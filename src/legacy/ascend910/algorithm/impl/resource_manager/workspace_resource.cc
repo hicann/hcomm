@@ -12,38 +12,36 @@
 #include "workspace_resource.h"
 
 namespace hccl {
-WorkspaceResource::WorkspaceResource(u32 devicePhyId, s32 deviceLogicId, CCLBufferManager *cclBufferManagerPtr)
+WorkspaceResource::WorkspaceResource(u32 devicePhyId, s32 deviceLogicId, CCLBufferManager* cclBufferManagerPtr)
 {
-    pimpl_.reset((new (std::nothrow)WorkspaceResourceImpl(devicePhyId, deviceLogicId, cclBufferManagerPtr)));
+    pimpl_.reset((new (std::nothrow) WorkspaceResourceImpl(devicePhyId, deviceLogicId, cclBufferManagerPtr)));
 }
 
-WorkspaceResource::~WorkspaceResource()
-{
-}
+WorkspaceResource::~WorkspaceResource() {}
 
-HcclResult WorkspaceResource::GetWorkspaceMemSize(const std::string &opType, u64 count,
-    HcclDataType dataType, u32 rankSize, u64 &memSize, DevType deviceType) const
+HcclResult WorkspaceResource::GetWorkspaceMemSize(
+    const std::string& opType, u64 count, HcclDataType dataType, u32 rankSize, u64& memSize, DevType deviceType) const
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->GetWorkspaceMemSize(opType, count, dataType, rankSize, memSize, deviceType);
 }
 
-HcclResult WorkspaceResource::RegisterMaster(const std::string &tag, Stream stream)
+HcclResult WorkspaceResource::RegisterMaster(const std::string& tag, Stream stream)
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->RegisterMaster(tag, stream);
 }
 
 // 基于tag 初始设置资源，包含 Stream 资源 和 内存 资源
-HcclResult WorkspaceResource::SetWorkspaceResource(const std::string &tag, void *memPtr,
-    u64 &maxSize, std::vector<rtStream_t> &stream)
+HcclResult WorkspaceResource::SetWorkspaceResource(
+    const std::string& tag, void* memPtr, u64& maxSize, std::vector<rtStream_t>& stream)
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->SetWorkspaceResource(tag, memPtr, maxSize, stream);
 }
 
 // 基于 tag 销毁资源，包含 Stream 资源 和 内存 资源
-void WorkspaceResource::DestroyWorkspaceResource(const std::string &tag)
+void WorkspaceResource::DestroyWorkspaceResource(const std::string& tag)
 {
     CHK_SMART_PTR_RET_NULL(pimpl_);
     pimpl_->DestroyWorkspaceResource(tag);
@@ -59,7 +57,7 @@ void WorkspaceResource::DestroyWorkspaceResource()
 }
 
 // 基于tag 分配 Stream 资源
-std::vector<Stream> WorkspaceResource::AllocSlaveStreams(const std::string &tag, u32 num)
+std::vector<Stream> WorkspaceResource::AllocSlaveStreams(const std::string& tag, u32 num)
 {
     HCCL_DEBUG("[WorkspaceResource][AllocSlaveStreams]requesting for [%u] slaves, tag[%s].", num, tag.c_str());
     // 安全性的保护，无实际业务意义
@@ -71,13 +69,13 @@ std::vector<Stream> WorkspaceResource::AllocSlaveStreams(const std::string &tag,
 }
 
 // 基于tag 销毁 Stream 资源
-HcclResult WorkspaceResource::DestroyStream(const std::string &tag)
+HcclResult WorkspaceResource::DestroyStream(const std::string& tag)
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->DestroyStream(tag);
 }
 
-DeviceMem WorkspaceResource::AllocDeviceMem(const std::string &tag, u64 size)
+DeviceMem WorkspaceResource::AllocDeviceMem(const std::string& tag, u64 size)
 {
     // 安全性的保护，无实际业务意义
     if (!pimpl_) {
@@ -88,34 +86,34 @@ DeviceMem WorkspaceResource::AllocDeviceMem(const std::string &tag, u64 size)
 }
 
 // 基于tag 销毁 DeviceMem 资源
-HcclResult WorkspaceResource::DestroyDeviceMem(const std::string &tag)
+HcclResult WorkspaceResource::DestroyDeviceMem(const std::string& tag)
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->DestroyDeviceMem(tag);
 }
 
-HcclResult WorkspaceResource::CreateOpBasedResources(const HcclCMDType &opType, const std::string &tag,
-    const HcomCollOpInfo &opInfo)
+HcclResult WorkspaceResource::CreateOpBasedResources(
+    const HcclCMDType& opType, const std::string& tag, const HcomCollOpInfo& opInfo)
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->CreateOpBasedResources(opType, tag, opInfo);
 }
 
-HcclResult WorkspaceResource::CreateRemoteOpBasedResources(u64 memSize, const std::string &tag)
+HcclResult WorkspaceResource::CreateRemoteOpBasedResources(u64 memSize, const std::string& tag)
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->CreateRemoteOpBasedResources(memSize, tag);
 }
 
-HcclResult WorkspaceResource::CreateOrUpdateRemoteOpBasedResources(u64 memSize, const std::string &tag)
+HcclResult WorkspaceResource::CreateOrUpdateRemoteOpBasedResources(u64 memSize, const std::string& tag)
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->CreateOrUpdateRemoteOpBasedResources(memSize, tag);
 }
 
-HcclResult WorkspaceResource::DestroyRemoteOpBasedMem(const std::string &tag)
+HcclResult WorkspaceResource::DestroyRemoteOpBasedMem(const std::string& tag)
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->DestroyRemoteOpBasedMem(tag);
 }
-}  // namespace hccl
+} // namespace hccl

@@ -14,23 +14,24 @@
 namespace hccl {
 class CollAllGatherRingExecutor : public CollAllGatherExecutor {
 public:
-    explicit CollAllGatherRingExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollAllGatherRingExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAllGatherRingExecutor() override = default;
 
 private:
     /* *************** 资源计算 *************** */
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
 
     /* *************** 算法编排 *************** */
     u64 CalcLoopMaxCount(const u64 cclBuffSize, const u32 unitSize) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
     HcclResult Getlevel1CommRank(SubCommInfo& level1CommInfo) override;
-    HcclResult SelectTempAlg(std::unique_ptr<AlgTemplateBase> &level1TempAlg, u32 level1RankSize) override;
-    HcclResult SelectAlgorithmTempAlg(std::unique_ptr<AlgTemplateBase> &level1TempAlg);
+    HcclResult SelectTempAlg(std::unique_ptr<AlgTemplateBase>& level1TempAlg, u32 level1RankSize) override;
+    HcclResult SelectAlgorithmTempAlg(std::unique_ptr<AlgTemplateBase>& level1TempAlg);
 };
 
 } // namespace hccl

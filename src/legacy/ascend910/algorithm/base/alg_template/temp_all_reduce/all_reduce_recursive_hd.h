@@ -14,7 +14,7 @@
 #include "all_reduce_recursive_hd_pub.h"
 
 namespace hccl {
-    constexpr u32 NSLBDP_ALL_REDUCE_MOLD2 = 2;
-}  // namespace hccl
+constexpr u32 NSLBDP_ALL_REDUCE_MOLD2 = 2;
+} // namespace hccl
 
 #endif /* * ALL_REDUCE_RECURSIVE_HD_H */

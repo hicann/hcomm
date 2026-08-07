@@ -13,7 +13,6 @@
 
 #include "mc2_handler_pub.h"
 
-namespace hccl {
-}
+namespace hccl {}
 
-#endif 
+#endif

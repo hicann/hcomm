@@ -28,12 +28,14 @@ public:
         streamLitePtr = aicpuThread.GetStreamLitePtr();
         EXPECT_NE(nullptr, streamLitePtr);
 
-        rtsqPtr = static_cast<StreamLite *>(streamLitePtr)->GetRtsq();
+        rtsqPtr = static_cast<StreamLite*>(streamLitePtr)->GetRtsq();
         EXPECT_NE(nullptr, rtsqPtr);
 
         MOCKER_CPP_VIRTUAL(*rtsqPtr, &RtsqBase::LaunchTask).stubs().will(ignoreReturnValue());
         MOCKER_CPP_VIRTUAL(*rtsqPtr, &RtsqBase::TryLaunchTask).stubs().will(ignoreReturnValue());
-        MOCKER_CPP_VIRTUAL(*rtsqPtr, &RtsqBase::NotifyWait, void (RtsqBase::*)(uint32_t, uint32_t)).stubs().will(ignoreReturnValue());
+        MOCKER_CPP_VIRTUAL(*rtsqPtr, &RtsqBase::NotifyWait, void(RtsqBase::*)(uint32_t, uint32_t))
+            .stubs()
+            .will(ignoreReturnValue());
         MOCKER_CPP_VIRTUAL(*rtsqPtr, &RtsqBase::NotifyRecordLoc).stubs().will(ignoreReturnValue());
         MOCKER_CPP_VIRTUAL(*rtsqPtr, &RtsqBase::SdmaCopy).stubs().will(ignoreReturnValue());
         MOCKER_CPP_VIRTUAL(*rtsqPtr, &RtsqBase::SdmaReduce).stubs().will(ignoreReturnValue());
@@ -44,8 +46,8 @@ public:
         GlobalMockObject::verify();
     }
     IAicpuTsThread aicpuThread{1, 2, 3, 4};
-    void *streamLitePtr{nullptr};
-    RtsqBase *rtsqPtr{nullptr};
+    void* streamLitePtr{nullptr};
+    RtsqBase* rtsqPtr{nullptr};
 };
 
 /**
@@ -130,8 +132,8 @@ TEST_F(TestIAicpuTsThread, Ut_IAicpuTsThread_SdmaReduce_INT8_SUM_When_Inited_Exp
     uint64_t dstAddr = 0x1000;
     uint64_t srcAddr = 0x2000;
     uint64_t sizeByte = 1024;
-    uint32_t dataTypeRaw = 0;   // INT8
-    uint32_t reduceOpRaw = 0;   // SUM
+    uint32_t dataTypeRaw = 0; // INT8
+    uint32_t reduceOpRaw = 0; // SUM
 
     HcclResult ret = aicpuThread.SdmaReduce(dstAddr, srcAddr, sizeByte, dataTypeRaw, reduceOpRaw);
     EXPECT_EQ(HCCL_SUCCESS, ret);
@@ -147,8 +149,8 @@ TEST_F(TestIAicpuTsThread, Ut_IAicpuTsThread_SdmaReduce_FP16_PROD_When_Inited_Ex
     uint64_t dstAddr = 0x1000;
     uint64_t srcAddr = 0x2000;
     uint64_t sizeByte = 1024;
-    uint32_t dataTypeRaw = 3;   // FP16
-    uint32_t reduceOpRaw = 1;   // PROD
+    uint32_t dataTypeRaw = 3; // FP16
+    uint32_t reduceOpRaw = 1; // PROD
 
     HcclResult ret = aicpuThread.SdmaReduce(dstAddr, srcAddr, sizeByte, dataTypeRaw, reduceOpRaw);
     EXPECT_EQ(HCCL_SUCCESS, ret);
@@ -164,8 +166,8 @@ TEST_F(TestIAicpuTsThread, Ut_IAicpuTsThread_SdmaReduce_FP32_MAX_When_Inited_Exp
     uint64_t dstAddr = 0x1000;
     uint64_t srcAddr = 0x2000;
     uint64_t sizeByte = 1024;
-    uint32_t dataTypeRaw = 4;   // FP32
-    uint32_t reduceOpRaw = 2;   // MAX
+    uint32_t dataTypeRaw = 4; // FP32
+    uint32_t reduceOpRaw = 2; // MAX
 
     HcclResult ret = aicpuThread.SdmaReduce(dstAddr, srcAddr, sizeByte, dataTypeRaw, reduceOpRaw);
     EXPECT_EQ(HCCL_SUCCESS, ret);
@@ -181,8 +183,8 @@ TEST_F(TestIAicpuTsThread, Ut_IAicpuTsThread_SdmaReduce_INT32_MIN_When_Inited_Ex
     uint64_t dstAddr = 0x1000;
     uint64_t srcAddr = 0x2000;
     uint64_t sizeByte = 1024;
-    uint32_t dataTypeRaw = 2;   // INT32
-    uint32_t reduceOpRaw = 3;   // MIN
+    uint32_t dataTypeRaw = 2; // INT32
+    uint32_t reduceOpRaw = 3; // MIN
 
     HcclResult ret = aicpuThread.SdmaReduce(dstAddr, srcAddr, sizeByte, dataTypeRaw, reduceOpRaw);
     EXPECT_EQ(HCCL_SUCCESS, ret);
@@ -198,8 +200,8 @@ TEST_F(TestIAicpuTsThread, Ut_IAicpuTsThread_SdmaReduce_When_SizeExceedMax_Expec
     uint64_t dstAddr = 0x1000;
     uint64_t srcAddr = 0x2000;
     uint64_t sizeByte = 0x100000001ULL;
-    uint32_t dataTypeRaw = 0;   // INT8
-    uint32_t reduceOpRaw = 0;   // SUM
+    uint32_t dataTypeRaw = 0; // INT8
+    uint32_t reduceOpRaw = 0; // SUM
 
     HcclResult ret = aicpuThread.SdmaReduce(dstAddr, srcAddr, sizeByte, dataTypeRaw, reduceOpRaw);
     EXPECT_EQ(HCCL_E_PARA, ret);
@@ -215,7 +217,7 @@ TEST_F(TestIAicpuTsThread, Ut_IAicpuTsThread_SdmaReduce_When_InvalidDataType_Exp
     uint64_t dstAddr = 0x1000;
     uint64_t srcAddr = 0x2000;
     uint64_t sizeByte = 1024;
-    uint32_t dataTypeRaw = 100;  // 不支持的数据类型
+    uint32_t dataTypeRaw = 100; // 不支持的数据类型
     uint32_t reduceOpRaw = 0;   // SUM
 
     HcclResult ret = aicpuThread.SdmaReduce(dstAddr, srcAddr, sizeByte, dataTypeRaw, reduceOpRaw);
@@ -233,7 +235,7 @@ TEST_F(TestIAicpuTsThread, Ut_IAicpuTsThread_SdmaReduce_When_InvalidReduceOp_Exp
     uint64_t srcAddr = 0x2000;
     uint64_t sizeByte = 1024;
     uint32_t dataTypeRaw = 0;   // INT8
-    uint32_t reduceOpRaw = 100;  // 不支持的操作类型
+    uint32_t reduceOpRaw = 100; // 不支持的操作类型
 
     HcclResult ret = aicpuThread.SdmaReduce(dstAddr, srcAddr, sizeByte, dataTypeRaw, reduceOpRaw);
     EXPECT_EQ(HCCL_E_PARA, ret);
@@ -246,7 +248,7 @@ TEST_F(TestIAicpuTsThread, Ut_IAicpuTsThread_SdmaReduce_When_InvalidReduceOp_Exp
 TEST_F(TestIAicpuTsThread, Ut_IAicpuTsThread_GetStreamLitePtr_When_Inited_Expect_Success)
 {
     IAicpuTsThread aicpuThread(1, 2, 3, 4);
-    void *streamLitePtr = aicpuThread.GetStreamLitePtr();
+    void* streamLitePtr = aicpuThread.GetStreamLitePtr();
 
     EXPECT_NE(nullptr, streamLitePtr);
 }
@@ -269,7 +271,7 @@ TEST_F(TestIAicpuTsThread, Ut_IAicpuTsThread_GetSqId_When_Inited_Expect_Success)
  */
 TEST_F(TestIAicpuTsThread, Ut_IAicpuTsThread_Destructor_When_Inited_Expect_NoMemoryLeak)
 {
-    IAicpuTsThread *aicpuThread = new IAicpuTsThread(1, 2, 3, 4);
+    IAicpuTsThread* aicpuThread = new IAicpuTsThread(1, 2, 3, 4);
     // 不应该发生内存泄漏
     EXPECT_NO_THROW(delete aicpuThread);
 }
@@ -284,8 +286,8 @@ TEST_F(TestIAicpuTsThread, Ut_IAicpuTsThread_SdmaReduce_FP8E4M3_When_Inited_Expe
     uint64_t dstAddr = 0x1000;
     uint64_t srcAddr = 0x2000;
     uint64_t sizeByte = 256;
-    uint32_t dataTypeRaw = 15;  // FP8E4M3
-    uint32_t reduceOpRaw = 0;    // SUM
+    uint32_t dataTypeRaw = 15; // FP8E4M3
+    uint32_t reduceOpRaw = 0;  // SUM
 
     HcclResult ret = aicpuThread.SdmaReduce(dstAddr, srcAddr, sizeByte, dataTypeRaw, reduceOpRaw);
     EXPECT_EQ(HCCL_SUCCESS, ret);
@@ -301,8 +303,8 @@ TEST_F(TestIAicpuTsThread, Ut_IAicpuTsThread_SdmaReduce_FP8E5M2_When_Inited_Expe
     uint64_t dstAddr = 0x1000;
     uint64_t srcAddr = 0x2000;
     uint64_t sizeByte = 256;
-    uint32_t dataTypeRaw = 16;  // FP8E5M2
-    uint32_t reduceOpRaw = 0;   // SUM
+    uint32_t dataTypeRaw = 16; // FP8E5M2
+    uint32_t reduceOpRaw = 0;  // SUM
 
     HcclResult ret = aicpuThread.SdmaReduce(dstAddr, srcAddr, sizeByte, dataTypeRaw, reduceOpRaw);
     EXPECT_EQ(HCCL_SUCCESS, ret);
@@ -318,8 +320,8 @@ TEST_F(TestIAicpuTsThread, Ut_IAicpuTsThread_SdmaReduce_BFP16_When_Inited_Expect
     uint64_t dstAddr = 0x1000;
     uint64_t srcAddr = 0x2000;
     uint64_t sizeByte = 512;
-    uint32_t dataTypeRaw = 11;  // BFP16
-    uint32_t reduceOpRaw = 1;   // PROD
+    uint32_t dataTypeRaw = 11; // BFP16
+    uint32_t reduceOpRaw = 1;  // PROD
 
     HcclResult ret = aicpuThread.SdmaReduce(dstAddr, srcAddr, sizeByte, dataTypeRaw, reduceOpRaw);
     EXPECT_EQ(HCCL_SUCCESS, ret);

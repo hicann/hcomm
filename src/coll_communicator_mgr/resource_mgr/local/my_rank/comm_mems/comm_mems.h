@@ -21,19 +21,15 @@
 #include "hcomm_c_adpt.h"
 
 namespace std {
-    template <>
-    struct hash<CommMemInfo> {
-        size_t operator()(const CommMemInfo& memInfo) const {
-            return std::hash<void*>()(memInfo.mem.addr);
-        }
-    };
-}
+template <>
+struct hash<CommMemInfo> {
+    size_t operator()(const CommMemInfo& memInfo) const { return std::hash<void*>()(memInfo.mem.addr); }
+};
+} // namespace std
 
 namespace hccl {
 struct CommMemInfoEqual {
-    bool operator()(const CommMemInfo& lhs, const CommMemInfo& rhs) const {
-        return lhs.mem.addr == rhs.mem.addr;
-    }
+    bool operator()(const CommMemInfo& lhs, const CommMemInfo& rhs) const { return lhs.mem.addr == rhs.mem.addr; }
 };
 
 CommMemType ConvertHcclToCommMemType(HcclMemType hcclType);
@@ -46,36 +42,37 @@ class CommMems {
 public:
     using Handle = std::shared_ptr<CommMemInfo>;
     using MemKey = hccl::BufferKey<uintptr_t, uint64_t>;
-    using Table  = hccl::RmaBufferMgr<MemKey, Handle>;
- 
+    using Table = hccl::RmaBufferMgr<MemKey, Handle>;
+
     explicit CommMems(uint64_t bufferSize);
     ~CommMems() = default;
 
-    HcclResult Add(void *addr, uint64_t len);
+    HcclResult Add(void* addr, uint64_t len);
 
-    HcclResult GetHcclBuffer(void *&addr, uint64_t &len);
+    HcclResult GetHcclBuffer(void*& addr, uint64_t& len);
 
-    HcclResult HcclBufferMemset(void *&addr, uint64_t &len, bool clearFlag) const;
+    HcclResult HcclBufferMemset(void*& addr, uint64_t& len, bool clearFlag) const;
 
     HcclResult Init(HcclMem cclBuffer);
 
-    HcclResult GetMemoryHandles(std::vector<HcclMem> &mem);
+    HcclResult GetMemoryHandles(std::vector<HcclMem>& mem);
 
     // 用户注册/反注册内存
     HcclResult CommRegMem(const std::string& tag, const CommMem& mem, void** rawHandle);
     HcclResult CommUnregMem(const std::string& tag, const void* rawHandle);
-    HcclResult GetTagMemoryHandles(void** memHandles, uint32_t memHandleNum, std::vector<HcclMem> &mem, 
-        std::vector<std::string> &memTag);
+    HcclResult GetTagMemoryHandles(
+        void** memHandles, uint32_t memHandleNum, std::vector<HcclMem>& mem, std::vector<std::string>& memTag);
 
 private:
     uint64_t bufferSize_{};
     CommMemInfo cclMemInfo_{};
- 
-    static inline MemKey MakeKey(void* addr, uint64_t size) {
+
+    static inline MemKey MakeKey(void* addr, uint64_t size)
+    {
         return MemKey(reinterpret_cast<uintptr_t>(addr), static_cast<uint64_t>(size));
     }
     struct TagRegistry {
-        Table table;                                        // 区间树 + ref 语义
+        Table table; // 区间树 + ref 语义
     };
     // 用户绑定内存
     std::mutex memMutex_;
@@ -84,6 +81,6 @@ private:
     // 每个tag 1个 CommMemInfo
     std::unordered_map<std::string, std::shared_ptr<CommMemInfo>> opBindings_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif // COMM_MEMS_H

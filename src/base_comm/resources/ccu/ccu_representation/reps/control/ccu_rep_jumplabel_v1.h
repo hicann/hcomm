@@ -12,11 +12,11 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepJumpLabel : public CcuRepBlock {
-public:
-    explicit CcuRepJumpLabel(CcuInsGeneratorBase* insGeneratorPtr, const std::string &label);
-    std::string Describe() override;
-};
+    class CcuRepJumpLabel : public CcuRepBlock {
+    public:
+        explicit CcuRepJumpLabel(CcuInsGeneratorBase* insGeneratorPtr, const std::string& label);
+        std::string Describe() override;
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

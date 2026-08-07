@@ -22,7 +22,8 @@
 
 class LoadXnXnExecutor : public CcuExecutorBase {
 public:
-    explicit LoadXnXnExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit LoadXnXnExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     LoadXnXnExecutor() = default;

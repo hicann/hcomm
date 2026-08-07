@@ -10,13 +10,12 @@
 
 #include "ns_recovery_lite.h"
 
-namespace hccl
-{
+namespace hccl {
 
-NsRecoveryLite::NsRecoveryLite()
-{}
+NsRecoveryLite::NsRecoveryLite() {}
 
-void NsRecoveryLite::Init(const std::shared_ptr<HDCommunicate>& kfcControlTransferH2D, 
+void NsRecoveryLite::Init(
+    const std::shared_ptr<HDCommunicate>& kfcControlTransferH2D,
     const std::shared_ptr<HDCommunicate>& kfcStatusTransferD2H)
 {
     hdcHandler_ = std::make_unique<HcclAicpuHdcHandler>(kfcControlTransferH2D, kfcStatusTransferD2H);
@@ -39,13 +38,7 @@ void NsRecoveryLite::BackGroundSetStatus(Hccl::KfcStatus status, Hccl::KfcErrTyp
     hdcHandler_->SetKfcExecStatus(status, errorCode);
 }
 
-void NsRecoveryLite::SetNeedClean(bool flag)
-{
-    needClean_ = flag;
-}
-bool NsRecoveryLite::IsNeedClean() const
-{
-    return needClean_;
-}
+void NsRecoveryLite::SetNeedClean(bool flag) { needClean_ = flag; }
+bool NsRecoveryLite::IsNeedClean() const { return needClean_; }
 
-}
+} // namespace hccl

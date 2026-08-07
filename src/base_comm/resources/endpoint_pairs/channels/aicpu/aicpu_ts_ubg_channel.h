@@ -18,15 +18,13 @@ constexpr char_t UBG_FINISH_MSG[FINISH_MSG_SIZE] = "Ubg Comm Pipe ready!";
 
 class AicpuTsUbgChannel : public AicpuTsUboeUbgChannelHelper {
 public:
-    AicpuTsUbgChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc)
-        : AicpuTsUboeUbgChannelHelper(endpointHandle, channelDesc) {}
+    AicpuTsUbgChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc)
+        : AicpuTsUboeUbgChannelHelper(endpointHandle, channelDesc)
+    {}
 
     ~AicpuTsUbgChannel() = default;
 
-    HcommChannelKind GetChannelKind() const override
-    {
-        return HcommChannelKind::AICPU_TS_UBG;
-    }
+    HcommChannelKind GetChannelKind() const override { return HcommChannelKind::AICPU_TS_UBG; }
 
     HcclResult Init() override;
     ChannelStatus GetStatus() override;
@@ -39,8 +37,9 @@ protected:
 private:
     void ProcessUbgState();
 
-    MAKE_ENUM(UbgStatus, INIT, BUILD_CONN, SEND_SIZE, RECV_SIZE, SEND_DATA,
-        RECV_DATA, SEND_FIN, RECV_FIN, PROCESS_DATA, SET_READY, READY)
+    MAKE_ENUM(
+        UbgStatus, INIT, BUILD_CONN, SEND_SIZE, RECV_SIZE, SEND_DATA, RECV_DATA, SEND_FIN, RECV_FIN, PROCESS_DATA,
+        SET_READY, READY)
     UbgStatus ubgStatus{UbgStatus::INIT};
 };
 

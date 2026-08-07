@@ -18,13 +18,13 @@ class IpcLocalNotify : public BaseLocalNotify {
 public:
     explicit IpcLocalNotify(bool devUsed = false);
 
-    IpcLocalNotify(const IpcLocalNotify &that) = delete;
+    IpcLocalNotify(const IpcLocalNotify& that) = delete;
 
-    IpcLocalNotify &operator=(const IpcLocalNotify &that) = delete;
+    IpcLocalNotify& operator=(const IpcLocalNotify& that) = delete;
 
-    void Wait(const Stream &stream, u32 timeout) const override;
+    void Wait(const Stream& stream, u32 timeout) const override;
 
-    void Post(const Stream &stream) const override;
+    void Post(const Stream& stream) const override;
 
     std::unique_ptr<Serializable> GetExchangeDto() override;
 

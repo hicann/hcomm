@@ -7,36 +7,37 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef COLL_REDUCESCATTER_MESH_AIV_EXECUTOR_H
 #define COLL_REDUCESCATTER_MESH_AIV_EXECUTOR_H
- 
+
 #include "coll_reduce_scatter_executor.h"
 #include "hccl_aiv.h"
- 
+
 namespace hccl {
 class CollReduceScatterMeshAivExecutor : public CollReduceScatterExecutor {
 public:
-    CollReduceScatterMeshAivExecutor(const HcclDispatcher dispatcher,
-                                               std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollReduceScatterMeshAivExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceScatterMeshAivExecutor() override = default;
- 
+
     HcclResult Orchestrate(OpParam& param, AlgResourceResponse& algRes) override;
-    HcclResult GetAivExecParam(const OpParam& param, AlgResourceResponse& algRes, AivSuperKernelArgs &args) override;
-    HcclResult CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize = 0, HcclCMDType cmdType = HcclCMDType::HCCL_CMD_INVALID) override;
+    HcclResult GetAivExecParam(const OpParam& param, AlgResourceResponse& algRes, AivSuperKernelArgs& args) override;
+    HcclResult CalNumBlocks(
+        u32& numBlocks, u32 rankSize, u64 dataSize = 0, HcclCMDType cmdType = HcclCMDType::HCCL_CMD_INVALID) override;
+
 private:
     /* *************** 资源计算 *************** */
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType,
-        TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
- 
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+
     /* *************** 算法编排 *************** */
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 };
- 
+
 } // namespace hccl
- 
+
 #endif

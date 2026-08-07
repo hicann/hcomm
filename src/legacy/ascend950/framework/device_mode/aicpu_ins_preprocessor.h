@@ -25,24 +25,22 @@ class AicpuInsPreprocessor {
 public:
     using InsIterator = HierarchicalQueue<Instruction, InsQueue>::Iterator;
 
-    explicit AicpuInsPreprocessor(CommunicatorImpl *comm) : comm(comm)
-    {
-    }
+    explicit AicpuInsPreprocessor(CommunicatorImpl* comm) : comm(comm) {}
 
-    void Preprocess(std::shared_ptr<InsQueue> &insQueue);
+    void Preprocess(std::shared_ptr<InsQueue>& insQueue);
 
     // AlltoallV算子使用
-    void       SetAicpuKernelLaunchParam(HcclKernelLaunchParam &param);
-    bool       IsAicpuResExisted(const std::string &algName);
-    void       SetAicpuResExisted(const std::string &algName);
-    DevBuffer *GetAicpuResBuffer(const std::string &algName);
+    void SetAicpuKernelLaunchParam(HcclKernelLaunchParam& param);
+    bool IsAicpuResExisted(const std::string& algName);
+    void SetAicpuResExisted(const std::string& algName);
+    DevBuffer* GetAicpuResBuffer(const std::string& algName);
 
 private:
-    CommunicatorImpl *comm;
+    CommunicatorImpl* comm;
     std::unordered_map<std::string, std::shared_ptr<DevBuffer>> aicpuResMap; // 集合通信算子资源加载到device侧的内存
     std::unordered_map<std::string, bool> aicpuResExistedMap;
 
-    std::set<LinkData>                                         availableLinks;
+    std::set<LinkData> availableLinks;
     unordered_map<std::string, unique_ptr<ConnectionsBuilder>> connectionsBuilders;
 
     // AlltoallV算子使用
@@ -50,25 +48,25 @@ private:
     std::vector<std::shared_ptr<DevBuffer>> recvCountsMem{};
     std::vector<std::shared_ptr<DevBuffer>> sdisplsMem{};
     std::vector<std::shared_ptr<DevBuffer>> rdisplsMem{};
-    bool                                    isCountMemInited{false};
-    u32                                     resIndex{0};
-    u32                                     launchResIndex{0};
+    bool isCountMemInited{false};
+    u32 resIndex{0};
+    u32 launchResIndex{0};
 
-    void InsPreprocess(InsIterator &insIter);
+    void InsPreprocess(InsIterator& insIter);
 
-    void AllocQueueNotify(std::vector<std::tuple<QId, QId, u32>> &queueNotifyReq) const;
-    void AllocBcastPostCntNotify(std::vector<std::pair<QId, u32>> &bcastPostCntNotifyReq) const;
-    void AllocWaitGroupCntNotify(std::vector<std::pair<QId, u32>> &waitGroupCntNotifyReq) const;
+    void AllocQueueNotify(std::vector<std::tuple<QId, QId, u32>>& queueNotifyReq) const;
+    void AllocBcastPostCntNotify(std::vector<std::pair<QId, u32>>& bcastPostCntNotifyReq) const;
+    void AllocWaitGroupCntNotify(std::vector<std::pair<QId, u32>>& waitGroupCntNotifyReq) const;
     void AllocWorkStream(u32 primQueueNum) const;
-    void AllocInterRankNotifies(const vector<LinkData> &links);
-    void BatchBuildTransports(const vector<LinkData> &links);
+    void AllocInterRankNotifies(const vector<LinkData>& links);
+    void BatchBuildTransports(const vector<LinkData>& links);
 
-    void PackResAndCopyToDev(const std::string &algName, const CollAlgResReq &collAlgResReq);
+    void PackResAndCopyToDev(const std::string& algName, const CollAlgResReq& collAlgResReq);
 
     // AlltoallV算子使用
     void AllocAlltoallVOpMem();
 
-    std::vector<char> PackOpData(const std::string &opTag, const std::string &algName, const CollAlgResReq &resReq);
+    std::vector<char> PackOpData(const std::string& opTag, const std::string& algName, const CollAlgResReq& resReq);
 };
 
 } // namespace Hccl

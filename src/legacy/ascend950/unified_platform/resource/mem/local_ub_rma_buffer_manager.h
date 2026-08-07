@@ -20,14 +20,15 @@ using LocalUbRmaBufferMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_
 
 class LocalUbRmaBufferManager {
 public:
-    static LocalUbRmaBufferMgr *GetInstance();
+    static LocalUbRmaBufferMgr* GetInstance();
+
 private:
     LocalUbRmaBufferManager() = default;
     ~LocalUbRmaBufferManager() = default;
-    LocalUbRmaBufferManager(const LocalUbRmaBufferManager &)            = delete;
-    LocalUbRmaBufferManager &operator=(const LocalUbRmaBufferManager &) = delete;
+    LocalUbRmaBufferManager(const LocalUbRmaBufferManager&) = delete;
+    LocalUbRmaBufferManager& operator=(const LocalUbRmaBufferManager&) = delete;
 };
 
-}   // namespace Hccl
+} // namespace Hccl
 
-#endif //LOCAL_UB_RMA_BUFFER_MANAGER_H
+#endif // LOCAL_UB_RMA_BUFFER_MANAGER_H

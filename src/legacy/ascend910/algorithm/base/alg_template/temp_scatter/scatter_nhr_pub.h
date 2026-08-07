@@ -27,28 +27,26 @@ public:
     // should be called soon after template ScatterNHR instance created
     HcclResult Prepare(bool needMerge) override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize,
-                                   const std::vector<std::shared_ptr<Transport> > &links) override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult
+    RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
 
 protected:
 private:
     void PrepareSlicesData(const u32 unitSize, const u64 totalCount, const u32 rankSize) const;
-    HcclResult SdmaRx(LINK &linkLeft, LINK &linkRight, InterServerAlgoStep &stepInfo,
-        const std::vector<LINK> &links);
-    HcclResult RdmaTxRx(LINK &linkLeft, LINK &linkRight, InterServerAlgoStep &stepInfo,
-        const std::vector<LINK> &links);
+    HcclResult SdmaRx(LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInfo, const std::vector<LINK>& links);
+    HcclResult RdmaTxRx(LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInfo, const std::vector<LINK>& links);
     HcclResult RdmaTxRx();
-    HcclResult RunScatterNHR(const std::vector<std::shared_ptr<Transport> > &links);
-    HcclResult Tx(const LINK &link, std::vector<Slice> &txSlices);
-    HcclResult Rx(const LINK &link, std::vector<Slice> &rxSlices);
+    HcclResult RunScatterNHR(const std::vector<std::shared_ptr<Transport>>& links);
+    HcclResult Tx(const LINK& link, std::vector<Slice>& txSlices);
+    HcclResult Rx(const LINK& link, std::vector<Slice>& rxSlices);
 
-    HcclResult GetStepInfo(u32 step, u32 nSteps, u32 rank, u32 rankSize, InterServerAlgoStep &stepInfo) override;
+    HcclResult GetStepInfo(u32 step, u32 nSteps, u32 rank, u32 rankSize, InterServerAlgoStep& stepInfo) override;
 
-    u32 interRank_;       // comm内的rank排序
-    u32 interRankSize_;  // 本comm内ranksize总数
+    u32 interRank_;     // comm内的rank排序
+    u32 interRankSize_; // 本comm内ranksize总数
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* SCATTER_NHR_PUB_H */

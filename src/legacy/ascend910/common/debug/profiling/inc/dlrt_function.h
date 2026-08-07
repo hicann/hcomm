@@ -24,19 +24,19 @@ namespace hccl {
 class DlRtFunction {
 public:
     virtual ~DlRtFunction();
-    static DlRtFunction &GetInstance();
+    static DlRtFunction& GetInstance();
     HcclResult DlRtFunctionInit();
     std::function<rtError_t(uint32_t, rtProfCtrlHandle)> dlrtProfRegisterCtrlCallback;
 
 protected:
 private:
-    void *handle_{};
+    void* handle_{};
     std::mutex handleMutex_;
     DlRtFunction(const DlRtFunction&) = delete;
-    DlRtFunction &operator=(const DlRtFunction&) = delete;
+    DlRtFunction& operator=(const DlRtFunction&) = delete;
     DlRtFunction();
     HcclResult DlRtFunctionInterInit();
     HcclResult DlRtFunctionStubInit();
 };
-}  // namespace hccl
+} // namespace hccl
 #endif

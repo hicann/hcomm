@@ -17,7 +17,7 @@
 class AicpuKfcRetryProcess {
 public:
     ~AicpuKfcRetryProcess() = default;
-    static HcclResult RetryProcess(hccl::HcclCommAicpu &comm, RestartParam &restartParam, uint32_t idx);
+    static HcclResult RetryProcess(hccl::HcclCommAicpu& comm, RestartParam& restartParam, uint32_t idx);
 };
 
 #endif

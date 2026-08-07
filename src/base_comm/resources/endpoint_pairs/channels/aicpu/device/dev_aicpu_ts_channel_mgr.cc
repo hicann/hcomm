@@ -14,13 +14,13 @@
 #include "dev_aicpu_ts_roce_channel_v2.h"
 #include "log.h"
 
-DevAicpuTsChannelMgr &DevAicpuTsChannelMgr::Instance()
+DevAicpuTsChannelMgr& DevAicpuTsChannelMgr::Instance()
 {
     static DevAicpuTsChannelMgr inst;
     return inst;
 }
 
-DevAicpuTsChannel *DevAicpuTsChannelMgr::GetOrCreateAicpuTsChannel(hcomm::HcommChannelKind kind)
+DevAicpuTsChannel* DevAicpuTsChannelMgr::GetOrCreateAicpuTsChannel(hcomm::HcommChannelKind kind)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = channelMap_.find(kind);
@@ -40,28 +40,28 @@ DevAicpuTsChannel *DevAicpuTsChannelMgr::GetOrCreateAicpuTsChannel(hcomm::HcommC
             channel = std::make_unique<Hccl::DevAicpuTsRoceChannelV2>();
             break;
         default:
-            HCCL_ERROR("[DevAicpuTsChannelMgr][GetOrCreateAicpuTsChannel] unsupported kind[%u]",
-                static_cast<uint32_t>(kind));
+            HCCL_ERROR(
+                "[DevAicpuTsChannelMgr][GetOrCreateAicpuTsChannel] unsupported kind[%u]", static_cast<uint32_t>(kind));
             return nullptr;
     }
 
     if (channel == nullptr) {
-        HCCL_ERROR("[DevAicpuTsChannelMgr][GetOrCreateAicpuTsChannel] alloc failed for kind[%u]",
-            static_cast<uint32_t>(kind));
+        HCCL_ERROR(
+            "[DevAicpuTsChannelMgr][GetOrCreateAicpuTsChannel] alloc failed for kind[%u]", static_cast<uint32_t>(kind));
         return nullptr;
     }
 
-    DevAicpuTsChannel *ptr = channel.get();
+    DevAicpuTsChannel* ptr = channel.get();
     channelMap_.emplace(kind, std::move(channel));
-    HCCL_DEBUG("[DevAicpuTsChannelMgr][GetOrCreateAicpuTsChannel] created channel for kind[%u]",
-        static_cast<uint32_t>(kind));
+    HCCL_DEBUG(
+        "[DevAicpuTsChannelMgr][GetOrCreateAicpuTsChannel] created channel for kind[%u]", static_cast<uint32_t>(kind));
     return ptr;
 }
 
 bool DevAicpuTsChannelMgr::DestroyChannel(ChannelHandle handle)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    for (auto &entry : channelMap_) {
+    for (auto& entry : channelMap_) {
         if (entry.second && entry.second->Destroy(handle)) {
             HCCL_DEBUG("[DevAicpuTsChannelMgr][DestroyChannel] destroyed handle[0x%llx]", handle);
             return true;

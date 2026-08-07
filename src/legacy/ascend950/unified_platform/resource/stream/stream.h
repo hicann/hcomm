@@ -20,21 +20,15 @@ public:
 
     explicit Stream(bool deviceUsed = false, bool isMaster = true);
 
-    Stream(const Stream &stream, bool isMaster = true) = delete;
+    Stream(const Stream& stream, bool isMaster = true) = delete;
 
-    Stream &operator=(const Stream &stream) = delete;
+    Stream& operator=(const Stream& stream) = delete;
 
     ~Stream();
 
-    bool operator==(const Stream &rhs) const
-    {
-        return ptr == rhs.ptr;
-    }
+    bool operator==(const Stream& rhs) const { return ptr == rhs.ptr; }
 
-    bool operator!=(const Stream &rhs) const
-    {
-        return !(rhs == *this);
-    }
+    bool operator!=(const Stream& rhs) const { return !(rhs == *this); }
 
     void SetStmMode(u64 stmMode);
 
@@ -55,19 +49,19 @@ public:
     std::string Describe() const;
 
 private:
-    static constexpr int32_t HCCL_STREAM_PRIORITY_LOW  = 5;
+    static constexpr int32_t HCCL_STREAM_PRIORITY_LOW = 5;
     static constexpr int32_t HCCL_STREAM_PRIORITY_HIGH = 5;
     static constexpr int32_t STREAM_MODE_STOP_ON_FAILURE = 1; // 配置流失败模式为遇错即停
 
     aclrtStream ptr;
-    u32        id{0};
-    bool       selfOwned{false};
-    u64        mode{0};
-    bool       devUsed{false};
-    u32        sqId{0};
-    u32        cqId{0};
-    u32        devPhyId{0};
-    bool       isMaster_{true};
+    u32 id{0};
+    bool selfOwned{false};
+    u64 mode{0};
+    bool devUsed{false};
+    u32 sqId{0};
+    u32 cqId{0};
+    u32 devPhyId{0};
+    bool isMaster_{true};
 
     void InitDevPhyId();
 };

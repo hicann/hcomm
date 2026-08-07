@@ -43,7 +43,7 @@ struct HcclP2pSendRecvQueue {
 };
 
 void ClearHcclGroupCommList();
-std::vector<HcclComm> &GetHcclGroupCommList();
+std::vector<HcclComm>& GetHcclGroupCommList();
 int32_t GetHcclP2pTaskNums();
 void SetHcclP2pTaskNums(int32_t targetP2pTaskNums);
 
@@ -52,17 +52,18 @@ public:
     GroupScheduleMgr() : userRank_(0), serverNum_(0), nTasksP2p_(-1), usrStream_(nullptr) {};
     ~GroupScheduleMgr();
 
-    HcclResult GetUsrStream(aclrtStream &usrStream);
-    HcclResult SetUsrStream(const aclrtStream &usrStream);
+    HcclResult GetUsrStream(aclrtStream& usrStream);
+    HcclResult SetUsrStream(const aclrtStream& usrStream);
 
-    HcclResult AppendGroupP2pTask(HcclComm comm, const HcclP2pTask &task, const HcclOpP2pDesc &p2pDesc);
-    HcclResult GetP2pTaskSchedule(std::vector<HcclP2pTask> &sortedSendQue, std::vector<HcclP2pTask> &sortedRecvQue);
+    HcclResult AppendGroupP2pTask(HcclComm comm, const HcclP2pTask& task, const HcclOpP2pDesc& p2pDesc);
+    HcclResult GetP2pTaskSchedule(std::vector<HcclP2pTask>& sortedSendQue, std::vector<HcclP2pTask>& sortedRecvQue);
 
 private:
-    HcclResult GetCurLocalRank(uint32_t &localRank);
+    HcclResult GetCurLocalRank(uint32_t& localRank);
     HcclResult CalculateGroupSize();
-    uint32_t GenerateP2pSchedule(const std::vector<uint32_t> &groupToServer,
-        const std::vector<uint32_t> &groupToLocalRankBase, uint32_t curGroupIdx, uint32_t curGroupLocalRankIdx);
+    uint32_t GenerateP2pSchedule(
+        const std::vector<uint32_t>& groupToServer, const std::vector<uint32_t>& groupToLocalRankBase,
+        uint32_t curGroupIdx, uint32_t curGroupLocalRankIdx);
     HcclResult InitGroupPlanner(HcclComm comm);
     HcclResult HcclP2pSchedulerGenerate();
 

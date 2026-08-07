@@ -25,8 +25,8 @@
 using namespace hccl;
 
 static int g_launchCallCount = 0;
-static HcclResult LaunchCountStub(
-    const rtStream_t, void *, u32, aclrtBinHandle, const std::string &, bool, u16, void *, u32)
+static HcclResult
+LaunchCountStub(const rtStream_t, void*, u32, aclrtBinHandle, const std::string&, bool, u16, void*, u32)
 {
     ++g_launchCallCount;
     return HCCL_SUCCESS;
@@ -34,10 +34,7 @@ static HcclResult LaunchCountStub(
 
 class AclgraphCommunicatorTest : public testing::Test {
 protected:
-    void SetUp() override
-    {
-        GlobalMockObject::reset();
-    }
+    void SetUp() override { GlobalMockObject::reset(); }
 
     void TearDown() override
     {
@@ -246,7 +243,7 @@ TEST_F(AclgraphCommunicatorTest, ClearAclgraphHostLinks_FullPath)
     // 1. 预置 host 端 HccltagRemoteResV2（模拟通信域分配的 remote res）
     HccltagRemoteResV2 remoteResV2;
     ListCommonInit(&remoteResV2.nextTagRes, &remoteResV2.nextTagRes);
-    HccltagRemoteResV2 *hostPtr = &remoteResV2;
+    HccltagRemoteResV2* hostPtr = &remoteResV2;
     // 将 HostMem 包装 remoteResV2 的指针后存入 hostMemVec_
     auto hostMem = std::make_shared<HostMem>(HostMem::create(hostPtr, sizeof(remoteResV2)));
     communicator_.hostMemVec_.push_back(hostMem);
@@ -270,7 +267,7 @@ TEST_F(AclgraphCommunicatorTest, ClearAclgraphHostLinks_FullPath)
     EXPECT_EQ(communicator_.rankTagRemoteRes_[rankId].count(tag), 0);
     // 验证：hostMemVec_ 中对应的条目已被 erase
     bool foundInHostMemVec = false;
-    for (auto &hm : communicator_.hostMemVec_) {
+    for (auto& hm : communicator_.hostMemVec_) {
         if (hm && hm->ptr() == hostPtr) {
             foundInHostMemVec = true;
             break;
@@ -323,10 +320,10 @@ TEST_F(AclgraphCommunicatorTest, KfcClearOpResLaunch_LaunchPath)
     // 预置成功能进 launch 路径的条件
     communicator_.binHandle_ = reinterpret_cast<aclrtBinHandle>(0x1);
     // 直接设置内部 stream_ 指针，避免 Stream(fake_ptr) 构造函数调用 InitStream 触发 hrt 函数访问
-    communicator_.opStream_.stream_ = reinterpret_cast<void *>(0x1234);
+    communicator_.opStream_.stream_ = reinterpret_cast<void*>(0x1234);
     communicator_.identifier_ = "test_group";
     // 预置 buffer 避免走 DeviceMem::alloc 路径（需要 mock 该静态方法）
-    communicator_.aicpuCleanupBuf_ = DeviceMem(reinterpret_cast<void *>(0x5678), 4096, false);
+    communicator_.aicpuCleanupBuf_ = DeviceMem(reinterpret_cast<void*>(0x5678), 4096, false);
     communicator_.aicpuCleanupHostBuf_.reset(new (std::nothrow) HcclKfcClearOpResTilingData());
     ASSERT_NE(communicator_.aicpuCleanupHostBuf_, nullptr);
 
@@ -346,9 +343,9 @@ TEST_F(AclgraphCommunicatorTest, KfcClearOpResLaunch_LaunchPath)
 TEST_F(AclgraphCommunicatorTest, KfcClearOpResLaunch_MultiBatch)
 {
     communicator_.binHandle_ = reinterpret_cast<aclrtBinHandle>(0x1);
-    communicator_.opStream_.stream_ = reinterpret_cast<void *>(0x1234);
+    communicator_.opStream_.stream_ = reinterpret_cast<void*>(0x1234);
     communicator_.identifier_ = "test_group";
-    communicator_.aicpuCleanupBuf_ = DeviceMem(reinterpret_cast<void *>(0x5678), 4096, false);
+    communicator_.aicpuCleanupBuf_ = DeviceMem(reinterpret_cast<void*>(0x5678), 4096, false);
     communicator_.aicpuCleanupHostBuf_.reset(new (std::nothrow) HcclKfcClearOpResTilingData());
     ASSERT_NE(communicator_.aicpuCleanupHostBuf_, nullptr);
 

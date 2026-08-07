@@ -13,17 +13,14 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepJumpLabel::CcuRepJumpLabel(CcuInsGeneratorBase* insGeneratorPtr, const std::string &label) :
-    CcuRepBlock(insGeneratorPtr, label)
-{
-    type = CcuRepType::JUMP_LABEL;
-    Append(std::make_shared<CcuRepNop>(insGeneratorPtr));
-}
+    CcuRepJumpLabel::CcuRepJumpLabel(CcuInsGeneratorBase* insGeneratorPtr, const std::string& label)
+        : CcuRepBlock(insGeneratorPtr, label)
+    {
+        type = CcuRepType::JUMP_LABEL;
+        Append(std::make_shared<CcuRepNop>(insGeneratorPtr));
+    }
 
-std::string CcuRepJumpLabel::Describe()
-{
-    return Hccl::StringFormat("JumpLabel[%s]", GetLabel().c_str());
-}
+    std::string CcuRepJumpLabel::Describe() { return Hccl::StringFormat("JumpLabel[%s]", GetLabel().c_str()); }
 
 }; // namespace CcuRep
 }; // namespace hcomm

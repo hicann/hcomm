@@ -16,10 +16,11 @@
 #include "utils/storage_manager.h"
 
 namespace HcclSim {
-HcclResult TaskCheckSendRecvSemantics(std::map<RankId, RankMemorySemantics> &allRankMemSemantics, u64 dataSize,
-                                      RankId srcRank, RankId dstRank);
-HcclResult TaskCheckSendRecvGroupSemantics(std::map<RankId, RankMemorySemantics> &allRankMemSemantics,
-    u64 dataSize, const std::vector<SendRecvPairParam> &pairs);
-}
+HcclResult TaskCheckSendRecvSemantics(
+    std::map<RankId, RankMemorySemantics>& allRankMemSemantics, u64 dataSize, RankId srcRank, RankId dstRank);
+HcclResult TaskCheckSendRecvGroupSemantics(
+    std::map<RankId, RankMemorySemantics>& allRankMemSemantics, u64 dataSize,
+    const std::vector<SendRecvPairParam>& pairs);
+} // namespace HcclSim
 
 #endif

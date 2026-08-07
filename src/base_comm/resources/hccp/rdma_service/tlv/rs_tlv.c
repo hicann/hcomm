@@ -70,8 +70,7 @@ RS_ATTRI_VISI_DEF int RsTlvDeinit(unsigned int phyId)
     ret = RsGetTlvCb(phyId, &tlvCb);
     CHK_PRT_RETURN(ret != 0, hccp_err("rs_get_tlv_cb failed, ret(%d) phyId(%u)", ret, phyId), ret);
 
-    CHK_PRT_RETURN(!tlvCb->initFlag,
-        hccp_warn("rs_tlv not init or already deinit, phyId(%u)", phyId), 0);
+    CHK_PRT_RETURN(!tlvCb->initFlag, hccp_warn("rs_tlv not init or already deinit, phyId(%u)", phyId), 0);
 
     RS_PTHREAD_MUTEX_LOCK(&tlvCb->mutex);
     tlvCb->initFlag = false;
@@ -91,22 +90,25 @@ STATIC int RsTlvAssembleSendData(struct TlvBufInfo *bufInfo, struct TlvRequestMs
 
     *isSendFinish = false;
     CHK_PRT_RETURN(head->offset >= bufInfo->bufferSize,
-        hccp_err("[recv][rs_tlv]param error, offset(%u) >= bufferSize(%u), phyId(%u)",
-        head->offset, bufInfo->bufferSize, head->phyId), -EINVAL);
+        hccp_err("[recv][rs_tlv]param error, offset(%u) >= bufferSize(%u), phyId(%u)", head->offset,
+            bufInfo->bufferSize, head->phyId),
+        -EINVAL);
     CHK_PRT_RETURN(head->sendBytes > dataMaxLength,
-        hccp_err("[recv][rs_tlv]param error, sendBytes(%u) >= data size(%u), phyId(%u)",
-        head->sendBytes, dataMaxLength, head->phyId), -EINVAL);
+        hccp_err("[recv][rs_tlv]param error, sendBytes(%u) >= data size(%u), phyId(%u)", head->sendBytes, dataMaxLength,
+            head->phyId),
+        -EINVAL);
     CHK_PRT_RETURN((head->offset + head->sendBytes) > head->totalBytes,
-        hccp_err("[recv][rs_tlv]data overflow, offset(%u) + sendBytes(%u) > totalBytes(%u), phyId(%u)",
-        head->offset, head->sendBytes, head->totalBytes, head->phyId), -EINVAL);
+        hccp_err("[recv][rs_tlv]data overflow, offset(%u) + sendBytes(%u) > totalBytes(%u), phyId(%u)", head->offset,
+            head->sendBytes, head->totalBytes, head->phyId),
+        -EINVAL);
 
     if (head->offset == 0) {
         (void)memset_s(bufInfo->buf, bufInfo->bufferSize, 0, bufInfo->bufferSize);
     }
 
     ret = memcpy_s(bufInfo->buf + head->offset, bufInfo->bufferSize - head->offset, data, head->sendBytes);
-    CHK_PRT_RETURN(ret != 0, hccp_err("[recv][rs_tlv]memcpy_s data failed, ret(%d) phyId(%u)",
-        ret, head->phyId), -ESAFEFUNC);
+    CHK_PRT_RETURN(ret != 0, hccp_err("[recv][rs_tlv]memcpy_s data failed, ret(%d) phyId(%u)", ret, head->phyId),
+        -ESAFEFUNC);
 
     if (head->offset + head->sendBytes == head->totalBytes) {
         *isSendFinish = true;
@@ -120,36 +122,44 @@ STATIC int RsCcuRequest(struct TlvRequestMsgHead *head, char *dataIn, char *data
     int ret = 0;
     if (isCcuTlvReqExist()) {
         ret = RsCcuTlvRequest(head->type, dataIn, dataOut, head->totalBytes, bufferSize, MAX_TLV_MSG_DATA_LEN_V2);
-        CHK_PRT_RETURN(ret != 0 && ret != -EUSERS, hccp_err("rs_ccu_tlv_request failed, ret(%d) msg_type(%u) phy_id(%u)",
-                ret, head->type, head->phyId), ret);
+        CHK_PRT_RETURN(ret != 0 && ret != -EUSERS,
+            hccp_err("rs_ccu_tlv_request failed, ret(%d) msg_type(%u) phy_id(%u)", ret, head->type, head->phyId), ret);
         return ret;
     }
 
     switch (head->type) {
         case MSG_TYPE_CCU_INIT:
             ret = RsCcuInit();
-            CHK_PRT_RETURN(ret != 0 && ret != -EUSERS , hccp_err("rs_ccu_init failed, ret(%d) module_type(%u) msg_type(%u) phy_id(%u)",
-                ret, head->moduleType, head->type, head->phyId), ret);
+            CHK_PRT_RETURN(ret != 0 && ret != -EUSERS,
+                hccp_err("rs_ccu_init failed, ret(%d) module_type(%u) msg_type(%u) phy_id(%u)", ret, head->moduleType,
+                    head->type, head->phyId),
+                ret);
             break;
         case MSG_TYPE_CCU_UNINIT:
             ret = RsCcuUninit();
-            CHK_PRT_RETURN(ret != 0, hccp_err("rs_ccu_uninit failed, ret(%d) module_type(%u) msg_type(%u) phyId(%u)",
-                ret, head->moduleType, head->type, head->phyId), ret);
+            CHK_PRT_RETURN(ret != 0,
+                hccp_err("rs_ccu_uninit failed, ret(%d) module_type(%u) msg_type(%u) phyId(%u)", ret, head->moduleType,
+                    head->type, head->phyId),
+                ret);
             break;
         case MSG_TYPE_CCU_GET_MEM_INFO:
             ret = RsCcuGetMemInfo(dataIn, dataOut, bufferSize);
-            CHK_PRT_RETURN(ret != 0, hccp_err("RsCcuGetMemInfo failed, ret(%d) module_type(%u) msg_type(%u) phyId(%u)",
-                ret, head->moduleType, head->type, head->phyId), ret);
+            CHK_PRT_RETURN(ret != 0,
+                hccp_err("RsCcuGetMemInfo failed, ret(%d) module_type(%u) msg_type(%u) phyId(%u)", ret,
+                    head->moduleType, head->type, head->phyId),
+                ret);
             break;
         case MSG_TYPE_CCU_DISPATCH_CMD:
             ret = RsCcuCustomChannel((struct channel_info_in *)dataIn, (struct channel_info_out *)dataOut);
             *bufferSize = sizeof(struct channel_info_out);
-            CHK_PRT_RETURN(ret != 0, hccp_err("RsCcuDispatchCmd failed, ret(%d) module_type(%u) msg_type(%u) phyId(%u)",
-                ret, head->moduleType, head->type, head->phyId), ret);
-            break;            
+            CHK_PRT_RETURN(ret != 0,
+                hccp_err("RsCcuDispatchCmd failed, ret(%d) module_type(%u) msg_type(%u) phyId(%u)", ret,
+                    head->moduleType, head->type, head->phyId),
+                ret);
+            break;
         default:
-            hccp_err("[request][rs_ccu]msg type error, module_type(%u) msg_type(%u) phyId(%u)",
-                head->moduleType, head->type, head->phyId);
+            hccp_err("[request][rs_ccu]msg type error, module_type(%u) msg_type(%u) phyId(%u)", head->moduleType,
+                head->type, head->phyId);
             return -EINVAL;
     }
 
@@ -168,8 +178,7 @@ RS_ATTRI_VISI_DEF int RsTlvRequest(struct TlvRequestMsgHead *head, char *dataIn,
 
     ret = RsGetTlvCb(head->phyId, &tlvCb);
     CHK_PRT_RETURN(ret != 0, hccp_err("rs_get_tlv_cb failed, ret(%d) phyId(%u)", ret, head->phyId), ret);
-    CHK_PRT_RETURN(tlvCb->bufInfo.buf == NULL,
-        hccp_err("rs_tlv buf not initialized, phyId(%u)", head->phyId), -EINVAL);
+    CHK_PRT_RETURN(tlvCb->bufInfo.buf == NULL, hccp_err("rs_tlv buf not initialized, phyId(%u)", head->phyId), -EINVAL);
 
     RS_PTHREAD_MUTEX_LOCK(&tlvCb->mutex);
     ret = RsTlvAssembleSendData(&tlvCb->bufInfo, head, dataIn, &isSendFinish, dataMaxLength);
@@ -182,10 +191,9 @@ RS_ATTRI_VISI_DEF int RsTlvRequest(struct TlvRequestMsgHead *head, char *dataIn,
         goto tlv_request_release_lock;
     }
 
-    switch(head->moduleType) {
+    switch (head->moduleType) {
         case TLV_MODULE_TYPE_NSLB:
-            ret = RsNslbNetcoRequest(head->phyId, &tlvCb->nslbCb,
-                    head->type, tlvCb->bufInfo.buf, head->totalBytes);
+            ret = RsNslbNetcoRequest(head->phyId, &tlvCb->nslbCb, head->type, tlvCb->bufInfo.buf, head->totalBytes);
             break;
         case TLV_MODULE_TYPE_CCU:
             ret = RsCcuRequest(head, tlvCb->bufInfo.buf, dataOut, bufferSize);
@@ -201,24 +209,24 @@ tlv_request_release_lock:
     return ret;
 }
 
-RS_ATTRI_VISI_DEF int RsCtxCustomChannel(const struct CustomChanInfoIn *in, struct CustomChanInfoOut *out) 
-{ 
-    struct channel_info_out chanOut = {0}; 
-    struct channel_info_in chanIn = {0}; 
-    int ret; 
+RS_ATTRI_VISI_DEF int RsCtxCustomChannel(const struct CustomChanInfoIn *in, struct CustomChanInfoOut *out)
+{
+    struct channel_info_out chanOut = {0};
+    struct channel_info_in chanIn = {0};
+    int ret;
 
-    RS_CHECK_POINTER_NULL_RETURN_INT(in); 
-    RS_CHECK_POINTER_NULL_RETURN_INT(out); 
+    RS_CHECK_POINTER_NULL_RETURN_INT(in);
+    RS_CHECK_POINTER_NULL_RETURN_INT(out);
 
-    ret = memcpy_s(&chanIn, sizeof(struct channel_info_in), in, sizeof(struct CustomChanInfoIn)); 
-    CHK_PRT_RETURN(ret != 0, hccp_err("[ccu]memcpy_s in failed, ret[%d]", ret), -ESAFEFUNC); 
+    ret = memcpy_s(&chanIn, sizeof(struct channel_info_in), in, sizeof(struct CustomChanInfoIn));
+    CHK_PRT_RETURN(ret != 0, hccp_err("[ccu]memcpy_s in failed, ret[%d]", ret), -ESAFEFUNC);
 
-    ret = RsCcuCustomChannel(&chanIn, &chanOut); 
-    CHK_PRT_RETURN(ret != 0, hccp_err("[ccu]rs_ctx_ccu_custom_channel failed, ret[%d]", ret), ret); 
+    ret = RsCcuCustomChannel(&chanIn, &chanOut);
+    CHK_PRT_RETURN(ret != 0, hccp_err("[ccu]rs_ctx_ccu_custom_channel failed, ret[%d]", ret), ret);
 
-    // prepare output data 
-    ret = memcpy_s(out, sizeof(struct CustomChanInfoOut), &chanOut, sizeof(struct channel_info_out)); 
-    CHK_PRT_RETURN(ret != 0, hccp_err("[ccu]memcpy_s out failed, ret[%d]", ret), -ESAFEFUNC); 
+    // prepare output data
+    ret = memcpy_s(out, sizeof(struct CustomChanInfoOut), &chanOut, sizeof(struct channel_info_out));
+    CHK_PRT_RETURN(ret != 0, hccp_err("[ccu]memcpy_s out failed, ret[%d]", ret), -ESAFEFUNC);
 
-    return 0; 
+    return 0;
 }

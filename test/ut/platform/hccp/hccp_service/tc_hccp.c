@@ -25,24 +25,24 @@
 
 extern int LltMain(int argc, char* argv);
 extern int HccpAddToCgroup(int logicId);
-extern int HccpParamParse(int argc, char *argv[], struct HccpInitParam *param);
-extern int HccpSetLogInfo(struct HccpInitParam *param);
+extern int HccpParamParse(int argc, char* argv[], struct HccpInitParam* param);
+extern int HccpSetLogInfo(struct HccpInitParam* param);
 extern void RsApiDeinit(void);
 extern int RsApiInit(void);
 extern int HccpChangeNumOfFile();
-int dlDrvGetDevNum(unsigned int *numDev);
-int dlDrvDeviceGetPhyIdByIndex(unsigned int devIndex, unsigned int *phyId);
+int dlDrvGetDevNum(unsigned int* numDev);
+int dlDrvDeviceGetPhyIdByIndex(unsigned int devIndex, unsigned int* phyId);
 
-extern int HccpParamParseId(const char *input, int *id);
-extern int HccpParseLogicId(const char *input, struct HccpInitParam *param);
-extern int HccpParsePid(const char *input, struct HccpInitParam *param);
-extern int HccpParsePidSign(const char *input, struct HccpInitParam *param);
-extern int HccpParseLogLevel(const char *input, struct HccpInitParam *param);
-extern int HccpParseHdcType(const char *input, struct HccpInitParam *param);
-extern int HccpParseWhiteListStatus(const char *input, struct HccpInitParam *param);
-extern int HccpParseBackupPhyid(const char *input, struct HccpInitParam *param);
+extern int HccpParamParseId(const char* input, int* id);
+extern int HccpParseLogicId(const char* input, struct HccpInitParam* param);
+extern int HccpParsePid(const char* input, struct HccpInitParam* param);
+extern int HccpParsePidSign(const char* input, struct HccpInitParam* param);
+extern int HccpParseLogLevel(const char* input, struct HccpInitParam* param);
+extern int HccpParseHdcType(const char* input, struct HccpInitParam* param);
+extern int HccpParseWhiteListStatus(const char* input, struct HccpInitParam* param);
+extern int HccpParseBackupPhyid(const char* input, struct HccpInitParam* param);
 
-static void ResetParam(struct HccpInitParam *param)
+static void ResetParam(struct HccpInitParam* param)
 {
     memset_s(param, sizeof(struct HccpInitParam), 0, sizeof(struct HccpInitParam));
     param->hdcType = HDC_SERVICE_TYPE_RDMA;
@@ -50,10 +50,7 @@ static void ResetParam(struct HccpInitParam *param)
     param->backupFlag = false;
 }
 
-static void ResetOptind(void)
-{
-    optind = 1;
-}
+static void ResetOptind(void) { optind = 1; }
 
 void TcNormal()
 {
@@ -157,40 +154,40 @@ void TcNormal()
     EXPECT_INT_EQ(ret, 0);
     EXPECT_INT_EQ(param.backupFlag, false);
 
-    char *argv1[] = {"hccp", NULL};
+    char* argv1[] = {"hccp", NULL};
     ResetParam(&param);
     ResetOptind();
     ret = HccpParamParse(1, argv1, &param);
     EXPECT_INT_NE(ret, 0);
 
-    char *argv2[] = {"hccp", "--deviceId", "0", NULL};
+    char* argv2[] = {"hccp", "--deviceId", "0", NULL};
     ResetParam(&param);
     ResetOptind();
     ret = HccpParamParse(3, argv2, &param);
     EXPECT_INT_NE(ret, 0);
 
-    char *argv3[] = {"hccp", "--deviceId", "0", "--pid", "100", NULL};
+    char* argv3[] = {"hccp", "--deviceId", "0", "--pid", "100", NULL};
     ResetParam(&param);
     ResetOptind();
     ret = HccpParamParse(5, argv3, &param);
     EXPECT_INT_NE(ret, 0);
 
-    char *argv4[] = {"hccp", "--pid", "100", "--logLevel", "3", "--hdcType", "6",
-                     "--whiteListStatus", "1", "--backupPhyId", "0", NULL};
+    char* argv4[] = {"hccp", "--pid",         "100", "--logLevel", "3", "--hdcType", "6", "--whiteListStatus",
+                     "1",    "--backupPhyId", "0",   NULL};
     ResetParam(&param);
     ResetOptind();
     ret = HccpParamParse(11, argv4, &param);
     EXPECT_INT_NE(ret, 0);
 
-    char *argv5[] = {"hccp", "--deviceId", "0", "--pid", "100", "--pidSign", "sign",
-                     "--logLevel", "3", "--hdcType", "6",
-                     "--whiteListStatus", "1", "--backupPhyId", "0", NULL};
+    char* argv5[] = {"hccp", "--deviceId",    "0", "--pid",     "100", "--pidSign",
+                     "sign", "--logLevel",    "3", "--hdcType", "6",   "--whiteListStatus",
+                     "1",    "--backupPhyId", "0", NULL};
     ResetParam(&param);
     ResetOptind();
     ret = HccpParamParse(15, argv5, &param);
     EXPECT_INT_NE(ret, 0);
 
-	return;
+    return;
 }
 
 void TcAbnormal()
@@ -229,19 +226,19 @@ void TcAbnormal()
     EXPECT_INT_EQ(ret, 0);
     EXPECT_INT_EQ(param.backupFlag, false);
 
-    char *argv1[] = {"hccp", "--unknown", "value", NULL};
+    char* argv1[] = {"hccp", "--unknown", "value", NULL};
     ResetParam(&param);
     ResetOptind();
     ret = HccpParamParse(3, argv1, &param);
     EXPECT_INT_NE(ret, 0);
 
-    char *argv2[] = {"hccp", "--pid", "abc", "--deviceId", "0", "--pidSign", "s", NULL};
+    char* argv2[] = {"hccp", "--pid", "abc", "--deviceId", "0", "--pidSign", "s", NULL};
     ResetParam(&param);
     ResetOptind();
     ret = HccpParamParse(7, argv2, &param);
     EXPECT_INT_NE(ret, 0);
 
-    char *argv3[] = {"hccp", "--pid", "100", "--deviceId", "abc", "--pidSign", "s", NULL};
+    char* argv3[] = {"hccp", "--pid", "100", "--deviceId", "abc", "--pidSign", "s", NULL};
     ResetParam(&param);
     ResetOptind();
     ret = HccpParamParse(7, argv3, &param);

@@ -22,16 +22,18 @@ vector<LinkData> ConnectionsBuilder::GetAvailableLinksVec() const
     return vector<LinkData>(availableLinks.begin(), availableLinks.end());
 }
 
-void ConnectionsBuilder::BatchBuild(const std::string &opTag, const vector<LinkData> &links)
+void ConnectionsBuilder::BatchBuild(const std::string& opTag, const vector<LinkData>& links)
 {
     vector<LinkData> pendingLinks;
-    for (auto &link : links) {
+    for (auto& link : links) {
         if (Contain(availableLinks, link)) {
             continue;
         }
         pendingLinks.emplace_back(link);
     }
-    HCCL_INFO("[%s]opTag[%s] links size[%u], pendingLinks size[%u]", __func__, opTag.c_str(), links.size(), pendingLinks.size());
+    HCCL_INFO(
+        "[%s]opTag[%s] links size[%u], pendingLinks size[%u]", __func__, opTag.c_str(), links.size(),
+        pendingLinks.size());
 
     if (pendingLinks.empty()) {
         return;
@@ -45,10 +47,10 @@ void ConnectionsBuilder::BatchBuild(const std::string &opTag, const vector<LinkD
     availableLinks.insert(pendingLinks.begin(), pendingLinks.end());
 }
 
-void ConnectionsBuilder::CreateRmaConnections(const std::string &opTag, const vector<LinkData> &links) const
+void ConnectionsBuilder::CreateRmaConnections(const std::string& opTag, const vector<LinkData>& links) const
 {
-    list<RmaConnection *> connTasks;
-    for (auto &link : links) {
+    list<RmaConnection*> connTasks;
+    for (auto& link : links) {
         connTasks.emplace_back(connManager->Create(opTag, link));
     }
     CHECK_NULLPTR(comm, "[ConnectionsBuilder::CreateRmaConnections] comm is nullptr!");
@@ -63,8 +65,8 @@ void ConnectionsBuilder::CreateRmaConnections(const std::string &opTag, const ve
             if (status == RmaConnStatus::READY) {
                 connIter = connTasks.erase(connIter);
             } else if (status == RmaConnStatus::CONN_INVALID || status == RmaConnStatus::CLOSE) {
-                THROW<RmaConnException>(StringFormat("Invalid status occurs when creating RMA connection %s!",
-                                                     (*connIter)->Describe().c_str()));
+                THROW<RmaConnException>(StringFormat(
+                    "Invalid status occurs when creating RMA connection %s!", (*connIter)->Describe().c_str()));
             } else {
                 ++connIter;
             }
@@ -72,9 +74,9 @@ void ConnectionsBuilder::CreateRmaConnections(const std::string &opTag, const ve
     }
 }
 
-ConnectionsBuilder::ConnectionsBuilder(CommunicatorImpl &communicator)
+ConnectionsBuilder::ConnectionsBuilder(CommunicatorImpl& communicator)
 {
-    this->comm  = &communicator;
+    this->comm = &communicator;
     connManager = &(comm->GetRmaConnManager());
 }
 

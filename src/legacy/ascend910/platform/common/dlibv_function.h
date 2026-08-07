@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #ifndef HCCL_SRC_DLIBVFUNCTION_H
 #define HCCL_SRC_DLIBVFUNCTION_H
 
@@ -23,22 +22,23 @@ namespace hccl {
 class DlIbvFunction {
 public:
     virtual ~DlIbvFunction();
-    static DlIbvFunction &GetInstance();
+    static DlIbvFunction& GetInstance();
     HcclResult DlIbvFunctionInit();
-    std::function<s32(struct ibv_comp_channel *channel, struct ibv_cq **cq,
-        void **cq_context)> dlRcoeGetCqEvent = nullptr;
-    std::function<void(struct ibv_cq *qp, unsigned int nevents)> dlRcoeAckCqEvent = nullptr;
-    std::function<s32(struct ibv_qp *qp, struct ibv_qp_attr *attr, int attr_mask,
-        struct ibv_qp_init_attr *init_attr)> dlRcoeQueryQp = nullptr;
+    std::function<s32(struct ibv_comp_channel* channel, struct ibv_cq** cq, void** cq_context)> dlRcoeGetCqEvent
+        = nullptr;
+    std::function<void(struct ibv_cq* qp, unsigned int nevents)> dlRcoeAckCqEvent = nullptr;
+    std::function<s32(struct ibv_qp* qp, struct ibv_qp_attr* attr, int attr_mask, struct ibv_qp_init_attr* init_attr)>
+        dlRcoeQueryQp = nullptr;
+
 protected:
 private:
-    void *handle_;
+    void* handle_;
     std::mutex handleMutex_;
     DlIbvFunction(const DlIbvFunction&);
-    DlIbvFunction &operator=(const DlIbvFunction&);
+    DlIbvFunction& operator=(const DlIbvFunction&);
     DlIbvFunction();
     HcclResult DlIbvFunctionApiInit();
 };
-}  // namespace hccl
+} // namespace hccl
 
-#endif  // HCCL_SRC_DLIBVFUNCTION_H
+#endif // HCCL_SRC_DLIBVFUNCTION_H

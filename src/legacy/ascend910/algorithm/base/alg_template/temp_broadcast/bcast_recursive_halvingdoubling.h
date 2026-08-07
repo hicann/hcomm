@@ -14,7 +14,7 @@
 #include "bcast_recursive_halvingdoubling_pub.h"
 
 namespace hccl {
-    constexpr u32 NSLBDP_BCAST_MOLD2 = 2;
-}  // namespace hccl
+constexpr u32 NSLBDP_BCAST_MOLD2 = 2;
+} // namespace hccl
 
 #endif /* * BCAST_RECURSIVE_HALVINGDOUBLING_H */

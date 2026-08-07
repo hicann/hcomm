@@ -13,7 +13,6 @@
 
 #include "broadcast_star_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif

@@ -27,18 +27,9 @@ using namespace hccl;
 
 class TopoInfoDetectDeviceTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "TopoInfoDetectDeviceTest SetUpTestCase" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "TopoInfoDetectDeviceTest TearDownTestCase" << std::endl;
-    }
-    virtual void SetUp()
-    {
-        std::cout << "TopoInfoDetectDeviceTest SetUp" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "TopoInfoDetectDeviceTest SetUpTestCase" << std::endl; }
+    static void TearDownTestCase() { std::cout << "TopoInfoDetectDeviceTest TearDownTestCase" << std::endl; }
+    virtual void SetUp() { std::cout << "TopoInfoDetectDeviceTest SetUp" << std::endl; }
     virtual void TearDown()
     {
         GlobalMockObject::verify();

@@ -23,15 +23,9 @@ using namespace hccl;
 
 class HcclCommDfxTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "HcclCommDfxTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "HcclCommDfxTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "HcclCommDfxTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "HcclCommDfxTest tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
@@ -77,7 +71,7 @@ TEST_F(HcclCommDfxTest, Ut_AddDpuTaskInfoCallback_When_EmptyTaskParam_Expect_Ret
 {
     Hccl::TaskParam taskParam{};
     u64 handle = INVALID_U64;
-    
+
     HcclResult ret = dfx_->AddDpuTaskInfoCallback(taskParam, handle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -94,13 +88,13 @@ TEST_F(HcclCommDfxTest, Ut_GetTaskId_When_FirstCall_Expect_ReturnZero)
 TEST_F(HcclCommDfxTest, Ut_GetTaskId_When_MultipleCalls_Expect_Increment)
 {
     u32 streamId = 456;
-    
+
     u32 taskId1 = HcclCommDfx::GetTaskId(streamId);
     EXPECT_EQ(taskId1, 1u);
-    
+
     u32 taskId2 = HcclCommDfx::GetTaskId(streamId);
     EXPECT_EQ(taskId2, 2u);
-    
+
     u32 taskId3 = HcclCommDfx::GetTaskId(streamId);
     EXPECT_EQ(taskId3, 3u);
 }
@@ -109,12 +103,12 @@ TEST_F(HcclCommDfxTest, Ut_GetTaskId_When_MultipleCalls_Expect_Increment)
 TEST_F(HcclCommDfxTest, Ut_GetTaskId_When_ExceedsLimit_Expect_ReturnToZero)
 {
     u32 streamId = 789;
-    
+
     // 先设置到 65535
     for (int i = 0; i < 65536; i++) {
         HcclCommDfx::GetTaskId(streamId);
     }
-    
+
     u32 taskId = HcclCommDfx::GetTaskId(streamId);
     EXPECT_EQ(taskId, 1u);
 }
@@ -151,7 +145,7 @@ TEST_F(HcclCommDfxTest, Ut_GetDpuCallback_When_CallCallback_Expect_ReturnSuccess
 
     // 先建立 handle 到 remoteRankId 的映射
     HcclCommDfx::AddChannelRemoteRankId("test_comm", handle, remoteRankId);
-    
+
     HcclResult ret = callback(taskParam, handle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -179,16 +173,16 @@ TEST_F(HcclCommDfxTest, Ut_GetTaskId_When_DifferentStreamId_Expect_Independent)
 {
     u32 streamId1 = 111;
     u32 streamId2 = 222;
-    
+
     u32 taskId1 = HcclCommDfx::GetTaskId(streamId1);
     EXPECT_EQ(taskId1, 1u);
-    
+
     u32 taskId2 = HcclCommDfx::GetTaskId(streamId2);
     EXPECT_EQ(taskId2, 1u);
-    
+
     taskId1 = HcclCommDfx::GetTaskId(streamId1);
     EXPECT_EQ(taskId1, 2u);
-    
+
     taskId2 = HcclCommDfx::GetTaskId(streamId2);
     EXPECT_EQ(taskId2, 2u);
 }
@@ -209,7 +203,8 @@ TEST_F(HcclCommDfxTest, Ut_GetOpModeFlags_When_OpModeIsOffload_Expect_ReturnFals
 {
     auto opInfo = std::make_shared<Hccl::DfxOpInfo>();
     opInfo->op_.opMode = Hccl::OpMode::OFFLOAD;
-    MOCKER_CPP(&Hccl::MirrorTaskManager::GetCurrDfxOpInfo,
+    MOCKER_CPP(
+        &Hccl::MirrorTaskManager::GetCurrDfxOpInfo,
         std::shared_ptr<Hccl::DfxOpInfo>(Hccl::MirrorTaskManager::*)() const)
         .stubs()
         .will(returnValue(opInfo));
@@ -226,7 +221,8 @@ TEST_F(HcclCommDfxTest, Ut_GetOpModeFlags_When_OpModeIsAclgraph_Expect_BothTrue)
 {
     auto opInfo = std::make_shared<Hccl::DfxOpInfo>();
     opInfo->op_.opMode = Hccl::OpMode::ACLGRAPH;
-    MOCKER_CPP(&Hccl::MirrorTaskManager::GetCurrDfxOpInfo,
+    MOCKER_CPP(
+        &Hccl::MirrorTaskManager::GetCurrDfxOpInfo,
         std::shared_ptr<Hccl::DfxOpInfo>(Hccl::MirrorTaskManager::*)() const)
         .stubs()
         .will(returnValue(opInfo));
@@ -304,16 +300,17 @@ TEST_F(HcclCommDfxTest, Ut_AddTaskInfoCallback_When_CcuTaskAndHandleExist_Expect
 
     // mock MirrorTaskManager
     auto opInfo = std::make_shared<Hccl::DfxOpInfo>();
-    MOCKER_CPP(&Hccl::MirrorTaskManager::GetCurrDfxOpInfo,
+    MOCKER_CPP(
+        &Hccl::MirrorTaskManager::GetCurrDfxOpInfo,
         std::shared_ptr<Hccl::DfxOpInfo>(Hccl::MirrorTaskManager::*)() const)
         .stubs()
         .will(returnValue(opInfo));
-    MOCKER_CPP(&Hccl::MirrorTaskManager::AddTaskInfo,
-        HcclResult(Hccl::MirrorTaskManager::*)(u32, u32, u32, const Hccl::TaskParam&,
-            std::shared_ptr<Hccl::DfxOpInfo>, bool))
+    MOCKER_CPP(
+        &Hccl::MirrorTaskManager::AddTaskInfo,
+        HcclResult(Hccl::MirrorTaskManager::*)(
+            u32, u32, u32, const Hccl::TaskParam&, std::shared_ptr<Hccl::DfxOpInfo>, bool))
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
-            mockcpp::any(), mockcpp::any())
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
     HcclResult ret = dfx_->AddTaskInfoCallback(1, 1, taskParam, channelHandle);
@@ -443,16 +440,17 @@ TEST_F(HcclCommDfxTest, Ut_AddTaskInfoCallback_When_NonCcuTaskAndHandleExist_Exp
     taskParam.taskType = Hccl::TaskParamType::TASK_NOTIFY_RECORD;
 
     auto opInfo = std::make_shared<Hccl::DfxOpInfo>();
-    MOCKER_CPP(&Hccl::MirrorTaskManager::GetCurrDfxOpInfo,
+    MOCKER_CPP(
+        &Hccl::MirrorTaskManager::GetCurrDfxOpInfo,
         std::shared_ptr<Hccl::DfxOpInfo>(Hccl::MirrorTaskManager::*)() const)
         .stubs()
         .will(returnValue(opInfo));
-    MOCKER_CPP(&Hccl::MirrorTaskManager::AddTaskInfo,
-        HcclResult(Hccl::MirrorTaskManager::*)(u32, u32, u32, const Hccl::TaskParam&,
-            std::shared_ptr<Hccl::DfxOpInfo>, bool))
+    MOCKER_CPP(
+        &Hccl::MirrorTaskManager::AddTaskInfo,
+        HcclResult(Hccl::MirrorTaskManager::*)(
+            u32, u32, u32, const Hccl::TaskParam&, std::shared_ptr<Hccl::DfxOpInfo>, bool))
         .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
-            mockcpp::any(), mockcpp::any())
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
     HcclResult ret = dfx_->AddTaskInfoCallback(1, 1, taskParam, channelHandle);

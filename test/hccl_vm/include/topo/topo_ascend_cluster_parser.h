@@ -25,16 +25,14 @@ using namespace HcclSim;
 using namespace std;
 using json = nlohmann::json;
 
-enum class HvmClusterStatus {
-    COMM_DOMAIN_UNINIT,
-    COMM_DOMAIN_INIT_DONE
-};
+enum class HvmClusterStatus { COMM_DOMAIN_UNINIT, COMM_DOMAIN_INIT_DONE };
 
 // 单例类，用于解析Ascend集群拓扑, 并初始化动态模型数据
 class AscendClusterTopoParser {
 public:
     // 单例模式
-    static AscendClusterTopoParser& GetInstance() {
+    static AscendClusterTopoParser& GetInstance()
+    {
         static AscendClusterTopoParser instance;
         return instance;
     }
@@ -46,9 +44,9 @@ public:
     AscendClusterTopoParser& operator=(AscendClusterTopoParser&&) = delete;
 
     // 初始化集群拓扑
-    HcclVmResult InitClusterTopo(const std::string &clusterDir);
+    HcclVmResult InitClusterTopo(const std::string& clusterDir);
     // 解析ranktable文件，并初始化通信域表项
-    HcclVmResult ParseRanktableAndInitCommDomain(const std::string &ranktablePath);
+    HcclVmResult ParseRanktableAndInitCommDomain(const std::string& ranktablePath);
     // 初始化通信域表项
     HcclVmResult InitCommunicationDomain(const TopoMeta& topoMeta, bool withRanktable = false);
     // 获取集群状态
@@ -60,24 +58,27 @@ private:
     // 私有构造、析构
     AscendClusterTopoParser() = default;
     ~AscendClusterTopoParser() = default;
+
 private:
     HcclVmResult InitClusterStaticTopoData();
     HcclVmResult InitDynamicModelData(const TopoMeta& topoMeta);
-    HcclVmResult BuildLevelList(const Server &server, int srcDevPhyId,
-                                const std::set<int> &commDomainLocalIds,
-                                uint32_t spIdx, uint32_t srvIdx,
-                                json &levelList);
-    json BuildRankEntry(const Server &server, int srcDevPhyId,
-                        const std::set<int> &commDomainLocalIds,
-                        uint32_t spIdx, uint32_t srvIdx, uint32_t rankId);
+    HcclVmResult BuildLevelList(
+        const Server& server, int srcDevPhyId, const std::set<int>& commDomainLocalIds, uint32_t spIdx, uint32_t srvIdx,
+        json& levelList);
+    json BuildRankEntry(
+        const Server& server, int srcDevPhyId, const std::set<int>& commDomainLocalIds, uint32_t spIdx, uint32_t srvIdx,
+        uint32_t rankId);
     uint64_t InitServer(uint32_t superPodId, const Server& server);
     uint64_t InitDevice(uint64_t serverKey, const Device& device);
     uint64_t InitPort(uint64_t deviceKey, const Port& port);
     uint64_t InitCcu(uint64_t deviceKey, uint32_t dieId);
     uint64_t InitCcuResource(uint64_t ccuKey);
-    HcclVmResult AddLinkInfo(const LinkPortRef* srcPort, const LinkPortRef* dstPort, uint32_t netLayer, const std::vector<Protocol> &protocols);
-    HcclVmResult CreateRankTableFile(const TopoMeta &topoMeta);
-    HcclVmResult ParseRanktable(const std::string &ranktablePath, TopoMeta &topoMeta);
+    HcclVmResult AddLinkInfo(
+        const LinkPortRef* srcPort, const LinkPortRef* dstPort, uint32_t netLayer,
+        const std::vector<Protocol>& protocols);
+    HcclVmResult CreateRankTableFile(const TopoMeta& topoMeta);
+    HcclVmResult ParseRanktable(const std::string& ranktablePath, TopoMeta& topoMeta);
+
 private:
     std::string outputFile_{"cluster_topo_data_output.txt"};
     std::string clusterDir_;

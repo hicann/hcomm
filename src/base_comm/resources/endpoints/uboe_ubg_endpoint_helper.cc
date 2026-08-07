@@ -14,10 +14,7 @@
 
 namespace hcomm {
 
-UboeUbgEndpointHelper::UboeUbgEndpointHelper(const EndpointDesc &endpointDesc)
-    : Endpoint(endpointDesc)
-{
-}
+UboeUbgEndpointHelper::UboeUbgEndpointHelper(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
 
 HcclResult UboeUbgEndpointHelper::ServerSocketListen(const uint32_t port)
 {
@@ -31,7 +28,7 @@ HcclResult UboeUbgEndpointHelper::ServerSocketStopListen(const uint32_t port)
     return HCCL_SUCCESS;
 }
 
-HcclResult UboeUbgEndpointHelper::RegisterMemory(HcommMem mem, const char *memTag, void **memHandle)
+HcclResult UboeUbgEndpointHelper::RegisterMemory(HcommMem mem, const char* memTag, void** memHandle)
 {
     CHK_RET(regedMemMgr_->RegisterMemory(mem, memTag, memHandle));
     return HCCL_SUCCESS;
@@ -43,28 +40,28 @@ HcclResult UboeUbgEndpointHelper::UnregisterMemory(void* memHandle)
     return HCCL_SUCCESS;
 }
 
-HcclResult UboeUbgEndpointHelper::MemoryExport(void *memHandle, void **memDesc, uint32_t *memDescLen)
+HcclResult UboeUbgEndpointHelper::MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen)
 {
     CHK_RET(regedMemMgr_->MemoryExport(endpointDesc_, memHandle, memDesc, memDescLen));
     return HCCL_SUCCESS;
 }
 
-HcclResult UboeUbgEndpointHelper::MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem)
+HcclResult UboeUbgEndpointHelper::MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem)
 {
     CHK_RET(regedMemMgr_->MemoryImport(memDesc, descLen, outMem));
     return HCCL_SUCCESS;
 }
 
-HcclResult UboeUbgEndpointHelper::MemoryUnimport(const void *memDesc, uint32_t descLen)
+HcclResult UboeUbgEndpointHelper::MemoryUnimport(const void* memDesc, uint32_t descLen)
 {
     CHK_RET(regedMemMgr_->MemoryUnimport(memDesc, descLen));
     return HCCL_SUCCESS;
 }
 
-HcclResult UboeUbgEndpointHelper::GetAllMemHandles(void **memHandles, uint32_t *memHandleNum)
+HcclResult UboeUbgEndpointHelper::GetAllMemHandles(void** memHandles, uint32_t* memHandleNum)
 {
     CHK_RET(regedMemMgr_->GetAllMemHandles(memHandles, memHandleNum));
     return HCCL_SUCCESS;
 }
 
-}
+} // namespace hcomm

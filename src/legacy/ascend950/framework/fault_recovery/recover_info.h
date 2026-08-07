@@ -20,7 +20,8 @@ namespace Hccl {
 
 const u32 RECOVER_OP_TAG_MAX_LEN = 191; // 最大的tag长度
 
-template <typename T> inline std::vector<char> ReCoverCustomTypeToCharVector(const T &data)
+template <typename T>
+inline std::vector<char> ReCoverCustomTypeToCharVector(const T& data)
 {
     std::vector<char> v;
     v.resize(sizeof(T));
@@ -31,9 +32,10 @@ template <typename T> inline std::vector<char> ReCoverCustomTypeToCharVector(con
     return v;
 }
 
-template <typename T> inline T RecoverCharVectorToCustomType(const std::vector<char> &v)
+template <typename T>
+inline T RecoverCharVectorToCustomType(const std::vector<char>& v)
 {
-    T   result;
+    T result;
     int ret = memcpy_s(&result, sizeof(result), &v[0], v.size());
     if (ret != 0) {
         THROW<InternalException>(StringFormat("VectorByteToCustomType copy dwqe failed, ret=%d", ret));
@@ -49,12 +51,9 @@ struct RecoverInfoData {
     // 通信步骤
     u32 step{0};
 
-    RecoverInfoData()
-    {
-    }
+    RecoverInfoData() {}
 
-    RecoverInfoData(u32 collOpIndex, u32 crcValue, u32 step) 
-        : collOpIndex(collOpIndex), crcValue(crcValue), step(step)
+    RecoverInfoData(u32 collOpIndex, u32 crcValue, u32 step) : collOpIndex(collOpIndex), crcValue(crcValue), step(step)
     {
         this->collOpIndex = collOpIndex;
         this->crcValue = crcValue;
@@ -68,9 +67,9 @@ struct RecoverInfoData {
 
 class RecoverInfo {
 public:
-    explicit RecoverInfo(const RecoverInfoData &recoverInfoData, RankId myRank);
+    explicit RecoverInfo(const RecoverInfoData& recoverInfoData, RankId myRank);
 
-    explicit RecoverInfo(const std::vector<char> &v);
+    explicit RecoverInfo(const std::vector<char>& v);
 
     std::string Describe() const;
 
@@ -79,13 +78,13 @@ public:
 
     void SetCrcValue(u32 crcValue);
 
-    void Check(const std::vector<char> &rmtUniqueId) const;
+    void Check(const std::vector<char>& rmtUniqueId) const;
 
-    void CompareRecoverInfo(const RecoverInfoData &otherRecoverInfoData) const;
+    void CompareRecoverInfo(const RecoverInfoData& otherRecoverInfoData) const;
 
 private:
     RecoverInfoData recoverInfoData;
-    RankId          myRank{0};
+    RankId myRank{0};
 };
 
 } // namespace Hccl

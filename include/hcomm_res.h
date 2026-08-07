@@ -7,32 +7,36 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef HCOMM_RES_H
 #define HCOMM_RES_H
- 
+
 #include "hcomm_res_defs.h"
- 
+
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
-extern HcommResult HcommEndpointCreate(const EndpointDesc *endpoint, EndpointHandle *endpointHandle);
+extern HcommResult HcommEndpointCreate(const EndpointDesc* endpoint, EndpointHandle* endpointHandle);
 
 extern HcommResult HcommEndpointDestroy(EndpointHandle endpointHandle);
 
-extern HcommResult HcommMemReg(EndpointHandle endpointHandle, const char *memTag, const CommMem *mem, HcommMemHandle *memHandle);
+extern HcommResult
+HcommMemReg(EndpointHandle endpointHandle, const char* memTag, const CommMem* mem, HcommMemHandle* memHandle);
 
 extern HcommResult HcommMemUnreg(EndpointHandle endpointHandle, HcommMemHandle memHandle);
 
-extern HcommResult HcommMemExport(EndpointHandle endpointHandle, HcommMemHandle memHandle, void **memDesc, uint32_t *memDescLen);
+extern HcommResult
+HcommMemExport(EndpointHandle endpointHandle, HcommMemHandle memHandle, void** memDesc, uint32_t* memDescLen);
 
-extern HcommResult HcommMemImport(EndpointHandle endpointHandle, const void *memDesc, uint32_t descLen, CommMem *outMem);
+extern HcommResult
+HcommMemImport(EndpointHandle endpointHandle, const void* memDesc, uint32_t descLen, CommMem* outMem);
 
-extern HcommResult HcommMemUnimport(EndpointHandle endpointHandle, const void *memDesc, uint32_t descLen);
+extern HcommResult HcommMemUnimport(EndpointHandle endpointHandle, const void* memDesc, uint32_t descLen);
 
-extern HcommResult HcommChannelCreate(EndpointHandle endpointHandle, CommEngine engine, HcommChannelDesc *channelDescs,
-    uint32_t channelNum, ChannelHandle *channels);
+extern HcommResult HcommChannelCreate(
+    EndpointHandle endpointHandle, CommEngine engine, HcommChannelDesc* channelDescs, uint32_t channelNum,
+    ChannelHandle* channels);
 
 /**
  * @brief 创建 Channel 配置对象
@@ -41,7 +45,7 @@ extern HcommResult HcommChannelCreate(EndpointHandle endpointHandle, CommEngine 
  * @note 调用者获得 config 后通过 HcommChannelConfigSetInt/SetStr 设置属性，
  *       传入 HcommChannelCreateWithConfig 后由 HcommChannelConfigDestroy 销毁。
  */
-extern HcommResult HcommChannelConfigCreate(HcommChannelConfig *config);
+extern HcommResult HcommChannelConfigCreate(HcommChannelConfig* config);
 
 /**
  * @brief 销毁 Channel 配置对象
@@ -75,24 +79,27 @@ extern HcommResult HcommChannelConfigSetInt(HcommChannelConfig config, HcommChan
  *       - 共享 Jetty 的不同 Channel 不支持并发使用，需由调用者按业务顺序串行调用。
  *       - 销毁 endpointHandle 前需确保所有共享 Jetty 的 Channel 已销毁。
  */
-extern HcommResult HcommChannelCreateWithConfig(EndpointHandle endpointHandle, CommEngine engine,
-    HcommChannelDesc *channelDescs, uint32_t channelNum, HcommChannelConfig config, ChannelHandle *channels);
+extern HcommResult HcommChannelCreateWithConfig(
+    EndpointHandle endpointHandle, CommEngine engine, HcommChannelDesc* channelDescs, uint32_t channelNum,
+    HcommChannelConfig config, ChannelHandle* channels);
 
-extern HcommResult HcommChannelGetStatus(const ChannelHandle *channelList, uint32_t listNum, int32_t *statusList);
+extern HcommResult HcommChannelGetStatus(const ChannelHandle* channelList, uint32_t listNum, int32_t* statusList);
 
-extern HcommResult HcommChannelDestroy(const ChannelHandle *channels, uint32_t channelNum);
+extern HcommResult HcommChannelDestroy(const ChannelHandle* channels, uint32_t channelNum);
 
-extern HcommResult HcommThreadAlloc(CommEngine engine, uint32_t threadNum, const uint32_t *notifyNumPerThread, ThreadHandle *threads);
+extern HcommResult
+HcommThreadAlloc(CommEngine engine, uint32_t threadNum, const uint32_t* notifyNumPerThread, ThreadHandle* threads);
 
-extern HcommResult HcommThreadFree(const ThreadHandle *threads, uint32_t threadNum);
+extern HcommResult HcommThreadFree(const ThreadHandle* threads, uint32_t threadNum);
 
-extern HcommResult HcommEndpointGetListenPort(EndpointHandle endpointHandle, uint32_t *port);
+extern HcommResult HcommEndpointGetListenPort(EndpointHandle endpointHandle, uint32_t* port);
 
-extern HcommResult HcommEndpointCheckFeature(HcommEndpointFeatureType featureType, const EndpointDesc *endpointDesc, bool *value);
+extern HcommResult
+HcommEndpointCheckFeature(HcommEndpointFeatureType featureType, const EndpointDesc* endpointDesc, bool* value);
 
-extern HcommResult HcommMemAlloc(void **ptr, size_t size);
+extern HcommResult HcommMemAlloc(void** ptr, size_t size);
 
-extern HcommResult HcommMemFree(void *ptr);
+extern HcommResult HcommMemFree(void* ptr);
 
 #ifdef __cplusplus
 }

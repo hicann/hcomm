@@ -44,10 +44,7 @@ protected:
     virtual void SetUp()
     {
         s32 portNum = -1;
-        MOCKER(hrtGetHccsPortNum)
-            .stubs()
-            .with(mockcpp::any(), outBound(portNum))
-            .will(returnValue(HCCL_SUCCESS));
+        MOCKER(hrtGetHccsPortNum).stubs().with(mockcpp::any(), outBound(portNum)).will(returnValue(HCCL_SUCCESS));
         std::cout << "A Test SetUP" << std::endl;
     }
     virtual void TearDown()
@@ -77,7 +74,7 @@ TEST_F(AlltoAllVStagedCalculatorTest, ut_alltoallv_staged_static)
         curSendRecvInfo.recvOffset.resize(userRankSize);
         u64 sdisp = 0;
         u64 rdisp = 0;
-//        cout << "rank " << i << endl;
+        //        cout << "rank " << i << endl;
         for (u32 j = 0; j < userRankSize; j++) {
             curSendRecvInfo.sendLength[j] = j + 1;
             curSendRecvInfo.sendOffset[j] = sdisp;
@@ -86,14 +83,14 @@ TEST_F(AlltoAllVStagedCalculatorTest, ut_alltoallv_staged_static)
             curSendRecvInfo.recvLength[j] = i + 1; // 从每个rank收到的数据是一样的
             curSendRecvInfo.recvOffset[j] = rdisp;
             rdisp += curSendRecvInfo.recvLength[j];
-//            cout << curSendRecvInfo.sendLength[j] << "," << curSendRecvInfo.sendOffset[j] << "," <<
-//                curSendRecvInfo.recvLength[j] << "," << curSendRecvInfo.recvOffset[j] << endl;
+            //            cout << curSendRecvInfo.sendLength[j] << "," << curSendRecvInfo.sendOffset[j] << "," <<
+            //                curSendRecvInfo.recvLength[j] << "," << curSendRecvInfo.recvOffset[j] << endl;
         }
         allSendRecvInfo.push_back(curSendRecvInfo);
     }
     u64 workspaceMemSize = 0;
-    AlltoAllVStagedCalculator::CalcWorkSpaceMemSize(userRankInfo, allSendRecvInfo, workspaceMemSize,
-        MESH_AGGREGATION_RANK_SIZE_910);
+    AlltoAllVStagedCalculator::CalcWorkSpaceMemSize(
+        userRankInfo, allSendRecvInfo, workspaceMemSize, MESH_AGGREGATION_RANK_SIZE_910);
     // cout << "workspaceMemSize:  " << workspaceMemSize << endl;
     EXPECT_EQ(workspaceMemSize, 72);
 }
@@ -103,14 +100,13 @@ TEST_F(AlltoAllVStagedCalculatorTest, ut_alltoallv_staged_static_int16)
 {
     u32 userRankSize = 12;
     for (u32 rankIndex = 0; rankIndex < userRankSize; rankIndex++) {
-
         u32 userRank = rankIndex;
 
         AlltoAllUserRankInfo userRankInfo;
         userRankInfo.userRankSize = userRankSize;
         userRankInfo.userRank = userRank;
 
-        u64 unitBytes = 100;  //104857600*2
+        u64 unitBytes = 100; // 104857600*2
 
         // 生成数据
         std::vector<SendRecvInfo> allSendRecvInfo;
@@ -122,7 +118,7 @@ TEST_F(AlltoAllVStagedCalculatorTest, ut_alltoallv_staged_static_int16)
             curSendRecvInfo.recvOffset.resize(userRankSize);
             u64 sdisp = 0;
             u64 rdisp = 0;
-//            cout << "rank " << i << endl;
+            //            cout << "rank " << i << endl;
 
             for (u32 j = 0; j < userRankSize; j++) {
                 curSendRecvInfo.sendLength[j] = unitBytes * (j + 1);
@@ -132,15 +128,16 @@ TEST_F(AlltoAllVStagedCalculatorTest, ut_alltoallv_staged_static_int16)
                 curSendRecvInfo.recvLength[j] = unitBytes * (i + 1); // 从每个rank收到的数据是一样的
                 curSendRecvInfo.recvOffset[j] = rdisp;
                 rdisp += curSendRecvInfo.recvLength[j];
-//                cout << curSendRecvInfo.sendLength[j] << "," << curSendRecvInfo.sendOffset[j] << "," <<
-//                    curSendRecvInfo.recvLength[j] << "," << curSendRecvInfo.recvOffset[j] << endl;
+                //                cout << curSendRecvInfo.sendLength[j] << "," << curSendRecvInfo.sendOffset[j] << ","
+                //                <<
+                //                    curSendRecvInfo.recvLength[j] << "," << curSendRecvInfo.recvOffset[j] << endl;
             }
             allSendRecvInfo.push_back(curSendRecvInfo);
         }
 
         u64 workspaceMemSize = 0;
-        AlltoAllVStagedCalculator::CalcWorkSpaceMemSize(userRankInfo, allSendRecvInfo, workspaceMemSize,
-            MESH_AGGREGATION_RANK_SIZE_910);
+        AlltoAllVStagedCalculator::CalcWorkSpaceMemSize(
+            userRankInfo, allSendRecvInfo, workspaceMemSize, MESH_AGGREGATION_RANK_SIZE_910);
     }
 }
 
@@ -148,7 +145,6 @@ TEST_F(AlltoAllVStagedCalculatorTest, ut_alltoallv_staged_static_size_0)
 {
     u32 userRankSize = 8;
     for (u32 rankIndex = 0; rankIndex < userRankSize; rankIndex++) {
-
         u32 userRank = rankIndex;
 
         AlltoAllUserRankInfo userRankInfo;

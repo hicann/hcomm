@@ -10,46 +10,43 @@
 
 #include "calc_p2p_transport_req.h"
 
-
 namespace hccl {
-CalcP2PTransportReq::CalcP2PTransportReq(std::vector<std::vector<u32>> &subCommPlaneVector,
-    std::vector<bool> &isBridgeVector, u32 userRank)
+CalcP2PTransportReq::CalcP2PTransportReq(
+    std::vector<std::vector<u32>>& subCommPlaneVector, std::vector<bool>& isBridgeVector, u32 userRank)
     : CalcTransportReqBase(subCommPlaneVector, isBridgeVector, userRank)
-{
-}
+{}
 
-CalcP2PTransportReq::~CalcP2PTransportReq()
-{
-}
+CalcP2PTransportReq::~CalcP2PTransportReq() {}
 
-HcclResult CalcP2PTransportReq::CalcTransportRequest(const std::string &tag, TransportMemType inputMemType,
-    TransportMemType outputMemType, const CommParaInfo &commParaInfo,
-    std::vector<SingleSubCommTransport> &commTransport, u32 subUserRankRoot)
+HcclResult CalcP2PTransportReq::CalcTransportRequest(
+    const std::string& tag, TransportMemType inputMemType, TransportMemType outputMemType,
+    const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport, u32 subUserRankRoot)
 {
     u32 planeSize = subCommPlaneVector_.size();
     commTransport.resize(planeSize);
 
     for (u32 planeIndex = 0; planeIndex < planeSize; planeIndex++) {
         u32 rankSize = subCommPlaneVector_[planeIndex].size();
-        SingleSubCommTransport &subCommTransport = commTransport[planeIndex];
+        SingleSubCommTransport& subCommTransport = commTransport[planeIndex];
         subCommTransport.transportRequests.resize(rankSize);
 
         if (userRank_ == commParaInfo.peerUserRank) {
             HCCL_ERROR("[CalcP2PCommInfo]p2p dstRank_[%u] is not support to create link with itself", userRank_);
             return HCCL_E_PARA;
         }
-        TransportRequest &tmpTransport = subCommTransport.transportRequests[0];
+        TransportRequest& tmpTransport = subCommTransport.transportRequests[0];
 
         tmpTransport.isValid = true;
         tmpTransport.localUserRank = userRank_;
         tmpTransport.remoteUserRank = commParaInfo.peerUserRank;
         tmpTransport.inputMemType = inputMemType;
         tmpTransport.outputMemType = outputMemType;
-        HCCL_INFO("[CommFactory][CalcP2PCommInfo] param_.tag[%s] planeIndex[%u], localRank[%u]," \
-            "remoteRank[%u], inputMemType[%d], outputMemType[%d]", tag.c_str(), planeIndex, userRank_,
-            tmpTransport.remoteUserRank, inputMemType, outputMemType);
+        HCCL_INFO(
+            "[CommFactory][CalcP2PCommInfo] param_.tag[%s] planeIndex[%u], localRank[%u],"
+            "remoteRank[%u], inputMemType[%d], outputMemType[%d]",
+            tag.c_str(), planeIndex, userRank_, tmpTransport.remoteUserRank, inputMemType, outputMemType);
     }
     return HCCL_SUCCESS;
 }
 
-}  // namespace hccl
+} // namespace hccl

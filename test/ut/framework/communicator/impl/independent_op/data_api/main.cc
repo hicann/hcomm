@@ -9,7 +9,8 @@
  */
 #include "gtest/gtest.h"
 
-GTEST_API_ int main(int argc, char **argv) {
+GTEST_API_ int main(int argc, char** argv)
+{
     printf("Running Hcomm Data API\n");
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

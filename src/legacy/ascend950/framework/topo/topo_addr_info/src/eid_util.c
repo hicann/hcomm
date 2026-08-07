@@ -20,7 +20,7 @@
 #define DIE_POS (39)
 #define DIE_OFFSET (3)
 
-static int Char2Int(char c, unsigned char * i)
+static int Char2Int(char c, unsigned char* i)
 {
     if (!isxdigit(c)) {
         return -1;
@@ -32,14 +32,14 @@ static int Char2Int(char c, unsigned char * i)
     return 0;
 }
 
-int EidGetFeId(const char *eidhexstr)
+int EidGetFeId(const char* eidhexstr)
 {
     char fe = eidhexstr[UE_ID_POS];
     int fe_id = (int)strtol(&fe, NULL, HEX_BASE) >> 1;
     return fe_id;
 }
 
-int EidGetPortId(const char *eidhexstr, int *port_id)
+int EidGetPortId(const char* eidhexstr, int* port_id)
 {
     unsigned char end = (unsigned char)strtoul(&eidhexstr[PORT_POS], NULL, HEX_BASE);
     unsigned int flag = 0x80;
@@ -49,7 +49,7 @@ int EidGetPortId(const char *eidhexstr, int *port_id)
     return 0;
 }
 
-int EidGetDieId(const char* eidhexstr, int *die_id)
+int EidGetDieId(const char* eidhexstr, int* die_id)
 {
     unsigned char d = 0;
     Char2Int(eidhexstr[DIE_POS], &d);
@@ -58,14 +58,14 @@ int EidGetDieId(const char* eidhexstr, int *die_id)
 }
 
 // 标卡
-int UrmaEidGetDieIdForCard(dcmi_urma_eid_t *eid)
+int UrmaEidGetDieIdForCard(dcmi_urma_eid_t* eid)
 {
     unsigned char last = eid->raw[DCMI_URMA_EID_SIZE - 1];
     int die_id = (4 & last) == 0 ? 0 : 1;
     return die_id;
 }
 
-int UrmaEidGetPortIdForCard(dcmi_urma_eid_t *eid)
+int UrmaEidGetPortIdForCard(dcmi_urma_eid_t* eid)
 {
 #define EID_PORT_LEFT_OFFSET (1)
 #define EID_PORT_RIGHT_OFFSET (4)
@@ -75,12 +75,11 @@ int UrmaEidGetPortIdForCard(dcmi_urma_eid_t *eid)
     return (int)last;
 }
 
-
 // 服务器和PoD
-int UrmaEidGetFeId(const dcmi_urma_eid_t *eid)
+int UrmaEidGetFeId(const dcmi_urma_eid_t* eid)
 {
 #define FE_POS (6)
-    unsigned char fe  = eid->raw[FE_POS];
+    unsigned char fe = eid->raw[FE_POS];
     const unsigned char mask = 0x7f; // fe使用7bit
     fe = fe & mask;
     return (int)fe;
@@ -96,7 +95,7 @@ int UrmaEidGetFeId(const dcmi_urma_eid_t *eid)
  * @param eid URMA eid结构体指针
  * @return int portID
  */
-int UrmaEidGetPortId(const dcmi_urma_eid_t *eid)
+int UrmaEidGetPortId(const dcmi_urma_eid_t* eid)
 {
     unsigned char dieAndPort = eid->raw[RAW_PORT_AND_DIE_POS];
     const unsigned char mask = 0x3F;
@@ -104,14 +103,14 @@ int UrmaEidGetPortId(const dcmi_urma_eid_t *eid)
     return (int)port;
 }
 
-int UrmaEidGetDieId(const dcmi_urma_eid_t *eid)
+int UrmaEidGetDieId(const dcmi_urma_eid_t* eid)
 {
-    unsigned char dieAndPort  = eid->raw[RAW_PORT_AND_DIE_POS];
+    unsigned char dieAndPort = eid->raw[RAW_PORT_AND_DIE_POS];
     unsigned char dieId = dieAndPort >> RAW_PORT_BIT_LEN;
     return (int)dieId;
 }
 
-int GetMaxFeId(const dcmi_urma_eid_info_t *eidList, size_t eidCnt)
+int GetMaxFeId(const dcmi_urma_eid_info_t* eidList, size_t eidCnt)
 {
     int maxFeId = -1;
     for (size_t i = 0; i < eidCnt; ++i) {
@@ -129,7 +128,7 @@ int GetMaxFeId(const dcmi_urma_eid_info_t *eidList, size_t eidCnt)
  * @param eid URMA eid结构体指针
  * @return int 1为portgroup，0为物理ID
  */
-int UrmaEidIsPortGroup(const dcmi_urma_eid_t *eid)
+int UrmaEidIsPortGroup(const dcmi_urma_eid_t* eid)
 {
     const int pgPortId = 0x3F;
     int port = UrmaEidGetPortId(eid);
@@ -147,7 +146,7 @@ int UrmaEidIsPortGroup(const dcmi_urma_eid_t *eid)
  * @param eid URMA eid结构体指针
  * @return int 1为UBOE，0为不是UBOE
  */
-int UrmaEidIsUBOE(const dcmi_urma_eid_t *eid)
+int UrmaEidIsUBOE(const dcmi_urma_eid_t* eid)
 {
     const int uboeMask = 0xc0;
     const int flagPos = 7; // UBOE和UBG标志位的位置
@@ -163,11 +162,11 @@ int UrmaEidIsUBOE(const dcmi_urma_eid_t *eid)
  * @param eid URMA eid结构体指针
  * @return int 1为UBG，0为不是UBG
  */
-int UrmaEidIsUBG(const dcmi_urma_eid_t *eid)
+int UrmaEidIsUBG(const dcmi_urma_eid_t* eid)
 {
     const unsigned char bitMask = 0xc0;
     const unsigned char ubgFlag = 0x80; // UBG的flag
-    const int flagPos = 7; // UBOE和UBG标志位的位置
+    const int flagPos = 7;              // UBOE和UBG标志位的位置
     unsigned char flag = eid->raw[flagPos];
     int bit = (flag & bitMask); //
     if (bit == ubgFlag) {
@@ -176,23 +175,23 @@ int UrmaEidIsUBG(const dcmi_urma_eid_t *eid)
     return 0;
 }
 
-int UrmaEid2CNA(const dcmi_urma_eid_t *eid, char *cna, size_t cnaSize)
+int UrmaEid2CNA(const dcmi_urma_eid_t* eid, char* cna, size_t cnaSize)
 {
     if (cna == NULL || cnaSize == 0) {
         return -1;
     }
     const int ipPos1 = 6; // ip 第一个字节位置
-    const int ipPos2 = 12; 
+    const int ipPos2 = 12;
     const int ipPos3 = 13;
     const int ipPos4 = 14;
     unsigned char ip1 = eid->raw[ipPos1];
     unsigned char ip2 = eid->raw[ipPos2];
     unsigned char ip3 = eid->raw[ipPos3];
     unsigned char ip4 = eid->raw[ipPos4];
-    return sprintf_s(cna, cnaSize, "%u.%u.%u.%u", ip1, ip2, ip3,ip4);
+    return sprintf_s(cna, cnaSize, "%u.%u.%u.%u", ip1, ip2, ip3, ip4);
 }
 
-int UBEntityGetId(const UBEntity *ue)
+int UBEntityGetId(const UBEntity* ue)
 {
     if (ue->eidNum == 0) {
         return -1;
@@ -200,7 +199,7 @@ int UBEntityGetId(const UBEntity *ue)
     return UrmaEidGetFeId(&ue->eidList[0].eid);
 }
 
-int UBEntityGetDieId(const UBEntity *ue)
+int UBEntityGetDieId(const UBEntity* ue)
 {
     if (ue->eidNum == 0) {
         return -1;
@@ -208,7 +207,7 @@ int UBEntityGetDieId(const UBEntity *ue)
     return UrmaEidGetDieId(&ue->eidList[0].eid);
 }
 
-int UBEntityGetPortGroupIdx(const UBEntity *ue)
+int UBEntityGetPortGroupIdx(const UBEntity* ue)
 {
     for (int i = 0; i < (int)ue->eidNum; ++i) {
         if (UrmaEidIsPortGroup(&ue->eidList[i].eid)) {
@@ -219,7 +218,7 @@ int UBEntityGetPortGroupIdx(const UBEntity *ue)
     return -1;
 }
 
-int UBGetMaxEntityId(const UEList *ueList, int dieId)
+int UBGetMaxEntityId(const UEList* ueList, int dieId)
 {
     int maxId = -1;
     for (unsigned int i = 0; i < ueList->ueNum; ++i) {

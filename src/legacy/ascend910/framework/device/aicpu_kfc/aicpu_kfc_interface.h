@@ -14,10 +14,10 @@
 #include <cstdint>
 
 extern "C" {
-__attribute__((visibility("default"))) uint32_t RunAicpuKfcResInit(void *args);
-__attribute__((visibility("default"))) uint32_t RunAicpuRpcSrvLaunch(void *args);
-__attribute__((visibility("default"))) uint32_t RunAicpuRpcSrvGroupLaunch(void *args);
-__attribute__((visibility("default"))) uint32_t RunAicpuKfcSrvLaunch(void *args[]);
+__attribute__((visibility("default"))) uint32_t RunAicpuKfcResInit(void* args);
+__attribute__((visibility("default"))) uint32_t RunAicpuRpcSrvLaunch(void* args);
+__attribute__((visibility("default"))) uint32_t RunAicpuRpcSrvGroupLaunch(void* args);
+__attribute__((visibility("default"))) uint32_t RunAicpuKfcSrvLaunch(void* args[]);
 }
 
 #endif // __MC2_AICPU_INTERFACE_HPP__

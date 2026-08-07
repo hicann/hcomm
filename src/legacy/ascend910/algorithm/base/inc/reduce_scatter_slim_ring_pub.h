@@ -21,27 +21,26 @@ public:
     explicit ReduceScatterSlimRing(const HcclDispatcher dispatcher);
     ~ReduceScatterSlimRing() override;
 
-    HcclResult Prepare(u64 reduceAttrBitMap, HcomCollOpInfo *opInfo = nullptr) override;
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
-    
+    HcclResult Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo = nullptr) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
+
     HcclResult SetNotifyIdx(u32 notifyIdx);
-    HcclResult GetNotifyIdx(u32 &notifyIdx);
+    HcclResult GetNotifyIdx(u32& notifyIdx);
 
 protected:
 private:
-    HcclResult RunReduceScatter(const u32 rank, const u32 rankSize, const std::vector<Slice> &inputSlices,
-                                    const std::vector<Slice> &outputSlices);
-    HcclResult RunVectorSourceReducer(const LINK &link, const std::vector<Slice> &txSlices,
-                                      const std::vector<Slice> &txSlicetemp);
-    HcclResult RunVectorDestRducer(const LINK &link, const std::vector<Slice> &rxSlices,
-                                   const std::vector<Slice> &rxSlicetemp);
-    HcclResult RunVectorFinRducer(const u32 rank,
-                                    const LINK &link, 
-                                    const u32 sliceSize,
-                                    const std::vector<Slice> &inputSlices,
-                                    const std::vector<Slice> &outputSlices);
-    HcclResult RunSourceReducer(const LINK &link, const Slice &txSlice, const Slice &txSlicetemp);
-    HcclResult RunDestRducer(const LINK &link, const Slice &rxSlice, const Slice &rxSlicetemp);
+    HcclResult RunReduceScatter(
+        const u32 rank, const u32 rankSize, const std::vector<Slice>& inputSlices,
+        const std::vector<Slice>& outputSlices);
+    HcclResult
+    RunVectorSourceReducer(const LINK& link, const std::vector<Slice>& txSlices, const std::vector<Slice>& txSlicetemp);
+    HcclResult
+    RunVectorDestRducer(const LINK& link, const std::vector<Slice>& rxSlices, const std::vector<Slice>& rxSlicetemp);
+    HcclResult RunVectorFinRducer(
+        const u32 rank, const LINK& link, const u32 sliceSize, const std::vector<Slice>& inputSlices,
+        const std::vector<Slice>& outputSlices);
+    HcclResult RunSourceReducer(const LINK& link, const Slice& txSlice, const Slice& txSlicetemp);
+    HcclResult RunDestRducer(const LINK& link, const Slice& rxSlice, const Slice& rxSlicetemp);
     HcclResult InitSlice(std::vector<Slice>& outputSlices, u32 rank, u32 rankSize, u32 unitSize);
     LINK linkLeft_;
     LINK linkRight_;
@@ -53,6 +52,6 @@ private:
 
     u32 notifyIdx_ = 0;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* REDUCE_SCATTER_SLIM_RING_PUB_H */

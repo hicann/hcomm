@@ -18,18 +18,18 @@
 namespace Hccl {
 namespace CcuRep {
 
-LoopCall::LoopCall(CcuRepContext *context, const std::string &label) : context(context), label(label)
-{
-    repLoopCall = std::make_shared<CcuRepLoopCall>(label);
-}
-
-void LoopCall::AppendToContext()
-{
-    if (context == nullptr) {
-        THROW<CcuApiException>("context is nullptr");
+    LoopCall::LoopCall(CcuRepContext* context, const std::string& label) : context(context), label(label)
+    {
+        repLoopCall = std::make_shared<CcuRepLoopCall>(label);
     }
-    return context->Append(repLoopCall);
-}
+
+    void LoopCall::AppendToContext()
+    {
+        if (context == nullptr) {
+            THROW<CcuApiException>("context is nullptr");
+        }
+        return context->Append(repLoopCall);
+    }
 
 }; // namespace CcuRep
 }; // namespace Hccl

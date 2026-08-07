@@ -24,6 +24,6 @@ public:
         return signature;
     }
 };
-}
+} // namespace Hccl
 
 #endif // HCCL_CCU_CTX_ARG_MC2_H

@@ -16,16 +16,11 @@
 
 namespace Hccl {
 
-RoceTransportLiteImpl::RoceTransportLiteImpl(std::vector<char> &uniqueId)
-{
-    Init(uniqueId);
-}
+RoceTransportLiteImpl::RoceTransportLiteImpl(std::vector<char>& uniqueId) { Init(uniqueId); }
 
-RoceTransportLiteImpl::~RoceTransportLiteImpl()
-{
-}
+RoceTransportLiteImpl::~RoceTransportLiteImpl() {}
 
-void RoceTransportLiteImpl::Init(std::vector<char> &uniqueId)
+void RoceTransportLiteImpl::Init(std::vector<char>& uniqueId)
 {
     BinaryStream binaryStream(uniqueId);
     u32 type;
@@ -59,7 +54,7 @@ void RoceTransportLiteImpl::Init(std::vector<char> &uniqueId)
     ParseConnVec(connUniqueIds);
 }
 
-void RoceTransportLiteImpl::ParseLocNotifyVec(std::vector<char> &data)
+void RoceTransportLiteImpl::ParseLocNotifyVec(std::vector<char>& data)
 {
     if (notifyNum_ == 0) {
         HCCL_WARNING("[RoceTransportLiteImpl::%s] notifyNum is 0", __func__);
@@ -69,15 +64,15 @@ void RoceTransportLiteImpl::ParseLocNotifyVec(std::vector<char> &data)
     u32 notifySizePerDto = data.size() / notifyNum_;
 
     for (u32 idx = 0; idx < notifyNum_; idx++) {
-        auto              start = data.begin() + idx * notifySizePerDto;
-        auto              end   = start + notifySizePerDto;
+        auto start = data.begin() + idx * notifySizePerDto;
+        auto end = start + notifySizePerDto;
         std::vector<char> dto(start, end);
         localNotifies_.push_back(std::make_unique<NotifyLite>(dto));
         HCCL_INFO("locNotify idx=%u, %s", idx, localNotifies_.back()->Describe().c_str());
     }
 }
 
-void RoceTransportLiteImpl::ParseRmtNotifyVec(std::vector<char> &data)
+void RoceTransportLiteImpl::ParseRmtNotifyVec(std::vector<char>& data)
 {
     if (notifyNum_ == 0) {
         HCCL_WARNING("[RoceTransportLiteImpl::%s] notifyNum is 0", __func__);
@@ -85,8 +80,9 @@ void RoceTransportLiteImpl::ParseRmtNotifyVec(std::vector<char> &data)
     }
 
     u32 rmtBufferSizePerDto = data.size() / notifyNum_;
-    HCCL_INFO("[RoceTransportLiteImpl::%s] Parse remote notify num=%u, sizePerDto=%u",
-        __func__, notifyNum_, rmtBufferSizePerDto);
+    HCCL_INFO(
+        "[RoceTransportLiteImpl::%s] Parse remote notify num=%u, sizePerDto=%u", __func__, notifyNum_,
+        rmtBufferSizePerDto);
 
     BinaryStream binaryStream(data);
     remoteNotifies_.clear();
@@ -103,7 +99,7 @@ void RoceTransportLiteImpl::ParseRmtNotifyVec(std::vector<char> &data)
     }
 }
 
-void RoceTransportLiteImpl::ParseNotifyValueBuffer(std::vector<char> &data)
+void RoceTransportLiteImpl::ParseNotifyValueBuffer(std::vector<char>& data)
 {
     HCCL_INFO("[RoceTransportLiteImpl::%s] Parse notify value buffer", __func__);
 
@@ -117,7 +113,7 @@ void RoceTransportLiteImpl::ParseNotifyValueBuffer(std::vector<char> &data)
     notifyValueBuffer_ = std::make_unique<RmaBufferLite>(addr, size, lkey);
 }
 
-void RoceTransportLiteImpl::ParseLocBufferVec(std::vector<char> &data)
+void RoceTransportLiteImpl::ParseLocBufferVec(std::vector<char>& data)
 {
     if (bufferNum_ == 0) {
         HCCL_WARNING("[RoceTransportLiteImpl::%s] bufferNum is 0", __func__);
@@ -125,8 +121,9 @@ void RoceTransportLiteImpl::ParseLocBufferVec(std::vector<char> &data)
     }
 
     u32 locBufferSizePerDto = data.size() / bufferNum_;
-    HCCL_INFO("[RoceTransportLiteImpl::%s] Parse local buffer num=%u, sizePerDto=%u",
-        __func__, bufferNum_, locBufferSizePerDto);
+    HCCL_INFO(
+        "[RoceTransportLiteImpl::%s] Parse local buffer num=%u, sizePerDto=%u", __func__, bufferNum_,
+        locBufferSizePerDto);
 
     BinaryStream binaryStream(data);
     locBufferVec_.clear();
@@ -143,7 +140,7 @@ void RoceTransportLiteImpl::ParseLocBufferVec(std::vector<char> &data)
     }
 }
 
-void RoceTransportLiteImpl::ParseRmtBufferVec(std::vector<char> &data)
+void RoceTransportLiteImpl::ParseRmtBufferVec(std::vector<char>& data)
 {
     if (bufferNum_ == 0) {
         HCCL_WARNING("[RoceTransportLiteImpl::%s] bufferNum is 0", __func__);
@@ -151,8 +148,9 @@ void RoceTransportLiteImpl::ParseRmtBufferVec(std::vector<char> &data)
     }
 
     u32 rmtBufferSizePerDto = data.size() / bufferNum_;
-    HCCL_INFO("[RoceTransportLiteImpl::%s] Parse remote buffer num=%u, sizePerDto=%u",
-        __func__, bufferNum_, rmtBufferSizePerDto);
+    HCCL_INFO(
+        "[RoceTransportLiteImpl::%s] Parse remote buffer num=%u, sizePerDto=%u", __func__, bufferNum_,
+        rmtBufferSizePerDto);
 
     BinaryStream binaryStream(data);
     rmtBufferVec_.clear();
@@ -169,7 +167,7 @@ void RoceTransportLiteImpl::ParseRmtBufferVec(std::vector<char> &data)
     }
 }
 
-void RoceTransportLiteImpl::ParseConnVec(std::vector<char> &data)
+void RoceTransportLiteImpl::ParseConnVec(std::vector<char>& data)
 {
     if (connNum_ == 0) {
         HCCL_WARNING("[RoceTransportLiteImpl::%s] connNum is 0", __func__);
@@ -177,11 +175,10 @@ void RoceTransportLiteImpl::ParseConnVec(std::vector<char> &data)
     }
 
     u32 connSizePerDto = data.size() / connNum_;
-    HCCL_INFO("[RoceTransportLiteImpl::%s] Parse conn num=%u, sizePerDto=%u",
-        __func__, connNum_, connSizePerDto);
+    HCCL_INFO("[RoceTransportLiteImpl::%s] Parse conn num=%u, sizePerDto=%u", __func__, connNum_, connSizePerDto);
     for (u32 idx = 0; idx < connNum_; idx++) {
-        auto              start = data.begin() + idx * connSizePerDto;
-        auto              end   = start + connSizePerDto;
+        auto start = data.begin() + idx * connSizePerDto;
+        auto end = start + connSizePerDto;
         std::vector<char> connUniqueId(start, end);
         connUniqueIdVec_.emplace_back(connUniqueId);
         std::unique_ptr<RdmaConnLiteV2> connLite;
@@ -191,7 +188,7 @@ void RoceTransportLiteImpl::ParseConnVec(std::vector<char> &data)
     }
 }
 
-RmaBufSliceLite RoceTransportLiteImpl::GetRmaBufSlicelite(const RmaBufferLite &lite) const
+RmaBufSliceLite RoceTransportLiteImpl::GetRmaBufSlicelite(const RmaBufferLite& lite) const
 {
     return RmaBufSliceLite(lite.GetAddr(), lite.GetSize(), lite.GetLkey(), 0);
 }
@@ -200,14 +197,12 @@ RmaBufSliceLite RoceTransportLiteImpl::GetNotifySlicelite(u32 index) const
 {
     (void)index;
     return RmaBufSliceLite(
-        notifyValueBuffer_->GetAddr(), 
-        notifyValueBuffer_->GetSize(), 
-        notifyValueBuffer_->GetLkey(), 0);
+        notifyValueBuffer_->GetAddr(), notifyValueBuffer_->GetSize(), notifyValueBuffer_->GetLkey(), 0);
 }
 
-RmtRmaBufSliceLite RoceTransportLiteImpl::GetRmtRmaBufSliceLite(const Buffer &rmtBuf) const
+RmtRmaBufSliceLite RoceTransportLiteImpl::GetRmtRmaBufSliceLite(const Buffer& rmtBuf) const
 {
-    for (auto &it : rmtBufferVec_) {
+    for (auto& it : rmtBufferVec_) {
         Buffer buf(it.GetAddr(), it.GetSize());
         if (buf.Contains(rmtBuf.GetAddr(), rmtBuf.GetSize())) {
             return RmtRmaBufSliceLite(rmtBuf.GetAddr(), rmtBuf.GetSize(), it.GetRkey(), 0, 0, UINT32_MAX);
@@ -218,7 +213,7 @@ RmtRmaBufSliceLite RoceTransportLiteImpl::GetRmtRmaBufSliceLite(const Buffer &rm
 
 RmtRmaBufSliceLite RoceTransportLiteImpl::GetRmtNotifySliceLite(u32 index) const
 {
-    auto &lite = remoteNotifies_[index];
+    auto& lite = remoteNotifies_[index];
     return RmtRmaBufSliceLite(lite.GetAddr(), lite.GetSize(), lite.GetRkey(), 0, 0, UINT32_MAX);
 }
 
@@ -228,35 +223,35 @@ std::string RoceTransportLiteImpl::Describe() const
 
     u32 idx = 0;
     desc += "localNotifies=[";
-    for (auto &it : localNotifies_) {
+    for (auto& it : localNotifies_) {
         desc += StringFormat("idx=%u, %s;", idx, it->Describe().c_str());
         idx++;
     }
 
     idx = 0;
     desc += "], remoteNotifies=[";
-    for (auto &it : remoteNotifies_) {
+    for (auto& it : remoteNotifies_) {
         desc += StringFormat("idx=%u, %s;", idx, it.Describe().c_str());
         idx++;
     }
 
     idx = 0;
     desc += "], locBufferVec=[";
-    for (auto &it : locBufferVec_) {
+    for (auto& it : locBufferVec_) {
         desc += StringFormat("idx=%u, %s;", idx, it.Describe().c_str());
         idx++;
     }
 
     idx = 0;
     desc += "], rmtBufferVec=[";
-    for (auto &it : rmtBufferVec_) {
+    for (auto& it : rmtBufferVec_) {
         desc += StringFormat("idx=%u, %s;", idx, it.Describe().c_str());
         idx++;
     }
 
     idx = 0;
     desc += "], connVec=[";
-    for (auto &it : connVec_) {
+    for (auto& it : connVec_) {
         desc += StringFormat("idx=%u, %s;", idx, it->Describe().c_str());
         idx++;
     }
@@ -265,18 +260,20 @@ std::string RoceTransportLiteImpl::Describe() const
     return desc;
 }
 
-HcclResult RoceTransportLiteImpl::BuildLocRmaBufferLite(const uintptr_t addr, const size_t size, RmaBufferLite &rmaBufferLite)
+HcclResult
+RoceTransportLiteImpl::BuildLocRmaBufferLite(const uintptr_t addr, const size_t size, RmaBufferLite& rmaBufferLite)
 {
-    HCCL_INFO("[RoceTransportLiteImpl::%s] start to find addr[0x%llx], size[0x%llx] in locBufferVec, whose size is %zu. ",
+    HCCL_INFO(
+        "[RoceTransportLiteImpl::%s] start to find addr[0x%llx], size[0x%llx] in locBufferVec, whose size is %zu. ",
         __func__, addr, size, locBufferVec_.size());
-    
+
     if (locBufferVec_.empty()) {
         HCCL_ERROR("[RoceTransportLiteImpl::%s] locBufferVec is empty.", __func__);
         return HCCL_E_INTERNAL;
     }
 
     bool isAddrInRange = false;
-    for (auto &it : locBufferVec_) {
+    for (auto& it : locBufferVec_) {
         Buffer iterBuf(it.GetAddr(), it.GetSize());
         if (iterBuf.Contains(addr, size)) {
             rmaBufferLite = RmaBufferLite(addr, size, it.GetLkey());
@@ -286,7 +283,9 @@ HcclResult RoceTransportLiteImpl::BuildLocRmaBufferLite(const uintptr_t addr, co
     }
 
     if (!isAddrInRange) {
-        HCCL_WARNING("[RoceTransportLiteImpl::%s] addr[0x%llx], size[0x%llx] not in any range of locBufferVec. The token of the first locBuffer is used.",
+        HCCL_WARNING(
+            "[RoceTransportLiteImpl::%s] addr[0x%llx], size[0x%llx] not in any range of locBufferVec. The token of the "
+            "first locBuffer is used.",
             __func__, addr, size);
         rmaBufferLite = RmaBufferLite(addr, size, locBufferVec_[0].GetLkey());
         return HCCL_SUCCESS;
@@ -295,7 +294,7 @@ HcclResult RoceTransportLiteImpl::BuildLocRmaBufferLite(const uintptr_t addr, co
     return HCCL_SUCCESS;
 }
 
-void RoceTransportLiteImpl::Read(const RmaBufferLite &loc, const Buffer &rmt, const StreamLite &stream)
+void RoceTransportLiteImpl::Read(const RmaBufferLite& loc, const Buffer& rmt, const StreamLite& stream)
 {
     u64 dbAddr = 0;
     u64 dbValue = 0;
@@ -316,18 +315,18 @@ void RoceTransportLiteImpl::Read(const RmaBufferLite &loc, const Buffer &rmt, co
 
     // 上报Profiling任务
     ReportDmaTask(
-        reinterpret_cast<const void *>(locRmaBufSliceLite.GetAddr()),
-        reinterpret_cast<const void *>(rmtRmaBufSliceLite.GetAddr()), locRmaBufSliceLite.GetSize(), stream,
-        taskId, TaskParamType::TASK_RDMA, DmaOp::HCCL_DMA_READ, INVALID_VALUE_NOTIFYID, UINT32_MAX, __func__);
+        reinterpret_cast<const void*>(locRmaBufSliceLite.GetAddr()),
+        reinterpret_cast<const void*>(rmtRmaBufSliceLite.GetAddr()), locRmaBufSliceLite.GetSize(), stream, taskId,
+        TaskParamType::TASK_RDMA, DmaOp::HCCL_DMA_READ, INVALID_VALUE_NOTIFYID, UINT32_MAX, __func__);
 
     // Poll Cq
-    constexpr int32_t POLL_NUM = 1;         // poll cqe num
-    constexpr int32_t POLL_TIMEOUT = 5;     // 5 ms
+    constexpr int32_t POLL_NUM = 1;     // poll cqe num
+    constexpr int32_t POLL_TIMEOUT = 5; // 5 ms
     std::vector<int32_t> errList = {};
     connVec_[0]->PollCq(POLL_NUM, POLL_TIMEOUT, errList, dbAddr, dbValue);
 }
 
-void RoceTransportLiteImpl::Write(const RmaBufferLite &loc, const Buffer &rmt, const StreamLite &stream)
+void RoceTransportLiteImpl::Write(const RmaBufferLite& loc, const Buffer& rmt, const StreamLite& stream)
 {
     u64 dbAddr = 0;
     u64 dbValue = 0;
@@ -348,19 +347,19 @@ void RoceTransportLiteImpl::Write(const RmaBufferLite &loc, const Buffer &rmt, c
 
     // 上报Profiling任务
     ReportDmaTask(
-        reinterpret_cast<const void *>(locRmaBufSliceLite.GetAddr()),
-        reinterpret_cast<const void *>(rmtRmaBufSliceLite.GetAddr()), locRmaBufSliceLite.GetSize(), stream,
-        taskId, TaskParamType::TASK_RDMA, DmaOp::HCCL_DMA_WRITE, INVALID_VALUE_NOTIFYID, UINT32_MAX, __func__);
+        reinterpret_cast<const void*>(locRmaBufSliceLite.GetAddr()),
+        reinterpret_cast<const void*>(rmtRmaBufSliceLite.GetAddr()), locRmaBufSliceLite.GetSize(), stream, taskId,
+        TaskParamType::TASK_RDMA, DmaOp::HCCL_DMA_WRITE, INVALID_VALUE_NOTIFYID, UINT32_MAX, __func__);
 
     // Poll Cq
-    constexpr int32_t POLL_NUM = 1;         // poll cqe num
-    constexpr int32_t POLL_TIMEOUT = 5;     // 5 ms
+    constexpr int32_t POLL_NUM = 1;     // poll cqe num
+    constexpr int32_t POLL_TIMEOUT = 5; // 5 ms
     std::vector<int32_t> errList = {};
     connVec_[0]->PollCq(POLL_NUM, POLL_TIMEOUT, errList, dbAddr, dbValue);
 }
 
-void RoceTransportLiteImpl::WriteReduce(const RmaBufferLite &loc, const Buffer &rmt, const ReduceIn &reduceIn,
-                                        const StreamLite &stream)
+void RoceTransportLiteImpl::WriteReduce(
+    const RmaBufferLite& loc, const Buffer& rmt, const ReduceIn& reduceIn, const StreamLite& stream)
 {
     u64 dbAddr = 0;
     u64 dbValue = 0;
@@ -372,27 +371,27 @@ void RoceTransportLiteImpl::WriteReduce(const RmaBufferLite &loc, const Buffer &
     auto rmtRmaBufSliceLite = GetRmtRmaBufSliceLite(rmt);
 
     // Post Wqe && return dbValue
-    connVec_[0]->WriteReduce(locRmaBufSliceLite, rmtRmaBufSliceLite, cfg, reduceIn.dataType, reduceIn.reduceOp, 
-                             dbAddr, dbValue);
+    connVec_[0]->WriteReduce(
+        locRmaBufSliceLite, rmtRmaBufSliceLite, cfg, reduceIn.dataType, reduceIn.reduceOp, dbAddr, dbValue);
 
     // Ring Doorbell
     BuildRdmaDbSendTask(stream, dbAddr, dbValue);
 
     // 上报Profiling任务
     ReportReduceTask(
-        reinterpret_cast<const void *>(locRmaBufSliceLite.GetAddr()),
-        reinterpret_cast<const void *>(rmtRmaBufSliceLite.GetAddr()), locRmaBufSliceLite.GetSize(), reduceIn, stream,
+        reinterpret_cast<const void*>(locRmaBufSliceLite.GetAddr()),
+        reinterpret_cast<const void*>(rmtRmaBufSliceLite.GetAddr()), locRmaBufSliceLite.GetSize(), reduceIn, stream,
         taskId, TaskParamType::TASK_REDUCE_INLINE, INVALID_VALUE_NOTIFYID, UINT32_MAX, __func__);
 
     // Poll Cq
-    constexpr int32_t POLL_NUM = 1;         // poll cqe num
-    constexpr int32_t POLL_TIMEOUT = 5;     // 5 ms
+    constexpr int32_t POLL_NUM = 1;     // poll cqe num
+    constexpr int32_t POLL_TIMEOUT = 5; // 5 ms
     std::vector<int32_t> errList = {};
     connVec_[0]->PollCq(POLL_NUM, POLL_TIMEOUT, errList, dbAddr, dbValue);
 }
 
-void RoceTransportLiteImpl::WriteWithNotify(const RmaBufferLite &loc, const Buffer &rmt,
-                                            const WithNotifyIn &withNotify, const StreamLite &stream)
+void RoceTransportLiteImpl::WriteWithNotify(
+    const RmaBufferLite& loc, const Buffer& rmt, const WithNotifyIn& withNotify, const StreamLite& stream)
 {
     auto taskId = stream.GetRtsq()->GetTaskId();
     u64 dbAddr = 0;
@@ -402,31 +401,32 @@ void RoceTransportLiteImpl::WriteWithNotify(const RmaBufferLite &loc, const Buff
     SetFenceConfig(cfg);
     auto locRmaBufSliceLite = GetRmaBufSlicelite(loc);
     auto rmtRmaBufSliceLite = GetRmtRmaBufSliceLite(rmt);
-    auto locNotifySliceLite = GetNotifySlicelite(withNotify.index_);        // 普通Notify
+    auto locNotifySliceLite = GetNotifySlicelite(withNotify.index_); // 普通Notify
     auto rmtNotifySliceLite = GetRmtNotifySliceLite(withNotify.index_);
 
     // Post Wqe && return dbValue
-    connVec_[0]->WriteWithNotify(locRmaBufSliceLite, rmtRmaBufSliceLite, locNotifySliceLite, rmtNotifySliceLite,
-                                 cfg, dbAddr, dbValue);
+    connVec_[0]->WriteWithNotify(
+        locRmaBufSliceLite, rmtRmaBufSliceLite, locNotifySliceLite, rmtNotifySliceLite, cfg, dbAddr, dbValue);
 
     // Ring Doorbell
     BuildRdmaDbSendTask(stream, dbAddr, dbValue);
 
     // 上报Profiling任务
     ReportDmaTask(
-        reinterpret_cast<const void *>(locRmaBufSliceLite.GetAddr()),
-        reinterpret_cast<const void *>(rmtRmaBufSliceLite.GetAddr()), locRmaBufSliceLite.GetSize(), stream, taskId,
+        reinterpret_cast<const void*>(locRmaBufSliceLite.GetAddr()),
+        reinterpret_cast<const void*>(rmtRmaBufSliceLite.GetAddr()), locRmaBufSliceLite.GetSize(), stream, taskId,
         TaskParamType::TASK_WRITE_WITH_NOTIFY, DmaOp::HCCL_DMA_WRITE, rmtNotifySliceLite.GetNotifyId(), 1, __func__);
 
     // Poll Cq
-    constexpr int32_t POLL_NUM = 2;         // poll cqe num
-    constexpr int32_t POLL_TIMEOUT = 5;     // 5 ms
+    constexpr int32_t POLL_NUM = 2;     // poll cqe num
+    constexpr int32_t POLL_TIMEOUT = 5; // 5 ms
     std::vector<int32_t> errList = {};
     connVec_[0]->PollCq(POLL_NUM, POLL_TIMEOUT, errList, dbAddr, dbValue);
 }
 
-void RoceTransportLiteImpl::WriteReduceWithNotify(const RmaBufferLite &loc, const Buffer &rmt, const ReduceIn &reduceIn,
-                                                   const WithNotifyIn &withNotify, const StreamLite &stream)
+void RoceTransportLiteImpl::WriteReduceWithNotify(
+    const RmaBufferLite& loc, const Buffer& rmt, const ReduceIn& reduceIn, const WithNotifyIn& withNotify,
+    const StreamLite& stream)
 {
     u64 dbAddr = 0;
     u64 dbValue = 0;
@@ -434,27 +434,28 @@ void RoceTransportLiteImpl::WriteReduceWithNotify(const RmaBufferLite &loc, cons
 
     auto locRmaBufSliceLite = GetRmaBufSlicelite(loc);
     auto rmtRmaBufSliceLite = GetRmtRmaBufSliceLite(rmt);
-    auto locNotifySliceLite = GetNotifySlicelite(withNotify.index_);    // 普通Notify
+    auto locNotifySliceLite = GetNotifySlicelite(withNotify.index_); // 普通Notify
     auto rmtNotifySliceLite = GetRmtNotifySliceLite(withNotify.index_);
     SqeConfigLite cfg;
     SetFenceConfig(cfg);
 
     // Post Wqe && return dbValue
-    connVec_[0]->WriteReduceWithNotify(locRmaBufSliceLite, rmtRmaBufSliceLite, locNotifySliceLite,
-                                       rmtNotifySliceLite, cfg, reduceIn.dataType, reduceIn.reduceOp, dbAddr, dbValue);
+    connVec_[0]->WriteReduceWithNotify(
+        locRmaBufSliceLite, rmtRmaBufSliceLite, locNotifySliceLite, rmtNotifySliceLite, cfg, reduceIn.dataType,
+        reduceIn.reduceOp, dbAddr, dbValue);
 
     // Ring Doorbell
     BuildRdmaDbSendTask(stream, dbAddr, dbValue);
 
     // 上报Profiling任务
     ReportReduceTask(
-        reinterpret_cast<const void *>(locRmaBufSliceLite.GetAddr()),
-        reinterpret_cast<const void *>(rmtRmaBufSliceLite.GetAddr()), locRmaBufSliceLite.GetSize(), reduceIn, stream,
+        reinterpret_cast<const void*>(locRmaBufSliceLite.GetAddr()),
+        reinterpret_cast<const void*>(rmtRmaBufSliceLite.GetAddr()), locRmaBufSliceLite.GetSize(), reduceIn, stream,
         taskId, TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY, rmtNotifySliceLite.GetNotifyId(), 1, __func__);
 
     // Poll Cq
-    constexpr int32_t POLL_NUM = 2;         // poll cqe num
-    constexpr int32_t POLL_TIMEOUT = 5;     // 5 ms
+    constexpr int32_t POLL_NUM = 2;     // poll cqe num
+    constexpr int32_t POLL_TIMEOUT = 5; // 5 ms
     std::vector<int32_t> errList = {};
     connVec_[0]->PollCq(POLL_NUM, POLL_TIMEOUT, errList, dbAddr, dbValue);
 }
@@ -466,7 +467,7 @@ HcclResult RoceTransportLiteImpl::Fence()
     return HCCL_SUCCESS;
 }
 
-void RoceTransportLiteImpl::Post(u32 index, const StreamLite &stream)
+void RoceTransportLiteImpl::Post(u32 index, const StreamLite& stream)
 {
     u64 dbAddr = 0;
     u64 dbValue = 0;
@@ -485,19 +486,18 @@ void RoceTransportLiteImpl::Post(u32 index, const StreamLite &stream)
 
     // 上报Profiling任务
     ReportDmaTask(
-        reinterpret_cast<const void *>(locNotifySliceLite.GetAddr()),
-        reinterpret_cast<const void *>(rmtNotifySliceLite.GetAddr()), locNotifySliceLite.GetSize(), stream, taskId,
+        reinterpret_cast<const void*>(locNotifySliceLite.GetAddr()),
+        reinterpret_cast<const void*>(rmtNotifySliceLite.GetAddr()), locNotifySliceLite.GetSize(), stream, taskId,
         TaskParamType::TASK_RDMA, DmaOp::HCCL_DMA_WRITE, rmtNotifySliceLite.GetNotifyId(), 1, __func__);
 
     // Poll Cq
-    constexpr int32_t POLL_NUM = 1;         // poll cqe num
-    constexpr int32_t POLL_TIMEOUT = 5;     // 5 ms
+    constexpr int32_t POLL_NUM = 1;     // poll cqe num
+    constexpr int32_t POLL_TIMEOUT = 5; // 5 ms
     std::vector<int32_t> errList = {};
     connVec_[0]->PollCq(POLL_NUM, POLL_TIMEOUT, errList, dbAddr, dbValue);
 }
 
-HcclResult RoceTransportLiteImpl::PollCq(
-    int32_t numEntries, int32_t timeOut, std::vector<int32_t> &errList)
+HcclResult RoceTransportLiteImpl::PollCq(int32_t numEntries, int32_t timeOut, std::vector<int32_t>& errList)
 {
     u64 dbAddr = 0;
     u64 cqDbValue = 0;
@@ -509,7 +509,7 @@ HcclResult RoceTransportLiteImpl::PollCq(
     return ret;
 }
 
-void RoceTransportLiteImpl::WaitWithTimeout(u32 index, const StreamLite &stream, u32 timeout)
+void RoceTransportLiteImpl::WaitWithTimeout(u32 index, const StreamLite& stream, u32 timeout)
 {
     auto taskId = stream.GetRtsq()->GetTaskId();
     auto notifyId = localNotifies_[index]->GetId();
@@ -520,27 +520,27 @@ void RoceTransportLiteImpl::WaitWithTimeout(u32 index, const StreamLite &stream,
 }
 
 // 下发Rtsq sqe, 敲DB
-void RoceTransportLiteImpl::BuildRdmaDbSendTask(const StreamLite &stream, u64 remoteAddr, u64 dbValue) const
+void RoceTransportLiteImpl::BuildRdmaDbSendTask(const StreamLite& stream, u64 remoteAddr, u64 dbValue) const
 {
     stream.GetRtsq()->RdmaDbSend(remoteAddr, dbValue);
 }
 
 // 下发Rtsq sqe, NotifyWait
-void RoceTransportLiteImpl::BuildNotifyWaitTask(u32 notifyId, const StreamLite &stream, u32 timeout) const
+void RoceTransportLiteImpl::BuildNotifyWaitTask(u32 notifyId, const StreamLite& stream, u32 timeout) const
 {
     stream.GetRtsq()->NotifyWait(notifyId, timeout);
 }
 
-void RoceTransportLiteImpl::SetFenceConfig(SqeConfigLite &cfg)
+void RoceTransportLiteImpl::SetFenceConfig(SqeConfigLite& cfg)
 {
     cfg.cqeEn = true;
     cfg.fence = fence_ ? 1 : 0;
     fence_ = false;
 }
 
-void RoceTransportLiteImpl::ReportDmaTask(const void *src, const void *dst, u64 size, const StreamLite &stream,
-                                          u32 taskId, TaskParamType taskType, DmaOp dmaOp, u64 notifyId,
-                                          u32 notifyValue, const char *funcName)
+void RoceTransportLiteImpl::ReportDmaTask(
+    const void* src, const void* dst, u64 size, const StreamLite& stream, u32 taskId, TaskParamType taskType,
+    DmaOp dmaOp, u64 notifyId, u32 notifyValue, const char* funcName)
 {
     // 未开启任务上报时直接返回
     if (!IsReportTask()) {
@@ -549,31 +549,32 @@ void RoceTransportLiteImpl::ReportDmaTask(const void *src, const void *dst, u64 
 
     // 填充DMA任务信息
     TaskParam taskParam{};
-    taskParam.taskType                 = taskType;
-    taskParam.beginTime                = ProfGetCurCpuTimestamp();
-    taskParam.taskPara.DMA.src         = src;
-    taskParam.taskPara.DMA.dst         = dst;
-    taskParam.taskPara.DMA.size        = size;
-    taskParam.taskPara.DMA.notifyID    = notifyId;
+    taskParam.taskType = taskType;
+    taskParam.beginTime = ProfGetCurCpuTimestamp();
+    taskParam.taskPara.DMA.src = src;
+    taskParam.taskPara.DMA.dst = dst;
+    taskParam.taskPara.DMA.size = size;
+    taskParam.taskPara.DMA.notifyID = notifyId;
     taskParam.taskPara.DMA.notifyValue = notifyValue;
-    taskParam.taskPara.DMA.linkType    = DfxLinkType::ROCE;
-    taskParam.taskPara.DMA.dmaOp       = dmaOp;
+    taskParam.taskPara.DMA.linkType = DfxLinkType::ROCE;
+    taskParam.taskPara.DMA.dmaOp = dmaOp;
 
-    HCCL_INFO("[RoceTransportLiteImpl::%s][ProfilingTaskParam] sqId[%u], taskId[%u], taskType[%s], "
-              "beginTime[%llu], src[%p], dst[%p], size[%zu], notifyId[%llu], notifyValue[%u], linkType[%s], "
-              "dmaOp[%s]",
-              funcName, stream.GetSqId(), taskId, taskParam.taskType.Describe().c_str(), taskParam.beginTime,
-              taskParam.taskPara.DMA.src, taskParam.taskPara.DMA.dst, taskParam.taskPara.DMA.size,
-              taskParam.taskPara.DMA.notifyID, taskParam.taskPara.DMA.notifyValue,
-              taskParam.taskPara.DMA.linkType.Describe().c_str(), taskParam.taskPara.DMA.dmaOp.Describe().c_str());
+    HCCL_INFO(
+        "[RoceTransportLiteImpl::%s][ProfilingTaskParam] sqId[%u], taskId[%u], taskType[%s], "
+        "beginTime[%llu], src[%p], dst[%p], size[%zu], notifyId[%llu], notifyValue[%u], linkType[%s], "
+        "dmaOp[%s]",
+        funcName, stream.GetSqId(), taskId, taskParam.taskType.Describe().c_str(), taskParam.beginTime,
+        taskParam.taskPara.DMA.src, taskParam.taskPara.DMA.dst, taskParam.taskPara.DMA.size,
+        taskParam.taskPara.DMA.notifyID, taskParam.taskPara.DMA.notifyValue,
+        taskParam.taskPara.DMA.linkType.Describe().c_str(), taskParam.taskPara.DMA.dmaOp.Describe().c_str());
 
     // 保存任务信息
     newCallback_(stream.GetSqId(), taskId, taskParam, reinterpret_cast<u64>(this));
 }
 
-void RoceTransportLiteImpl::ReportReduceTask(const void *src, const void *dst, u64 size, const ReduceIn &reduceIn,
-                                             const StreamLite &stream, u32 taskId, TaskParamType taskType, u64 notifyId,
-                                             u32 notifyValue, const char *funcName)
+void RoceTransportLiteImpl::ReportReduceTask(
+    const void* src, const void* dst, u64 size, const ReduceIn& reduceIn, const StreamLite& stream, u32 taskId,
+    TaskParamType taskType, u64 notifyId, u32 notifyValue, const char* funcName)
 {
     // 未开启任务上报时直接返回
     if (!IsReportTask()) {
@@ -582,32 +583,32 @@ void RoceTransportLiteImpl::ReportReduceTask(const void *src, const void *dst, u
 
     // 填充Reduce任务信息
     TaskParam taskParam{};
-    taskParam.taskType                       = taskType;
-    taskParam.beginTime                      = ProfGetCurCpuTimestamp();
-    taskParam.taskPara.Reduce.src            = src;
-    taskParam.taskPara.Reduce.dst            = dst;
-    taskParam.taskPara.Reduce.size           = size;
-    taskParam.taskPara.Reduce.notifyID       = notifyId;
-    taskParam.taskPara.Reduce.notifyValue    = notifyValue;
-    taskParam.taskPara.Reduce.linkType       = DfxLinkType::ROCE;
-    taskParam.taskPara.Reduce.reduceOp       = ConvertReduceOpToHcclReduceOp(reduceIn.reduceOp);
-    taskParam.taskPara.Reduce.dataType       = DataTypeToHcclDataType(reduceIn.dataType);
+    taskParam.taskType = taskType;
+    taskParam.beginTime = ProfGetCurCpuTimestamp();
+    taskParam.taskPara.Reduce.src = src;
+    taskParam.taskPara.Reduce.dst = dst;
+    taskParam.taskPara.Reduce.size = size;
+    taskParam.taskPara.Reduce.notifyID = notifyId;
+    taskParam.taskPara.Reduce.notifyValue = notifyValue;
+    taskParam.taskPara.Reduce.linkType = DfxLinkType::ROCE;
+    taskParam.taskPara.Reduce.reduceOp = ConvertReduceOpToHcclReduceOp(reduceIn.reduceOp);
+    taskParam.taskPara.Reduce.dataType = DataTypeToHcclDataType(reduceIn.dataType);
 
-    HCCL_INFO("[RoceTransportLiteImpl::%s][ProfilingTaskParam] sqId[%u], taskId[%u], taskType[%s], "
-              "beginTime[%llu], src[%p], dst[%p], size[%zu], notifyId[%llu], notifyValue[%u], linkType[%s], "
-              "dataType[%d], reduceOp[%d]",
-              funcName, stream.GetSqId(), taskId, taskParam.taskType.Describe().c_str(), taskParam.beginTime,
-              taskParam.taskPara.Reduce.src, taskParam.taskPara.Reduce.dst, taskParam.taskPara.Reduce.size,
-              taskParam.taskPara.Reduce.notifyID, taskParam.taskPara.Reduce.notifyValue,
-              taskParam.taskPara.Reduce.linkType.Describe().c_str(),
-              static_cast<int>(taskParam.taskPara.Reduce.dataType),
-              static_cast<int>(taskParam.taskPara.Reduce.reduceOp));
+    HCCL_INFO(
+        "[RoceTransportLiteImpl::%s][ProfilingTaskParam] sqId[%u], taskId[%u], taskType[%s], "
+        "beginTime[%llu], src[%p], dst[%p], size[%zu], notifyId[%llu], notifyValue[%u], linkType[%s], "
+        "dataType[%d], reduceOp[%d]",
+        funcName, stream.GetSqId(), taskId, taskParam.taskType.Describe().c_str(), taskParam.beginTime,
+        taskParam.taskPara.Reduce.src, taskParam.taskPara.Reduce.dst, taskParam.taskPara.Reduce.size,
+        taskParam.taskPara.Reduce.notifyID, taskParam.taskPara.Reduce.notifyValue,
+        taskParam.taskPara.Reduce.linkType.Describe().c_str(), static_cast<int>(taskParam.taskPara.Reduce.dataType),
+        static_cast<int>(taskParam.taskPara.Reduce.reduceOp));
 
     // 保存任务信息
     newCallback_(stream.GetSqId(), taskId, taskParam, reinterpret_cast<u64>(this));
 }
 
-void RoceTransportLiteImpl::ReportNotifyWaitTask(u64 notifyId, const StreamLite &stream, u32 taskId)
+void RoceTransportLiteImpl::ReportNotifyWaitTask(u64 notifyId, const StreamLite& stream, u32 taskId)
 {
     // 未开启任务上报时直接返回
     if (!IsReportTask()) {
@@ -616,15 +617,16 @@ void RoceTransportLiteImpl::ReportNotifyWaitTask(u64 notifyId, const StreamLite 
 
     // 填充Wait任务信息
     TaskParam taskParam{};
-    taskParam.taskType                 = TaskParamType::TASK_NOTIFY_WAIT;
-    taskParam.beginTime                = ProfGetCurCpuTimestamp();
+    taskParam.taskType = TaskParamType::TASK_NOTIFY_WAIT;
+    taskParam.beginTime = ProfGetCurCpuTimestamp();
     taskParam.taskPara.Notify.notifyID = notifyId;
-    taskParam.taskPara.Notify.value    = 1;
+    taskParam.taskPara.Notify.value = 1;
 
-    HCCL_INFO("[RoceTransportLiteImpl::%s][ProfilingTaskParam] sqId[%u], taskId[%u], taskType[%s], "
-              "beginTime[%llu], notifyId[%llu], notifyValue[%u]",
-              __func__, stream.GetSqId(), taskId, taskParam.taskType.Describe().c_str(), taskParam.beginTime,
-              taskParam.taskPara.Notify.notifyID, taskParam.taskPara.Notify.value);
+    HCCL_INFO(
+        "[RoceTransportLiteImpl::%s][ProfilingTaskParam] sqId[%u], taskId[%u], taskType[%s], "
+        "beginTime[%llu], notifyId[%llu], notifyValue[%u]",
+        __func__, stream.GetSqId(), taskId, taskParam.taskType.Describe().c_str(), taskParam.beginTime,
+        taskParam.taskPara.Notify.notifyID, taskParam.taskPara.Notify.value);
 
     // 保存任务信息
     newCallback_(stream.GetSqId(), taskId, taskParam, reinterpret_cast<u64>(this));

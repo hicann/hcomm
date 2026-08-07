@@ -25,18 +25,20 @@ public:
     void SetDisableLiteThread(bool disable);
     HcclResult DeInit();
     HcclResult GetRdmaHandle(RdmaHandle& rdmaHandle);
-    HcclResult GetCqeErrInfo(struct CqeErrInfo *infoList, u32 *num);
-    HcclResult GetCqeErrInfoByQpn(u32 qpn, struct HcclErrCqeInfo *errCqeList, u32 *num);
+    HcclResult GetCqeErrInfo(struct CqeErrInfo* infoList, u32* num);
+    HcclResult GetCqeErrInfoByQpn(u32 qpn, struct HcclErrCqeInfo* errCqeList, u32* num);
     HcclResult GetNotifyMrInfo(struct MrInfoT& mrInfo);
     HcclResult GetResvMemPoolIdByType(u32 type, u32& poolId);
+
 private:
     RdmaResourceManager();
     ~RdmaResourceManager();
     RdmaResourceManager(RdmaResourceManager const&) = delete;
     RdmaResourceManager(RdmaResourceManager&&) = delete;
     RdmaResourceManager& operator=(RdmaResourceManager const&) = delete;
-    RdmaResourceManager& operator=(RdmaResourceManager &&) = delete;
+    RdmaResourceManager& operator=(RdmaResourceManager&&) = delete;
     HcclResult InitResvMemInfo();
+
 private:
     s32 deviceLogicId_{};
     u32 devicePhyId_{};
@@ -45,14 +47,14 @@ private:
     u32 port_{MAX_VALUE_U32};
     RdmaHandle rdmaHandle_{};
     std::mutex cqeErrMapMutex_;
-    std::map<u32, std::queue<struct CqeErrInfo>> cqeErrPerQP_{}; //key:qp, value:cqe_err_info queue
+    std::map<u32, std::queue<struct CqeErrInfo>> cqeErrPerQP_{}; // key:qp, value:cqe_err_info queue
     MrHandle mrHandle_{};
     u64 notifyBaseVa_ = 0;
     u64 notifyTotalSize_ = 0;
-    struct MrInfoT notifyMrInfo_{};
-    std::unordered_map<u32, u32> resvMemInfo_{}; //type:pollId
+    struct MrInfoT notifyMrInfo_ {};
+    std::unordered_map<u32, u32> resvMemInfo_{}; // type:pollId
 };
 
-}  // namespace hccl
+} // namespace hccl
 
 #endif

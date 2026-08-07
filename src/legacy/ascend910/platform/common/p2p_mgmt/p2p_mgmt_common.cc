@@ -10,7 +10,6 @@
 
 #include "p2p_mgmt.h"
 
-
 namespace hccl {
 
 HcclResult P2PMgmtPub::EnableP2P(std::vector<uint32_t> remoteDevices)
@@ -27,4 +26,4 @@ HcclResult P2PMgmtPub::WaitP2PEnabled(std::vector<uint32_t> remoteDevices, std::
 {
     return P2PMgmt::Instance().WaitP2PEnabled(remoteDevices, needStop);
 }
-}
+} // namespace hccl

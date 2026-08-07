@@ -40,27 +40,29 @@ private:
     HcclResult ProcCcuNode4Async(TaskNodePtr ccuNode, RankId rankId);
     HcclResult ProcAsyncNode(TaskNodePtr ccuHead, TaskNodePtr currNode, uint32_t virtualQueId);
 
-    HcclResult ProcLoopNode(TaskNodePtr ccuHead, LoopHeadTailPairs &loopNodes, RankId rankId);
-    HcclResult PorcessLoopHeadTailNode(const LoopHeadTailPairs &loopNodes, uint32_t loopCnt, TaskNodePtr &beforLoopNode,
-        TaskNodePtr &afterLoopNode, RankId rankId);
-    HcclResult CreateLoopVirStream(RankId currRank, TaskNodePtr ccuHead, const LoopHeadTailPairs &loopNodes,
-        std::vector<LoopPostWaitNodes> &loopHeadTailNodes);
+    HcclResult ProcLoopNode(TaskNodePtr ccuHead, LoopHeadTailPairs& loopNodes, RankId rankId);
+    HcclResult PorcessLoopHeadTailNode(
+        const LoopHeadTailPairs& loopNodes, uint32_t loopCnt, TaskNodePtr& beforLoopNode, TaskNodePtr& afterLoopNode,
+        RankId rankId);
+    HcclResult CreateLoopVirStream(
+        RankId currRank, TaskNodePtr ccuHead, const LoopHeadTailPairs& loopNodes,
+        std::vector<LoopPostWaitNodes>& loopHeadTailNodes);
     HcclResult ModifyNodeQueIdx(
-        uint32_t virtualQueId, uint32_t relQueId, TaskNodePtr loopStart, LoopPostWaitNodes &loopPostWaitNodes);
-    HcclResult PorcessAsyncHeadTailNode(TaskNodePtr currNode, TaskNodePtr &locPostNode,
-        std::vector<TaskNodePtr> &beforeAsynNodes, std::vector<TaskNodePtr> &locPostAsynChild);
-    HcclResult RestorRealFlowConnection4Async(TaskNodePtr ccuHead, 
-    TaskNodePtr locPostNode, TaskNodePtr localPostHeadNode, std::vector<TaskNodePtr> &locPostAsynChild);
+        uint32_t virtualQueId, uint32_t relQueId, TaskNodePtr loopStart, LoopPostWaitNodes& loopPostWaitNodes);
+    HcclResult PorcessAsyncHeadTailNode(
+        TaskNodePtr currNode, TaskNodePtr& locPostNode, std::vector<TaskNodePtr>& beforeAsynNodes,
+        std::vector<TaskNodePtr>& locPostAsynChild);
+    HcclResult RestorRealFlowConnection4Async(
+        TaskNodePtr ccuHead, TaskNodePtr locPostNode, TaskNodePtr localPostHeadNode,
+        std::vector<TaskNodePtr>& locPostAsynChild);
 
 private:
     std::set<TaskTypeStub> locAsyncNodes_{TaskTypeStub::LOCAL_COPY, TaskTypeStub::LOCAL_REDUCE};
-    std::set<TaskTypeStub> rmtAsyncNodes_{TaskTypeStub::READ, TaskTypeStub::READ_REDUCE, TaskTypeStub::WRITE, TaskTypeStub::WRITE_REDUCE};
-    std::set<TaskTypeStub> asyncNodes_{TaskTypeStub::LOCAL_COPY,
-        TaskTypeStub::LOCAL_REDUCE,
-        TaskTypeStub::READ,
-        TaskTypeStub::READ_REDUCE,
-        TaskTypeStub::WRITE,
-        TaskTypeStub::WRITE_REDUCE};
+    std::set<TaskTypeStub> rmtAsyncNodes_{
+        TaskTypeStub::READ, TaskTypeStub::READ_REDUCE, TaskTypeStub::WRITE, TaskTypeStub::WRITE_REDUCE};
+    std::set<TaskTypeStub> asyncNodes_{TaskTypeStub::LOCAL_COPY, TaskTypeStub::LOCAL_REDUCE,
+                                       TaskTypeStub::READ,       TaskTypeStub::READ_REDUCE,
+                                       TaskTypeStub::WRITE,      TaskTypeStub::WRITE_REDUCE};
 };
 } // namespace HcclSim
 

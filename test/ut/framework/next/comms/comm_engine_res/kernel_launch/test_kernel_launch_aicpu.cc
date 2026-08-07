@@ -27,12 +27,14 @@ extern HcclResult groupLaunchA5();
 
 class TestKernelLaunchAicpu : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         BaseInit::SetUp();
         SetHcclP2pTaskNums(0);
         GetHcclGroupCommList().clear();
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
         SetHcclP2pTaskNums(0);
@@ -46,31 +48,31 @@ static aclrtFuncHandle g_mockFuncHandle = reinterpret_cast<aclrtFuncHandle>(0x70
 static aclrtArgsHandle g_mockArgsHandle = reinterpret_cast<aclrtArgsHandle>(0x8000);
 static aclrtParamHandle g_mockParamHandle = reinterpret_cast<aclrtParamHandle>(0x9000);
 
-HcclResult MockGetUsrStream(aclrtStream &usrStream)
+HcclResult MockGetUsrStream(aclrtStream& usrStream)
 {
     usrStream = g_usrStream;
     return HCCL_SUCCESS;
 }
 
-HcclResult MockHcclGetNotifyNumInThread(HcclComm, ThreadHandle, CommEngine, uint32_t *notifyNum)
+HcclResult MockHcclGetNotifyNumInThread(HcclComm, ThreadHandle, CommEngine, uint32_t* notifyNum)
 {
     *notifyNum = g_notifyNum;
     return HCCL_SUCCESS;
 }
 
-aclError MockAclrtBinaryGetFunction(const aclrtBinHandle, const char *, aclrtFuncHandle *funcHandle)
+aclError MockAclrtBinaryGetFunction(const aclrtBinHandle, const char*, aclrtFuncHandle* funcHandle)
 {
     *funcHandle = g_mockFuncHandle;
     return ACL_SUCCESS;
 }
 
-aclError MockAclrtKernelArgsInit(aclrtFuncHandle, aclrtArgsHandle *argsHandle)
+aclError MockAclrtKernelArgsInit(aclrtFuncHandle, aclrtArgsHandle* argsHandle)
 {
     *argsHandle = g_mockArgsHandle;
     return ACL_SUCCESS;
 }
 
-aclError MockAclrtKernelArgsAppend(aclrtArgsHandle, void*, uint64_t, aclrtParamHandle *paramHandle)
+aclError MockAclrtKernelArgsAppend(aclrtArgsHandle, void*, uint64_t, aclrtParamHandle* paramHandle)
 {
     *paramHandle = g_mockParamHandle;
     return ACL_SUCCESS;
@@ -85,7 +87,8 @@ TEST_F(TestKernelLaunchAicpu, Ut_HcclAicpuKernelLaunch_When_CommIsNull_Expect_HC
     HcclKernelLaunchCfg kernelLaunchCfg;
     kernelLaunchCfg.timeOut = 120U;
 
-    HcclResult ret = HcclAicpuKernelLaunch(nullptr, &opInfo, &funcInfo, aicpuThreadHandle, userStream, &kernelLaunchCfg);
+    HcclResult ret
+        = HcclAicpuKernelLaunch(nullptr, &opInfo, &funcInfo, aicpuThreadHandle, userStream, &kernelLaunchCfg);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
@@ -175,7 +178,7 @@ TEST_F(TestKernelLaunchAicpu, Ut_groupLaunchA5_When_OneSendAndOneRecvTask_Expect
     GetHcclGroupCommList().push_back(comm);
     static CollComm g_mockCollComm(nullptr, 0, "test", ManagerCallbacks{}, CollCommInitMode::simpleMode);
     g_mockCollComm.groupScheduleMgr.reset(new GroupScheduleMgr());
-    
+
     std::vector<HcclP2pTask> mockSendQue;
     std::vector<HcclP2pTask> mockRecvQue;
     HcclP2pTask sendTask;
@@ -195,8 +198,9 @@ TEST_F(TestKernelLaunchAicpu, Ut_groupLaunchA5_When_OneSendAndOneRecvTask_Expect
 
     MOCKER_CPP(&hcclComm::GetCollComm).stubs().will(returnValue(&g_mockCollComm));
     MOCKER_CPP(&hcclComm::GetBinHandle).stubs().will(returnValue((aclrtBinHandle)0x1000));
-    MOCKER_CPP(&GroupScheduleMgr::GetP2pTaskSchedule,
-        HcclResult (GroupScheduleMgr::*)(std::vector<HcclP2pTask> &, std::vector<HcclP2pTask> &))
+    MOCKER_CPP(
+        &GroupScheduleMgr::GetP2pTaskSchedule,
+        HcclResult(GroupScheduleMgr::*)(std::vector<HcclP2pTask>&, std::vector<HcclP2pTask>&))
         .stubs()
         .with(outBound(mockSendQue), outBound(mockRecvQue))
         .will(returnValue(HCCL_SUCCESS));

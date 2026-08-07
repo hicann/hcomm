@@ -16,8 +16,8 @@
 namespace Hccl {
 class ResUnpackageException : public HcclException {
 public:
-    explicit ResUnpackageException(const std::string &userDefinedMsg)
-        : HcclException(ExceptionType::RES_UNPACKAGE_EXCEPTION, userDefinedMsg){};
+    explicit ResUnpackageException(const std::string& userDefinedMsg)
+        : HcclException(ExceptionType::RES_UNPACKAGE_EXCEPTION, userDefinedMsg) {};
 };
 } // namespace Hccl
 

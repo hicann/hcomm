@@ -11,30 +11,22 @@
 #include "comm_halving_doubling.h"
 
 namespace hccl {
-CommHalvingDoubling::CommHalvingDoubling(const std::string &collectiveId,
-                                         const u32 userRank, const u32 userRankSize,
-                                         const u32 rank, const u32 rankSize, const TopoType topoFlag,
-                                         const HcclDispatcher dispatcher,
-                                         const std::unique_ptr<NotifyPool> &notifyPool,
-                                         std::map<HcclIpAddress, HcclNetDevCtx> &netDevCtxMap,
-                                         const IntraExchanger &exchanger,
-                                         const std::vector<RankInfo> paraVector,
-                                         const DeviceMem& inputMem, const DeviceMem& outputMem,
-                                         const bool isUsedRdmaLevel0,
-                                         const std::string &tag, const NICDeployment nicDeployInner,
-                                         const u32 subUserRankRoot, HalvingDoublingType halvingDoublingType,
-                                         const bool isHaveCpuRank, const bool useSuperPodMode)
-    : CommBase(collectiveId, userRank, userRankSize, rank, rankSize, paraVector, topoFlag,
-               dispatcher, notifyPool, netDevCtxMap, exchanger, inputMem, outputMem, isUsedRdmaLevel0,
-               tag, nicDeployInner, false, false, false,
-               INVALID_UINT, isHaveCpuRank, useSuperPodMode),
-      subUserRankRoot_(subUserRankRoot), halvingDoublingType_(halvingDoublingType)
-{
-}
+CommHalvingDoubling::CommHalvingDoubling(
+    const std::string& collectiveId, const u32 userRank, const u32 userRankSize, const u32 rank, const u32 rankSize,
+    const TopoType topoFlag, const HcclDispatcher dispatcher, const std::unique_ptr<NotifyPool>& notifyPool,
+    std::map<HcclIpAddress, HcclNetDevCtx>& netDevCtxMap, const IntraExchanger& exchanger,
+    const std::vector<RankInfo> paraVector, const DeviceMem& inputMem, const DeviceMem& outputMem,
+    const bool isUsedRdmaLevel0, const std::string& tag, const NICDeployment nicDeployInner, const u32 subUserRankRoot,
+    HalvingDoublingType halvingDoublingType, const bool isHaveCpuRank, const bool useSuperPodMode)
+    : CommBase(
+          collectiveId, userRank, userRankSize, rank, rankSize, paraVector, topoFlag, dispatcher, notifyPool,
+          netDevCtxMap, exchanger, inputMem, outputMem, isUsedRdmaLevel0, tag, nicDeployInner, false, false, false,
+          INVALID_UINT, isHaveCpuRank, useSuperPodMode),
+      subUserRankRoot_(subUserRankRoot),
+      halvingDoublingType_(halvingDoublingType)
+{}
 
-CommHalvingDoubling::~CommHalvingDoubling()
-{
-}
+CommHalvingDoubling::~CommHalvingDoubling() {}
 
 HcclResult CommHalvingDoubling::CalcLink()
 {
@@ -44,8 +36,8 @@ HcclResult CommHalvingDoubling::CalcLink()
         CHK_RET(GetRankByUserRank(subUserRankRoot_, subRoot));
     }
 
-    std::vector<bool> linkRelation = AlgTemplateBase::CalcLinksRelation(rank_, rankSize_, subRoot,
-                                                                     halvingDoublingType_);
+    std::vector<bool> linkRelation
+        = AlgTemplateBase::CalcLinksRelation(rank_, rankSize_, subRoot, halvingDoublingType_);
     if (linkRelation.size() == 0) {
         HCCL_ERROR("[Calc][Link]comm halving doubling calculate link relation failed!");
         return HCCL_E_INTERNAL;
@@ -59,16 +51,24 @@ HcclResult CommHalvingDoubling::CalcLink()
 
         if (rank_ < dstRank) {
             ret = CalcLinksNum(MachineType::MACHINE_SERVER_TYPE, dstRank);
-            CHK_PRT_RET(ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Calc][Link]comm halving doubling calc links num failed, type[%d], "\
-                "dstRank[%u]", static_cast<int32_t>(MachineType::MACHINE_SERVER_TYPE), dstRank), ret);
+            CHK_PRT_RET(
+                ret != HCCL_SUCCESS,
+                HCCL_ERROR(
+                    "[Calc][Link]comm halving doubling calc links num failed, type[%d], "
+                    "dstRank[%u]",
+                    static_cast<int32_t>(MachineType::MACHINE_SERVER_TYPE), dstRank),
+                ret);
         }
 
         if (rank_ > dstRank) {
             ret = CalcLinksNum(MachineType::MACHINE_CLIENT_TYPE, dstRank);
-            CHK_PRT_RET(ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Calc][Link]comm halving doubling calc links num failed, type[%d], "\
-                "dstRank[%u]", static_cast<int32_t>(MachineType::MACHINE_CLIENT_TYPE), dstRank), ret);
+            CHK_PRT_RET(
+                ret != HCCL_SUCCESS,
+                HCCL_ERROR(
+                    "[Calc][Link]comm halving doubling calc links num failed, type[%d], "
+                    "dstRank[%u]",
+                    static_cast<int32_t>(MachineType::MACHINE_CLIENT_TYPE), dstRank),
+                ret);
         }
     }
 
@@ -79,4 +79,4 @@ bool CommHalvingDoubling::NeedDataReceivedAck()
     HCCL_INFO("having-doubling need make a comm supporting DataReceivedAck");
     return true;
 }
-}  // namespace hccl
+} // namespace hccl

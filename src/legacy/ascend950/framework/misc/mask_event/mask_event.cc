@@ -17,19 +17,10 @@ MaskEvent::MaskEvent() : eventPtr(HrtEventCreateWithFlag(ACL_EVENT_CAPTURE_STREA
     // 待修改: flag暂时只用STREAM_MARK
 }
 
-MaskEvent::~MaskEvent()
-{
-    DECTOR_TRY_CATCH("MaskEvent", HrtEventDestroy(eventPtr));
-}
+MaskEvent::~MaskEvent() { DECTOR_TRY_CATCH("MaskEvent", HrtEventDestroy(eventPtr)); }
 
-void MaskEvent::Record(const Stream &stream) const
-{
-    HrtEventRecord(eventPtr, stream.GetPtr());
-}
+void MaskEvent::Record(const Stream& stream) const { HrtEventRecord(eventPtr, stream.GetPtr()); }
 
-HrtEventStatus MaskEvent::QueryStatus() const
-{
-    return HrtEventQueryStatus(eventPtr);
-}
+HrtEventStatus MaskEvent::QueryStatus() const { return HrtEventQueryStatus(eventPtr); }
 
 } // namespace Hccl

@@ -15,14 +15,16 @@
 namespace hcomm {
 constexpr uint32_t DEFAULT_CQN = 0;
 
-DevRdmaConnectionV2::DevRdmaConnectionV2(Hccl::Socket *socket, RdmaHandle rdmaHandle):
-    socket_(socket), rdmaHandle_(rdmaHandle) {}
+DevRdmaConnectionV2::DevRdmaConnectionV2(Hccl::Socket* socket, RdmaHandle rdmaHandle)
+    : socket_(socket),
+      rdmaHandle_(rdmaHandle)
+{}
 
 HcclResult DevRdmaConnectionV2::Init()
 {
     if (rdmaConnStatus_ != RdmaConnStatus::CLOSED) {
-        HCCL_INFO("[DevRdmaConnectionV2][%s] status[%s] is not need init.",
-            __func__, rdmaConnStatus_.Describe().c_str());
+        HCCL_INFO(
+            "[DevRdmaConnectionV2][%s] status[%s] is not need init.", __func__, rdmaConnStatus_.Describe().c_str());
         return HCCL_SUCCESS;
     }
 
@@ -50,22 +52,20 @@ std::string DevRdmaConnectionV2::Describe() const
     return Hccl::StringFormat("DevRdmaConnectionV2[status=%s]", rdmaConnStatus_.Describe().c_str());
 }
 
-static void *NdaAlloc(size_t size) {
-    return Hccl::HrtMalloc(size, static_cast<int>(ACL_MEM_MALLOC_HUGE_ONLY));
-}
+static void* NdaAlloc(size_t size) { return Hccl::HrtMalloc(size, static_cast<int>(ACL_MEM_MALLOC_HUGE_ONLY)); }
 
-static void NdaFree(void *ptr) {
+static void NdaFree(void* ptr)
+{
     if (ptr == nullptr) {
         return;
     }
     Hccl::HrtFree(ptr);
 }
 
-static void NdaMemset(void *dst, int value, size_t count) {
-    Hccl::HrtMemsetV2(dst, count, value, count);
-}
+static void NdaMemset(void* dst, int value, size_t count) { Hccl::HrtMemsetV2(dst, count, value, count); }
 
-static int NdaMemcpy(void *dst, size_t dstSize, void *src, size_t srcSize, uint32_t direct) {
+static int NdaMemcpy(void* dst, size_t dstSize, void* src, size_t srcSize, uint32_t direct)
+{
     Hccl::rtMemcpyKind_t kind = Hccl::rtMemcpyKind_t::RT_MEMCPY_DEFAULT;
     switch (direct) {
         case MEMCPY_DIRECT_HOST_TO_HOST: {
@@ -93,19 +93,17 @@ static int NdaMemcpy(void *dst, size_t dstSize, void *src, size_t srcSize, uint3
     return 0;
 }
 
-void DevRdmaConnectionV2::GetNdaOps() {
-    ndaOps_ = {
-        .alloc = NdaAlloc,
-        .free = NdaFree,
-        .memset_s = NdaMemset,
-        .memcpy_s = NdaMemcpy
-    };
+void DevRdmaConnectionV2::GetNdaOps()
+{
+    ndaOps_ = {.alloc = NdaAlloc, .free = NdaFree, .memset_s = NdaMemset, .memcpy_s = NdaMemcpy};
 }
 
-HcclResult DevRdmaConnectionV2::GetDirectFlag() {
+HcclResult DevRdmaConnectionV2::GetDirectFlag()
+{
     s32 ret = RaNdaGetDirectFlag(rdmaHandle_, &directFlag_);
     if (ret != 0) {
-        HCCL_ERROR("[DevRdmaConnectionV2][GetDirectFlag]errNo[0x%016llx] get directFlag fail. "
+        HCCL_ERROR(
+            "[DevRdmaConnectionV2][GetDirectFlag]errNo[0x%016llx] get directFlag fail. "
             "return[%d], params: rdmaHandle[%p], directFlag[%d]",
             HCCL_ERROR_CODE(HCCL_E_INTERNAL), ret, rdmaHandle_, directFlag_);
         return HCCL_E_INTERNAL;
@@ -113,7 +111,8 @@ HcclResult DevRdmaConnectionV2::GetDirectFlag() {
     return HCCL_SUCCESS;
 }
 
-HcclResult DevRdmaConnectionV2::GetDmaMode() {
+HcclResult DevRdmaConnectionV2::GetDmaMode()
+{
     switch (directFlag_) {
         case DIRECT_FLAG_PCIE: {
             dmaMode_ = QBUF_DMA_MODE_DEFAULT;
@@ -148,8 +147,10 @@ HcclResult DevRdmaConnectionV2::CreateQp()
     SqCiMem_ = hccl::DeviceMem::alloc(sizeof(void*));
     CqPiMem_ = hccl::DeviceMem::alloc(sizeof(void*));
     CqCiMem_ = hccl::DeviceMem::alloc(sizeof(void*));
-    CHK_PRT_RET(!SqPiMem_ || !SqCiMem_ || !CqPiMem_ || !CqCiMem_,
-        HCCL_ERROR("%s DeviceMem::alloc for SqPi_ or SqCi_ or CqPi_ or CqCi_ failed, size=%zu", __func__, sizeof(void*)),
+    CHK_PRT_RET(
+        !SqPiMem_ || !SqCiMem_ || !CqPiMem_ || !CqCiMem_,
+        HCCL_ERROR(
+            "%s DeviceMem::alloc for SqPi_ or SqCi_ or CqPi_ or CqCi_ failed, size=%zu", __func__, sizeof(void*)),
         HCCL_E_MEMORY);
 
     rdmaConnStatus_ = RdmaConnStatus::QP_CREATED;
@@ -186,11 +187,11 @@ HcclResult DevRdmaConnectionV2::DestroyQp()
     return ret;
 }
 
-HcclResult DevRdmaConnectionV2::GetExchangeDto(std::unique_ptr<Hccl::Serializable> &locQpAttrserial)
+HcclResult DevRdmaConnectionV2::GetExchangeDto(std::unique_ptr<Hccl::Serializable>& locQpAttrserial)
 {
     if (rdmaConnStatus_ != RdmaConnStatus::QP_CREATED && rdmaConnStatus_ != RdmaConnStatus::QP_MODIFIED) {
-        HCCL_ERROR("[DevRdmaConnectionV2][%s] status[%s] is not expected.",
-            __func__, rdmaConnStatus_.Describe().c_str());
+        HCCL_ERROR(
+            "[DevRdmaConnectionV2][%s] status[%s] is not expected.", __func__, rdmaConnStatus_.Describe().c_str());
         return HCCL_E_AGAIN;
     }
 
@@ -200,19 +201,18 @@ HcclResult DevRdmaConnectionV2::GetExchangeDto(std::unique_ptr<Hccl::Serializabl
         HCCL_ERROR("[DevRdmaConnectionV2::%s]RaGetQpAttr failed, ret[%d]", __func__, ret);
         return HCCL_E_ROCE_CONNECT;
     }
-    std::unique_ptr<ExchangeRdmaConnDto> dto= nullptr;
+    std::unique_ptr<ExchangeRdmaConnDto> dto = nullptr;
     EXCEPTION_CATCH(
         dto = std::make_unique<ExchangeRdmaConnDto>(localQpAttr.qpn, localQpAttr.psn, localQpAttr.gidIdx),
-        return HCCL_E_PTR
-    );
+        return HCCL_E_PTR);
     CHK_SAFETY_FUNC_RET(memcpy_s(dto->gid_, HCCP_GID_RAW_LEN, localQpAttr.gid, HCCP_GID_RAW_LEN));
     locQpAttrserial = std::unique_ptr<Hccl::Serializable>(std::move(dto));
     return HCCL_SUCCESS;
 }
 
-HcclResult DevRdmaConnectionV2::ParseRmtExchangeDto(const Hccl::Serializable &rmtDto)
+HcclResult DevRdmaConnectionV2::ParseRmtExchangeDto(const Hccl::Serializable& rmtDto)
 {
-    auto dto = dynamic_cast<const ExchangeRdmaConnDto &>(rmtDto);
+    auto dto = dynamic_cast<const ExchangeRdmaConnDto&>(rmtDto);
     HCCL_INFO("[DevRdmaConnectionV2][%s] remoteConnDto[%s]", __func__, dto.Describe().c_str());
     rmtQpAttr_.psn = dto.psn_;
     rmtQpAttr_.qpn = dto.qpn_;
@@ -224,13 +224,13 @@ HcclResult DevRdmaConnectionV2::ParseRmtExchangeDto(const Hccl::Serializable &rm
 HcclResult DevRdmaConnectionV2::ModifyQp()
 {
     if (rdmaConnStatus_ == RdmaConnStatus::QP_MODIFIED) {
-        HCCL_WARNING("[DevRdmaConnectionV2][%s] modify qp already, status[%s].",
-                     __func__, rdmaConnStatus_.Describe().c_str());
+        HCCL_WARNING(
+            "[DevRdmaConnectionV2][%s] modify qp already, status[%s].", __func__, rdmaConnStatus_.Describe().c_str());
         return HCCL_SUCCESS;
-    } 
+    }
     if (rdmaConnStatus_ != RdmaConnStatus::QP_CREATED) {
-        HCCL_ERROR("[DevRdmaConnectionV2][%s] status[%s] is not expected.", __func__,
-            rdmaConnStatus_.Describe().c_str());
+        HCCL_ERROR(
+            "[DevRdmaConnectionV2][%s] status[%s] is not expected.", __func__, rdmaConnStatus_.Describe().c_str());
         return HCCL_E_AGAIN;
     }
 
@@ -281,8 +281,8 @@ HcclResult DevRdmaConnectionV2::BuildSqContext(SqContext* context)
     }
 
     // 零初始化roceSq, 确保不同dmaMode下未使用字段有确定值
-    (void)memset_s(&context->contextInfo.roceSq, sizeof(context->contextInfo.roceSq), 0,
-        sizeof(context->contextInfo.roceSq));
+    (void)memset_s(
+        &context->contextInfo.roceSq, sizeof(context->contextInfo.roceSq), 0, sizeof(context->contextInfo.roceSq));
 
     struct QpAttr localQpAttr;
     s32 ret = RaGetQpAttr(qpHandle_, &localQpAttr);
@@ -297,25 +297,24 @@ HcclResult DevRdmaConnectionV2::BuildSqContext(SqContext* context)
     context->contextInfo.roceSq.sqVa = ndaQpInfo_.sqInfo.qBuf.base;
     context->contextInfo.roceSq.wqeSize = ndaQpInfo_.sqInfo.qBuf.entrySize;
     context->contextInfo.roceSq.depth = ndaQpInfo_.sqInfo.qBuf.entryCnt;
-    context->contextInfo.roceSq.headAddr = reinterpret_cast<uint64_t >(SqPiMem_.ptr());
-    context->contextInfo.roceSq.tailAddr = reinterpret_cast<uint64_t >(SqCiMem_.ptr());
+    context->contextInfo.roceSq.headAddr = reinterpret_cast<uint64_t>(SqPiMem_.ptr());
+    context->contextInfo.roceSq.tailAddr = reinterpret_cast<uint64_t>(SqCiMem_.ptr());
     context->contextInfo.roceSq.sl = qpInfo_.serviceLevel;
-    context->contextInfo.roceSq.dbHwVa = reinterpret_cast<uint64_t >(ndaQpInfo_.sqInfo.dbHwVa.iovBase);
+    context->contextInfo.roceSq.dbHwVa = reinterpret_cast<uint64_t>(ndaQpInfo_.sqInfo.dbHwVa.iovBase);
 
     if (dmaMode_ == QBUF_DMA_MODE_INDEP_UB) {
-        context->contextInfo.roceSq.dbSwVa = reinterpret_cast<uint64_t >(ndaQpInfo_.sqInfo.dbrPiVa.iovBase);
+        context->contextInfo.roceSq.dbSwVa = reinterpret_cast<uint64_t>(ndaQpInfo_.sqInfo.dbrPiVa.iovBase);
         context->contextInfo.roceSq.mtuShift = static_cast<uint8_t>(mtuShift);
     }
 
     HCCL_INFO(
         "[DevRdmaConnectionV2][%s] type=%u, QPN=%u, SQ_VA=0x%llx, WQE_SIZE=%u, "
         "SQ_DEPTH=%u, SQ_HEAD_ADDR=0x%llx, SQ_TAIL_ADDR=0x%llx, "
-        "SL=%u, DB_HW_VA=0x%llx, DB_SW_VA=0x%llx, MTU_SHIFT=%u", __func__, context->type,
-        context->contextInfo.roceSq.qpn, context->contextInfo.roceSq.sqVa, context->contextInfo.roceSq.wqeSize,
-        context->contextInfo.roceSq.depth, context->contextInfo.roceSq.headAddr, context->contextInfo.roceSq.tailAddr,
-        context->contextInfo.roceSq.sl, context->contextInfo.roceSq.dbHwVa,
-        context->contextInfo.roceSq.dbSwVa, context->contextInfo.roceSq.mtuShift
-    );
+        "SL=%u, DB_HW_VA=0x%llx, DB_SW_VA=0x%llx, MTU_SHIFT=%u",
+        __func__, context->type, context->contextInfo.roceSq.qpn, context->contextInfo.roceSq.sqVa,
+        context->contextInfo.roceSq.wqeSize, context->contextInfo.roceSq.depth, context->contextInfo.roceSq.headAddr,
+        context->contextInfo.roceSq.tailAddr, context->contextInfo.roceSq.sl, context->contextInfo.roceSq.dbHwVa,
+        context->contextInfo.roceSq.dbSwVa, context->contextInfo.roceSq.mtuShift);
     return HCCL_SUCCESS;
 }
 
@@ -327,32 +326,30 @@ HcclResult DevRdmaConnectionV2::BuildCqContext(CqContext* context)
     }
 
     // 零初始化roceCq, 确保不同dmaMode下未使用字段有确定值
-    (void)memset_s(&context->contextInfo.roceCq, sizeof(context->contextInfo.roceCq), 0,
-        sizeof(context->contextInfo.roceCq));
+    (void)memset_s(
+        &context->contextInfo.roceCq, sizeof(context->contextInfo.roceCq), 0, sizeof(context->contextInfo.roceCq));
 
     context->type = CQ_CONTEXT_TYPE_ROCE;
     context->contextInfo.roceCq.cqVa = ndaCqInfo_.cqInfo.qBuf.base;
     context->contextInfo.roceCq.cqeSize = ndaCqInfo_.cqInfo.qBuf.entrySize;
     context->contextInfo.roceCq.cqDepth = ndaCqInfo_.cqInfo.qBuf.entryCnt;
-    context->contextInfo.roceCq.headAddr = reinterpret_cast<uint64_t >(CqPiMem_.ptr());
-    context->contextInfo.roceCq.tailAddr = reinterpret_cast<uint64_t >(CqCiMem_.ptr());
+    context->contextInfo.roceCq.headAddr = reinterpret_cast<uint64_t>(CqPiMem_.ptr());
+    context->contextInfo.roceCq.tailAddr = reinterpret_cast<uint64_t>(CqCiMem_.ptr());
     // PCIe模式(DEFAULT): 仅使用硬DB; UBNIC模式(INDEP_UB): 仅使用软DB
     if (dmaMode_ == QBUF_DMA_MODE_DEFAULT) {
         context->contextInfo.roceCq.cqn = ndaCqInfo_.resv[0]; // 云脉网卡NDA直驱，协商ndaCqInfo_.resv[0]字段为CQN
-        context->contextInfo.roceCq.dbHwVa = reinterpret_cast<uint64_t >(ndaCqInfo_.cqInfo.dbHwVa.iovBase);
+        context->contextInfo.roceCq.dbHwVa = reinterpret_cast<uint64_t>(ndaCqInfo_.cqInfo.dbHwVa.iovBase);
     } else {
         context->contextInfo.roceCq.cqn = DEFAULT_CQN;
-        context->contextInfo.roceCq.dbSwVa = reinterpret_cast<uint64_t >(ndaCqInfo_.cqInfo.dbrCiVa.iovBase);
+        context->contextInfo.roceCq.dbSwVa = reinterpret_cast<uint64_t>(ndaCqInfo_.cqInfo.dbrCiVa.iovBase);
     }
 
     HCCL_INFO(
         "[DevRdmaConnectionV2][%s] type=%u, CQN=%u, CQ_VA=0x%llx, CQE_SIZE=%u, CQ_DEPTH=%u, "
         "CQ_HEAD_ADDR=0x%llx, CQ_TAIL_ADDR=0x%llx, DB_HW_VA=0x%llx, DB_SW_VA=0x%llx]",
-        __func__, context->type,
-        context->contextInfo.roceCq.cqn, context->contextInfo.roceCq.cqVa, context->contextInfo.roceCq.cqeSize,
-        context->contextInfo.roceCq.cqDepth, context->contextInfo.roceCq.headAddr, context->contextInfo.roceCq.tailAddr,
-        context->contextInfo.roceCq.dbHwVa, context->contextInfo.roceCq.dbSwVa
-    );
+        __func__, context->type, context->contextInfo.roceCq.cqn, context->contextInfo.roceCq.cqVa,
+        context->contextInfo.roceCq.cqeSize, context->contextInfo.roceCq.cqDepth, context->contextInfo.roceCq.headAddr,
+        context->contextInfo.roceCq.tailAddr, context->contextInfo.roceCq.dbHwVa, context->contextInfo.roceCq.dbSwVa);
 
     return HCCL_SUCCESS;
 }
@@ -374,10 +371,10 @@ std::vector<char> DevRdmaConnectionV2::GetSqUniqueId() const
     binaryStream << ndaQpInfo_.sqInfo.qBuf.base;
     binaryStream << ndaQpInfo_.sqInfo.qBuf.entrySize;
     binaryStream << ndaQpInfo_.sqInfo.qBuf.entryCnt;
-    binaryStream << reinterpret_cast<uint64_t >(SqPiMem_.ptr());
-    binaryStream << reinterpret_cast<uint64_t >(SqCiMem_.ptr());
-    binaryStream << reinterpret_cast<uint64_t >(ndaQpInfo_.sqInfo.dbHwVa.iovBase); 
-    binaryStream << reinterpret_cast<uint64_t >(ndaQpInfo_.sqInfo.dbrPiVa.iovBase);
+    binaryStream << reinterpret_cast<uint64_t>(SqPiMem_.ptr());
+    binaryStream << reinterpret_cast<uint64_t>(SqCiMem_.ptr());
+    binaryStream << reinterpret_cast<uint64_t>(ndaQpInfo_.sqInfo.dbHwVa.iovBase);
+    binaryStream << reinterpret_cast<uint64_t>(ndaQpInfo_.sqInfo.dbrPiVa.iovBase);
     binaryStream << static_cast<uint8_t>(qpInfo_.serviceLevel);
     binaryStream << static_cast<uint8_t>(mtuShift);
 
@@ -395,9 +392,9 @@ std::vector<char> DevRdmaConnectionV2::GetCqUniqueId() const
     binaryStream << ndaCqInfo_.cqInfo.qBuf.base;
     binaryStream << ndaCqInfo_.cqInfo.qBuf.entrySize;
     binaryStream << ndaCqInfo_.cqInfo.qBuf.entryCnt;
-    binaryStream << reinterpret_cast<uint64_t >(CqPiMem_.ptr());
-    binaryStream << reinterpret_cast<uint64_t >(CqCiMem_.ptr());
-    binaryStream << reinterpret_cast<uint64_t >(ndaCqInfo_.cqInfo.dbrCiVa.iovBase);
+    binaryStream << reinterpret_cast<uint64_t>(CqPiMem_.ptr());
+    binaryStream << reinterpret_cast<uint64_t>(CqCiMem_.ptr());
+    binaryStream << reinterpret_cast<uint64_t>(ndaCqInfo_.cqInfo.dbrCiVa.iovBase);
 
     std::vector<char> result;
     binaryStream.Dump(result);

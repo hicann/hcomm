@@ -17,13 +17,14 @@ HcclResult hrtMsprofRegisterCallback(uint32_t moduleId, ProfCommandHandle handle
 {
     s32 ret = DlProfFunction::GetInstance().dlMsprofRegisterCallback(moduleId, handle);
     HCCL_INFO("Call MsprofRegisterCallback, return value[%d], Params: moduleId[%u]", ret, moduleId);
-    CHK_PRT_RET(ret != 0,
+    CHK_PRT_RET(
+        ret != 0,
         HCCL_ERROR("[Register][CtrlCallback]MsprofRegisterCallback fail, return[%d], moduleId[%u]", ret, moduleId),
         HCCL_E_PROFILING);
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtMsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char *typeName)
+HcclResult hrtMsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char* typeName)
 {
     s32 ret = DlProfFunction::GetInstance().dlMsprofRegTypeInfo(level, typeId, typeName);
     HCCL_INFO("Call MsprofRegTypeInfo, return value[%d], Params: typeId[%u] typeName = [%s]", ret, typeId, typeName);
@@ -31,7 +32,7 @@ HcclResult hrtMsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char *typ
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtMsprofReportApi(uint32_t agingFlag, const MsprofApi *api)
+HcclResult hrtMsprofReportApi(uint32_t agingFlag, const MsprofApi* api)
 {
     s32 ret = DlProfFunction::GetInstance().dlMsprofReportApi(agingFlag, api);
     HCCL_INFO("Call MsprofReportApi, return value[%d], Params: agingFlag[%u]", ret, agingFlag);
@@ -55,13 +56,13 @@ HcclResult hrtMsprofReportAdditionalInfo(uint32_t agingFlag, const VOID_PTR data
     return HCCL_SUCCESS;
 }
 
-uint64_t hrtMsprofGetHashId(const char *hashInfo, uint32_t length)
+uint64_t hrtMsprofGetHashId(const char* hashInfo, uint32_t length)
 {
     if (hashInfo == nullptr || length == 0) {
         HCCL_WARNING("HashData hashInfo is empty.");
         return INVALID_U64;
     }
-    u64 ret =  DlProfFunction::GetInstance().dlMsprofStr2Id(hashInfo, length);
+    u64 ret = DlProfFunction::GetInstance().dlMsprofStr2Id(hashInfo, length);
     return ret;
 }
 
@@ -79,7 +80,12 @@ HcclResult hrtProfRegisterCtrlCallback(uint32_t logId, rtProfCtrlHandle callback
 {
     rtError_t ret = DlRtFunction::GetInstance().dlrtProfRegisterCtrlCallback(logId, callback);
     HCCL_DEBUG("Call rtProfRegisterCtrlCallback, return value[%d], Params: logId[%u].", ret, logId);
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[Register][CtrlCallback]errNo[0x%016llx] rtProf Register CtrlCallback"
-        " fail, return[%d], rt logId[%u]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, logId), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[Register][CtrlCallback]errNo[0x%016llx] rtProf Register CtrlCallback"
+            " fail, return[%d], rt logId[%u]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, logId),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 }

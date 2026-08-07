@@ -21,15 +21,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
-HcclResult HcclNetDevOpenV1(const HcclNetDevInfos *info, HcclNetDev *netDev);
+HcclResult HcclNetDevOpenV1(const HcclNetDevInfos* info, HcclNetDev* netDev);
 HcclResult HcclNetDevCloseV1(HcclNetDev netDev);
-HcclResult HcclNetDevGetAddrV1(HcclNetDev netDev, HcclAddress *addr);
-HcclResult HcclNetDevGetBusAddrV1(HcclDeviceId dstDevId, HcclAddress *busAddr);
-HcclResult HcclNetDevGetNicAddrV1(int32_t devicePhyId, HcclAddress **addr, uint32_t *addrNum);
+HcclResult HcclNetDevGetAddrV1(HcclNetDev netDev, HcclAddress* addr);
+HcclResult HcclNetDevGetBusAddrV1(HcclDeviceId dstDevId, HcclAddress* busAddr);
+HcclResult HcclNetDevGetNicAddrV1(int32_t devicePhyId, HcclAddress** addr, uint32_t* addrNum);
 
 #ifdef __cplusplus
 }
 #endif
 // #endif // __cplusplus
 
-#endif  // HCCL_NET_DEV_V1_H
+#endif // HCCL_NET_DEV_V1_H

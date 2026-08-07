@@ -21,19 +21,19 @@ public:
     explicit BroadcastNHRV1(const HcclDispatcher dispatcher);
     ~BroadcastNHRV1() override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
-    HcclResult Prepare(PrepareData &param) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
+    HcclResult Prepare(PrepareData& param) override;
 
 private:
     DeviceMem scratch_; /* * 临时deviceMem */
 
-    HcclResult SimpleCheck(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
-    HcclResult SetDefaultSlices(const u32 rank, const RingInfo &info);
-    HcclResult CheckSlices(const u32 rank, const RingInfo &info);
-    HcclResult RunScatterOnHorizontal(const u32 rank, const std::vector<LINK> &links, const RingInfo &info);
-    HcclResult RunBroadcastOnVertical(const u32 rank, const std::vector<LINK> &links, const RingInfo &info);
-    HcclResult RunAllGatherOnHorizontal(const u32 rank, const std::vector<LINK> &links, const RingInfo &info);
+    HcclResult SimpleCheck(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
+    HcclResult SetDefaultSlices(const u32 rank, const RingInfo& info);
+    HcclResult CheckSlices(const u32 rank, const RingInfo& info);
+    HcclResult RunScatterOnHorizontal(const u32 rank, const std::vector<LINK>& links, const RingInfo& info);
+    HcclResult RunBroadcastOnVertical(const u32 rank, const std::vector<LINK>& links, const RingInfo& info);
+    HcclResult RunAllGatherOnHorizontal(const u32 rank, const std::vector<LINK>& links, const RingInfo& info);
 };
-}  // hccl
+} // namespace hccl
 
-#endif  /* BROADCAST_NHR_V1_PUB_H */
+#endif /* BROADCAST_NHR_V1_PUB_H */

@@ -53,7 +53,7 @@ struct FakePluginScenario {
     uint32_t memoryUnimportCalls = 0;
     uint32_t getUserRemoteMemCalls = 0;
     HcommMemHandle lastMemHandle = nullptr;
-    const void *lastMemDesc = nullptr;
+    const void* lastMemDesc = nullptr;
     uint32_t lastMemDescLen = 0;
 };
 
@@ -62,74 +62,64 @@ constexpr uintptr_t FAKE_PLUGIN_MEM_HANDLE = 0x12345678U;
 char g_fakePluginMemDesc[8] = {};
 char g_fakeRemoteMem0[0x100] = {};
 char g_fakeRemoteMem1[0x200] = {};
-CommMem g_fakeRemoteMems[2] = {
-    {COMM_MEM_TYPE_HOST, g_fakeRemoteMem0, sizeof(g_fakeRemoteMem0)},
-    {COMM_MEM_TYPE_HOST, g_fakeRemoteMem1, sizeof(g_fakeRemoteMem1)}
-};
+CommMem g_fakeRemoteMems[2]
+    = {{COMM_MEM_TYPE_HOST, g_fakeRemoteMem0, sizeof(g_fakeRemoteMem0)},
+       {COMM_MEM_TYPE_HOST, g_fakeRemoteMem1, sizeof(g_fakeRemoteMem1)}};
 char g_fakeRemoteTag0[] = "fake_remote_0";
 char g_fakeRemoteTag1[] = "fake_remote_1";
-char *g_fakeRemoteTags[2] = {g_fakeRemoteTag0, g_fakeRemoteTag1};
+char* g_fakeRemoteTags[2] = {g_fakeRemoteTag0, g_fakeRemoteTag1};
 
-int32_t FakePluginCreateEndpoint(const EndpointDesc *endpointDesc, void **outCtx, HcommNicEndpointOps **outOps);
-int32_t FakePluginEndpointInit(void *ctx);
-void FakePluginEndpointDestroy(void *ctx);
-int32_t FakePluginRegisterMemory(void *ctx, const CommMem *mem, const char *tag, void **handle);
-int32_t FakePluginUnregisterMemory(void *ctx, void *handle);
-int32_t FakePluginMemoryExport(void *ctx, void *handle, void **desc, uint32_t *descLen);
-int32_t FakePluginMemoryImport(void *ctx, const void *desc, uint32_t descLen, CommMem *outMem);
-int32_t FakePluginMemoryUnimport(void *ctx, const void *desc, uint32_t descLen);
-int32_t FakePluginCreateChannel(void *epCtx, const HcommChannelDesc *channelDesc,
-    void **outCtx, HcommNicChannelOps **outOps);
-int32_t FakePluginGetStatus(void *ctx, int32_t *status);
-int32_t FakePluginGetUserRemoteMem(void *ctx, CommMem **mem, char ***tags, uint32_t *num);
-void FakePluginDestroyChannel(void *ctx);
+int32_t FakePluginCreateEndpoint(const EndpointDesc* endpointDesc, void** outCtx, HcommNicEndpointOps** outOps);
+int32_t FakePluginEndpointInit(void* ctx);
+void FakePluginEndpointDestroy(void* ctx);
+int32_t FakePluginRegisterMemory(void* ctx, const CommMem* mem, const char* tag, void** handle);
+int32_t FakePluginUnregisterMemory(void* ctx, void* handle);
+int32_t FakePluginMemoryExport(void* ctx, void* handle, void** desc, uint32_t* descLen);
+int32_t FakePluginMemoryImport(void* ctx, const void* desc, uint32_t descLen, CommMem* outMem);
+int32_t FakePluginMemoryUnimport(void* ctx, const void* desc, uint32_t descLen);
+int32_t
+FakePluginCreateChannel(void* epCtx, const HcommChannelDesc* channelDesc, void** outCtx, HcommNicChannelOps** outOps);
+int32_t FakePluginGetStatus(void* ctx, int32_t* status);
+int32_t FakePluginGetUserRemoteMem(void* ctx, CommMem** mem, char*** tags, uint32_t* num);
+void FakePluginDestroyChannel(void* ctx);
 
-HcommNicEndpointOps g_fakeEndpointOps = {
-    {HCOMM_NIC_ENDPOINT_OPS_VERSION, HCOMM_NIC_ENDPOINT_OPS_MAGIC_WORD, sizeof(HcommNicEndpointOps), 0},
-    FakePluginEndpointInit,
-    FakePluginRegisterMemory,
-    FakePluginUnregisterMemory,
-    FakePluginMemoryExport,
-    FakePluginMemoryImport,
-    FakePluginMemoryUnimport,
-    FakePluginEndpointDestroy
-};
+HcommNicEndpointOps g_fakeEndpointOps
+    = {{HCOMM_NIC_ENDPOINT_OPS_VERSION, HCOMM_NIC_ENDPOINT_OPS_MAGIC_WORD, sizeof(HcommNicEndpointOps), 0},
+       FakePluginEndpointInit,
+       FakePluginRegisterMemory,
+       FakePluginUnregisterMemory,
+       FakePluginMemoryExport,
+       FakePluginMemoryImport,
+       FakePluginMemoryUnimport,
+       FakePluginEndpointDestroy};
 
-HcommNicEndpointOps g_fakeUnsupportedEndpointOps = {
-    {HCOMM_NIC_ENDPOINT_OPS_VERSION, HCOMM_NIC_ENDPOINT_OPS_MAGIC_WORD, sizeof(HcommNicEndpointOps), 0}
-};
+HcommNicEndpointOps g_fakeUnsupportedEndpointOps
+    = {{HCOMM_NIC_ENDPOINT_OPS_VERSION, HCOMM_NIC_ENDPOINT_OPS_MAGIC_WORD, sizeof(HcommNicEndpointOps), 0}};
 
-HcommNicChannelOps g_fakeChannelOps = {
-    {HCOMM_NIC_CHANNEL_OPS_VERSION, HCOMM_NIC_CHANNEL_OPS_MAGIC_WORD, sizeof(HcommNicChannelOps), 0},
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    FakePluginDestroyChannel,
-    FakePluginGetStatus,
-    nullptr,
-    FakePluginGetUserRemoteMem
-};
+HcommNicChannelOps g_fakeChannelOps
+    = {{HCOMM_NIC_CHANNEL_OPS_VERSION, HCOMM_NIC_CHANNEL_OPS_MAGIC_WORD, sizeof(HcommNicChannelOps), 0},
+       nullptr,
+       nullptr,
+       nullptr,
+       nullptr,
+       nullptr,
+       nullptr,
+       nullptr,
+       nullptr,
+       FakePluginDestroyChannel,
+       FakePluginGetStatus,
+       nullptr,
+       FakePluginGetUserRemoteMem};
 
-HcommNicPluginInfo g_fakePluginInfo = {
-    {HCOMM_NIC_PLUGIN_INFO_VERSION, HCOMM_NIC_PLUGIN_INFO_MAGIC_WORD, sizeof(HcommNicPluginInfo), 0},
-    "fake_plugin",
-    1,
-    {COMM_PROTOCOL_ROCE}
-};
+HcommNicPluginInfo g_fakePluginInfo
+    = {{HCOMM_NIC_PLUGIN_INFO_VERSION, HCOMM_NIC_PLUGIN_INFO_MAGIC_WORD, sizeof(HcommNicPluginInfo), 0},
+       "fake_plugin",
+       1,
+       {COMM_PROTOCOL_ROCE}};
 
-NicPluginEntry g_fakePluginEntry = {
-    nullptr,
-    &g_fakePluginInfo,
-    FakePluginCreateEndpoint,
-    FakePluginCreateChannel
-};
+NicPluginEntry g_fakePluginEntry = {nullptr, &g_fakePluginInfo, FakePluginCreateEndpoint, FakePluginCreateChannel};
 
-int32_t FakePluginCreateEndpoint(const EndpointDesc *endpointDesc, void **outCtx, HcommNicEndpointOps **outOps)
+int32_t FakePluginCreateEndpoint(const EndpointDesc* endpointDesc, void** outCtx, HcommNicEndpointOps** outOps)
 {
     EXPECT_NE(endpointDesc, nullptr);
     g_fakePluginScenario.createEndpointCalls++;
@@ -138,32 +128,32 @@ int32_t FakePluginCreateEndpoint(const EndpointDesc *endpointDesc, void **outCtx
     return HCCL_SUCCESS;
 }
 
-int32_t FakePluginEndpointInit(void *ctx)
+int32_t FakePluginEndpointInit(void* ctx)
 {
     g_fakePluginScenario.initEndpointCalls++;
-    auto *state = static_cast<FakePluginEndpointState *>(ctx);
+    auto* state = static_cast<FakePluginEndpointState*>(ctx);
     state->inited = true;
     return HCCL_SUCCESS;
 }
 
-void FakePluginEndpointDestroy(void *ctx)
+void FakePluginEndpointDestroy(void* ctx)
 {
     g_fakePluginScenario.destroyEndpointCalls++;
-    delete static_cast<FakePluginEndpointState *>(ctx);
+    delete static_cast<FakePluginEndpointState*>(ctx);
 }
 
-int32_t FakePluginRegisterMemory(void *ctx, const CommMem *mem, const char *tag, void **handle)
+int32_t FakePluginRegisterMemory(void* ctx, const CommMem* mem, const char* tag, void** handle)
 {
     (void)ctx;
     (void)mem;
     (void)tag;
     g_fakePluginScenario.registerMemoryCalls++;
-    *handle = reinterpret_cast<void *>(FAKE_PLUGIN_MEM_HANDLE);
+    *handle = reinterpret_cast<void*>(FAKE_PLUGIN_MEM_HANDLE);
     g_fakePluginScenario.lastMemHandle = *handle;
     return HCCL_SUCCESS;
 }
 
-int32_t FakePluginUnregisterMemory(void *ctx, void *handle)
+int32_t FakePluginUnregisterMemory(void* ctx, void* handle)
 {
     (void)ctx;
     g_fakePluginScenario.unregisterMemoryCalls++;
@@ -171,7 +161,7 @@ int32_t FakePluginUnregisterMemory(void *ctx, void *handle)
     return HCCL_SUCCESS;
 }
 
-int32_t FakePluginMemoryExport(void *ctx, void *handle, void **desc, uint32_t *descLen)
+int32_t FakePluginMemoryExport(void* ctx, void* handle, void** desc, uint32_t* descLen)
 {
     (void)ctx;
     g_fakePluginScenario.memoryExportCalls++;
@@ -181,19 +171,19 @@ int32_t FakePluginMemoryExport(void *ctx, void *handle, void **desc, uint32_t *d
     return HCCL_SUCCESS;
 }
 
-int32_t FakePluginMemoryImport(void *ctx, const void *desc, uint32_t descLen, CommMem *outMem)
+int32_t FakePluginMemoryImport(void* ctx, const void* desc, uint32_t descLen, CommMem* outMem)
 {
     (void)ctx;
     g_fakePluginScenario.memoryImportCalls++;
     g_fakePluginScenario.lastMemDesc = desc;
     g_fakePluginScenario.lastMemDescLen = descLen;
     outMem->type = COMM_MEM_TYPE_HOST;
-    outMem->addr = const_cast<void *>(desc);
+    outMem->addr = const_cast<void*>(desc);
     outMem->size = descLen;
     return HCCL_SUCCESS;
 }
 
-int32_t FakePluginMemoryUnimport(void *ctx, const void *desc, uint32_t descLen)
+int32_t FakePluginMemoryUnimport(void* ctx, const void* desc, uint32_t descLen)
 {
     (void)ctx;
     g_fakePluginScenario.memoryUnimportCalls++;
@@ -202,8 +192,8 @@ int32_t FakePluginMemoryUnimport(void *ctx, const void *desc, uint32_t descLen)
     return HCCL_SUCCESS;
 }
 
-int32_t FakePluginCreateChannel(void *epCtx, const HcommChannelDesc *channelDesc,
-    void **outCtx, HcommNicChannelOps **outOps)
+int32_t
+FakePluginCreateChannel(void* epCtx, const HcommChannelDesc* channelDesc, void** outCtx, HcommNicChannelOps** outOps)
 {
     (void)epCtx;
     EXPECT_NE(channelDesc, nullptr);
@@ -213,18 +203,18 @@ int32_t FakePluginCreateChannel(void *epCtx, const HcommChannelDesc *channelDesc
     return HCCL_SUCCESS;
 }
 
-int32_t FakePluginGetStatus(void *ctx, int32_t *status)
+int32_t FakePluginGetStatus(void* ctx, int32_t* status)
 {
     if (g_fakePluginScenario.getStatusRet != HCCL_SUCCESS) {
         return g_fakePluginScenario.getStatusRet;
     }
-    auto *state = static_cast<FakePluginChannelState *>(ctx);
+    auto* state = static_cast<FakePluginChannelState*>(ctx);
     state->getStatusCalls++;
     *status = state->getStatusCalls >= g_fakePluginScenario.readyAfterCalls ? 0 : 1;
     return HCCL_SUCCESS;
 }
 
-int32_t FakePluginGetUserRemoteMem(void *ctx, CommMem **mem, char ***tags, uint32_t *num)
+int32_t FakePluginGetUserRemoteMem(void* ctx, CommMem** mem, char*** tags, uint32_t* num)
 {
     (void)ctx;
     g_fakePluginScenario.getUserRemoteMemCalls++;
@@ -234,20 +224,16 @@ int32_t FakePluginGetUserRemoteMem(void *ctx, CommMem **mem, char ***tags, uint3
     return HCCL_SUCCESS;
 }
 
-void FakePluginDestroyChannel(void *ctx)
+void FakePluginDestroyChannel(void* ctx)
 {
     g_fakePluginScenario.destroyChannelCalls++;
-    delete static_cast<FakePluginChannelState *>(ctx);
+    delete static_cast<FakePluginChannelState*>(ctx);
 }
 
 EndpointHandle MakeFakePluginEndpointHandle()
 {
     static int endpointCtx = 0;
-    static PluginEndpointCtx pluginEndpoint = {
-        &g_fakeEndpointOps,
-        &endpointCtx,
-        &g_fakePluginEntry
-    };
+    static PluginEndpointCtx pluginEndpoint = {&g_fakeEndpointOps, &endpointCtx, &g_fakePluginEntry};
     return MAKE_PLUGIN_EP_HANDLE(&pluginEndpoint);
 }
 
@@ -267,19 +253,13 @@ HcclResult StubServerSocketGetListenPort(Endpoint* /*endpoint*/, uint32_t* port)
 
 class HcommCAdptTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "HcommCAdptTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "HcommCAdptTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "HcommCAdptTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "HcommCAdptTest tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
-        const char *dfsConfig = std::getenv("HCCL_DFS_CONFIG");
+        const char* dfsConfig = std::getenv("HCCL_DFS_CONFIG");
         hasOldDfsConfig_ = (dfsConfig != nullptr);
         oldDfsConfig_ = hasOldDfsConfig_ ? dfsConfig : "";
         setenv("HCCL_DFS_CONFIG", "task_exception:on", 1);
@@ -305,9 +285,7 @@ TEST_F(HcommCAdptTest, ut_HcommChannelGet_When_Normal_Expect_Success)
 {
     ChannelHandle channelHandle = 0x12345;
     void* channel = nullptr;
-    MOCKER(ChannelProcess::ChannelGet)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(ChannelProcess::ChannelGet).stubs().will(returnValue(HCCL_SUCCESS));
     HcommResult ret = HcommChannelGet(channelHandle, &channel);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -315,10 +293,7 @@ TEST_F(HcommCAdptTest, ut_HcommChannelGet_When_Normal_Expect_Success)
 TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_When_Normal_Expect_Success)
 {
     // 假 handle 未注册到 channel map，GetChannelsInfo 找不到 channel 返回错误
-    ChannelHandle channelList[2] = {
-        0x12345,
-        0x12346
-    };
+    ChannelHandle channelList[2] = {0x12345, 0x12346};
     int32_t statusList[2] = {0, 0};
     HcommResult ret = HcommChannelGetStatus(channelList, 2, statusList);
     EXPECT_EQ(ret, HCCL_E_INTERNAL);
@@ -333,20 +308,14 @@ TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_When_ChannelListNull_Expect_E_PT
 
 TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_When_StatusListNull_Expect_E_PTR)
 {
-    ChannelHandle channelList[2] = {
-        0x12345,
-        0x12346
-    };
+    ChannelHandle channelList[2] = {0x12345, 0x12346};
     HcommResult ret = HcommChannelGetStatus(channelList, 2, nullptr);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
 TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_When_ListNumZero_Expect_E_PARA)
 {
-    ChannelHandle channelList[2] = {
-        0x12345,
-        0x12346
-    };
+    ChannelHandle channelList[2] = {0x12345, 0x12346};
     int32_t statusList[2] = {0, 0};
     HcommResult ret = HcommChannelGetStatus(channelList, 0, statusList);
     EXPECT_EQ(ret, HCCL_E_PARA);
@@ -367,17 +336,20 @@ public:
 
     hcomm::HcommChannelKind GetChannelKind() const override { return channelKind_; }
     HcclResult Init() override { return HCCL_SUCCESS; }
-    HcclResult GetNotifyNum(uint32_t *notifyNum) const override { return HCCL_SUCCESS; }
-    HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos) override { return HCCL_SUCCESS; }
+    HcclResult GetNotifyNum(uint32_t* notifyNum) const override { return HCCL_SUCCESS; }
+    HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos) override { return HCCL_SUCCESS; }
     hcomm::ChannelStatus GetStatus() override { return fakeStatus_; }
     const HcommChannelDesc& GetChannelDesc() const override { return desc_; }
     HcclResult Clean() override { return HCCL_SUCCESS; }
     HcclResult Resume() override { return HCCL_SUCCESS; }
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override { return HCCL_SUCCESS; }
     HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) override { return HCCL_SUCCESS; }
-    HcclResult WriteWithNotify(void *dst, const void *src, const uint64_t len, uint32_t remoteNotifyIdx) override { return HCCL_SUCCESS; }
-    HcclResult Write(void *dst, const void *src, uint64_t len) override { return HCCL_SUCCESS; }
-    HcclResult Read(void *dst, const void *src, uint64_t len) override { return HCCL_SUCCESS; }
+    HcclResult WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx) override
+    {
+        return HCCL_SUCCESS;
+    }
+    HcclResult Write(void* dst, const void* src, uint64_t len) override { return HCCL_SUCCESS; }
+    HcclResult Read(void* dst, const void* src, uint64_t len) override { return HCCL_SUCCESS; }
     HcclResult ChannelFence() override { return HCCL_SUCCESS; }
 
 private:
@@ -386,7 +358,7 @@ private:
 };
 
 // 辅助：注册 channel 到全局 map
-static ChannelHandle HcommCAdptRegisterChannel(std::shared_ptr<HcommCAdptFakeChannel> &ch)
+static ChannelHandle HcommCAdptRegisterChannel(std::shared_ptr<HcommCAdptFakeChannel>& ch)
 {
     ChannelHandle handle = reinterpret_cast<ChannelHandle>(ch.get());
     hcomm::DeviceChannelKey key{0, handle};
@@ -451,10 +423,7 @@ TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_Aicpu_When_MixedReadyFailed_Retu
 {
     auto ch1 = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_AICPU, hcomm::ChannelStatus::READY);
     auto ch2 = std::make_shared<HcommCAdptFakeChannel>(COMM_ENGINE_AICPU, hcomm::ChannelStatus::FAILED);
-    ChannelHandle handles[2] = {
-        HcommCAdptRegisterChannel(ch1),
-        HcommCAdptRegisterChannel(ch2)
-    };
+    ChannelHandle handles[2] = {HcommCAdptRegisterChannel(ch1), HcommCAdptRegisterChannel(ch2)};
 
     int32_t statusList[2] = {0, 0};
     HcommResult ret = HcommChannelGetStatus(handles, 2, statusList);
@@ -564,9 +533,9 @@ TEST_F(HcommCAdptTest, ut_HcommChannelGetStatus_MixedEngine_When_MixedStatus_Ret
     int32_t statusList[3] = {0, 0, 0};
     HcommResult ret = HcommChannelGetStatus(handles, 3, statusList);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_EQ(statusList[0], hcomm::HCOMM_CHANNEL_STATUS_READY);       // AICPU: READY
-    EXPECT_EQ(statusList[1], hcomm::HCOMM_CHANNEL_STATUS_CONNECTING);  // AIV: INIT → CONNECTING
-    EXPECT_EQ(statusList[2], hcomm::HCOMM_CHANNEL_STATUS_FAILED);      // CPU: FAILED
+    EXPECT_EQ(statusList[0], hcomm::HCOMM_CHANNEL_STATUS_READY);      // AICPU: READY
+    EXPECT_EQ(statusList[1], hcomm::HCOMM_CHANNEL_STATUS_CONNECTING); // AIV: INIT → CONNECTING
+    EXPECT_EQ(statusList[2], hcomm::HCOMM_CHANNEL_STATUS_FAILED);     // CPU: FAILED
 
     HcommCAdptClearChannelMap();
 }
@@ -575,22 +544,15 @@ TEST_F(HcommCAdptTest, ut_HcommChannelGetNotifyNum_When_Normal_Expect_Success)
 {
     ChannelHandle channelHandle = 0x12345;
     uint32_t notifyNum = 0;
-    MOCKER(ChannelProcess::ChannelGetNotifyNum)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(ChannelProcess::ChannelGetNotifyNum).stubs().will(returnValue(HCCL_SUCCESS));
     HcommResult ret = HcommChannelGetNotifyNum(channelHandle, &notifyNum);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
 TEST_F(HcommCAdptTest, ut_HcommChannelDestroy_When_Normal_Expect_Success)
 {
-    ChannelHandle channels[2] = {
-        0x12345,
-        0x12346
-    };
-    MOCKER(ChannelProcess::ChannelDestroy)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    ChannelHandle channels[2] = {0x12345, 0x12346};
+    MOCKER(ChannelProcess::ChannelDestroy).stubs().will(returnValue(HCCL_SUCCESS));
     HcommResult ret = HcommChannelDestroy(channels, 2);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -602,9 +564,7 @@ TEST_F(HcommCAdptTest, ut_HcommChannelGetRemoteMems_When_Normal_Expect_Success)
     uint32_t memNum = 0;
     char* memInfosStorage[2] = {nullptr, nullptr};
     char** memInfos = memInfosStorage;
-    MOCKER(ChannelProcess::ChannelGetRemoteMems)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(ChannelProcess::ChannelGetRemoteMems).stubs().will(returnValue(HCCL_SUCCESS));
     HcommResult ret = HcommChannelGetRemoteMems(channelHandle, &memNum, &remoteMem, &memInfos);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -613,15 +573,11 @@ TEST_F(HcommCAdptTest, ut_HcommChannelGetRemoteMems_Plugin_When_Normal_Expect_Di
 {
     ResetFakePluginScenario();
     FakePluginChannelState channelState;
-    PluginChannelCtx pluginChannel = {
-        &g_fakeChannelOps,
-        &channelState,
-        &g_fakePluginEntry
-    };
+    PluginChannelCtx pluginChannel = {&g_fakeChannelOps, &channelState, &g_fakePluginEntry};
     ChannelHandle channelHandle = MAKE_PLUGIN_CH_HANDLE(&pluginChannel);
-    CommMem *remoteMem = nullptr;
+    CommMem* remoteMem = nullptr;
     uint32_t memNum = 0;
-    char **memInfos = nullptr;
+    char** memInfos = nullptr;
 
     HcommResult ret = HcommChannelGetRemoteMems(channelHandle, &memNum, &remoteMem, &memInfos);
 
@@ -638,9 +594,7 @@ TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_When_Normal_Expect_Succes
     HcommChannelDesc channelDesc{};
     (void)HcommChannelDescInit(&channelDesc, 1);
     ChannelHandle channels[1] = {0};
-    MOCKER(ChannelProcess::CreateChannelsLoop)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(ChannelProcess::CreateChannelsLoop).stubs().will(returnValue(HCCL_SUCCESS));
     HcommResult ret = HcommCollectiveChannelCreate(endpointHandle, COMM_ENGINE_AICPU_TS, &channelDesc, 1, channels);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -702,9 +656,7 @@ TEST_F(HcommCAdptTest, ut_HcommChannelCreate_When_NotAiCpu_Expect_Success)
     HcommChannelDesc channelDesc{};
     (void)HcommChannelDescInit(&channelDesc, 1);
     ChannelHandle channels[1] = {0};
-    MOCKER(ChannelProcess::CreateChannelsLoop)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(ChannelProcess::CreateChannelsLoop).stubs().will(returnValue(HCCL_SUCCESS));
     HcommResult ret = HcommChannelCreate(endpointHandle, COMM_ENGINE_CPU, &channelDesc, 1, channels);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -723,8 +675,8 @@ TEST_F(HcommCAdptTest, ut_HcommChannelCreate_Plugin_When_StatusReadyLater_Expect
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(g_fakePluginScenario.createChannelCalls, 1);
     EXPECT_TRUE(IS_PLUGIN_HANDLE(channels[0]));
-    auto *pluginChannel = PLUGIN_CH_CTX(channels[0]);
-    auto *state = static_cast<FakePluginChannelState *>(pluginChannel->ctx);
+    auto* pluginChannel = PLUGIN_CH_CTX(channels[0]);
+    auto* state = static_cast<FakePluginChannelState*>(pluginChannel->ctx);
     EXPECT_GE(state->getStatusCalls, 3U);
     EXPECT_EQ(g_fakePluginScenario.destroyChannelCalls, 0);
     EXPECT_EQ(HcommChannelDestroy(channels, 1), HCCL_SUCCESS);
@@ -755,10 +707,7 @@ TEST_F(HcommCAdptTest, ut_HcommChannelCreate_Plugin_When_Timeout_Expect_DestroyA
     HcommChannelDesc channelDesc{};
     (void)HcommChannelDescInit(&channelDesc, 1);
     ChannelHandle channels[1] = {0};
-    MOCKER_CPP(&Hccl::EnvSocketConfig::GetLinkTimeOut)
-        .stubs()
-        .with(any())
-        .will(returnValue((s32)(0)));
+    MOCKER_CPP(&Hccl::EnvSocketConfig::GetLinkTimeOut).stubs().with(any()).will(returnValue((s32)(0)));
 
     HcommResult ret = HcommChannelCreate(endpointHandle, COMM_ENGINE_CPU, &channelDesc, 1, channels);
 
@@ -786,10 +735,10 @@ TEST_F(HcommCAdptTest, ut_HcommChannelCreate_Plugin_When_EngineNotCpu_Expect_Not
 TEST_F(HcommCAdptTest, ut_NicPluginDispatcher_When_NonPluginHandle_Expect_NotHandled)
 {
     bool handled = true;
-    void *endpoint = reinterpret_cast<void *>(0x1);
+    void* endpoint = reinterpret_cast<void*>(0x1);
     EXPECT_EQ(PluginEndpointGet(reinterpret_cast<EndpointHandle>(0x1234), &endpoint, handled), HCCL_SUCCESS);
     EXPECT_FALSE(handled);
-    EXPECT_EQ(endpoint, reinterpret_cast<void *>(0x1));
+    EXPECT_EQ(endpoint, reinterpret_cast<void*>(0x1));
 
     int32_t status = 7;
     EXPECT_EQ(PluginChannelGetStatus(0x1234, &status, handled), HCCL_SUCCESS);
@@ -804,8 +753,10 @@ TEST_F(HcommCAdptTest, ut_NicPluginDispatcherChannelCreate_When_NonPluginEndpoin
     (void)HcommChannelDescInit(&channelDesc, 1);
     ChannelHandle channels[1] = {0x1234};
 
-    EXPECT_EQ(PluginChannelCreate(reinterpret_cast<EndpointHandle>(0x1234), COMM_ENGINE_CPU,
-        &channelDesc, 1, channels, handled), HCCL_SUCCESS);
+    EXPECT_EQ(
+        PluginChannelCreate(
+            reinterpret_cast<EndpointHandle>(0x1234), COMM_ENGINE_CPU, &channelDesc, 1, channels, handled),
+        HCCL_SUCCESS);
     EXPECT_FALSE(handled);
     EXPECT_EQ(channels[0], 0x1234);
 }
@@ -814,34 +765,28 @@ TEST_F(HcommCAdptTest, ut_NicPluginDispatcher_When_OpUnsupported_Expect_NotSuppo
 {
     static int endpointCtx = 0;
     bool handled = false;
-    HcommNicChannelOps unsupportedChannelOps = {
-        {HCOMM_NIC_CHANNEL_OPS_VERSION, HCOMM_NIC_CHANNEL_OPS_MAGIC_WORD, sizeof(HcommNicChannelOps), 0}
-    };
-    PluginChannelCtx pluginChannel = {
-        &unsupportedChannelOps,
-        &endpointCtx,
-        &g_fakePluginEntry
-    };
+    HcommNicChannelOps unsupportedChannelOps
+        = {{HCOMM_NIC_CHANNEL_OPS_VERSION, HCOMM_NIC_CHANNEL_OPS_MAGIC_WORD, sizeof(HcommNicChannelOps), 0}};
+    PluginChannelCtx pluginChannel = {&unsupportedChannelOps, &endpointCtx, &g_fakePluginEntry};
     ChannelHandle channelHandle = MAKE_PLUGIN_CH_HANDLE(&pluginChannel);
     int32_t status = 0;
     EXPECT_EQ(PluginChannelGetStatus(channelHandle, &status, handled), HCCL_E_NOT_SUPPORT);
     EXPECT_TRUE(handled);
 
     uint32_t memNum = 0;
-    CommMem *remoteMem = nullptr;
-    char **memInfos = nullptr;
+    CommMem* remoteMem = nullptr;
+    char** memInfos = nullptr;
     EXPECT_EQ(PluginChannelGetRemoteMems(channelHandle, &memNum, &remoteMem, &memInfos, handled), HCCL_E_NOT_SUPPORT);
     EXPECT_TRUE(handled);
 }
 
 TEST_F(HcommCAdptTest, ut_NicPluginValidateInfo_When_HeaderInvalid_Expect_Fail)
 {
-    HcommNicPluginInfo info = {
-        {HCOMM_NIC_PLUGIN_INFO_VERSION, HCOMM_NIC_PLUGIN_INFO_MAGIC_WORD, sizeof(HcommNicPluginInfo), 0},
-        "fake_plugin",
-        1,
-        {COMM_PROTOCOL_ROCE}
-    };
+    HcommNicPluginInfo info
+        = {{HCOMM_NIC_PLUGIN_INFO_VERSION, HCOMM_NIC_PLUGIN_INFO_MAGIC_WORD, sizeof(HcommNicPluginInfo), 0},
+           "fake_plugin",
+           1,
+           {COMM_PROTOCOL_ROCE}};
 
     EXPECT_TRUE(ValidatePluginInfo("fake_plugin.so", &info, FakePluginCreateEndpoint, FakePluginCreateChannel));
 
@@ -860,7 +805,7 @@ TEST_F(HcommCAdptTest, ut_NicPluginValidateInfo_When_HeaderInvalid_Expect_Fail)
 TEST_F(HcommCAdptTest, ut_HcommEndpointCreate_Plugin_When_HostProtocolRegistered_Expect_PluginHandle)
 {
     ResetFakePluginScenario();
-    const NicPluginEntry *fakePluginEntry = &g_fakePluginEntry;
+    const NicPluginEntry* fakePluginEntry = &g_fakePluginEntry;
     MOCKER(hcomm::FindHostNicPlugin).stubs().will(returnValue(fakePluginEntry));
     EndpointDesc endpointDesc{};
     ASSERT_EQ(EndpointDescInit(&endpointDesc, 1), HCCL_SUCCESS);
@@ -876,10 +821,10 @@ TEST_F(HcommCAdptTest, ut_HcommEndpointCreate_Plugin_When_HostProtocolRegistered
     EXPECT_EQ(g_fakePluginScenario.createEndpointCalls, 1U);
     EXPECT_EQ(g_fakePluginScenario.initEndpointCalls, 1U);
 
-    void *endpoint = nullptr;
+    void* endpoint = nullptr;
     EXPECT_EQ(HcommEndpointGet(endpointHandle, &endpoint), HCCL_SUCCESS);
     ASSERT_NE(endpoint, nullptr);
-    EXPECT_TRUE(static_cast<FakePluginEndpointState *>(endpoint)->inited);
+    EXPECT_TRUE(static_cast<FakePluginEndpointState*>(endpoint)->inited);
 
     CommMem mem{};
     mem.type = COMM_MEM_TYPE_HOST;
@@ -901,38 +846,31 @@ TEST_F(HcommCAdptTest, ut_HcommEndpointCreate_Plugin_When_HostProtocolRegistered
 TEST_F(HcommCAdptTest, ut_HcommEndpoint_Plugin_When_OpUnsupported_Expect_NotSupport)
 {
     static int endpointCtx = 0;
-    PluginEndpointCtx pluginEndpoint = {
-        &g_fakeUnsupportedEndpointOps,
-        &endpointCtx,
-        &g_fakePluginEntry
-    };
+    PluginEndpointCtx pluginEndpoint = {&g_fakeUnsupportedEndpointOps, &endpointCtx, &g_fakePluginEntry};
     EndpointHandle endpointHandle = MAKE_PLUGIN_EP_HANDLE(&pluginEndpoint);
     uint32_t port = 0;
 
-    void *memDesc = nullptr;
+    void* memDesc = nullptr;
     uint32_t memDescLen = 0;
     char desc[8] = {};
     CommMem outMem{};
     HcommMemGrantInfo grantInfo{};
     EXPECT_EQ(HcommEndpointStartListen(endpointHandle, 60001, nullptr), HCCL_E_NOT_FOUND);
     EXPECT_EQ(HcommEndpointStopListen(endpointHandle, 60001), HCCL_E_NOT_FOUND);
-    EXPECT_EQ(HcommMemExport(endpointHandle, reinterpret_cast<HcommMemHandle>(&endpointCtx), &memDesc, &memDescLen),
+    EXPECT_EQ(
+        HcommMemExport(endpointHandle, reinterpret_cast<HcommMemHandle>(&endpointCtx), &memDesc, &memDescLen),
         HCCL_E_NOT_SUPPORT);
     EXPECT_EQ(HcommMemImport(endpointHandle, desc, sizeof(desc), &outMem), HCCL_E_NOT_SUPPORT);
     EXPECT_EQ(HcommMemUnimport(endpointHandle, desc, sizeof(desc)), HCCL_E_NOT_SUPPORT);
     EXPECT_EQ(HcommMemGrant(endpointHandle, &grantInfo), HCCL_E_NOT_FOUND);
-    EXPECT_EQ(HcommMemGetAllMemHandles(endpointHandle, reinterpret_cast<void **>(&endpointCtx), &port),
-        HCCL_E_NOT_FOUND);
+    EXPECT_EQ(
+        HcommMemGetAllMemHandles(endpointHandle, reinterpret_cast<void**>(&endpointCtx), &port), HCCL_E_NOT_FOUND);
 }
 
 TEST_F(HcommCAdptTest, ut_HcommEndpointGetListenPort_Plugin_When_OpsProvided_Expect_NotSupport)
 {
     static int endpointCtx = 0;
-    PluginEndpointCtx pluginEndpoint = {
-        &g_fakeEndpointOps,
-        &endpointCtx,
-        &g_fakePluginEntry
-    };
+    PluginEndpointCtx pluginEndpoint = {&g_fakeEndpointOps, &endpointCtx, &g_fakePluginEntry};
     EndpointHandle endpointHandle = MAKE_PLUGIN_EP_HANDLE(&pluginEndpoint);
     uint32_t port = 0;
 
@@ -944,7 +882,7 @@ TEST_F(HcommCAdptTest, ut_HcommEndpoint_PluginMemOps_When_Normal_Expect_Dispatch
     ResetFakePluginScenario();
     EndpointHandle endpointHandle = MakeFakePluginEndpointHandle();
     HcommMemHandle memHandle = reinterpret_cast<HcommMemHandle>(FAKE_PLUGIN_MEM_HANDLE);
-    void *memDesc = nullptr;
+    void* memDesc = nullptr;
     uint32_t memDescLen = 0;
 
     EXPECT_EQ(HcommMemExport(endpointHandle, memHandle, &memDesc, &memDescLen), HCCL_SUCCESS);
@@ -969,7 +907,7 @@ TEST_F(HcommCAdptTest, ut_HcommEndpoint_PluginMemOps_When_Normal_Expect_Dispatch
     HcommMemGrantInfo grantInfo{7, 9};
     EXPECT_EQ(HcommMemGrant(endpointHandle, &grantInfo), HCCL_E_NOT_FOUND);
 
-    void *memHandles[2] = {};
+    void* memHandles[2] = {};
     uint32_t memHandleNum = 0;
     EXPECT_EQ(HcommMemGetAllMemHandles(endpointHandle, memHandles, &memHandleNum), HCCL_E_NOT_FOUND);
     EXPECT_EQ(memHandleNum, 0U);
@@ -1043,9 +981,7 @@ TEST_F(HcommCAdptTest, ut_HcommChannelCreate_AICPU_When_CreateLoopMocked_PreAllo
     HcommChannelDesc channelDesc{};
     (void)HcommChannelDescInit(&channelDesc, 1);
     ChannelHandle channels[1] = {0};
-    MOCKER(ChannelProcess::CreateChannelsLoop)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(ChannelProcess::CreateChannelsLoop).stubs().will(returnValue(HCCL_SUCCESS));
     HcommResult ret = HcommChannelCreate(endpointHandle, COMM_ENGINE_AICPU, &channelDesc, 1, channels);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
@@ -1056,9 +992,7 @@ TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_CPU_Expect_Success)
     HcommChannelDesc channelDesc{};
     (void)HcommChannelDescInit(&channelDesc, 1);
     ChannelHandle channels[1] = {0};
-    MOCKER(ChannelProcess::CreateChannelsLoop)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(ChannelProcess::CreateChannelsLoop).stubs().will(returnValue(HCCL_SUCCESS));
     HcommResult ret = HcommCollectiveChannelCreate(endpointHandle, COMM_ENGINE_CPU, &channelDesc, 1, channels);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -1069,9 +1003,7 @@ TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_CCU_Expect_Success)
     HcommChannelDesc channelDesc{};
     (void)HcommChannelDescInit(&channelDesc, 1);
     ChannelHandle channels[1] = {0};
-    MOCKER(ChannelProcess::CreateChannelsLoop)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(ChannelProcess::CreateChannelsLoop).stubs().will(returnValue(HCCL_SUCCESS));
     HcommResult ret = HcommCollectiveChannelCreate(endpointHandle, COMM_ENGINE_CCU, &channelDesc, 1, channels);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -1079,10 +1011,10 @@ TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_CCU_Expect_Success)
 namespace {
 
 uint32_t gCapturedChannelDescQos = 0U;
-const char *gCapturedChannelDescChannelName = nullptr;
+const char* gCapturedChannelDescChannelName = nullptr;
 
-HcclResult CaptureCreateChannelsLoop(EndpointHandle, CommEngine, HcommChannelDesc *channelDescs, uint32_t channelNum,
-    ChannelHandle *)
+HcclResult CaptureCreateChannelsLoop(
+    EndpointHandle, CommEngine, HcommChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle*)
 {
     if (channelDescs != nullptr && channelNum > 0U) {
         gCapturedChannelDescQos = channelDescs[0].qos;
@@ -1161,18 +1093,17 @@ TEST_F(HcommCAdptTest, ut_HcommEndpointGetListenPort_When_HandleInvalid_Expect_E
     EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
 }
 
-
 class StubEndpoint final : public Endpoint {
 public:
     explicit StubEndpoint() : Endpoint(EndpointDesc{}) {}
     HcclResult Init() override { return HCCL_SUCCESS; }
     HcclResult ServerSocketListen(const uint32_t port) override { return HCCL_SUCCESS; }
-    HcclResult RegisterMemory(HcommMem mem, const char *memTag, void **memHandle) override { return HCCL_SUCCESS; }
+    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override { return HCCL_SUCCESS; }
     HcclResult UnregisterMemory(void* memHandle) override { return HCCL_SUCCESS; }
-    HcclResult MemoryExport(void *memHandle, void **memDesc, uint32_t *memDescLen) override { return HCCL_SUCCESS; }
-    HcclResult MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem) override { return HCCL_SUCCESS; }
-    HcclResult MemoryUnimport(const void *memDesc, uint32_t descLen) override { return HCCL_SUCCESS; }
-    HcclResult GetAllMemHandles(void **memHandles, uint32_t *memHandleNum) override { return HCCL_SUCCESS; }
+    HcclResult MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen) override { return HCCL_SUCCESS; }
+    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override { return HCCL_SUCCESS; }
+    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override { return HCCL_SUCCESS; }
+    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override { return HCCL_SUCCESS; }
 };
 
 TEST_F(HcommCAdptTest, ut_HcommEndpointGetListenPort_When_ServerSocketNotSupport_Expect_E_NOT_SUPPORT)
@@ -1181,7 +1112,7 @@ TEST_F(HcommCAdptTest, ut_HcommEndpointGetListenPort_When_ServerSocketNotSupport
     EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
     StubEndpoint stubEndpoint;
 
-    MOCKER_CPP(&HcommEndpointMap::GetEndpoint, Endpoint*(HcommEndpointMap::*)(EndpointHandle))
+    MOCKER_CPP(&HcommEndpointMap::GetEndpoint, Endpoint * (HcommEndpointMap::*)(EndpointHandle))
         .stubs()
         .will(returnValue(static_cast<Endpoint*>(&stubEndpoint)));
 
@@ -1207,7 +1138,7 @@ TEST_F(HcommCAdptTest, ut_HcommEndpointCheckFeature_When_SupportedFeature_Expect
     u32 devPhyId = 0;
     MOCKER(hrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any(), outBound(devPhyId)).will(returnValue(HCCL_SUCCESS));
 
-    void *fakeRdmaHandle = reinterpret_cast<void *>(0x12345678);
+    void* fakeRdmaHandle = reinterpret_cast<void*>(0x12345678);
     MOCKER_CPP(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(fakeRdmaHandle));
 
     s32 directFlag = DIRECT_FLAG_PCIE;

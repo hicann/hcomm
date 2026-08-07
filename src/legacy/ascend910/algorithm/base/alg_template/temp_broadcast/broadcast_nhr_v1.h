@@ -13,8 +13,6 @@
 
 #include "broadcast_nhr_v1_pub.h"
 
-namespace hccl {
-}  // hccl
+namespace hccl {} // namespace hccl
 
-#endif  /* BROADCAST_NHR_V1_H */
-
+#endif /* BROADCAST_NHR_V1_H */

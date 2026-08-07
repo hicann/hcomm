@@ -25,15 +25,15 @@ namespace hcomm {
 class CcuUrmaChannel : public Channel {
 public:
     // 当前仅支持交换hccl buffer
-    CcuUrmaChannel(const EndpointHandle locEndpointHandle, const HcommChannelDesc &channelDesc);
+    CcuUrmaChannel(const EndpointHandle locEndpointHandle, const HcommChannelDesc& channelDesc);
     ~CcuUrmaChannel() override = default;
 
     HcclResult Init() override;
     ChannelStatus GetStatus() override;
 
-    HcclResult GetNotifyNum(uint32_t *notifyNum) const override;
-    HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos) override;
-    HcclResult UpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum) override;
+    HcclResult GetNotifyNum(uint32_t* notifyNum) const override;
+    HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos) override;
+    HcclResult UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum) override;
 
     HcclResult Clean() override;
     HcclResult Resume() override;
@@ -41,34 +41,28 @@ public:
     HcclResult ChannelFence() override;
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;
     HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) override;
-    HcclResult WriteWithNotify(void *dst, const void *src, const uint64_t len, uint32_t remoteNotifyIdx) override;
-    HcclResult Write(void *dst, const void *src, uint64_t len) override;
-    HcclResult Read(void *dst, const void *src, uint64_t len) override;
+    HcclResult WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx) override;
+    HcclResult Write(void* dst, const void* src, uint64_t len) override;
+    HcclResult Read(void* dst, const void* src, uint64_t len) override;
 
 public:
     uint32_t GetDieId() const;
     uint32_t GetChannelId() const;
-    HcclResult GetRmtSignalAddrByIndex(uint32_t index, uint64_t &rmtCkeAddr) const;
-    HcclResult GetRmtCcuBufferTokenInfo(uint32_t &rmtTokenId, uint32_t &rmtTokenValue) const;
-    HcclResult GetRmtVarAddrByIndex(uint32_t index, uint64_t &rmtXnAddr) const;
-    HcclResult GetLocCkeByIndex(const uint32_t index, uint32_t &locCkeId) const;
-    HcclResult GetLocXnByIndex(const uint32_t index, uint32_t &locXnId) const;
+    HcclResult GetRmtSignalAddrByIndex(uint32_t index, uint64_t& rmtCkeAddr) const;
+    HcclResult GetRmtCcuBufferTokenInfo(uint32_t& rmtTokenId, uint32_t& rmtTokenValue) const;
+    HcclResult GetRmtVarAddrByIndex(uint32_t index, uint64_t& rmtXnAddr) const;
+    HcclResult GetLocCkeByIndex(const uint32_t index, uint32_t& locCkeId) const;
+    HcclResult GetLocXnByIndex(const uint32_t index, uint32_t& locXnId) const;
 
-    HcclResult GetRmtCkeByIndex(const uint32_t index, uint32_t &rmtCkeId) const;
-    HcclResult GetRmtXnByIndex(const uint32_t index, uint32_t &rmtXnId) const;
+    HcclResult GetRmtCkeByIndex(const uint32_t index, uint32_t& rmtCkeId) const;
+    HcclResult GetRmtXnByIndex(const uint32_t index, uint32_t& rmtXnId) const;
 
-    HcclResult GetRmtWishCntXnAddr(const std::string &resGroupTag, uint64_t &wishCntXnAddr) const;
+    HcclResult GetRmtWishCntXnAddr(const std::string& resGroupTag, uint64_t& wishCntXnAddr) const;
 
-    HcclResult GetRmtBuffer(uint64_t &addr, uint32_t &size, uint32_t &tokenId, uint32_t &tokenValue) const;
+    HcclResult GetRmtBuffer(uint64_t& addr, uint32_t& size, uint32_t& tokenId, uint32_t& tokenValue) const;
 
-    EndpointHandle GetlocEndPointHandle()
-    {
-        return locEndpointHandle_;
-    }
-    const HcommChannelDesc &GetChannelDesc() const override
-    {
-        return channelDesc_;
-    }
+    EndpointHandle GetlocEndPointHandle() { return locEndpointHandle_; }
+    const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
 
 private:
     std::atomic<bool> isFirstPrintChannelInfo_{true}; // 是否第一次打印通道建链信息，避免重复打印日志刷屏

@@ -19,22 +19,23 @@ public:
     explicit BcastRecursiveHalvingDoubling(const HcclDispatcher dispatcher);
     ~BcastRecursiveHalvingDoubling() override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize,
-        const std::vector<std::shared_ptr<Transport> > &links) override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult
+    RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
+
 protected:
 private:
-    HcclResult SendData(const u32 destRank, const std::vector<std::shared_ptr<Transport> > &links);
-    HcclResult ReceiveData(const u32 destRank, const std::vector<std::shared_ptr<Transport> > &links);
-    HcclResult BroadcastInBlock(const u32 rank, const std::vector<std::shared_ptr<Transport> > &links);
+    HcclResult SendData(const u32 destRank, const std::vector<std::shared_ptr<Transport>>& links);
+    HcclResult ReceiveData(const u32 destRank, const std::vector<std::shared_ptr<Transport>>& links);
+    HcclResult BroadcastInBlock(const u32 rank, const std::vector<std::shared_ptr<Transport>>& links);
     u32 GetRankIndexInBlock(const u32 rank) const;
     u32 GetRankIndexReal(const u32 rankInBlock) const;
-    HcclResult OddNumberRankProcess(const u32 rank, const std::vector<std::shared_ptr<Transport> > &links);
-    HcclResult EvenNumberRankProcess(const u32 rank, const std::vector<std::shared_ptr<Transport> > &links);
+    HcclResult OddNumberRankProcess(const u32 rank, const std::vector<std::shared_ptr<Transport>>& links);
+    HcclResult EvenNumberRankProcess(const u32 rank, const std::vector<std::shared_ptr<Transport>>& links);
 
     bool hasData_; // 表示该rank在运算步骤中是否有数据需要发送，该值可变
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* BCAST_RECURSIVE_HALVINGDOUBLING_PUB_H */

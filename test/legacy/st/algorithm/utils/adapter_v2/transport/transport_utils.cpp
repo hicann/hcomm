@@ -8,4 +8,4 @@ std::map<RankId, std::map<u32, ChannelsPerDie>> g_allRankChannelInfo;
 std::map<RankId, std::map<RankId, std::vector<CcuTransport*>>> g_allRankTransports;
 std::map<CcuTransport*, CcuTransport*> g_transportsPair;
 
-}
+} // namespace Hccl

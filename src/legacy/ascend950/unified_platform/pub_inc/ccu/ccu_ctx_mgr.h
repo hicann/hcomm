@@ -25,9 +25,10 @@ struct CcuCtxGroup {
     // 默认构造函数
     CcuCtxGroup() = default;
     // 移动构造函数
-    CcuCtxGroup(CcuCtxGroup &&other) : ctxs(std::move(other.ctxs)) {}
+    CcuCtxGroup(CcuCtxGroup&& other) : ctxs(std::move(other.ctxs)) {}
     // 移动赋值操作符
-    CcuCtxGroup& operator=(CcuCtxGroup &&other) {
+    CcuCtxGroup& operator=(CcuCtxGroup&& other)
+    {
         if (this == &other) {
             return *this;
         }
@@ -65,7 +66,7 @@ public:
      * @return 返回HcclResult，表示分配资源是否成功
      * @note 此函数用于分配资源
      */
-    static HcclResult AllocRes(s32 deviceLogicId, CcuCtxGroup &ctxGroup, CcuResPack &resPack);
+    static HcclResult AllocRes(s32 deviceLogicId, CcuCtxGroup& ctxGroup, CcuResPack& resPack);
 
     /**
      * @brief 释放资源
@@ -77,7 +78,7 @@ public:
      *
      * @note 此函数用于释放指定device逻辑ID的CCU上下文组的资源
      */
-    static HcclResult ReleaseRes(s32 deviceLogicId, CcuCtxGroup &ctxGroup);
+    static HcclResult ReleaseRes(s32 deviceLogicId, CcuCtxGroup& ctxGroup);
 
     /**
      * @brief 获取任务参数
@@ -90,22 +91,24 @@ public:
      * @return HcclResult 获取参数结果
      * @note 无
      */
-    static HcclResult GetTaskParam(s32 deviceLogicId, CcuTaskArg &ccuTaskArg, const uint64_t executorId,
-                                   std::vector<std::vector<CcuTaskParam>> &taskParam);
-    
+    static HcclResult GetTaskParam(
+        s32 deviceLogicId, CcuTaskArg& ccuTaskArg, const uint64_t executorId,
+        std::vector<std::vector<CcuTaskParam>>& taskParam);
+
     /**
-    * @brief 获取任务Profiling信息
-    *
-    * @param deviceLogicId device逻辑ID
-    * @param ccuTaskArg CCU 任务参数
-    * @param entityId 执行器ID
-    * @param profilingInfo 任务profiling信息
-    *
-    * @return HcclResult 获取profiling结果
-    * @note 无
-    */
-    static HcclResult GetProfilingInfo(s32 deviceLogicId, CcuTaskArg &ccuTaskArg, uint64_t entityId,
-                                       std::vector<std::vector<CcuProfilingInfo>> &profilingInfo);
+     * @brief 获取任务Profiling信息
+     *
+     * @param deviceLogicId device逻辑ID
+     * @param ccuTaskArg CCU 任务参数
+     * @param entityId 执行器ID
+     * @param profilingInfo 任务profiling信息
+     *
+     * @return HcclResult 获取profiling结果
+     * @note 无
+     */
+    static HcclResult GetProfilingInfo(
+        s32 deviceLogicId, CcuTaskArg& ccuTaskArg, uint64_t entityId,
+        std::vector<std::vector<CcuProfilingInfo>>& profilingInfo);
 
 private:
 };

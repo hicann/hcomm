@@ -31,7 +31,8 @@ public:
         uint32_t gid_idx{0};
         unsigned char gid[HCCP_GID_RAW_LEN];
 
-        bool IsValid() {
+        bool IsValid()
+        {
             if (qpn == UINT32_MAX || psn == UINT32_MAX) {
                 return false;
             }
@@ -39,19 +40,17 @@ public:
         }
     };
     MAKE_ENUM(RdmaConnStatus, CLOSED, INIT, QP_CREATED, QP_MODIFIED, SOCKET_TIMEOUT)
-    DevRdmaConnectionV2(Hccl::Socket *socket, RdmaHandle rdmaHandle);
+    DevRdmaConnectionV2(Hccl::Socket* socket, RdmaHandle rdmaHandle);
     ~DevRdmaConnectionV2();
 
     HcclResult Init();
     HcclResult CreateQp();
-    HcclResult GetExchangeDto(std::unique_ptr<Hccl::Serializable> &serial);
-    HcclResult ParseRmtExchangeDto(const Hccl::Serializable &rmtDto);
+    HcclResult GetExchangeDto(std::unique_ptr<Hccl::Serializable>& serial);
+    HcclResult ParseRmtExchangeDto(const Hccl::Serializable& rmtDto);
     HcclResult ModifyQp();
 
-    std::string Describe() const ;
-    Hccl::QpInfo& GetQpInfo() {
-        return qpInfo_;
-    }
+    std::string Describe() const;
+    Hccl::QpInfo& GetQpInfo() { return qpInfo_; }
 
     HcclResult BuildSqContext(SqContext* context);
     HcclResult BuildCqContext(CqContext* context);
@@ -67,26 +66,26 @@ private:
     std::vector<char> GetSqUniqueId() const;
     std::vector<char> GetCqUniqueId() const;
 
-    Hccl::Socket        *socket_{nullptr};
-    Hccl::RdmaHandle    rdmaHandle_{nullptr};
-    int32_t             directFlag_{0};
-    uint32_t            dmaMode_{0};
-    NdaOps              ndaOps_{};
+    Hccl::Socket* socket_{nullptr};
+    Hccl::RdmaHandle rdmaHandle_{nullptr};
+    int32_t directFlag_{0};
+    uint32_t dmaMode_{0};
+    NdaOps ndaOps_{};
 
-    Hccl::QpHandle      qpHandle_;
-    NdaQpInfo           ndaQpInfo_;
-    Hccl::CqHandle      cqHandle_;
-    NdaCqInfo           ndaCqInfo_;
+    Hccl::QpHandle qpHandle_;
+    NdaQpInfo ndaQpInfo_;
+    Hccl::CqHandle cqHandle_;
+    NdaCqInfo ndaCqInfo_;
 
-    RdmaConnStatus      rdmaConnStatus_{RdmaConnStatus::CLOSED};
-    QpAttrDto           rmtQpAttr_{};
-    QpAttrDto           locQpAttr_{};
-    Hccl::QpInfo        qpInfo_{};
+    RdmaConnStatus rdmaConnStatus_{RdmaConnStatus::CLOSED};
+    QpAttrDto rmtQpAttr_{};
+    QpAttrDto locQpAttr_{};
+    Hccl::QpInfo qpInfo_{};
 
-    hccl::DeviceMem    SqPiMem_;
-    hccl::DeviceMem    SqCiMem_;
-    hccl::DeviceMem    CqPiMem_;
-    hccl::DeviceMem    CqCiMem_;
+    hccl::DeviceMem SqPiMem_;
+    hccl::DeviceMem SqCiMem_;
+    hccl::DeviceMem CqPiMem_;
+    hccl::DeviceMem CqCiMem_;
 };
 
 } // namespace hcomm

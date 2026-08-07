@@ -71,10 +71,9 @@ std::string RdmaConnLiteV2::Describe()
         "SL=%u, DB_HW_VA=0x%llx, DB_SW_VA=0x%llx, MTU_SHIFT=%u, CQN=%u, CQ_VA=0x%llx, CQE_SIZE=%u, CQ_DEPTH=%u, "
         "CQ_HEAD_ADDR=0x%llx, CQ_TAIL_ADDR=0x%llx, DB_HW_VA=0x%llx, DB_SW_VA=0x%llx]",
         sqContext.qpn, sqContext.sqVa, sqContext.wqeSize, sqContext.depth, sqContext.headAddr, sqContext.tailAddr,
-        sqContext.sl, sqContext.dbHwVa, sqContext.dbSwVa, sqContext.mtuShift,
-        cqContext.cqn, cqContext.cqVa, cqContext.cqeSize, cqContext.cqDepth,
-        cqContext.headAddr, cqContext.tailAddr, cqContext.dbHwVa, cqContext.dbSwVa
-    );
+        sqContext.sl, sqContext.dbHwVa, sqContext.dbSwVa, sqContext.mtuShift, cqContext.cqn, cqContext.cqVa,
+        cqContext.cqeSize, cqContext.cqDepth, cqContext.headAddr, cqContext.tailAddr, cqContext.dbHwVa,
+        cqContext.dbSwVa);
 }
 
 void RdmaConnLiteV2::GetVendorOps()
@@ -83,12 +82,12 @@ void RdmaConnLiteV2::GetVendorOps()
         return;
     }
     switch (dmaMode_) {
-        case 0 : {   // [PCIe] QBUF_DMA_MODE_DEFAULT
+        case 0: { // [PCIe] QBUF_DMA_MODE_DEFAULT
             HCCL_INFO("[RdmaConnLiteV2::%s] Now Aicpu NDA doesn't support PCIE !", __func__);
             rdmaOps_ = nullptr;
             break;
         }
-        case 1: {  // [UB] QBUF_DMA_MODE_INDEP_UB
+        case 1: { // [UB] QBUF_DMA_MODE_INDEP_UB
             rdmaOps_ = std::make_unique<Rdma1825Ops>(&sqContext, &cqContext);
             break;
         }
@@ -108,64 +107,75 @@ void RdmaConnLiteV2::CheckVendorOp()
     }
 }
 
-void RdmaConnLiteV2::Read(const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg, u64 &dbAddr, u64 &dbValue)
+void RdmaConnLiteV2::Read(
+    const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg, u64& dbAddr, u64& dbValue)
 {
     HCCL_INFO("[RdmaConnLiteV2::%s] Read start, loc size = %u", __func__, loc.GetSize());
     CheckVendorOp();
-    
+
     // 分片操作
-    DoSlice(loc, rmt, [this, &cfg](const RmaBufSliceLite &locSlice, const RmtRmaBufSliceLite &rmtSlice) {
+    DoSlice(loc, rmt, [this, &cfg](const RmaBufSliceLite& locSlice, const RmtRmaBufSliceLite& rmtSlice) {
         rdmaOps_->Read(locSlice, rmtSlice, cfg);
     });
 
     // 构造Doorbell并返回
     rdmaOps_->BuildDoorbell(dbAddr, dbValue);
 
-    HCCL_INFO("[RdmaConnLiteV2::%s] Read end, dbAddr = %llu, dbValue = %llu, conn[%s]", __func__, dbAddr, dbValue, Describe().c_str());
+    HCCL_INFO(
+        "[RdmaConnLiteV2::%s] Read end, dbAddr = %llu, dbValue = %llu, conn[%s]", __func__, dbAddr, dbValue,
+        Describe().c_str());
 }
 
-void RdmaConnLiteV2::Write(const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg, u64 &dbAddr, u64 &dbValue)
+void RdmaConnLiteV2::Write(
+    const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg, u64& dbAddr, u64& dbValue)
 {
     HCCL_INFO("[RdmaConnLiteV2::%s] Write start, loc size = %u", __func__, loc.GetSize());
     CheckVendorOp();
-    
+
     // 分片操作
-    DoSlice(loc, rmt, [this, &cfg](const RmaBufSliceLite &locSlice, const RmtRmaBufSliceLite &rmtSlice) {
+    DoSlice(loc, rmt, [this, &cfg](const RmaBufSliceLite& locSlice, const RmtRmaBufSliceLite& rmtSlice) {
         rdmaOps_->Write(locSlice, rmtSlice, cfg);
     });
 
     // 构造Doorbell并返回
     rdmaOps_->BuildDoorbell(dbAddr, dbValue);
 
-    HCCL_INFO("[RdmaConnLiteV2::%s] Write end, dbAddr = 0x%llx, dbValue = 0x%llx, conn[%s]", __func__, dbAddr, dbValue, Describe().c_str());
+    HCCL_INFO(
+        "[RdmaConnLiteV2::%s] Write end, dbAddr = 0x%llx, dbValue = 0x%llx, conn[%s]", __func__, dbAddr, dbValue,
+        Describe().c_str());
 }
 
 void RdmaConnLiteV2::WriteReduce(
-    const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg, DataType dataType, ReduceOp reduceOp, u64 &dbAddr, u64 &dbValue)
+    const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg, DataType dataType,
+    ReduceOp reduceOp, u64& dbAddr, u64& dbValue)
 {
     HCCL_INFO("[RdmaConnLiteV2::%s] WriteReduce start, loc size = %u", __func__, loc.GetSize());
     CheckVendorOp();
-    
+
     // 分片操作
-    DoSlice(loc, rmt, [this, &cfg, dataType, reduceOp](const RmaBufSliceLite &locSlice, const RmtRmaBufSliceLite &rmtSlice) {
-        rdmaOps_->WriteReduce(locSlice, rmtSlice, cfg, dataType, reduceOp);
-    });
+    DoSlice(
+        loc, rmt,
+        [this, &cfg, dataType, reduceOp](const RmaBufSliceLite& locSlice, const RmtRmaBufSliceLite& rmtSlice) {
+            rdmaOps_->WriteReduce(locSlice, rmtSlice, cfg, dataType, reduceOp);
+        });
 
     // 构造Doorbell并返回
     rdmaOps_->BuildDoorbell(dbAddr, dbValue);
 
-    HCCL_INFO("[RdmaConnLiteV2::%s] WriteReduce end, dbAddr = %llu, dbValue = %llu, conn[%s]", __func__, dbAddr, dbValue, Describe().c_str());
+    HCCL_INFO(
+        "[RdmaConnLiteV2::%s] WriteReduce end, dbAddr = %llu, dbValue = %llu, conn[%s]", __func__, dbAddr, dbValue,
+        Describe().c_str());
 }
 
 void RdmaConnLiteV2::WriteWithNotify(
-    const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt,
-    const RmaBufSliceLite &locNotify, const RmtRmaBufSliceLite &notify, const SqeConfigLite &cfg, u64 &dbAddr, u64 &dbValue)
+    const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const RmaBufSliceLite& locNotify,
+    const RmtRmaBufSliceLite& notify, const SqeConfigLite& cfg, u64& dbAddr, u64& dbValue)
 {
     HCCL_INFO("[RdmaConnLiteV2::%s] WriteWithNotify start, loc size = %u", __func__, loc.GetSize());
     CheckVendorOp();
 
     // 分片操作
-    DoSlice(loc, rmt, [this, &cfg](const RmaBufSliceLite &locSlice, const RmtRmaBufSliceLite &rmtSlice) {
+    DoSlice(loc, rmt, [this, &cfg](const RmaBufSliceLite& locSlice, const RmtRmaBufSliceLite& rmtSlice) {
         rdmaOps_->Write(locSlice, rmtSlice, cfg);
     });
 
@@ -175,21 +185,25 @@ void RdmaConnLiteV2::WriteWithNotify(
     // 构造Doorbell并返回
     rdmaOps_->BuildDoorbell(dbAddr, dbValue);
 
-    HCCL_INFO("[RdmaConnLiteV2::%s] WriteWithNotify end, dbAddr = %llu, dbValue = %llu, conn[%s]", __func__, dbAddr, dbValue, Describe().c_str());
+    HCCL_INFO(
+        "[RdmaConnLiteV2::%s] WriteWithNotify end, dbAddr = %llu, dbValue = %llu, conn[%s]", __func__, dbAddr, dbValue,
+        Describe().c_str());
 }
 
 void RdmaConnLiteV2::WriteReduceWithNotify(
-    const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt,
-    const RmaBufSliceLite &locNotify, const RmtRmaBufSliceLite &notify, const SqeConfigLite &cfg,
-    DataType dataType, ReduceOp reduceOp, u64 &dbAddr, u64 &dbValue)
+    const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const RmaBufSliceLite& locNotify,
+    const RmtRmaBufSliceLite& notify, const SqeConfigLite& cfg, DataType dataType, ReduceOp reduceOp, u64& dbAddr,
+    u64& dbValue)
 {
     HCCL_INFO("[RdmaConnLiteV2::%s] WriteReduceWithNotify start, loc size = %u", __func__, loc.GetSize());
     CheckVendorOp();
 
     // 分片操作
-    DoSlice(loc, rmt, [this, &cfg, dataType, reduceOp](const RmaBufSliceLite &locSlice, const RmtRmaBufSliceLite &rmtSlice) {
-        rdmaOps_->WriteReduce(locSlice, rmtSlice, cfg, dataType, reduceOp);
-    });
+    DoSlice(
+        loc, rmt,
+        [this, &cfg, dataType, reduceOp](const RmaBufSliceLite& locSlice, const RmtRmaBufSliceLite& rmtSlice) {
+            rdmaOps_->WriteReduce(locSlice, rmtSlice, cfg, dataType, reduceOp);
+        });
 
     // 补充一个notify操作
     rdmaOps_->Write(locNotify, notify, cfg);
@@ -197,37 +211,40 @@ void RdmaConnLiteV2::WriteReduceWithNotify(
     // 构造Doorbell并返回
     rdmaOps_->BuildDoorbell(dbAddr, dbValue);
 
-    HCCL_INFO("[RdmaConnLiteV2::%s] WriteReduceWithNotify end, dbAddr = %llu, dbValue = %llu, conn[%s]", __func__, dbAddr, dbValue, Describe().c_str());
+    HCCL_INFO(
+        "[RdmaConnLiteV2::%s] WriteReduceWithNotify end, dbAddr = %llu, dbValue = %llu, conn[%s]", __func__, dbAddr,
+        dbValue, Describe().c_str());
 }
 
 void RdmaConnLiteV2::DoSlice(
-    const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt,
-    const std::function<void(const RmaBufSliceLite &, const RmtRmaBufSliceLite &)> &op) const
+    const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt,
+    const std::function<void(const RmaBufSliceLite&, const RmtRmaBufSliceLite&)>& op) const
 {
     const u64 len = loc.GetSize();
     const u32 fullSlices = static_cast<u32>(len / RDMA_DMA_MAX_SIZE);
-    const u32 remain     = static_cast<u32>(len % RDMA_DMA_MAX_SIZE);
+    const u32 remain = static_cast<u32>(len % RDMA_DMA_MAX_SIZE);
     const u32 totalSlices = fullSlices + (remain > 0 ? 1 : 0);
 
     for (u32 sliceIdx = 0; sliceIdx < totalSlices; sliceIdx++) {
-        const u64 offset     = static_cast<u64>(sliceIdx) * RDMA_DMA_MAX_SIZE;
-        const u64 localAddr  = loc.GetAddr() + offset;
+        const u64 offset = static_cast<u64>(sliceIdx) * RDMA_DMA_MAX_SIZE;
+        const u64 localAddr = loc.GetAddr() + offset;
         const u64 remoteAddr = rmt.GetAddr() + offset;
-        const u32 sliceSize  = (sliceIdx == totalSlices - 1 && remain > 0)
-                               ? remain : RDMA_DMA_MAX_SIZE;
+        const u32 sliceSize = (sliceIdx == totalSlices - 1 && remain > 0) ? remain : RDMA_DMA_MAX_SIZE;
 
-        RmaBufSliceLite    locSlice(localAddr, sliceSize, loc.GetLkey(), 0);
+        RmaBufSliceLite locSlice(localAddr, sliceSize, loc.GetLkey(), 0);
         RmtRmaBufSliceLite rmtSlice(remoteAddr, sliceSize, rmt.GetRkey(), 0, 0, UINT32_MAX);
 
-        HCCL_INFO("[RdmaConnLiteV2::%s] Slice[%u]: offset=0x%llx, localAddr=0x%llx, "
-                  "remoteAddr=0x%llx, size=0x%x",
-                  __func__, sliceIdx, offset, localAddr, remoteAddr, sliceSize);
+        HCCL_INFO(
+            "[RdmaConnLiteV2::%s] Slice[%u]: offset=0x%llx, localAddr=0x%llx, "
+            "remoteAddr=0x%llx, size=0x%x",
+            __func__, sliceIdx, offset, localAddr, remoteAddr, sliceSize);
 
         op(locSlice, rmtSlice);
     }
 }
 
-HcclResult RdmaConnLiteV2::PollCq(int32_t numEntries, int32_t timeOut, std::vector<int32_t> &errList, u64 &dbAddr, u64 &dbValue)
+HcclResult
+RdmaConnLiteV2::PollCq(int32_t numEntries, int32_t timeOut, std::vector<int32_t>& errList, u64& dbAddr, u64& dbValue)
 {
     HcclResult ret = HCCL_SUCCESS;
 
@@ -244,6 +261,5 @@ HcclResult RdmaConnLiteV2::PollCq(int32_t numEntries, int32_t timeOut, std::vect
     }
     return HCCL_SUCCESS;
 }
-
 
 } // namespace Hccl

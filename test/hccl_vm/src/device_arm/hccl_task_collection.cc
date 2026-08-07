@@ -15,7 +15,7 @@
 #include "sim_log.h"
 #include "db_sim_op_db_ops.h"
 
-void InsertTaskToCollectionDev(HcclTaskMetaData *task)
+void InsertTaskToCollectionDev(HcclTaskMetaData* task)
 {
     static std::atomic<uint32_t> g_taskSeq{0};
 
@@ -27,15 +27,14 @@ void InsertTaskToCollectionDev(HcclTaskMetaData *task)
 
     // 3. 写入任务信息到数据库
     sim::OpTaskTab opTaskInfo;
-    opTaskInfo.id = 0;   // 数据库自增，无需设置 
-    opTaskInfo.opDetailId = 0;  // 默认关联ID为0，需在上游调用处关联
+    opTaskInfo.id = 0;         // 数据库自增，无需设置
+    opTaskInfo.opDetailId = 0; // 默认关联ID为0，需在上游调用处关联
     opTaskInfo.taskSeq = g_taskSeq.fetch_add(1, std::memory_order_relaxed);
-    
+
     // 序列化 HcclTaskMetaData 到 blob
     opTaskInfo.optaskMeta.assign(
-        reinterpret_cast<const uint8_t*>(task),
-        reinterpret_cast<const uint8_t*>(task) + sizeof(HcclTaskMetaData));
-    
+        reinterpret_cast<const uint8_t*>(task), reinterpret_cast<const uint8_t*>(task) + sizeof(HcclTaskMetaData));
+
     auto ret = sim::InsertOpTask(opTaskInfo, true);
     if (ret != 0) {
         HCCL_VM_ERROR("错误：插入任务到数据库失败 - {}", ret);

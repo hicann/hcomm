@@ -21,27 +21,27 @@ public:
     explicit ReduceScatterRecursiveHalvingDoubling(const HcclDispatcher dispatcher);
     ~ReduceScatterRecursiveHalvingDoubling() override;
 
-    HcclResult Prepare(u64 reduceAttrBitMap, HcomCollOpInfo *opInfo = nullptr) override;
-    HcclResult RunAsync(
-        const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport> > &links) override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo = nullptr) override;
+    HcclResult
+    RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
 
 protected:
 private:
     HcclResult CalculateSlices(u64 dataBytes, const u32 rankSize) const;
 
-    HcclResult ReduceInPartOne(u32 rank, const std::vector<LINK> &links);
+    HcclResult ReduceInPartOne(u32 rank, const std::vector<LINK>& links);
 
-    HcclResult ReduceScatterInBlock(u32 rank, u32 rankSize, const std::vector<LINK> &links);
+    HcclResult ReduceScatterInBlock(u32 rank, u32 rankSize, const std::vector<LINK>& links);
 
-    HcclResult ScatterInPartOne(u32 rank, u32 rankSize, const std::vector<LINK> &links);
+    HcclResult ScatterInPartOne(u32 rank, u32 rankSize, const std::vector<LINK>& links);
 
     u64 reduceAttr = 0;
 
     std::unique_ptr<Sender> senderInfo_;
     std::unique_ptr<Reducer> reducerInfo_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* __REDUCE_SCATTER_HALVINGDOUBLING_PUB_H__ */

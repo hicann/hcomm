@@ -22,7 +22,7 @@ using HcclUs = std::chrono::steady_clock::time_point;
 
 namespace Hccl {
 
-void CollServiceDefaultImpl::LoadWithOpBasedModeNoRegister(CollOperator &op)
+void CollServiceDefaultImpl::LoadWithOpBasedModeNoRegister(CollOperator& op)
 {
     shared_ptr<InsQueue> insQueue;
     insQueue = OrchestrateWithIns(op);
@@ -52,7 +52,7 @@ void CollServiceDefaultImpl::LoadWithOpBasedModeNoRegister(CollOperator &op)
     UpdateUbCiIfNeed(op.opTag);
 }
 
-void CollServiceDefaultImpl::LoadWithOpBasedMode(CollOperator &op, unique_ptr<Stream> stream)
+void CollServiceDefaultImpl::LoadWithOpBasedMode(CollOperator& op, unique_ptr<Stream> stream)
 {
     HCCL_INFO("LoadWithOpBasedMode START");
     HCCL_INFO("RegisterOpbasedBuf start");
@@ -63,12 +63,12 @@ void CollServiceDefaultImpl::LoadWithOpBasedMode(CollOperator &op, unique_ptr<St
     HCCL_INFO("LoadWithOpBasedMode END");
 }
 
-void CollServiceDefaultImpl::UpdateUbCiIfNeed(const std::string &opTag)
+void CollServiceDefaultImpl::UpdateUbCiIfNeed(const std::string& opTag)
 {
     HCCL_INFO("CollServiceDefaultImpl::UpdateUbCiIfNeed start, opTag[%s]", opTag.c_str());
     if (updatingUbCiEvent == nullptr) {
         HCCL_INFO("updatingUbCiEvent is null");
-        std::vector<DevUbConnection *> devUbConns = GetStarsPollUbConns(comm->GetRmaConnManager().GetOpTagConns(opTag));
+        std::vector<DevUbConnection*> devUbConns = GetStarsPollUbConns(comm->GetRmaConnManager().GetOpTagConns(opTag));
         HCCL_INFO("starsPoll devUbConns size: %lu", devUbConns.size());
         if (IfNeedUpdatingUbCi(devUbConns)) {
             HCCL_INFO("need update ub ci");
@@ -93,7 +93,7 @@ void CollServiceDefaultImpl::UpdateUbCiIfNeed(const std::string &opTag)
     }
 }
 
-void CollServiceDefaultImpl::LoadWithOffloadModeNoRegister(CollOperator &op)
+void CollServiceDefaultImpl::LoadWithOffloadModeNoRegister(CollOperator& op)
 {
     RegisterOffloadLocalRmaBuf(op.opTag);
 
@@ -132,7 +132,7 @@ void CollServiceDefaultImpl::LoadWithOffloadModeNoRegister(CollOperator &op)
     AddNop(op.opTag, links);
 }
 
-void CollServiceDefaultImpl::LoadWithOffloadMode(CollOperator &op, std::unique_ptr<Stream> stream)
+void CollServiceDefaultImpl::LoadWithOffloadMode(CollOperator& op, std::unique_ptr<Stream> stream)
 {
     HCCL_INFO("LoadWithOffloadMode START");
     HCCL_INFO("RegisterOffloadBuf start");
@@ -145,13 +145,13 @@ void CollServiceDefaultImpl::LoadWithOffloadMode(CollOperator &op, std::unique_p
     HCCL_INFO("LoadWithOffloadMode END");
 }
 
-shared_ptr<PrimQueue> CollServiceDefaultImpl::OrchestrateWithPrim(const CollAlgOperator &op) const
+shared_ptr<PrimQueue> CollServiceDefaultImpl::OrchestrateWithPrim(const CollAlgOperator& op) const
 {
-    u64           tmpMemSize = comm->GetBufferSize();
+    u64 tmpMemSize = comm->GetBufferSize();
     CollAlgParams params{};
-    auto          primQueue = make_shared<PrimQueue>();
+    auto primQueue = make_shared<PrimQueue>();
 
-    params.opMode        = op.opMode;
+    params.opMode = op.opMode;
     params.maxTmpMemSize = tmpMemSize;
 
     HCCL_INFO("orchestrate with Prim start");
@@ -166,7 +166,7 @@ shared_ptr<PrimQueue> CollServiceDefaultImpl::OrchestrateWithPrim(const CollAlgO
     return primQueue;
 }
 
-shared_ptr<InsQueue> CollServiceDefaultImpl::OrchestrateWithIns(const CollAlgOperator &op) const
+shared_ptr<InsQueue> CollServiceDefaultImpl::OrchestrateWithIns(const CollAlgOperator& op) const
 {
     u64 tmpMemSize = 0;
     // 图模式部分算子不需要scratchMem
@@ -174,9 +174,9 @@ shared_ptr<InsQueue> CollServiceDefaultImpl::OrchestrateWithIns(const CollAlgOpe
         tmpMemSize = op.scratchMem->GetSize();
     }
     CollAlgParams params{};
-    auto          insQueue = make_shared<InsQueue>();
+    auto insQueue = make_shared<InsQueue>();
 
-    params.opMode        = op.opMode;
+    params.opMode = op.opMode;
     params.maxTmpMemSize = tmpMemSize;
 
     HCCL_INFO("orchestrate with Ins start");
@@ -190,10 +190,10 @@ shared_ptr<InsQueue> CollServiceDefaultImpl::OrchestrateWithIns(const CollAlgOpe
     return insQueue;
 }
 
-void CollServiceDefaultImpl::AllocNotifies(const vector<LinkData> &links)
+void CollServiceDefaultImpl::AllocNotifies(const vector<LinkData>& links)
 {
     vector<LinkData> pendingLinks;
-    for (auto &link : links) {
+    for (auto& link : links) {
         if (Contain(availableLinks, link)) {
             continue;
         }
@@ -204,7 +204,7 @@ void CollServiceDefaultImpl::AllocNotifies(const vector<LinkData> &links)
         return;
     }
 
-    for (auto &link : pendingLinks) {
+    for (auto& link : pendingLinks) {
         // 待修改: 申请数量
         comm->GetConnLocalNotifyManager().ApplyFor(link.GetRemoteRankId(), link);
     }
@@ -212,11 +212,11 @@ void CollServiceDefaultImpl::AllocNotifies(const vector<LinkData> &links)
     availableLinks.insert(pendingLinks.begin(), pendingLinks.end());
 }
 
-void CollServiceDefaultImpl::AllocOneLocCntNotify(const Instruction &ins) const
+void CollServiceDefaultImpl::AllocOneLocCntNotify(const Instruction& ins) const
 {
     HCCL_INFO("AllocOneLocCntNotify %s begin", ins.Describe().c_str());
     vector<LinkData> links;
-    const InsWaitGroupFin &insWaitGroupFin = reinterpret_cast<const InsWaitGroupFin &>(ins);
+    const InsWaitGroupFin& insWaitGroupFin = reinterpret_cast<const InsWaitGroupFin&>(ins);
     for (auto iter = insWaitGroupFin.Iter(); iter.HasNext(); ++iter) {
         links.push_back(*iter);
     }
@@ -224,7 +224,7 @@ void CollServiceDefaultImpl::AllocOneLocCntNotify(const Instruction &ins) const
     HCCL_INFO("AllocOneLocCntNotify %s end", ins.Describe().c_str());
 }
 
-void CollServiceDefaultImpl::AllocLocCntNotifies(const InsQueue &insQueue) const
+void CollServiceDefaultImpl::AllocLocCntNotifies(const InsQueue& insQueue) const
 {
     for (auto ins = insQueue.Iter(); ins.HasNext(); ++ins) {
         if (ins->GetType() == InstructionType::WAIT_GROUP_FIN) {
@@ -243,36 +243,36 @@ void CollServiceDefaultImpl::AllocLocCntNotifies(const InsQueue &insQueue) const
 
 void CollServiceDefaultImpl::Init()
 {
-    ubCiUpdaterMgr           = make_unique<UbCiUpdaterManager>(&comm->GetRmaConnManager());
-    primTranslator           = make_unique<PrimTranslator>();
+    ubCiUpdaterMgr = make_unique<UbCiUpdaterManager>(&comm->GetRmaConnManager());
+    primTranslator = make_unique<PrimTranslator>();
     RegisterCclLocRmaBuffer();
 }
 
-void CollServiceDefaultImpl::AddNop(const std::string &opTag, const vector<LinkData> &linkDataVec) const
+void CollServiceDefaultImpl::AddNop(const std::string& opTag, const vector<LinkData>& linkDataVec) const
 {
-    for (auto &linkData : linkDataVec) {
-        auto    conn       = comm->GetRmaConnManager().Get(opTag, linkData);
-        Stream *mainStream = comm->GetStreamManager().offload->GetMaster(opTag);
-        if(conn == nullptr) {
-        THROW<NullPtrException>(StringFormat("CollServiceDefaultImpl::AddNop ptr is null"));
+    for (auto& linkData : linkDataVec) {
+        auto conn = comm->GetRmaConnManager().Get(opTag, linkData);
+        Stream* mainStream = comm->GetStreamManager().offload->GetMaster(opTag);
+        if (conn == nullptr) {
+            THROW<NullPtrException>(StringFormat("CollServiceDefaultImpl::AddNop ptr is null"));
         }
         conn->AddNop(*mainStream);
     }
 }
 
-void CollServiceDefaultImpl::RecoverTransport(vector<LinkData> &links, vector<std::pair<LinkGroup, u32>> linkGroupPair)
+void CollServiceDefaultImpl::RecoverTransport(vector<LinkData>& links, vector<std::pair<LinkGroup, u32>> linkGroupPair)
 {
     THROW<NotSupportException>(StringFormat("CollServiceDefaultImpl::RecoverTransport not support yet."));
 }
 
-void CollServiceDefaultImpl::ReLoadWithOpBasedMode(CollOperator &op)
+void CollServiceDefaultImpl::ReLoadWithOpBasedMode(CollOperator& op)
 {
     HCCL_INFO("[CollServiceDeviceMode::%s] start.", __func__);
     LoadWithOpBasedModeNoRegister(op);
     HCCL_INFO("[CollServiceDeviceMode::%s] end.", __func__);
 }
 
-void CollServiceDefaultImpl::ReLoadWithOffloadMode(CollOperator &op)
+void CollServiceDefaultImpl::ReLoadWithOffloadMode(CollOperator& op)
 {
     HCCL_INFO("[CollServiceDeviceMode::%s] start.", __func__);
     LoadWithOffloadModeNoRegister(op);

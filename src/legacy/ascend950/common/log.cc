@@ -21,79 +21,61 @@ int HcclCheckLogLevel(int logLevel)
     }
 }
 
-bool CheckDebugLogLevel()
-{
-    return CheckLogLevel(HCCL, DLOG_DEBUG) == 1;
-}
+bool CheckDebugLogLevel() { return CheckLogLevel(HCCL, DLOG_DEBUG) == 1; }
 
-bool CheckInfoLogLevel()
-{
-    return CheckLogLevel(HCCL, DLOG_INFO) == 1;
-}
+bool CheckInfoLogLevel() { return CheckLogLevel(HCCL, DLOG_INFO) == 1; }
 
 void CallDlogInvalidType(int level, int errCode, std::string file, int line)
 {
     if (level == HCCL_LOG_RUN_INFO) {
-        LOG_FUNC(static_cast<u32>(HCCL) | RUN_LOG_MASK, DLOG_INFO,
-                 "[%s:%d][Log] Invalid LogType:Mod[%s],Type[%u]\n",
-                 file.c_str(), line, "HCCL", errCode);
+        LOG_FUNC(
+            static_cast<u32>(HCCL) | RUN_LOG_MASK, DLOG_INFO, "[%s:%d][Log] Invalid LogType:Mod[%s],Type[%u]\n",
+            file.c_str(), line, "HCCL", errCode);
     } else {
-        LOG_FUNC(HCCL, level,
-                 "[%s:%d][Log] Invalid LogType:Mod[%s],Type[%u]\n",
-                 file.c_str(), line, "HCCL", errCode);
+        LOG_FUNC(HCCL, level, "[%s:%d][Log] Invalid LogType:Mod[%s],Type[%u]\n", file.c_str(), line, "HCCL", errCode);
     }
 }
 
 void CallDlogNoSzFormat(int level, int errCode, std::string file, int line)
 {
     if (level == HCCL_LOG_RUN_INFO) {
-        LOG_FUNC(static_cast<u32>(HCCL) | RUN_LOG_MASK, DLOG_INFO,
-                 "[%s:%d]errNo[0x%016llx] ptr of szFormat is null\n",
-                 file.c_str(), line, errCode);
+        LOG_FUNC(
+            static_cast<u32>(HCCL) | RUN_LOG_MASK, DLOG_INFO, "[%s:%d]errNo[0x%016llx] ptr of szFormat is null\n",
+            file.c_str(), line, errCode);
     } else {
-        LOG_FUNC(HCCL, level,
-                 "[%s:%d]errNo[0x%016llx] ptr of szFormat is null\n",
-                 file.c_str(), line, errCode);
+        LOG_FUNC(HCCL, level, "[%s:%d]errNo[0x%016llx] ptr of szFormat is null\n", file.c_str(), line, errCode);
     }
 }
 
 void CallDlogMemError(int level, std::string file, int line)
 {
     if (level == HCCL_LOG_RUN_INFO) {
-        LOG_FUNC(static_cast<u32>(HCCL) | RUN_LOG_MASK, DLOG_INFO,
-                 "[%s:%d]memset stack log buffer to 0 failed.\n",
-                 file.c_str(), line);
+        LOG_FUNC(
+            static_cast<u32>(HCCL) | RUN_LOG_MASK, DLOG_INFO, "[%s:%d]memset stack log buffer to 0 failed.\n",
+            file.c_str(), line);
     } else {
-        LOG_FUNC(HCCL, level,
-                 "[%s:%d]memset stack log buffer to 0 failed.\n",
-                 file.c_str(), line);
+        LOG_FUNC(HCCL, level, "[%s:%d]memset stack log buffer to 0 failed.\n", file.c_str(), line);
     }
 }
 
 void CallDlogPrintError(int level, std::string file, int line)
 {
     if (level == HCCL_LOG_RUN_INFO) {
-        LOG_FUNC(static_cast<u32>(HCCL) | RUN_LOG_MASK, DLOG_INFO,
-                 "[%s:%d]snprintf_s failed.\n",
-                 file.c_str(), line);
+        LOG_FUNC(static_cast<u32>(HCCL) | RUN_LOG_MASK, DLOG_INFO, "[%s:%d]snprintf_s failed.\n", file.c_str(), line);
     } else {
-        LOG_FUNC(HCCL, level,
-                 "[%s:%d]snprintf_s failed.\n",
-                 file.c_str(), line);
+        LOG_FUNC(HCCL, level, "[%s:%d]snprintf_s failed.\n", file.c_str(), line);
     }
 }
 
-void CallDlog(int level, int sysCallBack, const char *buffer, std::string file, int line)
+void CallDlog(int level, int sysCallBack, const char* buffer, std::string file, int line)
 {
     if (level == HCCL_LOG_RUN_INFO) {
-        LOG_FUNC(static_cast<u32>(HCCL) | RUN_LOG_MASK, DLOG_INFO,
-                 "[%s:%d][%u]%s\n",
-                 file.c_str(), line, sysCallBack, buffer);
+        LOG_FUNC(
+            static_cast<u32>(HCCL) | RUN_LOG_MASK, DLOG_INFO, "[%s:%d][%u]%s\n", file.c_str(), line, sysCallBack,
+            buffer);
     } else {
-        LOG_FUNC(HCCL, level,
-                 "[%s:%d][%u]%s\n",
-                 file.c_str(), line, sysCallBack, buffer);
+        LOG_FUNC(HCCL, level, "[%s:%d][%u]%s\n", file.c_str(), line, sysCallBack, buffer);
     }
 }
 #endif
-}
+} // namespace Hccl

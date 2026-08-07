@@ -15,42 +15,56 @@
 namespace Hccl {
 namespace CcuRep {
 
-CcuRepWrite::CcuRepWrite(const CcuTransport &transport, Memory rem, Memory loc, Variable len, MaskSignal sem,
-                         uint16_t mask)
-    : transport(transport), rem(rem), loc(loc), len(len), sem(sem), mask(mask)
-{
-    type = CcuRepType::WRITE;
-    instrCount = 1;
-}
+    CcuRepWrite::CcuRepWrite(
+        const CcuTransport& transport, Memory rem, Memory loc, Variable len, MaskSignal sem, uint16_t mask)
+        : transport(transport),
+          rem(rem),
+          loc(loc),
+          len(len),
+          sem(sem),
+          mask(mask)
+    {
+        type = CcuRepType::WRITE;
+        instrCount = 1;
+    }
 
-CcuRepWrite::CcuRepWrite(const CcuTransport &transport, Memory rem, Memory loc, Variable len,
-                         uint16_t dataType, uint16_t opType, MaskSignal sem, uint16_t mask)
-    : transport(transport), rem(rem), loc(loc), len(len), sem(sem), mask(mask),
-      dataType(dataType), opType(opType), reduceFlag(1)
-{
-    type = CcuRepType::WRITE;
-    instrCount = 1;
-}
+    CcuRepWrite::CcuRepWrite(
+        const CcuTransport& transport, Memory rem, Memory loc, Variable len, uint16_t dataType, uint16_t opType,
+        MaskSignal sem, uint16_t mask)
+        : transport(transport),
+          rem(rem),
+          loc(loc),
+          len(len),
+          sem(sem),
+          mask(mask),
+          dataType(dataType),
+          opType(opType),
+          reduceFlag(1)
+    {
+        type = CcuRepType::WRITE;
+        instrCount = 1;
+    }
 
-bool CcuRepWrite::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool CcuRepWrite::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    TransLocMemToRmtMemInstr(instr++, rem.addr.Id(), rem.token.Id(), loc.addr.Id(), loc.token.Id(), len.Id(),
-                             transport.GetChannelId(), dataType, opType, sem.Id(), mask, 0, 0, 1, 1, reduceFlag);
-    
-    instrId += instrCount;
+        TransLocMemToRmtMemInstr(
+            instr++, rem.addr.Id(), rem.token.Id(), loc.addr.Id(), loc.token.Id(), len.Id(), transport.GetChannelId(),
+            dataType, opType, sem.Id(), mask, 0, 0, 1, 1, reduceFlag);
 
-    return translated;
-}
+        instrId += instrCount;
 
-std::string CcuRepWrite::Describe()
-{
-    return StringFormat(
-        "Write Memory[%u] to Memory[%u], length[%u], set sem[%u] with mask[%04x], dataType[%u], opType[%u]",
-        loc.addr.Id(), rem.addr.Id(), len.Id(), sem.Id(), mask, dataType, opType);
-}
+        return translated;
+    }
+
+    std::string CcuRepWrite::Describe()
+    {
+        return StringFormat(
+            "Write Memory[%u] to Memory[%u], length[%u], set sem[%u] with mask[%04x], dataType[%u], opType[%u]",
+            loc.addr.Id(), rem.addr.Id(), len.Id(), sem.Id(), mask, dataType, opType);
+    }
 
 }; // namespace CcuRep
 }; // namespace Hccl

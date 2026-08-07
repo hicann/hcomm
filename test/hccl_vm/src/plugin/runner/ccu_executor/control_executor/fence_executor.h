@@ -20,17 +20,19 @@
 
 class FenceExecutor : public CcuExecutorBase {
 public:
-    explicit FenceExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit FenceExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     FenceExecutor() = default;
     ~FenceExecutor() = default;
 
     void Parser() override;
-    void Process(CcuResourceManager &ccuResMgr)  override;
+    void Process(CcuResourceManager& ccuResMgr) override;
     void Run() override;
     std::string Describe() override;
     CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
+
 private:
 };
 

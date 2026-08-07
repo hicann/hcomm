@@ -18,14 +18,19 @@
 
 static const std::unordered_map<int, std::function<void(bool&)>> captureStatusHandlers = {
     // ACL Graph 获取capture状态处理
-    {aclmdlRICaptureStatus::ACL_MODEL_RI_CAPTURE_STATUS_ACTIVE, [](bool& isCapture) { isCapture = true; }},
+    {aclmdlRICaptureStatus::ACL_MODEL_RI_CAPTURE_STATUS_ACTIVE,
+     [](bool& isCapture) {
+         isCapture = true;
+     }},
     {aclmdlRICaptureStatus::ACL_MODEL_RI_CAPTURE_STATUS_NONE,
-        [](bool& isCapture) { HCCL_DEBUG("[GetStreamCaptureInfo]Stream capture status NONE."); }},
-    {aclmdlRICaptureStatus::ACL_MODEL_RI_CAPTURE_STATUS_INVALIDATED,
-        [](bool& isCapture) { HCCL_ERROR("[GetStreamCaptureInfo]Stream capture status invalidated."); }}
-};
+     [](bool& isCapture) {
+         HCCL_DEBUG("[GetStreamCaptureInfo]Stream capture status NONE.");
+     }},
+    {aclmdlRICaptureStatus::ACL_MODEL_RI_CAPTURE_STATUS_INVALIDATED, [](bool& isCapture) {
+         HCCL_ERROR("[GetStreamCaptureInfo]Stream capture status invalidated.");
+     }}};
 
-HcclResult GetStreamCaptureInfo(aclrtStream stream, aclmdlRI &rtModel, bool &isCapture)
+HcclResult GetStreamCaptureInfo(aclrtStream stream, aclmdlRI& rtModel, bool& isCapture)
 {
     isCapture = false;
     aclmdlRICaptureStatus captureStatus = aclmdlRICaptureStatus::ACL_MODEL_RI_CAPTURE_STATUS_NONE;
@@ -34,7 +39,8 @@ HcclResult GetStreamCaptureInfo(aclrtStream stream, aclmdlRI &rtModel, bool &isC
         HCCL_WARNING("[%s]Stream capture not support.", __func__);
         return HCCL_SUCCESS;
     } else {
-        CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclmdlRICaptureGetInfo fail. return[%d].", __func__, ret),
+        CHK_PRT_RET(
+            ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclmdlRICaptureGetInfo fail. return[%d].", __func__, ret),
             HCCL_E_RUNTIME);
     }
     auto it = captureStatusHandlers.find(captureStatus);
@@ -46,7 +52,7 @@ HcclResult GetStreamCaptureInfo(aclrtStream stream, aclmdlRI &rtModel, bool &isC
     return HCCL_SUCCESS;
 }
 
-HcclResult AddStreamToModel(rtStream_t stream, rtModel_t &rtModel)
+HcclResult AddStreamToModel(rtStream_t stream, rtModel_t& rtModel)
 {
     rtError_t ret = rtStreamAddToModel(stream, rtModel);
     if (ret != RT_ERROR_NONE) {
@@ -56,12 +62,13 @@ HcclResult AddStreamToModel(rtStream_t stream, rtModel_t &rtModel)
     return HCCL_SUCCESS;
 }
 
-HcclResult GetModelId(aclmdlRI &rtModel, u64 &modelId)
+HcclResult GetModelId(aclmdlRI& rtModel, u64& modelId)
 {
     uint32_t mdlId;
     rtError_t rtRet = rtModelGetId(rtModel, &mdlId);
-    CHK_PRT_RET(rtRet != RT_ERROR_NONE,
-                HCCL_ERROR("[%s]rtGet stream get model id fail. return[%d]", __func__, rtRet), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        rtRet != RT_ERROR_NONE, HCCL_ERROR("[%s]rtGet stream get model id fail. return[%d]", __func__, rtRet),
+        HCCL_E_RUNTIME);
     modelId = static_cast<uint64_t>(mdlId);
     return HCCL_SUCCESS;
 }

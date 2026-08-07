@@ -28,155 +28,153 @@
 
 namespace HcclSim {
 namespace {
-bool IsDigitString(const std::string &value, size_t start, size_t end)
-{
-    if (start >= end || end > value.size()) {
-        return false;
-    }
-    for (size_t index = start; index < end; ++index) {
-        if (value[index] < '0' || value[index] > '9') {
+    bool IsDigitString(const std::string& value, size_t start, size_t end)
+    {
+        if (start >= end || end > value.size()) {
             return false;
         }
-    }
-    return true;
-}
-
-bool TryParseMainTaskId(const std::string &taskId, RankId &rankId, uint64_t &nodeIndex)
-{
-    if (taskId.size() < 4 || taskId[0] != 'r') {
-        return false;
-    }
-    const size_t splitPos = taskId.find('n', 1);
-    if (splitPos == std::string::npos || splitPos == 1 || splitPos + 1 >= taskId.size()) {
-        return false;
-    }
-    if (!IsDigitString(taskId, 1, splitPos) || !IsDigitString(taskId, splitPos + 1, taskId.size())) {
-        return false;
+        for (size_t index = start; index < end; ++index) {
+            if (value[index] < '0' || value[index] > '9') {
+                return false;
+            }
+        }
+        return true;
     }
 
-    rankId = static_cast<RankId>(std::stoul(taskId.substr(1, splitPos - 1)));
-    nodeIndex = std::stoull(taskId.substr(splitPos + 1));
-    return true;
-}
+    bool TryParseMainTaskId(const std::string& taskId, RankId& rankId, uint64_t& nodeIndex)
+    {
+        if (taskId.size() < 4 || taskId[0] != 'r') {
+            return false;
+        }
+        const size_t splitPos = taskId.find('n', 1);
+        if (splitPos == std::string::npos || splitPos == 1 || splitPos + 1 >= taskId.size()) {
+            return false;
+        }
+        if (!IsDigitString(taskId, 1, splitPos) || !IsDigitString(taskId, splitPos + 1, taskId.size())) {
+            return false;
+        }
 
-bool TryParseDerivedTaskId(const std::string &taskId, const std::string &baseTaskId, uint64_t &subIndex)
-{
-    if (baseTaskId.empty() || taskId.size() <= baseTaskId.size() + 1) {
-        return false;
-    }
-    if (taskId.compare(0, baseTaskId.size(), baseTaskId) != 0 || taskId[baseTaskId.size()] != '_') {
-        return false;
-    }
-
-    const size_t suffixStart = baseTaskId.size() + 1;
-    if (!IsDigitString(taskId, suffixStart, taskId.size())) {
-        return false;
-    }
-
-    subIndex = std::stoull(taskId.substr(suffixStart));
-    return true;
-}
-
-bool IsValidTaskNode(const TaskNode *node)
-{
-    return node != nullptr && node->task != nullptr && node->rankIdx != static_cast<RankId>(-1);
-}
-
-void SeedMainGraphRankCounters(TaskNode *dummyStart, std::map<RankId, uint64_t> &rankNodeCounters)
-{
-    if (dummyStart == nullptr) {
-        return;
+        rankId = static_cast<RankId>(std::stoul(taskId.substr(1, splitPos - 1)));
+        nodeIndex = std::stoull(taskId.substr(splitPos + 1));
+        return true;
     }
 
-    std::queue<TaskNode *> visitQueue;
-    std::set<TaskNode *> visited;
-    visitQueue.push(dummyStart);
-    visited.insert(dummyStart);
+    bool TryParseDerivedTaskId(const std::string& taskId, const std::string& baseTaskId, uint64_t& subIndex)
+    {
+        if (baseTaskId.empty() || taskId.size() <= baseTaskId.size() + 1) {
+            return false;
+        }
+        if (taskId.compare(0, baseTaskId.size(), baseTaskId) != 0 || taskId[baseTaskId.size()] != '_') {
+            return false;
+        }
 
-    while (!visitQueue.empty()) {
-        TaskNode *currentNode = visitQueue.front();
-        visitQueue.pop();
+        const size_t suffixStart = baseTaskId.size() + 1;
+        if (!IsDigitString(taskId, suffixStart, taskId.size())) {
+            return false;
+        }
 
-        for (auto *child : currentNode->children) {
-            if (child != nullptr && visited.insert(child).second) {
-                visitQueue.push(child);
+        subIndex = std::stoull(taskId.substr(suffixStart));
+        return true;
+    }
+
+    bool IsValidTaskNode(const TaskNode* node)
+    {
+        return node != nullptr && node->task != nullptr && node->rankIdx != static_cast<RankId>(-1);
+    }
+
+    void SeedMainGraphRankCounters(TaskNode* dummyStart, std::map<RankId, uint64_t>& rankNodeCounters)
+    {
+        if (dummyStart == nullptr) {
+            return;
+        }
+
+        std::queue<TaskNode*> visitQueue;
+        std::set<TaskNode*> visited;
+        visitQueue.push(dummyStart);
+        visited.insert(dummyStart);
+
+        while (!visitQueue.empty()) {
+            TaskNode* currentNode = visitQueue.front();
+            visitQueue.pop();
+
+            for (auto* child : currentNode->children) {
+                if (child != nullptr && visited.insert(child).second) {
+                    visitQueue.push(child);
+                }
+            }
+
+            if (!IsValidTaskNode(currentNode)) {
+                continue;
+            }
+
+            RankId rankId = static_cast<RankId>(-1);
+            uint64_t nodeIndex = 0;
+            if (TryParseMainTaskId(currentNode->task->GetTaskId(), rankId, nodeIndex)
+                && rankId == currentNode->rankIdx) {
+                rankNodeCounters[rankId] = std::max(rankNodeCounters[rankId], nodeIndex + 1);
+            }
+        }
+    }
+
+    void EnsureCcuSubGraphTaskIds(TaskStubCcuGraph* ccuGraphTask)
+    {
+        if (ccuGraphTask == nullptr || ccuGraphTask->ccuHeadTaskNode == nullptr) {
+            return;
+        }
+
+        const std::string baseTaskId = ccuGraphTask->GetTaskId();
+        if (baseTaskId.empty()) {
+            return;
+        }
+
+        uint64_t nextSubIndex = 0;
+        std::queue<TaskNode*> seedQueue;
+        std::set<TaskNode*> seedVisited;
+        seedQueue.push(ccuGraphTask->ccuHeadTaskNode);
+        seedVisited.insert(ccuGraphTask->ccuHeadTaskNode);
+        while (!seedQueue.empty()) {
+            TaskNode* currentNode = seedQueue.front();
+            seedQueue.pop();
+            for (auto* child : currentNode->children) {
+                if (child != nullptr && seedVisited.insert(child).second) {
+                    seedQueue.push(child);
+                }
+            }
+            if (!IsValidTaskNode(currentNode)) {
+                continue;
+            }
+
+            uint64_t subIndex = 0;
+            if (TryParseDerivedTaskId(currentNode->task->GetTaskId(), baseTaskId, subIndex)) {
+                nextSubIndex = std::max(nextSubIndex, subIndex + 1);
             }
         }
 
-        if (!IsValidTaskNode(currentNode)) {
-            continue;
-        }
-
-        RankId rankId = static_cast<RankId>(-1);
-        uint64_t nodeIndex = 0;
-        if (TryParseMainTaskId(currentNode->task->GetTaskId(), rankId, nodeIndex) && rankId == currentNode->rankIdx) {
-            rankNodeCounters[rankId] = std::max(rankNodeCounters[rankId], nodeIndex + 1);
-        }
-    }
-}
-
-void EnsureCcuSubGraphTaskIds(TaskStubCcuGraph *ccuGraphTask)
-{
-    if (ccuGraphTask == nullptr || ccuGraphTask->ccuHeadTaskNode == nullptr) {
-        return;
-    }
-
-    const std::string baseTaskId = ccuGraphTask->GetTaskId();
-    if (baseTaskId.empty()) {
-        return;
-    }
-
-    uint64_t nextSubIndex = 0;
-    std::queue<TaskNode *> seedQueue;
-    std::set<TaskNode *> seedVisited;
-    seedQueue.push(ccuGraphTask->ccuHeadTaskNode);
-    seedVisited.insert(ccuGraphTask->ccuHeadTaskNode);
-    while (!seedQueue.empty()) {
-        TaskNode *currentNode = seedQueue.front();
-        seedQueue.pop();
-        for (auto *child : currentNode->children) {
-            if (child != nullptr && seedVisited.insert(child).second) {
-                seedQueue.push(child);
+        std::queue<TaskNode*> visitQueue;
+        std::set<TaskNode*> visited;
+        visitQueue.push(ccuGraphTask->ccuHeadTaskNode);
+        visited.insert(ccuGraphTask->ccuHeadTaskNode);
+        while (!visitQueue.empty()) {
+            TaskNode* currentNode = visitQueue.front();
+            visitQueue.pop();
+            for (auto* child : currentNode->children) {
+                if (child != nullptr && visited.insert(child).second) {
+                    visitQueue.push(child);
+                }
+            }
+            if (!IsValidTaskNode(currentNode)) {
+                continue;
+            }
+            if (currentNode->task->GetTaskId().empty()) {
+                AssignTaskId(currentNode->task, BuildDerivedTaskId(baseTaskId, nextSubIndex++));
             }
         }
-        if (!IsValidTaskNode(currentNode)) {
-            continue;
-        }
-
-        uint64_t subIndex = 0;
-        if (TryParseDerivedTaskId(currentNode->task->GetTaskId(), baseTaskId, subIndex)) {
-            nextSubIndex = std::max(nextSubIndex, subIndex + 1);
-        }
     }
+} // namespace
 
-    std::queue<TaskNode *> visitQueue;
-    std::set<TaskNode *> visited;
-    visitQueue.push(ccuGraphTask->ccuHeadTaskNode);
-    visited.insert(ccuGraphTask->ccuHeadTaskNode);
-    while (!visitQueue.empty()) {
-        TaskNode *currentNode = visitQueue.front();
-        visitQueue.pop();
-        for (auto *child : currentNode->children) {
-            if (child != nullptr && visited.insert(child).second) {
-                visitQueue.push(child);
-            }
-        }
-        if (!IsValidTaskNode(currentNode)) {
-            continue;
-        }
-        if (currentNode->task->GetTaskId().empty()) {
-            AssignTaskId(currentNode->task, BuildDerivedTaskId(baseTaskId, nextSubIndex++));
-        }
-    }
-}
-}  // namespace
+std::string BuildTaskId(RankId rankId, uint64_t nodeIndex) { return StringFormat("r%un%llu", rankId, nodeIndex); }
 
-std::string BuildTaskId(RankId rankId, uint64_t nodeIndex)
-{
-    return StringFormat("r%un%llu", rankId, nodeIndex);
-}
-
-std::string BuildDerivedTaskId(const std::string &baseTaskId, uint64_t subIndex)
+std::string BuildDerivedTaskId(const std::string& baseTaskId, uint64_t subIndex)
 {
     if (baseTaskId.empty()) {
         return "";
@@ -184,7 +182,7 @@ std::string BuildDerivedTaskId(const std::string &baseTaskId, uint64_t subIndex)
     return StringFormat("%s_%llu", baseTaskId.c_str(), subIndex);
 }
 
-void AssignTaskId(TaskStub *task, const std::string &taskId)
+void AssignTaskId(TaskStub* task, const std::string& taskId)
 {
     if (task == nullptr || taskId.empty()) {
         return;
@@ -192,7 +190,7 @@ void AssignTaskId(TaskStub *task, const std::string &taskId)
     task->SetTaskId(taskId);
 }
 
-void EnsureTaskNodeIdsAssigned(TaskNode *dummyStart)
+void EnsureTaskNodeIdsAssigned(TaskNode* dummyStart)
 {
     if (dummyStart == nullptr) {
         return;
@@ -201,16 +199,16 @@ void EnsureTaskNodeIdsAssigned(TaskNode *dummyStart)
     std::map<RankId, uint64_t> rankNodeCounters;
     SeedMainGraphRankCounters(dummyStart, rankNodeCounters);
 
-    std::queue<TaskNode *> visitQueue;
-    std::set<TaskNode *> visited;
+    std::queue<TaskNode*> visitQueue;
+    std::set<TaskNode*> visited;
     visitQueue.push(dummyStart);
     visited.insert(dummyStart);
 
     while (!visitQueue.empty()) {
-        TaskNode *currentNode = visitQueue.front();
+        TaskNode* currentNode = visitQueue.front();
         visitQueue.pop();
 
-        for (auto *child : currentNode->children) {
+        for (auto* child : currentNode->children) {
             if (child != nullptr && visited.insert(child).second) {
                 visitQueue.push(child);
             }
@@ -221,19 +219,21 @@ void EnsureTaskNodeIdsAssigned(TaskNode *dummyStart)
         }
 
         if (currentNode->task->GetTaskId().empty()) {
-            AssignTaskId(currentNode->task, BuildTaskId(currentNode->rankIdx, rankNodeCounters[currentNode->rankIdx]++));
+            AssignTaskId(
+                currentNode->task, BuildTaskId(currentNode->rankIdx, rankNodeCounters[currentNode->rankIdx]++));
         }
 
         if (currentNode->task->GetType() != TaskTypeStub::CCU_GRAPH) {
             continue;
         }
 
-        TaskStubCcuGraph *ccuGraphTask = dynamic_cast<TaskStubCcuGraph *>(currentNode->task);
+        TaskStubCcuGraph* ccuGraphTask = dynamic_cast<TaskStubCcuGraph*>(currentNode->task);
         EnsureCcuSubGraphTaskIds(ccuGraphTask);
     }
 }
 
-LinkProtoStub GetLinkProto(uint8_t commProtocol) {
+LinkProtoStub GetLinkProto(uint8_t commProtocol)
+{
     if (commProtocol == CommProtocol::COMM_PROTOCOL_ROCE) {
         return LinkProtoStub::RDMA;
     }
@@ -254,7 +254,7 @@ uint64_t CalcDataSize(HcclDataType dataType, uint64_t dataCount)
 // rankId, dieId, missionId
 std::map<uint32_t, std::map<uint8_t, std::map<uint8_t, std::shared_ptr<HcclSim::TaskStubCcuGraph>>>> g_missionTask;
 
-static HcclResult GetTaskDataSlice(uint32_t rankId, uint64_t addr, uint64_t size, DataSlice &dataSlice)
+static HcclResult GetTaskDataSlice(uint32_t rankId, uint64_t addr, uint64_t size, DataSlice& dataSlice)
 {
     uint32_t actualRank = 0;
     HcclResult ret = StorageManager::GetInstance().GetSlice(addr, size, dataSlice, &actualRank);
@@ -262,15 +262,16 @@ static HcclResult GetTaskDataSlice(uint32_t rankId, uint64_t addr, uint64_t size
         return ret;
     }
     if (actualRank != rankId) {
-        HCCL_VM_ERROR("{} Resolved data slice rank mismatch, expectedRank={}, actualRank={}, addr={}, size={}",
+        HCCL_VM_ERROR(
+            "{} Resolved data slice rank mismatch, expectedRank={}, actualRank={}, addr={}, size={}",
             MakeErrorCodeText(ErrorCode::GRAPH_ADDRESS_INVALID), rankId, actualRank, addr, size);
         return HCCL_E_MEMORY;
     }
     return HCCL_SUCCESS;
 }
 
-HcclResult ConvertTask(const HcclSim::StorageManager& storage, HcclTaskMetaData hcclTask,
-    std::shared_ptr<TaskStub> &task)
+HcclResult
+ConvertTask(const HcclSim::StorageManager& storage, HcclTaskMetaData hcclTask, std::shared_ptr<TaskStub>& task)
 {
     task.reset();
     switch (hcclTask.taskType) {
@@ -325,14 +326,14 @@ HcclResult ConvertTask(const HcclSim::StorageManager& storage, HcclTaskMetaData 
                 // Write
                 LinkProtoStub linkType = GetLinkProto(hcclTask.taskData.transMem.protocol);
                 HcclSim::LinkInfo link(linkType);
-                task = std::make_shared<HcclSim::TaskStubWriteReduce>(dstRank, link, srcDataSlice, dstDataSlice,
-                    dataType, reduceOp);
+                task = std::make_shared<HcclSim::TaskStubWriteReduce>(
+                    dstRank, link, srcDataSlice, dstDataSlice, dataType, reduceOp);
             } else if (dstRank == hcclTask.rankId) {
                 // Read
                 LinkProtoStub linkType = GetLinkProto(hcclTask.taskData.transMem.protocol);
                 HcclSim::LinkInfo link(linkType);
-                task = std::make_shared<HcclSim::TaskStubReadReduce>(srcRank, link, dstDataSlice, srcDataSlice,
-                    dataType, reduceOp);
+                task = std::make_shared<HcclSim::TaskStubReadReduce>(
+                    srcRank, link, dstDataSlice, srcDataSlice, dataType, reduceOp);
             }
             return HCCL_SUCCESS;
         }
@@ -378,7 +379,7 @@ HcclResult ConvertTask(const HcclSim::StorageManager& storage, HcclTaskMetaData 
             HcclSim::CcuTaskParam ccuParam;
             ccuParam.dieId = dieId;
             ccuParam.missionId = missionId;
-            ccuParam.timeout   = hcclTask.taskData.ccu.timeout;
+            ccuParam.timeout = hcclTask.taskData.ccu.timeout;
             ccuParam.instStartId = hcclTask.taskData.ccu.instStartId;
             ccuParam.instCnt = hcclTask.taskData.ccu.instCnt;
             ccuParam.key = hcclTask.taskData.ccu.key;
@@ -386,8 +387,9 @@ HcclResult ConvertTask(const HcclSim::StorageManager& storage, HcclTaskMetaData 
             memcpy(ccuParam.args, hcclTask.taskData.ccu.args, sizeof(uint64_t) * ccuParam.argSize);
             missionParam.push_back(ccuParam);
             HCCL_VM_INFO("rank {}, dieId= {}", hcclTask.rankId, static_cast<uint32_t>(dieId));
-            HCCL_VM_INFO("Get sqe info: missionId= {:d}, startId= {:d}, cnt= {:d}, argSize= {:d}",
-                missionId, ccuParam.instStartId, ccuParam.instCnt, ccuParam.argSize);
+            HCCL_VM_INFO(
+                "Get sqe info: missionId= {:d}, startId= {:d}, cnt= {:d}, argSize= {:d}", missionId,
+                ccuParam.instStartId, ccuParam.instCnt, ccuParam.argSize);
 
             if (g_missionTask.find(hcclTask.rankId) != g_missionTask.end()) {
                 auto rankMap = g_missionTask[hcclTask.rankId];
@@ -406,15 +408,17 @@ HcclResult ConvertTask(const HcclSim::StorageManager& storage, HcclTaskMetaData 
 
             // 组装微码指令数据
             auto hvmInstrData = storage.GetHvmInstrData();
-            for (auto &ccuInstr : hvmInstrData.instr_data) {
+            for (auto& ccuInstr : hvmInstrData.instr_data) {
                 if (ccuInstr.desc.rank_id != hcclTask.rankId || ccuInstr.desc.die_id != dieId) {
                     continue;
                 }
                 hcomm::CcuRep::CcuInstrInfo ccuInstrInfo;
                 ccuInstrInfo.instrVec = ccuInstr.data;
-                HCCL_VM_INFO("Create new ccu graph base node, rank_id= {}, die_id= {} - {}",
-                    ccuInstr.desc.rank_id, static_cast<uint32_t>(ccuInstr.desc.die_id), static_cast<uint32_t>(dieId));
-                auto taskPtr = std::make_shared<HcclSim::TaskStubCcuGraph>(ccuInstrInfo, missionParam, ccuInstr.desc.rank_id);
+                HCCL_VM_INFO(
+                    "Create new ccu graph base node, rank_id= {}, die_id= {} - {}", ccuInstr.desc.rank_id,
+                    static_cast<uint32_t>(ccuInstr.desc.die_id), static_cast<uint32_t>(dieId));
+                auto taskPtr
+                    = std::make_shared<HcclSim::TaskStubCcuGraph>(ccuInstrInfo, missionParam, ccuInstr.desc.rank_id);
                 g_missionTask[hcclTask.rankId][dieId][missionId] = taskPtr;
                 task = taskPtr;
                 return HCCL_SUCCESS;
@@ -435,15 +439,16 @@ HcclResult ConvertTaskQueue(AllRankTaskQueues& allRankTaskQueues)
     g_missionTask.clear(); // 每次转换前清理之前的状态，防止重复数据干扰转换逻辑
     auto taskMetaVec = storage.GetHvmTaskMetaData().task_meta;
     uint32_t size = taskMetaVec.size();
-    uint32_t outputInterval = std::max(1u, size / 10); // 十分之一数据量
+    uint32_t outputInterval = std::max(1u, size / 10);  // 十分之一数据量
     outputInterval = std::min(outputInterval, 100000u); // 不超过10万条
     std::map<RankId, uint64_t> rankNodeCounters;
     for (uint32_t i = 0; i < size; i++) {
         std::shared_ptr<TaskStub> task;
         HcclResult ret = ConvertTask(storage, taskMetaVec[i], task);
         if (ret != HCCL_SUCCESS) {
-            HCCL_VM_ERROR("Failed to convert checker task metadata, taskIndex={}, rankId={}, ret={}",
-                i, taskMetaVec[i].rankId, static_cast<uint32_t>(ret));
+            HCCL_VM_ERROR(
+                "Failed to convert checker task metadata, taskIndex={}, rankId={}, ret={}", i, taskMetaVec[i].rankId,
+                static_cast<uint32_t>(ret));
             g_missionTask.clear();
             return ret;
         }
@@ -451,16 +456,15 @@ HcclResult ConvertTaskQueue(AllRankTaskQueues& allRankTaskQueues)
             continue;
         }
         if (size > 10000 && i % outputInterval == 0) {
-            HCCL_VM_INFO("Processing at index: {:d} / {:d} ({:f}% complete)",
-                i, size, i * 100.0 / size);
+            HCCL_VM_INFO("Processing at index: {:d} / {:d} ({:f}% complete)", i, size, i * 100.0 / size);
         }
         uint32_t rankId = taskMetaVec[i].rankId;
         uint32_t streamId = (taskMetaVec[i].streamId);
-        
+
         if (allRankTaskQueues.find(rankId) == allRankTaskQueues.end()) {
-            allRankTaskQueues[rankId] = std::vector<std::vector<std::shared_ptr<HcclSim::TaskStub>>> {};
+            allRankTaskQueues[rankId] = std::vector<std::vector<std::shared_ptr<HcclSim::TaskStub>>>{};
         }
-        
+
         if (allRankTaskQueues[rankId].size() <= streamId) {
             allRankTaskQueues[rankId].resize(streamId + 1);
         }
@@ -476,4 +480,4 @@ HcclResult ConvertTaskQueue(AllRankTaskQueues& allRankTaskQueues)
     }
     return HCCL_SUCCESS;
 }
-}  // namespace HcclSim
+} // namespace HcclSim

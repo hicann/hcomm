@@ -19,11 +19,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
-HcclResult __attribute__((weak)) HcclNetDevOpenV2(const HcclNetDevInfos *info, HcclNetDev *netDev);
+HcclResult __attribute__((weak)) HcclNetDevOpenV2(const HcclNetDevInfos* info, HcclNetDev* netDev);
 HcclResult __attribute__((weak)) HcclNetDevCloseV2(HcclNetDev netDev);
-HcclResult __attribute__((weak)) HcclNetDevGetAddrV2(HcclNetDev netDev, HcclAddress *addr);
-HcclResult __attribute__((weak)) HcclNetDevGetBusAddrV2(HcclDeviceId dstDevId, HcclAddress *busAddr);
-HcclResult __attribute__((weak)) HcclNetDevGetNicAddrV2(int32_t devicePhyId, HcclAddress **addr, uint32_t *addrNum);
+HcclResult __attribute__((weak)) HcclNetDevGetAddrV2(HcclNetDev netDev, HcclAddress* addr);
+HcclResult __attribute__((weak)) HcclNetDevGetBusAddrV2(HcclDeviceId dstDevId, HcclAddress* busAddr);
+HcclResult __attribute__((weak)) HcclNetDevGetNicAddrV2(int32_t devicePhyId, HcclAddress** addr, uint32_t* addrNum);
 
 #ifdef __cplusplus
 }

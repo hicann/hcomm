@@ -15,14 +15,16 @@
 #include "exception_util.h"
 namespace Hccl {
 
-DataBuffer RmtDataBufferMgr::GetBuffer(const LinkData &linkData, BufferType bufferType)
+DataBuffer RmtDataBufferMgr::GetBuffer(const LinkData& linkData, BufferType bufferType)
 {
     if (algInfo_ == nullptr) {
         THROW<NullPtrException>("[%s] ERROR algInfo is null", __func__);
     }
     OpMode opMode = algInfo_->GetOpMode();
-    HCCL_INFO("[%s] linkData[%s] bufferType[%s] opMode[%s]", __func__, linkData.Describe().c_str(), bufferType.Describe().c_str(), opMode.Describe().c_str());
-    MemTransportLite *memTransportLite = nullptr;
+    HCCL_INFO(
+        "[%s] linkData[%s] bufferType[%s] opMode[%s]", __func__, linkData.Describe().c_str(),
+        bufferType.Describe().c_str(), opMode.Describe().c_str());
+    MemTransportLite* memTransportLite = nullptr;
     if (opMode == OpMode::OPBASE) {
         CHECK_NULLPTR(memTransportLiteMgr_, "[RmtDataBufferMgr::GetBuffer] memTransportLiteMgr_ is nullptr!");
         memTransportLite = memTransportLiteMgr_->GetOpbase(linkData);

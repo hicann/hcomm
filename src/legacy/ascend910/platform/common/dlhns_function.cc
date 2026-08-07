@@ -15,18 +15,15 @@
 #include "hccl_dl.h"
 #include "log.h"
 
-
 namespace hccl {
 
-DlHnsFunction &DlHnsFunction::GetInstance()
+DlHnsFunction& DlHnsFunction::GetInstance()
 {
     static DlHnsFunction hcclDlHnsFunction;
     return hcclDlHnsFunction;
 }
 
-DlHnsFunction::DlHnsFunction() : handle_(nullptr)
-{
-}
+DlHnsFunction::DlHnsFunction() : handle_(nullptr) {}
 
 DlHnsFunction::~DlHnsFunction()
 {
@@ -38,13 +35,14 @@ DlHnsFunction::~DlHnsFunction()
 
 HcclResult DlHnsFunction::DlHnsFunctionRoceInit()
 {
-    dlHnsIbvExtPostSend = (int(*)(struct ibv_qp *, struct ibv_send_wr *,
-        struct ibv_send_wr **, struct IbvPostSendExtAddt *,
-        struct IbvPostSendExtResp *))HcclDlsym(handle_, "ibv_ext_post_send");
+    dlHnsIbvExtPostSend = (int (*)(
+        struct ibv_qp*, struct ibv_send_wr*, struct ibv_send_wr**, struct IbvPostSendExtAddt*,
+        struct IbvPostSendExtResp*))HcclDlsym(handle_, "ibv_ext_post_send");
     CHK_SMART_PTR_NULL(dlHnsIbvExtPostSend);
 
-    dlHnsIbvExpPostSend = (int(*)(struct ibv_qp *, struct ibv_send_wr *,
-        struct ibv_send_wr **, struct WrExpRsp *))HcclDlsym(handle_, "ibv_exp_post_send");
+    dlHnsIbvExpPostSend
+        = (int (*)(struct ibv_qp*, struct ibv_send_wr*, struct ibv_send_wr**, struct WrExpRsp*))HcclDlsym(
+            handle_, "ibv_exp_post_send");
     CHK_SMART_PTR_NULL(dlHnsIbvExpPostSend);
     return HCCL_SUCCESS;
 }
@@ -58,7 +56,7 @@ HcclResult DlHnsFunction::DlHnsFunctionSoInit()
         }
         return HCCL_E_INTERNAL;
     } else {
-            HCCL_INFO("roce_user_api dlopen again!");
+        HCCL_INFO("roce_user_api dlopen again!");
     }
     return HCCL_SUCCESS;
 }
@@ -72,4 +70,4 @@ HcclResult DlHnsFunction::DlHnsFunctionInit()
     return HCCL_SUCCESS;
 }
 
-}
+} // namespace hccl

@@ -18,7 +18,7 @@ constexpr u32 MAX_LOG_TIMEOUT_MS = 1000;
 std::chrono::steady_clock::time_point lastLogTimeTrace{};
 
 // 抑制日志刷屏，同一类型日志超时前只打印一次
-bool CheckLogTime(std::chrono::steady_clock::time_point &lastTime)
+bool CheckLogTime(std::chrono::steady_clock::time_point& lastTime)
 {
     auto nowTime = std::chrono::steady_clock::now();
     if (nowTime - lastTime <= std::chrono::milliseconds(MAX_LOG_TIMEOUT_MS)) {
@@ -28,36 +28,35 @@ bool CheckLogTime(std::chrono::steady_clock::time_point &lastTime)
     return true;
 }
 
-intptr_t  TraceCreate(const char *objName)
+intptr_t TraceCreate(const char* objName)
 {
     TraceAttr hcclAtraceAttr = {0};
     hcclAtraceAttr.exitSave = true;
     hcclAtraceAttr.msgNum = DEFAULT_ATRACE_MSG_NUM;
     hcclAtraceAttr.msgSize = DEFAULT_ATRACE_MSG_SIZE;
- 
+
     TraHandle traHandle = 0;
     traHandle = AtraceCreateWithAttr(TRACER_TYPE_SCHEDULE, objName, &hcclAtraceAttr);
     if (traHandle == TRACE_INVALID_HANDLE && CheckLogTime(lastLogTimeTrace)) {
-        HCCL_ERROR("[TraceCrate]errNo[0x%016llx] rt trace create failed. return[%d]",
-                   HCCL_ERROR_CODE(HcclResult::HCCL_E_INTERNAL), traHandle);
+        HCCL_ERROR(
+            "[TraceCrate]errNo[0x%016llx] rt trace create failed. return[%d]",
+            HCCL_ERROR_CODE(HcclResult::HCCL_E_INTERNAL), traHandle);
     }
     return traHandle;
 }
- 
-bool TraceSubmit(intptr_t handle, const void *buffer, uint32_t bufSize)
+
+bool TraceSubmit(intptr_t handle, const void* buffer, uint32_t bufSize)
 {
     auto ret = AtraceSubmit(handle, buffer, bufSize);
     if (ret != 0) {
-        HCCL_ERROR("[TraceSubmit]errNo[0x%016llx] rt trace submit failed. return[%d]",
-                   HCCL_ERROR_CODE(HcclResult::HCCL_E_INTERNAL), ret);
+        HCCL_ERROR(
+            "[TraceSubmit]errNo[0x%016llx] rt trace submit failed. return[%d]",
+            HCCL_ERROR_CODE(HcclResult::HCCL_E_INTERNAL), ret);
         return false;
     }
     return true;
 }
- 
-void TraceDestroy(intptr_t handle)
-{
-    AtraceDestroy(handle);
-}
 
-} //namespace Hccl
+void TraceDestroy(intptr_t handle) { AtraceDestroy(handle); }
+
+} // namespace Hccl

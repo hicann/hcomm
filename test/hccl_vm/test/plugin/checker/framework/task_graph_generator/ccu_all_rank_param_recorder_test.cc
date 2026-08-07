@@ -21,11 +21,13 @@ using namespace HcclSim;
 
 class AllRankParamRecorderTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         AllRankParamRecorder::Global()->Reset();
         AllRankParamRecorder::Global()->curHBM.clear();
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         AllRankParamRecorder::Global()->Reset();
         AllRankParamRecorder::Global()->curHBM.clear();
     }
@@ -109,7 +111,8 @@ TEST_F(AllRankParamRecorderTest, GetCKE_NotSet_ReturnsZero)
 TEST_F(AllRankParamRecorderTest, SetHBM_GetHBM_Success)
 {
     std::vector<uint64_t> data(8, 0);
-    data[0] = 0x10; data[3] = 0x40;
+    data[0] = 0x10;
+    data[3] = 0x40;
     EXPECT_EQ(AllRankParamRecorder::Global()->SetHBM(0, 0, 0x1000, data), HCCL_SUCCESS);
     std::vector<uint64_t> out;
     EXPECT_EQ(AllRankParamRecorder::Global()->GetHBM(0, 0, 0x1000, out), HCCL_SUCCESS);
@@ -133,7 +136,8 @@ TEST_F(AllRankParamRecorderTest, GetHBM_NotSet_ReturnsError)
 TEST_F(AllRankParamRecorderTest, SetHBM_EightByteAligned_Success)
 {
     std::vector<uint64_t> data(8, 0);
-    data[0] = 1; data[7] = 8;
+    data[0] = 1;
+    data[7] = 8;
     EXPECT_EQ(AllRankParamRecorder::Global()->SetHBM(1, 0, 0x2000, data), HCCL_SUCCESS);
 }
 

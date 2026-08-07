@@ -17,71 +17,94 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepShL::CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Variable &varD, const Variable &varN, const Variable &varM)
-    : subType(ShiftSubType::VAR_EQUALS_VAR_SHIFT_VAR), shiftType(ShiftType::LOGICAL_SHIFT), varN(varN), varM(varM),
-      varD(varD), insGenPtr(insGenPtr)
-{
-    type       = CcuRepType::SHL;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
-
-CcuRepShL::CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Variable &varD, const Variable &varM)
-    : subType(ShiftSubType::VAR_SHIFT_ASSIGN_VAR), shiftType(ShiftType::LOGICAL_SHIFT), varM(varM), varD(varD), insGenPtr(insGenPtr)
-{
-    type       = CcuRepType::SHL;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
-
-CcuRepShL::CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Address &addrD, const Variable &varN, const Variable &varM)
-    : subType(ShiftSubType::ADDR_EQUALS_VAR_SHIFT_VAR), shiftType(ShiftType::LOGICAL_SHIFT), varN(varN), varM(varM),
-      addrD(addrD), insGenPtr(insGenPtr)
-{
-    type       = CcuRepType::SHL;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
-
-CcuRepShL::CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Address &addrD, const Variable &varM)
-    : subType(ShiftSubType::ADDR_SHIFT_ASSIGN_VAR), shiftType(ShiftType::LOGICAL_SHIFT), varM(varM), addrD(addrD), insGenPtr(insGenPtr)
-{
-    type       = CcuRepType::SHL;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
-
-bool CcuRepShL::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, const TransDep &dep)
-{
-    Hccl::CHECK_NULLPTR(instr, "[CcuRepShL::Translate] instr is nullptr!");
-    this->instrId = curInstrId;
-    translated    = true;
-    instrCount = insGenPtr->GetInstrCount(type);
-    insGenPtr->CcuRepShLTranslate(ccuKernel, instr, this, dep);
-    CHK_PRT_THROW((curInstrId > UINT16_MAX - instrCount),
-        HCCL_ERROR("[CcuRepShL::Translate]uint16 integer overflow occurs, curInstrId = [%hu], instrCount = [%hu]", curInstrId, instrCount),
-        Hccl::InternalException, "integer overflow");
-    curInstrId += instrCount;
-    return translated;
-}
-
-std::string CcuRepShL::Describe()
-{
-    switch (subType) {
-        case ShiftSubType::VAR_EQUALS_VAR_SHIFT_VAR: {
-            return Hccl::StringFormat("Variable[%u] = Variable[%u] << Variable[%u]", varD.Id(), varN.Id(), varM.Id());
-        }
-        case ShiftSubType::VAR_SHIFT_ASSIGN_VAR: {
-            return Hccl::StringFormat("Variable[%u] <<= Variable[%u]", varD.Id(), varM.Id());
-        }
-        case ShiftSubType::ADDR_EQUALS_VAR_SHIFT_VAR: {
-            return Hccl::StringFormat("Address[%u] = Variable[%u] << Variable[%u]", addrD.Id(), varN.Id(), varM.Id());
-        }
-        case ShiftSubType::ADDR_SHIFT_ASSIGN_VAR: {
-            return Hccl::StringFormat("Address[%u] <<= Variable[%u]", addrD.Id(), varM.Id());
-        }
-        default: {
-            return Hccl::StringFormat("Invalid Shift");
-        }
+    CcuRepShL::CcuRepShL(
+        CcuInsGeneratorBase* insGenPtr, const Variable& varD, const Variable& varN, const Variable& varM)
+        : subType(ShiftSubType::VAR_EQUALS_VAR_SHIFT_VAR),
+          shiftType(ShiftType::LOGICAL_SHIFT),
+          varN(varN),
+          varM(varM),
+          varD(varD),
+          insGenPtr(insGenPtr)
+    {
+        type = CcuRepType::SHL;
+        instrCount = insGenPtr->GetInstrCount(type);
     }
-    return Hccl::StringFormat("Invalid Shift");
-}
 
-};  // namespace CcuRep
+    CcuRepShL::CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Variable& varD, const Variable& varM)
+        : subType(ShiftSubType::VAR_SHIFT_ASSIGN_VAR),
+          shiftType(ShiftType::LOGICAL_SHIFT),
+          varM(varM),
+          varD(varD),
+          insGenPtr(insGenPtr)
+    {
+        type = CcuRepType::SHL;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
+
+    CcuRepShL::CcuRepShL(
+        CcuInsGeneratorBase* insGenPtr, const Address& addrD, const Variable& varN, const Variable& varM)
+        : subType(ShiftSubType::ADDR_EQUALS_VAR_SHIFT_VAR),
+          shiftType(ShiftType::LOGICAL_SHIFT),
+          varN(varN),
+          varM(varM),
+          addrD(addrD),
+          insGenPtr(insGenPtr)
+    {
+        type = CcuRepType::SHL;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
+
+    CcuRepShL::CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Address& addrD, const Variable& varM)
+        : subType(ShiftSubType::ADDR_SHIFT_ASSIGN_VAR),
+          shiftType(ShiftType::LOGICAL_SHIFT),
+          varM(varM),
+          addrD(addrD),
+          insGenPtr(insGenPtr)
+    {
+        type = CcuRepType::SHL;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
+
+    bool CcuRepShL::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, const TransDep& dep)
+    {
+        Hccl::CHECK_NULLPTR(instr, "[CcuRepShL::Translate] instr is nullptr!");
+        this->instrId = curInstrId;
+        translated = true;
+        instrCount = insGenPtr->GetInstrCount(type);
+        insGenPtr->CcuRepShLTranslate(ccuKernel, instr, this, dep);
+        CHK_PRT_THROW(
+            (curInstrId > UINT16_MAX - instrCount),
+            HCCL_ERROR(
+                "[CcuRepShL::Translate]uint16 integer overflow occurs, curInstrId = [%hu], instrCount = [%hu]",
+                curInstrId, instrCount),
+            Hccl::InternalException, "integer overflow");
+        curInstrId += instrCount;
+        return translated;
+    }
+
+    std::string CcuRepShL::Describe()
+    {
+        switch (subType) {
+            case ShiftSubType::VAR_EQUALS_VAR_SHIFT_VAR: {
+                return Hccl::StringFormat(
+                    "Variable[%u] = Variable[%u] << Variable[%u]", varD.Id(), varN.Id(), varM.Id());
+            }
+            case ShiftSubType::VAR_SHIFT_ASSIGN_VAR: {
+                return Hccl::StringFormat("Variable[%u] <<= Variable[%u]", varD.Id(), varM.Id());
+            }
+            case ShiftSubType::ADDR_EQUALS_VAR_SHIFT_VAR: {
+                return Hccl::StringFormat(
+                    "Address[%u] = Variable[%u] << Variable[%u]", addrD.Id(), varN.Id(), varM.Id());
+            }
+            case ShiftSubType::ADDR_SHIFT_ASSIGN_VAR: {
+                return Hccl::StringFormat("Address[%u] <<= Variable[%u]", addrD.Id(), varM.Id());
+            }
+            default: {
+                return Hccl::StringFormat("Invalid Shift");
+            }
+        }
+        return Hccl::StringFormat("Invalid Shift");
+    }
+
+}; // namespace CcuRep
 }; // namespace hcomm

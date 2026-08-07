@@ -29,19 +29,19 @@ namespace hcomm {
  */
 class CcuInstance {
 public:
-    explicit CcuInstance(){};
+    explicit CcuInstance() {};
     ~CcuInstance();
     CcuResult InitByInsType(const CcuInstanceType insType);
     // 基于资源描述符数组初始化（新接口路径，资源数量由 resDesc 驱动）
-    CcuResult InitByResDescs(const CcuResDesc *descs[], uint32_t descNum);
+    CcuResult InitByResDescs(const CcuResDesc* descs[], uint32_t descNum);
     // 使用当前 Device 上所有已使能 ioDie 的全部资源初始化
     CcuResult InitByAllRes();
     CcuResult Reset();
-    CcuResPack *GetResPack();
+    CcuResPack* GetResPack();
     // 获取 ccuIns 在指定 die 上持有的资源描述符，用于查询接口
-    const CcuResDesc &GetTotalResDescs(uint8_t dieId) const;
+    const CcuResDesc& GetTotalResDescs(uint8_t dieId) const;
     CcuResult SaveKernel(const CcuKernelHandle kernelHandle);
-    const std::vector<CcuKernelHandle> &GetUntranslatedKernels();
+    const std::vector<CcuKernelHandle>& GetUntranslatedKernels();
     void SetHandle(CcuInsHandle insHandle);
 
     CcuResult BeginRegister();

@@ -15,18 +15,20 @@ static int g_count = 0;
 
 class HcclCommRegCommStateCallbackTest : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         BaseInit::SetUp();
         UT_USE_1SERVER_1RANK_AS_DEFAULT;
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }
 };
 
-HcclResult ClearCallBack(HcclComm comm, HcclCommStatePhase phase, void *args)
+HcclResult ClearCallBack(HcclComm comm, HcclCommStatePhase phase, void* args)
 {
     (void)comm;
     (void)phase;
@@ -34,16 +36,17 @@ HcclResult ClearCallBack(HcclComm comm, HcclCommStatePhase phase, void *args)
     return HCCL_SUCCESS;
 }
 
-HcclResult CountCallBack(HcclComm comm, HcclCommStatePhase phase, void *args)
+HcclResult CountCallBack(HcclComm comm, HcclCommStatePhase phase, void* args)
 {
     (void)comm;
     (void)phase;
-    int *count = static_cast<int *>(args);
+    int* count = static_cast<int*>(args);
     (*count)++;
     return HCCL_SUCCESS;
 }
 
-TEST_F(HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_When_ArgsIsNull_Expect_ReturnIsHCCL_SUCCESS)
+TEST_F(
+    HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_When_ArgsIsNull_Expect_ReturnIsHCCL_SUCCESS)
 {
     UT_COMM_CREATE_DEFAULT(comm);
 
@@ -56,10 +59,11 @@ TEST_F(HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_Whe
     Ut_Comm_Destroy(comm);
 }
 
-TEST_F(HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_When_CallbackIsNull_Expect_ReturnIsHCCL_E_PTR)
+TEST_F(
+    HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_When_CallbackIsNull_Expect_ReturnIsHCCL_E_PTR)
 {
     UT_COMM_CREATE_DEFAULT(comm);
-    char *args = "userPtr";
+    char* args = "userPtr";
     std::string regName = "regName";
 
     HcclResult ret = HcclCommRegCommStateCallback(regName.c_str(), nullptr, args);
@@ -68,10 +72,11 @@ TEST_F(HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_Whe
     Ut_Comm_Destroy(comm);
 }
 
-TEST_F(HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_When_RegNameIsNull_Expect_ReturnIsHCCL_E_PTR)
+TEST_F(
+    HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_When_RegNameIsNull_Expect_ReturnIsHCCL_E_PTR)
 {
     UT_COMM_CREATE_DEFAULT(comm);
-    char *args = "userPtr";
+    char* args = "userPtr";
 
     HcclResult ret = HcclCommRegCommStateCallback(nullptr, ClearCallBack, args);
     EXPECT_EQ(ret, HCCL_E_PTR);
@@ -82,7 +87,7 @@ TEST_F(HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_Whe
 TEST_F(HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_When_Normal_Expect_ReturnIsHCCL_SUCCESS)
 {
     UT_COMM_CREATE_DEFAULT(comm);
-    char *args = "userPtr";
+    char* args = "userPtr";
     std::string regName = "regName";
 
     HcclResult ret1 = HcclCommRegCommStateCallback(regName.c_str(), ClearCallBack, args);
@@ -94,7 +99,8 @@ TEST_F(HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_Whe
     Ut_Comm_Destroy(comm);
 }
 
-TEST_F(HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_When_ArgsIsValid_Expect_ReturnIsHCCL_SUCCESS)
+TEST_F(
+    HcclCommRegCommStateCallbackTest, Ut_HcclCommRegCommStateCallbackTest_When_ArgsIsValid_Expect_ReturnIsHCCL_SUCCESS)
 {
     UT_COMM_CREATE_DEFAULT(comm);
     std::string regName = "regName";

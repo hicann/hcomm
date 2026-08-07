@@ -23,33 +23,35 @@ public:
     ~AllReduceRecursiveHalvingDoubling() override;
 
     // 新增的两段式构造函数，获取实例后要无脑调用实现构造函数功能，后续还要调用其它的基类Prepare函数实现其它成员变量初始化
-    HcclResult Prepare(u64 reduceAttrBitMap, HcomCollOpInfo *opInfo = nullptr) override;
+    HcclResult Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo = nullptr) override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
-    HcclResult RunAsyncStaged(const u32 rank, const u32 rankSize, const std::vector<LINK> &links,
-        RunStage stage) override;
-    HcclResult GetCommonNslbAdjInfo(const u32 rank, const u32 rankSize,
-                                    const std::vector<LINK> &links, AdjInfo& nslbAdjInfo);
-    HcclResult GetOddNslbAdjInfo(const u32 rank, const u32 rankSize,
-                                 const std::vector<LINK> &links, AdjInfo& nslbAdjInfo);
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
+    HcclResult
+    RunAsyncStaged(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, RunStage stage) override;
+    HcclResult
+    GetCommonNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo);
+    HcclResult
+    GetOddNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo);
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
+
 protected:
-    HcclResult PrepareRunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult PrepareRunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
+
 private:
-    HcclResult ReduceInPartOne(u32 rank, const std::vector<LINK> &links);
+    HcclResult ReduceInPartOne(u32 rank, const std::vector<LINK>& links);
 
-    HcclResult ReduceScatterInBlock(u32 rank, u32 rankSize, const std::vector<LINK> &links);
+    HcclResult ReduceScatterInBlock(u32 rank, u32 rankSize, const std::vector<LINK>& links);
 
-    HcclResult AllGatherInBlock(u32 rank, u32 rankSize, const std::vector<LINK> &links);
+    HcclResult AllGatherInBlock(u32 rank, u32 rankSize, const std::vector<LINK>& links);
 
-    HcclResult GatherInPartOne(u32 rank, const std::vector<LINK> &links);
+    HcclResult GatherInPartOne(u32 rank, const std::vector<LINK>& links);
 
     u64 reduceAttr;
 
     std::unique_ptr<Sender> senderInfo_;
     std::unique_ptr<Reducer> reducerInfo_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* __ALL_REDUCE_RECURSIVE_HALVINGDOUBLING_PUB_H__ */

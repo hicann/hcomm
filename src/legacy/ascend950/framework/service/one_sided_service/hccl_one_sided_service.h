@@ -25,36 +25,37 @@ namespace Hccl {
 class HcclOneSidedService {
 public:
     using LocalUbRmaBufferMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<LocalUbRmaBuffer>>;
-    using RankId              = u32;
+    using RankId = u32;
 
-    HcclOneSidedService(CommunicatorImpl &comm);
+    HcclOneSidedService(CommunicatorImpl& comm);
     ~HcclOneSidedService();
 
-    HcclResult RegMem(void *addr, u64 size, HcclMemType type, RankId remoteRankId, HcclMemDesc &localMemDesc);
-    HcclResult DeregMem(const HcclMemDesc &localMemDesc);
+    HcclResult RegMem(void* addr, u64 size, HcclMemType type, RankId remoteRankId, HcclMemDesc& localMemDesc);
+    HcclResult DeregMem(const HcclMemDesc& localMemDesc);
 
-    HcclResult ExchangeMemDesc(RankId remoteRankId, const HcclMemDescs &localMemDescs, HcclMemDescs &remoteMemDescs,
-                               u32 &actualNumOfRemote);
+    HcclResult ExchangeMemDesc(
+        RankId remoteRankId, const HcclMemDescs& localMemDescs, HcclMemDescs& remoteMemDescs, u32& actualNumOfRemote);
 
-    HcclResult EnableMemAccess(const HcclMemDesc &remoteMemDesc, HcclMem &remoteMem);
-    HcclResult DisableMemAccess(const HcclMemDesc &remoteMemDesc);
+    HcclResult EnableMemAccess(const HcclMemDesc& remoteMemDesc, HcclMem& remoteMem);
+    HcclResult DisableMemAccess(const HcclMemDesc& remoteMemDesc);
 
-    HcclResult BatchPut(RankId remoteRankId, const HcclOneSideOpDesc *desc, u32 descNum, const rtStream_t stream);
-    HcclResult BatchGet(RankId remoteRankId, const HcclOneSideOpDesc *desc, u32 descNum, const rtStream_t stream);
-    LinkData   GetLinkData(RankId remoteRankId);
+    HcclResult BatchPut(RankId remoteRankId, const HcclOneSideOpDesc* desc, u32 descNum, const rtStream_t stream);
+    HcclResult BatchGet(RankId remoteRankId, const HcclOneSideOpDesc* desc, u32 descNum, const rtStream_t stream);
+    LinkData GetLinkData(RankId remoteRankId);
 
-    void       AddOpCounterMems();
-    DevBuffer *GetOpCounterBuf();
+    void AddOpCounterMems();
+    DevBuffer* GetOpCounterBuf();
+
 private:
-    bool                                                          isOpModeReady_{false};
-    u32                                                           registeredMemCnt_{0};
+    bool isOpModeReady_{false};
+    u32 registeredMemCnt_{0};
     std::unordered_map<RankId, std::shared_ptr<HcclOneSidedConn>> oneSidedConns_{};
     mutable std::shared_mutex oneSidedConnsMutex_;
 
     std::unordered_map<std::string, std::shared_ptr<LocalUbRmaBuffer>> desc2LocalRdmaRmaBufferMap_{};
-    LocalUbRmaBufferMgr                                                localUbRmaBufferMgr_{};
+    LocalUbRmaBufferMgr localUbRmaBufferMgr_{};
 
-    CommunicatorImpl *comm_{nullptr};
+    CommunicatorImpl* comm_{nullptr};
     std::map<RankId, LinkData> linkDataMap_{};
 
     shared_ptr<DevBuffer> devBatchPutGetLocalBufs{nullptr};
@@ -66,9 +67,9 @@ private:
 
 private:
     HcclResult CheckLink(LinkData linkData) const;
-    HcclResult CreateConnection(std::shared_ptr<HcclOneSidedConn> &tempConn, LinkData linkData);
+    HcclResult CreateConnection(std::shared_ptr<HcclOneSidedConn>& tempConn, LinkData linkData);
 
-    HcclResult RmaMemDescCopyFromStr(RmaMemDesc &rmaMemDesc, const std::vector<char> &memDescStr) const
+    HcclResult RmaMemDescCopyFromStr(RmaMemDesc& rmaMemDesc, const std::vector<char>& memDescStr) const
     {
         if (memcpy_s(rmaMemDesc.memDesc, TRANSPORT_EMD_ESC_SIZE, memDescStr.data(), memDescStr.size()) != EOK) {
             return HCCL_E_INTERNAL;
@@ -77,28 +78,29 @@ private:
     }
 
     // 从 memDesc 转换为 string
-    std::string RmaMemDescCopyToStr(const RmaMemDesc &rmaMemDesc) const
+    std::string RmaMemDescCopyToStr(const RmaMemDesc& rmaMemDesc) const
     {
         return std::string(rmaMemDesc.memDesc, TRANSPORT_EMD_ESC_SIZE);
     }
-    HcclResult BatchPutGetDevBufs(const HcclOneSideOpDesc *desc, u32 descNum, std::shared_ptr<HcclOneSidedConn> oneSidedConn);
+    HcclResult
+    BatchPutGetDevBufs(const HcclOneSideOpDesc* desc, u32 descNum, std::shared_ptr<HcclOneSidedConn> oneSidedConn);
 
-    HcclResult BatchOpKernelLaunch(OpType opType, RankId remoteRankId, const HcclOneSideOpDesc* desc, u32 descNum,
-        shared_ptr<Stream> stream);
+    HcclResult BatchOpKernelLaunch(
+        OpType opType, RankId remoteRankId, const HcclOneSideOpDesc* desc, u32 descNum, shared_ptr<Stream> stream);
 
-    void AddPostToUserStream(const Stream &stream) const;
+    void AddPostToUserStream(const Stream& stream) const;
 
-    void AddWaitToUserStream(const Stream &stream) const;
+    void AddWaitToUserStream(const Stream& stream) const;
 
-    std::vector<char> PackOpData(const CollAlgOpReq &req) const;
+    std::vector<char> PackOpData(const CollAlgOpReq& req) const;
 
-    void FillOneSidedOperator(OpType type, RankId remoteRankId, const HcclOneSideOpDesc *desc) const;
+    void FillOneSidedOperator(OpType type, RankId remoteRankId, const HcclOneSideOpDesc* desc) const;
 
-    DevBuffer *PackResToKernelLanuch(CollAlgOpReq &opReq);
+    DevBuffer* PackResToKernelLanuch(CollAlgOpReq& opReq);
 
-    void SetOneSidedKernelLaunchParam(HcclKernelLaunchParam &param, const DevBuffer *mem) const;
+    void SetOneSidedKernelLaunchParam(HcclKernelLaunchParam& param, const DevBuffer* mem) const;
 
-    void OneSidedAicpuKernelLaunch(HcclKernelLaunchParam &param, Stream &stream)const ;
+    void OneSidedAicpuKernelLaunch(HcclKernelLaunchParam& param, Stream& stream) const;
 
     std::unordered_map<std::string, std::shared_ptr<DevBuffer>> OneSidedLoadMap;
 };

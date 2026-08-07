@@ -18,13 +18,13 @@
 namespace Hccl {
 namespace CcuRep {
 
-struct CcuInstrInfo {
-    std::vector<CcuInstr> instrVec;
-    uint16_t              startInstrId{0};
-    uint16_t              instrCount{0};
-    uint16_t              missionStartInstrId{0};
-    uint16_t              missionInstrCount{0};
-};
+    struct CcuInstrInfo {
+        std::vector<CcuInstr> instrVec;
+        uint16_t startInstrId{0};
+        uint16_t instrCount{0};
+        uint16_t missionStartInstrId{0};
+        uint16_t missionInstrCount{0};
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

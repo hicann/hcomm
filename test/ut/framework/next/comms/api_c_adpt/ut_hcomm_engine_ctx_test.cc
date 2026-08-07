@@ -12,12 +12,8 @@
 
 class TestHcommEngineCtx : public TestHcommCAdptBase {
 public:
-    void SetUp() override {
-        TestHcommCAdptBase::SetUp();
-    }
-    void TearDown() override {
-        TestHcommCAdptBase::TearDown();
-    }
+    void SetUp() override { TestHcommCAdptBase::SetUp(); }
+    void TearDown() override { TestHcommCAdptBase::TearDown(); }
 };
 
 TEST_F(TestHcommEngineCtx, Ut_TestHcommEngineCtxCreate_When_CPUEngine_Return_HCCL_Success)

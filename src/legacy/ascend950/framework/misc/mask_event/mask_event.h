@@ -21,15 +21,12 @@ public:
 
     virtual ~MaskEvent();
 
-    MaskEvent(const MaskEvent &maskEvent)            = delete;
-    MaskEvent &operator=(const MaskEvent &maskEvent) = delete;
+    MaskEvent(const MaskEvent& maskEvent) = delete;
+    MaskEvent& operator=(const MaskEvent& maskEvent) = delete;
 
-    inline RtEvent_t GetPtr() const
-    {
-        return eventPtr;
-    }
+    inline RtEvent_t GetPtr() const { return eventPtr; }
 
-    void Record(const Stream &stream) const;
+    void Record(const Stream& stream) const;
     HrtEventStatus QueryStatus() const;
 
 private:

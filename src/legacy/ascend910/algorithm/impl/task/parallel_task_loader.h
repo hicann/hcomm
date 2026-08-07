@@ -23,7 +23,7 @@ public:
     explicit ParallelTaskLoader(const s32 deviceLogicId, const HcclDispatcher dispatcher);
     ~ParallelTaskLoader();
 
-    HcclResult Prepare(std::vector<Stream *> streamsPtr, SubCommInfo level0CommInfo);
+    HcclResult Prepare(std::vector<Stream*> streamsPtr, SubCommInfo level0CommInfo);
 
     HcclResult StartTaskLoad();
     HcclResult WaitTaskLoadFinish();
@@ -31,15 +31,15 @@ public:
 
 protected:
 private:
-    s32 deviceLogicId_;                        // 当前设备的device id
-    const HcclDispatcher dispatcher_;  // dispatcher引用
+    s32 deviceLogicId_;               // 当前设备的device id
+    const HcclDispatcher dispatcher_; // dispatcher引用
     SubCommInfo commInfo_;
 
-    std::vector<Stream *> streamsPtr_;
+    std::vector<Stream*> streamsPtr_;
     std::vector<std::shared_ptr<TaskLoader>> streamTaskLoader_;
     std::vector<uint32_t> tidInfo_;
-    u32 taskLoaderNum_;  // taskLoader的个数和stream的个数一一对应
+    u32 taskLoaderNum_; // taskLoader的个数和stream的个数一一对应
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* PARALLEL_TASK_LOADER_H */

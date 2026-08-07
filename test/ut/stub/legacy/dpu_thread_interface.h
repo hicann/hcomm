@@ -17,9 +17,9 @@ namespace Hccl {
 
 class IDpuThread {
 public:
-    IDpuThread(){};
-    ~IDpuThread(){};
-    HcclResult GetRdmaHandle(void** rdmahandle) {return HCCL_SUCCESS;};
+    IDpuThread() {};
+    ~IDpuThread() {};
+    HcclResult GetRdmaHandle(void** rdmahandle) { return HCCL_SUCCESS; };
 };
-}  // namespace Hccl
+} // namespace Hccl
 #endif

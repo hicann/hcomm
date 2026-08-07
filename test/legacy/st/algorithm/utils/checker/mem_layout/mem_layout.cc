@@ -16,7 +16,8 @@ MemLayout* MemLayout::Global()
     return globalMemSim;
 }
 
-HcclResult MemLayout::GetSlice(char_t *addr, u64 dataCount, const HcclDataType dataType, DataSlice& dataSlice, RankId* rank)
+HcclResult
+MemLayout::GetSlice(char_t* addr, u64 dataCount, const HcclDataType dataType, DataSlice& dataSlice, RankId* rank)
 {
     RankId curRank = GetRankIdByAddr(addr);
     if (rank != nullptr) {
@@ -26,7 +27,7 @@ HcclResult MemLayout::GetSlice(char_t *addr, u64 dataCount, const HcclDataType d
     u32 superPodId = RankInfoRecorder::Global()->rankId2superpodId[curRank];
     u32 serverId = RankInfoRecorder::Global()->rankId2serverId[curRank];
     u32 rankId = RankInfoRecorder::Global()->rankId2phyId[curRank];
-    SingleRankMemLayout &singleRankMemLayout = allSuperPodLayout[superPodId][serverId][rankId];
+    SingleRankMemLayout& singleRankMemLayout = allSuperPodLayout[superPodId][serverId][rankId];
 
     for (u32 index = 0; index < singleRankMemLayout.size(); index++) {
         if (addr < singleRankMemLayout[index].startAddr) {
@@ -42,15 +43,13 @@ HcclResult MemLayout::GetSlice(char_t *addr, u64 dataCount, const HcclDataType d
 
         if (singleRankMemLayout[index].bufferType == BufferType::USERBUF_AIV) {
             u32 blockId = GetBlockIdByAddr(addr);
-            curBlockEndAddr =
-                (u64)allRanksUBMemLayout[curRank][blockId].startAddr + allRanksUBMemLayout[curRank][blockId].size;
+            curBlockEndAddr
+                = (u64)allRanksUBMemLayout[curRank][blockId].startAddr + allRanksUBMemLayout[curRank][blockId].size;
             if ((u64)addr + size > curBlockEndAddr) {
-                HCCL_ERROR("addr[%p], size[%llu] exceed mem bufferType[%s]: startAddr[%p], endAddr[%p], size[%llu]",
-                    addr,
-                    size,
-                    allRanksUBMemLayout[curRank][blockId].bufferType.Describe().c_str(),
-                    allRanksUBMemLayout[curRank][blockId].startAddr,
-                    curBlockEndAddr,
+                HCCL_ERROR(
+                    "addr[%p], size[%llu] exceed mem bufferType[%s]: startAddr[%p], endAddr[%p], size[%llu]", addr,
+                    size, allRanksUBMemLayout[curRank][blockId].bufferType.Describe().c_str(),
+                    allRanksUBMemLayout[curRank][blockId].startAddr, curBlockEndAddr,
                     allRanksUBMemLayout[curRank][blockId].size);
                 return HcclResult::HCCL_E_MEMORY;
             }
@@ -62,13 +61,10 @@ HcclResult MemLayout::GetSlice(char_t *addr, u64 dataCount, const HcclDataType d
 
         // 超出这个block的地址范围
         if ((u64)addr + size > curBlockEndAddr) {
-            HCCL_ERROR("addr[%p], size[%llu] exceed mem bufferType[%s]: startAddr[%p], endAddr[%p], size[%llu]",
-                addr,
-                size,
-                singleRankMemLayout[index].bufferType.Describe().c_str(),
-                singleRankMemLayout[index].startAddr,
-                curBlockEndAddr,
-                singleRankMemLayout[index].size);
+            HCCL_ERROR(
+                "addr[%p], size[%llu] exceed mem bufferType[%s]: startAddr[%p], endAddr[%p], size[%llu]", addr, size,
+                singleRankMemLayout[index].bufferType.Describe().c_str(), singleRankMemLayout[index].startAddr,
+                curBlockEndAddr, singleRankMemLayout[index].size);
             return HcclResult::HCCL_E_MEMORY;
         }
 
@@ -83,7 +79,7 @@ HcclResult MemLayout::GetSlice(char_t *addr, u64 dataCount, const HcclDataType d
 }
 
 #ifndef HCCL_ALG_ANALYZER_DAVID
-HcclResult MemLayout::GetSlice(const DeviceMem &deviceMem, DataSlice& dataSlice, RankId* rank)
+HcclResult MemLayout::GetSlice(const DeviceMem& deviceMem, DataSlice& dataSlice, RankId* rank)
 {
     u64 addr = (u64)deviceMem.ptr();
     u64 size = deviceMem.size();
@@ -110,9 +106,10 @@ HcclResult MemLayout::GetSlice(const DeviceMem &deviceMem, DataSlice& dataSlice,
 
         // 超出这个block的地址范围
         if ((u64)addr + size > curBlockEndAddr) {
-            HCCL_ERROR("addr[%p], size[%llu] exceed mem bufferType[%s]: startAddr[%p], endAddr[%p], size[%llu]",
-                       addr, size, singleRankMemLayout[index].bufferType.Describe().c_str(),
-                       singleRankMemLayout[index].startAddr, curBlockEndAddr, singleRankMemLayout[index].size);
+            HCCL_ERROR(
+                "addr[%p], size[%llu] exceed mem bufferType[%s]: startAddr[%p], endAddr[%p], size[%llu]", addr, size,
+                singleRankMemLayout[index].bufferType.Describe().c_str(), singleRankMemLayout[index].startAddr,
+                curBlockEndAddr, singleRankMemLayout[index].size);
             return HcclResult::HCCL_E_MEMORY;
         }
 
@@ -128,7 +125,7 @@ HcclResult MemLayout::GetSlice(const DeviceMem &deviceMem, DataSlice& dataSlice,
 }
 #endif
 
-HcclResult MemLayout::GetSlice(char_t *addr, u64 len, DataSlice &dataSlice, RankId *rank)
+HcclResult MemLayout::GetSlice(char_t* addr, u64 len, DataSlice& dataSlice, RankId* rank)
 {
     // HCCL_ERROR("Enter to get dataSlice, addr= %p", addr);
     RankId curRank = GetRankIdByAddr(addr);
@@ -139,7 +136,7 @@ HcclResult MemLayout::GetSlice(char_t *addr, u64 len, DataSlice &dataSlice, Rank
     u32 superPodId = RankInfoRecorder::Global()->rankId2superpodId[curRank];
     u32 serverId = RankInfoRecorder::Global()->rankId2serverId[curRank];
     u32 rankId = RankInfoRecorder::Global()->rankId2phyId[curRank];
-    SingleRankMemLayout &singleRankMemLayout = allSuperPodLayout[superPodId][serverId][rankId];
+    SingleRankMemLayout& singleRankMemLayout = allSuperPodLayout[superPodId][serverId][rankId];
 
     for (u32 index = 0; index < singleRankMemLayout.size(); index++) {
         if (addr < singleRankMemLayout[index].startAddr) {
@@ -153,15 +150,13 @@ HcclResult MemLayout::GetSlice(char_t *addr, u64 len, DataSlice &dataSlice, Rank
 
         if (singleRankMemLayout[index].bufferType == BufferType::USERBUF_AIV) {
             u32 blockId = GetBlockIdByAddr(addr);
-            curBlockEndAddr =
-                (u64)allRanksUBMemLayout[curRank][blockId].startAddr + allRanksUBMemLayout[curRank][blockId].size;
+            curBlockEndAddr
+                = (u64)allRanksUBMemLayout[curRank][blockId].startAddr + allRanksUBMemLayout[curRank][blockId].size;
             if ((u64)addr + len > curBlockEndAddr) {
-                HCCL_ERROR("addr[%p], size[%llu] exceed mem bufferType[%s]: startAddr[%p], endAddr[%p], size[%llu]",
-                    addr,
-                    len,
+                HCCL_ERROR(
+                    "addr[%p], size[%llu] exceed mem bufferType[%s]: startAddr[%p], endAddr[%p], size[%llu]", addr, len,
                     allRanksUBMemLayout[curRank][blockId].bufferType.Describe().c_str(),
-                    allRanksUBMemLayout[curRank][blockId].startAddr,
-                    curBlockEndAddr,
+                    allRanksUBMemLayout[curRank][blockId].startAddr, curBlockEndAddr,
                     allRanksUBMemLayout[curRank][blockId].size);
                 return HcclResult::HCCL_E_MEMORY;
             }
@@ -173,13 +168,10 @@ HcclResult MemLayout::GetSlice(char_t *addr, u64 len, DataSlice &dataSlice, Rank
 
         // 超出这个block的地址范围
         if ((u64)addr + len > curBlockEndAddr) {
-            HCCL_ERROR("addr[%p], len[%llu] exceed mem bufferType[%s]: startAddr[%p], endAddr[%p], size[%llu]",
-                addr,
-                len,
-                singleRankMemLayout[index].bufferType.Describe().c_str(),
-                singleRankMemLayout[index].startAddr,
-                curBlockEndAddr,
-                singleRankMemLayout[index].size);
+            HCCL_ERROR(
+                "addr[%p], len[%llu] exceed mem bufferType[%s]: startAddr[%p], endAddr[%p], size[%llu]", addr, len,
+                singleRankMemLayout[index].bufferType.Describe().c_str(), singleRankMemLayout[index].startAddr,
+                curBlockEndAddr, singleRankMemLayout[index].size);
             return HcclResult::HCCL_E_MEMORY;
         }
 
@@ -202,7 +194,7 @@ HcclResult MemLayout::GetSlice(BufferType bufferType, u64 dstOffset, u64 len, Da
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult MemLayout::AivGetSlice(char_t *addr, u64 size, DataSlice &dataSlice, RankId *rank, BlockId *block)
+HcclResult MemLayout::AivGetSlice(char_t* addr, u64 size, DataSlice& dataSlice, RankId* rank, BlockId* block)
 {
     if (addr == 0) {
         HCCL_ERROR("NULL addr input.");
@@ -219,14 +211,13 @@ HcclResult MemLayout::AivGetSlice(char_t *addr, u64 size, DataSlice &dataSlice, 
         *block = blockId;
     }
 
-    u64 curBlockEndAddr = (u64)allRanksUBMemLayout[curRank][blockId].startAddr + allRanksUBMemLayout[curRank][blockId].size;
+    u64 curBlockEndAddr
+        = (u64)allRanksUBMemLayout[curRank][blockId].startAddr + allRanksUBMemLayout[curRank][blockId].size;
     if ((u64)addr + size > curBlockEndAddr) {
-        HCCL_ERROR("addr[%p], size[%llu] exceed mem bufferType[%s]: startAddr[%p], endAddr[%p], size[%llu]",
-            addr,
-            size,
+        HCCL_ERROR(
+            "addr[%p], size[%llu] exceed mem bufferType[%s]: startAddr[%p], endAddr[%p], size[%llu]", addr, size,
             allRanksUBMemLayout[curRank][blockId].bufferType.Describe().c_str(),
-            allRanksUBMemLayout[curRank][blockId].startAddr,
-            curBlockEndAddr,
+            allRanksUBMemLayout[curRank][blockId].startAddr, curBlockEndAddr,
             allRanksUBMemLayout[curRank][blockId].size);
         return HcclResult::HCCL_E_MEMORY;
     }
@@ -271,18 +262,15 @@ MemBlock MemLayout::GetMemBlock(BufferType bufferType, RankId curRank)
 
 MemBlock MemLayout::GetUBMemBlock(RankId curRank, u32 blockId)
 {
-    if (allRanksUBMemLayout.find(curRank) == allRanksUBMemLayout.end() ||
-        allRanksUBMemLayout[curRank].size() <= blockId) {
+    if (allRanksUBMemLayout.find(curRank) == allRanksUBMemLayout.end()
+        || allRanksUBMemLayout[curRank].size() <= blockId) {
         HCCL_ERROR("curRank[%u], blockId[%u] is invalid", curRank, blockId);
         return MemBlock{BufferType::USERBUF_AIV, 0, 0};
     }
     return allRanksUBMemLayout[curRank][blockId];
 }
 
-CheckerDataType MemLayout::GetCheckerDataType()
-{
-    return checkerDataType;
-}
+CheckerDataType MemLayout::GetCheckerDataType() { return checkerDataType; }
 
 u32 MemLayout::GetRankIdByAddr(char_t* addr)
 {
@@ -298,7 +286,7 @@ u32 MemLayout::GetBlockIdByAddr(char_t* addr)
 
 u64 MemLayout::GetBlockMemAddrbyId(RankId curRank, u32 blockId)
 {
-    char_t *addr = GetUBMemBlock(curRank, blockId).startAddr;
+    char_t* addr = GetUBMemBlock(curRank, blockId).startAddr;
     return (u64)addr & AIV_MASKER;
 }
 
@@ -346,11 +334,12 @@ HcclResult MemLayout::SetBufferAddrAndLen(BufferType bufferType, char_t* addr, u
     u32 index = GetMemBlockIdx(bufferType);
 
     if (((u64)addr & CHECKER_MEM_MASKER) != ((u64)singleRankMemLayout[index].startAddr & CHECKER_MEM_MASKER)) {
-        HCCL_ERROR("new addr[%p] and origin addr[%p] are not in the same block", addr, singleRankMemLayout[index].startAddr);
+        HCCL_ERROR(
+            "new addr[%p] and origin addr[%p] are not in the same block", addr, singleRankMemLayout[index].startAddr);
         return HcclResult::HCCL_E_PARA;
     }
 
-    if(bufferType == BufferType::USERBUF_AIV){
+    if (bufferType == BufferType::USERBUF_AIV) {
         u64 tailAddr = (u64)addr - ((u64)addr & AIV_MASKER);
         if (tailAddr + len >= AIV_MEM_SIZE) {
             HCCL_ERROR("invalid addr[%p] and len[%lld]", addr, len);
@@ -400,9 +389,8 @@ HcclResult MemLayout::SetGlobalBuffer(char_t* addr, u64 len)
     return HcclResult::HCCL_E_PARA;
 }
 
-void MemLayout::SetCheckerDataType(CheckerOpParam &opParam)
+void MemLayout::SetCheckerDataType(CheckerOpParam& opParam)
 {
-
     switch (opParam.opType) {
         case CheckerOpType::ALLTOALLV:
         case CheckerOpType::ALLTOALLVC:
@@ -439,7 +427,7 @@ void MemLayout::InitBlockMem(u32 blockNum)
     return;
 }
 
-HcclResult MemLayout::TpipeInit(void *&startPtr, void *&endPtr, u32 blockId)
+HcclResult MemLayout::TpipeInit(void*& startPtr, void*& endPtr, u32 blockId)
 {
     HCCL_DEBUG("=====pipe blockId:%d=====", blockId);
     RankId curRank = RankInfoRecorder::Global()->GetRankId();
@@ -448,16 +436,16 @@ HcclResult MemLayout::TpipeInit(void *&startPtr, void *&endPtr, u32 blockId)
         HCCL_ERROR("fail to get startAddr");
         return HcclResult::HCCL_E_PARA;
     }
-    startPtr = (void *)startAddr;
-    endPtr = (void *)(startAddr + CHECKER_MEM_BLOCK_SIZE);
-    allRanksUBMemLayout[curRank][blockId].startAddr = (char_t *)startAddr;
+    startPtr = (void*)startAddr;
+    endPtr = (void*)(startAddr + CHECKER_MEM_BLOCK_SIZE);
+    allRanksUBMemLayout[curRank][blockId].startAddr = (char_t*)startAddr;
     allRanksUBMemLayout[curRank][blockId].size = CHECKER_MEM_BLOCK_SIZE;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult MemLayout::MemAlloc(u64 simAddr, u64 size)
 {
-    char *mem = new (std::nothrow) char[size];
+    char* mem = new (std::nothrow) char[size];
     if (mem == nullptr) {
         return HcclResult::HCCL_E_PARA;
     }
@@ -466,7 +454,7 @@ HcclResult MemLayout::MemAlloc(u64 simAddr, u64 size)
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult MemLayout::GetRealAddr(u64 simAddr, u64 &realAddr, u64 &size)
+HcclResult MemLayout::GetRealAddr(u64 simAddr, u64& realAddr, u64& size)
 {
     auto it = simAddr2RealAddr.find(simAddr);
     if (it != simAddr2RealAddr.end()) {
@@ -474,7 +462,7 @@ HcclResult MemLayout::GetRealAddr(u64 simAddr, u64 &realAddr, u64 &size)
         size = it->second.size;
         return HcclResult::HCCL_SUCCESS;
     }
-    for (auto &it : simAddr2RealAddr) {
+    for (auto& it : simAddr2RealAddr) {
         if (simAddr > it.first && it.first + it.second.size > simAddr) {
             realAddr = it.second.realAddr + (simAddr - it.first);
             size = it.second.size - (simAddr - it.first);
@@ -486,11 +474,11 @@ HcclResult MemLayout::GetRealAddr(u64 simAddr, u64 &realAddr, u64 &size)
 
 BufferType MemLayout::GetBufferType(u64 addr)
 {
-    RankId curRank = GetRankIdByAddr((char *)addr);
+    RankId curRank = GetRankIdByAddr((char*)addr);
     u32 superPodId = RankInfoRecorder::Global()->rankId2superpodId[curRank];
     u32 serverId = RankInfoRecorder::Global()->rankId2serverId[curRank];
     u32 rankId = RankInfoRecorder::Global()->rankId2phyId[curRank];
-    SingleRankMemLayout &singleRankMemLayout = allSuperPodLayout[superPodId][serverId][rankId];
+    SingleRankMemLayout& singleRankMemLayout = allSuperPodLayout[superPodId][serverId][rankId];
 
     for (u32 index = 0; index < singleRankMemLayout.size(); index++) {
         if (addr < (u64)singleRankMemLayout[index].startAddr) {
@@ -507,12 +495,12 @@ BufferType MemLayout::GetBufferType(u64 addr)
 
 HcclResult MemLayout::GenInitUBLayout(RankId rankId, u64 baseAddr, u32 blockNum)
 {
-    HCCL_DEBUG("=====init ub layout rankID:%d, addr:%llx=====", rankId , baseAddr);
+    HCCL_DEBUG("=====init ub layout rankID:%d, addr:%llx=====", rankId, baseAddr);
     u64 startAddr = (u64)baseAddr & AIV_MASKER;
     allRanksUBMemLayout[rankId].clear();
-    for(int i = 0; i < blockNum; ++i){
+    for (int i = 0; i < blockNum; ++i) {
         addr2RankIdBlockId[startAddr] = std::make_pair(rankId, i);
-        MemBlock inputMemBlock{BufferType::USERBUF_AIV, (char_t *)startAddr, (u64)0};
+        MemBlock inputMemBlock{BufferType::USERBUF_AIV, (char_t*)startAddr, (u64)0};
         allRanksUBMemLayout[rankId].push_back(inputMemBlock);
         startAddr += AIV_MEM_SIZE;
     }
@@ -525,55 +513,55 @@ SingleRankMemLayout MemLayout::GenInitLayout(RankId rankId)
     u64 startAddr = (u64)checkerMemAddrBase & CHECKER_MEM_MASKER;
 
     addr2RankId[startAddr] = rankId;
-    MemBlock inputMemBlock{BufferType::INPUT, (char_t *)checkerMemAddrBase, (u64)0};
+    MemBlock inputMemBlock{BufferType::INPUT, (char_t*)checkerMemAddrBase, (u64)0};
     initLayout.push_back(inputMemBlock);
     checkerMemAddrBase += CHECKER_MEM_BLOCK_SIZE;
 
     startAddr = (u64)checkerMemAddrBase & CHECKER_MEM_MASKER;
     addr2RankId[startAddr] = rankId;
-    MemBlock outputMemBlock{BufferType::OUTPUT, (char_t *)checkerMemAddrBase, (u64)0};
+    MemBlock outputMemBlock{BufferType::OUTPUT, (char_t*)checkerMemAddrBase, (u64)0};
     initLayout.push_back(outputMemBlock);
     checkerMemAddrBase += CHECKER_MEM_BLOCK_SIZE;
 
     startAddr = (u64)checkerMemAddrBase & CHECKER_MEM_MASKER;
     addr2RankId[startAddr] = rankId;
-    MemBlock inputCclMemBlock{BufferType::INPUT_CCL, (char_t *)checkerMemAddrBase, (u64)0};
+    MemBlock inputCclMemBlock{BufferType::INPUT_CCL, (char_t*)checkerMemAddrBase, (u64)0};
     initLayout.push_back(inputCclMemBlock);
     checkerMemAddrBase += CHECKER_MEM_BLOCK_SIZE;
 
     startAddr = (u64)checkerMemAddrBase & CHECKER_MEM_MASKER;
     addr2RankId[startAddr] = rankId;
-    MemBlock outputCclMemBlock{BufferType::OUTPUT_CCL, (char_t *)checkerMemAddrBase, (u64)0};
+    MemBlock outputCclMemBlock{BufferType::OUTPUT_CCL, (char_t*)checkerMemAddrBase, (u64)0};
     initLayout.push_back(outputCclMemBlock);
     checkerMemAddrBase += CHECKER_MEM_BLOCK_SIZE;
 
     startAddr = (u64)checkerMemAddrBase & CHECKER_MEM_MASKER;
     addr2RankId[startAddr] = rankId;
-    MemBlock scratchMemBlock{BufferType::SCRATCH, (char_t *)checkerMemAddrBase, (u64)0};
+    MemBlock scratchMemBlock{BufferType::SCRATCH, (char_t*)checkerMemAddrBase, (u64)0};
     initLayout.push_back(scratchMemBlock);
     checkerMemAddrBase += CHECKER_MEM_BLOCK_SIZE;
 
     startAddr = (u64)checkerMemAddrBase & CHECKER_MEM_MASKER;
     addr2RankId[startAddr] = rankId;
-    MemBlock inputAivMemBlock{BufferType::INPUT_AIV, (char_t *)checkerMemAddrBase, (u64)0};
+    MemBlock inputAivMemBlock{BufferType::INPUT_AIV, (char_t*)checkerMemAddrBase, (u64)0};
     initLayout.push_back(inputAivMemBlock);
     checkerMemAddrBase += CHECKER_MEM_BLOCK_SIZE;
 
     startAddr = (u64)checkerMemAddrBase & CHECKER_MEM_MASKER;
     addr2RankId[startAddr] = rankId;
-    MemBlock outputAivMemBlock{BufferType::OUTPUT_AIV, (char_t *)checkerMemAddrBase, (u64)0};
+    MemBlock outputAivMemBlock{BufferType::OUTPUT_AIV, (char_t*)checkerMemAddrBase, (u64)0};
     initLayout.push_back(outputAivMemBlock);
     checkerMemAddrBase += CHECKER_MEM_BLOCK_SIZE;
 
     startAddr = (u64)checkerMemAddrBase & CHECKER_MEM_MASKER;
     addr2RankId[startAddr] = rankId;
-    MemBlock aivCommInfoMemBlock{BufferType::AIV_COMMINFO, (char_t *)checkerMemAddrBase, (u64)0};
+    MemBlock aivCommInfoMemBlock{BufferType::AIV_COMMINFO, (char_t*)checkerMemAddrBase, (u64)0};
     initLayout.push_back(aivCommInfoMemBlock);
     checkerMemAddrBase += CHECKER_MEM_BLOCK_SIZE;
 
     startAddr = (u64)checkerMemAddrBase & CHECKER_MEM_MASKER;
     addr2RankId[startAddr] = rankId;
-    MemBlock aivUBMemBlock{BufferType::USERBUF_AIV, (char_t *)checkerMemAddrBase, CHECKER_MEM_BLOCK_SIZE};
+    MemBlock aivUBMemBlock{BufferType::USERBUF_AIV, (char_t*)checkerMemAddrBase, CHECKER_MEM_BLOCK_SIZE};
     initLayout.push_back(aivUBMemBlock);
     checkerMemAddrBase += CHECKER_MEM_BLOCK_SIZE;
     return initLayout;
@@ -584,8 +572,8 @@ void MemLayout::Reset()
     allSuperPodLayout.clear();
     allRanksUBMemLayout.clear();
     addr2RankIdBlockId.clear();
-    for (auto &it : simAddr2RealAddr) {
-        delete[] (char *)it.second.realAddr;
+    for (auto& it : simAddr2RealAddr) {
+        delete[] (char*)it.second.realAddr;
     }
     simAddr2RealAddr.clear();
     addr2RankId.clear();
@@ -605,7 +593,7 @@ void MemLayout::PrintUB()
     }
 }
 
-void MemLayout::Init(CheckerOpParam &opParam)
+void MemLayout::Init(CheckerOpParam& opParam)
 {
     u32 rankSize = RankInfoRecorder::Global()->GetRankSize();
     for (int curRank = 0; curRank < rankSize; curRank++) {
@@ -614,10 +602,10 @@ void MemLayout::Init(CheckerOpParam &opParam)
         u32 rankId = RankInfoRecorder::Global()->rankId2phyId[curRank];
         allSuperPodLayout[superPodId][serverId][rankId] = GenInitLayout(curRank);
 
-        SingleRankMemLayout &singleRankMemLayout = allSuperPodLayout[superPodId][serverId][rankId];
+        SingleRankMemLayout& singleRankMemLayout = allSuperPodLayout[superPodId][serverId][rankId];
     }
     hasInit = true;
     SetCheckerDataType(opParam);
     return;
 }
-}
+} // namespace checker

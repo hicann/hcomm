@@ -18,26 +18,27 @@
 #include "aiv_all_to_all_vc_910b_graph.h"
 #include "aiv_all_to_all_91093_single.h"
 
-#define AIV_ALL_TO_ALL_VC_KERNEL_BATCH_DEF(type) \
-extern "C" __global__ __aicore__ void aiv_all_to_all_vc_##type(EXTERN_KERNEL_ARGS_DEF) { \
-    AIV_INFO_HINT; \
-    if (isOpBase) { \
-        if (extraArgs.maxCount * sizeof(type) > bufferSize) { \
-            return aiv_all_to_all_vc_910b<type>(EXTERN_KERNEL_ARGS_CALL); \
-        } else { \
-            return aiv_all_to_all_vc_910b_no_loop<type>(EXTERN_KERNEL_ARGS_CALL); \
-        } \
-    } else { \
-        if (devType == DEV_TYPE_910_93) { \
-            return aiv_all_to_all_vc_91093_single_graph<type>(KERNEL_ARGS_CALL, &extraArgs); \
-        } else { \
-            return aiv_all_to_all_vc_910b_graph<type>(EXTERN_KERNEL_ARGS_CALL); \
-        } \
-    } \
-} \
-EXPORT_AIV_META_INFO(aiv_all_to_all_vc_##type)
+#define AIV_ALL_TO_ALL_VC_KERNEL_BATCH_DEF(type)                                                 \
+    extern "C" __global__ __aicore__ void aiv_all_to_all_vc_##type(EXTERN_KERNEL_ARGS_DEF)       \
+    {                                                                                            \
+        AIV_INFO_HINT;                                                                           \
+        if (isOpBase) {                                                                          \
+            if (extraArgs.maxCount * sizeof(type) > bufferSize) {                                \
+                return aiv_all_to_all_vc_910b<type>(EXTERN_KERNEL_ARGS_CALL);                    \
+            } else {                                                                             \
+                return aiv_all_to_all_vc_910b_no_loop<type>(EXTERN_KERNEL_ARGS_CALL);            \
+            }                                                                                    \
+        } else {                                                                                 \
+            if (devType == DEV_TYPE_910_93) {                                                    \
+                return aiv_all_to_all_vc_91093_single_graph<type>(KERNEL_ARGS_CALL, &extraArgs); \
+            } else {                                                                             \
+                return aiv_all_to_all_vc_910b_graph<type>(EXTERN_KERNEL_ARGS_CALL);              \
+            }                                                                                    \
+        }                                                                                        \
+    }                                                                                            \
+    EXPORT_AIV_META_INFO(aiv_all_to_all_vc_##type)
 
 // 定义算子各数据类型Kernel入口
 AIV_COPY_DATA_TYPE_DEF(AIV_ALL_TO_ALL_VC_KERNEL_BATCH_DEF);
 
-#endif  /* AIV_ALL_TO_ALL_VC_OP_H */
+#endif /* AIV_ALL_TO_ALL_VC_OP_H */

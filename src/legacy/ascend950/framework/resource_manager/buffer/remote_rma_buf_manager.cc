@@ -13,13 +13,12 @@
 #include "internal_exception.h"
 namespace Hccl {
 
-RemoteRmaBufManager::RemoteRmaBufManager(const CommunicatorImpl &communicator)
-    : comm(const_cast<CommunicatorImpl *>(&communicator))
-{
-}
+RemoteRmaBufManager::RemoteRmaBufManager(const CommunicatorImpl& communicator)
+    : comm(const_cast<CommunicatorImpl*>(&communicator))
+{}
 
-RemoteRmaBuffer *RemoteRmaBufManager::GetRemoteRmaBuffer(const string &opTag, const LinkData &linkData,
-                                                         BufferType bufType)
+RemoteRmaBuffer*
+RemoteRmaBufManager::GetRemoteRmaBuffer(const string& opTag, const LinkData& linkData, BufferType bufType)
 {
     auto tagIter = remoteBufMap.find(opTag);
     if (tagIter != remoteBufMap.end()) {
@@ -31,15 +30,16 @@ RemoteRmaBuffer *RemoteRmaBufManager::GetRemoteRmaBuffer(const string &opTag, co
             }
         }
     }
-    HCCL_WARNING("WARNING: RemoteRmaBuffer does not exist, "
-                 "errNo[0x%016llx], opTag[%s], linkData[%s], bufType[%s]",
-                 HCCL_ERROR_CODE(HcclResult::HCCL_E_PTR), opTag.c_str(), linkData.Describe().c_str(),
-                 bufType.Describe().c_str());
+    HCCL_WARNING(
+        "WARNING: RemoteRmaBuffer does not exist, "
+        "errNo[0x%016llx], opTag[%s], linkData[%s], bufType[%s]",
+        HCCL_ERROR_CODE(HcclResult::HCCL_E_PTR), opTag.c_str(), linkData.Describe().c_str(),
+        bufType.Describe().c_str());
 
     return nullptr;
 }
 
-unique_ptr<RemoteRmaBuffer> RemoteRmaBufManager::Create(const LinkData &linkData) const
+unique_ptr<RemoteRmaBuffer> RemoteRmaBufManager::Create(const LinkData& linkData) const
 {
     if (linkData.GetType() == PortDeploymentType::P2P) {
         HCCL_INFO("Create remote Ipc RMA buffer.");
@@ -61,8 +61,8 @@ unique_ptr<RemoteRmaBuffer> RemoteRmaBufManager::Create(const LinkData &linkData
     }
 }
 
-void RemoteRmaBufManager::Bind(unique_ptr<RemoteRmaBuffer> remoteRmaBuf, const string &opTag, const LinkData &linkData,
-                               BufferType bufType)
+void RemoteRmaBufManager::Bind(
+    unique_ptr<RemoteRmaBuffer> remoteRmaBuf, const string& opTag, const LinkData& linkData, BufferType bufType)
 {
     remoteBufMap[opTag][linkData][bufType] = std::move(remoteRmaBuf);
 }

@@ -7,16 +7,15 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #include "../../hccl_api_base_test.h"
 #include "endpoint_pair.h"
 using namespace hcomm;
 class TestEndpointPair : public BaseInit {
 public:
-    void SetUp() override {
-        BaseInit::SetUp();
-    }
-    void TearDown() override {
+    void SetUp() override { BaseInit::SetUp(); }
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }
@@ -112,8 +111,7 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_ConnectMode_0_Expect_Success)
     Hccl::IpAddress localIp("192.168.100.100");
     Hccl::IpAddress remoteIp("192.168.100.101");
 
-    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE,
-        0, 1, localIp, remoteIp, 0, 0, 0);
+    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE, 0, 1, localIp, remoteIp, 0, 0, 0);
 
     uint32_t listenPort = 12345;
     std::string tag = "test_tag";
@@ -127,7 +125,8 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_ConnectMode_0_Expect_Success)
     EXPECT_EQ(socketConfig.listeningPort, listenPort);
     EXPECT_EQ(socketConfig.GetRole(), Hccl::SocketRole::SERVER);
 
-    std::string expectedTag = tag + "_" + localIp.GetIpStr() + "_" + remoteIp.GetIpStr() + "_" + std::to_string(listenPort);
+    std::string expectedTag
+        = tag + "_" + localIp.GetIpStr() + "_" + remoteIp.GetIpStr() + "_" + std::to_string(listenPort);
     EXPECT_EQ(socketConfig.GetHccpTag(), expectedTag);
 }
 
@@ -138,8 +137,7 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_ConnectMode_1_Expect_Success)
     Hccl::IpAddress localIp("192.168.100.100");
     Hccl::IpAddress remoteIp("192.168.100.101");
 
-    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE,
-        1, 0, localIp, remoteIp, 0, 0, 0);
+    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE, 1, 0, localIp, remoteIp, 0, 0, 0);
 
     uint32_t listenPort = 54321;
     std::string tag = "hccp_test";
@@ -154,8 +152,8 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_ConnectMode_1_Expect_Success)
     EXPECT_EQ(socketConfig.hostNic2DeviceNicMode_, hostNic2DeviceNicMode);
     EXPECT_EQ(socketConfig.GetRole(), Hccl::SocketRole::CLIENT);
 
-    std::string expectedTag = tag + "_" + std::to_string(rmtRank) + "_" + std::to_string(myRank) + "_" +
-                              remoteIp.GetIpStr() + "_" + localIp.GetIpStr();
+    std::string expectedTag = tag + "_" + std::to_string(rmtRank) + "_" + std::to_string(myRank) + "_"
+                              + remoteIp.GetIpStr() + "_" + localIp.GetIpStr();
     EXPECT_EQ(socketConfig.GetHccpTag(), expectedTag);
 }
 
@@ -166,11 +164,10 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_FromSocketTag_Expect_Succe
     Hccl::IpAddress localIp("192.168.100.100");
     Hccl::IpAddress remoteIp("192.168.100.101");
 
-    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE,
-        0, 1, localIp, remoteIp, 0, 0, 0);
+    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE, 0, 1, localIp, remoteIp, 0, 0, 0);
 
     uint32_t listenPort = 54321;
-    std::string socketTag = "testCommTag_engine_5";  // socketTag格式: commTag_engine_X
+    std::string socketTag = "testCommTag_engine_5"; // socketTag格式: commTag_engine_X
     uint32_t hostNic2DeviceNicMode = 1;
     uint32_t myRank = 0;
     uint32_t rmtRank = 1;
@@ -183,8 +180,8 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_FromSocketTag_Expect_Succe
 
     // 解析出的commTag应为"testCommTag"，hccpTag格式: commTag_rankId_rankId_ip_ip
     std::string expectedCommTag = "testCommTag";
-    std::string expectedTag = expectedCommTag + "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_" +
-                              localIp.GetIpStr() + "_" + remoteIp.GetIpStr();
+    std::string expectedTag = expectedCommTag + "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_"
+                              + localIp.GetIpStr() + "_" + remoteIp.GetIpStr();
     EXPECT_EQ(socketConfig.GetHccpTag(), expectedTag);
 }
 
@@ -195,11 +192,10 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_FromSocketTagWithProtocol_
     Hccl::IpAddress localIp("192.168.100.100");
     Hccl::IpAddress remoteIp("192.168.100.101");
 
-    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE,
-        1, 0, localIp, remoteIp, 0, 0, 0);
+    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE, 1, 0, localIp, remoteIp, 0, 0, 0);
 
     uint32_t listenPort = 54321;
-    std::string socketTag = "myCommTag_engine_2_protocol_3";  // socketTag格式: commTag_engine_X_protocol_Y
+    std::string socketTag = "myCommTag_engine_2_protocol_3"; // socketTag格式: commTag_engine_X_protocol_Y
     uint32_t hostNic2DeviceNicMode = 1;
     uint32_t myRank = 1;
     uint32_t rmtRank = 0;
@@ -212,8 +208,8 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_FromSocketTagWithProtocol_
 
     // 解析出的commTag应为"myCommTag"，hccpTag格式: commTag_rankId_rankId_ip_ip
     std::string expectedCommTag = "myCommTag";
-    std::string expectedTag = expectedCommTag + "_" + std::to_string(rmtRank) + "_" + std::to_string(myRank) + "_" +
-                              remoteIp.GetIpStr() + "_" + localIp.GetIpStr();
+    std::string expectedTag = expectedCommTag + "_" + std::to_string(rmtRank) + "_" + std::to_string(myRank) + "_"
+                              + remoteIp.GetIpStr() + "_" + localIp.GetIpStr();
     EXPECT_EQ(socketConfig.GetHccpTag(), expectedTag);
 }
 
@@ -224,11 +220,10 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_NoEngineSuffix_Expect_Warn
     Hccl::IpAddress localIp("192.168.100.100");
     Hccl::IpAddress remoteIp("192.168.100.101");
 
-    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE,
-        0, 1, localIp, remoteIp, 0, 0, 0);
+    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE, 0, 1, localIp, remoteIp, 0, 0, 0);
 
     uint32_t listenPort = 54321;
-    std::string socketTag = "plainTag";  // 不包含"_engine_"后缀
+    std::string socketTag = "plainTag"; // 不包含"_engine_"后缀
     uint32_t hostNic2DeviceNicMode = 1;
     uint32_t myRank = 0;
     uint32_t rmtRank = 1;
@@ -240,8 +235,8 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_NoEngineSuffix_Expect_Warn
     EXPECT_EQ(socketConfig.GetRole(), Hccl::SocketRole::SERVER);
 
     // 无_engine_后缀时，commTag保持原样
-    std::string expectedTag = socketTag + "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_" +
-                              localIp.GetIpStr() + "_" + remoteIp.GetIpStr();
+    std::string expectedTag = socketTag + "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_"
+                              + localIp.GetIpStr() + "_" + remoteIp.GetIpStr();
     EXPECT_EQ(socketConfig.GetHccpTag(), expectedTag);
 }
 
@@ -252,11 +247,10 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_MultiEngine_Expect_FirstEn
     Hccl::IpAddress localIp("192.168.100.100");
     Hccl::IpAddress remoteIp("192.168.100.101");
 
-    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE,
-        0, 1, localIp, remoteIp, 0, 0, 0);
+    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE, 0, 1, localIp, remoteIp, 0, 0, 0);
 
     uint32_t listenPort = 54321;
-    std::string socketTag = "commTag_engine_1_engine_2";  // 多个_engine_，取第一个之前的部分
+    std::string socketTag = "commTag_engine_1_engine_2"; // 多个_engine_，取第一个之前的部分
     uint32_t hostNic2DeviceNicMode = 1;
     uint32_t myRank = 0;
     uint32_t rmtRank = 1;
@@ -267,8 +261,8 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_MultiEngine_Expect_FirstEn
 
     // 解析出的commTag应为"commTag"（第一个"_engine_"之前的部分）
     std::string expectedCommTag = "commTag";
-    std::string expectedTag = expectedCommTag + "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_" +
-                              localIp.GetIpStr() + "_" + remoteIp.GetIpStr();
+    std::string expectedTag = expectedCommTag + "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_"
+                              + localIp.GetIpStr() + "_" + remoteIp.GetIpStr();
     EXPECT_EQ(socketConfig.GetHccpTag(), expectedTag);
 }
 
@@ -280,11 +274,10 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_EnginePrefix_Expect_EmptyC
     Hccl::IpAddress localIp("192.168.100.100");
     Hccl::IpAddress remoteIp("192.168.100.101");
 
-    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE,
-        0, 1, localIp, remoteIp, 0, 0, 0);
+    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE, 0, 1, localIp, remoteIp, 0, 0, 0);
 
     uint32_t listenPort = 54321;
-    std::string socketTag = "_engine_5";  // 以_engine_开头，_engine_在位置0
+    std::string socketTag = "_engine_5"; // 以_engine_开头，_engine_在位置0
     uint32_t hostNic2DeviceNicMode = 1;
     uint32_t myRank = 0;
     uint32_t rmtRank = 1;
@@ -294,8 +287,8 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_EnginePrefix_Expect_EmptyC
     EXPECT_EQ(socketConfig.GetRole(), Hccl::SocketRole::SERVER);
 
     // 以_engine_开头时，commTag为空字符串（substr(0,0)返回空）
-    std::string expectedTag = "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_" +
-                              localIp.GetIpStr() + "_" + remoteIp.GetIpStr();
+    std::string expectedTag = "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_" + localIp.GetIpStr()
+                              + "_" + remoteIp.GetIpStr();
     EXPECT_EQ(socketConfig.GetHccpTag(), expectedTag);
 }
 
@@ -306,11 +299,10 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_InvalidFormat_Expect_Wrong
     Hccl::IpAddress localIp("192.168.100.100");
     Hccl::IpAddress remoteIp("192.168.100.101");
 
-    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE,
-        0, 1, localIp, remoteIp, 0, 0, 0);
+    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE, 0, 1, localIp, remoteIp, 0, 0, 0);
 
     uint32_t listenPort = 54321;
-    std::string socketTag = "test_engine_abc";  // engine后不是数字
+    std::string socketTag = "test_engine_abc"; // engine后不是数字
     uint32_t hostNic2DeviceNicMode = 1;
     uint32_t myRank = 0;
     uint32_t rmtRank = 1;
@@ -323,13 +315,13 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_InvalidFormat_Expect_Wrong
     // 但实际期望的commTag可能是完整的"test_engine_abc"
     // 这里验证实际解析结果：commTag应该是"test"
     std::string actualCommTag = "test";
-    std::string wrongExpectedTag = socketTag + "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_" +
-                                   localIp.GetIpStr() + "_" + remoteIp.GetIpStr();
+    std::string wrongExpectedTag = socketTag + "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_"
+                                   + localIp.GetIpStr() + "_" + remoteIp.GetIpStr();
     // 验证解析出的commTag确实不是完整的socketTag
     EXPECT_STRNE(socketTag.c_str(), actualCommTag.c_str());
     // 但hccpTag中用的是解析后的commTag
-    std::string expectedTag = actualCommTag + "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_" +
-                              localIp.GetIpStr() + "_" + remoteIp.GetIpStr();
+    std::string expectedTag = actualCommTag + "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_"
+                              + localIp.GetIpStr() + "_" + remoteIp.GetIpStr();
     EXPECT_EQ(socketConfig.GetHccpTag(), expectedTag);
 }
 
@@ -340,11 +332,10 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_EmptyTag_Expect_Success)
     Hccl::IpAddress localIp("192.168.100.100");
     Hccl::IpAddress remoteIp("192.168.100.101");
 
-    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE,
-        0, 1, localIp, remoteIp, 0, 0, 0);
+    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE, 0, 1, localIp, remoteIp, 0, 0, 0);
 
     uint32_t listenPort = 54321;
-    std::string socketTag = "";  // 空字符串
+    std::string socketTag = ""; // 空字符串
     uint32_t hostNic2DeviceNicMode = 1;
     uint32_t myRank = 0;
     uint32_t rmtRank = 1;
@@ -354,8 +345,8 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_EmptyTag_Expect_Success)
     EXPECT_EQ(socketConfig.GetRole(), Hccl::SocketRole::SERVER);
 
     // 空字符串时，commTag保持为空
-    std::string expectedTag = "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_" +
-                              localIp.GetIpStr() + "_" + remoteIp.GetIpStr();
+    std::string expectedTag = "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_" + localIp.GetIpStr()
+                              + "_" + remoteIp.GetIpStr();
     EXPECT_EQ(socketConfig.GetHccpTag(), expectedTag);
 }
 
@@ -366,11 +357,10 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_ComplexCommTag_Expect_Succ
     Hccl::IpAddress localIp("192.168.100.100");
     Hccl::IpAddress remoteIp("192.168.100.101");
 
-    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE,
-        0, 1, localIp, remoteIp, 0, 0, 0);
+    Hccl::LinkData link(Hccl::PortDeploymentType::P2P, Hccl::LinkProtocol::ROCE, 0, 1, localIp, remoteIp, 0, 0, 0);
 
     uint32_t listenPort = 54321;
-    std::string socketTag = "comm_tag_with_underscore_engine_3";  // commTag带下划线
+    std::string socketTag = "comm_tag_with_underscore_engine_3"; // commTag带下划线
     uint32_t hostNic2DeviceNicMode = 1;
     uint32_t myRank = 0;
     uint32_t rmtRank = 1;
@@ -381,8 +371,8 @@ TEST_F(TestEndpointPair, Ut_SocketConfig_CommTagParse_ComplexCommTag_Expect_Succ
 
     // 解析出的commTag应为"comm_tag_with_underscore"
     std::string expectedCommTag = "comm_tag_with_underscore";
-    std::string expectedTag = expectedCommTag + "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_" +
-                              localIp.GetIpStr() + "_" + remoteIp.GetIpStr();
+    std::string expectedTag = expectedCommTag + "_" + std::to_string(myRank) + "_" + std::to_string(rmtRank) + "_"
+                              + localIp.GetIpStr() + "_" + remoteIp.GetIpStr();
     EXPECT_EQ(socketConfig.GetHccpTag(), expectedTag);
 }
 

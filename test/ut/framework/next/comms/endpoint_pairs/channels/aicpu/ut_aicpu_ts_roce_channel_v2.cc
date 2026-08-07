@@ -37,15 +37,9 @@ using namespace hcomm;
 
 class AicpuTsRoceChannelV2Test : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "AicpuTsRoceChannelV2Test tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "AicpuTsRoceChannelV2Test tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "AicpuTsRoceChannelV2Test tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "AicpuTsRoceChannelV2Test tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
@@ -53,23 +47,32 @@ protected:
         Hccl::DevType dev = Hccl::DevType::DEV_TYPE_950;
         MOCKER(Hccl::HrtGetDevice).stubs().will(returnValue(0));
         MOCKER(Hccl::HrtGetDeviceType).stubs().will(returnValue(dev));
-        MOCKER(Hccl::HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(static_cast<Hccl::DevId>(0)));
-        RdmaHandle rdmaHandle = (void *)0x1000000;
+        MOCKER(Hccl::HrtGetDevicePhyIdByIndex)
+            .stubs()
+            .with(mockcpp::any())
+            .will(returnValue(static_cast<Hccl::DevId>(0)));
+        RdmaHandle rdmaHandle = (void*)0x1000000;
         MOCKER(HcommEndpointStartListen).stubs().will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
 
         Hccl::IpAddress localIp("1.0.0.0");
         Hccl::IpAddress remoteIp("2.0.0.0");
-        fakeSocket = new Hccl::Socket(nullptr, localIp, 60001, remoteIp, "_0_1_", 
-                                      Hccl::SocketRole::SERVER, Hccl::NicType::HOST_NIC_TYPE);
-        
+        fakeSocket = new Hccl::Socket(
+            nullptr, localIp, 60001, remoteIp, "_0_1_", Hccl::SocketRole::SERVER, Hccl::NicType::HOST_NIC_TYPE);
+
         MOCKER_CPP(&Hccl::Socket::GetStatus).stubs().will(returnValue((Hccl::SocketStatus)Hccl::SocketStatus::OK));
-        MOCKER(Hccl::HrtRaNdaQpCreate).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
-        MOCKER(Hccl::HrtRaNdaCqCreate).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+        MOCKER(Hccl::HrtRaNdaQpCreate)
+            .stubs()
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+            .will(returnValue(HCCL_SUCCESS));
+        MOCKER(Hccl::HrtRaNdaCqCreate)
+            .stubs()
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+            .will(returnValue(HCCL_SUCCESS));
         MOCKER(Hccl::HrtRaNdaCqDestroy).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
         MOCKER(Hccl::HrtRaQpDestroy).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
         MOCKER(RaGetQpAttr).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(0));
         MOCKER_CPP(&AicpuTsRoceChannelV2::BuildNotifyValueBuffer).stubs().will(returnValue(HCCL_SUCCESS));
-        
+
         EndpointDesc endpointDesc{};
         endpointDesc.protocol = COMM_PROTOCOL_ROCE;
         endpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
@@ -78,7 +81,7 @@ protected:
         endpoint = std::make_unique<CpuRoceEndpoint>(endpointDesc);
         endpoint->Init();
         endpointHandle = static_cast<EndpointHandle>(endpoint.get());
-        
+
         EndpointDesc endpointDesc2;
         endpointDesc2.protocol = COMM_PROTOCOL_ROCE;
         endpointDesc2.commAddr.type = COMM_ADDR_TYPE_IP_V4;
@@ -89,7 +92,7 @@ protected:
         channelDesc.port = 60001;
         void* fsocket = static_cast<void*>(fakeSocket);
         channelDesc.socket = fsocket;
-        
+
         localBufferPtr = std::make_shared<Hccl::Buffer>(666);
         localRdmaRmaBuffer = std::make_shared<Hccl::LocalRdmaRmaBuffer>(localBufferPtr, rdmaHandle);
         void* memHandle = static_cast<void*>(localRdmaRmaBuffer.get());
@@ -104,7 +107,7 @@ protected:
         std::cout << "A Test case in AicpuTsRoceChannelV2Test TearDown" << std::endl;
         delete fakeSocket;
     }
-    
+
     std::shared_ptr<Hccl::Buffer> localBufferPtr;
     std::shared_ptr<Hccl::LocalRdmaRmaBuffer> localRdmaRmaBuffer;
     std::unique_ptr<CpuRoceEndpoint> endpoint;
@@ -127,7 +130,10 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_Normal_Init_Expect_HCCL_SUCCESS)
     MOCKER_CPP(&AicpuTsRoceChannelV2::BufferVecPack).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&AicpuTsRoceChannelV2::NotifyVecUnpack).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&AicpuTsRoceChannelV2::ConnVecUnpackProc).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&AicpuTsRoceChannelV2::RmtBufferVecUnpackProc).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&AicpuTsRoceChannelV2::RmtBufferVecUnpackProc)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
 
     // construct
     void* memHandle = static_cast<void*>(localRdmaRmaBuffer.get());
@@ -149,7 +155,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_Normal_Init_Expect_HCCL_SUCCESS)
     status = channel->GetStatus();
     EXPECT_EQ(channel->rdmaStatus_, AicpuTsRoceChannelV2::RdmaStatus::CONN_OK);
     EXPECT_EQ(status, ChannelStatus::READY);
-    
+
     std::cout << "End Ut_When_Normal_Init_Expect_HCCL_SUCCESS" << std::endl;
 }
 
@@ -161,12 +167,12 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_GetNotifyNum_Expect_Correct)
     channelDesc.memHandleNum = 1;
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
-    
+
     uint32_t notifyNum = 0;
     HcclResult ret = channel->GetNotifyNum(&notifyNum);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(notifyNum, channelDesc.notifyNum);
-    
+
     std::cout << "End Ut_When_GetNotifyNum_Expect_Correct" << std::endl;
 }
 
@@ -178,11 +184,11 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_GetBufferNum_Expect_Correct)
     channelDesc.memHandleNum = 1;
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
-    
+
     uint32_t bufferNum = 0;
     HcclResult ret = channel->GetBufferNum(&bufferNum);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    
+
     std::cout << "End Ut_When_GetBufferNum_Expect_Correct" << std::endl;
 }
 
@@ -194,10 +200,10 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_Describe_Expect_NotEmpty)
     channelDesc.memHandleNum = 1;
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
-    
+
     std::string desc = channel->Describe();
     std::cout << desc << std::endl;
-    
+
     std::cout << "End Ut_When_Describe_Expect_NotEmpty" << std::endl;
 }
 
@@ -209,11 +215,11 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_GetQpNum_Expect_Success)
     channelDesc.memHandleNum = 1;
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
-    
+
     uint32_t qpNum = 0;
     HcclResult ret = channel->GetQpNum(&qpNum);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    
+
     std::cout << "End Ut_When_GetQpNum_Expect_Success" << std::endl;
 }
 
@@ -226,11 +232,11 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildAndGetLocNotifyInfo_Expect_Success
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->channelStatus_ = ChannelStatus::READY;
-    
+
     RegedNotifyEntity* notify = nullptr;
     HcclResult ret = channel->BuildAndGetLocNotifyInfo(&notify);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    
+
     std::cout << "End Ut_When_BuildAndGetLocNotifyInfo_Expect_Success" << std::endl;
 }
 
@@ -243,11 +249,11 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildAndGetRmtNotifyInfo_Expect_Success
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->channelStatus_ = ChannelStatus::READY;
-    
+
     RegedNotifyEntity* notify = nullptr;
     HcclResult ret = channel->BuildAndGetRmtNotifyInfo(&notify);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    
+
     std::cout << "End Ut_When_BuildAndGetRmtNotifyInfo_Expect_Success" << std::endl;
 }
 
@@ -260,7 +266,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildAndGetLocBufInfo_Expect_Success)
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->channelStatus_ = ChannelStatus::READY;
-    
+
     std::vector<RegedBufferEntity> locBufList;
     locBufList.resize(channel->bufferNum_);
     RegedBufferEntity* bufferEntity = nullptr;
@@ -279,7 +285,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildAndGetRmtBufInfo_Expect_Success)
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->channelStatus_ = ChannelStatus::READY;
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
 
     std::vector<RegedBufferEntity> rmtBufList;
     rmtBufList.resize(channel->bufferNum_);
@@ -330,11 +336,11 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildAndGetCqContext_Expect_Success)
 
 static hccl::DeviceMem StubDeviceMemAlloc(u64 size, bool)
 {
-    void *p = std::malloc(static_cast<size_t>(size));
+    void* p = std::malloc(static_cast<size_t>(size));
     return hccl::DeviceMem(p, size, false);
 }
 
-static void StubHrtMemSyncCopy(void *dst, uint64_t dstMax, const void *src, uint64_t count, rtMemcpyKind_t)
+static void StubHrtMemSyncCopy(void* dst, uint64_t dstMax, const void* src, uint64_t count, rtMemcpyKind_t)
 {
     if (dst != nullptr && src != nullptr && dstMax >= count) {
         (void)memcpy(dst, src, static_cast<size_t>(count));
@@ -342,10 +348,10 @@ static void StubHrtMemSyncCopy(void *dst, uint64_t dstMax, const void *src, uint
 }
 
 static bool g_slabAllocated = false;
-static void *g_slabPtr = nullptr;
+static void* g_slabPtr = nullptr;
 static size_t g_slabSize = 0;
 
-aclError StubAclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy, aclrtMallocConfig *)
+aclError StubAclrtMalloc(void** devPtr, size_t size, aclrtMemMallocPolicy, aclrtMallocConfig*)
 {
     if (devPtr == nullptr) {
         return ACL_ERROR_RT_PARAM_INVALID;
@@ -360,7 +366,7 @@ aclError StubAclrtMalloc(void **devPtr, size_t size, aclrtMemMallocPolicy, aclrt
     return ACL_SUCCESS;
 }
 
-aclError StubAclrtMallocFail(void **devPtr, size_t, aclrtMemMallocPolicy, aclrtMallocConfig *)
+aclError StubAclrtMallocFail(void** devPtr, size_t, aclrtMemMallocPolicy, aclrtMallocConfig*)
 {
     if (devPtr != nullptr) {
         *devPtr = nullptr;
@@ -368,7 +374,7 @@ aclError StubAclrtMallocFail(void **devPtr, size_t, aclrtMemMallocPolicy, aclrtM
     return ACL_ERROR_RT_MEMORY_ALLOCATION;
 }
 
-aclError StubAclrtFree(void *devPtr)
+aclError StubAclrtFree(void* devPtr)
 {
     std::free(devPtr);
     if (devPtr == g_slabPtr) {
@@ -379,11 +385,9 @@ aclError StubAclrtFree(void *devPtr)
     return ACL_SUCCESS;
 }
 
-static void StubHrtMemcpyVoid(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind)
-{
-}
+static void StubHrtMemcpyVoid(void*, uint64_t, const void*, uint64_t, Hccl::tagRtMemcpyKind) {}
 
-static void StubHrtMemcpyReal(void *dst, uint64_t dstMax, const void *src, uint64_t count, Hccl::tagRtMemcpyKind)
+static void StubHrtMemcpyReal(void* dst, uint64_t dstMax, const void* src, uint64_t count, Hccl::tagRtMemcpyKind)
 {
     if (dst != nullptr && src != nullptr && dstMax >= count) {
         (void)std::memcpy(dst, src, static_cast<size_t>(count));
@@ -399,7 +403,10 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildSocket_NullSocket_Expect_Success)
     channelDesc.memHandles = &memHandle;
     channelDesc.memHandleNum = 1;
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
-    MOCKER_CPP(&hcomm::SocketMgr::GetSocket).stubs().with(mockcpp::any(), outBound(fakeSocket)).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&hcomm::SocketMgr::GetSocket)
+        .stubs()
+        .with(mockcpp::any(), outBound(fakeSocket))
+        .will(returnValue(HCCL_SUCCESS));
     EXPECT_EQ(channel->Init(), HCCL_SUCCESS);
     std::cout << "End Ut_When_BuildSocket_NullSocket_Expect_Success" << std::endl;
 }
@@ -428,11 +435,11 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildAndGetDevChannelEntity_Expect_Succ
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->channelStatus_ = ChannelStatus::READY;
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
 
     MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
-    using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
+    using HrtMemcpyType = void (*)(void*, uint64_t, const void*, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
 
     uint64_t devChannelEntityPtr = 0;
@@ -452,11 +459,11 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildSlab_Expect_Success)
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->channelStatus_ = ChannelStatus::READY;
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
 
     MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
-    using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
+    using HrtMemcpyType = void (*)(void*, uint64_t, const void*, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
 
     g_slabAllocated = false;
@@ -468,7 +475,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildSlab_Expect_Success)
     EXPECT_NE(channel->devChannelEntitySlab_, nullptr);
     EXPECT_GT(channel->devChannelEntitySlabSize_, sizeof(ChannelEntity));
 
-    ChannelEntity *devEntity = reinterpret_cast<ChannelEntity *>(devChannelEntityPtr);
+    ChannelEntity* devEntity = reinterpret_cast<ChannelEntity*>(devChannelEntityPtr);
     EXPECT_EQ(devEntity->engine, static_cast<uint32_t>(COMM_ENGINE_AICPU));
     EXPECT_EQ(devEntity->sqNum, 1u);
     EXPECT_EQ(devEntity->cqNum, 1u);
@@ -486,11 +493,11 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildSlab_CachedReturn_Expect_SamePtr)
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->channelStatus_ = ChannelStatus::READY;
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
 
     MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
-    using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
+    using HrtMemcpyType = void (*)(void*, uint64_t, const void*, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
 
     uint64_t firstPtr = 0;
@@ -519,11 +526,11 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_BuildSlab_AclrtMallocFail_Expect_Memory
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->channelStatus_ = ChannelStatus::READY;
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
 
     MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMallocFail));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
-    using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
+    using HrtMemcpyType = void (*)(void*, uint64_t, const void*, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyVoid)));
 
     uint64_t devChannelEntityPtr = 0;
@@ -545,11 +552,11 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_Clean_FreesSlab_CanRebuild)
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->channelStatus_ = ChannelStatus::READY;
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
 
     MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
-    using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
+    using HrtMemcpyType = void (*)(void*, uint64_t, const void*, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
 
     // First build
@@ -583,10 +590,10 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_GetRemoteMem_NonEmpty_Expect_Success)
     channelDesc.memHandleNum = 1;
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
-    CommMem *remoteMem = nullptr;
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
+    CommMem* remoteMem = nullptr;
     uint32_t memNum = 0;
-    char **memInfos = nullptr;
+    char** memInfos = nullptr;
     HcclResult ret = channel->GetRemoteMems(&memNum, &remoteMem, &memInfos);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(memNum, 1u);
@@ -601,10 +608,10 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_GetRemoteMems_CacheValid_Expect_Success
     channelDesc.memHandleNum = 1;
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x2000000));
-    CommMem *remoteMem = nullptr;
-    char **memInfos = nullptr;
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x2000000));
+    CommMem* remoteMem = nullptr;
+    char** memInfos = nullptr;
     uint32_t memNum = 0;
     HcclResult ret = channel->GetRemoteMems(&memNum, &remoteMem, &memInfos);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -621,11 +628,11 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_GetRemoteMems_NullPtr_Expect_Error)
     channelDesc.memHandleNum = 1;
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
-    char **memInfos = nullptr;
+    char** memInfos = nullptr;
     uint32_t memNum = 0;
     HcclResult ret = channel->GetRemoteMems(&memNum, nullptr, &memInfos);
     EXPECT_NE(ret, HCCL_SUCCESS);
-    CommMem *remoteMem = nullptr;
+    CommMem* remoteMem = nullptr;
     ret = channel->GetRemoteMems(&memNum, &remoteMem, nullptr);
     EXPECT_NE(ret, HCCL_SUCCESS);
     ret = channel->GetRemoteMems(nullptr, &remoteMem, &memInfos);
@@ -642,8 +649,8 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_GetRemoteMems_Empty_Expect_Success)
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->rmtRmaBuffers_.clear();
-    CommMem *remoteMem = nullptr;
-    char **memInfos = nullptr;
+    CommMem* remoteMem = nullptr;
+    char** memInfos = nullptr;
     uint32_t memNum = 0;
     HcclResult ret = channel->GetRemoteMems(&memNum, &remoteMem, &memInfos);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -672,7 +679,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_GetRemoteNotifyUniqueIds_Expect_NotEmpt
     channelDesc.memHandleNum = 1;
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
-    channel->remoteNotifies_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
+    channel->remoteNotifies_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
     auto result = channel->GetRemoteNotifyUniqueIds();
     EXPECT_GT(result.size(), 0u);
     std::cout << "End Ut_When_GetRemoteNotifyUniqueIds_Expect_NotEmpty" << std::endl;
@@ -687,7 +694,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_GetNotifyValueBufferUniqueIds_Expect_No
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     // BuildNotifyValueBuffer is mocked in SetUp, so create notifyValueBuffer_ here
-    channel->notifyValueBuffer_ = std::make_unique<Hccl::LocalRdmaRmaBuffer>(localBufferPtr, (void *)0x1000000);
+    channel->notifyValueBuffer_ = std::make_unique<Hccl::LocalRdmaRmaBuffer>(localBufferPtr, (void*)0x1000000);
     auto result = channel->GetNotifyValueBufferUniqueIds();
     EXPECT_GT(result.size(), 0u);
     std::cout << "End Ut_When_GetNotifyValueBufferUniqueIds_Expect_NotEmpty" << std::endl;
@@ -729,7 +736,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_GetRmtBufferUniqueIds_Expect_NotEmpty)
     channelDesc.memHandleNum = 1;
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
     auto result = channel->GetRmtBufferUniqueIds();
     EXPECT_GT(result.size(), 0u);
     std::cout << "End Ut_When_GetRmtBufferUniqueIds_Expect_NotEmpty" << std::endl;
@@ -771,9 +778,9 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_GetUniqueId_Expect_NotEmpty)
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->channelStatus_ = ChannelStatus::READY;
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
     // BuildNotifyValueBuffer is mocked in SetUp, so create notifyValueBuffer_ here
-    channel->notifyValueBuffer_ = std::make_unique<Hccl::LocalRdmaRmaBuffer>(localBufferPtr, (void *)0x1000000);
+    channel->notifyValueBuffer_ = std::make_unique<Hccl::LocalRdmaRmaBuffer>(localBufferPtr, (void*)0x1000000);
     auto result = channel->GetUniqueId();
     EXPECT_GT(result.size(), 0u);
     std::cout << "End Ut_When_GetUniqueId_Expect_NotEmpty" << std::endl;
@@ -812,9 +819,9 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_When_H2DResPack_Expect_Success)
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->channelStatus_ = ChannelStatus::READY;
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
     // BuildNotifyValueBuffer is mocked in SetUp, so create notifyValueBuffer_ here
-    channel->notifyValueBuffer_ = std::make_unique<Hccl::LocalRdmaRmaBuffer>(localBufferPtr, (void *)0x1000000);
+    channel->notifyValueBuffer_ = std::make_unique<Hccl::LocalRdmaRmaBuffer>(localBufferPtr, (void*)0x1000000);
     std::vector<char> buffer;
     HcclResult ret = channel->H2DResPack(buffer);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -843,7 +850,7 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_FillDevChannelEntity_When_NotReady_Returns_E
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->channelStatus_ = ChannelStatus::INIT;
     // 模拟已预分配 slab（设置一个非空指针）
-    channel->devChannelEntitySlab_ = reinterpret_cast<void *>(0x1000);
+    channel->devChannelEntitySlab_ = reinterpret_cast<void*>(0x1000);
     channel->devChannelEntitySlabSize_ = 4096;
     EXPECT_EQ(channel->FillDevChannelEntity(), HCCL_E_INTERNAL);
     channel->devChannelEntitySlab_ = nullptr;
@@ -860,11 +867,11 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_PreAllocDevChannelEntity_When_Normal_Returns
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->channelStatus_ = ChannelStatus::READY;
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
 
     MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
-    using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
+    using HrtMemcpyType = void (*)(void*, uint64_t, const void*, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
 
     uint64_t devChannelEntityPtr = 0;
@@ -882,11 +889,11 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_PreAllocDevChannelEntity_When_AlreadyBuilt_R
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->channelStatus_ = ChannelStatus::READY;
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
 
     MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
-    using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
+    using HrtMemcpyType = void (*)(void*, uint64_t, const void*, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
 
     uint64_t firstPtr = 0;
@@ -907,11 +914,11 @@ TEST_F(AicpuTsRoceChannelV2Test, Ut_FillDevChannelEntity_When_PreAllocatedAndRea
     auto channel = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, CommEngine::COMM_ENGINE_AICPU);
     channel->Init();
     channel->channelStatus_ = ChannelStatus::READY;
-    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void *)0x1000000));
+    channel->rmtRmaBuffers_.push_back(std::make_unique<Hccl::RemoteRdmaRmaBuffer>((void*)0x1000000));
 
     MOCKER(aclrtMallocWithCfg).stubs().will(invoke(StubAclrtMalloc));
     MOCKER(aclrtFree).stubs().will(invoke(StubAclrtFree));
-    using HrtMemcpyType = void (*)(void *, uint64_t, const void *, uint64_t, Hccl::tagRtMemcpyKind);
+    using HrtMemcpyType = void (*)(void*, uint64_t, const void*, uint64_t, Hccl::tagRtMemcpyKind);
     MOCKER((Hccl::HrtMemcpy)).stubs().will(invoke(static_cast<HrtMemcpyType>(StubHrtMemcpyReal)));
 
     uint64_t devChannelEntityPtr = 0;

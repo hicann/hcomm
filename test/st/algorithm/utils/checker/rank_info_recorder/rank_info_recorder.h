@@ -41,6 +41,6 @@ public:
     u32 rankSize_ = 0;
 };
 
-}
+} // namespace checker
 
 #endif

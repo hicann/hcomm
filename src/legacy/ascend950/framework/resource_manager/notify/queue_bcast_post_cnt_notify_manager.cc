@@ -14,9 +14,7 @@ namespace Hccl {
 
 constexpr u32 CNTNOTIFY_MAX_NUM = 128;
 
-QueueBcastPostCntNotifyManager::QueueBcastPostCntNotifyManager()
-{
-}
+QueueBcastPostCntNotifyManager::QueueBcastPostCntNotifyManager() {}
 
 QueueBcastPostCntNotifyManager::~QueueBcastPostCntNotifyManager()
 {
@@ -27,17 +25,18 @@ void QueueBcastPostCntNotifyManager::ApplyFor(QId qid, u32 topicId)
 {
     HCCL_INFO("[QueueBcastPostCntNotifyManager][%s] start, qid[%u] topicId[%u]", __func__, qid, topicId);
     if (notifyPool.size() >= CNTNOTIFY_MAX_NUM) {
-        THROW<NotSupportException>(StringFormat("Bcast counter notify pool size[%u] reach max size[%u] qid[%u] topicId[%u].",
-            notifyPool.size(), CNTNOTIFY_MAX_NUM, qid, topicId));
+        THROW<NotSupportException>(StringFormat(
+            "Bcast counter notify pool size[%u] reach max size[%u] qid[%u] topicId[%u].", notifyPool.size(),
+            CNTNOTIFY_MAX_NUM, qid, topicId));
     }
 
-    const auto &pair = make_pair(qid, topicId);
+    const auto& pair = make_pair(qid, topicId);
     if (notifyPool[pair] == nullptr) {
         notifyPool[pair] = make_unique<Rts1ToNCntNotify>();
     }
 }
 
-Rts1ToNCntNotify *QueueBcastPostCntNotifyManager::Get(QId qid, u32 topicId)
+Rts1ToNCntNotify* QueueBcastPostCntNotifyManager::Get(QId qid, u32 topicId)
 {
     if (!IsExist(qid, topicId)) {
         HCCL_WARNING("Bcast Post count Notify for qid[%u] and topic Id[%u] does not exist", qid, topicId);
@@ -61,10 +60,7 @@ bool QueueBcastPostCntNotifyManager::IsExist(QId qid, u32 topicId)
     return notifyPool.count(make_pair(qid, topicId)) != 0;
 }
 
-void QueueBcastPostCntNotifyManager::Destroy()
-{
-    notifyPool.clear();
-}
+void QueueBcastPostCntNotifyManager::Destroy() { notifyPool.clear(); }
 
 std::vector<char> QueueBcastPostCntNotifyManager::GetPackedData()
 {
@@ -74,7 +70,7 @@ std::vector<char> QueueBcastPostCntNotifyManager::GetPackedData()
     u32 poolSize = notifyPool.size();
     binaryStream << poolSize;
 
-    for (auto &it : notifyPool) {
+    for (auto& it : notifyPool) {
         binaryStream << it.first.first;
         binaryStream << it.first.second;
         binaryStream << it.second->GetUniqueId();

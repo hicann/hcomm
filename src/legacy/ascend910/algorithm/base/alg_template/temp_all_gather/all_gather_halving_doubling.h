@@ -13,7 +13,6 @@
 
 #include "all_gather_halving_doubling_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALL_GATHER_HALVING_DOUBLING_H */

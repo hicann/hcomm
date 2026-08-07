@@ -18,15 +18,11 @@
 using namespace hccl;
 using namespace hcomm;
 
-class HcclReportAivKernelTest : public testing::Test
-{
+class HcclReportAivKernelTest : public testing::Test {
 protected:
     virtual void SetUp() override {}
 
-    virtual void TearDown() override
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() override { GlobalMockObject::verify(); }
 };
 
 TEST_F(HcclReportAivKernelTest, Ut_HcclReportAivKernel_When_CommIsNull_Expect_ReturnHCCL_E_PTR)
@@ -35,15 +31,11 @@ TEST_F(HcclReportAivKernelTest, Ut_HcclReportAivKernel_When_CommIsNull_Expect_Re
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
-class RaBatchQueryJettyStatusTest : public testing::Test
-{
+class RaBatchQueryJettyStatusTest : public testing::Test {
 protected:
     virtual void SetUp() override {}
 
-    virtual void TearDown() override
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() override { GlobalMockObject::verify(); }
 };
 
 TEST_F(RaBatchQueryJettyStatusTest, Ut_RaBatchQueryJettyStatus_When_SizeMismatch_Expect_ReturnHCCL_E_PARA)

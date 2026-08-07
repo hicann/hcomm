@@ -17,13 +17,10 @@
 namespace hccl {
 class TransportCompared {
 public:
-    void Describe() {
-        HCCL_DEBUG("TODO");
-    };
-    u32 GetTransportId() {
-        return transportId_;
-    }
-    HcclResult SetTransportId(u32 transportId) {
+    void Describe() { HCCL_DEBUG("TODO"); };
+    u32 GetTransportId() { return transportId_; }
+    HcclResult SetTransportId(u32 transportId)
+    {
         transportId_ = transportId;
         return HCCL_SUCCESS;
     }
@@ -38,6 +35,6 @@ public:
     TransportMemType remoteinputMemType = TransportMemType::RESERVED;
     TransportMemType remoteoutputMemType = TransportMemType::RESERVED;
 };
-}  // namespace checker
+} // namespace hccl
 
 #endif

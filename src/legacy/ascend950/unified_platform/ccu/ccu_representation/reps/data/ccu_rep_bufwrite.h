@@ -19,26 +19,26 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepBufWrite : public CcuRepBase {
-public:
-    CcuRepBufWrite(const CcuTransport &transport, CcuBuffer src, Memory dst, Variable len, MaskSignal sem,
-                   uint16_t mask);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
+    class CcuRepBufWrite : public CcuRepBase {
+    public:
+        CcuRepBufWrite(
+            const CcuTransport& transport, CcuBuffer src, Memory dst, Variable len, MaskSignal sem, uint16_t mask);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-private:
-    const CcuTransport &transport;
+    private:
+        const CcuTransport& transport;
 
-    CcuBuffer src;
-    Memory    dst;
-    Variable  len;
+        CcuBuffer src;
+        Memory dst;
+        Variable len;
 
-    MaskSignal sem;
-    uint16_t   mask{0};
+        MaskSignal sem;
+        uint16_t mask{0};
 
-    friend class Hccl::CcuErrorHandler;
-};
+        friend class Hccl::CcuErrorHandler;
+    };
 
-};     // namespace CcuRep
-};     // namespace Hccl
+}; // namespace CcuRep
+}; // namespace Hccl
 #endif // HCCL_CCU_REPRESENTATION_BUFWRITE_H

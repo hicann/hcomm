@@ -11,13 +11,13 @@
 
 #ifndef HCCLV1_ALLGATHER_V_SEMANTICS_CHECKER_H
 #define HCCLV1_ALLGATHER_V_SEMANTICS_CHECKER_H
- 
+
 #include "check_utils.h"
 #include "hccl_types.h"
- 
+
 namespace HcclSim {
-HcclResult TaskCheckAllGatherVSemantics(std::map<RankId, RankMemorySemantics> &allRankMemSemantics,
-                                        VDataDesTagInner &vDataDes);
+HcclResult
+TaskCheckAllGatherVSemantics(std::map<RankId, RankMemorySemantics>& allRankMemSemantics, VDataDesTagInner& vDataDes);
 }
- 
+
 #endif

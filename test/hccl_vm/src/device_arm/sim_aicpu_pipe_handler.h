@@ -23,6 +23,6 @@ int HandlePipeCmdExecKernel(uint8_t* payload, uint16_t payloadLen);
 
 int HandlePipeCmdFreeDevPtr(uint8_t* payload, uint16_t payloadLen);
 
-}
+} // namespace sim
 
 #endif

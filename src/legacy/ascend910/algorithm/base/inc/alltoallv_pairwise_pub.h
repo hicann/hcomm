@@ -15,42 +15,45 @@
 
 namespace hccl {
 
-class AlltoAllVPairWise : public AlgTemplateBase{
+class AlltoAllVPairWise : public AlgTemplateBase {
 public:
     explicit AlltoAllVPairWise(const HcclDispatcher dispatcher);
 
     ~AlltoAllVPairWise() override;
 
     /* 图模式使用该prepare */
-    HcclResult Prepare(AlltoAllVBufferInfo& sendBuffer, AlltoAllVBufferInfo& recvBuffer,
-        bool isAlltoAllZCopyMode, const Stream &stream, HcclWorkflowMode workMode, 
-        std::map<u32, std::vector<u64>> &rankSendDisplsMap, 
-        std::map<u32, std::vector<u64>> &rankRecvDisplsMap) override;
+    HcclResult Prepare(
+        AlltoAllVBufferInfo& sendBuffer, AlltoAllVBufferInfo& recvBuffer, bool isAlltoAllZCopyMode,
+        const Stream& stream, HcclWorkflowMode workMode, std::map<u32, std::vector<u64>>& rankSendDisplsMap,
+        std::map<u32, std::vector<u64>>& rankRecvDisplsMap) override;
 
     /* 单算子使用该prepare */
-    HcclResult Prepare(AlltoAllVBufferInfo& sendBuffer, AlltoAllVBufferInfo& recvBuffer,
-        DeviceMem& scratchInputMem, DeviceMem& scratchOutputMem,
-        bool isAlltoAllZCopyMode, const Stream &stream, HcclWorkflowMode workMode, 
-        std::map<u32, std::vector<u64>> &rankSendDisplsMap, 
-        std::map<u32, std::vector<u64>> &rankRecvDisplsMap) override;
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult Prepare(
+        AlltoAllVBufferInfo& sendBuffer, AlltoAllVBufferInfo& recvBuffer, DeviceMem& scratchInputMem,
+        DeviceMem& scratchOutputMem, bool isAlltoAllZCopyMode, const Stream& stream, HcclWorkflowMode workMode,
+        std::map<u32, std::vector<u64>>& rankSendDisplsMap,
+        std::map<u32, std::vector<u64>>& rankRecvDisplsMap) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
+
 protected:
 private:
     HcclResult LocalCopy(const u32 rank);
     // 单算子模式使用该函数
-    HcclResult RunBCopyAlltoAll(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
+    HcclResult RunBCopyAlltoAll(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
     // 图模式使用该函数
-    HcclResult RunZCopyAlltoAll(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
-    HcclResult CalcSendRecvCounts(u32 times, u32 curTime, u64 totalBytes, u64 &curBytes) const;
+    HcclResult RunZCopyAlltoAll(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
+    HcclResult CalcSendRecvCounts(u32 times, u32 curTime, u64 totalBytes, u64& curBytes) const;
 
     // 单算子模式使用该SendRecv
-    HcclResult SendRecv(u64 curSendBytes, u64 curRecvBytes, u8* sendAddr, u8* recvAddr,
-        std::shared_ptr<Transport> prevTransport, std::shared_ptr<Transport> nextTransport);
+    HcclResult SendRecv(
+        u64 curSendBytes, u64 curRecvBytes, u8* sendAddr, u8* recvAddr, std::shared_ptr<Transport> prevTransport,
+        std::shared_ptr<Transport> nextTransport);
     // 图模式使用该SendRecv
-    HcclResult SendRecv(TxMemoryInfo txMemoryInfo, RxMemoryInfo rxMemoryInfo,
-        std::shared_ptr<Transport> prevTransport, std::shared_ptr<Transport> nextTransport);
+    HcclResult SendRecv(
+        TxMemoryInfo txMemoryInfo, RxMemoryInfo rxMemoryInfo, std::shared_ptr<Transport> prevTransport,
+        std::shared_ptr<Transport> nextTransport);
 
     AlltoAllVBufferInfo sendBuffer_;
     AlltoAllVBufferInfo recvBuffer_;
@@ -62,11 +65,11 @@ private:
     u64 scratchMemSize_;
     u32 sendDataUnitBytes_;
     u32 recvDataUnitBytes_;
-    const std::map<u32, std::vector<u64>> *rankSendDisplsMapPtr_{nullptr};
-    const std::map<u32, std::vector<u64>> *rankRecvDisplsMapPtr_{nullptr};
+    const std::map<u32, std::vector<u64>>* rankSendDisplsMapPtr_{nullptr};
+    const std::map<u32, std::vector<u64>>* rankRecvDisplsMapPtr_{nullptr};
     HcclWorkflowMode workMode_;
     bool isAlltoAllZCopyMode_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* ALLTOALL_V_PAIRWISE_PUB_H */

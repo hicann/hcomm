@@ -20,29 +20,25 @@ class ReduceScatterMeshAtomic : public AlgTemplateBase {
 public:
     explicit ReduceScatterMeshAtomic(const HcclDispatcher dispatcher);
     ~ReduceScatterMeshAtomic() override;
-    HcclResult Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem, const u64 count,
-        const HcclDataType dataType, const Stream &stream, const HcclReduceOp reductionOp, 
-        const u32 root, const std::vector<Slice> &slices, const u64 baseOffset, 
-        const u64 reduceAttrBitMap, std::vector<Stream> &meshStreams, 
-        std::vector<std::shared_ptr<LocalNotify>> &meshSignal, 
-        std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux, 
-        u32 userRank, const HcomCollOpInfo *opInfo = nullptr) override;
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult Prepare(
+        DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+        const Stream& stream, const HcclReduceOp reductionOp, const u32 root, const std::vector<Slice>& slices,
+        const u64 baseOffset, const u64 reduceAttrBitMap, std::vector<Stream>& meshStreams,
+        std::vector<std::shared_ptr<LocalNotify>>& meshSignal, std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux,
+        u32 userRank, const HcomCollOpInfo* opInfo = nullptr) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
 private:
-    HcclResult RunReduceScatter(const std::vector<LINK> &links);
+    HcclResult RunReduceScatter(const std::vector<LINK>& links);
     HcclResult MemSlice();
-    inline u32 GetRemoteRank(u32 streamIndex) const
-    {
-        return (streamIndex + localRank_ + 1) % localRankSize_;
-    }
+    inline u32 GetRemoteRank(u32 streamIndex) const { return (streamIndex + localRank_ + 1) % localRankSize_; }
     u64 reduceAttr_ = 0;
     u32 localRank_ = 0;
     u32 localRankSize_ = 0;
     u32 userRank_ = 0;
-    std::vector<Stream> meshStreams_;         /* * 多steam* */
-    const std::vector<std::shared_ptr<LocalNotify>> *meshSignalPtr_{nullptr};    /* 每个ring创建一个signal */
-    const std::vector<std::shared_ptr<LocalNotify>> *meshSignalAuxPtr_{nullptr}; /* 从stream wait，主steam record */
+    std::vector<Stream> meshStreams_;                                            /* * 多steam* */
+    const std::vector<std::shared_ptr<LocalNotify>>* meshSignalPtr_{nullptr};    /* 每个ring创建一个signal */
+    const std::vector<std::shared_ptr<LocalNotify>>* meshSignalAuxPtr_{nullptr}; /* 从stream wait，主steam record */
     std::vector<Slice> scratchSlices_;
     std::unique_ptr<Sender> senderInfo_;
     std::unique_ptr<Reducer> reducerInfo_;

@@ -21,7 +21,8 @@ namespace hcomm {
 /**
  * @brief 创建临时 connection 的工厂回调类型（由各 channel 提供，确保 tpProtocol 正确）
  * @note 返回 Hccl::DevUbConnection 是历史现状（channel 侧已深度依赖该类型构造子类）；
- *       共享 jetty 对 connection 的操作统一走 InjectSharedJettyToConn / ExtractJettyInfoFromConn / TransferConnJettyOwnership 适配层，不直接调 legacy 新方法。
+ *       共享 jetty 对 connection 的操作统一走 InjectSharedJettyToConn / ExtractJettyInfoFromConn /
+ * TransferConnJettyOwnership 适配层，不直接调 legacy 新方法。
  */
 using TempConnFactory = std::function<std::unique_ptr<Hccl::DevUbConnection>()>;
 
@@ -33,11 +34,12 @@ using TempConnFactory = std::function<std::unique_ptr<Hccl::DevUbConnection>()>;
  * @param[in] connection 已构造的 connection
  * @param[in] tempConnFactory 创建临时 connection 的回调（首次创建 jetty 时使用）
  * @param[out] outCtx 输出的共享 jetty 上下文（含 PI/CI 共享内存指针，供 channel 构建 entity 时复用）
- * @return HcclResult 成功后 connection 已注入共享 jetty；调用方仍需把 connection 加入 connections_ 并由状态机推进 Import。
+ * @return HcclResult 成功后 connection 已注入共享 jetty；调用方仍需把 connection 加入 connections_ 并由状态机推进
+ * Import。
  */
-HcclResult AcquireSharedJettyForChannel(Endpoint *endpoint,
-    Hccl::DevUbConnection *connection, const TempConnFactory &tempConnFactory,
-    Endpoint::SharedJettyCtx &outCtx);
+HcclResult AcquireSharedJettyForChannel(
+    Endpoint* endpoint, Hccl::DevUbConnection* connection, const TempConnFactory& tempConnFactory,
+    Endpoint::SharedJettyCtx& outCtx);
 
 } // namespace hcomm
 

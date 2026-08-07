@@ -42,21 +42,23 @@ class AivTask {
 public:
     explicit AivTask(AivTaskType type) : type_(type) {}
     AivTask(AivTaskType type, TaskId taskId, RankId rankId, BlockId blockId, AscendC::pipe_t curPipe)
-        : type_(type), taskId_(taskId), rankId_(rankId), blockId_(blockId), curPipe_(curPipe) {}
+        : type_(type),
+          taskId_(taskId),
+          rankId_(rankId),
+          blockId_(blockId),
+          curPipe_(curPipe)
+    {}
     virtual ~AivTask() {}
     AivTask(const AivTask&) = delete;
     AivTask& operator=(const AivTask&) = delete;
 
-    virtual uint64_t GetUUID() const {
-        return (static_cast<uint64_t>(rankId_) << 32) | taskId_;
-    }
+    virtual uint64_t GetUUID() const { return (static_cast<uint64_t>(rankId_) << 32) | taskId_; }
 
-    virtual std::string Describe() const {
+    virtual std::string Describe() const
+    {
         std::stringstream ss;
         ss << "[" << GetTypeName(type_) << "] "
-           << "RankId=" << rankId_
-           << ", TaskId=" << taskId_
-           << ", BlockId=" << blockId_
+           << "RankId=" << rankId_ << ", TaskId=" << taskId_ << ", BlockId=" << blockId_
            << ", OnPipe=" << AscendC::GetPipeName(curPipe_);
         return ss.str();
     }
@@ -84,17 +86,20 @@ private:
 class AivTaskMemCopy : public AivTask {
 public:
     AivTaskMemCopy(RankId srcRank, const AivDataSlice& src, RankId dstRank, const AivDataSlice& dst)
-        : AivTask(AivTaskType::MEM_COPY), srcRank_(srcRank), src_(src), dstRank_(dstRank), dst_(dst) {}
+        : AivTask(AivTaskType::MEM_COPY),
+          srcRank_(srcRank),
+          src_(src),
+          dstRank_(dstRank),
+          dst_(dst)
+    {}
     ~AivTaskMemCopy() override {}
     AivTaskMemCopy(const AivTaskMemCopy&) = delete;
     AivTaskMemCopy& operator=(const AivTaskMemCopy&) = delete;
 
-    std::string Describe() const override {
+    std::string Describe() const override
+    {
         std::stringstream ss;
-        ss << AivTask::Describe()
-           << ", SrcRank=" << srcRank_
-           << ", Src=" << src_.Describe()
-           << ", DstRank=" << dstRank_
+        ss << AivTask::Describe() << ", SrcRank=" << srcRank_ << ", Src=" << src_.Describe() << ", DstRank=" << dstRank_
            << ", Dst=" << dst_.Describe();
         return ss.str();
     }
@@ -118,22 +123,26 @@ private:
 
 class AivTaskReduce : public AivTask {
 public:
-    AivTaskReduce(RankId srcRank, const AivDataSlice& src, RankId dstRank, const AivDataSlice& dst,
-                  uint32_t dataType, uint32_t reduceOp)
-        : AivTask(AivTaskType::REDUCE), srcRank_(srcRank), src_(src), dstRank_(dstRank), dst_(dst),
-          dataType_(dataType), reduceOp_(reduceOp) {}
+    AivTaskReduce(
+        RankId srcRank, const AivDataSlice& src, RankId dstRank, const AivDataSlice& dst, uint32_t dataType,
+        uint32_t reduceOp)
+        : AivTask(AivTaskType::REDUCE),
+          srcRank_(srcRank),
+          src_(src),
+          dstRank_(dstRank),
+          dst_(dst),
+          dataType_(dataType),
+          reduceOp_(reduceOp)
+    {}
     ~AivTaskReduce() override {}
     AivTaskReduce(const AivTaskReduce&) = delete;
     AivTaskReduce& operator=(const AivTaskReduce&) = delete;
 
-    std::string Describe() const override {
+    std::string Describe() const override
+    {
         std::stringstream ss;
-        ss << AivTask::Describe()
-           << ", SrcRank=" << srcRank_
-           << ", Src=" << src_.Describe()
-           << ", DstRank=" << dstRank_
-           << ", Dst=" << dst_.Describe()
-           << ", DataType=" << dataType_
+        ss << AivTask::Describe() << ", SrcRank=" << srcRank_ << ", Src=" << src_.Describe() << ", DstRank=" << dstRank_
+           << ", Dst=" << dst_.Describe() << ", DataType=" << dataType_
            << ", ReduceOp=" << GetReduceOpName(static_cast<ReduceOp>(reduceOp_));
         return ss.str();
     }
@@ -165,17 +174,20 @@ private:
 class AivTaskSetFlag : public AivTask {
 public:
     AivTaskSetFlag(AscendC::pipe_t srcPipe, AscendC::pipe_t dstPipe, int32_t eventId)
-        : AivTask(AivTaskType::SET_FLAG), srcPipe_(srcPipe), dstPipe_(dstPipe), eventId_(eventId) {}
+        : AivTask(AivTaskType::SET_FLAG),
+          srcPipe_(srcPipe),
+          dstPipe_(dstPipe),
+          eventId_(eventId)
+    {}
     ~AivTaskSetFlag() override {}
     AivTaskSetFlag(const AivTaskSetFlag&) = delete;
     AivTaskSetFlag& operator=(const AivTaskSetFlag&) = delete;
 
-    std::string Describe() const override {
+    std::string Describe() const override
+    {
         std::stringstream ss;
-        ss << AivTask::Describe()
-           << ", SrcPipe=" << AscendC::GetPipeName(srcPipe_)
-           << ", DstPipe=" << AscendC::GetPipeName(dstPipe_)
-           << ", EventId=" << eventId_;
+        ss << AivTask::Describe() << ", SrcPipe=" << AscendC::GetPipeName(srcPipe_)
+           << ", DstPipe=" << AscendC::GetPipeName(dstPipe_) << ", EventId=" << eventId_;
         return ss.str();
     }
 
@@ -195,17 +207,20 @@ private:
 class AivTaskWaitFlag : public AivTask {
 public:
     AivTaskWaitFlag(AscendC::pipe_t srcPipe, AscendC::pipe_t dstPipe, int32_t eventId)
-        : AivTask(AivTaskType::WAIT_FLAG), srcPipe_(srcPipe), dstPipe_(dstPipe), eventId_(eventId) {}
+        : AivTask(AivTaskType::WAIT_FLAG),
+          srcPipe_(srcPipe),
+          dstPipe_(dstPipe),
+          eventId_(eventId)
+    {}
     ~AivTaskWaitFlag() override {}
     AivTaskWaitFlag(const AivTaskWaitFlag&) = delete;
     AivTaskWaitFlag& operator=(const AivTaskWaitFlag&) = delete;
 
-    std::string Describe() const override {
+    std::string Describe() const override
+    {
         std::stringstream ss;
-        ss << AivTask::Describe()
-           << ", SrcPipe=" << AscendC::GetPipeName(srcPipe_)
-           << ", DstPipe=" << AscendC::GetPipeName(dstPipe_)
-           << ", EventId=" << eventId_;
+        ss << AivTask::Describe() << ", SrcPipe=" << AscendC::GetPipeName(srcPipe_)
+           << ", DstPipe=" << AscendC::GetPipeName(dstPipe_) << ", EventId=" << eventId_;
         return ss.str();
     }
 
@@ -224,17 +239,15 @@ private:
 
 class AivTaskPipeBarrier : public AivTask {
 public:
-    explicit AivTaskPipeBarrier(AscendC::pipe_t pipeType)
-        : AivTask(AivTaskType::PIPE_BARRIER), pipeType_(pipeType) {}
+    explicit AivTaskPipeBarrier(AscendC::pipe_t pipeType) : AivTask(AivTaskType::PIPE_BARRIER), pipeType_(pipeType) {}
     ~AivTaskPipeBarrier() override {}
     AivTaskPipeBarrier(const AivTaskPipeBarrier&) = delete;
     AivTaskPipeBarrier& operator=(const AivTaskPipeBarrier&) = delete;
 
-    std::string Describe() const override {
+    std::string Describe() const override
+    {
         std::stringstream ss;
-        ss << AivTask::Describe()
-           << ", PipeType=" << AscendC::GetPipeName(pipeType_)
-           << ", BarrierGroup=";
+        ss << AivTask::Describe() << ", PipeType=" << AscendC::GetPipeName(pipeType_) << ", BarrierGroup=";
         ss << "[";
         for (size_t i = 0; i < barrierGroup_.size(); ++i) {
             if (i != 0) {
@@ -265,10 +278,10 @@ public:
 
     uint32_t GetSyncRound() const { return syncRound_; }
 
-    std::string Describe() const override {
+    std::string Describe() const override
+    {
         std::stringstream ss;
-        ss << AivTask::Describe()
-           << ", SyncRound=" << syncRound_;
+        ss << AivTask::Describe() << ", SyncRound=" << syncRound_;
         return ss.str();
     }
 
@@ -279,16 +292,19 @@ private:
 class AivTaskSendFlag : public AivTask {
 public:
     AivTaskSendFlag(uint32_t rank, uint64_t commInfoOffset, flag_t flagValue)
-        : AivTask(AivTaskType::SEND_FLAG), rank_(rank), commInfoOffset_(commInfoOffset), flagValue_(flagValue) {}
+        : AivTask(AivTaskType::SEND_FLAG),
+          rank_(rank),
+          commInfoOffset_(commInfoOffset),
+          flagValue_(flagValue)
+    {}
     ~AivTaskSendFlag() override {}
     AivTaskSendFlag(const AivTaskSendFlag&) = delete;
     AivTaskSendFlag& operator=(const AivTaskSendFlag&) = delete;
 
-    std::string Describe() const override {
+    std::string Describe() const override
+    {
         std::stringstream ss;
-        ss << AivTask::Describe()
-           << ", Rank=" << rank_
-           << ", CommInfoOffset=" << commInfoOffset_
+        ss << AivTask::Describe() << ", Rank=" << rank_ << ", CommInfoOffset=" << commInfoOffset_
            << ", Value=" << flagValue_;
         return ss.str();
     }
@@ -309,16 +325,19 @@ private:
 class AivTaskRecvFlag : public AivTask {
 public:
     AivTaskRecvFlag(uint32_t rank, uint64_t commInfoOffset, flag_t targetValue)
-        : AivTask(AivTaskType::RECV_FLAG), rank_(rank), commInfoOffset_(commInfoOffset), targetValue_(targetValue) {}
+        : AivTask(AivTaskType::RECV_FLAG),
+          rank_(rank),
+          commInfoOffset_(commInfoOffset),
+          targetValue_(targetValue)
+    {}
     ~AivTaskRecvFlag() override {}
     AivTaskRecvFlag(const AivTaskRecvFlag&) = delete;
     AivTaskRecvFlag& operator=(const AivTaskRecvFlag&) = delete;
 
-    std::string Describe() const override {
+    std::string Describe() const override
+    {
         std::stringstream ss;
-        ss << AivTask::Describe()
-           << ", Rank=" << rank_
-           << ", CommInfoOffset=" << commInfoOffset_
+        ss << AivTask::Describe() << ", Rank=" << rank_ << ", CommInfoOffset=" << commInfoOffset_
            << ", Value=" << targetValue_;
         return ss.str();
     }
@@ -335,6 +354,6 @@ private:
     uint64_t commInfoOffset_{0};
     flag_t targetValue_{0};
 };
-}
+} // namespace AivSim
 
-#endif //AIV_AIV_TASK_H
+#endif // AIV_AIV_TASK_H

@@ -44,7 +44,7 @@ int RsConvertIpAddr(int family, union HccpIpAddr *ipAddr, struct RsIpAddrInfo *i
     // IPv4/IPv6 二进制转内部IP数据格式（含二进制、字符串）
     ip->family = (uint32_t)family;
     ip->binAddr = *ipAddr;
-    return RsInetNtop((int)ip->family, &ip->binAddr, (char*)&ip->readAddr, sizeof(ip->readAddr));
+    return RsInetNtop((int)ip->family, &ip->binAddr, (char *)&ip->readAddr, sizeof(ip->readAddr));
 }
 
 bool RsCompareIpAddr(struct RsIpAddrInfo *a, struct RsIpAddrInfo *b)
@@ -108,8 +108,8 @@ enum RsHardwareType RsGetDeviceType(unsigned int phyId)
     ret = rsGetLocalDevIDByHostDevID(phyId, &chipId);
     CHK_PRT_RETURN(ret != 0, hccp_err("phy_id[%u] invalid, ret %d", phyId, ret), RS_HARDWARE_UNKNOWN);
     ret = DlDrvDeviceGetIndexByPhyId(chipId, &logicId);
-    CHK_PRT_RETURN(ret != 0, hccp_err("dl_drv_device_get_index_by_phy_id failed, ret(%d), chipId(%u)",
-        ret, chipId), RS_HARDWARE_UNKNOWN);
+    CHK_PRT_RETURN(ret != 0, hccp_err("dl_drv_device_get_index_by_phy_id failed, ret(%d), chipId(%u)", ret, chipId),
+        RS_HARDWARE_UNKNOWN);
 
     ret = DlHalGetDeviceInfo(logicId, MODULE_TYPE_SYSTEM, INFO_TYPE_BOARD_ID, &boardId);
     CHK_PRT_RETURN(ret != 0, hccp_err("dl_hal_get_device_info board_id failed, ret[%d]", ret), RS_HARDWARE_UNKNOWN);
@@ -129,9 +129,9 @@ enum RsHardwareType RsGetDeviceType(unsigned int phyId)
     }
 
     if (((boardType & RS_BOARDID_PCIE_CARD_MASK) == RS_BOARDID_PCIE_CARD_MASK_VALUE) &&
-         (boardType != RS_BOARDID_AI_SERVER_MODULE) && (boardType != RS_BOARDID_ARM_SERVER_AG) &&
-         (boardType != RS_BOARDID_ARM_POD) && (boardType != RS_BOARDID_X86_16P) &&
-         (boardType != RS_BOARDID_ARM_SERVER_2DIE)) {
+        (boardType != RS_BOARDID_AI_SERVER_MODULE) && (boardType != RS_BOARDID_ARM_SERVER_AG) &&
+        (boardType != RS_BOARDID_ARM_POD) && (boardType != RS_BOARDID_X86_16P) &&
+        (boardType != RS_BOARDID_ARM_SERVER_2DIE)) {
         return RS_HARDWARE_PCIE;
     }
 
@@ -174,8 +174,7 @@ int RsCheckDstInterface(unsigned int phyId, const char *ifaName, enum RsHardware
             return -EAGAIN;
         }
 
-        if (strncmp(dstIfaName, ifaName, RS_INTERFACE_LEN) &&
-            strncmp(dstIfaBondName, ifaName, RS_INTERFACE_BOND_LEN)) {
+        if (strncmp(dstIfaName, ifaName, RS_INTERFACE_LEN) && strncmp(dstIfaBondName, ifaName, RS_INTERFACE_BOND_LEN)) {
             return 0;
         }
     } else {
@@ -212,8 +211,8 @@ int RsPeerFillIfnum(unsigned int phyId, unsigned int *num, struct ifaddrs *ifadd
     return 0;
 }
 
-int RsPeerFillIfaddrInfos(struct InterfaceInfo interfaceInfos[], unsigned int *num,
-    unsigned int phyId, struct ifaddrs *ifaddrList)
+int RsPeerFillIfaddrInfos(struct InterfaceInfo interfaceInfos[], unsigned int *num, unsigned int phyId,
+    struct ifaddrs *ifaddrList)
 {
     struct ifaddrs *ifaddr = ifaddrList;
     unsigned int numBak = *num;
@@ -294,7 +293,7 @@ out:
 
 int RsDrvConnect(int fd, struct RsIpAddrInfo *serverIp, struct RsIpAddrInfo *clientIp, uint16_t port)
 {
-    union RsSocketaddr clientAddr = { 0 };
+    union RsSocketaddr clientAddr = {0};
     socklen_t clientAddrLen = 0;
     uint16_t clientPort = 0;
     int errNo;
@@ -334,15 +333,14 @@ int RsDrvConnect(int fd, struct RsIpAddrInfo *serverIp, struct RsIpAddrInfo *cli
 out:
     clientAddrLen = (clientIp->family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
     getsockname(fd, (struct sockaddr *)&clientAddr, &clientAddrLen);
-    clientPort =
-        (clientIp->family == AF_INET) ? ntohs(clientAddr.sAddr.sin_port) : ntohs(clientAddr.sAddr6.sin6_port);
+    clientPort = (clientIp->family == AF_INET) ? ntohs(clientAddr.sAddr.sin_port) : ntohs(clientAddr.sAddr6.sin6_port);
 
     if ((clientPort < 60000) || (clientPort > 60015)) { // HCCL默认监听60000-60015端口,如client使用该端口，记录EVENT日志
         hccp_info("client connect success. client family %d addr %s:%u, server addr %s:%u, fd:%d", clientIp->family,
             clientIp->readAddr, clientPort, serverIp->readAddr, port, fd);
     } else {
-        hccp_run_info("client connect success. client family %d addr %s:%u, server addr %s:%u, fd:%d",
-            clientIp->family, clientIp->readAddr, clientPort, serverIp->readAddr, port, fd);
+        hccp_run_info("client connect success. client family %d addr %s:%u, server addr %s:%u, fd:%d", clientIp->family,
+            clientIp->readAddr, clientPort, serverIp->readAddr, port, fd);
     }
 
     return 0;
@@ -366,7 +364,7 @@ int RsFd2conn(int fd, struct RsConnInfo **conn)
     head = &rsCb->connCb.serverConnList;
     RS_LIST_GET_HEAD_ENTRY(connTmp, connTmp2, head, list, struct RsConnInfo);
     for (; &connTmp->list != head;
-        connTmp = connTmp2, connTmp2 = list_entry(connTmp2->list.next, struct RsConnInfo, list)) {
+         connTmp = connTmp2, connTmp2 = list_entry(connTmp2->list.next, struct RsConnInfo, list)) {
         if (connTmp->connfd == fd) {
             *conn = connTmp;
             RS_PTHREAD_MUTEX_ULOCK(&rsCb->connCb.connMutex);
@@ -377,7 +375,7 @@ int RsFd2conn(int fd, struct RsConnInfo **conn)
     head = &rsCb->connCb.clientConnList;
     RS_LIST_GET_HEAD_ENTRY(connTmp, connTmp2, head, list, struct RsConnInfo);
     for (; &connTmp->list != head;
-        connTmp = connTmp2, connTmp2 = list_entry(connTmp2->list.next, struct RsConnInfo, list)) {
+         connTmp = connTmp2, connTmp2 = list_entry(connTmp2->list.next, struct RsConnInfo, list)) {
         if (connTmp->connfd == fd) {
             *conn = connTmp;
             RS_PTHREAD_MUTEX_ULOCK(&rsCb->connCb.connMutex);
@@ -416,8 +414,8 @@ int RsDrvSocketSend(int fd, const void *data, uint64_t size, int flags)
     int ret = 0;
     int errNo;
 
-    CHK_PRT_RETURN(fd < 0 || size == 0 || data == NULL, hccp_err("param error ! fd:%d < 0, size:%llu or data is NULL",
-        fd, size), -EINVAL);
+    CHK_PRT_RETURN(fd < 0 || size == 0 || data == NULL,
+        hccp_err("param error ! fd:%d < 0, size:%llu or data is NULL", fd, size), -EINVAL);
 
     if (gRsCb->sslEnable == RS_SSL_ENABLE) {
         ret = RsFd2conn(fd, &conn);
@@ -466,13 +464,13 @@ int RsDrvSocketRecv(int fd, void *data, uint64_t size, int flags)
     int ret = 0;
     int errNo;
 
-    CHK_PRT_RETURN(fd < 0 || data == NULL || size == 0, hccp_err("param error ! fd:%d < 0 or data is NULL, size:%llu",
-        fd, size), -EINVAL);
+    CHK_PRT_RETURN(fd < 0 || data == NULL || size == 0,
+        hccp_err("param error ! fd:%d < 0 or data is NULL, size:%llu", fd, size), -EINVAL);
 
     if (gRsCb->sslEnable == RS_SSL_ENABLE) {
         ret = RsFd2conn(fd, &conn);
-        CHK_PRT_RETURN(ret, hccp_warn("can not find conn for fd[%d], ret:%d, the local fd may have been closed ",
-            fd, ret), ret);
+        CHK_PRT_RETURN(ret,
+            hccp_warn("can not find conn for fd[%d], ret:%d, the local fd may have been closed ", fd, ret), ret);
         ret = ssl_adp_read(conn->ssl, data, size);
         if (ret <= 0) {
             ret = RsSslReadInnerCheck(conn, ret, size);
@@ -501,14 +499,14 @@ void ShowConnNode(struct RsListHead *listHead)
 
     RS_LIST_GET_HEAD_ENTRY(connTmp, connTmp2, listHead, list, struct RsConnInfo);
     for (; (&connTmp->list) != listHead;
-        connTmp = connTmp2, connTmp2 = list_entry(connTmp2->list.next, struct RsConnInfo, list)) {
+         connTmp = connTmp2, connTmp2 = list_entry(connTmp2->list.next, struct RsConnInfo, list)) {
         hccp_info("current server ip: %s, client ip:%s, fd:%d, state:%d, tag:%s", connTmp->serverIp.readAddr,
             connTmp->clientIp.readAddr, connTmp->connfd, connTmp->state, connTmp->tag);
     }
 }
 
-int RsGetConnInfo(struct RsConnCb *connCb, struct SocketConnectInfo *conn,
-    struct RsConnInfo **connInfo, unsigned int serverPort)
+int RsGetConnInfo(struct RsConnCb *connCb, struct SocketConnectInfo *conn, struct RsConnInfo **connInfo,
+    unsigned int serverPort)
 {
     struct RsConnInfo *connTmp2 = NULL;
     struct RsConnInfo *connTmp = NULL;
@@ -524,7 +522,7 @@ int RsGetConnInfo(struct RsConnCb *connCb, struct SocketConnectInfo *conn,
     RS_PTHREAD_MUTEX_LOCK(&connCb->connMutex);
     RS_LIST_GET_HEAD_ENTRY(connTmp, connTmp2, &connCb->clientConnList, list, struct RsConnInfo);
     for (; (&connTmp->list) != &connCb->clientConnList;
-        connTmp = connTmp2, connTmp2 = list_entry(connTmp2->list.next, struct RsConnInfo, list)) {
+         connTmp = connTmp2, connTmp2 = list_entry(connTmp2->list.next, struct RsConnInfo, list)) {
         if ((!RsCompareIpAddr(&connTmp->serverIp, &ipAddr)) && connTmp->port == serverPort) {
             ret = strcmp(connTmp->tag, conn->tag);
             if (ret == 0) {
@@ -551,7 +549,7 @@ int RsFindListenNode(struct RsConnCb *connCb, struct RsIpAddrInfo *ipAddr, uint3
     RS_PTHREAD_MUTEX_LOCK(&connCb->connMutex);
     RS_LIST_GET_HEAD_ENTRY(listenTmp, listenTmp2, &connCb->listenList, list, struct RsListenInfo);
     for (; (&listenTmp->list) != &connCb->listenList;
-        listenTmp = listenTmp2, listenTmp2 = list_entry(listenTmp2->list.next, struct RsListenInfo, list)) {
+         listenTmp = listenTmp2, listenTmp2 = list_entry(listenTmp2->list.next, struct RsListenInfo, list)) {
         if ((!RsCompareIpAddr(&listenTmp->serverIpAddr, ipAddr)) && (listenTmp->sockPort == serverPort)) {
             *listenInfo = listenTmp;
             RS_PTHREAD_MUTEX_ULOCK(&connCb->connMutex);
@@ -611,8 +609,8 @@ int RsListenNodeAlloc(struct RsConnCb *connCb, struct RsIpAddrInfo *ipAddr, uint
     int ret;
 
     ret = RsFindListenNode(connCb, ipAddr, serverPort, &listenInfo);
-    CHK_PRT_RETURN(ret == 0,
-        hccp_info("listen node for IP(%s) exist! state:%u", ipAddr->readAddr, listenInfo->state), -EEXIST);
+    CHK_PRT_RETURN(ret == 0, hccp_info("listen node for IP(%s) exist! state:%u", ipAddr->readAddr, listenInfo->state),
+        -EEXIST);
 
     listenInfo = calloc(1, sizeof(struct RsListenInfo));
     CHK_PRT_RETURN(listenInfo == NULL, hccp_err("alloc mem for socket listen info failed!"), -ENOMEM);
@@ -698,8 +696,8 @@ int RsAllocConnNode(struct RsConnInfo **conn, unsigned short serverPort)
     return 0;
 }
 
-int RsFindWhiteListNode(struct RsWhiteList *rsSocketWhiteList,
-    struct SocketWlistInfoT *whiteListExpect, int family, struct RsWhiteListInfo **whiteListNode)
+int RsFindWhiteListNode(struct RsWhiteList *rsSocketWhiteList, struct SocketWlistInfoT *whiteListExpect, int family,
+    struct RsWhiteListInfo **whiteListNode)
 {
     struct RsWhiteListInfo *whiteListTmp2 = NULL;
     struct RsWhiteListInfo *whiteListTmp = NULL;
@@ -710,14 +708,12 @@ int RsFindWhiteListNode(struct RsWhiteList *rsSocketWhiteList,
     CHK_PRT_RETURN(ret != 0, hccp_err("convert(ntop) ip failed, ret:%d", ret), ret);
 
     RS_CHECK_POINTER_NULL_WITH_RET(rsSocketWhiteList);
-    RS_LIST_GET_HEAD_ENTRY(whiteListTmp, whiteListTmp2, &rsSocketWhiteList->whiteList, list,
-        struct RsWhiteListInfo);
+    RS_LIST_GET_HEAD_ENTRY(whiteListTmp, whiteListTmp2, &rsSocketWhiteList->whiteList, list, struct RsWhiteListInfo);
     for (; (&whiteListTmp->list) != &rsSocketWhiteList->whiteList;
-        whiteListTmp = whiteListTmp2, whiteListTmp2 = list_entry(whiteListTmp2->list.next,
-        struct RsWhiteListInfo, list)) {
-        hccp_info("client_ip %s 0x%08x, expectIp %s 0x%08x",
-            whiteListTmp->clientIp.readAddr, whiteListTmp->clientIp.binAddr.addr.s_addr,
-            expectIp.readAddr, expectIp.binAddr.addr.s_addr);
+         whiteListTmp = whiteListTmp2,
+         whiteListTmp2 = list_entry(whiteListTmp2->list.next, struct RsWhiteListInfo, list)) {
+        hccp_info("client_ip %s 0x%08x, expectIp %s 0x%08x", whiteListTmp->clientIp.readAddr,
+            whiteListTmp->clientIp.binAddr.addr.s_addr, expectIp.readAddr, expectIp.binAddr.addr.s_addr);
         if ((!RsCompareIpAddr(&whiteListTmp->clientIp, &expectIp)) &&
             (strncmp(whiteListTmp->tag, whiteListExpect->tag, SOCK_CONN_TAG_SIZE) == 0)) {
             *whiteListNode = whiteListTmp;
@@ -730,8 +726,7 @@ int RsFindWhiteListNode(struct RsWhiteList *rsSocketWhiteList,
     return -ENODEV;
 }
 
-int RsFindWhiteList(struct RsConnCb *connCb, struct RsIpAddrInfo *serverIp,
-    struct RsWhiteList **whiteList)
+int RsFindWhiteList(struct RsConnCb *connCb, struct RsIpAddrInfo *serverIp, struct RsWhiteList **whiteList)
 {
     struct RsWhiteList *whiteListTmp2 = NULL;
     struct RsWhiteList *whiteListTmp = NULL;
@@ -740,8 +735,7 @@ int RsFindWhiteList(struct RsConnCb *connCb, struct RsIpAddrInfo *serverIp,
     RS_PTHREAD_MUTEX_LOCK(&connCb->connMutex);
     RS_LIST_GET_HEAD_ENTRY(whiteListTmp, whiteListTmp2, &connCb->whiteList, list, struct RsWhiteList);
     for (; (&whiteListTmp->list) != &connCb->whiteList;
-        whiteListTmp = whiteListTmp2, whiteListTmp2 = list_entry(whiteListTmp2->list.next,
-        struct RsWhiteList, list)) {
+         whiteListTmp = whiteListTmp2, whiteListTmp2 = list_entry(whiteListTmp2->list.next, struct RsWhiteList, list)) {
         if (!RsCompareIpAddr(serverIp, &whiteListTmp->serverIp)) {
             *whiteList = whiteListTmp;
             RS_PTHREAD_MUTEX_ULOCK(&connCb->connMutex);
@@ -757,7 +751,7 @@ int RsFindWhiteList(struct RsConnCb *connCb, struct RsIpAddrInfo *serverIp,
 void RsSocketGetBindByChip(unsigned int chipId, bool *bindIp)
 {
 #define CHIP_NAME_910_93 "910_93"
-    halChipInfo chipInfo = { 0 };
+    halChipInfo chipInfo = {0};
     int64_t deviceInfo = 0;
     unsigned int logicId;
     int ret;
@@ -777,8 +771,8 @@ void RsSocketGetBindByChip(unsigned int chipId, bool *bindIp)
     // chip force to bind: 310P & 910_93
     if ((DlHalPlatGetChip((uint64_t)deviceInfo) == CHIP_TYPE_310P) ||
         ((DlHalPlatGetChip((uint64_t)deviceInfo) == CHIP_TYPE_910B_910_93) &&
-         (DlHalPlatGetVer((uint64_t)deviceInfo) >= VER_BIN5) &&
-         (DlHalPlatGetVer((uint64_t)deviceInfo) <= VER_BIN8))) {
+            (DlHalPlatGetVer((uint64_t)deviceInfo) >= VER_BIN5) &&
+            (DlHalPlatGetVer((uint64_t)deviceInfo) <= VER_BIN8))) {
         *bindIp = true;
         return;
     }

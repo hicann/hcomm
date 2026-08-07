@@ -18,15 +18,11 @@
 
 class TestCollComm : public TestHcommCAdptBase {
 public:
-    void SetUp() override {
-        TestHcommCAdptBase::SetUp();
-    }
-    void TearDown() override {
-        TestHcommCAdptBase::TearDown();
-    }
+    void SetUp() override { TestHcommCAdptBase::SetUp(); }
+    void TearDown() override { TestHcommCAdptBase::TearDown(); }
 };
 
-HcclResult StubCollCommUrmaHrtMalloc(void **devPtr, u64 size, bool Level2Address)
+HcclResult StubCollCommUrmaHrtMalloc(void** devPtr, u64 size, bool Level2Address)
 {
     static uintptr_t devAddr = 0x7000000;
     (void)size;
@@ -46,8 +42,8 @@ TEST_F(TestCollComm, Ut_TestCollCommInit_When_RankGraphNullptr_Return_HCCL_E_PTR
 
 TEST_F(TestCollComm, test_get_comm_status_initial_and_after_change)
 {
-    std::unique_ptr<CollComm> coll_ = std::make_unique<CollComm>(nullptr, 0u, std::string("ut_test"), 
-        hccl::ManagerCallbacks{});
+    std::unique_ptr<CollComm> coll_
+        = std::make_unique<CollComm>(nullptr, 0u, std::string("ut_test"), hccl::ManagerCallbacks{});
     coll_->commStatus_ = HcclCommStatus::HCCL_COMM_STATUS_INVALID;
     coll_->isCleaned_ = false;
     EXPECT_EQ(coll_->GetCommStatus(), HcclCommStatus::HCCL_COMM_STATUS_INVALID);
@@ -58,19 +54,20 @@ TEST_F(TestCollComm, test_get_comm_status_initial_and_after_change)
 
 TEST_F(TestCollComm, test_suspend_success_and_idempotent)
 {
-    std::unique_ptr<CollComm> coll_ = std::make_unique<CollComm>(nullptr, 0u, std::string("ut_test"), 
-        hccl::ManagerCallbacks{});
+    std::unique_ptr<CollComm> coll_
+        = std::make_unique<CollComm>(nullptr, 0u, std::string("ut_test"), hccl::ManagerCallbacks{});
     coll_->commStatus_ = HcclCommStatus::HCCL_COMM_STATUS_INVALID;
     coll_->isCleaned_ = false;
     // mock MyRank::StopLaunch to return success
-    MOCKER_CPP(&MyRank::StopLaunch, HcclResult(MyRank:: *)())
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&MyRank::StopLaunch, HcclResult(MyRank::*)())
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
 
     // attach a MyRank instance (can be real or mocked; method is mocked above)
     aclrtBinHandle binHandle;
-    coll_->myRank_ = std::make_shared<MyRank>(binHandle, 0, coll_->GetCommConfig(), ManagerCallbacks(), nullptr, nullptr);
+    coll_->myRank_
+        = std::make_shared<MyRank>(binHandle, 0, coll_->GetCommConfig(), ManagerCallbacks(), nullptr, nullptr);
 
     auto ret = coll_->Suspend();
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -83,8 +80,8 @@ TEST_F(TestCollComm, test_suspend_success_and_idempotent)
 
 TEST_F(TestCollComm, test_clean_fail_not_suspending)
 {
-    std::unique_ptr<CollComm> coll_ = std::make_unique<CollComm>(nullptr, 0u, std::string("ut_test"), 
-        hccl::ManagerCallbacks{});
+    std::unique_ptr<CollComm> coll_
+        = std::make_unique<CollComm>(nullptr, 0u, std::string("ut_test"), hccl::ManagerCallbacks{});
     coll_->commStatus_ = HcclCommStatus::HCCL_COMM_STATUS_INVALID;
     coll_->isCleaned_ = false;
     // when not suspending, Clean should return not support
@@ -95,8 +92,8 @@ TEST_F(TestCollComm, test_clean_fail_not_suspending)
 
 TEST_F(TestCollComm, test_clean_success_and_idempotent)
 {
-    std::unique_ptr<CollComm> coll_ = std::make_unique<CollComm>(nullptr, 0u, std::string("ut_test"), 
-        hccl::ManagerCallbacks{});
+    std::unique_ptr<CollComm> coll_
+        = std::make_unique<CollComm>(nullptr, 0u, std::string("ut_test"), hccl::ManagerCallbacks{});
     coll_->commStatus_ = HcclCommStatus::HCCL_COMM_STATUS_INVALID;
     coll_->isCleaned_ = false;
     // prepare for cleaning: put into suspending state
@@ -104,14 +101,12 @@ TEST_F(TestCollComm, test_clean_success_and_idempotent)
     coll_->isCleaned_ = false;
 
     // mock MyRank::Clean to return success
-    MOCKER_CPP(&MyRank::Clean, HcclResult(MyRank:: *)())
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&MyRank::Clean, HcclResult(MyRank::*)()).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
 
     // attach a MyRank instance
     aclrtBinHandle binHandle;
-    coll_->myRank_ = std::make_shared<MyRank>(binHandle, 0, coll_->GetCommConfig(), ManagerCallbacks(), nullptr, nullptr);
+    coll_->myRank_
+        = std::make_shared<MyRank>(binHandle, 0, coll_->GetCommConfig(), ManagerCallbacks(), nullptr, nullptr);
 
     auto ret = coll_->Clean();
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -124,8 +119,8 @@ TEST_F(TestCollComm, test_clean_success_and_idempotent)
 
 TEST_F(TestCollComm, test_resume_fail_invalid_and_resume_success)
 {
-    std::unique_ptr<CollComm> coll_ = std::make_unique<CollComm>(nullptr, 0u, std::string("ut_test"), 
-        hccl::ManagerCallbacks{});
+    std::unique_ptr<CollComm> coll_
+        = std::make_unique<CollComm>(nullptr, 0u, std::string("ut_test"), hccl::ManagerCallbacks{});
     coll_->commStatus_ = HcclCommStatus::HCCL_COMM_STATUS_INVALID;
     coll_->isCleaned_ = false;
     // Resume when commStatus_ is INVALID should return internal error
@@ -138,14 +133,12 @@ TEST_F(TestCollComm, test_resume_fail_invalid_and_resume_success)
     coll_->isCleaned_ = true;
 
     // mock MyRank::Resume to return success
-    MOCKER_CPP(&MyRank::Resume, HcclResult(MyRank:: *)())
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&MyRank::Resume, HcclResult(MyRank::*)()).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
 
     // attach a MyRank instance
     aclrtBinHandle binHandle;
-    coll_->myRank_ = std::make_shared<MyRank>(binHandle, 0, coll_->GetCommConfig(), ManagerCallbacks(), nullptr, nullptr);
+    coll_->myRank_
+        = std::make_shared<MyRank>(binHandle, 0, coll_->GetCommConfig(), ManagerCallbacks(), nullptr, nullptr);
 
     ret = coll_->Resume();
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -220,17 +213,11 @@ TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_InvalidServiceLevel_Expect_EPar
 
 TEST_F(TestCollComm, Ut_RegisterPendingSymmetricMemHandles_When_HasPendingWindow_Expect_ReturnMemHandleOnce)
 {
-    MOCKER_CPP(hrtMalloc)
-        .stubs()
-        .will(invoke(StubCollCommUrmaHrtMalloc));
-    MOCKER_CPP(hrtMemSyncCopy)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(hrtFree)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(hrtMalloc).stubs().will(invoke(StubCollCommUrmaHrtMalloc));
+    MOCKER_CPP(hrtMemSyncCopy).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(hrtFree).stubs().will(returnValue(HCCL_SUCCESS));
     hccl::CollComm coll(nullptr, 0, "ut_sym", hccl::ManagerCallbacks{});
-    aclrtBinHandle binHandle {};
+    aclrtBinHandle binHandle{};
     coll.myRank_ = std::make_shared<MyRank>(binHandle, 0, coll.GetCommConfig(), ManagerCallbacks(), nullptr, nullptr);
     coll.myRank_->commMems_ = std::make_unique<CommMems>(0);
     coll.symmetricMemory_.reset(new SymmetricMemory(0, 2, 0, SymmetricMemoryMode::URMA));
@@ -255,15 +242,9 @@ TEST_F(TestCollComm, Ut_RegisterPendingSymmetricMemHandles_When_HasPendingWindow
 
 TEST_F(TestCollComm, Ut_UpdateSymmetricRemoteMem_When_ChannelReturnsRemoteMem_Expect_UpdateWindow)
 {
-    MOCKER_CPP(hrtMalloc)
-        .stubs()
-        .will(invoke(StubCollCommUrmaHrtMalloc));
-    MOCKER_CPP(hrtMemSyncCopy)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(hrtFree)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(hrtMalloc).stubs().will(invoke(StubCollCommUrmaHrtMalloc));
+    MOCKER_CPP(hrtMemSyncCopy).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(hrtFree).stubs().will(returnValue(HCCL_SUCCESS));
 
     hccl::CollComm coll(nullptr, 0, "ut_sym", hccl::ManagerCallbacks{});
     coll.symmetricMemory_.reset(new SymmetricMemory(0, 2, 0, SymmetricMemoryMode::URMA));
@@ -275,11 +256,11 @@ TEST_F(TestCollComm, Ut_UpdateSymmetricRemoteMem_When_ChannelReturnsRemoteMem_Ex
 
     SymmetricMemoryResource resource;
     resource.memHandle = reinterpret_cast<void*>(0x9100000);
-    resource.memTag = std::string(HCCL_SYMMETRIC_MEMORY_TAG_PREFIX) + "ut_sym_addr_" +
-        std::to_string(reinterpret_cast<uintptr_t>(ptr)) + "_size_" + std::to_string(winSize);
+    resource.memTag = std::string(HCCL_SYMMETRIC_MEMORY_TAG_PREFIX) + "ut_sym_addr_"
+                      + std::to_string(reinterpret_cast<uintptr_t>(ptr)) + "_size_" + std::to_string(winSize);
     EXPECT_EQ(coll.symmetricMemory_->SetRegisteredMemoryResource(win, resource), HCCL_SUCCESS);
 
-    CommMem remoteMem {};
+    CommMem remoteMem{};
     remoteMem.type = COMM_MEM_TYPE_DEVICE;
     remoteMem.addr = reinterpret_cast<void*>(0x9200000);
     remoteMem.size = winSize;

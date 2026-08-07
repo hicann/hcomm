@@ -13,12 +13,13 @@
 #include "orion_adapter_rts.h"
 
 namespace Hccl {
-int32_t ProcessTaskAbortHandleCallback(int32_t deviceLogicId, aclrtDeviceTaskAbortStage stage, uint32_t timeout,
-                                       void* args);
-MAKE_ENUM(TaskAbortResult,
-    TASK_ABORT_SUCCESS = 0,  // taskabortSuccess
-    TASK_ABORT_FAIL    = 1,  // taskabortFail
-    TASK_ABORT_TIMEOUT = 2)  // taskabortTimeout
+int32_t
+ProcessTaskAbortHandleCallback(int32_t deviceLogicId, aclrtDeviceTaskAbortStage stage, uint32_t timeout, void* args);
+MAKE_ENUM(
+    TaskAbortResult,
+    TASK_ABORT_SUCCESS = 0, // taskabortSuccess
+    TASK_ABORT_FAIL = 1,    // taskabortFail
+    TASK_ABORT_TIMEOUT = 2) // taskabortTimeout
 
 // class HcclCommunicator;
 
@@ -26,15 +27,16 @@ class TaskAbortHandler {
 public:
     TaskAbortHandler();
     ~TaskAbortHandler();
-    static TaskAbortHandler &GetInstance();
-    HcclResult Register(HcclCommunicator *communicator);
-    HcclResult UnRegister(HcclCommunicator *communicator);
+    static TaskAbortHandler& GetInstance();
+    HcclResult Register(HcclCommunicator* communicator);
+    HcclResult UnRegister(HcclCommunicator* communicator);
+
 private:
-    std::vector<HcclCommunicator *> commVector;
+    std::vector<HcclCommunicator*> commVector;
 
     TaskAbortHandler(const TaskAbortHandler&) = delete;
     TaskAbortHandler& operator=(const TaskAbortHandler&) = delete;
 };
-}
+} // namespace Hccl
 
 #endif

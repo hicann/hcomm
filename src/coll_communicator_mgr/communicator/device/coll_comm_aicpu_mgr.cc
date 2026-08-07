@@ -21,37 +21,37 @@ HcclResult CollCommAicpuMgr::AcquireCollCommAicpu()
     return HCCL_SUCCESS;
 }
 
-HcclResult CollCommAicpuMgr::InitAicpuIndOp(CommAicpuParam *commAicpuParam) 
+HcclResult CollCommAicpuMgr::InitAicpuIndOp(CommAicpuParam* commAicpuParam)
 {
     CHK_PTR_NULL(collCommAicpu_);
     return collCommAicpu_->InitAicpuIndOp(commAicpuParam);
 }
 
-HcclResult CollCommAicpuMgr::InitThreads(ThreadMgrAicpuParam *param)
+HcclResult CollCommAicpuMgr::InitThreads(ThreadMgrAicpuParam* param)
 {
     CHK_PTR_NULL(collCommAicpu_);
     return collCommAicpu_->InitThreads(param);
 }
 
-HcclResult CollCommAicpuMgr::AllocChannelResource(HcclChannelUrmaRes *commParam)
+HcclResult CollCommAicpuMgr::AllocChannelResource(HcclChannelUrmaRes* commParam)
 {
     CHK_PTR_NULL(collCommAicpu_);
     return collCommAicpu_->AllocChannelResource(commParam);
 }
 
-HcclResult CollCommAicpuMgr::UpdateChannelResource(HcclChannelUrmaRes *commParam)
+HcclResult CollCommAicpuMgr::UpdateChannelResource(HcclChannelUrmaRes* commParam)
 {
     CHK_PTR_NULL(collCommAicpu_);
     return collCommAicpu_->Resume(commParam);
 }
 
-HcclResult CollCommAicpuMgr::NotifyFree(NotifyMgrAicpuParam *param)
+HcclResult CollCommAicpuMgr::NotifyFree(NotifyMgrAicpuParam* param)
 {
     CHK_PTR_NULL(collCommAicpu_);
     return collCommAicpu_->NotifyFree(param);
 }
 
-HcclResult CollCommAicpuMgr::NotifyAlloc(NotifyMgrAicpuParam *param)
+HcclResult CollCommAicpuMgr::NotifyAlloc(NotifyMgrAicpuParam* param)
 {
     CHK_PTR_NULL(collCommAicpu_);
     return collCommAicpu_->NotifyAlloc(param);
@@ -69,7 +69,7 @@ void CollCommAicpuMgr::SetUsed(bool used)
     isUsed_ = used;
 }
 
-void CollCommAicpuMgr::SetOldA5Comm(void *oldA5Comm)
+void CollCommAicpuMgr::SetOldA5Comm(void* oldA5Comm)
 {
     if (oldA5Comm_ == nullptr) {
         oldA5Comm_ = oldA5Comm;

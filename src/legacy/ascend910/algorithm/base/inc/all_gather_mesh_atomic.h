@@ -21,10 +21,10 @@ public:
     ~AllGatherMeshAtomic() override;
 
 protected:
-    HcclResult RunAllGather(const std::vector<LINK> &links,
-                                const std::vector<Slice> &outputSlices,
-                                const std::vector<Slice> &inputSlices) override;
+    HcclResult RunAllGather(
+        const std::vector<LINK>& links, const std::vector<Slice>& outputSlices,
+        const std::vector<Slice>& inputSlices) override;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* ALL_GATHER_MESH_ATOMIC_H */

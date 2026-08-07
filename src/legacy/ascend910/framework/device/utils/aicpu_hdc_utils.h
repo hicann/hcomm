@@ -17,14 +17,16 @@
 
 class AicpuHdcUtils {
 public:
-    static HcclResult InitOpExecStatus(std::shared_ptr<hccl::HDCommunicate> d2hTransfer, HcclOpIdentifier &opId);
-    static HcclResult GetOpExecCtrlCmd(std::shared_ptr<hccl::HDCommunicate> h2dTransfer, KfcCommand &cmd);
+    static HcclResult InitOpExecStatus(std::shared_ptr<hccl::HDCommunicate> d2hTransfer, HcclOpIdentifier& opId);
+    static HcclResult GetOpExecCtrlCmd(std::shared_ptr<hccl::HDCommunicate> h2dTransfer, KfcCommand& cmd);
     static HcclResult SetOpExecStatus(
         std::shared_ptr<hccl::HDCommunicate> d2hTransfer, KfcStatus state, KfcError errorCode, u32 retryCount);
-    static HcclResult GetSuspendingStatus(std::shared_ptr<hccl::HDCommunicate> h2dTransfer, HcclComSuspendingFlag &flag);
-    static HcclResult GetBackGroundCommand(std::shared_ptr<hccl::HDCommunicate> h2dTransfer, BackgroundCommand &bgCmd);
-    static HcclResult ResponseBackGroundStatus(std::shared_ptr<hccl::HDCommunicate> d2hTransfer, KfcExecStatus &kfcStatus);
-    static HcclResult SetErrorMessage(std::shared_ptr<hccl::HDCommunicate> d2hTransfer, ErrorMessageReport &emrInfo);
-    static HcclResult GetKfcCommand(const std::shared_ptr<hccl::HDCommunicate> &h2dTransfer, KfcCommand &cmd);
+    static HcclResult
+    GetSuspendingStatus(std::shared_ptr<hccl::HDCommunicate> h2dTransfer, HcclComSuspendingFlag& flag);
+    static HcclResult GetBackGroundCommand(std::shared_ptr<hccl::HDCommunicate> h2dTransfer, BackgroundCommand& bgCmd);
+    static HcclResult
+    ResponseBackGroundStatus(std::shared_ptr<hccl::HDCommunicate> d2hTransfer, KfcExecStatus& kfcStatus);
+    static HcclResult SetErrorMessage(std::shared_ptr<hccl::HDCommunicate> d2hTransfer, ErrorMessageReport& emrInfo);
+    static HcclResult GetKfcCommand(const std::shared_ptr<hccl::HDCommunicate>& h2dTransfer, KfcCommand& cmd);
 };
 #endif // HCCL_AICPU_HDC_UTILS_H

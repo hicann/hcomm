@@ -30,18 +30,20 @@ static std::unordered_map<ThreadHandle, std::shared_ptr<hccl::Thread>> g_ThreadM
 
 using namespace hcomm;
 
-HcommResult HcommThreadAlloc(
-    CommEngine engine, uint32_t threadNum, const uint32_t *notifyNumPerThread, ThreadHandle *threads)
+HcommResult
+HcommThreadAlloc(CommEngine engine, uint32_t threadNum, const uint32_t* notifyNumPerThread, ThreadHandle* threads)
 {
     CHK_PTR_NULL(threads);
     CHK_PTR_NULL(notifyNumPerThread);
     (void)HcommResMgrInit();
     const uint32_t notifyNum = notifyNumPerThread[0];
     if (threadNum > 1U) {
-        HCCL_RUN_WARNING("[%s] only notifyNumPerThread[0] is used currently, threadNum[%u], notifyNum[0][%u].",
-            __func__, threadNum, notifyNum);
+        HCCL_RUN_WARNING(
+            "[%s] only notifyNumPerThread[0] is used currently, threadNum[%u], notifyNum[0][%u].", __func__, threadNum,
+            notifyNum);
     }
-    HCCL_INFO("[%s] ThreadAcquire begin. engine[%s], threadNum[%u], notifyPerThread[%u], threads[%p]", __func__,
+    HCCL_INFO(
+        "[%s] ThreadAcquire begin. engine[%s], threadNum[%u], notifyPerThread[%u], threads[%p]", __func__,
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), threadNum, notifyNum, threads);
     CHK_RET(RefreshCommEngineContext(engine));
 
@@ -66,39 +68,47 @@ HcommResult HcommThreadAlloc(
     CHK_RET(AicpuTsChannelHelper::EnsureKernelBinLoaded(engine));
     CHK_RET(hccl::StoreThreadHandles(newThreads, threads, engine, AicpuTsChannelHelper::GetBinHandle()));
 
-    HCCL_INFO("[HcommThreadAlloc] ThreadAcquire done: engine[%s] threadNum[%u], notifyPerThread[%u]",
+    HCCL_INFO(
+        "[HcommThreadAlloc] ThreadAcquire done: engine[%s] threadNum[%u], notifyPerThread[%u]",
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), threadNum, notifyNum);
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommThreadAlloc(CommEngine engine, uint32_t threadNum, uint32_t notifyNumPerThread, ThreadHandle *threads)
+HcommResult HcommThreadAlloc(CommEngine engine, uint32_t threadNum, uint32_t notifyNumPerThread, ThreadHandle* threads)
 {
     return ::HcommThreadAlloc(engine, threadNum, &notifyNumPerThread, threads);
 }
 
 HcommResult HcommThreadAllocWithConfig(
-    CommEngine engine, uint32_t threadNum, ThreadType type, const ThreadConfig *config, ThreadHandle *threads)
+    CommEngine engine, uint32_t threadNum, ThreadType type, const ThreadConfig* config, ThreadHandle* threads)
 {
     CHK_PTR_NULL(threads);
     CHK_PTR_NULL(config);
-    CHK_PRT_RET(type == THREAD_TYPE_INVALID,
+    CHK_PRT_RET(
+        type == THREAD_TYPE_INVALID,
         HCCL_ERROR("[%s] thread type[%d] is invalid", __func__, static_cast<int32_t>(type)), (HcommResult)HCCL_E_PARA);
-    CHK_PRT_RET(engine == COMM_ENGINE_AICPU_TS || engine == COMM_ENGINE_CPU_TS,
-        HCCL_ERROR("[%s] commEngine[%d] CPU_TS/AICPU_TS not supported, use engine with ThreadType instead", __func__,
+    CHK_PRT_RET(
+        engine == COMM_ENGINE_AICPU_TS || engine == COMM_ENGINE_CPU_TS,
+        HCCL_ERROR(
+            "[%s] commEngine[%d] CPU_TS/AICPU_TS not supported, use engine with ThreadType instead", __func__,
             static_cast<int32_t>(engine)),
         (HcommResult)HCCL_E_PARA);
-    CHK_PRT_RET(engine == COMM_ENGINE_AIV || engine == COMM_ENGINE_CCU,
-        HCCL_ERROR("[%s] commEngine[%d] AIV/CCU not supported, supported engines: CPU/AICPU", __func__,
+    CHK_PRT_RET(
+        engine == COMM_ENGINE_AIV || engine == COMM_ENGINE_CCU,
+        HCCL_ERROR(
+            "[%s] commEngine[%d] AIV/CCU not supported, supported engines: CPU/AICPU", __func__,
             static_cast<int32_t>(engine)),
         (HcommResult)HCCL_E_PARA);
     CHK_PRT_RET(
         threadNum == 0, HCCL_ERROR("[%s] threadNum[%u] is invalid", __func__, threadNum), (HcommResult)HCCL_E_PARA);
     HcommResult hcommRet = HcommResMgrInit();
-    CHK_PRT_RET(hcommRet != HCCL_SUCCESS,
+    CHK_PRT_RET(
+        hcommRet != HCCL_SUCCESS,
         HCCL_ERROR("[%s] HcommResMgrInit failed, ret[%d]", __func__, static_cast<int32_t>(hcommRet)), hcommRet);
     CHK_RET(RefreshCommEngineContext(engine));
 
-    HCCL_INFO("[%s] begin. engine[%d], threadType[%d], threadNum[%u], threads[%p]", __func__, engine,
+    HCCL_INFO(
+        "[%s] begin. engine[%d], threadType[%d], threadNum[%u], threads[%p]", __func__, engine,
         static_cast<int32_t>(type), threadNum, threads);
 
     hccl::NotifyLoadType notifyLoadType;
@@ -109,19 +119,23 @@ HcommResult HcommThreadAllocWithConfig(
     std::vector<std::shared_ptr<hccl::Thread>> newThreads;
     newThreads.reserve(threadNum);
     for (uint32_t i = 0; i < threadNum; ++i) {
-        CHK_PRT_RET(config[i].header.magicWord != HCOMM_THREAD_CONFIG_MAGIC_WORD,
-            HCCL_ERROR("[%s] config[%u] magicWord[0x%x] mismatch, expected[0x%x], call ThreadConfigInit first",
-                __func__, i, config[i].header.magicWord, HCOMM_THREAD_CONFIG_MAGIC_WORD),
+        CHK_PRT_RET(
+            config[i].header.magicWord != HCOMM_THREAD_CONFIG_MAGIC_WORD,
+            HCCL_ERROR(
+                "[%s] config[%u] magicWord[0x%x] mismatch, expected[0x%x], call ThreadConfigInit first", __func__, i,
+                config[i].header.magicWord, HCOMM_THREAD_CONFIG_MAGIC_WORD),
             (HcommResult)HCCL_E_PARA);
         CHK_RET(hccl::ValidateThreadParams(1, config[i].notifyNumPerThread));
         std::shared_ptr<hccl::Thread> threadPtr;
         HcclResult ret
             = hccl::CreateThread(engine, streamType, config[i].notifyNumPerThread, notifyLoadType, threadPtr);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[%s] Failed to create thread at index[%u], ret[%d]", __func__, i, ret), (HcommResult)ret);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS, HCCL_ERROR("[%s] Failed to create thread at index[%u], ret[%d]", __func__, i, ret),
+            (HcommResult)ret);
         ret = threadPtr->Init();
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[%s] Failed to init thread at index[%u], ret[%d]", __func__, i, ret), (HcommResult)ret);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS, HCCL_ERROR("[%s] Failed to init thread at index[%u], ret[%d]", __func__, i, ret),
+            (HcommResult)ret);
         newThreads.emplace_back(std::move(threadPtr));
     }
 
@@ -134,14 +148,14 @@ HcommResult HcommThreadAllocWithConfig(
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommThreadFree(const ThreadHandle *threads, uint32_t threadNum)
+HcommResult HcommThreadFree(const ThreadHandle* threads, uint32_t threadNum)
 {
     CHK_PTR_NULL(threads);
     (void)HcommResMgrInit();
     return hccl::FreeThreads(threads, threadNum, AicpuTsChannelHelper::GetBinHandle());
 }
 
-HcommResult HcommThreadAllocWithStream(CommEngine engine, rtStream_t stream, uint32_t notifyNum, ThreadHandle *thread)
+HcommResult HcommThreadAllocWithStream(CommEngine engine, rtStream_t stream, uint32_t notifyNum, ThreadHandle* thread)
 {
     CHK_PTR_NULL(thread);
     hccl::NotifyLoadType notifyLoadType;
@@ -154,8 +168,9 @@ HcommResult HcommThreadAllocWithStream(CommEngine engine, rtStream_t stream, uin
     *thread = reinterpret_cast<ThreadHandle>(handle.get());
     hcomm::g_ThreadMap.emplace(*thread, handle);
 
-    HCCL_INFO("[ThreadMgr] ThreadAcquireWithStream done: engine[%s] stream[%p], "
-              "notifyNum[%u]",
+    HCCL_INFO(
+        "[ThreadMgr] ThreadAcquireWithStream done: engine[%s] stream[%p], "
+        "notifyNum[%u]",
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), stream, notifyNum);
     return HCCL_SUCCESS;
 }

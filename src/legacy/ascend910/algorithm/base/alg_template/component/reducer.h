@@ -13,7 +13,6 @@
 
 #include "reducer_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * REDUCER_H */

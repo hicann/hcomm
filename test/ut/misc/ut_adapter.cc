@@ -24,17 +24,10 @@
 using namespace std;
 using namespace hccl;
 
-class HccpTest : public testing::Test
-{
+class HccpTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "HccpTest SetUP" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "HccpTest TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "HccpTest SetUP" << std::endl; }
+    static void TearDownTestCase() { std::cout << "HccpTest TearDown" << std::endl; }
 };
 
 TEST_F(HccpTest, ut_hrtRdmaInitWithBackupAttr_notSupport)
@@ -60,9 +53,7 @@ TEST_F(HccpTest, ut_hrtRdmaInitWithBackupAttr_notSupport)
 
 TEST_F(HccpTest, ut_CheckAutoListenVersion)
 {
-    MOCKER(hrtRaGetInterfaceVersion)
-    .expects(atMost(1))
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtRaGetInterfaceVersion).expects(atMost(1)).will(returnValue(HCCL_SUCCESS));
 
     HcclResult ret = NetworkManager::GetInstance(0).CheckAutoListenVersion(true);
     EXPECT_EQ(ret, (ret, HCCL_E_NOT_SUPPORT));
@@ -378,12 +369,12 @@ TEST_F(HccpTest, Ut_hrtStreamCreateWithFlags_hrtGetStreamIdFail_Expect_DestorySt
 
 TEST_F(HccpTest, Ut_hrtMemcpy_CountExceedsDestMax_Expect_ParaError)
 {
-    void *dst = malloc(100);
-    void *src = malloc(100);
+    void* dst = malloc(100);
+    void* src = malloc(100);
     uint64_t destMax = 50;
     uint64_t count = 100;
     HcclRtMemcpyKind kind = HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE;
-    
+
     HcclResult ret = hrtMemcpy(dst, destMax, src, count, kind);
     EXPECT_EQ(ret, HCCL_E_PARA);
 
@@ -564,7 +555,8 @@ TEST_F(HccpTest, Ut_NetworkManager_PsWorkerRaInit_SocketInitFail)
     MOCKER(hrtRaSocketInit).stubs().will(returnValue(HCCL_E_TCP_CONNECT));
 
     HcclIpAddress ipAddr("10.21.78.208");
-    HcclResult ret = NetworkManager::GetInstance(device_id).PsWorkerRaInit(device_id, ipAddr, port, false, false, false);
+    HcclResult ret
+        = NetworkManager::GetInstance(device_id).PsWorkerRaInit(device_id, ipAddr, port, false, false, false);
     EXPECT_EQ(ret, HCCL_E_TCP_CONNECT);
 
     GlobalMockObject::verify();
@@ -587,7 +579,7 @@ TEST_F(HccpTest, Ut_NetworkManager_Destory_DeviceRaDeinitFail)
 
     ret = NetworkManager::GetInstance(device_id).Destroy();
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    
+
     GlobalMockObject::verify();
 }
 
@@ -608,6 +600,6 @@ TEST_F(HccpTest, Ut_NetworkManager_Destory_HostRaDeinitFail)
 
     ret = NetworkManager::GetInstance(device_id).Destroy();
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    
+
     GlobalMockObject::verify();
 }

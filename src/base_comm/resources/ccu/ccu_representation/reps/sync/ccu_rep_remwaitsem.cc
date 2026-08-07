@@ -17,33 +17,41 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepRemWaitSem::CcuRepRemWaitSem(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, uint16_t semIndex, uint16_t mask, bool isProfiling)
-    : insGenPtr(insGenPtr), channel(channel), semIndex(semIndex), mask(mask), isProfiling(isProfiling)
-{
-    type       = CcuRepType::REM_WAIT_SEM;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
+    CcuRepRemWaitSem::CcuRepRemWaitSem(
+        CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, uint16_t semIndex, uint16_t mask, bool isProfiling)
+        : insGenPtr(insGenPtr),
+          channel(channel),
+          semIndex(semIndex),
+          mask(mask),
+          isProfiling(isProfiling)
+    {
+        type = CcuRepType::REM_WAIT_SEM;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
 
-bool CcuRepRemWaitSem::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool CcuRepRemWaitSem::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    insGenPtr->CcuRepRemWaitSemTranslate(ccuKernel, instr, this);
+        insGenPtr->CcuRepRemWaitSemTranslate(ccuKernel, instr, this);
 
-    CHK_PRT_THROW(instrId > UINT16_MAX - instrCount,
-                        HCCL_ERROR("[CcuRepRemWaitSem::Translate]uint16 integer overflow occurs, instrId = [%hu], instrCount = [%hu]", instrId, instrCount),
-                          Hccl::InternalException, "integer overflow");
+        CHK_PRT_THROW(
+            instrId > UINT16_MAX - instrCount,
+            HCCL_ERROR(
+                "[CcuRepRemWaitSem::Translate]uint16 integer overflow occurs, instrId = [%hu], instrCount = [%hu]",
+                instrId, instrCount),
+            Hccl::InternalException, "integer overflow");
 
-    instrId += instrCount;
+        instrId += instrCount;
 
-    return translated;
-}
+        return translated;
+    }
 
-std::string CcuRepRemWaitSem::Describe()
-{
-    return Hccl::StringFormat("Wait, Use semIndex[%u] and mask[%04x]", semIndex, mask);
-}
+    std::string CcuRepRemWaitSem::Describe()
+    {
+        return Hccl::StringFormat("Wait, Use semIndex[%u] and mask[%04x]", semIndex, mask);
+    }
 
 }; // namespace CcuRep
 }; // namespace hcomm

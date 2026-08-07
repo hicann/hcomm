@@ -13,25 +13,18 @@
 
 using namespace hccl;
 
-class UtAicpuTsHcommSetNotifyWaitTimeOut : public UtAicpuTsBase
-{
+class UtAicpuTsHcommSetNotifyWaitTimeOut : public UtAicpuTsBase {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "UtAicpuTsHcommSetNotifyWaitTimeOut tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "UtAicpuTsHcommSetNotifyWaitTimeOut tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "UtAicpuTsHcommSetNotifyWaitTimeOut tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "UtAicpuTsHcommSetNotifyWaitTimeOut tests tear down." << std::endl; }
 
     virtual void SetUp() override
     {
         std::cout << "A Test case in UtAicpuTsHcommSetNotifyWaitTimeOut SetUp" << std::endl;
         UtAicpuTsBase::SetUp();
 
-        MOCKER_CPP(&Hccl::IAicpuTsThread::NotifyWait, HcclResult (Hccl::IAicpuTsThread::*)(uint32_t, uint32_t) const)
+        MOCKER_CPP(&Hccl::IAicpuTsThread::NotifyWait, HcclResult(Hccl::IAicpuTsThread::*)(uint32_t, uint32_t) const)
             .stubs()
             .will(returnValue(HCCL_SUCCESS));
     }
@@ -62,7 +55,8 @@ TEST_F(UtAicpuTsHcommSetNotifyWaitTimeOut, Ut_HcommSetNotifyWaitTimeOut_When_Tim
     EXPECT_EQ(res, HCCL_SUCCESS);
 }
 
-TEST_F(UtAicpuTsHcommSetNotifyWaitTimeOut, Ut_HcommSetNotifyWaitTimeOut_When_Timeout_IsLarge_Expect_ReturnIsHCCL_SUCCESS)
+TEST_F(
+    UtAicpuTsHcommSetNotifyWaitTimeOut, Ut_HcommSetNotifyWaitTimeOut_When_Timeout_IsLarge_Expect_ReturnIsHCCL_SUCCESS)
 {
     timeout = 100000;
     res = HcommSetNotifyWaitTimeOut(timeout);

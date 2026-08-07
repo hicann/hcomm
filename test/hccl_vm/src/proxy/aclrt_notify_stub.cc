@@ -27,45 +27,56 @@
 #include "db_sim_runner_ops.h"
 #include "db_sim_runner_common.h"
 
-
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
-void PrintTaskMetaData(const HcclTaskMetaData &taskMeta)
+void PrintTaskMetaData(const HcclTaskMetaData& taskMeta)
 {
     pid_t pid = getpid();
     switch (taskMeta.taskType) {
         case HccLTaskMetaType::MEM_CPY:
-            HCCL_VM_INFO("pid[{}]: rankId[{}], streamId[{}], taskType[MEM_CPY], srcOffset[{}], dstOffset[{}], len[{}], srcRankId[{}], dstRankId[{}]",
-                   pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.transMem.srcOffset, taskMeta.taskData.transMem.dstOffset, taskMeta.taskData.transMem.len,
-                   taskMeta.taskData.transMem.srcRankId, taskMeta.taskData.transMem.dstRankId);
+            HCCL_VM_INFO(
+                "pid[{}]: rankId[{}], streamId[{}], taskType[MEM_CPY], srcOffset[{}], dstOffset[{}], len[{}], "
+                "srcRankId[{}], dstRankId[{}]",
+                pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.transMem.srcOffset,
+                taskMeta.taskData.transMem.dstOffset, taskMeta.taskData.transMem.len,
+                taskMeta.taskData.transMem.srcRankId, taskMeta.taskData.transMem.dstRankId);
             break;
-        case HccLTaskMetaType::REDUCE: 
-            HCCL_VM_INFO("pid[{}]: rankId[{}], streamId[{}], taskType[REDUCE], srcOffset[{}], dstOffset[{}], len[{}], srcRankId[{}], dstRankId[{}], reduceOp[{}], dataType[{}]",
-                   pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.reduce.srcOffset, taskMeta.taskData.reduce.dstOffset, taskMeta.taskData.reduce.dataCount,
-                   taskMeta.taskData.reduce.srcRankId, taskMeta.taskData.reduce.dstRankId, taskMeta.taskData.reduce.reduceOp, taskMeta.taskData.reduce.dataType);
+        case HccLTaskMetaType::REDUCE:
+            HCCL_VM_INFO(
+                "pid[{}]: rankId[{}], streamId[{}], taskType[REDUCE], srcOffset[{}], dstOffset[{}], len[{}], "
+                "srcRankId[{}], dstRankId[{}], reduceOp[{}], dataType[{}]",
+                pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.reduce.srcOffset,
+                taskMeta.taskData.reduce.dstOffset, taskMeta.taskData.reduce.dataCount,
+                taskMeta.taskData.reduce.srcRankId, taskMeta.taskData.reduce.dstRankId,
+                taskMeta.taskData.reduce.reduceOp, taskMeta.taskData.reduce.dataType);
             break;
         case HccLTaskMetaType::NOTIFY_WAIT:
-            HCCL_VM_INFO("pid[{}]: rankId[{}], streamId[{}], taskType[NOTIFY_WAIT], notifyId[{}], srcRankId[{}], dstRankId[{}]",
-                   pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.notify.notifyId, taskMeta.taskData.notify.srcRankId, taskMeta.taskData.notify.dstRankId);
+            HCCL_VM_INFO(
+                "pid[{}]: rankId[{}], streamId[{}], taskType[NOTIFY_WAIT], notifyId[{}], srcRankId[{}], dstRankId[{}]",
+                pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.notify.notifyId,
+                taskMeta.taskData.notify.srcRankId, taskMeta.taskData.notify.dstRankId);
             break;
         case HccLTaskMetaType::NOTIFY_RECORD:
-            HCCL_VM_INFO("pid[{}]: rankId[{}], streamId[{}], taskType[NOTIFY_RECORD], notifyId[{}], srcRankId[{}], dstRankId[{}]",
-                   pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.notify.notifyId, taskMeta.taskData.notify.srcRankId, taskMeta.taskData.notify.dstRankId);
+            HCCL_VM_INFO(
+                "pid[{}]: rankId[{}], streamId[{}], taskType[NOTIFY_RECORD], notifyId[{}], srcRankId[{}], "
+                "dstRankId[{}]",
+                pid, taskMeta.rankId, taskMeta.streamId, taskMeta.taskData.notify.notifyId,
+                taskMeta.taskData.notify.srcRankId, taskMeta.taskData.notify.dstRankId);
             break;
         default:
             break;
     }
 }
 
-aclError aclrtCreateNotify(aclrtNotify *notify, uint64_t flag)
+aclError aclrtCreateNotify(aclrtNotify* notify, uint64_t flag)
 {
-    (void) flag;
+    (void)flag;
     auto serverId = sim::GetCurServerId();
- 	if (serverId == 0) {
- 	    return ACL_ERROR_INVALID_PARAM;
- 	}
+    if (serverId == 0) {
+        return ACL_ERROR_INVALID_PARAM;
+    }
     sim::Runner runner;
     if (!sim::GetCurrRunnerTls(serverId, runner)) {
         return ACL_ERROR_INVALID_PARAM;
@@ -99,7 +110,7 @@ aclError aclrtDestroyNotify(aclrtNotify notify)
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetNotifyId(aclrtNotify notify, uint32_t *notifyId)
+aclError aclrtGetNotifyId(aclrtNotify notify, uint32_t* notifyId)
 {
     *notifyId = (uint32_t)(uintptr_t)notify;
     HCCL_VM_DEBUG("id:{:d}", *notifyId);
@@ -115,11 +126,11 @@ aclError aclrtRecordNotify(aclrtNotify notify, aclrtStream stream)
 
     HcclTaskMetaData taskMetaData;
     taskMetaData.taskType = HccLTaskMetaType::NOTIFY_RECORD;
-    taskMetaData.commId   = 0;
-    taskMetaData.rankId   = curRank;
+    taskMetaData.commId = 0;
+    taskMetaData.rankId = curRank;
     taskMetaData.streamId = streamId;
     taskMetaData.taskData.notify.notifyId = notifyId;
-    taskMetaData.taskData.notify.notifyCount = 0; //notify value
+    taskMetaData.taskData.notify.notifyCount = 0; // notify value
     taskMetaData.taskData.notify.srcRankId = curRank;
     taskMetaData.taskData.notify.dstRankId = curRank;
     PrintTaskMetaData(taskMetaData);
@@ -137,12 +148,14 @@ aclError aclrtRecordNotify(aclrtNotify notify, aclrtStream stream)
 
 aclError aclrtWaitAndResetNotify(aclrtNotify notify, aclrtStream stream, uint32_t timeout)
 {
-    (void) timeout;
+    (void)timeout;
     uint64_t streamId = sim::GetCurrentStreamId((uint64_t)(uintptr_t)stream);
     uint64_t notifyId = (uint32_t)(uintptr_t)notify;
 
     // reset notify
-    auto res = RunnerDB::Update<sim::Notify>(notifyId, [](sim::Notify &notify) { notify.value = 0; });
+    auto res = RunnerDB::Update<sim::Notify>(notifyId, [](sim::Notify& notify) {
+        notify.value = 0;
+    });
     if (!res) {
         HCCL_VM_ERROR("notify not found:{:d}", notifyId);
         return ACL_ERROR_INVALID_PARAM;
@@ -152,11 +165,11 @@ aclError aclrtWaitAndResetNotify(aclrtNotify notify, aclrtStream stream, uint32_
 
     HcclTaskMetaData taskMetaData;
     taskMetaData.taskType = HccLTaskMetaType::NOTIFY_WAIT;
-    taskMetaData.commId   = 0;
-    taskMetaData.rankId   = curRank;
+    taskMetaData.commId = 0;
+    taskMetaData.rankId = curRank;
     taskMetaData.streamId = streamId;
     taskMetaData.taskData.notify.notifyId = notifyId;
-    taskMetaData.taskData.notify.notifyCount = 0; //notify value
+    taskMetaData.taskData.notify.notifyCount = 0; // notify value
     taskMetaData.taskData.notify.srcRankId = curRank;
     taskMetaData.taskData.notify.dstRankId = curRank;
     PrintTaskMetaData(taskMetaData);
@@ -172,13 +185,15 @@ aclError aclrtWaitAndResetNotify(aclrtNotify notify, aclrtStream stream, uint32_
     return ACL_SUCCESS;
 }
 
-aclError aclrtNotifyBatchReset(aclrtNotify *notifies, size_t num)
+aclError aclrtNotifyBatchReset(aclrtNotify* notifies, size_t num)
 {
     for (int i = 0; i < num; i++) {
         uint64_t notifyId = (uint32_t)(uintptr_t)notifies[i];
 
         // reset notify
-        auto res = RunnerDB::Update<sim::Notify>(notifyId, [](sim::Notify &notify) { notify.value = 0; });
+        auto res = RunnerDB::Update<sim::Notify>(notifyId, [](sim::Notify& notify) {
+            notify.value = 0;
+        });
         if (!res) {
             HCCL_VM_ERROR("notify not found:{:d}", notifyId);
             return ACL_ERROR_INVALID_PARAM;
@@ -187,10 +202,10 @@ aclError aclrtNotifyBatchReset(aclrtNotify *notifies, size_t num)
     return ACL_SUCCESS;
 }
 
-aclError aclrtNotifyGetExportKey(aclrtNotify notify, char *key, size_t len, uint64_t flags)
+aclError aclrtNotifyGetExportKey(aclrtNotify notify, char* key, size_t len, uint64_t flags)
 {
-    (void) len;
-    (void) flags;
+    (void)len;
+    (void)flags;
     uint64_t notifyId = (uint32_t)(uintptr_t)notify;
 
     std::string notifyKeyStr = std::to_string(notifyId);
@@ -206,13 +221,13 @@ aclError aclrtNotifyGetExportKey(aclrtNotify notify, char *key, size_t len, uint
     return ACL_SUCCESS;
 }
 
-aclError aclrtNotifySetImportPid(aclrtNotify notify, int32_t *pid, size_t num)
+aclError aclrtNotifySetImportPid(aclrtNotify notify, int32_t* pid, size_t num)
 {
     uint64_t notifyId = (uint32_t)(uintptr_t)notify;
     HCCL_VM_DEBUG("id:{:d}", notifyId);
 
     auto ipcNotify = RunnerDB::GetOneByPred<sim::IpcNotify>([notifyId](const sim::IpcNotify& ipc) {
-        return ipc.notify_id  == notifyId;
+        return ipc.notify_id == notifyId;
     });
     if (!ipcNotify.second) {
         HCCL_VM_ERROR("notify in ipc notify not found:{:d}", notifyId);
@@ -229,9 +244,9 @@ aclError aclrtNotifySetImportPid(aclrtNotify notify, int32_t *pid, size_t num)
     return ACL_SUCCESS;
 }
 
-aclError aclrtNotifyImportByKey(aclrtNotify *notify, const char *key, uint64_t flags)
+aclError aclrtNotifyImportByKey(aclrtNotify* notify, const char* key, uint64_t flags)
 {
-    (void) flags;
+    (void)flags;
     auto ipcNotify = RunnerDB::GetOneByPred<sim::IpcNotify>([key](const sim::IpcNotify& ipc) {
         return memcmp(key, ipc.name_or_key, strlen(key)) == 0;
     });
@@ -245,24 +260,18 @@ aclError aclrtNotifyImportByKey(aclrtNotify *notify, const char *key, uint64_t f
 }
 
 ////////////////////////////rt 接口/////////////////////////////////
-rtError_t rtsNotifyCreate(rtNotify_t *notify, uint64_t flag)
-{
-    return aclrtCreateNotify(notify, flag);
-}
+rtError_t rtsNotifyCreate(rtNotify_t* notify, uint64_t flag) { return aclrtCreateNotify(notify, flag); }
 
-rtError_t rtNotifyWait(rtNotify_t notify, rtStream_t stm)
-{
-    return aclrtWaitAndResetNotify(notify, stm, 0);
-}
+rtError_t rtNotifyWait(rtNotify_t notify, rtStream_t stm) { return aclrtWaitAndResetNotify(notify, stm, 0); }
 
-rtError_t  rtGetNotifyAddress(rtNotify_t notify, uint64_t * const notifyAddres)
+rtError_t rtGetNotifyAddress(rtNotify_t notify, uint64_t* const notifyAddres)
 {
     uint64_t notifyId = (uint32_t)(uintptr_t)notify;
     *notifyAddres = notifyId;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtNotifyGetPhyInfo(rtNotify_t notify, uint32_t *phyDevId, uint32_t *tsId)
+rtError_t rtNotifyGetPhyInfo(rtNotify_t notify, uint32_t* phyDevId, uint32_t* tsId)
 {
     uint64_t notifyId = (uint32_t)(uintptr_t)notify;
     // reset notify
@@ -288,7 +297,7 @@ rtError_t rtNotifyGetPhyInfo(rtNotify_t notify, uint32_t *phyDevId, uint32_t *ts
     return RT_ERROR_NONE;
 }
 
-rtError_t rtNotifyGetPhyInfoExt(rtNotify_t notify, rtNotifyPhyInfo *notifyInfo)
+rtError_t rtNotifyGetPhyInfoExt(rtNotify_t notify, rtNotifyPhyInfo* notifyInfo)
 {
     uint64_t notifyId = (uint32_t)(uintptr_t)notify;
     // reset notify
@@ -309,21 +318,21 @@ rtError_t rtNotifyGetPhyInfoExt(rtNotify_t notify, rtNotifyPhyInfo *notifyInfo)
         HCCL_VM_ERROR("device id not found:{:d}", createCtx->device_id);
         return ACL_ERROR_INVALID_PARAM;
     }
-    notifyInfo->phyId   = devRes->physical_id;
-    notifyInfo->tsId    = 0;
-    notifyInfo->idType  = 0;
-    notifyInfo->shrId   = (uint32_t)notifyId;
-    notifyInfo->flag    =  0;
+    notifyInfo->phyId = devRes->physical_id;
+    notifyInfo->tsId = 0;
+    notifyInfo->idType = 0;
+    notifyInfo->shrId = (uint32_t)notifyId;
+    notifyInfo->flag = 0;
     return RT_ERROR_NONE;
 }
 
 rtError_t rtNotifyGetAddrOffset(rtNotify_t notify, uint64_t* devAddrOffset)
 {
-    (void) notify;
-    (void) devAddrOffset;
+    (void)notify;
+    (void)devAddrOffset;
     return RT_ERROR_NONE;
 }
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus

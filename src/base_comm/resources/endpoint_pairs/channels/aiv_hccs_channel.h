@@ -21,6 +21,6 @@ public:
     AivHccsChannel();
     virtual ~AivHccsChannel() = default;
 };
-}
+} // namespace hcomm
 
 #endif // AIV_HCCS_CHANNEL_H

@@ -24,68 +24,86 @@ namespace Hccl {
 void RankTableInfo::Check()
 {
     if (version != "2.0") {
-        HCCL_ERROR("[RankTableInfo::%s] failed with version [%s] is not \"2.0\".", __func__ , version.c_str());
-        RPT_INPUT_ERR(true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-                            std::vector<std::string>({version, "version", "2.0"}));
+        HCCL_ERROR("[RankTableInfo::%s] failed with version [%s] is not \"2.0\".", __func__, version.c_str());
+        RPT_INPUT_ERR(
+            true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+            std::vector<std::string>({version, "version", "2.0"}));
         THROW<InvalidParamsException>(
             StringFormat("[RankTableInfo::%s] failed with version is not \"2.0\" in ranktable file.", __func__));
     }
 
     if (rankCount > MAX_RANKCOUNT) {
-        RPT_INPUT_ERR(true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-                            std::vector<std::string>({std::to_string(rankCount), "rankCount", "lower than " + std::to_string(MAX_RANKCOUNT)}));
+        RPT_INPUT_ERR(
+            true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+            std::vector<std::string>(
+                {std::to_string(rankCount), "rankCount", "lower than " + std::to_string(MAX_RANKCOUNT)}));
         THROW<InvalidParamsException>(StringFormat(
-            "[RankTableInfo::%s] failed with rankCount [%u] exceeds maximum limit of [%u]",
-            __func__, rankCount, MAX_RANKCOUNT));
+            "[RankTableInfo::%s] failed with rankCount [%u] exceeds maximum limit of [%u]", __func__, rankCount,
+            MAX_RANKCOUNT));
     }
 
     if (rankCount == 0) {
-        RPT_INPUT_ERR(true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-                            std::vector<std::string>({std::to_string(rankCount), "rankCount", "should not be 0"}));
+        RPT_INPUT_ERR(
+            true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+            std::vector<std::string>({std::to_string(rankCount), "rankCount", "should not be 0"}));
         THROW<InvalidParamsException>(StringFormat(
-            "[RankTableInfo::%s] failed with rankCount [%u] exceeds minimum limit of [%u]",__func__, rankCount, 0));
+            "[RankTableInfo::%s] failed with rankCount [%u] exceeds minimum limit of [%u]", __func__, rankCount, 0));
     }
 
     if (rankCount != ranks.size()) {
-        RPT_INPUT_ERR(true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-                            std::vector<std::string>({std::to_string(rankCount), "rankCount","rankCount is equal to rankSize[" + std::to_string(ranks.size()) + "]"}));
-        THROW<InvalidParamsException>(StringFormat("[RankTableInfo::%s] failed with rankCount is not equal "
-                                                   "to rank_list size. version[%s], rankCount[%u], ranks.size[%u]",
-                                                   __func__, version.c_str(), rankCount, ranks.size()));
+        RPT_INPUT_ERR(
+            true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+            std::vector<std::string>(
+                {std::to_string(rankCount), "rankCount",
+                 "rankCount is equal to rankSize[" + std::to_string(ranks.size()) + "]"}));
+        THROW<InvalidParamsException>(StringFormat(
+            "[RankTableInfo::%s] failed with rankCount is not equal "
+            "to rank_list size. version[%s], rankCount[%u], ranks.size[%u]",
+            __func__, version.c_str(), rankCount, ranks.size()));
     }
 
     std::unordered_set<u32> rankIdSet;
     std::unordered_set<u32> localIdSet;
     u32 recordedReplaceLocalId{UNDEFIEND_LOCAL_ID};
-    for (auto &rank : ranks) {
+    for (auto& rank : ranks) {
         if (static_cast<u32>(rank.rankId) >= rankCount) {
-            RPT_INPUT_ERR(true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-                            std::vector<std::string>({std::to_string(rank.rankId), "rankId", "[0," + std::to_string(rankCount) + ")"}));
-            THROW<InvalidParamsException>(StringFormat("[Parse][ClusterInfo][RankTableInfo::%s] failed with rank_id is "
-                                                       "out of range. version[%s], rankCount[%u], rank_id[%d]",
-                                                       __func__, version.c_str(), rankCount, rank.rankId));
+            RPT_INPUT_ERR(
+                true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+                std::vector<std::string>(
+                    {std::to_string(rank.rankId), "rankId", "[0," + std::to_string(rankCount) + ")"}));
+            THROW<InvalidParamsException>(StringFormat(
+                "[Parse][ClusterInfo][RankTableInfo::%s] failed with rank_id is "
+                "out of range. version[%s], rankCount[%u], rank_id[%d]",
+                __func__, version.c_str(), rankCount, rank.rankId));
         }
         if (rankIdSet.count(rank.rankId) > 0) {
-            RPT_INPUT_ERR(true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-                            std::vector<std::string>({std::to_string(rank.rankId), "rankId", "rank_id is not repeat."}));
-            THROW<InvalidParamsException>(StringFormat("[Parse][ClusterInfo][RankTableInfo::%s] failed with rank_id is "
-                                                       "repeat. version[%s], rankCount[%u], rank_id[%d]",
-                                                       __func__, version.c_str(), rankCount, rank.rankId));
+            RPT_INPUT_ERR(
+                true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+                std::vector<std::string>({std::to_string(rank.rankId), "rankId", "rank_id is not repeat."}));
+            THROW<InvalidParamsException>(StringFormat(
+                "[Parse][ClusterInfo][RankTableInfo::%s] failed with rank_id is "
+                "repeat. version[%s], rankCount[%u], rank_id[%d]",
+                __func__, version.c_str(), rankCount, rank.rankId));
         }
         rankIdSet.insert(rank.rankId);
 
         if (rank.localId != BACKUP_LOCAL_ID && rank.localId != rank.replacedLocalId) {
-            RPT_INPUT_ERR(true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-                            std::vector<std::string>({std::to_string(rank.replacedLocalId), "replacedLocalId", 
-                                "replacedLocalId equal to locaId[" + std::to_string(rank.localId) + "]"}));
-            THROW<InvalidParamsException>(StringFormat("[Parse][ClusterInfo][RankTableInfo::Check] "
-            "failed with replacedLocalId[%u] not equal to localId[%u].", rank.replacedLocalId, rank.localId));
+            RPT_INPUT_ERR(
+                true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+                std::vector<std::string>(
+                    {std::to_string(rank.replacedLocalId), "replacedLocalId",
+                     "replacedLocalId equal to locaId[" + std::to_string(rank.localId) + "]"}));
+            THROW<InvalidParamsException>(StringFormat(
+                "[Parse][ClusterInfo][RankTableInfo::Check] "
+                "failed with replacedLocalId[%u] not equal to localId[%u].",
+                rank.replacedLocalId, rank.localId));
         } else if (rank.localId == BACKUP_LOCAL_ID) {
             if (recordedReplaceLocalId == UNDEFIEND_LOCAL_ID) {
                 recordedReplaceLocalId = rank.replacedLocalId;
             } else {
-                RPT_INPUT_ERR(true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-                            std::vector<std::string>({"NA", "NA", "multiple replaced rank is configured."}));
+                RPT_INPUT_ERR(
+                    true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+                    std::vector<std::string>({"NA", "NA", "multiple replaced rank is configured."}));
                 THROW<InvalidParamsException>(StringFormat("[Parse][ClusterInfo][RankTableInfo::Check] "
                                                            "multiple replaced rank is configured"));
             }
@@ -96,40 +114,46 @@ void RankTableInfo::Check()
 
     for (u32 rankRange = 0; rankRange < rankCount; rankRange++) {
         if (rankIdSet.find(rankRange) == rankIdSet.end()) {
-            RPT_INPUT_ERR(true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-                            std::vector<std::string>({std::to_string(rankRange),"rankId", "rank_id is continuous."}));
-            THROW<InvalidParamsException>(StringFormat("[Parse][ClusterInfo][RankTableInfo::%s] failed with rank_id is "
-                                                       "not continuous. version[%s], rankCount[%u], rankRange[%d]",
-                                                           __func__, version.c_str(), rankCount, rankRange));
+            RPT_INPUT_ERR(
+                true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+                std::vector<std::string>({std::to_string(rankRange), "rankId", "rank_id is continuous."}));
+            THROW<InvalidParamsException>(StringFormat(
+                "[Parse][ClusterInfo][RankTableInfo::%s] failed with rank_id is "
+                "not continuous. version[%s], rankCount[%u], rankRange[%d]",
+                __func__, version.c_str(), rankCount, rankRange));
         }
     }
 
     std::vector<std::unordered_map<std::string, u32>> verifyRankAddr;
-    for (auto &rank : ranks) {
-        for (auto &levelInfo : rank.rankLevelInfos) {
+    for (auto& rank : ranks) {
+        for (auto& levelInfo : rank.rankLevelInfos) {
             InsertToRank(levelInfo.netInstId, levelInfo.rankAddrs.size(), verifyRankAddr, levelInfo.netLayer);
         }
     }
 
-    if(localIdSet.find(recordedReplaceLocalId) != localIdSet.end()) {
-        RPT_INPUT_ERR(true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-                            std::vector<std::string>({std::to_string(recordedReplaceLocalId), "recordedReplacedLocalId",
-                                 "failed with configuring same local_id with replaced one simutaneously."}));
-        THROW<InvalidParamsException>(StringFormat("[Parse][ClusterInfo][RankTableInfo::%s] failed with configuring "
-                                                   "same local_id[%u] with replaced one simutaneously",
-                                                    __func__, recordedReplaceLocalId));
+    if (localIdSet.find(recordedReplaceLocalId) != localIdSet.end()) {
+        RPT_INPUT_ERR(
+            true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+            std::vector<std::string>(
+                {std::to_string(recordedReplaceLocalId), "recordedReplacedLocalId",
+                 "failed with configuring same local_id with replaced one simutaneously."}));
+        THROW<InvalidParamsException>(StringFormat(
+            "[Parse][ClusterInfo][RankTableInfo::%s] failed with configuring "
+            "same local_id[%u] with replaced one simutaneously",
+            __func__, recordedReplaceLocalId));
     }
 }
 
-void RankTableInfo::Deserialize(const nlohmann::json &rankTableInfoJson, bool isCheck)
+void RankTableInfo::Deserialize(const nlohmann::json& rankTableInfoJson, bool isCheck)
 {
-    std::string msgVersion   = "error occurs when parser object of propName \"version\"";
+    std::string msgVersion = "error occurs when parser object of propName \"version\"";
     TRY_CATCH_THROW(InvalidParamsException, msgVersion, version = GetJsonProperty(rankTableInfoJson, "version"););
-    std::string msgStatus    = "error occurs when parser object of propName \"status\"";
+    std::string msgStatus = "error occurs when parser object of propName \"status\"";
 
     std::string detourStr;
-    std::string msgDetour   = "error occurs when parser object of propName \"detour\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgDetour, detourStr = GetJsonProperty(rankTableInfoJson, "detour", false););
+    std::string msgDetour = "error occurs when parser object of propName \"detour\"";
+    TRY_CATCH_THROW(InvalidParamsException, msgDetour,
+                    detourStr = GetJsonProperty(rankTableInfoJson, "detour", false););
     if (detourStr == "true") {
         detour = true;
     } else if (detourStr == "false" || detourStr == "") {
@@ -139,38 +163,41 @@ void RankTableInfo::Deserialize(const nlohmann::json &rankTableInfoJson, bool is
     }
 
     std::string msgRankcount = "error occurs when parser object of propName \"rank_count\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgRankcount, rankCount = GetJsonPropertyUInt(rankTableInfoJson, "rank_count"););
+    TRY_CATCH_THROW(InvalidParamsException, msgRankcount,
+                    rankCount = GetJsonPropertyUInt(rankTableInfoJson, "rank_count"););
 
     nlohmann::json rankJsons;
-    std::string    msgRanklist = "error occurs when parser object of propName \"rank_list\"";
+    std::string msgRanklist = "error occurs when parser object of propName \"rank_list\"";
     TRY_CATCH_THROW(InvalidParamsException, msgRanklist,
-                         GetJsonPropertyList(rankTableInfoJson, "rank_list", rankJsons););
-    for (auto &rankJson : rankJsons) {
+                    GetJsonPropertyList(rankTableInfoJson, "rank_list", rankJsons););
+    for (auto& rankJson : rankJsons) {
         NewRankInfo rankInfo;
         rankInfo.Deserialize(rankJson);
         ranks.emplace_back(rankInfo);
     }
-   
+
     // check
     if (isCheck) {
         Check();
     }
 }
 
-void RankTableInfo::CheckAndInsert(const std::string &levelId, u32 rankAddrSize,
-                                   std::unordered_map<std::string, u32> &idRankSizeMap) const
+void RankTableInfo::CheckAndInsert(
+    const std::string& levelId, u32 rankAddrSize, std::unordered_map<std::string, u32>& idRankSizeMap) const
 {
     if (idRankSizeMap.find(levelId) != idRankSizeMap.end() && idRankSizeMap[levelId] != rankAddrSize) {
-        THROW<InvalidParamsException>(StringFormat("[RankTableInfo::%s] failed with the size of "
-                                                   "rank_addrs with the same id is different. leveId[%s],"
-                                                   "rankAddrSize[%u]",
-                                                   __func__, levelId.c_str(), rankAddrSize));
+        THROW<InvalidParamsException>(StringFormat(
+            "[RankTableInfo::%s] failed with the size of "
+            "rank_addrs with the same id is different. leveId[%s],"
+            "rankAddrSize[%u]",
+            __func__, levelId.c_str(), rankAddrSize));
     }
     idRankSizeMap[levelId] = rankAddrSize;
 }
 
-void RankTableInfo::InsertToRank(const std::string &levelId, u32 rankAddrSize,
-                                 std::vector<std::unordered_map<std::string, u32>> &rankLists, u32 levelNum) const
+void RankTableInfo::InsertToRank(
+    const std::string& levelId, u32 rankAddrSize, std::vector<std::unordered_map<std::string, u32>>& rankLists,
+    u32 levelNum) const
 {
     if (rankLists.size() <= levelNum) {
         rankLists.resize(levelNum + 1);
@@ -180,8 +207,8 @@ void RankTableInfo::InsertToRank(const std::string &levelId, u32 rankAddrSize,
 
 std::string RankTableInfo::Describe() const
 {
-    return StringFormat("RankTableInfo[version=%s, rankCount=%u, ranks size=%d]", version.c_str(), rankCount,
-                        ranks.size());
+    return StringFormat(
+        "RankTableInfo[version=%s, rankCount=%u, ranks size=%d]", version.c_str(), rankCount, ranks.size());
 }
 
 void RankTableInfo::Dump() const
@@ -197,36 +224,38 @@ void RankTableInfo::Dump() const
     }
 }
 
-RankTableInfo::RankTableInfo(BinaryStream& binaryStream){
+RankTableInfo::RankTableInfo(BinaryStream& binaryStream)
+{
     binaryStream >> version >> rankCount;
     size_t ranksSize = 0;
     binaryStream >> ranksSize;
     HCCL_INFO("[%s] version[%s] rankCount[%u] ranks size[%u]", __func__, version.c_str(), rankCount, ranksSize);
-    for(u32 i = 0; i < ranksSize; i++){
+    for (u32 i = 0; i < ranksSize; i++) {
         NewRankInfo rankInfo(binaryStream);
         ranks.emplace_back(rankInfo);
     }
-    binaryStream>>detour;
+    binaryStream >> detour;
 }
 
-void RankTableInfo::GetBinStream(bool isContainLocId, BinaryStream& binaryStream) const{
-    if(ranks.size() == 0) {
+void RankTableInfo::GetBinStream(bool isContainLocId, BinaryStream& binaryStream) const
+{
+    if (ranks.size() == 0) {
         std::string msg = StringFormat("ranks size is zero.");
         THROW<InvalidParamsException>(msg);
     }
     HCCL_INFO("[%s] version[%s] rankCount[%u] ranks size[%u]", __func__, version.c_str(), rankCount, ranks.size());
 
-    binaryStream << version  << rankCount;
+    binaryStream << version << rankCount;
     binaryStream << ranks.size();
-    for(auto& it: ranks){
+    for (auto& it : ranks) {
         it.GetBinStream(isContainLocId, binaryStream);
     }
-    binaryStream<<detour;
+    binaryStream << detour;
 }
 
 vector<char> RankTableInfo::GetUniqueId(bool isContainLocId) const
 {
-    if(ranks.size() == 0) {
+    if (ranks.size() == 0) {
         std::string msg = StringFormat("ranks size is zero.");
         THROW<InvalidParamsException>(msg);
     }
@@ -237,35 +266,38 @@ vector<char> RankTableInfo::GetUniqueId(bool isContainLocId) const
 
     u32 ranksSize = ranks.size();
     binaryStream << ranksSize;
-    for(auto& it: ranks) {
+    for (auto& it : ranks) {
         it.GetBinStream(isContainLocId, binaryStream);
     }
 
     binaryStream.Dump(result);
-    return result; 
+    return result;
 }
 
-void RankTableInfo::UpdateRankTable(const RankTableInfo &localRankInfo)
+void RankTableInfo::UpdateRankTable(const RankTableInfo& localRankInfo)
 {
     // version
     if (detour) {
-        CHK_PRT_THROW(localRankInfo.detour != true,
-            HCCL_ERROR("[%s] detour cfg is not same with other ranks.", __func__),
-            InvalidParamsException, 
-            "updateRankTableInfo error");
+        CHK_PRT_THROW(
+            localRankInfo.detour != true, HCCL_ERROR("[%s] detour cfg is not same with other ranks.", __func__),
+            InvalidParamsException, "updateRankTableInfo error");
     }
-    detour = localRankInfo.detour; 
+    detour = localRankInfo.detour;
     if (rankCount == 0) {
         version = localRankInfo.version;
     } else {
-        CHK_PRT_THROW(version != localRankInfo.version, 
-            HCCL_ERROR("[%s] version[%s] error, local version[%s] .", __func__, version.c_str(), localRankInfo.version.c_str()), 
+        CHK_PRT_THROW(
+            version != localRankInfo.version,
+            HCCL_ERROR(
+                "[%s] version[%s] error, local version[%s] .", __func__, version.c_str(),
+                localRankInfo.version.c_str()),
             InvalidParamsException, "updateRankTableInfo error");
     }
 
     // ranks size
-    CHK_PRT_THROW(localRankInfo.ranks.size() == 0, HCCL_ERROR("[%s] ranks size is zero.", __func__), 
-            InvalidParamsException, "updateRankTableInfo error");
+    CHK_PRT_THROW(
+        localRankInfo.ranks.size() == 0, HCCL_ERROR("[%s] ranks size is zero.", __func__), InvalidParamsException,
+        "updateRankTableInfo error");
 
     ranks.insert(ranks.end(), localRankInfo.ranks.begin(), localRankInfo.ranks.end());
     rankCount++;
@@ -273,13 +305,13 @@ void RankTableInfo::UpdateRankTable(const RankTableInfo &localRankInfo)
     HCCL_INFO("[%s] success, current rankTableInfo[%s]", __func__, Describe().c_str());
 }
 
-std::unordered_map<u32, std::unordered_map<IpAddress, u32>> RankTableInfo::GetRankDeviceListenPortMap() 
+std::unordered_map<u32, std::unordered_map<IpAddress, u32>> RankTableInfo::GetRankDeviceListenPortMap()
 {
     std::unordered_map<u32, std::unordered_map<IpAddress, u32>> ranklListenPortMap;
-    for (auto &rankinfo : ranks) {
+    for (auto& rankinfo : ranks) {
         std::unordered_map<IpAddress, u32> listenPortMap;
-        for (auto &rankLevelInfo : rankinfo.rankLevelInfos) {
-            for (auto &rankAddr : rankLevelInfo.rankAddrs) {
+        for (auto& rankLevelInfo : rankinfo.rankLevelInfos) {
+            for (auto& rankAddr : rankLevelInfo.rankAddrs) {
                 listenPortMap.insert(std::make_pair(rankAddr.addr, rankAddr.socketPort_));
             }
         }

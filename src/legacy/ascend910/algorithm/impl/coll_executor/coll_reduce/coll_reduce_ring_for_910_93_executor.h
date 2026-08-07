@@ -13,31 +13,29 @@
 #include "coll_reduce_executor.h"
 namespace hccl {
 class CollReduceRingFor91093Executor : public CollReduceExecutor {
-
 public:
-    CollReduceRingFor91093Executor(const HcclDispatcher dispatcher,
-    std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollReduceRingFor91093Executor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceRingFor91093Executor() override = default;
 
 private:
     /* *************** 资源计算 *************** */
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType,
-        TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel1CommInfo(TransportMemType inputType,
-        TransportMemType outputType,
+    HcclResult CalcLevel1CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel2CommInfo(TransportMemType inputType,
-        TransportMemType outputType,
+    HcclResult CalcLevel2CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
     HcclResult CalcStreamNum(u32& streamNum) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
 
     /* *************** 算法编排 *************** */
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
     HcclResult Getlevel1CommRank(SubCommInfo& level1CommInfo) override;
-    HcclResult SelectTempAlg(std::unique_ptr<AlgTemplateBase> &level1TempAlg, u32 level1RankSize) override;
+    HcclResult SelectTempAlg(std::unique_ptr<AlgTemplateBase>& level1TempAlg, u32 level1RankSize) override;
     bool meshSinglePlane_ = false;
 };
 

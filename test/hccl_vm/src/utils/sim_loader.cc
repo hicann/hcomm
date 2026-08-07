@@ -49,21 +49,19 @@ HcclResult Loader::LoadOpTaskFile(const std::string dbPath)
 }
 
 // 返回内部已组装好的完整 Pipeline 缓存
-const OpPipeline& Loader::GetOpTasks() const
-{
-    return opTaskCache_;
-}
+const OpPipeline& Loader::GetOpTasks() const { return opTaskCache_; }
 
-// Runner: 每 sync 一次调用一次，只加载下一条 pending(status=0) 记录，根据业务传入的 syncIter，从 pending(status=0) 记录中查找并加载对应算子数据
-HcclResult Loader::LoadRunnerSingleSync(const uint32_t& outSyncIter, 
-                                         std::map<uint32_t, std::vector<sim::CompositeOpDetail>>& compositeDataMap)
+// Runner: 每 sync 一次调用一次，只加载下一条 pending(status=0) 记录，根据业务传入的 syncIter，从 pending(status=0)
+// 记录中查找并加载对应算子数据
+HcclResult Loader::LoadRunnerSingleSync(
+    const uint32_t& outSyncIter, std::map<uint32_t, std::vector<sim::CompositeOpDetail>>& compositeDataMap)
 {
-   if (sim::QueryCompositeOpDetailBySyncIter(outSyncIter, compositeDataMap) != 0) {
-       HCCL_VM_ERROR("QueryCompositeOpDetailBySyncIter failed for syncIter: {}", outSyncIter);
-       return HcclResult::HCCL_E_PARA;
-   }
-   HCCL_VM_INFO("syncIter={} loaded. Rank Count: {}", outSyncIter, compositeDataMap.size());
-   return HcclResult::HCCL_SUCCESS;
+    if (sim::QueryCompositeOpDetailBySyncIter(outSyncIter, compositeDataMap) != 0) {
+        HCCL_VM_ERROR("QueryCompositeOpDetailBySyncIter failed for syncIter: {}", outSyncIter);
+        return HcclResult::HCCL_E_PARA;
+    }
+    HCCL_VM_INFO("syncIter={} loaded. Rank Count: {}", outSyncIter, compositeDataMap.size());
+    return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult Loader::GetCcuChannelInfo(std::vector<sim::CcuChannelTab>& channels)
@@ -116,7 +114,8 @@ HcclResult Loader::GetSyncRecordsByStatus(uint8_t status, std::vector<sim::SyncR
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult Loader::LoadCompositeOpDetailBySyncIter(uint32_t syncIter, std::map<uint32_t, std::vector<sim::CompositeOpDetail>>& compositeDataMap)
+HcclResult Loader::LoadCompositeOpDetailBySyncIter(
+    uint32_t syncIter, std::map<uint32_t, std::vector<sim::CompositeOpDetail>>& compositeDataMap)
 {
     if (sim::QueryCompositeOpDetailBySyncIter(syncIter, compositeDataMap) != 0) {
         HCCL_VM_ERROR("QueryCompositeOpDetailsBySyncIter failed for syncIter: {}", syncIter);

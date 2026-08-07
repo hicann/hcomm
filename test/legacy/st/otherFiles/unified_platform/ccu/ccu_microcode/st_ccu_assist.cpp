@@ -23,20 +23,11 @@ using namespace CcuRep;
 
 class CcuAssistTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "CcuAssistTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "CcuAssistTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "CcuAssistTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "CcuAssistTest tests tear down." << std::endl; }
 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in CcuAssistTest SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in CcuAssistTest SetUP" << std::endl; }
 
     virtual void TearDown()
     {

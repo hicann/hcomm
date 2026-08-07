@@ -23,22 +23,24 @@ public:
     ~AllGatherRingConcurrentDirect() override;
 
     // should be called soon after template AllGatherMeshDirect instance created
-    HcclResult Prepare(HcomCollOpInfo *opInfo, const u32 userRank, std::vector<Stream> &subStreams, 
-        const std::vector<std::shared_ptr<LocalNotify>> &mainSignals, 
-        const std::vector<std::shared_ptr<LocalNotify>> &subSignals, const std::vector<u32> &ringsOrder, 
-        const std::vector<Slice> &userMemSlices, bool isSdma = true) override;
+    HcclResult Prepare(
+        HcomCollOpInfo* opInfo, const u32 userRank, std::vector<Stream>& subStreams,
+        const std::vector<std::shared_ptr<LocalNotify>>& mainSignals,
+        const std::vector<std::shared_ptr<LocalNotify>>& subSignals, const std::vector<u32>& ringsOrder,
+        const std::vector<Slice>& userMemSlices, bool isSdma = true) override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
 protected:
 private:
-    HcclResult CheckParameters(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
+    HcclResult CheckParameters(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
     HcclResult OneRankMemcpy();
-    HcclResult GetInitializedNeighborLinks(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
+    HcclResult GetInitializedNeighborLinks(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
     HcclResult SetSlices(const u32 rank, const u32 rankSize);
     HcclResult RunInitStep(const u32 rank, const u32 rankSize);
-    HcclResult RunSubStreamSlice(const u32 step, const u32 sliceIdx, const std::vector<Slice> &txSliceVector,
-                                 const std::vector<Slice> &subSliceVector);
+    HcclResult RunSubStreamSlice(
+        const u32 step, const u32 sliceIdx, const std::vector<Slice>& txSliceVector,
+        const std::vector<Slice>& subSliceVector);
     HcclResult RunAllGather(u32 rank, u32 rankSize);
     HcclResult MainRecordSub();
     HcclResult SubWaitMain();
@@ -48,15 +50,15 @@ private:
     LINK leftLink_;
     LINK rightLink_;
 
-    HcomCollOpInfo                     *opInfo_{nullptr};
-    u32                                 userRank_;
-    std::vector<Stream>                       subStreams_;
+    HcomCollOpInfo* opInfo_{nullptr};
+    u32 userRank_;
+    std::vector<Stream> subStreams_;
     std::vector<std::shared_ptr<LocalNotify>> mainSignals_;
     std::vector<std::shared_ptr<LocalNotify>> subSignals_;
-    std::vector<u32>                    ringsOrder_;
-    std::vector<Slice>                  userMemOutputSlices_;
-    std::vector<Slice>                        inputSlices_; // 需要吗？
-    bool                                      isSdma_;
+    std::vector<u32> ringsOrder_;
+    std::vector<Slice> userMemOutputSlices_;
+    std::vector<Slice> inputSlices_; // 需要吗？
+    bool isSdma_;
 };
 } // namespace hccl
 

@@ -57,16 +57,13 @@ enum class ErrorCode {
     SETTING_WARNING = 902
 };
 
-constexpr uint32_t ToErrorCodeValue(ErrorCode code)
-{
-    return static_cast<uint32_t>(code);
-}
+constexpr uint32_t ToErrorCodeValue(ErrorCode code) { return static_cast<uint32_t>(code); }
 
 inline std::string MakeErrorCodeText(ErrorCode code)
 {
     return "[ErrorCode: " + std::to_string(ToErrorCodeValue(code)) + "]";
 }
 
-}  // namespace HcclSim
+} // namespace HcclSim
 
 #endif

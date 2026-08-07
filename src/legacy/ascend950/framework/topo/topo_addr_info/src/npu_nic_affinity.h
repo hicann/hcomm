@@ -28,7 +28,7 @@ extern "C" {
  * @param ipLen  缓冲区大小
  * @return HCCL_SUCCESS=成功, 其他=错误码
  */
-TopoAddrResult GetRoceIpFromXml(int npuId, char *ip, size_t ipLen);
+TopoAddrResult GetRoceIpFromXml(int npuId, char* ip, size_t ipLen);
 
 #ifdef __cplusplus
 }

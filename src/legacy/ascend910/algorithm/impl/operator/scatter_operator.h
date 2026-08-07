@@ -18,13 +18,15 @@ namespace hccl {
 
 class ScatterOperator : public CollAlgOperator {
 public:
-    ScatterOperator(AlgConfigurator* algConfigurator, CCLBufferManager &cclBufferManager,
-        HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    ScatterOperator(
+        AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager, HcclDispatcher dispatcher,
+        std::unique_ptr<TopoMatcher>& topoMatcher);
     ~ScatterOperator() override;
-    HcclResult SelectAlg(const std::string& tag, const OpParam& param, std::string& algName,
-        std::string& newTag) override;
+    HcclResult
+    SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag) override;
+
 private:
 };
-}
+} // namespace hccl
 
 #endif /** __SCATTER_OPERATOR_H__ */

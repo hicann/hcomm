@@ -17,51 +17,56 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepSub : public CcuRepBase {
-public:
-    explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB);
-    explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, uint16_t immedB);
-    explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Variable &varA, const Variable &varB);
-    explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Variable &varA, uint16_t immedB);
+    class CcuRepSub : public CcuRepBase {
+    public:
+        explicit CcuRepSub(
+            CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varA, const Variable& varB);
+        explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varA, uint16_t immedB);
+        explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Variable& varA, const Variable& varB);
+        explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Variable& varA, uint16_t immedB);
 
-    explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Address &addrA, const Variable &varB);
-    explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Address &addrA, const uint16_t immedB);
-    explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Address &addrA, const Variable &varB);
-    explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Address &addrA, const uint16_t immedB);
+        explicit CcuRepSub(
+            CcuInsGeneratorBase* insGenPtr, const Address& addrC, const Address& addrA, const Variable& varB);
+        explicit CcuRepSub(
+            CcuInsGeneratorBase* insGenPtr, const Address& addrC, const Address& addrA, const uint16_t immedB);
+        explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Address& addrA, const Variable& varB);
+        explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Address& addrA, const uint16_t immedB);
 
-    explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Variable &varA, const uint16_t immedB);
-    explicit CcuRepSub(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Address &addrA, const uint16_t immedB);
+        explicit CcuRepSub(
+            CcuInsGeneratorBase* insGenPtr, const Address& addrC, const Variable& varA, const uint16_t immedB);
+        explicit CcuRepSub(
+            CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Address& addrA, const uint16_t immedB);
 
-    bool     Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string   Describe() override;
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-    Address     GetAddrA();
-    Address     GetAddrB();
-    Address     GetAddrC();
-    Variable    GetVarA();
-    Variable    GetVarB();
-    Variable    GetVarC();
-    uint16_t    GetImmedB();
-    MinusSubType  GetSubType();
+        Address GetAddrA();
+        Address GetAddrB();
+        Address GetAddrC();
+        Variable GetVarA();
+        Variable GetVarB();
+        Variable GetVarC();
+        uint16_t GetImmedB();
+        MinusSubType GetSubType();
 
-private:
-    CcuInsGeneratorBase* insGenPtr{nullptr};
-    MinusSubType subType{MinusSubType::INVALID};
+    private:
+        CcuInsGeneratorBase* insGenPtr{nullptr};
+        MinusSubType subType{MinusSubType::INVALID};
 
-    Variable varA;
-    Variable varB;
-    Variable varC;
+        Variable varA;
+        Variable varB;
+        Variable varC;
 
-    Address addrA;
-    Address addrB;
-    Address addrC;
+        Address addrA;
+        Address addrB;
+        Address addrC;
 
-    uint16_t immedB{0};
+        uint16_t immedB{0};
 
-    void SetCommonInfo();
-    void ValidateInsGenPtrForSub();
-    bool supportCcuV1{false};
-};
+        void SetCommonInfo();
+        void ValidateInsGenPtrForSub();
+        bool supportCcuV1{false};
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

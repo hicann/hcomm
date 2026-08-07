@@ -17,28 +17,29 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepXor : public CcuRepBase {
-public:
-    explicit CcuRepXor(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB);
-    explicit CcuRepXor(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varB);
-    bool Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, const TransDep &dep) override;
-    
-    Variable GetVarA() { return varA; }
-    Variable GetVarB() { return varB; }
-    Variable GetVarC() { return varC; }
-    XorSubType GetSubType() { return subType; }
+    class CcuRepXor : public CcuRepBase {
+    public:
+        explicit CcuRepXor(
+            CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varA, const Variable& varB);
+        explicit CcuRepXor(CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varB);
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, const TransDep& dep) override;
 
-    std::string Describe() override;
+        Variable GetVarA() { return varA; }
+        Variable GetVarB() { return varB; }
+        Variable GetVarC() { return varC; }
+        XorSubType GetSubType() { return subType; }
 
-private:
-    XorSubType subType{XorSubType::INVALID};
+        std::string Describe() override;
 
-    Variable varA;
-    Variable varB;
-    Variable varC;
+    private:
+        XorSubType subType{XorSubType::INVALID};
 
-    CcuInsGeneratorBase* insGenPtr{nullptr};
-};
+        Variable varA;
+        Variable varB;
+        Variable varC;
+
+        CcuInsGeneratorBase* insGenPtr{nullptr};
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

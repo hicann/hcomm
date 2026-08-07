@@ -15,8 +15,8 @@
 namespace hccl {
 class CollReduceScatterDeterPipelineExecutor : public CollReduceScatterExecutor {
 public:
-    explicit CollReduceScatterDeterPipelineExecutor(const HcclDispatcher dispatcher,
-        std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollReduceScatterDeterPipelineExecutor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceScatterDeterPipelineExecutor() override = default;
 
 private:
@@ -25,20 +25,23 @@ private:
     HcclResult CalcScratchMemSize(u64& scratchMemSize) override;
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel1CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel1CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
 
     /* *************** 算法编排 *************** */
     u64 CalcLoopMaxCount(const u32 unitSize) override;
-    HcclResult RunLoop(OpParam &param, AlgResourceResponse &algRes) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult RunLoop(OpParam& param, AlgResourceResponse& algRes) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 
     /* **************** 数据准备*************** */
-    HcclResult PrepareDataSlice(const OpParam &param, const ExecMem &execMem, const SubCommInfo &level0CommInfo,
-        const SubCommInfo &level1CommInfo, std::vector<Slice> &bufferSlices);
+    HcclResult PrepareDataSlice(
+        const OpParam& param, const ExecMem& execMem, const SubCommInfo& level0CommInfo,
+        const SubCommInfo& level1CommInfo, std::vector<Slice>& bufferSlices);
 
     u64 curOffset_ = 0;
 };

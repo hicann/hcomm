@@ -25,14 +25,16 @@ void DeviceInfoRecorder::Reset()
     return;
 }
 
-void DeviceInfoRecorder::InitDeviceInfo(TopoMeta topoMeta, RankTable_t &rankTable, CheckerDevType uniDevType)
+void DeviceInfoRecorder::InitDeviceInfo(TopoMeta topoMeta, RankTable_t& rankTable, CheckerDevType uniDevType)
 {
     u32 myRankId = 0;
     for (int i = 0; i < topoMeta.size(); i++) {
         for (int j = 0; j < topoMeta[i].size(); j++) {
             for (int k = 0; k < topoMeta[i][j].size(); k++) {
-                if (g_HcclDevType2CheckerDevType[rankTable.rankList[myRankId].deviceInfo.deviceType] != CheckerDevType::DEV_TYPE_NOSOC) {
-                    rankId2devType[myRankId] = g_HcclDevType2CheckerDevType[rankTable.rankList[myRankId].deviceInfo.deviceType];
+                if (g_HcclDevType2CheckerDevType[rankTable.rankList[myRankId].deviceInfo.deviceType]
+                    != CheckerDevType::DEV_TYPE_NOSOC) {
+                    rankId2devType[myRankId]
+                        = g_HcclDevType2CheckerDevType[rankTable.rankList[myRankId].deviceInfo.deviceType];
                 } else {
                     rankId2devType[myRankId] = uniDevType;
                 }
@@ -44,4 +46,4 @@ void DeviceInfoRecorder::InitDeviceInfo(TopoMeta topoMeta, RankTable_t &rankTabl
     }
 }
 
-}
+} // namespace hccl

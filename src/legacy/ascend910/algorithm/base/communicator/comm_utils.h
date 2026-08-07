@@ -17,22 +17,22 @@ namespace hccl {
 constexpr u32 HCCL_RANK_SIZE_EQ_ONE = 1;
 
 enum CommPlane {
-    COMM_LEVEL0 = 0,    // 一级通信域(server内)
-    COMM_LEVEL0_ANYPATH_RDMA,  // anypath特性使用
-    COMM_LEVEL1,        // 二级通信域(server间)
+    COMM_LEVEL0 = 0,          // 一级通信域(server内)
+    COMM_LEVEL0_ANYPATH_RDMA, // anypath特性使用
+    COMM_LEVEL1,              // 二级通信域(server间)
     COMM_LEVEL1_ANYPATH_RDMA, // anypath特性使用
-    COMM_LEVEL1_AHC,    // AHC 二级通信域(server间)
-    COMM_LEVEL2,        // 三级通信域(超节点间)
-    COMM_MESH_L0,       // mesh内
-    COMM_MESH_L1,       // mesh间
-    COMM_COMBINE,       // 打平通信域，大ring环
-    COMM_COMBINE_ORDER, // 打平通信域，按rank排序
-    COMM_LEVEL0_ANYPATH_SDMA,  // anypath特性使用
+    COMM_LEVEL1_AHC,          // AHC 二级通信域(server间)
+    COMM_LEVEL2,              // 三级通信域(超节点间)
+    COMM_MESH_L0,             // mesh内
+    COMM_MESH_L1,             // mesh间
+    COMM_COMBINE,             // 打平通信域，大ring环
+    COMM_COMBINE_ORDER,       // 打平通信域，按rank排序
+    COMM_LEVEL0_ANYPATH_SDMA, // anypath特性使用
     COMM_LEVEL1_ANYPATH_SDMA, // anypath特性使用
-    COMM_LEVEL0_LOGICAL, //环内
-    COMM_LEVEL1_LOGICAL, //环间
-    COMM_ARS, //超节点内给ARS使用
-    COMM_COMBINE_L1,    //超节点打平通信域
+    COMM_LEVEL0_LOGICAL,      // 环内
+    COMM_LEVEL1_LOGICAL,      // 环间
+    COMM_ARS,                 // 超节点内给ARS使用
+    COMM_COMBINE_L1,          // 超节点打平通信域
     COMM_LEVEL_RESERVED,
 };
 
@@ -71,14 +71,19 @@ struct CommParaInfo {
     bool forceRdma = false;
 
     CommParaInfo() {}
-    CommParaInfo (CommPlane commPlane, CommType commType, u32 root = INVALID_VALUE_RANKID,
+    CommParaInfo(
+        CommPlane commPlane, CommType commType, u32 root = INVALID_VALUE_RANKID,
         u32 peerUserRank = INVALID_VALUE_RANKID, bool isAicpuModeEn = false, bool meshSinglePlane = false,
         std::set<u32> batchSendRecvtargetRanks = std::set<u32>(), bool forceRdma = false)
-        : commPlane(commPlane), commType(commType), root(root), peerUserRank(peerUserRank),
-        isAicpuModeEn(isAicpuModeEn), meshSinglePlane(meshSinglePlane),
-        batchSendRecvtargetRanks(batchSendRecvtargetRanks), forceRdma(forceRdma)
-    {
-    }
+        : commPlane(commPlane),
+          commType(commType),
+          root(root),
+          peerUserRank(peerUserRank),
+          isAicpuModeEn(isAicpuModeEn),
+          meshSinglePlane(meshSinglePlane),
+          batchSendRecvtargetRanks(batchSendRecvtargetRanks),
+          forceRdma(forceRdma)
+    {}
 };
-}
+} // namespace hccl
 #endif

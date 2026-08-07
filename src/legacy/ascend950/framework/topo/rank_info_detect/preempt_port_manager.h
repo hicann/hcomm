@@ -26,9 +26,8 @@
 
 namespace Hccl {
 
-struct EnumClassHash
-{
-    template<typename T>
+struct EnumClassHash {
+    template <typename T>
     std::size_t operator()(T t) const
     {
         return static_cast<std::size_t>(t);
@@ -45,29 +44,29 @@ public:
     static PreemptPortManager& GetInstance(s32 deviceLogicId);
 
     // 尝试在给定范围内抢占一个端口
-    void ListenPreempt(const std::shared_ptr<Socket> &listenSocket,
-        const std::vector<SocketPortRange> &portRange, u32 &usePort);
+    void ListenPreempt(
+        const std::shared_ptr<Socket>& listenSocket, const std::vector<SocketPortRange>& portRange, u32& usePort);
     // 释放一个已抢占的端口
-    void Release(const std::shared_ptr<Socket> &listenSocket);
+    void Release(const std::shared_ptr<Socket>& listenSocket);
 
 private:
     explicit PreemptPortManager();
 
-    void PreemptPortInRange(const std::shared_ptr<Socket> &listenSocket, HrtNetworkMode netMode, 
-        const std::vector<SocketPortRange> &portRange, u32 &usePort);
-    void ReleasePreempt(IpPortRef& portRef, const std::shared_ptr<Socket> &listenSocket,
-        HrtNetworkMode netMode);
+    void PreemptPortInRange(
+        const std::shared_ptr<Socket>& listenSocket, HrtNetworkMode netMode,
+        const std::vector<SocketPortRange>& portRange, u32& usePort);
+    void ReleasePreempt(IpPortRef& portRef, const std::shared_ptr<Socket>& listenSocket, HrtNetworkMode netMode);
 
-    bool IsAlreadyListening(const IpPortRef& ipPortRef, const std::string &ipAddr, const u32 port);
-    std::string GetRangeStr(const std::vector<SocketPortRange> &portRangeVec);
+    bool IsAlreadyListening(const IpPortRef& ipPortRef, const std::string& ipAddr, const u32 port);
+    std::string GetRangeStr(const std::vector<SocketPortRange>& portRangeVec);
 
     static bool initialized;
-    s32         deviceLogicId_;
-    u32         devicePhyId_;
-    std::mutex  preemptMutex_;
+    s32 deviceLogicId_;
+    u32 devicePhyId_;
+    std::mutex preemptMutex_;
 
     // 不同类型网卡上抢占的Socket
     std::unordered_map<HrtNetworkMode, IpPortRef, EnumClassHash> preemptSockets_;
 };
-}
-#endif  // HCCL_PREEMPT_SOCKET_MANAGER_H
+} // namespace Hccl
+#endif // HCCL_PREEMPT_SOCKET_MANAGER_H

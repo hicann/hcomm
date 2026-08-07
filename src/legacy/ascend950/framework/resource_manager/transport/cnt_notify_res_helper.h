@@ -19,9 +19,9 @@ namespace Hccl {
 class CntNotifyResHelper {
 public:
     BaseMemTransport::LocCntNotifyRes
-    GetCntNotifyRes(const unordered_map<u32, vector<LocalCntNotify *>> &topicIdCntNotifyVecMap) const;
+    GetCntNotifyRes(const unordered_map<u32, vector<LocalCntNotify*>>& topicIdCntNotifyVecMap) const;
 
-    u32 GetIndex(vector<char> &desc, u32 topicId, u32 pos) const;
+    u32 GetIndex(vector<char>& desc, u32 topicId, u32 pos) const;
 };
 } // namespace Hccl
 

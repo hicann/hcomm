@@ -21,13 +21,16 @@
 
 namespace HcclSim {
 TaskStubCcuGraph::TaskStubCcuGraph(
-    hcomm::CcuRep::CcuInstrInfo &missionInstrs, const std::vector<HcclSim::CcuTaskParam> &ccuParam, RankId rank)
-    : TaskStub(TaskTypeStub::CCU_GRAPH), rankId(rank)
+    hcomm::CcuRep::CcuInstrInfo& missionInstrs, const std::vector<HcclSim::CcuTaskParam>& ccuParam, RankId rank)
+    : TaskStub(TaskTypeStub::CCU_GRAPH),
+      rankId(rank)
 {
     instrInfo.clear();
     missionInstrs.missionStartInstrId = ccuParam[0].instStartId;
     instrInfo.push_back(missionInstrs);
-    des = StringFormat("[CcuGraph] : [rank=%u, die=%u, mission=%u]", rankId, static_cast<uint32_t>(ccuParam[0].dieId), ccuParam[0].missionId);
+    des = StringFormat(
+        "[CcuGraph] : [rank=%u, die=%u, mission=%u]", rankId, static_cast<uint32_t>(ccuParam[0].dieId),
+        ccuParam[0].missionId);
     if (instrInfo.size() == 0) {
         HCCL_VM_WARN("Get no microcode instructions...");
     }
@@ -56,9 +59,13 @@ TaskStubCcuGraph::~TaskStubCcuGraph()
     }
 }
 
-// [注意!!!]拷贝构造函数: 用于后面ccu子图的内存冲突改造(仅保留了内存冲突改造所需要的成员变量, 如果用作它途,可能成员变量须补充)
-TaskStubCcuGraph::TaskStubCcuGraph(const TaskStubCcuGraph *ccuTask)
-    : TaskStub(TaskTypeStub::CCU_GRAPH), rankId(ccuTask->rankId), des(ccuTask->des), queueNum_(ccuTask->queueNum_)
+// [注意!!!]拷贝构造函数: 用于后面ccu子图的内存冲突改造(仅保留了内存冲突改造所需要的成员变量,
+// 如果用作它途,可能成员变量须补充)
+TaskStubCcuGraph::TaskStubCcuGraph(const TaskStubCcuGraph* ccuTask)
+    : TaskStub(TaskTypeStub::CCU_GRAPH),
+      rankId(ccuTask->rankId),
+      des(ccuTask->des),
+      queueNum_(ccuTask->queueNum_)
 {
     SetTaskId(ccuTask->GetTaskId());
     ccuHeadTaskNode = new TaskNode(nullptr, -1, 0, 0);
@@ -86,10 +93,7 @@ void TaskStubCcuGraph::GetDieId(uint32_t queId, uint32_t& dieId)
     return;
 }
 
-RankId TaskStubCcuGraph::GetRankId()
-{
-    return rankId;
-}
+RankId TaskStubCcuGraph::GetRankId() { return rankId; }
 
 std::string TaskStubCcuGraph::Describe() const
 {
@@ -108,7 +112,7 @@ bool TaskStubCcuGraph::IsSameCcuGraph(uint32_t startId)
 {
     auto sqeSize = ccuParams[0].size();
     auto lastInstrId = ccuParams[0][sqeSize - 1].instStartId + ccuParams[0][sqeSize - 1].instCnt;
-    return ccuParams[0][sqeSize - 1].instCnt == 13  && startId == lastInstrId;
+    return ccuParams[0][sqeSize - 1].instCnt == 13 && startId == lastInstrId;
 }
 
 uint32_t TaskStubCcuGraph::GetMissionEndInstrId(uint32_t queId)
@@ -117,28 +121,27 @@ uint32_t TaskStubCcuGraph::GetMissionEndInstrId(uint32_t queId)
     return ccuParams[queId][sqeSize - 1].instStartId + ccuParams[queId][sqeSize - 1].instCnt;
 }
 
-TaskStubSubGraphEnd::TaskStubSubGraphEnd(TaskNodePtr node)
-    : TaskStub(TaskTypeStub::SUB_GRAPH_END), subGraphNode(node)
-{ }
+TaskStubSubGraphEnd::TaskStubSubGraphEnd(TaskNodePtr node) : TaskStub(TaskTypeStub::SUB_GRAPH_END), subGraphNode(node)
+{}
 
 std::string TaskStubSubGraphEnd::Describe() const
 {
     return StringFormat("end node of sub graph: %s", subGraphNode->task->Describe().c_str());
 }
 
-TaskNode* UpdateNodeForCcuGraph(TaskNode *node, std::set<TaskNode *>& simulatedNodes)
+TaskNode* UpdateNodeForCcuGraph(TaskNode* node, std::set<TaskNode*>& simulatedNodes)
 {
     TaskNode* retNode = node;
     if (node->task != nullptr && node->task->GetType() == TaskTypeStub::CCU_GRAPH) {
         // 首次进入子图
-        TaskStubCcuGraph *curCcuTask = dynamic_cast<TaskStubCcuGraph *>(node->task);
+        TaskStubCcuGraph* curCcuTask = dynamic_cast<TaskStubCcuGraph*>(node->task);
         retNode = curCcuTask->ccuHeadTaskNode;
         simulatedNodes.insert(retNode);
     } else if (node->task != nullptr && node->task->GetType() == TaskTypeStub::SUB_GRAPH_END) {
         // 走到子图的最后一个子节点了，就回到整图
-        TaskStubSubGraphEnd *subGraphEnd = dynamic_cast<TaskStubSubGraphEnd *>(node->task);
+        TaskStubSubGraphEnd* subGraphEnd = dynamic_cast<TaskStubSubGraphEnd*>(node->task);
         retNode = subGraphEnd->subGraphNode;
     }
     return retNode;
 }
-} // namespace hccl
+} // namespace HcclSim

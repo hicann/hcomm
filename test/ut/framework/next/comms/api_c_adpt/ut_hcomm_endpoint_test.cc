@@ -12,12 +12,8 @@
 
 class TestHcommEndpoint : public TestHcommCAdptBase {
 public:
-    void SetUp() override {
-        TestHcommCAdptBase::SetUp();
-    }
-    void TearDown() override {
-        TestHcommCAdptBase::TearDown();
-    }
+    void SetUp() override { TestHcommCAdptBase::SetUp(); }
+    void TearDown() override { TestHcommCAdptBase::TearDown(); }
 };
 
 TEST_F(TestHcommEndpoint, Ut_TestHcommEndpointCreate_When_EndpointNullptr_Return_HCCL_E_PTR)

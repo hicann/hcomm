@@ -26,9 +26,9 @@ namespace {
 
 class UbTimeoutEnvGuard {
 public:
-    explicit UbTimeoutEnvGuard(const char *value)
+    explicit UbTimeoutEnvGuard(const char* value)
     {
-        const char *saved = std::getenv("HCCL_UB_TIMEOUT");
+        const char* saved = std::getenv("HCCL_UB_TIMEOUT");
         if (saved != nullptr) {
             savedValue_ = saved;
             hadValue_ = true;
@@ -66,18 +66,18 @@ void MockDeviceTpAttrAsyncSupport()
     MOCKER(HrtRaSetTpAttrAsync).stubs().will(returnValue(HCCL_SUCCESS));
 }
 
-RequestHandle StubRaUbGetTpInfoAsyncEight(const RdmaHandle, const RaUbGetTpInfoParam &, vector<char_t> &out,
-    uint32_t &num)
+RequestHandle
+StubRaUbGetTpInfoAsyncEight(const RdmaHandle, const RaUbGetTpInfoParam&, vector<char_t>& out, uint32_t& num)
 {
     num = 1U;
     out.resize(static_cast<size_t>(num) * sizeof(HccpTpInfo));
-    auto *list = reinterpret_cast<HccpTpInfo *>(out.data());
+    auto* list = reinterpret_cast<HccpTpInfo*>(out.data());
     list[0].tpHandle = 0x300ULL;
     return static_cast<RequestHandle>(0x12345678ULL);
 }
 
-int StubRaGetTpAttrAsyncUboeSl789Legacy(void *ctxHandle, uint64_t tpHandle, uint32_t *attrBitmap, struct TpAttr *attr,
-    void **reqHandle)
+int StubRaGetTpAttrAsyncUboeSl789Legacy(
+    void* ctxHandle, uint64_t tpHandle, uint32_t* attrBitmap, struct TpAttr* attr, void** reqHandle)
 {
     static char kLegacyUboeAttrReq{};
     (void)ctxHandle;
@@ -95,14 +95,14 @@ int StubRaGetTpAttrAsyncUboeSl789Legacy(void *ctxHandle, uint64_t tpHandle, uint
     return 0;
 }
 
-int StubRaGetHccnCfgDscpLegacy(struct RaInfo *info, enum HccnCfgKey key, char *value, unsigned int *valueLen)
+int StubRaGetHccnCfgDscpLegacy(struct RaInfo* info, enum HccnCfgKey key, char* value, unsigned int* valueLen)
 {
     (void)info;
     (void)key;
     if (value == nullptr || valueLen == nullptr) {
         return -1;
     }
-    const char *cfg = "0,10,1,20,2,30";
+    const char* cfg = "0,10,1,20,2,30";
     const unsigned int len = static_cast<unsigned int>(strlen(cfg));
     if (*valueLen < len) {
         return -1;
@@ -112,19 +112,18 @@ int StubRaGetHccnCfgDscpLegacy(struct RaInfo *info, enum HccnCfgKey key, char *v
     return 0;
 }
 
-RequestHandle StubRaUbGetTpInfoAsyncTwo(const RdmaHandle, const RaUbGetTpInfoParam &, vector<char_t> &out,
-    uint32_t &num)
+RequestHandle StubRaUbGetTpInfoAsyncTwo(const RdmaHandle, const RaUbGetTpInfoParam&, vector<char_t>& out, uint32_t& num)
 {
     num = 2U;
     out.resize(static_cast<size_t>(num) * sizeof(HccpTpInfo));
-    auto *list = reinterpret_cast<HccpTpInfo *>(out.data());
+    auto* list = reinterpret_cast<HccpTpInfo*>(out.data());
     list[0].tpHandle = 0x500ULL;
     list[1].tpHandle = 0x501ULL;
     return static_cast<RequestHandle>(0x12345679ULL);
 }
 
-int StubRaGetTpAttrAsyncSl01Legacy(void *ctxHandle, uint64_t tpHandle, uint32_t *attrBitmap, struct TpAttr *attr,
-    void **reqHandle)
+int StubRaGetTpAttrAsyncSl01Legacy(
+    void* ctxHandle, uint64_t tpHandle, uint32_t* attrBitmap, struct TpAttr* attr, void** reqHandle)
 {
     static char kLegacySl01Req{};
     (void)ctxHandle;
@@ -145,20 +144,14 @@ int StubRaGetTpAttrAsyncSl01Legacy(void *ctxHandle, uint64_t tpHandle, uint32_t 
 
 class TpManagerTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "TpManagerTest SetUP" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "TpManagerTest SetUP" << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "TpManagerTest TearDown" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "TpManagerTest TearDown" << std::endl; }
 
     virtual void SetUp()
     {
         MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<DevId>(0)));
-        void *rdmaHandle = (void*)0x200;
+        void* rdmaHandle = (void*)0x200;
         MOCKER(HrtRaUbCtxInit).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(rdmaHandle));
         MOCKER(RaGetInterfaceVersion).defaults().will(returnValue(static_cast<s32>(-1)));
         TpManager::GetInstance(0).Init();
@@ -229,7 +222,8 @@ TEST_F(TpManagerTest, tp_manager_get_infos_not_found)
 {
     uint32_t errNum = 0;
     RequestHandle reqHandle = 0x12345678;
-    MOCKER(RaUbGetTpInfoAsync).stubs()
+    MOCKER(RaUbGetTpInfoAsync)
+        .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(errNum))
         .will(returnValue(reqHandle));
     HcclResult result;
@@ -248,10 +242,11 @@ TEST_F(TpManagerTest, tp_manager_get_infos_not_found)
 }
 
 TEST_F(TpManagerTest, tp_manager_redo_get_infos_not_found)
-{   // 新版本查询失败后，下一次调用还会尝试寻找tp资源，不会直接按记录报错
+{ // 新版本查询失败后，下一次调用还会尝试寻找tp资源，不会直接按记录报错
     uint32_t errNum = 0;
     RequestHandle reqHandle = 0x12345678;
-    MOCKER(RaUbGetTpInfoAsync).stubs()
+    MOCKER(RaUbGetTpInfoAsync)
+        .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(errNum))
         .will(returnValue(reqHandle));
     HcclResult result;

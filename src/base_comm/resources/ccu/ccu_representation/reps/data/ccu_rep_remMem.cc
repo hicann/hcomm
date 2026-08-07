@@ -21,29 +21,31 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepRemMem::CcuRepRemMem(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, RemoteAddr rem)
-    : insGenPtr(insGenPtr), channel(channel), rem(rem) 
-{
-    type = CcuRepType::REM_MEM;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
+    CcuRepRemMem::CcuRepRemMem(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, RemoteAddr rem)
+        : insGenPtr(insGenPtr),
+          channel(channel),
+          rem(rem)
+    {
+        type = CcuRepType::REM_MEM;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
 
-bool CcuRepRemMem::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool CcuRepRemMem::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    instrCount = insGenPtr->GetInstrCount(type);
-    insGenPtr->CcuRepRemMemTranslate(ccuKernel, instr, this);
-    instrId += instrCount;
+        instrCount = insGenPtr->GetInstrCount(type);
+        insGenPtr->CcuRepRemMemTranslate(ccuKernel, instr, this);
+        instrId += instrCount;
 
-    return translated;
-}
+        return translated;
+    }
 
-std::string CcuRepRemMem::Describe()
-{
-    return Hccl::StringFormat("Get Remote Buffer Addr and TokenInfo By Transport");
-}
+    std::string CcuRepRemMem::Describe()
+    {
+        return Hccl::StringFormat("Get Remote Buffer Addr and TokenInfo By Transport");
+    }
 
 }; // namespace CcuRep
 }; // namespace hcomm

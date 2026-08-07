@@ -14,22 +14,21 @@
 
 namespace hccl {
 class CollReduceScatterFor310PRingExecutor : public CollReduceScatterExecutor {
-
 public:
-    explicit CollReduceScatterFor310PRingExecutor(const HcclDispatcher dispatcher,
-    std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollReduceScatterFor310PRingExecutor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceScatterFor310PRingExecutor() override = default;
 
 private:
     /* *************** 资源计算 *************** */
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType,
-        TransportMemType outputType,
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
 
     /* *************** 算法编排 *************** */
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 };
 } // namespace hccl
 

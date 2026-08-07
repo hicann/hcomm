@@ -27,22 +27,22 @@ namespace Hccl {
 class ResMgrFetcher {
 public:
     virtual ~ResMgrFetcher() = default;
-    virtual HostDeviceSyncNotifyLiteMgr *GetHostDeviceSyncNotifyLiteMgr() = 0;
-    virtual StreamLiteMgr               *GetStreamLiteMgr()               = 0;
-    virtual QueueNotifyLiteMgr          *GetQueueNotifyLiteMgr()          = 0;
-    virtual Cnt1tonNotifyLiteMgr        *GetCnt1tonNotifyLiteMgr()        = 0;
-    virtual CntNto1NotifyLiteMgr        *GetCntNto1NotifyLiteMgr()        = 0;
-    virtual ConnectedLinkMgr            *GetConnectedLinkMgr()            = 0;
-    virtual DevId                        GetDevPhyId()                    = 0;
-    virtual u64                          GetLocAddr(BufferType type)      = 0;
-    virtual u32                          GetExecTimeOut()                 = 0;
+    virtual HostDeviceSyncNotifyLiteMgr* GetHostDeviceSyncNotifyLiteMgr() = 0;
+    virtual StreamLiteMgr* GetStreamLiteMgr() = 0;
+    virtual QueueNotifyLiteMgr* GetQueueNotifyLiteMgr() = 0;
+    virtual Cnt1tonNotifyLiteMgr* GetCnt1tonNotifyLiteMgr() = 0;
+    virtual CntNto1NotifyLiteMgr* GetCntNto1NotifyLiteMgr() = 0;
+    virtual ConnectedLinkMgr* GetConnectedLinkMgr() = 0;
+    virtual DevId GetDevPhyId() = 0;
+    virtual u64 GetLocAddr(BufferType type) = 0;
+    virtual u32 GetExecTimeOut() = 0;
 
-    virtual CollOperator   GetCurrentOp()                    = 0;
-    virtual RmaBufferLite *GetRmaBufferLite(BufferType type) = 0;
-    virtual u64            GetCounterAddr()                  = 0;
+    virtual CollOperator GetCurrentOp() = 0;
+    virtual RmaBufferLite* GetRmaBufferLite(BufferType type) = 0;
+    virtual u64 GetCounterAddr() = 0;
 
-    virtual MemTransportLiteMgr *GetTransportLiteMgr() = 0;
-    virtual MirrorTaskManagerLite   *GetMirrorTaskMgrLite()    = 0;
+    virtual MemTransportLiteMgr* GetTransportLiteMgr() = 0;
+    virtual MirrorTaskManagerLite* GetMirrorTaskMgrLite() = 0;
 };
 } // namespace Hccl
 

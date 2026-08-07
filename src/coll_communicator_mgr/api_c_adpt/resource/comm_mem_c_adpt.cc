@@ -27,64 +27,72 @@
 
 using namespace hccl;
 
-HcclResult HcclCommMemReg(HcclComm comm, const char *memTag, const CommMem *mem, HcclMemHandle *memHandle)
- 
+HcclResult HcclCommMemReg(HcclComm comm, const char* memTag, const CommMem* mem, HcclMemHandle* memHandle)
+
 {
-    CHK_PRT_RET(comm == nullptr,  HCCL_ERROR("[HcclCommMemReg]comm is null"), HCCL_E_PTR);
+    CHK_PRT_RET(comm == nullptr, HCCL_ERROR("[HcclCommMemReg]comm is null"), HCCL_E_PTR);
     CHK_PRT_RET(memTag == nullptr, HCCL_ERROR("[HcclCommMemReg]memTag is null"), HCCL_E_PTR);
-    CHK_PRT_RET(strlen(memTag) == 0 || strlen(memTag) > HCCL_RES_TAG_MAX_LEN,
+    CHK_PRT_RET(
+        strlen(memTag) == 0 || strlen(memTag) > HCCL_RES_TAG_MAX_LEN,
         HCCL_ERROR("[HcclCommMemReg]memTag length is %zu", strlen(memTag)), HCCL_E_PARA);
     std::string memTagStr(memTag);
-    CHK_PRT_RET(memTagStr.compare(0, strlen(HCCL_SYMMETRIC_MEMORY_TAG_PREFIX),
-        HCCL_SYMMETRIC_MEMORY_TAG_PREFIX) == 0,
-        HCCL_ERROR("[HcclCommMemReg]memTag[%s] uses reserved symmetric memory prefix[%s]",
-            memTag, HCCL_SYMMETRIC_MEMORY_TAG_PREFIX), HCCL_E_PARA);
-    CHK_PRT_RET(memTagStr.compare(0, strlen(HCCL_TEAM_SYNCMEM_TAG_PREFIX), HCCL_TEAM_SYNCMEM_TAG_PREFIX) == 0,
-        HCCL_ERROR("[HcclCommMemReg]memTag[%s] uses reserved team syncmem prefix[%s]",
-            memTag, HCCL_TEAM_SYNCMEM_TAG_PREFIX), HCCL_E_PARA);
-    CHK_PRT_RET(memTagStr.compare(0, strlen(HCCL_TEAM_USERMEM_TAG_PREFIX), HCCL_TEAM_USERMEM_TAG_PREFIX) == 0,
-        HCCL_ERROR("[HcclCommMemReg]memTag[%s] uses reserved team usermem prefix[%s]",
-            memTag, HCCL_TEAM_USERMEM_TAG_PREFIX), HCCL_E_PARA);
-    CHK_PRT_RET(mem == nullptr,   HCCL_ERROR("[HcclCommMemReg]mem is null"), HCCL_E_PTR);
+    CHK_PRT_RET(
+        memTagStr.compare(0, strlen(HCCL_SYMMETRIC_MEMORY_TAG_PREFIX), HCCL_SYMMETRIC_MEMORY_TAG_PREFIX) == 0,
+        HCCL_ERROR(
+            "[HcclCommMemReg]memTag[%s] uses reserved symmetric memory prefix[%s]", memTag,
+            HCCL_SYMMETRIC_MEMORY_TAG_PREFIX),
+        HCCL_E_PARA);
+    CHK_PRT_RET(
+        memTagStr.compare(0, strlen(HCCL_TEAM_SYNCMEM_TAG_PREFIX), HCCL_TEAM_SYNCMEM_TAG_PREFIX) == 0,
+        HCCL_ERROR(
+            "[HcclCommMemReg]memTag[%s] uses reserved team syncmem prefix[%s]", memTag, HCCL_TEAM_SYNCMEM_TAG_PREFIX),
+        HCCL_E_PARA);
+    CHK_PRT_RET(
+        memTagStr.compare(0, strlen(HCCL_TEAM_USERMEM_TAG_PREFIX), HCCL_TEAM_USERMEM_TAG_PREFIX) == 0,
+        HCCL_ERROR(
+            "[HcclCommMemReg]memTag[%s] uses reserved team usermem prefix[%s]", memTag, HCCL_TEAM_USERMEM_TAG_PREFIX),
+        HCCL_E_PARA);
+    CHK_PRT_RET(mem == nullptr, HCCL_ERROR("[HcclCommMemReg]mem is null"), HCCL_E_PTR);
     CHK_PRT_RET(memHandle == nullptr, HCCL_ERROR("[HcclCommMemReg]memHandle is null"), HCCL_E_PTR);
-    CHK_PRT_RET((mem->type != COMM_MEM_TYPE_DEVICE) && (mem->type != COMM_MEM_TYPE_HOST),
+    CHK_PRT_RET(
+        (mem->type != COMM_MEM_TYPE_DEVICE) && (mem->type != COMM_MEM_TYPE_HOST),
         HCCL_ERROR("[HcclCommMemReg]memoryType[%d] must be device or host", mem->type), HCCL_E_PARA);
     CHK_PRT_RET(mem->addr == nullptr, HCCL_ERROR("[HcclCommMemReg]addr is null"), HCCL_E_PTR);
-    CHK_PRT_RET(mem->size == 0, HCCL_ERROR("[HcclCommMemReg]size[%llu] invalid",
-        static_cast<unsigned long long>(mem->size)), HCCL_E_PARA);
+    CHK_PRT_RET(
+        mem->size == 0, HCCL_ERROR("[HcclCommMemReg]size[%llu] invalid", static_cast<unsigned long long>(mem->size)),
+        HCCL_E_PARA);
 
-#if (!defined (HCCD)) && (!defined (CCL_KERNEL_AICPU))
-    HCCLV2_FUNC_RUN(
-        [&]() -> HcclResult {
-            auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
-            std::string commId = hcclComm->GetIdentifier();
-            HCCL_RUN_INFO("Entry-%s:comm[%s]", __func__, commId.c_str());
-            hccl::CollComm* collComm = hcclComm->GetCollComm();
-            CHK_PTR_NULL(collComm);
-            auto myRank = collComm->GetMyRank();
-            CHK_PTR_NULL(myRank);
-            CommMems* commMem = myRank->GetCommMems();
-            HcclResult ret = HCCL_SUCCESS;
-            ret = commMem->CommRegMem(memTagStr, *mem, memHandle);
-            CHK_PRT_RET(ret != HCCL_SUCCESS,
-                HCCL_ERROR("[HcclCommMemReg]Bind failed. memTag[%s], ret[%d]", memTag, ret), ret);
-            HCCL_INFO("[HcclCommMemReg] success: raw handle[%p]", *memHandle);
-            return HCCL_SUCCESS;
-        }());
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+    HCCLV2_FUNC_RUN([&]() -> HcclResult {
+        auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
+        std::string commId = hcclComm->GetIdentifier();
+        HCCL_RUN_INFO("Entry-%s:comm[%s]", __func__, commId.c_str());
+        hccl::CollComm* collComm = hcclComm->GetCollComm();
+        CHK_PTR_NULL(collComm);
+        auto myRank = collComm->GetMyRank();
+        CHK_PTR_NULL(myRank);
+        CommMems* commMem = myRank->GetCommMems();
+        HcclResult ret = HCCL_SUCCESS;
+        ret = commMem->CommRegMem(memTagStr, *mem, memHandle);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS, HCCL_ERROR("[HcclCommMemReg]Bind failed. memTag[%s], ret[%d]", memTag, ret), ret);
+        HCCL_INFO("[HcclCommMemReg] success: raw handle[%p]", *memHandle);
+        return HCCL_SUCCESS;
+    }());
 #endif
 
     HCCL_RUN_INFO("HcclCommMemReg is not supported");
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommDeregMem(HcclComm comm, const char *memTag, const void* memHandle)
+HcclResult HcclCommDeregMem(HcclComm comm, const char* memTag, const void* memHandle)
 {
     CHK_PRT_RET(comm == nullptr, HCCL_ERROR("[HcclCommDeregMem]comm is null"), HCCL_E_PTR);
     CHK_PRT_RET(memHandle == nullptr, HCCL_ERROR("[HcclCommDeregMem]memHandle is null"), HCCL_E_PTR);
     CHK_PRT_RET(memTag == nullptr, HCCL_ERROR("[HcclCommDeregMem]memTag is null"), HCCL_E_PARA);
     CHK_PRT_RET(strlen(memTag) == 0, HCCL_ERROR("[HcclCommDeregMem]memTag length is 0"), HCCL_E_PARA);
 
-    auto *hcclComm = static_cast<hccl::hcclComm *>(comm);
+    auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
     std::string commId = hcclComm->GetIdentifier();
     HCCL_RUN_INFO("Entry-%s: comm[%s], handle[%p]", __func__, commId.c_str(), memHandle);
 
@@ -96,24 +104,24 @@ HcclResult HcclCommDeregMem(HcclComm comm, const char *memTag, const void* memHa
         CommMemMgr* commMemMgr = collComm->GetCommMemMgr();
         CHK_PTR_NULL(commMemMgr);
         ret = commMemMgr->CommUnregMem(std::string(memTag), memHandle);
-    }
-    else {
+    } else {
         auto& commMemMgr = hcclComm->GetIndependentOp().GetCommMemMgr();
         ret = commMemMgr.CommUnregMem(std::string(memTag), memHandle);
     }
 
-    CHK_PRT_RET(ret == HCCL_E_NOT_FOUND,
-        HCCL_WARNING("[HcclCommDeregMem]handle not bound in this domain. raw[%p]", memHandle), HCCL_SUCCESS);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[HcclCommDeregMem] unBind failed. handle[%p], ret[%d]", memHandle, ret), ret);
+    CHK_PRT_RET(
+        ret == HCCL_E_NOT_FOUND, HCCL_WARNING("[HcclCommDeregMem]handle not bound in this domain. raw[%p]", memHandle),
+        HCCL_SUCCESS);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[HcclCommDeregMem] unBind failed. handle[%p], ret[%d]", memHandle, ret), ret);
     HCCL_INFO("[HcclCommDeregMem]success: raw handle[%p]", memHandle);
     return HCCL_SUCCESS;
 }
 
-HcclResult GetHcclBufferWithClearFlag(HcclComm comm, void **buffer, uint64_t *size, bool clearFlag)
+HcclResult GetHcclBufferWithClearFlag(HcclComm comm, void** buffer, uint64_t* size, bool clearFlag)
 {
     auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
-    const std::string &commId = hcclComm->GetIdentifier();
+    const std::string& commId = hcclComm->GetIdentifier();
     hccl::CollComm* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
     auto myRank = collComm->GetMyRank();
@@ -126,27 +134,26 @@ HcclResult GetHcclBufferWithClearFlag(HcclComm comm, void **buffer, uint64_t *si
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclGetHcclBuffer(HcclComm comm, void ** buffer, uint64_t *size)
+HcclResult HcclGetHcclBuffer(HcclComm comm, void** buffer, uint64_t* size)
 {
     CHK_PRT_RET(buffer == nullptr, HCCL_ERROR("[%s] buffer is null", __func__), HCCL_E_PTR);
     CHK_PRT_RET(comm == nullptr, HCCL_ERROR("[%s] comm is null", __func__), HCCL_E_PTR);
     CHK_PRT_RET(size == nullptr, HCCL_ERROR("[%s] size is null", __func__), HCCL_E_PTR);
 
-#if (!defined (HCCD)) && (!defined (CCL_KERNEL_AICPU))
-    HCCLV2_FUNC_RUN(
-        [&]() -> HcclResult {
-            return GetHcclBufferWithClearFlag(comm, buffer, size, false);
-        }());
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+    HCCLV2_FUNC_RUN([&]() -> HcclResult {
+        return GetHcclBufferWithClearFlag(comm, buffer, size, false);
+    }());
 #endif
 
-    auto *hcclComm = static_cast<hccl::hcclComm *>(comm);
+    auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
     CollComm* collComm = hcclComm->GetCollComm();
-    hccl::MyRank *myRank = nullptr;
+    hccl::MyRank* myRank = nullptr;
     if (collComm != nullptr) {
         myRank = collComm->GetMyRank();
     }
-    if (collComm != nullptr && hcclComm->GetConnectMode() !=0 && myRank != nullptr) {
-        CommMems *commMem = myRank->GetCommMems();
+    if (collComm != nullptr && hcclComm->GetConnectMode() != 0 && myRank != nullptr) {
+        CommMems* commMem = myRank->GetCommMems();
         CHK_PTR_NULL(commMem);
         CHK_RET(commMem->GetHcclBuffer(*buffer, *size));
         return HCCL_SUCCESS;
@@ -156,7 +163,7 @@ HcclResult HcclGetHcclBuffer(HcclComm comm, void ** buffer, uint64_t *size)
     HCCL_RUN_INFO("Entry-%s:comm[%s]", __func__, commId.c_str());
     HcclResult ret = HCCL_SUCCESS;
     CommBuffer commBuffer;
-    
+
     auto& commMemMgr = hcclComm->GetIndependentOp().GetCommMemMgr();
     ret = commMemMgr.GetHcclBuffer(&commBuffer);
     if (ret != HCCL_SUCCESS) {
@@ -165,21 +172,22 @@ HcclResult HcclGetHcclBuffer(HcclComm comm, void ** buffer, uint64_t *size)
     }
     *buffer = commBuffer.addr;
     *size = commBuffer.size;
-    HCCL_RUN_INFO("Entry-%s: success: comm[%s], buffer[%p] size[%llu]", __func__, commId.c_str(), *buffer, static_cast<unsigned long long>(*size));
+    HCCL_RUN_INFO(
+        "Entry-%s: success: comm[%s], buffer[%p] size[%llu]", __func__, commId.c_str(), *buffer,
+        static_cast<unsigned long long>(*size));
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclGetHcclBufferCleared(HcclComm comm, void **buffer, uint64_t *size)
+HcclResult HcclGetHcclBufferCleared(HcclComm comm, void** buffer, uint64_t* size)
 {
     CHK_PRT_RET(buffer == nullptr, HCCL_ERROR("[%s] buffer is null", __func__), HCCL_E_PTR);
     CHK_PRT_RET(comm == nullptr, HCCL_ERROR("[%s] comm is null", __func__), HCCL_E_PTR);
     CHK_PRT_RET(size == nullptr, HCCL_ERROR("[%s] size is null", __func__), HCCL_E_PTR);
 
-#if (!defined (HCCD)) && (!defined (CCL_KERNEL_AICPU))
-    HCCLV2_FUNC_RUN(
-        [&]() -> HcclResult {
-            return GetHcclBufferWithClearFlag(comm, buffer, size, true);
-        }());
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+    HCCLV2_FUNC_RUN([&]() -> HcclResult {
+        return GetHcclBufferWithClearFlag(comm, buffer, size, true);
+    }());
 #endif
 
     HCCL_ERROR("HcclGetHcclBufferCleared is not supported");

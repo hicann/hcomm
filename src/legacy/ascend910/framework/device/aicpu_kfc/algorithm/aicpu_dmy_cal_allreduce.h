@@ -15,19 +15,20 @@
 
 class AicpuDmyCalAllreduce : public AicpuAlgorithm {
 public:
-    explicit AicpuDmyCalAllreduce(AicpuComContext *ctx) : AicpuAlgorithm(ctx) {}
+    explicit AicpuDmyCalAllreduce(AicpuComContext* ctx) : AicpuAlgorithm(ctx) {}
     ~AicpuDmyCalAllreduce() override = default;
     // determinacy calculate 确定性计算
-    HcclResult RunAlgorithm(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
-        HcclDataType dataType, u64 strideLen = 0, AivAicpuOpParam *nextTask = nullptr) override;
+    HcclResult RunAlgorithm(
+        HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType,
+        u64 strideLen = 0, AivAicpuOpParam* nextTask = nullptr) override;
+
 private:
     // allgather + localreduce
-    HcclResult RunAllReduceAL(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
-        HcclDataType dataType);
+    HcclResult
+    RunAllReduceAL(HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType);
     // reducescatter + localreduce + allgather
-    HcclResult RunAllReduceRLA(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
-        HcclDataType dataType) const;
+    HcclResult RunAllReduceRLA(
+        HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType) const;
 };
-
 
 #endif

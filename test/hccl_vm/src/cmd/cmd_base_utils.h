@@ -35,21 +35,18 @@ extern std::uint32_t g_hcclVmLevel;
 
 class CstyleCmd {
 public:
-    explicit CstyleCmd(const std::vector<std::string>& args) {
+    explicit CstyleCmd(const std::vector<std::string>& args)
+    {
         storage_ = args;
         rebuild();
     }
-    int argc() const {
-        return static_cast<int>(pointers_.size());
-    }
-    char** argv() {
-        return pointers_.data();
-    }
-    std::string cmd() {
-        return cmd_;
-    }
+    int argc() const { return static_cast<int>(pointers_.size()); }
+    char** argv() { return pointers_.data(); }
+    std::string cmd() { return cmd_; }
+
 private:
-    void rebuild() {
+    void rebuild()
+    {
         std::stringstream ss;
         pointers_.clear();
         pointers_.reserve(storage_.size() + 1);
@@ -66,7 +63,7 @@ private:
 
 // 通用工具方法
 std::string GetBinLocation();
-std::string ArgvToString(int argc, char *argv[]);
+std::string ArgvToString(int argc, char* argv[]);
 std::string FileInModelDir(const std::string& fileName);
 std::string CheckClusterConfigFile(const std::string& topoFileName);
 std::string GenerateClusterTopo(const std::string& topoFileName);
@@ -93,7 +90,7 @@ HcclVmResult ShowCurrentLogLevel();
 // hccl-vm 流程类方法
 HcclVmResult StartHvmCmd();
 
-void StartHostClient(int argc, char *argv[]);
+void StartHostClient(int argc, char* argv[]);
 void ServerListen();
 void RunnerListen();
 void ParseCommand(std::string& cmd);

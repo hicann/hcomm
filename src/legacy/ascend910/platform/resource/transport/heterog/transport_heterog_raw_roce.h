@@ -16,14 +16,16 @@
 namespace hccl {
 class TransportHeterogRawRoce : public TransportHeterogRoce {
 public:
-    explicit TransportHeterogRawRoce(const std::string &transTag, HcclIpAddress &selfIp,
-        HcclIpAddress &peerIp, u32 peerPort, u32 selfPort, const TransportResourceInfo &transportResourceInfo);
+    explicit TransportHeterogRawRoce(
+        const std::string& transTag, HcclIpAddress& selfIp, HcclIpAddress& peerIp, u32 peerPort, u32 selfPort,
+        const TransportResourceInfo& transportResourceInfo);
     ~TransportHeterogRawRoce() override;
 
     HcclResult Init() override;
-    HcclResult Init(SocketInfoT &socketInfo, RdmaHandle rdmaHandle, MrHandle mrHandle) override;
-    HcclResult ImrecvScatter(void *buf[], int count[], int bufCount, HcclDataType datatype, HcclMessageInfo &msg,
-        HcclRequestInfo *&request) override;
+    HcclResult Init(SocketInfoT& socketInfo, RdmaHandle rdmaHandle, MrHandle mrHandle) override;
+    HcclResult ImrecvScatter(
+        void* buf[], int count[], int bufCount, HcclDataType datatype, HcclMessageInfo& msg,
+        HcclRequestInfo*& request) override;
 
 protected:
     HcclResult CreateCqAndQp() override;
@@ -33,22 +35,30 @@ protected:
 private:
     HcclResult EnterStateProcess(ConnState nextState) override;
     HcclResult LoopStateProcess() override;
-    HcclResult PrepareModifyInfo(struct QpAttr &qpAttr, struct TypicalQp &typicalQpInfo);
-    HcclResult GetQpAttr(QpHandle &qpHandle, struct QpAttr *attr, bool &completed);
-    HcclResult TypicalQpModify(QpHandle &qpHandle, struct TypicalQp* localQpInfo,
-        struct TypicalQp* remoteQpInfo, bool &completed);
+    HcclResult PrepareModifyInfo(struct QpAttr& qpAttr, struct TypicalQp& typicalQpInfo);
+    HcclResult GetQpAttr(QpHandle& qpHandle, struct QpAttr* attr, bool& completed);
+    HcclResult
+    TypicalQpModify(QpHandle& qpHandle, struct TypicalQp* localQpInfo, struct TypicalQp* remoteQpInfo, bool& completed);
 
-    struct ibv_send_wr dataReadWrScatter_;      // scatter数据读取的wr模板
-    struct ibv_send_wr dataAckWrScatter_;       // scatterACK发送的wr模板
+    struct ibv_send_wr dataReadWrScatter_; // scatter数据读取的wr模板
+    struct ibv_send_wr dataAckWrScatter_;  // scatterACK发送的wr模板
 
-    struct QpAttr localTagQpAttr_{};
-    struct QpAttr localDataQpAttr_{};
-    struct QpAttr remoteTagQpAttr_{};
-    struct QpAttr remoteDataQpAttr_{};
-    struct TypicalQp localTagModifyInfo_{0};
-    struct TypicalQp localDataModifyInfo_{0};
-    struct TypicalQp remoteTagModifyInfo_{0};
-    struct TypicalQp remoteDataModifyInfo_{0};
+    struct QpAttr localTagQpAttr_ {};
+    struct QpAttr localDataQpAttr_ {};
+    struct QpAttr remoteTagQpAttr_ {};
+    struct QpAttr remoteDataQpAttr_ {};
+    struct TypicalQp localTagModifyInfo_ {
+        0
+    };
+    struct TypicalQp localDataModifyInfo_ {
+        0
+    };
+    struct TypicalQp remoteTagModifyInfo_ {
+        0
+    };
+    struct TypicalQp remoteDataModifyInfo_ {
+        0
+    };
 };
-}
+} // namespace hccl
 #endif

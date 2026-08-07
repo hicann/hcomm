@@ -8,18 +8,17 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
- 
 #ifndef AIV_SK_RS_DETER_H
 #define AIV_SK_RS_DETER_H
- 
+
 #include "aiv_communication_base.h"
 #include "aiv_reduce_scatter_91093_deter.h"
 // aiv reducescatter
- 
-extern "C" __aicore__ void sk_reducescatter_deter(SUPERKERNEL_LITE_ARGS_DEF) {
+
+extern "C" __aicore__ void sk_reducescatter_deter(SUPERKERNEL_LITE_ARGS_DEF)
+{
     SUPERKERNEL_LITE_ARGS_EXTRACT;
     return sk_reduce_scatter_deter(SUPERKERNEL_ARGS_CALL);
 }
- 
- 
-#endif  /* AIV_RS_SUPERKERNEL_DETER_H */
+
+#endif /* AIV_RS_SUPERKERNEL_DETER_H */

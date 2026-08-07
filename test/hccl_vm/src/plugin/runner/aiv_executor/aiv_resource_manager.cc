@@ -24,7 +24,7 @@ namespace {
 constexpr uint8_t INPUT_BUFFER_TYPE = 0;
 constexpr uint8_t OUTPUT_BUFFER_TYPE = 1;
 constexpr uint8_t CCL_BUFFER_TYPE = 2;
-const char *GetBufferTypeName(uint8_t bufferType)
+const char* GetBufferTypeName(uint8_t bufferType)
 {
     switch (bufferType) {
         case INPUT_BUFFER_TYPE:
@@ -38,7 +38,7 @@ const char *GetBufferTypeName(uint8_t bufferType)
     }
 }
 
-AivBufferResource *GetBufferSlot(AivRankResource &rankResource, uint8_t bufferType)
+AivBufferResource* GetBufferSlot(AivRankResource& rankResource, uint8_t bufferType)
 {
     switch (bufferType) {
         case INPUT_BUFFER_TYPE:
@@ -53,18 +53,15 @@ AivBufferResource *GetBufferSlot(AivRankResource &rankResource, uint8_t bufferTy
 }
 } // namespace
 
-AivResourceManager &AivResourceManager::GetInstance()
+AivResourceManager& AivResourceManager::GetInstance()
 {
     static AivResourceManager instance;
     return instance;
 }
 
-AivResourceManager::~AivResourceManager()
-{
-    Reset();
-}
+AivResourceManager::~AivResourceManager() { Reset(); }
 
-HcclVmResult AivResourceManager::Init(uint32_t rankId, const sim::OpMemInfoTab &opMemInfo, uint32_t rankSize)
+HcclVmResult AivResourceManager::Init(uint32_t rankId, const sim::OpMemInfoTab& opMemInfo, uint32_t rankSize)
 {
     auto ret = EnsureInitialized(rankSize);
     if (ret != HcclVmResult::HCCL_SIM_SUCCESS) {
@@ -88,22 +85,17 @@ HcclVmResult AivResourceManager::Init(uint32_t rankId, const sim::OpMemInfoTab &
         return ret;
     }
 
-    HCCL_VM_DEBUG("init rank op mem success, rankId={}, rankSize={}, "
+    HCCL_VM_DEBUG(
+        "init rank op mem success, rankId={}, rankSize={}, "
         "input={:x}/{} output={:x}/{} ccl={:x}/{}",
-        rankId,
-        rankSize,
-        opMemInfo.inputAddr,
-        opMemInfo.inputSize,
-        opMemInfo.outputAddr,
-        opMemInfo.outputSize,
-        opMemInfo.cclAddr,
-        opMemInfo.cclSize);
+        rankId, rankSize, opMemInfo.inputAddr, opMemInfo.inputSize, opMemInfo.outputAddr, opMemInfo.outputSize,
+        opMemInfo.cclAddr, opMemInfo.cclSize);
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
 void AivResourceManager::Reset()
 {
-    for (const auto &phyMem : acquiredPhyMemBlocks_) {
+    for (const auto& phyMem : acquiredPhyMemBlocks_) {
         sim::ReleaseInNoHostProcess(phyMem);
     }
     acquiredPhyMemBlocks_.clear();
@@ -111,12 +103,9 @@ void AivResourceManager::Reset()
     rankResources_.clear();
 }
 
-const std::vector<AivRankResource> &AivResourceManager::GetAllRankResources() const
-{
-    return rankResources_;
-}
+const std::vector<AivRankResource>& AivResourceManager::GetAllRankResources() const { return rankResources_; }
 
-const AivRankResource *AivResourceManager::GetRankResource(uint32_t rankId) const
+const AivRankResource* AivResourceManager::GetRankResource(uint32_t rankId) const
 {
     if (rankId >= rankResources_.size()) {
         return nullptr;
@@ -143,8 +132,7 @@ HcclVmResult AivResourceManager::EnsureInitialized(uint32_t rankSize)
     }
 
     if (rankResources_.size() != rankSize) {
-        HCCL_VM_ERROR("rankSize mismatch, current={}, incoming={}",
-            rankResources_.size(), rankSize);
+        HCCL_VM_ERROR("rankSize mismatch, current={}, incoming={}", rankResources_.size(), rankSize);
         return HcclVmResult::HCCL_SIM_E_PARA;
     }
     return HcclVmResult::HCCL_SIM_SUCCESS;
@@ -154,35 +142,34 @@ HcclVmResult AivResourceManager::MapBuffer(
     uint32_t rankSize, uint32_t rankId, uint8_t bufferType, uint64_t startAddr, uint64_t size, bool allowDuplicateSame)
 {
     if (rankId >= rankSize) {
-        HCCL_VM_ERROR("rankId={} out of range, rankSize={}",
-            rankId, rankSize);
+        HCCL_VM_ERROR("rankId={} out of range, rankSize={}", rankId, rankSize);
         return HcclVmResult::HCCL_SIM_E_PARA;
     }
 
-    auto &rankResource = rankResources_[rankId];
-    AivBufferResource *bufferSlot = GetBufferSlot(rankResource, bufferType);
+    auto& rankResource = rankResources_[rankId];
+    AivBufferResource* bufferSlot = GetBufferSlot(rankResource, bufferType);
     if (bufferSlot == nullptr) {
-        HCCL_VM_ERROR("unsupported buffer type={}, rankId={}",
-            bufferType, rankId);
+        HCCL_VM_ERROR("unsupported buffer type={}, rankId={}", bufferType, rankId);
         return HcclVmResult::HCCL_SIM_E_PARA;
     }
     if (bufferSlot->realAddr != nullptr) {
         if (allowDuplicateSame && bufferSlot->virtualAddr == startAddr && bufferSlot->size == size) {
-            HCCL_VM_DEBUG("duplicate same {} buffer skipped, "
+            HCCL_VM_DEBUG(
+                "duplicate same {} buffer skipped, "
                 "rankId={}, virtualAddr={:x}, size={}",
                 GetBufferTypeName(bufferType), rankId, startAddr, size);
             return HcclVmResult::HCCL_SIM_SUCCESS;
         }
-        HCCL_VM_ERROR("duplicate {} buffer found, rankId={}, virtualAddr={:x}, size={}",
-            GetBufferTypeName(bufferType), rankId, startAddr, size);
+        HCCL_VM_ERROR(
+            "duplicate {} buffer found, rankId={}, virtualAddr={:x}, size={}", GetBufferTypeName(bufferType), rankId,
+            startAddr, size);
         return HcclVmResult::HCCL_SIM_E_PARA;
     }
 
-    sim::PhyMemBlock phyMem {};
-    void *realAddr = sim::AcquireDevPtrInNoHostProcess(reinterpret_cast<void *>(startAddr), phyMem);
+    sim::PhyMemBlock phyMem{};
+    void* realAddr = sim::AcquireDevPtrInNoHostProcess(reinterpret_cast<void*>(startAddr), phyMem);
     if (realAddr == nullptr) {
-        HCCL_VM_ERROR("translate addr failed, rankId={}, type={}, addr={:x}",
-            rankId, bufferType, startAddr);
+        HCCL_VM_ERROR("translate addr failed, rankId={}, type={}, addr={:x}", rankId, bufferType, startAddr);
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
     }
 
@@ -194,8 +181,8 @@ HcclVmResult AivResourceManager::MapBuffer(
     *bufferSlot = bufferResource;
 
     acquiredPhyMemBlocks_.push_back(phyMem);
-    HCCL_VM_DEBUG("rankId={}, type={}, virtualAddr={:x}, realAddr={}, size={}",
-        rankId, bufferType, startAddr, realAddr, size);
+    HCCL_VM_DEBUG(
+        "rankId={}, type={}, virtualAddr={:x}, realAddr={}, size={}", rankId, bufferType, startAddr, realAddr, size);
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
@@ -204,7 +191,8 @@ HcclVmResult AivResourceManager::MapOpMemBuffer(
 {
     if (startAddr == 0 || size == 0) {
         if (startAddr != 0 || size != 0) {
-            HCCL_VM_WARN("incomplete {} buffer skipped, "
+            HCCL_VM_WARN(
+                "incomplete {} buffer skipped, "
                 "rankId={}, virtualAddr={:x}, size={}",
                 GetBufferTypeName(bufferType), rankId, startAddr, size);
         }
@@ -220,8 +208,8 @@ HcclVmResult AivResourceManager::InitAivCommInfoBuffers(uint32_t rankSize)
     for (uint32_t rankId = 0; rankId < rankSize; ++rankId) {
         auto aivCommInfoBuffer = std::make_unique<uint8_t[]>(AivCommInfoLayout::SIZE_BYTES);
         if (aivCommInfoBuffer == nullptr) {
-            HCCL_VM_ERROR("alloc AIV commInfo buffer failed, rankId={}, size={}",
-                rankId, AivCommInfoLayout::SIZE_BYTES);
+            HCCL_VM_ERROR(
+                "alloc AIV commInfo buffer failed, rankId={}, size={}", rankId, AivCommInfoLayout::SIZE_BYTES);
             return HcclVmResult::HCCL_SIM_E_INTERNAL;
         }
 
@@ -229,9 +217,8 @@ HcclVmResult AivResourceManager::InitAivCommInfoBuffers(uint32_t rankSize)
         rankResources_[rankId].aivCommInfoBuffer.size = AivCommInfoLayout::SIZE_BYTES;
         aivCommInfoBufferOwners_[rankId] = std::move(aivCommInfoBuffer);
 
-        HCCL_VM_DEBUG("AIV commInfo rankId={}, realAddr={}, size={}",
-            rankId,
-            rankResources_[rankId].aivCommInfoBuffer.realAddr,
+        HCCL_VM_DEBUG(
+            "AIV commInfo rankId={}, realAddr={}, size={}", rankId, rankResources_[rankId].aivCommInfoBuffer.realAddr,
             rankResources_[rankId].aivCommInfoBuffer.size);
     }
     return HcclVmResult::HCCL_SIM_SUCCESS;

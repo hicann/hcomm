@@ -14,7 +14,7 @@
 #include "reduce_scatter_recursive_hd_pub.h"
 
 namespace hccl {
-    constexpr u32 NSLBDP_REDUCE_SCATTER_MOLD2 = 2;
-}  // namespace hccl
+constexpr u32 NSLBDP_REDUCE_SCATTER_MOLD2 = 2;
+} // namespace hccl
 
 #endif /* * REDUCE_SCATTER_RECURSIVE_HD_H */

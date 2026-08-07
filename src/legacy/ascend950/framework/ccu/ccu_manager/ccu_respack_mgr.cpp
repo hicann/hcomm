@@ -21,23 +21,22 @@ void CcuResPackMgr::PrepareAlloc(u32 size)
         resPacks.resize(size);
     }
 
-    HCCL_INFO("[CcuResPackMgr][PrepareAlloc] CcuResPack need size[%u], current resPacks size[%zu], unConfirmedNum[%u]",
-               size, resPacks.size(), unConfirmedNum);
+    HCCL_INFO(
+        "[CcuResPackMgr][PrepareAlloc] CcuResPack need size[%u], current resPacks size[%zu], unConfirmedNum[%u]", size,
+        resPacks.size(), unConfirmedNum);
 }
 
 // 确认新增的资源，未来不可回退（对之前调用PrepareXxx()新增的资源，取消标记）
-void CcuResPackMgr::Confirm()
-{
-    unConfirmedNum = 0;
-}
+void CcuResPackMgr::Confirm() { unConfirmedNum = 0; }
 
 // 对新增的资源进行回退
 void CcuResPackMgr::Fallback()
 {
     for (u32 idx = 0; idx < unConfirmedNum; ++idx) {
         if (resPacks[idx].handles.size() != 0) {
-            HCCL_WARNING("[CcuResPackMgr][Fallback]resPacks idx[%u] has handles size[%u], not empty", idx,
-                         resPacks[idx].handles.size());
+            HCCL_WARNING(
+                "[CcuResPackMgr][Fallback]resPacks idx[%u] has handles size[%u], not empty", idx,
+                resPacks[idx].handles.size());
         }
         resPacks.pop_back();
     }
@@ -45,7 +44,7 @@ void CcuResPackMgr::Fallback()
 }
 
 // 获取idx对应的CcuResPack
-CcuResPack &CcuResPackMgr::GetCcuResPack(u32 idx)
+CcuResPack& CcuResPackMgr::GetCcuResPack(u32 idx)
 {
     u32 size = resPacks.size();
     if (size <= idx) {

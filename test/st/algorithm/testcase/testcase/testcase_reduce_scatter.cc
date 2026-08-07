@@ -33,20 +33,15 @@ std::vector<string> reduceScatterAlgName = {
 
 class ReduceScatterTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "ReduceScatterTest set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "ReduceScatterTest set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "ReduceScatterTest tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "ReduceScatterTest tear down." << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
         MOCKER(ExecuteKernelLaunch).stubs().will(returnValue(HCCL_SUCCESS));
     }
@@ -435,7 +430,7 @@ TEST_F(ReduceScatterTest, reduce_scatter_executor_ReduceScatterRingExecutor_NSLB
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 3, 8);
     setenv("HCCL_ALGO", "level0:ring;level1:H-D_R", 1);
- 
+
     CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
@@ -486,7 +481,7 @@ TEST_F(ReduceScatterTest, reduce_scatter_executor_test_loop)
 TEST_F(ReduceScatterTest, reduce_scatter_ReduceScatterComm_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1}, {0, 1, 2}}};
+    TopoMeta topoMeta{{{0, 1}, {0, 1, 2}}};
 
     CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
@@ -573,7 +568,7 @@ TEST_F(ReduceScatterTest, reduce_scatter_910A_offload_ReduceScatterRingExecutor)
 TEST_F(ReduceScatterTest, reduce_scatter_910A_offload_ReduceScatterComm)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{2, 5}, {0, 1, 2}}};
+    TopoMeta topoMeta{{{2, 5}, {0, 1, 2}}};
 
     CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
@@ -638,7 +633,7 @@ TEST_F(ReduceScatterTest, reduce_scatter_910A_opbase_ReduceScatterRingExecutor)
 TEST_F(ReduceScatterTest, reduce_scatter_910A_opbase_ReduceScatterComm)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{2, 5}, {0, 1, 2}}};
+    TopoMeta topoMeta{{{2, 5}, {0, 1, 2}}};
 
     CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
@@ -690,7 +685,7 @@ TEST_F(ReduceScatterTest, reduce_scatter_910_93_opbase_ReduceScatterFastDoubleRi
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_910_93;
-    checkerOpParam.DataDes.count = 2;   // not CCE reduce aligned(32B)
+    checkerOpParam.DataDes.count = 2; // not CCE reduce aligned(32B)
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_INT64;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_SUM;
     checkerOpParam.algName = "ReduceScatterFastDoubleRingFor91093Executor";
@@ -712,7 +707,7 @@ TEST_F(ReduceScatterTest, reduce_scatter_910_93_opbase_ReduceScatterFastDoubleRi
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_910_93;
-    checkerOpParam.DataDes.count = 4*1024*1024;
+    checkerOpParam.DataDes.count = 4 * 1024 * 1024;
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_INT64;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_SUM;
     checkerOpParam.algName = "ReduceScatterFastDoubleRingFor91093Executor";
@@ -1057,8 +1052,7 @@ TEST_F(ReduceScatterTest, reduce_scatter_910_93_offload_ReduceScatterMeshAtomic)
     EXPECT_EQ(ret, HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(ReduceScatterTest,
-    reduce_scatter_910_93_offload_ReduceScatterSemiRingExecutor_inlineReduce_singleServer)
+TEST_F(ReduceScatterTest, reduce_scatter_910_93_offload_ReduceScatterSemiRingExecutor_inlineReduce_singleServer)
 {
     RankTable_For_LLT gen;
     TopoMeta topoMeta;
@@ -1081,8 +1075,7 @@ TEST_F(ReduceScatterTest,
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(ReduceScatterTest,
-    reduce_scatter_910_93_offload_ReduceScatterSemiRingExecutor_inlineReduce_singleServer_oddNum)
+TEST_F(ReduceScatterTest, reduce_scatter_910_93_offload_ReduceScatterSemiRingExecutor_inlineReduce_singleServer_oddNum)
 {
     RankTable_For_LLT gen;
     TopoMeta topoMeta;
@@ -1153,9 +1146,10 @@ TEST_F(ReduceScatterTest, reduce_scatter_ax_4server_16p)
 TEST_F(ReduceScatterTest, reduce_scatter_superpod_asym_gcd)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1, 2}, {0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}}};
+    TopoMeta topoMeta{
+        {{0, 1, 2}, {0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}}};
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1173,9 +1167,9 @@ TEST_F(ReduceScatterTest, reduce_scatter_superpod_asym_gcd)
 TEST_F(ReduceScatterTest, reduce_scatter_superpod_asym_gcd_graph)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}}};
+    TopoMeta topoMeta{{{0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}}};
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -1559,7 +1553,7 @@ TEST_F(ReduceScatterTest, reduce_scatter_aiv_a3_ReduceScatterMeshAivFor91093Exec
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
-    checkerOpParam.DataDes.count = 64*1024;
+    checkerOpParam.DataDes.count = 64 * 1024;
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_FP16;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_910_93;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_SUM;
@@ -1856,7 +1850,7 @@ TEST_F(ReduceScatterTest, reduce_scatter_A2_1Server8Rank_order_preserved)
 TEST_F(ReduceScatterTest, reduce_scatter_A2_1server16Rank_order_preserved)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}}};
+    TopoMeta topoMeta{{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}}};
 
     CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
@@ -1896,7 +1890,7 @@ TEST_F(ReduceScatterTest, reduce_scatter_A2_2Server16Rank_order_preserved)
 TEST_F(ReduceScatterTest, reduce_scatter_910_93_opbase_2die_hccs_sio)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1}}};
+    TopoMeta topoMeta{{{0, 1}}};
 
     CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
@@ -1918,7 +1912,7 @@ TEST_F(ReduceScatterTest, reduce_scatter_910_93_opbase_2die_hccs_sio)
 TEST_F(ReduceScatterTest, reduce_scatter_910_93_offload_2die_hccs_sio)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1}}};
+    TopoMeta topoMeta{{{0, 1}}};
 
     CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
@@ -2089,7 +2083,7 @@ TEST_F(ReduceScatterTest, reduce_scatter_executor_deter_big_count_not_power_of_t
 
 TEST_F(ReduceScatterTest, reduce_scatter_executor_deter_big_count_ax)
 {
-    TopoMeta topoMeta {{{0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}}};
+    TopoMeta topoMeta{{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}}};
     setenv("HCCL_DETERMINISTIC", "true", 1);
     setenv("HCCL_ALGO", "level0:NA;level1:ring", 1);
     CheckerOpParam checkerOpParam;
@@ -2113,7 +2107,7 @@ TEST_F(ReduceScatterTest, ReduceScatterOrderPreservedFor91093Executor1)
     RankTable_For_LLT gen;
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 8);
-    //setenv("HCCL_DETERMINISTIC", "STRICT", 1);
+    // setenv("HCCL_DETERMINISTIC", "STRICT", 1);
     setenv("HCCL_OP_EXPANSION_MODE", "AI_CPU", 1);
     CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
@@ -2137,7 +2131,7 @@ TEST_F(ReduceScatterTest, ReduceScatterOrderPreservedFor91093Executor2)
     RankTable_For_LLT gen;
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 4, 4);
-    //setenv("HCCL_DETERMINISTIC", "STRICT", 1);
+    // setenv("HCCL_DETERMINISTIC", "STRICT", 1);
     setenv("HCCL_OP_EXPANSION_MODE", "AI_CPU", 1);
     CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
@@ -2161,7 +2155,7 @@ TEST_F(ReduceScatterTest, ReduceScatterOrderPreservedFor91093Executor3)
     RankTable_For_LLT gen;
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 2, 2, 8);
-    //setenv("HCCL_DETERMINISTIC", "STRICT", 1);
+    // setenv("HCCL_DETERMINISTIC", "STRICT", 1);
     setenv("HCCL_OP_EXPANSION_MODE", "AI_CPU", 1);
     CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;

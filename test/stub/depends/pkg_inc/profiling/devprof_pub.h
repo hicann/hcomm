@@ -31,9 +31,7 @@ struct AicpuStartPara {
     uint32_t profConfig;
 };
 
-enum AdprofReportType {
-    ADPROF_ADDITIONAL_INFO = 0
-};
+enum AdprofReportType { ADPROF_ADDITIONAL_INFO = 0 };
 
 /**
  * @ingroup libascend_devprof
@@ -42,7 +40,7 @@ enum AdprofReportType {
  * @param[in] para  aicpu start para
  * @return 0:SUCCESS, !0:FAILED
  */
-MSVP_PROF_API int32_t AdprofInit(const struct AicpuStartPara *para);
+MSVP_PROF_API int32_t AdprofInit(const struct AicpuStartPara* para);
 
 /**
  * @ingroup libascend_devprof
@@ -70,7 +68,7 @@ MSVP_PROF_API int32_t AdprofFinalize(void);
  * @param[in] para                aicpu start para
  * @return 0:SUCCESS, !0:FAILED
  */
-MSVP_PROF_API int32_t AdprofAicpuStartRegister(AicpuStartFunc aicpuStartCallback, const struct AicpuStartPara *para);
+MSVP_PROF_API int32_t AdprofAicpuStartRegister(AicpuStartFunc aicpuStartCallback, const struct AicpuStartPara* para);
 
 /**
  * @ingroup libascend_devprof
@@ -81,7 +79,7 @@ MSVP_PROF_API int32_t AdprofAicpuStartRegister(AicpuStartFunc aicpuStartCallback
  * @param[in] length     length of profiling data
  * @return 0:SUCCESS, !0:FAILED
  */
-MSVP_PROF_API int32_t AdprofReportAdditionalInfo(uint32_t nonPersistantFlag, const void *data, uint32_t length);
+MSVP_PROF_API int32_t AdprofReportAdditionalInfo(uint32_t nonPersistantFlag, const void* data, uint32_t length);
 
 /**
  * @ingroup libascend_devprof
@@ -92,7 +90,7 @@ MSVP_PROF_API int32_t AdprofReportAdditionalInfo(uint32_t nonPersistantFlag, con
  * @param[in] length     length of profiling data
  * @return 0:SUCCESS, !0:FAILED
  */
-MSVP_PROF_API int32_t AdprofReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void *data, uint32_t length);
+MSVP_PROF_API int32_t AdprofReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void* data, uint32_t length);
 
 /**
  * @ingroup libascend_devprof
@@ -111,7 +109,7 @@ MSVP_PROF_API size_t AdprofGetBatchReportMaxSize(uint32_t type);
  * @param[in] length    the length of information to be hashed
  * @return hash id
  */
-MSVP_PROF_API uint64_t AdprofStr2Id(const char *hashInfo, size_t length);
+MSVP_PROF_API uint64_t AdprofStr2Id(const char* hashInfo, size_t length);
 
 #ifdef __cplusplus
 }

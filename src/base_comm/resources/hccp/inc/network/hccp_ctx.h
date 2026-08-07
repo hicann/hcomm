@@ -136,26 +136,26 @@ enum MemSegTokenPolicy {
 };
 
 enum MemSegAccessFlags {
-    MEM_SEG_ACCESS_LOCAL_ONLY         = 1,
-    MEM_SEG_ACCESS_READ               = (1 << 1U),
-    MEM_SEG_ACCESS_WRITE              = (1 << 2U),
-    MEM_SEG_ACCESS_ATOMIC             = (1 << 3U),
+    MEM_SEG_ACCESS_LOCAL_ONLY = 1,
+    MEM_SEG_ACCESS_READ = (1 << 1U),
+    MEM_SEG_ACCESS_WRITE = (1 << 2U),
+    MEM_SEG_ACCESS_ATOMIC = (1 << 3U),
 };
 
 union RegSegFlag {
     struct {
-        uint32_t tokenPolicy   : 3;  /**< refer to enum mem_seg_token_policy */
-        uint32_t cacheable      : 1;  /* 0: URMA_NON_CACHEABLE.
-                                         1: URMA_CACHEABLE. */
-        uint32_t dsva           : 1;
-        uint32_t access         : 6;  /**< refer to enum mem_seg_access_flags */
-        uint32_t nonPin        : 1;  /* 0: segment pages pinned.
-                                         1: segment pages non-pinned. */
-        uint32_t userIova      : 1;  /* 0: segment without user iova addr.
-                                         1: segment with user iova addr. */
-        uint32_t tokenIdValid : 1;  /* 0: token id in cfg is invalid.
-                                         1: token id in cfg is valid. */
-        uint32_t reserved       : 18;
+        uint32_t tokenPolicy : 3; /**< refer to enum mem_seg_token_policy */
+        uint32_t cacheable : 1;   /* 0: URMA_NON_CACHEABLE.
+                                     1: URMA_CACHEABLE. */
+        uint32_t dsva : 1;
+        uint32_t access : 6;       /**< refer to enum mem_seg_access_flags */
+        uint32_t nonPin : 1;       /* 0: segment pages pinned.
+                                       1: segment pages non-pinned. */
+        uint32_t userIova : 1;     /* 0: segment without user iova addr.
+                                       1: segment with user iova addr. */
+        uint32_t tokenIdValid : 1; /* 0: token id in cfg is invalid.
+                                        1: token id in cfg is valid. */
+        uint32_t reserved : 18;
     } bs;
     uint32_t value;
 };
@@ -190,12 +190,12 @@ struct MrRegInfoT {
 
 union ImportSegFlag {
     struct {
-        uint32_t cacheable      : 1;  /* 0: URMA_NON_CACHEABLE.
-                                         1: URMA_CACHEABLE. */
-        uint32_t access         : 6;  /**< refer to enum mem_seg_access_flags */
-        uint32_t mapping        : 1;  /* 0: URMA_SEG_NOMAP/
-                                         1: URMA_SEG_MAPPED. */
-        uint32_t reserved       : 24;
+        uint32_t cacheable : 1; /* 0: URMA_NON_CACHEABLE.
+                                   1: URMA_CACHEABLE. */
+        uint32_t access : 6;    /**< refer to enum mem_seg_access_flags */
+        uint32_t mapping : 1;   /* 0: URMA_SEG_NOMAP/
+                                   1: URMA_SEG_MAPPED. */
+        uint32_t reserved : 24;
     } bs;
     uint32_t value;
 };
@@ -206,8 +206,8 @@ struct MemImportAttr {
     union {
         struct {
             union ImportSegFlag flags; /**< refer to urma_import_seg_flag_t */
-            uint64_t mappingAddr; /**< addr is needed if flag mapping set value */
-            uint32_t tokenValue; /**< refer to urma_token_t */
+            uint64_t mappingAddr;      /**< addr is needed if flag mapping set value */
+            uint32_t tokenValue;       /**< refer to urma_token_t */
         } ub;
     };
     uint32_t resv[4U];
@@ -232,18 +232,18 @@ struct HccpTokenId {
 };
 
 enum JfcMode {
-    JFC_MODE_NORMAL = 0,      /* Corresponding jetty mode：JETTY_MODE_URMA_NORMAL and JETTY_MODE_USER_CTL_NORMAL */
-    JFC_MODE_STARS_POLL = 1,  /* Corresponding jetty mode：JETTY_MODE_CACHE_LOCK_DWQE and JETTY_MODE_USER_CTL_NORMAL */
-    JFC_MODE_CCU_POLL = 2,    /* Corresponding jetty mode: JETTY_MODE_CCU */
-    JFC_MODE_USER_CTL_NORMAL = 3,    /* Corresponding jetty mode: JETTY_MODE_USER_CTL_NORMAL */
+    JFC_MODE_NORMAL = 0,     /* Corresponding jetty mode：JETTY_MODE_URMA_NORMAL and JETTY_MODE_USER_CTL_NORMAL */
+    JFC_MODE_STARS_POLL = 1, /* Corresponding jetty mode：JETTY_MODE_CACHE_LOCK_DWQE and JETTY_MODE_USER_CTL_NORMAL */
+    JFC_MODE_CCU_POLL = 2,   /* Corresponding jetty mode: JETTY_MODE_CCU */
+    JFC_MODE_USER_CTL_NORMAL = 3, /* Corresponding jetty mode: JETTY_MODE_USER_CTL_NORMAL */
     JFC_MODE_MAX
 };
 
 union JfcFlag {
     struct {
-        uint32_t lockFree         : 1;
-        uint32_t jfcInline        : 1;
-        uint32_t reserved          : 30;
+        uint32_t lockFree : 1;
+        uint32_t jfcInline : 1;
+        uint32_t reserved : 30;
     } bs;
     uint32_t value;
 };
@@ -296,35 +296,35 @@ struct ChanInfoT {
 };
 
 enum JettyMode {
-    JETTY_MODE_URMA_NORMAL = 0,      /* jetty_id belongs to [0, 1023] */
-    JETTY_MODE_CACHE_LOCK_DWQE = 1,  /* jetty_id belongs to [1216, 5311] */
-    JETTY_MODE_CCU = 2,              /* jetty_id belongs to [1024, 1151] */
-    JETTY_MODE_USER_CTL_NORMAL = 3,  /* jetty_id belongs to [5312, 9407] */
-    JETTY_MODE_CCU_TA_CACHE = 4,     /* jetty_id belongs to [1024, 1151] */
+    JETTY_MODE_URMA_NORMAL = 0,     /* jetty_id belongs to [0, 1023] */
+    JETTY_MODE_CACHE_LOCK_DWQE = 1, /* jetty_id belongs to [1216, 5311] */
+    JETTY_MODE_CCU = 2,             /* jetty_id belongs to [1024, 1151] */
+    JETTY_MODE_USER_CTL_NORMAL = 3, /* jetty_id belongs to [5312, 9407] */
+    JETTY_MODE_CCU_TA_CACHE = 4,    /* jetty_id belongs to [1024, 1151] */
     JETTY_MODE_MAX
 };
 
 union JettyFlag {
     struct {
-        uint32_t shareJfr       : 1;  /* 0: URMA_NO_SHARE_JFR.
-                                          1: URMA_SHARE_JFR.   */
-        uint32_t reserved       : 31;
+        uint32_t shareJfr : 1; /* 0: URMA_NO_SHARE_JFR.
+                                   1: URMA_SHARE_JFR.   */
+        uint32_t reserved : 31;
     } bs;
     uint32_t value;
 };
 
 union JfsFlag {
     struct {
-        uint32_t lockFree      : 1;  /* default as 0, lock protected */
-        uint32_t errorSuspend  : 1;  /* 0: error continue; 1: error suspend */
-        uint32_t outorderComp  : 1;  /* 0: not support; 1: support out-of-order completion */
-        uint32_t orderType     : 8;  /* (0x0): default, auto config by driver */
-                                      /* (0x1): OT, target ordering */
-                                      /* (0x2): OI, initiator ordering */
-                                      /* (0x3): OL, low layer ordering */
-                                      /* (0x4): UNO, unreliable non ordering */
-        uint32_t multiPath     : 1;  /* 1: multi-path, 0: single path, for ubagg only. */
-        uint32_t reserved       : 20;
+        uint32_t lockFree : 1;     /* default as 0, lock protected */
+        uint32_t errorSuspend : 1; /* 0: error continue; 1: error suspend */
+        uint32_t outorderComp : 1; /* 0: not support; 1: support out-of-order completion */
+        uint32_t orderType : 8;    /* (0x0): default, auto config by driver */
+                                   /* (0x1): OT, target ordering */
+                                   /* (0x2): OI, initiator ordering */
+                                   /* (0x3): OL, low layer ordering */
+                                   /* (0x4): UNO, unreliable non ordering */
+        uint32_t multiPath : 1;    /* 1: multi-path, 0: single path, for ubagg only. */
+        uint32_t reserved : 20;
     } bs;
     uint32_t value;
 };
@@ -336,10 +336,10 @@ struct JettyQueCfgEx {
 
 union CstmJfsFlag {
     struct {
-        uint32_t sqCstm        : 1; /**< valid in jetty mode: JETTY_MODE_CCU */
-        uint32_t dbCstm        : 1;
-        uint32_t dbCtlCstm    : 1;
-        uint32_t reserved       : 29;
+        uint32_t sqCstm : 1; /**< valid in jetty mode: JETTY_MODE_CCU */
+        uint32_t dbCstm : 1;
+        uint32_t dbCtlCstm : 1;
+        uint32_t reserved : 29;
     } bs;
     uint32_t value;
 };
@@ -357,23 +357,24 @@ struct QpCreateAttr {
     union {
         struct {
             enum JettyMode mode;
-            uint32_t jettyId; /**< [optional] user specified jetty id, 0 means not specified */
-            union JettyFlag flag; /**< refer to union urma_jetty_flag */
+            uint32_t jettyId;      /**< [optional] user specified jetty id, 0 means not specified */
+            union JettyFlag flag;  /**< refer to union urma_jetty_flag */
             union JfsFlag jfsFlag; /**< refer to union urma_jfs_flag; jfs_cfg->flag */
-            void *tokenIdHandle; /**< NULL means unspecified */
-            uint32_t tokenValue; /**< refer to urma_token_t; jfr_cfg->token_value */
+            void *tokenIdHandle;   /**< NULL means unspecified */
+            uint32_t tokenValue;   /**< refer to urma_token_t; jfr_cfg->token_value */
             uint8_t priority; /**< the priority of JFS. services with low delay need set high priority. Range:[0-0xf] */
             uint8_t rnrRetry; /**< the RNR retry count when receive RNR response; Range:[0-7] */
             uint8_t errTimeout; /**< the timeout to report error. Range: [0-31] */
             union {
                 struct {
-                    struct JettyQueCfgEx sq; /**< specify sq buffer config, required when cstm_flag.bs.sq_cstm specified */
+                    struct JettyQueCfgEx
+                        sq;      /**< specify sq buffer config, required when cstm_flag.bs.sq_cstm specified */
                     bool piType; /**< false: op mode, true: async mode */
                     union CstmJfsFlag cstmFlag; /**< refer to union udma_jfs_flag */
-                    uint32_t sqebbNum; /**< required when cstm_flag.bs.sq_cstm specified */
+                    uint32_t sqebbNum;          /**< required when cstm_flag.bs.sq_cstm specified */
                 } extMode;
                 struct {
-                    bool lockFlag;       /**< false: unlocked, true: locked by buffer. forced: true. */
+                    bool lockFlag;      /**< false: unlocked, true: locked by buffer. forced: true. */
                     uint32_t sqeBufIdx; /* base sqe index */
                 } taCacheMode;
             };
@@ -403,12 +404,12 @@ struct QpCreateInfo {
     union {
         struct {
             uint32_t uasid;
-            uint32_t id; /**< jetty id */
-            uint64_t sqBuffVa; /**< valid in jetty mode：JETTY_MODE_CACHE_LOCK_DWQE and JETTY_MODE_USER_CTL_NORMAL */
+            uint32_t id;        /**< jetty id */
+            uint64_t sqBuffVa;  /**< valid in jetty mode：JETTY_MODE_CACHE_LOCK_DWQE and JETTY_MODE_USER_CTL_NORMAL */
             uint64_t wqebbSize; /**< valid in jetty mode: JETTY_MODE_CACHE_LOCK_DWQE and JETTY_MODE_USER_CTL_NORMAL */
             uint64_t dbAddr;
             uint32_t dbTokenId;
-            uint32_t shareInfoLen; /**< refer to struct ctx_qp_share_info */
+            uint32_t shareInfoLen;  /**< refer to struct ctx_qp_share_info */
             uint64_t shareInfoAddr; /**< refer to struct ctx_qp_share_info */
         } ub;
     };
@@ -416,18 +417,9 @@ struct QpCreateInfo {
     uint32_t resv[16U];
 };
 
-enum JettyGrpPolicy {
-    JETTY_GRP_POLICY_RR = 0,
-    JETTY_GRP_POLICY_HASH_HINT = 1,
-    JETTY_GRP_POLICY_MAX
-};
+enum JettyGrpPolicy { JETTY_GRP_POLICY_RR = 0, JETTY_GRP_POLICY_HASH_HINT = 1, JETTY_GRP_POLICY_MAX };
 
-enum TargetType {
-    TARGET_TYPE_JFR = 0,
-    TARGET_TYPE_JETTY = 1,
-    TARGET_TYPE_JETTY_GROUP = 2,
-    TARGET_TYPE_MAX
-};
+enum TargetType { TARGET_TYPE_JFR = 0, TARGET_TYPE_JETTY = 1, TARGET_TYPE_JETTY_GROUP = 2, TARGET_TYPE_MAX };
 
 enum {
     TOKEN_POLICY_NONE = 0,
@@ -439,24 +431,20 @@ enum {
 
 union ImportJettyFlag {
     struct {
-        uint32_t tokenPolicy   : 3;
-        uint32_t orderType     : 8;  /* (0x0): default, auto config by driver */
-                                      /* (0x1): OT, target ordering */
-                                      /* (0x2): OI, initiator ordering */
-                                      /* (0x3): OL, low layer ordering */
-                                      /* (0x4): UNO, unreliable non ordering */
-        uint32_t shareTp       : 1;  /* 1: shared tp; 0: non-shared tp. When rc mode is not ta dst ordering,
-                                         this flag can only be set to 0. */
-        uint32_t reserved       : 20;
+        uint32_t tokenPolicy : 3;
+        uint32_t orderType : 8; /* (0x0): default, auto config by driver */
+                                /* (0x1): OT, target ordering */
+                                /* (0x2): OI, initiator ordering */
+                                /* (0x3): OL, low layer ordering */
+                                /* (0x4): UNO, unreliable non ordering */
+        uint32_t shareTp : 1;   /* 1: shared tp; 0: non-shared tp. When rc mode is not ta dst ordering,
+                                    this flag can only be set to 0. */
+        uint32_t reserved : 20;
     } bs;
     uint32_t value;
 };
 
-enum JettyImportMode {
-    JETTY_IMPORT_MODE_NORMAL = 0,
-    JETTY_IMPORT_MODE_EXP = 1,
-    JETTY_IMPORT_MODE_MAX
-};
+enum JettyImportMode { JETTY_IMPORT_MODE_NORMAL = 0, JETTY_IMPORT_MODE_EXP = 1, JETTY_IMPORT_MODE_MAX };
 
 struct JettyImportExpCfg {
     uint64_t tpHandle;
@@ -472,12 +460,12 @@ struct QpImportAttr {
     union {
         struct {
             enum JettyImportMode mode;
-            uint32_t tokenValue; /**< refer to urma_token_t */
-            enum JettyGrpPolicy policy; /**< refer to urma_jetty_grp_policy_t */
-            enum TargetType type; /**< refer to urma_target_type */
-            union ImportJettyFlag flag; /**< refer to urma_import_jetty_flag_t */
+            uint32_t tokenValue;                   /**< refer to urma_token_t */
+            enum JettyGrpPolicy policy;            /**< refer to urma_jetty_grp_policy_t */
+            enum TargetType type;                  /**< refer to urma_target_type */
+            union ImportJettyFlag flag;            /**< refer to urma_import_jetty_flag_t */
             struct JettyImportExpCfg expImportCfg; /**< only valid on mode JETTY_IMPORT_MODE_EXP */
-            uint32_t tpType; /**< refer to urma_tp_type_t */
+            uint32_t tpType;                       /**< refer to urma_tp_type_t */
         } ub;
     };
     uint32_t resv[7U];
@@ -487,7 +475,7 @@ struct QpImportInfo {
     union {
         struct {
             uint64_t tjettyHandle; /**< refer to urma_target_jetty_t *tjetty */
-            uint32_t tpn; /**< refer to urma_tp_t tp */
+            uint32_t tpn;          /**< refer to urma_tp_t tp */
         } ub;
     };
     uint32_t resv[8U];
@@ -498,17 +486,9 @@ struct QpImportInfoT {
     struct QpImportInfo out;
 };
 
-enum JettyAttrMask {
-    JETTY_ATTR_RX_THRESHOLD = 0x1,
-    JETTY_ATTR_STATE = 0x1 << 1
-};
+enum JettyAttrMask { JETTY_ATTR_RX_THRESHOLD = 0x1, JETTY_ATTR_STATE = 0x1 << 1 };
 
-enum JettyState {
-    JETTY_STATE_RESET = 0,
-    JETTY_STATE_READY,
-    JETTY_STATE_SUSPENDED,
-    JETTY_STATE_ERROR
-};
+enum JettyState { JETTY_STATE_RESET = 0, JETTY_STATE_READY, JETTY_STATE_SUSPENDED, JETTY_STATE_ERROR };
 
 struct JettyAttr {
     uint32_t mask; // mask value refer to enum jetty_attr_mask
@@ -528,7 +508,7 @@ struct JettyAttr {
  * @see RaGetDevEidInfoList
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaGetDevEidInfoNum(struct RaInfo info, unsigned int *num);
 
 /**
@@ -540,9 +520,8 @@ HCCP_ATTRI_VISI_DEF int RaGetDevEidInfoNum(struct RaInfo info, unsigned int *num
  * @see RaGetDevEidInfoNum
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
-HCCP_ATTRI_VISI_DEF int RaGetDevEidInfoList(struct RaInfo info, struct HccpDevEidInfo infoList[],
-    unsigned int *num);
+ */
+HCCP_ATTRI_VISI_DEF int RaGetDevEidInfoList(struct RaInfo info, struct HccpDevEidInfo infoList[], unsigned int *num);
 
 /**
  * @ingroup libudma
@@ -553,7 +532,7 @@ HCCP_ATTRI_VISI_DEF int RaGetDevEidInfoList(struct RaInfo info, struct HccpDevEi
  * @see ra_ctx_deinit
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxInit(struct CtxInitCfg *cfg, struct CtxInitAttr *attr, void **ctxHandle);
 
 /**
@@ -563,7 +542,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxInit(struct CtxInitCfg *cfg, struct CtxInitAttr *at
  * @param attr [OUT] dev base attr
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaGetDevBaseAttr(void *ctxHandle, struct DevBaseAttr *attr);
 
 /**
@@ -576,7 +555,7 @@ HCCP_ATTRI_VISI_DEF int RaGetDevBaseAttr(void *ctxHandle, struct DevBaseAttr *at
  * @see ra_ctx_init
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaGetEidByIp(void *ctxHandle, struct IpInfo ip[], union HccpEid eid[], unsigned int *num);
 
 /**
@@ -589,7 +568,7 @@ HCCP_ATTRI_VISI_DEF int RaGetEidByIp(void *ctxHandle, struct IpInfo ip[], union 
  * @see ra_ctx_init
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaGetIpByEid(void *ctxHandle, union HccpEid eid[], struct IpInfo ip[], unsigned int *num);
 
 /**
@@ -599,7 +578,7 @@ HCCP_ATTRI_VISI_DEF int RaGetIpByEid(void *ctxHandle, union HccpEid eid[], struc
  * @see ra_ctx_init
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxDeinit(void *ctxHandle);
 
 /**
@@ -611,7 +590,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxDeinit(void *ctxHandle);
  * @see ra_ctx_token_id_free
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxTokenIdAlloc(void *ctxHandle, struct HccpTokenId *info, void **tokenIdHandle);
 
 /**
@@ -622,7 +601,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxTokenIdAlloc(void *ctxHandle, struct HccpTokenId *i
  * @see ra_ctx_token_id_alloc
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxTokenIdFree(void *ctxHandle, void *tokenIdHandle);
 
 /**
@@ -634,7 +613,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxTokenIdFree(void *ctxHandle, void *tokenIdHandle);
  * @see ra_ctx_lmem_unregister
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxLmemRegister(void *ctxHandle, struct MrRegInfoT *lmemInfo, void **lmemHandle);
 
 /**
@@ -645,7 +624,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxLmemRegister(void *ctxHandle, struct MrRegInfoT *lm
  * @see ra_ctx_lmem_register
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxLmemUnregister(void *ctxHandle, void *lmemHandle);
 
 /**
@@ -657,7 +636,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxLmemUnregister(void *ctxHandle, void *lmemHandle);
  * @see ra_ctx_rmem_unimport
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxRmemImport(void *ctxHandle, struct MrImportInfoT *rmemInfo, void **rmemHandle);
 
 /**
@@ -668,7 +647,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxRmemImport(void *ctxHandle, struct MrImportInfoT *r
  * @see ra_ctx_rmem_import
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxRmemUnimport(void *ctxHandle, void *rmemHandle);
 
 /**
@@ -680,7 +659,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxRmemUnimport(void *ctxHandle, void *rmemHandle);
  * @see ra_ctx_chan_destroy
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxChanCreate(void *ctxHandle, struct ChanInfoT *chanInfo, void **chanHandle);
 
 /**
@@ -691,7 +670,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxChanCreate(void *ctxHandle, struct ChanInfoT *chanI
  * @see ra_ctx_chan_create
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxChanDestroy(void *ctxHandle, void *chanHandle);
 
 /**
@@ -703,7 +682,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxChanDestroy(void *ctxHandle, void *chanHandle);
  * @see ra_ctx_cq_destroy
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxCqCreate(void *ctxHandle, struct CqInfoT *info, void **cqHandle);
 
 /**
@@ -714,7 +693,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxCqCreate(void *ctxHandle, struct CqInfoT *info, voi
  * @see ra_ctx_cq_create
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxCqDestroy(void *ctxHandle, void *cqHandle);
 
 /**
@@ -727,7 +706,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxCqDestroy(void *ctxHandle, void *cqHandle);
  * @see ra_ctx_qp_destroy
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInfo *info,
     void **qpHandle);
 
@@ -740,7 +719,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxQpCreate(void *ctxHandle, struct QpCreateAttr *attr
  * @see ra_ctx_qp_create
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxQpQueryBatch(void *qpHandle[], struct JettyAttr attr[], unsigned int *num);
 
 /**
@@ -750,7 +729,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxQpQueryBatch(void *qpHandle[], struct JettyAttr att
  * @see ra_ctx_qp_create
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxQpDestroy(void *qpHandle);
 
 /**
@@ -763,7 +742,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxQpDestroy(void *qpHandle);
  * @see RaCtxInit
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxGetTpInfoList(void *ctxHandle, struct GetTpCfg *cfg, struct HccpTpInfo infoList[],
     unsigned int *num);
 
@@ -777,7 +756,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxGetTpInfoList(void *ctxHandle, struct GetTpCfg *cfg
  * @see RaCtxGetTpInfoList
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxGetTpAttr(void *ctxHandle, uint64_t tpHandle, uint32_t *attrBitmap, struct TpAttr *attr);
 
 /**
@@ -790,7 +769,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxGetTpAttr(void *ctxHandle, uint64_t tpHandle, uint3
  * @see RaCtxGetTpInfoList
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxSetTpAttr(void *ctxHandle, uint64_t tpHandle, uint32_t attrBitmap, struct TpAttr *attr);
 
 /**
@@ -802,7 +781,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxSetTpAttr(void *ctxHandle, uint64_t tpHandle, uint3
  * @see ra_ctx_qp_unimport
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxQpImport(void *ctxHandle, struct QpImportInfoT *qpInfo, void **remQpHandle);
 
 /**
@@ -813,7 +792,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxQpImport(void *ctxHandle, struct QpImportInfoT *qpI
  * @see ra_ctx_qp_import
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxQpUnimport(void *ctxHandle, void *remQpHandle);
 
 /**
@@ -824,7 +803,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxQpUnimport(void *ctxHandle, void *remQpHandle);
  * @see ra_ctx_qp_unbind
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxQpBind(void *qpHandle, void *remQpHandle);
 
 /**
@@ -834,7 +813,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxQpBind(void *qpHandle, void *remQpHandle);
  * @see ra_ctx_qp_bind
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxQpUnbind(void *qpHandle);
 
 /**
@@ -845,7 +824,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxQpUnbind(void *qpHandle);
  * @param num [IN/OUT] num of events, max num is ASYNC_EVENT_MAX_NUM
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxGetAsyncEvents(void *ctxHandle, struct AsyncEvent events[], unsigned int *num);
 
 /**
@@ -857,7 +836,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxGetAsyncEvents(void *ctxHandle, struct AsyncEvent e
  * @see ra_ctx_init
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxGetAuxInfo(void *ctxHandle, struct HccpAuxInfoIn *in, struct HccpAuxInfoOut *out);
 
 /**
@@ -869,9 +848,8 @@ HCCP_ATTRI_VISI_DEF int RaCtxGetAuxInfo(void *ctxHandle, struct HccpAuxInfoIn *i
  * @see ra_ctx_init
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
-HCCP_ATTRI_VISI_DEF int RaCtxGetCrErrInfoList(void *ctxHandle, struct CrErrInfo *infoList,
-    unsigned int *num);
+ */
+HCCP_ATTRI_VISI_DEF int RaCtxGetCrErrInfoList(void *ctxHandle, struct CrErrInfo *infoList, unsigned int *num);
 
 /**
  * @ingroup libudma
@@ -882,7 +860,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxGetCrErrInfoList(void *ctxHandle, struct CrErrInfo 
  * @see RaCtxQpCreate
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaCtxGetJettyContext(void *qpHandle, uint8_t context[], unsigned int *len);
 #ifdef __cplusplus
 }

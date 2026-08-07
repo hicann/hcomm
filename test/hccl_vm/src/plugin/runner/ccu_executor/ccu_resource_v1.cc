@@ -28,7 +28,8 @@ void CcuResourceV1::Reset()
     channelId2RmtRankMap_ = {};
 }
 
-CcuResourceV1::CcuResourceV1(int rankId, uint32_t rankSize) {
+CcuResourceV1::CcuResourceV1(int rankId, uint32_t rankSize)
+{
     rankId_ = rankId;
     rankSize_ = rankSize;
     for (int i = 0; i < HcclSim::DIE_NUM; i++) {

@@ -13,7 +13,6 @@
 
 #include "reduce_scatter_halving_doubling_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * REDUCE_SCATTER_HALVING_DOUBLING_H */

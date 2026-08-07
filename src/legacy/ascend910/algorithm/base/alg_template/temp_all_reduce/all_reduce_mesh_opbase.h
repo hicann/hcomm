@@ -13,7 +13,6 @@
 
 #include "all_reduce_mesh_opbase_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALL_REDUCE_MESH_OPBASE_H */

@@ -19,34 +19,34 @@
 
 namespace hccl {
 
-using CollExecCreator = std::function<CollExecutorBase *(const HcclDispatcher, std::unique_ptr<TopoMatcher> &)>;
+using CollExecCreator = std::function<CollExecutorBase*(const HcclDispatcher, std::unique_ptr<TopoMatcher>&)>;
 
 template <typename P>
-static CollExecutorBase *DefaultExecCreator(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher)
+static CollExecutorBase* DefaultExecCreator(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher)
 {
-    static_assert(std::is_base_of<CollExecutorBase, P>::value,
-        "Executor type must derived from Hccl::CollExecutorBase");
+    static_assert(
+        std::is_base_of<CollExecutorBase, P>::value, "Executor type must derived from Hccl::CollExecutorBase");
     return new (std::nothrow) P(dispatcher, topoMatcher);
 }
 
 class CollAlgExecRegistry {
 public:
-    static CollAlgExecRegistry &Instance();
-    HcclResult Register(const std::string &tag, const CollExecCreator &collExecCreator);
-    std::unique_ptr<CollExecutorBase> GetAlgExec(const std::string &tag, const HcclDispatcher dispatcher,
-                                                 std::unique_ptr<TopoMatcher> &topoMatcher);
+    static CollAlgExecRegistry& Instance();
+    HcclResult Register(const std::string& tag, const CollExecCreator& collExecCreator);
+    std::unique_ptr<CollExecutorBase>
+    GetAlgExec(const std::string& tag, const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
 
 private:
     std::unordered_map<std::string, const CollExecCreator> execCreators_;
     mutable std::mutex mu_;
 };
 
-#define REGISTER_EXEC_HELPER(ctr, tag, name, collExecBase)       \
-    static HcclResult g_func_##name##_##ctr             \
+#define REGISTER_EXEC_HELPER(ctr, tag, name, collExecBase) \
+    static HcclResult g_func_##name##_##ctr                \
         = CollAlgExecRegistry::Instance().Register(tag, DefaultExecCreator<collExecBase>)
 
 #define REGISTER_EXEC_HELPER_1(ctr, tag, name, collExecBase) REGISTER_EXEC_HELPER(ctr, tag, name, collExecBase)
 
 #define REGISTER_EXEC(tag, name, collExecBase) REGISTER_EXEC_HELPER_1(__COUNTER__, tag, name, collExecBase)
-}   // namespace hccl
+} // namespace hccl
 #endif

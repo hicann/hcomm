@@ -13,21 +13,22 @@
 #include "coll_all_to_all_executor.h"
 namespace hccl {
 class CollRunAlltoAllVFullMesh : public CollAlltoAllExecutor {
-
 public:
-    CollRunAlltoAllVFullMesh(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollRunAlltoAllVFullMesh(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollRunAlltoAllVFullMesh() override = default;
 
 private:
     HcclResult CalcStreamNum(u32& streamNum) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel2CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel2CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalAlltoAllFullMeshCommInfo(TransportMemType inputType, TransportMemType outputType,
-        std::vector<LevelNSubCommTransport>& opTransport);
+    HcclResult CalAlltoAllFullMeshCommInfo(
+        TransportMemType inputType, TransportMemType outputType, std::vector<LevelNSubCommTransport>& opTransport);
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 };
 
 } // namespace hccl

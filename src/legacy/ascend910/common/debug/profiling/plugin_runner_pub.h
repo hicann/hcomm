@@ -19,17 +19,18 @@
 namespace hccl {
 class PluginRunner {
 public:
-    explicit PluginRunner(ProfilerBase *profiler);
+    explicit PluginRunner(ProfilerBase* profiler);
     ~PluginRunner();
     template <typename T>
-    void operator () (rtStream_t stream, TaskType taskType, const T &para) const;
-    void operator () (rtStream_t stream, const TaskParaAiv &paraAiv) const;
-    void operator () (rtStream_t stream, const void *descBuf = nullptr, size_t descBufLen = 0) const; // FFTS+ launch
-    void operator () (const TaskParaHost &paraHost) const;
-    void operator () (const StepData &stepData);
+    void operator()(rtStream_t stream, TaskType taskType, const T& para) const;
+    void operator()(rtStream_t stream, const TaskParaAiv& paraAiv) const;
+    void operator()(rtStream_t stream, const void* descBuf = nullptr, size_t descBufLen = 0) const; // FFTS+ launch
+    void operator()(const TaskParaHost& paraHost) const;
+    void operator()(const StepData& stepData);
+
 protected:
 private:
-    ProfilerBase *profiler_;
+    ProfilerBase* profiler_;
     HcclResult isStreamCapture(rtStream_t stream, bool& isCapture) const;
 };
 } // namespace hccl

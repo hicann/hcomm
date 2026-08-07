@@ -17,10 +17,12 @@
 namespace hccl {
 class ReduceScatterVOperator : public CollAlgOperator {
 public:
-    ReduceScatterVOperator(AlgConfigurator* algConfigurator, CCLBufferManager &cclBufferManager,
-        HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    ReduceScatterVOperator(
+        AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager, HcclDispatcher dispatcher,
+        std::unique_ptr<TopoMatcher>& topoMatcher);
     ~ReduceScatterVOperator() override;
-    HcclResult SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag) override;
+    HcclResult
+    SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag) override;
 
 private:
     HcclResult SelectAlgfor91093(const OpParam& param, std::string& algName);
@@ -28,6 +30,6 @@ private:
     HcclResult SelectAlgfor310P3(const OpParam& param, std::string& algName);
 };
 
-}
+} // namespace hccl
 
 #endif /** __REDUCE_SCATTER_V_OPERATOR_H__ */

@@ -19,7 +19,8 @@
 struct RsTlvOps {
     int (*tlvInit)(unsigned int phyId, unsigned int *bufferSize);
     int (*tlvDeinit)(unsigned int phyId);
-    int (*tlvRequest)(struct TlvRequestMsgHead *head, char *dataIn, char *dataOut, unsigned int *bufferSize, unsigned int dataMaxLength);
+    int (*tlvRequest)(struct TlvRequestMsgHead *head, char *dataIn, char *dataOut, unsigned int *bufferSize,
+        unsigned int dataMaxLength);
     int (*ccuCustomChannel)(const struct CustomChanInfoIn *in, struct CustomChanInfoOut *out);
 };
 
@@ -75,7 +76,7 @@ int RaRsTlvRequest(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpTlvRequestData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     *opResult = gRaRsTlvOps.tlvRequest(&dataIn->txData.head, dataIn->txData.data, dataOut->rxData.recvData,
-            &dataOut->rxData.recvBytes, MAX_TLV_MSG_DATA_LEN);
+        &dataOut->rxData.recvBytes, MAX_TLV_MSG_DATA_LEN);
 
     CHK_PRT_RETURN(*opResult == -EUSERS || *opResult == -ENOTSUPP, hccp_warn("tlv request unsuccessful"), 0);
     if (*opResult != 0) {
@@ -93,7 +94,7 @@ int RaRsTlvRequestV2(char *inBuf, char *outBuf, int *outLen, int *opResult, int 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpTlvRequestDataV2), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     *opResult = gRaRsTlvOps.tlvRequest(&dataIn->txData.head, dataIn->txData.data, dataOut->rxData.recvData,
-            &dataOut->rxData.recvBytes, MAX_TLV_MSG_DATA_LEN_V2);
+        &dataOut->rxData.recvBytes, MAX_TLV_MSG_DATA_LEN_V2);
 
     CHK_PRT_RETURN(*opResult == -EUSERS || *opResult == -ENOTSUPP, hccp_warn("tlv request v2 unsuccessful"), 0);
     if (*opResult != 0) {
@@ -103,18 +104,17 @@ int RaRsTlvRequestV2(char *inBuf, char *outBuf, int *outLen, int *opResult, int 
     return 0;
 }
 
-int RaRsCustomChannel(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen) 
-{ 
-    union OpCustomChannelData *opDataOut = (union OpCustomChannelData *)(outBuf + sizeof(struct MsgHead)); 
-    union OpCustomChannelData *opData = (union OpCustomChannelData *)(inBuf + sizeof(struct MsgHead)); 
- 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCustomChannelData), sizeof(struct MsgHead), rcvBufLen, 
-        opResult); 
- 
-    *opResult = gRaRsTlvOps.ccuCustomChannel(&opData->txData.info, &opDataOut->rxData.info); 
-    if (*opResult != 0) { 
-        hccp_err("[ccu]custom channel failed, ret[%d], phyId[%u]", *opResult, opData->txData.phyId); 
-    } 
- 
-    return 0; 
+int RaRsCustomChannel(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
+{
+    union OpCustomChannelData *opDataOut = (union OpCustomChannelData *)(outBuf + sizeof(struct MsgHead));
+    union OpCustomChannelData *opData = (union OpCustomChannelData *)(inBuf + sizeof(struct MsgHead));
+
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCustomChannelData), sizeof(struct MsgHead), rcvBufLen, opResult);
+
+    *opResult = gRaRsTlvOps.ccuCustomChannel(&opData->txData.info, &opDataOut->rxData.info);
+    if (*opResult != 0) {
+        hccp_err("[ccu]custom channel failed, ret[%d], phyId[%u]", *opResult, opData->txData.phyId);
+    }
+
+    return 0;
 }

@@ -16,26 +16,28 @@
 namespace hccl {
 class TransportDeviceP2p : public TransportP2p {
 public:
-    explicit TransportDeviceP2p(DispatcherPub *dispatcher,
-                                const std::unique_ptr<NotifyPool> &notifyPool,
-                                MachinePara &machinePara,
-                                std::chrono::milliseconds timeout,
-                                const TransportDeviceP2pData &transDevP2pData);
+    explicit TransportDeviceP2p(
+        DispatcherPub* dispatcher, const std::unique_ptr<NotifyPool>& notifyPool, MachinePara& machinePara,
+        std::chrono::milliseconds timeout, const TransportDeviceP2pData& transDevP2pData);
     ~TransportDeviceP2p() override;
-    
+
     HcclResult Init() override;
 
-    HcclResult UpdateRemoteAddr(void *remoteIn, void *remoteOut) override;
+    HcclResult UpdateRemoteAddr(void* remoteIn, void* remoteOut) override;
+
 protected:
-    HcclResult SignalRecord(std::shared_ptr<RemoteNotify> &remoteSignal, u64 remoteSignalAddr, u64 remoteSignalOffset,
-        Stream &stream) override;
+    HcclResult SignalRecord(
+        std::shared_ptr<RemoteNotify>& remoteSignal, u64 remoteSignalAddr, u64 remoteSignalOffset,
+        Stream& stream) override;
+
 private:
     HcclResult CheckRelationship(u32 relationship);
     HcclResult ConfigUseSdmaCopyToSignalRecord();
-    template <typename T> HcclResult ModifySignalAddrToVA(s32 deviceId, std::shared_ptr<T> &notify);
-    HcclResult GetNotifyAddr(s32 deviceId, const HcclSignalInfo &signalInfo, u64 &addr);
+    template <typename T>
+    HcclResult ModifySignalAddrToVA(s32 deviceId, std::shared_ptr<T>& notify);
+    HcclResult GetNotifyAddr(s32 deviceId, const HcclSignalInfo& signalInfo, u64& addr);
     DeviceMem signalMem_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* TRANSPORT_DEVICE_P2P_PUB_H */

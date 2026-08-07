@@ -13,8 +13,6 @@
 
 #include "nonuniform_hierarchical_ring_base_pub.h"
 
-namespace hccl {
-}  // hccl
+namespace hccl {} // namespace hccl
 
-#endif  /* NONUNIFORM_HIERARCHICAL_RING_BASE_H */
-
+#endif /* NONUNIFORM_HIERARCHICAL_RING_BASE_H */

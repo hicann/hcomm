@@ -16,33 +16,39 @@
 namespace hcomm {
 namespace CcuRep {
 
-using namespace Hccl;
+    using namespace Hccl;
 
-CcuRepLoadArg::CcuRepLoadArg(CcuInsGeneratorBase* insGenPtr, const Variable &var, uint16_t argId, uint16_t fullArgId) :
-    insGeneratorPtr_(insGenPtr), var(var), argId(argId), fullArgId(fullArgId)
-{
-    type       = CcuRepType::LOAD_ARG;
-    instrCount = insGeneratorPtr_->GetInstrCount(type);
-}
+    CcuRepLoadArg::CcuRepLoadArg(
+        CcuInsGeneratorBase* insGenPtr, const Variable& var, uint16_t argId, uint16_t fullArgId)
+        : insGeneratorPtr_(insGenPtr),
+          var(var),
+          argId(argId),
+          fullArgId(fullArgId)
+    {
+        type = CcuRepType::LOAD_ARG;
+        instrCount = insGeneratorPtr_->GetInstrCount(type);
+    }
 
-bool CcuRepLoadArg::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool CcuRepLoadArg::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    CHK_RET_THROW(Hccl::CcuApiException,
-        Hccl::StringFormat("[CcuRepLoadArg][%s] failed to translate repLoadArg for instrId[%u] ", __func__, instrId),
+        CHK_RET_THROW(
+            Hccl::CcuApiException,
+            Hccl::StringFormat(
+                "[CcuRepLoadArg][%s] failed to translate repLoadArg for instrId[%u] ", __func__, instrId),
             insGeneratorPtr_->CcuRepLoadArgTranslate(ccuKernel, instr, instrId, this, dep));
 
-    instrId += instrCount;
+        instrId += instrCount;
 
-    return translated;
-}
+        return translated;
+    }
 
-std::string CcuRepLoadArg::Describe()
-{
-    return Hccl::StringFormat("Variable[%u] = Arg[%u] (slot=%u)", var.Id(), fullArgId, argId);
-}
+    std::string CcuRepLoadArg::Describe()
+    {
+        return Hccl::StringFormat("Variable[%u] = Arg[%u] (slot=%u)", var.Id(), fullArgId, argId);
+    }
 
 }; // namespace CcuRep
 }; // namespace hcomm

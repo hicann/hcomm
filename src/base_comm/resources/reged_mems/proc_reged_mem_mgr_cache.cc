@@ -12,14 +12,15 @@
 
 namespace hcomm {
 
-std::shared_ptr<RegedMemMgr> ProcRegedMemMgrCache::GetOrCreate(const MemMgrCacheKey &key,
-    std::function<std::shared_ptr<RegedMemMgr>()> creator)
+std::shared_ptr<RegedMemMgr>
+ProcRegedMemMgrCache::GetOrCreate(const MemMgrCacheKey& key, std::function<std::shared_ptr<RegedMemMgr>()> creator)
 {
     std::lock_guard<std::mutex> lock(mtx_);
     auto it = cacheMap_.find(key);
     if (it != cacheMap_.end()) {
         it->second.refCount++;
-        HCCL_INFO("[ProcRegedMemMgrCache][GetOrCreate] cache hit, refCount[%llu]",
+        HCCL_INFO(
+            "[ProcRegedMemMgrCache][GetOrCreate] cache hit, refCount[%llu]",
             static_cast<unsigned long long>(it->second.refCount));
         return it->second.mgrPtr;
     }
@@ -31,7 +32,7 @@ std::shared_ptr<RegedMemMgr> ProcRegedMemMgrCache::GetOrCreate(const MemMgrCache
     return mgrPtr;
 }
 
-void ProcRegedMemMgrCache::Release(const MemMgrCacheKey &key)
+void ProcRegedMemMgrCache::Release(const MemMgrCacheKey& key)
 {
     std::lock_guard<std::mutex> lock(mtx_);
     auto it = cacheMap_.find(key);
@@ -46,7 +47,8 @@ void ProcRegedMemMgrCache::Release(const MemMgrCacheKey &key)
         cacheMap_.erase(it);
         HCCL_INFO("[ProcRegedMemMgrCache][Release] refCount zero, entry erased");
     } else {
-        HCCL_INFO("[ProcRegedMemMgrCache][Release] refCount remain [%llu]",
+        HCCL_INFO(
+            "[ProcRegedMemMgrCache][Release] refCount remain [%llu]",
             static_cast<unsigned long long>(it->second.refCount));
     }
 }

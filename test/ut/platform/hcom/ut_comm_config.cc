@@ -34,38 +34,26 @@
 using namespace std;
 using namespace hccl;
 
-class CommConfigTest : public testing::Test
-{
+class CommConfigTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "\033[36m--CommConfigTest SetUP--\033[0m" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "\033[36m--CommConfigTest TearDown--\033[0m" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "\033[36m--CommConfigTest SetUP--\033[0m" << std::endl; }
+    static void TearDownTestCase() { std::cout << "\033[36m--CommConfigTest TearDown--\033[0m" << std::endl; }
     virtual void SetUp()
     {
         setenv("HCCL_DFS_CONFIG", "connection_fault_detection_time:0", 1);
         InitEnvParam();
         std::cout << "A Test SetUP" << std::endl;
     }
-    virtual void TearDown()
-    {
-        std::cout << "A Test TearDown" << std::endl;
-    }
+    virtual void TearDown() { std::cout << "A Test TearDown" << std::endl; }
 };
 
 TEST_F(CommConfigTest, utCommConfig_load)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
 
@@ -119,16 +107,14 @@ TEST_F(CommConfigTest, utCommConfig_magicword_verify)
 TEST_F(CommConfigTest, utCommConfig_version_compatibility_v0)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
-    CommConfigInfo configInfo = { sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 0, { 0 } };
-    CommConfigHandle configHandle = { configInfo, 300, 1 };
+    CommConfigInfo configInfo = {sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 0, {0}};
+    CommConfigHandle configHandle = {configInfo, 300, 1};
 
     HcclResult ret = commConfig.SetConfigByVersion(configHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -141,16 +127,14 @@ TEST_F(CommConfigTest, utCommConfig_version_compatibility_v0)
 TEST_F(CommConfigTest, utCommConfig_version_compatibility_v1)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
-    CommConfigInfo configInfo = { sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 1, { 0 } };
-    CommConfigHandle configHandle = { configInfo, 300, 1, "comm_ID", "should_not_be_loaded", 0, 132, 4};
+    CommConfigInfo configInfo = {sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 1, {0}};
+    CommConfigHandle configHandle = {configInfo, 300, 1, "comm_ID", "should_not_be_loaded", 0, 132, 4};
 
     HcclResult ret = commConfig.SetConfigByVersion(configHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -163,16 +147,15 @@ TEST_F(CommConfigTest, utCommConfig_version_compatibility_v1)
 TEST_F(CommConfigTest, utCommConfig_default_env_config)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
-    CommConfigInfo configInfo = { sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 1, { 0 } };
-    CommConfigHandle configHandle = { configInfo, HCCL_COMM_BUFFSIZE_CONFIG_NOT_SET, HCCL_COMM_DETERMINISTIC_CONFIG_NOT_SET };
+    CommConfigInfo configInfo = {sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 1, {0}};
+    CommConfigHandle configHandle
+        = {configInfo, HCCL_COMM_BUFFSIZE_CONFIG_NOT_SET, HCCL_COMM_DETERMINISTIC_CONFIG_NOT_SET};
 
     HcclResult ret = commConfig.SetConfigByVersion(configHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -186,22 +169,17 @@ ExternalInput g_externalInput;
 TEST_F(CommConfigTest, utCommConfig_op_expansion)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     DevType deviceType = DevType::DEV_TYPE_910B;
-    MOCKER(hrtGetDeviceType)
-    .stubs()
-    .with(outBound(deviceType))
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
 
     CommConfig commConfig("comm_ID");
-    CommConfigInfo configInfo = { sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 4, { 0 } };
-    CommConfigHandle configHandle = { configInfo, 300, 1, "comm_ID", "Unspecified", 3, 132, 4};
+    CommConfigInfo configInfo = {sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 4, {0}};
+    CommConfigHandle configHandle = {configInfo, 300, 1, "comm_ID", "Unspecified", 3, 132, 4};
 
     HcclResult ret = commConfig.SetConfigByVersion(configHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -236,14 +214,11 @@ TEST_F(CommConfigTest, utCommConfig_op_expansion)
 TEST_F(CommConfigTest, utCommConfig_op_expansion_v0)
 {
     DevType deviceType = DevType::DEV_TYPE_910B;
-    MOCKER(hrtGetDeviceType)
-    .stubs()
-    .with(outBound(deviceType))
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
 
     CommConfig commConfig("comm_ID");
-    CommConfigInfo configInfo = { sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 4, { 0 } };
-    CommConfigHandle configHandle = { configInfo, 300, 1, "comm_ID", "Unspecified", 3, 132, 4};
+    CommConfigInfo configInfo = {sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 4, {0}};
+    CommConfigHandle configHandle = {configInfo, 300, 1, "comm_ID", "Unspecified", 3, 132, 4};
     g_externalInput.hcclDeterministic == true;
     configHandle.opExpansionMode = 3;
     configHandle.deterministic = 1;
@@ -270,8 +245,8 @@ TEST_F(CommConfigTest, utCommConfig_op_expansion_v0)
 TEST_F(CommConfigTest, utCommConfig_deterministic_strcit)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
     MOCKER(GetExternalInputHcclDeterministicV2).stubs().will(returnValue(0));
 
@@ -279,8 +254,8 @@ TEST_F(CommConfigTest, utCommConfig_deterministic_strcit)
     MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
 
     CommConfig commConfig("comm_ID");
-    CommConfigInfo configInfo = { sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 1, { 0 } };
-    CommConfigHandle configHandle = { configInfo, 300, 2, "comm_ID", "should_not_be_loaded", 0, 132, 4};
+    CommConfigInfo configInfo = {sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 1, {0}};
+    CommConfigHandle configHandle = {configInfo, 300, 2, "comm_ID", "should_not_be_loaded", 0, 132, 4};
 
     HcclResult ret = commConfig.SetConfigByVersion(configHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -293,14 +268,11 @@ TEST_F(CommConfigTest, utCommConfig_deterministic_strcit)
 TEST_F(CommConfigTest, Ut_GetAicpuUnfoldConfig_When_SetConfigOpExpansionMode_Aicpu_A3_ReturnIsHCCL_SUCCESS)
 {
     DevType deviceType = DevType::DEV_TYPE_910_93;
-    MOCKER(hrtGetDeviceType)
-    .stubs()
-    .with(outBound(deviceType))
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
 
     CommConfig commConfig("comm_ID");
-    CommConfigInfo configInfo = { sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 4, { 0 } };
-    CommConfigHandle configHandle = { configInfo, 300, 1, "comm_ID", "Unspecified", 3, 132, 4};
+    CommConfigInfo configInfo = {sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 4, {0}};
+    CommConfigHandle configHandle = {configInfo, 300, 1, "comm_ID", "Unspecified", 3, 132, 4};
     configHandle.opExpansionMode = 2;
     HcclResult ret = commConfig.SetConfigOpExpansionMode(configHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -361,15 +333,15 @@ TEST_F(CommConfigTest, utCommConfig_deterministic_strcit_fail)
 TEST_F(CommConfigTest, CheckRankIpFamily_ValidIPv4_Success)
 {
     std::vector<RankInfo_t> rankList(2);
-    
+
     HcclIpAddress ip1(0x7f000001);
     rankList[0].hostIp = ip1;
     rankList[0].serverId = "server1";
-    
+
     HcclIpAddress ip2(0x7f000002);
     rankList[1].hostIp = ip2;
     rankList[1].serverId = "server2";
-    
+
     HcclResult ret = CheckRankIpFamily(rankList);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -377,15 +349,15 @@ TEST_F(CommConfigTest, CheckRankIpFamily_ValidIPv4_Success)
 TEST_F(CommConfigTest, CheckRankIpFamily_ValidIPv6_Success)
 {
     std::vector<RankInfo_t> rankList(2);
-    
+
     HcclIpAddress ip1("::1");
     rankList[0].hostIp = ip1;
     rankList[0].serverId = "server1";
-    
+
     HcclIpAddress ip2("::2");
     rankList[1].hostIp = ip2;
     rankList[1].serverId = "server2";
-    
+
     HcclResult ret = CheckRankIpFamily(rankList);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -393,13 +365,13 @@ TEST_F(CommConfigTest, CheckRankIpFamily_ValidIPv6_Success)
 TEST_F(CommConfigTest, CheckRankIpFamily_InvalidHostIpFamily_ReturnParaError)
 {
     std::vector<RankInfo_t> rankList(1);
-    
+
     HcclIpAddress ip1(0x7f000001);
     rankList[0].hostIp = ip1;
     rankList[0].serverId = "server1";
-    
+
     rankList[0].hostIp.family = 100;
-    
+
     HcclResult ret = CheckRankIpFamily(rankList);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
@@ -407,15 +379,15 @@ TEST_F(CommConfigTest, CheckRankIpFamily_InvalidHostIpFamily_ReturnParaError)
 TEST_F(CommConfigTest, CheckRankIpFamily_InconsistentHostIpFamily_ReturnParaError)
 {
     std::vector<RankInfo_t> rankList(2);
-    
+
     HcclIpAddress ip1(0x7f000001);
     rankList[0].hostIp = ip1;
     rankList[0].serverId = "server1";
-    
+
     HcclIpAddress ip2("::1");
     rankList[1].hostIp = ip2;
     rankList[1].serverId = "server2";
-    
+
     HcclResult ret = CheckRankIpFamily(rankList);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
@@ -423,15 +395,15 @@ TEST_F(CommConfigTest, CheckRankIpFamily_InconsistentHostIpFamily_ReturnParaErro
 TEST_F(CommConfigTest, CheckRankIpFamily_InvalidDeviceIpFamily_ReturnParaError)
 {
     std::vector<RankInfo_t> rankList(1);
-    
+
     HcclIpAddress ip1(0x7f000001);
     rankList[0].hostIp = ip1;
     rankList[0].serverId = "server1";
-    
+
     HcclIpAddress deviceIp(0x7f000002);
     deviceIp.family = 100;
     rankList[0].deviceInfo.deviceIp.push_back(deviceIp);
-    
+
     HcclResult ret = CheckRankIpFamily(rankList);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
@@ -439,21 +411,21 @@ TEST_F(CommConfigTest, CheckRankIpFamily_InvalidDeviceIpFamily_ReturnParaError)
 TEST_F(CommConfigTest, CheckRankIpFamily_InconsistentDeviceIpFamily_ReturnParaError)
 {
     std::vector<RankInfo_t> rankList(2);
-    
+
     HcclIpAddress ip1(0x7f000001);
     rankList[0].hostIp = ip1;
     rankList[0].serverId = "server1";
-    
+
     HcclIpAddress deviceIp1(0x7f000002);
     rankList[0].deviceInfo.deviceIp.push_back(deviceIp1);
-    
+
     HcclIpAddress ip2(0x7f000003);
     rankList[1].hostIp = ip2;
     rankList[1].serverId = "server2";
-    
+
     HcclIpAddress deviceIp2("::1");
     rankList[1].deviceInfo.deviceIp.push_back(deviceIp2);
-    
+
     HcclResult ret = CheckRankIpFamily(rankList);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
@@ -461,11 +433,11 @@ TEST_F(CommConfigTest, CheckRankIpFamily_InconsistentDeviceIpFamily_ReturnParaEr
 TEST_F(CommConfigTest, CheckRankIpFamily_EmptyDeviceIp_Success)
 {
     std::vector<RankInfo_t> rankList(1);
-    
+
     HcclIpAddress ip1(0x7f000001);
     rankList[0].hostIp = ip1;
     rankList[0].serverId = "server1";
-    
+
     HcclResult ret = CheckRankIpFamily(rankList);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -473,14 +445,14 @@ TEST_F(CommConfigTest, CheckRankIpFamily_EmptyDeviceIp_Success)
 TEST_F(CommConfigTest, CheckRankIpFamily_InvalidDeviceIp_Success)
 {
     std::vector<RankInfo_t> rankList(1);
-    
+
     HcclIpAddress ip1(0x7f000001);
     rankList[0].hostIp = ip1;
     rankList[0].serverId = "server1";
-    
+
     HcclIpAddress invalidIpDevice;
     rankList[0].deviceInfo.deviceIp.push_back(invalidIpDevice);
-    
+
     HcclResult ret = CheckRankIpFamily(rankList);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -495,12 +467,10 @@ TEST_F(CommConfigTest, Check_taskexception_enable)
 TEST_F(CommConfigTest, ApplyHcclCommConfig_NullConfig_ReturnSuccess)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
     uint32_t opExpansionMode = 999;
@@ -513,12 +483,10 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_NullConfig_ReturnSuccess)
 TEST_F(CommConfigTest, ApplyHcclCommConfig_ValidConfig_ReturnSuccess)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
     HcclCommConfig config;
@@ -537,12 +505,10 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_ValidConfig_ReturnSuccess)
 TEST_F(CommConfigTest, ApplyHcclCommConfig_InvalidTrafficClass_ReturnParaError)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
     HcclCommConfig config;
@@ -558,12 +524,10 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_InvalidTrafficClass_ReturnParaError)
 TEST_F(CommConfigTest, ApplyHcclCommConfig_InvalidServiceLevel_ReturnParaError)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
     HcclCommConfig config;
@@ -580,12 +544,10 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_InvalidServiceLevel_ReturnParaError)
 TEST_F(CommConfigTest, ApplyHcclCommConfig_ValidTrafficClassAndServiceLevel_ReturnSuccess)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
     HcclCommConfig config;
@@ -604,12 +566,10 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_ValidTrafficClassAndServiceLevel_Retu
 TEST_F(CommConfigTest, ApplyHcclCommConfig_InvalidQos_ReturnParaError)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
     HcclCommConfig config;
@@ -623,7 +583,7 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_InvalidQos_ReturnParaError)
         uint32_t version;
         uint64_t reserved;
     } configInfo_t;
-    configInfo_t *info = (configInfo_t *)&config;
+    configInfo_t* info = (configInfo_t*)&config;
     info->version = 10;
     config.hcclQos = 8;
 
@@ -636,12 +596,10 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_InvalidQos_ReturnParaError)
 TEST_F(CommConfigTest, ApplyHcclCommConfig_ValidQos_ReturnSuccess)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
     HcclCommConfig config;
@@ -655,7 +613,7 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_ValidQos_ReturnSuccess)
         uint32_t version;
         uint64_t reserved;
     } configInfo_t;
-    configInfo_t *info = (configInfo_t *)&config;
+    configInfo_t* info = (configInfo_t*)&config;
     info->version = 10;
     config.hcclQos = 5;
 
@@ -669,12 +627,10 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_ValidQos_ReturnSuccess)
 TEST_F(CommConfigTest, ApplyHcclCommConfig_QosVersionBelow10_SkipQos)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
     HcclCommConfig config;
@@ -688,7 +644,7 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_QosVersionBelow10_SkipQos)
         uint32_t version;
         uint64_t reserved;
     } configInfo_t;
-    configInfo_t *info = (configInfo_t *)&config;
+    configInfo_t* info = (configInfo_t*)&config;
     info->version = 9;
     config.hcclQos = 5;
 
@@ -701,12 +657,10 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_QosVersionBelow10_SkipQos)
 TEST_F(CommConfigTest, ApplyHcclCommConfig_TcNotMultipleOf4_ReturnParaError)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
     HcclCommConfig config;
@@ -723,12 +677,10 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_TcNotMultipleOf4_ReturnParaError)
 TEST_F(CommConfigTest, ApplyHcclCommConfig_QosNotSetWithHighVersion_ReturnSuccess)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
     HcclCommConfig config;
@@ -742,7 +694,7 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_QosNotSetWithHighVersion_ReturnSucces
         uint32_t version;
         uint64_t reserved;
     } configInfo_t;
-    configInfo_t *info = (configInfo_t *)&config;
+    configInfo_t* info = (configInfo_t*)&config;
     info->version = 10;
     config.hcclQos = HCCL_COMM_QOS_CONFIG_NOT_SET;
 
@@ -755,12 +707,10 @@ TEST_F(CommConfigTest, ApplyHcclCommConfig_QosNotSetWithHighVersion_ReturnSucces
 TEST_F(CommConfigTest, SetConfigExecTimeout_NotSet_Expect_UseEnvDefault)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
-    MOCKER(GetExternalInputHcclDeterministic)
-    .stubs()
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclDeterministic).stubs().will(returnValue(false));
 
     CommConfig commConfig("comm_ID");
     CommConfigHandle config;
@@ -774,7 +724,7 @@ TEST_F(CommConfigTest, SetConfigExecTimeout_NotSet_Expect_UseEnvDefault)
 
 TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryHoldTime_EmptyIdentifier_Expect_Default)
 {
-    auto &configer = CommConfiger::GetInstance();
+    auto& configer = CommConfiger::GetInstance();
     u32 result = configer.GetCommConfigRetryHoldTime("");
     u32 expected = GetExternalInputRetryHoldTime();
     EXPECT_EQ(result, expected);
@@ -783,7 +733,7 @@ TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryHoldTime_EmptyIdentifier_E
 
 TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryHoldTime_NotFoundIdentifier_Expect_Default)
 {
-    auto &configer = CommConfiger::GetInstance();
+    auto& configer = CommConfiger::GetInstance();
     u32 result = configer.GetCommConfigRetryHoldTime("nonexistent_identifier_test");
     u32 expected = GetExternalInputRetryHoldTime();
     EXPECT_EQ(result, expected);
@@ -792,7 +742,7 @@ TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryHoldTime_NotFoundIdentifie
 
 TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryHoldTime_ValidIdentifier_Expect_ConfigValue)
 {
-    auto &configer = CommConfiger::GetInstance();
+    auto& configer = CommConfiger::GetInstance();
     const std::string identifier = "test_retry_hold_time_identifier";
     CommConfig config("test_comm");
     configer.SetCommConfig(config, identifier);
@@ -807,7 +757,7 @@ TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryHoldTime_ValidIdentifier_E
 
 TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryIntervalTime_EmptyIdentifier_Expect_Default)
 {
-    auto &configer = CommConfiger::GetInstance();
+    auto& configer = CommConfiger::GetInstance();
     u32 result = configer.GetCommConfigRetryIntervalTime("");
     u32 expected = GetExternalInputRetryIntervalTime();
     EXPECT_EQ(result, expected);
@@ -816,7 +766,7 @@ TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryIntervalTime_EmptyIdentifi
 
 TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryIntervalTime_NotFoundIdentifier_Expect_Default)
 {
-    auto &configer = CommConfiger::GetInstance();
+    auto& configer = CommConfiger::GetInstance();
     u32 result = configer.GetCommConfigRetryIntervalTime("nonexistent_identifier_test");
     u32 expected = GetExternalInputRetryIntervalTime();
     EXPECT_EQ(result, expected);
@@ -825,7 +775,7 @@ TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryIntervalTime_NotFoundIdent
 
 TEST_F(CommConfigTest, CommConfiger_GetCommConfigRetryIntervalTime_ValidIdentifier_Expect_ConfigValue)
 {
-    auto &configer = CommConfiger::GetInstance();
+    auto& configer = CommConfiger::GetInstance();
     const std::string identifier = "test_retry_interval_identifier";
     CommConfig config("test_comm");
     configer.SetCommConfig(config, identifier);

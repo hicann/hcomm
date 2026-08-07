@@ -39,7 +39,7 @@ bool InsertRunner(uint64_t serverKey)
             return false;
         }
 
-        auto ret = RunnerDB::GetOneByPred<sim::Host>([serverKey](const sim::Host &d) {
+        auto ret = RunnerDB::GetOneByPred<sim::Host>([serverKey](const sim::Host& d) {
             return d.server_id == serverKey;
         });
         if (!ret.second) {
@@ -53,7 +53,7 @@ bool InsertRunner(uint64_t serverKey)
         runner.host_id = hostKey;
         runner.pid = getpid();
         runner.thread_id = pthread_self();
-        
+
         // todo: runner未实际插入数据库，这里需要重新赋值
         g_runner.host_id = hostKey;
         g_runner.pid = getpid();
@@ -64,16 +64,15 @@ bool InsertRunner(uint64_t serverKey)
 
         g_runner.id = RunnerDB::Add<sim::Runner>(runner);
         return true;
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
         HCCL_VM_ERROR("SQLite exception: {}", e.what());
         return false;
     }
 }
 
-bool GetCurrRunnerTls(uint64_t serverKey, Runner &runner)
+bool GetCurrRunnerTls(uint64_t serverKey, Runner& runner)
 {
-    if (g_runner.id == 0 && serverKey == 0)
-    {
+    if (g_runner.id == 0 && serverKey == 0) {
         HCCL_VM_ERROR("can not get runner by server key: {:d}", serverKey);
         return false;
     }
@@ -87,36 +86,25 @@ bool GetCurrRunnerTls(uint64_t serverKey, Runner &runner)
 bool SetCurrCtxTls(uint64_t ctx)
 {
     try {
-        auto &currRunnerId = g_runner.id;
+        auto& currRunnerId = g_runner.id;
         g_runner.current_ctx_id = ctx;
-        RunnerDB::Update<sim::Runner>(currRunnerId,
-                                       [currRunnerId, ctx](sim::Runner &runner) { runner.current_ctx_id = ctx; });
+        RunnerDB::Update<sim::Runner>(currRunnerId, [currRunnerId, ctx](sim::Runner& runner) {
+            runner.current_ctx_id = ctx;
+        });
         return true;
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
         HCCL_VM_ERROR("SQLite exception: {}", e.what());
         return false;
     }
 }
 
-void SetLastStreamIdTls(uint64_t streamId)
-{
-    g_last_streamId = streamId;
-}
+void SetLastStreamIdTls(uint64_t streamId) { g_last_streamId = streamId; }
 
-void SetLastTaskIdTls(uint64_t taskId)
-{
-    g_last_taskId = taskId;
-}
+void SetLastTaskIdTls(uint64_t taskId) { g_last_taskId = taskId; }
 
-uint64_t GetLastStreamIdTls()
-{
-    return g_last_streamId;
-}
+uint64_t GetLastStreamIdTls() { return g_last_streamId; }
 
-uint64_t GetLastTaskIdTls()
-{
-    return g_last_taskId;
-}
+uint64_t GetLastTaskIdTls() { return g_last_taskId; }
 
 uint64_t GetCurrRankId()
 {
@@ -177,10 +165,7 @@ uint64_t GetRankIdByCtxId(uint64_t ctxId)
     return dev->logic_id;
 }
 
-void SetTsDevice(int tsId)
-{
-    g_tsId = tsId;
-}
+void SetTsDevice(int tsId) { g_tsId = tsId; }
 
 uint32_t GetRankSize()
 {
@@ -221,4 +206,4 @@ uint64_t GetServerKeyById(uint32_t superPodIdx, uint32_t serverIdx)
     }
     return serverRet.first.id;
 }
-}
+} // namespace sim

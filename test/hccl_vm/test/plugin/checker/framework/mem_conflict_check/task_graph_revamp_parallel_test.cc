@@ -29,7 +29,7 @@ void BuildParentChild(TaskNodePtr parent, TaskNodePtr child)
     parent->children.push_back(child);
     child->parents.push_back(parent);
 }
-}
+} // namespace
 
 class GraphRevampParallelTest : public testing::Test {
 protected:
@@ -152,10 +152,8 @@ TEST_F(GraphRevampParallelTest, Revamp_CcuGraphWithTwoLoopsInSameGroup)
     BuildParentChild(&inner2Node, &loopEnd2Node);
     BuildParentChild(&loopEnd2Node, &afterNode);
 
-    ccuTask.loopGroupInfo_.push_back({
-        LoopInfo(&loopStart1Node, &loopEnd1Node),
-        LoopInfo(&loopStart2Node, &loopEnd2Node)
-    });
+    ccuTask.loopGroupInfo_.push_back(
+        {LoopInfo(&loopStart1Node, &loopEnd1Node), LoopInfo(&loopStart2Node, &loopEnd2Node)});
     ccuTask.queueNum_ = 1;
 
     HcclResult ret = revamp.Revamp(&dummyStart);
@@ -708,8 +706,8 @@ TEST_F(GraphRevampParallelTest, Revamp_ReadReduceAsyncNode)
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy beforeCopy(srcSlice, dstSlice);
-    TaskStubReadReduce readReduceStub(1, LinkInfo(LinkProtoStub::RDMA), srcSlice, dstSlice,
-        HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
+    TaskStubReadReduce readReduceStub(
+        1, LinkInfo(LinkProtoStub::RDMA), srcSlice, dstSlice, HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
     TaskStubLocalPostTo postTo(0);
     TaskStubLocalWaitFrom waitFrom(0);
     TaskStubLocalCopy afterCopy(srcSlice, dstSlice);
@@ -746,8 +744,8 @@ TEST_F(GraphRevampParallelTest, Revamp_WriteReduceAsyncNode)
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy beforeCopy(srcSlice, dstSlice);
-    TaskStubWriteReduce writeReduceStub(1, LinkInfo(LinkProtoStub::RDMA), srcSlice, dstSlice,
-        HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
+    TaskStubWriteReduce writeReduceStub(
+        1, LinkInfo(LinkProtoStub::RDMA), srcSlice, dstSlice, HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
     TaskStubLocalPostTo postTo(0);
     TaskStubLocalWaitFrom waitFrom(0);
     TaskStubLocalCopy afterCopy(srcSlice, dstSlice);

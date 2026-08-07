@@ -31,13 +31,13 @@ namespace hcomm {
 struct CcuMissionInfo;
 struct CcuLoopInfo;
 struct CcuVersionOps {
-    const char *name;
-    void (*printCcumDfxInfo)(const void *rawData, std::ostringstream &oss);
-    HcclResult (*getMissionInfo)(const void *rawData, CcuMissionInfo *out);
-    HcclResult (*getLoopInfo)(const void *rawData, CcuLoopInfo *out);
+    const char* name;
+    void (*printCcumDfxInfo)(const void* rawData, std::ostringstream& oss);
+    HcclResult (*getMissionInfo)(const void* rawData, CcuMissionInfo* out);
+    HcclResult (*getLoopInfo)(const void* rawData, CcuLoopInfo* out);
 };
 
-HcclResult GetCcuOps(const CcuVersionOps *&ops);
+HcclResult GetCcuOps(const CcuVersionOps*& ops);
 
 struct TestCcumDfxInfoV1 {
     unsigned int queryResult;
@@ -98,9 +98,11 @@ static_assert(sizeof(TestCcumDfxInfoV2) <= 128U, "TestCcumDfxInfoV2 must mirror 
 // 任一 schema struct 尺寸偏离 raw 协议都会编译期失败，提示重新评估 raw helper 容量。
 // 放在 UT 文件而非生产 .cc：上库必经 UT 编译，效果等价且不影响生产 TU。
 constexpr size_t CCU_CTX_RAW_CAPACITY = 64;
-static_assert(sizeof(CcuMissionContext) == CCU_CTX_RAW_CAPACITY,
+static_assert(
+    sizeof(CcuMissionContext) == CCU_CTX_RAW_CAPACITY,
     "CcuMissionContext size must match CCU raw ABI (32 x u16 = 64B)");
-static_assert(sizeof(CcuMissionContextV2) == CCU_CTX_RAW_CAPACITY,
+static_assert(
+    sizeof(CcuMissionContextV2) == CCU_CTX_RAW_CAPACITY,
     "CcuMissionContextV2 size must match CCU raw ABI (32 x u16 = 64B)");
 static_assert(
     sizeof(CcuLoopContext) == CCU_CTX_RAW_CAPACITY, "CcuLoopContext size must match CCU raw ABI (32 x u16 = 64B)");
@@ -120,11 +122,11 @@ struct CcuLoopInfo {
     uint32_t addrStride;
 };
 
-static std::string FormatPanicLogWithOps(DevType deviceType, const uint8_t *panicLog)
+static std::string FormatPanicLogWithOps(DevType deviceType, const uint8_t* panicLog)
 {
     MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
 
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     const HcclResult ret = GetCcuOps(ops);
     if (ret != HCCL_SUCCESS || ops == nullptr || ops->printCcumDfxInfo == nullptr) {
         ADD_FAILURE() << "FormatPanicLogWithOps failed to resolve printer ops, ret=" << ret;
@@ -138,10 +140,7 @@ static std::string FormatPanicLogWithOps(DevType deviceType, const uint8_t *pani
 
 class CcuTaskExceptionDecodeTest : public testing::Test {
 protected:
-    void TearDown() override
-    {
-        GlobalMockObject::verify();
-    }
+    void TearDown() override { GlobalMockObject::verify(); }
 };
 
 TEST_F(CcuTaskExceptionDecodeTest, Ut_PrintPanicLogInfo_WhenNullPtr_ExpectNoCrash)
@@ -154,7 +153,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_GetCcuOps_WhenDeviceTypeIs950_ExpectV1Ops)
     DevType deviceType = DevType::DEV_TYPE_950;
     MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
 
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     EXPECT_EQ(GetCcuOps(ops), HCCL_SUCCESS);
     ASSERT_NE(ops, nullptr);
     EXPECT_STREQ(ops->name, "CCU_V1");
@@ -165,7 +164,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_GetCcuOps_WhenDeviceTypeIs960_ExpectV2Ops)
     DevType deviceType = DevType::DEV_TYPE_960;
     MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
 
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     EXPECT_EQ(GetCcuOps(ops), HCCL_SUCCESS);
     ASSERT_NE(ops, nullptr);
     EXPECT_STREQ(ops->name, "CCU_V2");
@@ -175,7 +174,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_GetCcuOps_WhenDeviceTypeQueryFails_ExpectE
 {
     MOCKER(hrtGetDeviceType).stubs().with(any()).will(returnValue(HCCL_E_PARA));
 
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     EXPECT_EQ(GetCcuOps(ops), HCCL_E_PARA);
     EXPECT_EQ(ops, nullptr);
 }
@@ -185,8 +184,8 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_GetCcuOps_WhenSwitchDeviceTypeInProcess_Ex
     DevType deviceTypeV1 = DevType::DEV_TYPE_950;
     DevType deviceTypeV2 = DevType::DEV_TYPE_960;
     MOCKER(hrtGetDeviceType).expects(once()).with(outBound(deviceTypeV1)).will(returnValue(HCCL_SUCCESS));
-    const CcuVersionOps *opsV1 = nullptr;
-    const CcuVersionOps *opsV2 = nullptr;
+    const CcuVersionOps* opsV1 = nullptr;
+    const CcuVersionOps* opsV2 = nullptr;
     EXPECT_EQ(GetCcuOps(opsV1), HCCL_SUCCESS);
     GlobalMockObject::verify();
     MOCKER(hrtGetDeviceType).expects(once()).with(outBound(deviceTypeV2)).will(returnValue(HCCL_SUCCESS));
@@ -202,7 +201,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_PrintCcumDfxInfoV1_WhenDeviceTypeIs950_Exp
 {
     uint8_t panicLog[sizeof(TestCcumDfxInfoV1)];
     std::memset(panicLog, 0, sizeof(panicLog));
-    TestCcumDfxInfoV1 *info = reinterpret_cast<TestCcumDfxInfoV1 *>(panicLog);
+    TestCcumDfxInfoV1* info = reinterpret_cast<TestCcumDfxInfoV1*>(panicLog);
     info->ccumSqeRecvCnt = 11;
     info->ccumSqeSendCnt = 12;
     info->ccumMissionDfx = 13;
@@ -226,7 +225,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_PrintCcumDfxInfoV1_WhenQueryResultNonZero_
 {
     uint8_t panicLog[sizeof(TestCcumDfxInfoV1)];
     std::memset(panicLog, 0, sizeof(panicLog));
-    TestCcumDfxInfoV1 *info = reinterpret_cast<TestCcumDfxInfoV1 *>(panicLog);
+    TestCcumDfxInfoV1* info = reinterpret_cast<TestCcumDfxInfoV1*>(panicLog);
     info->queryResult = 1;
     info->ccumSqeRecvCnt = 41;
     info->ccumSqeSendCnt = 42;
@@ -248,11 +247,12 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_PrintCcumDfxInfoV1_WhenQueryResultNonZero_
 TEST_F(CcuTaskExceptionDecodeTest, Ut_PrintCcumDfxInfoV2_WhenDeviceTypeIs960_ExpectReadableString)
 {
     // panicLog 严格按 RTS ABI 大小分配，不要用 sizeof(TestCcumDfxInfoV2) 掩盖生产越界读。
-    static_assert(sizeof(TestCcumDfxInfoV2) <= MAX_CCU_EXCEPTION_INFO_SIZE,
+    static_assert(
+        sizeof(TestCcumDfxInfoV2) <= MAX_CCU_EXCEPTION_INFO_SIZE,
         "TestCcumDfxInfoV2 must not exceed panicLog raw buffer");
     uint8_t panicLog[MAX_CCU_EXCEPTION_INFO_SIZE];
     std::memset(panicLog, 0, sizeof(panicLog));
-    TestCcumDfxInfoV2 *info = reinterpret_cast<TestCcumDfxInfoV2 *>(panicLog);
+    TestCcumDfxInfoV2* info = reinterpret_cast<TestCcumDfxInfoV2*>(panicLog);
     info->validBits = 0xFFEU;
     info->dfxInfo.ccumSqeRecvCnt = 21;
     info->dfxInfo.ccumSqeSendCnt = 22;
@@ -278,7 +278,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_PrintCcumDfxInfoV2_WhenQueryResultNonZero_
 {
     uint8_t panicLog[MAX_CCU_EXCEPTION_INFO_SIZE];
     std::memset(panicLog, 0, sizeof(panicLog));
-    TestCcumDfxInfoV2 *info = reinterpret_cast<TestCcumDfxInfoV2 *>(panicLog);
+    TestCcumDfxInfoV2* info = reinterpret_cast<TestCcumDfxInfoV2*>(panicLog);
     info->validBits = 0xFFFFU;
     info->bs.queryResult = 1;
     info->dfxInfo.ccumSqeRecvCnt = 51;
@@ -303,7 +303,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_GetCcuMissionAndLoopInfoV1_WhenRawIsValid_
     DevType deviceType = DevType::DEV_TYPE_950;
     MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
 
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     ASSERT_EQ(GetCcuOps(ops), HCCL_SUCCESS);
     ASSERT_NE(ops, nullptr);
     ASSERT_NE(ops->getMissionInfo, nullptr);
@@ -343,7 +343,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_GetCcuMissionAndLoopInfoV2_WhenRawIsValid_
     DevType deviceType = DevType::DEV_TYPE_960;
     MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
 
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     ASSERT_EQ(GetCcuOps(ops), HCCL_SUCCESS);
     ASSERT_NE(ops, nullptr);
     ASSERT_NE(ops->getMissionInfo, nullptr);
@@ -381,7 +381,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_PrintCcumDfxInfoV2_WhenFieldInvalid_Expect
 {
     uint8_t panicLog[MAX_CCU_EXCEPTION_INFO_SIZE];
     std::memset(panicLog, 0, sizeof(panicLog));
-    TestCcumDfxInfoV2 *info = reinterpret_cast<TestCcumDfxInfoV2 *>(panicLog);
+    TestCcumDfxInfoV2* info = reinterpret_cast<TestCcumDfxInfoV2*>(panicLog);
     info->bs.sqeRecvCnt = 1;
     info->bs.missionDfx = 1;
     info->bs.tifSqeCnt = 1;
@@ -433,16 +433,16 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_PrintCcumDfxInfoV2_WhenPanicLogAtPageBound
     ASSERT_GE(pageSize, MAX_CCU_EXCEPTION_INFO_SIZE);
 
     // 连续两页：第一页可读写，第二页 PROT_NONE 作为守护页。
-    void *base = mmap(nullptr, pageSize * 2, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    void* base = mmap(nullptr, pageSize * 2, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     ASSERT_NE(base, MAP_FAILED);
-    ASSERT_EQ(mprotect(static_cast<uint8_t *>(base) + pageSize, pageSize, PROT_NONE), 0);
+    ASSERT_EQ(mprotect(static_cast<uint8_t*>(base) + pageSize, pageSize, PROT_NONE), 0);
 
     // panicLog 紧贴第一页末尾（最后 MAX_CCU_EXCEPTION_INFO_SIZE 字节）。
-    uint8_t *panicLog = static_cast<uint8_t *>(base) + pageSize - MAX_CCU_EXCEPTION_INFO_SIZE;
+    uint8_t* panicLog = static_cast<uint8_t*>(base) + pageSize - MAX_CCU_EXCEPTION_INFO_SIZE;
     std::memset(panicLog, 0, MAX_CCU_EXCEPTION_INFO_SIZE);
 
     MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_960)).will(returnValue(HCCL_SUCCESS));
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     ASSERT_EQ(GetCcuOps(ops), HCCL_SUCCESS);
     ASSERT_NE(ops, nullptr);
     ASSERT_NE(ops->printCcumDfxInfo, nullptr);
@@ -747,7 +747,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_GetCcuMissionInfoV1_WhenRawDataIsNull_Expe
 {
     MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
 
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     EXPECT_EQ(GetCcuOps(ops), HCCL_SUCCESS);
     ASSERT_NE(ops, nullptr);
     ASSERT_NE(ops->getMissionInfo, nullptr);
@@ -760,7 +760,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_GetCcuMissionInfoV1_WhenOutIsNull_ExpectEr
 {
     MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
 
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     EXPECT_EQ(GetCcuOps(ops), HCCL_SUCCESS);
     ASSERT_NE(ops, nullptr);
     ASSERT_NE(ops->getMissionInfo, nullptr);
@@ -773,7 +773,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_GetCcuLoopInfoV1_WhenRawDataIsNull_ExpectE
 {
     MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
 
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     EXPECT_EQ(GetCcuOps(ops), HCCL_SUCCESS);
     ASSERT_NE(ops, nullptr);
     ASSERT_NE(ops->getLoopInfo, nullptr);
@@ -786,7 +786,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_GetCcuLoopInfoV1_WhenOutIsNull_ExpectError
 {
     MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
 
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     EXPECT_EQ(GetCcuOps(ops), HCCL_SUCCESS);
     ASSERT_NE(ops, nullptr);
     ASSERT_NE(ops->getLoopInfo, nullptr);
@@ -799,7 +799,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_GetCcuMissionInfoV2_WhenRawDataIsNull_Expe
 {
     MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_960)).will(returnValue(HCCL_SUCCESS));
 
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     EXPECT_EQ(GetCcuOps(ops), HCCL_SUCCESS);
     ASSERT_NE(ops, nullptr);
     ASSERT_NE(ops->getMissionInfo, nullptr);
@@ -812,7 +812,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_GetCcuMissionInfoV2_WhenOutIsNull_ExpectEr
 {
     MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_960)).will(returnValue(HCCL_SUCCESS));
 
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     EXPECT_EQ(GetCcuOps(ops), HCCL_SUCCESS);
     ASSERT_NE(ops, nullptr);
     ASSERT_NE(ops->getMissionInfo, nullptr);
@@ -825,7 +825,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_GetCcuLoopInfoV2_WhenRawDataIsNull_ExpectE
 {
     MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_960)).will(returnValue(HCCL_SUCCESS));
 
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     EXPECT_EQ(GetCcuOps(ops), HCCL_SUCCESS);
     ASSERT_NE(ops, nullptr);
     ASSERT_NE(ops->getLoopInfo, nullptr);
@@ -838,7 +838,7 @@ TEST_F(CcuTaskExceptionDecodeTest, Ut_GetCcuLoopInfoV2_WhenOutIsNull_ExpectError
 {
     MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_960)).will(returnValue(HCCL_SUCCESS));
 
-    const CcuVersionOps *ops = nullptr;
+    const CcuVersionOps* ops = nullptr;
     EXPECT_EQ(GetCcuOps(ops), HCCL_SUCCESS);
     ASSERT_NE(ops, nullptr);
     ASSERT_NE(ops->getLoopInfo, nullptr);

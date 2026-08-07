@@ -15,14 +15,15 @@ protected:
     void TearDown() override { GlobalMockObject::verify(); }
 };
 
-TEST_F(RankPairTest, GetEpChannelMap_ReturnsEmptyWhenMgrEmpty) {
+TEST_F(RankPairTest, GetEpChannelMap_ReturnsEmptyWhenMgrEmpty)
+{
     RankIdPair ids = {1, 2};
     RankPair rp(ids, nullptr);
     EXPECT_EQ(rp.Init(), HCCL_SUCCESS);
 
     // Stub EndpointPairMgr::GetEpChannelMap to return empty map
     hcomm::EpChannelMap emptyMap;
-    MOCKER_CPP(&hcomm::EndpointPairMgr::GetEpChannelMap, hcomm::EpChannelMap(hcomm::EndpointPairMgr::* )())
+    MOCKER_CPP(&hcomm::EndpointPairMgr::GetEpChannelMap, hcomm::EpChannelMap(hcomm::EndpointPairMgr::*)())
         .stubs()
         .will(returnValue(emptyMap));
 
@@ -30,7 +31,8 @@ TEST_F(RankPairTest, GetEpChannelMap_ReturnsEmptyWhenMgrEmpty) {
     EXPECT_TRUE(ret.empty());
 }
 
-TEST_F(RankPairTest, GetEpChannelMap_ReturnsProvidedMap) {
+TEST_F(RankPairTest, GetEpChannelMap_ReturnsProvidedMap)
+{
     RankIdPair ids = {10, 20};
     RankPair rp(ids, nullptr);
     EXPECT_EQ(rp.Init(), HCCL_SUCCESS);
@@ -51,12 +53,12 @@ TEST_F(RankPairTest, GetEpChannelMap_ReturnsProvidedMap) {
     EndpointDescPair epPair = std::make_pair(localEp, remoteEp);
 
     std::unordered_map<CommEngine, std::vector<ChannelHandle>> inner;
-    inner[COMM_ENGINE_AICPU] = { (ChannelHandle)0x1, (ChannelHandle)0x2 };
+    inner[COMM_ENGINE_AICPU] = {(ChannelHandle)0x1, (ChannelHandle)0x2};
 
     hcomm::EpChannelMap fakeMap;
     fakeMap[epPair] = inner;
 
-    MOCKER_CPP(&hcomm::EndpointPairMgr::GetEpChannelMap, hcomm::EpChannelMap(hcomm::EndpointPairMgr::* )())
+    MOCKER_CPP(&hcomm::EndpointPairMgr::GetEpChannelMap, hcomm::EpChannelMap(hcomm::EndpointPairMgr::*)())
         .stubs()
         .will(returnValue(fakeMap));
 

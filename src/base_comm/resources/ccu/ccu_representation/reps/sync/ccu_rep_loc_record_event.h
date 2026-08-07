@@ -17,23 +17,21 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepLocRecordEvent : public CcuRepBase {
-public:
-    CcuRepLocRecordEvent(CcuInsGeneratorBase* insGenPtr, const CompletedEvent &event, uint32_t mask);
-    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
-    uint16_t GetEventId() { return event_.Id(); }
-    uint32_t GetMask() { return mask_; }
+    class CcuRepLocRecordEvent : public CcuRepBase {
+    public:
+        CcuRepLocRecordEvent(CcuInsGeneratorBase* insGenPtr, const CompletedEvent& event, uint32_t mask);
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
+        uint16_t GetEventId() { return event_.Id(); }
+        uint32_t GetMask() { return mask_; }
 
-    CompletedEvent GetEvent()
-    {
-        return event_;
-    }
-private:
-    CcuInsGeneratorBase* insGenPtr{nullptr};
-    CompletedEvent event_{};
-    uint32_t       mask_{1};
-};
+        CompletedEvent GetEvent() { return event_; }
+
+    private:
+        CcuInsGeneratorBase* insGenPtr{nullptr};
+        CompletedEvent event_{};
+        uint32_t mask_{1};
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

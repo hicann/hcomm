@@ -27,7 +27,8 @@ namespace std {
 
 template <>
 struct hash<RankIdPair> {
-    size_t operator()(const RankIdPair& p) const noexcept {
+    size_t operator()(const RankIdPair& p) const noexcept
+    {
         uint64_t key = (uint64_t(p.first) << 32) | uint64_t(p.second);
         return std::hash<uint64_t>{}(key);
     }
@@ -43,17 +44,15 @@ namespace hccl {
  */
 class RankPair {
 public:
-    RankPair(RankIdPair rankIdPair,
-        const Hccl::RankIpPortMapPtr& rankIpPortMap)
+    RankPair(RankIdPair rankIdPair, const Hccl::RankIpPortMapPtr& rankIpPortMap)
         : localRankId_(rankIdPair.first),
           remoteRankId_(rankIdPair.second),
           rankIpPortMap_(rankIpPortMap)
-    {
-    }
+    {}
     ~RankPair() = default;
 
     HcclResult Init();
-    HcclResult GetEndpointPair(const EndpointDescPair &epDescPair, hcomm::EndpointPair*& out);
+    HcclResult GetEndpointPair(const EndpointDescPair& epDescPair, hcomm::EndpointPair*& out);
     hcomm::EpChannelMap GetEpChannelMap();
 
 private:
@@ -62,6 +61,6 @@ private:
     std::unique_ptr<hcomm::EndpointPairMgr> endpointPairMgr_{};
     Hccl::RankIpPortMapPtr rankIpPortMap_;
 };
-}
+} // namespace hccl
 
 #endif // RANK_PAIR_H

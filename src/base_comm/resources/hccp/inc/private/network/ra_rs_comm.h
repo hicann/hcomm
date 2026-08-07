@@ -21,12 +21,12 @@
 #define RA_MR_MAX_NUM 8
 
 enum {
-    RA_RS_NOR_QP_MODE      = 0,
+    RA_RS_NOR_QP_MODE = 0,
     RA_RS_GDR_TMPL_QP_MODE = 1,
-    RA_RS_OP_QP_MODE       = 2,
+    RA_RS_OP_QP_MODE = 2,
     RA_RS_GDR_ASYN_QP_MODE = 3,
-    RA_RS_OP_QP_MODE_EXT   = 4,
-    RA_RS_ERR_QP_MODE      = 5,
+    RA_RS_OP_QP_MODE_EXT = 4,
+    RA_RS_ERR_QP_MODE = 5,
 };
 
 struct OpcodeInterfaceInfo {
@@ -140,8 +140,8 @@ struct RsQpNormWithAttrs {
 struct RsQpRespWithAttrs {
     unsigned int qpn;
     unsigned long long aiQpAddr; // refer to struct ibv_qp *
-    unsigned int sqIndex; // index of sq
-    unsigned int dbIndex; // index of db
+    unsigned int sqIndex;        // index of sq
+    unsigned int dbIndex;        // index of db
     unsigned int psn;
     unsigned int gidIdx;
 
@@ -170,14 +170,14 @@ struct TypicalQpAttr {
 };
 
 enum {
-    THREAD_HALT  = 0,
-    THREAD_RUNNING  = 1,
-    THREAD_DESTROYING  = 2,
+    THREAD_HALT = 0,
+    THREAD_RUNNING = 1,
+    THREAD_DESTROYING = 2,
 };
 
 enum {
-    HDC_UNCONNECTED  = 0,
-    HDC_CONNECTED  = 1,
+    HDC_UNCONNECTED = 0,
+    HDC_CONNECTED = 1,
 };
 
 struct TlvRequestMsgHead {
@@ -228,24 +228,24 @@ enum {
 #define RA_RS_GET_NOTIFY_BA_VERSION 1
 #define RA_RS_OPCODE_BASE_VERSION 1
 
-#define LITE_VERSION_V2                  2
-#define LITE_SUPPORT_DEV_MEM_REGISTER    1
-#define LITE_SUPPORT_PCIE_BAR_HUGE_MEM   (1 << 1)
-#define LITE_NOT_SUPPORT                 0
-#define LITE_ALIGN_4KB                   1
-#define LITE_ALIGN_2MB                   (1 << 1)
+#define LITE_VERSION_V2 2
+#define LITE_SUPPORT_DEV_MEM_REGISTER 1
+#define LITE_SUPPORT_PCIE_BAR_HUGE_MEM (1 << 1)
+#define LITE_NOT_SUPPORT 0
+#define LITE_ALIGN_4KB 1
+#define LITE_ALIGN_2MB (1 << 1)
 
 #define RA_RS_GET_ALL_IP_BIT_MASK (1U << 31)
 
-#define CQ_DEFAULT_MIN_SEND_DEPTH         64
-#define CQ_DEFAULT_MIN_RECV_DEPTH         64
-#define QP_DEFAULT_MIN_CAP_SEND_WR        CQ_DEFAULT_MIN_SEND_DEPTH
-#define QP_DEFAULT_MIN_CAP_RECV_WR        CQ_DEFAULT_MIN_RECV_DEPTH
-#define QP_DEFAULT_MAX_CAP_INLINE_DATA    32
-#define QP_DEFAULT_MIN_CAP_SEND_SGE       1
-#define QP_DEFAULT_MIN_CAP_RECV_SGE       1
-#define QP_DEFAULT_MAX_ATTR_TIMEOUT       20
-#define QP_DEFAULT_MAX_ATTR_RETRY_CNT     7
+#define CQ_DEFAULT_MIN_SEND_DEPTH 64
+#define CQ_DEFAULT_MIN_RECV_DEPTH 64
+#define QP_DEFAULT_MIN_CAP_SEND_WR CQ_DEFAULT_MIN_SEND_DEPTH
+#define QP_DEFAULT_MIN_CAP_RECV_WR CQ_DEFAULT_MIN_RECV_DEPTH
+#define QP_DEFAULT_MAX_CAP_INLINE_DATA 32
+#define QP_DEFAULT_MIN_CAP_SEND_SGE 1
+#define QP_DEFAULT_MIN_CAP_RECV_SGE 1
+#define QP_DEFAULT_MAX_ATTR_TIMEOUT 20
+#define QP_DEFAULT_MAX_ATTR_RETRY_CNT 7
 
 static inline void RaRsSetDevInfo(struct RaRsDevInfo *devInfo, unsigned int phyId, unsigned int devIndex)
 {

@@ -54,18 +54,18 @@ using namespace hccl;
  */
 
 constexpr uint32_t HCCL_CHANNEL_VERSION_ONE = 1;
-constexpr uint32_t MULTIPLE = 4;               // 用于A5判断TC是否为4的倍数
-constexpr uint32_t TC_MAX = 255;               // TC的最大值（不区分芯片类型）
-constexpr uint32_t RETRY_INTERVAL_MIN = 5u;    // retryInterval范围的最小值（不区分芯片类型）
-constexpr uint32_t A5_RETRY_INTERVAL_MAX = 24u;// A5的retryInterval范围的最大值
-constexpr uint32_t RETRY_CNT_MIN = 1u;         // retryCnt范围的最小值（不区分芯片类型）
-constexpr uint32_t RETRY_CNT_MAX = 7u;         // retryCnt范围的最大值（不区分芯片类型）
-constexpr uint32_t SL_MAX = 7u;                // sl范围的最大值，sl即serviceLevel（不区分芯片类型）
-constexpr uint32_t TC_DEFAULT = 0xFFFFFFFFu;   // TC的默认值（不区分芯片类型）
-constexpr uint32_t SL_DEFAULT = 0xFFFFFFFFu;   // SL的默认值（不区分芯片类型）
-constexpr uint32_t kDscpToRoceTcShift = 2U;    // RoCE TC = DSCP << 2（DiffServ 高 6 位为 DSCP）
+constexpr uint32_t MULTIPLE = 4;                // 用于A5判断TC是否为4的倍数
+constexpr uint32_t TC_MAX = 255;                // TC的最大值（不区分芯片类型）
+constexpr uint32_t RETRY_INTERVAL_MIN = 5u;     // retryInterval范围的最小值（不区分芯片类型）
+constexpr uint32_t A5_RETRY_INTERVAL_MAX = 24u; // A5的retryInterval范围的最大值
+constexpr uint32_t RETRY_CNT_MIN = 1u;          // retryCnt范围的最小值（不区分芯片类型）
+constexpr uint32_t RETRY_CNT_MAX = 7u;          // retryCnt范围的最大值（不区分芯片类型）
+constexpr uint32_t SL_MAX = 7u;                 // sl范围的最大值，sl即serviceLevel（不区分芯片类型）
+constexpr uint32_t TC_DEFAULT = 0xFFFFFFFFu;    // TC的默认值（不区分芯片类型）
+constexpr uint32_t SL_DEFAULT = 0xFFFFFFFFu;    // SL的默认值（不区分芯片类型）
+constexpr uint32_t kDscpToRoceTcShift = 2U;     // RoCE TC = DSCP << 2（DiffServ 高 6 位为 DSCP）
 
-static uint32_t ResolveRoceDevPhyId(const HcclChannelDesc &channelDesc)
+static uint32_t ResolveRoceDevPhyId(const HcclChannelDesc& channelDesc)
 {
     if (channelDesc.localEndpoint.loc.locType == ENDPOINT_LOC_TYPE_DEVICE) {
         return channelDesc.localEndpoint.loc.device.devPhyId;
@@ -81,15 +81,18 @@ static uint32_t ResolveRoceDevPhyId(const HcclChannelDesc &channelDesc)
     return devicePhyId;
 }
 
-static void FillRoceQos(const hccl::CommConfig &commConfig, const Hccl::EnvRdmaConfig &rdmaConfig,
-    const HcclChannelDesc &channelDesc, uint8_t &slOut, uint8_t &tcOut)
+static void FillRoceQos(
+    const hccl::CommConfig& commConfig, const Hccl::EnvRdmaConfig& rdmaConfig, const HcclChannelDesc& channelDesc,
+    uint8_t& slOut, uint8_t& tcOut)
 {
     const uint32_t hcclQos = commConfig.GetConfigHcclQos();
     if (hcclQos == HCCL_COMM_QOS_CONFIG_NOT_SET) {
-        tcOut = static_cast<uint8_t>((commConfig.GetConfigTrafficClass() == INVALID_UINT) ?
-            rdmaConfig.GetRdmaTrafficClass() : commConfig.GetConfigTrafficClass());
-        slOut = static_cast<uint8_t>((commConfig.GetConfigServiceLevel() == INVALID_UINT) ?
-            rdmaConfig.GetRdmaServerLevel() : commConfig.GetConfigServiceLevel());
+        tcOut = static_cast<uint8_t>(
+            (commConfig.GetConfigTrafficClass() == INVALID_UINT) ? rdmaConfig.GetRdmaTrafficClass() :
+                                                                   commConfig.GetConfigTrafficClass());
+        slOut = static_cast<uint8_t>(
+            (commConfig.GetConfigServiceLevel() == INVALID_UINT) ? rdmaConfig.GetRdmaServerLevel() :
+                                                                   commConfig.GetConfigServiceLevel());
         return;
     }
 
@@ -98,103 +101,136 @@ static void FillRoceQos(const hccl::CommConfig &commConfig, const Hccl::EnvRdmaC
     uint8_t dscp = Hccl::kUboeDefaultDscp;
     (void)Hccl::TpQosGetDscpByQosFromHccnCfg(devPhyId, slOut, dscp);
     tcOut = static_cast<uint8_t>((static_cast<uint32_t>(dscp) << kDscpToRoceTcShift) & 0xFFU);
-    HCCL_INFO("[FillRoceQos] hcclQos compat: hcclQos[%u] devPhyId[%u] dscp[%u] sl[%u] tc[%u].",
-        hcclQos, devPhyId, static_cast<unsigned>(dscp), static_cast<unsigned>(slOut),
-        static_cast<unsigned>(tcOut));
+    HCCL_INFO(
+        "[FillRoceQos] hcclQos compat: hcclQos[%u] devPhyId[%u] dscp[%u] sl[%u] tc[%u].", hcclQos, devPhyId,
+        static_cast<unsigned>(dscp), static_cast<unsigned>(slOut), static_cast<unsigned>(tcOut));
 }
 
-static void FillChannelDescFinal(hccl::CommConfig commConfig, const HcclChannelDesc &channelDesc, HcclChannelDesc &channelDescFinal, bool isCommunicatorV2)
+static void FillChannelDescFinal(
+    hccl::CommConfig commConfig, const HcclChannelDesc& channelDesc, HcclChannelDesc& channelDescFinal,
+    bool isCommunicatorV2)
 {
     if (isCommunicatorV2) { // A5
         auto& rdmaConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig();
-        channelDescFinal.roceAttr.retryCnt = (channelDesc.roceAttr.retryCnt == INVALID_UINT) ? rdmaConfig.GetRdmaRetryCnt() : channelDesc.roceAttr.retryCnt;
-        channelDescFinal.roceAttr.retryInterval = (channelDesc.roceAttr.retryInterval == INVALID_UINT) ? rdmaConfig.GetRdmaTimeOut() : channelDesc.roceAttr.retryInterval;
+        channelDescFinal.roceAttr.retryCnt = (channelDesc.roceAttr.retryCnt == INVALID_UINT) ?
+                                                 rdmaConfig.GetRdmaRetryCnt() :
+                                                 channelDesc.roceAttr.retryCnt;
+        channelDescFinal.roceAttr.retryInterval = (channelDesc.roceAttr.retryInterval == INVALID_UINT) ?
+                                                      rdmaConfig.GetRdmaTimeOut() :
+                                                      channelDesc.roceAttr.retryInterval;
         FillRoceQos(commConfig, rdmaConfig, channelDesc, channelDescFinal.roceAttr.sl, channelDescFinal.roceAttr.tc);
-        channelDescFinal.roceAttr.queueNum = (channelDesc.roceAttr.queueNum == INVALID_UINT) ? rdmaConfig.GetRdmaQueueNum() : channelDesc.roceAttr.queueNum;
+        channelDescFinal.roceAttr.queueNum = (channelDesc.roceAttr.queueNum == INVALID_UINT) ?
+                                                 rdmaConfig.GetRdmaQueueNum() :
+                                                 channelDesc.roceAttr.queueNum;
     } else {
-        channelDescFinal.roceAttr.retryCnt = (channelDesc.roceAttr.retryCnt == INVALID_UINT) ? EnvConfig::GetExternalInputRdmaRetryCnt() : channelDesc.roceAttr.retryCnt;
-        channelDescFinal.roceAttr.retryInterval = (channelDesc.roceAttr.retryInterval == INVALID_UINT) ? EnvConfig::GetExternalInputRdmaTimeOut() : channelDesc.roceAttr.retryInterval;
-        channelDescFinal.roceAttr.tc = (channelDesc.roceAttr.tc == 0xFF) ? EnvConfig::GetExternalInputRdmaTrafficClass() : channelDesc.roceAttr.tc;
-        channelDescFinal.roceAttr.sl = (channelDesc.roceAttr.sl == 0xFF) ? EnvConfig::GetExternalInputRdmaServerLevel() : channelDesc.roceAttr.sl;
-        channelDescFinal.roceAttr.queueNum = (channelDesc.roceAttr.queueNum == INVALID_UINT) ? GetExternalInputQpsPerConnection() : channelDesc.roceAttr.queueNum;
+        channelDescFinal.roceAttr.retryCnt = (channelDesc.roceAttr.retryCnt == INVALID_UINT) ?
+                                                 EnvConfig::GetExternalInputRdmaRetryCnt() :
+                                                 channelDesc.roceAttr.retryCnt;
+        channelDescFinal.roceAttr.retryInterval = (channelDesc.roceAttr.retryInterval == INVALID_UINT) ?
+                                                      EnvConfig::GetExternalInputRdmaTimeOut() :
+                                                      channelDesc.roceAttr.retryInterval;
+        channelDescFinal.roceAttr.tc = (channelDesc.roceAttr.tc == 0xFF) ?
+                                           EnvConfig::GetExternalInputRdmaTrafficClass() :
+                                           channelDesc.roceAttr.tc;
+        channelDescFinal.roceAttr.sl = (channelDesc.roceAttr.sl == 0xFF) ?
+                                           EnvConfig::GetExternalInputRdmaServerLevel() :
+                                           channelDesc.roceAttr.sl;
+        channelDescFinal.roceAttr.queueNum = (channelDesc.roceAttr.queueNum == INVALID_UINT) ?
+                                                 GetExternalInputQpsPerConnection() :
+                                                 channelDesc.roceAttr.queueNum;
     }
 }
 
-static HcclResult CheckA5Config(hccl::CommConfig commConfig, const HcclChannelDesc &channelDesc)
+static HcclResult CheckA5Config(hccl::CommConfig commConfig, const HcclChannelDesc& channelDesc)
 {
     u32 tc = commConfig.GetConfigTrafficClass();
-    CHK_PRT_RET((tc != TC_DEFAULT) && (tc > TC_MAX || (tc % MULTIPLE != 0)),
-        HCCL_ERROR("[ProcessRoceChannelDesc]errNo[0x%016llx] invalid hcclRdmaTrafficClass[%u], must be 0xFFFFFFFF or in [0,255] and a multiple of 4",
+    CHK_PRT_RET(
+        (tc != TC_DEFAULT) && (tc > TC_MAX || (tc % MULTIPLE != 0)),
+        HCCL_ERROR(
+            "[ProcessRoceChannelDesc]errNo[0x%016llx] invalid hcclRdmaTrafficClass[%u], must be 0xFFFFFFFF or in "
+            "[0,255] and a multiple of 4",
             static_cast<unsigned long long>(HCCL_ERROR_CODE(HCCL_E_PARA)), tc),
         HCCL_E_PARA);
 
     u32 sl = commConfig.GetConfigServiceLevel();
-    CHK_PRT_RET((sl != SL_DEFAULT) && (sl > SL_MAX),
-        HCCL_ERROR("[ProcessRoceChannelDesc]errNo[0x%016llx] invalid hcclRdmaServiceLevel[%u], must be 0xFFFFFFFF or in [0,7]",
+    CHK_PRT_RET(
+        (sl != SL_DEFAULT) && (sl > SL_MAX),
+        HCCL_ERROR(
+            "[ProcessRoceChannelDesc]errNo[0x%016llx] invalid hcclRdmaServiceLevel[%u], must be 0xFFFFFFFF or in [0,7]",
             static_cast<unsigned long long>(HCCL_ERROR_CODE(HCCL_E_PARA)), sl),
         HCCL_E_PARA);
 
     u32 retryInterval = channelDesc.roceAttr.retryInterval;
-    CHK_PRT_RET((retryInterval != INVALID_UINT) && (retryInterval < RETRY_INTERVAL_MIN || retryInterval > A5_RETRY_INTERVAL_MAX),
-        HCCL_ERROR("[ProcessRoceChannelDesc]errNo[0x%016llx] invalid hcclRdmaRetryInterval[%u], must be 0xFFFFFFFF or in [5,24]",
-        static_cast<unsigned long long>(HCCL_ERROR_CODE(HCCL_E_PARA)), retryInterval),
+    CHK_PRT_RET(
+        (retryInterval != INVALID_UINT)
+            && (retryInterval < RETRY_INTERVAL_MIN || retryInterval > A5_RETRY_INTERVAL_MAX),
+        HCCL_ERROR(
+            "[ProcessRoceChannelDesc]errNo[0x%016llx] invalid hcclRdmaRetryInterval[%u], must be 0xFFFFFFFF or in "
+            "[5,24]",
+            static_cast<unsigned long long>(HCCL_ERROR_CODE(HCCL_E_PARA)), retryInterval),
         HCCL_E_PARA);
 
     u32 retryCnt = channelDesc.roceAttr.retryCnt;
-    CHK_PRT_RET((retryCnt != INVALID_UINT) && (retryCnt < RETRY_CNT_MIN || retryCnt > RETRY_CNT_MAX),
-        HCCL_ERROR("[ProcessRoceChannelDesc]errNo[0x%016llx] invalid hcclRdmaRetryCnt[%u], must be 0xFFFFFFFF or in [1,7]",
-        static_cast<unsigned long long>(HCCL_ERROR_CODE(HCCL_E_PARA)), retryCnt),
+    CHK_PRT_RET(
+        (retryCnt != INVALID_UINT) && (retryCnt < RETRY_CNT_MIN || retryCnt > RETRY_CNT_MAX),
+        HCCL_ERROR(
+            "[ProcessRoceChannelDesc]errNo[0x%016llx] invalid hcclRdmaRetryCnt[%u], must be 0xFFFFFFFF or in [1,7]",
+            static_cast<unsigned long long>(HCCL_ERROR_CODE(HCCL_E_PARA)), retryCnt),
         HCCL_E_PARA);
     return HCCL_SUCCESS;
 }
 
-HcclResult ProcessRoceChannelDesc(const HcclChannelDesc &channelDesc, HcclChannelDesc &channelDescFinal, hccl::hcclComm *hcclComm)
+HcclResult
+ProcessRoceChannelDesc(const HcclChannelDesc& channelDesc, HcclChannelDesc& channelDescFinal, hccl::hcclComm* hcclComm)
 {
     bool isCommunicatorV2 = hcclComm->IsCommunicatorV2();
     hccl::CommConfig commConfig{}; // A5使用
-    if (isCommunicatorV2) { // A5
+    if (isCommunicatorV2) {        // A5
         hccl::CollComm* collComm = hcclComm->GetCollComm();
         CHK_PTR_NULL(collComm);
         commConfig = collComm->GetCommConfig();
         CHK_RET(CheckA5Config(commConfig, channelDesc));
     }
     FillChannelDescFinal(commConfig, channelDesc, channelDescFinal, isCommunicatorV2);
-    HCCL_INFO("[%s]queueNum[%u], retryCnt[%u], retryInterval[%u], tc[%u], sl[%u]", __func__,
+    HCCL_INFO(
+        "[%s]queueNum[%u], retryCnt[%u], retryInterval[%u], tc[%u], sl[%u]", __func__,
         channelDescFinal.roceAttr.queueNum, channelDescFinal.roceAttr.retryCnt, channelDescFinal.roceAttr.retryInterval,
         channelDescFinal.roceAttr.tc, channelDescFinal.roceAttr.sl);
     return HCCL_SUCCESS;
 }
 
-HcclResult ProcessUbChannelDesc(const HcclChannelDesc &channelDesc, const HcclChannelDesc &channelDescFinal,
-    const hccl::hcclComm *hcclComm)
+HcclResult ProcessUbChannelDesc(
+    const HcclChannelDesc& channelDesc, const HcclChannelDesc& channelDescFinal, const hccl::hcclComm* hcclComm)
 {
     (void)channelDescFinal;
     (void)hcclComm;
 
-    if (channelDesc.channelProtocol != COMM_PROTOCOL_UBC_CTP &&
-        channelDesc.channelProtocol != COMM_PROTOCOL_UBC_TP &&
-        channelDesc.channelProtocol != COMM_PROTOCOL_UBOE &&
-        channelDesc.channelProtocol != COMM_PROTOCOL_UBG) {
-        HCCL_ERROR("[%s] unexpected channelProtocol[%d], expect UBC_CTP/UBC_TP/UBOE/UBG", __func__,
+    if (channelDesc.channelProtocol != COMM_PROTOCOL_UBC_CTP && channelDesc.channelProtocol != COMM_PROTOCOL_UBC_TP
+        && channelDesc.channelProtocol != COMM_PROTOCOL_UBOE && channelDesc.channelProtocol != COMM_PROTOCOL_UBG) {
+        HCCL_ERROR(
+            "[%s] unexpected channelProtocol[%d], expect UBC_CTP/UBC_TP/UBOE/UBG", __func__,
             static_cast<int>(channelDesc.channelProtocol));
         return HCCL_E_PARA;
     }
-    HCCL_INFO("[%s] channelProtocol[%d] ub comm-domain qos applied in HcommChannelDesc::qos when converting (HcclChannelDesc has no qos field)",
+    HCCL_INFO(
+        "[%s] channelProtocol[%d] ub comm-domain qos applied in HcommChannelDesc::qos when converting (HcclChannelDesc "
+        "has no qos field)",
         __func__, static_cast<int>(channelDesc.channelProtocol));
     return HCCL_SUCCESS;
 }
 
-HcclResult ProcessHcclChannelDesc(const HcclChannelDesc &channelDesc, HcclChannelDesc &channelDescFinal, hccl::hcclComm *hcclComm)
+HcclResult
+ProcessHcclChannelDesc(const HcclChannelDesc& channelDesc, HcclChannelDesc& channelDescFinal, hccl::hcclComm* hcclComm)
 {
     channelDescFinal.remoteRank = channelDesc.remoteRank;
-    channelDescFinal.channelProtocol   = channelDesc.channelProtocol;
-    channelDescFinal.localEndpoint  = channelDesc.localEndpoint;
-    channelDescFinal.remoteEndpoint  = channelDesc.remoteEndpoint;
-    channelDescFinal.notifyNum  = channelDesc.notifyNum;
-    channelDescFinal.memHandles  = channelDesc.memHandles;
-    channelDescFinal.memHandleNum  = channelDesc.memHandleNum;
+    channelDescFinal.channelProtocol = channelDesc.channelProtocol;
+    channelDescFinal.localEndpoint = channelDesc.localEndpoint;
+    channelDescFinal.remoteEndpoint = channelDesc.remoteEndpoint;
+    channelDescFinal.notifyNum = channelDesc.notifyNum;
+    channelDescFinal.memHandles = channelDesc.memHandles;
+    channelDescFinal.memHandleNum = channelDesc.memHandleNum;
 
-     // 根据协议类型拷贝union中的相应成员
+    // 根据协议类型拷贝union中的相应成员
     switch (channelDesc.channelProtocol) {
         case COMM_PROTOCOL_HCCS:
         case COMM_PROTOCOL_HCCS_ONLY:
@@ -212,98 +248,117 @@ HcclResult ProcessHcclChannelDesc(const HcclChannelDesc &channelDesc, HcclChanne
         default: {
             auto ProtocolToString = [](const CommProtocol proto) -> const char* {
                 switch (proto) {
-                    case COMM_PROTOCOL_HCCS:    return "COMM_PROTOCOL_HCCS";
-                    case COMM_PROTOCOL_PCIE:    return "COMM_PROTOCOL_PCIE";
-                    case COMM_PROTOCOL_SIO:     return "COMM_PROTOCOL_SIO";
-                    case COMM_PROTOCOL_UBC_CTP: return "COMM_PROTOCOL_UBC_CTP";
-                    case COMM_PROTOCOL_UB_MEM:  return "COMM_PROTOCOL_UB_MEM";
-                    case COMM_PROTOCOL_ROCE:    return "COMM_PROTOCOL_ROCE";
-                    case COMM_PROTOCOL_UBC_TP:  return "COMM_PROTOCOL_UBC_TP";
-                    case COMM_PROTOCOL_UBOE:    return "COMM_PROTOCOL_UBOE";
-                    case COMM_PROTOCOL_UBG:     return "COMM_PROTOCOL_UBG";
-                    case COMM_PROTOCOL_HCCS_ONLY:   return "COMM_PROTOCOL_HCCS_ONLY";
-                    default:                    return "UNKNOWN_PROTOCOL";
+                    case COMM_PROTOCOL_HCCS:
+                        return "COMM_PROTOCOL_HCCS";
+                    case COMM_PROTOCOL_PCIE:
+                        return "COMM_PROTOCOL_PCIE";
+                    case COMM_PROTOCOL_SIO:
+                        return "COMM_PROTOCOL_SIO";
+                    case COMM_PROTOCOL_UBC_CTP:
+                        return "COMM_PROTOCOL_UBC_CTP";
+                    case COMM_PROTOCOL_UB_MEM:
+                        return "COMM_PROTOCOL_UB_MEM";
+                    case COMM_PROTOCOL_ROCE:
+                        return "COMM_PROTOCOL_ROCE";
+                    case COMM_PROTOCOL_UBC_TP:
+                        return "COMM_PROTOCOL_UBC_TP";
+                    case COMM_PROTOCOL_UBOE:
+                        return "COMM_PROTOCOL_UBOE";
+                    case COMM_PROTOCOL_UBG:
+                        return "COMM_PROTOCOL_UBG";
+                    case COMM_PROTOCOL_HCCS_ONLY:
+                        return "COMM_PROTOCOL_HCCS_ONLY";
+                    default:
+                        return "UNKNOWN_PROTOCOL";
                 }
             };
-            HCCL_ERROR("[%s] Unsupported protocol[%s] found in HcclChannelDesc.",
-                       __func__, ProtocolToString(channelDesc.channelProtocol));
+            HCCL_ERROR(
+                "[%s] Unsupported protocol[%s] found in HcclChannelDesc.", __func__,
+                ProtocolToString(channelDesc.channelProtocol));
             return HCCL_E_PARA;
         }
     }
     return HCCL_SUCCESS;
 }
 
-HcclResult ProcessHcclResPackReq(const HcclChannelDesc &channelDesc, HcclChannelDesc &channelDescFinal, hccl::hcclComm *hcclComm)
+HcclResult
+ProcessHcclResPackReq(const HcclChannelDesc& channelDesc, HcclChannelDesc& channelDescFinal, hccl::hcclComm* hcclComm)
 {
     if (channelDesc.header.size < channelDescFinal.header.size) {
         // 需要前向兼容HcclChannelDesc，末尾部分字段不支持处理
     } else if (channelDesc.header.size > channelDescFinal.header.size) {
         // 需要后向向兼容HcclChannelDesc，末尾部分字段会被忽略
     }
- 
+
     if (channelDesc.header.magicWord != channelDescFinal.header.magicWord) {
-        HCCL_ERROR("[%s]channelDescFinal.header.magicWord[%u] not equal to channelDesc.header.magicWord[%u]",
-            __func__, channelDescFinal.header.magicWord, channelDesc.header.magicWord);
+        HCCL_ERROR(
+            "[%s]channelDescFinal.header.magicWord[%u] not equal to channelDesc.header.magicWord[%u]", __func__,
+            channelDescFinal.header.magicWord, channelDesc.header.magicWord);
         return HCCL_E_PARA;
     }
- 
-    uint32_t copySize = (channelDescFinal.header.size < channelDesc.header.size ?
-        channelDescFinal.header.size : channelDesc.header.size) - sizeof(CommAbiHeader);
-    CHK_SAFETY_FUNC_RET(memcpy_s(reinterpret_cast<uint8_t *>(&channelDescFinal) + sizeof(CommAbiHeader), copySize,
-        reinterpret_cast<const uint8_t *>(&channelDesc) + sizeof(CommAbiHeader), copySize));
- 
+
+    uint32_t copySize = (channelDescFinal.header.size < channelDesc.header.size ? channelDescFinal.header.size :
+                                                                                  channelDesc.header.size)
+                        - sizeof(CommAbiHeader);
+    CHK_SAFETY_FUNC_RET(memcpy_s(
+        reinterpret_cast<uint8_t*>(&channelDescFinal) + sizeof(CommAbiHeader), copySize,
+        reinterpret_cast<const uint8_t*>(&channelDesc) + sizeof(CommAbiHeader), copySize));
+
     if (channelDesc.header.version >= HCCL_CHANNEL_VERSION_ONE) {
         CHK_RET(ProcessHcclChannelDesc(channelDesc, channelDescFinal, hcclComm));
     }
- 
+
     if (channelDesc.header.version > HCCL_CHANNEL_VERSION) {
         // 传入的版本高于当前版本，警告不支持的配置项将被忽略
-        HCCL_WARNING("The version of provided [%u] is higher than the current version[%u], "
+        HCCL_WARNING(
+            "The version of provided [%u] is higher than the current version[%u], "
             "unsupported configuration will be ignored.",
             channelDesc.header.version, HCCL_CHANNEL_VERSION);
     } else if (channelDesc.header.version < HCCL_CHANNEL_VERSION) {
         // 传入的版本低于当前版本，警告高版本支持的配置项将被忽略
-        HCCL_WARNING("The version of provided [%u] is lower than the current version[%u], "
+        HCCL_WARNING(
+            "The version of provided [%u] is lower than the current version[%u], "
             "configurations supported by later versions will be ignored.",
             channelDesc.header.version, HCCL_CHANNEL_VERSION);
     }
- 
+
     // 如果扩展到version=2后
     // 1) 在底层为新的结构体和版本（version为2）上，会正常执行下面的判断处理逻辑；
     // 2) 在底层为旧的结构体和版本（version为1）上，下面的逻辑没有，version的2 > 1的部分会被忽略掉；
     if (channelDesc.header.version >= 2) {
     }
- 
+
     return HCCL_SUCCESS;
 }
 
-static HcclResult BuildAivDeviceChannelEntity(const HcclChannelDesc &channelDesc, ChannelHandle hostChannel,
-    ChannelHandle &deviceChannel)
+static HcclResult
+BuildAivDeviceChannelEntity(const HcclChannelDesc& channelDesc, ChannelHandle hostChannel, ChannelHandle& deviceChannel)
 {
-    void *channel = nullptr;
+    void* channel = nullptr;
     CHK_RET(hcomm::ChannelProcess::ChannelGet(hostChannel, &channel));
-    hcomm::Channel *baseChannel = static_cast<hcomm::Channel *>(channel);
+    hcomm::Channel* baseChannel = static_cast<hcomm::Channel*>(channel);
     CHK_PTR_NULL(baseChannel);
 
     if (channelDesc.channelProtocol == COMM_PROTOCOL_ROCE) {
-        auto *aicpuTsRoceChannelV2 = dynamic_cast<hcomm::AicpuTsRoceChannelV2 *>(baseChannel);
+        auto* aicpuTsRoceChannelV2 = dynamic_cast<hcomm::AicpuTsRoceChannelV2*>(baseChannel);
         CHK_PTR_NULL(aicpuTsRoceChannelV2);
-        HCCL_INFO("[%s] build AIV direct device channel by AICPU+Host RoCE flow, protocol[%d], "
-            "hostHandle[0x%llx]", __func__, channelDesc.channelProtocol,
-            static_cast<unsigned long long>(hostChannel));
+        HCCL_INFO(
+            "[%s] build AIV direct device channel by AICPU+Host RoCE flow, protocol[%d], "
+            "hostHandle[0x%llx]",
+            __func__, channelDesc.channelProtocol, static_cast<unsigned long long>(hostChannel));
         CHK_RET(aicpuTsRoceChannelV2->BuildAndGetDevChannelEntity(&deviceChannel));
         return HCCL_SUCCESS;
     }
 
-    if (channelDesc.channelProtocol == COMM_PROTOCOL_UBC_CTP ||
-        channelDesc.channelProtocol == COMM_PROTOCOL_UBC_TP ||
-        channelDesc.channelProtocol == COMM_PROTOCOL_UBG) {
-        auto *aivUrmaChannel = dynamic_cast<hcomm::AivUrmaChannel *>(baseChannel);
+    if (channelDesc.channelProtocol == COMM_PROTOCOL_UBC_CTP || channelDesc.channelProtocol == COMM_PROTOCOL_UBC_TP
+        || channelDesc.channelProtocol == COMM_PROTOCOL_UBG) {
+        auto* aivUrmaChannel = dynamic_cast<hcomm::AivUrmaChannel*>(baseChannel);
         CHK_PTR_NULL(aivUrmaChannel);
-        HCCL_INFO("[%s] build AIV direct device channel by AIV+URMA flow, protocol[%d], "
-            "hostHandle[0x%llx]", __func__, channelDesc.channelProtocol,
-            static_cast<unsigned long long>(hostChannel));
-        void *devChannelEntity = nullptr;
+        HCCL_INFO(
+            "[%s] build AIV direct device channel by AIV+URMA flow, protocol[%d], "
+            "hostHandle[0x%llx]",
+            __func__, channelDesc.channelProtocol, static_cast<unsigned long long>(hostChannel));
+        void* devChannelEntity = nullptr;
         CHK_RET(aivUrmaChannel->BuildChannelEntityToDevice(&devChannelEntity));
         CHK_PTR_NULL(devChannelEntity);
         deviceChannel = static_cast<ChannelHandle>(reinterpret_cast<uintptr_t>(devChannelEntity));
@@ -314,8 +369,8 @@ static HcclResult BuildAivDeviceChannelEntity(const HcclChannelDesc &channelDesc
     return HCCL_E_PARA;
 }
 
-static HcclResult ConvertAivChannelHandlesToDevicePtrs(CommEngine engine, const HcclChannelDesc *channelDescs,
-    uint32_t channelNum, ChannelHandle *channels)
+static HcclResult ConvertAivChannelHandlesToDevicePtrs(
+    CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle* channels)
 {
     if (engine != COMM_ENGINE_AIV) {
         return HCCL_SUCCESS;
@@ -326,22 +381,24 @@ static HcclResult ConvertAivChannelHandlesToDevicePtrs(CommEngine engine, const 
     std::vector<ChannelHandle> mappedDeviceChannels;
     std::vector<ChannelHandle> mappedHostChannels;
     for (uint32_t idx = 0; idx < channelNum; ++idx) {
-        if (channelDescs[idx].channelProtocol != COMM_PROTOCOL_ROCE &&
-            channelDescs[idx].channelProtocol != COMM_PROTOCOL_UBC_CTP &&
-            channelDescs[idx].channelProtocol != COMM_PROTOCOL_UBC_TP &&
-            channelDescs[idx].channelProtocol != COMM_PROTOCOL_UBG) {
+        if (channelDescs[idx].channelProtocol != COMM_PROTOCOL_ROCE
+            && channelDescs[idx].channelProtocol != COMM_PROTOCOL_UBC_CTP
+            && channelDescs[idx].channelProtocol != COMM_PROTOCOL_UBC_TP
+            && channelDescs[idx].channelProtocol != COMM_PROTOCOL_UBG) {
             continue;
         }
         CHK_RET(BuildAivDeviceChannelEntity(channelDescs[idx], hostChannels[idx], deviceChannels[idx]));
         mappedDeviceChannels.emplace_back(deviceChannels[idx]);
         mappedHostChannels.emplace_back(hostChannels[idx]);
-        HCCL_INFO("[%s] convert AIV channel success, idx[%u], protocol[%d], hostHandle[0x%llx], devEntity[0x%llx]",
-            __func__, idx, channelDescs[idx].channelProtocol, static_cast<unsigned long long>(hostChannels[idx]),
+        HCCL_INFO(
+            "[%s] convert AIV channel success, idx[%u], protocol[%d], hostHandle[0x%llx], devEntity[0x%llx]", __func__,
+            idx, channelDescs[idx].channelProtocol, static_cast<unsigned long long>(hostChannels[idx]),
             static_cast<unsigned long long>(deviceChannels[idx]));
     }
 
     if (!mappedDeviceChannels.empty()) {
-        CHK_RET(hcomm::ChannelProcess::RegisterChannelD2HMap(mappedDeviceChannels.data(), mappedHostChannels.data(),
+        CHK_RET(hcomm::ChannelProcess::RegisterChannelD2HMap(
+            mappedDeviceChannels.data(), mappedHostChannels.data(),
             static_cast<uint32_t>(mappedDeviceChannels.size())));
     }
 
@@ -353,12 +410,12 @@ static HcclResult ConvertAivChannelHandlesToDevicePtrs(CommEngine engine, const 
 static bool IsUbUrmaChannelProtocol(CommProtocol protocol)
 {
     return protocol == COMM_PROTOCOL_UBC_CTP || protocol == COMM_PROTOCOL_UBC_TP || protocol == COMM_PROTOCOL_UBOE
-        || protocol == COMM_PROTOCOL_UBG;
+           || protocol == COMM_PROTOCOL_UBG;
 }
 
-static bool HasUbUrmaChannel(const std::vector<HcclChannelDesc> &channelDescFinals)
+static bool HasUbUrmaChannel(const std::vector<HcclChannelDesc>& channelDescFinals)
 {
-    for (const HcclChannelDesc &channelDesc : channelDescFinals) {
+    for (const HcclChannelDesc& channelDesc : channelDescFinals) {
         if (IsUbUrmaChannelProtocol(channelDesc.channelProtocol)) {
             return true;
         }
@@ -366,7 +423,7 @@ static bool HasUbUrmaChannel(const std::vector<HcclChannelDesc> &channelDescFina
     return false;
 }
 
-static void AppendUniqueMemHandle(std::vector<HcclMemHandle> &mergedHandles, HcclMemHandle memHandle)
+static void AppendUniqueMemHandle(std::vector<HcclMemHandle>& mergedHandles, HcclMemHandle memHandle)
 {
     if (memHandle == nullptr) {
         return;
@@ -376,8 +433,9 @@ static void AppendUniqueMemHandle(std::vector<HcclMemHandle> &mergedHandles, Hcc
     }
 }
 
-static HcclResult MergeSymmetricMemHandles(HcclChannelDesc &channelDesc,
-    const std::vector<HcclMemHandle> &symmetricMemHandles, std::vector<HcclMemHandle> &mergedHandles)
+static HcclResult MergeSymmetricMemHandles(
+    HcclChannelDesc& channelDesc, const std::vector<HcclMemHandle>& symmetricMemHandles,
+    std::vector<HcclMemHandle>& mergedHandles)
 {
     if (!IsUbUrmaChannelProtocol(channelDesc.channelProtocol)) {
         return HCCL_SUCCESS;
@@ -391,18 +449,18 @@ static HcclResult MergeSymmetricMemHandles(HcclChannelDesc &channelDesc,
     for (HcclMemHandle memHandle : symmetricMemHandles) {
         AppendUniqueMemHandle(mergedHandles, memHandle);
     }
-    CHK_PRT_RET(mergedHandles.size() > static_cast<size_t>(std::numeric_limits<uint32_t>::max()),
-        HCCL_ERROR("[MergeSymmetricMemHandles] merged memHandleNum[%zu] exceeds uint32 max.",
-            mergedHandles.size()), HCCL_E_PARA);
+    CHK_PRT_RET(
+        mergedHandles.size() > static_cast<size_t>(std::numeric_limits<uint32_t>::max()),
+        HCCL_ERROR("[MergeSymmetricMemHandles] merged memHandleNum[%zu] exceeds uint32 max.", mergedHandles.size()),
+        HCCL_E_PARA);
     channelDesc.memHandles = mergedHandles.data();
     channelDesc.memHandleNum = static_cast<uint32_t>(mergedHandles.size());
     return HCCL_SUCCESS;
 }
 
-static HcclResult AppendSymmetricMemHandles(hccl::CollComm *collComm,
-    std::vector<HcclChannelDesc> &channelDescFinals,
-    std::vector<std::vector<HcclMemHandle>> &mergedMemHandles,
-    bool &hasSymmetricMemHandles)
+static HcclResult AppendSymmetricMemHandles(
+    hccl::CollComm* collComm, std::vector<HcclChannelDesc>& channelDescFinals,
+    std::vector<std::vector<HcclMemHandle>>& mergedMemHandles, bool& hasSymmetricMemHandles)
 {
     CHK_PTR_NULL(collComm);
     hasSymmetricMemHandles = false;
@@ -422,24 +480,26 @@ static HcclResult AppendSymmetricMemHandles(hccl::CollComm *collComm,
     for (size_t idx = 0; idx < channelDescFinals.size(); ++idx) {
         CHK_RET(MergeSymmetricMemHandles(channelDescFinals[idx], symmetricMemHandles, mergedMemHandles[idx]));
     }
-    HCCL_INFO("[AppendSymmetricMemHandles] append symmetric memHandles success, channelNum[%zu], symMemHandleNum[%zu], "
+    HCCL_INFO(
+        "[AppendSymmetricMemHandles] append symmetric memHandles success, channelNum[%zu], symMemHandleNum[%zu], "
         "protocols[UBC_CTP/UBC_TP/UBOE].",
         channelDescFinals.size(), symmetricMemHandles.size());
     return HCCL_SUCCESS;
 }
 
-static HcclResult UpdateSymmetricRemoteMems(hccl::CollComm *collComm, const hccl::MyRank *myRank,
-    const std::vector<HcclChannelDesc> &channelDescFinals, const ChannelHandle *channels, uint32_t channelNum)
+static HcclResult UpdateSymmetricRemoteMems(
+    hccl::CollComm* collComm, const hccl::MyRank* myRank, const std::vector<HcclChannelDesc>& channelDescFinals,
+    const ChannelHandle* channels, uint32_t channelNum)
 {
     CHK_PTR_NULL(collComm);
     CHK_PTR_NULL(myRank);
     CHK_PTR_NULL(channels);
     for (uint32_t idx = 0; idx < channelNum; ++idx) {
-        const HcclChannelDesc &channelDesc = channelDescFinals[idx];
+        const HcclChannelDesc& channelDesc = channelDescFinals[idx];
         if (!IsUbUrmaChannelProtocol(channelDesc.channelProtocol)) {
             continue;
         }
-        CommMem *remoteMems = nullptr;
+        CommMem* remoteMems = nullptr;
         uint32_t memNum = 0;
         std::vector<std::string> memTags;
         // CreateChannels完成后，从channel取回交换到的remoteMem/memTag并回填window。
@@ -458,25 +518,20 @@ bool CheckCommEngine(const CommEngine engine, const uint32_t opExpansionMode)
     constexpr uint32_t CCU_MS_MODE = 5;
     constexpr uint32_t CCU_SCHE_MODE = 6;
     if (engine == CommEngine::COMM_ENGINE_CCU) {
-        return opExpansionMode == DEFAULT_MODE
-            || opExpansionMode == CCU_MS_MODE
-            || opExpansionMode == CCU_SCHE_MODE;
+        return opExpansionMode == DEFAULT_MODE || opExpansionMode == CCU_MS_MODE || opExpansionMode == CCU_SCHE_MODE;
     }
 
     return true;
 }
 
-static bool IsAicpuEngine(CommEngine engine)
-{
-    return engine == COMM_ENGINE_AICPU || engine == COMM_ENGINE_AICPU_TS;
-}
+static bool IsAicpuEngine(CommEngine engine) { return engine == COMM_ENGINE_AICPU || engine == COMM_ENGINE_AICPU_TS; }
 
-constexpr uint32_t CHANNEL_NUM_MAX = 1024 * 1024;  // channel的默认限制最大为1024 * 1024
+constexpr uint32_t CHANNEL_NUM_MAX = 1024 * 1024; // channel的默认限制最大为1024 * 1024
 
 HcclResult RegisterToClusterMonitor(HcclComm comm)
 {
     HCCL_INFO("[%s] START, comm[%p].", __func__, comm);
-    CHK_PRT_RET(comm == nullptr,  HCCL_ERROR("[%s] comm is null", __func__), HCCL_E_PTR);
+    CHK_PRT_RET(comm == nullptr, HCCL_ERROR("[%s] comm is null", __func__), HCCL_E_PTR);
     auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
     CHK_PTR_NULL(hcclComm);
     if (!hcclComm->IsCommunicatorV2()) {
@@ -492,11 +547,11 @@ HcclResult RegisterToClusterMonitor(HcclComm comm)
 
 // V2 通信域 channel acquire 公共前置准备：一致性记录、引擎校验、debug 初始化、集群监控注册。
 // 非共享路径 HcclChannelAcquire 与共享路径 HcclChannelAcquireWithConfig 共用。
-static HcclResult PrepareV2ChannelAcquire(hccl::hcclComm *hcclComm, HcclComm comm, CommEngine engine)
+static HcclResult PrepareV2ChannelAcquire(hccl::hcclComm* hcclComm, HcclComm comm, CommEngine engine)
 {
-    hccl::CollComm *collComm = hcclComm->GetCollComm();
+    hccl::CollComm* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
-    hccl::MyRank *myRank = collComm->GetMyRank();
+    hccl::MyRank* myRank = collComm->GetMyRank();
     CHK_PTR_NULL(myRank);
 
     s32 deviceLogicId = 0;
@@ -508,15 +563,17 @@ static HcclResult PrepareV2ChannelAcquire(hccl::hcclComm *hcclComm, HcclComm com
     char hcommPkgName[] = "hcomm";
     char hcommVersionStr[CANN_VERSION_MAX_LEN + 1] = {0};
     aclError aclRet = aclsysGetVersionStr(hcommPkgName, hcommVersionStr);
-    CHK_PRT_RET(aclRet != ACL_SUCCESS,
-        HCCL_ERROR("[%s] aclsysGetVersionStr failed, aclRet[%d].", __func__, aclRet), HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        aclRet != ACL_SUCCESS, HCCL_ERROR("[%s] aclsysGetVersionStr failed, aclRet[%d].", __func__, aclRet),
+        HCCL_E_INTERNAL);
     std::string curVersion(hcommVersionStr);
     CHK_RET(RankConsistencyCheckerV2::GetInstance(deviceLogicId).RecordCannVersionV2(curVersion));
 
     const uint32_t opExpansionMode = myRank->GetOpExpansionMode();
     if (!CheckCommEngine(engine, opExpansionMode)) {
-        HCCL_ERROR("[%s] opExpansionMode[%d] not supported by engine[%s].",
-            __func__, opExpansionMode, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
+        HCCL_ERROR(
+            "[%s] opExpansionMode[%d] not supported by engine[%s].", __func__, opExpansionMode,
+            GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
         return HCCL_E_PARA;
     }
 
@@ -526,9 +583,12 @@ static HcclResult PrepareV2ChannelAcquire(hccl::hcclComm *hcclComm, HcclComm com
 
     if (engine != CommEngine::COMM_ENGINE_CPU) {
         HcclResult monRet = RegisterToClusterMonitor(comm);
-        CHK_PRT_RET(monRet != HCCL_SUCCESS,
-            HCCL_ERROR("[%s] RegisterToClusterMonitor failed, group[%s], ret[%d].",
-                __func__, hcclComm->GetIdentifier().c_str(), monRet), monRet);
+        CHK_PRT_RET(
+            monRet != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[%s] RegisterToClusterMonitor failed, group[%s], ret[%d].", __func__,
+                hcclComm->GetIdentifier().c_str(), monRet),
+            monRet);
     }
 
     return HCCL_SUCCESS;
@@ -536,51 +596,52 @@ static HcclResult PrepareV2ChannelAcquire(hccl::hcclComm *hcclComm, HcclComm com
 
 // V2 通信域 channel acquire 公共后置处理：symmetric remoteMem 回填、CPU DFX callback、AICPU ReportKernel。
 // 非共享路径 HcclChannelAcquire 与共享路径 HcclChannelAcquireWithConfig 共用。
-static HcclResult FinalizeV2ChannelAcquire(hccl::hcclComm *hcclComm, CommEngine engine,
-    const std::vector<HcclChannelDesc> &channelDescFinals, ChannelHandle *channels,
-    uint32_t channelNum, bool hasSymmetricMemHandles, u64 beginTime)
+static HcclResult FinalizeV2ChannelAcquire(
+    hccl::hcclComm* hcclComm, CommEngine engine, const std::vector<HcclChannelDesc>& channelDescFinals,
+    ChannelHandle* channels, uint32_t channelNum, bool hasSymmetricMemHandles, u64 beginTime)
 {
-    hccl::CollComm *collComm = hcclComm->GetCollComm();
+    hccl::CollComm* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
 
     if (hasSymmetricMemHandles) {
-        hccl::MyRank *myRank = collComm->GetMyRank();
+        hccl::MyRank* myRank = collComm->GetMyRank();
         CHK_PTR_NULL(myRank);
         CHK_RET(UpdateSymmetricRemoteMems(collComm, myRank, channelDescFinals, channels, channelNum));
     }
 
     if (engine == COMM_ENGINE_CPU) {
-        HcclCommDfx *hcclCommDfx = collComm->GetHcclCommDfx();
+        HcclCommDfx* hcclCommDfx = collComm->GetHcclCommDfx();
         CHK_PTR_NULL(hcclCommDfx);
         auto callback = hcclCommDfx->GetDpuCallback();
         for (uint32_t idx = 0; idx < channelNum; idx++) {
             int32_t dpuRet = HcommDpuChannelRegisterDfx(channels[idx], callback);
-            CHK_PRT_RET(dpuRet != HCCL_SUCCESS,
-                HCCL_ERROR("[%s] Failed to register DFX callback for channel[%u], ret[%d].",
-                    __func__, idx, dpuRet),
+            CHK_PRT_RET(
+                dpuRet != HCCL_SUCCESS,
+                HCCL_ERROR("[%s] Failed to register DFX callback for channel[%u], ret[%d].", __func__, idx, dpuRet),
                 static_cast<HcclResult>(dpuRet));
         }
     }
 
     if (IsAicpuEngine(engine)) {
-        HcclCommDfx *hcclCommDfx = collComm->GetHcclCommDfx();
+        HcclCommDfx* hcclCommDfx = collComm->GetHcclCommDfx();
         CHK_PTR_NULL(hcclCommDfx);
         std::string kernelName = "RunAicpuIndOpChannelInitV2";
-        HcclResult reportRet = hcclCommDfx->ReportKernel(beginTime,
-            hcclComm->GetIdentifier(), kernelName, SalGetTid(), false);
-        CHK_PRT_RET(reportRet != HCCL_SUCCESS,
-            HCCL_ERROR("[%s] ReportKernel failed, kernelName[%s], ret[%d].",
-                __func__, kernelName.c_str(), reportRet), reportRet);
+        HcclResult reportRet
+            = hcclCommDfx->ReportKernel(beginTime, hcclComm->GetIdentifier(), kernelName, SalGetTid(), false);
+        CHK_PRT_RET(
+            reportRet != HCCL_SUCCESS,
+            HCCL_ERROR("[%s] ReportKernel failed, kernelName[%s], ret[%d].", __func__, kernelName.c_str(), reportRet),
+            reportRet);
     }
 
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine, 
-    const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle* channels)
+HcclResult HcclChannelAcquire(
+    HcclComm comm, CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle* channels)
 {
     HcclUs startut = TIME_NOW();
-    u64 beginTime =  Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
     EXCEPTION_HANDLE_BEGIN
 
     // 入参校验
@@ -588,27 +649,34 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
     CHK_PTR_NULL(channelDescs);
     CHK_PTR_NULL(channels);
     CHK_PRT_RET(
-        (channelNum == 0 || channelNum > CHANNEL_NUM_MAX), 
-        HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u], max channel num[%u]",
-        __func__, channelNum, CHANNEL_NUM_MAX), HCCL_E_PARA
-    );
- 
+        (channelNum == 0 || channelNum > CHANNEL_NUM_MAX),
+        HCCL_ERROR(
+            "[%s]Invalid channelNum, channelNum[%u], max channel num[%u]", __func__, channelNum, CHANNEL_NUM_MAX),
+        HCCL_E_PARA);
+
     HcclResult ret = HCCL_SUCCESS;
-    hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);
-    HCCL_RUN_INFO("Entry-%s channelNum[%u], engine[%s] group[%s]", __func__, channelNum, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), hcclComm->GetIdentifier().c_str());
+    hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
+    HCCL_RUN_INFO(
+        "Entry-%s channelNum[%u], engine[%s] group[%s]", __func__, channelNum,
+        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), hcclComm->GetIdentifier().c_str());
     std::vector<HcclChannelDesc> channelDescFinals;
     std::vector<std::vector<HcclMemHandle>> mergedMemHandles;
     for (uint32_t idx = 0; idx < channelNum; idx++) {
         HcclChannelDesc channelDescFinal;
         HcclChannelDescInit(&channelDescFinal, 1);
         ret = ProcessHcclResPackReq(channelDescs[idx], channelDescFinal, hcclComm);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("ProcessHcclResPackReq failed. channelDesc idx[%u], group[%s], engine[%s] channelNum[%u], ret[%d]", idx, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, ret), ret);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "ProcessHcclResPackReq failed. channelDesc idx[%u], group[%s], engine[%s] channelNum[%u], ret[%d]", idx,
+                hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(),
+                channelNum, ret),
+            ret);
         channelDescFinals.push_back(channelDescFinal);
     }
- 
-    if (hcclComm->IsCommunicatorV2()) {  // A5
-        const std::string &commTag = hcclComm->GetIdentifier();
+
+    if (hcclComm->IsCommunicatorV2()) { // A5
+        const std::string& commTag = hcclComm->GetIdentifier();
         hccl::CollComm* collComm = hcclComm->GetCollComm();
         CHK_PTR_NULL(collComm);
 
@@ -618,53 +686,67 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
         if (IsAicpuEngine(engine)) {
             CHK_RET(AppendSymmetricMemHandles(collComm, channelDescFinals, mergedMemHandles, hasSymmetricMemHandles));
         }
-        HCCL_INFO("[HcclChannelAcquire] AppendSymmetricMemHandles done, group[%s], engine[%d], channelNum[%u], "
+        HCCL_INFO(
+            "[HcclChannelAcquire] AppendSymmetricMemHandles done, group[%s], engine[%d], channelNum[%u], "
             "hasSymmetricMemHandles[%d], mergedMemHandleGroups[%zu].",
             commTag.c_str(), engine, channelNum, hasSymmetricMemHandles, mergedMemHandles.size());
 
         hccl::MyRank* myRank = collComm->GetMyRank();
         CHK_PTR_NULL(myRank);
         ret = myRank->CreateChannels(engine, commTag, channelDescFinals.data(), channelNum, channels);
-        CHK_PRT_RET((ret == HCCL_E_AGAIN || ret == HCCL_E_UNAVAIL),
-            HCCL_WARNING("CreateChannels group[%s], engine[%s] ret[%d]", commTag.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), ret), ret);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("CreateChannels failed. group[%s], engine[%s] ret[%d]", commTag.c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), ret), ret);
+        CHK_PRT_RET(
+            (ret == HCCL_E_AGAIN || ret == HCCL_E_UNAVAIL),
+            HCCL_WARNING(
+                "CreateChannels group[%s], engine[%s] ret[%d]", commTag.c_str(),
+                GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), ret),
+            ret);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "CreateChannels failed. group[%s], engine[%s] ret[%d]", commTag.c_str(),
+                GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), ret),
+            ret);
 
-        CHK_RET(FinalizeV2ChannelAcquire(hcclComm, engine, channelDescFinals, channels,
-            channelNum, hasSymmetricMemHandles, beginTime));
+        CHK_RET(FinalizeV2ChannelAcquire(
+            hcclComm, engine, channelDescFinals, channels, channelNum, hasSymmetricMemHandles, beginTime));
     } else {
         hccl::CollComm* collComm = hcclComm->GetCollComm();
         if (collComm != nullptr) {
-            hccl::MyRank *myRank = collComm->GetMyRank();
+            hccl::MyRank* myRank = collComm->GetMyRank();
             if (hcclComm->GetConnectMode() != 0 && engine == COMM_ENGINE_CPU && myRank != nullptr) {
-                const std::string &commTag = hcclComm->GetIdentifier();
+                const std::string& commTag = hcclComm->GetIdentifier();
                 ret = myRank->CreateChannels(engine, commTag, channelDescFinals.data(), channelNum, channels);
             } else {
                 auto& channelMgr = hcclComm->GetIndependentOp().GetChannelManager();
-                ret = channelMgr.ChannelCommCreate(hcclComm->GetIdentifier(), engine,
-                    channelDescFinals.data(), channelNum, channels);
+                ret = channelMgr.ChannelCommCreate(
+                    hcclComm->GetIdentifier(), engine, channelDescFinals.data(), channelNum, channels);
             }
         } else {
             auto& channelMgr = hcclComm->GetIndependentOp().GetChannelManager();
-            ret = channelMgr.ChannelCommCreate(hcclComm->GetIdentifier(), engine,
-                channelDescFinals.data(), channelNum, channels);
+            ret = channelMgr.ChannelCommCreate(
+                hcclComm->GetIdentifier(), engine, channelDescFinals.data(), channelNum, channels);
         }
     }
- 
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[%s] Failed to acquire channel, group[%s], engine[%s], channelNum[%u], ret[%d]", __func__, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, ret), ret);
+
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[%s] Failed to acquire channel, group[%s], engine[%s], channelNum[%u], ret[%d]", __func__,
+            hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum,
+            ret),
+        ret);
 
     CHK_RET(ConvertAivChannelHandlesToDevicePtrs(engine, channelDescFinals.data(), channelNum, channels));
- 
-    HCCL_RUN_INFO("[%s] acquire channel success, group[%s], engine[%s], channelNum[%u], take time [%lld]us.", __func__, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, DURATION_US(TIME_NOW() - startut).count());
+
+    HCCL_RUN_INFO(
+        "[%s] acquire channel success, group[%s], engine[%s], channelNum[%u], take time [%lld]us.", __func__,
+        hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum,
+        DURATION_US(TIME_NOW() - startut).count());
     EXCEPTION_HANDLE_END
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclGroupStart()
-{
-    return HcclLegacyGroupStart();
-}
+HcclResult HcclGroupStart() { return HcclLegacyGroupStart(); }
 
 HcclResult HcclGroupEndV2()
 {
@@ -692,7 +774,7 @@ HcclResult HcclGroupEnd()
     return HcclLegacyGroupEnd();
 }
 
-HcclResult HcclGroupStatusGet(bool *isGroupEnabled)
+HcclResult HcclGroupStatusGet(bool* isGroupEnabled)
 {
     CHK_PTR_NULL(isGroupEnabled);
     *isGroupEnabled = (hcclGroupDepth > 0);
@@ -704,31 +786,33 @@ static bool IsSharedQueueUbProtocol(CommProtocol protocol)
     return protocol == COMM_PROTOCOL_UBC_CTP || protocol == COMM_PROTOCOL_UBC_TP;
 }
 
-static bool IsSameLocalEndpoint(const EndpointDesc &a, const EndpointDesc &b)
+static bool IsSameLocalEndpoint(const EndpointDesc& a, const EndpointDesc& b)
 {
-    return a.protocol == b.protocol &&
-           a.commAddr.type == b.commAddr.type &&
-           std::memcmp(a.commAddr.raws, b.commAddr.raws, sizeof(a.commAddr.raws)) == 0 &&
-           a.loc.locType == b.loc.locType &&
-           std::memcmp(a.loc.raws, b.loc.raws, sizeof(a.loc.raws)) == 0;
+    return a.protocol == b.protocol && a.commAddr.type == b.commAddr.type
+           && std::memcmp(a.commAddr.raws, b.commAddr.raws, sizeof(a.commAddr.raws)) == 0
+           && a.loc.locType == b.loc.locType && std::memcmp(a.loc.raws, b.loc.raws, sizeof(a.loc.raws)) == 0;
 }
 
-static HcclResult ValidateSharedQueueDescs(const std::vector<HcclChannelDesc> &channelDescs)
+static HcclResult ValidateSharedQueueDescs(const std::vector<HcclChannelDesc>& channelDescs)
 {
     for (uint32_t i = 0; i < channelDescs.size(); ++i) {
         if (!IsSharedQueueUbProtocol(channelDescs[i].channelProtocol)) {
-            HCCL_ERROR("[%s] IS_SHARED_QUEUE only supports UB protocols (UBC_CTP/UBC_TP), "
-                "channelDesc[%u] protocol[%d].", __func__, i, channelDescs[i].channelProtocol);
+            HCCL_ERROR(
+                "[%s] IS_SHARED_QUEUE only supports UB protocols (UBC_CTP/UBC_TP), "
+                "channelDesc[%u] protocol[%d].",
+                __func__, i, channelDescs[i].channelProtocol);
             return HCCL_E_NOT_SUPPORT;
         }
     }
 
     if (channelDescs.size() > 1) {
-        const EndpointDesc &firstLocal = channelDescs[0].localEndpoint;
+        const EndpointDesc& firstLocal = channelDescs[0].localEndpoint;
         for (uint32_t i = 1; i < channelDescs.size(); ++i) {
             if (!IsSameLocalEndpoint(firstLocal, channelDescs[i].localEndpoint)) {
-                HCCL_ERROR("[%s] all channelDescs must have the same localEndpoint for shared jetty, "
-                    "channelDesc[0] != channelDesc[%u].", __func__, i);
+                HCCL_ERROR(
+                    "[%s] all channelDescs must have the same localEndpoint for shared jetty, "
+                    "channelDesc[0] != channelDesc[%u].",
+                    __func__, i);
                 return HCCL_E_PARA;
             }
         }
@@ -741,49 +825,46 @@ struct SharedJettyRemoteGroup {
     std::vector<uint32_t> descIndices;
 };
 
-static HcclResult RegisterMemForSharedJettyChannels(hccl::MyRank *myRank, hcomm::EndpointMgr *endpointMgr,
-    EndpointHandle epHandle, std::vector<HcclChannelDesc> &channelDescs,
-    std::vector<std::vector<MemHandle>> &memHandleStorage)
+static HcclResult RegisterMemForSharedJettyChannels(
+    hccl::MyRank* myRank, hcomm::EndpointMgr* endpointMgr, EndpointHandle epHandle,
+    std::vector<HcclChannelDesc>& channelDescs, std::vector<std::vector<MemHandle>>& memHandleStorage)
 {
     uint32_t channelNum = static_cast<uint32_t>(channelDescs.size());
     std::vector<HcclMem> memVec;
-    CommMems *commMems = myRank->GetCommMems();
+    CommMems* commMems = myRank->GetCommMems();
     CHK_PTR_NULL(commMems);
     for (uint32_t i = 0; i < channelNum; ++i) {
         std::vector<std::string> memTag;
         memVec.clear();
-        CHK_RET(commMems->GetTagMemoryHandles(channelDescs[i].memHandles,
-            channelDescs[i].memHandleNum, memVec, memTag));
+        CHK_RET(
+            commMems->GetTagMemoryHandles(channelDescs[i].memHandles, channelDescs[i].memHandleNum, memVec, memTag));
         HcclResult regRet = endpointMgr->RegisterMemory(epHandle, memTag, memVec, memHandleStorage[i]);
-        CHK_PRT_RET(regRet != HCCL_SUCCESS,
-            HCCL_ERROR("[%s] RegisterMemory failed, channelIndex[%u], ret[%d].", __func__, i, regRet),
-            regRet);
+        CHK_PRT_RET(
+            regRet != HCCL_SUCCESS,
+            HCCL_ERROR("[%s] RegisterMemory failed, channelIndex[%u], ret[%d].", __func__, i, regRet), regRet);
         channelDescs[i].memHandles = memHandleStorage[i].data();
         channelDescs[i].memHandleNum = static_cast<uint32_t>(memHandleStorage[i].size());
     }
     return HCCL_SUCCESS;
 }
 
-static void GroupChannelDescsByRemoteEp(const std::vector<HcclChannelDesc> &channelDescs,
-    std::vector<SharedJettyRemoteGroup> &groups)
+static void GroupChannelDescsByRemoteEp(
+    const std::vector<HcclChannelDesc>& channelDescs, std::vector<SharedJettyRemoteGroup>& groups)
 {
-    auto FindGroup = [&groups](const EndpointDesc &remoteEp) -> SharedJettyRemoteGroup * {
-        for (auto &g : groups) {
-            if (g.remoteEp.protocol == remoteEp.protocol &&
-                g.remoteEp.commAddr.type == remoteEp.commAddr.type &&
-                std::memcmp(g.remoteEp.commAddr.raws, remoteEp.commAddr.raws,
-                    sizeof(remoteEp.commAddr.raws)) == 0 &&
-                g.remoteEp.loc.locType == remoteEp.loc.locType &&
-                std::memcmp(g.remoteEp.loc.raws, remoteEp.loc.raws,
-                    sizeof(remoteEp.loc.raws)) == 0) {
+    auto FindGroup = [&groups](const EndpointDesc& remoteEp) -> SharedJettyRemoteGroup* {
+        for (auto& g : groups) {
+            if (g.remoteEp.protocol == remoteEp.protocol && g.remoteEp.commAddr.type == remoteEp.commAddr.type
+                && std::memcmp(g.remoteEp.commAddr.raws, remoteEp.commAddr.raws, sizeof(remoteEp.commAddr.raws)) == 0
+                && g.remoteEp.loc.locType == remoteEp.loc.locType
+                && std::memcmp(g.remoteEp.loc.raws, remoteEp.loc.raws, sizeof(remoteEp.loc.raws)) == 0) {
                 return &g;
             }
         }
         return nullptr;
     };
     for (uint32_t i = 0; i < channelDescs.size(); ++i) {
-        const EndpointDesc &remoteEp = channelDescs[i].remoteEndpoint;
-        SharedJettyRemoteGroup *g = FindGroup(remoteEp);
+        const EndpointDesc& remoteEp = channelDescs[i].remoteEndpoint;
+        SharedJettyRemoteGroup* g = FindGroup(remoteEp);
         if (g == nullptr) {
             groups.push_back({remoteEp, {i}});
         } else {
@@ -792,10 +873,9 @@ static void GroupChannelDescsByRemoteEp(const std::vector<HcclChannelDesc> &chan
     }
 }
 
-static HcclResult CreateSharedJettyChannelsForGroup(CommEngine engine, EndpointHandle epHandle,
-    const std::vector<HcclChannelDesc> &channelDescs, uint32_t repIdx,
-    const std::string &commTag, hccl::MyRank *myRank,
-    uint32_t needCreate, ChannelHandle *outCh)
+static HcclResult CreateSharedJettyChannelsForGroup(
+    CommEngine engine, EndpointHandle epHandle, const std::vector<HcclChannelDesc>& channelDescs, uint32_t repIdx,
+    const std::string& commTag, hccl::MyRank* myRank, uint32_t needCreate, ChannelHandle* outCh)
 {
     std::vector<HcclChannelDesc> hcclDescs(needCreate, channelDescs[repIdx]);
     std::vector<HcommChannelDesc> hcommDescs(needCreate);
@@ -804,26 +884,26 @@ static HcclResult CreateSharedJettyChannelsForGroup(CommEngine engine, EndpointH
         hcommDescs[j].channelName = commTag.c_str();
     }
     std::string socketTag = commTag + "_engine_" + std::to_string(static_cast<uint32_t>(engine));
-    HcclResult sockRet = myRank->BatchCreateSockets(
-        hcclDescs.data(), needCreate, socketTag, hcommDescs);
-    CHK_PRT_RET(sockRet != HCCL_SUCCESS,
-        HCCL_ERROR("[%s] BatchCreateSockets failed, repIdx[%u], remoteRank[%u], ret[%d].",
-            __func__, repIdx, channelDescs[repIdx].remoteRank, sockRet),
+    HcclResult sockRet = myRank->BatchCreateSockets(hcclDescs.data(), needCreate, socketTag, hcommDescs);
+    CHK_PRT_RET(
+        sockRet != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[%s] BatchCreateSockets failed, repIdx[%u], remoteRank[%u], ret[%d].", __func__, repIdx,
+            channelDescs[repIdx].remoteRank, sockRet),
         sockRet);
-    HCCL_INFO("[%s] shared jetty sockets created, repIdx[%u], needCreate[%u].",
-        __func__, repIdx, needCreate);
+    HCCL_INFO("[%s] shared jetty sockets created, repIdx[%u], needCreate[%u].", __func__, repIdx, needCreate);
 
     HcommChannelConfig hcommConfig = nullptr;
     HcclResult cfgRet = static_cast<HcclResult>(hcomm::ChannelConfigCreate(&hcommConfig));
-    CHK_PRT_RET(cfgRet != HCCL_SUCCESS,
-        HCCL_ERROR("[%s] ChannelConfigCreate failed, ret[%d].", __func__, cfgRet), cfgRet);
-    auto *hcommCfg = static_cast<hcomm::HcommChannelConfigData *>(hcommConfig);
+    CHK_PRT_RET(
+        cfgRet != HCCL_SUCCESS, HCCL_ERROR("[%s] ChannelConfigCreate failed, ret[%d].", __func__, cfgRet), cfgRet);
+    auto* hcommCfg = static_cast<hcomm::HcommChannelConfigData*>(hcommConfig);
     hcommCfg->isSharedQueue = true;
 
     uint32_t created = 0;
     for (uint32_t j = 0; j < needCreate; ++j) {
-        HcclResult ret = static_cast<HcclResult>(HcommChannelCreateWithConfig(
-            epHandle, engine, &hcommDescs[j], 1, hcommConfig, &outCh[j]));
+        HcclResult ret = static_cast<HcclResult>(
+            HcommChannelCreateWithConfig(epHandle, engine, &hcommDescs[j], 1, hcommConfig, &outCh[j]));
         if (ret != HCCL_SUCCESS) {
             if (created > 0) {
                 (void)HcommChannelDestroy(outCh, created);
@@ -838,21 +918,21 @@ static HcclResult CreateSharedJettyChannelsForGroup(CommEngine engine, EndpointH
     return HCCL_SUCCESS;
 }
 
-static HcclResult AcquireSharedJettyGroupChannels(HcclComm comm, CommEngine engine,
-    const std::vector<HcclChannelDesc> &channelDescs, const SharedJettyRemoteGroup &group,
-    EndpointHandle epHandle, const std::string &commTag, const std::string &sharedTag,
-    hccl::MyRank *myRank, const EndpointDesc &localEp,
-    ChannelHandle *channels, std::vector<bool> *outIsNewChannel)
+static HcclResult AcquireSharedJettyGroupChannels(
+    HcclComm comm, CommEngine engine, const std::vector<HcclChannelDesc>& channelDescs,
+    const SharedJettyRemoteGroup& group, EndpointHandle epHandle, const std::string& commTag,
+    const std::string& sharedTag, hccl::MyRank* myRank, const EndpointDesc& localEp, ChannelHandle* channels,
+    std::vector<bool>* outIsNewChannel)
 {
     (void)comm;
     uint32_t requestedNum = static_cast<uint32_t>(group.descIndices.size());
     hccl::EndpointDescPair epPair = std::make_pair(localEp, group.remoteEp);
     uint32_t repIdx = group.descIndices[0];
 
-    auto createFunc = [engine, &channelDescs, repIdx, epHandle, &commTag, myRank]
-        (uint32_t needCreate, ChannelHandle *outCh) -> HcclResult {
-        return CreateSharedJettyChannelsForGroup(engine, epHandle, channelDescs, repIdx,
-            commTag, myRank, needCreate, outCh);
+    auto createFunc = [engine, &channelDescs, repIdx, epHandle, &commTag,
+                       myRank](uint32_t needCreate, ChannelHandle* outCh) -> HcclResult {
+        return CreateSharedJettyChannelsForGroup(
+            engine, epHandle, channelDescs, repIdx, commTag, myRank, needCreate, outCh);
     };
 
     std::vector<ChannelHandle> groupOut(requestedNum, 0);
@@ -874,16 +954,14 @@ static HcclResult AcquireSharedJettyGroupChannels(HcclComm comm, CommEngine engi
             (*outIsNewChannel)[descIdx] = true;
         }
         u32 remoteRank = channelDescs[descIdx].remoteRank;
-        HcclCommDfx::AddChannelRemoteRankId(commTag,
-            static_cast<u64>(groupOut[k]), remoteRank);
+        HcclCommDfx::AddChannelRemoteRankId(commTag, static_cast<u64>(groupOut[k]), remoteRank);
     }
     return HCCL_SUCCESS;
 }
 
-static void RollbackAcquiredSharedJettyChannels(uint32_t channelNum, ChannelHandle *channels,
-    const std::vector<bool> *isNewChannel, const EndpointDesc &localEp,
-    const std::vector<HcclChannelDesc> &channelDescs, hccl::MyRank *myRank,
-    const std::string &sharedTag)
+static void RollbackAcquiredSharedJettyChannels(
+    uint32_t channelNum, ChannelHandle* channels, const std::vector<bool>* isNewChannel, const EndpointDesc& localEp,
+    const std::vector<HcclChannelDesc>& channelDescs, hccl::MyRank* myRank, const std::string& sharedTag)
 {
     // 多组部分失败时回滚已成功的新建 channel
     // 复用的 channel 仍由池和其他调用方持有，不可销毁，否则导致 use-after-free
@@ -891,35 +969,33 @@ static void RollbackAcquiredSharedJettyChannels(uint32_t channelNum, ChannelHand
         if (channels[i] != 0 && isNewChannel != nullptr && (*isNewChannel)[i]) {
             (void)HcommChannelDestroy(&channels[i], 1);
             hccl::EndpointDescPair epPair = std::make_pair(localEp, channelDescs[i].remoteEndpoint);
-            hccl::SharedJettyChannelPool::GetInstance().RemoveChannels(
-                myRank, sharedTag, epPair, &channels[i], 1);
+            hccl::SharedJettyChannelPool::GetInstance().RemoveChannels(myRank, sharedTag, epPair, &channels[i], 1);
             channels[i] = 0;
         }
     }
 }
 
-static HcclResult AcquireSharedJettyChannels(HcclComm comm, CommEngine engine,
-    std::vector<HcclChannelDesc> &channelDescs,
-    const hccl::HcclChannelConfigData *cfg, ChannelHandle *channels,
-    std::vector<bool> *outIsNewChannel)
+static HcclResult AcquireSharedJettyChannels(
+    HcclComm comm, CommEngine engine, std::vector<HcclChannelDesc>& channelDescs,
+    const hccl::HcclChannelConfigData* cfg, ChannelHandle* channels, std::vector<bool>* outIsNewChannel)
 {
-    hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);
-    hccl::CollComm *collComm = hcclComm->GetCollComm();
+    hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
+    hccl::CollComm* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
-    hccl::MyRank *myRank = collComm->GetMyRank();
+    hccl::MyRank* myRank = collComm->GetMyRank();
     CHK_PTR_NULL(myRank);
 
-    const std::string &commTag = hcclComm->GetIdentifier();
-    const std::string &sharedTag = cfg->sharedQueueTag;
+    const std::string& commTag = hcclComm->GetIdentifier();
+    const std::string& sharedTag = cfg->sharedQueueTag;
     uint32_t channelNum = static_cast<uint32_t>(channelDescs.size());
 
     if (outIsNewChannel != nullptr) {
         outIsNewChannel->assign(channelNum, false);
     }
 
-    const EndpointDesc &localEp = channelDescs[0].localEndpoint;
+    const EndpointDesc& localEp = channelDescs[0].localEndpoint;
     EndpointHandle epHandle = nullptr;
-    hcomm::EndpointMgr *endpointMgr = myRank->GetEndpointMgr();
+    hcomm::EndpointMgr* endpointMgr = myRank->GetEndpointMgr();
     CHK_PTR_NULL(endpointMgr);
     CHK_RET(endpointMgr->Get(localEp, epHandle));
 
@@ -933,22 +1009,24 @@ static HcclResult AcquireSharedJettyChannels(HcclComm comm, CommEngine engine,
     GroupChannelDescsByRemoteEp(channelDescs, groups);
 
     HcclResult groupRet = HCCL_SUCCESS;
-    for (const auto &group : groups) {
-        groupRet = AcquireSharedJettyGroupChannels(comm, engine, channelDescs, group,
-            epHandle, commTag, sharedTag, myRank, localEp, channels, outIsNewChannel);
+    for (const auto& group : groups) {
+        groupRet = AcquireSharedJettyGroupChannels(
+            comm, engine, channelDescs, group, epHandle, commTag, sharedTag, myRank, localEp, channels,
+            outIsNewChannel);
         if (groupRet != HCCL_SUCCESS) {
             break;
         }
     }
 
     if (groupRet != HCCL_SUCCESS) {
-        RollbackAcquiredSharedJettyChannels(channelNum, channels, outIsNewChannel,
-            localEp, channelDescs, myRank, sharedTag);
+        RollbackAcquiredSharedJettyChannels(
+            channelNum, channels, outIsNewChannel, localEp, channelDescs, myRank, sharedTag);
         return groupRet;
     }
 
-    HCCL_INFO("[%s] shared jetty channels acquired, comm[%p], tag[%s], channelNum[%u], remoteGroups[%zu].",
-        __func__, comm, sharedTag.c_str(), channelNum, groups.size());
+    HCCL_INFO(
+        "[%s] shared jetty channels acquired, comm[%p], tag[%s], channelNum[%u], remoteGroups[%zu].", __func__, comm,
+        sharedTag.c_str(), channelNum, groups.size());
 
     // memHandleStorage 即将析构，清空 channelDescs 中的悬空指针，防止调用方误用
     for (uint32_t i = 0; i < channelNum; ++i) {
@@ -958,12 +1036,13 @@ static HcclResult AcquireSharedJettyChannels(HcclComm comm, CommEngine engine,
     return HCCL_SUCCESS;
 }
 
-static HcclResult ParseSharedQueueConfig(HcclChannelConfig config, CommEngine engine,
-    HcclComm comm, bool &isSharedQueue, std::string &sharedQueueTag, hccl::hcclComm *&hcclComm)
+static HcclResult ParseSharedQueueConfig(
+    HcclChannelConfig config, CommEngine engine, HcclComm comm, bool& isSharedQueue, std::string& sharedQueueTag,
+    hccl::hcclComm*& hcclComm)
 {
     isSharedQueue = false;
     if (config != nullptr) {
-        auto *cfg = static_cast<hccl::HcclChannelConfigData *>(config);
+        auto* cfg = static_cast<hccl::HcclChannelConfigData*>(config);
         isSharedQueue = cfg->isSharedQueue;
         sharedQueueTag = cfg->sharedQueueTag;
     }
@@ -978,12 +1057,12 @@ static HcclResult ParseSharedQueueConfig(HcclChannelConfig config, CommEngine en
     }
 
     if (engine != COMM_ENGINE_AIV) {
-        HCCL_ERROR("[%s] IS_SHARED_QUEUE currently only supports AIV engine, engine[%d].",
-            __func__, static_cast<int>(engine));
+        HCCL_ERROR(
+            "[%s] IS_SHARED_QUEUE currently only supports AIV engine, engine[%d].", __func__, static_cast<int>(engine));
         return HCCL_E_NOT_SUPPORT;
     }
 
-    hcclComm = static_cast<hccl::hcclComm *>(comm);
+    hcclComm = static_cast<hccl::hcclComm*>(comm);
     if (!hcclComm->IsCommunicatorV2()) {
         HCCL_ERROR("[%s] IS_SHARED_QUEUE only supports V2 communicator.", __func__);
         return HCCL_E_NOT_SUPPORT;
@@ -991,27 +1070,31 @@ static HcclResult ParseSharedQueueConfig(HcclChannelConfig config, CommEngine en
     return HCCL_SUCCESS;
 }
 
-static HcclResult ProcessSharedQueueDescFinals(const HcclChannelDesc *channelDescs, uint32_t channelNum,
-    hccl::hcclComm *hcclComm, CommEngine engine, std::vector<HcclChannelDesc> &channelDescFinals)
+static HcclResult ProcessSharedQueueDescFinals(
+    const HcclChannelDesc* channelDescs, uint32_t channelNum, hccl::hcclComm* hcclComm, CommEngine engine,
+    std::vector<HcclChannelDesc>& channelDescFinals)
 {
     for (uint32_t idx = 0; idx < channelNum; idx++) {
         HcclChannelDesc channelDescFinal;
         HcclChannelDescInit(&channelDescFinal, 1);
         HcclResult ret = ProcessHcclResPackReq(channelDescs[idx], channelDescFinal, hcclComm);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("ProcessHcclResPackReq failed. channelDesc idx[%u], group[%s], engine[%s] "
-                "channelNum[%u], ret[%d]", idx, hcclComm->GetIdentifier().c_str(),
-                GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, ret), ret);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "ProcessHcclResPackReq failed. channelDesc idx[%u], group[%s], engine[%s] "
+                "channelNum[%u], ret[%d]",
+                idx, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(),
+                channelNum, ret),
+            ret);
         channelDescFinals.push_back(channelDescFinal);
     }
     return HCCL_SUCCESS;
 }
 
-static void DestroyAndClearSharedJettyChannels(hccl::hcclComm *hcclComm,
-    const std::string &sharedQueueTag, uint32_t channelNum,
-    ChannelHandle *channels, const std::vector<bool> &isNewChannel,
-    const std::vector<ChannelHandle> &channelsCopy,
-    const std::vector<HcclChannelDesc> &channelDescFinals)
+static void DestroyAndClearSharedJettyChannels(
+    hccl::hcclComm* hcclComm, const std::string& sharedQueueTag, uint32_t channelNum, ChannelHandle* channels,
+    const std::vector<bool>& isNewChannel, const std::vector<ChannelHandle>& channelsCopy,
+    const std::vector<HcclChannelDesc>& channelDescFinals)
 {
     // 仅销毁本轮新建的 channel，复用的 channel 保留在池中供其他调用方使用
     for (uint32_t i = 0; i < channelNum; ++i) {
@@ -1021,47 +1104,42 @@ static void DestroyAndClearSharedJettyChannels(hccl::hcclComm *hcclComm,
         }
     }
     // 从池中移除已销毁的新建句柄，避免重试时返回已销毁的 channel
-    hccl::CollComm *collComm = hcclComm->GetCollComm();
+    hccl::CollComm* collComm = hcclComm->GetCollComm();
     if (collComm == nullptr) {
         return;
     }
-    hccl::MyRank *myRank = collComm->GetMyRank();
+    hccl::MyRank* myRank = collComm->GetMyRank();
     if (myRank == nullptr) {
         return;
     }
-    const EndpointDesc &localEp = channelDescFinals[0].localEndpoint;
+    const EndpointDesc& localEp = channelDescFinals[0].localEndpoint;
     for (uint32_t i = 0; i < channelNum; ++i) {
         if (channelsCopy[i] == 0 || !isNewChannel[i]) {
             continue;
         }
-        const EndpointDesc &remoteEp = channelDescFinals[i].remoteEndpoint;
+        const EndpointDesc& remoteEp = channelDescFinals[i].remoteEndpoint;
         hccl::EndpointDescPair epPair = std::make_pair(localEp, remoteEp);
-        hccl::SharedJettyChannelPool::GetInstance().RemoveChannels(
-            myRank, sharedQueueTag, epPair, &channelsCopy[i], 1);
+        hccl::SharedJettyChannelPool::GetInstance().RemoveChannels(myRank, sharedQueueTag, epPair, &channelsCopy[i], 1);
     }
 }
 
-static HcclResult WaitForSharedJettyChannelsReady(uint32_t channelNum, ChannelHandle *channels,
-    hccl::hcclComm *hcclComm)
+static HcclResult
+WaitForSharedJettyChannelsReady(uint32_t channelNum, ChannelHandle* channels, hccl::hcclComm* hcclComm)
 {
     std::vector<int32_t> statusList(channelNum, 0);
-    auto linkTimeout = std::chrono::seconds(
-        Hccl::EnvConfig::GetInstance().GetSocketConfig().GetLinkTimeOut());
+    auto linkTimeout = std::chrono::seconds(Hccl::EnvConfig::GetInstance().GetSocketConfig().GetLinkTimeOut());
     auto startTime = std::chrono::steady_clock::now();
     while (true) {
-        HcclResult statusRet = static_cast<HcclResult>(
-            HcommChannelGetStatus(channels, channelNum, statusList.data()));
+        HcclResult statusRet = static_cast<HcclResult>(HcommChannelGetStatus(channels, channelNum, statusList.data()));
         if (statusRet != HCCL_SUCCESS && statusRet != HCCL_E_AGAIN) {
-            HCCL_ERROR("[%s] HcommChannelGetStatus failed during shared jetty connect, ret[%d].",
-                __func__, statusRet);
+            HCCL_ERROR("[%s] HcommChannelGetStatus failed during shared jetty connect, ret[%d].", __func__, statusRet);
             return statusRet;
         }
         bool allReady = true;
         for (uint32_t i = 0; i < channelNum; ++i) {
-            if (statusList[i] == hcomm::HCOMM_CHANNEL_STATUS_FAILED ||
-                statusList[i] == hcomm::HCOMM_CHANNEL_STATUS_TIMEOUT) {
-                HCCL_ERROR("[%s] shared jetty channel[%u] connect failed, status[%d].",
-                    __func__, i, statusList[i]);
+            if (statusList[i] == hcomm::HCOMM_CHANNEL_STATUS_FAILED
+                || statusList[i] == hcomm::HCOMM_CHANNEL_STATUS_TIMEOUT) {
+                HCCL_ERROR("[%s] shared jetty channel[%u] connect failed, status[%d].", __func__, i, statusList[i]);
                 return HCCL_E_NETWORK;
             }
             if (statusList[i] != hcomm::HCOMM_CHANNEL_STATUS_READY) {
@@ -1072,21 +1150,21 @@ static HcclResult WaitForSharedJettyChannelsReady(uint32_t channelNum, ChannelHa
             return HCCL_SUCCESS;
         }
         if ((std::chrono::steady_clock::now() - startTime) >= linkTimeout) {
-            HCCL_ERROR("[%s] shared jetty channel connect timeout, group[%s].",
-                __func__, hcclComm->GetIdentifier().c_str());
+            HCCL_ERROR(
+                "[%s] shared jetty channel connect timeout, group[%s].", __func__, hcclComm->GetIdentifier().c_str());
             return HCCL_E_TIMEOUT;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(2));
     }
 }
 
-static HcclResult ExchangeConsistencyForSharedJetty(hccl::hcclComm *hcclComm, CommEngine engine,
-    uint32_t channelNum, const std::vector<HcclChannelDesc> &channelDescFinals,
-    const std::vector<bool> &isNewChannel)
+static HcclResult ExchangeConsistencyForSharedJetty(
+    hccl::hcclComm* hcclComm, CommEngine engine, uint32_t channelNum,
+    const std::vector<HcclChannelDesc>& channelDescFinals, const std::vector<bool>& isNewChannel)
 {
-    hccl::CollComm *collComm = hcclComm->GetCollComm();
+    hccl::CollComm* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
-    hccl::MyRank *myRank = collComm->GetMyRank();
+    hccl::MyRank* myRank = collComm->GetMyRank();
     CHK_PTR_NULL(myRank);
 
     std::vector<HcommChannelDesc> consistencyDescs(channelNum);
@@ -1095,13 +1173,13 @@ static HcclResult ExchangeConsistencyForSharedJetty(hccl::hcclComm *hcclComm, Co
         consistencyDescs[i].channelName = hcclComm->GetIdentifier().c_str();
     }
 
-    std::string consistencySocketTag =
-        hcclComm->GetIdentifier() + "_engine_" + std::to_string(static_cast<uint32_t>(engine));
-    HcclResult sockRet = myRank->BatchCreateSockets(
-        channelDescFinals.data(), channelNum, consistencySocketTag, consistencyDescs);
-    CHK_PRT_RET(sockRet != HCCL_SUCCESS,
-        HCCL_ERROR("[%s] BatchCreateSockets for consistency failed, ret[%d].", __func__, sockRet),
-        sockRet);
+    std::string consistencySocketTag
+        = hcclComm->GetIdentifier() + "_engine_" + std::to_string(static_cast<uint32_t>(engine));
+    HcclResult sockRet
+        = myRank->BatchCreateSockets(channelDescFinals.data(), channelNum, consistencySocketTag, consistencyDescs);
+    CHK_PRT_RET(
+        sockRet != HCCL_SUCCESS,
+        HCCL_ERROR("[%s] BatchCreateSockets for consistency failed, ret[%d].", __func__, sockRet), sockRet);
 
     std::vector<std::pair<u32, u32>> newChannelIdxs;
     for (uint32_t i = 0; i < channelNum; ++i) {
@@ -1111,39 +1189,43 @@ static HcclResult ExchangeConsistencyForSharedJetty(hccl::hcclComm *hcclComm, Co
     }
     HcclResult exchRet = myRank->BatchExchangeAndCheckConsistency(
         channelDescFinals.data(), consistencyDescs, channelNum, newChannelIdxs, engine);
-    CHK_PRT_RET(exchRet != HCCL_SUCCESS,
-        HCCL_ERROR("[%s] BatchExchangeAndCheckConsistency failed, group[%s], ret[%d].",
-            __func__, hcclComm->GetIdentifier().c_str(), exchRet),
+    CHK_PRT_RET(
+        exchRet != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[%s] BatchExchangeAndCheckConsistency failed, group[%s], ret[%d].", __func__,
+            hcclComm->GetIdentifier().c_str(), exchRet),
         exchRet);
     return HCCL_SUCCESS;
 }
 
 // 推进建链状态机至 READY + 一致性交换，失败时销毁已获取的新建 channel 并从池中移除
-static HcclResult FinalizeSharedJettyAcquisition(hccl::hcclComm *hcclComm, CommEngine engine,
-    uint32_t channelNum, ChannelHandle *channels, const std::vector<bool> &isNewChannel,
-    const std::vector<HcclChannelDesc> &channelDescFinals, const std::string &sharedQueueTag)
+static HcclResult FinalizeSharedJettyAcquisition(
+    hccl::hcclComm* hcclComm, CommEngine engine, uint32_t channelNum, ChannelHandle* channels,
+    const std::vector<bool>& isNewChannel, const std::vector<HcclChannelDesc>& channelDescFinals,
+    const std::string& sharedQueueTag)
 {
     std::vector<ChannelHandle> channelsCopy(channels, channels + channelNum);
 
     HcclResult waitRet = WaitForSharedJettyChannelsReady(channelNum, channels, hcclComm);
     if (waitRet != HCCL_SUCCESS) {
-        DestroyAndClearSharedJettyChannels(hcclComm, sharedQueueTag, channelNum,
-            channels, isNewChannel, channelsCopy, channelDescFinals);
+        DestroyAndClearSharedJettyChannels(
+            hcclComm, sharedQueueTag, channelNum, channels, isNewChannel, channelsCopy, channelDescFinals);
         return waitRet;
     }
 
-    HcclResult exchRet = ExchangeConsistencyForSharedJetty(hcclComm, engine,
-        channelNum, channelDescFinals, isNewChannel);
+    HcclResult exchRet
+        = ExchangeConsistencyForSharedJetty(hcclComm, engine, channelNum, channelDescFinals, isNewChannel);
     if (exchRet != HCCL_SUCCESS) {
-        DestroyAndClearSharedJettyChannels(hcclComm, sharedQueueTag, channelNum,
-            channels, isNewChannel, channelsCopy, channelDescFinals);
+        DestroyAndClearSharedJettyChannels(
+            hcclComm, sharedQueueTag, channelNum, channels, isNewChannel, channelsCopy, channelDescFinals);
         return exchRet;
     }
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclChannelAcquireWithConfig(HcclComm comm, CommEngine engine,
-    const HcclChannelDesc *channelDescs, uint32_t channelNum, HcclChannelConfig config, ChannelHandle *channels)
+HcclResult HcclChannelAcquireWithConfig(
+    HcclComm comm, CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum,
+    HcclChannelConfig config, ChannelHandle* channels)
 {
     HcclUs startut = TIME_NOW();
     EXCEPTION_HANDLE_BEGIN
@@ -1154,12 +1236,13 @@ HcclResult HcclChannelAcquireWithConfig(HcclComm comm, CommEngine engine,
     CHK_PTR_NULL(channels);
     CHK_PRT_RET(
         (channelNum == 0 || channelNum > CHANNEL_NUM_MAX),
-        HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u], max channel num[%u]",
-        __func__, channelNum, CHANNEL_NUM_MAX), HCCL_E_PARA);
+        HCCL_ERROR(
+            "[%s]Invalid channelNum, channelNum[%u], max channel num[%u]", __func__, channelNum, CHANNEL_NUM_MAX),
+        HCCL_E_PARA);
 
     bool isSharedQueue = false;
     std::string sharedQueueTag;
-    hccl::hcclComm *hcclComm = nullptr;
+    hccl::hcclComm* hcclComm = nullptr;
     CHK_RET(ParseSharedQueueConfig(config, engine, comm, isSharedQueue, sharedQueueTag, hcclComm));
     if (!isSharedQueue) {
         return HcclChannelAcquire(comm, engine, channelDescs, channelNum, channels);
@@ -1176,31 +1259,31 @@ HcclResult HcclChannelAcquireWithConfig(HcclComm comm, CommEngine engine,
     std::vector<std::vector<HcclMemHandle>> mergedMemHandles;
     bool hasSymmetricMemHandles = false;
     if (IsAicpuEngine(engine)) {
-        hccl::CollComm *collComm = hcclComm->GetCollComm();
+        hccl::CollComm* collComm = hcclComm->GetCollComm();
         CHK_PTR_NULL(collComm);
         CHK_RET(AppendSymmetricMemHandles(collComm, channelDescFinals, mergedMemHandles, hasSymmetricMemHandles));
     }
 
-    auto *cfg = static_cast<hccl::HcclChannelConfigData *>(config);
+    auto* cfg = static_cast<hccl::HcclChannelConfigData*>(config);
     std::vector<bool> isNewChannel;
     HcclResult ret = AcquireSharedJettyChannels(comm, engine, channelDescFinals, cfg, channels, &isNewChannel);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[%s] AcquireSharedJettyChannels failed, group[%s], ret[%d].",
-            __func__, hcclComm->GetIdentifier().c_str(), ret);
-        for (uint32_t i = 0; i < channelNum; ++i) { channels[i] = 0; },
-        ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR(
+                                 "[%s] AcquireSharedJettyChannels failed, group[%s], ret[%d].", __func__,
+                                 hcclComm->GetIdentifier().c_str(), ret);
+        for (uint32_t i = 0; i < channelNum; ++i) { channels[i] = 0; }, ret);
 
     // 推进建链状态机至 READY + 一致性交换，失败时自动清理
-    CHK_RET(FinalizeSharedJettyAcquisition(hcclComm, engine, channelNum,
-        channels, isNewChannel, channelDescFinals, sharedQueueTag));
+    CHK_RET(FinalizeSharedJettyAcquisition(
+        hcclComm, engine, channelNum, channels, isNewChannel, channelDescFinals, sharedQueueTag));
 
-    CHK_RET(FinalizeV2ChannelAcquire(hcclComm, engine, channelDescFinals, channels,
-        channelNum, hasSymmetricMemHandles, beginTime));
+    CHK_RET(FinalizeV2ChannelAcquire(
+        hcclComm, engine, channelDescFinals, channels, channelNum, hasSymmetricMemHandles, beginTime));
 
-    HCCL_RUN_INFO("[%s] acquire shared jetty channels success, group[%s], engine[%s], channelNum[%u], take time [%lld]us.",
-        __func__, hcclComm->GetIdentifier().c_str(),
-        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum,
-        DURATION_US(TIME_NOW() - startut));
+    HCCL_RUN_INFO(
+        "[%s] acquire shared jetty channels success, group[%s], engine[%s], channelNum[%u], take time [%lld]us.",
+        __func__, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(),
+        channelNum, DURATION_US(TIME_NOW() - startut));
     EXCEPTION_HANDLE_END
     return HCCL_SUCCESS;
 }

@@ -13,8 +13,6 @@
 
 #include "transport_net_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* TRANSPORT_NET_H */
-

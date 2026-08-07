@@ -17,7 +17,8 @@
 #include <vector>
 
 namespace HcclSim {
-std::string StringFormat(const char* format, ...) {
+std::string StringFormat(const char* format, ...)
+{
     va_list args;
     va_start(args, format);
 
@@ -38,4 +39,4 @@ std::string StringFormat(const char* format, ...) {
 
     return std::string(buffer.data(), size);
 }
-}
+} // namespace HcclSim

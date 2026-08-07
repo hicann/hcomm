@@ -22,12 +22,12 @@ public:
     void ReportAllTasks();
     void UpdateProfStat();
     Hccl::MirrorTaskManagerLite* GetMirrorTaskManagerLite() const;
-    
+
 private:
     Hccl::MirrorTaskManagerLite* mirrorTaskManagerLite_;
     std::unique_ptr<Hccl::ProfilingReporterLite> profilingReporterLite_{nullptr};
     bool initializedFlag_{false};
 };
-}
+} // namespace hccl
 
-#endif 
+#endif

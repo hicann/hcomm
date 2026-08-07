@@ -11,9 +11,6 @@
 #include "coll_all_to_all_executor.h"
 
 namespace hccl {
-HcclResult CollAlltoAllExecutor::SetParallelTaskLoader(ParallelTaskLoader* parallelTaskLoader)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult CollAlltoAllExecutor::SetParallelTaskLoader(ParallelTaskLoader* parallelTaskLoader) { return HCCL_SUCCESS; }
 
-}
+} // namespace hccl

@@ -29,12 +29,11 @@
 #include "db_sim_runner_common.h"
 #include "db_sim_runner_ops.h"
 
-
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
-HcclResult hrtGetDeviceType(DevType &devType)
+HcclResult hrtGetDeviceType(DevType& devType)
 {
     auto devKey = sim::GetCurrDeviceKey();
     auto device = RunnerDB::GetById<sim::Device>(devKey);
@@ -57,46 +56,48 @@ HcclResult hrtGetDeviceType(DevType &devType)
     return HCCL_SUCCESS;
 }
 
-rtError_t rtOpenNetService(const rtNetServiceOpenArgs *args)
+rtError_t rtOpenNetService(const rtNetServiceOpenArgs* args)
 {
-    (void) args;
+    (void)args;
     // hccpThreadStatus = 1;
     return ACL_SUCCESS;
 }
 
-rtError_t rtGetDeviceInfo(uint32_t deviceId, int32_t moduleType, int32_t infoType, int64_t *value)
+rtError_t rtGetDeviceInfo(uint32_t deviceId, int32_t moduleType, int32_t infoType, int64_t* value)
 {
-    (void) deviceId;
-    (void) moduleType;
-    (void) infoType;
-    (void) value;
-    return RT_ERROR_NONE; 
-}
-
-rtError_t rtUbDevQueryInfo(rtUbDevQueryCmd cmd, void *devInfo)
-{
-    (void) cmd;
-    (void) devInfo;
+    (void)deviceId;
+    (void)moduleType;
+    (void)infoType;
+    (void)value;
     return RT_ERROR_NONE;
 }
 
-rtError_t rtCntNotifyCreateServer(rtCntNotify_t * const cntNotify, uint64_t flags)
+rtError_t rtUbDevQueryInfo(rtUbDevQueryCmd cmd, void* devInfo)
 {
-    (void) cntNotify;
-    (void) flags;
+    (void)cmd;
+    (void)devInfo;
+    return RT_ERROR_NONE;
+}
+
+rtError_t rtCntNotifyCreateServer(rtCntNotify_t* const cntNotify, uint64_t flags)
+{
+    (void)cntNotify;
+    (void)flags;
     return 0;
 }
 
-rtError_t rtsCntNotifyGetId(rtCntNotify_t cntNotify, uint32_t *notifyId)
+rtError_t rtsCntNotifyGetId(rtCntNotify_t cntNotify, uint32_t* notifyId)
 {
-    (void) cntNotify;
-    (void) notifyId;
+    (void)cntNotify;
+    (void)notifyId;
     return ACL_SUCCESS;
 }
 
-rtError_t rtGetDevResAddress(rtDevResInfo *const resInfo, rtDevResAddrInfo *const addrInfo)
+rtError_t rtGetDevResAddress(rtDevResInfo* const resInfo, rtDevResAddrInfo* const addrInfo)
 {
-    if (resInfo == nullptr || (resInfo->resType != rtDevResType_t::RT_RES_TYPE_STARS_NOTIFY_RECORD && resInfo->resType != rtDevResType_t::RT_RES_TYPE_STARS_CNT_NOTIFY_BIT_WR)) {
+    if (resInfo == nullptr
+        || (resInfo->resType != rtDevResType_t::RT_RES_TYPE_STARS_NOTIFY_RECORD
+            && resInfo->resType != rtDevResType_t::RT_RES_TYPE_STARS_CNT_NOTIFY_BIT_WR)) {
         // 非NotifyRecord场景暂不处理
         return RT_ERROR_NONE;
     }
@@ -110,4 +111,4 @@ rtError_t rtGetDevResAddress(rtDevResInfo *const resInfo, rtDevResAddrInfo *cons
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus

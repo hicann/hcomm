@@ -12,13 +12,13 @@
 
 namespace hccl {
 
-CollAlgOpRegistry &CollAlgOpRegistry::Instance()
+CollAlgOpRegistry& CollAlgOpRegistry::Instance()
 {
     static CollAlgOpRegistry globalOpRegistry;
     return globalOpRegistry;
 }
 
-HcclResult CollAlgOpRegistry::Register(const HcclCMDType &opType, const CollAlgOpCreator &collAlgOpCreator)
+HcclResult CollAlgOpRegistry::Register(const HcclCMDType& opType, const CollAlgOpCreator& collAlgOpCreator)
 {
     const std::lock_guard<std::mutex> lock(mu_);
     if (opCreators_.find(opType) != opCreators_.end()) {
@@ -30,15 +30,15 @@ HcclResult CollAlgOpRegistry::Register(const HcclCMDType &opType, const CollAlgO
 }
 
 std::unique_ptr<CollAlgOperator> CollAlgOpRegistry::GetAlgOp(
-    const HcclCMDType &opType, AlgConfigurator* algConfigurator, CCLBufferManager &cclBufferManager,
-    HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher)
+    const HcclCMDType& opType, AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager,
+    HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher)
 {
     if (opCreators_.find(opType) == opCreators_.end()) {
         HCCL_ERROR("[CollAlgOpRegistry]Creator for op type[%d] has not registered.", opType);
         return nullptr;
     }
-    return std::unique_ptr<CollAlgOperator>(opCreators_[opType](
-        algConfigurator, cclBufferManager, dispatcher, topoMatcher));
+    return std::unique_ptr<CollAlgOperator>(
+        opCreators_[opType](algConfigurator, cclBufferManager, dispatcher, topoMatcher));
 }
 
-} // namespace Hccl
+} // namespace hccl

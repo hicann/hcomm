@@ -19,15 +19,13 @@
 
 #include "sim_op_db_types.h"
 
-namespace loader
-{
+namespace loader {
 using ProxyId = uint32_t;
 
 using OpStage = std::vector<sim::CompositeOpDetail>; // 某一次算子任务
 using OpPipeline = std::map<uint32_t, OpStage>;      // 所有算子任务
 
-class Loader
-{
+class Loader {
 public:
     Loader();
     ~Loader();
@@ -35,21 +33,23 @@ public:
     // dbPath: 数据库路径
     HcclResult LoadOpTaskFile(const std::string dbPath = "");
 
-    HcclResult GetSyncInfo(std::vector<sim::SyncRecordTab> &syncRecords);
+    HcclResult GetSyncInfo(std::vector<sim::SyncRecordTab>& syncRecords);
 
-    HcclResult GetSyncRecordsByStatus(uint8_t status, std::vector<sim::SyncRecordTab> &syncRecords);
+    HcclResult GetSyncRecordsByStatus(uint8_t status, std::vector<sim::SyncRecordTab>& syncRecords);
     // Runner: 每 sync 一次调用一次，outSyncIter: 输出本次加载的 syncIter
-    HcclResult LoadRunnerSingleSync(const uint32_t &outSyncIter, std::map<uint32_t, std::vector<sim::CompositeOpDetail>> &compositeDataMap);
+    HcclResult LoadRunnerSingleSync(
+        const uint32_t& outSyncIter, std::map<uint32_t, std::vector<sim::CompositeOpDetail>>& compositeDataMap);
 
     // 根据 syncIter 查询复合算子详情
-    HcclResult LoadCompositeOpDetailBySyncIter(uint32_t syncIter, std::map<uint32_t, std::vector<sim::CompositeOpDetail>>& compositeDataMap);
+    HcclResult LoadCompositeOpDetailBySyncIter(
+        uint32_t syncIter, std::map<uint32_t, std::vector<sim::CompositeOpDetail>>& compositeDataMap);
 
-    HcclResult GetCcuChannelInfo(std::vector<sim::CcuChannelTab> &channels);
-    HcclResult GetJettyMapInfo(std::vector<sim::JettyMapTab> &jettyMaps);
-    HcclResult GetInstrResInfo(std::vector<sim::CcuInstrResTab> &instrRes);
+    HcclResult GetCcuChannelInfo(std::vector<sim::CcuChannelTab>& channels);
+    HcclResult GetJettyMapInfo(std::vector<sim::JettyMapTab>& jettyMaps);
+    HcclResult GetInstrResInfo(std::vector<sim::CcuInstrResTab>& instrRes);
 
     // 返回内部已组装好的完整 Pipeline 缓存
-    const OpPipeline &GetOpTasks() const;
+    const OpPipeline& GetOpTasks() const;
 
 private:
     // 成员变量

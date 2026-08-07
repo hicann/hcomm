@@ -16,8 +16,7 @@
 #include "hccl_common.h"
 
 namespace hccl {
-struct AclgraphDestroyCallbackParam
-{
+struct AclgraphDestroyCallbackParam {
     u64 modelId;
 };
 
@@ -25,15 +24,15 @@ class AclgraphCallback {
 public:
     static AclgraphCallback& GetInstance();
     HcclResult CleanCaptureRes(u64 modelId);
-    void CleanCaptureRes(HcclCommunicator *communicator);
-    HcclResult InsertNewTagToCaptureResMap(HcclCommunicator *communicator,
-        const std::string &newTag, const OpParam &opParam);
+    void CleanCaptureRes(HcclCommunicator* communicator);
+    HcclResult
+    InsertNewTagToCaptureResMap(HcclCommunicator* communicator, const std::string& newTag, const OpParam& opParam);
 
 private:
     AclgraphCallback() = default;
     ~AclgraphCallback();
     std::mutex resMutex_;
-    std::unordered_map<u64, std::unordered_map<HcclCommunicator *, std::unordered_set<std::string>>> captureResMap_;
+    std::unordered_map<u64, std::unordered_map<HcclCommunicator*, std::unordered_set<std::string>>> captureResMap_;
     std::unordered_map<u64, AclgraphDestroyCallbackParam> captureCallbackParamMap_;
 };
 

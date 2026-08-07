@@ -37,4 +37,4 @@ struct ChannelManagerCallbacks {
 
 } // namespace hccl
 
-#endif  // MANAGER_COMMON_H
+#endif // MANAGER_COMMON_H

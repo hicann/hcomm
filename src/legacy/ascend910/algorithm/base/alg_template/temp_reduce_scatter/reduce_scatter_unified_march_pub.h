@@ -19,13 +19,13 @@ public:
     explicit ReduceScatterUnifiedMarch(const HcclDispatcher dispatcher);
     ~ReduceScatterUnifiedMarch() override;
 
-    HcclResult Prepare(Stream &mainStream, SubCommInfo &level0CommInfo,
-        DeviceMem &userInput, DeviceMem &userOutput, DeviceMem &usrInMem,
-        DeviceMem &scratchMem, u64 totalCount, std::vector<Stream> &subStreams,
-        const std::vector<std::shared_ptr<LocalNotify>> &meshSignalMainToSub,
-        const std::vector<std::shared_ptr<LocalNotify>> &meshSignalSubToMain,
-        const HcclDataType dataType, const HcclReduceOp reductionOp,
-        const std::vector<std::vector<Slice>> &multRingsUserMemSlice, u64 reduceAttrBitMap) override;
+    HcclResult Prepare(
+        Stream& mainStream, SubCommInfo& level0CommInfo, DeviceMem& userInput, DeviceMem& userOutput,
+        DeviceMem& usrInMem, DeviceMem& scratchMem, u64 totalCount, std::vector<Stream>& subStreams,
+        const std::vector<std::shared_ptr<LocalNotify>>& meshSignalMainToSub,
+        const std::vector<std::shared_ptr<LocalNotify>>& meshSignalSubToMain, const HcclDataType dataType,
+        const HcclReduceOp reductionOp, const std::vector<std::vector<Slice>>& multRingsUserMemSlice,
+        u64 reduceAttrBitMap) override;
     HcclResult RunAsync() override;
 
 protected:
@@ -35,8 +35,9 @@ private:
     HcclResult WaitSubStreamFinish(u32 streamSize);
     HcclResult NotifyNeighborsStart(LINK& prevIntraLink, LINK& nextIntralLink, u32 neighbors);
     HcclResult NotifyNeighborsEnd(LINK& prevIntraLink, LINK& nextIntralLink, u32 neighbors);
-    HcclResult DoSerialReduce(void* remDMAMemPtr, void* dstAddr, u64 memSize,
-    u64 dataCount, Stream &tmpStream, LINK& tmpLink, u64 remoteOffsetByte);
+    HcclResult DoSerialReduce(
+        void* remDMAMemPtr, void* dstAddr, u64 memSize, u64 dataCount, Stream& tmpStream, LINK& tmpLink,
+        u64 remoteOffsetByte);
     HcclResult RunSingleSliceRead(u32 ringPrevRank, u32 ringNextRank, u32 step, u32 totalStep);
     HcclResult RunHalfSliceRead(u32 ringPrevRank, u32 ringNextRank, u32 step, u32 totalStep);
     HcclResult RunLastStep(u32 ringPrevRank, u32 ringNextRank, u32 totalStep);
@@ -58,7 +59,7 @@ private:
     u64 totalCount_ = 0;
     u64 blockDataByte_ = 0;
     std::vector<std::vector<Slice>> multRingsUserMemSlice_; // 记录server内的要发送的不连续数据块
-    u32 notifyIdx_ = 0; // 新增notify资源索引
+    u32 notifyIdx_ = 0;                                     // 新增notify资源索引
 };
 } // namespace hccl
 #endif /* ALLTOALL_V_MESH_READ_ONLY_PUB_H */

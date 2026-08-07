@@ -29,15 +29,9 @@
 using namespace Hccl;
 class RtsqA5Test : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "RtsqA5 tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "RtsqA5 tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "RtsqA5 tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "RtsqA5 tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
@@ -371,8 +365,7 @@ TEST_F(RtsqA5Test, Ut_TryLaunchTask_When_HasEnoughSpace_Expect_LaunchTask)
     EXPECT_EQ(rtsq.pendingSqeCnt, 0);
 }
 
-TEST_F(RtsqA5Test,
-       UT_CheckLaunchTaskStatus_CallbackReturnSuspending_Expect_PendingSqeCntResetAndNoThrow)
+TEST_F(RtsqA5Test, UT_CheckLaunchTaskStatus_CallbackReturnSuspending_Expect_PendingSqeCntResetAndNoThrow)
 {
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
     rtsq.sqTail_ = 8;
@@ -383,14 +376,15 @@ TEST_F(RtsqA5Test,
 
     auto startTime = std::chrono::steady_clock::now();
     auto curTime = startTime + std::chrono::seconds(5);
-    rtsq.checkExecStatusCallback_ = [](bool isTimeout) { return HCCL_E_SUSPENDING; };
+    rtsq.checkExecStatusCallback_ = [](bool isTimeout) {
+        return HCCL_E_SUSPENDING;
+    };
 
     EXPECT_NO_THROW(rtsq.CheckLaunchTaskStatus(startTime, curTime));
     EXPECT_EQ(rtsq.pendingSqeCnt, 0);
 }
 
-TEST_F(RtsqA5Test,
-       UT_CheckLaunchTaskStatus_CallbackReturnSuspendingWithTimeout_Expect_NoThrow)
+TEST_F(RtsqA5Test, UT_CheckLaunchTaskStatus_CallbackReturnSuspendingWithTimeout_Expect_NoThrow)
 {
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
     rtsq.sqTail_ = 8;
@@ -401,14 +395,15 @@ TEST_F(RtsqA5Test,
 
     auto startTime = std::chrono::steady_clock::now() - std::chrono::seconds(10);
     auto curTime = std::chrono::steady_clock::now();
-    rtsq.checkExecStatusCallback_ = [](bool isTimeout) { return HCCL_E_SUSPENDING; };
+    rtsq.checkExecStatusCallback_ = [](bool isTimeout) {
+        return HCCL_E_SUSPENDING;
+    };
 
     EXPECT_NO_THROW(rtsq.CheckLaunchTaskStatus(startTime, curTime));
     EXPECT_EQ(rtsq.pendingSqeCnt, 0);
 }
 
-TEST_F(RtsqA5Test,
-       UT_CheckLaunchTaskStatus_CallbackReturnSuspendingZeroPending_Expect_NormalReturn)
+TEST_F(RtsqA5Test, UT_CheckLaunchTaskStatus_CallbackReturnSuspendingZeroPending_Expect_NormalReturn)
 {
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
     rtsq.pendingSqeCnt = 0;
@@ -416,14 +411,15 @@ TEST_F(RtsqA5Test,
 
     auto startTime = std::chrono::steady_clock::now();
     auto curTime = startTime + std::chrono::seconds(5);
-    rtsq.checkExecStatusCallback_ = [](bool isTimeout) { return HCCL_E_SUSPENDING; };
+    rtsq.checkExecStatusCallback_ = [](bool isTimeout) {
+        return HCCL_E_SUSPENDING;
+    };
 
     EXPECT_NO_THROW(rtsq.CheckLaunchTaskStatus(startTime, curTime));
     EXPECT_EQ(rtsq.pendingSqeCnt, 0);
 }
 
-TEST_F(RtsqA5Test,
-       UT_CheckLaunchTaskStatus_CallbackReturnErrorWithNoTimeout_Expect_ThrowException)
+TEST_F(RtsqA5Test, UT_CheckLaunchTaskStatus_CallbackReturnErrorWithNoTimeout_Expect_ThrowException)
 {
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
     rtsq.pendingSqeCnt = 16;
@@ -431,13 +427,14 @@ TEST_F(RtsqA5Test,
 
     auto startTime = std::chrono::steady_clock::now();
     auto curTime = startTime + std::chrono::seconds(5);
-    rtsq.checkExecStatusCallback_ = [](bool isTimeout) { return HCCL_E_INTERNAL; };
+    rtsq.checkExecStatusCallback_ = [](bool isTimeout) {
+        return HCCL_E_INTERNAL;
+    };
 
     EXPECT_THROW(rtsq.CheckLaunchTaskStatus(startTime, curTime), Hccl::InternalException);
 }
 
-TEST_F(RtsqA5Test,
-       UT_CheckLaunchTaskStatus_CallbackNullWithTimeout_Expect_ThrowException)
+TEST_F(RtsqA5Test, UT_CheckLaunchTaskStatus_CallbackNullWithTimeout_Expect_ThrowException)
 {
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
     rtsq.pendingSqeCnt = 16;
@@ -458,7 +455,7 @@ TEST_F(RtsqA5Test, Ut_RefreshSqeHeaderTaskField_SetsTaskFields)
     rtsq.taskId_ = 0x00010002U;
 
     std::vector<uint8_t> sqeBuf(AC_SQE_SIZE, 0);
-    auto *header = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeBuf.data());
+    auto* header = reinterpret_cast<Rt91095StarsSqeHeader*>(sqeBuf.data());
     header->rtStreamId = 0;
     header->taskId = 0;
 
@@ -474,7 +471,7 @@ TEST_F(RtsqA5Test, Ut_RefreshSqeHeaderTaskField_IncrementsTaskId)
     u32 initialTaskId = rtsq.taskId_;
 
     std::vector<uint8_t> sqeBuf(AC_SQE_SIZE, 0);
-    auto *header = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeBuf.data());
+    auto* header = reinterpret_cast<Rt91095StarsSqeHeader*>(sqeBuf.data());
 
     rtsq.RefreshSqeHeaderTaskField(header);
 
@@ -487,7 +484,7 @@ TEST_F(RtsqA5Test, Ut_RefreshSqeHeaderTaskField_MultipleCalls_TaskIdIncrementsEa
     u32 initialTaskId = rtsq.taskId_;
 
     std::vector<uint8_t> sqeBuf(AC_SQE_SIZE, 0);
-    auto *header = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeBuf.data());
+    auto* header = reinterpret_cast<Rt91095StarsSqeHeader*>(sqeBuf.data());
 
     rtsq.RefreshSqeHeaderTaskField(header);
     u32 taskIdAfterFirst = rtsq.taskId_;
@@ -505,7 +502,7 @@ TEST_F(RtsqA5Test, Ut_RefreshSqeHeaderTaskField_PreservesOtherHeaderFields)
     rtsq.taskId_ = 0;
 
     std::vector<uint8_t> sqeBuf(AC_SQE_SIZE, 0);
-    auto *header = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeBuf.data());
+    auto* header = reinterpret_cast<Rt91095StarsSqeHeader*>(sqeBuf.data());
     header->type = static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_WAIT);
     header->wrCqe = 1;
     header->numBlocks = 0xABCD;
@@ -562,15 +559,15 @@ TEST_F(RtsqA5Test, Ut_LaunchNewTask_Success_CopiesSqeToSqBuffer)
     MOCKER_CPP(&RtsqA5::QuerySqHead).stubs().will(returnValue(static_cast<u32>(0)));
 
     std::vector<uint8_t> sqeArray(AC_SQE_SIZE * 2, 0);
-    auto *header0 = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeArray.data());
+    auto* header0 = reinterpret_cast<Rt91095StarsSqeHeader*>(sqeArray.data());
     header0->type = static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_WAIT);
-    auto *header1 = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeArray.data() + AC_SQE_SIZE);
+    auto* header1 = reinterpret_cast<Rt91095StarsSqeHeader*>(sqeArray.data() + AC_SQE_SIZE);
     header1->type = static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_SDMA);
 
     EXPECT_NO_THROW(rtsq.LaunchNewTask(sqeArray.data(), 2));
 
-    auto *sqHeader0 = reinterpret_cast<Rt91095StarsSqeHeader *>(mockSq);
-    auto *sqHeader1 = reinterpret_cast<Rt91095StarsSqeHeader *>(mockSq + AC_SQE_SIZE);
+    auto* sqHeader0 = reinterpret_cast<Rt91095StarsSqeHeader*>(mockSq);
+    auto* sqHeader1 = reinterpret_cast<Rt91095StarsSqeHeader*>(mockSq + AC_SQE_SIZE);
     EXPECT_EQ(sqHeader0->type, static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_WAIT));
     EXPECT_EQ(sqHeader1->type, static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_SDMA));
 }
@@ -604,7 +601,7 @@ TEST_F(RtsqA5Test, Ut_LaunchNewTask_SingleSqe_Success)
     MOCKER_CPP(&RtsqA5::QuerySqHead).stubs().will(returnValue(static_cast<u32>(0)));
 
     std::vector<uint8_t> sqeArray(AC_SQE_SIZE, 0);
-    auto *header = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeArray.data());
+    auto* header = reinterpret_cast<Rt91095StarsSqeHeader*>(sqeArray.data());
     header->type = static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_RECORD);
 
     EXPECT_NO_THROW(rtsq.LaunchNewTask(sqeArray.data(), 1));
@@ -612,6 +609,6 @@ TEST_F(RtsqA5Test, Ut_LaunchNewTask_SingleSqe_Success)
     EXPECT_EQ(rtsq.sqTail_, 1U);
     EXPECT_EQ(rtsq.pendingSqeCnt, 0U);
 
-    auto *sqHeader = reinterpret_cast<Rt91095StarsSqeHeader *>(mockSq);
+    auto* sqHeader = reinterpret_cast<Rt91095StarsSqeHeader*>(mockSq);
     EXPECT_EQ(sqHeader->type, static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_RECORD));
 }

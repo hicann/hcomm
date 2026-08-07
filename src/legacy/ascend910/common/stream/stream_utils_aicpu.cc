@@ -8,21 +8,12 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
- #include <unordered_map>
- #include <functional>
- #include "stream_utils.h"
- 
- HcclResult GetStreamCaptureInfo(rtStream_t stream, rtModel_t &rtModel, bool &isCapture)
- {
-     return HCCL_SUCCESS;
- }
+#include <unordered_map>
+#include <functional>
+#include "stream_utils.h"
 
- HcclResult AddStreamToModel(rtStream_t stream, rtModel_t &rtModel)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult GetStreamCaptureInfo(rtStream_t stream, rtModel_t& rtModel, bool& isCapture) { return HCCL_SUCCESS; }
 
-HcclResult GetModelId(aclmdlRI &rtModel, u64 &modelId)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult AddStreamToModel(rtStream_t stream, rtModel_t& rtModel) { return HCCL_SUCCESS; }
+
+HcclResult GetModelId(aclmdlRI& rtModel, u64& modelId) { return HCCL_SUCCESS; }

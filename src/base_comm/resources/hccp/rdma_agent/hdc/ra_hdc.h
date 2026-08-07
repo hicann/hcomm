@@ -43,7 +43,7 @@ struct HdcAsyncInfo {
     HDC_SESSION snapshotSession;
     pthread_t tid;
     unsigned int connectStatus; // hdc session connect status
-    unsigned int threadStatus; // recv thread status
+    unsigned int threadStatus;  // recv thread status
 
     int lastRecvStatus;
     pthread_mutex_t sendMutex;
@@ -195,25 +195,27 @@ struct HdcOps {
     hdcError_t (*reuseMsg)(struct drvHdcMsg *msg);
     hdcError_t (*addMsgBuffer)(struct drvHdcMsg *msg, char *pBuf, int len);
     hdcError_t (*getMsgBuffer)(struct drvHdcMsg *msg, int index, char **pBuf, int *pLen);
-    hdcError_t (*recv)(HDC_SESSION session, struct drvHdcMsg *msg, int bufLen, unsigned long long flag, 
+    hdcError_t (*recv)(HDC_SESSION session, struct drvHdcMsg *msg, int bufLen, unsigned long long flag,
         int *recvBufCount, unsigned int timeout);
     hdcError_t (*send)(HDC_SESSION session, struct drvHdcMsg *msg, unsigned long long flag, unsigned int timeout);
     hdcError_t (*setSessionReference)(HDC_SESSION session);
 };
 
-#define RA_PTHREAD_MUTEX_LOCK(mutex) do { \
-    int ret_lock = pthread_mutex_lock(mutex); \
-    if (ret_lock) { \
-        hccp_warn("pthread_mutex_lock unsuccessful, ret[%d]", ret_lock); \
-    } \
-} while (0)
+#define RA_PTHREAD_MUTEX_LOCK(mutex)                                                                                   \
+    do {                                                                                                               \
+        int ret_lock = pthread_mutex_lock(mutex);                                                                      \
+        if (ret_lock) {                                                                                                \
+            hccp_warn("pthread_mutex_lock unsuccessful, ret[%d]", ret_lock);                                           \
+        }                                                                                                              \
+    } while (0)
 
-#define RA_PTHREAD_MUTEX_UNLOCK(mutex) do { \
-    int ret_ulock = pthread_mutex_unlock(mutex); \
-    if (ret_ulock) { \
-        hccp_warn("pthread_mutex_unlock unsuccessful, ret[%d]", ret_ulock); \
-    } \
-} while (0)
+#define RA_PTHREAD_MUTEX_UNLOCK(mutex)                                                                                 \
+    do {                                                                                                               \
+        int ret_ulock = pthread_mutex_unlock(mutex);                                                                   \
+        if (ret_ulock) {                                                                                               \
+            hccp_warn("pthread_mutex_unlock unsuccessful, ret[%d]", ret_ulock);                                        \
+        }                                                                                                              \
+    } while (0)
 
 static inline bool RaHdcIsBroken(int lastRecvStatus)
 {
@@ -231,8 +233,8 @@ int RaHdcProcessMsg(unsigned int opcode, unsigned int phyId, char *data, unsigne
 int RaHdcInitSession(int peerNode, int peerDevid, unsigned int phyId, int hdcType, HDC_SESSION *session);
 void RaHdcDeinitSession(HDC_SESSION *session);
 int RaHdcSetSessionReference(HDC_SESSION *session);
-void MsgHeadBuildUp(struct MsgHead *pSendRcvHead, unsigned int opcode, unsigned int reqId,
-    unsigned int msgDataLen, pid_t hostTgid);
+void MsgHeadBuildUp(struct MsgHead *pSendRcvHead, unsigned int opcode, unsigned int reqId, unsigned int msgDataLen,
+    pid_t hostTgid);
 int HdcAsyncSendPkt(struct HdcAsyncInfo *asyncInfo, unsigned int phyId, void *sendBuf, unsigned int sendLen);
 int HdcAsyncRecvPkt(struct HdcAsyncInfo *asyncInfo, unsigned int phyId, void *recvBuf, unsigned int *recvLen);
 int RaHdcSaveSnapshot(unsigned int phyId, enum SaveSnapshotAction action);

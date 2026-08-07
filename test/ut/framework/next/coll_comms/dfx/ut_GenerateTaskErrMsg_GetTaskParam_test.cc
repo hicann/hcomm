@@ -34,31 +34,25 @@ using namespace hccl;
 using namespace hcomm;
 
 namespace hcomm {
-void GetTaskParam(Hccl::TaskParam &taskParam, const Hccl::ErrorMessageReport &errMsgInfo);
+void GetTaskParam(Hccl::TaskParam& taskParam, const Hccl::ErrorMessageReport& errMsgInfo);
 }
 
 class TaskErrMsgTest : public testing::Test {
 protected:
     void SetUp() override
     {
-        MOCKER(::getpid)
-            .stubs()
-            .will(returnValue(12345));
-        MOCKER(HrtHalDrvQueryProcessHostPid)
-            .stubs()
-            .will(returnValue(HCCL_SUCCESS));
-        Hccl::DlHalFunctionV2::GetInstance().dlHalEschedSubmitEvent = [](unsigned int, struct event_summary *) -> drvError_t {
+        MOCKER(::getpid).stubs().will(returnValue(12345));
+        MOCKER(HrtHalDrvQueryProcessHostPid).stubs().will(returnValue(HCCL_SUCCESS));
+        Hccl::DlHalFunctionV2::GetInstance().dlHalEschedSubmitEvent
+            = [](unsigned int, struct event_summary*) -> drvError_t {
             return DRV_ERROR_NONE;
         };
         HcclCommTaskExceptionLite::GetInstance().Init(0);
     }
-    void TearDown() override
-    {
-        GlobalMockObject::verify();
-    }
+    void TearDown() override { GlobalMockObject::verify(); }
 };
 
-static Hccl::TaskInfo MakeTaskInfo(Hccl::TaskParam &taskParam)
+static Hccl::TaskInfo MakeTaskInfo(Hccl::TaskParam& taskParam)
 {
     auto dfxOpInfo = std::make_shared<Hccl::DfxOpInfo>();
     Hccl::TaskInfo taskInfo(0, 0, 0, taskParam, dfxOpInfo, true);
@@ -350,8 +344,8 @@ TEST_F(TaskErrMsgTest, Ut_GetTaskParam_When_UbReduceInline_Expect_ReduceFieldsSe
     EXPECT_EQ(taskParam.taskPara.Reduce.notifyValue, 600u);
     EXPECT_EQ(taskParam.taskPara.Reduce.linkType, Hccl::DfxLinkType::HCCS);
     EXPECT_EQ(taskParam.taskPara.Reduce.size, 1024u);
-    EXPECT_EQ(taskParam.taskPara.Reduce.src, reinterpret_cast<void *>(0x1000));
-    EXPECT_EQ(taskParam.taskPara.Reduce.dst, reinterpret_cast<void *>(0x2000));
+    EXPECT_EQ(taskParam.taskPara.Reduce.src, reinterpret_cast<void*>(0x1000));
+    EXPECT_EQ(taskParam.taskPara.Reduce.dst, reinterpret_cast<void*>(0x2000));
 }
 
 TEST_F(TaskErrMsgTest, Ut_GetTaskParam_When_WriteReduceWithNotify_Expect_ReduceFieldsSet)
@@ -403,8 +397,8 @@ TEST_F(TaskErrMsgTest, Ut_GetTaskParam_When_UbInlineWrite_Expect_DmaFieldsSet)
     EXPECT_EQ(taskParam.taskPara.DMA.notifyValue, 1200u);
     EXPECT_EQ(taskParam.taskPara.DMA.linkType, Hccl::DfxLinkType::ROCE);
     EXPECT_EQ(taskParam.taskPara.DMA.size, 4096u);
-    EXPECT_EQ(taskParam.taskPara.DMA.src, reinterpret_cast<void *>(0x3000));
-    EXPECT_EQ(taskParam.taskPara.DMA.dst, reinterpret_cast<void *>(0x4000));
+    EXPECT_EQ(taskParam.taskPara.DMA.src, reinterpret_cast<void*>(0x3000));
+    EXPECT_EQ(taskParam.taskPara.DMA.dst, reinterpret_cast<void*>(0x4000));
 }
 
 TEST_F(TaskErrMsgTest, Ut_GetTaskParam_When_WriteWithNotify_Expect_DmaFieldsSet)
@@ -439,8 +433,8 @@ TEST_F(TaskErrMsgTest, Ut_GetTaskParam_When_Ub_Expect_UbFieldsSet)
     EXPECT_EQ(taskParam.taskPara.DMA.notifyValue, 0u);
     EXPECT_EQ(taskParam.taskPara.DMA.linkType, Hccl::DfxLinkType::UB);
     EXPECT_EQ(taskParam.taskPara.DMA.size, 2048u);
-    EXPECT_EQ(taskParam.taskPara.DMA.src, reinterpret_cast<void *>(0x1000));
-    EXPECT_EQ(taskParam.taskPara.DMA.dst, reinterpret_cast<void *>(0x2000));
+    EXPECT_EQ(taskParam.taskPara.DMA.src, reinterpret_cast<void*>(0x1000));
+    EXPECT_EQ(taskParam.taskPara.DMA.dst, reinterpret_cast<void*>(0x2000));
 }
 
 TEST_F(TaskErrMsgTest, Ut_GetTaskParam_When_Sdma_Expect_BasicDmaFieldsSet)
@@ -460,6 +454,6 @@ TEST_F(TaskErrMsgTest, Ut_GetTaskParam_When_Sdma_Expect_BasicDmaFieldsSet)
     EXPECT_EQ(taskParam.taskPara.DMA.notifyValue, 0u);
     EXPECT_EQ(taskParam.taskPara.DMA.linkType, Hccl::DfxLinkType::ROCE);
     EXPECT_EQ(taskParam.taskPara.DMA.size, 8192u);
-    EXPECT_EQ(taskParam.taskPara.DMA.src, reinterpret_cast<void *>(0x5000));
-    EXPECT_EQ(taskParam.taskPara.DMA.dst, reinterpret_cast<void *>(0x6000));
+    EXPECT_EQ(taskParam.taskPara.DMA.src, reinterpret_cast<void*>(0x5000));
+    EXPECT_EQ(taskParam.taskPara.DMA.dst, reinterpret_cast<void*>(0x6000));
 }

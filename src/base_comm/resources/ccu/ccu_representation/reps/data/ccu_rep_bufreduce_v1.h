@@ -15,37 +15,39 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepBufReduce : public CcuRepBase {
-public:
-    CcuRepBufReduce(CcuInsGeneratorBase* insGenPtr, const std::vector<CcuBuf> &mem, uint16_t count, uint16_t dataType, uint16_t outputDataType,
-                    uint16_t opType, CompletedEvent sem, const CcuRep::Variable &len, uint16_t mask = 1);
-    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
-    const std::vector<CcuBuf>& GetMem() { return mem; }
-    uint16_t GetCount() { return count; }
-    uint16_t GetDataType() { return dataType; }
-    uint16_t GetOutputDataType() { return outputDataType; }
-    uint16_t GetOpType() { return opType; }
-    uint16_t GetXnLengthId() { return xnIdLength_.Id(); }
-    uint16_t GetMask() { return mask; }
-    uint16_t GetSemId() { return sem.Id(); }
+    class CcuRepBufReduce : public CcuRepBase {
+    public:
+        CcuRepBufReduce(
+            CcuInsGeneratorBase* insGenPtr, const std::vector<CcuBuf>& mem, uint16_t count, uint16_t dataType,
+            uint16_t outputDataType, uint16_t opType, CompletedEvent sem, const CcuRep::Variable& len,
+            uint16_t mask = 1);
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
+        const std::vector<CcuBuf>& GetMem() { return mem; }
+        uint16_t GetCount() { return count; }
+        uint16_t GetDataType() { return dataType; }
+        uint16_t GetOutputDataType() { return outputDataType; }
+        uint16_t GetOpType() { return opType; }
+        uint16_t GetXnLengthId() { return xnIdLength_.Id(); }
+        uint16_t GetMask() { return mask; }
+        uint16_t GetSemId() { return sem.Id(); }
 
-    CompletedEvent GetSem() { return sem; }
-    CcuRep::Variable GetXnIdLength() { return xnIdLength_; }
+        CompletedEvent GetSem() { return sem; }
+        CcuRep::Variable GetXnIdLength() { return xnIdLength_; }
 
-private:
-    CcuInsGeneratorBase*   insGenPtr;
-    std::vector<CcuBuf>    mem;
-    uint16_t               count;
-    uint16_t               dataType;
-    uint16_t               outputDataType;
-    uint16_t               opType;
-    CompletedEvent         sem;
-    CcuRep::Variable       xnIdLength_;
+    private:
+        CcuInsGeneratorBase* insGenPtr;
+        std::vector<CcuBuf> mem;
+        uint16_t count;
+        uint16_t dataType;
+        uint16_t outputDataType;
+        uint16_t opType;
+        CompletedEvent sem;
+        CcuRep::Variable xnIdLength_;
 
-    uint16_t               mask{0};
-};
+        uint16_t mask{0};
+    };
 
-};     // namespace CcuRep
-};     // namespace hcomm
+}; // namespace CcuRep
+}; // namespace hcomm
 #endif // HCOMM_CCU_REPRESENTATION_BUFREDUCE_H

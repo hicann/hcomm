@@ -26,46 +26,47 @@
 namespace Hccl {
 class CollServiceBase {
 public:
-    explicit CollServiceBase(CommunicatorImpl *comm);
+    explicit CollServiceBase(CommunicatorImpl* comm);
     virtual void Init() = 0;
-    virtual void LoadWithOpBasedMode(CollOperator &op, std::unique_ptr<Stream> stream) = 0;
-    virtual void LoadWithOffloadMode(CollOperator &op, std::unique_ptr<Stream> stream) = 0;
+    virtual void LoadWithOpBasedMode(CollOperator& op, std::unique_ptr<Stream> stream) = 0;
+    virtual void LoadWithOffloadMode(CollOperator& op, std::unique_ptr<Stream> stream) = 0;
     virtual ~CollServiceBase();
 
-    virtual void AllocCommResource(void *mc2Tiling, void **commContext, const AcceleratorState& tilingAccelerator);
-    virtual HcclResult AllocCollOpResource(CollOperator &op, const std::string &opAlgTag, void **addr);
-    virtual void GetCcuTaskInfo(void *tilingData, void *ccuTaskGroup);
-    virtual u32  GetCcuMc2ServerNum();
-    virtual void RecoverTransport(vector<LinkData> &links, vector<std::pair<LinkGroup, u32>> linkGroupPair) = 0;
+    virtual void AllocCommResource(void* mc2Tiling, void** commContext, const AcceleratorState& tilingAccelerator);
+    virtual HcclResult AllocCollOpResource(CollOperator& op, const std::string& opAlgTag, void** addr);
+    virtual void GetCcuTaskInfo(void* tilingData, void* ccuTaskGroup);
+    virtual u32 GetCcuMc2ServerNum();
+    virtual void RecoverTransport(vector<LinkData>& links, vector<std::pair<LinkGroup, u32>> linkGroupPair) = 0;
 
-    virtual bool IsAllTransportRecoveredReady(const std::string &opTag);
+    virtual bool IsAllTransportRecoveredReady(const std::string& opTag);
 
-    DevBuffer *GetOpCounterBuf();
+    DevBuffer* GetOpCounterBuf();
 
-    virtual HcclResult GetSnapShotDynamicBuf(CollOperator &op, BinaryStream &buf);
+    virtual HcclResult GetSnapShotDynamicBuf(CollOperator& op, BinaryStream& buf);
 
-    void WaitTransportReady(const std::string &opTag) const;
+    void WaitTransportReady(const std::string& opTag) const;
 
     virtual void Resume();
 
-    virtual void ReLoadWithOpBasedMode(CollOperator &op);
-    virtual void ReLoadWithOffloadMode(CollOperator &op);
+    virtual void ReLoadWithOpBasedMode(CollOperator& op);
+    virtual void ReLoadWithOffloadMode(CollOperator& op);
 
-    virtual HcclResult GetAlgExecParam(bool clearEnable, u32 numBlocks, void *&commContext, u64 &len);
+    virtual HcclResult GetAlgExecParam(bool clearEnable, u32 numBlocks, void*& commContext, u64& len);
+
 protected:
-    void RegisterOpBufToBufMgr(CollOperator &op);
+    void RegisterOpBufToBufMgr(CollOperator& op);
 
     void RegisterCclLocRmaBuffer() const;
-    void RegisterCclBuffer(const std::vector<LinkData> &links) const;
+    void RegisterCclBuffer(const std::vector<LinkData>& links) const;
 
     void RegisterOpbasedStream(std::unique_ptr<Stream> stream);
 
-    void RegisterOpbasedLocalRmaBuf(const std::string &opTag) const;
-    void RegisterOffloadLocalRmaBuf(const std::string &opTag) const;
-    void RegisterOffloadMasterStream(const std::string &opTag, std::unique_ptr<Stream> stream) const;
+    void RegisterOpbasedLocalRmaBuf(const std::string& opTag) const;
+    void RegisterOffloadLocalRmaBuf(const std::string& opTag) const;
+    void RegisterOffloadMasterStream(const std::string& opTag, std::unique_ptr<Stream> stream) const;
 
     void WaitOpbasedTransportReady() const;
-    void WaitOffloadTransportReady(const std::string &opTag) const;
+    void WaitOffloadTransportReady(const std::string& opTag) const;
 
     void AddOpCounterMems();
     void SaveMirrorDfxOpInfo();
@@ -76,11 +77,11 @@ protected:
 
     std::shared_ptr<DevBuffer> counterBuf{nullptr};
 
-    CommunicatorImpl *comm{nullptr};
+    CommunicatorImpl* comm{nullptr};
 
-    virtual void AllocQueueNotify(const InsQueue &insQueue);
+    virtual void AllocQueueNotify(const InsQueue& insQueue);
 
-    virtual void AllocQNotifyForSingleQ(const InsQueue &insQueue) const;
+    virtual void AllocQNotifyForSingleQ(const InsQueue& insQueue) const;
 };
 } // namespace Hccl
 #endif // HCCL_COLLSERVICEBASE_H

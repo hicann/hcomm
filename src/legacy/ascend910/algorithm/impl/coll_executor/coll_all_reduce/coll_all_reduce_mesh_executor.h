@@ -16,7 +16,7 @@
 namespace hccl {
 class CollAllReduceMeshExecutor : public CollAllReduceExecutor {
 public:
-    CollAllReduceMeshExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollAllReduceMeshExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAllReduceMeshExecutor() override = default;
 
 private:
@@ -24,17 +24,18 @@ private:
     void ParseParam(const OpParam& param) override;
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
 
     /* *************** 算法编排 *************** */
     bool IsHugeData(const u64 curSize) override;
     bool IsSmallData(const u64 totalSize, const u64 curSize) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
     HcclResult Getlevel1CommRank(SubCommInfo& level1CommInfo) override;
-    HcclResult SelectTempAlg(std::unique_ptr<AlgTemplateBase> &level1TempAlg, u32 level1RankSize) override;
-    
+    HcclResult SelectTempAlg(std::unique_ptr<AlgTemplateBase>& level1TempAlg, u32 level1RankSize) override;
+
     bool meshSinglePlane_ = false;
 };
 

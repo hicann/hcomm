@@ -17,17 +17,17 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepSetLoop : public CcuRepBase {
-public:
-    CcuRepSetLoop(const Variable &loopParam, const Executor &executor, const Variable &var);
+    class CcuRepSetLoop : public CcuRepBase {
+    public:
+        CcuRepSetLoop(const Variable& loopParam, const Executor& executor, const Variable& var);
 
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-    Variable loopParam;
-    Executor executor;
-    Variable var;
-};
+        Variable loopParam;
+        Executor executor;
+        Variable var;
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

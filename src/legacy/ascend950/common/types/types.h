@@ -19,9 +19,9 @@
 namespace Hccl {
 using char_t = char;
 
-using RankId  = s32;
-using QId     = u32;
-using DevId   = u32;
+using RankId = s32;
+using QId = u32;
+using DevId = u32;
 using Timeout = u32;
 
 using SockPort = u16;
@@ -37,53 +37,29 @@ struct OpExecuteConfig {
     AcceleratorState accState = AcceleratorState::CCU_MS;
 };
 
-struct AcceleratorEnumHash
-{
-    template<typename T>
+struct AcceleratorEnumHash {
+    template <typename T>
     std::size_t operator()(T t) const
     {
         return static_cast<std::size_t>(t);
     }
 };
 
-const std::unordered_map<AcceleratorState, std::string, AcceleratorEnumHash> AcceleratorStateToString = {
-    { AcceleratorState::CCU_MS,    "CCU_MS" },
-    { AcceleratorState::CCU_SCHED, "CCU_SCHED" },
-    { AcceleratorState::CCU_FALLBACK,  "CCU_FALLBACK" },
-    { AcceleratorState::AIV,       "AIV" },
-    { AcceleratorState::AIV_ONLY,  "AIV_ONLY" },
-    { AcceleratorState::AICPU_TS,  "AICPU_TS" },
-    { AcceleratorState::HOSTCPU_TS, "HOSTCPU_TS" },
-    { AcceleratorState::AICPU,     "AICPU" }
-};
+const std::unordered_map<AcceleratorState, std::string, AcceleratorEnumHash> AcceleratorStateToString
+    = {{AcceleratorState::CCU_MS, "CCU_MS"},
+       {AcceleratorState::CCU_SCHED, "CCU_SCHED"},
+       {AcceleratorState::CCU_FALLBACK, "CCU_FALLBACK"},
+       {AcceleratorState::AIV, "AIV"},
+       {AcceleratorState::AIV_ONLY, "AIV_ONLY"},
+       {AcceleratorState::AICPU_TS, "AICPU_TS"},
+       {AcceleratorState::HOSTCPU_TS, "HOSTCPU_TS"},
+       {AcceleratorState::AICPU, "AICPU"}};
 
-MAKE_ENUM (HcclOpType,
-           HCCL_INVALID,
-           HCCL_BROADCAST,
-           HCCL_ALLREDUCE,
-           HCCL_REDUCE,
-           HCCL_SEND,
-           HCCL_RECEIVE,
-           HCCL_ALLGATHER,
-           HCCL_REDUCE_SCATTER,
-           HCCL_ALLTOALLV,
-           HCCL_ALLTOALLVC,
-           HCCL_ALLTOALL,
-           HCCL_GATHER,
-           HCCL_SCATTER,
-           HCCL_BATCH_SEND_RECV,
-           HCCL_BATCH_PUT,
-           HCCL_BATCH_GET,
-           HCCL_ALLGATHER_V,
-           HCCL_REDUCE_SCATTER_V,
-           HCCL_BATCH_WRITE,
-           HCCL_HALF_ALLTOALLV,
-           HCCL_ALL,
-           HCCL_FINALIZE = 100,
-           HCCL_INTER_GROUP_SYNC,
-           HCCL_INIT,
-           HCCL_BARRIER,
-           HCCL_MAX);
+MAKE_ENUM(
+    HcclOpType, HCCL_INVALID, HCCL_BROADCAST, HCCL_ALLREDUCE, HCCL_REDUCE, HCCL_SEND, HCCL_RECEIVE, HCCL_ALLGATHER,
+    HCCL_REDUCE_SCATTER, HCCL_ALLTOALLV, HCCL_ALLTOALLVC, HCCL_ALLTOALL, HCCL_GATHER, HCCL_SCATTER,
+    HCCL_BATCH_SEND_RECV, HCCL_BATCH_PUT, HCCL_BATCH_GET, HCCL_ALLGATHER_V, HCCL_REDUCE_SCATTER_V, HCCL_BATCH_WRITE,
+    HCCL_HALF_ALLTOALLV, HCCL_ALL, HCCL_FINALIZE = 100, HCCL_INTER_GROUP_SYNC, HCCL_INIT, HCCL_BARRIER, HCCL_MAX);
 
 } // namespace Hccl
 

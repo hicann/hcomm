@@ -1,7 +1,6 @@
 #ifndef HCCLV1_LINK_TYPE_RECORDER_H
 #define HCCLV1_LINK_TYPE_RECORDER_H
 
-
 #include "llt_common.h"
 #include <map>
 #include "hccl_common.h"
@@ -13,7 +12,7 @@ public:
     static LinkTypeRecorder* Global();
     std::map<CheckerDevType, std::map<u32, std::map<u32, LinkTypeInServer>>> devLinkTypeMap_;
 
-    void SetLinkTypeMap(std::vector<CheckerDevType> &devTypes);
+    void SetLinkTypeMap(std::vector<CheckerDevType>& devTypes);
     void SetLinkTypeMapOf910A();
     void SetLinkTypeMapOf910B();
     void SetLinkTypeMapOf310P3V();
@@ -24,6 +23,6 @@ public:
     bool is310P3V_ = false;
 };
 
-}
+} // namespace checker
 
 #endif

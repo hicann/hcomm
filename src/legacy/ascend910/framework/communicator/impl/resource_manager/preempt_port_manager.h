@@ -26,9 +26,8 @@
 
 namespace hccl {
 
-struct EnumClassHash
-{
-    template<typename T>
+struct EnumClassHash {
+    template <typename T>
     std::size_t operator()(T t) const
     {
         return static_cast<std::size_t>(t);
@@ -45,21 +44,23 @@ public:
     static PreemptPortManager& GetInstance(s32 deviceLogicId);
 
     // 尝试在给定范围内抢占一个端口
-    HcclResult ListenPreempt(const std::shared_ptr<HcclSocket> &listenSocket,
-        const std::vector<HcclSocketPortRange> &portRange, u32 &usePort);
+    HcclResult ListenPreempt(
+        const std::shared_ptr<HcclSocket>& listenSocket, const std::vector<HcclSocketPortRange>& portRange,
+        u32& usePort);
     // 释放一个已抢占的端口
-    HcclResult Release(const std::shared_ptr<HcclSocket> &listenSocket);
+    HcclResult Release(const std::shared_ptr<HcclSocket>& listenSocket);
 
 private:
     explicit PreemptPortManager();
 
-    HcclResult PreemptPortInRange(IpPortRef& portRef, const std::shared_ptr<HcclSocket> &listenSocket,
-        NICDeployment nicDeploy, const std::vector<HcclSocketPortRange> &portRange, u32 &usePort);
-    HcclResult ReleasePreempt(IpPortRef& portRef, const std::shared_ptr<HcclSocket> &listenSocket,
-        NICDeployment nicDeploy);
+    HcclResult PreemptPortInRange(
+        IpPortRef& portRef, const std::shared_ptr<HcclSocket>& listenSocket, NICDeployment nicDeploy,
+        const std::vector<HcclSocketPortRange>& portRange, u32& usePort);
+    HcclResult
+    ReleasePreempt(IpPortRef& portRef, const std::shared_ptr<HcclSocket>& listenSocket, NICDeployment nicDeploy);
 
-    bool IsAlreadyListening(const IpPortRef& ipPortRef, const std::string &ipAddr, const u32 port);
-    std::string GetRangeStr(const std::vector<HcclSocketPortRange> &portRangeVec);
+    bool IsAlreadyListening(const IpPortRef& ipPortRef, const std::string& ipAddr, const u32 port);
+    std::string GetRangeStr(const std::vector<HcclSocketPortRange>& portRangeVec);
 
     static bool initialized;
     s32 deviceLogicId_;
@@ -70,5 +71,5 @@ private:
     // 不同类型网卡上抢占的Socket
     std::unordered_map<NICDeployment, IpPortRef, EnumClassHash> preemptSockets_;
 };
-}
-#endif  // PREEMPT_SOCKET_MANAGER_H
+} // namespace hccl
+#endif // PREEMPT_SOCKET_MANAGER_H

@@ -27,32 +27,34 @@ using namespace hcomm::CcuRep;
 
 class LoadGsaXnExecutorTest : public testing::Test {
 protected:
-    void SetUp() override {
-        auto &mgr = CcuResourceManager::GetInstance();
+    void SetUp() override
+    {
+        auto& mgr = CcuResourceManager::GetInstance();
         mgr.Init(0, 4, RunnerCcuVersion::CCU_V1, {});
     }
     void TearDown() override {}
 };
 
-TEST_F(LoadGsaXnExecutorTest, StructSize) {
-    EXPECT_GT(sizeof(LoadGsaXnExecutor), 0);
-}
+TEST_F(LoadGsaXnExecutorTest, StructSize) { EXPECT_GT(sizeof(LoadGsaXnExecutor), 0); }
 
-TEST_F(LoadGsaXnExecutorTest, DefaultConstructor) {
+TEST_F(LoadGsaXnExecutorTest, DefaultConstructor)
+{
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     LoadGsaXnExecutor executor(0, 0, 0, instr, nullptr);
     EXPECT_NO_THROW(executor.Describe());
 }
 
-TEST_F(LoadGsaXnExecutorTest, ParameterizedConstructor) {
+TEST_F(LoadGsaXnExecutorTest, ParameterizedConstructor)
+{
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     LoadGsaXnExecutor executor(0, 0, 0, instr, nullptr);
     EXPECT_NO_THROW(executor.Describe());
 }
 
-TEST_F(LoadGsaXnExecutorTest, ParserZeroValues) {
+TEST_F(LoadGsaXnExecutorTest, ParserZeroValues)
+{
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     LoadGsaXnExecutor executor(0, 0, 0, instr, nullptr);
@@ -60,7 +62,8 @@ TEST_F(LoadGsaXnExecutorTest, ParserZeroValues) {
     EXPECT_NO_THROW(executor.Describe());
 }
 
-TEST_F(LoadGsaXnExecutorTest, ParserMaxValues) {
+TEST_F(LoadGsaXnExecutorTest, ParserMaxValues)
+{
     CcuInstr instr;
     memset(&instr, 0xFF, sizeof(instr));
     LoadGsaXnExecutor executor(0, 0, 0, instr, nullptr);
@@ -68,7 +71,8 @@ TEST_F(LoadGsaXnExecutorTest, ParserMaxValues) {
     EXPECT_NO_THROW(executor.Describe());
 }
 
-TEST_F(LoadGsaXnExecutorTest, ParserSpecificParameters) {
+TEST_F(LoadGsaXnExecutorTest, ParserSpecificParameters)
+{
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     instr.v1.loadGSAXn.gsAdId = 100;
@@ -80,7 +84,8 @@ TEST_F(LoadGsaXnExecutorTest, ParserSpecificParameters) {
     EXPECT_FALSE(desc.empty());
 }
 
-TEST_F(LoadGsaXnExecutorTest, DifferentIdCombinations) {
+TEST_F(LoadGsaXnExecutorTest, DifferentIdCombinations)
+{
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     uint16_t ids[] = {0, 1, 100, 0x7FFF, 0xFFFF};
@@ -98,7 +103,8 @@ TEST_F(LoadGsaXnExecutorTest, DifferentIdCombinations) {
     }
 }
 
-TEST_F(LoadGsaXnExecutorTest, DescribeContent) {
+TEST_F(LoadGsaXnExecutorTest, DescribeContent)
+{
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     instr.v1.loadGSAXn.gsAdId = 10;
@@ -112,7 +118,8 @@ TEST_F(LoadGsaXnExecutorTest, DescribeContent) {
     EXPECT_NE(desc.find("Xn"), std::string::npos);
 }
 
-TEST_F(LoadGsaXnExecutorTest, InheritanceCheck) {
+TEST_F(LoadGsaXnExecutorTest, InheritanceCheck)
+{
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     LoadGsaXnExecutor executor(0, 0, 0, instr, nullptr);
@@ -120,8 +127,9 @@ TEST_F(LoadGsaXnExecutorTest, InheritanceCheck) {
     EXPECT_NE(base, nullptr);
 }
 
-TEST_F(LoadGsaXnExecutorTest, Run_BasicAddition) {
-    auto &mgr = CcuResourceManager::GetInstance();
+TEST_F(LoadGsaXnExecutorTest, Run_BasicAddition)
+{
+    auto& mgr = CcuResourceManager::GetInstance();
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     instr.v1.loadGSAXn.gsAdId = 5;
@@ -136,8 +144,9 @@ TEST_F(LoadGsaXnExecutorTest, Run_BasicAddition) {
     EXPECT_EQ(result, 300);
 }
 
-TEST_F(LoadGsaXnExecutorTest, Run_ZeroValues) {
-    auto &mgr = CcuResourceManager::GetInstance();
+TEST_F(LoadGsaXnExecutorTest, Run_ZeroValues)
+{
+    auto& mgr = CcuResourceManager::GetInstance();
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     instr.v1.loadGSAXn.gsAdId = 1;
@@ -152,8 +161,9 @@ TEST_F(LoadGsaXnExecutorTest, Run_ZeroValues) {
     EXPECT_EQ(result, 0);
 }
 
-TEST_F(LoadGsaXnExecutorTest, Run_LargeValues) {
-    auto &mgr = CcuResourceManager::GetInstance();
+TEST_F(LoadGsaXnExecutorTest, Run_LargeValues)
+{
+    auto& mgr = CcuResourceManager::GetInstance();
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     instr.v1.loadGSAXn.gsAdId = 0;

@@ -18,8 +18,8 @@
 #include "ai_core_stub.h"
 
 namespace AivSim {
-nlohmann::json SerializeExecutor(const AivKernelExecutor &executor, uint32_t launchIndex);
-bool DumpExecutorToJsonFile(const AivKernelExecutor &executor, uint32_t launchIndex);
+nlohmann::json SerializeExecutor(const AivKernelExecutor& executor, uint32_t launchIndex);
+bool DumpExecutorToJsonFile(const AivKernelExecutor& executor, uint32_t launchIndex);
 } // namespace AivSim
 
 #endif // AIV_AIV_TASK_JSON_H

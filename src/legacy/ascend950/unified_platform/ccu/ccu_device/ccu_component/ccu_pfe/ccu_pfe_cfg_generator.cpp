@@ -18,13 +18,15 @@
 
 namespace Hccl {
 
-CcuPfeCfgGenerator &CcuPfeCfgGenerator::GetInstance(const int32_t deviceLogicId)
+CcuPfeCfgGenerator& CcuPfeCfgGenerator::GetInstance(const int32_t deviceLogicId)
 {
     static CcuPfeCfgGenerator ccuPfeCfgGenerator[MAX_MODULE_DEVICE_NUM + 1];
 
     if (deviceLogicId < 0 || static_cast<uint32_t>(deviceLogicId) > MAX_MODULE_DEVICE_NUM) {
-        THROW<InvalidParamsException>("[CcuPfeCfgGenerator][%s] failed to get instance, devLogicId[%d] "
-            "should be less than %u.", __func__, deviceLogicId, MAX_MODULE_DEVICE_NUM);
+        THROW<InvalidParamsException>(
+            "[CcuPfeCfgGenerator][%s] failed to get instance, devLogicId[%d] "
+            "should be less than %u.",
+            __func__, deviceLogicId, MAX_MODULE_DEVICE_NUM);
     }
 
     ccuPfeCfgGenerator[deviceLogicId].Init(deviceLogicId);
@@ -43,15 +45,14 @@ void CcuPfeCfgGenerator::Init(const int32_t deviceLogicId)
     std::vector<HrtDevEidInfo> eidInfoList;
     (void)CcuEidInfo::GetInstance(devLogicId).GetEidInfo(devLogicId, eidInfoList);
     if (eidInfoList.empty()) {
-        HCCL_RUN_INFO("[CcuPfeCfgGenerator][%s] eid infos are empty, devLogicId[%d]",
-            __func__, devLogicId);
+        HCCL_RUN_INFO("[CcuPfeCfgGenerator][%s] eid infos are empty, devLogicId[%d]", __func__, devLogicId);
         initFlag = true;
         return;
     }
 
     bool dieEnableFlags[MAX_CCU_IODIE_NUM] = {false, false};
     for (uint8_t i = 0; i < MAX_CCU_IODIE_NUM; i++) {
-        const auto &ccuResSpecs = CcuResSpecifications::GetInstance(devLogicId);
+        const auto& ccuResSpecs = CcuResSpecifications::GetInstance(devLogicId);
         (void)ccuResSpecs.GetDieEnableFlag(i, dieEnableFlags[i]);
     }
 
@@ -80,9 +81,10 @@ void CcuPfeCfgGenerator::Init(const int32_t deviceLogicId)
         pfeJettyCtxCfgs[dieId].emplace_back(std::move(cfg));
         dieFuncIdSet[dieId].insert(feId);
 
-        HCCL_RUN_INFO("[CcuPfeCfgGenerator] new pfe cfg set: dieId[%u] feId[%u] startJettyCtxId[%u] "
-            "startTaJettyId[%u] pfeJettyNum[%u].", dieId, feId, startJettyCtxId, startTaJettyId,
-            pfeJettyNum);
+        HCCL_RUN_INFO(
+            "[CcuPfeCfgGenerator] new pfe cfg set: dieId[%u] feId[%u] startJettyCtxId[%u] "
+            "startTaJettyId[%u] pfeJettyNum[%u].",
+            dieId, feId, startJettyCtxId, startTaJettyId, pfeJettyNum);
     }
 
     initFlag = true;
@@ -103,4 +105,4 @@ std::vector<PfeJettyCtxCfg> CcuPfeCfgGenerator::GetPfeJettyCtxCfg(const uint8_t 
     return pfeJettyCtxCfgs[dieId];
 }
 
-}; // Hccl
+}; // namespace Hccl

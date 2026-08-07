@@ -16,23 +16,23 @@
 
 namespace hcomm {
 
-class CcuResPack{
+class CcuResPack {
 public:
     explicit CcuResPack() {};
     ~CcuResPack();
     // 基于实例类型初始化
     CcuResult InitByInsType(const CcuInstanceType insType);
     // 基于资源描述符数组初始化（资源数量由 resDesc 驱动，与 Init 的 insType 路径区分）
-    CcuResult InitByResDescs(const CcuResDesc *descs[], uint32_t descNum);
+    CcuResult InitByResDescs(const CcuResDesc* descs[], uint32_t descNum);
     CcuResult Reset();
 
-    CcuResRepository &GetCcuResRepo();
+    CcuResRepository& GetCcuResRepo();
 
 private:
-    CcuResPack(const CcuResPack &that) = delete;
-    CcuResPack &operator=(const CcuResPack &that) = delete;
-    CcuResPack(CcuResPack &&that) = delete;
-    CcuResPack &operator=(CcuResPack &&that) = delete;
+    CcuResPack(const CcuResPack& that) = delete;
+    CcuResPack& operator=(const CcuResPack& that) = delete;
+    CcuResPack(CcuResPack&& that) = delete;
+    CcuResPack& operator=(CcuResPack&& that) = delete;
 
     int32_t devLogicId_{0};
     CcuResHandle resHandle_{nullptr};
@@ -41,4 +41,4 @@ private:
 
 } // namespace hcomm
 
-# endif // CCU_RES_PACK_H
+#endif // CCU_RES_PACK_H

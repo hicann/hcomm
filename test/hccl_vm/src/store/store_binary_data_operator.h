@@ -15,60 +15,60 @@
 #include "sim_common_defs.h"
 
 namespace HcclSim {
-HcclVmResult FileHeaderWrite(FILE *fp, const FileHeader &header);
+HcclVmResult FileHeaderWrite(FILE* fp, const FileHeader& header);
 
-HcclVmResult FileHeaderRead(FILE *fp, FileHeader &header, uint32_t magic);
+HcclVmResult FileHeaderRead(FILE* fp, FileHeader& header, uint32_t magic);
 
-HcclVmResult HcclVmSynDataRead(FILE *fp, HcclVmSynData &synData, uint32_t magic);
+HcclVmResult HcclVmSynDataRead(FILE* fp, HcclVmSynData& synData, uint32_t magic);
 
-HcclVmResult HcclVmSynDataWrite(FILE *fp, const HcclVmSynData &synData);
+HcclVmResult HcclVmSynDataWrite(FILE* fp, const HcclVmSynData& synData);
 
-HcclVmResult ModelInfoCommWrite(FILE *fp, const ModelInfoCommInner &comm);
+HcclVmResult ModelInfoCommWrite(FILE* fp, const ModelInfoCommInner& comm);
 
-HcclVmResult ModelInfoCommRead(FILE *fp, ModelInfoCommInner &comm);
+HcclVmResult ModelInfoCommRead(FILE* fp, ModelInfoCommInner& comm);
 
-HcclVmResult VDataDesTagWrite(FILE *fp, const VDataDesTagInner &vDataDes);
+HcclVmResult VDataDesTagWrite(FILE* fp, const VDataDesTagInner& vDataDes);
 
-HcclVmResult VDataDesTagRead(FILE *fp, VDataDesTagInner &vDataDes);
+HcclVmResult VDataDesTagRead(FILE* fp, VDataDesTagInner& vDataDes);
 
-HcclVmResult All2AllDataDesTagWrite(FILE *fp, const All2AllDataDesTagInner &all2AllDataDes);
+HcclVmResult All2AllDataDesTagWrite(FILE* fp, const All2AllDataDesTagInner& all2AllDataDes);
 
-HcclVmResult All2AllDataDesTagRead(FILE *fp, All2AllDataDesTagInner &all2AllDataDes);
+HcclVmResult All2AllDataDesTagRead(FILE* fp, All2AllDataDesTagInner& all2AllDataDes);
 
-HcclVmResult HcclVmInstrDataRead(FILE *fp, HcclVmInstrData &isntrData, uint32_t magic);
+HcclVmResult HcclVmInstrDataRead(FILE* fp, HcclVmInstrData& isntrData, uint32_t magic);
 
-HcclVmResult HcclVmInstrDataWrite(FILE *fp, const HcclVmInstrData &isntrData);
+HcclVmResult HcclVmInstrDataWrite(FILE* fp, const HcclVmInstrData& isntrData);
 
-HcclVmResult ModelInfoWrite(FILE *fp, const ModelInfoInner &modelInfo);
+HcclVmResult ModelInfoWrite(FILE* fp, const ModelInfoInner& modelInfo);
 
-HcclVmResult ModelInfoRead(FILE *fp, ModelInfoInner &modelInfo);
+HcclVmResult ModelInfoRead(FILE* fp, ModelInfoInner& modelInfo);
 
-HcclVmResult ChannelInfoWrite(FILE *fp, const ChannelInfoInner &chInfo);
+HcclVmResult ChannelInfoWrite(FILE* fp, const ChannelInfoInner& chInfo);
 
-HcclVmResult ChannelInfoRead(FILE *fp, ChannelInfoInner &chInfo);
+HcclVmResult ChannelInfoRead(FILE* fp, ChannelInfoInner& chInfo);
 
-HcclVmResult JettyInfoWrite(FILE *fp, const JettyInfoInner &jettyInfo);
+HcclVmResult JettyInfoWrite(FILE* fp, const JettyInfoInner& jettyInfo);
 
-HcclVmResult JettyInfoRead(FILE *fp, JettyInfoInner &jettyInfo);
+HcclVmResult JettyInfoRead(FILE* fp, JettyInfoInner& jettyInfo);
 
-HcclVmResult MemLayoutWrite(FILE *fp, const MemLayoutInfoInner &memLayoutInfo);
+HcclVmResult MemLayoutWrite(FILE* fp, const MemLayoutInfoInner& memLayoutInfo);
 
-HcclVmResult MemLayoutRead(FILE *fp, MemLayoutInfoInner &memLayoutInfo);
+HcclVmResult MemLayoutRead(FILE* fp, MemLayoutInfoInner& memLayoutInfo);
 
-HcclVmResult MicrocodeInstrWrite(FILE *fp, const MicrocodeInstrInner &mcInstrInfo);
+HcclVmResult MicrocodeInstrWrite(FILE* fp, const MicrocodeInstrInner& mcInstrInfo);
 
-HcclVmResult MicrocodeInstrRead(FILE *fp, MicrocodeInstrInner &mcInstrInfo);
+HcclVmResult MicrocodeInstrRead(FILE* fp, MicrocodeInstrInner& mcInstrInfo);
 
-HcclVmResult TaskMetaWrite(FILE *fp, const HcclTaskMetaData &taskData);
+HcclVmResult TaskMetaWrite(FILE* fp, const HcclTaskMetaData& taskData);
 
-HcclVmResult TaskMetaRead(FILE *fp, HcclTaskMetaData &taskData);
+HcclVmResult TaskMetaRead(FILE* fp, HcclTaskMetaData& taskData);
 
-HcclVmResult HcclVmTaskMetaDataWrite(FILE *fp, const HcclVmTaskMetaData &taskMeta);
+HcclVmResult HcclVmTaskMetaDataWrite(FILE* fp, const HcclVmTaskMetaData& taskMeta);
 
-HcclVmResult HcclVmTaskMetaDataRead(FILE *fp, HcclVmTaskMetaData &taskMeta, uint32_t magic);
+HcclVmResult HcclVmTaskMetaDataRead(FILE* fp, HcclVmTaskMetaData& taskMeta, uint32_t magic);
 
-HcclVmResult HcclVmFlagDataWrite(FILE *fp, const HcclVmFlagData &flagData);
+HcclVmResult HcclVmFlagDataWrite(FILE* fp, const HcclVmFlagData& flagData);
 
-HcclVmResult HcclVmFlagDataRead(FILE *fp, HcclVmFlagData &flagData, uint32_t magic);
-}
+HcclVmResult HcclVmFlagDataRead(FILE* fp, HcclVmFlagData& flagData, uint32_t magic);
+} // namespace HcclSim
 #endif

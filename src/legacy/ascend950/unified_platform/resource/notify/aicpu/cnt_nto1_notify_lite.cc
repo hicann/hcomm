@@ -14,7 +14,7 @@
 
 namespace Hccl {
 
-CntNto1NotifyLite::CntNto1NotifyLite(std::vector<char> &uniqueId)
+CntNto1NotifyLite::CntNto1NotifyLite(std::vector<char>& uniqueId)
 {
     BinaryStream binaryStream(uniqueId);
     binaryStream >> notifyId;
@@ -22,15 +22,9 @@ CntNto1NotifyLite::CntNto1NotifyLite(std::vector<char> &uniqueId)
     HCCL_INFO("CntNto1NotifyLite::CntNto1NotifyLite:%s", Describe().c_str());
 }
 
-u32 CntNto1NotifyLite::GetId() const
-{
-    return notifyId;
-}
+u32 CntNto1NotifyLite::GetId() const { return notifyId; }
 
-u32 CntNto1NotifyLite::GetDevPhyId() const
-{
-    return devPhyId;
-}
+u32 CntNto1NotifyLite::GetDevPhyId() const { return devPhyId; }
 
 std::string CntNto1NotifyLite::Describe() const
 {

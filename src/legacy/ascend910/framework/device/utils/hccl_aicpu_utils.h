@@ -20,14 +20,17 @@ class HcclAicpuUtils {
 public:
     static int32_t GetCpuId();
     static int32_t GetCurClusterId();
-    static void PrintHcclCombinOpParam(const HccCommResParamTask &commParam);
-    static void PrintHcclOpResParam(const HcclOpResParam *resParam);
-    static HcclResult Getkey(const AicpuComContext &ctx, u32 remoteRankId, const void *userAddr,
-        u64 length, u32 &outKey, int32_t keyType);
-    static HcclResult PostSend(const AicpuComContext &ctx, u32 remoteRankId, struct std::vector<hccl::Transport::Buffer> &remoteBuf,
-        struct std::vector<hccl::Transport::Buffer> &localBuf, bool isWrite);
-    static HcclResult PostSend(const u32 lKey, const u32 rKey, const struct HcclQpInfoV2 &qpInfo,
-        const struct hccl::Transport::Buffer &remoteBuf, const struct hccl::Transport::Buffer &localBuf, const bool isWrite);
+    static void PrintHcclCombinOpParam(const HccCommResParamTask& commParam);
+    static void PrintHcclOpResParam(const HcclOpResParam* resParam);
+    static HcclResult Getkey(
+        const AicpuComContext& ctx, u32 remoteRankId, const void* userAddr, u64 length, u32& outKey, int32_t keyType);
+    static HcclResult PostSend(
+        const AicpuComContext& ctx, u32 remoteRankId, struct std::vector<hccl::Transport::Buffer>& remoteBuf,
+        struct std::vector<hccl::Transport::Buffer>& localBuf, bool isWrite);
+    static HcclResult PostSend(
+        const u32 lKey, const u32 rKey, const struct HcclQpInfoV2& qpInfo,
+        const struct hccl::Transport::Buffer& remoteBuf, const struct hccl::Transport::Buffer& localBuf,
+        const bool isWrite);
     static u32 GetBlockNum(u32 defaultVal = 1U);
     static u32 GetBlockIdx();
 };

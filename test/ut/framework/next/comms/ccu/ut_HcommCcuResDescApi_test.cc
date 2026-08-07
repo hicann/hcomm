@@ -46,7 +46,7 @@ int32_t g_runtimeDeviceLogicId = TEST_DEVICE_LOGIC_ID;
 uint32_t g_deviceRefreshCalls = 0;
 HcclResult g_deviceRefreshResult = HcclResult::HCCL_SUCCESS;
 
-HcclResult MockHrtGetDeviceRefresh(int32_t *deviceLogicId)
+HcclResult MockHrtGetDeviceRefresh(int32_t* deviceLogicId)
 {
     ++g_deviceRefreshCalls;
     if (g_deviceRefreshResult != HcclResult::HCCL_SUCCESS) {
@@ -62,7 +62,8 @@ HcclResult MockHrtGetDeviceRefresh(int32_t *deviceLogicId)
 
 class HcommCcuResDescApiTest : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         GlobalMockObject::verify();
         GlobalMockObject::reset();
         BaseInit::SetUp();
@@ -80,23 +81,19 @@ public:
         g_deviceRefreshCalls = 0;
 
         // 将 enableEntryLog 默认返回 true
-        MOCKER(GetExternalInputHcclEnableEntryLog)
-            .stubs()
-            .with(mockcpp::any())
-            .will(returnValue(true));
+        MOCKER(GetExternalInputHcclEnableEntryLog).stubs().with(mockcpp::any()).will(returnValue(true));
 
         // 初始化 CcuResSpecifications (dieId=0 启用, 设置各资源容量)
         constexpr int32_t fakeDeviceLogicId = TEST_DEVICE_LOGIC_ID;
         constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V1;
-        MOCKER(hrtGetDevice).stubs()
-            .with(outBoundP(&fakeDeviceLogicId))
-            .will(returnValue(HcclResult::HCCL_SUCCESS));
-        MOCKER(hrtGetDevicePhyIdByIndex).stubs()
+        MOCKER(hrtGetDevice).stubs().with(outBoundP(&fakeDeviceLogicId)).will(returnValue(HcclResult::HCCL_SUCCESS));
+        MOCKER(hrtGetDevicePhyIdByIndex)
+            .stubs()
             .with(mockcpp::any(), outBound(static_cast<uint32_t>(fakeDeviceLogicId)), mockcpp::any())
             .will(returnValue(HcclResult::HCCL_SUCCESS));
-
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         g_runtimeDeviceLogicId = TEST_DEVICE_LOGIC_ID;
         g_deviceRefreshResult = HcclResult::HCCL_SUCCESS;
         int32_t restoredDeviceLogicId = INVALID_INT;
@@ -110,7 +107,7 @@ public:
     }
 
 protected:
-    static CcuResDescMgr &ResDescMgr(int32_t deviceLogicId)
+    static CcuResDescMgr& ResDescMgr(int32_t deviceLogicId)
     {
         return CcuInstanceMgr::GetInstance(deviceLogicId).GetResDescMgr();
     }
@@ -205,19 +202,18 @@ TEST_F(HcommCcuResDescApiTest, Ut_HcommCcuInsResDescSetNum_When_AllTypes_Expect_
     HcommCcuResDescHandle handle = 0;
     HcommCcuInsResDescCreate(0, &handle);
 
-    struct { HcommCcuResType type; uint32_t val; } cases[] = {
-        {HCOMM_CCU_RES_TYPE_LOOP,        8},
-        {HCOMM_CCU_RES_TYPE_CCU_BUF,    16},
-        {HCOMM_CCU_RES_TYPE_VARIABLE,   24},
-        {HCOMM_CCU_RES_TYPE_ADDRESS,    32},
-        {HCOMM_CCU_RES_TYPE_EVENT,      40},
-        {HCOMM_CCU_RES_TYPE_CCU_THREAD, 48},
+    struct {
+        HcommCcuResType type;
+        uint32_t val;
+    } cases[] = {
+        {HCOMM_CCU_RES_TYPE_LOOP, 8},         {HCOMM_CCU_RES_TYPE_CCU_BUF, 16}, {HCOMM_CCU_RES_TYPE_VARIABLE, 24},
+        {HCOMM_CCU_RES_TYPE_ADDRESS, 32},     {HCOMM_CCU_RES_TYPE_EVENT, 40},   {HCOMM_CCU_RES_TYPE_CCU_THREAD, 48},
         {HCOMM_CCU_RES_TYPE_INSTRUCTION, 56},
     };
-    for (auto &c : cases) {
+    for (auto& c : cases) {
         EXPECT_EQ(HcommCcuInsResDescSetNum(handle, c.type, c.val), CCU_SUCCESS);
     }
-    for (auto &c : cases) {
+    for (auto& c : cases) {
         uint32_t num = 0;
         EXPECT_EQ(HcommCcuInsResDescQueryNum(handle, c.type, &num), CCU_SUCCESS);
         EXPECT_EQ(num, c.val);
@@ -391,8 +387,7 @@ TEST_F(HcommCcuResDescApiTest, Ut_HcommCcuQueryRemainResDesc_When_CcuNotInit_Exp
 }
 
 // 验证运行时 Device 切换后，资源描述符接口均刷新并操作新 Device 的管理器。
-TEST_F(HcommCcuResDescApiTest,
-    Ut_HcommCcuResDescApis_When_RuntimeDeviceSwitches_Expect_OperateOnRefreshedDevice)
+TEST_F(HcommCcuResDescApiTest, Ut_HcommCcuResDescApis_When_RuntimeDeviceSwitches_Expect_OperateOnRefreshedDevice)
 {
     MOCKER(CcuIsInited).stubs().with(mockcpp::any()).will(returnValue(true));
     MOCKER(CcuGetDieEnableInfo)
@@ -425,8 +420,8 @@ TEST_F(HcommCcuResDescApiTest,
 }
 
 // 验证运行时 Device 切走时资源描述符操作被拒绝，切回后可继续操作原对象。
-TEST_F(HcommCcuResDescApiTest,
-    Ut_HcommCcuResDescApis_When_RuntimeDeviceSwitchesAwayAndBack_Expect_RejectAwayThenRecover)
+TEST_F(
+    HcommCcuResDescApiTest, Ut_HcommCcuResDescApis_When_RuntimeDeviceSwitchesAwayAndBack_Expect_RejectAwayThenRecover)
 {
     MOCKER(CcuIsInited).stubs().with(mockcpp::any()).will(returnValue(true));
     MOCKER(CcuGetDieEnableInfo)
@@ -439,15 +434,13 @@ TEST_F(HcommCcuResDescApiTest,
         .will(returnValue(HCCL_SUCCESS));
 
     const auto handle = CreateDescDirect(TEST_DEVICE_LOGIC_ID, 0);
-    EXPECT_EQ(ResDescMgr(TEST_DEVICE_LOGIC_ID).SetResNum(
-        handle, Hccl::ResType::LOOP, 23), CCU_SUCCESS);
+    EXPECT_EQ(ResDescMgr(TEST_DEVICE_LOGIC_ID).SetResNum(handle, Hccl::ResType::LOOP, 23), CCU_SUCCESS);
 
     g_runtimeDeviceLogicId = OTHER_TEST_DEVICE_LOGIC_ID;
     uint32_t resNum = 999;
     uint32_t dieId = 999;
     EXPECT_EQ(HcommCcuInsResDescSetNum(handle, HCOMM_CCU_RES_TYPE_LOOP, 31), CCU_E_NOT_FOUND);
-    EXPECT_EQ(HcommCcuInsResDescQueryNum(
-        handle, HCOMM_CCU_RES_TYPE_LOOP, &resNum), CCU_E_NOT_FOUND);
+    EXPECT_EQ(HcommCcuInsResDescQueryNum(handle, HCOMM_CCU_RES_TYPE_LOOP, &resNum), CCU_E_NOT_FOUND);
     EXPECT_EQ(resNum, 999U);
     EXPECT_EQ(HcommCcuInsResDescQueryDieId(handle, &dieId), CCU_E_NOT_FOUND);
     EXPECT_EQ(dieId, 999U);
@@ -456,8 +449,7 @@ TEST_F(HcommCcuResDescApiTest,
     EXPECT_NE(ResDescMgr(TEST_DEVICE_LOGIC_ID).Get(handle), nullptr);
 
     g_runtimeDeviceLogicId = TEST_DEVICE_LOGIC_ID;
-    EXPECT_EQ(HcommCcuInsResDescQueryNum(
-        handle, HCOMM_CCU_RES_TYPE_LOOP, &resNum), CCU_SUCCESS);
+    EXPECT_EQ(HcommCcuInsResDescQueryNum(handle, HCOMM_CCU_RES_TYPE_LOOP, &resNum), CCU_SUCCESS);
     EXPECT_EQ(resNum, 23U);
     EXPECT_EQ(HcommCcuInsResDescQueryDieId(handle, &dieId), CCU_SUCCESS);
     EXPECT_EQ(dieId, 0U);
@@ -467,8 +459,7 @@ TEST_F(HcommCcuResDescApiTest,
 }
 
 // 验证 Device 刷新失败时，所有资源描述符接口返回错误且不改变管理器状态。
-TEST_F(HcommCcuResDescApiTest,
-    Ut_HcommCcuResDescApis_When_DeviceRefreshFails_Expect_ReturnErrorWithoutMutation)
+TEST_F(HcommCcuResDescApiTest, Ut_HcommCcuResDescApis_When_DeviceRefreshFails_Expect_ReturnErrorWithoutMutation)
 {
     MOCKER(CcuGetDieEnableInfo)
         .stubs()
@@ -484,8 +475,7 @@ TEST_F(HcommCcuResDescApiTest,
     const auto queryNumHandle = CreateDescDirect(TEST_DEVICE_LOGIC_ID, 0);
     const auto queryDieHandle = CreateDescDirect(TEST_DEVICE_LOGIC_ID, 0);
     const auto remainHandle = CreateDescDirect(TEST_DEVICE_LOGIC_ID, 0);
-    EXPECT_EQ(ResDescMgr(TEST_DEVICE_LOGIC_ID).SetResNum(
-        setHandle, Hccl::ResType::LOOP, 41), CCU_SUCCESS);
+    EXPECT_EQ(ResDescMgr(TEST_DEVICE_LOGIC_ID).SetResNum(setHandle, Hccl::ResType::LOOP, 41), CCU_SUCCESS);
 
     g_deviceRefreshResult = HcclResult::HCCL_E_INTERNAL;
     HcommCcuResDescHandle createdHandle = 0x1234;
@@ -494,10 +484,8 @@ TEST_F(HcommCcuResDescApiTest,
     EXPECT_EQ(HcommCcuInsResDescCreate(0, &createdHandle), CCU_E_INTERNAL);
     EXPECT_EQ(createdHandle, 0x1234U);
     EXPECT_EQ(HcommCcuInsResDescDestroy(destroyHandle), CCU_E_INTERNAL);
-    EXPECT_EQ(HcommCcuInsResDescSetNum(
-        setHandle, HCOMM_CCU_RES_TYPE_LOOP, 99), CCU_E_INTERNAL);
-    EXPECT_EQ(HcommCcuInsResDescQueryNum(
-        queryNumHandle, HCOMM_CCU_RES_TYPE_LOOP, &resNum), CCU_E_INTERNAL);
+    EXPECT_EQ(HcommCcuInsResDescSetNum(setHandle, HCOMM_CCU_RES_TYPE_LOOP, 99), CCU_E_INTERNAL);
+    EXPECT_EQ(HcommCcuInsResDescQueryNum(queryNumHandle, HCOMM_CCU_RES_TYPE_LOOP, &resNum), CCU_E_INTERNAL);
     EXPECT_EQ(resNum, 0x5678U);
     EXPECT_EQ(HcommCcuInsResDescQueryDieId(queryDieHandle, &dieId), CCU_E_INTERNAL);
     EXPECT_EQ(dieId, 0x9ABCU);
@@ -505,8 +493,7 @@ TEST_F(HcommCcuResDescApiTest,
 
     EXPECT_NE(ResDescMgr(TEST_DEVICE_LOGIC_ID).Get(destroyHandle), nullptr);
     uint32_t storedNum = 0;
-    EXPECT_EQ(ResDescMgr(TEST_DEVICE_LOGIC_ID).QueryResNum(
-        setHandle, Hccl::ResType::LOOP, storedNum), CCU_SUCCESS);
+    EXPECT_EQ(ResDescMgr(TEST_DEVICE_LOGIC_ID).QueryResNum(setHandle, Hccl::ResType::LOOP, storedNum), CCU_SUCCESS);
     EXPECT_EQ(storedNum, 41U);
     EXPECT_EQ(g_deviceRefreshCalls, 6U);
 }

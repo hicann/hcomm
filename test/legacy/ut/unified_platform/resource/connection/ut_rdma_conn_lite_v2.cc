@@ -20,7 +20,7 @@
 
 using namespace Hccl;
 
-static std::vector<char> BuildSqUniqueId(const RdmaSqContextLite &sqCtx)
+static std::vector<char> BuildSqUniqueId(const RdmaSqContextLite& sqCtx)
 {
     BinaryStream bs;
     bs << sqCtx.qpn;
@@ -38,7 +38,7 @@ static std::vector<char> BuildSqUniqueId(const RdmaSqContextLite &sqCtx)
     return result;
 }
 
-static std::vector<char> BuildCqUniqueId(const RdmaCqContextLite &cqCtx)
+static std::vector<char> BuildCqUniqueId(const RdmaCqContextLite& cqCtx)
 {
     BinaryStream bs;
     bs << cqCtx.cqn;
@@ -53,17 +53,18 @@ static std::vector<char> BuildCqUniqueId(const RdmaCqContextLite &cqCtx)
     return result;
 }
 
-static std::vector<char> BuildRdmaConnLiteV2UniqueId(u32 dmaMode, const RdmaSqContextLite &sqCtx, const RdmaCqContextLite &cqCtx)
+static std::vector<char>
+BuildRdmaConnLiteV2UniqueId(u32 dmaMode, const RdmaSqContextLite& sqCtx, const RdmaCqContextLite& cqCtx)
 {
     BinaryStream binaryStream;
     binaryStream << dmaMode;
-    
+
     std::vector<char> sqUniqueId = BuildSqUniqueId(sqCtx);
     binaryStream << sqUniqueId;
-    
+
     std::vector<char> cqUniqueId = BuildCqUniqueId(cqCtx);
     binaryStream << cqUniqueId;
-    
+
     std::vector<char> result;
     binaryStream.Dump(result);
     return result;
@@ -100,15 +101,9 @@ static RdmaCqContextLite MakeDefaultCqContext()
 
 class RdmaConnLiteV2Test : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "RdmaConnLiteV2Test tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "RdmaConnLiteV2Test tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "RdmaConnLiteV2Test tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "RdmaConnLiteV2Test tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
@@ -132,32 +127,32 @@ protected:
 TEST_F(RdmaConnLiteV2Test, Ut_When_Construct_Expect_Success)
 {
     std::cout << "Start Ut_When_Construct_Expect_Success" << std::endl;
-    
+
     RdmaConnLiteV2 connLite(uniqueId_);
-    
+
     std::cout << "End Ut_When_Construct_Expect_Success" << std::endl;
 }
 
 TEST_F(RdmaConnLiteV2Test, Ut_When_Describe_Expect_NotEmpty)
 {
     std::cout << "Start Ut_When_Describe_Expect_NotEmpty" << std::endl;
-    
+
     RdmaConnLiteV2 connLite(uniqueId_);
-    
+
     std::string desc = connLite.Describe();
     EXPECT_FALSE(desc.empty());
-    
+
     std::cout << "End Ut_When_Describe_Expect_NotEmpty" << std::endl;
 }
 
 TEST_F(RdmaConnLiteV2Test, Ut_When_DmaMode_Expect_Correct)
 {
     std::cout << "Start Ut_When_DmaMode_Expect_Correct" << std::endl;
-    
+
     RdmaConnLiteV2 connLite(uniqueId_);
-    
+
     EXPECT_EQ(connLite.dmaMode_, 0u);
-    
+
     std::cout << "End Ut_When_DmaMode_Expect_Correct" << std::endl;
 }
 
@@ -201,19 +196,19 @@ TEST_F(RdmaConnLiteV2Test, Ut_When_CqContext_Expect_Valid)
 TEST_F(RdmaConnLiteV2Test, Ut_When_DmaModeNonZero_Expect_Correct)
 {
     std::cout << "Start Ut_When_DmaModeNonZero_Expect_Correct" << std::endl;
-    
+
     std::vector<char> testId = BuildRdmaConnLiteV2UniqueId(1, sqCtx_, cqCtx_);
     RdmaConnLiteV2 connLite(testId);
-    
+
     EXPECT_EQ(connLite.dmaMode_, 1u);
-    
+
     std::cout << "End Ut_When_DmaModeNonZero_Expect_Correct" << std::endl;
 }
 
 TEST_F(RdmaConnLiteV2Test, Ut_When_LargeValues_Expect_Correct)
 {
     std::cout << "Start Ut_When_LargeValues_Expect_Correct" << std::endl;
-    
+
     RdmaSqContextLite sqMax{};
     sqMax.qpn = UINT32_MAX;
     sqMax.sqVa = UINT64_MAX;
@@ -237,26 +232,25 @@ TEST_F(RdmaConnLiteV2Test, Ut_When_LargeValues_Expect_Correct)
 
     std::vector<char> testId = BuildRdmaConnLiteV2UniqueId(2, sqMax, cqMax);
     RdmaConnLiteV2 connLite(testId);
-    
+
     EXPECT_EQ(connLite.dmaMode_, 2u);
     EXPECT_EQ(connLite.sqContext.qpn, UINT32_MAX);
     EXPECT_EQ(connLite.cqContext.cqn, UINT32_MAX);
-    
+
     std::cout << "End Ut_When_LargeValues_Expect_Correct" << std::endl;
 }
-
 
 TEST_F(RdmaConnLiteV2Test, Ut_When_MultipleInstances_Expect_Independent)
 {
     std::cout << "Start Ut_When_MultipleInstances_Expect_Independent" << std::endl;
-    
+
     RdmaConnLiteV2 connLite1(uniqueId_);
     RdmaConnLiteV2 connLite2(uniqueId_);
-    
+
     EXPECT_EQ(connLite1.dmaMode_, connLite2.dmaMode_);
     EXPECT_EQ(connLite1.sqContext.qpn, connLite2.sqContext.qpn);
     EXPECT_EQ(connLite1.cqContext.cqn, connLite2.cqContext.cqn);
-    
+
     std::cout << "End Ut_When_MultipleInstances_Expect_Independent" << std::endl;
 }
 
@@ -335,14 +329,14 @@ TEST_F(RdmaConnLiteV2Test, Ut_When_WriteWithNotify_Expect_Success)
     RdmaConnLiteV2 connLite(testId);
 
     u64 totalSize = 0x80000000ULL;
-    RmaBufSliceLite      loc(0x1000, totalSize, 0x11, 0);
-    RmtRmaBufSliceLite   rmt(0x2000, totalSize, 0x22, 0, 0, UINT32_MAX);
+    RmaBufSliceLite loc(0x1000, totalSize, 0x11, 0);
+    RmtRmaBufSliceLite rmt(0x2000, totalSize, 0x22, 0, 0, UINT32_MAX);
 
     // notify 地址段
-    RmaBufSliceLite      locNotify(0x3000, 64, 0x33, 0);
-    RmtRmaBufSliceLite   notify(0x4000, 64, 0x44, 0, 0, UINT32_MAX);
+    RmaBufSliceLite locNotify(0x3000, 64, 0x33, 0);
+    RmtRmaBufSliceLite notify(0x4000, 64, 0x44, 0, 0, UINT32_MAX);
 
-    u64 dbAddr  = 0;
+    u64 dbAddr = 0;
     u64 dbValue = 0;
 
     // 屏蔽对硬件 SQ 的真实读写
@@ -490,10 +484,7 @@ TEST_F(RdmaConnLiteV2Test, Ut_When_PollCqSuccess_Expect_Success)
     u64 dbAddr = 0;
     u64 dbValue = 0;
 
-    MOCKER_CPP(&Rdma1825Ops::PollOne)
-        .stubs()
-        .with(mockcpp::any())
-        .will(returnValue(CqPollStatus::SUCCESS));
+    MOCKER_CPP(&Rdma1825Ops::PollOne).stubs().with(mockcpp::any()).will(returnValue(CqPollStatus::SUCCESS));
     EXPECT_EQ(connLite.PollCq(1, 1, errList, dbAddr, dbValue), HCCL_SUCCESS);
     EXPECT_TRUE(errList.empty());
     EXPECT_EQ(dbAddr, cqCtx_.dbSwVa);
@@ -516,10 +507,7 @@ TEST_F(RdmaConnLiteV2Test, Ut_When_PollCqEmpty_Expect_TimeoutWithoutDoorbell)
     u64 dbAddr = 0;
     u64 dbValue = 0;
 
-    MOCKER_CPP(&Rdma1825Ops::PollOne)
-        .stubs()
-        .with(mockcpp::any())
-        .will(returnValue(CqPollStatus::EMPTY));
+    MOCKER_CPP(&Rdma1825Ops::PollOne).stubs().with(mockcpp::any()).will(returnValue(CqPollStatus::EMPTY));
     EXPECT_EQ(connLite.PollCq(1, 0, errList, dbAddr, dbValue), HCCL_E_TIMEOUT);
     EXPECT_TRUE(errList.empty());
     EXPECT_EQ(dbAddr, 0ULL);
@@ -541,10 +529,7 @@ TEST_F(RdmaConnLiteV2Test, Ut_When_PollCqFail_Expect_ReturnError)
     u64 dbAddr = 0;
     u64 dbValue = 0;
 
-    MOCKER_CPP(&Rdma1825Ops::PollOne)
-        .stubs()
-        .with(mockcpp::any())
-        .will(returnValue(CqPollStatus::ERROR));
+    MOCKER_CPP(&Rdma1825Ops::PollOne).stubs().with(mockcpp::any()).will(returnValue(CqPollStatus::ERROR));
     EXPECT_EQ(connLite.PollCq(1, 1, errList, dbAddr, dbValue), HCCL_E_REMOTE);
     EXPECT_EQ(dbAddr, cqCtx_.dbSwVa);
     EXPECT_EQ(dbValue, 0ULL);

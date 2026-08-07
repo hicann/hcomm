@@ -40,32 +40,36 @@ using ProfCallbackTemplate = std::function<HcclResult(const TaskParam&, uint64_t
 class TaskService {
 public:
     TaskService() = default;
-    TaskService(void* deviceMem, int32_t deviceMemSize, void* hostMem, int32_t hostMemSize, std::string commId, uint32_t devId);
+    TaskService(
+        void* deviceMem, int32_t deviceMemSize, void* hostMem, int32_t hostMemSize, std::string commId, uint32_t devId);
     HcclResult TaskRun();
     HcclResult TaskRegister(std::string taskType, CallbackTemplate callback);
     HcclResult TaskUnRegister(std::string taskType);
     HcclResult TaskProfRegister(ProfCallbackTemplate profCallback);
+
 private:
-    HcclResult WriteFlag(uint8_t *flagPtr, uint8_t newFlag) const;
-    HcclResult ReadFlag(uint8_t *ctrlHdr, uint64_t hdrLen, uint8_t &flag) const;
-    HcclResult ReadTaskType(const uint8_t *ctrlHdr, uint64_t hdrLen, const uint8_t *srcTaskTypePtr, std::string &taskTypeStr) const;
-    HcclResult ExecuteTask(uint8_t *ctrlHdr, uint64_t hdrLen, uint8_t *srcPtr, std::string taskTypeStr);
-    HcclResult SynchronizeControlInfo(uint8_t *ctrlHdr, [[maybe_unused]] uint64_t hdrLen);
-    HcclResult ProcessTaskOk(uint8_t *ctrlHdr, uint64_t hdrLen, uint8_t *srcFlagPtr, uint8_t *srcTaskTypePtr);
+    HcclResult WriteFlag(uint8_t* flagPtr, uint8_t newFlag) const;
+    HcclResult ReadFlag(uint8_t* ctrlHdr, uint64_t hdrLen, uint8_t& flag) const;
+    HcclResult ReadTaskType(
+        const uint8_t* ctrlHdr, uint64_t hdrLen, const uint8_t* srcTaskTypePtr, std::string& taskTypeStr) const;
+    HcclResult ExecuteTask(uint8_t* ctrlHdr, uint64_t hdrLen, uint8_t* srcPtr, std::string taskTypeStr);
+    HcclResult SynchronizeControlInfo(uint8_t* ctrlHdr, [[maybe_unused]] uint64_t hdrLen);
+    HcclResult ProcessTaskOk(uint8_t* ctrlHdr, uint64_t hdrLen, uint8_t* srcFlagPtr, uint8_t* srcTaskTypePtr);
     HcclResult ExecuteTaskClean() const;
     HcclResult ExecuteTaskexception(int32_t ret);
-    HcclResult ExecuteExit(uint8_t *srcFlagPtr) const;
+    HcclResult ExecuteExit(uint8_t* srcFlagPtr) const;
+
 private:
     std::unordered_map<std::string, CallbackTemplate> callbacks_;
     ProfCallbackTemplate profCallback_{nullptr};
-    void       *npu2dpuMem_{nullptr};
-    void       *dpu2npuMem_{nullptr};
+    void* npu2dpuMem_{nullptr};
+    void* dpu2npuMem_{nullptr};
     int32_t shmemSize_{0};
     int32_t leftSize_{0}; // npu2dpuMem_中除去控制信息后剩余的可用空间大小
-    void       *hostMem_{nullptr};
+    void* hostMem_{nullptr};
     int32_t hostMemSize_{0};
-    std::string  commId_{};
-    uint32_t     devId_{UINT32_MAX};
+    std::string commId_{};
+    uint32_t devId_{UINT32_MAX};
 };
 } // namespace Hccl
 

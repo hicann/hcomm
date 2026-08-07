@@ -23,7 +23,7 @@ struct OpMemInfoTab;
 }
 
 struct AivBufferResource {
-    void *realAddr{nullptr};
+    void* realAddr{nullptr};
     uint64_t virtualAddr{0};
     uint64_t size{0};
 };
@@ -37,18 +37,18 @@ struct AivRankResource {
 
 class AivResourceManager {
 public:
-    static AivResourceManager &GetInstance();
+    static AivResourceManager& GetInstance();
 
-    AivResourceManager(const AivResourceManager &) = delete;
-    AivResourceManager &operator=(const AivResourceManager &) = delete;
+    AivResourceManager(const AivResourceManager&) = delete;
+    AivResourceManager& operator=(const AivResourceManager&) = delete;
 
     ~AivResourceManager();
 
-    HcclSim::HcclVmResult Init(uint32_t rankId, const sim::OpMemInfoTab &opMemInfo, uint32_t rankSize);
+    HcclSim::HcclVmResult Init(uint32_t rankId, const sim::OpMemInfoTab& opMemInfo, uint32_t rankSize);
     void Reset();
 
-    const std::vector<AivRankResource> &GetAllRankResources() const;
-    const AivRankResource *GetRankResource(uint32_t rankId) const;
+    const std::vector<AivRankResource>& GetAllRankResources() const;
+    const AivRankResource* GetRankResource(uint32_t rankId) const;
 
 private:
     AivResourceManager() = default;
@@ -57,8 +57,8 @@ private:
     HcclSim::HcclVmResult MapBuffer(
         uint32_t rankSize, uint32_t rankId, uint8_t bufferType, uint64_t startAddr, uint64_t size,
         bool allowDuplicateSame = false);
-    HcclSim::HcclVmResult MapOpMemBuffer(
-        uint32_t rankSize, uint32_t rankId, uint8_t bufferType, uint64_t startAddr, uint64_t size);
+    HcclSim::HcclVmResult
+    MapOpMemBuffer(uint32_t rankSize, uint32_t rankId, uint8_t bufferType, uint64_t startAddr, uint64_t size);
     HcclSim::HcclVmResult InitAivCommInfoBuffers(uint32_t rankSize);
 
     std::vector<AivRankResource> rankResources_;

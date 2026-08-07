@@ -19,25 +19,25 @@ extern HcclSim::TaskGraphGeneratorV3::AllRankChannelInfoV3 g_allRankChannelInfo;
 namespace HcclSim {
 namespace TaskGraphGeneratorV3 {
 
-AllRankChannelInfoV3 &g_allRankChannelInfo = ::g_allRankChannelInfo;
+    AllRankChannelInfoV3& g_allRankChannelInfo = ::g_allRankChannelInfo;
 
-std::string ParseMSList(const CcuRep::CcuInstr *instr)
-{
-    uint16_t msId[CcuRep::CCU_REDUCE_MAX_MS];
-    uint16_t count = instr->v1.add.count;
-    for (uint16_t index = 0; index < CcuRep::CCU_REDUCE_MAX_MS; index++) {
-        msId[index] = instr->v1.add.msId[index];
-    }
-
-    std::string res = "MS[";
-    for (uint16_t i = 0; i < count + 2; i++) { // 循环范围 0~count + 2
-        if (i == count + 1) {
-            res += std::to_string(msId[i] / 0x8000) + ":" + std::to_string(msId[i] % 0x8000) + "]";
-        } else {
-            res += std::to_string(msId[i] / 0x8000) + ":" + std::to_string(msId[i] % 0x8000) + ", ";
+    std::string ParseMSList(const CcuRep::CcuInstr* instr)
+    {
+        uint16_t msId[CcuRep::CCU_REDUCE_MAX_MS];
+        uint16_t count = instr->v1.add.count;
+        for (uint16_t index = 0; index < CcuRep::CCU_REDUCE_MAX_MS; index++) {
+            msId[index] = instr->v1.add.msId[index];
         }
+
+        std::string res = "MS[";
+        for (uint16_t i = 0; i < count + 2; i++) { // 循环范围 0~count + 2
+            if (i == count + 1) {
+                res += std::to_string(msId[i] / 0x8000) + ":" + std::to_string(msId[i] % 0x8000) + "]";
+            } else {
+                res += std::to_string(msId[i] / 0x8000) + ":" + std::to_string(msId[i] % 0x8000) + ", ";
+            }
+        }
+        return res;
     }
-    return res;
-}
 } // namespace TaskGraphGeneratorV3
 } // namespace HcclSim

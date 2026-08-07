@@ -27,6 +27,6 @@ public:
 
 private:
 };
-}  // hccl
+} // namespace hccl
 
-#endif  /* NONUNIFORM_BRUCK_BASE_PUB_H */
+#endif /* NONUNIFORM_BRUCK_BASE_PUB_H */

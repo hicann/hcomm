@@ -22,11 +22,7 @@
 
 namespace hccl {
 
-enum class DstMemType {
-    RESULT_INPUT_MEM,
-    RESULT_OUTPUT_MEM,
-    RESULT_MEM_RESERVED_NEW
-};
+enum class DstMemType { RESULT_INPUT_MEM, RESULT_OUTPUT_MEM, RESULT_MEM_RESERVED_NEW };
 
 struct ReducerMemoryInfo {
     u64 remoteMemOffset;
@@ -37,8 +33,9 @@ struct ReducerMemoryInfo {
 
 class Reducer {
 public:
-    explicit Reducer(const HcclDataType dataType = HCCL_DATA_TYPE_RESERVED,
-        const HcclReduceOp reductionOp = HCCL_REDUCE_RESERVED, const u64 reduceAttribute = 0x0);
+    explicit Reducer(
+        const HcclDataType dataType = HCCL_DATA_TYPE_RESERVED, const HcclReduceOp reductionOp = HCCL_REDUCE_RESERVED,
+        const u64 reduceAttribute = 0x0);
     ~Reducer();
 
     /**********************************************************************
@@ -53,19 +50,22 @@ public:
      输出参数  : 无
      返 回 值  : HcclResult
     **********************************************************************/
-    HcclResult run(const HcclDispatcher dispatcher, const std::shared_ptr<Transport> &link,
-                   const u64 remoteMemOffset, DeviceMem &localSrc, DeviceMem &localDst, DeviceMem &remoteRcvTemp,
-                   Stream &stream, DstMemType resultMem = DstMemType::RESULT_INPUT_MEM,
-                   const UserMemType srcMemType = UserMemType::INPUT_MEM) const;
+    HcclResult
+    run(const HcclDispatcher dispatcher, const std::shared_ptr<Transport>& link, const u64 remoteMemOffset,
+        DeviceMem& localSrc, DeviceMem& localDst, DeviceMem& remoteRcvTemp, Stream& stream,
+        DstMemType resultMem = DstMemType::RESULT_INPUT_MEM,
+        const UserMemType srcMemType = UserMemType::INPUT_MEM) const;
 
-    HcclResult run(const HcclDispatcher dispatcher, const std::shared_ptr<Transport> &link,
-                   const std::vector<ReducerMemoryInfo> &reducerMems, Stream &stream,
-                   DstMemType resultMem = DstMemType::RESULT_INPUT_MEM) const;
+    HcclResult
+    run(const HcclDispatcher dispatcher, const std::shared_ptr<Transport>& link,
+        const std::vector<ReducerMemoryInfo>& reducerMems, Stream& stream,
+        DstMemType resultMem = DstMemType::RESULT_INPUT_MEM) const;
 
-    HcclResult run(const HcclDispatcher dispatcher, const std::shared_ptr<Transport> &link,
-                  const std::vector<ReducerMemoryInfo> &reducerMems, u32 notifyIdx, Stream &stream,
-                  DstMemType resultMem = DstMemType::RESULT_INPUT_MEM) const;
-    
+    HcclResult
+    run(const HcclDispatcher dispatcher, const std::shared_ptr<Transport>& link,
+        const std::vector<ReducerMemoryInfo>& reducerMems, u32 notifyIdx, Stream& stream,
+        DstMemType resultMem = DstMemType::RESULT_INPUT_MEM) const;
+
     void SetPreSyncFunc(std::function<HcclResult()> lambda);
     void SetPostSyncFunc(std::function<HcclResult()> lambda);
 
@@ -74,15 +74,15 @@ protected:
     std::function<HcclResult()> postSync_;
 
 private:
-    HcclResult PrepareRxMems(const std::vector<ReducerMemoryInfo> &reducerMems,
-        std::vector<RxMemoryInfo> &rxMems) const;
-    HcclResult PrepareRxWithReduceMems(const std::vector<ReducerMemoryInfo> &reducerMems,
-        std::vector<RxWithReduceMemoryInfo> &rxWithReduceMems) const;
+    HcclResult
+    PrepareRxMems(const std::vector<ReducerMemoryInfo>& reducerMems, std::vector<RxMemoryInfo>& rxMems) const;
+    HcclResult PrepareRxWithReduceMems(
+        const std::vector<ReducerMemoryInfo>& reducerMems, std::vector<RxWithReduceMemoryInfo>& rxWithReduceMems) const;
 
     HcclDataType dataType_;
     HcclReduceOp reductionOp_;
     const u64 reduceAttribute_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* REDUCER_PUB_H */

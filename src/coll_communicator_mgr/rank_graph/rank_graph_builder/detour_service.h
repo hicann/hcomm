@@ -19,22 +19,22 @@ namespace Hccl {
 
 class DetourService {
 public:
-    static DetourService &GetInstance();
+    static DetourService& GetInstance();
 
     // 插入detourLinks
-    void InsertDetourLinks(RankGraph *rankGraph, const RankTableInfo *rankTable);
+    void InsertDetourLinks(RankGraph* rankGraph, const RankTableInfo* rankTable);
 
 private:
-    explicit DetourService(const PhyTopo *phyTopo);
-    ~DetourService()                                             = default;
-    DetourService(const DetourService &detourService)            = delete;
-    DetourService &operator=(const DetourService &detourService) = delete;
- 
-    const PhyTopo *phyTopo{nullptr};
+    explicit DetourService(const PhyTopo* phyTopo);
+    ~DetourService() = default;
+    DetourService(const DetourService& detourService) = delete;
+    DetourService& operator=(const DetourService& detourService) = delete;
+
+    const PhyTopo* phyTopo{nullptr};
 };
 
-void SetDetourTable4P(const std::set<u32>                                             &tableIdSet,
-                      unordered_map<LocalId, unordered_map<LocalId, vector<LocalId>>> &detourTable);
+void SetDetourTable4P(
+    const std::set<u32>& tableIdSet, unordered_map<LocalId, unordered_map<LocalId, vector<LocalId>>>& detourTable);
 } // namespace Hccl
 
 #endif // DETOUR_SERVICE_H

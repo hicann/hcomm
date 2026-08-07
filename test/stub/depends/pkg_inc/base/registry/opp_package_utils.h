@@ -14,35 +14,35 @@
 
 namespace gert {
 enum class OppImplVersionTag {
- kOpp,
- kOppKernel,
- // add new version definitions here
- kVersionEnd = 20
+    kOpp,
+    kOppKernel,
+    // add new version definitions here
+    kVersionEnd = 20
 };
 class OppSoDescImpl;
 using OppSoDescImplPtr = std::unique_ptr<OppSoDescImpl>;
 class OppSoDesc {
- public:
-  explicit OppSoDesc(const std::vector<ge::AscendString> &so_paths, const ge::AscendString &package_name);
-  ~OppSoDesc();
-  OppSoDesc(const OppSoDesc &other);
-  OppSoDesc &operator=(const OppSoDesc &other);
-  OppSoDesc(OppSoDesc &&other) noexcept;
-  OppSoDesc &operator=(OppSoDesc &&other) noexcept;
+public:
+    explicit OppSoDesc(const std::vector<ge::AscendString>& so_paths, const ge::AscendString& package_name);
+    ~OppSoDesc();
+    OppSoDesc(const OppSoDesc& other);
+    OppSoDesc& operator=(const OppSoDesc& other);
+    OppSoDesc(OppSoDesc&& other) noexcept;
+    OppSoDesc& operator=(OppSoDesc&& other) noexcept;
 
-  std::vector<ge::AscendString> GetSoPaths() const;
-  ge::AscendString GetPackageName() const;
+    std::vector<ge::AscendString> GetSoPaths() const;
+    ge::AscendString GetPackageName() const;
 
- private:
-  OppSoDescImplPtr impl_;
+private:
+    OppSoDescImplPtr impl_;
 };
 
 class OppPackageUtils {
- public:
-  /**
-   * 加载所有的安装目录下的so，优先级：自定义算子 > 内置安装目录算子
-   */
-  static void LoadAllOppPackage();
+public:
+    /**
+     * 加载所有的安装目录下的so，优先级：自定义算子 > 内置安装目录算子
+     */
+    static void LoadAllOppPackage();
 };
-}  // namespace gert
-#endif  // INC_BASE_OPP_PACKAGE_UTILS_H_
+} // namespace gert
+#endif // INC_BASE_OPP_PACKAGE_UTILS_H_

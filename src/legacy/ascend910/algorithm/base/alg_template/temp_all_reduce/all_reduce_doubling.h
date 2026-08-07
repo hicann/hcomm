@@ -13,6 +13,6 @@
 
 #include "all_reduce_doubling_pub.h"
 
-namespace hccl {}  // namespace hccl
+namespace hccl {} // namespace hccl
 
-#endif  // ~~ ALL_REDUCE_DOUBLING_H
+#endif // ~~ ALL_REDUCE_DOUBLING_H

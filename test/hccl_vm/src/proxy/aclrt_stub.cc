@@ -22,14 +22,13 @@
 #include "runtime/base.h"
 #include "db_sim_runner_ops.h"
 
-
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
-aclError aclsysGetVersionStr(char *pkgName, char *versionStr)
+aclError aclsysGetVersionStr(char* pkgName, char* versionStr)
 {
-    (void) pkgName;
+    (void)pkgName;
     memcpy(versionStr, "9.0.0", sizeof("9.0.0"));
     HCCL_VM_DEBUG("get version:{}", versionStr);
     return ACL_SUCCESS;
@@ -37,18 +36,18 @@ aclError aclsysGetVersionStr(char *pkgName, char *versionStr)
 
 rtError_t rtEnableP2P(uint32_t devIdDes, uint32_t phyIdSrc, uint32_t flag)
 {
-    (void) devIdDes;
-    (void) phyIdSrc;
-    (void) flag;
+    (void)devIdDes;
+    (void)phyIdSrc;
+    (void)flag;
     return ACL_SUCCESS;
 }
 
 rtError_t rtDisableP2P(uint32_t devIdDes, uint32_t phyIdSrc)
 {
-    (void) devIdDes;
-    (void) phyIdSrc;
+    (void)devIdDes;
+    (void)phyIdSrc;
     return ACL_SUCCESS;
 }
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus

@@ -31,6 +31,6 @@ using HcclUs = std::chrono::steady_clock::time_point;
 #define DURATION_US(x) (std::chrono::duration_cast<std::chrono::microseconds>(x))
 #define TIME_NOW() ({ std::chrono::steady_clock::now(); })
 
-}
+} // namespace checker
 
 #endif

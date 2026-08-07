@@ -13,24 +13,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-int __HcclDlclose(void *handle)
-{
-    return dlclose(handle);
-}
+int __HcclDlclose(void* handle) { return dlclose(handle); }
 
-void *__HcclDlsym(void *handle, const char *funcName)
-{
-    return dlsym(handle, funcName);
-}
+void* __HcclDlsym(void* handle, const char* funcName) { return dlsym(handle, funcName); }
 
-void *__HcclDlopen(const char *libName, int mode)
-{
-    return dlopen(libName, mode);
-}
+void* __HcclDlopen(const char* libName, int mode) { return dlopen(libName, mode); }
 weak_alias(__HcclDlopen, HcclDlopen);
 weak_alias(__HcclDlclose, HcclDlclose);
 weak_alias(__HcclDlsym, HcclDlsym);
 
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif

@@ -16,10 +16,10 @@
 namespace dfx {
 class DfxExtendInfoHelper {
 public:
-    static void ResetTryRestartTimes(DfxExtendInfo &dfxExtendInfo);
-    static void TryRestartOnceMore(DfxExtendInfo &dfxExtendInfo);
-    static bool TryRestartTooManyTimes(const DfxExtendInfo &dfxExtendInfo);
+    static void ResetTryRestartTimes(DfxExtendInfo& dfxExtendInfo);
+    static void TryRestartOnceMore(DfxExtendInfo& dfxExtendInfo);
+    static bool TryRestartTooManyTimes(const DfxExtendInfo& dfxExtendInfo);
 };
 
-}
+} // namespace dfx
 #endif // ASCEND_ACE_COMOP_HCCL_HCCL_AI_CPU_KERNEL_DFX_DFX_EXTEND_INFO_H_

@@ -15,7 +15,7 @@
 
 using namespace std;
 
-HcclResult HcclNetDevOpen(const HcclNetDevInfos *info, HcclNetDev *netDev)
+HcclResult HcclNetDevOpen(const HcclNetDevInfos* info, HcclNetDev* netDev)
 {
     CHK_PTR_NULL(netDev);
     CHK_PTR_NULL(info);
@@ -41,7 +41,7 @@ HcclResult HcclNetDevClose(HcclNetDev netDev)
     return HcclNetDevCloseV1(netDev);
 }
 
-HcclResult HcclNetDevGetAddr(HcclNetDev netDev, HcclAddress *addr)
+HcclResult HcclNetDevGetAddr(HcclNetDev netDev, HcclAddress* addr)
 {
     CHK_PTR_NULL(netDev);
     CHK_PTR_NULL(addr);
@@ -55,7 +55,7 @@ HcclResult HcclNetDevGetAddr(HcclNetDev netDev, HcclAddress *addr)
     return HcclNetDevGetAddrV1(netDev, addr);
 }
 
-HcclResult HcclNetDevGetBusAddr(HcclDeviceId dstDevId, HcclAddress *busAddr)
+HcclResult HcclNetDevGetBusAddr(HcclDeviceId dstDevId, HcclAddress* busAddr)
 {
     CHK_PTR_NULL(busAddr);
 
@@ -68,7 +68,7 @@ HcclResult HcclNetDevGetBusAddr(HcclDeviceId dstDevId, HcclAddress *busAddr)
     return HcclNetDevGetBusAddrV1(dstDevId, busAddr);
 }
 
-HcclResult HcclNetDevGetNicAddr(int32_t devicePhyId, HcclAddress **addr, uint32_t *addrNum)
+HcclResult HcclNetDevGetNicAddr(int32_t devicePhyId, HcclAddress** addr, uint32_t* addrNum)
 {
     CHK_PTR_NULL(addrNum);
     CHK_PTR_NULL(addr);

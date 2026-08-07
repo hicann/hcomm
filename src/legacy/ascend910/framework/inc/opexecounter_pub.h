@@ -23,27 +23,28 @@ namespace hccl {
 constexpr int HEAD = 0;
 constexpr int TAIL = 1;
 
-HcclResult StarsCounter(const HcclDispatcher &dispatcher, Stream &stream, int flag, bool isAicpuMode, bool isRetry, bool isAivMode);
-HcclResult FftsHeadCounter(const HcclDispatcher &dispatcher, Stream &stream);
-HcclResult FftsTailCounter(const HcclDispatcher &dispatcher, Stream &stream);
-HcclResult GetOpCountInfo(OpCounterInfo &opCounterInfo);
+HcclResult StarsCounter(
+    const HcclDispatcher& dispatcher, Stream& stream, int flag, bool isAicpuMode, bool isRetry, bool isAivMode);
+HcclResult FftsHeadCounter(const HcclDispatcher& dispatcher, Stream& stream);
+HcclResult FftsTailCounter(const HcclDispatcher& dispatcher, Stream& stream);
+HcclResult GetOpCountInfo(OpCounterInfo& opCounterInfo);
 HcclResult ClearOpCounterMem();
 
 class OpExeCounter {
 public:
     static OpExeCounter& GetInstance(s32 deviceLogicID);
-    HcclResult AddCounter(const HcclDispatcher &dispatcher, Stream &stream, int flag);
-    HcclResult GetCounter(std::pair<int32_t, int32_t> &counter);
+    HcclResult AddCounter(const HcclDispatcher& dispatcher, Stream& stream, int flag);
+    HcclResult GetCounter(std::pair<int32_t, int32_t>& counter);
     HcclResult InitCounter();
     HcclResult DeInitCounter();
-    HcclResult GetOpCountInfo(OpCounterInfo &opCounterInfo);
+    HcclResult GetOpCountInfo(OpCounterInfo& opCounterInfo);
     HcclResult ClearOpCounterMem();
 
 private:
     OpExeCounter() = default;
     ~OpExeCounter();
     void ReleaseMemHandles();
-    
+
     void* headCountMem_{};
     void* tailCountMem_{};
     void* addOneMem_{};

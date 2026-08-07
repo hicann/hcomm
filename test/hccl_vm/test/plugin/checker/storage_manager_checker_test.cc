@@ -28,28 +28,33 @@ std::map<RankId, std::map<u32, ChannelsPerDie>> g_allRankChannelInfo;
 
 class StorageManagerCheckerTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         StorageManager::GetInstance().Reset();
         StorageManager::GetInstance().SetDataId("");
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         StorageManager::GetInstance().Reset();
         StorageManager::GetInstance().SetDataId("");
     }
 
-    std::string CreateTempDir() {
+    std::string CreateTempDir()
+    {
         char tmpl[] = "/tmp/sm_test_XXXXXX";
         std::string dir = mkdtemp(tmpl);
         return dir;
     }
 
-    void RemoveDir(const std::string& dir) {
+    void RemoveDir(const std::string& dir)
+    {
         std::string cmd = "rm -rf " + dir;
         system(cmd.c_str());
     }
 
-    std::string CreateTestDataDir(const std::string& baseDir, const std::string& dataId) {
+    std::string CreateTestDataDir(const std::string& baseDir, const std::string& dataId)
+    {
         std::string pluginDir = baseDir + "/plugin";
         std::string dataDir = baseDir + "/data";
         mkdir(pluginDir.c_str(), 0755);
@@ -57,7 +62,8 @@ protected:
         return dataDir;
     }
 
-    void WriteSynDataFile(const std::string& path, const HcclVmSynData& synData) {
+    void WriteSynDataFile(const std::string& path, const HcclVmSynData& synData)
+    {
         FILE* fp = fopen(path.c_str(), "wb");
         ASSERT_NE(fp, nullptr);
         auto ret = HcclVmSynDataWrite(fp, synData);
@@ -65,7 +71,8 @@ protected:
         ASSERT_EQ(ret, HcclResult::HCCL_SUCCESS);
     }
 
-    void WriteInstrDataFile(const std::string& path, const HcclVmInstrData& instrData) {
+    void WriteInstrDataFile(const std::string& path, const HcclVmInstrData& instrData)
+    {
         FILE* fp = fopen(path.c_str(), "wb");
         ASSERT_NE(fp, nullptr);
         auto ret = HcclVmInstrDataWrite(fp, instrData);
@@ -73,7 +80,8 @@ protected:
         ASSERT_EQ(ret, HcclResult::HCCL_SUCCESS);
     }
 
-    void WriteTaskMetaDataFile(const std::string& path, const HcclVmTaskMetaData& taskMeta) {
+    void WriteTaskMetaDataFile(const std::string& path, const HcclVmTaskMetaData& taskMeta)
+    {
         FILE* fp = fopen(path.c_str(), "wb");
         ASSERT_NE(fp, nullptr);
         auto ret = HcclVmTaskMetaDataWrite(fp, taskMeta);
@@ -82,15 +90,16 @@ protected:
     }
 
     template <typename T>
-    static void AppendVParamField(std::vector<uint8_t>& payload, const T& value) {
+    static void AppendVParamField(std::vector<uint8_t>& payload, const T& value)
+    {
         const size_t offset = payload.size();
         payload.resize(offset + sizeof(T));
         std::memcpy(payload.data() + offset, &value, sizeof(T));
     }
 
-    static std::vector<uint8_t> BuildVParamPayload(uint64_t localCount,
-                                                    const std::vector<uint64_t>& counts,
-                                                    const std::vector<uint64_t>& displs) {
+    static std::vector<uint8_t>
+    BuildVParamPayload(uint64_t localCount, const std::vector<uint64_t>& counts, const std::vector<uint64_t>& displs)
+    {
         std::vector<uint8_t> payload;
         payload.reserve(sizeof(localCount) + (counts.size() + displs.size()) * sizeof(uint64_t));
         AppendVParamField(payload, localCount);
@@ -103,16 +112,18 @@ protected:
         return payload;
     }
 
-    static std::vector<uint8_t> BuildBatchSendRecvPayload(uint32_t itemNum) {
+    static std::vector<uint8_t> BuildBatchSendRecvPayload(uint32_t itemNum)
+    {
         std::vector<uint8_t> payload;
         payload.reserve(sizeof(itemNum));
         AppendVParamField(payload, itemNum);
         return payload;
     }
 
-    HcclResult ReportBatchSendRecvRankWithParams(uint32_t rankId, uint32_t rankSize, uint64_t peerCount,
-                                                 uint32_t itemNum, uint32_t sendPeer, uint32_t recvPeer,
-                                                 HcclDataType dataType = HCCL_DATA_TYPE_INT32) {
+    HcclResult ReportBatchSendRecvRankWithParams(
+        uint32_t rankId, uint32_t rankSize, uint64_t peerCount, uint32_t itemNum, uint32_t sendPeer, uint32_t recvPeer,
+        HcclDataType dataType = HCCL_DATA_TYPE_INT32)
+    {
         sim::OpDetailTab detailTab{};
         detailTab.rankId = rankId;
         detailTab.rankSize = rankSize;
@@ -128,23 +139,25 @@ protected:
         return StorageManager::GetInstance().Trans2CheckerParam(detailTab, detail);
     }
 
-    HcclResult ReportBatchSendRecvRank(uint32_t rankId, uint32_t rankSize, uint64_t peerCount,
-                                       uint32_t itemNum, HcclDataType dataType = HCCL_DATA_TYPE_INT32) {
+    HcclResult ReportBatchSendRecvRank(
+        uint32_t rankId, uint32_t rankSize, uint64_t peerCount, uint32_t itemNum,
+        HcclDataType dataType = HCCL_DATA_TYPE_INT32)
+    {
         const uint32_t sendPeer = rankSize == 0 ? 0 : (rankId + 1U) % rankSize;
         const uint32_t recvPeer = rankSize == 0 ? 0 : (rankId + rankSize - 1U) % rankSize;
-        return ReportBatchSendRecvRankWithParams(rankId, rankSize, peerCount, itemNum,
-            sendPeer, recvPeer, dataType);
+        return ReportBatchSendRecvRankWithParams(rankId, rankSize, peerCount, itemNum, sendPeer, recvPeer, dataType);
     }
 
-    HcclResult ReportBatchSendRecvRank(uint32_t rankId, uint32_t rankSize, uint64_t peerCount) {
+    HcclResult ReportBatchSendRecvRank(uint32_t rankId, uint32_t rankSize, uint64_t peerCount)
+    {
         return ReportBatchSendRecvRank(rankId, rankSize, peerCount, 2);
     }
 
-    HcclResult ReportVRank(HcclCMDType cmdType, uint32_t rankId, uint32_t rankSize,
-                           uint64_t localCount, const std::vector<uint64_t>& counts,
-                           const std::vector<uint64_t>& displs,
-                           HcclDataType dataType = HCCL_DATA_TYPE_INT32,
-                           HcclReduceOp reduceType = HCCL_REDUCE_SUM) {
+    HcclResult ReportVRank(
+        HcclCMDType cmdType, uint32_t rankId, uint32_t rankSize, uint64_t localCount,
+        const std::vector<uint64_t>& counts, const std::vector<uint64_t>& displs,
+        HcclDataType dataType = HCCL_DATA_TYPE_INT32, HcclReduceOp reduceType = HCCL_REDUCE_SUM)
+    {
         sim::OpDetailTab detailTab{};
         detailTab.rankId = rankId;
         detailTab.rankSize = rankSize;
@@ -158,7 +171,8 @@ protected:
         return StorageManager::GetInstance().Trans2CheckerParam(detailTab, detail);
     }
 
-    static std::vector<uint8_t> BuildMatrixPayload(const std::vector<uint64_t>& matrix) {
+    static std::vector<uint8_t> BuildMatrixPayload(const std::vector<uint64_t>& matrix)
+    {
         const uint32_t count = static_cast<uint32_t>(matrix.size());
         std::vector<uint8_t> payload(sizeof(count) + matrix.size() * sizeof(uint64_t));
         std::memcpy(payload.data(), &count, sizeof(count));
@@ -168,8 +182,9 @@ protected:
         return payload;
     }
 
-    HcclResult ReportAll2AllMatrix(HcclCMDType cmdType, uint32_t rankId, uint32_t rankSize,
-                                   const std::vector<uint64_t>& matrix) {
+    HcclResult
+    ReportAll2AllMatrix(HcclCMDType cmdType, uint32_t rankId, uint32_t rankSize, const std::vector<uint64_t>& matrix)
+    {
         sim::OpDetailTab detailTab{};
         detailTab.rankId = rankId;
         detailTab.rankSize = rankSize;
@@ -184,17 +199,17 @@ protected:
     }
 };
 
-TEST_F(StorageManagerCheckerTest, GetInstance_Singleton) {
+TEST_F(StorageManagerCheckerTest, GetInstance_Singleton)
+{
     StorageManager& instance1 = StorageManager::GetInstance();
     StorageManager& instance2 = StorageManager::GetInstance();
     EXPECT_EQ(&instance1, &instance2);
 }
 
-TEST_F(StorageManagerCheckerTest, Reset_NoThrow) {
-    EXPECT_NO_THROW(StorageManager::GetInstance().Reset());
-}
+TEST_F(StorageManagerCheckerTest, Reset_NoThrow) { EXPECT_NO_THROW(StorageManager::GetInstance().Reset()); }
 
-TEST_F(StorageManagerCheckerTest, Reset_ClearsAllState) {
+TEST_F(StorageManagerCheckerTest, Reset_ClearsAllState)
+{
     StorageManager::GetInstance().SetDataId("test_id");
     EXPECT_EQ(StorageManager::GetInstance().GetDataId(), "test_id");
     StorageManager::GetInstance().Reset();
@@ -203,35 +218,41 @@ TEST_F(StorageManagerCheckerTest, Reset_ClearsAllState) {
     EXPECT_EQ(StorageManager::GetInstance().GetHvmTaskMetaData().task_meta.size(), 0);
 }
 
-TEST_F(StorageManagerCheckerTest, Reset_ClearsGlobalChannelInfo) {
+TEST_F(StorageManagerCheckerTest, Reset_ClearsGlobalChannelInfo)
+{
     g_allRankChannelInfo[0][0][0] = {1, 0};
     StorageManager::GetInstance().Reset();
     EXPECT_TRUE(g_allRankChannelInfo.empty());
 }
 
-TEST_F(StorageManagerCheckerTest, SetDataId_GetDataId) {
+TEST_F(StorageManagerCheckerTest, SetDataId_GetDataId)
+{
     StorageManager::GetInstance().SetDataId("abc123");
     EXPECT_EQ(StorageManager::GetInstance().GetDataId(), "abc123");
 }
 
-TEST_F(StorageManagerCheckerTest, SetDataId_Empty) {
+TEST_F(StorageManagerCheckerTest, SetDataId_Empty)
+{
     StorageManager::GetInstance().SetDataId("");
     EXPECT_EQ(StorageManager::GetInstance().GetDataId(), "");
 }
 
-TEST_F(StorageManagerCheckerTest, SetDataId_LongString) {
+TEST_F(StorageManagerCheckerTest, SetDataId_LongString)
+{
     std::string longId(256, 'x');
     StorageManager::GetInstance().SetDataId(longId);
     EXPECT_EQ(StorageManager::GetInstance().GetDataId(), longId);
 }
 
-TEST_F(StorageManagerCheckerTest, SetDataId_Overwrite) {
+TEST_F(StorageManagerCheckerTest, SetDataId_Overwrite)
+{
     StorageManager::GetInstance().SetDataId("first");
     StorageManager::GetInstance().SetDataId("second");
     EXPECT_EQ(StorageManager::GetInstance().GetDataId(), "second");
 }
 
-TEST_F(StorageManagerCheckerTest, SetDataId_ThreadSafety) {
+TEST_F(StorageManagerCheckerTest, SetDataId_ThreadSafety)
+{
     const int threadCount = 10;
     std::vector<std::thread> threads;
     for (int i = 0; i < threadCount; i++) {
@@ -246,11 +267,10 @@ TEST_F(StorageManagerCheckerTest, SetDataId_ThreadSafety) {
     EXPECT_TRUE(result.substr(0, 7) == "thread_");
 }
 
-TEST_F(StorageManagerCheckerTest, GetRankSize_Default) {
-    EXPECT_EQ(StorageManager::GetInstance().GetRankSize(), 0);
-}
+TEST_F(StorageManagerCheckerTest, GetRankSize_Default) { EXPECT_EQ(StorageManager::GetInstance().GetRankSize(), 0); }
 
-TEST_F(StorageManagerCheckerTest, GetCheckerParam_Default) {
+TEST_F(StorageManagerCheckerTest, GetCheckerParam_Default)
+{
     CheckerParam param = StorageManager::GetInstance().GetCheckerParam();
     EXPECT_EQ(param.cmdType, static_cast<HcclCMDType>(0));
     EXPECT_EQ(param.rankSize, 0);
@@ -262,7 +282,8 @@ TEST_F(StorageManagerCheckerTest, GetCheckerParam_Default) {
     EXPECT_EQ(param.root, 0);
 }
 
-TEST_F(StorageManagerCheckerTest, CheckerParam_DefaultInitialization) {
+TEST_F(StorageManagerCheckerTest, CheckerParam_DefaultInitialization)
+{
     CheckerParam param;
     EXPECT_EQ(param.cmdType, static_cast<HcclCMDType>(0));
     EXPECT_EQ(param.rankSize, 0);
@@ -270,7 +291,8 @@ TEST_F(StorageManagerCheckerTest, CheckerParam_DefaultInitialization) {
     EXPECT_EQ(param.dataCount, 0);
 }
 
-TEST_F(StorageManagerCheckerTest, CheckerParam_CustomInitialization) {
+TEST_F(StorageManagerCheckerTest, CheckerParam_CustomInitialization)
+{
     CheckerParam param;
     param.cmdType = HCCL_CMD_ALLREDUCE;
     param.rankSize = 4;
@@ -290,61 +312,71 @@ TEST_F(StorageManagerCheckerTest, CheckerParam_CustomInitialization) {
     EXPECT_EQ(param.root, 2);
 }
 
-TEST_F(StorageManagerCheckerTest, GetBlockSize_NonExistentRank) {
+TEST_F(StorageManagerCheckerTest, GetBlockSize_NonExistentRank)
+{
     uint64_t size = StorageManager::GetInstance().GetBlockSize(999, BufferType::INPUT);
     EXPECT_EQ(size, 0);
 }
 
-TEST_F(StorageManagerCheckerTest, GetBlockSize_NonExistentBufferType) {
+TEST_F(StorageManagerCheckerTest, GetBlockSize_NonExistentBufferType)
+{
     uint64_t size = StorageManager::GetInstance().GetBlockSize(0, BufferType::CCL);
     EXPECT_EQ(size, 0);
 }
 
-TEST_F(StorageManagerCheckerTest, GetSlice_NonExistentRank) {
+TEST_F(StorageManagerCheckerTest, GetSlice_NonExistentRank)
+{
     DataSlice slice;
     uint32_t rank = 999;
     HcclResult ret = StorageManager::GetInstance().GetSlice(0x1000, 1024, slice, &rank);
     EXPECT_NE(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(StorageManagerCheckerTest, DataSlice_DefaultConstruction) {
+TEST_F(StorageManagerCheckerTest, DataSlice_DefaultConstruction)
+{
     DataSlice slice;
     EXPECT_EQ(slice.GetSize(), 0);
     EXPECT_EQ(slice.GetOffset(), 0);
     EXPECT_EQ(slice.GetType(), BufferType::INPUT);
 }
 
-TEST_F(StorageManagerCheckerTest, DataSlice_CustomConstruction) {
+TEST_F(StorageManagerCheckerTest, DataSlice_CustomConstruction)
+{
     DataSlice slice(BufferType::OUTPUT, 0x1000, 2048);
     EXPECT_EQ(slice.GetType(), BufferType::OUTPUT);
     EXPECT_EQ(slice.GetOffset(), 0x1000);
     EXPECT_EQ(slice.GetSize(), 2048);
 }
 
-TEST_F(StorageManagerCheckerTest, GetSlice_NonExistent) {
+TEST_F(StorageManagerCheckerTest, GetSlice_NonExistent)
+{
     DataSlice slice;
     uint32_t rank = 0;
     HcclResult ret = StorageManager::GetInstance().GetSlice(0x1000, 1024, slice, &rank);
     EXPECT_NE(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(StorageManagerCheckerTest, GetSlice_NullRankPtr) {
+TEST_F(StorageManagerCheckerTest, GetSlice_NullRankPtr)
+{
     DataSlice slice;
     HcclResult ret = StorageManager::GetInstance().GetSlice(0x1000, 1024, slice, nullptr);
     EXPECT_NE(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(StorageManagerCheckerTest, GetHvmInstrData_Default) {
+TEST_F(StorageManagerCheckerTest, GetHvmInstrData_Default)
+{
     HcclVmInstrData instrData = StorageManager::GetInstance().GetHvmInstrData();
     EXPECT_EQ(instrData.instr_data.size(), 0);
 }
 
-TEST_F(StorageManagerCheckerTest, GetHvmTaskMetaData_Default) {
+TEST_F(StorageManagerCheckerTest, GetHvmTaskMetaData_Default)
+{
     HcclVmTaskMetaData taskMeta = StorageManager::GetInstance().GetHvmTaskMetaData();
     EXPECT_EQ(taskMeta.task_meta.size(), 0);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmSynthesisData_EmptyDataId) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmSynthesisData_EmptyDataId)
+{
     uint32_t rankId = 0;
     sim::OpMemInfoTab memInfo{};
     std::vector<sim::CcuChannelTab> channels;
@@ -352,19 +384,22 @@ TEST_F(StorageManagerCheckerTest, LoadHcclVmSynthesisData_EmptyDataId) {
     EXPECT_EQ(ret, HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmInstrData_EmptyDataId) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmInstrData_EmptyDataId)
+{
     std::vector<sim::CcuInstrResTab> instrRes;
     HcclResult ret = StorageManager::GetInstance().LoadHcclVmInstrData(instrRes);
     EXPECT_EQ(ret, HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_EmptyDataId) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_EmptyDataId)
+{
     std::vector<std::vector<sim::OpTaskTab>> allTasks;
     HcclResult ret = StorageManager::GetInstance().LoadHcclVmTaskMetaData(allTasks);
     EXPECT_EQ(ret, HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_Default) {
+TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_Default)
+{
     sim::OpDetailTab detailTab{};
     ::OpDetails detail{};
     HcclResult ret = StorageManager::GetInstance().Trans2CheckerParam(detailTab, detail);
@@ -374,7 +409,8 @@ TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_Default) {
     EXPECT_EQ(param.dataCount, 0);
 }
 
-TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_BatchSendRecvRingBuildsCanonicalParameters) {
+TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_BatchSendRecvRingBuildsCanonicalParameters)
+{
     constexpr uint32_t kRankSize = 4;
     constexpr uint64_t kPeerCount = 128;
     StorageManager& storage = StorageManager::GetInstance();
@@ -401,7 +437,8 @@ TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_BatchSendRecvRingBuildsCanonic
     }
 }
 
-TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsMalformedBatchSendRecvExtInfo) {
+TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsMalformedBatchSendRecvExtInfo)
+{
     StorageManager& storage = StorageManager::GetInstance();
     storage.BeginOpGroup();
 
@@ -419,37 +456,41 @@ TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsMalformedBatchSendRe
     EXPECT_EQ(storage.Trans2CheckerParam(detailTab, detail), HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsInvalidBatchSendRecvItemNum) {
+TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsInvalidBatchSendRecvItemNum)
+{
     StorageManager::GetInstance().BeginOpGroup();
-    EXPECT_EQ(ReportBatchSendRecvRank(0, 2, 128, 3),
-              HcclResult::HCCL_E_PARA);
+    EXPECT_EQ(ReportBatchSendRecvRank(0, 2, 128, 3), HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsInvalidBatchSendRecvRingPeer) {
+TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsInvalidBatchSendRecvRingPeer)
+{
     StorageManager::GetInstance().BeginOpGroup();
-    EXPECT_EQ(ReportBatchSendRecvRankWithParams(0, 4, 128, 2, 2, 3),
-              HcclResult::HCCL_E_PARA);
+    EXPECT_EQ(ReportBatchSendRecvRankWithParams(0, 4, 128, 2, 2, 3), HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsSingleRankBatchSendRecvRing) {
+TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsSingleRankBatchSendRecvRing)
+{
     StorageManager::GetInstance().BeginOpGroup();
     EXPECT_EQ(ReportBatchSendRecvRank(0, 1, 128), HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsDuplicateBatchSendRecvRank) {
+TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsDuplicateBatchSendRecvRank)
+{
     StorageManager::GetInstance().BeginOpGroup();
     ASSERT_EQ(ReportBatchSendRecvRank(0, 2, 128), HcclResult::HCCL_SUCCESS);
     EXPECT_EQ(ReportBatchSendRecvRank(0, 2, 128), HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_RejectsMissingBatchSendRecvRank) {
+TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_RejectsMissingBatchSendRecvRank)
+{
     StorageManager& storage = StorageManager::GetInstance();
     storage.BeginOpGroup();
     ASSERT_EQ(ReportBatchSendRecvRank(0, 2, 128), HcclResult::HCCL_SUCCESS);
     EXPECT_EQ(storage.FinalizeOpGroup(), HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_RejectsInconsistentBatchSendRecvRanks) {
+TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_RejectsInconsistentBatchSendRecvRanks)
+{
     StorageManager& storage = StorageManager::GetInstance();
     storage.BeginOpGroup();
     ASSERT_EQ(ReportBatchSendRecvRank(0, 2, 128), HcclResult::HCCL_SUCCESS);
@@ -457,17 +498,17 @@ TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_RejectsInconsistentBatchSendRe
     EXPECT_EQ(storage.FinalizeOpGroup(), HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_RejectsInconsistentBatchSendRecvDataTypes) {
+TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_RejectsInconsistentBatchSendRecvDataTypes)
+{
     StorageManager& storage = StorageManager::GetInstance();
     storage.BeginOpGroup();
-    ASSERT_EQ(ReportBatchSendRecvRank(0, 2, 128, 2, HCCL_DATA_TYPE_INT32),
-              HcclResult::HCCL_SUCCESS);
-    ASSERT_EQ(ReportBatchSendRecvRank(1, 2, 128, 2, HCCL_DATA_TYPE_FP32),
-              HcclResult::HCCL_SUCCESS);
+    ASSERT_EQ(ReportBatchSendRecvRank(0, 2, 128, 2, HCCL_DATA_TYPE_INT32), HcclResult::HCCL_SUCCESS);
+    ASSERT_EQ(ReportBatchSendRecvRank(1, 2, 128, 2, HCCL_DATA_TYPE_FP32), HcclResult::HCCL_SUCCESS);
     EXPECT_EQ(storage.FinalizeOpGroup(), HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_AllGatherVBuildsCanonicalDataDescriptor) {
+TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_AllGatherVBuildsCanonicalDataDescriptor)
+{
     constexpr uint32_t kRankSize = 4;
     const std::vector<uint64_t> counts = {2, 0, 3, 1};
     const std::vector<uint64_t> displs = {0, 2, 2, 5};
@@ -475,8 +516,9 @@ TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_AllGatherVBuildsCanonicalDataD
 
     storage.BeginOpGroup();
     for (uint32_t rankId = 0; rankId < kRankSize; ++rankId) {
-        ASSERT_EQ(ReportVRank(HcclCMDType::HCCL_CMD_ALLGATHER_V, rankId, kRankSize,
-                              counts[rankId], counts, displs), HcclResult::HCCL_SUCCESS);
+        ASSERT_EQ(
+            ReportVRank(HcclCMDType::HCCL_CMD_ALLGATHER_V, rankId, kRankSize, counts[rankId], counts, displs),
+            HcclResult::HCCL_SUCCESS);
     }
 
     ASSERT_EQ(storage.FinalizeOpGroup(), HcclResult::HCCL_SUCCESS);
@@ -487,7 +529,8 @@ TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_AllGatherVBuildsCanonicalDataD
     EXPECT_EQ(param.vDataDes.displs, displs);
 }
 
-TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_AllGatherVRejectsCountMismatch) {
+TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_AllGatherVRejectsCountMismatch)
+{
     constexpr uint32_t kRankSize = 4;
     const std::vector<uint64_t> counts = {2, 0, 3, 1};
     const std::vector<uint64_t> displs = {0, 2, 2, 5};
@@ -499,14 +542,16 @@ TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_AllGatherVRejectsCountMismatch
         if (rankId == 2) {
             recvCounts[0] = 9;
         }
-        ASSERT_EQ(ReportVRank(HcclCMDType::HCCL_CMD_ALLGATHER_V, rankId, kRankSize,
-                              counts[rankId], recvCounts, displs), HcclResult::HCCL_SUCCESS);
+        ASSERT_EQ(
+            ReportVRank(HcclCMDType::HCCL_CMD_ALLGATHER_V, rankId, kRankSize, counts[rankId], recvCounts, displs),
+            HcclResult::HCCL_SUCCESS);
     }
 
     EXPECT_EQ(storage.FinalizeOpGroup(), HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_AllGatherVAcceptsAllZeroCounts) {
+TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_AllGatherVAcceptsAllZeroCounts)
+{
     constexpr uint32_t kRankSize = 3;
     const std::vector<uint64_t> counts = {0, 0, 0};
     const std::vector<uint64_t> displs = {0, 0, 0};
@@ -514,8 +559,9 @@ TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_AllGatherVAcceptsAllZeroCounts
 
     storage.BeginOpGroup();
     for (uint32_t rankId = 0; rankId < kRankSize; ++rankId) {
-        ASSERT_EQ(ReportVRank(HcclCMDType::HCCL_CMD_ALLGATHER_V, rankId, kRankSize,
-                              0, counts, displs), HcclResult::HCCL_SUCCESS);
+        ASSERT_EQ(
+            ReportVRank(HcclCMDType::HCCL_CMD_ALLGATHER_V, rankId, kRankSize, 0, counts, displs),
+            HcclResult::HCCL_SUCCESS);
     }
 
     ASSERT_EQ(storage.FinalizeOpGroup(), HcclResult::HCCL_SUCCESS);
@@ -524,7 +570,8 @@ TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_AllGatherVAcceptsAllZeroCounts
     EXPECT_EQ(param.vDataDes.displs, displs);
 }
 
-TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_ReduceScatterVBuildsCanonicalDataDescriptor) {
+TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_ReduceScatterVBuildsCanonicalDataDescriptor)
+{
     constexpr uint32_t kRankSize = 4;
     const std::vector<uint64_t> counts = {2, 0, 3, 1};
     const std::vector<uint64_t> displs = {0, 2, 2, 5};
@@ -532,8 +579,9 @@ TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_ReduceScatterVBuildsCanonicalD
 
     storage.BeginOpGroup();
     for (uint32_t rankId = 0; rankId < kRankSize; ++rankId) {
-        ASSERT_EQ(ReportVRank(HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V, rankId, kRankSize,
-                              counts[rankId], counts, displs), HcclResult::HCCL_SUCCESS);
+        ASSERT_EQ(
+            ReportVRank(HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V, rankId, kRankSize, counts[rankId], counts, displs),
+            HcclResult::HCCL_SUCCESS);
     }
 
     ASSERT_EQ(storage.FinalizeOpGroup(), HcclResult::HCCL_SUCCESS);
@@ -544,7 +592,8 @@ TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_ReduceScatterVBuildsCanonicalD
     EXPECT_EQ(param.vDataDes.displs, displs);
 }
 
-TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_ReduceScatterVRejectsCountMismatch) {
+TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_ReduceScatterVRejectsCountMismatch)
+{
     constexpr uint32_t kRankSize = 4;
     const std::vector<uint64_t> counts = {2, 0, 3, 1};
     const std::vector<uint64_t> displs = {0, 2, 2, 5};
@@ -556,14 +605,16 @@ TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_ReduceScatterVRejectsCountMism
         if (rankId == 3) {
             sendCounts[0] = 9;
         }
-        ASSERT_EQ(ReportVRank(HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V, rankId, kRankSize,
-                              counts[rankId], sendCounts, displs), HcclResult::HCCL_SUCCESS);
+        ASSERT_EQ(
+            ReportVRank(HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V, rankId, kRankSize, counts[rankId], sendCounts, displs),
+            HcclResult::HCCL_SUCCESS);
     }
 
     EXPECT_EQ(storage.FinalizeOpGroup(), HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_RejectsMissingVRankReport) {
+TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_RejectsMissingVRankReport)
+{
     constexpr uint32_t kRankSize = 4;
     const std::vector<uint64_t> counts = {2, 0, 3, 1};
     const std::vector<uint64_t> displs = {0, 2, 2, 5};
@@ -571,27 +622,32 @@ TEST_F(StorageManagerCheckerTest, FinalizeOpGroup_RejectsMissingVRankReport) {
 
     storage.BeginOpGroup();
     for (uint32_t rankId = 0; rankId < kRankSize - 1; ++rankId) {
-        ASSERT_EQ(ReportVRank(HcclCMDType::HCCL_CMD_ALLGATHER_V, rankId, kRankSize,
-                              counts[rankId], counts, displs), HcclResult::HCCL_SUCCESS);
+        ASSERT_EQ(
+            ReportVRank(HcclCMDType::HCCL_CMD_ALLGATHER_V, rankId, kRankSize, counts[rankId], counts, displs),
+            HcclResult::HCCL_SUCCESS);
     }
 
     EXPECT_EQ(storage.FinalizeOpGroup(), HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsDuplicateVRankReport) {
+TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsDuplicateVRankReport)
+{
     constexpr uint32_t kRankSize = 2;
     const std::vector<uint64_t> counts = {1, 2};
     const std::vector<uint64_t> displs = {0, 1};
     StorageManager& storage = StorageManager::GetInstance();
 
     storage.BeginOpGroup();
-    ASSERT_EQ(ReportVRank(HcclCMDType::HCCL_CMD_ALLGATHER_V, 0, kRankSize,
-                          counts[0], counts, displs), HcclResult::HCCL_SUCCESS);
-    EXPECT_EQ(ReportVRank(HcclCMDType::HCCL_CMD_ALLGATHER_V, 0, kRankSize,
-                          counts[0], counts, displs), HcclResult::HCCL_E_PARA);
+    ASSERT_EQ(
+        ReportVRank(HcclCMDType::HCCL_CMD_ALLGATHER_V, 0, kRankSize, counts[0], counts, displs),
+        HcclResult::HCCL_SUCCESS);
+    EXPECT_EQ(
+        ReportVRank(HcclCMDType::HCCL_CMD_ALLGATHER_V, 0, kRankSize, counts[0], counts, displs),
+        HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, BeginOpGroup_ClearsCompletedVRankParameters) {
+TEST_F(StorageManagerCheckerTest, BeginOpGroup_ClearsCompletedVRankParameters)
+{
     constexpr uint32_t kFirstRankSize = 4;
     const std::vector<uint64_t> firstCounts = {2, 0, 3, 1};
     const std::vector<uint64_t> firstDispls = {0, 2, 2, 5};
@@ -599,8 +655,11 @@ TEST_F(StorageManagerCheckerTest, BeginOpGroup_ClearsCompletedVRankParameters) {
 
     storage.BeginOpGroup();
     for (uint32_t rankId = 0; rankId < kFirstRankSize; ++rankId) {
-        ASSERT_EQ(ReportVRank(HcclCMDType::HCCL_CMD_ALLGATHER_V, rankId, kFirstRankSize,
-                              firstCounts[rankId], firstCounts, firstDispls), HcclResult::HCCL_SUCCESS);
+        ASSERT_EQ(
+            ReportVRank(
+                HcclCMDType::HCCL_CMD_ALLGATHER_V, rankId, kFirstRankSize, firstCounts[rankId], firstCounts,
+                firstDispls),
+            HcclResult::HCCL_SUCCESS);
     }
     ASSERT_EQ(storage.FinalizeOpGroup(), HcclResult::HCCL_SUCCESS);
 
@@ -609,8 +668,11 @@ TEST_F(StorageManagerCheckerTest, BeginOpGroup_ClearsCompletedVRankParameters) {
     const std::vector<uint64_t> secondDispls = {0, 5};
     storage.BeginOpGroup();
     for (uint32_t rankId = 0; rankId < kSecondRankSize; ++rankId) {
-        ASSERT_EQ(ReportVRank(HcclCMDType::HCCL_CMD_ALLGATHER_V, rankId, kSecondRankSize,
-                              secondCounts[rankId], secondCounts, secondDispls), HcclResult::HCCL_SUCCESS);
+        ASSERT_EQ(
+            ReportVRank(
+                HcclCMDType::HCCL_CMD_ALLGATHER_V, rankId, kSecondRankSize, secondCounts[rankId], secondCounts,
+                secondDispls),
+            HcclResult::HCCL_SUCCESS);
     }
     ASSERT_EQ(storage.FinalizeOpGroup(), HcclResult::HCCL_SUCCESS);
 
@@ -620,7 +682,8 @@ TEST_F(StorageManagerCheckerTest, BeginOpGroup_ClearsCompletedVRankParameters) {
     EXPECT_EQ(param.vDataDes.displs, secondDispls);
 }
 
-TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsMalformedVParamPayload) {
+TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsMalformedVParamPayload)
+{
     constexpr uint32_t kRankSize = 2;
     const std::vector<uint64_t> counts = {1, 2};
     const std::vector<uint64_t> displs = {0, 1};
@@ -639,7 +702,8 @@ TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsMalformedVParamPaylo
     EXPECT_EQ(storage.Trans2CheckerParam(detailTab, detail), HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsVLocalCountMismatch) {
+TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsVLocalCountMismatch)
+{
     constexpr uint32_t kRankSize = 2;
     const std::vector<uint64_t> counts = {1, 2};
     const std::vector<uint64_t> displs = {0, 1};
@@ -658,15 +722,16 @@ TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_RejectsVLocalCountMismatch)
     EXPECT_EQ(storage.Trans2CheckerParam(detailTab, detail), HcclResult::HCCL_E_PARA);
 }
 
-TEST_F(StorageManagerCheckerTest, MergeAll2AllVSendCountMatrix_PreservesExistingOrMerge) {
+TEST_F(StorageManagerCheckerTest, MergeAll2AllVSendCountMatrix_PreservesExistingOrMerge)
+{
     constexpr uint32_t kRankSize = 2;
     StorageManager& storage = StorageManager::GetInstance();
 
     storage.BeginOpGroup();
-    ASSERT_EQ(ReportAll2AllMatrix(HcclCMDType::HCCL_CMD_ALLTOALLVC, 0, kRankSize, {1, 2, 0, 4}),
-              HcclResult::HCCL_SUCCESS);
-    ASSERT_EQ(ReportAll2AllMatrix(HcclCMDType::HCCL_CMD_ALLTOALLVC, 1, kRankSize, {0, 8, 16, 0}),
-              HcclResult::HCCL_SUCCESS);
+    ASSERT_EQ(
+        ReportAll2AllMatrix(HcclCMDType::HCCL_CMD_ALLTOALLVC, 0, kRankSize, {1, 2, 0, 4}), HcclResult::HCCL_SUCCESS);
+    ASSERT_EQ(
+        ReportAll2AllMatrix(HcclCMDType::HCCL_CMD_ALLTOALLVC, 1, kRankSize, {0, 8, 16, 0}), HcclResult::HCCL_SUCCESS);
 
     storage.MergeAll2AllVSendCountMatrix();
     const CheckerParam param = storage.GetCheckerParam();
@@ -674,7 +739,8 @@ TEST_F(StorageManagerCheckerTest, MergeAll2AllVSendCountMatrix_PreservesExisting
     EXPECT_EQ(param.all2AllDataDes.sendCountMatrix, (std::vector<uint64_t>{1, 10, 16, 4}));
 }
 
-TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_WithSynData) {
+TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_WithSynData)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_trans";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -727,7 +793,8 @@ TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_WithSynData) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, InitCcuInfo_Default) {
+TEST_F(StorageManagerCheckerTest, InitCcuInfo_Default)
+{
     DevType devType;
     std::vector<uint64_t> resourceBaseAddr;
     StorageManager::GetInstance().InitCcuInfo(devType, resourceBaseAddr);
@@ -736,7 +803,8 @@ TEST_F(StorageManagerCheckerTest, InitCcuInfo_Default) {
     EXPECT_EQ(resourceBaseAddr[1], 0);
 }
 
-TEST_F(StorageManagerCheckerTest, InitCcuInfo_WithSynData) {
+TEST_F(StorageManagerCheckerTest, InitCcuInfo_WithSynData)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_ccu";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -781,7 +849,8 @@ TEST_F(StorageManagerCheckerTest, InitCcuInfo_WithSynData) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadCheckerParam_MissingFieldsDefault) {
+TEST_F(StorageManagerCheckerTest, LoadCheckerParam_MissingFieldsDefault)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_partial";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -804,7 +873,8 @@ TEST_F(StorageManagerCheckerTest, LoadCheckerParam_MissingFieldsDefault) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadMemLayout_WithFile) {
+TEST_F(StorageManagerCheckerTest, LoadMemLayout_WithFile)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_mem";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -834,7 +904,8 @@ TEST_F(StorageManagerCheckerTest, LoadMemLayout_WithFile) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, GetSlice_WithMemLayout_ByRank) {
+TEST_F(StorageManagerCheckerTest, GetSlice_WithMemLayout_ByRank)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_dataslice";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -879,7 +950,8 @@ TEST_F(StorageManagerCheckerTest, GetSlice_WithMemLayout_ByRank) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, GetSlice_AddrNotInAnyBlock) {
+TEST_F(StorageManagerCheckerTest, GetSlice_AddrNotInAnyBlock)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_noblock";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -910,7 +982,8 @@ TEST_F(StorageManagerCheckerTest, GetSlice_AddrNotInAnyBlock) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, GetSlice_WithMemLayout) {
+TEST_F(StorageManagerCheckerTest, GetSlice_WithMemLayout)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_getslice";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -947,7 +1020,8 @@ TEST_F(StorageManagerCheckerTest, GetSlice_WithMemLayout) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, GetSlice_AddrNotFound) {
+TEST_F(StorageManagerCheckerTest, GetSlice_AddrNotFound)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_slice_miss";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -973,7 +1047,8 @@ TEST_F(StorageManagerCheckerTest, GetSlice_AddrNotFound) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmSynthesisData_WithFile) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmSynthesisData_WithFile)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_syndata";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -1043,7 +1118,8 @@ TEST_F(StorageManagerCheckerTest, LoadHcclVmSynthesisData_WithFile) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmSynthesisData_FileNotFound) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmSynthesisData_FileNotFound)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "nonexist_syn";
     CreateTestDataDir(tmpDir, dataId);
@@ -1063,7 +1139,8 @@ TEST_F(StorageManagerCheckerTest, LoadHcclVmSynthesisData_FileNotFound) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmInstrData_WithFile) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmInstrData_WithFile)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_instr";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -1108,7 +1185,8 @@ TEST_F(StorageManagerCheckerTest, LoadHcclVmInstrData_WithFile) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmInstrData_NonCcuMode) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmInstrData_NonCcuMode)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_instr_nonccu";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -1150,7 +1228,8 @@ TEST_F(StorageManagerCheckerTest, LoadHcclVmInstrData_NonCcuMode) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmInstrData_FileNotFound) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmInstrData_FileNotFound)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "nonexist_instr";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -1183,7 +1262,8 @@ TEST_F(StorageManagerCheckerTest, LoadHcclVmInstrData_FileNotFound) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_WithFile) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_WithFile)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_taskmeta";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -1213,7 +1293,8 @@ TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_WithFile) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_WithTasks) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_WithTasks)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_tasks";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -1273,7 +1354,8 @@ TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_WithTasks) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_NotifyTasks) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_NotifyTasks)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_notify";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -1327,7 +1409,8 @@ TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_NotifyTasks) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_FileNotFound) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_FileNotFound)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "nonexist_task";
     CreateTestDataDir(tmpDir, dataId);
@@ -1345,7 +1428,8 @@ TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_FileNotFound) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, FileHeader_StructLayout) {
+TEST_F(StorageManagerCheckerTest, FileHeader_StructLayout)
+{
     FileHeader header{};
     header.magic = HCCLVM_TASK_FILE_MAGIC;
     header.version = 1;
@@ -1357,27 +1441,31 @@ TEST_F(StorageManagerCheckerTest, FileHeader_StructLayout) {
     EXPECT_EQ(header.count, 10u);
 }
 
-TEST_F(StorageManagerCheckerTest, FileHeader_MagicNumbers) {
+TEST_F(StorageManagerCheckerTest, FileHeader_MagicNumbers)
+{
     EXPECT_EQ(HCCLVM_TASK_FILE_MAGIC, 0x48565444u);
     EXPECT_EQ(HCCLVM_SYN_FILE_MAGIC, 0x48564D44u);
     EXPECT_EQ(HCCLVM_INSTR_FILE_MAGIC, 0x434D4349u);
     EXPECT_EQ(HCCLVM_FLAG_FILE_MAGIC, 0x464C4147u);
 }
 
-TEST_F(StorageManagerCheckerTest, MemBlock_InStorageManager) {
+TEST_F(StorageManagerCheckerTest, MemBlock_InStorageManager)
+{
     HcclSim::MemBlock sm_block{};
     EXPECT_EQ(sm_block.startAddr, 0u);
     EXPECT_EQ(sm_block.size, 0u);
     EXPECT_EQ(sm_block.globalOffset, 0u);
 }
 
-TEST_F(StorageManagerCheckerTest, RemoteDieInfo_StructDefault) {
+TEST_F(StorageManagerCheckerTest, RemoteDieInfo_StructDefault)
+{
     RemoteDieInfo info{};
     EXPECT_EQ(info.dstRank, 0u);
     EXPECT_EQ(info.remoteDieId, 0u);
 }
 
-TEST_F(StorageManagerCheckerTest, DataSlice_SetMethods) {
+TEST_F(StorageManagerCheckerTest, DataSlice_SetMethods)
+{
     DataSlice slice;
     slice.SetBufferType(BufferType::CCL);
     slice.SetOffset(0x5000);
@@ -1387,7 +1475,8 @@ TEST_F(StorageManagerCheckerTest, DataSlice_SetMethods) {
     EXPECT_EQ(slice.GetSize(), 4096);
 }
 
-TEST_F(StorageManagerCheckerTest, BufferType_EnumValues) {
+TEST_F(StorageManagerCheckerTest, BufferType_EnumValues)
+{
     EXPECT_EQ(static_cast<int>(BufferType::INPUT), 0);
     EXPECT_EQ(static_cast<int>(BufferType::OUTPUT), 1);
     EXPECT_EQ(static_cast<int>(BufferType::CCL), 2);
@@ -1400,7 +1489,8 @@ TEST_F(StorageManagerCheckerTest, BufferType_EnumValues) {
     EXPECT_EQ(static_cast<int>(BufferType::RESERVED), 9);
 }
 
-TEST_F(StorageManagerCheckerTest, HccLTaskMetaType_EnumValues) {
+TEST_F(StorageManagerCheckerTest, HccLTaskMetaType_EnumValues)
+{
     EXPECT_EQ(static_cast<char>(HccLTaskMetaType::NOTIFY_WAIT), 0);
     EXPECT_EQ(static_cast<char>(HccLTaskMetaType::NOTIFY_RECORD), 1);
     EXPECT_EQ(static_cast<char>(HccLTaskMetaType::REDUCE), 2);
@@ -1409,7 +1499,8 @@ TEST_F(StorageManagerCheckerTest, HccLTaskMetaType_EnumValues) {
     EXPECT_EQ(static_cast<char>(HccLTaskMetaType::AIV_GRAPH), 5);
 }
 
-TEST_F(StorageManagerCheckerTest, ChannelInfoInner_StructLayout) {
+TEST_F(StorageManagerCheckerTest, ChannelInfoInner_StructLayout)
+{
     ChannelInfoInner chInfo{};
     chInfo.count = 1;
     ChannelData chData{};
@@ -1425,7 +1516,8 @@ TEST_F(StorageManagerCheckerTest, ChannelInfoInner_StructLayout) {
     EXPECT_EQ(chInfo.data[0].dstRank, 2);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmSynthesisData_MultipleChannelsAndMemLayout) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmSynthesisData_MultipleChannelsAndMemLayout)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_multi_ch";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -1504,7 +1596,8 @@ TEST_F(StorageManagerCheckerTest, LoadHcclVmSynthesisData_MultipleChannelsAndMem
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_All2AllDataDes) {
+TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_All2AllDataDes)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_a2a";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -1555,13 +1648,15 @@ TEST_F(StorageManagerCheckerTest, Trans2CheckerParam_All2AllDataDes) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, DevType_EnumValues) {
+TEST_F(StorageManagerCheckerTest, DevType_EnumValues)
+{
     EXPECT_GE(static_cast<int>(DevType::DEV_TYPE_COUNT), 0);
     EXPECT_GE(static_cast<int>(DevType::DEV_TYPE_910_93), 0);
     EXPECT_GE(static_cast<int>(DevType::DEV_TYPE_910B), 0);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmInstrData_CcuModeWithData) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmInstrData_CcuModeWithData)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_instr_data";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);
@@ -1618,7 +1713,8 @@ TEST_F(StorageManagerCheckerTest, LoadHcclVmInstrData_CcuModeWithData) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_CcuTask) {
+TEST_F(StorageManagerCheckerTest, LoadHcclVmTaskMetaData_CcuTask)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_ccu_task";
     std::string dataDir = CreateTestDataDir(tmpDir, dataId);

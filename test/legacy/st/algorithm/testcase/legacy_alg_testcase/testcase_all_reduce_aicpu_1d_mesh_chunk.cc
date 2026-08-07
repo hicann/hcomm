@@ -27,23 +27,17 @@ constexpr u64 K = 1024;
 constexpr u64 M = 1024 * K;
 constexpr u64 G = 1024 * M;
 
-
 class AllReduceAICPU1DMeshChunkTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "AllReduce AICPU 1D Mesh Chunk test set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "AllReduce AICPU 1D Mesh Chunk test set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "AllReduce AICPU 1D Mesh Chunk test tear down" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "AllReduce AICPU 1D Mesh Chunk test tear down" << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -72,7 +66,7 @@ TEST_F(AllReduceAICPU1DMeshChunkTest, allreduce_aicpu_case_test_4_rank_Mesh1DTwo
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_SUM;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_950;
-    checkerOpParam.DataDes.count = 26214400; //256M
+    checkerOpParam.DataDes.count = 26214400; // 256M
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_FP32;
     checkerOpParam.algName = "InsAllReduceMesh1DTwoShotMeshChunk";
 
@@ -98,7 +92,7 @@ TEST_F(AllReduceAICPU1DMeshChunkTest, allreduce_aicpu_case_test_4_rank_Mesh1DTwo
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_MIN;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_950;
-    checkerOpParam.DataDes.count = 26214400; //256M
+    checkerOpParam.DataDes.count = 26214400; // 256M
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_FP32;
     checkerOpParam.algName = "InsAllReduceMesh1DTwoShotMeshChunk";
 
@@ -124,7 +118,7 @@ TEST_F(AllReduceAICPU1DMeshChunkTest, allreduce_aicpu_case_test_4_rank_Mesh1DTwo
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_MAX;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_950;
-    checkerOpParam.DataDes.count = 26214400; //256M
+    checkerOpParam.DataDes.count = 26214400; // 256M
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_FP32;
     checkerOpParam.algName = "InsAllReduceMesh1DTwoShotMeshChunk";
 
@@ -150,7 +144,7 @@ TEST_F(AllReduceAICPU1DMeshChunkTest, allreduce_aicpu_case_test_4_rank_Mesh1DTwo
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_SUM;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_950;
-    checkerOpParam.DataDes.count = 52428800; //256M
+    checkerOpParam.DataDes.count = 52428800; // 256M
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_FP16;
     checkerOpParam.algName = "InsAllReduceMesh1DTwoShotMeshChunk";
 
@@ -176,7 +170,7 @@ TEST_F(AllReduceAICPU1DMeshChunkTest, allreduce_aicpu_case_test_4_rank_Mesh1DTwo
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_MIN;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_950;
-    checkerOpParam.DataDes.count = 52428800; //256M
+    checkerOpParam.DataDes.count = 52428800; // 256M
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_FP16;
     checkerOpParam.algName = "InsAllReduceMesh1DTwoShotMeshChunk";
 
@@ -202,7 +196,7 @@ TEST_F(AllReduceAICPU1DMeshChunkTest, allreduce_aicpu_case_test_4_rank_Mesh1DTwo
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_MIN;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_950;
-    checkerOpParam.DataDes.count = 104857600; //256M
+    checkerOpParam.DataDes.count = 104857600; // 256M
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_INT8;
     checkerOpParam.algName = "InsAllReduceMesh1DTwoShotMeshChunk";
 
@@ -228,7 +222,7 @@ TEST_F(AllReduceAICPU1DMeshChunkTest, allreduce_aicpu_case_test_4_rank_Mesh1DTwo
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_SUM;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_950;
-    checkerOpParam.DataDes.count = 26214400; //256M
+    checkerOpParam.DataDes.count = 26214400; // 256M
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_FP32;
     checkerOpParam.algName = "InsAllReduceMesh1DTwoShotMeshChunk";
 
@@ -254,7 +248,7 @@ TEST_F(AllReduceAICPU1DMeshChunkTest, allreduce_aicpu_case_test_4_rank_Mesh1DTwo
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_MIN;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_950;
-    checkerOpParam.DataDes.count = 26214400; //256M
+    checkerOpParam.DataDes.count = 26214400; // 256M
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_FP32;
     checkerOpParam.algName = "InsAllReduceMesh1DTwoShotMeshChunk";
 
@@ -280,7 +274,7 @@ TEST_F(AllReduceAICPU1DMeshChunkTest, allreduce_aicpu_case_test_4_rank_Mesh1DTwo
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_MAX;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_950;
-    checkerOpParam.DataDes.count = 26214400; //256M
+    checkerOpParam.DataDes.count = 26214400; // 256M
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_FP32;
     checkerOpParam.algName = "InsAllReduceMesh1DTwoShotMeshChunk";
 
@@ -306,7 +300,7 @@ TEST_F(AllReduceAICPU1DMeshChunkTest, allreduce_aicpu_case_test_4_rank_Mesh1DTwo
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_SUM;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_950;
-    checkerOpParam.DataDes.count = 52428800; //256M
+    checkerOpParam.DataDes.count = 52428800; // 256M
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_FP16;
     checkerOpParam.algName = "InsAllReduceMesh1DTwoShotMeshChunk";
 
@@ -332,7 +326,7 @@ TEST_F(AllReduceAICPU1DMeshChunkTest, allreduce_aicpu_case_test_4_rank_Mesh1DTwo
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_MIN;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_950;
-    checkerOpParam.DataDes.count = 52428800; //256M
+    checkerOpParam.DataDes.count = 52428800; // 256M
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_FP16;
     checkerOpParam.algName = "InsAllReduceMesh1DTwoShotMeshChunk";
 
@@ -358,7 +352,7 @@ TEST_F(AllReduceAICPU1DMeshChunkTest, allreduce_aicpu_case_test_4_rank_Mesh1DTwo
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
     checkerOpParam.reduceType = CheckerReduceOp::REDUCE_MIN;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_950;
-    checkerOpParam.DataDes.count = 104857600; //256M
+    checkerOpParam.DataDes.count = 104857600; // 256M
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_INT8;
     checkerOpParam.algName = "InsAllReduceMesh1DTwoShotMeshChunk";
 
@@ -394,4 +388,4 @@ TEST_F(AllReduceAICPU1DMeshChunkTest, allreduce_aicpu_case_test_2_rank_Mesh1DTwo
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-}
+} // namespace checker

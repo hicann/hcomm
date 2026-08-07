@@ -22,7 +22,8 @@
 
 class ClearCkeExecutor : public CcuExecutorBase {
 public:
-    explicit ClearCkeExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit ClearCkeExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     ClearCkeExecutor() = default;
@@ -31,7 +32,7 @@ public:
     void Parser() override;
     void Run() override;
     void RunV2();
-    void Process(CcuResourceManager &ccuResMgr) override;
+    void Process(CcuResourceManager& ccuResMgr) override;
     std::string Describe() override;
     CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 

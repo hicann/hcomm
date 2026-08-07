@@ -18,40 +18,40 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepFuncCall : public CcuRepBase {
-public:
-    explicit CcuRepFuncCall(const std::string &label);
-    explicit CcuRepFuncCall(const Variable &funcAddrVar);
-    bool               Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string        Describe() override;
-    uint16_t InstrCount() override;
-    const std::string &GetLabel() const;
+    class CcuRepFuncCall : public CcuRepBase {
+    public:
+        explicit CcuRepFuncCall(const std::string& label);
+        explicit CcuRepFuncCall(const Variable& funcAddrVar);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
+        uint16_t InstrCount() override;
+        const std::string& GetLabel() const;
 
-    void Reference(std::shared_ptr<CcuRepFuncBlock> refRep);
-    void SetFuncManager(CcuRepReferenceManager *funcManager);
+        void Reference(std::shared_ptr<CcuRepFuncBlock> refRep);
+        void SetFuncManager(CcuRepReferenceManager* funcManager);
 
-    void SetInArg(const Variable &var);
-    void SetOutArg(const Variable &var);
-    void SetInArg(const std::vector<Variable> &varList);
-    void SetOutArg(const std::vector<Variable> &varList);
+        void SetInArg(const Variable& var);
+        void SetOutArg(const Variable& var);
+        void SetInArg(const std::vector<Variable>& varList);
+        void SetOutArg(const std::vector<Variable>& varList);
 
-    int32_t GetCallLayer();
+        int32_t GetCallLayer();
 
-private:
-    CcuRepReferenceManager *funcManager{nullptr};
+    private:
+        CcuRepReferenceManager* funcManager{nullptr};
 
-    std::string                      label;
-    std::shared_ptr<CcuRepFuncBlock> funcBlock{nullptr};
-    Variable                         funcAddrVar;
+        std::string label;
+        std::shared_ptr<CcuRepFuncBlock> funcBlock{nullptr};
+        Variable funcAddrVar;
 
-    std::vector<CcuRepArg> inArgs;
-    std::vector<CcuRepArg> outArgs;
-    uint32_t               inArgCount{0};
-    uint32_t               outArgCount{0};
+        std::vector<CcuRepArg> inArgs;
+        std::vector<CcuRepArg> outArgs;
+        uint32_t inArgCount{0};
+        uint32_t outArgCount{0};
 
-    CcuInstr *instr{nullptr};
-};
+        CcuInstr* instr{nullptr};
+    };
 
-};     // namespace CcuRep
-};     // namespace Hccl
+}; // namespace CcuRep
+}; // namespace Hccl
 #endif // HCCL_CCU_REPRESENTATION_FUNC_CALL_H

@@ -20,26 +20,16 @@
 #undef private
 #undef protected
 
-
 using namespace std;
 using namespace Hccl;
 
 class TaskInfoTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "TaskInfoTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "TaskInfoTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "TaskInfoTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "TaskInfoTest tests tear down." << std::endl; }
 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in TaskInfoTest SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in TaskInfoTest SetUP" << std::endl; }
 
     virtual void TearDown()
     {
@@ -181,9 +171,11 @@ TEST_F(TaskInfoTest, test_get_para_dma)
     TaskInfo taskInfo = InitTaskInfo();
     taskInfo.taskParam_.taskType = TaskParamType::TASK_RDMA;
     taskInfo.remoteRank_ = 3;
-    ParaDMA paraDMA {(void*)0xaaaa, (void*)0xbbbb, 0xa, 0xaaaabbbbcccc, 1, DfxLinkType::ONCHIP};
+    ParaDMA paraDMA{(void*)0xaaaa, (void*)0xbbbb, 0xa, 0xaaaabbbbcccc, 1, DfxLinkType::ONCHIP};
     taskInfo.taskParam_.taskPara.DMA = paraDMA;
-    EXPECT_EQ(taskInfo.GetParaInfo(), "src:[0xaaaa], dst:[0xbbbb], size:[0xa], notify id:[0x0000aaaabbbbcccc], link type:[DfxLinkType::ONCHIP], remote rank:[3]");
+    EXPECT_EQ(
+        taskInfo.GetParaInfo(), "src:[0xaaaa], dst:[0xbbbb], size:[0xa], notify id:[0x0000aaaabbbbcccc], link "
+                                "type:[DfxLinkType::ONCHIP], remote rank:[3]");
 }
 
 TEST_F(TaskInfoTest, test_get_para_reduce)
@@ -191,9 +183,19 @@ TEST_F(TaskInfoTest, test_get_para_reduce)
     TaskInfo taskInfo = InitTaskInfo();
     taskInfo.taskParam_.taskType = TaskParamType::TASK_REDUCE_TBE;
     taskInfo.remoteRank_ = UINT32_MAX;
-    ParaReduce paraReduce {(void*)0xaaaa, (void*)0xbbbb, 0xa, 0xaaaabbbbcccc, 1, DfxLinkType::HCCS, HcclReduceOp::HCCL_REDUCE_SUM, HcclDataType::HCCL_DATA_TYPE_INT32};
+    ParaReduce paraReduce{
+        (void*)0xaaaa,
+        (void*)0xbbbb,
+        0xa,
+        0xaaaabbbbcccc,
+        1,
+        DfxLinkType::HCCS,
+        HcclReduceOp::HCCL_REDUCE_SUM,
+        HcclDataType::HCCL_DATA_TYPE_INT32};
     taskInfo.taskParam_.taskPara.Reduce = paraReduce;
-    EXPECT_EQ(taskInfo.GetParaInfo(), "src:[0xaaaa], dst:[0xbbbb], size:[0xa], notify id:[0x0000aaaabbbbcccc], op:[0], data type:[2], link type:[DfxLinkType::HCCS], remote rank:[local]");
+    EXPECT_EQ(
+        taskInfo.GetParaInfo(), "src:[0xaaaa], dst:[0xbbbb], size:[0xa], notify id:[0x0000aaaabbbbcccc], op:[0], data "
+                                "type:[2], link type:[DfxLinkType::HCCS], remote rank:[local]");
 }
 
 TEST_F(TaskInfoTest, test_get_para_notify)
@@ -212,7 +214,8 @@ TEST_F(TaskInfoTest, test_GetIndopBaseInfo)
     taskInfo.streamId_ = 1;
     taskInfo.taskId_ = 7;
     taskInfo.taskParam_.taskType = TaskParamType::TASK_SDMA;
-    EXPECT_EQ(taskInfo.GetIndopBaseInfo(), "streamID(sqId):[1], taskID(sqeId):[7], taskType:[TaskParamType::TASK_SDMA]");
+    EXPECT_EQ(
+        taskInfo.GetIndopBaseInfo(), "streamID(sqId):[1], taskID(sqeId):[7], taskType:[TaskParamType::TASK_SDMA]");
 }
 
 TEST_F(TaskInfoTest, test_GetIndopDataInfo)
@@ -227,7 +230,9 @@ TEST_F(TaskInfoTest, test_GetIndopDataInfo)
     taskInfo.dfxOpInfo_->op_.inputSize = 11;
     taskInfo.dfxOpInfo_->op_.outputAddr = 0x2;
     taskInfo.dfxOpInfo_->op_.outputSize = 22;
-    EXPECT_EQ(taskInfo.GetIndopDataInfo(), "opIndex[1], algTag[allreduce_test], count[1024], reduceType[ReduceOp::SUM], dataType[DataType::INT32], "\
+    EXPECT_EQ(
+        taskInfo.GetIndopDataInfo(),
+        "opIndex[1], algTag[allreduce_test], count[1024], reduceType[ReduceOp::SUM], dataType[DataType::INT32], "
         "input: ptr[0x1] size[11], output: ptr[0x2] size[22]");
 
     taskInfo.dfxOpInfo_ = nullptr;

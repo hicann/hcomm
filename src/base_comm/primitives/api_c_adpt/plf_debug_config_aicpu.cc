@@ -14,14 +14,8 @@ namespace Hccl {
 
 static u64 g_plfDebugConfig = 0;
 
-void SetPlfDebugConfigValue(u64 value)
-{
-    g_plfDebugConfig = value;
-}
+void SetPlfDebugConfigValue(u64 value) { g_plfDebugConfig = value; }
 
-u64 GetPlfDebugConfigValue()
-{
-    return g_plfDebugConfig;
-}
+u64 GetPlfDebugConfigValue() { return g_plfDebugConfig; }
 
-}  // namespace Hccl
+} // namespace Hccl

@@ -28,12 +28,13 @@ public:
 
     std::shared_ptr<AivGraphExecutor> GetAivGraphExecutor(uint32_t rankId, uint64_t launchIdx);
     void Reset();
-    
+
 private:
     AivGraphExecutorMgr() = default;
 
 private:
-    std::map<std::pair<uint32_t, uint64_t>, std::shared_ptr<AivGraphExecutor>> executorMap_{};   // key: <rankId, launchIdx>
+    std::map<std::pair<uint32_t, uint64_t>, std::shared_ptr<AivGraphExecutor>>
+        executorMap_{}; // key: <rankId, launchIdx>
 };
 
-#endif //AIV_AIVGRAPHEXECUTORMGR_H
+#endif // AIV_AIVGRAPHEXECUTORMGR_H

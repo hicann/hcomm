@@ -18,18 +18,17 @@
 
 namespace HcclSim {
 namespace TaskGraphGeneratorV3 {
-struct SyncConflictCheckStats {
-    size_t originalNodeCount{0};
-    size_t copiedNodeCount{0};
-    size_t copiedEdgeCount{0};
-    size_t resourceBucketCount{0};
-    size_t pairCount{0};
-    size_t checkedBucketCount{0};
-    size_t conflictCount{0};
-};
+    struct SyncConflictCheckStats {
+        size_t originalNodeCount{0};
+        size_t copiedNodeCount{0};
+        size_t copiedEdgeCount{0};
+        size_t resourceBucketCount{0};
+        size_t pairCount{0};
+        size_t checkedBucketCount{0};
+        size_t conflictCount{0};
+    };
 
-HcclResult CheckSyncResourceConflict(const TaskNode *start,
-    SyncConflictCheckStats *stats = nullptr);
+    HcclResult CheckSyncResourceConflict(const TaskNode* start, SyncConflictCheckStats* stats = nullptr);
 } // namespace TaskGraphGeneratorV3
 } // namespace HcclSim
 

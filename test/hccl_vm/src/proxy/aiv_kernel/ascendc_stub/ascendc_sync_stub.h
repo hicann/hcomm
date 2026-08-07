@@ -19,7 +19,8 @@
 #include "local_tensor_stub.h"
 
 namespace AscendC {
-inline void pipe_barrier(pipe_t pipe) {
+inline void pipe_barrier(pipe_t pipe)
+{
     auto curBlockIdx = GetBlockIdx();
     auto aiv = AivSim::AivKernelExecutor::GetInstance().GetAivCore(curBlockIdx);
     if (aiv == nullptr) {
@@ -68,7 +69,8 @@ inline void pipe_barrier(pipe_t pipe) {
     }
 }
 
-inline void send_flag(uint32_t targetRank, uint64_t commInfoOffset, int32_t curTag) {
+inline void send_flag(uint32_t targetRank, uint64_t commInfoOffset, int32_t curTag)
+{
     auto curBlockIdx = GetBlockIdx();
     auto aiv = AivSim::AivKernelExecutor::GetInstance().GetAivCore(curBlockIdx);
     if (aiv == nullptr) {
@@ -78,7 +80,8 @@ inline void send_flag(uint32_t targetRank, uint64_t commInfoOffset, int32_t curT
     aiv->AppendScalar(std::make_shared<AivSim::AivTaskSendFlag>(targetRank, commInfoOffset, curTag));
 }
 
-inline void recv_flag(uint32_t targetRank, uint64_t commInfoOffset, int32_t curTag) {
+inline void recv_flag(uint32_t targetRank, uint64_t commInfoOffset, int32_t curTag)
+{
     auto curBlockIdx = GetBlockIdx();
     auto aiv = AivSim::AivKernelExecutor::GetInstance().GetAivCore(curBlockIdx);
     if (aiv == nullptr) {
@@ -89,11 +92,13 @@ inline void recv_flag(uint32_t targetRank, uint64_t commInfoOffset, int32_t curT
 }
 
 template <pipe_t pipe>
-__aicore__ void PipeBarrier() {
+__aicore__ void PipeBarrier()
+{
     pipe_barrier(pipe);
 }
 
-pipe_t inline GetEventSrcPipe(HardEvent event) {
+pipe_t inline GetEventSrcPipe(HardEvent event)
+{
     switch (event) {
         case HardEvent::MTE3_MTE2:
         case HardEvent::MTE3_S:
@@ -113,7 +118,8 @@ pipe_t inline GetEventSrcPipe(HardEvent event) {
     }
 }
 
-pipe_t inline GetEventDstPipe(HardEvent event) {
+pipe_t inline GetEventDstPipe(HardEvent event)
+{
     switch (event) {
         case HardEvent::MTE3_S:
         case HardEvent::MTE2_S:
@@ -134,7 +140,8 @@ pipe_t inline GetEventDstPipe(HardEvent event) {
 }
 
 template <HardEvent event>
-__aicore__ void SetFlag(TEventID eventID) {
+__aicore__ void SetFlag(TEventID eventID)
+{
     auto curBlockIdx = GetBlockIdx();
     auto aiv = AivSim::AivKernelExecutor::GetInstance().GetAivCore(curBlockIdx);
     if (aiv == nullptr) {
@@ -162,7 +169,8 @@ __aicore__ void SetFlag(TEventID eventID) {
 }
 
 template <HardEvent event>
-__aicore__ void WaitFlag(TEventID eventID) {
+__aicore__ void WaitFlag(TEventID eventID)
+{
     auto curBlockIdx = GetBlockIdx();
     auto aiv = AivSim::AivKernelExecutor::GetInstance().GetAivCore(curBlockIdx);
     if (aiv == nullptr) {
@@ -190,7 +198,8 @@ __aicore__ void WaitFlag(TEventID eventID) {
 }
 
 template <bool isAIVOnly = true>
-__aicore__ void SyncAll() {
+__aicore__ void SyncAll()
+{
     auto curBlockIdx = GetBlockIdx();
     auto aiv = AivSim::AivKernelExecutor::GetInstance().GetAivCore(curBlockIdx);
     if (aiv == nullptr) {
@@ -202,6 +211,6 @@ __aicore__ void SyncAll() {
     aiv->AppendMTE2(std::make_shared<AivSim::AivTaskSyncAll>(curSyncRound));
     aiv->AppendMTE3(std::make_shared<AivSim::AivTaskSyncAll>(curSyncRound));
 }
-}
+} // namespace AscendC
 
 #endif // ASCEND_C_SYNC_STUB_H

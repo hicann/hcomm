@@ -16,13 +16,15 @@
 #include "subcmd_plugin.h"
 
 namespace HcclSim {
-void PluginCommand::Setup(CLI::App& app) {
+void PluginCommand::Setup(CLI::App& app)
+{
     auto sub_plugin = app.add_subcommand("plugin", "插件管理子命令");
     sub_plugin->require_subcommand(1);
     // install
     auto plugin_install = sub_plugin->add_subcommand("install", "安装插件");
-    plugin_install->add_option("name", plugName, "插件文件名")->required()
-        ->check([](const std::string &value) -> std::string {
+    plugin_install->add_option("name", plugName, "插件文件名")
+        ->required()
+        ->check([](const std::string& value) -> std::string {
             if (value.length() > 1 && value[0] == '@') {
                 return ""; // 返回空串表示通过
             }
@@ -33,20 +35,23 @@ void PluginCommand::Setup(CLI::App& app) {
     });
     // uninstall
     auto plugin_uninstall = sub_plugin->add_subcommand("uninstall", "卸载插件");
-    plugin_uninstall->add_option("name", plugName, "插件文件名")->required()
-        ->check([](const std::string &value) -> std::string {
+    plugin_uninstall->add_option("name", plugName, "插件文件名")
+        ->required()
+        ->check([](const std::string& value) -> std::string {
             if (value.length() > 1 && value[0] == '@') {
                 return ""; // 返回空串表示通过
             }
-            return "[HVM] [ERROR] Uninstall plugin : Invalid format! Plugin name must start with '@' (e.g., @myplugin).";
+            return "[HVM] [ERROR] Uninstall plugin : Invalid format! Plugin name must start with '@' (e.g., "
+                   "@myplugin).";
         });
     plugin_uninstall->callback([&]() {
         auto ret = UninstallUserPlugin(plugName);
     });
     // run
     auto plugin_run = sub_plugin->add_subcommand("run", "运行插件"); // todo
-    plugin_run->add_option("name", plugName, "插件文件名")->required()
-        ->check([](const std::string &value) -> std::string {
+    plugin_run->add_option("name", plugName, "插件文件名")
+        ->required()
+        ->check([](const std::string& value) -> std::string {
             if (value.length() > 1 && value[0] == '@') {
                 return ""; // 返回空串表示通过
             }
@@ -63,4 +68,4 @@ void PluginCommand::Setup(CLI::App& app) {
 }
 
 static inline CommandAutoRegister<PluginCommand> g_plugin_cmd_reg{};
-}
+} // namespace HcclSim

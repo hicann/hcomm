@@ -26,10 +26,7 @@ namespace sim {
 
 thread_local static sim::SubProcessManager g_aiCpuProcMgr;
 
-SubProcessManager &GetAicpuProcMgr()
-{
-    return g_aiCpuProcMgr;
-}
+SubProcessManager& GetAicpuProcMgr() { return g_aiCpuProcMgr; }
 
 SubProcessManager::~SubProcessManager()
 {
@@ -72,13 +69,13 @@ int SubProcessManager::CreateProcess(const SubProcessConfig& config)
     // device进程执行参数拼接
     std::vector<char*> argv;
     for (const auto& arg : config.args) {
-        argv.push_back(const_cast<char *>(arg.c_str()));
+        argv.push_back(const_cast<char*>(arg.c_str()));
     }
 
     std::string h2dReadFdStr = std::to_string(kH2dReadFd);
     std::string d2hWriteFdStr = std::to_string(kD2hWriteFd);
-    argv.push_back(const_cast<char *>(h2dReadFdStr.c_str()));
-    argv.push_back(const_cast<char *>(d2hWriteFdStr.c_str()));
+    argv.push_back(const_cast<char*>(h2dReadFdStr.c_str()));
+    argv.push_back(const_cast<char*>(d2hWriteFdStr.c_str()));
     argv.push_back(nullptr);
 
     if (pid == 0) {
@@ -94,8 +91,8 @@ int SubProcessManager::CreateProcess(const SubProcessConfig& config)
     }
 
     m_pid = pid;
-    sim::PipeClose(h2dPipe.readFd);   // 主进程不读 h2dPipe
-    sim::PipeClose(d2hPipe.writeFd);  // 主进程不写 d2hPipe
+    sim::PipeClose(h2dPipe.readFd);  // 主进程不读 h2dPipe
+    sim::PipeClose(d2hPipe.writeFd); // 主进程不写 d2hPipe
     m_h2dWriteFd = h2dPipe.writeFd;
     m_d2hReadFd = d2hPipe.readFd;
 
@@ -159,8 +156,9 @@ int SubProcessManager::DestroyProcess(int timeoutMs)
             break;
         }
 
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - startTime).count();
+        auto elapsed
+            = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime)
+                  .count();
         if (elapsed >= timeoutMs) {
             HCCL_VM_WARN("Child process {} did not exit within {} ms, SIGKILL.", m_pid, timeoutMs);
             kill(m_pid, SIGKILL);
@@ -179,7 +177,7 @@ int SubProcessManager::DestroyProcess(int timeoutMs)
 bool SubProcessManager::IsAlive() const
 {
     if (m_pid < 0) {
-         return false;
+        return false;
     }
 
     int status = 0;
@@ -187,8 +185,9 @@ bool SubProcessManager::IsAlive() const
     return wPid == 0;
 }
 
-int SubProcessManager::Request(uint8_t reqCmd, const void* reqData, uint32_t reqLen,
-                               uint8_t& rspCmd, void* rspData, uint32_t rspMaxLen, uint32_t& rspLen)
+int SubProcessManager::Request(
+    uint8_t reqCmd, const void* reqData, uint32_t reqLen, uint8_t& rspCmd, void* rspData, uint32_t rspMaxLen,
+    uint32_t& rspLen)
 {
     std::lock_guard<std::mutex> lock(m_rpcLock);
     if (HostSendMsg(reqCmd, reqData, reqLen) != 0) {
@@ -226,8 +225,7 @@ bool IsAarch64Host()
 {
     utsname utsBuf;
     uname(&utsBuf);
-    return (std::strstr(utsBuf.machine, "aarch64") != nullptr ||
-            std::strstr(utsBuf.machine, "arm") != nullptr);
+    return (std::strstr(utsBuf.machine, "aarch64") != nullptr || std::strstr(utsBuf.machine, "arm") != nullptr);
 }
 
 SubProcessConfig CreateAicpuDeviceConfig(uint32_t rankId, uint32_t deviceKey)
@@ -265,4 +263,4 @@ SubProcessConfig CreateAicpuDeviceConfig(uint32_t rankId, uint32_t deviceKey)
     return config;
 }
 
-}
+} // namespace sim

@@ -21,25 +21,21 @@ using namespace Hccl;
 
 class ControlPlaneParserTest : public testing::Test {
 protected:
-    static void SetUpTestCase() {
-        std::cout << "ControlPlaneParserTest SetUP" << std::endl;
-    }
- 
-    static void TearDownTestCase() {
-        std::cout << "ControlPlaneParserTest TearDown" << std::endl;
-    }
- 
-    virtual void SetUp() {
-        std::cout << "A Test case in ControlPlaneParserTest SetUP" << std::endl;
-    }
- 
-    virtual void TearDown() {
+    static void SetUpTestCase() { std::cout << "ControlPlaneParserTest SetUP" << std::endl; }
+
+    static void TearDownTestCase() { std::cout << "ControlPlaneParserTest TearDown" << std::endl; }
+
+    virtual void SetUp() { std::cout << "A Test case in ControlPlaneParserTest SetUP" << std::endl; }
+
+    virtual void TearDown()
+    {
         GlobalMockObject::verify();
         std::cout << "A Test case in ControlPlaneParserTest TearDown" << std::endl;
     }
 };
 
-TEST_F(ControlPlaneParserTest, St_Deserialize_When_Normal_Expect_Success) {
+TEST_F(ControlPlaneParserTest, St_Deserialize_When_Normal_Expect_Success)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -53,21 +49,21 @@ TEST_F(ControlPlaneParserTest, St_Deserialize_When_Normal_Expect_Success) {
     JsonParser controlPlaneParser;
     ControlPlane controlPlane;
     controlPlaneParser.ParseString(controlPlaneString, controlPlane);
-    
+
     ControlPlane controlPlane0;
-    controlPlane0.addrType=AddrType::IPV4;
+    controlPlane0.addrType = AddrType::IPV4;
     IpAddress ipAddress0("192.168.100.100", AF_INET);
-    controlPlane0.addr=ipAddress0;
-    controlPlane0.listenPort=8000;
+    controlPlane0.addr = ipAddress0;
+    controlPlane0.listenPort = 8000;
     controlPlane.Describe();
 
-
     EXPECT_EQ(controlPlane0.addrType, controlPlane.addrType);
-    EXPECT_EQ(controlPlane0.addr , controlPlane.addr);
+    EXPECT_EQ(controlPlane0.addr, controlPlane.addr);
     EXPECT_EQ(controlPlane0.listenPort, controlPlane.listenPort);
 }
 
-TEST_F(ControlPlaneParserTest, St_Deserialize_When_EID_Expect_Success) {
+TEST_F(ControlPlaneParserTest, St_Deserialize_When_EID_Expect_Success)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -81,17 +77,17 @@ TEST_F(ControlPlaneParserTest, St_Deserialize_When_EID_Expect_Success) {
     JsonParser controlPlaneParser;
     ControlPlane controlPlane;
     controlPlaneParser.ParseString(controlPlaneString, controlPlane);
-    
+
     ControlPlane controlPlane0;
-    controlPlane0.addrType=AddrType::EID;
-    Eid eid0=IpAddress::StrToEID("000000000000002000100000df001007");
+    controlPlane0.addrType = AddrType::EID;
+    Eid eid0 = IpAddress::StrToEID("000000000000002000100000df001007");
     IpAddress ipAddress0(eid0);
-    controlPlane0.addr=ipAddress0;
-    controlPlane0.listenPort=8000;
+    controlPlane0.addr = ipAddress0;
+    controlPlane0.listenPort = 8000;
     controlPlane.Describe();
 
     EXPECT_EQ(controlPlane0.addrType, controlPlane.addrType);
-    EXPECT_EQ(controlPlane0.addr , controlPlane.addr);
+    EXPECT_EQ(controlPlane0.addr, controlPlane.addr);
     EXPECT_EQ(controlPlane0.listenPort, controlPlane.listenPort);
 
     BinaryStream binStream;
@@ -102,7 +98,8 @@ TEST_F(ControlPlaneParserTest, St_Deserialize_When_EID_Expect_Success) {
     EXPECT_EQ(controlPlane1.listenPort, controlPlane.listenPort);
 }
 
-TEST_F(ControlPlaneParserTest, St_Deserialize_When_IPV6_Expect_Success) {
+TEST_F(ControlPlaneParserTest, St_Deserialize_When_IPV6_Expect_Success)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -116,21 +113,21 @@ TEST_F(ControlPlaneParserTest, St_Deserialize_When_IPV6_Expect_Success) {
     JsonParser controlPlaneParser;
     ControlPlane controlPlane;
     controlPlaneParser.ParseString(controlPlaneString, controlPlane);
-    
+
     ControlPlane controlPlane0;
-    controlPlane0.addrType=AddrType::IPV6;
+    controlPlane0.addrType = AddrType::IPV6;
     IpAddress ipAddress0("fe80:0000:0001:0000:0440:44ff:1233:5678", AF_INET6);
-    controlPlane0.addr=ipAddress0;
-    controlPlane0.listenPort=8000;
+    controlPlane0.addr = ipAddress0;
+    controlPlane0.listenPort = 8000;
     controlPlane.Describe();
 
-
     EXPECT_EQ(controlPlane0.addrType, controlPlane.addrType);
-    EXPECT_EQ(controlPlane0.addr , controlPlane.addr);
+    EXPECT_EQ(controlPlane0.addr, controlPlane.addr);
     EXPECT_EQ(controlPlane0.listenPort, controlPlane.listenPort);
 }
 
-TEST_F(ControlPlaneParserTest, St_Deserialize_When_InvalidAddrType_Expect_Exception) {
+TEST_F(ControlPlaneParserTest, St_Deserialize_When_InvalidAddrType_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -148,7 +145,8 @@ TEST_F(ControlPlaneParserTest, St_Deserialize_When_InvalidAddrType_Expect_Except
     EXPECT_THROW(controlPlaneParser.ParseString(controlPlaneString, controlPlane), InvalidParamsException);
 }
 
-TEST_F(ControlPlaneParserTest, St_Deserialize_When_InvalidAddr_Expect_Exception) {
+TEST_F(ControlPlaneParserTest, St_Deserialize_When_InvalidAddr_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -166,7 +164,8 @@ TEST_F(ControlPlaneParserTest, St_Deserialize_When_InvalidAddr_Expect_Exception)
     EXPECT_THROW(controlPlaneParser.ParseString(controlPlaneString, controlPlane), InvalidParamsException);
 }
 
-TEST_F(ControlPlaneParserTest, St_Deserialize_When_InvalidListenPort_Expect_Exception) {
+TEST_F(ControlPlaneParserTest, St_Deserialize_When_InvalidListenPort_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -183,4 +182,3 @@ TEST_F(ControlPlaneParserTest, St_Deserialize_When_InvalidListenPort_Expect_Exce
 
     EXPECT_THROW(controlPlaneParser.ParseString(controlPlaneString, controlPlane), InvalidParamsException);
 }
-

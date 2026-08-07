@@ -21,7 +21,7 @@ struct CcuLoopAddKernelArg {
 CcuResult CcuLoopAddDemoKernel(CcuKernelArg arg)
 {
     using namespace ccu;
-    auto *args = static_cast<CcuLoopAddKernelArg *>(arg);
+    auto* args = static_cast<CcuLoopAddKernelArg*>(arg);
 
     Variable r1{}, r2{}, r3{}, r4{}, r5{}, r6{}, r7{}, numA{}, numB{};
 
@@ -43,10 +43,8 @@ CcuResult CcuLoopAddDemoKernel(CcuKernelArg arg)
     Loop loop1(cfg1, body1);
     Loop loop2(cfg2, body2);
 
-    LoopGroupConfig grpCfg1 = {
-        .cloneNum = 0, .cloneLoopOffset = 0,
-        .addrOffset = 0, .ccuBufferOffset = 0, .eventOffset = 0
-    };
+    LoopGroupConfig grpCfg1
+        = {.cloneNum = 0, .cloneLoopOffset = 0, .addrOffset = 0, .ccuBufferOffset = 0, .eventOffset = 0};
     LoopGroup group1(grpCfg1, /*maxLoopNum=*/2, {loop1, loop2});
 
     r4 = numA + numB;
@@ -58,10 +56,8 @@ CcuResult CcuLoopAddDemoKernel(CcuKernelArg arg)
     LoopConfig cfg3 = {.addrOffset = 4096, .iterNum = 4};
     Loop loop3(cfg3, body3);
 
-    LoopGroupConfig grpCfg2 = {
-        .cloneNum = 3, .cloneLoopOffset = 1,
-        .addrOffset = 4096, .ccuBufferOffset = 1, .eventOffset = 1
-    };
+    LoopGroupConfig grpCfg2
+        = {.cloneNum = 3, .cloneLoopOffset = 1, .addrOffset = 4096, .ccuBufferOffset = 1, .eventOffset = 1};
     LoopGroup group2(grpCfg2, /*maxLoopNum=*/2, {loop2, loop3});
 
     // ========== LoopGroup 3 (var-based): variable group with two distinct var-loops ==========
@@ -69,8 +65,8 @@ CcuResult CcuLoopAddDemoKernel(CcuKernelArg arg)
 
     varLoopParam4 = 0x0001000200030000ULL;
     varLoopParam5 = 0x0002000300040000ULL;
-    varParallel   = 0x0002000100020000ULL;
-    varOffset     = 0x1000000100010000ULL;
+    varParallel = 0x0002000100020000ULL;
+    varOffset = 0x1000000100010000ULL;
 
     Func body4([&]() {
         r6 = numA + numB;
@@ -133,8 +129,8 @@ CcuResult CcuV2CompatLoopGroupDemoKernel(CcuKernelArg arg)
     Variable varLoopParam1{}, varLoopParam2{}, varParallel{}, varOffset{};
     varLoopParam1 = 0x0001000200030000ULL;
     varLoopParam2 = 0x0002000300040000ULL;
-    varParallel   = 0x0002000100020000ULL;
-    varOffset     = 0x1000000100010000ULL;
+    varParallel = 0x0002000100020000ULL;
+    varOffset = 0x1000000100010000ULL;
 
     Func body1([&]() {
         r1 = numA + numB;
@@ -172,10 +168,8 @@ CcuResult CcuV2ConfigLoopGroupDemoKernel(CcuKernelArg arg)
     Loop loop1(cfg1, body1);
     Loop loop2(cfg2, body2);
 
-    LoopGroupConfig grpCfg = {
-        .cloneNum = 3, .cloneLoopOffset = 1,
-        .addrOffset = 4096, .ccuBufferOffset = 1, .eventOffset = 1
-    };
+    LoopGroupConfig grpCfg
+        = {.cloneNum = 3, .cloneLoopOffset = 1, .addrOffset = 4096, .ccuBufferOffset = 1, .eventOffset = 1};
     LoopGroup group(grpCfg, /*maxLoopNum=*/2, {loop1, loop2});
 
     return CcuResult::CCU_SUCCESS;
@@ -196,19 +190,23 @@ CcuResult CcuV2MixedLoopGroupDemoKernel(CcuKernelArg arg)
     iter3 = 4;
     gsa3 = 4096;
 
-    Func body1([&]() { r1 = numA + numB; });
-    Func body2([&]() { r2 = numA + numB; });
-    Func body3([&]() { r3 = numA + numB; });
+    Func body1([&]() {
+        r1 = numA + numB;
+    });
+    Func body2([&]() {
+        r2 = numA + numB;
+    });
+    Func body3([&]() {
+        r3 = numA + numB;
+    });
 
     LoopConfig cfg1 = {.addrOffset = 0, .iterNum = 2};
-    Loop loop1(cfg1, body1);            // config loop
-    Loop loop2(varLoopParam2, body2);   // packed-var loop
-    Loop loop3(iter3, gsa3, body3);     // v2 var-direct loop
+    Loop loop1(cfg1, body1);          // config loop
+    Loop loop2(varLoopParam2, body2); // packed-var loop
+    Loop loop3(iter3, gsa3, body3);   // v2 var-direct loop
 
-    LoopGroupConfig grpCfg = {
-        .cloneNum = 3, .cloneLoopOffset = 1,
-        .addrOffset = 4096, .ccuBufferOffset = 1, .eventOffset = 1
-    };
+    LoopGroupConfig grpCfg
+        = {.cloneNum = 3, .cloneLoopOffset = 1, .addrOffset = 4096, .ccuBufferOffset = 1, .eventOffset = 1};
     LoopGroup group(grpCfg, /*maxLoopNum=*/3, {loop1, loop2, loop3});
 
     return CcuResult::CCU_SUCCESS;
@@ -224,18 +222,25 @@ CcuResult CcuV2LoopGroupCfgDemoKernel(CcuKernelArg arg)
     numA = 3;
     numB = 4;
 
-    Func body1([&]() { r1 = numA + numB; });
-    Func body2([&]() { r2 = numA + numB; });
+    Func body1([&]() {
+        r1 = numA + numB;
+    });
+    Func body2([&]() {
+        r2 = numA + numB;
+    });
 
     LoopCfg cfg1 = {.addrOffset = 0, .iterNum = 2};
     LoopCfg cfg2 = {.addrOffset = 4096, .iterNum = 4};
     Loop loop1(cfg1, body1);
     Loop loop2(cfg2, body2);
 
-    LoopGroupCfg grpCfg = {
-        .cloneNum = 3, .cloneLoopOffset = 1,
-        .addrOffset = 4096, .ccuBufferOffset = 1, .eventOffset = 1, .varOffset = 7
-    };
+    LoopGroupCfg grpCfg
+        = {.cloneNum = 3,
+           .cloneLoopOffset = 1,
+           .addrOffset = 4096,
+           .ccuBufferOffset = 1,
+           .eventOffset = 1,
+           .varOffset = 7};
     LoopGroup group(grpCfg, /*maxLoopNum=*/2, {loop1, loop2});
 
     return CcuResult::CCU_SUCCESS;
@@ -256,22 +261,28 @@ CcuResult CcuA5MixedLoopCountDemoKernel(CcuKernelArg arg)
     Variable varLoopParam1{}, varLoopParam2{}, varParallel{}, varOffset{};
     varLoopParam1 = 0x0001000200030000ULL;
     varLoopParam2 = 0x0002000300040000ULL;
-    varParallel   = 0x0002000100020000ULL;
-    varOffset     = 0x1000000100010000ULL;
+    varParallel = 0x0002000100020000ULL;
+    varOffset = 0x1000000100010000ULL;
 
-    Func body1([&]() { r1 = numA + numB; });
-    Func body2([&]() { r2 = numA + numB; });
-    Func body3([&]() { r3 = numA + numB; });
-    Func body4([&]() { r4 = numA + numB; });
+    Func body1([&]() {
+        r1 = numA + numB;
+    });
+    Func body2([&]() {
+        r2 = numA + numB;
+    });
+    Func body3([&]() {
+        r3 = numA + numB;
+    });
+    Func body4([&]() {
+        r4 = numA + numB;
+    });
 
     // config group 混入 1 个 config loop + 1 个 packed-var loop
     LoopConfig cfg1 = {.addrOffset = 0, .iterNum = 2};
     Loop cfgLoop1(cfg1, body1);
     Loop varLoop1(varLoopParam1, body2);
-    LoopGroupConfig grpCfg = {
-        .cloneNum = 3, .cloneLoopOffset = 1,
-        .addrOffset = 4096, .ccuBufferOffset = 1, .eventOffset = 1
-    };
+    LoopGroupConfig grpCfg
+        = {.cloneNum = 3, .cloneLoopOffset = 1, .addrOffset = 4096, .ccuBufferOffset = 1, .eventOffset = 1};
     LoopGroup cfgGroup(grpCfg, /*maxLoopNum=*/2, {cfgLoop1, varLoop1});
 
     // var group 混入 1 个 config loop + 1 个 packed-var loop（totalLoopNum 应保持 0）
@@ -298,30 +309,38 @@ CcuResult CcuA6MixedLoopCountDemoKernel(CcuKernelArg arg)
     Variable packedVar{}, iterA{}, gsaA{}, iterB{}, gsaB{};
     packedVar = 0x0002000300040000ULL;
     iterA = 2;
-    gsaA  = 0;
+    gsaA = 0;
     iterB = 4;
-    gsaB  = 4096;
+    gsaB = 4096;
 
     Variable parallelV2{}, offsetV2{}, xnOffsetV2{};
     parallelV2 = 0x0002000100020000ULL;
-    offsetV2   = 0x1000000100010000ULL;
+    offsetV2 = 0x1000000100010000ULL;
     xnOffsetV2 = 0x0000000300040000ULL;
 
-    Func body1([&]() { r1 = numA + numB; });
-    Func body2([&]() { r2 = numA + numB; });
-    Func body3([&]() { r3 = numA + numB; });
-    Func body4([&]() { r4 = numA + numB; });
-    Func body5([&]() { r5 = numA + numB; });
+    Func body1([&]() {
+        r1 = numA + numB;
+    });
+    Func body2([&]() {
+        r2 = numA + numB;
+    });
+    Func body3([&]() {
+        r3 = numA + numB;
+    });
+    Func body4([&]() {
+        r4 = numA + numB;
+    });
+    Func body5([&]() {
+        r5 = numA + numB;
+    });
 
     // config group 混入 config + packed-var + v2-var 三种 loop
     LoopConfig cfg1 = {.addrOffset = 0, .iterNum = 2};
     Loop cfgLoop1(cfg1, body1);
     Loop packedLoop(packedVar, body2);
     Loop v2Loop1(iterA, gsaA, body3);
-    LoopGroupConfig grpCfg = {
-        .cloneNum = 3, .cloneLoopOffset = 1,
-        .addrOffset = 4096, .ccuBufferOffset = 1, .eventOffset = 1
-    };
+    LoopGroupConfig grpCfg
+        = {.cloneNum = 3, .cloneLoopOffset = 1, .addrOffset = 4096, .ccuBufferOffset = 1, .eventOffset = 1};
     LoopGroup cfgGroup(grpCfg, /*maxLoopNum=*/3, {cfgLoop1, packedLoop, v2Loop1});
 
     // V2 var group 混入 v2-var loop + config loop（totalLoopNum 应保持 0）
@@ -356,7 +375,8 @@ inline CcuResult CcuIfInLoopInvalidDemoKernel(CcuKernelArg arg)
     Variable v{};
     v = 0;
     Func body([&]() {
-        CCU_IF(v == 0) {
+        CCU_IF(v == 0)
+        {
             Variable t{};
             t = v + v;
         }
@@ -434,12 +454,24 @@ CcuResult CcuLoopCfgDemoKernel(CcuKernelArg arg)
 
     // 每个 Loop 各自 compose 一份独立 body
     Variable s1{}, s2{}, s3{}, s4{}, s5{}, s6{};
-    Func body1([&]() { s1 = a + b; });
-    Func body2([&]() { s2 = a + b; });
-    Func body3([&]() { s3 = a + b; });
-    Func body4([&]() { s4 = a + b; });
-    Func body5([&]() { s5 = a + b; });
-    Func body6([&]() { s6 = a + b; });
+    Func body1([&]() {
+        s1 = a + b;
+    });
+    Func body2([&]() {
+        s2 = a + b;
+    });
+    Func body3([&]() {
+        s3 = a + b;
+    });
+    Func body4([&]() {
+        s4 = a + b;
+    });
+    Func body5([&]() {
+        s5 = a + b;
+    });
+    Func body6([&]() {
+        s6 = a + b;
+    });
 
     // config 型 loop
     LoopConfig cfg = {.addrOffset = 0, .iterNum = 2};
@@ -456,10 +488,8 @@ CcuResult CcuLoopCfgDemoKernel(CcuKernelArg arg)
     Loop lv2(lp2, body5);
     Loop lv3(lp3, body6);
 
-    LoopGroupConfig cfgGrp = {
-        .cloneNum = 0, .cloneLoopOffset = 0,
-        .addrOffset = 0, .ccuBufferOffset = 0, .eventOffset = 0
-    };
+    LoopGroupConfig cfgGrp
+        = {.cloneNum = 0, .cloneLoopOffset = 0, .addrOffset = 0, .ccuBufferOffset = 0, .eventOffset = 0};
 
     // ===== config 型 group（totalLoopNum 以立即数编码，必须等于 loop 总数）=====
     // 1) config group + config loops  -> loops=2, totalLoopNum=2

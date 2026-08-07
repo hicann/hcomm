@@ -57,19 +57,10 @@ using namespace hccl;
 
 class PrepareSliceTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "PrepareSliceTest SetUP" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "PrepareSliceTest TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "PrepareSliceTest SetUP" << std::endl; }
+    static void TearDownTestCase() { std::cout << "PrepareSliceTest TearDown" << std::endl; }
     // Some expensive resource shared by all tests.
-    virtual void SetUp()
-    {
-        std::cout << "A Test SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test SetUP" << std::endl; }
     virtual void TearDown()
     {
         GlobalMockObject::verify();
@@ -77,34 +68,33 @@ protected:
     }
 };
 
-
-
 TEST_F(PrepareSliceTest, ut_slice)
 {
     s32 ret = 0;
     Stream mainstream;
-    void *dispatcherPtr = nullptr;
+    void* dispatcherPtr = nullptr;
     ret = HcclDispatcherInit(DispatcherType::DISPATCHER_NORMAL, 0, &dispatcherPtr);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_NE(dispatcherPtr, nullptr);
-    DispatcherPub * dispatcher = reinterpret_cast<DispatcherPub*>(dispatcherPtr);
+    DispatcherPub* dispatcher = reinterpret_cast<DispatcherPub*>(dispatcherPtr);
     std::vector<Stream> meshStreams;
     std::vector<std::shared_ptr<LocalNotify>> meshSignal;
     std::vector<std::shared_ptr<LocalNotify>> meshSignalAux;
     HcomCollOpInfo opInfo;
 
-	DeviceMem inputMem = DeviceMem::create(0, 1024);
-	DeviceMem outputMem = DeviceMem::create(0, 1024);
+    DeviceMem inputMem = DeviceMem::create(0, 1024);
+    DeviceMem outputMem = DeviceMem::create(0, 1024);
 
-	opInfo.outputAddr = inputMem.ptr();
+    opInfo.outputAddr = inputMem.ptr();
 
     std::vector<Slice> dataSlice;
     std::vector<Slice> startOffset;
 
-	std::unique_ptr<AllReduceLocalReduce> tempAlg;
+    std::unique_ptr<AllReduceLocalReduce> tempAlg;
     tempAlg.reset(new (std::nothrow) AllReduceLocalReduce(dispatcher));
     tempAlg->Prepare(0, meshStreams, meshSignal, meshSignalAux, 0, 8, 0, &opInfo);
-    tempAlg->Prepare(outputMem, outputMem, outputMem, 17, HcclDataType::HCCL_DATA_TYPE_FP16, mainstream,
+    tempAlg->Prepare(
+        outputMem, outputMem, outputMem, 17, HcclDataType::HCCL_DATA_TYPE_FP16, mainstream,
         HcclReduceOp::HCCL_REDUCE_SUM, 0, dataSlice, 0);
 
     tempAlg->PrepareSlice(17, 2, 8, dataSlice, startOffset);

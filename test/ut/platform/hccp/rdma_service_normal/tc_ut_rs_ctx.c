@@ -26,47 +26,47 @@
 #include "dl_hal_function.h"
 #include "hccp_msg.h"
 
-extern void RsUbCtxDrvJettyDelete(struct RsCtxJettyCb *jettyCb);
-extern void RsUbCtxFreeJettyCb(struct RsCtxJettyCb *jettyCb);
+extern void RsUbCtxDrvJettyDelete(struct RsCtxJettyCb* jettyCb);
+extern void RsUbCtxFreeJettyCb(struct RsCtxJettyCb* jettyCb);
 extern int RsCcuDeviceApiInit(void);
 extern int RsOpenCcuSo(void);
 extern void RsCloseCcuSo(void);
-extern int RsEschedProcessEvent(struct rs_cb *rscb, struct event_info *event);
-extern void RsEschedHandleEvent(struct rs_cb *rscb);
-extern void RsEschedAckEvent(struct rs_cb *rscb, struct event_info *event);
+extern int RsEschedProcessEvent(struct rs_cb* rscb, struct event_info* event);
+extern void RsEschedHandleEvent(struct rs_cb* rscb);
+extern void RsEschedAckEvent(struct rs_cb* rscb, struct event_info* event);
 extern int RsNetApiInit(void);
 extern void RsNetApiDeinit(void);
-extern int RsNetAllocJfcId(const char *udevName, unsigned int jfcMode, unsigned int *jfcId);
-extern int RsNetFreeJfcId(const char *udevName, unsigned int jfcMode, unsigned int jfcId);
-extern int RsNetAllocJettyId(const char *udevName, unsigned int jettyMode, unsigned int *jettyId);
-extern int RsNetFreeJettyId(const char *udevName, unsigned int jettyMode, unsigned int jettyId);
-extern int RsNetGetCqeBaseAddr(unsigned int dieId, unsigned long long *cqeBaseAddr);
-extern int RsCcuGetCqeBaseAddr(unsigned int dieId, unsigned long long *cqeBaseAddr);
+extern int RsNetAllocJfcId(const char* udevName, unsigned int jfcMode, unsigned int* jfcId);
+extern int RsNetFreeJfcId(const char* udevName, unsigned int jfcMode, unsigned int jfcId);
+extern int RsNetAllocJettyId(const char* udevName, unsigned int jettyMode, unsigned int* jettyId);
+extern int RsNetFreeJettyId(const char* udevName, unsigned int jettyMode, unsigned int jettyId);
+extern int RsNetGetCqeBaseAddr(unsigned int dieId, unsigned long long* cqeBaseAddr);
+extern int RsCcuGetCqeBaseAddr(unsigned int dieId, unsigned long long* cqeBaseAddr);
 
 struct rs_cb stubRsCb;
 struct RsUbDevCb stubDevCb;
 struct RsUbDevCb crErrDevCb = {0};
 
-int StubRsUbGetDevCbCrErr(struct rs_cb *rscb, unsigned int devIndex, struct RsUbDevCb **devCb)
+int StubRsUbGetDevCbCrErr(struct rs_cb* rscb, unsigned int devIndex, struct RsUbDevCb** devCb)
 {
     *devCb = &crErrDevCb;
     return 0;
 }
 
-int StubRsGetRsCbV1(unsigned int phyId, struct rs_cb **rsCb)
+int StubRsGetRsCbV1(unsigned int phyId, struct rs_cb** rsCb)
 {
     *rsCb = &stubRsCb;
     return 0;
 }
 
-int StubRsUbGetDevCb(struct rs_cb *rscb, unsigned int devIndex, struct RsUbDevCb **devCb)
+int StubRsUbGetDevCb(struct rs_cb* rscb, unsigned int devIndex, struct RsUbDevCb** devCb)
 {
     stubDevCb.rscb = &stubRsCb;
     *devCb = &stubDevCb;
     return 0;
 }
 
-int StubRsGetRsCb(unsigned int phyId, struct rs_cb **rsCb)
+int StubRsGetRsCb(unsigned int phyId, struct rs_cb** rsCb)
 {
     static struct rs_cb rsCbTmp = {0};
 
@@ -427,7 +427,7 @@ void TcRsCtxEsched()
     mocker(RsUbCtxFreeJettyCb, 10, 0);
 
     event.priv.msg_len = sizeof(struct TagTsHccpMsg);
-    struct TagTsHccpMsg  *hccpMsg = (struct TagTsHccpMsg *)event.priv.msg;
+    struct TagTsHccpMsg* hccpMsg = (struct TagTsHccpMsg*)event.priv.msg;
     ccuTaskInfo.num = 1;
     ubTaskInfo.num = 1;
     RS_INIT_LIST_HEAD(&rscb.udevList);
@@ -517,7 +517,7 @@ void TcRsGetTpInfoList()
     stubRsCb.protocol = PROTOCOL_UDMA;
     mocker_invoke(RsGetRsCb, StubRsGetRsCbV1, 10);
     mocker_invoke(RsUbGetDevCb, StubRsUbGetDevCb, 10);
-    ret =  RsGetTpInfoList(&devInfo, &cfg, infoList, &num);
+    ret = RsGetTpInfoList(&devInfo, &cfg, infoList, &num);
     EXPECT_INT_EQ(0, ret);
     mocker_clean();
 }
@@ -547,7 +547,7 @@ void TcRsCtxQpDestroyBatch()
     mocker_invoke(RsGetRsCb, StubRsGetRsCbV1, 10);
     mocker_invoke(RsUbGetDevCb, StubRsUbGetDevCb, 10);
     mocker(RsUbCtxJettyDestroyBatch, 1, 0);
-    ret =  RsCtxQpDestroyBatch(&devInfo, ids, &num);
+    ret = RsCtxQpDestroyBatch(&devInfo, ids, &num);
     EXPECT_INT_EQ(0, ret);
     mocker_clean();
 }
@@ -582,7 +582,7 @@ void TcRsCtxQpQueryBatch()
     mocker_invoke(RsUbGetDevCb, StubRsUbGetDevCb, 10);
     mocker(RsUbCtxQueryJettyBatch, 1, 0);
     num = 1;
-    ret =  RsCtxQpQueryBatch(&devInfo, ids, attr, &num);
+    ret = RsCtxQpQueryBatch(&devInfo, ids, attr, &num);
     EXPECT_INT_EQ(0, ret);
     mocker_clean();
 }
@@ -719,7 +719,7 @@ void TcRsGetTpAttr()
     mocker_invoke(RsGetRsCb, StubRsGetRsCbV1, 10);
     mocker_invoke(RsUbGetDevCb, StubRsUbGetDevCb, 10);
     mocker(RsUbGetTpAttr, 1, 0);
-    ret =  RsGetTpAttr(&devInfo, &attrBitmap, tpHandle, &attr);
+    ret = RsGetTpAttr(&devInfo, &attrBitmap, tpHandle, &attr);
     EXPECT_INT_EQ(0, ret);
     mocker_clean();
 }
@@ -747,7 +747,7 @@ void TcRsSetTpAttr()
     mocker_invoke(RsGetRsCb, StubRsGetRsCbV1, 10);
     mocker_invoke(RsUbGetDevCb, StubRsUbGetDevCb, 10);
     mocker(RsUbSetTpAttr, 1, 0);
-    ret =  RsSetTpAttr(&devInfo, attrBitmap, tpHandle, &attr);
+    ret = RsSetTpAttr(&devInfo, attrBitmap, tpHandle, &attr);
     EXPECT_INT_EQ(0, ret);
     mocker_clean();
 }

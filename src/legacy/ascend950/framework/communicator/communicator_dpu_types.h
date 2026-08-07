@@ -17,12 +17,12 @@
 #include "types.h"
 
 struct DpuKernelLaunchParam {
-    u64         memorySize{0};
-    void       *shareHBM{nullptr};
-    void       *hostMem{nullptr};
-    uint32_t    deviceId{UINT32_MAX};
+    u64 memorySize{0};
+    void* shareHBM{nullptr};
+    void* hostMem{nullptr};
+    uint32_t deviceId{UINT32_MAX};
     std::string commId;
-    void       *taskexceptionVa{nullptr};
+    void* taskexceptionVa{nullptr};
 };
 
 // Dpu Kernel Launch 申请的共享内存

@@ -11,22 +11,22 @@
 #include "binary_stream.h"
 namespace Hccl {
 BaseMemTransport::LocCntNotifyRes
-CntNotifyResHelper::GetCntNotifyRes(const unordered_map<u32, vector<LocalCntNotify *>> &topicIdCntNotifyVecMap) const
+CntNotifyResHelper::GetCntNotifyRes(const unordered_map<u32, vector<LocalCntNotify*>>& topicIdCntNotifyVecMap) const
 {
     u32 cntNotifyNum = 0;
-    for (auto &it : topicIdCntNotifyVecMap) {
+    for (auto& it : topicIdCntNotifyVecMap) {
         cntNotifyNum += it.second.size();
     }
 
-    BinaryStream                      binaryStream;
+    BinaryStream binaryStream;
     BaseMemTransport::LocCntNotifyRes result;
     binaryStream << cntNotifyNum;
 
     u32 cntNotifyIndex = 0;
-    for (auto &it : topicIdCntNotifyVecMap) {
+    for (auto& it : topicIdCntNotifyVecMap) {
         auto topicId = it.first;
-        u32  pos     = 0;
-        for (auto &notify : it.second) {
+        u32 pos = 0;
+        for (auto& notify : it.second) {
             binaryStream << topicId;
             binaryStream << pos;
             binaryStream << cntNotifyIndex;
@@ -39,10 +39,10 @@ CntNotifyResHelper::GetCntNotifyRes(const unordered_map<u32, vector<LocalCntNoti
     return result;
 }
 
-u32 CntNotifyResHelper::GetIndex(vector<char> &desc, u32 topicId, u32 pos) const
+u32 CntNotifyResHelper::GetIndex(vector<char>& desc, u32 topicId, u32 pos) const
 {
     BinaryStream binaryStream(desc);
-    u32          cntNotifyNum = 0;
+    u32 cntNotifyNum = 0;
     binaryStream >> cntNotifyNum;
     for (u32 index = 0; index < cntNotifyNum; index++) {
         u32 theTopicId;

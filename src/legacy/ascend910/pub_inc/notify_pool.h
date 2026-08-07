@@ -11,7 +11,6 @@
 #ifndef NOTIFY_POOL_H
 #define NOTIFY_POOL_H
 
-
 #include "dispatcher.h"
 
 namespace hccl {
@@ -23,17 +22,17 @@ public:
     ~NotifyPool();
     HcclResult Init(const s32 devicePhyId);
     HcclResult Destroy();
-    HcclResult RegisterOp(const std::string &tag);
-    HcclResult UnregisterOp(const std::string &tag);
+    HcclResult RegisterOp(const std::string& tag);
+    HcclResult UnregisterOp(const std::string& tag);
     // local notify申请
-    HcclResult Alloc(const std::string &tag, const RemoteRankInfo &info,
-        std::shared_ptr<LocalIpcNotify> &localNotify, const NotifyLoadType type = NotifyLoadType::HOST_NOTIFY,
-        u32 offsetAlignSize = INVALID_UINT);
+    HcclResult Alloc(
+        const std::string& tag, const RemoteRankInfo& info, std::shared_ptr<LocalIpcNotify>& localNotify,
+        const NotifyLoadType type = NotifyLoadType::HOST_NOTIFY, u32 offsetAlignSize = INVALID_UINT);
     HcclResult ResetNotify();
     HcclResult ResetNotifyForDestRank(s64 destRank);
 
 protected:
     std::unique_ptr<NotifyPoolImpl> pimpl_;
 };
-}
+} // namespace hccl
 #endif //  NOTIFY_POOL_H

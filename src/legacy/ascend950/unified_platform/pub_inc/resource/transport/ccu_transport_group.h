@@ -21,25 +21,25 @@ MAKE_ENUM(TransportGrpStatus, INIT, FAIL)
 
 class CcuTransportGroup {
 public:
-    explicit                CcuTransportGroup(const vector<CcuTransport*> &transports, u32 cntCkeNum);
-    CcuTransportGroup() =   delete;     // 禁用默认构造函数
-    virtual                ~CcuTransportGroup();
-    void                    Destroy();
-    TransportGrpStatus      GetGrpStatus() const;
-    HcclResult              GetCntCkeId(u32 index, u32 &cntCkeId) const;
-    bool                    CheckTransports(const vector<CcuTransport*> &transports);
-    HcclResult              CheckTransportCntCke();
-    const vector<CcuTransport*> &GetTransports() const;
+    explicit CcuTransportGroup(const vector<CcuTransport*>& transports, u32 cntCkeNum);
+    CcuTransportGroup() = delete; // 禁用默认构造函数
+    virtual ~CcuTransportGroup();
+    void Destroy();
+    TransportGrpStatus GetGrpStatus() const;
+    HcclResult GetCntCkeId(u32 index, u32& cntCkeId) const;
+    bool CheckTransports(const vector<CcuTransport*>& transports);
+    HcclResult CheckTransportCntCke();
+    const vector<CcuTransport*>& GetTransports() const;
 
 private:
-    vector<CcuTransport*>                   transportsGrp{};
-    vector<u32>                             cntCkesGroup{};
-    u32                                     cntCkesGroupDieId{0};
-    u32                                     cntCkeNumTransportGroupUse{0};
-    vector<CcuResHandle>                    cntResHandleTransportGroupUse{};
-    vector<ResInfo>                         ckeInfoTransportGroupUse{};
-    bool                                    isDestroyed{false};
-    TransportGrpStatus                      grpStatus;
+    vector<CcuTransport*> transportsGrp{};
+    vector<u32> cntCkesGroup{};
+    u32 cntCkesGroupDieId{0};
+    u32 cntCkeNumTransportGroupUse{0};
+    vector<CcuResHandle> cntResHandleTransportGroupUse{};
+    vector<ResInfo> ckeInfoTransportGroupUse{};
+    bool isDestroyed{false};
+    TransportGrpStatus grpStatus;
 };
 
 } // namespace Hccl

@@ -15,8 +15,8 @@
 namespace hccl {
 class CollReduceScatterRingZerocopyExecutor : public CollReduceScatterExecutor {
 public:
-    explicit CollReduceScatterRingZerocopyExecutor(const HcclDispatcher dispatcher,
-    std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollReduceScatterRingZerocopyExecutor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceScatterRingZerocopyExecutor() override = default;
 
 protected:
@@ -33,30 +33,32 @@ private:
     /* *************** 资源计算 *************** */
     std::set<u32> commTargetUserRankSet_;
     HcclResult CalcStreamNum(u32& streamNum) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType,
-        TransportMemType outputType, std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
+        std::vector<LevelNSubCommTransport>& opTransport) override;
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
     u64 CalcLoopMaxCount(const u32 unitSize) override;
 
     /* *************** 算法编排 *************** */
     HcclResult SemiRingReduceScatter(
-        const std::string &tag, DeviceMem inputMem, DeviceMem outputMem,
-        const u64 count, const HcclDataType dataType, const HcclReduceOp reductionOp,
-        const std::vector<std::vector<Slice> > multRingsSliceZero, Stream stream, s32 profStage,
-        const u64 baseOffset, const HcomCollOpInfo *opInfo,
+        const std::string& tag, DeviceMem inputMem, DeviceMem outputMem, const u64 count, const HcclDataType dataType,
+        const HcclReduceOp reductionOp, const std::vector<std::vector<Slice>> multRingsSliceZero, Stream stream,
+        s32 profStage, const u64 baseOffset, const HcomCollOpInfo* opInfo,
         const std::vector<std::vector<Slice>> multRingsUserMemSlice);
-    HcclResult RunIntraSeverReduceScatter(const std::string &tag, DeviceMem &inputMem, DeviceMem &outputMem,
-        const u64 count, const HcclDataType &dataType, const HcclReduceOp &reductionOp,
-        const std::vector<std::vector<Slice>> &multRingsSliceZero, const Stream &stream, s32 profStage,
-        const u64 baseOffset = 0, const HcomCollOpInfo *opInfo = nullptr,
-        const std::vector<std::vector<Slice>> &multRingsUserMemSlice = std::vector<std::vector<Slice>>(0),
+    HcclResult RunIntraSeverReduceScatter(
+        const std::string& tag, DeviceMem& inputMem, DeviceMem& outputMem, const u64 count,
+        const HcclDataType& dataType, const HcclReduceOp& reductionOp,
+        const std::vector<std::vector<Slice>>& multRingsSliceZero, const Stream& stream, s32 profStage,
+        const u64 baseOffset = 0, const HcomCollOpInfo* opInfo = nullptr,
+        const std::vector<std::vector<Slice>>& multRingsUserMemSlice = std::vector<std::vector<Slice>>(0),
         const bool disableDMAReduce = false);
-    HcclResult KernelRunIntraServerPre(const OpParam &param, ExecMem &execMem) override;
-    HcclResult KernelRunInterServer(const OpParam &param, ExecMem &execMem) override;
-    virtual HcclResult KernelRunInterServerPostProcess(const OpParam &param, const ExecMem &execMem);
+    HcclResult KernelRunIntraServerPre(const OpParam& param, ExecMem& execMem) override;
+    HcclResult KernelRunInterServer(const OpParam& param, ExecMem& execMem) override;
+    virtual HcclResult KernelRunInterServerPostProcess(const OpParam& param, const ExecMem& execMem);
 
-    virtual HcclResult CalcLevel0DataSlices(const OpParam &param, const ExecMem &execMem, std::vector<Slice> &dataSegsSlice);
-    virtual HcclResult KernelRunInterServerPreProcess(const OpParam &param, const ExecMem &execMem);
+    virtual HcclResult
+    CalcLevel0DataSlices(const OpParam& param, const ExecMem& execMem, std::vector<Slice>& dataSegsSlice);
+    virtual HcclResult KernelRunInterServerPreProcess(const OpParam& param, const ExecMem& execMem);
 };
 
 } // namespace hccl

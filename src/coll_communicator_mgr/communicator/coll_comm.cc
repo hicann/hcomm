@@ -23,14 +23,17 @@
 #include "launch_device.h"
 
 namespace hccl {
-void SymmetricMemoryDeleter::operator()(SymmetricMemory *ptr) const
-{
-    delete ptr;
-}
+void SymmetricMemoryDeleter::operator()(SymmetricMemory* ptr) const { delete ptr; }
 
-CollComm::CollComm(void * comm, uint32_t rankId, const std::string &commName, const ManagerCallbacks& callbacks,
-                   CollCommInitMode initMode)
-    : comm_(comm), rankId_(rankId), commId_ (commName), config_(commName), callbacks_(callbacks), initMode_(initMode)
+CollComm::CollComm(
+    void* comm, uint32_t rankId, const std::string& commName, const ManagerCallbacks& callbacks,
+    CollCommInitMode initMode)
+    : comm_(comm),
+      rankId_(rankId),
+      commId_(commName),
+      config_(commName),
+      callbacks_(callbacks),
+      initMode_(initMode)
 {
     groupScheduleMgr = std::make_shared<GroupScheduleMgr>();
 }
@@ -51,7 +54,7 @@ CollComm::~CollComm()
 
     // 兜底释放所有team的syncMem本地内存
     HcclTeamMgr::GetInstance().ClearByCollComm(this);
-    CollCommMgr::GetInstance()->UnRegisteCollComm(this); 
+    CollCommMgr::GetInstance()->UnRegisteCollComm(this);
     HCCL_INFO("[CollComm][~CollComm] collComm deinit");
     // dpu的兜底上报 - 异常退出时捕获异常避免二次崩溃
     if (hcclCommDfx_ != nullptr) {
@@ -62,7 +65,7 @@ CollComm::~CollComm()
     HCCL_RUN_INFO("[CollComm][~CollComm] cclBuffer free, commId[%s].", commId_.c_str());
 }
 
-HcclResult CollComm::Init(void *rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, uint32_t opExpansionMode)
+HcclResult CollComm::Init(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, uint32_t opExpansionMode)
 {
     if (IsFullMode()) { // A5和下一代
         return InitFullMode(rankGraph, binHandle, cclBuffer, opExpansionMode);
@@ -71,8 +74,8 @@ HcclResult CollComm::Init(void *rankGraph, aclrtBinHandle binHandle, HcclMem ccl
     }
 }
 
-HcclResult CollComm::InitSimpleMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer,
-    uint32_t opExpansionMode)
+HcclResult
+CollComm::InitSimpleMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, uint32_t opExpansionMode)
 {
     CHK_PTR_NULL(rankGraph);
 
@@ -99,8 +102,8 @@ HcclResult CollComm::InitSimpleMode(void* rankGraph, aclrtBinHandle binHandle, H
     return HCCL_SUCCESS;
 }
 
-HcclResult CollComm::InitFullMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer,
-    uint32_t opExpansionMode)
+HcclResult
+CollComm::InitFullMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, uint32_t opExpansionMode)
 {
     CHK_PTR_NULL(rankGraph);
 
@@ -117,8 +120,7 @@ HcclResult CollComm::InitFullMode(void* rankGraph, aclrtBinHandle binHandle, Hcc
     u32 threadNum = 0xffffffff;
     u32 notifyNumPerThread = 0xffffffff;
     if (!commEngineResMgr_) {
-        EXCEPTION_CATCH(commEngineResMgr_ = std::make_unique<CommEngineResMgr>(),
-            return HCCL_E_PTR);
+        EXCEPTION_CATCH(commEngineResMgr_ = std::make_unique<CommEngineResMgr>(), return HCCL_E_PTR);
         CHK_PRT(commEngineResMgr_->Init(threadNum, notifyNumPerThread, commId_, binHandle, callbacks_));
     }
 
@@ -135,10 +137,10 @@ HcclResult CollComm::InitFullMode(void* rankGraph, aclrtBinHandle binHandle, Hcc
 
     CHK_RET(InitHDCommunicate());
 
- 	if (!hcclCommDfx_) {
+    if (!hcclCommDfx_) {
         EXCEPTION_CATCH(hcclCommDfx_ = std::make_unique<HcclCommDfx>(), return HCCL_E_PTR);
- 	}
- 	CHK_RET(hcclCommDfx_->Init(deviceLogicId_, commId_, rankId_));
+    }
+    CHK_RET(hcclCommDfx_->Init(deviceLogicId_, commId_, rankId_));
     CHK_RET(InitTaskExceptionHandler());
 
     CHK_RET(InitKfcAndRegisterCollComm());
@@ -154,20 +156,22 @@ HcclResult CollComm::InitFullMode(void* rankGraph, aclrtBinHandle binHandle, Hcc
 HcclResult CollComm::InitSymmetricMemory()
 {
     uint32_t rankSize = GetRankSize();
-    HCCL_RUN_INFO("[CollComm][InitSymmetricMemory] commId[%s], rank[%u], rankSize[%u].",
-        commId_.c_str(), rankId_, rankSize);
+    HCCL_RUN_INFO(
+        "[CollComm][InitSymmetricMemory] commId[%s], rank[%u], rankSize[%u].", commId_.c_str(), rankId_, rankSize);
 
-    EXCEPTION_CATCH(symmetricMemory_.reset(new SymmetricMemory(rankId_, rankSize, 0, SymmetricMemoryMode::URMA)),
+    EXCEPTION_CATCH(
+        symmetricMemory_.reset(new SymmetricMemory(rankId_, rankSize, 0, SymmetricMemoryMode::URMA)),
         return HCCL_E_PTR);
     CHK_SMART_PTR_NULL(symmetricMemory_);
     return HCCL_SUCCESS;
 }
 
-HcclResult CollComm::RegisterSymmetricMemoryResource(void* ptr, size_t size, SymmetricMemoryResource &resource)
+HcclResult CollComm::RegisterSymmetricMemoryResource(void* ptr, size_t size, SymmetricMemoryResource& resource)
 {
     CHK_PTR_NULL(ptr);
-    CHK_PRT_RET(size == 0,
-        HCCL_ERROR("[CollComm][RegisterSymmetricMemoryResource] invalid symmetric memory size 0."), HCCL_E_PARA);
+    CHK_PRT_RET(
+        size == 0, HCCL_ERROR("[CollComm][RegisterSymmetricMemoryResource] invalid symmetric memory size 0."),
+        HCCL_E_PARA);
     CHK_SMART_PTR_NULL(myRank_);
 
     CommMems* commMems = myRank_->GetCommMems();
@@ -177,48 +181,62 @@ HcclResult CollComm::RegisterSymmetricMemoryResource(void* ptr, size_t size, Sym
     commMem.type = COMM_MEM_TYPE_DEVICE;
     commMem.addr = ptr;
     commMem.size = static_cast<uint64_t>(size);
-    resource.memTag = std::string(HCCL_SYMMETRIC_MEMORY_TAG_PREFIX) + commId_ + "_addr_" +
-        std::to_string(reinterpret_cast<uintptr_t>(ptr)) + "_size_" + std::to_string(size);
+    resource.memTag = std::string(HCCL_SYMMETRIC_MEMORY_TAG_PREFIX) + commId_ + "_addr_"
+                      + std::to_string(reinterpret_cast<uintptr_t>(ptr)) + "_size_" + std::to_string(size);
     HcclResult ret = commMems->CommRegMem(resource.memTag, commMem, &resource.memHandle);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[CollComm][RegisterSymmetricMemoryResource] CommRegMem failed, tag[%s], ptr[%p], "
-            "size[%zu], ret[%d].", resource.memTag.c_str(), ptr, size, ret), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[CollComm][RegisterSymmetricMemoryResource] CommRegMem failed, tag[%s], ptr[%p], "
+            "size[%zu], ret[%d].",
+            resource.memTag.c_str(), ptr, size, ret),
+        ret);
 
-    HCCL_RUN_INFO("[CollComm][RegisterSymmetricMemoryResource] register symmetric memory success, group[%s], "
-        "tag[%s], ptr[%p], size[%zu], memHandle[%p].", commId_.c_str(), resource.memTag.c_str(), ptr, size,
-        resource.memHandle);
+    HCCL_RUN_INFO(
+        "[CollComm][RegisterSymmetricMemoryResource] register symmetric memory success, group[%s], "
+        "tag[%s], ptr[%p], size[%zu], memHandle[%p].",
+        commId_.c_str(), resource.memTag.c_str(), ptr, size, resource.memHandle);
     return HCCL_SUCCESS;
 }
 
-void CollComm::UnregisterSymmetricMemoryResource(const SymmetricMemoryResource &resource)
+void CollComm::UnregisterSymmetricMemoryResource(const SymmetricMemoryResource& resource)
 {
     if (resource.memHandle == nullptr || resource.memTag.empty()) {
-        HCCL_WARNING("[CollComm][UnregisterSymmetricMemoryResource] invalid resource, tag[%s], memHandle[%p].",
+        HCCL_WARNING(
+            "[CollComm][UnregisterSymmetricMemoryResource] invalid resource, tag[%s], memHandle[%p].",
             resource.memTag.c_str(), resource.memHandle);
         return;
     }
     if (myRank_ == nullptr) {
-        HCCL_WARNING("[CollComm][UnregisterSymmetricMemoryResource] myRank is null, skip CommUnregMem, "
-            "tag[%s], memHandle[%p].", resource.memTag.c_str(), resource.memHandle);
+        HCCL_WARNING(
+            "[CollComm][UnregisterSymmetricMemoryResource] myRank is null, skip CommUnregMem, "
+            "tag[%s], memHandle[%p].",
+            resource.memTag.c_str(), resource.memHandle);
         return;
     }
     CommMems* commMems = myRank_->GetCommMems();
     if (commMems == nullptr) {
-        HCCL_WARNING("[CollComm][UnregisterSymmetricMemoryResource] commMems is null, skip CommUnregMem, "
-            "tag[%s], memHandle[%p].", resource.memTag.c_str(), resource.memHandle);
+        HCCL_WARNING(
+            "[CollComm][UnregisterSymmetricMemoryResource] commMems is null, skip CommUnregMem, "
+            "tag[%s], memHandle[%p].",
+            resource.memTag.c_str(), resource.memHandle);
         return;
     }
     HcclResult ret = commMems->CommUnregMem(resource.memTag, resource.memHandle);
     if (ret != HCCL_SUCCESS) {
-        HCCL_WARNING("[CollComm][UnregisterSymmetricMemoryResource] CommUnregMem failed, tag[%s], "
-            "memHandle[%p], ret[%d].", resource.memTag.c_str(), resource.memHandle, ret);
+        HCCL_WARNING(
+            "[CollComm][UnregisterSymmetricMemoryResource] CommUnregMem failed, tag[%s], "
+            "memHandle[%p], ret[%d].",
+            resource.memTag.c_str(), resource.memHandle, ret);
         return;
     }
-    HCCL_INFO("[CollComm][UnregisterSymmetricMemoryResource] unregister symmetric memory success, "
-        "tag[%s], memHandle[%p].", resource.memTag.c_str(), resource.memHandle);
+    HCCL_INFO(
+        "[CollComm][UnregisterSymmetricMemoryResource] unregister symmetric memory success, "
+        "tag[%s], memHandle[%p].",
+        resource.memTag.c_str(), resource.memHandle);
 }
 
-HcclResult CollComm::RegisterWindow(void* ptr, size_t size, HcclCommSymWindow *winHandle)
+HcclResult CollComm::RegisterWindow(void* ptr, size_t size, HcclCommSymWindow* winHandle)
 {
     CHK_SMART_PTR_NULL(symmetricMemory_);
     return symmetricMemory_->RegisterUrmaSymmetricMem(ptr, size, winHandle);
@@ -229,9 +247,13 @@ HcclResult CollComm::DeregisterWindow(HcclCommSymWindow winHandle)
     CHK_SMART_PTR_NULL(symmetricMemory_);
     SymmetricMemoryResource resource;
     HcclResult getResourceRet = symmetricMemory_->GetRegisteredMemoryResource(winHandle, resource);
-    CHK_PRT_RET(getResourceRet != HCCL_SUCCESS && getResourceRet != HCCL_E_NOT_FOUND,
-        HCCL_ERROR("[CollComm][DeregisterWindow] get registered symmetric memory resource failed, "
-            "winHandle[%p], ret[%d].", winHandle, getResourceRet), getResourceRet);
+    CHK_PRT_RET(
+        getResourceRet != HCCL_SUCCESS && getResourceRet != HCCL_E_NOT_FOUND,
+        HCCL_ERROR(
+            "[CollComm][DeregisterWindow] get registered symmetric memory resource failed, "
+            "winHandle[%p], ret[%d].",
+            winHandle, getResourceRet),
+        getResourceRet);
 
     HcclResult ret = symmetricMemory_->DeregisterUrmaSymmetricMem(winHandle);
     if (ret == HCCL_SUCCESS && getResourceRet == HCCL_SUCCESS) {
@@ -240,13 +262,13 @@ HcclResult CollComm::DeregisterWindow(HcclCommSymWindow winHandle)
     return ret;
 }
 
-HcclResult CollComm::GetCommSymWin(void* ptr, size_t size, HcclCommSymWindow *winHandle, size_t *offset)
+HcclResult CollComm::GetCommSymWin(void* ptr, size_t size, HcclCommSymWindow* winHandle, size_t* offset)
 {
     CHK_SMART_PTR_NULL(symmetricMemory_);
     return symmetricMemory_->FindUrmaSymmetricWindow(ptr, size, winHandle, offset);
 }
 
-HcclResult CollComm::RegisterPendingSymmetricMemHandles(std::vector<HcclMemHandle> &memHandles)
+HcclResult CollComm::RegisterPendingSymmetricMemHandles(std::vector<HcclMemHandle>& memHandles)
 {
     memHandles.clear();
     if (symmetricMemory_ == nullptr) {
@@ -261,14 +283,15 @@ HcclResult CollComm::RegisterPendingSymmetricMemHandles(std::vector<HcclMemHandl
     }
 
     std::vector<std::pair<void*, SymmetricMemoryResource>> registeredResources;
-    for (const SymmetricMemoryRegisterInfo &registerInfo : registerInfos) {
+    for (const SymmetricMemoryRegisterInfo& registerInfo : registerInfos) {
         SymmetricMemoryResource resource;
         HcclResult ret = RegisterSymmetricMemoryResource(registerInfo.userVa, registerInfo.userSize, resource);
         if (ret != HCCL_SUCCESS) {
-            HCCL_ERROR("[CollComm][RegisterPendingSymmetricMemHandles] register symmetric memory failed, "
-                "win[%p], userVa[%p], size[%zu], ret[%d].", registerInfo.devWin, registerInfo.userVa,
-                registerInfo.userSize, ret);
-            for (const auto &registeredResource : registeredResources) {
+            HCCL_ERROR(
+                "[CollComm][RegisterPendingSymmetricMemHandles] register symmetric memory failed, "
+                "win[%p], userVa[%p], size[%zu], ret[%d].",
+                registerInfo.devWin, registerInfo.userVa, registerInfo.userSize, ret);
+            for (const auto& registeredResource : registeredResources) {
                 symmetricMemory_->RemoveRegisteredMemoryResource(registeredResource.first);
                 UnregisterSymmetricMemoryResource(registeredResource.second);
             }
@@ -277,11 +300,12 @@ HcclResult CollComm::RegisterPendingSymmetricMemHandles(std::vector<HcclMemHandl
 
         ret = symmetricMemory_->SetRegisteredMemoryResource(registerInfo.devWin, resource);
         if (ret != HCCL_SUCCESS) {
-            HCCL_ERROR("[CollComm][RegisterPendingSymmetricMemHandles] save symmetric memory resource failed, "
-                "win[%p], userVa[%p], size[%zu], ret[%d].", registerInfo.devWin, registerInfo.userVa,
-                registerInfo.userSize, ret);
+            HCCL_ERROR(
+                "[CollComm][RegisterPendingSymmetricMemHandles] save symmetric memory resource failed, "
+                "win[%p], userVa[%p], size[%zu], ret[%d].",
+                registerInfo.devWin, registerInfo.userVa, registerInfo.userSize, ret);
             UnregisterSymmetricMemoryResource(resource);
-            for (const auto &registeredResource : registeredResources) {
+            for (const auto& registeredResource : registeredResources) {
                 symmetricMemory_->RemoveRegisteredMemoryResource(registeredResource.first);
                 UnregisterSymmetricMemoryResource(registeredResource.second);
             }
@@ -295,8 +319,8 @@ HcclResult CollComm::RegisterPendingSymmetricMemHandles(std::vector<HcclMemHandl
     return HCCL_SUCCESS;
 }
 
-HcclResult CollComm::UpdateSymmetricRemoteMem(uint32_t remoteRank, const CommMem *remoteMems,
-    const std::vector<std::string> &memTags)
+HcclResult CollComm::UpdateSymmetricRemoteMem(
+    uint32_t remoteRank, const CommMem* remoteMems, const std::vector<std::string>& memTags)
 {
     if (symmetricMemory_ == nullptr) {
         return HCCL_SUCCESS;
@@ -307,7 +331,7 @@ HcclResult CollComm::UpdateSymmetricRemoteMem(uint32_t remoteRank, const CommMem
 HcclResult CollComm::InitKfcAndRegisterCollComm()
 {
     myRank_->SetKfcControlTransfer(kfcControlTransferH2D_, kfcStatusTransferD2H_);
-    CollCommMgr::GetInstance()->RegisteCollComm(this); 
+    CollCommMgr::GetInstance()->RegisteCollComm(this);
     commStatus_ = HcclCommStatus::HCCL_COMM_STATUS_READY;
     return HCCL_SUCCESS;
 }
@@ -320,8 +344,9 @@ HcclResult CollComm::DestroyAicpuComm()
         CHK_SMART_PTR_NULL(kfcStatusTransferD2H_);
 
         Hccl::KfcCommand opCmd = Hccl::KfcCommand::DESTROY_AICPU_COMM;
-        CHK_RET(kfcControlTransferH2D_->Put(0, sizeof(Hccl::KfcCommand), reinterpret_cast<uint8_t *>(&opCmd)));
-        HCCL_RUN_INFO("[%s]group[%s] send Hccl::KfcCommand[%d] success", __func__, commId_.c_str(), static_cast<int>(opCmd));
+        CHK_RET(kfcControlTransferH2D_->Put(0, sizeof(Hccl::KfcCommand), reinterpret_cast<uint8_t*>(&opCmd)));
+        HCCL_RUN_INFO(
+            "[%s]group[%s] send Hccl::KfcCommand[%d] success", __func__, commId_.c_str(), static_cast<int>(opCmd));
 
         Hccl::KfcExecStatus opInfo;
         constexpr u32 WAIT_CMD_TIMEOUT = 10 * 1000; // 最大等待10秒
@@ -329,13 +354,14 @@ HcclResult CollComm::DestroyAicpuComm()
         auto startTime = std::chrono::steady_clock::now();
 
         while (true) {
-            CHK_RET(kfcStatusTransferD2H_->Get(0, sizeof(Hccl::KfcExecStatus), reinterpret_cast<uint8_t *>(&opInfo)));
+            CHK_RET(kfcStatusTransferD2H_->Get(0, sizeof(Hccl::KfcExecStatus), reinterpret_cast<uint8_t*>(&opInfo)));
             if (opInfo.kfcStatus == Hccl::KfcStatus::DESTROY_AICPU_COMM_DONE) {
                 HCCL_RUN_INFO("[%s]get Hccl::KfcStatus[%d] success", __func__, static_cast<int>(opInfo.kfcStatus));
                 return HCCL_SUCCESS;
             } else if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
-                HCCL_ERROR("[%s]timeout, maxTime[%u ms] and get the opExecStatus is [%s].",
-                    __func__, WAIT_CMD_TIMEOUT, opInfo.kfcStatus.Describe().c_str());
+                HCCL_ERROR(
+                    "[%s]timeout, maxTime[%u ms] and get the opExecStatus is [%s].", __func__, WAIT_CMD_TIMEOUT,
+                    opInfo.kfcStatus.Describe().c_str());
                 return HCCL_E_TIMEOUT;
             }
             usleep(TEN_MILLISECOND_OF_USLEEP);
@@ -344,10 +370,7 @@ HcclResult CollComm::DestroyAicpuComm()
     return HCCL_SUCCESS;
 }
 
-uint32_t CollComm::GetMyRankId() const
-{
-    return rankId_;
-}
+uint32_t CollComm::GetMyRankId() const { return rankId_; }
 
 HcclResult CollComm::GetParentRankId(u32& parentRankId) const
 {
@@ -360,13 +383,15 @@ HcclResult CollComm::GetParentRankId(u32& parentRankId) const
 HcclResult CollComm::InitHDCommunicate()
 {
     // 初始化aicpu进程 host-device 共享内存
-    EXCEPTION_CATCH((kfcControlTransferH2D_ = 
-        std::make_shared<hccl::HDCommunicate>(deviceLogicId_, HCCL_HDC_TYPE_H2D, sizeof(Hccl::KfcCommand))),
+    EXCEPTION_CATCH(
+        (kfcControlTransferH2D_
+         = std::make_shared<hccl::HDCommunicate>(deviceLogicId_, HCCL_HDC_TYPE_H2D, sizeof(Hccl::KfcCommand))),
         return HCCL_E_PTR);
     CHK_RET(kfcControlTransferH2D_->InitHost());
 
-    EXCEPTION_CATCH((kfcStatusTransferD2H_ = 
-        std::make_shared<hccl::HDCommunicate>(deviceLogicId_, HCCL_HDC_TYPE_D2H, sizeof(Hccl::KfcExecStatus))),
+    EXCEPTION_CATCH(
+        (kfcStatusTransferD2H_
+         = std::make_shared<hccl::HDCommunicate>(deviceLogicId_, HCCL_HDC_TYPE_D2H, sizeof(Hccl::KfcExecStatus))),
         return HCCL_E_PTR);
     CHK_RET(kfcStatusTransferD2H_->InitHost());
 
@@ -374,7 +399,7 @@ HcclResult CollComm::InitHDCommunicate()
 }
 
 HcclResult CollComm::GetHDCommunicate(
-    HDCommunicateParams &kfcControlTransferH2DParams, HDCommunicateParams &kfcStatusTransferD2HParams)
+    HDCommunicateParams& kfcControlTransferH2DParams, HDCommunicateParams& kfcStatusTransferD2HParams)
 {
     CHK_SMART_PTR_NULL(kfcControlTransferH2D_);
     CHK_SMART_PTR_NULL(kfcStatusTransferD2H_);
@@ -384,10 +409,7 @@ HcclResult CollComm::GetHDCommunicate(
     return HCCL_SUCCESS;
 }
 
-HcclCommStatus CollComm::GetCommStatus() const
-{
-    return commStatus_;
-}
+HcclCommStatus CollComm::GetCommStatus() const { return commStatus_; }
 
 HcclResult CollComm::Suspend()
 {
@@ -408,7 +430,8 @@ HcclResult CollComm::Clean()
 {
     HCCL_RUN_INFO("[CollComm][Clean] commId[%s] start to clean.", commId_.c_str());
     if (commStatus_ != HcclCommStatus::HCCL_COMM_STATUS_SUSPENDING) {
-        HCCL_ERROR("[CollComm][Clean] The current communication is not suspended, cannot clean, status is [%u]", 
+        HCCL_ERROR(
+            "[CollComm][Clean] The current communication is not suspended, cannot clean, status is [%u]",
             static_cast<uint32_t>(commStatus_));
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
@@ -432,11 +455,12 @@ HcclResult CollComm::Resume()
         return HcclResult::HCCL_E_INTERNAL;
     }
     if (commStatus_ != HcclCommStatus::HCCL_COMM_STATUS_SUSPENDING) {
-        HCCL_WARNING("[CollComm][Resume] The current communication is normal, no need to resume, status is [%u]",
+        HCCL_WARNING(
+            "[CollComm][Resume] The current communication is normal, no need to resume, status is [%u]",
             static_cast<uint32_t>(commStatus_));
         return HcclResult::HCCL_SUCCESS;
     }
-    
+
     HCCL_INFO("[CollComm][Resume] start to Resume.");
     CHK_SMART_PTR_NULL(myRank_);
     auto ret = myRank_->Resume();
@@ -463,20 +487,19 @@ Hccl::ErrorMessageReport CollComm::GetAicpuTaskException()
 {
     Hccl::ErrorMessageReport errorMessage;
     CHK_PRT_RET(kfcStatusTransferD2H_ == nullptr, HCCL_ERROR("[%s]fail, d2h is nullptr", __func__), errorMessage);
-    
-    HcclResult ret = kfcStatusTransferD2H_->Get(sizeof(Hccl::KfcStatus) + sizeof(Hccl::KfcErrType),
-       sizeof(errorMessage),reinterpret_cast<uint8_t *>(&errorMessage));
-   
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
+
+    HcclResult ret = kfcStatusTransferD2H_->Get(
+        sizeof(Hccl::KfcStatus) + sizeof(Hccl::KfcErrType), sizeof(errorMessage),
+        reinterpret_cast<uint8_t*>(&errorMessage));
+
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
         HCCL_ERROR("[%s]fail, group [%s], ret[%d]", __func__, commId_.c_str(), static_cast<int>(ret)), errorMessage);
     HCCL_INFO("[%s]group[%s] success", __func__, commId_.c_str());
-   return errorMessage;
+    return errorMessage;
 }
 
-uint32_t CollComm::UpdateIndex()
-{
-    return index_ += 1;
-}
+uint32_t CollComm::UpdateIndex() { return index_ += 1; }
 
 HcclResult CollComm::GetRankIpPortMap()
 {
@@ -489,7 +512,7 @@ HcclResult CollComm::GetRankIpPortMap()
     return HCCL_SUCCESS;
 }
 
-HcclResult CollComm::GetHcclBinHandle(aclrtBinHandle &binHcclHandle)
+HcclResult CollComm::GetHcclBinHandle(aclrtBinHandle& binHcclHandle)
 {
     std::lock_guard<std::mutex> lock(binHcclmutex_);
     HCCL_DEBUG("[%s] GetHcclBinHandle", __func__);
@@ -499,13 +522,16 @@ HcclResult CollComm::GetHcclBinHandle(aclrtBinHandle &binHcclHandle)
         hcclJsonPath += "libscatter_aicpu_kernel.json";
         HcclResult ret
             = LoadBinaryFromFile(hcclJsonPath.c_str(), ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE, 0, binHcclHandle_);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[%s]errNo[0x%016llx]load aicpu file fail, path[%s] optionType[%u] cpuKernelMode[%u].", __func__,
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[%s]errNo[0x%016llx]load aicpu file fail, path[%s] optionType[%u] cpuKernelMode[%u].", __func__,
                 HCCL_ERROR_CODE(ret), hcclJsonPath.c_str(), ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE, 0),
             ret);
 
-        HCCL_INFO("[%s]load aicpu file success, path[%s] optionType[%u] cpuKernelMode[%u].", __func__,
-            hcclJsonPath.c_str(), ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE, 0);
+        HCCL_INFO(
+            "[%s]load aicpu file success, path[%s] optionType[%u] cpuKernelMode[%u].", __func__, hcclJsonPath.c_str(),
+            ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE, 0);
     }
     binHcclHandle = binHcclHandle_;
     return HCCL_SUCCESS;
@@ -529,4 +555,4 @@ HcclResult CollComm::HcclBinaryUnLoad()
     return HCCL_SUCCESS;
 }
 
-}  // namespace hccl
+} // namespace hccl

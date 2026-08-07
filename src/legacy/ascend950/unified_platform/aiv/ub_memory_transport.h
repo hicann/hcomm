@@ -19,21 +19,23 @@
 namespace Hccl {
 class UbMemoryTransport {
 public:
-    MAKE_ENUM(UBTransportStatus, INIT, SOCKET_OK, SEND_MEM_INFO, RECV_MEM_INFO, RECV_MEM_INFO_PROCESS, SEND_NAME, RECV_NAME, CONNECT_FAILED,
-              SOCKET_TIMEOUT, READY)
+    MAKE_ENUM(
+        UBTransportStatus, INIT, SOCKET_OK, SEND_MEM_INFO, RECV_MEM_INFO, RECV_MEM_INFO_PROCESS, SEND_NAME, RECV_NAME,
+        CONNECT_FAILED, SOCKET_TIMEOUT, READY)
 
-    UbMemoryTransport(const std::shared_ptr<Buffer> cclBuffer, const std::shared_ptr<Buffer> aivTagBuffer, 
-                const std::shared_ptr<Buffer> aivOffloadTagBuffer, Socket *socket, int32_t deviceLogicId);
+    UbMemoryTransport(
+        const std::shared_ptr<Buffer> cclBuffer, const std::shared_ptr<Buffer> aivTagBuffer,
+        const std::shared_ptr<Buffer> aivOffloadTagBuffer, Socket* socket, int32_t deviceLogicId);
 
-    UbMemoryTransport(const UbMemoryTransport &that)             = delete;
-    UbMemoryTransport &operator=(const UbMemoryTransport &other) = delete;
+    UbMemoryTransport(const UbMemoryTransport& that) = delete;
+    UbMemoryTransport& operator=(const UbMemoryTransport& other) = delete;
     HcclResult Init();
-    UBTransportStatus   GetStatus();
+    UBTransportStatus GetStatus();
 
     // 给算子开发提供的两个接口
-    LocalIpcRmaBuffer  *GetLocMemBuffer(const u32 bufIndex) const;
-    RemoteIpcRmaBuffer *GetRmtMemBuffer(const u32 bufIndex) const;
-    std::string         Describe() const;
+    LocalIpcRmaBuffer* GetLocMemBuffer(const u32 bufIndex) const;
+    RemoteIpcRmaBuffer* GetRmtMemBuffer(const u32 bufIndex) const;
+    std::string Describe() const;
 
     vector<char> GetRmtHandshakeMsg() // 返回握手消息
     {
@@ -45,25 +47,13 @@ public:
         return localHandshakeMsg;
     }
 
-    void SetHandshakeMsg(const vector<char> &handshakeMsg)
-    {
-        localHandshakeMsg = handshakeMsg;
-    }
+    void SetHandshakeMsg(const vector<char>& handshakeMsg) { localHandshakeMsg = handshakeMsg; }
 
-    AcceleratorState &GetRmtOpAcceState()
-    {
-        return rmtOpAcceState;
-    }
+    AcceleratorState& GetRmtOpAcceState() { return rmtOpAcceState; }
 
-    AcceleratorState &GetLocalOpAcceState()
-    {
-        return locOpAcceState;
-    }
+    AcceleratorState& GetLocalOpAcceState() { return locOpAcceState; }
 
-    void SetLocalOpAcceState(const AcceleratorState &opAcceState)
-    {
-        locOpAcceState = opAcceState;
-    }
+    void SetLocalOpAcceState(const AcceleratorState& opAcceState) { locOpAcceState = opAcceState; }
 
     struct CclBufferInfo {
         uint64_t addr{0};
@@ -71,13 +61,13 @@ public:
         uint32_t tokenId{0};
         uint32_t tokenValue{0};
 
-        void Pack(BinaryStream &binaryStream) const
+        void Pack(BinaryStream& binaryStream) const
         {
             binaryStream << addr << size << tokenId << tokenValue;
             HCCL_INFO("Pack Ccl Buffer Info: addr[%llu] size[%u]", addr, size);
         }
 
-        void Unpack(BinaryStream &binaryStream)
+        void Unpack(BinaryStream& binaryStream)
         {
             binaryStream >> addr >> size >> tokenId >> tokenValue;
             HCCL_INFO("Unpack Ccl Buffer Info: addr[%llu] size[%u]", addr, size);
@@ -85,39 +75,39 @@ public:
     };
 
 private:
-    UBTransportStatus     ubStatus{UBTransportStatus::INIT};
+    UBTransportStatus ubStatus{UBTransportStatus::INIT};
     vector<char> rmtHandshakeMsg{0}; // 远端握手消息
     vector<char> localHandshakeMsg{0};
     vector<char> recvDataMsg{0};
-    AcceleratorState                         rmtOpAcceState{AcceleratorState::AIV};
-    AcceleratorState                         locOpAcceState{AcceleratorState::AIV};
+    AcceleratorState rmtOpAcceState{AcceleratorState::AIV};
+    AcceleratorState locOpAcceState{AcceleratorState::AIV};
 
     CclBufferInfo locCclBufInfo;
     CclBufferInfo rmtCclBufInfo;
-    uint32_t      exchangeDataSize{0};
+    uint32_t exchangeDataSize{0};
 
     //  新增
-    std::shared_ptr<Buffer> cclBuffer; 
+    std::shared_ptr<Buffer> cclBuffer;
     std::shared_ptr<Buffer> aivTagBuffer;
     std::shared_ptr<Buffer> aivOffloadTagBuffer;
-    Socket                 *socket{};
-    int32_t                 deviceLogicId{0};
+    Socket* socket{};
+    int32_t deviceLogicId{0};
 
     std::vector<std::unique_ptr<RemoteIpcRmaBuffer>> rmtBufferVec;
-    std::vector<std::unique_ptr<LocalIpcRmaBuffer>>  localBufferVec;
-    std::vector<RemoteRmaBuffer *>                   rmtRmaBufferVec;
+    std::vector<std::unique_ptr<LocalIpcRmaBuffer>> localBufferVec;
+    std::vector<RemoteRmaBuffer*> rmtRmaBufferVec;
 
-    void     HandshakeMsgPack(BinaryStream &binaryStream);
-    void     HandshakeMsgUnpack(BinaryStream &binaryStream);
+    void HandshakeMsgPack(BinaryStream& binaryStream);
+    void HandshakeMsgUnpack(BinaryStream& binaryStream);
     UBTransportStatus StateMachine();
-    void     ReleaseRes();
-    void     SendMemInfo();
-    void     RecvMemInfo();
-    void     RecvMemProcess();
-    void     BufferPack(BinaryStream &binaryStream);
-    void     RmtBufferUnpackProc(BinaryStream &binaryStream);
-    void     SendName();
-    void     RecvName();
+    void ReleaseRes();
+    void SendMemInfo();
+    void RecvMemInfo();
+    void RecvMemProcess();
+    void BufferPack(BinaryStream& binaryStream);
+    void RmtBufferUnpackProc(BinaryStream& binaryStream);
+    void SendName();
+    void RecvName();
 };
 } // namespace Hccl
 

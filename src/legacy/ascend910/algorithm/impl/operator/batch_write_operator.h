@@ -16,14 +16,15 @@
 #include "coll_alg_op_registry.h"
 
 namespace hccl {
-class BatchWriteOperator: public CollAlgOperator {
+class BatchWriteOperator : public CollAlgOperator {
 public:
-    BatchWriteOperator(AlgConfigurator *algConfigurator, CCLBufferManager &cclBufferManager, HcclDispatcher dispatcher,
-                       std::unique_ptr<TopoMatcher> &topoMatcher):
-                       CollAlgOperator(algConfigurator, cclBufferManager, dispatcher, topoMatcher,
-                                       HcclCMDType::HCCL_CMD_BATCH_WRITE) {}
+    BatchWriteOperator(
+        AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager, HcclDispatcher dispatcher,
+        std::unique_ptr<TopoMatcher>& topoMatcher)
+        : CollAlgOperator(algConfigurator, cclBufferManager, dispatcher, topoMatcher, HcclCMDType::HCCL_CMD_BATCH_WRITE)
+    {}
     ~BatchWriteOperator() override = default;
 };
-}
+} // namespace hccl
 
 #endif

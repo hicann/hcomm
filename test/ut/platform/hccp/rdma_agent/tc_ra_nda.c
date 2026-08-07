@@ -19,7 +19,7 @@
 #include "rs_nda.h"
 #include "tc_ra_nda.h"
 
-extern int RaQpDestroy(void *qpHandle);
+extern int RaQpDestroy(void* qpHandle);
 extern struct RaRdmaOps gRaPeerRdmaOps;
 
 void TcRaNdaGetDirectFlag()
@@ -53,15 +53,15 @@ void TcRaNdaQpCreate()
     struct RaRdmaHandle rdmaHandle = {0};
     struct NdaQpInitAttr attr = {0};
     struct NdaQpInfo info = {0};
-    void *qpHandle = NULL;
+    void* qpHandle = NULL;
     int ret = 0;
 
     rdmaHandle.rdmaOps = &gRaPeerRdmaOps;
 
-    ret = RaNdaQpCreate(NULL, &attr , &info, &qpHandle);
+    ret = RaNdaQpCreate(NULL, &attr, &info, &qpHandle);
     EXPECT_INT_EQ(128103, ret);
 
-    ret = RaNdaQpCreate(&rdmaHandle, &attr , &info, &qpHandle);
+    ret = RaNdaQpCreate(&rdmaHandle, &attr, &info, &qpHandle);
     EXPECT_INT_EQ(0, ret);
 
     ret = RaQpDestroy(qpHandle);
@@ -73,7 +73,7 @@ void TcRaPeerNdaQpCreate()
     struct RaRdmaHandle rdmaHandle = {0};
     struct NdaQpInitAttr attr = {0};
     struct NdaQpInfo info = {0};
-    void *qpHandle = NULL;
+    void* qpHandle = NULL;
     int ret = 0;
 
     mocker(RsNdaQpCreate, 1, -1);

@@ -18,22 +18,16 @@ namespace hccl {
 
 class DpuStreamManager {
 public:
-    explicit DpuStreamManager()
-    {
-        stream_ = std::make_unique<Stream>(StreamType::STREAM_TYPE_ONLINE, true);
-    }
+    explicit DpuStreamManager() { stream_ = std::make_unique<Stream>(StreamType::STREAM_TYPE_ONLINE, true); }
 
     ~DpuStreamManager() = default;
 
-    Stream *GetStream() const
-    {
-        return stream_.get();
-    }
+    Stream* GetStream() const { return stream_.get(); }
 
 private:
     std::unique_ptr<Stream> stream_{nullptr};
 };
 
-}  // namespace hccl
+} // namespace hccl
 
-#endif  // HCCLV2_DPU_STREAM_MANAGER_H
+#endif // HCCLV2_DPU_STREAM_MANAGER_H

@@ -46,7 +46,6 @@ typedef struct tagBkfSysLog {
     char key[0];
 } BkfSysLog;
 
-
 #pragma pack()
 
 /* 工具函数 */
@@ -127,8 +126,8 @@ STATIC BkfSysLogTableType *BkfSysLogTableTypeCreate(BkfSysLogMng *sysLogMng, Bkf
         BKF_FREE(sysLogMng->argInit.memMng, tableType);
         return VOS_NULL;
     }
-    VOS_AVLL_INIT_TREE(tableType->sysLogTree, (AVLL_COMPARE)tableType->vTbl.keyCmp,
-        BKF_OFFSET(BkfSysLog, key[0]), BKF_OFFSET(BkfSysLog, avlNode));
+    VOS_AVLL_INIT_TREE(tableType->sysLogTree, (AVLL_COMPARE)tableType->vTbl.keyCmp, BKF_OFFSET(BkfSysLog, key[0]),
+        BKF_OFFSET(BkfSysLog, avlNode));
 
     return tableType;
 }
@@ -229,8 +228,9 @@ error:
 STATIC void BkfSysLogUnRegAll(BkfSysLogMng *sysLogMng)
 {
     BkfSysLogTableType *tableType = VOS_AVLL_FIRST(sysLogMng->tableTypeSet);
-    BkfSysLogTableType *tableTypeNext = tableType == VOS_NULL ? VOS_NULL :
-        VOS_AVLL_NEXT(sysLogMng->tableTypeSet, tableType->avlNode);
+    BkfSysLogTableType *tableTypeNext = tableType == VOS_NULL
+                                            ? VOS_NULL
+                                            : VOS_AVLL_NEXT(sysLogMng->tableTypeSet, tableType->avlNode);
     while (tableType != VOS_NULL) {
         BkfSysLogTableTypeDelete(sysLogMng, tableType);
         tableType = tableTypeNext;

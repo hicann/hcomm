@@ -15,38 +15,38 @@
 
 namespace hccl {
 class CollAllReduceFastDoubleRingFor91093Executor : public CollAllReduceRingFor91093Executor {
-
 public:
     CollAllReduceFastDoubleRingFor91093Executor(
-        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAllReduceFastDoubleRingFor91093Executor() override = default;
 
 private:
     /* *************** 算法编排 *************** */
-    HcclResult DoubleRingReduceScatter(const std::string &tag, DeviceMem inputMem, DeviceMem outputMem, const u64 count,
-        const HcclDataType dataType, const HcclReduceOp reductionOp,
-        const std::vector<std::vector<Slice>> multRingsSliceZero, Stream stream, s32 profStage,
-        const u64 baseOffset = 0, const HcomCollOpInfo *opInfo = nullptr,
+    HcclResult DoubleRingReduceScatter(
+        const std::string& tag, DeviceMem inputMem, DeviceMem outputMem, const u64 count, const HcclDataType dataType,
+        const HcclReduceOp reductionOp, const std::vector<std::vector<Slice>> multRingsSliceZero, Stream stream,
+        s32 profStage, const u64 baseOffset = 0, const HcomCollOpInfo* opInfo = nullptr,
         const std::vector<std::vector<Slice>> multRingsUserMemSlice = std::vector<std::vector<Slice>>(0),
         const bool disableDMAReduce = false);
-    HcclResult DoubleRingAllGather(const std::string &tag, DeviceMem inputMem, DeviceMem outputMem, const u64 count,
-        const HcclDataType dataType,
-        const std::vector<std::vector<Slice> > multRingsSliceZero, Stream stream,
-        s32 profStage, const u64 baseOffset = 0, const HcomCollOpInfo *opInfo = nullptr,
-        const std::vector<std::vector<Slice>> multRingsUserMemSlice = std::vector<std::vector<Slice>> (0));
-    HcclResult RunIntraSeverReduceScatter(const std::string &tag, DeviceMem &inputMem, DeviceMem &outputMem,
-        const u64 count, const HcclDataType &dataType, const HcclReduceOp &reductionOp,
-        const std::vector<std::vector<Slice>> &multRingsSliceZero, const Stream &stream, s32 profStage,
-        const u64 baseOffset = 0, const HcomCollOpInfo *opInfo = nullptr,
-        const std::vector<std::vector<Slice>> &multRingsUserMemSlice = std::vector<std::vector<Slice>>(0),
+    HcclResult DoubleRingAllGather(
+        const std::string& tag, DeviceMem inputMem, DeviceMem outputMem, const u64 count, const HcclDataType dataType,
+        const std::vector<std::vector<Slice>> multRingsSliceZero, Stream stream, s32 profStage,
+        const u64 baseOffset = 0, const HcomCollOpInfo* opInfo = nullptr,
+        const std::vector<std::vector<Slice>> multRingsUserMemSlice = std::vector<std::vector<Slice>>(0));
+    HcclResult RunIntraSeverReduceScatter(
+        const std::string& tag, DeviceMem& inputMem, DeviceMem& outputMem, const u64 count,
+        const HcclDataType& dataType, const HcclReduceOp& reductionOp,
+        const std::vector<std::vector<Slice>>& multRingsSliceZero, const Stream& stream, s32 profStage,
+        const u64 baseOffset = 0, const HcomCollOpInfo* opInfo = nullptr,
+        const std::vector<std::vector<Slice>>& multRingsUserMemSlice = std::vector<std::vector<Slice>>(0),
         const bool disableDMAReduce = false) override;
-    HcclResult RunIntraSeverAllGather(const std::string &tag, DeviceMem &inputMem, DeviceMem &outputMem,
-        const u64 count, const HcclDataType &dataType,
-        const std::vector<std::vector<Slice>> &multRingsSliceZero, const Stream &stream,
-        s32 profStage, const u64 baseOffset = 0, const HcomCollOpInfo *opInfo = nullptr,
-        const std::vector<std::vector<Slice>> &multRingsUserMemSlice = std::vector<std::vector<Slice>> (0)) override;
+    HcclResult RunIntraSeverAllGather(
+        const std::string& tag, DeviceMem& inputMem, DeviceMem& outputMem, const u64 count,
+        const HcclDataType& dataType, const std::vector<std::vector<Slice>>& multRingsSliceZero, const Stream& stream,
+        s32 profStage, const u64 baseOffset = 0, const HcomCollOpInfo* opInfo = nullptr,
+        const std::vector<std::vector<Slice>>& multRingsUserMemSlice = std::vector<std::vector<Slice>>(0)) override;
 };
 
-}  // namespace hccl
+} // namespace hccl
 
 #endif

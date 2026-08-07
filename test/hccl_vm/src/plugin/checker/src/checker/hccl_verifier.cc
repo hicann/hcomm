@@ -19,7 +19,7 @@
 using namespace HcclSim;
 
 HcclResult CheckAllReduce(
-    HcclSim::AllRankTaskQueues &taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount, HcclReduceOp reduceType)
+    HcclSim::AllRankTaskQueues& taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount, HcclReduceOp reduceType)
 {
     Checker checker;
     TaskCheckOpSemantics opSemanticsChecker(rankSize, HcclCMDType::HCCL_CMD_ALLREDUCE, dataType, dataCount);
@@ -28,8 +28,7 @@ HcclResult CheckAllReduce(
     return HCCL_SUCCESS;
 }
 
-HcclResult CheckAllGather(
-    HcclSim::AllRankTaskQueues &taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount)
+HcclResult CheckAllGather(HcclSim::AllRankTaskQueues& taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount)
 {
     Checker checker;
     TaskCheckOpSemantics opSemanticsChecker(rankSize, HcclCMDType::HCCL_CMD_ALLGATHER, dataType, dataCount);
@@ -38,7 +37,7 @@ HcclResult CheckAllGather(
 }
 
 HcclResult CheckReduceScatter(
-    HcclSim::AllRankTaskQueues &taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount, HcclReduceOp reduceType)
+    HcclSim::AllRankTaskQueues& taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount, HcclReduceOp reduceType)
 {
     Checker checker;
     TaskCheckOpSemantics opSemanticsChecker(rankSize, HcclCMDType::HCCL_CMD_REDUCE_SCATTER, dataType, dataCount);
@@ -48,7 +47,8 @@ HcclResult CheckReduceScatter(
 }
 
 HcclResult CheckSend(
-    HcclSim::AllRankTaskQueues &taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount, u32 srcRank, u32 dstRank)
+    HcclSim::AllRankTaskQueues& taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount, u32 srcRank,
+    u32 dstRank)
 {
     Checker checker;
     TaskCheckOpSemantics opSemanticsChecker(rankSize, HcclCMDType::HCCL_CMD_SEND, dataType, dataCount);
@@ -59,7 +59,8 @@ HcclResult CheckSend(
 }
 
 HcclResult CheckRecv(
-    HcclSim::AllRankTaskQueues &taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount, u32 srcRank, u32 dstRank)
+    HcclSim::AllRankTaskQueues& taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount, u32 srcRank,
+    u32 dstRank)
 {
     Checker checker;
     TaskCheckOpSemantics opSemanticsChecker(rankSize, HcclCMDType::HCCL_CMD_RECEIVE, dataType, dataCount);
@@ -69,8 +70,8 @@ HcclResult CheckRecv(
     return HCCL_SUCCESS;
 }
 
-HcclResult CheckBroadcast(
-    HcclSim::AllRankTaskQueues &taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount, u32 root)
+HcclResult
+CheckBroadcast(HcclSim::AllRankTaskQueues& taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount, u32 root)
 {
     Checker checker;
     TaskCheckOpSemantics opSemanticsChecker(rankSize, HcclCMDType::HCCL_CMD_BROADCAST, dataType, dataCount);
@@ -80,7 +81,8 @@ HcclResult CheckBroadcast(
 }
 
 HcclResult CheckReduce(
-    HcclSim::AllRankTaskQueues &taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount, HcclReduceOp reduceType, u32 root)
+    HcclSim::AllRankTaskQueues& taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount, HcclReduceOp reduceType,
+    u32 root)
 {
     Checker checker;
     TaskCheckOpSemantics opSemanticsChecker(rankSize, HcclCMDType::HCCL_CMD_REDUCE, dataType, dataCount);
@@ -90,8 +92,8 @@ HcclResult CheckReduce(
     return HCCL_SUCCESS;
 }
 
-HcclResult CheckScatter(
-    HcclSim::AllRankTaskQueues &taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount, u32 root)
+HcclResult
+CheckScatter(HcclSim::AllRankTaskQueues& taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount, u32 root)
 {
     Checker checker;
     TaskCheckOpSemantics opSemanticsChecker(rankSize, HcclCMDType::HCCL_CMD_SCATTER, dataType, dataCount);
@@ -100,8 +102,8 @@ HcclResult CheckScatter(
     return HCCL_SUCCESS;
 }
 
-HcclResult CheckBatchSendRecv(
-    HcclSim::AllRankTaskQueues &taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount)
+HcclResult
+CheckBatchSendRecv(HcclSim::AllRankTaskQueues& taskQueues, u32 rankSize, HcclDataType dataType, u64 dataCount)
 {
     Checker checker;
     TaskCheckOpSemantics opSemanticsChecker(rankSize, HcclCMDType::HCCL_CMD_BATCH_SEND_RECV, dataType, dataCount);
@@ -109,8 +111,7 @@ HcclResult CheckBatchSendRecv(
     return HCCL_SUCCESS;
 }
 
-HcclResult CheckAll2All(
-    HcclSim::AllRankTaskQueues &taskQueues, u32 rankSize, HcclDataType sendType, u64 sendCount)
+HcclResult CheckAll2All(HcclSim::AllRankTaskQueues& taskQueues, u32 rankSize, HcclDataType sendType, u64 sendCount)
 {
     All2AllDataDesTagInner all2AllDataDes;
     all2AllDataDes.sendType = sendType;
@@ -125,9 +126,9 @@ HcclResult CheckAll2All(
     CHK_RET(checker.GenAndCheckGraph(taskQueues, opSemanticsChecker));
     return HCCL_SUCCESS;
 }
- 
+
 HcclResult CheckAll2AllV(
-    HcclSim::AllRankTaskQueues &taskQueues, u32 rankSize, HcclDataType sendType, std::vector<uint64_t> sendCountMatrix)
+    HcclSim::AllRankTaskQueues& taskQueues, u32 rankSize, HcclDataType sendType, std::vector<uint64_t> sendCountMatrix)
 {
     All2AllDataDesTagInner all2AllDataDes;
     all2AllDataDes.sendType = sendType;
@@ -140,9 +141,9 @@ HcclResult CheckAll2AllV(
     CHK_RET(checker.GenAndCheckGraph(taskQueues, opSemanticsChecker));
     return HCCL_SUCCESS;
 }
- 
+
 HcclResult CheckAll2AllVC(
-    HcclSim::AllRankTaskQueues &taskQueues, u32 rankSize, HcclDataType sendType, std::vector<uint64_t> sendCountMatrix)
+    HcclSim::AllRankTaskQueues& taskQueues, u32 rankSize, HcclDataType sendType, std::vector<uint64_t> sendCountMatrix)
 {
     All2AllDataDesTagInner all2AllDataDes;
     all2AllDataDes.sendType = sendType;
@@ -154,22 +155,23 @@ HcclResult CheckAll2AllVC(
     CHK_RET(checker.GenAndCheckGraph(taskQueues, opSemanticsChecker));
     return HCCL_SUCCESS;
 }
- 
-HcclResult CheckAllGatherV(
-    HcclSim::AllRankTaskQueues &taskQueues, u32 rankSize, VDataDesTagInner vDataDes)
+
+HcclResult CheckAllGatherV(HcclSim::AllRankTaskQueues& taskQueues, u32 rankSize, VDataDesTagInner vDataDes)
 {
     Checker checker;
-    TaskCheckOpSemantics opSemanticsChecker(rankSize, HcclCMDType::HCCL_CMD_ALLGATHER_V, static_cast<HcclDataType>(vDataDes.dataType), 0);
+    TaskCheckOpSemantics opSemanticsChecker(
+        rankSize, HcclCMDType::HCCL_CMD_ALLGATHER_V, static_cast<HcclDataType>(vDataDes.dataType), 0);
     opSemanticsChecker.SetVDataDes(vDataDes);
     CHK_RET(checker.GenAndCheckGraph(taskQueues, opSemanticsChecker));
     return HCCL_SUCCESS;
 }
- 
+
 HcclResult CheckReduceScatterV(
-    HcclSim::AllRankTaskQueues &taskQueues, u32 rankSize, HcclReduceOp reduceType, VDataDesTagInner vDataDes)
+    HcclSim::AllRankTaskQueues& taskQueues, u32 rankSize, HcclReduceOp reduceType, VDataDesTagInner vDataDes)
 {
     Checker checker;
-    TaskCheckOpSemantics opSemanticsChecker(rankSize, HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V, static_cast<HcclDataType>(vDataDes.dataType), 0);
+    TaskCheckOpSemantics opSemanticsChecker(
+        rankSize, HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V, static_cast<HcclDataType>(vDataDes.dataType), 0);
     opSemanticsChecker.SetReduceType(reduceType);
     opSemanticsChecker.SetVDataDes(vDataDes);
     CHK_RET(checker.GenAndCheckGraph(taskQueues, opSemanticsChecker));

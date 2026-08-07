@@ -31,41 +31,47 @@ HcclResult CcuWqeBBMgrV2::Init()
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuWqeBBMgrV2::Alloc(const WqeBBReq& wqeBBReq, ResInfo &wqeBBInfo)
+HcclResult CcuWqeBBMgrV2::Alloc(const WqeBBReq& wqeBBReq, ResInfo& wqeBBInfo)
 {
     wqeBBInfo.startId = wqeBBReq.jettyCtxStartId * CCU_V2_FIXED_SQ_SIZE;
     wqeBBInfo.num = CCU_V2_FIXED_SQ_SIZE;
     // 检查是否可用，防止重新分配
-    if (wqeBBReq.jettyCtxStartId >= allocatedWqeBBBlocks_.size()) { 
-        HCCL_ERROR("[CcuWqeBBMgrV2][%s] failed, jetty ctx start id[%u] is not expected, "
-            "more than specNum[%zu].", __func__, wqeBBReq.jettyCtxStartId,  allocatedWqeBBBlocks_.size());
+    if (wqeBBReq.jettyCtxStartId >= allocatedWqeBBBlocks_.size()) {
+        HCCL_ERROR(
+            "[CcuWqeBBMgrV2][%s] failed, jetty ctx start id[%u] is not expected, "
+            "more than specNum[%zu].",
+            __func__, wqeBBReq.jettyCtxStartId, allocatedWqeBBBlocks_.size());
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     if (allocatedWqeBBBlocks_[wqeBBReq.jettyCtxStartId]) {
-        HCCL_ERROR("[CcuWqeBBMgrV2][%s] failed, the jetty ctx id[%u] has been allocated.",
-            __func__, wqeBBReq.jettyCtxStartId);
+        HCCL_ERROR(
+            "[CcuWqeBBMgrV2][%s] failed, the jetty ctx id[%u] has been allocated.", __func__, wqeBBReq.jettyCtxStartId);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     allocatedWqeBBBlocks_[wqeBBReq.jettyCtxStartId] = true;
-    HCCL_INFO("[CcuWqeBBMgrV2][%s] jettyCtxStartId[%u], wqeBBInfo.startId[%u], wqeBBInfo.num[%u]",
-        __func__, wqeBBReq.jettyCtxStartId, wqeBBInfo.startId, wqeBBInfo.num);
+    HCCL_INFO(
+        "[CcuWqeBBMgrV2][%s] jettyCtxStartId[%u], wqeBBInfo.startId[%u], wqeBBInfo.num[%u]", __func__,
+        wqeBBReq.jettyCtxStartId, wqeBBInfo.startId, wqeBBInfo.num);
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuWqeBBMgrV2::Release(const ResInfo &wqeBBInfo)
+HcclResult CcuWqeBBMgrV2::Release(const ResInfo& wqeBBInfo)
 {
     auto startId = wqeBBInfo.startId / CCU_V2_FIXED_SQ_SIZE;
     if (startId >= allocatedWqeBBBlocks_.size()) {
-        HCCL_ERROR("[CcuWqeBBMgrV2][%s] failed, jetty ctx start id[%u] is not expected, "
-            "more than specNum[%zu].", __func__, startId,  allocatedWqeBBBlocks_.size());
+        HCCL_ERROR(
+            "[CcuWqeBBMgrV2][%s] failed, jetty ctx start id[%u] is not expected, "
+            "more than specNum[%zu].",
+            __func__, startId, allocatedWqeBBBlocks_.size());
         return HcclResult::HCCL_E_INTERNAL;
     }
 
     if (!allocatedWqeBBBlocks_[startId]) {
-        HCCL_ERROR("[CcuWqeBBMgrV2][%s] failed, jetty ctx start id[%u] is not allocated.",
-            __func__, startId, allocatedWqeBBBlocks_.size());
+        HCCL_ERROR(
+            "[CcuWqeBBMgrV2][%s] failed, jetty ctx start id[%u] is not allocated.", __func__, startId,
+            allocatedWqeBBBlocks_.size());
         return HcclResult::HCCL_E_PARA;
     }
 

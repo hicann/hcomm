@@ -38,8 +38,8 @@ RS_ATTRI_VISI_DEF int RsNdaGetDirectFlag(unsigned int phyId, unsigned int rdevIn
     }
 
     ret = RsIbvQueryDeviceExtend(rdevCb->ibCtxEx, &extDevAttr);
-    CHK_PRT_RETURN(ret != 0, hccp_err("RsIbvQueryDeviceExtend failed, phyId:%u rdevIndex:%u ret:%d",
-        phyId, rdevIndex, ret), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("RsIbvQueryDeviceExtend failed, phyId:%u rdevIndex:%u ret:%d", phyId, rdevIndex, ret), ret);
 
     if ((extDevAttr.ext_cap & IBV_EXTEND_DEV_NDA) == 0) {
         *directFlag = DIRECT_FLAG_NOTSUPP;
@@ -56,7 +56,11 @@ STATIC int RsNdaGetDirectFlagByDevAttr(struct ibv_device_attr *deviceAttr)
         uint32_t vendorId;
         uint32_t vendorPartID;
     } vendorInfoList[] = {
-        {0x19E5U, 0x0230U}, {0x19E5U, 0x0231U}, {0x19E5U, 0x0232U}, {0xCC08U, 0x8200U}, {0xCC08U, 0x8201U},
+        {0x19E5U, 0x0230U},
+        {0x19E5U, 0x0231U},
+        {0x19E5U, 0x0232U},
+        {0xCC08U, 0x8200U},
+        {0xCC08U, 0x8201U},
     };
     unsigned int listSize = sizeof(vendorInfoList) / sizeof(vendorInfoList[0]);
     unsigned int i;
@@ -78,7 +82,7 @@ STATIC int RsGetNdaPcieDbCb(struct RsNdaCb *ndaCb, uint64_t hva, struct NdaPcieD
 
     RS_LIST_GET_HEAD_ENTRY(dbCbCurr, dbCbNext, &ndaCb->ndaPcieCb.ndaDbList, list, struct NdaPcieDbCb);
     for (; (&dbCbCurr->list) != &ndaCb->ndaPcieCb.ndaDbList;
-        dbCbCurr = dbCbNext, dbCbNext = list_entry(dbCbNext->list.next, struct NdaPcieDbCb, list)) {
+         dbCbCurr = dbCbNext, dbCbNext = list_entry(dbCbNext->list.next, struct NdaPcieDbCb, list)) {
         if (dbCbCurr->hva == hva) {
             *ndaDbCb = dbCbCurr;
             return 0;
@@ -97,7 +101,7 @@ STATIC int RsGetNdaUbDbCb(struct RsNdaCb *ndaCb, uint64_t guidL, uint64_t guidH,
 
     RS_LIST_GET_HEAD_ENTRY(dbCbCurr, dbCbNext, &ndaCb->ndaUbCb.ndaDbList, list, struct NdaUbDbCb);
     for (; (&dbCbCurr->list) != &ndaCb->ndaUbCb.ndaDbList;
-        dbCbCurr = dbCbNext, dbCbNext = list_entry(dbCbNext->list.next, struct NdaUbDbCb, list)) {
+         dbCbCurr = dbCbNext, dbCbNext = list_entry(dbCbNext->list.next, struct NdaUbDbCb, list)) {
         if (dbCbCurr->guidL == guidL && dbCbCurr->guidH == guidH) {
             *ndaDbCb = dbCbCurr;
             return 0;
@@ -114,8 +118,8 @@ STATIC void *RsNdaPcieAlloc(size_t size)
     struct RsNdaCb *ndaCb = (struct RsNdaCb *)gRsCb->ndaCb;
     void *ptr = NULL;
 
-    CHK_PRT_RETURN(ndaCb == NULL || ndaCb->ndaOps.alloc == NULL, hccp_err("ndaCb or ndaOps.alloc is NULL, chipId:%u",
-        gRsCb->chipId), NULL);
+    CHK_PRT_RETURN(ndaCb == NULL || ndaCb->ndaOps.alloc == NULL,
+        hccp_err("ndaCb or ndaOps.alloc is NULL, chipId:%u", gRsCb->chipId), NULL);
 
     ptr = ndaCb->ndaOps.alloc(size);
     CHK_PRT_RETURN(ptr == NULL, hccp_err("ptr alloc failed"), NULL);
@@ -253,15 +257,15 @@ STATIC void *RsNdaDbMmapHostVa(struct RsNdaCb *ndaCb, struct doorbell_map_desc *
 
     ret = DlHalHostRegister((void *)(uintptr_t)alignHva, alignSize, HOST_IO_MAP_DEV, logicId, &dbDva);
     if (ret != 0) {
-        hccp_err("register host failed, chipId:%u logicId:%u ret:%d alignHva:0x%llx",
-            gRsCb->chipId, logicId, ret, alignHva);
+        hccp_err("register host failed, chipId:%u logicId:%u ret:%d alignHva:0x%llx", gRsCb->chipId, logicId, ret,
+            alignHva);
         free(ndaDbCb);
         ndaDbCb = NULL;
         return NULL;
     }
 
     ndaDbCb->hva = alignHva;
-    ndaDbCb->dva = (uint64_t )(uintptr_t)dbDva;
+    ndaDbCb->dva = (uint64_t)(uintptr_t)dbDva;
     ndaDbCb->refCnt++;
     RsListAddTail(&ndaDbCb->list, &ndaCb->ndaPcieCb.ndaDbList);
     return (void *)(uintptr_t)(ndaDbCb->dva + offset);
@@ -271,7 +275,7 @@ STATIC void RsNdaMapPrivPrepare(struct doorbell_map_desc *desc, struct NdaUbResM
 {
     resMapIn->guid_l = desc->ub_res.guid_l;
     resMapIn->guid_h = desc->ub_res.guid_h;
-    resMapIn->db_idx = desc->ub_res.bits.offset / (uint64_t )RA_RS_4K_PAGE_SIZE;
+    resMapIn->db_idx = desc->ub_res.bits.offset / (uint64_t)RA_RS_4K_PAGE_SIZE;
     resMapIn->db_num = 1;
     return;
 }
@@ -308,8 +312,8 @@ map_db:
     resInfoIn.priv = (void *)&resMapIn;
     ret = DlHalResAddrMapV2(logicId, &resInfoIn, &resInfoOut);
     if (ret != 0) {
-        hccp_err("DlHalResAddrMapV2 failed, chipId:%u logicId:%u resId:0x%x ret:%d",
-            gRsCb->chipId, logicId, resInfoIn.res_id, ret);
+        hccp_err("DlHalResAddrMapV2 failed, chipId:%u logicId:%u resId:0x%x ret:%d", gRsCb->chipId, logicId,
+            resInfoIn.res_id, ret);
         RsNdaFreeUbDbCb(ndaDbCb);
         return NULL;
     }
@@ -344,8 +348,8 @@ STATIC int RsNdaDbUnmapHostVa(struct RsNdaCb *ndaCb, void *ptr, struct doorbell_
     int ret = 0;
 
     ret = RsGetNdaPcieDbCb(ndaCb, alignHva, &ndaDbCb);
-    CHK_PRT_RETURN(ret != 0, hccp_err("RsGetNdaPcieDbCb failed, hva:0x%llx chipId:%u ret:%d",
-        alignHva, gRsCb->chipId, ret), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("RsGetNdaPcieDbCb failed, hva:0x%llx chipId:%u ret:%d", alignHva, gRsCb->chipId, ret), ret);
 
     ndaDbCb->refCnt--;
     if (ndaDbCb->refCnt != 0) {
@@ -372,8 +376,10 @@ STATIC int RsNdaDbUnmapUbRes(struct RsNdaCb *ndaCb, void *ptr, struct doorbell_m
     int ret = 0;
 
     ret = RsGetNdaUbDbCb(ndaCb, desc->ub_res.guid_l, desc->ub_res.guid_h, &ndaDbCb);
-    CHK_PRT_RETURN(ret != 0, hccp_err("RsGetNdaUbDbCb failed, chipId:%u guidL:0x%llx guidH:0x%llx",
-        gRsCb->chipId, desc->ub_res.guid_l, desc->ub_res.guid_h), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("RsGetNdaUbDbCb failed, chipId:%u guidL:0x%llx guidH:0x%llx", gRsCb->chipId, desc->ub_res.guid_l,
+            desc->ub_res.guid_h),
+        ret);
 
     RsNdaMapPrivPrepare(desc, &resMapIn);
     resInfoIn.target_proc_type = PROCESS_CP1;
@@ -383,8 +389,8 @@ STATIC int RsNdaDbUnmapUbRes(struct RsNdaCb *ndaCb, void *ptr, struct doorbell_m
     resInfoIn.priv = (void *)&resMapIn;
     ret = DlHalResAddrUnmapV2(logicId, &resInfoIn);
     if (ret != 0) {
-        hccp_err("DlHalResAddrUnmapV2 failed, chipId:%u logicId:%u resId:0x%x ret:%d",
-            gRsCb->chipId, logicId, resInfoIn.res_id, ret);
+        hccp_err("DlHalResAddrUnmapV2 failed, chipId:%u logicId:%u resId:0x%x ret:%d", gRsCb->chipId, logicId,
+            resInfoIn.res_id, ret);
     }
 
     ndaDbCb->refCnt--;
@@ -526,7 +532,7 @@ STATIC int RsNdaCqCreateEx(struct RsRdevCb *rdevCb, struct ibv_cq_init_attr_exte
     return 0;
 }
 
-RS_ATTRI_VISI_DEF int RsNdaCqCreate(unsigned int phyId, unsigned int rdevIndex, struct NdaCqInitAttr *attr, 
+RS_ATTRI_VISI_DEF int RsNdaCqCreate(unsigned int phyId, unsigned int rdevIndex, struct NdaCqInitAttr *attr,
     struct NdaCqInfo *info, void **ibvCqExt)
 {
     struct ibv_cq_init_attr_extend cqInitAttrEx = {0};
@@ -535,8 +541,8 @@ RS_ATTRI_VISI_DEF int RsNdaCqCreate(unsigned int phyId, unsigned int rdevIndex, 
     int ret = 0;
 
     CHK_PRT_RETURN(attr == NULL || info == NULL, hccp_err("attr or info is NULL, phyId:%u", phyId), -EINVAL);
-    CHK_PRT_RETURN(attr->dmaMode >= QBUF_DMA_MODE_MAX, hccp_err("param err, dmaMode:%u >= %u, phyId:%u",
-        attr->dmaMode, QBUF_DMA_MODE_MAX, phyId), -EINVAL);
+    CHK_PRT_RETURN(attr->dmaMode >= QBUF_DMA_MODE_MAX,
+        hccp_err("param err, dmaMode:%u >= %u, phyId:%u", attr->dmaMode, QBUF_DMA_MODE_MAX, phyId), -EINVAL);
 
     ret = RsQueryRdevCb(phyId, rdevIndex, &rdevCb);
     CHK_PRT_RETURN(ret != 0, hccp_err("RsQueryRdevCb failed, phyId:%u rdevIndex:%u ret:%d", phyId, rdevIndex, ret),
@@ -564,8 +570,8 @@ RS_ATTRI_VISI_DEF int RsNdaCqDestroy(unsigned int phyId, unsigned int rdevIndex,
         ret);
 
     ret = RsIbvDestroyCqExtend(rdevCb->ibCtxEx, ibvCqExt);
-    CHK_PRT_RETURN(ret != 0, hccp_err("RsIbvDestroyCqExtend failed, phyId:%u rdevIndex:%u ret:%d",
-        phyId, rdevIndex, ret), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("RsIbvDestroyCqExtend failed, phyId:%u rdevIndex:%u ret:%d", phyId, rdevIndex, ret), ret);
 
     return ret;
 }
@@ -683,10 +689,10 @@ RS_ATTRI_VISI_DEF int RsNdaQpCreate(unsigned int phyId, unsigned int rdevIndex, 
     struct RsQpCb *qpCb = NULL;
     int ret = 0;
 
-    CHK_PRT_RETURN(attr == NULL || info == NULL || qpResp == NULL, hccp_err("attr or info or qpResp is NULL, phyId:%u",
-        phyId), -EINVAL);
-    CHK_PRT_RETURN(attr->dmaMode >= QBUF_DMA_MODE_MAX, hccp_err("param err, dmaMode:%u >= %u, phyId:%u",
-        attr->dmaMode, QBUF_DMA_MODE_MAX, phyId), -EINVAL);
+    CHK_PRT_RETURN(attr == NULL || info == NULL || qpResp == NULL,
+        hccp_err("attr or info or qpResp is NULL, phyId:%u", phyId), -EINVAL);
+    CHK_PRT_RETURN(attr->dmaMode >= QBUF_DMA_MODE_MAX,
+        hccp_err("param err, dmaMode:%u >= %u, phyId:%u", attr->dmaMode, QBUF_DMA_MODE_MAX, phyId), -EINVAL);
 
     ret = RsQueryRdevCb(phyId, rdevIndex, &rdevCb);
     CHK_PRT_RETURN(ret != 0, hccp_err("RsQueryRdevCb phyId:%u rdevIndex:%u ret:%d", phyId, rdevIndex, ret), ret);

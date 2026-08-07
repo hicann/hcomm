@@ -21,20 +21,11 @@ using namespace Hccl;
 
 class LocalCntNotifyTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "LocalCntNotifyTest SetUP" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "LocalCntNotifyTest SetUP" << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "LocalCntNotifyTest TearDown" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "LocalCntNotifyTest TearDown" << std::endl; }
 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in LocalCntNotifyTest SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in LocalCntNotifyTest SetUP" << std::endl; }
 
     virtual void TearDown()
     {
@@ -50,7 +41,7 @@ TEST_F(LocalCntNotifyTest, getExchangeDto_test)
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType::DEV_TYPE_910A2));
     MOCKER(HrtGetDevice).stubs().will(returnValue(0));
     MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
-    MOCKER(HrtCntNotifyCreate).stubs().will(returnValue((void *)(fakeNotifyHandleAddr)));
+    MOCKER(HrtCntNotifyCreate).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
     MOCKER(HrtGetCntNotifyId).stubs().will(returnValue(fakeNotifyId));
 
     int a = 0;

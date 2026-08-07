@@ -22,39 +22,38 @@ public:
     LocalNotify();
     ~LocalNotify();
     HcclResult Init(const NotifyLoadType type = NotifyLoadType::HOST_NOTIFY);
-    HcclResult Init(const HcclSignalInfo &notifyInfo,
-                    const NotifyLoadType type = NotifyLoadType::DEVICE_NOTIFY);
-    HcclResult InitNotifyLite(const HcclSignalInfo &notifyInfo);
+    HcclResult Init(const HcclSignalInfo& notifyInfo, const NotifyLoadType type = NotifyLoadType::DEVICE_NOTIFY);
+    HcclResult InitNotifyLite(const HcclSignalInfo& notifyInfo);
 
-    HcclResult Wait(Stream& stream, HcclDispatcher dispatcher,
-        s32 stage = INVALID_VALUE_STAGE, u32 timeOut = NOTIFY_INVALID_WAIT_TIME);
+    HcclResult Wait(
+        Stream& stream, HcclDispatcher dispatcher, s32 stage = INVALID_VALUE_STAGE,
+        u32 timeOut = NOTIFY_INVALID_WAIT_TIME);
     HcclResult Wait(Stream& stream, u32 timeOut);
-    HcclResult Post(Stream& stream, HcclDispatcher dispatcher,
-        s32 stage = INVALID_VALUE_STAGE);
+    HcclResult Post(Stream& stream, HcclDispatcher dispatcher, s32 stage = INVALID_VALUE_STAGE);
     HcclResult Post(Stream& stream);
     virtual HcclResult Destroy();
     virtual HcclResult SetIpc();
 
     // mc2获取aicpu notify信息  local&remote
-    HcclResult GetNotifyData(HcclSignalInfo &notifyInfo);
+    HcclResult GetNotifyData(HcclSignalInfo& notifyInfo);
     // aicpu device 侧set notify信息
-    HcclResult SetNotifyData(HcclSignalInfo &notifyInfo);
+    HcclResult SetNotifyData(HcclSignalInfo& notifyInfo);
 
     // 使用时需判空
-    inline HcclRtNotify ptr()
-    {
-        return notifyPtr;
-    }
+    inline HcclRtNotify ptr() { return notifyPtr; }
 
     // 获取offset
-    HcclResult GetNotifyOffset(u64 &notifyOffset);
+    HcclResult GetNotifyOffset(u64& notifyOffset);
 
-    static HcclResult Wait(Stream& stream, HcclDispatcher dispatcherPtr, const std::shared_ptr<LocalNotify> &notify,
+    static HcclResult Wait(
+        Stream& stream, HcclDispatcher dispatcherPtr, const std::shared_ptr<LocalNotify>& notify,
         s32 stage = INVALID_VALUE_STAGE, u32 timeOut = NOTIFY_INVALID_WAIT_TIME);
-    static HcclResult Post(Stream& stream, HcclDispatcher dispatcherPtr, const std::shared_ptr<LocalNotify> &notify,
+    static HcclResult Post(
+        Stream& stream, HcclDispatcher dispatcherPtr, const std::shared_ptr<LocalNotify>& notify,
         s32 stage = INVALID_VALUE_STAGE);
 
     u32 notifyId_{INVALID_UINT};
+
 protected:
     std::unique_ptr<LocalNotifyImpl> pimpl_;
     HcclRtNotify notifyPtr = nullptr;
@@ -62,6 +61,6 @@ protected:
      * 在析构时需要销毁 */
     bool notifyOwner_ = true;
 };
-}
+} // namespace hccl
 
 #endif // LOCAL_NOTIFY_H

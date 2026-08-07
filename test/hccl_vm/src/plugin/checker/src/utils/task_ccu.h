@@ -26,7 +26,7 @@
 namespace HcclSim {
 constexpr uint32_t MAX_LOOPGROUP_NUM = 1024;
 
-TaskNode* UpdateNodeForCcuGraph(TaskNode *node,  std::set<TaskNode *>& simulatedNodes);
+TaskNode* UpdateNodeForCcuGraph(TaskNode* node, std::set<TaskNode*>& simulatedNodes);
 
 struct LoopInfo {
     LoopInfo(TaskNodePtr start, TaskNodePtr end) : loopStart(start), loopEnd(end) {}
@@ -45,7 +45,11 @@ struct BilateralPostInfo {
 };
 
 struct BilateralNode {
-    BilateralNode(TaskNodePtr asyncNode, TaskNodePtr wait, TaskNodePtr post) : asyncNode(asyncNode), backwardWait(wait), forwardPost(post) {}
+    BilateralNode(TaskNodePtr asyncNode, TaskNodePtr wait, TaskNodePtr post)
+        : asyncNode(asyncNode),
+          backwardWait(wait),
+          forwardPost(post)
+    {}
     TaskNodePtr backwardWait{nullptr};
     TaskNodePtr forwardPost{nullptr};
     TaskNodePtr asyncNode;
@@ -55,14 +59,15 @@ struct BilateralNode {
 class TaskStubCcuGraph : public TaskStub {
 public:
     TaskStubCcuGraph() = delete;
-    TaskStubCcuGraph(hcomm::CcuRep::CcuInstrInfo &missionInstrs,
-        const std::vector<HcclSim::CcuTaskParam> &ccuParam, RankId rank);
+    TaskStubCcuGraph(
+        hcomm::CcuRep::CcuInstrInfo& missionInstrs, const std::vector<HcclSim::CcuTaskParam>& ccuParam, RankId rank);
     // 本构造函数只给UT测试使用
-    TaskStubCcuGraph(RankId rank) : TaskStub(TaskTypeStub::CCU_GRAPH), rankId(rank) {
+    TaskStubCcuGraph(RankId rank) : TaskStub(TaskTypeStub::CCU_GRAPH), rankId(rank)
+    {
         ccuHeadTaskNode = new TaskNode(nullptr, -1, 0, 0);
         toDeleteTaskNode_.push_back(ccuHeadTaskNode);
     }
-    TaskStubCcuGraph(const TaskStubCcuGraph *ccuTask);
+    TaskStubCcuGraph(const TaskStubCcuGraph* ccuTask);
     ~TaskStubCcuGraph() override;
     std::string Describe() const override;
 
@@ -77,11 +82,11 @@ public:
     std::string des;
     std::vector<hcomm::CcuRep::CcuInstrInfo> instrInfo;
     std::vector<std::vector<HcclSim::CcuTaskParam>> ccuParams;
-    std::vector<u32> ccuParamIndexs;     // 记录load加载到哪一组参数
-    std::vector<u32> microCodePosInQue;  // 每条que当前处理到的微码位置
-    std::vector<u32> startInstrIdInQue;  // 每条que的起始ID
-    std::vector<bool> instrQueStatus;    // 一条微码队列成图完成后，其标识位设置为true
-    std::vector<TaskNode*> tailNodes;    // 微码队列成图时，对应的尾部node
+    std::vector<u32> ccuParamIndexs;    // 记录load加载到哪一组参数
+    std::vector<u32> microCodePosInQue; // 每条que当前处理到的微码位置
+    std::vector<u32> startInstrIdInQue; // 每条que的起始ID
+    std::vector<bool> instrQueStatus;   // 一条微码队列成图完成后，其标识位设置为true
+    std::vector<TaskNode*> tailNodes;   // 微码队列成图时，对应的尾部node
     TaskNode* ccuHeadTaskNode = nullptr;
     bool isGenGraphed = false; // 可能不需要了
 
@@ -114,5 +119,5 @@ public:
     std::string Describe() const override;
     TaskNodePtr subGraphNode = nullptr;
 };
-} // namespace hccl
+} // namespace HcclSim
 #endif

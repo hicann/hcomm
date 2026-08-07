@@ -16,13 +16,13 @@
 #include "hccl_device_pub.h"
 #include "runtime/rt.h"
 
-void ParseA5SqeFromSqBuffer(uint32_t devId, struct halSqCqConfigInfo *info);
+void ParseA5SqeFromSqBuffer(uint32_t devId, struct halSqCqConfigInfo* info);
 
-void ParseDavidSDMASqe(uint32_t streamId, void *sqeBuf);
+void ParseDavidSDMASqe(uint32_t streamId, void* sqeBuf);
 
-void ParseDavidNotifySqe(uint32_t streamId, void *sqeBuf, bool isPost);
+void ParseDavidNotifySqe(uint32_t streamId, void* sqeBuf, bool isPost);
 
-void ParseDavidUDMASqe(uint32_t streamId, void *sqeBuf);
+void ParseDavidUDMASqe(uint32_t streamId, void* sqeBuf);
 
 void ParseDavidUBReadWriteSqe(uint64_t wqeAddr, uint16_t streamId, uint32_t jettyId, bool isRead);
 
@@ -38,7 +38,7 @@ HcclReduceOp ParseUbReduceTypeDavid(uint32_t type);
 
 HcclDataType ParseUbDataTypeDavid(uint32_t type);
 
-void PrintTaskMetaData(const HcclTaskMetaData &taskMeta);
+void PrintTaskMetaData(const HcclTaskMetaData& taskMeta);
 
 uint32_t GetRmtRankIdByEid(uint32_t eid);
 

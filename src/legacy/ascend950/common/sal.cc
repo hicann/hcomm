@@ -33,18 +33,18 @@ void SalSleep(u32 sec)
     }
 }
 
-std::string SalGetEnv(const char *name)
+std::string SalGetEnv(const char* name)
 {
     if (name == nullptr || getenv(name) == nullptr) {
         return "EmptyString";
     }
- 
+
     return getenv(name);
 }
 
 constexpr u32 INVALID_UINT = 0xFFFFFFFF;
 // 字串符转换成无符号整型
-HcclResult SalStrToULong(const std::string str, int base, u32 &val)
+HcclResult SalStrToULong(const std::string str, int base, u32& val)
 {
     try {
         u64 tmp = std::stoull(str, nullptr, base);
@@ -54,16 +54,13 @@ HcclResult SalStrToULong(const std::string str, int base, u32 &val)
         } else {
             val = static_cast<u32>(tmp);
         }
-    }
-    catch (std::invalid_argument&) {
+    } catch (std::invalid_argument&) {
         HCCL_ERROR("[Transform][StrToULong]stoull invalid argument, str[%s] base[%d] val[%u]", str.c_str(), base, val);
         return HCCL_E_PARA;
-    }
-    catch (std::out_of_range&) {
+    } catch (std::out_of_range&) {
         HCCL_ERROR("[Transform][StrToULong]stoull out of range, str[%s] base[%d] val[%u]", str.c_str(), base, val);
         return HCCL_E_PARA;
-    }
-    catch (...) {
+    } catch (...) {
         HCCL_ERROR("[Transform][StrToULong]stoull catch errror, str[%s] base[%d] val[%u]", str.c_str(), base, val);
         return HCCL_E_PARA;
     }
@@ -73,7 +70,7 @@ HcclResult SalStrToULong(const std::string str, int base, u32 &val)
 u64 SalGetCurrentTimestamp()
 {
     u64 timestamp;
-    struct timeval tv{};
+    struct timeval tv {};
     int ret = gettimeofday(&tv, nullptr);
     if (ret != 0) {
         HCCL_ERROR("[Get][tCurrentTimestamp]get timestamp fail, return[%d].", ret);
@@ -88,14 +85,11 @@ u64 GetCurAicpuTimestamp()
     (void)clock_gettime(1, &timestamp);
     return static_cast<u64>((timestamp.tv_sec * 1000000000U) + (timestamp.tv_nsec));
 }
- 
-// 返回当前线程ID
-s32 SalGetTid()
-{
-    return syscall(SYS_gettid);
-}
 
-void SetThreadName(const std::string &threadStr)
+// 返回当前线程ID
+s32 SalGetTid() { return syscall(SYS_gettid); }
+
+void SetThreadName(const std::string& threadStr)
 {
     // 线程名应限制在15个字符内，防止被截断
     s32 sRet = pthread_setname_np(pthread_self(), threadStr.c_str());

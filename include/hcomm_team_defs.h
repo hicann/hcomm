@@ -19,13 +19,12 @@ extern "C" {
 /**
  * @brief 团队句柄类型（不透明结构）
  */
-typedef uint64_t *HcommTeamHandle;
-
+typedef uint64_t* HcommTeamHandle;
 
 /**
  * @brief 窗口句柄类型（不透明结构）
  */
-typedef uint64_t *HcommWindowHandle;
+typedef uint64_t* HcommWindowHandle;
 
 typedef struct {
     uint32_t signalCount;

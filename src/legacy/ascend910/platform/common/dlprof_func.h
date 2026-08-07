@@ -22,18 +22,18 @@ namespace hccl {
 class DlProfFunc {
 public:
     virtual ~DlProfFunc();
-    static DlProfFunc &GetInstance();
+    static DlProfFunc& GetInstance();
     HcclResult DlProfFunctionInit();
     std::function<uint64_t(void)> dlMsprofSysCycleTime{};
 
 private:
-    void *handle_{};
+    void* handle_{};
     std::mutex handleMutex_;
     DlProfFunc(const DlProfFunc&) = delete;
-    DlProfFunc &operator=(const DlProfFunc&) = delete;
+    DlProfFunc& operator=(const DlProfFunc&) = delete;
     DlProfFunc();
     HcclResult DlProfFunctionInterInit();
     void DlProfFunctionStubInit();
 };
-}  // namespace hccl
+} // namespace hccl
 #endif

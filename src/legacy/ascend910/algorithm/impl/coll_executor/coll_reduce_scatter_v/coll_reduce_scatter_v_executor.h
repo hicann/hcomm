@@ -16,22 +16,23 @@ namespace hccl {
 
 class CollReduceScatterVExecutor : public CollCommExecutor {
 public:
-    explicit CollReduceScatterVExecutor(const HcclDispatcher dispatcher,
-    std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollReduceScatterVExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceScatterVExecutor() override = default;
 
     HcclResult Orchestrate(OpParam& param, AlgResourceResponse& algRes) override;
     HcclResult GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& adjInfo) override;
+
 protected:
     // ReduceScatter Loop Executor公共接口
     virtual u64 CalcLoopMaxCount(const u32 unitSize);
-    virtual HcclResult CalcCurCountsAndCurDispls(const u64 maxTotalCount, std::vector<u64> &countsLeft,
-        std::vector<u64> &displs, std::vector<u64> &curCounts, std::vector<u64> &curDispls, bool &finished);
-    virtual bool IsHugeData(const u64 curSize, const OpParam &param);
-    virtual HcclResult RunLoop(OpParam &param, AlgResourceResponse &algRes);
+    virtual HcclResult CalcCurCountsAndCurDispls(
+        const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
+        std::vector<u64>& curDispls, bool& finished);
+    virtual bool IsHugeData(const u64 curSize, const OpParam& param);
+    virtual HcclResult RunLoop(OpParam& param, AlgResourceResponse& algRes);
 
     // 工具类
-    void PrintCurCountAndCurDispls(const std::vector<u64> &curCounts, const std::vector<u64> &curDispls);
+    void PrintCurCountAndCurDispls(const std::vector<u64>& curCounts, const std::vector<u64>& curDispls);
 
     bool CCLMemSlice_{true};     // 每次Loop是否需要对CCLMem进行切片
     bool DMAReduceFlag_{false};  // 是否DMA消减
@@ -39,7 +40,7 @@ protected:
     u64 totalSize_{0};           // 总数据量
 
 private:
-    HcclResult RunLoopInner(OpParam &param, const ReduceType &reduceType, ExecMem &execMem);
+    HcclResult RunLoopInner(OpParam& param, const ReduceType& reduceType, ExecMem& execMem);
 };
 
 } // namespace hccl

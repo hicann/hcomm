@@ -27,22 +27,24 @@
 #include <string>
 
 namespace std {
-    template <>
-    struct hash<HcclChannelDesc> {
-        size_t operator()(const HcclChannelDesc& desc) const {
-            size_t hash = 0;
-            // 仅区分remoteRank和protocol
-            hash ^= std::hash<uint32_t>()(desc.remoteRank);
-            hash ^= std::hash<int32_t>()(static_cast<int32_t>(desc.channelProtocol));
-            return hash;
-        }
-    };
-}
+template <>
+struct hash<HcclChannelDesc> {
+    size_t operator()(const HcclChannelDesc& desc) const
+    {
+        size_t hash = 0;
+        // 仅区分remoteRank和protocol
+        hash ^= std::hash<uint32_t>()(desc.remoteRank);
+        hash ^= std::hash<int32_t>()(static_cast<int32_t>(desc.channelProtocol));
+        return hash;
+    }
+};
+} // namespace std
 
 namespace hccl {
 
 struct HcclChannelDescEqual {
-    bool operator()(const HcclChannelDesc& lcd, const HcclChannelDesc& rcd) const {
+    bool operator()(const HcclChannelDesc& lcd, const HcclChannelDesc& rcd) const
+    {
         // 需要扩展增加EndpointDesc的有关内容
         return lcd.remoteRank == rcd.remoteRank && lcd.channelProtocol == rcd.channelProtocol;
     }
@@ -54,47 +56,51 @@ public:
     ~ChannelManager() = default;
     HcclResult Init(aclrtBinHandle binHandle, u32 userRank, const ManagerCallbacks& callbacks);
     HcclResult SetChannelCallbacks(const ChannelManagerCallbacks& channelCallbacks);
-    HcclResult ChannelCommCreate(const std::string &commId, CommEngine engine,
-        const HcclChannelDesc *channelDescList, uint32_t listNum, ChannelHandle *channelList);
-    HcclResult ChannelCommGetNotifyNum(ChannelHandle channel, uint32_t *notifyNum);
-    HcclResult ChannelCommDestroy(ChannelHandle *channelList, uint32_t channelNum);
-    HcclResult ChannelCommGetHcclBuffer(ChannelHandle channel, CommBuffer *buffer);
-    HcclResult ChannelCommGetRemoteMem(ChannelHandle channel, HcclMem **remoteMem, uint32_t *memNum);
+    HcclResult ChannelCommCreate(
+        const std::string& commId, CommEngine engine, const HcclChannelDesc* channelDescList, uint32_t listNum,
+        ChannelHandle* channelList);
+    HcclResult ChannelCommGetNotifyNum(ChannelHandle channel, uint32_t* notifyNum);
+    HcclResult ChannelCommDestroy(ChannelHandle* channelList, uint32_t channelNum);
+    HcclResult ChannelCommGetHcclBuffer(ChannelHandle channel, CommBuffer* buffer);
+    HcclResult ChannelCommGetRemoteMem(ChannelHandle channel, HcclMem** remoteMem, uint32_t* memNum);
     HcclResult ReleaseChannel();
     HcclResult SetHcclQos(u32 hcclQos);
 
 private:
     template <typename T>
-    HcclResult CopyVectorToDeviceMem(const u64 len, DeviceMem &dstDeviceMem, const std::vector<T> &srcVec);
-    HcclResult AllocAndClearHostMem(u64 size, std::shared_ptr<HostMem> &bufferPtr) const;
-    HcclResult CreateWorkSpace(u64 size, DeviceMem &buffer) const;
-    HcclResult CheckNotifyOrQPMaxNum(u64 &existNum, const u64 &MaxNum, const bool &isNotifyRes);
-    HcclResult DeepCopyH2DChannelP2p(const HcclChannelP2p &hostChannelP2p, HcclChannelP2p &deviceChannelP2p);
-    HcclResult DeepCopyH2DChannelRoce(const HcclChannelRoce &hostChannelRoce, HcclChannelRoce &deviceChannelRoce);
-    HcclResult DeepCopyH2DChannelRemoteResV2(const HcclIndOpChannelRemoteResV2 &hostRemoteResV2, 
-        HcclIndOpChannelRemoteResV2 &deviceRemoteResV2);
-    HcclResult DeepCopyH2DchannelParam(const HcclIndOpChannelRemoteResV3 &hostChannelParam, 
-        HcclIndOpChannelRemoteResV3 &deviceChannelParam);
-    HcclResult ReleaseChannelParam(HcclIndOpChannelRemoteResV3 &channelParam);
-    HcclResult BuildOpRemoteChannelP2pResParam(const LINK &link, HcclIndOpChannelRemoteResV2 &remoteRes);
-    HcclResult BuildOpRemoteChannelRoceResParam(const LINK &link, HcclIndOpChannelRemoteResV2 &remoteRes);
-    HcclResult ParseChannelRemoteDataToMem(const OpCommTransport &opTransportResponse, HcclIndOpChannelRemoteResV3 &channelParam);
-    HcclResult AicpuChannelInit(const std::string &commId, const std::string &tag, CommEngine engine, 
-        const OpCommTransport &opTransportResponse, ChannelHandle *channelList, uint32_t listNum);
-    void ClearOpTransportResponseLinks(OpCommTransport &opTransportResponse);
-    OpCommTransport BuildChannelRequests(const std::vector<HcclChannelDesc> &descs);
+    HcclResult CopyVectorToDeviceMem(const u64 len, DeviceMem& dstDeviceMem, const std::vector<T>& srcVec);
+    HcclResult AllocAndClearHostMem(u64 size, std::shared_ptr<HostMem>& bufferPtr) const;
+    HcclResult CreateWorkSpace(u64 size, DeviceMem& buffer) const;
+    HcclResult CheckNotifyOrQPMaxNum(u64& existNum, const u64& MaxNum, const bool& isNotifyRes);
+    HcclResult DeepCopyH2DChannelP2p(const HcclChannelP2p& hostChannelP2p, HcclChannelP2p& deviceChannelP2p);
+    HcclResult DeepCopyH2DChannelRoce(const HcclChannelRoce& hostChannelRoce, HcclChannelRoce& deviceChannelRoce);
+    HcclResult DeepCopyH2DChannelRemoteResV2(
+        const HcclIndOpChannelRemoteResV2& hostRemoteResV2, HcclIndOpChannelRemoteResV2& deviceRemoteResV2);
+    HcclResult DeepCopyH2DchannelParam(
+        const HcclIndOpChannelRemoteResV3& hostChannelParam, HcclIndOpChannelRemoteResV3& deviceChannelParam);
+    HcclResult ReleaseChannelParam(HcclIndOpChannelRemoteResV3& channelParam);
+    HcclResult BuildOpRemoteChannelP2pResParam(const LINK& link, HcclIndOpChannelRemoteResV2& remoteRes);
+    HcclResult BuildOpRemoteChannelRoceResParam(const LINK& link, HcclIndOpChannelRemoteResV2& remoteRes);
+    HcclResult
+    ParseChannelRemoteDataToMem(const OpCommTransport& opTransportResponse, HcclIndOpChannelRemoteResV3& channelParam);
+    HcclResult AicpuChannelInit(
+        const std::string& commId, const std::string& tag, CommEngine engine,
+        const OpCommTransport& opTransportResponse, ChannelHandle* channelList, uint32_t listNum);
+    void ClearOpTransportResponseLinks(OpCommTransport& opTransportResponse);
+    OpCommTransport BuildChannelRequests(const std::vector<HcclChannelDesc>& descs);
 
-    HcclResult CheckChannelParam(CommEngine engine, const HcclChannelDesc *channelDesc,
-        uint32_t descNum);
-    HcclResult RegisterHandle(const std::string& tag, CommEngine engine, const HcclChannelDesc& channelDesc, ChannelHandle channelHandle);
+    HcclResult CheckChannelParam(CommEngine engine, const HcclChannelDesc* channelDesc, uint32_t descNum);
+    HcclResult RegisterHandle(
+        const std::string& tag, CommEngine engine, const HcclChannelDesc& channelDesc, ChannelHandle channelHandle);
     HcclResult RegisterHandleHDPair(ChannelHandle deviceChannelHandle, ChannelHandle hostChannelHandle);
     HcclResult UnregisterHandle(ChannelHandle channel);
-    HcclResult PrepareHandleArray(const std::string &tag, CommEngine engine, const HcclChannelDesc *channelDesc, 
-        uint32_t descNum, ChannelHandle *channelHandleArray, std::vector<HcclChannelDesc> &needCreateDescs,
-        std::vector<uint32_t> &needCreateIndices);
+    HcclResult PrepareHandleArray(
+        const std::string& tag, CommEngine engine, const HcclChannelDesc* channelDesc, uint32_t descNum,
+        ChannelHandle* channelHandleArray, std::vector<HcclChannelDesc>& needCreateDescs,
+        std::vector<uint32_t>& needCreateIndices);
     HcclResult IsChannelExist(ChannelHandle channel);
-    HcclResult GetHostChannel(ChannelHandle channel, ChannelHandle &hostChannel);
-    
+    HcclResult GetHostChannel(ChannelHandle channel, ChannelHandle& hostChannel);
+
     std::unordered_map<std::string, ChannelHandle> channelHandleMap_;
     std::unordered_map<ChannelHandle, std::string> keyMap_;
     std::unordered_map<ChannelHandle, CommEngine> engineMap_;
@@ -107,11 +113,11 @@ private:
     std::vector<std::shared_ptr<DeviceMem>> channelParamMemVector_;
     std::list<DeviceMem> channelParamMemList_;
     aclrtBinHandle binHandle_;
-    ManagerCallbacks callbacks_;  // 存储回调函数
-    ChannelManagerCallbacks channelCallbacks_;  // channelMgr的回调函数
+    ManagerCallbacks callbacks_;               // 存储回调函数
+    ChannelManagerCallbacks channelCallbacks_; // channelMgr的回调函数
     u32 hcclQos_;
 };
 
 } // namespace hccl
 
-#endif  // CHANNEL_MANAGER_H
+#endif // CHANNEL_MANAGER_H

@@ -17,22 +17,24 @@
 class AicpuKfcDeprecatedProcess {
 public:
     ~AicpuKfcDeprecatedProcess() = default;
-    static HcclResult AICPU_RpcServerUnfoldStageWait(AicpuComContext *ctx, AicpuKfcRpcServer &rpc);
-    static HcclResult RunRpcServerTwoStageWait(AicpuComContext *ctx, AicpuKfcRpcServer &rpc);
-    static HcclResult TryRunRpcServerOneStageWait(AicpuComContext *ctx, AicpuKfcRpcServer &rpc);
+    static HcclResult AICPU_RpcServerUnfoldStageWait(AicpuComContext* ctx, AicpuKfcRpcServer& rpc);
+    static HcclResult RunRpcServerTwoStageWait(AicpuComContext* ctx, AicpuKfcRpcServer& rpc);
+    static HcclResult TryRunRpcServerOneStageWait(AicpuComContext* ctx, AicpuKfcRpcServer& rpc);
 
 private:
-    static HcclResult LaunchHcclOp(AicpuComContext *ctx, AivAicpuOpParam *commParam, uint32_t &beginSqePos,
-                                   uint32_t &endSqePos);
-    static HcclResult RetryLaunchHcclOp(AicpuComContext *ctx, AivAicpuOpParam *commParam, uint32_t &endSqePos);
-    static HcclResult RunRpcServerOneStageWait(AicpuComContext *ctx, AicpuKfcRpcServer &rpc);
-    static HcclResult HcclOpExecFsmWaitEndProcess(AicpuComContext *ctx, HcclOpExecFSM &state, KfcError &errorCode,
-                                                  u32 retryCnt);
-    static HcclResult HcclOpExecFsmWaitRetryProcess(AicpuComContext *ctx, HcclOpExecFSM &state, KfcError &errorCode);
-    static HcclResult HcclOpExecFsmLaunchProcess(AicpuComContext *ctx, HcclOpExecFSM &state, KfcError &errorCode,
-                                                 AivAicpuOpParam &opParams, uint32_t &beginSqePos, uint32_t &endSqePos);
-    static HcclResult HcclOpExecFsmRetryProcess(AicpuComContext *ctx, HcclOpExecFSM &state, KfcError &errorCode,
-                                                uint32_t &retryCnt, AivAicpuOpParam &opParams, uint32_t &endSqePos);
+    static HcclResult
+    LaunchHcclOp(AicpuComContext* ctx, AivAicpuOpParam* commParam, uint32_t& beginSqePos, uint32_t& endSqePos);
+    static HcclResult RetryLaunchHcclOp(AicpuComContext* ctx, AivAicpuOpParam* commParam, uint32_t& endSqePos);
+    static HcclResult RunRpcServerOneStageWait(AicpuComContext* ctx, AicpuKfcRpcServer& rpc);
+    static HcclResult
+    HcclOpExecFsmWaitEndProcess(AicpuComContext* ctx, HcclOpExecFSM& state, KfcError& errorCode, u32 retryCnt);
+    static HcclResult HcclOpExecFsmWaitRetryProcess(AicpuComContext* ctx, HcclOpExecFSM& state, KfcError& errorCode);
+    static HcclResult HcclOpExecFsmLaunchProcess(
+        AicpuComContext* ctx, HcclOpExecFSM& state, KfcError& errorCode, AivAicpuOpParam& opParams,
+        uint32_t& beginSqePos, uint32_t& endSqePos);
+    static HcclResult HcclOpExecFsmRetryProcess(
+        AicpuComContext* ctx, HcclOpExecFSM& state, KfcError& errorCode, uint32_t& retryCnt, AivAicpuOpParam& opParams,
+        uint32_t& endSqePos);
 };
 
 #endif

@@ -29,17 +29,21 @@ void UpdaterFor64Plus1::SaveReplaceInfo(const NewRankInfo& rank)
         }
     }
     if (netInstId.empty()) {
-        THROW<InvalidParamsException>(StringFormat("[UpdaterFor64Plus1::Init] "
-            "Replaced rank[%d] has empty R0Id", rank.rankId));
+        THROW<InvalidParamsException>(StringFormat(
+            "[UpdaterFor64Plus1::Init] "
+            "Replaced rank[%d] has empty R0Id",
+            rank.rankId));
     }
     if (replaceInfo.find(netInstId) != replaceInfo.end()) {
-        THROW<InvalidParamsException>(StringFormat("[UpdaterFor64Plus1::Init] "
-            "R0Group[%s] has more than one backups", netInstId.c_str()));
+        THROW<InvalidParamsException>(StringFormat(
+            "[UpdaterFor64Plus1::Init] "
+            "R0Group[%s] has more than one backups",
+            netInstId.c_str()));
     }
     replaceInfo[netInstId] = make_pair(rank.localId, rank.replacedLocalId);
 }
 
-void UpdaterFor64Plus1::UpdateRankGraph(RankGraph* rankGraph, const RankTableInfo *rankTable) const
+void UpdaterFor64Plus1::UpdateRankGraph(RankGraph* rankGraph, const RankTableInfo* rankTable) const
 {
     if (rankGraph == nullptr) {
         THROW<NullPtrException>(StringFormat("[UpdaterFor64Plus1][%s] rankGraph is nullptr", __func__));
@@ -53,14 +57,17 @@ void UpdaterFor64Plus1::UpdateRankGraph(RankGraph* rankGraph, const RankTableInf
         s32 replacedLocalId = it.second.second;
         NetInstance* netInstance = rankGraph->GetNetInstanceByNetInstId(0, netInstId);
         if (netInstance == nullptr) {
-            HCCL_WARNING("[UpdaterFor64Plus1][%s] netInstance netlayer[0] netInstanceId[%s] not exist", __func__, netInstId.c_str());
+            HCCL_WARNING(
+                "[UpdaterFor64Plus1][%s] netInstance netlayer[0] netInstanceId[%s] not exist", __func__,
+                netInstId.c_str());
             continue;
         }
         UpdateNetInstance(netInstance, localId, replacedLocalId, rankTable);
     }
 }
 
-void UpdaterFor64Plus1::UpdateNetInstance(NetInstance* netInstance, LocalId localId, LocalId replacedLocalId, const RankTableInfo *rankTable) const
+void UpdaterFor64Plus1::UpdateNetInstance(
+    NetInstance* netInstance, LocalId localId, LocalId replacedLocalId, const RankTableInfo* rankTable) const
 {
     if (netInstance == nullptr) {
         THROW<NullPtrException>(StringFormat("[UpdaterFor64Plus1][%s] netInstance is nullptr", __func__));
@@ -69,11 +76,12 @@ void UpdaterFor64Plus1::UpdateNetInstance(NetInstance* netInstance, LocalId loca
     if (phyTopoGraph == nullptr) {
         THROW<NullPtrException>(StringFormat("[UpdaterFor64Plus1][%s] phyTopoGraph is nullptr", __func__));
     }
-    HCCL_DEBUG("[UpdaterFor64Plus1][%s] Updating NetInstance[%s]: localId[%u]->replacedId[%u]",
-        __func__, netInstance->GetNetInstId().c_str(), localId, replacedLocalId);
+    HCCL_DEBUG(
+        "[UpdaterFor64Plus1][%s] Updating NetInstance[%s]: localId[%u]->replacedId[%u]", __func__,
+        netInstance->GetNetInstId().c_str(), localId, replacedLocalId);
 
     // 找到与故障D直连的D
-    shared_ptr<NetInstance::Peer> backupPeer;  // local[64]
+    shared_ptr<NetInstance::Peer> backupPeer; // local[64]
     vector<shared_ptr<NetInstance::Peer>> backupLinkedPeers;
     for (const auto& it : netInstance->GetPeers()) {
         auto peer = it.second;
@@ -96,15 +104,15 @@ void UpdaterFor64Plus1::UpdateNetInstance(NetInstance* netInstance, LocalId loca
     }
 }
 
-void UpdaterFor64Plus1::AddPeer2BackupLinks(shared_ptr<NetInstance::Peer> peer,
-                                            shared_ptr<NetInstance::Peer> backupPeer, LocalId replacedLocalId,
-                                            NetInstance* netInstance, const RankTableInfo* rankTable) const
+void UpdaterFor64Plus1::AddPeer2BackupLinks(
+    shared_ptr<NetInstance::Peer> peer, shared_ptr<NetInstance::Peer> backupPeer, LocalId replacedLocalId,
+    NetInstance* netInstance, const RankTableInfo* rankTable) const
 {
     auto phyTopoGraph = PhyTopo::GetInstance()->GetTopoGraph(0);
 
     std::unordered_map<u64, u64> fabricIds;
-    auto peer2AllPlaneEdges =
-        phyTopoGraph->GetEdges(PhyTopo::Peer::GetId(backupPeer->GetLocalId()), PhyTopo::Fabric::GetId());
+    auto peer2AllPlaneEdges
+        = phyTopoGraph->GetEdges(PhyTopo::Peer::GetId(backupPeer->GetLocalId()), PhyTopo::Fabric::GetId());
     for (auto edge : peer2AllPlaneEdges) {
         auto topoInstId = edge->GetTopoInstId();
         auto fabricId = static_cast<u64>(topoInstId) | (static_cast<u64>(1) << 32);
@@ -114,8 +122,9 @@ void UpdaterFor64Plus1::AddPeer2BackupLinks(shared_ptr<NetInstance::Peer> peer,
     auto idx = GetLinkIndex(peer->GetLocalId(), replacedLocalId);
     auto backupPlaneId = idx.first;
     auto backupLinkIdx = idx.second;
-    HCCL_DEBUG("[UpdaterFor64Plus1][%s] Peer{rankId[%d], localId[%u]} will use BackupPlane[%u] addr[%u]", __func__,
-               peer->GetRankId(), peer->GetLocalId(), backupPlaneId, backupLinkIdx);
+    HCCL_DEBUG(
+        "[UpdaterFor64Plus1][%s] Peer{rankId[%d], localId[%u]} will use BackupPlane[%u] addr[%u]", __func__,
+        peer->GetRankId(), peer->GetLocalId(), backupPlaneId, backupLinkIdx);
 
     // 先获取phyTopoGraph中备份面和备份D的连接，因为只有一个fabric，所以会获取到全量16条备份面和备份D的连接
     // Edges中可能包含多个连接，但是在phytopo中保存为一条连接，内部有多个连接的端口
@@ -129,12 +138,13 @@ void UpdaterFor64Plus1::AddPeer2BackupLinks(shared_ptr<NetInstance::Peer> peer,
 
     // 校验端口集合大小是否符合预期
     if (backD2PlanePorts.size() != BACKUP_TO_PLANE_ADDR_NUM) {
-        THROW<InvalidParamsException>("[UpdaterFor64Plus1][%s] Backup to BackupPlane[%u] port num error", __func__,
-                                      backupPlaneId);
+        THROW<InvalidParamsException>(
+            "[UpdaterFor64Plus1][%s] Backup to BackupPlane[%u] port num error", __func__, backupPlaneId);
     }
     if (peer2PlanePorts.size() != 1) {
-        THROW<InvalidParamsException>("[UpdaterFor64Plus1][%s] Peer[%u] to BackupPlane[%u] port num error", __func__,
-                                      peer->GetLocalId(), backupPlaneId);
+        THROW<InvalidParamsException>(
+            "[UpdaterFor64Plus1][%s] Peer[%u] to BackupPlane[%u] port num error", __func__, peer->GetLocalId(),
+            backupPlaneId);
     }
 
     // 从端口集合中取出对应逻辑位置的端口
@@ -180,16 +190,17 @@ void UpdaterFor64Plus1::AddPeer2BackupLinks(shared_ptr<NetInstance::Peer> peer,
     }
 }
 
-std::shared_ptr<PhyTopo::Link> UpdaterFor64Plus1::GetPeer2PlaneEdges(u32 backupPlaneId, shared_ptr<NetInstance::Peer> peer, 
-    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> phyTopoGraph) const{
+std::shared_ptr<PhyTopo::Link> UpdaterFor64Plus1::GetPeer2PlaneEdges(
+    u32 backupPlaneId, shared_ptr<NetInstance::Peer> peer,
+    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> phyTopoGraph) const
+{
     std::shared_ptr<PhyTopo::Link> peer2PlaneEdges = nullptr;
-    auto peer2AllPlaneEdges = phyTopoGraph->GetEdges(
-        PhyTopo::Peer::GetId(peer->GetLocalId()), PhyTopo::Fabric::GetId());
+    auto peer2AllPlaneEdges
+        = phyTopoGraph->GetEdges(PhyTopo::Peer::GetId(peer->GetLocalId()), PhyTopo::Fabric::GetId());
     if (peer2AllPlaneEdges.size() != BACKUP_PLANE_NUM) {
-        THROW<InvalidParamsException>("[UpdaterFor64Plus1][%s] BackupPlane num error",
-            __func__);
+        THROW<InvalidParamsException>("[UpdaterFor64Plus1][%s] BackupPlane num error", __func__);
     }
-    for (auto &edges : peer2AllPlaneEdges) {
+    for (auto& edges : peer2AllPlaneEdges) {
         if (edges->GetTopoInstId() == backupPlaneId) {
             peer2PlaneEdges = edges;
             break;
@@ -201,14 +212,13 @@ std::shared_ptr<PhyTopo::Link> UpdaterFor64Plus1::GetPeer2PlaneEdges(u32 backupP
     return peer2PlaneEdges;
 }
 
-std::string UpdaterFor64Plus1::GetPortFromSet(std::set<string> &ports, u32 linkIdx) const
+std::string UpdaterFor64Plus1::GetPortFromSet(std::set<string>& ports, u32 linkIdx) const
 {
     std::string peer2PlanePort = "";
     if (linkIdx >= ports.size()) {
-        THROW<InvalidParamsException>("[UpdaterFor64Plus1][%s] BackupPlane port num error",
-            __func__);
+        THROW<InvalidParamsException>("[UpdaterFor64Plus1][%s] BackupPlane port num error", __func__);
     }
-    for (auto &port : ports) {
+    for (auto& port : ports) {
         if (linkIdx == 0) {
             peer2PlanePort = port;
             break;
@@ -233,27 +243,28 @@ bool UpdaterFor64Plus1::IsSameY(LocalId srcLocalId, LocalId dstLocalId) const
 pair<u32, u32> UpdaterFor64Plus1::GetLinkIndex(LocalId localId, LocalId replacedLocalId) const
 {
     if (localId >= BACKUP_LOCAL_ID || replacedLocalId >= BACKUP_LOCAL_ID || localId == replacedLocalId) {
-        THROW<InvalidParamsException>("[UpdaterFor64Plus1][%s] localId[%u] or replacedId[%u] invalid",
-            __func__, localId, replacedLocalId);
+        THROW<InvalidParamsException>(
+            "[UpdaterFor64Plus1][%s] localId[%u] or replacedId[%u] invalid", __func__, localId, replacedLocalId);
         return {};
     }
     if (IsSameX(localId, replacedLocalId)) {
         auto idx = localId % DEVICE_NUM_PER_AXIS;
         if (idx < DEVICE_HALF_NUM_PER_AXIS) {
-            return make_pair(0, idx);    // X轴左边4个正常D走备份面0
+            return make_pair(0, idx); // X轴左边4个正常D走备份面0
         } else {
-            return make_pair(1, idx % DEVICE_HALF_NUM_PER_AXIS);    // X轴右边4个正常D走备份面1
+            return make_pair(1, idx % DEVICE_HALF_NUM_PER_AXIS); // X轴右边4个正常D走备份面1
         }
     } else if (IsSameY(localId, replacedLocalId)) {
         auto idx = localId / DEVICE_NUM_PER_AXIS;
         if (idx < DEVICE_HALF_NUM_PER_AXIS) {
-            return make_pair(2, idx);    // Y轴上边4个正常D走备份面2
+            return make_pair(2, idx); // Y轴上边4个正常D走备份面2
         } else {
-            return make_pair(3, idx % DEVICE_HALF_NUM_PER_AXIS);    // Y轴下边4个正常D走备份面3
+            return make_pair(3, idx % DEVICE_HALF_NUM_PER_AXIS); // Y轴下边4个正常D走备份面3
         }
     } else {
-        THROW<InvalidParamsException>("[UpdaterFor64Plus1][%s] localId[%u] and replacedId[%u] are not at same line",
-            __func__, localId, replacedLocalId);
+        THROW<InvalidParamsException>(
+            "[UpdaterFor64Plus1][%s] localId[%u] and replacedId[%u] are not at same line", __func__, localId,
+            replacedLocalId);
         return {};
     }
 }

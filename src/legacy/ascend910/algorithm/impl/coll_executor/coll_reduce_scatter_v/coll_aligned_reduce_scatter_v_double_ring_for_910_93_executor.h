@@ -16,18 +16,18 @@
 namespace hccl {
 class CollAlignedReduceScatterVDoubleRingFor91093Executor : public CollAlignedReduceScatterDoubleRingFor91093Executor {
 public:
-    CollAlignedReduceScatterVDoubleRingFor91093Executor(const HcclDispatcher dispatcher,
-        std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollAlignedReduceScatterVDoubleRingFor91093Executor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAlignedReduceScatterVDoubleRingFor91093Executor() override = default;
 
 private:
     /* *************** 算法编排 *************** */
     u64 CalcLoopMaxCount(const u32 unitSize) override;
-    bool IsHugeData(const u64 curSize, OpParam *param = nullptr) override;
+    bool IsHugeData(const u64 curSize, OpParam* param = nullptr) override;
 
-    bool IsUnifiedMarch(const OpParam &param) const override;
+    bool IsUnifiedMarch(const OpParam& param) const override;
 };
 
-}  // namespace hccl
+} // namespace hccl
 
 #endif

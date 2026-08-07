@@ -18,60 +18,57 @@
 #include "dlhal_function.h"
 
 namespace hccl {
-class MemMappingManager
-{
+class MemMappingManager {
 public:
     ~MemMappingManager();
 
-    static MemMappingManager &GetInstance(s32 deviceLogicID);
+    static MemMappingManager& GetInstance(s32 deviceLogicID);
 
-    HcclResult GetDevVA(s32 deviceLogicID, void *addr, u64 size, void *&devVA);
-    HcclResult ReleaseDevVA(s32 deviceLogicID, void *addr, u64 size);
+    HcclResult GetDevVA(s32 deviceLogicID, void* addr, u64 size, void*& devVA);
+    HcclResult ReleaseDevVA(s32 deviceLogicID, void* addr, u64 size);
 
     // delete copy and move constructors and assign operators
-    MemMappingManager(MemMappingManager const&) = delete;             // Copy construct
-    MemMappingManager(MemMappingManager&&) = delete;                  // Move construct
-    MemMappingManager& operator=(MemMappingManager const&) = delete;  // Copy assign
-    MemMappingManager& operator=(MemMappingManager &&) = delete;      // Move assign
+    MemMappingManager(MemMappingManager const&) = delete;            // Copy construct
+    MemMappingManager(MemMappingManager&&) = delete;                 // Move construct
+    MemMappingManager& operator=(MemMappingManager const&) = delete; // Copy assign
+    MemMappingManager& operator=(MemMappingManager&&) = delete;      // Move assign
 
 private:
     struct HostMappingKey {
         u64 addr = 0;
         u64 size = 0;
 
-        HostMappingKey(u64 addr, u64 size) : addr(addr), size(size)
-        {
-        }
+        HostMappingKey(u64 addr, u64 size) : addr(addr), size(size) {}
 
-        bool operator == (const HostMappingKey &that) const
+        bool operator==(const HostMappingKey& that) const
         {
             return ((this->addr == that.addr) && (this->size == that.size));
         }
 
-        bool operator != (const HostMappingKey &that) const
+        bool operator!=(const HostMappingKey& that) const
         {
             return (this->addr != that.addr) || (this->size != that.size);
         }
 
-        bool operator <(const HostMappingKey &that) const
+        bool operator<(const HostMappingKey& that) const
         {
             return (addr < that.addr) || (addr == that.addr && size < that.size);
         }
     };
     struct HostMappingInfo {
-        void *devVA = nullptr;
+        void* devVA = nullptr;
         Referenced ref;
         drvRegisterTpye registerTpye;
     };
     using HostMappingIter = std::map<MemMappingManager::HostMappingKey, MemMappingManager::HostMappingInfo>::iterator;
 
     MemMappingManager() {}
-    HcclResult MapMem(s32 deviceLogicID, void *addr, u64 size, void *&devVA);
-    bool IsRequireMapping(void *addr, u64 size, void *&devVA);
+    HcclResult MapMem(s32 deviceLogicID, void* addr, u64 size, void*& devVA);
+    bool IsRequireMapping(void* addr, u64 size, void*& devVA);
     HostMappingIter SearchMappingMap(u64 userAddr, u64 userSize);
 
     std::mutex mappedHostToDevMutex_;
     std::map<HostMappingKey, HostMappingInfo> mappedHostToDevMap_;
 };
-}
+} // namespace hccl
 #endif //  MEM_MAPPING_MANAGER_H

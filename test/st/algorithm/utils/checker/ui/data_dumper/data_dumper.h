@@ -21,11 +21,7 @@
 #include "check_rank_mem.h"
 namespace checker {
 
-enum class GraphType {
-    ORIGINAL_GRAPH,
-    BILATERALSEMANTIC_GRAPH,
-    PARALLELED_GRAPH
-};
+enum class GraphType { ORIGINAL_GRAPH, BILATERALSEMANTIC_GRAPH, PARALLELED_GRAPH };
 
 class DataDumper {
 public:
@@ -42,10 +38,11 @@ public:
     }
 
     // 待相关特性开发完成后进行补充
-    void DumpMemConflictInfo(TaskNodePtr nodeA, TaskNodePtr nodeB, SliceMemoryStatus& statusA, SliceMemoryStatus& statusB);
+    void
+    DumpMemConflictInfo(TaskNodePtr nodeA, TaskNodePtr nodeB, SliceMemoryStatus& statusA, SliceMemoryStatus& statusB);
     void InitSemanticState();
-    void DumpSemanticState(RankId rankId, u32 localStep, u32 globalStep, bool change,
-                           RankMemorySemantics& memSemantics);
+    void
+    DumpSemanticState(RankId rankId, u32 localStep, u32 globalStep, bool change, RankMemorySemantics& memSemantics);
     void MarkInvalidSemantic(RankId rankId, BufferType type, const BufferSemantic& semantic);
 
     // dump 错误信息
@@ -67,8 +64,9 @@ public:
 private:
     bool NodeIsReady(TaskNodePtr node, std::set<TaskNodePtr>& visited);
     void GenNodeId(TaskNodePtr dummyStart, GraphType graphType);
-    void GenNodeMessage(std::map<u32, TaskNodePtr> &nodeId2nodePtr, std::map<TaskNodePtr, u32> &nodePtr2nodeId,
-                        std::map<u32, std::set<u32>> &rank2nodes, gui::WholeGraph* wholeGraph);
+    void GenNodeMessage(
+        std::map<u32, TaskNodePtr>& nodeId2nodePtr, std::map<TaskNodePtr, u32>& nodePtr2nodeId,
+        std::map<u32, std::set<u32>>& rank2nodes, gui::WholeGraph* wholeGraph);
     void FillInGuiBufferSemantic(gui::BufferSemantic* guiBufferSemantic, const BufferSemantic& singleBufferSemantic);
     void DumpBufferSemantic(gui::MemBufferSemantic* curState, RankMemorySemantics& memSemantics);
 
@@ -90,6 +88,6 @@ private:
     std::string fileName_ = "analysis_result";
 };
 
-}
+} // namespace checker
 
 #endif

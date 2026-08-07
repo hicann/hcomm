@@ -11,23 +11,19 @@
 #include "communicator_impl.h"
 namespace Hccl {
 
-QueueNotifyManager::QueueNotifyManager(const CommunicatorImpl &comm) : comm(const_cast<CommunicatorImpl *>(&comm))
-{
-}
+QueueNotifyManager::QueueNotifyManager(const CommunicatorImpl& comm) : comm(const_cast<CommunicatorImpl*>(&comm)) {}
 
-QueueNotifyManager::~QueueNotifyManager()
-{
-    DECTOR_TRY_CATCH("QueueNotifyManager", Destroy());
-}
+QueueNotifyManager::~QueueNotifyManager() { DECTOR_TRY_CATCH("QueueNotifyManager", Destroy()); }
 
 void QueueNotifyManager::ApplyFor(QId postQid, QId waitQid, u32 topicId)
 {
     if (topicId > MAX_NUM_FOR_QPAIR) {
-        string msg = StringFormat("topicId=%d, Exceed max notify number %d for queue tuple {postQid=%d, waitQid=%d}",
-                                  topicId, MAX_NUM_FOR_QPAIR, postQid, waitQid);
+        string msg = StringFormat(
+            "topicId=%d, Exceed max notify number %d for queue tuple {postQid=%d, waitQid=%d}", topicId,
+            MAX_NUM_FOR_QPAIR, postQid, waitQid);
         THROW<InvalidParamsException>(msg);
     }
-    const auto &tuple = std::make_tuple(postQid, waitQid, topicId);
+    const auto& tuple = std::make_tuple(postQid, waitQid, topicId);
     if (notifyPool[tuple] == nullptr) {
         notifyPool[tuple] = std::make_unique<RtsNotify>(comm->GetOpAiCpuTSFeatureFlag()); // 算子粒度
     }
@@ -50,7 +46,7 @@ bool QueueNotifyManager::Destroy()
     return true;
 }
 
-RtsNotify *QueueNotifyManager::Get(QId postQid, QId waitQid, u32 topicId)
+RtsNotify* QueueNotifyManager::Get(QId postQid, QId waitQid, u32 topicId)
 {
     if (!IsExist(postQid, waitQid, topicId)) {
         HCCL_WARNING("Notify for postQid[%u] and waitQid[%u] does not exist", postQid, waitQid);
@@ -77,14 +73,15 @@ std::vector<char> QueueNotifyManager::GetPackedData()
     u32 poolSize = notifyPool.size();
     binaryStream << poolSize;
 
-    for (auto &it : notifyPool) {
+    for (auto& it : notifyPool) {
         binaryStream << (std::get<QUEUE_NOTIFY_POST_QID_POS>(it.first));
         binaryStream << (std::get<QUEUE_NOTIFY_WAIT_QID_POS>(it.first));
         binaryStream << (std::get<QUEUE_NOTIFY_TOPIC_ID_POS>(it.first));
         binaryStream << it.second->GetUniqueId();
-        HCCL_INFO("QueueNotifyManager::GetPackedData: postQid=%u, waitQid=%u, topicId=%u, %s", (std::get<QUEUE_NOTIFY_POST_QID_POS>(it.first)),
-                   (std::get<QUEUE_NOTIFY_WAIT_QID_POS>(it.first)), (std::get<QUEUE_NOTIFY_TOPIC_ID_POS>(it.first)),
-                   it.second->Describe().c_str());
+        HCCL_INFO(
+            "QueueNotifyManager::GetPackedData: postQid=%u, waitQid=%u, topicId=%u, %s",
+            (std::get<QUEUE_NOTIFY_POST_QID_POS>(it.first)), (std::get<QUEUE_NOTIFY_WAIT_QID_POS>(it.first)),
+            (std::get<QUEUE_NOTIFY_TOPIC_ID_POS>(it.first)), it.second->Describe().c_str());
     }
     binaryStream.Dump(result);
     return result;

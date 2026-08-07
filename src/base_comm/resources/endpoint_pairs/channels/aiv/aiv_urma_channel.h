@@ -25,7 +25,7 @@ struct UbConnBuildContext;
 
 class AivUrmaChannel : public Channel {
 public:
-    AivUrmaChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc);
+    AivUrmaChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc);
     ~AivUrmaChannel() override;
 
     HcclResult Init() override;
@@ -33,18 +33,18 @@ public:
 
     HcclResult Clean() override;
     HcclResult Resume() override;
-    virtual HcclResult GetNotifyNum(uint32_t *notifyNum) const override;
-    HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos) override;
+    virtual HcclResult GetNotifyNum(uint32_t* notifyNum) const override;
+    HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos) override;
     const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
-    HcclResult BuildChannelEntityToDevice(void **devChannelPtr);
-    HcclResult PreAllocChannelEntityToDevice(void **devChannelPtr);
+    HcclResult BuildChannelEntityToDevice(void** devChannelPtr);
+    HcclResult PreAllocChannelEntityToDevice(void** devChannelPtr);
     HcclResult FillChannelEntityToDevice();
 
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;
     HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) override;
-    HcclResult WriteWithNotify(void *dst, const void *src, const uint64_t len, uint32_t remoteNotifyIdx) override;
-    HcclResult Write(void *dst, const void *src, uint64_t len) override;
-    HcclResult Read(void *dst, const void *src, uint64_t len) override;
+    HcclResult WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx) override;
+    HcclResult Write(void* dst, const void* src, uint64_t len) override;
+    HcclResult Read(void* dst, const void* src, uint64_t len) override;
     HcclResult ChannelFence() override;
 
 private:
@@ -57,10 +57,9 @@ private:
     void PutSocketIfNeeded();
     void ReleaseDeviceChannelEntity();
 
-    HcclResult CreateUbConnectionByProtocol(const UbConnBuildContext &ctx,
-        std::unique_ptr<Hccl::DevUbConnection> &ubConn);
-    HcclResult AcquireSharedJettyInBuildConnection(const UbConnBuildContext &ctx,
-        Hccl::DevUbConnection *connection);
+    HcclResult
+    CreateUbConnectionByProtocol(const UbConnBuildContext& ctx, std::unique_ptr<Hccl::DevUbConnection>& ubConn);
+    HcclResult AcquireSharedJettyInBuildConnection(const UbConnBuildContext& ctx, Hccl::DevUbConnection* connection);
 
     // --------------------- 转换参数 ---------------------
     EndpointDesc localEp_{};
@@ -73,14 +72,14 @@ private:
     HcommChannelDesc channelDesc_;
 
     // --------------------- 具体成员 ---------------------
-    Hccl::Socket *socket_{nullptr};
+    Hccl::Socket* socket_{nullptr};
     std::unique_ptr<Hccl::AivUrmaTransport> transport_{nullptr};
     Hccl::BaseMemTransport::Attribution attr_{};
     Hccl::BaseMemTransport::CommonLocRes commonRes_{};
     std::vector<std::unique_ptr<Hccl::DevUbConnection>> connections_{};
     RdmaHandle rdmaHandle_{nullptr};
-    void *devChannelEntity_{nullptr};
-    void *devChannelEntitySlab_{nullptr};
+    void* devChannelEntity_{nullptr};
+    void* devChannelEntitySlab_{nullptr};
     size_t devChannelEntitySlabSize_{0};
     std::vector<hccl::DeviceMem> deviceMemories_{};
     std::unique_ptr<Hccl::SocketConfig> socketConfigHolder_{nullptr};
@@ -89,10 +88,10 @@ private:
 
     // 共享 jetty 模式下从 Endpoint::SharedJettyCtx 取得的 PI/CI device 内存指针，
     // BuildChannelEntityToDevice 时绑给 transport，使同 endpoint 下多 channel 共用同一 PI/CI。
-    void *sharedSqPiPtr_{nullptr};
-    void *sharedSqCiPtr_{nullptr};
-    void *sharedCqPiPtr_{nullptr};
-    void *sharedCqCiPtr_{nullptr};
+    void* sharedSqPiPtr_{nullptr};
+    void* sharedSqCiPtr_{nullptr};
+    void* sharedCqPiPtr_{nullptr};
+    void* sharedCqCiPtr_{nullptr};
 };
 
 } // namespace hcomm

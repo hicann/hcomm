@@ -12,28 +12,28 @@
 
 class HcclCommConfigInitTest : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         BaseInit::SetUp();
         UT_USE_1SERVER_1RANK_AS_DEFAULT;
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }
 };
 
-TEST_F(HcclCommConfigInitTest,Ut_HcclCommConfigInit_When_Normal_Expect_Normal)
+TEST_F(HcclCommConfigInitTest, Ut_HcclCommConfigInit_When_Normal_Expect_Normal)
 {
     Ut_Device_Set(0);
     const char* rankTableFile = rankTableFileName;
     u32 rankId = 0;
     HcclCommConfig commConfig;
     HcclCommConfigInit(&commConfig);
-    commConfig.hcclBufferSize= 400;
+    commConfig.hcclBufferSize = 400;
     HcclResult ret = HcclCommInitClusterInfoConfig(rankTableFile, rankId, &commConfig, &comm);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     Ut_Comm_Destroy(comm);
 }
-
-

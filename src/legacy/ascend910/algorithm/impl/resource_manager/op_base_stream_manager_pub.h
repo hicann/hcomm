@@ -46,13 +46,13 @@ public:
     HcclResult ClearSlaves();
 
     // delete copy and move constructors and assign operators
-    OpBaseStreamManager(OpBaseStreamManager const&) = delete;                 // Copy construct
-    OpBaseStreamManager(OpBaseStreamManager&&) = delete;                      // Move construct
-    OpBaseStreamManager& operator=(OpBaseStreamManager const&) = delete;      // Copy assign
-    OpBaseStreamManager& operator=(OpBaseStreamManager &&) = delete;          // Move assign
+    OpBaseStreamManager(OpBaseStreamManager const&) = delete;            // Copy construct
+    OpBaseStreamManager(OpBaseStreamManager&&) = delete;                 // Move construct
+    OpBaseStreamManager& operator=(OpBaseStreamManager const&) = delete; // Copy assign
+    OpBaseStreamManager& operator=(OpBaseStreamManager&&) = delete;      // Move assign
 
 private:
-    HcclResult SetSlaveMode(Stream &slave);
+    HcclResult SetSlaveMode(Stream& slave);
 
     Stream master_;
     std::vector<Stream> slaves_;
@@ -60,6 +60,6 @@ private:
     std::mutex masterMutex_;
     std::mutex slavesMutex_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* OP_BASE_STREAM_MANAGER_PUB_H */

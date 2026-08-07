@@ -23,15 +23,15 @@ namespace hcomm {
 class EndpointMonitor {
 public:
     EndpointMonitor() = default;
-    EndpointMonitor(const EndpointMonitor &) = delete;
-    EndpointMonitor &operator=(const EndpointMonitor &) = delete;
-    EndpointMonitor(EndpointMonitor &&) = delete;
-    EndpointMonitor &operator=(EndpointMonitor &&) = delete;
+    EndpointMonitor(const EndpointMonitor&) = delete;
+    EndpointMonitor& operator=(const EndpointMonitor&) = delete;
+    EndpointMonitor(EndpointMonitor&&) = delete;
+    EndpointMonitor& operator=(EndpointMonitor&&) = delete;
     ~EndpointMonitor();
 
-    static EndpointMonitor &GetInstance(s32 deviceId);
+    static EndpointMonitor& GetInstance(s32 deviceId);
     HcclResult RegisterToEndpointMonitor(s32 deviceLogicId, EndpointHandle epHandle);
-    HcclResult UnRegisterToEndpointMonitor();  
+    HcclResult UnRegisterToEndpointMonitor();
     void RemoveEpHandleFromEndpointMonitor(EndpointHandle epHandle);
 
 private:
@@ -40,7 +40,7 @@ private:
     HcclResult DeInit(s32 deviceLogicId);
 
     void ProcessUbAsyncEvents();
-    void PrintUbAsyncEventsContext(void *epHandle, u32 seq, const struct AsyncEvent &event);
+    void PrintUbAsyncEventsContext(void* epHandle, u32 seq, const struct AsyncEvent& event);
 
     static constexpr u32 MONITOR_INTERVAL = 1000;
     std::unique_ptr<std::thread> endpointMonitorThread_;

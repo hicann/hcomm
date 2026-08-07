@@ -15,10 +15,10 @@
 #include "hccl_types.h"
 
 namespace HcclSim {
-HcclResult TaskCheckBatchSendRecvSemantics(std::map<RankId, RankMemorySemantics> &allRankMemSemantics,
-    u32 expectedRankSize, u64 dataSize);
-HcclResult TaskCheckBatchSendRecvRingSemantics(std::map<RankId, RankMemorySemantics> &allRankMemSemantics,
-    u32 expectedRankSize, u64 dataSize);
-}
+HcclResult TaskCheckBatchSendRecvSemantics(
+    std::map<RankId, RankMemorySemantics>& allRankMemSemantics, u32 expectedRankSize, u64 dataSize);
+HcclResult TaskCheckBatchSendRecvRingSemantics(
+    std::map<RankId, RankMemorySemantics>& allRankMemSemantics, u32 expectedRankSize, u64 dataSize);
+} // namespace HcclSim
 
 #endif

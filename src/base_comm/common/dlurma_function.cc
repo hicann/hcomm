@@ -7,22 +7,20 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #include "dlurma_function.h"
 #include "hccl_next_dl.h"
 #include "log.h"
- 
+
 namespace hcomm {
-DlUrmaFunction &DlUrmaFunction::GetInstance()
+DlUrmaFunction& DlUrmaFunction::GetInstance()
 {
     static DlUrmaFunction hcclDlUrmaFunction;
     return hcclDlUrmaFunction;
 }
- 
-DlUrmaFunction::DlUrmaFunction() : handle_(nullptr)
-{
-}
- 
+
+DlUrmaFunction::DlUrmaFunction() : handle_(nullptr) {}
+
 DlUrmaFunction::~DlUrmaFunction()
 {
     std::lock_guard<std::mutex> lock(handleMutex_);
@@ -31,15 +29,14 @@ DlUrmaFunction::~DlUrmaFunction()
         handle_ = nullptr;
     }
 }
- 
+
 HcclResult DlUrmaFunction::DlUrmaFunctionApiInit()
 {
-    dlUrmaPostJettySendWr = (urma_status_t(*)(urma_jetty_t *jetty, urma_jfs_wr_t *wr, urma_jfs_wr_t **bad_wr))
+    dlUrmaPostJettySendWr = (urma_status_t(*)(urma_jetty_t * jetty, urma_jfs_wr_t * wr, urma_jfs_wr_t * *bad_wr))
         HcclNextDlsym(handle_, "urma_post_jetty_send_wr");
     CHK_SMART_PTR_NULL(dlUrmaPostJettySendWr);
- 
-    dlUrmaPollJfc = (int(*)(urma_jfc_t *jfc, int cr_cnt, urma_cr_t *cr))
-        HcclNextDlsym(handle_, "urma_poll_jfc");
+
+    dlUrmaPollJfc = (int (*)(urma_jfc_t* jfc, int cr_cnt, urma_cr_t* cr))HcclNextDlsym(handle_, "urma_poll_jfc");
     CHK_SMART_PTR_NULL(dlUrmaPollJfc);
     return HCCL_SUCCESS;
 }
@@ -53,12 +50,15 @@ HcclResult DlUrmaFunction::DlUrmaFunctionInit()
             handle_ = HcclNextDlopen("/lib64/liburma.so.0", RTLD_NOW);
         }
         const char* errMsg = dlerror();
-        CHK_PRT_RET(handle_ == nullptr, HCCL_ERROR("dlopen [%s] failed, %s", "liburma.so.0",\
-            (errMsg == nullptr) ? "please check the file exist or permission denied." : errMsg),\
+        CHK_PRT_RET(
+            handle_ == nullptr,
+            HCCL_ERROR(
+                "dlopen [%s] failed, %s", "liburma.so.0",
+                (errMsg == nullptr) ? "please check the file exist or permission denied." : errMsg),
             HCCL_E_OPEN_FILE_FAILURE);
     }
- 
+
     CHK_RET(DlUrmaFunctionApiInit());
     return HCCL_SUCCESS;
 }
-}
+} // namespace hcomm

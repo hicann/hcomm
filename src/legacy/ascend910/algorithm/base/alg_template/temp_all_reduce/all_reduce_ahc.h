@@ -13,7 +13,6 @@
 
 #include "all_reduce_ahc_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALL_REDUCE_AHC_H */

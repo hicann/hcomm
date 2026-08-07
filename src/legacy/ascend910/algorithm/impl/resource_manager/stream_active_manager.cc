@@ -13,9 +13,7 @@
 
 using namespace hccl;
 std::atomic<bool> StreamActiveManager::initFlag_ = {false};
-StreamActiveManager::StreamActiveManager()
-{
-}
+StreamActiveManager::StreamActiveManager() {}
 
 StreamActiveManager::~StreamActiveManager()
 {
@@ -25,7 +23,7 @@ StreamActiveManager::~StreamActiveManager()
     lock.unlock();
 }
 
-StreamActiveManager &StreamActiveManager::GetInstance(s32 deviceLogicID)
+StreamActiveManager& StreamActiveManager::GetInstance(s32 deviceLogicID)
 {
     static StreamActiveManager streamActiveManager[MAX_MODULE_DEVICE_NUM];
     if (static_cast<u32>(deviceLogicID) >= MAX_MODULE_DEVICE_NUM) {
@@ -58,14 +56,14 @@ HcclResult StreamActiveManager::StreamActive(HcclRtStream activeStream, HcclRtSt
 }
 
 // ge在model析构时，先销毁流、在unload task，此时hccl获取不到流id
-HcclResult StreamActiveManager::StreamsUnactive(const std::vector<Stream> &streams)
+HcclResult StreamActiveManager::StreamsUnactive(const std::vector<Stream>& streams)
 {
     if (initFlag_) {
-        for (auto &curStream : streams) {
+        for (auto& curStream : streams) {
             std::unique_lock<std::mutex> lock(streamActiveManagerMutex_);
-                if (streamActiveManager_.count(curStream.ptr()) == 1) {
-                    streamActiveManager_.erase(curStream.ptr());
-                }
+            if (streamActiveManager_.count(curStream.ptr()) == 1) {
+                streamActiveManager_.erase(curStream.ptr());
+            }
             lock.unlock();
         }
     }

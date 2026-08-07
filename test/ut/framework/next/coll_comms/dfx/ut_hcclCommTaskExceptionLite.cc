@@ -31,18 +31,14 @@ constexpr u32 RT_UB_LOCAL_OPERATIOINERR = 0x2;
 constexpr u32 RT_UB_REMOTE_OPERATIOINERR = 0x3;
 constexpr u32 RT_UB_LINK_FAILEDERR = 0x5;
 
-class hcclCommTaskExceptionLiteTest : public testing::Test
-{
+class hcclCommTaskExceptionLiteTest : public testing::Test {
 protected:
     virtual void SetUp() override
     {
-        MOCKER(::getpid)
-            .stubs()
-            .will(returnValue(12345));
-        MOCKER(HrtHalDrvQueryProcessHostPid)
-            .stubs()
-            .will(returnValue(HCCL_SUCCESS));
-        Hccl::DlHalFunctionV2::GetInstance().dlHalEschedSubmitEvent = [](unsigned int, struct event_summary *) -> drvError_t {
+        MOCKER(::getpid).stubs().will(returnValue(12345));
+        MOCKER(HrtHalDrvQueryProcessHostPid).stubs().will(returnValue(HCCL_SUCCESS));
+        Hccl::DlHalFunctionV2::GetInstance().dlHalEschedSubmitEvent
+            = [](unsigned int, struct event_summary*) -> drvError_t {
             return DRV_ERROR_NONE;
         };
         HcclCommTaskExceptionLite::GetInstance().Init(0);
@@ -54,6 +50,7 @@ protected:
         g_taskExpDevMemMap.clear();
         GlobalMockObject::verify();
     }
+
 private:
     u32 notifyId = 1;
     u32 tsId = 2;
@@ -63,7 +60,7 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_SwitchUBCqeErrCodeToTsErrCode_When_Norm
 {
     uint16_t ret = HcclCommTaskExceptionLite::GetInstance().SwitchUBCqeErrCodeToTsErrCode(RT_UB_LOCAL_OPERATIOINERR);
     EXPECT_EQ(ret, TS_ERROR_HCCL_OP_UB_DDRC_FAILED);
-    
+
     ret = HcclCommTaskExceptionLite::GetInstance().SwitchUBCqeErrCodeToTsErrCode(RT_UB_REMOTE_OPERATIOINERR);
     EXPECT_EQ(ret, TS_ERROR_HCCL_OP_UB_POISON_FAILED);
 
@@ -78,7 +75,7 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_SwitchSdmaCqeErrCodeToTsErrCode_When_No
 {
     uint16_t ret = HcclCommTaskExceptionLite::GetInstance().SwitchSdmaCqeErrCodeToTsErrCode(RT_SDMA_COMPERR);
     EXPECT_EQ(ret, TS_ERROR_SDMA_LINK_ERROR);
-    
+
     ret = HcclCommTaskExceptionLite::GetInstance().SwitchSdmaCqeErrCodeToTsErrCode(RT_SDMA_COMPDATAERR);
     EXPECT_EQ(ret, TS_ERROR_SDMA_POISON_ERROR);
 
@@ -94,8 +91,9 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_SwitchSdmaCqeErrCodeToTsErrCode_taskexc
     hcomm::SetTaskExceptionEnable(false);
     rtLogicCqReport_t exceptionInfo;
     dfx::CqeStatus cqeStatus = dfx::CqeStatus::kDefault;
-    std::vector<std::pair<std::string, CollCommAicpuMgr *>> aicpuCommInfo;
-    HcclResult ret = HcclCommTaskExceptionLite::GetInstance().ProcessCqe(nullptr, exceptionInfo, cqeStatus, aicpuCommInfo);
+    std::vector<std::pair<std::string, CollCommAicpuMgr*>> aicpuCommInfo;
+    HcclResult ret
+        = HcclCommTaskExceptionLite::GetInstance().ProcessCqe(nullptr, exceptionInfo, cqeStatus, aicpuCommInfo);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     hcomm::SetTaskExceptionEnable(true);
 }
@@ -146,11 +144,17 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_PrintCommTaskException)
 {
     u32 sqHead = 1;
     u32 sqTail = 2;
-    MOCKER(QuerySqStatus).stubs().with(mockcpp::any(), mockcpp::any(), outBound(sqHead), outBound(sqTail)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(QuerySqStatus)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBound(sqHead), outBound(sqTail))
+        .will(returnValue(HCCL_SUCCESS));
 
     uint16_t streamId = 1;
     uint16_t taskId = 10;
-    MOCKER_CPP(&Hccl::RtsqBase::GetStreamIdAndTaskIdBySqIdx).stubs().with(mockcpp::any(), outBound(streamId), outBound(taskId)).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::RtsqBase::GetStreamIdAndTaskIdBySqIdx)
+        .stubs()
+        .with(mockcpp::any(), outBound(streamId), outBound(taskId))
+        .will(returnValue(HCCL_SUCCESS));
 
     CollCommAicpu aicpuComm;
     std::shared_ptr<AicpuTsThread> thread = std::make_shared<AicpuTsThread>("test");
@@ -242,7 +246,8 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_HandleDpuTaskexception_When_ErrorFlagZe
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
-TEST_F(hcclCommTaskExceptionLiteTest, Ut_HandleDpuTaskexception_When_ErrorFlagNonZeroAndDfxLiteNull_Expect_ReturnPtrNull)
+TEST_F(
+    hcclCommTaskExceptionLiteTest, Ut_HandleDpuTaskexception_When_ErrorFlagNonZeroAndDfxLiteNull_Expect_ReturnPtrNull)
 {
     std::string testCommId = "dpuExpTest";
     std::vector<uint8_t> shmem(10, 0);
@@ -258,7 +263,9 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_HandleDpuTaskexception_When_ErrorFlagNo
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
-TEST_F(hcclCommTaskExceptionLiteTest, Ut_HandleDpuTaskexception_When_ErrorFlagNonZeroAndMirrorTaskMgrNull_Expect_ReturnPtrNull)
+TEST_F(
+    hcclCommTaskExceptionLiteTest,
+    Ut_HandleDpuTaskexception_When_ErrorFlagNonZeroAndMirrorTaskMgrNull_Expect_ReturnPtrNull)
 {
     std::string testCommId = "dpuExpTest";
     std::vector<uint8_t> shmem(10, 0);
@@ -276,7 +283,8 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_HandleDpuTaskexception_When_ErrorFlagNo
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
-TEST_F(hcclCommTaskExceptionLiteTest, Ut_HandleDpuTaskexception_When_ErrorFlagNonZeroAndDfxOpInfoNull_Expect_ReturnPtrNull)
+TEST_F(
+    hcclCommTaskExceptionLiteTest, Ut_HandleDpuTaskexception_When_ErrorFlagNonZeroAndDfxOpInfoNull_Expect_ReturnPtrNull)
 {
     std::string testCommId = "dpuExpTest";
     std::vector<uint8_t> shmem(10, 0);
@@ -293,7 +301,8 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_HandleDpuTaskexception_When_ErrorFlagNo
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
-TEST_F(hcclCommTaskExceptionLiteTest, Ut_HandleDpuTaskexception_When_ErrorFlagNonZero_Expect_SendTaskExceptionAndClearFlag)
+TEST_F(
+    hcclCommTaskExceptionLiteTest, Ut_HandleDpuTaskexception_When_ErrorFlagNonZero_Expect_SendTaskExceptionAndClearFlag)
 {
     std::string testCommId = "dpuExpTest";
     std::vector<uint8_t> shmem(10, 0);
@@ -328,4 +337,3 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_Call_ReturnHCCL_SUCCESS_When_CommStatus
     MOCKER_CPP(&CollCommAicpu::GetCommmStatus).stubs().will(returnValue(HcclCommStatus::HCCL_COMM_STATUS_SUSPENDING));
     hcomm::HcclCommTaskExceptionLite::GetInstance().Call();
 }
-

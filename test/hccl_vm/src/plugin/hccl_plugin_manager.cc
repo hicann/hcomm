@@ -65,7 +65,7 @@ bool HcclPluginManager::IsMatchingPlugin(const std::string& manifestPath, const 
 
         if (data.contains(nameKey) && data[nameKey].is_string()) {
             std::string currentPluginName = data[nameKey].get<std::string>();
-            
+
             // 进行 Tag 匹配
             if (currentPluginName == targetTag) {
                 // 如果必需字段缺失，认为是一个损坏的插件，返回 false 并记录日志
@@ -113,13 +113,13 @@ bool HcclPluginManager::GetPluginFolderPath(const std::string& pluginTag, std::s
             char absPath[PATH_MAX];
             if (realpath(current.path.c_str(), absPath)) {
                 std::string currentAbsPath(absPath);
-                
+
                 // 冲突检查：如果之前已经找到了一个路径，且不是当前路径
                 if (!foundPath.empty() && foundPath != currentAbsPath) {
-                    HCCL_VM_ERROR("Conflict detected: Tag '{}' exists in both: {} and {}",
-                        pluginTag, foundPath, currentAbsPath);
+                    HCCL_VM_ERROR(
+                        "Conflict detected: Tag '{}' exists in both: {} and {}", pluginTag, foundPath, currentAbsPath);
                     hasConflict = true;
-                    break; 
+                    break;
                 }
                 foundPath = currentAbsPath;
             }
@@ -166,14 +166,13 @@ bool HcclPluginManager::GetPluginFolderPath(const std::string& pluginTag, std::s
     return false;
 }
 
-std::vector<std::string> HcclPluginManager::GetPluginStatus() const {
+std::vector<std::string> HcclPluginManager::GetPluginStatus() const
+{
     std::vector<std::string> result;
-    
+
     // 1. 定义表头 (使用左对齐和固定宽度确保整齐)
     std::stringstream header;
-    header << std::left << std::setw(20) << "PLUGIN_TAG" 
-           << std::setw(10) << "PID" 
-           << std::setw(15) << "STATUS";
+    header << std::left << std::setw(20) << "PLUGIN_TAG" << std::setw(10) << "PID" << std::setw(15) << "STATUS";
     result.push_back(header.str());
 
     // 2. 遍历插件获取数据
@@ -188,10 +187,9 @@ std::vector<std::string> HcclPluginManager::GetPluginStatus() const {
         std::string statusStr = running ? "RUNNING" : "STOPPED/EXITED";
 
         std::stringstream row;
-        row << std::left << std::setw(20) << tag 
-            << std::setw(10) << (pid > 0 ? std::to_string(pid) : "N/A") 
+        row << std::left << std::setw(20) << tag << std::setw(10) << (pid > 0 ? std::to_string(pid) : "N/A")
             << std::setw(15) << statusStr;
-        
+
         result.push_back(row.str());
     }
 
@@ -201,7 +199,7 @@ std::vector<std::string> HcclPluginManager::GetPluginStatus() const {
 HcclVmResult HcclPluginManager::RegisterPlugin(const std::string& pluginTag)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    
+
     // 防止重复注册
     if (m_plugins.find(pluginTag) != m_plugins.end()) {
         HCCL_VM_WARN("Plugin {} already registered", pluginTag);
@@ -225,7 +223,8 @@ HcclVmResult HcclPluginManager::RegisterPlugin(const std::string& pluginTag)
     return HcclSim::HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult HcclPluginManager::SendMessageToPlugin(const std::string& pluginTag, const std::string& action, const nlohmann::json& payload)
+HcclVmResult HcclPluginManager::SendMessageToPlugin(
+    const std::string& pluginTag, const std::string& action, const nlohmann::json& payload)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     auto it = m_plugins.find(pluginTag);
@@ -255,7 +254,8 @@ HcclVmResult HcclPluginManager::BroadcastToAllPlugin(const std::string& action, 
     return ret;
 }
 
-std::vector<HcclSim::HcclVmResult> HcclPluginManager::StartPlugins(const std::vector<std::string>& tags) {
+std::vector<HcclSim::HcclVmResult> HcclPluginManager::StartPlugins(const std::vector<std::string>& tags)
+{
     std::vector<HcclSim::HcclVmResult> results;
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -277,14 +277,16 @@ std::vector<HcclSim::HcclVmResult> HcclPluginManager::StartPlugins(const std::ve
     return results;
 }
 
-HcclVmResult ExitRunnerPlugin() {
+HcclVmResult ExitRunnerPlugin()
+{
     sim::ProcessSyncer syncer;
     syncer.signalRunnerExit();
     HCCL_VM_INFO("Runner exit signal sent.");
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-std::vector<HcclSim::HcclVmResult> HcclPluginManager::StopPlugins(const std::vector<std::string>& tags) {
+std::vector<HcclSim::HcclVmResult> HcclPluginManager::StopPlugins(const std::vector<std::string>& tags)
+{
     std::vector<HcclSim::HcclVmResult> results;
     std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -320,7 +322,8 @@ std::vector<HcclSim::HcclVmResult> HcclPluginManager::StopPlugins(const std::vec
     return results;
 }
 
-HcclSim::HcclVmResult HcclPluginManager::StopAllPlugins() {
+HcclSim::HcclVmResult HcclPluginManager::StopAllPlugins()
+{
     // 1. 获取当前所有插件的 Tag
     std::vector<std::string> allTags;
     {
@@ -349,7 +352,8 @@ HcclPluginManager::HcclPluginManager()
     });
 }
 
-HcclPluginManager::~HcclPluginManager() {
+HcclPluginManager::~HcclPluginManager()
+{
     m_monitorThreadStop = true;
     StopAllPlugins();
     if (m_monitorThread.joinable()) {
@@ -365,16 +369,18 @@ void HcclPluginManager::MonitorThread()
         pid_t terminatedPid = waitpid(-1, &status, WNOHANG);
         if (terminatedPid > 0) {
             std::lock_guard<std::mutex> lock(m_mutex);
-            for (auto it: m_plugins) {
+            for (auto it : m_plugins) {
                 // 用户通过命令行关闭的plugin已经不在map里 不会有输出
                 if (it.second->GetPid() == terminatedPid) {
                     // 解析退出原因
                     if (WIFEXITED(status)) {
-                        HCCL_VM_INFO("Plugin [{}] (PID: {}) exit normally. Code {}",
-                            it.second->GetTag(), terminatedPid, WEXITSTATUS(status));
+                        HCCL_VM_INFO(
+                            "Plugin [{}] (PID: {}) exit normally. Code {}", it.second->GetTag(), terminatedPid,
+                            WEXITSTATUS(status));
                     } else if (WIFSIGNALED(status)) {
-                        HCCL_VM_ERROR("Plugin [{}] (PID: {}) exit with failure. Code {} ({})",
-                            it.second->GetTag(), terminatedPid, WTERMSIG(status), strsignal(WTERMSIG(status)));
+                        HCCL_VM_ERROR(
+                            "Plugin [{}] (PID: {}) exit with failure. Code {} ({})", it.second->GetTag(), terminatedPid,
+                            WTERMSIG(status), strsignal(WTERMSIG(status)));
                     }
                     m_plugins.erase(it.first);
                     break;

@@ -44,7 +44,7 @@ void StoreExecutor::Run()
     uint16_t xdId = GetXnId(xdId_);
     uint16_t xsId = GetXnId(xsId_);
     uint16_t xlId = GetXnId(xlId_);
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t xdValue = ccuResMgr.GetXnValue(rankId_, dieId_, xdId);
     uint64_t xsValue = ccuResMgr.GetXnValue(rankId_, dieId_, xsId);
     uint64_t length = ccuResMgr.GetXnValue(rankId_, dieId_, xlId);
@@ -63,15 +63,16 @@ void StoreExecutor::Run()
 
 std::string StoreExecutor::Describe()
 {
-    return HcclSim::StringFormat("[StoreExecutor] xdId:[%u], xsId:[%u], xlId:[%u], ckeId:[%u], ckeMask:[0x%04x]\n",
-        xdId_, xsId_, xlId_, ckeId_, ckeMask_);
+    return HcclSim::StringFormat(
+        "[StoreExecutor] xdId:[%u], xsId:[%u], xlId:[%u], ckeId:[%u], ckeMask:[0x%04x]\n", xdId_, xsId_, xlId_, ckeId_,
+        ckeMask_);
 }
 
 CcuTrace::CcuInstrTraceDetail StoreExecutor::CollectTraceDetail()
 {
     CcuTrace::CcuInstrTraceDetail detail;
     detail.typeName = "Store";
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     detail.args["xdValue"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xdId_));
     detail.args["xsValue"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xsId_));
     detail.args["length"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xlId_));

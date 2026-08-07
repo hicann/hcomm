@@ -21,11 +21,11 @@ namespace Hccl {
 class TaskExceptionHandlerLite {
 public:
     // 获取单例实例的方法
-    static TaskExceptionHandlerLite &GetInstance();
+    static TaskExceptionHandlerLite& GetInstance();
     // task exception处理逻辑
-    static void Process(CommunicatorImplLite *aicpuComm, rtLogicCqReport_t* exceptionInfo);
+    static void Process(CommunicatorImplLite* aicpuComm, rtLogicCqReport_t* exceptionInfo);
     static std::string GetGroupRankInfo(const TaskInfo& taskInfo);
-    static void PrintTaskContextInfo(CommunicatorImplLite *aicpuComm, uint32_t sqId, uint32_t taskId);
+    static void PrintTaskContextInfo(CommunicatorImplLite* aicpuComm, uint32_t sqId, uint32_t taskId);
 
 private:
     // 私有构造函数
@@ -35,8 +35,8 @@ private:
     ~TaskExceptionHandlerLite();
 
     // 私有拷贝构造函数和赋值运算符，防止拷贝
-    TaskExceptionHandlerLite(const TaskExceptionHandlerLite &)            = delete;
-    TaskExceptionHandlerLite &operator=(const TaskExceptionHandlerLite &) = delete;
+    TaskExceptionHandlerLite(const TaskExceptionHandlerLite&) = delete;
+    TaskExceptionHandlerLite& operator=(const TaskExceptionHandlerLite&) = delete;
 
     // 注册方法
     void Register() const;

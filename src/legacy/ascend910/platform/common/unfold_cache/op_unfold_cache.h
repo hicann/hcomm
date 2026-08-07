@@ -30,17 +30,21 @@ public:
 
     bool IsCacheFull() const;
 
-    HcclResult FindEntry(const OpUnfoldKey& key, OpUnfoldCacheEntry **entryPtrPtr) const; // 查看是否存在key对应的cache entry (如果不存在, *entryPtrPtr会被置为空)
-    HcclResult AddEntry(const OpUnfoldKey& key, const std::vector<OpUnfoldMemRange>& userInputMemRanges, const std::vector<OpUnfoldMemRange>& userOutputMemRanges, OpUnfoldCacheEntry **entryPtrPtr); // 插入新的cache entry
+    HcclResult FindEntry(const OpUnfoldKey& key, OpUnfoldCacheEntry** entryPtrPtr)
+        const; // 查看是否存在key对应的cache entry (如果不存在, *entryPtrPtr会被置为空)
+    HcclResult AddEntry(
+        const OpUnfoldKey& key, const std::vector<OpUnfoldMemRange>& userInputMemRanges,
+        const std::vector<OpUnfoldMemRange>& userOutputMemRanges,
+        OpUnfoldCacheEntry** entryPtrPtr);         // 插入新的cache entry
     HcclResult ClearEntry(const OpUnfoldKey& key); // 如果key存在对应的cache entry, 清理entry
 
     HcclResult ClearEntryForAlltoallv(); // 清理与alltoallv类算子相关的cache entry
 
     // 只会在DEBUG_LEVEL下打印SQE内容 (通过比较打印算子正常展开的SQE与缓存的SQE, 判断刷新后的SQE是否正确)
-    static HcclResult DumpSqeContent(const uint8_t *sqePtr, const uint8_t sqeType);
+    static HcclResult DumpSqeContent(const uint8_t* sqePtr, const uint8_t sqeType);
 
 private:
-    using CacheHashMap = std::unordered_map<OpUnfoldKey, OpUnfoldCacheEntry *>;
+    using CacheHashMap = std::unordered_map<OpUnfoldKey, OpUnfoldCacheEntry*>;
 
     // 只会在DEBUG_LEVEL下打印SQE header的内容
     static HcclResult DumpSqeHeader(const rtStarsSqeHeader_t& sqeHeader);

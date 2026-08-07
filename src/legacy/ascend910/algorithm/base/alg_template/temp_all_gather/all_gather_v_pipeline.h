@@ -12,7 +12,6 @@
 #define ALL_GATHER_V_PIPELINE_H
 
 #include "all_gather_v_pipeline_pub.h"
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALL_GATHER_V_PIPELINE_H */

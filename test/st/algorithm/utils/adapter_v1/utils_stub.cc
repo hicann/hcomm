@@ -20,5 +20,4 @@ HcclResult CheckCurRankId(RankId curRank, RankId srcRank, RankId dstRank)
     return HcclResult::HCCL_SUCCESS;
 }
 
-}
-
+} // namespace hccl

@@ -18,6 +18,7 @@ class RunnerDBTest : public testing::Test {
 protected:
 };
 
-TEST_F(RunnerDBTest, GetAllTableName_DeclarationExists) {
+TEST_F(RunnerDBTest, GetAllTableName_DeclarationExists)
+{
     EXPECT_TRUE(std::is_function_v<decltype(RunnerDB::GetAllTableName)>);
 }

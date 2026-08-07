@@ -42,7 +42,7 @@ struct CheckerParam {
     uint32_t rankSize = 0;
     HcclDataType dataType = static_cast<HcclDataType>(0);
     uint64_t dataCount = 0;
-    
+
     // 以下是可能缺失的字段，初始化为安全值
     HcclReduceOp reduceType = static_cast<HcclReduceOp>(0);
     uint32_t srcRank = 0;
@@ -59,7 +59,8 @@ using AllRankTaskQueues = std::vector<SingleTaskQueue>;
 
 class StorageManager {
 public:
-    static StorageManager& GetInstance() {
+    static StorageManager& GetInstance()
+    {
         static StorageManager instance;
         return instance;
     }
@@ -67,17 +68,20 @@ public:
     StorageManager(const StorageManager&) = delete;
     StorageManager& operator=(const StorageManager&) = delete;
 
-    void SetDataId(const std::string& data_id) {
+    void SetDataId(const std::string& data_id)
+    {
         std::lock_guard<std::mutex> lock(m_mutex);
         m_data_id = data_id;
     }
 
-    std::string GetDataId() const {
+    std::string GetDataId() const
+    {
         std::lock_guard<std::mutex> lock(m_mutex);
         return m_data_id;
     }
 
-    CheckerParam GetCheckerParam() const {
+    CheckerParam GetCheckerParam() const
+    {
         std::lock_guard<std::mutex> lock(m_mutex);
         return m_checker_param;
     }
@@ -85,23 +89,23 @@ public:
     std::string FindRootPath();
 
     HcclVmResult InitCcuResource(std::vector<sim::CcuInstrResTab>& instrRes);
-    HcclVmResult InitAivResourceFromCompositeOpDetail(const sim::CompositeOpDetail &opDetail);
+    HcclVmResult InitAivResourceFromCompositeOpDetail(const sim::CompositeOpDetail& opDetail);
     void ResetAivResource();
     void ReleasePhyMem();
 
     HcclVmResult LoadHcclVmSynthesisData(sim::OpDetailTab& detail, std::vector<sim::CcuChannelTab>& channels);
     HcclVmResult LoadHcclVmInstrData(std::vector<sim::CcuInstrResTab>& instrRes);
     HcclVmResult LoadHcclVmTaskMetaData(std::vector<sim::OpTaskTab>& tasks);
-    HcclVmResult ConvertTaskQueue(const HcclVmTaskMetaData &taskMeataData);
+    HcclVmResult ConvertTaskQueue(const HcclVmTaskMetaData& taskMeataData);
     uint32_t GetRankSize() const;
 
     HcclVmInstrData GetHvmInstrData() const;
     HcclVmResult Trans2CheckerParam(sim::OpDetailTab& detailTab, ::OpDetails& detail);
     HcclVmTaskMetaData GetHvmTaskMetaData() const;
-    AllRankTaskQueues &GetAllRankTaskQueues();
+    AllRankTaskQueues& GetAllRankTaskQueues();
     void DumpAllRankInputOutput(std::vector<std::map<uint32_t, sim::CompositeOpDetail>>& compositeDataMap);
     HcclVmResult DumpHcclVmFlagData(uint16_t finishFlag);
-    HcclVmResult GetHcclVmFlagData(HcclSim::HcclVmFlagData &flagData);
+    HcclVmResult GetHcclVmFlagData(HcclSim::HcclVmFlagData& flagData);
     void Reset()
     {
         m_allRankTaskQueues.clear();
@@ -112,15 +116,15 @@ public:
         m_checker_param = {};
         devType_ = DevType::DEV_TYPE_COUNT;
     }
-    std::vector<RankChannelInfo> &GetAllRankChannelInfo();
+    std::vector<RankChannelInfo>& GetAllRankChannelInfo();
+
 private:
     StorageManager() = default;
     HcclVmResult PrintAllRankInputBuffer();
-    void FlexiblePrintData(std::ofstream &ofs, const BufferInfo &buffer);
-    void PrintOpData1(std::ofstream &ofs, const std::vector<BufferInfo> &allRankInput);
-    void PrintOpData2(std::ofstream &ofs,
-                      const std::vector<BufferInfo> &allRankInput,
-                      const std::vector<BufferInfo> &allRankOutput);
+    void FlexiblePrintData(std::ofstream& ofs, const BufferInfo& buffer);
+    void PrintOpData1(std::ofstream& ofs, const std::vector<BufferInfo>& allRankInput);
+    void PrintOpData2(
+        std::ofstream& ofs, const std::vector<BufferInfo>& allRankInput, const std::vector<BufferInfo>& allRankOutput);
 
     bool IsDirExists(const std::string& path);
 
@@ -136,6 +140,6 @@ private:
     std::vector<sim::PhyMemBlock> m_allPhyMem;
     DevType devType_{DevType::DEV_TYPE_COUNT}; // 初始化无效值
 };
-}
+} // namespace HcclSim
 
 #endif

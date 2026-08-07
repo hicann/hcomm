@@ -22,7 +22,8 @@
 
 class ReduceMaxExecutor : public CcuExecutorBase {
 public:
-    explicit ReduceMaxExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit ReduceMaxExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {
         (void)memset(msId_, 0, sizeof(uint16_t) * hcomm::CcuRep::CCU_REDUCE_MAX_MS);
@@ -34,7 +35,7 @@ public:
     void Run() override;
     void RunV1();
     void RunV2();
-    void Process(CcuResourceManager &ccuResMgr) override;
+    void Process(CcuResourceManager& ccuResMgr) override;
     std::string Describe() override;
     CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 

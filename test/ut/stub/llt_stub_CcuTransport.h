@@ -16,8 +16,8 @@
 
 namespace hcomm {
 
-extern HcclResult BuildBufferInfos(void **memHandles, uint32_t memHandleNum,
-    std::vector<CcuTransport::CclBufferInfo> &bufferInfos);
+extern HcclResult
+BuildBufferInfos(void** memHandles, uint32_t memHandleNum, std::vector<CcuTransport::CclBufferInfo>& bufferInfos);
 
-}  // namespace hcomm
+} // namespace hcomm
 #endif

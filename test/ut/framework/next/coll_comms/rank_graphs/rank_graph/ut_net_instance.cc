@@ -21,21 +21,12 @@ using namespace Hccl;
 
 class NetInstanceTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "NetInstanceTest tests set up." << std::endl;
-    }
- 
-    static void TearDownTestCase()
-    {
-        std::cout << "NetInstanceTest tests tear down." << std::endl;
-    }
- 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in NetInstanceTest SetUP" << std::endl;
-    }
- 
+    static void SetUpTestCase() { std::cout << "NetInstanceTest tests set up." << std::endl; }
+
+    static void TearDownTestCase() { std::cout << "NetInstanceTest tests tear down." << std::endl; }
+
+    virtual void SetUp() { std::cout << "A Test case in NetInstanceTest SetUP" << std::endl; }
+
     virtual void TearDown()
     {
         GlobalMockObject::verify();
@@ -54,8 +45,10 @@ TEST_F(NetInstanceTest, ut_NetInstance_Node_When_Normal_Expect_SUCCESS)
     IpAddress inputAddr(0);
     std::set<std::string> ports = {"0/0"};
     std::set<LinkProtocol> protocals = {LinkProtocol::UB_CTP, LinkProtocol::UB_TP};
-    shared_ptr<NetInstance::ConnInterface> connInterface = std::make_shared<NetInstance::ConnInterface>(inputAddr, ports, AddrPosition::HOST, LinkType::PEER2PEER, protocals);
-    std::shared_ptr<NetInstance::Node> node = std::make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId, devPort);
+    shared_ptr<NetInstance::ConnInterface> connInterface = std::make_shared<NetInstance::ConnInterface>(
+        inputAddr, ports, AddrPosition::HOST, LinkType::PEER2PEER, protocals);
+    std::shared_ptr<NetInstance::Node> node
+        = std::make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId, devPort);
     node->AddConnInterface(0, connInterface);
     node->AddConnInterface(0, connInterface);
 }
@@ -68,7 +61,8 @@ TEST_F(NetInstanceTest, FabGroup_Peer_test)
     DeviceId deviceId = 0;
     constexpr u32 devPort = 60001;
     string netInstId = "test";
-    std::shared_ptr<NetInstance::Peer> peer = std::make_shared<NetInstance::Peer>(rankId, localId, localId, localId, devPort);
+    std::shared_ptr<NetInstance::Peer> peer
+        = std::make_shared<NetInstance::Peer>(rankId, localId, localId, localId, devPort);
     EXPECT_EQ(nullptr, peer->GetNetInstance(1));
     EXPECT_EQ(nullptr, peer->GetNetInstance(groupLevel));
     std::shared_ptr<NetInstance> fabGroup = std::make_shared<InnerNetInstance>(groupLevel, netInstId);
@@ -106,14 +100,19 @@ TEST_F(NetInstanceTest, FabGroup_Link_test)
     u64 dstNodeId = 1;
     constexpr u32 devPort = 60001;
     constexpr u32 devPort1 = 60002;
-    shared_ptr<NetInstance::Node> source = std::make_shared<NetInstance::Peer>(rankId, localId, localId, localId, devPort);
-    shared_ptr<NetInstance::Node> target = std::make_shared<NetInstance::Peer>(rankId1, localId1, localId1, localId1, devPort1);
+    shared_ptr<NetInstance::Node> source
+        = std::make_shared<NetInstance::Peer>(rankId, localId, localId, localId, devPort);
+    shared_ptr<NetInstance::Node> target
+        = std::make_shared<NetInstance::Peer>(rankId1, localId1, localId1, localId1, devPort1);
     IpAddress inputAddr(0);
     std::set<LinkProtocol> protocals = {LinkProtocol::UB_CTP};
     std::set<std::string> ports = {"0/0"};
-    shared_ptr<NetInstance::ConnInterface> sourceIface = std::make_shared<NetInstance::ConnInterface>(inputAddr, ports, AddrPosition::HOST, LinkType::PEER2PEER, protocals);
-    shared_ptr<NetInstance::ConnInterface> targetIface = std::make_shared<NetInstance::ConnInterface>(inputAddr, ports, AddrPosition::DEVICE, LinkType::PEER2PEER, protocals);
-    shared_ptr<NetInstance::Link> link = std::make_shared<NetInstance::Link>(source, target, sourceIface, targetIface, LinkType::PEER2PEER, protocals);
+    shared_ptr<NetInstance::ConnInterface> sourceIface = std::make_shared<NetInstance::ConnInterface>(
+        inputAddr, ports, AddrPosition::HOST, LinkType::PEER2PEER, protocals);
+    shared_ptr<NetInstance::ConnInterface> targetIface = std::make_shared<NetInstance::ConnInterface>(
+        inputAddr, ports, AddrPosition::DEVICE, LinkType::PEER2PEER, protocals);
+    shared_ptr<NetInstance::Link> link
+        = std::make_shared<NetInstance::Link>(source, target, sourceIface, targetIface, LinkType::PEER2PEER, protocals);
     EXPECT_EQ(protocals, link->GetLinkProtocols());
     EXPECT_EQ(LinkDirection::BOTH, link->GetLinkDirection());
     EXPECT_EQ(LinkType::PEER2PEER, link->GetType());
@@ -124,9 +123,10 @@ TEST_F(NetInstanceTest, FabGroup_Link_test)
     EXPECT_NE(nullptr, link->GetTargetIface());
     link->Describe();
 
-    shared_ptr<NetInstance::Link> link1 = std::make_shared<NetInstance::Link>(source, target, sourceIface, targetIface, LinkType::PEER2PEER, protocals);
-    EXPECT_EQ(false, link==link1);
-    EXPECT_EQ(true, link!=link1);
+    shared_ptr<NetInstance::Link> link1
+        = std::make_shared<NetInstance::Link>(source, target, sourceIface, targetIface, LinkType::PEER2PEER, protocals);
+    EXPECT_EQ(false, link == link1);
+    EXPECT_EQ(true, link != link1);
 }
 
 TEST_F(NetInstanceTest, fabGroup_inner_test)
@@ -134,7 +134,7 @@ TEST_F(NetInstanceTest, fabGroup_inner_test)
     u32 level = 0;
     std::string netInstId = "InnerGroup";
     NetType fabType = NetType::TOPO_FILE_DESC;
-    
+
     InnerNetInstance fabGroup = InnerNetInstance(level, netInstId);
 
     EXPECT_EQ(fabGroup.GetNetLayer(), level);
@@ -147,7 +147,7 @@ TEST_F(NetInstanceTest, fabGroup_clos_test)
     u32 level = 1;
     std::string netInstId = "ClosGroup";
     NetType fabType = NetType::CLOS;
-    
+
     ClosNetInstance fabGroup = ClosNetInstance(level, netInstId);
 
     EXPECT_EQ(fabGroup.GetNetLayer(), level);
@@ -178,8 +178,7 @@ TEST_F(NetInstanceTest, fabGroup_add_peer_test)
     constexpr u32 devPort = 60001;
 
     NetInstance::Peer peer = NetInstance::Peer(rankId, localId, localId, deviceId, devPort);
-    std::shared_ptr<NetInstance::Peer> peerPtr =
-        std::make_shared<NetInstance::Peer>(peer);
+    std::shared_ptr<NetInstance::Peer> peerPtr = std::make_shared<NetInstance::Peer>(peer);
 
     InnerNetInstance fabGroup = InnerNetInstance(level, netInstId);
 
@@ -198,8 +197,7 @@ TEST_F(NetInstanceTest, fabGroup_add_fabric_test_v1)
     s32 fabricId = 1;
     PlaneId planeId = "planaA";
     NetInstance::Fabric fabric = NetInstance::Fabric(fabricId, planeId);
-    std::shared_ptr<NetInstance::Fabric> fabricPtr =
-        std::make_shared<NetInstance::Fabric>(fabric);
+    std::shared_ptr<NetInstance::Fabric> fabricPtr = std::make_shared<NetInstance::Fabric>(fabric);
     ClosNetInstance fabGroup = ClosNetInstance(level, netInstId);
     fabGroup.AddNode(fabricPtr);
     NodeId nodeId = fabric.GetNodeId();
@@ -221,10 +219,8 @@ TEST_F(NetInstanceTest, fabGroup_add_fabric_test_v2)
     EXPECT_NE(fabGroup, nullptr);
 }
 
-NetInstance::Link InitBaseLink(
-    std::shared_ptr<NetInstance::Node> srcNodePtr,
-    std::shared_ptr<NetInstance::Node> dstNodePtr,
-    u32 hop = 1)
+NetInstance::Link
+InitBaseLink(std::shared_ptr<NetInstance::Node> srcNodePtr, std::shared_ptr<NetInstance::Node> dstNodePtr, u32 hop = 1)
 {
     IpAddress srcAddr = IpAddress(0);
     IpAddress dstAddr = IpAddress(0);
@@ -234,21 +230,13 @@ NetInstance::Link InitBaseLink(
     LinkDirection direction = LinkDirection::BOTH;
     std::set<std::string> ports = {"0/0"};
 
-    NetInstance::ConnInterface srcIf = NetInstance::ConnInterface(
-        srcAddr, ports, addrPos, linkType, protocols);
+    NetInstance::ConnInterface srcIf = NetInstance::ConnInterface(srcAddr, ports, addrPos, linkType, protocols);
 
-    NetInstance::ConnInterface dstIf = NetInstance::ConnInterface(
-        dstAddr, ports, addrPos, linkType, protocols);
+    NetInstance::ConnInterface dstIf = NetInstance::ConnInterface(dstAddr, ports, addrPos, linkType, protocols);
 
     NetInstance::Link link = NetInstance::Link(
-        srcNodePtr,
-        dstNodePtr,
-        std::make_shared<NetInstance::ConnInterface>(srcIf),
-        std::make_shared<NetInstance::ConnInterface>(dstIf),
-        linkType,
-        protocols,
-        direction,
-        hop);
+        srcNodePtr, dstNodePtr, std::make_shared<NetInstance::ConnInterface>(srcIf),
+        std::make_shared<NetInstance::ConnInterface>(dstIf), linkType, protocols, direction, hop);
 
     return link;
 }
@@ -283,8 +271,7 @@ TEST_F(NetInstanceTest, fabGroup_add_link_test_v1)
     EXPECT_EQ(fabGroup.HasNode(srcNodeId), true);
     EXPECT_EQ(fabGroup.HasNode(dstNodeId), true);
 
-    std::shared_ptr<NetInstance::Link> linkPtr =
-        std::make_shared<NetInstance::Link>(link);
+    std::shared_ptr<NetInstance::Link> linkPtr = std::make_shared<NetInstance::Link>(link);
     fabGroup.AddLink(linkPtr);
 
     EXPECT_EQ(fabGroup.GetPaths(srcRankId, dstRankId).size(), 1);
@@ -337,15 +324,15 @@ TEST_F(NetInstanceTest, fabGroup_add_link_test_v2)
     EXPECT_EQ(fabGroup.GetPaths(dstRankId, srcRankId).size(), 0);
 }
 
-
-std::vector<std::tuple<RankId, RankId, NodeId, NodeId, NetInstance::Link>> InitInnerLinks(
-    std::vector<std::tuple<RankId, NodeId, NetInstance::Peer>> &peers)
+std::vector<std::tuple<RankId, RankId, NodeId, NodeId, NetInstance::Link>>
+InitInnerLinks(std::vector<std::tuple<RankId, NodeId, NetInstance::Peer>>& peers)
 {
     std::vector<std::tuple<RankId, RankId, NodeId, NodeId, NetInstance::Link>> links;
 
     for (int i = 0; i < peers.size(); i++) {
         for (int j = 0; j < peers.size(); j++) {
-            if (i == j) continue;
+            if (i == j)
+                continue;
 
             RankId srcRankId = get<0>(peers[i]);
             RankId dstRankId = get<0>(peers[j]);
@@ -357,9 +344,7 @@ std::vector<std::tuple<RankId, RankId, NodeId, NodeId, NetInstance::Link>> InitI
                 std::make_shared<NetInstance::Peer>(get<2>(peers[i])),
                 std::make_shared<NetInstance::Peer>(get<2>(peers[j])));
 
-            links.push_back(
-                std::make_tuple(srcRankId, dstRankId,
-                srcPeerId, dstPeerId, link));
+            links.push_back(std::make_tuple(srcRankId, dstRankId, srcPeerId, dstPeerId, link));
         }
     }
 
@@ -367,8 +352,8 @@ std::vector<std::tuple<RankId, RankId, NodeId, NodeId, NetInstance::Link>> InitI
 }
 
 std::vector<std::tuple<RankId, RankId, NodeId, NodeId, NetInstance::Link>> InitClosLinks(
-    std::vector<std::tuple<RankId, NodeId, NetInstance::Peer>> &peers,
-    std::vector<std::pair<NodeId, NetInstance::Fabric>> &fabrics)
+    std::vector<std::tuple<RankId, NodeId, NetInstance::Peer>>& peers,
+    std::vector<std::pair<NodeId, NetInstance::Fabric>>& fabrics)
 {
     std::vector<std::tuple<RankId, RankId, NodeId, NodeId, NetInstance::Link>> links;
 
@@ -396,12 +381,7 @@ std::vector<std::tuple<RankId, RankId, NodeId, NodeId, NetInstance::Link>> InitC
 }
 
 std::unique_ptr<NetInstance> InitFullFabGroup(
-    u32 level,
-    std::string netInstId,
-    NetType fabType,
-    std::vector<RankId> rankIds,
-    int fabricSize,
-    int fabricIdBase)
+    u32 level, std::string netInstId, NetType fabType, std::vector<RankId> rankIds, int fabricSize, int fabricIdBase)
 {
     std::vector<std::tuple<RankId, NodeId, NetInstance::Peer>> peers;
     for (auto& rankId : rankIds) {
@@ -443,21 +423,15 @@ std::unique_ptr<NetInstance> InitFullFabGroup(
     }
 
     for (auto& peer : peers) {
-        fabGroupPtr->AddNode(
-            std::make_shared<NetInstance::Peer>(get<2>(peer))
-        );
+        fabGroupPtr->AddNode(std::make_shared<NetInstance::Peer>(get<2>(peer)));
     }
 
     for (auto& fabric : fabrics) {
-        fabGroupPtr->AddNode(
-            std::make_shared<NetInstance::Fabric>(fabric.second)
-        );
+        fabGroupPtr->AddNode(std::make_shared<NetInstance::Fabric>(fabric.second));
     }
 
     for (auto& link : links) {
-        fabGroupPtr->AddLink(
-            std::make_shared<NetInstance::Link>(std::get<4>(link))
-        );
+        fabGroupPtr->AddLink(std::make_shared<NetInstance::Link>(std::get<4>(link)));
     }
 
     std::cout << fabGroupPtr->Describe() << std::endl;
@@ -465,8 +439,7 @@ std::unique_ptr<NetInstance> InitFullFabGroup(
     return std::move(fabGroupPtr);
 }
 
-std::pair<std::shared_ptr<NetInstance::Node>, std::shared_ptr<NetInstance::Node>> 
-    GetBothNodes(NetInstance::Link link)
+std::pair<std::shared_ptr<NetInstance::Node>, std::shared_ptr<NetInstance::Node>> GetBothNodes(NetInstance::Link link)
 {
     u64 srcNodeId = 0;
     u64 dstNodeId = 0;
@@ -484,21 +457,21 @@ TEST_F(NetInstanceTest, fabGroup_inner_get_paths_v1)
     std::vector<RankId> rankIds = {0, 1, 2, 3, 4, 5, 6};
     RankId wrongRankId = 27;
 
-    std::unique_ptr<NetInstance> fabGroupPtr = InitFullFabGroup(
-        level, netInstId, fabType, rankIds, 0, 0);
+    std::unique_ptr<NetInstance> fabGroupPtr = InitFullFabGroup(level, netInstId, fabType, rankIds, 0, 0);
 
     EXPECT_NE(fabGroupPtr, nullptr);
 
     for (int i = 0; i < rankIds.size(); i++) {
         for (int j = 0; j < rankIds.size(); j++) {
-            if (i == j) continue;
+            if (i == j)
+                continue;
             RankId srcRankId = rankIds[i];
             RankId dstRankId = rankIds[j];
 
             vector<NetInstance::Path> paths = fabGroupPtr->GetPaths(srcRankId, dstRankId);
             EXPECT_EQ(paths.size(), 1);
             EXPECT_EQ(paths[0].links.size(), 1);
-            
+
             auto testNodeId = GetBothNodes(paths[0].links[0]);
 
             EXPECT_EQ(std::dynamic_pointer_cast<NetInstance::Peer>(testNodeId.first)->GetRankId(), srcRankId);
@@ -517,21 +490,22 @@ TEST_F(NetInstanceTest, fabGroup_clos_get_paths_v1)
     int fabricSize = 4;
     int fabricIdBase = 10;
 
-    std::unique_ptr<NetInstance> fabGroupPtr = InitFullFabGroup(
-        level, netInstId, fabType, rankIds, fabricSize, fabricIdBase);
+    std::unique_ptr<NetInstance> fabGroupPtr
+        = InitFullFabGroup(level, netInstId, fabType, rankIds, fabricSize, fabricIdBase);
 
     EXPECT_NE(fabGroupPtr, nullptr);
 
     for (int i = 0; i < rankIds.size(); i++) {
         for (int j = 0; j < rankIds.size(); j++) {
-            if (i == j) continue;
+            if (i == j)
+                continue;
             RankId srcRankId = rankIds[i];
             RankId dstRankId = rankIds[j];
 
             vector<NetInstance::Path> paths = fabGroupPtr->GetPaths(srcRankId, dstRankId);
             EXPECT_EQ(paths.size(), fabricSize / 2);
 
-            for (auto path: paths) {
+            for (auto path : paths) {
                 EXPECT_EQ(path.links.size(), 2);
 
                 auto testFromNodes = GetBothNodes(path.links[0]);
@@ -561,10 +535,12 @@ TEST_F(NetInstanceTest, UT_GetIfacesByLayer_When_Valid_Return_HCCl_SUCCESS)
     IpAddress inputAddr(0);
     std::set<std::string> ports = {"0/0"};
     std::set<LinkProtocol> protocals = {LinkProtocol::UB_CTP};
-    shared_ptr<NetInstance::ConnInterface> connInterface = std::make_shared<NetInstance::ConnInterface>(inputAddr, ports, AddrPosition::HOST, LinkType::PEER2PEER, protocals);
+    shared_ptr<NetInstance::ConnInterface> connInterface = std::make_shared<NetInstance::ConnInterface>(
+        inputAddr, ports, AddrPosition::HOST, LinkType::PEER2PEER, protocals);
     EXPECT_EQ(connInterface->GetTopoType(), TopoType::CLOS);
     EXPECT_EQ(connInterface->GetTopoInstId(), 0);
-    std::shared_ptr<NetInstance::Node> node = std::make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId, devPort);
+    std::shared_ptr<NetInstance::Node> node
+        = std::make_shared<NetInstance::Peer>(rankId, localId, localId, deviceId, devPort);
     node->AddConnInterface(0, connInterface);
 
     auto ifaces = node->GetIfacesByLayer(0);

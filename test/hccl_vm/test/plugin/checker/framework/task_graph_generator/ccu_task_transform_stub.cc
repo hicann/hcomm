@@ -13,7 +13,8 @@
 
 namespace HcclSim {
 // Stub implementation for testing TaskGraphGenerator without full CCU support
-HcclResult GenCcuGraph(TaskNode* dummyStart) {
+HcclResult GenCcuGraph(TaskNode* dummyStart)
+{
     // For unit testing, we don't need to actually process CCU graphs
     return HcclResult::HCCL_SUCCESS;
 }

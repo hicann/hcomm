@@ -21,25 +21,25 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepLoop : public CcuRepBase {
-public:
-    explicit CcuRepLoop(const std::string &label, const Variable &loopParam);
-    bool               Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string        Describe() override;
-    const std::string &GetLabel() const;
+    class CcuRepLoop : public CcuRepBase {
+    public:
+        explicit CcuRepLoop(const std::string& label, const Variable& loopParam);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
+        const std::string& GetLabel() const;
 
-    void                        Reference(std::shared_ptr<CcuRepLoopBlock> refRep);
-    std::shared_ptr<CcuRepBase> SetLoopParam(Executor executor, Variable var);
+        void Reference(std::shared_ptr<CcuRepLoopBlock> refRep);
+        std::shared_ptr<CcuRepBase> SetLoopParam(Executor executor, Variable var);
 
-private:
-    std::string                      label;
-    std::shared_ptr<CcuRepLoopBlock> loopBlock{nullptr};
+    private:
+        std::string label;
+        std::shared_ptr<CcuRepLoopBlock> loopBlock{nullptr};
 
-    Variable loopParam;
-    CcuInstr *instr{nullptr};
+        Variable loopParam;
+        CcuInstr* instr{nullptr};
 
-    friend class Hccl::CcuErrorHandler;
-};
+        friend class Hccl::CcuErrorHandler;
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

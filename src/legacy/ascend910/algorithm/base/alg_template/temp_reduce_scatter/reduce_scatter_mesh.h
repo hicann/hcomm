@@ -13,7 +13,6 @@
 
 #include "reduce_scatter_mesh_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * REDUCE_SCATTER_MESH_H */

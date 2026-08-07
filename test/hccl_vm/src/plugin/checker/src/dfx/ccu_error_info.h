@@ -22,16 +22,7 @@ constexpr uint32_t MISSION_STATUS_MSG_LEN = 64;
 constexpr uint32_t WAIT_SIGNAL_CHANNEL_SIZE = 16;
 constexpr uint32_t BUF_REDUCE_ID_SIZE = 8;
 
-enum class CcuErrorType {
-    DEFAULT = 0,
-    MISSION,
-    WAIT_SIGNAL,
-    TRANS_MEM,
-    BUF_TRANS_MEM,
-    BUF_REDUCE,
-    LOOP,
-    LOOP_GROUP
-};
+enum class CcuErrorType { DEFAULT = 0, MISSION, WAIT_SIGNAL, TRANS_MEM, BUF_TRANS_MEM, BUF_REDUCE, LOOP, LOOP_GROUP };
 
 struct CcuErrorInfo {
     // 根据不同的typeId解析不同的union类型
@@ -98,8 +89,8 @@ struct CcuErrorInfo {
         struct {
             uint16_t startInstrId;
             uint16_t endInstrId;
-            uint16_t loopCnt;           // 该Loop需要循环执行的次数
-            uint16_t loopCurrentCnt;    // 该Loop已经循环次数
+            uint16_t loopCnt;        // 该Loop需要循环执行的次数
+            uint16_t loopCurrentCnt; // 该Loop已经循环次数
             uint32_t addrStride;
         } loop;
 
@@ -119,5 +110,5 @@ struct CcuErrorInfo {
         this->instrId = insId;
     }
 };
-}
+} // namespace Hccl
 #endif // CCU_ERROR_INFO_H

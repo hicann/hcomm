@@ -25,24 +25,24 @@ public:
 
     ~LocalIpcRmaBuffer() override;
 
-    LocalIpcRmaBuffer(const LocalIpcRmaBuffer &that) = delete;
+    LocalIpcRmaBuffer(const LocalIpcRmaBuffer& that) = delete;
 
-    LocalIpcRmaBuffer &operator=(const LocalIpcRmaBuffer &that) = delete;
+    LocalIpcRmaBuffer& operator=(const LocalIpcRmaBuffer& that) = delete;
 
     std::string Describe() const override;
 
     void Grant(u32 pid);
 
     std::unique_ptr<Serializable> GetExchangeDto() override;
-    std::pair<uintptr_t, u64> GetBufferInfo() {return std::make_pair(buf->GetAddr(), buf->GetSize());}
+    std::pair<uintptr_t, u64> GetBufferInfo() { return std::make_pair(buf->GetAddr(), buf->GetSize()); }
 
-    void* GetIpcPtr() const {return ipcPtr;}
+    void* GetIpcPtr() const { return ipcPtr; }
 
 protected:
-    char  name[RTS_IPC_MEM_NAME_LEN];
-    void *ipcPtr{nullptr};
-    u64   ipcOffset{0};
-    u64   ipcSize{0};
+    char name[RTS_IPC_MEM_NAME_LEN];
+    void* ipcPtr{nullptr};
+    u64 ipcOffset{0};
+    u64 ipcSize{0};
 };
 
 } // namespace Hccl

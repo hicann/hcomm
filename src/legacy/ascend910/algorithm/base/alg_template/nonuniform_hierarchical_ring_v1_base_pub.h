@@ -35,6 +35,7 @@ public:
     u32 GetRank(u32 vIndex, u32 hIndex) const;
 
     u32 threshold = 5;
+
 private:
     u32 rankSize_{};
     u32 sqrtRankSize_{};
@@ -54,6 +55,6 @@ public:
 
 private:
 };
-}  // hccl
+} // namespace hccl
 
-#endif  /* NONUNIFORM_HIERARCHICAL_RING_V1_BASE_PUB_H */
+#endif /* NONUNIFORM_HIERARCHICAL_RING_V1_BASE_PUB_H */

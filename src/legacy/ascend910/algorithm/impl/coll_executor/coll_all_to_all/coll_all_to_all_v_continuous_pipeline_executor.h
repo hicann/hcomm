@@ -13,22 +13,23 @@
 #include "coll_all_to_all_executor.h"
 namespace hccl {
 class CollAlltoAllVContinuousPipeline : public CollAlltoAllExecutor {
-
 public:
-    CollAlltoAllVContinuousPipeline(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollAlltoAllVContinuousPipeline(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAlltoAllVContinuousPipeline() override = default;
     HcclResult Orchestrate(OpParam& param, AlgResourceResponse& algRes) override;
 
 private:
     HcclResult CalcStreamNum(u32& streamNum) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel1CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel1CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
-    HcclResult FillLocalSendRecvInfo(const OpParam &param, SendRecvInfo &info);
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
+    HcclResult FillLocalSendRecvInfo(const OpParam& param, SendRecvInfo& info);
 };
 
 } // namespace hccl

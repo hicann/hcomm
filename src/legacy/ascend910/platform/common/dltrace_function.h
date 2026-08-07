@@ -21,29 +21,29 @@ namespace hccl {
 class DlTraceFunction {
 public:
     virtual ~DlTraceFunction();
-    static DlTraceFunction &GetInstance();
+    static DlTraceFunction& GetInstance();
     HcclResult DlTraceFunctionInit();
 
     std::function<void(TraHandle handle)> dlAtraceDestroy{};
-    std::function<HcclResult(TraHandle handle, const void *buffer, u32 bufSize)> dlAtraceSubmit{};
-    std::function<TraHandle(int tracerType, const char *objName, const TraceAttr *attr)> dlAtraceCreateWithAttr{};
-    std::function<TraStatus(const TraceGlobalAttr *attr)> dlAtraceSetGlobalAttr{};
+    std::function<HcclResult(TraHandle handle, const void* buffer, u32 bufSize)> dlAtraceSubmit{};
+    std::function<TraHandle(int tracerType, const char* objName, const TraceAttr* attr)> dlAtraceCreateWithAttr{};
+    std::function<TraStatus(const TraceGlobalAttr* attr)> dlAtraceSetGlobalAttr{};
     std::function<TraStatus(TracerType tracerType, bool syncFlag)> dlAtraceSave{};
-    
+
     std::function<void(TraHandle handle)> dlUtraceDestroy{};
-    std::function<HcclResult(TraHandle handle, const void *buffer, u32 bufSize)> dlUtraceSubmit{};
-    std::function<TraHandle(int tracerType, const char *objName, const TraceAttr *attr)> dlUtraceCreateWithAttr{};
-    std::function<TraStatus(const TraceGlobalAttr *attr)> dlUtraceSetGlobalAttr{};
+    std::function<HcclResult(TraHandle handle, const void* buffer, u32 bufSize)> dlUtraceSubmit{};
+    std::function<TraHandle(int tracerType, const char* objName, const TraceAttr* attr)> dlUtraceCreateWithAttr{};
+    std::function<TraStatus(const TraceGlobalAttr* attr)> dlUtraceSetGlobalAttr{};
     std::function<TraStatus(TracerType tracerType, bool syncFlag)> dlUtraceSave{};
 
 private:
-    void *handle_;
+    void* handle_;
     std::mutex handleMutex_;
     DlTraceFunction(const DlTraceFunction&);
-    DlTraceFunction &operator=(const DlTraceFunction&);
+    DlTraceFunction& operator=(const DlTraceFunction&);
     DlTraceFunction();
     HcclResult DlATraceFunctionInterInit();
     HcclResult DlUTraceFunctionInterInit();
 };
-}  // namespace hccl
+} // namespace hccl
 #endif

@@ -10,7 +10,7 @@
 
 #ifndef PROFILER_BASE_PUB_EXTEND_H
 #define PROFILER_BASE_PUB_EXTEND_H
- 
+
 #include <memory>
 #include <mutex>
 #include <string>
@@ -34,13 +34,13 @@
 #define HCCL_PROFILER_DEL_TAG(tag)
 
 // 兼容性考虑，需保留
-#define HCCL_PROFILER_ADD_OPDATA(tag, count, src, dst, dataType, rootId, group)                \
-    do {                                                                       \
+#define HCCL_PROFILER_ADD_OPDATA(tag, count, src, dst, dataType, rootId, group)                    \
+    do {                                                                                           \
         HcclResult __ret = ProfilerBase::AddOpData(tag, count, src, dst, dataType, rootId, group); \
-        if (UNLIKELY(__ret != 0)) {                                        \
-            HCCL_ERROR("profiler add opData error[%d]", __ret);               \
-            return HCCL_E_INTERNAL;                                        \
-        }                                                                  \
+        if (UNLIKELY(__ret != 0)) {                                                                \
+            HCCL_ERROR("profiler add opData error[%d]", __ret);                                    \
+            return HCCL_E_INTERNAL;                                                                \
+        }                                                                                          \
     } while (0)
 
 #define HCCL_PROFILER_ADD_OPDATA_OP(tag, count, src, dst, dataType, rootId, group, reduceType)
@@ -51,4 +51,4 @@
 #define HCCL_PROFILER_ADD_GROUP_UDI(group, udi)
 #define HCCL_PROFILER_DEL_GROUP_UDI(group)
 
- #endif /* PROFILER_BASE_PUB_EXTEND_H */
+#endif /* PROFILER_BASE_PUB_EXTEND_H */

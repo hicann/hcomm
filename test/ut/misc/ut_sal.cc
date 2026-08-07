@@ -24,33 +24,18 @@
 
 using namespace std;
 using namespace hccl;
-class SalTest : public testing::Test
-{
+class SalTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "SalTest SetUP" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "SalTest TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "SalTest SetUP" << std::endl; }
+    static void TearDownTestCase() { std::cout << "SalTest TearDown" << std::endl; }
     // Some expensive resource shared by all tests.
-    virtual void SetUp()
-    {
-        std::cout << "A Test SetUP" << std::endl;
-    }
-    virtual void TearDown()
-    {
-        std::cout << "A Test TearDown" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test SetUP" << std::endl; }
+    virtual void TearDown() { std::cout << "A Test TearDown" << std::endl; }
 };
 
 TEST_F(SalTest, ut_ip_addr_check)
 {
-    MOCKER(inet_ntop)
-    .stubs()
-    .will(returnValue((char const*)NULL));
+    MOCKER(inet_ntop).stubs().will(returnValue((char const*)NULL));
 
     HcclInAddr ipv4;
     ipv4.addr.s_addr = 666;
@@ -97,9 +82,7 @@ TEST_F(SalTest, ut_SalStrToLonglong_error)
 TEST_F(SalTest, ut_atrace_error_test)
 {
     DlTraceFunction::GetInstance().DlTraceFunctionInit();
-    MOCKER(AtraceCreateWithAttr)
-    .stubs()
-    .will(returnValue(TRACE_INVALID_HANDLE));
+    MOCKER(AtraceCreateWithAttr).stubs().will(returnValue(TRACE_INVALID_HANDLE));
 
     HcclTraceInfo atrace;
     std::string hccl = "HCCL";
@@ -113,11 +96,9 @@ TEST_F(SalTest, ut_atrace_error_test)
 
 TEST_F(SalTest, ut_DlTraceFunctionInit_ATrace_Failed_Expect_ReturnError)
 {
-    MOCKER_CPP(&hccl::DlTraceFunction::DlATraceFunctionInterInit)
-    .stubs()
-    .will(returnValue(HCCL_E_INTERNAL));
+    MOCKER_CPP(&hccl::DlTraceFunction::DlATraceFunctionInterInit).stubs().will(returnValue(HCCL_E_INTERNAL));
 
-    DlTraceFunction &dlTrace = DlTraceFunction::GetInstance();
+    DlTraceFunction& dlTrace = DlTraceFunction::GetInstance();
     dlTrace.handle_ = nullptr;
     HcclResult ret = dlTrace.DlTraceFunctionInit();
     EXPECT_EQ(ret, HCCL_E_INTERNAL);

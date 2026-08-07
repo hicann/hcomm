@@ -17,7 +17,6 @@
 #include "comm_star_pub.h"
 #include "comm_halving_doubling_pub.h"
 
-namespace hccl {
-}
+namespace hccl {}
 
 #endif /* COMM_IMPL_H */

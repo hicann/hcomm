@@ -37,18 +37,16 @@ public:
     ~ThreadManage();
 
     HcclResult Init();
-    HcclResult Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem, const u64 count,
-                       const HcclDataType dataType, const Stream &stream, const HcclReduceOp reductionOp,
-                       const u32 root, const std::vector<Slice> &slices, const u64 baseOffset,
-                       std::vector<u32> nicRankList, const std::string &tag,
-                       s32 profStage, const SubCommInfo &ringSubCommInfo, std::shared_ptr<LocalNotify> &signalAux,
-                       std::shared_ptr<LocalNotify> &signalMain, u32 ringIndex,
-                       ExecutorType type, u64 reduceAttr = 0, const HcomCollOpInfo *opInfo = nullptr,
-                       std::vector<Stream> subStreamsInOneRing = {},
-                       std::vector<std::shared_ptr<LocalNotify>> mainSignalsInOneRing = {},
-                       std::vector<std::shared_ptr<LocalNotify>> subSignalsInOneRing = {},
-                       std::vector<u32> ringsOrder = {},
-                       std::vector<Slice> userMemInputSlices = {});
+    HcclResult Prepare(
+        DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+        const Stream& stream, const HcclReduceOp reductionOp, const u32 root, const std::vector<Slice>& slices,
+        const u64 baseOffset, std::vector<u32> nicRankList, const std::string& tag, s32 profStage,
+        const SubCommInfo& ringSubCommInfo, std::shared_ptr<LocalNotify>& signalAux,
+        std::shared_ptr<LocalNotify>& signalMain, u32 ringIndex, ExecutorType type, u64 reduceAttr = 0,
+        const HcomCollOpInfo* opInfo = nullptr, std::vector<Stream> subStreamsInOneRing = {},
+        std::vector<std::shared_ptr<LocalNotify>> mainSignalsInOneRing = {},
+        std::vector<std::shared_ptr<LocalNotify>> subSignalsInOneRing = {}, std::vector<u32> ringsOrder = {},
+        std::vector<Slice> userMemInputSlices = {});
 
     HcclResult Finalize();
     void NotifyStart();
@@ -56,12 +54,12 @@ public:
     void NotifyDone();
     void WaitDone();
     uint32_t GetTid();
-protected:
 
+protected:
 private:
     HcclResult ThreadExecuteFn();
     HcclResult ExecuteService();
-    std::shared_ptr<std::thread>ringThread_;
+    std::shared_ptr<std::thread> ringThread_;
     uint32_t threadId_ = 0;
     s32 deviceLogicId_;
     u32 userRank_;
@@ -92,9 +90,9 @@ private:
     SubCommInfo ringSubCommInfo_;
     std::shared_ptr<LocalNotify> signalAux_ = nullptr;
     std::shared_ptr<LocalNotify> signalMain_ = nullptr;
-    u32 ringIndex_  = 0;
+    u32 ringIndex_ = 0;
     u64 reduceAttr_ = 0;
-    const HcomCollOpInfo *opInfo_;
+    const HcomCollOpInfo* opInfo_;
     std::vector<Stream> subStreamsInOneRing_;
     std::vector<std::shared_ptr<LocalNotify>> mainSignalsInOneRing_;
     std::vector<std::shared_ptr<LocalNotify>> subSignalsInOneRing_;
@@ -104,6 +102,6 @@ private:
     HcclRtContext context_;
     HcclWorkflowMode workflowMode_{HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE};
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* * THREAD_MANAGE_H */

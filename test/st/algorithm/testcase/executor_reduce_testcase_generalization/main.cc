@@ -9,7 +9,8 @@
  */
 #include "gtest/gtest.h"
 
-GTEST_API_ int main(int argc, char **argv) {
+GTEST_API_ int main(int argc, char** argv)
+{
     // testcase测试代码，只跑特定的用例
     // testing::GTEST_FLAG(filter) = "AllReduceTest.allreduce_910_93_opbase_NHRoneshot";
     testing::InitGoogleTest(&argc, argv);

@@ -17,13 +17,19 @@
 
 namespace AscendC {
 template <typename T>
-__aicore__ inline void Add(const LocalTensor<T>& dst, const LocalTensor<T>& src0, const LocalTensor<T>& src1, const int32_t& count) {}
+__aicore__ inline void
+Add(const LocalTensor<T>& dst, const LocalTensor<T>& src0, const LocalTensor<T>& src1, const int32_t& count)
+{}
 
 template <typename T>
-__aicore__ inline void Max(const LocalTensor<T>& dst, const LocalTensor<T>& src0, const LocalTensor<T>& src1, const int32_t& count) {}
+__aicore__ inline void
+Max(const LocalTensor<T>& dst, const LocalTensor<T>& src0, const LocalTensor<T>& src1, const int32_t& count)
+{}
 
 template <typename T>
-__aicore__ inline void Min(const LocalTensor<T>& dst, const LocalTensor<T>& src0, const LocalTensor<T>& src1, const int32_t& count) {}
-}
+__aicore__ inline void
+Min(const LocalTensor<T>& dst, const LocalTensor<T>& src0, const LocalTensor<T>& src1, const int32_t& count)
+{}
+} // namespace AscendC
 
-#endif //HCCL_VM_ASCENDC_MATH_STUB_H
+#endif // HCCL_VM_ASCENDC_MATH_STUB_H

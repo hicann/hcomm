@@ -22,7 +22,8 @@
 
 class SetCkeExecutor : public CcuExecutorBase {
 public:
-    explicit SetCkeExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit SetCkeExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     SetCkeExecutor() = default;
@@ -30,7 +31,7 @@ public:
 
     void Parser() override;
     void Run() override;
-    void Process(CcuResourceManager &ccuResMgr) override;
+    void Process(CcuResourceManager& ccuResMgr) override;
     std::string Describe() override;
     CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 

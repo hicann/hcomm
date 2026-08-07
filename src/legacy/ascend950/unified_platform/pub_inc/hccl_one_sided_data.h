@@ -20,21 +20,21 @@ struct HcclMemDesc {
 };
 
 struct HcclMemDescs {
-    HcclMemDesc *array;
-    u32          arrayLength;
+    HcclMemDesc* array;
+    u32 arrayLength;
 };
 
 struct HcclOneSideOpDesc {
-    void        *localAddr;  // 本端VA
-    void        *remoteAddr; // 远端VA
-    u64          count;
+    void* localAddr;  // 本端VA
+    void* remoteAddr; // 远端VA
+    u64 count;
     HcclDataType dataType;
 };
 
 constexpr size_t TRANSPORT_EMD_ESC_SIZE = 512U - (sizeof(u32) * 2);
 struct RmaMemDesc {
-    s32  localRankId;
-    s32  remoteRankId;
+    s32 localRankId;
+    s32 remoteRankId;
     char memDesc[TRANSPORT_EMD_ESC_SIZE];
 };
 

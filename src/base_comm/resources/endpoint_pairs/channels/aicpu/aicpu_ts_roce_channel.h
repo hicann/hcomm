@@ -28,14 +28,14 @@ class AicpuTsRoceEndpoint;
 
 class AicpuTsRoceChannel : public Channel {
 public:
-    explicit AicpuTsRoceChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc);
+    explicit AicpuTsRoceChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc);
     ~AicpuTsRoceChannel() override;
 
     HcclResult Init() override;
-    HcclResult GetNotifyNum(uint32_t *notifyNum) const override;
-    HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos) override;
+    HcclResult GetNotifyNum(uint32_t* notifyNum) const override;
+    HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos) override;
     ChannelStatus GetStatus() override;
-    HcclResult Serialize(std::shared_ptr<hccl::DeviceMem> &out) override;
+    HcclResult Serialize(std::shared_ptr<hccl::DeviceMem>& out) override;
     HcommChannelKind GetChannelKind() const override;
     const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
     HcclResult Clean() override;
@@ -44,12 +44,12 @@ public:
     // 数据面接口
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;
     HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) override;
-    HcclResult WriteWithNotify(void *dst, const void *src, const uint64_t len, uint32_t remoteNotifyIdx) override;
-    HcclResult Write(void *dst, const void *src, uint64_t len) override;
-    HcclResult Read(void *dst, const void *src, uint64_t len) override;
+    HcclResult WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx) override;
+    HcclResult Write(void* dst, const void* src, uint64_t len) override;
+    HcclResult Read(void* dst, const void* src, uint64_t len) override;
     HcclResult ChannelFence() override;
 
-    AicpuTsChannelHelper *GetAicpuTsHelper() override { return &aicpuTsHelper_; }
+    AicpuTsChannelHelper* GetAicpuTsHelper() override { return &aicpuTsHelper_; }
 
 private:
     AicpuTsChannelHelper aicpuTsHelper_;
@@ -61,37 +61,36 @@ private:
     };
 
     enum class RoceStatus {
-        INIT,               // 初始状态
-        SOCKET_CONNECTING,  // Socket正在连接
-        SOCKET_OK,          // Socket建立连接
-        READY,              // Dispatcher + Transport初始化完成
-        FAILED              // 建链失败
+        INIT,              // 初始状态
+        SOCKET_CONNECTING, // Socket正在连接
+        SOCKET_OK,         // Socket建立连接
+        READY,             // Dispatcher + Transport初始化完成
+        FAILED             // 建链失败
     };
 
     HcclResult ParseInputParam();
     HcclResult BuildDataSocket();
     HcclResult BuildClientDataSocket(
-        HcclNetDevCtx netDevCtx, const hccl::HcclIpAddress &remoteIp, uint32_t port, const std::string &socketTag);
-    HcclResult BuildServerDataSocket(AicpuTsRoceEndpoint *roceEp, const hccl::HcclIpAddress &remoteIp, uint32_t port,
-        const std::string &socketTag);
+        HcclNetDevCtx netDevCtx, const hccl::HcclIpAddress& remoteIp, uint32_t port, const std::string& socketTag);
+    HcclResult BuildServerDataSocket(
+        AicpuTsRoceEndpoint* roceEp, const hccl::HcclIpAddress& remoteIp, uint32_t port, const std::string& socketTag);
     HcclResult BuildDispatcherAndTransport();
     HcclResult AssignDispatcherCommId();
     HcclResult EnsureDispatcherCtx(u32 devPhyId);
     HcclResult ConfigureMachineParaForTransport();
     void ConfigureTransportParaForRoce();
     HcclResult CreateAndInitTransport(HcclDispatcher dispatcher);
-    HcclResult BuildSocketTagName(std::string &outTag) const;
+    HcclResult BuildSocketTagName(std::string& outTag) const;
     HcclResult ValidateSerializeParams(u32 qpNum, size_t localMemCount, size_t remoteMemCount) const;
-    HcclResult InitSerializeRoceChannelRes(HcommRoceChannelRes &res, size_t localMemCount, size_t remoteMemCount,
-        void *localMem, void *remoteMem, const std::vector<HcclQpInfoV2> &aiQpInfos, u32 qpNum) const;
-    HcclResult BuildSerializeChannelMem(AicpuTsRoceChannelMem &bundle, const std::vector<RoceMemDetails> &localMd,
-        const std::vector<RoceMemDetails> &remoteMd, const std::vector<HcclQpInfoV2> &aiQpInfos, u32 qpNum);
+    HcclResult InitSerializeRoceChannelRes(
+        HcommRoceChannelRes& res, size_t localMemCount, size_t remoteMemCount, void* localMem, void* remoteMem,
+        const std::vector<HcclQpInfoV2>& aiQpInfos, u32 qpNum) const;
+    HcclResult BuildSerializeChannelMem(
+        AicpuTsRoceChannelMem& bundle, const std::vector<RoceMemDetails>& localMd,
+        const std::vector<RoceMemDetails>& remoteMd, const std::vector<HcclQpInfoV2>& aiQpInfos, u32 qpNum);
 
-    const char *SocketRoleTag() const noexcept
-    {
-        return isLocalIpClient_ ? "client" : "server";
-    }
-    HcclResult SerializeDrainNotifyInfo(HcommRoceChannelRes &res) const;
+    const char* SocketRoleTag() const noexcept { return isLocalIpClient_ ? "client" : "server"; }
+    HcclResult SerializeDrainNotifyInfo(HcommRoceChannelRes& res) const;
 
     EndpointHandle endpointHandle_{};
     HcommChannelDesc channelDesc_{};

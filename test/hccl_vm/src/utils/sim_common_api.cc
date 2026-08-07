@@ -21,7 +21,8 @@ static std::string GetExePath()
 {
     char buf[PATH_MAX] = {0};
     ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
-    if (len <= 0) return "";
+    if (len <= 0)
+        return "";
     buf[len] = '\0';
     return std::string(buf);
 }
@@ -69,28 +70,20 @@ const std::string& InstallPath::GetHcclVmInstallAbsPath()
 
 std::string InstallPath::ResolveToInstallRoot(const std::string& relPath)
 {
-    if (relPath.empty() || relPath[0] == '/' ||
-        (relPath.size() >= 2 && relPath[0] == '.' && relPath[1] == '/')) {
+    if (relPath.empty() || relPath[0] == '/' || (relPath.size() >= 2 && relPath[0] == '.' && relPath[1] == '/')) {
         return relPath;
     }
     return GetHcclVmInstallAbsPath() + "/" + relPath;
 }
 
 static std::map<HcclDataType, std::string> g_DataType2Str = {
-    {HcclDataType::HCCL_DATA_TYPE_INT8, "INT8"},
-    {HcclDataType::HCCL_DATA_TYPE_INT16, "INT16"},
-    {HcclDataType::HCCL_DATA_TYPE_INT32, "INT32"},
-    {HcclDataType::HCCL_DATA_TYPE_FP16, "FP16"},
-    {HcclDataType::HCCL_DATA_TYPE_UINT64, "UINT64"},
-    {HcclDataType::HCCL_DATA_TYPE_UINT8, "UINT8"},
-    {HcclDataType::HCCL_DATA_TYPE_UINT16, "UINT16"},
-    {HcclDataType::HCCL_DATA_TYPE_UINT32, "UINT32"},
-    {HcclDataType::HCCL_DATA_TYPE_FP64, "FP64"},
-    {HcclDataType::HCCL_DATA_TYPE_BFP16, "BFP16"},
-    {HcclDataType::HCCL_DATA_TYPE_INT128, "INT128"},
-    {HcclDataType::HCCL_DATA_TYPE_INT64, "INT64"},
-    {HcclDataType::HCCL_DATA_TYPE_HIF8, "HIF8"},
-    {HcclDataType::HCCL_DATA_TYPE_FP8E4M3, "FP8E4M3"},
+    {HcclDataType::HCCL_DATA_TYPE_INT8, "INT8"},       {HcclDataType::HCCL_DATA_TYPE_INT16, "INT16"},
+    {HcclDataType::HCCL_DATA_TYPE_INT32, "INT32"},     {HcclDataType::HCCL_DATA_TYPE_FP16, "FP16"},
+    {HcclDataType::HCCL_DATA_TYPE_UINT64, "UINT64"},   {HcclDataType::HCCL_DATA_TYPE_UINT8, "UINT8"},
+    {HcclDataType::HCCL_DATA_TYPE_UINT16, "UINT16"},   {HcclDataType::HCCL_DATA_TYPE_UINT32, "UINT32"},
+    {HcclDataType::HCCL_DATA_TYPE_FP64, "FP64"},       {HcclDataType::HCCL_DATA_TYPE_BFP16, "BFP16"},
+    {HcclDataType::HCCL_DATA_TYPE_INT128, "INT128"},   {HcclDataType::HCCL_DATA_TYPE_INT64, "INT64"},
+    {HcclDataType::HCCL_DATA_TYPE_HIF8, "HIF8"},       {HcclDataType::HCCL_DATA_TYPE_FP8E4M3, "FP8E4M3"},
     {HcclDataType::HCCL_DATA_TYPE_FP8E5M2, "FP8E5M2"},
 };
 

@@ -87,8 +87,11 @@ STATIC int RsPingCbGetUrmaContextAndIndex(struct RsPingCtxCb *pingCb, struct Pin
     int ret;
 
     pingCb->udevCb.urmaCtx = RsUrmaCreateContext(pingCb->udevCb.urmaDev, attr->dev.ub.eidIndex);
-    CHK_PRT_RETURN(pingCb->udevCb.urmaCtx == NULL, hccp_err("urma_create_context failed, errno:%d, "
-        "eidIndex:%u", errno, attr->dev.ub.eidIndex), -ENODEV);
+    CHK_PRT_RETURN(pingCb->udevCb.urmaCtx == NULL,
+        hccp_err("urma_create_context failed, errno:%d, "
+                 "eidIndex:%u",
+            errno, attr->dev.ub.eidIndex),
+        -ENODEV);
 
     ret = RsUbGetUeInfo(pingCb->udevCb.urmaCtx, &devAttr);
     if (ret != 0) {
@@ -116,8 +119,8 @@ STATIC int RsPingCommonInitJfce(struct RsPingCtxCb *pingCb, struct RsPingLocalJe
     return 0;
 }
 
-STATIC int RsPingCommonInitSendJfcWithAttr(struct rs_cb *rscb, struct RsPingCtxCb *pingCb,
-    union PingQpAttr *attr, struct RsPingLocalJettyCb *jettyCb)
+STATIC int RsPingCommonInitSendJfcWithAttr(struct rs_cb *rscb, struct RsPingCtxCb *pingCb, union PingQpAttr *attr,
+    struct RsPingLocalJettyCb *jettyCb)
 {
     urma_jfc_cfg_t sendJfcCfg = {
         .depth = attr->ub.cqAttr.sendCqDepth,
@@ -131,14 +134,13 @@ STATIC int RsPingCommonInitSendJfcWithAttr(struct rs_cb *rscb, struct RsPingCtxC
     jettyCb->sendJfc.jfc = RsUrmaCreateJfc(pingCb->udevCb.urmaCtx, &sendJfcCfg);
     CHK_PRT_RETURN(jettyCb->sendJfc.jfc == NULL, hccp_err("urma_create_jfc failed, errno:%d", errno), -EOPENSRC);
 
-    hccp_run_info("eid:%016llx:%016llx init send jfc success, jfc_id:%u",
-        pingCb->udevCb.eidInfo.eid.in6.subnetPrefix, pingCb->udevCb.eidInfo.eid.in6.interfaceId,
-        jettyCb->sendJfc.jfc->jfc_id.id);
+    hccp_run_info("eid:%016llx:%016llx init send jfc success, jfc_id:%u", pingCb->udevCb.eidInfo.eid.in6.subnetPrefix,
+        pingCb->udevCb.eidInfo.eid.in6.interfaceId, jettyCb->sendJfc.jfc->jfc_id.id);
     return 0;
 }
 
-STATIC int RsPingCommonInitRecvJfcWithAttr(struct RsPingCtxCb *pingCb,
-    union PingQpAttr *attr, struct RsPingLocalJettyCb *jettyCb)
+STATIC int RsPingCommonInitRecvJfcWithAttr(struct RsPingCtxCb *pingCb, union PingQpAttr *attr,
+    struct RsPingLocalJettyCb *jettyCb)
 {
     urma_jfc_cfg_t recvJfcCfg = {
         .depth = attr->ub.cqAttr.recvCqDepth,
@@ -152,14 +154,13 @@ STATIC int RsPingCommonInitRecvJfcWithAttr(struct RsPingCtxCb *pingCb,
     jettyCb->recvJfc.jfc = RsUrmaCreateJfc(pingCb->udevCb.urmaCtx, &recvJfcCfg);
     CHK_PRT_RETURN(jettyCb->recvJfc.jfc == NULL, hccp_err("urma_create_jfc failed, errno:%d", errno), -EOPENSRC);
 
-    hccp_run_info("eid:%016llx:%016llx init recv jfc success, jfc_id:%u",
-        pingCb->udevCb.eidInfo.eid.in6.subnetPrefix, pingCb->udevCb.eidInfo.eid.in6.interfaceId,
-        jettyCb->recvJfc.jfc->jfc_id.id);
+    hccp_run_info("eid:%016llx:%016llx init recv jfc success, jfc_id:%u", pingCb->udevCb.eidInfo.eid.in6.subnetPrefix,
+        pingCb->udevCb.eidInfo.eid.in6.interfaceId, jettyCb->recvJfc.jfc->jfc_id.id);
     return 0;
 }
 
-STATIC int RsPingCommonInitJettyWithAttr(struct RsPingCtxCb *pingCb,
-    union PingQpAttr *attr, struct RsPingLocalJettyCb *jettyCb)
+STATIC int RsPingCommonInitJettyWithAttr(struct RsPingCtxCb *pingCb, union PingQpAttr *attr,
+    struct RsPingLocalJettyCb *jettyCb)
 {
     urma_jetty_cfg_t jettyCfg = {0};
     urma_jfs_cfg_t jfsCfg = {0};
@@ -198,9 +199,8 @@ STATIC int RsPingCommonInitJettyWithAttr(struct RsPingCtxCb *pingCb,
     }
 
     jettyCb->tokenValue = attr->ub.qpAttr.tokenValue;
-    hccp_run_info("eid:%016llx:%016llx init jetty success, jetty_id:%u",
-        pingCb->udevCb.eidInfo.eid.in6.subnetPrefix, pingCb->udevCb.eidInfo.eid.in6.interfaceId,
-        jettyCb->jetty->jetty_id.id);
+    hccp_run_info("eid:%016llx:%016llx init jetty success, jetty_id:%u", pingCb->udevCb.eidInfo.eid.in6.subnetPrefix,
+        pingCb->udevCb.eidInfo.eid.in6.interfaceId, jettyCb->jetty->jetty_id.id);
     return 0;
 
 create_jetty_fail:
@@ -294,35 +294,31 @@ STATIC int RsPingCommonInitSegCb(struct rs_cb *rscb, struct RsPingCtxCb *pingCb,
     uint32_t idx = 0;
     int ret;
 
-    urma_reg_seg_flag_t segFlag = {
-        .bs.token_policy = URMA_TOKEN_PLAIN_TEXT,
+    urma_reg_seg_flag_t segFlag = {.bs.token_policy = URMA_TOKEN_PLAIN_TEXT,
         .bs.cacheable = URMA_NON_CACHEABLE,
         .bs.access = URMA_ACCESS_LOCAL_ONLY,
         .bs.non_pin = (RaRsHasCapability(RA_CAP_DRV_SHAREPOOL_NON_PIN, 0, RsNetGetApiVersion())) ? 1 : 0,
         .bs.token_id_valid = URMA_TOKEN_ID_INVALID,
-        .bs.reserved = 0
-    };
-    urma_seg_cfg_t segCfg = {
-        .va = 0,
+        .bs.reserved = 0};
+    urma_seg_cfg_t segCfg = {.va = 0,
         .len = segCb->len,
         .token_value = segCb->tokenValue,
         .flag = segFlag,
         .user_ctx = (uintptr_t)NULL,
-        .iova = 0
-    };
+        .iova = 0};
 
-    hccp_info("payload_offset:%u len:0x%llx sge_num:%u grp_id:%u",
-        segCb->payloadOffset, segCb->len, segCb->sgeNum, rscb->grpId);
+    hccp_info("payload_offset:%u len:0x%llx sge_num:%u grp_id:%u", segCb->payloadOffset, segCb->len, segCb->sgeNum,
+        rscb->grpId);
 
     ret = pthread_mutex_init(&segCb->mutex, NULL);
     CHK_PRT_RETURN(ret != 0, hccp_err("pthread_mutex_init seg_cb mutex failed, ret:%d", ret), ret);
 
     flag = ((unsigned long)pingCb->logicDevid << BUFF_FLAGS_DEVID_OFFSET) | BUFF_SP_SVM;
-    ret = DlHalBuffAllocAlignEx(segCb->len, (unsigned int)RA_RS_4K_PAGE_SIZE,
-        flag, (int)rscb->grpId, (void **)&segCb->addr);
+    ret = DlHalBuffAllocAlignEx(segCb->len, (unsigned int)RA_RS_4K_PAGE_SIZE, flag, (int)rscb->grpId,
+        (void **)&segCb->addr);
     if (ret != 0) {
-        hccp_err("DlHalBuffAllocAlignEx failed, length:0x%llx, dev_id:0x%x, flag:0x%lx, grp_id:%u, ret:%d",
-            segCb->len, pingCb->logicDevid, flag, rscb->grpId, ret);
+        hccp_err("DlHalBuffAllocAlignEx failed, length:0x%llx, dev_id:0x%x, flag:0x%lx, grp_id:%u, ret:%d", segCb->len,
+            pingCb->logicDevid, flag, rscb->grpId, ret);
         goto alloc_fail;
     }
 
@@ -354,8 +350,8 @@ STATIC int RsPingCommonInitSegCb(struct rs_cb *rscb, struct RsPingCtxCb *pingCb,
     segCb->sgeIdx = 0;
 
     hccp_info("eid:%016llx:%016llx segment register success, addr:0x%llx len:%u",
-        pingCb->udevCb.eidInfo.eid.in6.subnetPrefix, pingCb->udevCb.eidInfo.eid.in6.interfaceId,
-        segCb->addr, segCb->len);
+        pingCb->udevCb.eidInfo.eid.in6.subnetPrefix, pingCb->udevCb.eidInfo.eid.in6.interfaceId, segCb->addr,
+        segCb->len);
 
     return 0;
 
@@ -384,15 +380,14 @@ STATIC void RsPingCommonDeinitSegCb(struct RsPingSegCb *segCb)
     (void)pthread_mutex_destroy(&segCb->mutex);
 }
 
-STATIC int RsPingPongInitLocalJettyBuffer(struct rs_cb *rscb, struct PingInitAttr *attr,
-    struct PingInitInfo *info, struct RsPingCtxCb *pingCb)
+STATIC int RsPingPongInitLocalJettyBuffer(struct rs_cb *rscb, struct PingInitAttr *attr, struct PingInitInfo *info,
+    struct RsPingCtxCb *pingCb)
 {
     int ret;
 
     // prepare ping_jetty send segment
     pingCb->pingJetty.sendSegCb.payloadOffset = PING_TOTAL_PAYLOAD_MAX_SIZE;
-    pingCb->pingJetty.sendSegCb.len =
-        attr->client.ub.qpAttr.cap.maxSendWr * pingCb->pingJetty.sendSegCb.payloadOffset;
+    pingCb->pingJetty.sendSegCb.len = attr->client.ub.qpAttr.cap.maxSendWr * pingCb->pingJetty.sendSegCb.payloadOffset;
     pingCb->pingJetty.sendSegCb.sgeNum = attr->client.ub.qpAttr.cap.maxSendWr;
     pingCb->pingJetty.sendSegCb.tokenValue.token = attr->client.ub.segAttr.tokenValue;
     ret = RsPingCommonInitSegCb(rscb, pingCb, &pingCb->pingJetty.sendSegCb);
@@ -400,8 +395,7 @@ STATIC int RsPingPongInitLocalJettyBuffer(struct rs_cb *rscb, struct PingInitAtt
 
     // prepare ping_jetty recv segment
     pingCb->pingJetty.recvSegCb.payloadOffset = PING_TOTAL_PAYLOAD_MAX_SIZE;
-    pingCb->pingJetty.recvSegCb.len =
-        attr->client.ub.qpAttr.cap.maxRecvWr * pingCb->pingJetty.recvSegCb.payloadOffset;
+    pingCb->pingJetty.recvSegCb.len = attr->client.ub.qpAttr.cap.maxRecvWr * pingCb->pingJetty.recvSegCb.payloadOffset;
     pingCb->pingJetty.recvSegCb.sgeNum = attr->client.ub.qpAttr.cap.maxRecvWr;
     pingCb->pingJetty.recvSegCb.tokenValue.token = attr->client.ub.segAttr.tokenValue;
     ret = RsPingCommonInitSegCb(rscb, pingCb, &pingCb->pingJetty.recvSegCb);
@@ -412,8 +406,7 @@ STATIC int RsPingPongInitLocalJettyBuffer(struct rs_cb *rscb, struct PingInitAtt
 
     // prepare pong_jetty send segment
     pingCb->pongJetty.sendSegCb.payloadOffset = PING_TOTAL_PAYLOAD_MAX_SIZE;
-    pingCb->pongJetty.sendSegCb.len =
-        attr->server.ub.qpAttr.cap.maxSendWr * pingCb->pongJetty.sendSegCb.payloadOffset;
+    pingCb->pongJetty.sendSegCb.len = attr->server.ub.qpAttr.cap.maxSendWr * pingCb->pongJetty.sendSegCb.payloadOffset;
     pingCb->pongJetty.sendSegCb.sgeNum = attr->server.ub.qpAttr.cap.maxSendWr;
     pingCb->pongJetty.sendSegCb.tokenValue.token = attr->server.ub.segAttr.tokenValue;
     ret = RsPingCommonInitSegCb(rscb, pingCb, &pingCb->pongJetty.sendSegCb);
@@ -491,8 +484,7 @@ STATIC int RsPingCommonInitJettyPostRecvAll(struct RsPingLocalJettyCb *jettyCb)
     (void)RsUrmaRearmJfc(jettyCb->recvJfc.jfc, false);
 
     // prepare jfr wqe
-    for (i = jettyCb->recvSegCb.sgeIdx;
-        i < jettyCb->recvSegCb.sgeNum && i < jettyCb->jfr->jfr_cfg.depth; i++) {
+    for (i = jettyCb->recvSegCb.sgeIdx; i < jettyCb->recvSegCb.sgeNum && i < jettyCb->jfr->jfr_cfg.depth; i++) {
         ret = RsPingCommonJfrPostRecv(jettyCb);
         if (ret != 0) {
             hccp_err("rs_ping_common_jfr_post_recv %u-th rqe failed, ret:%d", i, ret);
@@ -503,8 +495,8 @@ STATIC int RsPingCommonInitJettyPostRecvAll(struct RsPingLocalJettyCb *jettyCb)
     return ret;
 }
 
-STATIC int RsPingPongInitLocalUbResources(struct rs_cb *rscb, struct PingInitAttr *attr,
-    struct PingInitInfo *info, struct RsPingCtxCb *pingCb)
+STATIC int RsPingPongInitLocalUbResources(struct rs_cb *rscb, struct PingInitAttr *attr, struct PingInitInfo *info,
+    struct RsPingCtxCb *pingCb)
 {
     urma_jetty_id_t jettyKey = {0};
     int ret;
@@ -622,7 +614,7 @@ STATIC int RsPingUrmaFindTargetNode(struct RsPingCtxCb *pingCb, struct PingQpInf
     RS_PTHREAD_MUTEX_LOCK(&pingCb->pingMutex);
     RS_LIST_GET_HEAD_ENTRY(targetCurr, targetNext, &pingCb->pingList, list, struct RsPingTargetInfo);
     for (; (&targetCurr->list) != &pingCb->pingList;
-        targetCurr = targetNext, targetNext = list_entry(targetNext->list.next, struct RsPingTargetInfo, list)) {
+         targetCurr = targetNext, targetNext = list_entry(targetNext->list.next, struct RsPingTargetInfo, list)) {
         if (RsPingCommonCompareUbInfo(&targetCurr->qpInfo, target)) {
             *node = targetCurr;
             RS_PTHREAD_MUTEX_ULOCK(&pingCb->pingMutex);
@@ -653,8 +645,8 @@ STATIC int RsPingCommonImportJetty(urma_context_t *urmaCtx, struct PingQpInfo *t
 
     *importTjetty = RsUrmaImportJetty(urmaCtx, &rjetty, &tokenValue);
     if (*importTjetty == NULL) {
-        hccp_err("urma_import_jetty failed, errno:%d remote eid:%016llx:%016llx", errno,
-            remoteEid.in6.subnet_prefix, remoteEid.in6.interface_id);
+        hccp_err("urma_import_jetty failed, errno:%d remote eid:%016llx:%016llx", errno, remoteEid.in6.subnet_prefix,
+            remoteEid.in6.interface_id);
         return -EOPENSRC;
     }
     return 0;
@@ -686,11 +678,10 @@ STATIC int RsPingUrmaAllocTargetNode(struct RsPingCtxCb *pingCb, struct PingTarg
         (void)memcpy_s(targetInfo->payloadBuffer, target->payload.size, target->payload.buffer, target->payload.size);
     }
 
-    (void)memcpy_s(&targetInfo->qpInfo, sizeof(struct PingQpInfo),
-        &target->remoteInfo.qpInfo, sizeof(struct PingQpInfo));
+    (void)memcpy_s(&targetInfo->qpInfo, sizeof(struct PingQpInfo), &target->remoteInfo.qpInfo,
+        sizeof(struct PingQpInfo));
 
-    ret = RsPingCommonImportJetty(pingCb->udevCb.urmaCtx, &target->remoteInfo.qpInfo,
-        &targetInfo->importTjetty);
+    ret = RsPingCommonImportJetty(pingCb->udevCb.urmaCtx, &target->remoteInfo.qpInfo, &targetInfo->importTjetty);
     if (ret != 0) {
         hccp_err("rs_ping_import_jetty failed, ret:%d", ret);
         goto free_payload_buffer;
@@ -717,8 +708,8 @@ free_target_info:
 STATIC void RsPingUrmaResetRecvBuffer(struct RsPingCtxCb *pingCb)
 {
     RS_PTHREAD_MUTEX_LOCK(&pingCb->pongJetty.recvSegCb.mutex);
-    (void)memset_s((void *)(uintptr_t)pingCb->pongJetty.recvSegCb.addr, pingCb->pongJetty.recvSegCb.len,
-        0, pingCb->pongJetty.recvSegCb.len);
+    (void)memset_s((void *)(uintptr_t)pingCb->pongJetty.recvSegCb.addr, pingCb->pongJetty.recvSegCb.len, 0,
+        pingCb->pongJetty.recvSegCb.len);
     RS_PTHREAD_MUTEX_ULOCK(&pingCb->pongJetty.recvSegCb.mutex);
 }
 
@@ -732,8 +723,8 @@ STATIC void RsPingFillSendHeader(struct RsPingPayloadHeader *header, urma_jetty_
     (void)memcpy_s(&header->target, sizeof(struct PingQpInfo), &target->qpInfo, sizeof(struct PingQpInfo));
 }
 
-STATIC void RsPingJettyBuildUpWr(struct RsPingCtxCb *pingCb, struct RsPingTargetInfo *target,
-    urma_sge_t *list, urma_jfs_wr_t *wr)
+STATIC void RsPingJettyBuildUpWr(struct RsPingCtxCb *pingCb, struct RsPingTargetInfo *target, urma_sge_t *list,
+    urma_jfs_wr_t *wr)
 {
     wr->opcode = URMA_OPC_SEND;
     wr->flag.bs.complete_enable = 1;
@@ -777,8 +768,10 @@ STATIC int RsPingUrmaPostSend(struct RsPingCtxCb *pingCb, struct RsPingTargetInf
     if (target->payloadSize > 0) {
         ret = memcpy_s((void *)(uintptr_t)(list.addr + RS_PING_PAYLOAD_HEADER_RESV_CUSTOM),
             (list.len - RS_PING_PAYLOAD_HEADER_RESV_CUSTOM), (void *)target->payloadBuffer, target->payloadSize);
-        CHK_PRT_RETURN(ret != 0, hccp_err("memcpy_s buffer payload_size:%u list.len:%u failed, ret:%d",
-            target->payloadSize, (list.len - RS_PING_PAYLOAD_HEADER_RESV_CUSTOM), ret), -ESAFEFUNC);
+        CHK_PRT_RETURN(ret != 0,
+            hccp_err("memcpy_s buffer payload_size:%u list.len:%u failed, ret:%d", target->payloadSize,
+                (list.len - RS_PING_PAYLOAD_HEADER_RESV_CUSTOM), ret),
+            -ESAFEFUNC);
     }
     list.len = RS_PING_PAYLOAD_HEADER_RESV_CUSTOM + target->payloadSize;
 
@@ -884,7 +877,7 @@ STATIC int RsPongJettyFindTargetNode(struct RsPingCtxCb *pingCb, struct PingQpIn
     RS_PTHREAD_MUTEX_LOCK(&pingCb->pongMutex);
     RS_LIST_GET_HEAD_ENTRY(targetCurr, targetNext, &pingCb->pongList, list, struct RsPongTargetInfo);
     for (; (&targetCurr->list) != &pingCb->pongList;
-        targetCurr = targetNext, targetNext = list_entry(targetNext->list.next, struct RsPongTargetInfo, list)) {
+         targetCurr = targetNext, targetNext = list_entry(targetNext->list.next, struct RsPongTargetInfo, list)) {
         if (RsPingCommonCompareUbInfo(&targetCurr->qpInfo, target)) {
             *node = targetCurr;
             RS_PTHREAD_MUTEX_ULOCK(&pingCb->pongMutex);
@@ -968,20 +961,20 @@ STATIC int RsPongJettyPostSend(struct RsPingCtxCb *pingCb, urma_cr_t *cr, struct
         hccp_err("param err recv_sge_idx:%u > sge_num:%u", recvSgeIdx, pingCb->pingJetty.recvSegCb.sgeNum);
         return -EIO;
     }
-    (void)memcpy_s(&recvList, sizeof(urma_sge_t),
-        &pingCb->pingJetty.recvSegCb.sgeList[recvSgeIdx], sizeof(urma_sge_t));
+    (void)memcpy_s(&recvList, sizeof(urma_sge_t), &pingCb->pingJetty.recvSegCb.sgeList[recvSgeIdx], sizeof(urma_sge_t));
 
     RS_PTHREAD_MUTEX_LOCK(&pingCb->pongJetty.sendSegCb.mutex);
     sendSgeIdx = pingCb->pongJetty.sendSegCb.sgeIdx;
-    (void)memcpy_s(&sendList, sizeof(urma_sge_t),
-        &pingCb->pongJetty.sendSegCb.sgeList[sendSgeIdx], sizeof(urma_sge_t));
+    (void)memcpy_s(&sendList, sizeof(urma_sge_t), &pingCb->pongJetty.sendSegCb.sgeList[sendSgeIdx], sizeof(urma_sge_t));
     pingCb->pongJetty.sendSegCb.sgeIdx = (sendSgeIdx + 1) % pingCb->pongJetty.sendSegCb.sgeNum;
     RS_PTHREAD_MUTEX_ULOCK(&pingCb->pongJetty.sendSegCb.mutex);
 
-    ret = memcpy_s((void *)(uintptr_t)sendList.addr, sendList.len,
-        (void *)(uintptr_t)recvList.addr, cr->completion_len);
-    CHK_PRT_RETURN(ret != 0, hccp_err("memcpy_s buffer cr->completion_len:%u send_list.length:%u failed, ret:%d",
-        cr->completion_len, sendList.len, ret), -ESAFEFUNC);
+    ret = memcpy_s((void *)(uintptr_t)sendList.addr, sendList.len, (void *)(uintptr_t)recvList.addr,
+        cr->completion_len);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("memcpy_s buffer cr->completion_len:%u send_list.length:%u failed, ret:%d", cr->completion_len,
+            sendList.len, ret),
+        -ESAFEFUNC);
     sendList.len = cr->completion_len;
     header = (struct RsPingPayloadHeader *)(uintptr_t)sendList.addr;
     header->type = RS_PING_TYPE_URMA_RESPONSE;
@@ -1189,8 +1182,8 @@ STATIC int RsPingUrmaGetTargetResult(struct RsPingCtxCb *pingCb, struct PingTarg
 
     ret = RsPingUrmaFindTargetNode(pingCb, &target->qpInfo, &targetInfo);
     if (ret != 0) {
-        hccp_err("rs_ping_urma_find_target_node failed, ret:%d jettyId:%u eid:%016llx:%016llx", ret,
-            targetJettyId.id, targetEid.in6.subnet_prefix, targetEid.in6.interface_id);
+        hccp_err("rs_ping_urma_find_target_node failed, ret:%d jettyId:%u eid:%016llx:%016llx", ret, targetJettyId.id,
+            targetEid.in6.subnet_prefix, targetEid.in6.interface_id);
         return ret;
     }
 
@@ -1202,7 +1195,8 @@ STATIC int RsPingUrmaGetTargetResult(struct RsPingCtxCb *pingCb, struct PingTarg
         result->state = PING_RESULT_STATE_INVALID;
     }
     hccp_dbg("eid:%016llx:%016llx jetty_id:%u, state:%d send_cnt:%u recv_cnt:%u timeout_cnt:%u rtt_min:%u rtt_max:%u "
-        "rtt_avg:%u", targetEid.in6.subnet_prefix, targetEid.in6.interface_id, targetJettyId.id, result->state,
+             "rtt_avg:%u",
+        targetEid.in6.subnet_prefix, targetEid.in6.interface_id, targetJettyId.id, result->state,
         result->summary.sendCnt, result->summary.recvCnt, result->summary.timeoutCnt, result->summary.rttMin,
         result->summary.rttMax, result->summary.rttAvg);
 
@@ -1237,7 +1231,7 @@ STATIC void RsPingPongJettyDelTargetList(struct RsPingCtxCb *pingCb)
     RS_PTHREAD_MUTEX_LOCK(&pingCb->pingMutex);
     RS_LIST_GET_HEAD_ENTRY(pingCurr, pingNext, &pingCb->pingList, list, struct RsPingTargetInfo);
     for (; (&pingCurr->list) != &pingCb->pingList;
-        pingCurr = pingNext, pingNext = list_entry(pingNext->list.next, struct RsPingTargetInfo, list)) {
+         pingCurr = pingNext, pingNext = list_entry(pingNext->list.next, struct RsPingTargetInfo, list)) {
         RsListDel(&pingCurr->list);
         if (pingCurr->payloadSize > 0 && pingCurr->payloadBuffer != NULL) {
             free(pingCurr->payloadBuffer);
@@ -1256,7 +1250,7 @@ STATIC void RsPingPongJettyDelTargetList(struct RsPingCtxCb *pingCb)
     RS_PTHREAD_MUTEX_LOCK(&pingCb->pongMutex);
     RS_LIST_GET_HEAD_ENTRY(pongCurr, pongNext, &pingCb->pongList, list, struct RsPongTargetInfo);
     for (; (&pongCurr->list) != &pingCb->pongList;
-        pongCurr = pongNext, pongNext = list_entry(pongNext->list.next, struct RsPongTargetInfo, list)) {
+         pongCurr = pongNext, pongNext = list_entry(pongNext->list.next, struct RsPongTargetInfo, list)) {
         RsListDel(&pongCurr->list);
         if (pongCurr->importTjetty != NULL) {
             (void)RsUrmaUnimportJetty(pongCurr->importTjetty);
@@ -1298,14 +1292,14 @@ STATIC void RsPingUrmaAddTargetSuccess(struct PingTargetInfo *target, struct RsP
     urma_jetty_id_t jettyId = {0};
     RsGetJettyInfo(&targetInfo->qpInfo, &jettyId, NULL);
     hccp_info("target eid:%016llx:%016llx payload_size:%u add success, jettyId:%u uuid:0x%llx",
-        target->remoteInfo.eid.in6.subnetPrefix, target->remoteInfo.eid.in6.interfaceId,
-        target->payload.size, jettyId.id, targetInfo->uuid);
+        target->remoteInfo.eid.in6.subnetPrefix, target->remoteInfo.eid.in6.interfaceId, target->payload.size,
+        jettyId.id, targetInfo->uuid);
 }
 
 STATIC void RsPingUrmaPingCbInitSuccess(unsigned int phyId, struct PingInitAttr *attr, unsigned int rdevIndex)
 {
-    hccp_run_info("ping_cb init success, phyId:%u, eid:%016llx:%016llx, rdevIndex:%u",
-        phyId, attr->dev.ub.eid.in6.subnetPrefix, attr->dev.ub.eid.in6.interfaceId, rdevIndex);
+    hccp_run_info("ping_cb init success, phyId:%u, eid:%016llx:%016llx, rdevIndex:%u", phyId,
+        attr->dev.ub.eid.in6.subnetPrefix, attr->dev.ub.eid.in6.interfaceId, rdevIndex);
 }
 
 STATIC void RsPingUrmaCannotFindTargetNode(unsigned int i, int ret, struct PingTargetCommInfo target,
@@ -1314,37 +1308,39 @@ STATIC void RsPingUrmaCannotFindTargetNode(unsigned int i, int ret, struct PingT
     urma_jetty_id_t jettyId = {0};
     RsGetJettyInfo(&target.qpInfo, &jettyId, NULL);
 
-    hccp_err("rs_ping_urma_find_target_node i:%u failed, ret:%d eid:%016llx:%016llx jettyId:%u phyId:%u",i, ret,
+    hccp_err("rs_ping_urma_find_target_node i:%u failed, ret:%d eid:%016llx:%016llx jettyId:%u phyId:%u", i, ret,
         target.eid.in6.subnetPrefix, target.eid.in6.interfaceId, jettyId.id, phyId);
 }
 
 struct RsPingPongOps gRsPingUrmaOps = {
-    .checkPingFd          = RsPingUrmaCheckFd,
-    .checkPongFd          = RsPongUrmaCheckFd,
-    .initPingCb           = RsPingUrmaPingCbInit,
-    .pingFindTargetNode  = RsPingUrmaFindTargetNode,
+    .checkPingFd = RsPingUrmaCheckFd,
+    .checkPongFd = RsPongUrmaCheckFd,
+    .initPingCb = RsPingUrmaPingCbInit,
+    .pingFindTargetNode = RsPingUrmaFindTargetNode,
     .pingAllocTargetNode = RsPingUrmaAllocTargetNode,
-    .resetRecvBuffer      = RsPingUrmaResetRecvBuffer,
-    .pingPostSend         = RsPingUrmaPostSend,
-    .pingPollScq          = RsPingUrmaPollScq,
-    .pingPollRcq          = RsPingUrmaPollRcq,
-    .pongHandleSend       = RsPongUrmaHandleSend,
-    .pongPollRcq          = RsPongUrmaPollRcq,
-    .getTargetResult      = RsPingUrmaGetTargetResult,
-    .pingFreeTargetNode  = RsPingUrmaFreeTargetNode,
-    .deinitPingCb         = RsPingUrmaPingCbDeinit,
+    .resetRecvBuffer = RsPingUrmaResetRecvBuffer,
+    .pingPostSend = RsPingUrmaPostSend,
+    .pingPollScq = RsPingUrmaPollScq,
+    .pingPollRcq = RsPingUrmaPollRcq,
+    .pongHandleSend = RsPongUrmaHandleSend,
+    .pongPollRcq = RsPongUrmaPollRcq,
+    .getTargetResult = RsPingUrmaGetTargetResult,
+    .pingFreeTargetNode = RsPingUrmaFreeTargetNode,
+    .deinitPingCb = RsPingUrmaPingCbDeinit,
 };
 
 struct RsPingPongDfx gRsPingUrmaDfx = {
-    .addTargetSuccess           = RsPingUrmaAddTargetSuccess,
-    .initPingCbSuccess         = RsPingUrmaPingCbInitSuccess,
+    .addTargetSuccess = RsPingUrmaAddTargetSuccess,
+    .initPingCbSuccess = RsPingUrmaPingCbInitSuccess,
     .pingCannotFindTargetNode = RsPingUrmaCannotFindTargetNode,
 };
 
-struct RsPingPongOps *RsPingUrmaGetOps(void) {
+struct RsPingPongOps *RsPingUrmaGetOps(void)
+{
     return &gRsPingUrmaOps;
 }
 
-struct RsPingPongDfx *RsPingUrmaGetDfx(void) {
+struct RsPingPongDfx *RsPingUrmaGetDfx(void)
+{
     return &gRsPingUrmaDfx;
 }

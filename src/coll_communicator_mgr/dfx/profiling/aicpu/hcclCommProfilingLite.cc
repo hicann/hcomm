@@ -14,9 +14,13 @@
 namespace hccl {
 // 构造函数
 HcclCommProfilingLite::HcclCommProfilingLite(Hccl::DevId deviceId, Hccl::MirrorTaskManagerLite* mirrorTaskManagerLite)
-    : mirrorTaskManagerLite_(mirrorTaskManagerLite) { (void)deviceId; }
+    : mirrorTaskManagerLite_(mirrorTaskManagerLite)
+{
+    (void)deviceId;
+}
 
-HcclResult HcclCommProfilingLite::Init() {
+HcclResult HcclCommProfilingLite::Init()
+{
     if (initializedFlag_) {
         return HCCL_SUCCESS;
     }
@@ -29,15 +33,9 @@ HcclResult HcclCommProfilingLite::Init() {
 }
 
 // HcclCommProfilingLite任务上报
-void HcclCommProfilingLite::ReportAllTasks() {
-    profilingReporterLite_->ReportAllTasks();
-}
+void HcclCommProfilingLite::ReportAllTasks() { profilingReporterLite_->ReportAllTasks(); }
 
-void HcclCommProfilingLite::UpdateProfStat() {
-    profilingReporterLite_->UpdateProfStat();
-}
+void HcclCommProfilingLite::UpdateProfStat() { profilingReporterLite_->UpdateProfStat(); }
 
-Hccl::MirrorTaskManagerLite* HcclCommProfilingLite::GetMirrorTaskManagerLite() const {
-    return mirrorTaskManagerLite_;
-}
-}
+Hccl::MirrorTaskManagerLite* HcclCommProfilingLite::GetMirrorTaskManagerLite() const { return mirrorTaskManagerLite_; }
+} // namespace hccl

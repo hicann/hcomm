@@ -26,15 +26,9 @@ using namespace Hccl;
 
 class StreamManagerTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "StreamManager tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "StreamManager tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "StreamManager tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "StreamManager tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
@@ -57,15 +51,15 @@ protected:
         std::cout << "A Test case in StreamManager TearDown" << std::endl;
     }
 
-    u32              fakeId       = 1;
-    s32              fakeDevLogId = 1;
-    u32              fakeDevPhyId = 1;
-    u32              fakeSqId     = 2;
-    u32              fakeCqId     = 2;
-    u32              num          = 1;
-    u32              sizePerDto   = 12;
+    u32 fakeId = 1;
+    s32 fakeDevLogId = 1;
+    u32 fakeDevPhyId = 1;
+    u32 fakeSqId = 2;
+    u32 fakeCqId = 2;
+    u32 num = 1;
+    u32 sizePerDto = 12;
     CommunicatorImpl impl;
-    StreamManager *streamManager;
+    StreamManager* streamManager;
 };
 
 TEST_F(StreamManagerTest, opbase_not_register_and_get)
@@ -95,7 +89,7 @@ TEST_F(StreamManagerTest, opbase_register_master_and_get)
 TEST_F(StreamManagerTest, opbase_register_master_two_same_stream_and_get)
 {
     // Given
-    auto stream  = std::make_unique<Stream>((void*)1);
+    auto stream = std::make_unique<Stream>((void*)1);
     auto stream1 = std::make_unique<Stream>((void*)1);
 
     // when
@@ -111,8 +105,8 @@ TEST_F(StreamManagerTest, opbase_register_master_two_same_stream_and_get)
 TEST_F(StreamManagerTest, opbase_register_master_two_diff_stream_and_get)
 {
     // Given
-    auto stream  = std::make_unique<Stream>((void*)1);
-    auto stream1 = std::make_unique<Stream>((void *)1234);
+    auto stream = std::make_unique<Stream>((void*)1);
+    auto stream1 = std::make_unique<Stream>((void*)1234);
     // when
     streamManager->opbase->RegisterMaster(std::move(stream));
     streamManager->opbase->RegisterMaster(std::move(stream1));
@@ -147,7 +141,7 @@ TEST_F(StreamManagerTest, offload_register_master_and_get)
 }
 
 TEST_F(StreamManagerTest, offload_register_master_two_diff_stream_and_get)
-{   
+{
     // Given
     auto stream = std::make_unique<Stream>((void*)1);
     auto stream1 = std::make_unique<Stream>((void*)1234);
@@ -159,15 +153,14 @@ TEST_F(StreamManagerTest, offload_register_master_two_diff_stream_and_get)
     EXPECT_NE((void*)1, res);
 
     // then
-    EXPECT_THROW(streamManager->offload->RegisterMaster(opTag, std::move(stream1)),
-        InvalidParamsException);
+    EXPECT_THROW(streamManager->offload->RegisterMaster(opTag, std::move(stream1)), InvalidParamsException);
 }
 
 TEST_F(StreamManagerTest, offload_register_two_diff_slave_stream_and_get)
-{   
+{
     // Given
     std::string opTag = "test";
-    std::vector<void *> slaveStreams = {(void*)1234, (void*)5678}; 
+    std::vector<void*> slaveStreams = {(void*)1234, (void*)5678};
     // when
     streamManager->offload->RegisterSlaves(opTag, slaveStreams);
     streamManager->offload->currOpTag = opTag;
@@ -180,8 +173,7 @@ TEST_F(StreamManagerTest, offload_register_two_diff_slave_stream_and_get)
     EXPECT_NE(nullptr, res2);
 
     // then
-    EXPECT_THROW(streamManager->offload->RegisterSlaves(opTag, slaveStreams),
-        InvalidParamsException);
+    EXPECT_THROW(streamManager->offload->RegisterSlaves(opTag, slaveStreams), InvalidParamsException);
 }
 
 TEST_F(StreamManagerTest, Ut_CaptureSlaveStream_When_GetStreamCaptureInfo_ERROR_Expect_InternalException)
@@ -228,7 +220,7 @@ TEST_F(StreamManagerTest, Ut_CaptureSlaveStream_When_GetModelId_ERROR_Expect_Int
 {
     // 前置条件
     bool isCapture = true;
-    rtModel_t rtModel = (void *)0x100;
+    rtModel_t rtModel = (void*)0x100;
     MOCKER(&GetStreamCaptureInfo)
         .stubs()
         .with(mockcpp::any(), outBound(rtModel), outBound(isCapture))
@@ -251,7 +243,7 @@ TEST_F(StreamManagerTest, Ut_CaptureSlaveStream_When_AddStreamToModel_ERROR_Inte
 {
     // 前置条件
     bool isCapture = true;
-    rtModel_t rtModel = (void *)0x100;
+    rtModel_t rtModel = (void*)0x100;
     MOCKER(&GetStreamCaptureInfo)
         .stubs()
         .with(mockcpp::any(), outBound(rtModel), outBound(isCapture))
@@ -274,7 +266,7 @@ TEST_F(StreamManagerTest, Ut_CaptureSlaveStream_Expect_no_throw)
 {
     // 前置条件
     bool isCapture = true;
-    rtModel_t rtModel = (void *)0x100;
+    rtModel_t rtModel = (void*)0x100;
     MOCKER(&GetStreamCaptureInfo)
         .stubs()
         .with(mockcpp::any(), outBound(rtModel), outBound(isCapture))

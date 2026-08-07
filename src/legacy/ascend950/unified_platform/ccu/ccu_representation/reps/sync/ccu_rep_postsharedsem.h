@@ -18,19 +18,19 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepPostSharedSem : public CcuRepBase {
-public:
-    CcuRepPostSharedSem(const MaskSignal &sem, uint16_t mask);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
+    class CcuRepPostSharedSem : public CcuRepBase {
+    public:
+        CcuRepPostSharedSem(const MaskSignal& sem, uint16_t mask);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-private:
-    MaskSignal sem;
-    uint16_t   mask{0};
+    private:
+        MaskSignal sem;
+        uint16_t mask{0};
 
-    friend class Hccl::CcuErrorHandler;
-};
+        friend class Hccl::CcuErrorHandler;
+    };
 
-};     // namespace CcuRep
-};     // namespace Hccl
+}; // namespace CcuRep
+}; // namespace Hccl
 #endif // HCCL_CCU_REPRESENTATION_POSTSHAREDSEM_H

@@ -19,24 +19,25 @@
 #include "task_service.h"
 
 extern std::mutex g_serMapMutex;
-extern std::unordered_map<std::string, std::unordered_map<uint32_t, std::unique_ptr<Hccl::TaskService>>> g_taskServiceMap;
+extern std::unordered_map<std::string, std::unordered_map<uint32_t, std::unique_ptr<Hccl::TaskService>>>
+    g_taskServiceMap;
 extern std::unordered_map<std::string, std::unordered_map<uint32_t, void*>> g_taskExpMemMap;
 extern "C" {
 __attribute__((visibility("default"))) uint32_t RunDpuRpcSrvLaunch(const uint64_t args);
 }
 
 namespace Hccl {
-constexpr uint8_t  TASK_TERMINATE_RESPONSE = 3;
+constexpr uint8_t TASK_TERMINATE_RESPONSE = 3;
 
 struct DpuKernelLaunchParam {
-    u64         memorySize;
-    void*       deviceMem;
-    void*       hostMem;
-    uint32_t    deviceId;
+    u64 memorySize;
+    void* deviceMem;
+    void* hostMem;
+    uint32_t deviceId;
     std::string commId;
-    void*       taskExpMem;
+    void* taskExpMem;
 };
 
-}
+} // namespace Hccl
 
 #endif // DPU_INTERFACE_H

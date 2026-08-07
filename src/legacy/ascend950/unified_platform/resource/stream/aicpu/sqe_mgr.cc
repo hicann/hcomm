@@ -26,18 +26,18 @@ HcclResult SqeMgr::Begin(u32 sqId)
     HCCL_INFO("SqeMgr::%s start, sqId %u", __func__, sqId);
     if (Contain(sqInfos, sqId)) {
         if (sqInfos[sqId]->sqeCnt != 0) {
-            //called Begin twice in the same round
+            // called Begin twice in the same round
             HCCL_ERROR("sqInfos[sqId]->sqeCnt != 0");
             return HcclResult::HCCL_E_INTERNAL;
         }
         return HcclResult::HCCL_SUCCESS;
     }
     std::unique_ptr<SqInfo> sqInfo = std::make_unique<SqInfo>();
-    sqInfo->sqeCnt                 = 0;
-    sqInfo->sqDepth                = QuerySqDepth(sqId);
-    sqInfo->sqTail                 = QuerySqTail(sqId);
-    sqInfo->sqHead                 = QuerySqHead(sqId);
-    sqInfo->sqBaseAddr             = QuerySqBaseAddr(sqId);
+    sqInfo->sqeCnt = 0;
+    sqInfo->sqDepth = QuerySqDepth(sqId);
+    sqInfo->sqTail = QuerySqTail(sqId);
+    sqInfo->sqHead = QuerySqHead(sqId);
+    sqInfo->sqBaseAddr = QuerySqBaseAddr(sqId);
     s32 ret = memset_s(sqInfo->sqeBuffer, sizeof(sqInfo->sqeBuffer), 0, sizeof(sqInfo->sqeBuffer));
     if (ret != EOK) {
         std::string formatStr = StringFormat("SqeMgr::%s memcpy_s failed. errorno[%d]", __func__, ret);
@@ -54,7 +54,7 @@ HcclResult SqeMgr::Begin(u32 sqId)
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult SqeMgr::Add(u32 sqId, HcclSqe *sqe)
+HcclResult SqeMgr::Add(u32 sqId, HcclSqe* sqe)
 {
     if (sqe == nullptr) {
         HCCL_ERROR("SqeMgr::Add HcclSqe *sqe is nullptr");
@@ -66,17 +66,17 @@ HcclResult SqeMgr::Add(u32 sqId, HcclSqe *sqe)
         return HcclResult::HCCL_E_NOT_FOUND;
     }
 
-    SqInfo *sqInfo         = sqInfos[sqId].get();
+    SqInfo* sqInfo = sqInfos[sqId].get();
     if (sqInfo == nullptr) {
         HCCL_ERROR("SqeMgr::add failed sqInfo is null sq_id=%u", sqId);
         return HcclResult::HCCL_E_NOT_FOUND;
     }
 
-    void   *nextBufferAddr = static_cast<u8 *>(sqInfo->sqeBuffer) + sqInfo->sqeCnt * AC_SQE_SIZE;
+    void* nextBufferAddr = static_cast<u8*>(sqInfo->sqeBuffer) + sqInfo->sqeCnt * AC_SQE_SIZE;
 
     HCCL_INFO("SqeMgr::%s sqe->GetSqe() %llu", __func__, sqe->GetSqe());
 
-    AddSqeToBuffer(nextBufferAddr, reinterpret_cast<void *>(sqe->GetSqe()));
+    AddSqeToBuffer(nextBufferAddr, reinterpret_cast<void*>(sqe->GetSqe()));
     sqInfo->sqeCnt++;
     HCCL_INFO("SqeMgr::%s end sqInfo->sqeCnt[%u]", __func__, sqInfo->sqeCnt);
     return HcclResult::HCCL_SUCCESS;
@@ -89,16 +89,16 @@ HcclResult SqeMgr::Commit(u32 sqId)
         HCCL_ERROR("no available buffer found for sq_id=%u", sqId);
         return HcclResult::HCCL_E_NOT_FOUND;
     }
-    
-    SqInfo *sqInfo         = sqInfos[sqId].get();
+
+    SqInfo* sqInfo = sqInfos[sqId].get();
     CHECK_NULLPTR(sqInfo, "[SqeMgr::Commit] sqInfo is nullptr!");
-    u32     availableSpace = GetTailToHeadDist(sqId, sqInfo->sqHead, sqInfo->sqTail);
-    auto    startTime      = std::chrono::steady_clock::now();
-    auto    timeout        = std::chrono::seconds(COMMIT_TIMEOUT);
+    u32 availableSpace = GetTailToHeadDist(sqId, sqInfo->sqHead, sqInfo->sqTail);
+    auto startTime = std::chrono::steady_clock::now();
+    auto timeout = std::chrono::seconds(COMMIT_TIMEOUT);
     HCCL_INFO("SqeMgr::%s start", __func__);
     while (availableSpace <= sqInfo->sqeCnt) {
-        HCCL_INFO("SqeMgr::%s while loop availableSpace %u <= sqInfo->sqeCnt %u", __func__, availableSpace,
-                    sqInfo->sqeCnt);
+        HCCL_INFO(
+            "SqeMgr::%s while loop availableSpace %u <= sqInfo->sqeCnt %u", __func__, availableSpace, sqInfo->sqeCnt);
         if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
             HCCL_ERROR("Rtsq full, timeout 30s. cur head: %u, sqId: %u", sqInfo->sqHead, sqId);
             return HcclResult::HCCL_E_TIMEOUT;
@@ -108,26 +108,30 @@ HcclResult SqeMgr::Commit(u32 sqId)
     }
     u32 depthLeft = sqInfo->sqDepth - sqInfo->sqTail;
     if (sqInfo->sqeCnt <= depthLeft) { // 没有回绕
-        HCCL_INFO("SqeMgr::%s copy sqe from sqe buffer, cur tail: %u, size: %u", __func__, sqInfo->sqTail,
-                    sqInfo->sqeCnt);
-        int ret = memcpy_s(reinterpret_cast<u8 *>(sqInfo->sqBaseAddr) + sqInfo->sqTail * AC_SQE_SIZE,
-                           sqInfo->sqeCnt * AC_SQE_SIZE, sqInfo->sqeBuffer, sqInfo->sqeCnt * AC_SQE_SIZE);
+        HCCL_INFO(
+            "SqeMgr::%s copy sqe from sqe buffer, cur tail: %u, size: %u", __func__, sqInfo->sqTail, sqInfo->sqeCnt);
+        int ret = memcpy_s(
+            reinterpret_cast<u8*>(sqInfo->sqBaseAddr) + sqInfo->sqTail * AC_SQE_SIZE, sqInfo->sqeCnt * AC_SQE_SIZE,
+            sqInfo->sqeBuffer, sqInfo->sqeCnt * AC_SQE_SIZE);
         if (ret != 0) {
             THROW<InternalException>(StringFormat("SqeMgr::%s sqe memcpy_s failed, ret = %d", __func__, ret));
         }
     } else {
-        HCCL_INFO("SqeMgr::%s copy sqe twice, cnt: %u, tail: %u, depth remain: %u", __func__, sqInfo->sqeCnt,
-                    sqInfo->sqTail, depthLeft);
+        HCCL_INFO(
+            "SqeMgr::%s copy sqe twice, cnt: %u, tail: %u, depth remain: %u", __func__, sqInfo->sqeCnt, sqInfo->sqTail,
+            depthLeft);
         // 先拷贝rtsq里剩余空间大小
-        int ret = memcpy_s(reinterpret_cast<u8 *>(sqInfo->sqBaseAddr) + sqInfo->sqTail * AC_SQE_SIZE,
-                           depthLeft * AC_SQE_SIZE, sqInfo->sqeBuffer, depthLeft * AC_SQE_SIZE);
+        int ret = memcpy_s(
+            reinterpret_cast<u8*>(sqInfo->sqBaseAddr) + sqInfo->sqTail * AC_SQE_SIZE, depthLeft * AC_SQE_SIZE,
+            sqInfo->sqeBuffer, depthLeft * AC_SQE_SIZE);
         if (ret != 0) {
-            THROW<InternalException>(StringFormat("SqeMgr::%s rtsq remaining space memcpy_s failed, ret = %d",
-                                                    __func__, ret));
+            THROW<InternalException>(
+                StringFormat("SqeMgr::%s rtsq remaining space memcpy_s failed, ret = %d", __func__, ret));
         }
         // 拷贝剩余sqe
-        ret = memcpy_s(reinterpret_cast<u8 *>(sqInfo->sqBaseAddr), sqInfo->sqHead * AC_SQE_SIZE,
-                       sqInfo->sqeBuffer + depthLeft * AC_SQE_SIZE, (sqInfo->sqeCnt - depthLeft) * AC_SQE_SIZE);
+        ret = memcpy_s(
+            reinterpret_cast<u8*>(sqInfo->sqBaseAddr), sqInfo->sqHead * AC_SQE_SIZE,
+            sqInfo->sqeBuffer + depthLeft * AC_SQE_SIZE, (sqInfo->sqeCnt - depthLeft) * AC_SQE_SIZE);
         if (ret != 0) {
             THROW<InternalException>(StringFormat("SqeMgr::%s remaining sqe memcpy_s failed, ret = %d", __func__, ret));
         }
@@ -177,8 +181,8 @@ u64 SqeMgr::QuerySqBaseAddr(u32 sqId)
     HCCL_INFO("SqeMgr::%s begin", __func__);
     drvError_t ret = halSqCqQuery(devPhyId, &queryInfo);
     if (ret != 0) {
-        std::string formatStr = StringFormat("SqeMgr::%s call halSqCqQuery failed, devPhyId %d, ret %d", 
-                                            __func__, devPhyId, ret);
+        std::string formatStr
+            = StringFormat("SqeMgr::%s call halSqCqQuery failed, devPhyId %d, ret %d", __func__, devPhyId, ret);
         HCCL_ERROR("%s", formatStr.c_str());
         THROW<DrvApiException>(formatStr);
     }
@@ -198,8 +202,8 @@ u32 SqeMgr::QuerySqStatusByType(u32 sqId, drvSqCqPropType_t type) const
     HCCL_INFO("%s::halSqCqQuery begin, type %d sqiId %u", __func__, type, sqId);
     drvError_t ret = halSqCqQuery(devPhyId, &queryInfo);
     if (ret != 0) {
-        std::string formatStr = StringFormat("SqeMgr::%s call halSqCqQuery failed, devPhyId %d, ret %d", 
-                                            __func__, devPhyId, ret);
+        std::string formatStr
+            = StringFormat("SqeMgr::%s call halSqCqQuery failed, devPhyId %d, ret %d", __func__, devPhyId, ret);
         HCCL_ERROR("%s", formatStr.c_str());
         THROW<DrvApiException>(formatStr);
     }
@@ -217,17 +221,17 @@ void SqeMgr::ConfigSqTail(u32 sqId, u32 value)
 void SqeMgr::ConfigSqStatusByType(u32 sqId, drvSqCqPropType_t type, u32 value) const
 {
     halSqCqConfigInfo configInfo;
-    configInfo.tsId     = 0;
-    configInfo.sqId     = sqId;
-    configInfo.cqId     = 0;
-    configInfo.type     = DRV_NORMAL_TYPE;
-    configInfo.prop     = type;
+    configInfo.tsId = 0;
+    configInfo.sqId = sqId;
+    configInfo.cqId = 0;
+    configInfo.type = DRV_NORMAL_TYPE;
+    configInfo.prop = type;
     configInfo.value[0] = value;
 
     HCCL_INFO("SqeMgr::%s start", __func__);
     drvError_t ret = halSqCqConfig(devPhyId, &configInfo);
     if (ret != 0) {
-        HCCL_ERROR("call halSqCqConfig failed, ret %d",ret);
+        HCCL_ERROR("call halSqCqConfig failed, ret %d", ret);
     }
     HCCL_INFO("SqeMgr::%s end", __func__);
 }
@@ -240,7 +244,7 @@ u32 SqeMgr::GetTailToHeadDist(u32 sqId, u32 head, u32 tail)
     return (tail < head) ? head - tail : sqInfos[sqId]->sqDepth - (tail - head);
 }
 
-void SqeMgr::AddSqeToBuffer(void *bufferAddr, void *sqeAddr) const
+void SqeMgr::AddSqeToBuffer(void* bufferAddr, void* sqeAddr) const
 {
     if (bufferAddr == nullptr || sqeAddr == nullptr) {
         std::string formatStr = StringFormat("SqeMgr::%s bufferAddr[%u], sqeAddr[%u]", __func__, bufferAddr, sqeAddr);
@@ -255,8 +259,6 @@ void SqeMgr::AddSqeToBuffer(void *bufferAddr, void *sqeAddr) const
     }
 }
 
-SqeMgr::SqeMgr(u32 devPhysicalId) : devPhyId(devPhysicalId)
-{
-}
+SqeMgr::SqeMgr(u32 devPhysicalId) : devPhyId(devPhysicalId) {}
 
 } // namespace Hccl

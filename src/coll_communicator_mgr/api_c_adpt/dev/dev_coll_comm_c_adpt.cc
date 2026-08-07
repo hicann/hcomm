@@ -13,7 +13,7 @@
 
 using namespace hccl;
 
-HcclResult HcclCommGetStatus(const char * commId, HcclCommStatus *status)
+HcclResult HcclCommGetStatus(const char* commId, HcclCommStatus* status)
 {
     CHK_PTR_NULL(commId);
     CHK_PTR_NULL(status);
@@ -21,10 +21,12 @@ HcclResult HcclCommGetStatus(const char * commId, HcclCommStatus *status)
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType == DevType::DEV_TYPE_950 || deviceType == DevType::DEV_TYPE_960) {
-        CollCommAicpuMgr *hcclComm = AicpuIndopProcess::AicpuGetComm(commId);
-        CHK_PRT_RET(!hcclComm, HCCL_ERROR("%s AicpuGetCommMgrbyGroup is null, commId[%s]", __func__, commId), HCCL_E_PTR);
+        CollCommAicpuMgr* hcclComm = AicpuIndopProcess::AicpuGetComm(commId);
+        CHK_PRT_RET(
+            !hcclComm, HCCL_ERROR("%s AicpuGetCommMgrbyGroup is null, commId[%s]", __func__, commId), HCCL_E_PTR);
         CollCommAicpu* collCommAicpu = hcclComm->GetCollCommAicpu();
-        CHK_PRT_RET(!collCommAicpu, HCCL_ERROR("%s GetCollCommAicpu is null, commId[%s]", __func__, commId), HCCL_E_PTR);
+        CHK_PRT_RET(
+            !collCommAicpu, HCCL_ERROR("%s GetCollCommAicpu is null, commId[%s]", __func__, commId), HCCL_E_PTR);
         *status = collCommAicpu->GetCommmStatus();
     } else if (deviceType == DevType::DEV_TYPE_910B) {
         HCCL_INFO("[%s] deviceType[%d] comm status ready", __func__, deviceType);

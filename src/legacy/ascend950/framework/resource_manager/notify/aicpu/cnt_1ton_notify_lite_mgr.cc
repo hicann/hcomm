@@ -14,7 +14,7 @@
 
 namespace Hccl {
 
-Cnt1tonNotifyLite *Cnt1tonNotifyLiteMgr::Get(u32 postQId, u32 topicId)
+Cnt1tonNotifyLite* Cnt1tonNotifyLiteMgr::Get(u32 postQId, u32 topicId)
 {
     auto key = std::make_pair(postQId, topicId);
     if (!Contain(notifys, key)) {
@@ -25,14 +25,11 @@ Cnt1tonNotifyLite *Cnt1tonNotifyLiteMgr::Get(u32 postQId, u32 topicId)
     return notifys[key].get();
 }
 
-void Cnt1tonNotifyLiteMgr::Reset()
-{
-    notifys.clear();
-}
+void Cnt1tonNotifyLiteMgr::Reset() { notifys.clear(); }
 
-void Cnt1tonNotifyLiteMgr::ParsePackedData(std::vector<char> &data)
+void Cnt1tonNotifyLiteMgr::ParsePackedData(std::vector<char>& data)
 {
-    u32          poolSize;
+    u32 poolSize;
     BinaryStream binaryStream(data);
     binaryStream >> poolSize;
 

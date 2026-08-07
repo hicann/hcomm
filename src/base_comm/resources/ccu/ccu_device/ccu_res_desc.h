@@ -37,7 +37,7 @@ public:
     std::array<uint32_t, CCU_RES_TYPE_COUNT> resNum{};
 
     CcuResult SetResNum(ResType resType, uint32_t num);
-    CcuResult QueryResNum(ResType resType, uint32_t &num) const;
+    CcuResult QueryResNum(ResType resType, uint32_t& num) const;
 
 private:
     static bool IsValidResType(ResType resType);

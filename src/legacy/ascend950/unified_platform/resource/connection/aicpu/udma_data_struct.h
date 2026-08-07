@@ -9,7 +9,7 @@
  */
 #ifndef HCCLV2_AICPU_WQEMGR_WQE_H
 #define HCCLV2_AICPU_WQEMGR_WQE_H
- 
+
 #include <string>
 #include "string_util.h"
 #include "hccl/base.h"
@@ -21,38 +21,19 @@ namespace Hccl {
 
 #define UDMA_SQE_RMT_EID_SIZE 4
 
-MAKE_ENUM(UdmaSqOpcode,
-        UDMA_OPC_SEND,
-        UDMA_OPC_SEND_WITH_IMM,
-        UDMA_OPC_SEND_WITH_INVALID,
-        UDMA_OPC_WRITE,
-        UDMA_OPC_WRITE_WITH_IMM,
-        UDMA_OPC_READ = 0x6,
-        UDMA_OPC_CAS,
-        UDMA_OPC_FAA = 0xb,
-        UDMA_OPC_NOP = 0x11,
-        UDMA_OPC_INVALID = 0x12
-        )
+MAKE_ENUM(
+    UdmaSqOpcode, UDMA_OPC_SEND, UDMA_OPC_SEND_WITH_IMM, UDMA_OPC_SEND_WITH_INVALID, UDMA_OPC_WRITE,
+    UDMA_OPC_WRITE_WITH_IMM, UDMA_OPC_READ = 0x6, UDMA_OPC_CAS, UDMA_OPC_FAA = 0xb, UDMA_OPC_NOP = 0x11,
+    UDMA_OPC_INVALID = 0x12)
 
-MAKE_ENUM(UdmaDataOp,
-        REDUCE_OP_MAX = 0x8,
-        REDUCE_OP_MIN = 0x9,
-        REDUCE_OP_ADD = 0xA,
-        REDUCE_OP_EQUAL = 0xB,
-        REDUCE_OP_RESEVERD = 0xC
-        )
+MAKE_ENUM(
+    UdmaDataOp, REDUCE_OP_MAX = 0x8, REDUCE_OP_MIN = 0x9, REDUCE_OP_ADD = 0xA, REDUCE_OP_EQUAL = 0xB,
+    REDUCE_OP_RESEVERD = 0xC)
 
-MAKE_ENUM(UdmaDataType,
-        REDUCE_TYPE_INT8        = 0x0,
-        REDUCE_TYPE_INT16       = 0X1,
-        REDUCE_TYPE_INT32       = 0x2,
-        REDUCE_TYPE_UINT32      = 0X5,
-        REDUCE_TYPE_FP16_NORMAL = 0X6,
-        REDUCE_TYPE_FP32        = 0X7,
-        REDUCE_TYPE_FP16        = 0X8,
-        REDUCE_TYPE_FP16_SAT    = 0X9,
-        REDUCE_TYPE_RESEVERD    = 0XA
-        )
+MAKE_ENUM(
+    UdmaDataType, REDUCE_TYPE_INT8 = 0x0, REDUCE_TYPE_INT16 = 0X1, REDUCE_TYPE_INT32 = 0x2, REDUCE_TYPE_UINT32 = 0X5,
+    REDUCE_TYPE_FP16_NORMAL = 0X6, REDUCE_TYPE_FP32 = 0X7, REDUCE_TYPE_FP16 = 0X8, REDUCE_TYPE_FP16_SAT = 0X9,
+    REDUCE_TYPE_RESEVERD = 0XA)
 
 struct UdmaNormalSge {
     uint32_t length;
@@ -63,10 +44,11 @@ struct UdmaNormalSge {
     std::string Desc() const
     {
         constexpr uint64_t UINT32_BIT_WIDTH = 32;
-        const uint64_t dataAddr =
-            (static_cast<uint64_t>(dataAddrHigh) << UINT32_BIT_WIDTH) | static_cast<uint64_t>(dataAddrLow);
-        return StringFormat("length = %u dataAddrLow = %u dataAddrHigh = %u dataAddr = 0x%016llx",
-            length, dataAddrLow, dataAddrHigh, static_cast<unsigned long long>(dataAddr));
+        const uint64_t dataAddr
+            = (static_cast<uint64_t>(dataAddrHigh) << UINT32_BIT_WIDTH) | static_cast<uint64_t>(dataAddrLow);
+        return StringFormat(
+            "length = %u dataAddrLow = %u dataAddrHigh = %u dataAddr = 0x%016llx", length, dataAddrLow, dataAddrHigh,
+            static_cast<unsigned long long>(dataAddr));
     }
 };
 
@@ -76,8 +58,8 @@ struct UdmaInlineData {
 
 struct UdfExtDate { // UDF扩展数据
     uint32_t udfType : 8;
-    uint32_t reduceType: 4;
-    uint32_t reduceOp: 4;
+    uint32_t reduceType : 4;
+    uint32_t reduceOp : 4;
     uint32_t rsv : 16;
 };
 
@@ -116,7 +98,7 @@ struct UdmaSqe {
     } u;
 };
 
-union LocalValueU{
+union LocalValueU {
     UdmaNormalSge sge;
     UdmaInlineData inlineData;
 };
@@ -131,9 +113,10 @@ struct UdmaSqeNotify {
     uint32_t notifyDataHigh;
     std::string Desc() const
     {
-        return StringFormat("notifyAddrLow = %u notifyAddrHigh %u notifyDataLow = %u "
-                    "notifyDataHigh %u",
-                    notifyAddrLow, notifyAddrHigh, notifyDataLow, notifyDataHigh);
+        return StringFormat(
+            "notifyAddrLow = %u notifyAddrHigh %u notifyDataLow = %u "
+            "notifyDataHigh %u",
+            notifyAddrLow, notifyAddrHigh, notifyDataLow, notifyDataHigh);
     }
 };
 
@@ -190,8 +173,8 @@ struct UdmaSqeRead {
 // 定义WqeTask用于aicpu task cache
 // 注意: 不需要额外维护wqeType指定struct, 因为所有struct开头都是UdmaSqeCommon, 可以利用opCode判断wqe类型
 union WqeTask {
-    struct UdmaSqeRead wqeRead; // 64B (48 + 16); ub_conn_lite.cc中暂不使用UdmaSqeRead
-    struct UdmaSqeWrite wqeWrite; // 64B (48 + 16)
+    struct UdmaSqeRead wqeRead;                       // 64B (48 + 16); ub_conn_lite.cc中暂不使用UdmaSqeRead
+    struct UdmaSqeWrite wqeWrite;                     // 64B (48 + 16)
     struct UdmaSqeWriteWithNotify wqeWriteWithNotify; // 96B (48 + 32 + 16)
 
     WqeTask() {}
@@ -199,25 +182,32 @@ union WqeTask {
 
     explicit WqeTask(const struct UdmaSqeRead& tmpWqeRead) : wqeRead(tmpWqeRead) {}
     explicit WqeTask(const struct UdmaSqeWrite& tmpWqeWrite) : wqeWrite(tmpWqeWrite) {}
-    explicit WqeTask(const struct UdmaSqeWriteWithNotify& tmpWqeWriteWithNotify) : wqeWriteWithNotify(tmpWqeWriteWithNotify) {}
+    explicit WqeTask(const struct UdmaSqeWriteWithNotify& tmpWqeWriteWithNotify)
+        : wqeWriteWithNotify(tmpWqeWriteWithNotify)
+    {}
 };
 
 // 记录DbSqe TaskParam中, 与WQE相关的profiling信息, 用于aicpu task cache适配profiling
 struct DbSqeProfInfo {
     bool isValid = false;
     TaskParamType taskParamType;
-    uint64_t srcAddr; // TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
-    uint64_t dstAddr; // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
-    uint64_t size; // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
-    Eid locEid; // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
-    Eid rmtEid; // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
-    DmaOp dmaOp; // TASK_UB
-    HcclReduceOp reduceOp; // TASK_UB_REDUCE_INLINE, TASK_WRITE_REDUCE_WITH_NOTIFY
-    HcclDataType dataType; // TASK_UB_REDUCE_INLINE, TASK_WRITE_REDUCE_WITH_NOTIFY
-    u64 notifyId; // TASK_UB_INLINE_WRITE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
+    uint64_t srcAddr;        // TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
+    uint64_t dstAddr;        // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
+                             // TASK_WRITE_REDUCE_WITH_NOTIFY
+    uint64_t size;           // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
+                             // TASK_WRITE_REDUCE_WITH_NOTIFY
+    Eid locEid;              // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
+                             // TASK_WRITE_REDUCE_WITH_NOTIFY
+    Eid rmtEid;              // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
+                             // TASK_WRITE_REDUCE_WITH_NOTIFY
+    DmaOp dmaOp;             // TASK_UB
+    HcclReduceOp reduceOp;   // TASK_UB_REDUCE_INLINE, TASK_WRITE_REDUCE_WITH_NOTIFY
+    HcclDataType dataType;   // TASK_UB_REDUCE_INLINE, TASK_WRITE_REDUCE_WITH_NOTIFY
+    u64 notifyId;            // TASK_UB_INLINE_WRITE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
     uint64_t jettyHandle{0}; // TASK_UB_INLINE_WRITE
-    uint32_t jettyId{0}; // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY, TASK_WRITE_REDUCE_WITH_NOTIFY
+    uint32_t jettyId{0};     // TASK_UB_INLINE_WRITE, TASK_UB, TASK_UB_REDUCE_INLINE, TASK_WRITE_WITH_NOTIFY,
+                             // TASK_WRITE_REDUCE_WITH_NOTIFY
 };
 
-}
+} // namespace Hccl
 #endif // HCCL_AICPU_RESOURCE_AI_CPU_RESOUCES_H_

@@ -13,7 +13,7 @@
 #include "rdma_resource_manager.h"
 
 namespace hccl {
-TypicalSyncMem &TypicalSyncMem::GetInstance()
+TypicalSyncMem& TypicalSyncMem::GetInstance()
 {
     static TypicalSyncMem typicalSyncMem[MAX_MODULE_DEVICE_NUM + 1];
     s32 deviceLogicId = INVALID_INT;
@@ -26,9 +26,7 @@ TypicalSyncMem &TypicalSyncMem::GetInstance()
     return typicalSyncMem[MAX_MODULE_DEVICE_NUM];
 }
 
-TypicalSyncMem::TypicalSyncMem()
-{
-}
+TypicalSyncMem::TypicalSyncMem() {}
 
 TypicalSyncMem::~TypicalSyncMem()
 {
@@ -46,10 +44,11 @@ HcclResult TypicalSyncMem::InitNotifySrcMem()
     CHK_RET(hrtGetNotifySize(notifySize));
 
     CHK_RET(DeviceMem::alloc(srcDevMem_, notifySize));
-    HCCL_DEBUG("[TypicalSyncMem][InitNotifySrcMem]Create notify src buffer[%p], size[%u].",
-        srcDevMem_.ptr(), notifySize);
+    HCCL_DEBUG(
+        "[TypicalSyncMem][InitNotifySrcMem]Create notify src buffer[%p], size[%u].", srcDevMem_.ptr(), notifySize);
 
-    CHK_RET(hrtMemSyncCopy(srcDevMem_.ptr(), notifySize, &notifyVaule, notifySize, HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
+    CHK_RET(hrtMemSyncCopy(
+        srcDevMem_.ptr(), notifySize, &notifyVaule, notifySize, HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
 
     notifySrcMrInfo_.addr = srcDevMem_.ptr();
     notifySrcMrInfo_.size = notifySize;
@@ -57,8 +56,9 @@ HcclResult TypicalSyncMem::InitNotifySrcMem()
     notifySrcMrHandle_ = nullptr;
     CHK_RET(hrtRaRegGlobalMr(rdmaHandle_, notifySrcMrInfo_, notifySrcMrHandle_));
 
-    HCCL_INFO("[TypicalSyncMem][InitNotifySrcMem]Init notifySrcMem_=%p success, mr lkey is [%u].",
-        notifySrcMrInfo_.addr, notifySrcMrInfo_.lkey);
+    HCCL_INFO(
+        "[TypicalSyncMem][InitNotifySrcMem]Init notifySrcMem_=%p success, mr lkey is [%u].", notifySrcMrInfo_.addr,
+        notifySrcMrInfo_.lkey);
     return HCCL_SUCCESS;
 }
 
@@ -76,7 +76,7 @@ HcclResult TypicalSyncMem::DeInitNotifySrcMem()
     return HCCL_SUCCESS;
 }
 
-HcclResult TypicalSyncMem::AllocSyncMem(int32_t **ptr)
+HcclResult TypicalSyncMem::AllocSyncMem(int32_t** ptr)
 {
     HCCL_DEBUG("[TypicalSyncMem][AllocSyncMem]start alloc sync mem on [%p].", ptr);
     std::unique_lock<std::mutex> lockSyncMemMap(syncMemMapMutex_);
@@ -102,9 +102,9 @@ HcclResult TypicalSyncMem::AllocSyncMem(int32_t **ptr)
     notifyBaseVaTmp = notifyBaseVa;
     CHK_RET(HrtRaGetNotifyBaseAddr(rdmaHandle_, &notifyBaseVa, &notifyTotalSize));
 
-    CHK_PRT_RET(((notifyBaseVaTmp != 0) && (notifyBaseVaTmp != notifyBaseVa)),
-        HCCL_ERROR("[TypicalSyncMem][AllocSyncMem]get base addr failed, notify base va has changed."),
-        HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        ((notifyBaseVaTmp != 0) && (notifyBaseVaTmp != notifyBaseVa)),
+        HCCL_ERROR("[TypicalSyncMem][AllocSyncMem]get base addr failed, notify base va has changed."), HCCL_E_INTERNAL);
 
     // Get the offset to the base address for the created notify,
     // which is same for both physical address and virtual address.
@@ -114,19 +114,22 @@ HcclResult TypicalSyncMem::AllocSyncMem(int32_t **ptr)
     // notify寄存器的虚拟地址与物理地址偏移相同，所以虚拟地址为虚拟基地址加偏移
     u64 notifyVa = notifyBaseVa + offset;
 
-    HCCL_INFO("[TypicalSyncMem][AllocSyncMem]notifyBaseVa=0x%llx," \
+    HCCL_INFO(
+        "[TypicalSyncMem][AllocSyncMem]notifyBaseVa=0x%llx,"
         "notifyTotalSize=0x%x, offset=0x%llx, notifyVa=0x%llx notify=%p.",
         notifyBaseVa, notifyTotalSize, offset, notifyVa, notify);
     // Store the notifyVa to set
     syncMemMap_[notifyVa] = notify;
     // Assign the notify virtual address to *ptr.
-    *ptr = reinterpret_cast<int32_t *>(static_cast<uintptr_t>(notifyVa));
-    HCCL_RUN_INFO("[TypicalSyncMem][AllocSyncMem]alloc an empty sync mem success, notifyVa[%p]. " \
-        "please register mr before use.", *ptr);
+    *ptr = reinterpret_cast<int32_t*>(static_cast<uintptr_t>(notifyVa));
+    HCCL_RUN_INFO(
+        "[TypicalSyncMem][AllocSyncMem]alloc an empty sync mem success, notifyVa[%p]. "
+        "please register mr before use.",
+        *ptr);
     return HCCL_SUCCESS;
 }
 
-HcclResult TypicalSyncMem::FreeSyncMem(int32_t *ptr)
+HcclResult TypicalSyncMem::FreeSyncMem(int32_t* ptr)
 {
     HCCL_DEBUG("[TypicalSyncMem][FreeSyncMem]start free sync mem[%p], please deregister mr before free.", ptr);
     CHK_PTR_NULL(ptr);
@@ -147,7 +150,7 @@ HcclResult TypicalSyncMem::FreeSyncMem(int32_t *ptr)
     return HCCL_SUCCESS;
 }
 
-HcclResult TypicalSyncMem::GetNotifyHandle(u64 notifyVa, HcclRtNotify &notifyHandle)
+HcclResult TypicalSyncMem::GetNotifyHandle(u64 notifyVa, HcclRtNotify& notifyHandle)
 {
     std::unique_lock<std::mutex> lockSyncMemMap(syncMemMapMutex_);
     auto smIter = syncMemMap_.find(notifyVa);
@@ -159,7 +162,7 @@ HcclResult TypicalSyncMem::GetNotifyHandle(u64 notifyVa, HcclRtNotify &notifyHan
     return HCCL_E_PARA;
 }
 
-HcclResult TypicalSyncMem::GetNotifySrcMem(struct MrInfoT &mrInfo)
+HcclResult TypicalSyncMem::GetNotifySrcMem(struct MrInfoT& mrInfo)
 {
     CHK_PTR_NULL(notifySrcMrInfo_.addr);
     mrInfo.addr = notifySrcMrInfo_.addr;
@@ -169,20 +172,27 @@ HcclResult TypicalSyncMem::GetNotifySrcMem(struct MrInfoT &mrInfo)
     return HCCL_SUCCESS;
 }
 
-HcclResult TypicalSyncMem::CreateEmptyNotify(HcclRtNotify &notifyHandle)
+HcclResult TypicalSyncMem::CreateEmptyNotify(HcclRtNotify& notifyHandle)
 {
     s32 deviceId = 0;
     CHK_RET(hrtGetDevice(&deviceId));
     HcclResult ret = hrtNotifyCreate(deviceId, &notifyHandle);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[TypicalSyncMem][CreateNotify]errNo[0x%016llx] Notify create failed. return[%d], deviceLogicId[%d]",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, deviceId), HCCL_E_RUNTIME);
-    CHK_PRT_RET(notifyHandle == nullptr,
-        HCCL_ERROR("[TypicalSyncMem][CreateNotify]errNo[0x%016llx] Notify create failed. notifyHandle is NULL",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME)), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[TypicalSyncMem][CreateNotify]errNo[0x%016llx] Notify create failed. return[%d], deviceLogicId[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, deviceId),
+        HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        notifyHandle == nullptr,
+        HCCL_ERROR(
+            "[TypicalSyncMem][CreateNotify]errNo[0x%016llx] Notify create failed. notifyHandle is NULL",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME)),
+        HCCL_E_RUNTIME);
 
-    HCCL_INFO("[TypicalSyncMem][CreateNotify]create notify success, deviceId[%d], notify handle[%p].",
-        deviceId, notifyHandle);
+    HCCL_INFO(
+        "[TypicalSyncMem][CreateNotify]create notify success, deviceId[%d], notify handle[%p].", deviceId,
+        notifyHandle);
     return HCCL_SUCCESS;
 }
 
@@ -191,9 +201,12 @@ HcclResult TypicalSyncMem::DestroyNotify(HcclRtNotify notifyHandle)
     HCCL_DEBUG("[TypicalSyncMem][DestroyNotify]start destroy notify[%p].", notifyHandle);
     CHK_PTR_NULL(notifyHandle);
     HcclResult ret = hrtNotifyDestroy(notifyHandle);
-    CHK_PRT_RET(ret != RT_ERROR_NONE,
-        HCCL_ERROR("[TypicalSyncMem][DestroyNotify]errNo[0x%016llx] rt notify destroy fail, return[%d].",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[TypicalSyncMem][DestroyNotify]errNo[0x%016llx] rt notify destroy fail, return[%d].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret),
+        HCCL_E_RUNTIME);
     HCCL_INFO("[TypicalSyncMem][DestroyNotify]destroy notify success.");
     return HCCL_SUCCESS;
 }
@@ -202,7 +215,7 @@ HcclResult TypicalSyncMem::FreeAllSyncMem()
 {
     std::unique_lock<std::mutex> lockSyncMemMap(syncMemMapMutex_);
     if (!syncMemMap_.empty()) {
-        for (auto &smIter : syncMemMap_) {
+        for (auto& smIter : syncMemMap_) {
             if (smIter.second != nullptr) {
                 CHK_RET(DestroyNotify(smIter.second));
             }
@@ -212,4 +225,4 @@ HcclResult TypicalSyncMem::FreeAllSyncMem()
     HCCL_INFO("[TypicalSyncMem][FreeAllSyncMem]free all sync memory success.");
     return HCCL_SUCCESS;
 }
-}   // namespace hccl
+} // namespace hccl

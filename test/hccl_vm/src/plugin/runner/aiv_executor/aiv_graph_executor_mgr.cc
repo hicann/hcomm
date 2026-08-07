@@ -12,12 +12,14 @@
 
 #include <cstdint>
 
-AivGraphExecutorMgr& AivGraphExecutorMgr::GetInstance() {
+AivGraphExecutorMgr& AivGraphExecutorMgr::GetInstance()
+{
     static AivGraphExecutorMgr instance;
     return instance;
 }
 
-std::shared_ptr<AivGraphExecutor> AivGraphExecutorMgr::GetAivGraphExecutor(uint32_t rankId, uint64_t launchIdx) {
+std::shared_ptr<AivGraphExecutor> AivGraphExecutorMgr::GetAivGraphExecutor(uint32_t rankId, uint64_t launchIdx)
+{
     const auto key = std::make_pair(rankId, launchIdx);
     auto iter = executorMap_.find(key);
     if (iter == executorMap_.end()) {
@@ -26,7 +28,4 @@ std::shared_ptr<AivGraphExecutor> AivGraphExecutorMgr::GetAivGraphExecutor(uint3
     return iter->second;
 }
 
-void AivGraphExecutorMgr::Reset()
-{
-    executorMap_.clear();
-}
+void AivGraphExecutorMgr::Reset() { executorMap_.clear(); }

@@ -17,7 +17,7 @@
 namespace Hccl {
 class NotifyLite {
 public:
-    explicit NotifyLite(std::vector<char> &uniqueId);
+    explicit NotifyLite(std::vector<char>& uniqueId);
 
     u32 GetId() const;
     u32 GetDevPhyId() const;

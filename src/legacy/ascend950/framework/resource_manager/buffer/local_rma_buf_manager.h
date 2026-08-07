@@ -24,27 +24,31 @@ namespace Hccl {
 class CommunicatorImpl;
 class LocalRmaBufManager {
 public:
-    explicit LocalRmaBufManager(const CommunicatorImpl &communicator);
+    explicit LocalRmaBufManager(const CommunicatorImpl& communicator);
 
     ~LocalRmaBufManager();
 
-    LocalRmaBuffer *Reg(const string &opTag, BufferType bufferType, std::shared_ptr<Buffer> buffer, const PortData &portData, LinkProtocol linkProtocol);
+    LocalRmaBuffer*
+    Reg(const string& opTag, BufferType bufferType, std::shared_ptr<Buffer> buffer, const PortData& portData,
+        LinkProtocol linkProtocol);
 
-    HcclResult Dereg(const string &opTag);
+    HcclResult Dereg(const string& opTag);
 
-    LocalRmaBuffer *Get(const string &opTag, const PortData &portData, BufferType bufferType);
+    LocalRmaBuffer* Get(const string& opTag, const PortData& portData, BufferType bufferType);
 
-    LocalRmaBuffer *Get(const PortData &portData);
+    LocalRmaBuffer* Get(const PortData& portData);
 
     void Destroy();
 
 private:
-    CommunicatorImpl *comm;
+    CommunicatorImpl* comm;
 
-    bool IsExist(const string &opTag, const PortData &portData, BufferType bufferType);
+    bool IsExist(const string& opTag, const PortData& portData, BufferType bufferType);
 
-    unordered_map<string, unordered_map<PortData, unordered_map<BufferType, unique_ptr<LocalRmaBuffer>, EnumClassHash>,
-                                        hash<Hccl::PortData>>>
+    unordered_map<
+        string,
+        unordered_map<
+            PortData, unordered_map<BufferType, unique_ptr<LocalRmaBuffer>, EnumClassHash>, hash<Hccl::PortData>>>
         bufs;
 
     unordered_map<PortData, unique_ptr<LocalRmaBuffer>, hash<Hccl::PortData>> ccuBufs;

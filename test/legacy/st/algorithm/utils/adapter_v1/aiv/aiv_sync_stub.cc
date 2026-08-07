@@ -5,7 +5,6 @@
 #include "aiv_task_queue_stub.h"
 #include "rank_info_recorder.h"
 
-
 using namespace checker;
 using namespace hccl;
 
@@ -38,35 +37,35 @@ void pipe_barrier(pipe_t pipe)
     }
 }
 
-void GetSrcDstPipe(HardEvent event, pipe_t *src, pipe_t *dst)
+void GetSrcDstPipe(HardEvent event, pipe_t* src, pipe_t* dst)
 {
     switch (event) {
-        case HardEvent::MTE3_MTE2 : {
+        case HardEvent::MTE3_MTE2: {
             *src = PIPE_MTE3;
             *dst = PIPE_MTE2;
             break;
         }
-        case HardEvent::MTE3_S : {
+        case HardEvent::MTE3_S: {
             *src = PIPE_MTE3;
             *dst = PIPE_S;
             break;
         }
-        case HardEvent::S_MTE2 : {
+        case HardEvent::S_MTE2: {
             *src = PIPE_S;
             *dst = PIPE_MTE2;
             break;
         }
-        case HardEvent::S_MTE3 : {
+        case HardEvent::S_MTE3: {
             *src = PIPE_S;
             *dst = PIPE_MTE3;
             break;
         }
-        case HardEvent::MTE2_S : {
+        case HardEvent::MTE2_S: {
             *src = PIPE_MTE2;
             *dst = PIPE_S;
             break;
         }
-        case HardEvent::MTE2_MTE3 : {
+        case HardEvent::MTE2_MTE3: {
             *src = PIPE_MTE2;
             *dst = PIPE_MTE3;
             break;
@@ -114,8 +113,9 @@ template void WaitFlag<HardEvent::MTE3_S>(int32_t eventID);
 template void WaitFlag<HardEvent::S_MTE3>(int32_t eventID);
 template void WaitFlag<HardEvent::MTE2_S>(int32_t eventID);
 
-__aicore__ void SyncAll(const GlobalTensor<int32_t>& gmWorkspace, const LocalTensor<int32_t>& ubWorkspace, const int32_t usedCores)
+__aicore__ void
+SyncAll(const GlobalTensor<int32_t>& gmWorkspace, const LocalTensor<int32_t>& ubWorkspace, const int32_t usedCores)
 {
     return;
 }
-}
+} // namespace AscendC

@@ -16,8 +16,9 @@
 namespace sim {
 bool ProbeCheckOnlyMode()
 {
-    auto cfg = RunnerDB::GetOneByPred<RunModeConfig>(
-        [](const RunModeConfig&) { return true; });
+    auto cfg = RunnerDB::GetOneByPred<RunModeConfig>([](const RunModeConfig&) {
+        return true;
+    });
     return cfg.second && cfg.first.mode != 0;
 }
 
@@ -27,4 +28,4 @@ bool IsCheckOnlyMode()
     static bool cached = ProbeCheckOnlyMode();
     return cached;
 }
-}  // namespace sim
+} // namespace sim

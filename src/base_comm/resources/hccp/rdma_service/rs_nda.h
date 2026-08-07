@@ -92,7 +92,7 @@ static inline uint64_t AlignUp(uint64_t val, uint64_t align)
 int RsInitNdaCb(struct RsRdevCb *rdevCb);
 void RsDeinitNdaCb(struct RsRdevCb *rdevCb);
 RS_ATTRI_VISI_DEF int RsNdaGetDirectFlag(unsigned int phyId, unsigned int rdevIndex, int *directFlag);
-RS_ATTRI_VISI_DEF int RsNdaCqCreate(unsigned int phyId, unsigned int rdevIndex, struct NdaCqInitAttr *attr, 
+RS_ATTRI_VISI_DEF int RsNdaCqCreate(unsigned int phyId, unsigned int rdevIndex, struct NdaCqInitAttr *attr,
     struct NdaCqInfo *info, void **ibvCqExt);
 RS_ATTRI_VISI_DEF int RsNdaCqDestroy(unsigned int phyId, unsigned int rdevIndex, void *ibvCqExt);
 RS_ATTRI_VISI_DEF int RsNdaQpCreate(unsigned int phyId, unsigned int rdevIndex, struct NdaQpInitAttr *attr,

@@ -23,19 +23,19 @@ using namespace checker;
 
 namespace Hccl {
 
-extern  std::map<CheckerOpType, OpType> g_CheckerOpType2OpType_aicpu;
-extern  std::map<OpType, CheckerOpType> g_OpType2CheckerOpType_aicpu;
-extern  std::map<CheckerReduceOp, ReduceOp> g_CheckerReduceOp2ReduceOp_aicpu;
-extern  std::map<ReduceOp, CheckerReduceOp> g_ReduceOp2CheckerReduceOp_aicpu;
-extern  std::map<CheckerDataType, DataType> g_CheckerDataType2DataType_aicpu;
-extern  std::map<DataType, CheckerDataType> g_DataType2CheckerDataType_aicpu;
-extern  std::map<LinkProtoType, LinkProtoStub> g_LinkProtoType2LinkProtoStub_aicpu;
-extern  std::map<CheckerOpMode, OpMode> g_CheckerOpMode2OpMode_aicpu;
-extern  std::map<Hccl::BufferType, checker::BufferType> g_HcclBufferType2CheckerBufferType_aicpu;
-extern  std::map<CheckerDevType, Hccl::DevType> g_CheckerDevType2HcclDevType_aicpu;
+extern std::map<CheckerOpType, OpType> g_CheckerOpType2OpType_aicpu;
+extern std::map<OpType, CheckerOpType> g_OpType2CheckerOpType_aicpu;
+extern std::map<CheckerReduceOp, ReduceOp> g_CheckerReduceOp2ReduceOp_aicpu;
+extern std::map<ReduceOp, CheckerReduceOp> g_ReduceOp2CheckerReduceOp_aicpu;
+extern std::map<CheckerDataType, DataType> g_CheckerDataType2DataType_aicpu;
+extern std::map<DataType, CheckerDataType> g_DataType2CheckerDataType_aicpu;
+extern std::map<LinkProtoType, LinkProtoStub> g_LinkProtoType2LinkProtoStub_aicpu;
+extern std::map<CheckerOpMode, OpMode> g_CheckerOpMode2OpMode_aicpu;
+extern std::map<Hccl::BufferType, checker::BufferType> g_HcclBufferType2CheckerBufferType_aicpu;
+extern std::map<CheckerDevType, Hccl::DevType> g_CheckerDevType2HcclDevType_aicpu;
 
-extern  std::map<uint16_t, CheckerReduceOp> g_ReduceOp2CheckerReduceOp_ccu;
-extern  std::map<uint16_t, CheckerDataType> g_DataType2CheckerDataType_ccu;
+extern std::map<uint16_t, CheckerReduceOp> g_ReduceOp2CheckerReduceOp_ccu;
+extern std::map<uint16_t, CheckerDataType> g_DataType2CheckerDataType_ccu;
 
 } // namespace Hccl
 

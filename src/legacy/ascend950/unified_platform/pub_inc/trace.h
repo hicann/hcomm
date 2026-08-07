@@ -19,13 +19,13 @@ namespace Hccl {
 class Trace {
 public:
     Trace();
-    HcclResult Init(std::string &logInfo);
-    void Save(std::string &buffer);
+    HcclResult Init(std::string& logInfo);
+    void Save(std::string& buffer);
     ~Trace();
 
 private:
     bool isClosingChar(const char& c) const;
-    intptr_t    traceHandle{TRACE_INVALID_HANDLE};
+    intptr_t traceHandle{TRACE_INVALID_HANDLE};
 };
 } // namespace Hccl
 #endif // HCCLV2_TRACE_H

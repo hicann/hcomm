@@ -21,7 +21,6 @@
 void ClearHcclEnv();
 std::vector<u64> GenerateSendCountMatrix(u64 count, u32 rankSize);
 namespace Hccl {
-std::unique_ptr<RankGraph> BuildRankGraph(std::string rankTableFilePath,
-    std::string topoFilePath, RankId myRank);
+std::unique_ptr<RankGraph> BuildRankGraph(std::string rankTableFilePath, std::string topoFilePath, RankId myRank);
 }
 #endif

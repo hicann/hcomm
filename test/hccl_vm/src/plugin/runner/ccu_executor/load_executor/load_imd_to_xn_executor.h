@@ -23,7 +23,8 @@
 
 class LoadImdToXnExecutor : public CcuExecutorBase {
 public:
-    explicit LoadImdToXnExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit LoadImdToXnExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     LoadImdToXnExecutor() = default;
@@ -37,7 +38,7 @@ public:
 private:
     uint16_t xnId_{0};
     uint64_t immediate_{0};
-    uint16_t ckeId_ {0};
+    uint16_t ckeId_{0};
     uint16_t ckeMask_{0};
 };
 

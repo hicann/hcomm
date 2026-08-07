@@ -28,46 +28,43 @@ namespace Hccl {
 
 class CcuComponent {
 public:
-    CcuComponent(const CcuComponent &that) = delete;
-    CcuComponent &operator=(const CcuComponent &that) = delete;
+    CcuComponent(const CcuComponent& that) = delete;
+    CcuComponent& operator=(const CcuComponent& that) = delete;
 
-    static CcuComponent &GetInstance(const int32_t deviceLogicId);
+    static CcuComponent& GetInstance(const int32_t deviceLogicId);
     void Init();
     void Deinit();
 
-    HcclResult GetCcuResourceSpaceBufInfo(const uint8_t dieId, uint64_t &addr, uint64_t &size) const;
-    HcclResult GetCcuResourceSpaceTokenInfo(const uint8_t dieId, uint64_t &tokenId,
-        uint64_t &tokenValue) const;
-    HcclResult GetCcuResourceSpaceTokenInfoForLocal(const uint8_t dieId, uint64_t &tokenId,
-    uint64_t &tokenValue) const;
+    HcclResult GetCcuResourceSpaceBufInfo(const uint8_t dieId, uint64_t& addr, uint64_t& size) const;
+    HcclResult GetCcuResourceSpaceTokenInfo(const uint8_t dieId, uint64_t& tokenId, uint64_t& tokenValue) const;
+    HcclResult GetCcuResourceSpaceTokenInfoForLocal(const uint8_t dieId, uint64_t& tokenId, uint64_t& tokenValue) const;
 
-    HcclResult AllocChannels(const uint8_t dieId, const ChannelPara &channelPara,
-        std::vector<ChannelInfo> &channelInfos);
-    HcclResult ConfigChannel(const uint8_t dieId, const ChannelCfg &cfg);
+    HcclResult
+    AllocChannels(const uint8_t dieId, const ChannelPara& channelPara, std::vector<ChannelInfo>& channelInfos);
+    HcclResult ConfigChannel(const uint8_t dieId, const ChannelCfg& cfg);
     HcclResult ReleaseChannel(const uint8_t dieId, const uint32_t channelId);
-    
-    HcclResult GetLoopChannelId(const uint8_t srcDieId, const uint8_t dstDieId,
-        uint32_t &channelId) const;
 
-    HcclResult AllocRes(const uint8_t dieId, const ResType resType, const uint32_t num,
-        const bool consecutive, vector<ResInfo> &resInfos);
-    HcclResult ReleaseRes(const uint8_t dieId, const ResType resType, const uint32_t startId,
-        const uint32_t num);
-    
-    HcclResult AllocIns(const uint8_t dieId, const uint32_t num, ResInfo &insInfo);
-    HcclResult ReleaseIns(const uint8_t dieId, const ResInfo &insInfo);
+    HcclResult GetLoopChannelId(const uint8_t srcDieId, const uint8_t dstDieId, uint32_t& channelId) const;
+
+    HcclResult AllocRes(
+        const uint8_t dieId, const ResType resType, const uint32_t num, const bool consecutive,
+        vector<ResInfo>& resInfos);
+    HcclResult ReleaseRes(const uint8_t dieId, const ResType resType, const uint32_t startId, const uint32_t num);
+
+    HcclResult AllocIns(const uint8_t dieId, const uint32_t num, ResInfo& insInfo);
+    HcclResult ReleaseIns(const uint8_t dieId, const ResInfo& insInfo);
     uint32_t GetInsConsecutiveRemainSize(const uint8_t dieId) const;
-    HcclResult AllocCke(const uint8_t dieId, const uint32_t num, vector<ResInfo> &ckeInfos);
-    HcclResult ReleaseCke(const uint8_t dieId, const vector<ResInfo> &ckeInfos);
-    HcclResult AllocXn(const uint8_t dieId, const uint32_t num, vector<ResInfo> &xnInfos);
-    HcclResult ReleaseXn(const uint8_t dieId, const vector<ResInfo> &xnInfos);
+    HcclResult AllocCke(const uint8_t dieId, const uint32_t num, vector<ResInfo>& ckeInfos);
+    HcclResult ReleaseCke(const uint8_t dieId, const vector<ResInfo>& ckeInfos);
+    HcclResult AllocXn(const uint8_t dieId, const uint32_t num, vector<ResInfo>& xnInfos);
+    HcclResult ReleaseXn(const uint8_t dieId, const vector<ResInfo>& xnInfos);
 
     HcclResult CleanDieCkes(const uint8_t dieId) const;
     HcclResult SetTaskKill();
     HcclResult SetTaskKillDone();
     HcclResult CleanTaskKillState() const;
 
-    const std::array<bool, MAX_CCU_IODIE_NUM> &GetDieEnableFlags() const;
+    const std::array<bool, MAX_CCU_IODIE_NUM>& GetDieEnableFlags() const;
     bool IsInited() const { return ifInit; }
 
 private:
@@ -98,7 +95,7 @@ private:
     std::unordered_map<IpAddress, uint32_t> psnMap{};
 
     // CCU Task Kill相关状态
-    enum class CcuTaskKillStatus : uint8_t { INIT = 0, TASK_KILL = 1, KILL_DONE = 2, CLEAN_TIF = 3, INVALID = 4};
+    enum class CcuTaskKillStatus : uint8_t { INIT = 0, TASK_KILL = 1, KILL_DONE = 2, CLEAN_TIF = 3, INVALID = 4 };
     CcuTaskKillStatus status{CcuTaskKillStatus::INVALID};
     std::mutex innerMutex;
     std::mutex taskKillMutex_;
@@ -107,20 +104,19 @@ private:
     ~CcuComponent();
 
     void CheckDiesEnable();
-    void ChooseLoopEid(bool &dieDrvEnableFlag, uint8_t dieId);
-    HcclResult GetLoopFeIpByDieId(const uint8_t dieId, uint32_t &feId, IpAddress &ipAddr);
+    void ChooseLoopEid(bool& dieDrvEnableFlag, uint8_t dieId);
+    HcclResult GetLoopFeIpByDieId(const uint8_t dieId, uint32_t& feId, IpAddress& ipAddr);
     void CreateCcuRmaBuffer();
     void CreateResourceManagers();
     void CreateLoopChannels();
-    HcclResult CreateLoopChannel(const uint8_t dieId, uint32_t &channelId);
-    HcclResult CreateAndImportLoopJettys(const uint8_t dieId, const IpAddress &ipAddr,
-        const vector<JettyInfo> &jettyInfos);
-    TpInfo RequestNewTpInfo(const IpAddress &srcIpAddr, const IpAddress &dstIpAddr) const;
-    TpInfo GetTpInfo(const IpAddress &ipAddr);
-    TpAttrInfo GetLoopTpAttr(const IpAddress &ipAddr, const TpHandle tpHandle);
-    uint32_t GetPsn(const IpAddress &ipAddr);
-    HcclResult ConfigLoopChannel(const uint8_t dieId, const IpAddress &ipAddr,
-        const ChannelInfo &channelInfo);
+    HcclResult CreateLoopChannel(const uint8_t dieId, uint32_t& channelId);
+    HcclResult
+    CreateAndImportLoopJettys(const uint8_t dieId, const IpAddress& ipAddr, const vector<JettyInfo>& jettyInfos);
+    TpInfo RequestNewTpInfo(const IpAddress& srcIpAddr, const IpAddress& dstIpAddr) const;
+    TpInfo GetTpInfo(const IpAddress& ipAddr);
+    TpAttrInfo GetLoopTpAttr(const IpAddress& ipAddr, const TpHandle tpHandle);
+    uint32_t GetPsn(const IpAddress& ipAddr);
+    HcclResult ConfigLoopChannel(const uint8_t dieId, const IpAddress& ipAddr, const ChannelInfo& channelInfo);
     void ConfigMsIdToken();
 
     void ReleaseJettyRes();

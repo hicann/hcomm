@@ -28,27 +28,27 @@ struct DBConfig {
     std::string database;
 };
 
-struct OpDetailTab { 
-    uint32_t id;            // PK (自增)
-    uint32_t pid;           // proxy 进程 ID
-    uint32_t rankId;      // 设备 ID
-    uint32_t opIter;        // 算子迭代次数 (从 0 开始)
-    uint32_t syncIter;      // 所属 sync 周期 (从 0 开始)
+struct OpDetailTab {
+    uint32_t id;       // PK (自增)
+    uint32_t pid;      // proxy 进程 ID
+    uint32_t rankId;   // 设备 ID
+    uint32_t opIter;   // 算子迭代次数 (从 0 开始)
+    uint32_t syncIter; // 所属 sync 周期 (从 0 开始)
 
-    uint64_t streamId;      // streamId
-    uint32_t root;          // root
-    uint32_t opExpansionMode; // 算子执行模式 0: ccu, 1: aicpu, 2: aiv
-    uint32_t devType;       // 设备类型
-    uint32_t rankSize;      // ransize
-    uint32_t srcRank;       // srcRank
-    uint32_t dstRank;       // dstRank
-    std::vector<uint8_t> opDetail;    // BLOB
-    std::vector<uint8_t> opExtInfo;  // BLOB
+    uint64_t streamId;              // streamId
+    uint32_t root;                  // root
+    uint32_t opExpansionMode;       // 算子执行模式 0: ccu, 1: aicpu, 2: aiv
+    uint32_t devType;               // 设备类型
+    uint32_t rankSize;              // ransize
+    uint32_t srcRank;               // srcRank
+    uint32_t dstRank;               // dstRank
+    std::vector<uint8_t> opDetail;  // BLOB
+    std::vector<uint8_t> opExtInfo; // BLOB
 };
 
 struct OpMemInfoTab {
-    uint32_t id;            // PK (自增)
-    uint32_t opDetailId;  // FK，关联 OpDetailTab
+    uint32_t id;         // PK (自增)
+    uint32_t opDetailId; // FK，关联 OpDetailTab
     uint64_t inputAddr;
     uint64_t inputSize;
     uint64_t outputAddr;
@@ -58,50 +58,50 @@ struct OpMemInfoTab {
 };
 
 struct SyncRecordTab {
-    uint32_t id;        // PK (自增)
-    uint32_t pid;       // proxy 进程 ID
+    uint32_t id;  // PK (自增)
+    uint32_t pid; // proxy 进程 ID
     uint32_t rankId;
     uint32_t rankSize;
-    uint32_t syncIter;  // sync 迭代次数 (从 0 开始)
-    uint64_t streamId;  // streamId
-    uint8_t  status;    // 0=pending, 2=completed
+    uint32_t syncIter; // sync 迭代次数 (从 0 开始)
+    uint64_t streamId; // streamId
+    uint8_t status;    // 0=pending, 2=completed
 };
 
 struct OpTaskTab {
-    uint32_t id;            // PK (自增)
-    uint32_t opDetailId;  // FK，关联 OpDetailTables
-    uint32_t taskSeq;       // 任务序号
-    std::vector<uint8_t> optaskMeta;  // BLOB，动态大小
+    uint32_t id;                     // PK (自增)
+    uint32_t opDetailId;             // FK，关联 OpDetailTables
+    uint32_t taskSeq;                // 任务序号
+    std::vector<uint8_t> optaskMeta; // BLOB，动态大小
 };
 
 struct CcuChannelTab {
-    uint32_t id;            // PK (自增)
-    uint32_t channelId;     // ccuChannelId
+    uint32_t id;        // PK (自增)
+    uint32_t channelId; // ccuChannelId
     uint32_t srcDieId;
     uint32_t dstDieId;
     uint32_t srcRankId;
     uint32_t dstRankId;
-    uint8_t  leid[16];
-    uint8_t  reid[16];
+    uint8_t leid[16];
+    uint8_t reid[16];
     uint16_t protocol;
     uint16_t jettyNum;
-    uint32_t jettyId[64];   // BLOB，动态大小 最大64个
+    uint32_t jettyId[64]; // BLOB，动态大小 最大64个
 };
 
 struct JettyMapTab {
-    uint32_t id;            // PK (自增)
-    uint32_t opDetailId;  // FK，关联 OpDetailTab
+    uint32_t id;         // PK (自增)
+    uint32_t opDetailId; // FK，关联 OpDetailTab
     uint32_t srcDieId;
     uint32_t dstDieId;
     uint32_t srcRankId;
     uint32_t dstRankId;
-    uint8_t  leid[16];
-    uint8_t  reid[16];
+    uint8_t leid[16];
+    uint8_t reid[16];
     uint16_t protocol;
 };
 
 struct CcuInstrResTab {
-    uint32_t id;            // PK (自增)
+    uint32_t id; // PK (自增)
     uint32_t deviceId;
     uint32_t rankId;
     uint32_t dieId;
@@ -110,7 +110,7 @@ struct CcuInstrResTab {
 };
 
 struct CcuInstrTab {
-    uint32_t id;            // PK (自增)
+    uint32_t id; // PK (自增)
     uint32_t ccuInstrResId;
     uint32_t rankId;
     uint32_t startId;
@@ -124,5 +124,5 @@ struct CompositeOpDetail {
     OpMemInfoTab memInfo;
     std::vector<OpTaskTab> tasks;
 };
-}
+} // namespace sim
 #endif

@@ -11,16 +11,15 @@
 #include "calc_ahc_transport_req.h"
 
 namespace hccl {
-CalcAHCTransportReq::CalcAHCTransportReq(std::vector<std::vector<u32>> &subCommPlaneVector,
-    std::vector<bool> &isBridgeVector, u32 userRank, std::vector<std::vector<std::vector<u32>>> &globalSubGroups,
-    std::map<AHCConcOpType, TemplateType> &ahcAlgOption, std::unordered_map<u32, bool>  &isUsedRdmaMap)
-    : CalcAHCTransportReqBase(subCommPlaneVector, isBridgeVector, userRank, globalSubGroups, ahcAlgOption, isUsedRdmaMap)
-{
-}
+CalcAHCTransportReq::CalcAHCTransportReq(
+    std::vector<std::vector<u32>>& subCommPlaneVector, std::vector<bool>& isBridgeVector, u32 userRank,
+    std::vector<std::vector<std::vector<u32>>>& globalSubGroups, std::map<AHCConcOpType, TemplateType>& ahcAlgOption,
+    std::unordered_map<u32, bool>& isUsedRdmaMap)
+    : CalcAHCTransportReqBase(
+          subCommPlaneVector, isBridgeVector, userRank, globalSubGroups, ahcAlgOption, isUsedRdmaMap)
+{}
 
-CalcAHCTransportReq::~CalcAHCTransportReq()
-{
-}
+CalcAHCTransportReq::~CalcAHCTransportReq() {}
 
 HcclResult CalcAHCTransportReq::DisposeSubGroups(u32 rank)
 {
@@ -28,24 +27,24 @@ HcclResult CalcAHCTransportReq::DisposeSubGroups(u32 rank)
     CommAHCBaseInfo::DisposeSubGroups(rank, globalSubGroups_, subGroups_, level1SubGroups);
     return HCCL_SUCCESS;
 }
- 
-HcclResult CalcAHCTransportReq::CalcDstRanks(u32 rank, std::set<u32> &dstRanks, u32 ringIndex)
+
+HcclResult CalcAHCTransportReq::CalcDstRanks(u32 rank, std::set<u32>& dstRanks, u32 ringIndex)
 {
     (void)ringIndex;
- 
+
     // 获取 rank 对应分组信息
     DisposeSubGroups(rank);
- 
-    //commAHCBaseInfo_ 初始化
+
+    // commAHCBaseInfo_ 初始化
     CHK_RET(CommAHCInfoInit(subGroups_));
- 
-    //计算 AHC建链的目的dstRanks
+
+    // 计算 AHC建链的目的dstRanks
     commAHCBaseInfo_->CalcDstRanks(rank, dstRanks);
- 
+
     return HCCL_SUCCESS;
 }
 
-HcclResult CalcAHCTransportReq::CommAHCInfoInit(std::vector<std::vector<u32>> &subGroups)
+HcclResult CalcAHCTransportReq::CommAHCInfoInit(std::vector<std::vector<u32>>& subGroups)
 {
     commAHCBaseInfo_.reset(new (std::nothrow) CommAHCAlignInfo(subGroups));
     CHK_SMART_PTR_NULL(commAHCBaseInfo_);
@@ -53,4 +52,4 @@ HcclResult CalcAHCTransportReq::CommAHCInfoInit(std::vector<std::vector<u32>> &s
     return HCCL_SUCCESS;
 }
 
-}  // namespace hccl
+} // namespace hccl

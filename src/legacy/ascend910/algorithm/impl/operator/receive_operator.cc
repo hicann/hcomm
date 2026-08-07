@@ -11,18 +11,16 @@
 #include "receive_operator.h"
 
 namespace hccl {
-ReceiveOperator::ReceiveOperator(AlgConfigurator* algConfigurator, CCLBufferManager &cclBufferManager,
-    HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher)
+ReceiveOperator::ReceiveOperator(
+    AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager, HcclDispatcher dispatcher,
+    std::unique_ptr<TopoMatcher>& topoMatcher)
     : CollAlgOperator(algConfigurator, cclBufferManager, dispatcher, topoMatcher, HcclCMDType::HCCL_CMD_RECEIVE)
-{
-}
+{}
 
-ReceiveOperator::~ReceiveOperator()
-{
-}
+ReceiveOperator::~ReceiveOperator() {}
 
-HcclResult ReceiveOperator::SelectAlg(const std::string& tag, const OpParam& param, std::string& algName,
-    std::string& newTag)
+HcclResult
+ReceiveOperator::SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag)
 {
     algName = "ReceiveExecutor";
     if (GetWorkflowMode() != HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
@@ -36,4 +34,4 @@ HcclResult ReceiveOperator::SelectAlg(const std::string& tag, const OpParam& par
 }
 
 REGISTER_OP(HcclCMDType::HCCL_CMD_RECEIVE, Receive, ReceiveOperator);
-}
+} // namespace hccl

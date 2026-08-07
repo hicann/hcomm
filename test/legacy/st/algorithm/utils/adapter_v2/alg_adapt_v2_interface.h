@@ -26,19 +26,21 @@ class TaskQuesGeneratorV2 {
 public:
     TaskQuesGeneratorV2() = default;
     ~TaskQuesGeneratorV2();
-    HcclResult Run(CheckerOpParam &checkerOpParam, TopoMeta &topoMeta, DavidAlgConfig &config);
+    HcclResult Run(CheckerOpParam& checkerOpParam, TopoMeta& topoMeta, DavidAlgConfig& config);
 };
 
 // 将CCU的task序列转换为CCU子图
 HcclResult GenCcuGraph(TaskNode* dummyStart);
-TaskNode* UpdateNodeForCcuGraph(TaskNode *node,  std::set<TaskNode *>& simulatedNodes);
+TaskNode* UpdateNodeForCcuGraph(TaskNode* node, std::set<TaskNode*>& simulatedNodes);
 TaskNodePtr GetCcuTaskHead(TaskNodePtr node);
 // 拷贝ccu子图节点
-HcclResult CopyCcuSubGraphNode(TaskStub *originCcu, TaskStub **newCcu,
-    std::vector<std::pair<TaskStubPtr, TaskStubPtr>> &ccuGraphs, std::vector<CcuOri2NewNodeMap> &AllOri2NewNodeMap);
+HcclResult CopyCcuSubGraphNode(
+    TaskStub* originCcu, TaskStub** newCcu, std::vector<std::pair<TaskStubPtr, TaskStubPtr>>& ccuGraphs,
+    std::vector<CcuOri2NewNodeMap>& AllOri2NewNodeMap);
 // 拷贝ccu子图连接关系
-HcclResult CopyCcuSubGraphConnection(std::vector<std::pair<TaskStubPtr, TaskStubPtr>> &ccuGraphs,
-    const std::vector<CcuOri2NewNodeMap> &AllOri2NewNodeMap);
-}
+HcclResult CopyCcuSubGraphConnection(
+    std::vector<std::pair<TaskStubPtr, TaskStubPtr>>& ccuGraphs,
+    const std::vector<CcuOri2NewNodeMap>& AllOri2NewNodeMap);
+} // namespace Hccl
 
 #endif

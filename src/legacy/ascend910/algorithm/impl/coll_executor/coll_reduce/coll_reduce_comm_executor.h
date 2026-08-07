@@ -13,22 +13,19 @@
 #include "coll_reduce_executor.h"
 namespace hccl {
 class CollReduceCommExecutor : public CollReduceExecutor {
-
 public:
-    CollReduceCommExecutor(const HcclDispatcher dispatcher,
-    std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollReduceCommExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceCommExecutor() override = default;
 
 private:
     /* *************** 资源计算 *************** */
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcCombinedCommInfo(TransportMemType inputType,
-        TransportMemType outputType,
-        std::vector<LevelNSubCommTransport>& opTransport);
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcCombinedCommInfo(
+        TransportMemType inputType, TransportMemType outputType, std::vector<LevelNSubCommTransport>& opTransport);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
 
     /* *************** 算法编排 *************** */
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 };
 
 } // namespace hccl

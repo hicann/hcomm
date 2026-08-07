@@ -35,30 +35,31 @@ public:
     RankInfoDetect();
     ~RankInfoDetect();
 
-    void SetupServer(HcclRootHandleV2 &rootHandle);
-    void SetupAgent(u32 rankSize, u32 rankId, const HcclRootHandleV2 &rootHandle);
-    void GetRankTable(RankTableInfo &ranktable) const;
+    void SetupServer(HcclRootHandleV2& rootHandle);
+    void SetupAgent(u32 rankSize, u32 rankId, const HcclRootHandleV2& rootHandle);
+    void GetRankTable(RankTableInfo& ranktable) const;
     void WaitComplete(u32 listenPort, u32 listenStatus) const;
 
 private:
-    s32                       devLogicId_{0};
-    s32                       userDevId_{0};
-    u32                       devPhyId_{0};
-    RankTableInfo             rankTable_{};
-    IpAddress                 hostIp_{};
-    u32                       hostPort_{HCCL_INVALID_PORT};
+    s32 devLogicId_{0};
+    s32 userDevId_{0};
+    u32 devPhyId_{0};
+    RankTableInfo rankTable_{};
+    IpAddress hostIp_{};
+    u32 hostPort_{HCCL_INVALID_PORT};
     vector<RaSocketWhitelist> wlistInfo_{};
-    std::string               identifier_{};
+    std::string identifier_{};
     std::shared_ptr<RankInfoDetectClient> rankInfoDetectClient;
     std::unique_ptr<std::thread> serviceThreadPtr_{nullptr};
-    void SetupRankInfoDetectService(shared_ptr<Socket> serverSocket, s32 devLogicId, u32 devPhyId,
-                                                       std::string identifier, vector<RaSocketWhitelist> wlistInfo);
+    void SetupRankInfoDetectService(
+        shared_ptr<Socket> serverSocket, s32 devLogicId, u32 devPhyId, std::string identifier,
+        vector<RaSocketWhitelist> wlistInfo);
     std::shared_ptr<Socket> ServerInit();
-    std::shared_ptr<Socket> ClientInit(const HcclRootHandleV2 &rootHandle);
-    void                    AddHostSocketWhitelist(SocketHandle &socketHandle, const std::vector<IpAddress> &hostSocketWlist);
-    u32                     GetHostListenPort();
-    void                    GetRootHandle(HcclRootHandleV2 &rootHandle);
-    SocketHandle            GetHostSocketHandle();
+    std::shared_ptr<Socket> ClientInit(const HcclRootHandleV2& rootHandle);
+    void AddHostSocketWhitelist(SocketHandle& socketHandle, const std::vector<IpAddress>& hostSocketWlist);
+    u32 GetHostListenPort();
+    void GetRootHandle(HcclRootHandleV2& rootHandle);
+    SocketHandle GetHostSocketHandle();
     void JoinServiceThread();
 
     static UniversalConcurrentMap<u32, u32> g_detectServerStatus_;

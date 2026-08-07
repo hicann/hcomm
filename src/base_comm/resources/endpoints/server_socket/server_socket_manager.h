@@ -26,7 +26,8 @@ namespace hcomm {
 
 class ServerSocketManager {
 public:
-    static ServerSocketManager& GetInstance() {
+    static ServerSocketManager& GetInstance()
+    {
         static ServerSocketManager instance;
         return instance;
     }
@@ -34,11 +35,13 @@ public:
     ServerSocketManager& operator=(const ServerSocketManager&) = delete;
     ServerSocketManager(ServerSocketManager&&) = delete;
     ServerSocketManager& operator=(ServerSocketManager&&) = delete;
-    
+
     ~ServerSocketManager() {};
 
-    HcclResult ServerSocketStartListen(const Hccl::PortData& localPort, const Hccl::NicType nicType, const uint32_t devPhyId, uint32_t *port);
-    HcclResult ServerSocketStopListen(const Hccl::PortData& localPort, const Hccl::NicType nicType, const uint32_t port);
+    HcclResult ServerSocketStartListen(
+        const Hccl::PortData& localPort, const Hccl::NicType nicType, const uint32_t devPhyId, uint32_t* port);
+    HcclResult
+    ServerSocketStopListen(const Hccl::PortData& localPort, const Hccl::NicType nicType, const uint32_t port);
     void DeInit(u32 devPhyId);
 
 private:
@@ -48,16 +51,18 @@ private:
         (void)Hccl::SocketHandleManager::GetInstance();
         (void)Hccl::HostSocketHandleManager::GetInstance();
     };
-    HcclResult DeviceSocketListen(const Hccl::PortData& localPort, const uint32_t devPhyId, uint32_t *port);
-    HcclResult HostSocketListen(const Hccl::PortData& localPort, const uint32_t devPhyId, uint32_t *port);
+    HcclResult DeviceSocketListen(const Hccl::PortData& localPort, const uint32_t devPhyId, uint32_t* port);
+    HcclResult HostSocketListen(const Hccl::PortData& localPort, const uint32_t devPhyId, uint32_t* port);
     HcclResult DeviceSocketStopListen(const Hccl::PortData& localPort, const uint32_t port);
     HcclResult HostSocketStopListen(const Hccl::PortData& localPort, const uint32_t port);
     void DeInitDeviceSockets(u32 devPhyId);
     void DeInitHostSockets(u32 devPhyId);
 
     // PortData : {ListenPort : {Socket, Count}}
-    std::unordered_map<Hccl::PortData, std::unordered_map<uint32_t, std::pair<std::unique_ptr<Hccl::Socket>, uint32_t>>> deviceServerSocketMap_{};
-    std::unordered_map<Hccl::PortData, std::unordered_map<uint32_t, std::pair<std::unique_ptr<Hccl::Socket>, uint32_t>>> hostServerSocketMap_{};
+    std::unordered_map<Hccl::PortData, std::unordered_map<uint32_t, std::pair<std::unique_ptr<Hccl::Socket>, uint32_t>>>
+        deviceServerSocketMap_{};
+    std::unordered_map<Hccl::PortData, std::unordered_map<uint32_t, std::pair<std::unique_ptr<Hccl::Socket>, uint32_t>>>
+        hostServerSocketMap_{};
     std::unique_ptr<Hccl::SocketManager> socketMgrCompat_;
     std::mutex hostMutex_{};
     std::mutex deviceMutex_{};

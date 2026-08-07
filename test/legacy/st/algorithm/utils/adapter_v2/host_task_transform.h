@@ -24,12 +24,11 @@ using namespace checker;
 
 namespace Hccl {
 
-    HcclResult GenCollAlgOperator(CollAlgOperator &op, CheckerOpParam &checkerOpParam);
-    HcclResult GenCollAlgParams(CollAlgParams &params, CheckerOpParam &checkerOpParam, DavidAlgConfig &config);
-    HcclResult HcclDataSlice2CheckerDataSlice(Hccl::DataSlice &dataSlice, checker::DataSlice &checkerDataSlice);
-    HcclResult TransformIns2Task(const Instruction &ins, RankId rankId, QId qId);
+HcclResult GenCollAlgOperator(CollAlgOperator& op, CheckerOpParam& checkerOpParam);
+HcclResult GenCollAlgParams(CollAlgParams& params, CheckerOpParam& checkerOpParam, DavidAlgConfig& config);
+HcclResult HcclDataSlice2CheckerDataSlice(Hccl::DataSlice& dataSlice, checker::DataSlice& checkerDataSlice);
+HcclResult TransformIns2Task(const Instruction& ins, RankId rankId, QId qId);
 
-
-}// namespace Hccl
+} // namespace Hccl
 
 #endif

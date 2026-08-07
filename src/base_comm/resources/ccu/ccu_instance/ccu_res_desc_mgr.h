@@ -24,15 +24,15 @@ class CcuResDescMgr {
 public:
     CcuResDescMgr() = default;
     ~CcuResDescMgr() = default;
-    CcuResDescMgr(const CcuResDescMgr &) = delete;
-    CcuResDescMgr &operator=(const CcuResDescMgr &) = delete;
+    CcuResDescMgr(const CcuResDescMgr&) = delete;
+    CcuResDescMgr& operator=(const CcuResDescMgr&) = delete;
 
-    CcuResult Create(uint32_t dieId, HcommCcuResDescHandle &handle);
-    const CcuResDesc *Get(HcommCcuResDescHandle handle) const;
+    CcuResult Create(uint32_t dieId, HcommCcuResDescHandle& handle);
+    const CcuResDesc* Get(HcommCcuResDescHandle handle) const;
     CcuResult Destroy(HcommCcuResDescHandle handle);
     CcuResult SetResNum(HcommCcuResDescHandle handle, ResType resType, uint32_t resNum);
-    CcuResult QueryResNum(HcommCcuResDescHandle handle,  ResType resType, uint32_t &resNum) const;
-    CcuResult QueryDieId(HcommCcuResDescHandle handle, uint32_t &dieId) const;
+    CcuResult QueryResNum(HcommCcuResDescHandle handle, ResType resType, uint32_t& resNum) const;
+    CcuResult QueryDieId(HcommCcuResDescHandle handle, uint32_t& dieId) const;
     CcuResult Deinit();
 
     // 在锁内遍历资源类型 → 查询容量 → 收集区间 → 扫描最大连续 → 写入 desc
@@ -42,13 +42,13 @@ private:
     using DescMap = std::unordered_map<HcommCcuResDescHandle, std::unique_ptr<CcuResDesc>>;
     using ConstDescIterator = DescMap::const_iterator;
 
-    CcuResult FindDesc(HcommCcuResDescHandle handle, const char *funcName, ConstDescIterator &it) const;
+    CcuResult FindDesc(HcommCcuResDescHandle handle, const char* funcName, ConstDescIterator& it) const;
 
     mutable std::shared_timed_mutex descMapMutex_;
     HcommCcuResDescHandle nextHandle_{0};
     DescMap descMap_{};
 };
 
-}  // namespace hcomm
+} // namespace hcomm
 
-#endif  // HCOMM_CCU_RES_DESC_MGR_H
+#endif // HCOMM_CCU_RES_DESC_MGR_H

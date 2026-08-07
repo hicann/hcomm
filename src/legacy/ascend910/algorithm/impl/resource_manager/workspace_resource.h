@@ -22,48 +22,48 @@ namespace hccl {
 class WorkspaceResourceImpl;
 class WorkspaceResource {
 public:
-    WorkspaceResource(u32 devicePhyId, s32 deviceLogicId, CCLBufferManager *cclBufferManagerPtr = nullptr);
+    WorkspaceResource(u32 devicePhyId, s32 deviceLogicId, CCLBufferManager* cclBufferManagerPtr = nullptr);
     ~WorkspaceResource();
 
-    HcclResult GetWorkspaceMemSize(const std::string &opType, u64 count,
-        HcclDataType dataType, u32 rankSize, u64 &memSize, DevType deviceType) const;
+    HcclResult GetWorkspaceMemSize(
+        const std::string& opType, u64 count, HcclDataType dataType, u32 rankSize, u64& memSize,
+        DevType deviceType) const;
 
     // 基于 tag 注册 Master Stream
-    HcclResult RegisterMaster(const std::string &tag, Stream stream);
+    HcclResult RegisterMaster(const std::string& tag, Stream stream);
 
     // 基于 tag 初始设置资源，包含 Stream 资源 和 DeviceMem 资源
-    HcclResult SetWorkspaceResource(const std::string &tag, void *memPtr,
-        u64 &maxSize, std::vector<rtStream_t> &stream);
+    HcclResult
+    SetWorkspaceResource(const std::string& tag, void* memPtr, u64& maxSize, std::vector<rtStream_t>& stream);
 
     // 基于 tag 销毁资源，包含 Stream 资源 和 DeviceMem 资源
-    void DestroyWorkspaceResource(const std::string &tag);
+    void DestroyWorkspaceResource(const std::string& tag);
 
     // 销毁 Workspace 全局资源，包含 Stream 资源 和 DeviceMem 资源
     void DestroyWorkspaceResource();
 
     // 基于 tag 批量分配 Stream 资源
-    std::vector<Stream> AllocSlaveStreams(const std::string &tag, u32 num);
+    std::vector<Stream> AllocSlaveStreams(const std::string& tag, u32 num);
 
     // 基于 tag 销毁 Stream 资源
-    HcclResult DestroyStream(const std::string &tag);
+    HcclResult DestroyStream(const std::string& tag);
 
     // 基于 tag 分配 DeviceMem 资源
-    DeviceMem AllocDeviceMem(const std::string &tag, u64 size);
+    DeviceMem AllocDeviceMem(const std::string& tag, u64 size);
 
     // 基于 tag 销毁 DeviceMem 资源
-    HcclResult DestroyDeviceMem(const std::string &tag);
+    HcclResult DestroyDeviceMem(const std::string& tag);
 
-    HcclResult CreateOpBasedResources(const HcclCMDType &opType, const std::string &tag,
-        const HcomCollOpInfo &opInfo);
+    HcclResult CreateOpBasedResources(const HcclCMDType& opType, const std::string& tag, const HcomCollOpInfo& opInfo);
 
-    HcclResult CreateRemoteOpBasedResources(u64 memSize, const std::string &tag);
+    HcclResult CreateRemoteOpBasedResources(u64 memSize, const std::string& tag);
 
-    HcclResult CreateOrUpdateRemoteOpBasedResources(u64 memSize, const std::string &tag);
+    HcclResult CreateOrUpdateRemoteOpBasedResources(u64 memSize, const std::string& tag);
 
-    HcclResult DestroyRemoteOpBasedMem(const std::string &tag);
-    
+    HcclResult DestroyRemoteOpBasedMem(const std::string& tag);
+
 private:
     std::unique_ptr<WorkspaceResourceImpl> pimpl_;
 };
-}  // namespace hccl
+} // namespace hccl
 #endif /* WORKSPACE_RESOURCE_H */

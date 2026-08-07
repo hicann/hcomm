@@ -14,16 +14,15 @@
 
 class OpBaseV2Test : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         BaseInit::SetUp();
         UT_USE_1SERVER_1RANK_AS_DEFAULT;
-        MOCKER_CPP(GetExternalInputHcclEnableEntryLog)
-            .stubs()
-            .with(mockcpp::any())
-            .will(returnValue(true));
+        MOCKER_CPP(GetExternalInputHcclEnableEntryLog).stubs().with(mockcpp::any()).will(returnValue(true));
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }
@@ -62,9 +61,7 @@ TEST_F(OpBaseV2Test, Ut_HcclTaskRegisterProfV2_When_Normal_Expect_ReturnIsHCCL_S
         return HCCL_SUCCESS;
     };
     // Mock TaskService::TaskProfRegister返回成功
-    MOCKER_CPP(&Hccl::TaskService::TaskProfRegister)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::TaskService::TaskProfRegister).stubs().will(returnValue(HCCL_SUCCESS));
     HcclResult ret = HcclTaskRegisterProfV2(comm, callback);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     Ut_Comm_Destroy(comm);
@@ -76,9 +73,7 @@ TEST_F(OpBaseV2Test, Ut_HcclTaskRegisterProfV2_When_TaskProfRegisterFails_Expect
     Hccl::ProfCallbackTemplate callback = [](const Hccl::TaskParam&, uint64_t) -> HcclResult {
         return HCCL_SUCCESS;
     };
-    MOCKER_CPP(&Hccl::TaskService::TaskProfRegister)
-        .stubs()
-        .will(returnValue(HCCL_E_INTERNAL));
+    MOCKER_CPP(&Hccl::TaskService::TaskProfRegister).stubs().will(returnValue(HCCL_E_INTERNAL));
     HcclResult ret = HcclTaskRegisterProfV2(comm, callback);
     EXPECT_EQ(ret, HCCL_E_INTERNAL);
     Ut_Comm_Destroy(comm);

@@ -16,30 +16,25 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepLocWaitNotify : public CcuRepBase {
-public:
-    CcuRepLocWaitNotify(CcuInsGeneratorBase* insGenPtr, const LocalNotify &notify, const uint32_t mask, bool isProfiling=true);
-    bool Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
-    uint32_t GetMask() { return mask_; };
-    uint16_t GetNotifyId() { return notify_.Id(); };
+    class CcuRepLocWaitNotify : public CcuRepBase {
+    public:
+        CcuRepLocWaitNotify(
+            CcuInsGeneratorBase* insGenPtr, const LocalNotify& notify, const uint32_t mask, bool isProfiling = true);
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
+        uint32_t GetMask() { return mask_; };
+        uint16_t GetNotifyId() { return notify_.Id(); };
 
-    LocalNotify GetNotify()
-    {
-        return notify_;
-    }
+        LocalNotify GetNotify() { return notify_; }
 
-    bool GetIsProfiling()
-    {
-        return isProfiling_;
-    }
+        bool GetIsProfiling() { return isProfiling_; }
 
-private:
-    CcuInsGeneratorBase* insGenPtr{nullptr};
-    LocalNotify notify_{};
-    uint32_t mask_{0};
-    bool isProfiling_{true};
-};
+    private:
+        CcuInsGeneratorBase* insGenPtr{nullptr};
+        LocalNotify notify_{};
+        uint32_t mask_{0};
+        bool isProfiling_{true};
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

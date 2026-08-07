@@ -22,12 +22,16 @@
 namespace hccl {
 class P2PMgmt {
 public:
-    static P2PMgmt &Instance();
+    static P2PMgmt& Instance();
     HcclResult EnableP2P(std::vector<uint32_t> remoteDevices);
     HcclResult DisableP2P(std::vector<uint32_t> remoteDevices);
-    HcclResult WaitP2PEnabled(std::vector<uint32_t> remoteDevices, std::function<bool()> needStop = []() { return false; });
+    HcclResult WaitP2PEnabled(
+        std::vector<uint32_t> remoteDevices, std::function<bool()> needStop = []() {
+            return false;
+        });
     HcclResult SetStopFlag(bool value);
     bool GetStopFlag();
+
 private:
     explicit P2PMgmt();
     ~P2PMgmt();
@@ -35,12 +39,17 @@ private:
     HcclResult EnableP2P(uint32_t remoteDevicePhysicID);
     HcclResult DisableAllP2P();
     HcclResult DisableP2P(uint32_t localDeviceLogicID, uint32_t remoteDevicePhysicID);
-    HcclResult WaitP2PEnabled(uint32_t remoteDevicePhysicID, std::function<bool()> needStop = []() { return false; });
+    HcclResult WaitP2PEnabled(
+        uint32_t remoteDevicePhysicID, std::function<bool()> needStop = []() {
+            return false;
+        });
 
-    HcclResult CheckP2P(uint32_t remoteDevicePhysicID, bool &enabled);
-    HcclResult WaitP2PConnected(int32_t localDeviceLogicID, uint32_t remoteDevicePhysicID,
-        std::function<bool()> needStop = []() { return false; });
-    HcclResult CheckMarsterId(uint32_t remoteDevicePhysicID, uint32_t localDevicePhysicID, bool &isMarsterIdDiff);
+    HcclResult CheckP2P(uint32_t remoteDevicePhysicID, bool& enabled);
+    HcclResult WaitP2PConnected(
+        int32_t localDeviceLogicID, uint32_t remoteDevicePhysicID, std::function<bool()> needStop = []() {
+            return false;
+        });
+    HcclResult CheckMarsterId(uint32_t remoteDevicePhysicID, uint32_t localDevicePhysicID, bool& isMarsterIdDiff);
     bool IsNeedEstablishP2Pconnection(uint32_t remoteDevicePhysicID);
     bool IsStandardCardFor910B(std::vector<uint32_t>& remoteDevicePhysicIDs);
 

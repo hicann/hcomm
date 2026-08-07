@@ -14,53 +14,58 @@ namespace hcomm {
 
 namespace CcuRep {
 
-class FuncCall {
-public:
-    FuncCall(CcuRepContext *context, std::string label);
-    FuncCall(CcuRepContext *context, const Variable &funcAddr);
+    class FuncCall {
+    public:
+        FuncCall(CcuRepContext* context, std::string label);
+        FuncCall(CcuRepContext* context, const Variable& funcAddr);
 
-    template <typename... Arguments> FuncCall &operator()(const Arguments &...args)
-    {
-        SetArgHelper(args...);
-        AppendToContext();
-        return *this;
-    }
+        template <typename... Arguments>
+        FuncCall& operator()(const Arguments&... args)
+        {
+            SetArgHelper(args...);
+            AppendToContext();
+            return *this;
+        }
 
-    FuncCall &operator()()
-    {
-        AppendToContext();
-        return *this;
-    }
+        FuncCall& operator()()
+        {
+            AppendToContext();
+            return *this;
+        }
 
-    void AppendToContext();
+        void AppendToContext();
 
-    template <typename T> void SetInArg(T &&arg)
-    {
-        repFuncCall->SetInArg(std::forward<T>(arg));
-    }
+        template <typename T>
+        void SetInArg(T&& arg)
+        {
+            repFuncCall->SetInArg(std::forward<T>(arg));
+        }
 
-    template <typename T> void SetOutArg(T &&arg)
-    {
-        repFuncCall->SetOutArg(std::forward<T>(arg));
-    }
+        template <typename T>
+        void SetOutArg(T&& arg)
+        {
+            repFuncCall->SetOutArg(std::forward<T>(arg));
+        }
 
-private:
-    template <typename First> void SetArgHelper(const First &first)
-    {
-        repFuncCall->SetInArg(first);
-    }
+    private:
+        template <typename First>
+        void SetArgHelper(const First& first)
+        {
+            repFuncCall->SetInArg(first);
+        }
 
-    template <typename First, typename... Rest> void SetArgHelper(const First &first, const Rest &...rest)
-    {
-        repFuncCall->SetInArg(first);
-        SetArgHelper(rest...);
-    }
+        template <typename First, typename... Rest>
+        void SetArgHelper(const First& first, const Rest&... rest)
+        {
+            repFuncCall->SetInArg(first);
+            SetArgHelper(rest...);
+        }
 
-    CcuRepContext *context{nullptr};
-    std::string    label;
+        CcuRepContext* context{nullptr};
+        std::string label;
 
-    std::shared_ptr<CcuRepFuncCall> repFuncCall{nullptr};
-};
+        std::shared_ptr<CcuRepFuncCall> repFuncCall{nullptr};
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

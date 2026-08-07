@@ -22,7 +22,8 @@ using namespace HcclSim;
 #undef private
 class StartCommandTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         app_ = std::make_unique<CLI::App>("test");
         cmd_ = std::make_unique<StartCommand>();
         // Save and reset global state
@@ -32,7 +33,8 @@ protected:
         g_hcclVmLevel = 2;
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         // Restore global state
         g_hcclVmBashFlag = savedBashFlag_;
         g_hcclVmLevel = savedLevel_;
@@ -44,25 +46,26 @@ protected:
     std::uint32_t savedLevel_;
 };
 
-TEST_F(StartCommandTest, StaticName_ShouldReturnStart) {
-    EXPECT_EQ(StartCommand::StaticName(), "start");
-}
+TEST_F(StartCommandTest, StaticName_ShouldReturnStart) { EXPECT_EQ(StartCommand::StaticName(), "start"); }
 
-TEST_F(StartCommandTest, Setup_RegistersStartSubcommand) {
+TEST_F(StartCommandTest, Setup_RegistersStartSubcommand)
+{
     cmd_->Setup(*app_);
     auto sub = app_->get_subcommand("start");
     EXPECT_NE(sub, nullptr);
     EXPECT_EQ(sub->get_name(), "start");
 }
 
-TEST_F(StartCommandTest, Setup_StartSubcommandDescription) {
+TEST_F(StartCommandTest, Setup_StartSubcommandDescription)
+{
     cmd_->Setup(*app_);
     auto start = app_->get_subcommand("start");
     ASSERT_NE(start, nullptr);
     EXPECT_FALSE(std::string(start->get_description()).empty());
 }
 
-TEST_F(StartCommandTest, Setup_HasConfigFileOption) {
+TEST_F(StartCommandTest, Setup_HasConfigFileOption)
+{
     cmd_->Setup(*app_);
     auto start = app_->get_subcommand("start");
     ASSERT_NE(start, nullptr);
@@ -70,7 +73,8 @@ TEST_F(StartCommandTest, Setup_HasConfigFileOption) {
     EXPECT_GE(opts.size(), 1u);
 }
 
-TEST_F(StartCommandTest, Setup_HasLevelOption) {
+TEST_F(StartCommandTest, Setup_HasLevelOption)
+{
     cmd_->Setup(*app_);
     auto start = app_->get_subcommand("start");
     ASSERT_NE(start, nullptr);
@@ -85,7 +89,8 @@ TEST_F(StartCommandTest, Setup_HasLevelOption) {
     EXPECT_TRUE(hasLevel);
 }
 
-TEST_F(StartCommandTest, Setup_ConfigFileOptionIsRequired) {
+TEST_F(StartCommandTest, Setup_ConfigFileOptionIsRequired)
+{
     cmd_->Setup(*app_);
     auto start = app_->get_subcommand("start");
     ASSERT_NE(start, nullptr);
@@ -100,7 +105,8 @@ TEST_F(StartCommandTest, Setup_ConfigFileOptionIsRequired) {
     EXPECT_TRUE(foundRequired);
 }
 
-TEST_F(StartCommandTest, ParseStart_Help) {
+TEST_F(StartCommandTest, ParseStart_Help)
+{
     cmd_->Setup(*app_);
     try {
         app_->parse("test start --help", true);
@@ -111,12 +117,14 @@ TEST_F(StartCommandTest, ParseStart_Help) {
     }
 }
 
-TEST_F(StartCommandTest, ParseStart_WithoutConfigFile_Throws) {
+TEST_F(StartCommandTest, ParseStart_WithoutConfigFile_Throws)
+{
     cmd_->Setup(*app_);
     EXPECT_THROW(app_->parse("test start", true), CLI::RequiredError);
 }
 
-TEST_F(StartCommandTest, Execute_BashFlagTrue_LogsWarningAndReturns) {
+TEST_F(StartCommandTest, Execute_BashFlagTrue_LogsWarningAndReturns)
+{
     // When g_hcclVmBashFlag is true, Execute() should log a warning and return early
     // without calling ParseYamlTopo or other external functions
     g_hcclVmBashFlag = true;
@@ -133,7 +141,8 @@ TEST_F(StartCommandTest, Execute_BashFlagTrue_LogsWarningAndReturns) {
     EXPECT_TRUE(g_hcclVmBashFlag);
 }
 
-TEST_F(StartCommandTest, Execute_BashFlagFalse_ParsesAndCallsExternal) {
+TEST_F(StartCommandTest, Execute_BashFlagFalse_ParsesAndCallsExternal)
+{
     // When g_hcclVmBashFlag is false, Execute() will try to call ParseYamlTopo
     // which may fail, but we can at least verify the code path is exercised
     g_hcclVmBashFlag = false;
@@ -150,7 +159,8 @@ TEST_F(StartCommandTest, Execute_BashFlagFalse_ParsesAndCallsExternal) {
     EXPECT_FALSE(g_hcclVmBashFlag);
 }
 
-TEST_F(StartCommandTest, CommandRegistry_CreateAll_ContainsStartCommand) {
+TEST_F(StartCommandTest, CommandRegistry_CreateAll_ContainsStartCommand)
+{
     auto commands = CommandRegistry::CreateAll();
     bool found = false;
     for (const auto& cmd : commands) {
@@ -162,7 +172,8 @@ TEST_F(StartCommandTest, CommandRegistry_CreateAll_ContainsStartCommand) {
     EXPECT_TRUE(found);
 }
 
-TEST_F(StartCommandTest, Execute_BashFlagTrue_ReturnsEarly) {
+TEST_F(StartCommandTest, Execute_BashFlagTrue_ReturnsEarly)
+{
     g_hcclVmBashFlag = true;
     cmd_->Setup(*app_);
     try {
@@ -175,7 +186,8 @@ TEST_F(StartCommandTest, Execute_BashFlagTrue_ReturnsEarly) {
     EXPECT_TRUE(g_hcclVmBashFlag);
 }
 
-TEST_F(StartCommandTest, Parse_LevelOptionDefault) {
+TEST_F(StartCommandTest, Parse_LevelOptionDefault)
+{
     cmd_->Setup(*app_);
     g_hcclVmLevel = 2;
     try {
@@ -188,7 +200,8 @@ TEST_F(StartCommandTest, Parse_LevelOptionDefault) {
     EXPECT_EQ(g_hcclVmLevel, 2u);
 }
 
-TEST_F(StartCommandTest, Setup_ConfigFileOptionHasValidator) {
+TEST_F(StartCommandTest, Setup_ConfigFileOptionHasValidator)
+{
     cmd_->Setup(*app_);
     auto start = app_->get_subcommand("start");
     ASSERT_NE(start, nullptr);
@@ -197,7 +210,8 @@ TEST_F(StartCommandTest, Setup_ConfigFileOptionHasValidator) {
     EXPECT_NE(opt->get_validator(), nullptr);
 }
 
-TEST_F(StartCommandTest, Setup_ConfigFileOptionRequired) {
+TEST_F(StartCommandTest, Setup_ConfigFileOptionRequired)
+{
     cmd_->Setup(*app_);
     auto start = app_->get_subcommand("start");
     ASSERT_NE(start, nullptr);

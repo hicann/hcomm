@@ -20,45 +20,24 @@ using namespace hcomm;
 namespace {
 class FakeRegedMemMgrForEndpointUt : public RegedMemMgr {
 public:
-    HcclResult RegisterMemory(HcommMem, const char *, void **memHandle) override
+    HcclResult RegisterMemory(HcommMem, const char*, void** memHandle) override
     {
-        *memHandle = reinterpret_cast<void *>(0x42ULL);
+        *memHandle = reinterpret_cast<void*>(0x42ULL);
         return HCCL_SUCCESS;
     }
-    HcclResult UnregisterMemory(void *) override
-    {
-        return HCCL_SUCCESS;
-    }
-    HcclResult MemoryExport(const EndpointDesc, void *, void **, uint32_t *) override
-    {
-        return HCCL_SUCCESS;
-    }
-    HcclResult MemoryImport(const void *, uint32_t, HcommMem *) override
-    {
-        return HCCL_SUCCESS;
-    }
-    HcclResult MemoryUnimport(const void *, uint32_t) override
-    {
-        return HCCL_SUCCESS;
-    }
-    HcclResult GetAllMemHandles(void **, uint32_t *) override
-    {
-        return HCCL_SUCCESS;
-    }
+    HcclResult UnregisterMemory(void*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryExport(const EndpointDesc, void*, void**, uint32_t*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryImport(const void*, uint32_t, HcommMem*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryUnimport(const void*, uint32_t) override { return HCCL_SUCCESS; }
+    HcclResult GetAllMemHandles(void**, uint32_t*) override { return HCCL_SUCCESS; }
 };
-}
+} // namespace
 
 class CpuUrmaEndpointTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "CpuUrmaEndpointTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "CpuUrmaEndpointTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "CpuUrmaEndpointTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "CpuUrmaEndpointTest tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
@@ -69,7 +48,7 @@ protected:
         endpointDesc.commAddr.addr = localIp.GetBinaryAddress().addr;
         endpointDesc.loc.locType = ENDPOINT_LOC_TYPE_HOST;
         rdmaHandle = (void*)0x1000000;
-        
+
         MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_SUCCESS));
         MOCKER(hrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
         MOCKER(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(rdmaHandle));
@@ -116,7 +95,7 @@ TEST_F(CpuUrmaEndpointTest, Ut_When_RegisterMemory_Normal_Expect_HCCL_SUCCESS)
     endpoint->regedMemMgr_ = std::make_shared<FakeRegedMemMgrForEndpointUt>();
     HcommMem mem;
     mem.type = COMM_MEM_TYPE_HOST;
-    mem.addr = reinterpret_cast<void *>(0x1000U);
+    mem.addr = reinterpret_cast<void*>(0x1000U);
     mem.size = 10;
     void* memHandle = nullptr;
     EXPECT_EQ(endpoint->RegisterMemory(mem, "test", &memHandle), HCCL_SUCCESS);
@@ -139,7 +118,8 @@ TEST_F(CpuUrmaEndpointTest, Ut_When_ServerSocketGetListenPort_Normal_Expect_HCCL
     uint32_t port = 0;
     uint32_t portValue = 60001;
 
-    MOCKER_CPP(&hcomm::ServerSocketManager::ServerSocketStartListen).stubs()
+    MOCKER_CPP(&hcomm::ServerSocketManager::ServerSocketStartListen)
+        .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&portValue, sizeof(portValue)))
         .will(returnValue(HCCL_SUCCESS));
     EXPECT_EQ(endpoint->ServerSocketGetListenPort(&port), HCCL_SUCCESS);

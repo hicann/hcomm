@@ -11,16 +11,16 @@
 #include "log.h"
 
 namespace Hccl {
-InnerNetDevManager &InnerNetDevManager::GetInstance()
+InnerNetDevManager& InnerNetDevManager::GetInstance()
 {
     static InnerNetDevManager instance;
     return instance;
 }
 
-HcclResult InnerNetDevManager::AddDevice(const NetDevInfo &info, HcclNetDevice *&device)
+HcclResult InnerNetDevManager::AddDevice(const NetDevInfo& info, HcclNetDevice*& device)
 {
-    device = new(nothrow) HcclNetDevice(info);
-    if(device == nullptr) {
+    device = new (nothrow) HcclNetDevice(info);
+    if (device == nullptr) {
         HCCL_ERROR("new HcclNetDevice fail, devId[%u]", info.devId);
         return HCCL_E_PTR;
     }
@@ -28,8 +28,8 @@ HcclResult InnerNetDevManager::AddDevice(const NetDevInfo &info, HcclNetDevice *
     InnerNetDev* innerNetDev = nullptr;
     auto it = netDevMap_.find(info);
     if (it == netDevMap_.end()) {
-        innerNetDev = new(nothrow) InnerNetDev(info);
-        if(innerNetDev == nullptr || !innerNetDev->GetIsValid()) {
+        innerNetDev = new (nothrow) InnerNetDev(info);
+        if (innerNetDev == nullptr || !innerNetDev->GetIsValid()) {
             HCCL_ERROR("new InnerNetDev fail, devId[%u]", info.devId);
             if (innerNetDev != nullptr) {
                 delete innerNetDev;
@@ -49,7 +49,7 @@ HcclResult InnerNetDevManager::AddDevice(const NetDevInfo &info, HcclNetDevice *
     return HCCL_SUCCESS;
 }
 
-HcclResult InnerNetDevManager::RemoveDevice(const NetDevInfo &info)
+HcclResult InnerNetDevManager::RemoveDevice(const NetDevInfo& info)
 {
     auto cntIt = netDevCnt_.find(info);
     if (cntIt == netDevCnt_.end()) {
@@ -58,14 +58,14 @@ HcclResult InnerNetDevManager::RemoveDevice(const NetDevInfo &info)
     }
 
     cntIt->second--;
-    if (cntIt->second == 0) {          
+    if (cntIt->second == 0) {
         netDevMap_.erase(info);
         netDevCnt_.erase(cntIt);
     }
     return HCCL_SUCCESS;
 }
 
-HcclResult InnerNetDevManager::DeleteDevice(Hccl::HcclNetDevice *device)
+HcclResult InnerNetDevManager::DeleteDevice(Hccl::HcclNetDevice* device)
 {
     if (device == nullptr) {
         return HCCL_SUCCESS;

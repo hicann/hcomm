@@ -21,24 +21,26 @@ template <typename T>
 class LocalTensor {
 public:
     __aicore__ LocalTensor() = default;
-    __aicore__ LocalTensor(TPosition pos, void* ptr, uint32_t size)
-        : ptr_(static_cast<T*>(ptr)), size_(size) {}
-    __aicore__ LocalTensor(TPosition pos, uint32_t addr, uint32_t size)
-        : ptr_(reinterpret_cast<T*>(addr)), size_(size) {}
+    __aicore__ LocalTensor(TPosition pos, void* ptr, uint32_t size) : ptr_(static_cast<T*>(ptr)), size_(size) {}
+    __aicore__ LocalTensor(TPosition pos, uint32_t addr, uint32_t size) : ptr_(reinterpret_cast<T*>(addr)), size_(size)
+    {}
     __aicore__ ~LocalTensor() = default;
 
-    __aicore__ __inout_pipe__(S) void SetValue(const uint32_t index, const T value) const {
+    __aicore__ __inout_pipe__(S) void SetValue(const uint32_t index, const T value) const
+    {
         HCCL_VM_ERROR("LocalTensor SetValue not support !");
     }
 
-    __aicore__ __inout_pipe__(S) T GetValue(const uint32_t offset) const {
+    __aicore__ __inout_pipe__(S) T GetValue(const uint32_t offset) const
+    {
         if (offset >= size_) {
             HCCL_VM_ERROR("LocalTensor GetValue out-of-bounds, offset={:d}", offset);
         }
         return *(ptr_ + offset);
     }
 
-    __aicore__ LocalTensor operator[](const uint32_t offset) const {
+    __aicore__ LocalTensor operator[](const uint32_t offset) const
+    {
         if (offset >= size_) {
             HCCL_VM_ERROR("LocalTensor operator[] out-of-bounds, offset={:d}", offset);
         }
@@ -57,8 +59,8 @@ public:
 
 private:
     T* ptr_{nullptr};
-    uint32_t size_{0};  // 元素个数
+    uint32_t size_{0}; // 元素个数
 };
-}
+} // namespace AscendC
 
-#endif //AIV_LOCAL_TENSOR_STUB_H
+#endif // AIV_LOCAL_TENSOR_STUB_H

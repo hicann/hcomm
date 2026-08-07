@@ -18,9 +18,10 @@ namespace hccl {
 
 class CollCommAicpuDestroyFunc : public Hccl::DaemonFunc {
 public:
-    static CollCommAicpuDestroyFunc &GetInstance();
+    static CollCommAicpuDestroyFunc& GetInstance();
     ~CollCommAicpuDestroyFunc() override = default;
     void Call() override;
+
 private:
     HcclResult Process();
     CollCommAicpuDestroyFunc() = default;
@@ -30,6 +31,6 @@ private:
     bool stopCall_{false};
 };
 
-}
+} // namespace hccl
 
 #endif

@@ -16,6 +16,6 @@
 namespace hccl {
 constexpr u32 NSLBDP_PAIRWISE_MAXPHASE = 256;
 
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* * ALLTOALL_V_PAIRWISE_H */

@@ -20,16 +20,16 @@
 
 namespace hcomm {
 
-inline CcuResult ConvertHcommCcuResTypeToHcclResType(HcommCcuResType ccuResType, ResType &hcclResType)
+inline CcuResult ConvertHcommCcuResTypeToHcclResType(HcommCcuResType ccuResType, ResType& hcclResType)
 {
     static constexpr auto RES_TYPE_MAP = std::array{
-        ResType::LOOP,     // <- HCOMM_CCU_RES_TYPE_LOOP
-        ResType::MS,       // <- HCOMM_CCU_RES_TYPE_CCU_BUF
-        ResType::XN,       // <- HCOMM_CCU_RES_TYPE_VARIABLE
-        ResType::GSA,      // <- HCOMM_CCU_RES_TYPE_ADDRESS
-        ResType::CKE,      // <- HCOMM_CCU_RES_TYPE_EVENT
-        ResType::MISSION,  // <- HCOMM_CCU_RES_TYPE_CCU_THREAD
-        ResType::INS       // <- HCOMM_CCU_RES_TYPE_INSTRUCTION
+        ResType::LOOP,    // <- HCOMM_CCU_RES_TYPE_LOOP
+        ResType::MS,      // <- HCOMM_CCU_RES_TYPE_CCU_BUF
+        ResType::XN,      // <- HCOMM_CCU_RES_TYPE_VARIABLE
+        ResType::GSA,     // <- HCOMM_CCU_RES_TYPE_ADDRESS
+        ResType::CKE,     // <- HCOMM_CCU_RES_TYPE_EVENT
+        ResType::MISSION, // <- HCOMM_CCU_RES_TYPE_CCU_THREAD
+        ResType::INS      // <- HCOMM_CCU_RES_TYPE_INSTRUCTION
     };
     const int32_t resTypeIndex = static_cast<int32_t>(ccuResType);
     if ((resTypeIndex < 0) || (static_cast<std::size_t>(resTypeIndex) >= RES_TYPE_MAP.size())) {
@@ -39,19 +39,18 @@ inline CcuResult ConvertHcommCcuResTypeToHcclResType(HcommCcuResType ccuResType,
     return CcuResult::CCU_SUCCESS;
 }
 
-inline CcuResult ConvertHcclResTypeToHcommCcuResType(ResType hcclResType, HcommCcuResType &ccuResType)
+inline CcuResult ConvertHcclResTypeToHcommCcuResType(ResType hcclResType, HcommCcuResType& ccuResType)
 {
-    static constexpr std::array<HcommCcuResType, static_cast<std::size_t>(ResType::__COUNT__)>
-        RES_TYPE_MAP = {
-            HCOMM_CCU_RES_TYPE_LOOP,         // <- ResType::LOOP
-            HCOMM_CCU_RES_TYPE_CCU_BUF,      // <- ResType::MS
-            HCOMM_CCU_RES_TYPE_EVENT,        // <- ResType::CKE
-            HCOMM_CCU_RES_TYPE_VARIABLE,     // <- ResType::XN
-            HCOMM_CCU_RES_TYPE_INVALID,      // <- ResType::COUNT_XN
-            HCOMM_CCU_RES_TYPE_ADDRESS,      // <- ResType::GSA
-            HCOMM_CCU_RES_TYPE_INSTRUCTION,  // <- ResType::INS
-            HCOMM_CCU_RES_TYPE_CCU_THREAD    // <- ResType::MISSION
-        };
+    static constexpr std::array<HcommCcuResType, static_cast<std::size_t>(ResType::__COUNT__)> RES_TYPE_MAP = {
+        HCOMM_CCU_RES_TYPE_LOOP,        // <- ResType::LOOP
+        HCOMM_CCU_RES_TYPE_CCU_BUF,     // <- ResType::MS
+        HCOMM_CCU_RES_TYPE_EVENT,       // <- ResType::CKE
+        HCOMM_CCU_RES_TYPE_VARIABLE,    // <- ResType::XN
+        HCOMM_CCU_RES_TYPE_INVALID,     // <- ResType::COUNT_XN
+        HCOMM_CCU_RES_TYPE_ADDRESS,     // <- ResType::GSA
+        HCOMM_CCU_RES_TYPE_INSTRUCTION, // <- ResType::INS
+        HCOMM_CCU_RES_TYPE_CCU_THREAD   // <- ResType::MISSION
+    };
     const auto resTypeIndex = static_cast<std::size_t>(static_cast<ResType::Value>(hcclResType));
     if ((resTypeIndex >= RES_TYPE_MAP.size()) || (RES_TYPE_MAP[resTypeIndex] == HCOMM_CCU_RES_TYPE_INVALID)) {
         return CcuResult::CCU_E_PARA;

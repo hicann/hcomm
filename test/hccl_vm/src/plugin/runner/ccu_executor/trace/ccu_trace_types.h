@@ -25,21 +25,26 @@ namespace CcuTrace {
 
 // ===== 指令分类枚举 =====
 enum class CcuInstrCategory : uint8_t {
-    LOAD = 0,       // 加载/存储/算术
-    TRANS = 1,      // 数据搬运
-    CONTROL = 2,    // 控制流
-    REDUCE = 3,     // 归约运算
+    LOAD = 0,    // 加载/存储/算术
+    TRANS = 1,   // 数据搬运
+    CONTROL = 2, // 控制流
+    REDUCE = 3,  // 归约运算
     UNKNOWN = 0xFF
 };
 
 inline const char* CcuInstrCategoryToString(CcuInstrCategory cat)
 {
     switch (cat) {
-        case CcuInstrCategory::LOAD: return "Load";
-        case CcuInstrCategory::TRANS: return "Trans";
-        case CcuInstrCategory::CONTROL: return "Control";
-        case CcuInstrCategory::REDUCE: return "Reduce";
-        default: return "Unknown";
+        case CcuInstrCategory::LOAD:
+            return "Load";
+        case CcuInstrCategory::TRANS:
+            return "Trans";
+        case CcuInstrCategory::CONTROL:
+            return "Control";
+        case CcuInstrCategory::REDUCE:
+            return "Reduce";
+        default:
+            return "Unknown";
     }
 }
 
@@ -62,7 +67,7 @@ struct CcuCkeRecord {
 
 struct CcuMsRecord {
     uint16_t id{0};
-    std::vector<uint8_t> data;  // 4KB 数据
+    std::vector<uint8_t> data; // 4KB 数据
 };
 
 struct CcuChannelRecord {
@@ -93,8 +98,8 @@ struct CcuCkeChange {
 
 struct CcuMsChange {
     uint16_t id{0};
-    uint64_t offset{0};       // 变化起始偏移
-    uint32_t length{0};       // 变化长度
+    uint64_t offset{0}; // 变化起始偏移
+    uint32_t length{0}; // 变化长度
     std::vector<uint8_t> dataBefore;
     std::vector<uint8_t> dataAfter;
 };
@@ -107,7 +112,7 @@ struct CcuResourceSnapshot {
     std::vector<CcuXnRecord> xnRecords;
     std::vector<CcuGsaRecord> gsaRecords;
     std::vector<CcuCkeRecord> ckeRecords;
-    std::vector<CcuMsRecord> msRecords;          // 可选，体积大
+    std::vector<CcuMsRecord> msRecords; // 可选，体积大
 };
 
 // ===== 资源变化增量（仅记录变化的部分） =====
@@ -119,11 +124,7 @@ struct CcuResourceDelta {
     std::vector<CcuCkeChange> ckeChanges;
     std::vector<CcuMsChange> msChanges;
 
-    bool IsEmpty() const
-    {
-        return xnChanges.empty() && gsaChanges.empty() && ckeChanges.empty()
-            && msChanges.empty();
-    }
+    bool IsEmpty() const { return xnChanges.empty() && gsaChanges.empty() && ckeChanges.empty() && msChanges.empty(); }
 };
 
 // ===== 执行上下文（Loop/Jump 相关） =====
@@ -164,7 +165,7 @@ struct CcuWaitInfo {
 struct CcuErrorInfo {
     bool hasError{false};
     std::string errorMessage;
-    std::string failPhase;       // "Parser" / "Run" / "Process"
+    std::string failPhase; // "Parser" / "Run" / "Process"
 };
 
 // ===== 跨 CCU 资源变更 =====
@@ -204,7 +205,7 @@ struct CcuCrossCcuChanges {
 
 struct CcuInstrTraceDetail {
     std::string typeName;
-    std::map<std::string, std::string> args;  // 运行时动态参数（Loop offset 后的值、SQE 参数值等）
+    std::map<std::string, std::string> args; // 运行时动态参数（Loop offset 后的值、SQE 参数值等）
     // 注意：不包含 describeText（指令描述存储在指令空间中，通过 instrId 索引）
 };
 
@@ -216,7 +217,7 @@ struct CcuInstrTraceDetail {
 
 struct CcuInstrSpaceEntry {
     uint16_t instrId{0};
-    std::string instrDescribe;                // 预计算的 Describe() 输出（静态，不含运行时值）
+    std::string instrDescribe; // 预计算的 Describe() 输出（静态，不含运行时值）
 };
 
 struct CcuInstrSpace {
@@ -235,7 +236,7 @@ struct CcuInstrSpace {
 struct CcuChannelSpace {
     int32_t rankId{0};
     uint16_t dieId{0};
-    std::vector<CcuChannelRecord> channels;  // channelId → (remoteRankId, remoteDieId)
+    std::vector<CcuChannelRecord> channels; // channelId → (remoteRankId, remoteDieId)
 };
 
 // ===== 单条指令的 trace 条目 =====
@@ -248,7 +249,7 @@ struct CcuTraceEntry {
     // CCU 归属 + 指令索引（三元组索引指令空间）
     int32_t rankId{0};
     uint16_t dieId{0};
-    uint32_t instrId{0};                       // 指令 ID，与 (rankId, dieId) 一起索引指令空间
+    uint32_t instrId{0}; // 指令 ID，与 (rankId, dieId) 一起索引指令空间
 
     // SQE 归属（引用 sqeTaskRegistry 中的 sqeTaskId）
     uint32_t sqeTaskId{0};
@@ -283,7 +284,7 @@ struct CcuTraceNonCcuEntry {
     uint32_t execRound{0};
     int32_t rankId{0};
     HccLTaskMetaType taskType{HccLTaskMetaType::CCU_GRAPH};
-    int32_t execResult{0};  // HcclVmResult 值（HCCL_SIM_SUCCESS = 0）
+    int32_t execResult{0}; // HcclVmResult 值（HCCL_SIM_SUCCESS = 0）
     std::string description;
 };
 
@@ -350,15 +351,15 @@ struct CcuTraceRun {
     CcuRunMetadata runMetadata;
     std::vector<CcuIdentity> ccuRegistry;
     std::vector<CcuSqeTask> sqeTaskRegistry;
-    
+
     // ===== 静态配置层（per CCU，初始化后不变）=====
-    std::vector<CcuInstrSpace> instrSpaces;               // 指令空间（per CCU，纯静态）
-    std::vector<CcuChannelSpace> channelSpaces;           // Channel 映射表（per CCU，纯静态）
-    
+    std::vector<CcuInstrSpace> instrSpaces;     // 指令空间（per CCU，纯静态）
+    std::vector<CcuChannelSpace> channelSpaces; // Channel 映射表（per CCU，纯静态）
+
     // ===== 动态执行层（运行时变化）=====
     std::vector<CcuTraceEntry> globalEntries;
     std::vector<CcuTraceNonCcuEntry> nonCcuEntries;
-    std::map<std::string, CcuResourceSnapshot> ccuFinalSnapshots;  // key: "rankId_dieId"
+    std::map<std::string, CcuResourceSnapshot> ccuFinalSnapshots; // key: "rankId_dieId"
     CcuRunSummary runSummary;
 };
 

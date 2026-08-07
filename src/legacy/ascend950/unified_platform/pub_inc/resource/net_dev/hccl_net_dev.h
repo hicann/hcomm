@@ -26,7 +26,7 @@ extern "C" {
  * @param[out] netDev 返回的网络设备句柄
  * @return 执行状态码 HcclResult
  */
-extern HcclResult HcclNetDevOpen(const HcclNetDevInfos *info, HcclNetDev *netDev);
+extern HcclResult HcclNetDevOpen(const HcclNetDevInfos* info, HcclNetDev* netDev);
 
 /**
  * @brief 关闭网络设备
@@ -41,7 +41,7 @@ extern HcclResult HcclNetDevClose(HcclNetDev netDev);
  * @param[out] addr 返回的地址信息结构
  * @return 执行状态码 HcclResult
  */
-extern HcclResult HcclNetDevGetAddr(HcclNetDev netDev, HcclAddress *addr);
+extern HcclResult HcclNetDevGetAddr(HcclNetDev netDev, HcclAddress* addr);
 
 /**
  * @brief 通过设备物理ID获取总线地址
@@ -49,7 +49,7 @@ extern HcclResult HcclNetDevGetAddr(HcclNetDev netDev, HcclAddress *addr);
  * @param[out] busAddr 返回的总线地址信息
  * @return 执行状态码 HcclResult
  */
-extern HcclResult HcclNetDevGetBusAddr(HcclDeviceId dstDevId, HcclAddress *busAddr);
+extern HcclResult HcclNetDevGetBusAddr(HcclDeviceId dstDevId, HcclAddress* busAddr);
 /**
  * @brief 通过设备物理ID获取nic地址
  * @param[in] devicePhyId 设备物理ID
@@ -57,7 +57,7 @@ extern HcclResult HcclNetDevGetBusAddr(HcclDeviceId dstDevId, HcclAddress *busAd
  * @param[out] addrNum 返回的地址数量
  * @return 执行状态码 HcclResult
  */
-extern HcclResult HcclNetDevGetNicAddr(int32_t devicePhyId, HcclAddress **addr, uint32_t *addrNum);
+extern HcclResult HcclNetDevGetNicAddr(int32_t devicePhyId, HcclAddress** addr, uint32_t* addrNum);
 
 #ifdef __cplusplus
 }

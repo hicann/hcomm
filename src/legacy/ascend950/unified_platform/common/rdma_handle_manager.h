@@ -24,10 +24,7 @@
 namespace Hccl {
 
 struct LinkProtoTypelHash {
-    size_t operator()(LinkProtoType t) const
-    {
-        return static_cast<size_t>(t);
-    }
+    size_t operator()(LinkProtoType t) const { return static_cast<size_t>(t); }
 };
 
 struct HandleInfo {
@@ -37,28 +34,30 @@ struct HandleInfo {
 
 class RdmaHandleManager {
 public:
-    static RdmaHandleManager &GetInstance();
+    static RdmaHandleManager& GetInstance();
 
     ~RdmaHandleManager();
 
-    RdmaHandle GetByAddr(u32 devPhyId, const LinkProtoType &localProtocolType, IpAddress &localIp, PortDeploymentType type);
-    RdmaHandle Get(u32 devPhyId, const PortData &localPort, LinkProtocol linkProtocol);
-    RdmaHandle GetByIp(u32 devPhyId, const IpAddress &localIp); // only support ccu create loop channel
-    JfcHandle  GetJfcHandle(RdmaHandle rdmaHandle, CqCreateInfo& cqInfo, HrtUbJfcMode jfcMode);
-    JfcHandle  GetJfcHandleAndCqInfo(RdmaHandle rdmaHandle, CqCreateInfo& cqInfo, HrtUbJfcMode jfcMode);
+    RdmaHandle
+    GetByAddr(u32 devPhyId, const LinkProtoType& localProtocolType, IpAddress& localIp, PortDeploymentType type);
+    RdmaHandle Get(u32 devPhyId, const PortData& localPort, LinkProtocol linkProtocol);
+    RdmaHandle GetByIp(u32 devPhyId, const IpAddress& localIp); // only support ccu create loop channel
+    JfcHandle GetJfcHandle(RdmaHandle rdmaHandle, CqCreateInfo& cqInfo, HrtUbJfcMode jfcMode);
+    JfcHandle GetJfcHandleAndCqInfo(RdmaHandle rdmaHandle, CqCreateInfo& cqInfo, HrtUbJfcMode jfcMode);
     std::pair<uint32_t, uint32_t> GetDieAndFuncId(RdmaHandle rdmaHandle);
     bool GetRtpEnable(RdmaHandle rdmaHandle);
 
-    std::pair<TokenIdHandle, uint32_t> GetTokenIdInfo(RdmaHandle rdmaHandle, const BufferKey<uintptr_t, u64> &bufKey);
-    void PutTokenIdInfo(RdmaHandle rdmaHandle, const BufferKey<uintptr_t, u64> &bufKey, TokenIdHandle tokenIdHandle);
-    RdmaHandleManager(const RdmaHandleManager &rdmaHandleManager) = delete;
-    RdmaHandleManager &operator=(const RdmaHandleManager &rdmaHandleManager) = delete;
+    std::pair<TokenIdHandle, uint32_t> GetTokenIdInfo(RdmaHandle rdmaHandle, const BufferKey<uintptr_t, u64>& bufKey);
+    void PutTokenIdInfo(RdmaHandle rdmaHandle, const BufferKey<uintptr_t, u64>& bufKey, TokenIdHandle tokenIdHandle);
+    RdmaHandleManager(const RdmaHandleManager& rdmaHandleManager) = delete;
+    RdmaHandleManager& operator=(const RdmaHandleManager& rdmaHandleManager) = delete;
     void DestroyAll();
     void DeInit(u32 devPhyId);
     bool IsHandleValid(RdmaHandle handle);
 
     HcclResult GetEidByIpv4Addr(const IpAddress& addr, IpAddress& eidAddr);
     void UboeIpv4ToEid(const IpAddress& ipV4Address, IpAddress& eidAddress, u32 devPhyId);
+
 private:
     std::mutex managerMutex;
     std::atomic<bool> destroyed{false};
@@ -84,17 +83,18 @@ private:
 
     RdmaHandleManager();
 
-    bool FindCachedJfcHandle(RdmaHandle rdmaHandle, HrtUbJfcMode jfcMode, JfcHandle &handle, CqCreateInfo &cqInfo);
+    bool FindCachedJfcHandle(RdmaHandle rdmaHandle, HrtUbJfcMode jfcMode, JfcHandle& handle, CqCreateInfo& cqInfo);
 
-    RdmaHandle Create(u32 devPhyId, const PortData &localPort);
-    RdmaHandle Create(u32 devPhyId, const LinkProtoType &localProtocolType, const IpAddress &localIp, PortDeploymentType type);
+    RdmaHandle Create(u32 devPhyId, const PortData& localPort);
+    RdmaHandle
+    Create(u32 devPhyId, const LinkProtoType& localProtocolType, const IpAddress& localIp, PortDeploymentType type);
 
-    void CollectHandlesToCleanup(u32 devPhyId, std::vector<HandleInfo> &handlesToCleanup);
+    void CollectHandlesToCleanup(u32 devPhyId, std::vector<HandleInfo>& handlesToCleanup);
     void CleanupJfcHandles(RdmaHandle handle);
     void CleanupRdmaHandleEntry(RdmaHandle handle);
     void CleanupUbHandleEntry(RdmaHandle handle);
     void CleanupAuxiliaryMaps(RdmaHandle handle);
-    void CleanupSingleHandle(const HandleInfo &info);
+    void CleanupSingleHandle(const HandleInfo& info);
 };
 
 } // namespace Hccl

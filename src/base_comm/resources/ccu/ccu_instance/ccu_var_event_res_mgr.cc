@@ -23,14 +23,16 @@
 
 namespace hcomm {
 
-CcuVarEventResMgr &CcuVarEventResMgr::GetInstance(const int32_t deviceLogicId)
+CcuVarEventResMgr& CcuVarEventResMgr::GetInstance(const int32_t deviceLogicId)
 {
     static CcuVarEventResMgr resMgrs[MAX_MODULE_DEVICE_NUM + 1];
 
     int32_t devLogicId = deviceLogicId;
     if (devLogicId < 0 || static_cast<uint32_t>(devLogicId) >= MAX_MODULE_DEVICE_NUM) {
-        HCCL_WARNING("[CcuVarEventResMgr][%s] use the backup device, devLogicId[%d] should be "
-            "less than %u.", __func__, devLogicId, MAX_MODULE_DEVICE_NUM);
+        HCCL_WARNING(
+            "[CcuVarEventResMgr][%s] use the backup device, devLogicId[%d] should be "
+            "less than %u.",
+            __func__, devLogicId, MAX_MODULE_DEVICE_NUM);
         devLogicId = MAX_MODULE_DEVICE_NUM;
     }
 
@@ -38,8 +40,7 @@ CcuVarEventResMgr &CcuVarEventResMgr::GetInstance(const int32_t deviceLogicId)
     return resMgrs[devLogicId];
 }
 
-CcuResult CcuVarEventResMgr::AllocFromPool(std::vector<ResInfo> &pool, uint32_t num,
-    std::vector<ResInfo> &out)
+CcuResult CcuVarEventResMgr::AllocFromPool(std::vector<ResInfo>& pool, uint32_t num, std::vector<ResInfo>& out)
 {
     for (auto it = pool.begin(); it != pool.end(); ++it) {
         if (it->num < num) {
@@ -53,7 +54,7 @@ CcuResult CcuVarEventResMgr::AllocFromPool(std::vector<ResInfo> &pool, uint32_t 
             pool.erase(it);
         } else {
             it->startId += num;
-            it->num     -= num;
+            it->num -= num;
         }
         return CCU_SUCCESS;
     }
@@ -61,9 +62,9 @@ CcuResult CcuVarEventResMgr::AllocFromPool(std::vector<ResInfo> &pool, uint32_t 
     return CCU_E_UNAVAIL;
 }
 
-void CcuVarEventResMgr::ReturnToPool(std::vector<ResInfo> &pool, const std::vector<ResInfo> &res)
+void CcuVarEventResMgr::ReturnToPool(std::vector<ResInfo>& pool, const std::vector<ResInfo>& res)
 {
-    for (const auto &info : res) {
+    for (const auto& info : res) {
         if (info.num == 0) {
             continue;
         }
@@ -71,7 +72,7 @@ void CcuVarEventResMgr::ReturnToPool(std::vector<ResInfo> &pool, const std::vect
     }
 }
 
-static std::vector<ResInfo> *SelectPool(CcuResRepository &resRepo, CcuVarEventType type, uint8_t dieId)
+static std::vector<ResInfo>* SelectPool(CcuResRepository& resRepo, CcuVarEventType type, uint8_t dieId)
 {
     switch (type) {
         case CcuVarEventType::VARIABLE:
@@ -84,7 +85,7 @@ static std::vector<ResInfo> *SelectPool(CcuResRepository &resRepo, CcuVarEventTy
 }
 
 // 由预约资源类型推导runtime资源类型，不支持的类型返回false
-static bool GetRtResType(CcuVarEventType type, rtDevResType_t &resType)
+static bool GetRtResType(CcuVarEventType type, rtDevResType_t& resType)
 {
     switch (type) {
         case CcuVarEventType::VARIABLE:
@@ -98,25 +99,27 @@ static bool GetRtResType(CcuVarEventType type, rtDevResType_t &resType)
     }
 }
 
-static CcuResult MapDevResAddress(uint8_t dieId, rtDevResType_t resType, uint32_t resId, uint64_t &va)
+static CcuResult MapDevResAddress(uint8_t dieId, rtDevResType_t resType, uint32_t resId, uint64_t& va)
 {
     rtDevResInfo resInfo{};
-    resInfo.dieId    = dieId;
+    resInfo.dieId = dieId;
     resInfo.procType = RT_PROCESS_CP1;
-    resInfo.resType  = resType;
-    resInfo.resId    = resId;
-    resInfo.flag     = 0;
+    resInfo.resType = resType;
+    resInfo.resId = resId;
+    resInfo.flag = 0;
 
     uint64_t mappedAddr = 0;
     uint32_t mappedLen = 0;
     rtDevResAddrInfo addrInfo{};
     addrInfo.resAddress = &mappedAddr;
-    addrInfo.len        = &mappedLen;
+    addrInfo.len = &mappedLen;
 
     rtError_t ret = rtGetDevResAddress(&resInfo, &addrInfo);
     if (ret != RT_ERROR_NONE) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] rtGetDevResAddress failed[%d], dieId[%u] resType[%d] "
-            "resId[%u].", __func__, ret, dieId, static_cast<int32_t>(resType), resId);
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] rtGetDevResAddress failed[%d], dieId[%u] resType[%d] "
+            "resId[%u].",
+            __func__, ret, dieId, static_cast<int32_t>(resType), resId);
         return CCU_E_RUNTIME;
     }
 
@@ -128,16 +131,18 @@ static CcuResult MapDevResAddress(uint8_t dieId, rtDevResType_t resType, uint32_
 static CcuResult UnmapDevResAddress(uint8_t dieId, rtDevResType_t resType, uint32_t resId)
 {
     rtDevResInfo resInfo{};
-    resInfo.dieId    = dieId;
+    resInfo.dieId = dieId;
     resInfo.procType = RT_PROCESS_CP1;
-    resInfo.resType  = resType;
-    resInfo.resId    = resId;
-    resInfo.flag     = 0;
+    resInfo.resType = resType;
+    resInfo.resId = resId;
+    resInfo.flag = 0;
 
     rtError_t ret = rtReleaseDevResAddress(&resInfo);
     if (ret != RT_ERROR_NONE) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] rtReleaseDevResAddress failed[%d], dieId[%u] "
-            "resType[%d] resId[%u].", __func__, ret, dieId, static_cast<int32_t>(resType), resId);
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] rtReleaseDevResAddress failed[%d], dieId[%u] "
+            "resType[%d] resId[%u].",
+            __func__, ret, dieId, static_cast<int32_t>(resType), resId);
         return CCU_E_RUNTIME;
     }
 
@@ -145,20 +150,21 @@ static CcuResult UnmapDevResAddress(uint8_t dieId, rtDevResType_t resType, uint3
 }
 
 namespace {
-// RegisterAddrs 中记录本次已成功映射的资源，供失败回滚逆序解除
-struct MappedRes {
-    uint8_t dieId;
-    uint32_t resId;
-};
-}
+    // RegisterAddrs 中记录本次已成功映射的资源，供失败回滚逆序解除
+    struct MappedRes {
+        uint8_t dieId;
+        uint32_t resId;
+    };
+} // namespace
 
 // 逆序解除本次已完成的映射，与 MapDevResAddress 一一对应
-static void UnmapMappedRes(const std::vector<MappedRes> &mapped, rtDevResType_t resType,
-    uint64_t handle, CcuVarEventType type)
+static void
+UnmapMappedRes(const std::vector<MappedRes>& mapped, rtDevResType_t resType, uint64_t handle, CcuVarEventType type)
 {
-    HCCL_RUN_WARNING("[CcuVarEventResMgr][%s] rollback, unmap [%zu] mapped res of "
-        "handle[0x%llx] type[%d].", __func__, mapped.size(), handle,
-        static_cast<int32_t>(type));
+    HCCL_RUN_WARNING(
+        "[CcuVarEventResMgr][%s] rollback, unmap [%zu] mapped res of "
+        "handle[0x%llx] type[%d].",
+        __func__, mapped.size(), handle, static_cast<int32_t>(type));
     for (auto it = mapped.rbegin(); it != mapped.rend(); ++it) {
         (void)UnmapDevResAddress(it->dieId, resType, it->resId);
     }
@@ -168,8 +174,9 @@ CcuResult CcuVarEventResMgr::RegisterAddrs(CcuVarEventType type, uint64_t handle
 {
     rtDevResType_t resType = RT_RES_TYPE_CCU_XN;
     if (!GetRtResType(type, resType)) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, unsupported type[%d], handle[0x%llx].",
-            __func__, static_cast<int32_t>(type), handle);
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] failed, unsupported type[%d], handle[0x%llx].", __func__,
+            static_cast<int32_t>(type), handle);
         return CCU_E_PARA;
     }
 
@@ -187,9 +194,8 @@ CcuResult CcuVarEventResMgr::RegisterAddrs(CcuVarEventType type, uint64_t handle
     for (uint32_t index = 0; index < num; index++) {
         uint8_t dieId = 0;
         uint32_t resId = 0;
-        CcuResult idRet = (type == CcuVarEventType::VARIABLE)
-            ? GetVariableXnId(handle, index, dieId, resId)
-            : GetEventCkeId(handle, index, dieId, resId);
+        CcuResult idRet = (type == CcuVarEventType::VARIABLE) ? GetVariableXnId(handle, index, dieId, resId) :
+                                                                GetEventCkeId(handle, index, dieId, resId);
         if (idRet != CCU_SUCCESS) {
             rollback();
             return idRet;
@@ -213,12 +219,13 @@ CcuResult CcuVarEventResMgr::RegisterAddrs(CcuVarEventType type, uint64_t handle
     return CCU_SUCCESS;
 }
 
-CcuResult CcuVarEventResMgr::AllocAndRecord(CcuInsHandle insHandle, CcuResRepository &resRepo,
-    CcuVarEventType type, uint8_t dieId, uint32_t num, uint64_t &newHandle)
+CcuResult CcuVarEventResMgr::AllocAndRecord(
+    CcuInsHandle insHandle, CcuResRepository& resRepo, CcuVarEventType type, uint8_t dieId, uint32_t num,
+    uint64_t& newHandle)
 {
     if (dieId >= CCU_MAX_IODIE_NUM) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, dieId[%u] should be less than %u.",
-            __func__, dieId, CCU_MAX_IODIE_NUM);
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] failed, dieId[%u] should be less than %u.", __func__, dieId, CCU_MAX_IODIE_NUM);
         return CCU_E_PARA;
     }
     if (num == 0) {
@@ -226,29 +233,29 @@ CcuResult CcuVarEventResMgr::AllocAndRecord(CcuInsHandle insHandle, CcuResReposi
         return CCU_E_PARA;
     }
 
-    std::vector<ResInfo> *pool = SelectPool(resRepo, type, dieId);
+    std::vector<ResInfo>* pool = SelectPool(resRepo, type, dieId);
     if (pool == nullptr) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, unsupported type[%d].",
-            __func__, static_cast<int32_t>(type));
+        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, unsupported type[%d].", __func__, static_cast<int32_t>(type));
         return CCU_E_PARA;
     }
 
     std::vector<ResInfo> resInfos{};
     CcuResult ret = AllocFromPool(*pool, num, resInfos);
     if (ret != CCU_SUCCESS) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, no consecutive block of num[%u] in insHandle[0x%llx] "
-            "resource pool, dieId[%u] type[%d].", __func__, num, insHandle, dieId,
-            static_cast<int32_t>(type));
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] failed, no consecutive block of num[%u] in insHandle[0x%llx] "
+            "resource pool, dieId[%u] type[%d].",
+            __func__, num, insHandle, dieId, static_cast<int32_t>(type));
         return ret;
     }
 
     CcuVarEventRes res{};
-    res.insHandle  = insHandle;
+    res.insHandle = insHandle;
     res.devLogicId = devLogicId_;
-    res.dieId      = dieId;
-    res.type       = type;
-    res.resInfos   = std::move(resInfos);
-    res.resRepo    = &resRepo;
+    res.dieId = dieId;
+    res.type = type;
+    res.resInfos = std::move(resInfos);
+    res.resRepo = &resRepo;
 
     std::unique_lock<std::shared_timed_mutex> lock(mapMutex_);
     handleSeed_ += 1;
@@ -257,8 +264,9 @@ CcuResult CcuVarEventResMgr::AllocAndRecord(CcuInsHandle insHandle, CcuResReposi
     return CCU_SUCCESS;
 }
 
-CcuResult CcuVarEventResMgr::Acquire(CcuInsHandle insHandle, CcuResRepository &resRepo,
-    CcuVarEventType type, uint8_t dieId, uint32_t num, uint64_t &handle)
+CcuResult CcuVarEventResMgr::Acquire(
+    CcuInsHandle insHandle, CcuResRepository& resRepo, CcuVarEventType type, uint8_t dieId, uint32_t num,
+    uint64_t& handle)
 {
     uint64_t newHandle = 0;
     CcuResult allocRet = AllocAndRecord(insHandle, resRepo, type, dieId, num, newHandle);
@@ -269,23 +277,23 @@ CcuResult CcuVarEventResMgr::Acquire(CcuInsHandle insHandle, CcuResRepository &r
     // 申请期即完成地址映射；失败与切池动作配对，整笔撤销后不写出参
     CcuResult regRet = RegisterAddrs(type, newHandle, num);
     if (regRet != CCU_SUCCESS) {
-        HCCL_RUN_WARNING("[CcuVarEventResMgr][%s] register addrs failed[%d], release acquired "
-            "handle[0x%llx] insHandle[0x%llx] dieId[%u] type[%d] num[%u].", __func__,
-            static_cast<int32_t>(regRet), newHandle, insHandle, dieId,
-            static_cast<int32_t>(type), num);
+        HCCL_RUN_WARNING(
+            "[CcuVarEventResMgr][%s] register addrs failed[%d], release acquired "
+            "handle[0x%llx] insHandle[0x%llx] dieId[%u] type[%d] num[%u].",
+            __func__, static_cast<int32_t>(regRet), newHandle, insHandle, dieId, static_cast<int32_t>(type), num);
         (void)ReleaseByHandle(newHandle);
         return regRet;
     }
 
     handle = newHandle;
-    HCCL_RUN_INFO("[CcuVarEventResMgr][%s] success, devLogicId[%d] insHandle[0x%llx] dieId[%u] "
-        "type[%d] num[%u] handle[0x%llx].", __func__, devLogicId_, insHandle, dieId,
-        static_cast<int32_t>(type), num, handle);
+    HCCL_RUN_INFO(
+        "[CcuVarEventResMgr][%s] success, devLogicId[%d] insHandle[0x%llx] dieId[%u] "
+        "type[%d] num[%u] handle[0x%llx].",
+        __func__, devLogicId_, insHandle, dieId, static_cast<int32_t>(type), num, handle);
     return CCU_SUCCESS;
 }
 
-CcuResult CcuVarEventResMgr::GetVariableXnId(uint64_t handle, uint32_t index, uint8_t &dieId,
-    uint32_t &xnId) const
+CcuResult CcuVarEventResMgr::GetVariableXnId(uint64_t handle, uint32_t index, uint8_t& dieId, uint32_t& xnId) const
 {
     std::shared_lock<std::shared_timed_mutex> lock(mapMutex_);
     auto it = resMap_.find(handle);
@@ -294,32 +302,32 @@ CcuResult CcuVarEventResMgr::GetVariableXnId(uint64_t handle, uint32_t index, ui
         return CCU_E_NOT_FOUND;
     }
 
-    const auto &res = it->second;
+    const auto& res = it->second;
     if (res.type != CcuVarEventType::VARIABLE) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, handle[0x%llx] is not a variable(xn) resource.",
-            __func__, handle);
+        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, handle[0x%llx] is not a variable(xn) resource.", __func__, handle);
         return CCU_E_PARA;
     }
     if (res.resInfos.size() != 1) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] get variable resource id failed, variable resource is fragmented into %zu blocks.",
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] get variable resource id failed, variable resource is fragmented into %zu blocks.",
             __func__, res.resInfos.size());
         return CCU_E_NOT_SUPPORT;
     }
 
-    const ResInfo &info = res.resInfos[0];
+    const ResInfo& info = res.resInfos[0];
     if (index >= info.num) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] get variable resource id failed, index[%u] out of range, block num[%u].",
-            __func__, index, info.num);
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] get variable resource id failed, index[%u] out of range, block num[%u].", __func__,
+            index, info.num);
         return CCU_E_PARA;
     }
 
     dieId = res.dieId;
-    xnId  = info.startId + index;
+    xnId = info.startId + index;
     return CCU_SUCCESS;
 }
 
-CcuResult CcuVarEventResMgr::GetEventCkeId(uint64_t handle, uint32_t index, uint8_t &dieId,
-    uint32_t &ckeId) const
+CcuResult CcuVarEventResMgr::GetEventCkeId(uint64_t handle, uint32_t index, uint8_t& dieId, uint32_t& ckeId) const
 {
     std::shared_lock<std::shared_timed_mutex> lock(mapMutex_);
     auto it = resMap_.find(handle);
@@ -328,22 +336,23 @@ CcuResult CcuVarEventResMgr::GetEventCkeId(uint64_t handle, uint32_t index, uint
         return CCU_E_NOT_FOUND;
     }
 
-    const auto &res = it->second;
+    const auto& res = it->second;
     if (res.type != CcuVarEventType::EVENT) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] get event resource id failed, handle[0x%llx] is not an event(cke) resource.",
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] get event resource id failed, handle[0x%llx] is not an event(cke) resource.",
             __func__, handle);
         return CCU_E_PARA;
     }
     if (res.resInfos.size() != 1) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] get event resource id failed, event resource is fragmented into %zu blocks.",
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] get event resource id failed, event resource is fragmented into %zu blocks.",
             __func__, res.resInfos.size());
         return CCU_E_NOT_SUPPORT;
     }
 
-    const ResInfo &info = res.resInfos[0];
+    const ResInfo& info = res.resInfos[0];
     if (index >= info.num) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, index[%u] out of range, block num[%u].",
-            __func__, index, info.num);
+        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, index[%u] out of range, block num[%u].", __func__, index, info.num);
         return CCU_E_PARA;
     }
 
@@ -352,8 +361,7 @@ CcuResult CcuVarEventResMgr::GetEventCkeId(uint64_t handle, uint32_t index, uint
     return CCU_SUCCESS;
 }
 
-CcuResult CcuVarEventResMgr::SaveAddrs(CcuVarEventType type, uint64_t handle,
-    const std::vector<uint64_t> &vaList)
+CcuResult CcuVarEventResMgr::SaveAddrs(CcuVarEventType type, uint64_t handle, const std::vector<uint64_t>& vaList)
 {
     std::unique_lock<std::shared_timed_mutex> lock(mapMutex_);
     auto it = resMap_.find(handle);
@@ -362,21 +370,23 @@ CcuResult CcuVarEventResMgr::SaveAddrs(CcuVarEventType type, uint64_t handle,
         return CCU_E_NOT_FOUND;
     }
 
-    auto &res = it->second;
+    auto& res = it->second;
     if (res.type != type) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, handle[0x%llx] type mismatch, expect[%d] "
-            "actual[%d].", __func__, handle, static_cast<int32_t>(type),
-            static_cast<int32_t>(res.type));
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] failed, handle[0x%llx] type mismatch, expect[%d] "
+            "actual[%d].",
+            __func__, handle, static_cast<int32_t>(type), static_cast<int32_t>(res.type));
         return CCU_E_PARA;
     }
     if (res.resInfos.size() != 1) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, resource is fragmented into %zu blocks.",
-            __func__, res.resInfos.size());
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] failed, resource is fragmented into %zu blocks.", __func__, res.resInfos.size());
         return CCU_E_NOT_SUPPORT;
     }
     if (vaList.size() != res.resInfos[0].num) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, va count[%zu] mismatch resource num[%u].",
-            __func__, vaList.size(), res.resInfos[0].num);
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] failed, va count[%zu] mismatch resource num[%u].", __func__, vaList.size(),
+            res.resInfos[0].num);
         return CCU_E_PARA;
     }
 
@@ -384,8 +394,7 @@ CcuResult CcuVarEventResMgr::SaveAddrs(CcuVarEventType type, uint64_t handle,
     return CCU_SUCCESS;
 }
 
-CcuResult CcuVarEventResMgr::GetSavedAddr(CcuVarEventType type, uint64_t handle, uint32_t index,
-    uint64_t &va) const
+CcuResult CcuVarEventResMgr::GetSavedAddr(CcuVarEventType type, uint64_t handle, uint32_t index, uint64_t& va) const
 {
     std::shared_lock<std::shared_timed_mutex> lock(mapMutex_);
     auto it = resMap_.find(handle);
@@ -394,16 +403,18 @@ CcuResult CcuVarEventResMgr::GetSavedAddr(CcuVarEventType type, uint64_t handle,
         return CCU_E_NOT_FOUND;
     }
 
-    const auto &res = it->second;
+    const auto& res = it->second;
     if (res.type != type) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, handle[0x%llx] type mismatch, expect[%d] "
-            "actual[%d].", __func__, handle, static_cast<int32_t>(type),
-            static_cast<int32_t>(res.type));
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] failed, handle[0x%llx] type mismatch, expect[%d] "
+            "actual[%d].",
+            __func__, handle, static_cast<int32_t>(type), static_cast<int32_t>(res.type));
         return CCU_E_PARA;
     }
     if (index >= res.vaList.size()) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, index[%u] out of range, registered num[%zu].",
-            __func__, index, res.vaList.size());
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] failed, index[%u] out of range, registered num[%zu].", __func__, index,
+            res.vaList.size());
         return CCU_E_PARA;
     }
 
@@ -411,7 +422,7 @@ CcuResult CcuVarEventResMgr::GetSavedAddr(CcuVarEventType type, uint64_t handle,
     return CCU_SUCCESS;
 }
 
-CcuResult CcuVarEventResMgr::UnmapSavedAddrs(const CcuVarEventRes &res)
+CcuResult CcuVarEventResMgr::UnmapSavedAddrs(const CcuVarEventRes& res)
 {
     // 仅 unmap Alloc 阶段已成功映射并保存 VA 的资源；错误回滚路径中 vaList 为空，天然跳过。
     // 不变量：vaList 非空 <=> SaveAddrs 已成功，而 SaveAddrs 强校验 resInfos 为单个连续块且
@@ -422,15 +433,15 @@ CcuResult CcuVarEventResMgr::UnmapSavedAddrs(const CcuVarEventRes &res)
     // 上述不变量当前由 SaveAddrs 保证，此处再作一次防御校验：一旦将来分配策略改为可返回多块，
     // 用首块 startId 反推 resId 会越出块边界，宁可跳过 unmap 也不能解除错误资源的映射
     if (res.resInfos.size() != 1) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] unexpected fragmented resInfos size[%zu], skip unmap.",
-            __func__, res.resInfos.size());
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] unexpected fragmented resInfos size[%zu], skip unmap.", __func__,
+            res.resInfos.size());
         return CCU_E_NOT_SUPPORT;
     }
 
     rtDevResType_t resType = RT_RES_TYPE_CCU_XN;
     if (!GetRtResType(res.type, resType)) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, unsupported type[%d].",
-            __func__, static_cast<int32_t>(res.type));
+        HCCL_ERROR("[CcuVarEventResMgr][%s] failed, unsupported type[%d].", __func__, static_cast<int32_t>(res.type));
         return CCU_E_PARA;
     }
 
@@ -463,17 +474,20 @@ CcuResult CcuVarEventResMgr::ReleaseByHandle(uint64_t handle)
     // unmap 失败不阻断归还，错误码上抛由调用方决定是否处理
     CcuResult unmapRet = UnmapSavedAddrs(res);
     if (unmapRet != CCU_SUCCESS) {
-        HCCL_RUN_WARNING("[CcuVarEventResMgr][%s] unmap failed[%d], continue to return resources, "
-            "handle[0x%llx].", __func__, static_cast<int32_t>(unmapRet), handle);
+        HCCL_RUN_WARNING(
+            "[CcuVarEventResMgr][%s] unmap failed[%d], continue to return resources, "
+            "handle[0x%llx].",
+            __func__, static_cast<int32_t>(unmapRet), handle);
     }
 
     if (res.resRepo == nullptr) {
         return unmapRet;
     }
-    std::vector<ResInfo> *pool = SelectPool(*res.resRepo, res.type, res.dieId);
+    std::vector<ResInfo>* pool = SelectPool(*res.resRepo, res.type, res.dieId);
     if (pool == nullptr) {
-        HCCL_ERROR("[CcuVarEventResMgr][%s] failed to return, handle[0x%llx] type[%d].",
-            __func__, handle, static_cast<int32_t>(res.type));
+        HCCL_ERROR(
+            "[CcuVarEventResMgr][%s] failed to return, handle[0x%llx] type[%d].", __func__, handle,
+            static_cast<int32_t>(res.type));
         return CCU_E_INTERNAL;
     }
     ReturnToPool(*pool, res.resInfos);
@@ -497,7 +511,7 @@ CcuResult CcuVarEventResMgr::ReleaseByInstance(CcuInsHandle insHandle)
 
     // 通信域正在销毁，单条失败不中断，记录首个错误码后继续清干净其余记录
     CcuResult firstErr = CCU_SUCCESS;
-    for (auto &res : toRelease) {
+    for (auto& res : toRelease) {
         // ccu_instance 析构释放资源前，先解除 Alloc 阶段映射的进程可访问 VA
         CcuResult unmapRet = UnmapSavedAddrs(res);
         if (unmapRet != CCU_SUCCESS && firstErr == CCU_SUCCESS) {
@@ -507,10 +521,11 @@ CcuResult CcuVarEventResMgr::ReleaseByInstance(CcuInsHandle insHandle)
         if (res.resRepo == nullptr) {
             continue;
         }
-        std::vector<ResInfo> *pool = SelectPool(*res.resRepo, res.type, res.dieId);
+        std::vector<ResInfo>* pool = SelectPool(*res.resRepo, res.type, res.dieId);
         if (pool == nullptr) {
-            HCCL_ERROR("[CcuVarEventResMgr][%s] failed to return, insHandle[0x%llx] type[%d].",
-                __func__, insHandle, static_cast<int32_t>(res.type));
+            HCCL_ERROR(
+                "[CcuVarEventResMgr][%s] failed to return, insHandle[0x%llx] type[%d].", __func__, insHandle,
+                static_cast<int32_t>(res.type));
             if (firstErr == CCU_SUCCESS) {
                 firstErr = CCU_E_INTERNAL;
             }
@@ -522,7 +537,7 @@ CcuResult CcuVarEventResMgr::ReleaseByInstance(CcuInsHandle insHandle)
 }
 
 // 从空闲块列表 pool 中扣除区间 [start, start+num)必要时把命中的空闲块拆分成左右两段。
-static void RemoveRangeFromPool(std::vector<ResInfo> &pool, uint32_t start, uint32_t num)
+static void RemoveRangeFromPool(std::vector<ResInfo>& pool, uint32_t start, uint32_t num)
 {
     if (num == 0) {
         return;
@@ -530,7 +545,7 @@ static void RemoveRangeFromPool(std::vector<ResInfo> &pool, uint32_t start, uint
     const uint32_t end = start + num;
     std::vector<ResInfo> result{};
     result.reserve(pool.size() + 1);
-    for (const auto &block : pool) {
+    for (const auto& block : pool) {
         const uint32_t blockStart = block.startId;
         const uint32_t blockEnd = block.startId + block.num;
         if (end <= blockStart || start >= blockEnd) {
@@ -552,22 +567,24 @@ CcuResult CcuVarEventResMgr::ExcludeAllocatedFromRepo(CcuInsHandle insHandle) co
     // shared_lock 用于只读遍历 resMap_；被修改的 *pool 属于该 insHandle 自己的 CcuResPack，
     // 其并发安全由“同一 instance 单线程串行访问”契约保证，详见头文件线程安全契约说明
     std::shared_lock<std::shared_timed_mutex> lock(mapMutex_);
-    for (const auto &kv : resMap_) {
-        const CcuVarEventRes &res = kv.second;
+    for (const auto& kv : resMap_) {
+        const CcuVarEventRes& res = kv.second;
         if (res.insHandle != insHandle || res.resRepo == nullptr) {
             continue;
         }
-        std::vector<ResInfo> *pool = SelectPool(*res.resRepo, res.type, res.dieId);
+        std::vector<ResInfo>* pool = SelectPool(*res.resRepo, res.type, res.dieId);
         if (pool == nullptr) {
-            HCCL_ERROR("[CcuVarEventResMgr][%s] failed, insHandle[0x%llx] type[%d].",
-                __func__, insHandle, static_cast<int32_t>(res.type));
+            HCCL_ERROR(
+                "[CcuVarEventResMgr][%s] failed, insHandle[0x%llx] type[%d].", __func__, insHandle,
+                static_cast<int32_t>(res.type));
             continue;
         }
-        for (const auto &info : res.resInfos) {
+        for (const auto& info : res.resInfos) {
             RemoveRangeFromPool(*pool, info.startId, info.num);
-            HCCL_INFO("[CcuVarEventResMgr][%s] exclude acquired res, insHandle[0x%llx] type[%d] "
-                "dieId[%u] startId[%u] num[%u].", __func__, insHandle,
-                static_cast<int32_t>(res.type), res.dieId, info.startId, info.num);
+            HCCL_INFO(
+                "[CcuVarEventResMgr][%s] exclude acquired res, insHandle[0x%llx] type[%d] "
+                "dieId[%u] startId[%u] num[%u].",
+                __func__, insHandle, static_cast<int32_t>(res.type), res.dieId, info.startId, info.num);
         }
     }
     return CCU_SUCCESS;

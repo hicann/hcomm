@@ -18,35 +18,38 @@
 namespace Hccl {
 namespace CcuRep {
 
-class LoopBlock {
-public:
-    LoopBlock(CcuRepContext *context, std::string label);
-    ~LoopBlock();
+    class LoopBlock {
+    public:
+        LoopBlock(CcuRepContext* context, std::string label);
+        ~LoopBlock();
 
-    template <typename... Arguments> LoopBlock &operator()(const Arguments &...args)
-    {
-        DefineInArgHelper(args...);
-        return *this;
-    }
+        template <typename... Arguments>
+        LoopBlock& operator()(const Arguments&... args)
+        {
+            DefineInArgHelper(args...);
+            return *this;
+        }
 
-private:
-    template <typename First> void DefineInArgHelper(const First &first)
-    {
-        repLoopBlock->DefineArg(first);
-    }
+    private:
+        template <typename First>
+        void DefineInArgHelper(const First& first)
+        {
+            repLoopBlock->DefineArg(first);
+        }
 
-    template <typename First, typename... Rest> void DefineInArgHelper(const First &first, const Rest &...rest)
-    {
-        repLoopBlock->DefineArg(first);
-        DefineInArgHelper(rest...);
-    }
+        template <typename First, typename... Rest>
+        void DefineInArgHelper(const First& first, const Rest&... rest)
+        {
+            repLoopBlock->DefineArg(first);
+            DefineInArgHelper(rest...);
+        }
 
-    CcuRepContext *context{nullptr};
-    std::string    label;
+        CcuRepContext* context{nullptr};
+        std::string label;
 
-    std::shared_ptr<CcuRepLoopBlock> repLoopBlock{nullptr};
-    std::shared_ptr<CcuRepBlock>     curActiveBlock{nullptr};
-};
+        std::shared_ptr<CcuRepLoopBlock> repLoopBlock{nullptr};
+        std::shared_ptr<CcuRepBlock> curActiveBlock{nullptr};
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

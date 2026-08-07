@@ -42,26 +42,23 @@ struct DevEidInfo {
     uint32_t devFeature{0};
 };
 
-HcclResult IpAddressToHccpEid(const Hccl::IpAddress &ipAddr, Eid &eid);
-HcclResult IpAddressToReverseHccpEid(const Hccl::IpAddress &ipAddr, Eid &eid);
-HcclResult IpAddressToReverseHcclEid(const Hccl::IpAddress &ipAddr, Hccl::Eid &eid);
+HcclResult IpAddressToHccpEid(const Hccl::IpAddress& ipAddr, Eid& eid);
+HcclResult IpAddressToReverseHccpEid(const Hccl::IpAddress& ipAddr, Eid& eid);
+HcclResult IpAddressToReverseHcclEid(const Hccl::IpAddress& ipAddr, Hccl::Eid& eid);
 
-HcclResult RaGetDevEidInfos(const RaInfo &raInfo, std::vector<DevEidInfo> &devEidInfos);
+HcclResult RaGetDevEidInfos(const RaInfo& raInfo, std::vector<DevEidInfo>& devEidInfos);
 
 using RequestHandle = u64;
-MAKE_ENUM(RequestResult,
-    COMPLETED,
-    NOT_COMPLETED, SOCK_E_AGAIN,
-    INVALID_PARA,
-    GET_REQ_RESULT_FAILED, ASYNC_REQUEST_FAILED);
+MAKE_ENUM(
+    RequestResult, COMPLETED, NOT_COMPLETED, SOCK_E_AGAIN, INVALID_PARA, GET_REQ_RESULT_FAILED, ASYNC_REQUEST_FAILED);
 
-RequestResult HccpGetAsyncReqResult(RequestHandle &reqHandle);
+RequestResult HccpGetAsyncReqResult(RequestHandle& reqHandle);
 
-using CtxHandle         = void *;
-using JettyHandle       = void *;
-using TargetJettyHandle = void *;
-using JfcHandle         = void *;
-using TokenIdHandle     = void *;
+using CtxHandle = void*;
+using JettyHandle = void*;
+using TargetJettyHandle = void*;
+using JfcHandle = void*;
+using TokenIdHandle = void*;
 
 HcclResult HrtRaDumpJettyContext(JettyHandle jettyHandle, u32 jettyId);
 
@@ -98,53 +95,61 @@ using HrtRaUbCreateJettyParam = struct HrtRaUbJettyCreateParamDef {
 
     // HOST_OFFLOAD / HOST_OPBASE / CACHE_LOCK_DWQE 类型的Jetty ，需要指定WQEBB的数目
     // STADARD 类型Jetty，该参数代表SQ深度
-    u32              sqDepth{0};
-    u32              rqDepth{64};
+    u32 sqDepth{0};
+    u32 rqDepth{64};
     HrtTransportMode transMode{HrtTransportMode::RM}; // 仅能使用RM模式的Jetty
     u8 errTimeout{16};
     /// 低 4bit 映射 UB Jetty 创建属性中的 priority（attr.ub.priority = qos & 0xF）
-    u32              qos{EnvConfig::UB_QOS_DEFAULT};
+    u32 qos{EnvConfig::UB_QOS_DEFAULT};
 
     HrtRaUbJettyCreateParamDef() {}
 
-    HrtRaUbJettyCreateParamDef(JfcHandle sjfcHandle, JfcHandle rjfcHandle,
-        u32 tokenValue, TokenIdHandle tokenIdHandle, HrtJettyMode jettyMode,
+    HrtRaUbJettyCreateParamDef(
+        JfcHandle sjfcHandle, JfcHandle rjfcHandle, u32 tokenValue, TokenIdHandle tokenIdHandle, HrtJettyMode jettyMode,
         u32 jettyId, u64 sqBufVa, u32 sqBufSize, u32 sqeBufIndex, u32 sqDepth, u8 errTimeout = 16)
-        : sjfcHandle(sjfcHandle), rjfcHandle(rjfcHandle), tokenValue(tokenValue),
-          tokenIdHandle(tokenIdHandle), jettyMode(jettyMode), jettyId(jettyId),
-          sqBufVa(sqBufVa), sqBufSize(sqBufSize), sqeBufIndex(sqeBufIndex),
-          sqDepth(sqDepth), errTimeout(errTimeout)
-    {
-    }
+        : sjfcHandle(sjfcHandle),
+          rjfcHandle(rjfcHandle),
+          tokenValue(tokenValue),
+          tokenIdHandle(tokenIdHandle),
+          jettyMode(jettyMode),
+          jettyId(jettyId),
+          sqBufVa(sqBufVa),
+          sqBufSize(sqBufSize),
+          sqeBufIndex(sqeBufIndex),
+          sqDepth(sqDepth),
+          errTimeout(errTimeout)
+    {}
 };
 
 constexpr u32 HRT_UB_QP_KEY_MAX_LEN = 64; // UB 最大的QpKey长度
 
 using HrtRaUbJettyCreatedOutParam = struct HrtRaUbJettyCreatedOutParamDef {
     JettyHandle handle{0};
-    u8          key[HRT_UB_QP_KEY_MAX_LEN]{0};
-    u64         jettyVa{0};
-    u32         uasid{0};
-    u32         id{0};
-    u32         keySize{0};
-    u64         dbVa{0};
-    u32         dbTokenId{0};
+    u8 key[HRT_UB_QP_KEY_MAX_LEN]{0};
+    u64 jettyVa{0};
+    u32 uasid{0};
+    u32 id{0};
+    u32 keySize{0};
+    u64 dbVa{0};
+    u32 dbTokenId{0};
 };
 
-HcclResult HccpUbCreateJetty(const CtxHandle ctxhandle, const HrtRaUbCreateJettyParam &in,
-    HrtRaUbJettyCreatedOutParam &out);
+HcclResult
+HccpUbCreateJetty(const CtxHandle ctxhandle, const HrtRaUbCreateJettyParam& in, HrtRaUbJettyCreatedOutParam& out);
 
-HcclResult HccpUbCreateJettyAsync(const CtxHandle ctxhandle, const HrtRaUbCreateJettyParam &in,
-    std::vector<char> &out, void *&jettyHandle, RequestHandle &reqHandle);
+HcclResult HccpUbCreateJettyAsync(
+    const CtxHandle ctxhandle, const HrtRaUbCreateJettyParam& in, std::vector<char>& out, void*& jettyHandle,
+    RequestHandle& reqHandle);
 
 MAKE_ENUM(JettyStatus, RESET, READY, SUSPENDED, ERROR);
 constexpr u32 MAX_JETTY_QUERY_NUM = 128;
-HcclResult RaBatchQueryJettyStatus(const std::vector<JettyHandle> &jettyHandles, std::vector<JettyStatus> &jettyAttrs, u32 &num);
+HcclResult
+RaBatchQueryJettyStatus(const std::vector<JettyHandle>& jettyHandles, std::vector<JettyStatus>& jettyAttrs, u32& num);
 
 using HrtRaUbJettyImportedOutParam = struct HrtRaUbJettyImportedOutParamDef {
     TargetJettyHandle handle{0};
-    u64               targetJettyVa{0};
-    u32               tpn{0};
+    u64 targetJettyVa{0};
+    u32 tpn{0};
 };
 
 MAKE_ENUM(TpProtocol, CTP, RTP, UBOE);
@@ -152,32 +157,32 @@ MAKE_ENUM(TpProtocol, CTP, RTP, UBOE);
 struct JettyImportCfg {
     u64 localTpHandle{0};
     u64 remoteTpHandle{0};
-    u64 localTag{0};  // tag是hccp预留字段，暂不需要赋值
+    u64 localTag{0}; // tag是hccp预留字段，暂不需要赋值
     u32 localPsn{0};
     u32 remotePsn{0};
     TpProtocol protocol{TpProtocol::INVALID};
 };
 
-HcclResult HccpUbTpImportJetty(const CtxHandle ctxHandle, u8 *key, const u32 keyLen,
-    const u32 tokenValue, const JettyImportCfg &jettyImportCfg,
-    HrtRaUbJettyImportedOutParam &out);
+HcclResult HccpUbTpImportJetty(
+    const CtxHandle ctxHandle, u8* key, const u32 keyLen, const u32 tokenValue, const JettyImportCfg& jettyImportCfg,
+    HrtRaUbJettyImportedOutParam& out);
 
 using HccpUbJettyImportedInParam = struct HccpUbJettyImportedInParamDef {
-    u8 *key{nullptr};
+    u8* key{nullptr};
     u32 keyLen{0};
     u32 tokenValue{0};
     JettyImportCfg jettyImportCfg{};
 };
 
-HcclResult HccpUbTpImportJettyAsync(const CtxHandle ctxHandle,
-    const HccpUbJettyImportedInParam &in, std::vector<char> &out,
-    void *&remQpHandle, RequestHandle &reqHandle);
+HcclResult HccpUbTpImportJettyAsync(
+    const CtxHandle ctxHandle, const HccpUbJettyImportedInParam& in, std::vector<char>& out, void*& remQpHandle,
+    RequestHandle& reqHandle);
 
-HcclResult HccpRaTlvCcuCustomChannel(int32_t devLogicId, void *customIn, void *customOut);
+HcclResult HccpRaTlvCcuCustomChannel(int32_t devLogicId, void* customIn, void* customOut);
 
-HcclResult HccpRaTlvRequestForCustomChannel(void *tlvHandle, unsigned int msgType, void *customIn, void *customOut);
+HcclResult HccpRaTlvRequestForCustomChannel(void* tlvHandle, unsigned int msgType, void* customIn, void* customOut);
 
-HcclResult HccpRaGetDevBaseAttr(void *ctxHandle, struct DevBaseAttr *attr);
+HcclResult HccpRaGetDevBaseAttr(void* ctxHandle, struct DevBaseAttr* attr);
 
 constexpr u32 GET_UBOE_FLAG_ENABLE_OPCODE = 57;
 constexpr u32 GET_UBOE_FLAG_ENABLE_VERSION = 2;

@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- #include "cmd_cluster_model_utils.h"
+#include "cmd_cluster_model_utils.h"
 #include <cerrno>
 #include <cstdint>
 #include <cstdlib>
@@ -49,7 +49,7 @@ bool ParseYamlTopoImpl(const std::string& fileName, TopoMeta& topo)
         uint32_t rankNum = root["meta"]["rankNum"].as<uint32_t>();
         HCCL_VM_DEBUG("PodNum: {}, SerNum: {}, RankNum: {}", podNum, serNum, rankNum);
         topo.reserve(podNum);
-        if (podNum <= 0 || podNum >1024 || serNum <= 0 || serNum >1024 || rankNum <= 0 || rankNum >1024) {
+        if (podNum <= 0 || podNum > 1024 || serNum <= 0 || serNum > 1024 || rankNum <= 0 || rankNum > 1024) {
             HCCL_VM_ERROR("YAML : 'meta' number not surport, please check your config.yaml.");
             return false;
         }
@@ -76,9 +76,6 @@ bool ParseYamlTopoImpl(const std::string& fileName, TopoMeta& topo)
         return false;
     }
 }
-}
+} // namespace
 
-bool ParseYamlTopo(const std::string& fileName, TopoMeta& topo)
-{
-    return ParseYamlTopoImpl(fileName, topo);
-}
+bool ParseYamlTopo(const std::string& fileName, TopoMeta& topo) { return ParseYamlTopoImpl(fileName, topo); }

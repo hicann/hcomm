@@ -19,9 +19,11 @@
 namespace hcomm {
 
 CcuJettyCtxMgr::CcuJettyCtxMgr(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId)
-    : devLogicId_(devLogicId), dieId_(dieId), devPhyId_(devPhyId), pfeMgr_(devLogicId, dieId, devPhyId)
-{
-}
+    : devLogicId_(devLogicId),
+      dieId_(dieId),
+      devPhyId_(devPhyId),
+      pfeMgr_(devLogicId, dieId, devPhyId)
+{}
 
 // 对一个数求以2为底的对数，num已保证不为0
 inline uint16_t Log2OfPowerOfTwo(uint32_t num)
@@ -39,8 +41,8 @@ union DoorbellAddr {
     uint16_t dbAddr16[4];
 };
 
-LocalJettyCtxData BuildJettyCtxData(const uint8_t dieId, const uint32_t pfeId,
-    const JettyInfo& jettyInfo, const JettyCfg& jettyCfg)
+LocalJettyCtxData
+BuildJettyCtxData(const uint8_t dieId, const uint32_t pfeId, const JettyInfo& jettyInfo, const JettyCfg& jettyCfg)
 {
     LocalJettyCtxData data{};
 
@@ -50,29 +52,27 @@ LocalJettyCtxData BuildJettyCtxData(const uint8_t dieId, const uint32_t pfeId,
     data.doorbellAddr[1] = dbAddr.dbAddr16[1];
     data.doorbellAddr[2] = dbAddr.dbAddr16[2]; // 2: doorbell 地址访问
     data.doorbellAddr[3] = dbAddr.dbAddr16[3]; // 3: doorbell 地址访问
-    
+
     data.pfeIdx = static_cast<uint8_t>(pfeId);
     data.ioDieId = dieId;
-    
-    data.doorbellAddrType  = DB_ADDR_TYPE;
+
+    data.doorbellAddrType = DB_ADDR_TYPE;
     data.tokenValueIsValid = TOKEN_VALUE_IS_VALIDE;
-    
+
     data.tokenIdLow = jettyCfg.dbTokenId & MASK_TK_ID_LOW;
     data.tokenIdHigh = (jettyCfg.dbTokenId >> Hccl::SHIFT_8BITS) & MASK_TK_ID_HIGH; // tokenId右移8位
-    
+
     data.tokenValueLow = jettyCfg.dbTokenValue & MASK_TK_VALUE_LOW;
-    data.tokenValueMiddle =
-        (jettyCfg.dbTokenValue >> Hccl::SHIFT_4BITS) & MASK_TK_VALUE_MID; // tokenValue右移4位
-    data.tokenValueHigh =
-        (jettyCfg.dbTokenValue >> Hccl::SHIFT_20BITS) & MASK_TK_VALUE_HIGH; // tokenValue右移20位
-    
+    data.tokenValueMiddle = (jettyCfg.dbTokenValue >> Hccl::SHIFT_4BITS) & MASK_TK_VALUE_MID; // tokenValue右移4位
+    data.tokenValueHigh = (jettyCfg.dbTokenValue >> Hccl::SHIFT_20BITS) & MASK_TK_VALUE_HIGH; // tokenValue右移20位
+
     const uint16_t wqeBBShift = Log2OfPowerOfTwo(jettyInfo.sqDepth * CCU_WQE_NUM_PER_SQE);
     data.sqeBasicBlockLeftShifts = wqeBBShift;
 
     const uint16_t wqeBBIdx = jettyInfo.wqeBBStartId;
     data.startWqeBasicBlockIdxLow = wqeBBIdx & MASK_WQEBB_IDX_LOW;
     data.startWqeBasicBlockIdxHigh = (wqeBBIdx >> Hccl::SHIFT_4BITS) & MASK_WQEBB_IDX_HIGH; // 右移4位
-    
+
     data.pi = CCU_HARDWARE_DEFAULT_VALUE;
     data.ci = CCU_HARDWARE_DEFAULT_VALUE;
     data.maxCi = CCU_HARDWARE_DEFAULT_VALUE;
@@ -82,81 +82,89 @@ LocalJettyCtxData BuildJettyCtxData(const uint8_t dieId, const uint32_t pfeId,
     return data;
 }
 
-void DumpJettyCtxData(const LocalJettyCtxData &tmp)
+void DumpJettyCtxData(const LocalJettyCtxData& tmp)
 {
-    HCCL_RUN_INFO("doorbellAddr: [3]0x%04x, [2]0x%04x, [1]0x%04x, [0]0x%04x",
+    HCCL_RUN_INFO(
+        "doorbellAddr: [3]0x%04x, [2]0x%04x, [1]0x%04x, [0]0x%04x",
         tmp.doorbellAddr[3], // 3: doorbell 地址访问
         tmp.doorbellAddr[2], // 2: doorbell 地址访问
-        tmp.doorbellAddr[1],
-        tmp.doorbellAddr[0]);
+        tmp.doorbellAddr[1], tmp.doorbellAddr[0]);
 
     // 安全问题：禁止打印token相关信息
-    HCCL_RUN_INFO("pfeIdx: 0x%04x, ioDieId: 0x%04x, doorbellAddrType: 0x%04x, "
-        "tokenValueIsValid: 0x%04x", tmp.pfeIdx, tmp.ioDieId, tmp.doorbellAddrType,
-        tmp.tokenValueIsValid);
+    HCCL_RUN_INFO(
+        "pfeIdx: 0x%04x, ioDieId: 0x%04x, doorbellAddrType: 0x%04x, "
+        "tokenValueIsValid: 0x%04x",
+        tmp.pfeIdx, tmp.ioDieId, tmp.doorbellAddrType, tmp.tokenValueIsValid);
 
-    HCCL_RUN_INFO("sqeBasicBlockLeftShifts: 0x%04x, pi: 0x%04x, ci: 0x%04x, "
+    HCCL_RUN_INFO(
+        "sqeBasicBlockLeftShifts: 0x%04x, pi: 0x%04x, ci: 0x%04x, "
         "maxCi: 0x%04x, oooCqeCnt: 0x%04x, startWqeBasicBlockIdxLow: 0x%04x, "
         "startWqeBasicBlockIdxHigh: 0x%04x, doorbellSendState: 0x%04x",
-        tmp.sqeBasicBlockLeftShifts, tmp.pi, tmp.ci, tmp.maxCi, tmp.oooCqeCnt,
-        tmp.startWqeBasicBlockIdxLow, tmp.startWqeBasicBlockIdxHigh, tmp.doorbellSendState);
+        tmp.sqeBasicBlockLeftShifts, tmp.pi, tmp.ci, tmp.maxCi, tmp.oooCqeCnt, tmp.startWqeBasicBlockIdxLow,
+        tmp.startWqeBasicBlockIdxHigh, tmp.doorbellSendState);
 }
 
-HcclResult ConfigJettyCtxData(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId,
-    const uint16_t startJettyCtxId, std::vector<LocalJettyCtxData>& jettyCtxData)
+HcclResult ConfigJettyCtxData(
+    const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId, const uint16_t startJettyCtxId,
+    std::vector<LocalJettyCtxData>& jettyCtxData)
 {
     const uint32_t jettyNum = jettyCtxData.size(); // 分配与配置前校验已保证不为0
-    CustomChannelInfoIn  inBuff{};
+    CustomChannelInfoIn inBuff{};
     CustomChannelInfoOut outBuff{};
 
     inBuff.op = CcuOpcodeType::CCU_U_OP_SET_JETTY_CTX;
     (void)memset_s(inBuff.data.raw, sizeof(inBuff.data.raw), 0, sizeof(inBuff.data.raw));
-    inBuff.data.dataInfo.udieIdx       = dieId;
+    inBuff.data.dataInfo.udieIdx = dieId;
     inBuff.data.dataInfo.dataArraySize = jettyNum;
 
     // 设置数据长度，目前设备管理A5最多使用5个JettyCtx，需要长度上限为 32 * 5 = 160B
     // A6 依据配比关系，最大长度为 32 * 8 = 256B，当前业务仅使用 32 * 1 = 32B
-    inBuff.data.dataInfo.dataLen =
-        sizeof(struct LocalJettyCtxData) * inBuff.data.dataInfo.dataArraySize;
+    inBuff.data.dataInfo.dataLen = sizeof(struct LocalJettyCtxData) * inBuff.data.dataInfo.dataArraySize;
     inBuff.offsetStartIdx = startJettyCtxId; // 设置起始Jetty上下文ID，注意应从0开始，非TaJettyId
 
-    HCCL_INFO("[CcuJettyCtxMgr][%s] iodie[%u], startJettyCtxId[%u], jettyCtxData.size[%u]",
-        __func__, dieId, startJettyCtxId, jettyNum);
+    HCCL_INFO(
+        "[CcuJettyCtxMgr][%s] iodie[%u], startJettyCtxId[%u], jettyCtxData.size[%u]", __func__, dieId, startJettyCtxId,
+        jettyNum);
 
     for (size_t i = 0; i < jettyNum; i++) {
         DumpJettyCtxData(jettyCtxData[i]);
 
-        (void)memcpy_s(&inBuff.data.dataInfo.dataArray[i], sizeof(struct LocalJettyCtxData),
-            &jettyCtxData[i], sizeof(struct LocalJettyCtxData));
+        (void)memcpy_s(
+            &inBuff.data.dataInfo.dataArray[i], sizeof(struct LocalJettyCtxData), &jettyCtxData[i],
+            sizeof(struct LocalJettyCtxData));
     }
 
-    auto ret = HccpRaTlvCcuCustomChannel(devLogicId,
-        static_cast<void *>(&inBuff), static_cast<void *>(&outBuff));
+    auto ret = HccpRaTlvCcuCustomChannel(devLogicId, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[CcuJettyCtxMgr][%s] failed to call ccu driver, "
-            "devLogicId[%d] devPhyId[%u] dieId[%d] op[%s] ret[%d].", __func__, devLogicId, devPhyId, dieId,
-            "SET_JETTY_CTX", ret);
+        HCCL_ERROR(
+            "[CcuJettyCtxMgr][%s] failed to call ccu driver, "
+            "devLogicId[%d] devPhyId[%u] dieId[%d] op[%s] ret[%d].",
+            __func__, devLogicId, devPhyId, dieId, "SET_JETTY_CTX", ret);
         return ret;
     }
 
     return HcclResult::HCCL_SUCCESS;
 }
 
-static HcclResult GetSqeBuffVa(const uint64_t ccuResBaseVa, const uint32_t jettyCtxId, uint64_t &sqeBuffVa)
+static HcclResult GetSqeBuffVa(const uint64_t ccuResBaseVa, const uint32_t jettyCtxId, uint64_t& sqeBuffVa)
 {
     sqeBuffVa = 0;
     if (UINT32_MAX / CCU_SQ_BUFFER_SIZE < jettyCtxId) {
-        HCCL_ERROR("[CcuJettyCtxMgr][%s] jetty context id[%u] is greater "
+        HCCL_ERROR(
+            "[CcuJettyCtxMgr][%s] jetty context id[%u] is greater "
             "than expected, CCU_SQ_UBFFER_SIZE[%u], their product will exceed the "
-            "range of uint32_t.", __func__, jettyCtxId, CCU_SQ_BUFFER_SIZE);
+            "range of uint32_t.",
+            __func__, jettyCtxId, CCU_SQ_BUFFER_SIZE);
         return HcclResult::HCCL_E_INTERNAL;
     }
     const uint64_t jettyCtxOffset = static_cast<uint64_t>(jettyCtxId) * CCU_SQ_BUFFER_SIZE;
 
     if (UINT64_MAX - CCU_V1_WQE_BASIC_BLOCK_OFFSET - jettyCtxOffset < ccuResBaseVa) {
-        HCCL_ERROR("[CcuJettyCtxMgr][%s] ccu resource space base va[%llu] "
+        HCCL_ERROR(
+            "[CcuJettyCtxMgr][%s] ccu resource space base va[%llu] "
             "is greater than expected, jettyCtxId[%u], the sqe buff va exceed the "
-            "range of uint64_t.", __func__, ccuResBaseVa, jettyCtxId);
+            "range of uint64_t.",
+            __func__, ccuResBaseVa, jettyCtxId);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -165,20 +173,24 @@ static HcclResult GetSqeBuffVa(const uint64_t ccuResBaseVa, const uint32_t jetty
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuJettyCtxMgr::TryAllocWqeBBResource(uint32_t sqSize,
-    uint32_t jettyCtxStartId, uint32_t taJettyStartId,
-    CcuJettyType jettyType, std::vector<JettyInfo> &jettyInfos)
+HcclResult CcuJettyCtxMgr::TryAllocWqeBBResource(
+    uint32_t sqSize, uint32_t jettyCtxStartId, uint32_t taJettyStartId, CcuJettyType jettyType,
+    std::vector<JettyInfo>& jettyInfos)
 {
     const uint32_t jettyNum = jettyInfos.size();
     if (jettyNum == 0) {
-        HCCL_ERROR("[CcuJettyCtxMgr][%s] failed, jettyInfos size is 0, "
-            "devLogicId[%d], dieId[%u].", __func__, devLogicId_, dieId_);
+        HCCL_ERROR(
+            "[CcuJettyCtxMgr][%s] failed, jettyInfos size is 0, "
+            "devLogicId[%d], dieId[%u].",
+            __func__, devLogicId_, dieId_);
         return HcclResult::HCCL_E_PARA;
     }
 
     if (UNLIKELY(ccuResBaseVa_ == 0)) { // 直接终止，避免访问非法地址
-        HCCL_ERROR("[CcuJettyCtxMgr] init failed, ccu resource base addr is 0, "
-            "devLogicId[%d] dieId[%u].", devLogicId_, dieId_);
+        HCCL_ERROR(
+            "[CcuJettyCtxMgr] init failed, ccu resource base addr is 0, "
+            "devLogicId[%d] dieId[%u].",
+            devLogicId_, dieId_);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -189,24 +201,26 @@ HcclResult CcuJettyCtxMgr::TryAllocWqeBBResource(uint32_t sqSize,
         const WqeBBReq wqeBBReq{sqSize, jettyCtxStartId};
         HcclResult ret = wqeBBMgr_->Alloc(wqeBBReq, wqeBBInfo);
         if (ret == HcclResult::HCCL_E_UNAVAIL) {
-            HCCL_WARNING("[CcuJettyCtxMgr][%s] failed to alloc wqe basic block resource, "
+            HCCL_WARNING(
+                "[CcuJettyCtxMgr][%s] failed to alloc wqe basic block resource, "
                 "left resources are not enough, devLogicId[%d], dieId[%u].",
                 __func__, devLogicId_, dieId_);
             return ret;
         }
         CHK_RET(ret);
 
-        auto &jettyInfo = jettyInfos[i];
-        jettyInfo.jettyType  = jettyType;
+        auto& jettyInfo = jettyInfos[i];
+        jettyInfo.jettyType = jettyType;
         jettyInfo.jettyCtxId = static_cast<uint16_t>(jettyCtxStartId + i);
-        jettyInfo.taJettyId  = static_cast<uint16_t>(taJettyStartId + i);
+        jettyInfo.taJettyId = static_cast<uint16_t>(taJettyStartId + i);
 
         const uint32_t wqeBBReqNum = wqeBBInfo.num;
-        jettyInfo.sqDepth      = wqeBBReqNum / CCU_WQE_NUM_PER_SQE;
+        jettyInfo.sqDepth = wqeBBReqNum / CCU_WQE_NUM_PER_SQE;
         jettyInfo.wqeBBStartId = wqeBBInfo.startId;
         if (jettyType == CcuJettyType::CCUM_CACHED_JETTY) {
             jettyInfo.sqBufSize = wqeBBReqNum * CCU_ONE_WQE_SIZE;
-            CHK_RET(GetSqeBuffVa(ccuResBaseVa_, static_cast<uint32_t>(jettyInfo.jettyCtxId),
+            CHK_RET(GetSqeBuffVa(
+                ccuResBaseVa_, static_cast<uint32_t>(jettyInfo.jettyCtxId),
                 jettyInfo.sqBufVa)); // 检查溢出，分配成功的wqeBB资源已经记录
         }
     }
@@ -214,9 +228,9 @@ HcclResult CcuJettyCtxMgr::TryAllocWqeBBResource(uint32_t sqSize,
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuJettyCtxMgr::ReleaseWqeBBResource(const std::vector<JettyInfo> &jettyInfos)
+HcclResult CcuJettyCtxMgr::ReleaseWqeBBResource(const std::vector<JettyInfo>& jettyInfos)
 {
-    for (const auto &jettyInfo : jettyInfos) {
+    for (const auto& jettyInfo : jettyInfos) {
         if (jettyInfo.sqDepth == 0) {
             continue; // 该jetty未分配完成，跳过wqeBB资源释放
         }
@@ -230,22 +244,25 @@ HcclResult CcuJettyCtxMgr::ReleaseWqeBBResource(const std::vector<JettyInfo> &je
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuJettyCtxMgr::CheckIfJettyCfgsValid(const std::vector<JettyInfo> &jettyInfos,
-    const std::vector<JettyCfg>& jettyCfgs) const
+HcclResult CcuJettyCtxMgr::CheckIfJettyCfgsValid(
+    const std::vector<JettyInfo>& jettyInfos, const std::vector<JettyCfg>& jettyCfgs) const
 {
     const uint32_t jettyNum = jettyInfos.size();
     const uint32_t jettyCfgNum = jettyCfgs.size();
-    CHK_PRT_RET(jettyCfgNum != jettyNum,
-        HCCL_ERROR("[CcuJettyCtxMgr][%s] failed, jettyCfgs size[%u] is not expected, "
+    CHK_PRT_RET(
+        jettyCfgNum != jettyNum,
+        HCCL_ERROR(
+            "[CcuJettyCtxMgr][%s] failed, jettyCfgs size[%u] is not expected, "
             "which should be equal to jettyInfo size[%u], devLogicId[%d], dieId[%u].",
             __func__, jettyCfgNum, jettyNum, devLogicId_, dieId_),
         HcclResult::HCCL_E_PARA);
 
     for (uint32_t i = 0; i < jettyNum; i++) {
         if (jettyInfos[i].jettyCtxId != jettyCfgs[i].jettyCtxId) {
-            HCCL_ERROR("[CcuJettyCtxMgr][%s] failed, jettyCtxId of jettyInfo[%u] and "
-                "jettyCfg[%u] are not same, devLogicId[%d], dieId[%u].", __func__,
-                jettyInfos[i].jettyCtxId, jettyCfgs[i].jettyCtxId, devLogicId_, dieId_);
+            HCCL_ERROR(
+                "[CcuJettyCtxMgr][%s] failed, jettyCtxId of jettyInfo[%u] and "
+                "jettyCfg[%u] are not same, devLogicId[%d], dieId[%u].",
+                __func__, jettyInfos[i].jettyCtxId, jettyCfgs[i].jettyCtxId, devLogicId_, dieId_);
             return HcclResult::HCCL_E_PARA;
         }
     }
@@ -253,4 +270,3 @@ HcclResult CcuJettyCtxMgr::CheckIfJettyCfgsValid(const std::vector<JettyInfo> &j
 }
 
 }; // namespace hcomm
-

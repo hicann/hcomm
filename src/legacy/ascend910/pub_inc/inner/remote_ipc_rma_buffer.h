@@ -28,12 +28,13 @@ public:
     HcclResult Close();
     ~RemoteIpcRmaBuffer() override;
 
-    RemoteIpcRmaBuffer(const RemoteIpcRmaBuffer &that) = delete;
-    RemoteIpcRmaBuffer &operator=(const RemoteIpcRmaBuffer &that) = delete;
-    bool IsOpened() const {return isOpened_;}
+    RemoteIpcRmaBuffer(const RemoteIpcRmaBuffer& that) = delete;
+    RemoteIpcRmaBuffer& operator=(const RemoteIpcRmaBuffer& that) = delete;
+    bool IsOpened() const { return isOpened_; }
+
 private:
     std::unique_ptr<RemoteIpcRmaBufferImpl> pimpl_;
     bool isOpened_{false};
 };
-}
+} // namespace hccl
 #endif //  REMOTE_IPC_RMA_BUFFER_H

@@ -23,8 +23,8 @@ public:
     ~ReduceScatterMeshMixSingleStream() override;
 
     HcclResult Prepare(u64 reduceAttrBitMap, u32 streamIndex) override;
-    HcclResult RunAsync(const u32 rank, const u32 rankSize,
-                                   const std::vector<std::shared_ptr<Transport> > &links) override;
+    HcclResult
+    RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links) override;
 
 protected:
 private:
@@ -42,21 +42,21 @@ private:
         }
         return (rank + step) % rankSize;
     }
-    HcclResult RunSourceReducer(const LINK& link, const std::vector<Slice> &txSlices,
-        const std::vector<Slice> &dstSlices);
+    HcclResult
+    RunSourceReducer(const LINK& link, const std::vector<Slice>& txSlices, const std::vector<Slice>& dstSlices);
 
-    HcclResult RunDestReducer(const LINK& link, const std::vector<Slice> &rxSlices,
-        const std::vector<Slice> &dstSlices);
+    HcclResult
+    RunDestReducer(const LINK& link, const std::vector<Slice>& rxSlices, const std::vector<Slice>& dstSlices);
 
-    HcclResult RunReduceScatter(const u32 rank, const u32 rankSize, const std::vector<LINK>& links,
-                                    const std::vector<Slice>& inputSlices,
-                                    const std::vector<Slice>& scratchSlices);
+    HcclResult RunReduceScatter(
+        const u32 rank, const u32 rankSize, const std::vector<LINK>& links, const std::vector<Slice>& inputSlices,
+        const std::vector<Slice>& scratchSlices);
     std::unique_ptr<Sender> senderInfo_;
     std::unique_ptr<Reducer> reducerInfo_;
 
-    u64 reduceAttr_ = 0;       /* 0x1:表示data_type + reduce_type支持inlinereduce  */
+    u64 reduceAttr_ = 0; /* 0x1:表示data_type + reduce_type支持inlinereduce  */
     u32 streamIndex_ = 0;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* REDUCE_SCATTER_MESH_MIX_SINGLE_STREAM_PUB_H */

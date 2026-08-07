@@ -12,7 +12,7 @@ protected:
     void TearDown() override {}
 
     // 初始化 NsRecoveryLite 并用两个默认构造的 HDCommunicate 填充 hdcHandler_
-    void InitWithDefaultHdc(NsRecoveryLite &lite)
+    void InitWithDefaultHdc(NsRecoveryLite& lite)
     {
         auto h2d = std::make_shared<HDCommunicate>();
         auto d2h = std::make_shared<HDCommunicate>();

@@ -19,20 +19,20 @@ using namespace checker;
 extern "C" {
 #endif // __cplusplus
 
-int memcpy_s(void *dest, size_t destMax, const void *src, size_t count)
+int memcpy_s(void* dest, size_t destMax, const void* src, size_t count)
 {
-	memcpy(dest, src, count);
-	return 0;
+    memcpy(dest, src, count);
+    return 0;
 }
 
-INT32 mmGetEnv(const CHAR *name, CHAR *value, UINT32 len)
+INT32 mmGetEnv(const CHAR* name, CHAR* value, UINT32 len)
 {
     INT32 ret;
     UINT32 envLen = 0;
     if ((name == NULL) || (value == NULL) || (len == MMPA_ZERO)) {
         return EN_INVALID_PARAM;
     }
-    const CHAR *envPtr = getenv(name);
+    const CHAR* envPtr = getenv(name);
     if (envPtr == NULL) {
         return EN_ERROR;
     }
@@ -45,7 +45,7 @@ INT32 mmGetEnv(const CHAR *name, CHAR *value, UINT32 len)
     if ((envLen != MMPA_ZERO) && (len < envLen)) {
         return EN_INVALID_PARAM;
     } else {
-        ret = memcpy_s(value, len, envPtr, envLen); //lint !e613
+        ret = memcpy_s(value, len, envPtr, envLen); // lint !e613
         if (ret != EN_OK) {
             return EN_ERROR;
         }
@@ -80,8 +80,9 @@ std::vector<u64> GenerateSendCountMatrix(u64 count, u32 rankSize)
     return sendCountMatrix;
 }
 
-void GenAllToAllVParams(u32 rankSize, u64 count, std::vector<u64>& sendCounts, std::vector<u64>& sdispls,
-                        std::vector<u64>& recvCounts, std::vector<u64>& rdispls)
+void GenAllToAllVParams(
+    u32 rankSize, u64 count, std::vector<u64>& sendCounts, std::vector<u64>& sdispls, std::vector<u64>& recvCounts,
+    std::vector<u64>& rdispls)
 {
     u64 sendDisplacement = 0;
     u64 recvDisplacement = 0;

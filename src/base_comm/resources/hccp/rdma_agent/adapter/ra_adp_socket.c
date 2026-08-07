@@ -44,13 +44,11 @@ struct RsSocketOps gSocketOps = {
 
 int RaRsSocketBatchConnect(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
-    union OpSocketConnectData *socketConnectData =
-        (union OpSocketConnectData *)(inBuf + sizeof(struct MsgHead));
+    union OpSocketConnectData *socketConnectData = (union OpSocketConnectData *)(inBuf + sizeof(struct MsgHead));
     unsigned int usePort = 0;
     unsigned int i;
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSocketConnectData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSocketConnectData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     // clear resv bit 31 use_port, for compatibility issue
     usePort = socketConnectData->txData.num >> SOCKET_USE_PORT_BIT;
@@ -67,8 +65,7 @@ int RaRsSocketBatchConnect(char *inBuf, char *outBuf, int *outLen, int *opResult
         }
     }
 
-    *opResult = gSocketOps.socketBatchConnect((socketConnectData->txData).conn,
-        (socketConnectData->txData).num);
+    *opResult = gSocketOps.socketBatchConnect((socketConnectData->txData).conn, (socketConnectData->txData).num);
     if (*opResult != 0) {
         hccp_err("socket batch connect failed ret[%d].", *opResult);
     }
@@ -103,15 +100,12 @@ int RaRsSocketBatchClose(char *inBuf, char *outBuf, int *outLen, int *opResult, 
 
 int RaRsSocketBatchAbort(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
-    union OpSocketConnectData *socketConnectData = (union OpSocketConnectData *)(inBuf +
-        sizeof(struct MsgHead));
+    union OpSocketConnectData *socketConnectData = (union OpSocketConnectData *)(inBuf + sizeof(struct MsgHead));
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSocketConnectData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSocketConnectData), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_NUM(socketConnectData->txData.num, MAX_SOCKET_NUM);
 
-    *opResult = gSocketOps.socketBatchAbort((socketConnectData->txData).conn,
-        (socketConnectData->txData).num);
+    *opResult = gSocketOps.socketBatchAbort((socketConnectData->txData).conn, (socketConnectData->txData).num);
     if (*opResult != 0) {
         hccp_err("socket batch abort failed ret[%d]", *opResult);
     }
@@ -224,12 +218,11 @@ int RaRsSocketSend(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSocketSendData), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_LEN_RET_HOST(sendData->txData.sendSize, 0, SOCKET_SEND_MAXLEN, opResult);
 
-    sendLen =
-        gSocketOps.socketSend(sendData->txData.fd, sendData->txData.dataSend, sendData->txData.sendSize);
+    sendLen = gSocketOps.socketSend(sendData->txData.fd, sendData->txData.dataSend, sendData->txData.sendSize);
     if (sendLen <= 0) {
         if (sendLen == -EAGAIN) {
             hccp_dbg("socket send need retry, ret[%d]", sendLen);
-        }else {
+        } else {
             hccp_warn("send unsuccessful, sendLen[%d] expect greater than 0.", sendLen);
         }
     }
@@ -247,8 +240,7 @@ int RaRsSocketRecv(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
     union OpSocketRecvData *recvData = (union OpSocketRecvData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSocketRecvData), sizeof(struct MsgHead), rcvBufLen, opResult);
-    HCCP_CHECK_PARAM_LEN(sizeof(union OpSocketRecvData) + recvData->txData.recvSize, sizeof(struct MsgHead),
-        rcvBufLen);
+    HCCP_CHECK_PARAM_LEN(sizeof(union OpSocketRecvData) + recvData->txData.recvSize, sizeof(struct MsgHead), rcvBufLen);
 
     recvLen = gSocketOps.socketRecv(recvData->txData.fd,
         outBuf + sizeof(struct MsgHead) + sizeof(union OpSocketRecvData), recvData->txData.recvSize);
@@ -295,8 +287,7 @@ int RaRsSocketWhiteListAdd(char *inBuf, char *outBuf, int *outLen, int *opResult
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpWlistData), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_NUM(wlistData->txData.num, MAX_WLIST_NUM);
 
-    *opResult = gSocketOps.whiteListAdd(wlistData->txData.rdevInfo, wlistData->txData.wlist,
-        wlistData->txData.num);
+    *opResult = gSocketOps.whiteListAdd(wlistData->txData.rdevInfo, wlistData->txData.wlist, wlistData->txData.num);
     if (*opResult != 0) {
         hccp_err("white_list_add failed, ret[%d]", *opResult);
     }
@@ -310,8 +301,7 @@ int RaRsSocketWhiteListAddV2(char *inBuf, char *outBuf, int *outLen, int *opResu
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpWlistDataV2), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_NUM(wlistData->txData.num, MAX_WLIST_NUM);
 
-    *opResult = gSocketOps.whiteListAdd(wlistData->txData.rdevInfo, wlistData->txData.wlist,
-        wlistData->txData.num);
+    *opResult = gSocketOps.whiteListAdd(wlistData->txData.rdevInfo, wlistData->txData.wlist, wlistData->txData.num);
     if (*opResult != 0) {
         hccp_err("white_list_add failed, ret[%d]", *opResult);
     }
@@ -325,8 +315,7 @@ int RaRsSocketWhiteListDel(char *inBuf, char *outBuf, int *outLen, int *opResult
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpWlistData), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_NUM(wlistData->txData.num, MAX_WLIST_NUM);
 
-    *opResult = gSocketOps.whiteListDel(wlistData->txData.rdevInfo, wlistData->txData.wlist,
-        wlistData->txData.num);
+    *opResult = gSocketOps.whiteListDel(wlistData->txData.rdevInfo, wlistData->txData.wlist, wlistData->txData.num);
     if (*opResult != 0) {
         hccp_err("white_list_del failed, ret[%d]", *opResult);
     }
@@ -340,8 +329,7 @@ int RaRsSocketWhiteListDelV2(char *inBuf, char *outBuf, int *outLen, int *opResu
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpWlistDataV2), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_NUM(wlistData->txData.num, MAX_WLIST_NUM);
 
-    *opResult = gSocketOps.whiteListDel(wlistData->txData.rdevInfo, wlistData->txData.wlist,
-        wlistData->txData.num);
+    *opResult = gSocketOps.whiteListDel(wlistData->txData.rdevInfo, wlistData->txData.wlist, wlistData->txData.num);
     if (*opResult != 0) {
         hccp_err("white_list_del failed, ret[%d]", *opResult);
     }
@@ -355,8 +343,7 @@ int RaRsSocketCreditAdd(char *inBuf, char *outBuf, int *outLen, int *opResult, i
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpAcceptCreditData), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_NUM(opData->txData.num, MAX_SOCKET_NUM);
 
-    *opResult = gSocketOps.acceptCreditAdd(opData->txData.conn, opData->txData.num,
-        opData->txData.creditLimit);
+    *opResult = gSocketOps.acceptCreditAdd(opData->txData.conn, opData->txData.num, opData->txData.creditLimit);
     if (*opResult != 0) {
         hccp_err("accept_credit_add failed, ret[%d]", *opResult);
     }
@@ -470,17 +457,14 @@ int RaRsGetVnicIp(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcv
 
 int RaRsGetVnicIpInfosV1(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
-    union OpGetVnicIpInfosDataV1 *vnicIpData = (union OpGetVnicIpInfosDataV1 *)(inBuf +
-        sizeof(struct MsgHead));
-    union OpGetVnicIpInfosDataV1 *vnicIpOut = (union OpGetVnicIpInfosDataV1 *)(outBuf +
-        sizeof(struct MsgHead));
+    union OpGetVnicIpInfosDataV1 *vnicIpData = (union OpGetVnicIpInfosDataV1 *)(inBuf + sizeof(struct MsgHead));
+    union OpGetVnicIpInfosDataV1 *vnicIpOut = (union OpGetVnicIpInfosDataV1 *)(outBuf + sizeof(struct MsgHead));
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetVnicIpInfosDataV1), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetVnicIpInfosDataV1), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_LEN_RET_HOST(vnicIpData->txData.num, 0, MAX_IP_INFO_NUM_V1, opResult);
 
-    *opResult = gSocketOps.getVnicIpInfos(vnicIpData->txData.phyId, vnicIpData->txData.type,
-        vnicIpData->txData.ids, vnicIpData->txData.num, vnicIpOut->rxData.infos);
+    *opResult = gSocketOps.getVnicIpInfos(vnicIpData->txData.phyId, vnicIpData->txData.type, vnicIpData->txData.ids,
+        vnicIpData->txData.num, vnicIpOut->rxData.infos);
 
     if (*opResult != 0) {
         hccp_err("rs get vnic ip infos failed, ret %d", *opResult);
@@ -491,17 +475,14 @@ int RaRsGetVnicIpInfosV1(char *inBuf, char *outBuf, int *outLen, int *opResult, 
 
 int RaRsGetVnicIpInfos(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
-    union OpGetVnicIpInfosData *vnicIpData = (union OpGetVnicIpInfosData *)(inBuf +
-        sizeof(struct MsgHead));
-    union OpGetVnicIpInfosData *vnicIpOut = (union OpGetVnicIpInfosData *)(outBuf +
-        sizeof(struct MsgHead));
+    union OpGetVnicIpInfosData *vnicIpData = (union OpGetVnicIpInfosData *)(inBuf + sizeof(struct MsgHead));
+    union OpGetVnicIpInfosData *vnicIpOut = (union OpGetVnicIpInfosData *)(outBuf + sizeof(struct MsgHead));
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetVnicIpInfosData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetVnicIpInfosData), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_LEN_RET_HOST(vnicIpData->txData.num, 0, MAX_IP_INFO_NUM, opResult);
 
-    *opResult = gSocketOps.getVnicIpInfos(vnicIpData->txData.phyId, vnicIpData->txData.type,
-        vnicIpData->txData.ids, vnicIpData->txData.num, vnicIpOut->rxData.infos);
+    *opResult = gSocketOps.getVnicIpInfos(vnicIpData->txData.phyId, vnicIpData->txData.type, vnicIpData->txData.ids,
+        vnicIpData->txData.num, vnicIpOut->rxData.infos);
 
     if (*opResult != 0) {
         hccp_err("rs get vnic ip infos failed, ret %d", *opResult);

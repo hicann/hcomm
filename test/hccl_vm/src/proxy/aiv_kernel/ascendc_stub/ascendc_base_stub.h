@@ -45,9 +45,9 @@ using fp8_e8m0_t = int8_t;
 using hifloat8_t = int8_t;
 
 typedef enum {
-    PIPE_S = 0,     // Scalar Pipe
-    PIPE_MTE2 = 1,  // MTE2 Pipe: GM->UB
-    PIPE_MTE3 = 2,  // MTE3 Pipe: UB->GM
+    PIPE_S = 0,    // Scalar Pipe
+    PIPE_MTE2 = 1, // MTE2 Pipe: GM->UB
+    PIPE_MTE3 = 2, // MTE3 Pipe: UB->GM
     PIPE_ALL,
 } pipe_t;
 
@@ -118,6 +118,6 @@ enum class TPosition : uint8_t {
 };
 
 using QuePosition = TPosition;
-}
+} // namespace AscendC
 
 #endif // ASCEND_C_BASE_STUB_H

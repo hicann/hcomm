@@ -20,20 +20,21 @@ namespace Hccl {
 class ConnInterface {
 public:
     // 使用地址信息、位置信息、链路类型、链路协议构造接口
-    ConnInterface(const IpAddress inputAddr, const AddrPosition inputPos, const LinkType inputLinkType,
-                  const LinkProtocol inputLinkProtocol);
-    IpAddress    GetAddr() const;
+    ConnInterface(
+        const IpAddress inputAddr, const AddrPosition inputPos, const LinkType inputLinkType,
+        const LinkProtocol inputLinkProtocol);
+    IpAddress GetAddr() const;
     AddrPosition GetPos() const;
-    LinkType     GetLinkType() const;
+    LinkType GetLinkType() const;
     LinkProtocol GetLinkProtocol() const;
-    std::string  Describe() const;
-    bool         operator==(const ConnInterface &rhs) const;
-    bool         operator!=(const ConnInterface &rhs) const;
+    std::string Describe() const;
+    bool operator==(const ConnInterface& rhs) const;
+    bool operator!=(const ConnInterface& rhs) const;
 
 private:
-    IpAddress    addr{};
+    IpAddress addr{};
     AddrPosition pos{};
-    LinkType     linkType{};
+    LinkType linkType{};
     LinkProtocol linkProtocol{};
 };
 } // namespace Hccl

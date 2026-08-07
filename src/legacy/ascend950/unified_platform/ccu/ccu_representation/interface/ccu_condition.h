@@ -22,24 +22,24 @@ namespace CcuRep {
 
 #define CCU_IF_HELPER1(ctr, x) CCU_IF_HELPER2(ctr, x)
 
-#define CCU_IF_HELPER2(ctr, x)                                                                                         \
-    for (auto __ccuConditionHidden##ctr = CcuRep::Condition(this, x); __ccuConditionHidden##ctr.Check();               \
+#define CCU_IF_HELPER2(ctr, x)                                                                           \
+    for (auto __ccuConditionHidden##ctr = CcuRep::Condition(this, x); __ccuConditionHidden##ctr.Check(); \
          __ccuConditionHidden##ctr.Run())
 
-class Condition {
-public:
-    Condition(CcuRepContext *context, CcuRelationalOperator<Variable, uint64_t> rel);
-    ~Condition();
-    bool Check() const;
-    void Run();
+    class Condition {
+    public:
+        Condition(CcuRepContext* context, CcuRelationalOperator<Variable, uint64_t> rel);
+        ~Condition();
+        bool Check() const;
+        void Run();
 
-private:
-    CcuRepContext *context{nullptr};
-    bool isExecuted{false};
+    private:
+        CcuRepContext* context{nullptr};
+        bool isExecuted{false};
 
-    std::shared_ptr<CcuRepJumpBase>  jump{nullptr};
-    std::shared_ptr<CcuRepJumpLabel> endLabel{nullptr};
-};
+        std::shared_ptr<CcuRepJumpBase> jump{nullptr};
+        std::shared_ptr<CcuRepJumpLabel> endLabel{nullptr};
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

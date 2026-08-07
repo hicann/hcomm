@@ -5,25 +5,25 @@
 #include "orion_adapter_rts.h"
 #include "rdma_handle_manager.h"
 
-
 namespace Hccl {
 
-void TpManager::Init()
-{ }
+void TpManager::Init() {}
 
 TpManager& TpManager::GetInstance(const int32_t deviceLogicId)
 {
     static TpManager tpManager[MAX_MODULE_DEVICE_NUM];
 
     if (deviceLogicId < 0 || static_cast<uint32_t>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM) {
-        THROW<InvalidParamsException>("[TpManager][%s] Failed to get instance. "
-            "devLogicId[%d] should be less than %u.", __func__, deviceLogicId, MAX_MODULE_DEVICE_NUM);
+        THROW<InvalidParamsException>(
+            "[TpManager][%s] Failed to get instance. "
+            "devLogicId[%d] should be less than %u.",
+            __func__, deviceLogicId, MAX_MODULE_DEVICE_NUM);
     }
 
     return tpManager[deviceLogicId];
 }
 
-HcclResult TpManager::GetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &tpInfo, bool isSync)
+HcclResult TpManager::GetTpInfo(const RaUbGetTpInfoParam& param, TpInfo& tpInfo, bool isSync)
 {
     TpInfo info;
     info.tpHandle = 1;
@@ -33,24 +33,21 @@ HcclResult TpManager::GetTpInfo(const RaUbGetTpInfoParam &param, TpInfo &tpInfo,
     return HCCL_SUCCESS;
 }
 
-HcclResult TpManager::ReleaseTpInfo(const RaUbGetTpInfoParam &param, const TpInfo &tpInfo)
+HcclResult TpManager::ReleaseTpInfo(const RaUbGetTpInfoParam& param, const TpInfo& tpInfo)
 {
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult TpManager::GetTpAttr(const GetTpAttrParam &param, TpAttrInfo &tpAttrInfo, RdmaHandle rdmaHandle)
+HcclResult TpManager::GetTpAttr(const GetTpAttrParam& param, TpAttrInfo& tpAttrInfo, RdmaHandle rdmaHandle)
 {
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult TpManager::ReleaseTpAttr(const TpHandle tpHandle, const TpAttrInfo &tpAttrInfo)
+HcclResult TpManager::ReleaseTpAttr(const TpHandle tpHandle, const TpAttrInfo& tpAttrInfo)
 {
     return HcclResult::HCCL_SUCCESS;
 }
 
-uint8_t TpManager::CalcTaTimeout(const TpAttrInfo &tpAttrInfo)
-{
-    return AT_GEAR_DEFAULT * 8;
-}
+uint8_t TpManager::CalcTaTimeout(const TpAttrInfo& tpAttrInfo) { return AT_GEAR_DEFAULT * 8; }
 
-}
+} // namespace Hccl

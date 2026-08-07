@@ -18,33 +18,31 @@
 
 namespace hccl {
 
-using AlgTemplateCreator = std::function<AlgTemplateBase *(const HcclDispatcher)>;
+using AlgTemplateCreator = std::function<AlgTemplateBase*(const HcclDispatcher)>;
 
 template <typename P>
-static AlgTemplateBase *DefaultTemplateCreator(const HcclDispatcher dispatcher)
+static AlgTemplateBase* DefaultTemplateCreator(const HcclDispatcher dispatcher)
 {
-    static_assert(std::is_base_of<AlgTemplateBase, P>::value,
-        "Template type must derived from Hccl::AlgTemplateBase");
+    static_assert(std::is_base_of<AlgTemplateBase, P>::value, "Template type must derived from Hccl::AlgTemplateBase");
     return new (std::nothrow) P(dispatcher);
 }
 
 class AlgTemplateRegistry {
 public:
-    static AlgTemplateRegistry &Instance();
+    static AlgTemplateRegistry& Instance();
     AlgTemplateRegistry();
-    HcclResult Register(const TemplateType type, const AlgTemplateCreator &algTemplateCreator);
-    std::unique_ptr<AlgTemplateBase> GetAlgTemplate(const TemplateType type,
-        const HcclDispatcher dispatcher);
+    HcclResult Register(const TemplateType type, const AlgTemplateCreator& algTemplateCreator);
+    std::unique_ptr<AlgTemplateBase> GetAlgTemplate(const TemplateType type, const HcclDispatcher dispatcher);
 
 private:
     std::vector<AlgTemplateCreator> tempCreators_;
     mutable std::mutex mu_;
 };
 
-#define REGISTER_TEMPLATE_HELPER(ctr, type, algTempBase)       \
-    static HcclResult g_func_##algTempBase##_##ctr             \
+#define REGISTER_TEMPLATE_HELPER(ctr, type, algTempBase) \
+    static HcclResult g_func_##algTempBase##_##ctr       \
         = AlgTemplateRegistry::Instance().Register(type, DefaultTemplateCreator<algTempBase>)
 
 #define REGISTER_TEMPLATE(type, algTempBase) REGISTER_TEMPLATE_HELPER(__COUNTER__, type, algTempBase)
 
-}   // namespace hccl
+} // namespace hccl

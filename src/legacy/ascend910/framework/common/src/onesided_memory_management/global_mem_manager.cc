@@ -7,16 +7,14 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #include "global_mem_manager.h"
 
 #include <string>
 #include "hccl_mem.h"
 
 namespace hccl {
-GlobalMemRegMgr::~GlobalMemRegMgr()
-{
-}
+GlobalMemRegMgr::~GlobalMemRegMgr() {}
 
 GlobalMemRegMgr& GlobalMemRegMgr::GetInstance()
 {
@@ -26,8 +24,10 @@ GlobalMemRegMgr& GlobalMemRegMgr::GetInstance()
 
     HcclResult hcclRet = hrtGetDeviceRefresh(&deviceLogicID);
     if (hcclRet != HCCL_SUCCESS) {
-        HCCL_RUN_WARNING("GlobalMemRegMgr::GetInstance hrtGetDeviceRefresh failed, ret[%d], "
-            "return reserve instance", hcclRet);
+        HCCL_RUN_WARNING(
+            "GlobalMemRegMgr::GetInstance hrtGetDeviceRefresh failed, ret[%d], "
+            "return reserve instance",
+            hcclRet);
         return instance[MAX_MODULE_DEVICE_NUM];
     }
 
@@ -68,7 +68,8 @@ HcclResult GlobalMemRegMgr::CheckOverlapAndInsert(GlobalMemRecord& memRecord, vo
         if (memRecord == *it) {
             // 已经存在相同的记录，取出地址作为handle
             *memRecordHandle = const_cast<GlobalMemRecord*>(&(*it));
-            HCCL_INFO("[GlobalMemRegMgr][CheckOverlapAndInsert] The memory[%s] has been registered already.",
+            HCCL_INFO(
+                "[GlobalMemRegMgr][CheckOverlapAndInsert] The memory[%s] has been registered already.",
                 memInfo.c_str());
             return HCCL_SUCCESS;
         }
@@ -108,29 +109,27 @@ HcclResult GlobalMemRegMgr::Reg(const HcclMem* mem, void** memRecordHandle)
 {
     // 不允许注册空内存，报错退出
     CHK_PTR_NULL(mem);
-    CHK_PRT_RET(mem->addr == nullptr,
-        HCCL_ERROR("[GlobalMemRegMgr][Reg] The address of mem[%p] to register is null.", mem),
+    CHK_PRT_RET(
+        mem->addr == nullptr, HCCL_ERROR("[GlobalMemRegMgr][Reg] The address of mem[%p] to register is null.", mem),
         HCCL_E_PARA);
-    CHK_PRT_RET(mem->size == 0,
-        HCCL_ERROR("[GlobalMemRegMgr][Reg] The size of mem[%p] to register is 0.", mem),
-        HCCL_E_PARA);
+    CHK_PRT_RET(
+        mem->size == 0, HCCL_ERROR("[GlobalMemRegMgr][Reg] The size of mem[%p] to register is 0.", mem), HCCL_E_PARA);
 
     GlobalMemRecord newRecord(mem);
     const auto memInfo = newRecord.PrintInfo();
     std::unique_lock<std::mutex> lock(lock_);
     CHK_RET(CheckOverlapAndInsert(newRecord, memRecordHandle));
-    HCCL_INFO("[GlobalMemRegMgr][Reg] Added a new memory record[%s], handle[%p].",
-        memInfo.c_str(), *memRecordHandle);
-    
+    HCCL_INFO("[GlobalMemRegMgr][Reg] Added a new memory record[%s], handle[%p].", memInfo.c_str(), *memRecordHandle);
+
     // 记录地址，便于其他接口进行入参handle合法性校验
     validHandlePtrSet.emplace(*memRecordHandle);
 
     return HCCL_SUCCESS;
 }
 
-HcclResult GlobalMemRegMgr::DeReg(void *memRecordHandle)
+HcclResult GlobalMemRegMgr::DeReg(void* memRecordHandle)
 {
-    const auto *memRecordPtr = static_cast<GlobalMemRecord *>(memRecordHandle);
+    const auto* memRecordPtr = static_cast<GlobalMemRecord*>(memRecordHandle);
     const auto memInfo = memRecordPtr->PrintInfo();
     std::unique_lock<std::mutex> lock(lock_);
 
@@ -150,7 +149,7 @@ HcclResult GlobalMemRegMgr::DeReg(void *memRecordHandle)
             "[GlobalMemRegMgr][DeReg] Cannot deregistor memory[%s] since it is still bound to comm(s) listed below:",
             memInfo.c_str());
 
-        for (const auto &commIdentifier : boundComm) {
+        for (const auto& commIdentifier : boundComm) {
             HCCL_ERROR("[GlobalMemRegMgr][DeReg][bound comm] %s", commIdentifier.c_str());
         }
 
@@ -159,12 +158,14 @@ HcclResult GlobalMemRegMgr::DeReg(void *memRecordHandle)
     }
     HcclResult ret = HCCL_SUCCESS;
     auto regBufInfo = memRecordPtr->GetAllRegBufInfo();
-    for (auto &pair : regBufInfo) {
+    for (auto& pair : regBufInfo) {
         do {
-            ret = HcclMemDereg(&pair.second);  // 需循环调用DeregMem解注册注册内存(一块内存多次Reg的情况，内部有计数)
-            CHK_PRT_CONT(ret != HCCL_SUCCESS && ret != HCCL_E_AGAIN,
-                HCCL_ERROR("[GlobalMemRegMgr][DeReg] Dereg global mem failed, addr[%p] size[%lu].",
-                    pair.second.addr, pair.second.len));
+            ret = HcclMemDereg(&pair.second); // 需循环调用DeregMem解注册注册内存(一块内存多次Reg的情况，内部有计数)
+            CHK_PRT_CONT(
+                ret != HCCL_SUCCESS && ret != HCCL_E_AGAIN,
+                HCCL_ERROR(
+                    "[GlobalMemRegMgr][DeReg] Dereg global mem failed, addr[%p] size[%lu].", pair.second.addr,
+                    pair.second.len));
         } while (ret == HCCL_E_AGAIN);
     }
 
@@ -195,7 +196,8 @@ HcclResult GlobalMemRegMgr::InitNic()
     }
     CHK_RET(HcclNetInit(NICDeployment::NIC_DEPLOYMENT_DEVICE, devicePhyId_, static_cast<u32>(deviceLogicId_), false));
     nicInited_ = true;
-    socketManager_.reset(new (std::nothrow) HcclSocketManager(NICDeployment::NIC_DEPLOYMENT_DEVICE, deviceLogicId_, devicePhyId_, 0));
+    socketManager_.reset(new (std::nothrow)
+                             HcclSocketManager(NICDeployment::NIC_DEPLOYMENT_DEVICE, deviceLogicId_, devicePhyId_, 0));
     CHK_PTR_NULL(socketManager_);
     HCCL_INFO("[InitNic] Nic init success, devicePhyId[%u], deviceLogicId[%d]", devicePhyId_, deviceLogicId_);
     return HCCL_SUCCESS;
@@ -219,14 +221,17 @@ HcclResult GlobalMemRegMgr::DeInitNic()
     return HCCL_SUCCESS;
 }
 
-HcclResult GlobalMemRegMgr::CheckOneSidedBackupAndSetDevId(const HcclIpAddress &ipAddr, u32 &backupDevPhyId, u32 &backupDevLogicId,
-    std::vector<HcclIpAddress> &localIpList, bool &isOneSidedTaskAndBackupInitA3)
+HcclResult GlobalMemRegMgr::CheckOneSidedBackupAndSetDevId(
+    const HcclIpAddress& ipAddr, u32& backupDevPhyId, u32& backupDevLogicId, std::vector<HcclIpAddress>& localIpList,
+    bool& isOneSidedTaskAndBackupInitA3)
 {
     DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType != DevType::DEV_TYPE_910_93) {
         isOneSidedTaskAndBackupInitA3 = false;
-        HCCL_INFO("[GlobalMemRegMgr::CheckOneSidedBackupAndSetDevId] deviceType[%d] is not 910_93, One sided backup not support",
+        HCCL_INFO(
+            "[GlobalMemRegMgr::CheckOneSidedBackupAndSetDevId] deviceType[%d] is not 910_93, One sided backup not "
+            "support",
             static_cast<u32>(deviceType));
         return HCCL_SUCCESS;
     }
@@ -236,28 +241,36 @@ HcclResult GlobalMemRegMgr::CheckOneSidedBackupAndSetDevId(const HcclIpAddress &
     std::vector<std::vector<HcclIpAddress>> chipDeviceIPs;
     CHK_RET(hrtRaGetDeviceAllNicIP(chipDeviceIPs));
     if (chipDeviceIPs.empty()) {
-        HCCL_RUN_WARNING("[GlobalMemRegMgr::CheckOneSidedBackupAndSetDevId] chipDeviceIPs is empty, system nic ip may not set.");
+        HCCL_RUN_WARNING(
+            "[GlobalMemRegMgr::CheckOneSidedBackupAndSetDevId] chipDeviceIPs is empty, system nic ip may not set.");
         isOneSidedTaskAndBackupInitA3 = false;
         return HCCL_SUCCESS;
     }
     u32 ipIdex = 1U - (devicePhyId_ % 2U);
-    std::copy_if(chipDeviceIPs[ipIdex].begin(), chipDeviceIPs[ipIdex].end(),
-                std::back_inserter(backupIpList), [](const HcclIpAddress& ip) { return !ip.IsIPv6(); });
-    auto equalToLocal = [&ipAddr](const HcclIpAddress &entry) { return entry == ipAddr;};
-    isOneSidedTaskAndBackupInitA3 = !std::any_of(localIpList.begin(), localIpList.end(), equalToLocal) &&
-                                    std::any_of(backupIpList.begin(), backupIpList.end(), equalToLocal);
+    std::copy_if(
+        chipDeviceIPs[ipIdex].begin(), chipDeviceIPs[ipIdex].end(), std::back_inserter(backupIpList),
+        [](const HcclIpAddress& ip) {
+            return !ip.IsIPv6();
+        });
+    auto equalToLocal = [&ipAddr](const HcclIpAddress& entry) {
+        return entry == ipAddr;
+    };
+    isOneSidedTaskAndBackupInitA3 = !std::any_of(localIpList.begin(), localIpList.end(), equalToLocal)
+                                    && std::any_of(backupIpList.begin(), backupIpList.end(), equalToLocal);
     if (isOneSidedTaskAndBackupInitA3) {
         CHK_RET(hrtGetDeviceIndexByPhyId(backupDevPhyId, backupDevLogicId));
     }
-    HCCL_INFO("[GlobalMemRegMgr::CheckOneSidedBackupAndSetDevI]devicePhysicID[%u], localIpList[%s], backupDevPhyId[%d], backupDeviceIP[0]:[%s],"
-        "isOneSidedTaskAndBackupInitA3[%s]", devicePhyId_, localIpList[0].GetReadableAddress(), backupDevPhyId, backupIpList[0].GetReadableAddress(),
+    HCCL_INFO(
+        "[GlobalMemRegMgr::CheckOneSidedBackupAndSetDevI]devicePhysicID[%u], localIpList[%s], backupDevPhyId[%d], "
+        "backupDeviceIP[0]:[%s],"
+        "isOneSidedTaskAndBackupInitA3[%s]",
+        devicePhyId_, localIpList[0].GetReadableAddress(), backupDevPhyId, backupIpList[0].GetReadableAddress(),
         isOneSidedTaskAndBackupInitA3 ? "true" : "false");
     return HCCL_SUCCESS;
 }
 
-
-HcclResult GlobalMemRegMgr::GetNetDevCtx(NicType nicType, const HcclIpAddress &ipAddr, u32 port,
-    HcclNetDevCtx &netDevCtx)
+HcclResult
+GlobalMemRegMgr::GetNetDevCtx(NicType nicType, const HcclIpAddress& ipAddr, u32 port, HcclNetDevCtx& netDevCtx)
 {
     if (devicePhyId_ == INVALID_UINT || deviceLogicId_ == INVALID_INT) {
         CHK_RET(hrtGetDevice(&deviceLogicId_));
@@ -269,9 +282,10 @@ HcclResult GlobalMemRegMgr::GetNetDevCtx(NicType nicType, const HcclIpAddress &i
     u32 backupDevLogicId = INVALID_INT;
     bool isOneSidedTaskAndBackupInitA3 = false;
     std::vector<HcclIpAddress> localIpList;
-    CHK_RET(CheckOneSidedBackupAndSetDevId(ipAddr, backupDevPhyId, backupDevLogicId, localIpList, isOneSidedTaskAndBackupInitA3));
-    HCCL_INFO("[GlobalMemRegMgr][GetNetDevCtx] nicType[%d], ip[%s], port[%u]", nicType, ipAddr.GetReadableAddress(),
-        port);
+    CHK_RET(CheckOneSidedBackupAndSetDevId(
+        ipAddr, backupDevPhyId, backupDevLogicId, localIpList, isOneSidedTaskAndBackupInitA3));
+    HCCL_INFO(
+        "[GlobalMemRegMgr][GetNetDevCtx] nicType[%d], ip[%s], port[%u]", nicType, ipAddr.GetReadableAddress(), port);
 
     std::lock_guard<std::mutex> lock(netDevCtxMtx_);
     // 进程粒度open dev，如果已open，直接复用
@@ -283,10 +297,13 @@ HcclResult GlobalMemRegMgr::GetNetDevCtx(NicType nicType, const HcclIpAddress &i
     }
     HcclNetDevCtx tempNetDevCtx;
     if (isOneSidedTaskAndBackupInitA3) {
-        HCCL_INFO("[GlobalMemRegMgr::GetNetDevCtx] OneSeidedService backupInit: backupDevPhyId[%d], backupDevLogicId[%d], localIp[%s], backupIp[%s]",
-                backupDevPhyId, backupDevLogicId, localIpList[0].GetReadableAddress(), ipAddr.GetReadableAddress());
+        HCCL_INFO(
+            "[GlobalMemRegMgr::GetNetDevCtx] OneSeidedService backupInit: backupDevPhyId[%d], backupDevLogicId[%d], "
+            "localIp[%s], backupIp[%s]",
+            backupDevPhyId, backupDevLogicId, localIpList[0].GetReadableAddress(), ipAddr.GetReadableAddress());
         CHK_RET(HcclNetInit(NICDeployment::NIC_DEPLOYMENT_DEVICE, backupDevPhyId, backupDevLogicId, false, true));
-        CHK_RET(HcclNetInit(NICDeployment::NIC_DEPLOYMENT_DEVICE, devicePhyId_, static_cast<u32>(deviceLogicId_), false));
+        CHK_RET(
+            HcclNetInit(NICDeployment::NIC_DEPLOYMENT_DEVICE, devicePhyId_, static_cast<u32>(deviceLogicId_), false));
         CHK_RET(HcclNetOpenDev(&tempNetDevCtx, nicType, backupDevPhyId, backupDevLogicId, ipAddr, localIpList[0]));
     } else {
         CHK_RET(HcclNetOpenDev(&tempNetDevCtx, nicType, devicePhyId_, deviceLogicId_, ipAddr));

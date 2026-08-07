@@ -10,32 +10,16 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepBase::CcuRepBase()
-{
-}
+    CcuRepBase::CcuRepBase() {}
 
-CcuRepBase::~CcuRepBase()
-{
-}
+    CcuRepBase::~CcuRepBase() {}
 
-CcuRepType CcuRepBase::Type() const
-{
-    return type;
-}
+    CcuRepType CcuRepBase::Type() const { return type; }
 
-bool CcuRepBase::Translated() const
-{
-    return translated;
-}
+    bool CcuRepBase::Translated() const { return translated; }
 
-uint16_t CcuRepBase::StartInstrId() const
-{
-    return instrId;
-}
-uint16_t CcuRepBase::InstrCount()
-{
-    return instrCount;
-}
+    uint16_t CcuRepBase::StartInstrId() const { return instrId; }
+    uint16_t CcuRepBase::InstrCount() { return instrCount; }
 
 }; // namespace CcuRep
 }; // namespace hcomm

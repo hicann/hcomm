@@ -19,35 +19,36 @@ public:
     explicit ReduceScatterPlantLocalReduceCombine(const HcclDispatcher dispatcher);
     ~ReduceScatterPlantLocalReduceCombine() override;
 
-    HcclResult Prepare(DeviceMem &cclInMem, DeviceMem &outputMem, const Stream &stream, std::vector<Stream> &subStreams,
-        std::vector<std::shared_ptr<LocalNotify>> &meshSignal, std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux,
-        MemBlockInfo &memBlockInfo, const HcclReduceOp reductionOp, const HcclDataType dataType, 
-        bool isUseCclIn, bool isLevel0LastRank, bool isNeedSpaceBorrow) override;
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult Prepare(
+        DeviceMem& cclInMem, DeviceMem& outputMem, const Stream& stream, std::vector<Stream>& subStreams,
+        std::vector<std::shared_ptr<LocalNotify>>& meshSignal, std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux,
+        MemBlockInfo& memBlockInfo, const HcclReduceOp reductionOp, const HcclDataType dataType, bool isUseCclIn,
+        bool isLevel0LastRank, bool isNeedSpaceBorrow) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
 protected:
 private:
-    HcclResult MainRecordSub(Stream &mainStream, u32 firstSubStreamIndex, u32 totalTask);    // 主流通知从流
-    HcclResult SubWaitMain(u32 firstSubStreamIndex, u32 totalTask);      // 从流等待主流
-    HcclResult MainWaitSub(Stream &mainStream, u32 firstSubStreamIndex, u32 totalTask);      // 主流等待从流
-    HcclResult SubRecordMain(u32 firstSubStreamIndex, u32 totalTask);    // 从流等待主流
+    HcclResult MainRecordSub(Stream& mainStream, u32 firstSubStreamIndex, u32 totalTask); // 主流通知从流
+    HcclResult SubWaitMain(u32 firstSubStreamIndex, u32 totalTask);                       // 从流等待主流
+    HcclResult MainWaitSub(Stream& mainStream, u32 firstSubStreamIndex, u32 totalTask);   // 主流等待从流
+    HcclResult SubRecordMain(u32 firstSubStreamIndex, u32 totalTask);                     // 从流等待主流
     u32 CalcOutputIndex(const u32 round);
     bool isLastRank(const u32 rankId);
     bool isLastBlockData(const u32 outputIndex);
     HcclResult LocalCopy();
-    HcclResult RunAlltoAllRDMA(u32 round, u64 sliceSize, const std::vector<LINK> &links);
-    HcclResult RunAlltoAllSDMA(u32 round, u64 sliceSize, const std::vector<LINK> &links);
-    HcclResult RunAlltoAll(const std::vector<LINK> &links);
+    HcclResult RunAlltoAllRDMA(u32 round, u64 sliceSize, const std::vector<LINK>& links);
+    HcclResult RunAlltoAllSDMA(u32 round, u64 sliceSize, const std::vector<LINK>& links);
+    HcclResult RunAlltoAll(const std::vector<LINK>& links);
     HcclResult RunLocalReduce();
     u32 rankSize_{0};
     u32 localRank_{0};
     bool isUseCclIn_{false};
     bool isLevel0LastRank_{false};
-    std::vector<Stream> subStreams_;  // 从流
-    const std::vector<std::shared_ptr<LocalNotify>> *meshSignalPtr_{nullptr};
-    const std::vector<std::shared_ptr<LocalNotify>> *meshSignalAuxPtr_{nullptr};
+    std::vector<Stream> subStreams_; // 从流
+    const std::vector<std::shared_ptr<LocalNotify>>* meshSignalPtr_{nullptr};
+    const std::vector<std::shared_ptr<LocalNotify>>* meshSignalAuxPtr_{nullptr};
     MemBlockInfo memBlockInfo_;
-    bool isNeedSpaceBorrow_{false}; //是否需要借用CCLIN空间完成通信(算子维度)
+    bool isNeedSpaceBorrow_{false}; // 是否需要借用CCLIN空间完成通信(算子维度)
 };
 } // namespace hccl
 #endif /* REDUCE_SCATTER_PLANT_LOCAL_REDUCE_COMBINE_H */

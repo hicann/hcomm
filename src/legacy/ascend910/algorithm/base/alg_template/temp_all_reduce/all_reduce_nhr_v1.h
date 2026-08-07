@@ -13,7 +13,6 @@
 
 #include "all_reduce_nhr_v1_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALL_REDUCE_NHR_V1_H */

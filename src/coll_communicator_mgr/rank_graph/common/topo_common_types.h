@@ -38,7 +38,8 @@ MAKE_ENUM(TopoType, CLOS, MESH_1D, MESH_2D, A3_SERVER, A2_AX_SERVER, TOPO_TYPE_R
 constexpr LocalId BACKUP_LOCAL_ID = 64;
 } // namespace Hccl
 
-inline bool operator==(const CommAddr& lhs, const CommAddr& rhs) {
+inline bool operator==(const CommAddr& lhs, const CommAddr& rhs)
+{
     // 类型不同，直接不等
     if (lhs.type != rhs.type) {
         return false;
@@ -62,39 +63,27 @@ inline bool operator==(const CommAddr& lhs, const CommAddr& rhs) {
 
         case COMM_ADDR_TYPE_RESERVED:
         default:
-            return true; 
+            return true;
     }
 }
 
 namespace std {
 template <>
 struct hash<Hccl::LinkProtocol> {
-    size_t operator()(const Hccl::LinkProtocol& k) const noexcept
-    {
-        return static_cast<std::size_t>(k);
-    }
+    size_t operator()(const Hccl::LinkProtocol& k) const noexcept { return static_cast<std::size_t>(k); }
 };
 template <>
 struct hash<Hccl::NetType> {
-    size_t operator()(const Hccl::NetType& k) const noexcept
-    {
-        return static_cast<std::size_t>(k);
-    }
+    size_t operator()(const Hccl::NetType& k) const noexcept { return static_cast<std::size_t>(k); }
 };
 template <>
 struct hash<Hccl::TopoType> {
-    size_t operator()(const Hccl::TopoType& k) const noexcept
-    {
-        return static_cast<std::size_t>(k);
-    }
+    size_t operator()(const Hccl::TopoType& k) const noexcept { return static_cast<std::size_t>(k); }
 };
 
 template <>
 struct hash<CommProtocol> {
-    size_t operator()(const CommProtocol& protocol) const
-    {
-        return static_cast<size_t>(protocol);
-    }
+    size_t operator()(const CommProtocol& protocol) const { return static_cast<size_t>(protocol); }
 };
 
 template <>
@@ -115,7 +104,7 @@ struct hash<CommAddr> {
                 h = h ^ static_cast<size_t>(commAddr.addr.s_addr);
                 break;
             }
-             case COMM_ADDR_TYPE_IP_V6: {
+            case COMM_ADDR_TYPE_IP_V6: {
                 for (u32 i = 0; i < sizeof(commAddr.addr6); ++i) {
                     h = h ^ static_cast<size_t>(commAddr.addr6.s6_addr[i]) << (i % 8);
                 }
@@ -143,6 +132,6 @@ struct hash<std::pair<CommAddr, CommProtocol>> {
         return h1 ^ (h2 << 1);
     }
 };
-};  // namespace std
+}; // namespace std
 
 #endif // TOPO_COMMON_TYPES_H

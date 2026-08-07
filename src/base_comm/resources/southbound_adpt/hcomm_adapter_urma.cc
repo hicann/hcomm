@@ -7,13 +7,13 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #include <hcomm_adapter_urma.h>
 #include "log.h"
- 
+
 namespace hcomm {
- 
-HcclResult HrtUrmaPostJettySendWr(urma_jetty_t *jetty, urma_jfs_wr_t *wr, urma_jfs_wr_t **bad_wr)
+
+HcclResult HrtUrmaPostJettySendWr(urma_jetty_t* jetty, urma_jfs_wr_t* wr, urma_jfs_wr_t** bad_wr)
 {
     // 参数有效性检查
     if (jetty == nullptr || wr == nullptr) {
@@ -31,13 +31,13 @@ HcclResult HrtUrmaPostJettySendWr(urma_jetty_t *jetty, urma_jfs_wr_t *wr, urma_j
     }
     return HCCL_SUCCESS;
 }
- 
-int HrtUrmaPollJfc(urma_jfc_t *jfc, int cr_cnt, urma_cr_t *cr)
+
+int HrtUrmaPollJfc(urma_jfc_t* jfc, int cr_cnt, urma_cr_t* cr)
 {
     if (UNLIKELY(!DlUrmaFunction::GetInstance().DlUrmaFunctionIsInit())) {
         CHK_RET(DlUrmaFunction::GetInstance().DlUrmaFunctionInit());
     }
     return DlUrmaFunction::GetInstance().dlUrmaPollJfc(jfc, cr_cnt, cr);
 }
- 
-}
+
+} // namespace hcomm

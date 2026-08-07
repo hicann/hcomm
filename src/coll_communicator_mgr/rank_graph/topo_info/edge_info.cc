@@ -15,37 +15,34 @@
 
 namespace Hccl {
 
-const unordered_map<string, LinkProtocol> EdgeInfo::strToLinkProtocol =
-    (unordered_map<string, LinkProtocol>{{"UB_CTP", LinkProtocol::UB_CTP},
-        {"UB_TP", LinkProtocol::UB_TP},
-        {"ROCE", LinkProtocol::ROCE},
-        {"HCCS", LinkProtocol::HCCS},
-        {"PCIE", LinkProtocol::PCIE},
-        {"TCP", LinkProtocol::TCP},
-        {"UB_MEM", LinkProtocol::UB_MEM},
-        {"UBOE", LinkProtocol::UBOE},
-        {"UBG", LinkProtocol::UBG}
-    });
+const unordered_map<string, LinkProtocol> EdgeInfo::strToLinkProtocol = (unordered_map<string, LinkProtocol>{
+    {"UB_CTP", LinkProtocol::UB_CTP},
+    {"UB_TP", LinkProtocol::UB_TP},
+    {"ROCE", LinkProtocol::ROCE},
+    {"HCCS", LinkProtocol::HCCS},
+    {"PCIE", LinkProtocol::PCIE},
+    {"TCP", LinkProtocol::TCP},
+    {"UB_MEM", LinkProtocol::UB_MEM},
+    {"UBOE", LinkProtocol::UBOE},
+    {"UBG", LinkProtocol::UBG}});
 
-const unordered_map<std::string, TopoType> EdgeInfo::strToTopoType =
-    (unordered_map<string, TopoType>{{"CLOS", TopoType::CLOS},
-        {"1DMESH", TopoType::MESH_1D},
-        {"2DMESH", TopoType::MESH_2D},
-        {"A3_SERVER", TopoType::A3_SERVER},
-        {"A2_AX_SERVER", TopoType::A2_AX_SERVER}});
+const unordered_map<std::string, TopoType> EdgeInfo::strToTopoType = (unordered_map<string, TopoType>{
+    {"CLOS", TopoType::CLOS},
+    {"1DMESH", TopoType::MESH_1D},
+    {"2DMESH", TopoType::MESH_2D},
+    {"A3_SERVER", TopoType::A3_SERVER},
+    {"A2_AX_SERVER", TopoType::A2_AX_SERVER}});
 
-const unordered_map<string, LinkType> EdgeInfo::strToLinkType =
-    (unordered_map<string, LinkType>{{"PEER2PEER", LinkType::PEER2PEER}, {"PEER2NET", LinkType::PEER2NET}});
+const unordered_map<string, LinkType> EdgeInfo::strToLinkType
+    = (unordered_map<string, LinkType>{{"PEER2PEER", LinkType::PEER2PEER}, {"PEER2NET", LinkType::PEER2NET}});
 
-const unordered_map<string, AddrPosition> EdgeInfo::strToAddrPosition =
-    (unordered_map<string, AddrPosition>{{"DEVICE", AddrPosition::DEVICE}, {"HOST", AddrPosition::HOST}});
+const unordered_map<string, AddrPosition> EdgeInfo::strToAddrPosition
+    = (unordered_map<string, AddrPosition>{{"DEVICE", AddrPosition::DEVICE}, {"HOST", AddrPosition::HOST}});
 
-void EdgeInfo::Deserialize(const nlohmann::json &edgeInfoJson)
+void EdgeInfo::Deserialize(const nlohmann::json& edgeInfoJson)
 {
     std::string msgNetLayer = "[EdgeInfo::Deserialize] error occurs when parser object of propName \"net_layer\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgNetLayer,
-        netLayer = GetJsonPropertyUInt(edgeInfoJson, "net_layer");
-    );
+    TRY_CATCH_THROW(InvalidParamsException, msgNetLayer, netLayer = GetJsonPropertyUInt(edgeInfoJson, "net_layer"););
     if (netLayer > MAX_VALUE_LEVEL) {
         THROW<InvalidParamsException>(StringFormat(
             "[EdgeInfo::%s] netLayer value[%u] is out of range[0, %u].", __func__, netLayer, MAX_VALUE_LEVEL));
@@ -63,11 +60,11 @@ void EdgeInfo::Deserialize(const nlohmann::json &edgeInfoJson)
         topoType = TopoType::CLOS; // topo_type字段不存在时，取默认值CLOS
     }
 
-    std::string msgtopoInstIdType = "[EdgeInfo::Deserialize] error occurs when parser object of propName \"topo_instance_id\"";
+    std::string msgtopoInstIdType
+        = "[EdgeInfo::Deserialize] error occurs when parser object of propName \"topo_instance_id\"";
     if (edgeInfoJson.contains("topo_instance_id")) {
         TRY_CATCH_THROW(InvalidParamsException, msgtopoInstIdType,
-            topoInstId = GetJsonPropertyUInt(edgeInfoJson, "topo_instance_id");
-        );
+                        topoInstId = GetJsonPropertyUInt(edgeInfoJson, "topo_instance_id"););
     } else {
         HCCL_WARNING("[EdgeInfo::%s] topo_instance_id not found, [default]topo_instance_id=0", __func__);
         topoInstId = 0;
@@ -77,12 +74,14 @@ void EdgeInfo::Deserialize(const nlohmann::json &edgeInfoJson)
     DeserializeEndpoint(edgeInfoJson);
 }
 
-void EdgeInfo::DeserializeProtocol(const nlohmann::json &edgeInfoJson)
+void EdgeInfo::DeserializeProtocol(const nlohmann::json& edgeInfoJson)
 {
     nlohmann::json jsonProtocols;
-    std::string msgProtocols = "[EdgeInfo::DeserializeProtocol] error occurs when parser object of propName \"protocols\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgProtocols, GetJsonPropertyList(edgeInfoJson, "protocols", jsonProtocols););
-    for (auto &protocolEle : jsonProtocols) {
+    std::string msgProtocols
+        = "[EdgeInfo::DeserializeProtocol] error occurs when parser object of propName \"protocols\"";
+    TRY_CATCH_THROW(InvalidParamsException, msgProtocols,
+                    GetJsonPropertyList(edgeInfoJson, "protocols", jsonProtocols););
+    for (auto& protocolEle : jsonProtocols) {
         auto protocolStr = protocolEle.get<std::string>();
         LinkProtocol protocol = GetLinkProtocol(protocolStr);
         if (protocols.count(protocol) == 0) {
@@ -97,19 +96,16 @@ void EdgeInfo::DeserializeProtocol(const nlohmann::json &edgeInfoJson)
     }
 }
 
-void EdgeInfo::DeserializeEndpoint(const nlohmann::json &edgeInfoJson)
+void EdgeInfo::DeserializeEndpoint(const nlohmann::json& edgeInfoJson)
 {
     std::string linkTypeStr;
-    std::string msglinkType = "[EdgeInfo::DeserializeEndpoint] error occurs when parser object of propName \"link_type\"";
-    TRY_CATCH_THROW(InvalidParamsException, msglinkType,
-        linkTypeStr = GetJsonProperty(edgeInfoJson, "link_type");
-    );
+    std::string msglinkType
+        = "[EdgeInfo::DeserializeEndpoint] error occurs when parser object of propName \"link_type\"";
+    TRY_CATCH_THROW(InvalidParamsException, msglinkType, linkTypeStr = GetJsonProperty(edgeInfoJson, "link_type"););
     linkType = GetLinkType(linkTypeStr);
 
     std::string msgLocalA = "[EdgeInfo::DeserializeEndpoint] error occurs when parser object of propName \"local_a\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgLocalA,
-        localA = GetJsonPropertyUInt(edgeInfoJson, "local_a");
-    );
+    TRY_CATCH_THROW(InvalidParamsException, msgLocalA, localA = GetJsonPropertyUInt(edgeInfoJson, "local_a"););
 
     DeserializePort(edgeInfoJson, "local_a_ports", localAPorts);
     if (localAPorts.empty()) {
@@ -117,13 +113,13 @@ void EdgeInfo::DeserializeEndpoint(const nlohmann::json &edgeInfoJson)
     }
 
     if (linkType == LinkType::PEER2PEER) {
-        std::string msgLocalB = "[EdgeInfo::DeserializeEndpoint] error occurs when parser object of propName \"local_b\"";
-        TRY_CATCH_THROW(InvalidParamsException, msgLocalB,
-            localB = GetJsonPropertyUInt(edgeInfoJson, "local_b");
-        );
+        std::string msgLocalB
+            = "[EdgeInfo::DeserializeEndpoint] error occurs when parser object of propName \"local_b\"";
+        TRY_CATCH_THROW(InvalidParamsException, msgLocalB, localB = GetJsonPropertyUInt(edgeInfoJson, "local_b"););
 
         if (localA == localB) { // localA 和 localB 不能是同一个点
-            THROW<InvalidParamsException>("[EdgeInfo::%s] local_a and local_b can not be the same Endpoint id[%u].", __func__, localA);
+            THROW<InvalidParamsException>(
+                "[EdgeInfo::%s] local_a and local_b can not be the same Endpoint id[%u].", __func__, localA);
         }
 
         DeserializePort(edgeInfoJson, "local_b_ports", localBPorts);
@@ -138,7 +134,8 @@ void EdgeInfo::DeserializeEndpoint(const nlohmann::json &edgeInfoJson)
 
     if (edgeInfoJson.contains("position")) {
         string positionStr;
-        std::string msgPosition = "[EdgeInfo::DeserializeEndpoint] error occurs when parser object of propName \"position\"";
+        std::string msgPosition
+            = "[EdgeInfo::DeserializeEndpoint] error occurs when parser object of propName \"position\"";
         TRY_CATCH_THROW(InvalidParamsException, msgPosition, positionStr = GetJsonProperty(edgeInfoJson, "position"););
         position = GetAddrPosition(positionStr);
     } else {
@@ -147,20 +144,18 @@ void EdgeInfo::DeserializeEndpoint(const nlohmann::json &edgeInfoJson)
     }
 }
 
-void EdgeInfo::DeserializePort(const nlohmann::json &edgeInfoJson, std::string propName, std::set<std::string> &ports)
+void EdgeInfo::DeserializePort(const nlohmann::json& edgeInfoJson, std::string propName, std::set<std::string>& ports)
 {
     nlohmann::json jsonPorts;
-    std::string msgPort =
-        StringFormat("[EdgeInfo::%s] error occurs when parser object of propName \"%s\"", __func__, propName.c_str());
+    std::string msgPort
+        = StringFormat("[EdgeInfo::%s] error occurs when parser object of propName \"%s\"", __func__, propName.c_str());
     TRY_CATCH_THROW(InvalidParamsException, msgPort, GetJsonPropertyList(edgeInfoJson, propName.c_str(), jsonPorts));
     if (jsonPorts.empty() || jsonPorts.size() > MAX_PORTS_SIZE) {
-        THROW<InvalidParamsException>("[EdgeInfo::%s] ports[%s].size=[%zu] out of range[1, %u]",
-            __func__,
-            propName.c_str(),
-            jsonPorts.size(),
+        THROW<InvalidParamsException>(
+            "[EdgeInfo::%s] ports[%s].size=[%zu] out of range[1, %u]", __func__, propName.c_str(), jsonPorts.size(),
             MAX_PORTS_SIZE);
     }
-    for (auto &portEle : jsonPorts) {
+    for (auto& portEle : jsonPorts) {
         string port = portEle.get<string>();
         if (!port.empty() && port.size() <= PORT_MAX_LENGTH) {
             if (ports.count(port) == 0) {
@@ -169,40 +164,32 @@ void EdgeInfo::DeserializePort(const nlohmann::json &edgeInfoJson, std::string p
                 HCCL_WARNING("[EdgeInfo::%s] Repeat port:[%s]", __func__, port.c_str());
             }
         } else {
-            THROW<InvalidParamsException>("[EdgeInfo::%s] Invalid port[%s], length[%zu] out of range[1, %u]",
-                __func__,
-                port.c_str(),
-                port.size(),
+            THROW<InvalidParamsException>(
+                "[EdgeInfo::%s] Invalid port[%s], length[%zu] out of range[1, %u]", __func__, port.c_str(), port.size(),
                 PORT_MAX_LENGTH);
         }
     }
 }
 
-bool EdgeInfo::operator==(const EdgeInfo &other) const
+bool EdgeInfo::operator==(const EdgeInfo& other) const
 {
-    return netLayer == other.netLayer && linkType == other.linkType && protocols == other.protocols &&
-           topoType == other.topoType && topoInstId == other.topoInstId && CompareEndpoints(other) &&
-           position == other.position;
+    return netLayer == other.netLayer && linkType == other.linkType && protocols == other.protocols
+           && topoType == other.topoType && topoInstId == other.topoInstId && CompareEndpoints(other)
+           && position == other.position;
 }
 
 // 比较EndpointA和B
-bool EdgeInfo::CompareEndpoints(const EdgeInfo &other) const
+bool EdgeInfo::CompareEndpoints(const EdgeInfo& other) const
 {
     // 无论什么情况，A=other.A && B=other.B时，可视为相同的连接关系
-    if (localA == other.localA && 
-        localB == other.localB && 
-        localAPorts == other.localAPorts &&
-        localBPorts == other.localBPorts) {
+    if (localA == other.localA && localB == other.localB && localAPorts == other.localAPorts
+        && localBPorts == other.localBPorts) {
         return true;
     }
 
     // 当连接类型是PEER2PEER时，A=other.B && B=other.A时，可视为相同的连接关系
-    if (linkType == other.linkType && 
-        linkType == LinkType::PEER2PEER && 
-        localA == other.localB &&
-        localAPorts == other.localBPorts && 
-        localB == other.localA && 
-        localBPorts == other.localAPorts) {
+    if (linkType == other.linkType && linkType == LinkType::PEER2PEER && localA == other.localB
+        && localAPorts == other.localBPorts && localB == other.localA && localBPorts == other.localAPorts) {
         return true;
     }
 
@@ -212,7 +199,8 @@ bool EdgeInfo::CompareEndpoints(const EdgeInfo &other) const
 LinkProtocol EdgeInfo::GetLinkProtocol(string str) const
 {
     if (strToLinkProtocol.count(str) == 0) {
-        THROW<InvalidParamsException>("[EdgeInfo::%s] string['%s'] is not type of LinkProtocol.", __func__, str.c_str());
+        THROW<InvalidParamsException>(
+            "[EdgeInfo::%s] string['%s'] is not type of LinkProtocol.", __func__, str.c_str());
     }
     return strToLinkProtocol.at(str);
 }
@@ -223,7 +211,8 @@ TopoType EdgeInfo::GetTopoType(std::string topoTypeStr) const
         return TopoType::CLOS; // 不填写时，取默认值
     }
     if (strToTopoType.count(topoTypeStr) == 0) {
-        THROW<InvalidParamsException>("[EdgeInfo::%s] string['%s'] is not type of TopoType.", __func__, topoTypeStr.c_str());
+        THROW<InvalidParamsException>(
+            "[EdgeInfo::%s] string['%s'] is not type of TopoType.", __func__, topoTypeStr.c_str());
     }
     return strToTopoType.at(topoTypeStr);
 }
@@ -231,7 +220,8 @@ TopoType EdgeInfo::GetTopoType(std::string topoTypeStr) const
 LinkType EdgeInfo::GetLinkType(std::string linkTypeStr) const
 {
     if (strToLinkType.count(linkTypeStr) == 0) {
-        THROW<InvalidParamsException>("[EdgeInfo::%s] string['%s'] is not type of LinkType.", __func__, linkTypeStr.c_str());
+        THROW<InvalidParamsException>(
+            "[EdgeInfo::%s] string['%s'] is not type of LinkType.", __func__, linkTypeStr.c_str());
     }
     return strToLinkType.at(linkTypeStr);
 }
@@ -292,14 +282,14 @@ std::string EdgeInfo::DescribePorts(std::set<std::string> ports) const
     return portsStr.str();
 }
 
-void EdgeInfo::GetBinStream(BinaryStream &binaryStream) const
+void EdgeInfo::GetBinStream(BinaryStream& binaryStream) const
 {
     binaryStream << netLayer << static_cast<u32>(linkType) << static_cast<u32>(topoType) << topoInstId;
     binaryStream << protocols.size();
     for (LinkProtocol protocol : protocols) {
         binaryStream << static_cast<u32>(protocol);
     }
-    
+
     binaryStream << localA << localB;
 
     binaryStream << localAPorts.size();
@@ -315,7 +305,7 @@ void EdgeInfo::GetBinStream(BinaryStream &binaryStream) const
     binaryStream << static_cast<u32>(position);
 }
 
-EdgeInfo::EdgeInfo(BinaryStream &binaryStream)
+EdgeInfo::EdgeInfo(BinaryStream& binaryStream)
 {
     binaryStream >> netLayer;
     u32 linkTypeTmp;
@@ -323,7 +313,7 @@ EdgeInfo::EdgeInfo(BinaryStream &binaryStream)
     linkType = static_cast<LinkType::Value>(linkTypeTmp);
     u32 topoTypeTmp;
     binaryStream >> topoTypeTmp;
-    topoType  = static_cast<TopoType::Value>(topoTypeTmp);
+    topoType = static_cast<TopoType::Value>(topoTypeTmp);
     binaryStream >> topoInstId;
     size_t protocolSize;
     binaryStream >> protocolSize;
@@ -336,7 +326,7 @@ EdgeInfo::EdgeInfo(BinaryStream &binaryStream)
     }
 
     binaryStream >> localA >> localB;
-    
+
     size_t localAPortsSize;
     binaryStream >> localAPortsSize;
     localAPorts.clear();

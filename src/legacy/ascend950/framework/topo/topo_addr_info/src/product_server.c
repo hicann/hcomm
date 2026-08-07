@@ -26,8 +26,7 @@
 #define MAX_UE_ID_IN_LEVEL (4)
 #define MAX_LEVEL_NUM (4)
 #define SERVER_NPU_NUM (8)
-#define CLOS_LEVEL3 \
-    { .level = 3, .netType = NET_TYPE_CLOS, .ueNum = 0, .instanceIdFunc = GetNetInstanceIdForCluster }
+#define CLOS_LEVEL3 {.level = 3, .netType = NET_TYPE_CLOS, .ueNum = 0, .instanceIdFunc = GetNetInstanceIdForCluster}
 
 enum UbEntityType {
     UE_TYPE_MESH = 0,
@@ -45,7 +44,7 @@ typedef struct stUEInfo {
 } UEInfo;
 
 typedef int (*GetNetInstanceIdFunc)(
-    int npu_id, const struct dcmi_spod_info *spodInfo, char *netInstanceId, int netInstanceIdLen);
+    int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen);
 
 typedef struct stLevelInfo {
     int level;
@@ -65,22 +64,22 @@ typedef struct _stUBRule {
 /**
  *  获取OS级net instance id， 用于不组超节点形态
  */
-int GetNetInstanceIdForOS(int npu_id, const struct dcmi_spod_info *spodInfo, char *netInstanceId, int netInstanceIdLen);
+int GetNetInstanceIdForOS(int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen);
 
 /**
  *  获取超节点中单个服务器的net instance id
  */
 int GetNetInstanceIdForPod(
-    int npu_id, const struct dcmi_spod_info *spodInfo, char *netInstanceId, int netInstanceIdLen);
+    int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen);
 
 /**
  *  获取超节点的net instance id
  */
 int GetNetInstanceIdForSuperPod(
-    int npu_id, const struct dcmi_spod_info *spodInfo, char *netInstanceId, int netInstanceIdLen);
+    int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen);
 
 int GetNetInstanceIdForCluster(
-    int npu_id, const struct dcmi_spod_info *spodInfo, char *netInstanceId, int netInstanceIdLen);
+    int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen);
 
 #define MAX_UE_ID (99) // 定义一个MAX_UE_ID， mesh必须使用最大的UE
 static const NetInfo g_netInfoList[] = {
@@ -230,35 +229,35 @@ static const NetInfo g_netInfoList[] = {
    },
 };
 
-int ServerGetRootinfoLen(size_t *len)
+int ServerGetRootinfoLen(size_t* len)
 {
     *len = MAX_SERVER_ROOTINFO_LEN;
     return 0;
 }
 
-int GetNetInstanceIdForOS(int npu_id, const struct dcmi_spod_info *spodInfo, char *netInstanceId, int netInstanceIdLen)
+int GetNetInstanceIdForOS(int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen)
 {
     return get_server_id(netInstanceId, netInstanceIdLen);
 }
 
-int GetNetInstanceIdForPod(int npu_id, const struct dcmi_spod_info *spodInfo, char *netInstanceId, int netInstanceIdLen)
+int GetNetInstanceIdForPod(int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen)
 {
     return sprintf_s(netInstanceId, netInstanceIdLen, "sp_%ld_srv_%ld", spodInfo->super_pod_id, spodInfo->server_index);
 }
 
 int GetNetInstanceIdForSuperPod(
-    int npu_id, const struct dcmi_spod_info *spodInfo, char *netInstanceId, int netInstanceIdLen)
+    int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen)
 {
     return sprintf_s(netInstanceId, netInstanceIdLen, "sp_%ld", spodInfo->super_pod_id);
 }
 
 int GetNetInstanceIdForCluster(
-    int npu_id, const struct dcmi_spod_info *spodInfo, char *netInstanceId, int netInstanceIdLen)
+    int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen)
 {
     return sprintf_s(netInstanceId, netInstanceIdLen, "cluster");
 }
 
-const NetInfo *GetNetInfo(unsigned int mainBoardId, unsigned int spodType)
+const NetInfo* GetNetInfo(unsigned int mainBoardId, unsigned int spodType)
 {
     // 优先匹配满足mainboard id和 super pod type的情况
     for (size_t i = 0; i < sizeof(g_netInfoList) / sizeof(g_netInfoList[0]); ++i) {
@@ -283,7 +282,7 @@ const NetInfo *GetNetInfo(unsigned int mainBoardId, unsigned int spodType)
  * @param spod_info: spod信息
  * @return int: 0 成功
  */
-static int LayerAddMesh(const UBEntity *ue, NetLayer *layer, int type)
+static int LayerAddMesh(const UBEntity* ue, NetLayer* layer, int type)
 {
     for (unsigned int j = 0; j < ue->eidNum; ++j) {
         if (UrmaEidIsPortGroup(&ue->eidList[j].eid)) {
@@ -310,7 +309,7 @@ static int LayerAddMesh(const UBEntity *ue, NetLayer *layer, int type)
     return 0;
 }
 
-static int LayerAddClos(const UBEntity *ue, NetLayer *layer)
+static int LayerAddClos(const UBEntity* ue, NetLayer* layer)
 {
     int portGroupIdx = UBEntityGetPortGroupIdx(ue);
     if (portGroupIdx < 0) {
@@ -336,7 +335,7 @@ static int LayerAddClos(const UBEntity *ue, NetLayer *layer)
     return 0;
 }
 
-static int LayerAddUBOE(const UBEntity *ue, const UEInfo *ueInfo, NetLayer *layer)
+static int LayerAddUBOE(const UBEntity* ue, const UEInfo* ueInfo, NetLayer* layer)
 {
 #define INVLID_IP_PREFIX "254" // 该IP是有协议栈无DHCP等场景自动生成的本地私有地址前缀
     Addr addr;
@@ -375,7 +374,7 @@ static int LayerAddUBOE(const UBEntity *ue, const UEInfo *ueInfo, NetLayer *laye
  * @param type: UB类型
  * @return UBEntity*: ue entity
  */
-static const UBEntity *GetUBEntityByFilter(const UEList *ueList, int dieId, int ueId, int type)
+static const UBEntity* GetUBEntityByFilter(const UEList* ueList, int dieId, int ueId, int type)
 {
     if (type == UE_TYPE_UBOE) {
         for (unsigned int i = 0; i < ueList->ueNum; i++) {
@@ -394,7 +393,7 @@ static const UBEntity *GetUBEntityByFilter(const UEList *ueList, int dieId, int 
         return NULL;
     }
     int maxFe = 0;
-    const UBEntity *ubEntity = NULL;
+    const UBEntity* ubEntity = NULL;
     for (unsigned int i = 0; i < ueList->ueNum; i++) {
         if (UrmaEidIsUBOE(&ueList->ueList[i].eidList[0].eid)) {
             continue;
@@ -425,7 +424,7 @@ static const UBEntity *GetUBEntityByFilter(const UEList *ueList, int dieId, int 
  * @return int: 0 成功
  */
 static int ProcessLayer(
-    int npuId, NetLayer *layer, UEList *ueList, const LevelInfo *levelInfo, const struct dcmi_spod_info *spodInfo)
+    int npuId, NetLayer* layer, UEList* ueList, const LevelInfo* levelInfo, const struct dcmi_spod_info* spodInfo)
 {
     /* RoCE 层（level 3）走独立路径，不查 UEList */
     if (levelInfo->level == 3) {
@@ -442,7 +441,7 @@ static int ProcessLayer(
         int fe = levelInfo->ueList[i].feId;
         int die = levelInfo->ueList[i].dieId;
         int type = levelInfo->ueList[i].type;
-        const UBEntity *ue = GetUBEntityByFilter(ueList, die, fe, type);
+        const UBEntity* ue = GetUBEntityByFilter(ueList, die, fe, type);
         if (ue == NULL) {
             continue;
         }
@@ -457,7 +456,7 @@ static int ProcessLayer(
     return ret;
 }
 
-int ServerGetRootinfo(int npu_id, unsigned mainboard_id, void *buf, size_t *len)
+int ServerGetRootinfo(int npu_id, unsigned mainboard_id, void* buf, size_t* len)
 {
     if (buf == NULL || len == NULL) {
         return RET_NOK;
@@ -476,9 +475,8 @@ int ServerGetRootinfo(int npu_id, unsigned mainboard_id, void *buf, size_t *len)
     }
     RankInit(&rank, npu_id, localId);
     TopoGetFilePath(mainboard_id, spod_info.super_pod_type, rootinfo.topo_file_path, MAX_TOPO_PATH_LEN);
-    
 
-    const NetInfo *netInfo = GetNetInfo(mainboard_id, spod_info.super_pod_type);
+    const NetInfo* netInfo = GetNetInfo(mainboard_id, spod_info.super_pod_type);
     if (netInfo == NULL) {
         return -1;
     }
@@ -491,7 +489,7 @@ int ServerGetRootinfo(int npu_id, unsigned mainboard_id, void *buf, size_t *len)
     }
 
     RootInfoAddRank(&rootinfo, &rank);
-    char *rootinfo_buf = RootInfoToString(&rootinfo);
+    char* rootinfo_buf = RootInfoToString(&rootinfo);
     if (rootinfo_buf == NULL) {
         return -1;
     }

@@ -16,17 +16,17 @@ using namespace AscendC;
 
 #define FORCE_INLINE_AICORE __attribute__((always_inline)) inline __aicore__
 
-template<typename T>
+template <typename T>
 class AivAllGather910BRdma : public AivCommBase {
 public:
-    
-    FORCE_INLINE_AICORE  AivAllGather910BRdma() {}
+    FORCE_INLINE_AICORE AivAllGather910BRdma() {}
 
     /**
      *  8个核就够拉整个8个不同卡cclOut到userOut了
      */
 
-    FORCE_INLINE_AICORE void Process(GM_ADDR input, GM_ADDR output, uint64_t len, int32_t tag, uint64_t bufferSize, uint64_t serverNum) 
+    FORCE_INLINE_AICORE void
+    Process(GM_ADDR input, GM_ADDR output, uint64_t len, int32_t tag, uint64_t bufferSize, uint64_t serverNum)
     {
         if (blockIdx_ >= rankSize_) {
             return;
@@ -37,7 +37,7 @@ public:
             Record1vN(tag, CommPattern::interRank);
         } else {
             WaitNv1(tag, blockIdx_);
-	    }
+        }
         pipe_barrier(PIPE_ALL);
 
         // todo:1、serverNum需要赋值。 2、len是inputCount 还是inputSize还是 output相关？
@@ -45,15 +45,17 @@ public:
             int64_t sendSize = len * sizeof(T);
             int64_t sendSizeOffset = i * len * sizeof(T);
             int64_t receiveSizeOffset = (i * rankSize_ + blockIdx_) * len * sizeof(T);
-            CpGM2GM<T>((__gm__ T*)((__gm__ char*)output + receiveSizeOffset), (__gm__ T*)((__gm__ char*)(GM_IN[blockIdx_]) + sendSizeOffset), len);
+            CpGM2GM<T>(
+                (__gm__ T*)((__gm__ char*)output + receiveSizeOffset),
+                (__gm__ T*)((__gm__ char*)(GM_IN[blockIdx_]) + sendSizeOffset), len);
         }
         pipe_barrier(PIPE_ALL);
-        //尾同步，每个卡搬完完后要进行标记。要确保所有卡都搬完再退出。
-	    if (blockIdx_ == rank_) {
+        // 尾同步，每个卡搬完完后要进行标记。要确保所有卡都搬完再退出。
+        if (blockIdx_ == rank_) {
             Wait1vN(tag * (rankSize_ - 1), CommPattern::interRank);
         } else {
-	        RecordNv1(tag, blockIdx_);
-	    }
+            RecordNv1(tag, blockIdx_);
+        }
     }
 };
 
@@ -67,4 +69,3 @@ FORCE_INLINE_AICORE void aiv_all_gather_910b_rdma(KERNEL_ARGS_DEF)
     op.TailCounter();
 }
 #endif // AIV_ALL_GATHER_910B_RDMA_H
-

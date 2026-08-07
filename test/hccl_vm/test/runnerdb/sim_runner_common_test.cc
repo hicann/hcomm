@@ -20,9 +20,9 @@
 extern uint64_t g_cur_server_key;
 
 namespace sim {
-aclError GetServerByKey(uint64_t serverKey, sim::Server &server);
+aclError GetServerByKey(uint64_t serverKey, sim::Server& server);
 uint32_t GetCubeCoreCount(uint64_t deviceId);
-}
+} // namespace sim
 
 namespace {
 const std::string kTestDbPath = "/tmp/test_sim_runner_common.db";
@@ -64,17 +64,13 @@ void SetupTestData()
 
     g_cur_server_key = 1;
 }
-}
+} // namespace
 
 class SimRunnerCommonTest : public testing::Test {
 protected:
-    void SetUp() override {
-        SetupTestData();
-    }
+    void SetUp() override { SetupTestData(); }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimRunnerCommonTest, GetDeviceByLogicId_WhenDeviceExists_ReturnSuccess)
@@ -208,14 +204,16 @@ TEST_F(SimRunnerCommonTest, GetDeviceByServerKeyAndPhysicalId_WhenInvalidPhysica
     EXPECT_FALSE(ret.second);
 }
 
-TEST_F(SimRunnerCommonTest, GetServerByKey_Found_ReturnSuccess) {
+TEST_F(SimRunnerCommonTest, GetServerByKey_Found_ReturnSuccess)
+{
     sim::Server server{};
     auto ret = sim::GetServerByKey(1, server);
     EXPECT_EQ(ret, ACL_SUCCESS);
     EXPECT_EQ(server.pod_id, 100);
 }
 
-TEST_F(SimRunnerCommonTest, GetServerByKey_NotFound_ReturnError) {
+TEST_F(SimRunnerCommonTest, GetServerByKey_NotFound_ReturnError)
+{
     sim::Server server{};
     auto ret = sim::GetServerByKey(999, server);
     EXPECT_EQ(ret, ACL_ERROR_INVALID_PARAM);
@@ -223,7 +221,8 @@ TEST_F(SimRunnerCommonTest, GetServerByKey_NotFound_ReturnError) {
 
 class SimRunnerCommonCcuTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestData();
 
         sim::Device device{};
@@ -241,9 +240,7 @@ protected:
         RunnerDB::Add<sim::CcuResource>(ccuRes);
     }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimRunnerCommonCcuTest, GetCcuFromDeviceByDieId_WhenValid_ReturnSuccess)
@@ -283,7 +280,8 @@ TEST_F(SimRunnerCommonCcuTest, GetCcuResourceByCcu_WhenNotFound_ReturnError)
 
 class SimRunnerCommonContextTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestData();
 
         sim::Device device{};
@@ -297,9 +295,7 @@ protected:
         RunnerDB::Add<sim::Context>(ctx);
     }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimRunnerCommonContextTest, GetContextByDevId_WhenValid_ReturnSuccess)
@@ -326,7 +322,8 @@ TEST_F(SimRunnerCommonContextTest, GetContextByDevId_WhenNotFound_ReturnError)
 
 class SimRunnerCommonPortTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestData();
 
         sim::Device device{};
@@ -346,9 +343,7 @@ protected:
         RunnerDB::Add<sim::Port>(port2);
     }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimRunnerCommonPortTest, GetPortByName_WhenValid_ReturnSuccess)
@@ -370,7 +365,8 @@ TEST_F(SimRunnerCommonPortTest, GetPortByName_WhenNotFound_ReturnError)
 
 class SimRunnerCommonCountTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestData();
 
         sim::Device device{};
@@ -386,9 +382,7 @@ protected:
         RunnerDB::Add<sim::TaskSchedulerDevice>(tsDev);
     }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimRunnerCommonCountTest, GetAICpuCount_WhenDeviceExists_ReturnCorrectCount)
@@ -421,7 +415,8 @@ TEST_F(SimRunnerCommonCountTest, GetAICoreCount_WhenDeviceNotExists_ReturnZero)
 
 class SimRunnerCommonVectorCubeTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestData();
 
         sim::Device device{};
@@ -442,9 +437,7 @@ protected:
         RunnerDB::Add<sim::ComputeDie>(die);
     }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimRunnerCommonVectorCubeTest, GetVectorCoreCount_WhenDeviceExists_ReturnCorrectCount)
@@ -461,19 +454,22 @@ TEST_F(SimRunnerCommonVectorCubeTest, GetVectorCoreCount_WhenDeviceNotExists_Ret
     EXPECT_EQ(count, 0);
 }
 
-TEST_F(SimRunnerCommonVectorCubeTest, GetCubeCoreCount_WhenDeviceExists_ReturnCorrectCount) {
+TEST_F(SimRunnerCommonVectorCubeTest, GetCubeCoreCount_WhenDeviceExists_ReturnCorrectCount)
+{
     auto count = sim::GetCubeCoreCount(0);
     EXPECT_GE(count, 1);
 }
 
-TEST_F(SimRunnerCommonVectorCubeTest, GetCubeCoreCount_WhenDeviceNotExists_ReturnZero) {
+TEST_F(SimRunnerCommonVectorCubeTest, GetCubeCoreCount_WhenDeviceNotExists_ReturnZero)
+{
     auto count = sim::GetCubeCoreCount(999);
     EXPECT_EQ(count, 0);
 }
 
 class SimRunnerCommonRankEndpointTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestData();
 
         sim::Device device{};
@@ -486,9 +482,7 @@ protected:
         RunnerDB::Add<sim::Rank>(rank);
     }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimRunnerCommonRankEndpointTest, GetRankIdByDeviceId_WhenExists_ReturnsRankId)
@@ -517,7 +511,8 @@ TEST_F(SimRunnerCommonRankEndpointTest, GetEndPointByIpAddr_WhenNotExists_Return
 
 class SimRunnerCommonFullPortTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestData();
 
         sim::Device device{};
@@ -541,9 +536,7 @@ protected:
         RunnerDB::Add<sim::Port>(port);
     }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 
     uint64_t portId_{0};
     uint64_t ccuId_{0};

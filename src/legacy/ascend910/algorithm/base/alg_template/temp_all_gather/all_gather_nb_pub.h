@@ -24,16 +24,17 @@ public:
 
     ~AllGatherNB() override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
+
 protected:
 private:
-    HcclResult RunAllGather(u32 rank, u32 rankSize, const std::vector<Slice> &outputSlices,
-        const std::vector<LINK> &links);
+    HcclResult
+    RunAllGather(u32 rank, u32 rankSize, const std::vector<Slice>& outputSlices, const std::vector<LINK>& links);
 
-    HcclResult Tx(const LINK &link, const std::vector<Slice> &txSlices);
-    HcclResult Rx(const LINK &link, const std::vector<Slice> &rxSlices);
+    HcclResult Tx(const LINK& link, const std::vector<Slice>& txSlices);
+    HcclResult Rx(const LINK& link, const std::vector<Slice>& rxSlices);
 };
 } // namespace hccl
 

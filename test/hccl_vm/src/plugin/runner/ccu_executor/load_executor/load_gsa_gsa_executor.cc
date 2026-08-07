@@ -34,7 +34,7 @@ void LoadGsaGsaExecutor::Parser()
 
 void LoadGsaGsaExecutor::Run()
 {
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t gsa1 = ccuResMgr.GetGsaValue(rankId_, dieId_, gsAmId_);
     uint64_t gsa2 = ccuResMgr.GetGsaValue(rankId_, dieId_, gsAnId_);
     uint64_t val = gsa1 + gsa2;
@@ -50,7 +50,7 @@ CcuTrace::CcuInstrTraceDetail LoadGsaGsaExecutor::CollectTraceDetail()
 {
     CcuTrace::CcuInstrTraceDetail detail;
     detail.typeName = "LoadGsaGsa";
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     detail.args["gsa1"] = std::to_string(ccuResMgr.GetGsaValue(rankId_, dieId_, gsAmId_));
     detail.args["gsa2"] = std::to_string(ccuResMgr.GetGsaValue(rankId_, dieId_, gsAnId_));
     return detail;

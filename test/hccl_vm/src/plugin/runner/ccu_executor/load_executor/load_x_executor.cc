@@ -39,7 +39,7 @@ void LoadXExecutor::Run()
     uint16_t xdId = GetXnId(xdId_);
     uint16_t xsId = GetXnId(xsId_);
     uint64_t xdValue = 0;
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t xsValue = ccuResMgr.GetXnValue(rankId_, dieId_, xsId);
 
     if (oMode_ == 0) {
@@ -67,15 +67,15 @@ void LoadXExecutor::Run()
 
 std::string LoadXExecutor::Describe()
 {
-    return HcclSim::StringFormat("[LoadXExecutor] xdId:[%u],xsId[%u],xsoId[%u],xdoId[%u],oMode[%u]\n",
-        xdId_, xsId_, xsoId_, xdoId_, oMode_);
+    return HcclSim::StringFormat(
+        "[LoadXExecutor] xdId:[%u],xsId[%u],xsoId[%u],xdoId[%u],oMode[%u]\n", xdId_, xsId_, xsoId_, xdoId_, oMode_);
 }
 
 CcuTrace::CcuInstrTraceDetail LoadXExecutor::CollectTraceDetail()
 {
     CcuTrace::CcuInstrTraceDetail detail;
     detail.typeName = "LoadX";
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     detail.args["xsValue"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xsId_));
     return detail;
 }

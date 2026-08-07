@@ -20,17 +20,19 @@ namespace Hccl {
 class CcuCtxCreatorRegistry {
 public:
     using CreateCtxFunc = std::function<std::unique_ptr<CcuContext>(
-        const CcuCtxArg &ccuCtxArg, const std::vector<CcuTransport *> &transports, const CcuTransportGroup &group)>;
+        const CcuCtxArg& ccuCtxArg, const std::vector<CcuTransport*>& transports, const CcuTransportGroup& group)>;
 
-    static CcuCtxCreatorRegistry &GetInstance();
+    static CcuCtxCreatorRegistry& GetInstance();
 
-    template <typename T> void Register(CcuInstType ccuInstType)
+    template <typename T>
+    void Register(CcuInstType ccuInstType)
     {
-        creators.emplace(ccuInstType,
-                         [](const CcuCtxArg &ccuCtxArg, const std::vector<CcuTransport *> &transports,
-                            const CcuTransportGroup &group) -> std::unique_ptr<CcuContext> {
-                             return std::make_unique<T>(ccuCtxArg, transports, group);
-                         });
+        creators.emplace(
+            ccuInstType,
+            [](const CcuCtxArg& ccuCtxArg, const std::vector<CcuTransport*>& transports,
+               const CcuTransportGroup& group) -> std::unique_ptr<CcuContext> {
+                return std::make_unique<T>(ccuCtxArg, transports, group);
+            });
     }
 
     CreateCtxFunc GetCreateFunc(CcuInstType ccuInstType) const;
@@ -39,12 +41,10 @@ private:
     std::unordered_map<CcuInstType, CreateCtxFunc, std::EnumClassHash> creators;
 };
 
-template <typename T> class CcuInstRegister {
+template <typename T>
+class CcuInstRegister {
 public:
-    explicit CcuInstRegister(CcuInstType ccuInstType)
-    {
-        CcuCtxCreatorRegistry::GetInstance().Register<T>(ccuInstType);
-    }
+    explicit CcuInstRegister(CcuInstType ccuInstType) { CcuCtxCreatorRegistry::GetInstance().Register<T>(ccuInstType); }
 };
 
 } // namespace Hccl

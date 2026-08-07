@@ -13,7 +13,6 @@
 
 #include "asymmetric_hierarchical_concatenate_base_pub.h"
 
-namespace hccl {
-}  // hccl
+namespace hccl {} // namespace hccl
 
-#endif  /* ASYMMETRIC_HIERARCHICAL_CONCATENATE_BASE_H */
+#endif /* ASYMMETRIC_HIERARCHICAL_CONCATENATE_BASE_H */

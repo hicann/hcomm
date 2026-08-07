@@ -35,20 +35,15 @@ namespace checker {
 
 class BroadCastCCUTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "BroadCast CCU test set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "BroadCast CCU test set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "BroadCast CCU test tear down" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "BroadCast CCU test tear down" << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -68,6 +63,7 @@ protected:
         // 这边每个case执行完成需要清理所有的环境变量，如果有新增的环境变量，需要在这个函数中进行清理
         ClearHcclEnv();
     }
+
 public:
     uint32_t rankSize_{0};
 };
@@ -239,4 +235,4 @@ TEST_F(BroadCastCCUTest, broadcast_ccu_case_test_6rank_mem2mem)
     ret = checker.CheckA5Aicpu(checkerOpParam, topoMeta);
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
-}
+} // namespace checker

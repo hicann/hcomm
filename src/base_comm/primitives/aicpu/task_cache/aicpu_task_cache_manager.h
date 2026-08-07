@@ -26,12 +26,13 @@ public:
     // cache miss且cache容量未满
     static bool NeedCacheTask();
 
-    static HcclResult AddWqeArray(UbConnLite *ubConnLitePtr, UbTransportLiteImpl *ubTransportLiteImplPtr,
-        const std::vector<WqeTask> &wqeTasks, const uint32_t streamId, const uint32_t dbSqeIdx, const bool isReportTask,
-        const DbSqeProfInfo &dbSqeProfInfo);
+    static HcclResult AddWqeArray(
+        UbConnLite* ubConnLitePtr, UbTransportLiteImpl* ubTransportLiteImplPtr, const std::vector<WqeTask>& wqeTasks,
+        const uint32_t streamId, const uint32_t dbSqeIdx, const bool isReportTask, const DbSqeProfInfo& dbSqeProfInfo);
 
-    static HcclResult AddSqeArray(RtsqA5 *rtsqPtr, AicpuTsThread *aicpuTsThreadPtr, const uint64_t sqeCount,
-        const uint8_t *sqeArray, const uint32_t streamId);
+    static HcclResult AddSqeArray(
+        RtsqA5* rtsqPtr, AicpuTsThread* aicpuTsThreadPtr, const uint64_t sqeCount, const uint8_t* sqeArray,
+        const uint32_t streamId);
 
     // 多个通信域共享的全局变量 (仅声明)
     static AicpuTaskCache aicpuTaskCache;
@@ -42,7 +43,7 @@ public:
     // Case 3: isHit == true && cacheEntryPtr != nullptr -> aicpu task cache命中, 使用已有cache entry刷新下发task
     static thread_local std::string cacheTag;
     static thread_local bool isHit;
-    static thread_local AicpuTaskCacheEntry *cacheEntryPtr;
+    static thread_local AicpuTaskCacheEntry* cacheEntryPtr;
 };
 
 } // namespace hcomm

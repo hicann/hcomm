@@ -21,20 +21,18 @@ namespace Hccl {
 
 class AicpuKernelLauncher {
 public:
-    explicit AicpuKernelLauncher(const CommunicatorImpl &comm) : comm(&comm)
-    {
-    }
+    explicit AicpuKernelLauncher(const CommunicatorImpl& comm) : comm(&comm) {}
 
-    void AicpuKernelLaunch(const Stream &stream, const string &algName) const;
+    void AicpuKernelLaunch(const Stream& stream, const string& algName) const;
 
 private:
-    const CommunicatorImpl *comm;
+    const CommunicatorImpl* comm;
 
-    void SetOpbaseBufferParam(HcclKernelLaunchParam &param, CollOperator &op) const;
-    void SetOffloadBufferParam(HcclKernelLaunchParam &param, CollOperator &op) const;
-    void SetHcclKernelLaunchParam(HcclKernelLaunchParam &param) const;
-    void AddPostToUserStream(const Stream &stream) const;
-    void AddWaitToUserStream(const Stream &stream) const;
+    void SetOpbaseBufferParam(HcclKernelLaunchParam& param, CollOperator& op) const;
+    void SetOffloadBufferParam(HcclKernelLaunchParam& param, CollOperator& op) const;
+    void SetHcclKernelLaunchParam(HcclKernelLaunchParam& param) const;
+    void AddPostToUserStream(const Stream& stream) const;
+    void AddWaitToUserStream(const Stream& stream) const;
 };
 
 } // namespace Hccl

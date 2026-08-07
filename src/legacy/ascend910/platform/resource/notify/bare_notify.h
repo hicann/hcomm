@@ -30,11 +30,10 @@ public:
     HcclResult Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut) override;
     HcclResult Post(Stream& stream, HcclDispatcher dispatcher, s32 stage) override;
 
-    HcclResult Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut,
-        u32 userRank, u32 remoteUserRank) override;
-    HcclResult Wait(Stream& stream, u32 timeOut) override;    
-    HcclResult Post(Stream& stream, HcclDispatcher dispatcher, s32 stage,
-        u32 remoteUserRank) override;
+    HcclResult
+    Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut, u32 userRank, u32 remoteUserRank) override;
+    HcclResult Wait(Stream& stream, u32 timeOut) override;
+    HcclResult Post(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 remoteUserRank) override;
     HcclResult Post(Stream& stream) override;
 
     HcclResult SetIpc() override;
@@ -42,11 +41,10 @@ public:
     void Break() override;
 
 private:
-
     bool isOpen{false};
     drvIpcNotifyInfo drvinfo{};
 };
 
-}
+} // namespace hccl
 
 #endif // BARE_NOTIFY_H

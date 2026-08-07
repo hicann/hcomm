@@ -24,20 +24,15 @@ namespace checker {
 
 class AllGatherCCUTestDetour : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "AllGather CCU detour test set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "AllGather CCU detour test set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "AllGather CCU detour test tear down" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "AllGather CCU detour test tear down" << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -96,4 +91,4 @@ TEST_F(AllGatherCCUTestDetour, allgather_ccu_case_test_2rank_count101_detour)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-}
+} // namespace checker

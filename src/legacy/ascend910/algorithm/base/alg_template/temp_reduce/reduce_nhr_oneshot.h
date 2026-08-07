@@ -13,7 +13,6 @@
 
 #include "reduce_nhr_oneshot_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* REDUCE_NHR_ONESHOT_H */

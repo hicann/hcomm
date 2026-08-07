@@ -27,7 +27,7 @@ using namespace hccl;
 namespace {
 constexpr uint32_t kKindTsRoce = 2U;
 
-HcclResult StubHrtDrvGetLocalDevIDByHostDevID(u32 /*hostUdevid*/, u32 *localDevid)
+HcclResult StubHrtDrvGetLocalDevIDByHostDevID(u32 /*hostUdevid*/, u32* localDevid)
 {
     if (localDevid != nullptr) {
         *localDevid = 0U;
@@ -35,7 +35,7 @@ HcclResult StubHrtDrvGetLocalDevIDByHostDevID(u32 /*hostUdevid*/, u32 *localDevi
     return HCCL_SUCCESS;
 }
 
-HcclResult StubHrtDrvGetPlatformInfo(uint32_t *info)
+HcclResult StubHrtDrvGetPlatformInfo(uint32_t* info)
 {
     if (info != nullptr) {
         *info = 1U;
@@ -59,9 +59,9 @@ TEST_F(AicpuChannelProcessTest, Ut_InitHcommChannelRes_WhenChannelListNull_Retur
     HcommChannelRes res{};
     res.listNum = 1U;
     res.channelList = nullptr;
-    res.channelDataListAddr = reinterpret_cast<void *>(0x1U);
-    res.channelDataSizeListAddr = reinterpret_cast<void *>(0x1U);
-    res.channelTypeListAddr = reinterpret_cast<void *>(0x1U);
+    res.channelDataListAddr = reinterpret_cast<void*>(0x1U);
+    res.channelDataSizeListAddr = reinterpret_cast<void*>(0x1U);
+    res.channelTypeListAddr = reinterpret_cast<void*>(0x1U);
     EXPECT_EQ(AicpuChannelProcess::InitHcommChannelRes(&res), HCCL_E_PTR);
 }
 
@@ -71,17 +71,17 @@ TEST_F(AicpuChannelProcessTest, Ut_InitHcommChannelRes_WhenUnsupportedKind_Retur
     blob.qpsPerConnection = 1U;
     blob.QpInfo[0].qpPtr = 0x7000ULL;
 
-    void *dataPtr = static_cast<void *>(&blob);
+    void* dataPtr = static_cast<void*>(&blob);
     u64 sizeVal = sizeof(blob);
     u32 typeVal = 999U;
     ChannelHandle outHandle = 0ULL;
 
     HcommChannelRes res{};
     res.listNum = 1U;
-    res.channelList = static_cast<void *>(&outHandle);
-    res.channelDataListAddr = static_cast<void *>(&dataPtr);
-    res.channelDataSizeListAddr = static_cast<void *>(&sizeVal);
-    res.channelTypeListAddr = static_cast<void *>(&typeVal);
+    res.channelList = static_cast<void*>(&outHandle);
+    res.channelDataListAddr = static_cast<void*>(&dataPtr);
+    res.channelDataSizeListAddr = static_cast<void*>(&sizeVal);
+    res.channelTypeListAddr = static_cast<void*>(&typeVal);
     res.deviceInfo.deviceLogicId = 0;
     res.deviceInfo.devicePhyId = 0U;
 
@@ -113,19 +113,19 @@ TEST_F(AicpuChannelProcessTest, Ut_InitHcommChannelRes_WhenValidTsRoceBlob_Retur
     blob.QpInfo[0].qpPtr = 0x7000ULL;
     blob.QpInfo[0].sqIndex = 1U;
     blob.QpInfo[0].dbIndex = 2U;
-    blob.localDataNotifyAddr=reinterpret_cast<void*>(static_cast<uintptr_t>(0x8000ULL));
-    blob.remoteNotifyAddr=reinterpret_cast<void*>(static_cast<uintptr_t>(0x9000ULL));
-    void *dataPtr = static_cast<void *>(&blob);
+    blob.localDataNotifyAddr = reinterpret_cast<void*>(static_cast<uintptr_t>(0x8000ULL));
+    blob.remoteNotifyAddr = reinterpret_cast<void*>(static_cast<uintptr_t>(0x9000ULL));
+    void* dataPtr = static_cast<void*>(&blob);
     u64 sizeVal = sizeof(blob);
     u32 typeVal = kKindTsRoce;
     ChannelHandle outHandle = 0ULL;
 
     HcommChannelRes res{};
     res.listNum = 1U;
-    res.channelList = static_cast<void *>(&outHandle);
-    res.channelDataListAddr = static_cast<void *>(&dataPtr);
-    res.channelDataSizeListAddr = static_cast<void *>(&sizeVal);
-    res.channelTypeListAddr = static_cast<void *>(&typeVal);
+    res.channelList = static_cast<void*>(&outHandle);
+    res.channelDataListAddr = static_cast<void*>(&dataPtr);
+    res.channelDataSizeListAddr = static_cast<void*>(&sizeVal);
+    res.channelTypeListAddr = static_cast<void*>(&typeVal);
     res.deviceInfo.deviceLogicId = 0;
     res.deviceInfo.devicePhyId = 0U;
     res.deviceInfo.deviceType = static_cast<u32>(DevType::DEV_TYPE_910_93);

@@ -20,25 +20,24 @@ namespace {
 // 用于跨 EP 共享 / 不共享 RegedMemMgr 的 C API 层测试。
 class FakeEndpoint : public hcomm::Endpoint {
 public:
-    FakeEndpoint(const EndpointDesc &desc, std::shared_ptr<hcomm::RegedMemMgr> mgr)
-        : hcomm::Endpoint(desc), mgr_(std::move(mgr)) {}
+    FakeEndpoint(const EndpointDesc& desc, std::shared_ptr<hcomm::RegedMemMgr> mgr)
+        : hcomm::Endpoint(desc),
+          mgr_(std::move(mgr))
+    {}
 
     HcclResult Init() override { return HCCL_SUCCESS; }
     HcclResult ServerSocketListen(const uint32_t port) override { return HCCL_SUCCESS; }
 
-    HcclResult RegisterMemory(HcommMem mem, const char *memTag, void **memHandle) override
+    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override
     {
         return mgr_->RegisterMemory(mem, memTag, memHandle);
     }
-    HcclResult UnregisterMemory(void *memHandle) override
-    {
-        return mgr_->UnregisterMemory(memHandle);
-    }
+    HcclResult UnregisterMemory(void* memHandle) override { return mgr_->UnregisterMemory(memHandle); }
 
-    HcclResult MemoryExport(void *, void **, uint32_t *) override { return HCCL_E_NOT_SUPPORT; }
-    HcclResult MemoryImport(const void *, uint32_t, HcommMem *) override { return HCCL_E_NOT_SUPPORT; }
-    HcclResult MemoryUnimport(const void *, uint32_t) override { return HCCL_E_NOT_SUPPORT; }
-    HcclResult GetAllMemHandles(void **, uint32_t *) override { return HCCL_E_NOT_SUPPORT; }
+    HcclResult MemoryExport(void*, void**, uint32_t*) override { return HCCL_E_NOT_SUPPORT; }
+    HcclResult MemoryImport(const void*, uint32_t, HcommMem*) override { return HCCL_E_NOT_SUPPORT; }
+    HcclResult MemoryUnimport(const void*, uint32_t) override { return HCCL_E_NOT_SUPPORT; }
+    HcclResult GetAllMemHandles(void**, uint32_t*) override { return HCCL_E_NOT_SUPPORT; }
 
 private:
     std::shared_ptr<hcomm::RegedMemMgr> mgr_;
@@ -64,10 +63,7 @@ void RegisterRaMrMockSuccess(MrHandle fakeMrHandle)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), outBoundP(&fakeMrHandle, sizeof(fakeMrHandle)))
         .will(returnValue(0));
-    MOCKER(RaDeregisterMr)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(0));
+    MOCKER(RaDeregisterMr).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(0));
 }
 
 std::shared_ptr<hcomm::RoceRegedMemMgr> MakeSharedMgr(RdmaHandle fakeRdmaHandle)
@@ -81,10 +77,9 @@ std::shared_ptr<hcomm::RoceRegedMemMgr> MakeSharedMgr(RdmaHandle fakeRdmaHandle)
 
 class TestHcommMem : public TestHcommCAdptBase {
 public:
-    void SetUp() override {
-        TestHcommCAdptBase::SetUp();
-    }
-    void TearDown() override {
+    void SetUp() override { TestHcommCAdptBase::SetUp(); }
+    void TearDown() override
+    {
         for (auto h : injectedHandles_) {
             hcomm::HcommEndpointMap map;
             map.RemoveEndpoint(h);
@@ -195,7 +190,7 @@ TEST_F(TestHcommMem, MemReg_When_SingleEP_SameBufferTwice_Expect_BothSuccessAndH
 
     CommMem mem{};
     mem.type = COMM_MEM_TYPE_HOST;
-    mem.addr = reinterpret_cast<void *>(0x1000);
+    mem.addr = reinterpret_cast<void*>(0x1000);
     mem.size = 4096;
 
     HcommMemHandle h1 = nullptr;
@@ -225,7 +220,7 @@ TEST_F(TestHcommMem, MemReg_When_CrossEP_NotShared_Expect_BothSuccess)
 
     CommMem mem{};
     mem.type = COMM_MEM_TYPE_HOST;
-    mem.addr = reinterpret_cast<void *>(0x5000);
+    mem.addr = reinterpret_cast<void*>(0x5000);
     mem.size = 2048;
 
     HcommMemHandle h1 = nullptr;
@@ -254,7 +249,7 @@ TEST_F(TestHcommMem, MemReg_When_CrossEP_Shared_Expect_BothSuccessAndHandlesDiff
 
     CommMem mem{};
     mem.type = COMM_MEM_TYPE_HOST;
-    mem.addr = reinterpret_cast<void *>(0x5000);
+    mem.addr = reinterpret_cast<void*>(0x5000);
     mem.size = 2048;
 
     HcommMemHandle h1 = nullptr;
@@ -283,7 +278,7 @@ TEST_F(TestHcommMem, MemUnreg_When_CrossEP_Shared_Expect_BothSuccess)
 
     CommMem mem{};
     mem.type = COMM_MEM_TYPE_HOST;
-    mem.addr = reinterpret_cast<void *>(0x5000);
+    mem.addr = reinterpret_cast<void*>(0x5000);
     mem.size = 2048;
 
     HcommMemHandle h1 = nullptr;
@@ -311,12 +306,12 @@ TEST_F(TestHcommMem, MemReg_When_CrossEP_Shared_ParentChild_Expect_BothSuccess)
 
     CommMem memParent{};
     memParent.type = COMM_MEM_TYPE_HOST;
-    memParent.addr = reinterpret_cast<void *>(0x1000);
+    memParent.addr = reinterpret_cast<void*>(0x1000);
     memParent.size = 4096;
 
     CommMem memChild{};
     memChild.type = COMM_MEM_TYPE_HOST;
-    memChild.addr = reinterpret_cast<void *>(0x1000);
+    memChild.addr = reinterpret_cast<void*>(0x1000);
     memChild.size = 1024;
 
     HcommMemHandle hParent = nullptr;

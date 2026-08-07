@@ -20,9 +20,15 @@
 
 class CcuSimulator {
 public:
-    explicit CcuSimulator(int rankId, int dieId, uint16_t startInstrId, uint16_t endInstrId, uint16_t instrCnt, RunnerCcuVersion version)
-        : rankId_(rankId), dieId_(dieId), curInstrId_(startInstrId), startInstrId_(startInstrId), endInstrId_(endInstrId),
-          instrCnt_(instrCnt), version_(version)
+    explicit CcuSimulator(
+        int rankId, int dieId, uint16_t startInstrId, uint16_t endInstrId, uint16_t instrCnt, RunnerCcuVersion version)
+        : rankId_(rankId),
+          dieId_(dieId),
+          curInstrId_(startInstrId),
+          startInstrId_(startInstrId),
+          endInstrId_(endInstrId),
+          instrCnt_(instrCnt),
+          version_(version)
     {}
     CcuSimulator() = default;
     ~CcuSimulator() = default;
@@ -37,11 +43,12 @@ public:
     void SetExecState(CcuExecState state);
 
     void Init(uint16_t startInstrId, uint16_t endInstrId, uint16_t instrCnt, RunnerCcuVersion version);
-    void InitLoopGroupInfo(const LoopGroupInfo &loopGroupInfo);
+    void InitLoopGroupInfo(const LoopGroupInfo& loopGroupInfo);
     void InitLoopGroupInfo(uint16_t startLoopId, uint64_t offsetCfg, uint64_t repeatCfg);
     void InitLoopGroupInfoV2(uint16_t startLoopId, uint64_t xnValue, uint64_t xmValue, uint64_t xpValue);
     void InitLoopInfo(uint16_t startInstrId, uint16_t endInstrId, uint16_t execCount, uint32_t addrStep);
-    void InitLoopInfoV2(uint16_t startInstrId, uint16_t endInstrId, uint64_t xnValue, uint64_t xmValue, uint64_t xpValue);
+    void
+    InitLoopInfoV2(uint16_t startInstrId, uint16_t endInstrId, uint64_t xnValue, uint64_t xmValue, uint64_t xpValue);
     void InitJumpStatus(uint16_t jumpInstrId);
 
     uint64_t GetLoopGsaAddrOffset();
@@ -49,7 +56,7 @@ public:
     uint16_t GetLoopCKEOffset();
     uint16_t GetCurInstrId();
     uint16_t GetLoopXnIdOffset();
-    uint16_t GetStartInstrId() {return startInstrId_;};
+    uint16_t GetStartInstrId() { return startInstrId_; };
 
     uint16_t GetCurLoopCnt();
     uint32_t GetLoopIterStepGSA();
@@ -68,7 +75,7 @@ private:
     uint16_t endInstrId_;
     uint16_t instrCnt_;
     uint16_t jumpInstrId_{0};
-    uint16_t instrType_{0};  // 当前指令的类型(主要用于记录当前执行是否为Loop)
+    uint16_t instrType_{0};   // 当前指令的类型(主要用于记录当前执行是否为Loop)
     bool initialized_{false}; // 是否已经初始化
     CcuExecState state_{CcuExecState::EXEC_NORMAL_INSTR}; // 当前ccu的执行状态
     RunnerCcuVersion version_{RunnerCcuVersion::CCU_V1};

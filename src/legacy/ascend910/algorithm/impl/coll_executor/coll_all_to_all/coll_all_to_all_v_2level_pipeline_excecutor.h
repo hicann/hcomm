@@ -15,24 +15,26 @@ namespace hccl {
 
 class CollRunAlltoAllVTwoLevelPipeline : public CollAlltoAllExecutor {
 public:
-    CollRunAlltoAllVTwoLevelPipeline(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollRunAlltoAllVTwoLevelPipeline(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollRunAlltoAllVTwoLevelPipeline() override = default;
 
 private:
-    u64 GetAlltoall2LevelPipelineScratchSize910B(u32 rank, std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo);
-    u64 GetAlltoall2LevelPipelineMaxScratchSize910B(std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo);
+    u64 GetAlltoall2LevelPipelineScratchSize910B(u32 rank, std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo);
+    u64 GetAlltoall2LevelPipelineMaxScratchSize910B(std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo);
     HcclResult CalcScratchMemSize(u64& scratchMemSize) override;
     HcclResult CalcStreamNum(u32& streamNum) override;
 
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel1CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel1CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalNoScratchAlltoallCommInfo(TransportMemType inputType, TransportMemType outputType,
-        std::vector<LevelNSubCommTransport>& opTransport);
+    HcclResult CalNoScratchAlltoallCommInfo(
+        TransportMemType inputType, TransportMemType outputType, std::vector<LevelNSubCommTransport>& opTransport);
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
     HcclOpMetaInfo GetOpMeta(HcclCMDType opType, const u64 size) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 };
 
 } // namespace hccl

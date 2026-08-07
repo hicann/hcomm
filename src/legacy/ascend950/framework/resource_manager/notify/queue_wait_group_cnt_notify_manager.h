@@ -28,14 +28,14 @@ public:
 
     bool Release(QId qid, u32 topicId);
 
-    RtsCntNotify *Get(QId qid, u32 topicId);
+    RtsCntNotify* Get(QId qid, u32 topicId);
 
     void Destroy();
 
     vector<char> GetPackedData();
 
 private:
-    bool                                          IsExist(QId qid, u32 topicId);
+    bool IsExist(QId qid, u32 topicId);
     map<pair<QId, u32>, unique_ptr<RtsCntNotify>> notifyPool;
 };
 } // namespace Hccl

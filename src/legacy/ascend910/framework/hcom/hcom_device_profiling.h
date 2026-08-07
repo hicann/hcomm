@@ -39,8 +39,7 @@ typedef struct HcomProInfo {
     bool isCapture = false;
     bool isAiv = false;
     uint8_t reserved[MAX_LENGTH];
-}HcomProInfo;
-
+} HcomProInfo;
 
 typedef uint64_t ThreadHandle;
 
@@ -48,15 +47,15 @@ extern HcclResult HcommProfilingReportMainStreamAndFirstTask(ThreadHandle thread
 
 extern HcclResult HcommProfilingReportMainStreamAndLastTask(ThreadHandle thread);
 
-//device侧的OP
+// device侧的OP
 extern HcclResult HcommProfilingReportDeviceHcclOpInfo(HcomProInfo profInfo);
 
-extern HcclResult HcommProfilingInit(ThreadHandle *threads, u32 threadNum);
+extern HcclResult HcommProfilingInit(ThreadHandle* threads, u32 threadNum);
 
-extern HcclResult HcommProfilingEnd(ThreadHandle *threads, u32 threadNum);
+extern HcclResult HcommProfilingEnd(ThreadHandle* threads, u32 threadNum);
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus
 
 #endif

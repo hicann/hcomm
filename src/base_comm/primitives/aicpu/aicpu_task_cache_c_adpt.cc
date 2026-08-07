@@ -18,7 +18,7 @@
 
 using namespace hcomm;
 
-HcommResult HcommAicpuTsTaskCacheLookup(const char *tag, bool *isHit)
+HcommResult HcommAicpuTsTaskCacheLookup(const char* tag, bool* isHit)
 {
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));
@@ -29,13 +29,14 @@ HcommResult HcommAicpuTsTaskCacheLookup(const char *tag, bool *isHit)
 
     CHK_PTR_NULL(tag);
     CHK_PTR_NULL(isHit);
-    
+
     // 记录当前tag, 后续校验tag一致性
     AicpuTaskCacheManager::cacheTag = tag;
-    
-    // 注意: 相同tag的算子一定不会被多个aicpu kernel threads同时展开, 否则后续threads可能命中第一个thread插入的不完整的cache entry
-    // 例如: tag中有commId时, 相同tag的算子一定属于同一个通信域, 必定按序展开
-    // 因此, FindEntry和AddEntry不需要统一成单个接口, 即FindEntry后, 当前tag的缓存状态不会被其他threads改变, 可以直接AddEntry
+
+    // 注意: 相同tag的算子一定不会被多个aicpu kernel threads同时展开,
+    // 否则后续threads可能命中第一个thread插入的不完整的cache entry 例如: tag中有commId时,
+    // 相同tag的算子一定属于同一个通信域, 必定按序展开 因此, FindEntry和AddEntry不需要统一成单个接口, 即FindEntry后,
+    // 当前tag的缓存状态不会被其他threads改变, 可以直接AddEntry
 
     // 查询tag对应的cache entry
     AicpuTaskCacheManager::cacheEntryPtr = nullptr;
@@ -54,7 +55,7 @@ HcommResult HcommAicpuTsTaskCacheLookup(const char *tag, bool *isHit)
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommAicpuTsTaskCacheStart(const char *tag, void **addrs, uint64_t *sizes, uint64_t count)
+HcommResult HcommAicpuTsTaskCacheStart(const char* tag, void** addrs, uint64_t* sizes, uint64_t count)
 {
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));
@@ -68,26 +69,29 @@ HcommResult HcommAicpuTsTaskCacheStart(const char *tag, void **addrs, uint64_t *
     CHK_PTR_NULL(sizes);
 
     // 校验tag一致性 (即Submit对应的tag一定与Lookup对应的tag一致)
-    CHK_PRT_RET(strcmp(AicpuTaskCacheManager::cacheTag.c_str(), tag) != 0,
-        HCCL_ERROR("[HcommAicpuTsTaskCacheStart] submit's tag[%s] != lookup's tag[%s]",
-            tag, AicpuTaskCacheManager::cacheTag.c_str()),
+    CHK_PRT_RET(
+        strcmp(AicpuTaskCacheManager::cacheTag.c_str(), tag) != 0,
+        HCCL_ERROR(
+            "[HcommAicpuTsTaskCacheStart] submit's tag[%s] != lookup's tag[%s]", tag,
+            AicpuTaskCacheManager::cacheTag.c_str()),
         HCCL_E_PARA);
 
     // 一定是cache miss
-    CHK_PRT_RET(AicpuTaskCacheManager::isHit,
-        HCCL_ERROR("[HcommAicpuTsTaskCacheStart] cache hit, but should be miss"),
+    CHK_PRT_RET(
+        AicpuTaskCacheManager::isHit, HCCL_ERROR("[HcommAicpuTsTaskCacheStart] cache hit, but should be miss"),
         HCCL_E_INTERNAL);
 
     // Aicpu task cache容量未满
     if (AicpuTaskCacheManager::cacheEntryPtr != nullptr) {
         // 保存地址信息到cache entry
-        CHK_RET(AicpuTaskCacheManager::cacheEntryPtr->InitCacheEntry(reinterpret_cast<const uint64_t*>(addrs), sizes, count));
+        CHK_RET(AicpuTaskCacheManager::cacheEntryPtr->InitCacheEntry(
+            reinterpret_cast<const uint64_t*>(addrs), sizes, count));
     }
 
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommAicpuTsTaskCacheEnd(const char *tag)
+HcommResult HcommAicpuTsTaskCacheEnd(const char* tag)
 {
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));
@@ -99,14 +103,16 @@ HcommResult HcommAicpuTsTaskCacheEnd(const char *tag)
     CHK_PTR_NULL(tag);
 
     // 校验tag一致性 (即Submit对应的tag一定与Lookup对应的tag一致)
-    CHK_PRT_RET(strcmp(AicpuTaskCacheManager::cacheTag.c_str(), tag) != 0,
-        HCCL_ERROR("[HcommAicpuTsTaskCacheEnd] submit's tag[%s] != lookup's tag[%s]",
-            tag, AicpuTaskCacheManager::cacheTag.c_str()),
+    CHK_PRT_RET(
+        strcmp(AicpuTaskCacheManager::cacheTag.c_str(), tag) != 0,
+        HCCL_ERROR(
+            "[HcommAicpuTsTaskCacheEnd] submit's tag[%s] != lookup's tag[%s]", tag,
+            AicpuTaskCacheManager::cacheTag.c_str()),
         HCCL_E_PARA);
 
     // 一定是cache miss
-    CHK_PRT_RET(AicpuTaskCacheManager::isHit,
-        HCCL_ERROR("[HcommAicpuTsTaskCacheEnd] cache hit, but should be miss"),
+    CHK_PRT_RET(
+        AicpuTaskCacheManager::isHit, HCCL_ERROR("[HcommAicpuTsTaskCacheEnd] cache hit, but should be miss"),
         HCCL_E_INTERNAL);
 
     HcclResult ret = HCCL_SUCCESS;
@@ -115,14 +121,17 @@ HcommResult HcommAicpuTsTaskCacheEnd(const char *tag)
         if (AicpuTaskCacheManager::cacheEntryPtr != nullptr) {
             // 提交cache entry, 更新cache entry内部信息
             ret = AicpuTaskCacheManager::cacheEntryPtr->SubmitCacheEntry();
-            CHK_PRT_BREAK(ret != HCCL_SUCCESS,
-                HCCL_ERROR("[HcommAicpuTsTaskCacheEnd] SubmitCacheEntry error,ret[%d]", ret), (void)0);
+            CHK_PRT_BREAK(
+                ret != HCCL_SUCCESS, HCCL_ERROR("[HcommAicpuTsTaskCacheEnd] SubmitCacheEntry error,ret[%d]", ret),
+                (void)0);
 
             // 更新cache空间消耗
             const uint64_t entryBytes = AicpuTaskCacheManager::cacheEntryPtr->GetEntryBytes();
-            ret = AicpuTaskCacheManager::aicpuTaskCache.IncCacheBytes(AicpuTaskCacheManager::cacheTag.c_str(), entryBytes);
-            CHK_PRT_BREAK(ret != HCCL_SUCCESS,
-                HCCL_ERROR("[HcommAicpuTsTaskCacheEnd] IncCacheBytes error, ret[%d]", ret), (void)0);
+            ret = AicpuTaskCacheManager::aicpuTaskCache.IncCacheBytes(
+                AicpuTaskCacheManager::cacheTag.c_str(), entryBytes);
+            CHK_PRT_BREAK(
+                ret != HCCL_SUCCESS, HCCL_ERROR("[HcommAicpuTsTaskCacheEnd] IncCacheBytes error, ret[%d]", ret),
+                (void)0);
         }
     } while (0);
 
@@ -134,7 +143,7 @@ HcommResult HcommAicpuTsTaskCacheEnd(const char *tag)
     return ret;
 }
 
-HcommResult HcommAicpuTsTaskCacheExecute(const char *tag, void **addrs, uint64_t *sizes, uint64_t count)
+HcommResult HcommAicpuTsTaskCacheExecute(const char* tag, void** addrs, uint64_t* sizes, uint64_t count)
 {
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));
@@ -148,14 +157,16 @@ HcommResult HcommAicpuTsTaskCacheExecute(const char *tag, void **addrs, uint64_t
     CHK_PTR_NULL(sizes);
 
     // 校验tag一致性 (即Submit对应的tag一定与Lookup对应的tag一致)
-    CHK_PRT_RET(strcmp(AicpuTaskCacheManager::cacheTag.c_str(), tag) != 0,
-        HCCL_ERROR("[HcommAicpuTsTaskCacheExecute] submit's tag[%s] != lookup's tag[%s]",
-            tag, AicpuTaskCacheManager::cacheTag.c_str()),
+    CHK_PRT_RET(
+        strcmp(AicpuTaskCacheManager::cacheTag.c_str(), tag) != 0,
+        HCCL_ERROR(
+            "[HcommAicpuTsTaskCacheExecute] submit's tag[%s] != lookup's tag[%s]", tag,
+            AicpuTaskCacheManager::cacheTag.c_str()),
         HCCL_E_PARA);
 
     // 一定是cache hit
-    CHK_PRT_RET(!AicpuTaskCacheManager::isHit,
-        HCCL_ERROR("[HcommAicpuTsTaskCacheExecute] cache miss, but should be hit"),
+    CHK_PRT_RET(
+        !AicpuTaskCacheManager::isHit, HCCL_ERROR("[HcommAicpuTsTaskCacheExecute] cache miss, but should be hit"),
         HCCL_E_INTERNAL);
 
     // cache hit一定存在对应的cache entry
@@ -163,7 +174,7 @@ HcommResult HcommAicpuTsTaskCacheExecute(const char *tag, void **addrs, uint64_t
 
     // 刷新并下发task
     HcclResult ret = AicpuTaskCacheManager::cacheEntryPtr->RefreshAndLaunch(
-        reinterpret_cast<const uint64_t *>(addrs), sizes, count);
+        reinterpret_cast<const uint64_t*>(addrs), sizes, count);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[HcommAicpuTsTaskCacheExecute] RefreshAndLaunch error, ret[%d]", ret);
     }
@@ -176,7 +187,7 @@ HcommResult HcommAicpuTsTaskCacheExecute(const char *tag, void **addrs, uint64_t
     return ret;
 }
 
-HcommResult HcommAicpuTsTaskCacheClear(const char *tag)
+HcommResult HcommAicpuTsTaskCacheClear(const char* tag)
 {
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));

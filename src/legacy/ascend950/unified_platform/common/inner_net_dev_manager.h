@@ -22,20 +22,20 @@ namespace Hccl {
 class InnerNetDevManager {
 public:
     // 获取单例实例（线程安全）
-    static InnerNetDevManager &GetInstance();
+    static InnerNetDevManager& GetInstance();
 
     // 删除拷贝构造和赋值运算符，防止实例复制
     InnerNetDevManager(const InnerNetDevManager&) = delete;
     InnerNetDevManager& operator=(const InnerNetDevManager&) = delete;
 
     // 添加设备（增加引用计数）
-    HcclResult AddDevice(const NetDevInfo &info, HcclNetDevice*& device);
-    
+    HcclResult AddDevice(const NetDevInfo& info, HcclNetDevice*& device);
+
     // 删除设备（减少引用计数，计数为0时删除）
     HcclResult DeleteDevice(HcclNetDevice* device);
 
     // 删除设备（减少引用计数，计数为0时删除）
-    HcclResult RemoveDevice(const NetDevInfo &info);
+    HcclResult RemoveDevice(const NetDevInfo& info);
 
 private:
     // 私有构造函数和析构函数
@@ -43,7 +43,7 @@ private:
     ~InnerNetDevManager() = default;
 
     std::unordered_map<NetDevInfo, unique_ptr<InnerNetDev>> netDevMap_;
-    std::unordered_map<NetDevInfo, uint32_t>                netDevCnt_;    
+    std::unordered_map<NetDevInfo, uint32_t> netDevCnt_;
 };
 
 } // namespace Hccl

@@ -19,8 +19,9 @@ namespace hcomm {
 
 AicpuTaskCache::AicpuTaskCache(const uint64_t maxCacheBytes) : cacheBytes_(0), maxCacheBytes_(maxCacheBytes)
 {
-    HCCL_RUN_INFO("[AicpuTaskCache][AicpuTaskCache] create aicpu task cache at 0x%016llx: maxCacheBytes[%llu]",
-        this, maxCacheBytes_);
+    HCCL_RUN_INFO(
+        "[AicpuTaskCache][AicpuTaskCache] create aicpu task cache at 0x%016llx: maxCacheBytes[%llu]", this,
+        maxCacheBytes_);
 }
 
 AicpuTaskCache::~AicpuTaskCache()
@@ -38,11 +39,13 @@ AicpuTaskCache::~AicpuTaskCache()
         entryPtr = nullptr;
     }
 
-    HCCL_RUN_INFO("[AicpuTaskCache][~AicpuTaskCache] release aicpu task cache at 0x%016llx: "
-        "entryCnt[%zu], cacheBytes_[%llu]", this, entryCnt, cacheBytes_);
+    HCCL_RUN_INFO(
+        "[AicpuTaskCache][~AicpuTaskCache] release aicpu task cache at 0x%016llx: "
+        "entryCnt[%zu], cacheBytes_[%llu]",
+        this, entryCnt, cacheBytes_);
 }
 
-HcclResult AicpuTaskCache::FindEntry(const char *cacheTag, AicpuTaskCacheEntry** entryPtrPtr) const
+HcclResult AicpuTaskCache::FindEntry(const char* cacheTag, AicpuTaskCacheEntry** entryPtrPtr) const
 {
     CHK_PTRPTR_NULL(entryPtrPtr);
 
@@ -65,15 +68,17 @@ HcclResult AicpuTaskCache::FindEntry(const char *cacheTag, AicpuTaskCacheEntry**
         std::lock_guard<std::shared_timed_mutex> lock(cacheMtx_); // 写锁后二次确认
         if (!cacheHitRunInfoPrinted_) {
             cacheHitRunInfoPrinted_ = true;
-            HCCL_RUN_INFO("[AicpuTaskCacheManager][ReportCacheHitOnce] aicpu task cache hit for the first time in "
-                "current process, cacheTag[%s]", cacheTag);
+            HCCL_RUN_INFO(
+                "[AicpuTaskCacheManager][ReportCacheHitOnce] aicpu task cache hit for the first time in "
+                "current process, cacheTag[%s]",
+                cacheTag);
         }
     }
 
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTaskCache::AddEntry(const char *cacheTag, AicpuTaskCacheEntry** entryPtrPtr)
+HcclResult AicpuTaskCache::AddEntry(const char* cacheTag, AicpuTaskCacheEntry** entryPtrPtr)
 {
     std::lock_guard<std::shared_timed_mutex> lock(cacheMtx_); // 写锁
 
@@ -81,25 +86,30 @@ HcclResult AicpuTaskCache::AddEntry(const char *cacheTag, AicpuTaskCacheEntry** 
 
     // 检查cache容量
     if (cacheBytes_ >= maxCacheBytes_) {
-        HCCL_INFO("[AicpuTaskCache][AddEntry] cacheBytes[%llu] >= maxCacheBytes[%llu] -> aicpu task cache is full "
-            "not add cache entry for cacheTag[%s]", cacheBytes_, maxCacheBytes_, cacheTag);
+        HCCL_INFO(
+            "[AicpuTaskCache][AddEntry] cacheBytes[%llu] >= maxCacheBytes[%llu] -> aicpu task cache is full "
+            "not add cache entry for cacheTag[%s]",
+            cacheBytes_, maxCacheBytes_, cacheTag);
         *entryPtrPtr = nullptr;
         if (!cacheFullRunInfoPrinted_) {
             cacheFullRunInfoPrinted_ = true;
-            HCCL_RUN_INFO("[AicpuTaskCacheManager][ReportCacheFullOnce] aicpu task cache is full for the first time "
-                "in current process, cacheTag[%s]", cacheTag);
+            HCCL_RUN_INFO(
+                "[AicpuTaskCacheManager][ReportCacheFullOnce] aicpu task cache is full for the first time "
+                "in current process, cacheTag[%s]",
+                cacheTag);
         }
         return HCCL_SUCCESS;
     }
 
     // 打印cache容量
-    HCCL_INFO("[AicpuTaskCache][AddEntry] cacheBytes[%llu] (maxCacheBytes[%llu]) -> aicpu task cache not full",
-        cacheBytes_, maxCacheBytes_);
+    HCCL_INFO(
+        "[AicpuTaskCache][AddEntry] cacheBytes[%llu] (maxCacheBytes[%llu]) -> aicpu task cache not full", cacheBytes_,
+        maxCacheBytes_);
 
     CacheHashMap::iterator iter = cacheHashMap_.find(cacheTag);
-    CHK_PRT_RET(iter != cacheHashMap_.end(),
-        HCCL_ERROR("[AicpuTaskCache][AddEntry] cache entry for cacheTag[%s] exists", cacheTag),
-        HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        iter != cacheHashMap_.end(),
+        HCCL_ERROR("[AicpuTaskCache][AddEntry] cache entry for cacheTag[%s] exists", cacheTag), HCCL_E_INTERNAL);
 
     // 初始化new cache entry
     AicpuTaskCacheEntry* newCacheEntryPtr = (new (std::nothrow) AicpuTaskCacheEntry());
@@ -108,16 +118,16 @@ HcclResult AicpuTaskCache::AddEntry(const char *cacheTag, AicpuTaskCacheEntry** 
     // 添加到cache
     std::pair<CacheHashMap::iterator, bool> insertResult = cacheHashMap_.emplace(cacheTag, newCacheEntryPtr);
     if (UNLIKELY(!(insertResult.second))) {
-        HCCL_ERROR("[AicpuTaskCache][AddEntry] fail to insert a new cache entry for cacheTag[%s]",
-            cacheTag);
+        HCCL_ERROR("[AicpuTaskCache][AddEntry] fail to insert a new cache entry for cacheTag[%s]", cacheTag);
 
         delete newCacheEntryPtr;
         newCacheEntryPtr = nullptr;
 
         return HCCL_E_INTERNAL;
     } else {
-        HCCL_INFO("[AicpuTaskCache][AddEntry] add a new cache entry for cacheTag[%s] cacheHashMap_.size[%zu]",
-            cacheTag, cacheHashMap_.size());
+        HCCL_INFO(
+            "[AicpuTaskCache][AddEntry] add a new cache entry for cacheTag[%s] cacheHashMap_.size[%zu]", cacheTag,
+            cacheHashMap_.size());
 
         iter = insertResult.first;
         *entryPtrPtr = iter->second;
@@ -127,7 +137,7 @@ HcclResult AicpuTaskCache::AddEntry(const char *cacheTag, AicpuTaskCacheEntry** 
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTaskCache::IncCacheBytes(const char *cacheTag, const uint64_t entryBytes)
+HcclResult AicpuTaskCache::IncCacheBytes(const char* cacheTag, const uint64_t entryBytes)
 {
     std::lock_guard<std::shared_timed_mutex> lock(cacheMtx_); // 写锁
 
@@ -135,14 +145,15 @@ HcclResult AicpuTaskCache::IncCacheBytes(const char *cacheTag, const uint64_t en
     cacheBytes_ += strlen(cacheTag);
     cacheBytes_ += sizeof(AicpuTaskCacheEntry*);
 
-    HCCL_INFO("[AicpuTaskCache][IncCacheBytes] add entryBytes[%llu] + cacheTag[%zu] + AicpuTaskCacheEntry*[%llu] -> "
+    HCCL_INFO(
+        "[AicpuTaskCache][IncCacheBytes] add entryBytes[%llu] + cacheTag[%zu] + AicpuTaskCacheEntry*[%llu] -> "
         "cacheBytes[%llu] (maxCacheBytes[%llu])",
         entryBytes, strlen(cacheTag), sizeof(AicpuTaskCacheEntry*), cacheBytes_, maxCacheBytes_);
 
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTaskCache::ClearEntry(const char *cacheTag)
+HcclResult AicpuTaskCache::ClearEntry(const char* cacheTag)
 {
     std::lock_guard<std::shared_timed_mutex> lock(cacheMtx_); // 写锁
 
@@ -165,7 +176,8 @@ HcclResult AicpuTaskCache::ClearEntry(const char *cacheTag)
             cacheBytes_ = 0;
         }
 
-        HCCL_INFO("[AicpuTaskCache][ClearEntry] dec entryBytes[%llu] + cacheTag[%zu] + AicpuTaskCacheEntry*[%llu] -> "
+        HCCL_INFO(
+            "[AicpuTaskCache][ClearEntry] dec entryBytes[%llu] + cacheTag[%zu] + AicpuTaskCacheEntry*[%llu] -> "
             "cacheBytes[%llu] (maxCacheBytes[%llu])",
             entryBytes, strlen(cacheTag), sizeof(AicpuTaskCacheEntry*), cacheBytes_, maxCacheBytes_);
 

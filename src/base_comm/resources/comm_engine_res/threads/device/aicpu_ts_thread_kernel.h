@@ -14,9 +14,8 @@ namespace hcomm {
 /**
  * @note 职责：AICPU_TS通信引擎的Thread的Host和Device aicpu kernel间的数据结构定义和接口声明。
  */
-using AicpuTsThreadKernel = struct {
-};
+using AicpuTsThreadKernel = struct {};
 
-}
+} // namespace hcomm
 
 #endif // AICPU_TS_THREAD_KERNEL_H

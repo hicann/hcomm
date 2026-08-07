@@ -20,15 +20,15 @@ extern "C" {
 /* ── TopoAddrResult 错误码枚举 ── */
 /* 值对齐 include/hccl/hccl_types.h 中的 HcclResult，便于调用方识别 */
 typedef enum {
-    TOPO_SUCCESS          = 0,
-    TOPO_ERR_PARA         = 1,  // 参数错误
-    TOPO_ERR_PTR          = 2,  // 空指针
-    TOPO_ERR_MEMORY       = 3,  // 内存错误
-    TOPO_ERR_INTERNAL     = 4,  // 内部错误
-    TOPO_ERR_NOT_FOUND    = 6,  // 未找到
-    TOPO_ERR_SYSCALL      = 8,  // 系统调用失败
-    TOPO_ERR_OPEN_FILE    = 10, // 文件打开失败
-    TOPO_ERR_OOM          = 24, // 内存耗尽
+    TOPO_SUCCESS = 0,
+    TOPO_ERR_PARA = 1,       // 参数错误
+    TOPO_ERR_PTR = 2,        // 空指针
+    TOPO_ERR_MEMORY = 3,     // 内存错误
+    TOPO_ERR_INTERNAL = 4,   // 内部错误
+    TOPO_ERR_NOT_FOUND = 6,  // 未找到
+    TOPO_ERR_SYSCALL = 8,    // 系统调用失败
+    TOPO_ERR_OPEN_FILE = 10, // 文件打开失败
+    TOPO_ERR_OOM = 24,       // 内存耗尽
 } TopoAddrResult;
 
 #ifdef __cplusplus

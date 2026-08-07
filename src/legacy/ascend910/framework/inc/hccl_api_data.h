@@ -21,7 +21,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
 /**
  * @defgroup 数据面编程接口
@@ -39,8 +39,8 @@ extern HcclResult CommFence(ThreadHandle thread, ChannelHandle channel);
 
 extern int32_t HcommFlush();
 
-/** @} */  // 同步
-/** @} */  // 本地操作接口
+/** @} */ // 同步
+/** @} */ // 本地操作接口
 
 /**
  * @defgroup 通信通道操作接口（单边语义）
@@ -66,10 +66,11 @@ extern int32_t HcommFlush();
  * @return HcclResult 执行结果状态码
  * @note 当前在A5上主要支持
  */
-extern HcclResult CommWriteReduceWithNotify(ThreadHandle thread, ChannelHandle channel, void *dst, const void *src,
-    uint64_t count, HcclDataType dataType, HcclReduceOp reduceOp, uint32_t remoteNotifyIdx);
+extern HcclResult CommWriteReduceWithNotify(
+    ThreadHandle thread, ChannelHandle channel, void* dst, const void* src, uint64_t count, HcclDataType dataType,
+    HcclReduceOp reduceOp, uint32_t remoteNotifyIdx);
 
- /**
+/**
  * @brief 下发模式
  */
 typedef enum {
@@ -86,10 +87,10 @@ typedef enum {
  * @note 可运行在Host或Device上。
  * @warning
  */
-extern int32_t HcommSetLaunchMode(const char *launchTag, HcommLaunchMode mode);
+extern int32_t HcommSetLaunchMode(const char* launchTag, HcommLaunchMode mode);
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus
 
-#endif  // HCCL_API_DATA_H
+#endif // HCCL_API_DATA_H

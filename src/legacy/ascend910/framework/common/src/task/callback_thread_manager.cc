@@ -13,10 +13,7 @@
 
 namespace hccl {
 
-bool ThreadStreamManager::StreamHasBeenReged(void *stream)
-{
-    return streamTidMap_.find(stream) != streamTidMap_.end();
-}
+bool ThreadStreamManager::StreamHasBeenReged(void* stream) { return streamTidMap_.find(stream) != streamTidMap_.end(); }
 
 HcclResult ThreadStreamManager::RegTidAndStream(u64 tid, rtStream_t stream)
 {
@@ -28,7 +25,7 @@ HcclResult ThreadStreamManager::RegTidAndStream(u64 tid, rtStream_t stream)
     return HCCL_SUCCESS;
 }
 
-HcclResult ThreadStreamManager::GetStreamByTid(u64 tid, rtStream_t &stream)
+HcclResult ThreadStreamManager::GetStreamByTid(u64 tid, rtStream_t& stream)
 {
     std::unique_lock<std::mutex> lock(mapMutex_);
     std::map<rtStream_t, u64>::iterator it;
@@ -49,4 +46,4 @@ void ThreadStreamManager::ReleaseTidAndStream(rtStream_t stream)
     }
 }
 
-}
+} // namespace hccl

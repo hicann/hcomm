@@ -13,7 +13,6 @@
 
 #include "broadcast_ring_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * BROADCAST_RING_H */

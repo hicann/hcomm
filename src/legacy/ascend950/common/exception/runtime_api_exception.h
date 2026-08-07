@@ -17,8 +17,8 @@ namespace Hccl {
 
 class RuntimeApiException : public HcclException {
 public:
-    explicit RuntimeApiException(const std::string &userDefinedMsg)
-        : HcclException(ExceptionType::RUNTIME_API_EXCEPTION, userDefinedMsg){};
+    explicit RuntimeApiException(const std::string& userDefinedMsg)
+        : HcclException(ExceptionType::RUNTIME_API_EXCEPTION, userDefinedMsg) {};
 };
 
 } // namespace Hccl

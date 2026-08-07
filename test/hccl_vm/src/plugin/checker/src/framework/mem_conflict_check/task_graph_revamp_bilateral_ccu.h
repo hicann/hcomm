@@ -28,22 +28,22 @@ public:
 
 private:
     HcclResult ProcCcuRWNode(TaskNodePtr ccuNode, TaskNodePtr asyncNode, TaskNodePtr waitNode, TaskNodePtr postNode);
-    HcclResult ProcAsyncCcuRWNode(
-        TaskNodePtr ccuNode, TaskNodePtr asyncNode, TaskNodePtr waitNode, TaskNodePtr postNode);
-    HcclResult SearchBackwardCcuRW(
-        TaskNodePtr ccuNode, TaskNodePtr asyncNode, TaskNodePtr waitNode, TaskNodePtr &beingRWNode);
-    HcclResult SearchForwardCcuRW(
-        TaskNodePtr ccuNode, TaskNodePtr asyncNode, TaskNodePtr postNode, TaskNodePtr &beingRWNode);
+    HcclResult
+    ProcAsyncCcuRWNode(TaskNodePtr ccuNode, TaskNodePtr asyncNode, TaskNodePtr waitNode, TaskNodePtr postNode);
+    HcclResult
+    SearchBackwardCcuRW(TaskNodePtr ccuNode, TaskNodePtr asyncNode, TaskNodePtr waitNode, TaskNodePtr& beingRWNode);
+    HcclResult
+    SearchForwardCcuRW(TaskNodePtr ccuNode, TaskNodePtr asyncNode, TaskNodePtr postNode, TaskNodePtr& beingRWNode);
 
-    HcclResult AddBeingRWNode2CcuHead(
-        TaskNodePtr ccuNode, TaskNodePtr currNode, TaskNodePtr &beingRWNode, RankId peerRank);
+    HcclResult
+    AddBeingRWNode2CcuHead(TaskNodePtr ccuNode, TaskNodePtr currNode, TaskNodePtr& beingRWNode, RankId peerRank);
     HcclResult AddVirtualFlowFirstHalfPart(
-        TaskNodePtr headNode, TaskNodePtr headChild, TaskNodePtr currNode, TaskNodePtr &beingRWNode, TaskStub *beingRW);
+        TaskNodePtr headNode, TaskNodePtr headChild, TaskNodePtr currNode, TaskNodePtr& beingRWNode, TaskStub* beingRW);
 
-    HcclResult CreateNewVirtualStream(
-        TaskNodePtr waitNode, TaskNodePtr currNode, TaskNodePtr &beingRWNode, RankId peerRank);
-    HcclResult CloseLoopNewVirtualStream(
-        TaskNodePtr waitNode, TaskNodePtr currNode, TaskNodePtr beingRWNode, RankId peerRank);
+    HcclResult
+    CreateNewVirtualStream(TaskNodePtr waitNode, TaskNodePtr currNode, TaskNodePtr& beingRWNode, RankId peerRank);
+    HcclResult
+    CloseLoopNewVirtualStream(TaskNodePtr waitNode, TaskNodePtr currNode, TaskNodePtr beingRWNode, RankId peerRank);
 };
 } // namespace HcclSim
 

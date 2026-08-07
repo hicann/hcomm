@@ -18,13 +18,12 @@ public:
     using AlgTemplateBase::Prepare;
     explicit AllGatherUnifiedMarch(const HcclDispatcher dispatcher);
     ~AllGatherUnifiedMarch() override;
-    HcclResult Prepare(const Stream &mainStream,
-        SubCommInfo &level0CommInfo, DeviceMem &userInput, DeviceMem &userOutput,
-        DeviceMem &usrInMem, DeviceMem &usrOutMem, u64 blockDataByte,
-        std::vector<Stream> &subStreams,
-        const std::vector<std::shared_ptr<LocalNotify>> &meshSignalMainToSub,
-        const std::vector<std::shared_ptr<LocalNotify>> &meshSignalSubToMain,
-        const std::vector<std::vector<Slice>> &multRingsUserMemSlice, const u64 baseOffset = 0) override;
+    HcclResult Prepare(
+        const Stream& mainStream, SubCommInfo& level0CommInfo, DeviceMem& userInput, DeviceMem& userOutput,
+        DeviceMem& usrInMem, DeviceMem& usrOutMem, u64 blockDataByte, std::vector<Stream>& subStreams,
+        const std::vector<std::shared_ptr<LocalNotify>>& meshSignalMainToSub,
+        const std::vector<std::shared_ptr<LocalNotify>>& meshSignalSubToMain,
+        const std::vector<std::vector<Slice>>& multRingsUserMemSlice, const u64 baseOffset = 0) override;
     HcclResult RunAsync() override;
 
 protected:
@@ -34,8 +33,9 @@ private:
     HcclResult WaitSubStreamFinish(u32 streamSize);
     HcclResult NotifyNeighborsStart(LINK& prevIntraLink, LINK& nextIntralLink, u32 neighbors);
     HcclResult NotifyNeighborsEnd(LINK& prevIntraLink, LINK& nextIntralLink, u32 neighbors);
-    HcclResult DoSerialSDMA(void* remoteSrcAddr, u64 remoteOffsetByte, void* dstAddr,
-        Stream &temStream, LINK& tmpLink, u64 memSize, u32 step = INVALID_UINT);
+    HcclResult DoSerialSDMA(
+        void* remoteSrcAddr, u64 remoteOffsetByte, void* dstAddr, Stream& temStream, LINK& tmpLink, u64 memSize,
+        u32 step = INVALID_UINT);
     HcclResult RunSingleStep(u32 ringPrevRank, u32 ringNextRank, u32 step, u32 totalStep);
     HcclResult RunLastStep(u32 ringPrevRank, u32 ringNextRank, u32 totalStep);
 

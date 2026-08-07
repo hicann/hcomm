@@ -12,23 +12,24 @@
 
 namespace hcomm {
 
-SharedJettyMgr &SharedJettyMgr::GetInstance()
+SharedJettyMgr& SharedJettyMgr::GetInstance()
 {
     static SharedJettyMgr instance;
     return instance;
 }
 
-HcclResult SharedJettyMgr::RegisterChannels(EndpointHandle endpointHandle,
-    const ChannelHandle *channels, uint32_t channelNum)
+HcclResult
+SharedJettyMgr::RegisterChannels(EndpointHandle endpointHandle, const ChannelHandle* channels, uint32_t channelNum)
 {
     if (endpointHandle == nullptr || channels == nullptr || channelNum == 0) {
-        HCCL_ERROR("[%s] invalid params, endpointHandle[%p], channels[%p], channelNum[%u].",
-            __func__, endpointHandle, channels, channelNum);
+        HCCL_ERROR(
+            "[%s] invalid params, endpointHandle[%p], channels[%p], channelNum[%u].", __func__, endpointHandle,
+            channels, channelNum);
         return HCCL_E_PARA;
     }
 
     std::lock_guard<std::mutex> lock(mtx_);
-    auto &ctx = contexts_[endpointHandle];
+    auto& ctx = contexts_[endpointHandle];
     for (uint32_t i = 0; i < channelNum; ++i) {
         ctx.channelHandles.insert(channels[i]);
     }
@@ -36,12 +37,13 @@ HcclResult SharedJettyMgr::RegisterChannels(EndpointHandle endpointHandle,
     // channelCount > channelHandles.size()，UnregisterChannels 永远无法将 count 减到 0，
     // CheckEndpointDestroy 永久阻塞 endpoint 销毁。
     ctx.channelCount = static_cast<uint32_t>(ctx.channelHandles.size());
-    HCCL_INFO("[%s] registered %u channels for endpointHandle[%p], total channelCount[%u].",
-        __func__, channelNum, endpointHandle, ctx.channelCount);
+    HCCL_INFO(
+        "[%s] registered %u channels for endpointHandle[%p], total channelCount[%u].", __func__, channelNum,
+        endpointHandle, ctx.channelCount);
     return HCCL_SUCCESS;
 }
 
-HcclResult SharedJettyMgr::UnregisterChannels(const ChannelHandle *channels, uint32_t channelNum)
+HcclResult SharedJettyMgr::UnregisterChannels(const ChannelHandle* channels, uint32_t channelNum)
 {
     if (channels == nullptr || channelNum == 0) {
         return HCCL_SUCCESS;
@@ -56,15 +58,16 @@ HcclResult SharedJettyMgr::UnregisterChannels(const ChannelHandle *channels, uin
                 if (it->second.channelCount > 0) {
                     it->second.channelCount--;
                 }
-                HCCL_INFO("[%s] unregistered channel[0x%llx] from endpointHandle[%p], remaining[%u].",
-                    __func__, channels[i], it->first, it->second.channelCount);
+                HCCL_INFO(
+                    "[%s] unregistered channel[0x%llx] from endpointHandle[%p], remaining[%u].", __func__, channels[i],
+                    it->first, it->second.channelCount);
                 // 注：共享 jetty 引用计数由 connection 析构时的 releaseCb_ 自动减（Endpoint::ReleaseSharedJetty），
                 // 此处不再重复减引用，仅维护 channelHandles 记录供 CheckEndpointDestroy 校验
                 if (it->second.channelCount == 0) {
                     EndpointHandle epHandle = it->first;
                     contexts_.erase(it);
-                    HCCL_INFO("[%s] all channels unregistered, context removed for endpointHandle[%p].",
-                        __func__, epHandle);
+                    HCCL_INFO(
+                        "[%s] all channels unregistered, context removed for endpointHandle[%p].", __func__, epHandle);
                 }
                 break;
             }
@@ -81,8 +84,9 @@ HcclResult SharedJettyMgr::CheckEndpointDestroy(EndpointHandle endpointHandle)
     if (it == contexts_.end()) {
         return HCCL_SUCCESS;
     }
-    HCCL_ERROR("[%s] cannot destroy endpointHandle[%p], still has [%u] shared jetty channels.",
-        __func__, endpointHandle, it->second.channelCount);
+    HCCL_ERROR(
+        "[%s] cannot destroy endpointHandle[%p], still has [%u] shared jetty channels.", __func__, endpointHandle,
+        it->second.channelCount);
     return HCCL_E_UNAVAIL;
 }
 

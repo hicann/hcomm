@@ -22,7 +22,8 @@
 
 class TransRmtMemToLocMemExecutor : public CcuExecutorBase {
 public:
-    explicit TransRmtMemToLocMemExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit TransRmtMemToLocMemExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     TransRmtMemToLocMemExecutor() = default;
@@ -34,7 +35,7 @@ public:
     CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 
 private:
-    void Process(CcuResourceManager &ccuResMgr);
+    void Process(CcuResourceManager& ccuResMgr);
 
 private:
     uint16_t locGSAId_{0};

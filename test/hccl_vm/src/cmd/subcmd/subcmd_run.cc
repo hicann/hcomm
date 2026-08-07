@@ -19,21 +19,30 @@
 #include "subcmd_run.h"
 
 namespace HcclSim {
-void RunCommand::Setup(CLI::App& app) {
-    auto sub_oneShot = app.add_subcommand("run", "算例one_shot运行模式, 请勿在子bash中重复启用,命令后必须接有算例执行指令");
+void RunCommand::Setup(CLI::App& app)
+{
+    auto sub_oneShot
+        = app.add_subcommand("run", "算例one_shot运行模式, 请勿在子bash中重复启用,命令后必须接有算例执行指令");
 
-    sub_oneShot->add_option("configFile", configClusterName, "加载昇腾集群组网配置目录")->required()->check(GenerateClusterTopo);
+    sub_oneShot->add_option("configFile", configClusterName, "加载昇腾集群组网配置目录")
+        ->required()
+        ->check(GenerateClusterTopo);
     sub_oneShot->add_option("--level", g_hcclVmLevel, "设置模拟等级, 当前支持等级为 1 和 2, 默认模拟等级 2 ");
-    sub_oneShot->add_flag("--check-only", checkOnlyMode,
+    sub_oneShot->add_flag(
+        "--check-only", checkOnlyMode,
         "仅校验模式:大块(200MB-4GB)内存申请复用同一块 4GB 共享区,内容不保证正确,换取内存节省");
     sub_oneShot->allow_extras(true);
-    
-    sub_oneShot->callback([this, &app]() { Execute(app); });
+
+    sub_oneShot->callback([this, &app]() {
+        Execute(app);
+    });
 }
 
-void RunCommand::Execute(CLI::App& app) {
+void RunCommand::Execute(CLI::App& app)
+{
     if (g_hcclVmBashFlag) {
-        HCCL_VM_WARN("hccl-vm is already running. Please do not run examples in one_shot mode within a sub-bash. Exit the sub-bash and try again.");
+        HCCL_VM_WARN("hccl-vm is already running. Please do not run examples in one_shot mode within a sub-bash. Exit "
+                     "the sub-bash and try again.");
         return;
     }
     CLI::App* tmp_cmd = app.get_subcommand("run");
@@ -78,4 +87,4 @@ void RunCommand::Execute(CLI::App& app) {
 }
 
 static inline CommandAutoRegister<RunCommand> g_run_cmd_reg{};
-}
+} // namespace HcclSim

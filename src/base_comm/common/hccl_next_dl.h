@@ -7,12 +7,12 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef HCCL_SRC_NEXT_HCCLDL_H
 #define HCCL_SRC_NEXT_HCCLDL_H
 #include <dlfcn.h>
 #include <functional>
- 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,12 +20,11 @@ extern "C" {
 #define weak_alias(name, aliasname) _weak_alias(name, aliasname)
 #define _weak_alias(name, aliasname) extern __typeof(name) aliasname __attribute__((weak, alias(#name)))
 
-
-void *HcclNextDlopen(const char *libName, int mode);
-void *HcclNextDlsym(void *handle, const char *funcName);
-int HcclNextDlclose(void *handle);
+void* HcclNextDlopen(const char* libName, int mode);
+void* HcclNextDlsym(void* handle, const char* funcName);
+int HcclNextDlclose(void* handle);
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
- 
+
 #endif

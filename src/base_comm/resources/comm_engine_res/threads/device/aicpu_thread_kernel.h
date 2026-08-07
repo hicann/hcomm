@@ -14,10 +14,10 @@
 #include <cstdint>
 
 extern "C" {
-__attribute__((visibility("default"))) uint32_t RunAicpuIndOpThreadInit(void *args);
-__attribute__((visibility("default"))) uint32_t RunAicpuIndOpNotify(void *args);
-__attribute__((visibility("default"))) uint32_t RunAicpuThreadInit(void *args);
-__attribute__((visibility("default"))) uint32_t RunAicpuThreadDestroy(void *args);
+__attribute__((visibility("default"))) uint32_t RunAicpuIndOpThreadInit(void* args);
+__attribute__((visibility("default"))) uint32_t RunAicpuIndOpNotify(void* args);
+__attribute__((visibility("default"))) uint32_t RunAicpuThreadInit(void* args);
+__attribute__((visibility("default"))) uint32_t RunAicpuThreadDestroy(void* args);
 __attribute__((visibility("default"))) uint32_t RunAicpuThreadSupplementNotify(void* args);
 }
 

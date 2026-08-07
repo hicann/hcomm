@@ -14,9 +14,8 @@
 #include "log.h"
 #include <chrono>
 
-namespace hccl
-{
-    class AicpuTsThread;
+namespace hccl {
+class AicpuTsThread;
 }
 
 namespace Hccl {
@@ -49,15 +48,15 @@ public:
 
     void SdmaCopy(u64 srcAddr, u64 dstAddr, u32 size, u32 partId) override;
 
-    void SdmaReduce(u64 srcAddr, u64 dstAddr, u32 size, u32 partId, const ReduceIn &reduceIn) override;
+    void SdmaReduce(u64 srcAddr, u64 dstAddr, u32 size, u32 partId, const ReduceIn& reduceIn) override;
 
     void P2PWriteValue(u64 remoteAddr, u32 writeValue) override;
 
-    void UbDbSend(const UbJettyLiteId &jettyLiteId, u16 piValue) override;
+    void UbDbSend(const UbJettyLiteId& jettyLiteId, u16 piValue) override;
 
-    void RdmaDbSend(const uint64_t &dbAddr, const uint64_t &dbValue) override;
+    void RdmaDbSend(const uint64_t& dbAddr, const uint64_t& dbValue) override;
 
-    void UbDirectSend(const UbJettyLiteId &jettyLiteId, u32 dwqeSize, const u8 *wqe) override
+    void UbDirectSend(const UbJettyLiteId& jettyLiteId, u32 dwqeSize, const u8* wqe) override
     {
         // 构造UBDMA的command，这个里面，SQE可能占用 128Byte 或者 192Byte
         (void)jettyLiteId;
@@ -86,7 +85,7 @@ public:
     // 用于aicpu task cache
     uint32_t GetPendingSqeCnt() const { return pendingSqeCnt; }
 
-    inline HcclResult SetAicpuTsThreadPtr(hccl::AicpuTsThread *threadPtr)
+    inline HcclResult SetAicpuTsThreadPtr(hccl::AicpuTsThread* threadPtr)
     {
         CHK_PTR_NULL(threadPtr);
         aicpuTsThreadPtr_ = threadPtr;
@@ -100,17 +99,19 @@ public:
         return HCCL_SUCCESS;
     }
 
-    inline HcclResult SetAddSqeArrayCallback(std::function<HcclResult(Hccl::RtsqA5 *, hccl::AicpuTsThread *, uint64_t, 
-        const uint8_t *, const uint32_t)> callback)
+    inline HcclResult SetAddSqeArrayCallback(
+        std::function<HcclResult(Hccl::RtsqA5*, hccl::AicpuTsThread*, uint64_t, const uint8_t*, const uint32_t)>
+            callback)
     {
         CHK_PTR_NULL(callback);
         addSqeArrayCallback_ = callback;
         return HCCL_SUCCESS;
     }
 
-    void RefreshSqeHeaderTaskField(Rt91095StarsSqeHeader *sqeHeaderPtr);
+    void RefreshSqeHeaderTaskField(Rt91095StarsSqeHeader* sqeHeaderPtr);
 
-    void LaunchNewTask(uint8_t *sqeArray, uint32_t sqeCount);
+    void LaunchNewTask(uint8_t* sqeArray, uint32_t sqeCount);
+
 private:
     u32 pendingSqeCnt{0};
 
@@ -123,24 +124,24 @@ private:
     u8 locBuf[RTSQ_SQE_SIZE * PER_LAUNCH_SQE_CNT]{0};
 
     std::function<bool()> needCacheTaskCallback_{nullptr};
-    std::function<HcclResult(Hccl::RtsqA5 *, hccl::AicpuTsThread *, uint64_t, const uint8_t *, const uint32_t)> 
+    std::function<HcclResult(Hccl::RtsqA5*, hccl::AicpuTsThread*, uint64_t, const uint8_t*, const uint32_t)>
         addSqeArrayCallback_{nullptr};
     hccl::AicpuTsThread* aicpuTsThreadPtr_{nullptr};
 
-    u8 *GetCurrSqeBuffer();
+    u8* GetCurrSqeBuffer();
 
     void RefreshInfo();
 
-    void CopySqeBufToSq(u8 *sqeBuf);
+    void CopySqeBufToSq(u8* sqeBuf);
 
     void MakeSureAvailableSpace();
 
     u32 GetTailToHeadDist() const;
 
-    void CheckLaunchTaskStatus(const std::chrono::steady_clock::time_point &startTime,
-        const std::chrono::steady_clock::time_point &curTime);
+    void CheckLaunchTaskStatus(
+        const std::chrono::steady_clock::time_point& startTime, const std::chrono::steady_clock::time_point& curTime);
 
-    void PreLaunchSqeForCache(bool &needCacheTask);
+    void PreLaunchSqeForCache(bool& needCacheTask);
 
     void PostLaunchSqeForCache();
 };

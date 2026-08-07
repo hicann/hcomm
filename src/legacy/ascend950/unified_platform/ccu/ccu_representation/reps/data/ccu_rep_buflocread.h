@@ -18,23 +18,23 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepBufLocRead : public CcuRepBase {
-public:
-    CcuRepBufLocRead(Memory src, CcuBuffer dst, Variable len, MaskSignal sem, uint16_t mask);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
+    class CcuRepBufLocRead : public CcuRepBase {
+    public:
+        CcuRepBufLocRead(Memory src, CcuBuffer dst, Variable len, MaskSignal sem, uint16_t mask);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-private:
-    Memory    src;
-    CcuBuffer dst;
-    Variable  len;
+    private:
+        Memory src;
+        CcuBuffer dst;
+        Variable len;
 
-    MaskSignal sem;
-    uint16_t   mask{0};
+        MaskSignal sem;
+        uint16_t mask{0};
 
-    friend class Hccl::CcuErrorHandler;
-};
+        friend class Hccl::CcuErrorHandler;
+    };
 
-};     // namespace CcuRep
-};     // namespace Hccl
+}; // namespace CcuRep
+}; // namespace Hccl
 #endif // HCCL_CCU_REPRESENTATION_BUFLOCREAD_H

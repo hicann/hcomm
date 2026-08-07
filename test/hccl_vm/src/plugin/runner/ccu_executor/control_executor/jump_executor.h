@@ -22,7 +22,8 @@
 
 class JumpExecutor : public CcuExecutorBase {
 public:
-    explicit JumpExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit JumpExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     JumpExecutor() = default;
@@ -30,8 +31,8 @@ public:
 
     void Parser() override;
     void Run() override;
-    void RunV1(); 
-    void RunV2(); 
+    void RunV1();
+    void RunV2();
     std::string Describe() override;
     CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 

@@ -15,17 +15,11 @@
 #include "hccl/base.h"
 #include <string>
 namespace hccl {
-enum class AtraceOption {
-    Opbasekey,
-    Algtype
-};
+enum class AtraceOption { Opbasekey, Algtype };
 
 class HcclTraceInfo {
 public:
-    enum class HcclTraceType {
-        HostTraceType,
-        DeviceTraceType
-    };
+    enum class HcclTraceType { HostTraceType, DeviceTraceType };
 
     struct UtraceAttr {
         bool utraceStatusFlag;
@@ -34,17 +28,17 @@ public:
     };
 
     HcclTraceInfo();
-    HcclTraceInfo(const UtraceAttr &utraceAttr);
+    HcclTraceInfo(const UtraceAttr& utraceAttr);
     ~HcclTraceInfo();
-    HcclResult Init(std::string &logInfo);
+    HcclResult Init(std::string& logInfo);
     void DeInit();
     HcclResult Flush();
-    HcclResult SaveTraceInfo(std::string &logInfo, AtraceOption op);
-    HcclResult SavealgtypeTraceInfo(std::string &algtype, const std::string &tag);
+    HcclResult SaveTraceInfo(std::string& logInfo, AtraceOption op);
+    HcclResult SavealgtypeTraceInfo(std::string& algtype, const std::string& tag);
     HcclTraceType hcclTraceType_ = HcclTraceType::HostTraceType;
     UtraceAttr utraceAttr_{};
     uint32_t index{0};
     HcclTraHandle handle{0};
 };
-}
+} // namespace hccl
 #endif // HCCL_TRACE_INFO_H

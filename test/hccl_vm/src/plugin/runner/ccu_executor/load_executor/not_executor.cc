@@ -35,7 +35,7 @@ void NotExecutor::Run()
 {
     uint16_t xnId = GetXnId(xnId_);
     uint16_t xdId = GetXnId(xdId_);
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t xnValue = ccuResMgr.GetXnValue(rankId_, dieId_, xnId);
     uint64_t xdValue = ~xnValue;
     HCCL_VM_INFO("Not Xn{}{} | to Xd{}{}", xnId, xnValue, xdId_, xdValue);
@@ -47,15 +47,15 @@ void NotExecutor::Run()
 
 std::string NotExecutor::Describe()
 {
-    return HcclSim::StringFormat("[NotExecutor] xdId:[%u], xnId:[%u], ckeId:[%u], ckeMask:[0x%04x]\n",
-        xdId_, xnId_, ckeId_, ckeMask_);
+    return HcclSim::StringFormat(
+        "[NotExecutor] xdId:[%u], xnId:[%u], ckeId:[%u], ckeMask:[0x%04x]\n", xdId_, xnId_, ckeId_, ckeMask_);
 }
 
 CcuTrace::CcuInstrTraceDetail NotExecutor::CollectTraceDetail()
 {
     CcuTrace::CcuInstrTraceDetail detail;
     detail.typeName = "Not";
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     detail.args["xnValue"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xnId_));
     return detail;
 }

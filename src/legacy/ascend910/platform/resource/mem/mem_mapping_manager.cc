@@ -12,7 +12,7 @@
 #include "dlhal_function.h"
 
 namespace hccl {
-MemMappingManager &MemMappingManager::GetInstance(s32 deviceLogicID)
+MemMappingManager& MemMappingManager::GetInstance(s32 deviceLogicID)
 {
     static MemMappingManager instance[MAX_DEV_NUM];
     if (deviceLogicID == HOST_DEVICE_ID) {
@@ -25,11 +25,9 @@ MemMappingManager &MemMappingManager::GetInstance(s32 deviceLogicID)
     }
     return instance[deviceLogicID];
 }
-MemMappingManager::~MemMappingManager()
-{
-}
+MemMappingManager::~MemMappingManager() {}
 // 获取映射后的devVa，先去map找，找不到则新建映射关系
-HcclResult MemMappingManager::GetDevVA(s32 deviceLogicID, void *addr, u64 size, void *&devVA)
+HcclResult MemMappingManager::GetDevVA(s32 deviceLogicID, void* addr, u64 size, void*& devVA)
 {
     std::unique_lock<std::mutex> lockMapping(mappedHostToDevMutex_);
     if (!DlHalFunction::GetInstance().DlHalFunctionIsInit()) {
@@ -38,12 +36,11 @@ HcclResult MemMappingManager::GetDevVA(s32 deviceLogicID, void *addr, u64 size, 
     }
 
     CHK_RET(MapMem(deviceLogicID, addr, size, devVA));
-    HCCL_INFO("[MemMappingManager][GetDevVA]addr[%p] size[%llu] mapping success, devVa[%p]",
-        addr, size, devVA);
+    HCCL_INFO("[MemMappingManager][GetDevVA]addr[%p] size[%llu] mapping success, devVa[%p]", addr, size, devVA);
     return HCCL_SUCCESS;
 }
 
-bool MemMappingManager::IsRequireMapping(void *addr, u64 size, void *&devVA)
+bool MemMappingManager::IsRequireMapping(void* addr, u64 size, void*& devVA)
 {
     u64 userAddr = reinterpret_cast<u64>(addr);
     u64 userSize = size;
@@ -65,12 +62,11 @@ bool MemMappingManager::IsRequireMapping(void *addr, u64 size, void *&devVA)
 MemMappingManager::HostMappingIter MemMappingManager::SearchMappingMap(u64 userAddr, u64 userSize)
 {
     for (auto iter = mappedHostToDevMap_.begin(); iter != mappedHostToDevMap_.end(); ++iter) {
-        if ((userAddr >= iter->first.addr) &&
-            (userAddr + userSize <= iter->first.size + iter->first.addr)) {
+        if ((userAddr >= iter->first.addr) && (userAddr + userSize <= iter->first.size + iter->first.addr)) {
             return iter;
         }
     }
     return mappedHostToDevMap_.end();
 }
 
-}
+} // namespace hccl

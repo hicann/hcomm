@@ -25,9 +25,9 @@ public:
 
     explicit Buffer(uintptr_t addr, std::size_t size, HcclMemType memType);
 
-    explicit Buffer(uintptr_t addr, std::size_t size, HcclMemType memType, const char *memInfo);
+    explicit Buffer(uintptr_t addr, std::size_t size, HcclMemType memType, const char* memInfo);
 
-    explicit Buffer(uintptr_t addr, std::size_t size, const char *memInfo);
+    explicit Buffer(uintptr_t addr, std::size_t size, const char* memInfo);
 
     virtual ~Buffer() = default;
 
@@ -41,32 +41,23 @@ public:
 
     virtual std::string Describe() const;
 
-    bool Contains(Buffer *buf) const;
+    bool Contains(Buffer* buf) const;
 
     bool Contains(uintptr_t bufAddr, size_t bufSize) const;
 
     Buffer Range(std::size_t offset, std::size_t givenSize) const;
 
     // "bool"运算符(可执行if(object){...}的操作判断该buffer是否为空)
-    operator bool() const
-    {
-        return addr_ != 0;
-    }
+    operator bool() const { return addr_ != 0; }
 
     // "=="运算符
-    bool operator==(const Buffer &that) const
-    {
-        return (addr_ == that.GetAddr()) && (size_ == that.GetSize());
-    }
+    bool operator==(const Buffer& that) const { return (addr_ == that.GetAddr()) && (size_ == that.GetSize()); }
 
     // "!="运算符
-    bool operator!=(const Buffer &that) const
-    {
-        return (addr_ != that.GetAddr()) || (size_ != that.GetSize());
-    }
+    bool operator!=(const Buffer& that) const { return (addr_ != that.GetAddr()) || (size_ != that.GetSize()); }
 
 protected:
-    uintptr_t   addr_{0};
+    uintptr_t addr_{0};
     std::size_t size_{0};
     HcclMemType memType_{HcclMemType::HCCL_MEM_TYPE_DEVICE};
     char memInfo_[256]{};

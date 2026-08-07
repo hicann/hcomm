@@ -16,32 +16,31 @@ class AivReduceScatterVSmall910B : public AivCommBase {
 public:
     __aicore__ inline AivReduceScatterVSmall910B() {}
 
-    template<typename T>
-    __aicore__ inline void Process(GM_ADDR input, GM_ADDR output, int32_t tag, ExtraArgs &extraArgs);
+    template <typename T>
+    __aicore__ inline void Process(GM_ADDR input, GM_ADDR output, int32_t tag, ExtraArgs& extraArgs);
 };
 
-template<typename T>
-__aicore__ inline void AivReduceScatterVSmall910B::Process(GM_ADDR input, GM_ADDR output, int32_t tag,
-    ExtraArgs &extraArgs)
+template <typename T>
+__aicore__ inline void
+AivReduceScatterVSmall910B::Process(GM_ADDR input, GM_ADDR output, int32_t tag, ExtraArgs& extraArgs)
 {
     // 共用16个flag
-    bool ifPingpong  = (tag % 2 == 0);
+    bool ifPingpong = (tag % 2 == 0);
     uint32_t dataOffset = (tag % 2 == 0) ? AIV_INIT_OFFSET : AIV_PING_PONG_SIZE;
 
-    __gm__ T *inputGM = (__gm__ T *)input;
-    __gm__ T *cclGMSelf = (__gm__ T *)(GM_IN[rank_] + dataOffset);
-    __gm__ T *cclGMOther = (__gm__ T *)(GM_IN[blockIdx_] + dataOffset);
-    __gm__ T *outputGM = (__gm__ T *)output;
-
+    __gm__ T* inputGM = (__gm__ T*)input;
+    __gm__ T* cclGMSelf = (__gm__ T*)(GM_IN[rank_] + dataOffset);
+    __gm__ T* cclGMOther = (__gm__ T*)(GM_IN[blockIdx_] + dataOffset);
+    __gm__ T* outputGM = (__gm__ T*)output;
 
     if (blockIdx_ != rank_) {
-
         GlobalTensor<T> cclGTOther;
         cclGTOther.SetGlobalBuffer(cclGMOther, extraArgs.sendCounts[rank_]);
         GlobalTensor<T> outputGT;
         outputGT.SetGlobalBuffer(outputGM, extraArgs.sendCounts[rank_]);
 
-        CpGM2GM(cclGMSelf + extraArgs.sendDispls[blockIdx_], inputGM + extraArgs.sendDispls[blockIdx_],
+        CpGM2GM(
+            cclGMSelf + extraArgs.sendDispls[blockIdx_], inputGM + extraArgs.sendDispls[blockIdx_],
             extraArgs.sendCounts[blockIdx_]);
         // 卡间同步
         pipe_barrier(PIPE_ALL);
@@ -69,8 +68,7 @@ __aicore__ inline void AivReduceScatterVSmall910B::Process(GM_ADDR input, GM_ADD
     }
 }
 
-
-template<typename T>
+template <typename T>
 __aicore__ inline void aiv_reduce_scatter_v_910b_smalldata(EXTERN_KERNEL_ARGS_DEF)
 {
     AivReduceScatterVSmall910B op;

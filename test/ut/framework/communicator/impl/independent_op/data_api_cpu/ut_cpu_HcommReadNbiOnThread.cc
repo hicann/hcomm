@@ -17,26 +17,22 @@
 
 using namespace hccl;
 
-class UtCpuHcommReadNbiOnThread : public testing::Test
-{
+class UtCpuHcommReadNbiOnThread : public testing::Test {
 protected:
     virtual void SetUp() override {}
 
-    virtual void TearDown() override
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() override { GlobalMockObject::verify(); }
 
     // thread is unused by HcommReadNbiOnThread, any value is acceptable.
     ThreadHandle thread = static_cast<ThreadHandle>(0x01);
-    EndpointHandle epHandle = reinterpret_cast<void *>(0x01);
+    EndpointHandle epHandle = reinterpret_cast<void*>(0x01);
     HcommChannelDesc channelDesc{};
     hcomm::HostCpuRoceChannel channelOnHost{epHandle, channelDesc};
     ChannelHandle channel = reinterpret_cast<ChannelHandle>(&channelOnHost);
     char srcBuf[8]{};
     char dstBuf[8]{};
-    void *src = srcBuf;
-    void *dst = dstBuf;
+    void* src = srcBuf;
+    void* dst = dstBuf;
     uint64_t len = sizeof(srcBuf);
     int32_t res{HCCL_E_RESERVED};
     DevType t950 = DevType::DEV_TYPE_950;
@@ -49,9 +45,9 @@ TEST_F(UtCpuHcommReadNbiOnThread, Ut_HcommReadNbiOnThread_When_950_Normal_Expect
 {
     MOCKER(&hrtGetDeviceType).stubs().with(outBound(t950)).will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP_VIRTUAL(channelOnHost, &hcomm::HostCpuRoceChannel::Read)
-            .stubs()
-            .with(mockcpp::any(), mockcpp::any())
-            .will(returnValue(HCCL_SUCCESS));
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
     res = HcommReadNbiOnThread(thread, channel, dst, src, len);
     EXPECT_EQ(res, HCCL_SUCCESS);
 }
@@ -60,9 +56,9 @@ TEST_F(UtCpuHcommReadNbiOnThread, Ut_HcommReadNbiOnThread_When_950_Thread_IsNull
 {
     MOCKER(&hrtGetDeviceType).stubs().with(outBound(t950)).will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP_VIRTUAL(channelOnHost, &hcomm::HostCpuRoceChannel::Read)
-            .stubs()
-            .with(mockcpp::any(), mockcpp::any())
-            .will(returnValue(HCCL_SUCCESS));
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
     // thread is cast to void — nullptr is acceptable.
     res = HcommReadNbiOnThread(0, channel, dst, src, len);
     EXPECT_EQ(res, HCCL_SUCCESS);
@@ -93,9 +89,9 @@ TEST_F(UtCpuHcommReadNbiOnThread, Ut_HcommReadNbiOnThread_When_950_Read_Fails_Ex
 {
     MOCKER(&hrtGetDeviceType).stubs().with(outBound(t950)).will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP_VIRTUAL(channelOnHost, &hcomm::HostCpuRoceChannel::Read)
-            .stubs()
-            .with(mockcpp::any(), mockcpp::any())
-            .will(returnValue(HCCL_E_INTERNAL));
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_E_INTERNAL));
     res = HcommReadNbiOnThread(thread, channel, dst, src, len);
     EXPECT_EQ(res, HCCL_E_INTERNAL);
 }

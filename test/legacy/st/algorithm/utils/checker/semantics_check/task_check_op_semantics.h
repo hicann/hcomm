@@ -20,11 +20,11 @@ enum class SliceOp {
 };
 
 struct SliceOpPair {
-    RankId    srcRank;
-    RankId    dstRank;
+    RankId srcRank;
+    RankId dstRank;
     DataSlice srcSlice;
     DataSlice dtsSlice;
-    SliceOp   sliceOp;
+    SliceOp sliceOp;
 
     std::string Describe() const
     {
@@ -52,10 +52,15 @@ struct LocalStep {
 
 class TaskCheckOpSemantics {
 public:
-    TaskCheckOpSemantics(TaskNodePtr head, CheckerOpParam &checkerOpParam, u32 rankSize)
-        : graphHead_(head), opType_(checkerOpParam.opType), reduceType_(checkerOpParam.reduceType),
-          checkerOpParam_(&checkerOpParam), root_(checkerOpParam.root), srcRank_(checkerOpParam.srcRank),
-          dstRank_(checkerOpParam.dstRank), rankSize_(rankSize)
+    TaskCheckOpSemantics(TaskNodePtr head, CheckerOpParam& checkerOpParam, u32 rankSize)
+        : graphHead_(head),
+          opType_(checkerOpParam.opType),
+          reduceType_(checkerOpParam.reduceType),
+          checkerOpParam_(&checkerOpParam),
+          root_(checkerOpParam.root),
+          srcRank_(checkerOpParam.srcRank),
+          dstRank_(checkerOpParam.dstRank),
+          rankSize_(rankSize)
     {
         CalcDataSize(checkerOpParam, dataSize_);
     }
@@ -64,51 +69,56 @@ public:
 private:
     void InitInputBuffer();
     void InitInputBuffer(RankId root);
-    void UpdateStep(TaskNode *simNode);
+    void UpdateStep(TaskNode* simNode);
     u32 GetCurLocalStep();
-    HcclResult DumpNodeSemantics(TaskNode *simNode);
+    HcclResult DumpNodeSemantics(TaskNode* simNode);
 
-    void       GetSrcIntersectionAddr(SliceOpPair &slicePair, const BufferSemantic &srcBufSemantic, u64 &srcStartAddr,
-                                      u64 &srcEndAddr) const;
-    HcclResult CheckBufSemantics(std::vector<BufferSemantic *> &bufSemantics, u64 startAddr, u64 size, bool ignoreError = false) const;
-    void RemoveAffectedBufSemantics(SliceOpPair &slicePair, std::vector<BufferSemantic *> &affectedDstBufSemantics);
-    void       ApplyOverrideSrcBufSemantic(SliceOpPair &slicePair, const BufferSemantic srcBufSemantic);
-    HcclResult ReduceToAffectedBufSemantic(const BufferSemantic         &srcBufSemantic,
-                                           std::vector<BufferSemantic *> toAddReduceInfoSemantics, u64 srcStartAddr);
-    HcclResult ApplyReduceSrcBufSemantic(SliceOpPair &slicePair, const BufferSemantic &srcBufSemantic,
-                                         std::vector<BufferSemantic *> &affectedDstBufSemantics);
-    void       GetAffectedBufSemantics(SliceOpPair &slicePair, const BufferSemantic &srcBufSemantic,
-                                       std::vector<BufferSemantic *> &affectedDstBufSemantics);
-    void GetAffectedBufSemantics(SliceOpPair &slicePair, std::vector<BufferSemantic *> &affectedDstBufSemantics);
-    HcclResult ApplySrcBufSemanticsToDst(SliceOpPair &slicePair, std::vector<BufferSemantic *> srcBufSemantics);
+    void GetSrcIntersectionAddr(
+        SliceOpPair& slicePair, const BufferSemantic& srcBufSemantic, u64& srcStartAddr, u64& srcEndAddr) const;
+    HcclResult CheckBufSemantics(
+        std::vector<BufferSemantic*>& bufSemantics, u64 startAddr, u64 size, bool ignoreError = false) const;
+    void RemoveAffectedBufSemantics(SliceOpPair& slicePair, std::vector<BufferSemantic*>& affectedDstBufSemantics);
+    void ApplyOverrideSrcBufSemantic(SliceOpPair& slicePair, const BufferSemantic srcBufSemantic);
+    HcclResult ReduceToAffectedBufSemantic(
+        const BufferSemantic& srcBufSemantic, std::vector<BufferSemantic*> toAddReduceInfoSemantics, u64 srcStartAddr);
+    HcclResult ApplyReduceSrcBufSemantic(
+        SliceOpPair& slicePair, const BufferSemantic& srcBufSemantic,
+        std::vector<BufferSemantic*>& affectedDstBufSemantics);
+    void GetAffectedBufSemantics(
+        SliceOpPair& slicePair, const BufferSemantic& srcBufSemantic,
+        std::vector<BufferSemantic*>& affectedDstBufSemantics);
+    void GetAffectedBufSemantics(SliceOpPair& slicePair, std::vector<BufferSemantic*>& affectedDstBufSemantics);
+    HcclResult ApplySrcBufSemanticsToDst(SliceOpPair& slicePair, std::vector<BufferSemantic*> srcBufSemantics);
 
-    HcclResult ProcessSliceOpPair(SliceOpPair &slicePair);
-    void       GetSliceOpPair(TaskNode *simNodes, std::vector<SliceOpPair> &sliceOpPairs) const;
-    HcclResult ProcessNodeSemantics(TaskNode *simNode);
+    HcclResult ProcessSliceOpPair(SliceOpPair& slicePair);
+    void GetSliceOpPair(TaskNode* simNodes, std::vector<SliceOpPair>& sliceOpPairs) const;
+    HcclResult ProcessNodeSemantics(TaskNode* simNode);
 
-    bool       IsReadyForSimulate(const TaskNode *node, std::set<TaskNode *> &simulatedNodes) const;
-    bool       IsNeedSimulateSameTime(TaskNode *node) const;
-    HcclResult FindCorrespondingPairNode(TaskNode *node, std::vector<TaskNode *> &result) const;
+    bool IsReadyForSimulate(const TaskNode* node, std::set<TaskNode*>& simulatedNodes) const;
+    bool IsNeedSimulateSameTime(TaskNode* node) const;
+    HcclResult FindCorrespondingPairNode(TaskNode* node, std::vector<TaskNode*>& result) const;
 
-    void       AddChildrenToQueue(TaskNode *node, std::set<TaskNode *> &visitedNodes,
-                                  std::queue<TaskNode *> &walkQue, std::set<TaskNode *>& simulatedNodes) const;
-    void       AddAivChildrenToQueue(TaskNode *node, std::set<TaskNode *> &visitedNodes,
-                                  std::queue<TaskNode *> &walkQue, std::set<TaskNode *>& simulatedNodes) const;
+    void AddChildrenToQueue(
+        TaskNode* node, std::set<TaskNode*>& visitedNodes, std::queue<TaskNode*>& walkQue,
+        std::set<TaskNode*>& simulatedNodes) const;
+    void AddAivChildrenToQueue(
+        TaskNode* node, std::set<TaskNode*>& visitedNodes, std::queue<TaskNode*>& walkQue,
+        std::set<TaskNode*>& simulatedNodes) const;
     HcclResult GenMemSemantics();
     HcclResult GenAivMemSemantics();
 
-    TaskNodePtr                           graphHead_;
-    CheckerOpType                         opType_ = CheckerOpType::INVALID;
-    CheckerReduceOp                       reduceType_ = CheckerReduceOp::REDUCE_RESERVED;
-    CheckerOpParam                        *checkerOpParam_;
-    u64                                   dataSize_ = 0;
-    u64                                   inputDataSize_ = 0;
-    u64                                   outputDataSize_ = 0;
+    TaskNodePtr graphHead_;
+    CheckerOpType opType_ = CheckerOpType::INVALID;
+    CheckerReduceOp reduceType_ = CheckerReduceOp::REDUCE_RESERVED;
+    CheckerOpParam* checkerOpParam_;
+    u64 dataSize_ = 0;
+    u64 inputDataSize_ = 0;
+    u64 outputDataSize_ = 0;
     std::map<RankId, RankMemorySemantics> allRankMemSemantics_;
-    RankId                                root_ = 0;
-    RankId                                srcRank_ = 0;
-    RankId                                dstRank_ = 1;
-    u32                                   rankSize_;
+    RankId root_ = 0;
+    RankId srcRank_ = 0;
+    RankId dstRank_ = 1;
+    u32 rankSize_;
 
     // 语义信息dump相关的环境变量
     u32 globalStep_ = 0;

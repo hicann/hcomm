@@ -26,32 +26,18 @@
 using namespace std;
 using namespace hccl;
 
-
-class RankConSistentTest : public testing::Test
-{
+class RankConSistentTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "\033[36m--RankConsistentcyChecker SetUP--\033[0m" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "\033[36m--RankConsistentcyChecker TearDown--\033[0m" << std::endl;
-    }
-    virtual void SetUp()
-    {
-        std::cout << "A Test SetUP" << std::endl;
-    }
-    virtual void TearDown()
-    {
-        std::cout << "A Test TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "\033[36m--RankConsistentcyChecker SetUP--\033[0m" << std::endl; }
+    static void TearDownTestCase() { std::cout << "\033[36m--RankConsistentcyChecker TearDown--\033[0m" << std::endl; }
+    virtual void SetUp() { std::cout << "A Test SetUP" << std::endl; }
+    virtual void TearDown() { std::cout << "A Test TearDown" << std::endl; }
 };
 
-#if 1 //这个用例其实没什么意义
+#if 1 // 这个用例其实没什么意义
 TEST_F(RankConSistentTest, ut_Compare_Cann_Version)
 {
-    RankConsistentcyChecker *implObj = new RankConsistentcyChecker();
+    RankConsistentcyChecker* implObj = new RankConsistentcyChecker();
     implObj->SetCheckCannVersionSwitch(true);
 
     bool ret;
@@ -82,7 +68,7 @@ TEST_F(RankConSistentTest, ut_Compare_Cann_Version)
 
 TEST_F(RankConSistentTest, ut_Compare_Toolkit_And_Ops_Version)
 {
-    RankConsistentcyChecker *implObj = new RankConsistentcyChecker();
+    RankConsistentcyChecker* implObj = new RankConsistentcyChecker();
     implObj->SetCheckCannVersionSwitch(true);
 
     bool ret;
@@ -149,7 +135,6 @@ TEST_F(RankConSistentTest, ut_Compare_check_error)
     checkInfo.cmdInfo = cmdInfo;
     checkInfo.protocolType = ProtocolType::RDMA;
 
-
     crcInfo.configFileExist_ = true;
     crcInfo.crcNum = 1;
     crcInfo.crcArray[0] = 2;
@@ -172,8 +157,7 @@ TEST_F(RankConSistentTest, ut_crc)
     RankConsistentcyChecker consistentDst;
     char str[10000];
     for (u32 i = 0; i < 10000; i++) {
-
-        str[i] = i%100;
+        str[i] = i % 100;
     }
 
     u32 srcCrc1;

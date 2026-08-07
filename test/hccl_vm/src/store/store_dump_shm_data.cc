@@ -37,7 +37,8 @@ static const std::string HCCLVM_INSTR_DATA_FILE = "/%s_hcclvm_instr_data.bin";
 
 namespace HcclSim {
 namespace fs = std::filesystem;
-std::string GetBinLocation() {
+std::string GetBinLocation()
+{
     std::filesystem::path curPath = std::filesystem::current_path();
     return curPath.string();
 }
@@ -45,7 +46,7 @@ std::string GetBinLocation() {
 std::string GenDataId()
 {
     std::string dataId;
-    
+
     // 1. 初始化随机数生成器 (static 保证只初始化一次，提高性能和随机性)
     static std::random_device rd;
     static std::mt19937 gen(rd());
@@ -83,7 +84,7 @@ std::string GenDataId()
     return dataId;
 }
 
-HcclVmResult DumpHcclVmFlagData(HcclSim::HcclVmFlagData &flagData)
+HcclVmResult DumpHcclVmFlagData(HcclSim::HcclVmFlagData& flagData)
 {
     HCCL_VM_INFO("Start dumping hccl vm flag data...");
     // 1. 构造完整路径
@@ -92,7 +93,7 @@ HcclVmResult DumpHcclVmFlagData(HcclSim::HcclVmFlagData &flagData)
     std::string fullPath = rootPath + DATA_FILE_PATH + HCCLVM_FLAG_DATA_FILE;
 
     // 2. 写文件，通知runner启动
-    FILE *fp = fopen(fullPath.c_str(), "wb");
+    FILE* fp = fopen(fullPath.c_str(), "wb");
     if (!fp) {
         HCCL_VM_ERROR("Open file failed: {}, error={}", fullPath, strerror(errno));
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
@@ -108,14 +109,14 @@ HcclVmResult DumpHcclVmFlagData(HcclSim::HcclVmFlagData &flagData)
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult GetHcclVmFlagData(HcclSim::HcclVmFlagData &waitFlag)
+HcclVmResult GetHcclVmFlagData(HcclSim::HcclVmFlagData& waitFlag)
 {
     // 1. 构造完整路径
     // 假设 FindRootPath() 已经实现并返回插件根目录
     std::string rootPath = GetBinLocation();
     std::string fullPath = rootPath + DATA_FILE_PATH + HCCLVM_FLAG_DATA_FILE;
     // 2. 读取文件，等待runner状态
-    FILE *fp = fopen(fullPath.c_str(), "rb");
+    FILE* fp = fopen(fullPath.c_str(), "rb");
     if (!fp) {
         HCCL_VM_ERROR("Open file failed: {}, error={}", fullPath, strerror(errno));
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
@@ -131,7 +132,7 @@ HcclVmResult GetHcclVmFlagData(HcclSim::HcclVmFlagData &waitFlag)
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult DumpDataToFile(const std::string &dataId)
+HcclVmResult DumpDataToFile(const std::string& dataId)
 {
     HcclVmResult ret{HcclVmResult::HCCL_SIM_SUCCESS};
     ret = DumpHcclVmSynthesisData(dataId);
@@ -156,17 +157,17 @@ HcclVmResult DumpDataToFile(const std::string &dataId)
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult CreateMemoryInfo(HcclVmSynData &hvmSynData, const sim::OpMemInfoTab &memInfo, uint32_t rankId)
+HcclVmResult CreateMemoryInfo(HcclVmSynData& hvmSynData, const sim::OpMemInfoTab& memInfo, uint32_t rankId)
 {
     HCCL_VM_INFO("Enter into create memory info...");
     auto addBuf = [&](uint8_t bufType, uint64_t addr, uint64_t size) {
         if (addr != 0 && size > 0) {
             MemLayoutData memLayoutData{};
-            memLayoutData.rank_id       = rankId;
-            memLayoutData.buffer_type   = bufType;
-            memLayoutData.start_addr    = addr;
-            memLayoutData.size          = size;
-            memLayoutData.global_offset = 0;  // 简化约定，与 checker 侧一致
+            memLayoutData.rank_id = rankId;
+            memLayoutData.buffer_type = bufType;
+            memLayoutData.start_addr = addr;
+            memLayoutData.size = size;
+            memLayoutData.global_offset = 0; // 简化约定，与 checker 侧一致
             hvmSynData.memory_info.data.push_back(memLayoutData);
         }
     };
@@ -180,7 +181,7 @@ HcclVmResult CreateMemoryInfo(HcclVmSynData &hvmSynData, const sim::OpMemInfoTab
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult CreateChannelInfo(HcclVmSynData &hvmSynData)
+HcclVmResult CreateChannelInfo(HcclVmSynData& hvmSynData)
 {
     HCCL_VM_INFO("Enter into create channel info...");
 
@@ -194,16 +195,16 @@ HcclVmResult CreateChannelInfo(HcclVmSynData &hvmSynData)
     for (const auto& ch : channels) {
         ChannelData chData{};
         chData.channelId = static_cast<uint16_t>(ch.channelId);
-        chData.srcDieId  = static_cast<uint8_t>(ch.srcDieId);
-        chData.dstDieId  = static_cast<uint8_t>(ch.dstDieId);
-        chData.srcRank   = ch.srcRankId;
-        chData.dstRank   = ch.dstRankId;
+        chData.srcDieId = static_cast<uint8_t>(ch.srcDieId);
+        chData.dstDieId = static_cast<uint8_t>(ch.dstDieId);
+        chData.srcRank = ch.srcRankId;
+        chData.dstRank = ch.dstRankId;
 
         std::memcpy(chData.leid, ch.leid, sizeof(chData.leid));
         std::memcpy(chData.reid, ch.reid, sizeof(chData.reid));
 
         uint8_t* leidPtr = chData.leid;
-        auto lEpRet = RunnerDB::GetOneByPred<sim::EndPoint>([leidPtr](const sim::EndPoint &ep) {
+        auto lEpRet = RunnerDB::GetOneByPred<sim::EndPoint>([leidPtr](const sim::EndPoint& ep) {
             return memcmp(ep.eid, leidPtr, sizeof(ep.eid)) == 0;
         });
         if (!lEpRet.second) {
@@ -212,7 +213,7 @@ HcclVmResult CreateChannelInfo(HcclVmSynData &hvmSynData)
         }
 
         uint8_t* reidPtr = chData.reid;
-        auto rEpRet = RunnerDB::GetOneByPred<sim::EndPoint>([reidPtr](const sim::EndPoint &ep) {
+        auto rEpRet = RunnerDB::GetOneByPred<sim::EndPoint>([reidPtr](const sim::EndPoint& ep) {
             return memcmp(ep.eid, reidPtr, sizeof(ep.eid)) == 0;
         });
         if (!rEpRet.second) {
@@ -223,25 +224,27 @@ HcclVmResult CreateChannelInfo(HcclVmSynData &hvmSynData)
         auto localEpId = lEpRet.first.id;
         auto remoteEpId = rEpRet.first.id;
 
-        auto pairOpt = RunnerDB::GetOneByPred<sim::EndPointPair>([localEpId, remoteEpId](const sim::EndPointPair &pair) {
-            return ((pair.local_enpoint_id == localEpId) && (pair.remote_enpoint_id == remoteEpId));
-        });
+        auto pairOpt
+            = RunnerDB::GetOneByPred<sim::EndPointPair>([localEpId, remoteEpId](const sim::EndPointPair& pair) {
+                  return ((pair.local_enpoint_id == localEpId) && (pair.remote_enpoint_id == remoteEpId));
+              });
 
         if (!pairOpt.second) {
             HCCL_VM_ERROR("cannot find EndPointPair by local: {} remote: {}", localEpId, remoteEpId);
             return HcclVmResult::HCCL_SIM_E_NOT_FOUND;
         }
 
-        chData.protocol  = pairOpt.first.tp_type;
-        chData.jettyNum  = ch.jettyNum;
+        chData.protocol = pairOpt.first.tp_type;
+        chData.jettyNum = ch.jettyNum;
         // ChannelData.jettyId[32] 仅容纳前 32 个，与 CcuChannelTab.jettyId[64] 差异
-        uint32_t copyNum = std::min(static_cast<uint32_t>(chData.jettyNum),
-                                    static_cast<uint32_t>(sizeof(chData.jettyId) / sizeof(chData.jettyId[0])));
+        uint32_t copyNum = std::min(
+            static_cast<uint32_t>(chData.jettyNum),
+            static_cast<uint32_t>(sizeof(chData.jettyId) / sizeof(chData.jettyId[0])));
         std::memcpy(chData.jettyId, ch.jettyId, copyNum * sizeof(uint32_t));
 
-        
-        HCCL_VM_INFO("channelId={}, srcRank={}, dstRank={}, jettyNum={}, protocol={}",
-                     chData.channelId, chData.srcRank, chData.dstRank, chData.jettyNum, chData.protocol);
+        HCCL_VM_INFO(
+            "channelId={}, srcRank={}, dstRank={}, jettyNum={}, protocol={}", chData.channelId, chData.srcRank,
+            chData.dstRank, chData.jettyNum, chData.protocol);
 
         hvmSynData.channel_info.data.push_back(chData);
     }
@@ -249,11 +252,13 @@ HcclVmResult CreateChannelInfo(HcclVmSynData &hvmSynData)
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult CreateJettyInfo(HcclVmSynData &hvmSynData)
+HcclVmResult CreateJettyInfo(HcclVmSynData& hvmSynData)
 {
     HCCL_VM_INFO("Enter into create jetty info...");
-    auto endpointPairs = RunnerDB::GetByPred<sim::EndPointPair>([](auto &&) { return true; });
-    for (auto &endpoint : endpointPairs) {
+    auto endpointPairs = RunnerDB::GetByPred<sim::EndPointPair>([](auto&&) {
+        return true;
+    });
+    for (auto& endpoint : endpointPairs) {
         uint64_t localEndPointId = endpoint.local_enpoint_id;
         uint64_t rmtEndPointId = endpoint.remote_enpoint_id;
         uint8_t protocol = endpoint.tp_type;
@@ -272,26 +277,30 @@ HcclVmResult CreateJettyInfo(HcclVmSynData &hvmSynData)
         }
 
         ChannelData channelData;
-        channelData.channelId = endpoint.id;  // AICPU模式无用赋值为主键
+        channelData.channelId = endpoint.id; // AICPU模式无用赋值为主键
         channelData.protocol = protocol;
 
         memcpy(channelData.leid, localEndPointOpt->eid, sizeof(channelData.leid));
         channelData.srcDieId = localEndPointOpt->die_id;
         channelData.srcRank = sim::GetRankIdByDeviceId(localEndPointOpt->device_id);
 
-        memcpy(channelData.reid, rmtEndPointOpt->eid, sizeof(channelData.reid));   
+        memcpy(channelData.reid, rmtEndPointOpt->eid, sizeof(channelData.reid));
         channelData.dstDieId = rmtEndPointOpt->die_id;
         channelData.dstRank = sim::GetRankIdByDeviceId(rmtEndPointOpt->device_id);
 
         // 查表查询JettyNum和JettyId
-        auto raCtx = RunnerDB::GetOneByPred<sim::RaContext>([localEndPointId](const sim::RaContext &ctx) { return ctx.endpoint_id == localEndPointId; });
+        auto raCtx = RunnerDB::GetOneByPred<sim::RaContext>([localEndPointId](const sim::RaContext& ctx) {
+            return ctx.endpoint_id == localEndPointId;
+        });
         if (!raCtx.second) {
             HCCL_VM_ERROR("Get RaContext failed handle = {}", localEndPointId);
             continue;
         }
 
         uint64_t raCtxHandle = raCtx.first.id;
-        auto raJettys = RunnerDB::GetByPred<sim::RaJetty>([raCtxHandle](const sim::RaJetty& jetty) { return jetty.ctx_handle == raCtxHandle && jetty.mode == 3; });
+        auto raJettys = RunnerDB::GetByPred<sim::RaJetty>([raCtxHandle](const sim::RaJetty& jetty) {
+            return jetty.ctx_handle == raCtxHandle && jetty.mode == 3;
+        });
         if (raJettys.empty()) {
             continue;
         }
@@ -303,14 +312,14 @@ HcclVmResult CreateJettyInfo(HcclVmSynData &hvmSynData)
         hvmSynData.channel_info.data.push_back(channelData);
     }
     hvmSynData.channel_info.count = hvmSynData.channel_info.data.size();
-    
+
     // 打印测试-JettyInfo
     std::stringstream chDataStr;
     for (auto chData : hvmSynData.channel_info.data) {
-        
-        chDataStr << "channelId="<< chData.channelId <<", srcRank="<< chData.srcRank <<", dstRank="<< chData.dstRank;
-        chDataStr <<", srcDieId=" << (int)chData.srcDieId << ", dstDieId=" << (int)chData.dstDieId;
-        chDataStr <<", protocol=" << chData.protocol;
+        chDataStr << "channelId=" << chData.channelId << ", srcRank=" << chData.srcRank
+                  << ", dstRank=" << chData.dstRank;
+        chDataStr << ", srcDieId=" << (int)chData.srcDieId << ", dstDieId=" << (int)chData.dstDieId;
+        chDataStr << ", protocol=" << chData.protocol;
         chDataStr << ", leid=";
         for (int i = 0; i < sizeof(chData.leid); i++) {
             chDataStr << std::hex << std::setw(2) << std::setfill('0') << std::hex << chData.leid[i];
@@ -332,7 +341,7 @@ HcclVmResult CreateJettyInfo(HcclVmSynData &hvmSynData)
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult CreateSimSynData(HcclVmSynData &hvmSynData)
+HcclVmResult CreateSimSynData(HcclVmSynData& hvmSynData)
 {
     HCCL_VM_INFO("Start get simulator synthesis data...");
     // header
@@ -342,7 +351,7 @@ HcclVmResult CreateSimSynData(HcclVmSynData &hvmSynData)
     hvmSynData.header.count = 1;
 
     std::map<uint32_t, std::vector<sim::CompositeOpDetail>> compositeDataMap;
-    constexpr uint32_t kDumpSyncIter = 0;  // 仅在 round 0 时 dump，syncIter 固定为 0
+    constexpr uint32_t kDumpSyncIter = 0; // 仅在 round 0 时 dump，syncIter 固定为 0
     loader::Loader dataLoader;
     if (dataLoader.LoadCompositeOpDetailBySyncIter(kDumpSyncIter, compositeDataMap) != HcclResult::HCCL_SUCCESS) {
         HCCL_VM_ERROR("LoadCompositeOpDetailBySyncIter({}) failed.", kDumpSyncIter);
@@ -356,7 +365,7 @@ HcclVmResult CreateSimSynData(HcclVmSynData &hvmSynData)
     const auto& opTab = compRank0.detail;
     const auto& memInfo = compRank0.memInfo;
     uint32_t rankId = compRank0.rankId;
-    if(compositeDataMap[0].size() > 1){
+    if (compositeDataMap[0].size() > 1) {
         HCCL_VM_INFO("Skip data dump when operator count exceeds 1.");
         return HcclVmResult::HCCL_SIM_E_SKIP;
     }
@@ -368,27 +377,26 @@ HcclVmResult CreateSimSynData(HcclVmSynData &hvmSynData)
     ::OpDetails opDetails{};
     std::memcpy(&opDetails, opTab.opDetail.data(), sizeof(OpDetails));
     g_opExpansionMode = opTab.opExpansionMode;
-    hvmSynData.model_info.comm.root       = opTab.root;
-    hvmSynData.model_info.comm.rank_size  = opTab.rankSize;
-    hvmSynData.model_info.comm.chip_type  = static_cast<uint16_t>(opTab.devType);
-    hvmSynData.model_info.comm.op_type    = opDetails.opType;
-    hvmSynData.model_info.comm.reduce_op  = opDetails.reduceType;
-    hvmSynData.model_info.comm.data_type  = opDetails.dataType;
+    hvmSynData.model_info.comm.root = opTab.root;
+    hvmSynData.model_info.comm.rank_size = opTab.rankSize;
+    hvmSynData.model_info.comm.chip_type = static_cast<uint16_t>(opTab.devType);
+    hvmSynData.model_info.comm.op_type = opDetails.opType;
+    hvmSynData.model_info.comm.reduce_op = opDetails.reduceType;
+    hvmSynData.model_info.comm.data_type = opDetails.dataType;
     hvmSynData.model_info.comm.data_count = opDetails.opV1.count;
     hvmSynData.model_info.comm.op_expansion_mode = opTab.opExpansionMode;
     // 保留占位（与 checker 侧一致）
     hvmSynData.model_info.comm.ccu0_resource_base_addr = 0x123123123;
     hvmSynData.model_info.comm.ccu1_resource_base_addr = 0x456456456;
-    hvmSynData.model_info.all2AllDataDes.sendType  = opDetails.opV2.sendDataType;
-    hvmSynData.model_info.all2AllDataDes.recvType  = opDetails.opV2.recvDataType;
+    hvmSynData.model_info.all2AllDataDes.sendType = opDetails.opV2.sendDataType;
+    hvmSynData.model_info.all2AllDataDes.recvType = opDetails.opV2.recvDataType;
     hvmSynData.model_info.all2AllDataDes.sendCount = opDetails.opV2.sendCount;
     hvmSynData.model_info.all2AllDataDes.recvCount = opDetails.opV2.recvCount;
     // opExtInfo 解析 count + sendCountMatrix
     hvmSynData.model_info.all2AllDataDes.count = 0;
     const HcclCMDType cmdType = static_cast<HcclCMDType>(opDetails.opType);
-    const bool isAll2AllOp = cmdType == HcclCMDType::HCCL_CMD_ALLTOALL ||
-                             cmdType == HcclCMDType::HCCL_CMD_ALLTOALLV ||
-                             cmdType == HcclCMDType::HCCL_CMD_ALLTOALLVC;
+    const bool isAll2AllOp = cmdType == HcclCMDType::HCCL_CMD_ALLTOALL || cmdType == HcclCMDType::HCCL_CMD_ALLTOALLV
+                             || cmdType == HcclCMDType::HCCL_CMD_ALLTOALLVC;
     if (isAll2AllOp && opTab.opExtInfo.size() >= sizeof(uint32_t)) {
         uint32_t cnt = 0;
         std::memcpy(&cnt, opTab.opExtInfo.data(), sizeof(uint32_t));
@@ -403,7 +411,7 @@ HcclVmResult CreateSimSynData(HcclVmSynData &hvmSynData)
         }
     }
     HCCL_VM_INFO("all2AllDataDes send count: {}", hvmSynData.model_info.all2AllDataDes.count);
-  
+
     // ChannelInfo(CCU) or JettyInfo(AICPU)
     if (hvmSynData.model_info.comm.op_expansion_mode == sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_AICPU) {
         CreateJettyInfo(hvmSynData);
@@ -417,7 +425,7 @@ HcclVmResult CreateSimSynData(HcclVmSynData &hvmSynData)
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult DumpHcclVmSynthesisData(const std::string &dataId)
+HcclVmResult DumpHcclVmSynthesisData(const std::string& dataId)
 {
     HCCL_VM_INFO("Start dumping hccl vm synthesis data...");
     // 1. 构造完整路径
@@ -438,7 +446,7 @@ HcclVmResult DumpHcclVmSynthesisData(const std::string &dataId)
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
     }
 
-    FILE *fp = fopen(fullPath.c_str(), "wb");
+    FILE* fp = fopen(fullPath.c_str(), "wb");
     if (!fp) {
         HCCL_VM_ERROR("Open file failed: {}, err: {}", fullPath, strerror(errno));
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
@@ -457,7 +465,7 @@ HcclVmResult DumpHcclVmSynthesisData(const std::string &dataId)
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult CreateSimInstrData(HcclVmInstrData &hvmInstrData)
+HcclVmResult CreateSimInstrData(HcclVmInstrData& hvmInstrData)
 {
     HCCL_VM_INFO("Start create simulator instruction data...");
     // 原来实现中 sizeof(hcomm::CcuRep::CcuInstr) == 32判断（与 instrSpace[i][32] 对齐），加 static_assert
@@ -472,7 +480,7 @@ HcclVmResult CreateSimInstrData(HcclVmInstrData &hvmInstrData)
     }
     // 过滤掉 instrCount == 0 的记录 等价原来的 Ccustatus.state == 1 的判断
     std::vector<sim::CcuInstrResTab> validInstrRes;
-    for (const auto &instrRes : allInstrRes) {
+    for (const auto& instrRes : allInstrRes) {
         if (instrRes.instrCount > 0) {
             validInstrRes.push_back(instrRes);
         }
@@ -484,11 +492,11 @@ HcclVmResult CreateSimInstrData(HcclVmInstrData &hvmInstrData)
     hvmInstrData.header.header_size = 20;
     hvmInstrData.header.count = validInstrRes.size(); // CCU有微码指令的个数
 
-    for (const auto &instrRes : validInstrRes) {
+    for (const auto& instrRes : validInstrRes) {
         MicrocodeInstrInner mcInstr;
         mcInstr.desc.rank_id = instrRes.rankId;
-        mcInstr.desc.die_id  = instrRes.dieId;
-        mcInstr.desc.count   = instrRes.instrCount;
+        mcInstr.desc.die_id = instrRes.dieId;
+        mcInstr.desc.count = instrRes.instrCount;
 
         if (mcInstr.desc.count > UINT16_MAX) {
             HCCL_VM_ERROR("instrCount {} exceeds UINT16_MAX", mcInstr.desc.count);
@@ -504,16 +512,16 @@ HcclVmResult CreateSimInstrData(HcclVmInstrData &hvmInstrData)
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult DumpHcclVmInstrData(const std::string &dataId)
+HcclVmResult DumpHcclVmInstrData(const std::string& dataId)
 {
     HCCL_VM_INFO("Start dumping hccl vm instruction data...");
     // 1. 构造完整路径
     char fileName[256];
     snprintf(fileName, sizeof(fileName), HCCLVM_INSTR_DATA_FILE.c_str(), dataId.c_str());
-    
+
     fs::create_directories(fs::path(InstallPath::ResolveToInstallRoot("data")));
     std::string fullPath = InstallPath::ResolveToInstallRoot("data" + std::string(fileName));
-    FILE *fp = fopen(fullPath.c_str(), "wb");
+    FILE* fp = fopen(fullPath.c_str(), "wb");
     if (!fp) {
         HCCL_VM_ERROR("Open file failed: {}, err: {}", fullPath, strerror(errno));
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
@@ -554,8 +562,9 @@ HcclVmResult DumpHcclVmInstrData(const std::string &dataId)
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult CreateSimTaskMetaData(HcclVmTaskMetaData &hvmTaskMetaData,
-                                     const std::map<uint32_t, std::vector<sim::CompositeOpDetail>> &compositeDataMap)
+HcclVmResult CreateSimTaskMetaData(
+    HcclVmTaskMetaData& hvmTaskMetaData,
+    const std::map<uint32_t, std::vector<sim::CompositeOpDetail>>& compositeDataMap)
 {
     HCCL_VM_INFO("Start create simulator task metadata...");
 
@@ -593,17 +602,17 @@ HcclVmResult CreateSimTaskMetaData(HcclVmTaskMetaData &hvmTaskMetaData,
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult DumpHcclVmTask(const std::string &dataId)
+HcclVmResult DumpHcclVmTask(const std::string& dataId)
 {
     HCCL_VM_INFO("Start dumping hccl vm task data...");
     // 1. 构造完整路径
     char fileName[256];
     snprintf(fileName, sizeof(fileName), HCCLVM_TASK_DATA_FILE.c_str(), dataId.c_str());
-    
+
     fs::create_directories(fs::path(InstallPath::ResolveToInstallRoot("data")));
     std::string fullPath = InstallPath::ResolveToInstallRoot("data" + std::string(fileName));
 
-    FILE *fp = fopen(fullPath.c_str(), "wb");
+    FILE* fp = fopen(fullPath.c_str(), "wb");
     if (!fp) {
         HCCL_VM_ERROR("Open file failed: {}, err: {}", fullPath, strerror(errno));
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
@@ -651,4 +660,4 @@ HcclVmResult DumpHcclVmTask(const std::string &dataId)
     HCCL_VM_INFO("Write hccl vm task file success.");
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
-}
+} // namespace HcclSim

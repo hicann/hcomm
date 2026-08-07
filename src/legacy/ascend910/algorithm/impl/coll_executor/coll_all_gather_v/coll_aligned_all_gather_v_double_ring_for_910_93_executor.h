@@ -14,28 +14,29 @@
 namespace hccl {
 class CollAlignedAllGatherVDoubleRingFor91093Executor : public CollAlignedAllGatherDoubleRingFor91093Executor {
 public:
-    CollAlignedAllGatherVDoubleRingFor91093Executor(const HcclDispatcher dispatcher,
-        std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollAlignedAllGatherVDoubleRingFor91093Executor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAlignedAllGatherVDoubleRingFor91093Executor() override = default;
 
 private:
     bool IsSmallData(const u64 size) override;
 
-    u64 CalcDstMemOffset(const OpParam &param, u32 perDataSize, u64 inputMemSize) const override;
-    HcomCollOpInfo GetHcomCollOpInfo(const OpParam &param, const ExecMem &execMem) const override;
-    std::vector<Slice> PrepareSlicesL2(const OpParam &param, const SubCommInfo &level2CommInfo,
-        const SubCommInfo &level1CommInfo, const SubCommInfo &level0CommInfo, u32 perDataSize,
-        u64 inputMemSize) const override;
-    std::vector<Slice> PrepareSlicesL1(const OpParam &param, const SubCommInfo &level2CommInfo,
-        const SubCommInfo &level1CommInfo, const SubCommInfo &level0CommInfo, u32 perDataSize,
-        u64 inputMemSize) const override;
-    HcclResult PrepareSlicesL0(std::vector<std::vector<Slice>> &multRingsSlice, const OpParam &param,
-        const SubCommInfo &level2CommInfo, const SubCommInfo &level1CommInfo, const SubCommInfo &level0CommInfo,
-        u32 perDataSize, u64 inputMemSize) override;
-    HcclResult PrepareUserMemSlices(std::vector<std::vector<Slice>> &userMemSlices,
-        const std::vector<std::vector<Slice>> &multRingsSlice, const OpParam &param, const SubCommInfo &level2CommInfo,
-        const SubCommInfo &level1CommInfo, const SubCommInfo &level0CommInfo, u32 perDataSize,
+    u64 CalcDstMemOffset(const OpParam& param, u32 perDataSize, u64 inputMemSize) const override;
+    HcomCollOpInfo GetHcomCollOpInfo(const OpParam& param, const ExecMem& execMem) const override;
+    std::vector<Slice> PrepareSlicesL2(
+        const OpParam& param, const SubCommInfo& level2CommInfo, const SubCommInfo& level1CommInfo,
+        const SubCommInfo& level0CommInfo, u32 perDataSize, u64 inputMemSize) const override;
+    std::vector<Slice> PrepareSlicesL1(
+        const OpParam& param, const SubCommInfo& level2CommInfo, const SubCommInfo& level1CommInfo,
+        const SubCommInfo& level0CommInfo, u32 perDataSize, u64 inputMemSize) const override;
+    HcclResult PrepareSlicesL0(
+        std::vector<std::vector<Slice>>& multRingsSlice, const OpParam& param, const SubCommInfo& level2CommInfo,
+        const SubCommInfo& level1CommInfo, const SubCommInfo& level0CommInfo, u32 perDataSize,
         u64 inputMemSize) override;
+    HcclResult PrepareUserMemSlices(
+        std::vector<std::vector<Slice>>& userMemSlices, const std::vector<std::vector<Slice>>& multRingsSlice,
+        const OpParam& param, const SubCommInfo& level2CommInfo, const SubCommInfo& level1CommInfo,
+        const SubCommInfo& level0CommInfo, u32 perDataSize, u64 inputMemSize) override;
 };
 
 } // namespace hccl

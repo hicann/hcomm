@@ -15,14 +15,13 @@
 namespace hcomm {
 namespace CcuRep {
 
-FuncBlock::FuncBlock(CcuRepContext *context, std::string label, uint16_t callLayer)
-    : context(context), label(label), callLayer(callLayer)
-{
-}
+    FuncBlock::FuncBlock(CcuRepContext* context, std::string label, uint16_t callLayer)
+        : context(context),
+          label(label),
+          callLayer(callLayer)
+    {}
 
-FuncBlock::~FuncBlock()
-{
-}
+    FuncBlock::~FuncBlock() {}
 
 }; // namespace CcuRep
 }; // namespace hcomm

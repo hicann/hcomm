@@ -7,16 +7,17 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef AIV_AR_SUPERKERNEL_H
 #define AIV_AR_SUPERKERNEL_H
- 
+
 #include "aiv_communication_base.h"
 #include "aiv_all_reduce_91093.h"
 #include "aiv_all_reduce_910b_smalldata_graph.h"
 #include "aiv_all_reduce_910b_bigdata_graph.h"
 
-extern "C" __aicore__ void sk_allreduce(SUPERKERNEL_LITE_ARGS_DEF) {
+extern "C" __aicore__ void sk_allreduce(SUPERKERNEL_LITE_ARGS_DEF)
+{
     SUPERKERNEL_LITE_ARGS_EXTRACT;
     if (devType == DEV_TYPE_910_93) {
         return sk_all_reduce_91093(SUPERKERNEL_ARGS_CALL);
@@ -28,6 +29,5 @@ extern "C" __aicore__ void sk_allreduce(SUPERKERNEL_LITE_ARGS_DEF) {
         }
     }
 }
- 
- 
-#endif  /* AIV_AR_SUPERKERNEL_H */
+
+#endif /* AIV_AR_SUPERKERNEL_H */

@@ -13,15 +13,17 @@
 namespace hccl {
 using namespace std;
 
-IHcclOneSidedService::IHcclOneSidedService(unique_ptr<HcclSocketManager> &socketManager,
-    unique_ptr<NotifyPool> &notifyPool)
-    : socketManager_(socketManager), notifyPool_(notifyPool),
-      trafficClass_(HCCL_COMM_TRAFFIC_CLASS_CONFIG_NOT_SET), serviceLevel_(HCCL_COMM_SERVICE_LEVEL_CONFIG_NOT_SET)
-{
-}
+IHcclOneSidedService::IHcclOneSidedService(
+    unique_ptr<HcclSocketManager>& socketManager, unique_ptr<NotifyPool>& notifyPool)
+    : socketManager_(socketManager),
+      notifyPool_(notifyPool),
+      trafficClass_(HCCL_COMM_TRAFFIC_CLASS_CONFIG_NOT_SET),
+      serviceLevel_(HCCL_COMM_SERVICE_LEVEL_CONFIG_NOT_SET)
+{}
 
-HcclResult IHcclOneSidedService::Config(const HcclDispatcher &dispatcher, const HcclRankLinkInfo &localRankInfo,
-    const RankTable_t *rankTable, std::string identifier, bool isStandardCard, const std::unordered_set<u32>& enableP2PRankIds)
+HcclResult IHcclOneSidedService::Config(
+    const HcclDispatcher& dispatcher, const HcclRankLinkInfo& localRankInfo, const RankTable_t* rankTable,
+    std::string identifier, bool isStandardCard, const std::unordered_set<u32>& enableP2PRankIds)
 {
     CHK_PTR_NULL(dispatcher);
     CHK_PTR_NULL(rankTable);
@@ -37,7 +39,7 @@ HcclResult IHcclOneSidedService::Config(const HcclDispatcher &dispatcher, const 
     return HCCL_SUCCESS;
 }
 
-HcclResult IHcclOneSidedService::SetNetDevCtx(const HcclNetDevCtx &netDevCtx, bool useRdma)
+HcclResult IHcclOneSidedService::SetNetDevCtx(const HcclNetDevCtx& netDevCtx, bool useRdma)
 {
     if (useRdma) {
         netDevRdmaCtx_ = netDevCtx;
@@ -49,7 +51,7 @@ HcclResult IHcclOneSidedService::SetNetDevCtx(const HcclNetDevCtx &netDevCtx, bo
     return HCCL_SUCCESS;
 }
 
-HcclResult IHcclOneSidedService::GetNetDevCtx(HcclNetDevCtx &netDevCtx, bool useRdma)
+HcclResult IHcclOneSidedService::GetNetDevCtx(HcclNetDevCtx& netDevCtx, bool useRdma)
 {
     if (useRdma) {
         netDevCtx = netDevRdmaCtx_;
@@ -59,10 +61,7 @@ HcclResult IHcclOneSidedService::GetNetDevCtx(HcclNetDevCtx &netDevCtx, bool use
     return HCCL_SUCCESS;
 }
 
-HcclResult IHcclOneSidedService::DeInit()
-{
-    return HCCL_SUCCESS;
-}
+HcclResult IHcclOneSidedService::DeInit() { return HCCL_SUCCESS; }
 
 void IHcclOneSidedService::SetTCAndSL(u32 trafficClass, u32 serviceLevel)
 {
@@ -70,4 +69,4 @@ void IHcclOneSidedService::SetTCAndSL(u32 trafficClass, u32 serviceLevel)
     serviceLevel_ = serviceLevel;
 }
 
-}
+} // namespace hccl

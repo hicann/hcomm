@@ -32,16 +32,12 @@ namespace HcclSim {
 LinkProtoStub GetLinkProto(uint8_t commProtocol);
 uint64_t CalcDataSize(HcclDataType dataType, uint64_t dataCount);
 extern std::map<uint32_t, std::map<uint8_t, std::map<uint8_t, std::shared_ptr<TaskStubCcuGraph>>>> g_missionTask;
-}
+} // namespace HcclSim
 
 class TaskUtilsTest : public testing::Test {
 protected:
-    void SetUp() override {
-        g_missionTask.clear();
-    }
-    void TearDown() override {
-        g_missionTask.clear();
-    }
+    void SetUp() override { g_missionTask.clear(); }
+    void TearDown() override { g_missionTask.clear(); }
 };
 
 TEST_F(TaskUtilsTest, GetLinkProto_Roce)
@@ -424,7 +420,8 @@ TEST_F(TaskUtilsTest, ConvertTask_NotifyRecord_Remote_SDMA)
     EXPECT_EQ(result->GetLinkType(), LinkProtoStub::SDMA);
 }
 
-TEST_F(TaskUtilsTest, ConvertTask_CCU_Graph_Basic) {
+TEST_F(TaskUtilsTest, ConvertTask_CCU_Graph_Basic)
+{
     HcclSim::StorageManager& storage = HcclSim::StorageManager::GetInstance();
     HcclTaskMetaData task{};
     task.taskType = HccLTaskMetaType::CCU_GRAPH;
@@ -441,7 +438,8 @@ TEST_F(TaskUtilsTest, ConvertTask_CCU_Graph_Basic) {
     EXPECT_EQ(result, nullptr);
 }
 
-TEST_F(TaskUtilsTest, ConvertTaskQueue_Empty_AlreadyCovered) {
+TEST_F(TaskUtilsTest, ConvertTaskQueue_Empty_AlreadyCovered)
+{
     AllRankTaskQueues q;
     EXPECT_EQ(ConvertTaskQueue(q), HCCL_SUCCESS);
 }

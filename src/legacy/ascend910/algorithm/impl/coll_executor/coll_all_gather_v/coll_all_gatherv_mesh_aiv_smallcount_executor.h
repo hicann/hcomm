@@ -10,31 +10,32 @@
 
 #ifndef COLL_ALLGATHERV_MESH_AIV_SMALLCOUNT_EXECUTOR_H
 #define COLL_ALLGATHERV_MESH_AIV_SMALLCOUNT_EXECUTOR_H
- 
+
 #include "coll_all_gather_v_executor.h"
 #include "hccl_aiv.h"
- 
+
 namespace hccl {
 class CollAllGatherVMeshAivSmallCountExecutor : public CollAllGatherVExecutor {
 public:
-    CollAllGatherVMeshAivSmallCountExecutor(const HcclDispatcher dispatcher,
-                                               std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollAllGatherVMeshAivSmallCountExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     CollAllGatherVMeshAivSmallCountExecutor() = default;
- 
+
     HcclResult Orchestrate(OpParam& param, AlgResourceResponse& algRes) override;
+
 private:
     /* *************** 资源计算 *************** */
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType,
-        TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
-    HcclResult CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize = 0, HcclCMDType cmdType = HcclCMDType::HCCL_CMD_INVALID) override;
- 
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalNumBlocks(
+        u32& numBlocks, u32 rankSize, u64 dataSize = 0, HcclCMDType cmdType = HcclCMDType::HCCL_CMD_INVALID) override;
+
     /* *************** 算法编排 *************** */
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 };
- 
+
 } // namespace hccl
- 
+
 #endif

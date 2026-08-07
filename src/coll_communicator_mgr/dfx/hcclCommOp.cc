@@ -12,10 +12,11 @@
 
 namespace hccl {
 
-std::shared_ptr<Hccl::DfxOpInfo> ConvertToDfxOpInfo(const HcclDfxOpInfo& dfxOpInfo) {
+std::shared_ptr<Hccl::DfxOpInfo> ConvertToDfxOpInfo(const HcclDfxOpInfo& dfxOpInfo)
+{
     auto dfxOpInfoOnce = std::make_shared<Hccl::DfxOpInfo>();
     dfxOpInfoOnce->op_.opMode = static_cast<Hccl::OpMode::Value>(dfxOpInfo.opMode);
-    dfxOpInfoOnce->op_.oldOpType = dfxOpInfo.opType; // 存A3的类型
+    dfxOpInfoOnce->op_.oldOpType = dfxOpInfo.opType;     // 存A3的类型
     dfxOpInfoOnce->op_.oldReduceOp = dfxOpInfo.reduceOp; // 存A3的类型
     dfxOpInfoOnce->op_.oldDataType = dfxOpInfo.dataType; // 存A3的类型
 
@@ -34,4 +35,4 @@ std::shared_ptr<Hccl::DfxOpInfo> ConvertToDfxOpInfo(const HcclDfxOpInfo& dfxOpIn
     return dfxOpInfoOnce;
 }
 
-}
+} // namespace hccl

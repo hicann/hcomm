@@ -20,7 +20,7 @@ static std::unordered_map<std::string, DispatcherCtxPtr> g_ctx;
 std::mutex g_mtx; // 考虑已有的universal_map，或读写锁
 thread_local DispatcherCtxPtr gDispatcherCtx = nullptr;
 
-bool FindDispatcherByCommId(DispatcherCtxPtr *ctx, const char* commId)
+bool FindDispatcherByCommId(DispatcherCtxPtr* ctx, const char* commId)
 {
     if (commId == nullptr) {
         HCCL_ERROR("[%s] find dispatcher fail, commId is nullptr", __func__);
@@ -72,12 +72,12 @@ HcclResult BindDispatcherCtxWithComm(DispatcherCtxPtr ctx, const char* commId)
     return HCCL_SUCCESS;
 }
 
-HcclResult CreateDispatcherCtx(DispatcherCtxPtr *ctx, u32 devPhyId, const char* commId)
+HcclResult CreateDispatcherCtx(DispatcherCtxPtr* ctx, u32 devPhyId, const char* commId)
 {
     CHK_PTR_NULL(commId);
     CHK_PRT_RET(devPhyId == INVALID_UINT, HCCL_ERROR("[CreateCtx] devPhyId invalid"), HCCL_E_PARA);
     CHK_PTR_NULL(ctx);
-    hccl::DispatcherCtx *Ctx_tmp = new (std::nothrow) hccl::DispatcherCtx(devPhyId);
+    hccl::DispatcherCtx* Ctx_tmp = new (std::nothrow) hccl::DispatcherCtx(devPhyId);
     CHK_PTR_NULL(Ctx_tmp);
     // 创建ctx，内部创建dispatcher和notify pool实例  目前没有pool
     HcclResult ret = Ctx_tmp->Init();
@@ -150,7 +150,7 @@ HcclResult DestroyDispatcherCtx(DispatcherCtxPtr ctx, const char* commId)
         }
         HCCL_WARNING("[DestroyCtx] ctx[%p] not found by commId[%s], just destroy", ctx, commId);
     }
-    hccl::DispatcherCtx *Ctx_tmp = reinterpret_cast<hccl::DispatcherCtx*>(ctx);
+    hccl::DispatcherCtx* Ctx_tmp = reinterpret_cast<hccl::DispatcherCtx*>(ctx);
     HcclResult ret = Ctx_tmp->Destroy();
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[DestroyCtx] CTX Destroy fail");
@@ -194,7 +194,7 @@ DispatcherCtxPtr GetDispatcherCtx(const char* commId)
 HcclResult SetDispatcherCtxOpIdx(u32 opRingBufferIdx)
 {
     HCCL_INFO("%s start, %u", __func__, opRingBufferIdx);
-    hccl::DispatcherCtx* ctx_temp = reinterpret_cast<hccl::DispatcherCtx *>(GetDispatcherCtx());
+    hccl::DispatcherCtx* ctx_temp = reinterpret_cast<hccl::DispatcherCtx*>(GetDispatcherCtx());
     CHK_PTR_NULL(ctx_temp);
     hccl::DispatcherAiCpu* dispatcherPtr = reinterpret_cast<hccl::DispatcherAiCpu*>(ctx_temp->GetDispatcher());
     CHK_PTR_NULL(dispatcherPtr);
@@ -202,7 +202,7 @@ HcclResult SetDispatcherCtxOpIdx(u32 opRingBufferIdx)
     return HCCL_SUCCESS;
 }
 
-HcclResult AcquireDispatcherCtx(DispatcherCtxPtr *ctx, const char* commId)
+HcclResult AcquireDispatcherCtx(DispatcherCtxPtr* ctx, const char* commId)
 {
     CHK_PTR_NULL(commId);
     DispatcherCtxPtr ctxPtr = GetDispatcherCtx(commId);
@@ -217,7 +217,7 @@ HcclResult AcquireDispatcherCtx(DispatcherCtxPtr *ctx, const char* commId)
     CHK_RET(hrtGetDevicePhyIdByIndex(deviceLogicId, devPhyId));
     CHK_PRT_RET(devPhyId == INVALID_UINT, HCCL_ERROR("[CreateCtx] devPhyId invalid"), HCCL_E_PARA);
     CHK_PTR_NULL(ctx);
-    hccl::DispatcherCtx *Ctx_tmp = new (std::nothrow) hccl::DispatcherCtx(devPhyId);
+    hccl::DispatcherCtx* Ctx_tmp = new (std::nothrow) hccl::DispatcherCtx(devPhyId);
     CHK_PTR_NULL(Ctx_tmp);
     HcclResult ret = Ctx_tmp->Init();
     if (ret != HCCL_SUCCESS) {

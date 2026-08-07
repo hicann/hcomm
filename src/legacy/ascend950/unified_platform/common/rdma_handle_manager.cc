@@ -27,22 +27,19 @@ RdmaHandleManager::RdmaHandleManager()
     }
 }
 
-RdmaHandleManager::~RdmaHandleManager()
-{
-    DECTOR_TRY_CATCH("RdmaHandleManager", DestroyAll());
-}
+RdmaHandleManager::~RdmaHandleManager() { DECTOR_TRY_CATCH("RdmaHandleManager", DestroyAll()); }
 
-RdmaHandleManager &RdmaHandleManager::GetInstance()
+RdmaHandleManager& RdmaHandleManager::GetInstance()
 {
     static RdmaHandleManager rdmaHandleManager;
     return rdmaHandleManager;
 }
 
-RdmaHandle RdmaHandleManager::Create(u32 devPhyId, const PortData &localPort)
+RdmaHandle RdmaHandleManager::Create(u32 devPhyId, const PortData& localPort)
 {
     RaInterface intf{};
     intf.address = localPort.GetAddr();
-    intf.phyId   = devPhyId;
+    intf.phyId = devPhyId;
 
     HCCL_INFO("RdmaHandleManager::Create, devPhyId[%u], localPort[%s]", devPhyId, localPort.Describe().c_str());
 
@@ -58,15 +55,16 @@ RdmaHandle RdmaHandleManager::Create(u32 devPhyId, const PortData &localPort)
     return rdmaHandle;
 }
 
-RdmaHandle RdmaHandleManager::Create(u32 devPhyId, const LinkProtoType &localProtocolType,
-    const IpAddress &localIp, PortDeploymentType type)
+RdmaHandle RdmaHandleManager::Create(
+    u32 devPhyId, const LinkProtoType& localProtocolType, const IpAddress& localIp, PortDeploymentType type)
 {
     RaInterface intf{};
     intf.address = localIp;
-    intf.phyId   = devPhyId;
+    intf.phyId = devPhyId;
 
-    HCCL_INFO("RdmaHandleManager::Create, devPhyId[%u], LinkProtoType[%s], localIp[%s]", 
-        devPhyId, localProtocolType.Describe().c_str(), localIp.GetIpStr().c_str());
+    HCCL_INFO(
+        "RdmaHandleManager::Create, devPhyId[%u], LinkProtoType[%s], localIp[%s]", devPhyId,
+        localProtocolType.Describe().c_str(), localIp.GetIpStr().c_str());
 
     HrtNetworkMode netMode = HrtNetworkMode::HDC;
     if (type == PortDeploymentType::HOST_NET) {
@@ -80,7 +78,7 @@ RdmaHandle RdmaHandleManager::Create(u32 devPhyId, const LinkProtoType &localPro
     return rdmaHandle;
 }
 
-RdmaHandle RdmaHandleManager::Get(u32 devPhyId, const PortData &localPort, LinkProtocol linkProtocol)
+RdmaHandle RdmaHandleManager::Get(u32 devPhyId, const PortData& localPort, LinkProtocol linkProtocol)
 {
     std::lock_guard<std::mutex> lock(managerMutex);
 
@@ -89,35 +87,37 @@ RdmaHandle RdmaHandleManager::Get(u32 devPhyId, const PortData &localPort, LinkP
         return nullptr;
     }
 
-    IpAddress  localIp = localPort.GetAddr();
+    IpAddress localIp = localPort.GetAddr();
     if (linkProtocol == LinkProtocol::UBOE) {
         IpAddress eidAddress;
         UboeIpv4ToEid(localIp, eidAddress, devPhyId);
         localIp = eidAddress;
     }
 
-    RdmaHandle res     = rdmaHandleMap[devPhyId][localProto][localIp];
+    RdmaHandle res = rdmaHandleMap[devPhyId][localProto][localIp];
     if (res == nullptr) {
         if (localProto == LinkProtoType::RDMA) {
             res = Create(devPhyId, localPort);
         } else if (localProto == LinkProtoType::UB) {
             HrtRaUbCtxInitParam in(HrtNetworkMode::HDC, devPhyId, localIp);
-            res                                          = HrtRaUbCtxInit(in);
+            res = HrtRaUbCtxInit(in);
             rdmaHandleMap[devPhyId][localProto][localIp] = res;
             tokenInfoMap[res] = std::make_unique<TokenInfoManager>(devPhyId, res);
             activeHandles_.insert(res);
-            HCCL_INFO("Create one rdmahandle [%p], devPhyId [%u], portAddr [%s]",
-                res, devPhyId, localPort.GetAddr().Describe().c_str());
+            HCCL_INFO(
+                "Create one rdmahandle [%p], devPhyId [%u], portAddr [%s]", res, devPhyId,
+                localPort.GetAddr().Describe().c_str());
         }
     }
 
-    HCCL_INFO("[RdmaHandleManager::Get] one rdmahandle [%p], devPhyId [%u], portAddr [%s]",
-                res, devPhyId, localPort.GetAddr().Describe().c_str());
+    HCCL_INFO(
+        "[RdmaHandleManager::Get] one rdmahandle [%p], devPhyId [%u], portAddr [%s]", res, devPhyId,
+        localPort.GetAddr().Describe().c_str());
     return res;
 }
 
-RdmaHandle RdmaHandleManager::GetByAddr(u32 devPhyId, const LinkProtoType &localProtocolType,
-    IpAddress &localIp, PortDeploymentType type)
+RdmaHandle RdmaHandleManager::GetByAddr(
+    u32 devPhyId, const LinkProtoType& localProtocolType, IpAddress& localIp, PortDeploymentType type)
 {
     std::lock_guard<std::mutex> lock(managerMutex);
 
@@ -125,33 +125,37 @@ RdmaHandle RdmaHandleManager::GetByAddr(u32 devPhyId, const LinkProtoType &local
         return nullptr;
     }
 
-    RdmaHandle res     = rdmaHandleMap[devPhyId][localProtocolType][localIp];
+    RdmaHandle res = rdmaHandleMap[devPhyId][localProtocolType][localIp];
     if (res == nullptr) {
         if (localProtocolType == LinkProtoType::RDMA) {
             res = Create(devPhyId, localProtocolType, localIp, type);
         } else if (localProtocolType == LinkProtoType::UB) {
-            HrtNetworkMode mode = (type == Hccl::PortDeploymentType::DEV_NET) ? HrtNetworkMode::HDC : HrtNetworkMode::PEER;
-	        HrtRaUbCtxInitParam in(mode, devPhyId, localIp);
-            res                 = HrtRaUbCtxInit(in);
+            HrtNetworkMode mode
+                = (type == Hccl::PortDeploymentType::DEV_NET) ? HrtNetworkMode::HDC : HrtNetworkMode::PEER;
+            HrtRaUbCtxInitParam in(mode, devPhyId, localIp);
+            res = HrtRaUbCtxInit(in);
             rdmaHandleMap[devPhyId][localProtocolType][localIp] = res;
             tokenInfoMap[res] = std::make_unique<TokenInfoManager>(devPhyId, res);
             activeHandles_.insert(res);
-            HCCL_INFO("Create one rdmahandle [%p], devPhyId [%u], portAddr [%s]",
-                res, devPhyId, localIp.Describe().c_str());
+            HCCL_INFO(
+                "Create one rdmahandle [%p], devPhyId [%u], portAddr [%s]", res, devPhyId, localIp.Describe().c_str());
         }
     }
-    HCCL_INFO("[RdmaHandleManager::GetByAddr] one rdmahandle [%p], devPhyId [%u], portAddr [%s]",
-        res, devPhyId, localIp.Describe().c_str());
+    HCCL_INFO(
+        "[RdmaHandleManager::GetByAddr] one rdmahandle [%p], devPhyId [%u], portAddr [%s]", res, devPhyId,
+        localIp.Describe().c_str());
     return res;
 }
 
-RdmaHandle RdmaHandleManager::GetByIp(u32 devPhyId, const IpAddress &localIp)
+RdmaHandle RdmaHandleManager::GetByIp(u32 devPhyId, const IpAddress& localIp)
 {
     std::lock_guard<std::mutex> lock(managerMutex);
 
     if (devPhyId > rdmaHandleMap.size() - 1) {
-        HCCL_ERROR("[RdmaHandleManager][GetByIp]devPhyId[%u] is invalid, "
-            "should be less than [%zu]", devPhyId, rdmaHandleMap.size());
+        HCCL_ERROR(
+            "[RdmaHandleManager][GetByIp]devPhyId[%u] is invalid, "
+            "should be less than [%zu]",
+            devPhyId, rdmaHandleMap.size());
         return nullptr;
     }
 
@@ -163,15 +167,14 @@ RdmaHandle RdmaHandleManager::GetByIp(u32 devPhyId, const IpAddress &localIp)
         rdmaHandleMap[devPhyId][LinkProtoType::UB][localIp] = res;
         tokenInfoMap[res] = std::make_unique<TokenInfoManager>(devPhyId, res);
         activeHandles_.insert(res);
-        HCCL_INFO("Create one rdmahandle [%p], devPhyId [%u], ipAddr [%s]",
-            res, devPhyId, localIp.Describe().c_str());
+        HCCL_INFO("Create one rdmahandle [%p], devPhyId [%u], ipAddr [%s]", res, devPhyId, localIp.Describe().c_str());
     }
 
     return res;
 }
 
-bool RdmaHandleManager::FindCachedJfcHandle(RdmaHandle rdmaHandle, HrtUbJfcMode jfcMode,
-    JfcHandle &handle, CqCreateInfo &cqInfo)
+bool RdmaHandleManager::FindCachedJfcHandle(
+    RdmaHandle rdmaHandle, HrtUbJfcMode jfcMode, JfcHandle& handle, CqCreateInfo& cqInfo)
 {
     auto outerIt = jfcHandleMap.find(rdmaHandle);
     if (outerIt == jfcHandleMap.end()) {
@@ -195,8 +198,10 @@ JfcHandle RdmaHandleManager::GetJfcHandle(RdmaHandle rdmaHandle, CqCreateInfo& c
     }
 
     if (jfcMode != HrtUbJfcMode::STARS_POLL && jfcMode != HrtUbJfcMode::CCU_POLL && jfcMode != HrtUbJfcMode::NORMAL) {
-        THROW<InvalidParamsException>("[RdmaHandleManager][GetJfcHandle]jfcMode[%s] is not STARS_POLL or CCU_POLL or NORMAL, "
-            "please check input.", jfcMode.Describe().c_str());
+        THROW<InvalidParamsException>(
+            "[RdmaHandleManager][GetJfcHandle]jfcMode[%s] is not STARS_POLL or CCU_POLL or NORMAL, "
+            "please check input.",
+            jfcMode.Describe().c_str());
     }
 
     JfcHandle cachedHandle{};
@@ -204,23 +209,26 @@ JfcHandle RdmaHandleManager::GetJfcHandle(RdmaHandle rdmaHandle, CqCreateInfo& c
         return cachedHandle;
     }
     JfcHandle newHandle = HrtRaUbCreateJfc(rdmaHandle, cqInfo, jfcMode);
-    JfcHandle &ref = jfcHandleMap[rdmaHandle][jfcMode]; // 引用缓存
+    JfcHandle& ref = jfcHandleMap[rdmaHandle][jfcMode]; // 引用缓存
     ref = newHandle;
     cqInfoMap[ref] = cqInfo;
     return ref;
 }
 
-JfcHandle  RdmaHandleManager::GetJfcHandleAndCqInfo(RdmaHandle rdmaHandle, CqCreateInfo& cqInfo, HrtUbJfcMode jfcMode)
+JfcHandle RdmaHandleManager::GetJfcHandleAndCqInfo(RdmaHandle rdmaHandle, CqCreateInfo& cqInfo, HrtUbJfcMode jfcMode)
 {
     std::lock_guard<std::mutex> lock(managerMutex);
 
     if (rdmaHandle == nullptr) {
-        THROW<InvalidParamsException>("[RdmaHandleManager][GetJfcHandleAndCqInfo]rdmaHandle is nullptr, please check input.");
+        THROW<InvalidParamsException>(
+            "[RdmaHandleManager][GetJfcHandleAndCqInfo]rdmaHandle is nullptr, please check input.");
     }
 
     if (jfcMode != HrtUbJfcMode::USER_CTL) {
-    THROW<InvalidParamsException>("[RdmaHandleManager][GetJfcHandleAndCqInfo]jfcMode[%s] is not USER_CTL, "
-            "please check input.", jfcMode.Describe().c_str());
+        THROW<InvalidParamsException>(
+            "[RdmaHandleManager][GetJfcHandleAndCqInfo]jfcMode[%s] is not USER_CTL, "
+            "please check input.",
+            jfcMode.Describe().c_str());
     }
 
     JfcHandle cachedHandle{};
@@ -228,7 +236,7 @@ JfcHandle  RdmaHandleManager::GetJfcHandleAndCqInfo(RdmaHandle rdmaHandle, CqCre
         return cachedHandle;
     }
     JfcHandle newHandle = HrtRaUbCreateJfcUserCtl(rdmaHandle, cqInfo);
-    JfcHandle &ref = jfcHandleMap[rdmaHandle][jfcMode]; // 引用缓存
+    JfcHandle& ref = jfcHandleMap[rdmaHandle][jfcMode]; // 引用缓存
     ref = newHandle;
     cqInfoMap[ref] = cqInfo;
     return ref;
@@ -237,7 +245,7 @@ JfcHandle  RdmaHandleManager::GetJfcHandleAndCqInfo(RdmaHandle rdmaHandle, CqCre
 std::pair<uint32_t, uint32_t> RdmaHandleManager::GetDieAndFuncId(RdmaHandle rdmaHandle)
 {
     std::lock_guard<std::mutex> lock(managerMutex);
-    
+
     if (rdmaHandle == nullptr) {
         THROW<InvalidParamsException>("[RdmaHandleManager][GetDieAndFuncId]rdmaHandle is nullptr, please check input.");
     }
@@ -267,7 +275,8 @@ bool RdmaHandleManager::GetRtpEnable(RdmaHandle rdmaHandle)
     return RtpEnableMap[rdmaHandle];
 }
 
-std::pair<TokenIdHandle, uint32_t> RdmaHandleManager::GetTokenIdInfo(RdmaHandle rdmaHandle, const BufferKey<uintptr_t, u64> &bufKey)
+std::pair<TokenIdHandle, uint32_t>
+RdmaHandleManager::GetTokenIdInfo(RdmaHandle rdmaHandle, const BufferKey<uintptr_t, u64>& bufKey)
 {
     std::lock_guard<std::mutex> lock(managerMutex);
 
@@ -278,15 +287,17 @@ std::pair<TokenIdHandle, uint32_t> RdmaHandleManager::GetTokenIdInfo(RdmaHandle 
     if (tokenInfoMap.find(rdmaHandle) == tokenInfoMap.end()) {
         THROW<InvalidParamsException>("[RdmaHandleManager::%s]tokenInfoManager is nullptr, please check.", __func__);
     }
-    
+
     std::pair<TokenIdHandle, uint32_t> tokenInfo = tokenInfoMap[rdmaHandle]->GetTokenInfo(bufKey);
- 
-    HCCL_INFO("[RdmaHandleManager::%s] Addr[%llu] Size[%llu] rdmahandle[%p]", __func__, bufKey.Addr(), bufKey.Size(), rdmaHandle);
+
+    HCCL_INFO(
+        "[RdmaHandleManager::%s] Addr[%llu] Size[%llu] rdmahandle[%p]", __func__, bufKey.Addr(), bufKey.Size(),
+        rdmaHandle);
     return tokenInfo;
 }
 
-void RdmaHandleManager::PutTokenIdInfo(RdmaHandle rdmaHandle, const BufferKey<uintptr_t, u64> &bufKey,
-                                       TokenIdHandle tokenIdHandle)
+void RdmaHandleManager::PutTokenIdInfo(
+    RdmaHandle rdmaHandle, const BufferKey<uintptr_t, u64>& bufKey, TokenIdHandle tokenIdHandle)
 {
     std::lock_guard<std::mutex> lock(managerMutex);
 
@@ -301,16 +312,17 @@ void RdmaHandleManager::PutTokenIdInfo(RdmaHandle rdmaHandle, const BufferKey<ui
     }
 
     tokenInfoMap[rdmaHandle]->PutTokenInfo(bufKey, tokenIdHandle);
-    HCCL_DEBUG("[RdmaHandleManager::%s] Addr[%llu] Size[%llu] rdmahandle[%p]",
-              __func__, bufKey.Addr(), bufKey.Size(), rdmaHandle);
+    HCCL_DEBUG(
+        "[RdmaHandleManager::%s] Addr[%llu] Size[%llu] rdmahandle[%p]", __func__, bufKey.Addr(), bufKey.Size(),
+        rdmaHandle);
 }
 
-constexpr u32 UB_HANDLE_INDEX   = 3;
+constexpr u32 UB_HANDLE_INDEX = 3;
 constexpr u32 RDMA_HANDLE_INDEX = 2;
 
 void RdmaHandleManager::DestroyAll()
 {
-    if(destroyed.load()) {
+    if (destroyed.load()) {
         return;
     }
     destroyed.store(true);
@@ -320,17 +332,18 @@ void RdmaHandleManager::DestroyAll()
 
     activeHandles_.clear();
 
-    for (auto &handleIter : jfcHandleMap) {
-        for (auto &modeIter : handleIter.second) {
+    for (auto& handleIter : jfcHandleMap) {
+        for (auto& modeIter : handleIter.second) {
             DECTOR_TRY_CATCH("jfc handle destroy", HrtRaUbDestroyJfc(handleIter.first, modeIter.second));
         }
     }
 
     for (u32 i = 0; i < rdmaHandleMap.size(); ++i) {
         for (u32 j = 0; j < rdmaHandleMap[i].size(); ++j) {
-            for (auto &handleIter : rdmaHandleMap[i][j]) {
+            for (auto& handleIter : rdmaHandleMap[i][j]) {
                 if (j == RDMA_HANDLE_INDEX && handleIter.second != nullptr) {
-                    DECTOR_TRY_CATCH("rdma handle deinit", HrtRaRdmaDeInit(handleIter.second, netWorkModeMap[handleIter.second]));
+                    DECTOR_TRY_CATCH(
+                        "rdma handle deinit", HrtRaRdmaDeInit(handleIter.second, netWorkModeMap[handleIter.second]));
                 }
                 if (j == UB_HANDLE_INDEX && handleIter.second != nullptr) {
                     if (tokenInfoMap[handleIter.second] != nullptr) {
@@ -351,7 +364,8 @@ void RdmaHandleManager::DestroyAll()
     netWorkModeMap.clear();
 }
 
-HcclResult GetEidByAnyEidInfo(s32 deviceLogicId, const HrtDevEidInfo& eidInfo, const IpAddress& ipV4Address, IpAddress& eidAddress)
+HcclResult
+GetEidByAnyEidInfo(s32 deviceLogicId, const HrtDevEidInfo& eidInfo, const IpAddress& ipV4Address, IpAddress& eidAddress)
 {
     // 根据eidInfo初始化rdmaHandle
     HrtRaUbCtxInitParam in(HrtNetworkMode::HDC, HrtGetDevicePhyIdByIndex(deviceLogicId), eidInfo.ipAddress);
@@ -361,8 +375,9 @@ HcclResult GetEidByAnyEidInfo(s32 deviceLogicId, const HrtDevEidInfo& eidInfo, c
     vector<IpAddress> eidAddrList{};
     CHK_RET(HrtRaGetEidByIp(rdmaHandle, {ipV4Address}, eidAddrList));
     if (eidAddrList.empty()) {
-        HCCL_WARNING("[RdmaHandleManager::%s] Get Eid failed, deviceLogicId=%d, ipV4Address=%s", 
-            __func__, deviceLogicId, ipV4Address.Describe().c_str());
+        HCCL_WARNING(
+            "[RdmaHandleManager::%s] Get Eid failed, deviceLogicId=%d, ipV4Address=%s", __func__, deviceLogicId,
+            ipV4Address.Describe().c_str());
         return HCCL_E_NOT_FOUND;
     }
     eidAddress = eidAddrList.front();
@@ -388,18 +403,19 @@ void RdmaHandleManager::UboeIpv4ToEid(const IpAddress& ipV4Address, IpAddress& e
     }
 
     s32 deviceLogicId = HrtGetDevice();
-    HRaInfo                      info(HrtNetworkMode::HDC, HrtGetDevicePhyIdByIndex(deviceLogicId));
-    vector<HrtDevEidInfo> eidInfoList =  HrtRaGetDevEidInfoList(info);
+    HRaInfo info(HrtNetworkMode::HDC, HrtGetDevicePhyIdByIndex(deviceLogicId));
+    vector<HrtDevEidInfo> eidInfoList = HrtRaGetDevEidInfoList(info);
     if (eidInfoList.empty()) {
         HCCL_WARNING("[RdmaHandleManager::%s] Get EidInfoList empty, deviceLogicId=%d", __func__, deviceLogicId);
         return;
     }
-    HCCL_INFO("[RdmaHandleManager::%s] Get EidInfo success, deviceLogicId=%d, eidInfo size=%u",
-        __func__, deviceLogicId, eidInfoList.size());
+    HCCL_INFO(
+        "[RdmaHandleManager::%s] Get EidInfo success, deviceLogicId=%d, eidInfo size=%u", __func__, deviceLogicId,
+        eidInfoList.size());
 
     for (const auto& eidInfo : eidInfoList) {
-        if (HrtCheckUboeSupported(eidInfo.devFeature) &&
-            GetEidByAnyEidInfo(deviceLogicId, eidInfo, ipV4Address, eidAddress) == HCCL_SUCCESS) {
+        if (HrtCheckUboeSupported(eidInfo.devFeature)
+            && GetEidByAnyEidInfo(deviceLogicId, eidInfo, ipV4Address, eidAddress) == HCCL_SUCCESS) {
             // 存储eid到AddressInfo
             HCCL_INFO("[UboeIpv4ToEid] success, eidAddress[%s]", eidAddress.Describe().c_str());
             uboeIpv4EidMap.insert(std::make_pair(ipV4Address, eidAddress));
@@ -420,10 +436,10 @@ HcclResult RdmaHandleManager::GetEidByIpv4Addr(const IpAddress& addr, IpAddress&
     return HCCL_SUCCESS;
 }
 
-void RdmaHandleManager::CollectHandlesToCleanup(u32 devPhyId, std::vector<HandleInfo> &handlesToCleanup)
+void RdmaHandleManager::CollectHandlesToCleanup(u32 devPhyId, std::vector<HandleInfo>& handlesToCleanup)
 {
-    for(u32 j = 0; j < rdmaHandleMap[devPhyId].size(); ++j) {
-        for (auto &handleIter : rdmaHandleMap[devPhyId][j]) {
+    for (u32 j = 0; j < rdmaHandleMap[devPhyId].size(); ++j) {
+        for (auto& handleIter : rdmaHandleMap[devPhyId][j]) {
             if (handleIter.second != nullptr) {
                 handlesToCleanup.push_back({handleIter.second, j});
             }
@@ -436,7 +452,7 @@ void RdmaHandleManager::CleanupJfcHandles(RdmaHandle handle)
 {
     auto jfcIt = jfcHandleMap.find(handle);
     if (jfcIt != jfcHandleMap.end()) {
-        for (auto &modeIter : jfcIt->second) {
+        for (auto& modeIter : jfcIt->second) {
             DECTOR_TRY_CATCH("jfc handle destroy", HrtRaUbDestroyJfc(handle, modeIter.second));
             cqInfoMap.erase(modeIter.second);
         }
@@ -473,11 +489,11 @@ void RdmaHandleManager::CleanupAuxiliaryMaps(RdmaHandle handle)
     RtpEnableMap.erase(handle);
 }
 
-void RdmaHandleManager::CleanupSingleHandle(const HandleInfo &info)
+void RdmaHandleManager::CleanupSingleHandle(const HandleInfo& info)
 {
     RdmaHandle handle = info.handle;
     CleanupJfcHandles(handle);
-    if(info.protoIndex == RDMA_HANDLE_INDEX) {
+    if (info.protoIndex == RDMA_HANDLE_INDEX) {
         CleanupRdmaHandleEntry(handle);
     }
     if (info.protoIndex == UB_HANDLE_INDEX) {
@@ -488,7 +504,7 @@ void RdmaHandleManager::CleanupSingleHandle(const HandleInfo &info)
 
 void RdmaHandleManager::DeInit(u32 devPhyId)
 {
-    if(destroyed.load()) {
+    if (destroyed.load()) {
         return;
     }
     HCCL_INFO("[RdmaHandleManager][%s] DeInit[%u]", __func__, devPhyId);
@@ -502,11 +518,11 @@ void RdmaHandleManager::DeInit(u32 devPhyId)
     std::vector<HandleInfo> handlesToCleanup;
     CollectHandlesToCleanup(devPhyId, handlesToCleanup);
 
-    for (auto &info : handlesToCleanup) {
+    for (auto& info : handlesToCleanup) {
         activeHandles_.erase(info.handle);
     }
 
-    for(auto &info : handlesToCleanup) {
+    for (auto& info : handlesToCleanup) {
         CleanupSingleHandle(info);
     }
 }

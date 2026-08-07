@@ -20,28 +20,35 @@
 #include "env_config/env_config.h"
 
 namespace Hccl {
-constexpr uint32_t CTRL_HDR_FLAG_LENGTH    = 1;
-constexpr uint32_t TASKTYPE_ADDR_LENGTH    = 256;
-constexpr uint32_t CTRL_HDR_MSG_ID_LEN     = 4;
-constexpr uint32_t TIMEOUT_SIZE_BYTE       = 4; // timeout字段长度为4字节，表示超时时间，单位为秒
-constexpr uint32_t CTRL_HDR_DATA_SIZE_LEN  = 8; // size_t 在不同平台上长度不同，取最大值
-constexpr uint32_t CTRL_HDR_DEFAULT_DATA_LEN  = 512;
+constexpr uint32_t CTRL_HDR_FLAG_LENGTH = 1;
+constexpr uint32_t TASKTYPE_ADDR_LENGTH = 256;
+constexpr uint32_t CTRL_HDR_MSG_ID_LEN = 4;
+constexpr uint32_t TIMEOUT_SIZE_BYTE = 4;      // timeout字段长度为4字节，表示超时时间，单位为秒
+constexpr uint32_t CTRL_HDR_DATA_SIZE_LEN = 8; // size_t 在不同平台上长度不同，取最大值
+constexpr uint32_t CTRL_HDR_DEFAULT_DATA_LEN = 512;
 
-constexpr uint8_t  TASK_UNSET              = 0;
-constexpr uint8_t  TASK_OK                 = 1;
-constexpr uint8_t  TASK_TERMINATE          = 2;
-constexpr uint8_t  MEMORY_DEVIDE           = 2;
+constexpr uint8_t TASK_UNSET = 0;
+constexpr uint8_t TASK_OK = 1;
+constexpr uint8_t TASK_TERMINATE = 2;
+constexpr uint8_t MEMORY_DEVIDE = 2;
 
-TaskService::TaskService(void *deviceMem, int32_t deviceMemSize, void *hostMem, int32_t hostMemSize, std::string commId, uint32_t devId)
-    : npu2dpuMem_(deviceMem), shmemSize_(deviceMemSize / MEMORY_DEVIDE), hostMem_(hostMem), hostMemSize_(hostMemSize), commId_(commId), devId_(devId)
+TaskService::TaskService(
+    void* deviceMem, int32_t deviceMemSize, void* hostMem, int32_t hostMemSize, std::string commId, uint32_t devId)
+    : npu2dpuMem_(deviceMem),
+      shmemSize_(deviceMemSize / MEMORY_DEVIDE),
+      hostMem_(hostMem),
+      hostMemSize_(hostMemSize),
+      commId_(commId),
+      devId_(devId)
 {
-    int32_t controlSize = sizeof(uint8_t) + sizeof(char) * TASKTYPE_ADDR_LENGTH + sizeof(uint32_t) + TIMEOUT_SIZE_BYTE + CTRL_HDR_DATA_SIZE_LEN;
+    int32_t controlSize = sizeof(uint8_t) + sizeof(char) * TASKTYPE_ADDR_LENGTH + sizeof(uint32_t) + TIMEOUT_SIZE_BYTE
+                          + CTRL_HDR_DATA_SIZE_LEN;
     if (shmemSize_ < controlSize) {
         leftSize_ = 0;
     } else {
         leftSize_ = shmemSize_ - controlSize;
     }
-    dpu2npuMem_ = static_cast<uint8_t *>(npu2dpuMem_) + shmemSize_;
+    dpu2npuMem_ = static_cast<uint8_t*>(npu2dpuMem_) + shmemSize_;
 }
 
 HcclResult TaskService::TaskRegister(std::string taskType, CallbackTemplate callback)
@@ -71,7 +78,7 @@ HcclResult TaskService::TaskProfRegister(ProfCallbackTemplate profCallback)
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskService::WriteFlag(uint8_t *flagPtr, uint8_t newFlag) const
+HcclResult TaskService::WriteFlag(uint8_t* flagPtr, uint8_t newFlag) const
 {
     errno_t ret = memcpy_s(flagPtr, sizeof(newFlag), &newFlag, sizeof(newFlag));
     if (ret != EOK) {
@@ -81,7 +88,7 @@ HcclResult TaskService::WriteFlag(uint8_t *flagPtr, uint8_t newFlag) const
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskService::ReadFlag(uint8_t *ctrlHdr, uint64_t hdrLen, uint8_t &flag) const
+HcclResult TaskService::ReadFlag(uint8_t* ctrlHdr, uint64_t hdrLen, uint8_t& flag) const
 {
     errno_t ret = memcpy_s(ctrlHdr, hdrLen, npu2dpuMem_, hdrLen);
     if (ret != EOK) {
@@ -92,14 +99,17 @@ HcclResult TaskService::ReadFlag(uint8_t *ctrlHdr, uint64_t hdrLen, uint8_t &fla
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskService::ReadTaskType(const uint8_t *ctrlHdr, [[maybe_unused]] uint64_t hdrLen, const uint8_t *srcTaskTypePtr, std::string &taskTypeStr) const
+HcclResult TaskService::ReadTaskType(
+    const uint8_t* ctrlHdr, [[maybe_unused]] uint64_t hdrLen, const uint8_t* srcTaskTypePtr,
+    std::string& taskTypeStr) const
 {
     CHK_PTR_NULL(srcTaskTypePtr);
     // 读 taskType
-    char    *taskType = new char[TASKTYPE_ADDR_LENGTH];
+    char* taskType = new char[TASKTYPE_ADDR_LENGTH];
     CHK_PTR_NULL(taskType);
-    int ret = memcpy_s(taskType, (sizeof(char) * TASKTYPE_ADDR_LENGTH),
-        ctrlHdr + CTRL_HDR_FLAG_LENGTH, (sizeof(char) * TASKTYPE_ADDR_LENGTH));
+    int ret = memcpy_s(
+        taskType, (sizeof(char) * TASKTYPE_ADDR_LENGTH), ctrlHdr + CTRL_HDR_FLAG_LENGTH,
+        (sizeof(char) * TASKTYPE_ADDR_LENGTH));
     if (ret != EOK) {
         HCCL_ERROR("[%s] memcpy failed on taskType, return[%d].", __func__, ret);
         delete[] taskType;
@@ -115,9 +125,9 @@ HcclResult TaskService::ReadTaskType(const uint8_t *ctrlHdr, [[maybe_unused]] ui
     taskTypeStr = std::string(taskType);
     delete[] taskType;
     HCCL_INFO("[TaskService::TaskRun] read taskType = %s", taskTypeStr.c_str());
- 
+
     uint32_t msgId{0};
-    ret = memcpy_s(&msgId, sizeof(msgId),  ctrlHdr + CTRL_HDR_FLAG_LENGTH + TASKTYPE_ADDR_LENGTH, sizeof(msgId));
+    ret = memcpy_s(&msgId, sizeof(msgId), ctrlHdr + CTRL_HDR_FLAG_LENGTH + TASKTYPE_ADDR_LENGTH, sizeof(msgId));
     if (ret != EOK) {
         HCCL_ERROR("[%s] memcpy failed on msgId, return[%d].", __func__, ret);
         return HCCL_E_INTERNAL;
@@ -126,20 +136,21 @@ HcclResult TaskService::ReadTaskType(const uint8_t *ctrlHdr, [[maybe_unused]] ui
     return HCCL_SUCCESS;
 }
 
-// 共享内存排布：|stop flag[1]|hcclret[2]|dstret[2]| 
-// 其中，stop flag为aicpu侧读取是否停止的标志位, hcclret为aicpu背景线程读取是否有错的标志位, dstret为host侧taskexception回调读取是否有错的标志位
+// 共享内存排布：|stop flag[1]|hcclret[2]|dstret[2]|
+// 其中，stop flag为aicpu侧读取是否停止的标志位, hcclret为aicpu背景线程读取是否有错的标志位,
+// dstret为host侧taskexception回调读取是否有错的标志位
 HcclResult TaskService::ExecuteTaskexception(int32_t ret)
 {
     if (g_taskExpMemMap.find(commId_) == g_taskExpMemMap.end()) {
         HCCL_ERROR("TaskService::ExecuteTaskexception commId not in g_taskExpMemMap, please check");
         return HCCL_E_NOT_FOUND;
     }
-    void *taskexpShmem = g_taskExpMemMap[commId_][devId_];
+    void* taskexpShmem = g_taskExpMemMap[commId_][devId_];
     HcclResult hcclRet = static_cast<HcclResult>(ret);
     if (taskexpShmem != nullptr) {
-        uint8_t *stopFlagPtr = static_cast<uint8_t *>(taskexpShmem);
-        uint8_t *hcclRetPtr = stopFlagPtr + sizeof(uint8_t);
-        uint8_t *dstRetPtr = hcclRetPtr + sizeof(uint16_t);
+        uint8_t* stopFlagPtr = static_cast<uint8_t*>(taskexpShmem);
+        uint8_t* hcclRetPtr = stopFlagPtr + sizeof(uint8_t);
+        uint8_t* dstRetPtr = hcclRetPtr + sizeof(uint16_t);
         auto ret = memcpy_s(hcclRetPtr, sizeof(uint16_t), &hcclRet, sizeof(uint16_t)); // aicpu背景线程轮询的标志位
         if (ret != 0) {
             HCCL_ERROR("[TaskService::ExecuteTaskexception] memcpy ret for device failed.");
@@ -174,14 +185,14 @@ HcclResult TaskService::ExecuteTaskClean() const
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskService::ExecuteTask(uint8_t *ctrlHdr, uint64_t hdrLen, uint8_t *srcPtr, std::string taskTypeStr)
+HcclResult TaskService::ExecuteTask(uint8_t* ctrlHdr, uint64_t hdrLen, uint8_t* srcPtr, std::string taskTypeStr)
 {
     uint64_t beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
     auto itFunc = callbacks_.find(taskTypeStr);
     if (itFunc == callbacks_.end()) {
         HCCL_ERROR("[TaskService::TaskRun] Callback of taskType[%s] Not Found", taskTypeStr.c_str());
         std::string taskTypeMsg{"map{"};
-        for (const auto &pair : callbacks_) {
+        for (const auto& pair : callbacks_) {
             taskTypeMsg += pair.first;
         }
         taskTypeMsg += "}";
@@ -190,21 +201,24 @@ HcclResult TaskService::ExecuteTask(uint8_t *ctrlHdr, uint64_t hdrLen, uint8_t *
     }
 
     // copy data
-    uint64_t dataLen = *reinterpret_cast<size_t*>(ctrlHdr + CTRL_HDR_FLAG_LENGTH + TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN + TIMEOUT_SIZE_BYTE);
+    uint64_t dataLen = *reinterpret_cast<size_t*>(
+        ctrlHdr + CTRL_HDR_FLAG_LENGTH + TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN + TIMEOUT_SIZE_BYTE);
     if (dataLen > static_cast<uint64_t>(leftSize_) || dataLen > static_cast<uint64_t>(hostMemSize_)) {
-        HCCL_ERROR("[TaskService::%s] dataLen[%llu] larger than leftSize[%d] or hostMemSize[%d]", __func__, dataLen,
-            leftSize_, hostMemSize_);
+        HCCL_ERROR(
+            "[TaskService::%s] dataLen[%llu] larger than leftSize[%d] or hostMemSize[%d]", __func__, dataLen, leftSize_,
+            hostMemSize_);
         return HCCL_E_PARA;
     }
-    uint32_t ctrlHdrLen = CTRL_HDR_FLAG_LENGTH + TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN + TIMEOUT_SIZE_BYTE + CTRL_HDR_DATA_SIZE_LEN;
+    uint32_t ctrlHdrLen = CTRL_HDR_FLAG_LENGTH + TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN + TIMEOUT_SIZE_BYTE
+                          + CTRL_HDR_DATA_SIZE_LEN;
     /* ctrlHdr提前从deviceMem copy一定长度，如果长度够，直接从ctrlHdr copy，减少一次aclmemcpy耗时 */
-    uint8_t *dataPtr = nullptr;
+    uint8_t* dataPtr = nullptr;
     if (hdrLen < ctrlHdrLen + dataLen) {
         dataPtr = srcPtr + ctrlHdrLen;
     } else {
         dataPtr = ctrlHdr + ctrlHdrLen;
     }
-    errno_t ret     = memcpy_s(hostMem_, leftSize_, dataPtr, dataLen);
+    errno_t ret = memcpy_s(hostMem_, leftSize_, dataPtr, dataLen);
     if (ret != EOK) {
         HCCL_ERROR("control data memcpy failed: %d", ret);
         return HCCL_E_MEMORY;
@@ -228,7 +242,7 @@ HcclResult TaskService::ExecuteTask(uint8_t *ctrlHdr, uint64_t hdrLen, uint8_t *
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskService::SynchronizeControlInfo([[maybe_unused]] uint8_t *ctrlHdr, [[maybe_unused]] uint64_t hdrLen)
+HcclResult TaskService::SynchronizeControlInfo([[maybe_unused]] uint8_t* ctrlHdr, [[maybe_unused]] uint64_t hdrLen)
 {
     CHK_PTR_NULL(npu2dpuMem_);
     CHK_PTR_NULL(dpu2npuMem_);
@@ -245,11 +259,11 @@ HcclResult TaskService::SynchronizeControlInfo([[maybe_unused]] uint8_t *ctrlHdr
 
     uint8_t newFlag = 1;
     HCCL_INFO("[TaskService::TaskRun] Send response: Set dpu2npu flag -> 1");
-    static_cast<std::atomic<uint8_t> *>(dpu2npuMem_)->store(newFlag, std::memory_order_release);
+    static_cast<std::atomic<uint8_t>*>(dpu2npuMem_)->store(newFlag, std::memory_order_release);
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskService::ProcessTaskOk(uint8_t *ctrlHdr, uint64_t hdrLen, uint8_t *srcFlagPtr, uint8_t *srcTaskTypePtr)
+HcclResult TaskService::ProcessTaskOk(uint8_t* ctrlHdr, uint64_t hdrLen, uint8_t* srcFlagPtr, uint8_t* srcTaskTypePtr)
 {
     std::string taskTypeStr;
     HCCL_INFO("[TaskService::TaskRun] flag = %u.", TASK_OK);
@@ -261,7 +275,7 @@ HcclResult TaskService::ProcessTaskOk(uint8_t *ctrlHdr, uint64_t hdrLen, uint8_t
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskService::ExecuteExit(uint8_t *srcFlagPtr) const
+HcclResult TaskService::ExecuteExit(uint8_t* srcFlagPtr) const
 {
     CHK_RET(WriteFlag(srcFlagPtr, TASK_TERMINATE_RESPONSE));
     HCCL_INFO("[TaskService::TaskRun] Exiting.");
@@ -273,8 +287,9 @@ HcclResult TaskService::TaskRun()
     CHK_PTR_NULL(hostMem_);
     CHK_PTR_NULL(npu2dpuMem_);
     CHK_PTR_NULL(dpu2npuMem_);
-    HCCL_INFO("[TaskService::%s] TaskService{npu2dpuMem:%p; dpu2npuMem:%p; hostMem:%p}", __func__, npu2dpuMem_,
-              dpu2npuMem_, hostMem_);
+    HCCL_INFO(
+        "[TaskService::%s] TaskService{npu2dpuMem:%p; dpu2npuMem:%p; hostMem:%p}", __func__, npu2dpuMem_, dpu2npuMem_,
+        hostMem_);
     if (leftSize_ <= 0) {
         HCCL_ERROR("[TaskService::%s] dataSize[%d] illegal", __func__, leftSize_);
         return HCCL_E_INTERNAL;
@@ -284,15 +299,16 @@ HcclResult TaskService::TaskRun()
         return HCCL_E_INTERNAL;
     }
     uint8_t flag{0};
-    uint8_t *srcFlagPtr = static_cast<uint8_t *>(npu2dpuMem_);
-    uint8_t *dstTimeoutPtr = static_cast<uint8_t *>(dpu2npuMem_) + sizeof(flag) + sizeof(char) * TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN;
-    uint8_t *srcTaskTypePtr = srcFlagPtr + sizeof(flag);
-    uint64_t hdrLen = CTRL_HDR_FLAG_LENGTH + TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN + TIMEOUT_SIZE_BYTE +
-        CTRL_HDR_DATA_SIZE_LEN + CTRL_HDR_DEFAULT_DATA_LEN;
+    uint8_t* srcFlagPtr = static_cast<uint8_t*>(npu2dpuMem_);
+    uint8_t* dstTimeoutPtr
+        = static_cast<uint8_t*>(dpu2npuMem_) + sizeof(flag) + sizeof(char) * TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN;
+    uint8_t* srcTaskTypePtr = srcFlagPtr + sizeof(flag);
+    uint64_t hdrLen = CTRL_HDR_FLAG_LENGTH + TASKTYPE_ADDR_LENGTH + CTRL_HDR_MSG_ID_LEN + TIMEOUT_SIZE_BYTE
+                      + CTRL_HDR_DATA_SIZE_LEN + CTRL_HDR_DEFAULT_DATA_LEN;
     uint8_t ctrlHdr[hdrLen];
     u32 timeout = Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut();
     timeout = timeout > 1 ? timeout - 1 : timeout; // 执行超时时间减1秒，避免aicpu侧超时
-    CHK_SAFETY_FUNC_RET(memcpy_s(dstTimeoutPtr, sizeof(timeout),  &timeout, sizeof(timeout)));
+    CHK_SAFETY_FUNC_RET(memcpy_s(dstTimeoutPtr, sizeof(timeout), &timeout, sizeof(timeout)));
 
     while (true) {
         CHK_RET(ReadFlag(ctrlHdr, hdrLen, flag));

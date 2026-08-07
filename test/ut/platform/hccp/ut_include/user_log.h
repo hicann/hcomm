@@ -16,11 +16,11 @@
 #include <unistd.h>
 
 #define CHK_PRT_RETURN(result, exeLog, ret) \
-    do {                                      \
-        if (result) {                         \
-            exeLog;                           \
-            return (ret);                       \
-        }                                     \
+    do {                                    \
+        if (result) {                       \
+            exeLog;                         \
+            return (ret);                   \
+        }                                   \
     } while (0)
 
 #define CHK_PRT_GOTO(result, exeLog, label) \
@@ -38,12 +38,14 @@
     fprintf(stderr, "%s, pid(%d), %s(%d): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, ##args)
 #define hccp_info(fmt, args...) \
     fprintf(stderr, "%s, pid(%d), %s(%d): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, ##args)
-#define hccp_dbg(fmt, args...)  \
+#define hccp_dbg(fmt, args...) \
     fprintf(stderr, "%s, pid(%d), %s(%d): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, ##args)
-#define hccp_event(fmt, args...)  \
+#define hccp_event(fmt, args...) \
     fprintf(stderr, "%s, pid(%d), %s(%d): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, ##args)
-#define hccp_event_with_user(fmt, args...)  \
-    fprintf(stderr, "%s, pid(%d), %s(%d), user(%s): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, getpwuid(getuid())->pw_name, ##args)
+#define hccp_event_with_user(fmt, args...)                                                          \
+    fprintf(                                                                                        \
+        stderr, "%s, pid(%d), %s(%d), user(%s): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, \
+        getpwuid(getuid())->pw_name, ##args)
 #define hccp_run_info(fmt, args...) \
     fprintf(stderr, "%s, pid(%d), %s(%d): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, ##args)
 #define hccp_run_warn(fmt, args...) \
@@ -70,7 +72,7 @@
     fprintf(stderr, "%s, pid(%d), %s(%d): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, ##args)
 #define net_info(fmt, args...) \
     fprintf(stderr, "%s, pid(%d), %s(%d): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, ##args)
-#define net_dbg(fmt, args...)  \
+#define net_dbg(fmt, args...) \
     fprintf(stderr, "%s, pid(%d), %s(%d): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, ##args)
 #define net_run_err(fmt, args...) \
     fprintf(stderr, "%s, pid(%d), %s(%d): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, ##args)
@@ -89,22 +91,22 @@
     fprintf(stderr, "%s, pid(%d), %s(%d): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, ##args)
 
 enum {
-    SLOG,          /**< Slog */
-    IDEDD,         /**< IDE daemon device */
-    IDEDH,         /**< IDE daemon host */
-    HCCL,          /**< HCCL */
-    FMK,           /**< Adapter */
+    SLOG,  /**< Slog */
+    IDEDD, /**< IDE daemon device */
+    IDEDH, /**< IDE daemon host */
+    HCCL,  /**< HCCL */
+    FMK,   /**< Adapter */
     CCU,
-    HIAIENGINE,    /**< Matrix */
-    DVPP,          /**< DVPP */
-    RUNTIME,       /**< Runtime */
-    CCE,           /**< CCE */
+    HIAIENGINE, /**< Matrix */
+    DVPP,       /**< DVPP */
+    RUNTIME,    /**< Runtime */
+    CCE,        /**< CCE */
 #if (OS_TYPE == LINUX)
-    HDC,         /**< HDC */
+    HDC, /**< HDC */
 #else
     HDCL,
 #endif
-    DRV,           /**< Driver */
+    DRV, /**< Driver */
     NET,
     MDCFUSION,     /**< Mdc fusion */
     MDCLOCATION,   /**< Mdc location */

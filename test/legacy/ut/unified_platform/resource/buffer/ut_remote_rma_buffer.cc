@@ -29,15 +29,9 @@ using namespace Hccl;
 
 class RemoteRmaBufferTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "RemoteRmaBuffer tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "RemoteRmaBuffer tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "RemoteRmaBuffer tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "RemoteRmaBuffer tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
@@ -77,12 +71,12 @@ TEST_F(RemoteRmaBufferTest, remoteubrmabuffer_deserialize_success)
 {
     // construct buffer
     BufferType type = BufferType::INPUT;
-    void *ptr = nullptr;
+    void* ptr = nullptr;
     u64 size = 0;
     bool remoteAccess = true;
 
     std::shared_ptr<DevBuffer> devBuf = DevBuffer::Create(0x100, 0x100);
-    Buffer                    *buf    = devBuf.get();
+    Buffer* buf = devBuf.get();
 
     HcclMemType memType = HcclMemType::HCCL_MEM_TYPE_HOST;
     u32 tokenValue = 1;
@@ -95,7 +89,7 @@ TEST_F(RemoteRmaBufferTest, remoteubrmabuffer_deserialize_success)
     ExchangeUbBufferDto dto;
     dto.Deserialize(binaryStream);
 
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     RemoteUbRmaBuffer remoteUbRmaBuffer(rdmaHandle, dto);
 
     UbRmaBufferExchangeData exchangeData;
@@ -113,7 +107,7 @@ TEST_F(RemoteRmaBufferTest, remoteubrmabuffer_deserialize_success)
 
 TEST_F(RemoteRmaBufferTest, remoterdmarmabuffer_describe_size)
 {
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     RemoteRdmaRmaBuffer remoteRdmaRmaBuffer(rdmaHandle);
 
     std::string fakeKeyDesc = "fakeKeyDesc";

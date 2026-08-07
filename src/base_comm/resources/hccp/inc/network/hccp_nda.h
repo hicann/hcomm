@@ -105,7 +105,7 @@ enum {
  * @see RaRdevInit
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaNdaGetDirectFlag(void *rdmaHandle, int *directFlag);
 
 /**
@@ -118,7 +118,7 @@ HCCP_ATTRI_VISI_DEF int RaNdaGetDirectFlag(void *rdmaHandle, int *directFlag);
  * @see RaNdaCqDestroy
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaNdaCqCreate(void *rdmaHandle, struct NdaCqInitAttr *attr, struct NdaCqInfo *info,
     void **cqHandle);
 
@@ -130,7 +130,7 @@ HCCP_ATTRI_VISI_DEF int RaNdaCqCreate(void *rdmaHandle, struct NdaCqInitAttr *at
  * @see RaNdaCqCreate
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaNdaCqDestroy(void *rdmaHandle, void *cqHandle);
 
 /**
@@ -143,7 +143,7 @@ HCCP_ATTRI_VISI_DEF int RaNdaCqDestroy(void *rdmaHandle, void *cqHandle);
  * @see RaQpDestroy
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaNdaQpCreate(void *rdmaHandle, struct NdaQpInitAttr *attr, struct NdaQpInfo *info,
     void **qpHandle);
 #ifdef __cplusplus

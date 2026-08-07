@@ -21,24 +21,28 @@ public:
     __aicore__ GlobalTensor() = default;
     __aicore__ ~GlobalTensor() = default;
 
-    __aicore__ void SetGlobalBuffer(__gm__ T* buffer, uint64_t bufferSize) {
+    __aicore__ void SetGlobalBuffer(__gm__ T* buffer, uint64_t bufferSize)
+    {
         ptr_ = buffer;
         size_ = bufferSize;
     }
 
-    __aicore__ void SetGlobalBuffer(__gm__ T* buffer) {
+    __aicore__ void SetGlobalBuffer(__gm__ T* buffer)
+    {
         ptr_ = buffer;
         size_ = UINT64_MAX;
     }
 
-    __aicore__ __inout_pipe__(S) T GetValue(const uint64_t offset) const {
+    __aicore__ __inout_pipe__(S) T GetValue(const uint64_t offset) const
+    {
         if (offset >= size_) {
             HCCL_VM_ERROR("GlobalTensor GetValue out-of-bounds, offset={:d}", offset);
         }
         return *(ptr_ + offset);
     }
 
-    __aicore__ GlobalTensor operator[](const uint64_t offset) const {
+    __aicore__ GlobalTensor operator[](const uint64_t offset) const
+    {
         if (offset >= size_) {
             HCCL_VM_ERROR("LocalTensor operator[] out-of-bounds, offset={:d}", offset);
         }
@@ -60,6 +64,6 @@ private:
     T* ptr_{nullptr};
     uint64_t size_{0};
 };
-}
+} // namespace AscendC
 
-#endif //AIV_GLOBAL_TENSOR_STUB_H
+#endif // AIV_GLOBAL_TENSOR_STUB_H

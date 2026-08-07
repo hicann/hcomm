@@ -14,7 +14,7 @@
 #include "all_gather_recursive_hd_pub.h"
 
 namespace hccl {
-    constexpr u32 NSLBDP_ALL_GATHER_MOLD2 = 2;
-}  // namespace hccl
+constexpr u32 NSLBDP_ALL_GATHER_MOLD2 = 2;
+} // namespace hccl
 
 #endif /* * __BCAST_RECURSIVE_HALVINGDOUBLING_H__ */

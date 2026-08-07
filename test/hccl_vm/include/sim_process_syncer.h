@@ -30,8 +30,7 @@ constexpr uint32_t kRunnerExitSignal = UINT32_MAX;
 
 class ProcessSyncer {
 public:
-    explicit ProcessSyncer(const std::string& syncDir = "/dev/shm/hccl_sync/")
-        : m_syncDir(syncDir)
+    explicit ProcessSyncer(const std::string& syncDir = "/dev/shm/hccl_sync/") : m_syncDir(syncDir)
     {
         if (!m_syncDir.empty() && m_syncDir.back() != '/') {
             m_syncDir += '/';
@@ -49,10 +48,7 @@ public:
 
     // Returns the most recently completed round number (= value in runner_done.flag).
     // Proxies use this to compute their expected targetRound = getCurrentRound() + 1.
-    uint32_t getCurrentRound() const
-    {
-        return readCounter(m_fileRunnerDone);
-    }
+    uint32_t getCurrentRound() const { return readCounter(m_fileRunnerDone); }
 
     // hccl-vm: ready all proxies have arrived, notify runner and wait for ACK.
     void notifyRunnerAndWaitAcknowledge(uint32_t targetRound)
@@ -79,8 +75,7 @@ public:
     // Returns true if runner completed targetRound within timeoutMs, false if timed out.
     bool tryBlockProxyUntilRunnerDone(uint32_t targetRound, int timeoutMs)
     {
-        auto deadline = std::chrono::steady_clock::now()
-                      + std::chrono::milliseconds(timeoutMs);
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
         while (true) {
             if (readCounter(m_fileRunnerDone) >= targetRound) {
                 return true;
@@ -109,16 +104,10 @@ public:
     }
 
     // runner: signal that targetRound has been completed.
-    void notifyProxyToContinue(uint32_t targetRound)
-    {
-        writeCounter(m_fileRunnerDone, targetRound);
-    }
+    void notifyProxyToContinue(uint32_t targetRound) { writeCounter(m_fileRunnerDone, targetRound); }
 
     // hccl-vm: signal runner to exit.
-    void signalRunnerExit()
-    {
-        writeCounter(m_fileProxyReady, kRunnerExitSignal);
-    }
+    void signalRunnerExit() { writeCounter(m_fileProxyReady, kRunnerExitSignal); }
 
     // hccl-vm: reset all state (called on hccl-vm reset/restart).
     void Reset()
@@ -137,8 +126,7 @@ private:
 
         int fd = ::open(tmpPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (fd < 0) {
-            HCCL_VM_ERROR("[ProcessSyncer] open tmp failed: {}, error: {}",
-                          tmpPath.c_str(), std::strerror(errno));
+            HCCL_VM_ERROR("[ProcessSyncer] open tmp failed: {}, error: {}", tmpPath.c_str(), std::strerror(errno));
             return;
         }
 
@@ -172,4 +160,4 @@ private:
     std::string m_fileProxyReady;
     std::string m_fileRunnerDone;
 };
-}
+} // namespace sim

@@ -22,7 +22,7 @@
 #define CARD_4P_MESH_NUM (4)
 #define CARD_2P_MESH_NUM (2)
 
-int GetCardRankInfoLen(size_t *len)
+int GetCardRankInfoLen(size_t* len)
 {
     (*len) = MAX_CARD_ROOTINFO_LEN;
     return 0;
@@ -31,7 +31,7 @@ int GetCardRankInfoLen(size_t *len)
 /**
  *
  */
-static int ProcessLayerMesh(int npu_id, NetLayer *layer, dcmi_urma_eid_info_t *eid_list, size_t eid_cnt)
+static int ProcessLayerMesh(int npu_id, NetLayer* layer, dcmi_urma_eid_info_t* eid_list, size_t eid_cnt)
 {
     if (eid_cnt == 0) {
         return -1;
@@ -70,7 +70,7 @@ static int ProcessLayerMesh(int npu_id, NetLayer *layer, dcmi_urma_eid_info_t *e
     return 0;
 }
 
-static int ProcessLayerMesh2P(int npu_id, NetLayer *layer, dcmi_urma_eid_info_t *eid_list, size_t eid_cnt)
+static int ProcessLayerMesh2P(int npu_id, NetLayer* layer, dcmi_urma_eid_info_t* eid_list, size_t eid_cnt)
 {
     if (eid_cnt == 0) {
         return -1;
@@ -107,7 +107,7 @@ static int ProcessLayerMesh2P(int npu_id, NetLayer *layer, dcmi_urma_eid_info_t 
     return 0;
 }
 
-int GetCardRankInfo(int phyId, unsigned int mainboardId, void *buf, size_t *len)
+int GetCardRankInfo(int phyId, unsigned int mainboardId, void* buf, size_t* len)
 {
     if (buf == NULL || len == NULL) {
         return RET_NOK;
@@ -138,7 +138,7 @@ int GetCardRankInfo(int phyId, unsigned int mainboardId, void *buf, size_t *len)
     }
 
     RootInfoAddRank(&rootinfo, &rank);
-    char *rootinfo_buf = RootInfoToString(&rootinfo);
+    char* rootinfo_buf = RootInfoToString(&rootinfo);
     if (rootinfo_buf == NULL) {
         return -1;
     }

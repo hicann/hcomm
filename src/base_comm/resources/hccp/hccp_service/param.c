@@ -75,8 +75,8 @@ STATIC int HccpParseHdcType(const char *input, struct HccpInitParam *param)
 
     ret = HccpParamParseId(input, &param->hdcType);
     if (ret != 0 || (param->hdcType != HDC_SERVICE_TYPE_RDMA && param->hdcType != HDC_SERVICE_TYPE_RDMA_V2)) {
-        hccp_warn("parse hdcType unsuccessful ret:%d or hdc_type[%d] invalid. set to default hdc_type[%d]",
-            ret, param->hdcType, HDC_SERVICE_TYPE_RDMA);
+        hccp_warn("parse hdcType unsuccessful ret:%d or hdc_type[%d] invalid. set to default hdc_type[%d]", ret,
+            param->hdcType, HDC_SERVICE_TYPE_RDMA);
         param->hdcType = HDC_SERVICE_TYPE_RDMA;
     }
 
@@ -160,10 +160,10 @@ int HccpParamParse(int argc, char *argv[], struct HccpInitParam *param)
         }
 
         CHK_PRT_RETURN(optIdx < 0 || optIdx >= HCCP_ARGC_NUM || paramHandles[optIdx].optHandle == NULL,
-            hccp_err("opt_idx:%d invalid, valid range[0, %d), errno:%d", optIdx, HCCP_ARGC_NUM, errno),-EINVAL);
+            hccp_err("opt_idx:%d invalid, valid range[0, %d), errno:%d", optIdx, HCCP_ARGC_NUM, errno), -EINVAL);
 
-        CHK_PRT_RETURN(paramHandles[optIdx].optVal != optIdx, hccp_err("opt_val:%d != opt_idx:%d",
-            paramHandles[optIdx].optVal, optIdx), -EINVAL);
+        CHK_PRT_RETURN(paramHandles[optIdx].optVal != optIdx,
+            hccp_err("opt_val:%d != opt_idx:%d", paramHandles[optIdx].optVal, optIdx), -EINVAL);
 
         ret = paramHandles[optIdx].optHandle(optarg, param);
         CHK_PRT_RETURN(ret != 0, hccp_err("parse param failed, optIdx:%d, ret:%d", optIdx, ret), ret);

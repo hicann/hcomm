@@ -19,24 +19,24 @@
  * @param bin_out  输出：16字节uint8_t数组
  * @return 成功0，失败-1（非法字符）
  */
-int hex32_to_bin16(const char *hex_str, uint8_t *bin_out) {
+int hex32_to_bin16(const char* hex_str, uint8_t* bin_out)
+{
     for (int i = 0; i < 16; i++) {
         // 取两个十六进制字符
-        char c1 = hex_str[2*i];
-        char c2 = hex_str[2*i + 1];
+        char c1 = hex_str[2 * i];
+        char c2 = hex_str[2 * i + 1];
 
         // 转数字（0-15）
         int h1 = tolower((unsigned char)c1);
         int h2 = tolower((unsigned char)c2);
 
-        h1 = (h1 >= '0' && h1 <= '9') ? h1 - '0' :
-             (h1 >= 'a' && h1 <= 'f') ? 10 + h1 - 'a' : -1;
+        h1 = (h1 >= '0' && h1 <= '9') ? h1 - '0' : (h1 >= 'a' && h1 <= 'f') ? 10 + h1 - 'a' : -1;
 
-        h2 = (h2 >= '0' && h2 <= '9') ? h2 - '0' :
-             (h2 >= 'a' && h2 <= 'f') ? 10 + h2 - 'a' : -1;
+        h2 = (h2 >= '0' && h2 <= '9') ? h2 - '0' : (h2 >= 'a' && h2 <= 'f') ? 10 + h2 - 'a' : -1;
 
         // 非法字符检查
-        if (h1 < 0 || h2 < 0) return -1;
+        if (h1 < 0 || h2 < 0)
+            return -1;
 
         // 组合成1字节：高4位 + 低4位
         bin_out[i] = (h1 << 4) | h2;
@@ -46,20 +46,11 @@ int hex32_to_bin16(const char *hex_str, uint8_t *bin_out) {
 
 class TopoAddrInfoTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "TopoAddrInfo tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "TopoAddrInfo tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "TopoAddrInfo tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "TopoAddrInfo tests tear down." << std::endl; }
 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in TopoAddrInfoTest SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in TopoAddrInfoTest SetUP" << std::endl; }
 
     virtual void TearDown()
     {
@@ -104,8 +95,14 @@ TEST_F(TopoAddrInfoTest, Ut_Card_2P)
     size_t eidNum = 4;
 
     MOCKER(hal_get_mainboard_id).stubs().with(mockcpp::any(), outBoundP(&m)).will(returnValue(0));
-    MOCKER(hal_get_driver_install_path).stubs().with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any()).will(returnValue(0));
-    MOCKER(hal_get_eid_list_by_phy_id).stubs().with(mockcpp::any(), outBoundP(eidList, eidNum*sizeof(dcmi_urma_eid_info_t)), outBoundP(&eidNum)).will(returnValue(0));
+    MOCKER(hal_get_driver_install_path)
+        .stubs()
+        .with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any())
+        .will(returnValue(0));
+    MOCKER(hal_get_eid_list_by_phy_id)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(eidList, eidNum * sizeof(dcmi_urma_eid_info_t)), outBoundP(&eidNum))
+        .will(returnValue(0));
 
     char* buf = (char*)malloc(4096);
     memset(buf, 0x00, 4096);
@@ -143,8 +140,14 @@ TEST_F(TopoAddrInfoTest, Ut_Card_4P)
     size_t eidNum = 4;
 
     MOCKER(hal_get_mainboard_id).stubs().with(mockcpp::any(), outBoundP(&mainboard_id)).will(returnValue(0));
-    MOCKER(hal_get_driver_install_path).stubs().with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any()).will(returnValue(0));
-    MOCKER(hal_get_eid_list_by_phy_id).stubs().with(mockcpp::any(), outBoundP(eidList, eidNum*sizeof(dcmi_urma_eid_info_t)), outBoundP(&eidNum)).will(returnValue(0));
+    MOCKER(hal_get_driver_install_path)
+        .stubs()
+        .with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any())
+        .will(returnValue(0));
+    MOCKER(hal_get_eid_list_by_phy_id)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(eidList, eidNum * sizeof(dcmi_urma_eid_info_t)), outBoundP(&eidNum))
+        .will(returnValue(0));
 
     char* buf = (char*)malloc(4096);
     memset(buf, 0x00, 4096);
@@ -153,7 +156,7 @@ TEST_F(TopoAddrInfoTest, Ut_Card_4P)
     EXPECT_EQ(ret, 0);
     printf("[%s]\n", buf);
     // 4P使用直连口
-    EXPECT_TRUE(strstr(buf, "dfdf0051") ==  NULL);
+    EXPECT_TRUE(strstr(buf, "dfdf0051") == NULL);
     free(buf);
 }
 
@@ -229,7 +232,10 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_pod)
     spinfo.super_pod_type = 0x00000000;
 
     MOCKER(hal_get_mainboard_id).stubs().with(mockcpp::any(), outBoundP(&mainboard_id)).will(returnValue(0));
-    MOCKER(hal_get_driver_install_path).stubs().with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any()).will(returnValue(0));
+    MOCKER(hal_get_driver_install_path)
+        .stubs()
+        .with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any())
+        .will(returnValue(0));
     MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
     MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
 
@@ -240,19 +246,19 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_pod)
     EXPECT_EQ(ret, 0);
     printf("[%s]\n", buf);
 
-    EXPECT_TRUE(strstr(buf,"\"local_id\": 8") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "\"local_id\": 8") != NULL);
     // 校验PG口EID在地址信息中
-    EXPECT_TRUE(strstr(buf,"000000000000030000100000df100100") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000003030000100000df100400") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000004030000100000df100500") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000005030000100000df100600") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000006030000100000df100700") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000007030000100000df100800") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000008030000100000df100900") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "000000000000030000100000df100100") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000003030000100000df100400") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000004030000100000df100500") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000005030000100000df100600") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000006030000100000df100700") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000007030000100000df100800") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000008030000100000df100900") != NULL);
     // 校验mesh层net type正确
-    EXPECT_TRUE(strstr(buf, "TOPO_FILE_DESC") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "TOPO_FILE_DESC") != NULL);
     // 校验clos层net type正确
-    EXPECT_TRUE(strstr(buf, "CLOS") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "CLOS") != NULL);
     free(buf);
 }
 
@@ -272,29 +278,29 @@ int mock_dcmiv2_get_mainboard_id(int npu_id, unsigned int* mainboard_id)
 // 预期整个生命周期只会被调用1次
 int mock_get_logicid_from_chipphy_id(unsigned int phyId, unsigned int* logicId)
 {
-   *logicId = phyId;
-   return 0;
+    *logicId = phyId;
+    return 0;
 }
 
 int mock_aclrtGetLogicDevIdByPhyDevId(const int phyId, int* const logicId)
 {
-   *logicId = phyId;
-   return 0;
+    *logicId = phyId;
+    return 0;
 }
 
 int mock_convertId(const int inputId, int* const outputId)
 {
-   *outputId = inputId;
-   return 0;
+    *outputId = inputId;
+    return 0;
 }
 
-int mock_halGetDeviceInfo(unsigned int devId, uint32_t moduleType, int32_t infoType, int64_t *value)
+int mock_halGetDeviceInfo(unsigned int devId, uint32_t moduleType, int32_t infoType, int64_t* value)
 {
     *value = 0x07;
     return 0;
 }
 
-void *mock_dlsym(void *handle, const char *symbol)
+void* mock_dlsym(void* handle, const char* symbol)
 {
     if (strcmp(symbol, "dcmiv2_init") == 0) {
         return (void*)mock_dcmi_init;
@@ -303,10 +309,10 @@ void *mock_dlsym(void *handle, const char *symbol)
         return (void*)mock_dcmiv2_get_mainboard_id;
     }
     if (strcmp(symbol, "dcmiv2_get_dev_id_from_chip_phyid") == 0
-     || strcmp(symbol, "dcmiv2_get_dev_id_by_chip_phy_id") == 0) {
+        || strcmp(symbol, "dcmiv2_get_dev_id_by_chip_phy_id") == 0) {
         return (void*)mock_get_logicid_from_chipphy_id;
     }
-                        
+
     if (strcmp(symbol, "aclrtGetLogicDevIdByPhyDevId") == 0) {
         return (void*)mock_aclrtGetLogicDevIdByPhyDevId;
     }
@@ -325,10 +331,7 @@ void *mock_dlsym(void *handle, const char *symbol)
     return (void*)0x1;
 }
 
-void *mock_dlopen(const char *filename, int flag)
-{
-    return (void*)0x1;
-}
+void* mock_dlopen(const char* filename, int flag) { return (void*)0x1; }
 
 TEST_F(TopoAddrInfoTest, ut_multi_init)
 {
@@ -344,7 +347,6 @@ TEST_F(TopoAddrInfoTest, ut_multi_init)
     hal_get_mainboard_id(0, &mainBoardId2);
     EXPECT_EQ(mainBoardId2, expectedMainboardId);
 }
-
 
 /**
  * 验证多线程并发调用
@@ -371,8 +373,7 @@ TEST_F(TopoAddrInfoTest, ut_multi_thread_init)
     }
 }
 
-
-void mock_uelist_for_server_with_uboe(UEList *ueList)
+void mock_uelist_for_server_with_uboe(UEList* ueList)
 {
     memset_s(ueList, sizeof(UEList), 0x00, sizeof(UEList));
     hex32_to_bin16("000000000000020000100000df000101", ueList->ueList[0].eidList[0].eid.raw);
@@ -404,7 +405,7 @@ void mock_uelist_for_server_with_uboe(UEList *ueList)
     ueList->ueNum = 5;
 }
 
-void mock_uelist_for_server_without_uboe(UEList *ueList)
+void mock_uelist_for_server_without_uboe(UEList* ueList)
 {
     memset_s(ueList, sizeof(UEList), 0x00, sizeof(UEList));
     hex32_to_bin16("000000000000020000100000df000101", ueList->ueList[0].eidList[0].eid.raw);
@@ -454,7 +455,10 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_server_no_uboe1)
     spinfo.super_pod_type = 0x00000000;
 
     MOCKER(hal_get_mainboard_id).stubs().with(mockcpp::any(), outBoundP(&mainboard_id)).will(returnValue(0));
-    MOCKER(hal_get_driver_install_path).stubs().with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any()).will(returnValue(0));
+    MOCKER(hal_get_driver_install_path)
+        .stubs()
+        .with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any())
+        .will(returnValue(0));
     MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
     MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
 
@@ -466,27 +470,27 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_server_no_uboe1)
     printf("[%s]\n", buf);
 
     // 校验MESH
-    EXPECT_TRUE(strstr(buf, "000000000041050000100000df001200") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "00000000007f050000100000df001b00") ==  NULL);// mesh中的PG不在其中
-    EXPECT_TRUE(strstr(buf, "000000000047050000100000df001800") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "000000000046050000100000df001700") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "000000000045050000100000df001600") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "000000000044050000100000df001500") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "000000000043050000100000df001400") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "000000000042050000100000df001300") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "000000000041050000100000df001200") != NULL);
+    EXPECT_TRUE(strstr(buf, "00000000007f050000100000df001b00") == NULL); // mesh中的PG不在其中
+    EXPECT_TRUE(strstr(buf, "000000000047050000100000df001800") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000046050000100000df001700") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000045050000100000df001600") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000044050000100000df001500") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000043050000100000df001400") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000042050000100000df001300") != NULL);
 
     // 校验UBOE IP, 不应该存在
-    EXPECT_TRUE(strstr(buf, "10.10.20.2") ==  NULL); // 虽然有UBOE IP，但是mainboard机型不带UBOE
+    EXPECT_TRUE(strstr(buf, "10.10.20.2") == NULL); // 虽然有UBOE IP，但是mainboard机型不带UBOE
 
     // 校验clos端口必须都在
     for (int i = 1; i <= 8; i++) {
         char port[32] = {0};
         sprintf_s(port, sizeof(port), "0/%d", i);
-        EXPECT_TRUE(strstr(buf, port) !=  NULL);
+        EXPECT_TRUE(strstr(buf, port) != NULL);
     }
 
     // 校验mesh层net type正确
-    EXPECT_TRUE(strstr(buf, "TOPO_FILE_DESC") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "TOPO_FILE_DESC") != NULL);
     // 校验clos层net type正确
     free(buf);
 }
@@ -511,7 +515,10 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_server_no_uboe2)
     spinfo.super_pod_type = 0x00000000;
 
     MOCKER(hal_get_mainboard_id).stubs().with(mockcpp::any(), outBoundP(&mainboard_id)).will(returnValue(0));
-    MOCKER(hal_get_driver_install_path).stubs().with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any()).will(returnValue(0));
+    MOCKER(hal_get_driver_install_path)
+        .stubs()
+        .with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any())
+        .will(returnValue(0));
     MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
     MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
 
@@ -523,24 +530,24 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_server_no_uboe2)
     printf("[%s]\n", buf);
 
     // 校验MESH, 未配置UBOE，FE ID是3
-    EXPECT_TRUE(strstr(buf, "000000000041030000100000df001200") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "00000000007f030000100000df001b00") ==  NULL);// mesh中的PG不在其中
-    EXPECT_TRUE(strstr(buf, "000000000047030000100000df001800") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "000000000046030000100000df001700") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "000000000045030000100000df001600") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "000000000044030000100000df001500") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "000000000043030000100000df001400") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "000000000042030000100000df001300") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "000000000041030000100000df001200") != NULL);
+    EXPECT_TRUE(strstr(buf, "00000000007f030000100000df001b00") == NULL); // mesh中的PG不在其中
+    EXPECT_TRUE(strstr(buf, "000000000047030000100000df001800") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000046030000100000df001700") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000045030000100000df001600") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000044030000100000df001500") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000043030000100000df001400") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000042030000100000df001300") != NULL);
 
     // 校验clos端口必须都在
     for (int i = 1; i <= 8; i++) {
         char port[32] = {0};
         sprintf_s(port, sizeof(port), "0/%d", i);
-        EXPECT_TRUE(strstr(buf, port) !=  NULL);
+        EXPECT_TRUE(strstr(buf, port) != NULL);
     }
 
     // 校验mesh层net type正确
-    EXPECT_TRUE(strstr(buf, "TOPO_FILE_DESC") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "TOPO_FILE_DESC") != NULL);
     // 校验clos层net type正确
     free(buf);
 }
@@ -565,7 +572,10 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_server_uboe)
     spinfo.super_pod_type = 0x00000000;
 
     MOCKER(hal_get_mainboard_id).stubs().with(mockcpp::any(), outBoundP(&mainboard_id)).will(returnValue(0));
-    MOCKER(hal_get_driver_install_path).stubs().with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any()).will(returnValue(0));
+    MOCKER(hal_get_driver_install_path)
+        .stubs()
+        .with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any())
+        .will(returnValue(0));
     MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
     MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
 
@@ -576,10 +586,9 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_server_uboe)
     EXPECT_EQ(ret, 0);
     printf("[%s]\n", buf);
     // 校验UBOE IP
-    EXPECT_TRUE(strstr(buf, "10.10.20.2") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "10.10.20.2") != NULL);
     free(buf);
 }
-
 
 TEST_F(TopoAddrInfoTest, ut_rootinfo_for_ubx1)
 {
@@ -613,7 +622,10 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_ubx1)
     spinfo.super_pod_type = 0x00000000;
 
     MOCKER(hal_get_mainboard_id).stubs().with(mockcpp::any(), outBoundP(&mainboard_id)).will(returnValue(0));
-    MOCKER(hal_get_driver_install_path).stubs().with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any()).will(returnValue(0));
+    MOCKER(hal_get_driver_install_path)
+        .stubs()
+        .with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any())
+        .will(returnValue(0));
     MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
     MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
 
@@ -625,14 +637,14 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_ubx1)
     printf("[%s]\n", buf);
 
     // 校验mesh部分
-    EXPECT_TRUE(strstr(buf, "000000000f40030000100000df0088f8") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "000000000f42030000100000df0098f8") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "000000000f41030000100000df0090f8") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "000000000f40030000100000df0088f8") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000f42030000100000df0098f8") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000f41030000100000df0090f8") != NULL);
     //  校验CLOS地址
-    EXPECT_TRUE(strstr(buf, "000000000f7f020000100000df00d9f8") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "000000000f7f020000100000df00d9f8") != NULL);
 
     // 校验mesh层net type正确
-    EXPECT_TRUE(strstr(buf, "TOPO_FILE_DESC") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "TOPO_FILE_DESC") != NULL);
     // 校验clos层net type正确
     free(buf);
 }
@@ -669,7 +681,10 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_ubx2)
     spinfo.super_pod_type = 4; // UBX的superpod type 为4
 
     MOCKER(hal_get_mainboard_id).stubs().with(mockcpp::any(), outBoundP(&mainboard_id)).will(returnValue(0));
-    MOCKER(hal_get_driver_install_path).stubs().with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any()).will(returnValue(0));
+    MOCKER(hal_get_driver_install_path)
+        .stubs()
+        .with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any())
+        .will(returnValue(0));
     MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
     MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
 
@@ -681,14 +696,14 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_ubx2)
     printf("[%s]\n", buf);
 
     // 校验mesh部分
-    EXPECT_TRUE(strstr(buf, "000000000f40030000100000df0088f8") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "000000000f42030000100000df0098f8") !=  NULL);
-    EXPECT_TRUE(strstr(buf, "000000000f41030000100000df0090f8") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "000000000f40030000100000df0088f8") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000f42030000100000df0098f8") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000f41030000100000df0090f8") != NULL);
     //  校验CLOS地址
-    EXPECT_TRUE(strstr(buf, "000000000f7f020000100000df00d9f8") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "000000000f7f020000100000df00d9f8") != NULL);
 
     // 校验mesh层net type正确
-    EXPECT_TRUE(strstr(buf, "TOPO_FILE_DESC") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "TOPO_FILE_DESC") != NULL);
     // 校验clos层net type正确
     free(buf);
 }
@@ -713,7 +728,10 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_server_uboe_16fm)
     spinfo.super_pod_type = 3;
 
     MOCKER(hal_get_mainboard_id).stubs().with(mockcpp::any(), outBoundP(&mainboard_id)).will(returnValue(0));
-    MOCKER(hal_get_driver_install_path).stubs().with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any()).will(returnValue(0));
+    MOCKER(hal_get_driver_install_path)
+        .stubs()
+        .with(outBoundP(drv_path, strlen(drv_path)), mockcpp::any())
+        .will(returnValue(0));
     MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
     MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
 
@@ -725,26 +743,26 @@ TEST_F(TopoAddrInfoTest, ut_rootinfo_for_server_uboe_16fm)
     printf("[%s]\n", buf);
 
     //  跨节点MESH
-    EXPECT_TRUE(strstr(buf,"000000000001030000100000df000201") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000008030000100000df000901") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000007030000100000df000801") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000006030000100000df000701") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000005030000100000df000601") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000004030000100000df000501") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000003030000100000df000401") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000002030000100000df000301") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "000000000001030000100000df000201") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000008030000100000df000901") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000007030000100000df000801") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000006030000100000df000701") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000005030000100000df000601") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000004030000100000df000501") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000003030000100000df000401") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000002030000100000df000301") != NULL);
 
     //  本节点MESH
-    EXPECT_TRUE(strstr(buf,"000000000041050000100000df001200") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000047050000100000df001800") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000046050000100000df001700") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000045050000100000df001600") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000044050000100000df001500") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000043050000100000df001400") !=  NULL);
-    EXPECT_TRUE(strstr(buf,"000000000042050000100000df001300") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "000000000041050000100000df001200") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000047050000100000df001800") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000046050000100000df001700") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000045050000100000df001600") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000044050000100000df001500") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000043050000100000df001400") != NULL);
+    EXPECT_TRUE(strstr(buf, "000000000042050000100000df001300") != NULL);
 
     // 校验UBOE IP
-    EXPECT_TRUE(strstr(buf, "10.10.20.2") !=  NULL);
+    EXPECT_TRUE(strstr(buf, "10.10.20.2") != NULL);
 
     free(buf);
 }

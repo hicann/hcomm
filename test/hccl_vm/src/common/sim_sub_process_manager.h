@@ -42,8 +42,9 @@ public:
     bool IsAlive() const;
     pid_t GetPid() const { return m_pid; }
 
-    int Request(uint8_t reqCmd, const void* reqData, uint32_t reqLen,
-                uint8_t& rspCmd, void* rspData, uint32_t rspMaxLen, uint32_t& rspLen);
+    int Request(
+        uint8_t reqCmd, const void* reqData, uint32_t reqLen, uint8_t& rspCmd, void* rspData, uint32_t rspMaxLen,
+        uint32_t& rspLen);
 
 private:
     static constexpr int kH2dReadFd = 200;
@@ -63,7 +64,7 @@ private:
 };
 
 SubProcessConfig CreateAicpuDeviceConfig(uint32_t rankId, uint32_t deviceKey = 0);
-SubProcessManager &GetAicpuProcMgr();
-}
+SubProcessManager& GetAicpuProcMgr();
+} // namespace sim
 
 #endif

@@ -21,10 +21,7 @@ void RankInfoRecorder::SetRankId(RankId rankId)
     return;
 }
 
-RankId RankInfoRecorder::GetRankId()
-{
-    return curRankId;
-}
+RankId RankInfoRecorder::GetRankId() { return curRankId; }
 
 void RankInfoRecorder::SetDevType(CheckerDevType devType)
 {
@@ -32,15 +29,9 @@ void RankInfoRecorder::SetDevType(CheckerDevType devType)
     return;
 }
 
-CheckerDevType RankInfoRecorder::GetDevType()
-{
-    return curDevType;
-}
+CheckerDevType RankInfoRecorder::GetDevType() { return curDevType; }
 
-u32 RankInfoRecorder::GetRankSize()
-{
-    return rankSize_;
-}
+u32 RankInfoRecorder::GetRankSize() { return rankSize_; }
 
 void RankInfoRecorder::InitRankInfo(TopoMeta topoMeta, CheckerDevType uniDevType)
 {
@@ -58,4 +49,4 @@ void RankInfoRecorder::InitRankInfo(TopoMeta topoMeta, CheckerDevType uniDevType
     rankSize_ = myRankId;
 }
 
-}
+} // namespace checker

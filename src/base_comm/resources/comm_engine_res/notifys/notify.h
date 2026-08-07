@@ -20,6 +20,6 @@ class Notify {
 public:
     virtual ~Notify() = default;
 };
-}
+} // namespace hcomm
 
 #endif // NOTIFY_H

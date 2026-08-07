@@ -22,15 +22,20 @@ MAKE_ENUM(SocketStatus, INIT, LISTEN_STARTING, LISTENING, CONNECT_STARTING, CONN
 
 MAKE_ENUM(NicType, DEVICE_NIC_TYPE, HOST_NIC_TYPE, DEVICE_VNIC_TYPE)
 
-using FdHandle = void *;
+using FdHandle = void*;
 class Socket {
 public:
-    Socket(SocketHandle socketHandle, IpAddress localIp, u32 listenPort, IpAddress remoteIp, const std::string &tag,
-           SocketRole role, NicType nicType)
-        : socketHandle(socketHandle), localIp(localIp), listenPort(listenPort), remoteIp(remoteIp), tag(tag),
-          role(role), nicType(nicType)
-    {
-    }
+    Socket(
+        SocketHandle socketHandle, IpAddress localIp, u32 listenPort, IpAddress remoteIp, const std::string& tag,
+        SocketRole role, NicType nicType)
+        : socketHandle(socketHandle),
+          localIp(localIp),
+          listenPort(listenPort),
+          remoteIp(remoteIp),
+          tag(tag),
+          role(role),
+          nicType(nicType)
+    {}
 
     virtual ~Socket();
 
@@ -38,94 +43,77 @@ public:
     virtual void Connect();
     SocketStatus GetStatus(u32 timeout = 0);
 
-    virtual SocketRole GetRole() const
-    {
-        return role;
-    }
-    virtual IpAddress GetRemoteIp()
-    {
-        return remoteIp;
-    }
+    virtual SocketRole GetRole() const { return role; }
+    virtual IpAddress GetRemoteIp() { return remoteIp; }
     void Destroy();
     void Close();
     void StopListen();
 
-    bool Send(const void *sendBuf, u32 size) const;
-    bool Recv(void *recvBuf, u32 size) const;
-    
-    bool Listen(u32 &port);
-    bool ISend(void *data, u64 size, u64& compSize) const;
+    bool Send(const void* sendBuf, u32 size) const;
+    bool Recv(void* recvBuf, u32 size) const;
 
-    HcclResult ISendWithHeart(void *data, u64 size, u64& compSize) const;
-    HcclResult IRecvWithHeart(void *data, u64 size, u64& compSize) const;
+    bool Listen(u32& port);
+    bool ISend(void* data, u64 size, u64& compSize) const;
 
-    bool IsListen() const
-    {
-        return isListening;
-    }
+    HcclResult ISendWithHeart(void* data, u64 size, u64& compSize) const;
+    HcclResult IRecvWithHeart(void* data, u64 size, u64& compSize) const;
+
+    bool IsListen() const { return isListening; }
 
     SocketStatus GetAsyncStatus();
 
     void ListenAsync();
     void ConnectAsync();
-    void SendAsync(const void *sendBuf, u32 size);
-    void RecvAsync(u8 *recvBuf, u32 size);
+    void SendAsync(const void* sendBuf, u32 size);
+    void RecvAsync(u8* recvBuf, u32 size);
 
     FdHandle GetFdHandle() const // will be used in hccp QP connecting
     {
         return fdHandle;
     }
 
-    NicType GetNicType() const
-    {
-        return nicType;
-    }
+    NicType GetNicType() const { return nicType; }
 
-    IpAddress GetLocalIp()
-    {
-        return localIp;
-    }
+    IpAddress GetLocalIp() { return localIp; }
 
-    u32 GetListenPort() const
-    {
-        return listenPort;
-    }
+    u32 GetListenPort() const { return listenPort; }
 
     string Describe()
     {
-        return StringFormat("Socket[role=%s, localIp=%s, listenPort=%u, remoteIp=%s, tag=%s, nicType=%s]",
-                            role.Describe().c_str(), localIp.Describe().c_str(), listenPort,
-                            remoteIp.Describe().c_str(), tag.c_str(), nicType.Describe().c_str());
+        return StringFormat(
+            "Socket[role=%s, localIp=%s, listenPort=%u, remoteIp=%s, tag=%s, nicType=%s]", role.Describe().c_str(),
+            localIp.Describe().c_str(), listenPort, remoteIp.Describe().c_str(), tag.c_str(),
+            nicType.Describe().c_str());
     }
 
 private:
-    SocketHandle      socketHandle{nullptr}; // vnic/nic创建的handle，HCCP初始化返回的handle_
-    IpAddress         localIp;
-    u32               listenPort{0};
-    IpAddress         remoteIp;
+    SocketHandle socketHandle{nullptr}; // vnic/nic创建的handle，HCCP初始化返回的handle_
+    IpAddress localIp;
+    u32 listenPort{0};
+    IpAddress remoteIp;
     const std::string tag;
-    SocketRole        role{SocketRole::CLIENT};
-    FdHandle          fdHandle{nullptr};
-    SocketStatus      socketStatus{SocketStatus::INIT};
-    NicType           nicType{NicType::INVALID};
-    bool              isConnected{false};
-    bool              isListening{false};
-    bool              isDestroyed{false};
+    SocketRole role{SocketRole::CLIENT};
+    FdHandle fdHandle{nullptr};
+    SocketStatus socketStatus{SocketStatus::INIT};
+    NicType nicType{NicType::INVALID};
+    bool isConnected{false};
+    bool isListening{false};
+    bool isDestroyed{false};
     std::unique_ptr<SocketListenInfoT> listenInfo_{nullptr};
 
     std::chrono::steady_clock::time_point lastLogTime{}; // 抑制日志刷屏时间戳，刷新时可置空
 
     RequestHandle reqHandle{0};
 
-    const void *sendDataBuff{nullptr};         // 发送缓冲区的起始地址，需要调用方保证内存生命周期
-    unsigned long long sendSize{0};      // 调用Send接口入参，返回接口调用后实际发送的数据量
-    u32                sendLeftSize{0};  // 发送缓冲区剩余待发送数据量
-    u32                totalSendSize{0}; // 发送缓冲区已发送总数据量
+    const void* sendDataBuff{nullptr}; // 发送缓冲区的起始地址，需要调用方保证内存生命周期
+    unsigned long long sendSize{0};    // 调用Send接口入参，返回接口调用后实际发送的数据量
+    u32 sendLeftSize{0};               // 发送缓冲区剩余待发送数据量
+    u32 totalSendSize{0};              // 发送缓冲区已发送总数据量
 
-    void *recvDataBuff{nullptr};         // 接受缓冲区的起始地址，需要调用方保证内存生命周期
-    unsigned long long recvSize{0};      // 调用Recv接口入参，返回接口调用后实际接受的数据量
-    u32                recvLeftSize{0};  // 接受缓冲区剩余待接受数据量
-    u32                totalRecvSize{0}; // 接受缓冲区已接受总数据量
+    void* recvDataBuff{nullptr};    // 接受缓冲区的起始地址，需要调用方保证内存生命周期
+    unsigned long long recvSize{0}; // 调用Recv接口入参，返回接口调用后实际接受的数据量
+    u32 recvLeftSize{0};            // 接受缓冲区剩余待接受数据量
+    u32 totalRecvSize{0};           // 接受缓冲区已接受总数据量
 
     void GetOneSocket();
 

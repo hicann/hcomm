@@ -11,9 +11,7 @@
 #include "coll_comm_config_consistency.h"
 
 namespace hccl {
-CollCommConfigConsistency::CollCommConfigConsistency()
-{
-}
+CollCommConfigConsistency::CollCommConfigConsistency() {}
 
 CollCommConfigConsistency::~CollCommConfigConsistency()
 {
@@ -28,18 +26,18 @@ HcclResult CollCommConfigConsistency::AddExchangeInfo(const void* data, uint32_t
     if (length > 0 && length <= HCCL_EXCHANGE_INFO_LEN) {
         exchangeInfoBuf_.resize(length);
         s32 sRet = memcpy_s(exchangeInfoBuf_.data(), length, data, length);
-        CHK_PRT_RET(sRet != EOK, 
-            HCCL_ERROR("[AddExchangeInfo] memcpy_s failed, ret[%d]", sRet), HCCL_E_MEMORY);
+        CHK_PRT_RET(sRet != EOK, HCCL_ERROR("[AddExchangeInfo] memcpy_s failed, ret[%d]", sRet), HCCL_E_MEMORY);
         HCCL_INFO("[AddExchangeInfo] success, length[%u].", length);
-    }else {
+    } else {
         HCCL_ERROR("[AddExchangeInfo] length[%u] is illegal", length);
         return HCCL_E_PARA;
     }
-    
+
     return HCCL_SUCCESS;
 }
 
-HcclResult CollCommConfigConsistency::GetExchangeInfo(uint32_t remoteRank, uint32_t length, void* data, uint32_t* actualLength)
+HcclResult
+CollCommConfigConsistency::GetExchangeInfo(uint32_t remoteRank, uint32_t length, void* data, uint32_t* actualLength)
 {
     CHK_PTR_NULL(data);
     auto iter = remoteExchangeInfoMap_.find(remoteRank);
@@ -49,16 +47,15 @@ HcclResult CollCommConfigConsistency::GetExchangeInfo(uint32_t remoteRank, uint3
         return HCCL_SUCCESS;
     }
     *actualLength = static_cast<uint32_t>(iter->second.size());
-    
+
     if (length == *actualLength || *actualLength == 0) {
         s32 sRet = memcpy_s(data, length, iter->second.data(), iter->second.size());
-        CHK_PRT_RET(sRet != EOK, 
-            HCCL_ERROR("[GetExchangeInfo] memcpy_s failed, ret[%d]", sRet), HCCL_E_MEMORY);
+        CHK_PRT_RET(sRet != EOK, HCCL_ERROR("[GetExchangeInfo] memcpy_s failed, ret[%d]", sRet), HCCL_E_MEMORY);
     } else {
         HCCL_ERROR("[GetExchangeInfo] failed, length[%u] actualLength[%u].", length, *actualLength);
         return HCCL_E_PARA;
     }
-    
+
     // 读后清除
     remoteExchangeInfoMap_.erase(iter);
     HCCL_INFO("[GetExchangeInfo] success, remoteRank[%u], actualLength[%u].", remoteRank, *actualLength);
@@ -68,7 +65,9 @@ HcclResult CollCommConfigConsistency::GetExchangeInfo(uint32_t remoteRank, uint3
 HcclResult CollCommConfigConsistency::StoreRemoteExchangeInfo(uint32_t remoteRank, std::vector<u8>& data)
 {
     remoteExchangeInfoMap_[remoteRank] = std::move(data);
-    HCCL_INFO("[StoreRemoteExchangeInfo] success, remoteRank[%u], length[%zu].", remoteRank, remoteExchangeInfoMap_[remoteRank].size());
+    HCCL_INFO(
+        "[StoreRemoteExchangeInfo] success, remoteRank[%u], length[%zu].", remoteRank,
+        remoteExchangeInfoMap_[remoteRank].size());
     return HCCL_SUCCESS;
 }
 
@@ -79,7 +78,7 @@ HcclResult CollCommConfigConsistency::ResetExchangeInfo()
     return HCCL_SUCCESS;
 }
 
-HcclResult CollCommConfigConsistency::GetExchangeInfoBuf(std::vector<u8> &exchangeInfoBuf)
+HcclResult CollCommConfigConsistency::GetExchangeInfoBuf(std::vector<u8>& exchangeInfoBuf)
 {
     exchangeInfoBuf = exchangeInfoBuf_;
     return HCCL_SUCCESS;
@@ -90,5 +89,4 @@ uint32_t CollCommConfigConsistency::GetExchangeInfoLen() const
     return static_cast<uint32_t>(exchangeInfoBuf_.size());
 }
 
-}
-
+} // namespace hccl

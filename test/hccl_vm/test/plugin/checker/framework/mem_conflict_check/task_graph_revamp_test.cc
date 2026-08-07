@@ -30,15 +30,13 @@ void BuildParentChild(TaskNodePtr parent, TaskNodePtr child)
     parent->children.push_back(child);
     child->parents.push_back(parent);
 }
-}
+} // namespace
 
 class GraphRevampBilateralSemanticsTest : public testing::Test {
 protected:
-    void SetUp() override {
-    }
+    void SetUp() override {}
 
-    void TearDown() override {
-    }
+    void TearDown() override {}
 };
 
 TEST_F(GraphRevampBilateralSemanticsTest, Destructor_EmptyResources)
@@ -116,8 +114,8 @@ TEST_F(GraphRevampBilateralSemanticsTest, Revamp_SingleRankWithReadReduceSDMA)
     DataSlice localSlice(BufferType::CCL, 0, 1024);
     DataSlice remoteSlice(BufferType::CCL, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
-    auto readReduceTask = std::make_shared<TaskStubReadReduce>(1, link, localSlice, remoteSlice,
-        HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
+    auto readReduceTask = std::make_shared<TaskStubReadReduce>(
+        1, link, localSlice, remoteSlice, HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
     auto localCopy = std::make_shared<TaskStubLocalCopy>(localSlice, remoteSlice);
     auto localCopy2 = std::make_shared<TaskStubLocalCopy>(localSlice, remoteSlice);
     TaskNode copyNode(localCopy.get(), 0, 0, 0);
@@ -194,8 +192,8 @@ TEST_F(GraphRevampBilateralSemanticsTest, Revamp_WriteReduceWithSDMA)
     DataSlice localSlice(BufferType::CCL, 0, 1024);
     DataSlice remoteSlice(BufferType::CCL, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
-    auto writeReduceTask = std::make_shared<TaskStubWriteReduce>(1, link, localSlice, remoteSlice,
-        HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
+    auto writeReduceTask = std::make_shared<TaskStubWriteReduce>(
+        1, link, localSlice, remoteSlice, HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
     auto localCopy = std::make_shared<TaskStubLocalCopy>(localSlice, remoteSlice);
     auto localCopy2 = std::make_shared<TaskStubLocalCopy>(localSlice, remoteSlice);
     TaskNode copyNode(localCopy.get(), 0, 0, 0);
@@ -215,8 +213,8 @@ TEST_F(GraphRevampBilateralSemanticsTest, Revamp_WriteReduceWithRDMA)
     DataSlice localSlice(BufferType::CCL, 0, 1024);
     DataSlice remoteSlice(BufferType::CCL, 0, 1024);
     LinkInfo link(LinkProtoStub::RDMA);
-    auto writeReduceTask = std::make_shared<TaskStubWriteReduce>(1, link, localSlice, remoteSlice,
-        HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
+    auto writeReduceTask = std::make_shared<TaskStubWriteReduce>(
+        1, link, localSlice, remoteSlice, HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
     auto localCopy = std::make_shared<TaskStubLocalCopy>(localSlice, remoteSlice);
     auto localCopy2 = std::make_shared<TaskStubLocalCopy>(localSlice, remoteSlice);
     TaskNode copyNode(localCopy.get(), 0, 0, 0);
@@ -438,8 +436,8 @@ TEST_F(GraphRevampBilateralSemanticsTest, IsReadWriteWithSameRank_ReadReduceMatc
     GraphRevampBilateralSemantics revamp;
     DataSlice slice(BufferType::CCL, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
-    auto readReduceTask = std::make_shared<TaskStubReadReduce>(1, link, slice, slice,
-        HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
+    auto readReduceTask = std::make_shared<TaskStubReadReduce>(
+        1, link, slice, slice, HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
     TaskNode node(readReduceTask.get(), 0, 0, 0);
     bool result = revamp.IsReadWriteWithSameRank(1, &node);
     EXPECT_TRUE(result);
@@ -450,8 +448,8 @@ TEST_F(GraphRevampBilateralSemanticsTest, IsReadWriteWithSameRank_WriteReduceMat
     GraphRevampBilateralSemantics revamp;
     DataSlice slice(BufferType::CCL, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
-    auto writeReduceTask = std::make_shared<TaskStubWriteReduce>(1, link, slice, slice,
-        HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
+    auto writeReduceTask = std::make_shared<TaskStubWriteReduce>(
+        1, link, slice, slice, HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
     TaskNode node(writeReduceTask.get(), 0, 0, 0);
     bool result = revamp.IsReadWriteWithSameRank(1, &node);
     EXPECT_TRUE(result);
@@ -498,8 +496,8 @@ TEST_F(GraphRevampBilateralSemanticsTest, GetPeerRankByTaskNode_ReadReduce)
     GraphRevampBilateralSemantics revamp;
     DataSlice slice(BufferType::CCL, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
-    auto readReduceTask = std::make_shared<TaskStubReadReduce>(7, link, slice, slice,
-        HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
+    auto readReduceTask = std::make_shared<TaskStubReadReduce>(
+        7, link, slice, slice, HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
     TaskNode node(readReduceTask.get(), 0, 0, 0);
     RankId peerRank = 0;
     HcclResult ret = revamp.GetPeerRankByTaskNode(&node, peerRank);
@@ -512,8 +510,8 @@ TEST_F(GraphRevampBilateralSemanticsTest, GetPeerRankByTaskNode_WriteReduce)
     GraphRevampBilateralSemantics revamp;
     DataSlice slice(BufferType::CCL, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
-    auto writeReduceTask = std::make_shared<TaskStubWriteReduce>(9, link, slice, slice,
-        HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
+    auto writeReduceTask = std::make_shared<TaskStubWriteReduce>(
+        9, link, slice, slice, HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
     TaskNode node(writeReduceTask.get(), 0, 0, 0);
     RankId peerRank = 0;
     HcclResult ret = revamp.GetPeerRankByTaskNode(&node, peerRank);
@@ -552,8 +550,8 @@ TEST_F(GraphRevampBilateralSemanticsTest, GetLinkProtoStubByTaskNode_ReadReduce)
     GraphRevampBilateralSemantics revamp;
     DataSlice slice(BufferType::CCL, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
-    auto readReduceTask = std::make_shared<TaskStubReadReduce>(1, link, slice, slice,
-        HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
+    auto readReduceTask = std::make_shared<TaskStubReadReduce>(
+        1, link, slice, slice, HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
     TaskNode node(readReduceTask.get(), 0, 0, 0);
     LinkProtoStub result = LinkProtoStub::INVALID_A;
     HcclResult ret = revamp.GetLinkProtoStubByTaskNode(&node, result);
@@ -566,8 +564,8 @@ TEST_F(GraphRevampBilateralSemanticsTest, GetLinkProtoStubByTaskNode_WriteReduce
     GraphRevampBilateralSemantics revamp;
     DataSlice slice(BufferType::CCL, 0, 1024);
     LinkInfo link(LinkProtoStub::RDMA);
-    auto writeReduceTask = std::make_shared<TaskStubWriteReduce>(1, link, slice, slice,
-        HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
+    auto writeReduceTask = std::make_shared<TaskStubWriteReduce>(
+        1, link, slice, slice, HcclDataType::HCCL_DATA_TYPE_INT32, HcclReduceOp::HCCL_REDUCE_SUM);
     TaskNode node(writeReduceTask.get(), 0, 0, 0);
     LinkProtoStub result = LinkProtoStub::INVALID_A;
     HcclResult ret = revamp.GetLinkProtoStubByTaskNode(&node, result);

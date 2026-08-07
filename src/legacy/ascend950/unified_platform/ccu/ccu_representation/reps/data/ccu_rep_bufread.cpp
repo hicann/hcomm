@@ -15,32 +15,39 @@
 namespace Hccl {
 namespace CcuRep {
 
-CcuRepBufRead::CcuRepBufRead(const CcuTransport &transport, Memory src, CcuBuffer dst, Variable len, MaskSignal sem,
-                             uint16_t mask)
-    : transport(transport), src(src), dst(dst), len(len), sem(sem), mask(mask)
-{
-    type       = CcuRepType::BUF_READ;
-    instrCount = 1;
-}
+    CcuRepBufRead::CcuRepBufRead(
+        const CcuTransport& transport, Memory src, CcuBuffer dst, Variable len, MaskSignal sem, uint16_t mask)
+        : transport(transport),
+          src(src),
+          dst(dst),
+          len(len),
+          sem(sem),
+          mask(mask)
+    {
+        type = CcuRepType::BUF_READ;
+        instrCount = 1;
+    }
 
-bool CcuRepBufRead::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool CcuRepBufRead::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    TransRmtMemToLocMSInstr(instr++, dst.Id(), src.addr.Id(), src.token.Id(), len.Id(), transport.GetChannelId(),
-                            sem.Id(), mask, 0, 0, 1, 1);
+        TransRmtMemToLocMSInstr(
+            instr++, dst.Id(), src.addr.Id(), src.token.Id(), len.Id(), transport.GetChannelId(), sem.Id(), mask, 0, 0,
+            1, 1);
 
-    instrId += instrCount;
+        instrId += instrCount;
 
-    return translated;
-}
+        return translated;
+    }
 
-std::string CcuRepBufRead::Describe()
-{
-    return StringFormat("Read Rmt Mem[%u] To CcuBuffer[%u], len[%u], ChannalId[%u], sem[%u], mask[%04x]",
-                        src.addr.Id(), dst.Id(), len.Id(), transport.GetChannelId(), sem.Id(), mask);
-}
+    std::string CcuRepBufRead::Describe()
+    {
+        return StringFormat(
+            "Read Rmt Mem[%u] To CcuBuffer[%u], len[%u], ChannalId[%u], sem[%u], mask[%04x]", src.addr.Id(), dst.Id(),
+            len.Id(), transport.GetChannelId(), sem.Id(), mask);
+    }
 
 }; // namespace CcuRep
 }; // namespace Hccl

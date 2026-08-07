@@ -17,12 +17,14 @@
 #include <iostream>
 #include <queue>
 
-DeviceResourceV1::DeviceResourceV1(uint32_t rankSize) {
+DeviceResourceV1::DeviceResourceV1(uint32_t rankSize)
+{
     rankSize_ = rankSize;
     notifyResources_.resize(rankSize);
 }
 
-void DeviceResourceV1::Reset(uint32_t rankSize) {
+void DeviceResourceV1::Reset(uint32_t rankSize)
+{
     rankSize_ = rankSize;
     notifyResources_.resize(rankSize);
     for (auto& rankRes : notifyResources_) {

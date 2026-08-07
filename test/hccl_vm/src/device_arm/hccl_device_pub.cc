@@ -32,7 +32,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
 uint32_t g_rankId = 0;
 uint32_t g_deviceKey = 0;
@@ -46,7 +46,7 @@ HcclVmResult SetCurRankId(uint32_t rankId)
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult GetCurRankId(uint32_t *rankId)
+HcclVmResult GetCurRankId(uint32_t* rankId)
 {
     *rankId = g_rankId;
     return HcclVmResult::HCCL_SIM_SUCCESS;
@@ -58,20 +58,17 @@ void SetCurDeviceKey(uint32_t deviceKey)
     g_deviceKey = deviceKey;
 }
 
-uint32_t GetCurDeviceKey()
-{
-    return g_deviceKey;
-}
+uint32_t GetCurDeviceKey() { return g_deviceKey; }
 
 uint8_t sqBuffer[HCCL_SQE_SIZE * HCCL_SQE_MAX_CNT];
-HcclVmResult GetSqBufferAddr(uint8_t **sqBuff)
+HcclVmResult GetSqBufferAddr(uint8_t** sqBuff)
 {
     *sqBuff = sqBuffer;
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
 std::map<uint32_t, uint32_t> jettyId2PiValMap;
-HcclVmResult GetPiValByJettyId(uint32_t jettyId, uint32_t *piValue)
+HcclVmResult GetPiValByJettyId(uint32_t jettyId, uint32_t* piValue)
 {
     *piValue = jettyId2PiValMap[jettyId];
     return HcclVmResult::HCCL_SIM_SUCCESS;
@@ -84,28 +81,20 @@ HcclVmResult UpdatePiValByJettyId(uint32_t jettyId, uint32_t piValue)
 }
 
 std::map<uint32_t, uint32_t> sqTailMap;
-uint32_t GetSqTail(uint32_t sqId)
-{
-    return sqTailMap[sqId];
-}
+uint32_t GetSqTail(uint32_t sqId) { return sqTailMap[sqId]; }
 
-void UpdateSqTail(uint32_t sqId, uint32_t newTail)
-{
-    sqTailMap[sqId] = newTail;
-}
+void UpdateSqTail(uint32_t sqId, uint32_t newTail) { sqTailMap[sqId] = newTail; }
 
 // AICPU构造Task时任务转换，将本端设备地址(本rank对应host进程申请的)转换为虚拟地址
 uint64_t TransLocalAddrToVirtual(uint64_t devAddr)
 {
     uint64_t deviceKey = GetCurDeviceKey();
-    auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock> (
-        [devAddr, deviceKey](const sim::VirtualMemBlock &virMem) {
-            return ((virMem.dev_mapped_ptr <= devAddr) &&
-                    (devAddr < (virMem.dev_mapped_ptr + virMem.size)) &&
-                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV)) &&
-                    (virMem.device_id == deviceKey);
-        }
-    );
+    auto virMemRes
+        = RunnerDB::GetOneByPred<sim::VirtualMemBlock>([devAddr, deviceKey](const sim::VirtualMemBlock& virMem) {
+              return ((virMem.dev_mapped_ptr <= devAddr) && (devAddr < (virMem.dev_mapped_ptr + virMem.size))
+                      && (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV))
+                     && (virMem.device_id == deviceKey);
+          });
     if (!virMemRes.second) {
         HCCL_VM_ERROR("cannot find virMemRes by devAddr[{}]", devAddr);
         return 0;
@@ -118,14 +107,12 @@ uint64_t TransLocalAddrToVirtual(uint64_t devAddr)
 // AICPU构造Task时任务转换，将对端设备地址(rankId对应host进程申请的)转换为虚拟地址
 uint64_t TransRemoteAddrToVirtualByRank(uint64_t devAddr, uint32_t rankId)
 {
-    auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock> (
-        [devAddr, rankId](const sim::VirtualMemBlock &virMem) {
-            return ((virMem.dev_mapped_ptr <= devAddr) &&
-                    (devAddr < (virMem.dev_mapped_ptr + virMem.size)) &&
-                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV)) &&
-                    (virMem.rank_id == rankId);
-        }
-    );
+    auto virMemRes
+        = RunnerDB::GetOneByPred<sim::VirtualMemBlock>([devAddr, rankId](const sim::VirtualMemBlock& virMem) {
+              return ((virMem.dev_mapped_ptr <= devAddr) && (devAddr < (virMem.dev_mapped_ptr + virMem.size))
+                      && (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV))
+                     && (virMem.rank_id == rankId);
+          });
     if (!virMemRes.second) {
         HCCL_VM_ERROR("cannot find virMemRes by devAddr[{}]", devAddr);
         return 0;
@@ -135,16 +122,15 @@ uint64_t TransRemoteAddrToVirtualByRank(uint64_t devAddr, uint32_t rankId)
     return virMemRes.first.start_ptr + diff;
 }
 
-uint64_t GetDevMapperAddrByDevAddrImpl(uint64_t devAddr, const char *file, int line)
+uint64_t GetDevMapperAddrByDevAddrImpl(uint64_t devAddr, const char* file, int line)
 {
     uint64_t deviceKey = GetCurDeviceKey();
-    auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
-        [devAddr, deviceKey](const sim::VirtualMemBlock &virMem) {
-            return (virMem.dev_mapped_ptr <= devAddr) &&
-                   (devAddr < virMem.dev_mapped_ptr + virMem.size) &&
-                   (virMem.src_type == static_cast<uint8_t>(sim::VIR_MEM_TYPE_DEV)) &&
-                   (virMem.device_id == deviceKey);
-        });
+    auto virMemRes
+        = RunnerDB::GetOneByPred<sim::VirtualMemBlock>([devAddr, deviceKey](const sim::VirtualMemBlock& virMem) {
+              return (virMem.dev_mapped_ptr <= devAddr) && (devAddr < virMem.dev_mapped_ptr + virMem.size)
+                     && (virMem.src_type == static_cast<uint8_t>(sim::VIR_MEM_TYPE_DEV))
+                     && (virMem.device_id == deviceKey);
+          });
     if (!virMemRes.second) {
         HCCL_VM_ERROR("cannot find virMemRes by devAddr[0x{:x}], called from {}:{}", devAddr, file, line);
         return 0;
@@ -164,7 +150,7 @@ uint64_t GetDevMapperAddrByDevAddrImpl(uint64_t devAddr, const char *file, int l
     }
 
     std::string memName(phyMemRes->name);
-    void *devMappedPtr = sim::MemoryManager::GetInstance().AcquireMemByName(memName.c_str());
+    void* devMappedPtr = sim::MemoryManager::GetInstance().AcquireMemByName(memName.c_str());
     if (devMappedPtr == nullptr) {
         HCCL_VM_ERROR("acquire device shm for memName[{}] failed, called from {}:{}", memName, file, line);
         return 0;
@@ -172,18 +158,19 @@ uint64_t GetDevMapperAddrByDevAddrImpl(uint64_t devAddr, const char *file, int l
 
     uint64_t offset = devAddr - virMemRes.first.dev_mapped_ptr;
     uint64_t result = reinterpret_cast<uint64_t>(devMappedPtr) + offset;
-    HCCL_VM_INFO("devAddr[0x{:x}] offset[{}] devMappedPtr[0x{:x}] memName[{}]",
-                 devAddr, offset, reinterpret_cast<uint64_t>(devMappedPtr), memName);
+    HCCL_VM_INFO(
+        "devAddr[0x{:x}] offset[{}] devMappedPtr[0x{:x}] memName[{}]", devAddr, offset,
+        reinterpret_cast<uint64_t>(devMappedPtr), memName);
     return result;
 }
 
 uint32_t GetRankIdByDevAddr(uint64_t devAddr)
 {
-    auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
-        [devAddr](const sim::VirtualMemBlock &virMem)
-        { return ((virMem.start_ptr <= devAddr) &&
-                    (devAddr < (virMem.start_ptr + virMem.size)) &&
-                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV)); });
+    auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>([devAddr](const sim::VirtualMemBlock& virMem) {
+        return (
+            (virMem.start_ptr <= devAddr) && (devAddr < (virMem.start_ptr + virMem.size))
+            && (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV));
+    });
     if (!virMemRes.second) {
         HCCL_VM_ERROR("cannot find virMemRes by devAddr[{}]", devAddr);
         return 0;
@@ -197,7 +184,9 @@ uint32_t GetRankIdByDevAddr(uint64_t devAddr)
     };
 
     uint32_t device_id = phyMemRes->device_id;
-    auto rank = RunnerDB::GetOneByPred<sim::Rank>([device_id](const sim::Rank &rank) { return rank.device_id == device_id; });
+    auto rank = RunnerDB::GetOneByPred<sim::Rank>([device_id](const sim::Rank& rank) {
+        return rank.device_id == device_id;
+    });
     if (!rank.second) {
         HCCL_VM_ERROR("cannot find rank by device_id[{}]", device_id);
         return 0;
@@ -208,14 +197,18 @@ uint32_t GetRankIdByDevAddr(uint64_t devAddr)
 
 uint32_t GetRankIdByIpAddr(std::string ipAddr)
 {
-    auto ret = RunnerDB::GetOneByPred<sim::EndPoint>([ipAddr](const sim::EndPoint &p) { return strcmp(p.ip_addr, ipAddr.c_str()) == 0; });
+    auto ret = RunnerDB::GetOneByPred<sim::EndPoint>([ipAddr](const sim::EndPoint& p) {
+        return strcmp(p.ip_addr, ipAddr.c_str()) == 0;
+    });
     if (!ret.second) {
         HCCL_VM_ERROR("cannot find Port by ipAddr[{}]", ipAddr);
         return 0;
     }
 
     uint32_t device_id = ret.first.device_id;
-    auto rank = RunnerDB::GetOneByPred<sim::Rank>([device_id](const sim::Rank &rank) { return rank.device_id == device_id; });
+    auto rank = RunnerDB::GetOneByPred<sim::Rank>([device_id](const sim::Rank& rank) {
+        return rank.device_id == device_id;
+    });
     if (!rank.second) {
         HCCL_VM_ERROR("cannot find Rank by device_id[{}]", device_id);
         return 0;
@@ -235,17 +228,17 @@ void UpdataKfcStatus(uint64_t d2hAddr)
     constexpr uint32_t headTailCnt = 66;
     constexpr uint32_t headCntOffset = 4088;
     constexpr uint32_t tailCntOffset = 4092;
-    *reinterpret_cast<uint8_t *>(d2hAddr) = devDoneStatus;  // 更新设备状态
-    *reinterpret_cast<uint32_t *>(d2hAddr + headCntOffset) = headTailCnt;  // 更新headCnt
-    *reinterpret_cast<uint32_t *>(d2hAddr + tailCntOffset) = headTailCnt;  // 更新tailCnt
+    *reinterpret_cast<uint8_t*>(d2hAddr) = devDoneStatus;                // 更新设备状态
+    *reinterpret_cast<uint32_t*>(d2hAddr + headCntOffset) = headTailCnt; // 更新headCnt
+    *reinterpret_cast<uint32_t*>(d2hAddr + tailCntOffset) = headTailCnt; // 更新tailCnt
     HCCL_VM_INFO("update kfc status success.");
 }
 
-static int DumpModuleMap(struct dl_phdr_info *info, size_t size, void *data)
+static int DumpModuleMap(struct dl_phdr_info* info, size_t size, void* data)
 {
-    int fd = *(int *)data;
+    int fd = *(int*)data;
     char buf[512];
-    const char *name = info->dlpi_name[0] ? info->dlpi_name : "[main]";
+    const char* name = info->dlpi_name[0] ? info->dlpi_name : "[main]";
 
     uint64_t vaddr_min = (uint64_t)-1;
     uint64_t vaddr_max = 0;
@@ -263,22 +256,24 @@ static int DumpModuleMap(struct dl_phdr_info *info, size_t size, void *data)
         }
     }
 
-    int len = snprintf(buf, sizeof(buf), "  0x%016lx-0x%016lx  base=0x%016lx  %s\n",
-                       vaddr_min, vaddr_max, (uint64_t)info->dlpi_addr, name);
+    int len = snprintf(
+        buf, sizeof(buf), "  0x%016lx-0x%016lx  base=0x%016lx  %s\n", vaddr_min, vaddr_max, (uint64_t)info->dlpi_addr,
+        name);
     if (len > 0) {
         write(fd, buf, len);
     }
     return 0;
 }
 
-static void DumpCallSites(int fd, void *const *stack_pointers, int nptrs)
+static void DumpCallSites(int fd, void* const* stack_pointers, int nptrs)
 {
     char buf[768];
     int len;
 
-    len = snprintf(buf, sizeof(buf),
-                   "\n---- [Call Sites] (call_site = ret_addr - 4, aarch64 instruction size) ----\n"
-                   "     (addr2line -e <binary> -f -C -p <file_offset>)\n");
+    len = snprintf(
+        buf, sizeof(buf),
+        "\n---- [Call Sites] (call_site = ret_addr - 4, aarch64 instruction size) ----\n"
+        "     (addr2line -e <binary> -f -C -p <file_offset>)\n");
     if (len > 0) {
         write(fd, buf, len);
     }
@@ -289,17 +284,17 @@ static void DumpCallSites(int fd, void *const *stack_pointers, int nptrs)
 
         Dl_info info;
         uint64_t base = 0;
-        const char *module = "??";
-        if (dladdr((void *)call_addr, &info) && info.dli_fname) {
+        const char* module = "??";
+        if (dladdr((void*)call_addr, &info) && info.dli_fname) {
             base = (uint64_t)info.dli_fbase;
             module = info.dli_fname;
         }
 
         uint64_t call_offset = call_addr - base;
 
-        len = snprintf(buf, sizeof(buf),
-                       "  #%02d  call_site=0x%016lx  file_offset=0x%lx  base=0x%016lx  %s\n",
-                       i, call_addr, call_offset, base, module);
+        len = snprintf(
+            buf, sizeof(buf), "  #%02d  call_site=0x%016lx  file_offset=0x%lx  base=0x%016lx  %s\n", i, call_addr,
+            call_offset, base, module);
         if (len > 0) {
             write(fd, buf, len);
         }
@@ -345,12 +340,12 @@ void RegisterSignalHandler()
     sprintf(g_crash_file_name, "crash_%d.log", pid);
     signal(SIGSEGV, SignalHandler); // 段错误
     signal(SIGABRT, SignalHandler); // Abort (如 assert 失败)
-    signal(SIGFPE,  SignalHandler); // 算术溢出/除零
-    signal(SIGBUS,  SignalHandler); // 总线错误
-    signal(SIGILL,  SignalHandler); // 非法指令
+    signal(SIGFPE, SignalHandler);  // 算术溢出/除零
+    signal(SIGBUS, SignalHandler);  // 总线错误
+    signal(SIGILL, SignalHandler);  // 非法指令
 }
 
-bool GetWqebufferByJettyId(uint64_t jettyId, uint64_t &wqeBuffer)
+bool GetWqebufferByJettyId(uint64_t jettyId, uint64_t& wqeBuffer)
 {
     auto raJetty = RunnerDB::GetById<sim::RaJetty>(jettyId);
     if (!raJetty.has_value()) {
@@ -371,7 +366,7 @@ void InitPipeFds(int h2dReadFd, int d2hWriteFd)
     g_d2hWriteFd = d2hWriteFd;
 }
 
-int DeviceSendMsg(uint8_t cmd, const void *data, uint32_t dataLen)
+int DeviceSendMsg(uint8_t cmd, const void* data, uint32_t dataLen)
 {
     if (g_d2hWriteFd < 0) {
         HCCL_VM_ERROR("pipe d2h write fd not initialized.");
@@ -381,7 +376,7 @@ int DeviceSendMsg(uint8_t cmd, const void *data, uint32_t dataLen)
     return sim::PipeSendMsg(g_d2hWriteFd, cmd, data, dataLen);
 }
 
-int DeviceRecvMsg(uint8_t &outCmd, void *outData, uint32_t maxLen, uint32_t &outLen)
+int DeviceRecvMsg(uint8_t& outCmd, void* outData, uint32_t maxLen, uint32_t& outLen)
 {
     if (g_h2dReadFd < 0) {
         HCCL_VM_ERROR("pipe h2d read fd not initialized.");

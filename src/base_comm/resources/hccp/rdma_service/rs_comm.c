@@ -158,8 +158,8 @@ RS_ATTRI_VISI_DEF int RsGetInterfaceVersion(unsigned int opcode, unsigned int *v
     CHK_PRT_RETURN(version == NULL, hccp_err("rs_get_interface_version failed! version is null"), -EINVAL);
 
     for (i = 0; i < num; i++) {
-        if (opcode == gInterfaceInfoList[i].opcode &&
-            opcode != RA_RS_GET_ROCE_API_VERSION && opcode != RA_RS_GET_NET_API_VERSION) {
+        if (opcode == gInterfaceInfoList[i].opcode && opcode != RA_RS_GET_ROCE_API_VERSION &&
+            opcode != RA_RS_GET_NET_API_VERSION) {
             interfaceVersion = gInterfaceInfoList[i].version;
             break;
         } else if (opcode == RA_RS_GET_ROCE_API_VERSION) {

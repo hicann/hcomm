@@ -14,41 +14,49 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepBufRead::CcuRepBufRead(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, RemoteAddr src, CcuBuf dst, Variable len, CompletedEvent sem,
-                             uint32_t mask)
-    : insGenPtr(insGenPtr), channel(channel), src(src), dst(dst), len(len), sem(sem), mask(mask)
-{
-    type       = CcuRepType::BUF_READ;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
-
-bool CcuRepBufRead::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
-
-    insGenPtr->CcuRepBufReadTranslate(ccuKernel, instr, this, dep);
-    instrId += instrCount;
-
-    return translated;
-}
-
-std::string CcuRepBufRead::Describe()
-{
-    void *channelPtr{nullptr};
-    auto ret = HcommChannelGet(channel, &channelPtr);
-    if (ret != HcclResult::HCCL_SUCCESS) {
-        Hccl::THROW<Hccl::CcuApiException>("failed to get ccu channel, type[%d]", type);
+    CcuRepBufRead::CcuRepBufRead(
+        CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, RemoteAddr src, CcuBuf dst, Variable len,
+        CompletedEvent sem, uint32_t mask)
+        : insGenPtr(insGenPtr),
+          channel(channel),
+          src(src),
+          dst(dst),
+          len(len),
+          sem(sem),
+          mask(mask)
+    {
+        type = CcuRepType::BUF_READ;
+        instrCount = insGenPtr->GetInstrCount(type);
     }
 
-    auto *channelImpl = dynamic_cast<CcuUrmaChannel *>(static_cast<Channel *>(channelPtr));
-    if (channelImpl == nullptr) {
-        Hccl::THROW<Hccl::CcuApiException>("[%s] failed to cast channel[0x%llx] to CcuUrmaChannel",
-            __func__, channel);
+    bool CcuRepBufRead::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
+
+        insGenPtr->CcuRepBufReadTranslate(ccuKernel, instr, this, dep);
+        instrId += instrCount;
+
+        return translated;
     }
-    return Hccl::StringFormat("Read Rmt Mem[%u] To CcuBuf[%u], len[%u], ChannalId[%u], sem[%u], mask[%04x]",
-                        src.addr.Id(), dst.Id(), len.Id(), channelImpl->GetChannelId(), sem.Id(), mask);
-}
+
+    std::string CcuRepBufRead::Describe()
+    {
+        void* channelPtr{nullptr};
+        auto ret = HcommChannelGet(channel, &channelPtr);
+        if (ret != HcclResult::HCCL_SUCCESS) {
+            Hccl::THROW<Hccl::CcuApiException>("failed to get ccu channel, type[%d]", type);
+        }
+
+        auto* channelImpl = dynamic_cast<CcuUrmaChannel*>(static_cast<Channel*>(channelPtr));
+        if (channelImpl == nullptr) {
+            Hccl::THROW<Hccl::CcuApiException>(
+                "[%s] failed to cast channel[0x%llx] to CcuUrmaChannel", __func__, channel);
+        }
+        return Hccl::StringFormat(
+            "Read Rmt Mem[%u] To CcuBuf[%u], len[%u], ChannalId[%u], sem[%u], mask[%04x]", src.addr.Id(), dst.Id(),
+            len.Id(), channelImpl->GetChannelId(), sem.Id(), mask);
+    }
 
 }; // namespace CcuRep
 }; // namespace hcomm

@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #include "bifrost_cncoi_puber_comminfo.h"
 #include "bifrost_cncoi_svc.h"
 #include "bifrost_cncoi_table.h"
@@ -20,8 +19,7 @@ extern "C" {
 #endif
 
 STATIC int32_t BifrostCncoiPuberComminfoOnUpdateCode(BifrostCncoiPuber *bifrostCncoiPuber,
-    BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiComminfoKeyT *tupleKey, void *tupleVal, void *codeBuf,
-    int32_t bufLen)
+    BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiComminfoKeyT *tupleKey, void *tupleVal, void *codeBuf, int32_t bufLen)
 {
     BifrostCncoiPuberComminfoVTbl *appVTbl = VOS_NULL;
     int32_t ret = -1;
@@ -90,8 +88,8 @@ error:
     return ret;
 }
 
-STATIC void BifrostCncoiPuberComminfoOnSub(BifrostCncoiPuber *bifrostCncoiPuber,
-    BifrostCncoiSliceKeyT *sliceKey, void *data, int32_t len)
+STATIC void BifrostCncoiPuberComminfoOnSub(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
+    void *data, int32_t len)
 {
     BifrostCncoiPuberComminfoVTbl *appVTbl = VOS_NULL;
 
@@ -110,8 +108,7 @@ error:
     return;
 }
 
-STATIC void BifrostCncoiPuberComminfoOnUnsub(BifrostCncoiPuber *bifrostCncoiPuber,
-    BifrostCncoiSliceKeyT *sliceKey)
+STATIC void BifrostCncoiPuberComminfoOnUnsub(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey)
 {
     BifrostCncoiPuberComminfoVTbl *appVTbl = VOS_NULL;
 
@@ -130,18 +127,17 @@ error:
     return;
 }
 
-uint32_t BifrostCncoiPuberComminfoReg(BifrostCncoiPuber *bifrostCncoiPuber,
-    BifrostCncoiPuberComminfoVTbl *appVTbl)
+uint32_t BifrostCncoiPuberComminfoReg(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiPuberComminfoVTbl *appVTbl)
 {
-    BkfDcTableTypeVTbl dcVTbl = { 0 };
-    BkfPuberTableTypeVTbl puberVTbl = { 0 };
+    BkfDcTableTypeVTbl dcVTbl = {0};
+    BkfPuberTableTypeVTbl puberVTbl = {0};
     uint32_t ret;
 
     if (bifrostCncoiPuber == VOS_NULL || appVTbl == VOS_NULL) {
         return BKF_ERR;
     }
 
-    dcVTbl.name = BIFROST_CNCOI_SVC_NAME"_comminfo";
+    dcVTbl.name = BIFROST_CNCOI_SVC_NAME "_comminfo";
     dcVTbl.tableTypeId = BIFROST_CNCOI_TABLE_TYPE_COMMINFO;
     dcVTbl.cookie = appVTbl->cookie;
     dcVTbl.noDcTuple = appVTbl->noDcTuple;
@@ -152,7 +148,7 @@ uint32_t BifrostCncoiPuberComminfoReg(BifrostCncoiPuber *bifrostCncoiPuber,
     dcVTbl.tupleKeyGetStrOrNull = (F_BKF_GET_STR)BifrostCncoiComminfoKeyGetStr;
     dcVTbl.tupleValGetStrOrNull = (F_BKF_GET_STR)appVTbl->onGetTupleValStr;
     dcVTbl.getFirst = (F_BKF_DC_GET_FIRSTTUPLE)appVTbl->getFirstTuple;
-    dcVTbl.getNext  = (F_BKF_DC_GET_NEXTTUPLE)appVTbl->getNextTuple;
+    dcVTbl.getNext = (F_BKF_DC_GET_NEXTTUPLE)appVTbl->getNextTuple;
     ret = BkfDcRegTableType(bifrostCncoiPuber->argInit.dc, &dcVTbl);
     if (ret != BKF_OK) {
         return ret;
@@ -182,8 +178,7 @@ uint32_t BifrostCncoiPuberComminfoNotifyTableComplete(BifrostCncoiPuber *bifrost
     return BkfDcNotifyTableTypeComplete(bifrostCncoiPuber->argInit.dc, BIFROST_CNCOI_TABLE_TYPE_COMMINFO);
 }
 
-uint32_t BifrostCncoiPuberComminfoCreateTable(BifrostCncoiPuber *bifrostCncoiPuber,
-    BifrostCncoiSliceKeyT *sliceKey)
+uint32_t BifrostCncoiPuberComminfoCreateTable(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey)
 {
     if (bifrostCncoiPuber == VOS_NULL) {
         return BKF_ERR;
@@ -192,8 +187,7 @@ uint32_t BifrostCncoiPuberComminfoCreateTable(BifrostCncoiPuber *bifrostCncoiPub
     return BkfDcCreateTable(bifrostCncoiPuber->argInit.dc, sliceKey, BIFROST_CNCOI_TABLE_TYPE_COMMINFO);
 }
 
-void BifrostCncoiPuberComminfoDeleteTable(BifrostCncoiPuber *bifrostCncoiPuber,
-    BifrostCncoiSliceKeyT *sliceKey)
+void BifrostCncoiPuberComminfoDeleteTable(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey)
 {
     if (bifrostCncoiPuber == VOS_NULL) {
         return;
@@ -202,8 +196,7 @@ void BifrostCncoiPuberComminfoDeleteTable(BifrostCncoiPuber *bifrostCncoiPuber,
     BkfDcDeleteTable(bifrostCncoiPuber->argInit.dc, sliceKey, BIFROST_CNCOI_TABLE_TYPE_COMMINFO);
 }
 
-void BifrostCncoiPuberComminfoReleaseTable(BifrostCncoiPuber *bifrostCncoiPuber,
-    BifrostCncoiSliceKeyT *sliceKey)
+void BifrostCncoiPuberComminfoReleaseTable(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey)
 {
     if (bifrostCncoiPuber == VOS_NULL) {
         return;
@@ -212,8 +205,8 @@ void BifrostCncoiPuberComminfoReleaseTable(BifrostCncoiPuber *bifrostCncoiPuber,
     BkfDcReleaseTable(bifrostCncoiPuber->argInit.dc, sliceKey, BIFROST_CNCOI_TABLE_TYPE_COMMINFO);
 }
 
-uint32_t BifrostCncoiPuberComminfoUpdate(BifrostCncoiPuber *bifrostCncoiPuber,
-    BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiComminfoKeyT *tupleKey, void *val)
+uint32_t BifrostCncoiPuberComminfoUpdate(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
+    BifrostCncoiComminfoKeyT *tupleKey, void *val)
 {
     if (bifrostCncoiPuber == VOS_NULL) {
         return BKF_ERR;
@@ -223,8 +216,8 @@ uint32_t BifrostCncoiPuberComminfoUpdate(BifrostCncoiPuber *bifrostCncoiPuber,
         VOS_NULL);
 }
 
-void BifrostCncoiPuberComminfoDelete(BifrostCncoiPuber *bifrostCncoiPuber,
-    BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiComminfoKeyT *tupleKey)
+void BifrostCncoiPuberComminfoDelete(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
+    BifrostCncoiComminfoKeyT *tupleKey)
 {
     if (bifrostCncoiPuber == VOS_NULL) {
         return;
@@ -236,4 +229,3 @@ void BifrostCncoiPuberComminfoDelete(BifrostCncoiPuber *bifrostCncoiPuber,
 #if __cplusplus
 }
 #endif
-

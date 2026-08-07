@@ -24,7 +24,7 @@
 using namespace HcclSim;
 
 namespace {
-constexpr const char *TEST_MEM_NAME = "/HcclShmPubUtMem";
+constexpr const char* TEST_MEM_NAME = "/HcclShmPubUtMem";
 constexpr size_t TEST_MEM_SIZE = 4096;
 constexpr uint64_t TEST_DEV_BASE = 0x10000000;
 constexpr uint64_t TEST_DEV_OFFSET = 128;
@@ -35,12 +35,12 @@ void CleanupTestMem()
     shm_unlink(TEST_MEM_NAME);
 }
 
-std::vector<uint8_t> ToBlob(const HcclTaskMetaData &task)
+std::vector<uint8_t> ToBlob(const HcclTaskMetaData& task)
 {
-    const auto *begin = reinterpret_cast<const uint8_t *>(&task);
+    const auto* begin = reinterpret_cast<const uint8_t*>(&task);
     return std::vector<uint8_t>(begin, begin + sizeof(HcclTaskMetaData));
 }
-}  // namespace
+} // namespace
 
 class HcclShmPubTest : public testing::Test {
 protected:
@@ -59,7 +59,7 @@ protected:
 
 TEST_F(HcclShmPubTest, GetAddrByOffset_ReturnsErrorWhenOutputAlreadyHoldsPointer)
 {
-    VmUniquePtr addrPtr(reinterpret_cast<void *>(0x1), VmPtrReleaser{sim::PhyMemBlock{}});
+    VmUniquePtr addrPtr(reinterpret_cast<void*>(0x1), VmPtrReleaser{sim::PhyMemBlock{}});
     EXPECT_EQ(GetAddrByOffset(TEST_DEV_BASE, addrPtr), HcclVmResult::HCCL_SIM_E_PARA);
 }
 
@@ -72,9 +72,9 @@ TEST_F(HcclShmPubTest, GetAddrByOffset_ReturnsErrorWhenVirtualMemMissing)
 
 TEST_F(HcclShmPubTest, GetAddrByOffset_MapsRunnerDbVirtualAddressToSharedMemory)
 {
-    void *shm = sim::MemoryManager::GetInstance().AllocMemByName(TEST_MEM_NAME, TEST_MEM_SIZE);
+    void* shm = sim::MemoryManager::GetInstance().AllocMemByName(TEST_MEM_NAME, TEST_MEM_SIZE);
     ASSERT_NE(shm, nullptr);
-    static_cast<uint8_t *>(shm)[TEST_DEV_OFFSET] = 0x5a;
+    static_cast<uint8_t*>(shm)[TEST_DEV_OFFSET] = 0x5a;
 
     sim::PhyMemBlock phyMem{};
     phyMem.device_id = 0;
@@ -97,7 +97,7 @@ TEST_F(HcclShmPubTest, GetAddrByOffset_MapsRunnerDbVirtualAddressToSharedMemory)
     VmUniquePtr addrPtr(nullptr);
     EXPECT_EQ(GetAddrByOffset(TEST_DEV_BASE + TEST_DEV_OFFSET, addrPtr), HcclVmResult::HCCL_SIM_SUCCESS);
     ASSERT_NE(addrPtr.get(), nullptr);
-    EXPECT_EQ(static_cast<uint8_t *>(addrPtr.get())[0], 0x5a);
+    EXPECT_EQ(static_cast<uint8_t*>(addrPtr.get())[0], 0x5a);
 }
 
 TEST_F(HcclShmPubTest, InsertTaskToCollection_ReturnsErrorForNullTask)

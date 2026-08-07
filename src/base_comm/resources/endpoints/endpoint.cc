@@ -22,8 +22,8 @@
 #include "hccp_nda.h"
 #include "adapter_rts_common.h"
 
-namespace hcomm{
-static bool IsSupported(const EndpointDesc &endpointDesc)
+namespace hcomm {
+static bool IsSupported(const EndpointDesc& endpointDesc)
 {
     bool protocolSupported = false;
     bool locTypeSupported = false;
@@ -53,10 +53,7 @@ static bool IsSupported(const EndpointDesc &endpointDesc)
     return protocolSupported && locTypeSupported;
 }
 
-Endpoint::Endpoint(const EndpointDesc &endpointDesc)
-{
-    endpointDesc_ = endpointDesc;
-}
+Endpoint::Endpoint(const EndpointDesc& endpointDesc) { endpointDesc_ = endpointDesc; }
 
 Endpoint::~Endpoint()
 {
@@ -65,18 +62,28 @@ Endpoint::~Endpoint()
     // 强制销毁会导致 use-after-free，此时仅告警不销毁（接受泄漏以避免更严重后果）。
     if (sharedJettyCtx_.valid && sharedJettyCtx_.handle != 0) {
         if (sharedJettyCtx_.refCount == 0) {
-            HCCL_WARNING("[Endpoint][~Endpoint] shared jetty still valid on destroy, handle[%llu], force destroy.",
+            HCCL_WARNING(
+                "[Endpoint][~Endpoint] shared jetty still valid on destroy, handle[%llu], force destroy.",
                 static_cast<unsigned long long>(sharedJettyCtx_.handle));
             Hccl::HrtRaUbDestroyJetty(sharedJettyCtx_.handle);
             if (sharedJettyCtx_.jfcHandle != 0 && sharedJettyCtx_.rdmaHandle != nullptr) {
                 Hccl::HrtRaUbDestroyJfc(sharedJettyCtx_.rdmaHandle, sharedJettyCtx_.jfcHandle);
             }
-            if (sharedJettyCtx_.sqPiPtr != nullptr) { (void)hrtFree(sharedJettyCtx_.sqPiPtr); }
-            if (sharedJettyCtx_.sqCiPtr != nullptr) { (void)hrtFree(sharedJettyCtx_.sqCiPtr); }
-            if (sharedJettyCtx_.cqPiPtr != nullptr) { (void)hrtFree(sharedJettyCtx_.cqPiPtr); }
-            if (sharedJettyCtx_.cqCiPtr != nullptr) { (void)hrtFree(sharedJettyCtx_.cqCiPtr); }
+            if (sharedJettyCtx_.sqPiPtr != nullptr) {
+                (void)hrtFree(sharedJettyCtx_.sqPiPtr);
+            }
+            if (sharedJettyCtx_.sqCiPtr != nullptr) {
+                (void)hrtFree(sharedJettyCtx_.sqCiPtr);
+            }
+            if (sharedJettyCtx_.cqPiPtr != nullptr) {
+                (void)hrtFree(sharedJettyCtx_.cqPiPtr);
+            }
+            if (sharedJettyCtx_.cqCiPtr != nullptr) {
+                (void)hrtFree(sharedJettyCtx_.cqCiPtr);
+            }
         } else {
-            HCCL_WARNING("[Endpoint][~Endpoint] shared jetty still in use, refCount[%u], handle[%llu], skip destroy "
+            HCCL_WARNING(
+                "[Endpoint][~Endpoint] shared jetty still in use, refCount[%u], handle[%llu], skip destroy "
                 "to avoid use-after-free.",
                 sharedJettyCtx_.refCount, static_cast<unsigned long long>(sharedJettyCtx_.handle));
         }
@@ -84,8 +91,8 @@ Endpoint::~Endpoint()
     }
 }
 
-HcclResult Endpoint::AcquireSharedJetty(
-    const std::function<HcclResult(SharedJettyCtx &)> &provideCtx, SharedJettyCtx &outCtx)
+HcclResult
+Endpoint::AcquireSharedJetty(const std::function<HcclResult(SharedJettyCtx&)>& provideCtx, SharedJettyCtx& outCtx)
 {
     // 第一段（持锁）：检查是否已创建或正在创建。已创建则 refCount++ 返回；未创建则标记 creating。
     while (true) {
@@ -93,7 +100,8 @@ HcclResult Endpoint::AcquireSharedJetty(
         if (sharedJettyCtx_.valid) {
             sharedJettyCtx_.refCount++;
             outCtx = sharedJettyCtx_;
-            HCCL_INFO("[Endpoint][AcquireSharedJetty] reuse shared jetty, handle[%llu], refCount[%u]",
+            HCCL_INFO(
+                "[Endpoint][AcquireSharedJetty] reuse shared jetty, handle[%llu], refCount[%u]",
                 static_cast<unsigned long long>(outCtx.handle), sharedJettyCtx_.refCount);
             return HCCL_SUCCESS;
         }
@@ -127,7 +135,8 @@ HcclResult Endpoint::AcquireSharedJetty(
         sharedJettyCtx_.refCount = 1;
         outCtx = sharedJettyCtx_;
     }
-    HCCL_INFO("[Endpoint][AcquireSharedJetty] created shared jetty, handle[%llu]",
+    HCCL_INFO(
+        "[Endpoint][AcquireSharedJetty] created shared jetty, handle[%llu]",
         static_cast<unsigned long long>(outCtx.handle));
     return HCCL_SUCCESS;
 }
@@ -144,18 +153,21 @@ HcclResult Endpoint::ReleaseSharedJetty()
         return HCCL_SUCCESS;
     }
     sharedJettyCtx_.refCount--;
-    HCCL_INFO("[Endpoint][ReleaseSharedJetty] release shared jetty, handle[%llu], refCount[%u]",
+    HCCL_INFO(
+        "[Endpoint][ReleaseSharedJetty] release shared jetty, handle[%llu], refCount[%u]",
         static_cast<unsigned long long>(sharedJettyCtx_.handle), sharedJettyCtx_.refCount);
     if (sharedJettyCtx_.refCount == 0) {
         if (sharedJettyCtx_.handle != 0) {
             Hccl::HrtRaUbDestroyJetty(sharedJettyCtx_.handle);
-            HCCL_INFO("[Endpoint][ReleaseSharedJetty] destroyed shared jetty, handle[%llu]",
+            HCCL_INFO(
+                "[Endpoint][ReleaseSharedJetty] destroyed shared jetty, handle[%llu]",
                 static_cast<unsigned long long>(sharedJettyCtx_.handle));
         }
         // 销毁临时 connection 转移过来的 JFC（共享 jetty 模式下临时 connection 不自销毁 JFC）
         if (sharedJettyCtx_.jfcHandle != 0 && sharedJettyCtx_.rdmaHandle != nullptr) {
             Hccl::HrtRaUbDestroyJfc(sharedJettyCtx_.rdmaHandle, sharedJettyCtx_.jfcHandle);
-            HCCL_INFO("[Endpoint][ReleaseSharedJetty] destroyed shared jfc, jfcHandle[%llu]",
+            HCCL_INFO(
+                "[Endpoint][ReleaseSharedJetty] destroyed shared jfc, jfcHandle[%llu]",
                 static_cast<unsigned long long>(sharedJettyCtx_.jfcHandle));
         }
         if (sharedJettyCtx_.sqPiPtr != nullptr) {
@@ -175,58 +187,97 @@ HcclResult Endpoint::ReleaseSharedJetty()
     return HCCL_SUCCESS;
 }
 
-HcclResult Endpoint::CreateEndpoint(const EndpointDesc &endpointDesc, std::unique_ptr<Endpoint> &endpointPtr)
+HcclResult Endpoint::CreateEndpoint(const EndpointDesc& endpointDesc, std::unique_ptr<Endpoint>& endpointPtr)
 {
     if (!IsSupported(endpointDesc)) {
-        HCCL_ERROR("[%s]endpointDesc is not supported. endpointDesc.protocol [%d] endpointDesc.loc.locType [%d].", __func__, endpointDesc.protocol, endpointDesc.loc.locType);
+        HCCL_ERROR(
+            "[%s]endpointDesc is not supported. endpointDesc.protocol [%d] endpointDesc.loc.locType [%d].", __func__,
+            endpointDesc.protocol, endpointDesc.loc.locType);
         return HCCL_E_PARA;
     }
 
-    HCCL_INFO("[%s]endpointDesc.protocol [%d] endpointDesc.loc.locType [%d].", __func__, endpointDesc.protocol, endpointDesc.loc.locType);
+    HCCL_INFO(
+        "[%s]endpointDesc.protocol [%d] endpointDesc.loc.locType [%d].", __func__, endpointDesc.protocol,
+        endpointDesc.loc.locType);
 
     return CreateEndpointBase(endpointDesc, endpointPtr);
 }
 
-HcclResult Endpoint::CreateEndpointBase(const EndpointDesc &endpointDesc, std::unique_ptr<Endpoint> &endpointPtr)
+HcclResult Endpoint::CreateEndpointBase(const EndpointDesc& endpointDesc, std::unique_ptr<Endpoint>& endpointPtr)
 {
-    using EndpointCreator = std::function<std::unique_ptr<Endpoint>(const EndpointDesc &)>;
+    using EndpointCreator = std::function<std::unique_ptr<Endpoint>(const EndpointDesc&)>;
     struct Entry {
         CommProtocol protocol;
         EndpointLocType locType;
         EndpointCreator creator;
     };
     static const Entry table[] = {
-        {COMM_PROTOCOL_ROCE,    ENDPOINT_LOC_TYPE_HOST,   [](const EndpointDesc &d) { return std::make_unique<CpuRoceEndpoint>(d); }},
-        {COMM_PROTOCOL_UBC_TP,  ENDPOINT_LOC_TYPE_HOST,   [](const EndpointDesc &d) { return std::make_unique<CpuUrmaEndpoint>(d); }},
-        {COMM_PROTOCOL_UBC_CTP, ENDPOINT_LOC_TYPE_HOST,   [](const EndpointDesc &d) { return std::make_unique<CpuUrmaEndpoint>(d); }},
-        {COMM_PROTOCOL_UBC_TP,  ENDPOINT_LOC_TYPE_DEVICE, [](const EndpointDesc &d) { return std::make_unique<UrmaEndpoint>(d); }},
-        {COMM_PROTOCOL_UBC_CTP, ENDPOINT_LOC_TYPE_DEVICE, [](const EndpointDesc &d) { return std::make_unique<UrmaEndpoint>(d); }},
-        {COMM_PROTOCOL_UB_MEM,  ENDPOINT_LOC_TYPE_DEVICE, [](const EndpointDesc &d) { return std::make_unique<UbMemEndpoint>(d); }},
-        {COMM_PROTOCOL_PCIE,    ENDPOINT_LOC_TYPE_DEVICE, [](const EndpointDesc &d) { return std::make_unique<UbMemEndpoint>(d); }},
-        {COMM_PROTOCOL_UBOE,    ENDPOINT_LOC_TYPE_DEVICE, [](const EndpointDesc &d) { return std::make_unique<UboeEndpoint>(d); }},
-        {COMM_PROTOCOL_UBG,     ENDPOINT_LOC_TYPE_DEVICE, [](const EndpointDesc &d) { return std::make_unique<UbgEndpoint>(d); }},
-        {COMM_PROTOCOL_ROCE,    ENDPOINT_LOC_TYPE_DEVICE, [](const EndpointDesc &d) { return std::make_unique<AicpuTsRoceEndpoint>(d); }},
-        {COMM_PROTOCOL_HCCS,    ENDPOINT_LOC_TYPE_DEVICE, [](const EndpointDesc &d) { return std::make_unique<AicpuTsHccsEndpoint>(d); }},
+        {COMM_PROTOCOL_ROCE, ENDPOINT_LOC_TYPE_HOST,
+         [](const EndpointDesc& d) {
+             return std::make_unique<CpuRoceEndpoint>(d);
+         }},
+        {COMM_PROTOCOL_UBC_TP, ENDPOINT_LOC_TYPE_HOST,
+         [](const EndpointDesc& d) {
+             return std::make_unique<CpuUrmaEndpoint>(d);
+         }},
+        {COMM_PROTOCOL_UBC_CTP, ENDPOINT_LOC_TYPE_HOST,
+         [](const EndpointDesc& d) {
+             return std::make_unique<CpuUrmaEndpoint>(d);
+         }},
+        {COMM_PROTOCOL_UBC_TP, ENDPOINT_LOC_TYPE_DEVICE,
+         [](const EndpointDesc& d) {
+             return std::make_unique<UrmaEndpoint>(d);
+         }},
+        {COMM_PROTOCOL_UBC_CTP, ENDPOINT_LOC_TYPE_DEVICE,
+         [](const EndpointDesc& d) {
+             return std::make_unique<UrmaEndpoint>(d);
+         }},
+        {COMM_PROTOCOL_UB_MEM, ENDPOINT_LOC_TYPE_DEVICE,
+         [](const EndpointDesc& d) {
+             return std::make_unique<UbMemEndpoint>(d);
+         }},
+        {COMM_PROTOCOL_PCIE, ENDPOINT_LOC_TYPE_DEVICE,
+         [](const EndpointDesc& d) {
+             return std::make_unique<UbMemEndpoint>(d);
+         }},
+        {COMM_PROTOCOL_UBOE, ENDPOINT_LOC_TYPE_DEVICE,
+         [](const EndpointDesc& d) {
+             return std::make_unique<UboeEndpoint>(d);
+         }},
+        {COMM_PROTOCOL_UBG, ENDPOINT_LOC_TYPE_DEVICE,
+         [](const EndpointDesc& d) {
+             return std::make_unique<UbgEndpoint>(d);
+         }},
+        {COMM_PROTOCOL_ROCE, ENDPOINT_LOC_TYPE_DEVICE,
+         [](const EndpointDesc& d) {
+             return std::make_unique<AicpuTsRoceEndpoint>(d);
+         }},
+        {COMM_PROTOCOL_HCCS, ENDPOINT_LOC_TYPE_DEVICE,
+         [](const EndpointDesc& d) {
+             return std::make_unique<AicpuTsHccsEndpoint>(d);
+         }},
     };
 
-    for (const auto &entry : table) {
+    for (const auto& entry : table) {
         if (entry.protocol == endpointDesc.protocol && entry.locType == endpointDesc.loc.locType) {
             EXCEPTION_CATCH(endpointPtr = entry.creator(endpointDesc), return HCCL_E_PTR);
             return HCCL_SUCCESS;
         }
     }
 
-    HCCL_ERROR("[%s] failed, endpointDesc.protocol [%d] and endpointDesc.loc.locType [%d] do not match.",
-        __func__, endpointDesc.protocol, endpointDesc.loc.locType);
+    HCCL_ERROR(
+        "[%s] failed, endpointDesc.protocol [%d] and endpointDesc.loc.locType [%d] do not match.", __func__,
+        endpointDesc.protocol, endpointDesc.loc.locType);
     return HCCL_E_PARA;
 }
 
-HcclResult Endpoint::CheckFeature(const EndpointDesc &endpointDesc, HcommEndpointFeatureType featureType, bool &value)
+HcclResult Endpoint::CheckFeature(const EndpointDesc& endpointDesc, HcommEndpointFeatureType featureType, bool& value)
 {
     if (featureType == HCOMM_ENDPOINT_FEATURE_NDA) {
         if (endpointDesc.protocol != COMM_PROTOCOL_ROCE || endpointDesc.loc.locType != ENDPOINT_LOC_TYPE_HOST) {
-            HCCL_WARNING("[%s] not support NDA, protocol[%d], locType[%d]",
-                __func__, endpointDesc.protocol, endpointDesc.loc.locType);
+            HCCL_WARNING(
+                "[%s] not support NDA, protocol[%d], locType[%d]", __func__, endpointDesc.protocol,
+                endpointDesc.loc.locType);
             value = false;
             return HCCL_SUCCESS;
         }
@@ -238,18 +289,19 @@ HcclResult Endpoint::CheckFeature(const EndpointDesc &endpointDesc, HcommEndpoin
         u32 devPhyId = 0;
         CHK_RET(hrtGetDevicePhyIdByIndex(devId, devPhyId));
 
-        auto &rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
-        void *rdmaHandle = static_cast<void *>(
+        auto& rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
+        void* rdmaHandle = static_cast<void*>(
             rdmaHandleMgr.GetByAddr(devPhyId, Hccl::LinkProtoType::RDMA, ipAddr, Hccl::PortDeploymentType::HOST_NET));
         CHK_PTR_NULL(rdmaHandle);
 
         s32 directFlag = 0;
         s32 ret = RaNdaGetDirectFlag(rdmaHandle, &directFlag);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[%s] failed to get directFlag, ret[%d]", __func__, ret), HCCL_E_INTERNAL);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS, HCCL_ERROR("[%s] failed to get directFlag, ret[%d]", __func__, ret), HCCL_E_INTERNAL);
         value = (directFlag != DIRECT_FLAG_NOTSUPP);
-        HCCL_INFO("[%s] %s NDA, rdmaHandle[%p], directFlag[%d]",
-            __func__, value ? "support" : "not support", rdmaHandle, directFlag);
+        HCCL_INFO(
+            "[%s] %s NDA, rdmaHandle[%p], directFlag[%d]", __func__, value ? "support" : "not support", rdmaHandle,
+            directFlag);
     } else {
         HCCL_WARNING("[%s] unsupported featureType[%d]", __func__, featureType);
         value = false;
@@ -257,4 +309,4 @@ HcclResult Endpoint::CheckFeature(const EndpointDesc &endpointDesc, HcommEndpoin
 
     return HCCL_SUCCESS;
 }
-}
+} // namespace hcomm

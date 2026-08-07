@@ -16,32 +16,31 @@
 namespace Hccl {
 namespace CcuRep {
 
-CcuRepLocPostSem::CcuRepLocPostSem(const MaskSignal &sem, uint16_t mask) : sem(sem), mask(mask)
-{
-    type       = CcuRepType::LOC_POST_SEM;
-    instrCount = 1;
-}
-
-bool CcuRepLocPostSem::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
-
-    SetCKEInstr(instr++, sem.Id(), mask, 0, 0, 1);
-
-    if (instrId > USHRT_MAX - instrCount) {
-        THROW<InternalException>(StringFormat("[CcuRepLocPostSem][Translate] instrId[%u] + instrCount[%u] exceeds the "
-            "maximum value of unsigned short int.", instrId, instrCount));
+    CcuRepLocPostSem::CcuRepLocPostSem(const MaskSignal& sem, uint16_t mask) : sem(sem), mask(mask)
+    {
+        type = CcuRepType::LOC_POST_SEM;
+        instrCount = 1;
     }
-    instrId += instrCount;
 
-    return translated;
-}
+    bool CcuRepLocPostSem::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-std::string CcuRepLocPostSem::Describe()
-{
-    return StringFormat("Set Sem[%u], mask[%04x]", sem.Id(), mask);
-}
+        SetCKEInstr(instr++, sem.Id(), mask, 0, 0, 1);
+
+        if (instrId > USHRT_MAX - instrCount) {
+            THROW<InternalException>(StringFormat(
+                "[CcuRepLocPostSem][Translate] instrId[%u] + instrCount[%u] exceeds the "
+                "maximum value of unsigned short int.",
+                instrId, instrCount));
+        }
+        instrId += instrCount;
+
+        return translated;
+    }
+
+    std::string CcuRepLocPostSem::Describe() { return StringFormat("Set Sem[%u], mask[%04x]", sem.Id(), mask); }
 
 }; // namespace CcuRep
 }; // namespace Hccl

@@ -10,5 +10,4 @@ HcclResult CheckCurRankId(RankId curRank, RankId srcRank, RankId dstRank);
 
 }
 
-
 #endif

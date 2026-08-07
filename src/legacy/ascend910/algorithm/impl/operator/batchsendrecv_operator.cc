@@ -11,24 +11,22 @@
 #include "batchsendrecv_operator.h"
 namespace hccl {
 
-BatchSendRecvOperator::BatchSendRecvOperator(AlgConfigurator* algConfigurator, CCLBufferManager &cclBufferManager,
-    HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher)
+BatchSendRecvOperator::BatchSendRecvOperator(
+    AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager, HcclDispatcher dispatcher,
+    std::unique_ptr<TopoMatcher>& topoMatcher)
     : CollAlgOperator(algConfigurator, cclBufferManager, dispatcher, topoMatcher, HcclCMDType::HCCL_CMD_BATCH_SEND_RECV)
-{
-}
+{}
 
-BatchSendRecvOperator::~BatchSendRecvOperator() {
-}
+BatchSendRecvOperator::~BatchSendRecvOperator() {}
 
-HcclResult BatchSendRecvOperator::SelectAlg(const std::string& tag, const OpParam& param, std::string& algName,
-    std::string& newTag)
+HcclResult BatchSendRecvOperator::SelectAlg(
+    const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag)
 {
     if (retryEnable_ && param.aicpuUnfoldMode) {
         algName = "BatchSendRecvRetry";
     } else if (param.isGroupMode) {
         algName = "BatchSendRecvGroup";
-    }
-    else {
+    } else {
         algName = "BatchSendRecv";
     }
     newTag = tag;
@@ -38,4 +36,4 @@ HcclResult BatchSendRecvOperator::SelectAlg(const std::string& tag, const OpPara
 }
 
 REGISTER_OP(HcclCMDType::HCCL_CMD_BATCH_SEND_RECV, BatchSendRecv, BatchSendRecvOperator);
-}
+} // namespace hccl

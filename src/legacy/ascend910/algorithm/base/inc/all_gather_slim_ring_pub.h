@@ -21,22 +21,19 @@ public:
 
     ~AllGatherSlimRing() override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
     HcclResult SetNotifyIdx(u32 notifyIdx);
-    HcclResult GetNotifyIdx(u32 &notifyIdx);
+    HcclResult GetNotifyIdx(u32& notifyIdx);
 
 protected:
 private:
     // 获取向该rank往前的第i个rank
-    inline u32 ForwordRank(u32 rank, u32 rankSize, u32 preNum) const
-    {
-        return (rank + rankSize - preNum) % rankSize;
-    }
-    HcclResult RunAllGather(u32 rank, u32 rankSize, const std::vector<Slice> &outputSlices);
+    inline u32 ForwordRank(u32 rank, u32 rankSize, u32 preNum) const { return (rank + rankSize - preNum) % rankSize; }
+    HcclResult RunAllGather(u32 rank, u32 rankSize, const std::vector<Slice>& outputSlices);
 
-    HcclResult TxVector(const LINK &link, const std::vector<Slice> &txSlices);
-    HcclResult RxVector(const LINK &link, const std::vector<Slice> &rxSlices);
+    HcclResult TxVector(const LINK& link, const std::vector<Slice>& txSlices);
+    HcclResult RxVector(const LINK& link, const std::vector<Slice>& rxSlices);
 
     HcclResult InitSlice(std::vector<Slice>& inputSlices, u32 rank, u32 rankSize, u32 unitSize);
 
@@ -45,6 +42,6 @@ private:
     std::shared_ptr<Transport> linkRight_;
     u32 notifyIdx_ = 0;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* ALL_GATHER_SLIM_RING_PUB_H */

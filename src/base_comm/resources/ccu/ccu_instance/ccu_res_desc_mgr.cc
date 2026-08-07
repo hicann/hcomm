@@ -20,26 +20,21 @@
 
 namespace hcomm {
 
-CcuResult CcuResDescMgr::Create(uint32_t dieId, HcommCcuResDescHandle &handle)
+CcuResult CcuResDescMgr::Create(uint32_t dieId, HcommCcuResDescHandle& handle)
 {
     std::unique_lock<std::shared_timed_mutex> lock(descMapMutex_);
 
     std::unique_ptr<CcuResDesc> desc{nullptr};
-    EXCEPTION_CATCH(
-        desc = std::make_unique<CcuResDesc>(),
-        return CcuResult::CCU_E_INTERNAL);
+    EXCEPTION_CATCH(desc = std::make_unique<CcuResDesc>(), return CcuResult::CCU_E_INTERNAL);
 
     desc->dieId = dieId;
     nextHandle_ += 1;
-    EXCEPTION_CATCH(
-        descMap_.emplace(nextHandle_, std::move(desc)),
-        return CcuResult::CCU_E_INTERNAL);
+    EXCEPTION_CATCH(descMap_.emplace(nextHandle_, std::move(desc)), return CcuResult::CCU_E_INTERNAL);
     handle = nextHandle_;
     return CcuResult::CCU_SUCCESS;
 }
 
-CcuResult CcuResDescMgr::FindDesc(
-    HcommCcuResDescHandle handle, const char *funcName, ConstDescIterator &it) const
+CcuResult CcuResDescMgr::FindDesc(HcommCcuResDescHandle handle, const char* funcName, ConstDescIterator& it) const
 {
     it = descMap_.find(handle);
     if (it == descMap_.cend()) {
@@ -50,7 +45,7 @@ CcuResult CcuResDescMgr::FindDesc(
     return CcuResult::CCU_SUCCESS;
 }
 
-const CcuResDesc *CcuResDescMgr::Get(HcommCcuResDescHandle handle) const
+const CcuResDesc* CcuResDescMgr::Get(HcommCcuResDescHandle handle) const
 {
     std::shared_lock<std::shared_timed_mutex> lock(descMapMutex_);
     auto it = descMap_.cend();
@@ -80,7 +75,7 @@ CcuResult CcuResDescMgr::SetResNum(HcommCcuResDescHandle handle, ResType resType
     return it->second->SetResNum(resType, resNum);
 }
 
-CcuResult CcuResDescMgr::QueryResNum(HcommCcuResDescHandle handle, ResType resType, uint32_t &resNum) const
+CcuResult CcuResDescMgr::QueryResNum(HcommCcuResDescHandle handle, ResType resType, uint32_t& resNum) const
 {
     std::shared_lock<std::shared_timed_mutex> lock(descMapMutex_);
     auto it = descMap_.cend();
@@ -89,7 +84,7 @@ CcuResult CcuResDescMgr::QueryResNum(HcommCcuResDescHandle handle, ResType resTy
     return it->second->QueryResNum(resType, resNum);
 }
 
-CcuResult CcuResDescMgr::QueryDieId(HcommCcuResDescHandle handle, uint32_t &dieId) const
+CcuResult CcuResDescMgr::QueryDieId(HcommCcuResDescHandle handle, uint32_t& dieId) const
 {
     std::shared_lock<std::shared_timed_mutex> lock(descMapMutex_);
     auto it = descMap_.cend();
@@ -105,33 +100,34 @@ CcuResult CcuResDescMgr::QueryRemainRes(HcommCcuResDescHandle handle, int32_t de
     auto it = descMap_.cend();
     CCU_CHK_RET(FindDesc(handle, __func__, it));
 
-    CcuResDesc &desc = *it->second;
+    CcuResDesc& desc = *it->second;
     const uint8_t dieId = static_cast<uint8_t>(desc.dieId);
 
     // 遍历全部 ResType (LOOP..MISSION, 不含 INS)
-    constexpr ResType kResTypes[] = {
-        ResType::LOOP, ResType::MS, ResType::CKE,
-        ResType::XN, ResType::GSA, ResType::MISSION
-    };
+    constexpr ResType kResTypes[]
+        = {ResType::LOOP, ResType::MS, ResType::CKE, ResType::XN, ResType::GSA, ResType::MISSION};
 
     uint32_t remainNum = 0;
     for (auto internalType : kResTypes) {
         // 查询最大连续剩余
         if (CcuDevMgrImp::QueryRemainRes(devLogicId, dieId, internalType, remainNum) != HCCL_SUCCESS) {
-            HCCL_ERROR("[CcuResDescMgr][%s] devLogicId[%d] dieId[%u] resType[%s] query failed",
-                __func__, devLogicId, dieId, internalType.Describe().c_str());
+            HCCL_ERROR(
+                "[CcuResDescMgr][%s] devLogicId[%d] dieId[%u] resType[%s] query failed", __func__, devLogicId, dieId,
+                internalType.Describe().c_str());
             return CcuResult::CCU_E_INTERNAL;
         }
-        HCCL_INFO("[CcuResDescMgr][%s] devLogicId[%d] dieId[%u] resType[%s] remainNum[%u]",
-            __func__, devLogicId, dieId, internalType.Describe().c_str(), remainNum);
+        HCCL_INFO(
+            "[CcuResDescMgr][%s] devLogicId[%d] dieId[%u] resType[%s] remainNum[%u]", __func__, devLogicId, dieId,
+            internalType.Describe().c_str(), remainNum);
         // 写入最大连续剩余
         CCU_CHK_RET(desc.SetResNum(internalType, remainNum));
     }
 
     // 单独处理 INSTRUCTION: 从 CcuComponent 查询实际剩余量
     uint32_t insFreeSize = CcuDevMgrImp::GetInsConsecutiveRemainSize(devLogicId, dieId);
-    HCCL_INFO("[CcuResDescMgr][%s] devLogicId[%d] dieId[%u] resType[ResType::INS] remainNum[%u]",
-            __func__, devLogicId, dieId, insFreeSize);
+    HCCL_INFO(
+        "[CcuResDescMgr][%s] devLogicId[%d] dieId[%u] resType[ResType::INS] remainNum[%u]", __func__, devLogicId, dieId,
+        insFreeSize);
     CCU_CHK_RET(desc.SetResNum(ResType::INS, insFreeSize));
 
     return CcuResult::CCU_SUCCESS;

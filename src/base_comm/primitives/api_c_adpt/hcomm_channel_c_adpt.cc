@@ -29,7 +29,7 @@
 
 using namespace hcomm;
 
-HcommResult CheckUbAttr(HcommChannelDesc &channelDesc)
+HcommResult CheckUbAttr(HcommChannelDesc& channelDesc)
 {
     if (channelDesc.remoteEndpoint.protocol != COMM_PROTOCOL_UBC_TP
         && channelDesc.remoteEndpoint.protocol != COMM_PROTOCOL_UBOE
@@ -67,7 +67,7 @@ HcommResult CheckUbAttr(HcommChannelDesc &channelDesc)
     return HCCL_SUCCESS;
 }
 
-HcommResult CheckRoceAttr(HcommChannelDesc &channelDesc)
+HcommResult CheckRoceAttr(HcommChannelDesc& channelDesc)
 {
     if (channelDesc.remoteEndpoint.protocol != COMM_PROTOCOL_ROCE) {
         return HCCL_SUCCESS;
@@ -82,7 +82,7 @@ HcommResult CheckRoceAttr(HcommChannelDesc &channelDesc)
 }
 
 namespace {
-void ApplyHcommChannelDescV1Fields(const HcommChannelDesc &channelDesc, HcommChannelDesc &channelDescFinal)
+void ApplyHcommChannelDescV1Fields(const HcommChannelDesc& channelDesc, HcommChannelDesc& channelDescFinal)
 {
     if (channelDesc.header.version < HCOMM_CHANNEL_VERSION_ONE) {
         return;
@@ -98,7 +98,7 @@ void ApplyHcommChannelDescV1Fields(const HcommChannelDesc &channelDesc, HcommCha
     channelDescFinal.port = channelDesc.port;
 }
 
-HcommResult ProcessHcommChannelDescs(const HcommChannelDesc &channelDesc, HcommChannelDesc &channelDescFinal)
+HcommResult ProcessHcommChannelDescs(const HcommChannelDesc& channelDesc, HcommChannelDesc& channelDescFinal)
 {
     if (channelDesc.header.size < sizeof(CommAbiHeader)) {
         HCCL_ERROR("[%s] invalid channelDesc.header.size[%u].", __func__, channelDesc.header.size);
@@ -106,24 +106,28 @@ HcommResult ProcessHcommChannelDescs(const HcommChannelDesc &channelDesc, HcommC
     }
 
     if (channelDesc.header.magicWord != channelDescFinal.header.magicWord) {
-        HCCL_ERROR("[%s] channelDesc.header.magicWord[0x%08x] is invalid, expected[0x%08x].", __func__,
+        HCCL_ERROR(
+            "[%s] channelDesc.header.magicWord[0x%08x] is invalid, expected[0x%08x].", __func__,
             channelDesc.header.magicWord, channelDescFinal.header.magicWord);
         return HCCL_E_PARA;
     }
 
-    const uint32_t copySize = (channelDescFinal.header.size < channelDesc.header.size ? channelDescFinal.header.size
-                                                                                      : channelDesc.header.size)
+    const uint32_t copySize = (channelDescFinal.header.size < channelDesc.header.size ? channelDescFinal.header.size :
+                                                                                        channelDesc.header.size)
                               - sizeof(CommAbiHeader);
-    CHK_SAFETY_FUNC_RET(memcpy_s(reinterpret_cast<uint8_t *>(&channelDescFinal) + sizeof(CommAbiHeader), copySize,
-        reinterpret_cast<const uint8_t *>(&channelDesc) + sizeof(CommAbiHeader), copySize));
+    CHK_SAFETY_FUNC_RET(memcpy_s(
+        reinterpret_cast<uint8_t*>(&channelDescFinal) + sizeof(CommAbiHeader), copySize,
+        reinterpret_cast<const uint8_t*>(&channelDesc) + sizeof(CommAbiHeader), copySize));
     ApplyHcommChannelDescV1Fields(channelDesc, channelDescFinal);
     if (channelDesc.header.version > HCOMM_CHANNEL_VERSION) {
-        HCCL_RUN_WARNING("The version of provided [%u] is higher than the current version[%u], "
-                         "unsupported configuration will be ignored.",
+        HCCL_RUN_WARNING(
+            "The version of provided [%u] is higher than the current version[%u], "
+            "unsupported configuration will be ignored.",
             channelDesc.header.version, HCOMM_CHANNEL_VERSION);
     } else if (channelDesc.header.version < HCOMM_CHANNEL_VERSION) {
-        HCCL_RUN_WARNING("The version of provided [%u] is lower than the current version[%u], "
-                         "configurations supported by later versions will be ignored.",
+        HCCL_RUN_WARNING(
+            "The version of provided [%u] is lower than the current version[%u], "
+            "configurations supported by later versions will be ignored.",
             channelDesc.header.version, HCOMM_CHANNEL_VERSION);
     }
 
@@ -157,7 +161,7 @@ HcommResult ProcessHcommChannelDescs(const HcommChannelDesc &channelDesc, HcommC
 }
 
 HcommResult NormalizeHcommChannelDescs(
-    HcommChannelDesc *channelDescs, uint32_t channelNum, std::vector<HcommChannelDesc> &channelDescFinals)
+    HcommChannelDesc* channelDescs, uint32_t channelNum, std::vector<HcommChannelDesc>& channelDescFinals)
 {
     channelDescFinals.clear();
     channelDescFinals.reserve(channelNum);
@@ -190,14 +194,16 @@ HcommResult NormalizeHcommChannelDescs(
 } // namespace
 
 // 集合通信使用，待归一到HcommChannelCreate
-HcommResult HcommCollectiveChannelCreate(EndpointHandle endpointHandle, CommEngine engine,
-    HcommChannelDesc *channelDescs, uint32_t channelNum, ChannelHandle *channels)
+HcommResult HcommCollectiveChannelCreate(
+    EndpointHandle endpointHandle, CommEngine engine, HcommChannelDesc* channelDescs, uint32_t channelNum,
+    ChannelHandle* channels)
 {
     CHK_PTR_NULL(channelDescs);
     CHK_PTR_NULL(channels);
     CHK_PRT_RET(
         (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
-    HCCL_INFO("[%s] START. endpointHandle[0x%llx], engine[%s], channelNum[%u].", __func__, endpointHandle,
+    HCCL_INFO(
+        "[%s] START. endpointHandle[0x%llx], engine[%s], channelNum[%u].", __func__, endpointHandle,
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum);
 
     std::vector<HcommChannelDesc> channelDescFinals;
@@ -205,7 +211,7 @@ HcommResult HcommCollectiveChannelCreate(EndpointHandle endpointHandle, CommEngi
     return ChannelProcess::CreateChannelsLoop(endpointHandle, engine, channelDescFinals.data(), channelNum, channels);
 }
 
-HcommResult HcommChannelUpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum, ChannelHandle channelHandle)
+HcommResult HcommChannelUpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum, ChannelHandle channelHandle)
 {
     CHK_PTR_NULL(memHandles);
     CHK_PRT_RET((memHandleNum == 0), HCCL_ERROR("[%s]Invalid memHandleNum, memHandleNum is 0.", __func__), HCCL_E_PARA);
@@ -220,15 +226,17 @@ HcommResult HcommChannelUpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHa
     return ChannelProcess::ChannelUpdateMemInfo(memHandles, memHandleNum, channelHandle);
 }
 
-HcommResult HcommChannelCreate(EndpointHandle endpointHandle, CommEngine engine, HcommChannelDesc *channelDescs,
-    uint32_t channelNum, ChannelHandle *channels)
+HcommResult HcommChannelCreate(
+    EndpointHandle endpointHandle, CommEngine engine, HcommChannelDesc* channelDescs, uint32_t channelNum,
+    ChannelHandle* channels)
 {
     CHK_PTR_NULL(endpointHandle);
     CHK_PTR_NULL(channelDescs);
     CHK_PTR_NULL(channels);
     CHK_PRT_RET(
         (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
-    HCCL_INFO("[%s] START. endpointHandle[0x%llx], engine[%s], channelNum[%u].", __func__, endpointHandle,
+    HCCL_INFO(
+        "[%s] START. endpointHandle[0x%llx], engine[%s], channelNum[%u].", __func__, endpointHandle,
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum);
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
     if (endpoint != nullptr) {
@@ -248,7 +256,7 @@ HcommResult HcommChannelCreate(EndpointHandle endpointHandle, CommEngine engine,
 #endif
 
     std::vector<ChannelHandle> hostChannelHandles(channelNum);
-    ChannelHandle *targetChannels = hostChannelHandles.data();
+    ChannelHandle* targetChannels = hostChannelHandles.data();
 
     CHK_RET(ChannelProcess::CreateChannelsLoop(
         endpointHandle, engine, channelDescFinals.data(), channelNum, targetChannels));
@@ -258,7 +266,7 @@ HcommResult HcommChannelCreate(EndpointHandle endpointHandle, CommEngine engine,
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommChannelGet(ChannelHandle channelHandle, void **channel)
+HcommResult HcommChannelGet(ChannelHandle channelHandle, void** channel)
 {
     CHK_PTR_NULL(channel);
 #ifdef ENABLE_EXPERIMENTAL
@@ -271,7 +279,7 @@ HcommResult HcommChannelGet(ChannelHandle channelHandle, void **channel)
     return ChannelProcess::ChannelGet(channelHandle, channel);
 }
 
-HcommResult HcommChannelGetStatus(const ChannelHandle *channelList, uint32_t listNum, int32_t *statusList)
+HcommResult HcommChannelGetStatus(const ChannelHandle* channelList, uint32_t listNum, int32_t* statusList)
 {
     CHK_PTR_NULL(channelList);
     CHK_PTR_NULL(statusList);
@@ -308,7 +316,7 @@ HcommResult HcommChannelGetStatus(const ChannelHandle *channelList, uint32_t lis
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommChannelGetNotifyNum(ChannelHandle channelHandle, uint32_t *notifyNum)
+HcommResult HcommChannelGetNotifyNum(ChannelHandle channelHandle, uint32_t* notifyNum)
 {
     CHK_PTR_NULL(notifyNum);
 #ifdef ENABLE_EXPERIMENTAL
@@ -322,19 +330,18 @@ HcommResult HcommChannelGetNotifyNum(ChannelHandle channelHandle, uint32_t *noti
 }
 
 #ifdef ENABLE_EXPERIMENTAL
-static void UnregisterPluginChannels(std::vector<ChannelHandle> &pluginChannels)
+static void UnregisterPluginChannels(std::vector<ChannelHandle>& pluginChannels)
 {
     // plugin channel 虽由 PluginChannelDestroy 销毁，但创建时同样经 RegisterChannels 注册，
     // 需在此统一注销，否则 CheckEndpointDestroy 会因残留记录阻止 Endpoint 销毁。
     // 无论 PluginChannelDestroy 是否失败，已收集的 pluginChannels 都需注销。
     if (!pluginChannels.empty()) {
-        (void)hcomm::SharedJettyMgr::GetInstance().UnregisterChannels(
-            pluginChannels.data(), pluginChannels.size());
+        (void)hcomm::SharedJettyMgr::GetInstance().UnregisterChannels(pluginChannels.data(), pluginChannels.size());
     }
 }
 #endif
 
-static HcclResult DestroyBuiltinChannels(std::vector<ChannelHandle> &builtinChannels)
+static HcclResult DestroyBuiltinChannels(std::vector<ChannelHandle>& builtinChannels)
 {
     // 即使 plugin channel 销毁失败，也需继续销毁 builtin channel，避免 RDMA/jetty 资源泄漏
     // 及 SharedJettyMgr 残留记录永久阻塞 Endpoint 销毁。最终返回首个错误（优先 plugin 错误）。
@@ -342,25 +349,24 @@ static HcclResult DestroyBuiltinChannels(std::vector<ChannelHandle> &builtinChan
     if (builtinChannels.empty()) {
         return builtinRet;
     }
-    builtinRet = ChannelProcess::ChannelDestroy(builtinChannels.data(), builtinChannels.size(),
-        AicpuTsChannelHelper::GetBinHandle());
+    builtinRet = ChannelProcess::ChannelDestroy(
+        builtinChannels.data(), builtinChannels.size(), AicpuTsChannelHelper::GetBinHandle());
     // 无论 ChannelDestroy 成功与否都注销 SharedJettyMgr 记录：
     // 成功时正常清理；失败时 channel 已不可用，若不注销会永久阻塞 Endpoint 销毁。
     if (builtinRet != HCCL_SUCCESS) {
-        HCCL_WARNING("[%s] ChannelDestroy failed, ret[%d], force unregister shared jetty channels.",
-            __func__, builtinRet);
+        HCCL_WARNING(
+            "[%s] ChannelDestroy failed, ret[%d], force unregister shared jetty channels.", __func__, builtinRet);
     }
-    (void)hcomm::SharedJettyMgr::GetInstance().UnregisterChannels(
-        builtinChannels.data(), builtinChannels.size());
+    (void)hcomm::SharedJettyMgr::GetInstance().UnregisterChannels(builtinChannels.data(), builtinChannels.size());
     return builtinRet;
 }
 
-HcommResult HcommChannelDestroy(const ChannelHandle *channels, uint32_t channelNum)
+HcommResult HcommChannelDestroy(const ChannelHandle* channels, uint32_t channelNum)
 {
     CHK_PTR_NULL(channels);
     (void)HcommResMgrInit();
-    CHK_PRT_RET((channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]",
-        __func__, channelNum), HCCL_E_PARA);
+    CHK_PRT_RET(
+        (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
     std::vector<ChannelHandle> builtinChannels;
     builtinChannels.reserve(channelNum);
 #ifdef ENABLE_EXPERIMENTAL
@@ -371,8 +377,9 @@ HcommResult HcommChannelDestroy(const ChannelHandle *channels, uint32_t channelN
         bool handled = false;
         HcclResult curRet = static_cast<HcclResult>(PluginChannelDestroy(channels[idx], handled));
         if (curRet != HCCL_SUCCESS) {
-            HCCL_ERROR("[%s] PluginChannelDestroy failed, idx[%u], ret[%d], handled[%d].",
-                __func__, idx, curRet, static_cast<int>(handled));
+            HCCL_ERROR(
+                "[%s] PluginChannelDestroy failed, idx[%u], ret[%d], handled[%d].", __func__, idx, curRet,
+                static_cast<int>(handled));
             pluginRet = curRet;
             // 不 break，继续处理剩余 channel，确保全部得到销毁/注销
             if (handled) {
@@ -383,8 +390,10 @@ HcommResult HcommChannelDestroy(const ChannelHandle *channels, uint32_t channelN
             }
             // handled=false 契约保证 plugin 未修改 channel 状态且应返回 HCCL_SUCCESS；
             // 此分支为防御性兜底（当前实现不可达），仍按 builtin 路径销毁避免资源泄漏。
-            HCCL_WARNING("[%s] PluginChannelDestroy returned error with handled=false, idx[%u], ret[%d]. "
-                "Falling back to builtin destroy per contract.", __func__, idx, curRet);
+            HCCL_WARNING(
+                "[%s] PluginChannelDestroy returned error with handled=false, idx[%u], ret[%d]. "
+                "Falling back to builtin destroy per contract.",
+                __func__, idx, curRet);
         } else if (handled) {
             pluginChannels.push_back(channels[idx]);
             continue;
@@ -406,7 +415,7 @@ HcommResult HcommChannelDestroy(const ChannelHandle *channels, uint32_t channelN
 #endif
 }
 
-HcommResult HcommChannelConfigCreate(HcommChannelConfig *config)
+HcommResult HcommChannelConfigCreate(HcommChannelConfig* config)
 {
     return static_cast<HcommResult>(hcomm::ChannelConfigCreate(config));
 }
@@ -426,13 +435,15 @@ static bool IsUbProtocol(CommProtocol protocol)
     return protocol == COMM_PROTOCOL_UBC_CTP || protocol == COMM_PROTOCOL_UBC_TP;
 }
 
-static HcclResult ValidateSharedQueueConfig(const std::vector<HcommChannelDesc> &channelDescs)
+static HcclResult ValidateSharedQueueConfig(const std::vector<HcommChannelDesc>& channelDescs)
 {
     for (uint32_t i = 0; i < channelDescs.size(); ++i) {
         CommProtocol protocol = channelDescs[i].remoteEndpoint.protocol;
         if (!IsUbProtocol(protocol)) {
-            HCCL_ERROR("[%s] IS_SHARED_QUEUE only supports UB protocols (UBC_CTP/UBC_TP), "
-                "channelDesc[%u] protocol[%d].", __func__, i, protocol);
+            HCCL_ERROR(
+                "[%s] IS_SHARED_QUEUE only supports UB protocols (UBC_CTP/UBC_TP), "
+                "channelDesc[%u] protocol[%d].",
+                __func__, i, protocol);
             return HCCL_E_NOT_SUPPORT;
         }
     }
@@ -440,14 +451,13 @@ static HcclResult ValidateSharedQueueConfig(const std::vector<HcommChannelDesc> 
 }
 
 #ifdef ENABLE_EXPERIMENTAL
-static HcclResult RegisterSharedQueuePluginChannels(EndpointHandle endpointHandle,
-    uint32_t channelNum, ChannelHandle *channels)
+static HcclResult
+RegisterSharedQueuePluginChannels(EndpointHandle endpointHandle, uint32_t channelNum, ChannelHandle* channels)
 {
     // plugin channel 不经过 Channel::BuildConnection，无法走共享 jetty 复用路径。
     // 但仍需注册到 SharedJettyMgr 以便 CheckEndpointDestroy 校验，确保 plugin channel
     // 销毁后 endpoint 才能销毁（plugin channel 与 endpoint 也有资源依赖关系）。
-    HcclResult regRet = hcomm::SharedJettyMgr::GetInstance().RegisterChannels(
-        endpointHandle, channels, channelNum);
+    HcclResult regRet = hcomm::SharedJettyMgr::GetInstance().RegisterChannels(endpointHandle, channels, channelNum);
     if (regRet != HCCL_SUCCESS) {
         HCCL_ERROR("[%s] failed to register shared jetty channels (plugin), ret[%d].", __func__, regRet);
         // 注册失败需销毁已创建的 plugin channel，避免泄漏
@@ -461,26 +471,26 @@ static HcclResult RegisterSharedQueuePluginChannels(EndpointHandle endpointHandl
 }
 #endif
 
-static HcclResult CreateAndRegisterSharedQueueBuiltinChannels(EndpointHandle endpointHandle, CommEngine engine,
-    HcommChannelDesc *channelDescFinals, uint32_t channelNum, ChannelHandle *channels)
+static HcclResult CreateAndRegisterSharedQueueBuiltinChannels(
+    EndpointHandle endpointHandle, CommEngine engine, HcommChannelDesc* channelDescFinals, uint32_t channelNum,
+    ChannelHandle* channels)
 {
     // 共享模式建链流程与 HcommChannelCreate 一致：CreateChannelsLoop 传 isSharedQueue=true，
     // channel 的 BuildConnection 据此走共享 jetty 复用路径；PrepareUserChannels 完成 AICPU/AIV 预分配。
     std::vector<ChannelHandle> hostChannelHandles(channelNum);
-    ChannelHandle *targetChannels = hostChannelHandles.data();
+    ChannelHandle* targetChannels = hostChannelHandles.data();
 
-    CHK_RET(ChannelProcess::CreateChannelsLoop(endpointHandle, engine, channelDescFinals, channelNum,
-        targetChannels, true));
-    HcclResult prepRet = ChannelProcess::PrepareUserChannels(targetChannels, channels,
-        channelDescFinals, channelNum, engine);
+    CHK_RET(ChannelProcess::CreateChannelsLoop(
+        endpointHandle, engine, channelDescFinals, channelNum, targetChannels, true));
+    HcclResult prepRet
+        = ChannelProcess::PrepareUserChannels(targetChannels, channels, channelDescFinals, channelNum, engine);
     if (prepRet != HCCL_SUCCESS) {
         HCCL_ERROR("[%s] PrepareUserChannels failed, ret[%d], destroying created channels.", __func__, prepRet);
         (void)ChannelProcess::ChannelDestroy(targetChannels, channelNum, AicpuTsChannelHelper::GetBinHandle());
         return prepRet;
     }
 
-    HcclResult regRet = hcomm::SharedJettyMgr::GetInstance().RegisterChannels(
-        endpointHandle, channels, channelNum);
+    HcclResult regRet = hcomm::SharedJettyMgr::GetInstance().RegisterChannels(endpointHandle, channels, channelNum);
     if (regRet != HCCL_SUCCESS) {
         HCCL_ERROR("[%s] failed to register shared jetty channels, ret[%d].", __func__, regRet);
         (void)ChannelProcess::ChannelDestroy(channels, channelNum, AicpuTsChannelHelper::GetBinHandle());
@@ -489,21 +499,22 @@ static HcclResult CreateAndRegisterSharedQueueBuiltinChannels(EndpointHandle end
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommChannelCreateWithConfig(EndpointHandle endpointHandle, CommEngine engine,
-    HcommChannelDesc *channelDescs, uint32_t channelNum, HcommChannelConfig config, ChannelHandle *channels)
+HcommResult HcommChannelCreateWithConfig(
+    EndpointHandle endpointHandle, CommEngine engine, HcommChannelDesc* channelDescs, uint32_t channelNum,
+    HcommChannelConfig config, ChannelHandle* channels)
 {
     CHK_PTR_NULL(endpointHandle);
     CHK_PTR_NULL(channelDescs);
     CHK_PTR_NULL(channels);
-    CHK_PRT_RET((channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]",
-        __func__, channelNum), HCCL_E_PARA);
-    HCCL_INFO("[%s] START. endpointHandle[0x%llx], engine[%s], channelNum[%u], config[%p].",
-        __func__, endpointHandle, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(),
-        channelNum, config);
+    CHK_PRT_RET(
+        (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
+    HCCL_INFO(
+        "[%s] START. endpointHandle[0x%llx], engine[%s], channelNum[%u], config[%p].", __func__, endpointHandle,
+        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, config);
 
     bool isSharedQueue = false;
     if (config != nullptr) {
-        auto *cfg = static_cast<hcomm::HcommChannelConfigData *>(config);
+        auto* cfg = static_cast<hcomm::HcommChannelConfigData*>(config);
         isSharedQueue = cfg->isSharedQueue;
     }
 
@@ -516,8 +527,8 @@ HcommResult HcommChannelCreateWithConfig(EndpointHandle endpointHandle, CommEngi
     // 强行创建会导致 channel 注册到 SharedJettyMgr 但无实际 jetty 共享，多 channel 共用同一 SQ
     // 但 PI/CI 未协调，引发 WQE 覆盖、doorbell 不前进、notify 超时。
     if (engine != COMM_ENGINE_AIV) {
-        HCCL_ERROR("[%s] IS_SHARED_QUEUE currently only supports AIV engine, engine[%d].",
-            __func__, static_cast<int>(engine));
+        HCCL_ERROR(
+            "[%s] IS_SHARED_QUEUE currently only supports AIV engine, engine[%d].", __func__, static_cast<int>(engine));
         return HCCL_E_NOT_SUPPORT;
     }
 
@@ -534,8 +545,8 @@ HcommResult HcommChannelCreateWithConfig(EndpointHandle endpointHandle, CommEngi
 
 #ifdef ENABLE_EXPERIMENTAL
     bool pluginHandled = false;
-    CHK_RET(static_cast<HcclResult>(PluginChannelCreate(endpointHandle, engine,
-        channelDescFinals.data(), channelNum, channels, pluginHandled)));
+    CHK_RET(static_cast<HcclResult>(
+        PluginChannelCreate(endpointHandle, engine, channelDescFinals.data(), channelNum, channels, pluginHandled)));
     if (pluginHandled) {
         return static_cast<HcommResult>(RegisterSharedQueuePluginChannels(endpointHandle, channelNum, channels));
     }
@@ -551,8 +562,8 @@ HcommResult HcommChannelCreateWithConfig(EndpointHandle endpointHandle, CommEngi
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommChannelGetRemoteMems(
-    ChannelHandle channelHandle, uint32_t *memNum, CommMem **remoteMem, char ***memInfos)
+HcommResult
+HcommChannelGetRemoteMems(ChannelHandle channelHandle, uint32_t* memNum, CommMem** remoteMem, char*** memInfos)
 {
     CHK_PTR_NULL(remoteMem);
     CHK_PTR_NULL(memNum);

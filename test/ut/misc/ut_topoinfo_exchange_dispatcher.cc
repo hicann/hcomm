@@ -29,25 +29,15 @@ using namespace hccl;
 
 class TopoExchangeDispatcherTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "TopoExchangeDispatcherTest SetUP" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "TopoExchangeDispatcherTest TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "TopoExchangeDispatcherTest SetUP" << std::endl; }
+    static void TearDownTestCase() { std::cout << "TopoExchangeDispatcherTest TearDown" << std::endl; }
     // Some expensive resource shared by all tests.
-    virtual void SetUp()
-    {
-        std::cout << "A Test SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test SetUP" << std::endl; }
     virtual void TearDown()
     {
         GlobalMockObject::verify();
         std::cout << "A Test TearDown" << std::endl;
     }
-    
 };
 
 #if 0
@@ -184,15 +174,12 @@ TEST_F(TopoExchangeDispatcherTest, ut_sendHelper_ISendSuccess)
     TopoInfoExchangeDispather workers(&topoServer);
     // set params
     auto socketPtr = std::make_shared<HcclSocket>(netDevCtx, 5);
-    char *buf = reinterpret_cast<char *>(0x1234);
+    char* buf = reinterpret_cast<char*>(0x1234);
     size_t dataLen = 100;
     size_t sendedLen = 80;
     TopoInfoExchangeDispather::SendState txS;
 
-    MOCKER_CPP(&HcclSocket::ISend)
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(0));
+    MOCKER_CPP(&HcclSocket::ISend).stubs().with(mockcpp::any()).will(returnValue(0));
 
     HcclResult ret = HCCL_SUCCESS;
     ret = txS.SendHelper(socketPtr, buf, dataLen, sendedLen);
@@ -213,15 +200,12 @@ TEST_F(TopoExchangeDispatcherTest, ut_sendHelper_networkError)
     TopoInfoExchangeDispather workers(&topoServer);
     // set params
     auto socketPtr = std::make_shared<HcclSocket>(netDevCtx, 5);
-    char *buf = reinterpret_cast<char *>(0x1234);
+    char* buf = reinterpret_cast<char*>(0x1234);
     size_t dataLen = 100;
     size_t sendedLen = 80;
     TopoInfoExchangeDispather::SendState txS;
 
-    MOCKER_CPP(&HcclSocket::ISend)
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(HCCL_E_NETWORK));
+    MOCKER_CPP(&HcclSocket::ISend).stubs().with(mockcpp::any()).will(returnValue(HCCL_E_NETWORK));
 
     HcclResult ret = HCCL_SUCCESS;
     ret = txS.SendHelper(socketPtr, buf, dataLen, sendedLen);
@@ -242,15 +226,12 @@ TEST_F(TopoExchangeDispatcherTest, ut_sendHelper_internalError)
     TopoInfoExchangeDispather workers(&topoServer);
     // set params
     auto socketPtr = std::make_shared<HcclSocket>(netDevCtx, 5);
-    char *buf = reinterpret_cast<char *>(0x1234);
+    char* buf = reinterpret_cast<char*>(0x1234);
     size_t dataLen = 100;
     size_t sendedLen = 80;
     TopoInfoExchangeDispather::SendState txS;
 
-    MOCKER_CPP(&HcclSocket::ISend)
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(HCCL_E_INTERNAL));
+    MOCKER_CPP(&HcclSocket::ISend).stubs().with(mockcpp::any()).will(returnValue(HCCL_E_INTERNAL));
 
     HcclResult ret = HCCL_SUCCESS;
     ret = txS.SendHelper(socketPtr, buf, dataLen, sendedLen);
@@ -268,8 +249,7 @@ TEST_F(TopoExchangeDispatcherTest, ut_Teardown)
     auto socket = std::make_shared<HcclSocket>(netDevCtx, 5);
     std::string identifier;
     TopoInfoExchangeServer topoServer(hostIP, hostPort, whitelist, netDevCtx, socket, identifier);
- 
- 
+
     HcclResult ret = HCCL_SUCCESS;
     ret = topoServer.Teardown();
     EXPECT_EQ(ret, HCCL_SUCCESS);

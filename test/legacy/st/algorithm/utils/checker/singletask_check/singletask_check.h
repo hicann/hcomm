@@ -16,16 +16,18 @@ class SingleTaskCheck {
 public:
     HcclResult CheckSlaveTaskQueue();
     HcclResult CheckTaskMem(TaskNodePtr dummyStart);
+
 private:
-    
     HcclResult CheckSingleSlice(RankId taskRank, u32 queueId, u32 taskId, const DataSlice& slice, RankId sliceRank);
-    HcclResult CheckTwoSliceOverlap(RankId rank, u32 queueId, u32 taskId, const DataSlice& sliceA, const DataSlice& sliceB);
+    HcclResult
+    CheckTwoSliceOverlap(RankId rank, u32 queueId, u32 taskId, const DataSlice& sliceA, const DataSlice& sliceB);
 
     HcclResult CheckSingleTaskMem(TaskNodePtr curTask);
     HcclResult CheckSingleCcuTaskMem(TaskNodePtr curTask);
-    void AddChildrenToQueue(TaskNode *node, std::set<TaskNode *> &visitedNodes,
-        std::queue<TaskNode *> &walkQue, std::set<TaskNode *> &simulatedNodes);
+    void AddChildrenToQueue(
+        TaskNode* node, std::set<TaskNode*>& visitedNodes, std::queue<TaskNode*>& walkQue,
+        std::set<TaskNode*>& simulatedNodes);
 };
-}
+} // namespace checker
 
 #endif

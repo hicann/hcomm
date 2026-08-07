@@ -13,7 +13,6 @@
 
 #include <hccl/hccl_types.h>
 
-namespace Hccl {
-} // namespace Hccl
+namespace Hccl {} // namespace Hccl
 
 #endif

@@ -11,13 +11,12 @@
 #include "coll_all_gather_single_rank_executor.h"
 
 namespace hccl {
-CollAllGatherSingleRankExecutor::CollAllGatherSingleRankExecutor(const HcclDispatcher dispatcher,
-    std::unique_ptr<TopoMatcher> &topoMatcher)
+CollAllGatherSingleRankExecutor::CollAllGatherSingleRankExecutor(
+    const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher)
     : CollAllGatherExecutor(dispatcher, topoMatcher)
-{
-}
+{}
 
-HcclResult CollAllGatherSingleRankExecutor::KernelRun(const OpParam &param, ExecMem &execMem)
+HcclResult CollAllGatherSingleRankExecutor::KernelRun(const OpParam& param, ExecMem& execMem)
 {
     HCCL_CONFIG_INFO(HCCL_ALG, "[CollAllGatherSingleRankExecutor][KernelRun]AllGather single rank");
     u32 unitSize = SIZE_TABLE[param.DataDes.dataType];

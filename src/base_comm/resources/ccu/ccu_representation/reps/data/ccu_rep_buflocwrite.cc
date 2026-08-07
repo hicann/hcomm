@@ -14,29 +14,36 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepBufLocWrite::CcuRepBufLocWrite(CcuInsGeneratorBase* insGenPtr, CcuBuf src, LocalAddr dst, Variable len, CompletedEvent sem, uint32_t mask)
-    : insGenPtr(insGenPtr), src(src), dst(dst), len(len), sem(sem), mask(mask)
-{
-    type       = CcuRepType::BUF_LOC_WRITE;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
+    CcuRepBufLocWrite::CcuRepBufLocWrite(
+        CcuInsGeneratorBase* insGenPtr, CcuBuf src, LocalAddr dst, Variable len, CompletedEvent sem, uint32_t mask)
+        : insGenPtr(insGenPtr),
+          src(src),
+          dst(dst),
+          len(len),
+          sem(sem),
+          mask(mask)
+    {
+        type = CcuRepType::BUF_LOC_WRITE;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
 
-bool CcuRepBufLocWrite::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool CcuRepBufLocWrite::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    insGenPtr->CcuRepBufLocWriteTranslate(ccuKernel, instr, this, dep);
-    instrId += instrCount;
+        insGenPtr->CcuRepBufLocWriteTranslate(ccuKernel, instr, this, dep);
+        instrId += instrCount;
 
-    return translated;
-}
+        return translated;
+    }
 
-std::string CcuRepBufLocWrite::Describe()
-{
-    return Hccl::StringFormat("Write CcuBuf[%u] To Loc Mem[%u], len[%u], sem[%u], mask[%04x]", src.Id(), dst.addr.Id(),
-                        len.Id(), sem.Id(), mask);
-}
+    std::string CcuRepBufLocWrite::Describe()
+    {
+        return Hccl::StringFormat(
+            "Write CcuBuf[%u] To Loc Mem[%u], len[%u], sem[%u], mask[%04x]", src.Id(), dst.addr.Id(), len.Id(),
+            sem.Id(), mask);
+    }
 
 }; // namespace CcuRep
 }; // namespace hcomm

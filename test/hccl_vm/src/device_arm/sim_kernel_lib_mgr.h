@@ -7,12 +7,11 @@
 #include <mutex>
 
 // 函数原型：入参void*，返回uint32_t
-using KernelFn = uint32_t(*)(void*);
+using KernelFn = uint32_t (*)(void*);
 
 namespace sim {
 
-class KernelLibManager
-{
+class KernelLibManager {
 public:
     static KernelLibManager& GetInstance();
 

@@ -21,7 +21,8 @@
 using namespace std;
 
 template <typename T>
-void ReduceAdd(const void *srcBuf, void *dstBuf, uint64_t length) {
+void ReduceAdd(const void* srcBuf, void* dstBuf, uint64_t length)
+{
     // 1. 类型转换
     auto srcPtr = static_cast<const T*>(srcBuf);
     auto dstPtr = static_cast<T*>(dstBuf);
@@ -33,7 +34,8 @@ void ReduceAdd(const void *srcBuf, void *dstBuf, uint64_t length) {
 }
 
 template <typename T>
-void ReduceMax(const void *srcBuf, void *dstBuf, uint64_t length) {
+void ReduceMax(const void* srcBuf, void* dstBuf, uint64_t length)
+{
     // 1. 类型转换
     auto srcPtr = static_cast<const T*>(srcBuf);
     auto dstPtr = static_cast<T*>(dstBuf);
@@ -45,7 +47,8 @@ void ReduceMax(const void *srcBuf, void *dstBuf, uint64_t length) {
 }
 
 template <typename T>
-void ReduceMin(const void *srcBuf, void *dstBuf, uint64_t length) {
+void ReduceMin(const void* srcBuf, void* dstBuf, uint64_t length)
+{
     // 1. 类型转换
     auto srcPtr = static_cast<const T*>(srcBuf);
     auto dstPtr = static_cast<T*>(dstBuf);
@@ -56,129 +59,195 @@ void ReduceMin(const void *srcBuf, void *dstBuf, uint64_t length) {
     }
 }
 
-const std::map<TransMemReduceDataTypeV1, std::function<void(const void *, void *, uint64_t)>> transmemReduceAddFuncMapV1 =
-{
-    {TransMemReduceDataTypeV1::INT8_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceAdd<int8_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::INT16_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceAdd<int16_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::INT32_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceAdd<int32_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::UINT8_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceAdd<uint8_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::UINT16_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceAdd<uint16_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::UINT32_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceAdd<uint32_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::FP16_NORMAL_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceAdd<FP16>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::FP32_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceAdd<float>(srcBuf, dstBuf, length); }}
-};
+const std::map<TransMemReduceDataTypeV1, std::function<void(const void*, void*, uint64_t)>> transmemReduceAddFuncMapV1
+    = {{TransMemReduceDataTypeV1::INT8_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceAdd<int8_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::INT16_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceAdd<int16_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::INT32_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceAdd<int32_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::UINT8_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceAdd<uint8_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::UINT16_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceAdd<uint16_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::UINT32_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceAdd<uint32_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::FP16_NORMAL_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceAdd<FP16>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::FP32_V1, [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceAdd<float>(srcBuf, dstBuf, length);
+        }}};
 
-const std::map<TransMemReduceDataTypeV1, std::function<void(const void *, void *, uint64_t)>> transmemReduceMaxFuncMapV1 =
-{
-    {TransMemReduceDataTypeV1::INT8_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMax<int8_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::INT16_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMax<int16_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::INT32_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMax<int32_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::UINT8_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMax<uint8_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::UINT16_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMax<uint16_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::UINT32_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMax<uint32_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::FP16_NORMAL_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMax<FP16>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::FP32_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMax<float>(srcBuf, dstBuf, length); }}
-};
+const std::map<TransMemReduceDataTypeV1, std::function<void(const void*, void*, uint64_t)>> transmemReduceMaxFuncMapV1
+    = {{TransMemReduceDataTypeV1::INT8_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMax<int8_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::INT16_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMax<int16_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::INT32_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMax<int32_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::UINT8_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMax<uint8_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::UINT16_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMax<uint16_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::UINT32_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMax<uint32_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::FP16_NORMAL_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMax<FP16>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::FP32_V1, [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMax<float>(srcBuf, dstBuf, length);
+        }}};
 
-const std::map<TransMemReduceDataTypeV1, std::function<void(const void *, void *, uint64_t)>> transmemReduceMinFuncMapV1 =
-{
-    {TransMemReduceDataTypeV1::INT8_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMin<int8_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::INT16_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMin<int16_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::INT32_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMin<int32_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::UINT8_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMin<uint8_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::UINT16_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMin<uint16_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::UINT32_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMin<uint32_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::FP16_NORMAL_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMin<FP16>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV1::FP32_V1,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMin<float>(srcBuf, dstBuf, length); }}
-};
+const std::map<TransMemReduceDataTypeV1, std::function<void(const void*, void*, uint64_t)>> transmemReduceMinFuncMapV1
+    = {{TransMemReduceDataTypeV1::INT8_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMin<int8_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::INT16_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMin<int16_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::INT32_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMin<int32_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::UINT8_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMin<uint8_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::UINT16_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMin<uint16_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::UINT32_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMin<uint32_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::FP16_NORMAL_V1,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMin<FP16>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV1::FP32_V1, [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMin<float>(srcBuf, dstBuf, length);
+        }}};
 
-const std::map<TransMemReduceDataTypeV2, std::function<void(const void *, void *, uint64_t)>> transmemReduceAddFuncMapV2 =
-{
-    {TransMemReduceDataTypeV2::INT8_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceAdd<int8_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::INT16_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceAdd<int16_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::INT32_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceAdd<int32_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::UINT32_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceAdd<uint32_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::FP16_NORMAL_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceAdd<FP16>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::FP32_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceAdd<float>(srcBuf, dstBuf, length); }}
-};
+const std::map<TransMemReduceDataTypeV2, std::function<void(const void*, void*, uint64_t)>> transmemReduceAddFuncMapV2
+    = {{TransMemReduceDataTypeV2::INT8_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceAdd<int8_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::INT16_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceAdd<int16_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::INT32_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceAdd<int32_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::UINT32_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceAdd<uint32_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::FP16_NORMAL_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceAdd<FP16>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::FP32_V2, [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceAdd<float>(srcBuf, dstBuf, length);
+        }}};
 
-const std::map<TransMemReduceDataTypeV2, std::function<void(const void *, void *, uint64_t)>> transmemReduceMaxFuncMapV2 =
-{
-    {TransMemReduceDataTypeV2::INT8_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMax<int8_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::INT16_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMax<int16_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::INT32_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMax<int32_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::UINT32_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMax<uint32_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::FP16_NORMAL_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMax<FP16>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::FP32_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMax<float>(srcBuf, dstBuf, length); }}
-};
+const std::map<TransMemReduceDataTypeV2, std::function<void(const void*, void*, uint64_t)>> transmemReduceMaxFuncMapV2
+    = {{TransMemReduceDataTypeV2::INT8_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMax<int8_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::INT16_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMax<int16_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::INT32_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMax<int32_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::UINT32_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMax<uint32_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::FP16_NORMAL_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMax<FP16>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::FP32_V2, [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMax<float>(srcBuf, dstBuf, length);
+        }}};
 
-const std::map<TransMemReduceDataTypeV2, std::function<void(const void *, void *, uint64_t)>> transmemReduceMinFuncMapV2 =
-{
-    {TransMemReduceDataTypeV2::INT8_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMin<int8_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::INT16_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMin<int16_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::INT32_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMin<int32_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::UINT32_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMin<uint32_t>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::FP16_NORMAL_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMin<FP16>(srcBuf, dstBuf, length); }},
-    {TransMemReduceDataTypeV2::FP32_V2,
-        [](const void *srcBuf, void *dstBuf, uint64_t length) { ReduceMin<float>(srcBuf, dstBuf, length); }}
-};
+const std::map<TransMemReduceDataTypeV2, std::function<void(const void*, void*, uint64_t)>> transmemReduceMinFuncMapV2
+    = {{TransMemReduceDataTypeV2::INT8_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMin<int8_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::INT16_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMin<int16_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::INT32_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMin<int32_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::UINT32_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMin<uint32_t>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::FP16_NORMAL_V2,
+        [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMin<FP16>(srcBuf, dstBuf, length);
+        }},
+       {TransMemReduceDataTypeV2::FP32_V2, [](const void* srcBuf, void* dstBuf, uint64_t length) {
+            ReduceMin<float>(srcBuf, dstBuf, length);
+        }}};
 
-bool ReduceAddProcess(const void *srcBuf, void *dstBuf, uint64_t length, uint16_t dataType, RunnerCcuVersion version)
+bool ReduceAddProcess(const void* srcBuf, void* dstBuf, uint64_t length, uint16_t dataType, RunnerCcuVersion version)
 {
     HCCL_VM_INFO("ReduceAddProcess dataType {} length {} srcBuf {} dstBuf {}", dataType, length, srcBuf, dstBuf);
 
     if (version == RunnerCcuVersion::CCU_V1) {
         TransMemReduceDataTypeV1 type = static_cast<TransMemReduceDataTypeV1>(dataType);
         auto res = transmemReduceAddFuncMapV1.find(type);
-        if (res !=  transmemReduceAddFuncMapV1.end()) {
+        if (res != transmemReduceAddFuncMapV1.end()) {
             res->second(srcBuf, dstBuf, length);
             return true;
         }
     } else if (version == RunnerCcuVersion::CCU_V2) {
         TransMemReduceDataTypeV2 type = static_cast<TransMemReduceDataTypeV2>(dataType);
         auto res = transmemReduceAddFuncMapV2.find(type);
-        if (res !=  transmemReduceAddFuncMapV2.end()) {
+        if (res != transmemReduceAddFuncMapV2.end()) {
             res->second(srcBuf, dstBuf, length);
             return true;
         }
@@ -187,21 +256,21 @@ bool ReduceAddProcess(const void *srcBuf, void *dstBuf, uint64_t length, uint16_
     return false;
 }
 
-bool ReduceMaxProcess(const void *srcBuf, void *dstBuf, uint64_t length, uint16_t dataType, RunnerCcuVersion version)
+bool ReduceMaxProcess(const void* srcBuf, void* dstBuf, uint64_t length, uint16_t dataType, RunnerCcuVersion version)
 {
-   HCCL_VM_INFO("ReduceMaxProcess dataType {} length {} srcBuf {} dstBuf {}", dataType, length, srcBuf, dstBuf);
+    HCCL_VM_INFO("ReduceMaxProcess dataType {} length {} srcBuf {} dstBuf {}", dataType, length, srcBuf, dstBuf);
 
     if (version == RunnerCcuVersion::CCU_V1) {
         TransMemReduceDataTypeV1 type = static_cast<TransMemReduceDataTypeV1>(dataType);
         auto res = transmemReduceMaxFuncMapV1.find(type);
-        if (res !=  transmemReduceMaxFuncMapV1.end()) {
+        if (res != transmemReduceMaxFuncMapV1.end()) {
             res->second(srcBuf, dstBuf, length);
             return true;
         }
     } else if (version == RunnerCcuVersion::CCU_V2) {
         TransMemReduceDataTypeV2 type = static_cast<TransMemReduceDataTypeV2>(dataType);
         auto res = transmemReduceMaxFuncMapV2.find(type);
-        if (res !=  transmemReduceMaxFuncMapV2.end()) {
+        if (res != transmemReduceMaxFuncMapV2.end()) {
             res->second(srcBuf, dstBuf, length);
             return true;
         }
@@ -210,21 +279,21 @@ bool ReduceMaxProcess(const void *srcBuf, void *dstBuf, uint64_t length, uint16_
     return false;
 }
 
-bool ReduceMinProcess(const void *srcBuf, void *dstBuf, uint64_t length, uint16_t dataType, RunnerCcuVersion version)
+bool ReduceMinProcess(const void* srcBuf, void* dstBuf, uint64_t length, uint16_t dataType, RunnerCcuVersion version)
 {
     HCCL_VM_INFO("ReduceMinProcess dataType {} length {} srcBuf {} dstBuf {}", dataType, length, srcBuf, dstBuf);
 
     if (version == RunnerCcuVersion::CCU_V1) {
         TransMemReduceDataTypeV1 type = static_cast<TransMemReduceDataTypeV1>(dataType);
         auto res = transmemReduceMinFuncMapV1.find(type);
-        if (res !=  transmemReduceMinFuncMapV1.end()) {
+        if (res != transmemReduceMinFuncMapV1.end()) {
             res->second(srcBuf, dstBuf, length);
             return true;
         }
     } else if (version == RunnerCcuVersion::CCU_V2) {
         TransMemReduceDataTypeV2 type = static_cast<TransMemReduceDataTypeV2>(dataType);
         auto res = transmemReduceMinFuncMapV2.find(type);
-        if (res !=  transmemReduceMinFuncMapV2.end()) {
+        if (res != transmemReduceMinFuncMapV2.end()) {
             res->second(srcBuf, dstBuf, length);
             return true;
         }
@@ -233,7 +302,8 @@ bool ReduceMinProcess(const void *srcBuf, void *dstBuf, uint64_t length, uint16_
     return false;
 }
 
-bool ReduceProcess(const void *srcBuf, void *dstBuf, uint64_t length, uint16_t dataType, uint32_t reduceOp, RunnerCcuVersion version)
+bool ReduceProcess(
+    const void* srcBuf, void* dstBuf, uint64_t length, uint16_t dataType, uint32_t reduceOp, RunnerCcuVersion version)
 {
     switch (reduceOp) {
         case 8: // MAX

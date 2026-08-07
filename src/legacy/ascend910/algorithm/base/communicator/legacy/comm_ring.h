@@ -13,7 +13,6 @@
 
 #include "comm_ring_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * COMM_RING_H */

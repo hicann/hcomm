@@ -229,8 +229,9 @@ HCCP_ATTRI_VISI_DEF int RaSocketInit(int mode, struct rdev rdevInfo, void **sock
     char localIp[MAX_IP_LEN] = {0};
 
     CHK_PRT_RETURN(rdevInfo.phyId >= RA_MAX_PHY_ID_NUM || socketHandle == NULL,
-        hccp_err("[init][ra_socket]phyId(%u) is invalid! it must be [0,%d) or socket is null!",
-                 rdevInfo.phyId, RA_MAX_PHY_ID_NUM), ConverReturnCode(HCCP_INIT, -EINVAL));
+        hccp_err("[init][ra_socket]phyId(%u) is invalid! it must be [0,%d) or socket is null!", rdevInfo.phyId,
+            RA_MAX_PHY_ID_NUM),
+        ConverReturnCode(HCCP_INIT, -EINVAL));
 
     ret = RaInetPton(rdevInfo.family, rdevInfo.localIp, localIp, MAX_IP_LEN);
     CHK_PRT_RETURN(ret, hccp_err("[init][ra_socket]ra_inet_pton for local_ip failed, ret(%d)", ret),
@@ -239,8 +240,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketInit(int mode, struct rdev rdevInfo, void **sock
     hccp_run_info("socket init:mode=%d phyId=%u family=%d ip=%s", mode, rdevInfo.phyId, rdevInfo.family, localIp);
 
     socketHandleTmp = calloc(1, sizeof(struct RaSocketHandle));
-    CHK_PRT_RETURN(socketHandleTmp == NULL,
-        hccp_err("[init][ra_socket]calloc socketHandleTmp failed, ret(%d)", ret),
+    CHK_PRT_RETURN(socketHandleTmp == NULL, hccp_err("[init][ra_socket]calloc socketHandleTmp failed, ret(%d)", ret),
         ConverReturnCode(HCCP_INIT, -ENOMEM));
 
     if (mode == NETWORK_OFFLINE) {
@@ -271,7 +271,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketInit(int mode, struct rdev rdevInfo, void **sock
             }
         }
     }
-    *socketHandle = (void*)socketHandleTmp;
+    *socketHandle = (void *)socketHandleTmp;
     return ret;
 err:
     free(socketHandleTmp);
@@ -289,7 +289,8 @@ HCCP_ATTRI_VISI_DEF int RaSocketInitV1(int mode, struct SocketInitInfoT socketIn
 
     CHK_PRT_RETURN(socketInit.rdevInfo.phyId >= RA_MAX_PHY_ID_NUM || socketHandle == NULL,
         hccp_err("[init][ra_socket]phyId(%u) is invalid! it must be [0,%d) or socket is null!",
-                 socketInit.rdevInfo.phyId, RA_MAX_PHY_ID_NUM), ConverReturnCode(HCCP_INIT, -EINVAL));
+            socketInit.rdevInfo.phyId, RA_MAX_PHY_ID_NUM),
+        ConverReturnCode(HCCP_INIT, -EINVAL));
 
     ret = RaInetPton(socketInit.rdevInfo.family, socketInit.rdevInfo.localIp, localIp, MAX_IP_LEN);
     CHK_PRT_RETURN(ret, hccp_err("[init][ra_socket]ra_inet_pton for local_ip failed, ret(%d)", ret),
@@ -332,7 +333,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketInitV1(int mode, struct SocketInitInfoT socketIn
             }
         }
     }
-    *socketHandle = (void*)socketHandleTmp;
+    *socketHandle = (void *)socketHandleTmp;
     return ret;
 err:
     free(socketHandleTmp);
@@ -376,8 +377,8 @@ HCCP_ATTRI_VISI_DEF int RaSocketDeinit(void *socketHandle)
 STATIC int RaRdevInitCheckIp(int mode, struct rdev rdevInfo, char localIp[])
 {
     struct InterfaceInfo *interfaceInfos = NULL;
-    char interfaceIp[MAX_IP_LEN] = { 0 };
-    struct RaGetIfattr config = { 0 };
+    char interfaceIp[MAX_IP_LEN] = {0};
+    struct RaGetIfattr config = {0};
     unsigned int i, interfaceVersion;
     unsigned int num = 0;
     int ret;
@@ -425,9 +426,10 @@ get_addrs:
             return 0;
         }
     }
-    hccp_err("[check][ip]failed, ret(%d) the IP address(%s) in the ranktable is inconsistent with the IP(%s)"\
-        "address of the network adapter, please make sure they're consistent. "\
-        "num(%u)", ret, localIp, interfaceIp, num);
+    hccp_err("[check][ip]failed, ret(%d) the IP address(%s) in the ranktable is inconsistent with the IP(%s)"
+             "address of the network adapter, please make sure they're consistent. "
+             "num(%u)",
+        ret, localIp, interfaceIp, num);
 
     free(interfaceInfos);
     return -EINVALIDIP;
@@ -437,11 +439,14 @@ int RaRdevInitCheck(int mode, struct rdev rdevInfo, char localIp[], unsigned int
 {
     int ret;
 
-    CHK_PRT_RETURN(rdevInfo.phyId >= RA_MAX_PHY_ID_NUM, hccp_err("[check][ra_rdev_init]phyId(%u) is invalid!"
-        "it must greater or equal to 0 and less than %d!", rdevInfo.phyId, RA_MAX_PHY_ID_NUM), -EINVAL);
+    CHK_PRT_RETURN(rdevInfo.phyId >= RA_MAX_PHY_ID_NUM,
+        hccp_err("[check][ra_rdev_init]phyId(%u) is invalid!"
+                 "it must greater or equal to 0 and less than %d!",
+            rdevInfo.phyId, RA_MAX_PHY_ID_NUM),
+        -EINVAL);
 
-    CHK_PRT_RETURN(rdmaHandle == NULL, hccp_err("[check][ra_rdev_init]phyId(%u) rdma_handle is null!",
-        rdevInfo.phyId), -EINVAL);
+    CHK_PRT_RETURN(rdmaHandle == NULL, hccp_err("[check][ra_rdev_init]phyId(%u) rdma_handle is null!", rdevInfo.phyId),
+        -EINVAL);
 
     ret = RaInetPton(rdevInfo.family, rdevInfo.localIp, localIp, num);
     CHK_PRT_RETURN(ret, hccp_err("[check][ra_rdev_init]ra_inet_pton for local_ip failed, ret(%d)", ret), -EINVAL);
@@ -463,17 +468,16 @@ STATIC int RaGetInitRdmaHandle(int mode, struct RaRdmaHandle *rdmaHandle)
         return -EINVAL;
     }
 
-    CHK_PRT_RETURN(rdmaHandle->rdmaOps->raRdevInit == NULL, hccp_err("[init][ra_rdev] ra_rdev_init is NULL!"),
-        -EINVAL);
+    CHK_PRT_RETURN(rdmaHandle->rdmaOps->raRdevInit == NULL, hccp_err("[init][ra_rdev] ra_rdev_init is NULL!"), -EINVAL);
     return 0;
 }
 
 STATIC void RaGenerateGidByRdevInfo(struct RaRdmaHandle *rdmaHandle)
 {
-#define RA_GID_SEQ_NUM   4
-#define RA_GID_SEQ_ZERO  0
-#define RA_GID_SEQ_ONE   1
-#define RA_GID_SEQ_TWO   2
+#define RA_GID_SEQ_NUM 4
+#define RA_GID_SEQ_ZERO 0
+#define RA_GID_SEQ_ONE 1
+#define RA_GID_SEQ_TWO 2
 #define RA_GID_SEQ_THREE 3
     union HccpIpAddr localIp = rdmaHandle->rdevInfo.localIp;
     int family = rdmaHandle->rdevInfo.family;
@@ -485,7 +489,7 @@ STATIC void RaGenerateGidByRdevInfo(struct RaRdmaHandle *rdmaHandle)
         gidV4[RA_GID_SEQ_ZERO] = 0;
         gidV4[RA_GID_SEQ_ONE] = 0;
         /* The gid format generated by ipv4 is filled with 0xFFFF in [33, 48] */
-        gidV4[RA_GID_SEQ_TWO]   = htonl(0x0000FFFF);
+        gidV4[RA_GID_SEQ_TWO] = htonl(0x0000FFFF);
         gidV4[RA_GID_SEQ_THREE] = localIp.addr.s_addr;
         (void)memcpy_s(rdmaHandle->gid, HCCP_GID_RAW_LEN, gidV4, HCCP_GID_RAW_LEN);
     }
@@ -493,8 +497,8 @@ STATIC void RaGenerateGidByRdevInfo(struct RaRdmaHandle *rdmaHandle)
     return;
 }
 
-STATIC int RaRdevInitWithBackupInfo(struct RdevInitInfo initInfo, struct rdev rdevInfo,
-    struct RaBackupInfo backupInfo, void **rdmaHandle)
+STATIC int RaRdevInitWithBackupInfo(struct RdevInitInfo initInfo, struct rdev rdevInfo, struct RaBackupInfo backupInfo,
+    void **rdmaHandle)
 {
     struct RaRdmaHandle *rdmaHandleTmp = NULL;
     char localIp[MAX_IP_LEN] = {0};
@@ -516,8 +520,7 @@ STATIC int RaRdevInitWithBackupInfo(struct RdevInitInfo initInfo, struct rdev rd
     rdmaHandleTmp->disabledLiteThread = initInfo.disabledLiteThread;
     rdmaHandleTmp->enabled910aLite = initInfo.enabled910aLite;
     rdmaHandleTmp->enabled2mbLite = initInfo.enabled2mbLite;
-    (void)memcpy_s(&rdmaHandleTmp->backupInfo, sizeof(struct RaBackupInfo),
-        &backupInfo, sizeof(struct RaBackupInfo));
+    (void)memcpy_s(&rdmaHandleTmp->backupInfo, sizeof(struct RaBackupInfo), &backupInfo, sizeof(struct RaBackupInfo));
 
     ret = RaGetInitRdmaHandle(initInfo.mode, rdmaHandleTmp);
     if (ret) {
@@ -555,7 +558,7 @@ err:
 HCCP_ATTRI_VISI_DEF int RaRdevInitWithBackup(struct RdevInitInfo *initInfo, struct rdev *rdevInfo,
     struct rdev *backupRdevInfo, void **rdmaHandle)
 {
-    struct RaBackupInfo backupInfo = { 0 };
+    struct RaBackupInfo backupInfo = {0};
 
     if (initInfo == NULL || rdevInfo == NULL || backupRdevInfo == NULL || rdmaHandle == NULL) {
         hccp_err("[init][ra_rdev]init_info or rdev_info or backup_rdev_info or rdma_handle is NULL");
@@ -570,19 +573,19 @@ HCCP_ATTRI_VISI_DEF int RaRdevInitWithBackup(struct RdevInitInfo *initInfo, stru
 
 HCCP_ATTRI_VISI_DEF int RaRdevInitV2(struct RdevInitInfo initInfo, struct rdev rdevInfo, void **rdmaHandle)
 {
-    struct RaBackupInfo backupInfo = { 0 };
+    struct RaBackupInfo backupInfo = {0};
 
     return RaRdevInitWithBackupInfo(initInfo, rdevInfo, backupInfo, rdmaHandle);
 }
 
 HCCP_ATTRI_VISI_DEF int RaRdevInit(int mode, unsigned int notifyType, struct rdev rdevInfo, void **rdmaHandle)
 {
-    struct RdevInitInfo initInfo = { 0 };
+    struct RdevInitInfo initInfo = {0};
     initInfo.mode = mode;
     initInfo.notifyType = notifyType;
     initInfo.disabledLiteThread = false; // will start lite thread by default
-    initInfo.enabled910aLite = false; // will disabled lite on 910A by default
-    initInfo.enabled2mbLite = false; // will disabled lite on 2MB page align scenario by default
+    initInfo.enabled910aLite = false;    // will disabled lite on 910A by default
+    initInfo.enabled2mbLite = false;     // will disabled lite on 2MB page align scenario by default
 
     return RaRdevInitV2(initInfo, rdevInfo, rdmaHandle);
 }
@@ -595,8 +598,11 @@ STATIC int RaRdevDeinitParaCheck(void *rdmaHandle, struct RaRdmaHandle **rdmaHan
 
     *rdmaHandleTmp = (struct RaRdmaHandle *)rdmaHandle;
     rdevInfo = (*rdmaHandleTmp)->rdevInfo;
-    CHK_PRT_RETURN(rdevInfo.phyId >= RA_MAX_PHY_ID_NUM, hccp_err("[deinit][ra_rdev]phyId(%u)"
-        "must smaller than %u", rdevInfo.phyId, RA_MAX_PHY_ID_NUM), -EINVAL);
+    CHK_PRT_RETURN(rdevInfo.phyId >= RA_MAX_PHY_ID_NUM,
+        hccp_err("[deinit][ra_rdev]phyId(%u)"
+                 "must smaller than %u",
+            rdevInfo.phyId, RA_MAX_PHY_ID_NUM),
+        -EINVAL);
 
     ret = RaInetPton(rdevInfo.family, rdevInfo.localIp, localIp, MAX_IP_LEN);
     CHK_PRT_RETURN(ret, hccp_err("[deinit][ra_rdev]ra_inet_pton for local_ip failed, ret(%d)", ret), ret);
@@ -604,8 +610,8 @@ STATIC int RaRdevDeinitParaCheck(void *rdmaHandle, struct RaRdmaHandle **rdmaHan
     CHK_PRT_RETURN((*rdmaHandleTmp)->rdmaOps == NULL || (*rdmaHandleTmp)->rdmaOps->raRdevDeinit == NULL,
         hccp_err("[deinit][ra_rdev]rdma_ops is NULL or ra_rdev_deinit is NULL"), -EINVAL);
 
-    hccp_run_info("Input parameters: phyId[%u] rdev_index[%u] family[%d] local_ip[%s]",
-        rdevInfo.phyId, (*rdmaHandleTmp)->rdevIndex, rdevInfo.family, localIp);
+    hccp_run_info("Input parameters: phyId[%u] rdev_index[%u] family[%d] local_ip[%s]", rdevInfo.phyId,
+        (*rdmaHandleTmp)->rdevIndex, rdevInfo.family, localIp);
 
     return 0;
 }
@@ -617,8 +623,7 @@ HCCP_ATTRI_VISI_DEF int RaRdevGetPortStatus(void *rdmaHandle, enum PortStatus *s
     int ret;
 
     CHK_PRT_RETURN(rdmaHandle == NULL || status == NULL,
-        hccp_err("[get][ra_port_status]rdma_handle or status is NULL, invalid"),
-        ConverReturnCode(RDMA_OP, -EINVAL));
+        hccp_err("[get][ra_port_status]rdma_handle or status is NULL, invalid"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     phyId = rdmaHandleTmp->rdevInfo.phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
@@ -687,7 +692,8 @@ HCCP_ATTRI_VISI_DEF int RaSocketBatchConnect(struct SocketConnectInfoT conn[], u
 
     CHK_PRT_RETURN(conn == NULL || num == 0 || num > MAX_SOCKET_NUM,
         hccp_err("[batch_connect][ra_socket]conn is NULL or num[%u] is zero or num is greater than %d", num,
-        MAX_SOCKET_NUM), ConverReturnCode(SOCKET_OP, -EINVAL));
+            MAX_SOCKET_NUM),
+        ConverReturnCode(SOCKET_OP, -EINVAL));
 
     for (i = 0; i < num; i++) {
         socketHandle = (struct RaSocketHandle *)conn[i].socketHandle;
@@ -699,11 +705,13 @@ HCCP_ATTRI_VISI_DEF int RaSocketBatchConnect(struct SocketConnectInfoT conn[], u
 
         CHK_PRT_RETURN(socketHandle->rdevInfo.phyId >= RA_MAX_PHY_ID_NUM,
             hccp_err("[batch_connect][ra_socket]phyId(%u) must smaller than %u", socketHandle->rdevInfo.phyId,
-            RA_MAX_PHY_ID_NUM), ConverReturnCode(SOCKET_OP, -EINVAL));
+                RA_MAX_PHY_ID_NUM),
+            ConverReturnCode(SOCKET_OP, -EINVAL));
 
         CHK_PRT_RETURN(strlen(conn[i].tag) >= SOCK_CONN_TAG_SIZE,
             hccp_err("[batch_connect][ra_socket]conn tag len(%d) more than max len(%d)", strlen(conn[i].tag),
-            SOCK_CONN_TAG_SIZE), ConverReturnCode(SOCKET_OP, -EINVAL));
+                SOCK_CONN_TAG_SIZE),
+            ConverReturnCode(SOCKET_OP, -EINVAL));
 
         ret = RaInetPton(socketHandle->rdevInfo.family, socketHandle->rdevInfo.localIp, localIp, MAX_IP_LEN);
         CHK_PRT_RETURN(ret, hccp_err("[batch_connect][ra_socket]ra_inet_pton for local_ip failed, ret(%d)", ret),
@@ -713,9 +721,8 @@ HCCP_ATTRI_VISI_DEF int RaSocketBatchConnect(struct SocketConnectInfoT conn[], u
         CHK_PRT_RETURN(ret, hccp_err("[batch_connect][ra_socket]ra_inet_pton for remote_ip failed, ret(%d)", ret),
             ConverReturnCode(SOCKET_OP, ret));
 
-        hccp_run_info("Input parameters: [%u]th, phyId[%u], localIp[%s], remoteIp[%s], port[%u], tag[%s], cnt[%u]",
-            i, socketHandle->rdevInfo.phyId, localIp, remoteIp, conn[i].port, conn[i].tag,
-            socketHandle->connectCnt);
+        hccp_run_info("Input parameters: [%u]th, phyId[%u], localIp[%s], remoteIp[%s], port[%u], tag[%s], cnt[%u]", i,
+            socketHandle->rdevInfo.phyId, localIp, remoteIp, conn[i].port, conn[i].tag, socketHandle->connectCnt);
     }
 
     socketHandle->connectCnt++;
@@ -733,7 +740,8 @@ HCCP_ATTRI_VISI_DEF int RaSocketBatchClose(struct SocketCloseInfoT conn[], unsig
 
     CHK_PRT_RETURN(conn == NULL || num == 0 || num > MAX_SOCKET_NUM,
         hccp_err("[batch_close][ra_socket]conn is NULL or num[%u] is zero or num is greater than %d", num,
-        MAX_SOCKET_NUM), ConverReturnCode(SOCKET_OP, -EINVAL));
+            MAX_SOCKET_NUM),
+        ConverReturnCode(SOCKET_OP, -EINVAL));
 
     for (i = 0; i < num; i++) {
         socketHandle = (struct RaSocketHandle *)conn[i].socketHandle;
@@ -751,8 +759,8 @@ HCCP_ATTRI_VISI_DEF int RaSocketBatchClose(struct SocketCloseInfoT conn[], unsig
         CHK_PRT_RETURN(ret, hccp_err("[batch_connect][ra_socket]ra_inet_pton for local_ip failed, ret(%d)", ret),
             ConverReturnCode(SOCKET_OP, ret));
 
-        hccp_run_info("Input parameters: [%u]th, phyId[%u], localIp[%s], cnt[%u]", i, phyId,
-            localIp, socketHandle->closeCnt);
+        hccp_run_info("Input parameters: [%u]th, phyId[%u], localIp[%s], cnt[%u]", i, phyId, localIp,
+            socketHandle->closeCnt);
     }
 
     socketHandle->closeCnt++;
@@ -770,15 +778,15 @@ HCCP_ATTRI_VISI_DEF int RaSocketBatchAbort(struct SocketConnectInfoT conn[], uns
     int ret;
 
     CHK_PRT_RETURN(conn == NULL || num == 0 || num > MAX_SOCKET_NUM,
-        hccp_err("[batch_abort][ra_socket]conn is NULL or num[%u] is zero or num is greater than %d",
-        num, MAX_SOCKET_NUM), ConverReturnCode(SOCKET_OP, -EINVAL));
+        hccp_err("[batch_abort][ra_socket]conn is NULL or num[%u] is zero or num is greater than %d", num,
+            MAX_SOCKET_NUM),
+        ConverReturnCode(SOCKET_OP, -EINVAL));
 
     for (i = 0; i < num; i++) {
         socketHandle = (struct RaSocketHandle *)conn[i].socketHandle;
         CHK_PRT_RETURN(socketHandle == NULL || socketHandle->socketOps == NULL ||
-            socketHandle->socketOps->raSocketBatchAbort == NULL,
-            hccp_err("[batch_abort][ra_socket]socket_handle or func is NULL"),
-            ConverReturnCode(SOCKET_OP, -EINVAL));
+                           socketHandle->socketOps->raSocketBatchAbort == NULL,
+            hccp_err("[batch_abort][ra_socket]socket_handle or func is NULL"), ConverReturnCode(SOCKET_OP, -EINVAL));
 
         phyId = socketHandle->rdevInfo.phyId;
         CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
@@ -793,8 +801,8 @@ HCCP_ATTRI_VISI_DEF int RaSocketBatchAbort(struct SocketConnectInfoT conn[], uns
         CHK_PRT_RETURN(ret, hccp_err("[batch_abort][ra_socket]ra_inet_pton for remote_ip failed, ret(%d)", ret),
             ConverReturnCode(SOCKET_OP, ret));
 
-        hccp_run_info("Input parameters: [%u]th, phyId[%u], localIp[%s], remoteIp[%s], tag[%s], cnt[%u]",
-            i, phyId, localIp, remoteIp, conn[i].tag, socketHandle->abortCnt);
+        hccp_run_info("Input parameters: [%u]th, phyId[%u], localIp[%s], remoteIp[%s], tag[%s], cnt[%u]", i, phyId,
+            localIp, remoteIp, conn[i].tag, socketHandle->abortCnt);
     }
 
     socketHandle->abortCnt++;
@@ -812,7 +820,8 @@ HCCP_ATTRI_VISI_DEF int RaSocketListenStart(struct SocketListenInfoT conn[], uns
 
     CHK_PRT_RETURN(conn == NULL || num == 0 || num > MAX_SOCKET_NUM,
         hccp_err("[listen_start][ra_socket]conn is NULL or num[%u] is zero or num is greater than %d", num,
-        MAX_SOCKET_NUM), ConverReturnCode(SOCKET_OP, -EINVAL));
+            MAX_SOCKET_NUM),
+        ConverReturnCode(SOCKET_OP, -EINVAL));
 
     for (i = 0; i < num; i++) {
         socketHandle = (struct RaSocketHandle *)conn[i].socketHandle;
@@ -830,8 +839,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketListenStart(struct SocketListenInfoT conn[], uns
         CHK_PRT_RETURN(ret, hccp_err("[listen_start][ra_socket]ra_inet_pton for server_ip failed, ret(%d)", ret),
             ConverReturnCode(SOCKET_OP, ret));
 
-        hccp_run_info("Input parameters: [%u]th, phyId[%u], localIp[%s], port[%u]",
-            i, phyId, localIp, conn[i].port);
+        hccp_run_info("Input parameters: [%u]th, phyId[%u], localIp[%s], port[%u]", i, phyId, localIp, conn[i].port);
     }
 
     ret = socketHandle->socketOps->raSocketListenStart(phyId, conn, num);
@@ -848,7 +856,8 @@ HCCP_ATTRI_VISI_DEF int RaSocketListenStop(struct SocketListenInfoT conn[], unsi
 
     CHK_PRT_RETURN(conn == NULL || num == 0 || num > MAX_SOCKET_NUM,
         hccp_err("[listen_stop][ra_socket]conn is NULL or num[%u] is zero or num is greater than %d", num,
-        MAX_SOCKET_NUM), ConverReturnCode(SOCKET_OP, -EINVAL));
+            MAX_SOCKET_NUM),
+        ConverReturnCode(SOCKET_OP, -EINVAL));
 
     for (i = 0; i < num; i++) {
         socketHandle = (struct RaSocketHandle *)conn[i].socketHandle;
@@ -886,12 +895,12 @@ HCCP_ATTRI_VISI_DEF int RaGetSockets(unsigned int role, struct SocketInfoT conn[
 
     CHK_PRT_RETURN(conn == NULL || connectedNum == NULL || num == 0 || num > MAX_SOCKET_NUM,
         hccp_err("[get][ra_socket]conn or connected_num is NULL or num[%u] is zero or num greater than %d", num,
-        MAX_SOCKET_NUM), ConverReturnCode(SOCKET_OP, -EINVAL));
+            MAX_SOCKET_NUM),
+        ConverReturnCode(SOCKET_OP, -EINVAL));
 
     for (i = 0; i < num; i++) {
         socketHandle = (struct RaSocketHandle *)conn[i].socketHandle;
-        if (socketHandle == NULL || socketHandle->socketOps == NULL ||
-            socketHandle->socketOps->raGetSockets == NULL) {
+        if (socketHandle == NULL || socketHandle->socketOps == NULL || socketHandle->socketOps->raGetSockets == NULL) {
             hccp_err("[get][ra_socket]socket_handle or func is NULL");
             return ConverReturnCode(SOCKET_OP, -EINVAL);
         }
@@ -1043,8 +1052,7 @@ HCCP_ATTRI_VISI_DEF int RaSetTcpRecvCallback(const void *socketHandle, const voi
     unsigned int phyId;
 
     CHK_PRT_RETURN(socketHandleTmp == NULL || callback == NULL,
-        hccp_err("[ra_socket]socket_handle is NULL or callback is NULL"),
-        ConverReturnCode(SOCKET_OP, -EINVAL));
+        hccp_err("[ra_socket]socket_handle is NULL or callback is NULL"), ConverReturnCode(SOCKET_OP, -EINVAL));
 
     phyId = socketHandleTmp->rdevInfo.phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
@@ -1063,7 +1071,7 @@ HCCP_ATTRI_VISI_DEF int RaGetTsqpDepth(void *rdevHandle, unsigned int *tempDepth
     int ret;
 
     CHK_PRT_RETURN(rdevHandle == NULL || rdmaHandleTmp->rdmaOps == NULL ||
-        rdmaHandleTmp->rdmaOps->raGetTsqpDepth == NULL,
+                       rdmaHandleTmp->rdmaOps->raGetTsqpDepth == NULL,
         hccp_err("[get][ra_tsqp_depth]rdev_handle is NULL or func is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(tempDepth == NULL || qpNum == NULL, hccp_err("[get][ra_tsqp_depth]temp_depth or qp_num is NULL"),
@@ -1071,8 +1079,9 @@ HCCP_ATTRI_VISI_DEF int RaGetTsqpDepth(void *rdevHandle, unsigned int *tempDepth
 
     phyId = rdmaHandleTmp->rdevInfo.phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[get][ra_tsqp_depth]phyId(%u) is invalid! it must greater or equal to 0 and less than %d!",
-        phyId, RA_MAX_PHY_ID_NUM), ConverReturnCode(RDMA_OP, -EINVAL));
+        hccp_err("[get][ra_tsqp_depth]phyId(%u) is invalid! it must greater or equal to 0 and less than %d!", phyId,
+            RA_MAX_PHY_ID_NUM),
+        ConverReturnCode(RDMA_OP, -EINVAL));
 
     hccp_info("Input parameters: phyId[%u], rdevIndex[%u]", phyId, rdmaHandleTmp->rdevIndex);
 
@@ -1087,23 +1096,24 @@ HCCP_ATTRI_VISI_DEF int RaSetTsqpDepth(void *rdevHandle, unsigned int tempDepth,
     int ret;
 
     CHK_PRT_RETURN(rdevHandle == NULL || rdmaHandleTmp->rdmaOps == NULL ||
-        rdmaHandleTmp->rdmaOps->raSetTsqpDepth == NULL,
+                       rdmaHandleTmp->rdmaOps->raSetTsqpDepth == NULL,
         hccp_err("[set][ra_tsqp_depth]rdev_handle is NULL or func is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
-    CHK_PRT_RETURN(qpNum == NULL, hccp_err("[set][ra_tsqp_depth]qp_num is NULL"),
-        ConverReturnCode(RDMA_OP, -EINVAL));
+    CHK_PRT_RETURN(qpNum == NULL, hccp_err("[set][ra_tsqp_depth]qp_num is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(tempDepth < RA_MIN_TEMPTH_DEPTH || tempDepth > RA_MAX_TEMPTH_DEPTH,
-        hccp_err("[set][ra_tsqp_depth]param error! temp_depth(%u) can not smaller than %d or bigger than %d",
-        tempDepth, RA_MIN_TEMPTH_DEPTH, RA_MAX_TEMPTH_DEPTH), ConverReturnCode(RDMA_OP, -EINVAL));
+        hccp_err("[set][ra_tsqp_depth]param error! temp_depth(%u) can not smaller than %d or bigger than %d", tempDepth,
+            RA_MIN_TEMPTH_DEPTH, RA_MAX_TEMPTH_DEPTH),
+        ConverReturnCode(RDMA_OP, -EINVAL));
 
     phyId = rdmaHandleTmp->rdevInfo.phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[set][ra_tsqp_depth]phyId(%u) is invalid! it must greater or equal to 0 and less than %d!",
-        phyId, RA_MAX_PHY_ID_NUM), ConverReturnCode(RDMA_OP, -EINVAL));
+        hccp_err("[set][ra_tsqp_depth]phyId(%u) is invalid! it must greater or equal to 0 and less than %d!", phyId,
+            RA_MAX_PHY_ID_NUM),
+        ConverReturnCode(RDMA_OP, -EINVAL));
 
-    hccp_run_info("Input parameters: phyId[%u], rdevIndex[%u], tempDepth[%u]",
-        phyId, rdmaHandleTmp->rdevIndex, tempDepth);
+    hccp_run_info("Input parameters: phyId[%u], rdevIndex[%u], tempDepth[%u]", phyId, rdmaHandleTmp->rdevIndex,
+        tempDepth);
 
     ret = rdmaHandleTmp->rdmaOps->raSetTsqpDepth(rdmaHandleTmp, tempDepth, qpNum);
     return ConverReturnCode(RDMA_OP, ret);
@@ -1115,12 +1125,10 @@ HCCP_ATTRI_VISI_DEF int RaQpCreate(void *rdevHandle, int flag, int qpMode, void 
     unsigned int phyId;
     int ret;
 
-    CHK_PRT_RETURN(rdevHandle == NULL || rdmaHandleTmp->rdmaOps == NULL ||
-        rdmaHandleTmp->rdmaOps->raQpCreate == NULL,
+    CHK_PRT_RETURN(rdevHandle == NULL || rdmaHandleTmp->rdmaOps == NULL || rdmaHandleTmp->rdmaOps->raQpCreate == NULL,
         hccp_err("[create][ra_qp]rdev_handle is NULL or func is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
-    CHK_PRT_RETURN(qpHandle == NULL, hccp_err("[create][ra_qp]qp_handle is NULL"),
-        ConverReturnCode(RDMA_OP, -EINVAL));
+    CHK_PRT_RETURN(qpHandle == NULL, hccp_err("[create][ra_qp]qp_handle is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     /* 0 means RC mode */
     CHK_PRT_RETURN(flag != 0, hccp_err("[create][ra_qp]The flag(%d) is invalid, expect 0", flag),
@@ -1139,8 +1147,7 @@ HCCP_ATTRI_VISI_DEF int RaQpCreate(void *rdevHandle, int flag, int qpMode, void 
 
     ret = rdmaHandleTmp->rdmaOps->raQpCreate(rdmaHandleTmp, flag, qpMode, qpHandle);
     CHK_PRT_RETURN(ret != 0 || *qpHandle == NULL,
-        hccp_err("[create][ra_qp]create qp failed, ret(%d) phyId(%u)", ret, phyId),
-        ConverReturnCode(RDMA_OP, ret));
+        hccp_err("[create][ra_qp]create qp failed, ret(%d) phyId(%u)", ret, phyId), ConverReturnCode(RDMA_OP, ret));
 
     return 0;
 }
@@ -1152,9 +1159,8 @@ HCCP_ATTRI_VISI_DEF int RaQpCreateWithAttrs(void *rdevHandle, struct QpExtAttrs 
     int ret;
 
     CHK_PRT_RETURN(rdevHandle == NULL || rdmaHandleTmp->rdmaOps == NULL ||
-        rdmaHandleTmp->rdmaOps->raQpCreateWithAttrs == NULL,
-        hccp_err("[create][ra_qp_with_attrs]rdev_handle is NULL or func is NULL"),
-        ConverReturnCode(RDMA_OP, -EINVAL));
+                       rdmaHandleTmp->rdmaOps->raQpCreateWithAttrs == NULL,
+        hccp_err("[create][ra_qp_with_attrs]rdev_handle is NULL or func is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(qpHandle == NULL, hccp_err("[create][ra_qp_with_attrs]qp_handle is NULL"),
         ConverReturnCode(RDMA_OP, -EINVAL));
@@ -1164,25 +1170,27 @@ HCCP_ATTRI_VISI_DEF int RaQpCreateWithAttrs(void *rdevHandle, struct QpExtAttrs 
 
     CHK_PRT_RETURN(extAttrs->version != QP_CREATE_WITH_ATTR_VERSION,
         hccp_err("[create][ra_qp_with_attrs]attr version[%d] mismatch, expect [%d]", extAttrs->version,
-        QP_CREATE_WITH_ATTR_VERSION), ConverReturnCode(RDMA_OP, -EINVAL));
+            QP_CREATE_WITH_ATTR_VERSION),
+        ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(extAttrs->qpMode < 0 || extAttrs->qpMode >= RA_RS_ERR_QP_MODE,
-        hccp_err("[create][ra_qp_with_attrs]QP mode[%d] must greater or equal to 0 and less than %d",
-        extAttrs->qpMode, RA_RS_ERR_QP_MODE), ConverReturnCode(RDMA_OP, -EINVAL));
+        hccp_err("[create][ra_qp_with_attrs]QP mode[%d] must greater or equal to 0 and less than %d", extAttrs->qpMode,
+            RA_RS_ERR_QP_MODE),
+        ConverReturnCode(RDMA_OP, -EINVAL));
     // no need and disallow to set data_plane_flag, set it to default value 0
     extAttrs->dataPlaneFlag.value = 0;
 
     phyId = rdmaHandleTmp->rdevInfo.phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
         hccp_err("[create][ra_qp_with_attrs]phyId(%u) must greater or equal to 0 and less than %d!", phyId,
-        RA_MAX_PHY_ID_NUM), ConverReturnCode(RDMA_OP, -EINVAL));
+            RA_MAX_PHY_ID_NUM),
+        ConverReturnCode(RDMA_OP, -EINVAL));
 
-    hccp_run_info("Input parameters: phyId[%u] qp_mode[%d] cq_attr{%d,%d,%d,%d} qpAttr.cap{%u,%u,%u,%u,%u}"\
-        " qp_type[%u] sqSigAll[%d], cnt[%u], useResvMem[%u], resvMemPoolId[%u]", phyId, extAttrs->qpMode,
-        extAttrs->cqAttr.sendCqDepth, extAttrs->cqAttr.sendCqCompVector,
-        extAttrs->cqAttr.recvCqDepth, extAttrs->cqAttr.recvCqCompVector,
-        extAttrs->qpAttr.cap.max_send_wr, extAttrs->qpAttr.cap.max_recv_wr,
-        extAttrs->qpAttr.cap.max_send_sge, extAttrs->qpAttr.cap.max_recv_sge,
+    hccp_run_info("Input parameters: phyId[%u] qp_mode[%d] cq_attr{%d,%d,%d,%d} qpAttr.cap{%u,%u,%u,%u,%u}"
+                  " qp_type[%u] sqSigAll[%d], cnt[%u], useResvMem[%u], resvMemPoolId[%u]",
+        phyId, extAttrs->qpMode, extAttrs->cqAttr.sendCqDepth, extAttrs->cqAttr.sendCqCompVector,
+        extAttrs->cqAttr.recvCqDepth, extAttrs->cqAttr.recvCqCompVector, extAttrs->qpAttr.cap.max_send_wr,
+        extAttrs->qpAttr.cap.max_recv_wr, extAttrs->qpAttr.cap.max_send_sge, extAttrs->qpAttr.cap.max_recv_sge,
         extAttrs->qpAttr.cap.max_inline_data, extAttrs->qpAttr.qp_type, extAttrs->qpAttr.sq_sig_all,
         rdmaHandleTmp->qpCnt, extAttrs->cstmFlag.bs.useResvMem, extAttrs->resvMemPoolId);
 
@@ -1195,8 +1203,7 @@ HCCP_ATTRI_VISI_DEF int RaQpCreateWithAttrs(void *rdevHandle, struct QpExtAttrs 
     return 0;
 }
 
-HCCP_ATTRI_VISI_DEF int RaAiQpCreate(void *rdevHandle, struct QpExtAttrs *attrs, struct AiQpInfo *info,
-    void **qpHandle)
+HCCP_ATTRI_VISI_DEF int RaAiQpCreate(void *rdevHandle, struct QpExtAttrs *attrs, struct AiQpInfo *info, void **qpHandle)
 {
     struct RaRdmaHandle *rdmaHandleTmp = (struct RaRdmaHandle *)rdevHandle;
     unsigned int interfaceVersion = 0;
@@ -1204,8 +1211,8 @@ HCCP_ATTRI_VISI_DEF int RaAiQpCreate(void *rdevHandle, struct QpExtAttrs *attrs,
     int ret;
 
     CHK_PRT_RETURN(rdevHandle == NULL || rdmaHandleTmp->rdmaOps == NULL ||
-        rdmaHandleTmp->rdmaOps->raAiQpCreate == NULL ||
-        rdmaHandleTmp->rdmaOps->raAiQpCreateWithAttrs == NULL,
+                       rdmaHandleTmp->rdmaOps->raAiQpCreate == NULL ||
+                       rdmaHandleTmp->rdmaOps->raAiQpCreateWithAttrs == NULL,
         hccp_err("[create][ra_ai_qp]rdev_handle is NULL or func is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(info == NULL || qpHandle == NULL, hccp_err("[create][ra_ai_qp]info is NULL or qp_handle is NULL"),
@@ -1215,23 +1222,24 @@ HCCP_ATTRI_VISI_DEF int RaAiQpCreate(void *rdevHandle, struct QpExtAttrs *attrs,
 
     CHK_PRT_RETURN(attrs->version != QP_CREATE_WITH_ATTR_VERSION,
         hccp_err("[create][ra_ai_qp]attr version[%d] mismatch, expect [%d]", attrs->version,
-        QP_CREATE_WITH_ATTR_VERSION), ConverReturnCode(RDMA_OP, -EINVAL));
+            QP_CREATE_WITH_ATTR_VERSION),
+        ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(attrs->qpMode < 0 || attrs->qpMode >= RA_RS_ERR_QP_MODE,
         hccp_err("[create][ra_ai_qp]QP mode[%d] must greater or equal to 0 and less than %d", attrs->qpMode,
-        RA_RS_ERR_QP_MODE), ConverReturnCode(RDMA_OP, -EINVAL));
+            RA_RS_ERR_QP_MODE),
+        ConverReturnCode(RDMA_OP, -EINVAL));
 
     phyId = rdmaHandleTmp->rdevInfo.phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[create][ra_ai_qp]phyId(%u) must greater or equal to 0 and less than %d!", phyId,
-        RA_MAX_PHY_ID_NUM), ConverReturnCode(RDMA_OP, -EINVAL));
+        hccp_err("[create][ra_ai_qp]phyId(%u) must greater or equal to 0 and less than %d!", phyId, RA_MAX_PHY_ID_NUM),
+        ConverReturnCode(RDMA_OP, -EINVAL));
 
     hccp_run_info("Input parameters: phyId[%u] qp_mode[%d] cq_attr{%d,%d,%d,%d} cqCstm[%d] "
-        "qpAttr.cap{%u,%u,%u,%u,%u} qp_type[%u] sqSigAll[%d]", phyId, attrs->qpMode,
-        attrs->cqAttr.sendCqDepth, attrs->cqAttr.sendCqCompVector,
-        attrs->cqAttr.recvCqDepth, attrs->cqAttr.recvCqCompVector, attrs->dataPlaneFlag.bs.cqCstm,
-        attrs->qpAttr.cap.max_send_wr, attrs->qpAttr.cap.max_recv_wr,
-        attrs->qpAttr.cap.max_send_sge, attrs->qpAttr.cap.max_recv_sge,
+                  "qpAttr.cap{%u,%u,%u,%u,%u} qp_type[%u] sqSigAll[%d]",
+        phyId, attrs->qpMode, attrs->cqAttr.sendCqDepth, attrs->cqAttr.sendCqCompVector, attrs->cqAttr.recvCqDepth,
+        attrs->cqAttr.recvCqCompVector, attrs->dataPlaneFlag.bs.cqCstm, attrs->qpAttr.cap.max_send_wr,
+        attrs->qpAttr.cap.max_recv_wr, attrs->qpAttr.cap.max_send_sge, attrs->qpAttr.cap.max_recv_sge,
         attrs->qpAttr.cap.max_inline_data, attrs->qpAttr.qp_type, attrs->qpAttr.sq_sig_all);
 
     ret = RaGetInterfaceVersion(phyId, RA_RS_AI_QP_CREATE_WITH_ATTRS, &interfaceVersion);
@@ -1241,8 +1249,8 @@ HCCP_ATTRI_VISI_DEF int RaAiQpCreate(void *rdevHandle, struct QpExtAttrs *attrs,
         // origin procedure: not support to process data_plane_flag.bs.cq_cstm
         ret = rdmaHandleTmp->rdmaOps->raAiQpCreate(rdmaHandleTmp, attrs, info, qpHandle);
     }
-    CHK_PRT_RETURN(ret != 0 || *qpHandle == NULL, hccp_err("[create][ra_ai_qp]create qp failed, ret(%d) phyId(%u)",
-        ret, phyId), ConverReturnCode(RDMA_OP, ret));
+    CHK_PRT_RETURN(ret != 0 || *qpHandle == NULL,
+        hccp_err("[create][ra_ai_qp]create qp failed, ret(%d) phyId(%u)", ret, phyId), ConverReturnCode(RDMA_OP, ret));
 
     return 0;
 }
@@ -1255,7 +1263,7 @@ HCCP_ATTRI_VISI_DEF int RaTypicalQpCreate(void *rdevHandle, int flag, int qpMode
     int ret;
 
     CHK_PRT_RETURN(rdevHandle == NULL || rdmaHandleTmp->rdmaOps == NULL ||
-        rdmaHandleTmp->rdmaOps->raTypicalQpCreate == NULL,
+                       rdmaHandleTmp->rdmaOps->raTypicalQpCreate == NULL,
         hccp_err("[create][ra_typical_qp]rdev_handle is NULL or func is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(qpHandle == NULL, hccp_err("[create][ra_typical_qp]qp_handle is NULL"),
@@ -1270,11 +1278,13 @@ HCCP_ATTRI_VISI_DEF int RaTypicalQpCreate(void *rdevHandle, int flag, int qpMode
     phyId = rdmaHandleTmp->rdevInfo.phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
         hccp_err("[create][ra_typical_qp]phyId(%u) must greater or equal to 0 and less than %d!", phyId,
-        RA_MAX_PHY_ID_NUM), ConverReturnCode(RDMA_OP, -EINVAL));
+            RA_MAX_PHY_ID_NUM),
+        ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(qpMode < 0 || qpMode >= RA_RS_ERR_QP_MODE,
         hccp_err("[create][ra_typical_qp]QP mode(%d) must greater or equal to 0 and less than %d", qpMode,
-        RA_RS_ERR_QP_MODE), ConverReturnCode(RDMA_OP, -EINVAL));
+            RA_RS_ERR_QP_MODE),
+        ConverReturnCode(RDMA_OP, -EINVAL));
 
     hccp_run_info("Input parameters: phyId[%u], flag[%d] qpMode[%d]", phyId, flag, qpMode);
 
@@ -1293,7 +1303,7 @@ HCCP_ATTRI_VISI_DEF int RaLoopbackQpCreate(void *rdevHandle, struct LoopbackQpPa
     int ret;
 
     CHK_PRT_RETURN(rdmaHandleTmp == NULL || rdmaHandleTmp->rdmaOps == NULL ||
-        rdmaHandleTmp->rdmaOps->raLoopbackQpCreate == NULL,
+                       rdmaHandleTmp->rdmaOps->raLoopbackQpCreate == NULL,
         hccp_err("[create][ra_loopback_qp]rdev_handle is NULL or func is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(qpPair == NULL, hccp_err("[create][ra_loopback_qp]qp_pair is NULL"),
@@ -1304,7 +1314,8 @@ HCCP_ATTRI_VISI_DEF int RaLoopbackQpCreate(void *rdevHandle, struct LoopbackQpPa
 
     phyId = rdmaHandleTmp->rdevInfo.phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[create][ra_loopback_qp]phyId(%u) must greater or equal to 0 and less than %d!", phyId, RA_MAX_PHY_ID_NUM),
+        hccp_err("[create][ra_loopback_qp]phyId(%u) must greater or equal to 0 and less than %d!", phyId,
+            RA_MAX_PHY_ID_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
     hccp_run_info("Input parameters: phyId[%u]", phyId);
@@ -1321,16 +1332,14 @@ HCCP_ATTRI_VISI_DEF int RaQpDestroy(void *qpHandle)
     struct RaQpHandle *raQpHandle = (struct RaQpHandle *)qpHandle;
     int ret;
 
-    CHK_PRT_RETURN(qpHandle == NULL,
-        hccp_err("[destroy][ra_qp]qp_handle is NULL"),
-        ConverReturnCode(RDMA_OP, -EINVAL));
+    CHK_PRT_RETURN(qpHandle == NULL, hccp_err("[destroy][ra_qp]qp_handle is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(raQpHandle->rdmaOps == NULL || raQpHandle->rdmaOps->raQpDestroy == NULL,
         hccp_err("[destroy][ra_qp]rdma_ops is NULL or ra_qp_handle->rdma_ops->ra_qp_destroy is NULL, invalid"),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
-    hccp_run_info("Input parameters: qpn[%u], phyId[%u], rdevIndex[%u] qpMode[%d] flag[%d]",
-        raQpHandle->qpn, raQpHandle->phyId, raQpHandle->rdevIndex, raQpHandle->qpMode, raQpHandle->flag);
+    hccp_run_info("Input parameters: qpn[%u], phyId[%u], rdevIndex[%u] qpMode[%d] flag[%d]", raQpHandle->qpn,
+        raQpHandle->phyId, raQpHandle->rdevIndex, raQpHandle->qpMode, raQpHandle->flag);
 
     ret = raQpHandle->rdmaOps->raQpDestroy(raQpHandle);
     return ConverReturnCode(RDMA_OP, ret);
@@ -1359,8 +1368,7 @@ HCCP_ATTRI_VISI_DEF int RaGetQpStatus(void *qpHandle, int *status)
     int ret;
 
     CHK_PRT_RETURN(qpHandle == NULL || status == NULL,
-        hccp_err("[get][ra_qp_status]ra_qp_handle or status is NULL, para error!"),
-        ConverReturnCode(RDMA_OP, -EINVAL));
+        hccp_err("[get][ra_qp_status]ra_qp_handle or status is NULL, para error!"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(raQpHandle->rdmaOps == NULL || raQpHandle->rdmaOps->raGetQpStatus == NULL,
         hccp_err("[get][ra_qp_status]rdma_ops is NULL or ra_qp_handle->rdma_ops->ra_get_qp_status is NULL, invalid"),
@@ -1376,8 +1384,7 @@ HCCP_ATTRI_VISI_DEF int RaMrReg(void *qpHandle, struct MrInfoT *info)
     int ret;
 
     CHK_PRT_RETURN(qpHandle == NULL || info == NULL,
-        hccp_err("[reg][ra_mr]qp_handle is NULL or info is NULL, para error!"),
-        ConverReturnCode(RDMA_OP, -EINVAL));
+        hccp_err("[reg][ra_mr]qp_handle is NULL or info is NULL, para error!"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(raQpHandle->rdmaOps == NULL || raQpHandle->rdmaOps->raMrReg == NULL,
         hccp_err("[reg][ra_mr]rdma_ops is NULL or ra_qp_handle->rdma_ops->ra_mr_reg is NULL, invalid"),
@@ -1393,8 +1400,7 @@ HCCP_ATTRI_VISI_DEF int RaMrDereg(void *qpHandle, struct MrInfoT *info)
     int ret;
 
     CHK_PRT_RETURN(qpHandle == NULL || info == NULL || info->addr == NULL,
-        hccp_err("[dereg][ra_mr]qp_handle or info or addr is NULL, para error!"),
-        ConverReturnCode(RDMA_OP, -EINVAL));
+        hccp_err("[dereg][ra_mr]qp_handle or info or addr is NULL, para error!"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(raQpHandle->rdmaOps == NULL || raQpHandle->rdmaOps->raMrDereg == NULL,
         hccp_err("[dereg][ra_mr]rdma_ops is NULL or ra_qp_handle->rdma_ops->ra_mr_dereg is NULL, invalid"),
@@ -1477,8 +1483,8 @@ HCCP_ATTRI_VISI_DEF int RaSendWrlist(void *qpHandle, struct SendWrlistData wr[],
     return ConverReturnCode(RDMA_OP, ret);
 }
 
-HCCP_ATTRI_VISI_DEF int RaSendWrlistExt(void *qpHandle, struct SendWrlistDataExt wr[],
-    struct SendWrRsp opRsp[], unsigned int sendNum, unsigned int *completeNum)
+HCCP_ATTRI_VISI_DEF int RaSendWrlistExt(void *qpHandle, struct SendWrlistDataExt wr[], struct SendWrRsp opRsp[],
+    unsigned int sendNum, unsigned int *completeNum)
 {
     struct RaQpHandle *raQpHandle = (struct RaQpHandle *)qpHandle;
     struct WrlistSendCompleteNum wrlistNum = {0};
@@ -1486,8 +1492,8 @@ HCCP_ATTRI_VISI_DEF int RaSendWrlistExt(void *qpHandle, struct SendWrlistDataExt
     int ret;
 
     CHK_PRT_RETURN(qpHandle == NULL || wr == NULL || opRsp == NULL || sendNum == 0 || completeNum == NULL,
-        hccp_err("[send][ra_wrlist]qp_handle or wr or op_rsp or complete_num is NULL"\
-            "or send_num is zero, para error!"),
+        hccp_err("[send][ra_wrlist]qp_handle or wr or op_rsp or complete_num is NULL"
+                 "or send_num is zero, para error!"),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
     for (i = 0; i < sendNum; i++) {
@@ -1531,8 +1537,7 @@ HCCP_ATTRI_VISI_DEF int RaGetNotifyMrInfo(void *rdevHandle, struct MrInfoT *info
     int ret;
 
     CHK_PRT_RETURN(rdevHandle == NULL || info == NULL,
-        hccp_err("[get][ra_notify_mr_info]rdev_handle or info is NULL, invalid"),
-        ConverReturnCode(RDMA_OP, -EINVAL));
+        hccp_err("[get][ra_notify_mr_info]rdev_handle or info is NULL, invalid"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(rdevHandleTmp->rdmaOps == NULL || rdevHandleTmp->rdmaOps->raGetNotifyMrInfo == NULL,
         hccp_err("[get][ra_notify_mr_info]rdma_ops is NULL or ra_get_notify_mr_info is NULL, invalid"),
@@ -1565,8 +1570,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketSetWhiteListStatus(unsigned int enable)
     return 0;
 }
 
-HCCP_ATTRI_VISI_DEF int RaSocketWhiteListAdd(void *socketHandle, struct SocketWlistInfoT whiteList[],
-    unsigned int num)
+HCCP_ATTRI_VISI_DEF int RaSocketWhiteListAdd(void *socketHandle, struct SocketWlistInfoT whiteList[], unsigned int num)
 {
     struct RaSocketHandle *socketHandleTmp = NULL;
     char localIp[MAX_IP_LEN] = {0};
@@ -1574,8 +1578,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketWhiteListAdd(void *socketHandle, struct SocketWl
     int ret;
 
     CHK_PRT_RETURN(whiteList == NULL || num > MAX_WLIST_NUM || num == 0,
-        hccp_err("[add][ra_socket_white_list]white_list is NULL, or num(%u) > %u or = 0, invalid",
-            num, MAX_WLIST_NUM),
+        hccp_err("[add][ra_socket_white_list]white_list is NULL, or num(%u) > %u or = 0, invalid", num, MAX_WLIST_NUM),
         ConverReturnCode(SOCKET_OP, -EINVAL));
 
     socketHandleTmp = (struct RaSocketHandle *)socketHandle;
@@ -1585,8 +1588,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketWhiteListAdd(void *socketHandle, struct SocketWl
         return ConverReturnCode(SOCKET_OP, -EINVAL);
     }
 
-    ret = RaInetPton(socketHandleTmp->rdevInfo.family, socketHandleTmp->rdevInfo.localIp,
-                       localIp, MAX_IP_LEN);
+    ret = RaInetPton(socketHandleTmp->rdevInfo.family, socketHandleTmp->rdevInfo.localIp, localIp, MAX_IP_LEN);
     CHK_PRT_RETURN(ret, hccp_err("[add][ra_socket_white_list]ra_inet_pton for local_ip failed, ret(%d)", ret),
         ConverReturnCode(SOCKET_OP, ret));
 
@@ -1601,8 +1603,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketWhiteListAdd(void *socketHandle, struct SocketWl
     return ConverReturnCode(SOCKET_OP, ret);
 }
 
-HCCP_ATTRI_VISI_DEF int RaSocketWhiteListDel(void *socketHandle, struct SocketWlistInfoT whiteList[],
-    unsigned int num)
+HCCP_ATTRI_VISI_DEF int RaSocketWhiteListDel(void *socketHandle, struct SocketWlistInfoT whiteList[], unsigned int num)
 {
     struct RaSocketHandle *socketHandleTmp = NULL;
     char localIp[MAX_IP_LEN] = {0};
@@ -1619,8 +1620,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketWhiteListDel(void *socketHandle, struct SocketWl
         hccp_err("[del][ra_socket_white_list]socket_handle or func is NULL");
         return ConverReturnCode(SOCKET_OP, -EINVAL);
     }
-    ret = RaInetPton(socketHandleTmp->rdevInfo.family, socketHandleTmp->rdevInfo.localIp, localIp,
-        MAX_IP_LEN);
+    ret = RaInetPton(socketHandleTmp->rdevInfo.family, socketHandleTmp->rdevInfo.localIp, localIp, MAX_IP_LEN);
     if (ret) {
         hccp_err("[del][ra_socket_white_list]ra_inet_pton for local_ip failed, ret(%d)", ret);
         return ConverReturnCode(SOCKET_OP, ret);
@@ -1649,17 +1649,21 @@ STATIC int RaIfaddrInfoConverter(unsigned int phyId, bool isAll, struct Interfac
 
     ret = RaGetInterfaceVersion(phyId, RA_RS_GET_IFADDRS, &interfaceVersion);
     CHK_PRT_RETURN(ret != 0 || interfaceVersion == 0,
-        hccp_err("[converter][ra_ifaddr]get interface version failed, ret(%d), phyId(%u), interfaceVersion(%u)",
-            ret, phyId, interfaceVersion), -EINVAL);
+        hccp_err("[converter][ra_ifaddr]get interface version failed, ret(%d), phyId(%u), interfaceVersion(%u)", ret,
+            phyId, interfaceVersion),
+        -EINVAL);
 
     ret = RaGetInterfaceVersion(phyId, RA_RS_GET_IFADDRS_V2, &interfaceVersionV2);
     CHK_PRT_RETURN(ret != 0,
-        hccp_err("[converter][ra_ifaddr]get interface version failed, ret(%d), phyId(%u), interfaceVersion(%u)",
-            ret, phyId, interfaceVersion), -EINVAL);
+        hccp_err("[converter][ra_ifaddr]get interface version failed, ret(%d), phyId(%u), interfaceVersion(%u)", ret,
+            phyId, interfaceVersion),
+        -EINVAL);
 
     CHK_PRT_RETURN(interfaceVersionV2 < GET_IFADDRS_VERSION_3 && isAll,
         hccp_err("[converter][ra_ifaddr]current version do not support get all device ip addr, interfaceVersion(%u), "
-            "interfaceVersionV2(%u), isAll(%d)", interfaceVersion, interfaceVersionV2, isAll), -EPROTONOSUPPORT);
+                 "interfaceVersionV2(%u), isAll(%d)",
+            interfaceVersion, interfaceVersionV2, isAll),
+        -EPROTONOSUPPORT);
 
     if (interfaceVersion == GET_IFADDRS_VERSION_1) {
         ifaddrInfos = calloc(*num, sizeof(struct IfaddrInfo));
@@ -1670,8 +1674,7 @@ STATIC int RaIfaddrInfoConverter(unsigned int phyId, bool isAll, struct Interfac
 
         ret = RaHdcGetIfaddrs(phyId, ifaddrInfos, num);
         if (ret) {
-            hccp_err("[converter][ra_ifaddr]ra_hdc_get_ifaddrs failed, ret(%d), phyId(%u), num(%u)",
-                ret, phyId, *num);
+            hccp_err("[converter][ra_ifaddr]ra_hdc_get_ifaddrs failed, ret(%d), phyId(%u), num(%u)", ret, phyId, *num);
             free(ifaddrInfos);
             return ret;
         }
@@ -1701,8 +1704,9 @@ STATIC int RaIfaddrInfoConverter(unsigned int phyId, bool isAll, struct Interfac
     } else if (interfaceVersion == GET_IFADDRS_VERSION_2) { /* version 2 support IPV6 and IPV4 */
         ret = RaHdcGetIfaddrsV2(phyId, isAll, interfaceInfos, num);
         CHK_PRT_RETURN(ret,
-            hccp_err("[converter][ra_ifaddr]ra_hdc_get_ifaddrs_v2 failed, ret(%d), phyId(%u), isAll(%d), num(%u)",
-                ret, phyId, isAll, *num), ret);
+            hccp_err("[converter][ra_ifaddr]ra_hdc_get_ifaddrs_v2 failed, ret(%d), phyId(%u), isAll(%d), num(%u)", ret,
+                phyId, isAll, *num),
+            ret);
     } else {
         hccp_err("[converter][ra_ifaddr]interface version not support, interfaceVersion(%u)", interfaceVersion);
         return -EINVAL;
@@ -1720,23 +1724,22 @@ HCCP_ATTRI_VISI_DEF int RaGetIfnum(struct RaGetIfattr *config, unsigned int *num
         ConverReturnCode(OTHERS, -EINVAL));
 
     CHK_PRT_RETURN(config->phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[get][ra_ifnum]phyId(%u) is invalid! it must greater or equal to 0 and less than %d!",
-        config->phyId, RA_MAX_PHY_ID_NUM),
+        hccp_err("[get][ra_ifnum]phyId(%u) is invalid! it must greater or equal to 0 and less than %d!", config->phyId,
+            RA_MAX_PHY_ID_NUM),
         ConverReturnCode(OTHERS, -EINVAL));
 
-    hccp_run_info("Input parameters: phyId[%u], nicPosition:[%u], isAll:[%d]",
-        config->phyId, config->nicPosition, config->isAll);
+    hccp_run_info("Input parameters: phyId[%u], nicPosition:[%u], isAll:[%d]", config->phyId, config->nicPosition,
+        config->isAll);
 
     ret = RaGetInterfaceVersion(config->phyId, RA_RS_GET_IFADDRS_V2, &interfaceVersion);
     CHK_PRT_RETURN(ret != 0,
         hccp_err("[get][ra_ifnum]get interface version failed, ret(%d), phyId(%u), interfaceVersion(%u)", ret,
-        config->phyId, interfaceVersion),
+            config->phyId, interfaceVersion),
         ConverReturnCode(OTHERS, -EINVAL));
 
-    CHK_PRT_RETURN(interfaceVersion < GET_IFADDRS_VERSION_3 && config->nicPosition == NETWORK_OFFLINE &&
-        config->isAll,
+    CHK_PRT_RETURN(interfaceVersion < GET_IFADDRS_VERSION_3 && config->nicPosition == NETWORK_OFFLINE && config->isAll,
         hccp_err("[get][ra_ifnum]current version do not support get all ip num, interfaceVersion(%u), isAll(%d)",
-        interfaceVersion, config->isAll),
+            interfaceVersion, config->isAll),
         ConverReturnCode(OTHERS, -ENOTSUPP));
 
     if (config->nicPosition == NETWORK_OFFLINE) {
@@ -1754,7 +1757,8 @@ HCCP_ATTRI_VISI_DEF int RaGetIfnum(struct RaGetIfattr *config, unsigned int *num
 
     CHK_PRT_RETURN((*num) > MAX_SUPPORT_IFNUM,
         hccp_err("[get][ra_ifnum]get interface num(%d)! It must greater or equal to 0 and less or equal to %d", (*num),
-        MAX_SUPPORT_IFNUM), ConverReturnCode(OTHERS, -EINVAL));
+            MAX_SUPPORT_IFNUM),
+        ConverReturnCode(OTHERS, -EINVAL));
 
     return 0;
 }
@@ -1769,17 +1773,19 @@ HCCP_ATTRI_VISI_DEF int RaGetIfaddrs(struct RaGetIfattr *config, struct Interfac
 
     CHK_PRT_RETURN(config->phyId >= RA_MAX_PHY_ID_NUM,
         hccp_err("[get][ra_ifaddrs]phyId(%u) is invalid! it must greater or equal to 0 and less than %d!",
-        config->phyId, RA_MAX_PHY_ID_NUM), ConverReturnCode(OTHERS, -EINVAL));
+            config->phyId, RA_MAX_PHY_ID_NUM),
+        ConverReturnCode(OTHERS, -EINVAL));
 
     CHK_PRT_RETURN(*num == 0, hccp_err("[get][ra_ifaddrs]interface num(%u) is invalid! it must greater than 0", *num),
         ConverReturnCode(OTHERS, -EINVAL));
 
-    hccp_run_info("Input parameters: phyId[%u], nicPosition:[%u], isAll[%d], interface num[%u]",
-        config->phyId, config->nicPosition, config->isAll, *num);
+    hccp_run_info("Input parameters: phyId[%u], nicPosition:[%u], isAll[%d], interface num[%u]", config->phyId,
+        config->nicPosition, config->isAll, *num);
 
     if (config->nicPosition == NETWORK_OFFLINE) {
         CHK_PRT_RETURN(*num > MAX_INTERFACE_NUM,
-            hccp_err("[get][ra_ifaddrs]interface num(%u) is invalid! it must be less than %d!", *num, MAX_INTERFACE_NUM),
+            hccp_err("[get][ra_ifaddrs]interface num(%u) is invalid! it must be less than %d!", *num,
+                MAX_INTERFACE_NUM),
             ConverReturnCode(OTHERS, -EINVAL));
 
         ret = RaIfaddrInfoConverter(config->phyId, config->isAll, interfaceInfos, num);
@@ -1797,14 +1803,14 @@ HCCP_ATTRI_VISI_DEF int RaGetIfaddrs(struct RaGetIfattr *config, struct Interfac
 }
 
 HCCP_ATTRI_VISI_DEF int RaGetInterfaceVersion(unsigned int phyId, unsigned int interfaceOpcode,
-    unsigned int* interfaceVersion)
+    unsigned int *interfaceVersion)
 {
     int ret;
 
     if (interfaceVersion == NULL || phyId >= RA_MAX_PHY_ID_NUM || interfaceOpcode >= RA_RS_EXTER_OP_MAX_NUM) {
-        hccp_err("[get][ra_interface_version]para is invalid! interface_version is NULL or phyId(%u) is"\
-            "greater than [%u] or interface_opcode(%u) more than [%u]", phyId, RA_MAX_PHY_ID_NUM, interfaceOpcode,
-            RA_RS_EXTER_OP_MAX_NUM);
+        hccp_err("[get][ra_interface_version]para is invalid! interface_version is NULL or phyId(%u) is"
+                 "greater than [%u] or interface_opcode(%u) more than [%u]",
+            phyId, RA_MAX_PHY_ID_NUM, interfaceOpcode, RA_RS_EXTER_OP_MAX_NUM);
         return ConverReturnCode(OTHERS, -EINVAL);
     }
 
@@ -1822,7 +1828,7 @@ int ConverReturnCode(enum ModuleType module, int erroCode)
         return 0;
     }
 
-    if (erroCode / ACL_ERRCODE_DIGIT) {        /* ACL error codes are transparently transmitted */
+    if (erroCode / ACL_ERRCODE_DIGIT) { /* ACL error codes are transparently transmitted */
         return erroCode;
     }
 
@@ -1833,7 +1839,7 @@ int ConverReturnCode(enum ModuleType module, int erroCode)
         }
     }
 
-    if (erroCode != -EAGAIN) {  // 防止刷屏
+    if (erroCode != -EAGAIN) { // 防止刷屏
         hccp_info("ConverReturnCode: orig_errcode[%d] curr_errcode[%d]", erroCode, ret);
     }
     return ret;
@@ -1866,7 +1872,7 @@ HCCP_ATTRI_VISI_DEF int RaRecvWrlist(void *qpHandle, struct RecvWrlistData *wr, 
     return ConverReturnCode(RDMA_OP, ret);
 }
 
-HCCP_ATTRI_VISI_DEF int RaGetQpContext(void *qpHandle, void** qp, void** sendCq, void** recvCq)
+HCCP_ATTRI_VISI_DEF int RaGetQpContext(void *qpHandle, void **qp, void **sendCq, void **recvCq)
 {
     int ret;
     struct RaQpHandle *raQpHandle = (struct RaQpHandle *)qpHandle;
@@ -1882,7 +1888,8 @@ HCCP_ATTRI_VISI_DEF int RaGetQpContext(void *qpHandle, void** qp, void** sendCq,
     }
     CHK_PRT_RETURN(raQpHandle->phyId >= RA_MAX_PHY_ID_NUM,
         hccp_err("[get][rs_get_qp_context]qpPeer->phyId[%u] >= max_dev_num[%u], input is invalid", raQpHandle->phyId,
-        RA_MAX_PHY_ID_NUM), -EINVAL);
+            RA_MAX_PHY_ID_NUM),
+        -EINVAL);
 
     ret = raQpHandle->rdmaOps->raGetQpContext(raQpHandle, qp, sendCq, recvCq);
     return ConverReturnCode(RDMA_OP, ret);
@@ -1894,10 +1901,9 @@ HCCP_ATTRI_VISI_DEF int RaCqCreate(void *rdevHandle, struct CqAttr *attr)
     unsigned int phyId;
     int ret;
 
-    CHK_PRT_RETURN(rdevHandle == NULL || rdmaHandleTmp->rdmaOps == NULL ||
-        rdmaHandleTmp->rdmaOps->raCqCreate == NULL || attr == NULL || attr->ibSendCq == NULL ||
-        attr->ibRecvCq == NULL || attr->qpContext == NULL, hccp_err("[create][ra_cq]para is NULL or func is NULL"),
-        ConverReturnCode(RDMA_OP, -EINVAL));
+    CHK_PRT_RETURN(rdevHandle == NULL || rdmaHandleTmp->rdmaOps == NULL || rdmaHandleTmp->rdmaOps->raCqCreate == NULL ||
+                       attr == NULL || attr->ibSendCq == NULL || attr->ibRecvCq == NULL || attr->qpContext == NULL,
+        hccp_err("[create][ra_cq]para is NULL or func is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     phyId = rdmaHandleTmp->rdevInfo.phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
@@ -1908,8 +1914,7 @@ HCCP_ATTRI_VISI_DEF int RaCqCreate(void *rdevHandle, struct CqAttr *attr)
 
     ret = rdmaHandleTmp->rdmaOps->raCqCreate(rdmaHandleTmp, attr);
     CHK_PRT_RETURN(ret != 0 || *attr->ibSendCq == NULL || *attr->ibRecvCq == NULL || *attr->qpContext == NULL,
-        hccp_err("[create][ra_cq]create cp failed, ret(%d) phyId(%u)", ret, phyId),
-        ConverReturnCode(RDMA_OP, -EINVAL));
+        hccp_err("[create][ra_cq]create cp failed, ret(%d) phyId(%u)", ret, phyId), ConverReturnCode(RDMA_OP, -EINVAL));
 
     return 0;
 }
@@ -1920,10 +1925,10 @@ HCCP_ATTRI_VISI_DEF int RaCqDestroy(void *rdevHandle, struct CqAttr *attr)
     unsigned int phyId;
     int ret;
 
-    CHK_PRT_RETURN(rdevHandle == NULL || rdmaHandleTmp->rdmaOps == NULL || 
-        rdmaHandleTmp->rdmaOps->raCqDestroy == NULL || attr == NULL || attr->ibSendCq == NULL ||
-        attr->ibRecvCq == NULL || attr->qpContext == NULL, hccp_err("[destroy][ra_cq]para is NULL or func is NULL"),
-        ConverReturnCode(RDMA_OP, -EINVAL));
+    CHK_PRT_RETURN(rdevHandle == NULL || rdmaHandleTmp->rdmaOps == NULL ||
+                       rdmaHandleTmp->rdmaOps->raCqDestroy == NULL || attr == NULL || attr->ibSendCq == NULL ||
+                       attr->ibRecvCq == NULL || attr->qpContext == NULL,
+        hccp_err("[destroy][ra_cq]para is NULL or func is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     phyId = rdmaHandleTmp->rdevInfo.phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
@@ -1933,8 +1938,7 @@ HCCP_ATTRI_VISI_DEF int RaCqDestroy(void *rdevHandle, struct CqAttr *attr)
     hccp_run_info("Input parameters: phyId[%u]", phyId);
 
     ret = rdmaHandleTmp->rdmaOps->raCqDestroy(rdmaHandleTmp, attr);
-    CHK_PRT_RETURN(ret != 0 || *attr->ibSendCq == NULL || *attr->ibRecvCq == NULL ||
-                   *attr->qpContext == NULL,
+    CHK_PRT_RETURN(ret != 0 || *attr->ibSendCq == NULL || *attr->ibRecvCq == NULL || *attr->qpContext == NULL,
         hccp_err("[destroy][ra_cq]destroy cp failed, ret(%d) phyId(%u)", ret, phyId),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
@@ -1948,8 +1952,8 @@ HCCP_ATTRI_VISI_DEF int RaNormalQpCreate(void *rdevHandle, struct ibv_qp_init_at
     unsigned int phyId;
     int ret;
 
-    if (rdevHandle == NULL || rdmaHandleTmp->rdmaOps == NULL ||
-        rdmaHandleTmp->rdmaOps->raNormalQpCreate == NULL || qpInitAttr == NULL || qp == NULL) {
+    if (rdevHandle == NULL || rdmaHandleTmp->rdmaOps == NULL || rdmaHandleTmp->rdmaOps->raNormalQpCreate == NULL ||
+        qpInitAttr == NULL || qp == NULL) {
         hccp_err("[create][ra_normal_qp]para is NULL or func is NULL");
         return ConverReturnCode(RDMA_OP, -EINVAL);
     }
@@ -1991,8 +1995,8 @@ HCCP_ATTRI_VISI_DEF int RaNormalQpDestroy(void *qpHandle)
         return ConverReturnCode(RDMA_OP, -EINVAL);
     }
 
-    hccp_run_info("Input parameters: qpn[%u], phyId[%u], rdevIndex[%u]",
-        raQpHandle->qpn, raQpHandle->phyId, raQpHandle->rdevIndex);
+    hccp_run_info("Input parameters: qpn[%u], phyId[%u], rdevIndex[%u]", raQpHandle->qpn, raQpHandle->phyId,
+        raQpHandle->rdevIndex);
 
     ret = raQpHandle->rdmaOps->raNormalQpDestroy(raQpHandle);
     return ConverReturnCode(RDMA_OP, ret);
@@ -2072,7 +2076,7 @@ HCCP_ATTRI_VISI_DEF int RaCreateCompChannel(const void *rdmaHandle, void **compC
 
     if (raRdmaHandle->rdmaOps == NULL || raRdmaHandle->rdmaOps->raCreateCompChannel == NULL) {
         hccp_err("[ra_create_comp_channel]rdma_ops is NULL or ra_rdma_handle->rdma_ops->ra_create_comp_channel "
-            "is NULL, invalid");
+                 "is NULL, invalid");
         return ConverReturnCode(RDMA_OP, -EINVAL);
     }
 
@@ -2097,7 +2101,7 @@ HCCP_ATTRI_VISI_DEF int RaDestroyCompChannel(const void *rdmaHandle, void *compC
 
     if (raRdmaHandle->rdmaOps == NULL || raRdmaHandle->rdmaOps->raDestroyCompChannel == NULL) {
         hccp_err("[ra_destroy_comp_channel]rdma_ops is NULL or ra_rdma_handle->rdma_ops->ra_destroy_comp_channel "
-            "is NULL, invalid");
+                 "is NULL, invalid");
         return ConverReturnCode(RDMA_OP, -EINVAL);
     }
 
@@ -2115,8 +2119,8 @@ HCCP_ATTRI_VISI_DEF int RaGetCqeErrInfo(unsigned int phyId, struct CqeErrInfo *i
     }
 
     if (phyId >= RA_MAX_PHY_ID_NUM) {
-        hccp_err("[ra_get_cqe_err_info]phyId(%u) must greater or equal to 0 and less than %d!",
-            phyId, RA_MAX_PHY_ID_NUM);
+        hccp_err("[ra_get_cqe_err_info]phyId(%u) must greater or equal to 0 and less than %d!", phyId,
+            RA_MAX_PHY_ID_NUM);
         return ConverReturnCode(RDMA_OP, -EINVAL);
     }
 
@@ -2124,8 +2128,7 @@ HCCP_ATTRI_VISI_DEF int RaGetCqeErrInfo(unsigned int phyId, struct CqeErrInfo *i
     return ConverReturnCode(RDMA_OP, ret);
 }
 
-HCCP_ATTRI_VISI_DEF int RaRdevGetCqeErrInfoList(void *rdmaHandle, struct CqeErrInfo *infoList,
-    unsigned int *num)
+HCCP_ATTRI_VISI_DEF int RaRdevGetCqeErrInfoList(void *rdmaHandle, struct CqeErrInfo *infoList, unsigned int *num)
 {
     struct RaRdmaHandle *raRdmaHandle = (struct RaRdmaHandle *)rdmaHandle;
     int ret;
@@ -2180,7 +2183,7 @@ HCCP_ATTRI_VISI_DEF int RaCreateSrq(const void *rdmaHandle, struct SrqAttr *attr
     // 创建srq&srq cq
     if (raRdmaHandle->rdmaOps == NULL || raRdmaHandle->rdmaOps->raCreateSrq == NULL) {
         hccp_err("[ra_create_srq]rdma_ops is NULL or ra_rdma_handle->rdma_ops->ra_create_srq "
-            "is NULL, invalid");
+                 "is NULL, invalid");
         return ConverReturnCode(RDMA_OP, -EINVAL);
     }
 
@@ -2206,7 +2209,7 @@ HCCP_ATTRI_VISI_DEF int RaDestroySrq(const void *rdmaHandle, struct SrqAttr *att
     // 销毁srq&srq cq
     if (raRdmaHandle->rdmaOps == NULL || raRdmaHandle->rdmaOps->raDestroySrq == NULL) {
         hccp_err("[ra_destroy_srq]rdma_ops is NULL or ra_rdma_handle->rdma_ops->ra_destroy_srq "
-            "is NULL, invalid");
+                 "is NULL, invalid");
         return ConverReturnCode(RDMA_OP, -EINVAL);
     }
 
@@ -2231,8 +2234,7 @@ HCCP_ATTRI_VISI_DEF int RaCreateEventHandle(int *eventHandle)
     return 0;
 }
 
-HCCP_ATTRI_VISI_DEF int RaCtlEventHandle(int eventHandle, const void *fdHandle, int opcode,
-    enum RaEpollEvent event)
+HCCP_ATTRI_VISI_DEF int RaCtlEventHandle(int eventHandle, const void *fdHandle, int opcode, enum RaEpollEvent event)
 {
     int ret;
 
@@ -2245,8 +2247,8 @@ HCCP_ATTRI_VISI_DEF int RaCtlEventHandle(int eventHandle, const void *fdHandle, 
         return ConverReturnCode(SOCKET_OP, -EINVAL);
     }
     if (opcode != EPOLL_CTL_ADD && opcode != EPOLL_CTL_DEL && opcode != EPOLL_CTL_MOD) {
-        hccp_err("[ra_ctl_event_handle]opcode[%d] invalid, valid opcode includes {%d, %d, %d}",
-            opcode, EPOLL_CTL_ADD, EPOLL_CTL_DEL, EPOLL_CTL_MOD);
+        hccp_err("[ra_ctl_event_handle]opcode[%d] invalid, valid opcode includes {%d, %d, %d}", opcode, EPOLL_CTL_ADD,
+            EPOLL_CTL_DEL, EPOLL_CTL_MOD);
         return ConverReturnCode(SOCKET_OP, -EINVAL);
     }
     if (event >= RA_EPOLLINVALD) {
@@ -2339,15 +2341,13 @@ HCCP_ATTRI_VISI_DEF int RaPollCq(void *qpHandle, bool isSendCq, unsigned int num
     return ret;
 }
 
-HCCP_ATTRI_VISI_DEF int RaTypicalQpModify(void *qpHandle, struct TypicalQp *localQpInfo,
-    struct TypicalQp *remoteQpInfo)
+HCCP_ATTRI_VISI_DEF int RaTypicalQpModify(void *qpHandle, struct TypicalQp *localQpInfo, struct TypicalQp *remoteQpInfo)
 {
     struct RaQpHandle *raQpHandle = (struct RaQpHandle *)qpHandle;
     unsigned int phyId;
     int ret;
 
-    if (qpHandle == NULL || raQpHandle->rdmaOps == NULL ||
-        raQpHandle->rdmaOps->raTypicalQpModify == NULL) {
+    if (qpHandle == NULL || raQpHandle->rdmaOps == NULL || raQpHandle->rdmaOps->raTypicalQpModify == NULL) {
         hccp_err("[modify][ra_qp]qp_handle is NULL or func is NULL");
         return ConverReturnCode(RDMA_OP, -EINVAL);
     }
@@ -2363,8 +2363,8 @@ HCCP_ATTRI_VISI_DEF int RaTypicalQpModify(void *qpHandle, struct TypicalQp *loca
         return ConverReturnCode(RDMA_OP, -EINVAL);
     }
 
-    hccp_run_info("Input parameters: phyId[%u] local_qpn[%u] remote_qpn[%u]",
-        phyId, localQpInfo->qpn, remoteQpInfo->qpn);
+    hccp_run_info("Input parameters: phyId[%u] local_qpn[%u] remote_qpn[%u]", phyId, localQpInfo->qpn,
+        remoteQpInfo->qpn);
 
     ret = raQpHandle->rdmaOps->raTypicalQpModify(raQpHandle, localQpInfo, remoteQpInfo);
     if (ret != 0) {
@@ -2410,8 +2410,8 @@ HCCP_ATTRI_VISI_DEF int RaSocketGetVnicIpInfos(unsigned int phyId, enum IdType t
     }
 
     if (phyId >= RA_MAX_PHY_ID_NUM) {
-        hccp_err("[get][vnic_ip]phyId(%u) is invalid! it must greater or equal to 0 and less than %d!",
-            phyId, RA_MAX_PHY_ID_NUM);
+        hccp_err("[get][vnic_ip]phyId(%u) is invalid! it must greater or equal to 0 and less than %d!", phyId,
+            RA_MAX_PHY_ID_NUM);
         return ConverReturnCode(OTHERS, -EINVAL);
     }
 
@@ -2434,8 +2434,8 @@ int RaQpBatchModifyCheckParam(void *rdmaHandle, void *qpHandle[], unsigned int n
 
     if (rdmaHandle == NULL || num == 0 || qpHandle == NULL ||
         ((expectStatus != RA_QP_STATUS_CONNECTED) && (expectStatus != RA_QP_STATUS_PAUSE))) {
-        hccp_err("[batch_modify][check param]expect_status is %d or rdma_handle is NULL or num[%u] is 0!",
-            expectStatus, num);
+        hccp_err("[batch_modify][check param]expect_status is %d or rdma_handle is NULL or num[%u] is 0!", expectStatus,
+            num);
         return ConverReturnCode(RDMA_OP, -EINVAL);
     }
 
@@ -2460,10 +2460,10 @@ HCCP_ATTRI_VISI_DEF int RaQpBatchModify(void *rdmaHandle, void *qpHandle[], unsi
 
     raRdmaHandle = (struct RaRdmaHandle *)rdmaHandle;
     phyId = raRdmaHandle->rdevInfo.phyId;
-    if (phyId >= RA_MAX_PHY_ID_NUM || raRdmaHandle->rdmaOps == NULL ||
-        raRdmaHandle->rdmaOps->raQpBatchModify == NULL) {
+    if (phyId >= RA_MAX_PHY_ID_NUM || raRdmaHandle->rdmaOps == NULL || raRdmaHandle->rdmaOps->raQpBatchModify == NULL) {
         hccp_err("[modify][ra_qp]phyId(%u) must greater or equal to 0 and less than %d or ops is NULL or "
-                 "ra_rdma_handle->rdma_ops->ra_qp_batch_modify is NULL!", phyId, RA_MAX_PHY_ID_NUM);
+                 "ra_rdma_handle->rdma_ops->ra_qp_batch_modify is NULL!",
+            phyId, RA_MAX_PHY_ID_NUM);
         return ConverReturnCode(RDMA_OP, -EINVAL);
     }
 
@@ -2475,8 +2475,7 @@ HCCP_ATTRI_VISI_DEF int RaQpBatchModify(void *rdmaHandle, void *qpHandle[], unsi
     }
     ret = raRdmaHandle->rdmaOps->raQpBatchModify(rdmaHandle, qpHandle, num, expectStatus);
     if (ret != 0) {
-        hccp_err("[modify][ra_qp_batch_modify]modify qp to [%d] failed, ret[%d] phyId[%u]",
-            expectStatus, ret, phyId);
+        hccp_err("[modify][ra_qp_batch_modify]modify qp to [%d] failed, ret[%d] phyId[%u]", expectStatus, ret, phyId);
     }
     if ((raRdmaHandle->supportLite != 0) && expectStatus == RA_QP_STATUS_PAUSE) {
         RA_PTHREAD_MUTEX_UNLOCK(&raRdmaHandle->rdevMutex);

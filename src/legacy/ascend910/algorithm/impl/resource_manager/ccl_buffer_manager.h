@@ -16,21 +16,18 @@
 
 namespace hccl {
 
-enum class MemAttr {
-    IN_CCL_BUFFER = 0,
-    OUT_CCL_BUFFER = 1
-};
+enum class MemAttr { IN_CCL_BUFFER = 0, OUT_CCL_BUFFER = 1 };
 
-constexpr s64 AIV_FLAG_SIZE = 4 * 1024 * 1024; // aiv算子需要的flag区域大小
+constexpr s64 AIV_FLAG_SIZE = 4 * 1024 * 1024;  // aiv算子需要的flag区域大小
 constexpr s64 AIV_DATA_SIZE = 36 * 1024 * 1024; // aiv算子需要的data区域大小
 constexpr s64 AIV_COMM_INFO_SIZE = 32 * 1024; // aiv算子需要的通信域信息区域大小，当前最大768*2*8 Byte
-constexpr u64 EXP_BUFFER_SIZE = 1 * 1024 *1024; // 拓展内存, 供MC2使用
+constexpr u64 EXP_BUFFER_SIZE = 1 * 1024 * 1024; // 拓展内存, 供MC2使用
 
 class CCLBufferManager {
 public:
     CCLBufferManager();
     ~CCLBufferManager();
-    HcclResult CreateCommCCLbuffer(const std::string &bufferName = "");
+    HcclResult CreateCommCCLbuffer(const std::string& bufferName = "");
     HcclResult CreateCommAIVbuffer(bool useOpbaseFlag);
     HcclResult CreateCommInfoAIVbuffer();
     HcclResult ReleaseCommCCLbuffer();
@@ -38,10 +35,10 @@ public:
     HcclResult InitCCLbuffer(u64 inCCLbufferSize, u64 outCCLbufferSize);
     DeviceMem& GetInCCLbuffer();
     DeviceMem& GetCommExpBuffer();
-    HcclResult GetInCCLbuffer(void* &buffer, u64 &size);
+    HcclResult GetInCCLbuffer(void*& buffer, u64& size);
     u64 GetInCCLbufferSize();
     DeviceMem& GetOutCCLbuffer();
-    HcclResult GetOutCCLbuffer(void* &buffer, u64 &size);
+    HcclResult GetOutCCLbuffer(void*& buffer, u64& size);
     DeviceMem& GetCommCCLBuffer();
     u64 GetOutCCLbufferSize();
     u64 GetExpBufferSize();
@@ -57,11 +54,12 @@ public:
     DeviceMem& GetOutAlltoAllvParaBuffer();
     void ReleaseAlltoAllvParaBuffer();
     HcclResult CleanCCLbuffer();
-    HcclResult CleanAIVbuffer(void *bufferPtr);
-    HcclResult GetIndependentOpCCLbuffer(void* &buffer, uint64_t &size);
+    HcclResult CleanAIVbuffer(void* bufferPtr);
+    HcclResult GetIndependentOpCCLbuffer(void*& buffer, uint64_t& size);
+
 private:
-    HcclResult CreateCCLbuffer(u64 size, DeviceMem &buffer);
-    void* GetCCLbufferAddr(const DeviceMem &buffer);
+    HcclResult CreateCCLbuffer(u64 size, DeviceMem& buffer);
+    void* GetCCLbufferAddr(const DeviceMem& buffer);
 
     DeviceMem cclBuffer_;
     DeviceMem inCCLbuffer_;

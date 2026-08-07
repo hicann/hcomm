@@ -13,7 +13,6 @@
 
 #include "alg_template_base_pub.h"
 
-namespace hccl {
-}
+namespace hccl {}
 
 #endif

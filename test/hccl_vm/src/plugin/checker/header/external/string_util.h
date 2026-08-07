@@ -15,12 +15,13 @@
 #include <string>
 #include <vector>
 
-template <typename... Args> inline std::string StringFormat(const char *format, Args... args)
+template <typename... Args>
+inline std::string StringFormat(const char* format, Args... args)
 {
     using namespace std;
     constexpr size_t bufSize = BUFSIZ;
-    char             buffer[bufSize];
-    size_t           actualSize = std::snprintf(&buffer[0], bufSize, format, args...);
+    char buffer[bufSize];
+    size_t actualSize = std::snprintf(&buffer[0], bufSize, format, args...);
     actualSize++;
 
     if (actualSize > bufSize) {
@@ -31,7 +32,8 @@ template <typename... Args> inline std::string StringFormat(const char *format, 
     return buffer;
 }
 
-template <typename I> std::string Dec2hex(I i)
+template <typename I>
+std::string Dec2hex(I i)
 {
     static_assert(std::is_integral<I>::value, "type I is not a integral");
     std::stringstream ss;
@@ -39,12 +41,13 @@ template <typename I> std::string Dec2hex(I i)
     return ss.str();
 }
 
-std::vector<std::string> SplitString(const std::string &str, const char c);
+std::vector<std::string> SplitString(const std::string& str, const char c);
 
-template <class T> T String2T(const std::string &s)
+template <class T>
+T String2T(const std::string& s)
 {
     // T must support >>
-    T                  t;
+    T t;
     std::istringstream ist(s);
     ist >> t;
     return t;

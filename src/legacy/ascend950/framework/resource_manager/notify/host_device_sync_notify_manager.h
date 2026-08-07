@@ -22,9 +22,9 @@ class HostDeviceSyncNotifyManager {
 public:
     HostDeviceSyncNotifyManager();
 
-    RtsNotify *GetDeviceWaitNotify();
+    RtsNotify* GetDeviceWaitNotify();
 
-    RtsNotify *GetHostWaitNotify();
+    RtsNotify* GetHostWaitNotify();
 
     void GetMc2AiCpuNotifys(u8 aicpuNotifyNum, void** aicpuNotify);
 

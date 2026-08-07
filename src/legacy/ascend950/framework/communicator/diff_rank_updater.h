@@ -15,7 +15,7 @@
 #include "topo_common_types.h"
 
 namespace Hccl {
-HcclResult DiffRankUpdater(const char *changeInfo, RankTableInfo &rankTableInfo);
+HcclResult DiffRankUpdater(const char* changeInfo, RankTableInfo& rankTableInfo);
 } // namespace Hccl
 
 #endif

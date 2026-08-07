@@ -20,17 +20,18 @@ extern "C" {
 
 /* ── 耗时打点宏（纳秒精度，通过 TOPO_INFO 输出） ── */
 
-#define TOPO_PERF_BEGIN(name) \
+#define TOPO_PERF_BEGIN(name)         \
     struct timespec _tp_##name##_bgn; \
     clock_gettime(CLOCK_MONOTONIC_RAW, &_tp_##name##_bgn)
 
-#define TOPO_PERF_END(name) do { \
-    struct timespec _tp_##name##_end; \
-    clock_gettime(CLOCK_MONOTONIC_RAW, &_tp_##name##_end); \
-    long long _tp_##name##_ns = (_tp_##name##_end.tv_sec - _tp_##name##_bgn.tv_sec) * 1000000000LL + \
-                                (_tp_##name##_end.tv_nsec - _tp_##name##_bgn.tv_nsec); \
-    TOPO_INFO("[perf] " #name " took %lld ns", _tp_##name##_ns); \
-} while (0)
+#define TOPO_PERF_END(name)                                                                            \
+    do {                                                                                               \
+        struct timespec _tp_##name##_end;                                                              \
+        clock_gettime(CLOCK_MONOTONIC_RAW, &_tp_##name##_end);                                         \
+        long long _tp_##name##_ns = (_tp_##name##_end.tv_sec - _tp_##name##_bgn.tv_sec) * 1000000000LL \
+                                    + (_tp_##name##_end.tv_nsec - _tp_##name##_bgn.tv_nsec);           \
+        TOPO_INFO("[perf] " #name " took %lld ns", _tp_##name##_ns);                                   \
+    } while (0)
 
 #ifdef __cplusplus
 }

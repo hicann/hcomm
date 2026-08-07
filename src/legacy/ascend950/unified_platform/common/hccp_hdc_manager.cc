@@ -14,7 +14,7 @@
 
 namespace Hccl {
 
-HccpHdcManager &HccpHdcManager::GetInstance()
+HccpHdcManager& HccpHdcManager::GetInstance()
 {
     static HccpHdcManager hccpHdcManager;
     return hccpHdcManager;
@@ -31,7 +31,7 @@ void HccpHdcManager::Init(u32 deviceLogicId)
 
     HRaInitConfig cfg;
     cfg.phyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
-    cfg.mode  = HrtNetworkMode::HDC;
+    cfg.mode = HrtNetworkMode::HDC;
     HrtRaInit(cfg);
 
     instances.insert(deviceLogicId);
@@ -65,7 +65,7 @@ void HccpHdcManager::DestroyAll()
     }
     destroyed.store(true);
 
-    //析构前先注销reset devcie的回调，防止嵌套调用
+    // 析构前先注销reset devcie的回调，防止嵌套调用
     UnregisterDeviceResetCallback();
 
     std::lock_guard<std::recursive_mutex> lock(managerMutex);
@@ -74,7 +74,7 @@ void HccpHdcManager::DestroyAll()
 
         HRaInitConfig cfg;
         cfg.phyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
-        cfg.mode  = HrtNetworkMode::HDC;
+        cfg.mode = HrtNetworkMode::HDC;
         DECTOR_TRY_CATCH("HccpHdcManager", HrtRaDeInit(cfg));
         DECTOR_TRY_CATCH("HccpHdcManager", HrtResetDevice(deviceLogicId));
     }
@@ -91,9 +91,6 @@ void HccpHdcManager::UnregisterDeviceResetCallback() const
     HCCL_INFO("[HccpHdcManager] aclrtRegDeviceStateCallback unregister success");
 }
 
-HccpHdcManager::~HccpHdcManager()
-{
-    DECTOR_TRY_CATCH("HccpHdcManager", DestroyAll());
-}
+HccpHdcManager::~HccpHdcManager() { DECTOR_TRY_CATCH("HccpHdcManager", DestroyAll()); }
 
 } // namespace Hccl

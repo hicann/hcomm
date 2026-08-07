@@ -31,12 +31,14 @@
 #include "sim_common_api.h"
 
 namespace sim {
-inline std::shared_mutex& GetConnectionMutex() {
+inline std::shared_mutex& GetConnectionMutex()
+{
     static std::shared_mutex s_connMtx;
     return s_connMtx;
 }
 
-inline int BusyHandler(void* /*data*/, int retryCount) {
+inline int BusyHandler(void* /*data*/, int retryCount)
+{
     static constexpr int kDelaysMs[] = {1, 2, 5, 10, 20, 50, 100, 200, 500};
     int idx = retryCount < 9 ? retryCount : 8;
     std::this_thread::sleep_for(std::chrono::milliseconds(kDelaysMs[idx]));
@@ -55,8 +57,8 @@ public:
     using KeyType = uint64_t;
     using ValueType = T;
 
-    SqliteTable(sqlite3* db, const std::string& tableName)
-        : m_db(db), m_tableName(tableName) {
+    SqliteTable(sqlite3* db, const std::string& tableName) : m_db(db), m_tableName(tableName)
+    {
         CreateTableIfNotExists();
     }
 
@@ -65,9 +67,10 @@ public:
     SqliteTable(const SqliteTable&) = delete;
     SqliteTable& operator=(const SqliteTable&) = delete;
 
-    KeyType Add(T& rec) {
-        static constexpr int    kMaxRetries = 8;
-        static constexpr int    kBackoffMs[] = {2, 5, 10, 20, 50, 100, 200, 500};
+    KeyType Add(T& rec)
+    {
+        static constexpr int kMaxRetries = 8;
+        static constexpr int kBackoffMs[] = {2, 5, 10, 20, 50, 100, 200, 500};
 
         for (int attempt = 0; attempt <= kMaxRetries; ++attempt) {
             std::unique_lock<std::shared_mutex> connLock(GetConnectionMutex());
@@ -77,8 +80,9 @@ public:
             sqlite3_stmt* rawStmt;
             int rc = sqlite3_prepare_v2(m_db, sql.c_str(), -1, &rawStmt, nullptr);
             if (rc != SQLITE_OK) {
-                HCCL_VM_ERROR("[SqliteTable::Add] SQL prepare failed [{}]: {} (rc={})",
-                        m_tableName.c_str(), sqlite3_errmsg(m_db), rc);
+                HCCL_VM_ERROR(
+                    "[SqliteTable::Add] SQL prepare failed [{}]: {} (rc={})", m_tableName.c_str(), sqlite3_errmsg(m_db),
+                    rc);
                 return 0;
             }
 
@@ -91,18 +95,19 @@ public:
                 return rec.id;
             }
 
-            int errc    = sqlite3_errcode(m_db);
+            int errc = sqlite3_errcode(m_db);
             int extErrc = sqlite3_extended_errcode(m_db);
 
-            bool isRetryable = (errc == SQLITE_BUSY    || errc == SQLITE_LOCKED   ||
-                                extErrc == SQLITE_BUSY_SNAPSHOT                   ||
-                                extErrc == SQLITE_LOCKED_SHAREDCACHE);
+            bool isRetryable
+                = (errc == SQLITE_BUSY || errc == SQLITE_LOCKED || extErrc == SQLITE_BUSY_SNAPSHOT
+                   || extErrc == SQLITE_LOCKED_SHAREDCACHE);
 
             connLock.unlock();
 
             if (!isRetryable || attempt == kMaxRetries) {
-                HCCL_VM_ERROR("[SqliteTable::Add] SQL insert failed [{}]: rc={}, errc={}, ext={}, msg={}",
-                        m_tableName.c_str(), stepRc, errc, extErrc, sqlite3_errmsg(m_db));
+                HCCL_VM_ERROR(
+                    "[SqliteTable::Add] SQL insert failed [{}]: rc={}, errc={}, ext={}, msg={}", m_tableName.c_str(),
+                    stepRc, errc, extErrc, sqlite3_errmsg(m_db));
                 return 0;
             }
 
@@ -111,7 +116,8 @@ public:
         return 0;
     }
 
-    bool Update(KeyType id, std::function<void(T&)> updater) {
+    bool Update(KeyType id, std::function<void(T&)> updater)
+    {
         static constexpr int kMaxRetries = 5;
         static constexpr int kBackoffMs[] = {2, 5, 10, 50, 200};
 
@@ -134,8 +140,8 @@ public:
             sqlite3_stmt* rawStmt;
             if (sqlite3_prepare_v2(m_db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
                 sqlite3_exec(m_db, "ROLLBACK", nullptr, nullptr, nullptr);
-                HCCL_VM_ERROR("[SqliteTable::Update] SQL prepare failed [{}]: {}",
-                        m_tableName.c_str(), sqlite3_errmsg(m_db));
+                HCCL_VM_ERROR(
+                    "[SqliteTable::Update] SQL prepare failed [{}]: {}", m_tableName.c_str(), sqlite3_errmsg(m_db));
                 return false;
             }
 
@@ -156,8 +162,9 @@ public:
                 connLock.unlock();
 
                 if (!isRetryable || attempt == kMaxRetries) {
-                    HCCL_VM_ERROR("[SqliteTable::Update] SQL step failed [{}]: rc={}, errc={}, msg={}",
-                            m_tableName.c_str(), result, errc, sqlite3_errmsg(m_db));
+                    HCCL_VM_ERROR(
+                        "[SqliteTable::Update] SQL step failed [{}]: rc={}, errc={}, msg={}", m_tableName.c_str(),
+                        result, errc, sqlite3_errmsg(m_db));
                     return false;
                 }
 
@@ -171,7 +178,8 @@ public:
         return false;
     }
 
-    bool Delete(KeyType id) {
+    bool Delete(KeyType id)
+    {
         std::unique_lock<std::shared_mutex> connLock(GetConnectionMutex());
 
         for (int attempt = 0; attempt < 5; ++attempt) {
@@ -179,8 +187,8 @@ public:
 
             sqlite3_stmt* rawStmt;
             if (sqlite3_prepare_v2(m_db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
-                HCCL_VM_ERROR("[SqliteTable::Delete] SQL prepare failed [{}]: {}",
-                        m_tableName.c_str(), sqlite3_errmsg(m_db));
+                HCCL_VM_ERROR(
+                    "[SqliteTable::Delete] SQL prepare failed [{}]: {}", m_tableName.c_str(), sqlite3_errmsg(m_db));
                 return false;
             }
 
@@ -193,8 +201,8 @@ public:
 
             int errc = sqlite3_errcode(m_db);
             if (errc != SQLITE_BUSY && errc != SQLITE_LOCKED) {
-                HCCL_VM_ERROR("[SqliteTable::Delete] SQL step failed [{}]: rc={}, errc={}",
-                        m_tableName.c_str(), result, errc);
+                HCCL_VM_ERROR(
+                    "[SqliteTable::Delete] SQL step failed [{}]: rc={}, errc={}", m_tableName.c_str(), result, errc);
                 return false;
             }
 
@@ -206,13 +214,14 @@ public:
         return false;
     }
 
-    bool DeleteAll() {
+    bool DeleteAll()
+    {
         std::unique_lock<std::shared_mutex> connLock(GetConnectionMutex());
 
         std::string sql = "DELETE FROM " + m_tableName;
         if (sqlite3_exec(m_db, sql.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
-            HCCL_VM_ERROR("[SqliteTable::DeleteAll] SQL delete all failed [{}]: {}",
-                    m_tableName.c_str(), sqlite3_errmsg(m_db));
+            HCCL_VM_ERROR(
+                "[SqliteTable::DeleteAll] SQL delete all failed [{}]: {}", m_tableName.c_str(), sqlite3_errmsg(m_db));
             return false;
         }
 
@@ -227,7 +236,8 @@ public:
         return true;
     }
 
-    std::optional<ValueType> Find(KeyType id) const {
+    std::optional<ValueType> Find(KeyType id) const
+    {
         std::shared_lock<std::shared_mutex> connLock(GetConnectionMutex());
 
         T rec;
@@ -237,7 +247,8 @@ public:
         return std::nullopt;
     }
 
-     std::vector<ValueType> QueryList(std::function<bool(const T&)> pred) const {
+    std::vector<ValueType> QueryList(std::function<bool(const T&)> pred) const
+    {
         std::shared_lock<std::shared_mutex> connLock(GetConnectionMutex());
 
         std::vector<ValueType> result;
@@ -249,8 +260,8 @@ public:
 
             sqlite3_stmt* rawStmt;
             if (sqlite3_prepare_v2(m_db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
-                HCCL_VM_ERROR("[SqliteTable::QueryList] SQL prepare failed [{}]: {}",
-                        m_tableName.c_str(), sqlite3_errmsg(m_db));
+                HCCL_VM_ERROR(
+                    "[SqliteTable::QueryList] SQL prepare failed [{}]: {}", m_tableName.c_str(), sqlite3_errmsg(m_db));
                 return result;
             }
 
@@ -261,7 +272,7 @@ public:
                 if (rc == SQLITE_ROW) {
                     T rec;
                     const void* blob = sqlite3_column_blob(stmt.get(), 1);
-                    int blobSize     = sqlite3_column_bytes(stmt.get(), 1);
+                    int blobSize = sqlite3_column_bytes(stmt.get(), 1);
                     if (blobSize == static_cast<int>(sizeof(T))) {
                         std::memcpy(&rec, blob, sizeof(T));
                         rec.id = static_cast<KeyType>(sqlite3_column_int64(stmt.get(), 0));
@@ -286,20 +297,20 @@ public:
             connLock.lock();
         }
 
-        HCCL_VM_ERROR("[SqliteTable::QueryList] SQLITE_BUSY after {} retries [{}]",
-                kMaxRetries, m_tableName.c_str());
+        HCCL_VM_ERROR("[SqliteTable::QueryList] SQLITE_BUSY after {} retries [{}]", kMaxRetries, m_tableName.c_str());
         return result;
-     }
+    }
 
-     std::pair<ValueType, bool> Query(std::function<bool(const T&)> pred) const {
+    std::pair<ValueType, bool> Query(std::function<bool(const T&)> pred) const
+    {
         std::shared_lock<std::shared_mutex> connLock(GetConnectionMutex());
         std::string sql = "SELECT id, data FROM " + m_tableName;
         static constexpr int kMaxRetries = 30;
         for (int attempt = 0; attempt <= kMaxRetries; ++attempt) {
             sqlite3_stmt* rawStmt;
             if (sqlite3_prepare_v2(m_db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
-                HCCL_VM_ERROR("[SqliteTable::Query] SQL prepare failed [{}]: {}",
-                        m_tableName.c_str(), sqlite3_errmsg(m_db));
+                HCCL_VM_ERROR(
+                    "[SqliteTable::Query] SQL prepare failed [{}]: {}", m_tableName.c_str(), sqlite3_errmsg(m_db));
                 return {ValueType{}, false};
             }
 
@@ -311,7 +322,7 @@ public:
                 if (rc == SQLITE_ROW) {
                     T rec;
                     const void* blob = sqlite3_column_blob(stmt.get(), 1);
-                    int blobSize     = sqlite3_column_bytes(stmt.get(), 1);
+                    int blobSize = sqlite3_column_bytes(stmt.get(), 1);
                     if (blobSize == static_cast<int>(sizeof(T))) {
                         std::memcpy(&rec, blob, sizeof(T));
                         rec.id = static_cast<KeyType>(sqlite3_column_int64(stmt.get(), 0));
@@ -336,34 +347,34 @@ public:
             connLock.lock();
         }
 
-        HCCL_VM_ERROR("[SqliteTable::Query] SQLITE_BUSY after {} retries [{}]",
-                kMaxRetries, m_tableName.c_str());
+        HCCL_VM_ERROR("[SqliteTable::Query] SQLITE_BUSY after {} retries [{}]", kMaxRetries, m_tableName.c_str());
         return {ValueType{}, false};
-     }
-
-    std::string GetTableName() const override {
-        return m_tableName;
     }
 
+    std::string GetTableName() const override { return m_tableName; }
+
 private:
-    void CreateTableIfNotExists() {
+    void CreateTableIfNotExists()
+    {
         std::unique_lock<std::shared_mutex> connLock(GetConnectionMutex());
-        std::string sql = "CREATE TABLE IF NOT EXISTS " + m_tableName +
-            " (id INTEGER PRIMARY KEY AUTOINCREMENT, data BLOB NOT NULL)";
+        std::string sql = "CREATE TABLE IF NOT EXISTS " + m_tableName
+                          + " (id INTEGER PRIMARY KEY AUTOINCREMENT, data BLOB NOT NULL)";
 
         if (sqlite3_exec(m_db, sql.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK) {
-            HCCL_VM_ERROR("[SqliteTable::CreateTableIfNotExists] SQL create table failed [{}]: {}",
-                    m_tableName.c_str(), sqlite3_errmsg(m_db));
+            HCCL_VM_ERROR(
+                "[SqliteTable::CreateTableIfNotExists] SQL create table failed [{}]: {}", m_tableName.c_str(),
+                sqlite3_errmsg(m_db));
         }
     }
 
-    bool FindInternal(KeyType id, T& rec) const {
+    bool FindInternal(KeyType id, T& rec) const
+    {
         std::string sql = "SELECT id, data FROM " + m_tableName + " WHERE id = ?";
 
         sqlite3_stmt* rawStmt;
         if (sqlite3_prepare_v2(m_db, sql.c_str(), -1, &rawStmt, nullptr) != SQLITE_OK) {
-            HCCL_VM_ERROR("[SqliteTable::FindInternal] SQL prepare failed [{}]: {}",
-                    m_tableName.c_str(), sqlite3_errmsg(m_db));
+            HCCL_VM_ERROR(
+                "[SqliteTable::FindInternal] SQL prepare failed [{}]: {}", m_tableName.c_str(), sqlite3_errmsg(m_db));
             return false;
         }
 
@@ -372,7 +383,7 @@ private:
 
         if (sqlite3_step(stmt.get()) == SQLITE_ROW) {
             const void* blob = sqlite3_column_blob(stmt.get(), 1);
-            int blobSize     = sqlite3_column_bytes(stmt.get(), 1);
+            int blobSize = sqlite3_column_bytes(stmt.get(), 1);
 
             if (blobSize == static_cast<int>(sizeof(T))) {
                 std::memcpy(&rec, blob, sizeof(T));
@@ -390,20 +401,20 @@ private:
 
 class SqliteDatabase {
 public:
-    static SqliteDatabase& Instance() {
+    static SqliteDatabase& Instance()
+    {
         static SqliteDatabase s_instance;
         return s_instance;
     }
 
-    static void SetDbPath(const std::string& path) {
-        s_dbPath = path;
-    }
+    static void SetDbPath(const std::string& path) { s_dbPath = path; }
 
     SqliteDatabase(const SqliteDatabase&) = delete;
     SqliteDatabase& operator=(const SqliteDatabase&) = delete;
 
     template <typename T>
-    SqliteTable<T>& GetTable(const std::string& tableName) {
+    SqliteTable<T>& GetTable(const std::string& tableName)
+    {
         {
             std::lock_guard<std::mutex> lock(m_tablesMutex);
             auto it = m_tables.find(tableName);
@@ -413,19 +424,20 @@ public:
         }
 
         auto newTable = std::make_unique<SqliteTable<T>>(m_db, tableName);
-        auto* rawPtr  = newTable.get();
+        auto* rawPtr = newTable.get();
 
         std::lock_guard<std::mutex> lock(m_tablesMutex);
         auto it = m_tables.find(tableName);
         if (it == m_tables.end()) {
-            m_tables[tableName]     = std::move(newTable);
+            m_tables[tableName] = std::move(newTable);
             m_tableTypes[tableName] = typeid(T).name();
             return *rawPtr;
         }
         return *static_cast<SqliteTable<T>*>(m_tables[tableName].get());
     }
 
-    void Close() {
+    void Close()
+    {
         std::unique_lock<std::shared_mutex> connLock(GetConnectionMutex());
         {
             std::lock_guard<std::mutex> lock(m_tablesMutex);
@@ -438,13 +450,12 @@ public:
         }
     }
 
-    sqlite3* GetDb() {
-        return m_db;
-    }
+    sqlite3* GetDb() { return m_db; }
 
-    void ClearAllTables() {
+    void ClearAllTables()
+    {
         std::unique_lock<std::shared_mutex> connLock(GetConnectionMutex());
-        std::lock_guard<std::mutex>         lock(m_tablesMutex);
+        std::lock_guard<std::mutex> lock(m_tablesMutex);
 
         for (auto& pair : m_tables) {
             std::string sql = "DELETE FROM " + pair.first;
@@ -452,7 +463,8 @@ public:
         }
     }
 
-    static void RemoveDbFile() {
+    static void RemoveDbFile()
+    {
         if (!s_dbPath.empty() && s_dbPath != ":memory:") {
             std::remove(s_dbPath.c_str());
             std::string walPath = s_dbPath + "-wal";
@@ -465,34 +477,32 @@ public:
 public:
     static std::string s_dbPath;
 
-    SqliteDatabase() : m_db(nullptr) {
+    SqliteDatabase() : m_db(nullptr)
+    {
         std::string actualPath = s_dbPath.empty() ? InstallPath::ResolveToInstallRoot("data/hccl_sim.db") : s_dbPath;
-        if (sqlite3_open_v2(actualPath.c_str(), &m_db,
-                            SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI,
-                            nullptr) != SQLITE_OK) {
-            HCCL_VM_ERROR("[SqliteDatabase] CRITICAL: Failed to open SQLite database: {}",
-                    sqlite3_errmsg(m_db));
+        if (sqlite3_open_v2(
+                actualPath.c_str(), &m_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_URI, nullptr)
+            != SQLITE_OK) {
+            HCCL_VM_ERROR("[SqliteDatabase] CRITICAL: Failed to open SQLite database: {}", sqlite3_errmsg(m_db));
         } else {
-            sqlite3_exec(m_db, "PRAGMA journal_mode     = WAL",        nullptr, nullptr, nullptr);
-            sqlite3_exec(m_db, "PRAGMA synchronous      = NORMAL",     nullptr, nullptr, nullptr);
-            sqlite3_exec(m_db, "PRAGMA cache_size       = -10000",     nullptr, nullptr, nullptr);
-            sqlite3_exec(m_db, "PRAGMA temp_store       = MEMORY",     nullptr, nullptr, nullptr);
-            sqlite3_exec(m_db, "PRAGMA locking_mode     = NORMAL",     nullptr, nullptr, nullptr);
-            sqlite3_exec(m_db, "PRAGMA wal_autocheckpoint = 1000",     nullptr, nullptr, nullptr);
-            sqlite3_exec(m_db, "PRAGMA busy_timeout     = 60000",      nullptr, nullptr, nullptr);
+            sqlite3_exec(m_db, "PRAGMA journal_mode     = WAL", nullptr, nullptr, nullptr);
+            sqlite3_exec(m_db, "PRAGMA synchronous      = NORMAL", nullptr, nullptr, nullptr);
+            sqlite3_exec(m_db, "PRAGMA cache_size       = -10000", nullptr, nullptr, nullptr);
+            sqlite3_exec(m_db, "PRAGMA temp_store       = MEMORY", nullptr, nullptr, nullptr);
+            sqlite3_exec(m_db, "PRAGMA locking_mode     = NORMAL", nullptr, nullptr, nullptr);
+            sqlite3_exec(m_db, "PRAGMA wal_autocheckpoint = 1000", nullptr, nullptr, nullptr);
+            sqlite3_exec(m_db, "PRAGMA busy_timeout     = 60000", nullptr, nullptr, nullptr);
             sqlite3_busy_handler(m_db, BusyHandler, nullptr);
         }
     }
 
-    ~SqliteDatabase() {
-        Close();
-    }
+    ~SqliteDatabase() { Close(); }
 
-    sqlite3*                                   m_db;
-    mutable std::mutex                         m_tablesMutex;
+    sqlite3* m_db;
+    mutable std::mutex m_tablesMutex;
     std::unordered_map<std::string, std::unique_ptr<TableBase>> m_tables;
-    std::unordered_map<std::string, std::string>                m_tableTypes;
+    std::unordered_map<std::string, std::string> m_tableTypes;
 };
-}
+} // namespace sim
 
 #endif

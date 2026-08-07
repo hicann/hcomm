@@ -48,25 +48,26 @@ std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> InitFileSink(const LogConf
         // 同一把非递归 std::mutex, 造成自死锁。因此这里只能直写 stderr, 不得使用日志宏。
         // rename
         static std::atomic<uint32_t> g_log_file_index{0};
-        if (filePath.size() < config.fileSuffix.size() ||
-            filePath.substr(filePath.size() - config.fileSuffix.size()) != config.fileSuffix) {
+        if (filePath.size() < config.fileSuffix.size()
+            || filePath.substr(filePath.size() - config.fileSuffix.size()) != config.fileSuffix) {
             fprintf(stderr, "[HCCL-VM][ERROR] Log file name error: %s\n", filePath.c_str());
             return;
         }
         std::ostringstream oss;
-        oss << filePath.substr(0, filePath.size() - config.fileSuffix.size())
-            << "_" << std::to_string(g_log_file_index.fetch_add(1, std::memory_order_relaxed))
-            << config.fileSuffix;
+        oss << filePath.substr(0, filePath.size() - config.fileSuffix.size()) << "_"
+            << std::to_string(g_log_file_index.fetch_add(1, std::memory_order_relaxed)) << config.fileSuffix;
         const std::string newPath = oss.str();
         if (spdlog::details::os::rename(filePath, newPath) != 0) {
-            fprintf(stderr, "[HCCL-VM][ERROR] Fail to rename rotating log file: %s -> %s pid %d errno %d: %s\n",
- 	                 filePath.c_str(), newPath.c_str(), getpid(), errno, strerror(errno));
+            fprintf(
+                stderr, "[HCCL-VM][ERROR] Fail to rename rotating log file: %s -> %s pid %d errno %d: %s\n",
+                filePath.c_str(), newPath.c_str(), getpid(), errno, strerror(errno));
             return;
         }
     };
 
     std::ostringstream logFileName;
-    logFileName << config.filePath << "/" << config.fileBaseName << "_" << std::to_string(getpid()) << config.fileSuffix;
+    logFileName << config.filePath << "/" << config.fileBaseName << "_" << std::to_string(getpid())
+                << config.fileSuffix;
 
     auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
         logFileName.str(), config.maxFileSize, config.maxFiles, true, handlers);
@@ -88,9 +89,7 @@ LogConfig LoadLogConfig(const std::string& process_name)
 {
     LogConfig cfg;
 
-    static const std::map<std::string, std::string> yaml_node_map = {
-        {"device_aarch64", "proxy"}
-    };
+    static const std::map<std::string, std::string> yaml_node_map = {{"device_aarch64", "proxy"}};
     std::string node_name = process_name;
     auto it = yaml_node_map.find(process_name);
     if (it != yaml_node_map.end()) {
@@ -99,31 +98,31 @@ LogConfig LoadLogConfig(const std::string& process_name)
 
     std::map<std::string, std::string> fields;
     if (LoadYamlStringMap(GetLogYamlConfigPath(), node_name, fields)) {
-        auto it_console  = fields.find("console_level");
-        auto it_file     = fields.find("file_level");
+        auto it_console = fields.find("console_level");
+        auto it_file = fields.find("file_level");
         auto it_max_size = fields.find("max_file_size");
-        auto it_max_num  = fields.find("max_files");
-        auto it_path     = fields.find("file_path");
-        auto it_suffix   = fields.find("file_suffix");
+        auto it_max_num = fields.find("max_files");
+        auto it_path = fields.find("file_path");
+        auto it_suffix = fields.find("file_suffix");
         auto it_compress = fields.find("enable_compress");
 
-        if (it_console  != fields.end()) {
-            cfg.consoleLevel   = std::stoi(it_console->second);
+        if (it_console != fields.end()) {
+            cfg.consoleLevel = std::stoi(it_console->second);
         }
-        if (it_file     != fields.end()) {
-            cfg.fileLevel      = std::stoi(it_file->second);
+        if (it_file != fields.end()) {
+            cfg.fileLevel = std::stoi(it_file->second);
         }
         if (it_max_size != fields.end()) {
-            cfg.maxFileSize    = static_cast<size_t>(std::stoull(it_max_size->second));
+            cfg.maxFileSize = static_cast<size_t>(std::stoull(it_max_size->second));
         }
-        if (it_max_num  != fields.end()) {
-            cfg.maxFiles       = static_cast<size_t>(std::stoull(it_max_num->second));
+        if (it_max_num != fields.end()) {
+            cfg.maxFiles = static_cast<size_t>(std::stoull(it_max_num->second));
         }
-        if (it_path     != fields.end()) {
+        if (it_path != fields.end()) {
             cfg.filePath = InstallPath::ResolveToInstallRoot(it_path->second);
         }
-        if (it_suffix   != fields.end()) {
-            cfg.fileSuffix     = it_suffix->second;
+        if (it_suffix != fields.end()) {
+            cfg.fileSuffix = it_suffix->second;
         }
         if (it_compress != fields.end()) {
             cfg.enableCompress = (it_compress->second == "true" || it_compress->second == "1");
@@ -156,10 +155,12 @@ void InitLogger(const LogConfig& config)
         auto console_sink = InitConsoleSink(config);
         auto file_sink = InitFileSink(config);
         g_logger = new spdlog::logger("muti-logger", spdlog::sinks_init_list({console_sink, file_sink}));
-        g_logger->set_level(spdlog::level::trace);  // global级别设置为最低, 只通过sink的级别控制日志输出
+        g_logger->set_level(spdlog::level::trace); // global级别设置为最低, 只通过sink的级别控制日志输出
         g_logger->flush_on(spdlog::level::warn);
 
-        std::atexit([] (){ DeInitLogger(); });
+        std::atexit([]() {
+            DeInitLogger();
+        });
     } catch (...) {
         // 此处 g_logger 可能尚未成功构造(为 null), 且报告的正是"日志初始化失败";
         // 再用日志宏会被宏内的 null 守卫吞掉, 导致失败完全不可见。故直写 stderr。

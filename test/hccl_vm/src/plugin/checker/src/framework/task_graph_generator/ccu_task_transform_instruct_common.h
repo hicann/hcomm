@@ -36,7 +36,7 @@
 
 using namespace hcomm;
 namespace HcclSim {
-    std::string ParseMSList(const CcuRep::CcuInstr *instr);
+std::string ParseMSList(const CcuRep::CcuInstr* instr);
 }
 
 #endif

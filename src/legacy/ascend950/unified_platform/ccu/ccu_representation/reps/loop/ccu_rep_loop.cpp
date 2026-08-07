@@ -18,68 +18,63 @@
 namespace Hccl {
 namespace CcuRep {
 
-CcuRepLoop::CcuRepLoop(const std::string &label, const Variable &loopParam) : label(label), loopParam(loopParam)
-{
-    type       = CcuRepType::LOOP;
-    instrCount = 1; // loop翻译需要1条指令
-}
-
-const std::string &CcuRepLoop::GetLabel() const
-{
-    return label;
-}
-
-void CcuRepLoop::Reference(std::shared_ptr<CcuRepLoopBlock> refRep)
-{
-    loopBlock = refRep;
-}
-
-std::shared_ptr<CcuRepBase> CcuRepLoop::SetLoopParam(Executor executor, Variable var)
-{
-    return std::make_shared<CcuRepSetLoop>(loopParam, executor, var);
-}
-
-bool CcuRepLoop::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
-
-    Hccl::CHECK_NULLPTR(loopBlock, "[CcuRepLoop::Translate] LoopBlock is nullptr!");
-
-    if (!loopBlock->Translated()) {
-        THROW<CcuApiException>("Reference To Invalid LoopBlock");
+    CcuRepLoop::CcuRepLoop(const std::string& label, const Variable& loopParam) : label(label), loopParam(loopParam)
+    {
+        type = CcuRepType::LOOP;
+        instrCount = 1; // loop翻译需要1条指令
     }
 
-    uint16_t startInstrId = loopBlock->StartInstrId();
-    uint16_t loopInstrCount = loopBlock->InstrCount();
-    if (loopInstrCount == 0) {
-        HCCL_ERROR("[CcuRepLoop][Translate] loopInstrCount[%u] is 0, which causes underflow in endInstrId calculation.",
-                    loopInstrCount);
-        return false;
+    const std::string& CcuRepLoop::GetLabel() const { return label; }
+
+    void CcuRepLoop::Reference(std::shared_ptr<CcuRepLoopBlock> refRep) { loopBlock = refRep; }
+
+    std::shared_ptr<CcuRepBase> CcuRepLoop::SetLoopParam(Executor executor, Variable var)
+    {
+        return std::make_shared<CcuRepSetLoop>(loopParam, executor, var);
     }
-    if (startInstrId > USHRT_MAX - loopInstrCount) {
-        HCCL_ERROR("[CcuRepLoop][Translate] startInstrId[%u] + loopInstrCount[%u] exceeds the maximum value of unsigned short int.",
-                    startInstrId, loopInstrCount);
-        return false;
+
+    bool CcuRepLoop::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
+
+        Hccl::CHECK_NULLPTR(loopBlock, "[CcuRepLoop::Translate] LoopBlock is nullptr!");
+
+        if (!loopBlock->Translated()) {
+            THROW<CcuApiException>("Reference To Invalid LoopBlock");
+        }
+
+        uint16_t startInstrId = loopBlock->StartInstrId();
+        uint16_t loopInstrCount = loopBlock->InstrCount();
+        if (loopInstrCount == 0) {
+            HCCL_ERROR(
+                "[CcuRepLoop][Translate] loopInstrCount[%u] is 0, which causes underflow in endInstrId calculation.",
+                loopInstrCount);
+            return false;
+        }
+        if (startInstrId > USHRT_MAX - loopInstrCount) {
+            HCCL_ERROR(
+                "[CcuRepLoop][Translate] startInstrId[%u] + loopInstrCount[%u] exceeds the maximum value of unsigned "
+                "short int.",
+                startInstrId, loopInstrCount);
+            return false;
+        }
+        if (instrId > USHRT_MAX - instrCount) {
+            HCCL_ERROR(
+                "[CcuRepLoop][Translate] instrId[%u] + instrCount[%u] exceeds the maximum value of unsigned short int.",
+                instrId, instrCount);
+            return false;
+        }
+        uint16_t endInstrId = startInstrId + loopInstrCount - 1;
+
+        LoopInstr(instr++, startInstrId, endInstrId, loopParam.Id());
+
+        instrId += instrCount;
+
+        return translated;
     }
-    if (instrId > USHRT_MAX - instrCount) {
-        HCCL_ERROR("[CcuRepLoop][Translate] instrId[%u] + instrCount[%u] exceeds the maximum value of unsigned short int.",
-                    instrId, instrCount);
-        return false;
-    }
-    uint16_t endInstrId = startInstrId + loopInstrCount - 1;
 
-    LoopInstr(instr++, startInstrId, endInstrId, loopParam.Id());
-
-    instrId += instrCount;
-
-    return translated;
-}
-
-std::string CcuRepLoop::Describe()
-{
-    return StringFormat("Loop reference to [%s]", label.c_str());
-}
+    std::string CcuRepLoop::Describe() { return StringFormat("Loop reference to [%s]", label.c_str()); }
 
 }; // namespace CcuRep
 }; // namespace Hccl

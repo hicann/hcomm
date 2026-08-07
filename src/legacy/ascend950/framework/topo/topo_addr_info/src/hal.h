@@ -14,50 +14,49 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
-
+#endif
 
 #define DCMI_URMA_EID_SIZE (16)
 #define MAX_EID_NUM (32)
 #define MAX_NPU_COUNT (64)
 
-typedef union dcmi_urma_eid{
+typedef union dcmi_urma_eid {
     unsigned char raw[DCMI_URMA_EID_SIZE];
     struct {
         unsigned long subnet_prefix;
         unsigned long interface_id;
-    }in6;
-}dcmi_urma_eid_t;
+    } in6;
+} dcmi_urma_eid_t;
 
 typedef struct dcmi_urma_eid_info {
     dcmi_urma_eid_t eid;
     unsigned int eid_index;
-}dcmi_urma_eid_info_t;
+} dcmi_urma_eid_info_t;
 
 #define MAX_EID_PER_UE (32)
 typedef struct {
     dcmi_urma_eid_info_t eidList[MAX_EID_PER_UE];
     unsigned int eidNum;
-}UBEntity;
+} UBEntity;
 
 #define MAX_UE_PER_NPU (8)
 typedef struct {
     UBEntity ueList[MAX_UE_PER_NPU];
     unsigned int ueNum;
-}UEList;
+} UEList;
 
-int HalGetUBEntityList(int phyId, UEList *ueList);
+int HalGetUBEntityList(int phyId, UEList* ueList);
 
 struct dcmi_pcie_info_all {
-unsigned int venderid; //厂商ID
-unsigned int subvenderid; //厂商子ID
-unsigned int deviceid; //设备ID
-unsigned int subdeviceid; //设备子ID
-int domain; //pcie domain
-unsigned int bdf_busid; //BDF（Bus，Device，Function）中的总线ID
-unsigned int bdf_deviceid; //BDF（Bus，Device，Function）中的设备ID
-unsigned int bdf_funcid; //BDF（Bus，Device，Function）中的功能ID
-unsigned char reserve[32];
+    unsigned int venderid;     // 厂商ID
+    unsigned int subvenderid;  // 厂商子ID
+    unsigned int deviceid;     // 设备ID
+    unsigned int subdeviceid;  // 设备子ID
+    int domain;                // pcie domain
+    unsigned int bdf_busid;    // BDF（Bus，Device，Function）中的总线ID
+    unsigned int bdf_deviceid; // BDF（Bus，Device，Function）中的设备ID
+    unsigned int bdf_funcid;   // BDF（Bus，Device，Function）中的功能ID
+    unsigned char reserve[32];
 };
 
 struct dcmi_spod_info {
@@ -80,14 +79,13 @@ struct dcmi_spod_info {
 #define MAIN_BOARD_ID_SERVER_8PMESH_NOSP_UBOE (0x2B)
 #define MAIN_BOARD_ID_SERVER_16PMESH (0x44)
 #define MAIN_BOARD_ID_SERVER_UBX (0x44)
-#define MAIN_BOARD_ID_POD         (0x07)
-#define MAIN_BOARD_ID_POD_2D      (0x03)
-
+#define MAIN_BOARD_ID_POD (0x07)
+#define MAIN_BOARD_ID_POD_2D (0x03)
 
 /* 定义拓扑类型 */
-#define TOPO_TYPE_IGNORE (99)      // 忽略该拓扑类型
-#define TOPO_TYPE_SERVER_8P (0)    // 普通服务
-#define TOPO_TYPE_SERVER_16FM (3)  // 两个服务器组16p fullmesh
+#define TOPO_TYPE_IGNORE (99)     // 忽略该拓扑类型
+#define TOPO_TYPE_SERVER_8P (0)   // 普通服务
+#define TOPO_TYPE_SERVER_16FM (3) // 两个服务器组16p fullmesh
 
 int hal_get_eid_list_by_phy_id(int phyId, dcmi_urma_eid_info_t* eidList, size_t* eidCnt);
 
@@ -101,17 +99,17 @@ int hal_get_npu_count();
 
 int hal_get_logicid_from_phyid(unsigned int phyId, unsigned int* logicId);
 
-int hal_get_userdevid_by_phyid(int phyId, int *userDevId);
+int hal_get_userdevid_by_phyid(int phyId, int* userDevId);
 
 int get_server_id(char* server_id, size_t buf_size);
 
-int hal_get_driver_install_path(char *value_buf, size_t buf_size);
+int hal_get_driver_install_path(char* value_buf, size_t buf_size);
 
 /**
  * 添加一层适配，便于测试
  */
-void *hal_dlopen(const char *filename, int flag);
-void *hal_dlsym(void *handle, const char *symbol);
+void* hal_dlopen(const char* filename, int flag);
+void* hal_dlsym(void* handle, const char* symbol);
 
 #ifdef __cplusplus
 }

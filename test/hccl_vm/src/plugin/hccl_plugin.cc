@@ -27,13 +27,13 @@
 
 using namespace HcclSim;
 
-const int HcclPlugin::MAX_SCAN_DEPTH = 2;    // 最大扫描深度
+const int HcclPlugin::MAX_SCAN_DEPTH = 2; // 最大扫描深度
 const std::string HcclPlugin::PLUGIN_PATH = "/plugin";
 const std::string HcclPlugin::MANIFEST_FILE = "/manifest.json";
 
-const std::string HcclPlugin::Manifest::pluginName    = "name";
+const std::string HcclPlugin::Manifest::pluginName = "name";
 const std::string HcclPlugin::Manifest::pluginVersion = "version";
-const std::string HcclPlugin::Manifest::pluginEntry   = "entry";
+const std::string HcclPlugin::Manifest::pluginEntry = "entry";
 
 const std::string HcclPlugin::Manifest::pluginDependency::hostVersion = "min_core_version";
 
@@ -46,7 +46,7 @@ HcclPlugin::HcclPlugin(const std::string& pluginPath)
     m_pluginPath = pluginPath;
     std::string manifestPath = pluginPath + HcclPlugin::MANIFEST_FILE;
     std::ifstream file(manifestPath);
-    
+
     if (!file.is_open()) {
         throw std::runtime_error("Manifest not found at: " + manifestPath);
     }
@@ -65,10 +65,7 @@ HcclPlugin::HcclPlugin(const std::string& pluginPath)
     }
 }
 
-HcclPlugin::~HcclPlugin()
-{
-    Stop();
-}
+HcclPlugin::~HcclPlugin() { Stop(); }
 
 HcclVmResult HcclPlugin::Start()
 {
@@ -90,7 +87,7 @@ HcclVmResult HcclPlugin::Start()
     }
     if (m_pid == 0) {
         // 子进程逻辑
-        prctl(PR_SET_PDEATHSIG, SIGTERM);   // 父进程退出时自动退出子进程
+        prctl(PR_SET_PDEATHSIG, SIGTERM); // 父进程退出时自动退出子进程
 
         ::close(fds[1]); // 关闭不需要的写端
 
@@ -120,7 +117,7 @@ HcclVmResult HcclPlugin::Start()
         int flags = fcntl(m_stdinFd, F_GETFL, 0);
         fcntl(m_stdinFd, F_SETFL, flags | O_NONBLOCK);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(5)); 
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
         int status = 0;
         pid_t res = waitpid(m_pid, &status, WNOHANG);
@@ -140,7 +137,7 @@ HcclVmResult HcclPlugin::Start()
             // 清理现场，防止后续逻辑误以为子进程还在
             ::close(m_stdinFd);
             m_stdinFd = -1;
-            m_pid = -1; 
+            m_pid = -1;
             return HcclVmResult::HCCL_SIM_E_INTERNAL; // 返回具体的错误枚举
         } else {
             // 情况 C: waitpid 出错
@@ -189,7 +186,7 @@ HcclVmResult HcclPlugin::Stop()
     // 3. 进入 5 秒等待期
     bool exited = false;
     auto start = std::chrono::steady_clock::now();
-    
+
     // 使用 1 秒一次的频率进行非阻塞检查 (满足你之前的 sleep(1) 想法)
     while (true) {
         int32_t stas;
@@ -213,7 +210,7 @@ HcclVmResult HcclPlugin::Stop()
     if (!exited) {
         HCCL_VM_ERROR("Plugin [{}] detected as not exiting normally.", GetTag());
         HCCL_VM_ERROR("[ACTION REQUIRED] Please manually check or terminate PID: {:d}", m_pid);
-        
+
         // 既然无法回收，我们将该 PID 记录在日志后放弃管理
         // 防止析构函数再次产生误判
     } else {
@@ -224,9 +221,7 @@ HcclVmResult HcclPlugin::Stop()
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult HcclPlugin::SendMessage(PLUGIN_MESSAGE_TYPE type, 
-                                        const std::string& action, 
-                                        const nlohmann::json& payload)
+HcclVmResult HcclPlugin::SendMessage(PLUGIN_MESSAGE_TYPE type, const std::string& action, const nlohmann::json& payload)
 {
     if (m_pid <= 0 || m_stdinFd == -1) {
         return HcclVmResult::HCCL_SIM_SUCCESS;
@@ -236,7 +231,7 @@ HcclVmResult HcclPlugin::SendMessage(PLUGIN_MESSAGE_TYPE type,
     nlohmann::json msg;
     msg[HcclPlugin::PluginMessage::messageType] = static_cast<int32_t>(type);
     msg[HcclPlugin::PluginMessage::messageAction] = action;
-    
+
     // 即使 payload 为空也传个空对象 {}，方便插件端解析
     msg[HcclPlugin::PluginMessage::messagePayload] = payload;
 
@@ -253,7 +248,8 @@ HcclVmResult HcclPlugin::SendMessage(PLUGIN_MESSAGE_TYPE type,
     }
 }
 
-bool HcclPlugin::IsRunning() const {
+bool HcclPlugin::IsRunning() const
+{
     if (m_pid <= 0) {
         return false;
     }
@@ -274,13 +270,12 @@ bool HcclPlugin::IsRunning() const {
     }
 }
 
-std::string HcclPlugin::GetTag() const {
-    return m_manifest.value(HcclPlugin::Manifest::pluginName, "Unknown");
-}
+std::string HcclPlugin::GetTag() const { return m_manifest.value(HcclPlugin::Manifest::pluginName, "Unknown"); }
 
-std::vector<char*> HcclPlugin::PrepareArgs(const std::string& command) {
+std::vector<char*> HcclPlugin::PrepareArgs(const std::string& command)
+{
     std::vector<char*> argv;
-    
+
     // 1. 在局部创建一个副本（每个子进程独立，无需 static）
     // 使用 std::vector<char> 以确保内存连续且可写
     std::vector<char> buffer(command.begin(), command.end());
@@ -290,14 +285,14 @@ std::vector<char*> HcclPlugin::PrepareArgs(const std::string& command) {
     char* saveptr = nullptr;
     // 注意：这里的 buffer.data() 指向的是子进程栈/堆上的副本
     char* token = strtok_r(buffer.data(), " ", &saveptr);
-    
+
     while (token != nullptr) {
         // 这里有一个关键点：token 指向 buffer 内部
         // 我们需要把这个 token 真正拷贝出来，否则 buffer 销毁后指针就失效了
-        argv.push_back(strdup(token)); 
+        argv.push_back(strdup(token));
         token = strtok_r(nullptr, " ", &saveptr);
     }
-    
+
     argv.push_back(nullptr);
     return argv;
 }

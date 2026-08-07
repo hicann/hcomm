@@ -24,9 +24,10 @@ public:
 
 private:
     HcclResult DisposeSubGroups(const u32 rank) override;
-    HcclResult CommAHCInfoInit() override;    
-    HcclResult RunInterAllReduce(const u32 rank, const std::vector<LINK> &links,
-        const std::unique_ptr<CommAHCBaseInfo> &commAHCBaseInfo) override;
+    HcclResult CommAHCInfoInit() override;
+    HcclResult RunInterAllReduce(
+        const u32 rank, const std::vector<LINK>& links,
+        const std::unique_ptr<CommAHCBaseInfo>& commAHCBaseInfo) override;
 };
 } // namespace hccl
 #endif /* ALL_REDUCE_AHC_BROKE_PUB_H */

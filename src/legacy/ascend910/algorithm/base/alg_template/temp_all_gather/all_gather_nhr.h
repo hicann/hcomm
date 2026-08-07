@@ -13,7 +13,6 @@
 
 #include "all_gather_nhr_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALL_GATHER_NHR_H */

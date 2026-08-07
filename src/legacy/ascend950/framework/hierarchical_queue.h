@@ -24,34 +24,29 @@
 namespace Hccl {
 using namespace std;
 
-template <typename E, typename SubQueue> class HierarchicalQueue {
+template <typename E, typename SubQueue>
+class HierarchicalQueue {
 public:
     using SlaveIterator = BaseConstIterator<vector, shared_ptr<SubQueue>>;
 
     using Iterator = BaseConstIterator<vector, unique_ptr<E>>;
 
     using UnConstIterator = BaseIterator<vector, unique_ptr<E>>;
- 
+
     using UnConstSlaveIterator = BaseIterator<vector, shared_ptr<SubQueue>>;
 
-    inline u32 GetId() const
-    {
-        return id;
-    }
+    inline u32 GetId() const { return id; }
 
-    inline bool IsMaster() const
-    {
-        return masterFlag;
-    }
+    inline bool IsMaster() const { return masterFlag; }
 
     virtual shared_ptr<SubQueue> Fork()
     {
         // 待修改 Fork() can only be called by master queue!;
-        auto slave        = make_shared<SubQueue>();
+        auto slave = make_shared<SubQueue>();
         slave->masterFlag = false;
-        slave->id         = slaves.size() + 1;
+        slave->id = slaves.size() + 1;
         slaves.push_back(slave);
-        slave->master = static_cast<SubQueue *>(this)->shared_from_this();
+        slave->master = static_cast<SubQueue*>(this)->shared_from_this();
         return slave;
     }
 
@@ -64,37 +59,19 @@ public:
         elements.push_back(std::move(elem));
     }
 
-    weak_ptr<HierarchicalQueue> GetMaster()
-    {
-        return master;
-    }
+    weak_ptr<HierarchicalQueue> GetMaster() { return master; }
 
-    SlaveIterator IterSlaves() const
-    {
-        return SlaveIterator(slaves);
-    };
+    SlaveIterator IterSlaves() const { return SlaveIterator(slaves); };
 
-    Iterator Iter() const
-    {
-        return Iterator(elements);
-    };
+    Iterator Iter() const { return Iterator(elements); };
 
-    UnConstSlaveIterator UnConstIterSlaves()
-    {
-        return UnConstSlaveIterator(slaves);
-    };
- 
-    UnConstIterator UnConstIter()
-    {
-        return UnConstIterator(elements);
-    };
+    UnConstSlaveIterator UnConstIterSlaves() { return UnConstSlaveIterator(slaves); };
 
-    inline u32 Size() const
-    {
-        return elements.size();
-    };
+    UnConstIterator UnConstIter() { return UnConstIterator(elements); };
 
-    const E *First() const
+    inline u32 Size() const { return elements.size(); };
+
+    const E* First() const
     {
         if (elements.empty()) {
             return nullptr;
@@ -102,7 +79,7 @@ public:
         return elements.front().get();
     };
 
-    const E *Last() const
+    const E* Last() const
     {
         if (elements.empty()) {
             return nullptr;
@@ -110,17 +87,14 @@ public:
         return elements.back().get();
     };
 
-    inline u32 SizeOfSlaves() const
-    {
-        return slaves.size();
-    };
+    inline u32 SizeOfSlaves() const { return slaves.size(); };
 
 protected:
-    HierarchicalQueue() : id(0), masterFlag(true){};
+    HierarchicalQueue() : id(0), masterFlag(true) {};
 
-    QId                          id;
-    bool                         masterFlag;
-    weak_ptr<SubQueue>           master;
+    QId id;
+    bool masterFlag;
+    weak_ptr<SubQueue> master;
     vector<shared_ptr<SubQueue>> slaves;
     // 使用指针保证E的多态
     vector<unique_ptr<E>> elements;

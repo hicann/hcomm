@@ -19,7 +19,7 @@ class RtsNotify : public NotifyBase {
 public:
     explicit RtsNotify(NotifyType notifyType);
     RtsNotify(NotifyType notifyType, HcclNotifyInfo notifyInfo);
-    RtsNotify(NotifyType notifyType, const HcclSignalInfo &notifyInfo);
+    RtsNotify(NotifyType notifyType, const HcclSignalInfo& notifyInfo);
     ~RtsNotify() override;
 
     HcclResult Alloc() override;
@@ -31,29 +31,29 @@ public:
     HcclResult Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut) override;
     HcclResult Post(Stream& stream, HcclDispatcher dispatcher, s32 stage) override;
 
-    HcclResult Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut,
-        u32 userRank, u32 remoteUserRank) override;
+    HcclResult
+    Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut, u32 userRank, u32 remoteUserRank) override;
     HcclResult Wait(Stream& stream, u32 timeOut) override;
-    HcclResult Post(Stream& stream, HcclDispatcher dispatcher, s32 stage,
-        u32 remoteUserRank) override;
+    HcclResult Post(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 remoteUserRank) override;
     HcclResult Post(Stream& stream) override;
 
     HcclResult SetIpc() override;
     HcclResult Grant(s64 recvId) override;
 
-    HcclResult GetNotifyData(HcclSignalInfo &notifyInfo) override
+    HcclResult GetNotifyData(HcclSignalInfo& notifyInfo) override
     {
         notifyInfo.resId = static_cast<u64>(id);
         notifyInfo.addr = address;
         notifyInfo.devId = devId;
         notifyInfo.tsId = tsId;
         notifyInfo.flag = flag;
-        HCCL_DEBUG("GetNotifyData resId[%lld], addr[%llu], devId[%u], tsId[%u]", notifyInfo.resId,
-            notifyInfo.addr, notifyInfo.devId, notifyInfo.tsId);
+        HCCL_DEBUG(
+            "GetNotifyData resId[%lld], addr[%llu], devId[%u], tsId[%u]", notifyInfo.resId, notifyInfo.addr,
+            notifyInfo.devId, notifyInfo.tsId);
         return HCCL_SUCCESS;
     }
 
-    HcclResult SetNotifyData(const HcclSignalInfo &notifyInfo) override
+    HcclResult SetNotifyData(const HcclSignalInfo& notifyInfo) override
     {
         id = notifyInfo.resId;
         address = notifyInfo.addr;
@@ -64,13 +64,14 @@ public:
         return HCCL_SUCCESS;
     }
 
-    HcclResult GetNotifyOffset(u64 &notifyOffset) override
+    HcclResult GetNotifyOffset(u64& notifyOffset) override
     {
         notifyOffset = notifyInfo_.ipcNotify.offset;
         return HCCL_SUCCESS;
     }
 
     HcclResult InitAndVerifySingleSignal();
+
 private:
     HcclResult UpdateNotifyInfo();
 
@@ -86,6 +87,6 @@ private:
     u32 flag{INVALID_UINT};
 };
 
-}
+} // namespace hccl
 
 #endif // RTS_NOTIFY_H

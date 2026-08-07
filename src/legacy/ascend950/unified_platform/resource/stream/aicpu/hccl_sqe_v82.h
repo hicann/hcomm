@@ -48,7 +48,7 @@ class HcclUBNotifyRecordSqe : public HcclSqe {
 public:
     HcclUBNotifyRecordSqe();
     void Config(u16 streamId, u16 taskId, u64 notifyId);
-    u64  GetSqe() override;
+    u64 GetSqe() override;
 
 private:
     std::unique_ptr<Rt91095StarsNotifySqe> sqe;
@@ -106,8 +106,9 @@ class HcclUBMemcpySqe : public HcclSqe {
 public:
     HcclUBMemcpySqe();
 
-    void Config(u16 streamId, u16 taskId, RtDataType rtDataType, RtReduceKind rtReduceOp,
-                        u64 count, const u64 *src, const u64 *dst, u32 partId);
+    void Config(
+        u16 streamId, u16 taskId, RtDataType rtDataType, RtReduceKind rtReduceOp, u64 count, const u64* src,
+        const u64* dst, u32 partId);
 
     u64 GetSqe() override;
 

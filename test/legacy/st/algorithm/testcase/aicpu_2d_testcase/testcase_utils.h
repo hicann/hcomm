@@ -7,14 +7,14 @@
  * INCLUDING BUT NOT TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef HCCL_TESTCASE_UTILS_H
 #define HCCL_TESTCASE_UTILS_H
- 
+
 #include <vector>
 #include "llt_common.h"
- 
+
 void ClearHcclEnv();
 std::vector<u64> GenerateSendCountMatrix(u64 count, u32 rankSize);
- 
+
 #endif

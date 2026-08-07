@@ -9,7 +9,7 @@
  */
 #ifndef HCCS_MEM_H
 #define HCCS_MEM_H
- 
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -26,42 +26,44 @@ namespace hcomm {
  */
 class HccsRegedMemMgr : public RegedMemMgr {
 public:
-    using LocalIpcRmaBufferMgr =
-        hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::LocalIpcRmaBuffer>>;
-    using RemoteIpcRmaBufferMgr =
-        hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::RemoteIpcRmaBuffer>>;
+    using LocalIpcRmaBufferMgr
+        = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::LocalIpcRmaBuffer>>;
+    using RemoteIpcRmaBufferMgr
+        = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::RemoteIpcRmaBuffer>>;
 
     HccsRegedMemMgr(HcclNetDevCtx netDevCtx);
     ~HccsRegedMemMgr() override;
- 
-    HcclResult RegisterMemory(HcommMem mem, const char *memTag, void **memHandle) override;
-    HcclResult UnregisterMemory(void* memHandle) override;
-    HcclResult MemoryExport(const EndpointDesc endpointDesc, void *memHandle,
-        void **memDesc, uint32_t *memDescLen) override;
-    HcclResult MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem) override;
-    HcclResult MemoryUnimport(const void *memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void **memHandles, uint32_t *memHandleNum) override;
 
-    HcclResult MemoryGrant(const HcommMemGrantInfo *remoteGrantInfo);
-    HcclResult MemoryEnableP2P(const EndpointDesc &localEndpointDesc, const EndpointDesc &remoteEndpointDesc);
-    HcclResult MemoryDisableP2P(const EndpointDesc &localEndpointDesc, const EndpointDesc &remoteEndpointDesc);
+    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
+    HcclResult UnregisterMemory(void* memHandle) override;
+    HcclResult
+    MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen) override;
+    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
+    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
+    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
+
+    HcclResult MemoryGrant(const HcommMemGrantInfo* remoteGrantInfo);
+    HcclResult MemoryEnableP2P(const EndpointDesc& localEndpointDesc, const EndpointDesc& remoteEndpointDesc);
+    HcclResult MemoryDisableP2P(const EndpointDesc& localEndpointDesc, const EndpointDesc& remoteEndpointDesc);
     HcclResult MemoryOpenRemoteIpc();
     HcclResult MemoryCloseRemoteIpc();
-    HcclResult GetRemoteIpcRmaBuffer(std::vector<CommMem> &remoteIpcRmaBufferVec);
-    HcclResult GetRemoteIpcRmaBufferEx(std::vector<HcclMemEx> &remoteIpcRmaBufferVecEx);
-    HcclResult GetLocalIpcRmaBufferEx(std::vector<HcclMemEx> &localIpcRmaBufferVecEx);
+    HcclResult GetRemoteIpcRmaBuffer(std::vector<CommMem>& remoteIpcRmaBufferVec);
+    HcclResult GetRemoteIpcRmaBufferEx(std::vector<HcclMemEx>& remoteIpcRmaBufferVecEx);
+    HcclResult GetLocalIpcRmaBufferEx(std::vector<HcclMemEx>& localIpcRmaBufferVecEx);
 
 private:
-    HcclResult SerializeToMemDesc(const EndpointDesc &endpointDesc, hccl::LocalIpcRmaBuffer *localIpcRmaBuffer,
-        void **memDesc, uint32_t *descLen);
-    HcclResult MakeRemoteIpcRmaBuffer(std::string &ipcRmaBufferDesc,
-        std::shared_ptr<hccl::RemoteIpcRmaBuffer> &remoteIpcRmaBuffer);
-    HcclResult DeSerializeFromMemDesc(const void *memDesc, uint32_t descLen,
-        EndpointDesc &endpointDesc, std::shared_ptr<hccl::RemoteIpcRmaBuffer> &remoteIpcRmaBuffer);
+    HcclResult SerializeToMemDesc(
+        const EndpointDesc& endpointDesc, hccl::LocalIpcRmaBuffer* localIpcRmaBuffer, void** memDesc,
+        uint32_t* descLen);
+    HcclResult MakeRemoteIpcRmaBuffer(
+        std::string& ipcRmaBufferDesc, std::shared_ptr<hccl::RemoteIpcRmaBuffer>& remoteIpcRmaBuffer);
+    HcclResult DeSerializeFromMemDesc(
+        const void* memDesc, uint32_t descLen, EndpointDesc& endpointDesc,
+        std::shared_ptr<hccl::RemoteIpcRmaBuffer>& remoteIpcRmaBuffer);
 
-    HcclResult AddMem(hccl::BufferKey<uintptr_t, u64> &memKey,
-        std::shared_ptr<hccl::RemoteIpcRmaBuffer> &remoteIpcRmaBuffer);
-    HcclResult DeleteMem(hccl::BufferKey<uintptr_t, u64> &memKey);
+    HcclResult
+    AddMem(hccl::BufferKey<uintptr_t, u64>& memKey, std::shared_ptr<hccl::RemoteIpcRmaBuffer>& remoteIpcRmaBuffer);
+    HcclResult DeleteMem(hccl::BufferKey<uintptr_t, u64>& memKey);
 
 private:
     HcclNetDevCtx netDevCtx_{};
@@ -70,6 +72,6 @@ private:
     // for read/write with origin addr and len
     RemoteIpcRmaBufferMgr remoteIpcRmaBufferMgr_;
 };
-}
+} // namespace hcomm
 
 #endif // HCCS_MEM_H

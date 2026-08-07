@@ -16,10 +16,13 @@
 namespace hccl {
 class AllGatherOperator : public CollAlgOperator {
 public:
-    AllGatherOperator(AlgConfigurator* algConfigurator, CCLBufferManager &cclBufferManager,
-        HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    AllGatherOperator(
+        AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager, HcclDispatcher dispatcher,
+        std::unique_ptr<TopoMatcher>& topoMatcher);
     ~AllGatherOperator() override;
-    HcclResult SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag) override;
+    HcclResult
+    SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag) override;
+
 private:
     HcclResult SelectAlgforMix(const OpParam& param, std::string& algName);
 
@@ -30,10 +33,10 @@ private:
     HcclResult SelectAlgfor910B(const OpParam& param, std::string& algName);
 
     HcclResult SelectAlgfor91093(const OpParam& param, std::string& algName);
-    
+
     bool SmallCountOptimSinglePod(const OpParam& param);
 };
 
-}
+} // namespace hccl
 
 #endif /** __ALL_GATHER_OPERATOR_H__ */

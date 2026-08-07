@@ -22,13 +22,14 @@ public:
     explicit RankGraphStub() = default;
     ~RankGraphStub() = default;
     std::shared_ptr<Hccl::RankGraph> Create2PGraph();
+
 private:
-    std::shared_ptr<Hccl::NetInstance::Peer> InitPeer(
-        Hccl::RankId rankId, Hccl::LocalId localId, Hccl::DeviceId deviceId, uint32_t listenPort);
+    std::shared_ptr<Hccl::NetInstance::Peer>
+    InitPeer(Hccl::RankId rankId, Hccl::LocalId localId, Hccl::DeviceId deviceId, uint32_t listenPort);
     std::shared_ptr<Hccl::NetInstance> InitNetInstance(uint32_t netLayer, std::string id);
     std::shared_ptr<Hccl::NetInstance::ConnInterface> InitConnInterface(Hccl::IpAddress addr);
 };
 
-}  // namespace hccl
+} // namespace hccl
 
 #endif

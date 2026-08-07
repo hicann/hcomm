@@ -30,22 +30,16 @@ using namespace Hccl;
 using LocalRdmaRmaBufferMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<LocalUbRmaBuffer>>;
 class HcclOneSidedConnTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "HcclOneSidedConnTest SetUP" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "HcclOneSidedConnTest SetUP" << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "HcclOneSidedConnTest TearDown" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "HcclOneSidedConnTest TearDown" << std::endl; }
 
     virtual void SetUp()
     {
         std::cout << "A Test case in HcclOneSidedConnTest SetUp" << std::endl;
         MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-        MOCKER(HrtNotifyCreate).stubs().will(returnValue((void *)(fakeNotifyHandleAddr)));
-        MOCKER(HrtNotifyCreateWithFlag).stubs().will(returnValue((void *)(fakeNotifyHandleAddr)));
+        MOCKER(HrtNotifyCreate).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
+        MOCKER(HrtNotifyCreateWithFlag).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
         MOCKER(HrtGetNotifyID).stubs().will(returnValue(fakeNotifyId));
         MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(fakeDevPhyId)));
         MOCKER(HrtIpcSetNotifyName).stubs().with(mockcpp::any(), outBoundP(fakeName, sizeof(fakeName)), mockcpp::any());
@@ -69,7 +63,7 @@ protected:
 
 TEST_F(HcclOneSidedConnTest, EnableMemAccess_MemoryOverlap)
 {
-    void *rdmaHandle = (void *)0x100;
+    void* rdmaHandle = (void*)0x100;
     MOCKER_CPP(&RdmaHandleManager::Get).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(rdmaHandle));
     CommunicatorImpl com;
     BasePortType basePortType(PortDeploymentType::P2P, ConnectProtoType::UB);
@@ -77,15 +71,15 @@ TEST_F(HcclOneSidedConnTest, EnableMemAccess_MemoryOverlap)
     HcclOneSidedConn conn(&com, linkData);
 
     HcclBuf hcclBuf;
-    int *a = new int;
+    int* a = new int;
     std::shared_ptr<Buffer> localBufferPtr
         = make_shared<Buffer>(reinterpret_cast<uintptr_t>(a), sizeof(int), HcclMemType::HCCL_MEM_TYPE_DEVICE);
     std::shared_ptr<LocalUbRmaBuffer> localUbRmaBuffer = make_shared<LocalUbRmaBuffer>(localBufferPtr);
-    hcclBuf.handle = reinterpret_cast<void *>(localUbRmaBuffer.get());
+    hcclBuf.handle = reinterpret_cast<void*>(localUbRmaBuffer.get());
     hcclBuf.len = sizeof(int);
     hcclBuf.addr = a;
     RmaMemDesc rmaDesc1;
-    char    *desc    = static_cast<char *>(rmaDesc1.memDesc);
+    char* desc = static_cast<char*>(rmaDesc1.memDesc);
     uint64_t descLen = 0;
     HcclMemExportV2(&hcclBuf, &desc, &descLen);
 
@@ -102,12 +96,15 @@ TEST_F(HcclOneSidedConnTest, EnableMemAccess_MemoryOverlap)
     std::string fakeKeyDesc = "fakeKeyDesc";
     MOCKER(HrtRaGetKeyDescribe).stubs().will(returnValue(fakeKeyDesc));
 
-    u64               fakeNotifyHandleAddr = 100;
-    u64               fakeTargetSegVa      = 150;
+    u64 fakeNotifyHandleAddr = 100;
+    u64 fakeTargetSegVa = 150;
     HrtRaUbRemMemImportedOutParam fakeRemoteOutParam;
-    fakeRemoteOutParam.handle      = fakeNotifyHandleAddr;
+    fakeRemoteOutParam.handle = fakeNotifyHandleAddr;
     fakeRemoteOutParam.targetSegVa = fakeTargetSegVa;
-    MOCKER(HrtRaUbRemoteMemImport).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(fakeRemoteOutParam));
+    MOCKER(HrtRaUbRemoteMemImport)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(fakeRemoteOutParam));
 
     EXPECT_NO_THROW(conn.EnableMemAccess(desc1, mem1));
     EXPECT_NO_THROW(conn.DisableMemAccess(desc1));
@@ -116,7 +113,7 @@ TEST_F(HcclOneSidedConnTest, EnableMemAccess_MemoryOverlap)
 
 TEST_F(HcclOneSidedConnTest, DisableMemAccess_BufferNotFound)
 {
-    void *rdmaHandle = (void *)0x100;
+    void* rdmaHandle = (void*)0x100;
     MOCKER_CPP(&RdmaHandleManager::Get).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(rdmaHandle));
     CommunicatorImpl com;
     BasePortType basePortType(PortDeploymentType::P2P, ConnectProtoType::UB);
@@ -130,18 +127,21 @@ TEST_F(HcclOneSidedConnTest, DisableMemAccess_BufferNotFound)
     const size_t copySize = sizeof(RmaMemDesc);
     memcpy_s(desc.desc, bufferSize, &rmaDesc, copySize);
 
-    u64               fakeNotifyHandleAddr = 100;
-    u64               fakeTargetSegVa      = 150;
+    u64 fakeNotifyHandleAddr = 100;
+    u64 fakeTargetSegVa = 150;
     HrtRaUbRemMemImportedOutParam fakeRemoteOutParam;
-    fakeRemoteOutParam.handle      = fakeNotifyHandleAddr;
+    fakeRemoteOutParam.handle = fakeNotifyHandleAddr;
     fakeRemoteOutParam.targetSegVa = fakeTargetSegVa;
-    MOCKER(HrtRaUbRemoteMemImport).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(fakeRemoteOutParam));
+    MOCKER(HrtRaUbRemoteMemImport)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(fakeRemoteOutParam));
 
     // 调用DisableMemAccess，期望抛出异常，实际上没有抛出异常
     EXPECT_NO_THROW(conn.DisableMemAccess(desc));
 }
 
-static bool StubRecvForRemoteMemDesc(Socket *socket, void *data, u32 size)
+static bool StubRecvForRemoteMemDesc(Socket* socket, void* data, u32 size)
 {
     (void)socket;
     static u32 actualNumOfRemote = 1;
@@ -160,7 +160,8 @@ TEST_F(HcclOneSidedConnTest, ReceiveRemoteMemDesc_When_ArrayIsNullptr_Expect_Ret
 
     IpAddress localIp;
     IpAddress remoteIp;
-    Socket *mockSocket = new Socket(nullptr, localIp, 0, remoteIp, "test", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket* mockSocket
+        = new Socket(nullptr, localIp, 0, remoteIp, "test", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
     conn.socket_ = mockSocket;
 
     MOCKER_CPP(&Socket::Recv).stubs().will(invoke(StubRecvForRemoteMemDesc));

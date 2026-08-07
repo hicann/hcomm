@@ -17,7 +17,7 @@
 
 #include "hccl_types.h"
 
-#define RT_CCU_SQE_ARGS_LEN     (13U)
+#define RT_CCU_SQE_ARGS_LEN (13U)
 
 enum class LinkProto {
     SDMA = 0,
@@ -51,12 +51,12 @@ typedef enum {
 #pragma pack(push, 1)
 
 typedef struct {
-    uint32_t    srcRankId;
-    uint64_t    srcOffset;
-    uint32_t    dstRankId;
-    uint64_t    dstOffset;
-    uint64_t    len;
-    uint8_t     protocol;
+    uint32_t srcRankId;
+    uint64_t srcOffset;
+    uint32_t dstRankId;
+    uint64_t dstOffset;
+    uint64_t len;
+    uint8_t protocol;
 } TransMemTask;
 
 typedef struct {
@@ -80,56 +80,56 @@ typedef struct {
 } OpSyncTask;
 
 typedef struct {
-    uint32_t    srcRankId;
-    uint64_t    srcOffset;
-    uint32_t    dstRankId;
-    uint64_t    dstOffset;
-    uint64_t    dataCount;
-    uint8_t     dataType;
-    uint8_t     reduceOp;
-    uint8_t     protocol;
-    uint8_t     resv;
+    uint32_t srcRankId;
+    uint64_t srcOffset;
+    uint32_t dstRankId;
+    uint64_t dstOffset;
+    uint64_t dataCount;
+    uint8_t dataType;
+    uint8_t reduceOp;
+    uint8_t protocol;
+    uint8_t resv;
 } ReduceTask;
 
 typedef struct {
-    uint32_t    srcRankId;
-    uint64_t    notifyId;
-    uint32_t    dstRankId;
-    uint8_t     notifyCount;
-    uint8_t     protocol;
+    uint32_t srcRankId;
+    uint64_t notifyId;
+    uint32_t dstRankId;
+    uint8_t notifyCount;
+    uint8_t protocol;
 } NotifyTask;
 
 typedef struct {
-    uint8_t    dieId;
-    uint8_t    missionId;
-    uint16_t   timeout;
-    uint16_t   instStartId;
-    uint16_t   instCnt;
-    uint32_t   key;
-    uint32_t   argSize;
-    uint64_t   args[RT_CCU_SQE_ARGS_LEN];
+    uint8_t dieId;
+    uint8_t missionId;
+    uint16_t timeout;
+    uint16_t instStartId;
+    uint16_t instCnt;
+    uint32_t key;
+    uint32_t argSize;
+    uint64_t args[RT_CCU_SQE_ARGS_LEN];
 } CcuTask;
 
 typedef struct {
-    uint64_t   launchIdx;
+    uint64_t launchIdx;
 } AivTask;
 
 typedef struct HcclTaskMetaData {
-    HccLTaskMetaType    taskType;
-    uint16_t            commId;
-    uint32_t            rankId;
-    uint64_t            streamId;
-    uint32_t            jettyId;
-    uint8_t             rmEid[16];
+    HccLTaskMetaType taskType;
+    uint16_t commId;
+    uint32_t rankId;
+    uint64_t streamId;
+    uint32_t jettyId;
+    uint8_t rmEid[16];
     union {
-        TransMemTask    transMem;
-        ReduceTask      reduce;
-        NotifyTask      notify;
-        CcuTask         ccu;
-        AivTask         aiv;
-        OpStartTask     opStartTask;
-        OpSyncTask      opSyncTask;
-    }                   taskData;
+        TransMemTask transMem;
+        ReduceTask reduce;
+        NotifyTask notify;
+        CcuTask ccu;
+        AivTask aiv;
+        OpStartTask opStartTask;
+        OpSyncTask opSyncTask;
+    } taskData;
     HcclTaskMetaData()
     {
         jettyId = UINT32_MAX;
@@ -138,13 +138,13 @@ typedef struct HcclTaskMetaData {
 } HcclTaskMetaData;
 
 typedef struct {
-    uint64_t    taskCid;
-    uint16_t    dispatchId;
+    uint64_t taskCid;
+    uint16_t dispatchId;
 } HcclTaskReq;
 
 typedef struct {
-    uint64_t    taskCid;
-    uint16_t    status;
+    uint64_t taskCid;
+    uint16_t status;
 } HcclTaskRsp;
 
 #pragma pack(pop)

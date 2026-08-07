@@ -30,4 +30,4 @@ struct GatherPara {
     u32 rankSize;
     s32 addrLength;
 };
-#endif  // OP_BASE_PUB_H
+#endif // OP_BASE_PUB_H

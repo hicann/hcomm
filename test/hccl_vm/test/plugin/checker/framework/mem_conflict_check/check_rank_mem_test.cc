@@ -22,98 +22,109 @@
 namespace HcclSim {
 MemoryStatus operator|(MemoryStatus a, MemoryStatus b);
 MemoryStatus operator&(MemoryStatus a, MemoryStatus b);
-MemoryStatus &operator|=(MemoryStatus &a, MemoryStatus b);
+MemoryStatus& operator|=(MemoryStatus& a, MemoryStatus b);
 bool IsBoardType(TaskTypeStub type);
-std::string GenFragQueueMemDes(FragQueueMemStatus &fragQueMemStatus);
+std::string GenFragQueueMemDes(FragQueueMemStatus& fragQueMemStatus);
 bool IsGenFromSync(TaskStub* task);
-std::string GenConflictDetailInfo(TaskNode *node);
-}
+std::string GenConflictDetailInfo(TaskNode* node);
+} // namespace HcclSim
 
 std::map<RankId, std::map<u32, HcclSim::ChannelsPerDie>> g_allRankChannelInfo;
 
 namespace HcclSim {
 class CheckRankMemTest : public testing::Test {
 protected:
-    void SetUp() override {
-    }
-    
-    void TearDown() override {
-    }
+    void SetUp() override {}
+
+    void TearDown() override {}
 };
 
 // Test MemoryStatus enum operators
-TEST_F(CheckRankMemTest, MemoryStatus_OrOperator) {
+TEST_F(CheckRankMemTest, MemoryStatus_OrOperator)
+{
     MemoryStatus a = MemoryStatus::READ;
     MemoryStatus b = MemoryStatus::WRITE;
     MemoryStatus result = a | b;
-    
+
     EXPECT_EQ(static_cast<u32>(result), static_cast<u32>(MemoryStatus::READ) | static_cast<u32>(MemoryStatus::WRITE));
 }
 
-TEST_F(CheckRankMemTest, MemoryStatus_AndOperator) {
-    MemoryStatus a = static_cast<MemoryStatus>(static_cast<u32>(MemoryStatus::READ) | static_cast<u32>(MemoryStatus::WRITE));
+TEST_F(CheckRankMemTest, MemoryStatus_AndOperator)
+{
+    MemoryStatus a
+        = static_cast<MemoryStatus>(static_cast<u32>(MemoryStatus::READ) | static_cast<u32>(MemoryStatus::WRITE));
     MemoryStatus b = MemoryStatus::WRITE;
     MemoryStatus result = a & b;
-    
+
     EXPECT_EQ(static_cast<u32>(result), static_cast<u32>(MemoryStatus::WRITE));
 }
 
-TEST_F(CheckRankMemTest, MemoryStatus_OrEqualOperator) {
+TEST_F(CheckRankMemTest, MemoryStatus_OrEqualOperator)
+{
     MemoryStatus a = MemoryStatus::READ;
     a |= MemoryStatus::WRITE;
-    
+
     EXPECT_EQ(static_cast<u32>(a), static_cast<u32>(MemoryStatus::READ) | static_cast<u32>(MemoryStatus::WRITE));
 }
 
 // Test SliceMemoryStatus struct
-TEST_F(CheckRankMemTest, SliceMemoryStatus_BasicProperties) {
+TEST_F(CheckRankMemTest, SliceMemoryStatus_BasicProperties)
+{
     SliceMemoryStatus status{0, 1024, MemoryStatus::READ};
-    
+
     EXPECT_EQ(status.startAddr, 0u);
     EXPECT_EQ(status.size, 1024u);
     EXPECT_EQ(status.status, MemoryStatus::READ);
 }
 
-TEST_F(CheckRankMemTest, SliceMemoryStatus_Comparison) {
+TEST_F(CheckRankMemTest, SliceMemoryStatus_Comparison)
+{
     SliceMemoryStatus status1{0, 1024, MemoryStatus::READ};
     SliceMemoryStatus status2{1024, 2048, MemoryStatus::WRITE};
-    
+
     EXPECT_TRUE(status1 < status2);
     EXPECT_FALSE(status2 < status1);
 }
 
-TEST_F(CheckRankMemTest, SliceMemoryStatus_SameStartAddr) {
+TEST_F(CheckRankMemTest, SliceMemoryStatus_SameStartAddr)
+{
     SliceMemoryStatus status1{0, 1024, MemoryStatus::READ};
     SliceMemoryStatus status2{0, 2048, MemoryStatus::WRITE};
-    
+
     EXPECT_FALSE(status1 < status2);
     EXPECT_FALSE(status2 < status1);
 }
 
 // Test SliceMemoryStatus Describe
-TEST_F(CheckRankMemTest, SliceMemoryStatus_Describe_Read) {
+TEST_F(CheckRankMemTest, SliceMemoryStatus_Describe_Read)
+{
     SliceMemoryStatus status{0, 1024, MemoryStatus::READ};
     std::string desc = status.Describe();
-    
+
     EXPECT_NE(desc.find("READ"), std::string::npos);
 }
 
-TEST_F(CheckRankMemTest, SliceMemoryStatus_Describe_Write) {
+TEST_F(CheckRankMemTest, SliceMemoryStatus_Describe_Write)
+{
     SliceMemoryStatus status{0, 1024, MemoryStatus::WRITE};
     std::string desc = status.Describe();
-    
+
     EXPECT_NE(desc.find("WRITE"), std::string::npos);
 }
 
-TEST_F(CheckRankMemTest, SliceMemoryStatus_Describe_ReadWrite) {
-    SliceMemoryStatus status{0, 1024, static_cast<MemoryStatus>(static_cast<u32>(MemoryStatus::READ) | static_cast<u32>(MemoryStatus::WRITE))};
+TEST_F(CheckRankMemTest, SliceMemoryStatus_Describe_ReadWrite)
+{
+    SliceMemoryStatus status{
+        0, 1024,
+        static_cast<MemoryStatus>(static_cast<u32>(MemoryStatus::READ) | static_cast<u32>(MemoryStatus::WRITE))};
     std::string desc = status.Describe();
-    
+
     EXPECT_NE(desc.find("READ|WRITE"), std::string::npos);
 }
 
 // Test FragmentQueue struct
-TEST_F(CheckRankMemTest, FragmentQueue_BasicProperties) {
+TEST_F(CheckRankMemTest, FragmentQueue_BasicProperties)
+{
     FragmentQueue fragQueue;
     fragQueue.queIdx = 0;
     fragQueue.blockIdx = -1;
@@ -121,7 +132,7 @@ TEST_F(CheckRankMemTest, FragmentQueue_BasicProperties) {
     fragQueue.isAIV = false;
     fragQueue.head = nullptr;
     fragQueue.tail = nullptr;
-    
+
     EXPECT_EQ(fragQueue.queIdx, 0u);
     EXPECT_EQ(fragQueue.isAIV, false);
     EXPECT_EQ(fragQueue.head, nullptr);
@@ -129,64 +140,68 @@ TEST_F(CheckRankMemTest, FragmentQueue_BasicProperties) {
 }
 
 // Test FragmentQueue comparison (non-AIV)
-TEST_F(CheckRankMemTest, FragmentQueue_Comparison_NonAIV_DifferentQueue) {
+TEST_F(CheckRankMemTest, FragmentQueue_Comparison_NonAIV_DifferentQueue)
+{
     FragmentQueue fragQueue1;
     fragQueue1.queIdx = 0;
     fragQueue1.isAIV = false;
     fragQueue1.head = nullptr;
     fragQueue1.tail = nullptr;
-    
+
     FragmentQueue fragQueue2;
     fragQueue2.queIdx = 1;
     fragQueue2.isAIV = false;
     fragQueue2.head = nullptr;
     fragQueue2.tail = nullptr;
-    
+
     EXPECT_TRUE(fragQueue1 < fragQueue2);
     EXPECT_FALSE(fragQueue2 < fragQueue1);
 }
 
 // Test FragmentQueue comparison (AIV)
-TEST_F(CheckRankMemTest, FragmentQueue_Comparison_AIV_DifferentBlock) {
+TEST_F(CheckRankMemTest, FragmentQueue_Comparison_AIV_DifferentBlock)
+{
     FragmentQueue fragQueue1;
     fragQueue1.blockIdx = 0;
     fragQueue1.pipeIdx = 0;
     fragQueue1.isAIV = true;
     fragQueue1.head = nullptr;
     fragQueue1.tail = nullptr;
-    
+
     FragmentQueue fragQueue2;
     fragQueue2.blockIdx = 1;
     fragQueue2.pipeIdx = 0;
     fragQueue2.isAIV = true;
     fragQueue2.head = nullptr;
     fragQueue2.tail = nullptr;
-    
+
     EXPECT_TRUE(fragQueue1 < fragQueue2);
     EXPECT_FALSE(fragQueue2 < fragQueue1);
 }
 
-TEST_F(CheckRankMemTest, FragmentQueue_Comparison_AIV_SameBlockDifferentPipe) {
+TEST_F(CheckRankMemTest, FragmentQueue_Comparison_AIV_SameBlockDifferentPipe)
+{
     FragmentQueue fragQueue1;
     fragQueue1.blockIdx = 0;
     fragQueue1.pipeIdx = 0;
     fragQueue1.isAIV = true;
     fragQueue1.head = nullptr;
     fragQueue1.tail = nullptr;
-    
+
     FragmentQueue fragQueue2;
     fragQueue2.blockIdx = 0;
     fragQueue2.pipeIdx = 1;
     fragQueue2.isAIV = true;
     fragQueue2.head = nullptr;
     fragQueue2.tail = nullptr;
-    
+
     EXPECT_TRUE(fragQueue1 < fragQueue2);
     EXPECT_FALSE(fragQueue2 < fragQueue1);
 }
 
 // Test IsBoardType function
-TEST_F(CheckRankMemTest, IsBoardType_ValidBoardTypes) {
+TEST_F(CheckRankMemTest, IsBoardType_ValidBoardTypes)
+{
     EXPECT_TRUE(IsBoardType(TaskTypeStub::LOCAL_POST_TO));
     EXPECT_TRUE(IsBoardType(TaskTypeStub::LOCAL_WAIT_FROM));
     EXPECT_TRUE(IsBoardType(TaskTypeStub::LOCAL_POST_TO_SHADOW));
@@ -201,7 +216,8 @@ TEST_F(CheckRankMemTest, IsBoardType_ValidBoardTypes) {
     EXPECT_TRUE(IsBoardType(TaskTypeStub::SEND_SYNC_REDUCE));
 }
 
-TEST_F(CheckRankMemTest, IsBoardType_InvalidBoardTypes) {
+TEST_F(CheckRankMemTest, IsBoardType_InvalidBoardTypes)
+{
     EXPECT_FALSE(IsBoardType(TaskTypeStub::LOCAL_COPY));
     EXPECT_FALSE(IsBoardType(TaskTypeStub::LOCAL_REDUCE));
     EXPECT_FALSE(IsBoardType(TaskTypeStub::READ));
@@ -211,30 +227,33 @@ TEST_F(CheckRankMemTest, IsBoardType_InvalidBoardTypes) {
 }
 
 // Test GenFragQueueMemDes function
-TEST_F(CheckRankMemTest, GenFragQueueMemDes_Empty) {
+TEST_F(CheckRankMemTest, GenFragQueueMemDes_Empty)
+{
     FragQueueMemStatus fragQueMemStatus;
     std::string desc = GenFragQueueMemDes(fragQueMemStatus);
-    
+
     EXPECT_TRUE(desc.empty());
 }
 
-TEST_F(CheckRankMemTest, GenFragQueueMemDes_WithContent) {
+TEST_F(CheckRankMemTest, GenFragQueueMemDes_WithContent)
+{
     FragQueueMemStatus fragQueMemStatus;
     std::set<SliceMemoryStatus> sliceSet;
     sliceSet.insert(SliceMemoryStatus{0, 1024, MemoryStatus::READ});
     fragQueMemStatus[BufferType::INPUT] = sliceSet;
-    
+
     std::string desc = GenFragQueueMemDes(fragQueMemStatus);
-    
+
     EXPECT_NE(desc.find("BufferType"), std::string::npos);
 }
 
 // Test BlockIdxPipeIdx struct
-TEST_F(CheckRankMemTest, BlockIdxPipeIdx_Comparison) {
+TEST_F(CheckRankMemTest, BlockIdxPipeIdx_Comparison)
+{
     BlockIdxPipeIdx idx1{0, 0};
     BlockIdxPipeIdx idx2{0, 1};
     BlockIdxPipeIdx idx3{1, 0};
-    
+
     EXPECT_TRUE(idx1 < idx2);
     EXPECT_TRUE(idx1 < idx3);
     EXPECT_TRUE(idx2 < idx3);
@@ -243,9 +262,10 @@ TEST_F(CheckRankMemTest, BlockIdxPipeIdx_Comparison) {
 }
 
 // Test CcuQueueGraph struct
-TEST_F(CheckRankMemTest, CcuQueueGraph_BasicProperties) {
+TEST_F(CheckRankMemTest, CcuQueueGraph_BasicProperties)
+{
     CcuQueueGraph graph;
-    
+
     EXPECT_TRUE(graph.entryQueueIds.empty());
     EXPECT_TRUE(graph.queueId2Head.empty());
     EXPECT_TRUE(graph.queueAdj.empty());
@@ -253,80 +273,89 @@ TEST_F(CheckRankMemTest, CcuQueueGraph_BasicProperties) {
 }
 
 // Test IsGenFromSync function - free function
-TEST_F(CheckRankMemTest, IsGenFromSync_LocalCopyNotGenFromSync) {
+TEST_F(CheckRankMemTest, IsGenFromSync_LocalCopyNotGenFromSync)
+{
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy task(srcSlice, dstSlice, false);
-    
+
     EXPECT_FALSE(IsGenFromSync(&task));
 }
 
-TEST_F(CheckRankMemTest, IsGenFromSync_LocalCopyGenFromSync) {
+TEST_F(CheckRankMemTest, IsGenFromSync_LocalCopyGenFromSync)
+{
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy task(srcSlice, dstSlice, true);
-    
+
     EXPECT_TRUE(IsGenFromSync(&task));
 }
 
-TEST_F(CheckRankMemTest, IsGenFromSync_ReadNotGenFromSync) {
+TEST_F(CheckRankMemTest, IsGenFromSync_ReadNotGenFromSync)
+{
     DataSlice localSlice(BufferType::INPUT, 0, 1024);
     DataSlice remoteSlice(BufferType::OUTPUT, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
     TaskStubRead task(0, link, localSlice, remoteSlice, false);
-    
+
     EXPECT_FALSE(IsGenFromSync(&task));
 }
 
-TEST_F(CheckRankMemTest, IsGenFromSync_ReadGenFromSync) {
+TEST_F(CheckRankMemTest, IsGenFromSync_ReadGenFromSync)
+{
     DataSlice localSlice(BufferType::INPUT, 0, 1024);
     DataSlice remoteSlice(BufferType::OUTPUT, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
     TaskStubRead task(0, link, localSlice, remoteSlice, true);
-    
+
     EXPECT_TRUE(IsGenFromSync(&task));
 }
 
-TEST_F(CheckRankMemTest, IsGenFromSync_OtherType) {
+TEST_F(CheckRankMemTest, IsGenFromSync_OtherType)
+{
     DataSlice localSlice(BufferType::INPUT, 0, 1024);
     DataSlice remoteSlice(BufferType::OUTPUT, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
     TaskStubWrite task(0, link, localSlice, remoteSlice);
-    
+
     EXPECT_FALSE(IsGenFromSync(&task));
 }
 
 // Test GenConflictDetailInfo function - free function
-TEST_F(CheckRankMemTest, GenConflictDetailInfo_WithRealPeerNode) {
+TEST_F(CheckRankMemTest, GenConflictDetailInfo_WithRealPeerNode)
+{
     TaskStubLocalPostTo task(1);
     TaskNode node(&task, 0, 0, 0);
     TaskNode peerNode(&task, 1, 0, 0);
     node.realPeerNode = &peerNode;
-    
+
     std::string info = GenConflictDetailInfo(&node);
-    
+
     EXPECT_FALSE(info.empty());
 }
 
-TEST_F(CheckRankMemTest, GenConflictDetailInfo_WithoutRealPeerNode) {
+TEST_F(CheckRankMemTest, GenConflictDetailInfo_WithoutRealPeerNode)
+{
     TaskStubLocalPostTo task(1);
     TaskNode node(&task, 0, 0, 0);
     node.realPeerNode = nullptr;
-    
+
     std::string info = GenConflictDetailInfo(&node);
-    
+
     EXPECT_FALSE(info.empty());
 }
 
 // Test CheckRankMem constructor and Execute with nullptr
-TEST_F(CheckRankMemTest, CheckRankMem_Constructor) {
+TEST_F(CheckRankMemTest, CheckRankMem_Constructor)
+{
     CheckRankMem checker(nullptr);
     // Just verify constructor works
     EXPECT_TRUE(true);
 }
 
 // Test Execute with a simple graph head
-TEST_F(CheckRankMemTest, Execute_WithNullHead) {
+TEST_F(CheckRankMemTest, Execute_WithNullHead)
+{
     CheckRankMem checker(nullptr);
     // Execute with nullptr should handle gracefully
     // The function may return an error but should not crash
@@ -334,7 +363,8 @@ TEST_F(CheckRankMemTest, Execute_WithNullHead) {
 }
 
 // Test Execute with a simple graph containing a single rank
-TEST_F(CheckRankMemTest, Execute_SingleRankSingleNode) {
+TEST_F(CheckRankMemTest, Execute_SingleRankSingleNode)
+{
     // Create a simple graph: head -> child (LOCAL_COPY)
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
@@ -343,123 +373,128 @@ TEST_F(CheckRankMemTest, Execute_SingleRankSingleNode) {
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&child);
     child.parents.push_back(&head);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing a LOCAL_POST_TO boundary node
-TEST_F(CheckRankMemTest, Execute_WithBoundaryNode) {
+TEST_F(CheckRankMemTest, Execute_WithBoundaryNode)
+{
     // Create a graph with a boundary node (LOCAL_POST_TO)
     TaskStubLocalPostTo postTask(1);
     TaskNode postNode(&postTask, 0, 0, 0);
-    
+
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
     TaskNode copyNode(&copyTask, 0, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&postNode);
     postNode.parents.push_back(&head);
     postNode.children.push_back(&copyNode);
     copyNode.parents.push_back(&postNode);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing multiple ranks
-TEST_F(CheckRankMemTest, Execute_MultipleRanks) {
+TEST_F(CheckRankMemTest, Execute_MultipleRanks)
+{
     // Create a graph with multiple ranks
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy task1(srcSlice, dstSlice);
     TaskNode rank0Node(&task1, 0, 0, 0);
-    
+
     DataSlice srcSlice2(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice2(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy task2(srcSlice2, dstSlice2);
     TaskNode rank1Node(&task2, 1, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&rank0Node);
     head.children.push_back(&rank1Node);
     rank0Node.parents.push_back(&head);
     rank1Node.parents.push_back(&head);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing a LOCAL_WAIT_FROM node
-TEST_F(CheckRankMemTest, Execute_WithWaitNode) {
+TEST_F(CheckRankMemTest, Execute_WithWaitNode)
+{
     TaskStubLocalWaitFrom waitTask(1);
     TaskNode waitNode(&waitTask, 0, 0, 0);
-    
+
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
     TaskNode copyNode(&copyTask, 0, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&waitNode);
     waitNode.parents.push_back(&head);
     waitNode.children.push_back(&copyNode);
     copyNode.parents.push_back(&waitNode);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing a PIPE_BARRIER node
-TEST_F(CheckRankMemTest, Execute_WithPipeBarrier) {
+TEST_F(CheckRankMemTest, Execute_WithPipeBarrier)
+{
     TaskStubGraphSeparate barrierTask;
     TaskNode barrierNode(&barrierTask, 0, 0, 0);
-    
+
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
     TaskNode copyNode(&copyTask, 0, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&barrierNode);
     barrierNode.parents.push_back(&head);
     barrierNode.children.push_back(&copyNode);
     copyNode.parents.push_back(&barrierNode);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing a SEND_SYNC/RECV_SYNC pair
-TEST_F(CheckRankMemTest, Execute_WithSendRecvSync) {
+TEST_F(CheckRankMemTest, Execute_WithSendRecvSync)
+{
     TaskStubLocalPostTo sendTask(1);
     TaskNode sendNode(&sendTask, 0, 0, 0);
-    
+
     TaskStubLocalWaitFrom recvTask(1);
     TaskNode recvNode(&recvTask, 0, 0, 0);
-    
+
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
     TaskNode copyNode(&copyTask, 0, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&sendNode);
     sendNode.parents.push_back(&head);
@@ -467,27 +502,28 @@ TEST_F(CheckRankMemTest, Execute_WithSendRecvSync) {
     recvNode.parents.push_back(&sendNode);
     recvNode.children.push_back(&copyNode);
     copyNode.parents.push_back(&recvNode);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing a SET_FLAG/WAIT_FLAG pair
-TEST_F(CheckRankMemTest, Execute_WithSetWaitFlag) {
+TEST_F(CheckRankMemTest, Execute_WithSetWaitFlag)
+{
     TaskStubLocalPostTo setTask(1);
     TaskNode setNode(&setTask, 0, 0, 0);
-    
+
     TaskStubLocalWaitFrom waitTask(1);
     TaskNode waitNode(&waitTask, 0, 0, 0);
-    
+
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
     TaskNode copyNode(&copyTask, 0, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&setNode);
     setNode.parents.push_back(&head);
@@ -495,169 +531,176 @@ TEST_F(CheckRankMemTest, Execute_WithSetWaitFlag) {
     waitNode.parents.push_back(&setNode);
     waitNode.children.push_back(&copyNode);
     copyNode.parents.push_back(&waitNode);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing a CCU_GRAPH node
-TEST_F(CheckRankMemTest, Execute_WithCcuGraph) {
+TEST_F(CheckRankMemTest, Execute_WithCcuGraph)
+{
     TaskStubGraphSeparate ccuTask;
     TaskNode ccuNode(&ccuTask, 0, 0, 0);
     ccuNode.hasCcuTask = true;
-    
+
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
     TaskNode copyNode(&copyTask, 0, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&ccuNode);
     ccuNode.parents.push_back(&head);
     ccuNode.children.push_back(&copyNode);
     copyNode.parents.push_back(&ccuNode);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing a LOCAL_POST_TO_SHADOW node
-TEST_F(CheckRankMemTest, Execute_WithPostToShadow) {
+TEST_F(CheckRankMemTest, Execute_WithPostToShadow)
+{
     TaskStubLocalPostToShadow postTask(0, 0, 0);
     TaskNode postNode(&postTask, 0, 0, 0);
-    
+
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
     TaskNode copyNode(&copyTask, 0, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&postNode);
     postNode.parents.push_back(&head);
     postNode.children.push_back(&copyNode);
     copyNode.parents.push_back(&postNode);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing a LOCAL_WAIT_FROM_SHADOW node
-TEST_F(CheckRankMemTest, Execute_WithWaitFromShadow) {
+TEST_F(CheckRankMemTest, Execute_WithWaitFromShadow)
+{
     TaskStubLocalWaitFromShadow waitTask(0, 0, 0);
     TaskNode waitNode(&waitTask, 0, 0, 0);
-    
+
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
     TaskNode copyNode(&copyTask, 0, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&waitNode);
     waitNode.parents.push_back(&head);
     waitNode.children.push_back(&copyNode);
     copyNode.parents.push_back(&waitNode);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing a SEND_SYNC_REDUCE node
-TEST_F(CheckRankMemTest, Execute_WithSendSyncReduce) {
+TEST_F(CheckRankMemTest, Execute_WithSendSyncReduce)
+{
     TaskStubLocalPostTo sendTask(1);
     TaskNode sendNode(&sendTask, 0, 0, 0);
-    
+
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
     TaskNode copyNode(&copyTask, 0, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&sendNode);
     sendNode.parents.push_back(&head);
     sendNode.children.push_back(&copyNode);
     copyNode.parents.push_back(&sendNode);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing a SET_FLAG_SHADOW node
-TEST_F(CheckRankMemTest, Execute_WithSetFlagShadow) {
+TEST_F(CheckRankMemTest, Execute_WithSetFlagShadow)
+{
     TaskStubLocalPostTo setTask(1);
     TaskNode setNode(&setTask, 0, 0, 0);
-    
+
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
     TaskNode copyNode(&copyTask, 0, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&setNode);
     setNode.parents.push_back(&head);
     setNode.children.push_back(&copyNode);
     copyNode.parents.push_back(&setNode);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing a WAIT_FLAG_SHADOW node
-TEST_F(CheckRankMemTest, Execute_WithWaitFlagShadow) {
+TEST_F(CheckRankMemTest, Execute_WithWaitFlagShadow)
+{
     TaskStubLocalWaitFrom waitTask(1);
     TaskNode waitNode(&waitTask, 0, 0, 0);
-    
+
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
     TaskNode copyNode(&copyTask, 0, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&waitNode);
     waitNode.parents.push_back(&head);
     waitNode.children.push_back(&copyNode);
     copyNode.parents.push_back(&waitNode);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing multiple boundary nodes in sequence
-TEST_F(CheckRankMemTest, Execute_MultipleBoundaryNodes) {
+TEST_F(CheckRankMemTest, Execute_MultipleBoundaryNodes)
+{
     TaskStubLocalPostTo postTask(1);
     TaskNode postNode(&postTask, 0, 0, 0);
-    
+
     TaskStubLocalWaitFrom waitTask(1);
     TaskNode waitNode(&waitTask, 0, 0, 0);
-    
+
     TaskStubLocalPostTo postTask2(2);
     TaskNode postNode2(&postTask2, 0, 0, 0);
-    
+
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
     TaskNode copyNode(&copyTask, 0, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&postNode);
     postNode.parents.push_back(&head);
@@ -667,31 +710,32 @@ TEST_F(CheckRankMemTest, Execute_MultipleBoundaryNodes) {
     postNode2.parents.push_back(&waitNode);
     postNode2.children.push_back(&copyNode);
     copyNode.parents.push_back(&postNode2);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing a node with multiple children
-TEST_F(CheckRankMemTest, Execute_NodeWithMultipleChildren) {
+TEST_F(CheckRankMemTest, Execute_NodeWithMultipleChildren)
+{
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy task1(srcSlice, dstSlice);
     TaskNode parentNode(&task1, 0, 0, 0);
-    
+
     DataSlice srcSlice2(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice2(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy task2(srcSlice2, dstSlice2);
     TaskNode child1(&task2, 0, 0, 0);
-    
+
     DataSlice srcSlice3(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice3(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy task3(srcSlice3, dstSlice3);
     TaskNode child2(&task3, 0, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&parentNode);
     parentNode.parents.push_back(&head);
@@ -699,31 +743,32 @@ TEST_F(CheckRankMemTest, Execute_NodeWithMultipleChildren) {
     parentNode.children.push_back(&child2);
     child1.parents.push_back(&parentNode);
     child2.parents.push_back(&parentNode);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
-    
+
     // Should complete without crashing
     // Test completed without crashing
 }
 
 // Test Execute with a graph containing a node with multiple parents
-TEST_F(CheckRankMemTest, Execute_NodeWithMultipleParents) {
+TEST_F(CheckRankMemTest, Execute_NodeWithMultipleParents)
+{
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy task1(srcSlice, dstSlice);
     TaskNode parent1(&task1, 0, 0, 0);
-    
+
     DataSlice srcSlice2(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice2(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy task2(srcSlice2, dstSlice2);
     TaskNode parent2(&task2, 0, 0, 0);
-    
+
     DataSlice srcSlice3(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice3(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy task3(srcSlice3, dstSlice3);
     TaskNode child(&task3, 0, 0, 0);
-    
+
     TaskNode head(nullptr, 0, 0, 0);
     head.children.push_back(&parent1);
     head.children.push_back(&parent2);
@@ -733,12 +778,13 @@ TEST_F(CheckRankMemTest, Execute_NodeWithMultipleParents) {
     parent2.children.push_back(&child);
     child.parents.push_back(&parent1);
     child.parents.push_back(&parent2);
-    
+
     CheckRankMem checker(&head);
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_PostWaitWithDifferentQueueIdx) {
+TEST_F(CheckRankMemTest, Execute_PostWaitWithDifferentQueueIdx)
+{
     TaskStubLocalPostTo postTask(1);
     TaskNode postNode(&postTask, 0, 0, 0);
 
@@ -762,7 +808,8 @@ TEST_F(CheckRankMemTest, Execute_PostWaitWithDifferentQueueIdx) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_PostWaitShadowWithDifferentQueueIdx) {
+TEST_F(CheckRankMemTest, Execute_PostWaitShadowWithDifferentQueueIdx)
+{
     TaskStubLocalPostToShadow postTask(0, 0, 0);
     TaskNode postNode(&postTask, 0, 0, 0);
 
@@ -786,7 +833,8 @@ TEST_F(CheckRankMemTest, Execute_PostWaitShadowWithDifferentQueueIdx) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_ChildWithDifferentRankIdx) {
+TEST_F(CheckRankMemTest, Execute_ChildWithDifferentRankIdx)
+{
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy task1(srcSlice, dstSlice);
@@ -810,7 +858,8 @@ TEST_F(CheckRankMemTest, Execute_ChildWithDifferentRankIdx) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_ChildWithDifferentQueueIdx) {
+TEST_F(CheckRankMemTest, Execute_ChildWithDifferentQueueIdx)
+{
     TaskStubLocalPostTo postTask(1);
     TaskNode postNode(&postTask, 0, 0, 0);
 
@@ -834,7 +883,8 @@ TEST_F(CheckRankMemTest, Execute_ChildWithDifferentQueueIdx) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_LocalReduceNode) {
+TEST_F(CheckRankMemTest, Execute_LocalReduceNode)
+{
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalReduce reduceTask(srcSlice, dstSlice, HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
@@ -848,7 +898,8 @@ TEST_F(CheckRankMemTest, Execute_LocalReduceNode) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_WriteNode) {
+TEST_F(CheckRankMemTest, Execute_WriteNode)
+{
     DataSlice localSlice(BufferType::INPUT, 0, 1024);
     DataSlice remoteSlice(BufferType::OUTPUT, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
@@ -863,7 +914,8 @@ TEST_F(CheckRankMemTest, Execute_WriteNode) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_ReadNode) {
+TEST_F(CheckRankMemTest, Execute_ReadNode)
+{
     DataSlice localSlice(BufferType::INPUT, 0, 1024);
     DataSlice remoteSlice(BufferType::OUTPUT, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
@@ -878,7 +930,8 @@ TEST_F(CheckRankMemTest, Execute_ReadNode) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_WriteReduceNode) {
+TEST_F(CheckRankMemTest, Execute_WriteReduceNode)
+{
     DataSlice localSlice(BufferType::INPUT, 0, 1024);
     DataSlice remoteSlice(BufferType::OUTPUT, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
@@ -893,7 +946,8 @@ TEST_F(CheckRankMemTest, Execute_WriteReduceNode) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_ReadReduceNode) {
+TEST_F(CheckRankMemTest, Execute_ReadReduceNode)
+{
     DataSlice localSlice(BufferType::INPUT, 0, 1024);
     DataSlice remoteSlice(BufferType::OUTPUT, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
@@ -908,7 +962,8 @@ TEST_F(CheckRankMemTest, Execute_ReadReduceNode) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_LocalReduceGenFromSync) {
+TEST_F(CheckRankMemTest, Execute_LocalReduceGenFromSync)
+{
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice, true);
@@ -927,7 +982,8 @@ TEST_F(CheckRankMemTest, Execute_LocalReduceGenFromSync) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_MultipleRanksWithPostWait) {
+TEST_F(CheckRankMemTest, Execute_MultipleRanksWithPostWait)
+{
     TaskStubLocalPostTo postTask0(1);
     TaskNode postNode0(&postTask0, 0, 0, 0);
 
@@ -966,7 +1022,8 @@ TEST_F(CheckRankMemTest, Execute_MultipleRanksWithPostWait) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_CcuGraphWithMainstream) {
+TEST_F(CheckRankMemTest, Execute_CcuGraphWithMainstream)
+{
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
@@ -981,7 +1038,8 @@ TEST_F(CheckRankMemTest, Execute_CcuGraphWithMainstream) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_CcuGraphWithNonZeroQueueId) {
+TEST_F(CheckRankMemTest, Execute_CcuGraphWithNonZeroQueueId)
+{
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
@@ -996,7 +1054,8 @@ TEST_F(CheckRankMemTest, Execute_CcuGraphWithNonZeroQueueId) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_PostWaitWithSameQueueContinue) {
+TEST_F(CheckRankMemTest, Execute_PostWaitWithSameQueueContinue)
+{
     TaskStubLocalPostTo postTask(1);
     TaskNode postNode(&postTask, 0, 0, 0);
 
@@ -1020,7 +1079,8 @@ TEST_F(CheckRankMemTest, Execute_PostWaitWithSameQueueContinue) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_ComplexGraphWithSubQueue) {
+TEST_F(CheckRankMemTest, Execute_ComplexGraphWithSubQueue)
+{
     TaskStubLocalPostTo postTask(1);
     TaskNode postNode(&postTask, 0, 0, 0);
 
@@ -1054,7 +1114,8 @@ TEST_F(CheckRankMemTest, Execute_ComplexGraphWithSubQueue) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_AivNodeWithDifferentBlockPipe) {
+TEST_F(CheckRankMemTest, Execute_AivNodeWithDifferentBlockPipe)
+{
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
@@ -1079,7 +1140,8 @@ TEST_F(CheckRankMemTest, Execute_AivNodeWithDifferentBlockPipe) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_AivNodeWithSameBlockPipe) {
+TEST_F(CheckRankMemTest, Execute_AivNodeWithSameBlockPipe)
+{
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
@@ -1104,7 +1166,8 @@ TEST_F(CheckRankMemTest, Execute_AivNodeWithSameBlockPipe) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_PostWaitWithCrossRankWait) {
+TEST_F(CheckRankMemTest, Execute_PostWaitWithCrossRankWait)
+{
     TaskStubLocalPostTo postTask(1);
     TaskNode postNode(&postTask, 0, 0, 0);
 
@@ -1128,7 +1191,8 @@ TEST_F(CheckRankMemTest, Execute_PostWaitWithCrossRankWait) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_MultipleBoundaryFragments) {
+TEST_F(CheckRankMemTest, Execute_MultipleBoundaryFragments)
+{
     TaskStubLocalPostTo post1(1);
     TaskNode postNode1(&post1, 0, 0, 0);
 
@@ -1167,7 +1231,8 @@ TEST_F(CheckRankMemTest, Execute_MultipleBoundaryFragments) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_ReadGenFromSyncWriteNode) {
+TEST_F(CheckRankMemTest, Execute_ReadGenFromSyncWriteNode)
+{
     DataSlice localSlice(BufferType::INPUT, 0, 1024);
     DataSlice remoteSlice(BufferType::OUTPUT, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
@@ -1187,7 +1252,8 @@ TEST_F(CheckRankMemTest, Execute_ReadGenFromSyncWriteNode) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, FragmentQueue_Comparison_NonAIV_SameQueue) {
+TEST_F(CheckRankMemTest, FragmentQueue_Comparison_NonAIV_SameQueue)
+{
     FragmentQueue fragQueue1;
     fragQueue1.queIdx = 0;
     fragQueue1.isAIV = false;
@@ -1203,7 +1269,8 @@ TEST_F(CheckRankMemTest, FragmentQueue_Comparison_NonAIV_SameQueue) {
     EXPECT_TRUE(fragQueue1 < fragQueue2);
 }
 
-TEST_F(CheckRankMemTest, FragmentQueue_Comparison_AIV_SameBlockPipe) {
+TEST_F(CheckRankMemTest, FragmentQueue_Comparison_AIV_SameBlockPipe)
+{
     FragmentQueue fragQueue1;
     fragQueue1.blockIdx = 0;
     fragQueue1.pipeIdx = 0;
@@ -1221,7 +1288,8 @@ TEST_F(CheckRankMemTest, FragmentQueue_Comparison_AIV_SameBlockPipe) {
     EXPECT_TRUE(fragQueue1 < fragQueue2);
 }
 
-TEST_F(CheckRankMemTest, FragmentQueue_Comparison_AIV_SameBlockPipeSameHead) {
+TEST_F(CheckRankMemTest, FragmentQueue_Comparison_AIV_SameBlockPipeSameHead)
+{
     FragmentQueue fragQueue1;
     fragQueue1.blockIdx = 0;
     fragQueue1.pipeIdx = 0;
@@ -1239,7 +1307,8 @@ TEST_F(CheckRankMemTest, FragmentQueue_Comparison_AIV_SameBlockPipeSameHead) {
     EXPECT_TRUE(fragQueue1 < fragQueue2);
 }
 
-TEST_F(CheckRankMemTest, FragmentQueue_Comparison_AIV_SameBlockPipeSameHeadSameTail) {
+TEST_F(CheckRankMemTest, FragmentQueue_Comparison_AIV_SameBlockPipeSameHeadSameTail)
+{
     FragmentQueue fragQueue1;
     fragQueue1.blockIdx = 0;
     fragQueue1.pipeIdx = 0;
@@ -1258,13 +1327,15 @@ TEST_F(CheckRankMemTest, FragmentQueue_Comparison_AIV_SameBlockPipeSameHeadSameT
     EXPECT_FALSE(fragQueue2 < fragQueue1);
 }
 
-TEST_F(CheckRankMemTest, SliceMemoryStatus_Describe_DefaultStatus) {
+TEST_F(CheckRankMemTest, SliceMemoryStatus_Describe_DefaultStatus)
+{
     SliceMemoryStatus status{0, 1024, static_cast<MemoryStatus>(99)};
     std::string desc = status.Describe();
     EXPECT_NE(desc.find("READ|WRITE"), std::string::npos);
 }
 
-TEST_F(CheckRankMemTest, GenFragQueueMemDes_MultipleBufferTypes) {
+TEST_F(CheckRankMemTest, GenFragQueueMemDes_MultipleBufferTypes)
+{
     FragQueueMemStatus fragQueMemStatus;
     std::set<SliceMemoryStatus> inputSet;
     inputSet.insert(SliceMemoryStatus{0, 1024, MemoryStatus::READ});
@@ -1278,54 +1349,62 @@ TEST_F(CheckRankMemTest, GenFragQueueMemDes_MultipleBufferTypes) {
     EXPECT_NE(desc.find("BufferType"), std::string::npos);
 }
 
-TEST_F(CheckRankMemTest, MemoryStatus_OrSameType) {
+TEST_F(CheckRankMemTest, MemoryStatus_OrSameType)
+{
     MemoryStatus a = MemoryStatus::READ;
     MemoryStatus b = MemoryStatus::READ;
     MemoryStatus result = a | b;
     EXPECT_EQ(static_cast<u32>(result), static_cast<u32>(MemoryStatus::READ));
 }
 
-TEST_F(CheckRankMemTest, MemoryStatus_AndSameType) {
+TEST_F(CheckRankMemTest, MemoryStatus_AndSameType)
+{
     MemoryStatus a = MemoryStatus::WRITE;
     MemoryStatus b = MemoryStatus::WRITE;
     MemoryStatus result = a & b;
     EXPECT_EQ(static_cast<u32>(result), static_cast<u32>(MemoryStatus::WRITE));
 }
 
-TEST_F(CheckRankMemTest, MemoryStatus_AndDifferentType) {
+TEST_F(CheckRankMemTest, MemoryStatus_AndDifferentType)
+{
     MemoryStatus a = MemoryStatus::READ;
     MemoryStatus b = MemoryStatus::WRITE;
     MemoryStatus result = a & b;
     EXPECT_EQ(static_cast<u32>(result), 0u);
 }
 
-TEST_F(CheckRankMemTest, MemoryStatus_OrEqualAccumulate) {
+TEST_F(CheckRankMemTest, MemoryStatus_OrEqualAccumulate)
+{
     MemoryStatus a = MemoryStatus::READ;
     a |= MemoryStatus::WRITE;
     a |= MemoryStatus::READ;
     EXPECT_EQ(static_cast<u32>(a), static_cast<u32>(MemoryStatus::READ) | static_cast<u32>(MemoryStatus::WRITE));
 }
 
-TEST_F(CheckRankMemTest, IsBoardType_AllNonBoardTypes) {
+TEST_F(CheckRankMemTest, IsBoardType_AllNonBoardTypes)
+{
     EXPECT_FALSE(IsBoardType(TaskTypeStub::LOCAL_COPY));
     EXPECT_FALSE(IsBoardType(TaskTypeStub::LOCAL_REDUCE));
     EXPECT_FALSE(IsBoardType(TaskTypeStub::CCU_GRAPH));
     EXPECT_FALSE(IsBoardType(TaskTypeStub::GRAPH_SEPARATE));
 }
 
-TEST_F(CheckRankMemTest, SliceMemoryStatus_MutableSize) {
+TEST_F(CheckRankMemTest, SliceMemoryStatus_MutableSize)
+{
     SliceMemoryStatus status{0, 1024, MemoryStatus::READ};
     status.size = 2048;
     EXPECT_EQ(status.size, 2048u);
 }
 
-TEST_F(CheckRankMemTest, SliceMemoryStatus_MutableStatus) {
+TEST_F(CheckRankMemTest, SliceMemoryStatus_MutableStatus)
+{
     SliceMemoryStatus status{0, 1024, MemoryStatus::READ};
     status.status = MemoryStatus::WRITE;
     EXPECT_EQ(status.status, MemoryStatus::WRITE);
 }
 
-TEST_F(CheckRankMemTest, Execute_OverlappingWriteMemoryConflict) {
+TEST_F(CheckRankMemTest, Execute_OverlappingWriteMemoryConflict)
+{
     DataSlice srcSlice1(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice1(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy task1(srcSlice1, dstSlice1);
@@ -1356,7 +1435,8 @@ TEST_F(CheckRankMemTest, Execute_OverlappingWriteMemoryConflict) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_NonOverlappingMemoryNoConflict) {
+TEST_F(CheckRankMemTest, Execute_NonOverlappingMemoryNoConflict)
+{
     DataSlice srcSlice1(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice1(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy task1(srcSlice1, dstSlice1);
@@ -1388,7 +1468,8 @@ TEST_F(CheckRankMemTest, Execute_NonOverlappingMemoryNoConflict) {
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(CheckRankMemTest, Execute_OverlappingReadWriteNoConflict) {
+TEST_F(CheckRankMemTest, Execute_OverlappingReadWriteNoConflict)
+{
     DataSlice srcSlice1(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice1(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy task1(srcSlice1, dstSlice1);
@@ -1419,7 +1500,8 @@ TEST_F(CheckRankMemTest, Execute_OverlappingReadWriteNoConflict) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_ThreeFragmentsWithPostWait) {
+TEST_F(CheckRankMemTest, Execute_ThreeFragmentsWithPostWait)
+{
     TaskStubLocalPostTo post1(1);
     TaskNode postNode1(&post1, 0, 0, 0);
 
@@ -1460,7 +1542,8 @@ TEST_F(CheckRankMemTest, Execute_ThreeFragmentsWithPostWait) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_TwoRanksOverlappingWrite) {
+TEST_F(CheckRankMemTest, Execute_TwoRanksOverlappingWrite)
+{
     TaskStubLocalPostTo post0(1);
     TaskNode postNode0(&post0, 0, 0, 0);
 
@@ -1515,7 +1598,8 @@ TEST_F(CheckRankMemTest, Execute_TwoRanksOverlappingWrite) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_WriteReduceAndReadReduce) {
+TEST_F(CheckRankMemTest, Execute_WriteReduceAndReadReduce)
+{
     DataSlice localSlice(BufferType::INPUT, 0, 1024);
     DataSlice remoteSlice(BufferType::OUTPUT, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
@@ -1536,7 +1620,8 @@ TEST_F(CheckRankMemTest, Execute_WriteReduceAndReadReduce) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_LocalReduceGenFromSyncSkipWrite) {
+TEST_F(CheckRankMemTest, Execute_LocalReduceGenFromSyncSkipWrite)
+{
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
 
@@ -1563,7 +1648,8 @@ TEST_F(CheckRankMemTest, Execute_LocalReduceGenFromSyncSkipWrite) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_PartialOverlapMemory) {
+TEST_F(CheckRankMemTest, Execute_PartialOverlapMemory)
+{
     DataSlice srcSlice1(BufferType::INPUT, 0, 2048);
     DataSlice dstSlice1(BufferType::OUTPUT, 0, 2048);
     TaskStubLocalCopy task1(srcSlice1, dstSlice1);
@@ -1594,7 +1680,8 @@ TEST_F(CheckRankMemTest, Execute_PartialOverlapMemory) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_SubQueueHeadWithParentInSameQueue) {
+TEST_F(CheckRankMemTest, Execute_SubQueueHeadWithParentInSameQueue)
+{
     TaskStubLocalPostTo postTask(1);
     TaskNode postNode(&postTask, 0, 0, 0);
 
@@ -1634,7 +1721,8 @@ TEST_F(CheckRankMemTest, Execute_SubQueueHeadWithParentInSameQueue) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_FragmentWithNullTail) {
+TEST_F(CheckRankMemTest, Execute_FragmentWithNullTail)
+{
     DataSlice srcSlice(BufferType::INPUT, 0, 1024);
     DataSlice dstSlice(BufferType::OUTPUT, 0, 1024);
     TaskStubLocalCopy copyTask(srcSlice, dstSlice);
@@ -1653,7 +1741,8 @@ TEST_F(CheckRankMemTest, Execute_FragmentWithNullTail) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_MultipleSubQueuesFromSameNode) {
+TEST_F(CheckRankMemTest, Execute_MultipleSubQueuesFromSameNode)
+{
     TaskStubLocalPostTo postTask(1);
     TaskNode postNode(&postTask, 0, 0, 0);
 
@@ -1692,7 +1781,8 @@ TEST_F(CheckRankMemTest, Execute_MultipleSubQueuesFromSameNode) {
     auto ret = checker.Execute();
 }
 
-TEST_F(CheckRankMemTest, Execute_WriteReadWithOverlappingLocal) {
+TEST_F(CheckRankMemTest, Execute_WriteReadWithOverlappingLocal)
+{
     DataSlice localSliceW(BufferType::INPUT, 0, 1024);
     DataSlice remoteSliceW(BufferType::OUTPUT, 0, 1024);
     LinkInfo link(LinkProtoStub::SDMA);
@@ -1716,8 +1806,9 @@ TEST_F(CheckRankMemTest, Execute_WriteReadWithOverlappingLocal) {
 
 // ==================== CCU 子图测试 (使用 GenCcuTaskNodeGraphBase 基础设施) ====================
 
-// 双队列 CCU 子图 + 手动 Cross-Queue Link：覆盖 CcuGraphMemCheck、CollectCcuQueueGraph、GenFragQueueInOneQueueOnly、FindPostWaitPair 路径
-// queue 0: locCopy[0](INPUT:0..100→OUTPUT:0..100) → locPost[0](topic=1)
+// 双队列 CCU 子图 + 手动 Cross-Queue Link：覆盖
+// CcuGraphMemCheck、CollectCcuQueueGraph、GenFragQueueInOneQueueOnly、FindPostWaitPair 路径 queue 0:
+// locCopy[0](INPUT:0..100→OUTPUT:0..100) → locPost[0](topic=1)
 //                                                         ↓ (手动跨队列连接)
 // queue 1: locWait[1](topic=1) → locCopy[1](INPUT:200..100→OUTPUT:200..100)
 // 注意：queue 1 不再有内部的 post-wait 对，避免 FindPostWaitPair 在同一个 queue 内匹配失败
@@ -1731,7 +1822,7 @@ TEST_F(CheckRankMemTest, CcuGraph_Basic_NoConflict)
     auto ccuHead = genGraph.CreateCcuHeadNode(rankId, 0);
     genGraph.LinkNode(head, ccuHead);
 
-    TaskStubCcuGraph *curCcuTask = dynamic_cast<TaskStubCcuGraph *>(ccuHead->task);
+    TaskStubCcuGraph* curCcuTask = dynamic_cast<TaskStubCcuGraph*>(ccuHead->task);
     genGraph.Init(curCcuTask, 1, queNum);
 
     DataSlice srcSlice1(BufferType::INPUT, 0, 100);
@@ -1768,7 +1859,7 @@ TEST_F(CheckRankMemTest, CcuGraph_OverlapWrite_NoConflict)
     auto ccuHead = genGraph.CreateCcuHeadNode(rankId, 0);
     genGraph.LinkNode(head, ccuHead);
 
-    TaskStubCcuGraph *curCcuTask = dynamic_cast<TaskStubCcuGraph *>(ccuHead->task);
+    TaskStubCcuGraph* curCcuTask = dynamic_cast<TaskStubCcuGraph*>(ccuHead->task);
     genGraph.Init(curCcuTask, 1, queNum);
 
     DataSlice srcSlice1(BufferType::INPUT, 0, 200);
@@ -1804,7 +1895,7 @@ TEST_F(CheckRankMemTest, CcuGraph_OverlapRead_NoConflict)
     auto ccuHead = genGraph.CreateCcuHeadNode(rankId, 0);
     genGraph.LinkNode(head, ccuHead);
 
-    TaskStubCcuGraph *curCcuTask = dynamic_cast<TaskStubCcuGraph *>(ccuHead->task);
+    TaskStubCcuGraph* curCcuTask = dynamic_cast<TaskStubCcuGraph*>(ccuHead->task);
     genGraph.Init(curCcuTask, 1, queNum);
 
     DataSlice srcSlice1(BufferType::INPUT, 0, 200);

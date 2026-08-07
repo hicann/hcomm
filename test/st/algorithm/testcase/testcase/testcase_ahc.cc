@@ -28,20 +28,15 @@ using namespace std;
 
 class AHCTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "CheckOpSemanticsTest set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "CheckOpSemanticsTest set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "CheckOpSemanticsTest tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "CheckOpSemanticsTest tear down." << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -54,7 +49,7 @@ protected:
     }
 };
 
-//all reduce case
+// all reduce case
 TEST_F(AHCTest, all_reduce_910_93_1spod_2server_same_8_ring_test)
 {
     RankTable_For_LLT gen;
@@ -63,7 +58,7 @@ TEST_F(AHCTest, all_reduce_910_93_1spod_2server_same_8_ring_test)
 
     setenv("HCCL_ALGO", "level0:ring;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -86,7 +81,7 @@ TEST_F(AHCTest, all_reduce_910_93_1spod_2server_same_8_ring_broke_test)
 
     setenv("HCCL_ALGO", "level0:ring;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -109,7 +104,7 @@ TEST_F(AHCTest, all_reduce_910_93_2spod_1server_same_8_test)
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -124,7 +119,7 @@ TEST_F(AHCTest, all_reduce_910_93_2spod_1server_same_8_test)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(AHCTest, all_reduce_910_93_2spod_1server_same_8_default_test) //default case
+TEST_F(AHCTest, all_reduce_910_93_2spod_1server_same_8_default_test) // default case
 {
     RankTable_For_LLT gen;
     TopoMeta topoMeta;
@@ -132,7 +127,7 @@ TEST_F(AHCTest, all_reduce_910_93_2spod_1server_same_8_default_test) //default c
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -147,7 +142,7 @@ TEST_F(AHCTest, all_reduce_910_93_2spod_1server_same_8_default_test) //default c
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(AHCTest, all_reduce_910_93_2spod_1server_same_8_default_broke_test) //default case
+TEST_F(AHCTest, all_reduce_910_93_2spod_1server_same_8_default_broke_test) // default case
 {
     RankTable_For_LLT gen;
     TopoMeta topoMeta;
@@ -155,7 +150,7 @@ TEST_F(AHCTest, all_reduce_910_93_2spod_1server_same_8_default_broke_test) //def
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -169,14 +164,14 @@ TEST_F(AHCTest, all_reduce_910_93_2spod_1server_same_8_default_broke_test) //def
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_1_3_test) //default case
+TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_1_3_test) // default case
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}},{{0}, {0},{0}}};
+    TopoMeta topoMeta{{{0}}, {{0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -191,14 +186,14 @@ TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_1_3_test) //default case
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_1_3_broke_test) //default case
+TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_1_3_broke_test) // default case
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}},{{0}, {0},{0}}};
+    TopoMeta topoMeta{{{0}}, {{0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -216,11 +211,11 @@ TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_1_3_broke_test) //default ca
 TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_1_7_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}},{{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
+    TopoMeta topoMeta{{{0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -238,11 +233,11 @@ TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_1_7_test)
 TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_1_7_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}},{{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
+    TopoMeta topoMeta{{{0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -257,14 +252,14 @@ TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_1_7_broke_test)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(AHCTest, all_reduce_910_93_4spod_1server_test) //default case
+TEST_F(AHCTest, all_reduce_910_93_4spod_1server_test) // default case
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}},{{0}},{{0}},{{0}}};
+    TopoMeta topoMeta{{{0}}, {{0}}, {{0}}, {{0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -282,11 +277,11 @@ TEST_F(AHCTest, all_reduce_910_93_4spod_1server_test) //default case
 TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_2_3_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1}, {0, 1}},{{0, 1}, {0, 1}, {0, 1}}};
+    TopoMeta topoMeta{{{0, 1}, {0, 1}}, {{0, 1}, {0, 1}, {0, 1}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -304,11 +299,11 @@ TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_2_3_test)
 TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_2_3_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1}, {0, 1}},{{0, 1}, {0, 1}, {0, 1}}};
+    TopoMeta topoMeta{{{0, 1}, {0, 1}}, {{0, 1}, {0, 1}, {0, 1}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -326,11 +321,11 @@ TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_2_3_broke_test)
 TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_2_4_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0} },{{0}, {0} , {0}, {0}}};
+    TopoMeta topoMeta{{{0}, {0}}, {{0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -348,11 +343,11 @@ TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_2_4_test)
 TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_2_4_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0} },{{0}, {0} , {0}, {0}}};
+    TopoMeta topoMeta{{{0}, {0}}, {{0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -370,11 +365,11 @@ TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_2_4_broke_test)
 TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_2_8_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0} },{{0}, {0} , {0}, {0},{0}, {0} , {0}, {0}}};
+    TopoMeta topoMeta{{{0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -392,11 +387,11 @@ TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_2_8_test)
 TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_2_8_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0} },{{0}, {0} , {0}, {0},{0}, {0} , {0}, {0}}};
+    TopoMeta topoMeta{{{0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -414,11 +409,11 @@ TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_2_8_broke_test)
 TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_3_5_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}},{{0}, {0}, {0}, {0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -436,11 +431,11 @@ TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_3_5_test)
 TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_3_5_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}},{{0}, {0}, {0}, {0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -458,11 +453,11 @@ TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_3_5_broke_test)
 TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_3_7_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}},{{0}, {0} , {0}, {0}, {0}, {0} , {0}}};
+    TopoMeta topoMeta{{{0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -480,11 +475,11 @@ TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_3_7_test)
 TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_3_7_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}},{{0}, {0} , {0}, {0}, {0}, {0} , {0}}};
+    TopoMeta topoMeta{{{0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -502,11 +497,11 @@ TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_3_7_broke_test)
 TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_4_6_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}, {0} },{{0}, {0} , {0}, {0},{0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -524,11 +519,11 @@ TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_4_6_test)
 TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_4_6_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}, {0} },{{0}, {0} , {0}, {0},{0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -546,11 +541,11 @@ TEST_F(AHCTest, allreduce_910_93_2spod_server_diff_4_6_broke_test)
 TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_4_8_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}, {0}},{{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -568,11 +563,11 @@ TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_4_8_test)
 TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_4_8_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}, {0}},{{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLREDUCE;
     checkerOpParam.tag = "AllReduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -587,7 +582,6 @@ TEST_F(AHCTest, all_reduce_910_93_2spod_server_diff_4_8_broke_test)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-
 // reduce scatter case
 TEST_F(AHCTest, reduce_scatter_910_93_1spod_2server_same_8_ring_test)
 {
@@ -597,7 +591,7 @@ TEST_F(AHCTest, reduce_scatter_910_93_1spod_2server_same_8_ring_test)
 
     setenv("HCCL_ALGO", "level0:ring;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -620,7 +614,7 @@ TEST_F(AHCTest, reduce_scatter_910_93_1spod_2server_same_8_ring_broke_test)
 
     setenv("HCCL_ALGO", "level0:ring;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -643,7 +637,7 @@ TEST_F(AHCTest, reduce_scatter_910_93_1spod_2server_same_8_test)
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -658,7 +652,7 @@ TEST_F(AHCTest, reduce_scatter_910_93_1spod_2server_same_8_test)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(AHCTest, reduce_scatter_910_93_1spod_2server_same_8_default_test) //default case
+TEST_F(AHCTest, reduce_scatter_910_93_1spod_2server_same_8_default_test) // default case
 {
     RankTable_For_LLT gen;
     TopoMeta topoMeta;
@@ -666,7 +660,7 @@ TEST_F(AHCTest, reduce_scatter_910_93_1spod_2server_same_8_default_test) //defau
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -680,7 +674,7 @@ TEST_F(AHCTest, reduce_scatter_910_93_1spod_2server_same_8_default_test) //defau
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(AHCTest, reduce_scatter_910_93_1spod_2server_same_8_broke_default_test) //default case
+TEST_F(AHCTest, reduce_scatter_910_93_1spod_2server_same_8_broke_default_test) // default case
 {
     RankTable_For_LLT gen;
     TopoMeta topoMeta;
@@ -688,7 +682,7 @@ TEST_F(AHCTest, reduce_scatter_910_93_1spod_2server_same_8_broke_default_test) /
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -702,14 +696,14 @@ TEST_F(AHCTest, reduce_scatter_910_93_1spod_2server_same_8_broke_default_test) /
     ret = checker.Check(checkerOpParam, topoMeta);
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
-TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_1_3_test) //default case
+TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_1_3_test) // default case
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}},{{0}, {0},{0}}};
+    TopoMeta topoMeta{{{0}}, {{0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -724,14 +718,14 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_1_3_test) //default case
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_1_3_broke_test) //default case
+TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_1_3_broke_test) // default case
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}},{{0}, {0},{0}}};
+    TopoMeta topoMeta{{{0}}, {{0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -749,11 +743,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_1_3_broke_test) //defaul
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_1_7_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}},{{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
+    TopoMeta topoMeta{{{0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -771,11 +765,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_1_7_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_1_7_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}},{{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
+    TopoMeta topoMeta{{{0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -793,11 +787,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_1_7_broke_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_2_3_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1}, {0, 1} },{{0, 1}, {0, 1} , {0, 1}}};
+    TopoMeta topoMeta{{{0, 1}, {0, 1}}, {{0, 1}, {0, 1}, {0, 1}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -815,11 +809,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_2_3_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_2_3_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1}, {0, 1} },{{0, 1}, {0, 1} , {0, 1}}};
+    TopoMeta topoMeta{{{0, 1}, {0, 1}}, {{0, 1}, {0, 1}, {0, 1}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -837,11 +831,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_2_3_broke_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_2_4_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0} },{{0}, {0} , {0}, {0}}};
+    TopoMeta topoMeta{{{0}, {0}}, {{0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -859,11 +853,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_2_4_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_2_4_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0} },{{0}, {0} , {0}, {0}}};
+    TopoMeta topoMeta{{{0}, {0}}, {{0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -881,11 +875,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_2_4_broke_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_2_8_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0} },{{0}, {0} , {0}, {0},{0}, {0} , {0}, {0}}};
+    TopoMeta topoMeta{{{0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -903,11 +897,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_2_8_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_2_8_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0} },{{0}, {0} , {0}, {0},{0}, {0} , {0}, {0}}};
+    TopoMeta topoMeta{{{0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -925,11 +919,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_2_8_broke_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_3_5_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}},{{0}, {0} , {0}, {0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -947,11 +941,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_3_5_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_3_5_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}},{{0}, {0} , {0}, {0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -969,11 +963,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_3_5_broke_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_3_7_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}},{{0}, {0} , {0}, {0}, {0}, {0} , {0}}};
+    TopoMeta topoMeta{{{0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -991,11 +985,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_3_7_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_3_7_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}},{{0}, {0} , {0}, {0}, {0}, {0} , {0}}};
+    TopoMeta topoMeta{{{0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1013,11 +1007,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_3_7_broke_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_4_6_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}, {0} },{{0}, {0} , {0}, {0},{0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1035,11 +1029,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_4_6_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_4_6_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}, {0} },{{0}, {0} , {0}, {0},{0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1057,11 +1051,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_4_6_broke_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_4_8_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}, {0}},{{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1079,11 +1073,11 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_4_8_test)
 TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_4_8_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}, {0}},{{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE_SCATTER;
     checkerOpParam.tag = "ReduceScatter";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1098,8 +1092,7 @@ TEST_F(AHCTest, reduce_scatter_910_93_2spod_server_diff_4_8_broke_test)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-
-//all gather
+// all gather
 TEST_F(AHCTest, all_gather_910_93_1spod_2server_same_8_ring_test)
 {
     RankTable_For_LLT gen;
@@ -1108,7 +1101,7 @@ TEST_F(AHCTest, all_gather_910_93_1spod_2server_same_8_ring_test)
 
     setenv("HCCL_ALGO", "level0:ring;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1132,7 +1125,7 @@ TEST_F(AHCTest, all_gather_910_93_1spod_2server_same_8_ring_broke_test)
 
     setenv("HCCL_ALGO", "level0:ring;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1148,7 +1141,7 @@ TEST_F(AHCTest, all_gather_910_93_1spod_2server_same_8_ring_broke_test)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(AHCTest, all_gather_910_93_2spod_1server_same_8_test) //default case
+TEST_F(AHCTest, all_gather_910_93_2spod_1server_same_8_test) // default case
 {
     RankTable_For_LLT gen;
     TopoMeta topoMeta;
@@ -1156,7 +1149,7 @@ TEST_F(AHCTest, all_gather_910_93_2spod_1server_same_8_test) //default case
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1171,7 +1164,7 @@ TEST_F(AHCTest, all_gather_910_93_2spod_1server_same_8_test) //default case
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(AHCTest, all_gather_910_93_2spod_1server_same_8_broke_test) //default case
+TEST_F(AHCTest, all_gather_910_93_2spod_1server_same_8_broke_test) // default case
 {
     RankTable_For_LLT gen;
     TopoMeta topoMeta;
@@ -1179,7 +1172,7 @@ TEST_F(AHCTest, all_gather_910_93_2spod_1server_same_8_broke_test) //default cas
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1193,14 +1186,14 @@ TEST_F(AHCTest, all_gather_910_93_2spod_1server_same_8_broke_test) //default cas
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_1_3_test) //default case
+TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_1_3_test) // default case
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}},{{0}, {0},{0}}};
+    TopoMeta topoMeta{{{0}}, {{0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1215,14 +1208,14 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_1_3_test) //default case
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_1_3_broke_test) //default case
+TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_1_3_broke_test) // default case
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}},{{0}, {0},{0}}};
+    TopoMeta topoMeta{{{0}}, {{0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1240,11 +1233,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_1_3_broke_test) //default ca
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_1_7_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}},{{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
+    TopoMeta topoMeta{{{0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1262,11 +1255,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_1_7_test)
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_1_7_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}},{{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
+    TopoMeta topoMeta{{{0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1284,11 +1277,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_1_7_broke_test)
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_2_3_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1}, {0, 1}},{{0, 1}, {0, 1} , {0, 1}}};
+    TopoMeta topoMeta{{{0, 1}, {0, 1}}, {{0, 1}, {0, 1}, {0, 1}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1306,11 +1299,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_2_3_test)
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_2_3_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1}, {0, 1} },{{0, 1}, {0, 1} , {0, 1}}};
+    TopoMeta topoMeta{{{0, 1}, {0, 1}}, {{0, 1}, {0, 1}, {0, 1}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1328,11 +1321,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_2_3_broke_test)
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_2_4_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0} },{{0}, {0} , {0}, {0}}};
+    TopoMeta topoMeta{{{0}, {0}}, {{0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1350,11 +1343,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_2_4_test)
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_2_4_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0} },{{0}, {0} , {0}, {0}}};
+    TopoMeta topoMeta{{{0}, {0}}, {{0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1372,11 +1365,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_2_4_broke_test)
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_2_8_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0} },{{0}, {0} , {0}, {0},{0}, {0} , {0}, {0}}};
+    TopoMeta topoMeta{{{0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1394,11 +1387,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_2_8_test)
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_2_8_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0} },{{0}, {0} , {0}, {0},{0}, {0} , {0}, {0}}};
+    TopoMeta topoMeta{{{0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1416,11 +1409,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_2_8_broke_test)
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_3_5_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}},{{0}, {0} , {0}, {0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1438,11 +1431,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_3_5_test)
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_3_5_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}},{{0}, {0} , {0}, {0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1460,11 +1453,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_3_5_broke_test)
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_3_7_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}},{{0}, {0} , {0}, {0}, {0}, {0} , {0}}};
+    TopoMeta topoMeta{{{0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1482,11 +1475,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_3_7_test)
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_3_7_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}},{{0}, {0} , {0}, {0}, {0}, {0} , {0}}};
+    TopoMeta topoMeta{{{0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1504,11 +1497,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_3_7_broke_test)
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_4_6_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}, {0} },{{0}, {0} , {0}, {0},{0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1526,11 +1519,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_4_6_test)
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_4_6_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}, {0} },{{0}, {0} , {0}, {0},{0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1545,15 +1538,14 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_4_6_broke_test)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_4_8_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}, {0}},{{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1571,11 +1563,11 @@ TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_4_8_test)
 TEST_F(AHCTest, all_gather_910_93_2spod_server_diff_4_8_broke_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}, {0}, {0}, {0}},{{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0} }};
+    TopoMeta topoMeta{{{0}, {0}, {0}, {0}}, {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}};
 
     setenv("HCCL_ALGO", "level0:NA;level1:AHC_BROKE", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;

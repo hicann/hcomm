@@ -16,26 +16,28 @@
 
 namespace hccl {
 namespace {
-void *GetAliasDevAddr(void *addr, const LocalRdmaRmaBufferImpl &parent)
-{
-    const uintptr_t childAddr = reinterpret_cast<uintptr_t>(addr);
-    const uintptr_t parentAddr = reinterpret_cast<uintptr_t>(parent.GetAddr());
-    const uintptr_t parentDevAddr = reinterpret_cast<uintptr_t>(parent.GetDevAddr());
-    return reinterpret_cast<void *>(parentDevAddr + (childAddr - parentAddr));
-}
-}
+    void* GetAliasDevAddr(void* addr, const LocalRdmaRmaBufferImpl& parent)
+    {
+        const uintptr_t childAddr = reinterpret_cast<uintptr_t>(addr);
+        const uintptr_t parentAddr = reinterpret_cast<uintptr_t>(parent.GetAddr());
+        const uintptr_t parentDevAddr = reinterpret_cast<uintptr_t>(parent.GetDevAddr());
+        return reinterpret_cast<void*>(parentDevAddr + (childAddr - parentAddr));
+    }
+} // namespace
 
 LocalRdmaRmaBufferImpl::LocalRdmaRmaBufferImpl(
     const HcclNetDevCtx netDevCtx, void* addr, u64 size, const RmaMemType memType)
     : RmaBuffer(netDevCtx, addr, size, memType, RmaType::RDMA_RMA)
-{
-}
+{}
 
-LocalRdmaRmaBufferImpl::LocalRdmaRmaBufferImpl(const HcclNetDevCtx netDevCtx, void* addr, u64 size,
-    const RmaMemType memType, const LocalRdmaRmaBufferImpl& parent)
+LocalRdmaRmaBufferImpl::LocalRdmaRmaBufferImpl(
+    const HcclNetDevCtx netDevCtx, void* addr, u64 size, const RmaMemType memType, const LocalRdmaRmaBufferImpl& parent)
     : RmaBuffer(netDevCtx, addr, size, memType, RmaType::RDMA_RMA, true),
-      deviceLogicId(parent.deviceLogicId), rdmaHandle(parent.rdmaHandle),
-      mrHandle(parent.mrHandle), lkey(parent.lkey), devAddrID(parent.devAddrID),
+      deviceLogicId(parent.deviceLogicId),
+      rdmaHandle(parent.rdmaHandle),
+      mrHandle(parent.mrHandle),
+      lkey(parent.lkey),
+      devAddrID(parent.devAddrID),
       initialized_(true)
 {
     devAddr = (memType == RmaMemType::DEVICE) ? addr : GetAliasDevAddr(addr, parent);
@@ -55,7 +57,7 @@ LocalRdmaRmaBufferImpl::~LocalRdmaRmaBufferImpl()
 std::unordered_map<s32, std::unordered_map<std::string, u32>> g_devAddrIdentifierMap;
 std::mutex g_devAddrIdentifierMutex;
 
-bool IsDevAddrExistInDevAddrIdentifierMap(s32 deviceLogicId, const std::string &devAddrID)
+bool IsDevAddrExistInDevAddrIdentifierMap(s32 deviceLogicId, const std::string& devAddrID)
 {
     std::lock_guard<std::mutex> lock(g_devAddrIdentifierMutex);
     if (g_devAddrIdentifierMap.find(deviceLogicId) != g_devAddrIdentifierMap.end()) {
@@ -64,14 +66,11 @@ bool IsDevAddrExistInDevAddrIdentifierMap(s32 deviceLogicId, const std::string &
     return false;
 }
 
-HcclResult AddDevAddrIdentifierMap(s32 deviceLogicId, const std::string &devAddrID)
+HcclResult AddDevAddrIdentifierMap(s32 deviceLogicId, const std::string& devAddrID)
 {
-    CHK_PRT_RET(deviceLogicId == INVALID_INT,
-        HCCL_ERROR("[AddDevAddrIdentifierMap] deviceLogicId is error."),
-        HCCL_E_PARA);
-    CHK_PRT_RET(devAddrID.empty(),
-        HCCL_ERROR("[AddDevAddrIdentifierMap] devAddrID is error."),
-        HCCL_E_PARA);
+    CHK_PRT_RET(
+        deviceLogicId == INVALID_INT, HCCL_ERROR("[AddDevAddrIdentifierMap] deviceLogicId is error."), HCCL_E_PARA);
+    CHK_PRT_RET(devAddrID.empty(), HCCL_ERROR("[AddDevAddrIdentifierMap] devAddrID is error."), HCCL_E_PARA);
     // devAddrID exit
     bool isDevAddrExist = IsDevAddrExistInDevAddrIdentifierMap(deviceLogicId, devAddrID);
     std::lock_guard<std::mutex> lock(g_devAddrIdentifierMutex);
@@ -87,11 +86,11 @@ HcclResult AddDevAddrIdentifierMap(s32 deviceLogicId, const std::string &devAddr
     return HCCL_SUCCESS;
 }
 
-HcclResult DeDevAddrIdentifierMap(s32 deviceLogicId, const std::string &devAddrID)
+HcclResult DeDevAddrIdentifierMap(s32 deviceLogicId, const std::string& devAddrID)
 {
     bool isDevAddrExist = IsDevAddrExistInDevAddrIdentifierMap(deviceLogicId, devAddrID);
-    CHK_PRT_RET(!isDevAddrExist,
-        HCCL_ERROR("[LocalRdmaRmaBufferImpl][DeDevAddrIdentifierMap]devAddrID is not existed."),
+    CHK_PRT_RET(
+        !isDevAddrExist, HCCL_ERROR("[LocalRdmaRmaBufferImpl][DeDevAddrIdentifierMap]devAddrID is not existed."),
         HCCL_E_PARA);
     std::lock_guard<std::mutex> lock(g_devAddrIdentifierMutex);
     if (g_devAddrIdentifierMap[deviceLogicId][devAddrID] > 0) {
@@ -107,15 +106,17 @@ HcclResult DeDevAddrIdentifierMap(s32 deviceLogicId, const std::string &devAddrI
 HcclResult LocalRdmaRmaBufferImpl::Init()
 {
     CHK_PTR_NULL(netDevCtx);
-    deviceLogicId           = (static_cast<NetDevContext *>(netDevCtx))->GetLogicId();
-    HcclIpAddress localIp   = (static_cast<NetDevContext *>(netDevCtx))->GetLocalIp();
-    bool isBackupIpValid = !(static_cast<NetDevContext *>(netDevCtx))->GetBackupIp().IsInvalid();
+    deviceLogicId = (static_cast<NetDevContext*>(netDevCtx))->GetLogicId();
+    HcclIpAddress localIp = (static_cast<NetDevContext*>(netDevCtx))->GetLocalIp();
+    bool isBackupIpValid = !(static_cast<NetDevContext*>(netDevCtx))->GetBackupIp().IsInvalid();
     RaResourceInfo raResourceInfo;
     CHK_RET(NetworkManager::GetInstance(deviceLogicId).GetRaResourceInfo(raResourceInfo));
     rdmaHandle = raResourceInfo.nicSocketMap[localIp].nicRdmaHandle;
     CHK_PTR_NULL(rdmaHandle);
     if (isBackupIpValid) {
-        HCCL_INFO("[%s] before hrtGetDevice deviceLogicId[%d], isBackupIpValid[%d]", __func__, deviceLogicId, isBackupIpValid);
+        HCCL_INFO(
+            "[%s] before hrtGetDevice deviceLogicId[%d], isBackupIpValid[%d]", __func__, deviceLogicId,
+            isBackupIpValid);
         CHK_RET(hrtGetDevice(&deviceLogicId));
         HCCL_INFO("[%s] after hrtGetDevice deviceLogiID[%d]", __func__, deviceLogicId);
     }
@@ -128,39 +129,39 @@ HcclResult LocalRdmaRmaBufferImpl::Init()
 
     // 内存注册
     MrInfoT info = {};
-    info.size   = size;
+    info.size = size;
     info.access = RA_ACCESS_REMOTE_WRITE | RA_ACCESS_LOCAL_WRITE | RA_ACCESS_REMOTE_READ;
-    info.addr   = devAddr;
+    info.addr = devAddr;
 
     std::ostringstream oss;
-    oss.write(reinterpret_cast<const char_t *>(&rdmaHandle), sizeof(rdmaHandle));
-    oss.write(reinterpret_cast<const char_t *>(&addr), sizeof(addr));
-    oss.write(reinterpret_cast<const char_t *>(&size), sizeof(size));
+    oss.write(reinterpret_cast<const char_t*>(&rdmaHandle), sizeof(rdmaHandle));
+    oss.write(reinterpret_cast<const char_t*>(&addr), sizeof(addr));
+    oss.write(reinterpret_cast<const char_t*>(&size), sizeof(size));
     devAddrID = oss.str();
 
     CHK_RET(hrtRaRegGlobalMr(rdmaHandle, info, mrHandle));
     HCCL_DEBUG("[Init][RegMr] LocalRdmaRmaBuffer rdmaHandle[%p], mrHandle[%p].", rdmaHandle, mrHandle);
     // 信息保存
     CHK_RET(AddDevAddrIdentifierMap(deviceLogicId, devAddrID));
-    this->lkey  = info.lkey;
+    this->lkey = info.lkey;
     initialized_ = true;
     return HCCL_SUCCESS;
 }
 
-std::string &LocalRdmaRmaBufferImpl::Serialize()
+std::string& LocalRdmaRmaBufferImpl::Serialize()
 {
     if (!serializeStr_.empty()) {
         return serializeStr_;
     }
     // 序列化信息
     std::ostringstream oss;
-    u8 type{static_cast<u8>(rmaType)};  
-    oss.write(reinterpret_cast<const char_t *>(&type), sizeof(type));
-    oss.write(reinterpret_cast<const char_t *>(&addr), sizeof(addr));
-    oss.write(reinterpret_cast<const char_t *>(&size), sizeof(size));
-    oss.write(reinterpret_cast<const char_t *>(&devAddr), sizeof(devAddr));
-    oss.write(reinterpret_cast<const char_t *>(&memType), sizeof(memType));
-    oss.write(reinterpret_cast<const char_t *>(&lkey), sizeof(lkey));
+    u8 type{static_cast<u8>(rmaType)};
+    oss.write(reinterpret_cast<const char_t*>(&type), sizeof(type));
+    oss.write(reinterpret_cast<const char_t*>(&addr), sizeof(addr));
+    oss.write(reinterpret_cast<const char_t*>(&size), sizeof(size));
+    oss.write(reinterpret_cast<const char_t*>(&devAddr), sizeof(devAddr));
+    oss.write(reinterpret_cast<const char_t*>(&memType), sizeof(memType));
+    oss.write(reinterpret_cast<const char_t*>(&lkey), sizeof(lkey));
 
     serializeStr_ = oss.str();
     return serializeStr_;
@@ -185,8 +186,10 @@ HcclResult LocalRdmaRmaBufferImpl::Destroy()
             }
 
             if (ret != HCCL_SUCCESS) {
-                HCCL_ERROR("[LocalRdmaRmaBufferImpl][Destroy]deReg Global Mr failed, "
-                    "ret[%d], dev[%d], ptr[%p], size[%llu]", ret, deviceLogicId, addr, size);
+                HCCL_ERROR(
+                    "[LocalRdmaRmaBufferImpl][Destroy]deReg Global Mr failed, "
+                    "ret[%d], dev[%d], ptr[%p], size[%llu]",
+                    ret, deviceLogicId, addr, size);
             }
         }
 
@@ -194,15 +197,17 @@ HcclResult LocalRdmaRmaBufferImpl::Destroy()
         if (memType == RmaMemType::HOST) {
             ret = MemMappingManager::GetInstance(deviceLogicId).ReleaseDevVA(deviceLogicId, addr, size);
             if (ret != HCCL_SUCCESS) {
-                HCCL_ERROR("[LocalRdmaRmaBufferImpl][Destroy]release dev va failed, "
-                    "ret[%d], dev[%d], ptr[%p], size[%llu]", ret, deviceLogicId, addr, size);
+                HCCL_ERROR(
+                    "[LocalRdmaRmaBufferImpl][Destroy]release dev va failed, "
+                    "ret[%d], dev[%d], ptr[%p], size[%llu]",
+                    ret, deviceLogicId, addr, size);
             }
         }
 
-        addr        = nullptr;
-        size        = 0;
-        mrHandle    = nullptr;
-        devAddrID   = std::string();
+        addr = nullptr;
+        size = 0;
+        mrHandle = nullptr;
+        devAddrID = std::string();
         initialized_ = false;
         return ret;
     }
@@ -213,8 +218,7 @@ HcclResult LocalRdmaRmaBufferImpl::Destroy()
 HcclResult LocalRdmaRmaBufferImpl::Remap(void* addr, u64 length)
 {
     CHK_PTR_NULL(addr);
-    CHK_PRT_RET(length == 0,
-        HCCL_ERROR("[Remap]memorySize[%llu] must be greater than 0.", length), HCCL_E_PARA);
+    CHK_PRT_RET(length == 0, HCCL_ERROR("[Remap]memorySize[%llu] must be greater than 0.", length), HCCL_E_PARA);
 
     struct MemRemapInfo info = {0};
     info.addr = addr;
@@ -223,4 +227,4 @@ HcclResult LocalRdmaRmaBufferImpl::Remap(void* addr, u64 length)
     return HrtRaRemapMr(rdmaHandle, &info, num);
 }
 
-}
+} // namespace hccl

@@ -21,13 +21,13 @@ class StartCommand : public CommandBase {
 public:
     static std::string StaticName() { return "start"; }
     void Setup(CLI::App& app) override;
-    
+
 private:
     void Execute();
-    
+
     std::string configClusterName;
     bool checkOnlyMode = false;
 };
-}
+} // namespace HcclSim
 
 #endif

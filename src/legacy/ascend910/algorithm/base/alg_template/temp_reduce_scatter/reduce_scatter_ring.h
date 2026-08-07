@@ -13,7 +13,6 @@
 
 #include "reduce_scatter_ring_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * REDUCE_SCATTER_RING_H */

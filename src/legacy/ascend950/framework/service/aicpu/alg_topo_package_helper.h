@@ -21,9 +21,9 @@ public:
 
     ~AlgTopoPackageHelper() = default;
 
-    std::vector<char> GetPackedData(const AlgTopoInfo &algTopo) const;
+    std::vector<char> GetPackedData(const AlgTopoInfo& algTopo) const;
 
-    AlgTopoInfo GetAlgTopoInfo(std::vector<char> &packedData) const;
+    AlgTopoInfo GetAlgTopoInfo(std::vector<char>& packedData) const;
 };
 
 } // namespace Hccl

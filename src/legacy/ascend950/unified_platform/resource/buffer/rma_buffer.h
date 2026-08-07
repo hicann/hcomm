@@ -17,27 +17,27 @@
 namespace Hccl {
 // 待删除 CCU 重构完成后不再需要该文件
 struct IpcRmaBufferExchangeData {
-    char_t     name[RTS_IPC_MEM_NAME_LEN]{0};
-    u64        addr{0};
-    u64        size{0};
-    u64        offset{0};
-    u32        pid{0};
+    char_t name[RTS_IPC_MEM_NAME_LEN]{0};
+    u64 addr{0};
+    u64 size{0};
+    u64 offset{0};
+    u32 pid{0};
 };
 
 struct RdmaRmaBufferExchangeData {
-    u64        addr{0};
-    u64        size{0};
-    u8         key[RDMA_MEM_KEY_MAX_LEN]{0};
-    u32        rkey{0};
+    u64 addr{0};
+    u64 size{0};
+    u8 key[RDMA_MEM_KEY_MAX_LEN]{0};
+    u32 rkey{0};
 };
 
 struct UbRmaBufferExchangeData {
-    u64        addr{0};
-    u64        size{0};
-    u8         key[HRT_UB_MEM_KEY_MAX_LEN]{0};
-    u32        tokenValue{0};
-    u32        tokenId{0};
-    u32        keySize{0};
+    u64 addr{0};
+    u64 size{0};
+    u8 key[HRT_UB_MEM_KEY_MAX_LEN]{0};
+    u32 tokenValue{0};
+    u32 tokenId{0};
+    u32 keySize{0};
 };
 
 } // namespace Hccl

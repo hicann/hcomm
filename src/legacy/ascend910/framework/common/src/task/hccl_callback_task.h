@@ -17,10 +17,10 @@
 namespace hccl {
 class HcclCallbackTask {
 public:
-    HcclCallbackTask(u32 devicePhyId, u32 deviceLogicId,
-        HcclDispatcher dispatcher, NICDeployment nicDeployment);
+    HcclCallbackTask(u32 devicePhyId, u32 deviceLogicId, HcclDispatcher dispatcher, NICDeployment nicDeployment);
     ~HcclCallbackTask();
     HcclResult CallbackRegStream(rtStream_t stream);
+
 private:
     void CallbackThread();
     HcclResult CloseCallbackThread();

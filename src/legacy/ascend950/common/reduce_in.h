@@ -17,13 +17,11 @@ namespace Hccl {
 struct ReduceIn {
     DataType dataType;
     ReduceOp reduceOp;
-    ReduceIn(DataType dataType, ReduceOp reduceOp) : dataType(dataType), reduceOp(reduceOp)
-    {
-    }
+    ReduceIn(DataType dataType, ReduceOp reduceOp) : dataType(dataType), reduceOp(reduceOp) {}
     std::string Describe() const
     {
-        return StringFormat("ReduceIn[dataType=%s, reduceOp=%s]", dataType.Describe().c_str(),
-                            reduceOp.Describe().c_str());
+        return StringFormat(
+            "ReduceIn[dataType=%s, reduceOp=%s]", dataType.Describe().c_str(), reduceOp.Describe().c_str());
     }
 };
 

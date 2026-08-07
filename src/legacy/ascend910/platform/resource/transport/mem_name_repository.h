@@ -17,5 +17,5 @@ namespace hccl {
 constexpr u32 HCCL_IPC_PID_ARRAY_SIZE = 1; // 固定每次只传一个PID数据
 constexpr u32 MAX_DEV_NUM_IPC_MEM = 16;
 constexpr int32_t INVALID_PAGESIZE = -1;
-}  // namespace hccl
+} // namespace hccl
 #endif /* * __MEM_NAME_REPOSITRY_H__ */

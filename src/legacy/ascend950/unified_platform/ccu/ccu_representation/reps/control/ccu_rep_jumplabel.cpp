@@ -15,16 +15,13 @@
 namespace Hccl {
 namespace CcuRep {
 
-CcuRepJumpLabel::CcuRepJumpLabel(const std::string &label) : CcuRepBlock(label)
-{
-    type = CcuRepType::JUMP_LABEL;
-    Append(std::make_shared<CcuRepNop>());
-}
+    CcuRepJumpLabel::CcuRepJumpLabel(const std::string& label) : CcuRepBlock(label)
+    {
+        type = CcuRepType::JUMP_LABEL;
+        Append(std::make_shared<CcuRepNop>());
+    }
 
-std::string CcuRepJumpLabel::Describe()
-{
-    return StringFormat("JumpLabel[%s]", GetLabel().c_str());
-}
+    std::string CcuRepJumpLabel::Describe() { return StringFormat("JumpLabel[%s]", GetLabel().c_str()); }
 
 }; // namespace CcuRep
 }; // namespace Hccl

@@ -18,38 +18,26 @@ namespace Hccl {
 
 class StreamLite {
 public:
-    explicit StreamLite(std::vector<char> &uniqueId);
+    explicit StreamLite(std::vector<char>& uniqueId);
     StreamLite(u32 id, u32 sqIds, u32 phyId, u32 cqIds);
     StreamLite(u32 id, u32 sqIds, u32 phyId, u32 cqIds, bool launchFlag);
 
-    inline u32 GetId() const
-    {
-        return id;
-    }
+    inline u32 GetId() const { return id; }
 
-    inline u32 GetSqId() const
-    {
-        return sqId;
-    }
+    inline u32 GetSqId() const { return sqId; }
 
-    inline u32 GetCqId() const
-    {
-        return cqId;
-    }
+    inline u32 GetCqId() const { return cqId; }
 
-    inline u32 GetDevPhyId() const
-    {
-        return devPhyId;
-    }
+    inline u32 GetDevPhyId() const { return devPhyId; }
 
-    RtsqBase *GetRtsq() const;
+    RtsqBase* GetRtsq() const;
 
     std::string Describe() const;
 
 private:
     u32 id;
     u32 sqId;
-    u32 devPhyId{0};    
+    u32 devPhyId{0};
     u32 cqId{0};
 
     std::unique_ptr<RtsqBase> rtsq;

@@ -13,10 +13,10 @@
 
 #include <stdio.h>
 
-#define RS_TEST_MEM_SIZE  32
-#define RS_TEST_MEM_PAGE_SIZE  4096
+#define RS_TEST_MEM_SIZE 32
+#define RS_TEST_MEM_PAGE_SIZE 4096
 
-#define rs_ut_msg(fmt, args...)	fprintf(stderr, "\t>>>>> " fmt, ##args)
+#define rs_ut_msg(fmt, args...) fprintf(stderr, "\t>>>>> " fmt, ##args)
 
 void TcRsAbnormal();
 void TcRsAbnormal2();

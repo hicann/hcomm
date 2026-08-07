@@ -16,14 +16,16 @@ namespace hccl {
 template <typename Resource, typename State>
 class StateGuard {
 public:
-    StateGuard(Resource* resource, State targetState) : resource_(resource) {
+    StateGuard(Resource* resource, State targetState) : resource_(resource)
+    {
         if (resource_ != nullptr) {
-            initialState_ = resource_->GetState();  // 直接调用GetState
-            resource_->SetState(targetState);   // 设置目标状态
+            initialState_ = resource_->GetState(); // 直接调用GetState
+            resource_->SetState(targetState);      // 设置目标状态
         }
     }
 
-    ~StateGuard() {
+    ~StateGuard()
+    {
         if (resource_ != nullptr) {
             resource_->SetState(initialState_); // 恢复初始状态
         }
@@ -36,4 +38,4 @@ private:
 
 } // namespace hccl
 
-#endif  // STATE_GUARD_H
+#endif // STATE_GUARD_H

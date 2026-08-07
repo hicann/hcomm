@@ -18,8 +18,8 @@
 #include "ra_hdc_async.h"
 #include "ra_hdc_async_ctx.h"
 
-int RaHdcGetEidByIpAsync(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], union HccpEid eid[],
-    unsigned int *num, void **reqHandle)
+int RaHdcGetEidByIpAsync(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], union HccpEid eid[], unsigned int *num,
+    void **reqHandle)
 {
     struct RaRequestHandle *reqHandleTmp = NULL;
     unsigned int phyId = ctxHandle->attr.phyId;
@@ -29,15 +29,14 @@ int RaHdcGetEidByIpAsync(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], unio
 
     asyncRsp = (struct RaResponseEidList *)calloc(1, sizeof(struct RaResponseEidList));
     CHK_PRT_RETURN(asyncRsp == NULL,
-        hccp_err("[get][eid_by_ip]calloc async_rsp failed, phyId[%u] devIndex[0x%x]",
-        phyId, ctxHandle->devIndex), -ENOMEM);
+        hccp_err("[get][eid_by_ip]calloc async_rsp failed, phyId[%u] devIndex[0x%x]", phyId, ctxHandle->devIndex),
+        -ENOMEM);
     asyncRsp->eidList = eid;
     asyncRsp->num = num;
 
     reqHandleTmp = (struct RaRequestHandle *)calloc(1, sizeof(struct RaRequestHandle));
     if (reqHandleTmp == NULL) {
-        hccp_err("[get][eid_by_ip]calloc req_handle_tmp failed, phyId[%u], devIndex[0x%x]",
-            phyId, ctxHandle->devIndex);
+        hccp_err("[get][eid_by_ip]calloc req_handle_tmp failed, phyId[%u], devIndex[0x%x]", phyId, ctxHandle->devIndex);
         ret = -ENOMEM;
         goto out;
     }
@@ -48,8 +47,8 @@ int RaHdcGetEidByIpAsync(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], unio
     ret = RaHdcSendMsgAsync(RA_RS_GET_EID_BY_IP, phyId, (char *)&asyncData, sizeof(union OpGetEidByIpData),
         reqHandleTmp);
     if (ret != 0) {
-        hccp_err("[get][eid_by_ip]hdc async send message failed ret[%d], phyId[%u], devIndex[0x%x]",
-            ret, phyId, ctxHandle->devIndex);
+        hccp_err("[get][eid_by_ip]hdc async send message failed ret[%d], phyId[%u], devIndex[0x%x]", ret, phyId,
+            ctxHandle->devIndex);
         free(reqHandleTmp);
         reqHandleTmp = NULL;
         goto out;
@@ -87,8 +86,8 @@ void RaHdcAsyncHandleGetEidByIp(struct RaRequestHandle *reqHandle)
     return;
 }
 
-int RaHdcGetIpByEidAsync(struct RaCtxHandle *ctxHandle, union HccpEid eid[], struct IpInfo ip[],
-    unsigned int *num, void **reqHandle)
+int RaHdcGetIpByEidAsync(struct RaCtxHandle *ctxHandle, union HccpEid eid[], struct IpInfo ip[], unsigned int *num,
+    void **reqHandle)
 {
     struct RaRequestHandle *reqHandleTmp = NULL;
     unsigned int phyId = ctxHandle->attr.phyId;
@@ -98,15 +97,14 @@ int RaHdcGetIpByEidAsync(struct RaCtxHandle *ctxHandle, union HccpEid eid[], str
 
     asyncRsp = (struct RaResponseIpList *)calloc(1, sizeof(struct RaResponseIpList));
     CHK_PRT_RETURN(asyncRsp == NULL,
-        hccp_err("[get][IpByEid]calloc asyncRsp failed, phyId[%u] devIndex[0x%x]",
-        phyId, ctxHandle->devIndex), -ENOMEM);
+        hccp_err("[get][IpByEid]calloc asyncRsp failed, phyId[%u] devIndex[0x%x]", phyId, ctxHandle->devIndex),
+        -ENOMEM);
     asyncRsp->ipList = ip;
     asyncRsp->num = num;
 
     reqHandleTmp = (struct RaRequestHandle *)calloc(1, sizeof(struct RaRequestHandle));
     if (reqHandleTmp == NULL) {
-        hccp_err("[get][IpByEid]calloc reqHandleTmp failed, phyId[%u], devIndex[0x%x]",
-            phyId, ctxHandle->devIndex);
+        hccp_err("[get][IpByEid]calloc reqHandleTmp failed, phyId[%u], devIndex[0x%x]", phyId, ctxHandle->devIndex);
         ret = -ENOMEM;
         goto free_async;
     }
@@ -117,8 +115,8 @@ int RaHdcGetIpByEidAsync(struct RaCtxHandle *ctxHandle, union HccpEid eid[], str
     ret = RaHdcSendMsgAsync(RA_RS_GET_IP_BY_EID, phyId, (char *)&asyncData, sizeof(union OpGetIpByEidData),
         reqHandleTmp);
     if (ret != 0) {
-        hccp_err("[get][IpByEid]hdc async send message failed ret[%d], phyId[%u], devIndex[0x%x]",
-            ret, phyId, ctxHandle->devIndex);
+        hccp_err("[get][IpByEid]hdc async send message failed ret[%d], phyId[%u], devIndex[0x%x]", ret, phyId,
+            ctxHandle->devIndex);
         free(reqHandleTmp);
         reqHandleTmp = NULL;
         goto free_async;
@@ -146,8 +144,8 @@ void RaHdcAsyncHandleGetIpByEid(struct RaRequestHandle *reqHandle)
 
     ret = RaHdcGetIpResults(asyncData, eidNum, asyncRsp->ipList, asyncRsp->num);
     if (ret != 0) {
-        hccp_err("[get][IpByEid]RaHdcGetIpResults failed ret[%d], phyId[%u] devIndex[0x%x]", ret,
-            reqHandle->phyId, reqHandle->devIndex);
+        hccp_err("[get][IpByEid]RaHdcGetIpResults failed ret[%d], phyId[%u] devIndex[0x%x]", ret, reqHandle->phyId,
+            reqHandle->devIndex);
         reqHandle->opRet = ret;
     }
 
@@ -156,7 +154,7 @@ void RaHdcAsyncHandleGetIpByEid(struct RaRequestHandle *reqHandle)
     return;
 }
 
-int RaHdcCtxLmemRegisterAsync(struct RaCtxHandle *ctxHandle, struct MrRegInfoT *lmemInfo, 
+int RaHdcCtxLmemRegisterAsync(struct RaCtxHandle *ctxHandle, struct MrRegInfoT *lmemInfo,
     struct RaLmemHandle *lmemHandle, void **reqHandle)
 {
     struct RaRequestHandle *reqHandleTmp = NULL;
@@ -165,22 +163,24 @@ int RaHdcCtxLmemRegisterAsync(struct RaCtxHandle *ctxHandle, struct MrRegInfoT *
     int ret;
 
     ret = RaHdcCtxPrepareLmemRegister(ctxHandle, lmemInfo, &asyncData);
-    CHK_PRT_RETURN(ret != 0, hccp_err("[init][ra_hdc_lmem]prepare register failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[init][ra_hdc_lmem]prepare register failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId,
+            ctxHandle->devIndex),
+        ret);
 
     reqHandleTmp = (struct RaRequestHandle *)calloc(1, sizeof(struct RaRequestHandle));
     CHK_PRT_RETURN(reqHandleTmp == NULL,
-        hccp_err("[init][ra_hdc_lmem]calloc req_handle_tmp failed, phyId[%u], devIndex[0x%x]",
-        phyId, ctxHandle->devIndex), -ENOMEM);
+        hccp_err("[init][ra_hdc_lmem]calloc req_handle_tmp failed, phyId[%u], devIndex[0x%x]", phyId,
+            ctxHandle->devIndex),
+        -ENOMEM);
 
     reqHandleTmp->devIndex = ctxHandle->devIndex;
     reqHandleTmp->privData = (void *)&lmemInfo->out;
     reqHandleTmp->privHandle = (void *)lmemHandle;
-    ret = RaHdcSendMsgAsync(RA_RS_LMEM_REG, phyId, (char *)&asyncData, sizeof(union OpLmemRegInfoData),
-        reqHandleTmp);
+    ret = RaHdcSendMsgAsync(RA_RS_LMEM_REG, phyId, (char *)&asyncData, sizeof(union OpLmemRegInfoData), reqHandleTmp);
     if (ret != 0) {
-        hccp_err("[init][ra_hdc_lmem]hdc async send message failed ret[%d], phyId[%u], devIndex[0x%x]",
-            ret, phyId, ctxHandle->devIndex);
+        hccp_err("[init][ra_hdc_lmem]hdc async send message failed ret[%d], phyId[%u], devIndex[0x%x]", ret, phyId,
+            ctxHandle->devIndex);
         free(reqHandleTmp);
         reqHandleTmp = NULL;
         return ret;
@@ -202,8 +202,8 @@ void RaHdcAsyncHandleLmemRegister(struct RaRequestHandle *reqHandle)
     info = (struct MemRegInfo *)reqHandle->privData;
     ret = memcpy_s(info, sizeof(struct MemRegInfo), &asyncData->rxData.memInfo, sizeof(struct MemRegInfoT));
     if (ret != 0) {
-        hccp_err("[init][ra_hdc_lmem]memcpy_s mem_info failed ret[%d], phyId[%u] devIndex[0x%x]",
-            ret, reqHandle->phyId, reqHandle->devIndex);
+        hccp_err("[init][ra_hdc_lmem]memcpy_s mem_info failed ret[%d], phyId[%u] devIndex[0x%x]", ret, reqHandle->phyId,
+            reqHandle->devIndex);
         reqHandle->opRet = -ESAFEFUNC;
         return;
     }
@@ -212,8 +212,7 @@ void RaHdcAsyncHandleLmemRegister(struct RaRequestHandle *reqHandle)
     return;
 }
 
-int RaHdcCtxLmemUnregisterAsync(struct RaCtxHandle *ctxHandle, struct RaLmemHandle *lmemHandle,
-    void **reqHandle)
+int RaHdcCtxLmemUnregisterAsync(struct RaCtxHandle *ctxHandle, struct RaLmemHandle *lmemHandle, void **reqHandle)
 {
     struct RaRequestHandle *reqHandleTmp = NULL;
     union OpLmemUnregInfoData asyncData = {0};
@@ -225,14 +224,15 @@ int RaHdcCtxLmemUnregisterAsync(struct RaCtxHandle *ctxHandle, struct RaLmemHand
     asyncData.txData.addr = lmemHandle->addr;
     reqHandleTmp = (struct RaRequestHandle *)calloc(1, sizeof(struct RaRequestHandle));
     CHK_PRT_RETURN(reqHandleTmp == NULL,
-        hccp_err("[deinit][ra_hdc_lmem]calloc req_handle_tmp failed, phyId[%u], devIndex[0x%x]",
-        phyId, ctxHandle->devIndex), -ENOMEM);
+        hccp_err("[deinit][ra_hdc_lmem]calloc req_handle_tmp failed, phyId[%u], devIndex[0x%x]", phyId,
+            ctxHandle->devIndex),
+        -ENOMEM);
 
     ret = RaHdcSendMsgAsync(RA_RS_LMEM_UNREG, phyId, (char *)&asyncData, sizeof(union OpLmemUnregInfoData),
         reqHandleTmp);
     if (ret != 0) {
-        hccp_err("[deinit][ra_hdc_lmem]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]",
-            ret, phyId, ctxHandle->devIndex);
+        hccp_err("[deinit][ra_hdc_lmem]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]", ret, phyId,
+            ctxHandle->devIndex);
         free(reqHandleTmp);
         reqHandleTmp = NULL;
         return ret;
@@ -242,8 +242,8 @@ int RaHdcCtxLmemUnregisterAsync(struct RaCtxHandle *ctxHandle, struct RaLmemHand
     return 0;
 }
 
-int RaHdcCtxQpCreateAsync(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *attr,
-	struct QpCreateInfo *info, struct RaCtxQpHandle *qpHandle, void **reqHandle)
+int RaHdcCtxQpCreateAsync(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *attr, struct QpCreateInfo *info,
+    struct RaCtxQpHandle *qpHandle, void **reqHandle)
 {
     struct RaRequestHandle *reqHandleTmp = NULL;
     unsigned int phyId = ctxHandle->attr.phyId;
@@ -251,13 +251,16 @@ int RaHdcCtxQpCreateAsync(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *at
     int ret;
 
     ret = RaHdcCtxPrepareQpCreate(ctxHandle, attr, &asyncData);
-    CHK_PRT_RETURN(ret != 0, hccp_err("[init][ra_hdc_qp]prepare qp_create failed ret[%d], phyId[%u] devIndex[0x%x]",
-        ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[init][ra_hdc_qp]prepare qp_create failed ret[%d], phyId[%u] devIndex[0x%x]", ret, phyId,
+            ctxHandle->devIndex),
+        ret);
 
     reqHandleTmp = (struct RaRequestHandle *)calloc(1, sizeof(struct RaRequestHandle));
     CHK_PRT_RETURN(reqHandleTmp == NULL,
-        hccp_err("[init][ra_hdc_qp]calloc req_handle_tmp failed, phyId[%u], devIndex[0x%x]",
-        phyId, ctxHandle->devIndex), -ENOMEM);
+        hccp_err("[init][ra_hdc_qp]calloc req_handle_tmp failed, phyId[%u], devIndex[0x%x]", phyId,
+            ctxHandle->devIndex),
+        -ENOMEM);
     reqHandleTmp->devIndex = ctxHandle->devIndex;
     reqHandleTmp->privData = (void *)info;
     qpHandle->ctxHandle = ctxHandle;
@@ -267,11 +270,11 @@ int RaHdcCtxQpCreateAsync(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *at
     (void)memcpy_s(&qpHandle->qpAttr, sizeof(struct QpCreateAttr), attr, sizeof(struct QpCreateAttr));
     reqHandleTmp->privHandle = (void *)qpHandle;
 
-    ret = RaHdcSendMsgAsync(RA_RS_CTX_QP_CREATE, phyId, (char *)&asyncData,
-        sizeof(union OpCtxQpCreateData), reqHandleTmp);
+    ret = RaHdcSendMsgAsync(RA_RS_CTX_QP_CREATE, phyId, (char *)&asyncData, sizeof(union OpCtxQpCreateData),
+        reqHandleTmp);
     if (ret != 0) {
-        hccp_err("[init][ra_hdc_qp]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]",
-            ret, phyId, ctxHandle->devIndex);
+        hccp_err("[init][ra_hdc_qp]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]", ret, phyId,
+            ctxHandle->devIndex);
         free(reqHandleTmp);
         reqHandleTmp = NULL;
         return ret;
@@ -310,14 +313,15 @@ int RaHdcCtxQpDestroyAsync(struct RaCtxQpHandle *qpHandle, void **reqHandle)
 
     reqHandleTmp = (struct RaRequestHandle *)calloc(1, sizeof(struct RaRequestHandle));
     CHK_PRT_RETURN(reqHandleTmp == NULL,
-        hccp_err("[deinit][ra_hdc_qp]calloc req_handle_tmp failed, phyId[%u], devIndex[0x%x]",
-        phyId, qpHandle->devIndex), -ENOMEM);
+        hccp_err("[deinit][ra_hdc_qp]calloc req_handle_tmp failed, phyId[%u], devIndex[0x%x]", phyId,
+            qpHandle->devIndex),
+        -ENOMEM);
 
-    ret = RaHdcSendMsgAsync(RA_RS_CTX_QP_DESTROY, phyId, (char *)&asyncData,
-        sizeof(union OpCtxQpDestroyData), reqHandleTmp);
+    ret = RaHdcSendMsgAsync(RA_RS_CTX_QP_DESTROY, phyId, (char *)&asyncData, sizeof(union OpCtxQpDestroyData),
+        reqHandleTmp);
     if (ret != 0) {
-        hccp_err("[deinit][ra_hdc_qp]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]",
-            ret, phyId, qpHandle->devIndex);
+        hccp_err("[deinit][ra_hdc_qp]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]", ret, phyId,
+            qpHandle->devIndex);
         free(reqHandleTmp);
         reqHandleTmp = NULL;
         return ret;
@@ -336,13 +340,16 @@ int RaHdcCtxQpImportAsync(struct RaCtxHandle *ctxHandle, struct QpImportInfoT *i
     int ret = 0;
 
     ret = RaHdcCtxPrepareQpImport(ctxHandle, info, &asyncData);
-    CHK_PRT_RETURN(ret != 0, hccp_err("[init][ra_hdc_qp]prepare qp_import failed ret[%d], phyId[%u] devIndex[0x%x]",
-        ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[init][ra_hdc_qp]prepare qp_import failed ret[%d], phyId[%u] devIndex[0x%x]", ret, phyId,
+            ctxHandle->devIndex),
+        ret);
 
     reqHandleTmp = (struct RaRequestHandle *)calloc(1, sizeof(struct RaRequestHandle));
     CHK_PRT_RETURN(reqHandleTmp == NULL,
-        hccp_err("[init][ra_hdc_qp]calloc req_handle_tmp failed, phyId[%u], devIndex[0x%x]",
-        phyId, ctxHandle->devIndex), -ENOMEM);
+        hccp_err("[init][ra_hdc_qp]calloc req_handle_tmp failed, phyId[%u], devIndex[0x%x]", phyId,
+            ctxHandle->devIndex),
+        -ENOMEM);
 
     reqHandleTmp->devIndex = ctxHandle->devIndex;
     reqHandleTmp->privData = (void *)&info->out;
@@ -352,11 +359,11 @@ int RaHdcCtxQpImportAsync(struct RaCtxHandle *ctxHandle, struct QpImportInfoT *i
     remQpHandle->qpKey = info->in.key;
     reqHandleTmp->privHandle = (void *)remQpHandle;
 
-    ret = RaHdcSendMsgAsync(RA_RS_CTX_QP_IMPORT, phyId, (char *)&asyncData,
-        sizeof(union OpCtxQpImportData), reqHandleTmp);
+    ret = RaHdcSendMsgAsync(RA_RS_CTX_QP_IMPORT, phyId, (char *)&asyncData, sizeof(union OpCtxQpImportData),
+        reqHandleTmp);
     if (ret != 0) {
-        hccp_err("[init][ra_hdc_qp]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]",
-            ret, phyId, ctxHandle->devIndex);
+        hccp_err("[init][ra_hdc_qp]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]", ret, phyId,
+            ctxHandle->devIndex);
         free(reqHandleTmp);
         reqHandleTmp = NULL;
         return ret;
@@ -396,14 +403,15 @@ int RaHdcCtxQpUnimportAsync(struct RaCtxRemQpHandle *remQpHandle, void **reqHand
 
     reqHandleTmp = (struct RaRequestHandle *)calloc(1, sizeof(struct RaRequestHandle));
     CHK_PRT_RETURN(reqHandleTmp == NULL,
-        hccp_err("[deinit][ra_hdc_qp]calloc req_handle_tmp failed, phyId[%u], devIndex[0x%x]",
-        phyId, remQpHandle->devIndex), -ENOMEM);
+        hccp_err("[deinit][ra_hdc_qp]calloc req_handle_tmp failed, phyId[%u], devIndex[0x%x]", phyId,
+            remQpHandle->devIndex),
+        -ENOMEM);
 
-    ret = RaHdcSendMsgAsync(RA_RS_CTX_QP_UNIMPORT, phyId, (char *)&asyncData,
-        sizeof(union OpCtxQpUnimportData), reqHandleTmp);
+    ret = RaHdcSendMsgAsync(RA_RS_CTX_QP_UNIMPORT, phyId, (char *)&asyncData, sizeof(union OpCtxQpUnimportData),
+        reqHandleTmp);
     if (ret != 0) {
-        hccp_err("[deinit][ra_hdc_qp]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]",
-            ret, phyId, remQpHandle->devIndex);
+        hccp_err("[deinit][ra_hdc_qp]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]", ret, phyId,
+            remQpHandle->devIndex);
         free(reqHandleTmp);
         reqHandleTmp = NULL;
         return ret;
@@ -424,8 +432,8 @@ int RaHdcGetTpInfoListAsync(struct RaCtxHandle *ctxHandle, struct GetTpCfg *cfg,
 
     asyncRsp = (struct RaResponseTpInfoList *)calloc(1, sizeof(struct RaResponseTpInfoList));
     CHK_PRT_RETURN(asyncRsp == NULL,
-        hccp_err("[get][ra_hdc_tp_info]calloc async_rsp failed, phyId[%u] devIndex[0x%x]",
-        phyId, ctxHandle->devIndex), -ENOMEM);
+        hccp_err("[get][ra_hdc_tp_info]calloc async_rsp failed, phyId[%u] devIndex[0x%x]", phyId, ctxHandle->devIndex),
+        -ENOMEM);
     asyncRsp->infoList = infoList;
     asyncRsp->num = num;
 
@@ -436,19 +444,19 @@ int RaHdcGetTpInfoListAsync(struct RaCtxHandle *ctxHandle, struct GetTpCfg *cfg,
 
     reqHandleTmp = (struct RaRequestHandle *)calloc(1, sizeof(struct RaRequestHandle));
     if (reqHandleTmp == NULL) {
-        hccp_err("[get][ra_hdc_tp_info]calloc RaRequestHandle failed, phyId[%u], devIndex[0x%x]",
-            phyId, ctxHandle->devIndex);
+        hccp_err("[get][ra_hdc_tp_info]calloc RaRequestHandle failed, phyId[%u], devIndex[0x%x]", phyId,
+            ctxHandle->devIndex);
         ret = -ENOMEM;
         goto out;
     }
 
     reqHandleTmp->devIndex = ctxHandle->devIndex;
     reqHandleTmp->privData = (void *)asyncRsp;
-    ret = RaHdcSendMsgAsync(RA_RS_GET_TP_INFO_LIST, phyId, (char *)&asyncData,
-        sizeof(union OpGetTpInfoListData), reqHandleTmp);
+    ret = RaHdcSendMsgAsync(RA_RS_GET_TP_INFO_LIST, phyId, (char *)&asyncData, sizeof(union OpGetTpInfoListData),
+        reqHandleTmp);
     if (ret != 0) {
-        hccp_err("[get][ra_hdc_tp_info]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]",
-            ret, phyId, ctxHandle->devIndex);
+        hccp_err("[get][ra_hdc_tp_info]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]", ret, phyId,
+            ctxHandle->devIndex);
         free(reqHandleTmp);
         reqHandleTmp = NULL;
         goto out;
@@ -478,12 +486,12 @@ void RaHdcAsyncHandleTpInfoList(struct RaRequestHandle *reqHandle)
         goto out;
     }
 
-    ret = memcpy_s(asyncRsp->infoList, (*asyncRsp->num) * sizeof(struct HccpTpInfo),
-        asyncData->rxData.infoList, asyncData->rxData.num * sizeof(struct HccpTpInfo));
+    ret = memcpy_s(asyncRsp->infoList, (*asyncRsp->num) * sizeof(struct HccpTpInfo), asyncData->rxData.infoList,
+        asyncData->rxData.num * sizeof(struct HccpTpInfo));
     if (ret != 0) {
         hccp_err("[get][ra_hdc_tp_info]memcpy_s tp_info failed ret[%d] *async_rsp->num[%u] rx_data.num[%u], "
-            "phyId[%u] devIndex[0x%x]", ret, *asyncRsp->num, asyncData->rxData.num,
-            reqHandle->phyId, reqHandle->devIndex);
+                 "phyId[%u] devIndex[0x%x]",
+            ret, *asyncRsp->num, asyncData->rxData.num, reqHandle->phyId, reqHandle->devIndex);
         reqHandle->opRet = -ESAFEFUNC;
         goto out;
     }
@@ -494,8 +502,8 @@ out:
     return;
 }
 
-int RaHdcGetTpAttrAsync(struct RaCtxHandle *ctxHandle, uint64_t tpHandle, uint32_t *attrBitmap,
-    struct TpAttr *attr, void **reqHandle)
+int RaHdcGetTpAttrAsync(struct RaCtxHandle *ctxHandle, uint64_t tpHandle, uint32_t *attrBitmap, struct TpAttr *attr,
+    void **reqHandle)
 {
     struct RaResponseGetTpAttr *asyncRsp = NULL;
     struct RaRequestHandle *reqHandleTmp = NULL;
@@ -505,8 +513,9 @@ int RaHdcGetTpAttrAsync(struct RaCtxHandle *ctxHandle, uint64_t tpHandle, uint32
 
     asyncRsp = (struct RaResponseGetTpAttr *)calloc(1, sizeof(struct RaResponseGetTpAttr));
     CHK_PRT_RETURN(asyncRsp == NULL,
-        hccp_err("[get][ra_hdc_tp_attr]calloc ra_response_get_tp_attr failed, phyId[%u] devIndex[0x%x]",
-        phyId, ctxHandle->devIndex), -ENOMEM);
+        hccp_err("[get][ra_hdc_tp_attr]calloc ra_response_get_tp_attr failed, phyId[%u] devIndex[0x%x]", phyId,
+            ctxHandle->devIndex),
+        -ENOMEM);
     asyncRsp->attr = attr;
     asyncRsp->attrBitmap = attrBitmap;
 
@@ -516,19 +525,18 @@ int RaHdcGetTpAttrAsync(struct RaCtxHandle *ctxHandle, uint64_t tpHandle, uint32
     asyncData.txData.attrBitmap = *attrBitmap;
     reqHandleTmp = (struct RaRequestHandle *)calloc(1, sizeof(struct RaRequestHandle));
     if (reqHandleTmp == NULL) {
-        hccp_err("[get][ra_hdc_tp_attr]calloc RaRequestHandle failed, phyId[%u] devIndex[0x%x]",
-            phyId, ctxHandle->devIndex);
+        hccp_err("[get][ra_hdc_tp_attr]calloc RaRequestHandle failed, phyId[%u] devIndex[0x%x]", phyId,
+            ctxHandle->devIndex);
         ret = -ENOMEM;
         goto out;
     }
 
     reqHandleTmp->devIndex = ctxHandle->devIndex;
     reqHandleTmp->privData = (void *)asyncRsp;
-    ret = RaHdcSendMsgAsync(RA_RS_GET_TP_ATTR, phyId, (char *)&asyncData,
-        sizeof(union OpGetTpAttrData), reqHandleTmp);
+    ret = RaHdcSendMsgAsync(RA_RS_GET_TP_ATTR, phyId, (char *)&asyncData, sizeof(union OpGetTpAttrData), reqHandleTmp);
     if (ret != 0) {
-        hccp_err("[get][ra_hdc_tp_attr]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]",
-            ret, phyId, ctxHandle->devIndex);
+        hccp_err("[get][ra_hdc_tp_attr]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]", ret, phyId,
+            ctxHandle->devIndex);
         free(reqHandleTmp);
         reqHandleTmp = NULL;
         goto out;
@@ -561,8 +569,8 @@ out:
     return;
 }
 
-int RaHdcSetTpAttrAsync(struct RaCtxHandle *ctxHandle, uint64_t tpHandle, uint32_t attrBitmap,
-    struct TpAttr *attr, void **reqHandle)
+int RaHdcSetTpAttrAsync(struct RaCtxHandle *ctxHandle, uint64_t tpHandle, uint32_t attrBitmap, struct TpAttr *attr,
+    void **reqHandle)
 {
     struct RaRequestHandle *reqHandleTmp = NULL;
     unsigned int phyId = ctxHandle->attr.phyId;
@@ -576,15 +584,15 @@ int RaHdcSetTpAttrAsync(struct RaCtxHandle *ctxHandle, uint64_t tpHandle, uint32
     (void)memcpy_s(&asyncData.txData.attr, sizeof(struct TpAttr), attr, sizeof(struct TpAttr));
     reqHandleTmp = (struct RaRequestHandle *)calloc(1, sizeof(struct RaRequestHandle));
     CHK_PRT_RETURN(reqHandleTmp == NULL,
-        hccp_err("[set][ra_hdc_tp_attr]calloc RaRequestHandle failed, phyId[%u] devIndex[0x%x]",
-        phyId, ctxHandle->devIndex), -ENOMEM);
+        hccp_err("[set][ra_hdc_tp_attr]calloc RaRequestHandle failed, phyId[%u] devIndex[0x%x]", phyId,
+            ctxHandle->devIndex),
+        -ENOMEM);
 
     reqHandleTmp->devIndex = ctxHandle->devIndex;
-    ret = RaHdcSendMsgAsync(RA_RS_SET_TP_ATTR, phyId, (char *)&asyncData,
-        sizeof(union OpSetTpAttrData), reqHandleTmp);
+    ret = RaHdcSendMsgAsync(RA_RS_SET_TP_ATTR, phyId, (char *)&asyncData, sizeof(union OpSetTpAttrData), reqHandleTmp);
     if (ret != 0) {
-        hccp_err("[set][ra_hdc_tp_attr]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]",
-            ret, phyId, ctxHandle->devIndex);
+        hccp_err("[set][ra_hdc_tp_attr]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]", ret, phyId,
+            ctxHandle->devIndex);
         free(reqHandleTmp);
         reqHandleTmp = NULL;
         return ret;
@@ -594,16 +602,16 @@ int RaHdcSetTpAttrAsync(struct RaCtxHandle *ctxHandle, uint64_t tpHandle, uint32
     return 0;
 }
 
-STATIC int QpDestroyBatchParamCheck(struct RaCtxHandle *ctxHandle, void *qpHandle[],
-    unsigned int ids[], unsigned int *num)
+STATIC int QpDestroyBatchParamCheck(struct RaCtxHandle *ctxHandle, void *qpHandle[], unsigned int ids[],
+    unsigned int *num)
 {
     struct RaCtxQpHandle *qpHandleTmp = NULL;
     unsigned int i;
 
     for (i = 0; i < *num; ++i) {
         qpHandleTmp = (struct RaCtxQpHandle *)qpHandle[i];
-        CHK_PRT_RETURN(qpHandleTmp == NULL,
-            hccp_err("[destroy_batch][ra_hdc_ctx_qp]qp_handle[%u] is NULL", i), -EINVAL);
+        CHK_PRT_RETURN(qpHandleTmp == NULL, hccp_err("[destroy_batch][ra_hdc_ctx_qp]qp_handle[%u] is NULL", i),
+            -EINVAL);
         CHK_PRT_RETURN(qpHandleTmp->ctxHandle == NULL,
             hccp_err("[destroy_batch][ra_hdc_ctx_qp]ctx_handle[%u] is NULL", i), -EINVAL);
         CHK_PRT_RETURN(qpHandleTmp->ctxHandle != ctxHandle,
@@ -615,8 +623,7 @@ STATIC int QpDestroyBatchParamCheck(struct RaCtxHandle *ctxHandle, void *qpHandl
     return 0;
 }
 
-int RaHdcCtxQpDestroyBatchAsync(struct RaCtxHandle *ctxHandle, void *qpHandle[],
-    unsigned int *num, void **reqHandle)
+int RaHdcCtxQpDestroyBatchAsync(struct RaCtxHandle *ctxHandle, void *qpHandle[], unsigned int *num, void **reqHandle)
 {
     union OpCtxQpDestroyBatchData asyncData = {0};
     struct RaRequestHandle *reqHandleTmp = NULL;
@@ -624,24 +631,29 @@ int RaHdcCtxQpDestroyBatchAsync(struct RaCtxHandle *ctxHandle, void *qpHandle[],
     int ret;
 
     ret = QpDestroyBatchParamCheck(ctxHandle, qpHandle, asyncData.txData.ids, num);
-    CHK_PRT_RETURN(ret != 0, hccp_err("[destroy_batch][ra_hdc_ctx_qp]param check failed, phyId[%u] devIndex[0x%x]",
-        phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[destroy_batch][ra_hdc_ctx_qp]param check failed, phyId[%u] devIndex[0x%x]", phyId,
+            ctxHandle->devIndex),
+        ret);
 
     asyncData.txData.phyId = phyId;
     asyncData.txData.devIndex = ctxHandle->devIndex;
     asyncData.txData.num = *num;
 
     reqHandleTmp = (struct RaRequestHandle *)calloc(1, sizeof(struct RaRequestHandle));
-    CHK_PRT_RETURN(reqHandleTmp == NULL, hccp_err("[destroy_batch][ra_hdc_ctx_qp]calloc RaRequestHandle failed, "
-        "phyId[%u] devIndex[0x%x]", phyId, ctxHandle->devIndex), -ENOMEM);
+    CHK_PRT_RETURN(reqHandleTmp == NULL,
+        hccp_err("[destroy_batch][ra_hdc_ctx_qp]calloc RaRequestHandle failed, "
+                 "phyId[%u] devIndex[0x%x]",
+            phyId, ctxHandle->devIndex),
+        -ENOMEM);
 
     reqHandleTmp->devIndex = ctxHandle->devIndex;
     reqHandleTmp->privData = (void *)num;
     ret = RaHdcSendMsgAsync(RA_RS_CTX_QP_DESTROY_BATCH, phyId, (char *)&asyncData,
         sizeof(union OpCtxQpDestroyBatchData), reqHandleTmp);
     if (ret != 0) {
-        hccp_err("[destroy_batch][ra_hdc_ctx_qp]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]",
-            ret, phyId, ctxHandle->devIndex);
+        hccp_err("[destroy_batch][ra_hdc_ctx_qp]hdc async send message failed ret[%d], phyId[%u] devIndex[0x%x]", ret,
+            phyId, ctxHandle->devIndex);
         free(reqHandleTmp);
         reqHandleTmp = NULL;
         return ret;

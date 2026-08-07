@@ -25,12 +25,14 @@ public:
     __aicore__ ~TBuf() = default;
 
     template <typename T>
-    __aicore__ LocalTensor<T> Get() {
+    __aicore__ LocalTensor<T> Get()
+    {
         return LocalTensor<T>{TPosition::LCM, block_.ptr, block_.len / sizeof(T)};
     }
 
     template <typename T>
-    __aicore__ LocalTensor<T> GetWithOffset(uint32_t size, uint32_t bufOffset) {
+    __aicore__ LocalTensor<T> GetWithOffset(uint32_t size, uint32_t bufOffset)
+    {
         if ((size * sizeof(T) + bufOffset) >= block_.len) {
             HCCL_VM_ERROR("TBuf GetWithOffset out-of-bounds, bufOffset={} size={}", bufOffset, size);
         }
@@ -44,6 +46,6 @@ private:
 
     friend class TPipe;
 };
-}
+} // namespace AscendC
 
-#endif //AIV_T_BUF_STUB_H
+#endif // AIV_T_BUF_STUB_H

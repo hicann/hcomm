@@ -46,10 +46,10 @@ static std::vector<char> BuildLocNotifyUniqueIds(u32 notifyNum)
     for (u32 i = 0; i < notifyNum; i++) {
         u32 notifyId = i + 1;
         u32 devPhyId = i + 10;
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&notifyId), reinterpret_cast<char*>(&notifyId) + sizeof(notifyId));
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&devPhyId), reinterpret_cast<char*>(&devPhyId) + sizeof(devPhyId));
+        result.insert(
+            result.end(), reinterpret_cast<char*>(&notifyId), reinterpret_cast<char*>(&notifyId) + sizeof(notifyId));
+        result.insert(
+            result.end(), reinterpret_cast<char*>(&devPhyId), reinterpret_cast<char*>(&devPhyId) + sizeof(devPhyId));
     }
     return result;
 }
@@ -61,20 +61,14 @@ static std::vector<char> BuildRmtNotifyUniqueIds(u32 notifyNum)
         u64 addr = 0x2000 + i * 0x100;
         u64 size = 0x100;
         u32 rkey = 0x200 + i;
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&addr), reinterpret_cast<char*>(&addr) + sizeof(addr));
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + sizeof(size));
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&rkey), reinterpret_cast<char*>(&rkey) + sizeof(rkey));
+        result.insert(result.end(), reinterpret_cast<char*>(&addr), reinterpret_cast<char*>(&addr) + sizeof(addr));
+        result.insert(result.end(), reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + sizeof(size));
+        result.insert(result.end(), reinterpret_cast<char*>(&rkey), reinterpret_cast<char*>(&rkey) + sizeof(rkey));
     }
     return result;
 }
 
-static std::vector<char> BuildNotifyValueBufferUniqueId()
-{
-    return BuildSingleRmaBufferUniqueId(0x3000, 0x200, 0x300);
-}
+static std::vector<char> BuildNotifyValueBufferUniqueId() { return BuildSingleRmaBufferUniqueId(0x3000, 0x200, 0x300); }
 
 static std::vector<char> BuildLocBufferUniqueIds(u32 bufferNum)
 {
@@ -83,12 +77,9 @@ static std::vector<char> BuildLocBufferUniqueIds(u32 bufferNum)
         u64 addr = 0x4000 + i * 0x200;
         u64 size = 0x200;
         u32 lkey = 0x400 + i;
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&addr), reinterpret_cast<char*>(&addr) + sizeof(addr));
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + sizeof(size));
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&lkey), reinterpret_cast<char*>(&lkey) + sizeof(lkey));
+        result.insert(result.end(), reinterpret_cast<char*>(&addr), reinterpret_cast<char*>(&addr) + sizeof(addr));
+        result.insert(result.end(), reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + sizeof(size));
+        result.insert(result.end(), reinterpret_cast<char*>(&lkey), reinterpret_cast<char*>(&lkey) + sizeof(lkey));
     }
     return result;
 }
@@ -100,17 +91,14 @@ static std::vector<char> BuildRmtBufferUniqueIds(u32 bufferNum)
         u64 addr = 0x5000 + i * 0x200;
         u64 size = 0x200;
         u32 rkey = 0x600 + i;
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&addr), reinterpret_cast<char*>(&addr) + sizeof(addr));
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + sizeof(size));
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&rkey), reinterpret_cast<char*>(&rkey) + sizeof(rkey));
+        result.insert(result.end(), reinterpret_cast<char*>(&addr), reinterpret_cast<char*>(&addr) + sizeof(addr));
+        result.insert(result.end(), reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + sizeof(size));
+        result.insert(result.end(), reinterpret_cast<char*>(&rkey), reinterpret_cast<char*>(&rkey) + sizeof(rkey));
     }
     return result;
 }
 
-static std::vector<char> BuildSqUniqueId(const RdmaSqContextLite &sqCtx)
+static std::vector<char> BuildSqUniqueId(const RdmaSqContextLite& sqCtx)
 {
     BinaryStream bs;
     bs << sqCtx.qpn;
@@ -128,7 +116,7 @@ static std::vector<char> BuildSqUniqueId(const RdmaSqContextLite &sqCtx)
     return result;
 }
 
-static std::vector<char> BuildCqUniqueId(const RdmaCqContextLite &cqCtx)
+static std::vector<char> BuildCqUniqueId(const RdmaCqContextLite& cqCtx)
 {
     BinaryStream bs;
     bs << cqCtx.cqn;
@@ -143,17 +131,18 @@ static std::vector<char> BuildCqUniqueId(const RdmaCqContextLite &cqCtx)
     return result;
 }
 
-static std::vector<char> BuildSingleConnUniqueId(u32 dmaMode, const RdmaSqContextLite &sqCtx, const RdmaCqContextLite &cqCtx)
+static std::vector<char>
+BuildSingleConnUniqueId(u32 dmaMode, const RdmaSqContextLite& sqCtx, const RdmaCqContextLite& cqCtx)
 {
     BinaryStream bs;
     bs << dmaMode;
-    
+
     std::vector<char> sqUniqueId = BuildSqUniqueId(sqCtx);
     bs << sqUniqueId;
-    
+
     std::vector<char> cqUniqueId = BuildCqUniqueId(cqCtx);
     bs << cqUniqueId;
-    
+
     std::vector<char> result;
     bs.Dump(result);
     return result;
@@ -224,21 +213,21 @@ static std::vector<char> BuildTransportUniqueId(u32 notifyNum, u32 bufferNum, u3
 
 class RoceTransportLiteImplTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "RoceTransportLiteImplTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "RoceTransportLiteImplTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "RoceTransportLiteImplTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "RoceTransportLiteImplTest tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
         std::cout << "A Test case in RoceTransportLiteImplTest SetUP" << std::endl;
-        MOCKER_CPP(&RtsqBase::QuerySqBaseAddr).stubs().with(mockcpp::any()).will(returnValue(reinterpret_cast<u64>(&mockSq)));
-        MOCKER_CPP(&RtsqBase::QuerySqDepth).stubs().with(mockcpp::any()).will(returnValue(static_cast<u32>(AC_SQE_MAX_CNT)));
+        MOCKER_CPP(&RtsqBase::QuerySqBaseAddr)
+            .stubs()
+            .with(mockcpp::any())
+            .will(returnValue(reinterpret_cast<u64>(&mockSq)));
+        MOCKER_CPP(&RtsqBase::QuerySqDepth)
+            .stubs()
+            .with(mockcpp::any())
+            .will(returnValue(static_cast<u32>(AC_SQE_MAX_CNT)));
         MOCKER_CPP(&RtsqBase::QuerySqStatusByType).stubs().with(mockcpp::any()).will(returnValue(static_cast<u32>(0)));
         MOCKER_CPP(&RtsqBase::ConfigSqStatusByType).stubs();
         uniqueId_ = BuildTransportUniqueId(NOTIFY_NUM, BUFFER_NUM, CONN_NUM);
@@ -254,223 +243,223 @@ protected:
     u32 BUFFER_NUM = 1;
     u32 CONN_NUM = 1;
     std::vector<char> uniqueId_;
-    u8  mockSq[AC_SQE_SIZE * AC_SQE_MAX_CNT]{0};
+    u8 mockSq[AC_SQE_SIZE * AC_SQE_MAX_CNT]{0};
 };
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_Construct_Expect_Success)
 {
     std::cout << "Start Ut_When_Construct_Expect_Success" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     std::cout << "End Ut_When_Construct_Expect_Success" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_Describe_Expect_NotEmpty)
 {
     std::cout << "Start Ut_When_Describe_Expect_NotEmpty" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     std::string desc = transport.Describe();
     EXPECT_FALSE(desc.empty());
-    
+
     std::cout << "End Ut_When_Describe_Expect_NotEmpty" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_NotifyNum_Expect_Correct)
 {
     std::cout << "Start Ut_When_NotifyNum_Expect_Correct" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     EXPECT_EQ(transport.notifyNum_, NOTIFY_NUM);
-    
+
     std::cout << "End Ut_When_NotifyNum_Expect_Correct" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_BufferNum_Expect_Correct)
 {
     std::cout << "Start Ut_When_BufferNum_Expect_Correct" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     EXPECT_EQ(transport.bufferNum_, BUFFER_NUM);
-    
+
     std::cout << "End Ut_When_BufferNum_Expect_Correct" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_ConnNum_Expect_Correct)
 {
     std::cout << "Start Ut_When_ConnNum_Expect_Correct" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     EXPECT_EQ(transport.connNum_, CONN_NUM);
-    
+
     std::cout << "End Ut_When_ConnNum_Expect_Correct" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_LocalNotifies_Expect_NotEmpty)
 {
     std::cout << "Start Ut_When_LocalNotifies_Expect_NotEmpty" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     EXPECT_EQ(transport.localNotifies_.size(), static_cast<size_t>(NOTIFY_NUM));
-    
+
     std::cout << "End Ut_When_LocalNotifies_Expect_NotEmpty" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_RemoteNotifies_Expect_NotEmpty)
 {
     std::cout << "Start Ut_When_RemoteNotifies_Expect_NotEmpty" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     EXPECT_EQ(transport.remoteNotifies_.size(), static_cast<size_t>(NOTIFY_NUM));
-    
+
     std::cout << "End Ut_When_RemoteNotifies_Expect_NotEmpty" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_LocBufferVec_Expect_NotEmpty)
 {
     std::cout << "Start Ut_When_LocBufferVec_Expect_NotEmpty" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     EXPECT_EQ(transport.locBufferVec_.size(), static_cast<size_t>(BUFFER_NUM));
-    
+
     std::cout << "End Ut_When_LocBufferVec_Expect_NotEmpty" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_RmtBufferVec_Expect_NotEmpty)
 {
     std::cout << "Start Ut_When_RmtBufferVec_Expect_NotEmpty" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     EXPECT_EQ(transport.rmtBufferVec_.size(), static_cast<size_t>(BUFFER_NUM));
-    
+
     std::cout << "End Ut_When_RmtBufferVec_Expect_NotEmpty" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_ConnVec_Expect_NotEmpty)
 {
     std::cout << "Start Ut_When_ConnVec_Expect_NotEmpty" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     EXPECT_EQ(transport.connVec_.size(), static_cast<size_t>(CONN_NUM));
-    
+
     std::cout << "End Ut_When_ConnVec_Expect_NotEmpty" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_ConnUniqueIdVec_Expect_NotEmpty)
 {
     std::cout << "Start Ut_When_ConnUniqueIdVec_Expect_NotEmpty" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     EXPECT_EQ(transport.connUniqueIdVec_.size(), static_cast<size_t>(CONN_NUM));
-    
+
     std::cout << "End Ut_When_ConnUniqueIdVec_Expect_NotEmpty" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_NotifyValueBuffer_Expect_NotNull)
 {
     std::cout << "Start Ut_When_NotifyValueBuffer_Expect_NotNull" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     EXPECT_NE(transport.notifyValueBuffer_, nullptr);
-    
+
     std::cout << "End Ut_When_NotifyValueBuffer_Expect_NotNull" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_LocalNotifyValues_Expect_Correct)
 {
     std::cout << "Start Ut_When_LocalNotifyValues_Expect_Correct" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     ASSERT_EQ(transport.localNotifies_.size(), static_cast<size_t>(NOTIFY_NUM));
     for (u32 i = 0; i < NOTIFY_NUM; i++) {
         EXPECT_EQ(transport.localNotifies_[i]->GetId(), i + 1);
         EXPECT_EQ(transport.localNotifies_[i]->GetDevPhyId(), i + 10);
     }
-    
+
     std::cout << "End Ut_When_LocalNotifyValues_Expect_Correct" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_RemoteNotifyValues_Expect_Correct)
 {
     std::cout << "Start Ut_When_RemoteNotifyValues_Expect_Correct" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     ASSERT_EQ(transport.remoteNotifies_.size(), static_cast<size_t>(NOTIFY_NUM));
     for (u32 i = 0; i < NOTIFY_NUM; i++) {
         EXPECT_EQ(transport.remoteNotifies_[i].GetAddr(), 0x2000 + i * 0x100);
         EXPECT_EQ(transport.remoteNotifies_[i].GetSize(), 0x100u);
         EXPECT_EQ(transport.remoteNotifies_[i].GetRkey(), 0x200 + i);
     }
-    
+
     std::cout << "End Ut_When_RemoteNotifyValues_Expect_Correct" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_NotifyValueBufferValues_Expect_Correct)
 {
     std::cout << "Start Ut_When_NotifyValueBufferValues_Expect_Correct" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     ASSERT_NE(transport.notifyValueBuffer_, nullptr);
     EXPECT_EQ(transport.notifyValueBuffer_->GetAddr(), 0x3000u);
     EXPECT_EQ(transport.notifyValueBuffer_->GetSize(), 0x200u);
     EXPECT_EQ(transport.notifyValueBuffer_->GetLkey(), 0x300u);
-    
+
     std::cout << "End Ut_When_NotifyValueBufferValues_Expect_Correct" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_LocBufferValues_Expect_Correct)
 {
     std::cout << "Start Ut_When_LocBufferValues_Expect_Correct" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     ASSERT_EQ(transport.locBufferVec_.size(), static_cast<size_t>(BUFFER_NUM));
     for (u32 i = 0; i < BUFFER_NUM; i++) {
         EXPECT_EQ(transport.locBufferVec_[i].GetAddr(), 0x4000 + i * 0x200);
         EXPECT_EQ(transport.locBufferVec_[i].GetSize(), 0x200u);
         EXPECT_EQ(transport.locBufferVec_[i].GetLkey(), 0x400 + i);
     }
-    
+
     std::cout << "End Ut_When_LocBufferValues_Expect_Correct" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_RmtBufferValues_Expect_Correct)
 {
     std::cout << "Start Ut_When_RmtBufferValues_Expect_Correct" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     ASSERT_EQ(transport.rmtBufferVec_.size(), static_cast<size_t>(BUFFER_NUM));
     for (u32 i = 0; i < BUFFER_NUM; i++) {
         EXPECT_EQ(transport.rmtBufferVec_[i].GetAddr(), 0x5000 + i * 0x200);
         EXPECT_EQ(transport.rmtBufferVec_[i].GetSize(), 0x200u);
         EXPECT_EQ(transport.rmtBufferVec_[i].GetRkey(), 0x600 + i);
     }
-    
+
     std::cout << "End Ut_When_RmtBufferValues_Expect_Correct" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_When_ConnVecValues_Expect_Correct)
 {
     std::cout << "Start Ut_When_ConnVecValues_Expect_Correct" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     ASSERT_EQ(transport.connVec_.size(), static_cast<size_t>(CONN_NUM));
     for (u32 i = 0; i < CONN_NUM; i++) {
         EXPECT_NE(transport.connVec_[i], nullptr);
@@ -478,16 +467,16 @@ TEST_F(RoceTransportLiteImplTest, Ut_When_ConnVecValues_Expect_Correct)
         EXPECT_EQ(transport.connVec_[i]->sqContext.qpn, 1u + i);
         EXPECT_EQ(transport.connVec_[i]->cqContext.cqn, 2u + i);
     }
-    
+
     std::cout << "End Ut_When_ConnVecValues_Expect_Correct" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_Write)
 {
     std::cout << "Start Ut_RoceTransportLite_Write" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     ASSERT_EQ(transport.connVec_.size(), static_cast<size_t>(CONN_NUM));
 
     RmaBufferLite locBuf(0x4000, 2048, 0x400, 0);
@@ -497,20 +486,18 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_Write)
     StreamLite stream(uniqueId);
     MOCKER_CPP(&RtsqBase::QuerySqHead).stubs().with(mockcpp::any()).will(returnValue(1));
     MOCKER_CPP(&RtsqBase::QuerySqTail).stubs().with(mockcpp::any()).will(returnValue(1));
-    MOCKER_CPP(static_cast<void(RdmaConnLiteV2::*)(
-        const RmaBufSliceLite&,
-        const RmtRmaBufSliceLite&,
-        const SqeConfigLite&,
-        unsigned long long&,
-        unsigned long long&)>(&RdmaConnLiteV2::Write)).expects(once());
+    MOCKER_CPP(static_cast<void (RdmaConnLiteV2::*)(
+                   const RmaBufSliceLite&, const RmtRmaBufSliceLite&, const SqeConfigLite&, unsigned long long&,
+                   unsigned long long&)>(&RdmaConnLiteV2::Write))
+        .expects(once());
     MOCKER_CPP(&RdmaConnLiteV2::PollCq)
         .expects(once())
         .with(eq(1), eq(5), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
     u32 reportCount = 0;
-    ASSERT_EQ(transport.SetAddTaskInfoCallback(
-        [&reportCount](u32, u32, const TaskParam &taskParam, u64) {
+    ASSERT_EQ(
+        transport.SetAddTaskInfoCallback([&reportCount](u32, u32, const TaskParam& taskParam, u64) {
             EXPECT_EQ(taskParam.taskType, TaskParamType::TASK_RDMA);
             EXPECT_EQ(taskParam.taskPara.DMA.dmaOp, DmaOp::HCCL_DMA_WRITE);
             EXPECT_EQ(taskParam.taskPara.DMA.linkType, DfxLinkType::ROCE);
@@ -519,19 +506,20 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_Write)
             EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.DMA.dst), 0x5000u);
             ++reportCount;
             return HCCL_SUCCESS;
-        }), HCCL_SUCCESS);
+        }),
+        HCCL_SUCCESS);
     EXPECT_NO_THROW(transport.Write(locBuf, rmtBuf, stream));
     EXPECT_EQ(reportCount, 1u);
-    
+
     std::cout << "End Ut_RoceTransportLite_Write" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_WriteWithNotify)
 {
     std::cout << "Start Ut_RoceTransportLite_WriteWithNotify" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     ASSERT_EQ(transport.connVec_.size(), static_cast<size_t>(CONN_NUM));
 
     RmaBufferLite locBuf(0x4000, 2048, 0x400, 0);
@@ -543,22 +531,18 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_WriteWithNotify)
     StreamLite stream(uniqueId);
     MOCKER_CPP(&RtsqBase::QuerySqHead).stubs().with(mockcpp::any()).will(returnValue(1));
     MOCKER_CPP(&RtsqBase::QuerySqTail).stubs().with(mockcpp::any()).will(returnValue(1));
-    MOCKER_CPP(static_cast<void(RdmaConnLiteV2::*)(
-        const RmaBufSliceLite&,
-        const RmtRmaBufSliceLite&,
-        const RmaBufSliceLite&,
-        const RmtRmaBufSliceLite&,
-        const SqeConfigLite&,
-        unsigned long long&,
-        unsigned long long&)>(&RdmaConnLiteV2::WriteWithNotify)).expects(once());
+    MOCKER_CPP(static_cast<void (RdmaConnLiteV2::*)(
+                   const RmaBufSliceLite&, const RmtRmaBufSliceLite&, const RmaBufSliceLite&, const RmtRmaBufSliceLite&,
+                   const SqeConfigLite&, unsigned long long&, unsigned long long&)>(&RdmaConnLiteV2::WriteWithNotify))
+        .expects(once());
     MOCKER_CPP(&RdmaConnLiteV2::PollCq)
         .expects(once())
         .with(eq(2), eq(5), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
     u32 reportCount = 0;
-    ASSERT_EQ(transport.SetAddTaskInfoCallback(
-        [&reportCount](u32, u32, const TaskParam &taskParam, u64) {
+    ASSERT_EQ(
+        transport.SetAddTaskInfoCallback([&reportCount](u32, u32, const TaskParam& taskParam, u64) {
             EXPECT_EQ(taskParam.taskType, TaskParamType::TASK_WRITE_WITH_NOTIFY);
             EXPECT_EQ(taskParam.taskPara.DMA.notifyID, static_cast<u64>(UINT32_MAX));
             EXPECT_EQ(taskParam.taskPara.DMA.notifyValue, 1u);
@@ -566,19 +550,20 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_WriteWithNotify)
             EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.DMA.dst), 0x5000u);
             ++reportCount;
             return HCCL_SUCCESS;
-        }), HCCL_SUCCESS);
+        }),
+        HCCL_SUCCESS);
     EXPECT_NO_THROW(transport.WriteWithNotify(locBuf, rmtBuf, withNotify, stream));
     EXPECT_EQ(reportCount, 1u);
-    
+
     std::cout << "End Ut_RoceTransportLite_WriteWithNotify" << std::endl;
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_Post)
 {
     std::cout << "Start Ut_RoceTransportLite_Post" << std::endl;
-    
+
     RoceTransportLiteImpl transport(uniqueId_);
-    
+
     ASSERT_EQ(transport.connVec_.size(), static_cast<size_t>(CONN_NUM));
 
     uint32_t remoteNotifyIdx = 0;
@@ -587,20 +572,18 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_Post)
     StreamLite stream(uniqueId);
     MOCKER_CPP(&RtsqBase::QuerySqHead).stubs().with(mockcpp::any()).will(returnValue(1));
     MOCKER_CPP(&RtsqBase::QuerySqTail).stubs().with(mockcpp::any()).will(returnValue(1));
-    MOCKER_CPP(static_cast<void(RdmaConnLiteV2::*)(
-        const RmaBufSliceLite&,
-        const RmtRmaBufSliceLite&,
-        const SqeConfigLite&,
-        unsigned long long&,
-        unsigned long long&)>(&RdmaConnLiteV2::Write)).expects(once());
+    MOCKER_CPP(static_cast<void (RdmaConnLiteV2::*)(
+                   const RmaBufSliceLite&, const RmtRmaBufSliceLite&, const SqeConfigLite&, unsigned long long&,
+                   unsigned long long&)>(&RdmaConnLiteV2::Write))
+        .expects(once());
     MOCKER_CPP(&RdmaConnLiteV2::PollCq)
         .expects(once())
         .with(eq(1), eq(5), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
     u32 reportCount = 0;
-    ASSERT_EQ(transport.SetAddTaskInfoCallback(
-        [&reportCount](u32, u32, const TaskParam &taskParam, u64) {
+    ASSERT_EQ(
+        transport.SetAddTaskInfoCallback([&reportCount](u32, u32, const TaskParam& taskParam, u64) {
             EXPECT_EQ(taskParam.taskType, TaskParamType::TASK_RDMA);
             EXPECT_EQ(taskParam.taskPara.DMA.notifyID, static_cast<u64>(UINT32_MAX));
             EXPECT_EQ(taskParam.taskPara.DMA.notifyValue, 1u);
@@ -608,10 +591,11 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_Post)
             EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.DMA.dst), 0x2000u);
             ++reportCount;
             return HCCL_SUCCESS;
-        }), HCCL_SUCCESS);
+        }),
+        HCCL_SUCCESS);
     EXPECT_NO_THROW(transport.Post(remoteNotifyIdx, stream));
     EXPECT_EQ(reportCount, 1u);
-    
+
     std::cout << "End Ut_RoceTransportLite_Post" << std::endl;
 }
 
@@ -638,20 +622,18 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_Read)
 
     MOCKER_CPP(&RtsqBase::QuerySqHead).stubs().with(mockcpp::any()).will(returnValue(1));
     MOCKER_CPP(&RtsqBase::QuerySqTail).stubs().with(mockcpp::any()).will(returnValue(1));
-    MOCKER_CPP(static_cast<void(RdmaConnLiteV2::*)(
-        const RmaBufSliceLite&,
-        const RmtRmaBufSliceLite&,
-        const SqeConfigLite&,
-        unsigned long long&,
-        unsigned long long&)>(&RdmaConnLiteV2::Read)).expects(once());
+    MOCKER_CPP(static_cast<void (RdmaConnLiteV2::*)(
+                   const RmaBufSliceLite&, const RmtRmaBufSliceLite&, const SqeConfigLite&, unsigned long long&,
+                   unsigned long long&)>(&RdmaConnLiteV2::Read))
+        .expects(once());
     MOCKER_CPP(&RdmaConnLiteV2::PollCq)
         .expects(once())
         .with(eq(1), eq(5), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
     u32 reportCount = 0;
-    ASSERT_EQ(transport.SetAddTaskInfoCallback(
-        [&reportCount](u32, u32, const TaskParam &taskParam, u64) {
+    ASSERT_EQ(
+        transport.SetAddTaskInfoCallback([&reportCount](u32, u32, const TaskParam& taskParam, u64) {
             EXPECT_EQ(taskParam.taskType, TaskParamType::TASK_RDMA);
             EXPECT_EQ(taskParam.taskPara.DMA.dmaOp, DmaOp::HCCL_DMA_READ);
             EXPECT_EQ(taskParam.taskPara.DMA.notifyID, INVALID_VALUE_NOTIFYID);
@@ -660,7 +642,8 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_Read)
             EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.DMA.dst), 0x5000u);
             ++reportCount;
             return HCCL_SUCCESS;
-        }), HCCL_SUCCESS);
+        }),
+        HCCL_SUCCESS);
 
     EXPECT_NO_THROW(transport.Read(locBuf, rmtBuf, stream));
     EXPECT_EQ(reportCount, 1u);
@@ -677,25 +660,21 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_WriteReduce)
 
     MOCKER_CPP(&RtsqBase::QuerySqHead).stubs().with(mockcpp::any()).will(returnValue(1));
     MOCKER_CPP(&RtsqBase::QuerySqTail).stubs().with(mockcpp::any()).will(returnValue(1));
-    MOCKER_CPP(static_cast<void(RdmaConnLiteV2::*)(
-        const RmaBufSliceLite&,
-        const RmtRmaBufSliceLite&,
-        const SqeConfigLite&,
-        DataType,
-        ReduceOp,
-        unsigned long long&,
-        unsigned long long&)>(&RdmaConnLiteV2::WriteReduce))
+    MOCKER_CPP(static_cast<void (RdmaConnLiteV2::*)(
+                   const RmaBufSliceLite&, const RmtRmaBufSliceLite&, const SqeConfigLite&, DataType, ReduceOp,
+                   unsigned long long&, unsigned long long&)>(&RdmaConnLiteV2::WriteReduce))
         .expects(once())
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
-              mockcpp::any(), mockcpp::any());
+        .with(
+            mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
+            mockcpp::any());
     MOCKER_CPP(&RdmaConnLiteV2::PollCq)
         .expects(once())
         .with(eq(1), eq(5), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
     u32 reportCount = 0;
-    ASSERT_EQ(transport.SetAddTaskInfoCallback(
-        [&reportCount](u32, u32, const TaskParam &taskParam, u64) {
+    ASSERT_EQ(
+        transport.SetAddTaskInfoCallback([&reportCount](u32, u32, const TaskParam& taskParam, u64) {
             EXPECT_EQ(taskParam.taskType, TaskParamType::TASK_REDUCE_INLINE);
             EXPECT_EQ(taskParam.taskPara.Reduce.notifyID, INVALID_VALUE_NOTIFYID);
             EXPECT_EQ(taskParam.taskPara.Reduce.linkType, DfxLinkType::ROCE);
@@ -704,7 +683,8 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_WriteReduce)
             EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.Reduce.dst), 0x5000u);
             ++reportCount;
             return HCCL_SUCCESS;
-        }), HCCL_SUCCESS);
+        }),
+        HCCL_SUCCESS);
 
     EXPECT_NO_THROW(transport.WriteReduce(locBuf, rmtBuf, reduceIn, stream));
     EXPECT_EQ(reportCount, 1u);
@@ -722,27 +702,22 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_WriteReduceWithNotify)
 
     MOCKER_CPP(&RtsqBase::QuerySqHead).stubs().with(mockcpp::any()).will(returnValue(1));
     MOCKER_CPP(&RtsqBase::QuerySqTail).stubs().with(mockcpp::any()).will(returnValue(1));
-    MOCKER_CPP(static_cast<void(RdmaConnLiteV2::*)(
-        const RmaBufSliceLite&,
-        const RmtRmaBufSliceLite&,
-        const RmaBufSliceLite&,
-        const RmtRmaBufSliceLite&,
-        const SqeConfigLite&,
-        DataType,
-        ReduceOp,
-        unsigned long long&,
-        unsigned long long&)>(&RdmaConnLiteV2::WriteReduceWithNotify))
+    MOCKER_CPP(static_cast<void (RdmaConnLiteV2::*)(
+                   const RmaBufSliceLite&, const RmtRmaBufSliceLite&, const RmaBufSliceLite&, const RmtRmaBufSliceLite&,
+                   const SqeConfigLite&, DataType, ReduceOp, unsigned long long&, unsigned long long&)>(
+                   &RdmaConnLiteV2::WriteReduceWithNotify))
         .expects(once())
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
-              mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
+        .with(
+            mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(),
+            mockcpp::any(), mockcpp::any(), mockcpp::any());
     MOCKER_CPP(&RdmaConnLiteV2::PollCq)
         .expects(once())
         .with(eq(2), eq(5), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
     u32 reportCount = 0;
-    ASSERT_EQ(transport.SetAddTaskInfoCallback(
-        [&reportCount](u32, u32, const TaskParam &taskParam, u64) {
+    ASSERT_EQ(
+        transport.SetAddTaskInfoCallback([&reportCount](u32, u32, const TaskParam& taskParam, u64) {
             EXPECT_EQ(taskParam.taskType, TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY);
             EXPECT_EQ(taskParam.taskPara.Reduce.notifyID, static_cast<u64>(UINT32_MAX));
             EXPECT_EQ(taskParam.taskPara.Reduce.notifyValue, 1u);
@@ -751,7 +726,8 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_WriteReduceWithNotify)
             EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.Reduce.dst), 0x5000u);
             ++reportCount;
             return HCCL_SUCCESS;
-        }), HCCL_SUCCESS);
+        }),
+        HCCL_SUCCESS);
 
     EXPECT_NO_THROW(transport.WriteReduceWithNotify(locBuf, rmtBuf, reduceIn, withNotify, stream));
     EXPECT_EQ(reportCount, 1u);

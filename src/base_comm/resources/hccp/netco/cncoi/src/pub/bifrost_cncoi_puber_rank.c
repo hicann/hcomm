@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #include "bifrost_cncoi_puber_rank.h"
 #include "bifrost_cncoi_svc.h"
 #include "bifrost_cncoi_table.h"
@@ -19,7 +18,8 @@
 extern "C" {
 #endif
 
-STATIC int32_t BifrostCncoiPuberRankOnUpdateCode(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiRankKeyT *tupleKey, void *tupleVal, void *codeBuf, int32_t bufLen)
+STATIC int32_t BifrostCncoiPuberRankOnUpdateCode(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
+    BifrostCncoiRankKeyT *tupleKey, void *tupleVal, void *codeBuf, int32_t bufLen)
 {
     BifrostCncoiPuberRankVTbl *appVTbl = VOS_NULL;
     int32_t ret = -1;
@@ -56,7 +56,8 @@ error:
     return ret;
 }
 
-STATIC int32_t BifrostCncoiPuberRankOnDeleteCode(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiRankKeyT *tupleKey, void *codeBuf, int32_t bufLen)
+STATIC int32_t BifrostCncoiPuberRankOnDeleteCode(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
+    BifrostCncoiRankKeyT *tupleKey, void *codeBuf, int32_t bufLen)
 {
     SimpoBuilderT *builder;
     int32_t ret = -1;
@@ -87,8 +88,8 @@ error:
     return ret;
 }
 
-STATIC void BifrostCncoiPuberRankOnSub(BifrostCncoiPuber *bifrostCncoiPuber,
-    BifrostCncoiSliceKeyT *sliceKey, void *data, int32_t len)
+STATIC void BifrostCncoiPuberRankOnSub(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
+    void *data, int32_t len)
 {
     BifrostCncoiPuberRankVTbl *appVTbl = VOS_NULL;
 
@@ -107,8 +108,7 @@ error:
     return;
 }
 
-STATIC void BifrostCncoiPuberRankOnUnsub(BifrostCncoiPuber *bifrostCncoiPuber,
-    BifrostCncoiSliceKeyT *sliceKey)
+STATIC void BifrostCncoiPuberRankOnUnsub(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey)
 {
     BifrostCncoiPuberRankVTbl *appVTbl = VOS_NULL;
 
@@ -129,15 +129,15 @@ error:
 
 uint32_t BifrostCncoiPuberRankReg(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiPuberRankVTbl *appVTbl)
 {
-    BkfDcTableTypeVTbl dcVTbl = { 0 };
-    BkfPuberTableTypeVTbl puberVTbl = { 0 };
+    BkfDcTableTypeVTbl dcVTbl = {0};
+    BkfPuberTableTypeVTbl puberVTbl = {0};
     uint32_t ret;
 
     if (bifrostCncoiPuber == VOS_NULL || appVTbl == VOS_NULL) {
         return BKF_ERR;
     }
 
-    dcVTbl.name = BIFROST_CNCOI_SVC_NAME"_rank";
+    dcVTbl.name = BIFROST_CNCOI_SVC_NAME "_rank";
     dcVTbl.tableTypeId = BIFROST_CNCOI_TABLE_TYPE_RANK;
     dcVTbl.cookie = bifrostCncoiPuber;
     dcVTbl.tupleCntMax = appVTbl->tupleCntMax;
@@ -201,16 +201,19 @@ void BifrostCncoiPuberRankReleaseTable(BifrostCncoiPuber *bifrostCncoiPuber, Bif
     BkfDcReleaseTable(bifrostCncoiPuber->argInit.dc, sliceKey, BIFROST_CNCOI_TABLE_TYPE_RANK);
 }
 
-uint32_t BifrostCncoiPuberRankUpdate(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiRankKeyT *tupleKey, void *val)
+uint32_t BifrostCncoiPuberRankUpdate(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
+    BifrostCncoiRankKeyT *tupleKey, void *val)
 {
     if (bifrostCncoiPuber == VOS_NULL) {
         return BKF_ERR;
     }
 
-    return BkfDcUpdateTuple(bifrostCncoiPuber->argInit.dc, sliceKey, BIFROST_CNCOI_TABLE_TYPE_RANK, tupleKey, val, VOS_NULL);
+    return BkfDcUpdateTuple(bifrostCncoiPuber->argInit.dc, sliceKey, BIFROST_CNCOI_TABLE_TYPE_RANK, tupleKey, val,
+        VOS_NULL);
 }
 
-void BifrostCncoiPuberRankDelete(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiRankKeyT *tupleKey)
+void BifrostCncoiPuberRankDelete(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
+    BifrostCncoiRankKeyT *tupleKey)
 {
     if (bifrostCncoiPuber == VOS_NULL) {
         return;
@@ -222,7 +225,6 @@ void BifrostCncoiPuberRankDelete(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCn
 #if __cplusplus
 }
 #endif
-
 
 // auto-generated information:MS4wOzEwOzIyNTsyMDI0MTAxNDtiaWZyb3N0X2NuY29pX3B1YmVyX3JhbmsuYw==
 // auto-generated check_sum:94296802b5e576596c761b55d6c9d3188e46e6c11fff28939192568ab38c757e

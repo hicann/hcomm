@@ -48,7 +48,7 @@ TEST(AicpuTaskCacheEntryDebugConfigTest, TaskDebugFlagFollowsPlfTaskConfig)
 
 // Provide strong definition for weak symbol aicpu::GetSqeId (called by RtsqBase constructor)
 namespace aicpu {
-void GetSqeId(const uint32_t num, uint32_t &start, uint32_t &end)
+void GetSqeId(const uint32_t num, uint32_t& start, uint32_t& end)
 {
     start = 1;
     end = start + num;
@@ -65,17 +65,17 @@ constexpr uint32_t TEST_SQ_DEPTH = 128;
 std::vector<uint8_t> MakeSqeArray(Rt91095StarsSqeType sqeType, uint64_t srcAddr = 0, uint64_t dstAddr = 0)
 {
     std::vector<uint8_t> sqeArray(Hccl::AC_SQE_SIZE, 0);
-    Rt91095StarsSqeHeader *header = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeArray.data());
+    Rt91095StarsSqeHeader* header = reinterpret_cast<Rt91095StarsSqeHeader*>(sqeArray.data());
     header->type = static_cast<uint8_t>(sqeType);
 
     if (sqeType == Rt91095StarsSqeType::RT_91095_SQE_TYPE_SDMA) {
-        Rt91095StarsMemcpySqe *sdmaSqe = reinterpret_cast<Rt91095StarsMemcpySqe *>(sqeArray.data());
+        Rt91095StarsMemcpySqe* sdmaSqe = reinterpret_cast<Rt91095StarsMemcpySqe*>(sqeArray.data());
         sdmaSqe->u.strideMode0.srcAddrLow = static_cast<uint32_t>(srcAddr);
         sdmaSqe->u.strideMode0.srcAddrHigh = static_cast<uint32_t>(srcAddr >> 32);
         sdmaSqe->u.strideMode0.dstAddrLow = static_cast<uint32_t>(dstAddr);
         sdmaSqe->u.strideMode0.dstAddrHigh = static_cast<uint32_t>(dstAddr >> 32);
     } else if (sqeType == Rt91095StarsSqeType::RT_91095_SQE_TYPE_WRITE_VALUE) {
-        Rt91095StarsWriteValueSqe *wvSqe = reinterpret_cast<Rt91095StarsWriteValueSqe *>(sqeArray.data());
+        Rt91095StarsWriteValueSqe* wvSqe = reinterpret_cast<Rt91095StarsWriteValueSqe*>(sqeArray.data());
         wvSqe->writeAddrLow = static_cast<uint32_t>(dstAddr);
         wvSqe->writeAddrHigh = static_cast<uint32_t>(dstAddr >> 32);
     }
@@ -86,7 +86,7 @@ Hccl::WqeTask MakeWqeTaskRead(uint64_t locAddr, uint64_t rmtAddr)
 {
     Hccl::WqeTask wqe;
     memset(&wqe, 0, sizeof(wqe));
-    UdmaSqeCommon *common = reinterpret_cast<UdmaSqeCommon *>(&wqe);
+    UdmaSqeCommon* common = reinterpret_cast<UdmaSqeCommon*>(&wqe);
     common->opcode = static_cast<uint8_t>(Hccl::UdmaSqOpcode::UDMA_OPC_READ);
     wqe.wqeWrite.u.sge.dataAddrLow = static_cast<uint32_t>(locAddr);
     wqe.wqeWrite.u.sge.dataAddrHigh = static_cast<uint32_t>(locAddr >> 32);
@@ -99,7 +99,7 @@ Hccl::WqeTask MakeWqeTaskWrite(uint64_t locAddr, uint64_t rmtAddr, bool inlineEn
 {
     Hccl::WqeTask wqe;
     memset(&wqe, 0, sizeof(wqe));
-    UdmaSqeCommon *common = reinterpret_cast<UdmaSqeCommon *>(&wqe);
+    UdmaSqeCommon* common = reinterpret_cast<UdmaSqeCommon*>(&wqe);
     common->opcode = static_cast<uint8_t>(Hccl::UdmaSqOpcode::UDMA_OPC_WRITE);
     common->inlineEn = inlineEn ? 1 : 0;
     wqe.wqeWrite.u.sge.dataAddrLow = static_cast<uint32_t>(locAddr);
@@ -113,7 +113,7 @@ Hccl::WqeTask MakeWqeTaskWriteWithNotify(uint64_t locAddr, uint64_t rmtAddr)
 {
     Hccl::WqeTask wqe;
     memset(&wqe, 0, sizeof(wqe));
-    UdmaSqeCommon *common = reinterpret_cast<UdmaSqeCommon *>(&wqe);
+    UdmaSqeCommon* common = reinterpret_cast<UdmaSqeCommon*>(&wqe);
     common->opcode = static_cast<uint8_t>(WRITE_WITH_NOTIFY_OPCODE);
     wqe.wqeWriteWithNotify.localU.sge.dataAddrLow = static_cast<uint32_t>(locAddr);
     wqe.wqeWriteWithNotify.localU.sge.dataAddrHigh = static_cast<uint32_t>(locAddr >> 32);
@@ -126,7 +126,7 @@ Hccl::WqeTask MakeWqeTaskInvalid()
 {
     Hccl::WqeTask wqe;
     memset(&wqe, 0, sizeof(wqe));
-    UdmaSqeCommon *common = reinterpret_cast<UdmaSqeCommon *>(&wqe);
+    UdmaSqeCommon* common = reinterpret_cast<UdmaSqeCommon*>(&wqe);
     common->opcode = 0xFF;
     return wqe;
 }
@@ -186,7 +186,7 @@ TEST(AddrRefreshInfoTest, SelfAssignment)
 class AicpuTaskCacheEntryTest : public testing::Test {
 protected:
     std::unique_ptr<Hccl::RtsqA5> rtsq_;
-    Hccl::RtsqA5 *rtsqPtr_ = nullptr;
+    Hccl::RtsqA5* rtsqPtr_ = nullptr;
     std::unique_ptr<hccl::AicpuTsThread> aicpuTsThread_;
     std::unique_ptr<Hccl::UbConnLite> ubConnLite_;
     std::unique_ptr<Hccl::UbTransportLiteImpl> ubTransport_;
@@ -202,11 +202,9 @@ protected:
         ubTransport_ = std::make_unique<Hccl::UbTransportLiteImpl>(emptyUniqueId_);
     }
 
-    void TearDown() override
-    {
-    }
+    void TearDown() override {}
 
-    HcclResult InitEntryWithTwoAddrs(hcomm::AicpuTaskCacheEntry &entry)
+    HcclResult InitEntryWithTwoAddrs(hcomm::AicpuTaskCacheEntry& entry)
     {
         uint64_t baseAddrs[] = {TEST_BASE_ADDR_0, TEST_BASE_ADDR_1};
         uint64_t memSizes[] = {TEST_MEM_SIZE_0, TEST_MEM_SIZE_1};
@@ -215,7 +213,7 @@ protected:
 
     // AddWqeArray always creates a DbSqeTmpInfo entry that must be cleared by AddSqeArray
     // with the same streamId before SubmitCacheEntry can succeed.
-    void AddUbdmaSqeToClearTmpMap(hcomm::AicpuTaskCacheEntry &entry, uint32_t streamId = 0)
+    void AddUbdmaSqeToClearTmpMap(hcomm::AicpuTaskCacheEntry& entry, uint32_t streamId = 0)
     {
         auto sqeArray = MakeSqeArray(Rt91095StarsSqeType::RT_91095_SQE_TYPE_UBDMA);
         ASSERT_EQ(entry.AddSqeArray(rtsqPtr_, aicpuTsThread_.get(), 1, sqeArray.data(), streamId), HCCL_SUCCESS);
@@ -349,9 +347,11 @@ TEST_F(AicpuTaskCacheEntryTest, AddWqeArray_ReportTaskMismatch)
     ASSERT_EQ(InitEntryWithTwoAddrs(entry), HCCL_SUCCESS);
     std::vector<Hccl::WqeTask> wqeTasks = {MakeWqeTaskRead(0, 0)};
 
-    EXPECT_EQ(entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, true, MakeDbSqeProfInfo(false)),
+    EXPECT_EQ(
+        entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, true, MakeDbSqeProfInfo(false)),
         HCCL_E_INTERNAL);
-    EXPECT_EQ(entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(true)),
+    EXPECT_EQ(
+        entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(true)),
         HCCL_E_INTERNAL);
 }
 
@@ -392,7 +392,8 @@ TEST_F(AicpuTaskCacheEntryTest, AddWqeArray_Success)
     ASSERT_EQ(InitEntryWithTwoAddrs(entry), HCCL_SUCCESS);
     std::vector<Hccl::WqeTask> wqeTasks = {MakeWqeTaskRead(0, 0)};
 
-    EXPECT_EQ(entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
+    EXPECT_EQ(
+        entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
         HCCL_SUCCESS);
     EXPECT_EQ(entry.wqeTaskArrayInfos_.size(), 1U);
     EXPECT_EQ(entry.launchOrder_.size(), 1U);
@@ -406,7 +407,8 @@ TEST_F(AicpuTaskCacheEntryTest, AddWqeArray_Success_WithReportTask)
     ASSERT_EQ(InitEntryWithTwoAddrs(entry), HCCL_SUCCESS);
     std::vector<Hccl::WqeTask> wqeTasks = {MakeWqeTaskRead(0, 0)};
 
-    EXPECT_EQ(entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, true, MakeDbSqeProfInfo(true)),
+    EXPECT_EQ(
+        entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, true, MakeDbSqeProfInfo(true)),
         HCCL_SUCCESS);
     EXPECT_EQ(entry.wqeTaskArrayInfos_.size(), 1U);
     EXPECT_EQ(entry.streamIdToDbSqeTmpInfoMap_.size(), 1U);
@@ -425,7 +427,8 @@ TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_TmpMapNotEmpty)
     hcomm::AicpuTaskCacheEntry entry;
     ASSERT_EQ(InitEntryWithTwoAddrs(entry), HCCL_SUCCESS);
     std::vector<Hccl::WqeTask> wqeTasks = {MakeWqeTaskRead(0, 0)};
-    ASSERT_EQ(entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, true, MakeDbSqeProfInfo(true)),
+    ASSERT_EQ(
+        entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, true, MakeDbSqeProfInfo(true)),
         HCCL_SUCCESS);
 
     EXPECT_EQ(entry.SubmitCacheEntry(), HCCL_E_INTERNAL);
@@ -525,7 +528,8 @@ TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_Success_OnlyWqe_Read)
     uint64_t locAddr = TEST_BASE_ADDR_0 + 0x10;
     uint64_t rmtAddr = TEST_BASE_ADDR_1 + 0x20;
     std::vector<Hccl::WqeTask> wqeTasks = {MakeWqeTaskRead(locAddr, rmtAddr)};
-    ASSERT_EQ(entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
+    ASSERT_EQ(
+        entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
         HCCL_SUCCESS);
     AddUbdmaSqeToClearTmpMap(entry);
 
@@ -543,7 +547,8 @@ TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_Success_OnlyWqe_WriteNonInline)
     uint64_t locAddr = TEST_BASE_ADDR_0 + 0x10;
     uint64_t rmtAddr = TEST_BASE_ADDR_1 + 0x20;
     std::vector<Hccl::WqeTask> wqeTasks = {MakeWqeTaskWrite(locAddr, rmtAddr, false)};
-    ASSERT_EQ(entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
+    ASSERT_EQ(
+        entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
         HCCL_SUCCESS);
     AddUbdmaSqeToClearTmpMap(entry);
 
@@ -558,7 +563,8 @@ TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_Success_OnlyWqe_WriteInline)
     ASSERT_EQ(InitEntryWithTwoAddrs(entry), HCCL_SUCCESS);
     uint64_t rmtAddr = TEST_BASE_ADDR_1 + 0x20;
     std::vector<Hccl::WqeTask> wqeTasks = {MakeWqeTaskWrite(0, rmtAddr, true)};
-    ASSERT_EQ(entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
+    ASSERT_EQ(
+        entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
         HCCL_SUCCESS);
     AddUbdmaSqeToClearTmpMap(entry);
 
@@ -574,7 +580,8 @@ TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_Success_OnlyWqe_WriteWithNotify
     uint64_t locAddr = TEST_BASE_ADDR_0 + 0x10;
     uint64_t rmtAddr = TEST_BASE_ADDR_1 + 0x20;
     std::vector<Hccl::WqeTask> wqeTasks = {MakeWqeTaskWriteWithNotify(locAddr, rmtAddr)};
-    ASSERT_EQ(entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
+    ASSERT_EQ(
+        entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
         HCCL_SUCCESS);
     AddUbdmaSqeToClearTmpMap(entry);
 
@@ -588,7 +595,8 @@ TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_InvalidWqeType)
     hcomm::AicpuTaskCacheEntry entry;
     ASSERT_EQ(InitEntryWithTwoAddrs(entry), HCCL_SUCCESS);
     std::vector<Hccl::WqeTask> wqeTasks = {MakeWqeTaskInvalid()};
-    ASSERT_EQ(entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
+    ASSERT_EQ(
+        entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
         HCCL_SUCCESS);
     AddUbdmaSqeToClearTmpMap(entry);
 
@@ -601,7 +609,8 @@ TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_Success_BothSqeWqe)
     ASSERT_EQ(InitEntryWithTwoAddrs(entry), HCCL_SUCCESS);
 
     std::vector<Hccl::WqeTask> wqeTasks = {MakeWqeTaskRead(TEST_BASE_ADDR_0 + 0x10, TEST_BASE_ADDR_1 + 0x20)};
-    ASSERT_EQ(entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
+    ASSERT_EQ(
+        entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
         HCCL_SUCCESS);
 
     auto sqeArray = MakeSqeArray(Rt91095StarsSqeType::RT_91095_SQE_TYPE_UBDMA);
@@ -620,12 +629,13 @@ TEST_F(AicpuTaskCacheEntryTest, SubmitCacheEntry_Success_TokenInfoFlagSet)
     uint64_t locAddr = TEST_BASE_ADDR_0 + 0x10;
     uint64_t rmtAddr = TEST_BASE_ADDR_1 + 0x20;
     std::vector<Hccl::WqeTask> wqeTasks = {MakeWqeTaskRead(locAddr, rmtAddr)};
-    ASSERT_EQ(entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
+    ASSERT_EQ(
+        entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
         HCCL_SUCCESS);
     AddUbdmaSqeToClearTmpMap(entry);
     ASSERT_EQ(entry.SubmitCacheEntry(), HCCL_SUCCESS);
 
-    auto &tokenInfos = entry.tokenInfosMap_.begin()->second;
+    auto& tokenInfos = entry.tokenInfosMap_.begin()->second;
     EXPECT_TRUE(tokenInfos[0].needLocTokenIdFlag);
     EXPECT_TRUE(tokenInfos[1].needRmtTokenIdAndValueFlag);
 }
@@ -654,7 +664,8 @@ TEST_F(AicpuTaskCacheEntryTest, RefreshAndLaunch_Success_SqeAndWqe)
     uint64_t locAddr = TEST_BASE_ADDR_0 + 0x10;
     uint64_t rmtAddr = TEST_BASE_ADDR_1 + 0x20;
     std::vector<Hccl::WqeTask> wqeTasks = {MakeWqeTaskRead(locAddr, rmtAddr)};
-    ASSERT_EQ(entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
+    ASSERT_EQ(
+        entry.AddWqeArray(ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeDbSqeProfInfo(false)),
         HCCL_SUCCESS);
 
     // 添加SQE数组 (SDMA类型, src/dst地址均在cached range内)
@@ -677,8 +688,7 @@ TEST_F(AicpuTaskCacheEntryTest, RefreshAndLaunch_Success_SqeAndWqe)
     uint64_t newBaseAddrs[] = {0x50000, 0x60000};
     uint64_t newMemSizes[] = {TEST_MEM_SIZE_0, TEST_MEM_SIZE_1};
     ASSERT_EQ(entry.RefreshSqeTasks_(entry.sqeArrayInfos_[0], newBaseAddrs), HCCL_SUCCESS);
-    Rt91095StarsMemcpySqe *sdmaSqe =
-        reinterpret_cast<Rt91095StarsMemcpySqe *>(entry.sqeArrayInfos_[0].sqeArray);
+    Rt91095StarsMemcpySqe* sdmaSqe = reinterpret_cast<Rt91095StarsMemcpySqe*>(entry.sqeArrayInfos_[0].sqeArray);
     uint64_t newSrcAddr = 0;
     hcomm::AicpuTaskCacheEntry::CombineUint32ToUint64(
         newSrcAddr, sdmaSqe->u.strideMode0.srcAddrHigh, sdmaSqe->u.strideMode0.srcAddrLow);
@@ -706,7 +716,7 @@ TEST_F(AicpuTaskCacheEntryTest, RefreshAndLaunch_Success_SqeAndWqe)
     EXPECT_EQ(entry.RefreshAndLaunch(newBaseAddrs, newMemSizes, 2), HCCL_SUCCESS);
 
     // 验证tokenInfos已刷新 (needLocTokenIdFlag/needRmtTokenIdAndValueFlag在SubmitCacheEntry时已设置)
-    auto &tokenInfos = entry.tokenInfosMap_.begin()->second;
+    auto& tokenInfos = entry.tokenInfosMap_.begin()->second;
     EXPECT_TRUE(tokenInfos[0].needLocTokenIdFlag);
     EXPECT_TRUE(tokenInfos[1].needRmtTokenIdAndValueFlag);
 }
@@ -725,8 +735,7 @@ TEST_F(AicpuTaskCacheEntryTest, RefreshSqeTasks_NotifyWait_Success)
     uint64_t newMemSizes[] = {TEST_MEM_SIZE_0, TEST_MEM_SIZE_1};
     EXPECT_EQ(entry.RefreshSqeTasks_(entry.sqeArrayInfos_[0], newBaseAddrs), HCCL_SUCCESS);
 
-    Rt91095StarsSqeHeader *header =
-        reinterpret_cast<Rt91095StarsSqeHeader *>(entry.sqeArrayInfos_[0].sqeArray);
+    Rt91095StarsSqeHeader* header = reinterpret_cast<Rt91095StarsSqeHeader*>(entry.sqeArrayInfos_[0].sqeArray);
     EXPECT_EQ(static_cast<Rt91095StarsSqeType>(header->type), Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_WAIT);
 }
 
@@ -770,8 +779,7 @@ TEST_F(AicpuTaskCacheEntryTest, RefreshSqeTasks_Sdma_BothAddrsRefreshed)
     uint64_t newMemSizes[] = {TEST_MEM_SIZE_0, TEST_MEM_SIZE_1};
     EXPECT_EQ(entry.RefreshSqeTasks_(entry.sqeArrayInfos_[0], newBaseAddrs), HCCL_SUCCESS);
 
-    Rt91095StarsMemcpySqe *sdmaSqe =
-        reinterpret_cast<Rt91095StarsMemcpySqe *>(entry.sqeArrayInfos_[0].sqeArray);
+    Rt91095StarsMemcpySqe* sdmaSqe = reinterpret_cast<Rt91095StarsMemcpySqe*>(entry.sqeArrayInfos_[0].sqeArray);
     uint64_t newSrcAddr = 0;
     hcomm::AicpuTaskCacheEntry::CombineUint32ToUint64(
         newSrcAddr, sdmaSqe->u.strideMode0.srcAddrHigh, sdmaSqe->u.strideMode0.srcAddrLow);
@@ -796,8 +804,7 @@ TEST_F(AicpuTaskCacheEntryTest, RefreshSqeTasks_Sdma_AddrNotInRange)
     uint64_t newMemSizes[] = {TEST_MEM_SIZE_0, TEST_MEM_SIZE_1};
     EXPECT_EQ(entry.RefreshSqeTasks_(entry.sqeArrayInfos_[0], newBaseAddrs), HCCL_SUCCESS);
 
-    Rt91095StarsMemcpySqe *sdmaSqe =
-        reinterpret_cast<Rt91095StarsMemcpySqe *>(entry.sqeArrayInfos_[0].sqeArray);
+    Rt91095StarsMemcpySqe* sdmaSqe = reinterpret_cast<Rt91095StarsMemcpySqe*>(entry.sqeArrayInfos_[0].sqeArray);
     uint64_t newSrcAddr = 0;
     hcomm::AicpuTaskCacheEntry::CombineUint32ToUint64(
         newSrcAddr, sdmaSqe->u.strideMode0.srcAddrHigh, sdmaSqe->u.strideMode0.srcAddrLow);
@@ -822,8 +829,7 @@ TEST_F(AicpuTaskCacheEntryTest, RefreshSqeTasks_WriteValue_DstAddrRefreshed)
     uint64_t newMemSizes[] = {TEST_MEM_SIZE_0, TEST_MEM_SIZE_1};
     EXPECT_EQ(entry.RefreshSqeTasks_(entry.sqeArrayInfos_[0], newBaseAddrs), HCCL_SUCCESS);
 
-    Rt91095StarsWriteValueSqe *wvSqe =
-        reinterpret_cast<Rt91095StarsWriteValueSqe *>(entry.sqeArrayInfos_[0].sqeArray);
+    Rt91095StarsWriteValueSqe* wvSqe = reinterpret_cast<Rt91095StarsWriteValueSqe*>(entry.sqeArrayInfos_[0].sqeArray);
     uint64_t newDstAddr = 0;
     hcomm::AicpuTaskCacheEntry::CombineUint32ToUint64(newDstAddr, wvSqe->writeAddrHigh, wvSqe->writeAddrLow);
     EXPECT_EQ(newDstAddr, 0x50000ULL + 0x50);
@@ -852,12 +858,12 @@ TEST_F(AicpuTaskCacheEntryTest, RefreshSqeTasks_MultipleSqes)
     uint64_t newMemSizes[] = {TEST_MEM_SIZE_0, TEST_MEM_SIZE_1};
     EXPECT_EQ(entry.RefreshSqeTasks_(entry.sqeArrayInfos_[0], newBaseAddrs), HCCL_SUCCESS);
 
-    uint8_t *base = entry.sqeArrayInfos_[0].sqeArray;
+    uint8_t* base = entry.sqeArrayInfos_[0].sqeArray;
 
-    Rt91095StarsSqeHeader *header0 = reinterpret_cast<Rt91095StarsSqeHeader *>(base);
+    Rt91095StarsSqeHeader* header0 = reinterpret_cast<Rt91095StarsSqeHeader*>(base);
     EXPECT_EQ(static_cast<Rt91095StarsSqeType>(header0->type), Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_WAIT);
 
-    Rt91095StarsMemcpySqe *sdmaSqe = reinterpret_cast<Rt91095StarsMemcpySqe *>(base + Hccl::AC_SQE_SIZE);
+    Rt91095StarsMemcpySqe* sdmaSqe = reinterpret_cast<Rt91095StarsMemcpySqe*>(base + Hccl::AC_SQE_SIZE);
     uint64_t newSrcAddr = 0;
     hcomm::AicpuTaskCacheEntry::CombineUint32ToUint64(
         newSrcAddr, sdmaSqe->u.strideMode0.srcAddrHigh, sdmaSqe->u.strideMode0.srcAddrLow);
@@ -867,8 +873,7 @@ TEST_F(AicpuTaskCacheEntryTest, RefreshSqeTasks_MultipleSqes)
         newDstAddr, sdmaSqe->u.strideMode0.dstAddrHigh, sdmaSqe->u.strideMode0.dstAddrLow);
     EXPECT_EQ(newDstAddr, 0x60000ULL + 0x200);
 
-    Rt91095StarsWriteValueSqe *wvSqe =
-        reinterpret_cast<Rt91095StarsWriteValueSqe *>(base + 2 * Hccl::AC_SQE_SIZE);
+    Rt91095StarsWriteValueSqe* wvSqe = reinterpret_cast<Rt91095StarsWriteValueSqe*>(base + 2 * Hccl::AC_SQE_SIZE);
     uint64_t newWvDstAddr = 0;
     hcomm::AicpuTaskCacheEntry::CombineUint32ToUint64(newWvDstAddr, wvSqe->writeAddrHigh, wvSqe->writeAddrLow);
     EXPECT_EQ(newWvDstAddr, 0x50000ULL + 0x50);

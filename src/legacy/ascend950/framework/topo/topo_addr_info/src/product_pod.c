@@ -23,7 +23,7 @@
 #define MAX_MESH_PORT_ID (9)
 #define NPU_NUM (8)
 
-int PodGetRootinfoLen(size_t *len)
+int PodGetRootinfoLen(size_t* len)
 {
     *len = MAX_POD_ROOTINFO_LEN;
     return 0;
@@ -67,7 +67,7 @@ static const UBEntityRule g_ubrules[] = {
     {MAIN_BOARD_ID_POD_2D, PRODUCT_CLOS_LEVEL, 1, 2, {1, 2}, 2, {4, 5, 6, 7}, 4, "plane_pg_1"},
 };
 
-static int ProcessLayerMesh(int npu_id, NetLayer *layer, UEList *ueList, struct dcmi_spod_info *spod_info)
+static int ProcessLayerMesh(int npu_id, NetLayer* layer, UEList* ueList, struct dcmi_spod_info* spod_info)
 {
     char net_instance_id[MAX_INSTANCE_ID_LEN] = {0};
     sprintf_s(
@@ -111,7 +111,7 @@ static int ProcessLayerMesh(int npu_id, NetLayer *layer, UEList *ueList, struct 
  * @param feId UE ID
  * @return const UBEntityRule* 对应的UB实体规则
  */
-static const UBEntityRule *GetUBRule(int npu_id, int level, unsigned int mainBoardId, int die, int feId)
+static const UBEntityRule* GetUBRule(int npu_id, int level, unsigned int mainBoardId, int die, int feId)
 {
     for (size_t i = 0; i < sizeof(g_ubrules) / sizeof(UBEntityRule); ++i) {
         if (g_ubrules[i].level != level) {
@@ -138,7 +138,7 @@ static const UBEntityRule *GetUBRule(int npu_id, int level, unsigned int mainBoa
 }
 
 static int ProcessLayerClos(
-    int npu_id, unsigned int mainBoardId, NetLayer *layer, UEList *ueList, struct dcmi_spod_info *spod_info)
+    int npu_id, unsigned int mainBoardId, NetLayer* layer, UEList* ueList, struct dcmi_spod_info* spod_info)
 {
     char net_instance_id[MAX_INSTANCE_ID_LEN] = {0};
     sprintf_s(net_instance_id, sizeof(net_instance_id), "superpod_%ld", spod_info->super_pod_id);
@@ -152,7 +152,7 @@ static int ProcessLayerClos(
             continue;
         }
         int die = UrmaEidGetDieId(&ueList->ueList[i].eidList[portGroupIdx].eid);
-        const UBEntityRule *rule =  GetUBRule((npu_id % NPU_NUM), PRODUCT_CLOS_LEVEL, mainBoardId, die, fe);
+        const UBEntityRule* rule = GetUBRule((npu_id % NPU_NUM), PRODUCT_CLOS_LEVEL, mainBoardId, die, fe);
         if (rule == NULL) {
             continue;
         }
@@ -185,7 +185,7 @@ static int ProcessLayerClos(
     return 0;
 }
 
-int PodGetRootinfo(int npu_id, unsigned mainboard_id, void *buf, size_t *len)
+int PodGetRootinfo(int npu_id, unsigned mainboard_id, void* buf, size_t* len)
 {
     if (buf == NULL || len == NULL) {
         return RET_NOK;
@@ -196,7 +196,7 @@ int PodGetRootinfo(int npu_id, unsigned mainboard_id, void *buf, size_t *len)
     NetLayer layerClos;
     NetLayer layerRoce;
     RootInfoInit(&rootinfo);
-    
+
     TopoGetFilePath(mainboard_id, TOPO_TYPE_IGNORE, rootinfo.topo_file_path, MAX_TOPO_PATH_LEN);
     struct dcmi_spod_info spod_info;
     UEList ueList;
@@ -219,7 +219,7 @@ int PodGetRootinfo(int npu_id, unsigned mainboard_id, void *buf, size_t *len)
     }
 
     RootInfoAddRank(&rootinfo, &rank);
-    char *rootinfo_buf = RootInfoToString(&rootinfo);
+    char* rootinfo_buf = RootInfoToString(&rootinfo);
     if (rootinfo_buf == NULL) {
         return -1;
     }

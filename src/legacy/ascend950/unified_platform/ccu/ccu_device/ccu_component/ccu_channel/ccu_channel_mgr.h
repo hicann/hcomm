@@ -18,8 +18,8 @@
 
 namespace Hccl {
 
-constexpr uint32_t MASK_VTP      = 0xFFFF0000;
-constexpr uint32_t MASK_VTP_LOW  = 0x0000FFFF;
+constexpr uint32_t MASK_VTP = 0xFFFF0000;
+constexpr uint32_t MASK_VTP_LOW = 0x0000FFFF;
 constexpr uint32_t MASK_VTP_HIGH = 0x000000FF;
 
 struct ChannelResInfo {
@@ -28,7 +28,7 @@ struct ChannelResInfo {
     ChannelInfo channelInfo{};
 };
 
-void DumpChannelResInfo(const uint32_t feId, const ChannelInfo &info);
+void DumpChannelResInfo(const uint32_t feId, const ChannelInfo& info);
 bool IsEidEmpty(const uint8_t (&eidRaw)[URMA_EID_LEN]);
 
 class CcuChannelMgr {
@@ -37,14 +37,14 @@ public:
     CcuChannelMgr() = default;
     virtual ~CcuChannelMgr() = default;
 
-    virtual HcclResult Alloc(const ChannelPara &channelPara, std::vector<ChannelInfo> &channelInfos) = 0;
-    virtual HcclResult Config(const ChannelCfg &channelCfg) = 0;
+    virtual HcclResult Alloc(const ChannelPara& channelPara, std::vector<ChannelInfo>& channelInfos) = 0;
+    virtual HcclResult Config(const ChannelCfg& channelCfg) = 0;
     virtual HcclResult Release(const uint32_t channelId) = 0;
 
 protected:
     std::mutex innerMutex;
     int32_t devLogicId{0};
-    uint8_t  dieId{0};
+    uint8_t dieId{0};
     uint32_t devPhyId{0};
 
     std::vector<ChannelResInfo> channelResInfos;

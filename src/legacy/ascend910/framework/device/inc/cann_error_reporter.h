@@ -15,7 +15,7 @@
 #include "adapter_hal_pub.h"
 
 namespace dfx {
-enum class HcclReportEvent{
+enum class HcclReportEvent {
     HCCL_OP_RETRY_SUCCESS = 0x09,
     HCCL_OP_USE_BACKUP_LINK = 0x0A,
     HCCL_OP_RETRY_FAIL = 0X0B,
@@ -48,7 +48,7 @@ private:
     HcclResult Init(uint32_t deviceId);
 
     // 注册新的 Sensor Node，并返回该 Sensor 的句柄
-    HcclResult RegisterSensorNode(uint32_t deviceId, uint64_t *handle);
+    HcclResult RegisterSensorNode(uint32_t deviceId, uint64_t* handle);
 
     // 解注册指定的 Sensor Node
     HcclResult UnRegisterSensorNode(uint32_t deviceId, uint64_t handle);
@@ -58,23 +58,15 @@ private:
     uint32_t devId_;
 
     // 故障状态对应的上报事件类型
-    std::map<ReportStatus, std::pair<HcclReportEvent, HcclGeneralEventType>>
-        status2Event_ =
-    {
-        {
-            ReportStatus::kRetrySuccess,
-            { HcclReportEvent::HCCL_OP_RETRY_SUCCESS, HcclGeneralEventType::HCCL_GENERAL_EVENT_TYPE_ONE_TIME }
-        },
-        {
-            ReportStatus::kRetryWithBackupLink,
-            { HcclReportEvent::HCCL_OP_USE_BACKUP_LINK, HcclGeneralEventType::HCCL_GENERAL_EVENT_TYPE_ONE_TIME }
-        },
-        {
-            ReportStatus::kRetryFail,
-            { HcclReportEvent::HCCL_OP_RETRY_FAIL, HcclGeneralEventType::HCCL_GENERAL_EVENT_TYPE_ONE_TIME }
-        },
+    std::map<ReportStatus, std::pair<HcclReportEvent, HcclGeneralEventType>> status2Event_ = {
+        {ReportStatus::kRetrySuccess,
+         {HcclReportEvent::HCCL_OP_RETRY_SUCCESS, HcclGeneralEventType::HCCL_GENERAL_EVENT_TYPE_ONE_TIME}},
+        {ReportStatus::kRetryWithBackupLink,
+         {HcclReportEvent::HCCL_OP_USE_BACKUP_LINK, HcclGeneralEventType::HCCL_GENERAL_EVENT_TYPE_ONE_TIME}},
+        {ReportStatus::kRetryFail,
+         {HcclReportEvent::HCCL_OP_RETRY_FAIL, HcclGeneralEventType::HCCL_GENERAL_EVENT_TYPE_ONE_TIME}},
     };
 };
 
-} // namespace
+} // namespace dfx
 #endif // RAS_REPORTER_H

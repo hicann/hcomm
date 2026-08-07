@@ -13,15 +13,17 @@
 #include "aicpu_indop_process.h"
 
 extern "C" {
-__attribute__((visibility("default"))) uint32_t RunAicpuIndOpCommInit(void *args)
+__attribute__((visibility("default"))) uint32_t RunAicpuIndOpCommInit(void* args)
 {
     CHK_PRT_RET(args == nullptr, HCCL_ERROR("[%s]args is null.", __func__), HCCL_E_PARA);
 
-    CommAicpuParam *commAicpuParam = reinterpret_cast<CommAicpuParam *>(args);
+    CommAicpuParam* commAicpuParam = reinterpret_cast<CommAicpuParam*>(args);
     DevType devType = static_cast<DevType>(commAicpuParam->deviceType);
     if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960) {
-        HCCL_INFO("[RunAicpuIndOpCommInit] group[%s], deviceLogicId[%u], devicePhyId[%u], deviceType[%u]",
-                commAicpuParam->hcomId, commAicpuParam->deviceLogicId, commAicpuParam->devicePhyId, commAicpuParam->deviceType);
+        HCCL_INFO(
+            "[RunAicpuIndOpCommInit] group[%s], deviceLogicId[%u], devicePhyId[%u], deviceType[%u]",
+            commAicpuParam->hcomId, commAicpuParam->deviceLogicId, commAicpuParam->devicePhyId,
+            commAicpuParam->deviceType);
         return AicpuIndopProcess::AicpuIndOpCommInit(commAicpuParam);
     }
     return AicpuHcclProcess::AicpuIndOpCommInit(commAicpuParam);

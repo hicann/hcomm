@@ -25,18 +25,24 @@ namespace hccl {
 
 class ThreadMgr {
 public:
-    ThreadMgr(uint32_t threadNum, uint32_t notifyNumPerThread, std::string commId, aclrtBinHandle binHandle, const ManagerCallbacks& callbacks);
+    ThreadMgr(
+        uint32_t threadNum, uint32_t notifyNumPerThread, std::string commId, aclrtBinHandle binHandle,
+        const ManagerCallbacks& callbacks);
     ~ThreadMgr();
-    HcclResult HcclThreadAcquire(CommEngine engine, uint32_t threadNum, ThreadType type,
-        const ThreadConfig *config, ThreadHandle *threads, std::vector<uint32_t> &threadId);
-    HcclResult HcclThreadAcquireV2(CommEngine engine, uint32_t threadNum, ThreadType type,
-        const ThreadConfig *config, ThreadHandle *threads, std::vector<uint32_t> &threadId);
-    HcclResult HcclThreadAcquireWithStream(CommEngine engine,
-        rtStream_t stream, uint32_t notifyNum, ThreadHandle *thread);
-    HcclResult HcclGetNotifyNumInThread(ThreadHandle thread, uint32_t *notifyNum);
-    HcclResult HcclThreadExportToCommEngine(uint32_t threadNum, const ThreadHandle *threads, CommEngine dstCommEngine, ThreadHandle *exportedThreads);
-    HcclResult HcclThreadResGetInfo(ThreadHandle thread, ThreadResType resType, uint32_t infoLen, void **info);
-    HcclResult HcclDedicatedThreadAcquire( HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle *thread);
+    HcclResult HcclThreadAcquire(
+        CommEngine engine, uint32_t threadNum, ThreadType type, const ThreadConfig* config, ThreadHandle* threads,
+        std::vector<uint32_t>& threadId);
+    HcclResult HcclThreadAcquireV2(
+        CommEngine engine, uint32_t threadNum, ThreadType type, const ThreadConfig* config, ThreadHandle* threads,
+        std::vector<uint32_t>& threadId);
+    HcclResult
+    HcclThreadAcquireWithStream(CommEngine engine, rtStream_t stream, uint32_t notifyNum, ThreadHandle* thread);
+    HcclResult HcclGetNotifyNumInThread(ThreadHandle thread, uint32_t* notifyNum);
+    HcclResult HcclThreadExportToCommEngine(
+        uint32_t threadNum, const ThreadHandle* threads, CommEngine dstCommEngine, ThreadHandle* exportedThreads);
+    HcclResult HcclThreadResGetInfo(ThreadHandle thread, ThreadResType resType, uint32_t infoLen, void** info);
+    HcclResult
+    HcclDedicatedThreadAcquire(HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle* thread);
     u32 GetThreadNum() const { return threadNum_; }
     u32 GetNotifyNumPerThread() const { return notifyNumPerThread_; }
 
@@ -44,23 +50,31 @@ private:
     uint64_t GetMaxNotifyTotal();
     HcclResult CheckNotifyNum(CommEngine engine, uint32_t threadNum, uint32_t notifyNumPerThread);
     HcclResult CheckThreadNum(CommEngine engine, uint32_t threadNum, uint32_t notifyNumPerThread);
-    HcclResult SupplementNotify(CommEngine engine, std::vector<std::shared_ptr<Thread>> &needSupplementThread);
-    HcclResult SupplementNotify(CommEngine engine, uint32_t threadNum, ThreadType type, const ThreadConfig *config);
-    HcclResult SupplementThread(CommEngine engine, std::vector<std::shared_ptr<Thread>> &newThreads, std::unique_ptr<ThreadHandle[]> &hostHandle);
-    HcclResult SupplementThread(CommEngine engine, uint32_t supplementThreadNum, ThreadType type, const ThreadConfig *config);
-    HcclResult ThreadExportToCommEngineCpu(uint32_t threadNum, const ThreadHandle *threads, ThreadHandle *exportedThreads);
-    HcclResult ThreadExportToCommEngineAicpu(uint32_t threadNum, const ThreadHandle *threads, CommEngine dstCommEngine, ThreadHandle *exportedThreads);
-    HcclResult GetExportedThread(const ThreadHandle threadHandle, CommEngine commEngine, Thread *&exportedThread, std::shared_ptr<Thread> &threadOut);
-    HcclResult CreateAndInitThreads(CommEngine engine, StreamType streamType,
-        NotifyLoadType notifyLoadType, uint32_t threadNum, const ThreadConfig *config,
-        std::vector<std::shared_ptr<Thread>> &newThreads);
-    HcclResult AssignThreadHandles(CommEngine engine,
-        std::vector<std::shared_ptr<Thread>> &newThreads, ThreadHandle *threads,
-        std::unique_ptr<ThreadHandle[]> &hostHandle);
-    HcclResult StoreThreadsAndBuildHandleMap(CommEngine engine,
-        std::vector<std::shared_ptr<Thread>> &newThreads,
-        std::unique_ptr<ThreadHandle[]> &hostHandle);
-    HcclResult HcclUnfoldThreadAcquire(HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle *thread);
+    HcclResult SupplementNotify(CommEngine engine, std::vector<std::shared_ptr<Thread>>& needSupplementThread);
+    HcclResult SupplementNotify(CommEngine engine, uint32_t threadNum, ThreadType type, const ThreadConfig* config);
+    HcclResult SupplementThread(
+        CommEngine engine, std::vector<std::shared_ptr<Thread>>& newThreads,
+        std::unique_ptr<ThreadHandle[]>& hostHandle);
+    HcclResult
+    SupplementThread(CommEngine engine, uint32_t supplementThreadNum, ThreadType type, const ThreadConfig* config);
+    HcclResult
+    ThreadExportToCommEngineCpu(uint32_t threadNum, const ThreadHandle* threads, ThreadHandle* exportedThreads);
+    HcclResult ThreadExportToCommEngineAicpu(
+        uint32_t threadNum, const ThreadHandle* threads, CommEngine dstCommEngine, ThreadHandle* exportedThreads);
+    HcclResult GetExportedThread(
+        const ThreadHandle threadHandle, CommEngine commEngine, Thread*& exportedThread,
+        std::shared_ptr<Thread>& threadOut);
+    HcclResult CreateAndInitThreads(
+        CommEngine engine, StreamType streamType, NotifyLoadType notifyLoadType, uint32_t threadNum,
+        const ThreadConfig* config, std::vector<std::shared_ptr<Thread>>& newThreads);
+    HcclResult AssignThreadHandles(
+        CommEngine engine, std::vector<std::shared_ptr<Thread>>& newThreads, ThreadHandle* threads,
+        std::unique_ptr<ThreadHandle[]>& hostHandle);
+    HcclResult StoreThreadsAndBuildHandleMap(
+        CommEngine engine, std::vector<std::shared_ptr<Thread>>& newThreads,
+        std::unique_ptr<ThreadHandle[]>& hostHandle);
+    HcclResult
+    HcclUnfoldThreadAcquire(HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle* thread);
 
     u32 threadNum_ = 0;
     u32 notifyNumPerThread_ = 0;
@@ -78,15 +92,16 @@ private:
     std::map<std::pair<CommEngine, ThreadType>, std::vector<std::shared_ptr<Thread>>> engineToThreadsMap_;
 
     std::mutex threadMapMutex_;
-    std::unordered_map<ThreadHandle, ThreadHandle> threadHandleOthersToCpu_; // 其他引擎上的ThreadHandle与CPU_TS上的ThreadHandle的映射
+    std::unordered_map<ThreadHandle, ThreadHandle>
+        threadHandleOthersToCpu_; // 其他引擎上的ThreadHandle与CPU_TS上的ThreadHandle的映射
     std::unordered_map<ThreadHandle, ThreadHandle> hostToDeviceThreadHandle_;
     ManagerCallbacks callbacks_;
 
     std::mutex threadhandleToThreadMutex_;
     std::unordered_map<ThreadHandle, std::shared_ptr<Thread>> threadMap_;
 
-    std::mutex dedicatedThreadMutex_; 
+    std::mutex dedicatedThreadMutex_;
     std::unordered_map<HcclDedicatedThreadType, ThreadHandle> dedicatedThreadMap_;
 };
-}
+} // namespace hccl
 #endif

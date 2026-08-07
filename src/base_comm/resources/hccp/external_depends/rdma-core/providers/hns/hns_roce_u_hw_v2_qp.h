@@ -21,8 +21,7 @@ struct hns_roce_qpc_stat {
 };
 
 void hns_roce_u_v2_printf_dfx(struct hns_roce_qp *qp, unsigned int opcode);
-int hns_roce_u_v2_modify_qp(struct ibv_qp *qp, struct ibv_qp_attr *attr,
-    int attr_mask);
+int hns_roce_u_v2_modify_qp(struct ibv_qp *qp, struct ibv_qp_attr *attr, int attr_mask);
 int hns_roce_u_v2_destroy_qp(struct ibv_qp *ibqp);
 int hns_roce_u_v2_exp_peer_commit_qp(struct ibv_qp *ibvqp, struct ibv_exp_peer_commit *commit_ctx);
 

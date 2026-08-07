@@ -21,13 +21,13 @@ namespace hcomm {
 
 class AivUbMemChannel : public Channel {
 public:
-    AivUbMemChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc);
+    AivUbMemChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc);
 
     HcclResult Init() override;
-    HcclResult GetNotifyNum(uint32_t *notifyNum) const override;
-    HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos) override;
+    HcclResult GetNotifyNum(uint32_t* notifyNum) const override;
+    HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos) override;
     ChannelStatus GetStatus() override;
-    HcclResult UpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum) override;
+    HcclResult UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum) override;
     const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
 
     virtual HcclResult Clean() override;
@@ -36,9 +36,9 @@ public:
     // 数据面接口
     HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) override;
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;
-    HcclResult WriteWithNotify(void *dst, const void *src, const uint64_t len, uint32_t remoteNotifyIdx) override;
-    HcclResult Write(void *dst, const void *src, uint64_t len) override;
-    HcclResult Read(void *dst, const void *src, uint64_t len) override;
+    HcclResult WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx) override;
+    HcclResult Write(void* dst, const void* src, uint64_t len) override;
+    HcclResult Read(void* dst, const void* src, uint64_t len) override;
     HcclResult ChannelFence() override;
 
 private:
@@ -46,12 +46,12 @@ private:
     HcclResult BuildTransport();
 
     // --------------------- 入参 ---------------------
-    EndpointHandle                                              endpointHandle_;
-    HcommChannelDesc                                            channelDesc_;
+    EndpointHandle endpointHandle_;
+    HcommChannelDesc channelDesc_;
 
     // --------------------- 具体成员 ---------------------
-    Hccl::Socket*                                               socket_{nullptr};
-    std::unique_ptr<AivUbMemTransport>                          transport_{nullptr};
+    Hccl::Socket* socket_{nullptr};
+    std::unique_ptr<AivUbMemTransport> transport_{nullptr};
 };
 
 } // namespace hcomm

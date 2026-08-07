@@ -15,9 +15,9 @@
 #include <chrono>
 namespace Hccl {
 
-bool CheckLogTime(std::chrono::steady_clock::time_point &lastTime);
-intptr_t TraceCreate(const char *objName);
-bool TraceSubmit(intptr_t handle, const void *buffer, uint32_t bufSize);
+bool CheckLogTime(std::chrono::steady_clock::time_point& lastTime);
+intptr_t TraceCreate(const char* objName);
+bool TraceSubmit(intptr_t handle, const void* buffer, uint32_t bufSize);
 void TraceDestroy(intptr_t handle);
 extern std::chrono::steady_clock::time_point lastLogTimeTrace; // 抑制日志刷屏时间戳
 

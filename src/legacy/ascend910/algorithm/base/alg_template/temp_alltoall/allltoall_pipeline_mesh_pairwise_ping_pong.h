@@ -13,7 +13,6 @@
 
 #include "allltoall_pipeline_mesh_pairwise_ping_pong_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALLTOALL_PIPELINE_MESH_PAIRWISE_PING_PONG_H */

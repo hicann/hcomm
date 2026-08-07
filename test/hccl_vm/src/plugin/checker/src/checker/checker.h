@@ -34,5 +34,5 @@ private:
     vector<TaskNodePtr> toDeleteCopyTaskNodeResource_;
     bool closeRankMemCheck_ = true;
 };
-}
+} // namespace HcclSim
 #endif

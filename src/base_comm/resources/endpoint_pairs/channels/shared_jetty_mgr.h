@@ -35,7 +35,7 @@ public:
         std::unordered_set<ChannelHandle> channelHandles;
     };
 
-    static SharedJettyMgr &GetInstance();
+    static SharedJettyMgr& GetInstance();
 
     /**
      * @brief 注册 Channel 到共享 Jetty 上下文
@@ -44,8 +44,7 @@ public:
      * @param[in] channelNum Channel 数量
      * @return HcclResult 执行结果
      */
-    HcclResult RegisterChannels(EndpointHandle endpointHandle,
-        const ChannelHandle *channels, uint32_t channelNum);
+    HcclResult RegisterChannels(EndpointHandle endpointHandle, const ChannelHandle* channels, uint32_t channelNum);
 
     /**
      * @brief 注销 Channel
@@ -53,7 +52,7 @@ public:
      * @param[in] channelNum Channel 数量
      * @return HcclResult 执行结果
      */
-    HcclResult UnregisterChannels(const ChannelHandle *channels, uint32_t channelNum);
+    HcclResult UnregisterChannels(const ChannelHandle* channels, uint32_t channelNum);
 
     /**
      * @brief 校验 Endpoint 是否可以销毁（所有共享 Jetty 的 Channel 已销毁）
@@ -70,8 +69,8 @@ public:
 private:
     SharedJettyMgr() = default;
     ~SharedJettyMgr() = default;
-    SharedJettyMgr(const SharedJettyMgr &) = delete;
-    SharedJettyMgr &operator=(const SharedJettyMgr &) = delete;
+    SharedJettyMgr(const SharedJettyMgr&) = delete;
+    SharedJettyMgr& operator=(const SharedJettyMgr&) = delete;
 
     std::mutex mtx_;
     std::unordered_map<EndpointHandle, SharedJettyContext> contexts_;

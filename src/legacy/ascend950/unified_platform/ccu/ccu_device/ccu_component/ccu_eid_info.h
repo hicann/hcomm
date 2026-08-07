@@ -23,18 +23,18 @@ public:
     // 进行资源清理
     virtual ~CcuEidInfo();
 
-    CcuEidInfo(const CcuEidInfo &that) = delete;
+    CcuEidInfo(const CcuEidInfo& that) = delete;
 
-    CcuEidInfo &operator=(const CcuEidInfo &that) = delete;
+    CcuEidInfo& operator=(const CcuEidInfo& that) = delete;
 
-    static CcuEidInfo &GetInstance(int32_t logicDeviceId);
-    HcclResult GetEidInfo(int32_t logicDeviceId, std::vector<HrtDevEidInfo> &eidInfo);
+    static CcuEidInfo& GetInstance(int32_t logicDeviceId);
+    HcclResult GetEidInfo(int32_t logicDeviceId, std::vector<HrtDevEidInfo>& eidInfo);
 
 private:
     std::vector<HrtDevEidInfo> eidInfoList_;
     bool initflag_{false};
 };
 
-}; // Hccl
+}; // namespace Hccl
 
 #endif // CCU_EID_INFO_H

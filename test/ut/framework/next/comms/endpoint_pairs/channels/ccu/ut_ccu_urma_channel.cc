@@ -12,8 +12,8 @@
 using namespace hcomm;
 
 namespace hcomm {
-HcclResult BuildBufferInfos(HcommMemHandle *memHandles, uint32_t memHandleNum,
-    std::vector<CcuTransport::CclBufferInfo> &bufferInfos);
+HcclResult BuildBufferInfos(
+    HcommMemHandle* memHandles, uint32_t memHandleNum, std::vector<CcuTransport::CclBufferInfo>& bufferInfos);
 }
 
 class CcuUrmaChannelTest : public testing::Test {
@@ -24,7 +24,8 @@ protected:
     void TearDown() override {}
 };
 
-TEST_F(CcuUrmaChannelTest, Ut_Clean_When_ImplIsNull_Expect_HCCL_E_PTR) {
+TEST_F(CcuUrmaChannelTest, Ut_Clean_When_ImplIsNull_Expect_HCCL_E_PTR)
+{
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     CcuUrmaChannel ch(ep, desc);
@@ -36,14 +37,16 @@ TEST_F(CcuUrmaChannelTest, Ut_Clean_When_ImplIsNull_Expect_HCCL_E_PTR) {
 // Minimal test-only connection deriving from CcuConnection to avoid heavy Init()
 class TestCcuConnection : public CcuConnection {
 public:
-    TestCcuConnection(const CommAddr &locAddr, const CommAddr &rmtAddr,
-        const CcuChannelInfo &channelInfo, const std::vector<CcuJetty *> &ccuJettys,
-        uint32_t qos = Hccl::UB_QOS_DEFAULT)
-        : CcuConnection(locAddr, rmtAddr, channelInfo, ccuJettys, qos) {}
+    TestCcuConnection(
+        const CommAddr& locAddr, const CommAddr& rmtAddr, const CcuChannelInfo& channelInfo,
+        const std::vector<CcuJetty*>& ccuJettys, uint32_t qos = Hccl::UB_QOS_DEFAULT)
+        : CcuConnection(locAddr, rmtAddr, channelInfo, ccuJettys, qos)
+    {}
     // Do not call Init(); use default base behavior for Clean()
 };
 
-TEST_F(CcuUrmaChannelTest, Ut_Clean_When_ImplIsPresent_Expect_HCCL_SUCCESS) {
+TEST_F(CcuUrmaChannelTest, Ut_Clean_When_ImplIsPresent_Expect_HCCL_SUCCESS)
+{
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     CcuUrmaChannel ch(ep, desc);
@@ -52,14 +55,14 @@ TEST_F(CcuUrmaChannelTest, Ut_Clean_When_ImplIsPresent_Expect_HCCL_SUCCESS) {
     CommAddr locAddr{};
     CommAddr rmtAddr{};
     CcuChannelInfo channelInfo{};
-    std::vector<CcuJetty *> jettys{};
+    std::vector<CcuJetty*> jettys{};
 
     // Create a test connection (does not call Init)
     std::unique_ptr<CcuConnection> conn(
         new TestCcuConnection(locAddr, rmtAddr, channelInfo, jettys, Hccl::UB_QOS_DEFAULT));
 
     // Fake socket pointer (not dereferenced by Clean())
-    Hccl::Socket *fakeSocket = reinterpret_cast<Hccl::Socket *>(0x1);
+    Hccl::Socket* fakeSocket = reinterpret_cast<Hccl::Socket*>(0x1);
 
     // Prepare a simple buffer info
     CcuTransport::CclBufferInfo bufInfo(0x1000, 0x100, 1, 1);
@@ -74,7 +77,8 @@ TEST_F(CcuUrmaChannelTest, Ut_Clean_When_ImplIsPresent_Expect_HCCL_SUCCESS) {
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-TEST_F(CcuUrmaChannelTest, Ut_Resume_When_Called_Expect_HCCL_SUCCESS) {
+TEST_F(CcuUrmaChannelTest, Ut_Resume_When_Called_Expect_HCCL_SUCCESS)
+{
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     CcuUrmaChannel ch(ep, desc);
@@ -87,7 +91,7 @@ TEST_F(CcuUrmaChannelTest, Ut_BuildBufferInfos_When_LocalUbHandle_Expect_BufferI
 {
     auto rawBuffer = std::make_shared<Hccl::Buffer>(0x34560, 0x200, HCCL_MEM_TYPE_HOST, "ccu_user");
     auto localRmaBuffer = std::make_shared<Hccl::LocalUbRmaBuffer>(rawBuffer);
-    HcommMemHandle memHandles[1] = { reinterpret_cast<HcommMemHandle>(localRmaBuffer.get()) };
+    HcommMemHandle memHandles[1] = {reinterpret_cast<HcommMemHandle>(localRmaBuffer.get())};
 
     std::vector<CcuTransport::CclBufferInfo> bufferInfos;
     ASSERT_EQ(BuildBufferInfos(memHandles, 1, bufferInfos), HCCL_SUCCESS);
@@ -100,7 +104,8 @@ TEST_F(CcuUrmaChannelTest, Ut_BuildBufferInfos_When_LocalUbHandle_Expect_BufferI
     EXPECT_EQ(std::string(bufferInfos[0].memInfo.data()), rawBuffer->GetMemInfo());
 }
 
-TEST_F(CcuUrmaChannelTest, Ut_GetStatus_DfxInfo_TEST) {
+TEST_F(CcuUrmaChannelTest, Ut_GetStatus_DfxInfo_TEST)
+{
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(1);
     CcuUrmaChannel ch(ep, desc);
@@ -129,7 +134,7 @@ TEST_F(CcuUrmaChannelTest, Ut_GetStatus_DfxInfo_TEST) {
 
     // 4. Mock 1：成功
     ch.impl_->transStatus_ = CcuTransport::TransStatus::READY;
-    MOCKER_CPP(&CcuConnection::Describe, HcclResult (CcuConnection::*)(std::string&))
+    MOCKER_CPP(&CcuConnection::Describe, HcclResult(CcuConnection::*)(std::string&))
         .stubs()
         .with(mockcpp::any())
         .will(returnValue(HcclResult::HCCL_SUCCESS));
@@ -141,7 +146,7 @@ TEST_F(CcuUrmaChannelTest, Ut_GetStatus_DfxInfo_TEST) {
     // 5. Mock 2：失败
     ch.impl_->transStatus_ = CcuTransport::TransStatus::READY;
     ch.isFirstPrintChannelInfo_ = true; // 需要重置为true才能触发Describe的调用
-    MOCKER_CPP(&CcuConnection::Describe, HcclResult (CcuConnection::*)(std::string&))
+    MOCKER_CPP(&CcuConnection::Describe, HcclResult(CcuConnection::*)(std::string&))
         .stubs()
         .with(mockcpp::any())
         .will(returnValue(HcclResult::HCCL_E_PARA));

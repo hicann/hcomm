@@ -37,14 +37,13 @@ STATIC int RsResAddrMunmap(struct RsCtxJettyCb *jettyCb, struct UdmaVaInfo *vaIn
     resInfoIn.priv_len = sizeof(struct UdmaVaInfo);
     resInfoIn.priv = (void *)vaInfo;
     ret = DlHalResAddrUnmapV2(jettyCb->devCb->rscb->logicId, &resInfoIn);
-    CHK_PRT_RETURN(ret != 0, hccp_err("DlHalResAddrUnmapV2 failed, res_type:%d ret:%d, errno:%d",
-        resInfoIn.res_type, ret, errno), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("DlHalResAddrUnmapV2 failed, res_type:%d ret:%d, errno:%d", resInfoIn.res_type, ret, errno), ret);
 
     return ret;
 }
 
-STATIC int RsResAddrMmap(struct RsCtxJettyCb *jettyCb, struct UdmaVaInfo *vaInfo,
-    struct res_map_info_out *resInfoOut)
+STATIC int RsResAddrMmap(struct RsCtxJettyCb *jettyCb, struct UdmaVaInfo *vaInfo, struct res_map_info_out *resInfoOut)
 {
     struct res_map_info_in resInfoIn = {0};
     int ret = 0;
@@ -56,8 +55,8 @@ STATIC int RsResAddrMmap(struct RsCtxJettyCb *jettyCb, struct UdmaVaInfo *vaInfo
     resInfoIn.priv_len = sizeof(struct UdmaVaInfo);
     resInfoIn.priv = (void *)vaInfo;
     ret = DlHalResAddrMapV2(jettyCb->devCb->rscb->logicId, &resInfoIn, resInfoOut);
-    CHK_PRT_RETURN(ret != 0, hccp_err("DlHalResAddrMapV2 failed, res_type:%d ret:%d, errno:%d",
-        resInfoIn.res_type, ret, errno), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("DlHalResAddrMapV2 failed, res_type:%d ret:%d, errno:%d", resInfoIn.res_type, ret, errno), ret);
 
     return ret;
 }
@@ -97,8 +96,7 @@ STATIC int RsMmapJettyVa(struct RsCtxJettyCb *jettyCb)
     jettyVaInfo.len = WQE_BB_SIZE * jettyCb->txDepth * WQEBB_NUM_PER_SQE;
     jettyVaInfo.pid = getpid();
     ret = RsResAddrMmap(jettyCb, &jettyVaInfo, &jettyVaInfoOut);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_res_addr_mmap failed, res_type:%u ret:%d",
-        jettyVaInfo.resType, ret), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_res_addr_mmap failed, res_type:%u ret:%d", jettyVaInfo.resType, ret), ret);
     jettyCb->sqBuffVa = jettyVaInfoOut.va;
 
     dbVaInfo.resType = RES_ADDR_TYPE_HCCP_URMA_DB;
@@ -117,8 +115,7 @@ STATIC int RsMmapJettyVa(struct RsCtxJettyCb *jettyCb)
 munmap_sq_buff_va:
     jettyVaInfo.va = jettyVaInfoOut.va;
     ret += RsResAddrMunmap(jettyCb, &jettyVaInfo);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_res_addr_munmap failed, res_type:%u ret:%d",
-        jettyVaInfo.resType, ret), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_res_addr_munmap failed, res_type:%u ret:%d", jettyVaInfo.resType, ret), ret);
     return ret;
 }
 
@@ -163,8 +160,8 @@ STATIC int RsSetCcuJettyOpt(struct RsCtxJettyCb *jettyCb)
     }
 
     ret = RsUrmaSetJettyOpt(jettyCb->jetty, URMA_JFS_SQE_BASE_ADDR, (void *)&ccuJettySqBuffVa, sizeof(uint64_t));
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_urma_set_jetty_opt URMA_JFS_SQE_BASE_ADDR failed, ret:%d, errno:%d",
-        ret, errno), -EOPENSRC);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("rs_urma_set_jetty_opt URMA_JFS_SQE_BASE_ADDR failed, ret:%d, errno:%d", ret, errno), -EOPENSRC);
 
     return ret;
 }
@@ -176,15 +173,16 @@ STATIC int RsSetJettyOpt(struct RsCtxJettyCb *jettyCb)
     int ret = 0;
 
     hccp_dbg("sq.buff:0x%llx, sq.buffSize:%u, piType:%u, sqebbNum:%u, dbCstm:%u, txDepth:%u",
-        jettyCb->extMode.sq.buffVa, jettyCb->extMode.sq.buffSize, piType, jettyCb->extMode.sqebbNum, dbCstm, jettyCb->txDepth);
+        jettyCb->extMode.sq.buffVa, jettyCb->extMode.sq.buffSize, piType, jettyCb->extMode.sqebbNum, dbCstm,
+        jettyCb->txDepth);
 
     ret = RsUrmaSetJettyOpt(jettyCb->jetty, URMA_JFS_DB_STATUS, (void *)&dbCstm, sizeof(uint8_t));
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_urma_set_jetty_opt URMA_JFS_DB_STATUS failed, ret:%d, errno:%d",
-        ret, errno), -EOPENSRC);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_urma_set_jetty_opt URMA_JFS_DB_STATUS failed, ret:%d, errno:%d", ret, errno),
+        -EOPENSRC);
 
     ret = RsUrmaSetJettyOpt(jettyCb->jetty, URMA_JFS_PI_TYPE, (void *)&piType, sizeof(uint16_t));
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_urma_set_jetty_opt URMA_JFS_PI_TYPE failed, ret:%d, errno:%d",
-        ret, errno), -EOPENSRC);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_urma_set_jetty_opt URMA_JFS_PI_TYPE failed, ret:%d, errno:%d", ret, errno),
+        -EOPENSRC);
 
     ret = RsSetCcuJettyOpt(jettyCb);
     CHK_PRT_RETURN(ret != 0, hccp_err("RsSetCcuJettyOpt failed, ret:%d, mode:%d", ret, jettyCb->jettyMode), ret);
@@ -198,12 +196,12 @@ STATIC int RsGetJettyOpt(struct RsCtxJettyCb *jettyCb)
     int ret = 0;
 
     ret = RsUrmaGetJettyOpt(jettyCb->jetty, URMA_JFS_SQE_BASE_ADDR, &sqBuffVa, sizeof(uint64_t));
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_urma_get_jetty_opt URMA_JFS_SQE_BASE_ADDR failed, ret:%d, errno:%d",
-        ret, errno), -EOPENSRC);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("rs_urma_get_jetty_opt URMA_JFS_SQE_BASE_ADDR failed, ret:%d, errno:%d", ret, errno), -EOPENSRC);
 
     ret = RsUrmaGetJettyOpt(jettyCb->jetty, URMA_JFS_DB_ADDR, &dbVa, sizeof(uint64_t));
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_urma_get_jetty_opt URMA_JFS_DB_ADDR failed, ret:%d, errno:%d",
-        ret, errno), -EOPENSRC);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_urma_get_jetty_opt URMA_JFS_DB_ADDR failed, ret:%d, errno:%d", ret, errno),
+        -EOPENSRC);
 
     jettyCb->sqBuffVa = sqBuffVa;
     jettyCb->dbAddr = dbVa;
@@ -236,7 +234,8 @@ STATIC int RsJettyAttrInit(struct RsCtxJettyCb *jettyCb, urma_jetty_cfg_t *jetty
 
     CHK_PRT_RETURN(jettyCb->extMode.cstmFlag.bs.sqCstm == 1 && !RsIsCcuJetty(jettyCb->jettyMode),
         hccp_err("Non-CCU jetty cannot be created by specifying va, sqCstm:%u jettyMode:%u",
-        jettyCb->extMode.cstmFlag.bs.sqCstm, jettyCb->jettyMode), -EINVAL);
+            jettyCb->extMode.cstmFlag.bs.sqCstm, jettyCb->jettyMode),
+        -EINVAL);
 
     if (jettyCb->jettyMode == JETTY_MODE_CACHE_LOCK_DWQE) {
         ret = RsNetAllocJettyId(jettyCb->devCb->urmaDev->name, jettyCb->jettyMode, &jettyCfg->id);
@@ -335,7 +334,6 @@ void RsUbFreeJettyIdBatch(struct RsCtxJettyCb **jettyCbArr, unsigned int num)
     unsigned int i;
 
     for (i = 0; i < num; ++i) {
-        (void)RsFreeJettyId(jettyCbArr[i]->devCb->urmaDev->name, jettyCbArr[i]->jettyMode,
-            jettyCbArr[i]->jettyId);
+        (void)RsFreeJettyId(jettyCbArr[i]->devCb->urmaDev->name, jettyCbArr[i]->jettyMode, jettyCbArr[i]->jettyId);
     }
 }

@@ -18,5 +18,5 @@ namespace hcomm {
 void SetTaskExceptionEnable(bool taskExceptionEnable);
 
 const bool& GetTaskExceptionEnable();
-}
+} // namespace hcomm
 #endif

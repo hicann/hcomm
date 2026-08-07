@@ -80,23 +80,28 @@ std::string CcuTraceSerializer::SerializeResourceSnapshot(const CcuResourceSnaps
     // XN records
     oss << "\"xnRecords\": [";
     for (size_t i = 0; i < snap.xnRecords.size(); i++) {
-        if (i > 0) oss << ", ";
-        oss << "{\"id\": " << snap.xnRecords[i].id << ", \"value\": \"" << ToHexString(snap.xnRecords[i].value) << "\"}";
+        if (i > 0)
+            oss << ", ";
+        oss << "{\"id\": " << snap.xnRecords[i].id << ", \"value\": \"" << ToHexString(snap.xnRecords[i].value)
+            << "\"}";
     }
     oss << "], ";
 
     // GSA records
     oss << "\"gsaRecords\": [";
     for (size_t i = 0; i < snap.gsaRecords.size(); i++) {
-        if (i > 0) oss << ", ";
-        oss << "{\"id\": " << snap.gsaRecords[i].id << ", \"value\": \"" << ToHexString(snap.gsaRecords[i].value) << "\"}";
+        if (i > 0)
+            oss << ", ";
+        oss << "{\"id\": " << snap.gsaRecords[i].id << ", \"value\": \"" << ToHexString(snap.gsaRecords[i].value)
+            << "\"}";
     }
     oss << "], ";
 
     // CKE records
     oss << "\"ckeRecords\": [";
     for (size_t i = 0; i < snap.ckeRecords.size(); i++) {
-        if (i > 0) oss << ", ";
+        if (i > 0)
+            oss << ", ";
         oss << "{\"id\": " << snap.ckeRecords[i].id << ", \"value\": " << snap.ckeRecords[i].value << "}";
     }
     oss << "]";
@@ -113,12 +118,11 @@ std::string CcuTraceSerializer::SerializeCcuRegistry(const std::vector<CcuIdenti
     oss << "[\n";
     for (size_t i = 0; i < registry.size(); i++) {
         const auto& ccu = registry[i];
-        oss << "    {\"rankId\": " << ccu.rankId
-            << ", \"dieId\": " << ccu.dieId
-            << ", \"ccuVersion\": \"" << EscapeJsonString(RunnerCcuVersionToString(ccu.ccuVersion)) << "\""
-            << ", \"initialSnapshot\": " << SerializeResourceSnapshot(ccu.initialSnapshot)
-            << "}";
-        if (i + 1 < registry.size()) oss << ",";
+        oss << "    {\"rankId\": " << ccu.rankId << ", \"dieId\": " << ccu.dieId << ", \"ccuVersion\": \""
+            << EscapeJsonString(RunnerCcuVersionToString(ccu.ccuVersion)) << "\""
+            << ", \"initialSnapshot\": " << SerializeResourceSnapshot(ccu.initialSnapshot) << "}";
+        if (i + 1 < registry.size())
+            oss << ",";
         oss << "\n";
     }
     oss << "  ]";
@@ -131,23 +135,20 @@ std::string CcuTraceSerializer::SerializeSqeTaskRegistry(const std::vector<CcuSq
     oss << "[\n";
     for (size_t i = 0; i < registry.size(); i++) {
         const auto& task = registry[i];
-        oss << "    {\"sqeTaskId\": " << task.sqeTaskId
-            << ", \"rankId\": " << task.rankId
-            << ", \"dieId\": " << task.dieId
-            << ", \"missionId\": " << static_cast<int>(task.missionId)
-            << ", \"instStartId\": " << task.instStartId
-            << ", \"instCnt\": " << task.instCnt
-            << ", \"key\": " << task.key
-            << ", \"args\": [";
+        oss << "    {\"sqeTaskId\": " << task.sqeTaskId << ", \"rankId\": " << task.rankId
+            << ", \"dieId\": " << task.dieId << ", \"missionId\": " << static_cast<int>(task.missionId)
+            << ", \"instStartId\": " << task.instStartId << ", \"instCnt\": " << task.instCnt
+            << ", \"key\": " << task.key << ", \"args\": [";
         for (size_t j = 0; j < task.args.size(); j++) {
-            if (j > 0) oss << ", ";
+            if (j > 0)
+                oss << ", ";
             oss << "\"" << ToHexString(task.args[j]) << "\"";
         }
         oss << "]"
             << ", \"simulatorPtr\": \"" << ToHexString(task.simulatorPtr) << "\""
-            << ", \"firstExecRound\": " << task.firstExecRound
-            << "}";
-        if (i + 1 < registry.size()) oss << ",";
+            << ", \"firstExecRound\": " << task.firstExecRound << "}";
+        if (i + 1 < registry.size())
+            oss << ",";
         oss << "\n";
     }
     oss << "  ]";
@@ -160,18 +161,18 @@ std::string CcuTraceSerializer::SerializeInstrSpaces(const std::vector<CcuInstrS
     oss << "[\n";
     for (size_t i = 0; i < instrSpaces.size(); i++) {
         const auto& space = instrSpaces[i];
-        oss << "    {\"rankId\": " << space.rankId
-            << ", \"dieId\": " << space.dieId
-            << ", \"instructions\": [\n";
+        oss << "    {\"rankId\": " << space.rankId << ", \"dieId\": " << space.dieId << ", \"instructions\": [\n";
         for (size_t j = 0; j < space.instructions.size(); j++) {
             const auto& instr = space.instructions[j];
-            oss << "      {\"instrId\": " << instr.instrId
-                << ", \"instrDescribe\": \"" << EscapeJsonString(instr.instrDescribe) << "\"}";
-            if (j + 1 < space.instructions.size()) oss << ",";
+            oss << "      {\"instrId\": " << instr.instrId << ", \"instrDescribe\": \""
+                << EscapeJsonString(instr.instrDescribe) << "\"}";
+            if (j + 1 < space.instructions.size())
+                oss << ",";
             oss << "\n";
         }
         oss << "    ]}";
-        if (i + 1 < instrSpaces.size()) oss << ",";
+        if (i + 1 < instrSpaces.size())
+            oss << ",";
         oss << "\n";
     }
     oss << "  ]";
@@ -184,19 +185,18 @@ std::string CcuTraceSerializer::SerializeChannelSpaces(const std::vector<CcuChan
     oss << "[\n";
     for (size_t i = 0; i < channelSpaces.size(); i++) {
         const auto& space = channelSpaces[i];
-        oss << "    {\"rankId\": " << space.rankId
-            << ", \"dieId\": " << space.dieId
-            << ", \"channels\": [\n";
+        oss << "    {\"rankId\": " << space.rankId << ", \"dieId\": " << space.dieId << ", \"channels\": [\n";
         for (size_t j = 0; j < space.channels.size(); j++) {
             const auto& ch = space.channels[j];
-            oss << "      {\"channelId\": " << ch.channelId
-                << ", \"remoteRankId\": " << ch.remoteRankId
+            oss << "      {\"channelId\": " << ch.channelId << ", \"remoteRankId\": " << ch.remoteRankId
                 << ", \"remoteDieId\": " << ch.remoteDieId << "}";
-            if (j + 1 < space.channels.size()) oss << ",";
+            if (j + 1 < space.channels.size())
+                oss << ",";
             oss << "\n";
         }
         oss << "    ]}";
-        if (i + 1 < channelSpaces.size()) oss << ",";
+        if (i + 1 < channelSpaces.size())
+            oss << ",";
         oss << "\n";
     }
     oss << "  ]";
@@ -210,18 +210,20 @@ std::string CcuTraceSerializer::SerializeResourceDelta(const CcuResourceDelta& d
 
     oss << "\"xnChanges\": [";
     for (size_t i = 0; i < delta.xnChanges.size(); i++) {
-        if (i > 0) oss << ", ";
-        oss << "{\"id\": " << delta.xnChanges[i].id
-            << ", \"valueBefore\": \"" << ToHexString(delta.xnChanges[i].valueBefore) << "\""
+        if (i > 0)
+            oss << ", ";
+        oss << "{\"id\": " << delta.xnChanges[i].id << ", \"valueBefore\": \""
+            << ToHexString(delta.xnChanges[i].valueBefore) << "\""
             << ", \"valueAfter\": \"" << ToHexString(delta.xnChanges[i].valueAfter) << "\"}";
     }
     oss << "], ";
 
     oss << "\"gsaChanges\": [";
     for (size_t i = 0; i < delta.gsaChanges.size(); i++) {
-        if (i > 0) oss << ", ";
-        oss << "{\"id\": " << delta.gsaChanges[i].id
-            << ", \"valueBefore\": \"" << ToHexString(delta.gsaChanges[i].valueBefore) << "\""
+        if (i > 0)
+            oss << ", ";
+        oss << "{\"id\": " << delta.gsaChanges[i].id << ", \"valueBefore\": \""
+            << ToHexString(delta.gsaChanges[i].valueBefore) << "\""
             << ", \"valueAfter\": \"" << ToHexString(delta.gsaChanges[i].valueAfter) << "\"}";
     }
     oss << "], ";
@@ -229,9 +231,9 @@ std::string CcuTraceSerializer::SerializeResourceDelta(const CcuResourceDelta& d
     // Channel 表是静态配置，不会变化，无需序列化 channelChanges
     oss << "\"ckeChanges\": [";
     for (size_t i = 0; i < delta.ckeChanges.size(); i++) {
-        if (i > 0) oss << ", ";
-        oss << "{\"id\": " << delta.ckeChanges[i].id
-            << ", \"valueBefore\": " << delta.ckeChanges[i].valueBefore
+        if (i > 0)
+            oss << ", ";
+        oss << "{\"id\": " << delta.ckeChanges[i].id << ", \"valueBefore\": " << delta.ckeChanges[i].valueBefore
             << ", \"valueAfter\": " << delta.ckeChanges[i].valueAfter << "}";
     }
     oss << "]";
@@ -243,41 +245,30 @@ std::string CcuTraceSerializer::SerializeResourceDelta(const CcuResourceDelta& d
 std::string CcuTraceSerializer::SerializeContext(const CcuExecutionContext& ctx)
 {
     std::ostringstream oss;
-    oss << "{\"inLoop\": " << (ctx.inLoop ? "true" : "false")
-        << ", \"loopRound\": " << ctx.loopRound
-        << ", \"loopExtendIndex\": " << ctx.loopExtendIndex
-        << ", \"gsaOffset\": " << ctx.gsaOffset
-        << ", \"iterStepGSA\": " << ctx.iterStepGSA
-        << ", \"loopExtendNum\": " << ctx.loopExtendNum
-        << ", \"curLoopCnt\": " << ctx.curLoopCnt
-        << ", \"gsaAddrOffset\": " << ctx.gsaAddrOffset
-        << ", \"addrExpandCoef\": " << ctx.addrExpandCoef
-        << ", \"msOffset\": " << ctx.msOffset
-        << ", \"ckeOffset\": " << ctx.ckeOffset
-        << ", \"xnIdOffset\": " << ctx.xnIdOffset
-        << "}";
+    oss << "{\"inLoop\": " << (ctx.inLoop ? "true" : "false") << ", \"loopRound\": " << ctx.loopRound
+        << ", \"loopExtendIndex\": " << ctx.loopExtendIndex << ", \"gsaOffset\": " << ctx.gsaOffset
+        << ", \"iterStepGSA\": " << ctx.iterStepGSA << ", \"loopExtendNum\": " << ctx.loopExtendNum
+        << ", \"curLoopCnt\": " << ctx.curLoopCnt << ", \"gsaAddrOffset\": " << ctx.gsaAddrOffset
+        << ", \"addrExpandCoef\": " << ctx.addrExpandCoef << ", \"msOffset\": " << ctx.msOffset
+        << ", \"ckeOffset\": " << ctx.ckeOffset << ", \"xnIdOffset\": " << ctx.xnIdOffset << "}";
     return oss.str();
 }
 
 std::string CcuTraceSerializer::SerializeWaitInfo(const CcuWaitInfo& info)
 {
     std::ostringstream oss;
-    oss << "{\"hadWait\": " << (info.hadWait ? "true" : "false")
-        << ", \"waitRetryCount\": " << info.waitRetryCount
-        << ", \"waitCKEId\": " << info.waitCKEId
-        << ", \"waitCKEMask\": " << info.waitCKEMask
+    oss << "{\"hadWait\": " << (info.hadWait ? "true" : "false") << ", \"waitRetryCount\": " << info.waitRetryCount
+        << ", \"waitCKEId\": " << info.waitCKEId << ", \"waitCKEMask\": " << info.waitCKEMask
         << ", \"ckeValueOnFirstCheck\": " << info.ckeValueOnFirstCheck
-        << ", \"ckeValueOnPass\": " << info.ckeValueOnPass
-        << ", \"waitDurationNs\": " << info.waitDurationNs
-        << "}";
+        << ", \"ckeValueOnPass\": " << info.ckeValueOnPass << ", \"waitDurationNs\": " << info.waitDurationNs << "}";
     return oss.str();
 }
 
 std::string CcuTraceSerializer::SerializeErrorInfo(const CcuErrorInfo& info)
 {
     std::ostringstream oss;
-    oss << "{\"hasError\": " << (info.hasError ? "true" : "false")
-        << ", \"errorMessage\": \"" << EscapeJsonString(info.errorMessage) << "\""
+    oss << "{\"hasError\": " << (info.hasError ? "true" : "false") << ", \"errorMessage\": \""
+        << EscapeJsonString(info.errorMessage) << "\""
         << ", \"failPhase\": \"" << EscapeJsonString(info.failPhase) << "\""
         << "}";
     return oss.str();
@@ -290,34 +281,31 @@ std::string CcuTraceSerializer::SerializeCrossCcuChanges(const CcuCrossCcuChange
 
     oss << ", \"remoteCkeChanges\": [";
     for (size_t i = 0; i < changes.remoteCkeChanges.size(); i++) {
-        if (i > 0) oss << ", ";
+        if (i > 0)
+            oss << ", ";
         const auto& c = changes.remoteCkeChanges[i];
-        oss << "{\"remoteRankId\": " << c.remoteRankId
-            << ", \"remoteDieId\": " << c.remoteDieId
-            << ", \"ckeId\": " << c.ckeId
-            << ", \"valueBefore\": " << c.valueBefore
+        oss << "{\"remoteRankId\": " << c.remoteRankId << ", \"remoteDieId\": " << c.remoteDieId
+            << ", \"ckeId\": " << c.ckeId << ", \"valueBefore\": " << c.valueBefore
             << ", \"valueAfter\": " << c.valueAfter << "}";
     }
     oss << "]";
 
     oss << ", \"remoteMsChanges\": [";
     for (size_t i = 0; i < changes.remoteMsChanges.size(); i++) {
-        if (i > 0) oss << ", ";
+        if (i > 0)
+            oss << ", ";
         const auto& c = changes.remoteMsChanges[i];
-        oss << "{\"remoteRankId\": " << c.remoteRankId
-            << ", \"remoteDieId\": " << c.remoteDieId
-            << ", \"msId\": " << c.msId
-            << ", \"offset\": " << c.offset
-            << ", \"length\": " << c.length << "}";
+        oss << "{\"remoteRankId\": " << c.remoteRankId << ", \"remoteDieId\": " << c.remoteDieId
+            << ", \"msId\": " << c.msId << ", \"offset\": " << c.offset << ", \"length\": " << c.length << "}";
     }
     oss << "]";
 
     oss << ", \"remoteMemChanges\": [";
     for (size_t i = 0; i < changes.remoteMemChanges.size(); i++) {
-        if (i > 0) oss << ", ";
+        if (i > 0)
+            oss << ", ";
         const auto& c = changes.remoteMemChanges[i];
-        oss << "{\"remoteRankId\": " << c.remoteRankId
-            << ", \"remoteAddr\": " << c.remoteAddr
+        oss << "{\"remoteRankId\": " << c.remoteRankId << ", \"remoteAddr\": " << c.remoteAddr
             << ", \"length\": " << c.length << "}";
     }
     oss << "]";
@@ -333,7 +321,8 @@ std::string CcuTraceSerializer::SerializeDetail(const CcuInstrTraceDetail& detai
         << ", \"args\": {";
     bool first = true;
     for (const auto& kv : detail.args) {
-        if (!first) oss << ", ";
+        if (!first)
+            oss << ", ";
         oss << "\"" << EscapeJsonString(kv.first) << "\": \"" << EscapeJsonString(kv.second) << "\"";
         first = false;
     }
@@ -348,22 +337,18 @@ std::string CcuTraceSerializer::SerializeGlobalEntries(const std::vector<CcuTrac
     for (size_t i = 0; i < entries.size(); i++) {
         const auto& e = entries[i];
         oss << "    {";
-        oss << "\"globalSeqId\": " << e.globalSeqId
-            << ", \"execRound\": " << e.execRound
-            << ", \"rankId\": " << e.rankId
-            << ", \"dieId\": " << e.dieId
-            << ", \"instrId\": " << e.instrId
-            << ", \"sqeTaskId\": " << e.sqeTaskId
-            << ", \"category\": \"" << CcuInstrCategoryToString(e.category) << "\""
-            << ", \"execState\": " << static_cast<int>(e.execState)
-            << ", \"context\": " << SerializeContext(e.context)
+        oss << "\"globalSeqId\": " << e.globalSeqId << ", \"execRound\": " << e.execRound
+            << ", \"rankId\": " << e.rankId << ", \"dieId\": " << e.dieId << ", \"instrId\": " << e.instrId
+            << ", \"sqeTaskId\": " << e.sqeTaskId << ", \"category\": \"" << CcuInstrCategoryToString(e.category)
+            << "\""
+            << ", \"execState\": " << static_cast<int>(e.execState) << ", \"context\": " << SerializeContext(e.context)
             << ", \"resourceDelta\": " << SerializeResourceDelta(e.resourceDelta)
             << ", \"crossCcuChanges\": " << SerializeCrossCcuChanges(e.crossCcuChanges)
             << ", \"waitInfo\": " << SerializeWaitInfo(e.waitInfo)
-            << ", \"errorInfo\": " << SerializeErrorInfo(e.errorInfo)
-            << ", \"detail\": " << SerializeDetail(e.detail)
+            << ", \"errorInfo\": " << SerializeErrorInfo(e.errorInfo) << ", \"detail\": " << SerializeDetail(e.detail)
             << "}";
-        if (i + 1 < entries.size()) oss << ",";
+        if (i + 1 < entries.size())
+            oss << ",";
         oss << "\n";
     }
     oss << "  ]";
@@ -376,13 +361,12 @@ std::string CcuTraceSerializer::SerializeNonCcuEntries(const std::vector<CcuTrac
     oss << "[";
     for (size_t i = 0; i < entries.size(); i++) {
         const auto& e = entries[i];
-        oss << "{\"globalSeqId\": " << e.globalSeqId
-            << ", \"execRound\": " << e.execRound
-            << ", \"rankId\": " << e.rankId
-            << ", \"taskType\": " << static_cast<int>(e.taskType)
-            << ", \"execResult\": " << static_cast<int>(e.execResult)
-            << ", \"description\": \"" << EscapeJsonString(e.description) << "\"}";
-        if (i + 1 < entries.size()) oss << ", ";
+        oss << "{\"globalSeqId\": " << e.globalSeqId << ", \"execRound\": " << e.execRound
+            << ", \"rankId\": " << e.rankId << ", \"taskType\": " << static_cast<int>(e.taskType)
+            << ", \"execResult\": " << static_cast<int>(e.execResult) << ", \"description\": \""
+            << EscapeJsonString(e.description) << "\"}";
+        if (i + 1 < entries.size())
+            oss << ", ";
     }
     oss << "]";
     return oss.str();
@@ -394,7 +378,8 @@ std::string CcuTraceSerializer::SerializeFinalSnapshots(const std::map<std::stri
     oss << "{";
     bool first = true;
     for (const auto& kv : snapshots) {
-        if (!first) oss << ", ";
+        if (!first)
+            oss << ", ";
         oss << "\"" << kv.first << "\": " << SerializeResourceSnapshot(kv.second);
         first = false;
     }
@@ -406,15 +391,14 @@ std::string CcuTraceSerializer::SerializeSummary(const CcuRunSummary& s)
 {
     std::ostringstream oss;
     oss << "{";
-    oss << "\"totalInstrExecuted\": " << s.totalInstrExecuted
-        << ", \"totalFailedInstr\": " << s.totalFailedInstr
-        << ", \"totalCkeWaitSpins\": " << s.totalCkeWaitSpins
-        << ", \"totalHoldEvents\": " << s.totalHoldEvents;
+    oss << "\"totalInstrExecuted\": " << s.totalInstrExecuted << ", \"totalFailedInstr\": " << s.totalFailedInstr
+        << ", \"totalCkeWaitSpins\": " << s.totalCkeWaitSpins << ", \"totalHoldEvents\": " << s.totalHoldEvents;
 
     oss << ", \"instrCountByCategory\": {";
     bool first = true;
     for (const auto& kv : s.instrCountByCategory) {
-        if (!first) oss << ", ";
+        if (!first)
+            oss << ", ";
         oss << "\"" << kv.first << "\": " << kv.second;
         first = false;
     }
@@ -423,7 +407,8 @@ std::string CcuTraceSerializer::SerializeSummary(const CcuRunSummary& s)
     oss << ", \"instrCountByCcu\": {";
     first = true;
     for (const auto& kv : s.instrCountByCcu) {
-        if (!first) oss << ", ";
+        if (!first)
+            oss << ", ";
         oss << "\"" << kv.first << "\": " << kv.second;
         first = false;
     }
@@ -440,13 +425,27 @@ std::string CcuTraceSerializer::EscapeJsonString(const std::string& s)
     std::ostringstream oss;
     for (char c : s) {
         switch (c) {
-            case '"':  oss << "\\\""; break;
-            case '\\': oss << "\\\\"; break;
-            case '\b': oss << "\\b"; break;
-            case '\f': oss << "\\f"; break;
-            case '\n': oss << "\\n"; break;
-            case '\r': oss << "\\r"; break;
-            case '\t': oss << "\\t"; break;
+            case '"':
+                oss << "\\\"";
+                break;
+            case '\\':
+                oss << "\\\\";
+                break;
+            case '\b':
+                oss << "\\b";
+                break;
+            case '\f':
+                oss << "\\f";
+                break;
+            case '\n':
+                oss << "\\n";
+                break;
+            case '\r':
+                oss << "\\r";
+                break;
+            case '\t':
+                oss << "\\t";
+                break;
             default:
                 if (static_cast<unsigned char>(c) < 0x20) {
                     oss << "\\u" << std::hex << std::setfill('0') << std::setw(4) << static_cast<int>(c);

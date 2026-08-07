@@ -13,5 +13,4 @@
 
 #include "transport_direct_npu_pub.h"
 
-
 #endif /* TRANSPORT_DIRECT_NPU_H */

@@ -7,12 +7,11 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef ALIGNED_ALL_GATHER_DOUBLE_RING_H
 #define ALIGNED_ALL_GATHER_DOUBLE_RING_H
- 
+
 #include "aligned_all_gather_double_ring_pub.h"
- 
-namespace hccl {
-}  // namespace hccl
+
+namespace hccl {} // namespace hccl
 #endif

@@ -12,11 +12,12 @@
 #include "profiling_handler_lite.h"
 #include "mirror_task_manager_lite.h"
 #include "circular_queue.h"
- 
+
 namespace Hccl {
 class ProfilingReporterLite {
 public:
-    explicit ProfilingReporterLite(MirrorTaskManagerLite *mirrorTaskMgrLite, ProfilingHandlerLite *profilingHandlerLite, bool isIndop = false);
+    explicit ProfilingReporterLite(
+        MirrorTaskManagerLite* mirrorTaskMgrLite, ProfilingHandlerLite* profilingHandlerLite, bool isIndop = false);
     virtual ~ProfilingReporterLite();
     HcclResult Init();
     void ReportAllTasks();
@@ -25,11 +26,11 @@ public:
 private:
     void ReportAllTasksLog() const;
     void UpdateAllLastPos();
-    MirrorTaskManagerLite                                                         *mirrorTaskMgrLite_{nullptr};
-    ProfilingHandlerLite                                                      *profilingHandlerLite_{nullptr};
+    MirrorTaskManagerLite* mirrorTaskMgrLite_{nullptr};
+    ProfilingHandlerLite* profilingHandlerLite_{nullptr};
     std::map<u32, std::shared_ptr<Queue<std::unique_ptr<TaskInfo>>::Iterator>> lastPoses_{};
     bool initializedFlag_{false};
 };
 } // namespace Hccl
- 
+
 #endif // HCCL_PROFILING_REPORTER_LITE_H

@@ -17,24 +17,28 @@
 
 namespace hcomm {
 
-AivUbMemTransport::AivUbMemTransport(Hccl::Socket *socket, HcommChannelDesc &channelDesc) : socket_(socket), 
-    channelDesc_(channelDesc) {}
+AivUbMemTransport::AivUbMemTransport(Hccl::Socket* socket, HcommChannelDesc& channelDesc)
+    : socket_(socket),
+      channelDesc_(channelDesc)
+{}
 
-HcclResult AivUbMemTransport::FillBufferVec(HcommMemHandle *memHandles, uint32_t bufferNum,
-    std::vector<Hccl::LocalIpcRmaBuffer *> &bufferVec)
+HcclResult AivUbMemTransport::FillBufferVec(
+    HcommMemHandle* memHandles, uint32_t bufferNum, std::vector<Hccl::LocalIpcRmaBuffer*>& bufferVec)
 {
     uint32_t totalBufferNum = localRmaBufferVec_.size() + bufferNum;
     if (UNLIKELY(totalBufferNum > MAX_BUFFER_NUM)) {
-        HCCL_ERROR("[AivUbMemTransport][FillBufferVec] totalBufferNum[%u] exceeds limit[%u]", totalBufferNum, MAX_BUFFER_NUM);
+        HCCL_ERROR(
+            "[AivUbMemTransport][FillBufferVec] totalBufferNum[%u] exceeds limit[%u]", totalBufferNum, MAX_BUFFER_NUM);
         return HCCL_E_PARA;
     }
     for (uint32_t i = 0; i < bufferNum; ++i) {
-        auto localIpcRmaBuffer = reinterpret_cast<Hccl::LocalIpcRmaBuffer *>(memHandles[i]);
+        auto localIpcRmaBuffer = reinterpret_cast<Hccl::LocalIpcRmaBuffer*>(memHandles[i]);
         CHK_PTR_NULL(localIpcRmaBuffer);
         auto buf = localIpcRmaBuffer->GetBuf();
         CHK_PTR_NULL(buf);
         bufferVec.push_back(localIpcRmaBuffer);
-        HCCL_INFO("[AivUbMemTransport][FillBufferVec] memHandleNum[%u] buffer[%s]", i, localIpcRmaBuffer->Describe().data());
+        HCCL_INFO(
+            "[AivUbMemTransport][FillBufferVec] memHandleNum[%u] buffer[%s]", i, localIpcRmaBuffer->Describe().data());
     }
     return HCCL_SUCCESS;
 }
@@ -53,7 +57,7 @@ HcclResult AivUbMemTransport::Init()
     return HCCL_SUCCESS;
 }
 
-HcclResult AivUbMemTransport::IsSocketReady(bool &isReady)
+HcclResult AivUbMemTransport::IsSocketReady(bool& isReady)
 {
     CHK_PTR_NULL(socket_);
     EXCEPTION_HANDLE_BEGIN
@@ -72,8 +76,8 @@ HcclResult AivUbMemTransport::IsSocketReady(bool &isReady)
 void AivUbMemTransport::CheckStatusFuncResult(std::string funcName, HcclResult ret)
 {
     if (UNLIKELY(ret != HCCL_SUCCESS)) {
-        HCCL_ERROR("[%s] fail ret[%d], aivUbStatus_[%d], baseStatus_[%d]",
-            funcName.c_str(), ret, aivUbStatus_, baseStatus_);
+        HCCL_ERROR(
+            "[%s] fail ret[%d], aivUbStatus_[%d], baseStatus_[%d]", funcName.c_str(), ret, aivUbStatus_, baseStatus_);
         baseStatus_ = Hccl::TransportStatus::INVALID;
     }
 }
@@ -100,8 +104,9 @@ Hccl::TransportStatus AivUbMemTransport::GetStatus()
 
 Hccl::TransportStatus AivUbMemTransport::UpdateStatus()
 {
-    HCCL_INFO("%s aivUbStatus_[%d], baseStatus_[%d] start, aivUbStatus_::SOCKET_OK[%d]",
-        __func__, aivUbStatus_, baseStatus_, AivUbMemTransportStatus::SOCKET_OK);
+    HCCL_INFO(
+        "%s aivUbStatus_[%d], baseStatus_[%d] start, aivUbStatus_::SOCKET_OK[%d]", __func__, aivUbStatus_, baseStatus_,
+        AivUbMemTransportStatus::SOCKET_OK);
     HcclResult ret;
     switch (aivUbStatus_) {
         case AivUbMemTransportStatus::INIT:
@@ -165,7 +170,7 @@ HcclResult AivUbMemTransport::RecvDataSize()
     HCCL_INFO("[%s] start", __func__);
 
     EXCEPTION_HANDLE_BEGIN
-    socket_->RecvAsync(reinterpret_cast<u8 *>(&exchangeDataSize_), sizeof(exchangeDataSize_));
+    socket_->RecvAsync(reinterpret_cast<u8*>(&exchangeDataSize_), sizeof(exchangeDataSize_));
     EXCEPTION_HANDLE_END
     HCCL_INFO("[%s] finished", __func__);
     return HCCL_SUCCESS;
@@ -182,7 +187,8 @@ HcclResult AivUbMemTransport::SendMemInfo()
     return HCCL_SUCCESS;
 }
 
-HcclResult AivUbMemTransport::BufferPack(Hccl::BinaryStream &binaryStream, std::vector<Hccl::LocalIpcRmaBuffer *> &bufferVec)
+HcclResult
+AivUbMemTransport::BufferPack(Hccl::BinaryStream& binaryStream, std::vector<Hccl::LocalIpcRmaBuffer*>& bufferVec)
 {
     u32 vecSize = bufferVec.size();
     binaryStream << vecSize;
@@ -201,7 +207,7 @@ HcclResult AivUbMemTransport::RecvMemInfo()
 {
     recvData_.resize(exchangeDataSize_);
     EXCEPTION_HANDLE_BEGIN
-    socket_->RecvAsync(reinterpret_cast<u8 *>(&recvData_[0]), recvData_.size());
+    socket_->RecvAsync(reinterpret_cast<u8*>(&recvData_[0]), recvData_.size());
     EXCEPTION_HANDLE_END
     // HCCL_INFO("recv data, size=%llu, data=%s", data.size(), Hccl::Bytes2hex(data.data(), data.size()).c_str());
     return HCCL_SUCCESS;
@@ -218,7 +224,7 @@ HcclResult AivUbMemTransport::RecvDataProcess()
     return HCCL_SUCCESS;
 }
 
-void AivUbMemTransport::RmtBufferUnpackProc(Hccl::BinaryStream &binaryStream)
+void AivUbMemTransport::RmtBufferUnpackProc(Hccl::BinaryStream& binaryStream)
 {
     u32 vecSize{0};
     binaryStream >> vecSize;
@@ -244,11 +250,11 @@ void AivUbMemTransport::RmtBufferUnpackProc(Hccl::BinaryStream &binaryStream)
     }
 }
 
-HcclResult AivUbMemTransport::GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos)
+HcclResult AivUbMemTransport::GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos)
 {
     std::lock_guard<std::mutex> lock(remoteMemsMutex_);
-    Hccl::RemoteMemCtx<std::unique_ptr<Hccl::RemoteIpcRmaBuffer>> remoteMemCtx{cacheValid_, rmtBufferVec_,
-        remoteUserMems_, memInfoCopies_, memInfoPointers_, remoteMem, memInfos, memNum};
+    Hccl::RemoteMemCtx<std::unique_ptr<Hccl::RemoteIpcRmaBuffer>> remoteMemCtx{
+        cacheValid_, rmtBufferVec_, remoteUserMems_, memInfoCopies_, memInfoPointers_, remoteMem, memInfos, memNum};
     CHK_RET(GetRemoteUserMems(remoteMemCtx));
     return HCCL_SUCCESS;
 }
@@ -259,21 +265,25 @@ HcclResult AivUbMemTransport::CheckSocketStatus(std::string socketOperator)
     auto timeout = std::chrono::seconds(Hccl::EnvConfig::GetInstance().GetSocketConfig().GetLinkTimeOut());
     auto startTime = std::chrono::steady_clock::now();
     uint32_t retryCount = 0;
-    while(true) {
+    while (true) {
         EXCEPTION_HANDLE_BEGIN
         Hccl::SocketStatus socketStatus = socket_->GetAsyncStatus();
         if (socketStatus == Hccl::SocketStatus::OK) {
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - startTime).count();
-            HCCL_INFO("[AivUbMemTransport][%s] socket transport operation[%s] success, elapsed[%lld]ms, retryCount[%u]",
+            auto elapsed
+                = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime)
+                      .count();
+            HCCL_INFO(
+                "[AivUbMemTransport][%s] socket transport operation[%s] success, elapsed[%lld]ms, retryCount[%u]",
                 __func__, socketOperator.c_str(), elapsed, retryCount);
             break;
         }
-        if ((std::chrono::steady_clock::now() - startTime) >= timeout ||
-            socketStatus == Hccl::SocketStatus::TIMEOUT) {
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - startTime).count();
-            HCCL_ERROR("[AivUbMemTransport][%s] socket transport operation[%s] timeout after %lld sec, elapsed[%lld]ms, retryCount[%u]",
+        if ((std::chrono::steady_clock::now() - startTime) >= timeout || socketStatus == Hccl::SocketStatus::TIMEOUT) {
+            auto elapsed
+                = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime)
+                      .count();
+            HCCL_ERROR(
+                "[AivUbMemTransport][%s] socket transport operation[%s] timeout after %lld sec, elapsed[%lld]ms, "
+                "retryCount[%u]",
                 __func__, socketOperator.c_str(), timeout, elapsed, retryCount);
             return HCCL_E_TIMEOUT;
         }
@@ -283,7 +293,7 @@ HcclResult AivUbMemTransport::CheckSocketStatus(std::string socketOperator)
     return HCCL_SUCCESS;
 }
 
-HcclResult AivUbMemTransport::UpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum)
+HcclResult AivUbMemTransport::UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum)
 {
     if (memHandleNum == 0) {
         HCCL_WARNING("[AivUbMemTransport][UpdateMemInfo] bufferNum is 0.");
@@ -316,4 +326,4 @@ HcclResult AivUbMemTransport::UpdateMemInfo(HcommMemHandle *memHandles, uint32_t
     cacheValid_ = false;
     return HCCL_SUCCESS;
 }
-}
+} // namespace hcomm

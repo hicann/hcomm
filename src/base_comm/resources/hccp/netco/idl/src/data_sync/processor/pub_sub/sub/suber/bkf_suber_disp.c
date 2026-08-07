@@ -50,15 +50,12 @@ void BkfSuberDisp(BkfSuber *suber)
     BKF_DISP_PRINTF(disp, "Tmr(%#x)\n", BKF_MASK_ADDR(suber->env.tmrMng));
     BKF_DISP_PRINTF(disp, "Log(%#x)\n", BKF_MASK_ADDR(suber->env.log));
     BKF_DISP_PRINTF(disp, "msgLenMax(%d)\n", suber->env.msgLenMax);
-    BKF_DISP_PRINTF(disp, "JobMng(%#x)/jobTypeId1(%u)/jobPrioL(%u),JobPrioH(%u)\n",
-                    BKF_MASK_ADDR(suber->env.jobMng),
-                    suber->env.jobTypeId1,
-                    suber->env.jobPrioL, suber->env.jobPrioH);
+    BKF_DISP_PRINTF(disp, "JobMng(%#x)/jobTypeId1(%u)/jobPrioL(%u),JobPrioH(%u)\n", BKF_MASK_ADDR(suber->env.jobMng),
+        suber->env.jobTypeId1, suber->env.jobPrioL, suber->env.jobPrioH);
     BKF_DISP_PRINTF(disp, "Slice_keyLen(%u)/keyCmp(%#x)/keyGetStrOrNull(%#x)/keyCodec(%#x)\n",
-                    suber->env.sliceVTbl.keyLen, BKF_MASK_ADDR(suber->env.sliceVTbl.keyCmp),
-                    BKF_MASK_ADDR(suber->env.sliceVTbl.keyGetStrOrNull),
-                    BKF_MASK_ADDR(suber->env.sliceVTbl.keyCodec));
-    BKF_DISP_PRINTF(disp, "SeqNum(%"VOS_PRIu64")\n", suber->env.seeds);
+        suber->env.sliceVTbl.keyLen, BKF_MASK_ADDR(suber->env.sliceVTbl.keyCmp),
+        BKF_MASK_ADDR(suber->env.sliceVTbl.keyGetStrOrNull), BKF_MASK_ADDR(suber->env.sliceVTbl.keyCodec));
+    BKF_DISP_PRINTF(disp, "SeqNum(%" VOS_PRIu64 ")\n", suber->env.seeds);
 
     return;
 }
@@ -145,8 +142,7 @@ void BkfSuberDispInst(BkfSuber *suber)
     inst = BkfSuberDataGetFirstInst(suber->dataMng, &itor);
     while (inst != VOS_NULL) {
         cnt++;
-        BKF_DISP_PRINTF(disp, "%3u|%llu|%s\n", cnt, inst->instId, BkfUrlGetStr(&inst->puberUrl, buf,
-            sizeof(buf)));
+        BKF_DISP_PRINTF(disp, "%3u|%llu|%s\n", cnt, inst->instId, BkfUrlGetStr(&inst->puberUrl, buf, sizeof(buf)));
         inst = BkfSuberDataGetNextInst(suber->dataMng, &itor);
     }
 
@@ -239,7 +235,7 @@ void BkfSuberDispTestDelSvcInst(BkfSuber *suber, uint64_t instId)
 void BkfSuberDispInit(BkfSuber *suber)
 {
     BkfDisp *disp = suber->env.disp;
-    char *objName = (char*)suber->env.name;
+    char *objName = (char *)suber->env.name;
     uint32_t ret;
 
     ret = BkfDispRegObj(disp, objName, suber);
@@ -252,13 +248,13 @@ void BkfSuberDispInit(BkfSuber *suber)
     (void)BKF_DISP_REG_FUNC(disp, BkfSuberDispSlice, "disp suber slice", objName, 0);
     (void)BKF_DISP_REG_FUNC(disp, BkfSuberDispAppSub, "disp suber sess", objName, 0);
     (void)BKF_DISP_REG_FUNC(disp, BkfSuberDispInst, "disp suber inst", objName, 0);
-    (void)BKF_DISP_REG_TEST_FUNC(disp, BkfSuberDispTestUnSetInstUrl, "disp suber test unset inst url", objName, 1,\
+    (void)BKF_DISP_REG_TEST_FUNC(disp, BkfSuberDispTestUnSetInstUrl, "disp suber test unset inst url", objName, 1,
         "uniInstId");
-    (void)BKF_DISP_REG_TEST_FUNC(disp, BkfSuberDispTestSetInstUrl, "disp suber test set inst url", objName, BKF_NUM2,\
+    (void)BKF_DISP_REG_TEST_FUNC(disp, BkfSuberDispTestSetInstUrl, "disp suber test set inst url", objName, BKF_NUM2,
         "uniInstId", "pcUrlStr");
-    (void)BKF_DISP_REG_TEST_FUNC(disp, BkfSuberDispTestAddSvcInst, "disp suber test add svc inst", objName, 1,\
+    (void)BKF_DISP_REG_TEST_FUNC(disp, BkfSuberDispTestAddSvcInst, "disp suber test add svc inst", objName, 1,
         "uniInstId");
-    (void)BKF_DISP_REG_TEST_FUNC(disp, BkfSuberDispTestDelSvcInst, "disp suber test del svc inst", objName, 1,\
+    (void)BKF_DISP_REG_TEST_FUNC(disp, BkfSuberDispTestDelSvcInst, "disp suber test del svc inst", objName, 1,
         "uniInstId");
 }
 
@@ -291,4 +287,3 @@ char *BkfSuberGetSliceKeyStr(BkfSuberEnv *env, void *sliceKey, uint8_t *buf, int
 }
 #endif
 #endif
-

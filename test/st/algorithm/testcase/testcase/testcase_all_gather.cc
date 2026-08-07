@@ -24,29 +24,21 @@ using namespace checker;
 using namespace hccl;
 
 std::vector<string> allGatherAlgName = {
-    "AllGatherMeshExecutor",
-    "AllGatherMeshOpbaseExecutor",
-    "AllGatherMeshOpbasePipelineExecutor",
-    "AllGatherRingExecutor",
-    "AllGatherMeshAivFor91093Executor",
+    "AllGatherMeshExecutor", "AllGatherMeshOpbaseExecutor",      "AllGatherMeshOpbasePipelineExecutor",
+    "AllGatherRingExecutor", "AllGatherMeshAivFor91093Executor",
 };
 
 class AllGatherTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "AllGatherTest set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "AllGatherTest set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "AllGatherTest tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "AllGatherTest tear down." << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
         MOCKER(ExecuteKernelLaunch).stubs().will(returnValue(HCCL_SUCCESS));
     }
@@ -66,7 +58,7 @@ TEST_F(AllGatherTest, allgather_310P_opbase_AllGatherSlimRingExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -81,14 +73,13 @@ TEST_F(AllGatherTest, allgather_310P_opbase_AllGatherSlimRingExecutor)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-
 TEST_F(AllGatherTest, allgather_test)
 {
     RankTable_For_LLT gen;
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 2);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -106,7 +97,7 @@ TEST_F(AllGatherTest, allgather_test)
 TEST_F(AllGatherTest, allgather_test_loop)
 {
     RankTable_For_LLT gen;
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -133,7 +124,7 @@ TEST_F(AllGatherTest, allgather_offload_AllGatherMeshExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -154,7 +145,7 @@ TEST_F(AllGatherTest, allgather_offload_AllGatherMeshGraphExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 2, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -175,7 +166,7 @@ TEST_F(AllGatherTest, allgather_offload_3Server_AllGatherMeshGraphExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 3, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -196,7 +187,7 @@ TEST_F(AllGatherTest, allgather_offload_8Server_AllGatherMeshGraphExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 8, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -216,7 +207,7 @@ TEST_F(AllGatherTest, allgather_offload_2Server_AllGatherMeshGraphPipelineExecut
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 2, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -236,7 +227,7 @@ TEST_F(AllGatherTest, allgather_offload_3Server_AllGatherMeshGraphPipelineExecut
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 3, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -256,7 +247,7 @@ TEST_F(AllGatherTest, allgather_offload_AllGatherRingExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -278,7 +269,7 @@ TEST_F(AllGatherTest, allgather_executor_test_loop)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -303,9 +294,9 @@ TEST_F(AllGatherTest, allgather_executor_test_loop)
 TEST_F(AllGatherTest, allgather_AllGatherComm_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1}, {0, 1, 2}}};
+    TopoMeta topoMeta{{{0, 1}, {0, 1, 2}}};
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -327,7 +318,7 @@ TEST_F(AllGatherTest, allgather_AllGatherSingleExecutor_test)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGatherSingleExecutor";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -349,7 +340,7 @@ TEST_F(AllGatherTest, allgather_910A_offload_AllGatherMeshExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 4);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -370,7 +361,7 @@ TEST_F(AllGatherTest, allgather_910A_offload_AllGatherRingExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 2, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -388,9 +379,9 @@ TEST_F(AllGatherTest, allgather_910A_offload_AllGatherRingExecutor)
 TEST_F(AllGatherTest, allgather_910A_offload_AllGatherComm)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1}, {0, 1, 2}}};
+    TopoMeta topoMeta{{{0, 1}, {0, 1, 2}}};
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -411,7 +402,7 @@ TEST_F(AllGatherTest, allgather_910A_opbase_AllGatherMeshExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 4);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -432,7 +423,7 @@ TEST_F(AllGatherTest, allgather_910A_opbase_AllGatherRingExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 2, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -450,9 +441,9 @@ TEST_F(AllGatherTest, allgather_910A_opbase_AllGatherRingExecutor)
 TEST_F(AllGatherTest, allgather_910A_opbase_AllGatherComm)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1}, {0, 1, 2}}};
+    TopoMeta topoMeta{{{0, 1}, {0, 1, 2}}};
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -474,7 +465,7 @@ TEST_F(AllGatherTest, allgather_910A_opbase_AllGatherRingExecutor_NSLB)
     gen.GenTopoMeta(topoMeta, 1, 3, 8);
     setenv("HCCL_ALGO", "level0:ring;level1:H-D_R", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -495,7 +486,7 @@ TEST_F(AllGatherTest, allgather_910_93_opbase_AlignedAllGatherDoubleRingFor91093
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -516,7 +507,7 @@ TEST_F(AllGatherTest, allgather_910_93_offload_AlignedAllGatherDoubleRingFor9109
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -537,7 +528,7 @@ TEST_F(AllGatherTest, allgather_910_93_opbase_multiSuperPod_2_6_2_AllGatherRingF
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 2, 6, 2);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -557,7 +548,7 @@ TEST_F(AllGatherTest, allgather_910_93_opbase_multiSuperPod_4_3_2_AllGatherRingF
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 4, 3, 2);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -577,7 +568,7 @@ TEST_F(AllGatherTest, allgather_910_93_opbase_AllGatherRingFor91093Executor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -600,7 +591,7 @@ TEST_F(AllGatherTest, allgather_910_93_offload_AllGatherDoubleRingConcurrentExec
 
     setenv("HCCL_CONCURRENT_ENABLE", "1", 1);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -620,7 +611,7 @@ TEST_F(AllGatherTest, allgather_310P3_opbase_AllGatherFor310PExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -641,7 +632,7 @@ TEST_F(AllGatherTest, allgather_310P3_offload_AllGatherFor310PExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 8);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -662,7 +653,7 @@ TEST_F(AllGatherTest, allgather_smallcount_multiserver_test)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 2, 12);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -683,7 +674,7 @@ TEST_F(AllGatherTest, allgather_910_93_offload_AllGatherSemiRingExecutor_singleS
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 4);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -705,7 +696,7 @@ TEST_F(AllGatherTest, allgather_910_93_offload_AllGatherSemiRingExecutor_singleS
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 4);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -727,7 +718,7 @@ TEST_F(AllGatherTest, allgather_ax_4server_16p)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 4, 16);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -744,9 +735,9 @@ TEST_F(AllGatherTest, allgather_ax_4server_16p)
 TEST_F(AllGatherTest, allgather_superpod_asym_gcd)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}}};
+    TopoMeta topoMeta{{{0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}}};
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -763,9 +754,10 @@ TEST_F(AllGatherTest, allgather_superpod_asym_gcd)
 TEST_F(AllGatherTest, allgather_superpod_asym_gcd_graph)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1, 2}, {0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}}};
+    TopoMeta topoMeta{
+        {{0, 1, 2}, {0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}}};
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -782,9 +774,9 @@ TEST_F(AllGatherTest, allgather_superpod_asym_gcd_graph)
 TEST_F(AllGatherTest, allgather_mix_AllGatherMixExecutor)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1, 2}}, {{0, 1, 2, 3, 4, 5, 6, 7, 8}}};
+    TopoMeta topoMeta{{{0, 1, 2}}, {{0, 1, 2, 3, 4, 5, 6, 7, 8}}};
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -802,9 +794,9 @@ TEST_F(AllGatherTest, allgather_mix_AllGatherMixExecutor)
 TEST_F(AllGatherTest, allgather_mix_AllGatherMixExecutorComm)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0}}, {{0}}};
+    TopoMeta topoMeta{{{0}}, {{0}}};
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -827,7 +819,7 @@ TEST_F(AllGatherTest, allgather_aiv_a3_AllGatherVMeshAivExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 16);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -850,7 +842,7 @@ TEST_F(AllGatherTest, allgather_aiv_a3_AllGatherMeshAivFor91093Executor1)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 2, 16);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -874,11 +866,11 @@ TEST_F(AllGatherTest, allgather_aiv_a3_AllGatherMeshAivFor91093Executor2)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 2, 4);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
-    checkerOpParam.DataDes.count = 64*1024;
+    checkerOpParam.DataDes.count = 64 * 1024;
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_FP16;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_910_93;
     checkerOpParam.aicpuUnfoldMode = true;
@@ -896,7 +888,7 @@ TEST_F(AllGatherTest, allgather_AllGatherSmallCountExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 4, 4);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -912,14 +904,14 @@ TEST_F(AllGatherTest, allgather_AllGatherSmallCountExecutor)
 }
 TEST_F(AllGatherTest, allgather_AllGatherSmallCountExecutor_singleRank)
 {
-   // hccl::RankTable_t ranktable;
+    // hccl::RankTable_t ranktable;
     RankTable_For_LLT gen;
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 4, 3);
     CheckerOpParam testOpParam;
     testOpParam.opType = CheckerOpType::ALLGATHER;
     testOpParam.tag = "AllGather";
-    testOpParam.opMode =  CheckerOpMode::OPBASE;
+    testOpParam.opMode = CheckerOpMode::OPBASE;
     testOpParam.DataDes.count = 100;
     testOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_INT8;
     testOpParam.devtype = CheckerDevType::DEV_TYPE_910_93;
@@ -960,7 +952,7 @@ TEST_F(AllGatherTest, allgather_AllGatherAivRdmaExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 1, 16);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -981,7 +973,7 @@ TEST_F(AllGatherTest, allgather_AllGatherRingFor91093Executor_NHR)
     gen.GenTopoMeta(topoMeta, 2, 2, 8);
 
     setenv("HCCL_ALGO", "level0:NA;level1:NHR;level2:NHR", 1);
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1003,7 +995,7 @@ TEST_F(AllGatherTest, allgather_AllGatherRingFor91093Executor_NB)
     gen.GenTopoMeta(topoMeta, 2, 2, 8);
 
     setenv("HCCL_ALGO", "level0:NA;level1:NB;level2:NB", 1);
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1025,7 +1017,7 @@ TEST_F(AllGatherTest, allgather_A3_2Server1Rank_nb_test)
     gen.GenTopoMeta(topoMeta, 1, 2, 1);
 
     setenv("HCCL_ALGO", "level0:NA;level1:NB", 1);
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OFFLOAD;
@@ -1062,7 +1054,7 @@ TEST_F(AllGatherTest, allgather_A3_2Die_HccsSio_opbase_test)
 TEST_F(AllGatherTest, allgather_A3_2Die_HccsSio_offload_test)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1}}};
+    TopoMeta topoMeta{{{0, 1}}};
 
     CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
@@ -1137,7 +1129,7 @@ TEST_F(AllGatherTest, allgather_AllGatherMeshAivExecutor)
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
-    checkerOpParam.DataDes.count = 16*1024*1024;
+    checkerOpParam.DataDes.count = 16 * 1024 * 1024;
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_INT8;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_910B;
     checkerOpParam.algName = "AllGatherMeshAivExecutor";
@@ -1199,7 +1191,7 @@ TEST_F(AllGatherTest, allgather_aiv_a3_AllGatherMeshAivSmallCountExecutor)
     TopoMeta topoMeta;
     gen.GenTopoMeta(topoMeta, 1, 2, 4);
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
@@ -1215,7 +1207,6 @@ TEST_F(AllGatherTest, allgather_aiv_a3_AllGatherMeshAivSmallCountExecutor)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-
 TEST_F(AllGatherTest, allgather_91093_AllGathermidcountExecutor)
 {
     RankTable_For_LLT gen;
@@ -1226,7 +1217,7 @@ TEST_F(AllGatherTest, allgather_91093_AllGathermidcountExecutor)
     checkerOpParam.opType = CheckerOpType::ALLGATHER;
     checkerOpParam.tag = "AllGather";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;
-    checkerOpParam.DataDes.count = 1024 * 1024;  // 64K
+    checkerOpParam.DataDes.count = 1024 * 1024; // 64K
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_INT8;
     checkerOpParam.devtype = CheckerDevType::DEV_TYPE_910_93;
     checkerOpParam.algName = "AllGatherMidCountFor91093Executor";

@@ -24,41 +24,41 @@
 namespace HcclSim {
 namespace BigGraphCheckV3 {
 
-struct OperatorRankData {
-    uint32_t rankId{UINT32_MAX};
-    sim::CompositeOpDetail op;
-    std::vector<HcclTaskMetaData> taskMetas;
-};
+    struct OperatorRankData {
+        uint32_t rankId{UINT32_MAX};
+        sim::CompositeOpDetail op;
+        std::vector<HcclTaskMetaData> taskMetas;
+    };
 
-struct OpParam {
-    TaskGraphGeneratorV3::OperatorId operatorId{TaskGraphGeneratorV3::INVALID_OPERATOR_ID};
-    uint32_t syncIter{0};
-    uint32_t opIter{0};
-    std::vector<OperatorRankData> ranks;
-};
+    struct OpParam {
+        TaskGraphGeneratorV3::OperatorId operatorId{TaskGraphGeneratorV3::INVALID_OPERATOR_ID};
+        uint32_t syncIter{0};
+        uint32_t opIter{0};
+        std::vector<OperatorRankData> ranks;
+    };
 
-struct BigGraphData {
-    uint32_t syncIter{0};
-    std::vector<sim::CcuChannelTab> channels;
-    std::vector<sim::CcuInstrResTab> instrRes;
-    std::vector<OpParam> operators;
+    struct BigGraphData {
+        uint32_t syncIter{0};
+        std::vector<sim::CcuChannelTab> channels;
+        std::vector<sim::CcuInstrResTab> instrRes;
+        std::vector<OpParam> operators;
 
-    void Clear()
-    {
-        syncIter = 0;
-        channels.clear();
-        instrRes.clear();
-        operators.clear();
-    }
-};
+        void Clear()
+        {
+            syncIter = 0;
+            channels.clear();
+            instrRes.clear();
+            operators.clear();
+        }
+    };
 
-class BigGraphDataLoader {
-public:
-    HcclResult Load(loader::Loader &loader, uint32_t syncIter, BigGraphData &data) const;
+    class BigGraphDataLoader {
+    public:
+        HcclResult Load(loader::Loader& loader, uint32_t syncIter, BigGraphData& data) const;
 
-private:
-    static HcclResult DecodeTaskMeta(const sim::OpTaskTab &task, HcclTaskMetaData &taskMeta);
-};
+    private:
+        static HcclResult DecodeTaskMeta(const sim::OpTaskTab& task, HcclTaskMetaData& taskMeta);
+    };
 
 } // namespace BigGraphCheckV3
 } // namespace HcclSim

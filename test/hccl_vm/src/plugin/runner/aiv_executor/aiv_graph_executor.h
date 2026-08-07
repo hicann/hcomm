@@ -66,8 +66,10 @@ private:
     HcclSim::HcclVmResult ExecuteTask(std::shared_ptr<AivSim::AivTaskRecvFlag> task);
     HcclSim::HcclVmResult ExecuteTask(std::shared_ptr<AivSim::AivTaskSyncAll> task);
 
-    template <typename T,
-              typename = std::enable_if_t<std::is_same_v<T, AivSim::AivTaskMemCopy> || std::is_same_v<T, AivSim::AivTaskReduce>>>
+    template <
+        typename T,
+        typename
+        = std::enable_if_t<std::is_same_v<T, AivSim::AivTaskMemCopy> || std::is_same_v<T, AivSim::AivTaskReduce>>>
     void* GetMemPtr(std::shared_ptr<T> task, bool isSrc);
 
     template <typename T>
@@ -91,4 +93,4 @@ private:
     size_t curQueueIdx_{0}; // 当前执行的Task队列
 };
 
-#endif //AIV_AIVGRAPHEXECUTOR_H
+#endif // AIV_AIVGRAPHEXECUTOR_H

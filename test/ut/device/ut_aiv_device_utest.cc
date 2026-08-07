@@ -28,19 +28,10 @@ using namespace hccl;
 
 class Aiv_Device_UT : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "Aiv_Device_UT SetUP" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "Aiv_Device_UT TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "Aiv_Device_UT SetUP" << std::endl; }
+    static void TearDownTestCase() { std::cout << "Aiv_Device_UT TearDown" << std::endl; }
     // Some expensive resource shared by all tests.
-    virtual void SetUp()
-    {
-        std::cout << "A Test SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test SetUP" << std::endl; }
     virtual void TearDown()
     {
         GlobalMockObject::verify();
@@ -48,20 +39,21 @@ protected:
     }
 };
 
-TEST_F(Aiv_Device_UT, AivDeviceTest) {
+TEST_F(Aiv_Device_UT, AivDeviceTest)
+{
     AivProfilingInfo aivProInfo;
     uint64_t beginTime = 0;
     SetAivProfilingInfoBeginTime(beginTime);
     SetAivProfilingInfoBeginTime(aivProInfo);
 }
 
-TEST_F(Aiv_Device_UT, AlltoallExecutorDeviceTest) {
-    MOCKER_CPP(&CollAlltoAllExecutor::SetParallelTaskLoader)
-    .stubs()
-    .will(returnValue(HCCL_SUCCESS));
+TEST_F(Aiv_Device_UT, AlltoallExecutorDeviceTest)
+{
+    MOCKER_CPP(&CollAlltoAllExecutor::SetParallelTaskLoader).stubs().will(returnValue(HCCL_SUCCESS));
 }
 
-TEST_F(Aiv_Device_UT, CommDeviceTest) {
+TEST_F(Aiv_Device_UT, CommDeviceTest)
+{
     hcclComm comm;
     comm.RegistTaskAbortHandler();
     comm.UnRegistTaskAbortHandler();
@@ -70,7 +62,8 @@ TEST_F(Aiv_Device_UT, CommDeviceTest) {
     comm.DeinitOneSidedService();
 }
 
-TEST_F(Aiv_Device_UT, PluginRunnerDeviceTest) {
+TEST_F(Aiv_Device_UT, PluginRunnerDeviceTest)
+{
     u32 deviceLogicId = 0;
     TaskExceptionHandler taskExceptionHandler(deviceLogicId);
     PluginRunner pluginRunner(&taskExceptionHandler);
@@ -79,11 +72,12 @@ TEST_F(Aiv_Device_UT, PluginRunnerDeviceTest) {
     pluginRunner.isStreamCapture(stream, isCapture);
 }
 
-TEST_F(Aiv_Device_UT, AlgDeviceTest) {
+TEST_F(Aiv_Device_UT, AlgDeviceTest)
+{
     CCLBufferManager cclBufferManager;
     HcclDispatcher dispatcher = nullptr;
     HcclDispatcher vDispatcher = nullptr;
-    HcclAlg *alg = new HcclAlg(cclBufferManager, dispatcher, vDispatcher);
+    HcclAlg* alg = new HcclAlg(cclBufferManager, dispatcher, vDispatcher);
 
     std::unique_ptr<WorkspaceResource> workSpaceRes = nullptr;
     std::unique_ptr<NotifyPool> notifyPool = nullptr;
@@ -137,7 +131,7 @@ TEST_F(Aiv_Device_UT, AlgDeviceTest) {
     alg->InitTopoInfo(topoInfo, topoAttr);
     HcclAlgoInfo algoInfo;
     alg->InitAlgoInfo(algoInfo, algoAttr);
-#ifndef OPEN_HCCL_TEST  // 以下测试方法需对pimpl_做初始化才能调用 hccl_alg.cc中的Init方法受此宏控制
+#ifndef OPEN_HCCL_TEST // 以下测试方法需对pimpl_做初始化才能调用 hccl_alg.cc中的Init方法受此宏控制
     alg->ReleaseCommInfos();
     std::string tag = "alg";
     Stream stream;

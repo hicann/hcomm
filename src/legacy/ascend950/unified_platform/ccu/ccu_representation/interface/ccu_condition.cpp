@@ -18,42 +18,33 @@
 namespace Hccl {
 namespace CcuRep {
 
-Condition::Condition(CcuRepContext *context, CcuRelationalOperator<Variable, uint64_t> rel) : context(context)
-{
-    std::string label = "Condition";
-    endLabel          = std::make_shared<CcuRepJumpLabel>(label);
-    Variable tmp;
-    auto ret = CreateVariable(context, tmp);
-    if (ret != HcclResult::HCCL_SUCCESS) {
-        THROW<CcuApiException>("CreateVariable failed!");
+    Condition::Condition(CcuRepContext* context, CcuRelationalOperator<Variable, uint64_t> rel) : context(context)
+    {
+        std::string label = "Condition";
+        endLabel = std::make_shared<CcuRepJumpLabel>(label);
+        Variable tmp;
+        auto ret = CreateVariable(context, tmp);
+        if (ret != HcclResult::HCCL_SUCCESS) {
+            THROW<CcuApiException>("CreateVariable failed!");
+        }
+        // 当传入条件为真时, 执行Block, 对应不执行Jump
+        if (rel.type == CcuRelationalOperatorType::NOT_EQUAL) {
+            jump = std::make_shared<CcuRepJumpEQ>(label, tmp, rel.lhs, rel.rhs);
+        } else if (rel.type == CcuRelationalOperatorType::EQUAL) {
+            jump = std::make_shared<CcuRepJumpNE>(label, tmp, rel.lhs, rel.rhs);
+        } else {
+            THROW<CcuApiException>("Unsupported relational operation");
+        }
+        jump->Reference(endLabel);
+
+        AppendToContext(context, jump);
     }
-    // 当传入条件为真时, 执行Block, 对应不执行Jump
-    if (rel.type == CcuRelationalOperatorType::NOT_EQUAL) {
-        jump = std::make_shared<CcuRepJumpEQ>(label, tmp, rel.lhs, rel.rhs);
-    } else if (rel.type == CcuRelationalOperatorType::EQUAL) {
-        jump = std::make_shared<CcuRepJumpNE>(label, tmp, rel.lhs, rel.rhs);
-    } else {
-        THROW<CcuApiException>("Unsupported relational operation");
-    }
-    jump->Reference(endLabel);
 
-    AppendToContext(context, jump);
-}
+    Condition::~Condition() { DECTOR_TRY_CATCH("Condition", AppendToContext(context, endLabel)); }
 
-Condition::~Condition()
-{
-    DECTOR_TRY_CATCH("Condition", AppendToContext(context, endLabel));
-}
+    bool Condition::Check() const { return !isExecuted; }
 
-bool Condition::Check() const
-{
-    return !isExecuted;
-}
-
-void Condition::Run()
-{
-    isExecuted = true;
-}
+    void Condition::Run() { isExecuted = true; }
 
 }; // namespace CcuRep
 }; // namespace Hccl

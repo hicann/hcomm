@@ -17,20 +17,21 @@
 #include "aiv_reduce_scatter_v_910b_middata.h"
 #include "aiv_reduce_scatter_v_910b_bigdata.h"
 
-#define AIV_REDUCE_SCATTER_V_KERNEL_BATCH_DEF(type) \
-extern "C" __global__ __aicore__ void aiv_reduce_scatter_v_##type(EXTERN_KERNEL_ARGS_DEF) { \
-    AIV_INFO_HINT; \
-    if (extraArgs.maxCount * sizeof(type) > AIV_REDUCE_SCATTER_MID_SIZE) { \
-        return aiv_reduce_scatter_v_910b_bigdata<type>(EXTERN_KERNEL_ARGS_CALL); \
-    } else if (extraArgs.maxCount * sizeof(type) > UB_MAX_DATA_SIZE) { \
-        return aiv_reduce_scatter_v_910b_middata<type>(EXTERN_KERNEL_ARGS_CALL); \
-    } else  { \
-        return aiv_reduce_scatter_v_910b_smalldata<type>(EXTERN_KERNEL_ARGS_CALL); \
-    } \
-} \
-EXPORT_AIV_META_INFO(aiv_reduce_scatter_v_##type)
+#define AIV_REDUCE_SCATTER_V_KERNEL_BATCH_DEF(type)                                           \
+    extern "C" __global__ __aicore__ void aiv_reduce_scatter_v_##type(EXTERN_KERNEL_ARGS_DEF) \
+    {                                                                                         \
+        AIV_INFO_HINT;                                                                        \
+        if (extraArgs.maxCount * sizeof(type) > AIV_REDUCE_SCATTER_MID_SIZE) {                \
+            return aiv_reduce_scatter_v_910b_bigdata<type>(EXTERN_KERNEL_ARGS_CALL);          \
+        } else if (extraArgs.maxCount * sizeof(type) > UB_MAX_DATA_SIZE) {                    \
+            return aiv_reduce_scatter_v_910b_middata<type>(EXTERN_KERNEL_ARGS_CALL);          \
+        } else {                                                                              \
+            return aiv_reduce_scatter_v_910b_smalldata<type>(EXTERN_KERNEL_ARGS_CALL);        \
+        }                                                                                     \
+    }                                                                                         \
+    EXPORT_AIV_META_INFO(aiv_reduce_scatter_v_##type)
 
 // 定义算子各数据类型Kernel入口
 AIV_ATOMIC_DATA_TYPE_DEF(AIV_REDUCE_SCATTER_V_KERNEL_BATCH_DEF);
 
-#endif  /* AIV_REDUCE_SCATTER_V_OP_H */
+#endif /* AIV_REDUCE_SCATTER_V_OP_H */

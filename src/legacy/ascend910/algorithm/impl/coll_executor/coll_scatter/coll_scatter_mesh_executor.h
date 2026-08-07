@@ -19,19 +19,20 @@ namespace hccl {
 // 所有 Scatter Executor 的基类，继承自 NativeExecutor
 class CollScatterMeshExecutor : public CollScatterExecutor {
 public:
-    explicit CollScatterMeshExecutor(const HcclDispatcher dispatcher,
-                                std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollScatterMeshExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollScatterMeshExecutor() override = default;
+
 protected:
     /* *************** 资源计算 *************** */
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType,
-        TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
 
     HcclResult CalcStreamNum(u32& streamNum) override;
 
     /* *************** 算法编排 *************** */
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
+
 private:
 };
 

@@ -33,17 +33,14 @@ struct MemMgrCacheKey {
     Hccl::IpAddress ip{};
     Hccl::PortDeploymentType portType{Hccl::PortDeploymentType::HOST_NET};
 
-    bool operator==(const MemMgrCacheKey &other) const
+    bool operator==(const MemMgrCacheKey& other) const
     {
-        return devPhyId == other.devPhyId &&
-               protocol == other.protocol &&
-               ip == other.ip &&
-               portType == other.portType;
+        return devPhyId == other.devPhyId && protocol == other.protocol && ip == other.ip && portType == other.portType;
     }
 };
 
 struct MemMgrCacheKeyHash {
-    size_t operator()(const MemMgrCacheKey &k) const
+    size_t operator()(const MemMgrCacheKey& k) const
     {
         return Hccl::HashCombine({
             std::hash<u32>{}(k.devPhyId),
@@ -57,8 +54,8 @@ struct MemMgrCacheKeyHash {
 // 由 endpointDesc.loc.locType 推导 PortDeploymentType
 inline Hccl::PortDeploymentType LocTypeToPortType(EndpointLocType locType)
 {
-    return (locType == ENDPOINT_LOC_TYPE_DEVICE) ? Hccl::PortDeploymentType::DEV_NET
-                                                  : Hccl::PortDeploymentType::HOST_NET;
+    return (locType == ENDPOINT_LOC_TYPE_DEVICE) ? Hccl::PortDeploymentType::DEV_NET :
+                                                   Hccl::PortDeploymentType::HOST_NET;
 }
 
 struct MemMgrEntry {
@@ -68,21 +65,21 @@ struct MemMgrEntry {
 
 class ProcRegedMemMgrCache {
 public:
-    static ProcRegedMemMgrCache &GetInstance()
+    static ProcRegedMemMgrCache& GetInstance()
     {
         static ProcRegedMemMgrCache instance;
         return instance;
     }
 
     // hit: refCount++ 返已有 shared_ptr; miss: 调 creator() 建实例 insert refCount=1
-    std::shared_ptr<RegedMemMgr> GetOrCreate(const MemMgrCacheKey &key,
-        std::function<std::shared_ptr<RegedMemMgr>()> creator);
+    std::shared_ptr<RegedMemMgr>
+    GetOrCreate(const MemMgrCacheKey& key, std::function<std::shared_ptr<RegedMemMgr>()> creator);
 
     // refCount--, 归 0 则 erase cacheMap_ 条目
-    void Release(const MemMgrCacheKey &key);
+    void Release(const MemMgrCacheKey& key);
 
-    ProcRegedMemMgrCache(const ProcRegedMemMgrCache &) = delete;
-    ProcRegedMemMgrCache &operator=(const ProcRegedMemMgrCache &) = delete;
+    ProcRegedMemMgrCache(const ProcRegedMemMgrCache&) = delete;
+    ProcRegedMemMgrCache& operator=(const ProcRegedMemMgrCache&) = delete;
 
 private:
     ProcRegedMemMgrCache() = default;

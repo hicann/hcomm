@@ -37,30 +37,26 @@ typedef decltype(EndpointLoc::device) EndpointDeviceLoc;
 
 class AicpuTsRoceChannelV2 final : public Channel {
 public:
-    MAKE_ENUM(RdmaStatus, INIT, SOCKET_OK, QP_CREATED,  DATA_EXCHANGE, QP_MODIFIED, CONN_OK)
+    MAKE_ENUM(RdmaStatus, INIT, SOCKET_OK, QP_CREATED, DATA_EXCHANGE, QP_MODIFIED, CONN_OK)
 
     AicpuTsRoceChannelV2(EndpointHandle endpointHandle, HcommChannelDesc channelDesc, CommEngine engine);
     ~AicpuTsRoceChannelV2() override;
 
     HcclResult Init() override;
-    HcclResult GetNotifyNum(uint32_t *notifyNum) const override;
-    HcclResult GetBufferNum(uint32_t *bufferNum) const;
-    HcclResult GetQpNum(uint32_t *qpNum) const;
-    HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos) override;
+    HcclResult GetNotifyNum(uint32_t* notifyNum) const override;
+    HcclResult GetBufferNum(uint32_t* bufferNum) const;
+    HcclResult GetQpNum(uint32_t* qpNum) const;
+    HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos) override;
     ChannelStatus GetStatus() override;
-    HcclResult GetStatus(ChannelStatus &status);
+    HcclResult GetStatus(ChannelStatus& status);
     HcclResult ProcessStatus();
     HcommChannelKind GetChannelKind() const override;
     const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
 
     std::string Describe() const;
 
-    CommEngine GetCommEngine() const {
-        return engine_;
-    }
-    CommProtocol GetCommProtocol() const {
-        return channelDesc_.remoteEndpoint.protocol;
-    }
+    CommEngine GetCommEngine() const { return engine_; }
+    CommProtocol GetCommProtocol() const { return channelDesc_.remoteEndpoint.protocol; }
 
     HcclResult BuildAndGetDevChannelEntity(uint64_t* devChannelEntityPtr);
     HcclResult PreAllocDevChannelEntity(uint64_t* devChannelEntityPtr);
@@ -68,19 +64,22 @@ public:
 
     HcclResult H2DResPack(std::vector<char>& buffer);
 
-    HcclResult Serialize(std::shared_ptr<hccl::DeviceMem> &out) override;
+    HcclResult Serialize(std::shared_ptr<hccl::DeviceMem>& out) override;
 
     HcclResult Clean() override;
     HcclResult Resume() override;
 
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override { return HCCL_SUCCESS; }
     HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) override { return HCCL_SUCCESS; }
-    HcclResult WriteWithNotify(void *dst, const void *src, const uint64_t len, uint32_t remoteNotifyIdx) override { return HCCL_SUCCESS; }
-    HcclResult Write(void *dst, const void *src, uint64_t len) override { return HCCL_SUCCESS; }
-    HcclResult Read(void *dst, const void *src, uint64_t len) override { return HCCL_SUCCESS; }
+    HcclResult WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx) override
+    {
+        return HCCL_SUCCESS;
+    }
+    HcclResult Write(void* dst, const void* src, uint64_t len) override { return HCCL_SUCCESS; }
+    HcclResult Read(void* dst, const void* src, uint64_t len) override { return HCCL_SUCCESS; }
     HcclResult ChannelFence() override { return HCCL_SUCCESS; }
 
-    AicpuTsChannelHelper *GetAicpuTsHelper() override { return &aicpuTsHelper_; }
+    AicpuTsChannelHelper* GetAicpuTsHelper() override { return &aicpuTsHelper_; }
 
 private:
     AicpuTsChannelHelper aicpuTsHelper_;
@@ -97,13 +96,13 @@ private:
     HcclResult ExchangeData();
     HcclResult ModifyQp();
 
-    void NotifyVecPack(Hccl::BinaryStream &binaryStream);
-    HcclResult BufferVecPack(Hccl::BinaryStream &binaryStream);
-    HcclResult ConnVecPack(Hccl::BinaryStream &binaryStream);
+    void NotifyVecPack(Hccl::BinaryStream& binaryStream);
+    HcclResult BufferVecPack(Hccl::BinaryStream& binaryStream);
+    HcclResult ConnVecPack(Hccl::BinaryStream& binaryStream);
 
-    HcclResult NotifyVecUnpack(Hccl::BinaryStream &binaryStream);
-    HcclResult RmtBufferVecUnpackProc(Hccl::BinaryStream &binaryStream);
-    HcclResult ConnVecUnpackProc(Hccl::BinaryStream &binaryStream);
+    HcclResult NotifyVecUnpack(Hccl::BinaryStream& binaryStream);
+    HcclResult RmtBufferVecUnpackProc(Hccl::BinaryStream& binaryStream);
+    HcclResult ConnVecUnpackProc(Hccl::BinaryStream& binaryStream);
 
     HcclResult BuildAndGetLocNotifyInfo(RegedNotifyEntity** notify);
     HcclResult BuildAndGetRmtNotifyInfo(RegedNotifyEntity** notify);
@@ -111,9 +110,9 @@ private:
     HcclResult BuildAndGetLocBufInfo(std::vector<RegedBufferEntity>& bufList, RegedBufferEntity** bufferEntityPtr);
     HcclResult BuildAndGetSqContext(std::vector<SqContext>& sqList, SqContext** sqContextPtr);
     HcclResult BuildAndGetCqContext(std::vector<CqContext>& cqList, CqContext** cqContextPtr);
-    HcclResult BuildHostEntity(ChannelEntity &hostEntity,
-        std::vector<RegedBufferEntity> &locBufList, std::vector<RegedBufferEntity> &rmtBufList,
-        std::vector<SqContext> &sqList, std::vector<CqContext> &cqList);
+    HcclResult BuildHostEntity(
+        ChannelEntity& hostEntity, std::vector<RegedBufferEntity>& locBufList,
+        std::vector<RegedBufferEntity>& rmtBufList, std::vector<SqContext>& sqList, std::vector<CqContext>& cqList);
 
     void FreeDeviceMemories();
     void ReleaseDeviceEntitySlab();
@@ -126,7 +125,7 @@ private:
     std::vector<char> GetSingleRmaBufferUniqueId(u64 addr, u64 size, u32 key) const;
     std::vector<char> GetConnUniqueIds() const;
     std::vector<char> GetUniqueId() const;
-    HcclResult PackOpData(std::vector<char> &data) const;
+    HcclResult PackOpData(std::vector<char>& data) const;
 
     // 入参
     EndpointHandle endpointHandle_;
@@ -137,31 +136,31 @@ private:
     EndpointDesc localEp_;
     EndpointDesc remoteEp_;
     uint32_t notifyNum_{0};
-    Hccl::Socket*                                           socket_{nullptr};
-    const Hccl::SocketConfig*                               socketConfig_{nullptr};
-    RdmaHandle                                              rdmaHandle_{nullptr};
-    uint32_t                                                devicePhyId_{};
+    Hccl::Socket* socket_{nullptr};
+    const Hccl::SocketConfig* socketConfig_{nullptr};
+    RdmaHandle rdmaHandle_{nullptr};
+    uint32_t devicePhyId_{};
 
-    std::vector<std::unique_ptr<DevRdmaConnectionV2>>         connections_{};
-    std::vector<Hccl::LocalRdmaRmaBuffer *>                 localRmaBuffers_{};
-    std::vector<std::unique_ptr<Hccl::RdmaLocalNotify>>     localNotifies_{};
-    std::shared_ptr<Hccl::DevBuffer>                        notifyValueMem_{nullptr};
-    std::unique_ptr<Hccl::LocalRdmaRmaBuffer>               notifyValueBuffer_{nullptr};
-    uint32_t                                                bufferNum_{0};
-    uint32_t                                                connNum_{0};
-    ChannelStatus                                           channelStatus_{ChannelStatus::INIT};
-    RdmaStatus                                              rdmaStatus_{RdmaStatus::INIT};
+    std::vector<std::unique_ptr<DevRdmaConnectionV2>> connections_{};
+    std::vector<Hccl::LocalRdmaRmaBuffer*> localRmaBuffers_{};
+    std::vector<std::unique_ptr<Hccl::RdmaLocalNotify>> localNotifies_{};
+    std::shared_ptr<Hccl::DevBuffer> notifyValueMem_{nullptr};
+    std::unique_ptr<Hccl::LocalRdmaRmaBuffer> notifyValueBuffer_{nullptr};
+    uint32_t bufferNum_{0};
+    uint32_t connNum_{0};
+    ChannelStatus channelStatus_{ChannelStatus::INIT};
+    RdmaStatus rdmaStatus_{RdmaStatus::INIT};
     std::vector<std::unique_ptr<Hccl::RemoteRdmaRmaBuffer>> remoteNotifies_{};
     std::vector<std::unique_ptr<Hccl::RemoteRdmaRmaBuffer>> rmtRmaBuffers_{};
-    ExchangeRdmaConnDto                                     rmtConnDto_;
-    std::mutex                                              remoteMemsMutex_{};
-    std::vector<CommMem>                                    remoteUserMems_{};
-    std::vector<std::string>                                memInfoCopies_{};
-    std::vector<char*>                                      memInfoPointers_{};
-    bool                                                    cacheValid_{false};
+    ExchangeRdmaConnDto rmtConnDto_;
+    std::mutex remoteMemsMutex_{};
+    std::vector<CommMem> remoteUserMems_{};
+    std::vector<std::string> memInfoCopies_{};
+    std::vector<char*> memInfoPointers_{};
+    bool cacheValid_{false};
 
-    void *                                                devChannelEntitySlab_{nullptr};
-    size_t                                                devChannelEntitySlabSize_{0};
+    void* devChannelEntitySlab_{nullptr};
+    size_t devChannelEntitySlabSize_{0};
 };
 
 } // namespace hcomm

@@ -32,15 +32,14 @@ int RaHdcGetDevEidInfoNum(struct RaInfo info, unsigned int *num)
     opData.txData.phyId = info.phyId;
     ret = RaHdcProcessMsg(RA_RS_GET_DEV_EID_INFO_NUM, info.phyId, (char *)&opData,
         sizeof(union OpGetDevEidInfoNumData));
-    CHK_PRT_RETURN(ret != 0, hccp_err("[get][eid]hdc message process failed ret[%d], phyId[%u]",
-        ret, info.phyId), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("[get][eid]hdc message process failed ret[%d], phyId[%u]", ret, info.phyId), ret);
 
     *num = opData.rxData.num;
     return 0;
 }
 
-STATIC int RaHdcGetDevEidSubInfoList(unsigned int phyId, struct HccpDevEidInfo infoList[],
-    unsigned int startIndex, unsigned int count)
+STATIC int RaHdcGetDevEidSubInfoList(unsigned int phyId, struct HccpDevEidInfo infoList[], unsigned int startIndex,
+    unsigned int count)
 {
     union OpGetDevEidInfoListData opData = {0};
     int ret;
@@ -48,12 +47,11 @@ STATIC int RaHdcGetDevEidSubInfoList(unsigned int phyId, struct HccpDevEidInfo i
     opData.txData.phyId = phyId;
     opData.txData.startIndex = startIndex;
     opData.txData.count = count;
-    ret = RaHdcProcessMsg(RA_RS_GET_DEV_EID_INFO_LIST, phyId, (char *)&opData,
-        sizeof(union OpGetDevEidInfoListData));
+    ret = RaHdcProcessMsg(RA_RS_GET_DEV_EID_INFO_LIST, phyId, (char *)&opData, sizeof(union OpGetDevEidInfoListData));
     CHK_PRT_RETURN(ret, hccp_err("[get][eid]hdc message process failed ret[%d], phyId[%u]", ret, phyId), ret);
 
-    (void)memcpy_s(infoList, sizeof(struct HccpDevEidInfo) * MAX_DEV_INFO_TRANS_NUM,
-        opData.rxData.infoList, sizeof(struct HccpDevEidInfo) * MAX_DEV_INFO_TRANS_NUM);
+    (void)memcpy_s(infoList, sizeof(struct HccpDevEidInfo) * MAX_DEV_INFO_TRANS_NUM, opData.rxData.infoList,
+        sizeof(struct HccpDevEidInfo) * MAX_DEV_INFO_TRANS_NUM);
     return 0;
 }
 
@@ -69,12 +67,15 @@ int RaHdcGetDevEidInfoList(unsigned int phyId, struct HccpDevEidInfo infoList[],
     // get MAX_DEV_INFO_TRANS_NUM num of eid info every time: will fallthrough here
     for (startIndex = 0; startIndex + MAX_DEV_INFO_TRANS_NUM <= infoSize; startIndex += MAX_DEV_INFO_TRANS_NUM) {
         ret = RaHdcGetDevEidSubInfoList(phyId, subInfoList, startIndex, MAX_DEV_INFO_TRANS_NUM);
-        CHK_PRT_RETURN(ret != 0, hccp_err("[get][eid]get sub_info_list failed, ret(%d) phyId(%u) "
-            "startIndex(%u) count(%d)", ret, phyId, startIndex, MAX_DEV_INFO_TRANS_NUM), ret);
+        CHK_PRT_RETURN(ret != 0,
+            hccp_err("[get][eid]get sub_info_list failed, ret(%d) phyId(%u) "
+                     "startIndex(%u) count(%d)",
+                ret, phyId, startIndex, MAX_DEV_INFO_TRANS_NUM),
+            ret);
 
         *num += MAX_DEV_INFO_TRANS_NUM;
-        (void)memcpy_s(infoList + startIndex, sizeof(struct HccpDevEidInfo) * MAX_DEV_INFO_TRANS_NUM,
-            subInfoList, sizeof(struct HccpDevEidInfo) * MAX_DEV_INFO_TRANS_NUM);
+        (void)memcpy_s(infoList + startIndex, sizeof(struct HccpDevEidInfo) * MAX_DEV_INFO_TRANS_NUM, subInfoList,
+            sizeof(struct HccpDevEidInfo) * MAX_DEV_INFO_TRANS_NUM);
     }
 
     remainCount = infoSize % MAX_DEV_INFO_TRANS_NUM;
@@ -84,12 +85,15 @@ int RaHdcGetDevEidInfoList(unsigned int phyId, struct HccpDevEidInfo infoList[],
 
     // get remain count of eid info
     ret = RaHdcGetDevEidSubInfoList(phyId, subInfoList, startIndex, remainCount);
-    CHK_PRT_RETURN(ret != 0, hccp_err("[get][eid]get sub_info_list failed, ret(%d) phyId(%u) "
-        "startIndex(%u) remainCount(%u)", ret, phyId, startIndex, remainCount), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[get][eid]get sub_info_list failed, ret(%d) phyId(%u) "
+                 "startIndex(%u) remainCount(%u)",
+            ret, phyId, startIndex, remainCount),
+        ret);
 
     *num += remainCount;
-    (void)memcpy_s(infoList + startIndex, sizeof(struct HccpDevEidInfo) * remainCount,
-        subInfoList, sizeof(struct HccpDevEidInfo) * remainCount);
+    (void)memcpy_s(infoList + startIndex, sizeof(struct HccpDevEidInfo) * remainCount, subInfoList,
+        sizeof(struct HccpDevEidInfo) * remainCount);
     return ret;
 }
 
@@ -102,8 +106,8 @@ int RaHdcCtxInit(struct RaCtxHandle *ctxHandle, struct CtxInitAttr *attr, unsign
 
     (void)memcpy_s(&(opData.txData.attr), sizeof(struct CtxInitAttr), attr, sizeof(struct CtxInitAttr));
     ret = RaHdcProcessMsg(RA_RS_CTX_INIT, attr->phyId, (char *)&opData, sizeof(union OpCtxInitData));
-    CHK_PRT_RETURN(ret != 0, hccp_err("[init][ra_hdc_ctx]hdc message process failed ret[%d], phyId[%u]",
-        ret, phyId), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("[init][ra_hdc_ctx]hdc message process failed ret[%d], phyId[%u]", ret, phyId),
+        ret);
 
     *devIndex = opData.rxData.devIndex;
     (void)memcpy_s(devAttr, sizeof(struct DevBaseAttr), &opData.rxData.devAttr, sizeof(struct DevBaseAttr));
@@ -122,19 +126,24 @@ int RaHdcCtxGetAsyncEvents(struct RaCtxHandle *ctxHandle, struct AsyncEvent even
     opData.txData.phyId = phyId;
     opData.txData.devIndex = ctxHandle->devIndex;
     opData.txData.num = *num;
-    ret = RaHdcProcessMsg(RA_RS_CTX_GET_ASYNC_EVENTS, phyId, (char *)&opData,
-        sizeof(union OpCtxGetAsyncEventsData));
+    ret = RaHdcProcessMsg(RA_RS_CTX_GET_ASYNC_EVENTS, phyId, (char *)&opData, sizeof(union OpCtxGetAsyncEventsData));
 
-    CHK_PRT_RETURN(opData.rxData.num > expectedNum, hccp_err("[get][async_events]rxData.num:%u > expectedNum:%u,"
-        " phyId:%u dev_index:0x%x", opData.rxData.num, expectedNum, phyId, ctxHandle->devIndex), -EINVAL);
+    CHK_PRT_RETURN(opData.rxData.num > expectedNum,
+        hccp_err("[get][async_events]rxData.num:%u > expectedNum:%u,"
+                 " phyId:%u dev_index:0x%x",
+            opData.rxData.num, expectedNum, phyId, ctxHandle->devIndex),
+        -EINVAL);
 
     for (i = 0; i < opData.rxData.num; i++) {
         (void)memcpy_s(&events[i], sizeof(struct AsyncEvent), &opData.rxData.events[i], sizeof(struct AsyncEvent));
     }
     *num = opData.rxData.num;
 
-    CHK_PRT_RETURN(ret != 0, hccp_err("[get][async_events]hdc message process failed ret:%d, phyId:%u"
-        " dev_index:0x%x", ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[get][async_events]hdc message process failed ret:%d, phyId:%u"
+                 " dev_index:0x%x",
+            ret, phyId, ctxHandle->devIndex),
+        ret);
 
     return ret;
 }
@@ -148,8 +157,10 @@ int RaHdcCtxDeinit(struct RaCtxHandle *ctxHandle)
     opData.txData.phyId = phyId;
     opData.txData.devIndex = ctxHandle->devIndex;
     ret = RaHdcProcessMsg(RA_RS_CTX_DEINIT, phyId, (char *)&opData, sizeof(union OpCtxDeinitData));
-    CHK_PRT_RETURN(ret, hccp_err("[deinit][ra_hdc_ctx]hdc message process failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[deinit][ra_hdc_ctx]hdc message process failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId,
+            ctxHandle->devIndex),
+        ret);
 
     return 0;
 }
@@ -172,8 +183,8 @@ int RaHdcGetEidResults(union OpGetEidByIpData *opData, unsigned int ipNum, union
     unsigned int i = 0;
 
     *num = 0;
-    CHK_PRT_RETURN(opData->rxData.num > ipNum, hccp_err("[get][eid_by_ip]rx_data.num:%u > ip_num:%u",
-        opData->rxData.num, ipNum), -EINVAL);
+    CHK_PRT_RETURN(opData->rxData.num > ipNum,
+        hccp_err("[get][eid_by_ip]rx_data.num:%u > ip_num:%u", opData->rxData.num, ipNum), -EINVAL);
 
     *num = opData->rxData.num;
     for (i = 0; i < opData->rxData.num; i++) {
@@ -195,11 +206,17 @@ int RaHdcGetEidByIp(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], union Hcc
     ret = RaHdcProcessMsg(RA_RS_GET_EID_BY_IP, phyId, (char *)&opData, sizeof(union OpGetEidByIpData));
 
     retTmp = RaHdcGetEidResults(&opData, ipNum, eid, num);
-    CHK_PRT_RETURN(retTmp != 0, hccp_err("[get][eid_by_ip]ra_hdc_get_eid_results failed ret[%d], phyId[%u]"
-        " devIndex[0x%x]", retTmp, phyId, ctxHandle->devIndex), retTmp);
+    CHK_PRT_RETURN(retTmp != 0,
+        hccp_err("[get][eid_by_ip]ra_hdc_get_eid_results failed ret[%d], phyId[%u]"
+                 " devIndex[0x%x]",
+            retTmp, phyId, ctxHandle->devIndex),
+        retTmp);
 
-    CHK_PRT_RETURN(ret != 0, hccp_err("[get][eid_by_ip]hdc message process failed ret[%d], phyId[%u]"
-        " devIndex[0x%x]", ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[get][eid_by_ip]hdc message process failed ret[%d], phyId[%u]"
+                 " devIndex[0x%x]",
+            ret, phyId, ctxHandle->devIndex),
+        ret);
 
     return ret;
 }
@@ -222,8 +239,8 @@ int RaHdcGetIpResults(union OpGetIpByEidData *opData, unsigned int eidNum, struc
     unsigned int i = 0;
 
     *num = 0;
-    CHK_PRT_RETURN(opData->rxData.num > eidNum, hccp_err("[get][IpByEid]rxData.num:%u > eidNum:%u",
-        opData->rxData.num, eidNum), -EINVAL);
+    CHK_PRT_RETURN(opData->rxData.num > eidNum,
+        hccp_err("[get][IpByEid]rxData.num:%u > eidNum:%u", opData->rxData.num, eidNum), -EINVAL);
 
     *num = opData->rxData.num;
     for (i = 0; i < opData->rxData.num; i++) {
@@ -245,17 +262,22 @@ int RaHdcGetIpByEid(struct RaCtxHandle *ctxHandle, union HccpEid eid[], struct I
     ret = RaHdcProcessMsg(RA_RS_GET_IP_BY_EID, phyId, (char *)&opData, sizeof(union OpGetIpByEidData));
 
     retTmp = RaHdcGetIpResults(&opData, eidNum, ip, num);
-    CHK_PRT_RETURN(retTmp != 0, hccp_err("[get][IpByEid]RaHdcGetIpResults failed ret[%d], phyId[%u]"
-        " devIndex[0x%x]", retTmp, phyId, ctxHandle->devIndex), retTmp);
+    CHK_PRT_RETURN(retTmp != 0,
+        hccp_err("[get][IpByEid]RaHdcGetIpResults failed ret[%d], phyId[%u]"
+                 " devIndex[0x%x]",
+            retTmp, phyId, ctxHandle->devIndex),
+        retTmp);
 
-    CHK_PRT_RETURN(ret != 0, hccp_err("[get][IpByEid]hdc message process failed ret[%d], phyId[%u]"
-        " devIndex[0x%x]", ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[get][IpByEid]hdc message process failed ret[%d], phyId[%u]"
+                 " devIndex[0x%x]",
+            ret, phyId, ctxHandle->devIndex),
+        ret);
 
     return ret;
 }
 
-int RaHdcCtxTokenIdAlloc(struct RaCtxHandle *ctxHandle, struct HccpTokenId *info,
-    struct RaTokenIdHandle *tokenIdHandle)
+int RaHdcCtxTokenIdAlloc(struct RaCtxHandle *ctxHandle, struct HccpTokenId *info, struct RaTokenIdHandle *tokenIdHandle)
 {
     unsigned int phyId = ctxHandle->attr.phyId;
     union OpTokenIdAllocData opData = {0};
@@ -264,10 +286,12 @@ int RaHdcCtxTokenIdAlloc(struct RaCtxHandle *ctxHandle, struct HccpTokenId *info
     opData.txData.phyId = phyId;
     opData.txData.devIndex = ctxHandle->devIndex;
 
-    ret = RaHdcProcessMsg(RA_RS_CTX_TOKEN_ID_ALLOC, phyId, (char *)&opData,
-        sizeof(union OpTokenIdAllocData));
-    CHK_PRT_RETURN(ret != 0, hccp_err("[init][ra_token_id]hdc message process failed ret[%d], phyId[%u] "
-        "devIndex[%u]", ret, phyId, ctxHandle->devIndex), ret);
+    ret = RaHdcProcessMsg(RA_RS_CTX_TOKEN_ID_ALLOC, phyId, (char *)&opData, sizeof(union OpTokenIdAllocData));
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[init][ra_token_id]hdc message process failed ret[%d], phyId[%u] "
+                 "devIndex[%u]",
+            ret, phyId, ctxHandle->devIndex),
+        ret);
 
     info->tokenId = opData.rxData.tokenId;
     tokenIdHandle->addr = opData.rxData.addr;
@@ -283,10 +307,12 @@ int RaHdcCtxTokenIdFree(struct RaCtxHandle *ctxHandle, struct RaTokenIdHandle *t
     opData.txData.phyId = phyId;
     opData.txData.devIndex = ctxHandle->devIndex;
     opData.txData.addr = tokenIdHandle->addr;
-    ret = RaHdcProcessMsg(RA_RS_CTX_TOKEN_ID_FREE, phyId, (char *)&opData,
-        sizeof(union OpTokenIdFreeData));
-    CHK_PRT_RETURN(ret != 0, hccp_err("[deinit][ra_token_id]hdc message process failed ret[%d], phyId[%u] "
-        "devIndex[%u]", ret, phyId, ctxHandle->devIndex), ret);
+    ret = RaHdcProcessMsg(RA_RS_CTX_TOKEN_ID_FREE, phyId, (char *)&opData, sizeof(union OpTokenIdFreeData));
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[deinit][ra_token_id]hdc message process failed ret[%d], phyId[%u] "
+                 "devIndex[%u]",
+            ret, phyId, ctxHandle->devIndex),
+        ret);
 
     return 0;
 }
@@ -306,20 +332,23 @@ int RaHdcCtxPrepareLmemRegister(struct RaCtxHandle *ctxHandle, struct MrRegInfoT
     return 0;
 }
 
-int RaHdcCtxLmemRegister(struct RaCtxHandle *ctxHandle, struct MrRegInfoT *lmemInfo,
-    struct RaLmemHandle *lmemHandle)
+int RaHdcCtxLmemRegister(struct RaCtxHandle *ctxHandle, struct MrRegInfoT *lmemInfo, struct RaLmemHandle *lmemHandle)
 {
     unsigned int phyId = ctxHandle->attr.phyId;
     union OpLmemRegInfoData opData = {0};
     int ret;
 
     ret = RaHdcCtxPrepareLmemRegister(ctxHandle, lmemInfo, &opData);
-    CHK_PRT_RETURN(ret != 0, hccp_err("[init][ra_hdc_lmem]prepare register failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[init][ra_hdc_lmem]prepare register failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId,
+            ctxHandle->devIndex),
+        ret);
 
     ret = RaHdcProcessMsg(RA_RS_LMEM_REG, phyId, (char *)&opData, sizeof(union OpLmemRegInfoData));
-    CHK_PRT_RETURN(ret, hccp_err("[init][ra_hdc_lmem]hdc message process failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[init][ra_hdc_lmem]hdc message process failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId,
+            ctxHandle->devIndex),
+        ret);
 
     RaCtxGetLmemInfo(&(opData.rxData.memInfo), lmemInfo, lmemHandle);
 
@@ -336,8 +365,10 @@ int RaHdcCtxLmemUnregister(struct RaCtxHandle *ctxHandle, struct RaLmemHandle *l
     opData.txData.devIndex = ctxHandle->devIndex;
     opData.txData.addr = lmemHandle->addr;
     ret = RaHdcProcessMsg(RA_RS_LMEM_UNREG, phyId, (char *)&opData, sizeof(union OpLmemUnregInfoData));
-    CHK_PRT_RETURN(ret, hccp_err("[deinit][ra_hdc_lmem]hdc message process failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[deinit][ra_hdc_lmem]hdc message process failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId,
+            ctxHandle->devIndex),
+        ret);
 
     return 0;
 }
@@ -362,8 +393,10 @@ int RaHdcCtxRmemImport(struct RaCtxHandle *ctxHandle, struct MrImportInfoT *rmem
     RaHdcPrepareRmemImport(ctxHandle, &opData, rmemInfo);
 
     ret = RaHdcProcessMsg(RA_RS_RMEM_IMPORT, phyId, (char *)&opData, sizeof(union OpRmemImportInfoData));
-    CHK_PRT_RETURN(ret, hccp_err("[init][ra_hdc_rmem]hdc message process failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[init][ra_hdc_rmem]hdc message process failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId,
+            ctxHandle->devIndex),
+        ret);
 
     rmemInfo->out.ub.targetSegHandle = opData.rxData.memInfo.ub.targetSegHandle;
     return 0;
@@ -379,14 +412,15 @@ int RaHdcCtxRmemUnimport(struct RaCtxHandle *ctxHandle, struct RaRmemHandle *rme
     opData.txData.devIndex = ctxHandle->devIndex;
     opData.txData.addr = rmemHandle->addr;
     ret = RaHdcProcessMsg(RA_RS_RMEM_UNIMPORT, phyId, (char *)&opData, sizeof(union OpRmemUnimportInfoData));
-    CHK_PRT_RETURN(ret, hccp_err("[deinit][ra_hdc_rmem]hdc message process failed ret[%d], phyId[%u], devIndex[%u]",
-        ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[deinit][ra_hdc_rmem]hdc message process failed ret[%d], phyId[%u], devIndex[%u]", ret, phyId,
+            ctxHandle->devIndex),
+        ret);
 
     return 0;
 }
 
-int RaHdcCtxChanCreate(struct RaCtxHandle *ctxHandle, struct ChanInfoT *chanInfo,
-    struct RaChanHandle *chanHandle)
+int RaHdcCtxChanCreate(struct RaCtxHandle *ctxHandle, struct ChanInfoT *chanInfo, struct RaChanHandle *chanHandle)
 {
     unsigned int phyId = ctxHandle->attr.phyId;
     union OpCtxChanCreateData opData = {0};
@@ -396,8 +430,10 @@ int RaHdcCtxChanCreate(struct RaCtxHandle *ctxHandle, struct ChanInfoT *chanInfo
     opData.txData.devIndex = ctxHandle->devIndex;
     opData.txData.dataPlaneFlag = chanInfo->in.dataPlaneFlag;
     ret = RaHdcProcessMsg(RA_RS_CTX_CHAN_CREATE, phyId, (char *)&opData, sizeof(union OpCtxChanCreateData));
-    CHK_PRT_RETURN(ret, hccp_err("[init][ctx_chan]hdc message process failed ret[%d], phyId[%u], devIndex[%u]",
-        ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[init][ctx_chan]hdc message process failed ret[%d], phyId[%u], devIndex[%u]", ret, phyId,
+            ctxHandle->devIndex),
+        ret);
 
     chanHandle->addr = opData.rxData.addr;
     chanInfo->out.fd = opData.rxData.fd;
@@ -415,14 +451,15 @@ int RaHdcCtxChanDestroy(struct RaCtxHandle *ctxHandle, struct RaChanHandle *chan
     opData.txData.addr = chanHandle->addr;
 
     ret = RaHdcProcessMsg(RA_RS_CTX_CHAN_DESTROY, phyId, (char *)&opData, sizeof(union OpCtxChanDestroyData));
-    CHK_PRT_RETURN(ret, hccp_err("[deinit][ctx_chan]hdc message process failed ret[%d], phyId[%u], devIndex[%u]",
-        ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[deinit][ctx_chan]hdc message process failed ret[%d], phyId[%u], devIndex[%u]", ret, phyId,
+            ctxHandle->devIndex),
+        ret);
 
     return 0;
 }
 
-STATIC void RaHdcPrepareCqCreate(struct RaCtxHandle *ctxHandle, union OpCtxCqCreateData *opData,
-    struct CqInfoT *info)
+STATIC void RaHdcPrepareCqCreate(struct RaCtxHandle *ctxHandle, union OpCtxCqCreateData *opData, struct CqInfoT *info)
 {
     struct CtxCqAttr *cqAttr = NULL;
 
@@ -445,8 +482,10 @@ int RaHdcCtxCqCreate(struct RaCtxHandle *ctxHandle, struct CqInfoT *info, struct
     RaHdcPrepareCqCreate(ctxHandle, &opData, info);
 
     ret = RaHdcProcessMsg(RA_RS_CTX_CQ_CREATE, phyId, (char *)&opData, sizeof(union OpCtxCqCreateData));
-    CHK_PRT_RETURN(ret, hccp_err("[init][ra_cq]hdc message process failed ret[%d], phyId[%u], devIndex[%u]",
-        ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[init][ra_cq]hdc message process failed ret[%d], phyId[%u], devIndex[%u]", ret, phyId,
+            ctxHandle->devIndex),
+        ret);
 
     cqHandle->addr = opData.rxData.info.addr;
     RaCtxGetCqCreateInfo(&opData.rxData.info, info);
@@ -463,14 +502,15 @@ int RaHdcCtxCqDestroy(struct RaCtxHandle *ctxHandle, struct RaCqHandle *cqHandle
     opData.txData.devIndex = ctxHandle->devIndex;
     opData.txData.addr = cqHandle->addr;
     ret = RaHdcProcessMsg(RA_RS_CTX_CQ_DESTROY, phyId, (char *)&opData, sizeof(union OpCtxCqDestroyData));
-    CHK_PRT_RETURN(ret, hccp_err("[deinit][ra_cq]hdc message process failed ret[%d], phyId[%u], devIndex[%u]",
-        ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[deinit][ra_cq]hdc message process failed ret[%d], phyId[%u], devIndex[%u]", ret, phyId,
+            ctxHandle->devIndex),
+        ret);
 
     return 0;
 }
 
-int RaHdcCtxPrepareQpCreate(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *qpAttr,
-    union OpCtxQpCreateData *opData)
+int RaHdcCtxPrepareQpCreate(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *qpAttr, union OpCtxQpCreateData *opData)
 {
     struct CtxQpAttr *ctxQpAttr = NULL;
     int ret = 0;
@@ -494,8 +534,8 @@ int RaHdcCtxPrepareQpCreate(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *
     return 0;
 }
 
-int RaHdcCtxQpCreate(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *qpAttr,
-    struct QpCreateInfo *qpInfo, struct RaCtxQpHandle *qpHandle)
+int RaHdcCtxQpCreate(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *qpAttr, struct QpCreateInfo *qpInfo,
+    struct RaCtxQpHandle *qpHandle)
 {
     unsigned int devIndex = ctxHandle->devIndex;
     unsigned int phyId = ctxHandle->attr.phyId;
@@ -503,12 +543,14 @@ int RaHdcCtxQpCreate(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *qpAttr,
     int ret;
 
     ret = RaHdcCtxPrepareQpCreate(ctxHandle, qpAttr, &opData);
-    CHK_PRT_RETURN(ret, hccp_err("[init][ra_hdc_qp]prepare qp_create failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[init][ra_hdc_qp]prepare qp_create failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId, devIndex),
+        ret);
 
     ret = RaHdcProcessMsg(RA_RS_CTX_QP_CREATE, phyId, (char *)&opData, sizeof(union OpCtxQpCreateData));
-    CHK_PRT_RETURN(ret, hccp_err("[init][ra_hdc_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[init][ra_hdc_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId, devIndex),
+        ret);
 
     RaCtxGetQpCreateInfo(ctxHandle, qpAttr, &(opData.rxData.qpInfo), qpHandle);
     (void)memcpy_s(qpInfo, sizeof(struct QpCreateInfo), &(opData.rxData.qpInfo), sizeof(struct QpCreateInfo));
@@ -527,10 +569,14 @@ int RaHdcCtxQpDestroy(struct RaCtxQpHandle *qpHandle)
     opData.txData.id = qpHandle->id;
 
     ret = RaHdcProcessMsg(RA_RS_CTX_QP_DESTROY, phyId, (char *)&opData, sizeof(union OpCtxQpDestroyData));
-    CHK_PRT_RETURN(ret == -ENODEV, hccp_warn("[deinit][ra_hdc_qp]hdc message process ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, qpHandle->devIndex), ret);
-    CHK_PRT_RETURN(ret != 0, hccp_err("[deinit][ra_hdc_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, qpHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret == -ENODEV,
+        hccp_warn("[deinit][ra_hdc_qp]hdc message process ret[%d], phyId[%u] devIndex[%u]", ret, phyId,
+            qpHandle->devIndex),
+        ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[deinit][ra_hdc_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId,
+            qpHandle->devIndex),
+        ret);
     return 0;
 }
 
@@ -548,8 +594,7 @@ int RaHdcCtxPrepareQpImport(struct RaCtxHandle *ctxHandle, struct QpImportInfoT 
     return 0;
 }
 
-int RaHdcCtxQpImport(struct RaCtxHandle *ctxHandle, struct QpImportInfoT *qpInfo,
-    struct RaCtxRemQpHandle *remQpHandle)
+int RaHdcCtxQpImport(struct RaCtxHandle *ctxHandle, struct QpImportInfoT *qpInfo, struct RaCtxRemQpHandle *remQpHandle)
 {
     unsigned int devIndex = ctxHandle->devIndex;
     unsigned int phyId = ctxHandle->attr.phyId;
@@ -557,12 +602,14 @@ int RaHdcCtxQpImport(struct RaCtxHandle *ctxHandle, struct QpImportInfoT *qpInfo
     int ret;
 
     ret = RaHdcCtxPrepareQpImport(ctxHandle, qpInfo, &opData);
-    CHK_PRT_RETURN(ret, hccp_err("[init][ra_hdc_qp]prepare qp_import failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[init][ra_hdc_qp]prepare qp_import failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId, devIndex),
+        ret);
 
     ret = RaHdcProcessMsg(RA_RS_CTX_QP_IMPORT, phyId, (char *)&opData, sizeof(union OpCtxQpImportData));
-    CHK_PRT_RETURN(ret, hccp_err("[init][ra_hdc_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[init][ra_hdc_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId, devIndex),
+        ret);
 
     RaCtxGetQpImportInfo(ctxHandle, qpInfo, &(opData.rxData.info), remQpHandle);
     remQpHandle->id = opData.rxData.remJettyId;
@@ -580,8 +627,10 @@ int RaHdcCtxQpUnimport(struct RaCtxRemQpHandle *remQpHandle)
     opData.txData.devIndex = remQpHandle->devIndex;
     (void)memcpy_s(opData.txData.rawRemJettyId, REM_JETTY_ID_SIZE, remQpHandle->qpKey.value, REM_JETTY_ID_SIZE);
     ret = RaHdcProcessMsg(RA_RS_CTX_QP_UNIMPORT, phyId, (char *)&opData, sizeof(union OpCtxQpUnimportData));
-    CHK_PRT_RETURN(ret, hccp_err("[deinit][ra_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, remQpHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[deinit][ra_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId,
+            remQpHandle->devIndex),
+        ret);
 
     return 0;
 }
@@ -599,8 +648,9 @@ int RaHdcCtxQpBind(struct RaCtxQpHandle *qpHandle, struct RaCtxRemQpHandle *remQ
     opData.txData.remId = remQpHandle->id;
 
     ret = RaHdcProcessMsg(RA_RS_CTX_QP_BIND, phyId, (char *)&opData, sizeof(union OpCtxQpBindData));
-    CHK_PRT_RETURN(ret, hccp_err("[init][ra_hdc_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[init][ra_hdc_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId, devIndex),
+        ret);
 
     return 0;
 }
@@ -616,10 +666,13 @@ int RaHdcCtxQpUnbind(struct RaCtxQpHandle *qpHandle)
     opData.txData.id = qpHandle->id;
 
     ret = RaHdcProcessMsg(RA_RS_CTX_QP_UNBIND, phyId, (char *)&opData, sizeof(union OpCtxQpUnbindData));
-    CHK_PRT_RETURN(ret == -ENODEV, hccp_warn("[deinit][ra_qp]hdc message process ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, qpHandle->devIndex), ret);
-    CHK_PRT_RETURN(ret != 0, hccp_err("[deinit][ra_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, qpHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret == -ENODEV,
+        hccp_warn("[deinit][ra_qp]hdc message process ret[%d], phyId[%u] devIndex[%u]", ret, phyId, qpHandle->devIndex),
+        ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[deinit][ra_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId,
+            qpHandle->devIndex),
+        ret);
     return 0;
 }
 
@@ -650,10 +703,8 @@ STATIC int RaHdcSendWrDataProtocolInit(struct SendWrData *wr, struct BatchSendWr
         }
     } else {
         *isInline = ((wr->rdma.flags & RA_SEND_INLINE) != 0);
-        ret = memcpy_s(&wrData->rdma, sizeof(wrData->rdma),
-            &(wr->rdma), sizeof(wr->rdma));
-        CHK_PRT_RETURN(ret, hccp_err("[send][ra_hdc_ctx]memcpy_s protocol failed, ret[%d]", ret),
-            -ESAFEFUNC);
+        ret = memcpy_s(&wrData->rdma, sizeof(wrData->rdma), &(wr->rdma), sizeof(wr->rdma));
+        CHK_PRT_RETURN(ret, hccp_err("[send][ra_hdc_ctx]memcpy_s protocol failed, ret[%d]", ret), -ESAFEFUNC);
     }
 
     return 0;
@@ -662,8 +713,7 @@ STATIC int RaHdcSendWrDataProtocolInit(struct SendWrData *wr, struct BatchSendWr
 STATIC int RaHdcSendWrDataInit(struct RaCtxQpHandle *qpHandle, struct SendWrData wrList[],
     union OpCtxBatchSendWrData *opData, unsigned int completeCnt, unsigned int sendNum)
 {
-    unsigned int currBatchNum = (sendNum - completeCnt) >= MAX_CTX_WR_NUM ?
-        MAX_CTX_WR_NUM : (sendNum - completeCnt);
+    unsigned int currBatchNum = (sendNum - completeCnt) >= MAX_CTX_WR_NUM ? MAX_CTX_WR_NUM : (sendNum - completeCnt);
     struct RaLmemHandle *lmemHandle = NULL;
     struct RaRmemHandle *rmemHandle = NULL;
     struct BatchSendWrData *hdcWr = NULL;
@@ -684,8 +734,7 @@ STATIC int RaHdcSendWrDataInit(struct RaCtxQpHandle *qpHandle, struct SendWrData
         /* protocol cfg */
         ret = RaHdcSendWrDataProtocolInit(wr, hdcWr, qpHandle->protocol, &isInline);
         if (ret != 0) {
-            hccp_err("[send][ra_hdc_ctx]init protocol cfg failed, ret[%d], wr[%u]",
-                ret, (completeCnt + i));
+            hccp_err("[send][ra_hdc_ctx]init protocol cfg failed, ret[%d], wr[%u]", ret, (completeCnt + i));
             return ret;
         }
 
@@ -697,8 +746,7 @@ STATIC int RaHdcSendWrDataInit(struct RaCtxQpHandle *qpHandle, struct SendWrData
         /* lmem */
         if (isInline) {
             ret = memcpy_s(hdcWr->inlineData, MAX_INLINE_SIZE, wr->inlineData, wr->inlineSize);
-            CHK_PRT_RETURN(ret, hccp_err("[send][ra_hdc_ctx]memcpy_s inline data failed, ret[%d]",
-                ret), -ESAFEFUNC);
+            CHK_PRT_RETURN(ret, hccp_err("[send][ra_hdc_ctx]memcpy_s inline data failed, ret[%d]", ret), -ESAFEFUNC);
             hdcWr->inlineSize = wr->inlineSize;
         } else {
             for (j = 0; j < wr->numSge; j++) {
@@ -725,8 +773,8 @@ STATIC int RaHdcSendWrDataInit(struct RaCtxQpHandle *qpHandle, struct SendWrData
     return 0;
 }
 
-int RaHdcCtxBatchSendWr(struct RaCtxQpHandle *qpHandle, struct SendWrData wrList[],
-    struct SendWrResp opResp[], unsigned int sendNum, unsigned int *completeNum)
+int RaHdcCtxBatchSendWr(struct RaCtxQpHandle *qpHandle, struct SendWrData wrList[], struct SendWrResp opResp[],
+    unsigned int sendNum, unsigned int *completeNum)
 {
     union OpCtxBatchSendWrData opData = {0};
     unsigned int completeCnt = 0;
@@ -737,8 +785,8 @@ int RaHdcCtxBatchSendWr(struct RaCtxQpHandle *qpHandle, struct SendWrData wrList
     while (completeCnt < sendNum) {
         ret = RaHdcSendWrDataInit(qpHandle, wrList, &opData, completeCnt, sendNum);
         if (ret != 0) {
-            hccp_err("[send][ra_hdc_ctx]ra_hdc_send_wr_data_init failed, ret[%d] phyId[%u] devIndex[%u] qp_id[%u]",
-                ret, qpHandle->phyId, qpHandle->devIndex, qpHandle->id);
+            hccp_err("[send][ra_hdc_ctx]ra_hdc_send_wr_data_init failed, ret[%d] phyId[%u] devIndex[%u] qp_id[%u]", ret,
+                qpHandle->phyId, qpHandle->devIndex, qpHandle->id);
             break;
         }
 
@@ -753,8 +801,8 @@ int RaHdcCtxBatchSendWr(struct RaCtxQpHandle *qpHandle, struct SendWrData wrList
             break;
         }
         if (ret != 0 || opData.rxData.completeNum < currSendNum) {
-            hccp_err("[send][ra_hdc_ctx]batch send wr failed, ret[%d], sendNum[%u], completeNum[%u]",
-                ret, currSendNum, opData.rxData.completeNum);
+            hccp_err("[send][ra_hdc_ctx]batch send wr failed, ret[%d], sendNum[%u], completeNum[%u]", ret, currSendNum,
+                opData.rxData.completeNum);
             ret = -EOPENSRC;
             isFinished = true;
         }
@@ -788,14 +836,16 @@ int RaHdcCtxUpdateCi(struct RaCtxQpHandle *qpHandle, uint16_t ci)
     opData.txData.ci = ci;
 
     ret = RaHdcProcessMsg(RA_RS_CTX_UPDATE_CI, phyId, (char *)&opData, sizeof(union OpCtxUpdateCiData));
-    CHK_PRT_RETURN(ret, hccp_err("[update][ra_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]",
-        ret, phyId, qpHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("[update][ra_qp]hdc message process failed ret[%d], phyId[%u] devIndex[%u]", ret, phyId,
+            qpHandle->devIndex),
+        ret);
 
     return 0;
 }
 
-int RaHdcCtxQpQueryBatch(unsigned int phyId, unsigned int devIndex, unsigned int ids[],
-    struct JettyAttr attr[], unsigned int *num)
+int RaHdcCtxQpQueryBatch(unsigned int phyId, unsigned int devIndex, unsigned int ids[], struct JettyAttr attr[],
+    unsigned int *num)
 {
     union OpCtxQpQueryBatchData opData = {0};
     int ret, retTmp;
@@ -804,21 +854,26 @@ int RaHdcCtxQpQueryBatch(unsigned int phyId, unsigned int devIndex, unsigned int
     opData.txData.devIndex = devIndex;
     opData.txData.num = *num;
     (void)memcpy_s(opData.txData.ids, sizeof(unsigned int) * (*num), ids, sizeof(unsigned int) * (*num));
-    ret = RaHdcProcessMsg(RA_RS_CTX_QUERY_QP_BATCH, phyId, (char *)&opData,
-        sizeof(union OpCtxQpQueryBatchData));
-    CHK_PRT_RETURN(opData.rxData.num > *num, hccp_err("[query][ra_qp]op_data.rx_data.num[%u] is larger than num[%u], "
-        "ret[%d]", opData.rxData.num, *num, ret), ret);
+    ret = RaHdcProcessMsg(RA_RS_CTX_QUERY_QP_BATCH, phyId, (char *)&opData, sizeof(union OpCtxQpQueryBatchData));
+    CHK_PRT_RETURN(opData.rxData.num > *num,
+        hccp_err("[query][ra_qp]op_data.rx_data.num[%u] is larger than num[%u], "
+                 "ret[%d]",
+            opData.rxData.num, *num, ret),
+        ret);
 
-    if(ret != 0 || opData.rxData.num < *num) {
-        hccp_err("[query][ra_qp]hdc message process failed ret[%d], phyId[%u], num[%u], opData.rxData.num[%u]",
-            ret, phyId, *num, opData.rxData.num);
+    if (ret != 0 || opData.rxData.num < *num) {
+        hccp_err("[query][ra_qp]hdc message process failed ret[%d], phyId[%u], num[%u], opData.rxData.num[%u]", ret,
+            phyId, *num, opData.rxData.num);
         ret = -EOPENSRC;
     }
 
     retTmp = memcpy_s(attr, sizeof(struct JettyAttr) * (*num), opData.rxData.attr,
         sizeof(struct JettyAttr) * opData.rxData.num);
-    CHK_PRT_RETURN(retTmp != 0, hccp_err("[query][ra_qp]memcpy_s failed, ret[%d], phyId[%u], num[%u],"
-        "opData.rxData.num[%u]", ret, phyId, *num, opData.rxData.num), ret);
+    CHK_PRT_RETURN(retTmp != 0,
+        hccp_err("[query][ra_qp]memcpy_s failed, ret[%d], phyId[%u], num[%u],"
+                 "opData.rxData.num[%u]",
+            ret, phyId, *num, opData.rxData.num),
+        ret);
 
     *num = opData.rxData.num;
     return ret;
@@ -833,15 +888,17 @@ int RaHdcCtxGetAuxInfo(struct RaCtxHandle *ctxHandle, struct HccpAuxInfoIn *in, 
     opData.txData.phyId = phyId;
     opData.txData.devIndex = ctxHandle->devIndex;
     (void)memcpy_s(&(opData.txData.info), sizeof(struct HccpAuxInfoIn), in, sizeof(struct HccpAuxInfoIn));
-    ret = RaHdcProcessMsg(RA_RS_CTX_GET_AUX_INFO, phyId, (char *)&opData,
-        sizeof(union OpCtxGetAuxInfoData));
-    CHK_PRT_RETURN(ret != 0, hccp_err("[get][aux_info]hdc message process failed ret[%d], phyId[%u] "
-        "devIndex[0x%x]", ret, phyId, ctxHandle->devIndex), ret);
+    ret = RaHdcProcessMsg(RA_RS_CTX_GET_AUX_INFO, phyId, (char *)&opData, sizeof(union OpCtxGetAuxInfoData));
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[get][aux_info]hdc message process failed ret[%d], phyId[%u] "
+                 "devIndex[0x%x]",
+            ret, phyId, ctxHandle->devIndex),
+        ret);
 
-    (void)memcpy_s(&(out->auxInfoType), sizeof(unsigned int) * AUX_INFO_NUM_MAX,
-        &(opData.rxData.info.auxInfoType), sizeof(unsigned int) * AUX_INFO_NUM_MAX);
-    (void)memcpy_s(&(out->auxInfoValue), sizeof(unsigned int) * AUX_INFO_NUM_MAX,
-        &(opData.rxData.info.auxInfoValue), sizeof(unsigned int) * AUX_INFO_NUM_MAX);
+    (void)memcpy_s(&(out->auxInfoType), sizeof(unsigned int) * AUX_INFO_NUM_MAX, &(opData.rxData.info.auxInfoType),
+        sizeof(unsigned int) * AUX_INFO_NUM_MAX);
+    (void)memcpy_s(&(out->auxInfoValue), sizeof(unsigned int) * AUX_INFO_NUM_MAX, &(opData.rxData.info.auxInfoValue),
+        sizeof(unsigned int) * AUX_INFO_NUM_MAX);
     out->auxInfoNum = opData.rxData.info.auxInfoNum;
     return ret;
 }
@@ -866,12 +923,14 @@ int RaHdcCtxGetCrErrInfoList(struct RaCtxHandle *ctxHandle, struct CrErrInfo *in
         return -EINVAL;
     }
 
-    CHK_PRT_RETURN(ret != 0, hccp_err("[get][cr_err_info_list]hdc message process failed ret[%d], phyId[%u]"
-        " devIndex[0x%x]", ret, phyId, ctxHandle->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[get][cr_err_info_list]hdc message process failed ret[%d], phyId[%u]"
+                 " devIndex[0x%x]",
+            ret, phyId, ctxHandle->devIndex),
+        ret);
 
     for (i = 0; i < opData.rxData.num; i++) {
-        (void)memcpy_s(&infoList[i], sizeof(struct CrErrInfo),
-            &opData.rxData.infoList[i], sizeof(struct CrErrInfo));
+        (void)memcpy_s(&infoList[i], sizeof(struct CrErrInfo), &opData.rxData.infoList[i], sizeof(struct CrErrInfo));
     }
     *num = opData.rxData.num;
 
@@ -889,10 +948,12 @@ int RaHdcCtxGetJettyContext(struct RaCtxQpHandle *qpHandle, uint8_t context[], u
     opData.txData.id = qpHandle->id;
     opData.txData.contextType = CONTEXT_TYPE_JETTY;
     opData.txData.len = *len;
-    ret = RaHdcProcessMsg(RA_RS_CTX_GET_UB_CONTEXT, phyId, (char *)&opData,
-        sizeof(union OpCtxGetContextData));
-    CHK_PRT_RETURN(ret != 0, hccp_err("[get][jettyContext]hdc message process failed ret:%d, phyId:%u"
-        " devIndex:0x%x", ret, phyId, qpHandle->devIndex), ret);
+    ret = RaHdcProcessMsg(RA_RS_CTX_GET_UB_CONTEXT, phyId, (char *)&opData, sizeof(union OpCtxGetContextData));
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("[get][jettyContext]hdc message process failed ret:%d, phyId:%u"
+                 " devIndex:0x%x",
+            ret, phyId, qpHandle->devIndex),
+        ret);
 
     ret = memcpy_s(context, *len, opData.rxData.context, opData.rxData.len);
     CHK_PRT_RETURN(ret != 0, hccp_err("[get][jettyContext]memcpy_s for context failed, ret:%d", ret), -ESAFEFUNC);

@@ -19,36 +19,34 @@
 namespace hccl {
 class LocalRdmaRmaBufferImpl : public RmaBuffer {
 public:
-	LocalRdmaRmaBufferImpl(const HcclNetDevCtx netDevCtx, void* addr, u64 size, const RmaMemType memType);
+    LocalRdmaRmaBufferImpl(const HcclNetDevCtx netDevCtx, void* addr, u64 size, const RmaMemType memType);
 
     // 别名构造函数：共享父buffer的RDMA注册资源，不调用hrtRaRegGlobalMr
-    LocalRdmaRmaBufferImpl(const HcclNetDevCtx netDevCtx, void* addr, u64 size, const RmaMemType memType,
+    LocalRdmaRmaBufferImpl(
+        const HcclNetDevCtx netDevCtx, void* addr, u64 size, const RmaMemType memType,
         const LocalRdmaRmaBufferImpl& parent);
 
     ~LocalRdmaRmaBufferImpl() override;
 
-    LocalRdmaRmaBufferImpl(const LocalRdmaRmaBufferImpl &that) = delete;
-    LocalRdmaRmaBufferImpl &operator=(const LocalRdmaRmaBufferImpl &that) = delete;
+    LocalRdmaRmaBufferImpl(const LocalRdmaRmaBufferImpl& that) = delete;
+    LocalRdmaRmaBufferImpl& operator=(const LocalRdmaRmaBufferImpl& that) = delete;
 
     HcclResult Init();
     HcclResult Destroy();
 
-    std::string &Serialize();
+    std::string& Serialize();
     HcclResult Remap(void* addr, u64 length);
 
-    inline u32 GetKey() const
-    {
-        return lkey;
-    }
+    inline u32 GetKey() const { return lkey; }
 
 private:
-    s32         deviceLogicId{-1};
-    RdmaHandle  rdmaHandle{nullptr};
-    MrHandle    mrHandle{nullptr};
-    u32         lkey{0};
+    s32 deviceLogicId{-1};
+    RdmaHandle rdmaHandle{nullptr};
+    MrHandle mrHandle{nullptr};
+    u32 lkey{0};
     std::string devAddrID{""};
     bool initialized_ = false;
     std::string serializeStr_;
 };
-}
+} // namespace hccl
 #endif //  LOCAL_RDMA_RMA_BUFFER_IMPL_H

@@ -19,21 +19,16 @@ using namespace std;
 using namespace hcomm::CcuRep;
 
 // 注册NopExecutor create Func
-REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::CTRL_TYPE, SimCcuV2::FENCE_CODE , FenceExecutor);
+REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::CTRL_TYPE, SimCcuV2::FENCE_CODE, FenceExecutor);
 
-void FenceExecutor::Parser()
-{
-    ValidateVersionExclusive(RunnerCcuVersion::CCU_V2, "FenceExecutor");
-}
+void FenceExecutor::Parser() { ValidateVersionExclusive(RunnerCcuVersion::CCU_V2, "FenceExecutor"); }
 
-void FenceExecutor::Process(CcuResourceManager &ccuResMgr) {
-(void) ccuResMgr;
-}
+void FenceExecutor::Process(CcuResourceManager& ccuResMgr) { (void)ccuResMgr; }
 
 void FenceExecutor::Run()
 {
-     HCCL_VM_ERROR("Unsupported ");
-     ccuSimulator_->SetExecState(CcuExecState::EXEC_FAIL);
+    HCCL_VM_ERROR("Unsupported ");
+    ccuSimulator_->SetExecState(CcuExecState::EXEC_FAIL);
 }
 
 std::string FenceExecutor::Describe()

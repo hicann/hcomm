@@ -15,7 +15,7 @@
 #define HCCLV2_CONST_VAL_H
 namespace Hccl {
 constexpr u32 CANN_VERSION_MAX_LEN = 50; // Cann版本信息的最大长度为50
-constexpr u32 SOC_VERSION_MAX_LEN  = 32; // soc version的最大长度为32
+constexpr u32 SOC_VERSION_MAX_LEN = 32;  // soc version的最大长度为32
 constexpr u32 INVALID_U32 = UINT32_MAX;
 constexpr u64 INVALID_U64 = UINT64_MAX;
 constexpr s32 INVALID_RANKID = INT32_MAX;

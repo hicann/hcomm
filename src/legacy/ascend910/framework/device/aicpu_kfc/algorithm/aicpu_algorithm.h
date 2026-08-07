@@ -20,7 +20,7 @@ constexpr uint32_t RING_NUM = 2U;
 
 class AicpuAlgorithm {
 public:
-    explicit AicpuAlgorithm(AicpuComContext *ctx)
+    explicit AicpuAlgorithm(AicpuComContext* ctx)
     {
         ctx_ = ctx;
         rankId_ = ctx_ != nullptr ? ctx_->rankId : 0U;
@@ -30,15 +30,17 @@ public:
     }
     virtual ~AicpuAlgorithm() = default;
 
-    virtual HcclResult RunAlgorithm(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
-        HcclDataType dataType, u64 strideLen = 0, AivAicpuOpParam *nextTask = nullptr) = 0;
+    virtual HcclResult RunAlgorithm(
+        HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType,
+        u64 strideLen = 0, AivAicpuOpParam* nextTask = nullptr)
+        = 0;
 
 protected:
-    AicpuComContext *ctx_ { nullptr };
-    uint32_t rankId_ { 0U };
-    uint32_t rankNum_ { 0U };
-    uint32_t unitSize_ { 0U };
-    uint32_t turn_ { 0U };
+    AicpuComContext* ctx_{nullptr};
+    uint32_t rankId_{0U};
+    uint32_t rankNum_{0U};
+    uint32_t unitSize_{0U};
+    uint32_t turn_{0U};
 };
 
 #endif

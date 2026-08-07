@@ -18,21 +18,24 @@ class SimModelsTest : public testing::Test {
 protected:
 };
 
-TEST_F(SimModelsTest, Server_StructSize) {
+TEST_F(SimModelsTest, Server_StructSize)
+{
     static_assert(sizeof(Server) > 0, "Server struct should have size");
     Server s{1, 100, 0, "v1"};
     EXPECT_EQ(s.id, 1);
     EXPECT_EQ(s.pod_id, 100);
 }
 
-TEST_F(SimModelsTest, Device_StructSize) {
+TEST_F(SimModelsTest, Device_StructSize)
+{
     static_assert(sizeof(Device) > 0, "Device struct should have size");
     Device d{1, 100, 255, 0, 0, 1, 0, 0};
     EXPECT_EQ(d.id, 1);
     EXPECT_EQ(d.server_id, 100);
 }
 
-TEST_F(SimModelsTest, Runner_StructSize) {
+TEST_F(SimModelsTest, Runner_StructSize)
+{
     static_assert(sizeof(Runner) > 0, "Runner struct should have size");
     Runner r{1, 100, 1, 1, 1000, 1};
     EXPECT_EQ(r.id, 1);

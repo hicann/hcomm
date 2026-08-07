@@ -26,7 +26,8 @@ public:
     __aicore__ ~TPipe() = default;
 
     template <class T>
-    __aicore__ bool InitBuffer(T& que, uint8_t num, uint32_t len) {
+    __aicore__ bool InitBuffer(T& que, uint8_t num, uint32_t len)
+    {
         // todo 临时简单方案
         for (uint32_t i = 0; i < num; i++) {
             TensorMem tensorMem;
@@ -41,32 +42,35 @@ public:
     }
 
     template <TPosition pos>
-    __aicore__ bool InitBuffer(TBuf<pos>& buf, uint32_t len) {
+    __aicore__ bool InitBuffer(TBuf<pos>& buf, uint32_t len)
+    {
         // todo 临时简单方案
         buf.block_.ptr = 0;
         buf.block_.len = len;
         return true;
     }
 
-    __aicore__ void Reset() {
-        eventIdGen_.store(0);
-    }
+    __aicore__ void Reset() { eventIdGen_.store(0); }
 
     // 事件管理: 当前先简单实现, EventID的数量限制先不支持
     template <HardEvent evt>
-    __aicore__ TEventID AllocEventID() { return eventIdGen_.fetch_add(1); }
+    __aicore__ TEventID AllocEventID()
+    {
+        return eventIdGen_.fetch_add(1);
+    }
     template <HardEvent evt>
-    __aicore__ void ReleaseEventID(TEventID id) {}
+    __aicore__ void ReleaseEventID(TEventID id)
+    {}
 
 private:
-    std::atomic<TEventID> eventIdGen_{0};  // EventID Generator
+    std::atomic<TEventID> eventIdGen_{0}; // EventID Generator
 
-    void *startPtr = 0;
-    void *endPtr = 0;
-    void *curPtr = 0;
+    void* startPtr = 0;
+    void* endPtr = 0;
+    void* curPtr = 0;
     uint64_t usedLen = 0;
     uint32_t usedNum = 0;
 };
-}
+} // namespace AscendC
 
-#endif //AIV_T_PIPE_H
+#endif // AIV_T_PIPE_H

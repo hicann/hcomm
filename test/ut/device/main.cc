@@ -15,7 +15,8 @@
 #include "comm.h"
 #include "env_config.h"
 
-GTEST_API_ int main(int argc, char **argv) {
+GTEST_API_ int main(int argc, char** argv)
+{
     printf("Running main() from gtest_main.cc\n");
     testing::InitGoogleTest(&argc, argv);
     setenv("HCCL_DFS_CONFIG", "connection_fault_detection_time:0", 1);

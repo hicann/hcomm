@@ -9,7 +9,7 @@
  */
 #include "testcase_utils.h"
 #include <stdlib.h>
- 
+
 void ClearHcclEnv()
 {
     unsetenv("HCCL_HIGH_PERF_ENABLE");
@@ -24,7 +24,7 @@ void ClearHcclEnv()
     unsetenv("HCCL_IODIE_NUM");
     return;
 }
- 
+
 std::vector<u64> GenerateSendCountMatrix(u64 count, u32 rankSize)
 {
     std::vector<u64> sendCountMatrix(rankSize * rankSize, count);

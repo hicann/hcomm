@@ -17,47 +17,46 @@
 namespace Hccl {
 namespace CcuRep {
 
-void AppendToContext(CcuRepContext* context, std::shared_ptr<CcuRep::CcuRepBase> rep)
-{
-    if (context == nullptr) {
-        THROW<CcuApiException>("context is nullptr");
+    void AppendToContext(CcuRepContext* context, std::shared_ptr<CcuRep::CcuRepBase> rep)
+    {
+        if (context == nullptr) {
+            THROW<CcuApiException>("context is nullptr");
+        } else {
+            return context->Append(rep);
+        }
     }
-    else {
-        return context->Append(rep);
-    }
-}
 
-std::shared_ptr<CcuRep::CcuRepBlock> CurrentBlock(CcuRepContext* context)
-{
-    if (context == nullptr) {
-        THROW<CcuApiException>("context is nullptr");
+    std::shared_ptr<CcuRep::CcuRepBlock> CurrentBlock(CcuRepContext* context)
+    {
+        if (context == nullptr) {
+            THROW<CcuApiException>("context is nullptr");
+        }
+        return context->CurrentBlock();
     }
-    return context->CurrentBlock();
-}
 
-void SetCurrentBlock(CcuRepContext* context, std::shared_ptr<CcuRep::CcuRepBlock> repBlock)
-{
-    if (context == nullptr) {
-        THROW<CcuApiException>("context is nullptr");
+    void SetCurrentBlock(CcuRepContext* context, std::shared_ptr<CcuRep::CcuRepBlock> repBlock)
+    {
+        if (context == nullptr) {
+            THROW<CcuApiException>("context is nullptr");
+        }
+        context->SetCurrentBlock(repBlock);
     }
-    context->SetCurrentBlock(repBlock);
-}
 
-HcclResult CreateVariable(CcuRepContext* context, Variable &variable)
-{
-    HCCL_INFO("[CreateVariable] Input params: context[%p]", context);
-    if (context == nullptr) {
-        HCCL_ERROR("context is nullptr");
-        return HCCL_E_PTR;
+    HcclResult CreateVariable(CcuRepContext* context, Variable& variable)
+    {
+        HCCL_INFO("[CreateVariable] Input params: context[%p]", context);
+        if (context == nullptr) {
+            HCCL_ERROR("context is nullptr");
+            return HCCL_E_PTR;
+        }
+        auto ctx = dynamic_cast<CcuContext*>(context);
+        if (ctx == nullptr) {
+            HCCL_ERROR("Invalid context");
+            return HCCL_E_PTR;
+        }
+        variable = ctx->CreateVariable();
+        return HCCL_SUCCESS;
     }
-    auto ctx = dynamic_cast<CcuContext*>(context);
-    if (ctx == nullptr) {
-        HCCL_ERROR("Invalid context");
-        return HCCL_E_PTR;
-    }
-    variable = ctx->CreateVariable();
-    return HCCL_SUCCESS;
-}
 
 }; // namespace CcuRep
 }; // namespace Hccl

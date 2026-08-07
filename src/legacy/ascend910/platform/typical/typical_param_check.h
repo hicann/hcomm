@@ -15,8 +15,9 @@ namespace hccl {
 inline HcclResult CheckDataType(const HcclDataType dataType)
 {
     if ((dataType >= HCCL_DATA_TYPE_RESERVED) || (dataType < HCCL_DATA_TYPE_INT8)) {
-        HCCL_ERROR("[Check][DataType]errNo[0x%016llx] data type[%s] not supported",
-            HCOM_ERROR_CODE(HCCL_E_NOT_SUPPORT), GetDataTypeEnumStr(dataType).c_str());
+        HCCL_ERROR(
+            "[Check][DataType]errNo[0x%016llx] data type[%s] not supported", HCOM_ERROR_CODE(HCCL_E_NOT_SUPPORT),
+            GetDataTypeEnumStr(dataType).c_str());
         return HCCL_E_NOT_SUPPORT;
     }
     return HCCL_SUCCESS;
@@ -25,7 +26,8 @@ inline HcclResult CheckDataType(const HcclDataType dataType)
 inline HcclResult CheckCount(const u64 count)
 {
     if (count > SYS_MAX_COUNT) {
-        HCCL_ERROR("[Check][Count]errNo[0x%016llx] count[%llu] is invalid(bigger than MAX count[%llu])",
+        HCCL_ERROR(
+            "[Check][Count]errNo[0x%016llx] count[%llu] is invalid(bigger than MAX count[%llu])",
             HCOM_ERROR_CODE(HCCL_E_PARA), count, SYS_MAX_COUNT);
         return HCCL_E_PARA;
     }
@@ -84,8 +86,12 @@ inline HcclResult CheckSendLinkInfo(AscendSendLinkInfo* sendInfo)
     CHK_PTR_NULL(sendInfo->remoteNotifyValueMem);
     // 校验sendInfo->remoteNotifyValueMem长度
     const uint32_t NOTIFY_MEM_LEN = 4;
-    CHK_PRT_RET(sendInfo->remoteNotifyValueMem->size != NOTIFY_MEM_LEN, HCCL_ERROR("[CheckSendLinkInfo] remoteNotifyValueMem len expect:[%u], actual:[%llu].",
-        NOTIFY_MEM_LEN, sendInfo->remoteNotifyValueMem->size), HCCL_E_PARA);
+    CHK_PRT_RET(
+        sendInfo->remoteNotifyValueMem->size != NOTIFY_MEM_LEN,
+        HCCL_ERROR(
+            "[CheckSendLinkInfo] remoteNotifyValueMem len expect:[%u], actual:[%llu].", NOTIFY_MEM_LEN,
+            sendInfo->remoteNotifyValueMem->size),
+        HCCL_E_PARA);
     return HCCL_SUCCESS;
 }
 
@@ -97,6 +103,6 @@ inline HcclResult CheckParam(void* buf, uint64_t count, HcclDataType dataType, a
     CHK_PTR_NULL(stream);
     return HCCL_SUCCESS;
 }
-}
+} // namespace hccl
 // namespace hccl
 #endif

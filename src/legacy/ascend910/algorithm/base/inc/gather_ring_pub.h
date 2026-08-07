@@ -20,8 +20,8 @@ public:
 
     ~GatherRing() override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize,
-                                   const std::vector<std::shared_ptr<Transport> > &links) override;
+    HcclResult
+    RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links) override;
 
 protected:
 private:
@@ -31,9 +31,9 @@ private:
     HcclResult RunGatherOnRootNextRank();
     std::shared_ptr<Transport> linkLeft_;
     std::shared_ptr<Transport> linkRight_;
-    u32 interRank_;       // comm内的rank排序
+    u32 interRank_;     // comm内的rank排序
     u32 interRankSize_; // 本comm内ranksize总数
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* GATHER_RING_PUB_H */

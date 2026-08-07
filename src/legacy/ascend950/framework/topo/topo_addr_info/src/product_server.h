@@ -16,13 +16,12 @@
 extern "C" {
 #endif
 
-int ServerGetRootinfoLen(size_t *len);
+int ServerGetRootinfoLen(size_t* len);
 
-int ServerGetRootinfo(int npu_id, unsigned int mainboard_id, void *buf, size_t* len);
+int ServerGetRootinfo(int npu_id, unsigned int mainboard_id, void* buf, size_t* len);
 
 #ifdef __cplusplus
 }
 #endif
 
-
-#endif  // __PRODUCT_SERVER_H__
+#endif // __PRODUCT_SERVER_H__

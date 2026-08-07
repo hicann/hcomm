@@ -33,12 +33,12 @@
 #include "hccl/hccl_res.h"
 namespace Hccl {
 class DevBuffer;
-}  // namespace Hccl
+} // namespace Hccl
 namespace hccl {
 class SymmetricMemory;
 struct SymmetricMemoryResource;
 struct SymmetricMemoryDeleter {
-    void operator()(SymmetricMemory *ptr) const;
+    void operator()(SymmetricMemory* ptr) const;
 };
 /**
  * @note 职责：集合通信通信域上下文管理，包括RankGraph和本rank信息资源等内容。
@@ -46,30 +46,31 @@ struct SymmetricMemoryDeleter {
  * *指针、及新独立算子架构的通信域（支持91092/91093/91095...）。
  */
 enum class CollCommInitMode {
-    fullMode,    // 全功能模式：给A5及后续新架构使用，完整的CollComm初始化和资源管理
-    simpleMode   // 简化模式：给A2/A3老芯片使用，由于架构限制，仅将RankGraph、MyRank等放入CollComm管理
+    fullMode, // 全功能模式：给A5及后续新架构使用，完整的CollComm初始化和资源管理
+    simpleMode // 简化模式：给A2/A3老芯片使用，由于架构限制，仅将RankGraph、MyRank等放入CollComm管理
 };
 
 class CollComm {
 public:
-    CollComm(void *comm, uint32_t rankId, const std::string &commName, const ManagerCallbacks& callbacks,
-             CollCommInitMode initMode = CollCommInitMode::fullMode);
+    CollComm(
+        void* comm, uint32_t rankId, const std::string& commName, const ManagerCallbacks& callbacks,
+        CollCommInitMode initMode = CollCommInitMode::fullMode);
     ~CollComm();
-    
-    // 初始化通信域
-    HcclResult Init(void *rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, uint32_t opExpansionMode = 0);
 
-    inline CommConfig& GetCommConfig() { return config_;}
+    // 初始化通信域
+    HcclResult Init(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, uint32_t opExpansionMode = 0);
+
+    inline CommConfig& GetCommConfig() { return config_; }
     inline RankGraph* GetRankGraph() { return rankgraph_; }
     inline CommEngineResMgr* GetCommEngineResMgr() { return commEngineResMgr_.get(); }
     inline ContextManager* GetContextManager() { return contextMgr_.get(); }
     inline CommMemMgr* GetCommMemMgr() { return commMemMgr_.get(); }
     inline ChannelManager* GetChannelManager() { return channelMgr_.get(); }
-    void *GetCommunicatorV2() { return comm_; }
+    void* GetCommunicatorV2() { return comm_; }
 
     // 获取MyRank
     MyRank* GetMyRank() const { return myRank_.get(); }
-    
+
     // 获取Rank ID
     uint32_t GetMyRankId() const;
 
@@ -77,7 +78,8 @@ public:
     s32 GetDeviceLogicId() const { return deviceLogicId_; }
 
     // 获取Rank数量
-    uint32_t GetRankSize() const {
+    uint32_t GetRankSize() const
+    {
         if (rankgraph_ == nullptr) {
             HCCL_ERROR("[CollComm]get ranksize failed");
             return 0;
@@ -93,45 +95,46 @@ public:
 
     // 获取HcclCommDfx
     HcclCommDfx* GetHcclCommDfx() { return hcclCommDfx_.get(); }
-    std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> GetDfxCallback() {
+    std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> GetDfxCallback()
+    {
         if (hcclCommDfx_ == nullptr) {
             HCCL_ERROR("[CollComm]CollComm DfxCallBack failed. hcclCommDfx is nullptr");
             return nullptr;
         }
         return hcclCommDfx_->GetCallback();
     }
-    const std::string& GetCommId() const {return commId_;}
-    HcclResult GetHDCommunicate(
-        HDCommunicateParams &kfcControlTransferH2DParams, HDCommunicateParams &kfcStatusTransferD2HParams);
+    const std::string& GetCommId() const { return commId_; }
+    HcclResult
+    GetHDCommunicate(HDCommunicateParams& kfcControlTransferH2DParams, HDCommunicateParams& kfcStatusTransferD2HParams);
     Hccl::ErrorMessageReport GetAicpuTaskException();
     HcclResult GetParentRankId(u32& parentRankId) const;
     uint32_t UpdateIndex();
-    
+
     // Todo:在这里做N秒快恢
     HcclCommStatus GetCommStatus() const;
     HcclResult Suspend();
     HcclResult Clean();
     HcclResult Resume();
-    HcclResult RegisterWindow(void* ptr, size_t size, HcclCommSymWindow *winHandle);
+    HcclResult RegisterWindow(void* ptr, size_t size, HcclCommSymWindow* winHandle);
     HcclResult DeregisterWindow(HcclCommSymWindow winHandle);
-    HcclResult GetCommSymWin(void* ptr, size_t size, HcclCommSymWindow *winHandle, size_t *offset);
-    HcclResult RegisterPendingSymmetricMemHandles(std::vector<HcclMemHandle> &memHandles);
-    HcclResult UpdateSymmetricRemoteMem(uint32_t remoteRank, const CommMem *remoteMems,
-        const std::vector<std::string> &memTags);
-    HcclResult GetHcclBinHandle(aclrtBinHandle &binHcclHandle);
-    std::shared_ptr<class GroupScheduleMgr> groupScheduleMgr {nullptr}; //for group
+    HcclResult GetCommSymWin(void* ptr, size_t size, HcclCommSymWindow* winHandle, size_t* offset);
+    HcclResult RegisterPendingSymmetricMemHandles(std::vector<HcclMemHandle>& memHandles);
+    HcclResult
+    UpdateSymmetricRemoteMem(uint32_t remoteRank, const CommMem* remoteMems, const std::vector<std::string>& memTags);
+    HcclResult GetHcclBinHandle(aclrtBinHandle& binHcclHandle);
+    std::shared_ptr<class GroupScheduleMgr> groupScheduleMgr{nullptr}; // for group
 
 private:
     HcclResult DestroyAicpuComm();
-    HcclResult InitHDCommunicate();   
+    HcclResult InitHDCommunicate();
     HcclResult InitTaskExceptionHandler();
     HcclResult InitKfcAndRegisterCollComm();
     HcclResult GetRankIpPortMap();
     HcclResult InitSymmetricMemory();
-    HcclResult RegisterSymmetricMemoryResource(void* ptr, size_t size, SymmetricMemoryResource &resource);
-    void UnregisterSymmetricMemoryResource(const SymmetricMemoryResource &resource);
+    HcclResult RegisterSymmetricMemoryResource(void* ptr, size_t size, SymmetricMemoryResource& resource);
+    void UnregisterSymmetricMemoryResource(const SymmetricMemoryResource& resource);
 
-    /* 
+    /*
      * CollComm初始化方式：
      *      fullMode：给A5及后续新架构使用，完整的CollComm初始化和资源管理
      *      SimpleMode：给A2/A3老芯片使用，由于架构限制，仅将RankGraph、MyRank等放入CollComm管理，简化CollComm实现
@@ -150,8 +153,8 @@ private:
     std::string commId_;
     CommConfig config_{};
     HcclCommStatus commStatus_{HcclCommStatus::HCCL_COMM_STATUS_INVALID};
-    
-    ManagerCallbacks callbacks_; 
+
+    ManagerCallbacks callbacks_;
     s32 deviceLogicId_{0};
     uint32_t index_{0};
 
@@ -161,12 +164,12 @@ private:
     RankGraph* rankgraph_{nullptr};
     std::unique_ptr<RankGraph> rankGraphOwner_{nullptr};
     std::unique_ptr<CommEngineResMgr> commEngineResMgr_{nullptr};
-    std::unique_ptr<ContextManager>  contextMgr_{nullptr};
+    std::unique_ptr<ContextManager> contextMgr_{nullptr};
     std::unique_ptr<CommMemMgr> commMemMgr_{nullptr};
     std::unique_ptr<ChannelManager> channelMgr_{nullptr};
     std::shared_ptr<MyRank> myRank_{};
     std::unique_ptr<HcclCommDfx> hcclCommDfx_{nullptr};
-    uintptr_t   addr_{0};
+    uintptr_t addr_{0};
     std::size_t size_{0};
     HcclMemType memType_{HcclMemType::HCCL_MEM_TYPE_DEVICE};
 
@@ -177,11 +180,11 @@ private:
     std::shared_ptr<HDCommunicate> kfcStatusTransferD2H_{nullptr};
     Hccl::RankIpPortMapPtr rankIpPortMap_;
 
-    CollCommInitMode initMode_{CollCommInitMode::fullMode};  // 初始化模式
+    CollCommInitMode initMode_{CollCommInitMode::fullMode}; // 初始化模式
     std::unique_ptr<SymmetricMemory, SymmetricMemoryDeleter> symmetricMemory_{nullptr};
     aclrtBinHandle binHcclHandle_{nullptr};
     std::mutex binHcclmutex_;
 };
-}  // namespace hccl
+} // namespace hccl
 
-#endif  // COLL_COMM_H
+#endif // COLL_COMM_H

@@ -18,25 +18,25 @@ namespace Hccl {
 class CommunicatorImpl;
 
 class ConnLocalCntNotifyManager {
-    using RtsCntNotifyPool       = unordered_map<u32, vector<unique_ptr<RtsCntNotify>>>;
+    using RtsCntNotifyPool = unordered_map<u32, vector<unique_ptr<RtsCntNotify>>>;
     using ConnLocalCntNotifyPool = unordered_map<PortData, unordered_map<u32, vector<unique_ptr<LocalCntNotify>>>>;
 
 public:
-    explicit ConnLocalCntNotifyManager(CommunicatorImpl *communicator);
+    explicit ConnLocalCntNotifyManager(CommunicatorImpl* communicator);
 
     ~ConnLocalCntNotifyManager();
 
     void ApplyFor(u32 topicId, vector<LinkData> links);
 
-    vector<RtsCntNotify *> Get(u32 topicId);
+    vector<RtsCntNotify*> Get(u32 topicId);
 
     bool Destroy();
 
-    unordered_map<u32, vector<LocalCntNotify *>> GetTopicIdCntNotifyMap(const PortData &portData);
+    unordered_map<u32, vector<LocalCntNotify*>> GetTopicIdCntNotifyMap(const PortData& portData);
 
 private:
-    CommunicatorImpl      *comm;
-    RtsCntNotifyPool       rtsNotifyPool;
+    CommunicatorImpl* comm;
+    RtsCntNotifyPool rtsNotifyPool;
     ConnLocalCntNotifyPool localCntNotifyPool;
 };
 } // namespace Hccl

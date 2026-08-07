@@ -20,10 +20,10 @@
 namespace hcomm {
 
 struct PfeJettyStrategy {
-    uint32_t feId;              // FE index.
-    uint32_t pfeId;             // PFE ctx index.
-    uint32_t startTaJettyId;    // PFE assigned to CCU starting jetty index.
-    uint8_t  size;              // PFE assigned to CCU jetty num.
+    uint32_t feId;                 // FE index.
+    uint32_t pfeId;                // PFE ctx index.
+    uint32_t startTaJettyId;       // PFE assigned to CCU starting jetty index.
+    uint8_t size;                  // PFE assigned to CCU jetty num.
     uint32_t startLocalJettyCtxId; // PFE assigned to CCU starting local jetty index.
 };
 
@@ -45,12 +45,14 @@ struct PfeCtx {
 class CcuPfeMgr {
 public:
     CcuPfeMgr(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId)
-        : devLogicId_(devLogicId), dieId_(dieId), devPhyId_(devPhyId) {};
+        : devLogicId_(devLogicId),
+          dieId_(dieId),
+          devPhyId_(devPhyId) {};
     CcuPfeMgr() = default;
     ~CcuPfeMgr() = default;
 
     HcclResult Init();
-    HcclResult GetPfeStrategy(uint32_t feId, PfeJettyStrategy &pfeJettyStrategy) const;
+    HcclResult GetPfeStrategy(uint32_t feId, PfeJettyStrategy& pfeJettyStrategy) const;
 
 private:
     int32_t devLogicId_{0};
@@ -60,6 +62,6 @@ private:
     std::unordered_map<uint32_t, struct PfeJettyStrategy> pfeJettyMap_;
 };
 
-}; // Hccl
+}; // namespace hcomm
 
 #endif // CCU_PFE_MGR_H

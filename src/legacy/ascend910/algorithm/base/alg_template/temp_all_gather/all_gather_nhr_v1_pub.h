@@ -20,13 +20,13 @@ public:
 
     ~AllGatherNHRV1() override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
 protected:
-    HcclResult RunAllGatherOnHorizontal(u32 rank, const std::vector<LINK> &links, const RingInfo &info);
-    HcclResult RunAllGatherOnVertical(u32 rank, const std::vector<LINK> &links, const RingInfo &info);
+    HcclResult RunAllGatherOnHorizontal(u32 rank, const std::vector<LINK>& links, const RingInfo& info);
+    HcclResult RunAllGatherOnVertical(u32 rank, const std::vector<LINK>& links, const RingInfo& info);
 
 private:
 };
-}  // namespace hccl
+} // namespace hccl
 #endif /* ALL_GATHER_NHR_V1_PUB_H */

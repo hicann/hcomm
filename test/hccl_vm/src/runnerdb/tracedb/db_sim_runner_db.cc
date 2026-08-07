@@ -13,8 +13,5 @@
 #include "db_sim_sqlite_db.h"
 
 namespace RunnerDB {
-    std::vector<std::string> GetAllTableName()
-    {
-        return SimRunnerSqliteDB::Instance().GetAllTableName();
-    }
-}
+std::vector<std::string> GetAllTableName() { return SimRunnerSqliteDB::Instance().GetAllTableName(); }
+} // namespace RunnerDB

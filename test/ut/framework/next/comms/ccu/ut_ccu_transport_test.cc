@@ -44,7 +44,7 @@ TEST_F(CclBufferInfoTest, Ut_PackUnpack_WithMemInfo_Expect_SameValues)
 {
     CcuTransport::CclBufferInfo original(0xDEADBEEFULL, 4096U, 10U, 20U);
     std::array<char, HCCL_RES_TAG_MAX_LEN> memInfo{};
-    const char *tag = "TestBuffer";
+    const char* tag = "TestBuffer";
     memcpy(memInfo.data(), tag, strlen(tag));
     original.memInfo = memInfo;
 
@@ -268,6 +268,6 @@ TEST_F(CcuTransportTest, Ut_SetHandshakeMsg_Then_GetLocalHandshakeMsg_Expect_Sam
 TEST_F(CcuTransportTest, Ut_GetRmtHandshakeMsg_Expect_InitiallyEmpty)
 {
     transport->rmtHandshakeMsg_.clear();
-    auto &msg = transport->GetRmtHandshakeMsg();
+    auto& msg = transport->GetRmtHandshakeMsg();
     EXPECT_TRUE(msg.empty());
 }

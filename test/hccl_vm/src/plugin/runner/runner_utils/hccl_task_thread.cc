@@ -32,7 +32,7 @@ using namespace HcclSim;
 namespace VirtualRunTime {
 std::unordered_map<uint64_t, bool> g_notifyStatus;
 
-HcclVmResult TransformAddr(uint64_t srcOffset, uint64_t dstOffset, VmUniquePtr &src, VmUniquePtr &dst)
+HcclVmResult TransformAddr(uint64_t srcOffset, uint64_t dstOffset, VmUniquePtr& src, VmUniquePtr& dst)
 {
     HCCLVM_CHK_RET(GetAddrByOffset(srcOffset, src));
     HCCLVM_CHK_RET(GetAddrByOffset(dstOffset, dst));
@@ -40,9 +40,11 @@ HcclVmResult TransformAddr(uint64_t srcOffset, uint64_t dstOffset, VmUniquePtr &
 }
 
 // Memory copy task
-HcclVmResult TaskMemcpy(const HcclTaskMetaData &task) {
-    HCCL_VM_DEBUG("Memory copy task from src offset= {} to dst offset= {} len= {} started",
-                task.taskData.transMem.srcOffset, task.taskData.transMem.dstOffset, task.taskData.transMem.len);
+HcclVmResult TaskMemcpy(const HcclTaskMetaData& task)
+{
+    HCCL_VM_DEBUG(
+        "Memory copy task from src offset= {} to dst offset= {} len= {} started", task.taskData.transMem.srcOffset,
+        task.taskData.transMem.dstOffset, task.taskData.transMem.len);
     // 拷贝数据
     VmUniquePtr src;
     VmUniquePtr dst;
@@ -53,9 +55,11 @@ HcclVmResult TaskMemcpy(const HcclTaskMetaData &task) {
 }
 
 // Reduce add task
-HcclVmResult TaskReduceAdd(const HcclTaskMetaData &task) {
-    HCCL_VM_DEBUG("Reduce Add task from src offset= {} to dst offset= {} started",
-                task.taskData.reduce.srcOffset, task.taskData.reduce.dstOffset);
+HcclVmResult TaskReduceAdd(const HcclTaskMetaData& task)
+{
+    HCCL_VM_DEBUG(
+        "Reduce Add task from src offset= {} to dst offset= {} started", task.taskData.reduce.srcOffset,
+        task.taskData.reduce.dstOffset);
     // Reduce add
     VmUniquePtr src;
     VmUniquePtr dst;
@@ -67,9 +71,11 @@ HcclVmResult TaskReduceAdd(const HcclTaskMetaData &task) {
 }
 
 // Reduce max task
-HcclVmResult TaskReduceMax(const HcclTaskMetaData &task) {
-    HCCL_VM_DEBUG("Reduce Max task from src offset= {} to dst offset= {} started",
-                task.taskData.reduce.srcOffset, task.taskData.reduce.dstOffset);
+HcclVmResult TaskReduceMax(const HcclTaskMetaData& task)
+{
+    HCCL_VM_DEBUG(
+        "Reduce Max task from src offset= {} to dst offset= {} started", task.taskData.reduce.srcOffset,
+        task.taskData.reduce.dstOffset);
     // Reduce max
     VmUniquePtr src;
     VmUniquePtr dst;
@@ -81,9 +87,11 @@ HcclVmResult TaskReduceMax(const HcclTaskMetaData &task) {
 }
 
 // Reduce min task
-HcclVmResult TaskReduceMin(const HcclTaskMetaData &task) {
-    HCCL_VM_DEBUG("Reduce Min task from src offset= {} to dst offset= {} started",
-                task.taskData.reduce.srcOffset, task.taskData.reduce.dstOffset);
+HcclVmResult TaskReduceMin(const HcclTaskMetaData& task)
+{
+    HCCL_VM_DEBUG(
+        "Reduce Min task from src offset= {} to dst offset= {} started", task.taskData.reduce.srcOffset,
+        task.taskData.reduce.dstOffset);
     // Reduce min
     VmUniquePtr src;
     VmUniquePtr dst;
@@ -94,10 +102,9 @@ HcclVmResult TaskReduceMin(const HcclTaskMetaData &task) {
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult TaskReduce(const HcclTaskMetaData &task)
+HcclVmResult TaskReduce(const HcclTaskMetaData& task)
 {
-    switch ((HcclReduceOp)(task.taskData.reduce.reduceOp))
-    {
+    switch ((HcclReduceOp)(task.taskData.reduce.reduceOp)) {
         case HcclReduceOp::HCCL_REDUCE_MIN:
             return TaskReduceMin(task);
         case HcclReduceOp::HCCL_REDUCE_MAX:
@@ -111,7 +118,7 @@ HcclVmResult TaskReduce(const HcclTaskMetaData &task)
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult TaskNotifyRecord(const HcclTaskMetaData &task)
+HcclVmResult TaskNotifyRecord(const HcclTaskMetaData& task)
 {
     uint64_t notify = task.taskData.notify.notifyId;
     g_notifyStatus[notify] = true;
@@ -119,7 +126,7 @@ HcclVmResult TaskNotifyRecord(const HcclTaskMetaData &task)
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult TaskNotifyWait(const HcclTaskMetaData &task)
+HcclVmResult TaskNotifyWait(const HcclTaskMetaData& task)
 {
     uint64_t notify = task.taskData.notify.notifyId;
     HCCL_VM_DEBUG("Wait {} task start.", notify);
@@ -131,7 +138,7 @@ HcclVmResult TaskNotifyWait(const HcclTaskMetaData &task)
     return HcclVmResult::HCCL_SIM_VRT_HOLD_CMD;
 }
 
-HcclSim::HcclVmResult TaskCcuGraph(const HcclTaskMetaData &task)
+HcclSim::HcclVmResult TaskCcuGraph(const HcclTaskMetaData& task)
 {
     auto rankId = task.rankId;
     auto dieId = task.taskData.ccu.dieId;
@@ -139,17 +146,18 @@ HcclSim::HcclVmResult TaskCcuGraph(const HcclTaskMetaData &task)
     auto instCnt = task.taskData.ccu.instCnt;
     uint16_t endInstrId = instrStartId + instCnt;
 
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     ccuResMgr.AddTaskInfo(rankId, task);
     auto simulator = ccuResMgr.InitSimulator(rankId, dieId, instrStartId, endInstrId, instCnt);
-    HCCL_VM_INFO("TaskCcuGraph simulator start, rankId={}, dieId={}, instrStartId={}, endInstrId={}, instCnt={}, simulator_ptr: {:p}",
-                rankId, dieId, instrStartId, endInstrId, instCnt, (void*)(simulator.get()));
+    HCCL_VM_INFO(
+        "TaskCcuGraph simulator start, rankId={}, dieId={}, instrStartId={}, endInstrId={}, instCnt={}, simulator_ptr: "
+        "{:p}",
+        rankId, dieId, instrStartId, endInstrId, instCnt, (void*)(simulator.get()));
 
     // === Trace: 注册 CCU 静态信息（仅首次，使用 collector 内部跟踪，随 StartRun 自动重置） ===
     auto& traceCollector = CcuTrace::CcuTraceCollector::GetInstance();
     if (traceCollector.IsEnabled()) {
-        HCCL_VM_INFO("TaskCcuGraph: rankId={}, dieId={}, traceEnabled=true",
-                    rankId, dieId);
+        HCCL_VM_INFO("TaskCcuGraph: rankId={}, dieId={}, traceEnabled=true", rankId, dieId);
 
         if (traceCollector.TryRegisterCcuStatic(rankId, dieId)) {
             HCCL_VM_INFO("First time seeing CCU [{}:{}], registering static info...", rankId, dieId);
@@ -201,14 +209,14 @@ HcclSim::HcclVmResult TaskCcuGraph(const HcclTaskMetaData &task)
                 }
 
                 traceCollector.RegisterChannelSpace(channelSpace);
-                HCCL_VM_INFO("Registered {} channels for CCU [{}:{}] (from StorageManager)",
-                            channelSpace.channels.size(), rankId, dieId);
+                HCCL_VM_INFO(
+                    "Registered {} channels for CCU [{}:{}] (from StorageManager)", channelSpace.channels.size(),
+                    rankId, dieId);
             } else {
                 HCCL_VM_WARN("rankId {} >= rankSize {}, skipping channel registration", rankId, rankSize);
             }
 
-            HCCL_VM_INFO("Registered CCU [{}:{}], instrCount={}",
-                        rankId, dieId, instrEntries.size());
+            HCCL_VM_INFO("Registered CCU [{}:{}], instrCount={}", rankId, dieId, instrEntries.size());
         } else {
             HCCL_VM_INFO("CCU [{}:{}] already registered, skipping static info", rankId, dieId);
         }
@@ -220,11 +228,11 @@ HcclSim::HcclVmResult TaskCcuGraph(const HcclTaskMetaData &task)
             args[i] = task.taskData.ccu.args[i];
         }
         uint32_t sqeTaskId = traceCollector.RegisterSqeTask(
-            rankId, dieId, 0, instrStartId, instCnt, 0, args,
-            reinterpret_cast<uint64_t>(simulator.get()));
+            rankId, dieId, 0, instrStartId, instCnt, 0, args, reinterpret_cast<uint64_t>(simulator.get()));
         traceCollector.SetCurrentSqeTaskId(sqeTaskId);
-        HCCL_VM_INFO("Registered SQE task: sqeTaskId={}, rankId={}, dieId={}, startId={}, cnt={}",
-                    sqeTaskId, rankId, dieId, instrStartId, instCnt);
+        HCCL_VM_INFO(
+            "Registered SQE task: sqeTaskId={}, rankId={}, dieId={}, startId={}, cnt={}", sqeTaskId, rankId, dieId,
+            instrStartId, instCnt);
     } else {
         HCCL_VM_INFO("TaskCcuGraph: traceEnabled=false, skipping registration");
     }
@@ -232,7 +240,7 @@ HcclSim::HcclVmResult TaskCcuGraph(const HcclTaskMetaData &task)
     if (simulator->GetState() == CcuExecState::EXEC_FAIL) {
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
     }
-    
+
     if (simulator->Execute() == false) {
         HCCL_VM_WARN("TaskCcuGraph Execute Hold");
         return HcclVmResult::HCCL_SIM_VRT_HOLD_CMD;
@@ -240,7 +248,7 @@ HcclSim::HcclVmResult TaskCcuGraph(const HcclTaskMetaData &task)
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult TaskAivGraph(const HcclTaskMetaData &task)
+HcclVmResult TaskAivGraph(const HcclTaskMetaData& task)
 {
     const uint32_t rankId = task.rankId;
     const uint32_t streamId = static_cast<uint32_t>(task.streamId);
@@ -248,22 +256,23 @@ HcclVmResult TaskAivGraph(const HcclTaskMetaData &task)
     auto aivGraphExecutor = AivGraphExecutorMgr::GetInstance().GetAivGraphExecutor(rankId, launchIndex);
     if (!aivGraphExecutor->IsInitialized()) {
         if (!aivGraphExecutor->Init(rankId, launchIndex)) {
-            HCCL_VM_ERROR("Failed to init AivGraphExecutor, rankId={}, streamId={}, launchIndex={}",
-                        rankId, streamId, launchIndex);
+            HCCL_VM_ERROR(
+                "Failed to init AivGraphExecutor, rankId={}, streamId={}, launchIndex={}", rankId, streamId,
+                launchIndex);
             return HcclVmResult::HCCL_SIM_E_INTERNAL;
         }
     }
 
-    HCCL_VM_DEBUG("AivGraphExecutor running, rankId={}, streamId={}, launchIndex={}",
-                rankId, streamId, launchIndex);
+    HCCL_VM_DEBUG("AivGraphExecutor running, rankId={}, streamId={}, launchIndex={}", rankId, streamId, launchIndex);
     auto ret = aivGraphExecutor->Execute();
     if (ret != HcclVmResult::HCCL_SIM_SUCCESS) {
         if (ret != HcclVmResult::HCCL_SIM_VRT_HOLD_CMD) {
-            HCCL_VM_ERROR("AivGraphExecutor failed, rankId={}, streamId={}, launchIndex={}, ret={}",
-                        rankId, streamId, launchIndex, static_cast<int>(ret));
+            HCCL_VM_ERROR(
+                "AivGraphExecutor failed, rankId={}, streamId={}, launchIndex={}, ret={}", rankId, streamId,
+                launchIndex, static_cast<int>(ret));
         }
         return ret;
     }
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
-}
+} // namespace VirtualRunTime

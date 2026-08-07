@@ -13,17 +13,11 @@
 
 namespace hccl {
 constexpr u64 DEVICE_MEM_MAX_COUNT = 0x1000000000; // device申请内存最大值 64GB
-constexpr u64 HOST_MEM_MAX_COUNT = 0x10000000000; // host申请内存最大值 1TB
-
+constexpr u64 HOST_MEM_MAX_COUNT = 0x10000000000;  // host申请内存最大值 1TB
 
 constexpr u32 MAX_DEV_NUM = 32;
 constexpr u32 DEFAULT_DEVICE_LOGIC_ID = MAX_DEV_NUM - 1;
 
-
-enum class RmaType {
-    IPC_RMA = 0,
-    RDMA_RMA,
-    RMA_TYPE_RESERVED
-};
-}  // namespace hccl
-#endif  // HCCL_INNER_COMMON_H
+enum class RmaType { IPC_RMA = 0, RDMA_RMA, RMA_TYPE_RESERVED };
+} // namespace hccl
+#endif // HCCL_INNER_COMMON_H

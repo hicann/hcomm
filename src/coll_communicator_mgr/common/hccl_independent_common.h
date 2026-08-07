@@ -17,7 +17,7 @@
 #include "hccl_mem_defs.h"
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
 typedef enum {
     RANK_GRAPH_RESERVED = -1,
@@ -44,12 +44,11 @@ typedef union {
 
 typedef struct {
     HcclMemType type;
-    void *addr;
+    void* addr;
     u64 size;
 } CommBuffer;
 
-extern HcclResult HcclGetNotifyNumInThread(HcclComm comm, ThreadHandle thread,
-    CommEngine engine, uint32_t *notifyNum);
+extern HcclResult HcclGetNotifyNumInThread(HcclComm comm, ThreadHandle thread, CommEngine engine, uint32_t* notifyNum);
 
 constexpr u32 NOTIFY_MAX_NUM = 2048;
 inline bool IsValidCommEngine(CommEngine engine)
@@ -82,7 +81,6 @@ inline bool IsValidNotify(NotifyType notifyType)
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
-
+#endif // __cplusplus
 
 #endif

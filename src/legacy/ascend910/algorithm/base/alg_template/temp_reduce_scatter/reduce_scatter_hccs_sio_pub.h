@@ -22,24 +22,22 @@ public:
 
     ~ReduceScatterHccsSio() override;
 
-    HcclResult Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem, const u64 count,
-        const HcclDataType dataType, const Stream &stream, const HcclReduceOp reductionOp, 
-        const u32 root,  const u64 baseOffset, 
-        const u64 reduceAttrBitMap, std::vector<Stream> &meshStreams, 
-        std::vector<std::shared_ptr<LocalNotify>> &meshSignal, 
-        std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux, 
-        u32 userRank,SubCommInfo subCommInfoHccs, SubCommInfo subCommInfoSio, HcomCollOpInfo *opInfo) override;
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult Prepare(
+        DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+        const Stream& stream, const HcclReduceOp reductionOp, const u32 root, const u64 baseOffset,
+        const u64 reduceAttrBitMap, std::vector<Stream>& meshStreams,
+        std::vector<std::shared_ptr<LocalNotify>>& meshSignal, std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux,
+        u32 userRank, SubCommInfo subCommInfoHccs, SubCommInfo subCommInfoSio, HcomCollOpInfo* opInfo) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
 protected:
 private:
-
     HcclResult MainRecordSub();
     HcclResult SubWaitMain();
     HcclResult MainWaitSub();
     HcclResult SubRecordMain();
-    HcclResult RunInterDieOpBase(const u32 rank, const LINK &link, const u32 srcDMAMemSliceId, u32 unitSize);
-    HcclResult RunInterDieOffload(const u32 rank, const LINK &link, const u32 srcDMAMemSliceId, u32 unitSize);
+    HcclResult RunInterDieOpBase(const u32 rank, const LINK& link, const u32 srcDMAMemSliceId, u32 unitSize);
+    HcclResult RunInterDieOffload(const u32 rank, const LINK& link, const u32 srcDMAMemSliceId, u32 unitSize);
 
     u64 reduceAttr_ = 0;
     u32 localRank_ = 0;
@@ -47,12 +45,12 @@ private:
     u32 userRank_ = 0;
     SubCommInfo subCommInfoHccs_;
     SubCommInfo subCommInfoSio_;
-    std::vector<Stream> meshStreams_;         /* * 多steam* */
-    const std::vector<std::shared_ptr<LocalNotify>> *meshSignalPtr_{nullptr};    /* 每个ring创建一个signal */
-    const std::vector<std::shared_ptr<LocalNotify>> *meshSignalAuxPtr_{nullptr}; /* 从stream wait，主steam record */
+    std::vector<Stream> meshStreams_;                                            /* * 多steam* */
+    const std::vector<std::shared_ptr<LocalNotify>>* meshSignalPtr_{nullptr};    /* 每个ring创建一个signal */
+    const std::vector<std::shared_ptr<LocalNotify>>* meshSignalAuxPtr_{nullptr}; /* 从stream wait，主steam record */
     std::vector<Slice> scratchSlices_;
-    HcomCollOpInfo *opInfo_{nullptr};
+    HcomCollOpInfo* opInfo_{nullptr};
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* REDUCE_SCATTER_HCCS_SIO_PUB_H */

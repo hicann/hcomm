@@ -22,17 +22,18 @@ namespace Hccl {
 
 class UbCiUpdaterManager {
 public:
-    explicit UbCiUpdaterManager(const RmaConnManager *rmaConnMgr);
+    explicit UbCiUpdaterManager(const RmaConnManager* rmaConnMgr);
     ~UbCiUpdaterManager();
 
-    void SaveConnsCi(const std::string &opTag);
-    void UpdateConnsCi(const std::string &opTag);
+    void SaveConnsCi(const std::string& opTag);
+    void UpdateConnsCi(const std::string& opTag);
+
 private:
-    const RmaConnManager *rmaConnMgrPtr;
+    const RmaConnManager* rmaConnMgrPtr;
     std::unordered_map<std::string, std::vector<std::unique_ptr<DevUbConnection::UbCiUpdater>>> ubCiUpdaters;
 
-    std::vector<std::unique_ptr<DevUbConnection::UbCiUpdater>> BatchCreate(const std::string &opTag) const;
-    std::vector<DevUbConnection::UbCiUpdater *>                Get(const std::string &opTag);
+    std::vector<std::unique_ptr<DevUbConnection::UbCiUpdater>> BatchCreate(const std::string& opTag) const;
+    std::vector<DevUbConnection::UbCiUpdater*> Get(const std::string& opTag);
 };
 
 } // namespace Hccl

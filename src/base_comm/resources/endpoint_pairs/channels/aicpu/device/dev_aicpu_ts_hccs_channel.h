@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #ifndef DEV_AICPU_TS_HCCS_CHANNEL_H
 #define DEV_AICPU_TS_HCCS_CHANNEL_H
 
@@ -18,19 +17,17 @@
 #include "dev_aicpu_ts_channel.h"
 
 namespace hccl {
-class DevAicpuTsHccsChannel : public DevAicpuTsChannel  {
+class DevAicpuTsHccsChannel : public DevAicpuTsChannel {
 public:
     DevAicpuTsHccsChannel() = default;
     ~DevAicpuTsHccsChannel() override;
 
-    HcclResult Create(const void *blob, u64 blobBytes,
-                      const HcommDeviceInfo &deviceInfo,
-                      ChannelHandle &outHandle) override;
+    HcclResult
+    Create(const void* blob, u64 blobBytes, const HcommDeviceInfo& deviceInfo, ChannelHandle& outHandle) override;
     bool Destroy(ChannelHandle handle) override;
 
 private:
-    HcclResult SetTransportMachinePara(hccl::MachinePara &machinePara,
-        const HcclChannelHccsRes &channelHccsRes);
+    HcclResult SetTransportMachinePara(hccl::MachinePara& machinePara, const HcclChannelHccsRes& channelHccsRes);
 
     struct HccsSlot {
         DispatcherCtxPtr dispatcherCtx{nullptr};
@@ -41,6 +38,6 @@ private:
     std::unordered_map<ChannelHandle, HccsSlot> slots_;
     std::mutex mutex_;
 };
-}
+} // namespace hccl
 
 #endif // DEV_AICPU_TS_HCCS_CHANNEL_H

@@ -18,29 +18,29 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepLocCpy : public CcuRepBase {
-public:
-    CcuRepLocCpy(Memory dst, Memory src, Variable len, MaskSignal sem, uint16_t mask);
-    CcuRepLocCpy(Memory dst, Memory src, Variable len, uint16_t dataType, uint16_t opType, MaskSignal sem,
-                 uint16_t mask);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
+    class CcuRepLocCpy : public CcuRepBase {
+    public:
+        CcuRepLocCpy(Memory dst, Memory src, Variable len, MaskSignal sem, uint16_t mask);
+        CcuRepLocCpy(
+            Memory dst, Memory src, Variable len, uint16_t dataType, uint16_t opType, MaskSignal sem, uint16_t mask);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-private:
-    Memory   dst;
-    Memory   src;
-    Variable len;
+    private:
+        Memory dst;
+        Memory src;
+        Variable len;
 
-    MaskSignal sem;
-    uint16_t   mask{0};
+        MaskSignal sem;
+        uint16_t mask{0};
 
-    uint16_t dataType{0};
-    uint16_t opType{0};
-    uint16_t reduceFlag{0};
+        uint16_t dataType{0};
+        uint16_t opType{0};
+        uint16_t reduceFlag{0};
 
-    friend class Hccl::CcuErrorHandler;
-};
+        friend class Hccl::CcuErrorHandler;
+    };
 
-};     // namespace CcuRep
-};     // namespace Hccl
+}; // namespace CcuRep
+}; // namespace Hccl
 #endif // HCCL_CCU_REPRESENTATION_LOCCPY_H

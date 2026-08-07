@@ -18,55 +18,49 @@
 namespace Hccl {
 namespace CcuRep {
 
-Repeat::Repeat(CcuRepContext *context, CcuRelationalOperator<Variable, uint64_t> rel) : context(context)
-{
-    std::string label = "Repeat";
-    beginLabel        = std::make_shared<CcuRepJumpLabel>(label);
-    endLabel          = std::make_shared<CcuRepJumpLabel>("Break");
-    Variable tmp;
-    auto ret = CreateVariable(context, tmp);
-    if (ret != HcclResult::HCCL_SUCCESS) {
-        THROW<CcuApiException>("CreateVariable is failed. ret[%d]", ret);
+    Repeat::Repeat(CcuRepContext* context, CcuRelationalOperator<Variable, uint64_t> rel) : context(context)
+    {
+        std::string label = "Repeat";
+        beginLabel = std::make_shared<CcuRepJumpLabel>(label);
+        endLabel = std::make_shared<CcuRepJumpLabel>("Break");
+        Variable tmp;
+        auto ret = CreateVariable(context, tmp);
+        if (ret != HcclResult::HCCL_SUCCESS) {
+            THROW<CcuApiException>("CreateVariable is failed. ret[%d]", ret);
+        }
+        if (rel.type == CcuRelationalOperatorType::NOT_EQUAL) {
+            jump = std::make_shared<CcuRepJumpNE>(label, tmp, rel.lhs, rel.rhs);
+        } else if (rel.type == CcuRelationalOperatorType::EQUAL) {
+            jump = std::make_shared<CcuRepJumpEQ>(label, tmp, rel.lhs, rel.rhs);
+        } else {
+            THROW<CcuApiException>("Unsupported relational operation");
+        }
+        jump->Reference(beginLabel);
+
+        AppendToContext(context, beginLabel);
     }
-    if (rel.type == CcuRelationalOperatorType::NOT_EQUAL) {
-        jump = std::make_shared<CcuRepJumpNE>(label, tmp, rel.lhs, rel.rhs);
-    } else if (rel.type == CcuRelationalOperatorType::EQUAL) {
-        jump = std::make_shared<CcuRepJumpEQ>(label, tmp, rel.lhs, rel.rhs);
-    } else {
-        THROW<CcuApiException>("Unsupported relational operation");
+
+    Repeat::~Repeat()
+    {
+        DECTOR_TRY_CATCH("Repeat", AppendToContext(context, jump));
+        DECTOR_TRY_CATCH("Repeat", AppendToContext(context, endLabel));
     }
-    jump->Reference(beginLabel);
 
-    AppendToContext(context, beginLabel);
-}
-
-Repeat::~Repeat()
-{
-    DECTOR_TRY_CATCH("Repeat", AppendToContext(context, jump));
-    DECTOR_TRY_CATCH("Repeat", AppendToContext(context, endLabel));
-}
-
-void Repeat::Break()
-{
-    Variable tmp;
-    auto ret = CreateVariable(context, tmp);
-    if (ret != HcclResult::HCCL_SUCCESS) {
-        THROW<CcuApiException>("CreateVariable is failed. ret[%d]", ret);
+    void Repeat::Break()
+    {
+        Variable tmp;
+        auto ret = CreateVariable(context, tmp);
+        if (ret != HcclResult::HCCL_SUCCESS) {
+            THROW<CcuApiException>("CreateVariable is failed. ret[%d]", ret);
+        }
+        auto jumpToEnd = std::make_shared<CcuRepJump>("Break", tmp);
+        jumpToEnd->Reference(endLabel);
+        AppendToContext(context, jumpToEnd);
     }
-    auto jumpToEnd = std::make_shared<CcuRepJump>("Break", tmp);
-    jumpToEnd->Reference(endLabel);
-    AppendToContext(context, jumpToEnd);
-}
 
-bool Repeat::Check() const
-{
-    return !isExecuted;
-}
+    bool Repeat::Check() const { return !isExecuted; }
 
-void Repeat::Run()
-{
-    isExecuted = true;
-}
+    void Repeat::Run() { isExecuted = true; }
 
 }; // namespace CcuRep
 }; // namespace Hccl

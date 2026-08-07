@@ -23,10 +23,7 @@ constexpr size_t MSG_TAG_SIZE_BYTE = 256;
 
 class SyncDataDeviceTest : public BaseInit {
 public:
-    void SetUp() override
-    {
-        BaseInit::SetUp();
-    }
+    void SetUp() override { BaseInit::SetUp(); }
     void TearDown() override
     {
         BaseInit::TearDown();
@@ -45,7 +42,7 @@ public:
 
 TEST_F(SyncDataDeviceTest, ut_HcommSendRequest_When_Normal_Expect_ReturnIsHCCL_SUCCESS_And_MemoryIsCorrect)
 {
-    void *devShmem = malloc(SHMEM_SIZE_BYTE);
+    void* devShmem = malloc(SHMEM_SIZE_BYTE);
 
     MsgHandle handle = reinterpret_cast<MsgHandle>(devShmem);
     const char msgTag[MSG_TAG_SIZE_BYTE] = "Hello HCCL";
@@ -58,18 +55,16 @@ TEST_F(SyncDataDeviceTest, ut_HcommSendRequest_When_Normal_Expect_ReturnIsHCCL_S
 
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
-    MsgHeader *structedDevShmem = static_cast<MsgHeader *>(devShmem);
+    MsgHeader* structedDevShmem = static_cast<MsgHeader*>(devShmem);
 
-    printf("Simulated Device Shared Mem: [ %u | %s | %u | %s ]\n",
-        structedDevShmem->flag,
-        structedDevShmem->msgTag,
-        structedDevShmem->msgId,
-        static_cast<char *>(devShmem) + sizeof(MsgHeader));
+    printf(
+        "Simulated Device Shared Mem: [ %u | %s | %u | %s ]\n", structedDevShmem->flag, structedDevShmem->msgTag,
+        structedDevShmem->msgId, static_cast<char*>(devShmem) + sizeof(MsgHeader));
 
     EXPECT_EQ(structedDevShmem->flag, 1);
     EXPECT_STREQ(structedDevShmem->msgTag, msgTag);
     EXPECT_EQ(structedDevShmem->msgId, outMsgId);
-    EXPECT_STREQ(static_cast<char *>(devShmem) + sizeof(MsgHeader), data);
+    EXPECT_STREQ(static_cast<char*>(devShmem) + sizeof(MsgHeader), data);
 
     free(devShmem);
     devShmem = nullptr;
@@ -77,7 +72,7 @@ TEST_F(SyncDataDeviceTest, ut_HcommSendRequest_When_Normal_Expect_ReturnIsHCCL_S
 
 TEST_F(SyncDataDeviceTest, ut_HcommSendRequest_When_HandleIsNull_Expect_ReturnIsHCCL_E_PTR)
 {
-    void *devShmem = nullptr;
+    void* devShmem = nullptr;
 
     MsgHandle handle = reinterpret_cast<MsgHandle>(devShmem);
     const char msgTag[MSG_TAG_SIZE_BYTE] = "Hello HCCL";
@@ -93,7 +88,7 @@ TEST_F(SyncDataDeviceTest, ut_HcommSendRequest_When_HandleIsNull_Expect_ReturnIs
 
 TEST_F(SyncDataDeviceTest, ut_HcommWaitResponse_When_Normal_Expect_ReturnIsHCCL_SUCCESS_And_ResultIsCorrect)
 {
-    void *devShmem = malloc(SHMEM_SIZE_BYTE);
+    void* devShmem = malloc(SHMEM_SIZE_BYTE);
     memset_s(devShmem, SHMEM_SIZE_BYTE, 0, SHMEM_SIZE_BYTE);
 
     const char dpuData[] = "Open Source is Good.";
@@ -103,9 +98,9 @@ TEST_F(SyncDataDeviceTest, ut_HcommWaitResponse_When_Normal_Expect_ReturnIsHCCL_
     std::thread dpuKernel([=]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-        MsgHeader* structedDevShmem = reinterpret_cast<MsgHeader *>(devShmem);
+        MsgHeader* structedDevShmem = reinterpret_cast<MsgHeader*>(devShmem);
 
-        strcpy_s(reinterpret_cast<char *>(structedDevShmem) + sizeof(MsgHeader), dpuDataSizeByte, dpuData);
+        strcpy_s(reinterpret_cast<char*>(structedDevShmem) + sizeof(MsgHeader), dpuDataSizeByte, dpuData);
         strcpy_s(structedDevShmem->msgTag, MSG_TAG_SIZE_BYTE, "DPU Msg");
         structedDevShmem->msgId = dpuMsgId;
         structedDevShmem->flag = 1;
@@ -126,7 +121,7 @@ TEST_F(SyncDataDeviceTest, ut_HcommWaitResponse_When_Normal_Expect_ReturnIsHCCL_
 
     EXPECT_STREQ(dst, dpuData);
     EXPECT_EQ(outMsgId, dpuMsgId);
-    EXPECT_EQ(static_cast<MsgHeader *>(devShmem)->flag, 0);  // flag is resetted to 0
+    EXPECT_EQ(static_cast<MsgHeader*>(devShmem)->flag, 0); // flag is resetted to 0
 
     dpuKernel.join();
 
@@ -143,7 +138,7 @@ TEST_F(SyncDataDeviceTest, ut_HcommThreadSynchronize_When_ThreadIsNull_Expect_Re
 
 TEST_F(SyncDataDeviceTest, ut_HcommThreadSynchronize_When_ThreadIsValid_Expect_ReturnIsHCCL_SUCCESS)
 {
-    hccl::Thread *threadPtr = new (std::nothrow) hccl::AicpuTsThread(nullptr);
+    hccl::Thread* threadPtr = new (std::nothrow) hccl::AicpuTsThread(nullptr);
     ASSERT_NE(threadPtr, nullptr);
 
     ThreadHandle thread = reinterpret_cast<ThreadHandle>(threadPtr);

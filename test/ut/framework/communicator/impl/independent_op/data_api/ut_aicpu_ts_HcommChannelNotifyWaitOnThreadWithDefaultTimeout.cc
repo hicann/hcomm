@@ -13,8 +13,7 @@
 
 using namespace hccl;
 
-class UtAicpuTsHcommChannelNotifyWaitOnThreadWithDefaultTimeout : public UtAicpuTsBase
-{
+class UtAicpuTsHcommChannelNotifyWaitOnThreadWithDefaultTimeout : public UtAicpuTsBase {
 protected:
     static void SetUpTestCase()
     {
@@ -31,7 +30,7 @@ protected:
         std::cout << "A Test case in UtAicpuTsHcommChannelNotifyWaitOnThreadWithDefaultTimeout SetUp" << std::endl;
         UtAicpuTsBase::SetUp();
 
-        MOCKER_CPP(&Hccl::IAicpuTsThread::NotifyWait, HcclResult (Hccl::IAicpuTsThread::*)(uint32_t, uint32_t) const)
+        MOCKER_CPP(&Hccl::IAicpuTsThread::NotifyWait, HcclResult(Hccl::IAicpuTsThread::*)(uint32_t, uint32_t) const)
             .stubs()
             .will(returnValue(HCCL_SUCCESS));
     }
@@ -43,8 +42,9 @@ protected:
     int32_t res{HCCL_E_RESERVED};
 };
 
-TEST_F(UtAicpuTsHcommChannelNotifyWaitOnThreadWithDefaultTimeout, 
-       Ut_HcommChannelNotifyWaitOnThreadWithDefaultTimeout_When_Normal_Expect_ReturnIsHCCL_SUCCESS)
+TEST_F(
+    UtAicpuTsHcommChannelNotifyWaitOnThreadWithDefaultTimeout,
+    Ut_HcommChannelNotifyWaitOnThreadWithDefaultTimeout_When_Normal_Expect_ReturnIsHCCL_SUCCESS)
 {
     uint32_t customTimeout = 3000;
     res = HcommSetNotifyWaitTimeOut(customTimeout);

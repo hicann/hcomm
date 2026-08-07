@@ -17,22 +17,22 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepLoopBlock : public CcuRepBlock {
-public:
-    explicit CcuRepLoopBlock(const std::string &label);
-    std::string Describe() override;
- 
-    void DefineArg(Variable var);
-    void DefineArg(Memory mem);
-    void DefineArg(const std::vector<Variable> varList);
-    void DefineArg(const std::vector<Memory> memList);
- 
-    CcuRepArg &GetArg(uint16_t index);
- 
-private:
-    std::vector<CcuRepArg> args;
-};
+    class CcuRepLoopBlock : public CcuRepBlock {
+    public:
+        explicit CcuRepLoopBlock(const std::string& label);
+        std::string Describe() override;
 
-};     // namespace CcuRep
-};     // namespace Hccl
+        void DefineArg(Variable var);
+        void DefineArg(Memory mem);
+        void DefineArg(const std::vector<Variable> varList);
+        void DefineArg(const std::vector<Memory> memList);
+
+        CcuRepArg& GetArg(uint16_t index);
+
+    private:
+        std::vector<CcuRepArg> args;
+    };
+
+}; // namespace CcuRep
+}; // namespace Hccl
 #endif // HCCL_CCU_REPRESENTATION_LOOP_BLOCK_H

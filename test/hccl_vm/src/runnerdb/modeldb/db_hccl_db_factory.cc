@@ -15,14 +15,13 @@
 
 namespace HcclSim {
 namespace DB {
-HcclDBFactory::HcclDBFactory() {
-    RegisterBuiltInTypes();
-}
+    HcclDBFactory::HcclDBFactory() { RegisterBuiltInTypes(); }
 
-void HcclDBFactory::RegisterBuiltInTypes() {
-    RegisterDB(sim::DbType::SQLITE3, []() -> std::unique_ptr<HcclDB> {
-        return std::make_unique<HcclDBSqlite>();
-    });
-}
-}
-}
+    void HcclDBFactory::RegisterBuiltInTypes()
+    {
+        RegisterDB(sim::DbType::SQLITE3, []() -> std::unique_ptr<HcclDB> {
+            return std::make_unique<HcclDBSqlite>();
+        });
+    }
+} // namespace DB
+} // namespace HcclSim

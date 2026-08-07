@@ -13,19 +13,15 @@
 namespace hccl {
 RemoteRdmaRmaBufferImpl::RemoteRdmaRmaBufferImpl()
     : RmaBuffer(nullptr, nullptr, 0, RmaMemType::TYPE_NUM, RmaType::RDMA_RMA)
-{
-}
+{}
 
-
-RemoteRdmaRmaBufferImpl::~RemoteRdmaRmaBufferImpl()
-{
-}
+RemoteRdmaRmaBufferImpl::~RemoteRdmaRmaBufferImpl() {}
 
 HcclResult RemoteRdmaRmaBufferImpl::Deserialize(const std::string& msg)
 {
     std::istringstream iss(msg);
-    iss.read(reinterpret_cast<char_t *>(&rkey), sizeof(rkey));
+    iss.read(reinterpret_cast<char_t*>(&rkey), sizeof(rkey));
     HCCL_DEBUG("[RemoteRdmaRmaBufferImpl][Deserialize]rkey[%u]", rkey);
     return HCCL_SUCCESS;
 }
-}
+} // namespace hccl

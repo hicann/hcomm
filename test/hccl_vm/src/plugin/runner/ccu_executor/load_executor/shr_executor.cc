@@ -39,7 +39,7 @@ void ShrExecutor::Run()
     uint16_t xmId = GetXnId(xmId_);
     uint16_t xdId = GetXnId(xdId_);
     uint64_t xdValue = 0;
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t xnValue = ccuResMgr.GetXnValue(rankId_, dieId_, xnId);
     uint64_t xmValue = ccuResMgr.GetXnValue(rankId_, dieId_, xmId);
 
@@ -68,15 +68,15 @@ void ShrExecutor::Run()
 
 std::string ShrExecutor::Describe()
 {
-    return HcclSim::StringFormat("[ShrExecutor] xdId:[%u],xnId_[%u],xmId[%u],shiftType[%u]\n",
-        xdId_, xnId_, xmId_, shiftType_);
+    return HcclSim::StringFormat(
+        "[ShrExecutor] xdId:[%u],xnId_[%u],xmId[%u],shiftType[%u]\n", xdId_, xnId_, xmId_, shiftType_);
 }
 
 CcuTrace::CcuInstrTraceDetail ShrExecutor::CollectTraceDetail()
 {
     CcuTrace::CcuInstrTraceDetail detail;
     detail.typeName = "Shr";
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     detail.args["xnValue"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xnId_));
     detail.args["xmValue"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xmId_));
     return detail;

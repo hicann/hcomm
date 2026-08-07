@@ -16,87 +16,86 @@ namespace hccl {
 
 HcclResult ReadBinFile(const string& fileName, string& buffer)
 {
-    (void) fileName;
-    (void) buffer;
+    (void)fileName;
+    (void)buffer;
     return HCCL_SUCCESS;
 }
 
 // Kernel注册入口，全局只需要初始化一次
 HcclResult RegisterKernel(DevType deviceType)
 {
-    (void) deviceType;
+    (void)deviceType;
     return HCCL_SUCCESS;
 }
 
-HcclResult UnRegisterAivKernel()
-{
-    return HCCL_SUCCESS;
-}
+HcclResult UnRegisterAivKernel() { return HCCL_SUCCESS; }
 
 // KernelLaunch内部接口
-HcclResult ExecuteKernelLaunchInner(const AivOpArgs &opArgs, const AivTopoArgs &topoArgs,
-    const AivResourceArgs &resourceArgs, const AivAlgArgs &algArgs, void* args, u32 argsSize, 
-    AivProfilingInfo& aivProfilingInfo)
+HcclResult ExecuteKernelLaunchInner(
+    const AivOpArgs& opArgs, const AivTopoArgs& topoArgs, const AivResourceArgs& resourceArgs,
+    const AivAlgArgs& algArgs, void* args, u32 argsSize, AivProfilingInfo& aivProfilingInfo)
 {
-    (void) algArgs;
-    (void) args;
-    (void) argsSize;
-    (void) topoArgs;
-    (void) aivProfilingInfo;
-    (void) opArgs;
-    (void) resourceArgs;
+    (void)algArgs;
+    (void)args;
+    (void)argsSize;
+    (void)topoArgs;
+    (void)aivProfilingInfo;
+    (void)opArgs;
+    (void)resourceArgs;
     return HCCL_SUCCESS;
 }
 
 // Kernel单次调用Launch外部接口
-HcclResult ExecuteKernelLaunch(const AivOpArgs &opArgs, const AivTopoArgs &topoArgs,
-    const AivResourceArgs &resourceArgs, const AivAlgArgs &algArgs, AivProfilingInfo& aivProfilingInfo)
+HcclResult ExecuteKernelLaunch(
+    const AivOpArgs& opArgs, const AivTopoArgs& topoArgs, const AivResourceArgs& resourceArgs,
+    const AivAlgArgs& algArgs, AivProfilingInfo& aivProfilingInfo)
 {
-    (void) algArgs;
-    (void) topoArgs;
-    (void) aivProfilingInfo;
-    (void) opArgs;
-    (void) resourceArgs;
+    (void)algArgs;
+    (void)topoArgs;
+    (void)aivProfilingInfo;
+    (void)opArgs;
+    (void)resourceArgs;
     return HCCL_SUCCESS;
 }
 
 // Kernel单次调用Launch外部接口
-HcclResult ExecuteKernelLaunch(const AivOpArgs &opArgs, const AivTopoArgs &topoArgs,
-    const AivResourceArgs &resourceArgs, const AivAlgArgs &algArgs, const ExtraArgs &extraArgs, 
-    AivProfilingInfo& aivProfilingInfo)
+HcclResult ExecuteKernelLaunch(
+    const AivOpArgs& opArgs, const AivTopoArgs& topoArgs, const AivResourceArgs& resourceArgs,
+    const AivAlgArgs& algArgs, const ExtraArgs& extraArgs, AivProfilingInfo& aivProfilingInfo)
 {
-    (void) algArgs;
-    (void) topoArgs;
-    (void) extraArgs;
-    (void) opArgs;
-    (void) resourceArgs;
-    (void) aivProfilingInfo;
+    (void)algArgs;
+    (void)topoArgs;
+    (void)extraArgs;
+    (void)opArgs;
+    (void)resourceArgs;
+    (void)aivProfilingInfo;
     return HCCL_SUCCESS;
 }
 
 // Kernel单次调用Launch外部接口
-HcclResult ExecuteKernelLaunch(const AivOpArgs &opArgs, const AivTopoArgs &topoArgs,
-    const AivResourceArgs &resourceArgs, const AivAlgArgs &algArgs, const ExtraArgsV2 &extraArgs, 
-    AivProfilingInfo& aivProfilingInfo)
+HcclResult ExecuteKernelLaunch(
+    const AivOpArgs& opArgs, const AivTopoArgs& topoArgs, const AivResourceArgs& resourceArgs,
+    const AivAlgArgs& algArgs, const ExtraArgsV2& extraArgs, AivProfilingInfo& aivProfilingInfo)
 {
-    (void) algArgs;
-    (void) topoArgs;
-    (void) extraArgs;
-    (void) aivProfilingInfo;
-    (void) opArgs;
-    (void) resourceArgs;
+    (void)algArgs;
+    (void)topoArgs;
+    (void)extraArgs;
+    (void)aivProfilingInfo;
+    (void)opArgs;
+    (void)resourceArgs;
     return HCCL_SUCCESS;
 }
 
 void SetAivProfilingInfoBeginTime(AivProfilingInfo& aivProfilingInfo)
 {
-    (void) aivProfilingInfo;
+    (void)aivProfilingInfo;
     return;
 }
 
-void SetAivProfilingInfoBeginTime(uint64_t& beginTime){
-    (void) beginTime;
+void SetAivProfilingInfoBeginTime(uint64_t& beginTime)
+{
+    (void)beginTime;
     return;
 }
 
-}   // ~~ namespace hccl
+} // namespace hccl

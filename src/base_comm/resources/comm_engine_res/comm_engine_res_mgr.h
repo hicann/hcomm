@@ -33,5 +33,5 @@ private:
     std::unordered_map<CommEngineType, std::shared_ptr<CommEngineRes>> engineResources_{};
     std::mutex mutex_{};
 };
-}
+} // namespace hcomm
 #endif // COMM_ENGINE_RES_MGR_H

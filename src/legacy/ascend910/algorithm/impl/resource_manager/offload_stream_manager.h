@@ -13,7 +13,6 @@
 
 #include "offload_stream_manager_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* OFFLOAD_STREAM_MANAGER_H */

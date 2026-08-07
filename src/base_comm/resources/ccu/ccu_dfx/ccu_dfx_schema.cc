@@ -63,14 +63,14 @@ namespace {
             unsigned int regVal[31];
         };
     };
-    void PrintCcumDfxInfoV1(const void *rawData, std::ostringstream &oss)
+    void PrintCcumDfxInfoV1(const void* rawData, std::ostringstream& oss)
     {
         if (rawData == nullptr) {
             oss << " [rawData is null]";
             HCCL_ERROR("[PrintCcumDfxInfoV1] rawData is null");
             return;
         }
-        struct ccumDfxInfo info{};
+        struct ccumDfxInfo info {};
         const auto copyRet = memcpy_s(&info, sizeof(info), rawData, sizeof(info));
         if (copyRet != EOK) {
             oss << " [decode failed]";
@@ -92,14 +92,14 @@ namespace {
         oss << " ccumIsEnable[" << (info.commonInfo.lqcCcuSecReg0 & 1U) << ']';
     }
 
-    void PrintCcumDfxInfoV2(const void *rawData, std::ostringstream &oss)
+    void PrintCcumDfxInfoV2(const void* rawData, std::ostringstream& oss)
     {
         if (rawData == nullptr) {
             oss << " [rawData is null]";
             HCCL_ERROR("[PrintCcumDfxInfoV2] rawData is null");
             return;
         }
-        struct ccumDfxInfoV2 info{};
+        struct ccumDfxInfoV2 info {};
         const auto copyRet = memcpy_s(&info, sizeof(info), rawData, sizeof(info));
         if (copyRet != EOK) {
             oss << " [decode failed]";
@@ -109,7 +109,7 @@ namespace {
         if (info.bs.queryResult != 0U) {
             HCCL_ERROR("get ccu dfx info fail, ccu dfx info not all correct");
         }
-        auto dump = [&oss](const char *name, unsigned int value, bool hwValid) {
+        auto dump = [&oss](const char* name, unsigned int value, bool hwValid) {
             oss << ' ' << name << '[';
             if (hwValid) {
                 oss << value;
@@ -133,7 +133,7 @@ namespace {
         dump("MCM_DFX", info.dfxInfo.ccumMcmDfx, info.bs.mcmDfx != 0U);
     }
 
-    HcclResult GetCcuMissionInfoV1(const void *rawData, CcuMissionInfo *out)
+    HcclResult GetCcuMissionInfoV1(const void* rawData, CcuMissionInfo* out)
     {
         if (rawData == nullptr || out == nullptr) {
             HCCL_ERROR("[GetCcuMissionInfoV1] invalid input: rawData=%p, out=%p", rawData, out);
@@ -151,7 +151,7 @@ namespace {
         return HCCL_SUCCESS;
     }
 
-    HcclResult GetCcuLoopInfoV1(const void *rawData, CcuLoopInfo *out)
+    HcclResult GetCcuLoopInfoV1(const void* rawData, CcuLoopInfo* out)
     {
         if (rawData == nullptr || out == nullptr) {
             HCCL_ERROR("[GetCcuLoopInfoV1] invalid input: rawData=%p, out=%p", rawData, out);
@@ -168,7 +168,7 @@ namespace {
         return HCCL_SUCCESS;
     }
 
-    HcclResult GetCcuMissionInfoV2(const void *rawData, CcuMissionInfo *out)
+    HcclResult GetCcuMissionInfoV2(const void* rawData, CcuMissionInfo* out)
     {
         if (rawData == nullptr || out == nullptr) {
             HCCL_ERROR("[GetCcuMissionInfoV2] invalid input: rawData=%p, out=%p", rawData, out);
@@ -187,7 +187,7 @@ namespace {
         return HCCL_SUCCESS;
     }
 
-    HcclResult GetCcuLoopInfoV2(const void *rawData, CcuLoopInfo *out)
+    HcclResult GetCcuLoopInfoV2(const void* rawData, CcuLoopInfo* out)
     {
         if (rawData == nullptr || out == nullptr) {
             HCCL_ERROR("[GetCcuLoopInfoV2] invalid input: rawData=%p, out=%p", rawData, out);
@@ -222,7 +222,7 @@ namespace {
         GetCcuLoopInfoV2,
     };
 
-    const CcuVersionOps *const CCU_OPS_TABLE[] = {
+    const CcuVersionOps* const CCU_OPS_TABLE[] = {
         &CCU_V1_OPS, // [0] V1
         &CCU_V2_OPS, // [1] V2
     };
@@ -233,7 +233,7 @@ namespace {
         sizeof(CCU_OPS_TABLE) / sizeof(CCU_OPS_TABLE[0]) == static_cast<size_t>(CcuSchemaVersion::CCU_SCHEMA_COUNT),
         "CCU_OPS_TABLE size must match CcuSchemaVersion::CCU_SCHEMA_COUNT");
 
-    HcclResult GetCcuSchemaVersion(CcuSchemaVersion &schemaVersion)
+    HcclResult GetCcuSchemaVersion(CcuSchemaVersion& schemaVersion)
     {
         DevType deviceType = DevType::DEV_TYPE_COUNT;
         HcclResult ret = hrtGetDeviceType(deviceType);
@@ -246,14 +246,15 @@ namespace {
         } else if (deviceType == DevType::DEV_TYPE_960) {
             schemaVersion = CcuSchemaVersion::CCU_SCHEMA_V2;
         } else {
-            HCCL_ERROR("[GetCcuSchemaVersion] Unsupported deviceType[%u], only 950/960 supported.",
+            HCCL_ERROR(
+                "[GetCcuSchemaVersion] Unsupported deviceType[%u], only 950/960 supported.",
                 static_cast<uint32_t>(deviceType));
             return HCCL_E_INTERNAL;
         }
         return HCCL_SUCCESS;
     }
 
-    HcclResult ResolveCcuOps(CcuSchemaVersion schemaVersion, const CcuVersionOps *&ops)
+    HcclResult ResolveCcuOps(CcuSchemaVersion schemaVersion, const CcuVersionOps*& ops)
     {
         const uint8_t versionIdx = static_cast<uint8_t>(schemaVersion);
         const size_t tableSize = sizeof(CCU_OPS_TABLE) / sizeof(CCU_OPS_TABLE[0]);
@@ -269,7 +270,7 @@ namespace {
 
 } // namespace
 
-HcclResult GetCcuOps(const CcuVersionOps *&ops)
+HcclResult GetCcuOps(const CcuVersionOps*& ops)
 {
     ops = nullptr;
     CcuSchemaVersion schemaVersion = CcuSchemaVersion::CCU_SCHEMA_COUNT;

@@ -13,23 +13,25 @@
 #include "prof_common.h"
 
 namespace hccl {
-rtError_t CommandHandle(uint32_t rtType, void *data, uint32_t len)
+rtError_t CommandHandle(uint32_t rtType, void* data, uint32_t len)
 {
     (void)len;
     if (data == nullptr) {
         HCCL_ERROR("[Profiling][CommandHandle] CommandHandle's data is NULL.");
         return FAILED;
     }
-    auto &profilingManager = hccl::ProfilingManager::Instance();
+    auto& profilingManager = hccl::ProfilingManager::Instance();
     if (rtType == RT_PROF_CTRL_REPORTER) { // 创建 reporter
         HCCL_INFO("[Profiling][CommandHandle] CommandHandle's rtType is %u.", rtType);
         profilingManager.SetMsprofReporterCallback(reinterpret_cast<MsprofReporterCallback>(data));
     } else if (rtType == RT_PROF_CTRL_SWITCH) {
-        rtProfCommandHandle_t *profConfigParam = reinterpret_cast<rtProfCommandHandle_t *>(data);
+        rtProfCommandHandle_t* profConfigParam = reinterpret_cast<rtProfCommandHandle_t*>(data);
         auto type = profConfigParam->type;
         auto profconfig = profConfigParam->profSwitch;
-        HCCL_RUN_INFO("[Profiling][CommandHandle] CommandHandle's rtType is %u. CommandHandle_switch type[%u], " \
-            "profconfig[%llu], deviceLogicId[%u]", rtType, type, profconfig, profConfigParam->devIdList[0]);
+        HCCL_RUN_INFO(
+            "[Profiling][CommandHandle] CommandHandle's rtType is %u. CommandHandle_switch type[%u], "
+            "profconfig[%llu], deviceLogicId[%u]",
+            rtType, type, profconfig, profConfigParam->devIdList[0]);
         switch (type) {
             case PROF_COMMANDHANDLE_TYPE_INIT:
                 profilingManager.PluginInit();
@@ -60,7 +62,7 @@ rtError_t CommandHandle(uint32_t rtType, void *data, uint32_t len)
     return SUCCESS;
 }
 
-rtError_t EsCommandHandle(uint32_t rtType, void *data, uint32_t len)
+rtError_t EsCommandHandle(uint32_t rtType, void* data, uint32_t len)
 {
     (void)len;
     if (data == nullptr) {
@@ -74,8 +76,8 @@ rtError_t EsCommandHandle(uint32_t rtType, void *data, uint32_t len)
         return SUCCESS;
     }
 
-    auto &profilingManager = hccl::ProfilingManager::Instance();
-    rtProfCommandHandle_t *profConfigParam = static_cast<rtProfCommandHandle_t *>(data);
+    auto& profilingManager = hccl::ProfilingManager::Instance();
+    rtProfCommandHandle_t* profConfigParam = static_cast<rtProfCommandHandle_t*>(data);
     auto type = profConfigParam->type;
     auto profconfig = profConfigParam->profSwitch;
 

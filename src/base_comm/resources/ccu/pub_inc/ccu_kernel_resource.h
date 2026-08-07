@@ -17,19 +17,19 @@
 
 #include "ccu_datatype_v1.h"
 
-namespace hcomm { 
+namespace hcomm {
 
 struct CcuRepResource {
-    std::array<std::vector<CcuRep::CcuBuf>, CCU_MAX_IODIE_NUM>  ccubufs;
-    std::array<std::vector<CcuRep::CcuBuf>, CCU_MAX_IODIE_NUM>  blockCcubufs;
-    std::array<std::vector<CcuRep::Executor>, CCU_MAX_IODIE_NUM>   executor;
-    std::array<std::vector<CcuRep::Executor>, CCU_MAX_IODIE_NUM>   blockExecutor;
+    std::array<std::vector<CcuRep::CcuBuf>, CCU_MAX_IODIE_NUM> ccubufs;
+    std::array<std::vector<CcuRep::CcuBuf>, CCU_MAX_IODIE_NUM> blockCcubufs;
+    std::array<std::vector<CcuRep::Executor>, CCU_MAX_IODIE_NUM> executor;
+    std::array<std::vector<CcuRep::Executor>, CCU_MAX_IODIE_NUM> blockExecutor;
     std::array<std::vector<CcuRep::CompletedEvent>, CCU_MAX_IODIE_NUM> completedEvent;
     std::array<std::vector<CcuRep::CompletedEvent>, CCU_MAX_IODIE_NUM> blockCompletedEvent;
-    std::array<std::vector<CcuRep::Address>, CCU_MAX_IODIE_NUM>    address;
-    std::array<std::vector<CcuRep::Address>, CCU_MAX_IODIE_NUM>    blockAddress;
-    std::array<std::vector<CcuRep::Variable>, CCU_MAX_IODIE_NUM>   continuousVariable;
-    std::array<std::vector<CcuRep::Variable>, CCU_MAX_IODIE_NUM>   variable;
+    std::array<std::vector<CcuRep::Address>, CCU_MAX_IODIE_NUM> address;
+    std::array<std::vector<CcuRep::Address>, CCU_MAX_IODIE_NUM> blockAddress;
+    std::array<std::vector<CcuRep::Variable>, CCU_MAX_IODIE_NUM> continuousVariable;
+    std::array<std::vector<CcuRep::Variable>, CCU_MAX_IODIE_NUM> variable;
     std::array<std::vector<CcuRep::LocalNotify>, CCU_MAX_IODIE_NUM> localNotify;
 };
 

@@ -16,19 +16,21 @@
 namespace hccl {
 class CollAllGatherRingZerocopyExchangeExecutor : public CollAllGatherRingZerocopyExecutor {
 public:
-    explicit CollAllGatherRingZerocopyExchangeExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollAllGatherRingZerocopyExchangeExecutor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAllGatherRingZerocopyExchangeExecutor() override = default;
 
 private:
     /* *************** 资源计算 *************** */
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
     HcclResult CalcExchangeCommInfo(std::vector<LevelNSubCommTransport>& opTransport);
-    HcclResult CalExchangeRemoteRank(u32 &remoteRankSend, u32 &remoteRankRecv);
+    HcclResult CalExchangeRemoteRank(u32& remoteRankSend, u32& remoteRankRecv);
 
     /* *************** 算法编排 *************** */
-    HcclResult CalcLevel0DataSlices(const OpParam &param, const ExecMem &execMem, std::vector<Slice> &dataSegsSlice) override;
-    HcclResult KernelRunInterServerPreProcess(const OpParam &param, const ExecMem &execMem) override;
-    HcclResult KernelRunInterServerPostProcess(const OpParam &param, const ExecMem &execMem) override;
+    HcclResult
+    CalcLevel0DataSlices(const OpParam& param, const ExecMem& execMem, std::vector<Slice>& dataSegsSlice) override;
+    HcclResult KernelRunInterServerPreProcess(const OpParam& param, const ExecMem& execMem) override;
+    HcclResult KernelRunInterServerPostProcess(const OpParam& param, const ExecMem& execMem) override;
 };
 
 } // namespace hccl

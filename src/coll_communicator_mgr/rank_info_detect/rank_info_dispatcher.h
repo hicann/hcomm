@@ -10,7 +10,7 @@
 
 #ifndef TOPOINFO_EXCHANGE_DISPATCHER_H
 #define TOPOINFO_EXCHANGE_DISPATCHER_H
- 
+
 #include <map>
 #include <atomic>
 #include <vector>
@@ -32,20 +32,17 @@ public:
     struct SendState {
         u32 rankId;
         u64 header;
-        size_t headerLen       = sizeof(u64); // the header need to send
-        size_t headerSended    = 0;           // the header have sended length
-        size_t bodyLen         = 0;           // the whole data length
-        size_t bodySended      = 0;           // the data have sended
-        void *data;                           // data pointer
- 
+        size_t headerLen = sizeof(u64); // the header need to send
+        size_t headerSended = 0;        // the header have sended length
+        size_t bodyLen = 0;             // the whole data length
+        size_t bodySended = 0;          // the data have sended
+        void* data;                     // data pointer
+
         bool Send(std::shared_ptr<Socket> socket);
         bool SendHeader(std::shared_ptr<Socket> socket);
         bool SendBody(std::shared_ptr<Socket> socket);
-        bool SendHelper(std::shared_ptr<Socket> socket, void *buf, size_t dataLen, size_t &sendedLen);
-        bool IsOk()
-        {
-            return bodyLen != 0 && headerSended == headerLen && bodySended == bodyLen;
-        }
+        bool SendHelper(std::shared_ptr<Socket> socket, void* buf, size_t dataLen, size_t& sendedLen);
+        bool IsOk() { return bodyLen != 0 && headerSended == headerLen && bodySended == bodyLen; }
     };
 
     struct FdContext {
@@ -54,39 +51,41 @@ public:
     };
 
     using WorkerTask = std::function<void(void)>;
- 
+
 public:
     static constexpr u32 DEFAULT_THREAD_NUM = 1;
     static constexpr u32 MAX_THREAD_NUM = 4;
     static constexpr s32 INVALID_EPOLL_EVENT_FD = -1;
-    static constexpr s32 EPOLL_TIMEOUT_MS = 100; // 100ms
+    static constexpr s32 EPOLL_TIMEOUT_MS = 100;    // 100ms
     static constexpr s32 LAST_EPOLL_TIMEOUT_MS = 5; // 5ms
     static constexpr s32 RANK_CAPACITY_PER_THREAD = 512;
- 
-    explicit RankInfoDispather(RankInfoDetectService *rankInfoDetectServer, u32 threadNum = DEFAULT_THREAD_NUM)
-        : rankInfoDetectServer_(rankInfoDetectServer), threadNum_(threadNum)
-    {
-    }
+
+    explicit RankInfoDispather(RankInfoDetectService* rankInfoDetectServer, u32 threadNum = DEFAULT_THREAD_NUM)
+        : rankInfoDetectServer_(rankInfoDetectServer),
+          threadNum_(threadNum)
+    {}
     ~RankInfoDispather();
- 
-    void BroadcastRankTable(const std::unordered_map<std::string, std::shared_ptr<Socket>> &connectSockets,
-        const RankTableInfo &clusterInfo, const std::string &failedAgentIdList, u32 step);
- 
+
+    void BroadcastRankTable(
+        const std::unordered_map<std::string, std::shared_ptr<Socket>>& connectSockets,
+        const RankTableInfo& clusterInfo, const std::string& failedAgentIdList, u32 step);
+
 private:
     void InitWorkerThread();
     void WorkerWait(int workId);
     void WakeWoker();
     void RunWorkerThread(int workId);
-    bool GetTask(WorkerTask &workTask);
-    void PrepareResource(const std::unordered_map<std::string, std::shared_ptr<Socket>> connectSockets,
-         const RankTableInfo &clusterInfo, const std::string &failedAgentIdList, u32 step);
+    bool GetTask(WorkerTask& workTask);
+    void PrepareResource(
+        const std::unordered_map<std::string, std::shared_ptr<Socket>> connectSockets, const RankTableInfo& clusterInfo,
+        const std::string& failedAgentIdList, u32 step);
     void SendOnce();
-    void ProcessOneSendEvent(int epollFd, FdHandle &fdHandle);
+    void ProcessOneSendEvent(int epollFd, FdHandle& fdHandle);
     void ProcessSend();
     void CleanResource();
     void CloseEpollFd();
 
-    RankInfoDetectService *rankInfoDetectServer_;
+    RankInfoDetectService* rankInfoDetectServer_;
     u32 threadNum_{DEFAULT_THREAD_NUM};
     u32 rankNum_{0};
     std::vector<std::thread> workerThreads_;

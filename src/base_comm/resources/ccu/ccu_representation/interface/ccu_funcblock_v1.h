@@ -14,47 +14,52 @@
 namespace hcomm {
 namespace CcuRep {
 
-class FuncBlock {
-public:
-    FuncBlock(CcuRepContext *context, std::string label, uint16_t callLayer = FUNC_CALL_LAYER_INVALID);
-    ~FuncBlock();
+    class FuncBlock {
+    public:
+        FuncBlock(CcuRepContext* context, std::string label, uint16_t callLayer = FUNC_CALL_LAYER_INVALID);
+        ~FuncBlock();
 
-    template <typename... Arguments> FuncBlock &operator()(const Arguments &...args)
-    {
-        DefineInArgHelper(args...);
-        return *this;
-    }
+        template <typename... Arguments>
+        FuncBlock& operator()(const Arguments&... args)
+        {
+            DefineInArgHelper(args...);
+            return *this;
+        }
 
-    template <typename T> void DefineInArg(T &&arg)
-    {
-        repFuncBlock->DefineInArg(std::forward<T>(arg));
-    }
+        template <typename T>
+        void DefineInArg(T&& arg)
+        {
+            repFuncBlock->DefineInArg(std::forward<T>(arg));
+        }
 
-    template <typename T> void DefineOutArg(T &&arg)
-    {
-        repFuncBlock->DefineOutArg(std::forward<T>(arg));
-    }
+        template <typename T>
+        void DefineOutArg(T&& arg)
+        {
+            repFuncBlock->DefineOutArg(std::forward<T>(arg));
+        }
 
-private:
-    template <typename First> void DefineInArgHelper(const First &first)
-    {
-        repFuncBlock->DefineInArg(first);
-    }
+    private:
+        template <typename First>
+        void DefineInArgHelper(const First& first)
+        {
+            repFuncBlock->DefineInArg(first);
+        }
 
-    template <typename First, typename... Rest> void DefineInArgHelper(const First &first, const Rest &...rest)
-    {
-        repFuncBlock->DefineInArg(first);
-        DefineInArgHelper(rest...);
-    }
+        template <typename First, typename... Rest>
+        void DefineInArgHelper(const First& first, const Rest&... rest)
+        {
+            repFuncBlock->DefineInArg(first);
+            DefineInArgHelper(rest...);
+        }
 
-    CcuRepContext *context{nullptr};
-    std::string    label;
+        CcuRepContext* context{nullptr};
+        std::string label;
 
-    std::shared_ptr<CcuRepFuncBlock> repFuncBlock{nullptr};
-    std::shared_ptr<CcuRepBlock>     curActiveBlock{nullptr};
+        std::shared_ptr<CcuRepFuncBlock> repFuncBlock{nullptr};
+        std::shared_ptr<CcuRepBlock> curActiveBlock{nullptr};
 
-    uint16_t callLayer{FUNC_CALL_LAYER_INVALID};
-};
+        uint16_t callLayer{FUNC_CALL_LAYER_INVALID};
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

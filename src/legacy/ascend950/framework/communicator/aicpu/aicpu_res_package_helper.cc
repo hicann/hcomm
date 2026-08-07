@@ -13,7 +13,7 @@
 #include "log.h"
 namespace Hccl {
 
-BinaryStream &operator<<(BinaryStream &binaryStream, const ModuleData &m)
+BinaryStream& operator<<(BinaryStream& binaryStream, const ModuleData& m)
 {
     binaryStream << m.name;
     binaryStream << m.data;
@@ -23,7 +23,7 @@ BinaryStream &operator<<(BinaryStream &binaryStream, const ModuleData &m)
     return binaryStream;
 }
 
-BinaryStream &operator>>(BinaryStream &binaryStream, ModuleData &m)
+BinaryStream& operator>>(BinaryStream& binaryStream, ModuleData& m)
 {
     binaryStream >> m.name;
     binaryStream >> m.data;
@@ -33,20 +33,20 @@ BinaryStream &operator>>(BinaryStream &binaryStream, ModuleData &m)
     return binaryStream;
 }
 
-std::vector<char> AicpuResPackageHelper::GetPackedData(std::vector<ModuleData> &dataVec) const
+std::vector<char> AicpuResPackageHelper::GetPackedData(std::vector<ModuleData>& dataVec) const
 {
     std::vector<char> result;
-    BinaryStream      binaryStream;
+    BinaryStream binaryStream;
     binaryStream << dataVec;
     binaryStream.Dump(result);
 
     return result;
 }
 
-std::vector<ModuleData> AicpuResPackageHelper::ParsePackedData(std::vector<char> &data) const
+std::vector<ModuleData> AicpuResPackageHelper::ParsePackedData(std::vector<char>& data) const
 {
     std::vector<ModuleData> result;
-    BinaryStream            binaryStream(data);
+    BinaryStream binaryStream(data);
     binaryStream >> result;
 
     return result;

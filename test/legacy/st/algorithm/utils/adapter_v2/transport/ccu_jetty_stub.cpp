@@ -12,48 +12,44 @@
 
 namespace Hccl {
 
-HcclResult CcuCreateJetty(const IpAddress &ipAddr, const CcuJettyInfo &jettyInfo,
-    std::unique_ptr<CcuJetty> &ccuJetty)
+HcclResult CcuCreateJetty(const IpAddress& ipAddr, const CcuJettyInfo& jettyInfo, std::unique_ptr<CcuJetty>& ccuJetty)
 {
-    TRY_CATCH_RETURN(
-        ccuJetty = std::make_unique<CcuJetty>(ipAddr, jettyInfo);
-    );
+    TRY_CATCH_RETURN(ccuJetty = std::make_unique<CcuJetty>(ipAddr, jettyInfo););
     return HcclResult::HCCL_SUCCESS;
 }
 
-CcuJetty::CcuJetty(const IpAddress &ipAddr, const CcuJettyInfo &jettyInfo)
-    : ipAddr_(ipAddr), jettyInfo_(jettyInfo)
+CcuJetty::CcuJetty(const IpAddress& ipAddr, const CcuJettyInfo& jettyInfo) : ipAddr_(ipAddr), jettyInfo_(jettyInfo)
 {
     devLogicId_ = HrtGetDevice();
     uint32_t devPhyId = HrtGetDevicePhyIdByIndex(devLogicId_);
-    auto &rdmaHandleMgr = RdmaHandleManager::GetInstance();
+    auto& rdmaHandleMgr = RdmaHandleManager::GetInstance();
     rdmaHandle_ = rdmaHandleMgr.GetByIp(devPhyId, ipAddr);
     const auto jfcHandle = 1;
     const auto tokenValue = GetUbToken();
     const auto jettyMode = HrtJettyMode::CCU_CCUM_CACHE; // 当前仅支持该模式
 
-    inParam_ = HrtRaUbCreateJettyParam{jfcHandle, jfcHandle, tokenValue,
-        0, jettyMode, jettyInfo.taJettyId, jettyInfo.sqBufVa,
-        jettyInfo.sqBufSize, jettyInfo.wqeBBStartId, jettyInfo.sqDepth};
+    inParam_ = HrtRaUbCreateJettyParam{
+        jfcHandle,
+        jfcHandle,
+        tokenValue,
+        0,
+        jettyMode,
+        jettyInfo.taJettyId,
+        jettyInfo.sqBufVa,
+        jettyInfo.sqBufSize,
+        jettyInfo.wqeBBStartId,
+        jettyInfo.sqDepth};
 }
 
-CcuJetty::~CcuJetty()
-{
-}
+CcuJetty::~CcuJetty() {}
 
 HcclResult CcuJetty::CreateJetty()
 {
     return HcclResult::HCCL_SUCCESS; // 打桩保证创建一定成功
 }
 
-HrtRaUbCreateJettyParam CcuJetty::GetCreateJettyParam() const
-{
-    return inParam_;
-}
+HrtRaUbCreateJettyParam CcuJetty::GetCreateJettyParam() const { return inParam_; }
 
-HrtRaUbJettyCreatedOutParam CcuJetty::GetJettyedOutParam() const
-{
-    return outParam_;
-}
+HrtRaUbJettyCreatedOutParam CcuJetty::GetJettyedOutParam() const { return outParam_; }
 
 } // namespace Hccl

@@ -17,7 +17,7 @@
 #include "db_sim_runner_db.h"
 
 namespace sim {
-bool GetCurrRunnerTls(uint64_t serverKey, Runner &runner);
+bool GetCurrRunnerTls(uint64_t serverKey, Runner& runner);
 bool SetCurrCtxTls(uint64_t ctx);
 uint64_t GetCurrRankId();
 uint64_t GetCurrDeviceKey();
@@ -34,5 +34,5 @@ uint32_t GetRankSize();
 uint32_t GetHostSize();
 uint32_t GetCurrentStreamId(uint64_t streamKey);
 uint64_t GetServerKeyById(uint32_t superPodIdx, uint32_t serverIdx);
-}
+} // namespace sim
 #endif

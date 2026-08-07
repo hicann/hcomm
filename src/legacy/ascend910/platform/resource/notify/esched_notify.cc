@@ -14,102 +14,53 @@ constexpr u32 DEFAULT_NTC_EVENTID = 50;
 uint32_t EschedNotify::eventId_ = DEFAULT_NTC_EVENTID;
 uint32_t EschedNotify::initialThreadId_ = 0U;
 
-EschedNotify::EschedNotify(NotifyType notifyType) : NotifyBase(notifyType)
-{
-}
+EschedNotify::EschedNotify(NotifyType notifyType) : NotifyBase(notifyType) {}
 
-EschedNotify::EschedNotify(NotifyType notifyType, HcclNotifyInfo notifyInfo)
-    : NotifyBase(notifyType, notifyInfo)
-{
-}
+EschedNotify::EschedNotify(NotifyType notifyType, HcclNotifyInfo notifyInfo) : NotifyBase(notifyType, notifyInfo) {}
 
-EschedNotify::~EschedNotify()
-{
-    (void)Destroy();
-}
+EschedNotify::~EschedNotify() { (void)Destroy(); }
 
-HcclResult EschedNotify::Open()
-{
-    return HCCL_SUCCESS;
-}
+HcclResult EschedNotify::Open() { return HCCL_SUCCESS; }
 
-HcclResult EschedNotify::Close()
-{
-    return HCCL_SUCCESS;
-}
+HcclResult EschedNotify::Close() { return HCCL_SUCCESS; }
 
 HcclResult EschedNotify::Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult EschedNotify::Post(Stream& stream, HcclDispatcher dispatcher, s32 stage)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult EschedNotify::Post(Stream& stream, HcclDispatcher dispatcher, s32 stage) { return HCCL_SUCCESS; }
 
-HcclResult EschedNotify::Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut,
-    u32 userRank, u32 remoteUserRank)
+HcclResult
+EschedNotify::Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut, u32 userRank, u32 remoteUserRank)
 {
     return Wait(stream, dispatcher, stage, timeOut);
 }
 
-HcclResult EschedNotify::Wait(Stream& stream, u32 timeOut)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult EschedNotify::Wait(Stream& stream, u32 timeOut) { return HCCL_SUCCESS; }
 
 HcclResult EschedNotify::Post(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 remoteUserRank)
 {
     return Post(stream, dispatcher, stage);
 }
 
-HcclResult EschedNotify::Post(Stream& stream)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult EschedNotify::Post(Stream& stream) { return HCCL_SUCCESS; }
 
-HcclResult EschedNotify::SetIpc()
-{
-    return HCCL_SUCCESS;
-}
+HcclResult EschedNotify::SetIpc() { return HCCL_SUCCESS; }
 
-HcclResult EschedNotify::Grant(s64 recvId)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult EschedNotify::Grant(s64 recvId) { return HCCL_SUCCESS; }
 
-HcclResult EschedNotify::Alloc()
-{
-    return HCCL_SUCCESS;
-}
+HcclResult EschedNotify::Alloc() { return HCCL_SUCCESS; }
 
-HcclResult EschedNotify::Destroy()
-{
-    return HCCL_SUCCESS;
-}
+HcclResult EschedNotify::Destroy() { return HCCL_SUCCESS; }
 
-HcclResult EschedNotify::ThreadIdCreate(uint32_t &threadId)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult EschedNotify::ThreadIdCreate(uint32_t& threadId) { return HCCL_SUCCESS; }
 
-HcclResult EschedNotify::InitGroupId()
-{
-    return HCCL_SUCCESS;
-}
+HcclResult EschedNotify::InitGroupId() { return HCCL_SUCCESS; }
 
-void EschedNotify::ThreadIdQueInit()
-{
-    return;
-}
+void EschedNotify::ThreadIdQueInit() { return; }
 
-HcclResult EschedNotify::GetGroupId()
-{
-    return HCCL_SUCCESS;
-}
+HcclResult EschedNotify::GetGroupId() { return HCCL_SUCCESS; }
 
-void EschedNotify::Break()
-{
-}
-}
+void EschedNotify::Break() {}
+} // namespace hccl

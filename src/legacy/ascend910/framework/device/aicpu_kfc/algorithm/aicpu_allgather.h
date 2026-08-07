@@ -15,21 +15,25 @@
 
 class AicpuAllgather : public AicpuAlgorithm {
 public:
-    explicit AicpuAllgather(AicpuComContext *ctx) : AicpuAlgorithm(ctx) {}
+    explicit AicpuAllgather(AicpuComContext* ctx) : AicpuAlgorithm(ctx) {}
     ~AicpuAllgather() override = default;
 
-    HcclResult RunAlgorithm(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
-                            HcclDataType dataType, u64 strideLen = 0, AivAicpuOpParam *nextTask = nullptr) override;
-private:
-    HcclResult RunAllGatherv(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
-                             HcclDataType dataType, u64 strideCnt);
-    HcclResult RunAllGathervMC(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
-                               HcclDataType dataType, u64 strideCnt, AivAicpuOpParam *nextTask);
+    HcclResult RunAlgorithm(
+        HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType,
+        u64 strideLen = 0, AivAicpuOpParam* nextTask = nullptr) override;
 
-    HcclResult GenRingTask(HcclReduceOp opType, u64 sndAddr, u64 rcvAddr, u64 gatherSize, HcclDataType dataType,
-        uint32_t streamId, bool isClockwise, uint32_t step, bool isWindowLast) const;
-    HcclResult RunDoubleRingAllGather(HcclReduceOp opType, u64 sendBuffer,
-        u64 recvBuffer, u64 dataCount, HcclDataType dataType) const;
+private:
+    HcclResult RunAllGatherv(
+        HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType, u64 strideCnt);
+    HcclResult RunAllGathervMC(
+        HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType, u64 strideCnt,
+        AivAicpuOpParam* nextTask);
+
+    HcclResult GenRingTask(
+        HcclReduceOp opType, u64 sndAddr, u64 rcvAddr, u64 gatherSize, HcclDataType dataType, uint32_t streamId,
+        bool isClockwise, uint32_t step, bool isWindowLast) const;
+    HcclResult RunDoubleRingAllGather(
+        HcclReduceOp opType, u64 sendBuffer, u64 recvBuffer, u64 dataCount, HcclDataType dataType) const;
 
     u64 GetWindowOffset(u32 curTurnCnt, u64 curSize, u64 strideCnt, u64 recvBuffer);
 

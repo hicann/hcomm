@@ -31,8 +31,7 @@ int RaRsPingInit(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvB
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpPingInitData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
-    *opResult = gPingOps.pingInit(&pingData->txData.attr, &pingDataOut->rxData.info,
-        &pingDataOut->rxData.devIndex);
+    *opResult = gPingOps.pingInit(&pingData->txData.attr, &pingDataOut->rxData.info, &pingDataOut->rxData.devIndex);
     if (*opResult != 0) {
         hccp_err("ping_init failed ret[%d].", *opResult);
     }
@@ -88,8 +87,8 @@ int RaRsPingGetResults(char *inBuf, char *outBuf, int *outLen, int *opResult, in
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpPingResultsData), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_LEN_RET_HOST(pingData->txData.num, 0, RA_MAX_PING_TARGET_NUM, opResult);
 
-    *opResult = gPingOps.pingGetResults(&pingData->txData.rdev, pingData->txData.target,
-        &pingData->txData.num, pingDataOut->rxData.target);
+    *opResult = gPingOps.pingGetResults(&pingData->txData.rdev, pingData->txData.target, &pingData->txData.num,
+        pingDataOut->rxData.target);
     // caller needs to retry, degrade log level
     if (*opResult == -EAGAIN) {
         hccp_warn("ping_get_results unsuccessful, ret[%d].", *opResult);
@@ -131,8 +130,7 @@ int RaRsPingTargetDel(char *inBuf, char *outBuf, int *outLen, int *opResult, int
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpPingDelData), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_LEN_RET_HOST(pingData->txData.num, 0, RA_MAX_PING_TARGET_NUM, opResult);
 
-    *opResult = gPingOps.pingTargetDel(&pingData->txData.rdev, pingData->txData.target,
-        &pingData->txData.num);
+    *opResult = gPingOps.pingTargetDel(&pingData->txData.rdev, pingData->txData.target, &pingData->txData.num);
     if (*opResult != 0) {
         hccp_err("ping_target_del failed ret[%d].", *opResult);
     }

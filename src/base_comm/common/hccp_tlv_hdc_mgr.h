@@ -17,19 +17,19 @@
 
 namespace hcomm {
 
-using TlvHandle = void *;
+using TlvHandle = void*;
 
 class HccpTlvHdcMgr {
 public:
-    static HccpTlvHdcMgr &GetInstance(uint32_t devPhyId);
+    static HccpTlvHdcMgr& GetInstance(uint32_t devPhyId);
     TlvHandle GetHandle();
     HcclResult Init();
 
 private:
     HccpTlvHdcMgr() = default;
     ~HccpTlvHdcMgr();
-    HccpTlvHdcMgr(const HccpTlvHdcMgr &hccpTlvHdcMgr)            = delete;
-    HccpTlvHdcMgr &operator=(const HccpTlvHdcMgr &hccpTlvHdcMgr) = delete;
+    HccpTlvHdcMgr(const HccpTlvHdcMgr& hccpTlvHdcMgr) = delete;
+    HccpTlvHdcMgr& operator=(const HccpTlvHdcMgr& hccpTlvHdcMgr) = delete;
     HcclResult Deinit();
 
 private:

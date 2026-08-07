@@ -15,33 +15,29 @@
 namespace hccl {
 class TransportVirtural : public TransportBase {
 public:
-    explicit TransportVirtural(DispatcherPub *dispatcher,
-        const std::unique_ptr<NotifyPool> &notifyPool,
-        MachinePara &machinePara,
+    explicit TransportVirtural(
+        DispatcherPub* dispatcher, const std::unique_ptr<NotifyPool>& notifyPool, MachinePara& machinePara,
         std::chrono::milliseconds timeout, u32 index);
     ~TransportVirtural() override;
 
-    HcclResult TxAck(Stream &stream) override;
-    HcclResult RxAck(Stream &stream) override;
-    HcclResult TxAsync(std::vector<TxMemoryInfo>& txMems, Stream &stream) override;
-    HcclResult RxAsync(std::vector<RxMemoryInfo>& rxMems, Stream &stream) override;
-    HcclResult TxDataSignal(Stream &stream) override;
-    HcclResult RxDataSignal(Stream &stream) override;
+    HcclResult TxAck(Stream& stream) override;
+    HcclResult RxAck(Stream& stream) override;
+    HcclResult TxAsync(std::vector<TxMemoryInfo>& txMems, Stream& stream) override;
+    HcclResult RxAsync(std::vector<RxMemoryInfo>& rxMems, Stream& stream) override;
+    HcclResult TxDataSignal(Stream& stream) override;
+    HcclResult RxDataSignal(Stream& stream) override;
 
-    HcclResult TxPrepare(Stream &stream) override;
-    HcclResult RxPrepare(Stream &stream) override;
+    HcclResult TxPrepare(Stream& stream) override;
+    HcclResult RxPrepare(Stream& stream) override;
 
-    HcclResult TxData(UserMemType dstMemType, u64 dstOffset, const void *src, u64 len,
-                                Stream &stream) override;
-    HcclResult RxData(UserMemType srcMemType, u64 srcOffset, void *dst, u64 len,
-                                Stream &stream) override;
+    HcclResult TxData(UserMemType dstMemType, u64 dstOffset, const void* src, u64 len, Stream& stream) override;
+    HcclResult RxData(UserMemType srcMemType, u64 srcOffset, void* dst, u64 len, Stream& stream) override;
 
-    HcclResult TxDone(Stream &stream) override;
-    HcclResult RxDone(Stream &stream) override;
+    HcclResult TxDone(Stream& stream) override;
+    HcclResult RxDone(Stream& stream) override;
 
 protected:
     u32 currentIndex_; /* vTransport维护的index */
 };
-}  // namespace hccl
+} // namespace hccl
 #endif /* TRANSPORT_VIRTURAL_PUB_H */
-

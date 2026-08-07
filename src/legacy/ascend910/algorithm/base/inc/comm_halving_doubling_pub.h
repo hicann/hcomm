@@ -16,21 +16,16 @@
 namespace hccl {
 class CommHalvingDoubling : public CommBase {
 public:
-    explicit CommHalvingDoubling(const std::string &collectiveId,
-                                 const u32 userRank, const u32 userRankSize,
-                                 const u32 rank, const u32 rankSize, const TopoType topoFlag,
-                                 const HcclDispatcher dispatcher,
-                                 const std::unique_ptr<NotifyPool> &notifyPool,
-                                 std::map<HcclIpAddress, HcclNetDevCtx> &netDevCtxMap,
-                                 const IntraExchanger &exchanger,
-                                 const std::vector<RankInfo> paraVector,
-                                 const DeviceMem& inputMem, const DeviceMem& outputMem, const bool isUsedRdmaLevel0,
-                                 const std::string &tag = "",
-                                 const NICDeployment nicDeployInner = NICDeployment::NIC_DEPLOYMENT_DEVICE,
-                                 const u32 subUserRankRoot = INVALID_VALUE_RANKID,
-                                 HalvingDoublingType halvingDoublingType =
-                                    HalvingDoublingType::RECURSIVE_HALVING_DOUBLING,
-                                 const bool isHaveCpuRank = false, const bool useSuperPodMode = false);
+    explicit CommHalvingDoubling(
+        const std::string& collectiveId, const u32 userRank, const u32 userRankSize, const u32 rank, const u32 rankSize,
+        const TopoType topoFlag, const HcclDispatcher dispatcher, const std::unique_ptr<NotifyPool>& notifyPool,
+        std::map<HcclIpAddress, HcclNetDevCtx>& netDevCtxMap, const IntraExchanger& exchanger,
+        const std::vector<RankInfo> paraVector, const DeviceMem& inputMem, const DeviceMem& outputMem,
+        const bool isUsedRdmaLevel0, const std::string& tag = "",
+        const NICDeployment nicDeployInner = NICDeployment::NIC_DEPLOYMENT_DEVICE,
+        const u32 subUserRankRoot = INVALID_VALUE_RANKID,
+        HalvingDoublingType halvingDoublingType = HalvingDoublingType::RECURSIVE_HALVING_DOUBLING,
+        const bool isHaveCpuRank = false, const bool useSuperPodMode = false);
 
     ~CommHalvingDoubling() override;
 
@@ -43,6 +38,6 @@ private:
     const u32 subUserRankRoot_;
     HalvingDoublingType halvingDoublingType_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* COMM_HALVING_DOUBLING_PUB_H */

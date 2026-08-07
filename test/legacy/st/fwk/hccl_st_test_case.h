@@ -23,13 +23,14 @@
 #include <mutex>
 #include "context/st_ctx.h"
 
-void PrepareCtx(ThreadContext *ctx);
-bool VerifyCtx(ThreadContext *ctx);
+void PrepareCtx(ThreadContext* ctx);
+bool VerifyCtx(ThreadContext* ctx);
 
 class HcclStTestCase {
 public:
-    explicit HcclStTestCase(Situation &situation, string caseName = "")
-        : situation(situation), testcaseName(std::move(caseName))
+    explicit HcclStTestCase(Situation& situation, string caseName = "")
+        : situation(situation),
+          testcaseName(std::move(caseName))
     {
         InitSituationEnv();
     }
@@ -44,13 +45,13 @@ private:
 
     void InitSituationEnv();
 
-    void InternalProcess(ThreadContext *ctx);
+    void InternalProcess(ThreadContext* ctx);
 
     void SetEnv();
 
     void UnsetEnv();
 
-    vector<ThreadContext *> contexts;
+    vector<ThreadContext*> contexts;
 };
 
 #endif

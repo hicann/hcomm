@@ -14,19 +14,16 @@
 #include "string_util.h"
 namespace Hccl {
 
-Buffer::Buffer(uintptr_t addr, std::size_t size) : addr_(addr), size_(size)
-{
-}
+Buffer::Buffer(uintptr_t addr, std::size_t size) : addr_(addr), size_(size) {}
 
-Buffer::Buffer(std::size_t size) : size_(size)
-{
-}
+Buffer::Buffer(std::size_t size) : size_(size) {}
 
-Buffer::Buffer(uintptr_t addr, std::size_t size, HcclMemType memType) : addr_(addr), size_(size), memType_(memType)
-{
-}
+Buffer::Buffer(uintptr_t addr, std::size_t size, HcclMemType memType) : addr_(addr), size_(size), memType_(memType) {}
 
-Buffer::Buffer(uintptr_t addr, std::size_t size, HcclMemType memType, const char *memInfo) : addr_(addr), size_(size), memType_(memType)
+Buffer::Buffer(uintptr_t addr, std::size_t size, HcclMemType memType, const char* memInfo)
+    : addr_(addr),
+      size_(size),
+      memType_(memType)
 {
     if (memInfo != nullptr) {
         snprintf_s(memInfo_, sizeof(memInfo_), strlen(memInfo), "%s", memInfo);
@@ -35,7 +32,7 @@ Buffer::Buffer(uintptr_t addr, std::size_t size, HcclMemType memType, const char
     }
 }
 
-Buffer::Buffer(uintptr_t addr, std::size_t size, const char *memInfo) : addr_(addr), size_(size)
+Buffer::Buffer(uintptr_t addr, std::size_t size, const char* memInfo) : addr_(addr), size_(size)
 {
     if (memInfo != nullptr) {
         snprintf_s(memInfo_, sizeof(memInfo_), strlen(memInfo), "%s", memInfo);
@@ -43,35 +40,20 @@ Buffer::Buffer(uintptr_t addr, std::size_t size, const char *memInfo) : addr_(ad
         memInfo_[0] = '\0'; // 初始化为空字符串
     }
 }
-uintptr_t Buffer::GetAddr() const
-{
-    return addr_;
-}
+uintptr_t Buffer::GetAddr() const { return addr_; }
 
-size_t Buffer::GetSize() const
-{
-    return size_;
-}
+size_t Buffer::GetSize() const { return size_; }
 
-HcclMemType Buffer::GetMemType() const
-{
-    return memType_;
-}
+HcclMemType Buffer::GetMemType() const { return memType_; }
 
-const std::string Buffer::GetMemInfo() const
-{
-    return memInfo_;
-}
+const std::string Buffer::GetMemInfo() const { return memInfo_; }
 
 std::string Buffer::Describe() const
 {
     return StringFormat("Buffer[addr=0x%llx, size=0x%llx, memInfo=%s]", addr_, size_, memInfo_);
 }
 
-bool Buffer::Contains(Buffer *buf) const
-{
-    return IsRangeInclude(addr_, size_, buf->addr_, buf->size_);
-}
+bool Buffer::Contains(Buffer* buf) const { return IsRangeInclude(addr_, size_, buf->addr_, buf->size_); }
 
 bool Buffer::Contains(uintptr_t bufAddr, size_t bufSize) const
 {

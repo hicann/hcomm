@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #include "dump/dump_graph.h"
 #include <cerrno>
 #include <cstdint>
@@ -35,7 +35,7 @@ static const std::string INPUT_TASK_QUEUE_STAGE = "input_task_queues";
 static const std::string TASK_GRAPH_DUMP_TYPE = "task_graph";
 static const std::string INPUT_QUEUE_DUMP_TYPE = "input_task_queues";
 
-static std::string BuildStageRankDumpPath(const std::string &stage, RankId rankId)
+static std::string BuildStageRankDumpPath(const std::string& stage, RankId rankId)
 {
     return StringFormat("%s/%s/rank_%u.msgpack", DUMP_GRAPH_ROOT_DIR.c_str(), stage.c_str(), rankId);
 }
@@ -124,7 +124,7 @@ static Json DumpLinkProtoStubToJson(LinkProtoStub linkProto)
     }
 }
 
-static Json MakeTaskMetaFields(const HcclTaskMetaData &taskMeta)
+static Json MakeTaskMetaFields(const HcclTaskMetaData& taskMeta)
 {
     Json fields = Json::object();
     switch (taskMeta.taskType) {
@@ -141,7 +141,8 @@ static Json MakeTaskMetaFields(const HcclTaskMetaData &taskMeta)
             fields["src_offset"] = taskMeta.taskData.reduce.srcOffset;
             fields["dst_rank_id"] = taskMeta.taskData.reduce.dstRankId;
             fields["dst_offset"] = taskMeta.taskData.reduce.dstOffset;
-            fields["data_type"] = DumpHcclDataTypeToString(static_cast<HcclDataType>(taskMeta.taskData.reduce.dataType));
+            fields["data_type"]
+                = DumpHcclDataTypeToString(static_cast<HcclDataType>(taskMeta.taskData.reduce.dataType));
             fields["data_count"] = taskMeta.taskData.reduce.dataCount;
             fields["reduce_op"] = DumpReduceOpToString(static_cast<HcclReduceOp>(taskMeta.taskData.reduce.reduceOp));
             fields["protocol"] = taskMeta.taskData.reduce.protocol;
@@ -179,13 +180,13 @@ static Json MakeTaskMetaFields(const HcclTaskMetaData &taskMeta)
     return fields;
 }
 
-static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::string> *nodeIdMap = nullptr);
-static Json DumpCcuSingleQueue(TaskNode *headNode, RankId rankId, u32 queueIdx,
-    const std::map<TaskNode *, std::string> *nodeIdMap);
-static Json DumpCcuSubGraph(TaskStubCcuGraph *ccuGraphTask, const std::map<TaskNode *, std::string> *nodeIdMap);
-static Json DumpTaskStubToJsonWithNodeMap(TaskStub *task, const std::map<TaskNode *, std::string> *nodeIdMap);
+static Json MakeTaskStubFields(TaskStub* task, const std::map<TaskNode*, std::string>* nodeIdMap = nullptr);
+static Json
+DumpCcuSingleQueue(TaskNode* headNode, RankId rankId, u32 queueIdx, const std::map<TaskNode*, std::string>* nodeIdMap);
+static Json DumpCcuSubGraph(TaskStubCcuGraph* ccuGraphTask, const std::map<TaskNode*, std::string>* nodeIdMap);
+static Json DumpTaskStubToJsonWithNodeMap(TaskStub* task, const std::map<TaskNode*, std::string>* nodeIdMap);
 
-static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::string> *nodeIdMap)
+static Json MakeTaskStubFields(TaskStub* task, const std::map<TaskNode*, std::string>* nodeIdMap)
 {
     Json fields = Json::object();
     if (task == nullptr) {
@@ -195,10 +196,9 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
 
     switch (task->GetType()) {
         case TaskTypeStub::LOCAL_COPY: {
-            TaskStubLocalCopy *localCopyTask = dynamic_cast<TaskStubLocalCopy *>(task);
+            TaskStubLocalCopy* localCopyTask = dynamic_cast<TaskStubLocalCopy*>(task);
             if (localCopyTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalCopy.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalCopy.", taskType);
                 break;
             }
             fields["src_slice"] = DumpDataSliceToJson(localCopyTask->GetSrcSlice());
@@ -207,10 +207,9 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::LOCAL_REDUCE: {
-            TaskStubLocalReduce *localReduceTask = dynamic_cast<TaskStubLocalReduce *>(task);
+            TaskStubLocalReduce* localReduceTask = dynamic_cast<TaskStubLocalReduce*>(task);
             if (localReduceTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalReduce.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalReduce.", taskType);
                 break;
             }
             fields["src_slice"] = DumpDataSliceToJson(localReduceTask->GetSrcSlice());
@@ -221,14 +220,13 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::LOCAL_BATCH_REDUCE: {
-            TaskStubLocalBatchReduce *localBatchReduceTask = dynamic_cast<TaskStubLocalBatchReduce *>(task);
+            TaskStubLocalBatchReduce* localBatchReduceTask = dynamic_cast<TaskStubLocalBatchReduce*>(task);
             if (localBatchReduceTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalBatchReduce.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalBatchReduce.", taskType);
                 break;
             }
             fields["src_slices"] = Json::array();
-            for (const auto &srcSlice : localBatchReduceTask->GetSrcSlices()) {
+            for (const auto& srcSlice : localBatchReduceTask->GetSrcSlices()) {
                 fields["src_slices"].push_back(DumpDataSliceToJson(srcSlice));
             }
             fields["dst_slice"] = DumpDataSliceToJson(localBatchReduceTask->GetDstSlice());
@@ -237,10 +235,9 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::LOCAL_POST_TO: {
-            TaskStubLocalPostTo *localPostToTask = dynamic_cast<TaskStubLocalPostTo *>(task);
+            TaskStubLocalPostTo* localPostToTask = dynamic_cast<TaskStubLocalPostTo*>(task);
             if (localPostToTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalPostTo.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalPostTo.", taskType);
                 break;
             }
             fields["notify_id"] = localPostToTask->GetNotifyId();
@@ -253,20 +250,18 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::LOCAL_WAIT_FROM: {
-            TaskStubLocalWaitFrom *localWaitFromTask = dynamic_cast<TaskStubLocalWaitFrom *>(task);
+            TaskStubLocalWaitFrom* localWaitFromTask = dynamic_cast<TaskStubLocalWaitFrom*>(task);
             if (localWaitFromTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalWaitFrom.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalWaitFrom.", taskType);
                 break;
             }
             fields["notify_id"] = localWaitFromTask->GetNotifyId();
             break;
         }
         case TaskTypeStub::POST: {
-            TaskStubPost *postTask = dynamic_cast<TaskStubPost *>(task);
+            TaskStubPost* postTask = dynamic_cast<TaskStubPost*>(task);
             if (postTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubPost.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubPost.", taskType);
                 break;
             }
             fields["remote_rank"] = postTask->GetRemoteRank();
@@ -277,10 +272,9 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::WAIT: {
-            TaskStubWait *waitTask = dynamic_cast<TaskStubWait *>(task);
+            TaskStubWait* waitTask = dynamic_cast<TaskStubWait*>(task);
             if (waitTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubWait.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubWait.", taskType);
                 break;
             }
             fields["remote_rank"] = waitTask->GetRemoteRank();
@@ -290,10 +284,9 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::READ: {
-            TaskStubRead *readTask = dynamic_cast<TaskStubRead *>(task);
+            TaskStubRead* readTask = dynamic_cast<TaskStubRead*>(task);
             if (readTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubRead.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubRead.", taskType);
                 break;
             }
             fields["remote_rank"] = readTask->GetRemoteRank();
@@ -304,10 +297,9 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::READ_REDUCE: {
-            TaskStubReadReduce *readReduceTask = dynamic_cast<TaskStubReadReduce *>(task);
+            TaskStubReadReduce* readReduceTask = dynamic_cast<TaskStubReadReduce*>(task);
             if (readReduceTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubReadReduce.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubReadReduce.", taskType);
                 break;
             }
             fields["remote_rank"] = readReduceTask->GetRemoteRank();
@@ -320,10 +312,9 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::WRITE: {
-            TaskStubWrite *writeTask = dynamic_cast<TaskStubWrite *>(task);
+            TaskStubWrite* writeTask = dynamic_cast<TaskStubWrite*>(task);
             if (writeTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubWrite.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubWrite.", taskType);
                 break;
             }
             fields["remote_rank"] = writeTask->GetRemoteRank();
@@ -334,10 +325,9 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::WRITE_REDUCE: {
-            TaskStubWriteReduce *writeReduceTask = dynamic_cast<TaskStubWriteReduce *>(task);
+            TaskStubWriteReduce* writeReduceTask = dynamic_cast<TaskStubWriteReduce*>(task);
             if (writeReduceTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubWriteReduce.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubWriteReduce.", taskType);
                 break;
             }
             fields["remote_rank"] = writeReduceTask->GetRemoteRank();
@@ -350,30 +340,27 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::LOCAL_POST_TO_SHADOW: {
-            TaskStubLocalPostToShadow *localPostToShadowTask = dynamic_cast<TaskStubLocalPostToShadow *>(task);
+            TaskStubLocalPostToShadow* localPostToShadowTask = dynamic_cast<TaskStubLocalPostToShadow*>(task);
             if (localPostToShadowTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalPostToShadow.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalPostToShadow.", taskType);
                 break;
             }
             fields["neighbor_rank"] = localPostToShadowTask->GetNeighborRank();
             break;
         }
         case TaskTypeStub::LOCAL_WAIT_FROM_SHADOW: {
-            TaskStubLocalWaitFromShadow *localWaitFromShadowTask = dynamic_cast<TaskStubLocalWaitFromShadow *>(task);
+            TaskStubLocalWaitFromShadow* localWaitFromShadowTask = dynamic_cast<TaskStubLocalWaitFromShadow*>(task);
             if (localWaitFromShadowTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalWaitFromShadow.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLocalWaitFromShadow.", taskType);
                 break;
             }
             fields["neighbor_rank"] = localWaitFromShadowTask->GetNeighborRank();
             break;
         }
         case TaskTypeStub::BEING_READ: {
-            TaskStubBeingRead *beingReadTask = dynamic_cast<TaskStubBeingRead *>(task);
+            TaskStubBeingRead* beingReadTask = dynamic_cast<TaskStubBeingRead*>(task);
             if (beingReadTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubBeingRead.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubBeingRead.", taskType);
                 break;
             }
             fields["remote_rank"] = beingReadTask->GetRemoteRank();
@@ -384,10 +371,9 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::BEING_READ_REDUCE: {
-            TaskStubBeingReadReduce *beingReadReduceTask = dynamic_cast<TaskStubBeingReadReduce *>(task);
+            TaskStubBeingReadReduce* beingReadReduceTask = dynamic_cast<TaskStubBeingReadReduce*>(task);
             if (beingReadReduceTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubBeingReadReduce.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubBeingReadReduce.", taskType);
                 break;
             }
             fields["remote_rank"] = beingReadReduceTask->GetRemoteRank();
@@ -400,10 +386,9 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::BEING_WRITTEN: {
-            TaskStubBeingWritten *beingWrittenTask = dynamic_cast<TaskStubBeingWritten *>(task);
+            TaskStubBeingWritten* beingWrittenTask = dynamic_cast<TaskStubBeingWritten*>(task);
             if (beingWrittenTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubBeingWritten.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubBeingWritten.", taskType);
                 break;
             }
             fields["remote_rank"] = beingWrittenTask->GetRemoteRank();
@@ -414,10 +399,9 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::BEING_WRITTEN_REDUCE: {
-            TaskStubBeingWrittenReduce *beingWrittenReduceTask = dynamic_cast<TaskStubBeingWrittenReduce *>(task);
+            TaskStubBeingWrittenReduce* beingWrittenReduceTask = dynamic_cast<TaskStubBeingWrittenReduce*>(task);
             if (beingWrittenReduceTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubBeingWrittenReduce.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubBeingWrittenReduce.", taskType);
                 break;
             }
             fields["remote_rank"] = beingWrittenReduceTask->GetRemoteRank();
@@ -430,10 +414,9 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::CCU_GRAPH: {
-            TaskStubCcuGraph *ccuGraphTask = dynamic_cast<TaskStubCcuGraph *>(task);
+            TaskStubCcuGraph* ccuGraphTask = dynamic_cast<TaskStubCcuGraph*>(task);
             if (ccuGraphTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubCcuGraph.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubCcuGraph.", taskType);
                 break;
             }
             fields["rank_id"] = ccuGraphTask->rankId;
@@ -442,10 +425,9 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::LOOP_START: {
-            TaskStubLoopStart *loopStartTask = dynamic_cast<TaskStubLoopStart *>(task);
+            TaskStubLoopStart* loopStartTask = dynamic_cast<TaskStubLoopStart*>(task);
             if (loopStartTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLoopStart.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLoopStart.", taskType);
                 break;
             }
             fields["loop_idx"] = loopStartTask->loopIdx;
@@ -453,10 +435,9 @@ static Json MakeTaskStubFields(TaskStub *task, const std::map<TaskNode *, std::s
             break;
         }
         case TaskTypeStub::LOOP_END: {
-            TaskStubLoopEnd *loopEndTask = dynamic_cast<TaskStubLoopEnd *>(task);
+            TaskStubLoopEnd* loopEndTask = dynamic_cast<TaskStubLoopEnd*>(task);
             if (loopEndTask == nullptr) {
-                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLoopEnd.",
-                    taskType);
+                HCCL_VM_WARN("failed to cast task [{}] to TaskStubLoopEnd.", taskType);
                 break;
             }
             fields["loop_idx"] = loopEndTask->loopIdx;
@@ -496,25 +477,25 @@ static Json MakeGraphRankJson()
     return rankJson;
 }
 
-static bool IsValidRegisteredNode(const TaskNode *node);
+static bool IsValidRegisteredNode(const TaskNode* node);
 
-static void CollectMainGraphNodes(TaskNode *dummyStart, std::vector<TaskNode *> &graphNodes)
+static void CollectMainGraphNodes(TaskNode* dummyStart, std::vector<TaskNode*>& graphNodes)
 {
     graphNodes.clear();
     if (dummyStart == nullptr) {
         return;
     }
 
-    std::queue<TaskNode *> visitQueue;
-    std::set<TaskNode *> visited;
+    std::queue<TaskNode*> visitQueue;
+    std::set<TaskNode*> visited;
     visitQueue.push(dummyStart);
     visited.insert(dummyStart);
 
     while (!visitQueue.empty()) {
-        TaskNode *currentNode = visitQueue.front();
+        TaskNode* currentNode = visitQueue.front();
         visitQueue.pop();
 
-        for (auto *child : currentNode->children) {
+        for (auto* child : currentNode->children) {
             if (child != nullptr && visited.insert(child).second) {
                 visitQueue.push(child);
             }
@@ -530,12 +511,9 @@ static void CollectMainGraphNodes(TaskNode *dummyStart, std::vector<TaskNode *> 
     }
 }
 
-static std::string BuildNodeId(RankId rankId, uint64_t nodeIndex)
-{
-    return BuildTaskId(rankId, nodeIndex);
-}
+static std::string BuildNodeId(RankId rankId, uint64_t nodeIndex) { return BuildTaskId(rankId, nodeIndex); }
 
-static bool IsValidRegisteredNode(const TaskNode *node)
+static bool IsValidRegisteredNode(const TaskNode* node)
 {
     if (node == nullptr) {
         return false;
@@ -549,8 +527,9 @@ static bool IsValidRegisteredNode(const TaskNode *node)
     return true;
 }
 
-void CollectTaskNodesWithGlobalIds(TaskNode *dummyStart, std::vector<TaskNode *> &graphNodes,
-    std::map<TaskNode *, std::string> &nodeIdMap, bool includeStartNode)
+void CollectTaskNodesWithGlobalIds(
+    TaskNode* dummyStart, std::vector<TaskNode*>& graphNodes, std::map<TaskNode*, std::string>& nodeIdMap,
+    bool includeStartNode)
 {
     if (dummyStart == nullptr) {
         return;
@@ -558,11 +537,11 @@ void CollectTaskNodesWithGlobalIds(TaskNode *dummyStart, std::vector<TaskNode *>
 
     EnsureTaskNodeIdsAssigned(dummyStart);
 
-    std::queue<TaskNode *> visitQueue;
-    std::set<TaskNode *> visited;
+    std::queue<TaskNode*> visitQueue;
+    std::set<TaskNode*> visited;
     std::map<RankId, uint64_t> rankNodeCounters;
 
-    auto registerNode = [&rankNodeCounters, &graphNodes, &nodeIdMap](TaskNode *node) {
+    auto registerNode = [&rankNodeCounters, &graphNodes, &nodeIdMap](TaskNode* node) {
         if (!IsValidRegisteredNode(node) || nodeIdMap.count(node) != 0) {
             return;
         }
@@ -580,10 +559,10 @@ void CollectTaskNodesWithGlobalIds(TaskNode *dummyStart, std::vector<TaskNode *>
     visited.insert(dummyStart);
 
     while (!visitQueue.empty()) {
-        TaskNode *currentNode = visitQueue.front();
+        TaskNode* currentNode = visitQueue.front();
         visitQueue.pop();
 
-        for (auto *child : currentNode->children) {
+        for (auto* child : currentNode->children) {
             if (child != nullptr && visited.insert(child).second) {
                 visitQueue.push(child);
             }
@@ -598,19 +577,19 @@ void CollectTaskNodesWithGlobalIds(TaskNode *dummyStart, std::vector<TaskNode *>
         if (currentNode->task == nullptr || currentNode->task->GetType() != TaskTypeStub::CCU_GRAPH) {
             continue;
         }
-        TaskStubCcuGraph *ccuGraphTask = dynamic_cast<TaskStubCcuGraph *>(currentNode->task);
+        TaskStubCcuGraph* ccuGraphTask = dynamic_cast<TaskStubCcuGraph*>(currentNode->task);
         if (ccuGraphTask == nullptr || ccuGraphTask->ccuHeadTaskNode == nullptr) {
             continue;
         }
 
-        std::queue<TaskNode *> ccuQueue;
-        std::set<TaskNode *> ccuVisited;
+        std::queue<TaskNode*> ccuQueue;
+        std::set<TaskNode*> ccuVisited;
         ccuQueue.push(ccuGraphTask->ccuHeadTaskNode);
         ccuVisited.insert(ccuGraphTask->ccuHeadTaskNode);
         while (!ccuQueue.empty()) {
-            TaskNode *ccuNode = ccuQueue.front();
+            TaskNode* ccuNode = ccuQueue.front();
             ccuQueue.pop();
-            for (auto *child : ccuNode->children) {
+            for (auto* child : ccuNode->children) {
                 if (child != nullptr && ccuVisited.insert(child).second) {
                     ccuQueue.push(child);
                 }
@@ -620,7 +599,7 @@ void CollectTaskNodesWithGlobalIds(TaskNode *dummyStart, std::vector<TaskNode *>
     }
 }
 
-static Json TaskEdgeToJson(const std::string &srcNodeId, const std::string &dstNodeId)
+static Json TaskEdgeToJson(const std::string& srcNodeId, const std::string& dstNodeId)
 {
     Json edgeJson = Json::object();
     edgeJson["src_id"] = srcNodeId;
@@ -628,27 +607,27 @@ static Json TaskEdgeToJson(const std::string &srcNodeId, const std::string &dstN
     return edgeJson;
 }
 
-static void CollectCcuSubGraphNodes(TaskNode *headNode, std::vector<TaskNode *> &graphNodes)
+static void CollectCcuSubGraphNodes(TaskNode* headNode, std::vector<TaskNode*>& graphNodes)
 {
     graphNodes.clear();
     if (headNode == nullptr) {
         return;
     }
 
-    std::queue<TaskNode *> visitQueue;
-    std::set<TaskNode *> visited;
+    std::queue<TaskNode*> visitQueue;
+    std::set<TaskNode*> visited;
     visitQueue.push(headNode);
     visited.insert(headNode);
 
     while (!visitQueue.empty()) {
-        TaskNode *currentNode = visitQueue.front();
+        TaskNode* currentNode = visitQueue.front();
         visitQueue.pop();
 
         if (IsValidRegisteredNode(currentNode)) {
             graphNodes.push_back(currentNode);
         }
 
-        for (auto *child : currentNode->children) {
+        for (auto* child : currentNode->children) {
             if (child != nullptr && visited.insert(child).second) {
                 visitQueue.push(child);
             }
@@ -656,7 +635,7 @@ static void CollectCcuSubGraphNodes(TaskNode *headNode, std::vector<TaskNode *> 
     }
 }
 
-nlohmann::json TaskMetaToJson(const HcclTaskMetaData &taskMeta)
+nlohmann::json TaskMetaToJson(const HcclTaskMetaData& taskMeta)
 {
     Json taskMetaJson = Json::object();
     taskMetaJson["task_type"] = TaskMetaTypeToString(taskMeta.taskType);
@@ -667,12 +646,9 @@ nlohmann::json TaskMetaToJson(const HcclTaskMetaData &taskMeta)
     return taskMetaJson;
 }
 
-nlohmann::json DumpTaskStubToJson(TaskStub *task)
-{
-    return DumpTaskStubToJsonWithNodeMap(task, nullptr);
-}
+nlohmann::json DumpTaskStubToJson(TaskStub* task) { return DumpTaskStubToJsonWithNodeMap(task, nullptr); }
 
-static Json DumpTaskStubToJsonWithNodeMap(TaskStub *task, const std::map<TaskNode *, std::string> *nodeIdMap)
+static Json DumpTaskStubToJsonWithNodeMap(TaskStub* task, const std::map<TaskNode*, std::string>* nodeIdMap)
 {
     Json taskJson = Json::object();
     if (task == nullptr) {
@@ -687,8 +663,9 @@ static Json DumpTaskStubToJsonWithNodeMap(TaskStub *task, const std::map<TaskNod
     return taskJson;
 }
 
-static nlohmann::json DumpTaskNodeToJson(TaskNode *node, const std::string &nodeId,
-    const std::map<TaskNode *, std::string> &nodeIdMap, RankId rankFilter = static_cast<RankId>(-1))
+static nlohmann::json DumpTaskNodeToJson(
+    TaskNode* node, const std::string& nodeId, const std::map<TaskNode*, std::string>& nodeIdMap,
+    RankId rankFilter = static_cast<RankId>(-1))
 {
     Json nodeJson = Json::object();
     if (node == nullptr) {
@@ -717,7 +694,7 @@ static nlohmann::json DumpTaskNodeToJson(TaskNode *node, const std::string &node
     nodeJson["parents"] = Json::array();
     nodeJson["children"] = Json::array();
 
-    for (auto *parent : node->parents) {
+    for (auto* parent : node->parents) {
         if (parent == nullptr || !IsValidRegisteredNode(parent)) {
             continue;
         }
@@ -731,7 +708,7 @@ static nlohmann::json DumpTaskNodeToJson(TaskNode *node, const std::string &node
         }
         nodeJson["parents"].push_back(iter->second);
     }
-    for (auto *child : node->children) {
+    for (auto* child : node->children) {
         if (child == nullptr || !IsValidRegisteredNode(child)) {
             continue;
         }
@@ -749,31 +726,31 @@ static nlohmann::json DumpTaskNodeToJson(TaskNode *node, const std::string &node
     return nodeJson;
 }
 
-static Json DumpCcuSubGraph(TaskStubCcuGraph *ccuGraphTask, const std::map<TaskNode *, std::string> *nodeIdMap)
+static Json DumpCcuSubGraph(TaskStubCcuGraph* ccuGraphTask, const std::map<TaskNode*, std::string>* nodeIdMap)
 {
     Json ccuGraphJson = Json::array();
     if (ccuGraphTask == nullptr || ccuGraphTask->ccuHeadTaskNode == nullptr) {
         return ccuGraphJson;
     }
 
-    std::vector<TaskNode *> graphNodes;
-    std::map<TaskNode *, std::string> localNodeIdMap;
-    const std::map<TaskNode *, std::string> *resolvedNodeIdMap = nodeIdMap;
+    std::vector<TaskNode*> graphNodes;
+    std::map<TaskNode*, std::string> localNodeIdMap;
+    const std::map<TaskNode*, std::string>* resolvedNodeIdMap = nodeIdMap;
     if (resolvedNodeIdMap == nullptr) {
         resolvedNodeIdMap = &localNodeIdMap;
     }
     CollectTaskNodesWithGlobalIds(ccuGraphTask->ccuHeadTaskNode, graphNodes, localNodeIdMap, true);
 
-    std::vector<TaskNode *> rankGraphNodes;
+    std::vector<TaskNode*> rankGraphNodes;
     rankGraphNodes.reserve(graphNodes.size());
-    for (auto *node : graphNodes) {
+    for (auto* node : graphNodes) {
         if (node != nullptr && node->rankIdx == ccuGraphTask->rankId) {
             rankGraphNodes.push_back(node);
         }
     }
 
     uint32_t maxQueueId = 0;
-    for (auto *node : rankGraphNodes) {
+    for (auto* node : rankGraphNodes) {
         if (node == nullptr) {
             continue;
         }
@@ -784,8 +761,8 @@ static Json DumpCcuSubGraph(TaskStubCcuGraph *ccuGraphTask, const std::map<TaskN
     }
 
     const uint32_t queueCount = std::max<uint32_t>(ccuGraphTask->queueNum_, maxQueueId + 1);
-    std::vector<std::vector<TaskNode *>> queueBuckets(queueCount);
-    for (auto *node : rankGraphNodes) {
+    std::vector<std::vector<TaskNode*>> queueBuckets(queueCount);
+    for (auto* node : rankGraphNodes) {
         if (node == nullptr) {
             continue;
         }
@@ -793,8 +770,7 @@ static Json DumpCcuSubGraph(TaskStubCcuGraph *ccuGraphTask, const std::map<TaskN
             continue;
         }
         if (node->queIdx >= queueBuckets.size()) {
-            HCCL_VM_WARN("queue id[{}] is out of range[{}], skip node.",
-                node->queIdx, queueBuckets.size());
+            HCCL_VM_WARN("queue id[{}] is out of range[{}], skip node.", node->queIdx, queueBuckets.size());
             continue;
         }
         queueBuckets[node->queIdx].push_back(node);
@@ -802,14 +778,13 @@ static Json DumpCcuSubGraph(TaskStubCcuGraph *ccuGraphTask, const std::map<TaskN
 
     for (uint32_t queueIdx = 0; queueIdx < queueBuckets.size(); ++queueIdx) {
         Json queueJson = Json::array();
-        for (auto *node : queueBuckets[queueIdx]) {
+        for (auto* node : queueBuckets[queueIdx]) {
             auto nodeIdIter = resolvedNodeIdMap->find(node);
             if (nodeIdIter == resolvedNodeIdMap->end()) {
                 HCCL_VM_ERROR("node id not found.");
                 continue;
             }
-            queueJson.push_back(DumpTaskNodeToJson(node, nodeIdIter->second, *resolvedNodeIdMap,
-                ccuGraphTask->rankId));
+            queueJson.push_back(DumpTaskNodeToJson(node, nodeIdIter->second, *resolvedNodeIdMap, ccuGraphTask->rankId));
         }
         ccuGraphJson.push_back(queueJson);
     }
@@ -817,17 +792,17 @@ static Json DumpCcuSubGraph(TaskStubCcuGraph *ccuGraphTask, const std::map<TaskN
     return ccuGraphJson;
 }
 
-static std::map<RankId, Json> BuildAllRankTaskQueuesJsonMap(const AllRankTaskQueues &allRankTaskQueues)
+static std::map<RankId, Json> BuildAllRankTaskQueuesJsonMap(const AllRankTaskQueues& allRankTaskQueues)
 {
     std::map<RankId, Json> rankJsonMap;
 
-    for (const auto &rankIter : allRankTaskQueues) {
+    for (const auto& rankIter : allRankTaskQueues) {
         const RankId rankId = rankIter.first;
         Json rankJson = Json::object();
         rankJson["rank_id"] = rankId;
         rankJson["streams"] = Json::array();
 
-        const SingleTaskQueue &taskQueue = rankIter.second;
+        const SingleTaskQueue& taskQueue = rankIter.second;
         for (std::size_t queueIdx = 0; queueIdx < taskQueue.size(); ++queueIdx) {
             Json streamJson = Json::object();
             streamJson["queue_id"] = queueIdx;
@@ -848,7 +823,7 @@ static std::map<RankId, Json> BuildAllRankTaskQueuesJsonMap(const AllRankTaskQue
     return rankJsonMap;
 }
 
-static std::map<RankId, Json> BuildTaskGraphJsonMap(TaskNode *dummyStart)
+static std::map<RankId, Json> BuildTaskGraphJsonMap(TaskNode* dummyStart)
 {
     std::map<RankId, Json> rankJsonMap;
     std::map<RankId, std::set<std::pair<std::string, std::string>>> rankEdgeSets;
@@ -857,30 +832,30 @@ static std::map<RankId, Json> BuildTaskGraphJsonMap(TaskNode *dummyStart)
     }
 
     // Build one global node-id registry (includes CCU subgraph nodes) for cross-dump consistency.
-    std::vector<TaskNode *> allNodes;
-    std::map<TaskNode *, std::string> nodeIdMap;
+    std::vector<TaskNode*> allNodes;
+    std::map<TaskNode*, std::string> nodeIdMap;
     CollectTaskNodesWithGlobalIds(dummyStart, allNodes, nodeIdMap);
 
     // Outer DAG should only contain main-graph nodes. CCU subgraph nodes are embedded under CCU task details.
-    std::vector<TaskNode *> graphNodes;
+    std::vector<TaskNode*> graphNodes;
     CollectMainGraphNodes(dummyStart, graphNodes);
-    std::set<TaskNode *> mainNodeSet(graphNodes.begin(), graphNodes.end());
+    std::set<TaskNode*> mainNodeSet(graphNodes.begin(), graphNodes.end());
 
-    for (auto *currentNode : graphNodes) {
+    for (auto* currentNode : graphNodes) {
         auto currentNodeIdIter = nodeIdMap.find(currentNode);
         if (currentNodeIdIter == nodeIdMap.end()) {
             HCCL_VM_ERROR("current node id not found.");
             continue;
         }
 
-        Json &rankJson = rankJsonMap[currentNode->rankIdx];
+        Json& rankJson = rankJsonMap[currentNode->rankIdx];
         if (rankJson.is_null()) {
             rankJson = MakeGraphRankJson();
             rankJson["rank_id"] = currentNode->rankIdx;
         }
         rankJson["nodes"].push_back(DumpTaskNodeToJson(currentNode, currentNodeIdIter->second, nodeIdMap));
 
-        for (auto *parent : currentNode->parents) {
+        for (auto* parent : currentNode->parents) {
             if (parent == nullptr) {
                 continue;
             }
@@ -899,7 +874,7 @@ static std::map<RankId, Json> BuildTaskGraphJsonMap(TaskNode *dummyStart)
             }
         }
 
-        for (auto *child : currentNode->children) {
+        for (auto* child : currentNode->children) {
             if (child == nullptr) {
                 continue;
             }
@@ -922,29 +897,29 @@ static std::map<RankId, Json> BuildTaskGraphJsonMap(TaskNode *dummyStart)
     return rankJsonMap;
 }
 
-static HcclResult DumpRankJsonMapByStage(const std::map<RankId, Json> &rankJsonMap, const std::string &type,
-    const std::string &stage)
+static HcclResult
+DumpRankJsonMapByStage(const std::map<RankId, Json>& rankJsonMap, const std::string& type, const std::string& stage)
 {
     if (stage.empty()) {
         HCCL_VM_WARN("stage is empty.");
         return HcclResult::HCCL_E_PARA;
     }
 
-    DumpManager &dumpManager = DumpManager::GetInstance();
+    DumpManager& dumpManager = DumpManager::GetInstance();
     if (!dumpManager.IsEnabled()) {
         return HcclResult::HCCL_SUCCESS;
     }
 
     const std::string stageDirPath = StringFormat("%s/%s", DUMP_GRAPH_ROOT_DIR.c_str(), stage.c_str());
-    const std::string fullStageDirPath = StringFormat("%s/%s", dumpManager.GetDumpRootDir().c_str(),
-        stageDirPath.c_str());
-    auto removeDirRecursivelyBestEffort = [](const std::string &path, auto &&self) -> void {
-        DIR *dir = opendir(path.c_str());
+    const std::string fullStageDirPath
+        = StringFormat("%s/%s", dumpManager.GetDumpRootDir().c_str(), stageDirPath.c_str());
+    auto removeDirRecursivelyBestEffort = [](const std::string& path, auto&& self) -> void {
+        DIR* dir = opendir(path.c_str());
         if (dir == nullptr) {
             return;
         }
 
-        dirent *entry = nullptr;
+        dirent* entry = nullptr;
         while ((entry = readdir(dir)) != nullptr) {
             const std::string name = entry->d_name;
             if (name == "." || name == "..") {
@@ -962,15 +937,13 @@ static HcclResult DumpRankJsonMapByStage(const std::map<RankId, Json> &rankJsonM
             }
 
             if (unlink(childPath.c_str()) != 0) {
-                HCCL_VM_WARN("failed to remove file[{}], errno[{}].",
-                    childPath.c_str(), errno);
+                HCCL_VM_WARN("failed to remove file[{}], errno[{}].", childPath.c_str(), errno);
             }
         }
 
         closedir(dir);
         if (rmdir(path.c_str()) != 0 && errno != ENOENT) {
-            HCCL_VM_WARN("failed to remove dir[{}], errno[{}].",
-                path.c_str(), errno);
+            HCCL_VM_WARN("failed to remove dir[{}], errno[{}].", path.c_str(), errno);
         }
     };
     removeDirRecursivelyBestEffort(fullStageDirPath, removeDirRecursivelyBestEffort);
@@ -983,7 +956,7 @@ static HcclResult DumpRankJsonMapByStage(const std::map<RankId, Json> &rankJsonM
         stageIndexJson["type"] = type;
     }
 
-    for (const auto &rankJsonPair : rankJsonMap) {
+    for (const auto& rankJsonPair : rankJsonMap) {
         Json rankDumpJson = rankJsonPair.second;
         rankDumpJson["stage"] = stage;
         rankDumpJson["rank_id"] = rankJsonPair.first;
@@ -993,8 +966,9 @@ static HcclResult DumpRankJsonMapByStage(const std::map<RankId, Json> &rankJsonM
         const std::string rankDumpPath = BuildStageRankDumpPath(stage, rankJsonPair.first);
         const HcclResult writeRet = dumpManager.Write(rankDumpPath, rankDumpJson);
         if (writeRet != HcclResult::HCCL_SUCCESS) {
-            HCCL_VM_WARN("failed to dump rank[{}], stage[{}], ret[{}].",
-                rankJsonPair.first, stage.c_str(), static_cast<u32>(writeRet));
+            HCCL_VM_WARN(
+                "failed to dump rank[{}], stage[{}], ret[{}].", rankJsonPair.first, stage.c_str(),
+                static_cast<u32>(writeRet));
             return writeRet;
         }
         stageIndexJson["ranks"].push_back(rankJsonPair.first);
@@ -1012,12 +986,12 @@ static HcclResult DumpRankJsonMapByStage(const std::map<RankId, Json> &rankJsonM
         size_t totalNodeCount = 0;
         size_t totalEdgeCount = 0;
         stageStats["ranks"] = Json::array();
-        for (const auto &rankJsonPair : rankJsonMap) {
-            const Json &rankJson = rankJsonPair.second;
-            const size_t nodeCount = rankJson.contains("nodes") && rankJson["nodes"].is_array() ?
-                rankJson["nodes"].size() : 0;
-            const size_t edgeCount = rankJson.contains("edges") && rankJson["edges"].is_array() ?
-                rankJson["edges"].size() : 0;
+        for (const auto& rankJsonPair : rankJsonMap) {
+            const Json& rankJson = rankJsonPair.second;
+            const size_t nodeCount
+                = rankJson.contains("nodes") && rankJson["nodes"].is_array() ? rankJson["nodes"].size() : 0;
+            const size_t edgeCount
+                = rankJson.contains("edges") && rankJson["edges"].is_array() ? rankJson["edges"].size() : 0;
             totalNodeCount += nodeCount;
             totalEdgeCount += edgeCount;
             Json rankStats = Json::object();
@@ -1034,20 +1008,20 @@ static HcclResult DumpRankJsonMapByStage(const std::map<RankId, Json> &rankJsonM
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult DumpInputTaskQueues(const AllRankTaskQueues &allRankTaskQueues)
+HcclResult DumpInputTaskQueues(const AllRankTaskQueues& allRankTaskQueues)
 {
     if (!DumpManager::GetInstance().IsEnabled()) {
         return HcclResult::HCCL_SUCCESS;
     }
-    return DumpRankJsonMapByStage(BuildAllRankTaskQueuesJsonMap(allRankTaskQueues), INPUT_QUEUE_DUMP_TYPE,
-        INPUT_TASK_QUEUE_STAGE);
+    return DumpRankJsonMapByStage(
+        BuildAllRankTaskQueuesJsonMap(allRankTaskQueues), INPUT_QUEUE_DUMP_TYPE, INPUT_TASK_QUEUE_STAGE);
 }
 
-HcclResult DumpTaskGraphByStage(TaskNode *dummyStart, const std::string &stage)
+HcclResult DumpTaskGraphByStage(TaskNode* dummyStart, const std::string& stage)
 {
     if (!DumpManager::GetInstance().IsEnabled()) {
         return HcclResult::HCCL_SUCCESS;
     }
     return DumpRankJsonMapByStage(BuildTaskGraphJsonMap(dummyStart), TASK_GRAPH_DUMP_TYPE, stage);
 }
-}  // namespace HcclSim
+} // namespace HcclSim

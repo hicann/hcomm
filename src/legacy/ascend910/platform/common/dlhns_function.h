@@ -38,25 +38,25 @@ namespace hccl {
 class DlHnsFunction {
 public:
     virtual ~DlHnsFunction();
-    static DlHnsFunction &GetInstance();
+    static DlHnsFunction& GetInstance();
     HcclResult DlHnsFunctionInit();
 
-    std::function<int(struct ibv_qp *qp, struct ibv_send_wr *wr,
-        struct ibv_send_wr **badwr, struct IbvPostSendExtAddt *extAttr,
-        struct IbvPostSendExtResp *extResp)> dlHnsIbvExtPostSend;
-    std::function<int(struct ibv_qp *qp, struct ibv_send_wr *wr,
-        struct ibv_send_wr **badWr, struct WrExpRsp *expRsp)> dlHnsIbvExpPostSend;
+    std::function<int(
+        struct ibv_qp* qp, struct ibv_send_wr* wr, struct ibv_send_wr** badwr, struct IbvPostSendExtAddt* extAttr,
+        struct IbvPostSendExtResp* extResp)>
+        dlHnsIbvExtPostSend;
+    std::function<int(struct ibv_qp* qp, struct ibv_send_wr* wr, struct ibv_send_wr** badWr, struct WrExpRsp* expRsp)>
+        dlHnsIbvExpPostSend;
 
 private:
-    void *handle_;
+    void* handle_;
     std::mutex handleMutex_;
     DlHnsFunction(const DlHnsFunction&);
-    DlHnsFunction &operator=(const DlHnsFunction&);
+    DlHnsFunction& operator=(const DlHnsFunction&);
     DlHnsFunction();
     HcclResult DlHnsFunctionRoceInit();
     HcclResult DlHnsFunctionSoInit();
 };
-}  // namespace hccl
-
+} // namespace hccl
 
 #endif

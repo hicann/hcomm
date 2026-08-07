@@ -26,7 +26,7 @@
 
 typedef int (*GetSizeFuncType)(size_t* size);
 
-typedef int (*GetRootinfoFuncType)(int npu_id, unsigned int mainboard_id, void *buf, size_t* len);
+typedef int (*GetRootinfoFuncType)(int npu_id, unsigned int mainboard_id, void* buf, size_t* len);
 
 typedef struct {
     uint32_t mainboard_id;
@@ -34,8 +34,8 @@ typedef struct {
 } GetSizeFuncTable;
 
 typedef struct {
-   uint32_t mainboard_id;
-   GetRootinfoFuncType get_rootinfo_func;
+    uint32_t mainboard_id;
+    GetRootinfoFuncType get_rootinfo_func;
 } GetRootinfoFuncTable;
 
 static GetSizeFuncTable g_get_size_func_table[] = {
@@ -65,7 +65,6 @@ static GetRootinfoFuncTable g_get_rootinfo_func_table[] = {
     {MAIN_BOARD_ID_POD, PodGetRootinfo},
     {MAIN_BOARD_ID_POD_2D, PodGetRootinfo},
 };
-
 
 int TopoAddrInfoGetSize(int phyId, size_t* size)
 {
@@ -126,9 +125,9 @@ int TopoAddrInfoGetTopoFilePath(int phyId, char* filePath, size_t bufSize)
     return TopoGetFilePath(mainboard_id, spod_info.super_pod_type, filePath, bufSize);
 }
 
-static int PassThrough(char *rankInfo, size_t *bufSize)
+static int PassThrough(char* rankInfo, size_t* bufSize)
 {
-    FILE *fp = fopen(DEFAULT_RANKINFO_FILE_PATH, "r");
+    FILE* fp = fopen(DEFAULT_RANKINFO_FILE_PATH, "r");
     if (fp == NULL) {
         return -1;
     }
@@ -147,9 +146,9 @@ static int PassThrough(char *rankInfo, size_t *bufSize)
     return 0;
 }
 
-int TopoAddrInfoGet(int phyId, char* rankInfo, size_t *bufSize)
+int TopoAddrInfoGet(int phyId, char* rankInfo, size_t* bufSize)
 {
-    TopoLogInit();  /* 懒初始化日志，全部下游共用 */
+    TopoLogInit(); /* 懒初始化日志，全部下游共用 */
     TOPO_PERF_BEGIN(TopoAddrInfoGet);
     if (rankInfo == NULL || bufSize == NULL) {
         TOPO_PERF_END(TopoAddrInfoGet);
@@ -169,7 +168,7 @@ int TopoAddrInfoGet(int phyId, char* rankInfo, size_t *bufSize)
     }
 
     ret = -1;
-    for (size_t i = 0; i < sizeof(g_get_rootinfo_func_table)/sizeof(GetRootinfoFuncTable); ++i) {
+    for (size_t i = 0; i < sizeof(g_get_rootinfo_func_table) / sizeof(GetRootinfoFuncTable); ++i) {
         if (g_get_rootinfo_func_table[i].mainboard_id == mainboard_id) {
             ret = g_get_rootinfo_func_table[i].get_rootinfo_func(phyId, mainboard_id, rankInfo, bufSize);
             break;

@@ -15,13 +15,9 @@
 #include "dump/msgpack_writer.h"
 
 namespace HcclSim {
-MsgpackWriter::MsgpackWriter(std::vector<uint8_t> &buffer) : m_buffer(&buffer)
-{
-}
+MsgpackWriter::MsgpackWriter(std::vector<uint8_t>& buffer) : m_buffer(&buffer) {}
 
-MsgpackWriter::MsgpackWriter(std::ostream &out) : m_out(&out)
-{
-}
+MsgpackWriter::MsgpackWriter(std::ostream& out) : m_out(&out) {}
 
 void MsgpackWriter::WriteUInt(uint64_t value)
 {
@@ -48,7 +44,7 @@ void MsgpackWriter::WriteUInt(uint64_t value)
     WriteUInt64(value);
 }
 
-void MsgpackWriter::WriteString(const std::string &value)
+void MsgpackWriter::WriteString(const std::string& value)
 {
     const uint64_t length = static_cast<uint64_t>(value.size());
     if (length <= 31) {
@@ -63,7 +59,7 @@ void MsgpackWriter::WriteString(const std::string &value)
         WriteByte(0xDB);
         WriteUInt32(static_cast<uint32_t>(length));
     }
-    WriteBytes(reinterpret_cast<const uint8_t *>(value.data()), value.size());
+    WriteBytes(reinterpret_cast<const uint8_t*>(value.data()), value.size());
 }
 
 void MsgpackWriter::WriteArrayHeader(size_t count)
@@ -96,15 +92,9 @@ void MsgpackWriter::WriteMapHeader(size_t count)
     WriteUInt32(static_cast<uint32_t>(count));
 }
 
-void MsgpackWriter::WriteRawBytes(const uint8_t *data, size_t size)
-{
-    WriteBytes(data, size);
-}
+void MsgpackWriter::WriteRawBytes(const uint8_t* data, size_t size) { WriteBytes(data, size); }
 
-void MsgpackWriter::WriteRawBytes(const std::vector<uint8_t> &bytes)
-{
-    WriteBytes(bytes.data(), bytes.size());
-}
+void MsgpackWriter::WriteRawBytes(const std::vector<uint8_t>& bytes) { WriteBytes(bytes.data(), bytes.size()); }
 
 void MsgpackWriter::WriteByte(uint8_t value)
 {
@@ -115,7 +105,7 @@ void MsgpackWriter::WriteByte(uint8_t value)
     m_out->put(static_cast<char>(value));
 }
 
-void MsgpackWriter::WriteBytes(const uint8_t *data, size_t size)
+void MsgpackWriter::WriteBytes(const uint8_t* data, size_t size)
 {
     if (size == 0) {
         return;
@@ -124,7 +114,7 @@ void MsgpackWriter::WriteBytes(const uint8_t *data, size_t size)
         m_buffer->insert(m_buffer->end(), data, data + size);
         return;
     }
-    m_out->write(reinterpret_cast<const char *>(data), static_cast<std::streamsize>(size));
+    m_out->write(reinterpret_cast<const char*>(data), static_cast<std::streamsize>(size));
 }
 
 void MsgpackWriter::WriteUInt16(uint16_t value)
@@ -152,4 +142,4 @@ void MsgpackWriter::WriteUInt64(uint64_t value)
     WriteByte(static_cast<uint8_t>((value >> 8) & 0xFF));
     WriteByte(static_cast<uint8_t>(value & 0xFF));
 }
-}  // namespace HcclSim
+} // namespace HcclSim

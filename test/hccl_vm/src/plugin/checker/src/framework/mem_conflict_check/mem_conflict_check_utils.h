@@ -26,10 +26,12 @@ extern std::unordered_map<TaskStubPtr, TaskStubPtr> g_ccuGraphTaskOri2New;
 
 TaskNodePtr GetCcuTaskHead(TaskNodePtr node);
 // 拷贝ccu子图节点
-HcclResult CopyCcuSubGraphNode(TaskStub *originCcu, TaskStub **newCcu,
-    std::vector<std::unordered_map<TaskStubPtr, TaskStubPtr>> &ccuGraphs, std::vector<CcuOri2NewNodeMap> &AllOri2NewNodeMap);
+HcclResult CopyCcuSubGraphNode(
+    TaskStub* originCcu, TaskStub** newCcu, std::vector<std::unordered_map<TaskStubPtr, TaskStubPtr>>& ccuGraphs,
+    std::vector<CcuOri2NewNodeMap>& AllOri2NewNodeMap);
 // 拷贝ccu子图连接关系
-HcclResult CopyCcuSubGraphConnection(std::vector<std::unordered_map<TaskStubPtr, TaskStubPtr>> &ccuGraphs,
-    const std::vector<CcuOri2NewNodeMap> &AllOri2NewNodeMap);
-}
+HcclResult CopyCcuSubGraphConnection(
+    std::vector<std::unordered_map<TaskStubPtr, TaskStubPtr>>& ccuGraphs,
+    const std::vector<CcuOri2NewNodeMap>& AllOri2NewNodeMap);
+} // namespace HcclSim
 #endif

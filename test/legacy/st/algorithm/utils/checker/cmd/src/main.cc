@@ -8,10 +8,10 @@
 using namespace hccl;
 using namespace checker;
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     std::unique_ptr<CheckerCmd> checkerCmd(new CheckerCmd());
-    if(checkerCmd == nullptr) {
+    if (checkerCmd == nullptr) {
         printf("checkerCmd is null!\n");
         return EXIT_FAILURE;
     }
@@ -34,7 +34,8 @@ int main(int argc, char *argv[])
     u32 rankSize = GetRankNumFormTopoMeta(topoMeta);
     u64 dataSize = checkerCmd->data->minBytes;
     for (; dataSize <= checkerCmd->data->maxBytes;
-        (checkerCmd->stepfactorFlag == false ? dataSize += checkerCmd->data->dataStepBytes : dataSize *= checkerCmd->data->dataStepFactor)) {
+         (checkerCmd->stepfactorFlag == false ? dataSize += checkerCmd->data->dataStepBytes :
+                                                dataSize *= checkerCmd->data->dataStepFactor)) {
         struct CheckerOpParam testOpParam;
         checkerCmd->uiParam.count = dataSize / CHECK_SIZE_TABLE[checkerCmd->uiParam.dataType];
         if (GenTestOpParams(rankSize, checkerCmd->uiParam, testOpParam) != HCCL_SUCCESS) {

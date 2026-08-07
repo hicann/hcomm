@@ -40,38 +40,38 @@ struct certs {
 #define TLS_RES_LEN 1024
 struct rs_cert_manage_info {
     char magic_words[TLS_MAGIC_WORDS_LEN]; /* 1234567 */
-    unsigned int cert_count; /* num of certs */
-    int state; /* 0:not ok 1:ok */
-    unsigned int ca_wcout; /* counts of ca writing flash */
-    unsigned int cert_ky_wcout; /* counts of eqpt and key writing flash */
-    unsigned int crl_wcout; /* counts of crl writing flash */
-    unsigned int crl_len; /* len of crl */
-    unsigned int ky_len; /* len of key */
-    unsigned int ky_enc_len; /* len of enc key */
-    unsigned char salt[TLS_SALT_LEN]; /* salt */
-    unsigned int salt_size; /* len of salt */
+    unsigned int cert_count;               /* num of certs */
+    int state;                             /* 0:not ok 1:ok */
+    unsigned int ca_wcout;                 /* counts of ca writing flash */
+    unsigned int cert_ky_wcout;            /* counts of eqpt and key writing flash */
+    unsigned int crl_wcout;                /* counts of crl writing flash */
+    unsigned int crl_len;                  /* len of crl */
+    unsigned int ky_len;                   /* len of key */
+    unsigned int ky_enc_len;               /* len of enc key */
+    unsigned char salt[TLS_SALT_LEN];      /* salt */
+    unsigned int salt_size;                /* len of salt */
     unsigned int cert_len[MAX_CERT_COUNT];
     unsigned int total_cert_len; /* not include head only len of certs */
     unsigned int tls_enable;
     unsigned int tls_alarm;
-    unsigned int pwd_len; /* len of pwd */
+    unsigned int pwd_len;     /* len of pwd */
     unsigned int pwd_enc_len; /* len of enc pwd */
     unsigned char enc_pwd[PWD_ENC_LEN];
     unsigned int work_key_len; /* len of work_key */
     unsigned char work_key[WORK_KEY_LEN];
     unsigned char iv[IV_LEN]; /* initial vector */
-    unsigned int iv_size; /* len of initial vector */
+    unsigned int iv_size;     /* len of initial vector */
     unsigned char tag[TAG_LEN];
     unsigned int tag_len;
     unsigned int save_mode;
     char res[TLS_RES_LEN];
 };
 
-int dev_read_flash(unsigned int dev_id, const char* name, unsigned char* buf, unsigned int *buf_size)
+int dev_read_flash(unsigned int dev_id, const char* name, unsigned char* buf, unsigned int* buf_size)
 {
     int ret;
     if (strcmp(name, "hccp_certs_mng_cb") == 0) {
-        struct rs_cert_manage_info *mng_infos = (struct rs_cert_manage_info *)buf;
+        struct rs_cert_manage_info* mng_infos = (struct rs_cert_manage_info*)buf;
         mng_infos->cert_count = 0;
         mng_infos->total_cert_len = 0;
         mng_infos->ky_len = 0;
@@ -100,8 +100,8 @@ int dev_read_flash(unsigned int dev_id, const char* name, unsigned char* buf, un
     }
 }
 
-int tls_get_user_config(unsigned int save_mode, unsigned int chipId, const char *name,
-    unsigned char *buf, unsigned int *buf_size)
+int tls_get_user_config(
+    unsigned int save_mode, unsigned int chipId, const char* name, unsigned char* buf, unsigned int* buf_size)
 {
     int ret;
 
@@ -110,51 +110,36 @@ int tls_get_user_config(unsigned int save_mode, unsigned int chipId, const char 
     return ret;
 }
 
-void tls_get_enable_info(unsigned int save_mode, unsigned int chipId, unsigned char *buf, unsigned int buf_size)
+void tls_get_enable_info(unsigned int save_mode, unsigned int chipId, unsigned char* buf, unsigned int buf_size)
 {
     return;
 }
 
-int halSetUserConfig(unsigned int dev_id, const char *name, unsigned char *buf, unsigned int buf_size)
-{
-    return 0;
-}
+int halSetUserConfig(unsigned int dev_id, const char* name, unsigned char* buf, unsigned int buf_size) { return 0; }
 
-int halClearUserConfig(unsigned int devid, const char *name)
-{
-    return 0;
-}
+int halClearUserConfig(unsigned int devid, const char* name) { return 0; }
 
-int get_saved_tls_config_file_path(char *path, unsigned int path_len, const char *name)
-{
-    return 0;
-}
+int get_saved_tls_config_file_path(char* path, unsigned int path_len, const char* name) { return 0; }
 
-int ReadFileToBuf(const char *path, char *content, int *len)
-{
-    return 0;
-}
+int ReadFileToBuf(const char* path, char* content, int* len) { return 0; }
 
-int NetCommGetSelfHome(char *userNamePath, unsigned int pathLen)
+int NetCommGetSelfHome(char* userNamePath, unsigned int pathLen)
 {
     memcpy(userNamePath, "/tmp", strlen("/tmp"));
     return 0;
 }
 
-int get_tls_config_path(char *user_name_path, unsigned int path_len)
+int get_tls_config_path(char* user_name_path, unsigned int path_len) { return 0; }
+
+int NetGetGatewayAddress(
+    unsigned int chipId, const char* inbuf, unsigned int size_in, char* outbuf, unsigned int* size_out)
 {
     return 0;
 }
 
-int NetGetGatewayAddress(unsigned int chipId, const char *inbuf, unsigned int size_in,
-    char *outbuf, unsigned int *size_out)
+int FileReadCfg(const char* filePath, int devId, const char* confName, char* confValue, unsigned int len)
 {
-    return 0;
-}
-
-int FileReadCfg(const char *filePath, int devId, const char *confName, char *confValue, unsigned int len)
-{
-    if (strncmp(confName, "udp_port_mode", strlen("udp_port_mode") + 1) == 0){
+    if (strncmp(confName, "udp_port_mode", strlen("udp_port_mode") + 1) == 0) {
         memcpy_s(confValue, len, "nslb_dp", strlen("nslb_dp"));
     } else {
         memcpy_s(confValue, len, "16666", strlen("16666"));

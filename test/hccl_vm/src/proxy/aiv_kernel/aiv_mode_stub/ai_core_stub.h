@@ -85,18 +85,12 @@ public:
     uint64_t GetUbBufferSize() const { return AIV_UB_SIZE; }
     void SetCurOp(const AivOpParam& opParam) { curOp_ = opParam; }
     void SetIoBuffer(
-        uint64_t inBuffer,
-        uint64_t inBufferSize,
-        uint64_t outBuffer,
-        uint64_t outBufferSize,
-        uint64_t inputGlobalOffsetBase,
-        uint64_t outputGlobalOffsetBase);
-    void SetCommBuffer(RankId rankId,
-        uint64_t cclBuffer,
-        uint64_t cclBufferSize,
-        uint64_t aivCommInfoBuffer,
+        uint64_t inBuffer, uint64_t inBufferSize, uint64_t outBuffer, uint64_t outBufferSize,
+        uint64_t inputGlobalOffsetBase, uint64_t outputGlobalOffsetBase);
+    void SetCommBuffer(
+        RankId rankId, uint64_t cclBuffer, uint64_t cclBufferSize, uint64_t aivCommInfoBuffer,
         uint64_t aivCommInfoBufferSize);
-    AivDataSlice ResolveGlobalDataSlice(uint64_t addr, uint64_t size, RankId *rankId = nullptr) const;
+    AivDataSlice ResolveGlobalDataSlice(uint64_t addr, uint64_t size, RankId* rankId = nullptr) const;
 
     void DumpAllTasks() const;
 
@@ -104,7 +98,7 @@ private:
     AivKernelExecutor() = default;
 
 private:
-    std::atomic<TaskId> taskIdGen_{0};  // TaskId Generator
+    std::atomic<TaskId> taskIdGen_{0}; // TaskId Generator
     RankId rankId_{UINT32_MAX};
     uint32_t rankSize_{0};
     std::vector<std::shared_ptr<AivCore>> aivCores_{};
@@ -117,6 +111,6 @@ private:
     Mem cclBuffer_[MAX_RANK_NUM]{};
     Mem aivCommInfoBuffer_[MAX_RANK_NUM]{};
 };
-}
+} // namespace AivSim
 
-#endif //AIV_AI_CORE_STUB_H
+#endif // AIV_AI_CORE_STUB_H

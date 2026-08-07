@@ -14,163 +14,150 @@
 namespace hcomm {
 namespace CcuRep {
 
-enum class CcuRepType {
-    BASE,
-    BLOCK,
-    NOP,
+    enum class CcuRepType {
+        BASE,
+        BLOCK,
+        NOP,
 
-    LOAD,
-    STORE,
-    LOAD_ARG,
-    LOAD_VAR,
-    STORE_VAR,
+        LOAD,
+        STORE,
+        LOAD_ARG,
+        LOAD_VAR,
+        STORE_VAR,
 
-    ASSIGN,
-    ADD,
-    MUL,
-    SUB,
-    SET_LOOP,
+        ASSIGN,
+        ADD,
+        MUL,
+        SUB,
+        SET_LOOP,
 
-    AND,
-    OR,
-    XOR,
-    NOT,
+        AND,
+        OR,
+        XOR,
+        NOT,
 
-    JUMP,
-    JUMP_NE,
-    JUMP_EQ,
-    JUMP_LT,
-    JUMP_LE,
-    JUMP_GT,
-    JUMP_GE,
-    JUMP_LABEL,
+        JUMP,
+        JUMP_NE,
+        JUMP_EQ,
+        JUMP_LT,
+        JUMP_LE,
+        JUMP_GT,
+        JUMP_GE,
+        JUMP_LABEL,
 
-    FUNC_CALL,
-    FUNC_BLOCK,
+        FUNC_CALL,
+        FUNC_BLOCK,
 
-    LOOP_CALL,
-    LOOP,
-    LOOPGROUP,
-    LOOP_BLOCK,
-    LOOPGROUP_BLOCK,
+        LOOP_CALL,
+        LOOP,
+        LOOPGROUP,
+        LOOP_BLOCK,
+        LOOPGROUP_BLOCK,
 
-    LOC_RECORD_EVENT,
-    LOC_WAIT_EVENT,
-    LOC_WAIT_NOTIFY,
-    REM_POST_SEM,
-    REM_WAIT_SEM,
-    REM_POST_VAR,
-    REM_WAIT_GROUP,
+        LOC_RECORD_EVENT,
+        LOC_WAIT_EVENT,
+        LOC_WAIT_NOTIFY,
+        REM_POST_SEM,
+        REM_WAIT_SEM,
+        REM_POST_VAR,
+        REM_WAIT_GROUP,
 
-    READ,
-    WRITE,
-    LOCAL_CPY,
-    LOCAL_REDUCE,
-    REM_MEM,
+        READ,
+        WRITE,
+        LOCAL_CPY,
+        LOCAL_REDUCE,
+        REM_MEM,
 
-    BUF_READ,
-    BUF_WRITE,
-    BUF_LOC_READ,
-    BUF_LOC_WRITE,
-    BUF_REDUCE,
+        BUF_READ,
+        BUF_WRITE,
+        BUF_LOC_READ,
+        BUF_LOC_WRITE,
+        BUF_REDUCE,
 
-    SHR,
-    SHL,
+        SHR,
+        SHL,
 
-    RECORD_SHARED_NOTIFY,
+        RECORD_SHARED_NOTIFY,
 
-    //0.5rtt专用
-    WRITE_WITH_ARRIVE_NOTIFY,
-    CLEAR_ALL_ARRIVE_NOTIFY,
-    RECORD_EXPECT_COUNT,
-    WAIT_ALL_PEERS_ARRIVE_NOTIFY,
-};
+        // 0.5rtt专用
+        WRITE_WITH_ARRIVE_NOTIFY,
+        CLEAR_ALL_ARRIVE_NOTIFY,
+        RECORD_EXPECT_COUNT,
+        WAIT_ALL_PEERS_ARRIVE_NOTIFY,
+    };
 
-enum class AssignSubType { INVALID, IMD_TO_VARIABLE, IMD_TO_ADDR, VAR_TO_ADDR, ADDR_TO_ADDR, VAR_TO_VAR };
+    enum class AssignSubType { INVALID, IMD_TO_VARIABLE, IMD_TO_ADDR, VAR_TO_ADDR, ADDR_TO_ADDR, VAR_TO_VAR };
 
-enum class AddSubType {
-    INVALID,
-    ADDR_PLUS_VAR_TO_ADDR,
-    ADDR_PLUS_ADDR_TO_ADDR,
-    VAR_PLUS_VAR_TO_VAR,
-    SELF_ADD_ADDRESS,
-    SELF_ADD_VARIABLE,
-    VAR_PLUS_IMMED_TO_VAR,
-    ADDR_PLUS_IMMED_TO_ADDR,
-    VAR_PLUS_VAR_TO_ADDR,
-    SELF_ADD_IMMED_ADDRESS,
-    SELF_ADD_IMMED_VARIABLE,
-    VAR_PLUS_IMMED_TO_ADDR,
-    ADDR_PLUS_IMMED_TO_VAR,
-    ADDR_PLUS_ADDR_TO_VAR
-};
+    enum class AddSubType {
+        INVALID,
+        ADDR_PLUS_VAR_TO_ADDR,
+        ADDR_PLUS_ADDR_TO_ADDR,
+        VAR_PLUS_VAR_TO_VAR,
+        SELF_ADD_ADDRESS,
+        SELF_ADD_VARIABLE,
+        VAR_PLUS_IMMED_TO_VAR,
+        ADDR_PLUS_IMMED_TO_ADDR,
+        VAR_PLUS_VAR_TO_ADDR,
+        SELF_ADD_IMMED_ADDRESS,
+        SELF_ADD_IMMED_VARIABLE,
+        VAR_PLUS_IMMED_TO_ADDR,
+        ADDR_PLUS_IMMED_TO_VAR,
+        ADDR_PLUS_ADDR_TO_VAR
+    };
 
-enum class MulSubType {
-    INVALID,
-    VAR_MUL_VAR_TO_VAR,
-    VAR_MUL_IMMED_TO_VAR,
-    SELF_MUL_VAR_VARIABLE,
-    SELF_MUL_IMMED_VARIABLE,
-    VAR_MUL_VAR_TO_ADDR,
-    VAR_MUL_ADDR_TO_ADDR,
-    VAR_MUL_IMMED_TO_ADDR,
-    ADDR_MUL_IMMED_TO_ADDR,
-    SELF_MUL_VAR_ADDRESS,
-    SELF_MUL_IMMED_ADDRESS,
-    ADDR_MUL_IMMED_TO_VAR
-};
+    enum class MulSubType {
+        INVALID,
+        VAR_MUL_VAR_TO_VAR,
+        VAR_MUL_IMMED_TO_VAR,
+        SELF_MUL_VAR_VARIABLE,
+        SELF_MUL_IMMED_VARIABLE,
+        VAR_MUL_VAR_TO_ADDR,
+        VAR_MUL_ADDR_TO_ADDR,
+        VAR_MUL_IMMED_TO_ADDR,
+        ADDR_MUL_IMMED_TO_ADDR,
+        SELF_MUL_VAR_ADDRESS,
+        SELF_MUL_IMMED_ADDRESS,
+        ADDR_MUL_IMMED_TO_VAR
+    };
 
-enum class MinusSubType {
-    INVALID,
-    VAR_MINUS_VAR_TO_VAR,
-    VAR_MINUS_IMMED_TO_VAR,
-    SELF_SUB_VAR_VARIABLE,
-    SELF_SUB_IMMED_VARIABLE,
-    ADDR_MINUS_VAR_TO_ADDR,
-    ADDR_MINUS_IMMED_TO_ADDR,
-    SELF_SUB_VAR_ADDRESS,
-    SELF_SUB_IMMED_ADDRESS,
-    VAR_MINUS_IMMED_TO_ADDR,
-    ADDR_MINUS_IMMED_TO_VAR
-};
+    enum class MinusSubType {
+        INVALID,
+        VAR_MINUS_VAR_TO_VAR,
+        VAR_MINUS_IMMED_TO_VAR,
+        SELF_SUB_VAR_VARIABLE,
+        SELF_SUB_IMMED_VARIABLE,
+        ADDR_MINUS_VAR_TO_ADDR,
+        ADDR_MINUS_IMMED_TO_ADDR,
+        SELF_SUB_VAR_ADDRESS,
+        SELF_SUB_IMMED_ADDRESS,
+        VAR_MINUS_IMMED_TO_ADDR,
+        ADDR_MINUS_IMMED_TO_VAR
+    };
 
-enum class AndSubType {
-    INVALID,
-    VAR_AND_VAR_TO_VAR,
-    SELF_AND_VAR_VARIABLE,
-};
+    enum class AndSubType {
+        INVALID,
+        VAR_AND_VAR_TO_VAR,
+        SELF_AND_VAR_VARIABLE,
+    };
 
-enum class OrSubType {
-    INVALID,
-    VAR_OR_VAR_TO_VAR,
-    SELF_OR_VAR_VARIABLE
-};
+    enum class OrSubType { INVALID, VAR_OR_VAR_TO_VAR, SELF_OR_VAR_VARIABLE };
 
-enum class XorSubType {
-    INVALID,
-    VAR_XOR_VAR_TO_VAR,
-    SELF_XOR_VAR_VARIABLE
-};
+    enum class XorSubType { INVALID, VAR_XOR_VAR_TO_VAR, SELF_XOR_VAR_VARIABLE };
 
-enum class NotSubType {
-    INVALID,
-    VAR_EQUALS_NOT_VAR,
-};
+    enum class NotSubType {
+        INVALID,
+        VAR_EQUALS_NOT_VAR,
+    };
 
-enum class ShiftType {
-    LOGICAL_SHIFT,
-    ARITHMETIC_SHIFT,
-    CIRCULAR_SHIFT,
-    INVALID
-};
+    enum class ShiftType { LOGICAL_SHIFT, ARITHMETIC_SHIFT, CIRCULAR_SHIFT, INVALID };
 
-enum class ShiftSubType {
-    INVALID,
-    VAR_EQUALS_VAR_SHIFT_VAR,
-    VAR_SHIFT_ASSIGN_VAR,
-    ADDR_EQUALS_VAR_SHIFT_VAR,
-    ADDR_SHIFT_ASSIGN_VAR
-};
+    enum class ShiftSubType {
+        INVALID,
+        VAR_EQUALS_VAR_SHIFT_VAR,
+        VAR_SHIFT_ASSIGN_VAR,
+        ADDR_EQUALS_VAR_SHIFT_VAR,
+        ADDR_SHIFT_ASSIGN_VAR
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

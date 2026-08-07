@@ -112,8 +112,7 @@ STATIC void RsNslbNetcoDeinit(struct RsNslbCb *nslbCb)
     return;
 }
 
-STATIC int RsNslbNetcoTblRequest(struct RsNslbCb *nslbCb, unsigned int type,
-    char *data, unsigned int dataLen)
+STATIC int RsNslbNetcoTblRequest(struct RsNslbCb *nslbCb, unsigned int type, char *data, unsigned int dataLen)
 {
     int ret = 0;
 
@@ -124,12 +123,11 @@ STATIC int RsNslbNetcoTblRequest(struct RsNslbCb *nslbCb, unsigned int type,
     return ret;
 }
 
-int RsNslbNetcoRequest(unsigned int phyId, struct RsNslbCb *nslbCb, unsigned int type,
-    char *data, unsigned int dataLen)
+int RsNslbNetcoRequest(unsigned int phyId, struct RsNslbCb *nslbCb, unsigned int type, char *data, unsigned int dataLen)
 {
     int ret = 0;
 
-    switch(type) {
+    switch (type) {
         case NETCO_REQ_TYPE_INIT:
             ret = RsNslbNetcoInit(phyId, nslbCb);
             CHK_PRT_RETURN(ret == -ENOTSUPP, hccp_warn("netco init unsuccessful ret(%d)", ret), -ENOTSUPP);
@@ -142,7 +140,7 @@ int RsNslbNetcoRequest(unsigned int phyId, struct RsNslbCb *nslbCb, unsigned int
             break;
     }
 
-    ret = (ret > 0) ? -ret: ret;
+    ret = (ret > 0) ? -ret : ret;
     CHK_PRT_RETURN(ret != 0, hccp_err("netco request failed, type(%u) ret(%d)", type, ret), ret);
 
     return 0;

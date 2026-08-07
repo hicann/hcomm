@@ -18,21 +18,17 @@
 using namespace AivSim;
 
 namespace AivSim {
-extern bool AivBufferContains(const Mem &buffer, uint64_t addr, uint64_t size);
+extern bool AivBufferContains(const Mem& buffer, uint64_t addr, uint64_t size);
 extern bool AivBufferMatch(
-    uint64_t addr, uint64_t size, const Mem &buffer,
-    AivBufferType type, RankId rank, AivDataSlice &slice, RankId *matchedRank);
-}
+    uint64_t addr, uint64_t size, const Mem& buffer, AivBufferType type, RankId rank, AivDataSlice& slice,
+    RankId* matchedRank);
+} // namespace AivSim
 
 class AiCoreStubTest : public testing::Test {
 protected:
-    void SetUp() override {
-        AivKernelExecutor::GetInstance().Reset();
-    }
+    void SetUp() override { AivKernelExecutor::GetInstance().Reset(); }
 
-    void TearDown() override {
-        AivKernelExecutor::GetInstance().Reset();
-    }
+    void TearDown() override { AivKernelExecutor::GetInstance().Reset(); }
 };
 
 TEST_F(AiCoreStubTest, GetInstance_ReturnsSameInstance)
@@ -386,12 +382,8 @@ TEST_F(AiCoreStubTest, Reset_ClearsIoAndCommBuffers)
 
 class AivTaskTest : public testing::Test {
 protected:
-    void SetUp() override {
-        AivKernelExecutor::GetInstance().Reset();
-    }
-    void TearDown() override {
-        AivKernelExecutor::GetInstance().Reset();
-    }
+    void SetUp() override { AivKernelExecutor::GetInstance().Reset(); }
+    void TearDown() override { AivKernelExecutor::GetInstance().Reset(); }
 };
 
 TEST_F(AivTaskTest, AivTask_GetUUID_ReturnsExpectedValue)

@@ -13,7 +13,6 @@
 
 #include "gather_star_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * GATHER_STAR_H */

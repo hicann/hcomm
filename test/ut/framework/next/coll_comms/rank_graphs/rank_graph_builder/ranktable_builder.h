@@ -343,7 +343,6 @@ const std::string RankTable3p = R"(
 }
 )";
 
-
 const std::string RankTable2p = R"(
 {
   "version": "2.0",

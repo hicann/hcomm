@@ -35,14 +35,13 @@ void LoadXnXnExecutor::Parser()
 
 void LoadXnXnExecutor::Run()
 {
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t xn1 = ccuResMgr.GetXnValue(rankId_, dieId_, xmId_);
     uint64_t xn2 = ccuResMgr.GetXnValue(rankId_, dieId_, xnId_);
     uint64_t val = xn1 + xn2;
     ccuResMgr.UpdateXnValue(rankId_, dieId_, xdId_, val);
 
-    HCCL_VM_DEBUG("Load Xn[{}] + Xn[{}] to Xn[{}]",
-        xmId_, xnId_, xdId_);
+    HCCL_VM_DEBUG("Load Xn[{}] + Xn[{}] to Xn[{}]", xmId_, xnId_, xdId_);
 }
 
 std::string LoadXnXnExecutor::Describe()
@@ -54,7 +53,7 @@ CcuTrace::CcuInstrTraceDetail LoadXnXnExecutor::CollectTraceDetail()
 {
     CcuTrace::CcuInstrTraceDetail detail;
     detail.typeName = "LoadXnXn";
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     detail.args["xn1"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xmId_));
     detail.args["xn2"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xnId_));
     return detail;

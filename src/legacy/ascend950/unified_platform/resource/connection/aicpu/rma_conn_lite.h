@@ -34,21 +34,21 @@ struct SqeConfigLite {
 
 struct ConnLiteOperationOut {
     u16 pi{0};
-    u8 *data{};
-    u8  dataSize{0};
+    u8* data{};
+    u8 dataSize{0};
 };
 
 class RmaConnLite {
 public:
     RmaConnLite() = default;
 
-    RmaConnLite(const UbJettyLiteId &id, const UbJettyLiteAttr &attr, const Eid &rmtEid);
+    RmaConnLite(const UbJettyLiteId& id, const UbJettyLiteAttr& attr, const Eid& rmtEid);
 
     explicit RmaConnLite(const u64 qpVa);
 
     virtual ~RmaConnLite() = default;
 
-    static std::unique_ptr<RmaConnLite> Create(std::vector<char> &uniqueId);
+    static std::unique_ptr<RmaConnLite> Create(std::vector<char>& uniqueId);
 
     UbJettyLiteId GetUbJettyLiteId() const;
 
@@ -63,87 +63,104 @@ public:
 
     virtual std::string Describe();
 
-    virtual void Read(const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg,
-                      const StreamLite &stream, ConnLiteOperationOut &out)
+    virtual void Read(
+        const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg, const StreamLite& stream,
+        ConnLiteOperationOut& out)
     {
-        HCCL_INFO("RmaConnLite read start. loc.addr = %llx, rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u",
-                  loc.GetAddr(), rmt.GetAddr(), cfg.cqeEn, out.pi);
+        HCCL_INFO(
+            "RmaConnLite read start. loc.addr = %llx, rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u", loc.GetAddr(),
+            rmt.GetAddr(), cfg.cqeEn, out.pi);
     }
 
-    virtual void ReadReduce(ReduceIn reduceIn, const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt,
-                            const StreamLite &stream, const SqeConfigLite &cfg, ConnLiteOperationOut &out)
+    virtual void ReadReduce(
+        ReduceIn reduceIn, const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const StreamLite& stream,
+        const SqeConfigLite& cfg, ConnLiteOperationOut& out)
     {
-        HCCL_INFO("RmaConnLite ReadReduce start. dataType = %u, reduceOp %u, loc.addr = %llx, "
-                  "rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u",
-                  reduceIn.dataType, reduceIn.reduceOp, loc.GetAddr(), rmt.GetAddr(), cfg.cqeEn, out.pi);
+        HCCL_INFO(
+            "RmaConnLite ReadReduce start. dataType = %u, reduceOp %u, loc.addr = %llx, "
+            "rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u",
+            reduceIn.dataType, reduceIn.reduceOp, loc.GetAddr(), rmt.GetAddr(), cfg.cqeEn, out.pi);
     }
 
-    virtual void Write(const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg,
-                       const StreamLite &stream, ConnLiteOperationOut &out)
+    virtual void Write(
+        const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg, const StreamLite& stream,
+        ConnLiteOperationOut& out)
     {
-        HCCL_INFO("RmaConnLite write start. loc.addr = %llx, rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u",
-                  loc.GetAddr(), rmt.GetAddr(), cfg.cqeEn, out.pi);
+        HCCL_INFO(
+            "RmaConnLite write start. loc.addr = %llx, rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u", loc.GetAddr(),
+            rmt.GetAddr(), cfg.cqeEn, out.pi);
     }
 
-    virtual void InlineWrite(const u8 *data, u16 size, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg,
-                             const StreamLite &stream, ConnLiteOperationOut &out)
+    virtual void InlineWrite(
+        const u8* data, u16 size, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg, const StreamLite& stream,
+        ConnLiteOperationOut& out)
     {
-        HCCL_INFO("RmaConnLite InlineWrite start. data = %p, size = %hu, rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u",
-                  data, size, rmt.GetAddr(), cfg.cqeEn, out.pi);
+        HCCL_INFO(
+            "RmaConnLite InlineWrite start. data = %p, size = %hu, rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u", data,
+            size, rmt.GetAddr(), cfg.cqeEn, out.pi);
     }
 
-    virtual void WriteReduce(DataType dataType, ReduceOp reduceOp, const RmaBufSliceLite &loc, const StreamLite &stream,
-                             const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg, ConnLiteOperationOut &out)
+    virtual void WriteReduce(
+        DataType dataType, ReduceOp reduceOp, const RmaBufSliceLite& loc, const StreamLite& stream,
+        const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg, ConnLiteOperationOut& out)
     {
-        HCCL_INFO("RmaConnLite WriteReduce start. dataType = %u, reduceOp %u, loc.addr = %llx, "
-                  "rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u",
-                  dataType, reduceOp, loc.GetAddr(), rmt.GetAddr(), cfg.cqeEn, out.pi);
+        HCCL_INFO(
+            "RmaConnLite WriteReduce start. dataType = %u, reduceOp %u, loc.addr = %llx, "
+            "rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u",
+            dataType, reduceOp, loc.GetAddr(), rmt.GetAddr(), cfg.cqeEn, out.pi);
     }
 
-    virtual void WriteWithNotify(const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg,
-                                 ConnLiteOperationOut &out, const RmtRmaBufSliceLite &notify, const StreamLite &stream,
-                                 u64 notifyData)
+    virtual void WriteWithNotify(
+        const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg, ConnLiteOperationOut& out,
+        const RmtRmaBufSliceLite& notify, const StreamLite& stream, u64 notifyData)
     {
-        HCCL_INFO("RmaConnLite WriteWithNotify start. loc.addr = %llx, rmt.addr = %llx, cfg.cqeEn = %u, "
-                  "out.pi = %u, notify.addr = %llx, notifyData = %u",
-                  loc.GetAddr(), rmt.GetAddr(), cfg.cqeEn, out.pi, notify.GetAddr(), notifyData);
+        HCCL_INFO(
+            "RmaConnLite WriteWithNotify start. loc.addr = %llx, rmt.addr = %llx, cfg.cqeEn = %u, "
+            "out.pi = %u, notify.addr = %llx, notifyData = %u",
+            loc.GetAddr(), rmt.GetAddr(), cfg.cqeEn, out.pi, notify.GetAddr(), notifyData);
     }
 
-    virtual void WriteReduceWithNotify(DataType dataType, ReduceOp reduceOp, const RmaBufSliceLite &loc,
-                                       const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg, const StreamLite &stream,
-                                       ConnLiteOperationOut &out, const RmtRmaBufSliceLite &notify, u64 notifyData)
+    virtual void WriteReduceWithNotify(
+        DataType dataType, ReduceOp reduceOp, const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt,
+        const SqeConfigLite& cfg, const StreamLite& stream, ConnLiteOperationOut& out, const RmtRmaBufSliceLite& notify,
+        u64 notifyData)
     {
-        HCCL_INFO("RmaConnLite WriteReduceWithNotify start. dataType = %d, , reduceOp %d, loc.addr = %llx, "
-                  "rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u, notify.addr = %llx, notifyData = %llu",
-                  dataType, reduceOp, loc.GetAddr(), rmt.GetAddr(), cfg.cqeEn, out.pi, notify.GetAddr(), notifyData);
+        HCCL_INFO(
+            "RmaConnLite WriteReduceWithNotify start. dataType = %d, , reduceOp %d, loc.addr = %llx, "
+            "rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u, notify.addr = %llx, notifyData = %llu",
+            dataType, reduceOp, loc.GetAddr(), rmt.GetAddr(), cfg.cqeEn, out.pi, notify.GetAddr(), notifyData);
     }
 
-    virtual void BatchOneSidedRead(const vector<RmaBufSliceLite> &loc, const vector<RmtRmaBufSliceLite> &rmt, const SqeConfigLite &cfg,
-                       const StreamLite &stream, ConnLiteOperationOut &out)
+    virtual void BatchOneSidedRead(
+        const vector<RmaBufSliceLite>& loc, const vector<RmtRmaBufSliceLite>& rmt, const SqeConfigLite& cfg,
+        const StreamLite& stream, ConnLiteOperationOut& out)
     {
-        HCCL_INFO("RmaConnLite BatchOneSidedRead start. loc.size = %llu, rmt.size = %llu, cfg.cqeEn = %u, out.pi = %u",
-                  loc.size(), rmt.size(), cfg.cqeEn, out.pi);
+        HCCL_INFO(
+            "RmaConnLite BatchOneSidedRead start. loc.size = %llu, rmt.size = %llu, cfg.cqeEn = %u, out.pi = %u",
+            loc.size(), rmt.size(), cfg.cqeEn, out.pi);
     }
 
-    virtual void BatchOneSidedWrite(const vector<RmaBufSliceLite> &loc, const vector<RmtRmaBufSliceLite> &rmt, const SqeConfigLite &cfg,
-                       const StreamLite &stream, ConnLiteOperationOut &out)
+    virtual void BatchOneSidedWrite(
+        const vector<RmaBufSliceLite>& loc, const vector<RmtRmaBufSliceLite>& rmt, const SqeConfigLite& cfg,
+        const StreamLite& stream, ConnLiteOperationOut& out)
     {
-        HCCL_INFO("RmaConnLite BatchOneSidedWrite start. loc.size = %llu, rmt.size = %llu, cfg.cqeEn = %u, out.pi = %u",
-                  loc.size(), rmt.size(), cfg.cqeEn, out.pi);
+        HCCL_INFO(
+            "RmaConnLite BatchOneSidedWrite start. loc.size = %llu, rmt.size = %llu, cfg.cqeEn = %u, out.pi = %u",
+            loc.size(), rmt.size(), cfg.cqeEn, out.pi);
     }
 
 protected:
     u32 qpVa_{0};
 
-    u32  dieId_{0};
-    u32  funcId_{0};
-    u32  jettyId_{0};
-    u64  dbAddr_{0};
-    u64  sqVa_{0};
-    u32  sqDepth_{0};
+    u32 dieId_{0};
+    u32 funcId_{0};
+    u32 jettyId_{0};
+    u64 dbAddr_{0};
+    u64 sqVa_{0};
+    u32 sqDepth_{0};
     bool dwqeCacheLocked_{false}; // direct WQE cache Lock
-    u32  jfcPollMode_{0};         // 0代表STARS POLL， 1代表软件Poll
-    u32  tpn_{0};
+    u32 jfcPollMode_{0};          // 0代表STARS POLL， 1代表软件Poll
+    u32 tpn_{0};
 
     Eid rmtEid_;
     Eid locEid_;

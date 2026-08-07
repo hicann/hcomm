@@ -35,14 +35,9 @@
 
 using namespace Hccl;
 
-
-
 class CcuConnTest : public testing::Test {
-protected:    
-    static void SetUpTestCase()
-    {
-        std::cout << "CcuConnTest tests set up." << std::endl;
-    }
+protected:
+    static void SetUpTestCase() { std::cout << "CcuConnTest tests set up." << std::endl; }
 
     static void TearDownTestCase()
     {
@@ -61,10 +56,10 @@ protected:
         GlobalMockObject::verify();
         std::cout << "A Test case in CcuConnTest TearDown" << std::endl;
     }
-
 };
 
-pair<unique_ptr<hcomm::CcuConnection>, vector<unique_ptr<hcomm::CcuJetty>>> MockMakeCcuConnection(hcomm::TpProtocol tpProtocol)
+pair<unique_ptr<hcomm::CcuConnection>, vector<unique_ptr<hcomm::CcuJetty>>>
+MockMakeCcuConnection(hcomm::TpProtocol tpProtocol)
 {
     constexpr uint64_t fakeMemAddr = 0x12345678;
 
@@ -83,9 +78,9 @@ pair<unique_ptr<hcomm::CcuConnection>, vector<unique_ptr<hcomm::CcuJetty>>> Mock
     hcomm::CcuChannelInfo channelInfo;
     channelInfo.channelId = 1;
     channelInfo.dieId = 1;
-    
+
     vector<unique_ptr<hcomm::CcuJetty>> ccuJettys;
-    vector<hcomm::CcuJetty *> ccuJettyPtrs;
+    vector<hcomm::CcuJetty*> ccuJettyPtrs;
     for (uint32_t i = 0; i < 2; i++) {
         hcomm::CcuJettyInfo jettyInfo;
         jettyInfo.jettyCtxId = 1 + i;
@@ -122,7 +117,10 @@ TEST_F(CcuConnTest, Ut_GetStatus_When_CreateAndImportJettySuccess_Expect_Return_
     connection->Describe(testDfxMsg);
     GlobalMockObject::verify();
 
-    MOCKER(HrtRaGetTpAttrAsync).stubs().will(returnValue(HcclResult::HCCL_E_NOT_SUPPORT)).then(returnValue(HcclResult::HCCL_E_INTERNAL));
+    MOCKER(HrtRaGetTpAttrAsync)
+        .stubs()
+        .will(returnValue(HcclResult::HCCL_E_NOT_SUPPORT))
+        .then(returnValue(HcclResult::HCCL_E_INTERNAL));
     ret = connection->Describe(testDfxMsg);
     EXPECT_NE(ret, HcclResult::HCCL_SUCCESS);
     ret = connection->Describe(testDfxMsg);
@@ -218,7 +216,7 @@ TEST_F(CcuConnTest, Ut_UpdateInitStatus_TP_ATTR_GETTING_State_Transitions)
     GlobalMockObject::verify();
 }
 
-HcclResult StubTpMgrGetTpInfoWithMappedPriority(hcomm::TpMgr *, const hcomm::GetTpInfoParam &, hcomm::TpInfo &tpInfo)
+HcclResult StubTpMgrGetTpInfoWithMappedPriority(hcomm::TpMgr*, const hcomm::GetTpInfoParam&, hcomm::TpInfo& tpInfo)
 {
     tpInfo.tpHandle = 0x4321ULL;
     tpInfo.hasMappedJettyPriority = true;
@@ -239,7 +237,7 @@ TEST_F(CcuConnTest, Ut_CcuJetty_SetMappedJettyPriority_When_NotCreated_SetsQos)
 
     MOCKER(HcclGetThreadDeviceId).stubs().will(returnValue(0));
     MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<s32>(0)));
-    void *rdmaHandle = reinterpret_cast<void *>(0x300);
+    void* rdmaHandle = reinterpret_cast<void*>(0x300);
     MOCKER_CPP(&Hccl::RdmaHandleManager::GetByIp).stubs().will(returnValue(rdmaHandle));
     MOCKER_CPP(&Hccl::RdmaHandleManager::IsHandleValid).stubs().will(returnValue(true));
     MOCKER_CPP(&Hccl::RdmaHandleManager::GetJfcHandle)
@@ -268,7 +266,7 @@ TEST_F(CcuConnTest, Ut_CcuJetty_SetMappedJettyPriority_When_Conflict_Expect_Inte
 
     MOCKER(HcclGetThreadDeviceId).stubs().will(returnValue(0));
     MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<s32>(0)));
-    void *rdmaHandle = reinterpret_cast<void *>(0x300);
+    void* rdmaHandle = reinterpret_cast<void*>(0x300);
     MOCKER_CPP(&Hccl::RdmaHandleManager::GetByIp).stubs().will(returnValue(rdmaHandle));
     MOCKER_CPP(&Hccl::RdmaHandleManager::IsHandleValid).stubs().will(returnValue(true));
     MOCKER_CPP(&Hccl::RdmaHandleManager::GetJfcHandle)
@@ -290,7 +288,7 @@ TEST_F(CcuConnTest, Ut_UpdateInitStatus_WithMappedPriority_SetsJettyQos)
 {
     auto resPair = MockMakeCcuConnection(hcomm::TpProtocol::RTP);
     auto connection = resPair.first.get();
-    auto &jetty = *resPair.second.front();
+    auto& jetty = *resPair.second.front();
     connection->tpProtocol_ = hcomm::TpProtocol::RTP;
     connection->innerStatus_ = hcomm::CcuConnection::InnerStatus::INIT;
 
@@ -309,7 +307,7 @@ TEST_F(CcuConnTest, Ut_UpdateInitStatus_WithMappedPriority_SetsJettyQos)
 
 hcomm::GetTpInfoParam gCapturedConnTpParam{};
 
-HcclResult StubTpMgrGetTpInfoCaptureParam(hcomm::TpMgr *, const hcomm::GetTpInfoParam &param, hcomm::TpInfo &tpInfo)
+HcclResult StubTpMgrGetTpInfoCaptureParam(hcomm::TpMgr*, const hcomm::GetTpInfoParam& param, hcomm::TpInfo& tpInfo)
 {
     gCapturedConnTpParam = param;
     tpInfo.tpHandle = 0x4321ULL;

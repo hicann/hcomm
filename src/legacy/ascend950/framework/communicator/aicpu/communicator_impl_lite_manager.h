@@ -18,10 +18,10 @@ class CommunicatorImplLiteMgr {
 public:
     CommunicatorImplLiteMgr();
     ~CommunicatorImplLiteMgr();
-    static CommunicatorImplLiteMgr &GetInstance();
+    static CommunicatorImplLiteMgr& GetInstance();
     void DestroyComm(u32 commIdIndex);
-    CommunicatorImplLite *Get(const u32 commIdIndex);
-    std::vector<CommunicatorImplLite *> GetAll();
+    CommunicatorImplLite* Get(const u32 commIdIndex);
+    std::vector<CommunicatorImplLite*> GetAll();
 
     void SetEnvConfig(const HcclDeviceEnvConfigLite& envConfig) { envConfig_ = envConfig; }
     const HcclDeviceEnvConfigLite& GetEnvConfig() { return envConfig_; }

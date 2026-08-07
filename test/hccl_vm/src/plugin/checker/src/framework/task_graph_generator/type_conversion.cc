@@ -14,28 +14,25 @@
 
 namespace HcclSim {
 std::map<DataType, HcclDataType> g_DataType2CheckerDataType_aicpu = {
-    {DataType::INT8,   HcclDataType::HCCL_DATA_TYPE_INT8},
-    {DataType::INT16,  HcclDataType::HCCL_DATA_TYPE_INT16},
-    {DataType::INT32,  HcclDataType::HCCL_DATA_TYPE_INT32},
-    {DataType::FP16,   HcclDataType::HCCL_DATA_TYPE_FP16},
-    {DataType::FP32,   HcclDataType::HCCL_DATA_TYPE_FP32},
+    {DataType::INT8, HcclDataType::HCCL_DATA_TYPE_INT8},
+    {DataType::INT16, HcclDataType::HCCL_DATA_TYPE_INT16},
+    {DataType::INT32, HcclDataType::HCCL_DATA_TYPE_INT32},
+    {DataType::FP16, HcclDataType::HCCL_DATA_TYPE_FP16},
+    {DataType::FP32, HcclDataType::HCCL_DATA_TYPE_FP32},
     {DataType::UINT64, HcclDataType::HCCL_DATA_TYPE_UINT64},
-    {DataType::UINT8,  HcclDataType::HCCL_DATA_TYPE_UINT8},
+    {DataType::UINT8, HcclDataType::HCCL_DATA_TYPE_UINT8},
     {DataType::UINT16, HcclDataType::HCCL_DATA_TYPE_UINT16},
     {DataType::UINT32, HcclDataType::HCCL_DATA_TYPE_UINT32},
-    {DataType::FP64,   HcclDataType::HCCL_DATA_TYPE_FP64},
-    {DataType::BFP16,  HcclDataType::HCCL_DATA_TYPE_BFP16},
+    {DataType::FP64, HcclDataType::HCCL_DATA_TYPE_FP64},
+    {DataType::BFP16, HcclDataType::HCCL_DATA_TYPE_BFP16},
     {DataType::INT128, HcclDataType::HCCL_DATA_TYPE_INT128},
-    {DataType::INT64,  HcclDataType::HCCL_DATA_TYPE_INT64},
-    {DataType::HIF8,   HcclDataType::HCCL_DATA_TYPE_HIF8},
+    {DataType::INT64, HcclDataType::HCCL_DATA_TYPE_INT64},
+    {DataType::HIF8, HcclDataType::HCCL_DATA_TYPE_HIF8},
     {DataType::FP8E4M3, HcclDataType::HCCL_DATA_TYPE_FP8E4M3},
     {DataType::FP8E5M2, HcclDataType::HCCL_DATA_TYPE_FP8E5M2},
 };
 
-std::map<uint16_t, HcclReduceOp> g_ReduceOp2CheckerReduceOp_ccu = {
-    {10, HcclReduceOp::HCCL_REDUCE_SUM},
-    { 9, HcclReduceOp::HCCL_REDUCE_MIN},
-    { 8, HcclReduceOp::HCCL_REDUCE_MAX}
-};
+std::map<uint16_t, HcclReduceOp> g_ReduceOp2CheckerReduceOp_ccu
+    = {{10, HcclReduceOp::HCCL_REDUCE_SUM}, {9, HcclReduceOp::HCCL_REDUCE_MIN}, {8, HcclReduceOp::HCCL_REDUCE_MAX}};
 
 } // namespace HcclSim

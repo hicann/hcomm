@@ -19,9 +19,7 @@
 
 namespace Hccl {
 
-CcuDriverHandle::CcuDriverHandle(s32 deviceLogicId) : devLogicId(deviceLogicId)
-{
-}                                                                                                                                   
+CcuDriverHandle::CcuDriverHandle(s32 deviceLogicId) : devLogicId(deviceLogicId) {}
 
 CcuDriverHandle::~CcuDriverHandle()
 {

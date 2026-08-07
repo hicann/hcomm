@@ -19,9 +19,8 @@
 
 #include "sim_log.h"
 
-bool LoadYamlStringMap(const std::string& yamlPath,
-                       const std::string& nodeName,
-                       std::map<std::string, std::string>& out)
+bool LoadYamlStringMap(
+    const std::string& yamlPath, const std::string& nodeName, std::map<std::string, std::string>& out)
 {
 #if !defined(NO_YAML_CONFIG) && defined(HAVE_YAML_CPP)
     try {

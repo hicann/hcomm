@@ -29,26 +29,26 @@ std::unique_ptr<InstructMapBase> g_instrMap;
 u32 GetTopicId(HcclSim::TaskNode* post)
 {
     if (post->task->GetType() == TaskTypeStub::LOCAL_POST_TO) {
-        TaskStubLocalPostTo *postTask = dynamic_cast<TaskStubLocalPostTo *>(post->task);
+        TaskStubLocalPostTo* postTask = dynamic_cast<TaskStubLocalPostTo*>(post->task);
         return postTask->GetTopicId();
     }
-    TaskStubPost *postTask = dynamic_cast<TaskStubPost *>(post->task);
+    TaskStubPost* postTask = dynamic_cast<TaskStubPost*>(post->task);
     return postTask->GetTopicId();
 }
 
 void SetTopicId(HcclSim::TaskNode* post, u32 topicId)
 {
     if (post->task->GetType() == TaskTypeStub::LOCAL_POST_TO) {
-        TaskStubLocalPostTo *postTask = dynamic_cast<TaskStubLocalPostTo *>(post->task);
+        TaskStubLocalPostTo* postTask = dynamic_cast<TaskStubLocalPostTo*>(post->task);
         postTask->SetTopicId(topicId);
         return;
     }
-    TaskStubPost *postTask = dynamic_cast<TaskStubPost *>(post->task);
+    TaskStubPost* postTask = dynamic_cast<TaskStubPost*>(post->task);
     postTask->SetTopicId(topicId);
     return;
 }
 
-void GenWaitNode(TaskStubCcuGraph *curCcuTask, uint32_t queId, uint16_t waitCKEId, uint16_t waitCKEMask)
+void GenWaitNode(TaskStubCcuGraph* curCcuTask, uint32_t queId, uint16_t waitCKEId, uint16_t waitCKEMask)
 {
     RankId rankId = curCcuTask->GetRankId();
     uint32_t dieId;
@@ -83,7 +83,7 @@ void GenWaitNode(TaskStubCcuGraph *curCcuTask, uint32_t queId, uint16_t waitCKEI
     if (localWaitMask != 0) {
         localWaitNode = AddLocalWait(rankId, queId, curCcuTask, localWaitMask);
         // ccu子图中，local post和local wait是多对一的关系
-        for (auto &locPost : localPosts) {
+        for (auto& locPost : localPosts) {
             curCcuTask->localPostWaitPairs_[locPost] = localWaitNode;
         }
     }
@@ -100,7 +100,7 @@ void GenWaitNode(TaskStubCcuGraph *curCcuTask, uint32_t queId, uint16_t waitCKEI
             AddNodeRelation(post, localWaitNode);
         } else {
             AddNodeRelation(post, remoteWaitNode);
-            auto waitTask = dynamic_cast<TaskStubWait *>(remoteWaitNode->task);
+            auto waitTask = dynamic_cast<TaskStubWait*>(remoteWaitNode->task);
             waitTask->SetRemoteRank(post->rankIdx);
             CollectBilateralWaitInfo(curCcuTask, queId, remoteWaitNode);
         }
@@ -115,18 +115,22 @@ void GenWaitNode(TaskStubCcuGraph *curCcuTask, uint32_t queId, uint16_t waitCKEI
     return;
 }
 
-HcclResult ProcessWaitMask(RankId rankId, uint32_t dieId, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    uint16_t waitCKEId, uint16_t waitCKEMask, bool& isContinue)
+HcclResult ProcessWaitMask(
+    RankId rankId, uint32_t dieId, TaskStubCcuGraph* curCcuTask, uint32_t queId, uint16_t waitCKEId,
+    uint16_t waitCKEMask, bool& isContinue)
 {
-    HCCL_VM_DEBUG("Enter...rank {:d}, die{:d}, que{:d}, waitCke{:d}, waitMask{:d}",
-        rankId, static_cast<uint32_t>(dieId), queId, waitCKEId, waitCKEMask);
+    HCCL_VM_DEBUG(
+        "Enter...rank {:d}, die{:d}, que{:d}, waitCke{:d}, waitMask{:d}", rankId, static_cast<uint32_t>(dieId), queId,
+        waitCKEId, waitCKEMask);
     if (waitCKEMask != 0x0000) {
         uint16_t ckeValue = 0;
         CHK_RET(AllRankParamRecorder::Global()->GetCKE(rankId, dieId, waitCKEId, ckeValue));
         // 条件不满足，继续等待
         if ((ckeValue & waitCKEMask) != waitCKEMask) {
             isContinue = 0;
-            HCCL_VM_DEBUG("Does not meet the condition, continue: ckeId: {:d}, ckeValue: {:d}, mask: {:x}", waitCKEId, ckeValue, waitCKEMask);
+            HCCL_VM_DEBUG(
+                "Does not meet the condition, continue: ckeId: {:d}, ckeValue: {:d}, mask: {:x}", waitCKEId, ckeValue,
+                waitCKEMask);
             return HCCL_SUCCESS;
         } else {
             GenWaitNode(curCcuTask, queId, waitCKEId, waitCKEMask);
@@ -135,20 +139,21 @@ HcclResult ProcessWaitMask(RankId rankId, uint32_t dieId, TaskStubCcuGraph *curC
     return HCCL_SUCCESS;
 }
 
-HcclResult TransformInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId, bool& isContinue)
+HcclResult TransformInstr(const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue)
 {
-    if(g_instrMap == nullptr) {
+    if (g_instrMap == nullptr) {
         HCCL_ERROR("g_instrMap error");
         return HCCL_E_INTERNAL;
     }
-    if(!g_instrMap->IsSupported(instr->header.header)) {
+    if (!g_instrMap->IsSupported(instr->header.header)) {
         HCCL_ERROR("ins type not supported %hu", instr->header.header);
         return HCCL_E_INTERNAL;
     }
     return g_instrMap.get()->Transform(instr, curCcuTask, queId, isContinue, nullptr);
 }
 
-void addChildNode(std::deque<TaskNode*> &queue, std::set<TaskNode*> &isVisitedNode, TaskNode* curNode) {
+void addChildNode(std::deque<TaskNode*>& queue, std::set<TaskNode*>& isVisitedNode, TaskNode* curNode)
+{
     for (auto node = curNode->children.begin(); node != curNode->children.end(); node++) {
         TaskNode* child = *node;
         if (isVisitedNode.count(child) == 0) {
@@ -159,12 +164,12 @@ void addChildNode(std::deque<TaskNode*> &queue, std::set<TaskNode*> &isVisitedNo
     return;
 }
 
-bool AreParentsCompleted(TaskNode* node, const std::set<TaskNode*> &completedNodes)
+bool AreParentsCompleted(TaskNode* node, const std::set<TaskNode*>& completedNodes)
 {
     if (node == nullptr) {
         return false;
     }
-    for (auto *parent : node->parents) {
+    for (auto* parent : node->parents) {
         if (parent == nullptr || completedNodes.count(parent) == 0) {
             return false;
         }
@@ -172,20 +177,21 @@ bool AreParentsCompleted(TaskNode* node, const std::set<TaskNode*> &completedNod
     return true;
 }
 
-CcuInstrVersion GetCcuInstrVersion() {
+CcuInstrVersion GetCcuInstrVersion()
+{
     DevType devType = AllRankParamRecorder::Global()->GetDevType();
     if (devType == DevType::DEV_TYPE_950) {
         return CcuInstrVersion::VERSION_A5;
-    #ifdef BUILD_A6_CCU_INSTR
+#ifdef BUILD_A6_CCU_INSTR
     } else if (devType == DevType::DEV_TYPE_960) {
         return CcuInstrVersion::VERSION_A6;
-    #endif
+#endif
     } else {
         return CcuInstrVersion::VERSION_A5;
     }
 }
 
-HcclResult TransformInstrQue(TaskNodePtr node, TaskStubCcuGraph *curCcuTask, uint32_t queId)
+HcclResult TransformInstrQue(TaskNodePtr node, TaskStubCcuGraph* curCcuTask, uint32_t queId)
 {
     // 表示当前微码序列已经完成成图
     if (curCcuTask->instrQueStatus[queId]) {
@@ -199,7 +205,8 @@ HcclResult TransformInstrQue(TaskNodePtr node, TaskStubCcuGraph *curCcuTask, uin
     u32& pos = curCcuTask->microCodePosInQue[queId];
     while (pos < endInstrId) {
         u32 prePos = pos;
-        HCCL_VM_DEBUG("Current process ccu graph: {}, instruction id={}, header={}, queId={}, pointer={:x}",
+        HCCL_VM_DEBUG(
+            "Current process ccu graph: {}, instruction id={}, header={}, queId={}, pointer={:x}",
             curCcuTask->Describe(), pos, microCodeQue.instrVec[pos].header.header, queId, (uint64_t)curCcuTask);
         CHK_RET(TransformInstr(&microCodeQue.instrVec[pos], curCcuTask, queId, isContinue));
         if (!isContinue) {
@@ -212,8 +219,10 @@ HcclResult TransformInstrQue(TaskNodePtr node, TaskStubCcuGraph *curCcuTask, uin
     }
 
     curCcuTask->instrQueStatus[queId] = true;
-    curCcuTask->isGenGraphed = std::all_of(curCcuTask->instrQueStatus.begin(), curCcuTask->instrQueStatus.end(),
-        [](bool b) { return b; });
+    curCcuTask->isGenGraphed
+        = std::all_of(curCcuTask->instrQueStatus.begin(), curCcuTask->instrQueStatus.end(), [](bool b) {
+              return b;
+          });
 
     // 如果整图匹配完成，添加一个结束节点
     if (curCcuTask->isGenGraphed) {
@@ -224,7 +233,7 @@ HcclResult TransformInstrQue(TaskNodePtr node, TaskStubCcuGraph *curCcuTask, uin
     return HCCL_SUCCESS;
 }
 
-HcclResult ProcessCcuNode(TaskNodePtr node, TaskStubCcuGraph *curCcuTask)
+HcclResult ProcessCcuNode(TaskNodePtr node, TaskStubCcuGraph* curCcuTask)
 {
     curCcuTask->queueNum_ = curCcuTask->instrInfo.size();
     uint32_t rankSize = HcclSim::StorageManager::GetInstance().GetRankSize();
@@ -258,7 +267,7 @@ void PrintCcuSingleQue(TaskNodePtr head, u32 rankId, u32 queueIdx)
     }
     HCCL_VM_INFO("]");
 
-    while(!candNode.empty()) {
+    while (!candNode.empty()) {
         TaskNodePtr curNode = candNode.front();
         candNode.pop_front();
         for (auto& child : curNode->children) {
@@ -299,7 +308,7 @@ void PrintCcuGraph(TaskNodePtr dummyStart)
         candNode.push_back(child);
     }
 
-    while(!candNode.empty()) {
+    while (!candNode.empty()) {
         TaskNodePtr curNode = candNode.front();
         candNode.pop_front();
         addChildNode(candNode, isVisitedNode, curNode);
@@ -311,7 +320,7 @@ void PrintCcuGraph(TaskNodePtr dummyStart)
         HCCL_VM_INFO("=======================================================");
         HCCL_VM_INFO("rank id is {:d}", curNode->rankIdx);
 
-        TaskStubCcuGraph *curCcuTask = dynamic_cast<TaskStubCcuGraph *>(curNode->task);
+        TaskStubCcuGraph* curCcuTask = dynamic_cast<TaskStubCcuGraph*>(curNode->task);
         for (auto& child : curCcuTask->ccuHeadTaskNode->children) {
             u32 queueIdx = child->queIdx;
             HCCL_VM_INFO("-------------------------------------------------------");
@@ -334,7 +343,7 @@ void PrintSQEGraph(TaskNodePtr dummyStart)
     }
 
     HCCL_VM_INFO("---------------------------YY----------------------------");
-    while(!candNode.empty()) {
+    while (!candNode.empty()) {
         TaskNodePtr curNode = candNode.front();
         candNode.pop_front();
         addChildNode(candNode, isVisitedNode, curNode);
@@ -357,13 +366,14 @@ void PrintSQEGraph(TaskNodePtr dummyStart)
     return;
 }
 
-HcclResult GenCcuGraph(TaskNode* dummyStart) {
+HcclResult GenCcuGraph(TaskNode* dummyStart)
+{
     std::deque<TaskNode*> candNode;
     std::set<TaskNode*> isVisitedNode;
     std::set<TaskNode*> completedNodes;
     AllRankParamRecorder::Global()->InitParam();
-    HcclSim::StorageManager::GetInstance().InitCcuInfo(AllRankParamRecorder::Global()->devType_,
-        AllRankParamRecorder::Global()->ccu_resource_base_addr_);
+    HcclSim::StorageManager::GetInstance().InitCcuInfo(
+        AllRankParamRecorder::Global()->devType_, AllRankParamRecorder::Global()->ccu_resource_base_addr_);
     HCCL_VM_INFO("dummyStart children size: {}", dummyStart->children.size());
 
     bool isPrintCcuGraph = std::getenv("CCU_TASK_PRINT");
@@ -376,10 +386,10 @@ HcclResult GenCcuGraph(TaskNode* dummyStart) {
 
     HCCL_VM_INFO("start......{}", candNode.size());
     u32 unmatchedCnt = 0;
-    while(!candNode.empty()) {
+    while (!candNode.empty()) {
         // 先判断是否存在死锁的情况
         if (unmatchedCnt >= candNode.size()) {
-            for (auto &node : candNode) {
+            for (auto& node : candNode) {
                 node->unmatch = true;
             }
             HCCL_VM_ERROR("deadLocking occurs due to mismatch.");
@@ -404,7 +414,7 @@ HcclResult GenCcuGraph(TaskNode* dummyStart) {
             unmatchedCnt = 0;
             continue;
         }
-        TaskStubCcuGraph *curCcuTask = dynamic_cast<TaskStubCcuGraph *>(curNode->task);
+        TaskStubCcuGraph* curCcuTask = dynamic_cast<TaskStubCcuGraph*>(curNode->task);
         std::vector<u32> microCodePosInQuePre = curCcuTask->microCodePosInQue;
         HcclResult ret = ProcessCcuNode(curNode, curCcuTask);
         if (ret != HCCL_SUCCESS) {
@@ -446,13 +456,14 @@ HcclResult GenCcuGraph(TaskNode* dummyStart) {
     return HCCL_SUCCESS;
 }
 
-std::unique_ptr<InstructMapBase> InstructMapFactory::Create(CcuInstrVersion version) {
+std::unique_ptr<InstructMapBase> InstructMapFactory::Create(CcuInstrVersion version)
+{
     switch (version) {
         case CcuInstrVersion::VERSION_A5:
             return std::make_unique<InstructMapA5>();
 #ifdef BUILD_A6_CCU_INSTR
         case CcuInstrVersion::VERSION_A6:
-             return std::make_unique<InstructMapA6>();
+            return std::make_unique<InstructMapA6>();
 #endif
         default:
             return nullptr;

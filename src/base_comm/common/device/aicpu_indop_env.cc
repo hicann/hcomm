@@ -19,9 +19,6 @@ void SetTaskExceptionEnable(bool taskExceptionEnable)
     HCCL_INFO("[%s] taskExceptionEnable[%d]", __func__, taskExceptionEnable);
 }
 
-const bool& GetTaskExceptionEnable()
-{
-    return g_configEnv.taskExceptionEnable;
-}
+const bool& GetTaskExceptionEnable() { return g_configEnv.taskExceptionEnable; }
 
-}  // namespace hcomm
+} // namespace hcomm

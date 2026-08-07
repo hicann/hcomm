@@ -14,15 +14,12 @@ RdmaHandleManager::RdmaHandleManager()
     }
 }
 
-RdmaHandleManager::~RdmaHandleManager()
-{
-    ;
-}
+RdmaHandleManager::~RdmaHandleManager() { ; }
 
 std::map<RdmaHandle, std::pair<uint32_t, uint32_t>> g_rdmaHandle2DieIdAndFuncId;
 RdmaHandle g_rdmaHandlePtr = reinterpret_cast<RdmaHandle>(0x01);
 
-RdmaHandle RdmaHandleManager::Create(u32 devPhyId, const PortData &localPort)
+RdmaHandle RdmaHandleManager::Create(u32 devPhyId, const PortData& localPort)
 {
     RdmaHandle res = g_rdmaHandlePtr++;
     rdmaHandleMap[devPhyId][localPort.GetProto()][localPort.GetAddr()] = res;
@@ -31,7 +28,7 @@ RdmaHandle RdmaHandleManager::Create(u32 devPhyId, const PortData &localPort)
     return res;
 }
 
-RdmaHandle RdmaHandleManager::GetByIp(u32 devPhyId, const IpAddress &localIp)
+RdmaHandle RdmaHandleManager::GetByIp(u32 devPhyId, const IpAddress& localIp)
 {
     RdmaHandle res = rdmaHandleMap[devPhyId][LinkProtoType::UB][localIp];
 
@@ -40,21 +37,20 @@ RdmaHandle RdmaHandleManager::GetByIp(u32 devPhyId, const IpAddress &localIp)
         rdmaHandleMap[devPhyId][LinkProtoType::UB][localIp] = res;
 
         g_rdmaHandle2DieIdAndFuncId[res] = g_devId2Ip2DieIdAndFuncId[devPhyId][localIp];
-        HCCL_INFO("Create one rdmahandle [%p], devPhyId [%u], ipAddr [%s]",
-            res, devPhyId, localIp.Describe().c_str());
+        HCCL_INFO("Create one rdmahandle [%p], devPhyId [%u], ipAddr [%s]", res, devPhyId, localIp.Describe().c_str());
     }
     return res;
 }
 
-RdmaHandle RdmaHandleManager::Get(u32 devPhyId, const PortData &localPort, LinkProtocol linkProtocol)
+RdmaHandle RdmaHandleManager::Get(u32 devPhyId, const PortData& localPort, LinkProtocol linkProtocol)
 {
     LinkProtoType localProto = localPort.GetProto();
     if (devPhyId > rdmaHandleMap.size() - 1 || localProto == LinkProtoType::HCCS_PCIE) {
         return nullptr;
     }
 
-    IpAddress  localIp = localPort.GetAddr();
-    RdmaHandle res     = rdmaHandleMap[devPhyId][localProto][localIp];
+    IpAddress localIp = localPort.GetAddr();
+    RdmaHandle res = rdmaHandleMap[devPhyId][localProto][localIp];
     if (res == nullptr) {
         if (localProto == LinkProtoType::RDMA) {
             res = Create(devPhyId, localPort);
@@ -63,8 +59,9 @@ RdmaHandle RdmaHandleManager::Get(u32 devPhyId, const PortData &localPort, LinkP
             rdmaHandleMap[devPhyId][localProto][localIp] = res;
 
             g_rdmaHandle2DieIdAndFuncId[res] = g_devId2Ip2DieIdAndFuncId[devPhyId][localIp];
-            HCCL_INFO("Create one rdmahandle [%p], devPhyId [%u], portAddr [%s]",
-                res, devPhyId, localPort.GetAddr().Describe().c_str());
+            HCCL_INFO(
+                "Create one rdmahandle [%p], devPhyId [%u], portAddr [%s]", res, devPhyId,
+                localPort.GetAddr().Describe().c_str());
         }
     }
 
@@ -86,17 +83,15 @@ JfcHandle RdmaHandleManager::GetJfcHandle(RdmaHandle rdmaHandle, CqCreateInfo& c
     return 1;
 }
 
-std::pair<TokenIdHandle, uint32_t> RdmaHandleManager::GetTokenIdInfo(RdmaHandle rdmaHandle, const BufferKey<uintptr_t, u64> &bufKey)
+std::pair<TokenIdHandle, uint32_t>
+RdmaHandleManager::GetTokenIdInfo(RdmaHandle rdmaHandle, const BufferKey<uintptr_t, u64>& bufKey)
 {
     return std::make_pair(0, 0);
 }
 
-bool RdmaHandleManager::GetRtpEnable(RdmaHandle rdmaHandle)
-{
-    return true;
-}
+bool RdmaHandleManager::GetRtpEnable(RdmaHandle rdmaHandle) { return true; }
 
-RdmaHandleManager &RdmaHandleManager::GetInstance()
+RdmaHandleManager& RdmaHandleManager::GetInstance()
 {
     static RdmaHandleManager rdmaHandleManager;
     return rdmaHandleManager;
@@ -112,4 +107,4 @@ void RdmaHandleManager::DestroyAll()
     }
 }
 
-}
+} // namespace Hccl

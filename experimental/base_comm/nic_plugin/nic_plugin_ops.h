@@ -28,13 +28,13 @@ public:
     using EndpointT = typename Traits::EndpointT;
     using ChannelT = typename Traits::ChannelT;
 
-    static int32_t InitEndpoint(void *endpointCtx)
+    static int32_t InitEndpoint(void* endpointCtx)
     {
         CHK_PTR_NULL(endpointCtx);
-        return static_cast<EndpointT *>(endpointCtx)->Init();
+        return static_cast<EndpointT*>(endpointCtx)->Init();
     }
 
-    static HcommResult CreateEndpoint(const EndpointDesc *endpoint, void **endpointCtx)
+    static HcommResult CreateEndpoint(const EndpointDesc* endpoint, void** endpointCtx)
     {
         CHK_PTR_NULL(endpoint);
         CHK_PTR_NULL(endpointCtx);
@@ -44,71 +44,65 @@ public:
         return HCCL_SUCCESS;
     }
 
-    static void DestroyEndpoint(void *endpointCtx)
-    {
-        delete static_cast<EndpointT *>(endpointCtx);
-    }
+    static void DestroyEndpoint(void* endpointCtx) { delete static_cast<EndpointT*>(endpointCtx); }
 
-    static HcommResult MemReg(void *endpointCtx, const CommMem *mem, const char *memTag, void **memHandle)
+    static HcommResult MemReg(void* endpointCtx, const CommMem* mem, const char* memTag, void** memHandle)
     {
         CHK_PTR_NULL(endpointCtx);
         CHK_PTR_NULL(mem);
         CHK_PTR_NULL(memHandle);
-        return static_cast<EndpointT *>(endpointCtx)->RegisterMemory(*mem, memTag, memHandle);
+        return static_cast<EndpointT*>(endpointCtx)->RegisterMemory(*mem, memTag, memHandle);
     }
 
-    static HcommResult MemUnreg(void *endpointCtx, void *memHandle)
+    static HcommResult MemUnreg(void* endpointCtx, void* memHandle)
     {
         CHK_PTR_NULL(endpointCtx);
-        return static_cast<EndpointT *>(endpointCtx)->UnregisterMemory(memHandle);
+        return static_cast<EndpointT*>(endpointCtx)->UnregisterMemory(memHandle);
     }
 
-    static HcommResult MemExport(void *endpointCtx, void *memHandle, void **memDesc, uint32_t *memDescLen)
+    static HcommResult MemExport(void* endpointCtx, void* memHandle, void** memDesc, uint32_t* memDescLen)
     {
         CHK_PTR_NULL(endpointCtx);
-        return static_cast<EndpointT *>(endpointCtx)->MemoryExport(memHandle, memDesc, memDescLen);
+        return static_cast<EndpointT*>(endpointCtx)->MemoryExport(memHandle, memDesc, memDescLen);
     }
 
-    static HcommResult MemImport(void *endpointCtx, const void *memDesc, uint32_t descLen, CommMem *outMem)
+    static HcommResult MemImport(void* endpointCtx, const void* memDesc, uint32_t descLen, CommMem* outMem)
     {
         CHK_PTR_NULL(endpointCtx);
-        return static_cast<EndpointT *>(endpointCtx)->MemoryImport(memDesc, descLen, outMem);
+        return static_cast<EndpointT*>(endpointCtx)->MemoryImport(memDesc, descLen, outMem);
     }
 
-    static HcommResult MemUnimport(void *endpointCtx, const void *memDesc, uint32_t descLen)
+    static HcommResult MemUnimport(void* endpointCtx, const void* memDesc, uint32_t descLen)
     {
         CHK_PTR_NULL(endpointCtx);
-        return static_cast<EndpointT *>(endpointCtx)->MemoryUnimport(memDesc, descLen);
+        return static_cast<EndpointT*>(endpointCtx)->MemoryUnimport(memDesc, descLen);
     }
 
-    static int32_t InitChannel(void *channelCtx)
+    static int32_t InitChannel(void* channelCtx)
     {
         CHK_PTR_NULL(channelCtx);
-        return static_cast<ChannelT *>(channelCtx)->Init();
+        return static_cast<ChannelT*>(channelCtx)->Init();
     }
 
-    static HcommResult CreateChannel(void *endpointCtx, const HcommChannelDesc *channelDesc, void **channelCtx)
+    static HcommResult CreateChannel(void* endpointCtx, const HcommChannelDesc* channelDesc, void** channelCtx)
     {
         CHK_PTR_NULL(endpointCtx);
         CHK_PTR_NULL(channelDesc);
         CHK_PTR_NULL(channelCtx);
-        auto ch = std::unique_ptr<ChannelT>(
-            new (std::nothrow) ChannelT(reinterpret_cast<EndpointHandle>(endpointCtx), *channelDesc));
+        auto ch = std::unique_ptr<ChannelT>(new (std::nothrow)
+                                                ChannelT(reinterpret_cast<EndpointHandle>(endpointCtx), *channelDesc));
         CHK_SMART_PTR_NULL(ch);
         *channelCtx = ch.release();
         return HCCL_SUCCESS;
     }
 
-    static void DestroyChannel(void *channelCtx)
-    {
-        delete static_cast<ChannelT *>(channelCtx);
-    }
+    static void DestroyChannel(void* channelCtx) { delete static_cast<ChannelT*>(channelCtx); }
 
-    static HcommResult GetStatus(void *channelCtx, int32_t *status)
+    static HcommResult GetStatus(void* channelCtx, int32_t* status)
     {
         CHK_PTR_NULL(channelCtx);
         CHK_PTR_NULL(status);
-        auto channelStatus = static_cast<ChannelT *>(channelCtx)->GetStatus();
+        auto channelStatus = static_cast<ChannelT*>(channelCtx)->GetStatus();
         *status = (channelStatus == ChannelStatus::READY) ? 0 : 1;
         if (channelStatus == ChannelStatus::FAILED || channelStatus == ChannelStatus::SOCKET_TIMEOUT) {
             return HCCL_E_NETWORK;
@@ -116,58 +110,58 @@ public:
         return HCCL_SUCCESS;
     }
 
-    static HcommResult GetNotifyNum(void *channelCtx, uint32_t *notifyNum)
+    static HcommResult GetNotifyNum(void* channelCtx, uint32_t* notifyNum)
     {
         CHK_PTR_NULL(channelCtx);
-        return static_cast<ChannelT *>(channelCtx)->GetNotifyNum(notifyNum);
+        return static_cast<ChannelT*>(channelCtx)->GetNotifyNum(notifyNum);
     }
 
-    static HcommResult GetUserRemoteMem(void *channelCtx, CommMem **remoteMem, char ***memTags, uint32_t *memNum)
+    static HcommResult GetUserRemoteMem(void* channelCtx, CommMem** remoteMem, char*** memTags, uint32_t* memNum)
     {
-        return Traits::GetUserRemoteMem(static_cast<ChannelT *>(channelCtx), remoteMem, memTags, memNum);
+        return Traits::GetUserRemoteMem(static_cast<ChannelT*>(channelCtx), remoteMem, memTags, memNum);
     }
 
-    static HcommResult UpdateMemInfo(void *channelCtx, HcommMemHandle *memHandles, uint32_t memHandleNum)
-    {
-        CHK_PTR_NULL(channelCtx);
-        return static_cast<ChannelT *>(channelCtx)->UpdateMemInfo(memHandles, memHandleNum);
-    }
-
-    static HcommResult NotifyRecord(void *channelCtx, uint32_t remoteNotifyIdx)
+    static HcommResult UpdateMemInfo(void* channelCtx, HcommMemHandle* memHandles, uint32_t memHandleNum)
     {
         CHK_PTR_NULL(channelCtx);
-        return static_cast<ChannelT *>(channelCtx)->NotifyRecord(remoteNotifyIdx);
+        return static_cast<ChannelT*>(channelCtx)->UpdateMemInfo(memHandles, memHandleNum);
     }
 
-    static HcommResult NotifyWait(void *channelCtx, uint32_t localNotifyIdx, uint32_t timeout)
+    static HcommResult NotifyRecord(void* channelCtx, uint32_t remoteNotifyIdx)
     {
         CHK_PTR_NULL(channelCtx);
-        return static_cast<ChannelT *>(channelCtx)->NotifyWait(localNotifyIdx, timeout);
+        return static_cast<ChannelT*>(channelCtx)->NotifyRecord(remoteNotifyIdx);
     }
 
-    static HcommResult WriteWithNotify(void *channelCtx, void *dst, const void *src, uint64_t len,
-        uint32_t remoteNotifyIdx)
+    static HcommResult NotifyWait(void* channelCtx, uint32_t localNotifyIdx, uint32_t timeout)
     {
         CHK_PTR_NULL(channelCtx);
-        return static_cast<ChannelT *>(channelCtx)->WriteWithNotify(dst, src, len, remoteNotifyIdx);
+        return static_cast<ChannelT*>(channelCtx)->NotifyWait(localNotifyIdx, timeout);
     }
 
-    static HcommResult Write(void *channelCtx, void *dst, const void *src, uint64_t len)
+    static HcommResult
+    WriteWithNotify(void* channelCtx, void* dst, const void* src, uint64_t len, uint32_t remoteNotifyIdx)
     {
         CHK_PTR_NULL(channelCtx);
-        return static_cast<ChannelT *>(channelCtx)->Write(dst, src, len);
+        return static_cast<ChannelT*>(channelCtx)->WriteWithNotify(dst, src, len, remoteNotifyIdx);
     }
 
-    static HcommResult Read(void *channelCtx, void *dst, const void *src, uint64_t len)
+    static HcommResult Write(void* channelCtx, void* dst, const void* src, uint64_t len)
     {
         CHK_PTR_NULL(channelCtx);
-        return static_cast<ChannelT *>(channelCtx)->Read(dst, src, len);
+        return static_cast<ChannelT*>(channelCtx)->Write(dst, src, len);
     }
 
-    static HcommResult Fence(void *channelCtx)
+    static HcommResult Read(void* channelCtx, void* dst, const void* src, uint64_t len)
     {
         CHK_PTR_NULL(channelCtx);
-        return static_cast<ChannelT *>(channelCtx)->ChannelFence();
+        return static_cast<ChannelT*>(channelCtx)->Read(dst, src, len);
+    }
+
+    static HcommResult Fence(void* channelCtx)
+    {
+        CHK_PTR_NULL(channelCtx);
+        return static_cast<ChannelT*>(channelCtx)->ChannelFence();
     }
 
     static HcommNicEndpointOps EndpointOps()
@@ -180,8 +174,7 @@ public:
             MemExport,
             MemImport,
             MemUnimport,
-            DestroyEndpoint
-        };
+            DestroyEndpoint};
     }
 
     static HcommNicChannelOps ChannelOps()
@@ -199,12 +192,11 @@ public:
             DestroyChannel,
             GetStatus,
             UpdateMemInfo,
-            GetUserRemoteMem
-        };
+            GetUserRemoteMem};
     }
 
-    static int32_t CreateEndpointExport(const EndpointDesc *endpointDesc, void **outCtx,
-        HcommNicEndpointOps **outOps, HcommNicEndpointOps *endpointOps)
+    static int32_t CreateEndpointExport(
+        const EndpointDesc* endpointDesc, void** outCtx, HcommNicEndpointOps** outOps, HcommNicEndpointOps* endpointOps)
     {
         CHK_PTR_NULL(endpointDesc);
         CHK_PTR_NULL(outCtx);
@@ -214,8 +206,9 @@ public:
         return HCCL_SUCCESS;
     }
 
-    static int32_t CreateChannelExport(void *epCtx, const HcommChannelDesc *channelDesc, void **outCtx,
-        HcommNicChannelOps **outOps, HcommNicChannelOps *channelOps)
+    static int32_t CreateChannelExport(
+        void* epCtx, const HcommChannelDesc* channelDesc, void** outCtx, HcommNicChannelOps** outOps,
+        HcommNicChannelOps* channelOps)
     {
         CHK_PTR_NULL(channelDesc);
         CHK_PTR_NULL(outCtx);
@@ -228,22 +221,19 @@ public:
 
 } // namespace hcomm_experimental
 
-#define HCOMM_EXPERIMENTAL_NIC_PLUGIN_EXPORTS(PluginOpsType)                                                      \
-extern "C" const HcommNicPluginInfo *HcommNicPluginGetInfo(void)                                          \
-{                                                                                                         \
-    return &kPluginInfo;                                                                                  \
-}                                                                                                         \
-                                                                                                          \
-extern "C" int32_t HcommNicPluginCreateEndpoint(const EndpointDesc *endpointDesc,                        \
-    void **outCtx, HcommNicEndpointOps **outOps)                                                          \
-{                                                                                                         \
-    return PluginOpsType::CreateEndpointExport(endpointDesc, outCtx, outOps, &kEndpointOps);              \
-}                                                                                                         \
-                                                                                                          \
-extern "C" int32_t HcommNicPluginCreateChannel(void *epCtx, const HcommChannelDesc *channelDesc,          \
-    void **outCtx, HcommNicChannelOps **outOps)                                                           \
-{                                                                                                         \
-    return PluginOpsType::CreateChannelExport(epCtx, channelDesc, outCtx, outOps, &kChannelOps);          \
-}
+#define HCOMM_EXPERIMENTAL_NIC_PLUGIN_EXPORTS(PluginOpsType)                                          \
+    extern "C" const HcommNicPluginInfo* HcommNicPluginGetInfo(void) { return &kPluginInfo; }         \
+                                                                                                      \
+    extern "C" int32_t HcommNicPluginCreateEndpoint(                                                  \
+        const EndpointDesc* endpointDesc, void** outCtx, HcommNicEndpointOps** outOps)                \
+    {                                                                                                 \
+        return PluginOpsType::CreateEndpointExport(endpointDesc, outCtx, outOps, &kEndpointOps);      \
+    }                                                                                                 \
+                                                                                                      \
+    extern "C" int32_t HcommNicPluginCreateChannel(                                                   \
+        void* epCtx, const HcommChannelDesc* channelDesc, void** outCtx, HcommNicChannelOps** outOps) \
+    {                                                                                                 \
+        return PluginOpsType::CreateChannelExport(epCtx, channelDesc, outCtx, outOps, &kChannelOps);  \
+    }
 
 #endif // HCOMM_EXPERIMENTAL_PLUGIN_OPS_H

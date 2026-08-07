@@ -17,10 +17,7 @@
 
 namespace hcomm {
 
-UbgEndpoint::UbgEndpoint(const EndpointDesc &endpointDesc)
-    : UboeUbgEndpointHelper(endpointDesc)
-{
-}
+UbgEndpoint::UbgEndpoint(const EndpointDesc& endpointDesc) : UboeUbgEndpointHelper(endpointDesc) {}
 
 HcclResult UbgEndpoint::Init()
 {
@@ -29,8 +26,9 @@ HcclResult UbgEndpoint::Init()
     DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType != DevType::DEV_TYPE_950 && deviceType != DevType::DEV_TYPE_960) {
-        HCCL_ERROR("[%s] UBG protocol only support DEV_TYPE_950/960, current deviceType=%d",
-            __func__, static_cast<int>(deviceType));
+        HCCL_ERROR(
+            "[%s] UBG protocol only support DEV_TYPE_950/960, current deviceType=%d", __func__,
+            static_cast<int>(deviceType));
         return HCCL_E_NOT_SUPPORT;
     }
 
@@ -46,12 +44,14 @@ HcclResult UbgEndpoint::Init()
 
     Hccl::HccpHdcManager::GetInstance().Init(deviceLogicId);
     // UBG 直接用 EID 地址获取 rdmaHandle，不做 IP→EID 查询
-    auto &rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
-    EXCEPTION_CATCH(ctxHandle_ = static_cast<void *>(rdmaHandleMgr.GetByIp(endpointDesc_.loc.device.devPhyId, eidAddr)), 
+    auto& rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
+    EXCEPTION_CATCH(
+        ctxHandle_ = static_cast<void*>(rdmaHandleMgr.GetByIp(endpointDesc_.loc.device.devPhyId, eidAddr)),
         return HCCL_E_PARA);
     CHK_PTR_NULL(ctxHandle_);
-    HCCL_INFO("%s success, devPhyId[%u], eidAddr[%s], ctxHandle[%p]",
-        __func__, devPhyId, eidAddr.Describe().c_str(), ctxHandle_);
+    HCCL_INFO(
+        "%s success, devPhyId[%u], eidAddr[%s], ctxHandle[%p]", __func__, devPhyId, eidAddr.Describe().c_str(),
+        ctxHandle_);
 
     EXCEPTION_CATCH(regedMemMgr_ = std::make_unique<UbRegedMemMgr>(), return HCCL_E_INTERNAL);
     regedMemMgr_->rdmaHandle_ = ctxHandle_;
@@ -59,4 +59,4 @@ HcclResult UbgEndpoint::Init()
     return HcclResult::HCCL_SUCCESS;
 }
 
-}
+} // namespace hcomm

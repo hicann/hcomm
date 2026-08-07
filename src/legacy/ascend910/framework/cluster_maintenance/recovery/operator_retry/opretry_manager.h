@@ -21,8 +21,7 @@ struct RetryCtrl {
     bool startExec = false;
 };
 
-class OpRetryManager
-{
+class OpRetryManager {
 public:
     OpRetryManager() = default;
     ~OpRetryManager()
@@ -30,19 +29,24 @@ public:
         HCCL_DEBUG("Destroy OpRetryManager");
         (void)DeInit();
     }
-    HcclResult RegisterOpRetryMachine(OpRetryAgentParam &agentParam, u32 rankSize, bool isRoot,
-        std::map<u32, std::shared_ptr<HcclSocket> > &serverConnections, const OpRetryServerInfo& serverInfo);
+    HcclResult RegisterOpRetryMachine(
+        OpRetryAgentParam& agentParam, u32 rankSize, bool isRoot,
+        std::map<u32, std::shared_ptr<HcclSocket>>& serverConnections, const OpRetryServerInfo& serverInfo);
     HcclResult UnRegisterOpRetryManager(const std::string& group);
 
-    static HcclResult AddLinkInfoByIdentifier(s32 deviceLogicID, const std::string &identifier, 
-        const std::string &newTag, std::vector<u32> &remoteRankList, bool incre = false);
-    static HcclResult GetLinkInfoByIdentifier(s32 deviceLogicID, const std::string &identifier, 
-        const std::string &newTag, std::vector<u32> &remoteRankList, bool isGetGroupAllRemoteRank = false);
-    static HcclResult DeleteLinkInfoByIdentifier(s32 deviceLogicID, const std::string &identifier);
+    static HcclResult AddLinkInfoByIdentifier(
+        s32 deviceLogicID, const std::string& identifier, const std::string& newTag, std::vector<u32>& remoteRankList,
+        bool incre = false);
+    static HcclResult GetLinkInfoByIdentifier(
+        s32 deviceLogicID, const std::string& identifier, const std::string& newTag, std::vector<u32>& remoteRankList,
+        bool isGetGroupAllRemoteRank = false);
+    static HcclResult DeleteLinkInfoByIdentifier(s32 deviceLogicID, const std::string& identifier);
     HcclResult SetRetryStateToWaitResume(const std::string& group, bool isRoot);
-    HcclResult ExitWaitResumeState(const std::string& group, bool isRoot, bool haveCommEnableBackupLink, bool& isChangedLink);
-    bool IsPaused(const std::string &group);
-    bool IsResumed(const std::string &group);
+    HcclResult
+    ExitWaitResumeState(const std::string& group, bool isRoot, bool haveCommEnableBackupLink, bool& isChangedLink);
+    bool IsPaused(const std::string& group);
+    bool IsResumed(const std::string& group);
+
 private:
     HcclResult Init();
     HcclResult DeInit()
@@ -56,7 +60,7 @@ private:
                 }
             }
             agentOpRetry_.clear();
-    
+
             for (auto it = serverOpRetry.begin(); it != serverOpRetry.end(); ++it) {
                 if (it->second.thread != nullptr && it->second.thread->joinable()) {
                     it->second.thread->join();
@@ -67,11 +71,12 @@ private:
         }
         return HCCL_SUCCESS;
     }
-    HcclResult RegisterAgentRetryMachine(OpRetryAgentParam &agentParam);
-    HcclResult RegisterServerRetryMachine(const std::string& group,
-        std::map<u32, std::shared_ptr<HcclSocket>> &serverConnections, const OpRetryAgentInfo& agentInfo);
-    void RetryStateMonitor(const std::string &group, std::shared_ptr<RetryContext> retryCtx, const bool &startExec,
-        HcclRtContext rtCtx_);
+    HcclResult RegisterAgentRetryMachine(OpRetryAgentParam& agentParam);
+    HcclResult RegisterServerRetryMachine(
+        const std::string& group, std::map<u32, std::shared_ptr<HcclSocket>>& serverConnections,
+        const OpRetryAgentInfo& agentInfo);
+    void RetryStateMonitor(
+        const std::string& group, std::shared_ptr<RetryContext> retryCtx, const bool& startExec, HcclRtContext rtCtx_);
 
 private:
     std::map<std::string, RetryCtrl> serverOpRetry;
@@ -79,5 +84,5 @@ private:
     bool initialized_ = false;
     std::mutex ProcessLock_;
 };
-}
+} // namespace hccl
 #endif

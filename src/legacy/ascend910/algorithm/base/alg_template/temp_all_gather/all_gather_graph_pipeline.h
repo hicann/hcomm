@@ -13,6 +13,6 @@
 
 #include "all_gather_graph_pipeline_pub.h"
 
-namespace hccl {}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALL_GATHER_GRAPH_PIPELINE_H */

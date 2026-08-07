@@ -22,24 +22,22 @@ namespace hcomm {
  */
 class UboeUbgEndpointHelper : public Endpoint {
 public:
-    explicit UboeUbgEndpointHelper(const EndpointDesc &endpointDesc);
+    explicit UboeUbgEndpointHelper(const EndpointDesc& endpointDesc);
     ~UboeUbgEndpointHelper() = default;
 
     HcclResult ServerSocketListen(const uint32_t port) override;
     HcclResult ServerSocketStopListen(const uint32_t port) override;
 
-    std::shared_ptr<RegedMemMgr> GetRegedMemMgr() override {
-        return regedMemMgr_;
-    }
+    std::shared_ptr<RegedMemMgr> GetRegedMemMgr() override { return regedMemMgr_; }
 
-    HcclResult RegisterMemory(HcommMem mem, const char *memTag, void **memHandle) override;
+    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
     HcclResult UnregisterMemory(void* memHandle) override;
-    HcclResult MemoryExport(void *memHandle, void **memDesc, uint32_t *memDescLen) override;
-    HcclResult MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem) override;
-    HcclResult MemoryUnimport(const void *memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void **memHandles, uint32_t *memHandleNum) override;
+    HcclResult MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen) override;
+    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
+    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
+    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
 };
 
-}
+} // namespace hcomm
 
 #endif // UBOE_UBG_ENDPOINT_HELPER_H

@@ -17,17 +17,17 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepStore : public CcuRepBase {
-public:
-    CcuRepStore(const Variable &var, uint64_t addr);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
+    class CcuRepStore : public CcuRepBase {
+    public:
+        CcuRepStore(const Variable& var, uint64_t addr);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-private:
-    Variable var;
-    uint64_t addr;
-    uint16_t mask{1};
-};
+    private:
+        Variable var;
+        uint64_t addr;
+        uint16_t mask{1};
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

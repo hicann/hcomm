@@ -21,10 +21,10 @@ namespace Hccl {
 
 class FlushManager {
 public:
-    static FlushManager &GetInstance();
+    static FlushManager& GetInstance();
     FlushManager(const FlushManager&) = delete;
-    FlushManager& operator = (const FlushManager&) = delete;
-    
+    FlushManager& operator=(const FlushManager&) = delete;
+
     HcclResult initFlushHandle(IpAddress ip, u32 devPhyId);
     HcclResult Flush();
 
@@ -34,22 +34,22 @@ private:
     std::unordered_map<IpAddress, std::shared_ptr<FlushHandle>> flushHandleMap_;
 
     // flush实现
-    HcclResult FlushParamPrepare(std::shared_ptr<FlushHandle> flushHandlePtr, ibv_send_wr *swr) const;
-    HcclResult ExecuteRdmaRead(ibv_qp *loopbackqp0, ibv_cq *cq, ibv_send_wr &swr, int timeoutSec) const;
+    HcclResult FlushParamPrepare(std::shared_ptr<FlushHandle> flushHandlePtr, ibv_send_wr* swr) const;
+    HcclResult ExecuteRdmaRead(ibv_qp* loopbackqp0, ibv_cq* cq, ibv_send_wr& swr, int timeoutSec) const;
 
     // flush销毁
     HcclResult DestroyAll();
     std::mutex mutex_;
-    int FlushPostSend(struct ibv_qp *qp, struct ibv_send_wr *wr, struct ibv_send_wr **bad_wr) const
+    int FlushPostSend(struct ibv_qp* qp, struct ibv_send_wr* wr, struct ibv_send_wr** bad_wr) const
     {
         return ibv_post_send(qp, wr, bad_wr);
     }
-    int FlushPollCq(struct ibv_cq *cq, int num_entries, struct ibv_wc *wc) const
+    int FlushPollCq(struct ibv_cq* cq, int num_entries, struct ibv_wc* wc) const
     {
         return ibv_poll_cq(cq, num_entries, wc);
     }
 };
 
-}  // namespace Hccl
+} // namespace Hccl
 
 #endif

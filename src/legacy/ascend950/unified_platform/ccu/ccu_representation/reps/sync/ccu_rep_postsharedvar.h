@@ -18,21 +18,21 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepPostSharedVar : public CcuRepBase {
-public:
-    CcuRepPostSharedVar(const Variable &srcVar, const Variable &dstVar, const MaskSignal &sem, uint16_t mask);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
+    class CcuRepPostSharedVar : public CcuRepBase {
+    public:
+        CcuRepPostSharedVar(const Variable& srcVar, const Variable& dstVar, const MaskSignal& sem, uint16_t mask);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-private:
-    Variable   srcVar;
-    Variable   dstVar;
-    MaskSignal sem;
-    uint16_t   mask;
+    private:
+        Variable srcVar;
+        Variable dstVar;
+        MaskSignal sem;
+        uint16_t mask;
 
-    friend class Hccl::CcuErrorHandler;
-};
+        friend class Hccl::CcuErrorHandler;
+    };
 
-};     // namespace CcuRep
-};     // namespace Hccl
+}; // namespace CcuRep
+}; // namespace Hccl
 #endif // HCCL_CCU_REPRESENTATION_POSTSHAREDVAR_H

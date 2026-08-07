@@ -51,7 +51,7 @@ enum class HcommChannelKind : uint32_t {
     AICPU_TS_UBG = 9U,
 };
 
-inline const char *HcommChannelKindToString(HcommChannelKind kind)
+inline const char* HcommChannelKindToString(HcommChannelKind kind)
 {
     switch (kind) {
         case HcommChannelKind::INVALID:
@@ -98,25 +98,25 @@ public:
 
     // ------------------ 控制面接口 ------------------
     virtual HcclResult Init() = 0;
-    virtual HcclResult GetNotifyNum(uint32_t *notifyNum) const = 0;
-    virtual HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos) = 0;
+    virtual HcclResult GetNotifyNum(uint32_t* notifyNum) const = 0;
+    virtual HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos) = 0;
     virtual ChannelStatus GetStatus() = 0;
-    virtual HcclResult UpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum);
+    virtual HcclResult UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum);
 
-    virtual HcclResult Clean()        = 0;
-    virtual HcclResult Resume()       = 0;
+    virtual HcclResult Clean() = 0;
+    virtual HcclResult Resume() = 0;
 
     virtual HcommChannelKind GetChannelKind() const;
     CommEngine GetEngine() const { return engine_; }
     virtual const HcommChannelDesc& GetChannelDesc() const = 0;
-    virtual HcclResult Serialize(std::shared_ptr<hccl::DeviceMem> &out);
+    virtual HcclResult Serialize(std::shared_ptr<hccl::DeviceMem>& out);
     virtual void AddPtrArrayDevMem(std::shared_ptr<hccl::DeviceMem> ptrArrayMem);
     // ------------------ 数据面接口 ------------------
     virtual HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) = 0;
     virtual HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) = 0;
-    virtual HcclResult WriteWithNotify(void *dst, const void *src, const uint64_t len, uint32_t remoteNotifyIdx) = 0;
-    virtual HcclResult Write(void *dst, const void *src, uint64_t len) = 0;
-    virtual HcclResult Read(void *dst, const void *src, uint64_t len) = 0;
+    virtual HcclResult WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx) = 0;
+    virtual HcclResult Write(void* dst, const void* src, uint64_t len) = 0;
+    virtual HcclResult Read(void* dst, const void* src, uint64_t len) = 0;
     virtual HcclResult ChannelFence() = 0;
 
     // ------------------ 工具方法 ------------------
@@ -129,13 +129,11 @@ public:
     bool IsSharedJetty() const { return isSharedJetty_; }
 
     // ------------------ 工厂 ------------------
-    static HcclResult CreateChannel(EndpointHandle endpointHandle, 
-                                    CommEngine engine, 
-                                    HcommChannelDesc channelDesc,
-                                    std::shared_ptr<Channel>& out,
-                                    bool isSharedQueue = false);
+    static HcclResult CreateChannel(
+        EndpointHandle endpointHandle, CommEngine engine, HcommChannelDesc channelDesc, std::shared_ptr<Channel>& out,
+        bool isSharedQueue = false);
 
-    virtual AicpuTsChannelHelper *GetAicpuTsHelper() { return nullptr; }
+    virtual AicpuTsChannelHelper* GetAicpuTsHelper() { return nullptr; }
 
     bool IsDeviceEntityReady() const { return deviceEntityReady_; }
     void SetDeviceEntityReady() { deviceEntityReady_ = true; }

@@ -22,7 +22,11 @@ RmaBufferLite::RmaBufferLite(u64 addr, u64 size, u32 lkey) : type_(RmaType::RDMA
 }
 
 RmaBufferLite::RmaBufferLite(u64 addr, u64 size, u32 tokenId, u32 tokenValue)
-    : type_(RmaType::UB), addr_(addr), size_(size), tokenId_(tokenId), tokenValue_(tokenValue)
+    : type_(RmaType::UB),
+      addr_(addr),
+      size_(size),
+      tokenId_(tokenId),
+      tokenValue_(tokenValue)
 {
     HCCL_INFO("RmaBufferLite::RmaBufferLite:%s", Describe().c_str());
 }

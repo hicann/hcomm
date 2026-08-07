@@ -20,33 +20,34 @@
 namespace hccl {
 using WorkSpaceMem_t = struct tagWorkSpaceMem {
     void* curPtr{nullptr};
-    u64 maxSize{0};    /* 最大的内存大小 */
-    u64 totalSize{0};  /* 当前已累积的内存大小 */
+    u64 maxSize{0};   /* 最大的内存大小 */
+    u64 totalSize{0}; /* 当前已累积的内存大小 */
 };
 
 class WorkSpaceMem {
 public:
     WorkSpaceMem();
-    
+
     ~WorkSpaceMem();
-    
+
     /* 设置全局资源 */
-    HcclResult SetMemResource(const std::string &tag, void *ptr, u64 maxSize);
+    HcclResult SetMemResource(const std::string& tag, void* ptr, u64 maxSize);
 
     /* 内存分配 */
-    void* AllocMem(const std::string &tag, u64 size);
-    
+    void* AllocMem(const std::string& tag, u64 size);
+
     /* 基于tag销毁资源  */
-    HcclResult DestroyMemResource(const std::string &tag);
-    
+    HcclResult DestroyMemResource(const std::string& tag);
+
     /* 销毁全局资源 */
     void DestroyMemResource();
-    
-    bool IsExist(const std::string &tag);
 
-    std::map<std::string, WorkSpaceMem_t>  memResMap_;
+    bool IsExist(const std::string& tag);
+
+    std::map<std::string, WorkSpaceMem_t> memResMap_;
+
 private:
     std::mutex memResMutex_;
 };
-}  // namespace hccl
+} // namespace hccl
 #endif /* * WORKSPACE_MEM_H */

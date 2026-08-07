@@ -15,17 +15,11 @@
 namespace hccl {
 using namespace std;
 
-RemoteAccess::RemoteAccess()
-{
-}
+RemoteAccess::RemoteAccess() {}
 
-RemoteAccess::~RemoteAccess()
-{
-    impl_ = nullptr;
-}
+RemoteAccess::~RemoteAccess() { impl_ = nullptr; }
 
-HcclResult RemoteAccess::Init(u32 rank, const vector<MemRegisterAddr>& addrInfos,
-                              const RmaRankTable &rankTable)
+HcclResult RemoteAccess::Init(u32 rank, const vector<MemRegisterAddr>& addrInfos, const RmaRankTable& rankTable)
 {
     impl_.reset(new (std::nothrow) RemoteAccessImpl());
     CHK_PTR_NULL(impl_);
@@ -48,4 +42,4 @@ HcclResult RemoteAccess::RemoteWrite(const vector<HcomRemoteAccessAddrInfo>& add
     CHK_RET(impl_->RemoteWrite(addrInfos, stream));
     return HCCL_SUCCESS;
 }
-}
+} // namespace hccl

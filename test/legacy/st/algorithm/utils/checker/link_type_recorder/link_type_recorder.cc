@@ -13,7 +13,7 @@ void LinkTypeRecorder::SetIs310P3V(bool is310P3V)
     return;
 }
 
-void LinkTypeRecorder::SetLinkTypeMap(std::vector<CheckerDevType> &devTypes)
+void LinkTypeRecorder::SetLinkTypeMap(std::vector<CheckerDevType>& devTypes)
 {
     devLinkTypeMap_.clear();
 
@@ -44,7 +44,7 @@ void LinkTypeRecorder::SetLinkTypeMap(std::vector<CheckerDevType> &devTypes)
 
 void LinkTypeRecorder::SetLinkTypeMapOf910A()
 {
-    auto &linkTypeMap_ = devLinkTypeMap_[CheckerDevType::DEV_TYPE_910];
+    auto& linkTypeMap_ = devLinkTypeMap_[CheckerDevType::DEV_TYPE_910];
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             linkTypeMap_[i][j] = LinkTypeInServer::RESERVED_LINK_TYPE;
@@ -77,7 +77,7 @@ void LinkTypeRecorder::SetLinkTypeMapOf910A()
 
 void LinkTypeRecorder::SetLinkTypeMapOf910B()
 {
-    auto &linkTypeMap_ = devLinkTypeMap_[CheckerDevType::DEV_TYPE_910B];
+    auto& linkTypeMap_ = devLinkTypeMap_[CheckerDevType::DEV_TYPE_910B];
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 16; j++) {
             linkTypeMap_[i][j] = LinkTypeInServer::RESERVED_LINK_TYPE;
@@ -118,7 +118,7 @@ void LinkTypeRecorder::SetLinkTypeMapOf910B()
 
 void LinkTypeRecorder::SetLinkTypeMapOf310P3V()
 {
-    auto &linkTypeMap_ = devLinkTypeMap_[CheckerDevType::DEV_TYPE_310P3];
+    auto& linkTypeMap_ = devLinkTypeMap_[CheckerDevType::DEV_TYPE_310P3];
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             linkTypeMap_[i][j] = LinkTypeInServer::RESERVED_LINK_TYPE;
@@ -137,7 +137,7 @@ void LinkTypeRecorder::SetLinkTypeMapOf310P3V()
 
 void LinkTypeRecorder::SetLinkTypeMapOf310P3Dou()
 {
-    auto &linkTypeMap_ = devLinkTypeMap_[CheckerDevType::DEV_TYPE_310P3];
+    auto& linkTypeMap_ = devLinkTypeMap_[CheckerDevType::DEV_TYPE_310P3];
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
             linkTypeMap_[i][j] = LinkTypeInServer::RESERVED_LINK_TYPE;
@@ -173,7 +173,7 @@ void LinkTypeRecorder::SetLinkTypeMapOf310P3Dou()
 
 void LinkTypeRecorder::SetLinkTypeMapOf910_93()
 {
-    auto &linkTypeMap_ = devLinkTypeMap_[CheckerDevType::DEV_TYPE_910_93];
+    auto& linkTypeMap_ = devLinkTypeMap_[CheckerDevType::DEV_TYPE_910_93];
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 16; j++) {
             linkTypeMap_[i][j] = LinkTypeInServer::RESERVED_LINK_TYPE;
@@ -216,4 +216,4 @@ void LinkTypeRecorder::SetLinkTypeMapOf910_93()
     return;
 }
 
-}
+} // namespace checker

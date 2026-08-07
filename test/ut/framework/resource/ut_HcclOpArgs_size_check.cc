@@ -19,10 +19,7 @@ protected:
     void TearDown() override {}
 };
 
-TEST_F(HcclOpArgsStructTest, TestHcclOpArgsSize)
-{
-    EXPECT_EQ(sizeof(HcclOpArgs), 160u);
-}
+TEST_F(HcclOpArgsStructTest, TestHcclOpArgsSize) { EXPECT_EQ(sizeof(HcclOpArgs), 160u); }
 
 TEST_F(HcclOpArgsStructTest, TestHcclOpArgsFieldOffsets)
 {
@@ -52,7 +49,7 @@ TEST_F(HcclOpArgsStructTest, TestHcclOpArgsInitFunction)
 {
     HcclOpArgs opArgs;
     opArgs.Init();
-    
+
     EXPECT_EQ(opArgs.srcDataType, DataType::FP16);
     EXPECT_EQ(opArgs.dstDataType, DataType::FP16);
     EXPECT_EQ(opArgs.reduceType, ReduceOp::SUM);

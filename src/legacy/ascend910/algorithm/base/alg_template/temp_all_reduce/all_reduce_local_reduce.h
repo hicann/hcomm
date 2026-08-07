@@ -13,6 +13,6 @@
 
 #include "inc_all_reduce_deter/all_reduce_local_reduce_pub.h"
 
-namespace hccl {}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALL_REDUCE_LOCAL_REDUCE_H */

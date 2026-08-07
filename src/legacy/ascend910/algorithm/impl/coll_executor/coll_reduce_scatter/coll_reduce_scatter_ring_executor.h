@@ -15,8 +15,7 @@
 namespace hccl {
 class CollReduceScatterRingExecutor : public CollReduceScatterExecutor {
 public:
-    explicit CollReduceScatterRingExecutor(const HcclDispatcher dispatcher,
-    std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollReduceScatterRingExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceScatterRingExecutor() override = default;
 
 private:
@@ -25,17 +24,17 @@ private:
     HcclResult CalcScratchMemSize(u64& scratchMemSize) override;
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType,
-        TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
 
     /* *************** 算法编排 *************** */
     u64 CalcLoopMaxCount(const u32 unitSize) override;
-    bool IsHugeData(const u64 curSize, OpParam *param = nullptr) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    bool IsHugeData(const u64 curSize, OpParam* param = nullptr) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
     HcclResult Getlevel1CommRank(SubCommInfo& level1CommInfo) override;
-    HcclResult SelectTempAlg(std::unique_ptr<AlgTemplateBase> &level1TempAlg, u32 level1RankSize) override;
+    HcclResult SelectTempAlg(std::unique_ptr<AlgTemplateBase>& level1TempAlg, u32 level1RankSize) override;
 };
 
 } // namespace hccl

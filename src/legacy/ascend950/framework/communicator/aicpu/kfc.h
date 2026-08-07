@@ -16,19 +16,16 @@
 namespace Hccl {
 MAKE_ENUM(KfcCommand, NONE, NS_STOP_LAUNCH, NS_CLEAN, DESTROY_AICPU_COMM)
 MAKE_ENUM(KfcStatus, NONE, STOP_LAUNCH_DONE, CLEAN_DONE, DESTROY_AICPU_COMM_DONE, ERROR)
-MAKE_ENUM(KfcErrType,
-          NONE,
-          TIMEOUT,
-          EXEC)
+MAKE_ENUM(KfcErrType, NONE, TIMEOUT, EXEC)
 
 #pragma pack(push)
 #pragma pack(1)
 // aicpu向host提供的状态查询
 struct KfcExecStatus {
-    KfcStatus  kfcStatus;       // KFC状态
-    KfcErrType kfcError;        // KFC错误码
+    KfcStatus kfcStatus; // KFC状态
+    KfcErrType kfcError; // KFC错误码
     ErrorMessageReport errorMessageReport;
 };
 #pragma pack(pop)
-}
+} // namespace Hccl
 #endif

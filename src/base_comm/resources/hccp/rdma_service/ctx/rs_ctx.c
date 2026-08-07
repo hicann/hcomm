@@ -40,8 +40,8 @@ int RsGetChipProtocol(unsigned int chipId, enum NetworkMode hccpMode, enum Proto
     }
 
     ret = DlHalGetChipInfo(logicId, &chipInfo);
-    CHK_PRT_RETURN(ret != 0, hccp_warn("hal get chip info unsuccessful, chipId[%u], logicId[%u], ret[%d]",
-        chipId, logicId, ret), 0);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_warn("hal get chip info unsuccessful, chipId[%u], logicId[%u], ret[%d]", chipId, logicId, ret), 0);
 
     if ((strncmp((char *)chipInfo.name, CHIP_NAME_950, sizeof(CHIP_NAME_950) - 1) == 0) ||
         (strncmp((char *)chipInfo.name, CHIP_NAME_910_96, sizeof(CHIP_NAME_910_96) - 1) == 0)) {
@@ -124,8 +124,8 @@ RS_ATTRI_VISI_DEF int RsGetDevEidInfoNum(unsigned int phyId, unsigned int *num)
     return ret;
 }
 
-RS_ATTRI_VISI_DEF int RsGetDevEidInfoList(unsigned int phyId, struct HccpDevEidInfo infoList[],
-    unsigned int startIndex, unsigned int count)
+RS_ATTRI_VISI_DEF int RsGetDevEidInfoList(unsigned int phyId, struct HccpDevEidInfo infoList[], unsigned int startIndex,
+    unsigned int count)
 {
     int ret = 0;
 
@@ -254,8 +254,8 @@ RS_ATTRI_VISI_DEF int RsGetIpByEid(struct RaRsDevInfo *devInfo, union HccpEid ei
     return ret;
 }
 
-RS_ATTRI_VISI_DEF int RsGetTpInfoList(struct RaRsDevInfo *devInfo, struct GetTpCfg *cfg,
-    struct HccpTpInfo infoList[], unsigned int *num)
+RS_ATTRI_VISI_DEF int RsGetTpInfoList(struct RaRsDevInfo *devInfo, struct GetTpCfg *cfg, struct HccpTpInfo infoList[],
+    unsigned int *num)
 {
     struct RsUbDevCb *devCb = NULL;
     struct rs_cb *rscb = NULL;
@@ -270,15 +270,14 @@ RS_ATTRI_VISI_DEF int RsGetTpInfoList(struct RaRsDevInfo *devInfo, struct GetTpC
     CHK_PRT_RETURN(ret != 0, hccp_err("get rscb failed, ret:%d", ret), ret);
 
     ret = RsUbGetDevCb(rscb, devInfo->devIndex, &devCb);
-    CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
-        ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
     ret = RsUbGetTpInfoList(devCb, cfg, infoList, num);
 
     return ret;
 }
 
-RS_ATTRI_VISI_DEF int RsGetTpAttr(struct RaRsDevInfo *devInfo, unsigned int *attrBitmap,
-    const uint64_t tpHandle, struct TpAttr *attr)
+RS_ATTRI_VISI_DEF int RsGetTpAttr(struct RaRsDevInfo *devInfo, unsigned int *attrBitmap, const uint64_t tpHandle,
+    struct TpAttr *attr)
 {
     struct RsUbDevCb *devCb = NULL;
     struct rs_cb *rscb = NULL;
@@ -298,8 +297,8 @@ RS_ATTRI_VISI_DEF int RsGetTpAttr(struct RaRsDevInfo *devInfo, unsigned int *att
     return ret;
 }
 
-RS_ATTRI_VISI_DEF int RsSetTpAttr(struct RaRsDevInfo *devInfo, const unsigned int attrBitmap,
-    const uint64_t tpHandle, struct TpAttr *attr)
+RS_ATTRI_VISI_DEF int RsSetTpAttr(struct RaRsDevInfo *devInfo, const unsigned int attrBitmap, const uint64_t tpHandle,
+    struct TpAttr *attr)
 {
     struct RsUbDevCb *devCb = NULL;
     struct rs_cb *rscb = NULL;
@@ -318,8 +317,7 @@ RS_ATTRI_VISI_DEF int RsSetTpAttr(struct RaRsDevInfo *devInfo, const unsigned in
     return ret;
 }
 
-RS_ATTRI_VISI_DEF int RsCtxTokenIdAlloc(struct RaRsDevInfo *devInfo, unsigned long long *addr,
-    unsigned int *tokenId)
+RS_ATTRI_VISI_DEF int RsCtxTokenIdAlloc(struct RaRsDevInfo *devInfo, unsigned long long *addr, unsigned int *tokenId)
 {
     struct RsUbDevCb *devCb = NULL;
     struct rs_cb *rscb = NULL;
@@ -336,8 +334,8 @@ RS_ATTRI_VISI_DEF int RsCtxTokenIdAlloc(struct RaRsDevInfo *devInfo, unsigned lo
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxTokenIdAlloc(devCb, addr, tokenId);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_token_id_alloc failed, ret:%d, devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_token_id_alloc failed, ret:%d, devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
@@ -357,8 +355,8 @@ RS_ATTRI_VISI_DEF int RsCtxTokenIdFree(struct RaRsDevInfo *devInfo, unsigned lon
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxTokenIdFree(devCb, addr);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_token_id_free failed, ret:%d, devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_token_id_free failed, ret:%d, devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
@@ -381,8 +379,7 @@ RS_ATTRI_VISI_DEF int RsCtxLmemReg(struct RaRsDevInfo *devInfo, struct MemRegAtt
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxLmemReg(devCb, memAttr, memInfo);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_lmem_reg failed, ret:%d, devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_lmem_reg failed, ret:%d, devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     return ret;
 }
@@ -402,8 +399,8 @@ RS_ATTRI_VISI_DEF int RsCtxLmemUnreg(struct RaRsDevInfo *devInfo, unsigned long 
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxLmemUnreg(devCb, addr);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_lmem_unreg failed, ret:%d devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_lmem_unreg failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
@@ -426,8 +423,8 @@ RS_ATTRI_VISI_DEF int RsCtxRmemImport(struct RaRsDevInfo *devInfo, struct MemImp
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxRmemImport(devCb, memAttr, memInfo);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_rmem_import failed, ret:%d devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_rmem_import failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
@@ -447,8 +444,8 @@ RS_ATTRI_VISI_DEF int RsCtxRmemUnimport(struct RaRsDevInfo *devInfo, unsigned lo
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxRmemUnimport(devCb, addr);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_rmem_unimport failed, ret:%d devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_rmem_unimport failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
@@ -470,8 +467,8 @@ RS_ATTRI_VISI_DEF int RsCtxChanCreate(struct RaRsDevInfo *devInfo, union DataPla
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxChanCreate(devCb, dataPlaneFlag, addr, fd);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_chan_create failed, ret:%d devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_chan_create failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
@@ -491,14 +488,13 @@ RS_ATTRI_VISI_DEF int RsCtxChanDestroy(struct RaRsDevInfo *devInfo, unsigned lon
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxChanDestroy(devCb, addr);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_chan_destroy failed, ret:%d devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_chan_destroy failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
 
-RS_ATTRI_VISI_DEF int RsCtxCqCreate(struct RaRsDevInfo *devInfo, struct CtxCqAttr *attr,
-    struct CtxCqInfo *info)
+RS_ATTRI_VISI_DEF int RsCtxCqCreate(struct RaRsDevInfo *devInfo, struct CtxCqAttr *attr, struct CtxCqInfo *info)
 {
     struct RsUbDevCb *devCb = NULL;
     struct rs_cb *rscb = NULL;
@@ -515,8 +511,8 @@ RS_ATTRI_VISI_DEF int RsCtxCqCreate(struct RaRsDevInfo *devInfo, struct CtxCqAtt
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxJfcCreate(devCb, attr, info);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jfc_create failed, ret:%d devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jfc_create failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
@@ -536,14 +532,13 @@ RS_ATTRI_VISI_DEF int RsCtxCqDestroy(struct RaRsDevInfo *devInfo, unsigned long 
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxJfcDestroy(devCb, addr);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jfc_destroy failed, ret:%d devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jfc_destroy failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
 
-RS_ATTRI_VISI_DEF int RsCtxQpCreate(struct RaRsDevInfo *devInfo, struct CtxQpAttr *qpAttr,
-    struct QpCreateInfo *qpInfo)
+RS_ATTRI_VISI_DEF int RsCtxQpCreate(struct RaRsDevInfo *devInfo, struct CtxQpAttr *qpAttr, struct QpCreateInfo *qpInfo)
 {
     struct RsUbDevCb *devCb = NULL;
     struct rs_cb *rscb = NULL;
@@ -560,8 +555,8 @@ RS_ATTRI_VISI_DEF int RsCtxQpCreate(struct RaRsDevInfo *devInfo, struct CtxQpAtt
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxJettyCreate(devCb, qpAttr, qpInfo);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jetty_create failed, ret:%d devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jetty_create failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
@@ -581,8 +576,8 @@ RS_ATTRI_VISI_DEF int RsCtxQpDestroy(struct RaRsDevInfo *devInfo, unsigned int i
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxJettyDestroy(devCb, id);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jetty_destroy failed, ret:%d devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jetty_destroy failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
@@ -605,8 +600,8 @@ RS_ATTRI_VISI_DEF int RsCtxQpImport(struct RaRsDevInfo *devInfo, struct RsJettyI
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxJettyImport(devCb, importAttr, importInfo);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jetty_import failed, ret:%d devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jetty_import failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
@@ -626,8 +621,8 @@ RS_ATTRI_VISI_DEF int RsCtxQpUnimport(struct RaRsDevInfo *devInfo, unsigned char
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxJettyUnimport(devCb, rawRemJettyId, size);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jetty_unimport failed, ret:%d devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jetty_unimport failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
@@ -650,8 +645,8 @@ RS_ATTRI_VISI_DEF int RsCtxQpBind(struct RaRsDevInfo *devInfo, struct RsCtxQpInf
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxJettyBind(devCb, localQpInfo, remoteQpInfo);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jetty_bind failed, ret:%d devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jetty_bind failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
@@ -671,8 +666,8 @@ RS_ATTRI_VISI_DEF int RsCtxQpUnbind(struct RaRsDevInfo *devInfo, unsigned int qp
     CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
 
     ret = RsUbCtxJettyUnbind(devCb, qpId);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jetty_unbind failed, ret:%d devIndex:0x%x",
-        ret, devInfo->devIndex), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_ub_ctx_jetty_unbind failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
+        ret);
 
     return ret;
 }
@@ -716,8 +711,7 @@ RS_ATTRI_VISI_DEF int RsCtxUpdateCi(struct RaRsDevInfo *devInfo, unsigned int qp
     switch (rscb->protocol) {
         case PROTOCOL_UDMA:
             ret = RsUbGetDevCb(rscb, devInfo->devIndex, &devCb);
-            CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex),
-                ret);
+            CHK_PRT_RETURN(ret != 0, hccp_err("get dev_cb failed, ret:%d devIndex:0x%x", ret, devInfo->devIndex), ret);
             ret = RsUbCtxJettyUpdateCi(devCb, qpId, ci);
             break;
         default:
@@ -747,8 +741,8 @@ RS_ATTRI_VISI_DEF int RsCtxQpDestroyBatch(struct RaRsDevInfo *devInfo, unsigned 
     return ret;
 }
 
-RS_ATTRI_VISI_DEF int RsCtxQpQueryBatch(struct RaRsDevInfo *devInfo, unsigned int ids[],
-    struct JettyAttr attr[], unsigned int *num)
+RS_ATTRI_VISI_DEF int RsCtxQpQueryBatch(struct RaRsDevInfo *devInfo, unsigned int ids[], struct JettyAttr attr[],
+    unsigned int *num)
 {
     struct RsUbDevCb *devCb = NULL;
     struct rs_cb *rscb = NULL;
@@ -793,8 +787,7 @@ RS_ATTRI_VISI_DEF int RsCtxGetAuxInfo(struct RaRsDevInfo *devInfo, struct HccpAu
     return ret;
 }
 
-RS_ATTRI_VISI_DEF int RsCtxGetCrErrInfoList(struct RaRsDevInfo *devInfo, struct CrErrInfo infoList[],
-    unsigned int *num)
+RS_ATTRI_VISI_DEF int RsCtxGetCrErrInfoList(struct RaRsDevInfo *devInfo, struct CrErrInfo infoList[], unsigned int *num)
 {
     struct RsCtxJettyCb *jettyCbCurr = NULL;
     struct RsCtxJettyCb *jettyCbNext = NULL;
@@ -821,8 +814,8 @@ RS_ATTRI_VISI_DEF int RsCtxGetCrErrInfoList(struct RaRsDevInfo *devInfo, struct 
 
     numTmp = *num;
     RS_LIST_GET_HEAD_ENTRY(jettyCbCurr, jettyCbNext, &devCb->jettyList, list, struct RsCtxJettyCb);
-    for (; (&jettyCbCurr->list) != &devCb->jettyList; jettyCbCurr = jettyCbNext,
-        jettyCbNext = list_entry(jettyCbNext->list.next, struct RsCtxJettyCb, list)) {
+    for (; (&jettyCbCurr->list) != &devCb->jettyList;
+         jettyCbCurr = jettyCbNext, jettyCbNext = list_entry(jettyCbNext->list.next, struct RsCtxJettyCb, list)) {
         if (jettyCbCurr->crErrInfo.info.status != 0) {
             RS_PTHREAD_MUTEX_LOCK(&jettyCbCurr->crErrInfo.mutex);
             infoList[crErrIdx].status = jettyCbCurr->crErrInfo.info.status;

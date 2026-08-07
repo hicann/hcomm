@@ -27,12 +27,13 @@ extern uint64_t g_currOpDetailId;
 
 int HandlePipeCmdSetDevId(uint8_t* payload, uint16_t payloadLen)
 {
-    SetDevIdPayload *req = reinterpret_cast<SetDevIdPayload *>(payload);
+    SetDevIdPayload* req = reinterpret_cast<SetDevIdPayload*>(payload);
     uint32_t curRankId = static_cast<uint32_t>(req->rankId);
     uint64_t curDeviceKey = req->deviceKey;
     SetCurRankId(curRankId);
     SetCurDeviceKey(curDeviceKey);
-    HCCL_VM_INFO("Process[{}] PIPE_RSP_SET_DEV_ID, set rankId = [{}], deviceKey = [{}]", getpid(), curRankId, curDeviceKey);
+    HCCL_VM_INFO(
+        "Process[{}] PIPE_RSP_SET_DEV_ID, set rankId = [{}], deviceKey = [{}]", getpid(), curRankId, curDeviceKey);
     uint64_t donePayload = 0;
     DeviceSendMsg(PIPE_RSP_SET_DEV_ID, &donePayload, sizeof(donePayload));
     return 0;
@@ -40,9 +41,9 @@ int HandlePipeCmdSetDevId(uint8_t* payload, uint16_t payloadLen)
 
 int HandlePipeCmdGetDevPtr(uint8_t* payload, uint16_t payloadLen)
 {
-    DevMemOpPayload *req = reinterpret_cast<DevMemOpPayload *>(payload);
+    DevMemOpPayload* req = reinterpret_cast<DevMemOpPayload*>(payload);
     RspGetDevPtrPayload donePayload{};
-    void *shmptr = sim::MemoryManager::GetInstance().AcquireMemByName(req->memName);
+    void* shmptr = sim::MemoryManager::GetInstance().AcquireMemByName(req->memName);
     if (shmptr == nullptr) {
         donePayload.ptr = 0;
         HCCL_VM_ERROR("acquire {} shm failed.", req->memName);
@@ -54,7 +55,7 @@ int HandlePipeCmdGetDevPtr(uint8_t* payload, uint16_t payloadLen)
     return 0;
 }
 
-static void ExecuteAicpuKernel(uint32_t rankId, ExecKernelPayload *kernelReq)
+static void ExecuteAicpuKernel(uint32_t rankId, ExecKernelPayload* kernelReq)
 {
     uint64_t args = kernelReq->args;
     std::string kernelSo = kernelReq->soName;
@@ -68,18 +69,21 @@ static void ExecuteAicpuKernel(uint32_t rankId, ExecKernelPayload *kernelReq)
         return;
     }
 
-    void *ptr = reinterpret_cast<void *>(args);
+    void* ptr = reinterpret_cast<void*>(args);
     if (ptr == nullptr) {
         HCCL_VM_ERROR("[device] rankId[{}] init func handle failed null ptr.", rankId);
         return;
     }
 
     // CCU退化AICPU场景此处使用的内存先于device进程启动前分配，使用前需转换
-    if (kernelName == "RunAicpuIndOpCommInit") { 
-        CommAicpuParam *param = reinterpret_cast<CommAicpuParam *>(ptr); 
-        param->kfcControlTransferH2DParams.deviceAddr = GetDevMapperAddrByDevAddr(param->kfcControlTransferH2DParams.deviceAddr);
-        param->kfcControlTransferH2DParams.readCacheAddr = GetDevMapperAddrByDevAddr(param->kfcControlTransferH2DParams.readCacheAddr);
-        param->kfcStatusTransferD2HParams.deviceAddr = GetDevMapperAddrByDevAddr(param->kfcStatusTransferD2HParams.deviceAddr);
+    if (kernelName == "RunAicpuIndOpCommInit") {
+        CommAicpuParam* param = reinterpret_cast<CommAicpuParam*>(ptr);
+        param->kfcControlTransferH2DParams.deviceAddr
+            = GetDevMapperAddrByDevAddr(param->kfcControlTransferH2DParams.deviceAddr);
+        param->kfcControlTransferH2DParams.readCacheAddr
+            = GetDevMapperAddrByDevAddr(param->kfcControlTransferH2DParams.readCacheAddr);
+        param->kfcStatusTransferD2HParams.deviceAddr
+            = GetDevMapperAddrByDevAddr(param->kfcStatusTransferD2HParams.deviceAddr);
     }
 
     fn(ptr);
@@ -90,12 +94,11 @@ static void ExecuteAicpuKernel(uint32_t rankId, ExecKernelPayload *kernelReq)
 int HandlePipeCmdExecKernel(uint8_t* payload, uint16_t payloadLen)
 {
     if (payloadLen < sizeof(ExecKernelPayload)) {
-        HCCL_VM_ERROR("[device] EXEC_KERNEL payload too small: {} < {}",
-                      payloadLen, sizeof(ExecKernelPayload));
+        HCCL_VM_ERROR("[device] EXEC_KERNEL payload too small: {} < {}", payloadLen, sizeof(ExecKernelPayload));
         return -1;
     }
 
-    ExecKernelPayload *kernelReq = reinterpret_cast<ExecKernelPayload *>(payload);
+    ExecKernelPayload* kernelReq = reinterpret_cast<ExecKernelPayload*>(payload);
     uint32_t rankId = 0;
     GetCurRankId(&rankId);
     std::string kernelName(kernelReq->kernelName);
@@ -119,7 +122,7 @@ int HandlePipeCmdExecKernel(uint8_t* payload, uint16_t payloadLen)
 
 int HandlePipeCmdFreeDevPtr(uint8_t* payload, uint16_t payloadLen)
 {
-    DevMemOpPayload *req = reinterpret_cast<DevMemOpPayload *>(payload);
+    DevMemOpPayload* req = reinterpret_cast<DevMemOpPayload*>(payload);
     sim::MemoryManager::GetInstance().ReleaseMemByName(req->memName);
     HCCL_VM_INFO("[device] release memName:{} shm", req->memName);
     RspFreeDevPtrPayload donePayload{};
@@ -128,4 +131,4 @@ int HandlePipeCmdFreeDevPtr(uint8_t* payload, uint16_t payloadLen)
     return 0;
 }
 
-}
+} // namespace sim

@@ -16,11 +16,12 @@
 
 class RankTableCrcBridge {
 public:
-    static RankTableCrcBridge &GetInstance();
+    static RankTableCrcBridge& GetInstance();
     ~RankTableCrcBridge();
 
-    void RecordRankTableJsonCrc(s32 deviceLogicId, const std::string &rankTableJson);
+    void RecordRankTableJsonCrc(s32 deviceLogicId, const std::string& rankTableJson);
     u32 ConsumeRankTableJsonCrc(s32 deviceLogicId);
+
 private:
     std::unordered_map<s32, u32> rankTableJsonCrcMap_;
 };

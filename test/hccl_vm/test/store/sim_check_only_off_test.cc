@@ -13,7 +13,7 @@
 
 #include <gtest/gtest.h>
 
-#include <sys/mman.h>   // shm_unlink
+#include <sys/mman.h> // shm_unlink
 
 #include "store_sim_comm_pool_policy.h"
 #include "store_sim_device_memory_manager.h"
@@ -24,7 +24,8 @@
 
 class CheckOnlyOffTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         // 清进程内/磁盘上残留的 HcclCommPool。
         sim::MemoryManager::GetInstance().FreeMemByName(sim::CommPoolPolicy::kPoolName);
         shm_unlink(sim::CommPoolPolicy::kPoolName);
@@ -33,15 +34,16 @@ protected:
     }
 };
 
-TEST_F(CheckOnlyOffTest, NormalMode_BigBlocks_RealIndependentAlloc) {
-    EXPECT_FALSE(sim::IsCheckOnlyMode());   // 全程未 seed，首次 latch 须为 false。
+TEST_F(CheckOnlyOffTest, NormalMode_BigBlocks_RealIndependentAlloc)
+{
+    EXPECT_FALSE(sim::IsCheckOnlyMode()); // 全程未 seed，首次 latch 须为 false。
     auto& mgr = sim::DeviceMemoryManager::GetInstance();
     const size_t big = 256ULL * 1024 * 1024;
     void* a = mgr.AllocPhyMem("clean_big_a", 0, big);
     void* b = mgr.AllocPhyMem("clean_big_b", 0, big);
     ASSERT_NE(a, nullptr);
     ASSERT_NE(b, nullptr);
-    EXPECT_NE(a, b);   // clean 模式各自真实独立分配（仅校验模式下两者同为池首址）。
+    EXPECT_NE(a, b); // clean 模式各自真实独立分配（仅校验模式下两者同为池首址）。
     mgr.FreePhyMem("clean_big_a", 0);
     mgr.FreePhyMem("clean_big_b", 0);
 }

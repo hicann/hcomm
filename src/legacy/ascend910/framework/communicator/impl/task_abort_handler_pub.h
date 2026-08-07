@@ -19,10 +19,11 @@ class TaskAbortHandler {
 public:
     TaskAbortHandler();
     ~TaskAbortHandler();
-    static HcclResult Init(HcclCommunicator *communicator);
-    static HcclResult DeInit(HcclCommunicator *communicator);
+    static HcclResult Init(HcclCommunicator* communicator);
+    static HcclResult DeInit(HcclCommunicator* communicator);
+
 private:
 };
-}
+} // namespace hccl
 
 #endif

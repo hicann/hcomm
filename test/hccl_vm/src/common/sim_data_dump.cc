@@ -32,7 +32,7 @@ static const std::string TASK_COLLECTION_FILE = "/%s_task.jsonl.gz";
 static const std::string MEM_LAYOUT_FILE = "/%s_mem_layout.jsonl.gz";
 static const std::string MODEL_FILE = "/%s_model.jsonl.gz";
 
-HcclVmResult DumpData(nlohmann::json &j)
+HcclVmResult DumpData(nlohmann::json& j)
 {
     j["status"] = "finish";
     j["data_id"] = "1234";

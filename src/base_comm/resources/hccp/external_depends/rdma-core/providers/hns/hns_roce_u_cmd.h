@@ -87,23 +87,22 @@ struct hns_roce_qp_data_plane_info {
 };
 
 struct hns_roce_mr_remap_info {
-    void *va; /**< starting address need to remap of mr */
+    void *va;                /**< starting address need to remap of mr */
     unsigned long long size; /**< size need to remap of mr */
 };
 
-#define ROCE_IOCTL_MAGIC   'R'
-#define ROCE_CMD_SET_TSQP_DEPTH    _IO(ROCE_IOCTL_MAGIC, 1)
-#define ROCE_CMD_GET_TSQP_DEPTH    _IO(ROCE_IOCTL_MAGIC, 2)
+#define ROCE_IOCTL_MAGIC 'R'
+#define ROCE_CMD_SET_TSQP_DEPTH _IO(ROCE_IOCTL_MAGIC, 1)
+#define ROCE_CMD_GET_TSQP_DEPTH _IO(ROCE_IOCTL_MAGIC, 2)
 #define ROCE_CMD_GET_ROCE_DEV_INFO _IO(ROCE_IOCTL_MAGIC, 3)
 #define ROCE_CMD_GET_ROCE_QPC_STAT _IO(ROCE_IOCTL_MAGIC, 4)
 
-int roce_set_tsqp_depth(const char *dev_name, unsigned int rdev_index, unsigned int temp_depth,
-    unsigned int *qp_num, unsigned int *sq_depth);
-int roce_get_tsqp_depth(const char *dev_name, unsigned int rdev_index, unsigned int *temp_depth,
-    unsigned int *qp_num, unsigned int *sq_depth);
+int roce_set_tsqp_depth(const char *dev_name, unsigned int rdev_index, unsigned int temp_depth, unsigned int *qp_num,
+    unsigned int *sq_depth);
+int roce_get_tsqp_depth(const char *dev_name, unsigned int rdev_index, unsigned int *temp_depth, unsigned int *qp_num,
+    unsigned int *sq_depth);
 int roce_get_roce_dev_data(const char *dev_name, struct roce_dev_data *dev_data);
-int hns_roce_u_get_roce_qpc_stat(const struct ibv_context *ibv_ctx,
-    struct hns_roce_qpc_stat *qpc_stat);
+int hns_roce_u_get_roce_qpc_stat(const struct ibv_context *ibv_ctx, struct hns_roce_qpc_stat *qpc_stat);
 int roce_query_qpc(struct ibv_qp *qp, struct hns_roce_qpc_attr_val *attr_val, unsigned int attr_mask);
 int roce_mmap_ai_db_reg(struct ibv_context *ibv_ctx, unsigned int tgid);
 int roce_unmmap_ai_db_reg(struct ibv_context *ibv_ctx);

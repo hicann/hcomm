@@ -22,18 +22,18 @@ constexpr uint32_t DEFAULT_MR_KEY = 0;
 
 class TypicalMrManager {
 public:
-    static TypicalMrManager &GetInstance();
-    HcclResult RegisterMem(struct MrInfoT &mrInfo);                  // register MR
-    HcclResult DeRegisterMem(struct MrInfoT &mrInfo);                // unregister MR
+    static TypicalMrManager& GetInstance();
+    HcclResult RegisterMem(struct MrInfoT& mrInfo);   // register MR
+    HcclResult DeRegisterMem(struct MrInfoT& mrInfo); // unregister MR
 
 private:
     TypicalMrManager();
     ~TypicalMrManager();
     // Delete copy and move constructors and assign operators
-    TypicalMrManager(TypicalMrManager const&) = delete;             // Copy construct
-    TypicalMrManager(TypicalMrManager&&) = delete;                  // Move construct
-    TypicalMrManager& operator=(TypicalMrManager const&) = delete;  // Copy assign
-    TypicalMrManager& operator=(TypicalMrManager &&) = delete;      // Move assign
+    TypicalMrManager(TypicalMrManager const&) = delete;            // Copy construct
+    TypicalMrManager(TypicalMrManager&&) = delete;                 // Move construct
+    TypicalMrManager& operator=(TypicalMrManager const&) = delete; // Copy assign
+    TypicalMrManager& operator=(TypicalMrManager&&) = delete;      // Move assign
 
     HcclResult ReleaseMrResource();
 
@@ -41,5 +41,5 @@ private:
     std::mutex mrMapMutex_;
     std::map<uint32_t, std::pair<struct MrInfoT, MrHandle>> regedMrMap_; // registered MR map
 };
-}  // namespace hccl
-#endif  // HCCL_TYPICAL_MR_MANAGER_H
+} // namespace hccl
+#endif // HCCL_TYPICAL_MR_MANAGER_H

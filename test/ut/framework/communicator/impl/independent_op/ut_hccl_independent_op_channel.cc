@@ -21,23 +21,20 @@ static const char* RANKTABLE_FILE_NAME = nullptr;
 
 class HcclIndependentOpChannelTest : public BaseInit {
 public:
-    void SetUp() override {
-        MOCKER(HcclTbeTaskInit)
-            .stubs()
-            .will(returnValue(HCCL_SUCCESS));
+    void SetUp() override
+    {
+        MOCKER(HcclTbeTaskInit).stubs().will(returnValue(HCCL_SUCCESS));
         BaseInit::SetUp();
         bool isDeviceSide = false;
-        MOCKER(GetRunSideIsDevice)
-            .stubs()
-            .with(outBound(isDeviceSide))
-            .will(returnValue(HCCL_SUCCESS));
+        MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
         UT_USE_1SERVER_1RANK_AS_DEFAULT;
         UT_COMM_CREATE_DEFAULT(comm);
         RANKTABLE_FILE_NAME = rankTableFileName;
         EXPECT_EQ(RANKTABLE_FILE_NAME != nullptr, true);
         EXPECT_EQ(comm != nullptr, true);
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
         Ut_Comm_Destroy(comm);
@@ -65,6 +62,6 @@ TEST_F(HcclIndependentOpChannelTest, Ut_BuildChannelRequests_Expect_Success)
     channelDesc[0].channelProtocol = CommProtocol::COMM_PROTOCOL_HCCS_ONLY;
     channelDesc[0].remoteRank = 1;
     channelDesc[0].channelProtocol = CommProtocol::COMM_PROTOCOL_SIO;
-    OpCommTransport  transport = channelManager_.BuildChannelRequests(channelDesc);
+    OpCommTransport transport = channelManager_.BuildChannelRequests(channelDesc);
     EXPECT_EQ(1, transport.size());
 }

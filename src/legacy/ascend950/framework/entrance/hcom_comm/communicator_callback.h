@@ -14,12 +14,12 @@
 
 #include "hccl_types.h"
 
-namespace Hccl{
+namespace Hccl {
 class CommunicatorCallback {
-    public:
-        CommunicatorCallback();
-        HcclResult operator()(const std::string &commId, bool isUsingCcuMs, bool isUsingCcuSched) const;
+public:
+    CommunicatorCallback();
+    HcclResult operator()(const std::string& commId, bool isUsingCcuMs, bool isUsingCcuSched) const;
 };
 
-}
+} // namespace Hccl
 #endif

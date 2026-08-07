@@ -17,25 +17,25 @@ namespace Hccl {
 
 using namespace std;
 
-void TopoInfo::Deserialize(const nlohmann::json &topoInfoJson)
+void TopoInfo::Deserialize(const nlohmann::json& topoInfoJson)
 {
     std::string msgVersion = "[TopoInfo::Deserialize] error occurs when parser object of propName \"version\"";
-    std::string msgPc      = "[TopoInfo::Deserialize] error occurs when parser object of propName \"peer_count\"";
-    std::string msgEc      = "[TopoInfo::Deserialize] error occurs when parser object of propName \"edge_count\"";
+    std::string msgPc = "[TopoInfo::Deserialize] error occurs when parser object of propName \"peer_count\"";
+    std::string msgEc = "[TopoInfo::Deserialize] error occurs when parser object of propName \"edge_count\"";
     TRY_CATCH_THROW(InvalidParamsException, msgVersion, version = GetJsonProperty(topoInfoJson, "version"););
     TRY_CATCH_THROW(InvalidParamsException, msgPc, peerCount = GetJsonPropertyUInt(topoInfoJson, "peer_count"););
     TRY_CATCH_THROW(InvalidParamsException, msgEc, edgeCount = GetJsonPropertyUInt(topoInfoJson, "edge_count"););
 
     if (version != "2.0") {
         HCCL_ERROR("[TopoInfo::%s] failed with version[%s] is not \"2.0\".", __func__, version.c_str());
-        THROW<InvalidParamsException>(
-            StringFormat("[TopoInfo::%s] failed with version[%s] is not \"2.0\" in topo file.", __func__, version.c_str()));
+        THROW<InvalidParamsException>(StringFormat(
+            "[TopoInfo::%s] failed with version[%s] is not \"2.0\" in topo file.", __func__, version.c_str()));
     }
 
     if (peerCount == 0 || peerCount > MAX_PEER_COUNT) {
         THROW<InvalidParamsException>(
-            "[TopoInfo::%s] the range for the prop peer_count is [1, %u] while peer_count is %u", __func__, MAX_PEER_COUNT, peerCount
-        );
+            "[TopoInfo::%s] the range for the prop peer_count is [1, %u] while peer_count is %u", __func__,
+            MAX_PEER_COUNT, peerCount);
     }
 
     if (edgeCount == 0) {
@@ -44,25 +44,25 @@ void TopoInfo::Deserialize(const nlohmann::json &topoInfoJson)
 
     if (peerCount == 0 || peerCount > MAX_PEER_COUNT) {
         THROW<InvalidParamsException>(
-            "[TopoInfo::%s] the range for the prop peer_count is [1, 65] while peer_count is %u", __func__, peerCount
-        );
+            "[TopoInfo::%s] the range for the prop peer_count is [1, 65] while peer_count is %u", __func__, peerCount);
     }
 
     DeserializePeers(topoInfoJson);
     DeserializeEdges(topoInfoJson);
 }
 
-void TopoInfo::DeserializePeers(const nlohmann::json &topoInfoJson)
+void TopoInfo::DeserializePeers(const nlohmann::json& topoInfoJson)
 {
-    nlohmann::json     peerJsons;
-    std::string        msgPl = "[TopoInfo::DeserializePeers] error occurs when parser object of propName \"peer_list\"";
+    nlohmann::json peerJsons;
+    std::string msgPl = "[TopoInfo::DeserializePeers] error occurs when parser object of propName \"peer_list\"";
     TRY_CATCH_THROW(InvalidParamsException, msgPl, GetJsonPropertyList(topoInfoJson, "peer_list", peerJsons););
-    for (auto &peerJson : peerJsons) {
+    for (auto& peerJson : peerJsons) {
         PeerInfo peer;
         peer.Deserialize(peerJson);
 
         if (idSet.count(peer.localId) > 0) {
-            THROW<InvalidParamsException>(StringFormat("[TopoInfo::%s] in peers exist duplicate localId = %u.", __func__, peer.localId));
+            THROW<InvalidParamsException>(
+                StringFormat("[TopoInfo::%s] in peers exist duplicate localId = %u.", __func__, peer.localId));
         }
 
         peers.emplace_back(peer);
@@ -70,23 +70,18 @@ void TopoInfo::DeserializePeers(const nlohmann::json &topoInfoJson)
     }
 
     if (peerCount != peers.size()) {
-        THROW<InvalidParamsException>(
-            StringFormat("[TopoInfo::%s] Value of peer_count[%u] is inconsistent with the size of the peer_list[%zu].",
-                __func__,
-                peerCount,
-                peers.size()));
+        THROW<InvalidParamsException>(StringFormat(
+            "[TopoInfo::%s] Value of peer_count[%u] is inconsistent with the size of the peer_list[%zu].", __func__,
+            peerCount, peers.size()));
     }
 }
 
-void TopoInfo::VerifyEdges(EdgeInfo &edge)
+void TopoInfo::VerifyEdges(EdgeInfo& edge)
 {
     if (idSet.count(edge.localA) == 0 || idSet.count(edge.localB) == 0) {
-        THROW<InvalidParamsException>(
-            StringFormat("[TopoInfo::%s] endpoint localId [%u] or [%u] is not exist in peers[%zu].",
-                __func__,
-                edge.localA,
-                edge.localB,
-                idSet.size()));
+        THROW<InvalidParamsException>(StringFormat(
+            "[TopoInfo::%s] endpoint localId [%u] or [%u] is not exist in peers[%zu].", __func__, edge.localA,
+            edge.localB, idSet.size()));
     }
     //  检查edge.netLayer这一层级是否存在，不存在则初始化
     if (edges.find(edge.netLayer) == edges.end()) {
@@ -97,50 +92,42 @@ void TopoInfo::VerifyEdges(EdgeInfo &edge)
         THROW<InvalidParamsException>(StringFormat(
             "[TopoInfo::%s] exist duplicate edges. Location information:{edge.netLayer=%u, edge.linkType=%s, "
             "edge.topoType=%s, edge.topoInstanceId=%u, localA=%u, localB=%u}",
-            __func__,
-            edge.netLayer,
-            edge.linkType.Describe().c_str(),
-            edge.topoType.Describe().c_str(),
-            edge.topoInstId,
-            edge.localA,
-            edge.localB));
+            __func__, edge.netLayer, edge.linkType.Describe().c_str(), edge.topoType.Describe().c_str(),
+            edge.topoInstId, edge.localA, edge.localB));
     }
 
     edges[edge.netLayer].emplace_back(edge);
 }
 
-void TopoInfo::DeserializeEdges(const nlohmann::json &topoInfoJson)
+void TopoInfo::DeserializeEdges(const nlohmann::json& topoInfoJson)
 {
     nlohmann::json edgeJsons;
-    std::string    msgPe = "[TopoInfo::DeserializeEdges] error occurs when parser object of propName \"edge_list\"";
+    std::string msgPe = "[TopoInfo::DeserializeEdges] error occurs when parser object of propName \"edge_list\"";
     TRY_CATCH_THROW(InvalidParamsException, msgPe, GetJsonPropertyList(topoInfoJson, "edge_list", edgeJsons););
     if (edgeJsons.empty()) {
         if (edgeCount != 0) {
-            THROW<InvalidParamsException>(
-                StringFormat("[TopoInfo::%s] Value of edge_count[%u] is inconsistent with the size of edge_list[0].",
-                    __func__,
-                    edgeCount));
+            THROW<InvalidParamsException>(StringFormat(
+                "[TopoInfo::%s] Value of edge_count[%u] is inconsistent with the size of edge_list[0].", __func__,
+                edgeCount));
         } else {
             HCCL_WARNING("[TopoInfo::%s] edge count is zero", __func__);
             return;
         }
     }
-    for (auto &edgeJson : edgeJsons) {
+    for (auto& edgeJson : edgeJsons) {
         EdgeInfo edge;
         edge.Deserialize(edgeJson);
         VerifyEdges(edge);
     }
 
     size_t sumEdge = 0;
-    for (const auto &entry : edges) {
+    for (const auto& entry : edges) {
         sumEdge += entry.second.size();
     }
     if (sumEdge != edgeCount) {
         THROW<InvalidParamsException>(StringFormat(
-            "[TopoInfo::%s] Value of edge_count[%u] is inconsistent with the size of edge_list[%zu].",
-            __func__,
-            edgeCount,
-            sumEdge));
+            "[TopoInfo::%s] Value of edge_count[%u] is inconsistent with the size of edge_list[%zu].", __func__,
+            edgeCount, sumEdge));
     }
 }
 
@@ -173,7 +160,7 @@ void TopoInfo::Dump() const
     }
 }
 
-TopoInfo::TopoInfo(BinaryStream &binaryStream)
+TopoInfo::TopoInfo(BinaryStream& binaryStream)
 {
     binaryStream >> version >> peerCount >> edgeCount;
     size_t peersSize = 0;
@@ -185,8 +172,9 @@ TopoInfo::TopoInfo(BinaryStream &binaryStream)
     size_t edgesSize = 0;
     binaryStream >> edgesSize;
 
-    HCCL_INFO("[TopoInfo] version is [%s], peerCount is [%u], edgeCount is [%u], peers size is [%u], edges size is [%u]", 
-    version.c_str(), peerCount, edgeCount, peers.size(), edgesSize);
+    HCCL_INFO(
+        "[TopoInfo] version is [%s], peerCount is [%u], edgeCount is [%u], peers size is [%u], edges size is [%u]",
+        version.c_str(), peerCount, edgeCount, peers.size(), edgesSize);
     for (u32 i = 0; i < edgesSize; i++) {
         u32 edgeInfoIndex = 0;
         binaryStream >> edgeInfoIndex; // key
@@ -200,21 +188,23 @@ TopoInfo::TopoInfo(BinaryStream &binaryStream)
     }
 }
 
-void TopoInfo::GetBinStream(BinaryStream &binaryStream) const
+void TopoInfo::GetBinStream(BinaryStream& binaryStream) const
 {
     binaryStream << version << peerCount << edgeCount;
     binaryStream << peers.size();
-    for (auto &it : peers) {
+    for (auto& it : peers) {
         it.GetBinStream(binaryStream);
     }
     binaryStream << edges.size();
-    HCCL_INFO("[TopoInfo::GetBinStream] version is [%s], peerCount is [%u], edgeCount is [%u], peers size is [%u], edges size is [%u]", 
-    version.c_str(), peerCount, edgeCount, peers.size(), edges.size());
-    for (auto &it : edges) {
+    HCCL_INFO(
+        "[TopoInfo::GetBinStream] version is [%s], peerCount is [%u], edgeCount is [%u], peers size is [%u], edges "
+        "size is [%u]",
+        version.c_str(), peerCount, edgeCount, peers.size(), edges.size());
+    for (auto& it : edges) {
         binaryStream << it.first;
         binaryStream << it.second.size();
         HCCL_INFO("[TopoInfo::GetBinStream] edges key is [%u], value size is [%u]", it.first, it.second.size());
-        for (auto &edge : it.second) {
+        for (auto& edge : it.second) {
             edge.GetBinStream(binaryStream);
         }
     }

@@ -15,31 +15,37 @@
 namespace Hccl {
 namespace CcuRep {
 
-CcuRepBufLocWrite::CcuRepBufLocWrite(CcuBuffer src, Memory dst, Variable len, MaskSignal sem, uint16_t mask)
-    : src(src), dst(dst), len(len), sem(sem), mask(mask)
-{
-    type       = CcuRepType::BUF_LOC_WRITE;
-    instrCount = 1;
-}
+    CcuRepBufLocWrite::CcuRepBufLocWrite(CcuBuffer src, Memory dst, Variable len, MaskSignal sem, uint16_t mask)
+        : src(src),
+          dst(dst),
+          len(len),
+          sem(sem),
+          mask(mask)
+    {
+        type = CcuRepType::BUF_LOC_WRITE;
+        instrCount = 1;
+    }
 
-bool CcuRepBufLocWrite::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool CcuRepBufLocWrite::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    TransLocMSToLocMemInstr(instr++, dst.addr.Id(), dst.token.Id(), src.Id(), len.Id(), dep.reserveChannalId[0],
-                            sem.Id(), mask, 0, 0, 1, 1);
+        TransLocMSToLocMemInstr(
+            instr++, dst.addr.Id(), dst.token.Id(), src.Id(), len.Id(), dep.reserveChannalId[0], sem.Id(), mask, 0, 0,
+            1, 1);
 
-    instrId += instrCount;
+        instrId += instrCount;
 
-    return translated;
-}
+        return translated;
+    }
 
-std::string CcuRepBufLocWrite::Describe()
-{
-    return StringFormat("Write CcuBuffer[%u] To Loc Mem[%u], len[%u], sem[%u], mask[%04x]", src.Id(), dst.addr.Id(),
-                        len.Id(), sem.Id(), mask);
-}
+    std::string CcuRepBufLocWrite::Describe()
+    {
+        return StringFormat(
+            "Write CcuBuffer[%u] To Loc Mem[%u], len[%u], sem[%u], mask[%04x]", src.Id(), dst.addr.Id(), len.Id(),
+            sem.Id(), mask);
+    }
 
 }; // namespace CcuRep
 }; // namespace Hccl

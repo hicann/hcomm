@@ -16,8 +16,8 @@ HcclResult RankPair::Init()
     EXCEPTION_CATCH(endpointPairMgr_ = std::make_unique<hcomm::EndpointPairMgr>(), return HCCL_E_PTR);
     return HCCL_SUCCESS;
 }
- 
-HcclResult RankPair::GetEndpointPair(const EndpointDescPair &epDescPair, hcomm::EndpointPair*& out)
+
+HcclResult RankPair::GetEndpointPair(const EndpointDescPair& epDescPair, hcomm::EndpointPair*& out)
 {
     return endpointPairMgr_->Get(epDescPair, out, rankIpPortMap_);
 }

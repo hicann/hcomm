@@ -15,33 +15,36 @@
 
 class AicpuReduceScatter : public AicpuAlgorithm {
 public:
-    explicit AicpuReduceScatter(AicpuComContext *ctx) : AicpuAlgorithm(ctx) {}
+    explicit AicpuReduceScatter(AicpuComContext* ctx) : AicpuAlgorithm(ctx) {}
     ~AicpuReduceScatter() override = default;
 
-    HcclResult RunAlgorithm(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
-        HcclDataType dataType, u64 strideLen = 0, AivAicpuOpParam *nextTask = nullptr) override;
+    HcclResult RunAlgorithm(
+        HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType,
+        u64 strideLen = 0, AivAicpuOpParam* nextTask = nullptr) override;
 
 private:
-    HcclResult RunReduceScatterWriteMode(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
-        HcclDataType dataType, u64 strideLen);
-    HcclResult RunReduceScatterReadMode(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
-        HcclDataType dataType);
+    HcclResult RunReduceScatterWriteMode(
+        HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType, u64 strideLen);
+    HcclResult RunReduceScatterReadMode(
+        HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType);
 
     std::vector<Slice> PrepareMeshSlice(u64 dataSize, uint32_t rankNum);
-    HcclResult RunDeterministicReduceScatter(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
-        HcclDataType dataType, u64 strideCount);
-    HcclResult RunDeterministicReduceScatterLocal(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
-        HcclDataType dataType, u64 strideLen);
-    HcclResult RunCurrentDeterministicReduceScatter(HcclReduceOp opType, uint8_t *curInputPtr, uint8_t *curOutputPtr,
-        u64 strideSize, u64 curSize, HcclDataType dataType);
+    HcclResult RunDeterministicReduceScatter(
+        HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType, u64 strideCount);
+    HcclResult RunDeterministicReduceScatterLocal(
+        HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType, u64 strideLen);
+    HcclResult RunCurrentDeterministicReduceScatter(
+        HcclReduceOp opType, uint8_t* curInputPtr, uint8_t* curOutputPtr, u64 strideSize, u64 curSize,
+        HcclDataType dataType);
 
     // 910_93
-    HcclResult GenRingTask(HcclReduceOp opType, u64 sndAddr, u64 rcvAddr, u64 curSize, u64 scatterSize,
-        HcclDataType dataType, uint32_t streamId, bool isClockwise, uint32_t step) const;
-    HcclResult RunDoubleRingReduceScatter(HcclReduceOp opType, u64 sendBuffer, u64 recvBuffer,
-        u64 dataCount, HcclDataType dataType) const;
-    HcclResult RunSwitchReduceScatter(HcclReduceOp opType, u64 sendBuffer, u64 recvBuffer, u64 dataCount,
-        HcclDataType dataType) const;
+    HcclResult GenRingTask(
+        HcclReduceOp opType, u64 sndAddr, u64 rcvAddr, u64 curSize, u64 scatterSize, HcclDataType dataType,
+        uint32_t streamId, bool isClockwise, uint32_t step) const;
+    HcclResult RunDoubleRingReduceScatter(
+        HcclReduceOp opType, u64 sendBuffer, u64 recvBuffer, u64 dataCount, HcclDataType dataType) const;
+    HcclResult RunSwitchReduceScatter(
+        HcclReduceOp opType, u64 sendBuffer, u64 recvBuffer, u64 dataCount, HcclDataType dataType) const;
 };
 
 #endif

@@ -23,20 +23,11 @@
 
 class AicpuUbgEndpointTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "AicpuUbgEndpointTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "AicpuUbgEndpointTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "AicpuUbgEndpointTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "AicpuUbgEndpointTest tests tear down." << std::endl; }
 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in AicpuUbgEndpointTest SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in AicpuUbgEndpointTest SetUP" << std::endl; }
 
     virtual void TearDown()
     {
@@ -44,7 +35,7 @@ protected:
         std::cout << "A Test case in AicpuUbgEndpointTest TearDown" << std::endl;
     }
 
-    void CreateEndpointDesc(EndpointDesc &endpointDesc, const std::string& ip = "1.0.0.0")
+    void CreateEndpointDesc(EndpointDesc& endpointDesc, const std::string& ip = "1.0.0.0")
     {
         Hccl::IpAddress localIp(ip);
         endpointDesc.protocol = COMM_PROTOCOL_UBG;
@@ -53,7 +44,7 @@ protected:
         endpointDesc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
     }
 
-    HcommResult CreateEndpoint(EndpointHandle &endpointHandle, const std::string& ip = "1.0.0.0")
+    HcommResult CreateEndpoint(EndpointHandle& endpointHandle, const std::string& ip = "1.0.0.0")
     {
         EndpointDesc endpointDesc;
         CreateEndpointDesc(endpointDesc, ip);
@@ -70,7 +61,7 @@ protected:
     }
 };
 
-static HcclResult stub_hrtGetDeviceType_950(DevType &devType)
+static HcclResult stub_hrtGetDeviceType_950(DevType& devType)
 {
     devType = DevType::DEV_TYPE_950;
     return HCCL_SUCCESS;
@@ -108,7 +99,7 @@ TEST_F(AicpuUbgEndpointTest, Ut_When_Register_Memory_NORMAL_Expect_Return_SUCCES
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     CommMem mem = CreateCommMem((void*)0x01, 10, COMM_MEM_TYPE_DEVICE);
-    void *memHandle;
+    void* memHandle;
 
     ret = HcommMemReg(endpointHandle, "memTag", &mem, &memHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);

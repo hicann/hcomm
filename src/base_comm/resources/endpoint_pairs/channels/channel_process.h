@@ -39,15 +39,16 @@ struct DeviceChannelKey {
     int32_t deviceId;
     ChannelHandle handle;
 
-    bool operator==(const DeviceChannelKey& other) const {
+    bool operator==(const DeviceChannelKey& other) const
+    {
         return deviceId == other.deviceId && handle == other.handle;
     }
 };
 
 struct DeviceChannelKeyHash {
-    std::size_t operator()(const DeviceChannelKey& key) const {
-        return std::hash<int32_t>()(key.deviceId) ^
-               (std::hash<ChannelHandle>()(key.handle) << 1);
+    std::size_t operator()(const DeviceChannelKey& key) const
+    {
+        return std::hash<int32_t>()(key.deviceId) ^ (std::hash<ChannelHandle>()(key.handle) << 1);
     }
 };
 
@@ -55,60 +56,71 @@ class ChannelProcess {
 public:
     ChannelProcess() = default;
     ~ChannelProcess() = default;
-    static HcclResult CreateChannelsLoop(EndpointHandle endpointHandle, CommEngine engine,
-        HcommChannelDesc *channelDescs, uint32_t channelNum, ChannelHandle *outHandles, bool isSharedQueue = false);
-    static HcclResult ChannelUpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum, ChannelHandle channelHandle);
-    static HcclResult GetChannelsInfo(const ChannelHandle *channelList, uint32_t listNum,
-        std::vector<CommEngine> &engines, std::vector<HcommChannelDesc> &channelDescs,
-        std::vector<ChannelStatus> &statusList);
-    static HcclResult HandleStatusByEngine(const ChannelHandle *channelList, uint32_t listNum,
-        const std::vector<CommEngine> &engines, const std::vector<HcommChannelDesc> &channelDescFinals,
-        const std::vector<ChannelStatus> &internalStatus, int32_t *statusList);
-    static HcclResult PrepareUserChannels(ChannelHandle* targetChannels, ChannelHandle* userChannels,
-        HcommChannelDesc *channelDescs, uint32_t channelNum, CommEngine engine);
-    static HcclResult ChannelGetStatus(const ChannelHandle *channelList, uint32_t listNum, int32_t *statusList);
-    static HcclResult ChannelKernelLaunchForComm(ChannelHandle *channelHandles, ChannelHandle *hostChannelHandles,
-        HcommChannelDesc* hcommDesc, uint32_t listNum, const std::string &commTag, aclrtBinHandle binHandle);
-    static HcclResult ChannelGetNotifyNum(ChannelHandle channelHandle, uint32_t *notifyNum);
-    static HcclResult ChannelGetRemoteMems(ChannelHandle channelHandle, uint32_t *memNum, CommMem **remoteMem, char ***memInfos);
-    static HcclResult ChannelKernelDestroy(ChannelHandle *channelHandles, uint32_t listNum, aclrtBinHandle binHandle);
-    static HcclResult ChannelDestroy(const ChannelHandle *channels, uint32_t channelNum, aclrtBinHandle binHandle = nullptr);
-    static HcclResult ChannelGet(const ChannelHandle channelHandle, void **channel);
+    static HcclResult CreateChannelsLoop(
+        EndpointHandle endpointHandle, CommEngine engine, HcommChannelDesc* channelDescs, uint32_t channelNum,
+        ChannelHandle* outHandles, bool isSharedQueue = false);
+    static HcclResult
+    ChannelUpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum, ChannelHandle channelHandle);
+    static HcclResult GetChannelsInfo(
+        const ChannelHandle* channelList, uint32_t listNum, std::vector<CommEngine>& engines,
+        std::vector<HcommChannelDesc>& channelDescs, std::vector<ChannelStatus>& statusList);
+    static HcclResult HandleStatusByEngine(
+        const ChannelHandle* channelList, uint32_t listNum, const std::vector<CommEngine>& engines,
+        const std::vector<HcommChannelDesc>& channelDescFinals, const std::vector<ChannelStatus>& internalStatus,
+        int32_t* statusList);
+    static HcclResult PrepareUserChannels(
+        ChannelHandle* targetChannels, ChannelHandle* userChannels, HcommChannelDesc* channelDescs, uint32_t channelNum,
+        CommEngine engine);
+    static HcclResult ChannelGetStatus(const ChannelHandle* channelList, uint32_t listNum, int32_t* statusList);
+    static HcclResult ChannelKernelLaunchForComm(
+        ChannelHandle* channelHandles, ChannelHandle* hostChannelHandles, HcommChannelDesc* hcommDesc, uint32_t listNum,
+        const std::string& commTag, aclrtBinHandle binHandle);
+    static HcclResult ChannelGetNotifyNum(ChannelHandle channelHandle, uint32_t* notifyNum);
+    static HcclResult
+    ChannelGetRemoteMems(ChannelHandle channelHandle, uint32_t* memNum, CommMem** remoteMem, char*** memInfos);
+    static HcclResult ChannelKernelDestroy(ChannelHandle* channelHandles, uint32_t listNum, aclrtBinHandle binHandle);
+    static HcclResult
+    ChannelDestroy(const ChannelHandle* channels, uint32_t channelNum, aclrtBinHandle binHandle = nullptr);
+    static HcclResult ChannelGet(const ChannelHandle channelHandle, void** channel);
 
-    static HcclResult ChannelClean(const ChannelHandle *channelList, uint32_t channelNum);
-    static HcclResult ChannelResume(const ChannelHandle *channelList, uint32_t channelNum);
-    static HcclResult ChannelUpdateKernelLaunch(ChannelHandle* deviceChannelHandles, ChannelHandle* hostChannelHandles, 
-        uint32_t listNum, const std::string &commTag, aclrtBinHandle binHandle);
-    static HcclResult RegisterChannelD2HMap(ChannelHandle *deviceChannelHandles, ChannelHandle *hostChannelHandles,
-        uint32_t listNum);
-    static HcclResult FillChannelD2HMap(ChannelHandle *deviceChannelHandles, ChannelHandle *hostChannelHandles, 
-        uint32_t listNum);
-    static HcclResult LaunchChannelKernel(ChannelHandle *channelHandles, ChannelHandle *hostChannelHandles,
-        HcommChannelDesc* hcommDesc, uint32_t listNum, aclrtBinHandle binHandle);
-    
+    static HcclResult ChannelClean(const ChannelHandle* channelList, uint32_t channelNum);
+    static HcclResult ChannelResume(const ChannelHandle* channelList, uint32_t channelNum);
+    static HcclResult ChannelUpdateKernelLaunch(
+        ChannelHandle* deviceChannelHandles, ChannelHandle* hostChannelHandles, uint32_t listNum,
+        const std::string& commTag, aclrtBinHandle binHandle);
+    static HcclResult
+    RegisterChannelD2HMap(ChannelHandle* deviceChannelHandles, ChannelHandle* hostChannelHandles, uint32_t listNum);
+    static HcclResult
+    FillChannelD2HMap(ChannelHandle* deviceChannelHandles, ChannelHandle* hostChannelHandles, uint32_t listNum);
+    static HcclResult LaunchChannelKernel(
+        ChannelHandle* channelHandles, ChannelHandle* hostChannelHandles, HcommChannelDesc* hcommDesc, uint32_t listNum,
+        aclrtBinHandle binHandle);
+
 private:
     template <typename Func>
-    static HcclResult WithChannelByHandleLocked(ChannelHandle inHandle, Func &&func);
+    static HcclResult WithChannelByHandleLocked(ChannelHandle inHandle, Func&& func);
 
-    static HcclResult CombineHostMemory(const std::vector<std::vector<char>> &hostPackBuffers, 
-        hccl::HostMem &hostPackBuf);
-    static HcclResult CopyUpdateKernelPackResToDevice(const std::vector<std::vector<char>> &hostPackBuffers,
-        const std::vector<u32> &channelSizeVec, uint32_t totalListNum, hccl::DeviceMem &channelSizeAddr,
-        hccl::DeviceMem &devicePackBuf);
-    static HcclResult LaunchChannelKernelCommon(ChannelHandle *channelHandles, ChannelHandle *hostChannelHandles,
-        HcommChannelDesc* hcommDesc, uint32_t listNum, const std::string &commTag, aclrtBinHandle binHandle,
-        const std::string &kernelName, bool needProfiling);
-    static HcclResult ChannelKernelLaunchForBase(ChannelHandle *channelHandles, ChannelHandle *hostChannelHandles,
-        HcommChannelDesc* hcommDesc, uint32_t listNum, aclrtBinHandle binHandle);
-    static HcclResult LaunchCommonChannelKernel(ChannelHandle *channelHandles,
-        ChannelHandle *hostChannelHandles, uint32_t listNum, HcommChannelKind channelKind, aclrtBinHandle binHandle);
-    static HcclResult ChannelResumeConcurrency(const ChannelHandle *channelList, uint32_t channelNum);
-    static HcclResult RemoveSingleChannel(int32_t deviceId, ChannelHandle inHandle,
-        std::vector<ChannelHandle> &deviceHandles);
+    static HcclResult
+    CombineHostMemory(const std::vector<std::vector<char>>& hostPackBuffers, hccl::HostMem& hostPackBuf);
+    static HcclResult CopyUpdateKernelPackResToDevice(
+        const std::vector<std::vector<char>>& hostPackBuffers, const std::vector<u32>& channelSizeVec,
+        uint32_t totalListNum, hccl::DeviceMem& channelSizeAddr, hccl::DeviceMem& devicePackBuf);
+    static HcclResult LaunchChannelKernelCommon(
+        ChannelHandle* channelHandles, ChannelHandle* hostChannelHandles, HcommChannelDesc* hcommDesc, uint32_t listNum,
+        const std::string& commTag, aclrtBinHandle binHandle, const std::string& kernelName, bool needProfiling);
+    static HcclResult ChannelKernelLaunchForBase(
+        ChannelHandle* channelHandles, ChannelHandle* hostChannelHandles, HcommChannelDesc* hcommDesc, uint32_t listNum,
+        aclrtBinHandle binHandle);
+    static HcclResult LaunchCommonChannelKernel(
+        ChannelHandle* channelHandles, ChannelHandle* hostChannelHandles, uint32_t listNum,
+        HcommChannelKind channelKind, aclrtBinHandle binHandle);
+    static HcclResult ChannelResumeConcurrency(const ChannelHandle* channelList, uint32_t channelNum);
+    static HcclResult
+    RemoveSingleChannel(int32_t deviceId, ChannelHandle inHandle, std::vector<ChannelHandle>& deviceHandles);
 
     static std::unordered_map<ChannelHandle, std::shared_ptr<Channel>> g_ChannelMap;
     static std::unordered_map<DeviceChannelKey, ChannelHandle, DeviceChannelKeyHash> g_ChannelD2HMap;
     static std::mutex g_ChannelMapMtx;
 };
-}
+} // namespace hcomm
 #endif // CHANNEL_PROCESS_H

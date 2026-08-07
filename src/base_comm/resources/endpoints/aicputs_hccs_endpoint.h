@@ -26,29 +26,29 @@ constexpr uint32_t AICPU_CHANNEL_DEFAULT_PORT = 16666;
  */
 class AicpuTsHccsEndpoint : public Endpoint {
 public:
-    explicit AicpuTsHccsEndpoint(const EndpointDesc &endpointDesc);
+    explicit AicpuTsHccsEndpoint(const EndpointDesc& endpointDesc);
 
     ~AicpuTsHccsEndpoint();
 
     HcclResult Init() override;
     HcclResult ServerSocketListen(const uint32_t port) override;
     HcclResult ServerSocketStopListen(const uint32_t port) override;
- 	inline HcclResult ServerSocketStopListenImpl(const uint32_t port);
-    HcclResult RegisterMemory(HcommMem mem, const char *memTag, void **memHandle) override;
+    inline HcclResult ServerSocketStopListenImpl(const uint32_t port);
+    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
     HcclResult UnregisterMemory(void* memHandle) override;
-    HcclResult MemoryExport(void *memHandle, void **memDesc, uint32_t *memDescLen) override;
-    HcclResult MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem) override;
-    HcclResult MemoryUnimport(const void *memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void **memHandles, uint32_t *memHandleNum) override;
+    HcclResult MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen) override;
+    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
+    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
+    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
 
-    HcclResult MemoryGrant(const HcommMemGrantInfo *remoteGrantInfo) override;
-    HcclResult MemoryEnableP2P(const EndpointDesc &remoteEndpointDesc);
-    HcclResult MemoryDisableP2P(const EndpointDesc &remoteEndpointDesc);
+    HcclResult MemoryGrant(const HcommMemGrantInfo* remoteGrantInfo) override;
+    HcclResult MemoryEnableP2P(const EndpointDesc& remoteEndpointDesc);
+    HcclResult MemoryDisableP2P(const EndpointDesc& remoteEndpointDesc);
     HcclResult MemoryOpenRemoteIpc();
     HcclResult MemoryCloseRemoteIpc();
-    HcclResult GetRemoteIpcRmaBuffer(std::vector<CommMem> &remoteIpcRmaBufferVec);
-    HcclResult GetRemoteIpcRmaBufferEx(std::vector<HcclMemEx> &remoteIpcRmaBufferVecEx);
-    HcclResult GetLocalIpcRmaBufferEx(std::vector<HcclMemEx> &localIpcRmaBufferVecEx);
+    HcclResult GetRemoteIpcRmaBuffer(std::vector<CommMem>& remoteIpcRmaBufferVec);
+    HcclResult GetRemoteIpcRmaBufferEx(std::vector<HcclMemEx>& remoteIpcRmaBufferVecEx);
+    HcclResult GetLocalIpcRmaBufferEx(std::vector<HcclMemEx>& localIpcRmaBufferVecEx);
 
 private:
     u32 serverPort_{AICPU_CHANNEL_DEFAULT_PORT};
@@ -56,5 +56,5 @@ private:
     bool serverListened_{false};
     HcclNetDevCtx netDevCtx_{nullptr};
 };
-}
+} // namespace hcomm
 #endif // AICPUTS_HCCS_ENDPOINT_H

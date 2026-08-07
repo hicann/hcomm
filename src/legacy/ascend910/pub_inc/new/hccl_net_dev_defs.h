@@ -15,7 +15,7 @@
 #include <arpa/inet.h>
 
 /* 网络设备句柄 */
-typedef void *HcclNetDev;
+typedef void* HcclNetDev;
 constexpr uint32_t SUPER_DEVICE_ID_INVALID = 0xFFFFFFFF;
 /**
  * @enum HcclNetDevDeployment

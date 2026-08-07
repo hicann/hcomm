@@ -37,7 +37,6 @@ static uint64_t GetRef(Mgr& mgr, const Key& key)
     return 0;
 }
 
-
 TEST_F(HccsRegedMemMgrTest, ut_HccsRegedMemMgr_When_LocalIpcInitFails_Expect_ReturnError)
 {
     MOCKER_CPP(&hccl::LocalIpcRmaBuffer::Init).stubs().will(returnValue(HCCL_E_INTERNAL));
@@ -50,9 +49,9 @@ TEST_F(HccsRegedMemMgrTest, ut_HccsRegedMemMgr_When_LocalIpcInitFails_Expect_Ret
     HccsRegedMemMgr mgr(reinterpret_cast<HcclNetDevCtx>(&netCtx));
     HcommMem mem{};
     mem.type = CommMemType::COMM_MEM_TYPE_DEVICE;
-    mem.addr = reinterpret_cast<void *>(0xA0000ULL);
+    mem.addr = reinterpret_cast<void*>(0xA0000ULL);
     mem.size = 4096U;
-    void *handle = nullptr;
+    void* handle = nullptr;
     EXPECT_EQ(mgr.RegisterMemory(mem, "init_fail", &handle), HCCL_E_INTERNAL);
     EXPECT_EQ(handle, nullptr);
 }
@@ -71,20 +70,20 @@ TEST_F(HccsRegedMemMgrTest, ut_HccsRegedMemMgr_When_AliasParentMissing_Expect_Un
 
     HcommMem mem{};
     mem.type = CommMemType::COMM_MEM_TYPE_DEVICE;
-    mem.addr = reinterpret_cast<void *>(0xB0000ULL);
+    mem.addr = reinterpret_cast<void*>(0xB0000ULL);
     mem.size = 4096U;
-    void *parentHandle = nullptr;
+    void* parentHandle = nullptr;
     ASSERT_EQ(mgr.RegisterMemory(mem, "parent", &parentHandle), HCCL_SUCCESS);
     ASSERT_NE(parentHandle, nullptr);
 
-    void *childHandle = nullptr;
+    void* childHandle = nullptr;
     ASSERT_EQ(mgr.RegisterMemory(mem, "child", &childHandle), HCCL_SUCCESS);
     ASSERT_NE(childHandle, nullptr);
     EXPECT_NE(childHandle, parentHandle);
-    auto *childBuffer = static_cast<hccl::LocalIpcRmaBuffer *>(childHandle);
+    auto* childBuffer = static_cast<hccl::LocalIpcRmaBuffer*>(childHandle);
     EXPECT_TRUE(childBuffer->IsAlias());
 
-    auto *parentBuffer = static_cast<hccl::LocalIpcRmaBuffer *>(parentHandle);
+    auto* parentBuffer = static_cast<hccl::LocalIpcRmaBuffer*>(parentHandle);
     hccl::BufferKey<uintptr_t, u64> parentKey(
         reinterpret_cast<uintptr_t>(parentBuffer->GetAddr()), static_cast<u64>(parentBuffer->GetSize()));
     ASSERT_EQ(mgr.UnregisterMemory(parentHandle), HCCL_SUCCESS);
@@ -110,14 +109,13 @@ TEST_F(HccsRegedMemMgrTest, ut_HccsRegedMemMgr_When_ParentChild_Expect_Unregiste
     mem0.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem0.addr = (void*)0x3000;
     mem0.size = 8192;
-    void *h0 = nullptr;
+    void* h0 = nullptr;
     ASSERT_EQ(mgr.RegisterMemory(mem0, "parent", &h0), HCCL_SUCCESS);
     ASSERT_NE(h0, nullptr);
 
     auto* parentBuf = static_cast<hccl::LocalIpcRmaBuffer*>(h0);
     hccl::BufferKey<uintptr_t, u64> parentKey(
-        reinterpret_cast<uintptr_t>(parentBuf->GetAddr()),
-        static_cast<u64>(parentBuf->GetSize()));
+        reinterpret_cast<uintptr_t>(parentBuf->GetAddr()), static_cast<u64>(parentBuf->GetSize()));
     EXPECT_TRUE(localIpcRmaBufferMgr->Find(parentKey).first);
     EXPECT_EQ(GetRef(*localIpcRmaBufferMgr, parentKey), 1u);
 
@@ -126,7 +124,7 @@ TEST_F(HccsRegedMemMgrTest, ut_HccsRegedMemMgr_When_ParentChild_Expect_Unregiste
     mem1.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem1.addr = (void*)0x3000;
     mem1.size = 1024;
-    void *h1 = nullptr;
+    void* h1 = nullptr;
     EXPECT_EQ(mgr.RegisterMemory(mem1, "child", &h1), HCCL_SUCCESS);
     EXPECT_NE(h1, h0);
     EXPECT_EQ(GetRef(*localIpcRmaBufferMgr, parentKey), 2u);
@@ -164,8 +162,7 @@ TEST_F(HccsRegedMemMgrTest, ut_HccsRegedMemMgr_When_MultipleSameRange_Expect_All
     EXPECT_EQ(mgr.RegisterMemory(mem, "t1", &h1), HCCL_SUCCESS);
     auto* parentBuf = static_cast<hccl::LocalIpcRmaBuffer*>(h1);
     hccl::BufferKey<uintptr_t, u64> parentKey(
-        reinterpret_cast<uintptr_t>(parentBuf->GetAddr()),
-        static_cast<u64>(parentBuf->GetSize()));
+        reinterpret_cast<uintptr_t>(parentBuf->GetAddr()), static_cast<u64>(parentBuf->GetSize()));
     EXPECT_EQ(GetRef(*localIpcRmaBufferMgr, parentKey), 1u);
 
     EXPECT_EQ(mgr.RegisterMemory(mem, "t2", &h2), HCCL_SUCCESS);
@@ -194,14 +191,13 @@ TEST_F(HccsRegedMemMgrTest, Ut_MemoryExport_When_MemHandleUnregistered_Expect_No
     HccsRegedMemMgr mgr(reinterpret_cast<HcclNetDevCtx>(&netCtx));
     EndpointDesc endpointDesc{};
     auto localIpcRmaBuffer = std::make_shared<hccl::LocalIpcRmaBuffer>(
-        reinterpret_cast<HcclNetDevCtx>(&netCtx), reinterpret_cast<void *>(0xD1000ULL), 4096U,
-        hccl::RmaMemType::DEVICE);
-    void *memHandle = localIpcRmaBuffer.get();
+        reinterpret_cast<HcclNetDevCtx>(&netCtx), reinterpret_cast<void*>(0xD1000ULL), 4096U, hccl::RmaMemType::DEVICE);
+    void* memHandle = localIpcRmaBuffer.get();
 
     mgr.allRegisteredBuffers_.emplace_back(localIpcRmaBuffer, false);
     mgr.allRegisteredBuffers_.clear();
 
-    void *memDesc = nullptr;
+    void* memDesc = nullptr;
     uint32_t memDescLen = 0;
     EXPECT_EQ(mgr.MemoryExport(endpointDesc, memHandle, &memDesc, &memDescLen), HCCL_E_NOT_FOUND);
     EXPECT_EQ(memDesc, nullptr);
@@ -225,12 +221,11 @@ TEST_F(HccsRegedMemMgrTest, ut_HccsRegedMemMgr_When_UnregisterParentFirst_Expect
     mem0.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem0.addr = (void*)0x7000;
     mem0.size = 4096;
-    void *parentHandle = nullptr;
+    void* parentHandle = nullptr;
     ASSERT_EQ(mgr.RegisterMemory(mem0, "parent", &parentHandle), HCCL_SUCCESS);
     auto* parentBuf = static_cast<hccl::LocalIpcRmaBuffer*>(parentHandle);
     hccl::BufferKey<uintptr_t, u64> parentKey(
-        reinterpret_cast<uintptr_t>(parentBuf->GetAddr()),
-        static_cast<u64>(parentBuf->GetSize()));
+        reinterpret_cast<uintptr_t>(parentBuf->GetAddr()), static_cast<u64>(parentBuf->GetSize()));
     EXPECT_EQ(GetRef(*localIpcRmaBufferMgr, parentKey), 1u);
     EXPECT_EQ(mgr.handlesRecords_.size(), 1u);
 
@@ -239,7 +234,7 @@ TEST_F(HccsRegedMemMgrTest, ut_HccsRegedMemMgr_When_UnregisterParentFirst_Expect
     mem1.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem1.addr = (void*)0x7000;
     mem1.size = 512;
-    void *childHandle = nullptr;
+    void* childHandle = nullptr;
     EXPECT_EQ(mgr.RegisterMemory(mem1, "child", &childHandle), HCCL_SUCCESS);
     EXPECT_NE(childHandle, parentHandle);
     EXPECT_EQ(GetRef(*localIpcRmaBufferMgr, parentKey), 2u);
@@ -255,15 +250,17 @@ TEST_F(HccsRegedMemMgrTest, ut_HccsRegedMemMgr_When_UnregisterParentFirst_Expect
     EXPECT_EQ(mgr.handlesRecords_.size(), 1u);
     EXPECT_EQ(mgr.allRegisteredBuffers_.size(), 2u);
 
-    auto itParent = std::find_if(mgr.allRegisteredBuffers_.begin(),
-        mgr.allRegisteredBuffers_.end(),
-        [parentBuf](const auto& e) { return e.first.get() == parentBuf; });
+    auto itParent
+        = std::find_if(mgr.allRegisteredBuffers_.begin(), mgr.allRegisteredBuffers_.end(), [parentBuf](const auto& e) {
+              return e.first.get() == parentBuf;
+          });
     ASSERT_NE(itParent, mgr.allRegisteredBuffers_.end());
     EXPECT_TRUE(itParent->second);
 
-    auto itChild = std::find_if(mgr.allRegisteredBuffers_.begin(),
-        mgr.allRegisteredBuffers_.end(),
-        [childHandle](const auto& e) { return e.first.get() == childHandle; });
+    auto itChild = std::find_if(
+        mgr.allRegisteredBuffers_.begin(), mgr.allRegisteredBuffers_.end(), [childHandle](const auto& e) {
+            return e.first.get() == childHandle;
+        });
     ASSERT_NE(itChild, mgr.allRegisteredBuffers_.end());
     EXPECT_FALSE(itChild->second);
 
@@ -274,9 +271,10 @@ TEST_F(HccsRegedMemMgrTest, ut_HccsRegedMemMgr_When_UnregisterParentFirst_Expect
     EXPECT_EQ(mgr.handlesRecords_.size(), 0u);
 
     // 验证：子已从allRegisteredBuffers_中移除
-    itChild = std::find_if(mgr.allRegisteredBuffers_.begin(),
-        mgr.allRegisteredBuffers_.end(),
-        [childHandle](const auto& e) { return e.first.get() == childHandle; });
+    itChild = std::find_if(
+        mgr.allRegisteredBuffers_.begin(), mgr.allRegisteredBuffers_.end(), [childHandle](const auto& e) {
+            return e.first.get() == childHandle;
+        });
     EXPECT_EQ(itChild, mgr.allRegisteredBuffers_.end());
 }
 
@@ -292,7 +290,7 @@ TEST_F(HccsRegedMemMgrTest, ut_HccsRegedMemMgr_When_GetAllMemHandles_Expect_Corr
 
     HccsRegedMemMgr mgr(reinterpret_cast<HcclNetDevCtx>(&netCtx));
 
-    void *handles = nullptr;
+    void* handles = nullptr;
     uint32_t count = 99U;
     EXPECT_EQ(mgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
     EXPECT_EQ(count, 0U);
@@ -302,14 +300,14 @@ TEST_F(HccsRegedMemMgrTest, ut_HccsRegedMemMgr_When_GetAllMemHandles_Expect_Corr
     mem.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem.addr = (void*)0x8000;
     mem.size = 4096;
-    void *h1 = nullptr;
+    void* h1 = nullptr;
     ASSERT_EQ(mgr.RegisterMemory(mem, "t1", &h1), HCCL_SUCCESS);
 
     EXPECT_EQ(mgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);
     EXPECT_EQ(count, 1U);
     EXPECT_NE(handles, nullptr);
 
-    void *h2 = nullptr;
+    void* h2 = nullptr;
     ASSERT_EQ(mgr.RegisterMemory(mem, "t2", &h2), HCCL_SUCCESS);
 
     EXPECT_EQ(mgr.GetAllMemHandles(&handles, &count), HCCL_SUCCESS);

@@ -69,8 +69,7 @@ ExceptionHandle::ReceiveCqeReport(uint32_t devId, Hccl::StreamLite* streamLite, 
     return CqReportRecv(cqeQueryInput, cqeException);
 }
 
-HcclResult
-ExceptionHandle::CheckExceptionCqe(hccl::Thread* thread, uint32_t devId)
+HcclResult ExceptionHandle::CheckExceptionCqe(hccl::Thread* thread, uint32_t devId)
 {
     CHK_PTR_NULL(thread);
 

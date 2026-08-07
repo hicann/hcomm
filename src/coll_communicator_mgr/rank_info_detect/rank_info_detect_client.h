@@ -31,47 +31,50 @@ const u32 WAIT_ERROR_BROADCAST_TIME = 20;
 
 class RankInfoDetectClient {
 public:
-    RankInfoDetectClient(u32 devPhyId, u32 rankSize, u32 rankId, const std::shared_ptr<Socket> &clientSocket)
-        : devPhyId_(devPhyId), rankSize_(rankSize), rankId_(rankId), clientSocket_(clientSocket), socketAgent_(clientSocket.get())
-    {
-    }
+    RankInfoDetectClient(u32 devPhyId, u32 rankSize, u32 rankId, const std::shared_ptr<Socket>& clientSocket)
+        : devPhyId_(devPhyId),
+          rankSize_(rankSize),
+          rankId_(rankId),
+          clientSocket_(clientSocket),
+          socketAgent_(clientSocket.get())
+    {}
     ~RankInfoDetectClient();
 
-    void Setup(RankTableInfo &rankTable);
+    void Setup(RankTableInfo& rankTable);
 
 private:
-    u32                             devPhyId_{0};
-    u32                             rankSize_{0};
-    u32                             rankId_{0};
-    std::shared_ptr<Socket>         clientSocket_{nullptr};
-    u32                             currentStep_{0};
-    RankTableInfo                   rankTable_{};
-    SocketAgent                     socketAgent_;
+    u32 devPhyId_{0};
+    u32 rankSize_{0};
+    u32 rankId_{0};
+    std::shared_ptr<Socket> clientSocket_{nullptr};
+    u32 currentStep_{0};
+    RankTableInfo rankTable_{};
+    SocketAgent socketAgent_;
     std::mutex hostSocketLock_;
     std::shared_ptr<Socket> hostSocket_ = nullptr;
-    
-    void SetupHostListenPort(u32 devLogicId, u32 devPhyId, const IpAddress &hostIp, uint32_t &hostPort);
+
+    void SetupHostListenPort(u32 devLogicId, u32 devPhyId, const IpAddress& hostIp, uint32_t& hostPort);
     void SocketTearDown(u32 devPhyId);
     void Connect();
     void CheckStatus();
     void SendAgentIdAndRankSize();
-    void SendLocalRankTable(const RankTableInfo &localRankTable);
-    void ConstructRankTable(RankTableInfo &localRankTable);
+    void SendLocalRankTable(const RankTableInfo& localRankTable);
+    void ConstructRankTable(RankTableInfo& localRankTable);
     void VerifyRankTable();
     void RecvRankTable();
-    void RecvRankTableMsg(vector<char> &rankInfoMsg);
-    void ParseRankTable(vector<char> &rankInfoMsg);
-    void GetLocalRankTableJson(const nlohmann::json &parseJson, nlohmann::json &localRankTableJson);
-    void GetLocalDevInfoJson(const nlohmann::json &parseJson, nlohmann::json &localDevInfoJson);
-    void ConstructSingleRank(RankTableInfo &localRankTable);
-    HcclResult GetLocalTlsStatus(TlsStatus &tlsStatus) const;
+    void RecvRankTableMsg(vector<char>& rankInfoMsg);
+    void ParseRankTable(vector<char>& rankInfoMsg);
+    void GetLocalRankTableJson(const nlohmann::json& parseJson, nlohmann::json& localRankTableJson);
+    void GetLocalDevInfoJson(const nlohmann::json& parseJson, nlohmann::json& localDevInfoJson);
+    void ConstructSingleRank(RankTableInfo& localRankTable);
+    HcclResult GetLocalTlsStatus(TlsStatus& tlsStatus) const;
     HcclResult VerifyTlsConsistency() const;
-    void GenerateTlsStatusStr(std::string &tlsStatusStr, const std::vector<u32> &tlsStatusRanks) const;
+    void GenerateTlsStatusStr(std::string& tlsStatusStr, const std::vector<u32>& tlsStatusRanks) const;
     void ReportTlsConfigurationError(
-        const std::string &tlsInconsistentTlsType, const std::string &tlsEnableRankStr,
-        const std::string &tlsDisableRankStr, const std::string &tlsUnknownRankStr) const;
+        const std::string& tlsInconsistentTlsType, const std::string& tlsEnableRankStr,
+        const std::string& tlsDisableRankStr, const std::string& tlsUnknownRankStr) const;
     void TearDown();
-    void HostListenPortDetect(NewRankInfo &rankInfo);
+    void HostListenPortDetect(NewRankInfo& rankInfo);
 };
 
 } // namespace Hccl

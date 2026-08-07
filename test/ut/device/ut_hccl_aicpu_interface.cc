@@ -30,18 +30,9 @@ using namespace hccl;
 
 class Test_Hccl_Aicpu_Interface : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "UT_Hccl_Aicpu_Interface SetUP" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "UT_Hccl_Aicpu_Interface TearDown" << std::endl;
-    }
-    virtual void SetUp()
-    {
-        std::cout << "A Test SetUP" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "UT_Hccl_Aicpu_Interface SetUP" << std::endl; }
+    static void TearDownTestCase() { std::cout << "UT_Hccl_Aicpu_Interface TearDown" << std::endl; }
+    virtual void SetUp() { std::cout << "A Test SetUP" << std::endl; }
     virtual void TearDown()
     {
         GlobalMockObject::verify();
@@ -49,7 +40,7 @@ protected:
     }
 };
 
-HcclResult GetSuspendingFlagStub(HcclCommAicpu *This, HcclComSuspendingFlag &flag)
+HcclResult GetSuspendingFlagStub(HcclCommAicpu* This, HcclComSuspendingFlag& flag)
 {
     flag = HcclComSuspendingFlag::isSuspending;
     return HCCL_SUCCESS;
@@ -103,17 +94,11 @@ void* BuildKfcTaskComm(HcclOpResParam* commParam, OpTilingData* tilingData)
 
 void SetupRpcSrvLaunchMocks(HcclCommAicpu* hcclCommAicpu)
 {
-    MOCKER(AicpuHcclProcess::AicpuGetCommbyGroup)
-        .stubs()
-        .will(returnValue(hcclCommAicpu));
+    MOCKER(AicpuHcclProcess::AicpuGetCommbyGroup).stubs().will(returnValue(hcclCommAicpu));
 
-    MOCKER_CPP(&HcclCommAicpu::GetSuspendingFlag)
-        .stubs()
-        .will(invoke(GetSuspendingFlagStub));
+    MOCKER_CPP(&HcclCommAicpu::GetSuspendingFlag).stubs().will(invoke(GetSuspendingFlagStub));
 
-    MOCKER(AicpuHcclProcess::AicpuReleaseCommbyGroup)
-        .stubs()
-        .will(ignoreReturnValue());
+    MOCKER(AicpuHcclProcess::AicpuReleaseCommbyGroup).stubs().will(ignoreReturnValue());
 }
 
 TEST_F(Test_Hccl_Aicpu_Interface, Ut_RunAicpuRpcSrvLaunchV2_When_SuspendingFlagIsSuspending_Expect_ReturnZero)

@@ -37,7 +37,7 @@ void XorExecutor::Run()
     uint16_t xnId = GetXnId(xnId_);
     uint16_t xmId = GetXnId(xmId_);
     uint16_t xdId = GetXnId(xdId_);
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t xnValue = ccuResMgr.GetXnValue(rankId_, dieId_, xnId);
     uint64_t xmValue = ccuResMgr.GetXnValue(rankId_, dieId_, xmId);
     uint64_t xdValue = xnValue ^ xmValue;
@@ -50,15 +50,14 @@ void XorExecutor::Run()
 
 std::string XorExecutor::Describe()
 {
-    return HcclSim::StringFormat("[XorExecutor] xdId:[%u],xnId_[%u],xmId[%u]\n",
-        xdId_, xnId_, xmId_);
+    return HcclSim::StringFormat("[XorExecutor] xdId:[%u],xnId_[%u],xmId[%u]\n", xdId_, xnId_, xmId_);
 }
 
 CcuTrace::CcuInstrTraceDetail XorExecutor::CollectTraceDetail()
 {
     CcuTrace::CcuInstrTraceDetail detail;
     detail.typeName = "Xor";
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     detail.args["xnValue"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xnId_));
     detail.args["xmValue"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xmId_));
     return detail;

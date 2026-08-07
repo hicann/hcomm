@@ -17,12 +17,9 @@ using HccdInfo = struct HccdInfoTag {
     hccl::RankTable_t rankTable;
     bool cloudFlag;
 
-    HccdInfoTag()
-        :pCommhccd(nullptr), cloudFlag(false)
-    {
-    }
+    HccdInfoTag() : pCommhccd(nullptr), cloudFlag(false) {}
 };
 
-HcclResult HccdGenerateCommId(hccl::HcclCommParams &params);
+HcclResult HccdGenerateCommId(hccl::HcclCommParams& params);
 
 #endif

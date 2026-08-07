@@ -17,23 +17,23 @@ namespace hccl {
 class CollAllReduceARSFor91093Executor : public CollAllReduceRingFor91093Executor {
 public:
     explicit CollAllReduceARSFor91093Executor(
-        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAllReduceARSFor91093Executor() override = default;
 
 private:
     /* *************** 资源计算 *************** */
     u32 intraRingSize_ = 0;
     HcclResult CalcOptimalIntraRing(const OpParam& param) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType,
-        TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel1CommInfo(TransportMemType inputType,
-        TransportMemType outputType,
+    HcclResult CalcLevel1CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult GetLevelCommInfo() override;
 };
 
-}  // namespace hccl
+} // namespace hccl
 
 #endif

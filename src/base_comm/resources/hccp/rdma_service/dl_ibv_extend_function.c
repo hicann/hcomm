@@ -32,32 +32,34 @@ struct RsIbvExtendOps gIbvExtendOps = {
 STATIC int RsIbvExtendIbvApiInit(void)
 {
 #ifndef CA_CONFIG_LLT
-    gIbvExtendOps.rsIbvExtendGetVersion = (const char* (*)(uint32_t *, uint32_t *, uint32_t *))
-        HccpDlsym(gRoceIbvExtendApiHandle, "ibv_extend_get_version");
+    gIbvExtendOps.rsIbvExtendGetVersion = (const char *(*)(uint32_t *, uint32_t *,
+        uint32_t *))HccpDlsym(gRoceIbvExtendApiHandle, "ibv_extend_get_version");
     DL_API_RET_IS_NULL_CHECK(gIbvExtendOps.rsIbvExtendGetVersion, "ibv_extend_get_version");
-    gIbvExtendOps.rsIbvExtendCheckVersion = (int (*)(uint32_t, uint32_t, uint32_t))
-        HccpDlsym(gRoceIbvExtendApiHandle, "ibv_extend_check_version");
+    gIbvExtendOps.rsIbvExtendCheckVersion = (int (*)(uint32_t, uint32_t, uint32_t))HccpDlsym(gRoceIbvExtendApiHandle,
+        "ibv_extend_check_version");
     DL_API_RET_IS_NULL_CHECK(gIbvExtendOps.rsIbvExtendCheckVersion, "ibv_extend_check_version");
-    gIbvExtendOps.rsIbvOpenExtend = (struct ibv_context_extend* (*)(struct ibv_context *))
+    gIbvExtendOps.rsIbvOpenExtend = (struct ibv_context_extend * (*)(struct ibv_context *))
         HccpDlsym(gRoceIbvExtendApiHandle, "ibv_open_extend");
     DL_API_RET_IS_NULL_CHECK(gIbvExtendOps.rsIbvOpenExtend, "ibv_open_extend");
-    gIbvExtendOps.rsIbvCloseExtend = (int (*)(struct ibv_context_extend *))
-        HccpDlsym(gRoceIbvExtendApiHandle, "ibv_close_extend");
+    gIbvExtendOps.rsIbvCloseExtend = (int (*)(struct ibv_context_extend *))HccpDlsym(gRoceIbvExtendApiHandle,
+        "ibv_close_extend");
     DL_API_RET_IS_NULL_CHECK(gIbvExtendOps.rsIbvCloseExtend, "ibv_close_extend");
-    gIbvExtendOps.rsIbvQueryDeviceExtend = (int (*)(struct ibv_context_extend *, struct ibv_device_attr_extend *))
-        HccpDlsym(gRoceIbvExtendApiHandle, "ibv_query_device_extend");
+    gIbvExtendOps.rsIbvQueryDeviceExtend = (int (*)(struct ibv_context_extend *,
+        struct ibv_device_attr_extend *))HccpDlsym(gRoceIbvExtendApiHandle, "ibv_query_device_extend");
     DL_API_RET_IS_NULL_CHECK(gIbvExtendOps.rsIbvQueryDeviceExtend, "ibv_query_device_extend");
-    gIbvExtendOps.rsIbvCreateQpExtend = (struct ibv_qp_extend* (*)(struct ibv_context_extend *,
-        struct ibv_qp_init_attr_extend *)) HccpDlsym(gRoceIbvExtendApiHandle, "ibv_create_qp_extend");
+    gIbvExtendOps.rsIbvCreateQpExtend = (struct ibv_qp_extend *
+                                         (*)(struct ibv_context_extend *, struct ibv_qp_init_attr_extend *))
+        HccpDlsym(gRoceIbvExtendApiHandle, "ibv_create_qp_extend");
     DL_API_RET_IS_NULL_CHECK(gIbvExtendOps.rsIbvCreateQpExtend, "ibv_create_qp_extend");
-    gIbvExtendOps.rsIbvCreateCqExtend = (struct ibv_cq_extend* (*)(struct ibv_context_extend *,
-        struct ibv_cq_init_attr_extend *)) HccpDlsym(gRoceIbvExtendApiHandle, "ibv_create_cq_extend");
+    gIbvExtendOps.rsIbvCreateCqExtend = (struct ibv_cq_extend *
+                                         (*)(struct ibv_context_extend *, struct ibv_cq_init_attr_extend *))
+        HccpDlsym(gRoceIbvExtendApiHandle, "ibv_create_cq_extend");
     DL_API_RET_IS_NULL_CHECK(gIbvExtendOps.rsIbvCreateCqExtend, "ibv_create_cq_extend");
     gIbvExtendOps.rsIbvDestroyQpExtend = (int (*)(struct ibv_context_extend *,
-        struct ibv_qp_extend *)) HccpDlsym(gRoceIbvExtendApiHandle, "ibv_destroy_qp_extend");
+        struct ibv_qp_extend *))HccpDlsym(gRoceIbvExtendApiHandle, "ibv_destroy_qp_extend");
     DL_API_RET_IS_NULL_CHECK(gIbvExtendOps.rsIbvDestroyQpExtend, "ibv_destroy_qp_extend");
     gIbvExtendOps.rsIbvDestroyCqExtend = (int (*)(struct ibv_context_extend *,
-        struct ibv_cq_extend *)) HccpDlsym(gRoceIbvExtendApiHandle, "ibv_destroy_cq_extend");
+        struct ibv_cq_extend *))HccpDlsym(gRoceIbvExtendApiHandle, "ibv_destroy_cq_extend");
     DL_API_RET_IS_NULL_CHECK(gIbvExtendOps.rsIbvDestroyCqExtend, "ibv_destroy_cq_extend");
 #endif
     return 0;

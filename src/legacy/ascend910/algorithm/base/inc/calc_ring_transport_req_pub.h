@@ -16,16 +16,17 @@
 namespace hccl {
 class CalcRingTransportReq : public CalcTransportReqBase {
 public:
-    explicit CalcRingTransportReq(std::vector<std::vector<u32>> &subCommPlaneVector,
-        std::vector<bool> &isBridgeVector, u32 userRank);
+    explicit CalcRingTransportReq(
+        std::vector<std::vector<u32>>& subCommPlaneVector, std::vector<bool>& isBridgeVector, u32 userRank);
 
     ~CalcRingTransportReq() override;
 
-    HcclResult CalcTransportRequest(const std::string &tag, TransportMemType inputMemType,
-        TransportMemType outputMemType, const CommParaInfo &commParaInfo,
-        std::vector<SingleSubCommTransport> &commTransport, u32 subUserRankRoot = INVALID_VALUE_RANKID) override;
-    
-    static HcclResult CalcDstRanks(const u32 rank, const std::vector<u32> commGroups, std::set<u32> &dstRanks);
+    HcclResult CalcTransportRequest(
+        const std::string& tag, TransportMemType inputMemType, TransportMemType outputMemType,
+        const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport,
+        u32 subUserRankRoot = INVALID_VALUE_RANKID) override;
+
+    static HcclResult CalcDstRanks(const u32 rank, const std::vector<u32> commGroups, std::set<u32>& dstRanks);
 };
-}  // namespace hccl
+} // namespace hccl
 #endif /* CALC_RING_TRANSPORT_REQ_PUB_H */

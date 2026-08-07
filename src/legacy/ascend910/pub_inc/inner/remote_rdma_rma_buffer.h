@@ -26,8 +26,8 @@ public:
     HcclResult Deserialize(const std::string&);
     ~RemoteRdmaRmaBuffer() override;
 
-    RemoteRdmaRmaBuffer(const RemoteRdmaRmaBuffer &that) = delete;
-    RemoteRdmaRmaBuffer &operator=(const RemoteRdmaRmaBuffer &that) = delete;
+    RemoteRdmaRmaBuffer(const RemoteRdmaRmaBuffer& that) = delete;
+    RemoteRdmaRmaBuffer& operator=(const RemoteRdmaRmaBuffer& that) = delete;
 
     // Deserialize成功后调用获取属性接口
     u32 GetKey() const;
@@ -35,5 +35,5 @@ public:
 private:
     std::unique_ptr<RemoteRdmaRmaBufferImpl> pimpl_;
 };
-}
+} // namespace hccl
 #endif //  REMOTE_RDMA_RMA_BUFFER_H

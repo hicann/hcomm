@@ -21,16 +21,16 @@ namespace Hccl {
 
 class HccpPeerManager {
 public:
-    static HccpPeerManager &GetInstance();
-    void                    Init(s32 deviceLogicId);
-    void                    DeInit(s32 deviceLogicId);
+    static HccpPeerManager& GetInstance();
+    void Init(s32 deviceLogicId);
+    void DeInit(s32 deviceLogicId);
 
-    HccpPeerManager(const HccpPeerManager &hccpPeerManager)            = delete;
-    HccpPeerManager &operator=(const HccpPeerManager &hccpPeerManager) = delete;
+    HccpPeerManager(const HccpPeerManager& hccpPeerManager) = delete;
+    HccpPeerManager& operator=(const HccpPeerManager& hccpPeerManager) = delete;
 
 private:
     std::unordered_map<s32, Referenced> instances_; // key: deviceLogicId
-    std::mutex                          managerMutex_;
+    std::mutex managerMutex_;
     bool isDestroy{false};
 
     HccpPeerManager() = default;

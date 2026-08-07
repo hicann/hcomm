@@ -35,10 +35,7 @@ void CcuTraceCollector::SetEnabled(bool enabled)
     }
 }
 
-bool CcuTraceCollector::IsEnabled() const
-{
-    return m_enabled;
-}
+bool CcuTraceCollector::IsEnabled() const { return m_enabled; }
 
 void CcuTraceCollector::StartRun(const CcuRunMetadata& metadata)
 {
@@ -62,8 +59,7 @@ void CcuTraceCollector::StartRun(const CcuRunMetadata& metadata)
     m_traceRun.channelSpaces.clear();
     m_traceRun.ccuFinalSnapshots.clear();
     m_traceRun.runSummary = CcuRunSummary{};
-    HCCL_VM_INFO("StartRun: rankSize={}, diePerRank={}",
-                 metadata.rankSize, metadata.diePerRank);
+    HCCL_VM_INFO("StartRun: rankSize={}, diePerRank={}", metadata.rankSize, metadata.diePerRank);
 }
 
 void CcuTraceCollector::EndRun()
@@ -74,8 +70,9 @@ void CcuTraceCollector::EndRun()
     std::lock_guard<std::mutex> lock(m_mutex);
     m_traceRun.runMetadata.totalExecRounds = m_execRound.load();
     m_traceRun.runMetadata.totalSqeTaskCount = m_nextSqeTaskId.load();
-    HCCL_VM_INFO("EndRun: totalEntries={}, totalRounds={}, totalSqeTasks={}",
-                 m_traceRun.globalEntries.size(), m_execRound.load(), m_nextSqeTaskId.load());
+    HCCL_VM_INFO(
+        "EndRun: totalEntries={}, totalRounds={}, totalSqeTasks={}", m_traceRun.globalEntries.size(),
+        m_execRound.load(), m_nextSqeTaskId.load());
 }
 
 void CcuTraceCollector::RegisterCcuIdentity(const CcuIdentity& identity)
@@ -123,10 +120,9 @@ void CcuTraceCollector::BeginGlobalStep()
     m_globalSeqId++;
 }
 
-uint32_t CcuTraceCollector::RegisterSqeTask(int32_t rankId, uint16_t dieId, uint8_t missionId,
-                                              uint16_t instStartId, uint16_t instCnt,
-                                              uint32_t key, const std::vector<uint64_t>& args,
-                                              uint64_t simulatorPtr)
+uint32_t CcuTraceCollector::RegisterSqeTask(
+    int32_t rankId, uint16_t dieId, uint8_t missionId, uint16_t instStartId, uint16_t instCnt, uint32_t key,
+    const std::vector<uint64_t>& args, uint64_t simulatorPtr)
 {
     if (!m_enabled) {
         return 0;
@@ -176,15 +172,12 @@ void CcuTraceCollector::SetCurrentExecutingCcu(int32_t rankId, uint16_t dieId)
     m_execDie = dieId;
 }
 
-std::pair<int32_t, uint16_t> CcuTraceCollector::GetCurrentExecutingCcu() const
-{
-    return {m_execRank, m_execDie};
-}
+std::pair<int32_t, uint16_t> CcuTraceCollector::GetCurrentExecutingCcu() const { return {m_execRank, m_execDie}; }
 
 // ===== CKE Wait 自旋检测与合并 =====
 
-void CcuTraceCollector::RecordWaitSpin(int32_t rankId, uint16_t dieId, uint16_t instrId,
-                                        uint16_t waitCKEId, uint16_t waitCKEMask, uint16_t ckeValue)
+void CcuTraceCollector::RecordWaitSpin(
+    int32_t rankId, uint16_t dieId, uint16_t instrId, uint16_t waitCKEId, uint16_t waitCKEMask, uint16_t ckeValue)
 {
     if (!m_enabled) {
         return;
@@ -204,8 +197,8 @@ void CcuTraceCollector::RecordWaitSpin(int32_t rankId, uint16_t dieId, uint16_t 
     }
 }
 
-CcuWaitInfo CcuTraceCollector::FinalizeWaitInfo(int32_t rankId, uint16_t dieId, uint16_t instrId,
-                                                  uint16_t ckeValueOnPass)
+CcuWaitInfo
+CcuTraceCollector::FinalizeWaitInfo(int32_t rankId, uint16_t dieId, uint16_t instrId, uint16_t ckeValueOnPass)
 {
     CcuWaitInfo info;
     if (!m_enabled) {
@@ -233,9 +226,9 @@ CcuWaitInfo CcuTraceCollector::FinalizeWaitInfo(int32_t rankId, uint16_t dieId, 
 
 // ===== 跨 CCU 变更拦截 =====
 
-void CcuTraceCollector::RecordCrossCcuCkeChange(int32_t rankId, uint16_t dieId, uint16_t ckeId,
-                                                  uint16_t oldValue, uint16_t newValue,
-                                                  int32_t execRank, uint16_t execDie)
+void CcuTraceCollector::RecordCrossCcuCkeChange(
+    int32_t rankId, uint16_t dieId, uint16_t ckeId, uint16_t oldValue, uint16_t newValue, int32_t execRank,
+    uint16_t execDie)
 {
     if (!m_enabled) {
         return;
@@ -253,10 +246,9 @@ void CcuTraceCollector::RecordCrossCcuCkeChange(int32_t rankId, uint16_t dieId, 
     changes.remoteCkeChanges.push_back(change);
 }
 
-void CcuTraceCollector::RecordCrossCcuMsChange(int32_t rankId, uint16_t dieId, uint16_t msId,
-                                                 uint64_t offset, uint32_t length,
-                                                 const std::vector<uint8_t>& dataAfter,
-                                                 int32_t execRank, uint16_t execDie)
+void CcuTraceCollector::RecordCrossCcuMsChange(
+    int32_t rankId, uint16_t dieId, uint16_t msId, uint64_t offset, uint32_t length,
+    const std::vector<uint8_t>& dataAfter, int32_t execRank, uint16_t execDie)
 {
     if (!m_enabled) {
         return;
@@ -300,7 +292,7 @@ bool CcuTraceCollector::TryRegisterCcuStatic(int32_t rankId, uint16_t dieId)
     }
     std::lock_guard<std::mutex> lock(m_mutex);
     auto key = std::make_pair(rankId, dieId);
-    return m_registeredCcus.insert(key).second;  // 返回 true 表示首次插入
+    return m_registeredCcus.insert(key).second; // 返回 true 表示首次插入
 }
 
 // ===== 记录 trace entry =====
@@ -334,8 +326,8 @@ void CcuTraceCollector::RecordNonCcuEntry(const CcuTraceNonCcuEntry& entry)
     m_traceRun.nonCcuEntries.push_back(entry);
 }
 
-void CcuTraceCollector::CaptureInstrSpace(int32_t rankId, uint16_t dieId, uint32_t instrCnt,
-                                            const std::vector<CcuInstrSpaceEntry>& entries)
+void CcuTraceCollector::CaptureInstrSpace(
+    int32_t rankId, uint16_t dieId, uint32_t instrCnt, const std::vector<CcuInstrSpaceEntry>& entries)
 {
     if (!m_enabled) {
         return;
@@ -346,8 +338,7 @@ void CcuTraceCollector::CaptureInstrSpace(int32_t rankId, uint16_t dieId, uint32
     space.dieId = dieId;
     space.instructions = entries;
     m_traceRun.instrSpaces.push_back(std::move(space));
-    HCCL_VM_INFO("CaptureInstrSpace: rankId={}, dieId={}, instrCount={}",
-                 rankId, dieId, instrCnt);
+    HCCL_VM_INFO("CaptureInstrSpace: rankId={}, dieId={}, instrCount={}", rankId, dieId, instrCnt);
 }
 
 void CcuTraceCollector::SetFinalSnapshot(int32_t rankId, uint16_t dieId, const CcuResourceSnapshot& snapshot)
@@ -374,10 +365,7 @@ void CcuTraceCollector::SetOutputPath(const std::string& outputPath)
     m_outputPath = outputPath;
 }
 
-const std::string& CcuTraceCollector::GetOutputPath() const
-{
-    return m_outputPath;
-}
+const std::string& CcuTraceCollector::GetOutputPath() const { return m_outputPath; }
 
 // ===== 增量落盘 =====
 
@@ -421,8 +409,7 @@ std::string CcuTraceCollector::MakeWaitKey(int32_t rankId, uint16_t dieId, uint1
 uint64_t CcuTraceCollector::GetCurrentTimeNs()
 {
     auto now = std::chrono::steady_clock::now();
-    return static_cast<uint64_t>(
-        std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count());
+    return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count());
 }
 
 } // namespace CcuTrace

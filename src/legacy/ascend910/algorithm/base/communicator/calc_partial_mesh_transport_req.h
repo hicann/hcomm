@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #ifndef CALC_PARTIAL_MESH_TRANSPORT_REQ_H
 #define CALC_PARTIAL_MESH_TRANSPORT_REQ_H
 

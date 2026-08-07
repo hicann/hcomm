@@ -15,13 +15,14 @@
 #include "alltoallv_staged_calculator_pub.h"
 
 namespace hccl {
-class AlltoAllVStagedBase : public AlgTemplateBase{
+class AlltoAllVStagedBase : public AlgTemplateBase {
 public:
     explicit AlltoAllVStagedBase(const HcclDispatcher dispatcher);
     ~AlltoAllVStagedBase() override;
 
-    HcclResult Prepare(DeviceMem &sendMem, DeviceMem &recvMem, StageAlltoAllVAddrInfo& sendAddrInfo,
-        StageAlltoAllVAddrInfo& recvAddrInfo, bool isAlltoAllZCopyMode, Stream &mainStream) override;
+    HcclResult Prepare(
+        DeviceMem& sendMem, DeviceMem& recvMem, StageAlltoAllVAddrInfo& sendAddrInfo,
+        StageAlltoAllVAddrInfo& recvAddrInfo, bool isAlltoAllZCopyMode, Stream& mainStream) override;
 
 protected:
     HcclResult LocalCopy(u32 rank);
@@ -32,7 +33,7 @@ protected:
     StageAlltoAllVAddrInfo sendAddrInfo_;
     StageAlltoAllVAddrInfo recvAddrInfo_;
     bool isAlltoAllZCopyMode_ = false;
-    Stream *mainStreamPtr_{nullptr};
+    Stream* mainStreamPtr_{nullptr};
 };
 } // namespace hccl
 #endif /* ALLTOALL_V_STAGED_BASE_PUB_H */

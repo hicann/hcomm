@@ -21,7 +21,7 @@
 #include "buffer_key.h"
 #include "buffer.h"
 
-using RdmaHandle = void *;
+using RdmaHandle = void*;
 
 namespace hcomm {
 /**
@@ -33,27 +33,26 @@ public:
     virtual ~RegedMemMgr() = default;
 
     // 注册内存
-    virtual HcclResult RegisterMemory(HcommMem mem, const char *memTag, void **memHandle) = 0;
+    virtual HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) = 0;
 
     // 注销内存
     virtual HcclResult UnregisterMemory(void* memHandle) = 0;
- 
-    // 导出指定内存描述，用于交换
-    virtual HcclResult MemoryExport(const EndpointDesc endpointDesc, void *memHandle, void **memDesc, uint32_t *memDescLen) = 0;
- 
-    // 基于内存描述，导入获得内存
-    virtual HcclResult MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem) = 0;
- 
-    // 关闭内存
-    virtual HcclResult MemoryUnimport(const void *memDesc, uint32_t descLen) = 0;
 
-    virtual HcclResult GetAllMemHandles(void **memHandles, uint32_t *memHandleNum) = 0;
- 
+    // 导出指定内存描述，用于交换
+    virtual HcclResult
+    MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen)
+        = 0;
+
+    // 基于内存描述，导入获得内存
+    virtual HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) = 0;
+
+    // 关闭内存
+    virtual HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) = 0;
+
+    virtual HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) = 0;
+
     // 授权
-    virtual HcclResult MemoryGrant(const HcommMemGrantInfo *remoteGrantInfo)
-    {
-        return HCCL_SUCCESS;
-    }
+    virtual HcclResult MemoryGrant(const HcommMemGrantInfo* remoteGrantInfo) { return HCCL_SUCCESS; }
 
     RdmaHandle rdmaHandle_{nullptr};
 
@@ -64,25 +63,25 @@ protected:
     template <typename RmaBuffer>
     using RegedBufferEntry = std::pair<std::shared_ptr<RmaBuffer>, bool>;
 
-    static HcclResult ValidateMemParams(HcommMem mem, void **memHandle)
+    static HcclResult ValidateMemParams(HcommMem mem, void** memHandle)
     {
         CHK_PTR_NULL(memHandle);
         CHK_PTR_NULL(mem.addr);
         CHK_PRT_RET(mem.size == 0, HCCL_ERROR("[%s] mem size is zero", __func__), HCCL_E_PARA);
-        CHK_PRT_RET(mem.type == COMM_MEM_TYPE_INVALID,
-            HCCL_ERROR("[%s] invalid mem type [%d]", __func__, mem.type), HCCL_E_PARA);
+        CHK_PRT_RET(
+            mem.type == COMM_MEM_TYPE_INVALID, HCCL_ERROR("[%s] invalid mem type [%d]", __func__, mem.type),
+            HCCL_E_PARA);
         return HCCL_SUCCESS;
     }
 
     // MemoryExport: 从allBuffers中校验memHandle并获取buffer指针
     template <typename RmaBuffer>
-    static HcclResult ValidateMemExportHandle(void *memHandle,
-        const std::vector<RegedBufferEntry<RmaBuffer>>& allBuffers, RmaBuffer*& outBuffer)
+    static HcclResult ValidateMemExportHandle(
+        void* memHandle, const std::vector<RegedBufferEntry<RmaBuffer>>& allBuffers, RmaBuffer*& outBuffer)
     {
-        auto it = std::find_if(allBuffers.begin(), allBuffers.end(),
-            [memHandle](const auto &entry) {
-                return entry.first != nullptr && entry.first.get() == memHandle;
-            });
+        auto it = std::find_if(allBuffers.begin(), allBuffers.end(), [memHandle](const auto& entry) {
+            return entry.first != nullptr && entry.first.get() == memHandle;
+        });
         if (it == allBuffers.end()) {
             HCCL_ERROR("[RegedMemMgr][MemoryExport] memHandle[%p] is not registered.", memHandle);
             return HCCL_E_NOT_FOUND;
@@ -105,8 +104,9 @@ protected:
 
     // UnregisterMemory: IsAlias为true时，通过硬件句柄定位父buffer
     template <typename Mgr, typename BufferPtr, typename BufferVec, typename HwHandleFn, typename EqualFn>
-    static BufferPtr ResolveAliasParent(Mgr& mgr, const hccl::BufferKey<uintptr_t, u64>& ownKey,
-        BufferPtr buffer, BufferVec& allBuffers, HwHandleFn&& hwHandleGetter, EqualFn&& tokenEqual)
+    static BufferPtr ResolveAliasParent(
+        Mgr& mgr, const hccl::BufferKey<uintptr_t, u64>& ownKey, BufferPtr buffer, BufferVec& allBuffers,
+        HwHandleFn&& hwHandleGetter, EqualFn&& tokenEqual)
     {
         auto token = hwHandleGetter(buffer);
         auto findResult = mgr->Find(ownKey);
@@ -129,8 +129,8 @@ protected:
 
     // Find命中则基于父buffer构造别名，未命中则构造新buffer并注册
     template <typename Mgr, typename FindResult, typename BufferPtr, typename MakeAlias, typename MakeNew>
-    static HcclResult RegisterOrAlias(Mgr& mgr, const FindResult& findPair, BufferPtr& buffer,
-        MakeAlias&& makeAlias, MakeNew&& makeNew)
+    static HcclResult
+    RegisterOrAlias(Mgr& mgr, const FindResult& findPair, BufferPtr& buffer, MakeAlias&& makeAlias, MakeNew&& makeNew)
     {
         if (findPair.first) {
             auto parentBuffer = findPair.second;
@@ -150,9 +150,9 @@ protected:
     // makeNew(bufPtr)          — 构造新buffer
     // outRecords               — 可选的记录向量，注册成功时追加
     template <typename Mgr, typename RmaBuffer, typename MakeAlias, typename MakeNew>
-    static HcclResult RegisterMemoryImpl(HcommMem mem, const char *memTag, void **memHandle,
-        Mgr& mgr, std::vector<RegedBufferEntry<RmaBuffer>>& allBuffers,
-        std::vector<std::shared_ptr<RmaBuffer>> *outRecords,
+    static HcclResult RegisterMemoryImpl(
+        HcommMem mem, const char* memTag, void** memHandle, Mgr& mgr,
+        std::vector<RegedBufferEntry<RmaBuffer>>& allBuffers, std::vector<std::shared_ptr<RmaBuffer>>* outRecords,
         const char* logTag, MakeAlias&& makeAlias, MakeNew&& makeNew)
     {
         CHK_RET(ValidateMemParams(mem, memHandle));
@@ -161,17 +161,23 @@ protected:
         auto findPair = mgr->Find(tempKey);
 
         std::shared_ptr<Hccl::Buffer> localBufferPtr = nullptr;
-        EXCEPTION_CATCH((localBufferPtr = std::make_shared<Hccl::Buffer>(reinterpret_cast<uintptr_t>(mem.addr),
-            mem.size, static_cast<HcclMemType>(mem.type), memTag)),
+        EXCEPTION_CATCH(
+            (localBufferPtr = std::make_shared<Hccl::Buffer>(
+                 reinterpret_cast<uintptr_t>(mem.addr), mem.size, static_cast<HcclMemType>(mem.type), memTag)),
             return HCCL_E_PTR);
 
         std::shared_ptr<RmaBuffer> rmaBuffer;
-        CHK_RET(RegisterOrAlias(mgr, findPair, rmaBuffer,
-            [&](auto& parent) { return makeAlias(localBufferPtr, parent); },
-            [&]() { return makeNew(localBufferPtr); }));
+        CHK_RET(RegisterOrAlias(
+            mgr, findPair, rmaBuffer,
+            [&](auto& parent) {
+                return makeAlias(localBufferPtr, parent);
+            },
+            [&]() {
+                return makeNew(localBufferPtr);
+            }));
 
         HCCL_INFO("[%s][RegisterMemory] success, key {%p, %llu}", logTag, mem.addr, mem.size);
-        *memHandle = static_cast<void *>(rmaBuffer.get());
+        *memHandle = static_cast<void*>(rmaBuffer.get());
         allBuffers.emplace_back(rmaBuffer, false);
         if (outRecords != nullptr) {
             outRecords->push_back(rmaBuffer);
@@ -184,10 +190,9 @@ protected:
     // tokenEqual(lhs, rhs)   — 比较两个句柄是否相等
     // outRecords             — 可选的记录向量，注销成功时移除
     template <typename Mgr, typename RmaBuffer, typename HwHandleFn, typename EqualFn>
-    static HcclResult UnregisterMemoryImpl(void* memHandle, Mgr& mgr,
-        std::vector<RegedBufferEntry<RmaBuffer>>& allBuffers,
-        std::vector<std::shared_ptr<RmaBuffer>> *outRecords,
-        HwHandleFn&& hwHandleGetter, EqualFn&& tokenEqual)
+    static HcclResult UnregisterMemoryImpl(
+        void* memHandle, Mgr& mgr, std::vector<RegedBufferEntry<RmaBuffer>>& allBuffers,
+        std::vector<std::shared_ptr<RmaBuffer>>* outRecords, HwHandleFn&& hwHandleGetter, EqualFn&& tokenEqual)
     {
         CHK_PTR_NULL(memHandle);
         RmaBuffer* buffer = static_cast<RmaBuffer*>(memHandle);
@@ -197,8 +202,9 @@ protected:
         hccl::BufferKey<uintptr_t, u64> ownKey(bufferInfo.first, bufferInfo.second);
         RmaBuffer* refBuffer = buffer;
         if (buffer->IsAlias()) {
-            refBuffer = ResolveAliasParent(mgr, ownKey, buffer, allBuffers,
-                std::forward<HwHandleFn>(hwHandleGetter), std::forward<EqualFn>(tokenEqual));
+            refBuffer = ResolveAliasParent(
+                mgr, ownKey, buffer, allBuffers, std::forward<HwHandleFn>(hwHandleGetter),
+                std::forward<EqualFn>(tokenEqual));
             if (refBuffer == nullptr) {
                 HCCL_ERROR("[UnregisterMemory] alias parent not found");
                 return HCCL_E_NOT_FOUND;
@@ -210,22 +216,22 @@ protected:
         // Del returns false when ref remains nonzero; local unregister still succeeds after erasing this handle.
         EXCEPTION_CATCH((void)mgr->Del(tempKey), return HCCL_E_NOT_FOUND);
         // IsInTree判断tree中是否还有该key的引用
-        auto it = std::find_if(allBuffers.begin(), allBuffers.end(),
-            [buffer](const RegedBufferEntry<RmaBuffer>& entry) { return entry.first.get() == buffer; });
+        auto it
+            = std::find_if(allBuffers.begin(), allBuffers.end(), [buffer](const RegedBufferEntry<RmaBuffer>& entry) {
+                  return entry.first.get() == buffer;
+              });
         if (it != allBuffers.end()) {
-            if(!mgr->IsInTree(ownKey)) {
+            if (!mgr->IsInTree(ownKey)) {
                 allBuffers.erase(it);
             } else {
                 it->second = true;
             }
             if (outRecords != nullptr) {
-                outRecords->erase(std::remove(outRecords->begin(), outRecords->end(), it->first),
-                outRecords->end());
+                outRecords->erase(std::remove(outRecords->begin(), outRecords->end(), it->first), outRecords->end());
             }
         }
         return HCCL_SUCCESS;
     }
-
 };
-}
+} // namespace hcomm
 #endif // REGED_MEM_MGR_H

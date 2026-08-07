@@ -50,9 +50,9 @@ namespace hccl {
  */
 class MyRank {
 public:
-    MyRank(aclrtBinHandle binHandle, uint32_t rankId, const CommConfig& config,
-        const ManagerCallbacks& callbacks, RankGraph* rankGraph,
-        const Hccl::RankIpPortMapPtr& rankIpPortMap);
+    MyRank(
+        aclrtBinHandle binHandle, uint32_t rankId, const CommConfig& config, const ManagerCallbacks& callbacks,
+        RankGraph* rankGraph, const Hccl::RankIpPortMapPtr& rankIpPortMap);
     ~MyRank();
 
     HcclResult Init(HcclMem cclBuffer, const uint32_t opExpansionMode, uint32_t rankNum);
@@ -61,31 +61,27 @@ public:
 
     EngineCtxs* GetEngineCtxs() const { return engineCtxs_.get(); }
 
-    uint32_t GetOpExpansionMode() {
-        return opExpansionMode_;
-    }
-    CcuInsHandle GetCcuInstance() const {
-        return ccuInsHandle_;
-    }
-    void SetCcuInstance(CcuInsHandle ccuInsHandle) {
-        ccuInsHandle_ = ccuInsHandle;
-    }
+    uint32_t GetOpExpansionMode() { return opExpansionMode_; }
+    CcuInsHandle GetCcuInstance() const { return ccuInsHandle_; }
+    void SetCcuInstance(CcuInsHandle ccuInsHandle) { ccuInsHandle_ = ccuInsHandle; }
 
-    CollCommConfigConsistency &GetCollCommConfigConsistency();
+    CollCommConfigConsistency& GetCollCommConfigConsistency();
 
-    hcomm::EndpointMgr *GetEndpointMgr() const { return endpointMgr_.get(); }
+    hcomm::EndpointMgr* GetEndpointMgr() const { return endpointMgr_.get(); }
 
-    HcclResult CreateChannels(CommEngine engine, const std::string &commTag, 
-        const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle *channels);
-    
-    HcclResult ChannelGetHcclBuffer(ChannelHandle channel, void **buffer, uint64_t *size);
-    HcclResult ChannelGetRemoteMems(ChannelHandle channel, uint32_t *memNum, CommMem **remoteMem, char ***memTags) const;
-    HcclResult ChannelGetRemoteMems(ChannelHandle channel, uint32_t *memNum, CommMem **remoteMem,
-        std::vector<std::string> &memTags) const;
+    HcclResult CreateChannels(
+        CommEngine engine, const std::string& commTag, const HcclChannelDesc* channelDescs, uint32_t channelNum,
+        ChannelHandle* channels);
+
+    HcclResult ChannelGetHcclBuffer(ChannelHandle channel, void** buffer, uint64_t* size);
+    HcclResult
+    ChannelGetRemoteMems(ChannelHandle channel, uint32_t* memNum, CommMem** remoteMem, char*** memTags) const;
+    HcclResult ChannelGetRemoteMems(
+        ChannelHandle channel, uint32_t* memNum, CommMem** remoteMem, std::vector<std::string>& memTags) const;
 
     // Ns recovery
-    void SetKfcControlTransfer(std::shared_ptr<HDCommunicate> kfcControlTransferH2D, 
-        std::shared_ptr<HDCommunicate> kfcStatusTransferD2H);
+    void SetKfcControlTransfer(
+        std::shared_ptr<HDCommunicate> kfcControlTransferH2D, std::shared_ptr<HDCommunicate> kfcStatusTransferD2H);
     std::vector<ChannelHandle> GetAllChannelList();
     HcclResult StopLaunch();
     HcclResult Clean();
@@ -100,8 +96,9 @@ public:
      * @param[out] hcommDescs 输出的 HcommChannelDesc 数组（调用前需用 ChannelDescHccl2Hcomm 填充基础字段，
      *             本方法补上 socket/role/port 字段）
      */
-    HcclResult BatchCreateSockets(const HcclChannelDesc* channelDescs, uint32_t channelNum,
-        const std::string &socketTag, std::vector<HcommChannelDesc> &hcommDescs);
+    HcclResult BatchCreateSockets(
+        const HcclChannelDesc* channelDescs, uint32_t channelNum, const std::string& socketTag,
+        std::vector<HcommChannelDesc>& hcommDescs);
 
     /**
      * @brief 在已建好的 socket 上执行通信域一致性校验交换（CheckFrameV2 + 用户信息）。
@@ -115,26 +112,31 @@ public:
      * @param[in] engine 通信引擎
      * @note 仅 DEV_TYPE_950 实际执行交换，其它设备类型直接返回 SUCCESS，与非共享路径保持一致。
      */
-    HcclResult BatchExchangeAndCheckConsistency(const HcclChannelDesc* channelDescs,
-        const std::vector<HcommChannelDesc> &hcommDescs, uint32_t channelNum,
-        const std::vector<std::pair<u32, u32>> &newChannels, CommEngine engine);
+    HcclResult BatchExchangeAndCheckConsistency(
+        const HcclChannelDesc* channelDescs, const std::vector<HcommChannelDesc>& hcommDescs, uint32_t channelNum,
+        const std::vector<std::pair<u32, u32>>& newChannels, CommEngine engine);
 
 private:
     using ReuseSocketIdxMap = std::unordered_map<RankPair*, std::unordered_map<hcomm::EndpointPair*, u32>>;
-    HcclResult GetEndpointPairFromChannel(const HcclChannelDesc &channelDesc, uint32_t channelIndex, uint32_t channelNum,
-        uint32_t &remoteRank, hcomm::EndpointPair* &endpointPair, RankPair* &rankPair);
-    HcclResult BatchServerInitForChannels(const HcclChannelDesc* channelDescs, uint32_t channelNum,
-        const std::string &socketTag, ReuseSocketIdxMap &reuseSocketIdxMap);
-    HcclResult BatchGetSocketsForChannels(const HcclChannelDesc* channelDescs, uint32_t channelNum,
-        const std::string &socketTag, std::vector<HcommChannelDesc> &hcommDescs,
-        ReuseSocketIdxMap &reuseSocketIdxMap);
-    HcclResult BatchCreateChannels(CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum,
-        std::vector<HcommChannelDesc> &hcommDescs, ChannelHandle *channelHandles);
-    HcclResult BatchConnectChannels(const HcclChannelDesc* channelDescs, ChannelHandle *channelHandles, uint32_t channelNum);
+    HcclResult GetEndpointPairFromChannel(
+        const HcclChannelDesc& channelDesc, uint32_t channelIndex, uint32_t channelNum, uint32_t& remoteRank,
+        hcomm::EndpointPair*& endpointPair, RankPair*& rankPair);
+    HcclResult BatchServerInitForChannels(
+        const HcclChannelDesc* channelDescs, uint32_t channelNum, const std::string& socketTag,
+        ReuseSocketIdxMap& reuseSocketIdxMap);
+    HcclResult BatchGetSocketsForChannels(
+        const HcclChannelDesc* channelDescs, uint32_t channelNum, const std::string& socketTag,
+        std::vector<HcommChannelDesc>& hcommDescs, ReuseSocketIdxMap& reuseSocketIdxMap);
+    HcclResult BatchCreateChannels(
+        CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum,
+        std::vector<HcommChannelDesc>& hcommDescs, ChannelHandle* channelHandles);
+    HcclResult
+    BatchConnectChannels(const HcclChannelDesc* channelDescs, ChannelHandle* channelHandles, uint32_t channelNum);
     HcclResult CheckChannelParam(CommEngine engine, const HcclChannelDesc* channelDesc, uint32_t channelNum) const;
-    HcclResult QueryListenPort(uint32_t localRank, uint32_t remoteRank, const EndpointDesc &localEndpointDesc, 
-        const EndpointDesc &remoteEndpointDesc, uint32_t &listenPort, HcommChannelDesc &hcommDesc);
-    HcclResult GetLocalTlsStatus(Hccl::TlsStatus &tlsStatus) const;
+    HcclResult QueryListenPort(
+        uint32_t localRank, uint32_t remoteRank, const EndpointDesc& localEndpointDesc,
+        const EndpointDesc& remoteEndpointDesc, uint32_t& listenPort, HcommChannelDesc& hcommDesc);
+    HcclResult GetLocalTlsStatus(Hccl::TlsStatus& tlsStatus) const;
 
     HcclResult TryInitCcuInstanceLegacy();
     HcclResult TryInitCcuInstance();
@@ -145,7 +147,7 @@ private:
     HcclResult ConfigSqDepthByExpansionMode(CommEngine engine, HcommChannelDesc& hcommDesc) const;
     HcclResult DestroyNewChannels(CommEngine engine, const HcclChannelDesc* channelDescs);
     // 获取port
-    HcclResult GetListenPortInternal(uint32_t rank, uint32_t *devPort, EndpointLocType locType);
+    HcclResult GetListenPortInternal(uint32_t rank, uint32_t* devPort, EndpointLocType locType);
 
     aclrtBinHandle binHandle_{nullptr};
     uint32_t rankId_{};
@@ -173,7 +175,7 @@ private:
     // Ns recovery
     std::unique_ptr<NsRecoveryProcessor> nsRecoveryProcessor_{nullptr};
     // 内部获取 port 的方法，根据 mode_ 区分 v1/v2
-    HcclResult GetDevicePortInternal(uint32_t rank, uint32_t *devPort, EndpointLocType locType);
+    HcclResult GetDevicePortInternal(uint32_t rank, uint32_t* devPort, EndpointLocType locType);
 
     Hccl::RankIpPortMapPtr rankIpPortMap_;
 
@@ -189,8 +191,8 @@ private:
 
 namespace MyRankUtils {
 
-HcommChannelDesc ChannelDescHccl2Hcomm(const HcclChannelDesc &hcclDesc, const hccl::CommConfig &commConfig);
+HcommChannelDesc ChannelDescHccl2Hcomm(const HcclChannelDesc& hcclDesc, const hccl::CommConfig& commConfig);
 
-} // namespace MyRankUtils  
+} // namespace MyRankUtils
 
 #endif // MY_RANK_H

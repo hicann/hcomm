@@ -16,12 +16,14 @@ class ShmHeadTest : public testing::Test {
 protected:
 };
 
-TEST_F(ShmHeadTest, ShmHead_Size) {
+TEST_F(ShmHeadTest, ShmHead_Size)
+{
     static_assert(sizeof(ShmHead) > 0, "ShmHead should have size");
     EXPECT_EQ(sizeof(ShmHead), 88u);
 }
 
-TEST_F(ShmHeadTest, ShmConstants_Match) {
+TEST_F(ShmHeadTest, ShmConstants_Match)
+{
     EXPECT_EQ(SHM_MAGIC, 0x53484D50);
     EXPECT_EQ(SHM_VERSION, 1);
 }

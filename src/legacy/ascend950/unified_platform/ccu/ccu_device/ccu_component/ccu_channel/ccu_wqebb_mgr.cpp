@@ -32,43 +32,41 @@ static uint32_t RoundUpToNextPowerOfTwo(uint32_t num)
 static uint32_t GetWqeBBReqSizeBySqSize(uint32_t sqSize)
 {
     if (sqSize < CCU_MIN_SQ_DEPTH) {
-        HCCL_WARNING("[CcuJettyCtxMgr][%s] sqSize[%u] is too small, reset to [%u].",
-            __func__, sqSize, CCU_MIN_SQ_DEPTH);
+        HCCL_WARNING(
+            "[CcuJettyCtxMgr][%s] sqSize[%u] is too small, reset to [%u].", __func__, sqSize, CCU_MIN_SQ_DEPTH);
         return CCU_MIN_SQ_DEPTH;
     }
 
     // WQE basic block 的 size 必须是 2 的整数次幂，向上取整
     uint32_t wqeBBReqNum = RoundUpToNextPowerOfTwo(sqSize);
     if (wqeBBReqNum != sqSize) {
-        HCCL_WARNING("[CcuJettyCtxMgr][%s] sqSize[%u] is not power of 2, reset to [%u].",
-            __func__, sqSize, wqeBBReqNum);
+        HCCL_WARNING(
+            "[CcuJettyCtxMgr][%s] sqSize[%u] is not power of 2, reset to [%u].", __func__, sqSize, wqeBBReqNum);
     }
 
     if (sqSize > CCU_MAX_SQ_DEPTH) {
-        HCCL_WARNING("[CcuJettyCtxMgr][%s] sqSize[%u] is too large, reset to [%u].",
-            __func__, sqSize, CCU_MAX_SQ_DEPTH);
+        HCCL_WARNING(
+            "[CcuJettyCtxMgr][%s] sqSize[%u] is too large, reset to [%u].", __func__, sqSize, CCU_MAX_SQ_DEPTH);
         return CCU_MAX_SQ_DEPTH;
     }
 
     return wqeBBReqNum;
 }
 
-CcuWqeBBMgr::CcuWqeBBMgr(const int32_t devLogicId, const uint8_t dieId)
-    : devLogicId(devLogicId), dieId(dieId)
+CcuWqeBBMgr::CcuWqeBBMgr(const int32_t devLogicId, const uint8_t dieId) : devLogicId(devLogicId), dieId(dieId)
 {
     uint32_t wqeBBNum = 0; // 获取失败或为0场景，分配将按资源不足操作
     (void)CcuResSpecifications::GetInstance(devLogicId).GetWqeBBNum(dieId, wqeBBNum);
     idAllocator = std::make_unique<CcuResIdAllocator>(wqeBBNum);
 }
 
-HcclResult CcuWqeBBMgr::Alloc(const uint32_t sqSize, ResInfo &wqeBBInfo)
+HcclResult CcuWqeBBMgr::Alloc(const uint32_t sqSize, ResInfo& wqeBBInfo)
 {
     uint32_t wqeBBReqSize = GetWqeBBReqSizeBySqSize(sqSize);
     vector<ResInfo> resInfo;
     auto ret = idAllocator->Alloc(wqeBBReqSize, true, resInfo, "ResType::WqeBB"); // wqebb资源要求连续
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_WARNING("[CcuWqeBBMgr][%s] failed, sqSize[%u], wqeBBSize[%u]",
-            __func__, sqSize, wqeBBReqSize);
+        HCCL_WARNING("[CcuWqeBBMgr][%s] failed, sqSize[%u], wqeBBSize[%u]", __func__, sqSize, wqeBBReqSize);
         return ret;
     }
 
@@ -76,12 +74,13 @@ HcclResult CcuWqeBBMgr::Alloc(const uint32_t sqSize, ResInfo &wqeBBInfo)
     return ret;
 }
 
-HcclResult CcuWqeBBMgr::Release(const ResInfo &wqeBBInfo)
+HcclResult CcuWqeBBMgr::Release(const ResInfo& wqeBBInfo)
 {
     auto ret = idAllocator->Release(wqeBBInfo.startId, wqeBBInfo.num);
-    CHK_PRT_RET(ret != HcclResult::HCCL_SUCCESS,
-        HCCL_ERROR("[CcuWqeBBMgr][%s] failed, wqe basic block resource info[%s]",
-            __func__, wqeBBInfo.Describe().c_str()),
+    CHK_PRT_RET(
+        ret != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[CcuWqeBBMgr][%s] failed, wqe basic block resource info[%s]", __func__, wqeBBInfo.Describe().c_str()),
         ret);
 
     return HcclResult::HCCL_SUCCESS;

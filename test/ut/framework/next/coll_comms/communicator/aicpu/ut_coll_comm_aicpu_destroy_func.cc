@@ -26,28 +26,16 @@ using namespace hccl;
 
 class CollCommAicpuDestroyFuncTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "CollCommAicpuDestroyFuncTest set up." << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "CollCommAicpuDestroyFuncTest tear down." << std::endl;
-    }
-    void SetUp() override
-    {
-        GlobalMockObject::reset();
-    }
-    void TearDown() override
-    {
-        GlobalMockObject::verify();
-    }
+    static void SetUpTestCase() { std::cout << "CollCommAicpuDestroyFuncTest set up." << std::endl; }
+    static void TearDownTestCase() { std::cout << "CollCommAicpuDestroyFuncTest tear down." << std::endl; }
+    void SetUp() override { GlobalMockObject::reset(); }
+    void TearDown() override { GlobalMockObject::verify(); }
 };
 
 // 测试 Call() - stopCall_ 为 true 时直接返回，不执行 Process
 TEST_F(CollCommAicpuDestroyFuncTest, Ut_Call_When_StopCallTrue_Expect_NoProcess)
 {
-    auto &func = CollCommAicpuDestroyFunc::GetInstance();
+    auto& func = CollCommAicpuDestroyFunc::GetInstance();
     func.stopCall_ = true;
     func.Call();
     // 无通信域、无异常即视为通过
@@ -58,7 +46,7 @@ TEST_F(CollCommAicpuDestroyFuncTest, Ut_Call_When_StopCallTrue_Expect_NoProcess)
 // 测试 Call() - 无通信域时 Process 正常返回，覆盖 shared_lock 读路径(L39)
 TEST_F(CollCommAicpuDestroyFuncTest, Ut_Call_When_NoComm_Expect_Success)
 {
-    auto &func = CollCommAicpuDestroyFunc::GetInstance();
+    auto& func = CollCommAicpuDestroyFunc::GetInstance();
     func.stopCall_ = false;
     func.Call();
     // Process 返回成功，stopCall_ 不应被置为 true
@@ -76,7 +64,7 @@ TEST_F(CollCommAicpuDestroyFuncTest, Ut_Process_When_CommStatusInvalid_Expect_Sk
     ASSERT_EQ(AicpuIndopProcess::AicpuIndOpCommInit(&commAicpuParam), HCCL_SUCCESS);
 
     // 直接调用 Process()，通信域状态为 INVALID，会 continue 跳过
-    auto &func = CollCommAicpuDestroyFunc::GetInstance();
+    auto& func = CollCommAicpuDestroyFunc::GetInstance();
     HcclResult ret = func.Process();
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
@@ -96,7 +84,7 @@ TEST_F(CollCommAicpuDestroyFuncTest, Ut_Call_When_CommReadyButNoDestroyCmd_Expec
     ASSERT_EQ(AicpuIndopProcess::AicpuIndOpCommInit(&commAicpuParam), HCCL_SUCCESS);
 
     // 设置通信域状态为 READY，但 BackGroundGetCmd 返回非 DESTROY 命令
-    auto &func = CollCommAicpuDestroyFunc::GetInstance();
+    auto& func = CollCommAicpuDestroyFunc::GetInstance();
     func.stopCall_ = false;
     func.Call();
     EXPECT_FALSE(func.stopCall_);

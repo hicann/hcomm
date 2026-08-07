@@ -22,7 +22,7 @@
 
 /* ─── 工具函数 ─── */
 
-const char *TagFindAttr(const TagEntry *e, const char *name)
+const char* TagFindAttr(const TagEntry* e, const char* name)
 {
     for (int i = 0; i < e->attrCount; i++) {
         if (strcmp(e->attrs[i].name, name) == 0) {
@@ -32,23 +32,23 @@ const char *TagFindAttr(const TagEntry *e, const char *name)
     return NULL;
 }
 
-static bool IsSelfClose(const char *tag, const char *tagEnd)
+static bool IsSelfClose(const char* tag, const char* tagEnd)
 {
     size_t n = (size_t)(tagEnd - tag + 1);
     return n >= 2 && tag[n - 2] == '/';
 }
 
-static void GetTagName(const char *tag, char *name, size_t len)
+static void GetTagName(const char* tag, char* name, size_t len)
 {
     if (name == NULL || len == 0) {
         return;
     }
 
-    const char *p = tag + 1;
+    const char* p = tag + 1;
     if (*p == '/') {
         p++;
     }
-    const char *start = p;
+    const char* start = p;
     while (*p != '\0' && *p != ' ' && *p != '>' && *p != '/') {
         p++;
     }
@@ -63,10 +63,10 @@ static void GetTagName(const char *tag, char *name, size_t len)
     name[n] = '\0';
 }
 
-static void ExtractAttrs(const char *tag, TagEntry *e)
+static void ExtractAttrs(const char* tag, TagEntry* e)
 {
     int ac = e->attrCount;
-    const char *scan = tag;
+    const char* scan = tag;
 
     while (ac < MAX_ATTRS_PER_TAG) {
         scan = strchr(scan, ' ');
@@ -77,7 +77,7 @@ static void ExtractAttrs(const char *tag, TagEntry *e)
         if (*scan == '\0') {
             break;
         }
-        const char *eq = strchr(scan, '=');
+        const char* eq = strchr(scan, '=');
         if (eq == NULL || eq <= scan) {
             break;
         }
@@ -87,12 +87,12 @@ static void ExtractAttrs(const char *tag, TagEntry *e)
         }
         (void)strncpy_s(e->attrs[ac].name, sizeof(e->attrs[ac].name), scan, nlen);
 
-        const char *vq = strchr(eq, '\"');
+        const char* vq = strchr(eq, '\"');
         if (vq == NULL) {
             break;
         }
         vq++;
-        const char *ve = strchr(vq, '\"');
+        const char* ve = strchr(vq, '\"');
         if (ve == NULL) {
             break;
         }
@@ -110,8 +110,7 @@ static void ExtractAttrs(const char *tag, TagEntry *e)
 
 /* ─── 内部辅助：处理一个开标签 ─── */
 /* 返回 tagEnd+1（下一位置），通过指针更新 cnt / dc */
-static char *HandleOpenTag(char *t, char *tagEnd, TagEntry *tags, unsigned int maxTags,
-    unsigned int *cnt, int *dc)
+static char* HandleOpenTag(char* t, char* tagEnd, TagEntry* tags, unsigned int maxTags, unsigned int* cnt, int* dc)
 {
     char name[MAX_TAG_NAME_LEN];
     GetTagName(t, name, sizeof(name));
@@ -121,7 +120,7 @@ static char *HandleOpenTag(char *t, char *tagEnd, TagEntry *tags, unsigned int m
 
     bool selfClose = IsSelfClose(t, tagEnd);
     if (*cnt < maxTags) {
-        TagEntry *e = &tags[*cnt];
+        TagEntry* e = &tags[*cnt];
         (void)memset_s(e, sizeof(*e), 0, sizeof(*e));
         if (strcpy_s(e->tagName, sizeof(e->tagName), name) != 0) {
             TOPO_ERR("HandleOpenTag: strcpy_s failed, name=%s", name);
@@ -141,13 +140,12 @@ static char *HandleOpenTag(char *t, char *tagEnd, TagEntry *tags, unsigned int m
 
 /* ─── 逐行解析 XML，识别标签 ─── */
 /* 逐行解析 XML，识别标签 */
-static TopoAddrResult ParseXmlLines(FILE *fp, TagEntry *tags, unsigned int maxTags,
-                                    unsigned int *cnt)
+static TopoAddrResult ParseXmlLines(FILE* fp, TagEntry* tags, unsigned int maxTags, unsigned int* cnt)
 {
     int dc = 0;
     char line[MAX_LINE_LEN];
     while (fgets(line, sizeof(line), fp) != NULL) {
-        char *t = line;
+        char* t = line;
         while (*t != '\0') {
             while (*t != '\0' && isspace((unsigned char)*t)) {
                 t++;
@@ -156,7 +154,7 @@ static TopoAddrResult ParseXmlLines(FILE *fp, TagEntry *tags, unsigned int maxTa
                 break;
             }
 
-            char *tagEnd = strchr(t, '>');
+            char* tagEnd = strchr(t, '>');
             if (tagEnd == NULL) {
                 break;
             }
@@ -184,11 +182,11 @@ static TopoAddrResult ParseXmlLines(FILE *fp, TagEntry *tags, unsigned int maxTa
 
 /* ─── 核心解析函数 ─── */
 
-TopoAddrResult ParseXmlTags(const char *xmlPath, TagEntry *tags, unsigned int *tagCount, unsigned int maxTags)
+TopoAddrResult ParseXmlTags(const char* xmlPath, TagEntry* tags, unsigned int* tagCount, unsigned int maxTags)
 {
     *tagCount = 0;
 
-    FILE *fp = fopen(xmlPath, "rb");
+    FILE* fp = fopen(xmlPath, "rb");
     if (fp == NULL) {
         TOPO_ERR("ParseXmlTags: cannot open %s", xmlPath);
         return TOPO_ERR_OPEN_FILE;

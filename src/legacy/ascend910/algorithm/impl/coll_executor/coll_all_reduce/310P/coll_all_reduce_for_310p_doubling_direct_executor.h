@@ -13,22 +13,21 @@
 #include "coll_all_reduce_executor.h"
 namespace hccl {
 class CollAllReduceFor310PDoublingDirectExecutor : public CollAllReduceExecutor {
-
 public:
-    CollAllReduceFor310PDoublingDirectExecutor(const HcclDispatcher dispatcher,
-                                               std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollAllReduceFor310PDoublingDirectExecutor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAllReduceFor310PDoublingDirectExecutor() override = default;
 
 private:
     /* *************** 资源计算 *************** */
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType,
-        TransportMemType outputType,
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
 
     /* *************** 算法编排 *************** */
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 };
 } // namespace hccl
 

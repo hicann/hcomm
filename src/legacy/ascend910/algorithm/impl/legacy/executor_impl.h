@@ -14,7 +14,6 @@
 /* 节点间的集合通信操作汇总 */
 #include "alg_template_register.h"
 
-namespace hccl {
-}
+namespace hccl {}
 
 #endif /* EXECUTOR_IMPL_H */

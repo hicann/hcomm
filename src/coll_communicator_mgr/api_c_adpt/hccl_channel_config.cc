@@ -11,7 +11,7 @@
 #include "log.h"
 #include "exception_handler.h"
 
-HcclResult HcclChannelConfigCreate(HcclChannelConfig *config)
+HcclResult HcclChannelConfigCreate(HcclChannelConfig* config)
 {
     CHK_PTR_NULL(config);
     NEW_NOTHROW(*config, hccl::HcclChannelConfigData(), return HCCL_E_PTR);
@@ -23,7 +23,7 @@ HcclResult HcclChannelConfigDestroy(HcclChannelConfig config)
     if (config == nullptr) {
         return HCCL_SUCCESS;
     }
-    auto *cfg = static_cast<hccl::HcclChannelConfigData *>(config);
+    auto* cfg = static_cast<hccl::HcclChannelConfigData*>(config);
     delete cfg;
     return HCCL_SUCCESS;
 }
@@ -31,7 +31,7 @@ HcclResult HcclChannelConfigDestroy(HcclChannelConfig config)
 HcclResult HcclChannelConfigSetInt(HcclChannelConfig config, HcclChannelConfigType type, uint32_t value)
 {
     CHK_PTR_NULL(config);
-    auto *cfg = static_cast<hccl::HcclChannelConfigData *>(config);
+    auto* cfg = static_cast<hccl::HcclChannelConfigData*>(config);
     switch (type) {
         case HCCL_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE:
             cfg->isSharedQueue = (value != 0);
@@ -44,11 +44,11 @@ HcclResult HcclChannelConfigSetInt(HcclChannelConfig config, HcclChannelConfigTy
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclChannelConfigSetStr(HcclChannelConfig config, HcclChannelConfigType type, const char *value)
+HcclResult HcclChannelConfigSetStr(HcclChannelConfig config, HcclChannelConfigType type, const char* value)
 {
     CHK_PTR_NULL(config);
     CHK_PTR_NULL(value);
-    auto *cfg = static_cast<hccl::HcclChannelConfigData *>(config);
+    auto* cfg = static_cast<hccl::HcclChannelConfigData*>(config);
     switch (type) {
         case HCCL_CHANNEL_CONFIG_TYPE_SHARED_QUEUE_TAG:
             cfg->sharedQueueTag = std::string(value);

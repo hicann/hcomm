@@ -29,89 +29,70 @@
 using namespace std;
 using namespace hccl;
 
-TopoinfoRanktableHeterog::TopoinfoRanktableHeterog(const std::string &rankTableM,
-    const std::string &identify, DevType deviceType)
-    : TopoInfoRanktableParser(rankTableM, identify), deviceType_(deviceType)
-{
-}
+TopoinfoRanktableHeterog::TopoinfoRanktableHeterog(
+    const std::string& rankTableM, const std::string& identify, DevType deviceType)
+    : TopoInfoRanktableParser(rankTableM, identify),
+      deviceType_(deviceType)
+{}
 
-TopoinfoRanktableHeterog::~TopoinfoRanktableHeterog()
-{
-}
+TopoinfoRanktableHeterog::~TopoinfoRanktableHeterog() {}
 
-HcclResult TopoinfoRanktableHeterog::Init()
-{
-    return HCCL_E_NOT_SUPPORT;
-}
+HcclResult TopoinfoRanktableHeterog::Init() { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult TopoinfoRanktableHeterog::GetSelfClusterInfo(HcclCommParams &params)
+HcclResult TopoinfoRanktableHeterog::GetSelfClusterInfo(HcclCommParams& params) { return HCCL_E_NOT_SUPPORT; }
+
+HcclResult TopoinfoRanktableHeterog::GetClusterInfo(hccl::HcclCommParams& params, hccl::RankTable_t& rankTable)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableHeterog::GetClusterInfo(hccl::HcclCommParams &params,
-    hccl::RankTable_t &rankTable)
+HcclResult TopoinfoRanktableHeterog::GetClusterInfo(RankTable_t& clusterInfo) { return HCCL_E_NOT_SUPPORT; }
+
+HcclResult TopoinfoRanktableHeterog::ParserClusterInfo(hccl::HcclCommParams& params, hccl::RankTable_t& rankTable)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableHeterog::GetClusterInfo(RankTable_t &clusterInfo)
+HcclResult TopoinfoRanktableHeterog::GetRanktableInfo(RankTable_t& clusterInfo) { return HCCL_E_NOT_SUPPORT; }
+
+HcclResult TopoinfoRanktableHeterog::CheckNicDeployConsistence(RankTable_t& clusterInfo) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableHeterog::ParserClusterInfo(hccl::HcclCommParams &params,
-    hccl::RankTable_t &rankTable)
+HcclResult TopoinfoRanktableHeterog::CheckMode(std::string& mode) const { return HCCL_E_NOT_SUPPORT; }
+
+HcclResult TopoinfoRanktableHeterog::CheckHeterogSubVersion(std::string& subVersion) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableHeterog::GetRanktableInfo(RankTable_t &clusterInfo)
+HcclResult TopoinfoRanktableHeterog::GetHostPort(const u32& localRank, u32& hostPort) { return HCCL_E_NOT_SUPPORT; }
+
+HcclResult TopoinfoRanktableHeterog::GetRanks(
+    const nlohmann::json& NodeListObj, u32 objIndex, RankTable_t& clusterInfo, std::string& serverId, u32& serverIdx,
+    HcclIpAddress& nodeIp)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableHeterog::CheckNicDeployConsistence(RankTable_t &clusterInfo) const
-{
-    return HCCL_E_NOT_SUPPORT;
-}
-
-HcclResult TopoinfoRanktableHeterog::CheckMode(std::string &mode) const
-{
-    return HCCL_E_NOT_SUPPORT;
-}
-
-HcclResult TopoinfoRanktableHeterog::CheckHeterogSubVersion(std::string &subVersion) const
-{
-    return HCCL_E_NOT_SUPPORT;
-}
-
-HcclResult TopoinfoRanktableHeterog::GetHostPort(const u32 &localRank, u32 &hostPort)
-{
-    return HCCL_E_NOT_SUPPORT;
-}
-
-HcclResult TopoinfoRanktableHeterog::GetRanks(const nlohmann::json &NodeListObj, u32 objIndex,
-    RankTable_t &clusterInfo, std::string &serverId, u32 &serverIdx, HcclIpAddress &nodeIp)
-{
-    return HCCL_E_NOT_SUPPORT;
-}
-
-HcclResult TopoinfoRanktableHeterog::GetSingleNode(const nlohmann::json &NodeListObj, u32 objIndex,
-    RankTable_t &clusterInfo)
+HcclResult
+TopoinfoRanktableHeterog::GetSingleNode(const nlohmann::json& NodeListObj, u32 objIndex, RankTable_t& clusterInfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 // 91093暂定所有字段都是必选字段。除了ranks里面的 bind_device_id
-HcclResult TopoinfoRanktableHeterog::GetSingleRank91093(const nlohmann::json &ranksObj, u32 objIndex,
-    RankTable_t &clusterInfo, std::string &serverId, u32 &serverIdx, HcclIpAddress &nodeIp)
+HcclResult TopoinfoRanktableHeterog::GetSingleRank91093(
+    const nlohmann::json& ranksObj, u32 objIndex, RankTable_t& clusterInfo, std::string& serverId, u32& serverIdx,
+    HcclIpAddress& nodeIp)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableHeterog::GetSingleRank(const nlohmann::json &ranksObj, u32 objIndex,
-    RankTable_t &clusterInfo, std::string &serverId, u32 &serverIdx, HcclIpAddress &nodeIp)
+HcclResult TopoinfoRanktableHeterog::GetSingleRank(
+    const nlohmann::json& ranksObj, u32 objIndex, RankTable_t& clusterInfo, std::string& serverId, u32& serverIdx,
+    HcclIpAddress& nodeIp)
 {
     return HCCL_E_NOT_SUPPORT;
 }

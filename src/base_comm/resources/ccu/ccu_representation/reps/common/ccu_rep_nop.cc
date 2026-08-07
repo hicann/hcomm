@@ -16,32 +16,30 @@
 namespace hcomm {
 namespace CcuRep {
 
-using namespace Hccl;
+    using namespace Hccl;
 
-CcuRepNop::CcuRepNop(CcuInsGeneratorBase* insGeneratorPtr) : insGeneratorPtr_(insGeneratorPtr)
-{
-    type       = CcuRepType::NOP;
-    instrCount = insGeneratorPtr_->GetInstrCount(type);
-}
+    CcuRepNop::CcuRepNop(CcuInsGeneratorBase* insGeneratorPtr) : insGeneratorPtr_(insGeneratorPtr)
+    {
+        type = CcuRepType::NOP;
+        instrCount = insGeneratorPtr_->GetInstrCount(type);
+    }
 
-bool CcuRepNop::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool CcuRepNop::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    CHK_RET_THROW(Hccl::CcuApiException,
-        Hccl::StringFormat("[CcuRepNop][%s] failed to translate repNop for instrId[%u] ", __func__, instrId),
+        CHK_RET_THROW(
+            Hccl::CcuApiException,
+            Hccl::StringFormat("[CcuRepNop][%s] failed to translate repNop for instrId[%u] ", __func__, instrId),
             insGeneratorPtr_->CcuRepNopTranslate(ccuKernel, instr, instrId, this, dep));
 
-    instrId += instrCount;
+        instrId += instrCount;
 
-    return translated;
-}
+        return translated;
+    }
 
-std::string CcuRepNop::Describe()
-{
-    return Hccl::StringFormat("Nop");
-}
+    std::string CcuRepNop::Describe() { return Hccl::StringFormat("Nop"); }
 
 }; // namespace CcuRep
 }; // namespace hcomm

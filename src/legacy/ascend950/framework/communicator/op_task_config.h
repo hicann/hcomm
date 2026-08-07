@@ -15,27 +15,15 @@
 
 namespace Hccl {
 
-constexpr u32 INVALID_QOSCFG           = 0xFFFFFFFF;
+constexpr u32 INVALID_QOSCFG = 0xFFFFFFFF;
 constexpr s32 NOTIFY_DEFAULT_WAIT_TIME = 27 * 68; // notifywait默认1800等待时长
 
 class OpTaskConfig {
 public:
-    u32 GetQosCfg() const
-    {
-        return qosCfg;
-    }
-    void SetQosCfg(u32 qos)
-    {
-        OpTaskConfig::qosCfg = qos;
-    }
-    u32 GetNotifyWaitTime() const
-    {
-        return notifyWaitTime;
-    }
-    void SetNotifyWaitTime(u32 seconds)
-    {
-        OpTaskConfig::notifyWaitTime = seconds;
-    }
+    u32 GetQosCfg() const { return qosCfg; }
+    void SetQosCfg(u32 qos) { OpTaskConfig::qosCfg = qos; }
+    u32 GetNotifyWaitTime() const { return notifyWaitTime; }
+    void SetNotifyWaitTime(u32 seconds) { OpTaskConfig::notifyWaitTime = seconds; }
 
 private:
     u32 qosCfg{INVALID_QOSCFG};

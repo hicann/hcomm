@@ -18,26 +18,26 @@
 namespace Hccl {
 namespace CcuRep {
 
-#define CCU_WHILE(x)                                                                                                   \
+#define CCU_WHILE(x) \
     for (auto __ccuRepeatHidden = CcuRep::Repeat(this, x); __ccuRepeatHidden.Check(); __ccuRepeatHidden.Run())
 #define CCU_BREAK __ccuRepeatHidden.Break()
 
-class Repeat {
-public:
-    Repeat(CcuRepContext *context, CcuRelationalOperator<Variable, uint64_t> rel);
-    ~Repeat();
-    void Break();
-    bool Check() const;
-    void Run();
+    class Repeat {
+    public:
+        Repeat(CcuRepContext* context, CcuRelationalOperator<Variable, uint64_t> rel);
+        ~Repeat();
+        void Break();
+        bool Check() const;
+        void Run();
 
-private:
-    CcuRepContext *context{nullptr};
-    bool isExecuted{false};
+    private:
+        CcuRepContext* context{nullptr};
+        bool isExecuted{false};
 
-    std::shared_ptr<CcuRepJumpBase>  jump{nullptr};
-    std::shared_ptr<CcuRepJumpLabel> beginLabel{nullptr};
-    std::shared_ptr<CcuRepJumpLabel> endLabel{nullptr};
-};
+        std::shared_ptr<CcuRepJumpBase> jump{nullptr};
+        std::shared_ptr<CcuRepJumpLabel> beginLabel{nullptr};
+        std::shared_ptr<CcuRepJumpLabel> endLabel{nullptr};
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

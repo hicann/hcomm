@@ -8,23 +8,19 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #include "calc_hccs_plus_sio_transport_req.h"
 
 namespace hccl {
-CalcHccsPlusSioTransportReq::CalcHccsPlusSioTransportReq(std::vector<std::vector<u32>> &subCommPlaneVector,
-    std::vector<bool> &isBridgeVector, u32 userRank)
+CalcHccsPlusSioTransportReq::CalcHccsPlusSioTransportReq(
+    std::vector<std::vector<u32>>& subCommPlaneVector, std::vector<bool>& isBridgeVector, u32 userRank)
     : CalcTransportReqBase(subCommPlaneVector, isBridgeVector, userRank)
-{
-}
+{}
 
-CalcHccsPlusSioTransportReq::~CalcHccsPlusSioTransportReq()
-{
-}
+CalcHccsPlusSioTransportReq::~CalcHccsPlusSioTransportReq() {}
 
-HcclResult CalcHccsPlusSioTransportReq::CalcTransportRequest(const std::string &tag, TransportMemType inputMemType,
-    TransportMemType outputMemType, const CommParaInfo &commParaInfo,
-    std::vector<SingleSubCommTransport> &commTransport, u32 subUserRankRoot)
+HcclResult CalcHccsPlusSioTransportReq::CalcTransportRequest(
+    const std::string& tag, TransportMemType inputMemType, TransportMemType outputMemType,
+    const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport, u32 subUserRankRoot)
 {
     u32 ringSize = 2;
     commTransport.resize(ringSize);
@@ -33,15 +29,18 @@ HcclResult CalcHccsPlusSioTransportReq::CalcTransportRequest(const std::string &
         if (commParaInfo.commPlane == COMM_LEVEL1 && !isBridgeVector_.empty() && !isBridgeVector_[0]) {
             continue; // 跳出本次循环
         }
-        CHK_PRT_RET(subCommPlaneVector_.empty(), HCCL_ERROR("[CalcHccsPlusSioTransportReq][CalcTransportRequest] "\
-            "the vector named subCommPlaneVector_ is empty."), HCCL_E_NOT_FOUND);
+        CHK_PRT_RET(
+            subCommPlaneVector_.empty(),
+            HCCL_ERROR("[CalcHccsPlusSioTransportReq][CalcTransportRequest] "
+                       "the vector named subCommPlaneVector_ is empty."),
+            HCCL_E_NOT_FOUND);
         u32 rank = GetSubCollectiveRank(subCommPlaneVector_[0]);
         if (rank == INVALID_VALUE_RANKID) {
             continue;
         }
 
         u32 rankSize = subCommPlaneVector_[0].size();
-        SingleSubCommTransport &subCommTransport = commTransport[ringIndex];
+        SingleSubCommTransport& subCommTransport = commTransport[ringIndex];
         subCommTransport.transportRequests.resize(rankSize);
         // 只有一张卡时不需要建链
         if (rankSize == HCCL_RANK_SIZE_EQ_ONE) {
@@ -51,17 +50,19 @@ HcclResult CalcHccsPlusSioTransportReq::CalcTransportRequest(const std::string &
 
         HCCL_DEBUG("[CalcHccsPlusSioTransportReq][CalcTransportRequest]rankSize is %u", rankSize);
         for (u32 rankIndex = 0; rankIndex < rankSize; rankIndex++) {
-            TransportRequest &tmpTransport = subCommTransport.transportRequests[rankIndex];
+            TransportRequest& tmpTransport = subCommTransport.transportRequests[rankIndex];
             if (rankIndex != rank) {
                 tmpTransport.isValid = true;
-                tmpTransport.localUserRank  = userRank_;
+                tmpTransport.localUserRank = userRank_;
                 tmpTransport.remoteUserRank = subCommPlaneVector_[0][rankIndex];
                 tmpTransport.inputMemType = inputMemType;
                 tmpTransport.outputMemType = outputMemType;
                 tmpTransport.linkType = (ringIndex == 0) ? TransportLinkType::HCCS : TransportLinkType::SIO;
-                HCCL_INFO("[CommFactory][CalcHccsPlusSioCommInfo] param_.tag[%s] ringIndex[%u], localRank[%u], "\
-                    "remoteRank[%u], inputMemType[%d], outputMemType[%d], linkType[%d]", tag.c_str(), ringIndex, userRank_,
-                    tmpTransport.remoteUserRank, inputMemType, outputMemType, tmpTransport.linkType);
+                HCCL_INFO(
+                    "[CommFactory][CalcHccsPlusSioCommInfo] param_.tag[%s] ringIndex[%u], localRank[%u], "
+                    "remoteRank[%u], inputMemType[%d], outputMemType[%d], linkType[%d]",
+                    tag.c_str(), ringIndex, userRank_, tmpTransport.remoteUserRank, inputMemType, outputMemType,
+                    tmpTransport.linkType);
             } else {
                 tmpTransport.isValid = false;
                 continue;
@@ -71,4 +72,4 @@ HcclResult CalcHccsPlusSioTransportReq::CalcTransportRequest(const std::string &
     return HCCL_SUCCESS;
 }
 
-}  // namespace hccl
+} // namespace hccl

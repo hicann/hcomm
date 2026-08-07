@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef CCU_RES_H
 #define CCU_RES_H
 
@@ -28,8 +28,8 @@ extern "C" {
  *         CCU_E_PTR：varHandle 为 nullptr；CCU_E_RUNTIME：地址映射失败。
  * @note 句柄生命周期与 insHandle 绑定，无显式释放接口，由 HcommCcuInsDestroy 统一解映射并还池。
  */
-extern CcuResult HcommCcuVariableAlloc(CcuInsHandle insHandle, uint8_t dieId, uint32_t num,
-    CcuVariableHandle *varHandle);
+extern CcuResult
+HcommCcuVariableAlloc(CcuInsHandle insHandle, uint8_t dieId, uint32_t num, CcuVariableHandle* varHandle);
 
 /**
  * @brief 预约一段连续的 Event(CKE) 资源，参数与生命周期约束同 HcommCcuVariableAlloc。
@@ -40,8 +40,7 @@ extern CcuResult HcommCcuVariableAlloc(CcuInsHandle insHandle, uint8_t dieId, ui
  * @return CcuResult，错误码语义同 HcommCcuVariableAlloc。
  * @note CKE 池与 kernel 自身的完成事件共用且单 die 容量有限，大 num 可能总量足够却无连续块。
  */
-extern CcuResult HcommCcuEventAlloc(CcuInsHandle insHandle, uint8_t dieId, uint32_t num,
-    CcuEventHandle *eventHandle);
+extern CcuResult HcommCcuEventAlloc(CcuInsHandle insHandle, uint8_t dieId, uint32_t num, CcuEventHandle* eventHandle);
 
 /**
  * @brief 查询预约句柄名下第 index 个 Variable(XN) 的进程可访问虚拟地址。
@@ -52,7 +51,7 @@ extern CcuResult HcommCcuEventAlloc(CcuInsHandle insHandle, uint8_t dieId, uint3
  *         CCU_E_PTR：va 为 nullptr。
  * @note 地址已在 Alloc 阶段映射并缓存，此处为纯查表；VA 供 CCU 外模块访问，有效期同句柄。
  */
-extern CcuResult HcommCcuVariableGetAddr(CcuVariableHandle varHandle, uint32_t index, uint64_t *va);
+extern CcuResult HcommCcuVariableGetAddr(CcuVariableHandle varHandle, uint32_t index, uint64_t* va);
 
 /**
  * @brief 查询预约句柄名下第 index 个 Event(CKE) 的进程可访问虚拟地址。
@@ -61,7 +60,7 @@ extern CcuResult HcommCcuVariableGetAddr(CcuVariableHandle varHandle, uint32_t i
  * @param[out] va 该资源的进程可访问虚拟地址，不可为 nullptr。
  * @return CcuResult，错误码与约束同 HcommCcuVariableGetAddr。
  */
-extern CcuResult HcommCcuEventGetAddr(CcuEventHandle eventHandle, uint32_t index, uint64_t *va);
+extern CcuResult HcommCcuEventGetAddr(CcuEventHandle eventHandle, uint32_t index, uint64_t* va);
 
 /**
  * @brief 创建 CCU 实例资源描述符
@@ -73,7 +72,7 @@ extern CcuResult HcommCcuEventGetAddr(CcuEventHandle eventHandle, uint32_t index
  *         CCU_E_PTR    resDesc 为 nullptr
  *         CCU_E_INTERNAL 内部资源描述符创建或登记失败
  */
-extern CcuResult HcommCcuInsResDescCreate(uint32_t dieId, HcommCcuResDescHandle *resDesc);
+extern CcuResult HcommCcuInsResDescCreate(uint32_t dieId, HcommCcuResDescHandle* resDesc);
 
 /**
  * @brief 销毁 CCU 实例资源描述符
@@ -91,7 +90,7 @@ extern CcuResult HcommCcuInsResDescDestroy(HcommCcuResDescHandle resDesc);
  *         CCU_E_PTR    dieId 为 nullptr
  *         CCU_E_NOT_FOUND resDesc 未注册
  */
-extern CcuResult HcommCcuInsResDescQueryDieId(HcommCcuResDescHandle resDesc, uint32_t *dieId);
+extern CcuResult HcommCcuInsResDescQueryDieId(HcommCcuResDescHandle resDesc, uint32_t* dieId);
 
 /**
  * @brief 按资源类型设置 CCU 资源描述符中的资源数量
@@ -114,8 +113,7 @@ extern CcuResult HcommCcuInsResDescSetNum(HcommCcuResDescHandle resDesc, HcommCc
  *         CCU_E_PTR    resNum 为 nullptr
  *         CCU_E_NOT_FOUND resDesc 未注册
  */
-extern CcuResult HcommCcuInsResDescQueryNum(
-    HcommCcuResDescHandle resDesc, HcommCcuResType resType, uint32_t *resNum);
+extern CcuResult HcommCcuInsResDescQueryNum(HcommCcuResDescHandle resDesc, HcommCcuResType resType, uint32_t* resNum);
 
 /**
  * @brief 基于资源描述符创建 CCU 实例。
@@ -127,8 +125,8 @@ extern CcuResult HcommCcuInsResDescQueryNum(
  *         CCU_E_PARA   resDescNum 超出合法范围，或资源描述符中的 ioDie ID 重复
  *         CCU_E_INTERNAL 内部 CCU 实例创建或登记失败
  */
-extern CcuResult HcommCcuInsCreate(
-    const HcommCcuResDescHandle *resDescs, uint32_t resDescNum, CcuInsHandle *ccuInsHandle);
+extern CcuResult
+HcommCcuInsCreate(const HcommCcuResDescHandle* resDescs, uint32_t resDescNum, CcuInsHandle* ccuInsHandle);
 
 /**
  * @brief 使用当前 Device 上所有已使能 ioDie 的全部资源创建 CCU 实例。
@@ -139,8 +137,7 @@ extern CcuResult HcommCcuInsCreate(
  *         CCU_E_PTR    ccuInsHandle 为 nullptr，或内部资源包分配失败
  *         CCU_E_INTERNAL 内部 CCU 实例创建或登记失败
  */
-extern CcuResult HcommCcuInsCreateDefault(
-    const uint32_t *dieIds, uint32_t dieNum, CcuInsHandle *ccuInsHandle);
+extern CcuResult HcommCcuInsCreateDefault(const uint32_t* dieIds, uint32_t dieNum, CcuInsHandle* ccuInsHandle);
 
 /**
  * @brief 销毁 CCU 实例。
@@ -180,7 +177,7 @@ extern CcuResult HcommCcuQueryRemainResDesc(HcommCcuResDescHandle resDesc);
  * @return CcuResult。
  */
 extern CcuResult HcommCcuKernelQueryResReq(
-    const void *kernelFunc, const void **kernelArgs, uint32_t argNum, HcommCcuResDescHandle resDesc);
+    const void* kernelFunc, const void** kernelArgs, uint32_t argNum, HcommCcuResDescHandle resDesc);
 
 /**
  * @brief 查询/计算一段本端内存区域的 CCU 访问 token，供 host 端组装 LocalAddr/RemoteAddr 使用。
@@ -192,7 +189,7 @@ extern CcuResult HcommCcuKernelQueryResReq(
  * @note 仅可在 host 端调用，不能在 kernel 函数体内调用。token 属安全信息，调用方不应打印；
  *       其生命周期与对应内存注册绑定。跨 rank 场景下本端 token 需经带外通道交换给对端组装 RemoteAddr。
  */
-extern CcuResult HcommCcuGetMemToken(uint64_t srcVa, uint64_t size, uint64_t *tokenInfo);
+extern CcuResult HcommCcuGetMemToken(uint64_t srcVa, uint64_t size, uint64_t* tokenInfo);
 
 #ifdef __cplusplus
 }

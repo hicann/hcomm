@@ -28,10 +28,7 @@ using namespace hcomm;
 
 static HcommEndpointMap g_EndpointMap;
 
-HcommEndpointMap &GetEndpointMap()
-{
-    return g_EndpointMap;
-}
+HcommEndpointMap& GetEndpointMap() { return g_EndpointMap; }
 
 namespace {
 HcclResult RefreshCurrentDeviceContext()
@@ -45,7 +42,7 @@ HcclResult RefreshCurrentDeviceContext()
 }
 } // namespace
 
-HcclResult RefreshEndpointContext(const EndpointDesc &endpointDesc)
+HcclResult RefreshEndpointContext(const EndpointDesc& endpointDesc)
 {
     if (endpointDesc.loc.locType != ENDPOINT_LOC_TYPE_DEVICE) {
         return HCCL_SUCCESS;
@@ -84,14 +81,15 @@ HcommResult HcommResMgrInit(uint32_t devPhyId)
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommDfxKernelLaunch(const std::string &commTag, aclrtBinHandle binHandle, HcclDfxOpInfo dfxOpInfo)
+HcommResult HcommDfxKernelLaunch(const std::string& commTag, aclrtBinHandle binHandle, HcclDfxOpInfo dfxOpInfo)
 {
     // 申请device侧内存
     hccl::DeviceMem devicePackBuf = hccl::DeviceMem::alloc(sizeof(dfxOpInfo));
     CHK_PTR_NULL(devicePackBuf.ptr());
 
     // 将dfxOpInfo信息传递给device侧
-    CHK_RET(hrtMemSyncCopy(devicePackBuf.ptr(), sizeof(dfxOpInfo), &dfxOpInfo, sizeof(dfxOpInfo),
+    CHK_RET(hrtMemSyncCopy(
+        devicePackBuf.ptr(), sizeof(dfxOpInfo), &dfxOpInfo, sizeof(dfxOpInfo),
         HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
 
     // 创建局部流
@@ -112,8 +110,9 @@ HcommResult HcommDfxKernelLaunch(const std::string &commTag, aclrtBinHandle binH
     s32 sRet = strncpy_s(customInitTask.commTag, TAG_MAX_LENGTH, commTag.c_str(), TAG_MAX_LENGTH - 1);
     CHK_PRT_RET(sRet != EOK, HCCL_ERROR("[%s] str copy fail. return[%d]", __func__, sRet), HCCL_E_INTERNAL);
 
-    CHK_RET(hccl::AicpuAclKernelLaunch(localStream.ptr(), reinterpret_cast<void *>(&customInitTask),
-        sizeof(customInitTask), binHandle, kernelName, true, NOTIFY_DEFAULT_WAIT_TIME));
+    CHK_RET(hccl::AicpuAclKernelLaunch(
+        localStream.ptr(), reinterpret_cast<void*>(&customInitTask), sizeof(customInitTask), binHandle, kernelName,
+        true, NOTIFY_DEFAULT_WAIT_TIME));
 
     CHK_RET(
         hcclStreamSynchronize(localStream.ptr(), hccl::CommConfiger::GetInstance().GetCommConfigExecTimeOut(commTag)));

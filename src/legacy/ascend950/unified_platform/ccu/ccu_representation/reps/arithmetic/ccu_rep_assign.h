@@ -17,27 +17,27 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepAssign : public CcuRepBase {
-public:
-    explicit CcuRepAssign(const Variable &varA, uint64_t immediate);
-    explicit CcuRepAssign(const Address &addrA, uint64_t immediate);
-    explicit CcuRepAssign(const Address &addrA, const Variable &varA);
-    explicit CcuRepAssign(const Address &addrB, const Address &addrA);
-    explicit CcuRepAssign(const Variable &varB, const Variable &varA);
+    class CcuRepAssign : public CcuRepBase {
+    public:
+        explicit CcuRepAssign(const Variable& varA, uint64_t immediate);
+        explicit CcuRepAssign(const Address& addrA, uint64_t immediate);
+        explicit CcuRepAssign(const Address& addrA, const Variable& varA);
+        explicit CcuRepAssign(const Address& addrB, const Address& addrA);
+        explicit CcuRepAssign(const Variable& varB, const Variable& varA);
 
-    bool          Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string   Describe() override;
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-    AssignSubType subType{AssignSubType::INVALID};
+        AssignSubType subType{AssignSubType::INVALID};
 
-    uint64_t immediate{0};
+        uint64_t immediate{0};
 
-    Variable varA;
-    Variable varB;
+        Variable varA;
+        Variable varB;
 
-    Address addrA;
-    Address addrB;
-};
+        Address addrA;
+        Address addrB;
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

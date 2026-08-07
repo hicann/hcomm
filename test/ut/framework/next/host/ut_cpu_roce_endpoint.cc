@@ -14,22 +14,17 @@
 
 class CpuRoceEndpointTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "CpuRoceEndpointTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "CpuRoceEndpointTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "CpuRoceEndpointTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "CpuRoceEndpointTest tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
         std::cout << "A Test case in CpuRoceEndpointTest SetUP" << std::endl;
-        Hccl::IpAddress   localIp("1.0.0.0");
-        Hccl::IpAddress   remoteIp("2.0.0.0");
-        fakeSocket = new Hccl::Socket(nullptr, localIp, listenPort, remoteIp, tag, Hccl::SocketRole::SERVER, Hccl::NicType::HOST_NIC_TYPE);
+        Hccl::IpAddress localIp("1.0.0.0");
+        Hccl::IpAddress remoteIp("2.0.0.0");
+        fakeSocket = new Hccl::Socket(
+            nullptr, localIp, listenPort, remoteIp, tag, Hccl::SocketRole::SERVER, Hccl::NicType::HOST_NIC_TYPE);
     }
 
     virtual void TearDown()
@@ -38,17 +33,17 @@ protected:
         delete fakeSocket;
         std::cout << "A Test case in HostRdmaConnection TearDown" << std::endl;
     }
-    Hccl::Socket     *fakeSocket;
-    
-    u32         listenPort = 100;
-    std::string tag        = "test";
-    RdmaHandle   rdmaHandle = (void *)0x1000000;
+    Hccl::Socket* fakeSocket;
+
+    u32 listenPort = 100;
+    std::string tag = "test";
+    RdmaHandle rdmaHandle = (void*)0x1000000;
 };
 
 // HcommEndpointCreate
 TEST_F(CpuRoceEndpointTest, Ut_When_Normal_EXPECT_Return_HCCL_SUCCESS)
 {
-    Hccl::IpAddress   localIp("1.0.0.0");
+    Hccl::IpAddress localIp("1.0.0.0");
     EndpointDesc endpointDesc;
     endpointDesc.protocol = COMM_PROTOCOL_ROCE;
     endpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
@@ -63,7 +58,7 @@ TEST_F(CpuRoceEndpointTest, Ut_When_Normal_EXPECT_Return_HCCL_SUCCESS)
 // HcommEndpointCreate fail
 TEST_F(CpuRoceEndpointTest, Ut_When_wrongIp_EXPECT_Return_128003)
 {
-    Hccl::IpAddress   localIp("223.0.0.1");
+    Hccl::IpAddress localIp("223.0.0.1");
     EndpointDesc endpointDesc;
     endpointDesc.protocol = COMM_PROTOCOL_UBC_CTP;
     endpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
@@ -78,7 +73,7 @@ TEST_F(CpuRoceEndpointTest, Ut_When_wrongIp_EXPECT_Return_128003)
 // RdmaHandle初始化失败
 TEST_F(CpuRoceEndpointTest, Ut_When_RdmaHandle_Init_Fail_Expect_Return_HCCL_E_PTR)
 {
-    Hccl::IpAddress   localIp("1.0.0.0");
+    Hccl::IpAddress localIp("1.0.0.0");
     EndpointDesc endpointDesc;
     endpointDesc.protocol = COMM_PROTOCOL_ROCE;
     endpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
@@ -94,7 +89,7 @@ TEST_F(CpuRoceEndpointTest, Ut_When_RdmaHandle_Init_Fail_Expect_Return_HCCL_E_PT
 // HcommEndpointStartListen
 TEST_F(CpuRoceEndpointTest, Ut_When_HcommEndpointStartListen_EXPECT_Return_HCCL_SUCCESS)
 {
-    Hccl::IpAddress   localIp("1.0.0.0");
+    Hccl::IpAddress localIp("1.0.0.0");
     EndpointDesc endpointDesc;
     endpointDesc.protocol = COMM_PROTOCOL_ROCE;
     endpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
@@ -111,7 +106,7 @@ TEST_F(CpuRoceEndpointTest, Ut_When_HcommEndpointStartListen_EXPECT_Return_HCCL_
 // Ip重复监听
 TEST_F(CpuRoceEndpointTest, Ut_When_Listen_Repeat_Ip_EXPECT_Return_HCCL_SUCCESS)
 {
-    Hccl::IpAddress   localIp("1.0.0.0");
+    Hccl::IpAddress localIp("1.0.0.0");
     EndpointDesc endpointDesc;
     endpointDesc.protocol = COMM_PROTOCOL_ROCE;
     endpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
@@ -130,7 +125,7 @@ TEST_F(CpuRoceEndpointTest, Ut_When_Listen_Repeat_Ip_EXPECT_Return_HCCL_SUCCESS)
 // 停止监听
 TEST_F(CpuRoceEndpointTest, Ut_When_Stop_Listen_EXPECT_Return_HCCL_SUCCESS)
 {
-    Hccl::IpAddress   localIp("1.0.0.0");
+    Hccl::IpAddress localIp("1.0.0.0");
     EndpointDesc endpointDesc;
     endpointDesc.protocol = COMM_PROTOCOL_ROCE;
     endpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
@@ -151,7 +146,7 @@ TEST_F(CpuRoceEndpointTest, Ut_When_Stop_Listen_EXPECT_Return_HCCL_SUCCESS)
 // 内存注册失败
 TEST_F(CpuRoceEndpointTest, Ut_When_Register_Memory_Fail_Expect_Return_HCCL_E_PTR)
 {
-    Hccl::IpAddress   localIp("1.0.0.0");
+    Hccl::IpAddress localIp("1.0.0.0");
     EndpointDesc endpointDesc;
     endpointDesc.protocol = COMM_PROTOCOL_ROCE;
     endpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
@@ -179,14 +174,14 @@ TEST_F(CpuRoceEndpointTest, ut_HcommResMgrInit_When_Normal_Expect_ReturnSuccess)
 
 TEST_F(CpuRoceEndpointTest, ut_HcommEndpointGet_When_EndpointNotFound_Expect_ReturnHCCL_E_NOT_FOUND)
 {
-    void *endpoint = nullptr;
+    void* endpoint = nullptr;
     HcommResult ret = HcommEndpointGet(reinterpret_cast<EndpointHandle>(0x12345678), &endpoint);
     EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
 }
 
 TEST_F(CpuRoceEndpointTest, Ut_When_Unregister_Memory_Fail_Expect_Return_HCCL_E_PTR)
 {
-    Hccl::IpAddress   localIp("1.0.0.0");
+    Hccl::IpAddress localIp("1.0.0.0");
     EndpointDesc endpointDesc;
     endpointDesc.protocol = COMM_PROTOCOL_ROCE;
     endpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
@@ -266,7 +261,7 @@ TEST_F(CpuRoceEndpointTest, ut_HcommMemUnreg_When_EndpointIsNull_Expect_ReturnHC
 
 TEST_F(CpuRoceEndpointTest, ut_HcommMemExport_When_EndpointIsNull_Expect_ReturnHCCL_E_NOT_FOUND)
 {
-    void *memDesc = nullptr;
+    void* memDesc = nullptr;
     uint32_t memDescLen = 0;
     HcommResult ret = HcommMemExport(nullptr, reinterpret_cast<HcommMemHandle>(0x12345678), &memDesc, &memDescLen);
     EXPECT_EQ(ret, HCCL_E_NOT_FOUND);

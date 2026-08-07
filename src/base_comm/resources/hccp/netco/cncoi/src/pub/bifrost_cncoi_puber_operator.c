@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #include "bifrost_cncoi_puber_operator.h"
 #include "bifrost_cncoi_svc.h"
 #include "bifrost_cncoi_table.h"
@@ -19,7 +18,8 @@
 extern "C" {
 #endif
 
-STATIC int32_t BifrostCncoiPuberOperatorOnUpdateCode(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiOperatorKeyT *tupleKey, void *tupleVal, void *codeBuf, int32_t bufLen)
+STATIC int32_t BifrostCncoiPuberOperatorOnUpdateCode(BifrostCncoiPuber *bifrostCncoiPuber,
+    BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiOperatorKeyT *tupleKey, void *tupleVal, void *codeBuf, int32_t bufLen)
 {
     BifrostCncoiPuberOperatorVTbl *appVTbl = VOS_NULL;
     int32_t ret = -1;
@@ -56,7 +56,8 @@ error:
     return ret;
 }
 
-STATIC int32_t BifrostCncoiPuberOperatorOnDeleteCode(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiOperatorKeyT *tupleKey, void *codeBuf, int32_t bufLen)
+STATIC int32_t BifrostCncoiPuberOperatorOnDeleteCode(BifrostCncoiPuber *bifrostCncoiPuber,
+    BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiOperatorKeyT *tupleKey, void *codeBuf, int32_t bufLen)
 {
     SimpoBuilderT *builder;
     int32_t ret = -1;
@@ -87,8 +88,8 @@ error:
     return ret;
 }
 
-STATIC void BifrostCncoiPuberOperatorOnSub(BifrostCncoiPuber *bifrostCncoiPuber,
-    BifrostCncoiSliceKeyT *sliceKey, void *data, int32_t len)
+STATIC void BifrostCncoiPuberOperatorOnSub(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
+    void *data, int32_t len)
 {
     BifrostCncoiPuberOperatorVTbl *appVTbl = VOS_NULL;
 
@@ -107,8 +108,7 @@ error:
     return;
 }
 
-STATIC void BifrostCncoiPuberOperatorOnUnsub(BifrostCncoiPuber *bifrostCncoiPuber,
-    BifrostCncoiSliceKeyT *sliceKey)
+STATIC void BifrostCncoiPuberOperatorOnUnsub(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey)
 {
     BifrostCncoiPuberOperatorVTbl *appVTbl = VOS_NULL;
 
@@ -129,15 +129,15 @@ error:
 
 uint32_t BifrostCncoiPuberOperatorReg(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiPuberOperatorVTbl *appVTbl)
 {
-    BkfDcTableTypeVTbl dcVTbl = { 0 };
-    BkfPuberTableTypeVTbl puberVTbl = { 0 };
+    BkfDcTableTypeVTbl dcVTbl = {0};
+    BkfPuberTableTypeVTbl puberVTbl = {0};
     uint32_t ret;
 
     if (bifrostCncoiPuber == VOS_NULL || appVTbl == VOS_NULL) {
         return BKF_ERR;
     }
 
-    dcVTbl.name = BIFROST_CNCOI_SVC_NAME"_operator";
+    dcVTbl.name = BIFROST_CNCOI_SVC_NAME "_operator";
     dcVTbl.tableTypeId = BIFROST_CNCOI_TABLE_TYPE_OPERATOR;
     dcVTbl.cookie = bifrostCncoiPuber;
     dcVTbl.tupleCntMax = appVTbl->tupleCntMax;
@@ -157,7 +157,8 @@ uint32_t BifrostCncoiPuberOperatorReg(BifrostCncoiPuber *bifrostCncoiPuber, Bifr
     puberVTbl.tupleDeleteCode = (F_BKF_PUBER_TUPLE_DELETE_CODE)BifrostCncoiPuberOperatorOnDeleteCode;
     puberVTbl.tableOnSub = (F_BKF_PUBER_TABLE_ONSUB)BifrostCncoiPuberOperatorOnSub;
     puberVTbl.tableOnUnsub = (F_BKF_PUBER_TABLE_ONUNSUB)BifrostCncoiPuberOperatorOnUnsub;
-    ret = BkfPuberAttachTableTypeEx(bifrostCncoiPuber->puber, &puberVTbl, appVTbl, sizeof(BifrostCncoiPuberOperatorVTbl));
+    ret = BkfPuberAttachTableTypeEx(bifrostCncoiPuber->puber, &puberVTbl, appVTbl,
+        sizeof(BifrostCncoiPuberOperatorVTbl));
     if (ret != BKF_OK) {
         return ret;
     }
@@ -201,16 +202,19 @@ void BifrostCncoiPuberOperatorReleaseTable(BifrostCncoiPuber *bifrostCncoiPuber,
     BkfDcReleaseTable(bifrostCncoiPuber->argInit.dc, sliceKey, BIFROST_CNCOI_TABLE_TYPE_OPERATOR);
 }
 
-uint32_t BifrostCncoiPuberOperatorUpdate(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiOperatorKeyT *tupleKey, void *val)
+uint32_t BifrostCncoiPuberOperatorUpdate(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
+    BifrostCncoiOperatorKeyT *tupleKey, void *val)
 {
     if (bifrostCncoiPuber == VOS_NULL) {
         return BKF_ERR;
     }
 
-    return BkfDcUpdateTuple(bifrostCncoiPuber->argInit.dc, sliceKey, BIFROST_CNCOI_TABLE_TYPE_OPERATOR, tupleKey, val, VOS_NULL);
+    return BkfDcUpdateTuple(bifrostCncoiPuber->argInit.dc, sliceKey, BIFROST_CNCOI_TABLE_TYPE_OPERATOR, tupleKey, val,
+        VOS_NULL);
 }
 
-void BifrostCncoiPuberOperatorDelete(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiOperatorKeyT *tupleKey)
+void BifrostCncoiPuberOperatorDelete(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
+    BifrostCncoiOperatorKeyT *tupleKey)
 {
     if (bifrostCncoiPuber == VOS_NULL) {
         return;

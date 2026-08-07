@@ -25,9 +25,9 @@ struct ibv_exp_peer_buf {
 };
 
 struct ibv_exp_peer_direct_attr {
-    uint64_t peer_id;       // peer id，代表每个GPU的编号
+    uint64_t peer_id; // peer id，代表每个GPU的编号
     uint64_t (*register_va)(void *start, size_t length, uint64_t peer_id,
-                            struct ibv_exp_peer_buf *pb); // 将va地址注册到device，返回一个device ptr
+        struct ibv_exp_peer_buf *pb); // 将va地址注册到device，返回一个device ptr
 };
 
 enum ibv_exp_peer_op {
@@ -35,23 +35,23 @@ enum ibv_exp_peer_op {
 };
 
 struct peer_op_wr {
-    struct peer_op_wr *next;        // next peer wr
-    enum ibv_exp_peer_op type;  // peer wr type
+    struct peer_op_wr *next;   // next peer wr
+    enum ibv_exp_peer_op type; // peer wr type
     union {
         struct {
-            uint64_t  data;     // target_id value
-            uint64_t  target_id;    // target_id addr
+            uint64_t data;      // target_id value
+            uint64_t target_id; // target_id addr
         } qw;
 
         struct {
-            uint64_t db_addr;       // doorbell addr
-            uint64_t db_val;        // doorbell value
+            uint64_t db_addr; // doorbell addr
+            uint64_t db_val;  // doorbell value
         } db;
     } wr;
 };
 
 struct ibv_exp_peer_commit {
     struct peer_op_wr *storage; // peer wr addr
-    uint32_t entries;       // peer wr num
+    uint32_t entries;           // peer wr num
 };
 #endif

@@ -28,21 +28,15 @@ using namespace hccl;
 
 static bool g_recvCalled = false;
 
-static InconsistentCheckMode StubGetExternalInconsistentCheckSwitch()
-{
-    return InconsistentCheckMode::OFF;
-}
+static InconsistentCheckMode StubGetExternalInconsistentCheckSwitch() { return InconsistentCheckMode::OFF; }
 
-static HcclResult StubRecvFrame(Heartbeat *, UIDType &)
+static HcclResult StubRecvFrame(Heartbeat*, UIDType&)
 {
     g_recvCalled = true;
     return HCCL_SUCCESS;
 }
 
-static HcclResult StubSendFrame(Heartbeat *, UIDType &, UIDType &, UIDType &, HeartBeatStatus)
-{
-    return HCCL_SUCCESS;
-}
+static HcclResult StubSendFrame(Heartbeat*, UIDType&, UIDType&, UIDType&, HeartBeatStatus) { return HCCL_SUCCESS; }
 
 class HeartbeatLostReportTest : public testing::Test {
 protected:
@@ -88,7 +82,7 @@ protected:
         }
     }
 
-    Heartbeat *hb_;
+    Heartbeat* hb_;
     UIDType uidSelf_;
     UIDType uidRem_;
 };

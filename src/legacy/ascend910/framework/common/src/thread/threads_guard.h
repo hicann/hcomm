@@ -17,10 +17,11 @@ namespace hccl {
 
 class ThreadsGuard {
 public:
-    explicit ThreadsGuard(std::vector<std::unique_ptr<std::thread>> &threads);
+    explicit ThreadsGuard(std::vector<std::unique_ptr<std::thread>>& threads);
     ~ThreadsGuard();
+
 private:
-    std::vector<std::unique_ptr<std::thread>> &threads;
+    std::vector<std::unique_ptr<std::thread>>& threads;
 };
 } // namespace hccl
 

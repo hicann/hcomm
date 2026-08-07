@@ -14,14 +14,13 @@
 
 namespace hccl {
 class CollReduceScatterSingleRankExecutor : public CollReduceScatterExecutor {
-
 public:
-    explicit CollReduceScatterSingleRankExecutor(const HcclDispatcher dispatcher,
-    std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollReduceScatterSingleRankExecutor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceScatterSingleRankExecutor() override = default;
 
 private:
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 };
 
 } // namespace hccl

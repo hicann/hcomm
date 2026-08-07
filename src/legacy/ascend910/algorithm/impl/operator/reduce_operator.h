@@ -18,18 +18,20 @@ namespace hccl {
 
 class ReduceOperator : public CollAlgOperator {
 public:
-    ReduceOperator(AlgConfigurator* algConfigurator, CCLBufferManager &cclBufferManager,
-        HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    ReduceOperator(
+        AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager, HcclDispatcher dispatcher,
+        std::unique_ptr<TopoMatcher>& topoMatcher);
     ~ReduceOperator() override;
 
     // 算法选择
-    HcclResult SelectAlg(const std::string &tag, const OpParam &param, std::string &algName, std::string &newTag) override;
+    HcclResult
+    SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag) override;
 
 private:
-    HcclResult SelectAlgfor910A(const OpParam& param, std::string& algName);    // 算法选择 - 910A
-    HcclResult SelectAlgfor910B(const OpParam& param, std::string& algName);    // 算法选择 - 910B
-    HcclResult SelectAlgfor91093(const OpParam& param, std::string& algName);    // 算法选择 - 910_93
+    HcclResult SelectAlgfor910A(const OpParam& param, std::string& algName);  // 算法选择 - 910A
+    HcclResult SelectAlgfor910B(const OpParam& param, std::string& algName);  // 算法选择 - 910B
+    HcclResult SelectAlgfor91093(const OpParam& param, std::string& algName); // 算法选择 - 910_93
 };
-}
+} // namespace hccl
 
 #endif /** __REDUCE_EXECUTOR__ */

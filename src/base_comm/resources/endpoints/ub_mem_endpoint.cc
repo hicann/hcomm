@@ -15,14 +15,11 @@
 #include "ub_mem.h"
 #include "proc_reged_mem_mgr_cache.h"
 #include "hccl_mem_defs.h"
- 
-namespace hcomm {
-UbMemEndpoint::UbMemEndpoint(const EndpointDesc &endpointDesc) : Endpoint(endpointDesc){}
 
-UbMemEndpoint::~UbMemEndpoint() noexcept
-{
-    ProcRegedMemMgrCache::GetInstance().Release(cacheKey_);
-}
+namespace hcomm {
+UbMemEndpoint::UbMemEndpoint(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
+
+UbMemEndpoint::~UbMemEndpoint() noexcept { ProcRegedMemMgrCache::GetInstance().Release(cacheKey_); }
 
 HcclResult UbMemEndpoint::Init()
 {
@@ -35,10 +32,14 @@ HcclResult UbMemEndpoint::Init()
     CHK_RET(hrtGetDevicePhyIdByIndex(devId, devPhyId));
 
     cacheKey_ = MemMgrCacheKey{devPhyId, COMM_PROTOCOL_UB_MEM, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
-    auto &cache = ProcRegedMemMgrCache::GetInstance();
-    EXCEPTION_CATCH(regedMemMgr_ = cache.GetOrCreate(cacheKey_, []() {
-        return std::make_shared<UbMemRegedMemMgr>();
-    }), return HCCL_E_INTERNAL);
+    auto& cache = ProcRegedMemMgrCache::GetInstance();
+    EXCEPTION_CATCH(
+        regedMemMgr_ = cache.GetOrCreate(
+            cacheKey_,
+            []() {
+                return std::make_shared<UbMemRegedMemMgr>();
+            }),
+        return HCCL_E_INTERNAL);
 
     return HcclResult::HCCL_SUCCESS;
 }
@@ -50,7 +51,7 @@ HcclResult UbMemEndpoint::ServerSocketListen(const uint32_t port)
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemEndpoint::RegisterMemory(HcommMem mem, const char *memTag, void **memHandle)
+HcclResult UbMemEndpoint::RegisterMemory(HcommMem mem, const char* memTag, void** memHandle)
 {
     CHK_RET(this->regedMemMgr_->RegisterMemory(mem, memTag, memHandle));
     return HCCL_SUCCESS;
@@ -62,27 +63,27 @@ HcclResult UbMemEndpoint::UnregisterMemory(void* memHandle)
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemEndpoint::MemoryExport(void *memHandle, void **memDesc, uint32_t *memDescLen)
+HcclResult UbMemEndpoint::MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen)
 {
     HCCL_INFO("UbMemEndpoint MemoryExport is not supported");
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemEndpoint::MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem)
+HcclResult UbMemEndpoint::MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem)
 {
     HCCL_INFO("UbMemEndpoint MemoryImport is not supported");
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemEndpoint::MemoryUnimport(const void *memDesc, uint32_t descLen)
+HcclResult UbMemEndpoint::MemoryUnimport(const void* memDesc, uint32_t descLen)
 {
     HCCL_INFO("UbMemEndpoint MemoryUnimport is not supported");
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemEndpoint::GetAllMemHandles(void **memHandles, uint32_t *memHandleNum)
+HcclResult UbMemEndpoint::GetAllMemHandles(void** memHandles, uint32_t* memHandleNum)
 {
     HCCL_INFO("UbMemEndpoint GetAllMemHandles is not supported");
     return HCCL_SUCCESS;
 }
-}
+} // namespace hcomm

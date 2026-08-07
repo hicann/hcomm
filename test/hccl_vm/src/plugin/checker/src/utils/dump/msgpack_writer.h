@@ -20,26 +20,26 @@
 namespace HcclSim {
 class MsgpackWriter {
 public:
-    explicit MsgpackWriter(std::vector<uint8_t> &buffer);
-    explicit MsgpackWriter(std::ostream &out);
+    explicit MsgpackWriter(std::vector<uint8_t>& buffer);
+    explicit MsgpackWriter(std::ostream& out);
 
     void WriteUInt(uint64_t value);
-    void WriteString(const std::string &value);
+    void WriteString(const std::string& value);
     void WriteArrayHeader(size_t count);
     void WriteMapHeader(size_t count);
-    void WriteRawBytes(const uint8_t *data, size_t size);
-    void WriteRawBytes(const std::vector<uint8_t> &bytes);
+    void WriteRawBytes(const uint8_t* data, size_t size);
+    void WriteRawBytes(const std::vector<uint8_t>& bytes);
 
 private:
     void WriteByte(uint8_t value);
-    void WriteBytes(const uint8_t *data, size_t size);
+    void WriteBytes(const uint8_t* data, size_t size);
     void WriteUInt16(uint16_t value);
     void WriteUInt32(uint32_t value);
     void WriteUInt64(uint64_t value);
 
-    std::vector<uint8_t> *m_buffer = nullptr;
-    std::ostream *m_out = nullptr;
+    std::vector<uint8_t>* m_buffer = nullptr;
+    std::ostream* m_out = nullptr;
 };
-}  // namespace HcclSim
+} // namespace HcclSim
 
-#endif  // HCCL_VM_MSGPACK_WRITER_H
+#endif // HCCL_VM_MSGPACK_WRITER_H

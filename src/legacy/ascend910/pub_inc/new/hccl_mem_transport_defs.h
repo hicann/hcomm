@@ -18,7 +18,7 @@ extern "C" {
 #endif // __cplusplus
 
 /* 内存传输上下文句柄 */
-typedef void *HcclMemTransport;
+typedef void* HcclMemTransport;
 
 #ifdef __cplusplus
 }

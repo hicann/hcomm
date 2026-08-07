@@ -21,23 +21,25 @@ namespace Hccl {
 
 class CcuTempAllToAllMesh1D2Die : public CcuAlgTemplateBase {
 public:
-    explicit CcuTempAllToAllMesh1D2Die(const RankId virtualRank, const u32 tempRankSize,
-                                   const std::vector<std::vector<RankId>> &tempVTopo,
-                                   const std::map<RankId, u32>            &tempVirtRankMap);
+    explicit CcuTempAllToAllMesh1D2Die(
+        const RankId virtualRank, const u32 tempRankSize, const std::vector<std::vector<RankId>>& tempVTopo,
+        const std::map<RankId, u32>& tempVirtRankMap);
     ~CcuTempAllToAllMesh1D2Die() override;
 
-   std::string Describe() const override
+    std::string Describe() const override
     {
         return StringFormat("Template of alltoall2Die ccu mesh 1D with tempRankSize [%u].", tempRankSize_);
     }
 
-    HcclResult GenExtIns(const TempFuncs &tempFuncs, const TemplateDataParams &templateDataParams, const ResLinks &tempLinks,
-                   std::vector<InsQuePtr> &tempInsQues);
-    HcclResult CalcRes(AlgTempResReq &tempResReq) override;
+    HcclResult GenExtIns(
+        const TempFuncs& tempFuncs, const TemplateDataParams& templateDataParams, const ResLinks& tempLinks,
+        std::vector<InsQuePtr>& tempInsQues);
+    HcclResult CalcRes(AlgTempResReq& tempResReq) override;
     HcclResult SetBuffBlockSize(const u64 buffBlockSize);
     HcclResult SetConcurrentSendRecvNum(const u32 concurrentSendRecvNum);
+
 private:
-    u32             concurrentSendRecvNum_ = 8;
+    u32 concurrentSendRecvNum_ = 8;
     u64 buffBlockSize_ = 0;
 };
 

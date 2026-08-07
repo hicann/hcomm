@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #include "server_socket_mgr.h"
 #include "hccl_common.h"
 #include "exception_handler.h"
@@ -17,29 +16,29 @@
 
 namespace hcomm {
 
-HcclResult ServerSocketMgr::ListenStart(const uint32_t devPhyId, const CommAddr &commAddr, const Hccl::NicType nicType)
+HcclResult ServerSocketMgr::ListenStart(const uint32_t devPhyId, const CommAddr& commAddr, const Hccl::NicType nicType)
 {
-    if (nicType != Hccl::NicType::DEVICE_NIC_TYPE && 
-        nicType != Hccl::NicType::HOST_NIC_TYPE) {
+    if (nicType != Hccl::NicType::DEVICE_NIC_TYPE && nicType != Hccl::NicType::HOST_NIC_TYPE) {
         HCCL_ERROR("[%s] nicType[%d] is not supported", __func__, static_cast<int>(nicType)); // 枚举用转换吗？
-        return HCCL_E_PARA;        
+        return HCCL_E_PARA;
     }
 
-    auto &socketMgr = ServerSocketMgr::GetInstance(devPhyId);
-    
+    auto& socketMgr = ServerSocketMgr::GetInstance(devPhyId);
+
     CHK_RET(socketMgr.ListenStart_(commAddr, nicType));
 
     return HcclResult::HCCL_SUCCESS;
 }
 
-ServerSocketMgr &ServerSocketMgr::GetInstance(const uint32_t devicePhyId)
+ServerSocketMgr& ServerSocketMgr::GetInstance(const uint32_t devicePhyId)
 {
     static ServerSocketMgr socketMgr[MAX_MODULE_DEVICE_NUM + 1];
 
     uint32_t devPhyId = devicePhyId;
     if (devPhyId >= MAX_MODULE_DEVICE_NUM + 1) {
-        HCCL_WARNING("[%s] Invalid devicePhyId: %u, max allowed: %u, using default index: %u", 
-            __func__, devicePhyId, MAX_MODULE_DEVICE_NUM, MAX_MODULE_DEVICE_NUM);
+        HCCL_WARNING(
+            "[%s] Invalid devicePhyId: %u, max allowed: %u, using default index: %u", __func__, devicePhyId,
+            MAX_MODULE_DEVICE_NUM, MAX_MODULE_DEVICE_NUM);
         devPhyId = MAX_MODULE_DEVICE_NUM;
     }
 
@@ -47,7 +46,7 @@ ServerSocketMgr &ServerSocketMgr::GetInstance(const uint32_t devicePhyId)
     return socketMgr[devPhyId];
 }
 
-HcclResult ServerSocketMgr::ListenStart_(const CommAddr &commAddr, const Hccl::NicType nicType)
+HcclResult ServerSocketMgr::ListenStart_(const CommAddr& commAddr, const Hccl::NicType nicType)
 {
     std::lock_guard<std::mutex> lock(innerMutex_);
     Hccl::IpAddress ipAddr{};
@@ -72,8 +71,9 @@ HcclResult ServerSocketMgr::ListenStart_(const CommAddr &commAddr, const Hccl::N
     // todo: 暂时使用devPhyId构造rankId，id存疑？
     Hccl::PortData localPort = Hccl::PortData(static_cast<Hccl::RankId>(devPhyId_), portType, 0, ipAddr);
 
-    HCCL_INFO("[ServerSocketMgr][%s] get socket handle, devPhyId[%u] locAddr[%s].",
-        __func__, devPhyId_, ipAddr.Describe().c_str());
+    HCCL_INFO(
+        "[ServerSocketMgr][%s] get socket handle, devPhyId[%u] locAddr[%s].", __func__, devPhyId_,
+        ipAddr.Describe().c_str());
 
     Hccl::SocketHandle socketHandle = Hccl::SocketHandleManager::GetInstance().Create(devPhyId_, localPort);
 
@@ -82,13 +82,12 @@ HcclResult ServerSocketMgr::ListenStart_(const CommAddr &commAddr, const Hccl::N
     const std::string tag = "server";
     constexpr Hccl::SocketRole role = Hccl::SocketRole::SERVER;
 
-    HCCL_INFO("[ServerSocketMgr][%s] create server socket, "
+    HCCL_INFO(
+        "[ServerSocketMgr][%s] create server socket, "
         "locAddr[%s] rmtAddr[%s] tag[%s] role[%s].",
-        __func__, ipAddr.Describe().c_str(), ipAddr.Describe().c_str(),
-        tag.c_str(), role.Describe().c_str());
+        __func__, ipAddr.Describe().c_str(), ipAddr.Describe().c_str(), tag.c_str(), role.Describe().c_str());
 
-    serverSocket.reset(new (std::nothrow) Hccl::Socket(
-        socketHandle, ipAddr, listenPort, ipAddr, tag, role, nicType));
+    serverSocket.reset(new (std::nothrow) Hccl::Socket(socketHandle, ipAddr, listenPort, ipAddr, tag, role, nicType));
     CHK_PTR_NULL(serverSocket);
     serverSocket->Listen();
 
@@ -104,9 +103,9 @@ HcclResult ServerSocketMgr::ListenStart_(const CommAddr &commAddr, const Hccl::N
 void ServerSocketMgr::DeInit(u32 devPhyId)
 {
     HCCL_INFO("[ServerSocketMgr][%s] DeInit[%u]", __func__, devPhyId);
-    auto &inst = GetInstance(devPhyId);
+    auto& inst = GetInstance(devPhyId);
     std::lock_guard<std::mutex> lock(inst.innerMutex_);
-    for (auto &it : inst.deviceServerSocketMap_) {
+    for (auto& it : inst.deviceServerSocketMap_) {
         if (it.second != nullptr) {
             it.second->Destroy();
             it.second.reset();
@@ -114,7 +113,7 @@ void ServerSocketMgr::DeInit(u32 devPhyId)
     }
     inst.deviceServerSocketMap_.clear();
 
-    for (auto &it : inst.hostServerSocketMap_) {
+    for (auto& it : inst.hostServerSocketMap_) {
         if (it.second != nullptr) {
             it.second->Destroy();
             it.second.reset();

@@ -15,9 +15,10 @@
 #include "aiv_all_reduce_crossnode_91093.h"
 // aiv reducescatter
 
-extern "C" __aicore__ void sk_all_reduce_crossnode(SUPERKERNEL_LITE_ARGS_DEF) {
+extern "C" __aicore__ void sk_all_reduce_crossnode(SUPERKERNEL_LITE_ARGS_DEF)
+{
     SUPERKERNEL_LITE_ARGS_EXTRACT;
     return sk_allreduce_crossnode(SUPERKERNEL_ARGS_CALL);
 }
 
-#endif  /* AIV_AR_SUPERKERNEL_DETER_H */
+#endif /* AIV_AR_SUPERKERNEL_DETER_H */

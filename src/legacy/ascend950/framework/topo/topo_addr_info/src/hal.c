@@ -27,14 +27,14 @@
 #include <syslog.h>
 #include "securec.h"
 
-#define MAX_LINE_LENGTH 256          // 每行最大长度
-#define TARGET_KEY "Driver_Install_Path_Param"  // 要查找的key
+#define MAX_LINE_LENGTH 256                    // 每行最大长度
+#define TARGET_KEY "Driver_Install_Path_Param" // 要查找的key
 
 #define DRIVER_DRFAULT_INSTALL_PATH "/usr/local/Ascend"
 #define DRIVER_TOPO_FILE_DIR_PATH "driver/topo/950"
-#define MAX_TOPO_FILENAME_LEN   (64)
+#define MAX_TOPO_FILENAME_LEN (64)
 
-#define HAL_TRUE  (1)
+#define HAL_TRUE (1)
 #define HAL_FALSE (0)
 
 #define MODULE_TYPE_SYSTEM (0)
@@ -73,36 +73,26 @@ typedef enum {
     DCMI_CHIP_INFO_SUB_CMD_CHIP_ID,
     DCMI_CHIP_INFO_SUB_CMD_SPOD_INFO,
     DCMI_CHIP_INFO_SUB_CMD_MAX = 0xFF,
-}DCMI_CHIP_INFO_SUB_CMD;
-
-
+} DCMI_CHIP_INFO_SUB_CMD;
 
 static int (*dcmi_init)(void);
 
-static int (*dcmiv2_get_urma_device_cnt)(int npu_id, unsigned int *dev_cnt);
+static int (*dcmiv2_get_urma_device_cnt)(int npu_id, unsigned int* dev_cnt);
 
-static int (*dcmiv2_get_eid_list_by_urma_dev_index)(int npu_id,
-                                                    int urma_dev_index,
-                                                    dcmi_urma_eid_info_t* eid_list,
-                                                    int* eid_cnt);
+static int (*dcmiv2_get_eid_list_by_urma_dev_index)(
+    int npu_id, int urma_dev_index, dcmi_urma_eid_info_t* eid_list, int* eid_cnt);
 
 static int (*dcmiv2_get_device_pcie_info)(int npu_id, struct dcmi_pcie_info_all* pcie_info);
 
-static int (*aclrtGetUserDevIdByPhyDevId)(const int32_t phyId, int32_t *const userDevId);
+static int (*aclrtGetUserDevIdByPhyDevId)(const int32_t phyId, int32_t* const userDevId);
 
-static int (*aclrtGetLogicDevIdByUserDevId)(const int32_t userDevId, int32_t *const logicId);
+static int (*aclrtGetLogicDevIdByUserDevId)(const int32_t userDevId, int32_t* const logicId);
 
-static int (*halGetDeviceInfo)(unsigned int devId, uint32_t moduleType, int32_t infoType, int64_t *value);
+static int (*halGetDeviceInfo)(unsigned int devId, uint32_t moduleType, int32_t infoType, int64_t* value);
 
-void* hal_dlopen(const char *filename, int flag)
-{
-    return dlopen(filename, flag);
-}
+void* hal_dlopen(const char* filename, int flag) { return dlopen(filename, flag); }
 
-void* hal_dlsym(void *handle, const char *symbol)
-{
-    return dlsym(handle, symbol);
-}
+void* hal_dlsym(void* handle, const char* symbol) { return dlsym(handle, symbol); }
 
 int load_dcmi()
 {
@@ -115,12 +105,12 @@ int load_dcmi()
         pthread_mutex_unlock(&mutex);
         return 0;
     }
-    if(dcmi == NULL || acl == NULL) {
+    if (dcmi == NULL || acl == NULL) {
         dcmi = hal_dlopen("libdcmi.so", RTLD_LAZY);
         acl = hal_dlopen("libacl_rt.so", RTLD_LAZY);
     }
 
-    if(dcmi == NULL || acl == NULL) {
+    if (dcmi == NULL || acl == NULL) {
         pthread_mutex_unlock(&mutex);
         return -1;
     }
@@ -129,7 +119,7 @@ int load_dcmi()
     dcmiv2_get_eid_list_by_urma_dev_index = hal_dlsym(dcmi, "dcmiv2_get_eid_list_by_urma_dev_index");
     dcmiv2_get_device_pcie_info = hal_dlsym(dcmi, "dcmiv2_get_device_pcie_info");
 
-    //兼容性处理 aclrtGetLogicDevIdByPhyDevId接口语义错误,实际返回的是UserDevId，优先使用新接口
+    // 兼容性处理 aclrtGetLogicDevIdByPhyDevId接口语义错误,实际返回的是UserDevId，优先使用新接口
     aclrtGetUserDevIdByPhyDevId = hal_dlsym(acl, "aclrtGetUserDevIdByPhyDevId");
     if (aclrtGetUserDevIdByPhyDevId == NULL) {
         aclrtGetUserDevIdByPhyDevId = hal_dlsym(acl, "aclrtGetLogicDevIdByPhyDevId");
@@ -138,10 +128,9 @@ int load_dcmi()
     halGetDeviceInfo = hal_dlsym(acl, "halGetDeviceInfo");
     aclrtGetLogicDevIdByUserDevId = hal_dlsym(acl, "aclrtGetLogicDevIdByUserDevId");
 
-    if ((dcmi_init == NULL) || (dcmiv2_get_urma_device_cnt == NULL)
-     || (dcmiv2_get_eid_list_by_urma_dev_index == NULL) || (halGetDeviceInfo == NULL)
-     || (dcmiv2_get_device_pcie_info ==NULL) || (aclrtGetUserDevIdByPhyDevId == NULL)
-     || (aclrtGetLogicDevIdByUserDevId == NULL)) {
+    if ((dcmi_init == NULL) || (dcmiv2_get_urma_device_cnt == NULL) || (dcmiv2_get_eid_list_by_urma_dev_index == NULL)
+        || (halGetDeviceInfo == NULL) || (dcmiv2_get_device_pcie_info == NULL) || (aclrtGetUserDevIdByPhyDevId == NULL)
+        || (aclrtGetLogicDevIdByUserDevId == NULL)) {
         pthread_mutex_unlock(&mutex);
         return -1;
     }
@@ -166,13 +155,14 @@ int hal_get_mainboard_id(int phyId, unsigned int* mainboardId)
 }
 
 #define MAX_IFREQ_NUM (16)
-int get_server_id(char* server_id, size_t len) {
+int get_server_id(char* server_id, size_t len)
+{
     int sock_fd;
     struct ifconf ifc;
     struct ifreq ifr[MAX_IFREQ_NUM];
     int if_count, i;
 
-    if ((sock_fd =  socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    if ((sock_fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         return -1;
     }
 
@@ -194,9 +184,8 @@ int get_server_id(char* server_id, size_t len) {
         if (ifr[i].ifr_hwaddr.sa_family != ARPHRD_ETHER) {
             continue;
         }
-        unsigned char *mac = (unsigned char*)ifr[i].ifr_hwaddr.sa_data;
-        sprintf_s(server_id, len, "%02X%02X%02X%02X%02X%02X",
-                mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+        unsigned char* mac = (unsigned char*)ifr[i].ifr_hwaddr.sa_data;
+        sprintf_s(server_id, len, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
         close(sock_fd);
         return 0;
     }
@@ -230,7 +219,7 @@ int hal_get_eid_list_by_phy_id(int phyId, dcmi_urma_eid_info_t* eidList, size_t*
     return 0;
 }
 
-int HalGetUBEntityList(int phyId, UEList *ueList)
+int HalGetUBEntityList(int phyId, UEList* ueList)
 {
     if (ueList == NULL) {
         return 0;
@@ -246,8 +235,7 @@ int HalGetUBEntityList(int phyId, UEList *ueList)
     }
     for (size_t i = 0; i < ueList->ueNum; ++i) {
         int num = MAX_EID_PER_UE;
-        ret = dcmiv2_get_eid_list_by_urma_dev_index((int)logicId, i,
-        ueList->ueList[i].eidList, &num);
+        ret = dcmiv2_get_eid_list_by_urma_dev_index((int)logicId, i, ueList->ueList[i].eidList, &num);
         if (ret != 0) {
             continue;
         }
@@ -314,7 +302,7 @@ int hal_get_logicid_from_phyid(unsigned int phyId, unsigned int* logicId)
     if (ret != 0) {
         return -1;
     }
-    int value = -1; 
+    int value = -1;
     ret = aclrtGetLogicDevIdByUserDevId(userDevId, &value);
     if (ret != 0) {
         return -1;
@@ -323,7 +311,7 @@ int hal_get_logicid_from_phyid(unsigned int phyId, unsigned int* logicId)
     return 0;
 }
 
-int hal_get_userdevid_by_phyid(int phyId, int *userDevId)
+int hal_get_userdevid_by_phyid(int phyId, int* userDevId)
 {
     if (load_dcmi() != 0) {
         return -1;
@@ -332,21 +320,22 @@ int hal_get_userdevid_by_phyid(int phyId, int *userDevId)
 }
 
 // 去除字符串首尾的空白字符
-static char* trim_whitespace(char *str) {
-    char *end;
+static char* trim_whitespace(char* str)
+{
+    char* end;
 
     // 去除开头空格
-    while(isspace((unsigned char)*str)){
+    while (isspace((unsigned char)*str)) {
         str++;
     }
     // 如果字符串全是空格，返回空字符串
-    if(*str == 0) {
+    if (*str == 0) {
         return str;
     }
 
     // 去除结尾空格
     end = str + strlen(str) - 1;
-    while(end > str && isspace((unsigned char)*end)) {
+    while (end > str && isspace((unsigned char)*end)) {
         end--;
     }
     // 添加字符串结束符
@@ -360,9 +349,10 @@ static char* trim_whitespace(char *str) {
  * @param buf_size 缓冲区大小
  * @return 成功返回0，失败返回-1值
  */
-int hal_get_driver_install_path(char *value_buf, size_t buf_size) {
-    FILE *fp = NULL;
-    char *line = NULL;
+int hal_get_driver_install_path(char* value_buf, size_t buf_size)
+{
+    FILE* fp = NULL;
+    char* line = NULL;
     size_t len = 0;
     ssize_t read;
     // 参数合法性检查
@@ -384,19 +374,20 @@ int hal_get_driver_install_path(char *value_buf, size_t buf_size) {
     // 逐行读取文件
     while ((read = getline(&line, &len, fp)) != -1) {
         // 去除换行符
-        char *newline = strchr(line, '\n');
-        if (newline) *newline = '\0';
+        char* newline = strchr(line, '\n');
+        if (newline)
+            *newline = '\0';
 
         // 查找等号位置
-        char *equal_sign = strchr(line, '=');
+        char* equal_sign = strchr(line, '=');
         if (equal_sign == NULL) {
-            continue;  // 跳过没有等号的行
+            continue; // 跳过没有等号的行
         }
 
         // 分割key和value
         *equal_sign = '\0';
-        char *key = trim_whitespace(line);
-        char *value = trim_whitespace(equal_sign + 1);
+        char* key = trim_whitespace(line);
+        char* value = trim_whitespace(equal_sign + 1);
 
         // 匹配目标key
         if (strcmp(key, TARGET_KEY) == 0) {

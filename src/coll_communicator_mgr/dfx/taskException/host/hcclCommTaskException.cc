@@ -39,7 +39,8 @@ void RegisterGetAicpuCqeErrInfoCallBackHcomm(GetAicpuCqeErrInfoCallBackHcomm p1)
     return;
 }
 
-void TaskExceptionHost::ClusterMoniterGetAicpuCqeErrInfo(u32 remoteLocalId, u32 locDeviceId, uint16_t status, string localEid, string remoteEid, string remoteInsId) const
+void TaskExceptionHost::ClusterMoniterGetAicpuCqeErrInfo(
+    u32 remoteLocalId, u32 locDeviceId, uint16_t status, string localEid, string remoteEid, string remoteInsId) const
 {
     if (g_getAicpuCqeErrInfoCallBack != nullptr) {
         g_getAicpuCqeErrInfoCallBack(remoteLocalId, locDeviceId, status, localEid, remoteEid, remoteInsId);
@@ -65,18 +66,18 @@ std::vector<std::string> AicpuGetErrStatusVec(s32 deviceLogicID)
     return std::vector<std::string>();
 }
 
-std::string AicpuGetAndPrintClusterMonitorErr(const rtExceptionInfo *exceptionInfo)
+std::string AicpuGetAndPrintClusterMonitorErr(const rtExceptionInfo* exceptionInfo)
 {
     auto errStatusVec = AicpuGetErrStatusVec(exceptionInfo->deviceid);
     std::string errMsg = "";
     int errSize = errStatusVec.size();
     if (errSize > 0) {
-        int maxListSize = 3;  // 放入errMsg中的异常事件最多只有3个
+        int maxListSize = 3; // 放入errMsg中的异常事件最多只有3个
         if (errSize <= maxListSize) {
             errMsg = "\nthere are(is) " + std::to_string(errSize) + " abnormal device(s):\n";
         } else {
-            errMsg = "\nthere are " + std::to_string(errSize) + " abnormal device(s), " +
-                "only the first 3 devices are listed:\n";
+            errMsg = "\nthere are " + std::to_string(errSize) + " abnormal device(s), "
+                     + "only the first 3 devices are listed:\n";
         }
 
         for (int i = 0; i < errSize; i++) {
@@ -89,7 +90,7 @@ std::string AicpuGetAndPrintClusterMonitorErr(const rtExceptionInfo *exceptionIn
     return errMsg;
 }
 
-TaskExceptionHost *TaskExceptionHost::GetInstance(s32 deviceLogicID)
+TaskExceptionHost* TaskExceptionHost::GetInstance(s32 deviceLogicID)
 {
     if (deviceLogicID < 0 || static_cast<u32>(deviceLogicID) >= MAX_MODULE_DEVICE_NUM_V2) {
         HCCL_ERROR("[TaskExceptionHost][GetInstance] deviceLogicID[%d] is invalid", deviceLogicID);
@@ -108,12 +109,12 @@ TaskExceptionHost::~TaskExceptionHost()
     }
 }
 
-void TaskExceptionHost::ProcessCallback(rtExceptionInfo_t *exceptionInfo)
+void TaskExceptionHost::ProcessCallback(rtExceptionInfo_t* exceptionInfo)
 {
-    CHK_PRT_RET(exceptionInfo == nullptr, HCCL_ERROR("[%s]fail, exceptionInfo is nullptr", __func__),);
+    CHK_PRT_RET(exceptionInfo == nullptr, HCCL_ERROR("[%s]fail, exceptionInfo is nullptr", __func__), );
 
-    TaskExceptionHost *handler = TaskExceptionHost::GetInstance(exceptionInfo->deviceid);
-    CHK_PRT_RET(handler == nullptr, HCCL_ERROR("[%s]fail, TaskExceptionHost is nullptr", __func__),);
+    TaskExceptionHost* handler = TaskExceptionHost::GetInstance(exceptionInfo->deviceid);
+    CHK_PRT_RET(handler == nullptr, HCCL_ERROR("[%s]fail, TaskExceptionHost is nullptr", __func__), );
     handler->Process(exceptionInfo);
 }
 
@@ -122,8 +123,9 @@ HcclResult TaskExceptionHost::Register(u64 commHandle)
     std::unique_lock<std::mutex> lock(taskExceptionMutex_);
     if (CommRegisterMap_.empty()) {
         aclError ret = aclrtSetExceptionInfoCallback(ProcessCallback);
-        CHK_PRT_RET(ret != ACL_SUCCESS,
-            HCCL_ERROR("[%s]aclrtSetExceptionInfoCallback failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
+        CHK_PRT_RET(
+            ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtSetExceptionInfoCallback failed, ret[%d]", __func__, ret),
+            HCCL_E_RUNTIME);
         HCCL_RUN_INFO("[%s]aclrtSetExceptionInfoCallback set ProcessCallback success", __func__);
     }
 
@@ -143,8 +145,9 @@ HcclResult TaskExceptionHost::UnRegister(u64 commHandle)
     CommRegisterMap_.erase(commHandle);
     if (CommRegisterMap_.empty()) {
         aclError ret = aclrtSetExceptionInfoCallback(nullptr); // 把注册给rts的TaskException回调函数指针置空
-        CHK_PRT_RET(ret != ACL_SUCCESS,
-            HCCL_ERROR("[%s]aclrtSetExceptionInfoCallback failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
+        CHK_PRT_RET(
+            ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtSetExceptionInfoCallback failed, ret[%d]", __func__, ret),
+            HCCL_E_RUNTIME);
         HCCL_RUN_INFO("[%s]aclrtSetExceptionInfoCallback set nullptr success", __func__);
     }
 
@@ -170,11 +173,13 @@ HcclResult TaskExceptionHost::PrintUbRegisters(s32 devLogicId, const RdmaHandle 
     for (u32 i = 0; i < auxInfo.auxInfoNum; i++) {
         if (auxInfo.auxInfoValues[i] != 0) { // 非零进行打印
             isAuxInfoExisted = true;
-            HCCL_ERROR("devLogicId[%d], cqe_aux_info_type[%u], cqe_aux_info_value[0x%x]",
- 	  	            devLogicId, auxInfo.auxInfoTypes[i], auxInfo.auxInfoValues[i]);
- 	    } else {
- 	        HCCL_INFO("devLogicId[%d], cqe_aux_info_type[%u], cqe_aux_info_value[0x%x]",
- 	            devLogicId, auxInfo.auxInfoTypes[i], auxInfo.auxInfoValues[i]);
+            HCCL_ERROR(
+                "devLogicId[%d], cqe_aux_info_type[%u], cqe_aux_info_value[0x%x]", devLogicId, auxInfo.auxInfoTypes[i],
+                auxInfo.auxInfoValues[i]);
+        } else {
+            HCCL_INFO(
+                "devLogicId[%d], cqe_aux_info_type[%u], cqe_aux_info_value[0x%x]", devLogicId, auxInfo.auxInfoTypes[i],
+                auxInfo.auxInfoValues[i]);
         }
     }
     if (!isAuxInfoExisted) {
@@ -185,8 +190,8 @@ HcclResult TaskExceptionHost::PrintUbRegisters(s32 devLogicId, const RdmaHandle 
 
 bool IsMC2Exception(const rtExceptionInfo_t* exceptionInfo)
 {
-    return exceptionInfo->expandInfo.type == RT_EXCEPTION_FUSION &&
-           exceptionInfo->expandInfo.u.fusionInfo.type == RT_FUSION_AICORE_CCU;
+    return exceptionInfo->expandInfo.type == RT_EXCEPTION_FUSION
+           && exceptionInfo->expandInfo.u.fusionInfo.type == RT_FUSION_AICORE_CCU;
 }
 
 bool TaskExceptionHost::ProcessDpuException(const rtExceptionInfo_t* exceptionInfo) const
@@ -198,15 +203,23 @@ bool TaskExceptionHost::ProcessDpuException(const rtExceptionInfo_t* exceptionIn
     for (auto pairMap : g_taskExpMemMap) {
         std::string commId = pairMap.first;
         // 读取共享内存内容并打印
-        ret = memcpy_s(&hcclRet, sizeof(uint16_t), reinterpret_cast<uint8_t *>(pairMap.second[exceptionInfo->deviceid]) + sizeof(uint8_t) + sizeof(uint16_t), sizeof(uint16_t));
+        ret = memcpy_s(
+            &hcclRet, sizeof(uint16_t),
+            reinterpret_cast<uint8_t*>(pairMap.second[exceptionInfo->deviceid]) + sizeof(uint8_t) + sizeof(uint16_t),
+            sizeof(uint16_t));
         if (ret != EOK) {
             HCCL_ERROR("memcpy_s get dpu taskexception failed: %d", ret);
             return isExce;
         }
         if (hcclRet != 0) { // 有dpu任务出错
             HCCL_ERROR("[TaskExceptionHost][ProcessDpuException] Task from HCCL run failed.");
-            HCCL_ERROR("[TaskExceptionHost][ProcessDpuException] errorCode[%d], devId[%u], commId[%s]", hcclRet, exceptionInfo->deviceid, commId.c_str());
-            ret = memset_s(reinterpret_cast<uint8_t *>(pairMap.second[exceptionInfo->deviceid]) + sizeof(uint8_t) + sizeof(uint16_t), sizeof(uint16_t), 0, sizeof(uint16_t)); // 清空 dpu taskexception共享内存内容
+            HCCL_ERROR(
+                "[TaskExceptionHost][ProcessDpuException] errorCode[%d], devId[%u], commId[%s]", hcclRet,
+                exceptionInfo->deviceid, commId.c_str());
+            ret = memset_s(
+                reinterpret_cast<uint8_t*>(pairMap.second[exceptionInfo->deviceid]) + sizeof(uint8_t)
+                    + sizeof(uint16_t),
+                sizeof(uint16_t), 0, sizeof(uint16_t)); // 清空 dpu taskexception共享内存内容
             if (ret != EOK) {
                 HCCL_ERROR("memset_s clean dpu taskexception failed: %d", ret);
                 return isExce;
@@ -220,8 +233,9 @@ bool TaskExceptionHost::ProcessDpuException(const rtExceptionInfo_t* exceptionIn
 
 void TaskExceptionHost::Process(rtExceptionInfo_t* exceptionInfo)
 {
-    HCCL_RUN_INFO("[TaskExceptionHost][%s], taskid[%u], streamid[%u], tid[%u], deviceid[%u], retcode[%u], type[%d]",
-        __func__, exceptionInfo->taskid, exceptionInfo->streamid, exceptionInfo->tid, exceptionInfo->deviceid,
+    HCCL_RUN_INFO(
+        "[TaskExceptionHost][%s], taskid[%u], streamid[%u], tid[%u], deviceid[%u], retcode[%u], type[%d]", __func__,
+        exceptionInfo->taskid, exceptionInfo->streamid, exceptionInfo->tid, exceptionInfo->deviceid,
         exceptionInfo->retcode, exceptionInfo->expandInfo.type);
 
     if (IsMC2Exception(exceptionInfo)) { // MC2 taskException 新流程暂未支持，回退到老流程
@@ -236,16 +250,21 @@ void TaskExceptionHost::Process(rtExceptionInfo_t* exceptionInfo)
     };
 
     Hccl::TaskInfo* curTask = nullptr;
-    HcclResult ret = Hccl::GlobalMirrorTasks::Instance().FindTaskInfo(exceptionInfo->deviceid, exceptionInfo->streamid,
-        exceptionInfo->taskid, curTask);
-    CHK_PRT_RET(ret == HCCL_E_NOT_FOUND, HCCL_RUN_WARNING("[%s]FindTaskInfo not found, deviceid[%u] streamid[%u] taskid[%u].",
-        __func__, exceptionInfo->deviceid, exceptionInfo->streamid, exceptionInfo->taskid),);
+    HcclResult ret = Hccl::GlobalMirrorTasks::Instance().FindTaskInfo(
+        exceptionInfo->deviceid, exceptionInfo->streamid, exceptionInfo->taskid, curTask);
+    CHK_PRT_RET(
+        ret == HCCL_E_NOT_FOUND,
+        HCCL_RUN_WARNING(
+            "[%s]FindTaskInfo not found, deviceid[%u] streamid[%u] taskid[%u].", __func__, exceptionInfo->deviceid,
+            exceptionInfo->streamid, exceptionInfo->taskid), );
 
-    CHK_PRT_RET(ret != HCCL_SUCCESS || curTask == nullptr,
-        HCCL_ERROR("[%s]FindTaskInfo fail, ret[%d], deviceid[%u], streamid[%u], taskid[%u].",
-            __func__, ret, exceptionInfo->deviceid, exceptionInfo->streamid, exceptionInfo->taskid),);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS || curTask == nullptr,
+        HCCL_ERROR(
+            "[%s]FindTaskInfo fail, ret[%d], deviceid[%u], streamid[%u], taskid[%u].", __func__, ret,
+            exceptionInfo->deviceid, exceptionInfo->streamid, exceptionInfo->taskid), );
 
-    CHK_PRT_RET(curTask->dfxOpInfo_ == nullptr, HCCL_ERROR("[%s]fail, dfxOpInfo is nullptr", __func__),);
+    CHK_PRT_RET(curTask->dfxOpInfo_ == nullptr, HCCL_ERROR("[%s]fail, dfxOpInfo is nullptr", __func__), );
     bool isIndop_ = curTask->dfxOpInfo_->isIndop_;
     HCCL_INFO("[%s]isIndop_[%d], taskType[%s]", __func__, isIndop_, curTask->taskParam_.taskType.Describe().c_str());
 
@@ -259,13 +278,15 @@ void TaskExceptionHost::Process(rtExceptionInfo_t* exceptionInfo)
     std::unique_lock<std::mutex> lock(taskExceptionMutex_);
     u64 commHandle = reinterpret_cast<u64>(curTask->dfxOpInfo_->comm_);
     if (curTask->dfxOpInfo_->comm_ == nullptr || CommRegisterMap_.find(commHandle) == CommRegisterMap_.end()) {
-        HCCL_ERROR("[TaskExceptionHost][%s] commHandle[0x%llx] not exist, "
-            "the comm may have been destroyed or was never registered", __func__, commHandle);
+        HCCL_ERROR(
+            "[TaskExceptionHost][%s] commHandle[0x%llx] not exist, "
+            "the comm may have been destroyed or was never registered",
+            __func__, commHandle);
         return;
     }
 
     if (curTask->taskParam_.taskType == Hccl::TaskParamType::TASK_CCU) {
-        CcuTaskException::ProcessCcuException(exceptionInfo, *curTask); 
+        CcuTaskException::ProcessCcuException(exceptionInfo, *curTask);
     } else {
         ProcessException(exceptionInfo, *curTask);
     }
@@ -278,12 +299,14 @@ std::string TaskExceptionHost::GetGroupRankInfo(const Hccl::TaskInfo& taskInfo) 
         return "";
     }
 
-    hccl::CollComm *communicator = static_cast<hccl::CollComm*>(taskInfo.dfxOpInfo_->comm_);
-    return Hccl::StringFormat("group:[%s], rankSize[%u], rankId[%u]",
-        communicator->GetCommId().c_str(), communicator->GetRankSize(), communicator->GetMyRankId());
+    hccl::CollComm* communicator = static_cast<hccl::CollComm*>(taskInfo.dfxOpInfo_->comm_);
+    return Hccl::StringFormat(
+        "group:[%s], rankSize[%u], rankId[%u]", communicator->GetCommId().c_str(), communicator->GetRankSize(),
+        communicator->GetMyRankId());
 }
 
-void TaskExceptionHost::GetAicpuCqeErrRemoteLocalIdByRankId(hccl::CollComm* collComm, uint32_t rankid, u32 &remoteLocalId) const
+void TaskExceptionHost::GetAicpuCqeErrRemoteLocalIdByRankId(
+    hccl::CollComm* collComm, uint32_t rankid, u32& remoteLocalId) const
 {
     if (collComm == nullptr || rankid == INVALID_VALUE_RANKID) {
         HCCL_ERROR("[GetAicpuCqeErrRemoteLocalIdByRankId]collComm is nullptr or rankId is invalid, rankId[%u]", rankid);
@@ -291,48 +314,49 @@ void TaskExceptionHost::GetAicpuCqeErrRemoteLocalIdByRankId(hccl::CollComm* coll
         return;
     }
 
-    Hccl::HcclCommunicator *commV2 = static_cast<Hccl::HcclCommunicator *>(collComm->GetCommunicatorV2());
+    Hccl::HcclCommunicator* commV2 = static_cast<Hccl::HcclCommunicator*>(collComm->GetCommunicatorV2());
     if (commV2 == nullptr) {
         HCCL_ERROR("[GetAicpuCqeErrRemoteLocalIdByRankId]commV2 is nullptr, rankId[%u]", rankid);
         remoteLocalId = INVALID_VALUE_RANKID;
         return;
     }
-    void *rankGraph = nullptr;
-    HcclResult ret =commV2->GetRankGraphV2(rankGraph);
+    void* rankGraph = nullptr;
+    HcclResult ret = commV2->GetRankGraphV2(rankGraph);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[GetAicpuCqeErrRemoteLocalIdByRankId]GetRankGraphV2 failed, rankId[%u], ret[%d]", rankid, ret);
         remoteLocalId = INVALID_VALUE_RANKID;
         return;
     }
-    Hccl::RankGraph *rankGraphv2 = static_cast<Hccl::RankGraph *>(rankGraph);
+    Hccl::RankGraph* rankGraphv2 = static_cast<Hccl::RankGraph*>(rankGraph);
     u32 LocalId = rankGraphv2->GetLocalId(rankid);
     remoteLocalId = LocalId;
     return;
 }
 
-void TaskExceptionHost::GetAicpuCqeErrNetInstanceByRankId(hccl::CollComm* collComm, uint32_t rankid, std::string &netInstanceId) const
+void TaskExceptionHost::GetAicpuCqeErrNetInstanceByRankId(
+    hccl::CollComm* collComm, uint32_t rankid, std::string& netInstanceId) const
 {
     if (collComm == nullptr || rankid == INVALID_VALUE_RANKID) {
         HCCL_ERROR("[GetAicpuCqeErrNetInstanceByRankId]collComm is nullptr or rankId is invalid, rankId[%u]", rankid);
         netInstanceId = "";
         return;
     }
-    
-    Hccl::HcclCommunicator *commV2 = static_cast<Hccl::HcclCommunicator *>(collComm->GetCommunicatorV2());
+
+    Hccl::HcclCommunicator* commV2 = static_cast<Hccl::HcclCommunicator*>(collComm->GetCommunicatorV2());
     if (commV2 == nullptr) {
         HCCL_ERROR("[GetAicpuCqeErrNetInstanceByRankId]commV2 is nullptr, rankId[%u]", rankid);
         netInstanceId = "";
         return;
     }
-    void *rankGraph = nullptr;
+    void* rankGraph = nullptr;
     HcclResult ret = commV2->GetRankGraphV2(rankGraph);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[GetAicpuCqeErrNetInstanceByRankId]GetRankGraphV2 failed, rankId[%u], ret[%d]", rankid, ret);
         netInstanceId = "";
         return;
     }
-    Hccl::RankGraph *rankGraphv2 = static_cast<Hccl::RankGraph *>(rankGraph);
-    const Hccl::NetInstance *netInstance = rankGraphv2->GetNetInstanceByRankId(0, rankid);
+    Hccl::RankGraph* rankGraphv2 = static_cast<Hccl::RankGraph*>(rankGraph);
+    const Hccl::NetInstance* netInstance = rankGraphv2->GetNetInstanceByRankId(0, rankid);
     if (netInstance == nullptr) {
         HCCL_ERROR("[GetAicpuCqeErrNetInstanceByRankId]netInstance is nullptr, rankId[%u]", rankid);
         netInstanceId = "";
@@ -343,14 +367,18 @@ void TaskExceptionHost::GetAicpuCqeErrNetInstanceByRankId(hccl::CollComm* collCo
     return;
 }
 
-void TaskExceptionHost::GetAicpuCqeErrInfo(rtExceptionInfo_t* exceptionInfo, const Hccl::ErrorMessageReport &errorMessage, const Hccl::TaskInfo& taskInfo) const
+void TaskExceptionHost::GetAicpuCqeErrInfo(
+    rtExceptionInfo_t* exceptionInfo, const Hccl::ErrorMessageReport& errorMessage,
+    const Hccl::TaskInfo& taskInfo) const
 {
-    hccl::CollComm *collComm = static_cast<hccl::CollComm*>(taskInfo.dfxOpInfo_->comm_);
+    hccl::CollComm* collComm = static_cast<hccl::CollComm*>(taskInfo.dfxOpInfo_->comm_);
     u32 remoteLocalId = INVALID_VALUE_RANKID;
     GetAicpuCqeErrRemoteLocalIdByRankId(collComm, errorMessage.remoteUserRank, remoteLocalId);
     std::string netInstanceId = "";
     GetAicpuCqeErrNetInstanceByRankId(collComm, errorMessage.remoteUserRank, netInstanceId);
-    ClusterMoniterGetAicpuCqeErrInfo(remoteLocalId, exceptionInfo->deviceid, errorMessage.ubCqeStatus, errorMessage.locEid.Describe(), errorMessage.rmtEid.Describe(), netInstanceId); // 上报AICPU CQE错误信息到集群监控
+    ClusterMoniterGetAicpuCqeErrInfo(
+        remoteLocalId, exceptionInfo->deviceid, errorMessage.ubCqeStatus, errorMessage.locEid.Describe(),
+        errorMessage.rmtEid.Describe(), netInstanceId); // 上报AICPU CQE错误信息到集群监控
     return;
 }
 
@@ -359,7 +387,7 @@ void TaskExceptionHost::ProcessException(rtExceptionInfo_t* exceptionInfo, const
     HCCL_RUN_INFO("[TaskExceptionHost][%s]begin to execute hccl task exception callback function.", __func__);
     Hccl::ErrorMessageReport errorMessage;
     if (!hasAicpuReport_) { // 防止aicpu task exception重复上报
-        hccl::CollComm *communicator = static_cast<hccl::CollComm*>(taskInfo.dfxOpInfo_->comm_);
+        hccl::CollComm* communicator = static_cast<hccl::CollComm*>(taskInfo.dfxOpInfo_->comm_);
         errorMessage = communicator->GetAicpuTaskException();
     }
 
@@ -371,37 +399,34 @@ void TaskExceptionHost::ProcessException(rtExceptionInfo_t* exceptionInfo, const
     }
 }
 
-void TaskExceptionHost::HandleHostErrorReport(rtExceptionInfo_t *exceptionInfo, const Hccl::TaskInfo &taskInfo) const
+void TaskExceptionHost::HandleHostErrorReport(rtExceptionInfo_t* exceptionInfo, const Hccl::TaskInfo& taskInfo) const
 {
     HCCL_ERROR("[TaskExceptionHost][%s]Task from HCCL run failed.", __func__);
     if (taskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_NOTIFY_WAIT) {
         PrintTaskContextInfo(exceptionInfo->deviceid, exceptionInfo->streamid, exceptionInfo->taskid);
-        RPT_INPUT_ERR(true,
-            "EI0002",
+        RPT_INPUT_ERR(
+            true, "EI0002",
             std::vector<std::string>({"remote_rankid", "base_information", "task_information", "group_rank_content"}),
-            std::vector<std::string>({
-                std::to_string(taskInfo.remoteRank_),
-                taskInfo.GetBaseInfo(), (taskInfo.GetParaInfo()),
-                ""})
-        );
+            std::vector<std::string>(
+                {std::to_string(taskInfo.remoteRank_), taskInfo.GetBaseInfo(), (taskInfo.GetParaInfo()), ""}));
     }
     std::string clusterMonitorErrMsg = AicpuGetAndPrintClusterMonitorErr(exceptionInfo);
-    HCCL_ERROR("[TaskExceptionHost]Task run failed, base information is deviceID:[%u], %s.",
-        exceptionInfo->deviceid, taskInfo.GetIndopBaseInfo().c_str());
+    HCCL_ERROR(
+        "[TaskExceptionHost]Task run failed, base information is deviceID:[%u], %s.", exceptionInfo->deviceid,
+        taskInfo.GetIndopBaseInfo().c_str());
     HCCL_ERROR("[TaskExceptionHost]Task run failed, para information is %s.", taskInfo.GetParaInfo().c_str());
-    HCCL_ERROR("[TaskExceptionHost]Task run failed, groupRank information is %s.",
-        GetGroupRankInfo(taskInfo).c_str());
+    HCCL_ERROR("[TaskExceptionHost]Task run failed, groupRank information is %s.", GetGroupRankInfo(taskInfo).c_str());
     HCCL_ERROR("[TaskExceptionHost]Task run failed, opData information is %s.", taskInfo.GetIndopDataInfo().c_str());
 }
 
 void TaskExceptionHost::PrintTaskContextInfo(uint32_t deviceId, uint32_t streamId, uint32_t taskId) const
 {
-    Hccl::TaskInfoQueue *queue = nullptr;
+    Hccl::TaskInfoQueue* queue = nullptr;
     try {
         queue = Hccl::GlobalMirrorTasks::Instance().GetQueue(deviceId, streamId);
-    } catch (Hccl::HcclException &e) {
+    } catch (Hccl::HcclException& e) {
         HCCL_ERROR("Exception task queue not found. deviceId[%u], streamId[%u].", deviceId, streamId);
-        return ;
+        return;
     }
 
     if (queue == nullptr) {
@@ -410,7 +435,9 @@ void TaskExceptionHost::PrintTaskContextInfo(uint32_t deviceId, uint32_t streamI
         return;
     }
 
-    auto func = [taskId] (const unique_ptr<Hccl::TaskInfo>& task) { return task->taskId_ == taskId; };
+    auto func = [taskId](const unique_ptr<Hccl::TaskInfo>& task) {
+        return task->taskId_ == taskId;
+    };
     auto taskIterPtr = queue->Find(func);
     if (taskIterPtr == nullptr || *taskIterPtr == *queue->End()) {
         // 在队列中未找到异常对应的TaskInfo
@@ -419,20 +446,21 @@ void TaskExceptionHost::PrintTaskContextInfo(uint32_t deviceId, uint32_t streamI
     }
 
     // 找到当前异常task的前50个task(至多)
-    vector<Hccl::TaskInfo*> taskContext {};
+    vector<Hccl::TaskInfo*> taskContext{};
     for (uint32_t i = 0; i < TASK_CONTEXT_SIZE && *taskIterPtr != *queue->Begin(); ++i, --(*taskIterPtr)) {
         if ((**taskIterPtr)->taskId_ > taskId) {
-            HCCL_ERROR("[%s]prev taskId[%u]is bigger than err taskId[%u], traversal end.",
-                __func__, (**taskIterPtr)->taskId_, taskId);
+            HCCL_ERROR(
+                "[%s]prev taskId[%u]is bigger than err taskId[%u], traversal end.", __func__, (**taskIterPtr)->taskId_,
+                taskId);
             break;
         }
         taskContext.emplace_back((**taskIterPtr).get());
     }
 
     HCCL_ERROR("[TaskExceptionHost]Task run failed, context sequence before error task is "
-        "[SDMA:M(rank), RDMA:RS(rank,id), SendPayload:SP(rank), InlineReduce:IR(rank), Reduce:R(rank), "
-        "NotifyRecord:NR(rank,id), NotifyWait:NW(rank,id), SendNotify:SN(rank,id), "
-        "WriteWithNotify:WN(rank,id), WriteReduceWithNotify:WRN(rank,id)]:");
+               "[SDMA:M(rank), RDMA:RS(rank,id), SendPayload:SP(rank), InlineReduce:IR(rank), Reduce:R(rank), "
+               "NotifyRecord:NR(rank,id), NotifyWait:NW(rank,id), SendNotify:SN(rank,id), "
+               "WriteWithNotify:WN(rank,id), WriteReduceWithNotify:WRN(rank,id)]:");
 
     std::string taskContextInfo = "";
     for (auto it = taskContext.rbegin(); it != taskContext.rend(); ++it) {
@@ -448,30 +476,30 @@ void TaskExceptionHost::PrintTaskContextInfo(uint32_t deviceId, uint32_t streamI
     }
     HCCL_ERROR("[TaskExceptionHost]%s end.", taskContextInfo.c_str());
 }
-    
- 	 
-inline void PrintBaseErrorLog(const std::string &stageErrInfo, const std::string &baseInfo)
+
+inline void PrintBaseErrorLog(const std::string& stageErrInfo, const std::string& baseInfo)
 {
     HCCL_ERROR("%sTask run failed, base information is %s", stageErrInfo.c_str(), baseInfo.c_str());
 }
 
-inline void PrintParaErrorLog(const std::string &stageErrInfo, const std::string &paraInfoStr)
+inline void PrintParaErrorLog(const std::string& stageErrInfo, const std::string& paraInfoStr)
 {
     HCCL_ERROR("%sTask run failed, para information is %s.", stageErrInfo.c_str(), paraInfoStr.c_str());
 }
 
-inline void PrintOpDataErrorLog(const std::string &stageErrInfo, const std::string &opDataContent)
+inline void PrintOpDataErrorLog(const std::string& stageErrInfo, const std::string& opDataContent)
 {
     HCCL_ERROR("%sTask run failed, opData information is %s", stageErrInfo.c_str(), opDataContent.c_str());
 }
 
-inline void PrintGroupErrorLog(const std::string &stageErrInfo, const std::string &groupRankContent)
+inline void PrintGroupErrorLog(const std::string& stageErrInfo, const std::string& groupRankContent)
 {
     HCCL_ERROR("%sTask run failed, groupRank information is %s.", stageErrInfo.c_str(), groupRankContent.c_str());
 }
 
-void TaskExceptionHost::PrintGroupErrorMessage(const Hccl::ErrorMessageReport &errorMessage, [[maybe_unused]] const Hccl::TaskInfo &exceptionTaskInfo,
-    std::string &groupRankContent, std::string &stageErrInfo) const
+void TaskExceptionHost::PrintGroupErrorMessage(
+    const Hccl::ErrorMessageReport& errorMessage, [[maybe_unused]] const Hccl::TaskInfo& exceptionTaskInfo,
+    std::string& groupRankContent, std::string& stageErrInfo) const
 {
     groupRankContent += "group:[";
     groupRankContent += std::string(errorMessage.group);
@@ -492,8 +520,7 @@ const std::map<HcclReduceOp, std::string> HCOM_REDUCE_OP_STR_MAP{
     {HcclReduceOp::HCCL_REDUCE_PROD, "prod"},
     {HcclReduceOp::HCCL_REDUCE_MAX, "max"},
     {HcclReduceOp::HCCL_REDUCE_MIN, "min"},
-    {HcclReduceOp::HCCL_REDUCE_RESERVED, "invalid"}
-};
+    {HcclReduceOp::HCCL_REDUCE_RESERVED, "invalid"}};
 
 inline std::string GetReduceOpEnumStr2(HcclReduceOp reduceOp)
 {
@@ -506,23 +533,14 @@ inline std::string GetReduceOpEnumStr2(HcclReduceOp reduceOp)
 }
 
 const std::map<HcclDataType, std::string> HCOM_DATA_TYPE_STR_MAP{
-    {HcclDataType::HCCL_DATA_TYPE_INT8, "int8"},
-    {HcclDataType::HCCL_DATA_TYPE_INT16, "int16"},
-    {HcclDataType::HCCL_DATA_TYPE_INT32, "int32"},
-    {HcclDataType::HCCL_DATA_TYPE_INT64, "int64"},
-    {HcclDataType::HCCL_DATA_TYPE_UINT64, "uint64"},
-    {HcclDataType::HCCL_DATA_TYPE_FP16, "float16"},
-    {HcclDataType::HCCL_DATA_TYPE_FP32, "float32"},
-    {HcclDataType::HCCL_DATA_TYPE_UINT8, "uint8"},
-    {HcclDataType::HCCL_DATA_TYPE_UINT16, "uint16"},
-    {HcclDataType::HCCL_DATA_TYPE_UINT32, "uint32"},
-    {HcclDataType::HCCL_DATA_TYPE_FP64, "float64"},
-    {HcclDataType::HCCL_DATA_TYPE_BFP16, "bfloat16"},
-    {HcclDataType::HCCL_DATA_TYPE_INT128, "int128"},
-    {HcclDataType::HCCL_DATA_TYPE_FP8E4M3, "fp8e4m3"},
-    {HcclDataType::HCCL_DATA_TYPE_FP8E5M2, "fp8e5m2"},
-    {HcclDataType::HCCL_DATA_TYPE_RESERVED, "reserved"}
-};
+    {HcclDataType::HCCL_DATA_TYPE_INT8, "int8"},       {HcclDataType::HCCL_DATA_TYPE_INT16, "int16"},
+    {HcclDataType::HCCL_DATA_TYPE_INT32, "int32"},     {HcclDataType::HCCL_DATA_TYPE_INT64, "int64"},
+    {HcclDataType::HCCL_DATA_TYPE_UINT64, "uint64"},   {HcclDataType::HCCL_DATA_TYPE_FP16, "float16"},
+    {HcclDataType::HCCL_DATA_TYPE_FP32, "float32"},    {HcclDataType::HCCL_DATA_TYPE_UINT8, "uint8"},
+    {HcclDataType::HCCL_DATA_TYPE_UINT16, "uint16"},   {HcclDataType::HCCL_DATA_TYPE_UINT32, "uint32"},
+    {HcclDataType::HCCL_DATA_TYPE_FP64, "float64"},    {HcclDataType::HCCL_DATA_TYPE_BFP16, "bfloat16"},
+    {HcclDataType::HCCL_DATA_TYPE_INT128, "int128"},   {HcclDataType::HCCL_DATA_TYPE_FP8E4M3, "fp8e4m3"},
+    {HcclDataType::HCCL_DATA_TYPE_FP8E5M2, "fp8e5m2"}, {HcclDataType::HCCL_DATA_TYPE_RESERVED, "reserved"}};
 
 inline std::string GetDataTypeEnumStr2(HcclDataType dataType)
 {
@@ -541,17 +559,16 @@ inline std::string GetDataTypeEnumStr(u32 dataType)
 }
 inline std::string GetOpTypeEnumStr(u32 opType)
 {
- 	Hccl::OpType hcclOpType = static_cast<Hccl::OpType::Value>(opType);
- 	return hcclOpType.Describe();
+    Hccl::OpType hcclOpType = static_cast<Hccl::OpType::Value>(opType);
+    return hcclOpType.Describe();
 }
 
-void TaskExceptionHost::PrintOpDataErrorMessage(u32 deviceId, const Hccl::ErrorMessageReport &errorMessage,
-    std::string &stageErrInfo) const
+void TaskExceptionHost::PrintOpDataErrorMessage(
+    u32 deviceId, const Hccl::ErrorMessageReport& errorMessage, std::string& stageErrInfo) const
 {
     std::stringstream opDataStr;
-    opDataStr << "src" << "[0x"
-            << std::hex << errorMessage.srcAddr << "], dst[0x"
-            << std::hex << errorMessage.dstAddr << "], ";
+    opDataStr << "src" << "[0x" << std::hex << errorMessage.srcAddr << "], dst[0x" << std::hex << errorMessage.dstAddr
+              << "], ";
 
     std::string opStr;
     if (errorMessage.reduceType != HcclReduceOp::HCCL_REDUCE_RESERVED) {
@@ -578,8 +595,9 @@ void TaskExceptionHost::PrintOpDataErrorMessage(u32 deviceId, const Hccl::ErrorM
     return;
 }
 
-void TaskExceptionHost::ReportErrorMsg(const Hccl::TaskInfo &exceptionTaskInfo, [[maybe_unused]] const std::string &groupRankContent,
-    const Hccl::ErrorMessageReport &errorMessage, rtExceptionInfo_t *exceptionInfo) const
+void TaskExceptionHost::ReportErrorMsg(
+    const Hccl::TaskInfo& exceptionTaskInfo, [[maybe_unused]] const std::string& groupRankContent,
+    const Hccl::ErrorMessageReport& errorMessage, rtExceptionInfo_t* exceptionInfo) const
 {
     HCCL_RUN_INFO("[ReportErrorMsg] start, taskType[%d]", exceptionTaskInfo.taskParam_.taskType);
 
@@ -587,20 +605,19 @@ void TaskExceptionHost::ReportErrorMsg(const Hccl::TaskInfo &exceptionTaskInfo, 
 
     if (exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_NOTIFY_WAIT) {
         HCCL_ERROR("[ReportErrorMsg] EI0002");
-        RPT_INPUT_ERR(true,
-            "EI0002",
+        RPT_INPUT_ERR(
+            true, "EI0002",
             std::vector<std::string>({"remote_rankid", "base_information", "task_information", "group_rank_content"}),
-            std::vector<std::string>({
-                std::to_string(exceptionTaskInfo.remoteRank_),
-                exceptionTaskInfo.GetIndopBaseInfo().c_str(), (exceptionTaskInfo.GetParaInfo() + clusterMonitorErrMsg).c_str(),
-                ""})
-        );
-    } else if (exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY 
+            std::vector<std::string>(
+                {std::to_string(exceptionTaskInfo.remoteRank_), exceptionTaskInfo.GetIndopBaseInfo().c_str(),
+                 (exceptionTaskInfo.GetParaInfo() + clusterMonitorErrMsg).c_str(), ""}));
+    } else if (
+        exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY
         || exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_WRITE_WITH_NOTIFY
         || exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_UB_INLINE_WRITE
         || exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_UB_REDUCE_INLINE
         || exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_UB) {
-        hccl::CollComm *collComm = static_cast<hccl::CollComm*>(exceptionTaskInfo.dfxOpInfo_->comm_);
+        hccl::CollComm* collComm = static_cast<hccl::CollComm*>(exceptionTaskInfo.dfxOpInfo_->comm_);
         std::string localServerId = "";
         GetAicpuCqeErrNetInstanceByRankId(collComm, errorMessage.rankId, localServerId);
         u32 localDeviceId = INVALID_VALUE_RANKID;
@@ -612,17 +629,19 @@ void TaskExceptionHost::ReportErrorMsg(const Hccl::TaskInfo &exceptionTaskInfo, 
         Hccl::IpAddress localAddr(errorMessage.locEid);
         Hccl::IpAddress remoteAddr(errorMessage.rmtEid);
         HCCL_ERROR("[ReportErrorMsg] EI0018");
-        RPT_INPUT_ERR(true,
-            "EI0018",
-            std::vector<std::string>({"localServerId", "localDeviceId", "localDeviceIp", "remoteServerId", "remoteDeviceId", "remoteDeviceIp"}),
-            std::vector<std::string>({
-                localServerId, std::to_string(localDeviceId), localAddr.GetReverseEid().Describe().c_str(),
-                remoteServerId, std::to_string(remoteDeviceId), remoteAddr.GetReverseEid().Describe().c_str()})
-            );
+        RPT_INPUT_ERR(
+            true, "EI0018",
+            std::vector<std::string>(
+                {"localServerId", "localDeviceId", "localDeviceIp", "remoteServerId", "remoteDeviceId",
+                 "remoteDeviceIp"}),
+            std::vector<std::string>(
+                {localServerId, std::to_string(localDeviceId), localAddr.GetReverseEid().Describe().c_str(),
+                 remoteServerId, std::to_string(remoteDeviceId), remoteAddr.GetReverseEid().Describe().c_str()}));
     }
 }
 
-void GetTaskParam(Hccl::TaskParam &taskParam, const Hccl::ErrorMessageReport &errMsgInfo) {
+void GetTaskParam(Hccl::TaskParam& taskParam, const Hccl::ErrorMessageReport& errMsgInfo)
+{
     switch (errMsgInfo.taskType) {
         case Hccl::TaskParamType::TASK_NOTIFY_WAIT:
         case Hccl::TaskParamType::TASK_NOTIFY_RECORD:
@@ -637,8 +656,8 @@ void GetTaskParam(Hccl::TaskParam &taskParam, const Hccl::ErrorMessageReport &er
             taskParam.taskPara.Reduce.rmtEid = errMsgInfo.rmtEid;
             taskParam.taskPara.Reduce.linkType = errMsgInfo.linkType;
             taskParam.taskPara.Reduce.size = errMsgInfo.size;
-            taskParam.taskPara.Reduce.src = reinterpret_cast<void *>(errMsgInfo.taskSrcAddr);
-            taskParam.taskPara.Reduce.dst = reinterpret_cast<void *>(errMsgInfo.taskDstAddr);
+            taskParam.taskPara.Reduce.src = reinterpret_cast<void*>(errMsgInfo.taskSrcAddr);
+            taskParam.taskPara.Reduce.dst = reinterpret_cast<void*>(errMsgInfo.taskDstAddr);
             break;
         case Hccl::TaskParamType::TASK_REDUCE_INLINE:
             taskParam.taskPara.Reduce.reduceOp = static_cast<HcclReduceOp>(errMsgInfo.reduceType);
@@ -651,22 +670,22 @@ void GetTaskParam(Hccl::TaskParam &taskParam, const Hccl::ErrorMessageReport &er
             taskParam.taskPara.DMA.rmtEid = errMsgInfo.rmtEid;
             taskParam.taskPara.DMA.linkType = errMsgInfo.linkType;
             taskParam.taskPara.DMA.size = errMsgInfo.size;
-            taskParam.taskPara.DMA.src = reinterpret_cast<void *>(errMsgInfo.taskSrcAddr);
- 	        taskParam.taskPara.DMA.dst = reinterpret_cast<void *>(errMsgInfo.taskDstAddr);
+            taskParam.taskPara.DMA.src = reinterpret_cast<void*>(errMsgInfo.taskSrcAddr);
+            taskParam.taskPara.DMA.dst = reinterpret_cast<void*>(errMsgInfo.taskDstAddr);
             break;
         case Hccl::TaskParamType::TASK_UB:
             taskParam.taskPara.DMA.locEid = errMsgInfo.locEid;
             taskParam.taskPara.DMA.rmtEid = errMsgInfo.rmtEid;
             taskParam.taskPara.DMA.linkType = errMsgInfo.linkType;
             taskParam.taskPara.DMA.size = errMsgInfo.size;
-            taskParam.taskPara.DMA.src = reinterpret_cast<void *>(errMsgInfo.taskSrcAddr);
- 	        taskParam.taskPara.DMA.dst = reinterpret_cast<void *>(errMsgInfo.taskDstAddr);
+            taskParam.taskPara.DMA.src = reinterpret_cast<void*>(errMsgInfo.taskSrcAddr);
+            taskParam.taskPara.DMA.dst = reinterpret_cast<void*>(errMsgInfo.taskDstAddr);
             break;
         case Hccl::TaskParamType::TASK_SDMA:
             taskParam.taskPara.DMA.linkType = errMsgInfo.linkType;
             taskParam.taskPara.DMA.size = errMsgInfo.size;
-            taskParam.taskPara.DMA.src = reinterpret_cast<void *>(errMsgInfo.taskSrcAddr);
-            taskParam.taskPara.DMA.dst = reinterpret_cast<void *>(errMsgInfo.taskDstAddr);
+            taskParam.taskPara.DMA.src = reinterpret_cast<void*>(errMsgInfo.taskSrcAddr);
+            taskParam.taskPara.DMA.dst = reinterpret_cast<void*>(errMsgInfo.taskDstAddr);
             break;
         default:
             HCCL_ERROR("[TaskException][HOST]%s taskType[%d] is not support", __func__, taskParam.taskType);
@@ -674,8 +693,9 @@ void GetTaskParam(Hccl::TaskParam &taskParam, const Hccl::ErrorMessageReport &er
     }
 }
 
-void TaskExceptionHost::HandleAicpuErrorReport(rtExceptionInfo_t *exceptionInfo,
- 	const Hccl::ErrorMessageReport &errorMessage, const Hccl::TaskInfo &taskInfo) const
+void TaskExceptionHost::HandleAicpuErrorReport(
+    rtExceptionInfo_t* exceptionInfo, const Hccl::ErrorMessageReport& errorMessage,
+    const Hccl::TaskInfo& taskInfo) const
 {
     std::string groupRankContent;
     u32 streamId = static_cast<u32>(errorMessage.streamId);
@@ -687,17 +707,20 @@ void TaskExceptionHost::HandleAicpuErrorReport(rtExceptionInfo_t *exceptionInfo,
     dfxOpInfo->tag_ = tag;
     dfxOpInfo->comm_ = taskInfo.dfxOpInfo_->comm_;
     Hccl::TaskInfo exceptionTaskInfo(streamId, errorMessage.taskId, errorMessage.remoteUserRank, taskParam, dfxOpInfo);
-    auto logKeywordL2 = exceptionTaskInfo.taskParam_.taskType ==
-        Hccl::TaskParamType::TASK_NOTIFY_WAIT ? Hccl::LOG_KEYWORDS_TIMEOUT : Hccl::LOG_KEYWORDS_RUN_FAILED;
-    auto stageErrInfo = "[" + Hccl::LOG_KEYWORDS_TASK_EXEC + "][" + logKeywordL2 + "][" + Hccl::LOG_KEYWORDS_AICPU + "]";
+    auto logKeywordL2 = exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_NOTIFY_WAIT ?
+                            Hccl::LOG_KEYWORDS_TIMEOUT :
+                            Hccl::LOG_KEYWORDS_RUN_FAILED;
+    auto stageErrInfo
+        = "[" + Hccl::LOG_KEYWORDS_TASK_EXEC + "][" + logKeywordL2 + "][" + Hccl::LOG_KEYWORDS_AICPU + "]";
     HCCL_ERROR("%sTask from HCCL run failed.", stageErrInfo.c_str());
     // 防止tag字符串过长， 信息分开打印
     PrintBaseErrorLog(stageErrInfo, exceptionTaskInfo.GetIndopBaseInfo());
     PrintParaErrorLog(stageErrInfo, exceptionTaskInfo.GetParaInfo());
     PrintGroupErrorMessage(errorMessage, exceptionTaskInfo, groupRankContent, stageErrInfo);
     PrintOpDataErrorMessage(exceptionInfo->deviceid, errorMessage, stageErrInfo);
-    HCCL_ERROR("errorMessage taskType[%s], rtCqErrorType[%u], rtCqErrorCode[%u]. ",
-        errorMessage.taskType.Describe().c_str(), static_cast<u32>(errorMessage.rtCqErrorType), errorMessage.rtCqErrorCode);
+    HCCL_ERROR(
+        "errorMessage taskType[%s], rtCqErrorType[%u], rtCqErrorCode[%u]. ", errorMessage.taskType.Describe().c_str(),
+        static_cast<u32>(errorMessage.rtCqErrorType), errorMessage.rtCqErrorCode);
 
     // 打印UB DFX寄存器信息
     PrintUbDfxInfo(exceptionInfo, errorMessage);
@@ -707,14 +730,16 @@ void TaskExceptionHost::HandleAicpuErrorReport(rtExceptionInfo_t *exceptionInfo,
     }
 }
 
-void TaskExceptionHost::PrintUbDfxInfo(rtExceptionInfo_t *exceptionInfo, const Hccl::ErrorMessageReport &errorMessage) const
+void TaskExceptionHost::PrintUbDfxInfo(
+    rtExceptionInfo_t* exceptionInfo, const Hccl::ErrorMessageReport& errorMessage) const
 {
-    if (errorMessage.taskType == Hccl::TaskParamType::TASK_WRITE_WITH_NOTIFY ||
-        errorMessage.taskType == Hccl::TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY ||
-        errorMessage.taskType == Hccl::TaskParamType::TASK_UB_INLINE_WRITE ||
-        errorMessage.taskType == Hccl::TaskParamType::TASK_UB_REDUCE_INLINE ||
-        errorMessage.taskType == Hccl::TaskParamType::TASK_UB) {
-        HCCL_ERROR("errorMessage ubCqeStatus[%u], localEid[%s], remoteEid[%s]. ", static_cast<u32>(errorMessage.ubCqeStatus),
+    if (errorMessage.taskType == Hccl::TaskParamType::TASK_WRITE_WITH_NOTIFY
+        || errorMessage.taskType == Hccl::TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY
+        || errorMessage.taskType == Hccl::TaskParamType::TASK_UB_INLINE_WRITE
+        || errorMessage.taskType == Hccl::TaskParamType::TASK_UB_REDUCE_INLINE
+        || errorMessage.taskType == Hccl::TaskParamType::TASK_UB) {
+        HCCL_ERROR(
+            "errorMessage ubCqeStatus[%u], localEid[%s], remoteEid[%s]. ", static_cast<u32>(errorMessage.ubCqeStatus),
             errorMessage.locEid.Describe().c_str(), errorMessage.rmtEid.Describe().c_str());
         auto reverseAddr = Hccl::IpAddress(errorMessage.locEid);
         auto addr = Hccl::IpAddress(reverseAddr.GetReverseEid());
@@ -724,4 +749,4 @@ void TaskExceptionHost::PrintUbDfxInfo(rtExceptionInfo_t *exceptionInfo, const H
         PrintUbRegisters(static_cast<s32>(exceptionInfo->deviceid), rdmaHandle);
     }
 }
-} // namespace Hccl
+} // namespace hcomm

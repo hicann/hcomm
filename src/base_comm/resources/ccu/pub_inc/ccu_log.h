@@ -16,39 +16,39 @@
 
 #define HCCL_TO_CCU_RET(hcclRet) static_cast<CcuResult>(hcclRet)
 
-#define CCU_CHK_RES_UNAVAIL(ccuRet) \
-    (ccuRet == CCU_E_UNAVAIL)
+#define CCU_CHK_RES_UNAVAIL(ccuRet) (ccuRet == CCU_E_UNAVAIL)
 
 /* 检查函数返回值, 并返回指定错误码 */
-#define CCU_CHK_RET(call)                                 \
-    do {                                              \
-        CcuResult ccuRet = HCCL_TO_CCU_RET(call);                        \
-        if (UNLIKELY(ccuRet != CCU_SUCCESS)) {                    \
-            if (ccuRet == static_cast<int32_t>(HcclResult::HCCL_E_AGAIN) || ccuRet == CCU_E_DRV_BUSY) {                \
-                HCCL_WARNING("[%s]call trace: ccuRet -> %d", __func__, ccuRet); \
-            } else if (ccuRet == CCU_E_UNAVAIL) { \
-                HCCL_WARNING("[%s]call trace: ccuRet resources are unavailable -> %d", \
-                    __func__, ccuRet); \
-            } else {                                  \
-                HCCL_ERROR("[%s]call trace: ccuRet -> %d", __func__, ccuRet); \
-            }                                         \
-            return ccuRet;                               \
-        }                                             \
+#define CCU_CHK_RET(call)                                                                                 \
+    do {                                                                                                  \
+        CcuResult ccuRet = HCCL_TO_CCU_RET(call);                                                         \
+        if (UNLIKELY(ccuRet != CCU_SUCCESS)) {                                                            \
+            if (ccuRet == static_cast<int32_t>(HcclResult::HCCL_E_AGAIN) || ccuRet == CCU_E_DRV_BUSY) {   \
+                HCCL_WARNING("[%s]call trace: ccuRet -> %d", __func__, ccuRet);                           \
+            } else if (ccuRet == CCU_E_UNAVAIL) {                                                         \
+                HCCL_WARNING("[%s]call trace: ccuRet resources are unavailable -> %d", __func__, ccuRet); \
+            } else {                                                                                      \
+                HCCL_ERROR("[%s]call trace: ccuRet -> %d", __func__, ccuRet);                             \
+            }                                                                                             \
+            return ccuRet;                                                                                \
+        }                                                                                                 \
     } while (0)
 
-#define CCU_CHK_PTR_NULL(ptr)                                                                               \
+#define CCU_CHK_PTR_NULL(ptr)                                                                                      \
     do {                                                                                                           \
-        if (UNLIKELY((ptr) == nullptr)) {                  \
-            HCCL_ERROR("[%s]errNo[0x%016llx]ptr [%s] is nullptr, return CCU_E_PTR", \
-            __func__, HCCL_ERROR_CODE(CCU_E_PTR), #ptr); \
-            return CCU_E_PTR;                                                                                     \
+        if (UNLIKELY((ptr) == nullptr)) {                                                                          \
+            HCCL_ERROR(                                                                                            \
+                "[%s]errNo[0x%016llx]ptr [%s] is nullptr, return CCU_E_PTR", __func__, HCCL_ERROR_CODE(CCU_E_PTR), \
+                #ptr);                                                                                             \
+            return CCU_E_PTR;                                                                                      \
         }                                                                                                          \
     } while (0)
 
 // 宏定义，用于包装 C 接口函数的异常处理
 #define CCU_EXCEPTION_HANDLE_BEGIN try {
-#define CCU_EXCEPTION_HANDLE_END_INFO(func_name) } catch (...) { \
-    return HCCL_TO_CCU_RET(hccl::ExceptionHandler::HandleException(func_name)); }
+#define CCU_EXCEPTION_HANDLE_END_INFO(func_name) \
+    }                                            \
+    catch (...) { return HCCL_TO_CCU_RET(hccl::ExceptionHandler::HandleException(func_name)); }
 
 #define CCU_EXCEPTION_HANDLE_END CCU_EXCEPTION_HANDLE_END_INFO(__func__)
 

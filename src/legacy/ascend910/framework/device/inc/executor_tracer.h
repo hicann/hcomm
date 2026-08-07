@@ -19,28 +19,29 @@ namespace dfx_tracer {
 class ExecutorTracer {
 public:
     explicit ExecutorTracer();
-    static void BackGroundDfx(void *info);
-    static void StopBackGroundDfx(void *info);
-    static void SetCqeQueryInput(const uint32_t devId, const HcclComStreamInfo &streamInfo,
-                                 CqeQueryInput &cqeQueryInput);
+    static void BackGroundDfx(void* info);
+    static void StopBackGroundDfx(void* info);
+    static void
+    SetCqeQueryInput(const uint32_t devId, const HcclComStreamInfo& streamInfo, CqeQueryInput& cqeQueryInput);
+
 private:
-    static void HandleCqeStatus(AicpuComContext *const ctx);
-    static void StopLaunchCommandHandle(AicpuComContext *const ctx);
-    static void KfcCommandHandle(AicpuComContext *const ctx);
-    static void HandleBackGround(AicpuComContext *const ctx);
+    static void HandleCqeStatus(AicpuComContext* const ctx);
+    static void StopLaunchCommandHandle(AicpuComContext* const ctx);
+    static void KfcCommandHandle(AicpuComContext* const ctx);
+    static void HandleBackGround(AicpuComContext* const ctx);
     static void HandleCqeStatusInComm();
     static void HandleReportStatusInComm();
-    static void HandleAICPUCommand(hccl::HcclCommAicpu *const commInfo);
-    static void StopBackGround(AicpuComContext *const ctx,bool &isNotStop);
-    static void HandleDestroyComm(AicpuComContext *const ctx);
-    static void HandleSwitchNic(AicpuComContext *const ctx);
-    static void HandleResumeChangeLink(AicpuComContext *const ctx);
+    static void HandleAICPUCommand(hccl::HcclCommAicpu* const commInfo);
+    static void StopBackGround(AicpuComContext* const ctx, bool& isNotStop);
+    static void HandleDestroyComm(AicpuComContext* const ctx);
+    static void HandleSwitchNic(AicpuComContext* const ctx);
+    static void HandleResumeChangeLink(AicpuComContext* const ctx);
     static void TaskMonitor(void);
 };
 class AICPUcommandHandles {
 public:
-    static void NsCommStop(hccl::HcclCommAicpu *const commInfo);
-    static void NsCommClean(hccl::HcclCommAicpu *const commInfo);
+    static void NsCommStop(hccl::HcclCommAicpu* const commInfo);
+    static void NsCommClean(hccl::HcclCommAicpu* const commInfo);
 };
-}
+} // namespace dfx_tracer
 #endif // ASCEND_ACE_COMOP_HCCL_HCCL_AI_CPU_KERNEL_DFX_TRACE_EXECUTOR_TRACER_H_

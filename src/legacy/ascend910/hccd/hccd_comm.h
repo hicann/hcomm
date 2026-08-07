@@ -36,26 +36,29 @@ public:
     explicit HccdComm(std::string identifier = "");
     ~HccdComm();
 
-    HcclResult init(HcclCommParams &params, const RankTable_t &rankTable = g_hcclDefaultRankTable);
+    HcclResult init(HcclCommParams& params, const RankTable_t& rankTable = g_hcclDefaultRankTable);
     HcclResult RegisterMemory(void* buffer, uint64_t size);
     HcclResult UnregisterMemory(void* buffer);
-    HcclResult Isend(void *buffer, s32 count, HcclDataType dataType, u32 peerRank, s32 tag, HcclRequest &request,
+    HcclResult Isend(
+        void* buffer, s32 count, HcclDataType dataType, u32 peerRank, s32 tag, HcclRequest& request,
         u32 userRequire) const;
-    HcclResult Improbe(u32 peerRank, s32 tag, s32 &flag, HcclMessage &msgHandle, HcclStatus &status) const;
-    HcclResult Imrecv(void *buffer, s32 count, HcclDataType dataType, HcclMessage msg, HcclRequest &request) const;
-    HcclResult HcclTest(HcclRequest hcclRequest, s32 &flag, HcclStatus &compState) const;
-    HcclResult GetUserRank(u32 &userRank);
-    const std::string &GetIdentifier();
-    HcclResult GetRankSize(u32 &rankSize);
-    static HcclResult GetUniqueId(HcclRootInfo *uniqueId);
+    HcclResult Improbe(u32 peerRank, s32 tag, s32& flag, HcclMessage& msgHandle, HcclStatus& status) const;
+    HcclResult Imrecv(void* buffer, s32 count, HcclDataType dataType, HcclMessage msg, HcclRequest& request) const;
+    HcclResult HcclTest(HcclRequest hcclRequest, s32& flag, HcclStatus& compState) const;
+    HcclResult GetUserRank(u32& userRank);
+    const std::string& GetIdentifier();
+    HcclResult GetRankSize(u32& rankSize);
+    static HcclResult GetUniqueId(HcclRootInfo* uniqueId);
+
 protected:
     /* * 禁止用户对API类的实体做拷贝构造或拷贝赋值的操作，内部有指针成员变量 */
-    HccdComm(const HccdComm &) = delete;
-    HccdComm &operator=(const HccdComm &) = delete;
+    HccdComm(const HccdComm&) = delete;
+    HccdComm& operator=(const HccdComm&) = delete;
+
 private:
     HcclResult InitImpl();
     std::unique_ptr<HccdImplPml> impl_;
     const std::string identifier_;
 };
-}
+} // namespace hccl
 #endif

@@ -19,19 +19,19 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
 /**
  * @brief NPU上查询 rtsq任务执行完成的接口（阻塞）
  * @param[in] thread NPU上执行的线程句柄
  * @param[in] timeout 超时时间(秒)
  * @return int32_t 执行结果状态码
- * 
+ *
  * WARNING: experimental API, No compatibility is currently guaranteed for this API
  */
 extern int32_t HcommThreadJoin(ThreadHandle thread, uint32_t timeout);
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus
 
 #endif

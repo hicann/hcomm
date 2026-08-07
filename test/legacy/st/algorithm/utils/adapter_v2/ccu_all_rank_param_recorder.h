@@ -34,7 +34,6 @@ public:
     std::map<uint32_t, std::map<uint32_t, std::map<uint16_t, std::set<checker::TaskNode*>>>> seenPost;
 };
 
-
-}
+} // namespace Hccl
 
 #endif

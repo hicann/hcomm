@@ -13,8 +13,8 @@
 #include <stdio.h>
 
 /* ── 全局函数指针（初始为 NULL，TopoLogInit 填充） ── */
-void (*g_topo_DlogRecord)(int moduleId, int level, const char *fmt, ...) = NULL;
-int  (*g_topo_CheckLogLevel)(int moduleId, int logLevel) = NULL;
+void (*g_topo_DlogRecord)(int moduleId, int level, const char* fmt, ...) = NULL;
+int (*g_topo_CheckLogLevel)(int moduleId, int logLevel) = NULL;
 
 void TopoLogInit(void)
 {
@@ -23,13 +23,13 @@ void TopoLogInit(void)
         return;
     }
 
-    void *handle = dlopen("libunified_dlog.so", RTLD_NOW);
+    void* handle = dlopen("libunified_dlog.so", RTLD_NOW);
     if (handle == NULL) {
         initialized = -1;
         return;
     }
 
-    g_topo_DlogRecord = (void (*)(int, int, const char *, ...))dlsym(handle, "DlogRecord");
+    g_topo_DlogRecord = (void (*)(int, int, const char*, ...))dlsym(handle, "DlogRecord");
     g_topo_CheckLogLevel = (int (*)(int, int))dlsym(handle, "CheckLogLevel");
 
     if (g_topo_DlogRecord == NULL || g_topo_CheckLogLevel == NULL) {

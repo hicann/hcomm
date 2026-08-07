@@ -13,24 +13,25 @@
 #include "coll_comm_executor.h"
 namespace hccl {
 class CollAllGatherVExecutor : public CollCommExecutor {
-
 public:
-    explicit CollAllGatherVExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollAllGatherVExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAllGatherVExecutor() override = default;
 
     HcclResult Orchestrate(OpParam& param, AlgResourceResponse& algRes) override;
     HcclResult GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& adjInfo) override;
+
 protected:
     // AllGather Loop Executor公共接口
     virtual u64 CalcLoopMaxCount(const u64 cclBuffSize, const u32 unitSize);
     virtual bool IsHugeData(const u64 curSize);
-    virtual HcclResult RunLoop(OpParam &param, AlgResourceResponse &algRes);
-    virtual HcclResult CalcCurCountsAndCurDispls(const u64 maxTotalCount, std::vector<u64> &countsLeft,
-        std::vector<u64> &displs, std::vector<u64> &curCounts, std::vector<u64> &curDispls, bool &finished);
+    virtual HcclResult RunLoop(OpParam& param, AlgResourceResponse& algRes);
+    virtual HcclResult CalcCurCountsAndCurDispls(
+        const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
+        std::vector<u64>& curDispls, bool& finished);
 
     // 工具类
-    void PrintCurCountAndCurDispls(const std::vector<u64> &curCounts, const std::vector<u64> &curDispls);
-    HcclResult CalcTotalCount(std::vector<u64> curCounts, u64 &totalCount);
+    void PrintCurCountAndCurDispls(const std::vector<u64>& curCounts, const std::vector<u64>& curDispls);
+    HcclResult CalcTotalCount(std::vector<u64> curCounts, u64& totalCount);
 
     bool DMAReduceFlag_{false}; // 是否DMA消减的标志
 };

@@ -23,18 +23,18 @@ public:
     // should be called soon after template ScatterMesh instance created
     HcclResult Prepare(u32 interRank, u32 interRankSize) override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize,
-                                   const std::vector<std::shared_ptr<Transport> > &links) override;
+    HcclResult
+    RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links) override;
 
 protected:
 private:
-    HcclResult RunSendScatter(const u32 dstRank, const Slice &slice, const std::vector<LINK> &links);
-    HcclResult RunRecvScatter(const u32 srcRank, const Slice &slice, const std::vector<LINK> &links);
+    HcclResult RunSendScatter(const u32 dstRank, const Slice& slice, const std::vector<LINK>& links);
+    HcclResult RunRecvScatter(const u32 srcRank, const Slice& slice, const std::vector<LINK>& links);
     void PrepareSlicesData(const u32 unitSize, const u64 totalCount, const u32 rankSize) const;
 
-    u32 interRank_;       // comm内的rank排序
+    u32 interRank_;     // comm内的rank排序
     u32 interRankSize_; // 本comm内ranksize总数
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* * SCATTER_MESH_PUB_H */

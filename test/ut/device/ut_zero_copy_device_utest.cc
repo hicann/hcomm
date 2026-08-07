@@ -24,22 +24,13 @@ using namespace hccl;
 
 class Zero_Copy_Device_UT : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "Zero_Copy_Device_UT SetUP" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "Zero_Copy_Device_UT TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "Zero_Copy_Device_UT SetUP" << std::endl; }
+    static void TearDownTestCase() { std::cout << "Zero_Copy_Device_UT TearDown" << std::endl; }
     // Some expensive resource shared by all tests.
     virtual void SetUp()
     {
         s32 portNum = -1;
-        MOCKER(hrtGetHccsPortNum)
-            .stubs()
-            .with(mockcpp::any(), outBound(portNum))
-            .will(returnValue(HCCL_SUCCESS));
+        MOCKER(hrtGetHccsPortNum).stubs().with(mockcpp::any(), outBound(portNum)).will(returnValue(HCCL_SUCCESS));
         std::cout << "A Test SetUP" << std::endl;
     }
     virtual void TearDown()
@@ -49,7 +40,8 @@ protected:
     }
 };
 
-TEST_F(Zero_Copy_Device_UT, ZeroCopyDeviceTest) {
+TEST_F(Zero_Copy_Device_UT, ZeroCopyDeviceTest)
+{
     ZeroCopyAddressMgr addressMrg;
     addressMrg.InitRingBuffer();
     ZeroCopyRingBufferItem item;

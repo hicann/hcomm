@@ -22,27 +22,28 @@ public:
     ~ScatterDoubleRingDirect() override;
 
     // should be called soon after template ScatterDoubleRingDirect instance created
-    HcclResult Prepare(HcomCollOpInfo *opInfo, const u32 userRank, const u32 subRingRank, 
-        std::vector<Stream> &subStreams, const std::vector<std::shared_ptr<LocalNotify>> &mainSignals, 
-        const std::vector<std::shared_ptr<LocalNotify>> &subSignals, const std::vector<std::vector<u32>> &ringsOrders, 
-        const std::vector<std::vector<Slice>> &multiRingSlices, 
-        const std::vector<std::vector<Slice>> &userMemInputSlices) override;
+    HcclResult Prepare(
+        HcomCollOpInfo* opInfo, const u32 userRank, const u32 subRingRank, std::vector<Stream>& subStreams,
+        const std::vector<std::shared_ptr<LocalNotify>>& mainSignals,
+        const std::vector<std::shared_ptr<LocalNotify>>& subSignals, const std::vector<std::vector<u32>>& ringsOrders,
+        const std::vector<std::vector<Slice>>& multiRingSlices,
+        const std::vector<std::vector<Slice>>& userMemInputSlices) override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
 protected:
 private:
-    HcclResult CheckParameters(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
+    HcclResult CheckParameters(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
     HcclResult MemcpyByOneRank();
-    HcclResult GetInitializedNeighborLinks(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
+    HcclResult GetInitializedNeighborLinks(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
     HcclResult RunInitStep(const u32 rank, const u32 rankSize);
-    HcclResult RunAllStreams(const u32 rank, const u32 step, const u32 rankSize, RxMemoryInfo &mainRxMem,
-        RxMemoryInfo &subRxMem, DeviceMem &mainLocalSrcMem,
-        DeviceMem &mainLocalDstMem, DeviceMem &subLocalSrcMem, DeviceMem &subLocalDstMem);
-    HcclResult RxAsyncMemcpy(RxMemoryInfo& mem, Stream &stream, LINK &link);
-    HcclResult PrepareDeviceMems(const u32 rank, const u32 step, const u32 ringIndex,
-        const u32 rankSize, const u32 subSliceIdx, const u32 rxSliceIdx, RxMemoryInfo &rxMem,
-        DeviceMem &localSrcMem, DeviceMem &localDstMem);
+    HcclResult RunAllStreams(
+        const u32 rank, const u32 step, const u32 rankSize, RxMemoryInfo& mainRxMem, RxMemoryInfo& subRxMem,
+        DeviceMem& mainLocalSrcMem, DeviceMem& mainLocalDstMem, DeviceMem& subLocalSrcMem, DeviceMem& subLocalDstMem);
+    HcclResult RxAsyncMemcpy(RxMemoryInfo& mem, Stream& stream, LINK& link);
+    HcclResult PrepareDeviceMems(
+        const u32 rank, const u32 step, const u32 ringIndex, const u32 rankSize, const u32 subSliceIdx,
+        const u32 rxSliceIdx, RxMemoryInfo& rxMem, DeviceMem& localSrcMem, DeviceMem& localDstMem);
 
     HcclResult RunScatter(const u32 rank, const u32 rankSize);
     HcclResult MainRecordSub();
@@ -51,15 +52,15 @@ private:
     LINK leftLink_;
     LINK rightLink_;
 
-    HcomCollOpInfo                     *opInfo_{nullptr};
-    u32                                 userRank_;
-    u32                                 subRingRank_;
-    std::vector<Stream>                       subStreams_;
+    HcomCollOpInfo* opInfo_{nullptr};
+    u32 userRank_;
+    u32 subRingRank_;
+    std::vector<Stream> subStreams_;
     std::vector<std::shared_ptr<LocalNotify>> mainSignals_;
     std::vector<std::shared_ptr<LocalNotify>> subSignals_;
-    std::vector<std::vector<u32>>       ringsOrders_;
-    std::vector<std::vector<Slice>>     multiRingSlices_;
-    std::vector<std::vector<Slice>>     userMemInputSlices_;
+    std::vector<std::vector<u32>> ringsOrders_;
+    std::vector<std::vector<Slice>> multiRingSlices_;
+    std::vector<std::vector<Slice>> userMemInputSlices_;
 };
 } // namespace hccl
 

@@ -60,10 +60,9 @@ public:
     // ===== 全局上下文管理（由 SqeuentialExecutor 层调用） =====
     void BeginRound(uint32_t execRound);
     void BeginGlobalStep();
-    uint32_t RegisterSqeTask(int32_t rankId, uint16_t dieId, uint8_t missionId,
-                              uint16_t instStartId, uint16_t instCnt,
-                              uint32_t key, const std::vector<uint64_t>& args,
-                              uint64_t simulatorPtr);
+    uint32_t RegisterSqeTask(
+        int32_t rankId, uint16_t dieId, uint8_t missionId, uint16_t instStartId, uint16_t instCnt, uint32_t key,
+        const std::vector<uint64_t>& args, uint64_t simulatorPtr);
     void SetCurrentSqeTaskId(uint32_t sqeTaskId);
     CcuGlobalContext GetCurrentGlobalContext() const;
 
@@ -73,20 +72,18 @@ public:
 
     // ===== CKE Wait 自旋检测与合并 =====
     // waitCKE 不满足时调用，记录一次自旋
-    void RecordWaitSpin(int32_t rankId, uint16_t dieId, uint16_t instrId,
-                        uint16_t waitCKEId, uint16_t waitCKEMask, uint16_t ckeValue);
+    void RecordWaitSpin(
+        int32_t rankId, uint16_t dieId, uint16_t instrId, uint16_t waitCKEId, uint16_t waitCKEMask, uint16_t ckeValue);
     // CKE 通过后调用，获取并重置自旋信息
-    CcuWaitInfo FinalizeWaitInfo(int32_t rankId, uint16_t dieId, uint16_t instrId,
-                                  uint16_t ckeValueOnPass);
+    CcuWaitInfo FinalizeWaitInfo(int32_t rankId, uint16_t dieId, uint16_t instrId, uint16_t ckeValueOnPass);
 
     // ===== 跨 CCU 变更拦截（由 CcuResourceManager 调用） =====
-    void RecordCrossCcuCkeChange(int32_t rankId, uint16_t dieId, uint16_t ckeId,
-                                  uint16_t oldValue, uint16_t newValue,
-                                  int32_t execRank, uint16_t execDie);
-    void RecordCrossCcuMsChange(int32_t rankId, uint16_t dieId, uint16_t msId,
-                                 uint64_t offset, uint32_t length,
-                                 const std::vector<uint8_t>& dataAfter,
-                                 int32_t execRank, uint16_t execDie);
+    void RecordCrossCcuCkeChange(
+        int32_t rankId, uint16_t dieId, uint16_t ckeId, uint16_t oldValue, uint16_t newValue, int32_t execRank,
+        uint16_t execDie);
+    void RecordCrossCcuMsChange(
+        int32_t rankId, uint16_t dieId, uint16_t msId, uint64_t offset, uint32_t length,
+        const std::vector<uint8_t>& dataAfter, int32_t execRank, uint16_t execDie);
     CcuCrossCcuChanges ConsumeCrossCcuChanges(int32_t rankId, uint16_t dieId);
 
     // ===== 记录 trace entry =====
@@ -101,8 +98,8 @@ public:
 
     // ===== 指令空间采集（per CCU，纯静态） =====
     // 在 trace 开始前调用，传入预计算的 Describe() 结果
-    void CaptureInstrSpace(int32_t rankId, uint16_t dieId, uint32_t instrCnt,
-                            const std::vector<CcuInstrSpaceEntry>& entries);
+    void CaptureInstrSpace(
+        int32_t rankId, uint16_t dieId, uint32_t instrCnt, const std::vector<CcuInstrSpaceEntry>& entries);
 
     // ===== 设置最终快照 =====
     void SetFinalSnapshot(int32_t rankId, uint16_t dieId, const CcuResourceSnapshot& snapshot);

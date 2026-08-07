@@ -13,19 +13,17 @@
 
 namespace hccl {
 RemoteIpcRmaBufferImpl::RemoteIpcRmaBufferImpl(const HcclNetDevCtx netDevCtx)
-    : RmaBuffer(netDevCtx, nullptr, 0, RmaMemType::TYPE_NUM, RmaType::IPC_RMA), netDevCtx(netDevCtx)
-{
-}
+    : RmaBuffer(netDevCtx, nullptr, 0, RmaMemType::TYPE_NUM, RmaType::IPC_RMA),
+      netDevCtx(netDevCtx)
+{}
 
-RemoteIpcRmaBufferImpl::~RemoteIpcRmaBufferImpl()
-{
-}
+RemoteIpcRmaBufferImpl::~RemoteIpcRmaBufferImpl() {}
 
 HcclResult RemoteIpcRmaBufferImpl::Deserialize(const std::string& msg)
 {
     std::istringstream iss(msg);
-    iss.read(reinterpret_cast<char_t *>(&memName.ipcName), sizeof(memName.ipcName));
-    iss.read(reinterpret_cast<char_t *>(&memOffset), sizeof(memOffset));
+    iss.read(reinterpret_cast<char_t*>(&memName.ipcName), sizeof(memName.ipcName));
+    iss.read(reinterpret_cast<char_t*>(&memOffset), sizeof(memOffset));
     HCCL_DEBUG("[RemoteIpcRmaBufferImpl][Deserialize]ipcName[%s], memOffset[%lu]", memName.ipcName, memOffset);
     return HCCL_SUCCESS;
 }
@@ -39,16 +37,19 @@ HcclResult RemoteIpcRmaBufferImpl::Open()
 
     s32 deviceLogicId = 0;
     if (netDevCtx != nullptr) {
-        deviceLogicId = (static_cast<NetDevContext *>(netDevCtx))->GetLogicId();
+        deviceLogicId = (static_cast<NetDevContext*>(netDevCtx))->GetLogicId();
     } else {
         CHK_RET(hrtGetDevice(&deviceLogicId));
     }
     bool firstOpened = false;
     HcclResult ret = MemNameRepository::GetInstance(deviceLogicId)
-        ->OpenIpcMem(&devAddr, size, memName.ipcName, HCCL_IPC_MEM_NAME_LEN, memOffset, firstOpened);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[RemoteIpcRmaBufferImpl][Open]errNo[0x%016llx] Open ipc mem failed. memName[%s], offset[%llu]",
-            HCCL_ERROR_CODE(ret), memName.ipcName, memOffset), ret);
+                         ->OpenIpcMem(&devAddr, size, memName.ipcName, HCCL_IPC_MEM_NAME_LEN, memOffset, firstOpened);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[RemoteIpcRmaBufferImpl][Open]errNo[0x%016llx] Open ipc mem failed. memName[%s], offset[%llu]",
+            HCCL_ERROR_CODE(ret), memName.ipcName, memOffset),
+        ret);
     return HCCL_SUCCESS;
 }
 
@@ -56,13 +57,12 @@ HcclResult RemoteIpcRmaBufferImpl::Close()
 {
     s32 deviceLogicId = 0;
     if (netDevCtx != nullptr) {
-        deviceLogicId = (static_cast<NetDevContext *>(netDevCtx))->GetLogicId();
+        deviceLogicId = (static_cast<NetDevContext*>(netDevCtx))->GetLogicId();
     } else {
         CHK_RET(hrtGetDevice(&deviceLogicId));
     }
-    MemNameRepository::GetInstance(deviceLogicId)
-        ->CloseIpcMem(static_cast<const u8 *>(memName.ipcName));
+    MemNameRepository::GetInstance(deviceLogicId)->CloseIpcMem(static_cast<const u8*>(memName.ipcName));
     HCCL_DEBUG("[RemoteIpcRmaBufferImpl][Close]memName[%s]", memName.ipcName);
     return HCCL_SUCCESS;
 }
-}
+} // namespace hccl

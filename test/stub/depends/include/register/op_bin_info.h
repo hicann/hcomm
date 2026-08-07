@@ -32,5 +32,5 @@ private:
     const OpInfo& opInfo_;
 };
 
-}
+} // namespace ops
 #endif

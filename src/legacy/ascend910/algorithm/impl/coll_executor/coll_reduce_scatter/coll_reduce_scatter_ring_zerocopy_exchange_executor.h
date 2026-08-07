@@ -15,8 +15,8 @@
 namespace hccl {
 class CollReduceScatterRingZerocopyExchangeExecutor : public CollReduceScatterRingZerocopyExecutor {
 public:
-    explicit CollReduceScatterRingZerocopyExchangeExecutor(const HcclDispatcher dispatcher,
-    std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollReduceScatterRingZerocopyExchangeExecutor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceScatterRingZerocopyExchangeExecutor() override = default;
 
 private:
@@ -24,10 +24,11 @@ private:
     HcclResult CalcExchangeCommInfo(std::vector<LevelNSubCommTransport>& opTransport);
 
     HcclResult KernelRunIntraServerPreProcess();
-    HcclResult KernelRunInterServerPostProcess(const OpParam &param, const ExecMem &execMem) override;
+    HcclResult KernelRunInterServerPostProcess(const OpParam& param, const ExecMem& execMem) override;
 
-    HcclResult KernelRunInterServerPreProcess(const OpParam &param, const ExecMem &execMem) override;
-    HcclResult CalcLevel0DataSlices(const OpParam &param, const ExecMem &execMem, std::vector<Slice> &dataSegsSlice) override;
+    HcclResult KernelRunInterServerPreProcess(const OpParam& param, const ExecMem& execMem) override;
+    HcclResult
+    CalcLevel0DataSlices(const OpParam& param, const ExecMem& execMem, std::vector<Slice>& dataSegsSlice) override;
 };
 
 } // namespace hccl

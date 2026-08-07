@@ -20,46 +20,48 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepJumpBase : public CcuRepBase {
-public:
-    explicit CcuRepJumpBase(const std::string &label, const Variable &targetInstrId);
-    void                Reference(std::shared_ptr<CcuRepJumpLabel> refRep);
+    class CcuRepJumpBase : public CcuRepBase {
+    public:
+        explicit CcuRepJumpBase(const std::string& label, const Variable& targetInstrId);
+        void Reference(std::shared_ptr<CcuRepJumpLabel> refRep);
 
-protected:
-    std::string                      label;
-    std::shared_ptr<CcuRepJumpLabel> jumpLabel{nullptr};
-    Variable                         targetInstrId;
-    CcuInstr                        *instr{nullptr};
-};
+    protected:
+        std::string label;
+        std::shared_ptr<CcuRepJumpLabel> jumpLabel{nullptr};
+        Variable targetInstrId;
+        CcuInstr* instr{nullptr};
+    };
 
-class CcuRepJump : public CcuRepJumpBase {
-public:
-    explicit CcuRepJump(const std::string &label, const Variable &targetInstrId);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
-};
+    class CcuRepJump : public CcuRepJumpBase {
+    public:
+        explicit CcuRepJump(const std::string& label, const Variable& targetInstrId);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
+    };
 
-class CcuRepJumpNE : public CcuRepJumpBase {
-public:
-    CcuRepJumpNE(const std::string &label, const Variable &targetInstrId, const Variable &condition, uint64_t expected);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
+    class CcuRepJumpNE : public CcuRepJumpBase {
+    public:
+        CcuRepJumpNE(
+            const std::string& label, const Variable& targetInstrId, const Variable& condition, uint64_t expected);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-private:
-    Variable condition;
-    uint64_t expected{0};
-};
+    private:
+        Variable condition;
+        uint64_t expected{0};
+    };
 
-class CcuRepJumpEQ : public CcuRepJumpBase {
-public:
-    CcuRepJumpEQ(const std::string &label, const Variable &targetInstrId, const Variable &condition, uint64_t expected);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
+    class CcuRepJumpEQ : public CcuRepJumpBase {
+    public:
+        CcuRepJumpEQ(
+            const std::string& label, const Variable& targetInstrId, const Variable& condition, uint64_t expected);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-private:
-    Variable condition;
-    uint64_t expected{0};
-};
+    private:
+        Variable condition;
+        uint64_t expected{0};
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

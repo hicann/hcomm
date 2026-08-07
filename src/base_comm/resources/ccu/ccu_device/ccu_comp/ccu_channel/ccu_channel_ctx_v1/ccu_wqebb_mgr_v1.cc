@@ -35,21 +35,21 @@ static uint32_t RoundUpToNextPowerOfTwo(uint32_t num)
 static uint32_t GetWqeBBReqSizeBySqSize(uint32_t sqSize)
 {
     if (sqSize < CCU_MIN_SQ_DEPTH) {
-        HCCL_WARNING("[CcuJettyCtxMgr][%s] sqSize[%u] is too small, reset to [%u].",
-            __func__, sqSize, CCU_MIN_SQ_DEPTH);
+        HCCL_WARNING(
+            "[CcuJettyCtxMgr][%s] sqSize[%u] is too small, reset to [%u].", __func__, sqSize, CCU_MIN_SQ_DEPTH);
         return CCU_MIN_SQ_DEPTH;
     }
 
     // WQE basic block 的 size 必须是 2 的整数次幂，向上取整
     uint32_t wqeBBReqNum = RoundUpToNextPowerOfTwo(sqSize);
     if (wqeBBReqNum != sqSize) {
-        HCCL_WARNING("[CcuJettyCtxMgr][%s] sqSize[%u] is not power of 2, reset to [%u].",
-            __func__, sqSize, wqeBBReqNum);
+        HCCL_WARNING(
+            "[CcuJettyCtxMgr][%s] sqSize[%u] is not power of 2, reset to [%u].", __func__, sqSize, wqeBBReqNum);
     }
 
     if (sqSize > CCU_MAX_SQ_DEPTH) {
-        HCCL_WARNING("[CcuJettyCtxMgr][%s] sqSize[%u] is too large, reset to [%u].",
-            __func__, sqSize, CCU_MAX_SQ_DEPTH);
+        HCCL_WARNING(
+            "[CcuJettyCtxMgr][%s] sqSize[%u] is too large, reset to [%u].", __func__, sqSize, CCU_MAX_SQ_DEPTH);
         return CCU_MAX_SQ_DEPTH;
     }
 
@@ -60,34 +60,36 @@ HcclResult CcuWqeBBMgrV1::Init()
 {
     uint32_t wqeBBNum = 0; // 获取失败或为0场景，分配将按资源不足操作
     (void)CcuResSpecifications::GetInstance(devLogicId_).GetWqeBBNum(dieId_, wqeBBNum);
-    idAllocator_.reset(new (std::nothrow) CcuResIdAllocator(wqeBBNum)); 
+    idAllocator_.reset(new (std::nothrow) CcuResIdAllocator(wqeBBNum));
     CHK_PTR_NULL(idAllocator_);
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuWqeBBMgrV1::Alloc(const WqeBBReq& wqeBBReq, ResInfo &wqeBBInfo)
+HcclResult CcuWqeBBMgrV1::Alloc(const WqeBBReq& wqeBBReq, ResInfo& wqeBBInfo)
 {
     uint32_t wqeBBReqSize = GetWqeBBReqSizeBySqSize(wqeBBReq.sqSize);
     std::vector<ResInfo> resInfo;
     auto ret = idAllocator_->Alloc(wqeBBReqSize, true, resInfo, "ResType::WqeBB"); // wqebb资源要求连续
-    if (ret == HcclResult::HCCL_E_UNAVAIL) { 
-        HCCL_WARNING("[CcuWqeBBMgrV1][%s] failed, left resources are not enough, " 
-            "wqeBBReq.sqSize[%u], wqeBBSize[%u]", __func__,
-            wqeBBReq.sqSize, wqeBBReqSize); 
-        return ret; 
-    } 
+    if (ret == HcclResult::HCCL_E_UNAVAIL) {
+        HCCL_WARNING(
+            "[CcuWqeBBMgrV1][%s] failed, left resources are not enough, "
+            "wqeBBReq.sqSize[%u], wqeBBSize[%u]",
+            __func__, wqeBBReq.sqSize, wqeBBReqSize);
+        return ret;
+    }
     CHK_RET(ret);
 
     wqeBBInfo = resInfo[0]; // 分配连续资源包含1个元素
     return ret;
 }
 
-HcclResult CcuWqeBBMgrV1::Release(const ResInfo &wqeBBInfo)
+HcclResult CcuWqeBBMgrV1::Release(const ResInfo& wqeBBInfo)
 {
     auto ret = idAllocator_->Release(wqeBBInfo.startId, wqeBBInfo.num);
-    CHK_PRT_RET(ret != HcclResult::HCCL_SUCCESS,
-        HCCL_ERROR("[CcuWqeBBMgrV1][%s] failed, wqe basic block resource info[%s]",
-            __func__, wqeBBInfo.Describe().c_str()),
+    CHK_PRT_RET(
+        ret != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[CcuWqeBBMgrV1][%s] failed, wqe basic block resource info[%s]", __func__, wqeBBInfo.Describe().c_str()),
         ret);
 
     return HcclResult::HCCL_SUCCESS;

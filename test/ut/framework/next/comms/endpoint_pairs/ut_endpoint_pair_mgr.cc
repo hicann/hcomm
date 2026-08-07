@@ -45,7 +45,7 @@ TEST_F(EndpointPairMgrTest, GetEpChannelMap_ReturnsInsertedChannelHandles)
     // Prepare an EndpointPair and populate its channelHandles_
     auto epPtr = std::make_unique<EndpointPair>(localEp, remoteEp, rankIpPortMap);
     // Directly set the internal channel handles (we accessed private via #define)
-    epPtr->channelHandles_[COMM_ENGINE_CPU] = { (ChannelHandle)0x11, (ChannelHandle)0x22 };
+    epPtr->channelHandles_[COMM_ENGINE_CPU] = {(ChannelHandle)0x11, (ChannelHandle)0x22};
 
     // Insert into mgr's private map
     mgr.endpointPairMap_.emplace(key, std::move(epPtr));

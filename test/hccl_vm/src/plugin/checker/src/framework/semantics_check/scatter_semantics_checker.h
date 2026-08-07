@@ -15,7 +15,8 @@
 #include "hccl_types.h"
 
 namespace HcclSim {
-HcclResult TaskCheckScatterSemantics(std::map<RankId, RankMemorySemantics> &allRankMemSemantics, u64 dataSize, RankId root);
+HcclResult
+TaskCheckScatterSemantics(std::map<RankId, RankMemorySemantics>& allRankMemSemantics, u64 dataSize, RankId root);
 }
 
 #endif

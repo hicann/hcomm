@@ -21,32 +21,29 @@ constexpr size_t LOG_MSG_BUFFER_SIZE = 1024;
 extern "C" {
 #endif
 
-int32_t CheckLogLevel(int32_t moduleId, int32_t logLevel)
-{
-    return static_cast<int32_t>(true);
-}
+int32_t CheckLogLevel(int32_t moduleId, int32_t logLevel) { return static_cast<int32_t>(true); }
 
-void DlogPrintStub(int level, const char *msgBuffer)
+void DlogPrintStub(int level, const char* msgBuffer)
 {
     switch (level) {
-    case 0:
-        HCCL_VM_DEBUG("{}", msgBuffer);
-        break;
-    case 1:
-        HCCL_VM_INFO("{}", msgBuffer);
-        break;
-    case 2:
-        HCCL_VM_WARN("{}", msgBuffer);
-        break;
-    case 3:
-        HCCL_VM_ERROR("{}", msgBuffer);
-        break;
-    default:
-        HCCL_VM_TRACE("{}", msgBuffer);
+        case 0:
+            HCCL_VM_DEBUG("{}", msgBuffer);
+            break;
+        case 1:
+            HCCL_VM_INFO("{}", msgBuffer);
+            break;
+        case 2:
+            HCCL_VM_WARN("{}", msgBuffer);
+            break;
+        case 3:
+            HCCL_VM_ERROR("{}", msgBuffer);
+            break;
+        default:
+            HCCL_VM_TRACE("{}", msgBuffer);
     }
 }
 
-void DlogRecord(int moduleId, int level, const char *fmt, ...)
+void DlogRecord(int moduleId, int level, const char* fmt, ...)
 {
     // 定义一个缓冲区，用于存储格式化后的字符串
     char buffer[LOG_MSG_BUFFER_SIZE] = {0};
@@ -64,12 +61,9 @@ void DlogRecord(int moduleId, int level, const char *fmt, ...)
 
 bool HcclCheckLogLevel(int logType, int moduleId)
 {
-    (void) logType;
-    (void) moduleId;
+    (void)logType;
+    (void)moduleId;
     return true;
 }
- 
-bool IsErrorToWarn()
-{
-    return false;
-}
+
+bool IsErrorToWarn() { return false; }

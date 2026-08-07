@@ -23,19 +23,21 @@ class RemoteAccessImpl {
 public:
     explicit RemoteAccessImpl();
     virtual ~RemoteAccessImpl();
-    HcclResult Init(u32 rank, const std::vector<MemRegisterAddr>& addrInfos, const RmaRankTable &rankTable);
+    HcclResult Init(u32 rank, const std::vector<MemRegisterAddr>& addrInfos, const RmaRankTable& rankTable);
     HcclResult RemoteRead(const std::vector<HcomRemoteAccessAddrInfo>& addrInfos, HcclRtStream stream);
     HcclResult RemoteWrite(const std::vector<HcomRemoteAccessAddrInfo>& addrInfos, HcclRtStream stream);
+
 private:
-    void ParseRemoteAccessAddrInfo(const std::vector<HcomRemoteAccessAddrInfo>& addrInfos,
-                                   std::map<u32, std::vector<HcomRemoteAccessAddrInfo>>& addrInfoMap);
+    void ParseRemoteAccessAddrInfo(
+        const std::vector<HcomRemoteAccessAddrInfo>& addrInfos,
+        std::map<u32, std::vector<HcomRemoteAccessAddrInfo>>& addrInfoMap);
     HcclResult IsInSamePlane(const u32 userRank, const std::vector<HcomRemoteAccessAddrInfo>& addrInfos);
     std::unique_ptr<CommRemoteAccess> comm_;
     u32 userRank_;
     u32 userRankNum_;
     u32 serverNum_;
-    u32 rankNumPerServer_;  // 默认约束：每个server的rank数必须相同
+    u32 rankNumPerServer_; // 默认约束：每个server的rank数必须相同
 };
-}
+} // namespace hccl
 
-#endif  // REMOTE_ACCESS_IMPL_H
+#endif // REMOTE_ACCESS_IMPL_H

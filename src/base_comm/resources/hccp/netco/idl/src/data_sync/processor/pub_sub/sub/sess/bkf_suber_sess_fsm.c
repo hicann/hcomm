@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #define BKF_SUBSESS_PKT_DISP_LEN (512)
 #define BKF_SUBSESS_PKT_DISP_RESV_LEN (8)
 
@@ -54,35 +53,36 @@ void BkfSuberSessBatchChkTmrStart(BkfSuberSess *sess);
 #pragma pack()
 #endif
 
-
 #if BKF_BLOCK("表")
 const char *subSessFsmStr = "SubscribeSessionFsm";
 
-const char *subSessStateStrTbl[] = {"BACKFIN_SUB_SESS_STATE_DOWN",
-                                    "BACKFIN_SUB_SESS_STATE_WAITSUBACK",
-                                    "BACKFIN_SUB_SESS_STATE_UP",
-                                    "BACKFIN_SUB_SESS_STATE_SNDUNSUB",
-                                    "BACKFIN_SUB_SESS_STATE_BATCH",
-                                    "BACKFIN_SUB_SESS_STATE_BATOK",
-                                    "BACKFIN_SUB_SESS_STATE_VERIFYWAITACK",
-                                    "BACKFIN_SUB_SESS_STATE_VERIFYRDY",
-                                    "BACKFIN_SUB_SESS_STATE_VERIFY",
-                                   };
+const char *subSessStateStrTbl[] = {
+    "BACKFIN_SUB_SESS_STATE_DOWN",
+    "BACKFIN_SUB_SESS_STATE_WAITSUBACK",
+    "BACKFIN_SUB_SESS_STATE_UP",
+    "BACKFIN_SUB_SESS_STATE_SNDUNSUB",
+    "BACKFIN_SUB_SESS_STATE_BATCH",
+    "BACKFIN_SUB_SESS_STATE_BATOK",
+    "BACKFIN_SUB_SESS_STATE_VERIFYWAITACK",
+    "BACKFIN_SUB_SESS_STATE_VERIFYRDY",
+    "BACKFIN_SUB_SESS_STATE_VERIFY",
+};
 
-const char *subSessEvtStrTbl[] = {"BACKFIN_SUB_SESS_INPUT_SUB",
-                                  "BACKFIN_SUB_SESS_INPUT_SUBACK",
-                                  "BACKFIN_SUB_SESS_INPUT_UNSUB",
-                                  "BACKFIN_SUB_SESS_INPUT_BATCHBEGIN",
-                                  "BACKFIN_SUB_SESS_INPUT_BATCHEND",
-                                  "BACKFIN_SUB_SESS_INPUT_DATA",
-                                  "BACKFIN_SUB_SESS_INPUT_NTF",
-                                  "BACKFIN_SUB_SESS_INPUT_DISCONN",
-                                  "BACKFIN_SUB_SESS_INPUT_SCHED",
-                                  "BACKFIN_SUB_SESS_INPUT_VERIFYSUB",
-                                  "BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK",
-                                  "BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN",
-                                  "BACKFIN_SUB_SESS_INPUT_VERIFYEND",
-                                 };
+const char *subSessEvtStrTbl[] = {
+    "BACKFIN_SUB_SESS_INPUT_SUB",
+    "BACKFIN_SUB_SESS_INPUT_SUBACK",
+    "BACKFIN_SUB_SESS_INPUT_UNSUB",
+    "BACKFIN_SUB_SESS_INPUT_BATCHBEGIN",
+    "BACKFIN_SUB_SESS_INPUT_BATCHEND",
+    "BACKFIN_SUB_SESS_INPUT_DATA",
+    "BACKFIN_SUB_SESS_INPUT_NTF",
+    "BACKFIN_SUB_SESS_INPUT_DISCONN",
+    "BACKFIN_SUB_SESS_INPUT_SCHED",
+    "BACKFIN_SUB_SESS_INPUT_VERIFYSUB",
+    "BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK",
+    "BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN",
+    "BACKFIN_SUB_SESS_INPUT_VERIFYEND",
+};
 
 /*
 
@@ -128,139 +128,148 @@ Inputs                           States |   0   |   1   |   2   |   3   |   4   
 
 BkfFsmProcItem subSessStateEvtProcItemMtrx[BACKFIN_SUB_SESS_STATE_MAX][BACKFIN_SUB_SESS_INPUT_MAX] = {
     /* BACKFIN_SUB_SESS_STATE_DOWN */
-    {{BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)}, /* BACKFIN_SUB_SESS_INPUT_SUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_SUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)}, /* BACKFIN_SUB_SESS_INPUT_UNSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_DATA */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_NTF */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_DISCONN */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActStartSub)}, /* BACKFIN_SUB_SESS_INPUT_SCHED */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
+    {
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)},     /* BACKFIN_SUB_SESS_INPUT_SUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},   /* BACKFIN_SUB_SESS_INPUT_SUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)},   /* BACKFIN_SUB_SESS_INPUT_UNSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},   /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},   /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},   /* BACKFIN_SUB_SESS_INPUT_DATA */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},   /* BACKFIN_SUB_SESS_INPUT_NTF */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},   /* BACKFIN_SUB_SESS_INPUT_DISCONN */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActStartSub)}, /* BACKFIN_SUB_SESS_INPUT_SCHED */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},   /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},   /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},   /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},   /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
     },
     /* BACKFIN_SUB_SESS_STATE_WAITSUBACK */
-    {{BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)}, /* BACKFIN_SUB_SESS_INPUT_SUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvSubAck)}, /* BACKFIN_SUB_SESS_INPUT_SUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)}, /* BACKFIN_SUB_SESS_INPUT_UNSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_DATA */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtf)}, /* BACKFIN_SUB_SESS_INPUT_NTF */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconn)}, /* BACKFIN_SUB_SESS_INPUT_DISCONN */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActStartSub)}, /* BACKFIN_SUB_SESS_INPUT_SCHED */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
+    {
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)},       /* BACKFIN_SUB_SESS_INPUT_SUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvSubAck)},  /* BACKFIN_SUB_SESS_INPUT_SUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)},     /* BACKFIN_SUB_SESS_INPUT_UNSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},     /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},     /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},     /* BACKFIN_SUB_SESS_INPUT_DATA */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtf)},     /* BACKFIN_SUB_SESS_INPUT_NTF */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconn)},    /* BACKFIN_SUB_SESS_INPUT_DISCONN */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActStartSub)},   /* BACKFIN_SUB_SESS_INPUT_SCHED */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},     /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},     /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},     /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
     },
     /* BACKFIN_SUB_SESS_STATE_UP */
-    {{BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)}, /* BACKFIN_SUB_SESS_INPUT_SUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_SUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)}, /* BACKFIN_SUB_SESS_INPUT_UNSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvBatchBegin)}, /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_DATA */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtf)}, /* BACKFIN_SUB_SESS_INPUT_NTF */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconn)}, /* BACKFIN_SUB_SESS_INPUT_DISCONN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_SCHED */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
+    {
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)},          /* BACKFIN_SUB_SESS_INPUT_SUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},        /* BACKFIN_SUB_SESS_INPUT_SUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)},        /* BACKFIN_SUB_SESS_INPUT_UNSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvBatchBegin)}, /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},        /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},        /* BACKFIN_SUB_SESS_INPUT_DATA */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtf)},        /* BACKFIN_SUB_SESS_INPUT_NTF */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconn)},       /* BACKFIN_SUB_SESS_INPUT_DISCONN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},    /* BACKFIN_SUB_SESS_INPUT_SCHED */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},        /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},        /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},        /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},        /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
     },
     /* BACKFIN_SUB_SESS_STATE_SNDUNSUB */
-    {{BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)}, /* BACKFIN_SUB_SESS_INPUT_SUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_SUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_UNSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_DATA */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtfNotReSub)}, /* BACKFIN_SUB_SESS_INPUT_NTF */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconnNotReSub)}, /* BACKFIN_SUB_SESS_INPUT_DISCONN */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessSndUnSub)}, /* BACKFIN_SUB_SESS_INPUT_SCHED */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
+    {
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)},            /* BACKFIN_SUB_SESS_INPUT_SUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},          /* BACKFIN_SUB_SESS_INPUT_SUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},          /* BACKFIN_SUB_SESS_INPUT_UNSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},          /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},          /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},          /* BACKFIN_SUB_SESS_INPUT_DATA */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtfNotReSub)},  /* BACKFIN_SUB_SESS_INPUT_NTF */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconnNotReSub)}, /* BACKFIN_SUB_SESS_INPUT_DISCONN */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessSndUnSub)},           /* BACKFIN_SUB_SESS_INPUT_SCHED */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},          /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},          /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},          /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},          /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
     },
     /* BACKFIN_SUB_SESS_STATE_BATCH */
-    {{BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)}, /* BACKFIN_SUB_SESS_INPUT_SUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_SUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)}, /* BACKFIN_SUB_SESS_INPUT_UNSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvBatchEnd)}, /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvData)}, /* BACKFIN_SUB_SESS_INPUT_DATA */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtf)}, /* BACKFIN_SUB_SESS_INPUT_NTF */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconn)}, /* BACKFIN_SUB_SESS_INPUT_DISCONN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_SCHED */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
+    {
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)},        /* BACKFIN_SUB_SESS_INPUT_SUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},      /* BACKFIN_SUB_SESS_INPUT_SUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)},      /* BACKFIN_SUB_SESS_INPUT_UNSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},      /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvBatchEnd)}, /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvData)},     /* BACKFIN_SUB_SESS_INPUT_DATA */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtf)},      /* BACKFIN_SUB_SESS_INPUT_NTF */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconn)},     /* BACKFIN_SUB_SESS_INPUT_DISCONN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},  /* BACKFIN_SUB_SESS_INPUT_SCHED */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},      /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},      /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},      /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},      /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
     },
     /* BACKFIN_SUB_SESS_STATE_BATOK */
-    {{BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)}, /* BACKFIN_SUB_SESS_INPUT_SUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_SUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)}, /* BACKFIN_SUB_SESS_INPUT_UNSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvBatchBegin)}, /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvData)}, /* BACKFIN_SUB_SESS_INPUT_DATA */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtf)}, /* BACKFIN_SUB_SESS_INPUT_NTF */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconn)}, /* BACKFIN_SUB_SESS_INPUT_DISCONN */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActStartVerifySub)}, /* BACKFIN_SUB_SESS_INPUT_SCHED */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcVerifySub)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
+    {
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)},           /* BACKFIN_SUB_SESS_INPUT_SUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},         /* BACKFIN_SUB_SESS_INPUT_SUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)},         /* BACKFIN_SUB_SESS_INPUT_UNSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvBatchBegin)},  /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},         /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvData)},        /* BACKFIN_SUB_SESS_INPUT_DATA */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtf)},         /* BACKFIN_SUB_SESS_INPUT_NTF */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconn)},        /* BACKFIN_SUB_SESS_INPUT_DISCONN */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActStartVerifySub)}, /* BACKFIN_SUB_SESS_INPUT_SCHED */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcVerifySub)},     /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},     /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},     /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},     /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
     },
     /* BACKFIN_SUB_SESS_STATE_VERIFYWAITACK */
-    {{BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)}, /* BACKFIN_SUB_SESS_INPUT_SUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_SUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)}, /* BACKFIN_SUB_SESS_INPUT_UNSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvData)}, /* BACKFIN_SUB_SESS_INPUT_DATA */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtf)}, /* BACKFIN_SUB_SESS_INPUT_NTF */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconn)}, /* BACKFIN_SUB_SESS_INPUT_DISCONN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_SCHED */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcVerifySub)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvVerifyAck)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
+    {
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)},         /* BACKFIN_SUB_SESS_INPUT_SUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},   /* BACKFIN_SUB_SESS_INPUT_SUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)},       /* BACKFIN_SUB_SESS_INPUT_UNSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},   /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},   /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvData)},      /* BACKFIN_SUB_SESS_INPUT_DATA */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtf)},       /* BACKFIN_SUB_SESS_INPUT_NTF */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconn)},      /* BACKFIN_SUB_SESS_INPUT_DISCONN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},   /* BACKFIN_SUB_SESS_INPUT_SCHED */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcVerifySub)},   /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvVerifyAck)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},   /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},   /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
     },
     /* BACKFIN_SUB_SESS_STATE_VERIFYRDY */
-    {{BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)}, /* BACKFIN_SUB_SESS_INPUT_SUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_SUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)}, /* BACKFIN_SUB_SESS_INPUT_UNSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvData)}, /* BACKFIN_SUB_SESS_INPUT_DATA */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtf)}, /* BACKFIN_SUB_SESS_INPUT_NTF */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconn)}, /* BACKFIN_SUB_SESS_INPUT_DISCONN */
-     {BKF_FSM_BUILD_PROC_ITEM((BKF_FSM_PROC_IGNORE))}, /* BACKFIN_SUB_SESS_INPUT_SCHED */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcVerifySub)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
-     {BKF_FSM_BUILD_PROC_ITEM((BKF_FSM_PROC_IGNORE))}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvVerifyBegin)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
+    {
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)},           /* BACKFIN_SUB_SESS_INPUT_SUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},     /* BACKFIN_SUB_SESS_INPUT_SUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)},         /* BACKFIN_SUB_SESS_INPUT_UNSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},     /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},     /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvData)},        /* BACKFIN_SUB_SESS_INPUT_DATA */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtf)},         /* BACKFIN_SUB_SESS_INPUT_NTF */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconn)},        /* BACKFIN_SUB_SESS_INPUT_DISCONN */
+        {BKF_FSM_BUILD_PROC_ITEM((BKF_FSM_PROC_IGNORE))},       /* BACKFIN_SUB_SESS_INPUT_SCHED */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcVerifySub)},     /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
+        {BKF_FSM_BUILD_PROC_ITEM((BKF_FSM_PROC_IGNORE))},       /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvVerifyBegin)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},         /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
     },
     /* BACKFIN_SUB_SESS_STATE_VERIFY */
-    {{BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)}, /* BACKFIN_SUB_SESS_INPUT_SUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_SUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)}, /* BACKFIN_SUB_SESS_INPUT_UNSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvData)}, /* BACKFIN_SUB_SESS_INPUT_DATA */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtf)}, /* BACKFIN_SUB_SESS_INPUT_NTF */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconn)}, /* BACKFIN_SUB_SESS_INPUT_DISCONN */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)}, /* BACKFIN_SUB_SESS_INPUT_SCHED */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcVerifySub)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
-     {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
-     {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvVerifyEnd)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
+    {
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcSub)},         /* BACKFIN_SUB_SESS_INPUT_SUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},   /* BACKFIN_SUB_SESS_INPUT_SUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcUnSub)},       /* BACKFIN_SUB_SESS_INPUT_UNSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},   /* BACKFIN_SUB_SESS_INPUT_BATCHBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},   /* BACKFIN_SUB_SESS_INPUT_BATCHEND */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvData)},      /* BACKFIN_SUB_SESS_INPUT_DATA */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvNtf)},       /* BACKFIN_SUB_SESS_INPUT_NTF */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActDisconn)},      /* BACKFIN_SUB_SESS_INPUT_DISCONN */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IMPOSSIBLE)},   /* BACKFIN_SUB_SESS_INPUT_SCHED */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessProcVerifySub)},   /* BACKFIN_SUB_SESS_INPUT_VERIFYSUB */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},       /* BACKFIN_SUB_SESS_INPUT_VERIFYSUBACK */
+        {BKF_FSM_BUILD_PROC_ITEM(BKF_FSM_PROC_IGNORE)},       /* BACKFIN_SUB_SESS_INPUT_VERIFYBEGIN */
+        {BKF_FSM_BUILD_PROC_ITEM(BkfSubSessActRcvVerifyEnd)}, /* BACKFIN_SUB_SESS_INPUT_VERIFYEND */
     },
 };
 #endif
@@ -330,7 +339,7 @@ uint32_t BkfSubSessSndSub(BkfSuberSess *sess, BkfMsgCoder *coder, void *param)
     }
 
     uint8_t flag = 0;
-    if  (sess->isVerify) {
+    if (sess->isVerify) {
         BKF_BIT_SET(flag, BKF_FLAG_VERIFY);
     }
 
@@ -339,16 +348,17 @@ uint32_t BkfSubSessSndSub(BkfSuberSess *sess, BkfMsgCoder *coder, void *param)
     }
 
     uint32_t ret = BkfMsgCodeMsgHead(coder, BKF_MSG_SUB, flag);
-    ret |= BkfMsgCodeRawTLV(coder, BKF_TLV_SLICE_KEY, 0,
-                             sess->key.sliceKey, sess->sessMng->env->sliceVTbl.keyLen, VOS_FALSE);
+    ret |= BkfMsgCodeRawTLV(coder, BKF_TLV_SLICE_KEY, 0, sess->key.sliceKey, sess->sessMng->env->sliceVTbl.keyLen,
+        VOS_FALSE);
     ret |= BkfMsgCodeTLV(coder, BKF_TLV_TABLE_TYPE, 0, &sess->key.tableTypeId, VOS_FALSE);
     ret |= BkfMsgCodeTLV(coder, BKF_TLV_TRANS_NUM, 0, &sess->seq, VOS_TRUE);
 
     uint8_t buf[BKF_SUBER_DISP_SLICELEN] = {0};
     uint8_t urlStr[BKF_URL_STR_LEN_MAX];
     uint8_t urlStr2[BKF_URL_STR_LEN_MAX];
-    BKF_LOG_WARN(sess->sessMng->log, "Snd subSess(%#x) SubMsg tableType:%u, seq:%"VOS_PRIu64", %s, ret:%u.p %s l %s\n",
-        BKF_MASK_ADDR(sess), sess->key.tableTypeId, sess->seq,
+    BKF_LOG_WARN(sess->sessMng->log,
+        "Snd subSess(%#x) SubMsg tableType:%u, seq:%" VOS_PRIu64 ", %s, ret:%u.p %s l %s\n", BKF_MASK_ADDR(sess),
+        sess->key.tableTypeId, sess->seq,
         BkfSuberGetSliceKeyStr(sess->sessMng->env, sess->key.sliceKey, buf, sizeof(buf)), ret,
         BkfUrlGetStr(&sess->sessMng->pubUrl, urlStr, sizeof(urlStr)),
         BkfUrlGetStr(&sess->sessMng->locUrl, urlStr2, sizeof(urlStr2)));
@@ -406,14 +416,15 @@ uint32_t BkfSubSessCheckTransValid(BkfSuberSess *sess, BkfMsgDecoder *decoder)
         BKF_ASSERT(errCode == BKF_OK);
 
         if (tl->typeId == BKF_TLV_TRANS_NUM) {
-            tlvTransNum = (BkfTlvTransNum*)tl;
+            tlvTransNum = (BkfTlvTransNum *)tl;
             if (tlvTransNum->num == BKF_TRANS_NUM_INVALID) {
                 return BKF_ERR;
             }
 
             isInValid = (sess->seq == BKF_TRANS_NUM_INVALID) || (sess->seq != tlvTransNum->num);
             if (isInValid) {
-                BKF_LOG_ERROR(sess->sessMng->log, "subSess(%#x), subTransNum(L:%"VOS_PRIu64"/P:%"VOS_PRIu64")"
+                BKF_LOG_ERROR(sess->sessMng->log,
+                    "subSess(%#x), subTransNum(L:%" VOS_PRIu64 "/P:%" VOS_PRIu64 ")"
                     " not same, check error.\n",
                     BKF_MASK_ADDR(sess), sess->seq, tlvTransNum->num);
                 /* 驱动会话进入初始状态，重新sub */
@@ -421,10 +432,10 @@ uint32_t BkfSubSessCheckTransValid(BkfSuberSess *sess, BkfMsgDecoder *decoder)
                 return BKF_ERR;
             }
         } else if (tl->typeId == BKF_TLV_REASON_CODE) {
-            tlvReasonCode = (BkfTlvReasonCode*)tl;
+            tlvReasonCode = (BkfTlvReasonCode *)tl;
             if (tlvReasonCode->reasonCode != BKF_RC_OK) {
-                BKF_LOG_ERROR(sess->sessMng->log, "subSess(%#x), ReasonCode(%u) check error.\n",
-                    BKF_MASK_ADDR(sess), tlvReasonCode->reasonCode);
+                BKF_LOG_ERROR(sess->sessMng->log, "subSess(%#x), ReasonCode(%u) check error.\n", BKF_MASK_ADDR(sess),
+                    tlvReasonCode->reasonCode);
                 /* 驱动会话进入初始状态，重新sub */
                 (void)BkfSubSessActDownAndUpdSeq(sess, decoder, VOS_NULL);
                 return BKF_ERR;
@@ -444,7 +455,7 @@ STATIC uint32_t BkfSubSessActRcvSubAck(BkfSuberSess *sess, BkfMsgDecoder *decode
     uint8_t buf[BKF_SUBER_DISP_SLICELEN] = {0};
     uint8_t urlStr[BKF_URL_STR_LEN_MAX];
     uint8_t urlStr2[BKF_URL_STR_LEN_MAX];
-    BKF_LOG_WARN(sess->sessMng->log, "RcvAck subSess(%#x) tableType:%u, seq:%"VOS_PRIu64", %s p %s l %s\n",
+    BKF_LOG_WARN(sess->sessMng->log, "RcvAck subSess(%#x) tableType:%u, seq:%" VOS_PRIu64 ", %s p %s l %s\n",
         BKF_MASK_ADDR(sess), sess->key.tableTypeId, sess->seq,
         BkfSuberGetSliceKeyStr(sess->sessMng->env, sess->key.sliceKey, buf, sizeof(buf)),
         BkfUrlGetStr(&sess->sessMng->pubUrl, urlStr, sizeof(urlStr)),
@@ -473,15 +484,15 @@ STATIC uint32_t BkfSubSessSndUnSub(BkfSuberSess *sess, BkfMsgCoder *coder, void 
     BKF_LOG_WARN(sess->sessMng->log, "Session (%#x) Send UnSub.\n", BKF_MASK_ADDR(sess));
 
     uint8_t flag = 0;
-    if  (sess->isVerify) {
+    if (sess->isVerify) {
         BKF_BIT_SET(flag, BKF_FLAG_VERIFY);
     }
     if (vtbl->needTableComplete) {
         BKF_BIT_SET(flag, BKF_FLAG_NEED_TABLE_COMPLETE);
     }
     uint32_t ret = BkfMsgCodeMsgHead(coder, BKF_MSG_UNSUB, flag);
-    ret |= BkfMsgCodeRawTLV(coder, BKF_TLV_SLICE_KEY, 0,
-                             sess->key.sliceKey, sess->sessMng->env->sliceVTbl.keyLen, VOS_FALSE);
+    ret |= BkfMsgCodeRawTLV(coder, BKF_TLV_SLICE_KEY, 0, sess->key.sliceKey, sess->sessMng->env->sliceVTbl.keyLen,
+        VOS_FALSE);
     ret |= BkfMsgCodeTLV(coder, BKF_TLV_TABLE_TYPE, 0, &sess->key.tableTypeId, VOS_FALSE);
     ret |= BkfMsgCodeTLV(coder, BKF_TLV_TRANS_NUM, 0, &sess->seq, VOS_TRUE);
     if (ret != BKF_OK) {
@@ -525,8 +536,8 @@ STATIC uint32_t BkfSubSessActRcvBatchBegin(BkfSuberSess *sess, BkfMsgDecoder *de
 
     BkfSuberTableTypeVTbl *vtbl = BkfSuberDataTableTypeGetVtbl(sess->sessMng->dataMng, sess->key.tableTypeId);
     if (vtbl == VOS_NULL) {
-        BKF_LOG_ERROR(sess->sessMng->log, "batchBegin(typeId:%u, dataLen:%d) Vtl Null.\n",
-            sess->key.tableTypeId, decoder->rcvDataLen);
+        BKF_LOG_ERROR(sess->sessMng->log, "batchBegin(typeId:%u, dataLen:%d) Vtl Null.\n", sess->key.tableTypeId,
+            decoder->rcvDataLen);
         return BKF_ERR;
     }
     if (BkfSuberDataTableTypeGetMode(vtbl) == BKF_SUBER_MODE_DEFAULT) {
@@ -562,8 +573,8 @@ STATIC uint32_t BkfSubSessActRcvBatchEnd(BkfSuberSess *sess, BkfMsgDecoder *deco
     (void)BKF_FSM_CHG_STATE(&sess->fsm, BACKFIN_SUB_SESS_STATE_BATOK);
     BkfSuberTableTypeVTbl *vtbl = BkfSuberDataTableTypeGetVtbl(sess->sessMng->dataMng, sess->key.tableTypeId);
     if (vtbl == VOS_NULL) {
-        BKF_LOG_ERROR(sess->sessMng->log, "batchEnd(typeId:%u, dataLen:%d) Vtl Null.\n",
-            sess->key.tableTypeId, decoder->rcvDataLen);
+        BKF_LOG_ERROR(sess->sessMng->log, "batchEnd(typeId:%u, dataLen:%d) Vtl Null.\n", sess->key.tableTypeId,
+            decoder->rcvDataLen);
         return BKF_ERR;
     }
 
@@ -586,11 +597,11 @@ void BkfSubSessRcvDataCallBack(BkfSuberSess *sess, BkfSuberTableTypeVTbl *vtbl, 
     BkfSuberSessKey *sessKey = &sess->key;
     if (BkfSuberDataTableTypeGetMode(vtbl) == BKF_SUBER_MODE_DEFAULT) {
         if (idlData->tl.flag == BKF_FLAG_TUPLE_UPDATE) {
-            vtbl->onDataUpdate(vtbl->cookie, sessKey->sliceKey,
-                               idlData->idlData, valLen - BKF_MBR_SIZE(BkfTlvTupleIdlData, seq), VOS_TRUE);
+            vtbl->onDataUpdate(vtbl->cookie, sessKey->sliceKey, idlData->idlData,
+                valLen - BKF_MBR_SIZE(BkfTlvTupleIdlData, seq), VOS_TRUE);
         } else {
-            vtbl->onDataDelete(vtbl->cookie, sessKey->sliceKey,
-                               idlData->idlData, valLen - BKF_MBR_SIZE(BkfTlvTupleIdlData, seq), VOS_TRUE);
+            vtbl->onDataDelete(vtbl->cookie, sessKey->sliceKey, idlData->idlData,
+                valLen - BKF_MBR_SIZE(BkfTlvTupleIdlData, seq), VOS_TRUE);
         }
         return;
     }
@@ -619,22 +630,22 @@ uint32_t BkfSubSessDecodeIdlData(BkfSuberTableTypeVTbl *vtbl, BkfSuberSess *sess
     tl = BkfMsgDecodeTLV(decoder, &errCode);
     while (tl != VOS_NULL) {
         if ((tl->typeId == BKF_TLV_TRANS_NUM)) {
-            tlvTransNum = (BkfTlvTransNum*)tl;
+            tlvTransNum = (BkfTlvTransNum *)tl;
         } else if (tl->typeId == BKF_TLV_TUPLE_IDL_DATA) {
             isValid = (tlvTransNum == VOS_NULL) ||
-                ((sess->seq == BKF_TRANS_NUM_INVALID) || (sess->seq != tlvTransNum->num));
+                      ((sess->seq == BKF_TRANS_NUM_INVALID) || (sess->seq != tlvTransNum->num));
             if (isValid) {
                 BKF_LOG_ERROR(sess->sessMng->log,
-                    "suber sess(%#x) seq err: NULL(ctlSeq:%"VOS_PRIu64", tlvNum:%"VOS_PRIu64"). p %s l %s\n",
+                    "suber sess(%#x) seq err: NULL(ctlSeq:%" VOS_PRIu64 ", tlvNum:%" VOS_PRIu64 "). p %s l %s\n",
                     BKF_MASK_ADDR(sess), sess->seq, tlvTransNum != VOS_NULL ? tlvTransNum->num : 0,
                     BkfUrlGetStr(&sess->sessMng->pubUrl, urlStr, sizeof(urlStr)),
                     BkfUrlGetStr(&sess->sessMng->locUrl, urlStr2, sizeof(urlStr2)));
                 return BKF_ERR;
             }
             valLen = tl->valLen;
-            idlData = (BkfTlvTupleIdlData*)tl;
-            (void)BKF_GET_MEM_STD_STR(idlData->idlData, tl->valLen - sizeof(BkfTL),
-                                      suberIdlData, BKF_SUBSESS_PKT_DISP_LEN);
+            idlData = (BkfTlvTupleIdlData *)tl;
+            (void)BKF_GET_MEM_STD_STR(idlData->idlData, tl->valLen - sizeof(BkfTL), suberIdlData,
+                BKF_SUBSESS_PKT_DISP_LEN);
 
             uint8_t buf[BKF_SUBER_DISP_SLICELEN] = {0};
             /* 日志数量较多，不记录里程碑 */
@@ -661,8 +672,7 @@ STATIC uint32_t BkfSubSessActRcvData(BkfSuberSess *sess, BkfMsgDecoder *decoder,
     uint8_t urlStr2[BKF_URL_STR_LEN_MAX];
     if (sess->fsm.state < BACKFIN_SUB_SESS_STATE_BATCH) {
         BKF_LOG_ERROR(sess->sessMng->log, "Suber (%#x) Fsm ERR(typeId: %u, state: %u) p %s l %s\n", BKF_MASK_ADDR(sess),
-            sessKey->tableTypeId, sess->fsm.state,
-            BkfUrlGetStr(&sess->sessMng->pubUrl, urlStr, sizeof(urlStr)),
+            sessKey->tableTypeId, sess->fsm.state, BkfUrlGetStr(&sess->sessMng->pubUrl, urlStr, sizeof(urlStr)),
             BkfUrlGetStr(&sess->sessMng->locUrl, urlStr2, sizeof(urlStr2)));
         return BKF_ERR;
     }
@@ -679,7 +689,6 @@ STATIC uint32_t BkfSubSessActRcvData(BkfSuberSess *sess, BkfMsgDecoder *decoder,
 
     return BkfSubSessDecodeIdlData(vtbl, sess, decoder);
 }
-
 
 /* 驱动连接状态机启动订阅 */
 STATIC void BkfSubSessProcDisconn(BkfSuberSess *sess)
@@ -729,7 +738,7 @@ STATIC uint32_t BkfSubSessActStartVerifySub(BkfSuberSess *sess, BkfMsgCoder *cod
     }
 
     uint8_t flag = 0;
-    if  (sess->isVerify) {
+    if (sess->isVerify) {
         BKF_BIT_SET(flag, BKF_FLAG_VERIFY);
     }
     if (vtbl->needTableComplete) {
@@ -737,15 +746,15 @@ STATIC uint32_t BkfSubSessActStartVerifySub(BkfSuberSess *sess, BkfMsgCoder *cod
     }
 
     uint32_t ret = BkfMsgCodeMsgHead(coder, BKF_MSG_SUB, flag);
-    ret |= BkfMsgCodeRawTLV(coder, BKF_TLV_SLICE_KEY, 0,
-                             sess->key.sliceKey, sess->sessMng->env->sliceVTbl.keyLen, VOS_FALSE);
+    ret |= BkfMsgCodeRawTLV(coder, BKF_TLV_SLICE_KEY, 0, sess->key.sliceKey, sess->sessMng->env->sliceVTbl.keyLen,
+        VOS_FALSE);
     ret |= BkfMsgCodeTLV(coder, BKF_TLV_TABLE_TYPE, 0, &sess->key.tableTypeId, VOS_FALSE);
     ret |= BkfMsgCodeTLV(coder, BKF_TLV_TRANS_NUM, 0, &sess->seq, VOS_TRUE);
 
     uint8_t buf[BKF_SUBER_DISP_SLICELEN] = {0};
     uint8_t urlStr[BKF_URL_STR_LEN_MAX];
     uint8_t urlStr2[BKF_URL_STR_LEN_MAX];
-    BKF_LOG_WARN(sess->sessMng->log, "Snd verifysub, Sess(%#x) tableType:%u, seq:%"VOS_PRIu64", %s p %s, l %s\n",
+    BKF_LOG_WARN(sess->sessMng->log, "Snd verifysub, Sess(%#x) tableType:%u, seq:%" VOS_PRIu64 ", %s p %s, l %s\n",
         BKF_MASK_ADDR(sess), sess->key.tableTypeId, sess->seq,
         BkfSuberGetSliceKeyStr(sess->sessMng->env, sess->key.sliceKey, buf, sizeof(buf)),
         BkfUrlGetStr(&sess->sessMng->pubUrl, urlStr, sizeof(urlStr)),
@@ -768,9 +777,9 @@ STATIC uint32_t BkfSubSessActRcvVerifyAck(BkfSuberSess *sess, BkfMsgDecoder *dec
     uint8_t buf[BKF_1K / 4] = {0};
     uint8_t urlStr[BKF_URL_STR_LEN_MAX];
     uint8_t urlStr2[BKF_URL_STR_LEN_MAX];
-    BKF_LOG_WARN(sess->sessMng->log, "Rcv verifyAck, Sess(%#x) tableType:%u, seq:%"VOS_PRIu64", %s p %s l %s\n",
-        BKF_MASK_ADDR(sess), sess->key.tableTypeId, sess->seq, BkfSuberGetSliceKeyStr(sess->sessMng->env,
-        sess->key.sliceKey, buf, sizeof(buf)),
+    BKF_LOG_WARN(sess->sessMng->log, "Rcv verifyAck, Sess(%#x) tableType:%u, seq:%" VOS_PRIu64 ", %s p %s l %s\n",
+        BKF_MASK_ADDR(sess), sess->key.tableTypeId, sess->seq,
+        BkfSuberGetSliceKeyStr(sess->sessMng->env, sess->key.sliceKey, buf, sizeof(buf)),
         BkfUrlGetStr(&sess->sessMng->pubUrl, urlStr, sizeof(urlStr)),
         BkfUrlGetStr(&sess->sessMng->locUrl, urlStr2, sizeof(urlStr2)));
 
@@ -891,9 +900,8 @@ STATIC uint32_t BkfSubSessProcNtf(BkfSuberSess *sess, BkfMsgDecoder *decoder)
     uint8_t urlStr2[BKF_URL_STR_LEN_MAX];
     errCode = BkfSubSessCheckTransValid(sess, decoder);
     if (errCode != BKF_OK) {
-        BKF_LOG_ERROR(sess->sessMng->log, "Sess (%#x) ntf(typeId:%u, dataLen:%d) p %s l %s\n",
-            BKF_MASK_ADDR(sess), sessKey->tableTypeId, decoder->rcvDataLen,
-            BkfUrlGetStr(&sess->sessMng->pubUrl, urlStr, sizeof(urlStr)),
+        BKF_LOG_ERROR(sess->sessMng->log, "Sess (%#x) ntf(typeId:%u, dataLen:%d) p %s l %s\n", BKF_MASK_ADDR(sess),
+            sessKey->tableTypeId, decoder->rcvDataLen, BkfUrlGetStr(&sess->sessMng->pubUrl, urlStr, sizeof(urlStr)),
             BkfUrlGetStr(&sess->sessMng->locUrl, urlStr2, sizeof(urlStr2)));
         return errCode;
     }
@@ -950,7 +958,7 @@ uint32_t BkfSuberSessFsmInitFsmTmp(BkfSuberSessMng *sessMng)
     int32_t err;
 
     err = snprintf_truncated_s(sessMng->sessFsmTmplName, sizeof(sessMng->sessFsmTmplName),
-        "%s_sessFsmTmpl_%"VOS_PRIu64"", sessMng->env->name, BKF_GET_NEXT_VAL(sessMng->env->seeds));
+        "%s_sessFsmTmpl_%" VOS_PRIu64 "", sessMng->env->name, BKF_GET_NEXT_VAL(sessMng->env->seeds));
     if (err <= 0) {
         return BKF_ERR;
     }
@@ -1049,8 +1057,8 @@ void BkfSuberSessBatchChkTmrStart(BkfSuberSess *sess)
         BkfTmrStop(sessMng->env->tmrMng, sess->batchChkTmr);
     }
 
-    sess->batchChkTmr = BkfTmrStartOnce(sessMng->env->tmrMng,
-        (F_BKF_TMR_TIMEOUT_PROC)BkfSuberSessBatchChkTimeout, vTbl->batchTimeout * BKF_MS_PER_S, (void*)sess);
+    sess->batchChkTmr = BkfTmrStartOnce(sessMng->env->tmrMng, (F_BKF_TMR_TIMEOUT_PROC)BkfSuberSessBatchChkTimeout,
+        vTbl->batchTimeout * BKF_MS_PER_S, (void *)sess);
     return;
 }
 
@@ -1068,4 +1076,3 @@ void BkfSuberSessBatchChkTmrStop(BkfSuberSess *sess)
 #ifdef __cplusplus
 }
 #endif
-

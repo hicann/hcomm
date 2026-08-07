@@ -17,8 +17,8 @@ namespace Hccl {
 
 class ResourcesNotExistException : public HcclException {
 public:
-    explicit ResourcesNotExistException(const std::string &userDefinedMsg)
-        : HcclException(ExceptionType::RESOURCES_NOT_EXIST_EXCEPTION, userDefinedMsg){};
+    explicit ResourcesNotExistException(const std::string& userDefinedMsg)
+        : HcclException(ExceptionType::RESOURCES_NOT_EXIST_EXCEPTION, userDefinedMsg) {};
 }; // Hccl
 } // namespace Hccl
 #endif // HCCL_HCCL_NOT_FOUND_EXCEPTION_H

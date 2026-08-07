@@ -15,20 +15,17 @@
 
 namespace hccl {
 // 数据规模分类
-enum class HcclDataCountType {
-    HCCL_COUNT_SMALL = 0,
-    HCCL_COUNT_MEDIUM,
-    HCCL_COUNT_HUGE,
-    HCCL_COUNT_RESERVED
-};
+enum class HcclDataCountType { HCCL_COUNT_SMALL = 0, HCCL_COUNT_MEDIUM, HCCL_COUNT_HUGE, HCCL_COUNT_RESERVED };
 
 class AllReduceOperator : public CollAlgOperator {
 public:
-    AllReduceOperator(AlgConfigurator* algConfigurator, CCLBufferManager &cclBufferManager,
-        HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    AllReduceOperator(
+        AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager, HcclDispatcher dispatcher,
+        std::unique_ptr<TopoMatcher>& topoMatcher);
     ~AllReduceOperator() override;
-    HcclResult SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag) override;
-    HcclResult GetAllReduceScratchSize(const u64 count, const HcclDataType dataType, u64 &scratchSize);
+    HcclResult
+    SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag) override;
+    HcclResult GetAllReduceScratchSize(const u64 count, const HcclDataType dataType, u64& scratchSize);
 
 private:
     HcclResult SelectAlgforMix(const OpParam& param, std::string& algName);
@@ -53,8 +50,8 @@ private:
 
     HcclDataCountType GetCountTypeForDeterAllReduce(const u64 count, const HcclDataType dataType);
 
-    HcclResult GetScratchSizeForDeterAllReduce(const u64 count, const HcclDataType dataType,
-        const u32 rankSize, u64 &outScratchSize);
+    HcclResult GetScratchSizeForDeterAllReduce(
+        const u64 count, const HcclDataType dataType, const u32 rankSize, u64& outScratchSize);
 };
-}
+} // namespace hccl
 #endif /** __ALL_REDUCE_OPERATOR_H__ */

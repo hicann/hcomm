@@ -18,7 +18,7 @@ namespace Hccl {
 
 class BaseLocalNotify {
 public:
-    BaseLocalNotify(const RmaType &type, bool devUsed) : type(type)
+    BaseLocalNotify(const RmaType& type, bool devUsed) : type(type)
     {
         HCCL_INFO("[BaseLocalNotify] init type[%d] devUsed[%d]", type, devUsed);
         notify = std::make_unique<RtsNotify>(devUsed);
@@ -28,32 +28,23 @@ public:
 
     virtual string Describe() const = 0;
 
-    virtual void Wait(const Stream &stream, u32 timeout) const = 0;
+    virtual void Wait(const Stream& stream, u32 timeout) const = 0;
 
-    virtual void Post(const Stream &stream) const = 0;
+    virtual void Post(const Stream& stream) const = 0;
 
-    const RmaType &GetType() const
-    {
-        return type;
-    }
+    const RmaType& GetType() const { return type; }
 
-    std::vector<char> GetUniqueId() const
-    {
-        return notify->GetUniqueId();
-    }
+    std::vector<char> GetUniqueId() const { return notify->GetUniqueId(); }
 
     virtual std::unique_ptr<Serializable> GetExchangeDto()
     {
         MACRO_THROW(NotSupportException, StringFormat("not support."));
     }
 
-    RtsNotify* GetNotify() const
-    {
-        return notify.get();
-    }
+    RtsNotify* GetNotify() const { return notify.get(); }
 
 protected:
-    RmaType          type;
+    RmaType type;
 
 private:
     std::unique_ptr<RtsNotify> notify;

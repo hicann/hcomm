@@ -13,7 +13,6 @@
 
 #include "transport_device_p2p_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* TRANSPORT_DEVICE_P2P_H */

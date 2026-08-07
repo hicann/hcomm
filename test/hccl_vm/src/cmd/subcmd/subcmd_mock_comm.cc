@@ -18,16 +18,20 @@
 #include "subcmd_mock_comm.h"
 
 namespace HcclSim {
-void MockCommCommand::Setup(CLI::App& app) {
+void MockCommCommand::Setup(CLI::App& app)
+{
     auto sub_run = app.add_subcommand("mock-comm", "mock-comm: 启动一个算子的通信域");
 
     sub_run->add_option("configFile", configFileName, "加载昇腾集群组网配置目录")->required()->check(FileInModelDir);
     sub_run->add_option("--level", g_hcclVmLevel, "设置模拟等级, 当前支持等级为 1 和 2, 默认模拟等级 2 ");
-    
-    sub_run->callback([this]() { Execute(); });
+
+    sub_run->callback([this]() {
+        Execute();
+    });
 }
 
-void MockCommCommand::Execute() {
+void MockCommCommand::Execute()
+{
     HCCL_VM_INFO("Initializing mock communication domain: Config={}, Level={}", configFileName, g_hcclVmLevel);
 
     // 首先清理动态数据库表项
@@ -50,7 +54,7 @@ void MockCommCommand::Execute() {
         HCCL_VM_ERROR("Failed to reset mock communication domain.");
         return;
     }
-    
+
     if (configFileName != "ranktable") {
         if (!ParseYamlTopo(configFileName, topoMeta)) {
             return;
@@ -66,4 +70,4 @@ void MockCommCommand::Execute() {
 }
 
 static inline CommandAutoRegister<MockCommCommand> g_mock_comm_cmd_reg{};
-}
+} // namespace HcclSim

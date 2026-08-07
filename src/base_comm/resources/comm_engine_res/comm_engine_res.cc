@@ -10,6 +10,4 @@
 #include "comm_engine_res.h"
 #include "threads/thread.h"
 
-namespace hcomm {
-
-}
+namespace hcomm {}

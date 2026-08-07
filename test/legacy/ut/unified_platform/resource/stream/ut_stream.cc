@@ -18,15 +18,9 @@
 using namespace Hccl;
 class StreamTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "Stream tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "Stream tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "Stream tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "Stream tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
@@ -44,12 +38,12 @@ protected:
         GlobalMockObject::verify();
         std::cout << "A Test case in Stream TearDown" << std::endl;
     }
-    void* fakePtr      = (void *)1;
-    u32        fakeId       = 1;
-    s32        fakeDevLogId = 1;
-    u32        fakeDevPhyId = 1;
-    u32        fakeSqId     = 2;
-    u64        fakeStmMode  = 3;
+    void* fakePtr = (void*)1;
+    u32 fakeId = 1;
+    s32 fakeDevLogId = 1;
+    u32 fakeDevPhyId = 1;
+    u32 fakeSqId = 2;
+    u64 fakeStmMode = 3;
 };
 
 TEST_F(StreamTest, Stream_selfownded_false)

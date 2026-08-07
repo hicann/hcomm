@@ -15,22 +15,22 @@ namespace hcomm {
 
 EndpointMgr::~EndpointMgr()
 {
-    for (const auto &kv : endpointMemMap_) {
-        const EndpointHandle &endpointHandle = kv.first;
-        const std::vector<MemHandle> &memHandleVec = kv.second;
+    for (const auto& kv : endpointMemMap_) {
+        const EndpointHandle& endpointHandle = kv.first;
+        const std::vector<MemHandle>& memHandleVec = kv.second;
 
         for (auto menHandle : memHandleVec) {
             (void)HcommMemUnreg(endpointHandle, menHandle);
         }
     }
 
-    for (const auto &kv : endpointMap_) {
-        const EndpointHandle &endpointHandle = kv.second;
+    for (const auto& kv : endpointMap_) {
+        const EndpointHandle& endpointHandle = kv.second;
         (void)HcommEndpointDestroy(endpointHandle);
     }
 }
 
-HcclResult EndpointMgr::Get(EndpointDesc epDesc, EndpointHandle &handle)
+HcclResult EndpointMgr::Get(EndpointDesc epDesc, EndpointHandle& handle)
 {
     auto iterPtr = endpointMap_.find(epDesc);
     if (iterPtr != endpointMap_.end()) {
@@ -44,37 +44,34 @@ HcclResult EndpointMgr::Get(EndpointDesc epDesc, EndpointHandle &handle)
     return HCCL_SUCCESS;
 }
 
-HcclResult EndpointMgr::RegisterMemory(EndpointHandle epHandle, const std::vector<std::string>& memTag, 
-    const std::vector<HcclMem>& memVec, std::vector<MemHandle>& memHandleVec)
+HcclResult EndpointMgr::RegisterMemory(
+    EndpointHandle epHandle, const std::vector<std::string>& memTag, const std::vector<HcclMem>& memVec,
+    std::vector<MemHandle>& memHandleVec)
 {
     memHandleVec.clear();
     uint32_t index = 0;
-    for (const auto &mem: memVec) {
+    for (const auto& mem : memVec) {
         MemHandle memHandle = nullptr;
-        CommMem commMem {
-            static_cast<CommMemType>(mem.type),
-            mem.addr,
-            mem.size
-        };
+        CommMem commMem{static_cast<CommMemType>(mem.type), mem.addr, mem.size};
         HcclResult ret = static_cast<HcclResult>(HcommMemReg(epHandle, memTag[index].c_str(), &commMem, &memHandle));
-        if(ret != HCCL_SUCCESS && ret != HCCL_E_AGAIN) {
+        if (ret != HCCL_SUCCESS && ret != HCCL_E_AGAIN) {
             HCCL_ERROR("[%s]call trace: hcclRet -> %d", __FUNCTION__, ret);
             return ret;
         }
         CHK_PTR_NULL(memHandle);
         memHandleVec.push_back(memHandle);
         index++;
-        if(ret == HCCL_E_AGAIN) {
-            HCCL_WARNING("This mem has already been registered, addr=%p, size=%llu", mem.addr, mem.size);   
+        if (ret == HCCL_E_AGAIN) {
+            HCCL_WARNING("This mem has already been registered, addr=%p, size=%llu", mem.addr, mem.size);
         }
     }
     CHK_RET(AddMemHandle(epHandle, memHandleVec));
     return HCCL_SUCCESS;
 }
- 
+
 HcclResult EndpointMgr::AddMemHandle(EndpointHandle epHandle, const std::vector<MemHandle>& memHandleVec)
 {
-     if (memHandleVec.empty()) {
+    if (memHandleVec.empty()) {
         return HCCL_SUCCESS;
     }
 
@@ -83,21 +80,18 @@ HcclResult EndpointMgr::AddMemHandle(EndpointHandle epHandle, const std::vector<
         existMemHandleVec.insert(existMemHandleVec.end(), memHandleVec.begin(), memHandleVec.end());
         return HCCL_SUCCESS;
     }
-    
+
     endpointMemMap_.emplace(epHandle, std::move(memHandleVec));
     return HCCL_SUCCESS;
 }
- 
+
 bool EndpointMgr::IsMemExist(EndpointHandle epHandle)
 {
     return endpointMemMap_.find(epHandle) != endpointMemMap_.end();
 }
- 
-bool EndpointMgr::IsDescExist(EndpointDesc epDesc)
-{
-    return endpointMap_.find(epDesc) != endpointMap_.end();
-}
- 
+
+bool EndpointMgr::IsDescExist(EndpointDesc epDesc) { return endpointMap_.find(epDesc) != endpointMap_.end(); }
+
 HcclResult EndpointMgr::GetAllRegisteredMemory(EndpointHandle epHandle, std::vector<MemHandle>& memHandleVec)
 {
     if (!IsMemExist(epHandle)) {

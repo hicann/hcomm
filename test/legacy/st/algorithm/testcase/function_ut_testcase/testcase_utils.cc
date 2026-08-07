@@ -37,8 +37,8 @@ std::vector<u64> GenerateSendCountMatrix(u64 count, u32 rankSize)
 namespace Hccl {
 std::unique_ptr<RankGraph> BuildRankGraph(std::string rankTableFilePath, std::string topoFilePath, RankId myRank)
 {
-    char buffer[PATH_MAX + 1];  // 使用堆上 buffer, 避免 malloc 和 free 操作
-    char *res = realpath(rankTableFilePath.data(), buffer);
+    char buffer[PATH_MAX + 1]; // 使用堆上 buffer, 避免 malloc 和 free 操作
+    char* res = realpath(rankTableFilePath.data(), buffer);
     std::string realRankTableFilePath;
     if (res) {
         realRankTableFilePath = std::string(res);
@@ -65,4 +65,4 @@ std::unique_ptr<RankGraph> BuildRankGraph(std::string rankTableFilePath, std::st
     PhyTopo::GetInstance()->Clear();
     return rankGraphBuilder.Build(ranktableData, realTopoFilePath, myRank);
 }
-}
+} // namespace Hccl

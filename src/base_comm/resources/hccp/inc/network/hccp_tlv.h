@@ -73,7 +73,7 @@ struct CcuMemReq {
  * @see ra_tlv_deinit
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaTlvInit(struct TlvInitInfo *initInfo, unsigned int *bufferSize, void **tlvHandle);
 
 /**
@@ -83,7 +83,7 @@ HCCP_ATTRI_VISI_DEF int RaTlvInit(struct TlvInitInfo *initInfo, unsigned int *bu
  * @see ra_tlv_init
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
+ */
 HCCP_ATTRI_VISI_DEF int RaTlvDeinit(void *tlvHandle);
 
 /**
@@ -96,8 +96,9 @@ HCCP_ATTRI_VISI_DEF int RaTlvDeinit(void *tlvHandle);
  * @see ra_tlv_init
  * @retval #zero Success
  * @retval #non-zero Failure
-*/
-HCCP_ATTRI_VISI_DEF int RaTlvRequest(void *tlvHandle, unsigned int moduleType, struct TlvMsg *sendMsg, struct TlvMsg *recvMsg);
+ */
+HCCP_ATTRI_VISI_DEF int RaTlvRequest(void *tlvHandle, unsigned int moduleType, struct TlvMsg *sendMsg,
+    struct TlvMsg *recvMsg);
 
 #ifdef __cplusplus
 }

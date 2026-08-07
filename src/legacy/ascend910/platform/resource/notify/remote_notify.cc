@@ -13,13 +13,9 @@
 
 namespace hccl {
 
-RemoteNotify::RemoteNotify()
-{
-}
+RemoteNotify::RemoteNotify() {}
 
-RemoteNotify::~RemoteNotify()
-{
-}
+RemoteNotify::~RemoteNotify() {}
 
 HcclResult RemoteNotify::Init(const std::vector<u8>& byteVector)
 {
@@ -35,7 +31,7 @@ HcclResult RemoteNotify::Init(const std::vector<u8>& byteVector)
     return HCCL_SUCCESS;
 }
 
-HcclResult RemoteNotify::Init(const HcclSignalInfo &notifyInfo, const NotifyLoadType type)
+HcclResult RemoteNotify::Init(const HcclSignalInfo& notifyInfo, const NotifyLoadType type)
 {
     pimpl_.reset((new (std::nothrow) RemoteNotifyImpl()));
     CHK_SMART_PTR_NULL(pimpl_);
@@ -45,7 +41,7 @@ HcclResult RemoteNotify::Init(const HcclSignalInfo &notifyInfo, const NotifyLoad
         HCCL_ERROR("[LocalNotify]Init failed, ret[%d]", ret);
         return ret;
     }
- 
+
     notifyPtr = pimpl_->ptr();
     return HCCL_SUCCESS;
 }
@@ -75,21 +71,21 @@ HcclResult RemoteNotify::Post(Stream& stream, HcclDispatcher dispatcher, s32 sta
     return pimpl_->Post(stream, dispatcher, stage);
 }
 
-HcclResult RemoteNotify::GetNotifyData(HcclSignalInfo &notifyInfo)
+HcclResult RemoteNotify::GetNotifyData(HcclSignalInfo& notifyInfo)
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->GetNotifyData(notifyInfo);
 }
 
-HcclResult RemoteNotify::SetNotifyData(HcclSignalInfo &notifyInfo)
+HcclResult RemoteNotify::SetNotifyData(HcclSignalInfo& notifyInfo)
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->SetNotifyData(notifyInfo);
 }
 
-HcclResult RemoteNotify::GetNotifyOffset(u64 &notifyOffset)
+HcclResult RemoteNotify::GetNotifyOffset(u64& notifyOffset)
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->GetNotifyOffset(notifyOffset);
 }
-}
+} // namespace hccl

@@ -24,34 +24,36 @@
 namespace hccl {
 
 struct HcclMemoryHandle {
-    void* addr {nullptr};
-    uint64_t size {0};
-    HcclMemType memType {HCCL_MEM_TYPE_DEVICE};
-    HcclRegMemAttr attr {};
+    void* addr{nullptr};
+    uint64_t size{0};
+    HcclMemType memType{HCCL_MEM_TYPE_DEVICE};
+    HcclRegMemAttr attr{};
 };
 
 class CommMemMgr {
 public:
     using Handle = std::shared_ptr<HcclMemoryHandle>;
     using MemKey = hccl::BufferKey<uintptr_t, uint64_t>;
-    using Table  = hccl::RmaBufferMgr<MemKey, Handle>;
+    using Table = hccl::RmaBufferMgr<MemKey, Handle>;
     CommMemMgr() = default;
     ~CommMemMgr() = default;
 
-     // cclbuffer内存
-    void CommSetHcclBufferManager(CCLBufferManager &bufferManager);
-    HcclResult GetHcclBuffer(CommBuffer *buffer);
-    
+    // cclbuffer内存
+    void CommSetHcclBufferManager(CCLBufferManager& bufferManager);
+    HcclResult GetHcclBuffer(CommBuffer* buffer);
+
     // 用户注册/反注册内存
     HcclResult CommRegMem(const std::string& memTag, const HcclMem& mem, HcclRegMemAttr attr, void** memHandle);
     HcclResult CommUnregMem(const std::string& memTag, const void* memHandle);
-    HcclResult CommGetLocalRegMemByTag(const std::string &tag, std::vector<HcclMem> &memVec);
+    HcclResult CommGetLocalRegMemByTag(const std::string& tag, std::vector<HcclMem>& memVec);
+
 private:
-    static inline MemKey MakeKey(void* addr, uint64_t size) {
+    static inline MemKey MakeKey(void* addr, uint64_t size)
+    {
         return MemKey(reinterpret_cast<uintptr_t>(addr), static_cast<uint64_t>(size));
     }
     struct TagRegistry {
-        Table table;                                        // 区间树 + ref 语义
+        Table table; // 区间树 + ref 语义
     };
 
     // cclbuffer内存
@@ -65,7 +67,6 @@ private:
     // 每个tag n个 HcclMemoryHandle
     std::unordered_map<std::string, std::vector<std::shared_ptr<HcclMemoryHandle>>> opBindings_;
 };
-}
-
+} // namespace hccl
 
 #endif

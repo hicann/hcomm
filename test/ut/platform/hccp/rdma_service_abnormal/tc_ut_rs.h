@@ -13,8 +13,8 @@
 
 #include <stdio.h>
 
-#define RS_TEST_MEM_SIZE  32
-#define RS_TEST_MEM_PAGE_SIZE  4096
+#define RS_TEST_MEM_SIZE 32
+#define RS_TEST_MEM_PAGE_SIZE 4096
 
 void TcRsInit2();
 void TcRsDeinit2();

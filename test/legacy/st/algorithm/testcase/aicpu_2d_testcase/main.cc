@@ -8,8 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "gtest/gtest.h"
- 
-GTEST_API_ int main(int argc, char **argv) {
+
+GTEST_API_ int main(int argc, char** argv)
+{
     // testcase调试代码，只跑特定的用例
     // testing::GTEST_FLAG(filter) = "AllGatherCCUTest.allgather_ccu_case_test_2_mul_2_rank";
     testing::InitGoogleTest(&argc, argv);

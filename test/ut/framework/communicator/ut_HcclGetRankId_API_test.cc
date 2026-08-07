@@ -12,11 +12,13 @@
 
 class HcclGetRankIdTest : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         UT_USE_1SERVER_1RANK_AS_DEFAULT;
         BaseInit::SetUp();
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }

@@ -35,70 +35,64 @@ constexpr ThreadHandle FAKE_THREAD = 0x1357U;
 constexpr uint32_t FAKE_NOTIFY_IDX = 3U;
 constexpr uint32_t FAKE_TIMEOUT = 100U;
 
-int32_t FakeWriteNbi(void *ctx, void *dst, const void *src, uint64_t len)
+int32_t FakeWriteNbi(void* ctx, void* dst, const void* src, uint64_t len)
 {
     (void)dst;
     (void)src;
     (void)len;
-    static_cast<FakePluginChannelState *>(ctx)->writeNbiCalls++;
+    static_cast<FakePluginChannelState*>(ctx)->writeNbiCalls++;
     return HCCL_SUCCESS;
 }
 
-int32_t FakeWriteWithNotifyNbi(void *ctx, void *dst, const void *src, uint64_t len, uint32_t remoteNotifyIdx)
+int32_t FakeWriteWithNotifyNbi(void* ctx, void* dst, const void* src, uint64_t len, uint32_t remoteNotifyIdx)
 {
     (void)dst;
     (void)src;
     (void)len;
     (void)remoteNotifyIdx;
-    static_cast<FakePluginChannelState *>(ctx)->writeWithNotifyNbiCalls++;
+    static_cast<FakePluginChannelState*>(ctx)->writeWithNotifyNbiCalls++;
     return HCCL_SUCCESS;
 }
 
-int32_t FakeReadNbi(void *ctx, void *dst, const void *src, uint64_t len)
+int32_t FakeReadNbi(void* ctx, void* dst, const void* src, uint64_t len)
 {
     (void)dst;
     (void)src;
     (void)len;
-    static_cast<FakePluginChannelState *>(ctx)->readNbiCalls++;
+    static_cast<FakePluginChannelState*>(ctx)->readNbiCalls++;
     return HCCL_SUCCESS;
 }
 
-int32_t FakeNotifyRecord(void *ctx, uint32_t remoteNotifyIdx)
+int32_t FakeNotifyRecord(void* ctx, uint32_t remoteNotifyIdx)
 {
     (void)remoteNotifyIdx;
-    static_cast<FakePluginChannelState *>(ctx)->notifyRecordCalls++;
+    static_cast<FakePluginChannelState*>(ctx)->notifyRecordCalls++;
     return HCCL_SUCCESS;
 }
 
-int32_t FakeNotifyWait(void *ctx, uint32_t localNotifyIdx, uint32_t timeout)
+int32_t FakeNotifyWait(void* ctx, uint32_t localNotifyIdx, uint32_t timeout)
 {
     (void)localNotifyIdx;
     (void)timeout;
-    static_cast<FakePluginChannelState *>(ctx)->notifyWaitCalls++;
+    static_cast<FakePluginChannelState*>(ctx)->notifyWaitCalls++;
     return HCCL_SUCCESS;
 }
 
-int32_t FakeFence(void *ctx)
+int32_t FakeFence(void* ctx)
 {
-    static_cast<FakePluginChannelState *>(ctx)->fenceCalls++;
+    static_cast<FakePluginChannelState*>(ctx)->fenceCalls++;
     return HCCL_SUCCESS;
 }
 
-ChannelHandle MakeFakePluginChannelHandle()
-{
-    return MAKE_PLUGIN_CH_HANDLE(&g_fakePluginChannel);
-}
+ChannelHandle MakeFakePluginChannelHandle() { return MAKE_PLUGIN_CH_HANDLE(&g_fakePluginChannel); }
 
-ChannelHandle MakeUnsupportedPluginChannelHandle()
-{
-    return MAKE_PLUGIN_CH_HANDLE(&g_unsupportedPluginChannel);
-}
+ChannelHandle MakeUnsupportedPluginChannelHandle() { return MAKE_PLUGIN_CH_HANDLE(&g_unsupportedPluginChannel); }
 
 void InitFakeChannelOps()
 {
     g_fakeChannelOps = {};
-    g_fakeChannelOps.header = {HCOMM_NIC_CHANNEL_OPS_VERSION, HCOMM_NIC_CHANNEL_OPS_MAGIC_WORD,
-        sizeof(HcommNicChannelOps), 0};
+    g_fakeChannelOps.header
+        = {HCOMM_NIC_CHANNEL_OPS_VERSION, HCOMM_NIC_CHANNEL_OPS_MAGIC_WORD, sizeof(HcommNicChannelOps), 0};
     g_fakeChannelOps.writeNbi = FakeWriteNbi;
     g_fakeChannelOps.writeWithNotifyNbi = FakeWriteWithNotifyNbi;
     g_fakeChannelOps.readNbi = FakeReadNbi;
@@ -115,14 +109,14 @@ protected:
         g_fakeState = {};
         InitFakeChannelOps();
         g_unsupportedChannelOps = {};
-        g_unsupportedChannelOps.header = {HCOMM_NIC_CHANNEL_OPS_VERSION, HCOMM_NIC_CHANNEL_OPS_MAGIC_WORD,
-            sizeof(HcommNicChannelOps), 0};
+        g_unsupportedChannelOps.header
+            = {HCOMM_NIC_CHANNEL_OPS_VERSION, HCOMM_NIC_CHANNEL_OPS_MAGIC_WORD, sizeof(HcommNicChannelOps), 0};
     }
 
     char srcBuf[8]{};
     char dstBuf[8]{};
-    void *dst = dstBuf;
-    const void *src = srcBuf;
+    void* dst = dstBuf;
+    const void* src = srcBuf;
     uint64_t len = sizeof(srcBuf);
     uint64_t count = 1;
     HcommBatchTransferDesc desc{};
@@ -183,14 +177,18 @@ TEST_F(UtCpuHcommPluginChannelOps, Ut_PluginChannel_When_ReduceOrBatchCalled_Exp
     ChannelHandle channel = MakeFakePluginChannelHandle();
     desc.transType = HCOMM_TRANSFER_TYPE_WRITE;
     desc.transferInfo.write.dst = dst;
-    desc.transferInfo.write.src = const_cast<void *>(src);
+    desc.transferInfo.write.src = const_cast<void*>(src);
     desc.transferInfo.write.len = len;
 
-    EXPECT_EQ(HcommWriteReduceOnThread(FAKE_THREAD, channel, dst, src, count, HCOMM_DATA_TYPE_FP32, HCOMM_REDUCE_SUM),
+    EXPECT_EQ(
+        HcommWriteReduceOnThread(FAKE_THREAD, channel, dst, src, count, HCOMM_DATA_TYPE_FP32, HCOMM_REDUCE_SUM),
         HCCL_E_NOT_SUPPORT);
-    EXPECT_EQ(HcommWriteReduceWithNotifyOnThread(FAKE_THREAD, channel, dst, src, count, HCOMM_DATA_TYPE_FP32,
-        HCOMM_REDUCE_SUM, FAKE_NOTIFY_IDX), HCCL_E_NOT_SUPPORT);
-    EXPECT_EQ(HcommReadReduceOnThread(FAKE_THREAD, channel, dst, src, count, HCOMM_DATA_TYPE_FP32, HCOMM_REDUCE_SUM),
+    EXPECT_EQ(
+        HcommWriteReduceWithNotifyOnThread(
+            FAKE_THREAD, channel, dst, src, count, HCOMM_DATA_TYPE_FP32, HCOMM_REDUCE_SUM, FAKE_NOTIFY_IDX),
+        HCCL_E_NOT_SUPPORT);
+    EXPECT_EQ(
+        HcommReadReduceOnThread(FAKE_THREAD, channel, dst, src, count, HCOMM_DATA_TYPE_FP32, HCOMM_REDUCE_SUM),
         HCCL_E_NOT_SUPPORT);
     EXPECT_EQ(HcommBatchTransferOnThread(FAKE_THREAD, channel, &desc, 1), HCCL_E_NOT_SUPPORT);
 }

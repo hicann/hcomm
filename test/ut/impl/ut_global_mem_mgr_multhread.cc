@@ -24,25 +24,12 @@
 using namespace std;
 using namespace hccl;
 
-class GlobalMemMgrMulThreadTest : public testing::Test
-{
+class GlobalMemMgrMulThreadTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "--GlobalMemMgrMulThreadTest SetUP--" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "--GlobalMemMgrMulThreadTest TearDown--" << std::endl;
-    }
-    virtual void SetUp()
-    {
-        std::cout << "A Test SetUP" << std::endl;
-    }
-    virtual void TearDown()
-    {
-        std::cout << "A Test TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "--GlobalMemMgrMulThreadTest SetUP--" << std::endl; }
+    static void TearDownTestCase() { std::cout << "--GlobalMemMgrMulThreadTest TearDown--" << std::endl; }
+    virtual void SetUp() { std::cout << "A Test SetUP" << std::endl; }
+    virtual void TearDown() { std::cout << "A Test TearDown" << std::endl; }
 };
 
 HcclResult hrtGetDeviceRefreshStubSameId(s32* deviceLogicID)
@@ -94,30 +81,30 @@ TEST_F(GlobalMemMgrMulThreadTest, Ut_GlobalMemMgr_GetInstance_When_DifferentDevi
 {
     // 测试不同线程获取不同设备实例的场景
     MOCKER(hrtGetDeviceRefresh).stubs().will(invoke(hrtGetDeviceRefreshDifferentIdForTest));
-    
+
     const int threadCount = 16;
     std::vector<std::thread> threads;
     std::vector<GlobalMemRegMgr*> instances(threadCount);
-    
+
     // 多线程同时获取实例
     for (int i = 0; i < threadCount; i++) {
         threads.emplace_back([&, i]() {
             instances[i] = &GlobalMemRegMgr::GetInstance();
         });
     }
-    
+
     // 等待所有线程完成
     for (auto& thread : threads) {
         thread.join();
     }
-    
+
     // 验证线程获取的实例数量（应该只有 2 个不同的实例，对应设备 0 和 1）
     std::unordered_set<GlobalMemRegMgr*> uniqueInstances;
     for (auto instance : instances) {
         uniqueInstances.insert(instance);
     }
     EXPECT_EQ(uniqueInstances.size(), threadCount);
-    
+
     GlobalMockObject::verify();
 }
 
@@ -135,7 +122,8 @@ TEST_F(GlobalMemMgrMulThreadTest, Ut_GlobalMemMgr_InicNic_When_DeviceSameID_Expe
     // 多线程同时获取实例
     for (int i = 0; i < threadCount; i++) {
         threads.emplace_back([&, i]() {
-            ret[i] = GlobalMemRegMgr::GetInstance().InitNic();;
+            ret[i] = GlobalMemRegMgr::GetInstance().InitNic();
+            ;
         });
     }
 
@@ -149,7 +137,8 @@ TEST_F(GlobalMemMgrMulThreadTest, Ut_GlobalMemMgr_InicNic_When_DeviceSameID_Expe
         EXPECT_EQ(ret[i], HCCL_SUCCESS);
     }
 
-    GlobalMemRegMgr::GetInstance().DeInitNic();;
+    GlobalMemRegMgr::GetInstance().DeInitNic();
+    ;
 
     GlobalMockObject::verify();
 }

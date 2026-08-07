@@ -14,8 +14,8 @@
 #include "rt_external.h"
 
 namespace hccl {
-rtError_t CommandHandle(uint32_t rtType, void *data, uint32_t len);
+rtError_t CommandHandle(uint32_t rtType, void* data, uint32_t len);
 
-rtError_t EsCommandHandle(uint32_t rtType, void *data, uint32_t len);
-}
+rtError_t EsCommandHandle(uint32_t rtType, void* data, uint32_t len);
+} // namespace hccl
 #endif // COMMON_PROFILING_COMMAND_HANDLE_H

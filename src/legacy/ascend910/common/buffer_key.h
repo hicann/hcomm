@@ -14,7 +14,7 @@
 #include <stdint.h>
 
 namespace hcomm {
-template<typename A, typename S>
+template <typename A, typename S>
 class BufferKey {
 public:
     using AddrType = A;
@@ -27,25 +27,13 @@ private:
 public:
     BufferKey(AddrType addr, SizeType size) : addr_(addr), size_(size) {}
 
-    AddrType Addr() const
-    {
-        return addr_;
-    }
+    AddrType Addr() const { return addr_; }
 
-    SizeType Size() const
-    {
-        return size_;
-    }
+    SizeType Size() const { return size_; }
 
-    bool operator==(const BufferKey& other) const
-    {
-        return addr_ == other.addr_ && size_ == other.size_;
-    }
+    bool operator==(const BufferKey& other) const { return addr_ == other.addr_ && size_ == other.size_; }
 
-    bool operator!=(const BufferKey& other) const
-    {
-        return addr_ != other.addr_ || size_ != other.size_;
-    }
+    bool operator!=(const BufferKey& other) const { return addr_ != other.addr_ || size_ != other.size_; }
 
     bool operator<(const BufferKey& other) const
     {
@@ -53,7 +41,7 @@ public:
     }
 
     // 不含等于情况
-    inline bool IsSubset(const BufferKey& other) const 
+    inline bool IsSubset(const BufferKey& other) const
     {
         // 子集判断：当前 key 的起始地址 >= 其他 key 的起始地址，且结束地址 <= 其他 key 的结束地址
         return *this != other && addr_ >= other.addr_ && (addr_ + size_) <= (other.addr_ + other.size_);
@@ -66,14 +54,14 @@ public:
         return *this != other && addr_ <= other.addr_ && (addr_ + size_) >= (other.addr_ + other.size_);
     }
 
-    inline bool IsIntersect(const BufferKey& other) const 
+    inline bool IsIntersect(const BufferKey& other) const
     {
         // 检查是否有交集：两个区域重叠。
-        return (addr_ < other.addr_ + other.size_ && addr_ + size_ > other.addr_) ||
-            (other.addr_ < addr_ + size_ && other.addr_ + other.size_ > addr_);
+        return (addr_ < other.addr_ + other.size_ && addr_ + size_ > other.addr_)
+               || (other.addr_ < addr_ + size_ && other.addr_ + other.size_ > addr_);
     }
 
-    inline bool IsDisjoint(const BufferKey& other) const 
+    inline bool IsDisjoint(const BufferKey& other) const
     {
         // 检查是否没有交集：一方完全在另一方之前或之后。
         return (addr_ + size_ <= other.addr_) || (addr_ >= other.addr_ + other.size_);
@@ -84,17 +72,17 @@ public:
         return std::string("addr:") + std::to_string(addr_) + std::string(", size:") + std::to_string(size_);
     }
 };
-}
+} // namespace hcomm
 
-//兼容旧 Hccl namespace 引用
+// 兼容旧 Hccl namespace 引用
 namespace Hccl {
-    template<typename A, typename S>
-    using BufferKey = hcomm::BufferKey<A, S>;
+template <typename A, typename S>
+using BufferKey = hcomm::BufferKey<A, S>;
 }
 
-//兼容旧 hccl namespace 引用
+// 兼容旧 hccl namespace 引用
 namespace hccl {
-    template<typename A, typename S>
-    using BufferKey = hcomm::BufferKey<A, S>;
+template <typename A, typename S>
+using BufferKey = hcomm::BufferKey<A, S>;
 }
 #endif

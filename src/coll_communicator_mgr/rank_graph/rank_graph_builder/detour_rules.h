@@ -17,17 +17,17 @@
 
 namespace Hccl {
 
-const std::unordered_map<LocalId, std::unordered_map<LocalId, std::vector<LocalId>>> &GetDetour2PTable01();
+const std::unordered_map<LocalId, std::unordered_map<LocalId, std::vector<LocalId>>>& GetDetour2PTable01();
 
-const std::unordered_map<LocalId, std::unordered_map<LocalId, std::vector<LocalId>>> &GetDetour2PTable04();
+const std::unordered_map<LocalId, std::unordered_map<LocalId, std::vector<LocalId>>>& GetDetour2PTable04();
 
-const std::unordered_map<LocalId, std::unordered_map<LocalId, std::vector<LocalId>>> &GetDetour4PTable0123();
+const std::unordered_map<LocalId, std::unordered_map<LocalId, std::vector<LocalId>>>& GetDetour4PTable0123();
 
-const std::unordered_map<LocalId, std::unordered_map<LocalId, std::vector<LocalId>>> &GetDetour4PTable4567();
+const std::unordered_map<LocalId, std::unordered_map<LocalId, std::vector<LocalId>>>& GetDetour4PTable4567();
 
-const std::unordered_map<LocalId, std::unordered_map<LocalId, std::vector<LocalId>>> &GetDetour4PTable0246();
+const std::unordered_map<LocalId, std::unordered_map<LocalId, std::vector<LocalId>>>& GetDetour4PTable0246();
 
-const std::unordered_map<LocalId, std::unordered_map<LocalId, std::vector<LocalId>>> &GetDetour4PTable1357();
+const std::unordered_map<LocalId, std::unordered_map<LocalId, std::vector<LocalId>>>& GetDetour4PTable1357();
 
 } // namespace Hccl
 

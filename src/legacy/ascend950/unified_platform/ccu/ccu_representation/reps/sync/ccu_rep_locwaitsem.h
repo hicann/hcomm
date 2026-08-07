@@ -18,24 +18,24 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepLocWaitSem : public CcuRepBase {
-public:
-    CcuRepLocWaitSem(const MaskSignal &sem, uint16_t mask, bool isProfiling=true);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
-    uint16_t    GetSemId() const;
-    void SetDependencyInfo(const std::unordered_map<uint32_t, std::vector<std::shared_ptr<CcuRepBase>>>& depInfo);
-    std::vector<std::shared_ptr<CcuRepBase>> GetDependencyInfo(uint32_t bit);
+    class CcuRepLocWaitSem : public CcuRepBase {
+    public:
+        CcuRepLocWaitSem(const MaskSignal& sem, uint16_t mask, bool isProfiling = true);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
+        uint16_t GetSemId() const;
+        void SetDependencyInfo(const std::unordered_map<uint32_t, std::vector<std::shared_ptr<CcuRepBase>>>& depInfo);
+        std::vector<std::shared_ptr<CcuRepBase>> GetDependencyInfo(uint32_t bit);
 
-private:
-    MaskSignal sem;
-    uint16_t   mask{0};
-    bool       isProfiling{true};
+    private:
+        MaskSignal sem;
+        uint16_t mask{0};
+        bool isProfiling{true};
 
-    std::unordered_map<uint32_t, std::vector<std::shared_ptr<CcuRepBase>>> depInfo_;
+        std::unordered_map<uint32_t, std::vector<std::shared_ptr<CcuRepBase>>> depInfo_;
 
-    friend class Hccl::CcuErrorHandler;
-};
+        friend class Hccl::CcuErrorHandler;
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

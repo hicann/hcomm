@@ -23,26 +23,27 @@ public:
     ~ReduceScatterGraphPipeline() override;
 
     // 适配新CollExecutor接口
-    HcclResult Prepare(HcomCollOpInfo *opInfo, DeviceMem &cclBuffer, const u64 count, const u64 bufferSize,
-        const u64 offset, const SubCommInfo &level0CommInfo, const SubCommInfo &level1CommInfo, Stream &mainStream,
-        std::vector<Stream> &subStream, std::vector<std::shared_ptr<LocalNotify>> &notifyMain,
-        std::vector<std::shared_ptr<LocalNotify>> &notifySub, u64 reduceAttrBitMap) override;
+    HcclResult Prepare(
+        HcomCollOpInfo* opInfo, DeviceMem& cclBuffer, const u64 count, const u64 bufferSize, const u64 offset,
+        const SubCommInfo& level0CommInfo, const SubCommInfo& level1CommInfo, Stream& mainStream,
+        std::vector<Stream>& subStream, std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
+        std::vector<std::shared_ptr<LocalNotify>>& notifySub, u64 reduceAttrBitMap) override;
 
     HcclResult RunAsync() override;
 
 protected:
 private:
     HcclResult RunIntraServer(u64 blockIdx);
-    HcclResult RunInterServer(u64 blockIdx, const LINK &prevInterLink, const LINK &nextInterLink);
+    HcclResult RunInterServer(u64 blockIdx, const LINK& prevInterLink, const LINK& nextInterLink);
     HcclResult MainWaitSub(u32 begin);
     HcclResult SubRecordMain(u32 begin);
     HcclResult MainRecordSub(u32 begin);
     HcclResult SubWaitMain(u32 begin);
 
-    HcomCollOpInfo *opInfo_{nullptr};
+    HcomCollOpInfo* opInfo_{nullptr};
 
-    void *usrInMem_ = nullptr;
-    void *usrOutMem_ = nullptr;
+    void* usrInMem_ = nullptr;
+    void* usrOutMem_ = nullptr;
     u64 count_ = 0;
     u32 unitSize_ = 0;
     u64 memSliceSize_ = 0;
@@ -67,6 +68,6 @@ private:
     std::vector<LINK> intraLinks_;
     std::vector<LINK> interLinks_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* REDUCE_SCATTER_GRAPH_PIPELINE_PUB_H */

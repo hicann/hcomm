@@ -14,7 +14,7 @@
 namespace hccl {
 class CollRunAlltoAllVFor310PExecutor : public CollAlltoAllExecutor {
 public:
-    CollRunAlltoAllVFor310PExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollRunAlltoAllVFor310PExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollRunAlltoAllVFor310PExecutor() override = default;
 
     HcclResult Orchestrate(OpParam& param, AlgResourceResponse& algRes) override;
@@ -22,11 +22,12 @@ public:
 private:
     HcclOpMetaInfo GetOpMeta(HcclCMDType opType, const u64 size) override;
     HcclResult CalcStreamNum(u32& streamNum) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
 };
 
 } // namespace hccl

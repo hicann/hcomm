@@ -16,14 +16,14 @@
 extern "C" {
 #endif
 
-int GetCardRankInfoLen(size_t *len);
+int GetCardRankInfoLen(size_t* len);
 
-int GetCardRankInfo(int phyid, unsigned int mainboardId, void *buf, size_t* len);
+int GetCardRankInfo(int phyid, unsigned int mainboardId, void* buf, size_t* len);
 
-int GetCardRankInfoNoMesh(int phyid, unsigned int mainboardId, void *buf, size_t* len);
+int GetCardRankInfoNoMesh(int phyid, unsigned int mainboardId, void* buf, size_t* len);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // __PRODUCT_CARD_H__
+#endif // __PRODUCT_CARD_H__

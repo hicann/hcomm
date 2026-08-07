@@ -37,6 +37,7 @@ public:
 private:
     CommunicationMemoryManager();
     ~CommunicationMemoryManager();
+
 private:
     std::mutex m_mutex;
     std::unordered_map<std::string, void*> m_commMemMap;

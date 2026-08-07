@@ -35,8 +35,8 @@ public:
      * @return HcclResult 返回HcclResult类型的结果
      * @note 无
      */
-    static HcclResult RegisterExtendInstruction(s32 deviceLogicId, ExtInsExeEntity &entity,
-                                                ExtInsExeEntityId &entityId);
+    static HcclResult
+    RegisterExtendInstruction(s32 deviceLogicId, ExtInsExeEntity& entity, ExtInsExeEntityId& entityId);
 
     /**
      * @brief 注销扩展指令
@@ -46,7 +46,7 @@ public:
      * @return HcclResult 返回HcclResult类型的结果
      * @note 此函数用于注销扩展指令
      */
-    static HcclResult DeregisterExtendInstruction(s32 deviceLogicId, const ExtInsExeEntityId &entityId);
+    static HcclResult DeregisterExtendInstruction(s32 deviceLogicId, const ExtInsExeEntityId& entityId);
 
 private:
 };

@@ -29,7 +29,8 @@ struct CommMemHead {
 static CommunicationMemoryManager* s_instance = nullptr;
 static std::mutex s_instanceLock;
 
-CommunicationMemoryManager& CommunicationMemoryManager::GetInstance() {
+CommunicationMemoryManager& CommunicationMemoryManager::GetInstance()
+{
     if (s_instance == nullptr) {
         std::lock_guard<std::mutex> lock(s_instanceLock);
         if (s_instance == nullptr) {
@@ -39,14 +40,11 @@ CommunicationMemoryManager& CommunicationMemoryManager::GetInstance() {
     return *s_instance;
 }
 
-CommunicationMemoryManager::CommunicationMemoryManager() {
-}
+CommunicationMemoryManager::CommunicationMemoryManager() {}
 
-CommunicationMemoryManager::~CommunicationMemoryManager() 
-{
-}
+CommunicationMemoryManager::~CommunicationMemoryManager() {}
 
-void* CommunicationMemoryManager::AllocCommMem(const char* name) 
+void* CommunicationMemoryManager::AllocCommMem(const char* name)
 {
     if (!name) {
         HCCL_VM_ERROR("acquire name is null");
@@ -70,7 +68,7 @@ void* CommunicationMemoryManager::AllocCommMem(const char* name)
     return head->data;
 }
 
-void* CommunicationMemoryManager::AcquireCommMem(const char* name) 
+void* CommunicationMemoryManager::AcquireCommMem(const char* name)
 {
     if (!name) {
         HCCL_VM_ERROR("acquire name is null");
@@ -94,7 +92,8 @@ void* CommunicationMemoryManager::AcquireCommMem(const char* name)
     return head->data;
 }
 
-int CommunicationMemoryManager::ReleaseCommMem(const char* name) {
+int CommunicationMemoryManager::ReleaseCommMem(const char* name)
+{
     if (!name) {
         HCCL_VM_ERROR("release name is nullptr");
         return -1;

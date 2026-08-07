@@ -6,10 +6,7 @@
 
 namespace sim {
 
-KernelLibManager::KernelLibManager()
-{
-    LoadBaseLibs();
-}
+KernelLibManager::KernelLibManager() { LoadBaseLibs(); }
 
 KernelLibManager& KernelLibManager::GetInstance()
 {
@@ -97,9 +94,6 @@ void KernelLibManager::LoadBaseLibs()
     return;
 }
 
-KernelLibManager::~KernelLibManager()
-{
-    Cleanup();
-}
+KernelLibManager::~KernelLibManager() { Cleanup(); }
 
 } // namespace sim

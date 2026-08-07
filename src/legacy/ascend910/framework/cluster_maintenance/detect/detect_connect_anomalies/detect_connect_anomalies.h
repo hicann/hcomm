@@ -31,7 +31,7 @@ struct DetectInfo {
     s32 localDeviceId = 0XFFFFFFFF;
     s32 remoteDeviceId = 0XFFFFFFFF;
 
-    char localDeviceIp[DEST_MAX_LEN]{}; // 用来查重
+    char localDeviceIp[DEST_MAX_LEN]{};  // 用来查重
     char remoteDeviceIp[DEST_MAX_LEN]{}; // 用来查重
 
     char localServerId[DEST_MAX_LEN]{};
@@ -53,10 +53,7 @@ struct ErrInfo {
 // 统一处理 IP 插入逻辑
 template <typename ListType>
 HcclResult AddWlistEntry(
-    const HcclIpAddress& ipAddr, 
-    const std::string& tag, 
-    ListType& whiteList,
-    std::vector<SocketWlistInfo>& wlistVec)
+    const HcclIpAddress& ipAddr, const std::string& tag, ListType& whiteList, std::vector<SocketWlistInfo>& wlistVec)
 {
     // 查找是否已存在
     if (std::find(whiteList.begin(), whiteList.end(), ipAddr) != whiteList.end()) {
@@ -79,30 +76,34 @@ HcclResult AddWlistEntry(
 
 class DetectConnectionAnomalies {
 public:
-    static DetectConnectionAnomalies &GetInstance(s32 deviceLogicID);
-    void Init(std::vector<RankInfo> &rankInfos, bool isNeedNic);
-    void AddIpQueue(RankInfo &localRankInfo, RankInfo &remoteRankInfo, NicType nicType, s32 deviceLogicId);
+    static DetectConnectionAnomalies& GetInstance(s32 deviceLogicID);
+    void Init(std::vector<RankInfo>& rankInfos, bool isNeedNic);
+    void AddIpQueue(RankInfo& localRankInfo, RankInfo& remoteRankInfo, NicType nicType, s32 deviceLogicId);
     HcclResult Detect();
     void Deinit();
+
 private:
     void DetectMonitor();
     HcclResult GetIpQueue();
     HcclResult CreateServers(struct ErrInfo errInfo);
-    std::string GetTag(HcclIpAddress &Ip, int i = 0);
+    std::string GetTag(HcclIpAddress& Ip, int i = 0);
     HcclResult AddWhiteList(std::shared_ptr<HcclSocket> socket, NicType nicType, std::string& tag);
-    HcclResult DelWhiteList(HcclIpAddress &localIpAddr, 
-        std::vector<struct SocketWlistInfo> whiteListInfos, std::shared_ptr<HcclSocket> socket);
-    HcclResult GetStatus(struct ErrInfo errInfo, std::shared_ptr<HcclSocket> &clientSocket);
-    HcclResult Connect(struct ErrInfo errInfo, std::shared_ptr<HcclSocket> &clientSocket);
+    HcclResult DelWhiteList(
+        HcclIpAddress& localIpAddr, std::vector<struct SocketWlistInfo> whiteListInfos,
+        std::shared_ptr<HcclSocket> socket);
+    HcclResult GetStatus(struct ErrInfo errInfo, std::shared_ptr<HcclSocket>& clientSocket);
+    HcclResult Connect(struct ErrInfo errInfo, std::shared_ptr<HcclSocket>& clientSocket);
     HcclResult CreateDetectVnicLinks(struct ErrInfo errInfo);
     HcclResult CreateDetectNicLinks(struct ErrInfo errInfo);
-    HcclResult CreateClients(struct ErrInfo errInfo, std::vector<std::unique_ptr<std::thread>> &linkClientThreads);
-    HcclResult ConstructErrorInfo(std::shared_ptr<HcclSocket> &clientSocket, RankInfo &localRankInfo, RankInfo &remoteRankInfo);
+    HcclResult CreateClients(struct ErrInfo errInfo, std::vector<std::unique_ptr<std::thread>>& linkClientThreads);
+    HcclResult
+    ConstructErrorInfo(std::shared_ptr<HcclSocket>& clientSocket, RankInfo& localRankInfo, RankInfo& remoteRankInfo);
     HcclResult CreateClient(struct ErrInfo errInfo);
-    HcclResult processWhiteList(const HcclIpAddress &ipAddr, HcclIpAddress &localIpAddr, std::shared_ptr<HcclSocket> socket, NicType nicType);
+    HcclResult processWhiteList(
+        const HcclIpAddress& ipAddr, HcclIpAddress& localIpAddr, std::shared_ptr<HcclSocket> socket, NicType nicType);
     HcclResult WaitForDectect();
     HcclResult ProcessDetectionResults();
-    std::string FormatDetectMessage(const std::string &localServerId, s32 localDeviceId, const DetectInfo &detectInfo);
+    std::string FormatDetectMessage(const std::string& localServerId, s32 localDeviceId, const DetectInfo& detectInfo);
     std::string BuildGroupedDetectMessage();
     void ThreadDestroy();
     ~DetectConnectionAnomalies() = default;
@@ -114,16 +115,16 @@ private:
     bool isInitThread_ = false;
     std::mutex ipNictypeQueueMutex_;
     std::mutex ipConstuctMutex_;
-    std::mutex whiteListMutex_; //删除白名单需要加锁
-    std::mutex clientThreadMutex_; //删除clients需要加锁
+    std::mutex whiteListMutex_;       // 删除白名单需要加锁
+    std::mutex clientThreadMutex_;    // 删除clients需要加锁
     std::mutex clientResourcesMutex_; // 保护clientNicCtxs_和clientSockets_的并发访问
     std::mutex printDetectInfoMutex_; // 打印锁
     std::mutex detectThreadMutex_;
     std::set<HcclIpAddress> whiteVnicSet_; // 保存vnic的白名单 whiteVnicSet_
-    std::set<HcclIpAddress> whiteNicSet_; // 保存nic的白名单
+    std::set<HcclIpAddress> whiteNicSet_;  // 保存nic的白名单
     std::shared_ptr<HcclSocket> vnicSocket_ = nullptr;
     std::shared_ptr<HcclSocket> nicSocket_ = nullptr;
-    std::vector<std::shared_ptr<HcclSocket>> clientSockets_; //保存clien端的socket
+    std::vector<std::shared_ptr<HcclSocket>> clientSockets_; // 保存clien端的socket
     std::map<HcclIpAddress, HcclIpAddress> ipMap_;
     std::map<HcclIpAddress, std::shared_ptr<HcclSocket>> socketMap_;
     std::map<HcclIpAddress, HcclNetDevCtx> nicNetDevCtxMap_;
@@ -136,8 +137,8 @@ private:
     std::unique_ptr<std::thread> getIpNictypeQueue_ = nullptr;
     std::unique_ptr<std::thread> detectVnicThread_ = nullptr;
     std::unique_ptr<std::thread> detectNicThread_ = nullptr;
-    std::vector<struct SocketWlistInfo>  vnicWhiteListInfosVec_; // 保存vnic白名单单信息，方便删除的时候使用
-    std::vector<struct SocketWlistInfo>  nicWhiteListInfosVec_; // 保存nic白名单单信息，方便删除的时候使用
+    std::vector<struct SocketWlistInfo> vnicWhiteListInfosVec_; // 保存vnic白名单单信息，方便删除的时候使用
+    std::vector<struct SocketWlistInfo> nicWhiteListInfosVec_; // 保存nic白名单单信息，方便删除的时候使用
 
     // 发送完成后添加，发送前查重
     std::unordered_map<std::string, SendInfo> sendErrorInfoMap_;
@@ -146,7 +147,7 @@ private:
     std::mutex readRecvErrtInfo_;
 
     bool isCreateLink_ = false;
-    bool isCreateNicLink_  = false;
+    bool isCreateNicLink_ = false;
     std::atomic<bool> isPrint_{false};
     std::atomic<int> errorCount_{0};
     std::vector<std::unique_ptr<std::thread>> linkClientThreads_; // 保存client拉起的线程
@@ -155,6 +156,6 @@ private:
     std::mutex time_mutex;
     std::mutex print_mutex;
 };
-}
+} // namespace hccl
 
 #endif // HCCL_DETECT_CONNECT_ANOMALIES_H

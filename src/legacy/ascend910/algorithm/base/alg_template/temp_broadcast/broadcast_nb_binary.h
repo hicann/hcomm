@@ -7,13 +7,12 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef BROADCAST_NB_BINARY_H
 #define BROADCAST_NB_BINARY_H
- 
+
 #include "broadcast_nb_binary_pub.h"
- 
-namespace hccl {
-}  // namespace hccl
- 
-#endif  /* BROADCAST_NB_BINARY_H */
+
+namespace hccl {} // namespace hccl
+
+#endif /* BROADCAST_NB_BINARY_H */

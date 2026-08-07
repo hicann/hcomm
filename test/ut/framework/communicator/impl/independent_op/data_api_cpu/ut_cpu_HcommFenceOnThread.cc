@@ -17,15 +17,11 @@
 
 using namespace hccl;
 
-class UtCpuHcommFenceOnThread : public testing::Test
-{
+class UtCpuHcommFenceOnThread : public testing::Test {
 protected:
     virtual void SetUp() override {}
 
-    virtual void TearDown() override
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() override { GlobalMockObject::verify(); }
 
     // thread is unused by HcommFenceOnThread, any value is acceptable.
     ThreadHandle thread = static_cast<ThreadHandle>(0x01);

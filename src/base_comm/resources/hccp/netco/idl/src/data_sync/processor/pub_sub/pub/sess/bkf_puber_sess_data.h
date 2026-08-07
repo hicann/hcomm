@@ -94,10 +94,11 @@ typedef struct {
 #pragma pack()
 
 BkfPuberSessMng *BkfPuberSessDataInit(BkfPuberInitArg *arg, BkfPuberTableTypeMng *tableTypeMng,
-                                       F_BKF_PUBER_SESS_TRIG_SCHED_SELF trigSchedSess,
-                                       F_BKF_PUBER_SESS_TRIG_SLOW_SCHED_SELF trigSlowSchedSess, void *cookie);
+    F_BKF_PUBER_SESS_TRIG_SCHED_SELF trigSchedSess, F_BKF_PUBER_SESS_TRIG_SLOW_SCHED_SELF trigSlowSchedSess,
+    void *cookie);
 void BkfPuberSessDataUninit(BkfPuberSessMng *sessMng);
-BkfPuberSess *BkfPuberSessAdd(BkfPuberSessMng *sessMng, uint8_t *sliceKey, uint16_t tableTypeId, BkfDcTupleItorVTbl *vTbl);
+BkfPuberSess *BkfPuberSessAdd(BkfPuberSessMng *sessMng, uint8_t *sliceKey, uint16_t tableTypeId,
+    BkfDcTupleItorVTbl *vTbl);
 void BkfPuberSessDel(BkfPuberSess *sess);
 void BkfPuberSessDelAll(BkfPuberSessMng *sessMng);
 BkfPuberSess *BkfPuberSessFind(BkfPuberSessMng *sessMng, uint8_t *sliceKey, uint16_t tableTypeId);
@@ -117,4 +118,3 @@ static inline BOOL BkfPuberSessStateIsValid(uint8_t state)
 #endif
 
 #endif
-

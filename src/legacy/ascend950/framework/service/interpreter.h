@@ -21,33 +21,30 @@
 #include "op_task_config.h"
 #include "notify_timeout_cfg.h"
 namespace std {
-    template <>
-    struct hash<Hccl::InstructionType> {
-        std::size_t operator () (const Hccl::InstructionType &type) const noexcept
-        {
-            return static_cast<std::size_t>(type);
-        }
-    };
-}
+template <>
+struct hash<Hccl::InstructionType> {
+    std::size_t operator()(const Hccl::InstructionType& type) const noexcept { return static_cast<std::size_t>(type); }
+};
+} // namespace std
 namespace Hccl {
 
 class CommunicatorImpl;
 
 class Interpreter {
 public:
-    using InsRule = std::function<void(const Instruction &, CommunicatorImpl &, const Stream &, const OpTaskConfig &)>;
+    using InsRule = std::function<void(const Instruction&, CommunicatorImpl&, const Stream&, const OpTaskConfig&)>;
 
-    explicit Interpreter(CommunicatorImpl &communicator);
+    explicit Interpreter(CommunicatorImpl& communicator);
 
-    void Submit(const InsQueue &insQueue);
+    void Submit(const InsQueue& insQueue);
 
 private:
-    CommunicatorImpl &comm;
+    CommunicatorImpl& comm;
     std::unordered_map<InstructionType, InsRule> insRuleMap;
     OpTaskConfig taskConfig{};
 
-    void SubmitSlaveQueueAlternatively(list<InsQueue::Iterator> &slaveQueueIters, std::set<u32> &slaveStreamIndexSet);
-    void SubmitMasterQueueAlternatively(InsQueue::Iterator &masterQueueIter);
+    void SubmitSlaveQueueAlternatively(list<InsQueue::Iterator>& slaveQueueIters, std::set<u32>& slaveStreamIndexSet);
+    void SubmitMasterQueueAlternatively(InsQueue::Iterator& masterQueueIter);
 };
 } // namespace Hccl
 

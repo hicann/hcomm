@@ -25,6 +25,6 @@ extern std::map<RankId, std::map<RankId, std::vector<CcuTransport*>>> g_allRankT
 
 extern std::map<CcuTransport*, CcuTransport*> g_transportsPair;
 
-}
+} // namespace Hccl
 
 #endif

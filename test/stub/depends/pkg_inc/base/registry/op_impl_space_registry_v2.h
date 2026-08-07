@@ -22,51 +22,52 @@ class OpImplSpaceRegistryImpl;
 using OpImplSpaceRegistryImplPtr = std::shared_ptr<OpImplSpaceRegistryImpl>;
 
 class OpImplSpaceRegistryV2 {
- public:
-  OpImplSpaceRegistryV2();
+public:
+    OpImplSpaceRegistryV2();
 
-  ~OpImplSpaceRegistryV2() = default;
+    ~OpImplSpaceRegistryV2() = default;
 
-  ge::graphStatus AddSoToRegistry(const OppSoDesc& so_desc);
+    ge::graphStatus AddSoToRegistry(const OppSoDesc& so_desc);
 
-  const OpImplKernelRegistry::OpImplFunctionsV2 *GetOpImpl(const char_t *op_type) const;
+    const OpImplKernelRegistry::OpImplFunctionsV2* GetOpImpl(const char_t* op_type) const;
 
- private:
-  friend class OpImplSpaceRegistry;
-  // 兼容实现，cann-graph-engine仓后续使用OpImplSpaceRegistryEntry中的public接口
-  ge::graphStatus AddRegistry(const std::shared_ptr<OpImplRegistryHolder> &registry_holder);
-  OpImplKernelRegistry::OpImplFunctionsV2 *CreateOrGetOpImpl(const char_t *op_type);
-  OpImplSpaceRegistryImplPtr impl_;
+private:
+    friend class OpImplSpaceRegistry;
+    // 兼容实现，cann-graph-engine仓后续使用OpImplSpaceRegistryEntry中的public接口
+    ge::graphStatus AddRegistry(const std::shared_ptr<OpImplRegistryHolder>& registry_holder);
+    OpImplKernelRegistry::OpImplFunctionsV2* CreateOrGetOpImpl(const char_t* op_type);
+    OpImplSpaceRegistryImplPtr impl_;
 };
 
 using OpImplSpaceRegistryV2Ptr = std::shared_ptr<OpImplSpaceRegistryV2>;
-using OpImplSpaceRegistryV2Array =
-    std::array<OpImplSpaceRegistryV2Ptr, static_cast<size_t>(OppImplVersionTag::kVersionEnd)>;
+using OpImplSpaceRegistryV2Array
+    = std::array<OpImplSpaceRegistryV2Ptr, static_cast<size_t>(OppImplVersionTag::kVersionEnd)>;
 
 class DefaultOpImplSpaceRegistryV2Impl;
 using DefaultOpImplSpaceRegistryV2ImplPtr = std::shared_ptr<DefaultOpImplSpaceRegistryV2Impl>;
 
 class DefaultOpImplSpaceRegistryV2 {
- public:
-  DefaultOpImplSpaceRegistryV2(const DefaultOpImplSpaceRegistryV2 &) = delete;
-  DefaultOpImplSpaceRegistryV2(const DefaultOpImplSpaceRegistryV2 &&) = delete;
-  DefaultOpImplSpaceRegistryV2 &operator=(const DefaultOpImplSpaceRegistryV2 &) & = delete;
-  DefaultOpImplSpaceRegistryV2 &operator=(const DefaultOpImplSpaceRegistryV2 &&) & = delete;
+public:
+    DefaultOpImplSpaceRegistryV2(const DefaultOpImplSpaceRegistryV2&) = delete;
+    DefaultOpImplSpaceRegistryV2(const DefaultOpImplSpaceRegistryV2&&) = delete;
+    DefaultOpImplSpaceRegistryV2& operator=(const DefaultOpImplSpaceRegistryV2&) & = delete;
+    DefaultOpImplSpaceRegistryV2& operator=(const DefaultOpImplSpaceRegistryV2&&) & = delete;
 
-  static DefaultOpImplSpaceRegistryV2 &GetInstance();
+    static DefaultOpImplSpaceRegistryV2& GetInstance();
 
-  const std::shared_ptr<OpImplSpaceRegistryV2> GetSpaceRegistry(
-      gert::OppImplVersionTag opp_impl_version = gert::OppImplVersionTag::kOpp) const;
+    const std::shared_ptr<OpImplSpaceRegistryV2>
+    GetSpaceRegistry(gert::OppImplVersionTag opp_impl_version = gert::OppImplVersionTag::kOpp) const;
 
-  ge::graphStatus SetSpaceRegistry(const std::shared_ptr<OpImplSpaceRegistryV2> &space_registry_v2,
-                                        gert::OppImplVersionTag version_tag = gert::OppImplVersionTag::kOpp);
+    ge::graphStatus SetSpaceRegistry(
+        const std::shared_ptr<OpImplSpaceRegistryV2>& space_registry_v2,
+        gert::OppImplVersionTag version_tag = gert::OppImplVersionTag::kOpp);
 
-  void ClearSpaceRegistry();
+    void ClearSpaceRegistry();
 
- private:
-  DefaultOpImplSpaceRegistryV2();
-  ~DefaultOpImplSpaceRegistryV2() = default;
-  DefaultOpImplSpaceRegistryV2ImplPtr impl_;
+private:
+    DefaultOpImplSpaceRegistryV2();
+    ~DefaultOpImplSpaceRegistryV2() = default;
+    DefaultOpImplSpaceRegistryV2ImplPtr impl_;
 };
-}  // namespace gert
-#endif  // INC_OP_IMPL_SPACE_REGISTRY_V2_H_
+} // namespace gert
+#endif // INC_OP_IMPL_SPACE_REGISTRY_V2_H_

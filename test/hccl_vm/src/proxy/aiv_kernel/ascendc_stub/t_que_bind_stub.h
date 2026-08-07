@@ -33,7 +33,8 @@ public:
     __aicore__ ~TQueBind() = default;
 
     template <typename T>
-    __aicore__ LocalTensor<T> AllocTensor() {
+    __aicore__ LocalTensor<T> AllocTensor()
+    {
         LocalTensor<T> tmp;
         for (auto& mem : blocks_) {
             if (!mem.isUse && !mem.inQue) {
@@ -42,7 +43,7 @@ public:
                 tmp.SetSize(mem.len / sizeof(T));
 
                 if (mem.needWait) {
-                    WaitFlag<HardEvent::MTE3_MTE2>(dstEventID_);    // todo
+                    WaitFlag<HardEvent::MTE3_MTE2>(dstEventID_); // todo
                 }
                 mem.needWait = true;
                 break;
@@ -52,7 +53,8 @@ public:
     }
 
     template <typename T>
-    __aicore__ void FreeTensor(LocalTensor<T>& tensor) {
+    __aicore__ void FreeTensor(LocalTensor<T>& tensor)
+    {
         for (auto& mem : blocks_) {
             if (mem.ptr == tensor.GetPtr() && mem.isUse) {
                 mem.isUse = false;
@@ -65,7 +67,8 @@ public:
     }
 
     template <typename T>
-    __aicore__ bool EnQue(const LocalTensor<T>& tensor) {
+    __aicore__ bool EnQue(const LocalTensor<T>& tensor)
+    {
         for (auto& mem : blocks_) {
             if (mem.ptr == tensor.GetPtr() && !mem.inQue) {
                 mem.inQue = true;
@@ -77,7 +80,8 @@ public:
     }
 
     template <typename T>
-    __aicore__ LocalTensor<T> DeQue() {
+    __aicore__ LocalTensor<T> DeQue()
+    {
         LocalTensor<T> tmp;
         for (auto& mem : blocks_) {
             if (mem.isUse && mem.inQue) {
@@ -87,25 +91,25 @@ public:
                 break;
             }
         }
-        WaitFlag<HardEvent::MTE2_MTE3>(srcEventID_);    // todo
+        WaitFlag<HardEvent::MTE2_MTE3>(srcEventID_); // todo
         return tmp;
     }
 
     __aicore__ uint32_t GetMemBlockNum() const { return blocks_.size(); }
 
 private:
-    std::vector<TensorMem> blocks_{};   // 内存块, InitBuffer时分配
-    uint64_t tensorLen_{0};             // 每个内存块的大小，单位为字节
+    std::vector<TensorMem> blocks_{}; // 内存块, InitBuffer时分配
+    uint64_t tensorLen_{0};           // 每个内存块的大小，单位为字节
 
     // 正向同步事件(事件类型暂时固定), InitBuffer时分配ID
-    HardEvent srcEvent_{HardEvent::MTE2_MTE3};  // todo
+    HardEvent srcEvent_{HardEvent::MTE2_MTE3}; // todo
     TEventID srcEventID_{0};
     // 反向同步事件(事件类型暂时固定), InitBuffer时分配ID
-    HardEvent dstEvent_{HardEvent::MTE3_MTE2};  // todo
+    HardEvent dstEvent_{HardEvent::MTE3_MTE2}; // todo
     TEventID dstEventID_{0};
 
     friend class TPipe;
 };
-}
+} // namespace AscendC
 
-#endif //AIV_T_QUE_BIND_STUB_H
+#endif // AIV_T_QUE_BIND_STUB_H

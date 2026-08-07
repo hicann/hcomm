@@ -21,19 +21,14 @@ using namespace Hccl;
 
 class AddressInfoParserTest : public testing::Test {
 protected:
-    static void SetUpTestCase() {
-        std::cout << "AddressInfoParserTest SetUP" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "AddressInfoParserTest SetUP" << std::endl; }
 
-    static void TearDownTestCase() {
-        std::cout << "AddressInfoParserTest TearDown" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "AddressInfoParserTest TearDown" << std::endl; }
 
-    virtual void SetUp() {
-        std::cout << "A Test case in AddressInfoParserTest SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in AddressInfoParserTest SetUP" << std::endl; }
 
-    virtual void TearDown() {
+    virtual void TearDown()
+    {
         GlobalMockObject::verify();
         std::cout << "A Test case in AddressInfoParserTest TearDown" << std::endl;
     }
@@ -41,12 +36,13 @@ protected:
 
 namespace {
 struct InvalidAddressInfoCase {
-    const char *name;
-    const char *addressInfoString;
+    const char* name;
+    const char* addressInfoString;
 };
 } // namespace
 
-TEST_F(AddressInfoParserTest, Ut_Deserialize_When_Normal_Expect_Success) {
+TEST_F(AddressInfoParserTest, Ut_Deserialize_When_Normal_Expect_Success)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -63,22 +59,21 @@ TEST_F(AddressInfoParserTest, Ut_Deserialize_When_Normal_Expect_Success) {
     addressInfoParser.ParseString(addressInfoString, addressInfo);
 
     AddressInfo addressInfo0;
-    addressInfo0.addrType=AddrType::IPV4;
+    addressInfo0.addrType = AddrType::IPV4;
     IpAddress ipAddress0("192.168.100.100", AF_INET);
-    addressInfo0.addr=ipAddress0;
-    addressInfo0.planeId="planeB";
-    addressInfo0.ports={"1/1", "1/2"};
+    addressInfo0.addr = ipAddress0;
+    addressInfo0.planeId = "planeB";
+    addressInfo0.ports = {"1/1", "1/2"};
     addressInfo.Describe();
 
     EXPECT_EQ(addressInfo0.addrType, addressInfo.addrType);
-    EXPECT_EQ(addressInfo0.addr , addressInfo.addr);
+    EXPECT_EQ(addressInfo0.addr, addressInfo.addr);
     EXPECT_EQ(addressInfo0.planeId, addressInfo.planeId);
     EXPECT_EQ(addressInfo0.ports, addressInfo.ports);
-
-
 }
 
-TEST_F(AddressInfoParserTest, Ut_Deserialize_When_EID_Expect_Success) {
+TEST_F(AddressInfoParserTest, Ut_Deserialize_When_EID_Expect_Success)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -95,12 +90,12 @@ TEST_F(AddressInfoParserTest, Ut_Deserialize_When_EID_Expect_Success) {
     addressInfoParser.ParseString(addressInfoString, addressInfo);
 
     AddressInfo addressInfo0;
-    addressInfo0.addrType=AddrType::EID;
-    addressInfo0.planeId="plane0";
-    addressInfo0.ports={"0/6"};
-    Eid eid0=IpAddress::StrToEID("000000000000002000100000df001007");
+    addressInfo0.addrType = AddrType::EID;
+    addressInfo0.planeId = "plane0";
+    addressInfo0.ports = {"0/6"};
+    Eid eid0 = IpAddress::StrToEID("000000000000002000100000df001007");
     IpAddress ipAddress0(eid0);
-    addressInfo0.addr=ipAddress0;
+    addressInfo0.addr = ipAddress0;
 
     EXPECT_EQ(addressInfo0.addr, addressInfo.addr);
     EXPECT_EQ(addressInfo0.addrType, addressInfo.addrType);
@@ -116,7 +111,8 @@ TEST_F(AddressInfoParserTest, Ut_Deserialize_When_EID_Expect_Success) {
     EXPECT_EQ(addressInfo1.ports, addressInfo.ports);
 }
 
-TEST_F(AddressInfoParserTest, Ut_Deserialize_When_IPV6_Expect_Success) {
+TEST_F(AddressInfoParserTest, Ut_Deserialize_When_IPV6_Expect_Success)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -133,11 +129,11 @@ TEST_F(AddressInfoParserTest, Ut_Deserialize_When_IPV6_Expect_Success) {
     addressInfoParser.ParseString(addressInfoString, addressInfo);
 
     AddressInfo addressInfo0;
-    addressInfo0.addrType=AddrType::IPV6;
-    addressInfo0.planeId="plane0";
-    addressInfo0.ports={"0/6"};
+    addressInfo0.addrType = AddrType::IPV6;
+    addressInfo0.planeId = "plane0";
+    addressInfo0.ports = {"0/6"};
     IpAddress ipAddress0("fe80:0000:0001:0000:0440:44ff:1233:5678", AF_INET6);
-    addressInfo0.addr=ipAddress0;
+    addressInfo0.addr = ipAddress0;
 
     EXPECT_EQ(addressInfo0.addr, addressInfo.addr);
     EXPECT_EQ(addressInfo0.addrType, addressInfo.addrType);
@@ -145,7 +141,8 @@ TEST_F(AddressInfoParserTest, Ut_Deserialize_When_IPV6_Expect_Success) {
     EXPECT_EQ(addressInfo0.ports, addressInfo.ports);
 }
 
-class AddressInfoParserInvalidTest : public AddressInfoParserTest,
+class AddressInfoParserInvalidTest :
+    public AddressInfoParserTest,
     public testing::WithParamInterface<InvalidAddressInfoCase> {};
 
 TEST_P(AddressInfoParserInvalidTest, Ut_Deserialize_When_InvalidInput_Expect_Exception)
@@ -160,34 +157,43 @@ TEST_P(AddressInfoParserInvalidTest, Ut_Deserialize_When_InvalidInput_Expect_Exc
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    AddressInfoInvalidInputs,
-    AddressInfoParserInvalidTest,
+    AddressInfoInvalidInputs, AddressInfoParserInvalidTest,
     testing::Values(
-        InvalidAddressInfoCase{"InvalidEidLower",
+        InvalidAddressInfoCase{
+            "InvalidEidLower",
             R"({"addr_type":"EID","addr":"000000000000002000100000df0010g7","ports":["0/6"],"plane_id":"plane0"})"},
-        InvalidAddressInfoCase{"InvalidEidTooLong",
+        InvalidAddressInfoCase{
+            "InvalidEidTooLong",
             R"({"addr_type":"EID","addr":"000000000000002000100000df0010077","ports":["0/6"],"plane_id":"plane0"})"},
-        InvalidAddressInfoCase{"InvalidIpv6DoubleColonAtBothEnds",
+        InvalidAddressInfoCase{
+            "InvalidIpv6DoubleColonAtBothEnds",
             R"({"addr_type":"IPV6","addr":"::1234:5678::","ports":["0/6"],"plane_id":"plane0"})"},
-        InvalidAddressInfoCase{"InvalidIpv6EmbeddedIpv4",
+        InvalidAddressInfoCase{
+            "InvalidIpv6EmbeddedIpv4",
             R"({"addr_type":"IPV6","addr":"fe80::192.168.256.1","ports":["0/6"],"plane_id":"plane0"})"},
-        InvalidAddressInfoCase{"InvalidIpv6GroupTooLong",
+        InvalidAddressInfoCase{
+            "InvalidIpv6GroupTooLong",
             R"({"addr_type":"IPV6","addr":"fe80:00000:0001:0000:0440:44ff:1233:5678","ports":["0/6"],"plane_id":"plane0"})"},
-        InvalidAddressInfoCase{"InvalidAddrType",
+        InvalidAddressInfoCase{
+            "InvalidAddrType",
             R"({"addr_type":"ipv4","addr":"192.168.100.100","ports":["1/1","1/2"],"plane_id":"planeB"})"},
-        InvalidAddressInfoCase{"InvalidAddr",
-            R"({"addr_type":"IPV4","addr":"192.168.100","ports":["1/1","1/2"],"plane_id":"planeB"})"},
-        InvalidAddressInfoCase{"InvalidPort",
+        InvalidAddressInfoCase{
+            "InvalidAddr", R"({"addr_type":"IPV4","addr":"192.168.100","ports":["1/1","1/2"],"plane_id":"planeB"})"},
+        InvalidAddressInfoCase{
+            "InvalidPort",
             R"({"addr_type":"IPV4","addr":"192.168.100.100","ports":["9999999999999999/9999999999999999"],"plane_id":"planeB"})"},
-        InvalidAddressInfoCase{"InvalidIpv4TooLong",
+        InvalidAddressInfoCase{
+            "InvalidIpv4TooLong",
             R"({"addr_type":"IPV4","addr":"192.168.100.1000","ports":["1/1","1/2"],"plane_id":"planeB"})"},
-        InvalidAddressInfoCase{"InvalidIpv4LeadingZero",
+        InvalidAddressInfoCase{
+            "InvalidIpv4LeadingZero",
             R"({"addr_type":"IPV4","addr":"01.2.3.4","ports":["1/1","1/2"],"plane_id":"planeB"})"},
-        InvalidAddressInfoCase{"InvalidIpv4HasAlpha",
+        InvalidAddressInfoCase{
+            "InvalidIpv4HasAlpha",
             R"({"addr_type":"IPV4","addr":"A.168.1.2.3","ports":["1/1","1/2"],"plane_id":"planeB"})"},
-        InvalidAddressInfoCase{"InvalidPorts",
-            R"({"addr_type":"IPV4","addr":"192.168.100.100","ports":["1/1","1/2","1/3","1/4","1/5","1/6","1/7","1/8","1/9","1/10","1/11","1/12","1/13","1/14","1/15","1/16","1/17","1/18"],"plane_id":"planeB"})"}
-    ),
-    [](const testing::TestParamInfo<InvalidAddressInfoCase> &info) {
+        InvalidAddressInfoCase{
+            "InvalidPorts",
+            R"({"addr_type":"IPV4","addr":"192.168.100.100","ports":["1/1","1/2","1/3","1/4","1/5","1/6","1/7","1/8","1/9","1/10","1/11","1/12","1/13","1/14","1/15","1/16","1/17","1/18"],"plane_id":"planeB"})"}),
+    [](const testing::TestParamInfo<InvalidAddressInfoCase>& info) {
         return info.param.name;
     });

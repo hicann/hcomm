@@ -29,10 +29,9 @@ using namespace hcomm;
 
 class ClusterMonitorTest : public ::testing::Test {
 public:
-    void SetUp() override {
-        testing::Test::SetUp();
-    }
-    void TearDown() override {
+    void SetUp() override { testing::Test::SetUp(); }
+    void TearDown() override
+    {
         testing::Test::TearDown();
         GlobalMockObject::verify();
     }
@@ -141,11 +140,11 @@ TEST_F(ClusterMonitorTest, Ut_CreateMonitorLinksAsync_When_NormalInput_Expect_Cr
     auto linkThreadIt = g_monitor.monitorLinkStatusMap_.begin();
     const auto CREATE_LINK_TIMEOUT = std::chrono::seconds(10);
     auto startTime = std::chrono::steady_clock::now();
-    while((std::chrono::steady_clock::now() - startTime) <= CREATE_LINK_TIMEOUT) {
+    while ((std::chrono::steady_clock::now() - startTime) <= CREATE_LINK_TIMEOUT) {
         HCCL_ERROR("Waiting for monitor links to complete, uncompletedCount = %u", uncompletedCount);
         if (linkThreadIt == g_monitor.monitorLinkStatusMap_.end()) {
             linkThreadIt = g_monitor.monitorLinkStatusMap_.begin();
-        } 
+        }
         if (linkThreadIt->second == ClusterMonitor::MonitorLinkStatus::MONITOR_LINK_COMPLETED) {
             uncompletedCount--;
         }
@@ -158,10 +157,11 @@ TEST_F(ClusterMonitorTest, Ut_CreateMonitorLinksAsync_When_NormalInput_Expect_Cr
 
     g_monitor.linkThreadRunning_ = false;
     // 在心跳进程结束之前join所有的建链线程
-    for (auto &pair : g_monitor.linkThreadMap_) {
+    for (auto& pair : g_monitor.linkThreadMap_) {
         if (pair.second != nullptr && pair.second->joinable()) {
             pair.second->join();
-            HCCL_INFO("[HeartbeatStatusMonitor] thread has joined. Remote uid is [%s]", g_monitor.GetUID(pair.first).c_str());
+            HCCL_INFO(
+                "[HeartbeatStatusMonitor] thread has joined. Remote uid is [%s]", g_monitor.GetUID(pair.first).c_str());
         }
     }
 
@@ -173,7 +173,8 @@ TEST_F(ClusterMonitorTest, Ut_SendMonitorFrame_When_NormalInput_Expect_SendFrame
     for (auto iter = g_monitor.uid2SocketRefMap_.begin(); iter != g_monitor.uid2SocketRefMap_.end(); iter++) {
         ClusterUIDType rem = iter->first;
         g_monitor.uid2SocketRefMap_[rem].lostNum++;
-        g_monitor.SendFrame(rem, g_monitor.myRankUID_, g_monitor.myRankUID_, ClusterMonitorStatus::CLUSTER_MONITOR_STUCK);
+        g_monitor.SendFrame(
+            rem, g_monitor.myRankUID_, g_monitor.myRankUID_, ClusterMonitorStatus::CLUSTER_MONITOR_STUCK);
         EXPECT_EQ(g_monitor.uid2SocketRefMap_[rem].sendBuffer.size(), 0);
     }
 }
@@ -182,17 +183,16 @@ TEST_F(ClusterMonitorTest, Ut_SendMonitorFrame_When_SendFrameFromBufferFail_Expe
 {
     for (auto iter = g_monitor.uid2SocketRefMap_.begin(); iter != g_monitor.uid2SocketRefMap_.end(); iter++) {
         ClusterUIDType rem = iter->first;
-        ClusterMonitorFrame bufferedFrame(rem, g_monitor.myRankUID_, g_monitor.myRankUID_,
-            g_monitor.myRankUID_, ClusterMonitorStatus::CLUSTER_MONITOR_STUCK);
+        ClusterMonitorFrame bufferedFrame(
+            rem, g_monitor.myRankUID_, g_monitor.myRankUID_, g_monitor.myRankUID_,
+            ClusterMonitorStatus::CLUSTER_MONITOR_STUCK);
         g_monitor.uid2SocketRefMap_[rem].sendBuffer.push(bufferedFrame);
         g_monitor.uid2SocketRefMap_[rem].restSize = sizeof(ClusterMonitorFrame);
 
-        MOCKER(SocketSendNb)
-            .stubs()
-            .will(returnValue(HCCL_E_INTERNAL));
+        MOCKER(SocketSendNb).stubs().will(returnValue(HCCL_E_INTERNAL));
 
-        HcclResult ret = g_monitor.SendFrame(rem, g_monitor.myRankUID_, g_monitor.myRankUID_,
-            ClusterMonitorStatus::CLUSTER_MONITOR_STUCK);
+        HcclResult ret = g_monitor.SendFrame(
+            rem, g_monitor.myRankUID_, g_monitor.myRankUID_, ClusterMonitorStatus::CLUSTER_MONITOR_STUCK);
         EXPECT_NE(ret, HCCL_SUCCESS);
 
         GlobalMockObject::verify();
@@ -204,16 +204,14 @@ TEST_F(ClusterMonitorTest, Ut_SendMonitorFrame_When_SendFrameFromBufferFail_Expe
 
 TEST_F(ClusterMonitorTest, Ut_RecvMonitorFrame_When_NormalInput_Expect_RecvFrame)
 {
-    MOCKER_CPP(&ClusterMonitor::ParseFrame)
-    .stubs()
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&ClusterMonitor::ParseFrame).stubs().will(returnValue(HCCL_SUCCESS));
 
     uint64_t compSize = 0;
     MOCKER(SocketRecvNb)
-    .stubs()
-    .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&compSize, sizeof(uint64_t *)))
-    .will(invoke(SocketRecvNb))    // 第1次走真实函数
-    .then(returnValue(HCCL_E_AGAIN));  // 第2次返回特定值
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBoundP(&compSize, sizeof(uint64_t*)))
+        .will(invoke(SocketRecvNb))       // 第1次走真实函数
+        .then(returnValue(HCCL_E_AGAIN)); // 第2次返回特定值
 
     for (auto iter = g_monitor.uid2SocketRefMap_.begin(); iter != g_monitor.uid2SocketRefMap_.end(); iter++) {
         ClusterUIDType rem = iter->first;
@@ -281,9 +279,7 @@ TEST_F(ClusterMonitorTest, Ut_ProcessExceptionEvent_When_NormalQueue_Expect_Send
     otherStatus.status = ClusterMonitorStatus::CLUSTER_MONITOR_OK;
     g_monitor.uid2FrameStatusMap_.insert(otherUid, otherStatus);
 
-    MOCKER(SocketSendNb)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(SocketSendNb).stubs().will(returnValue(HCCL_SUCCESS));
 
     g_monitor.ProcessExceptionEvent();
 
@@ -318,7 +314,8 @@ TEST_F(ClusterMonitorTest, Ut_MakeErrMsg_When_LostStatus_Expect_GenerateCorrectM
     HcclUs relativeTime = std::chrono::steady_clock::now();
     std::chrono::system_clock::time_point systemTime = std::chrono::system_clock::now();
 
-    ClusterMonitorFrame frame(crimerUid, informerUid, ClusterMonitorStatus::CLUSTER_MONITOR_LOST, relativeTime, systemTime);
+    ClusterMonitorFrame frame(
+        crimerUid, informerUid, ClusterMonitorStatus::CLUSTER_MONITOR_LOST, relativeTime, systemTime);
     keyEvents.push(frame);
 
     std::vector<std::string> errStatusVec;
@@ -343,7 +340,8 @@ TEST_F(ClusterMonitorTest, Ut_MakeErrMsg_When_CqeErrStatus_Expect_GenerateCorrec
     HcclUs relativeTime = std::chrono::steady_clock::now();
     std::chrono::system_clock::time_point systemTime = std::chrono::system_clock::now();
 
-    ClusterMonitorFrame frame(crimerUid, informerUid, ClusterMonitorStatus::CLUSTER_MONITOR_CQE_ERR, relativeTime, systemTime);
+    ClusterMonitorFrame frame(
+        crimerUid, informerUid, ClusterMonitorStatus::CLUSTER_MONITOR_CQE_ERR, relativeTime, systemTime);
     keyEvents.push(frame);
 
     std::vector<std::string> errStatusVec;
@@ -378,10 +376,12 @@ TEST_F(ClusterMonitorTest, Ut_PrintEvents_When_NormalMap_Expect_ReturnVec)
     HcclUs relativeTime = std::chrono::steady_clock::now();
     std::chrono::system_clock::time_point systemTime = std::chrono::system_clock::now();
 
-    ClusterMonitorFrame cqeFrame(crimerUid, informerUid, ClusterMonitorStatus::CLUSTER_MONITOR_CQE_ERR, relativeTime, systemTime);
+    ClusterMonitorFrame cqeFrame(
+        crimerUid, informerUid, ClusterMonitorStatus::CLUSTER_MONITOR_CQE_ERR, relativeTime, systemTime);
     keyEvents[ClusterMonitorStatus::CLUSTER_MONITOR_CQE_ERR].push(cqeFrame);
 
-    ClusterMonitorFrame lostFrame(crimerUid, informerUid, ClusterMonitorStatus::CLUSTER_MONITOR_LOST, relativeTime, systemTime);
+    ClusterMonitorFrame lostFrame(
+        crimerUid, informerUid, ClusterMonitorStatus::CLUSTER_MONITOR_LOST, relativeTime, systemTime);
     keyEvents[ClusterMonitorStatus::CLUSTER_MONITOR_LOST].push(lostFrame);
 
     auto result = g_monitor.PrintEvents(keyEvents);
@@ -411,7 +411,8 @@ TEST_F(ClusterMonitorTest, Ut_GetErrStatusVecFromCluserMonitor_When_Normal_Expec
     HcclUs relativeTime = std::chrono::steady_clock::now();
     std::chrono::system_clock::time_point systemTime = std::chrono::system_clock::now();
 
-    ClusterMonitorFrame frame(crimerUid, informerUid, ClusterMonitorStatus::CLUSTER_MONITOR_CQE_ERR, relativeTime, systemTime);
+    ClusterMonitorFrame frame(
+        crimerUid, informerUid, ClusterMonitorStatus::CLUSTER_MONITOR_CQE_ERR, relativeTime, systemTime);
     g_monitor.errStatusQueue_.push(frame);
 
     auto result = g_monitor.GetErrStatusVecFromCluserMonitor();
@@ -430,27 +431,20 @@ TEST_F(ClusterMonitorTest, Ut_GetErrStatusVecFromCluserMonitor_When_EmptyQueue_E
     EXPECT_EQ(result.size(), 0);
 }
 
-
 TEST_F(ClusterMonitorTest, Ut_MonitorThread_When_Normal_Expect_ProcessEvents)
 {
-    MOCKER_CPP(&ClusterMonitor::SendFrame)
-    .stubs()
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&ClusterMonitor::SendFrame).stubs().will(returnValue(HCCL_SUCCESS));
 
-    MOCKER_CPP(&ClusterMonitor::RecvFrame)
-    .stubs()
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&ClusterMonitor::RecvFrame).stubs().will(returnValue(HCCL_SUCCESS));
 
-    MOCKER_CPP(&ClusterMonitor::PrintEvents)
-        .stubs()
-        .will(returnValue(std::vector<std::string>{"Error Message"}));
+    MOCKER_CPP(&ClusterMonitor::PrintEvents).stubs().will(returnValue(std::vector<std::string>{"Error Message"}));
 
     HCCL_ERROR("g_monitor.uid2SocketRefMap_.Size = %d", g_monitor.uid2SocketRefMap_.Size());
-    g_monitor.clusterMonitorThreadFlag_  = true;
+    g_monitor.clusterMonitorThreadFlag_ = true;
     g_monitor.RunMonitorThread();
     EXPECT_TRUE(g_monitor.clusterMonitorThread_ != nullptr);
-    SalSleep(1);  // 等待线程处理完队列中的事件
-    g_monitor.clusterMonitorThreadFlag_  = false;
+    SalSleep(1); // 等待线程处理完队列中的事件
+    g_monitor.clusterMonitorThreadFlag_ = false;
 
     if (g_monitor.clusterMonitorThread_) {
         if (g_monitor.clusterMonitorThread_->joinable()) {
@@ -462,21 +456,14 @@ TEST_F(ClusterMonitorTest, Ut_MonitorThread_When_Normal_Expect_ProcessEvents)
 TEST_F(ClusterMonitorTest, Ut_RegisterToClusterMonitor_When_Normal_Expect_Success)
 {
     Hccl::RankGraph stub(0);
-    void *stubPtr = &stub;
-    MOCKER_CPP(&Hccl::HcclCommunicator::GetRankGraphV2)
-    .stubs()
-    .with(outBound(stubPtr))
-    .will(returnValue(HCCL_SUCCESS));
+    void* stubPtr = &stub;
+    MOCKER_CPP(&Hccl::HcclCommunicator::GetRankGraphV2).stubs().with(outBound(stubPtr)).will(returnValue(HCCL_SUCCESS));
 
-    MOCKER_CPP(&ClusterMonitor::GetRemEndpointDescs)
-    .stubs()
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&ClusterMonitor::GetRemEndpointDescs).stubs().will(returnValue(HCCL_SUCCESS));
 
     MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
 
-    bool isDeviceSide {
-        false
-    };
+    bool isDeviceSide{false};
     MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
     setenv("HCCL_INDEPENDENT_OP", "1", 1);
     setenv("HCCL_RDMA_RETRY_CNT", "7", 1);
@@ -495,7 +482,7 @@ TEST_F(ClusterMonitorTest, Ut_RegisterToClusterMonitor_When_Normal_Expect_Succes
     char commName[128] = {};
     std::shared_ptr<hccl::hcclComm> hcclCommPtr = std::make_shared<hccl::hcclComm>(1, 1, commName);
     HcclCommConfig config;
-    config.hcclOpExpansionMode = 1; // 非CCU模式，避免拉起CCU平台层
+    config.hcclOpExpansionMode = 1;           // 非CCU模式，避免拉起CCU平台层
     config.hcclRdmaTrafficClass = 0xFFFFFFFF; // 不配置RDMA Traffic Class
     config.hcclRdmaServiceLevel = 0xFFFFFFFF; // 不配置RDMA Service Level
     config.hcclQos = 0xFFFFFFFF;
@@ -512,7 +499,7 @@ TEST_F(ClusterMonitorTest, Ut_UnRegisterToClusterMonitor_When_Normal_Expect_Succ
 {
     MOCKER(SocketDestroy).stubs().will(returnValue(HCCL_SUCCESS));
 
-    g_monitor.initialized_ = true;  // 设置已初始化标志，允许调用UnRegisterToClusterMonitor
+    g_monitor.initialized_ = true; // 设置已初始化标志，允许调用UnRegisterToClusterMonitor
     hccl::RankGraphStub rankGraphStub;
     std::shared_ptr<Hccl::RankGraph> rankGraphV2 = rankGraphStub.Create2PGraph();
     void* commV2 = (void*)0x2000;
@@ -524,7 +511,7 @@ TEST_F(ClusterMonitorTest, Ut_UnRegisterToClusterMonitor_When_Normal_Expect_Succ
     char commName[128] = {"comm1"};
     std::shared_ptr<hccl::hcclComm> hcclCommPtr = std::make_shared<hccl::hcclComm>(1, 1, commName);
     HcclCommConfig config;
-    config.hcclOpExpansionMode = 1; // 非CCU模式，避免拉起CCU平台层
+    config.hcclOpExpansionMode = 1;           // 非CCU模式，避免拉起CCU平台层
     config.hcclRdmaTrafficClass = 0xFFFFFFFF; // 不配置RDMA Traffic Class
     config.hcclRdmaServiceLevel = 0xFFFFFFFF; // 不配置RDMA Service Level
     config.hcclQos = 0xFFFFFFFF;
@@ -588,7 +575,8 @@ static Hccl::NetInstance* GetNetInstanceByRankIdStub(Hccl::RankGraph* self, u32 
     return &netInstance1;
 }
 
-static HcclResult HcclRankGraphGetRanksByLayerStub(HcclComm comm, uint32_t netLayer, uint32_t** ranks, uint32_t* rankNum)
+static HcclResult
+HcclRankGraphGetRanksByLayerStub(HcclComm comm, uint32_t netLayer, uint32_t** ranks, uint32_t* rankNum)
 {
     *ranks = (uint32_t*)malloc(sizeof(uint32_t) * 2);
     (*ranks)[0] = 0;
@@ -621,24 +609,15 @@ TEST_F(ClusterMonitorTest, Ut_GetRemEndpointDescs_When_Normal_Expect_Success)
     hccl::RankGraphStub rankGraphStub;
     std::shared_ptr<Hccl::RankGraph> rankGraphV2 = rankGraphStub.Create2PGraph();
     void* stubPtr = rankGraphV2.get();
-    MOCKER_CPP(&Hccl::HcclCommunicator::GetRankGraphV2)
-        .stubs()
-        .with(outBound(stubPtr))
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::HcclCommunicator::GetRankGraphV2).stubs().with(outBound(stubPtr)).will(returnValue(HCCL_SUCCESS));
 
-    MOCKER(HcclRankGraphGetLayers)
-        .stubs()
-        .will(invoke(HcclRankGraphGetLayersStub));
+    MOCKER(HcclRankGraphGetLayers).stubs().will(invoke(HcclRankGraphGetLayersStub));
 
-    MOCKER(HcclRankGraphGetRanksByLayer)
-        .stubs()
-        .will(invoke(HcclRankGraphGetRanksByLayerStub));
+    MOCKER(HcclRankGraphGetRanksByLayer).stubs().will(invoke(HcclRankGraphGetRanksByLayerStub));
 
-    MOCKER_CPP((&Hccl::RankGraph::GetLocalId))
-        .stubs()
-        .will(invoke(GetLocalIdStub));
+    MOCKER_CPP((&Hccl::RankGraph::GetLocalId)).stubs().will(invoke(GetLocalIdStub));
 
-    MOCKER_CPP((Hccl::NetInstance* (Hccl::RankGraph::*)(u32, Hccl::RankId))(&Hccl::RankGraph::GetNetInstanceByRankId))
+    MOCKER_CPP((Hccl::NetInstance * (Hccl::RankGraph::*)(u32, Hccl::RankId))(&Hccl::RankGraph::GetNetInstanceByRankId))
         .stubs()
         .will(invoke(GetNetInstanceByRankIdStub));
 
@@ -791,7 +770,9 @@ TEST_F(ClusterMonitorTest, Ut_GetConnectRank_When_HighLayerCommLinks_Expect_Sort
     EXPECT_EQ(ret, EOK);
 
     g_uidCtxs[0] = {UIDContext(uid1, 0, 0, 0, "remoteInstanceA"), UIDContext(uid2, 0, 1, 1, "remoteInstanceB")};
-    g_uidCtxs[1] = {UIDContext(uid3, 1, 2, 0, "remoteInstanceC"), UIDContext(uid4, 1, 3, 1, "remoteInstanceD"), UIDContext(uid5, 1, 4, 0, "remoteInstanceE")};
+    g_uidCtxs[1]
+        = {UIDContext(uid3, 1, 2, 0, "remoteInstanceC"), UIDContext(uid4, 1, 3, 1, "remoteInstanceD"),
+           UIDContext(uid5, 1, 4, 0, "remoteInstanceE")};
 
     MOCKER_CPP(&ClusterMonitor::GetSamePlaneRank).stubs().will(returnValue(HCCL_SUCCESS));
 
@@ -813,12 +794,16 @@ static InsertTestCtx CreateHcclCommForInsertTest()
     hccl::RankGraphV2* rankGraphV2 = new hccl::RankGraphV2(ctx.rankGraphData.get());
 
     hccl::ManagerCallbacks callbacks;
-    callbacks.getAicpuCommState = []() { return false; };
+    callbacks.getAicpuCommState = []() {
+        return false;
+    };
     callbacks.setAicpuCommState = [](bool) {};
-    callbacks.kernelLaunchAicpuCommInit = []() { return HCCL_SUCCESS; };
+    callbacks.kernelLaunchAicpuCommInit = []() {
+        return HCCL_SUCCESS;
+    };
 
-    auto collComm = std::make_unique<hccl::CollComm>(
-        nullptr, 1, "test_comm", callbacks, hccl::CollCommInitMode::simpleMode);
+    auto collComm
+        = std::make_unique<hccl::CollComm>(nullptr, 1, "test_comm", callbacks, hccl::CollCommInitMode::simpleMode);
     collComm->rankgraph_ = rankGraphV2;
 
     ctx.hcclCommPtr = std::make_shared<hccl::hcclComm>(1, 1, "test_comm");
@@ -847,9 +832,7 @@ TEST_F(ClusterMonitorTest, Ut_InsertClusterMonitorCtx_When_GetLinksFailed_Expect
 
     std::map<ClusterUIDType, ClusterMonitorSocketCtx> needConnectRank;
 
-    MOCKER(HcclRankGraphGetLinks)
-        .stubs()
-        .will(returnValue(HCCL_E_INTERNAL));
+    MOCKER(HcclRankGraphGetLinks).stubs().will(returnValue(HCCL_E_INTERNAL));
 
     HcclResult result = g_monitor.InsertClusterMonitorCtx(comm, remoteCtx, needConnectRank);
     EXPECT_EQ(result, HCCL_SUCCESS);
@@ -860,10 +843,7 @@ TEST_F(ClusterMonitorTest, Ut_InsertClusterMonitorCtx_When_GetLinksFailed_Expect
 static int g_salSleepCallCount = 0;
 static int g_socketGetStatusCallCount = 0;
 
-static void SalSleepStub(u32 sec)
-{
-    g_salSleepCallCount++;
-}
+static void SalSleepStub(u32 sec) { g_salSleepCallCount++; }
 
 static HcclResult SocketGetStatusStub(SocketHandler socketHandle, SocketStates* status)
 {
@@ -936,9 +916,7 @@ TEST_F(ClusterMonitorTest, Ut_InsertClusterMonitorCtx_When_GetLinksSuccess_ZeroL
 
     std::map<ClusterUIDType, ClusterMonitorSocketCtx> needConnectRank;
 
-    MOCKER(HcclRankGraphGetLinks)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(HcclRankGraphGetLinks).stubs().will(returnValue(HCCL_SUCCESS));
 
     HcclResult result = g_monitor.InsertClusterMonitorCtx(comm, remoteCtx, needConnectRank);
     EXPECT_EQ(result, HCCL_SUCCESS);

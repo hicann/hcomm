@@ -20,8 +20,8 @@ namespace Hccl {
 
 std::string ChangedRankInfo::Describe() const
 {
-    return StringFormat("ChangedRankInfo[version=%s, rankCount=%u, ranks size=%d]", version.c_str(), rankCount,
-                        ranks.size());
+    return StringFormat(
+        "ChangedRankInfo[version=%s, rankCount=%u, ranks size=%d]", version.c_str(), rankCount, ranks.size());
 }
 
 void ChangedRankInfo::Dump() const
@@ -37,18 +37,19 @@ void ChangedRankInfo::Dump() const
     }
 }
 
-void ChangedRankInfo::Deserialize(const nlohmann::json &changedRankInfoJson)
+void ChangedRankInfo::Deserialize(const nlohmann::json& changedRankInfoJson)
 {
-    std::string msgVersion   = "[ChangedRankInfo] error occurs when parser object of propName \"version\"";
+    std::string msgVersion = "[ChangedRankInfo] error occurs when parser object of propName \"version\"";
     std::string msgRankcount = "[ChangedRankInfo] error occurs when parser object of propName \"rank_count\"";
     TRY_CATCH_THROW(InvalidParamsException, msgVersion, version = GetJsonProperty(changedRankInfoJson, "version"););
-    TRY_CATCH_THROW(InvalidParamsException, msgRankcount, rankCount = GetJsonPropertyUInt(changedRankInfoJson, "rank_count"););
+    TRY_CATCH_THROW(InvalidParamsException, msgRankcount,
+                    rankCount = GetJsonPropertyUInt(changedRankInfoJson, "rank_count"););
 
     nlohmann::json rankJsons;
-    std::string    msgRanklist = "error occurs when parser object of propName \"rank_list\"";
+    std::string msgRanklist = "error occurs when parser object of propName \"rank_list\"";
     TRY_CATCH_THROW(InvalidParamsException, msgRanklist,
-                         GetJsonPropertyList(changedRankInfoJson, "rank_list", rankJsons););
-    for (auto &rankJson : rankJsons) {
+                    GetJsonPropertyList(changedRankInfoJson, "rank_list", rankJsons););
+    for (auto& rankJson : rankJsons) {
         NewRankInfo rankInfo;
         rankInfo.Deserialize(rankJson);
         ranks.emplace_back(rankInfo);

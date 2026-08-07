@@ -17,16 +17,13 @@
 class LogControl {
 public:
     // 构造时初始化initState，并将当前日志级别设置为targetState
-    LogControl(bool initState, bool targetState) : initState_(initState) {
-        SetErrToWarnSwitch(targetState);
-    }
+    LogControl(bool initState, bool targetState) : initState_(initState) { SetErrToWarnSwitch(targetState); }
 
     // 析构时恢复为initState
-    ~LogControl() {
-        SetErrToWarnSwitch(initState_);
-    }
+    ~LogControl() { SetErrToWarnSwitch(initState_); }
+
 private:
     bool initState_ = false;
 };
 
-#endif  // LOG_CONTROL_H
+#endif // LOG_CONTROL_H

@@ -16,10 +16,10 @@
 #include "endpoint_map.h"
 
 /* 获取 Endpoint 映射表引用（endpoint/mem/channel adapt使用） */
-hcomm::HcommEndpointMap &GetEndpointMap();
+hcomm::HcommEndpointMap& GetEndpointMap();
 
 /* 跨域共享的基础设施函数 */
-HcclResult RefreshEndpointContext(const EndpointDesc &endpointDesc);
+HcclResult RefreshEndpointContext(const EndpointDesc& endpointDesc);
 HcclResult RefreshCommEngineContext(CommEngine engine);
 
 #endif // HCOMM_C_ADPT_COMMON_H

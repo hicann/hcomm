@@ -15,7 +15,7 @@
 #include "log.h"
 
 namespace Hccl {
-HcclResult OneSidedComponentLite::Orchestrate(const HcclAicpuOpLite &op, InsQuePtr queue)
+HcclResult OneSidedComponentLite::Orchestrate(const HcclAicpuOpLite& op, InsQuePtr queue)
 {
     HCCL_INFO("[%s] Orchestrate Mode: Instruction.", __func__);
     bool isOneSidedComm = (op.algOperator.opType == OpType::BATCHPUT) || (op.algOperator.opType == OpType::BATCHGET);
@@ -26,24 +26,27 @@ HcclResult OneSidedComponentLite::Orchestrate(const HcclAicpuOpLite &op, InsQueP
     }
 
     vector<RmaBufSliceLite> usrInSlice;
-    vector<RmtRmaBufSliceLite> usrOutSlice; 
+    vector<RmtRmaBufSliceLite> usrOutSlice;
 
     for (uint32_t i = 0; i < op.batchPutGetDescNum; i++) {
-        HcclAicpuLocBufLite *localBuf = static_cast<HcclAicpuLocBufLite *>(op.batchPutGetLocalAddr) + i;
+        HcclAicpuLocBufLite* localBuf = static_cast<HcclAicpuLocBufLite*>(op.batchPutGetLocalAddr) + i;
         usrInSlice.push_back(RmaBufSliceLite(localBuf->addr, localBuf->size, localBuf->tokenValue, localBuf->tokenId));
 
-        HcclAicpuLocBufLite *rmtBuf = static_cast<HcclAicpuLocBufLite *>(op.batchPutGetRemoteAddr) + i;
-        usrOutSlice.push_back(RmtRmaBufSliceLite(rmtBuf->addr, rmtBuf->size, 0, rmtBuf->tokenId, rmtBuf->tokenValue, UINT32_MAX));
+        HcclAicpuLocBufLite* rmtBuf = static_cast<HcclAicpuLocBufLite*>(op.batchPutGetRemoteAddr) + i;
+        usrOutSlice.push_back(
+            RmtRmaBufSliceLite(rmtBuf->addr, rmtBuf->size, 0, rmtBuf->tokenId, rmtBuf->tokenValue, UINT32_MAX));
     }
 
     RankId rmtRankId = op.sendRecvRemoteRank;
     vector<LinkData> link = linkMgr_->GetLinks(0, rmtRankId);
     HCCL_INFO("[%s] Orchestrate Mode: Instruction %d.", __func__, rmtRankId);
     if (op.algOperator.opType == OpType::BATCHGET) {
-        std::unique_ptr<Instruction> ins = std::make_unique<InsBatchOneSidedRead>(rmtRankId, link[0], usrInSlice, usrOutSlice);
+        std::unique_ptr<Instruction> ins
+            = std::make_unique<InsBatchOneSidedRead>(rmtRankId, link[0], usrInSlice, usrOutSlice);
         queue->Append(std::move(ins));
     } else {
-        std::unique_ptr<Instruction> ins = std::make_unique<InsBatchOneSidedWrite>(rmtRankId, link[0], usrInSlice, usrOutSlice);
+        std::unique_ptr<Instruction> ins
+            = std::make_unique<InsBatchOneSidedWrite>(rmtRankId, link[0], usrInSlice, usrOutSlice);
         queue->Append(std::move(ins));
     }
 

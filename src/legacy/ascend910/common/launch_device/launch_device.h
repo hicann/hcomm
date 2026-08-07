@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef LAUNCH_DEVIDE_H
 #define LAUNCH_DEVIDE_H
 
@@ -17,8 +17,8 @@
 
 namespace hccl {
 
-HcclResult LoadBinaryFromFile(const char *binPath, aclrtBinaryLoadOptionType optionType, uint32_t cpuKernelMode,
-    aclrtBinHandle& binHandle);
+HcclResult LoadBinaryFromFile(
+    const char* binPath, aclrtBinaryLoadOptionType optionType, uint32_t cpuKernelMode, aclrtBinHandle& binHandle);
 }
 
 #endif // LAUNCH_DEVIDE_H

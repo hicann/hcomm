@@ -26,22 +26,22 @@ using HcclBatchData = struct {
 };
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
-HcclResult HcclRegisterMemV2(HcclComm comm, u32 remoteRank, int type, void *addr, u64 size, HcclMemDesc *desc);
+#endif // __cplusplus
+HcclResult HcclRegisterMemV2(HcclComm comm, u32 remoteRank, int type, void* addr, u64 size, HcclMemDesc* desc);
 
-HcclResult HcclDeregisterMemV2(HcclComm comm, HcclMemDesc *desc);
+HcclResult HcclDeregisterMemV2(HcclComm comm, HcclMemDesc* desc);
 
 HcclResult HcclExchangeMemDescV2(
-    HcclComm comm, u32 remoteRank, HcclMemDescs *local, int timeout, HcclMemDescs *remote, u32 *actualNum);
+    HcclComm comm, u32 remoteRank, HcclMemDescs* local, int timeout, HcclMemDescs* remote, u32* actualNum);
 
-HcclResult HcclEnableMemAccessV2(HcclComm comm, HcclMemDesc *remoteMemDesc, HcclMem *remoteMem);
+HcclResult HcclEnableMemAccessV2(HcclComm comm, HcclMemDesc* remoteMemDesc, HcclMem* remoteMem);
 
-HcclResult HcclDisableMemAccessV2(HcclComm comm, HcclMemDesc *remoteMemDesc);
+HcclResult HcclDisableMemAccessV2(HcclComm comm, HcclMemDesc* remoteMemDesc);
 
-HcclResult HcclBatchPutV2(HcclComm comm, u32 remoteRank, HcclOneSideOpDesc *desc, u32 descNum, const rtStream_t stream);
+HcclResult HcclBatchPutV2(HcclComm comm, u32 remoteRank, HcclOneSideOpDesc* desc, u32 descNum, const rtStream_t stream);
 
-HcclResult HcclBatchGetV2(HcclComm comm, u32 remoteRank, HcclOneSideOpDesc *desc, u32 descNum, const rtStream_t stream);
+HcclResult HcclBatchGetV2(HcclComm comm, u32 remoteRank, HcclOneSideOpDesc* desc, u32 descNum, const rtStream_t stream);
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
-#endif  // HCCL_ONE_SIDED_SERVICE_ADAPT_V2_H
+#endif // __cplusplus
+#endif // HCCL_ONE_SIDED_SERVICE_ADAPT_V2_H

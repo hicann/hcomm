@@ -17,17 +17,14 @@ using namespace hccl;
 
 class DpuNotifyManagerTest : public BaseInit {
 public:
-    void SetUp() override
-    {
-        BaseInit::SetUp();
-    }
+    void SetUp() override { BaseInit::SetUp(); }
     void TearDown() override
     {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }
 
-    std::string VectorToStr(const std::vector<uint32_t> &v)
+    std::string VectorToStr(const std::vector<uint32_t>& v)
     {
         std::string result;
 
@@ -184,7 +181,7 @@ TEST_F(DpuNotifyManagerTest, ut_DpuNotifyManager_When_freeWithInvalidNum_Expect_
     EXPECT_EQ(ret, HCCL_SUCCESS);
     ret = DpuNotifyManager::GetInstance().FreeNotifyIds(notifyNumInvalid, notifyIds);
     EXPECT_EQ(ret, HCCL_E_PARA);
-    
+
     ret = DpuNotifyManager::GetInstance().FreeNotifyIds(notifyNum, notifyIds);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }

@@ -9,16 +9,13 @@
  */
 
 #include "zero_copy_address_mgr.h"
- 
-namespace hccl{
-HcclResult ZeroCopyAddressMgr::InitRingBuffer()
-{
-    return HCCL_SUCCESS;
-}
- 
-HcclResult ZeroCopyAddressMgr::PushOne(ZeroCopyRingBufferItem &item)
+
+namespace hccl {
+HcclResult ZeroCopyAddressMgr::InitRingBuffer() { return HCCL_SUCCESS; }
+
+HcclResult ZeroCopyAddressMgr::PushOne(ZeroCopyRingBufferItem& item)
 {
     HCCL_DEBUG("[ZeroCopyAddressMgr][PushOne] device");
     return HCCL_SUCCESS;
 }
-}
+} // namespace hccl

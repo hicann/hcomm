@@ -20,22 +20,22 @@ namespace Hccl {
 
 class UbConnLiteMgr {
 public:
-    static UbConnLiteMgr &GetInstance();
+    static UbConnLiteMgr& GetInstance();
 
     ~UbConnLiteMgr();
 
-    RmaConnLite *Get(std::vector<char> &uniqueId);
+    RmaConnLite* Get(std::vector<char>& uniqueId);
 
-    void Clear(std::vector<char> &uniqueId);
+    void Clear(std::vector<char>& uniqueId);
 
 private:
     UbConnLiteMgr();
 
-    std::string GetKey(const UbConnLiteParam &liteParam) const;
+    std::string GetKey(const UbConnLiteParam& liteParam) const;
 
     std::unordered_map<std::string, std::unique_ptr<UbConnLite>> ubConnLiteMap;
 
-    bool IsExist(const std::string &key);
+    bool IsExist(const std::string& key);
 };
 } // namespace Hccl
 

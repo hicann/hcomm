@@ -16,17 +16,18 @@
 namespace hccl {
 class CalcNHRTransportReq : public CalcTransportReqBase {
 public:
-    explicit CalcNHRTransportReq(std::vector<std::vector<u32>> &subCommPlaneVector,
-        std::vector<bool> &isBridgeVector, u32 userRank);
+    explicit CalcNHRTransportReq(
+        std::vector<std::vector<u32>>& subCommPlaneVector, std::vector<bool>& isBridgeVector, u32 userRank);
 
     ~CalcNHRTransportReq() override;
 
-    HcclResult CalcTransportRequest(const std::string &tag, TransportMemType inputMemType,
-        TransportMemType outputMemType, const CommParaInfo &commParaInfo,
-        std::vector<SingleSubCommTransport> &commTransport, u32 subUserRankRoot = INVALID_VALUE_RANKID) override;
+    HcclResult CalcTransportRequest(
+        const std::string& tag, TransportMemType inputMemType, TransportMemType outputMemType,
+        const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport,
+        u32 subUserRankRoot = INVALID_VALUE_RANKID) override;
 
-    static HcclResult CalcDstRanks(const u32 rank, const std::vector<u32> commGroups, std::set<u32> &dstRanks);
+    static HcclResult CalcDstRanks(const u32 rank, const std::vector<u32> commGroups, std::set<u32>& dstRanks);
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* CALC_NHR_TRANSPORT_REQ_H */

@@ -11,18 +11,16 @@
 #include "send_operator.h"
 
 namespace hccl {
-SendOperator::SendOperator(AlgConfigurator* algConfigurator, CCLBufferManager &cclBufferManager,
-    HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher)
+SendOperator::SendOperator(
+    AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager, HcclDispatcher dispatcher,
+    std::unique_ptr<TopoMatcher>& topoMatcher)
     : CollAlgOperator(algConfigurator, cclBufferManager, dispatcher, topoMatcher, HcclCMDType::HCCL_CMD_SEND)
-{
-}
+{}
 
-SendOperator::~SendOperator()
-{
-}
+SendOperator::~SendOperator() {}
 
-HcclResult SendOperator::SelectAlg(const std::string& tag, const OpParam& param, std::string& algName,
-                                        std::string& newTag)
+HcclResult
+SendOperator::SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag)
 {
     algName = "SendExecutor";
     if (GetWorkflowMode() != HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
@@ -36,4 +34,4 @@ HcclResult SendOperator::SelectAlg(const std::string& tag, const OpParam& param,
 }
 
 REGISTER_OP(HcclCMDType::HCCL_CMD_SEND, Send, SendOperator);
-}
+} // namespace hccl

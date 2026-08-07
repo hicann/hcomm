@@ -18,10 +18,7 @@
 
 namespace Hccl {
 
-AicpuStreamManager::~AicpuStreamManager()
-{
-    DECTOR_TRY_CATCH("AicpuStreamManager", Clear());
-}
+AicpuStreamManager::~AicpuStreamManager() { DECTOR_TRY_CATCH("AicpuStreamManager", Clear()); }
 
 void AicpuStreamManager::AllocStreams(u32 num)
 {
@@ -36,10 +33,7 @@ void AicpuStreamManager::AllocStreams(u32 num)
     }
 }
 
-void AicpuStreamManager::Clear()
-{
-    streams.clear();
-}
+void AicpuStreamManager::Clear() { streams.clear(); }
 
 std::vector<char> AicpuStreamManager::GetPackedData()
 {
@@ -49,7 +43,7 @@ std::vector<char> AicpuStreamManager::GetPackedData()
     }
 
     std::vector<char> data;
-    for (auto &it : streams) {
+    for (auto& it : streams) {
         auto uniqueId = it->GetUniqueId();
         HCCL_INFO("AicpuStreamManager::GetPackedData:%s", it->Describe().c_str());
         data.insert(data.end(), uniqueId.begin(), uniqueId.end());
@@ -67,16 +61,16 @@ std::vector<char> AicpuStreamManager::GetPackedData()
 
 void AicpuStreamManager::AllocFreeStream()
 {
-    if (freeStream  == nullptr) {
+    if (freeStream == nullptr) {
         freeStream = std::make_unique<Stream>(false, false);
         HCCL_RUN_INFO("AicpuStreamManager %s allocted: %s", __func__, freeStream->Describe().c_str());
     }
 }
 
-HcclResult AicpuStreamManager::CaptureFreeStream(const Stream *mainStream, const Stream *slaveStream) const
+HcclResult AicpuStreamManager::CaptureFreeStream(const Stream* mainStream, const Stream* slaveStream) const
 {
-    HCCL_DEBUG("[AicpuStreamManager][%s] mainStream[%u] slaveStream[%u]",
-        __func__, mainStream->GetId(), slaveStream->GetId());
+    HCCL_DEBUG(
+        "[AicpuStreamManager][%s] mainStream[%u] slaveStream[%u]", __func__, mainStream->GetId(), slaveStream->GetId());
     rtModel_t rtModel = nullptr;
     bool isCapture = false;
     u32 modelId = 0;
@@ -85,18 +79,21 @@ HcclResult AicpuStreamManager::CaptureFreeStream(const Stream *mainStream, const
         CHK_PTR_NULL(rtModel);
         CHK_RET(GetModelId(rtModel, modelId));
         CHK_RET(AddStreamToModel(slaveStream->GetPtr(), rtModel));
-        HCCL_INFO("[AicpuStreamManager][%s] Add freeStream[%u] to model[%u] success, mainStream[%u]",
-            __func__, slaveStream->GetId(), modelId, mainStream->GetId());
+        HCCL_INFO(
+            "[AicpuStreamManager][%s] Add freeStream[%u] to model[%u] success, mainStream[%u]", __func__,
+            slaveStream->GetId(), modelId, mainStream->GetId());
     }
     return HCCL_SUCCESS;
 }
 
-void AicpuStreamManager::AclGraphCaptureFreeStream(const Stream *mainStream) const
+void AicpuStreamManager::AclGraphCaptureFreeStream(const Stream* mainStream) const
 {
     auto ret = CaptureFreeStream(mainStream, freeStream.get());
     if (ret != HCCL_SUCCESS) {
-        THROW<InternalException>(StringFormat("[AicpuStreamManager::%s] capture freeStream fail, "
-                                              "error code:%d", __func__, ret));
+        THROW<InternalException>(StringFormat(
+            "[AicpuStreamManager::%s] capture freeStream fail, "
+            "error code:%d",
+            __func__, ret));
     }
 }
 

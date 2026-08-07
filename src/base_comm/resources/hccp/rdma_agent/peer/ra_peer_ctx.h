@@ -34,8 +34,7 @@ int RaPeerCtxTokenIdAlloc(struct RaCtxHandle *ctxHandle, struct HccpTokenId *inf
 
 int RaPeerCtxTokenIdFree(struct RaCtxHandle *ctxHandle, struct RaTokenIdHandle *tokenIdHandle);
 
-int RaPeerCtxLmemRegister(struct RaCtxHandle *ctxHandle, struct MrRegInfoT *lmemInfo,
-    struct RaLmemHandle *lmemHandle);
+int RaPeerCtxLmemRegister(struct RaCtxHandle *ctxHandle, struct MrRegInfoT *lmemInfo, struct RaLmemHandle *lmemHandle);
 
 int RaPeerCtxLmemUnregister(struct RaCtxHandle *ctxHandle, struct RaLmemHandle *lmemHandle);
 
@@ -43,8 +42,7 @@ int RaPeerCtxRmemImport(struct RaCtxHandle *ctxHandle, struct MrImportInfoT *rme
 
 int RaPeerCtxRmemUnimport(struct RaCtxHandle *ctxHandle, struct RaRmemHandle *rmemHandle);
 
-int RaPeerCtxChanCreate(struct RaCtxHandle *ctxHandle, struct ChanInfoT *chanInfo,
-    struct RaChanHandle *chanHandle);
+int RaPeerCtxChanCreate(struct RaCtxHandle *ctxHandle, struct ChanInfoT *chanInfo, struct RaChanHandle *chanHandle);
 
 int RaPeerCtxChanDestroy(struct RaCtxHandle *ctxHandle, struct RaChanHandle *chanHandle);
 
@@ -52,8 +50,8 @@ int RaPeerCtxCqCreate(struct RaCtxHandle *ctxHandle, struct CqInfoT *info, struc
 
 int RaPeerCtxCqDestroy(struct RaCtxHandle *ctxHandle, struct RaCqHandle *cqHandle);
 
-int RaPeerCtxQpCreate(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *qpAttr,
-    struct QpCreateInfo *qpInfo, struct RaCtxQpHandle *qpHandle);
+int RaPeerCtxQpCreate(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *qpAttr, struct QpCreateInfo *qpInfo,
+    struct RaCtxQpHandle *qpHandle);
 
 int RaPeerCtxQpDestroy(struct RaCtxQpHandle *qpHandle);
 
@@ -75,4 +73,4 @@ int RaPeerCtxQpUnbind(struct RaCtxQpHandle *qpHandle);
 
 int RaPeerCtxGetJettyContext(struct RaCtxQpHandle *qpHandle, uint8_t context[], unsigned int *len);
 
-#endif  // RA_PEER_CTX_H
+#endif // RA_PEER_CTX_H

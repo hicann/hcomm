@@ -64,14 +64,19 @@ using GetTpInfoParam = struct GetTpInfoParamDef {
     uint32_t slLevelCount{0};
     /// 环回等场景：首 TPID + 掩码内最小 SL
     bool loopFirstTpLowestSl{false};
-    /// 仅 CCU 设备环回 GetTpInfo：与通信域 hcclQos 解耦，SL 来自 GetTpAttr.slBitmap；写回 SL 经 HrtRaSetTpAttrAsync（HDC）
+    /// 仅 CCU 设备环回 GetTpInfo：与通信域 hcclQos 解耦，SL 来自 GetTpAttr.slBitmap；写回 SL 经
+    /// HrtRaSetTpAttrAsync（HDC）
     bool ccuLoopbackGetTpInfo{false};
 
     explicit GetTpInfoParamDef() = default;
-    GetTpInfoParamDef(const CommAddr &locAddr, const CommAddr &rmtAddr, TpProtocol tpProtocol)
-        : locAddr(locAddr), rmtAddr(rmtAddr), tpProtocol(tpProtocol) {}
+    GetTpInfoParamDef(const CommAddr& locAddr, const CommAddr& rmtAddr, TpProtocol tpProtocol)
+        : locAddr(locAddr),
+          rmtAddr(rmtAddr),
+          tpProtocol(tpProtocol)
+    {}
 
-    std::string Describe() const {
+    std::string Describe() const
+    {
         Hccl::IpAddress locIpAddr{}, rmtIpAddr{};
         (void)CommAddrToIpAddress(locAddr, locIpAddr);
         (void)CommAddrToIpAddress(rmtAddr, rmtIpAddr);
@@ -93,16 +98,16 @@ struct TpInfo {
     bool hasMappedJettyPriority{false};
 
     TpInfo() = default;
-    explicit TpInfo(const TpHandle handle)
-        : tpHandle(handle) {}
+    explicit TpInfo(const TpHandle handle) : tpHandle(handle) {}
 };
 
 struct TpAttrInfo {
-    struct TpAttr tpAttr{0};
+    struct TpAttr tpAttr {
+        0
+    };
 
     TpAttrInfo() = default;
-    TpAttrInfo(const struct TpAttr &attr)
-        : tpAttr(attr) {}
+    TpAttrInfo(const struct TpAttr& attr) : tpAttr(attr) {}
 };
 
 using GetTpAttrParam = struct GetTpAttrParamDef {
@@ -111,51 +116,50 @@ using GetTpAttrParam = struct GetTpAttrParamDef {
 
     explicit GetTpAttrParamDef() = default;
     GetTpAttrParamDef(const TpHandle tpHandle, const uint32_t attrBitmap)
-        : tpHandle(tpHandle), attrBitmap(attrBitmap){};
+        : tpHandle(tpHandle),
+          attrBitmap(attrBitmap) {};
 
-    std::string Describe() const {
-        return Hccl::StringFormat("GetTpAttrParam[tpHandle=0x%llx, attrBitmap=0x%x]",
-            static_cast<unsigned long long>(tpHandle), attrBitmap);
+    std::string Describe() const
+    {
+        return Hccl::StringFormat(
+            "GetTpAttrParam[tpHandle=0x%llx, attrBitmap=0x%x]", static_cast<unsigned long long>(tpHandle), attrBitmap);
     }
 };
 
-
 class TpMgr {
 public:
-    static TpMgr &GetInstance(const uint32_t devicePhyId);
-    HcclResult GetTpInfo(const GetTpInfoParam &param, TpInfo &tpInfo);
-    HcclResult GetTpAttr(const GetTpAttrParam &param, TpAttrInfo &tpAttrInfo, CtxHandle ctxHandle);
+    static TpMgr& GetInstance(const uint32_t devicePhyId);
+    HcclResult GetTpInfo(const GetTpInfoParam& param, TpInfo& tpInfo);
+    HcclResult GetTpAttr(const GetTpAttrParam& param, TpAttrInfo& tpAttrInfo, CtxHandle ctxHandle);
     // unimport jetty 会 URMA 销毁 tp 资源，hccl 配套删除记录
-    HcclResult ReleaseTpInfo(const GetTpInfoParam &param, const TpInfo &tpInfo);
-    HcclResult ReleaseTpAttr(const TpHandle tpHandle, const TpAttrInfo &tpAttrInfo);
-    static HcclResult GetTpTotalTimeout(const TpAttrInfo &tpAttrInfo, uint32_t &tpTimeOutMs);
-    static uint8_t CalcTaTimeout(const TpAttrInfo &tpAttrInfo);
+    HcclResult ReleaseTpInfo(const GetTpInfoParam& param, const TpInfo& tpInfo);
+    HcclResult ReleaseTpAttr(const TpHandle tpHandle, const TpAttrInfo& tpAttrInfo);
+    static HcclResult GetTpTotalTimeout(const TpAttrInfo& tpAttrInfo, uint32_t& tpTimeOutMs);
+    static uint8_t CalcTaTimeout(const TpAttrInfo& tpAttrInfo);
 
 private:
-     struct TpInfoCtx {
+    struct TpInfoCtx {
         TpInfo tpInfo{};
         uint32_t useCnt{0};
-        
+
         TpInfoCtx() = default;
-        TpInfoCtx(const TpInfo &info, const uint32_t cnt)
-            : tpInfo(info), useCnt(cnt) {}
+        TpInfoCtx(const TpInfo& info, const uint32_t cnt) : tpInfo(info), useCnt(cnt) {}
     };
 
     struct TpAttrCtx {
         TpAttrInfo tpAttrInfo{};
         uint32_t useCnt{0};
-        
+
         TpAttrCtx() = default;
-        TpAttrCtx(const TpAttrInfo &info, const uint32_t cnt)
-            : tpAttrInfo(info), useCnt(cnt) {}
+        TpAttrCtx(const TpAttrInfo& info, const uint32_t cnt) : tpAttrInfo(info), useCnt(cnt) {}
     };
 
     /*
-    * Request上下文，保存查询TP信息相关调用异步接口出参
-    * handle: 异步接口调用handle，用于查询处理结果
-    * tpInfoNum: 查询到的TP信息个数，当前为复用TP，只会申请1个
-    * dataBuffer: 查询到的TP信息数据，原始数据保留缓冲区
-    */
+     * Request上下文，保存查询TP信息相关调用异步接口出参
+     * handle: 异步接口调用handle，用于查询处理结果
+     * tpInfoNum: 查询到的TP信息个数，当前为复用TP，只会申请1个
+     * dataBuffer: 查询到的TP信息数据，原始数据保留缓冲区
+     */
     enum class ReqPhase : uint8_t { WAIT_LIST = 0, WAIT_TP_ATTR = 1 };
 
     struct RequestCtx {
@@ -169,7 +173,9 @@ private:
 
     struct TpAttrRequestCtx {
         RequestHandle handle{0};
-        struct TpAttr tpAttr{0};
+        struct TpAttr tpAttr {
+            0
+        };
     };
 
     using TpAttrCtxMap = std::unordered_map<TpHandle, TpAttrCtx>;
@@ -186,45 +192,49 @@ private:
 private:
     TpMgr() = default;
     ~TpMgr() = default;
-    TpMgr(const TpMgr &that) = delete;
-    TpMgr &operator=(const TpMgr &that) = delete;
+    TpMgr(const TpMgr& that) = delete;
+    TpMgr& operator=(const TpMgr& that) = delete;
 
-    HcclResult FindAndGetTpInfo(const GetTpInfoParam &param, TpInfo &tpInfo);
-    HcclResult FindAndGetTpAttr(const TpHandle tpHandle, TpAttrInfo &tpAttrInfo);
-    HcclResult LookupInfoCtxEntry(InfoCtxMap &infoMap, const Hccl::IpAddress &locAddr, const Hccl::IpAddress &rmtAddr,
-        const QosKey qosKey, InfoCtxMap::iterator &lit, InfoRmtMap::iterator &rit, InfoQosMap::iterator &qosIt) const;
-    HcclResult PollGetTpInfoReqCtx(std::unique_lock<std::mutex> &reqCtxLock, const GetTpInfoParam &param, TpInfo &tpInfo);
-    HcclResult BeginGetTpInfoListRequest(const GetTpInfoParam &param, ReqQosMap &qosMap, const QosKey qosKey);
-    HcclResult AdvanceGetTpInfoWaitList(const GetTpInfoParam &param, RequestCtx &reqCtx, ReqQosMap &qosMap,
-        const ReqQosMap::iterator it, std::unique_lock<std::mutex> &reqCtxLock, TpInfo &tpInfo);
+    HcclResult FindAndGetTpInfo(const GetTpInfoParam& param, TpInfo& tpInfo);
+    HcclResult FindAndGetTpAttr(const TpHandle tpHandle, TpAttrInfo& tpAttrInfo);
+    HcclResult LookupInfoCtxEntry(
+        InfoCtxMap& infoMap, const Hccl::IpAddress& locAddr, const Hccl::IpAddress& rmtAddr, const QosKey qosKey,
+        InfoCtxMap::iterator& lit, InfoRmtMap::iterator& rit, InfoQosMap::iterator& qosIt) const;
+    HcclResult
+    PollGetTpInfoReqCtx(std::unique_lock<std::mutex>& reqCtxLock, const GetTpInfoParam& param, TpInfo& tpInfo);
+    HcclResult BeginGetTpInfoListRequest(const GetTpInfoParam& param, ReqQosMap& qosMap, const QosKey qosKey);
+    HcclResult AdvanceGetTpInfoWaitList(
+        const GetTpInfoParam& param, RequestCtx& reqCtx, ReqQosMap& qosMap, const ReqQosMap::iterator it,
+        std::unique_lock<std::mutex>& reqCtxLock, TpInfo& tpInfo);
 
-    HcclResult StartGetTpInfoListRequest(const GetTpInfoParam &param, RequestCtx &reqCtx) const;
-    HcclResult StartGetTpAttrForFirstTp(const GetTpInfoParam &param, RequestCtx &reqCtx) const;
-    HcclResult StartGetTpAttrRequest(const GetTpAttrParam &param, TpAttrRequestCtx &reqCtx, CtxHandle ctxHandle) const;
-    HcclResult BuildTpInfoAndCommitQosAttr(const GetTpInfoParam &param, const RequestCtx &reqCtx,
-        const struct HccpTpInfo *baseInfoPtr, const uint32_t tpListIndex, const uint32_t mappedSl, TpInfo &tpInfo);
-    HcclResult CommitTpInfoToCache(const GetTpInfoParam &param, TpInfo &tpInfo);
-    HcclResult HandleCompletedRequest(RequestCtx reqCtx, const GetTpInfoParam &param, TpInfo &tpInfo);
-    HcclResult HandleCompletedTpAttrRequest(const TpAttrRequestCtx reqCtx, const TpHandle tpHandle,
-        TpAttrInfo &tpAttrInfo);
+    HcclResult StartGetTpInfoListRequest(const GetTpInfoParam& param, RequestCtx& reqCtx) const;
+    HcclResult StartGetTpAttrForFirstTp(const GetTpInfoParam& param, RequestCtx& reqCtx) const;
+    HcclResult StartGetTpAttrRequest(const GetTpAttrParam& param, TpAttrRequestCtx& reqCtx, CtxHandle ctxHandle) const;
+    HcclResult BuildTpInfoAndCommitQosAttr(
+        const GetTpInfoParam& param, const RequestCtx& reqCtx, const struct HccpTpInfo* baseInfoPtr,
+        const uint32_t tpListIndex, const uint32_t mappedSl, TpInfo& tpInfo);
+    HcclResult CommitTpInfoToCache(const GetTpInfoParam& param, TpInfo& tpInfo);
+    HcclResult HandleCompletedRequest(RequestCtx reqCtx, const GetTpInfoParam& param, TpInfo& tpInfo);
+    HcclResult
+    HandleCompletedTpAttrRequest(const TpAttrRequestCtx reqCtx, const TpHandle tpHandle, TpAttrInfo& tpAttrInfo);
 
-    InfoCtxMap &GetInfoCtxMap(const TpProtocol tpProtocol);
-    ReqCtxMap  &GetReqCtxMap(const TpProtocol tpProtocol);
-    std::mutex &GetInfoCtxMutex(const TpProtocol tpProtocol);
-    std::mutex &GetReqCtxMutex(const TpProtocol tpProtocol);
+    InfoCtxMap& GetInfoCtxMap(const TpProtocol tpProtocol);
+    ReqCtxMap& GetReqCtxMap(const TpProtocol tpProtocol);
+    std::mutex& GetInfoCtxMutex(const TpProtocol tpProtocol);
+    std::mutex& GetReqCtxMutex(const TpProtocol tpProtocol);
 
 private:
     bool initFlag_{false};
     uint32_t devPhyId_{0};
 
     InfoCtxMap ctpInfoMap_;
-    ReqCtxMap  ctpReqMap_;
+    ReqCtxMap ctpReqMap_;
 
     InfoCtxMap rtpInfoMap_;
-    ReqCtxMap  rtpReqMap_;
+    ReqCtxMap rtpReqMap_;
 
     InfoCtxMap uboeInfoMap_;
-    ReqCtxMap  uboeReqMap_;
+    ReqCtxMap uboeReqMap_;
 
     TpAttrCtxMap tpAttrCtxMap_;
     TpAttrReqCtxMap tpAttrReqCtxMap_;

@@ -48,23 +48,20 @@
 #include "phy_topo_builder.h"
 #include "rank_graph_test_data_builder.h"
 
-extern "C" int TopoAddrInfoGetSize(int phyId, size_t *size);
-extern "C" int TopoAddrInfoGet(int phyId, char *rankInfo, size_t *bufSize);
-extern "C" int TopoAddrInfoGetTopoFilePath(int phyId, char *filePath, size_t bufSize);
+extern "C" int TopoAddrInfoGetSize(int phyId, size_t* size);
+extern "C" int TopoAddrInfoGet(int phyId, char* rankInfo, size_t* bufSize);
+extern "C" int TopoAddrInfoGetTopoFilePath(int phyId, char* filePath, size_t bufSize);
 
 using namespace Hccl;
 
 class RankInfoDetectClientTest : public testing::Test {
 protected:
-    static void SetUpTestCase() {
-        std::cout << "RankInfoDetectClientTest SetUP" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "RankInfoDetectClientTest SetUP" << std::endl; }
 
-    static void TearDownTestCase() {
-        std::cout << "RankInfoDetectClientTest TearDown" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "RankInfoDetectClientTest TearDown" << std::endl; }
 
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         std::cout << "A Test case in RankInfoDetectClientTest SetUP" << std::endl;
         socketHandle = new int(0);
         MOCKER(HrtRaSocketInit).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(socketHandle));
@@ -81,27 +78,25 @@ protected:
         u32 rankId_ = 0;
         std::string clientSocketTag = "rank_info_test_server";
 
-
         auto clientSocket_ = std::make_shared<Socket>(
-            socketHandle, hostIp_, hostPort, serverIp,
-            clientSocketTag, SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE
-        );
+            socketHandle, hostIp_, hostPort, serverIp, clientSocketTag, SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
         SocketAgent socketAgent_ = SocketAgent(clientSocket_.get());
         rankInfoDetectClient_ = new RankInfoDetectClient(devPhyId_, rankSize_, rankId_, clientSocket_);
     }
 
-    virtual void TearDown() {
+    virtual void TearDown()
+    {
         delete rankInfoDetectClient_;
         rankInfoDetectClient_ = nullptr;
         // RankInfoDetectClient 析构会 detach 线程调 DeInit，需等其完成再 verify 清 mock
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        delete static_cast<int *>(socketHandle);
+        delete static_cast<int*>(socketHandle);
         socketHandle = nullptr;
         GlobalMockObject::verify();
         std::cout << "A Test case in RankInfoDetectClientTest TearDown" << std::endl;
     }
 
-    RankInfoDetectClient *rankInfoDetectClient_{nullptr};
+    RankInfoDetectClient* rankInfoDetectClient_{nullptr};
     SocketHandle socketHandle;
 };
 
@@ -125,12 +120,12 @@ std::string BuildRootInfoJsonString()
                 {"net_type", "TOPO_FILE_DESC"},
                 {"net_attr", ""},
                 {"rank_addr_list", nlohmann::json::array({
-                    {
-                        {"addr_type", "IPV4"},
-                        {"addr", rankId == 0U ? "223.0.0.28" : "223.0.0.10"},
-                        {"ports", nlohmann::json::array({rankId == 0U ? "0/0" : "0/1"})},
-                    },
-                })},
+                                       {
+                                           {"addr_type", "IPV4"},
+                                           {"addr", rankId == 0U ? "223.0.0.28" : "223.0.0.10"},
+                                           {"ports", nlohmann::json::array({rankId == 0U ? "0/0" : "0/1"})},
+                                       },
+                                   })},
             },
         });
         rootInfo["rank_list"].push_back(rank);
@@ -138,10 +133,10 @@ std::string BuildRootInfoJsonString()
     return rootInfo.dump();
 }
 
-int FillTmpTopoPath(int phyId, char *path, size_t bufSize)
+int FillTmpTopoPath(int phyId, char* path, size_t bufSize)
 {
     (void)phyId;
-    constexpr const char *tmpPath = "/tmp";
+    constexpr const char* tmpPath = "/tmp";
     const size_t pathSize = std::strlen(tmpPath) + 1U;
     if (path == nullptr || bufSize < pathSize) {
         return -1;
@@ -150,7 +145,7 @@ int FillTmpTopoPath(int phyId, char *path, size_t bufSize)
     return 0;
 }
 
-void BuildEmptyTopo(PhyTopoBuilder *builder, const std::string &topoPath)
+void BuildEmptyTopo(PhyTopoBuilder* builder, const std::string& topoPath)
 {
     (void)builder;
     (void)topoPath;
@@ -158,7 +153,7 @@ void BuildEmptyTopo(PhyTopoBuilder *builder, const std::string &topoPath)
     PhyTopoBuilder::GetInstance().RecoverBuild(test::MakeTopoInfo({0}, {}));
 }
 
-void BuildHostRdmaTopo(PhyTopoBuilder *builder, const std::string &topoPath)
+void BuildHostRdmaTopo(PhyTopoBuilder* builder, const std::string& topoPath)
 {
     (void)builder;
     (void)topoPath;
@@ -166,25 +161,27 @@ void BuildHostRdmaTopo(PhyTopoBuilder *builder, const std::string &topoPath)
     PhyTopoBuilder::GetInstance().RecoverBuild(test::MakeHostRdmaTopo());
 }
 
-void MockTopoPathAndBuild(void (*buildFunc)(PhyTopoBuilder *, const std::string &))
+void MockTopoPathAndBuild(void (*buildFunc)(PhyTopoBuilder*, const std::string&))
 {
-    MOCKER(TopoAddrInfoGetTopoFilePath).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+    MOCKER(TopoAddrInfoGetTopoFilePath)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(invoke(FillTmpTopoPath));
     MOCKER_CPP(&PhyTopoBuilder::Build).stubs().with(mockcpp::any()).will(invoke(buildFunc));
 }
 
 NewRankInfo BuildRankInfoForTls(u32 rankId, TlsStatus tlsStatus)
 {
-    NewRankInfo rankInfo {};
+    NewRankInfo rankInfo{};
     rankInfo.rankId = rankId;
     rankInfo.localId = rankId;
     rankInfo.replacedLocalId = rankId;
-    rankInfo.rankLevelInfos.emplace_back(RankLevelInfo {});
+    rankInfo.rankLevelInfos.emplace_back(RankLevelInfo{});
     rankInfo.tlsStatus = tlsStatus;
     return rankInfo;
 }
 
-void BuildRankTableForTls(RankTableInfo &rankTable, const std::vector<TlsStatus> &tlsStatusList)
+void BuildRankTableForTls(RankTableInfo& rankTable, const std::vector<TlsStatus>& tlsStatusList)
 {
     rankTable.version = "2.0";
     rankTable.rankCount = tlsStatusList.size();
@@ -194,23 +191,18 @@ void BuildRankTableForTls(RankTableInfo &rankTable, const std::vector<TlsStatus>
     }
 }
 
-}
+} // namespace
 
 TEST_F(RankInfoDetectClientTest, Ut_CheckStatus_When_Normal_Expect_Success)
 {
-    MOCKER_CPP(&Socket::GetStatus)
-        .stubs()
-        .then(returnValue((SocketStatus)SocketStatus::OK));
+    MOCKER_CPP(&Socket::GetStatus).stubs().then(returnValue((SocketStatus)SocketStatus::OK));
 
     EXPECT_NO_THROW(rankInfoDetectClient_->CheckStatus());
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_SendAgentIdAndRankSize_When_Normal_Expect_Success)
 {
-    MOCKER(HrtRaSocketBlockSend)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(true));
+    MOCKER(HrtRaSocketBlockSend).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(true));
 
     EXPECT_NO_THROW(rankInfoDetectClient_->SendAgentIdAndRankSize());
 }
@@ -222,7 +214,7 @@ TEST_F(RankInfoDetectClientTest, Ut_ConstructSingleRank_When_Normal_Expect_Succe
     EXPECT_NO_THROW(rankInfoDetectClient_->ConstructSingleRank(localRankTable));
 
     EXPECT_EQ(localRankTable.version, "2.0");
-    EXPECT_EQ(localRankTable.rankCount, 1U) ;
+    EXPECT_EQ(localRankTable.rankCount, 1U);
     EXPECT_EQ(localRankTable.ranks.size(), 1U);
     const NewRankInfo& actualRankInfo = localRankTable.ranks[0];
     EXPECT_EQ(actualRankInfo.rankId, 0);
@@ -237,33 +229,23 @@ TEST_F(RankInfoDetectClientTest, Ut_ConstructRankTable_When_Normal_Expect_Succes
 
     MOCKER(realpath)
         .stubs()
-        .with(
-            mockcpp::any(),
-            outBoundP(
-                const_cast<char*>(testJsonPath.c_str()),
-                testJsonPath.size() + 1
-            )
-        )
-        .will(returnValue(
-            const_cast<char*>(testJsonPath.c_str())
-        ));
+        .with(mockcpp::any(), outBoundP(const_cast<char*>(testJsonPath.c_str()), testJsonPath.size() + 1))
+        .will(returnValue(const_cast<char*>(testJsonPath.c_str())));
     std::string testJsonContent = BuildRootInfoJsonString();
     size_t expectedSize = testJsonContent.size();
-    MOCKER(TopoAddrInfoGetSize)
-        .stubs()
-        .with(0, outBoundP(&expectedSize, sizeof(size_t)))
-        .will(returnValue(0));
+    MOCKER(TopoAddrInfoGetSize).stubs().with(0, outBoundP(&expectedSize, sizeof(size_t))).will(returnValue(0));
     const char* rootInfoCtx = testJsonContent.c_str();
     MOCKER(TopoAddrInfoGet)
         .stubs()
-        .with(0, outBoundP(const_cast<char*>(rootInfoCtx), testJsonContent.size()), outBoundP(&expectedSize, sizeof(size_t)))
+        .with(
+            0, outBoundP(const_cast<char*>(rootInfoCtx), testJsonContent.size()),
+            outBoundP(&expectedSize, sizeof(size_t)))
         .will(returnValue(0));
 
     EXPECT_NO_THROW(rankInfoDetectClient_->ConstructRankTable(localRankTable));
 
     EXPECT_EQ(localRankTable.version, "2.0");
     EXPECT_EQ(localRankTable.rankCount, 2);
-
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_RecvRankTable_When_Normal_Expect_Success)
@@ -288,16 +270,13 @@ TEST_F(RankInfoDetectClientTest, Ut_RecvRankTable_When_Normal_Expect_Success)
 
     MOCKER(aclrtMallocHostWithCfg).stubs().will(returnValue(1));
     std::vector<char> hostAlloc(MAX_BUFFER_LEN);
-    MOCKER(HrtMallocHost).stubs().with(mockcpp::any()).will(returnValue(static_cast<void *>(hostAlloc.data())));
+    MOCKER(HrtMallocHost).stubs().with(mockcpp::any()).will(returnValue(static_cast<void*>(hostAlloc.data())));
     MOCKER(HrtFreeHost).stubs().with(mockcpp::any()).will(ignoreReturnValue());
-    void *msg = rankInfoMsg.data();
+    void* msg = rankInfoMsg.data();
     u64 msgLen = rankInfoMsg.size();
     u64 revMsgLenOut = msgLen;
-    u64 &revMsgLen = revMsgLenOut;
-    MOCKER_CPP(&SocketAgent::RecvMsg)
-            .stubs()
-            .with(outBoundP(msg, msgLen), outBound(revMsgLen))
-            .will(returnValue(true));
+    u64& revMsgLen = revMsgLenOut;
+    MOCKER_CPP(&SocketAgent::RecvMsg).stubs().with(outBoundP(msg, msgLen), outBound(revMsgLen)).will(returnValue(true));
 
     MOCKER_CPP(&RankInfoDetectClient::VerifyRankTable).stubs().will(ignoreReturnValue());
 
@@ -342,7 +321,8 @@ TEST_F(RankInfoDetectClientTest, Ut_VerifyTlsConsistency_When_KnownConsistentAnd
 
 TEST_F(RankInfoDetectClientTest, Ut_VerifyTlsConsistency_When_KnownInconsistentAndUnknownExists_Expect_ReturnParaError)
 {
-    BuildRankTableForTls(rankInfoDetectClient_->rankTable_, {TlsStatus::ENABLE, TlsStatus::DISABLE, TlsStatus::UNKNOWN});
+    BuildRankTableForTls(
+        rankInfoDetectClient_->rankTable_, {TlsStatus::ENABLE, TlsStatus::DISABLE, TlsStatus::UNKNOWN});
 
     HcclResult ret = rankInfoDetectClient_->VerifyTlsConsistency();
 
@@ -376,7 +356,7 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_EmptyRankLevelInfos_Exp
     // When & Then: loop iterates zero times, returns without error
     EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
     EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
-    PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
+    PhyTopo::GetInstance()->Clear(); // 清理上一次测试的拓扑状态
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_NoTopoGraph_Expect_NoThrow)
@@ -403,7 +383,7 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_NoTopoGraph_Expect_NoTh
     // Then: skip nullptr graph, log debug, continue, return without error
     EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
     EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
-    PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
+    PhyTopo::GetInstance()->Clear(); // 清理上一次测试的拓扑状态
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_MultipleRankLevelInfos_Expect_NoThrow)
@@ -431,7 +411,7 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_MultipleRankLevelInfos_
     // When & Then: iterate all level infos, all graphs nullptr, no throw
     EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
     EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
-    PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
+    PhyTopo::GetInstance()->Clear(); // 清理上一次测试的拓扑状态
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_RdmaLinkEmptyRankAddrs_Expect_Continue)
@@ -443,7 +423,7 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_RdmaLinkEmptyRankAddrs_
     rankInfo.localId = 0;
 
     RankLevelInfo levelInfo;
-    levelInfo.netLayer = 3;  // HOST+ROCE link at netLayer=3
+    levelInfo.netLayer = 3; // HOST+ROCE link at netLayer=3
     // rankAddrs left EMPTY — triggers rankLevelInfo.rankAddrs.empty() check
     rankInfo.rankLevelInfos.push_back(levelInfo);
 
@@ -455,7 +435,7 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_RdmaLinkEmptyRankAddrs_
     PhyTopo::GetInstance()->Clear();
     EXPECT_NO_THROW(rankInfoDetectClient_->HostListenPortDetect(rankInfo));
     EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
-    PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
+    PhyTopo::GetInstance()->Clear(); // 清理上一次测试的拓扑状态
 }
 
 // basePort configured, portRange empty → listenPort = basePort + devPhyId
@@ -463,8 +443,10 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_BasePort_Expect_HostPor
 {
     // Given: HOST+ROCE link at netLayer=3, basePort configured
     EnvHostNicConfig fakeConfig;
-    fakeConfig.hcclHostSocketPortRange = CfgField<std::vector<SocketPortRange>>{"HCCL_HOST_SOCKET_PORT_RANGE", {},
-        [] (const std::string &s) -> std::vector<SocketPortRange> { return CastSocketPortRange(s, "HCCL_HOST_SOCKET_PORT_RANGE"); }};
+    fakeConfig.hcclHostSocketPortRange = CfgField<std::vector<SocketPortRange>>{
+        "HCCL_HOST_SOCKET_PORT_RANGE", {}, [](const std::string& s) -> std::vector<SocketPortRange> {
+            return CastSocketPortRange(s, "HCCL_HOST_SOCKET_PORT_RANGE");
+        }};
     fakeConfig.hcclHostSocketPortRange.isParsed = true;
     // hcclIfBasePort: configured to valid value 50000
     fakeConfig.hcclIfBasePort = CfgField<u32>{"HCCL_IF_BASE_PORT", 50000, Str2T<u32>};
@@ -479,7 +461,7 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_BasePort_Expect_HostPor
     AddressInfo addrInfo;
     addrInfo.addr = IpAddress("192.168.1.1");
     RankLevelInfo levelInfo;
-    levelInfo.netLayer = 3;  // HOST+ROCE link at netLayer=3
+    levelInfo.netLayer = 3; // HOST+ROCE link at netLayer=3
     levelInfo.rankAddrs.push_back(addrInfo);
     rankInfo.rankLevelInfos.push_back(levelInfo);
 
@@ -496,7 +478,7 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_BasePort_Expect_HostPor
 
     // Cleanup: TearDown resets hostSocket_
     rankInfoDetectClient_->SocketTearDown(0);
-    PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
+    PhyTopo::GetInstance()->Clear(); // 清理上一次测试的拓扑状态
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_NoHostLink_Expect_HostPortUnchanged)
@@ -511,7 +493,7 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_NoHostLink_Expect_HostP
     AddressInfo addrInfo;
     addrInfo.addr = IpAddress("192.168.1.1");
     RankLevelInfo levelInfo;
-    levelInfo.netLayer = 1;  // netLayer=1 has DEV links, not HOST
+    levelInfo.netLayer = 1; // netLayer=1 has DEV links, not HOST
     levelInfo.rankAddrs.push_back(addrInfo);
     rankInfo.rankLevelInfos.push_back(levelInfo);
 
@@ -525,7 +507,7 @@ TEST_F(RankInfoDetectClientTest, Ut_HostListenPortDetect_NoHostLink_Expect_HostP
 
     // Then: hostPort should remain at default since no HOST RDMA link found
     EXPECT_EQ(rankInfo.hostPort, DEFAULT_VALUE_TCPPORT);
-    PhyTopo::GetInstance()->Clear();  // 清理上一次测试的拓扑状态
+    PhyTopo::GetInstance()->Clear(); // 清理上一次测试的拓扑状态
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_TearDown_HostSocketNull_Expect_EarlyReturn)

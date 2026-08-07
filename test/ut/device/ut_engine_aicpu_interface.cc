@@ -34,19 +34,10 @@ using namespace hccl;
 
 class Test_Engine_Aicpu_Interface : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "Test_Engine_Aicpu_Interface SetUP" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "Test_Engine_Aicpu_Interface TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "Test_Engine_Aicpu_Interface SetUP" << std::endl; }
+    static void TearDownTestCase() { std::cout << "Test_Engine_Aicpu_Interface TearDown" << std::endl; }
     // Some expensive resource shared by all tests.
-    virtual void SetUp()
-    {
-        std::cout << "A Test SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test SetUP" << std::endl; }
     virtual void TearDown()
     {
         GlobalMockObject::verify();
@@ -54,17 +45,11 @@ protected:
     }
 };
 
-TEST_F(Test_Engine_Aicpu_Interface, test_RunAicpuThreadSupplementNotify) {
-
-    MOCKER(hrtGetDeviceType)
-        .stubs()
-        .with(outBound(DevType::DEV_TYPE_950))
-        .will(returnValue(HCCL_SUCCESS));
+TEST_F(Test_Engine_Aicpu_Interface, test_RunAicpuThreadSupplementNotify)
+{
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
     bool isDeviceSide{false};
-    MOCKER(GetRunSideIsDevice)
-        .stubs()
-        .with(outBound(isDeviceSide))
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
 
     AicpuTsThread aicpuThread(StreamType::STREAM_TYPE_DEVICE, 2, NotifyLoadType::DEVICE_NOTIFY);
     HcclResult ret = aicpuThread.Init();
@@ -78,15 +63,9 @@ TEST_F(Test_Engine_Aicpu_Interface, test_RunAicpuThreadSupplementNotify) {
     std::string supplementStr = aicpuThread.GetUniqueId();
     GlobalMockObject::verify();
 
-    MOCKER(hrtGetDeviceType)
-        .stubs()
-        .with(outBound(DevType::DEV_TYPE_950))
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
     isDeviceSide = true;
-    MOCKER(GetRunSideIsDevice)
-        .stubs()
-        .with(outBound(isDeviceSide))
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
 
     CommAicpuParam aicpuPara{};
     std::string hcomId = "abcd";
@@ -94,16 +73,10 @@ TEST_F(Test_Engine_Aicpu_Interface, test_RunAicpuThreadSupplementNotify) {
     aicpuPara.deviceLogicId = 0;
     aicpuPara.devicePhyId = 0;
     aicpuPara.deviceType = (u32)DevType::DEV_TYPE_950;
-    MOCKER_CPP(&CollCommAicpuMgr::InitAicpuIndOp)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&CollCommAicpu::RegisterThreadAddDfxTaskInfo)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&CollCommAicpu::RegisterThreadCacheCallback)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    void *args = (void*)(&aicpuPara);
+    MOCKER_CPP(&CollCommAicpuMgr::InitAicpuIndOp).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollCommAicpu::RegisterThreadAddDfxTaskInfo).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollCommAicpu::RegisterThreadCacheCallback).stubs().will(returnValue(HCCL_SUCCESS));
+    void* args = (void*)(&aicpuPara);
     EXPECT_EQ(RunAicpuIndOpCommInit(args), 0);
 
     ThreadMgrAicpuParam para{};
@@ -120,15 +93,9 @@ TEST_F(Test_Engine_Aicpu_Interface, test_RunAicpuThreadSupplementNotify) {
     EXPECT_EQ(memcpy_s(para.threadParam[0], THREAD_UNIQUE_ID_MAX_SIZE, supplementStr.c_str(), copyLen), 0);
     EXPECT_EQ(RunAicpuThreadSupplementNotify(args), 0);
 
-    MOCKER_CPP(&AicpuIndopProcess::AicpuIndOpNotifyInit)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&AicpuThreadProcess::AicpuThreadInit)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&AicpuThreadProcess::AicpuThreadDestroy)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&AicpuIndopProcess::AicpuIndOpNotifyInit).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&AicpuThreadProcess::AicpuThreadInit).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&AicpuThreadProcess::AicpuThreadDestroy).stubs().will(returnValue(HCCL_SUCCESS));
     EXPECT_EQ(RunAicpuIndOpNotify(args), 0);
     EXPECT_EQ(RunAicpuThreadInit(args), 0);
     EXPECT_EQ(RunAicpuThreadDestroy(args), 0);

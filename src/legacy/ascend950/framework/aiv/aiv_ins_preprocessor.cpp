@@ -10,21 +10,15 @@
 
 #include "aiv_ins_preprocessor.h"
 #include "aiv_ins.h"
- #include "env_config.h"
+#include "env_config.h"
 
 namespace Hccl {
 
-void AivInsPreprocessor::SetProtocol(uint8_t protocol)
-{
-    protocol_ = protocol;
-}
+void AivInsPreprocessor::SetProtocol(uint8_t protocol) { protocol_ = protocol; }
 
-uint8_t AivInsPreprocessor::GetProtocol() const
-{
-    return protocol_;
-}
+uint8_t AivInsPreprocessor::GetProtocol() const { return protocol_; }
 
-void AivInsPreprocessor::Preprocess(std::shared_ptr<InsQueue> &insQueue) const
+void AivInsPreprocessor::Preprocess(std::shared_ptr<InsQueue>& insQueue) const
 {
     HCCL_INFO("[AivInsPreprocessor::%s] insQueue Preprocess start.", __func__);
 
@@ -39,27 +33,26 @@ void AivInsPreprocessor::Preprocess(std::shared_ptr<InsQueue> &insQueue) const
     HCCL_INFO("[AivInsPreprocessor::%s] insQueue Preprocess end.", __func__);
 }
 
-void AivInsPreprocessor::InsPreprocess(InsIterator &insIter) const
+void AivInsPreprocessor::InsPreprocess(InsIterator& insIter) const
 {
     HCCL_INFO("[AivInsPreprocessor::%s] start.", __func__);
 
-    const AivInstruction &aivIns = dynamic_cast<const AivInstruction &>(*insIter);
+    const AivInstruction& aivIns = dynamic_cast<const AivInstruction&>(*insIter);
 
     auto links = aivIns.GetLinks();
 
-    if (protocol_ == 0) {   // ubmemory
+    if (protocol_ == 0) { // ubmemory
         BatchBuildTransports(links);
-    } else if (protocol_ == 1) {    // urma 
+    } else if (protocol_ == 1) { // urma
         BatchBuildUrmaTransports(links);
     } else {
-        THROW<InvalidParamsException>(
-            StringFormat("protocol[%u] not supported", protocol_));
+        THROW<InvalidParamsException>(StringFormat("protocol[%u] not supported", protocol_));
     }
 
     HCCL_INFO("[AivInsPreprocessor::%s] end.", __func__);
 }
 
-void AivInsPreprocessor::BatchBuildTransports(const vector<LinkData> &links) const
+void AivInsPreprocessor::BatchBuildTransports(const vector<LinkData>& links) const
 {
     HCCL_INFO("[AivInsPreprocessor::%s] start.", __func__);
 
@@ -71,7 +64,7 @@ void AivInsPreprocessor::BatchBuildTransports(const vector<LinkData> &links) con
     HCCL_INFO("[AivInsPreprocessor::%s] end.", __func__);
 }
 
-void AivInsPreprocessor::BatchBuildUrmaTransports(const vector<LinkData> &links) const
+void AivInsPreprocessor::BatchBuildUrmaTransports(const vector<LinkData>& links) const
 {
     HCCL_RUN_INFO("[AivInsPreprocessor::%s] start.", __func__);
 
@@ -79,12 +72,12 @@ void AivInsPreprocessor::BatchBuildUrmaTransports(const vector<LinkData> &links)
 
     // 创建RmaConnectiuon
     RmaConnManager& connManager = comm->GetRmaConnManager();
-    for (auto &link : links) {
+    for (auto& link : links) {
         auto conn = connManager.Create(opTag, link, HrtUbJfcMode::USER_CTL);
         CHECK_NULLPTR(conn, "[AivInsPreprocessor::BatchBuildUrmaTransports] conn is nullptr!");
     }
     HCCL_INFO("[AivInsPreprocessor::%s] end creating rma connection", __func__);
-    
+
     // 创建UrmaDirectTransport并进行异步建链、交换
     auto transportMgr = comm->GetMemTransportManager();
     CHECK_NULLPTR(transportMgr, "[AivInsPreprocessor::BatchBuildUrmaTransports] transportMgr is nullptr!");
@@ -101,10 +94,10 @@ void AivInsPreprocessor::BatchBuildUrmaTransports(const vector<LinkData> &links)
         }
         if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
             transportMgr->DumpNotReadyTransportsUrma();
-            RPT_INPUT_ERR(true, "EI0006", std::vector<std::string>({"reason"}),
-                            std::vector<std::string>({"Aiv urma wait transports ready timeout."}));
-            THROW<InternalException>("Aiv WaitTransportReady timeout, commId[%s].",
-                                    comm->GetId().c_str());
+            RPT_INPUT_ERR(
+                true, "EI0006", std::vector<std::string>({"reason"}),
+                std::vector<std::string>({"Aiv urma wait transports ready timeout."}));
+            THROW<InternalException>("Aiv WaitTransportReady timeout, commId[%s].", comm->GetId().c_str());
             break;
         }
     }
@@ -116,8 +109,7 @@ std::vector<HcclAiRMAWQ> AivInsPreprocessor::GetWqs() const
 {
     HCCL_INFO("[AivInsPreprocessor::%s] start.", __func__);
     if (protocol_ != 1) {
-        THROW<InvalidParamsException>(
-            StringFormat("can not get wq info when protocol is [%u]", protocol_));
+        THROW<InvalidParamsException>(StringFormat("can not get wq info when protocol is [%u]", protocol_));
     }
     auto memTransportMgr = comm->GetMemTransportManager();
     CHECK_NULLPTR(memTransportMgr, "[AivInsPreprocessor::GetWqs] memTransportMgr is nullptr!");
@@ -128,16 +120,13 @@ std::vector<HcclAiRMACQ> AivInsPreprocessor::GetCqs() const
 {
     HCCL_INFO("[AivInsPreprocessor::%s] start.", __func__);
     if (protocol_ != 1) {
-        THROW<InvalidParamsException>(
-            StringFormat("can not get cq info when protocol is [%u]", protocol_));
+        THROW<InvalidParamsException>(StringFormat("can not get cq info when protocol is [%u]", protocol_));
     }
     auto memTransportMgr = comm->GetMemTransportManager();
     CHECK_NULLPTR(memTransportMgr, "[AivInsPreprocessor::GetCqs] memTransportMgr is nullptr!");
     return memTransportMgr->GetUrmaCqs();
 }
 
-AivInsPreprocessor::~AivInsPreprocessor()
-{
-}
+AivInsPreprocessor::~AivInsPreprocessor() {}
 
 } // namespace Hccl

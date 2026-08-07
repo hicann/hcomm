@@ -21,19 +21,19 @@ class RemoteIpcRmaBufferImpl : public RmaBuffer {
 public:
     explicit RemoteIpcRmaBufferImpl(const HcclNetDevCtx netDevCtx);
 
-    HcclResult Deserialize(const std::string &msg);
+    HcclResult Deserialize(const std::string& msg);
     HcclResult Open();
     HcclResult Close();
 
     ~RemoteIpcRmaBufferImpl() override;
 
-    RemoteIpcRmaBufferImpl(const RemoteIpcRmaBufferImpl &that) = delete;
-    RemoteIpcRmaBufferImpl &operator=(const RemoteIpcRmaBufferImpl &that) = delete;
+    RemoteIpcRmaBufferImpl(const RemoteIpcRmaBufferImpl& that) = delete;
+    RemoteIpcRmaBufferImpl& operator=(const RemoteIpcRmaBufferImpl& that) = delete;
 
 private:
-    const           HcclNetDevCtx netDevCtx{nullptr};
-    SecIpcName_t    memName;
-    u64             memOffset{0};
+    const HcclNetDevCtx netDevCtx{nullptr};
+    SecIpcName_t memName;
+    u64 memOffset{0};
 };
-}
+} // namespace hccl
 #endif //  REMOTE_IPC_RMA_BUFFER_IMPL_H

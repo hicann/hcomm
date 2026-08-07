@@ -20,9 +20,9 @@
 
 namespace sim {
 
-int PipeBlockRead(int fd, void *buf, size_t len)
+int PipeBlockRead(int fd, void* buf, size_t len)
 {
-    uint8_t *ptr = static_cast<uint8_t *>(buf);
+    uint8_t* ptr = static_cast<uint8_t*>(buf);
     size_t remaining = len;
     while (remaining > 0) {
         ssize_t n = read(fd, ptr, remaining);
@@ -43,9 +43,9 @@ int PipeBlockRead(int fd, void *buf, size_t len)
     return 0;
 }
 
-int PipeBlockWrite(int fd, const void *buf, size_t len)
+int PipeBlockWrite(int fd, const void* buf, size_t len)
 {
-    const uint8_t *ptr = static_cast<const uint8_t *>(buf);
+    const uint8_t* ptr = static_cast<const uint8_t*>(buf);
     size_t remaining = len;
     while (remaining > 0) {
         ssize_t n = write(fd, ptr, remaining);
@@ -69,7 +69,7 @@ int PipeBlockWrite(int fd, const void *buf, size_t len)
     return 0;
 }
 
-int PipeSendMsg(int fd, uint8_t cmd, const void *data, uint32_t len)
+int PipeSendMsg(int fd, uint8_t cmd, const void* data, uint32_t len)
 {
     PipeMessage msg{};
     msg.cmd = cmd;
@@ -81,7 +81,7 @@ int PipeSendMsg(int fd, uint8_t cmd, const void *data, uint32_t len)
     return PipeBlockWrite(fd, &msg, sizeof(msg));
 }
 
-int PipeRecvMsg(int fd, uint8_t &outCmd, void *outData, uint32_t maxLen, uint32_t &outLen)
+int PipeRecvMsg(int fd, uint8_t& outCmd, void* outData, uint32_t maxLen, uint32_t& outLen)
 {
     PipeMessage msg{};
     if (PipeBlockRead(fd, &msg, sizeof(msg)) != 0) {
@@ -106,7 +106,7 @@ int PipeRecvMsg(int fd, uint8_t &outCmd, void *outData, uint32_t maxLen, uint32_
     return 0;
 }
 
-int PipeCreate(PipePair &pair)
+int PipeCreate(PipePair& pair)
 {
     int fds[2] = {-1, -1};
     if (pipe2(fds, O_CLOEXEC) == -1) {
@@ -119,7 +119,7 @@ int PipeCreate(PipePair &pair)
     return 0;
 }
 
-void PipeClose(int &fd)
+void PipeClose(int& fd)
 {
     if (fd >= 0) {
         close(fd);
@@ -127,7 +127,7 @@ void PipeClose(int &fd)
     }
 }
 
-int PipeChildSetup(PipePair &h2d, PipePair &d2h, int targetReadFd, int targetWriteFd)
+int PipeChildSetup(PipePair& h2d, PipePair& d2h, int targetReadFd, int targetWriteFd)
 {
     // 子进程不写 h2d，不读 d2h
     close(h2d.writeFd);

@@ -16,23 +16,17 @@ RankGraphV2::RankGraphV2() {}
 
 RankGraphV2::~RankGraphV2() {}
 
-RankGraphV2::RankGraphV2(void *rankGraphPtr)
-{
-    pImpl = std::make_unique<Hccl::IRankGraph>(rankGraphPtr);
-}
+RankGraphV2::RankGraphV2(void* rankGraphPtr) { pImpl = std::make_unique<Hccl::IRankGraph>(rankGraphPtr); }
 
-HcclResult RankGraphV2::GetRankSize(uint32_t *rankSize)
-{
-    return pImpl->GetRankSize(rankSize);
-}
+HcclResult RankGraphV2::GetRankSize(uint32_t* rankSize) { return pImpl->GetRankSize(rankSize); }
 
-HcclResult RankGraphV2::GetDevicePort(const uint32_t rank, uint32_t *devPort)
+HcclResult RankGraphV2::GetDevicePort(const uint32_t rank, uint32_t* devPort)
 {
     CHK_RET(pImpl->GetDevicePort(rank, devPort));
     return HCCL_SUCCESS;
 }
 
-HcclResult RankGraphV2::GetListenPort(const uint32_t rank, uint32_t *listenPort, EndpointLocType locType)
+HcclResult RankGraphV2::GetListenPort(const uint32_t rank, uint32_t* listenPort, EndpointLocType locType)
 {
     if (locType == EndpointLocType::ENDPOINT_LOC_TYPE_DEVICE) {
         CHK_RET(pImpl->GetDevicePort(rank, listenPort));
@@ -45,48 +39,45 @@ HcclResult RankGraphV2::GetListenPort(const uint32_t rank, uint32_t *listenPort,
     return HCCL_SUCCESS;
 }
 
-HcclResult RankGraphV2::GetRankId(uint32_t *rank)
-{
-    return pImpl->GetRankId(rank);
-}
+HcclResult RankGraphV2::GetRankId(uint32_t* rank) { return pImpl->GetRankId(rank); }
 
-HcclResult RankGraphV2::GetLinks(uint32_t netLayer, uint32_t srcRank, uint32_t dstRank, CommLink **linkList,
-                                 uint32_t *listSize)
+HcclResult
+RankGraphV2::GetLinks(uint32_t netLayer, uint32_t srcRank, uint32_t dstRank, CommLink** linkList, uint32_t* listSize)
 {
     return pImpl->GetLinks(netLayer, srcRank, dstRank, linkList, listSize);
 }
 
-HcclResult RankGraphV2::GetRankGraphInfo(GraphType type, void **graph, uint32_t *len)
+HcclResult RankGraphV2::GetRankGraphInfo(GraphType type, void** graph, uint32_t* len)
 {
     return pImpl->GetRankGraphInfo(graph, len);
 }
 
-HcclResult RankGraphV2::GetDeviceId(uint32_t rankId, uint32_t *deviceId)
+HcclResult RankGraphV2::GetDeviceId(uint32_t rankId, uint32_t* deviceId)
 {
     return pImpl->GetDeviceId(rankId, deviceId);
 }
 
-HcclResult RankGraphV2::GetNetLayers(uint32_t **netLayers, uint32_t *netLayerNum)
+HcclResult RankGraphV2::GetNetLayers(uint32_t** netLayers, uint32_t* netLayerNum)
 {
     return pImpl->GetNetLayers(netLayers, netLayerNum);
 }
 
-HcclResult RankGraphV2::GetInstTopoTypeByNetLayer(uint32_t netLayer, CommTopo *topoType)
+HcclResult RankGraphV2::GetInstTopoTypeByNetLayer(uint32_t netLayer, CommTopo* topoType)
 {
     return pImpl->GetInstTopoTypeByNetLayer(netLayer, topoType);
 }
 
-HcclResult RankGraphV2::GetInstSizeByNetLayer(uint32_t netLayer, uint32_t *rankNum)
+HcclResult RankGraphV2::GetInstSizeByNetLayer(uint32_t netLayer, uint32_t* rankNum)
 {
     return pImpl->GetInstSizeByNetLayer(netLayer, rankNum);
 }
 
-HcclResult RankGraphV2::GetInstRanksByNetLayer(uint32_t netLayer, uint32_t **rankList, uint32_t *rankNum)
+HcclResult RankGraphV2::GetInstRanksByNetLayer(uint32_t netLayer, uint32_t** rankList, uint32_t* rankNum)
 {
     return pImpl->GetInstRanksByNetLayer(netLayer, rankList, rankNum);
 }
 
-HcclResult RankGraphV2::GetInstSizeListByNetLayer(uint32_t netLayer, uint32_t **instSizeList, uint32_t *listSize)
+HcclResult RankGraphV2::GetInstSizeListByNetLayer(uint32_t netLayer, uint32_t** instSizeList, uint32_t* listSize)
 {
     return pImpl->GetInstSizeListByNetLayer(netLayer, instSizeList, listSize);
 }
@@ -101,24 +92,27 @@ HcclResult RankGraphV2::GetTopoType(const uint32_t netLayer, const uint32_t topo
     return pImpl->GetTopoType(netLayer, topoInstId, topoType);
 }
 
-HcclResult RankGraphV2::GetRanksByTopoInst(const uint32_t netLayer, const uint32_t topoInstId, uint32_t** ranks, uint32_t* rankNum)
+HcclResult
+RankGraphV2::GetRanksByTopoInst(const uint32_t netLayer, const uint32_t topoInstId, uint32_t** ranks, uint32_t* rankNum)
 {
     return pImpl->GetRanksByTopoInst(netLayer, topoInstId, ranks, rankNum);
 }
 
-HcclResult RankGraphV2::GetEndpointNum(uint32_t netLayer, uint32_t topoInstId, uint32_t *num)
+HcclResult RankGraphV2::GetEndpointNum(uint32_t netLayer, uint32_t topoInstId, uint32_t* num)
 {
- 	return pImpl->GetEndpointNum(netLayer, topoInstId, num);
-}
- 	 
-HcclResult RankGraphV2::GetEndpointDesc(uint32_t netLayer, uint32_t topoInstId, uint32_t *descNum, EndpointDesc *endpointDesc)
-{
- 	return pImpl->GetEndpointDesc(netLayer, topoInstId, descNum, endpointDesc);
-}
- 	 
-HcclResult RankGraphV2::GetEndpointInfo(uint32_t rankId, const EndpointDesc *endPointDesc, EndpointAttr endpointAttr, uint32_t infoLen, void *info)
-{
- 	return pImpl->GetEndpointInfo(rankId, endPointDesc, endpointAttr, infoLen, info);
+    return pImpl->GetEndpointNum(netLayer, topoInstId, num);
 }
 
-};  // namespace hccl
+HcclResult
+RankGraphV2::GetEndpointDesc(uint32_t netLayer, uint32_t topoInstId, uint32_t* descNum, EndpointDesc* endpointDesc)
+{
+    return pImpl->GetEndpointDesc(netLayer, topoInstId, descNum, endpointDesc);
+}
+
+HcclResult RankGraphV2::GetEndpointInfo(
+    uint32_t rankId, const EndpointDesc* endPointDesc, EndpointAttr endpointAttr, uint32_t infoLen, void* info)
+{
+    return pImpl->GetEndpointInfo(rankId, endPointDesc, endpointAttr, infoLen, info);
+}
+
+}; // namespace hccl

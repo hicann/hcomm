@@ -16,10 +16,8 @@ using namespace Hccl;
 
 class ConnInterfaceTest : public ::testing::Test {
 protected:
-    void SetUp() override
-    {}
-    void TearDown() override
-    {}
+    void SetUp() override {}
+    void TearDown() override {}
 };
 
 TEST_F(ConnInterfaceTest, ConnInterface_ShouldConstruct_WhenValidParameters)
@@ -94,9 +92,9 @@ TEST_F(ConnInterfaceTest, Describe_Test)
     LinkType linkType = LinkType::PEER2PEER;
     LinkProtocol linkProtocol = LinkProtocol::UB_CTP;
     ConnInterface conn(addr, pos, linkType, linkProtocol);
-    std::string expected =
-        "ConnInterface[addr=IpAddress[0000:0000:0000:0000:0000:0000:7f00:0001, AF=IPv4, addr=127.0.0.1], "
-        "pos=AddrPosition::DEVICE]";
+    std::string expected
+        = "ConnInterface[addr=IpAddress[0000:0000:0000:0000:0000:0000:7f00:0001, AF=IPv4, addr=127.0.0.1], "
+          "pos=AddrPosition::DEVICE]";
     EXPECT_EQ(conn.Describe(), expected);
 }
 

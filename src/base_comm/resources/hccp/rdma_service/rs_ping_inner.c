@@ -14,15 +14,14 @@
 uint32_t RsPingGetTripTime(struct RsPingTimestamp *timestamp)
 {
     uint64_t localInterval = ((timestamp->tvSec4 - timestamp->tvSec1) * RS_PING_SEC_TO_USEC + timestamp->tvUsec4) -
-        timestamp->tvUsec1;
+                             timestamp->tvUsec1;
     uint64_t remoteInterval = ((timestamp->tvSec3 - timestamp->tvSec2) * RS_PING_SEC_TO_USEC + timestamp->tvUsec3) -
-        timestamp->tvUsec2;
+                              timestamp->tvUsec2;
 
     hccp_dbg("t1:{%llu, %llu} t4:{%llu, %llu} t4-t1:%llu, t2:{%llu, %llu} t3:{%llu, %llu} t3-t2:%llu, rtt:%u",
-        timestamp->tvSec1, timestamp->tvUsec1,
-        timestamp->tvSec4, timestamp->tvUsec4, localInterval,
-        timestamp->tvSec2, timestamp->tvUsec2,
-        timestamp->tvSec3, timestamp->tvUsec3, remoteInterval, (uint32_t)(localInterval - remoteInterval));
+        timestamp->tvSec1, timestamp->tvUsec1, timestamp->tvSec4, timestamp->tvUsec4, localInterval, timestamp->tvSec2,
+        timestamp->tvUsec2, timestamp->tvSec3, timestamp->tvUsec3, remoteInterval,
+        (uint32_t)(localInterval - remoteInterval));
 
     return (uint32_t)(localInterval - remoteInterval);
 }

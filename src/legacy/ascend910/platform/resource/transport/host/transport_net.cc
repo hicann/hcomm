@@ -11,15 +11,11 @@
 #include "transport_net.h"
 
 namespace hccl {
-TransportNet::TransportNet(DispatcherPub *dispatcher,
-                           const std::unique_ptr<NotifyPool> &notifyPool,
-                           MachinePara &machinePara,
-                           std::chrono::milliseconds timeout)
+TransportNet::TransportNet(
+    DispatcherPub* dispatcher, const std::unique_ptr<NotifyPool>& notifyPool, MachinePara& machinePara,
+    std::chrono::milliseconds timeout)
     : TransportBase(dispatcher, notifyPool, machinePara, timeout)
-{
-}
+{}
 
-TransportNet::~TransportNet()
-{
-}
-}  // namespace hccl
+TransportNet::~TransportNet() {}
+} // namespace hccl

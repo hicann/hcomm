@@ -35,8 +35,7 @@
 
 namespace hcomm {
 
-static HcclResult HccpRaTlvRequest(const TlvHandle tlvHandle,
-    const u32 tlvModuleType, const u32 tlvCcuMsgType)
+static HcclResult HccpRaTlvRequest(const TlvHandle tlvHandle, const u32 tlvModuleType, const u32 tlvCcuMsgType)
 {
     CHK_PTR_NULL(tlvHandle);
     struct TlvMsg sendMsg {};
@@ -47,41 +46,44 @@ static HcclResult HccpRaTlvRequest(const TlvHandle tlvHandle,
     constexpr u32 RA_TLV_REQUEST_UNAVAIL = 128308;
     int32_t ret = RaTlvRequest(tlvHandle, tlvModuleType, &sendMsg, &recvMsg);
     if (ret == RA_TLV_REQUEST_UNAVAIL || ret == OTHERS_ENOTSUPP) {
-        HCCL_RUN_WARNING("[%s] ra tlv request UNAVAIL, tlvHandle[%p], tlvModeulType[%u], tlvCcuMsgType[%u], ret[%d].",
-            __func__, tlvHandle, tlvModuleType, tlvCcuMsgType, ret);
+        HCCL_RUN_WARNING(
+            "[%s] ra tlv request UNAVAIL, tlvHandle[%p], tlvModeulType[%u], tlvCcuMsgType[%u], ret[%d].", __func__,
+            tlvHandle, tlvModuleType, tlvCcuMsgType, ret);
         return HCCL_E_AGAIN; // 代表CCU驱动已被拉起，需要等待其他进程退出
     }
 
     if (ret != 0) {
-        HCCL_ERROR("[Request][RaTlv]errNo[0x%016llx] ra tlv request fail. "
+        HCCL_ERROR(
+            "[Request][RaTlv]errNo[0x%016llx] ra tlv request fail. "
             "return: ret[%d], module type[%u], message type[%u]",
-             HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK), tlvModuleType, tlvCcuMsgType);
+            HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK), tlvModuleType, tlvCcuMsgType);
         return HcclResult::HCCL_E_NETWORK;
     }
 
-    HCCL_INFO("tlv request success, tlv module type[%u], "
-        "message type[%u]", tlvModuleType, tlvCcuMsgType);
+    HCCL_INFO(
+        "tlv request success, tlv module type[%u], "
+        "message type[%u]",
+        tlvModuleType, tlvCcuMsgType);
     return HcclResult::HCCL_SUCCESS;
 }
 
-static CcuResult MockCcuDrvHandleInit(hcomm::CcuDrvHandle *This)
+static CcuResult MockCcuDrvHandleInit(hcomm::CcuDrvHandle* This)
 {
     HCCL_RUN_INFO("[CcuDrvHandle][%s], deviceLogicId: %d", __func__, This->devLogicId_);
     CCU_CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(This->devLogicId_), This->devPhyId_));
-    auto &tlvHdcMgr = HccpTlvHdcMgr::GetInstance(This->devPhyId_);
+    auto& tlvHdcMgr = HccpTlvHdcMgr::GetInstance(This->devPhyId_);
     CCU_CHK_RET(tlvHdcMgr.Init());
     This->tlvHandle_ = tlvHdcMgr.GetHandle();
     CCU_CHK_PTR_NULL(This->tlvHandle_);
     // 拉起CCU驱动如果因其他进程占用重复拉起时，返回EAGAIN，日志检查返回值打印warning
     auto ret = HccpRaTlvRequest(This->tlvHandle_, TLV_MODULE_TYPE_CCU, MSG_TYPE_CCU_INIT);
     if (ret == HcclResult::HCCL_E_AGAIN) {
-        HCCL_RUN_WARNING("[%s] HccpRaTlvRequest ret[%d], repeat init ccu, deviceLogicId[%d].",
-            __func__, ret, This->devLogicId_);
+        HCCL_RUN_WARNING(
+            "[%s] HccpRaTlvRequest ret[%d], repeat init ccu, deviceLogicId[%d].", __func__, ret, This->devLogicId_);
         return CcuResult::CCU_E_DRV_BUSY;
     }
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_ERROR("[%s] failed to init ccu driver, ret[%d] is unexpected.", 
-            __func__, ret);
+        HCCL_ERROR("[%s] failed to init ccu driver, ret[%d] is unexpected.", __func__, ret);
         return CcuResult::CCU_E_DRV_INIT_FAILED;
     }
 
@@ -94,7 +96,7 @@ static CcuResult MockCcuDrvHandleInit(hcomm::CcuDrvHandle *This)
     return CcuResult::CCU_SUCCESS;
 }
 
-static CcuResult MockCcuDrvHandleDeinit(hcomm::CcuDrvHandle *This)
+static CcuResult MockCcuDrvHandleDeinit(hcomm::CcuDrvHandle* This)
 {
     // 释放流程不打断，不抛异常，尽量尝试释放所有资源
     // 释放有时序要求

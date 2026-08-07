@@ -17,41 +17,30 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepAnd : public CcuRepBase {
-public:
-    explicit CcuRepAnd(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB);
-    explicit CcuRepAnd(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varB);
-    bool Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, const TransDep &dep) override;
-    Variable GetVarA()
-    {
-        return varA;
-    }
-    Variable GetVarB()
-    {
-        return varB;
-    }
+    class CcuRepAnd : public CcuRepBase {
+    public:
+        explicit CcuRepAnd(
+            CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varA, const Variable& varB);
+        explicit CcuRepAnd(CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varB);
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, const TransDep& dep) override;
+        Variable GetVarA() { return varA; }
+        Variable GetVarB() { return varB; }
 
-    Variable GetVarC()
-    {
-        return varC;
-    }
+        Variable GetVarC() { return varC; }
 
-    AndSubType GetSubType()
-    {
-        return subType;
-    }
+        AndSubType GetSubType() { return subType; }
 
-    std::string Describe() override;
+        std::string Describe() override;
 
-private:
-    AndSubType subType{AndSubType::INVALID};
+    private:
+        AndSubType subType{AndSubType::INVALID};
 
-    Variable varA;
-    Variable varB;
-    Variable varC;
+        Variable varA;
+        Variable varB;
+        Variable varC;
 
-    CcuInsGeneratorBase* insGenPtr{nullptr};
-};
+        CcuInsGeneratorBase* insGenPtr{nullptr};
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

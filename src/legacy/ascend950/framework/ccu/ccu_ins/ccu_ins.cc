@@ -14,10 +14,10 @@
 
 namespace Hccl {
 
-void CcuInstruction::Translate(std::vector<std::vector<CcuTaskParam>> &taskParam) const
+void CcuInstruction::Translate(std::vector<std::vector<CcuTaskParam>>& taskParam) const
 {
-    s32                         deviceLogicId = HrtGetDevice();
-    std::unique_ptr<CcuTaskArg> ccuTaskArg    = GetTaskArg();
+    s32 deviceLogicId = HrtGetDevice();
+    std::unique_ptr<CcuTaskArg> ccuTaskArg = GetTaskArg();
     if (ccuTaskArg == nullptr) {
         HCCL_ERROR("[CcuInstruction][Translate]ccuTaskArg is null");
         return;
@@ -32,4 +32,4 @@ void CcuInstruction::Translate(std::vector<std::vector<CcuTaskParam>> &taskParam
     return;
 }
 
-}
+} // namespace Hccl

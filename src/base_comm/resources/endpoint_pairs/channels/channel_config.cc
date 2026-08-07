@@ -13,7 +13,7 @@
 
 namespace hcomm {
 
-HcommResult ChannelConfigCreate(HcommChannelConfig *config)
+HcommResult ChannelConfigCreate(HcommChannelConfig* config)
 {
     CHK_PTR_NULL(config);
     NEW_NOTHROW(*config, HcommChannelConfigData(), return HCCL_E_PTR);
@@ -25,7 +25,7 @@ HcommResult ChannelConfigDestroy(HcommChannelConfig config)
     if (config == nullptr) {
         return HCCL_SUCCESS;
     }
-    auto *cfg = static_cast<HcommChannelConfigData *>(config);
+    auto* cfg = static_cast<HcommChannelConfigData*>(config);
     delete cfg;
     return HCCL_SUCCESS;
 }
@@ -33,7 +33,7 @@ HcommResult ChannelConfigDestroy(HcommChannelConfig config)
 HcommResult ChannelConfigSetInt(HcommChannelConfig config, HcommChannelConfigType type, uint32_t value)
 {
     CHK_PTR_NULL(config);
-    auto *cfg = static_cast<HcommChannelConfigData *>(config);
+    auto* cfg = static_cast<HcommChannelConfigData*>(config);
     switch (type) {
         case HCOMM_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE:
             cfg->isSharedQueue = (value != 0);

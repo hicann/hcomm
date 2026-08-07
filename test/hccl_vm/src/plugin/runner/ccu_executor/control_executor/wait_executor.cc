@@ -21,7 +21,7 @@ using namespace std;
 using namespace hcomm::CcuRep;
 
 // 注册NopExecutor create Func
-REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::CTRL_TYPE, SimCcuV2::WAIT_CODE , WaitExecutor);
+REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::CTRL_TYPE, SimCcuV2::WAIT_CODE, WaitExecutor);
 
 void WaitExecutor::Parser()
 {
@@ -33,7 +33,7 @@ void WaitExecutor::Parser()
 
 void WaitExecutor::Run()
 {
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint16_t expectedXnId = GetXnId(expectedXnId_);
     uint16_t conditionXnId = GetXnId(conditionXnId_);
     uint64_t expectedValue = ccuResMgr.GetXnValue(rankId_, dieId_, expectedXnId);
@@ -51,53 +51,57 @@ void WaitExecutor::Run()
     switch (conditionType_) {
         case 0: // 等于
             updateNextInsIdx(conditionValue == expectedValue);
-            HCCL_VM_INFO("When conditionXn{}{} equal to expectData{}{}, WaitFlag{} ", conditionXnId,
-                conditionValue, expectedXnId, expectedValue, conditionValue == expectedValue);
+            HCCL_VM_INFO(
+                "When conditionXn{}{} equal to expectData{}{}, WaitFlag{} ", conditionXnId, conditionValue,
+                expectedXnId, expectedValue, conditionValue == expectedValue);
             break;
         case 1: // 不等于
             updateNextInsIdx(conditionValue != expectedValue);
-            HCCL_VM_INFO("When conditionXn{}{} not equal to expectData{}{}, WaitFlag{} ", conditionXnId,
-                conditionValue, expectedXnId, expectedValue, conditionValue != expectedValue);
+            HCCL_VM_INFO(
+                "When conditionXn{}{} not equal to expectData{}{}, WaitFlag{} ", conditionXnId, conditionValue,
+                expectedXnId, expectedValue, conditionValue != expectedValue);
             break;
         case 2: // 大于
             updateNextInsIdx(conditionValue > expectedValue);
-            HCCL_VM_INFO("When conditionXn{}{} greater than expectData{}{}, WaitFlag{} ", conditionXnId,
-                conditionValue, expectedXnId, expectedValue, conditionValue > expectedValue);
+            HCCL_VM_INFO(
+                "When conditionXn{}{} greater than expectData{}{}, WaitFlag{} ", conditionXnId, conditionValue,
+                expectedXnId, expectedValue, conditionValue > expectedValue);
             break;
         case 3: // 大于/等于
             updateNextInsIdx(conditionValue >= expectedValue);
-            HCCL_VM_INFO("When conditionXn{}{} greater than or equal to expectData{}{}, WaitFlag{} ", conditionXnId,
+            HCCL_VM_INFO(
+                "When conditionXn{}{} greater than or equal to expectData{}{}, WaitFlag{} ", conditionXnId,
                 conditionValue, expectedXnId, expectedValue, conditionValue >= expectedValue);
             break;
         case 4: // 小于
             updateNextInsIdx(conditionValue < expectedValue);
-            HCCL_VM_INFO("When conditionXn{}{} less than expectData{}{}, WaitFlag{} ", conditionXnId,
-                conditionValue, expectedXnId, expectedValue, conditionValue < expectedValue);
+            HCCL_VM_INFO(
+                "When conditionXn{}{} less than expectData{}{}, WaitFlag{} ", conditionXnId, conditionValue,
+                expectedXnId, expectedValue, conditionValue < expectedValue);
             break;
         case 5: // 小于/等于
             updateNextInsIdx(conditionValue <= expectedValue);
-            HCCL_VM_INFO("When conditionXn{}{} less than or equal to expectData{}{}, WaitFlag{} ", conditionXnId,
-                conditionValue, expectedXnId, expectedValue, conditionValue <= expectedValue);
+            HCCL_VM_INFO(
+                "When conditionXn{}{} less than or equal to expectData{}{}, WaitFlag{} ", conditionXnId, conditionValue,
+                expectedXnId, expectedValue, conditionValue <= expectedValue);
             break;
         default: // 参考等于
             updateNextInsIdx(conditionValue == expectedValue);
-            HCCL_VM_INFO("When conditionXn{}{} equal to expectData{}{}, WaitFlag{} ", conditionXnId,
-                conditionValue, expectedXnId, expectedValue, conditionValue == expectedValue);
+            HCCL_VM_INFO(
+                "When conditionXn{}{} equal to expectData{}{}, WaitFlag{} ", conditionXnId, conditionValue,
+                expectedXnId, expectedValue, conditionValue == expectedValue);
             break;
     }
     ccuSimulator_->InitJumpStatus(nextInsIdx - ccuSimulator_->GetStartInstrId());
 }
 
-std::string WaitExecutor::Describe()
-{
-    return HcclSim::StringFormat("[WaitExecutor]\n");
-}
+std::string WaitExecutor::Describe() { return HcclSim::StringFormat("[WaitExecutor]\n"); }
 
 CcuTrace::CcuInstrTraceDetail WaitExecutor::CollectTraceDetail()
 {
     CcuTrace::CcuInstrTraceDetail detail;
     detail.typeName = "Wait";
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     detail.args["expectedValue"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, GetXnId(expectedXnId_)));
     detail.args["conditionValue"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, GetXnId(conditionXnId_)));
     detail.args["conditionType"] = std::to_string(conditionType_);

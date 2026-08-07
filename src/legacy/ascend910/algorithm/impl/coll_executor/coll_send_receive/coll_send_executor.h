@@ -15,9 +15,8 @@
 
 namespace hccl {
 class CollSendExecutor : public CollNativeExecutorBase {
-
 public:
-    CollSendExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollSendExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollSendExecutor() override = default;
 
     HcclResult Orchestrate(OpParam& param, AlgResourceResponse& algRes) override;
@@ -26,15 +25,16 @@ public:
 private:
     using CollNativeExecutorBase::CalcCommInfo;
     /* *************** 资源计算 *************** */
-    HcclResult CalcResRequest(const OpParam& param, AlgResourceRequest &resourceRequest) override;
+    HcclResult CalcResRequest(const OpParam& param, AlgResourceRequest& resourceRequest) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport, u32 dstRank);
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
-    HcclResult CalcP2PCommInfo(TransportMemType inputType, TransportMemType outputType,
-        std::vector<LevelNSubCommTransport>& opTransport, u32 dstRank);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcP2PCommInfo(
+        TransportMemType inputType, TransportMemType outputType, std::vector<LevelNSubCommTransport>& opTransport,
+        u32 dstRank);
 
     /* *************** 算法编排 *************** */
-    HcclResult RunLoop(OpParam &param, AlgResourceResponse &algRes);
-    HcclResult RunTemplate(const OpParam &param, DeviceMem &inputMem);
+    HcclResult RunLoop(OpParam& param, AlgResourceResponse& algRes);
+    HcclResult RunTemplate(const OpParam& param, DeviceMem& inputMem);
 
     bool DMAReduceFlag_{false}; // 是否DMA消减的标志
 };

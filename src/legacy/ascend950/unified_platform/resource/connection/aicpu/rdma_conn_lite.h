@@ -16,11 +16,9 @@
 namespace Hccl {
 class RdmaConnLite : public RmaConnLite {
 public:
-    explicit RdmaConnLite(u64 qpVa) : RmaConnLite(qpVa)
-    {
-    }
+    explicit RdmaConnLite(u64 qpVa) : RmaConnLite(qpVa) {}
 };
 
 } // namespace Hccl
 
-#endif
+#endif

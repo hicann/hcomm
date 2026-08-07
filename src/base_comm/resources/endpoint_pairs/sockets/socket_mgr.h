@@ -23,10 +23,10 @@ class SocketMgr {
 public:
     SocketMgr() {};
     ~SocketMgr() {};
-    HcclResult GetNewSocket(const Hccl::SocketConfig &socketConfig, Hccl::Socket*& socket);
-    HcclResult GetSocket(const Hccl::SocketConfig &socketConfig, Hccl::Socket*& socket);
-    HcclResult GetHostSocket(const Hccl::SocketConfig &socketConfig, Hccl::Socket*& socket);
-    HcclResult CreateSocketWithSocketHandle(const Hccl::SocketConfig &socketConfig);
+    HcclResult GetNewSocket(const Hccl::SocketConfig& socketConfig, Hccl::Socket*& socket);
+    HcclResult GetSocket(const Hccl::SocketConfig& socketConfig, Hccl::Socket*& socket);
+    HcclResult GetHostSocket(const Hccl::SocketConfig& socketConfig, Hccl::Socket*& socket);
+    HcclResult CreateSocketWithSocketHandle(const Hccl::SocketConfig& socketConfig);
     HcclResult MakeSocketInUse(Hccl::Socket*& socket);
     HcclResult PutSocket(const Hccl::SocketConfig*& socketConfig, Hccl::Socket*& socket);
     HcclResult UpdateSocketConfig(const Hccl::SocketConfig*& socketConfig, Hccl::Socket*& socket);
@@ -37,9 +37,9 @@ public:
 
 private:
     HcclResult Init();
-    HcclResult GetSocketHandle(const Hccl::SocketConfig &socketConfig, Hccl::SocketHandle &socketHandle);
-    HcclResult AddWhiteList(const Hccl::SocketConfig &socketConfig, const Hccl::SocketHandle &socketHandle);
-    HcclResult CreateSocket(const Hccl::SocketConfig &socketConfig, const Hccl::SocketHandle &socketHandle);
+    HcclResult GetSocketHandle(const Hccl::SocketConfig& socketConfig, Hccl::SocketHandle& socketHandle);
+    HcclResult AddWhiteList(const Hccl::SocketConfig& socketConfig, const Hccl::SocketHandle& socketHandle);
+    HcclResult CreateSocket(const Hccl::SocketConfig& socketConfig, const Hccl::SocketHandle& socketHandle);
 
 private:
     SocketMgr(const SocketMgr&) = delete;

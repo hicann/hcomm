@@ -21,10 +21,10 @@
 extern "C" {
 #endif
 HcclResult hrtOpenTsd();
-HcclResult hrtOpenNetService(rtNetServiceOpenArgs *openArgs);
+HcclResult hrtOpenNetService(rtNetServiceOpenArgs* openArgs);
 HcclResult hrtCloseNetService();
 HcclResult hrtTsdCapabilityGet(uint32_t deviceLogicId, int32_t type, uint64_t ptr);
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 #endif

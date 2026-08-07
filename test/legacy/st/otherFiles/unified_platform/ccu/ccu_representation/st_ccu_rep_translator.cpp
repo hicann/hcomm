@@ -20,15 +20,9 @@ using namespace CcuRep;
 
 class CcuRepTranslatorTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "CcuRepTranslatorTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "CcuRepTranslatorTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "CcuRepTranslatorTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "CcuRepTranslatorTest tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
@@ -36,7 +30,7 @@ protected:
             .stubs()
             .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
             .will(returnValue(HcclResult::HCCL_SUCCESS));
-        
+
         MOCKER(&CcuDeviceManager::GetXnBaseAddr)
             .stubs()
             .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
@@ -85,7 +79,7 @@ TEST_F(CcuRepTranslatorTest, translator_bind_phy_resource_success)
 
     // 绑定物理资源
     uint16_t id = 10;
-    for (auto &var : res.variable[0]) {
+    for (auto& var : res.variable[0]) {
         var.Reset(id);
         id++;
     }

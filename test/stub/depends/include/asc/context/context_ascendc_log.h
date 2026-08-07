@@ -27,29 +27,29 @@ extern "C" {
 #define ASCENDC_ASSERT(cond, ret, msg) \
     do {                               \
         if (!(cond)) {                 \
-            msg;                  \
-            ret;            \
+            msg;                       \
+            ret;                       \
         }                              \
     } while (0)
 
-#define CXT_ASCENDC_LOGE(format, ...)                                                              \
-    do {                                                                                           \
-        dlog_error(ASCENDC_MODULE_NAME, "[%s] " format "\n", __FUNCTION__, ##__VA_ARGS__);         \
+#define CXT_ASCENDC_LOGE(format, ...)                                                      \
+    do {                                                                                   \
+        dlog_error(ASCENDC_MODULE_NAME, "[%s] " format "\n", __FUNCTION__, ##__VA_ARGS__); \
     } while (0)
 
-#define CXT_ASCENDC_LOGD(format, ...)                                                              \
-    do {                                                                                             \
-      dlog_debug(ASCENDC_MODULE_NAME, "[%s] " format "\n", __FUNCTION__, ##__VA_ARGS__);             \
+#define CXT_ASCENDC_LOGD(format, ...)                                                      \
+    do {                                                                                   \
+        dlog_debug(ASCENDC_MODULE_NAME, "[%s] " format "\n", __FUNCTION__, ##__VA_ARGS__); \
     } while (0)
 
-#define CXT_ASCENDC_LOGW(format, ...)                                                              \
-    do {                                                                                             \
-      dlog_warn(ASCENDC_MODULE_NAME, "[%s] " format "\n", __FUNCTION__, ##__VA_ARGS__);              \
+#define CXT_ASCENDC_LOGW(format, ...)                                                     \
+    do {                                                                                  \
+        dlog_warn(ASCENDC_MODULE_NAME, "[%s] " format "\n", __FUNCTION__, ##__VA_ARGS__); \
     } while (0)
 
-#define CXT_ASCENDC_LOGI(format, ...)                                                              \
-    do {                                                                                             \
-      dlog_info(ASCENDC_MODULE_NAME, "[%s] " format "\n", __FUNCTION__, ##__VA_ARGS__);              \
+#define CXT_ASCENDC_LOGI(format, ...)                                                     \
+    do {                                                                                  \
+        dlog_info(ASCENDC_MODULE_NAME, "[%s] " format "\n", __FUNCTION__, ##__VA_ARGS__); \
     } while (0)
 
 #ifdef __cplusplus

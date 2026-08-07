@@ -20,25 +20,25 @@ public:
 
     ~MultiRootScatterRing() override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize,
-                                   const std::vector<std::shared_ptr<Transport> > &links) override;
+    HcclResult
+    RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links) override;
 
 protected:
 private:
     void SlicesDataPrepare(const u32 unitSize, const u64 totalCount, const u32 rankSize) const;
     std::shared_ptr<Transport> linkLeft_;
     std::shared_ptr<Transport> linkRight_;
-    u32 interRank_;       // comm内的rank排序
+    u32 interRank_;     // comm内的rank排序
     u32 interRankSize_; // 本comm内ranksize总数
 
     // scatter ring chunk实现相关函数
-    HcclResult RunMultiRootScatterChunk(const u32 rank, const u32 rankSize, const std::vector<Slice> &outputSlices);
-    HcclResult HeadScatterChunk(u32 rank, u32 rankSize, const std::vector<Slice> &outputSlices);
-    HcclResult MidScatterChunk(u32 rank, u32 rankSize, u32 sliceIdx, const std::vector<Slice> &outputSlices);
-    HcclResult TailScatterChunk(u32 rank, u32 rankSize, u32 sliceIdx, const std::vector<Slice> &outputSlices);
+    HcclResult RunMultiRootScatterChunk(const u32 rank, const u32 rankSize, const std::vector<Slice>& outputSlices);
+    HcclResult HeadScatterChunk(u32 rank, u32 rankSize, const std::vector<Slice>& outputSlices);
+    HcclResult MidScatterChunk(u32 rank, u32 rankSize, u32 sliceIdx, const std::vector<Slice>& outputSlices);
+    HcclResult TailScatterChunk(u32 rank, u32 rankSize, u32 sliceIdx, const std::vector<Slice>& outputSlices);
     HcclResult ScatterSlicesPrep(u32 rankSize, u32 nicSize);
     HcclResult MultiRootScatterSlicesPrep(u32 rankSize, u32 nicSize);
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* MULTI_ROOT_SCATTER_RING_PUB_H */

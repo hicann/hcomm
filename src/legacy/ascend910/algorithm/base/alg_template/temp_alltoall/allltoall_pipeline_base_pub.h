@@ -31,16 +31,16 @@ public:
     virtual ~AlltoallPipelineBase();
 
     // 适配新CollExecutor接口
-    virtual HcclResult Prepare(u32 userRank, A2aPipelineMemory A2aPipelineMemory,
-        const SubCommInfo &level0CommInfo, const SubCommInfo &level1CommInfo,
-        Stream &mainStream, std::vector<Stream> &subStream,
-        std::vector<std::shared_ptr<LocalNotify>> &notifyMain, std::vector<std::shared_ptr<LocalNotify>> &notifySub,
-        std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo,
+    virtual HcclResult Prepare(
+        u32 userRank, A2aPipelineMemory A2aPipelineMemory, const SubCommInfo& level0CommInfo,
+        const SubCommInfo& level1CommInfo, Stream& mainStream, std::vector<Stream>& subStream,
+        std::vector<std::shared_ptr<LocalNotify>>& notifyMain, std::vector<std::shared_ptr<LocalNotify>>& notifySub,
+        std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo,
         HcclWorkflowMode workMode = HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) override;
 
     HcclResult RunAsync() override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
 
 protected:
     virtual HcclResult DeviceMemMapping() = 0;
@@ -57,7 +57,7 @@ protected:
     HcclResult NotifyIntraStreamStart();
     HcclResult WaitIntraStreamFinish();
 
-    std::vector<SendRecvInfo> *allMeshAggregationSendRecvInfo_{nullptr};
+    std::vector<SendRecvInfo>* allMeshAggregationSendRecvInfo_{nullptr};
     SendRecvInfo localSendRecvInfo_;
     HcclWorkflowMode workMode_;
 
@@ -67,11 +67,11 @@ protected:
     u32 groupRankSize_ = 0;
     u32 intraRankSize_ = 0;
     u32 interRankSize_ = 0;
- 
+
     u32 userRank_ = 0;
     u32 intraRankId_ = 0;
     u32 interRankId_ = 0;
- 
+
     u32 meshRankStart_ = 0;
     u32 meshRankEnd_ = 0;
 
@@ -93,6 +93,6 @@ protected:
     //              SDMA流       发送数据长度 接收数据长度 接收数据本地偏移
     std::unordered_map<u32, std::vector<u64>> intraStreamInfo_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* ALLTOALL_PIPELINE_BASE_PUB_H */

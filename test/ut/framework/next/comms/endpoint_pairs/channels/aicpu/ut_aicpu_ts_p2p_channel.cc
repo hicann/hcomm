@@ -15,19 +15,16 @@ using namespace hcomm;
 namespace {
 class StubEndpointForP2pChannel : public Endpoint {
 public:
-    StubEndpointForP2pChannel()
-        : Endpoint(MakeDesc())
-    {
-    }
+    StubEndpointForP2pChannel() : Endpoint(MakeDesc()) {}
 
     HcclResult Init() override { return HCCL_SUCCESS; }
     HcclResult ServerSocketListen(const uint32_t) override { return HCCL_SUCCESS; }
-    HcclResult RegisterMemory(HcommMem, const char *, void **) override { return HCCL_SUCCESS; }
-    HcclResult UnregisterMemory(void *) override { return HCCL_SUCCESS; }
-    HcclResult MemoryExport(void *, void **, uint32_t *) override { return HCCL_SUCCESS; }
-    HcclResult MemoryImport(const void *, uint32_t, HcommMem *) override { return HCCL_SUCCESS; }
-    HcclResult MemoryUnimport(const void *, uint32_t) override { return HCCL_SUCCESS; }
-    HcclResult GetAllMemHandles(void **, uint32_t *) override { return HCCL_SUCCESS; }
+    HcclResult RegisterMemory(HcommMem, const char*, void**) override { return HCCL_SUCCESS; }
+    HcclResult UnregisterMemory(void*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryExport(void*, void**, uint32_t*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryImport(const void*, uint32_t, HcommMem*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryUnimport(const void*, uint32_t) override { return HCCL_SUCCESS; }
+    HcclResult GetAllMemHandles(void**, uint32_t*) override { return HCCL_SUCCESS; }
 
 private:
     static EndpointDesc MakeDesc()
@@ -46,13 +43,13 @@ public:
     std::string Describe() const override { return "NullBufRmaBuffer"; }
 };
 
-std::shared_ptr<Hccl::LocalIpcRmaBuffer> MakeLocalIpcRmaBuffer(uintptr_t addr, u64 size, const char *tag)
+std::shared_ptr<Hccl::LocalIpcRmaBuffer> MakeLocalIpcRmaBuffer(uintptr_t addr, u64 size, const char* tag)
 {
     auto buffer = std::make_shared<Hccl::Buffer>(addr, size, HCCL_MEM_TYPE_DEVICE, tag);
     return std::make_shared<Hccl::LocalIpcRmaBuffer>(buffer);
 }
 
-HcommResult StubP2pGetAllMemHandlesOne(EndpointHandle, void **memHandles, uint32_t *memHandleNum)
+HcommResult StubP2pGetAllMemHandlesOne(EndpointHandle, void** memHandles, uint32_t* memHandleNum)
 {
     static auto localBuffer = MakeLocalIpcRmaBuffer(0x4000U, 0x1000U, "p2p_all");
     static std::shared_ptr<Hccl::LocalIpcRmaBuffer> localBuffers[1] = {localBuffer};
@@ -72,8 +69,8 @@ protected:
 
 TEST_F(AicpuTsP2pChannelTest, UT_MakeRmaBufferVecFromMemHandles_When_NullHandle_Expect_ReturnHCCL_E_PTR)
 {
-    HcommMemHandle memHandles[1] = { nullptr };
-    std::vector<Hccl::LocalRmaBuffer *> bufferVec;
+    HcommMemHandle memHandles[1] = {nullptr};
+    std::vector<Hccl::LocalRmaBuffer*> bufferVec;
 
     EXPECT_EQ(MakeRmaBufferVecFromMemHandles(memHandles, 1, bufferVec, "AicpuTsP2pChannel"), HCCL_E_PTR);
     EXPECT_TRUE(bufferVec.empty());
@@ -81,7 +78,7 @@ TEST_F(AicpuTsP2pChannelTest, UT_MakeRmaBufferVecFromMemHandles_When_NullHandle_
 
 TEST_F(AicpuTsP2pChannelTest, UT_MakeRmaBufferVecFromMemHandles_When_ZeroHandles_Expect_EmptyBufferVec)
 {
-    std::vector<Hccl::LocalRmaBuffer *> bufferVec{reinterpret_cast<Hccl::LocalRmaBuffer *>(0x1)};
+    std::vector<Hccl::LocalRmaBuffer*> bufferVec{reinterpret_cast<Hccl::LocalRmaBuffer*>(0x1)};
 
     ASSERT_EQ(MakeRmaBufferVecFromMemHandles(nullptr, 0, bufferVec, "AicpuTsP2pChannel"), HCCL_SUCCESS);
     EXPECT_TRUE(bufferVec.empty());
@@ -90,8 +87,8 @@ TEST_F(AicpuTsP2pChannelTest, UT_MakeRmaBufferVecFromMemHandles_When_ZeroHandles
 TEST_F(AicpuTsP2pChannelTest, UT_MakeRmaBufferVecFromMemHandles_When_ValidHandle_Expect_FillBufferVec)
 {
     auto localRmaBuffer = MakeLocalIpcRmaBuffer(0x1000U, 0x2000U, "p2p_ut");
-    HcommMemHandle memHandles[1] = { reinterpret_cast<HcommMemHandle>(localRmaBuffer.get()) };
-    std::vector<Hccl::LocalRmaBuffer *> bufferVec;
+    HcommMemHandle memHandles[1] = {reinterpret_cast<HcommMemHandle>(localRmaBuffer.get())};
+    std::vector<Hccl::LocalRmaBuffer*> bufferVec;
 
     ASSERT_EQ(MakeRmaBufferVecFromMemHandles(memHandles, 1, bufferVec, "AicpuTsP2pChannel"), HCCL_SUCCESS);
     ASSERT_EQ(bufferVec.size(), 1U);
@@ -101,8 +98,8 @@ TEST_F(AicpuTsP2pChannelTest, UT_MakeRmaBufferVecFromMemHandles_When_ValidHandle
 TEST_F(AicpuTsP2pChannelTest, UT_MakeRmaBufferVecFromMemHandles_When_GetBufNull_Expect_ReturnHCCL_E_PTR)
 {
     NullBufRmaBuffer nullBuf;
-    HcommMemHandle memHandles[1] = { reinterpret_cast<HcommMemHandle>(&nullBuf) };
-    std::vector<Hccl::LocalRmaBuffer *> bufferVec;
+    HcommMemHandle memHandles[1] = {reinterpret_cast<HcommMemHandle>(&nullBuf)};
+    std::vector<Hccl::LocalRmaBuffer*> bufferVec;
 
     EXPECT_EQ(MakeRmaBufferVecFromMemHandles(memHandles, 1, bufferVec, "AicpuTsP2pChannel"), HCCL_E_PTR);
     EXPECT_TRUE(bufferVec.empty());
@@ -112,7 +109,7 @@ TEST_F(AicpuTsP2pChannelTest, UT_ParseInputParam_When_ExchangeAllMemsFalse_Expec
 {
     StubEndpointForP2pChannel endpoint;
     auto localRmaBuffer = MakeLocalIpcRmaBuffer(0x3000U, 0x1000U, "p2p_parse");
-    HcommMemHandle memHandles[1] = { reinterpret_cast<HcommMemHandle>(localRmaBuffer.get()) };
+    HcommMemHandle memHandles[1] = {reinterpret_cast<HcommMemHandle>(localRmaBuffer.get())};
     HcommChannelDesc desc{};
     desc.exchangeAllMems = false;
     desc.memHandles = memHandles;

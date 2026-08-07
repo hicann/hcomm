@@ -20,25 +20,30 @@ class TaskOverflow : public ProfilerBase {
 public:
     explicit TaskOverflow(u32 deviceLogicId);
     ~TaskOverflow() override;
-    HcclResult Save(u32 &streamID, u32 &taskID, TaskType &taskType, const TaskParaDMA &paraDMA) override;
-    HcclResult Save(u32 &streamID, u32 &taskID, TaskType &taskType, const TaskParaReduce &paraReduce) override;
-    HcclResult Save(u32 &streamID, u32 &taskID, TaskType &taskType, const TaskParaNotify &paraNotify) override;
-    HcclResult Save(u32 streamID, u32 taskID, const TaskParaAiv &paraAiv) override;
-    HcclResult Save(u32 &streamID, u32 &taskID, const void *descBuf = nullptr, size_t descBufLen = 0) override;
-    HcclResult Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType &taskType, const TaskParaDMA &paraDMA) override;
-    HcclResult Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType &taskType, const TaskParaReduce &paraReduce) override;
-    HcclResult Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType &taskType, const TaskParaNotify &paraNotify) override;
-    HcclResult Save(u32 captureStreamID, u32 streamID, u32 taskID, const void *descBuf = nullptr, size_t descBufLen = 0) override;
-    HcclResult Save(u32 captureStreamID, u32 streamID, u32 taskID, const TaskParaAiv &paraAiv) override;
+    HcclResult Save(u32& streamID, u32& taskID, TaskType& taskType, const TaskParaDMA& paraDMA) override;
+    HcclResult Save(u32& streamID, u32& taskID, TaskType& taskType, const TaskParaReduce& paraReduce) override;
+    HcclResult Save(u32& streamID, u32& taskID, TaskType& taskType, const TaskParaNotify& paraNotify) override;
+    HcclResult Save(u32 streamID, u32 taskID, const TaskParaAiv& paraAiv) override;
+    HcclResult Save(u32& streamID, u32& taskID, const void* descBuf = nullptr, size_t descBufLen = 0) override;
+    HcclResult
+    Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType& taskType, const TaskParaDMA& paraDMA) override;
+    HcclResult
+    Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType& taskType, const TaskParaReduce& paraReduce) override;
+    HcclResult
+    Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType& taskType, const TaskParaNotify& paraNotify) override;
+    HcclResult
+    Save(u32 captureStreamID, u32 streamID, u32 taskID, const void* descBuf = nullptr, size_t descBufLen = 0) override;
+    HcclResult Save(u32 captureStreamID, u32 streamID, u32 taskID, const TaskParaAiv& paraAiv) override;
     uint32_t GetTaskName(TaskType taskType) const;
-    HcclResult Run(const StepData &stepData) override;
-    HcclResult GetandClearOverFlowTasks(std::vector<HcclDumpInfo> &hcclDumpInfoVector);
+    HcclResult Run(const StepData& stepData) override;
+    HcclResult GetandClearOverFlowTasks(std::vector<HcclDumpInfo>& hcclDumpInfoVector);
     HcclResult Flush() override;
-    HcclResult SaveToLog(const TaskParaHost &paraHost) override;
+    HcclResult SaveToLog(const TaskParaHost& paraHost) override;
+
 protected:
 private:
     std::vector<HcclDumpInfo> dumpInfoVetcor_;
     std::mutex dumpInfoVetcorMutex_;
 };
-}
+} // namespace hccl
 #endif

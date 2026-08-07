@@ -28,14 +28,14 @@ struct CheckerSettings {
 
 class SettingManager {
 public:
-    static SettingManager &GetInstance()
+    static SettingManager& GetInstance()
     {
         static SettingManager instance;
         return instance;
     }
 
-    SettingManager(const SettingManager &) = delete;
-    SettingManager &operator=(const SettingManager &) = delete;
+    SettingManager(const SettingManager&) = delete;
+    SettingManager& operator=(const SettingManager&) = delete;
 
     HcclResult Refresh();
     void Reset();
@@ -56,6 +56,6 @@ private:
     std::string m_manifestPath;
 };
 
-}  // namespace HcclSim
+} // namespace HcclSim
 
-#endif  // HCCL_VM_SETTING_MANAGER_H
+#endif // HCCL_VM_SETTING_MANAGER_H

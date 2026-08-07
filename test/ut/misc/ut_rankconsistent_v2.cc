@@ -23,24 +23,12 @@ using namespace hccl;
 
 class RankConsistentV2Test : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "RankConsistentV2Test SetUp" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "RankConsistentV2Test TearDown" << std::endl;
-    }
-    virtual void SetUp()
-    {
-        std::cout << "A Test SetUp" << std::endl;
-    }
-    virtual void TearDown()
-    {
-        std::cout << "A Test TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "RankConsistentV2Test SetUp" << std::endl; }
+    static void TearDownTestCase() { std::cout << "RankConsistentV2Test TearDown" << std::endl; }
+    virtual void SetUp() { std::cout << "A Test SetUp" << std::endl; }
+    virtual void TearDown() { std::cout << "A Test TearDown" << std::endl; }
 
-    RankConsistencyCheckerV2 &checker_ = RankConsistencyCheckerV2::GetInstance(0);
+    RankConsistencyCheckerV2& checker_ = RankConsistencyCheckerV2::GetInstance(0);
 };
 
 TEST_F(RankConsistentV2Test, Ut_CompareCheckFrameV2_RankTable_Expect_Success)

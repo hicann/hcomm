@@ -24,8 +24,8 @@ public:
     CcuWqeBBMgr() = default;
     ~CcuWqeBBMgr() = default;
 
-    HcclResult Alloc(const uint32_t sqSize, ResInfo &wqeBBInfo);
-    HcclResult Release(const ResInfo &wqeBBInfo);
+    HcclResult Alloc(const uint32_t sqSize, ResInfo& wqeBBInfo);
+    HcclResult Release(const ResInfo& wqeBBInfo);
 
 private:
     int32_t devLogicId{0};

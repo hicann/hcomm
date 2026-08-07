@@ -18,7 +18,8 @@ protected:
         MOCKER(halTsdrvCtl).stubs().with(mockcpp::any()).will(returnValue(rv));
     }
 
-    static drvError_t HalTsdrvCtlStub(uint32_t devId, int cmd, void *param, size_t paramSize, void *out, size_t *outSize)
+    static drvError_t
+    HalTsdrvCtlStub(uint32_t devId, int cmd, void* param, size_t paramSize, void* out, size_t* outSize)
     {
         return HalTsdrvCtlStubImpl(devId, cmd, param, paramSize, out, outSize);
     }
@@ -28,16 +29,17 @@ protected:
     static uint32_t stubNotReadyRounds;
     static uint32_t stubCallCount;
 
-    static drvError_t HalTsdrvCtlStubImpl(uint32_t devId, int cmd, void *param, size_t paramSize, void *out, size_t *outSize)
+    static drvError_t
+    HalTsdrvCtlStubImpl(uint32_t devId, int cmd, void* param, size_t paramSize, void* out, size_t* outSize)
     {
         if (stubAckCountMismatch) {
             *outSize = 0;
             return DRV_ERROR_NONE;
         }
-        ts_ctrl_msg_body_t *outMsg = static_cast<ts_ctrl_msg_body_t *>(out);
-        uint32_t curStatus = (stubCallCount < stubNotReadyRounds)
-            ? static_cast<uint32_t>(APP_ABORT_STAUTS::APP_ABORT_INIT)
-            : stubStatus;
+        ts_ctrl_msg_body_t* outMsg = static_cast<ts_ctrl_msg_body_t*>(out);
+        uint32_t curStatus = (stubCallCount < stubNotReadyRounds) ?
+                                 static_cast<uint32_t>(APP_ABORT_STAUTS::APP_ABORT_INIT) :
+                                 stubStatus;
         outMsg->u.query_task_ack_info.status = curStatus;
         *outSize = sizeof(ts_ctrl_msg_body_t);
         stubCallCount++;
@@ -50,8 +52,10 @@ protected:
         stubAckCountMismatch = ackMismatch;
         stubNotReadyRounds = notReadyRounds;
         stubCallCount = 0;
-        MOCKER(halTsdrvCtl).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(),
-            mockcpp::any(), mockcpp::any(), mockcpp::any()).will(invoke(HalTsdrvCtlStub));
+        MOCKER(halTsdrvCtl)
+            .stubs()
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+            .will(invoke(HalTsdrvCtlStub));
     }
 };
 
@@ -91,8 +95,8 @@ TEST_F(NsRecoveryFuncLiteTest, Ut_DeviceQueryWhenTimeoutExpectHcclETimeout)
 TEST_F(NsRecoveryFuncLiteTest, Ut_DeviceQueryWhenTimeoutZeroAndStatusMeetsExpectSuccess)
 {
     SetUpHalTsdrvCtlStub(static_cast<uint32_t>(APP_ABORT_STAUTS::APP_ABORT_KILL_FINISH));
-    auto ret = NsRecoveryFuncLite::GetInstance().DeviceQuery(0,
-        static_cast<uint32_t>(APP_ABORT_STAUTS::APP_ABORT_KILL_FINISH), 0U);
+    auto ret = NsRecoveryFuncLite::GetInstance().DeviceQuery(
+        0, static_cast<uint32_t>(APP_ABORT_STAUTS::APP_ABORT_KILL_FINISH), 0U);
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
     GlobalMockObject::verify();
 }
@@ -100,8 +104,8 @@ TEST_F(NsRecoveryFuncLiteTest, Ut_DeviceQueryWhenTimeoutZeroAndStatusMeetsExpect
 TEST_F(NsRecoveryFuncLiteTest, Ut_DeviceQueryWhenTimeoutZeroPollMultiRoundsThenMeetExpectSuccess)
 {
     SetUpHalTsdrvCtlStub(static_cast<uint32_t>(APP_ABORT_STAUTS::APP_ABORT_KILL_FINISH), false, 2);
-    auto ret = NsRecoveryFuncLite::GetInstance().DeviceQuery(0,
-        static_cast<uint32_t>(APP_ABORT_STAUTS::APP_ABORT_KILL_FINISH), 0U);
+    auto ret = NsRecoveryFuncLite::GetInstance().DeviceQuery(
+        0, static_cast<uint32_t>(APP_ABORT_STAUTS::APP_ABORT_KILL_FINISH), 0U);
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
     EXPECT_GE(NsRecoveryFuncLiteTest::stubCallCount, 3U);
     GlobalMockObject::verify();

@@ -24,15 +24,15 @@ public:
 
     HcclResult Init() override;
     HcclResult DeInit() override;
-    std::string &GetUniqueId() override;
+    std::string& GetUniqueId() override;
     uint32_t GetNotifyNum() const override;
-    LocalNotify *GetNotify(uint32_t index) const override;
+    LocalNotify* GetNotify(uint32_t index) const override;
     HcclResult SupplementNotify(uint32_t notifyNum) override;
 
     // A3 Stream & A5 Stream
     bool IsDeviceA5() const override;
-    Stream *GetStream() const override;
-    void *GetStreamLitePtr() const override;
+    Stream* GetStream() const override;
+    void* GetStreamLitePtr() const override;
     void LaunchTask() const override;
     void TryLaunchTask() const override;
 
@@ -43,9 +43,9 @@ public:
     HcclResult LocalNotifyRecord(ThreadHandle dstThread, uint32_t dstNotifyIdx) const override;
     HcclResult LocalNotifyWait(uint32_t notifyIdx, uint32_t timeOut) const override;
 
-    HcclResult LocalCopy(void *dst, const void *src, uint64_t sizeByte) const override;
+    HcclResult LocalCopy(void* dst, const void* src, uint64_t sizeByte) const override;
     HcclResult LocalReduce(
-        void *dst, const void *src, uint64_t sizeByte, HcommDataType dataType, HcommReduceOp reduceOp) const override;
+        void* dst, const void* src, uint64_t sizeByte, HcommDataType dataType, HcommReduceOp reduceOp) const override;
     bool GetMaster() const override;
     void SetIsMaster(bool isMaster) override;
 
@@ -54,16 +54,16 @@ private:
     struct HcclStreamInfo {
         s32 streamIds;
         uint32_t sqIds;
-        uint32_t cqIds;       // 记录物理cqId
-        uint32_t logicCqids;  // 记录逻辑cqId
+        uint32_t cqIds;      // 记录物理cqId
+        uint32_t logicCqids; // 记录逻辑cqId
     };
 
     struct HcclStreamParam {
         HcclStreamInfo streamInfo;
-        uint64_t sqCqContextAddr = 0;  // 记录sqeContext地址
-        uint64_t sqCqContextSize = 0;  // 记录sqeContext大小
+        uint64_t sqCqContextAddr = 0; // 记录sqeContext地址
+        uint64_t sqCqContextSize = 0; // 记录sqeContext大小
     };
-    std::string &UpdateUniqueId();
+    std::string& UpdateUniqueId();
     rtStream_t rtStream_ = nullptr;
     bool isDeviceSide_ = false;
     StreamType streamType_ = StreamType::STREAM_TYPE_RESERVED;
@@ -74,11 +74,11 @@ private:
     DevType devType_ = DevType::DEV_TYPE_COUNT;
     std::vector<std::unique_ptr<LocalNotify>> notifys_;
 
-    std::unique_ptr<Stream> streamDevice_; //在把用户的stream生成的thread导出到device时使用
-    DeviceMem sqCqeContext_; 
+    std::unique_ptr<Stream> streamDevice_; // 在把用户的stream生成的thread导出到device时使用
+    DeviceMem sqCqeContext_;
     std::string uniqueIdStr_;
 };
 
-}  // namespace hccl
+} // namespace hccl
 
-#endif  // HCCL_CPU_TS_THREAD_H
+#endif // HCCL_CPU_TS_THREAD_H

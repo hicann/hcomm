@@ -22,9 +22,9 @@ void SaluSleep(u32 usec);
 
 void SalSleep(u32 sec);
 
-std::string SalGetEnv(const char *name);
+std::string SalGetEnv(const char* name);
 
-HcclResult SalStrToULong(const std::string str, int base, u32 &val);
+HcclResult SalStrToULong(const std::string str, int base, u32& val);
 
 s32 SalGetTid();
 
@@ -32,10 +32,10 @@ u64 SalGetCurrentTimestamp();
 
 u64 GetCurAicpuTimestamp();
 
-void SetThreadName(const std::string &threadStr);
+void SetThreadName(const std::string& threadStr);
 
 #ifndef CCL_LLT
-inline void AsmCntvc(uint64_t &cntvct)
+inline void AsmCntvc(uint64_t& cntvct)
 {
 #if defined __aarch64__
     asm volatile("mrs %0, cntvct_el0" : "=r"(cntvct));

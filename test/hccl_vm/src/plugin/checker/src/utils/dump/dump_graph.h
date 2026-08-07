@@ -19,12 +19,13 @@
 #include "task_def.h"
 
 namespace HcclSim {
-nlohmann::json DumpTaskStubToJson(TaskStub *task);
-void CollectTaskNodesWithGlobalIds(TaskNode *dummyStart, std::vector<TaskNode *> &graphNodes,
-    std::map<TaskNode *, std::string> &nodeIdMap, bool includeStartNode = false);
+nlohmann::json DumpTaskStubToJson(TaskStub* task);
+void CollectTaskNodesWithGlobalIds(
+    TaskNode* dummyStart, std::vector<TaskNode*>& graphNodes, std::map<TaskNode*, std::string>& nodeIdMap,
+    bool includeStartNode = false);
 
-HcclResult DumpInputTaskQueues(const AllRankTaskQueues &allRankTaskQueues);
-HcclResult DumpTaskGraphByStage(TaskNode *dummyStart, const std::string &stage);
-}  // namespace HcclSim
+HcclResult DumpInputTaskQueues(const AllRankTaskQueues& allRankTaskQueues);
+HcclResult DumpTaskGraphByStage(TaskNode* dummyStart, const std::string& stage);
+} // namespace HcclSim
 
-#endif  // HCCL_VM_DUMP_GRAPH_H
+#endif // HCCL_VM_DUMP_GRAPH_H

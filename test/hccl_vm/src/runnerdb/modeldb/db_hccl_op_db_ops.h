@@ -23,45 +23,47 @@
 
 namespace HcclSim {
 namespace DB {
-class OpDbOps {
-public:
-   static OpDbOps& Instance();
+    class OpDbOps {
+    public:
+        static OpDbOps& Instance();
 
-   int SetDbConfig(sim::DBConfig& config);
+        int SetDbConfig(sim::DBConfig& config);
 
-   void SetDB(std::unique_ptr<HcclDB> db);
+        void SetDB(std::unique_ptr<HcclDB> db);
 
-   HcclDB* GetDB() const;
+        HcclDB* GetDB() const;
 
-   HcclVmResult InitSchema();
+        HcclVmResult InitSchema();
 
-   int ExecInsert(const std::string& sql, const std::vector<Value>& params, uint32_t& outId);
+        int ExecInsert(const std::string& sql, const std::vector<Value>& params, uint32_t& outId);
 
-   int ExecInsertNoId(const std::string& sql, const std::vector<Value>& params);
+        int ExecInsertNoId(const std::string& sql, const std::vector<Value>& params);
 
-   int ExecQuery(const std::string& sql, const std::vector<Value>& params, std::vector<std::vector<std::string>>& rows);
+        int ExecQuery(
+            const std::string& sql, const std::vector<Value>& params, std::vector<std::vector<std::string>>& rows);
 
-   int ExecUpdate(const std::string& sql, const std::vector<Value>& params);
+        int ExecUpdate(const std::string& sql, const std::vector<Value>& params);
 
-   int QuerySingleBlob(const std::string& sql, const std::vector<Value>& params, std::vector<uint8_t>& outBlob);
+        int QuerySingleBlob(const std::string& sql, const std::vector<Value>& params, std::vector<uint8_t>& outBlob);
 
-   int QueryBlobColumns(const std::string& sql, const std::vector<Value>& params, std::vector<std::vector<uint8_t>>& outBlobs);
+        int QueryBlobColumns(
+            const std::string& sql, const std::vector<Value>& params, std::vector<std::vector<uint8_t>>& outBlobs);
 
-    int ExecQueryEx(const std::string& sql, const std::vector<Value>& params, ExRows& rows);
+        int ExecQueryEx(const std::string& sql, const std::vector<Value>& params, ExRows& rows);
 
-    HcclVmResult Backup(const std::string& destPath);
+        HcclVmResult Backup(const std::string& destPath);
 
-   int RunInTransaction(std::function<int()> fn);
+        int RunInTransaction(std::function<int()> fn);
 
- private:
-    OpDbOps();
-    ~OpDbOps();
-    OpDbOps(const OpDbOps&) = delete;
-    OpDbOps& operator=(const OpDbOps&) = delete;
+    private:
+        OpDbOps();
+        ~OpDbOps();
+        OpDbOps(const OpDbOps&) = delete;
+        OpDbOps& operator=(const OpDbOps&) = delete;
 
-    std::unique_ptr<HcclDB> m_db;
-};
-}
-}
+        std::unique_ptr<HcclDB> m_db;
+    };
+} // namespace DB
+} // namespace HcclSim
 
 #endif

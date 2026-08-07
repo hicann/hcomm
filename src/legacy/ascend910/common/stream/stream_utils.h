@@ -8,14 +8,14 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
- #ifndef HCOMM_STREAM_UTILS_H
- #define HCOMM_STREAM_UTILS_H
+#ifndef HCOMM_STREAM_UTILS_H
+#define HCOMM_STREAM_UTILS_H
 
 #include "hccl/base.h"
 #include "acl/acl_rt.h"
 
-HcclResult GetStreamCaptureInfo(aclrtStream stream, aclmdlRI &rtModel, bool &isCapture);
-HcclResult AddStreamToModel(rtStream_t stream, rtModel_t &rtModel);
-HcclResult GetModelId(aclmdlRI &rtModel, u64 &modelId);
+HcclResult GetStreamCaptureInfo(aclrtStream stream, aclmdlRI& rtModel, bool& isCapture);
+HcclResult AddStreamToModel(rtStream_t stream, rtModel_t& rtModel);
+HcclResult GetModelId(aclmdlRI& rtModel, u64& modelId);
 
 #endif

@@ -17,33 +17,43 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepRemPostVar::CcuRepRemPostVar(CcuInsGeneratorBase* insGenPtr, Variable param, const ChannelHandle channel, uint16_t paramIndex,
-                                   uint16_t semIndex, uint16_t mask)
-    : insGenPtr(insGenPtr), param(param), channel(channel), paramIndex(paramIndex), semIndex(semIndex), mask(mask)
-{
-    type       = CcuRepType::REM_POST_VAR;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
+    CcuRepRemPostVar::CcuRepRemPostVar(
+        CcuInsGeneratorBase* insGenPtr, Variable param, const ChannelHandle channel, uint16_t paramIndex,
+        uint16_t semIndex, uint16_t mask)
+        : insGenPtr(insGenPtr),
+          param(param),
+          channel(channel),
+          paramIndex(paramIndex),
+          semIndex(semIndex),
+          mask(mask)
+    {
+        type = CcuRepType::REM_POST_VAR;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
 
-bool CcuRepRemPostVar::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool CcuRepRemPostVar::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    insGenPtr->CcuRepRemPostVarTranslate(ccuKernel, instr, this);
-    CHK_PRT_THROW((instrId > UINT16_MAX - instrCount),
-                        HCCL_ERROR("[CcuRepRemPostVar::Translate]uint16 integer overflow occurs, instrId = [%hu], instrCount = [%hu]", instrId, instrCount),
-                          Hccl::InternalException, "integer overflow");
-    instrId += instrCount;
+        insGenPtr->CcuRepRemPostVarTranslate(ccuKernel, instr, this);
+        CHK_PRT_THROW(
+            (instrId > UINT16_MAX - instrCount),
+            HCCL_ERROR(
+                "[CcuRepRemPostVar::Translate]uint16 integer overflow occurs, instrId = [%hu], instrCount = [%hu]",
+                instrId, instrCount),
+            Hccl::InternalException, "integer overflow");
+        instrId += instrCount;
 
-    return translated;
-}
+        return translated;
+    }
 
-std::string CcuRepRemPostVar::Describe()
-{
-    return Hccl::StringFormat("Post Variable[%u] To ParamIndex[%u], Use semIndex[%u] and mask[%04x]", param.Id(), paramIndex,
-                        semIndex, mask);
-}
+    std::string CcuRepRemPostVar::Describe()
+    {
+        return Hccl::StringFormat(
+            "Post Variable[%u] To ParamIndex[%u], Use semIndex[%u] and mask[%04x]", param.Id(), paramIndex, semIndex,
+            mask);
+    }
 
 }; // namespace CcuRep
 }; // namespace hcomm

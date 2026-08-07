@@ -15,10 +15,10 @@
 
 namespace hcomm {
 // 申请物理内存并映射到虚拟地址
-HcommResult MemAlloc(void **ptr, size_t size);
+HcommResult MemAlloc(void** ptr, size_t size);
 
 // 释放 MemAlloc 申请的内存，ptr 为空时直接返回成功
-HcommResult MemFree(void *ptr);
-}  // namespace hcomm
+HcommResult MemFree(void* ptr);
+} // namespace hcomm
 
-#endif  // HCOMM_MEM_ALLOC_H
+#endif // HCOMM_MEM_ALLOC_H

@@ -8,9 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
- #ifndef PARAM_CHECK_PUB_BASIC_V2_H
- #define PARAM_CHECK_PUB_BASIC_V2_H
+#ifndef PARAM_CHECK_PUB_BASIC_V2_H
+#define PARAM_CHECK_PUB_BASIC_V2_H
 
- #define HCCLV2_FUNC_RUN(func, ...)
- 
- #endif //PARAM_CHECK_PUB_BASIC_V2_H
+#define HCCLV2_FUNC_RUN(func, ...)
+
+#endif // PARAM_CHECK_PUB_BASIC_V2_H

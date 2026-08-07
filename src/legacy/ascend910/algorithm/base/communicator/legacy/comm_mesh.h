@@ -13,7 +13,6 @@
 
 #include "comm_mesh_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * COMM_MESH_H */

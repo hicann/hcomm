@@ -18,10 +18,7 @@ void AllRankParamRecorder::Reset()
     return;
 }
 
-void AllRankParamRecorder::InitParam()
-{
-    return;
-}
+void AllRankParamRecorder::InitParam() { return; }
 
 HcclResult AllRankParamRecorder::SetXn(uint32_t rankId, uint32_t dieId, uint16_t xnId, uint64_t xnValue)
 {
@@ -43,7 +40,7 @@ HcclResult AllRankParamRecorder::SetCKE(uint32_t rankId, uint32_t dieId, uint16_
 
 HcclResult AllRankParamRecorder::GetXn(uint32_t rankId, uint32_t dieId, uint16_t xnId, uint64_t& xnValue)
 {
-    if(curXn.find(rankId) != curXn.end()) {
+    if (curXn.find(rankId) != curXn.end()) {
         if (curXn[rankId].find(dieId) != curXn[rankId].end()) {
             if (curXn[rankId][dieId].find(xnId) != curXn[rankId][dieId].end()) {
                 xnValue = curXn[rankId][dieId][xnId];
@@ -55,9 +52,9 @@ HcclResult AllRankParamRecorder::GetXn(uint32_t rankId, uint32_t dieId, uint16_t
     return HCCL_E_PARA;
 }
 
-HcclResult  AllRankParamRecorder::GetGSA(uint32_t rankId, uint32_t dieId, uint16_t gsaId, uint64_t& gsaValue)
+HcclResult AllRankParamRecorder::GetGSA(uint32_t rankId, uint32_t dieId, uint16_t gsaId, uint64_t& gsaValue)
 {
-    if(curGSA.find(rankId) != curGSA.end()) {
+    if (curGSA.find(rankId) != curGSA.end()) {
         if (curGSA[rankId].find(dieId) != curGSA[rankId].end()) {
             if (curGSA[rankId][dieId].find(gsaId) != curGSA[rankId][dieId].end()) {
                 gsaValue = curGSA[rankId][dieId][gsaId];
@@ -71,7 +68,7 @@ HcclResult  AllRankParamRecorder::GetGSA(uint32_t rankId, uint32_t dieId, uint16
 
 HcclResult AllRankParamRecorder::GetCKE(uint32_t rankId, uint32_t dieId, uint16_t ckeId, uint16_t& ckeValue)
 {
-    if(curCKE.find(rankId) != curCKE.end()) {
+    if (curCKE.find(rankId) != curCKE.end()) {
         if (curCKE[rankId].find(dieId) != curCKE[rankId].end()) {
             if (curCKE[rankId][dieId].find(ckeId) != curCKE[rankId][dieId].end()) {
                 ckeValue = curCKE[rankId][dieId][ckeId];
@@ -90,7 +87,7 @@ HcclResult AllRankParamRecorder::CheckAllPostMatch()
         RankId rank = rankPair.first;
         for (auto& diePair : seenPost[rank]) {
             uint32_t dieId = diePair.first;
-            for (auto& regPair: seenPost[rank][dieId]) {
+            for (auto& regPair : seenPost[rank][dieId]) {
                 uint16_t regId = regPair.first;
                 for (auto& post : seenPost[rank][dieId][regId]) {
                     HCCL_WARNING("unmatched LocalPost/Post: %s", post->task->Describe().c_str());
@@ -102,4 +99,4 @@ HcclResult AllRankParamRecorder::CheckAllPostMatch()
     return HCCL_SUCCESS;
 }
 
-}
+} // namespace Hccl

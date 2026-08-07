@@ -19,14 +19,8 @@ class CollAlgInfo {
 public:
     CollAlgInfo(OpMode opMode, std::string tag) : opMode(opMode), opTag(tag) {}
     ~CollAlgInfo() = default;
-    OpMode GetOpMode() const
-    {
-        return opMode;
-    }
-    std::string GetOpTag() const
-    {
-        return opTag;
-    }
+    OpMode GetOpMode() const { return opMode; }
+    std::string GetOpTag() const { return opTag; }
 
 private:
     OpMode opMode{OpMode::OPBASE};
@@ -34,5 +28,5 @@ private:
 };
 
 } // namespace Hccl
- 
+
 #endif // HCCL_AICPU_RESOURCE_AI_CPU_RESOUCES_H_

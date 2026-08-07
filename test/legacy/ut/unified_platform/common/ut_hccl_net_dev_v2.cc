@@ -18,20 +18,11 @@
 // Test suite class
 class HcclNetDevV2Test : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "HcclNetDevV2Test SetUP" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "HcclNetDevV2Test SetUP" << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "HcclNetDevV2Test TearDown" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "HcclNetDevV2Test TearDown" << std::endl; }
 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in HcclNetDevV2Test SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in HcclNetDevV2Test SetUP" << std::endl; }
 
     virtual void TearDown()
     {
@@ -41,7 +32,8 @@ protected:
 };
 
 // 测试HcclNetDevOpenV2
-TEST(HcclNetDevV2Test, ReturnsSuccessWhenDeviceAddedSuccessfully) {
+TEST(HcclNetDevV2Test, ReturnsSuccessWhenDeviceAddedSuccessfully)
+{
     MOCKER(Hccl::HrtRaRdmaInit).stubs().will(returnValue(Hccl::RdmaHandle()));
     HcclNetDev netDev = nullptr;
     HcclNetDevInfos info;
@@ -53,7 +45,8 @@ TEST(HcclNetDevV2Test, ReturnsSuccessWhenDeviceAddedSuccessfully) {
     EXPECT_EQ(HcclNetDevCloseV2(netDev), HCCL_SUCCESS);
 }
 
-TEST(HcclNetDevV2Test, ReturnsSuccessWhenDeviceAddedSuccessfully_1) {
+TEST(HcclNetDevV2Test, ReturnsSuccessWhenDeviceAddedSuccessfully_1)
+{
     MOCKER(Hccl::HrtRaRdmaInit).stubs().will(returnValue(Hccl::RdmaHandle()));
     HcclNetDev netDev = nullptr;
     HcclNetDevInfos info;
@@ -65,7 +58,8 @@ TEST(HcclNetDevV2Test, ReturnsSuccessWhenDeviceAddedSuccessfully_1) {
 }
 
 // 测试HcclNetDevGetAddrV2
-TEST(HcclNetDevV2Test, ReturnsSuccessWhenAddressIsIPv4) {
+TEST(HcclNetDevV2Test, ReturnsSuccessWhenAddressIsIPv4)
+{
     HcclAddress addr;
     MOCKER(Hccl::HrtRaRdmaInit).stubs().will(returnValue(Hccl::RdmaHandle()));
     HcclNetDev netDev = nullptr;
@@ -80,9 +74,10 @@ TEST(HcclNetDevV2Test, ReturnsSuccessWhenAddressIsIPv4) {
     EXPECT_EQ(HcclNetDevCloseV2(netDev), HCCL_SUCCESS);
 }
 
-TEST(HcclNetDevV2Test, HcclNetDevGetNicAddrV2test) {
+TEST(HcclNetDevV2Test, HcclNetDevGetNicAddrV2test)
+{
     HcclAddress busAddr;
-    HcclAddress * addr;
+    HcclAddress* addr;
     uint32_t addrNum = 0;
     int32_t devicePhyId = 0;
     EXPECT_EQ(HcclNetDevGetNicAddrV2(devicePhyId, &addr, &addrNum), HCCL_E_NOT_SUPPORT);

@@ -52,8 +52,10 @@ HcommResMgr& HcommResMgr::GetInstance(const uint32_t devicePhyId)
 
     uint32_t devPhyId = devicePhyId;
     if (devPhyId >= MAX_MODULE_DEVICE_NUM) {
-        HCCL_WARNING("[HcommResMgr][%s] use the backup device, devPhyId[%u] should be "
-            "less than %u.", __func__, devPhyId, MAX_MODULE_DEVICE_NUM);
+        HCCL_WARNING(
+            "[HcommResMgr][%s] use the backup device, devPhyId[%u] should be "
+            "less than %u.",
+            __func__, devPhyId, MAX_MODULE_DEVICE_NUM);
         devPhyId = MAX_MODULE_DEVICE_NUM; // 使用备份设备
     }
     if (!isInitialized[devPhyId]) {
@@ -105,7 +107,7 @@ HcommResMgr::~HcommResMgr()
     // 未来需在析构函数中主动调用各种单例销毁流程，保证销毁时序
 }
 
-static void OnDeviceResetPre(int32_t deviceId, aclrtDeviceState state, void *args)
+static void OnDeviceResetPre(int32_t deviceId, aclrtDeviceState state, void* args)
 {
     try {
         if (state != ACL_RT_DEVICE_STATE_RESET_PRE) {
@@ -125,7 +127,7 @@ static void OnDeviceResetPre(int32_t deviceId, aclrtDeviceState state, void *arg
         Hccl::RdmaHandleManager::GetInstance().DeInit(devPhyId);
         Hccl::SocketHandleManager::GetInstance().DeInit(devPhyId);
         Hccl::HccpHdcManager::GetInstance().DeInit(deviceId);
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
         HCCL_WARNING("[OnDeviceResetPre][%s] exception caught:%s", __func__, e.what());
     } catch (...) {
         HCCL_WARNING("[OnDeviceResetPre][%s] unknown exception caught", __func__);

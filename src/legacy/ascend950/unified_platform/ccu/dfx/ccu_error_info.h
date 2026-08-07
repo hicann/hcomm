@@ -89,8 +89,8 @@ struct CcuErrorInfo {
             uint16_t startInstrId;
             uint16_t endInstrId;
             uint16_t loopEngineId;
-            uint16_t loopCnt;           // 该Loop需要循环执行的次数
-            uint16_t loopCurrentCnt;    // 该Loop已经循环次数
+            uint16_t loopCnt;        // 该Loop需要循环执行的次数
+            uint16_t loopCurrentCnt; // 该Loop已经循环次数
             uint32_t addrStride;
         } loop;
 
@@ -111,5 +111,5 @@ struct CcuErrorInfo {
     }
 };
 
-}
+} // namespace Hccl
 #endif // CCU_ERROR_INFO_H

@@ -24,22 +24,15 @@ using TokenInfo = std::pair<TokenIdHandle, uint32_t>;
 using BufKeyVecIndex = u32;
 constexpr BufKeyVecIndex INVALID_BUF_KEY_VEC_INDEX = UINT32_MAX;
 
-class TokenRefMap
-{
+class TokenRefMap {
 public:
     using Iterator = std::unordered_map<BufKeyVecIndex, TokenInfo>::iterator;
 
-    Iterator begin()
-    {
-        return data_.begin();
-    }
+    Iterator begin() { return data_.begin(); }
 
-    Iterator end()
-    {
-        return data_.end();
-    }
+    Iterator end() { return data_.end(); }
 
-    u32 insert(BufKeyVecIndex key, const TokenInfo &value)
+    u32 insert(BufKeyVecIndex key, const TokenInfo& value)
     {
         if (has(key)) {
             ref_[key]++;
@@ -50,7 +43,7 @@ public:
         return count(key);
     }
 
-    u32 eraseAndGet(BufKeyVecIndex key, TokenInfo &erasedValue)
+    u32 eraseAndGet(BufKeyVecIndex key, TokenInfo& erasedValue)
     {
         u32 refCount = count(key);
         if (refCount > 1) {
@@ -69,51 +62,40 @@ public:
         ref_.clear();
     }
 
-    bool has(BufKeyVecIndex key)
-    {
-        return data_.find(key) != data_.end();
-    }
+    bool has(BufKeyVecIndex key) { return data_.find(key) != data_.end(); }
 
-    u32 count(BufKeyVecIndex key)
-    {
-        return has(key) ? ref_[key] : 0;
-    }
+    u32 count(BufKeyVecIndex key) { return has(key) ? ref_[key] : 0; }
 
-    TokenInfo &operator[](BufKeyVecIndex key)
-    {
-        return data_[key];
-    }
+    TokenInfo& operator[](BufKeyVecIndex key) { return data_[key]; }
 
 private:
     std::unordered_map<BufKeyVecIndex, TokenInfo> data_;
     std::unordered_map<BufKeyVecIndex, u32> ref_;
 };
 
-class TokenInfoManager
-{
+class TokenInfoManager {
 public:
-    TokenInfoManager(u32 devId, RdmaHandle rdmahandle) : devId_(devId), rdmahandle_(rdmahandle)
-    {
-    }
-    
-    TokenInfo GetTokenInfo(const BufferKey<uintptr_t, u64> &bufKey);
-    void PutTokenInfo(const BufferKey<uintptr_t, u64> &bufKey, TokenIdHandle tokenIdHandle);
+    TokenInfoManager(u32 devId, RdmaHandle rdmahandle) : devId_(devId), rdmahandle_(rdmahandle) {}
+
+    TokenInfo GetTokenInfo(const BufferKey<uintptr_t, u64>& bufKey);
+    void PutTokenInfo(const BufferKey<uintptr_t, u64>& bufKey, TokenIdHandle tokenIdHandle);
 
     void Destroy();
 
 private:
-    u32        devId_;
+    u32 devId_;
     RdmaHandle rdmahandle_;
     std::mutex tokenInfoMgrMutex_;
 
     TokenRefMap tokenRefMap_;
-    std::unordered_map<u32, vector<vector<BufferKey<uintptr_t, u64>>>> bufferKeysMap_; // <devId, BufKeyVecIndex, vector<BufferKey>>
+    std::unordered_map<u32, vector<vector<BufferKey<uintptr_t, u64>>>>
+        bufferKeysMap_; // <devId, BufKeyVecIndex, vector<BufferKey>>
     std::unordered_map<TokenIdHandle, BufKeyVecIndex> tokenIdToIndex_;
 
-    BufKeyVecIndex GetBufferVecIndex(const BufferKey<uintptr_t, u64> &inputBufKey);
+    BufKeyVecIndex GetBufferVecIndex(const BufferKey<uintptr_t, u64>& inputBufKey);
 };
 
-bool HasIntersect(const vector<BufferKey<uintptr_t, u64>> &bufKeys, const BufferKey<uintptr_t, u64> &inputBufKey);
+bool HasIntersect(const vector<BufferKey<uintptr_t, u64>>& bufKeys, const BufferKey<uintptr_t, u64>& inputBufKey);
 
 } // namespace Hccl
 

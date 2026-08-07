@@ -23,14 +23,15 @@ namespace Hccl {
 
 class RmtDataBufferMgr {
 public:
-    RmtDataBufferMgr(MemTransportLiteMgr *memTransportLiteMgr, CollAlgInfo *algInfo) :
-        memTransportLiteMgr_(memTransportLiteMgr), algInfo_(algInfo) {};
+    RmtDataBufferMgr(MemTransportLiteMgr* memTransportLiteMgr, CollAlgInfo* algInfo)
+        : memTransportLiteMgr_(memTransportLiteMgr),
+          algInfo_(algInfo) {};
     ~RmtDataBufferMgr() {};
-    DataBuffer GetBuffer(const LinkData &linkData, BufferType bufferType);
+    DataBuffer GetBuffer(const LinkData& linkData, BufferType bufferType);
 
 private:
-    MemTransportLiteMgr *memTransportLiteMgr_;
-    CollAlgInfo *algInfo_;
+    MemTransportLiteMgr* memTransportLiteMgr_;
+    CollAlgInfo* algInfo_;
 };
 } // namespace Hccl
 

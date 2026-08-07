@@ -12,12 +12,8 @@
 
 class TestHcommResMgrInit : public TestHcommCAdptBase {
 public:
-    void SetUp() override {
-        TestHcommCAdptBase::SetUp();
-    }
-    void TearDown() override {
-        TestHcommCAdptBase::TearDown();
-    }
+    void SetUp() override { TestHcommCAdptBase::SetUp(); }
+    void TearDown() override { TestHcommCAdptBase::TearDown(); }
 };
 
 TEST_F(TestHcommResMgrInit, Ut_TestHcommResMgrInit_When_WithDevPhyId_Return_HCCL_Success)

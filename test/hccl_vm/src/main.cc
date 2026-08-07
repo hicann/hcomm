@@ -35,7 +35,7 @@ void envInit()
     printf("envInit success\n");
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     const char* envCheck = std::getenv(HVM_BASH_ENV_KEY.c_str());
 

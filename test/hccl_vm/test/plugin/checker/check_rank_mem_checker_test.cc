@@ -29,28 +29,33 @@ std::map<RankId, std::map<u32, ChannelsPerDie>> g_allRankChannelInfo;
 
 class CheckRankMemTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         StorageManager::GetInstance().Reset();
         StorageManager::GetInstance().SetDataId("");
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         StorageManager::GetInstance().Reset();
         StorageManager::GetInstance().SetDataId("");
     }
 
-    std::string CreateTempDir() {
+    std::string CreateTempDir()
+    {
         char tmpl[] = "/tmp/crm_test_XXXXXX";
         std::string dir = mkdtemp(tmpl);
         return dir;
     }
 
-    void RemoveDir(const std::string& dir) {
+    void RemoveDir(const std::string& dir)
+    {
         std::string cmd = "rm -rf " + dir;
         system(cmd.c_str());
     }
 
-    std::string CreateTestDataDir(const std::string& baseDir, const std::string& dataId) {
+    std::string CreateTestDataDir(const std::string& baseDir, const std::string& dataId)
+    {
         std::string pluginDir = baseDir + "/plugin";
         std::string dataDir = baseDir + "/data";
         mkdir(pluginDir.c_str(), 0755);
@@ -58,7 +63,8 @@ protected:
         return dataDir;
     }
 
-    void WriteSynDataFile(const std::string& path, const HcclVmSynData& synData) {
+    void WriteSynDataFile(const std::string& path, const HcclVmSynData& synData)
+    {
         FILE* fp = fopen(path.c_str(), "wb");
         ASSERT_NE(fp, nullptr);
         auto ret = HcclVmSynDataWrite(fp, synData);
@@ -66,7 +72,8 @@ protected:
         ASSERT_EQ(ret, HcclResult::HCCL_SUCCESS);
     }
 
-    void WriteGzJsonlFile(const std::string& path, const std::vector<std::string>& lines) {
+    void WriteGzJsonlFile(const std::string& path, const std::vector<std::string>& lines)
+    {
         gzFile file = gzopen(path.c_str(), "wb");
         ASSERT_NE(file, nullptr);
         for (const auto& line : lines) {
@@ -76,8 +83,9 @@ protected:
         gzclose(file);
     }
 
-    void SetupStorageManagerWithMemLayout(const std::string& tmpDir, const std::string& dataId,
-                                          const std::vector<std::string>& memLayoutLines) {
+    void SetupStorageManagerWithMemLayout(
+        const std::string& tmpDir, const std::string& dataId, const std::vector<std::string>& memLayoutLines)
+    {
         std::string dataDir = CreateTestDataDir(tmpDir, dataId);
 
         HcclVmSynData synData{};
@@ -104,8 +112,9 @@ protected:
         chdir(savedCwd);
     }
 
-    void SetupStorageManagerWithSynData(const std::string& tmpDir, const std::string& dataId,
-                                        const HcclVmSynData& synData) {
+    void
+    SetupStorageManagerWithSynData(const std::string& tmpDir, const std::string& dataId, const HcclVmSynData& synData)
+    {
         std::string dataDir = CreateTestDataDir(tmpDir, dataId);
         std::string synFilePath = dataDir + "/" + dataId + "_hcclvm_syn_data.bin";
         WriteSynDataFile(synFilePath, synData);
@@ -121,10 +130,10 @@ protected:
         chdir(savedCwd);
     }
 
-    HcclTaskMetaData MakeMemCpyTask(uint32_t srcRank, uint64_t srcOffset,
-                                     uint32_t dstRank, uint64_t dstOffset,
-                                     uint64_t len, uint32_t commId = 0,
-                                     uint32_t rankId = 0, uint32_t streamId = 0) {
+    HcclTaskMetaData MakeMemCpyTask(
+        uint32_t srcRank, uint64_t srcOffset, uint32_t dstRank, uint64_t dstOffset, uint64_t len, uint32_t commId = 0,
+        uint32_t rankId = 0, uint32_t streamId = 0)
+    {
         HcclTaskMetaData task{};
         task.taskType = HccLTaskMetaType::MEM_CPY;
         task.commId = commId;
@@ -139,10 +148,10 @@ protected:
         return task;
     }
 
-    HcclTaskMetaData MakeReduceTask(uint32_t srcRank, uint64_t srcOffset,
-                                     uint32_t dstRank, uint64_t dstOffset,
-                                     uint64_t dataCount, uint32_t commId = 0,
-                                     uint32_t rankId = 0, uint32_t streamId = 0) {
+    HcclTaskMetaData MakeReduceTask(
+        uint32_t srcRank, uint64_t srcOffset, uint32_t dstRank, uint64_t dstOffset, uint64_t dataCount,
+        uint32_t commId = 0, uint32_t rankId = 0, uint32_t streamId = 0)
+    {
         HcclTaskMetaData task{};
         task.taskType = HccLTaskMetaType::REDUCE;
         task.commId = commId;
@@ -159,10 +168,10 @@ protected:
         return task;
     }
 
-    HcclTaskMetaData MakeNotifyRecordTask(uint32_t srcRank, uint32_t notifyId,
-                                           uint32_t dstRank, uint32_t notifyCount = 1,
-                                           uint32_t commId = 0, uint32_t rankId = 0,
-                                           uint32_t streamId = 0) {
+    HcclTaskMetaData MakeNotifyRecordTask(
+        uint32_t srcRank, uint32_t notifyId, uint32_t dstRank, uint32_t notifyCount = 1, uint32_t commId = 0,
+        uint32_t rankId = 0, uint32_t streamId = 0)
+    {
         HcclTaskMetaData task{};
         task.taskType = HccLTaskMetaType::NOTIFY_RECORD;
         task.commId = commId;
@@ -176,10 +185,10 @@ protected:
         return task;
     }
 
-    HcclTaskMetaData MakeNotifyWaitTask(uint32_t srcRank, uint32_t notifyId,
-                                          uint32_t dstRank, uint32_t notifyCount = 1,
-                                          uint32_t commId = 0, uint32_t rankId = 0,
-                                          uint32_t streamId = 0) {
+    HcclTaskMetaData MakeNotifyWaitTask(
+        uint32_t srcRank, uint32_t notifyId, uint32_t dstRank, uint32_t notifyCount = 1, uint32_t commId = 0,
+        uint32_t rankId = 0, uint32_t streamId = 0)
+    {
         HcclTaskMetaData task{};
         task.taskType = HccLTaskMetaType::NOTIFY_WAIT;
         task.commId = commId;
@@ -193,8 +202,8 @@ protected:
         return task;
     }
 
-    HcclTaskMetaData MakeCcuGraphTask(uint32_t commId = 0, uint32_t rankId = 0,
-                                       uint32_t streamId = 0) {
+    HcclTaskMetaData MakeCcuGraphTask(uint32_t commId = 0, uint32_t rankId = 0, uint32_t streamId = 0)
+    {
         HcclTaskMetaData task{};
         task.taskType = HccLTaskMetaType::CCU_GRAPH;
         task.commId = commId;
@@ -203,8 +212,8 @@ protected:
         return task;
     }
 
-    HcclTaskMetaData MakeAivGraphTask(uint32_t commId = 0, uint32_t rankId = 0,
-                                       uint32_t streamId = 0) {
+    HcclTaskMetaData MakeAivGraphTask(uint32_t commId = 0, uint32_t rankId = 0, uint32_t streamId = 0)
+    {
         HcclTaskMetaData task{};
         task.taskType = HccLTaskMetaType::AIV_GRAPH;
         task.commId = commId;
@@ -214,24 +223,28 @@ protected:
     }
 };
 
-TEST_F(CheckRankMemTest, DefaultConstruction) {
+TEST_F(CheckRankMemTest, DefaultConstruction)
+{
     CheckRankMem checker(0);
     EXPECT_EQ(checker.GetRankId(), 0);
 }
 
-TEST_F(CheckRankMemTest, ConstructionWithRankId) {
+TEST_F(CheckRankMemTest, ConstructionWithRankId)
+{
     CheckRankMem checker(3);
     EXPECT_EQ(checker.GetRankId(), 3);
 }
 
-TEST_F(CheckRankMemTest, CheckEmptyTaskList) {
+TEST_F(CheckRankMemTest, CheckEmptyTaskList)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     auto result = checker.Check(tasks);
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckSingleMemCpyTask) {
+TEST_F(CheckRankMemTest, CheckSingleMemCpyTask)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_single_mcpy";
 
@@ -252,7 +265,8 @@ TEST_F(CheckRankMemTest, CheckSingleMemCpyTask) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckTwoMemCpyTasksNoOverlap) {
+TEST_F(CheckRankMemTest, CheckTwoMemCpyTasksNoOverlap)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_two_mcpy_nooverlap";
 
@@ -274,7 +288,8 @@ TEST_F(CheckRankMemTest, CheckTwoMemCpyTasksNoOverlap) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpySrcDstOverlapConflict) {
+TEST_F(CheckRankMemTest, CheckMemCpySrcDstOverlapConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_mcpy_overlap";
 
@@ -296,7 +311,8 @@ TEST_F(CheckRankMemTest, CheckMemCpySrcDstOverlapConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyWriteWriteConflict) {
+TEST_F(CheckRankMemTest, CheckMemCpyWriteWriteConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_ww_conflict";
 
@@ -318,7 +334,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyWriteWriteConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckReduceTask) {
+TEST_F(CheckRankMemTest, CheckReduceTask)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_reduce";
 
@@ -339,7 +356,8 @@ TEST_F(CheckRankMemTest, CheckReduceTask) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckReduceConflictWithMemCpy) {
+TEST_F(CheckRankMemTest, CheckReduceConflictWithMemCpy)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_reduce_mcpy_conflict";
 
@@ -361,7 +379,8 @@ TEST_F(CheckRankMemTest, CheckReduceConflictWithMemCpy) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckNotifyRecordTask) {
+TEST_F(CheckRankMemTest, CheckNotifyRecordTask)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     tasks.push_back(MakeNotifyRecordTask(0, 1, 1));
@@ -370,7 +389,8 @@ TEST_F(CheckRankMemTest, CheckNotifyRecordTask) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckNotifyWaitTask) {
+TEST_F(CheckRankMemTest, CheckNotifyWaitTask)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     tasks.push_back(MakeNotifyWaitTask(0, 1, 1));
@@ -379,7 +399,8 @@ TEST_F(CheckRankMemTest, CheckNotifyWaitTask) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckNotifyRecordAndWaitNoConflict) {
+TEST_F(CheckRankMemTest, CheckNotifyRecordAndWaitNoConflict)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     tasks.push_back(MakeNotifyRecordTask(0, 1, 1, 1, 0, 0, 0));
@@ -389,7 +410,8 @@ TEST_F(CheckRankMemTest, CheckNotifyRecordAndWaitNoConflict) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckCcuGraphTask) {
+TEST_F(CheckRankMemTest, CheckCcuGraphTask)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     tasks.push_back(MakeCcuGraphTask(0, 0, 0));
@@ -398,7 +420,8 @@ TEST_F(CheckRankMemTest, CheckCcuGraphTask) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckAivGraphTask) {
+TEST_F(CheckRankMemTest, CheckAivGraphTask)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     tasks.push_back(MakeAivGraphTask(0, 0, 0));
@@ -407,7 +430,8 @@ TEST_F(CheckRankMemTest, CheckAivGraphTask) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckMixedTasksNoConflict) {
+TEST_F(CheckRankMemTest, CheckMixedTasksNoConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_mixed_noconflict";
 
@@ -431,7 +455,8 @@ TEST_F(CheckRankMemTest, CheckMixedTasksNoConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMixedTasksWithConflict) {
+TEST_F(CheckRankMemTest, CheckMixedTasksWithConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_mixed_conflict";
 
@@ -453,7 +478,8 @@ TEST_F(CheckRankMemTest, CheckMixedTasksWithConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckDifferentRanksNoConflict) {
+TEST_F(CheckRankMemTest, CheckDifferentRanksNoConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_diff_ranks";
 
@@ -479,7 +505,8 @@ TEST_F(CheckRankMemTest, CheckDifferentRanksNoConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckReadWriteConflict) {
+TEST_F(CheckRankMemTest, CheckReadWriteConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_rw_conflict";
 
@@ -501,7 +528,8 @@ TEST_F(CheckRankMemTest, CheckReadWriteConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMultipleStreamNoConflict) {
+TEST_F(CheckRankMemTest, CheckMultipleStreamNoConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_multi_stream";
 
@@ -523,7 +551,8 @@ TEST_F(CheckRankMemTest, CheckMultipleStreamNoConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckCrossStreamConflict) {
+TEST_F(CheckRankMemTest, CheckCrossStreamConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_cross_stream_conflict";
 
@@ -545,7 +574,8 @@ TEST_F(CheckRankMemTest, CheckCrossStreamConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyDifferentSrcDstNoConflict) {
+TEST_F(CheckRankMemTest, CheckMemCpyDifferentSrcDstNoConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_diff_srcdst";
 
@@ -569,7 +599,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyDifferentSrcDstNoConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckNotifySyncBetweenStreams) {
+TEST_F(CheckRankMemTest, CheckNotifySyncBetweenStreams)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_notify_sync";
 
@@ -593,7 +624,8 @@ TEST_F(CheckRankMemTest, CheckNotifySyncBetweenStreams) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckNotifySyncStillConflicts) {
+TEST_F(CheckRankMemTest, CheckNotifySyncStillConflicts)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_notify_still_conflict";
 
@@ -615,7 +647,8 @@ TEST_F(CheckRankMemTest, CheckNotifySyncStillConflicts) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckLargeMemCpyTask) {
+TEST_F(CheckRankMemTest, CheckLargeMemCpyTask)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_large_mcpy";
 
@@ -636,7 +669,8 @@ TEST_F(CheckRankMemTest, CheckLargeMemCpyTask) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMultipleReduceTasksNoConflict) {
+TEST_F(CheckRankMemTest, CheckMultipleReduceTasksNoConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_multi_reduce";
 
@@ -658,7 +692,8 @@ TEST_F(CheckRankMemTest, CheckMultipleReduceTasksNoConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckReduceOverlapConflict) {
+TEST_F(CheckRankMemTest, CheckReduceOverlapConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_reduce_overlap";
 
@@ -680,7 +715,8 @@ TEST_F(CheckRankMemTest, CheckReduceOverlapConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyPartialOverlap) {
+TEST_F(CheckRankMemTest, CheckMemCpyPartialOverlap)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_partial_overlap";
 
@@ -702,7 +738,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyPartialOverlap) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyAdjacentNoOverlap) {
+TEST_F(CheckRankMemTest, CheckMemCpyAdjacentNoOverlap)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_adjacent";
 
@@ -724,7 +761,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyAdjacentNoOverlap) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyZeroLen) {
+TEST_F(CheckRankMemTest, CheckMemCpyZeroLen)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_zero_len";
 
@@ -745,7 +783,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyZeroLen) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckReduceZeroDataCount) {
+TEST_F(CheckRankMemTest, CheckReduceZeroDataCount)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_reduce_zero";
 
@@ -766,7 +805,8 @@ TEST_F(CheckRankMemTest, CheckReduceZeroDataCount) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyOutputBufferConflict) {
+TEST_F(CheckRankMemTest, CheckMemCpyOutputBufferConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_output_conflict";
 
@@ -790,7 +830,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyOutputBufferConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyInputOutputNoConflict) {
+TEST_F(CheckRankMemTest, CheckMemCpyInputOutputNoConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_inout_noconflict";
 
@@ -814,7 +855,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyInputOutputNoConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckNotifyRecordAndWaitSync) {
+TEST_F(CheckRankMemTest, CheckNotifyRecordAndWaitSync)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     tasks.push_back(MakeNotifyRecordTask(0, 1, 1, 1, 0, 0, 0));
@@ -824,7 +866,8 @@ TEST_F(CheckRankMemTest, CheckNotifyRecordAndWaitSync) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckMultipleNotifyIds) {
+TEST_F(CheckRankMemTest, CheckMultipleNotifyIds)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     tasks.push_back(MakeNotifyRecordTask(0, 1, 1, 1, 0, 0, 0));
@@ -836,7 +879,8 @@ TEST_F(CheckRankMemTest, CheckMultipleNotifyIds) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckCcuGraphAndAivGraphMixed) {
+TEST_F(CheckRankMemTest, CheckCcuGraphAndAivGraphMixed)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     tasks.push_back(MakeCcuGraphTask(0, 0, 0));
@@ -847,7 +891,8 @@ TEST_F(CheckRankMemTest, CheckCcuGraphAndAivGraphMixed) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpySameStreamSequential) {
+TEST_F(CheckRankMemTest, CheckMemCpySameStreamSequential)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_same_stream_seq";
 
@@ -869,7 +914,8 @@ TEST_F(CheckRankMemTest, CheckMemCpySameStreamSequential) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpySelfCopy) {
+TEST_F(CheckRankMemTest, CheckMemCpySelfCopy)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_self_copy";
 
@@ -890,7 +936,8 @@ TEST_F(CheckRankMemTest, CheckMemCpySelfCopy) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpySelfCopyConflict) {
+TEST_F(CheckRankMemTest, CheckMemCpySelfCopyConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_self_copy_conflict";
 
@@ -912,7 +959,8 @@ TEST_F(CheckRankMemTest, CheckMemCpySelfCopyConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyDifferentCommId) {
+TEST_F(CheckRankMemTest, CheckMemCpyDifferentCommId)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_diff_comm";
 
@@ -934,7 +982,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyDifferentCommId) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckReduceThenMemCpyNoConflict) {
+TEST_F(CheckRankMemTest, CheckReduceThenMemCpyNoConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_reduce_then_mcpy";
 
@@ -956,7 +1005,8 @@ TEST_F(CheckRankMemTest, CheckReduceThenMemCpyNoConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyThenReduceConflict) {
+TEST_F(CheckRankMemTest, CheckMemCpyThenReduceConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_mcpy_reduce_conflict";
 
@@ -978,7 +1028,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyThenReduceConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckNotifyRecordOnly) {
+TEST_F(CheckRankMemTest, CheckNotifyRecordOnly)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     for (int i = 0; i < 5; i++) {
@@ -989,7 +1040,8 @@ TEST_F(CheckRankMemTest, CheckNotifyRecordOnly) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckNotifyWaitOnly) {
+TEST_F(CheckRankMemTest, CheckNotifyWaitOnly)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     for (int i = 0; i < 5; i++) {
@@ -1000,7 +1052,8 @@ TEST_F(CheckRankMemTest, CheckNotifyWaitOnly) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyWithNotifySyncNoConflict) {
+TEST_F(CheckRankMemTest, CheckMemCpyWithNotifySyncNoConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_mcpy_notify_sync";
 
@@ -1024,7 +1077,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyWithNotifySyncNoConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyWithoutNotifySyncConflict) {
+TEST_F(CheckRankMemTest, CheckMemCpyWithoutNotifySyncConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_mcpy_no_notify";
 
@@ -1046,7 +1100,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyWithoutNotifySyncConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMultipleNotifyRecordsForSameId) {
+TEST_F(CheckRankMemTest, CheckMultipleNotifyRecordsForSameId)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     tasks.push_back(MakeNotifyRecordTask(0, 1, 1, 1, 0, 0, 0));
@@ -1056,7 +1111,8 @@ TEST_F(CheckRankMemTest, CheckMultipleNotifyRecordsForSameId) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckNotifyWaitBeforeRecord) {
+TEST_F(CheckRankMemTest, CheckNotifyWaitBeforeRecord)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     tasks.push_back(MakeNotifyWaitTask(0, 1, 1, 1, 0, 0, 0));
@@ -1066,7 +1122,8 @@ TEST_F(CheckRankMemTest, CheckNotifyWaitBeforeRecord) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckAllTaskTypesMixed) {
+TEST_F(CheckRankMemTest, CheckAllTaskTypesMixed)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_all_types";
 
@@ -1092,7 +1149,8 @@ TEST_F(CheckRankMemTest, CheckAllTaskTypesMixed) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckRankIdAccessor) {
+TEST_F(CheckRankMemTest, CheckRankIdAccessor)
+{
     CheckRankMem checker0(0);
     EXPECT_EQ(checker0.GetRankId(), 0);
 
@@ -1100,7 +1158,8 @@ TEST_F(CheckRankMemTest, CheckRankIdAccessor) {
     EXPECT_EQ(checker7.GetRankId(), 7);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyDstOverlapWithReduceSrc) {
+TEST_F(CheckRankMemTest, CheckMemCpyDstOverlapWithReduceSrc)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_dst_reduce_src";
 
@@ -1124,7 +1183,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyDstOverlapWithReduceSrc) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpySrcOnlyConflict) {
+TEST_F(CheckRankMemTest, CheckMemCpySrcOnlyConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_src_only_conflict";
 
@@ -1146,7 +1206,8 @@ TEST_F(CheckRankMemTest, CheckMemCpySrcOnlyConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyDstOnlyConflict) {
+TEST_F(CheckRankMemTest, CheckMemCpyDstOnlyConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_dst_only_conflict";
 
@@ -1168,7 +1229,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyDstOnlyConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckNotifyWithMultipleNotifyCount) {
+TEST_F(CheckRankMemTest, CheckNotifyWithMultipleNotifyCount)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     tasks.push_back(MakeNotifyRecordTask(0, 1, 1, 3, 0, 0, 0));
@@ -1178,7 +1240,8 @@ TEST_F(CheckRankMemTest, CheckNotifyWithMultipleNotifyCount) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckReduceWithDifferentDataType) {
+TEST_F(CheckRankMemTest, CheckReduceWithDifferentDataType)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_reduce_dtype";
 
@@ -1201,7 +1264,8 @@ TEST_F(CheckRankMemTest, CheckReduceWithDifferentDataType) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckReduceWithDifferentReduceOp) {
+TEST_F(CheckRankMemTest, CheckReduceWithDifferentReduceOp)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_reduce_op";
 
@@ -1224,7 +1288,8 @@ TEST_F(CheckRankMemTest, CheckReduceWithDifferentReduceOp) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyWithProtocol) {
+TEST_F(CheckRankMemTest, CheckMemCpyWithProtocol)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_mcpy_protocol";
 
@@ -1247,7 +1312,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyWithProtocol) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckNotifyWithProtocol) {
+TEST_F(CheckRankMemTest, CheckNotifyWithProtocol)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     HcclTaskMetaData notifyTask = MakeNotifyRecordTask(0, 1, 1);
@@ -1258,7 +1324,8 @@ TEST_F(CheckRankMemTest, CheckNotifyWithProtocol) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckThreeWayConflict) {
+TEST_F(CheckRankMemTest, CheckThreeWayConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_three_way";
 
@@ -1281,7 +1348,8 @@ TEST_F(CheckRankMemTest, CheckThreeWayConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckMultipleRanksSameChecker) {
+TEST_F(CheckRankMemTest, CheckMultipleRanksSameChecker)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_multi_ranks";
 
@@ -1309,7 +1377,8 @@ TEST_F(CheckRankMemTest, CheckMultipleRanksSameChecker) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckNotifyRecordMultipleWaits) {
+TEST_F(CheckRankMemTest, CheckNotifyRecordMultipleWaits)
+{
     CheckRankMem checker(0);
     std::vector<HcclTaskMetaData> tasks;
     tasks.push_back(MakeNotifyRecordTask(0, 1, 1, 1, 0, 0, 0));
@@ -1320,7 +1389,8 @@ TEST_F(CheckRankMemTest, CheckNotifyRecordMultipleWaits) {
     EXPECT_TRUE(result.empty());
 }
 
-TEST_F(CheckRankMemTest, CheckMemCpyDifferentBufferTypesNoConflict) {
+TEST_F(CheckRankMemTest, CheckMemCpyDifferentBufferTypesNoConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_diff_buf";
 
@@ -1344,7 +1414,8 @@ TEST_F(CheckRankMemTest, CheckMemCpyDifferentBufferTypesNoConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckReduceAndNotifyNoConflict) {
+TEST_F(CheckRankMemTest, CheckReduceAndNotifyNoConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_reduce_notify";
 
@@ -1366,7 +1437,8 @@ TEST_F(CheckRankMemTest, CheckReduceAndNotifyNoConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckCcuGraphWithMemCpyNoConflict) {
+TEST_F(CheckRankMemTest, CheckCcuGraphWithMemCpyNoConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_ccu_mcpy";
 
@@ -1388,7 +1460,8 @@ TEST_F(CheckRankMemTest, CheckCcuGraphWithMemCpyNoConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckAivGraphWithMemCpyNoConflict) {
+TEST_F(CheckRankMemTest, CheckAivGraphWithMemCpyNoConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_aiv_mcpy";
 
@@ -1410,7 +1483,8 @@ TEST_F(CheckRankMemTest, CheckAivGraphWithMemCpyNoConflict) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckLargeNumberOfTasks) {
+TEST_F(CheckRankMemTest, CheckLargeNumberOfTasks)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_large_tasks";
 
@@ -1433,7 +1507,8 @@ TEST_F(CheckRankMemTest, CheckLargeNumberOfTasks) {
     RemoveDir(tmpDir);
 }
 
-TEST_F(CheckRankMemTest, CheckLargeNumberOfTasksNoConflict) {
+TEST_F(CheckRankMemTest, CheckLargeNumberOfTasksNoConflict)
+{
     std::string tmpDir = CreateTempDir();
     std::string dataId = "test_large_noconflict";
 

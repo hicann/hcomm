@@ -20,7 +20,7 @@ namespace Hccl {
 
 class MC2GlobalMirrorTasks {
 public:
-    static MC2GlobalMirrorTasks &GetInstance();
+    static MC2GlobalMirrorTasks& GetInstance();
 
     void Clear();
     void AddTaskInfo(u32 devLogicId, std::shared_ptr<TaskInfo> taskInfo);
@@ -29,13 +29,13 @@ public:
 private:
     MC2GlobalMirrorTasks() = default;
     ~MC2GlobalMirrorTasks() = default;
-    MC2GlobalMirrorTasks(const MC2GlobalMirrorTasks &)            = delete;
-    MC2GlobalMirrorTasks &operator=(const MC2GlobalMirrorTasks &) = delete;
+    MC2GlobalMirrorTasks(const MC2GlobalMirrorTasks&) = delete;
+    MC2GlobalMirrorTasks& operator=(const MC2GlobalMirrorTasks&) = delete;
 
 private:
     std::array<std::vector<std::shared_ptr<TaskInfo>>, DEVICE_MAX_NUM> taskQueues_;
 };
 
-}  // namespace Hccl
+} // namespace Hccl
 
-#endif //MC2_GLOBAL_MIRROR_TASKS_H
+#endif // MC2_GLOBAL_MIRROR_TASKS_H

@@ -30,10 +30,7 @@ using namespace Hccl;
 
 class CcuJettyTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "CcuJettyTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "CcuJettyTest tests set up." << std::endl; }
 
     static void TearDownTestCase()
     {

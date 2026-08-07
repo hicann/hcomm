@@ -29,57 +29,54 @@ using namespace HcclSim;
 extern std::map<RankId, std::map<u32, ChannelsPerDie>> g_allRankChannelInfo;
 namespace {
 // 18
-constexpr uint16_t A6_LOADSQEARGSTOXN_CODE  = 0x1; 
-constexpr uint16_t A6_LOADIMDTOX_CODE      = 0x2;
-constexpr uint16_t A6_LOADX_CODE           = 0x6;
-constexpr uint16_t A6_STOREX_CODE           = 0x7;
-constexpr uint16_t A6_CLEARX_CODE           = 0x8;
-constexpr uint16_t A6_NOP_CODE           = 0x9;
-constexpr uint16_t A6_LOAD_CODE           = 0xA;
-constexpr uint16_t A6_STORE_CODE           = 0xB;
-constexpr uint16_t A6_ADD_CODE           = 0xD;
-constexpr uint16_t A6_SUB_CODE           = 0xE;
-constexpr uint16_t A6_MUL_CODE           = 0xF;
-constexpr uint16_t A6_AND_CODE           = 0x10;
-constexpr uint16_t A6_OR_CODE           = 0x11;
-constexpr uint16_t A6_NOT_CODE           = 0x12;
-constexpr uint16_t A6_XOR_CODE           = 0x13;
-constexpr uint16_t A6_SHL_CODE           = 0x14;
-constexpr uint16_t A6_SHR_CODE           = 0x15;
-constexpr uint16_t A6_POPCNT_CODE           = 0x16;
+constexpr uint16_t A6_LOADSQEARGSTOXN_CODE = 0x1;
+constexpr uint16_t A6_LOADIMDTOX_CODE = 0x2;
+constexpr uint16_t A6_LOADX_CODE = 0x6;
+constexpr uint16_t A6_STOREX_CODE = 0x7;
+constexpr uint16_t A6_CLEARX_CODE = 0x8;
+constexpr uint16_t A6_NOP_CODE = 0x9;
+constexpr uint16_t A6_LOAD_CODE = 0xA;
+constexpr uint16_t A6_STORE_CODE = 0xB;
+constexpr uint16_t A6_ADD_CODE = 0xD;
+constexpr uint16_t A6_SUB_CODE = 0xE;
+constexpr uint16_t A6_MUL_CODE = 0xF;
+constexpr uint16_t A6_AND_CODE = 0x10;
+constexpr uint16_t A6_OR_CODE = 0x11;
+constexpr uint16_t A6_NOT_CODE = 0x12;
+constexpr uint16_t A6_XOR_CODE = 0x13;
+constexpr uint16_t A6_SHL_CODE = 0x14;
+constexpr uint16_t A6_SHR_CODE = 0x15;
+constexpr uint16_t A6_POPCNT_CODE = 0x16;
 
 // 7
-constexpr uint16_t A6_LOOP_CODE      = 0x0;
+constexpr uint16_t A6_LOOP_CODE = 0x0;
 constexpr uint16_t A6_LOOPGROUP_CODE = 0x1;
-constexpr uint16_t A6_SETCKBIT_CODE    = 0x2;
-constexpr uint16_t A6_CLEARCKE_CODE  = 0x4;
-constexpr uint16_t A6_JMP_CODE       = 0x5;
-constexpr uint16_t A6_WAIT_CODE     = 0x7;
-constexpr uint16_t A6_FENCE_CODE     = 0x8;
+constexpr uint16_t A6_SETCKBIT_CODE = 0x2;
+constexpr uint16_t A6_CLEARCKE_CODE = 0x4;
+constexpr uint16_t A6_JMP_CODE = 0x5;
+constexpr uint16_t A6_WAIT_CODE = 0x7;
+constexpr uint16_t A6_FENCE_CODE = 0x8;
 
 // 7
-constexpr uint16_t A6_TRANSLOCMEMTOLOCMS_CODE  = 0x0;
-constexpr uint16_t A6_TRANSLOCMSTOLOCMEM_CODE  = 0x2;
-constexpr uint16_t A6_TRANSLOCMSTOLOCMS_CODE   = 0x5;
-constexpr uint16_t A6_TRANSLOCMEMTOLOCMEM_CODE   = 0x6;
-constexpr uint16_t A6_TRANSMEM_CODE   = 0x10;
-constexpr uint16_t A6_SYNCXNWTX_CODE   = 0xd;
-constexpr uint16_t A6_SYNCATX_CODE   = 0xe;
+constexpr uint16_t A6_TRANSLOCMEMTOLOCMS_CODE = 0x0;
+constexpr uint16_t A6_TRANSLOCMSTOLOCMEM_CODE = 0x2;
+constexpr uint16_t A6_TRANSLOCMSTOLOCMS_CODE = 0x5;
+constexpr uint16_t A6_TRANSLOCMEMTOLOCMEM_CODE = 0x6;
+constexpr uint16_t A6_TRANSMEM_CODE = 0x10;
+constexpr uint16_t A6_SYNCXNWTX_CODE = 0xd;
+constexpr uint16_t A6_SYNCATX_CODE = 0xe;
 
 // 3
 constexpr uint16_t A6_REDUCEADD_CODE = 0x0;
 constexpr uint16_t A6_REDUCEMAX_CODE = 0x1;
 constexpr uint16_t A6_REDUCEMIN_CODE = 0x2;
-constexpr uint16_t A6_LOOP_BOARD_ENTRY = 1024;// LOOP指令的起始地址
+constexpr uint16_t A6_LOOP_BOARD_ENTRY = 1024; // LOOP指令的起始地址
 constexpr uint64_t UB_MAX_SIZE = 256 * 1024 * 1024;
 constexpr uint16_t MAX_LOADX_STOREX_ID_NUM = 16383; // loadx/storeX 指令S使用，最大寄存器ID个数
-constexpr  uint32_t JUMP_INSTR_MAX = 0x10000;
+constexpr uint32_t JUMP_INSTR_MAX = 0x10000;
 
-static std::map<uint16_t, uint16_t> ccuReduceTypeMap = {
-    {10, CcuRep::CCU_REDUCE_SUM},
-    { 9, CcuRep::CCU_REDUCE_MIN},
-    { 8, CcuRep::CCU_REDUCE_MAX}
-};
+static std::map<uint16_t, uint16_t> ccuReduceTypeMap
+    = {{10, CcuRep::CCU_REDUCE_SUM}, {9, CcuRep::CCU_REDUCE_MIN}, {8, CcuRep::CCU_REDUCE_MAX}};
 
 // loop指令使用的结构体，第n个通用寄存器，高32位保留，低32位表示搬运用到的GSA地址
 union LoopXnA6 {
@@ -112,7 +109,7 @@ union LoopXpA6 {
 struct LoopA6 {
     LoopXnA6 loopXn{};
     LoopXmA6 loopXm{};
-    LoopXpA6 loopXp{};    
+    LoopXpA6 loopXp{};
 };
 
 // loopGroup指令使用的结构体，第n个通用寄存器，loop指令个数，高10位表示展开次数，低9位表示循环次数，高35位保留
@@ -152,9 +149,9 @@ struct LoopGroupParamA6 {
     LoopGroupXnA6 loopGroupXn;
     LoopGroupXmA6 loopGroupXm;
     LoopGroupXpA6 loopGroupXp;
-    u32 curLoopIdx = 0;                   // 表示当前处理第几个loop
-    u32 curExpandCnt = 0;                 // 该loop被第几次展开
-    u32 curLoopCnt = 0;                   // 表示当前Loop第几次循环
+    u32 curLoopIdx = 0;   // 表示当前处理第几个loop
+    u32 curExpandCnt = 0; // 该loop被第几次展开
+    u32 curLoopCnt = 0;   // 表示当前Loop第几次循环
 };
 
 HcclResult CheckLoopGroupNotSupport(LoopGroupParamA6* loopGroupParam)
@@ -174,7 +171,8 @@ uint16_t UpdateCKEId(uint16_t CKEId, LoopGroupParamA6* loopGroupParam)
         return CKEId;
     }
 
-    return UpdateId(CKEId, loopGroupParam->curLoopIdx, loopGroupParam->loopGroupXn.expandOffset,
+    return UpdateId(
+        CKEId, loopGroupParam->curLoopIdx, loopGroupParam->loopGroupXn.expandOffset,
         loopGroupParam->loopGroupXm.ckOffset, loopGroupParam->curExpandCnt);
 }
 
@@ -186,9 +184,9 @@ uint16_t UpdateXnId(uint16_t xnId, LoopGroupParamA6* loopGroupParam)
         return xnId;
     }
 
-    return UpdateId(xnId, loopGroupParam->curLoopIdx,
-        loopGroupParam->loopGroupXn.expandOffset, loopGroupParam->loopGroupXp.xnIdOffset,
-        loopGroupParam->curExpandCnt);
+    return UpdateId(
+        xnId, loopGroupParam->curLoopIdx, loopGroupParam->loopGroupXn.expandOffset,
+        loopGroupParam->loopGroupXp.xnIdOffset, loopGroupParam->curExpandCnt);
 }
 
 // 循环中MS需要进行自动偏移
@@ -199,12 +197,13 @@ uint16_t UpdateMSId(uint16_t MSId, LoopGroupParamA6* loopGroupParam)
         return MSId;
     }
 
-    return UpdateId(MSId, loopGroupParam->curLoopIdx,
-        loopGroupParam->loopGroupXn.expandOffset, loopGroupParam->loopGroupXm.msOffset,
-        loopGroupParam->curExpandCnt);
+    return UpdateId(
+        MSId, loopGroupParam->curLoopIdx, loopGroupParam->loopGroupXn.expandOffset,
+        loopGroupParam->loopGroupXm.msOffset, loopGroupParam->curExpandCnt);
 }
 
-uint64_t UpdateAddressWithoutStride(uint64_t addr, LoopGroupParamA6* loopGroupParam) {
+uint64_t UpdateAddressWithoutStride(uint64_t addr, LoopGroupParamA6* loopGroupParam)
+{
     if (loopGroupParam == nullptr) {
         return addr;
     }
@@ -221,11 +220,11 @@ uint64_t UpdateAddress(uint64_t addr, LoopGroupParamA6* loopGroupParam, uint16_t
     LoopA6& xm = loopGroupParam->loopXms[loopGroupParam->curLoopIdx];
 
     if (loopGroupParam->curLoopIdx < loopGroupParam->loopGroupXn.expandOffset) {
-        return (addr + loopGroupParam->curLoopCnt * xm.loopXn.loopIntrGSA)<<addrExpandCoef;
+        return (addr + loopGroupParam->curLoopCnt * xm.loopXn.loopIntrGSA) << addrExpandCoef;
     }
 
-    return addr + ((loopGroupParam->curExpandCnt * loopGroupParam->loopGroupXm.gsaOffset)<<addrExpandCoef) \
-        + ((loopGroupParam->curLoopCnt * xm.loopXn.loopIntrGSA)<<addrExpandCoef);
+    return addr + ((loopGroupParam->curExpandCnt * loopGroupParam->loopGroupXm.gsaOffset) << addrExpandCoef)
+           + ((loopGroupParam->curLoopCnt * xm.loopXn.loopIntrGSA) << addrExpandCoef);
 }
 
 inline uint16_t GetXnId(uint16_t xnIdField, LoopGroupParamA6* loopGroupParam)
@@ -250,9 +249,11 @@ bool IsExistRemoteDieInfo(RankId rankId, u32 dieId, uint32_t channel)
 }
 
 // 将mession Sqe终端额args信息写到第n个X寄存器中
-HcclResult TransformLoadSqeArgsToXnInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
-    (void) isContinue;
+HcclResult TransformLoadSqeArgsToXnInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
+    (void)isContinue;
     CHK_RET(CheckLoopGroupNotSupport(loopGroupParam));
     uint16_t sqeArgsId = instr->v2.loadSqeArgsToX.sqeArgsId;
     uint16_t xnId = instr->v2.loadSqeArgsToX.xnId;
@@ -272,9 +273,11 @@ HcclResult TransformLoadSqeArgsToXnInstr(const CcuRep::CcuInstr *instr, TaskStub
 }
 
 // 将立即数 写到第n个X寄存器中
-HcclResult TransformLoadImdToXInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
-    (void) isContinue;
+HcclResult TransformLoadImdToXInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
+    (void)isContinue;
     uint16_t xnId = GetXnId(instr->v2.loadImdToX.xnId, loopGroupParam);
     uint64_t immediate = instr->v2.loadImdToX.immediate;
 
@@ -292,10 +295,11 @@ HcclResult TransformLoadImdToXInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGr
 }
 
 // 判断XnId是否有效
-HcclResult CheckXnValid(uint16_t xnId, uint16_t xnIdMin, uint16_t xnIdMax) {
+HcclResult CheckXnValid(uint16_t xnId, uint16_t xnIdMin, uint16_t xnIdMax)
+{
     if (xnId < xnIdMin || xnId > xnIdMax) {
-        HCCL_ERROR("CheckXnValid ERROR,xnId = [%u], XnmIdMin = [%u], XnmIdMax = [%u]", xnId, xnIdMin, xnIdMax);  
-        return HCCL_E_PARA; 
+        HCCL_ERROR("CheckXnValid ERROR,xnId = [%u], XnmIdMin = [%u], XnmIdMax = [%u]", xnId, xnIdMin, xnIdMax);
+        return HCCL_E_PARA;
     }
     return HCCL_SUCCESS;
 }
@@ -307,13 +311,15 @@ HcclResult GetXnValueAndCheck(RankId rankId, uint32_t dieId, uint16_t xnId, uint
     return HCCL_SUCCESS;
 }
 
-HcclResult TransformLoadXInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
-    (void) isContinue;
+HcclResult TransformLoadXInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
+    (void)isContinue;
     uint8_t mode = instr->v2.loadStoreX.oMode;
 
     RankId rankId = curCcuTask->GetRankId();
-    uint32_t dieId {0};
+    uint32_t dieId{0};
     curCcuTask->GetDieId(queId, dieId);
 
     uint16_t xsId = GetXnId(instr->v2.loadStoreX.xsId, loopGroupParam);
@@ -359,9 +365,11 @@ HcclResult TransformLoadXInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *
 }
 
 // StoreX指令
-HcclResult TransformStoreXInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
-    (void) isContinue;
+HcclResult TransformStoreXInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
+    (void)isContinue;
     uint8_t mode = instr->v2.loadStoreX.oMode;
 
     RankId rankId = curCcuTask->GetRankId();
@@ -407,21 +415,23 @@ HcclResult TransformStoreXInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph 
     // cke设置
     uint16_t ckeId = UpdateCKEId(instr->v2.loadStoreX.setCKEId, loopGroupParam);
     uint16_t ckeMask = instr->v2.loadStoreX.setCKEMask;
-    CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, ckeId, ckeMask));    
+    CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, ckeId, ckeMask));
     return HCCL_SUCCESS;
 }
 
 // ClearX指令，对指定的X寄存器进行清零操作
-HcclResult TransformClearXInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
-    (void) isContinue;
+HcclResult TransformClearXInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
+    (void)isContinue;
     // 清除范围为Xn~Xm  Xn的有效值？
     uint16_t xnOriId = instr->v2.clearX.xnId;
     uint16_t xnId = (instr->v2.clearX.xnIdMode == 0) ? xnOriId : UpdateXnId(xnOriId, loopGroupParam);
     uint16_t xmOriId = instr->v2.clearX.xmId;
     uint16_t xmId = (instr->v2.clearX.xmIdMode == 0) ? xmOriId : UpdateXnId(xmOriId, loopGroupParam);
     // 当xnId>xmId时，说明是清除范围为Xn~MAX_LOADX_STOREX_ID_NUM，xmId无效
-    xmId =  (xnId <= xmId)? xmId : MAX_LOADX_STOREX_ID_NUM;
+    xmId = (xnId <= xmId) ? xmId : MAX_LOADX_STOREX_ID_NUM;
     RankId rankId = curCcuTask->GetRankId();
     uint32_t dieId{0};
     curCcuTask->GetDieId(queId, dieId);
@@ -437,20 +447,24 @@ HcclResult TransformClearXInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph 
 }
 
 // Nop指令，空指令，用于排指令流水
-HcclResult TransformNopInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
-    (void) isContinue;
-    (void) instr;
-    (void) curCcuTask;
-    (void) queId;
-    (void) loopGroupParam;
+HcclResult TransformNopInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
+    (void)isContinue;
+    (void)instr;
+    (void)curCcuTask;
+    (void)queId;
+    (void)loopGroupParam;
     return HCCL_SUCCESS;
 }
 
 // Load指令，将指定的内存地址的数据读到CCU内部的指定空间寄存器中,目前只支持Xn寄存器
-HcclResult TransformLoadInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
-    (void) isContinue;
+HcclResult TransformLoadInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
+    (void)isContinue;
     RankId rankId = curCcuTask->GetRankId();
     uint32_t dieId{0};
     curCcuTask->GetDieId(queId, dieId);
@@ -466,26 +480,26 @@ HcclResult TransformLoadInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *c
     CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xdId, xdValue));
     uint16_t xsId = GetXnId(instr->v2.load.xsId, loopGroupParam);
     uint64_t xsStartAddr = 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xsId, xsStartAddr));   
+    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xsId, xsStartAddr));
     // 需要判断xsStartAddr是否8bye对齐
     if ((xsStartAddr & 0x7) != 0) {
         HCCL_ERROR("TransformLoadInstr ERROR,xsStartAddr = [%llu]", xsStartAddr);
         return HCCL_E_PARA;
-    }     
+    }
     uint16_t xlId = GetXnId(instr->v2.load.xlId, loopGroupParam);
     uint64_t length = 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xlId, length));   
+    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xlId, length));
     if ((length & 0x7) != 0) {
         HCCL_ERROR("TransformLoadInstr ERROR,length = [%llu]", length);
         return HCCL_E_PARA;
     }
     std::vector<uint64_t> entry;
-    CHK_RET(AllRankParamRecorder::Global()->GetHBM(rankId, dieId, xsStartAddr, entry)); 
-    if (length/8 > entry.size()) {
+    CHK_RET(AllRankParamRecorder::Global()->GetHBM(rankId, dieId, xsStartAddr, entry));
+    if (length / 8 > entry.size()) {
         HCCL_ERROR("TransformLoadInstr ERROR,length = [%llu]", length);
         return HCCL_E_PARA;
     }
-    for (size_t i=0; i < length/8; i++) {
+    for (size_t i = 0; i < length / 8; i++) {
         CHK_RET(AllRankParamRecorder::Global()->SetXn(rankId, dieId, xdValue++, entry[i]));
     }
     // cke设置
@@ -496,9 +510,11 @@ HcclResult TransformLoadInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *c
 }
 
 // Store指令，将CCU内部的指定空间寄存器的数据写到指定的内存地址中
-HcclResult TransformStoreInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
-    (void) isContinue;
+HcclResult TransformStoreInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
+    (void)isContinue;
     RankId rankId = curCcuTask->GetRankId();
     uint32_t dieId{0};
     curCcuTask->GetDieId(queId, dieId);
@@ -514,40 +530,42 @@ HcclResult TransformStoreInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *
     CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xdId, xdValue));
     uint16_t xsId = GetXnId(instr->v2.store.xsId, loopGroupParam);
     uint64_t xsValue = 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xsId, xsValue));   
-    // 需要判断xsStartAddr是否8bye对齐     
+    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xsId, xsValue));
+    // 需要判断xsStartAddr是否8bye对齐
     uint16_t xlId = GetXnId(instr->v2.store.xlId, loopGroupParam);
     uint64_t length = 0;
-    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xlId, length));   
+    CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xlId, length));
     if ((length & 0x7) != 0) {
         HCCL_ERROR("TransformStoreInstr ERROR,length = [%llu]", length);
         return HCCL_E_PARA;
     }
     std::vector<uint64_t> entry;
-    for(size_t i = 0; i < length/8; i++) {
+    for (size_t i = 0; i < length / 8; i++) {
         uint64_t xsValueTmp = 0;
         CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xsValue++, xsValueTmp));
         entry.push_back(xsValueTmp);
     }
-    CHK_RET(AllRankParamRecorder::Global()->SetHBM(rankId, dieId, xdValue, entry)); 
+    CHK_RET(AllRankParamRecorder::Global()->SetHBM(rankId, dieId, xdValue, entry));
 
     // cke设置
     uint16_t ckeId = UpdateCKEId(instr->v2.store.setCKEId, loopGroupParam);
     uint16_t ckeMask = instr->v2.store.setCKEMask;
     CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, ckeId, ckeMask));
-    
+
     return HCCL_SUCCESS;
 }
 
 // Add指令，实现算数“+”
-HcclResult TransformAddInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformAddInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t xnId = GetXnId(instr->v2.operate.xnId, loopGroupParam);
     uint16_t xdId = GetXnId(instr->v2.operate.xdId, loopGroupParam);
     uint16_t parMode = instr->v2.operate.parMode;
     uint16_t ckeId = UpdateCKEId(instr->v2.operate.setCKEId, loopGroupParam);
     uint16_t ckeMask = instr->v2.operate.setCKEMask;
-    
+
     RankId rankId = curCcuTask->GetRankId();
     uint32_t dieId{0};
     curCcuTask->GetDieId(queId, dieId);
@@ -574,8 +592,10 @@ HcclResult TransformAddInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *cu
 }
 
 // Sub指令，实现算数“-”
-HcclResult TransformSubInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformSubInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t xnId = GetXnId(instr->v2.operate.xnId, loopGroupParam);
     uint16_t xdId = GetXnId(instr->v2.operate.xdId, loopGroupParam);
 
@@ -607,8 +627,10 @@ HcclResult TransformSubInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *cu
 }
 
 // Mul指令，实现算数“*”
-HcclResult TransformMulInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformMulInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t xnId = GetXnId(instr->v2.operate.xnId, loopGroupParam);
     uint16_t xdId = GetXnId(instr->v2.operate.xdId, loopGroupParam);
     uint16_t parMode = instr->v2.operate.parMode;
@@ -624,15 +646,17 @@ HcclResult TransformMulInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *cu
     CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xnId, xnValue));
     if (parMode == 0) {
         xdValue = (xnValue & 0xFFFFFFFF) * instr->v2.operate.xmId;
-        HCCL_INFO("Mul Xn[%u](%llu) * immed[%u] to Xd[%u](%llu)", xnId, xnValue & 0xFFFFFFFF, instr->v2.operate.xmId,
-            xdId, xdValue);
+        HCCL_INFO(
+            "Mul Xn[%u](%llu) * immed[%u] to Xd[%u](%llu)", xnId, xnValue & 0xFFFFFFFF, instr->v2.operate.xmId, xdId,
+            xdValue);
     } else {
         uint16_t xmId = GetXnId(instr->v2.operate.xmId, loopGroupParam);
         uint64_t xmValue = 0;
         CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xmId, xmValue));
         xdValue = (xnValue & 0xFFFFFFFF) * (xmValue & 0xFFFFFFFF);
-        HCCL_INFO("Mul Xn[%u](%llu) * Xm[%u](%llu) to Xd[%u](%llu)", xnId, xnValue & 0xFFFFFFFF, xmId,
-            xmValue & 0xFFFFFFFF, xdId, xdValue);
+        HCCL_INFO(
+            "Mul Xn[%u](%llu) * Xm[%u](%llu) to Xd[%u](%llu)", xnId, xnValue & 0xFFFFFFFF, xmId, xmValue & 0xFFFFFFFF,
+            xdId, xdValue);
     }
 
     CHK_RET(AllRankParamRecorder::Global()->SetXn(rankId, dieId, xdId, xdValue));
@@ -641,8 +665,10 @@ HcclResult TransformMulInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *cu
 }
 
 // And指令，实现逻辑“&”
-HcclResult TransformANDInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformANDInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t xnId = GetXnId(instr->v2.operate.xnId, loopGroupParam);
     uint16_t xdId = GetXnId(instr->v2.operate.xdId, loopGroupParam);
     uint16_t xmId = GetXnId(instr->v2.operate.xmId, loopGroupParam);
@@ -666,8 +692,10 @@ HcclResult TransformANDInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *cu
 }
 
 // Or指令，实现逻辑“|”
-HcclResult TransformORInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformORInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t xnId = GetXnId(instr->v2.operate.xnId, loopGroupParam);
     uint16_t xdId = GetXnId(instr->v2.operate.xdId, loopGroupParam);
     uint16_t xmId = GetXnId(instr->v2.operate.xmId, loopGroupParam);
@@ -691,8 +719,10 @@ HcclResult TransformORInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *cur
 }
 
 // Not指令，实现逻辑“~”
-HcclResult TransformNOTInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformNOTInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t xnId = GetXnId(instr->v2.operate.xnId, loopGroupParam);
     uint16_t xdId = GetXnId(instr->v2.operate.xdId, loopGroupParam);
     uint16_t ckeId = UpdateCKEId(instr->v2.operate.setCKEId, loopGroupParam);
@@ -706,15 +736,17 @@ HcclResult TransformNOTInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *cu
     CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xnId, xnValue));
     uint64_t xdValue = ~xnValue;
     HCCL_INFO("Not Xn[%u](%llu) to Xd[%u](%llu)", xnId, xnValue, xdId, xdValue);
-    
+
     CHK_RET(AllRankParamRecorder::Global()->SetXn(rankId, dieId, xdId, xdValue));
     CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, ckeId, ckeMask));
     return HCCL_SUCCESS;
 }
 
 // Xor指令，实现逻辑“^”
-HcclResult TransformXORInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformXORInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t xnId = GetXnId(instr->v2.operate.xnId, loopGroupParam);
     uint16_t xdId = GetXnId(instr->v2.operate.xdId, loopGroupParam);
     uint16_t xmId = GetXnId(instr->v2.operate.xmId, loopGroupParam);
@@ -738,8 +770,10 @@ HcclResult TransformXORInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *cu
 }
 
 // SHL指令，实现逻辑“<<”
-HcclResult TransformSHLInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformSHLInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t xnId = GetXnId(instr->v2.operate.xnId, loopGroupParam);
     uint16_t xdId = GetXnId(instr->v2.operate.xdId, loopGroupParam);
     uint16_t xmId = GetXnId(instr->v2.operate.xmId, loopGroupParam);
@@ -760,17 +794,20 @@ HcclResult TransformSHLInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *cu
     switch (shiftType) {
         case 0: // 逻辑移位
             xdValue = xnValue << xmValue;
-            HCCL_INFO("Shl logical Xn[%u](%llu) << Xm[%u](%llu) to Xd[%u](%llu)", xnId, xnValue, xmId, xmValue, xdId,
+            HCCL_INFO(
+                "Shl logical Xn[%u](%llu) << Xm[%u](%llu) to Xd[%u](%llu)", xnId, xnValue, xmId, xmValue, xdId,
                 xdValue);
             break;
         case 1: // 算术移位
             xdValue = static_cast<int64_t>(xnValue) << xmValue;
-            HCCL_INFO("Shl arithmetic Xn[%u](%llu) << Xm[%u](%llu) to Xd[%u](%llu)", xnId, xnValue, xmId, xmValue, xdId,
+            HCCL_INFO(
+                "Shl arithmetic Xn[%u](%llu) << Xm[%u](%llu) to Xd[%u](%llu)", xnId, xnValue, xmId, xmValue, xdId,
                 xdValue);
             break;
         case 2: // 循环移位
             xdValue = (xnValue << (xmValue & 0x3F)) | (xnValue >> (64 - (xmValue & 0x3F)));
-            HCCL_INFO("Shl rotate Xn[%u](%llu) <<< Xm[%u](%llu) to Xd[%u](%llu)", xnId, xnValue, xmId, xmValue, xdId,
+            HCCL_INFO(
+                "Shl rotate Xn[%u](%llu) <<< Xm[%u](%llu) to Xd[%u](%llu)", xnId, xnValue, xmId, xmValue, xdId,
                 xdValue);
             break;
         default:
@@ -784,8 +821,10 @@ HcclResult TransformSHLInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *cu
 }
 
 // SHR指令，实现逻辑“>>”
-HcclResult TransformSHRInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformSHRInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t xnId = GetXnId(instr->v2.operate.xnId, loopGroupParam);
     uint16_t xdId = GetXnId(instr->v2.operate.xdId, loopGroupParam);
     uint16_t xmId = GetXnId(instr->v2.operate.xmId, loopGroupParam);
@@ -806,17 +845,20 @@ HcclResult TransformSHRInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *cu
     switch (shiftType) {
         case 0: // 逻辑移位
             xdValue = xnValue >> xmValue;
-            HCCL_INFO("Shr logical Xn[%u](%llu) >> Xm[%u](%llu) to Xd[%u](%llu)", xnId, xnValue, xmId, xmValue, xdId,
+            HCCL_INFO(
+                "Shr logical Xn[%u](%llu) >> Xm[%u](%llu) to Xd[%u](%llu)", xnId, xnValue, xmId, xmValue, xdId,
                 xdValue);
             break;
         case 1: // 算术移位
             xdValue = static_cast<int64_t>(xnValue) >> xmValue;
-            HCCL_INFO("Shr arithmetic Xn[%u](%llu) >> Xm[%u](%llu) to Xd[%u](%llu)", xnId, xnValue, xmId, xmValue, xdId,
+            HCCL_INFO(
+                "Shr arithmetic Xn[%u](%llu) >> Xm[%u](%llu) to Xd[%u](%llu)", xnId, xnValue, xmId, xmValue, xdId,
                 xdValue);
             break;
         case 2: // 循环移位
             xdValue = (xnValue >> (xmValue & 0x3F)) | (xnValue << (64 - (xmValue & 0x3F)));
-            HCCL_INFO("Shr rotate Xn[%u](%llu) >>> Xm[%u](%llu) to Xd[%u](%llu)", xnId, xnValue, xmId, xmValue, xdId,
+            HCCL_INFO(
+                "Shr rotate Xn[%u](%llu) >>> Xm[%u](%llu) to Xd[%u](%llu)", xnId, xnValue, xmId, xmValue, xdId,
                 xdValue);
             break;
         default:
@@ -830,8 +872,10 @@ HcclResult TransformSHRInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *cu
 }
 
 // POPCNT指令,统计指定64bit寄存器中的二进制1的个数
-HcclResult TransformPopcntInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformPopcntInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     RankId rankId = curCcuTask->GetRankId();
     uint32_t dieId{0};
     curCcuTask->GetDieId(queId, dieId);
@@ -841,7 +885,7 @@ HcclResult TransformPopcntInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph 
     CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xnId, xnValue));
 
     uint16_t xdId = GetXnId(instr->v2.operate.xdId, loopGroupParam);
-    uint64_t xdValue = __builtin_popcountll(xnValue); 
+    uint64_t xdValue = __builtin_popcountll(xnValue);
 
     CHK_RET(AllRankParamRecorder::Global()->SetXn(rankId, dieId, xdId, xdValue));
     uint16_t ckeId = UpdateCKEId(instr->v2.operate.setCKEId, loopGroupParam);
@@ -851,52 +895,60 @@ HcclResult TransformPopcntInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph 
 }
 
 // 处理Loop指令
-HcclResult ProcessLoopIns(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask,
-    uint32_t queId, bool& isContinue, LoopGroupParamA6* loopGroupParam, uint32_t loopGroupIdx);
+HcclResult ProcessLoopIns(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam, uint32_t loopGroupIdx);
 
-HcclResult TransformLoopInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformLoopInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t startInstrId = instr->v2.loop.startInstrId;
-    uint16_t endInstrId   = instr->v2.loop.endInstrId;
-    uint16_t xnId         = instr->v2.loop.xnId;
-    HCCL_ERROR("Loop instruction is not supported separately. startInstrId[%u] to endInstrId[%u] with loopXn[%u]",
+    uint16_t endInstrId = instr->v2.loop.endInstrId;
+    uint16_t xnId = instr->v2.loop.xnId;
+    HCCL_ERROR(
+        "Loop instruction is not supported separately. startInstrId[%u] to endInstrId[%u] with loopXn[%u]",
         startInstrId, endInstrId, xnId);
     // 当前Loop都需要通过LoopGoup来触发，暂不支持单独解析Loop命令
     return HCCL_E_INTERNAL;
 }
 
 // LoopGroup指令
-HcclResult TransformLoopGroupInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopInfo) {
+HcclResult TransformLoopGroupInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopInfo)
+{
     CHK_RET(CheckLoopGroupNotSupport(loopInfo));
     RankId rankId = curCcuTask->GetRankId();
     uint32_t dieId{0};
     curCcuTask->GetDieId(queId, dieId);
     LoopGroupParamA6 loopGroupParam{};
     uint16_t startLoopInstrId = instr->v2.loopGroup.startLoopInstrId;
-    uint16_t xnId             = instr->v2.loopGroup.xnId & 0x7FFF;
+    uint16_t xnId = instr->v2.loopGroup.xnId & 0x7FFF;
     CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xnId, loopGroupParam.loopGroupXn.value));
 
-    uint16_t xmId             = instr->v2.loopGroup.xmId & 0x7FFF;
+    uint16_t xmId = instr->v2.loopGroup.xmId & 0x7FFF;
     CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xmId, loopGroupParam.loopGroupXm.value));
 
-    uint16_t xpId             = instr->v2.loopGroup.xpId & 0x7FFF;
+    uint16_t xpId = instr->v2.loopGroup.xpId & 0x7FFF;
     CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xpId, loopGroupParam.loopGroupXp.value));
     // 数值校验
-    if (loopGroupParam.loopGroupXn.loopInsCnt > 512 || loopGroupParam.loopGroupXn.expandCnt >511 ||
-        loopGroupParam.loopGroupXn.expandOffset > 511 ||
-        loopGroupParam.loopGroupXn.expandOffset > loopGroupParam.loopGroupXn.loopInsCnt) {
-        HCCL_ERROR("LoopGroup Xn[%u] loopInsCnt[%u] expandCnt[%u] expandOffset[%u] is invalid",
+    if (loopGroupParam.loopGroupXn.loopInsCnt > 512 || loopGroupParam.loopGroupXn.expandCnt > 511
+        || loopGroupParam.loopGroupXn.expandOffset > 511
+        || loopGroupParam.loopGroupXn.expandOffset > loopGroupParam.loopGroupXn.loopInsCnt) {
+        HCCL_ERROR(
+            "LoopGroup Xn[%u] loopInsCnt[%u] expandCnt[%u] expandOffset[%u] is invalid",
             loopGroupParam.loopGroupXn.value, loopGroupParam.loopGroupXn.loopInsCnt,
             loopGroupParam.loopGroupXn.expandCnt, loopGroupParam.loopGroupXn.expandOffset);
         return HCCL_E_INTERNAL;
     }
 
-    hcomm::CcuRep::CcuInstrInfo &microCodeQue = curCcuTask->instrInfo[queId];
+    hcomm::CcuRep::CcuInstrInfo& microCodeQue = curCcuTask->instrInfo[queId];
     auto loopGroupIdx = curCcuTask->loopGroupIdx++;
     uint64_t loopCnt = loopGroupParam.loopGroupXn.loopInsCnt;
-    HCCL_VM_INFO("loop cnt= {}, loop offset= {}, expand cnt= {}",
-        loopCnt, static_cast<uint64_t>(loopGroupParam.loopGroupXn.expandOffset),
+    HCCL_VM_INFO(
+        "loop cnt= {}, loop offset= {}, expand cnt= {}", loopCnt,
+        static_cast<uint64_t>(loopGroupParam.loopGroupXn.expandOffset),
         static_cast<uint64_t>(loopGroupParam.loopGroupXn.expandCnt));
 
     for (u32 curLoopIdx = 0; curLoopIdx < loopCnt; curLoopIdx++) {
@@ -905,14 +957,14 @@ HcclResult TransformLoopGroupInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGra
         u32 insPos = startLoopInstrId + curLoopIdx - curCcuTask->startInstrIdInQue[queId];
         if (curLoopIdx < loopGroupParam.loopGroupXn.expandOffset) {
             // 不用进行Loop展开
-            CHK_RET(ProcessLoopIns(&microCodeQue.instrVec[insPos], curCcuTask, queId, isContinue, &loopGroupParam,
-                loopGroupIdx));
+            CHK_RET(ProcessLoopIns(
+                &microCodeQue.instrVec[insPos], curCcuTask, queId, isContinue, &loopGroupParam, loopGroupIdx));
         } else {
             // 需要进行loop展开
             for (u32 expandCnt = 0; expandCnt <= loopGroupParam.loopGroupXn.expandCnt; expandCnt++) {
                 loopGroupParam.curExpandCnt = expandCnt;
-                CHK_RET(ProcessLoopIns(&microCodeQue.instrVec[insPos], curCcuTask, queId, isContinue, &loopGroupParam,
-                    loopGroupIdx));
+                CHK_RET(ProcessLoopIns(
+                    &microCodeQue.instrVec[insPos], curCcuTask, queId, isContinue, &loopGroupParam, loopGroupIdx));
             }
         }
     }
@@ -922,12 +974,14 @@ HcclResult TransformLoopGroupInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGra
 }
 
 // SetCKBit指令
-HcclResult TransformSetCKBitInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
-    uint16_t clearType   = instr->v2.setCKE.clearType;
-    uint16_t setCKEId    = UpdateCKEId(instr->v2.setCKE.setCKEId, loopGroupParam);
-    uint16_t setCKEMask  = instr->v2.setCKE.setCKEMask;
-    uint16_t waitCKEId   = UpdateCKEId(instr->v2.setCKE.waitCKEId, loopGroupParam);
+HcclResult TransformSetCKBitInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
+    uint16_t clearType = instr->v2.setCKE.clearType;
+    uint16_t setCKEId = UpdateCKEId(instr->v2.setCKE.setCKEId, loopGroupParam);
+    uint16_t setCKEMask = instr->v2.setCKE.setCKEMask;
+    uint16_t waitCKEId = UpdateCKEId(instr->v2.setCKE.waitCKEId, loopGroupParam);
     uint16_t waitCKEMask = instr->v2.setCKE.waitCKEMask;
     // 当前只支持clearType为1的场景
     if (clearType != 0x0001) {
@@ -945,18 +999,20 @@ HcclResult TransformSetCKBitInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGrap
     }
     CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, setCKEId, setCKEMask, true));
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
-    HCCL_INFO("Wait CKE[%u:%04x], Set CKE[%u:%04x], clearType[%u]", waitCKEId, waitCKEMask, setCKEId,
-                        setCKEMask, clearType);
+    HCCL_INFO(
+        "Wait CKE[%u:%04x], Set CKE[%u:%04x], clearType[%u]", waitCKEId, waitCKEMask, setCKEId, setCKEMask, clearType);
     return HCCL_SUCCESS;
 }
 
 // ClearCKE指令
-HcclResult TransformClearCKEInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
-    uint16_t clearType   = instr->v2.clearCKE.clearType;
-    uint16_t clearCKEId  = UpdateCKEId(instr->v2.clearCKE.clearCKEId, loopGroupParam);
-    uint16_t clearMask   = instr->v2.clearCKE.clearMask;
-    uint16_t waitCKEId   = UpdateCKEId(instr->v2.clearCKE.waitCKEId, loopGroupParam);
+HcclResult TransformClearCKEInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
+    uint16_t clearType = instr->v2.clearCKE.clearType;
+    uint16_t clearCKEId = UpdateCKEId(instr->v2.clearCKE.clearCKEId, loopGroupParam);
+    uint16_t clearMask = instr->v2.clearCKE.clearMask;
+    uint16_t waitCKEId = UpdateCKEId(instr->v2.clearCKE.waitCKEId, loopGroupParam);
     uint16_t waitCKEMask = instr->v2.clearCKE.waitCKEMask;
 
     RankId rankId = curCcuTask->GetRankId();
@@ -975,17 +1031,20 @@ HcclResult TransformClearCKEInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGrap
 
     CHK_RET(ClearWaitMask(rankId, dieId, waitCKEId, waitCKEMask));
 
-    HCCL_INFO("Wait CKE[%u:%04x], Clear CKE[%u:%04x], clearType[%u]", waitCKEId, waitCKEMask, clearCKEId,
-               clearMask, clearType);
+    HCCL_INFO(
+        "Wait CKE[%u:%04x], Clear CKE[%u:%04x], clearType[%u]", waitCKEId, waitCKEMask, clearCKEId, clearMask,
+        clearType);
     return HCCL_SUCCESS;
 }
 
-HcclResult TransformJumpInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformJumpInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t expectedXnId = GetXnId(instr->v2.jmp.expectedXnId, loopGroupParam);
     uint16_t conditionXnId = GetXnId(instr->v2.jmp.conditionXnId, loopGroupParam);
     uint16_t relTarInstrXnId = GetXnId(instr->v2.jmp.relTarInstrXnId, loopGroupParam);
-    
+
     uint8_t conditionType = instr->v2.jmp.conditionType;
     uint8_t jumpMode = instr->v2.jmp.jumpMode;
 
@@ -1004,8 +1063,8 @@ HcclResult TransformJumpInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *c
 
     uint64_t nextInsIdx = 0;
     auto curInstrId = curCcuTask->microCodePosInQue[queId];
-    auto updateNextInsIdx = [jumpMode, curInstrId, relTarInstrValue, queId, curCcuTask,
-        &nextInsIdx](bool isJump) -> void {
+    auto updateNextInsIdx
+        = [jumpMode, curInstrId, relTarInstrValue, queId, curCcuTask, &nextInsIdx](bool isJump) -> void {
         if (isJump) {
             if (jumpMode == 0) {
                 // 相对跳转
@@ -1024,46 +1083,67 @@ HcclResult TransformJumpInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *c
     switch (conditionType) {
         case 0: // 等于
             updateNextInsIdx(conditionValue == expectedValue);
-            HCCL_INFO("When conditionXn[%u][%llu] equal to expectData[%u][%llu], Jump Mode[%u],Jump instruction offset[%u][%llu]",
-                conditionXnId, conditionValue, expectedXnId, expectedValue, jumpMode, relTarInstrXnId, relTarInstrValue);
+            HCCL_INFO(
+                "When conditionXn[%u][%llu] equal to expectData[%u][%llu], Jump Mode[%u],Jump instruction "
+                "offset[%u][%llu]",
+                conditionXnId, conditionValue, expectedXnId, expectedValue, jumpMode, relTarInstrXnId,
+                relTarInstrValue);
             break;
         case 1: // 不等于
             updateNextInsIdx(conditionValue != expectedValue);
-            HCCL_INFO("When conditionXn[%u][%llu] not equal to expectData[%u][%llu], Jump Mode[%u], Jump instruction offset[%u][%llu]",
-                conditionXnId, conditionValue, expectedXnId, expectedValue, jumpMode, relTarInstrXnId, relTarInstrValue);
+            HCCL_INFO(
+                "When conditionXn[%u][%llu] not equal to expectData[%u][%llu], Jump Mode[%u], Jump instruction "
+                "offset[%u][%llu]",
+                conditionXnId, conditionValue, expectedXnId, expectedValue, jumpMode, relTarInstrXnId,
+                relTarInstrValue);
             break;
         case 2: // 大于
             updateNextInsIdx(conditionValue > expectedValue);
-            HCCL_INFO("When conditionXn[%u][%llu] greater than expectData[%u][%llu], Jump Mode[%u], Jump instruction offset[%u][%llu]",
-                conditionXnId, conditionValue, expectedXnId, expectedValue, jumpMode, relTarInstrXnId, relTarInstrValue);
+            HCCL_INFO(
+                "When conditionXn[%u][%llu] greater than expectData[%u][%llu], Jump Mode[%u], Jump instruction "
+                "offset[%u][%llu]",
+                conditionXnId, conditionValue, expectedXnId, expectedValue, jumpMode, relTarInstrXnId,
+                relTarInstrValue);
             break;
         case 3: // 大于/等于
             updateNextInsIdx(conditionValue >= expectedValue);
-            HCCL_INFO("When conditionXn[%u][%llu] greater than or equal to expectData[%u][%llu], Jump Mode[%u], Jump instruction offset[%u][%llu]",
-                conditionXnId, conditionValue, expectedXnId, expectedValue, jumpMode, relTarInstrXnId, relTarInstrValue);
+            HCCL_INFO(
+                "When conditionXn[%u][%llu] greater than or equal to expectData[%u][%llu], Jump Mode[%u], Jump "
+                "instruction offset[%u][%llu]",
+                conditionXnId, conditionValue, expectedXnId, expectedValue, jumpMode, relTarInstrXnId,
+                relTarInstrValue);
             break;
         case 4: // 小于
             updateNextInsIdx(conditionValue < expectedValue);
-            HCCL_INFO("When conditionXn[%u][%llu] less than expectData[%u][%llu], Jump Mode[%u], Jump instruction offset[%u][%llu]",
-                conditionXnId, conditionValue, expectedXnId, expectedValue, jumpMode, relTarInstrXnId, relTarInstrValue);
+            HCCL_INFO(
+                "When conditionXn[%u][%llu] less than expectData[%u][%llu], Jump Mode[%u], Jump instruction "
+                "offset[%u][%llu]",
+                conditionXnId, conditionValue, expectedXnId, expectedValue, jumpMode, relTarInstrXnId,
+                relTarInstrValue);
             break;
         case 5: // 小于/等于
             updateNextInsIdx(conditionValue <= expectedValue);
-            HCCL_INFO("When conditionXn[%u][%llu] less than or equal to expectData[%u][%llu], Jump Mode[%u], Jump instruction offset[%u][%llu]",
-                conditionXnId, conditionValue, expectedXnId, expectedValue, jumpMode, relTarInstrXnId, relTarInstrValue);
+            HCCL_INFO(
+                "When conditionXn[%u][%llu] less than or equal to expectData[%u][%llu], Jump Mode[%u], Jump "
+                "instruction offset[%u][%llu]",
+                conditionXnId, conditionValue, expectedXnId, expectedValue, jumpMode, relTarInstrXnId,
+                relTarInstrValue);
             break;
         default: // 无条件跳转
             updateNextInsIdx(true);
-            HCCL_INFO("When conditionXn[%u][%llu] is true, Jump Mode[%u], Jump instruction offset[%u][%llu]",
-                conditionXnId, conditionValue, jumpMode, relTarInstrXnId, relTarInstrValue);
+            HCCL_INFO(
+                "When conditionXn[%u][%llu] is true, Jump Mode[%u], Jump instruction offset[%u][%llu]", conditionXnId,
+                conditionValue, jumpMode, relTarInstrXnId, relTarInstrValue);
             break;
     }
     return HCCL_SUCCESS;
 }
 
 // Wait指令
-HcclResult TransformWaitInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformWaitInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t expectedXnId = GetXnId(instr->v2.wait.expectedXnId, loopGroupParam);
     uint16_t conditionXnId = GetXnId(instr->v2.wait.conditionXnId, loopGroupParam);
 
@@ -1091,38 +1171,45 @@ HcclResult TransformWaitInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *c
     switch (conditionType) {
         case 0: // 等于
             updateNextInsIdx(conditionValue == expectedValue);
-            HCCL_INFO("When conditionXn[%u][%llu] equal to expectData[%u][%llu], WaitFlag[%u]", conditionXnId,
-                conditionValue, expectedXnId, expectedValue, conditionValue == expectedValue);
+            HCCL_INFO(
+                "When conditionXn[%u][%llu] equal to expectData[%u][%llu], WaitFlag[%u]", conditionXnId, conditionValue,
+                expectedXnId, expectedValue, conditionValue == expectedValue);
             break;
         case 1: // 不等于
             updateNextInsIdx(conditionValue != expectedValue);
-            HCCL_INFO("When conditionXn[%u][%llu] not equal to expectData[%u][%llu], WaitFlag[%u]", conditionXnId,
+            HCCL_INFO(
+                "When conditionXn[%u][%llu] not equal to expectData[%u][%llu], WaitFlag[%u]", conditionXnId,
                 conditionValue, expectedXnId, expectedValue, conditionValue != expectedValue);
             break;
         case 2: // 大于
             updateNextInsIdx(conditionValue > expectedValue);
-            HCCL_INFO("When conditionXn[%u][%llu] greater than expectData[%u][%llu], WaitFlag[%u]", conditionXnId,
+            HCCL_INFO(
+                "When conditionXn[%u][%llu] greater than expectData[%u][%llu], WaitFlag[%u]", conditionXnId,
                 conditionValue, expectedXnId, expectedValue, conditionValue > expectedValue);
             break;
         case 3: // 大于/等于
             updateNextInsIdx(conditionValue >= expectedValue);
-            HCCL_INFO("When conditionXn[%u][%llu] greater than or equal to expectData[%u][%llu], WaitFlag[%u]", conditionXnId,
+            HCCL_INFO(
+                "When conditionXn[%u][%llu] greater than or equal to expectData[%u][%llu], WaitFlag[%u]", conditionXnId,
                 conditionValue, expectedXnId, expectedValue, conditionValue >= expectedValue);
             break;
         case 4: // 小于
             updateNextInsIdx(conditionValue < expectedValue);
-            HCCL_INFO("When conditionXn[%u][%llu] less than expectData[%u][%llu], WaitFlag[%u]", conditionXnId,
+            HCCL_INFO(
+                "When conditionXn[%u][%llu] less than expectData[%u][%llu], WaitFlag[%u]", conditionXnId,
                 conditionValue, expectedXnId, expectedValue, conditionValue < expectedValue);
             break;
         case 5: // 小于/等于
             updateNextInsIdx(conditionValue <= expectedValue);
-            HCCL_INFO("When conditionXn[%u][%llu] less than or equal to expectData[%u][%llu], WaitFlag[%u]", conditionXnId,
+            HCCL_INFO(
+                "When conditionXn[%u][%llu] less than or equal to expectData[%u][%llu], WaitFlag[%u]", conditionXnId,
                 conditionValue, expectedXnId, expectedValue, conditionValue <= expectedValue);
             break;
         default: // 参考等于
             updateNextInsIdx(conditionValue == expectedValue);
-            HCCL_INFO("When conditionXn[%u][%llu] equal to expectData[%u][%llu], WaitFlag[%u]", conditionXnId,
-                conditionValue, expectedXnId, expectedValue, conditionValue == expectedValue);
+            HCCL_INFO(
+                "When conditionXn[%u][%llu] equal to expectData[%u][%llu], WaitFlag[%u]", conditionXnId, conditionValue,
+                expectedXnId, expectedValue, conditionValue == expectedValue);
             break;
     }
     curCcuTask->microCodePosInQue[queId] = nextInsIdx - curCcuTask->startInstrIdInQue[queId];
@@ -1130,21 +1217,25 @@ HcclResult TransformWaitInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *c
 }
 
 // Fence指令
-HcclResult TransformFenceInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformFenceInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     HCCL_ERROR("TransformFenceInstr is not supported.");
     return HCCL_E_PARA;
 }
 
 // TransLocMemToLocMS指令：将内存中的数据搬移到本端MS
-HcclResult TransformTransLocMemToLocMSInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformTransLocMemToLocMSInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t msId = instr->v2.transLocMemToLocMS.msId;
     uint16_t locMSId = UpdateMSId(msId, loopGroupParam);
     uint16_t xsId = GetXnId(instr->v2.transLocMemToLocMS.xsId, loopGroupParam);
     uint16_t xstId = GetXnId(instr->v2.transLocMemToLocMS.xstId, loopGroupParam);
     uint16_t xlId = GetXnId(instr->v2.transLocMemToLocMS.xlId, loopGroupParam);
-    uint16_t xoId = GetXnId(instr->v2.transLocMemToLocMS.xoId , loopGroupParam);
+    uint16_t xoId = GetXnId(instr->v2.transLocMemToLocMS.xoId, loopGroupParam);
 
     // allocHint和victimHint用于L2 Cache功能，暂不支持
     uint16_t setCkeId = UpdateCKEId(instr->v2.transLocMemToLocMS.setCKEId, loopGroupParam);
@@ -1182,15 +1273,17 @@ HcclResult TransformTransLocMemToLocMSInstr(const CcuRep::CcuInstr *instr, TaskS
 }
 
 // TransformTransLocMSToLocMemInstr指令：将本端MS数据搬运到内存中
-HcclResult TransformTransLocMSToLocMemInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformTransLocMSToLocMemInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t msId = instr->v2.transLocMSToLocMem.msId;
     uint16_t locMSId = UpdateMSId(msId, loopGroupParam);
 
     uint16_t xdId = GetXnId(instr->v2.transLocMSToLocMem.xdId, loopGroupParam);
     uint16_t xdtId = GetXnId(instr->v2.transLocMSToLocMem.xdtId, loopGroupParam);
     uint16_t xlId = GetXnId(instr->v2.transLocMSToLocMem.xlId, loopGroupParam);
-    uint16_t xoId = GetXnId(instr->v2.transLocMSToLocMem.xoId , loopGroupParam);
+    uint16_t xoId = GetXnId(instr->v2.transLocMSToLocMem.xoId, loopGroupParam);
 
     // allocHint和victimHint用于L2 Cache功能，暂不支持
     uint16_t setCkeId = UpdateCKEId(instr->v2.transLocMSToLocMem.setCKEId, loopGroupParam);
@@ -1227,21 +1320,23 @@ HcclResult TransformTransLocMSToLocMemInstr(const CcuRep::CcuInstr *instr, TaskS
 }
 
 //   TransformTransLocMSToLocMS指令：将本端MS数据搬运到另一端MS中，用于die内部数据搬运
-HcclResult TransformTransLocMSToLocMSInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformTransLocMSToLocMSInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t msdId = instr->v2.transLocMSToLocMS.msdId;
     uint16_t locMsdId = UpdateMSId(msdId, loopGroupParam);
     uint16_t mssId = instr->v2.transLocMSToLocMS.mssId;
     uint16_t locMssId = UpdateMSId(mssId, loopGroupParam);
 
     uint16_t xlId = GetXnId(instr->v2.transLocMSToLocMS.xlId, loopGroupParam);
-    uint16_t xoId = GetXnId(instr->v2.transLocMSToLocMS.xoId , loopGroupParam);
+    uint16_t xoId = GetXnId(instr->v2.transLocMSToLocMS.xoId, loopGroupParam);
     // allocHint和victimHint用于L2 Cache功能，暂不支持
     uint16_t setCkeId = UpdateCKEId(instr->v2.transLocMSToLocMS.setCKEId, loopGroupParam);
     uint16_t setCkeMask = instr->v2.transLocMSToLocMS.setCKEMask;
 
     RankId rankId = curCcuTask->GetRankId();
-    uint32_t dieId {0};
+    uint32_t dieId{0};
     curCcuTask->GetDieId(queId, dieId);
 
     uint64_t msStartAddrOffset = 0; // MS地址从非4KB对齐位置开始
@@ -1263,8 +1358,10 @@ HcclResult TransformTransLocMSToLocMSInstr(const CcuRep::CcuInstr *instr, TaskSt
 }
 
 // TransformTransLocMemToLocMem指令：将本端内存数据搬运到本端内存中
-HcclResult TransformTransLocMemToLocMemInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformTransLocMemToLocMemInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     uint16_t xdId = GetXnId(instr->v2.transLocMemToLocMem.xdId, loopGroupParam);
     uint16_t xdtId = GetXnId(instr->v2.transLocMemToLocMem.xdtId, loopGroupParam);
     uint16_t xsId = GetXnId(instr->v2.transLocMemToLocMem.xsId, loopGroupParam);
@@ -1310,7 +1407,8 @@ HcclResult TransformTransLocMemToLocMemInstr(const CcuRep::CcuInstr *instr, Task
     return HCCL_SUCCESS;
 }
 
-uint16_t ChooseReduceType(uint16_t udfType) {
+uint16_t ChooseReduceType(uint16_t udfType)
+{
     if (udfType == 8) {
         return CcuRep::CCU_REDUCE_SUM;
     } else if (udfType == 9) {
@@ -1323,20 +1421,22 @@ uint16_t ChooseReduceType(uint16_t udfType) {
 }
 
 // TransformTransMem指令：使用UB进行数据搬移
-HcclResult TransformTransMemInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformTransMemInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     // 参数校验
     uint16_t udfType = instr->v2.transMem.udfType;
     if (udfType != 0) {
         HCCL_ERROR("TransformTransMemInstr is not supported. udfType:[%u]", udfType);
         return HCCL_E_PARA;
     }
-    uint16_t dmaOpCode = instr->v2.transMem.dmaOpCode;// 用于判断是读还是写
+    uint16_t dmaOpCode = instr->v2.transMem.dmaOpCode; // 用于判断是读还是写
     // 1. 优先执行指令搬移
     RankId rankId = curCcuTask->GetRankId();
-    uint32_t dieId {0};
+    uint32_t dieId{0};
     curCcuTask->GetDieId(queId, dieId);
-    
+
     uint16_t xdId = GetXnId(instr->v2.transMem.xdId, loopGroupParam);
 
     uint16_t xsId = GetXnId(instr->v2.transMem.xsId, loopGroupParam);
@@ -1348,9 +1448,10 @@ HcclResult TransformTransMemInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGrap
     uint64_t xcValue = 0;
     CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xcId, xcValue));
     // 需要找对端的rank信息
-    if(!IsExistRemoteDieInfo(rankId, dieId, xcValue)) {
-        HCCL_ERROR("TransformTransMemInstr RemoteDieInfo is not exist. rankId:[%u], dieId:[%u], xcValue:[%lu]",
-            rankId, dieId, xcValue);
+    if (!IsExistRemoteDieInfo(rankId, dieId, xcValue)) {
+        HCCL_ERROR(
+            "TransformTransMemInstr RemoteDieInfo is not exist. rankId:[%u], dieId:[%u], xcValue:[%lu]", rankId, dieId,
+            xcValue);
         return HCCL_E_PARA;
     }
     uint16_t srcMode = instr->v2.transMem.src_mode;
@@ -1369,28 +1470,30 @@ HcclResult TransformTransMemInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGrap
     if (reduceEn) {
         checkerReduceOp = g_ReduceOp2CheckerReduceOp_ccu[instr->v2.transMem.reduceOpCode];
         DataType hcclDataType;
-        CHK_RET(GetHcclDataTypeFromCCUDataType(instr->v2.transMem.reduceDataType, ccuReduceTypeMap[instr->v2.transMem.reduceOpCode], hcclDataType));
+        CHK_RET(GetHcclDataTypeFromCCUDataType(
+            instr->v2.transMem.reduceDataType, ccuReduceTypeMap[instr->v2.transMem.reduceOpCode], hcclDataType));
         checkerDataType = g_DataType2CheckerDataType_aicpu[hcclDataType];
     }
 
     if (dmaOpCode == 3 || dmaOpCode == 5) {
-    // 写数据 dst为对端 src为本端
+        // 写数据 dst为对端 src为本端
         if (msMode == 1) {
             // XsId寄存器中存的就是MSId
-            CHK_RET(GenSliceFromMs(UpdateMSId(instr->v2.transMem.xsId , loopGroupParam), len, srcSlice));
+            CHK_RET(GenSliceFromMs(UpdateMSId(instr->v2.transMem.xsId, loopGroupParam), len, srcSlice));
         } else {
             CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xsId, xsValue));
             xsValue = (srcMode == 1) ? UpdateAddress(xsValue, loopGroupParam) :
-                                    UpdateAddressWithoutStride(xsValue, loopGroupParam);
+                                       UpdateAddressWithoutStride(xsValue, loopGroupParam);
             CHK_RET(StorageManager::GetInstance().GetSlice(xsValue, len, srcSlice));
         }
         CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xdId, xdValue));
         xdValue = (dstMode == 1) ? UpdateAddress(xdValue, loopGroupParam) :
-                                UpdateAddressWithoutStride(xdValue, loopGroupParam);
+                                   UpdateAddressWithoutStride(xdValue, loopGroupParam);
         CHK_RET(StorageManager::GetInstance().GetSlice(xdValue, len, dstSlice));
         if (rmtRankId != rankId) {
             if (reduceEn) {
-                AddWriteReduce(rankId, rmtRankId, queId, curCcuTask, srcSlice, dstSlice, checkerDataType, checkerReduceOp);
+                AddWriteReduce(
+                    rankId, rmtRankId, queId, curCcuTask, srcSlice, dstSlice, checkerDataType, checkerReduceOp);
             } else {
                 AddWrite(rankId, rmtRankId, queId, curCcuTask, srcSlice, dstSlice);
             }
@@ -1402,22 +1505,24 @@ HcclResult TransformTransMemInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGrap
             }
         }
     } else if (dmaOpCode == 6) {
-    // 读数据 src为对端 dst为本端
-        CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xsId, xsValue));CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xsId, xsValue));
+        // 读数据 src为对端 dst为本端
+        CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xsId, xsValue));
+        CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xsId, xsValue));
         xsValue = (srcMode == 1) ? UpdateAddress(xsValue, loopGroupParam) :
-                                    UpdateAddressWithoutStride(xsValue, loopGroupParam);
+                                   UpdateAddressWithoutStride(xsValue, loopGroupParam);
         CHK_RET(StorageManager::GetInstance().GetSlice(xsValue, len, srcSlice));
         if (msMode == 1) {
             CHK_RET(GenSliceFromMs(UpdateMSId(instr->v2.transMem.xdId, loopGroupParam), len, dstSlice));
         } else {
             CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xdId, xdValue));
             xdValue = (dstMode == 1) ? UpdateAddress(xdValue, loopGroupParam) :
-                                    UpdateAddressWithoutStride(xdValue, loopGroupParam);
+                                       UpdateAddressWithoutStride(xdValue, loopGroupParam);
             CHK_RET(StorageManager::GetInstance().GetSlice(xdValue, len, dstSlice));
         }
         if (rmtRankId != rankId) {
             if (reduceEn) {
-                AddReadReduce(rankId, rmtRankId, queId, curCcuTask, srcSlice, dstSlice, checkerDataType, checkerReduceOp);
+                AddReadReduce(
+                    rankId, rmtRankId, queId, curCcuTask, srcSlice, dstSlice, checkerDataType, checkerReduceOp);
             } else {
                 AddRead(rankId, rmtRankId, queId, curCcuTask, srcSlice, dstSlice);
             }
@@ -1441,7 +1546,8 @@ HcclResult TransformTransMemInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGrap
         uint16_t xnIdRmt = 0;
         CHK_RET(AllRankParamRecorder::Global()->GetXnIdByAddr(dieId, CcuComponerntType::XN_A6, xnAddr, xnIdRmt));
         uint32_t notifyValue = instr->v2.transMem.value;
-        CHK_RET(AllRankParamRecorder::Global()->SetXn(rmtRankId, rmtDieId, xnIdRmt, static_cast<uint64_t>(notifyValue)));
+        CHK_RET(
+            AllRankParamRecorder::Global()->SetXn(rmtRankId, rmtDieId, xnIdRmt, static_cast<uint64_t>(notifyValue)));
     }
 
     uint16_t setCkeId = UpdateCKEId(instr->v2.transMem.setCKEId, loopGroupParam);
@@ -1451,10 +1557,12 @@ HcclResult TransformTransMemInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGrap
 }
 
 // TransformSyncXnWtx指令：同步指令，将本端寄存器的值以write操作同步到远端，用于同步XN和WTX
-HcclResult TransformSyncXnWtxInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformSyncXnWtxInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     RankId rankId = curCcuTask->GetRankId();
-    uint32_t dieId {0};
+    uint32_t dieId{0};
     curCcuTask->GetDieId(queId, dieId);
     uint16_t xdId = GetXnId(instr->v2.syncWtX.xdId, loopGroupParam);
     uint64_t xdValue = 0;
@@ -1463,9 +1571,10 @@ HcclResult TransformSyncXnWtxInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGra
     uint16_t xcId = GetXnId(instr->v2.syncWtX.xcId, loopGroupParam);
     uint64_t xcValue = 0;
     CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xcId, xcValue));
-    if(!IsExistRemoteDieInfo(rankId, dieId, xcValue)) {
-        HCCL_ERROR("TransformSyncXnWtxInstr RemoteDieInfo is not exist. rankId:[%u], dieId:[%u], xcValue:[%lu]",
-            rankId, dieId, xcValue);
+    if (!IsExistRemoteDieInfo(rankId, dieId, xcValue)) {
+        HCCL_ERROR(
+            "TransformSyncXnWtxInstr RemoteDieInfo is not exist. rankId:[%u], dieId:[%u], xcValue:[%lu]", rankId, dieId,
+            xcValue);
         return HCCL_E_PARA;
     }
     // 需要找对端的rank信息
@@ -1479,9 +1588,9 @@ HcclResult TransformSyncXnWtxInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGra
         CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xsId, xsValue));
     }
     // 将Xs内容写到Xd中
-    uint16_t xdIdRmt {0};
-    CcuComponerntType ccuType {CcuComponerntType::UNKNOWN};
-    CHK_RET(AllRankParamRecorder::Global()->GetXnAndTypeIdByAddr(dieId, xdValue , ccuType, xdIdRmt));
+    uint16_t xdIdRmt{0};
+    CcuComponerntType ccuType{CcuComponerntType::UNKNOWN};
+    CHK_RET(AllRankParamRecorder::Global()->GetXnAndTypeIdByAddr(dieId, xdValue, ccuType, xdIdRmt));
     if (ccuType == CcuComponerntType::XN_A6) {
         CHK_RET(AllRankParamRecorder::Global()->SetXn(rmtRankId, rmtDieId, xdIdRmt, xsValue));
     } else if (ccuType == CcuComponerntType::CKE_A6) {
@@ -1506,21 +1615,25 @@ HcclResult TransformSyncXnWtxInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGra
 }
 
 // TransformSyncAtx指令：同步指令，将本端寄存器的值以atomic操作同步到远端，用于同步ATX
-HcclResult TransformSyncAtxInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
+HcclResult TransformSyncAtxInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
     HCCL_ERROR("TransformSyncAtxInstr is not supported.");
     return HCCL_E_PARA;
 }
 
 // ReduceAdd指令
-HcclResult TransformReduceAddInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
-    uint16_t count       = instr->v2.reduce.count;
-    uint16_t castEn      = instr->v2.reduce.castEn;
-    uint16_t dataType    = instr->v2.reduce.dataType;
-    uint16_t setCKEId    = UpdateCKEId(instr->v2.reduce.setCKEId, loopGroupParam);
-    uint16_t setCKEMask  = instr->v2.reduce.setCKEMask;
-    uint16_t lengthId    = instr->v2.reduce.XnIdLength;
+HcclResult TransformReduceAddInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
+    uint16_t count = instr->v2.reduce.count;
+    uint16_t castEn = instr->v2.reduce.castEn;
+    uint16_t dataType = instr->v2.reduce.dataType;
+    uint16_t setCKEId = UpdateCKEId(instr->v2.reduce.setCKEId, loopGroupParam);
+    uint16_t setCKEMask = instr->v2.reduce.setCKEMask;
+    uint16_t lengthId = instr->v2.reduce.XnIdLength;
 
     uint16_t msId[CcuRep::CCU_REDUCE_MAX_MS];
     for (uint16_t index = 0; index < CcuRep::CCU_REDUCE_MAX_MS; index++) {
@@ -1554,19 +1667,22 @@ HcclResult TransformReduceAddInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGra
 
     CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, setCKEId, setCKEMask));
 
-    HCCL_INFO("Add [%s] with Count[%u], DataType[%u] and CastEn[%u], Set CKE[%u:%04x]",
-     ParseMSList(instr).c_str(), count, dataType, castEn, setCKEId, setCKEMask);
+    HCCL_INFO(
+        "Add [%s] with Count[%u], DataType[%u] and CastEn[%u], Set CKE[%u:%04x]", ParseMSList(instr).c_str(), count,
+        dataType, castEn, setCKEId, setCKEMask);
 
     return HCCL_SUCCESS;
 }
 
-HcclResult TransformReduceMaxInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
-    uint16_t count       = instr->v2.reduce.count;
-    uint16_t dataType    = instr->v2.reduce.dataType;
-    uint16_t setCKEId    = UpdateCKEId(instr->v2.reduce.setCKEId, loopGroupParam);
-    uint16_t setCKEMask  = instr->v2.reduce.setCKEMask;
-    uint16_t lengthId    = instr->v2.reduce.XnIdLength;
+HcclResult TransformReduceMaxInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
+    uint16_t count = instr->v2.reduce.count;
+    uint16_t dataType = instr->v2.reduce.dataType;
+    uint16_t setCKEId = UpdateCKEId(instr->v2.reduce.setCKEId, loopGroupParam);
+    uint16_t setCKEMask = instr->v2.reduce.setCKEMask;
+    uint16_t lengthId = instr->v2.reduce.XnIdLength;
 
     uint16_t msId[CcuRep::CCU_REDUCE_MAX_MS];
     for (uint16_t index = 0; index < CcuRep::CCU_REDUCE_MAX_MS; index++) {
@@ -1600,20 +1716,23 @@ HcclResult TransformReduceMaxInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGra
 
     CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, setCKEId, setCKEMask));
 
-    HCCL_INFO("Max[%s] with Count[%u], DataType[%u], Set CKE[%u:%04x]",
-         ParseMSList(instr).c_str(), count, dataType, setCKEId, setCKEMask);
+    HCCL_INFO(
+        "Max[%s] with Count[%u], DataType[%u], Set CKE[%u:%04x]", ParseMSList(instr).c_str(), count, dataType, setCKEId,
+        setCKEMask);
 
     return HCCL_SUCCESS;
 }
 
 // ReduceMin指令
-HcclResult TransformReduceMinInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, LoopGroupParamA6* loopGroupParam) {
-    uint16_t count       = instr->v2.reduce.count;
-    uint16_t dataType    = instr->v2.reduce.dataType;
-    uint16_t setCKEId    = UpdateCKEId(instr->v2.reduce.setCKEId, loopGroupParam);
-    uint16_t setCKEMask  = instr->v2.reduce.setCKEMask;
-    uint16_t lengthId    = instr->v2.reduce.XnIdLength;
+HcclResult TransformReduceMinInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam)
+{
+    uint16_t count = instr->v2.reduce.count;
+    uint16_t dataType = instr->v2.reduce.dataType;
+    uint16_t setCKEId = UpdateCKEId(instr->v2.reduce.setCKEId, loopGroupParam);
+    uint16_t setCKEMask = instr->v2.reduce.setCKEMask;
+    uint16_t lengthId = instr->v2.reduce.XnIdLength;
 
     uint16_t msId[CcuRep::CCU_REDUCE_MAX_MS];
     for (uint16_t index = 0; index < CcuRep::CCU_REDUCE_MAX_MS; index++) {
@@ -1642,223 +1761,259 @@ HcclResult TransformReduceMinInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGra
 
     CHK_RET(ProcessSetMask(rankId, dieId, curCcuTask, queId, setCKEId, setCKEMask));
 
-    HCCL_INFO("Min [%s] with Count[%u], DataType[%u], Set CKE[%u:%04x]",
-         HcclSim::ParseMSList(instr).c_str(), count, dataType, setCKEId, setCKEMask);
+    HCCL_INFO(
+        "Min [%s] with Count[%u], DataType[%u], Set CKE[%u:%04x]", HcclSim::ParseMSList(instr).c_str(), count, dataType,
+        setCKEId, setCKEMask);
     return HCCL_SUCCESS;
 }
 
 // 以下为数据转换函数，只起到转换数据作用
-HcclResult TransformLoadSqeArgsToXnInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformLoadSqeArgsToXnInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformLoadSqeArgsToXnInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformLoadImdToXInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformLoadImdToXInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformLoadImdToXInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformLoadXInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformLoadXInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformLoadXInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformStoreXInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformStoreXInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformStoreXInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformClearXInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformClearXInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformClearXInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformNopInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformNopInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformNopInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformLoadInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformLoadInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformLoadInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformStoreInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformStoreInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformStoreInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformAddInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformAddInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformAddInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformSubInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformSubInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformSubInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformMulInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformMulInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformMulInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformANDInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformANDInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformANDInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformORInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformORInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformORInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformNOTInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformNOTInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformNOTInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformXORInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformXORInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformXORInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformSHLInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformSHLInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformSHLInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformSHRInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformSHRInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformSHRInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformPopcntInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformPopcntInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformPopcntInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformLoopInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformLoopInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformLoopInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformLoopGroupInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformLoopGroupInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformLoopGroupInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformSetCKBitInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformSetCKBitInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformSetCKBitInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformClearCKEInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformClearCKEInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformClearCKEInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformJumpInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformJumpInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformJumpInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformWaitInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformWaitInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformWaitInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformFenceInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformFenceInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformFenceInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformTransLocMemToLocMSInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformTransLocMemToLocMSInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformTransLocMemToLocMSInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformTransLocMSToLocMemInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformTransLocMSToLocMemInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformTransLocMSToLocMemInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformTransLocMSToLocMSInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformTransLocMSToLocMSInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformTransLocMSToLocMSInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformTransLocMemToLocMemInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformTransLocMemToLocMemInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformTransLocMemToLocMemInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformTransMemInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformTransMemInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformTransMemInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformSyncXnWtxInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformSyncXnWtxInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformSyncXnWtxInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformSyncAtxInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformSyncAtxInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformSyncAtxInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformReduceAddInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformReduceAddInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformReduceAddInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformReduceMaxInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformReduceMaxInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformReduceMaxInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-HcclResult TransformReduceMinInstr(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask, uint32_t queId,
-    bool& isContinue, void* loopParam) {
+HcclResult TransformReduceMinInstr(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto* loopGroupParam = static_cast<LoopGroupParamA6*>(loopParam);
     return TransformReduceMinInstr(instr, curCcuTask, queId, isContinue, loopGroupParam);
 }
 
-std::unordered_map<uint16_t, TransformInstrFunc> transformA6InstrSqeMap {
+std::unordered_map<uint16_t, TransformInstrFunc> transformA6InstrSqeMap{
     {CcuRep::InstrHeader(LOAD_TYPE, A6_LOADSQEARGSTOXN_CODE).header, &TransformLoadSqeArgsToXnInstr},
     {CcuRep::InstrHeader(LOAD_TYPE, A6_LOADIMDTOX_CODE).header, &TransformLoadImdToXInstr},
     {CcuRep::InstrHeader(LOAD_TYPE, A6_LOADX_CODE).header, &TransformLoadXInstr},
@@ -1877,7 +2032,7 @@ std::unordered_map<uint16_t, TransformInstrFunc> transformA6InstrSqeMap {
     {CcuRep::InstrHeader(LOAD_TYPE, A6_SHL_CODE).header, &TransformSHLInstr},
     {CcuRep::InstrHeader(LOAD_TYPE, A6_SHR_CODE).header, &TransformSHRInstr},
     {CcuRep::InstrHeader(LOAD_TYPE, A6_POPCNT_CODE).header, &TransformPopcntInstr},
-    
+
     {CcuRep::InstrHeader(CTRL_TYPE, A6_LOOP_CODE).header, &TransformLoopInstr},
     {CcuRep::InstrHeader(CTRL_TYPE, A6_LOOPGROUP_CODE).header, &TransformLoopGroupInstr},
     {CcuRep::InstrHeader(CTRL_TYPE, A6_SETCKBIT_CODE).header, &TransformSetCKBitInstr},
@@ -1885,7 +2040,7 @@ std::unordered_map<uint16_t, TransformInstrFunc> transformA6InstrSqeMap {
     {CcuRep::InstrHeader(CTRL_TYPE, A6_JMP_CODE).header, &TransformJumpInstr},
     {CcuRep::InstrHeader(CTRL_TYPE, A6_WAIT_CODE).header, &TransformWaitInstr},
     {CcuRep::InstrHeader(CTRL_TYPE, A6_FENCE_CODE).header, &TransformFenceInstr},
-    
+
     {CcuRep::InstrHeader(TRANS_TYPE, A6_TRANSLOCMEMTOLOCMS_CODE).header, &TransformTransLocMemToLocMSInstr},
     {CcuRep::InstrHeader(TRANS_TYPE, A6_TRANSLOCMSTOLOCMEM_CODE).header, &TransformTransLocMSToLocMemInstr},
     {CcuRep::InstrHeader(TRANS_TYPE, A6_TRANSLOCMSTOLOCMS_CODE).header, &TransformTransLocMSToLocMSInstr},
@@ -1893,24 +2048,25 @@ std::unordered_map<uint16_t, TransformInstrFunc> transformA6InstrSqeMap {
     {CcuRep::InstrHeader(TRANS_TYPE, A6_TRANSMEM_CODE).header, &TransformTransMemInstr},
     {CcuRep::InstrHeader(TRANS_TYPE, A6_SYNCXNWTX_CODE).header, &TransformSyncXnWtxInstr},
     {CcuRep::InstrHeader(TRANS_TYPE, A6_SYNCATX_CODE).header, &TransformSyncAtxInstr},
-    
+
     {CcuRep::InstrHeader(REDUCE_TYPE, A6_REDUCEADD_CODE).header, &TransformReduceAddInstr},
     {CcuRep::InstrHeader(REDUCE_TYPE, A6_REDUCEMAX_CODE).header, &TransformReduceMaxInstr},
-    {CcuRep::InstrHeader(REDUCE_TYPE, A6_REDUCEMIN_CODE).header, &TransformReduceMinInstr}
-};
+    {CcuRep::InstrHeader(REDUCE_TYPE, A6_REDUCEMIN_CODE).header, &TransformReduceMinInstr}};
 
-HcclResult ProcessLoopIns(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCcuTask,
-    uint32_t queId, bool& isContinue, LoopGroupParamA6* loopGroupParam, uint32_t loopGroupIdx)
+HcclResult ProcessLoopIns(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue,
+    LoopGroupParamA6* loopGroupParam, uint32_t loopGroupIdx)
 {
     uint16_t mode = instr->v2.loop.mode;
     RankId rankId = curCcuTask->GetRankId();
-    uint32_t dieId {0};
+    uint32_t dieId{0};
     curCcuTask->GetDieId(queId, dieId);
     LoopA6 loop{};
-    uint16_t xpId         = GetXnId(instr->v2.loop.xpId, loopGroupParam);
+    uint16_t xpId = GetXnId(instr->v2.loop.xpId, loopGroupParam);
     CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xpId, loop.loopXp.value));
     if (mode == 1) {
-        // Xp中存储的是Loop Context ID，当mode为1时，在loop与自身预期值checkEntry相等时才进行展开。 否则，直接跳过该loop。
+        // Xp中存储的是Loop Context ID，当mode为1时，在loop与自身预期值checkEntry相等时才进行展开。
+        // 否则，直接跳过该loop。
         uint16_t wishCKEBit = instr->v2.loop.wishCKEBit;
         if (wishCKEBit != loop.loopXp.loopCtxId + A6_LOOP_BOARD_ENTRY) {
             isContinue = false;
@@ -1918,13 +2074,13 @@ HcclResult ProcessLoopIns(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCc
         }
     }
     uint16_t startInstrId = instr->v2.loop.startInstrId;
-    uint16_t endInstrId   = instr->v2.loop.endInstrId;
-    uint16_t xnId         = GetXnId(instr->v2.loop.xnId, loopGroupParam);
+    uint16_t endInstrId = instr->v2.loop.endInstrId;
+    uint16_t xnId = GetXnId(instr->v2.loop.xnId, loopGroupParam);
     CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xnId, loop.loopXn.value));
 
-    uint16_t xmId         = GetXnId(instr->v2.loop.xmId, loopGroupParam);
+    uint16_t xmId = GetXnId(instr->v2.loop.xmId, loopGroupParam);
     CHK_RET(AllRankParamRecorder::Global()->GetXn(rankId, dieId, xmId, loop.loopXm.value));
-    
+
     loopGroupParam->loopXms.push_back(loop);
 
     HCCL_VM_INFO("debug...{}, {}", loopGroupIdx, curCcuTask->loopGroupInfo_.size());
@@ -1944,7 +2100,8 @@ HcclResult ProcessLoopIns(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCc
                 HCCL_ERROR("ins type not supported [%hu]", instr->header.header);
                 return HCCL_E_INTERNAL;
             }
-            CHK_RET(transformA6InstrSqeMap[instrVec->header.header](instrVec, curCcuTask, queId, isContinue, loopGroupParam));
+            CHK_RET(transformA6InstrSqeMap[instrVec->header.header](
+                instrVec, curCcuTask, queId, isContinue, loopGroupParam));
         }
     }
     auto loopEnd = AddLoopEndTask(queId, loopIdx, loopGroupIdx, curCcuTask); // loop后新增loopEnd标记节点
@@ -1955,12 +2112,11 @@ HcclResult ProcessLoopIns(const CcuRep::CcuInstr *instr, TaskStubCcuGraph *curCc
 } // namespace
 
 namespace HcclSim {
-InstructMapA6::InstructMapA6() {
-    transformInstrSqeMap = transformA6InstrSqeMap;
-}
+InstructMapA6::InstructMapA6() { transformInstrSqeMap = transformA6InstrSqeMap; }
 
-HcclResult InstructMapA6::Transform(const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId,
-        bool& isContinue, void* loopParam) {
+HcclResult InstructMapA6::Transform(
+    const CcuRep::CcuInstr* instr, TaskStubCcuGraph* curCcuTask, uint32_t queId, bool& isContinue, void* loopParam)
+{
     auto it = transformInstrSqeMap.find(instr->header.header);
     if (it == transformInstrSqeMap.end()) {
         HCCL_ERROR("[A6] Unsupported: 0x%04x", instr->header.header);

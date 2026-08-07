@@ -26,30 +26,30 @@
 namespace hccl {
 class ReduceScatterPipeline : public AlgTemplateBase {
 public:
-    explicit ReduceScatterPipeline (const HcclDispatcher dispatcher);
+    explicit ReduceScatterPipeline(const HcclDispatcher dispatcher);
     ~ReduceScatterPipeline() override;
 
     // 适配新CollExecutor接口
-    HcclResult Prepare(HcomCollOpInfo *opInfo, DeviceMem &cclBuffer, const u64 count, const u64 bufferSize,
-                       const u64 offset, const SubCommInfo &level0CommInfo, const SubCommInfo &level1CommInfo,
-                       Stream &mainStream, std::vector<Stream> &subStream,
-                       std::vector<std::shared_ptr<LocalNotify>> &notifyMain,
-                       std::vector<std::shared_ptr<LocalNotify>> &notifySub,
-                       u64 reduceAttrBitMap) override;
+    HcclResult Prepare(
+        HcomCollOpInfo* opInfo, DeviceMem& cclBuffer, const u64 count, const u64 bufferSize, const u64 offset,
+        const SubCommInfo& level0CommInfo, const SubCommInfo& level1CommInfo, Stream& mainStream,
+        std::vector<Stream>& subStream, std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
+        std::vector<std::shared_ptr<LocalNotify>>& notifySub, u64 reduceAttrBitMap) override;
 
     HcclResult RunAsync() override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
+
 protected:
     virtual HcclResult RunIntraServer(u32 step, u64 remoteOffset);
-    virtual HcclResult RunInterServer(u32 step, const LINK &prevInterLink, const LINK &nextInterLink);
+    virtual HcclResult RunInterServer(u32 step, const LINK& prevInterLink, const LINK& nextInterLink);
     virtual HcclResult CopyToScratchBuffer(u32 step);
     HcclResult MainWaitSub(u32 begin);
     HcclResult SubRecordMain(u32 begin);
     HcclResult MainRecordSub(u32 begin);
     HcclResult SubWaitMain(u32 begin);
 
-    HcomCollOpInfo *opInfo_{nullptr};
+    HcomCollOpInfo* opInfo_{nullptr};
 
     void* usrInMem_ = nullptr;
     void* usrOutMem_ = nullptr;
@@ -84,6 +84,6 @@ protected:
     std::vector<LINK> intraLinks_;
     std::vector<LINK> interLinks_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* REDUCE_SCATTER_PIPELINE_PUB_H */

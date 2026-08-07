@@ -21,20 +21,22 @@ public:
     ~AllReduceRing() override;
 
     // 新增的两段式构造函数，获取实例后要无脑调用实现构造函数功能，后续还要调用其它的基类Prepare函数实现其它成员变量初始化
-    HcclResult Prepare(u64 reduceAttrBitMap, HcomCollOpInfo *opInfo = nullptr) override;
+    HcclResult Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo = nullptr) override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
-    HcclResult RunAsyncStaged(const u32 rank, const u32 rankSize, const std::vector<LINK> &links,
-        RunStage stage) override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
+    HcclResult
+    RunAsyncStaged(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, RunStage stage) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
+
 protected:
-    HcclResult PrepareRunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult PrepareRunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
+
 private:
-    HcclResult RunReduceScatter(u32 rank, u32 rankSize, const std::vector<LINK> &links, bool needBarrier = false);
-    HcclResult RunAllGather(u32 rank, u32 rankSize, const std::vector<LINK> &links);
+    HcclResult RunReduceScatter(u32 rank, u32 rankSize, const std::vector<LINK>& links, bool needBarrier = false);
+    HcclResult RunAllGather(u32 rank, u32 rankSize, const std::vector<LINK>& links);
 
     u64 reduceAttr_; /* 0x1:表示data_type + reduce_type支持inlinereduce  */
 };
-}  // namespace hccl
+} // namespace hccl
 #endif /* ALL_REDUCE_RING_PUB_H */

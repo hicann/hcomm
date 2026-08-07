@@ -21,12 +21,12 @@ class JsonUtils {
 public:
     JsonUtils() = default;
     ~JsonUtils() = default;
-    static HcclResult GetJsonProperty(const nlohmann::json &obj, const std::string &propName, u32 &propValue);
-    static HcclResult GetJsonProperty(const nlohmann::json &obj, const std::string &propName, std::string &propValue);
-    static HcclResult GetJsonProperty(const nlohmann::json &obj, const std::string &propName,
-        nlohmann::json &propValue);
-    static HcclResult ParseInformation(nlohmann::json &parseInformation, const std::string &information);
+    static HcclResult GetJsonProperty(const nlohmann::json& obj, const std::string& propName, u32& propValue);
+    static HcclResult GetJsonProperty(const nlohmann::json& obj, const std::string& propName, std::string& propValue);
+    static HcclResult
+    GetJsonProperty(const nlohmann::json& obj, const std::string& propName, nlohmann::json& propValue);
+    static HcclResult ParseInformation(nlohmann::json& parseInformation, const std::string& information);
 };
-}
+} // namespace hccl
 
 #endif // end HCCL_JSON_UTILS_H

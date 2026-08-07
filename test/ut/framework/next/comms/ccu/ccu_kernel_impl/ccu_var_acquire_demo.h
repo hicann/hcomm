@@ -22,7 +22,7 @@ struct CcuVarAcquireDemoKernelArg {
 
 CcuResult CcuVarAcquireDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuVarAcquireDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuVarAcquireDemoKernelArg*>(arg);
 
     ccu::Variable sum;
     sum = 0;

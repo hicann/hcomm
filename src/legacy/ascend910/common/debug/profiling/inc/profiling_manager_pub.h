@@ -21,18 +21,19 @@ namespace hccl {
 
 class ProfilingManagerPub {
 public:
-    static HcclResult CallMsprofReportMultiThreadInfo(const std::vector<uint32_t> &tidInfo);
+    static HcclResult CallMsprofReportMultiThreadInfo(const std::vector<uint32_t>& tidInfo);
     static bool GetAdditionInfoState();
     static bool GetTaskApiState();
-    static HcclResult CallMsprofReportHostApi(HcclCMDType cmdType, uint64_t beginTime, u64 count, HcclDataType dataType,
-        AlgType algType, uint64_t groupName, u32 numBlocks=0);
-    static HcclResult CallMsprofReportMc2CommInfo(uint64_t timeStamp, const void *data, int len);
-    static HcclResult CallMsprofReportHostNodeApi(uint64_t beginTime, uint64_t endTime, const std::string profName,
-        uint32_t threadId);
-    static HcclResult CallMsprofReportHostNodeBasicInfo(uint64_t endTime, const std::string profName,
-        uint32_t threadId);
-    static HcclResult CallMsprofReportNodeInfo(uint64_t beginTime, uint64_t endTime,
-        const std::string profName, uint32_t threadId);
+    static HcclResult CallMsprofReportHostApi(
+        HcclCMDType cmdType, uint64_t beginTime, u64 count, HcclDataType dataType, AlgType algType, uint64_t groupName,
+        u32 numBlocks = 0);
+    static HcclResult CallMsprofReportMc2CommInfo(uint64_t timeStamp, const void* data, int len);
+    static HcclResult
+    CallMsprofReportHostNodeApi(uint64_t beginTime, uint64_t endTime, const std::string profName, uint32_t threadId);
+    static HcclResult
+    CallMsprofReportHostNodeBasicInfo(uint64_t endTime, const std::string profName, uint32_t threadId);
+    static HcclResult
+    CallMsprofReportNodeInfo(uint64_t beginTime, uint64_t endTime, const std::string profName, uint32_t threadId);
     static bool GetAllState();
     static HcclResult ClearStoragedProfilingInfo();
     static void SetThreadCaptureStatus(s32 threadID, bool isCapture);

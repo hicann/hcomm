@@ -22,20 +22,15 @@ using namespace checker;
 
 class ReduceTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "ReduceTest set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "ReduceTest set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "ReduceTest tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "ReduceTest tear down." << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -349,9 +344,9 @@ TEST_F(ReduceTest, reduce_test_opbase_910_93_2superpod_4servers_4ranks_Reduce)
 TEST_F(ReduceTest, reduce_superpod_asym_gcd)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}}};
+    TopoMeta topoMeta{{{0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}}, {{0, 1, 2}, {0, 1, 2}, {0, 1, 2}, {0, 1, 2}}};
 
-    CheckerOpParam  checkerOpParam;
+    CheckerOpParam checkerOpParam;
     checkerOpParam.opType = CheckerOpType::REDUCE;
     checkerOpParam.tag = "Reduce";
     checkerOpParam.opMode = CheckerOpMode::OPBASE;

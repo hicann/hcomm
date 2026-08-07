@@ -19,8 +19,10 @@
 
 namespace hcomm {
 
-AicpuTsP2pChannel::AicpuTsP2pChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc):
-    endpointHandle_(endpointHandle), channelDesc_(channelDesc) {}
+AicpuTsP2pChannel::AicpuTsP2pChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc)
+    : endpointHandle_(endpointHandle),
+      channelDesc_(channelDesc)
+{}
 
 AicpuTsP2pChannel::~AicpuTsP2pChannel()
 {
@@ -45,17 +47,18 @@ HcclResult AicpuTsP2pChannel::ParseInputParam()
 
     if (channelDesc_.exchangeAllMems) {
         HCCL_INFO("[AicpuTsP2pChannel][%s] exchangeAllMems == True. Get memHandles from endpoint.", __func__);
-        std::shared_ptr<Hccl::LocalIpcRmaBuffer> *memHandles = nullptr;
+        std::shared_ptr<Hccl::LocalIpcRmaBuffer>* memHandles = nullptr;
         uint32_t memHandleNum = 0;
-        CHK_RET(static_cast<HcclResult>(HcommMemGetAllMemHandles(
-            endpointHandle_, reinterpret_cast<void**>(&memHandles), &memHandleNum)));
+        CHK_RET(static_cast<HcclResult>(
+            HcommMemGetAllMemHandles(endpointHandle_, reinterpret_cast<void**>(&memHandles), &memHandleNum)));
         HCCL_INFO("[AicpuTsP2pChannel][%s] Got memHandleNum[%u].", __func__, memHandleNum);
         for (uint32_t i = 0; i < memHandleNum; ++i) {
-            std::shared_ptr<Hccl::LocalIpcRmaBuffer> &localIpcRmaBuffer = memHandles[i];
+            std::shared_ptr<Hccl::LocalIpcRmaBuffer>& localIpcRmaBuffer = memHandles[i];
             CHK_SMART_PTR_NULL(localIpcRmaBuffer);
             auto buf = localIpcRmaBuffer->GetBuf();
             CHK_PTR_NULL(buf);
-            HCCL_INFO("[AicpuTsP2pChannel][%s] Got memHandle No.%u: addr[0x%llx], size[0x%llx], "
+            HCCL_INFO(
+                "[AicpuTsP2pChannel][%s] Got memHandle No.%u: addr[0x%llx], size[0x%llx], "
                 "memType[%d], memInfo[%s].",
                 __func__, i, static_cast<unsigned long long>(buf->GetAddr()),
                 static_cast<unsigned long long>(buf->GetSize()), static_cast<int>(buf->GetMemType()),
@@ -74,7 +77,7 @@ HcclResult AicpuTsP2pChannel::ParseInputParam()
 HcclResult AicpuTsP2pChannel::BuildAttr()
 {
     attr_.devicePhyId = localEp_.loc.device.devPhyId;
-    attr_.opMode      = Hccl::OpMode::OPBASE;
+    attr_.opMode = Hccl::OpMode::OPBASE;
     return HCCL_SUCCESS;
 }
 
@@ -82,11 +85,8 @@ HcclResult AicpuTsP2pChannel::BuildConnection()
 {
     std::unique_ptr<Hccl::P2PConnection> p2pConn = nullptr;
     std::string connTag = "P2P_CHANNEL_" + std::to_string(localEp_.loc.device.devPhyId);
-   
-    EXCEPTION_CATCH(
-        p2pConn = std::make_unique<Hccl::P2PConnection>(socket_, connTag),
-        return HCCL_E_PTR
-    );
+
+    EXCEPTION_CATCH(p2pConn = std::make_unique<Hccl::P2PConnection>(socket_, connTag), return HCCL_E_PTR);
     CHK_SMART_PTR_NULL(p2pConn);
 
     commonRes_.connVec.clear();
@@ -104,10 +104,7 @@ HcclResult AicpuTsP2pChannel::BuildNotify()
     bool devUsed = true;
     for (uint32_t i = 0; i < notifyNum_; ++i) {
         std::unique_ptr<Hccl::IpcLocalNotify> notifyPtr = nullptr;
-        EXCEPTION_CATCH(
-            notifyPtr = std::make_unique<Hccl::IpcLocalNotify>(devUsed),
-            return HCCL_E_PTR
-        );
+        EXCEPTION_CATCH(notifyPtr = std::make_unique<Hccl::IpcLocalNotify>(devUsed), return HCCL_E_PTR);
         commonRes_.notifyVec.push_back(notifyPtr.get());
         localNotifies_.push_back(std::move(notifyPtr));
     }
@@ -116,17 +113,13 @@ HcclResult AicpuTsP2pChannel::BuildNotify()
 
 HcclResult AicpuTsP2pChannel::BuildP2pMemTransport()
 {
-    const Hccl::Socket &socket = *socket_;
+    const Hccl::Socket& socket = *socket_;
 
     Hccl::LinkData linkData = BuildDefaultLinkData();
     CHK_RET(EndpointDescPairToLinkData(localEp_, remoteEp_, linkData));
 
     EXCEPTION_CATCH(
-        memTransport_ = std::make_unique<Hccl::P2PTransport>(
-            commonRes_, attr_, linkData, socket
-        ),
-        return HCCL_E_PTR
-    );
+        memTransport_ = std::make_unique<Hccl::P2PTransport>(commonRes_, attr_, linkData, socket), return HCCL_E_PTR);
     return HCCL_SUCCESS;
 }
 
@@ -141,17 +134,20 @@ HcclResult AicpuTsP2pChannel::BuildSocket()
     CHK_RET(CommAddrToIpAddress(localEp_.commAddr, ipaddr));
     Hccl::DevNetPortType type = Hccl::DevNetPortType(Hccl::ConnectProtoType::PCIE); // TODO PROTOTYPE P2P?
     Hccl::PortData localPort = Hccl::PortData(static_cast<Hccl::RankId>(localEp_.loc.device.devPhyId), type, 0, ipaddr);
-    Hccl::SocketHandle socketHandle = Hccl::SocketHandleManager::GetInstance().Create(localEp_.loc.device.devPhyId, localPort);
-    EXCEPTION_CATCH(serverSocket_ = std::make_unique<Hccl::Socket>(socketHandle, ipaddr, 60001,
-        ipaddr, "server", Hccl::SocketRole::SERVER, Hccl::NicType::DEVICE_NIC_TYPE), return HCCL_E_PARA);
+    Hccl::SocketHandle socketHandle
+        = Hccl::SocketHandleManager::GetInstance().Create(localEp_.loc.device.devPhyId, localPort);
+    EXCEPTION_CATCH(
+        serverSocket_ = std::make_unique<Hccl::Socket>(
+            socketHandle, ipaddr, 60001, ipaddr, "server", Hccl::SocketRole::SERVER, Hccl::NicType::DEVICE_NIC_TYPE),
+        return HCCL_E_PARA);
     HCCL_INFO("[AicpuTsP2pChannel][%s] listen_socket_info[%s]", __func__, serverSocket_->Describe().c_str());
     EXCEPTION_CATCH(serverSocket_->Listen(), return HCCL_E_INTERNAL);
 
     Hccl::LinkData linkData = BuildDefaultLinkData();
     CHK_RET(EndpointDescPairToLinkData(localEp_, remoteEp_, linkData));
     HCCL_INFO("[AicpuTsP2pChannel][%s] built linkData: %s", __func__, linkData.Describe().c_str());
-    std::string socketTag = (channelDesc_.channelName != nullptr)
-        ? std::string(channelDesc_.channelName) : "AUTOMATIC_SOCKET_TAG";
+    std::string socketTag
+        = (channelDesc_.channelName != nullptr) ? std::string(channelDesc_.channelName) : "AUTOMATIC_SOCKET_TAG";
     bool noRankId = true;
     Hccl::SocketConfig socketConfig = Hccl::SocketConfig(linkData, socketTag, noRankId);
     CHK_RET(SocketMgr::GetInstance(devicePhyId_).GetSocket(socketConfig, socket_));
@@ -170,17 +166,17 @@ HcclResult AicpuTsP2pChannel::Init()
     CHK_RET(BuildConnection());
     CHK_RET(BuildNotify());
     CHK_RET(BuildP2pMemTransport());
-    
+
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsP2pChannel::GetNotifyNum(uint32_t *notifyNum) const
+HcclResult AicpuTsP2pChannel::GetNotifyNum(uint32_t* notifyNum) const
 {
     *notifyNum = this->notifyNum_;
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsP2pChannel::GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos)
+HcclResult AicpuTsP2pChannel::GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos)
 {
     return memTransport_->GetRemoteMems(memNum, remoteMem, memInfos);
 }
@@ -191,7 +187,7 @@ ChannelStatus AicpuTsP2pChannel::GetStatus()
     return out;
 }
 
-HcclResult AicpuTsP2pChannel::SetModuleDataName(Hccl::ModuleData &module, const std::string &name)
+HcclResult AicpuTsP2pChannel::SetModuleDataName(Hccl::ModuleData& module, const std::string& name)
 {
     int ret = strcpy_s(module.name, sizeof(module.name), name.c_str());
     if (ret != 0) {
@@ -202,7 +198,7 @@ HcclResult AicpuTsP2pChannel::SetModuleDataName(Hccl::ModuleData &module, const 
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsP2pChannel::PackOpData(std::vector<char> &data)
+HcclResult AicpuTsP2pChannel::PackOpData(std::vector<char>& data)
 {
     std::vector<Hccl::ModuleData> dataVec;
     dataVec.resize(Hccl::AicpuResMgrType::__COUNT__);
@@ -211,7 +207,7 @@ HcclResult AicpuTsP2pChannel::PackOpData(std::vector<char> &data)
     CHK_RET(SetModuleDataName(dataVec[resType], "P2PTransport"));
 
     std::vector<char> result;
-    Hccl::BinaryStream      binaryStream;
+    Hccl::BinaryStream binaryStream;
     binaryStream << memTransport_->GetUniqueIdV2();
 
     binaryStream.Dump(result);
@@ -227,8 +223,8 @@ HcclResult AicpuTsP2pChannel::PackOpData(std::vector<char> &data)
 HcclResult AicpuTsP2pChannel::H2DResPack(std::vector<char>& buffer)
 {
     CHK_RET(PackOpData(buffer));
-    HCCL_INFO("[AicpuTsP2pChannel][%s] Pack Buffer data[%p], Pack Buffer size[%zu].",
-        __func__, buffer.data(), buffer.size());
+    HCCL_INFO(
+        "[AicpuTsP2pChannel][%s] Pack Buffer data[%p], Pack Buffer size[%zu].", __func__, buffer.data(), buffer.size());
     return HCCL_SUCCESS;
 }
 
@@ -246,7 +242,7 @@ HcclResult AicpuTsP2pChannel::Resume()
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsP2pChannel::UpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum)
+HcclResult AicpuTsP2pChannel::UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum)
 {
     HCCL_WARNING("[AicpuTsP2pChannel][%s] P2PTransport does not support UpdateMemInfo.", __func__);
     return HCCL_SUCCESS;
@@ -264,19 +260,19 @@ HcclResult AicpuTsP2pChannel::NotifyWait(const uint32_t localNotifyIdx, const ui
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsP2pChannel::WriteWithNotify(void *dst, const void *src, const uint64_t len, uint32_t remoteNotifyIdx)
+HcclResult AicpuTsP2pChannel::WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[AicpuTsP2pChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsP2pChannel::Write(void *dst, const void *src, uint64_t len)
+HcclResult AicpuTsP2pChannel::Write(void* dst, const void* src, uint64_t len)
 {
     HCCL_INFO("[AicpuTsP2pChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsP2pChannel::Read(void *dst, const void *src, uint64_t len)
+HcclResult AicpuTsP2pChannel::Read(void* dst, const void* src, uint64_t len)
 {
     HCCL_INFO("[AicpuTsP2pChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;

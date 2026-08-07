@@ -11,55 +11,44 @@
 #ifndef HCCLV2_ITERATOR_UNCONST_H
 #define HCCLV2_ITERATOR_UNCONST_H
 
-
 namespace Hccl {
 using namespace std;
 
 template <template <class U, typename _Alloc = std::allocator<U>> class Sequence, typename T, typename Enable = void>
 class BaseIterator {};
- 
+
 template <template <class U, typename _Alloc = std::allocator<U>> class Sequence, typename T>
 class BaseIterator<Sequence, T, typename enable_if<IsSharedPtr<T>::value || IsUniquePtr<T>::value>::type> {
 public:
     using V = typename T::element_type;
- 
-    BaseIterator(): iter(nullptr), end(nullptr) {};
- 
-    explicit BaseIterator(Sequence<T> &seq) : iter(seq.begin()), end(seq.end()){};
+
+    BaseIterator() : iter(nullptr), end(nullptr) {};
+
+    explicit BaseIterator(Sequence<T>& seq) : iter(seq.begin()), end(seq.end()) {};
     virtual ~BaseIterator() {};
- 
-    virtual V &operator*()
-    {
-        return *(*iter);
-    };
- 
-    virtual V *operator->()
-    {
-        return (*iter).get();
-    };
- 
-    virtual BaseIterator &Next()
+
+    virtual V& operator*() { return *(*iter); };
+
+    virtual V* operator->() { return (*iter).get(); };
+
+    virtual BaseIterator& Next()
     {
         iter++;
         return *this;
     };
- 
-    virtual BaseIterator &operator++()
+
+    virtual BaseIterator& operator++()
     {
         iter++;
         return *this;
     }
- 
-    virtual bool HasNext()
-    {
-        return iter != end;
-    };
- 
+
+    virtual bool HasNext() { return iter != end; };
+
 protected:
     typename Sequence<T>::iterator iter;
     typename Sequence<T>::iterator end;
 };
-
 
 } // namespace Hccl
 

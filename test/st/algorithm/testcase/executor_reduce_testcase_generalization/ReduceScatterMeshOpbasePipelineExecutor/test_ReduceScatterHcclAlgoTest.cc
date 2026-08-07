@@ -23,22 +23,17 @@
 #include "checker.h"
 using namespace checker;
 
-class ReduceScatterGeneralizationHcclAlgoTest: public ::testing::Test {
+class ReduceScatterGeneralizationHcclAlgoTest : public ::testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "ReduceScatterGeneralizationHcclAlgoTest set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "ReduceScatterGeneralizationHcclAlgoTest set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "ReduceScatterGeneralizationHcclAlgoTest tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "ReduceScatterGeneralizationHcclAlgoTest tear down." << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 

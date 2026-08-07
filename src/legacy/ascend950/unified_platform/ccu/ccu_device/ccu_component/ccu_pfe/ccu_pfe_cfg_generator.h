@@ -18,31 +18,35 @@
 
 namespace Hccl {
 
-constexpr uint8_t MAX_CCU_INNER_FE_IDX = 7; // 框内最大FE Index
+constexpr uint8_t MAX_CCU_INNER_FE_IDX = 7;  // 框内最大FE Index
 constexpr uint8_t INNER_MAX_CCU_PFE_NUM = 6; // 2D fullmesh组网框内x/y轴最大FE个数
-constexpr uint8_t ONE_CCU_PFE_USE_JETTY_NUM = 23;  // 框内每个FE使用的Jetty个数
- // 优先分配框内FE，每个FE按最大数量分配，剩余Jetty分配个出框，每个die仅支持1个出框FE
-constexpr uint8_t INNER_MAX_TA_JETTY_ID_OFFSET =
-    (INNER_MAX_CCU_PFE_NUM - 2) * ONE_CCU_PFE_USE_JETTY_NUM;
+constexpr uint8_t ONE_CCU_PFE_USE_JETTY_NUM
+    = 23; // 框内每个FE使用的Jetty个数
+          // 优先分配框内FE，每个FE按最大数量分配，剩余Jetty分配个出框，每个die仅支持1个出框FE
+constexpr uint8_t INNER_MAX_TA_JETTY_ID_OFFSET = (INNER_MAX_CCU_PFE_NUM - 2) * ONE_CCU_PFE_USE_JETTY_NUM;
 
 struct PfeJettyCtxCfg {
     uint32_t feId{0};
     uint32_t startJettyCtxId{0};
     uint32_t startTaJettyId{0};
-    uint8_t  size{0};
+    uint8_t size{0};
 
     PfeJettyCtxCfg() = default;
-    PfeJettyCtxCfg(uint32_t feId, uint32_t startJettyCtxId, uint32_t startTaJettyId, uint8_t size) :
-        feId(feId), startJettyCtxId(startJettyCtxId), startTaJettyId(startTaJettyId), size(size) {}
+    PfeJettyCtxCfg(uint32_t feId, uint32_t startJettyCtxId, uint32_t startTaJettyId, uint8_t size)
+        : feId(feId),
+          startJettyCtxId(startJettyCtxId),
+          startTaJettyId(startTaJettyId),
+          size(size)
+    {}
 };
 
 class CcuPfeCfgGenerator {
 public:
-    CcuPfeCfgGenerator(const CcuPfeCfgGenerator &that) = delete;
+    CcuPfeCfgGenerator(const CcuPfeCfgGenerator& that) = delete;
 
-    CcuPfeCfgGenerator &operator=(const CcuPfeCfgGenerator &that) = delete;
+    CcuPfeCfgGenerator& operator=(const CcuPfeCfgGenerator& that) = delete;
 
-    static CcuPfeCfgGenerator &GetInstance(const int32_t deviceLogicId);
+    static CcuPfeCfgGenerator& GetInstance(const int32_t deviceLogicId);
     std::vector<PfeJettyCtxCfg> GetPfeJettyCtxCfg(const uint8_t dieId);
 
 private:
@@ -57,6 +61,6 @@ private:
     HcclResult SetPfeJettyCtxCfgMap(const int32_t logicDeviceId);
 };
 
-}; // Hccl
+}; // namespace Hccl
 
 #endif // CCU_PFE_CFG_GENERATOR_H

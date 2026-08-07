@@ -15,38 +15,42 @@
 namespace hccl {
 class AlltoAllOperator : public CollAlgOperator {
 public:
-    AlltoAllOperator(AlgConfigurator* algConfigurator, CCLBufferManager &cclBufferManager,
-        HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    AlltoAllOperator(
+        AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager, HcclDispatcher dispatcher,
+        std::unique_ptr<TopoMatcher>& topoMatcher);
     ~AlltoAllOperator() override;
 
-    HcclResult GetAlltoAllStagedWorkSpaceMemSize(const OpParam& param, u64 &memSize);
-    HcclResult GetAlltoAllStagedWorkSpaceMemSize(std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo,
-        u64 &memSize);
+    HcclResult GetAlltoAllStagedWorkSpaceMemSize(const OpParam& param, u64& memSize);
+    HcclResult
+    GetAlltoAllStagedWorkSpaceMemSize(std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo, u64& memSize);
 
-    HcclResult CheckSendRecvParams(const std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo);
-    HcclResult GetAlltoAllvSendRecvInfo(const OpParam& param, const HostMem &alltoallAddrInfoGathered);
-    HcclResult GetAlltoAllvcSendRecvInfo(const void *sendCountMatrix, HcclDataType sendType, HcclDataType recvType);
-    void UpdateAlltoAllCopyMode(std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo, std::string& copyMode);
-    HcclResult SelectAlgforAlltoAll(const OpParam& param, std::string& algName, std::string& copyMode,
-        const ResourceLimit& resourceLimit);
+    HcclResult CheckSendRecvParams(const std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo);
+    HcclResult GetAlltoAllvSendRecvInfo(const OpParam& param, const HostMem& alltoallAddrInfoGathered);
+    HcclResult GetAlltoAllvcSendRecvInfo(const void* sendCountMatrix, HcclDataType sendType, HcclDataType recvType);
+    void UpdateAlltoAllCopyMode(std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo, std::string& copyMode);
+    HcclResult SelectAlgforAlltoAll(
+        const OpParam& param, std::string& algName, std::string& copyMode, const ResourceLimit& resourceLimit);
     HcclResult SelectAlgforAiv(const OpParam& param, std::string& algName);
-    HcclResult SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag) override;
-    HcclResult SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag,
+    HcclResult
+    SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag) override;
+    HcclResult SelectAlg(
+        const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag,
         const ResourceLimit& resourceLimit) override;
 
-    HcclResult GetAlltoAllvAllAddrInfo(u64 *sendLength, u64 *sendOffset, u64 *recvLength, u64 *recvOffset,
-        std::unique_ptr<PreProcessMetaInfo> &preMetaInfo);
-    HcclResult PrepareAlltoAllAddrInfo(const void *sendCounts, const void *sdispls, HcclDataType sendType,
-        const void *recvCounts, const void *rdispls, HcclDataType recvType,
-        std::unique_ptr<PreProcessMetaInfo> &preMetaInfo);
-    HcclResult PreparePreOpParam(OpParam& preProcessOpParam, const std::unique_ptr<PreProcessMetaInfo> &preMetaInfo,
-        Stream &preProcessStream);
-    bool JudgeIfNeedPreProcessAndGetParam(const OpParam& param, std::unique_ptr<PreProcessMetaInfo> &preMetaInfo);
+    HcclResult GetAlltoAllvAllAddrInfo(
+        u64* sendLength, u64* sendOffset, u64* recvLength, u64* recvOffset,
+        std::unique_ptr<PreProcessMetaInfo>& preMetaInfo);
+    HcclResult PrepareAlltoAllAddrInfo(
+        const void* sendCounts, const void* sdispls, HcclDataType sendType, const void* recvCounts, const void* rdispls,
+        HcclDataType recvType, std::unique_ptr<PreProcessMetaInfo>& preMetaInfo);
+    HcclResult PreparePreOpParam(
+        OpParam& preProcessOpParam, const std::unique_ptr<PreProcessMetaInfo>& preMetaInfo, Stream& preProcessStream);
+    bool JudgeIfNeedPreProcessAndGetParam(const OpParam& param, std::unique_ptr<PreProcessMetaInfo>& preMetaInfo);
     void SetPreProcessResult(HostMem hostCollectBuffer);
     HcclResult SetExcutorExtraInfo(const std::string& algName, const OpParam& param);
 
-    virtual HcclResult CheckNeedRecreateComm(const std::string& algName, const OpParam& param, u64 lastScratchMemSize,
-        bool& needRecreateAlltoallComm);
+    virtual HcclResult CheckNeedRecreateComm(
+        const std::string& algName, const OpParam& param, u64 lastScratchMemSize, bool& needRecreateAlltoallComm);
     void SetVirtualDispatcher(const HcclDispatcher vDispatcher);
     void SetParallelTaskLoader(ParallelTaskLoader* parallelTaskLoader);
     bool IsSatisfyAlltoAllAivCondition(const OpParam& param);
@@ -57,11 +61,12 @@ public:
 private:
     bool IsSatisfyAlltoallPipelineCondition();
     bool IsBufferSatisfyAlltoAllAivCondition(const OpParam& param);
-    HcclResult RunAlltoAllVTwoLevelPipeline(DeviceMem &sendBuf, DeviceMem &recvBuf,
-        std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo, Stream &stream, const std::string &tag);
-    HcclResult RunAlltoAllVFullMesh(DeviceMem &sendBuf, HcclDataType sendType, DeviceMem &recvBuf,
-        HcclDataType recvType, std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo,
-        Stream &stream, const std::string &tag);
+    HcclResult RunAlltoAllVTwoLevelPipeline(
+        DeviceMem& sendBuf, DeviceMem& recvBuf, std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo,
+        Stream& stream, const std::string& tag);
+    HcclResult RunAlltoAllVFullMesh(
+        DeviceMem& sendBuf, HcclDataType sendType, DeviceMem& recvBuf, HcclDataType recvType,
+        std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo, Stream& stream, const std::string& tag);
 
     HcclResult SetExecutorAttr(const OpParam& param) override;
 
@@ -71,6 +76,6 @@ private:
     HcclDispatcher vDispatcher_;
     ParallelTaskLoader* parallelTaskLoader_ = nullptr;
 };
-}
+} // namespace hccl
 
 #endif /** __ALLTOALL_OPERATOR_H_ */

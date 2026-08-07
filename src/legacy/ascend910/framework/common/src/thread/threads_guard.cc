@@ -13,15 +13,14 @@
 
 namespace hccl {
 
-ThreadsGuard::ThreadsGuard(std::vector<std::unique_ptr<std::thread>> &threads) : threads(threads)
-{}
+ThreadsGuard::ThreadsGuard(std::vector<std::unique_ptr<std::thread>>& threads) : threads(threads) {}
 
 ThreadsGuard::~ThreadsGuard()
 {
-    for (auto &thread : threads) {
+    for (auto& thread : threads) {
         if (thread != nullptr && thread->joinable()) {
             thread->join();
         }
     }
 }
-}
+} // namespace hccl

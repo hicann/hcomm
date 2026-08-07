@@ -10,11 +10,11 @@ using namespace hccl;
 
 namespace checker {
 
-HcclResult RankTable_For_LLT::GenTopoMeta(TopoMeta &topoMate, int superPodNum, int serverNum, int rankNum)
+HcclResult RankTable_For_LLT::GenTopoMeta(TopoMeta& topoMate, int superPodNum, int serverNum, int rankNum)
 {
-    for (u32 i = 0; i < superPodNum; i++) {  // box
+    for (u32 i = 0; i < superPodNum; i++) { // box
         SuperPodMeta superPodMeta;
-        for (u32 j = 0; j < serverNum; j++) {  // serverNumPerBox
+        for (u32 j = 0; j < serverNum; j++) { // serverNumPerBox
             ServerMeta serverMate;
             for (u32 k = 0; k < rankNum; k++) {
                 serverMate.push_back(k);
@@ -26,22 +26,22 @@ HcclResult RankTable_For_LLT::GenTopoMeta(TopoMeta &topoMate, int superPodNum, i
     return HCCL_SUCCESS;
 }
 
-u32 GetRankNumFormTopoMeta(TopoMeta &topoMeta)
+u32 GetRankNumFormTopoMeta(TopoMeta& topoMeta)
 {
     u32 rankNum = 0;
-    for (auto &podMeta : topoMeta) {
-        for (auto &serverMeta : podMeta) {
+    for (auto& podMeta : topoMeta) {
+        for (auto& serverMeta : podMeta) {
             rankNum += serverMeta.size();
         }
     }
     return rankNum;
 }
 
-u32 GetServerNumFormTopoMeta(TopoMeta &topoMeta)
+u32 GetServerNumFormTopoMeta(TopoMeta& topoMeta)
 {
     u32 sererNum = 0;
-    for (auto &podMeta : topoMeta) {
-        for (auto &serverMeta : podMeta) {
+    for (auto& podMeta : topoMeta) {
+        for (auto& serverMeta : podMeta) {
             if (serverMeta.size()) {
                 sererNum++;
             }
@@ -50,4 +50,4 @@ u32 GetServerNumFormTopoMeta(TopoMeta &topoMeta)
     return sererNum;
 }
 
-}  // namespace checker
+} // namespace checker

@@ -14,30 +14,25 @@
 namespace hccl {
 ExecutorBase::ExecutorBase(const HcclDispatcher dispatcher)
     : dispatcher_(dispatcher),
-      slices_(slicesDummy_), count_(0), dataBytes_(0), dataType_(HCCL_DATA_TYPE_RESERVED),
-      reductionOp_(HCCL_REDUCE_RESERVED), root_(INVALID_VALUE_RANKID),
-      baseOffset_(0), barrierSwitchOn_(true)
-{
-}
+      slices_(slicesDummy_),
+      count_(0),
+      dataBytes_(0),
+      dataType_(HCCL_DATA_TYPE_RESERVED),
+      reductionOp_(HCCL_REDUCE_RESERVED),
+      root_(INVALID_VALUE_RANKID),
+      baseOffset_(0),
+      barrierSwitchOn_(true)
+{}
 
-ExecutorBase::~ExecutorBase()
-{
-    slices_.clear();
-}
+ExecutorBase::~ExecutorBase() { slices_.clear(); }
 
-HcclResult ExecutorBase::Prepare(PrepareData &param)
-{
-    return HCCL_E_PARA;
-}
+HcclResult ExecutorBase::Prepare(PrepareData& param) { return HCCL_E_PARA; }
 
 // prepare函数给需要进行集合通信操作进行参数赋值
-HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem,
-                                 const u64 count,
-                                 const HcclDataType dataType, const Stream &stream,
-                                 const HcclReduceOp reductionOp,
-                                 const u32 root, const std::vector<Slice> &slices, const u64 baseOffset,
-                                 std::vector<u32> nicRankList,
-                                 const bool disableDMAReduce)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+    const Stream& stream, const HcclReduceOp reductionOp, const u32 root, const std::vector<Slice>& slices,
+    const u64 baseOffset, std::vector<u32> nicRankList, const bool disableDMAReduce)
 {
     // 部分集合通信操作允许input_mem/output_mem为空
 
@@ -69,12 +64,10 @@ HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &outputMem, Devi
     return HCCL_SUCCESS;
 }
 
-HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &scratchMem, const u64 count,
-                                 const HcclDataType dataType, const Stream &stream,
-                                 const HcclReduceOp reductionOp,
-                                 const u32 root, const std::vector<Slice> &slices, const u64 baseOffset,
-                                 std::vector<u32> nicRankList,
-                                 const bool disableDMAReduce)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& inputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType, const Stream& stream,
+    const HcclReduceOp reductionOp, const u32 root, const std::vector<Slice>& slices, const u64 baseOffset,
+    std::vector<u32> nicRankList, const bool disableDMAReduce)
 {
     // 部分集合通信操作允许input_mem/output_mem为空
     CHK_PTR_NULL(stream.ptr());
@@ -107,14 +100,10 @@ HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &scratchMem, con
     return HCCL_SUCCESS;
 }
 
-HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem,
-                                 const u64 count,
-                                 const HcclDataType dataType, const Stream &stream,
-                                 const std::vector<std::vector<Slice>> &multRingsSlices,
-                                 const HcclReduceOp reductionOp,
-                                 const u32 root,
-                                 const u64 baseOffset,
-                                 const bool disableDMAReduce)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+    const Stream& stream, const std::vector<std::vector<Slice>>& multRingsSlices, const HcclReduceOp reductionOp,
+    const u32 root, const u64 baseOffset, const bool disableDMAReduce)
 {
     // 部分集合通信操作允许input_mem/output_mem为空
 
@@ -148,47 +137,26 @@ HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &outputMem, Devi
 
 /* 1个参数 */
 // AllGatherNHR, ScatterNHR
-HcclResult ExecutorBase::Prepare(bool needSaveRankMap)
-{
-    return HCCL_E_PARA;
-}
+HcclResult ExecutorBase::Prepare(bool needSaveRankMap) { return HCCL_E_PARA; }
 
 // GatherStar
-HcclResult ExecutorBase::Prepare(u32 userRank)
-{
-    return HCCL_E_PARA;
-}
+HcclResult ExecutorBase::Prepare(u32 userRank) { return HCCL_E_PARA; }
 
 // AHC 扩展参数
-HcclResult ExecutorBase::Prepare(AHCExtendPreparePara &extendParam)
-{
-    return HCCL_E_PARA;    
-}
+HcclResult ExecutorBase::Prepare(AHCExtendPreparePara& extendParam) { return HCCL_E_PARA; }
 
 /* 2个参数 */
 // ReduceScatterNB, ReduceScatterNHRV1, ReduceScatterRing, ReduceScatterRecursiveHalvingDoubling
-HcclResult ExecutorBase::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo *opInfo)
-{
-    return HCCL_E_PARA;
-}
+HcclResult ExecutorBase::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo) { return HCCL_E_PARA; }
 
 // ReduceScatterNHR
-HcclResult ExecutorBase::Prepare(u64 reduceAttrBitMap, bool needMerge)
-{
-    return HCCL_E_PARA;
-}
+HcclResult ExecutorBase::Prepare(u64 reduceAttrBitMap, bool needMerge) { return HCCL_E_PARA; }
 
 // ReduceScatterMeshMixSingleStream, ReduceScatterMesh
-HcclResult ExecutorBase::Prepare(u64 reduceAttrBitMap, u32 streamIndex)
-{
-    return HCCL_E_PARA;
-}
+HcclResult ExecutorBase::Prepare(u64 reduceAttrBitMap, u32 streamIndex) { return HCCL_E_PARA; }
 
 // ScatterMesh
-HcclResult ExecutorBase::Prepare(u32 interRank, u32 interRankSize)
-{
-    return HCCL_E_PARA;
-}
+HcclResult ExecutorBase::Prepare(u32 interRank, u32 interRankSize) { return HCCL_E_PARA; }
 
 /* 3个参数 */
 // for AllGatherHalvingDoubling based on intput_scratch_Mem_nicRankList Prepare
@@ -200,382 +168,410 @@ HcclResult ExecutorBase::Prepare(u32 blockSize, UserMemType hdInputMemType, User
 
 /* 4个参数 */
 // ScatterRingDirect
-HcclResult ExecutorBase::Prepare(HcomCollOpInfo *opInfo, const u32 userRank, const std::vector<u32> &ringsOrders,
-    const std::vector<Slice> &userMemInputSlices)
+HcclResult ExecutorBase::Prepare(
+    HcomCollOpInfo* opInfo, const u32 userRank, const std::vector<u32>& ringsOrders,
+    const std::vector<Slice>& userMemInputSlices)
 {
     return HCCL_E_PARA;
 }
 
-HcclResult ExecutorBase::Prepare(HcomCollOpInfo *opInfo, u32 userRank,
-    const std::vector<Slice> &userMemOutputSlices, bool isSdma)
+HcclResult
+ExecutorBase::Prepare(HcomCollOpInfo* opInfo, u32 userRank, const std::vector<Slice>& userMemOutputSlices, bool isSdma)
 {
     return HCCL_E_PARA;
 }
 
 /* 5个参数 */
 // AHC 5个参数,带扩展参数
-HcclResult ExecutorBase::Prepare(u64 totalCount, const std::vector<std::vector<std::vector<u32>>> &subGroups,
-    std::map<AHCConcOpType, TemplateType> &ahcAlgOption, bool extendFlag, AHCExtendPreparePara extendPara)
+HcclResult ExecutorBase::Prepare(
+    u64 totalCount, const std::vector<std::vector<std::vector<u32>>>& subGroups,
+    std::map<AHCConcOpType, TemplateType>& ahcAlgOption, bool extendFlag, AHCExtendPreparePara extendPara)
 {
     return HCCL_E_PARA;
 }
 
 /* 6个参数 */
 // AlltoAllVStagedPairwise
-HcclResult ExecutorBase::Prepare(DeviceMem &sendMem, DeviceMem &recvMem, StageAlltoAllVAddrInfo &sendAddrInfo,
-    StageAlltoAllVAddrInfo &recvAddrInfo, bool isAlltoAllZCopyMode, Stream &mainStream)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& sendMem, DeviceMem& recvMem, StageAlltoAllVAddrInfo& sendAddrInfo, StageAlltoAllVAddrInfo& recvAddrInfo,
+    bool isAlltoAllZCopyMode, Stream& mainStream)
 {
     return HCCL_E_PARA;
 }
 
 /* 7个参数 */
-HcclResult ExecutorBase::Prepare(u64 reduceAttrBitMap, std::vector<Stream> &meshStreams,
-    std::vector<std::shared_ptr<LocalNotify>> &meshSignal, std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux,
-    u32 userRank, HcomCollOpInfo *opInfo, bool aicpu)
+HcclResult ExecutorBase::Prepare(
+    u64 reduceAttrBitMap, std::vector<Stream>& meshStreams, std::vector<std::shared_ptr<LocalNotify>>& meshSignal,
+    std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux, u32 userRank, HcomCollOpInfo* opInfo, bool aicpu)
 {
     return HCCL_E_PARA;
 }
 
 // AlltoAllVPairWise
-HcclResult ExecutorBase::Prepare(AlltoAllVBufferInfo &sendBuffer, AlltoAllVBufferInfo &recvBuffer,
-    bool isAlltoAllZCopyMode, const Stream &stream, HcclWorkflowMode workMode,
-    std::map<u32, std::vector<u64>> &rankSendDisplsMap, std::map<u32, std::vector<u64>> &rankRecvDisplsMap)
+HcclResult ExecutorBase::Prepare(
+    AlltoAllVBufferInfo& sendBuffer, AlltoAllVBufferInfo& recvBuffer, bool isAlltoAllZCopyMode, const Stream& stream,
+    HcclWorkflowMode workMode, std::map<u32, std::vector<u64>>& rankSendDisplsMap,
+    std::map<u32, std::vector<u64>>& rankRecvDisplsMap)
 {
     return HCCL_E_PARA;
 }
 
 // AlignedAllGatherDoubleRing
-HcclResult ExecutorBase::Prepare(HcomCollOpInfo *opInfo, const u32 userRank, std::vector<Stream> &subStreams,
-    std::vector<std::shared_ptr<LocalNotify>> &mainSignals, std::vector<std::shared_ptr<LocalNotify>> &subSignals,
-    const std::vector<std::vector<u32>> &ringsOrders,
-    const std::vector<std::vector<Slice>> &userMemOutputSlicesOfDoubleRing)
+HcclResult ExecutorBase::Prepare(
+    HcomCollOpInfo* opInfo, const u32 userRank, std::vector<Stream>& subStreams,
+    std::vector<std::shared_ptr<LocalNotify>>& mainSignals, std::vector<std::shared_ptr<LocalNotify>>& subSignals,
+    const std::vector<std::vector<u32>>& ringsOrders,
+    const std::vector<std::vector<Slice>>& userMemOutputSlicesOfDoubleRing)
 {
     return HCCL_E_PARA;
 }
 
 // AllGatherMeshAtomic, AllgatherMeshDirect, AllGatherMesh, AllgatherMeshMix GatherMesh
-HcclResult ExecutorBase::Prepare(std::vector<Stream> &meshStreams,
-    std::vector<std::shared_ptr<LocalNotify>> &meshSignal, std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux,
-    u32 userRank, HcomCollOpInfo *opInfo, u32 interRank, u32 interRankSize)
+HcclResult ExecutorBase::Prepare(
+    std::vector<Stream>& meshStreams, std::vector<std::shared_ptr<LocalNotify>>& meshSignal,
+    std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux, u32 userRank, HcomCollOpInfo* opInfo, u32 interRank,
+    u32 interRankSize)
 {
     return HCCL_E_PARA;
 }
 
 /* 8个参数 */
-HcclResult ExecutorBase::Prepare(u64 reduceAttrBitMap, std::vector<Stream> &meshStreams,
-    std::vector<std::shared_ptr<LocalNotify>> &meshSignal, std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux,
-    u32 interRank, u32 interRankSize, u32 userRank, HcomCollOpInfo *opInfo)
+HcclResult ExecutorBase::Prepare(
+    u64 reduceAttrBitMap, std::vector<Stream>& meshStreams, std::vector<std::shared_ptr<LocalNotify>>& meshSignal,
+    std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux, u32 interRank, u32 interRankSize, u32 userRank,
+    HcomCollOpInfo* opInfo)
 {
     return HCCL_E_PARA;
 }
 
 // AlltoAllVStagedPairwise
-HcclResult ExecutorBase::Prepare(DeviceMem &sendMem, DeviceMem &recvMem, DeviceMem &scratchInputMem,
-    DeviceMem &scratchOutputMem, StageAlltoAllVAddrInfo &sendAddrInfo, StageAlltoAllVAddrInfo &recvAddrInfo,
-    bool isAlltoAllZCopyMode, Stream &mainStream)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& sendMem, DeviceMem& recvMem, DeviceMem& scratchInputMem, DeviceMem& scratchOutputMem,
+    StageAlltoAllVAddrInfo& sendAddrInfo, StageAlltoAllVAddrInfo& recvAddrInfo, bool isAlltoAllZCopyMode,
+    Stream& mainStream)
 {
     return HCCL_E_PARA;
 }
 
 // AllGatherRingConcurrentDirect ScatterRingConcurrentDirect
-HcclResult ExecutorBase::Prepare(HcomCollOpInfo *opInfo, const u32 userRank, std::vector<Stream> &subStreams,
-    const std::vector<std::shared_ptr<LocalNotify>> &mainSignals,
-    const std::vector<std::shared_ptr<LocalNotify>> &subSignals, const std::vector<u32> &ringsOrder,
-    const std::vector<Slice> &userMemSlices, bool isSdma)
+HcclResult ExecutorBase::Prepare(
+    HcomCollOpInfo* opInfo, const u32 userRank, std::vector<Stream>& subStreams,
+    const std::vector<std::shared_ptr<LocalNotify>>& mainSignals,
+    const std::vector<std::shared_ptr<LocalNotify>>& subSignals, const std::vector<u32>& ringsOrder,
+    const std::vector<Slice>& userMemSlices, bool isSdma)
 {
     return HCCL_E_PARA;
 }
 
 /* 9个参数 */
 // catterDoubleRingDirect
-HcclResult ExecutorBase::Prepare(HcomCollOpInfo *opInfo, const u32 userRank, const u32 subRingRank,
-    std::vector<Stream> &subStreams, const std::vector<std::shared_ptr<LocalNotify>> &mainSignals,
-    const std::vector<std::shared_ptr<LocalNotify>> &subSignals, const std::vector<std::vector<u32>> &ringsOrders,
-    const std::vector<std::vector<Slice>> &multiRingSlices, const std::vector<std::vector<Slice>> &userMemInputSlices)
+HcclResult ExecutorBase::Prepare(
+    HcomCollOpInfo* opInfo, const u32 userRank, const u32 subRingRank, std::vector<Stream>& subStreams,
+    const std::vector<std::shared_ptr<LocalNotify>>& mainSignals,
+    const std::vector<std::shared_ptr<LocalNotify>>& subSignals, const std::vector<std::vector<u32>>& ringsOrders,
+    const std::vector<std::vector<Slice>>& multiRingSlices, const std::vector<std::vector<Slice>>& userMemInputSlices)
 {
     return HCCL_E_PARA;
 }
 
 // ReduceScatterRingConcurrentDirect
-HcclResult ExecutorBase::Prepare(const u64 reduceAttrBitMap, const HcomCollOpInfo *opInfo, const u32 userRank,
-    std::vector<Stream> &subStreams, const std::vector<std::shared_ptr<LocalNotify>> &mainSignals,
-    const std::vector<std::shared_ptr<LocalNotify>> &subSignals, const std::vector<u32> &ringsOrder,
-    const std::vector<Slice> &userMemInputSlices, bool isSdma)
+HcclResult ExecutorBase::Prepare(
+    const u64 reduceAttrBitMap, const HcomCollOpInfo* opInfo, const u32 userRank, std::vector<Stream>& subStreams,
+    const std::vector<std::shared_ptr<LocalNotify>>& mainSignals,
+    const std::vector<std::shared_ptr<LocalNotify>>& subSignals, const std::vector<u32>& ringsOrder,
+    const std::vector<Slice>& userMemInputSlices, bool isSdma)
 {
     return HCCL_E_PARA;
 }
 
 // AlltoAllVPairWise
-HcclResult ExecutorBase::Prepare(AlltoAllVBufferInfo &sendBuffer, AlltoAllVBufferInfo &recvBuffer,
-    DeviceMem &scratchInputMem, DeviceMem &scratchOutputMem, bool isAlltoAllZCopyMode, const Stream &stream,
-    HcclWorkflowMode workMode, std::map<u32, std::vector<u64>> &rankSendDisplsMap,
-    std::map<u32, std::vector<u64>> &rankRecvDisplsMap)
+HcclResult ExecutorBase::Prepare(
+    AlltoAllVBufferInfo& sendBuffer, AlltoAllVBufferInfo& recvBuffer, DeviceMem& scratchInputMem,
+    DeviceMem& scratchOutputMem, bool isAlltoAllZCopyMode, const Stream& stream, HcclWorkflowMode workMode,
+    std::map<u32, std::vector<u64>>& rankSendDisplsMap, std::map<u32, std::vector<u64>>& rankRecvDisplsMap)
 {
     return HCCL_E_PARA;
 }
 
 /* 10个参数 */
-HcclResult ExecutorBase::Prepare(const HcomCollOpInfo *opInfo, DeviceMem &cclBufferA, DeviceMem &cclBufferB,
-    const u64 count, const SubCommInfo &level1CommInfo, const SubCommInfo &level0CommInfo, Stream &mainStream,
-    std::vector<Stream> &subStream, std::vector<std::shared_ptr<LocalNotify>> &notifyMain,
-    std::vector<std::shared_ptr<LocalNotify>> &notifySub)
+HcclResult ExecutorBase::Prepare(
+    const HcomCollOpInfo* opInfo, DeviceMem& cclBufferA, DeviceMem& cclBufferB, const u64 count,
+    const SubCommInfo& level1CommInfo, const SubCommInfo& level0CommInfo, Stream& mainStream,
+    std::vector<Stream>& subStream, std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
+    std::vector<std::shared_ptr<LocalNotify>>& notifySub)
 {
     return HCCL_E_PARA;
 }
 
 // AlltoallPipelineMeshPairwiseCCLEnough, AlltoallPipelineMeshPairwisePingPong
-HcclResult ExecutorBase::Prepare(u32 userRank, A2aPipelineMemory A2aPipelineMemory, const SubCommInfo &level0CommInfo,
-    const SubCommInfo &level1CommInfo, Stream &mainStream, std::vector<Stream> &subStream,
-    std::vector<std::shared_ptr<LocalNotify>> &notifyMain, std::vector<std::shared_ptr<LocalNotify>> &notifySub,
-    std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo, HcclWorkflowMode workMode)
+HcclResult ExecutorBase::Prepare(
+    u32 userRank, A2aPipelineMemory A2aPipelineMemory, const SubCommInfo& level0CommInfo,
+    const SubCommInfo& level1CommInfo, Stream& mainStream, std::vector<Stream>& subStream,
+    std::vector<std::shared_ptr<LocalNotify>>& notifyMain, std::vector<std::shared_ptr<LocalNotify>>& notifySub,
+    std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo, HcclWorkflowMode workMode)
 {
     return HCCL_E_PARA;
 }
 
 // AlltoAllVStagedMesh
-HcclResult ExecutorBase::Prepare(DeviceMem &sendMem, DeviceMem &recvMem, StageAlltoAllVAddrInfo &sendAddrInfo,
-    StageAlltoAllVAddrInfo &recvAddrInfo, bool isAlltoAllZCopyMode, u32 userRank, Stream &mainStream,
-    std::vector<Stream> &subStreams, std::vector<std::shared_ptr<LocalNotify>> &meshSignalMainToSub,
-    std::vector<std::shared_ptr<LocalNotify>> &meshSignalSubToMain)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& sendMem, DeviceMem& recvMem, StageAlltoAllVAddrInfo& sendAddrInfo, StageAlltoAllVAddrInfo& recvAddrInfo,
+    bool isAlltoAllZCopyMode, u32 userRank, Stream& mainStream, std::vector<Stream>& subStreams,
+    std::vector<std::shared_ptr<LocalNotify>>& meshSignalMainToSub,
+    std::vector<std::shared_ptr<LocalNotify>>& meshSignalSubToMain)
 {
     return HCCL_E_PARA;
 }
 
 // ReduceScatterPlantLocalReduceCombine
-HcclResult ExecutorBase::Prepare(DeviceMem &cclInMem, DeviceMem &outputMem,
-    const Stream &stream, std::vector<Stream> &subStreams, std::vector<std::shared_ptr<LocalNotify>> &meshSignal,
-    std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux, MemBlockInfo &memBlockInfo,
-    const HcclReduceOp reductionOp, const HcclDataType dataType, bool isUseCclIn, bool isLevel0LastRank, bool isNeedSpaceBorrow)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& cclInMem, DeviceMem& outputMem, const Stream& stream, std::vector<Stream>& subStreams,
+    std::vector<std::shared_ptr<LocalNotify>>& meshSignal, std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux,
+    MemBlockInfo& memBlockInfo, const HcclReduceOp reductionOp, const HcclDataType dataType, bool isUseCclIn,
+    bool isLevel0LastRank, bool isNeedSpaceBorrow)
 {
-    (void) isUseCclIn;
-    (void) memBlockInfo;
-    (void) isLevel0LastRank;
-    (void) isNeedSpaceBorrow;
+    (void)isUseCclIn;
+    (void)memBlockInfo;
+    (void)isLevel0LastRank;
+    (void)isNeedSpaceBorrow;
     return HCCL_E_PARA;
 }
 
 /* 11个参数 */
 // Prepare for AllGatherPipeline
-HcclResult ExecutorBase::Prepare(HcomCollOpInfo *opInfo, u32 userRank, u64 &count, DeviceMem &cclBufferPartOne,
-    DeviceMem &cclBufferPartTwo, SubCommInfo &level0CommInfo, SubCommInfo &level1CommInfo, Stream &mainStream,
-    std::vector<Stream> &subStream, std::vector<std::shared_ptr<LocalNotify>> &notifyMain,
-    std::vector<std::shared_ptr<LocalNotify>> &notifySub)
+HcclResult ExecutorBase::Prepare(
+    HcomCollOpInfo* opInfo, u32 userRank, u64& count, DeviceMem& cclBufferPartOne, DeviceMem& cclBufferPartTwo,
+    SubCommInfo& level0CommInfo, SubCommInfo& level1CommInfo, Stream& mainStream, std::vector<Stream>& subStream,
+    std::vector<std::shared_ptr<LocalNotify>>& notifyMain, std::vector<std::shared_ptr<LocalNotify>>& notifySub)
 {
     return HCCL_E_PARA;
 }
 
 // Prepare for AllGatherUnifiedMarch
-HcclResult ExecutorBase::Prepare(const Stream &mainStream, SubCommInfo &level0CommInfo, DeviceMem &userInput,
-    DeviceMem &userOutput, DeviceMem &usrInMem, DeviceMem &usrOutMem, u64 blockDataByte, std::vector<Stream> &subStreams,
-    const std::vector<std::shared_ptr<LocalNotify>> &meshSignalMainToSub,
-    const std::vector<std::shared_ptr<LocalNotify>> &meshSignalSubToMain,
-    const std::vector<std::vector<Slice>> &multRingsUserMemSlice, const u64 baseOffset)
+HcclResult ExecutorBase::Prepare(
+    const Stream& mainStream, SubCommInfo& level0CommInfo, DeviceMem& userInput, DeviceMem& userOutput,
+    DeviceMem& usrInMem, DeviceMem& usrOutMem, u64 blockDataByte, std::vector<Stream>& subStreams,
+    const std::vector<std::shared_ptr<LocalNotify>>& meshSignalMainToSub,
+    const std::vector<std::shared_ptr<LocalNotify>>& meshSignalSubToMain,
+    const std::vector<std::vector<Slice>>& multRingsUserMemSlice, const u64 baseOffset)
 {
     return HCCL_E_PARA;
 }
 
 // Prepare for ReduceScatterPlantLocalReduce
-HcclResult ExecutorBase::Prepare(void *inputMemPtr, DeviceMem &cclInMem, DeviceMem &outputMem,
-    const Stream &stream, std::vector<Stream> &subStreams,
-    std::vector<std::shared_ptr<LocalNotify>> &meshSignal, std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux,
-    GroupSlicesInfo &grouSlicesInfo, const HcclReduceOp reductionOp, u32 all2allOffset, const HcclDataType dataType,
+HcclResult ExecutorBase::Prepare(
+    void* inputMemPtr, DeviceMem& cclInMem, DeviceMem& outputMem, const Stream& stream, std::vector<Stream>& subStreams,
+    std::vector<std::shared_ptr<LocalNotify>>& meshSignal, std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux,
+    GroupSlicesInfo& grouSlicesInfo, const HcclReduceOp reductionOp, u32 all2allOffset, const HcclDataType dataType,
     bool isNeedSpaceBorrow, bool reverseMemUsage, bool isA3CrossNode)
 {
-    (void) inputMemPtr;
-    (void) all2allOffset;
-    (void) grouSlicesInfo;
-    (void) isNeedSpaceBorrow;
+    (void)inputMemPtr;
+    (void)all2allOffset;
+    (void)grouSlicesInfo;
+    (void)isNeedSpaceBorrow;
     return HCCL_E_PARA;
 }
 
 // Prepare for ReduceScatterVPipeline
-HcclResult ExecutorBase::Prepare(HcomCollOpInfo *opInfo, DeviceMem &cclBuffer, const u64 bufferSize,
-    const std::vector<Slice> &slices, const SubCommInfo &level0CommInfo, const SubCommInfo &level1CommInfo,
-    Stream &mainStream, std::vector<Stream> &subStream, std::vector<std::shared_ptr<LocalNotify>> &notifyMain,
-    std::vector<std::shared_ptr<LocalNotify>> &notifySub, u64 reduceAttrBitMap)
+HcclResult ExecutorBase::Prepare(
+    HcomCollOpInfo* opInfo, DeviceMem& cclBuffer, const u64 bufferSize, const std::vector<Slice>& slices,
+    const SubCommInfo& level0CommInfo, const SubCommInfo& level1CommInfo, Stream& mainStream,
+    std::vector<Stream>& subStream, std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
+    std::vector<std::shared_ptr<LocalNotify>>& notifySub, u64 reduceAttrBitMap)
 {
     return HCCL_E_PARA;
 }
 
-HcclResult ExecutorBase::Prepare(const u32 userRank, const A2aPipelineMemory &a2aPipelineMemory,
-    const SubCommInfo &level0CommInfo, const SubCommInfo &level1CommInfo,
-    const Stream &mainStream, std::vector<Stream> &subStream,
-    std::vector<std::shared_ptr<LocalNotify>> &notifyMain, std::vector<std::shared_ptr<LocalNotify>> &notifySub,
-    std::vector<SendRecvInfo> &sendRecvInfoList, const HcclDataType dataType,
-    const HcclWorkflowMode workMode)
+HcclResult ExecutorBase::Prepare(
+    const u32 userRank, const A2aPipelineMemory& a2aPipelineMemory, const SubCommInfo& level0CommInfo,
+    const SubCommInfo& level1CommInfo, const Stream& mainStream, std::vector<Stream>& subStream,
+    std::vector<std::shared_ptr<LocalNotify>>& notifyMain, std::vector<std::shared_ptr<LocalNotify>>& notifySub,
+    std::vector<SendRecvInfo>& sendRecvInfoList, const HcclDataType dataType, const HcclWorkflowMode workMode)
 {
-    (void) a2aPipelineMemory;
-    (void) sendRecvInfoList;
+    (void)a2aPipelineMemory;
+    (void)sendRecvInfoList;
     return HCCL_E_PARA;
 }
 
 /* 12个参数 */
 // AlltoAllVFor310P
-HcclResult ExecutorBase::Prepare(DeviceMem &userInput, DeviceMem &userOutput, DeviceMem &cclInMem, DeviceMem &cclOutMem,
-    const std::vector<std::shared_ptr<LocalNotify>> &signalMainToSub,
-    const std::vector<std::shared_ptr<LocalNotify>> &signalSubToMain, Stream &mainStream,
-    std::vector<Stream> &subStreams, const std::vector<LINK> &links, u32 userRank, u32 userRankSize,
-    std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& userInput, DeviceMem& userOutput, DeviceMem& cclInMem, DeviceMem& cclOutMem,
+    const std::vector<std::shared_ptr<LocalNotify>>& signalMainToSub,
+    const std::vector<std::shared_ptr<LocalNotify>>& signalSubToMain, Stream& mainStream,
+    std::vector<Stream>& subStreams, const std::vector<LINK>& links, u32 userRank, u32 userRankSize,
+    std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo)
 {
     return HCCL_E_PARA;
 }
 
 // AlltoAllVStagedMesh
-HcclResult ExecutorBase::Prepare(DeviceMem &sendMem, DeviceMem &recvMem, DeviceMem &scratchInputMem,
-    DeviceMem &scratchOutputMem, StageAlltoAllVAddrInfo &sendAddrInfo, StageAlltoAllVAddrInfo &recvAddrInfo,
-    bool isAlltoAllZCopyMode, u32 userRank, Stream &mainStream, std::vector<Stream> &subStreams,
-    std::vector<std::shared_ptr<LocalNotify>> &meshSignalMainToSub,
-    std::vector<std::shared_ptr<LocalNotify>> &meshSignalSubToMain)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& sendMem, DeviceMem& recvMem, DeviceMem& scratchInputMem, DeviceMem& scratchOutputMem,
+    StageAlltoAllVAddrInfo& sendAddrInfo, StageAlltoAllVAddrInfo& recvAddrInfo, bool isAlltoAllZCopyMode, u32 userRank,
+    Stream& mainStream, std::vector<Stream>& subStreams, std::vector<std::shared_ptr<LocalNotify>>& meshSignalMainToSub,
+    std::vector<std::shared_ptr<LocalNotify>>& meshSignalSubToMain)
 {
     return HCCL_E_PARA;
 }
 
 // ReduceScatterPipeline
-HcclResult ExecutorBase::Prepare(HcomCollOpInfo *opInfo, DeviceMem &cclBuffer, const u64 count, const u64 bufferSize,
-    const u64 offset, const SubCommInfo &level0CommInfo, const SubCommInfo &level1CommInfo, Stream &mainStream,
-    std::vector<Stream> &subStream, std::vector<std::shared_ptr<LocalNotify>> &notifyMain,
-    std::vector<std::shared_ptr<LocalNotify>> &notifySub, u64 reduceAttrBitMap)
+HcclResult ExecutorBase::Prepare(
+    HcomCollOpInfo* opInfo, DeviceMem& cclBuffer, const u64 count, const u64 bufferSize, const u64 offset,
+    const SubCommInfo& level0CommInfo, const SubCommInfo& level1CommInfo, Stream& mainStream,
+    std::vector<Stream>& subStream, std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
+    std::vector<std::shared_ptr<LocalNotify>>& notifySub, u64 reduceAttrBitMap)
 {
     return HCCL_E_PARA;
 }
 
 // BroadcastStar
-HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem, const u64 count,
-    const HcclDataType dataType, const Stream &stream, const HcclReduceOp reductionOp, const u32 root,
-    const std::vector<Slice> &slices, const u64 baseOffset, std::vector<u32> nicRankList, u32 userRank)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+    const Stream& stream, const HcclReduceOp reductionOp, const u32 root, const std::vector<Slice>& slices,
+    const u64 baseOffset, std::vector<u32> nicRankList, u32 userRank)
 {
     return HCCL_E_PARA;
 }
 
 // Prepare for AllGatherVPipeline
-HcclResult ExecutorBase::Prepare(HcomCollOpInfo *opInfo, u32 userRank, u64 &count, DeviceMem &cclBufferPartOne, 
-    DeviceMem &cclBufferPartTwo, SubCommInfo &level0CommInfo, SubCommInfo &level1CommInfo, Stream &mainStream, 
-    std::vector<Stream> &subStream, std::vector<std::shared_ptr<LocalNotify>> &notifyMain,
-    std::vector<std::shared_ptr<LocalNotify>> &notifySub, std::vector<Slice>& userOutSlice)
+HcclResult ExecutorBase::Prepare(
+    HcomCollOpInfo* opInfo, u32 userRank, u64& count, DeviceMem& cclBufferPartOne, DeviceMem& cclBufferPartTwo,
+    SubCommInfo& level0CommInfo, SubCommInfo& level1CommInfo, Stream& mainStream, std::vector<Stream>& subStream,
+    std::vector<std::shared_ptr<LocalNotify>>& notifyMain, std::vector<std::shared_ptr<LocalNotify>>& notifySub,
+    std::vector<Slice>& userOutSlice)
 {
-    (void) userOutSlice;
+    (void)userOutSlice;
     return HCCL_E_PARA;
 }
 
 /* 13个参数 */
 // BroadcastHD
-HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem, const u64 count,
-    const HcclDataType dataType, const Stream &stream, const HcclReduceOp reductionOp, const u32 root,
-    std::vector<Stream> &meshStreams, const std::vector<std::shared_ptr<LocalNotify>> &meshSignal,
-    const std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux, u32 interRank, const HcomCollOpInfo *opInfo)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+    const Stream& stream, const HcclReduceOp reductionOp, const u32 root, std::vector<Stream>& meshStreams,
+    const std::vector<std::shared_ptr<LocalNotify>>& meshSignal,
+    const std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux, u32 interRank, const HcomCollOpInfo* opInfo)
 {
     return HCCL_E_PARA;
 }
 
 /* 14个参数 */
 // ReduceScatterUnifiedMarch
-HcclResult ExecutorBase::Prepare(Stream &mainStream, SubCommInfo &level0CommInfo, DeviceMem &userInput,
-    DeviceMem &userOutput, DeviceMem &usrInMem, DeviceMem &scratchMem, u64 totalCount, std::vector<Stream> &subStreams,
-    const std::vector<std::shared_ptr<LocalNotify>> &meshSignalMainToSub,
-    const std::vector<std::shared_ptr<LocalNotify>> &meshSignalSubToMain, const HcclDataType dataType,
-    const HcclReduceOp reductionOp, const std::vector<std::vector<Slice>> &multRingsUserMemSlice, u64 reduceAttrBitMap)
+HcclResult ExecutorBase::Prepare(
+    Stream& mainStream, SubCommInfo& level0CommInfo, DeviceMem& userInput, DeviceMem& userOutput, DeviceMem& usrInMem,
+    DeviceMem& scratchMem, u64 totalCount, std::vector<Stream>& subStreams,
+    const std::vector<std::shared_ptr<LocalNotify>>& meshSignalMainToSub,
+    const std::vector<std::shared_ptr<LocalNotify>>& meshSignalSubToMain, const HcclDataType dataType,
+    const HcclReduceOp reductionOp, const std::vector<std::vector<Slice>>& multRingsUserMemSlice, u64 reduceAttrBitMap)
 {
     return HCCL_E_PARA;
 }
 
 // ReduceScatterHalvingDoubling
-HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem, const u64 count,
-    const HcclDataType dataType, const Stream &stream, const HcclReduceOp reductionOp, const u32 root,
-    const std::vector<Slice> &slices, const u64 baseOffset, const u32 blockSize, const u64 reduceAttrBitMap,
-    const UserMemType hdInputMemType, const UserMemType hdOutputMemType)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+    const Stream& stream, const HcclReduceOp reductionOp, const u32 root, const std::vector<Slice>& slices,
+    const u64 baseOffset, const u32 blockSize, const u64 reduceAttrBitMap, const UserMemType hdInputMemType,
+    const UserMemType hdOutputMemType)
 {
     return HCCL_E_PARA;
 }
 
 /* 15个参数 */
 // AlltoAllVMeshReadOnly
-HcclResult ExecutorBase::Prepare(DeviceMem &userInput, DeviceMem &userOutput, DeviceMem &scratchPingMem,
-    DeviceMem &scratchPongMem, StageAlltoAllVAddrInfo &sendAddrInfo, StageAlltoAllVAddrInfo &recvAddrInfo,
-    HcclWorkflowMode workMode, Stream &mainStream, std::vector<Stream> &subStreams,
-    const std::vector<std::shared_ptr<LocalNotify>> &meshSignalMainToSub,
-    const std::vector<std::shared_ptr<LocalNotify>> &meshSignalSubToMain, u32 userRank, u32 intraRankSize,
-    const std::vector<LINK> &links, std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& userInput, DeviceMem& userOutput, DeviceMem& scratchPingMem, DeviceMem& scratchPongMem,
+    StageAlltoAllVAddrInfo& sendAddrInfo, StageAlltoAllVAddrInfo& recvAddrInfo, HcclWorkflowMode workMode,
+    Stream& mainStream, std::vector<Stream>& subStreams,
+    const std::vector<std::shared_ptr<LocalNotify>>& meshSignalMainToSub,
+    const std::vector<std::shared_ptr<LocalNotify>>& meshSignalSubToMain, u32 userRank, u32 intraRankSize,
+    const std::vector<LINK>& links, std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo)
 {
     return HCCL_E_PARA;
 }
 
 /* 16个参数 */
 // ReduceScatterHDStage, ReduceScatterLocalReduce, ReduceScatterMeshAtomic, ReduceScatterMeshDirect
-HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem, const u64 count,
-    const HcclDataType dataType, const Stream &stream, const HcclReduceOp reductionOp, const u32 root,
-    const std::vector<Slice> &slices, const u64 baseOffset, const u64 reduceAttrBitMap,
-    std::vector<Stream> &meshStreams, std::vector<std::shared_ptr<LocalNotify>> &meshSignal,
-    std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux, u32 userRank, const HcomCollOpInfo *opInfo)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+    const Stream& stream, const HcclReduceOp reductionOp, const u32 root, const std::vector<Slice>& slices,
+    const u64 baseOffset, const u64 reduceAttrBitMap, std::vector<Stream>& meshStreams,
+    std::vector<std::shared_ptr<LocalNotify>>& meshSignal, std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux,
+    u32 userRank, const HcomCollOpInfo* opInfo)
 {
     return HCCL_E_PARA;
 }
 
 /* 17个参数 */
 // ReduceScatterMeshMix
-HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem, const u64 count,
-    const HcclDataType dataType, const Stream &stream, const HcclReduceOp reductionOp, const u32 root,
-    const std::vector<Slice> &slices, const u64 baseOffset, const u64 reduceAttrBitMap,
-    std::vector<Stream> &meshStreams, const std::vector<std::shared_ptr<LocalNotify>> &meshSignal,
-    const std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux, u32 interRank, u32 interRankSize,
-    HcomCollOpInfo *opInfo)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+    const Stream& stream, const HcclReduceOp reductionOp, const u32 root, const std::vector<Slice>& slices,
+    const u64 baseOffset, const u64 reduceAttrBitMap, std::vector<Stream>& meshStreams,
+    const std::vector<std::shared_ptr<LocalNotify>>& meshSignal,
+    const std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux, u32 interRank, u32 interRankSize,
+    HcomCollOpInfo* opInfo)
 {
     return HCCL_E_PARA;
 }
 
 /* 19个参数 */
 // AlignedReduceScatterDoubleRing, AlignedReduceScatter, DoubleRingWithSerialLocalCopy
-HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem, const u64 count,
-    const HcclDataType dataType, const Stream &stream, const std::vector<std::vector<Slice>> &multRingsSlices,
-    const HcclReduceOp reductionOp, const u32 root, const u64 baseOffset, const bool disableDMAReduce,
-    const u64 reduceAttrBitMap, const HcomCollOpInfo *opInfo, const u32 userRank, std::vector<Stream> &subStreams,
-    const std::vector<std::shared_ptr<LocalNotify>> &mainSignals,
-    const std::vector<std::shared_ptr<LocalNotify>> &subSignals, const std::vector<std::vector<u32>> &ringsOrders,
-    const std::vector<std::vector<Slice>> &userMemInputSlicesOfDoubleRing)
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+    const Stream& stream, const std::vector<std::vector<Slice>>& multRingsSlices, const HcclReduceOp reductionOp,
+    const u32 root, const u64 baseOffset, const bool disableDMAReduce, const u64 reduceAttrBitMap,
+    const HcomCollOpInfo* opInfo, const u32 userRank, std::vector<Stream>& subStreams,
+    const std::vector<std::shared_ptr<LocalNotify>>& mainSignals,
+    const std::vector<std::shared_ptr<LocalNotify>>& subSignals, const std::vector<std::vector<u32>>& ringsOrders,
+    const std::vector<std::vector<Slice>>& userMemInputSlicesOfDoubleRing)
 {
     return HCCL_E_PARA;
 }
 
-//ReduceScatterHccsSio
-HcclResult ExecutorBase::Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem, const u64 count,
-        const HcclDataType dataType, const Stream &stream, const HcclReduceOp reductionOp, 
-        const u32 root, const u64 baseOffset, 
-        const u64 reduceAttrBitMap, std::vector<Stream> &meshStreams, 
-        std::vector<std::shared_ptr<LocalNotify>> &meshSignal, 
-        std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux, 
-        u32 userRank, SubCommInfo subCommInfoHccs, SubCommInfo subCommInfoSio, HcomCollOpInfo *opInfo)
-        {
-            return HCCL_E_PARA;
-        }
+// ReduceScatterHccsSio
+HcclResult ExecutorBase::Prepare(
+    DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+    const Stream& stream, const HcclReduceOp reductionOp, const u32 root, const u64 baseOffset,
+    const u64 reduceAttrBitMap, std::vector<Stream>& meshStreams, std::vector<std::shared_ptr<LocalNotify>>& meshSignal,
+    std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux, u32 userRank, SubCommInfo subCommInfoHccs,
+    SubCommInfo subCommInfoSio, HcomCollOpInfo* opInfo)
+{
+    return HCCL_E_PARA;
+}
 
-        // AllGatherHccsSio
-HcclResult ExecutorBase::Prepare(SubCommInfo &outerCommInfoHccs, SubCommInfo &outerCommInfoSio,
-        DeviceMem &usrInMem, DeviceMem &usrOutMem, u64 totalCount, const HcclDataType dataType,
-        const Stream &mainStream, std::vector<Stream> &meshStreams,
-        std::vector<std::shared_ptr<LocalNotify>> &meshSignal,
-        std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux, u32 userRank, HcomCollOpInfo *opInfo)
-        {
-            return HCCL_E_PARA;
-        }
+// AllGatherHccsSio
+HcclResult ExecutorBase::Prepare(
+    SubCommInfo& outerCommInfoHccs, SubCommInfo& outerCommInfoSio, DeviceMem& usrInMem, DeviceMem& usrOutMem,
+    u64 totalCount, const HcclDataType dataType, const Stream& mainStream, std::vector<Stream>& meshStreams,
+    std::vector<std::shared_ptr<LocalNotify>>& meshSignal, std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux,
+    u32 userRank, HcomCollOpInfo* opInfo)
+{
+    return HCCL_E_PARA;
+}
 
 // ReduceScatterDeterPipeline
-HcclResult ExecutorBase::Prepare(HcomCollOpInfo *opInfo, DeviceMem &buffer, const u64 count,
-    const u64 offset, const std::vector<Slice> &slices, const SubCommInfo &level0CommInfo,
-    const SubCommInfo &level1CommInfo, Stream &mainStream, std::vector<Stream> &subStream,
-    std::vector<std::shared_ptr<LocalNotify>> &notifyMain, std::vector<std::shared_ptr<LocalNotify>> &notifySub)
+HcclResult ExecutorBase::Prepare(
+    HcomCollOpInfo* opInfo, DeviceMem& buffer, const u64 count, const u64 offset, const std::vector<Slice>& slices,
+    const SubCommInfo& level0CommInfo, const SubCommInfo& level1CommInfo, Stream& mainStream,
+    std::vector<Stream>& subStream, std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
+    std::vector<std::shared_ptr<LocalNotify>>& notifySub)
 {
     return HCCL_E_PARA;
 }
 
 // AllReduceDeterPipeline
-HcclResult ExecutorBase::Prepare(HcomCollOpInfo *opInfo, DeviceMem &inBuffer, DeviceMem &outBuffer, const u64 count,
-    const std::vector<Slice> &slices, const SubCommInfo &level0CommInfo,
-    const SubCommInfo &level1CommInfo, Stream &mainStream, std::vector<Stream> &subStream,
-    std::vector<std::shared_ptr<LocalNotify>> &notifyMain, std::vector<std::shared_ptr<LocalNotify>> &notifySub)
+HcclResult ExecutorBase::Prepare(
+    HcomCollOpInfo* opInfo, DeviceMem& inBuffer, DeviceMem& outBuffer, const u64 count,
+    const std::vector<Slice>& slices, const SubCommInfo& level0CommInfo, const SubCommInfo& level1CommInfo,
+    Stream& mainStream, std::vector<Stream>& subStream, std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
+    std::vector<std::shared_ptr<LocalNotify>>& notifySub)
 {
     return HCCL_E_PARA;
 }
 
-HcclResult ExecutorBase::RegisterProfiler(s32 planeId, s32 stage, s32 step, const Stream &stream)
+HcclResult ExecutorBase::RegisterProfiler(s32 planeId, s32 stage, s32 step, const Stream& stream)
 {
     profilerInput_.streamID = stream.id();
     profilerInput_.planeID = planeId;
@@ -584,13 +580,10 @@ HcclResult ExecutorBase::RegisterProfiler(s32 planeId, s32 stage, s32 step, cons
     return HCCL_SUCCESS;
 }
 
-HcclResult ExecutorBase::RunAsync()
-{
-    return HCCL_SUCCESS;
-}
+HcclResult ExecutorBase::RunAsync() { return HCCL_SUCCESS; }
 
-HcclResult ExecutorBase::RunAsync(const u32 rank, const u32 rankSize,
-    const std::vector<std::shared_ptr<Transport> > &links)
+HcclResult
+ExecutorBase::RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links)
 {
     (void)rank;
     (void)rankSize;
@@ -598,8 +591,8 @@ HcclResult ExecutorBase::RunAsync(const u32 rank, const u32 rankSize,
     return HCCL_SUCCESS;
 }
 
-HcclResult ExecutorBase::RunAsyncStaged(const u32 rank, const u32 rankSize,
-    const std::vector<std::shared_ptr<Transport> > &links, RunStage stage)
+HcclResult ExecutorBase::RunAsyncStaged(
+    const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links, RunStage stage)
 {
     (void)rank;
     (void)rankSize;
@@ -608,8 +601,9 @@ HcclResult ExecutorBase::RunAsyncStaged(const u32 rank, const u32 rankSize,
     return HCCL_SUCCESS;
 }
 
-void ExecutorBase::CalcBinaryBlockParams(u32 rank, u32 rankSize, u32 &stepsInBlock, u32 &lowerBlockSize,
-    u32 &myBlockSize, u32 &rankInMyBlock, u32 &myBlockOffset, u32 &higherBlockSize)
+void ExecutorBase::CalcBinaryBlockParams(
+    u32 rank, u32 rankSize, u32& stepsInBlock, u32& lowerBlockSize, u32& myBlockSize, u32& rankInMyBlock,
+    u32& myBlockOffset, u32& higherBlockSize)
 {
     u32 offset = rankSize;
     u32 blockSize = 1;
@@ -621,8 +615,7 @@ void ExecutorBase::CalcBinaryBlockParams(u32 rank, u32 rankSize, u32 &stepsInBlo
             preBlockSize = currentBlockSize;
             currentBlockSize = blockSize;
             if (blockSize == 0) {
-                HCCL_ERROR("[Calc][BinaryBlockParams]calculate_binary_block_paras: blockSize[%u] is zero",
-                    blockSize);
+                HCCL_ERROR("[Calc][BinaryBlockParams]calculate_binary_block_paras: blockSize[%u] is zero", blockSize);
                 break;
             }
             offset -= blockSize;
@@ -643,11 +636,12 @@ void ExecutorBase::CalcBinaryBlockParams(u32 rank, u32 rankSize, u32 &stepsInBlo
         rankInMyBlock = rank % myBlockSize;
     }
 }
-std::vector<bool> ExecutorBase::CalcLinksRelation(const u32 rank, const u32 rankSize, const u32 rootRank,
-                                                  HalvingDoublingType algorithmType)
+std::vector<bool> ExecutorBase::CalcLinksRelation(
+    const u32 rank, const u32 rankSize, const u32 rootRank, HalvingDoublingType algorithmType)
 {
-    HCCL_INFO("Calculate links relation: Rank[%u], RankSize[%u], RootRank[%u], HDType[%d]",
-        rank, rankSize, rootRank, algorithmType);
+    HCCL_INFO(
+        "Calculate links relation: Rank[%u], RankSize[%u], RootRank[%u], HDType[%d]", rank, rankSize, rootRank,
+        algorithmType);
     std::vector<bool> linkRelation(rankSize, false);
 
     HcclResult ret;
@@ -659,7 +653,8 @@ std::vector<bool> ExecutorBase::CalcLinksRelation(const u32 rank, const u32 rank
         default:
             ret = CalcBinaryBlockHalvingDoubleLinkReleation(rank, rankSize, linkRelation);
             if (ret == HCCL_E_PARA) {
-                HCCL_ERROR("[Calc][LinksRelation]errNo[0x%016llx] Calculation binary block parameter error",
+                HCCL_ERROR(
+                    "[Calc][LinksRelation]errNo[0x%016llx] Calculation binary block parameter error",
                     HCCL_ERROR_CODE(HCCL_E_PARA));
                 for (u32 i = 0; i < rankSize; i++) {
                     linkRelation[i] = false;
@@ -687,8 +682,8 @@ std::vector<bool> ExecutorBase::CalcLinksRelation(const u32 rank, const u32 rank
 }
 
 // 将数据均分，最小单位是128
-HcclResult ExecutorBase::PrepareSliceData(u64 dataCount, u32 unitSize, u32 sliceNum, u64 piplineOffset,
-    std::vector<Slice>& dataSlice)
+HcclResult ExecutorBase::PrepareSliceData(
+    u64 dataCount, u32 unitSize, u32 sliceNum, u64 piplineOffset, std::vector<Slice>& dataSlice)
 {
     Slice temp;
     u64 totalSize = dataCount * unitSize;
@@ -697,7 +692,8 @@ HcclResult ExecutorBase::PrepareSliceData(u64 dataCount, u32 unitSize, u32 slice
     CHK_PRT_RET((sliceNum == 0), HCCL_ERROR("[Prepare][SliceData]data slice prepare, sliceNum is 0"), HCCL_E_PARA);
     u64 tempPerSlice = (totalSize + sliceNum - 1) / sliceNum; /* 1是为了向上取整 */
     u64 sizePerSlice = RoundUpWithDivisor(tempPerSlice, HCCL_MIN_SLICE_ALIGN);
-    HCCL_DEBUG("total_size:%llu sliceNum:%u temp_per_ring:%llu size_per_ring:%llu", totalSize, sliceNum, tempPerSlice,
+    HCCL_DEBUG(
+        "total_size:%llu sliceNum:%u temp_per_ring:%llu size_per_ring:%llu", totalSize, sliceNum, tempPerSlice,
         sizePerSlice);
     u64 residueSize = totalSize;
     u32 i = 0;
@@ -706,7 +702,8 @@ HcclResult ExecutorBase::PrepareSliceData(u64 dataCount, u32 unitSize, u32 slice
         temp.size = sliceSize;
         temp.offset = totalSize - residueSize + piplineOffset;
         i++;
-        CHK_PRT_RET((sliceSize <= 0), HCCL_ERROR("[Prepare][SliceData]data_slice_prepare sliceSize[%llu]", sliceSize),
+        CHK_PRT_RET(
+            (sliceSize <= 0), HCCL_ERROR("[Prepare][SliceData]data_slice_prepare sliceSize[%llu]", sliceSize),
             HCCL_E_PARA);
         residueSize -= sliceSize;
         dataSlice.push_back(temp);
@@ -721,8 +718,8 @@ HcclResult ExecutorBase::PrepareSliceData(u64 dataCount, u32 unitSize, u32 slice
 }
 
 // 数据切分到每个stream上，最小单位是128
-HcclResult ExecutorBase::PrepareSliceMeshStreams(const std::vector<Slice> &rankSegsSlice, u32 streamCount,
-    std::vector<std::vector<Slice>>& mutliStreamsSlices)
+HcclResult ExecutorBase::PrepareSliceMeshStreams(
+    const std::vector<Slice>& rankSegsSlice, u32 streamCount, std::vector<std::vector<Slice>>& mutliStreamsSlices)
 {
     std::vector<u64> rankStreamSize;
     std::vector<u64> rankResidueSize;
@@ -765,8 +762,8 @@ HcclResult ExecutorBase::PrepareSliceMeshStreams(const std::vector<Slice> &rankS
     return HCCL_SUCCESS;
 }
 
-HcclResult ExecutorBase::CalcBinaryBlockHalvingDoubleLinkReleation(u32 rank, u32 rankSize,
-    std::vector<bool> &linkRelation)
+HcclResult
+ExecutorBase::CalcBinaryBlockHalvingDoubleLinkReleation(u32 rank, u32 rankSize, std::vector<bool>& linkRelation)
 {
     u32 stepsInBlock = 0;
     u32 myBlockSize = 0;
@@ -774,8 +771,8 @@ HcclResult ExecutorBase::CalcBinaryBlockHalvingDoubleLinkReleation(u32 rank, u32
     u32 myBlockOffset = 0;
     u32 higherBlockSize = 0;
     u32 lowerBlockSize = 0;
-    CalcBinaryBlockParams(rank, rankSize, stepsInBlock, lowerBlockSize, myBlockSize, rankInMyBlock,
-        myBlockOffset, higherBlockSize);
+    CalcBinaryBlockParams(
+        rank, rankSize, stepsInBlock, lowerBlockSize, myBlockSize, rankInMyBlock, myBlockOffset, higherBlockSize);
     if (lowerBlockSize == 0) {
         HCCL_ERROR("[Calc][BinaryBlockHalvingDoubleLinkReleation]lowerBlockSize size is zero.");
         return HCCL_E_PARA;
@@ -796,7 +793,7 @@ HcclResult ExecutorBase::CalcBinaryBlockHalvingDoubleLinkReleation(u32 rank, u32
         linkRelation[dstRank] = true;
     }
     if (higherBlockSize != 0) {
-        u32 segments = higherBlockSize / myBlockSize;  // 和高阶block的rank数差n倍，那么本rank就要向高阶的n个rank发送
+        u32 segments = higherBlockSize / myBlockSize; // 和高阶block的rank数差n倍，那么本rank就要向高阶的n个rank发送
         u32 dstRank = (myBlockOffset - higherBlockSize) + rankInMyBlock * segments;
         for (u32 i = 0; i < segments; i++) {
             linkRelation[dstRank] = true;
@@ -807,9 +804,9 @@ HcclResult ExecutorBase::CalcBinaryBlockHalvingDoubleLinkReleation(u32 rank, u32
 }
 
 //  用于recursive halving doubling
-void ExecutorBase::CalcLinkInBlock(u32 blockSize, u32 rankInBlock, std::list<u32> &linkRankIndexInBlock)
+void ExecutorBase::CalcLinkInBlock(u32 blockSize, u32 rankInBlock, std::list<u32>& linkRankIndexInBlock)
 {
-    u32 blockSizeHalving = blockSize / 2;       //  每个循环除2计算当前block的折半rank数
+    u32 blockSizeHalving = blockSize / 2; //  每个循环除2计算当前block的折半rank数
     u32 rankInTempBlock = rankInBlock;
     while (blockSizeHalving >= 1) {
         if (rankInTempBlock < blockSizeHalving) {
@@ -823,15 +820,15 @@ void ExecutorBase::CalcLinkInBlock(u32 blockSize, u32 rankInBlock, std::list<u32
 }
 
 //  用于recursive halving doubling
-void ExecutorBase::CalcLinkBetweenParts(u32 part1Size, std::list<u32> &linkRankIndexInBlock,
-                                        std::list<u32> &linkRankIndex, bool oddRank)
+void ExecutorBase::CalcLinkBetweenParts(
+    u32 part1Size, std::list<u32>& linkRankIndexInBlock, std::list<u32>& linkRankIndex, bool oddRank)
 {
     for (auto it : linkRankIndexInBlock) {
-        if (it < (part1Size / 2)) {                   //  属于part1,除2计算part1中的rank范围
+        if (it < (part1Size / 2)) { //  属于part1,除2计算part1中的rank范围
             if (oddRank) {
                 linkRankIndex.push_back(it * 2 + 1); //  乘2加1得到part1中奇数rank
             } else {
-                linkRankIndex.push_back(it * 2);      //  乘2得到part1中偶数rank
+                linkRankIndex.push_back(it * 2); //  乘2得到part1中偶数rank
             }
         } else {
             linkRankIndex.push_back(part1Size / 2 + it); //  不属于part1,除2得到part1中rank范围
@@ -840,8 +837,8 @@ void ExecutorBase::CalcLinkBetweenParts(u32 part1Size, std::list<u32> &linkRankI
 }
 
 //  用于recursive halving doubling
-void ExecutorBase::CalcRecursiveHalvingDobuleLinkReleation(u32 rank, u32 rankSize, u32 rootRank,
-                                                           std::vector<bool> &linkRelation)
+void ExecutorBase::CalcRecursiveHalvingDobuleLinkReleation(
+    u32 rank, u32 rankSize, u32 rootRank, std::vector<bool>& linkRelation)
 {
     u32 exponent = 0;
 
@@ -867,24 +864,24 @@ void ExecutorBase::CalcRecursiveHalvingDobuleLinkReleation(u32 rank, u32 rankSiz
     }
 }
 
-void ExecutorBase::CalcRecursiveHdLinkRelationForFirstScene(u32 rank,
-    u32 part1Size, u32 blockSize, std::vector<bool> &linkRelation)
+void ExecutorBase::CalcRecursiveHdLinkRelationForFirstScene(
+    u32 rank, u32 part1Size, u32 blockSize, std::vector<bool>& linkRelation)
 {
     if (rank < part1Size && rank % 2 == 0) { // 除2判断是否为偶数
         std::list<u32> linkRankIndex;
         std::list<u32> linkRankIndexInBlock;
-        u32 rankInBlock = rank / 2;          // 除2计算block内的rank号
+        u32 rankInBlock = rank / 2; // 除2计算block内的rank号
         CalcLinkInBlock(blockSize, rankInBlock, linkRankIndexInBlock);
         CalcLinkBetweenParts(part1Size, linkRankIndexInBlock, linkRankIndex, false);
-        linkRankIndex.push_back(rank + 1);   // 加1得到旁边的那个rank
+        linkRankIndex.push_back(rank + 1); // 加1得到旁边的那个rank
         for (auto it : linkRankIndex) {
             linkRelation[it] = true;
         }
     } else if (rank < part1Size && rank % 2 == 1) { // 除2判断是否为奇数
         if ((rank > 0) && (rank - 1 < linkRelation.size())) {
-            linkRelation[rank - 1] = true;    //  只有旁边的那个rank
+            linkRelation[rank - 1] = true; //  只有旁边的那个rank
         }
-    } else {                                //  rank大于等于part1Size
+    } else { //  rank大于等于part1Size
         std::list<u32> linkRankIndexInBlock;
         u32 rankInBlock = rank - part1Size / 2; // 除2计算part1在block内的rank范围
         std::list<u32> linkRankIndex;
@@ -896,24 +893,24 @@ void ExecutorBase::CalcRecursiveHdLinkRelationForFirstScene(u32 rank,
     }
 }
 
-void ExecutorBase::CalcRecursiveHdLinkRelationForSecondScene(u32 rank,
-    u32 part1Size, u32 blockSize, std::vector<bool> &linkRelation)
+void ExecutorBase::CalcRecursiveHdLinkRelationForSecondScene(
+    u32 rank, u32 part1Size, u32 blockSize, std::vector<bool>& linkRelation)
 {
-    if (rank < part1Size && rank % 2 == 1) {  // 除2判断是否为奇数
+    if (rank < part1Size && rank % 2 == 1) { // 除2判断是否为奇数
         std::list<u32> linkRankIndex;
         std::list<u32> linkRankIndexInBlock;
-        u32 rankInBlock = (rank - 1) / 2;     // 减1再除2计算在block内的rank
+        u32 rankInBlock = (rank - 1) / 2; // 减1再除2计算在block内的rank
         CalcLinkInBlock(blockSize, rankInBlock, linkRankIndexInBlock);
         CalcLinkBetweenParts(part1Size, linkRankIndexInBlock, linkRankIndex, true);
-        linkRankIndex.push_back(rank - 1);   // 减1得到旁边的那个rank
+        linkRankIndex.push_back(rank - 1); // 减1得到旁边的那个rank
         for (auto it : linkRankIndex) {
             linkRelation[it] = true;
         }
     } else if (rank < part1Size && rank % 2 == 0) { // 除2判断是否为偶数
         if (rank + 1 < linkRelation.size()) {
-            linkRelation[rank + 1] = true;    //  只有旁边的那个rank
+            linkRelation[rank + 1] = true; //  只有旁边的那个rank
         }
-    } else {                                //  rank大于等于part1Size
+    } else { //  rank大于等于part1Size
         std::list<u32> linkRankIndexInBlock;
         u32 rankInBlock = rank - part1Size / 2; // 除2计算part1在block内的rank范围
         std::list<u32> linkRankIndex;
@@ -925,14 +922,14 @@ void ExecutorBase::CalcRecursiveHdLinkRelationForSecondScene(u32 rank,
     }
 }
 
-HcclResult ExecutorBase::ExecuteBarrier(const std::shared_ptr<Transport> &preLink,
-                                        const std::shared_ptr<Transport> &aftLink)
+HcclResult
+ExecutorBase::ExecuteBarrier(const std::shared_ptr<Transport>& preLink, const std::shared_ptr<Transport>& aftLink)
 {
     return ExecuteBarrier(preLink, aftLink, stream_);
 }
 
-HcclResult ExecutorBase::ExecuteBarrier(const std::shared_ptr<Transport> &preLink,
-    const std::shared_ptr<Transport> &aftLink, Stream &stream)
+HcclResult ExecutorBase::ExecuteBarrier(
+    const std::shared_ptr<Transport>& preLink, const std::shared_ptr<Transport>& aftLink, Stream& stream)
 {
     // 同步与preLink保证数据收发已结束
     CHK_RET(preLink->TxAck(stream));
@@ -947,7 +944,7 @@ HcclResult ExecutorBase::ExecuteBarrier(const std::shared_ptr<Transport> &preLin
     return HCCL_SUCCESS;
 }
 
-HcclResult ExecutorBase::ExecuteBarrier(std::shared_ptr<Transport> link, Stream &stream)
+HcclResult ExecutorBase::ExecuteBarrier(std::shared_ptr<Transport> link, Stream& stream)
 {
     CHK_RET(link->TxAck(stream));
 
@@ -960,15 +957,14 @@ HcclResult ExecutorBase::ExecuteBarrier(std::shared_ptr<Transport> link, Stream 
     return HCCL_SUCCESS;
 }
 
-HcclResult ExecutorBase::ExecuteBarrier(const std::shared_ptr<Transport> &preLink,
-                                        const std::shared_ptr<Transport> &aftLink,
-                                        u32 notifyIdx)
+HcclResult ExecutorBase::ExecuteBarrier(
+    const std::shared_ptr<Transport>& preLink, const std::shared_ptr<Transport>& aftLink, u32 notifyIdx)
 {
     return ExecuteBarrier(preLink, aftLink, notifyIdx, stream_);
 }
 
-HcclResult ExecutorBase::ExecuteBarrier(const std::shared_ptr<Transport> &preLink,
-    const std::shared_ptr<Transport> &aftLink, u32 notifyIdx, Stream &stream)
+HcclResult ExecutorBase::ExecuteBarrier(
+    const std::shared_ptr<Transport>& preLink, const std::shared_ptr<Transport>& aftLink, u32 notifyIdx, Stream& stream)
 {
     // 同步与aftLink保证数据收发已结束
     CHK_RET(aftLink->Post(notifyIdx, stream));
@@ -978,12 +974,17 @@ HcclResult ExecutorBase::ExecuteBarrier(const std::shared_ptr<Transport> &preLin
     return HCCL_SUCCESS;
 }
 
-HcclResult ExecutorBase::Sum(const std::vector<Slice> &inputSlices, u32 start, u32 num, u64 &sizeOut)
+HcclResult ExecutorBase::Sum(const std::vector<Slice>& inputSlices, u32 start, u32 num, u64& sizeOut)
 {
     u64 totalSize = 0;
     // 判断不是<=因为访问vector前会先进行num--
-    CHK_PRT_RET(inputSlices.size() < start + num, HCCL_ERROR("[ExecutorBase][Sum]recursive Halving Doubling sum "\
-        "error.para: size[%llu], start[%u], num[%u]", inputSlices.size(), start, num), HCCL_E_PARA);
+    CHK_PRT_RET(
+        inputSlices.size() < start + num,
+        HCCL_ERROR(
+            "[ExecutorBase][Sum]recursive Halving Doubling sum "
+            "error.para: size[%llu], start[%u], num[%u]",
+            inputSlices.size(), start, num),
+        HCCL_E_PARA);
     while (num > 0) {
         num--;
         totalSize += inputSlices[start + num].size;
@@ -991,38 +992,58 @@ HcclResult ExecutorBase::Sum(const std::vector<Slice> &inputSlices, u32 start, u
     sizeOut = totalSize;
     return HCCL_SUCCESS;
 }
-HcclResult ExecutorBase::ExecuteRxSync(std::shared_ptr<Transport> link, UserMemType srcMemType, u64 srcOffset,
-    void *dst, u64 len, Stream &stream) const
+HcclResult ExecutorBase::ExecuteRxSync(
+    std::shared_ptr<Transport> link, UserMemType srcMemType, u64 srcOffset, void* dst, u64 len, Stream& stream) const
 {
     HcclResult ret = link->TxAsync(srcMemType, srcOffset, dst, 0, stream);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[ExecutorBase][ExecuteRxSync]ExecuteRxSync: tx async size[%llu] "\
-        "failed", len), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[ExecutorBase][ExecuteRxSync]ExecuteRxSync: tx async size[%llu] "
+            "failed",
+            len),
+        ret);
     ret = link->RxAsync(srcMemType, srcOffset, dst, len, stream);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[ExecutorBase][ExecuteRxSync]ExecuteRxSync: rx async with rcvMem[%p] "\
-        "offset[%llu] size[%llu] failed", dst, srcOffset, len), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[ExecutorBase][ExecuteRxSync]ExecuteRxSync: rx async with rcvMem[%p] "
+            "offset[%llu] size[%llu] failed",
+            dst, srcOffset, len),
+        ret);
     ret = link->DataReceivedAck(stream);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[ExecutorBase][ExecuteRxSync]ExecuteRxSync: data received ack failed"), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[ExecutorBase][ExecuteRxSync]ExecuteRxSync: data received ack failed"), ret);
     return HCCL_SUCCESS;
 }
-HcclResult ExecutorBase::ExecuteTxSync(std::shared_ptr<Transport> link, UserMemType dstMemType, u64 dstOffset,
-    void *src, u64 len, Stream &stream) const
+HcclResult ExecutorBase::ExecuteTxSync(
+    std::shared_ptr<Transport> link, UserMemType dstMemType, u64 dstOffset, void* src, u64 len, Stream& stream) const
 {
     HcclResult ret = link->TxAsync(dstMemType, dstOffset, src, len, stream);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[ExecutorBase][ExecuteTxSync]ExecuteTxSync: tx async sendMem[%p] "\
-        "offset[%llu] size[%llu] failed", src, dstOffset, len), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[ExecutorBase][ExecuteTxSync]ExecuteTxSync: tx async sendMem[%p] "
+            "offset[%llu] size[%llu] failed",
+            src, dstOffset, len),
+        ret);
     // 接收应答
     ret = link->RxAsync(dstMemType, dstOffset, src, 0, stream);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[ExecutorBase][ExecuteTxSync]ExecuteTxSync: rx async size[%llu] "\
-        "failed", len), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[ExecutorBase][ExecuteTxSync]ExecuteTxSync: rx async size[%llu] "
+            "failed",
+            len),
+        ret);
     ret = link->DataReceivedAck(stream);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[ExecutorBase][ExecuteTxSync]ExecuteTxSync: data received ack failed"), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[ExecutorBase][ExecuteTxSync]ExecuteTxSync: data received ack failed"), ret);
     return HCCL_SUCCESS;
 }
 
-HcclResult ExecutorBase::PrepareRunAsync(const u32 rank, const u32 rankSize,
-    const std::vector<std::shared_ptr<Transport> > &links)
+HcclResult
+ExecutorBase::PrepareRunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links)
 {
     (void)rank;
     (void)rankSize;
@@ -1030,8 +1051,8 @@ HcclResult ExecutorBase::PrepareRunAsync(const u32 rank, const u32 rankSize,
     return HCCL_SUCCESS;
 }
 
-HcclResult ExecutorBase::ExecEmptyTask(DeviceMem &inputMem, DeviceMem &outputMem, Stream &stream,
-    const HcclDispatcher dispatcher)
+HcclResult
+ExecutorBase::ExecEmptyTask(DeviceMem& inputMem, DeviceMem& outputMem, Stream& stream, const HcclDispatcher dispatcher)
 {
     DeviceMem emptySrcMem = DeviceMem::create(inputMem.ptr(), 0);
     DeviceMem emptyDstMem = DeviceMem::create(outputMem.ptr(), 0);
@@ -1039,8 +1060,8 @@ HcclResult ExecutorBase::ExecEmptyTask(DeviceMem &inputMem, DeviceMem &outputMem
     return HCCL_SUCCESS;
 }
 
-HcclResult ExecutorBase::CheckConcurrentDirectParameters(const u32 rank, const u32 rankSize,
-                                                         const std::vector<LINK> &links)
+HcclResult
+ExecutorBase::CheckConcurrentDirectParameters(const u32 rank, const u32 rankSize, const std::vector<LINK>& links)
 {
     // 判断stream, dispatcher是否为空
     CHK_SMART_PTR_NULL(dispatcher_);
@@ -1052,15 +1073,18 @@ HcclResult ExecutorBase::CheckConcurrentDirectParameters(const u32 rank, const u
         HCCL_ERROR("[ExecutorBase] rank[%u] run_async inputmem or outputmem is null", rank);
         return HCCL_E_PTR;
     }
-    HCCL_INFO("ExecutorBase run: rank[%u] ranksize[%u] inputMem[%p] outputMem[%p] count[%llu]", rank, rankSize,
-              inputMem_.ptr(), outputMem_.ptr(), count_);
+    HCCL_INFO(
+        "ExecutorBase run: rank[%u] ranksize[%u] inputMem[%p] outputMem[%p] count[%llu]", rank, rankSize,
+        inputMem_.ptr(), outputMem_.ptr(), count_);
 
     // 判断links数量是否正确
-    CHK_PRT_RET(links.size() < rankSize,
-                HCCL_ERROR("[ExecutorBase] rank[%u] link size[%u] is less than "
-                           "rank size[%u]",
-                           rank, links.size(), rankSize),
-                HCCL_E_PARA);
+    CHK_PRT_RET(
+        links.size() < rankSize,
+        HCCL_ERROR(
+            "[ExecutorBase] rank[%u] link size[%u] is less than "
+            "rank size[%u]",
+            rank, links.size(), rankSize),
+        HCCL_E_PARA);
 
     // 校验DataUnitSize
     if (DataUnitSize(dataType_) == 0) {
@@ -1072,20 +1096,21 @@ HcclResult ExecutorBase::CheckConcurrentDirectParameters(const u32 rank, const u
     return HCCL_SUCCESS;
 }
 
-HcclResult ExecutorBase::GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                                        const std::vector<LINK> &links, AdjInfo& nslbAdjInfo)
+HcclResult
+ExecutorBase::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo)
 {
-    (void) rank;
-    (void) rankSize;
-    (void) nslbAdjInfo;
+    (void)rank;
+    (void)rankSize;
+    (void)nslbAdjInfo;
     return HCCL_SUCCESS;
 }
 
-HcclResult ExecutorBase::GetHcclOffsetDstRanksMap(std::unordered_map<uint64_t, std::vector<uint32_t>>& hcclOffsetDstRanksMap) const
+HcclResult
+ExecutorBase::GetHcclOffsetDstRanksMap(std::unordered_map<uint64_t, std::vector<uint32_t>>& hcclOffsetDstRanksMap) const
 {
     UNUSED_PARAM(hcclOffsetDstRanksMap);
     HCCL_ERROR("[ExecutorBase][GetHcclOffsetDstRanksMap] not supported for current template!");
     return HCCL_E_NOT_SUPPORT;
 }
 
-}  // namespace hccl
+} // namespace hccl

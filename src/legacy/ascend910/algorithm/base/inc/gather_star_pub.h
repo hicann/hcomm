@@ -23,16 +23,17 @@ public:
     // should be called soon after template GatherStar instance created
     HcclResult Prepare(u32 userRank) override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize,
-        const std::vector<std::shared_ptr<Transport>> &links) override;
+    HcclResult
+    RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links) override;
+
 protected:
 private:
-    HcclResult RunRecvGather(const u32 srcRank, const Slice &slice,
-        const std::vector<std::shared_ptr<Transport>> &links);
-    HcclResult RunSendGather(const u32 dstRank, const Slice &slice,
-        const std::vector<std::shared_ptr<Transport>> &links);
+    HcclResult
+    RunRecvGather(const u32 srcRank, const Slice& slice, const std::vector<std::shared_ptr<Transport>>& links);
+    HcclResult
+    RunSendGather(const u32 dstRank, const Slice& slice, const std::vector<std::shared_ptr<Transport>>& links);
     void PrepareSlicesData(const u32 unitSize, const u64 totalCount, const u32 rankSize) const;
-    HcclResult ExecuteBarrierSrcRank(std::shared_ptr<Transport> link, Stream &stream) const;
+    HcclResult ExecuteBarrierSrcRank(std::shared_ptr<Transport> link, Stream& stream) const;
 
     const std::vector<Stream> Streams_; /** 多steam**/
     u32 userRank_;

@@ -22,47 +22,36 @@ namespace Hccl {
 
 class CcuCtxSignature {
 public:
-    CcuCtxSignature()  = default;
+    CcuCtxSignature() = default;
     ~CcuCtxSignature() = default;
-    CcuCtxSignature(const CcuCtxSignature &other)
+    CcuCtxSignature(const CcuCtxSignature& other)
     {
         // 实现复制构造函数
         data << other.data.str();
     }
- 
-    void operator=(const CcuCtxSignature &other)
+
+    void operator=(const CcuCtxSignature& other)
     {
         // 实现赋值操作
         data << other.data.str();
     }
- 
-    bool operator==(const CcuCtxSignature &rhs) const
-    {
-        return this == &rhs || data.str() == rhs.data.str();
-    }
- 
+
+    bool operator==(const CcuCtxSignature& rhs) const { return this == &rhs || data.str() == rhs.data.str(); }
+
     // 用法Append<T>(t)
-    template <typename T> void Append(T t)
+    template <typename T>
+    void Append(T t)
     {
         data << t;
     }
- 
-    void Append(const CcuCtxSignature &other)
-    {
-        data << other.data.str();
-    }
 
-    std::string Describe() const
-    {
-        return StringFormat("CcuCtxSignature[data=%s]", data.str().c_str());
-    }
- 
+    void Append(const CcuCtxSignature& other) { data << other.data.str(); }
+
+    std::string Describe() const { return StringFormat("CcuCtxSignature[data=%s]", data.str().c_str()); }
+
     // 下掉CcuContext GetSignatrue
-    std::string GetData() const
-    {
-        return data.str();
-    }
- 
+    std::string GetData() const { return data.str(); }
+
     friend class std::hash<Hccl::CcuCtxSignature>;
 
 private:
@@ -73,9 +62,10 @@ private:
 
 namespace std {
 
-template <> class hash<Hccl::CcuCtxSignature> {
+template <>
+class hash<Hccl::CcuCtxSignature> {
 public:
-    size_t operator()(const Hccl::CcuCtxSignature &signature) const
+    size_t operator()(const Hccl::CcuCtxSignature& signature) const
     {
         auto dataHash = hash<string>{}(signature.GetData());
         return Hccl::HashCombine({dataHash});

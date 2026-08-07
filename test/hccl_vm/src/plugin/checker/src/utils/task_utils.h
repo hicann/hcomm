@@ -20,12 +20,12 @@
 
 namespace HcclSim {
 std::string BuildTaskId(RankId rankId, uint64_t nodeIndex);
-std::string BuildDerivedTaskId(const std::string &baseTaskId, uint64_t subIndex);
-void AssignTaskId(TaskStub *task, const std::string &taskId);
-void EnsureTaskNodeIdsAssigned(TaskNode *dummyStart);
+std::string BuildDerivedTaskId(const std::string& baseTaskId, uint64_t subIndex);
+void AssignTaskId(TaskStub* task, const std::string& taskId);
+void EnsureTaskNodeIdsAssigned(TaskNode* dummyStart);
 
-HcclResult ConvertTask(const HcclSim::StorageManager& storage, HcclTaskMetaData hcclTask,
-    std::shared_ptr<TaskStub> &task);
+HcclResult
+ConvertTask(const HcclSim::StorageManager& storage, HcclTaskMetaData hcclTask, std::shared_ptr<TaskStub>& task);
 HcclResult ConvertTaskQueue(AllRankTaskQueues& allRankTaskQueues);
 } // namespace HcclSim
 

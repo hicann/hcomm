@@ -14,6 +14,5 @@
 #include "network/hccp_common.h"
 #include "network_manager_pub.h"
 
-namespace hccl {
-}
+namespace hccl {}
 #endif

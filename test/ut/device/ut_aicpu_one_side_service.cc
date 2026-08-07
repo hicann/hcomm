@@ -32,14 +32,8 @@ using namespace hccl;
 
 class OneSideServiceUT : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "OneSideServiceUT SetUp" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "OneSideServiceUT TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "OneSideServiceUT SetUp" << std::endl; }
+    static void TearDownTestCase() { std::cout << "OneSideServiceUT TearDown" << std::endl; }
     virtual void SetUp()
     {
         HcclOneSideServiceAicpu::services_.clear();
@@ -52,7 +46,8 @@ protected:
         std::cout << "A Test TearDown" << std::endl;
     }
 
-    void SetupService(std::shared_ptr<HcclOneSideServiceAicpu> &service, const std::string &identifier, bool execStreamEnable, 
+    void SetupService(
+        std::shared_ptr<HcclOneSideServiceAicpu>& service, const std::string& identifier, bool execStreamEnable,
         uint32_t devId, uint32_t sqId, uint32_t actualStreamId)
     {
         service->identifier_ = identifier;
@@ -67,24 +62,18 @@ protected:
 };
 
 TEST_F(OneSideServiceUT, Ut_CleanStreamFunc_When_Disabled_ExecutesClean)
-{   
+{
     auto service = std::make_shared<HcclOneSideServiceAicpu>();
     SetupService(service, "test_clean", false, 0, 1, 100);
 
     SqCqeContext sqCqeContext{};
     service->execStream_.sqeContext_ = &sqCqeContext.sqContext;
 
-    MOCKER(ConfigSqStatusByType)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(ConfigSqStatusByType).stubs().will(returnValue(HCCL_SUCCESS));
 
-    MOCKER_CPP(&Stream::ClearLocalBuff)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Stream::ClearLocalBuff).stubs().will(returnValue(HCCL_SUCCESS));
 
-    MOCKER(QuerySqStatusByType)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(QuerySqStatusByType).stubs().will(returnValue(HCCL_SUCCESS));
 
     HcclResult ret = service->CleanStreamFunc();
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -106,9 +95,7 @@ TEST_F(OneSideServiceUT, Ut_CleanAllStreamFunc_When_CleanStreamFuncFail_ReturnsE
     SetupService(service, "fail_tag", false, 0, 1, 100);
     HcclOneSideServiceAicpu::services_["fail_tag"] = service;
 
-    MOCKER(ConfigSqStatusByType)
-        .stubs()
-        .will(returnValue(HCCL_E_INTERNAL));
+    MOCKER(ConfigSqStatusByType).stubs().will(returnValue(HCCL_E_INTERNAL));
 
     HcclResult ret = HcclOneSideServiceAicpu::CleanAllStreamFunc();
     EXPECT_NE(ret, HCCL_SUCCESS);
@@ -126,11 +113,11 @@ TEST_F(OneSideServiceUT, Ut_Process_When_Finalize_Expect_EraseService)
     // 构造 OpTilingData + OpTilingOneSideCommDataDes，设置 finalize=true
     constexpr size_t bufSize = sizeof(OpTilingData) + sizeof(OpTilingOneSideCommDataDes);
     std::vector<u8> tilingBuf(bufSize, 0);
-    auto *tilingData = reinterpret_cast<OpTilingData *>(tilingBuf.data());
+    auto* tilingData = reinterpret_cast<OpTilingData*>(tilingBuf.data());
     strncpy(tilingData->tag, "finalize_tag", sizeof(tilingData->tag) - 1);
     tilingData->length = sizeof(OpTilingOneSideCommDataDes); // 满足 >= sizeof(OpTilingOneSideCommDataDes)
 
-    auto *vDataPtr = reinterpret_cast<OpTilingOneSideCommDataDes *>(tilingBuf.data() + sizeof(OpTilingData));
+    auto* vDataPtr = reinterpret_cast<OpTilingOneSideCommDataDes*>(tilingBuf.data() + sizeof(OpTilingData));
     vDataPtr->finalize = true;
 
     HcclResult ret = HcclOneSideServiceAicpu::Process(tilingData);
@@ -143,7 +130,7 @@ TEST_F(OneSideServiceUT, Ut_Process_When_DynamicDataTooSmall_Expect_ReturnParaEr
 {
     constexpr size_t bufSize = sizeof(OpTilingData) + 4; // 故意小于 sizeof(OpTilingOneSideCommDataDes)
     std::vector<u8> tilingBuf(bufSize, 0);
-    auto *tilingData = reinterpret_cast<OpTilingData *>(tilingBuf.data());
+    auto* tilingData = reinterpret_cast<OpTilingData*>(tilingBuf.data());
     strncpy(tilingData->tag, "short_tag", sizeof(tilingData->tag) - 1);
     tilingData->length = 2; // 小于 sizeof(OpTilingOneSideCommDataDes)
 
@@ -161,10 +148,10 @@ TEST_F(OneSideServiceUT, Ut_GetService_When_Exist_Expect_ReturnExistingService)
     // 构造最小的 tilingData（GetService 查找命中时不会使用 tilingData 内容）
     constexpr size_t bufSize = sizeof(OpTilingData) + sizeof(OpTilingOneSideCommDataDes);
     std::vector<u8> tilingBuf(bufSize, 0);
-    auto *tilingData = reinterpret_cast<OpTilingData *>(tilingBuf.data());
+    auto* tilingData = reinterpret_cast<OpTilingData*>(tilingBuf.data());
     strncpy(tilingData->tag, "exist_tag", sizeof(tilingData->tag) - 1);
     tilingData->length = sizeof(OpTilingOneSideCommDataDes);
-    auto *vDataPtr = reinterpret_cast<OpTilingOneSideCommDataDes *>(tilingBuf.data() + sizeof(OpTilingData));
+    auto* vDataPtr = reinterpret_cast<OpTilingOneSideCommDataDes*>(tilingBuf.data() + sizeof(OpTilingData));
     vDataPtr->finalize = false;
 
     auto result = HcclOneSideServiceAicpu::GetService("exist_tag", tilingData);
@@ -177,20 +164,16 @@ TEST_F(OneSideServiceUT, Ut_GetService_When_NotExist_Expect_CreateAndInsert)
 {
     constexpr size_t bufSize = sizeof(OpTilingData) + sizeof(OpTilingOneSideCommDataDes);
     std::vector<u8> tilingBuf(bufSize, 0);
-    auto *tilingData = reinterpret_cast<OpTilingData *>(tilingBuf.data());
+    auto* tilingData = reinterpret_cast<OpTilingData*>(tilingBuf.data());
     strncpy(tilingData->tag, "new_tag", sizeof(tilingData->tag) - 1);
     tilingData->length = sizeof(OpTilingOneSideCommDataDes);
-    auto *vDataPtr = reinterpret_cast<OpTilingOneSideCommDataDes *>(tilingBuf.data() + sizeof(OpTilingData));
+    auto* vDataPtr = reinterpret_cast<OpTilingOneSideCommDataDes*>(tilingBuf.data() + sizeof(OpTilingData));
     vDataPtr->finalize = false;
     vDataPtr->rankSize = 1;
 
     // GetService 内部会调用 Init，Init 可能依赖运行时，mock 掉关键依赖
-    MOCKER_CPP(&HcclOneSideServiceAicpu::InitOpNotifyObj)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&HcclOneSideServiceAicpu::InitStream)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclOneSideServiceAicpu::InitOpNotifyObj).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclOneSideServiceAicpu::InitStream).stubs().will(returnValue(HCCL_SUCCESS));
 
     auto result = HcclOneSideServiceAicpu::GetService("new_tag", tilingData);
     // 如果 Init 成功，应该返回非空且插入到 map

@@ -23,28 +23,32 @@ namespace Hccl {
 
 class CcuCommunicator {
 public:
-    explicit CcuCommunicator(CommunicatorImpl *comm)
-        : comm(comm), devLogicId(HrtGetDevice()), ccuResPackMgr(), ccuJettyMgr(devLogicId),
-          ccuTransportMgr(*comm, devLogicId), ccuTransportGroupMgr(*comm),
+    explicit CcuCommunicator(CommunicatorImpl* comm)
+        : comm(comm),
+          devLogicId(HrtGetDevice()),
+          ccuResPackMgr(),
+          ccuJettyMgr(devLogicId),
+          ccuTransportMgr(*comm, devLogicId),
+          ccuTransportGroupMgr(*comm),
           registeredCcuCtxMgr(devLogicId)
-    {
-    }
+    {}
 
-    CcuResPackMgr        *GetCcuResPackMgr();
-    CcuJettyMgr          *GetCcuJettyMgr();
-    CcuTransportMgr      *GetCcuTransportMgr();
-    CcuTransportGroupMgr *GetCcuTransportGrpMgr();
-    RegisteredCcuCtxMgr  *GetRegisteredCcuCtxMgr();
-    int32_t               GetDeviceLogicId() const;
-    void                  AcceleratorFallback() const;
+    CcuResPackMgr* GetCcuResPackMgr();
+    CcuJettyMgr* GetCcuJettyMgr();
+    CcuTransportMgr* GetCcuTransportMgr();
+    CcuTransportGroupMgr* GetCcuTransportGrpMgr();
+    RegisteredCcuCtxMgr* GetRegisteredCcuCtxMgr();
+    int32_t GetDeviceLogicId() const;
+    void AcceleratorFallback() const;
+
 private:
-    CommunicatorImpl    *comm;
-    int32_t              devLogicId;
-    CcuResPackMgr        ccuResPackMgr;
-    CcuJettyMgr          ccuJettyMgr;
-    CcuTransportMgr      ccuTransportMgr;
+    CommunicatorImpl* comm;
+    int32_t devLogicId;
+    CcuResPackMgr ccuResPackMgr;
+    CcuJettyMgr ccuJettyMgr;
+    CcuTransportMgr ccuTransportMgr;
     CcuTransportGroupMgr ccuTransportGroupMgr;
-    RegisteredCcuCtxMgr  registeredCcuCtxMgr;
+    RegisteredCcuCtxMgr registeredCcuCtxMgr;
 };
 
 } // namespace Hccl

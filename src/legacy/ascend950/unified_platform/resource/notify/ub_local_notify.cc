@@ -19,24 +19,25 @@
 namespace Hccl {
 
 UbLocalNotify::UbLocalNotify(RdmaHandle rdmaHandle, bool devUsed)
-    : BaseLocalNotify(RmaType::UB, devUsed), rdmaHandle(rdmaHandle)
+    : BaseLocalNotify(RmaType::UB, devUsed),
+      rdmaHandle(rdmaHandle)
 {
     auto devType = HrtGetDeviceType(); // 先查询，避免后续失败资源泄露
     HrtDevResInfo devResInfo;
-    devResInfo.dieId            = 0;
-    devResInfo.procType         = HrtDevResProcType::PROCESS_HCCP;
-    devResInfo.resType          = HrtDevResType::RES_TYPE_STARS_NOTIFY_RECORD;
-    devResInfo.resId            = GetNotify()->GetId();
-    devResInfo.flag             = 0;
-    auto resAddrInfo            = HrtGetDevResAddress(devResInfo);
-    addr                        = resAddrInfo.address;
+    devResInfo.dieId = 0;
+    devResInfo.procType = HrtDevResProcType::PROCESS_HCCP;
+    devResInfo.resType = HrtDevResType::RES_TYPE_STARS_NOTIFY_RECORD;
+    devResInfo.resId = GetNotify()->GetId();
+    devResInfo.flag = 0;
+    auto resAddrInfo = HrtGetDevResAddress(devResInfo);
+    addr = resAddrInfo.address;
     DevCapability::GetInstance().Init(devType); // 单例初始化
-    size                        = DevCapability::GetInstance().GetNotifySize();
+    size = DevCapability::GetInstance().GetNotifySize();
     std::pair<u64, u64> alignBuf = BufAlign(addr, size);
     bufKey_ = BufferKey<uintptr_t, u64>{alignBuf.first, alignBuf.second};
-    auto tokenIdInfoPair        = RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle, bufKey_);
-    tokenIdHandle_              = tokenIdInfoPair.first;
-    tokenId                     = tokenIdInfoPair.second;
+    auto tokenIdInfoPair = RdmaHandleManager::GetInstance().GetTokenIdInfo(rdmaHandle, bufKey_);
+    tokenIdHandle_ = tokenIdInfoPair.first;
+    tokenId = tokenIdInfoPair.second;
     HCCL_INFO("[UbLocalNotify] tokenIdHandle=0x[%llx]", tokenIdHandle_);
     HCCL_INFO("mapped addr=[%llx]", addr);
     HCCL_INFO("UB notify size=[%u]", size);
@@ -46,23 +47,21 @@ UbLocalNotify::UbLocalNotify(RdmaHandle rdmaHandle, bool devUsed)
     tokenValue = GetUbToken();
     HrtRaUbLocMemRegParam lmemReg{alignBuf.first, alignBuf.second, tokenValue, tokenIdHandle_, 1};
     reqReg = HrtRaUbLocalMemReg(rdmaHandle, lmemReg);
-    keySize         = reqReg.keySize;
-    memHandle       = reqReg.handle;
+    keySize = reqReg.keySize;
+    memHandle = reqReg.handle;
     (void)memcpy_s(key, HRT_UB_MEM_KEY_MAX_LEN, reqReg.key, HRT_UB_MEM_KEY_MAX_LEN);
 }
 
 string UbLocalNotify::Describe() const
 {
-    return StringFormat("UbLocalNotify:notify=%s, addr=0x%llx, keySize=%u, memHandle=0x%llx",
-                        GetNotify()->Describe().c_str(), addr, keySize, memHandle);
+    return StringFormat(
+        "UbLocalNotify:notify=%s, addr=0x%llx, keySize=%u, memHandle=0x%llx", GetNotify()->Describe().c_str(), addr,
+        keySize, memHandle);
 }
 
-void UbLocalNotify::Wait(const Stream &stream, u32 timeout) const
-{
-    GetNotify()->Wait(stream, timeout);
-}
+void UbLocalNotify::Wait(const Stream& stream, u32 timeout) const { GetNotify()->Wait(stream, timeout); }
 
-void UbLocalNotify::Post(const Stream &stream) const
+void UbLocalNotify::Post(const Stream& stream) const
 {
     std::string msg = "UbLocalNotify does not support submitting record task";
     MACRO_THROW(NotSupportException, msg);
@@ -87,16 +86,13 @@ void UbLocalNotify::ReleaseResource() const
     }
 
     HrtDevResInfo devResInfo;
-    devResInfo.dieId    = 0;
+    devResInfo.dieId = 0;
     devResInfo.procType = HrtDevResProcType::PROCESS_HCCP;
-    devResInfo.resType  = HrtDevResType::RES_TYPE_STARS_NOTIFY_RECORD;
-    devResInfo.resId    = GetNotify()->GetId();
-    devResInfo.flag     = 0;
+    devResInfo.resType = HrtDevResType::RES_TYPE_STARS_NOTIFY_RECORD;
+    devResInfo.resId = GetNotify()->GetId();
+    devResInfo.flag = 0;
     HrtReleaseDevResAddress(devResInfo);
 }
 
-UbLocalNotify::~UbLocalNotify()
-{
-    DECTOR_TRY_CATCH("UbLocalNotify", ReleaseResource());
-}
+UbLocalNotify::~UbLocalNotify() { DECTOR_TRY_CATCH("UbLocalNotify", ReleaseResource()); }
 } // namespace Hccl

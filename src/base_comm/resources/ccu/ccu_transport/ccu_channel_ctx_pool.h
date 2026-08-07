@@ -21,16 +21,16 @@
 
 namespace hcomm {
 
-//管理着有限的硬件资源：ChannelCtx与jetty
-class CcuChannelCtxPool final { 
+// 管理着有限的硬件资源：ChannelCtx与jetty
+class CcuChannelCtxPool final {
 public:
     explicit CcuChannelCtxPool(int32_t devLogicId);
     ~CcuChannelCtxPool();
 
-    HcclResult PrepareCreate(const std::vector<Hccl::LinkData> &links, uint32_t sqSize = 0);
-    using CcuChannelCtx = std::pair<CcuChannelInfo, std::vector<CcuJetty *>>;
-    HcclResult GetChannelCtx(const Hccl::LinkData &link, CcuChannelCtx &channelCtx) const;
-    HcclResult GetCcuChannelCtxById(const std::pair<uint8_t, uint32_t> &key, CcuChannelCtx& ctx);
+    HcclResult PrepareCreate(const std::vector<Hccl::LinkData>& links, uint32_t sqSize = 0);
+    using CcuChannelCtx = std::pair<CcuChannelInfo, std::vector<CcuJetty*>>;
+    HcclResult GetChannelCtx(const Hccl::LinkData& link, CcuChannelCtx& channelCtx) const;
+    HcclResult GetCcuChannelCtxById(const std::pair<uint8_t, uint32_t>& key, CcuChannelCtx& ctx);
 
 private:
     struct ResIdHash {
@@ -53,37 +53,38 @@ private:
         std::vector<ChannelIdKey> channelIdKeys;
         std::vector<ChannelIdKey> availableChannelIdKeys;
         std::unordered_map<JettyIdKey, std::unique_ptr<CcuJetty>, ResIdHash> jettys;
-    
-        ResourceBatch(const BatchKey &batchKey) : key(batchKey) {};
-        HcclResult Init(const std::vector<CcuChannelInfo> &channelInfos);
+
+        ResourceBatch(const BatchKey& batchKey) : key(batchKey) {};
+        HcclResult Init(const std::vector<CcuChannelInfo>& channelInfos);
     };
 
     struct Allocation {
         Hccl::LinkData link;
         ChannelIdKey channelIdKey;
-        ResourceBatch *batchPtr;
+        ResourceBatch* batchPtr;
     };
 
     struct UnconfirmedRecord {
-        std::vector<Allocation> allocations; // 记录从已申请的资源中的分配操作
-        std::unordered_set<ResourceBatch *> newBatchSet; // 记录新申请资源的操作
+        std::vector<Allocation> allocations;            // 记录从已申请的资源中的分配操作
+        std::unordered_set<ResourceBatch*> newBatchSet; // 记录新申请资源的操作
 
-        void Clear() {
+        void Clear()
+        {
             allocations.clear();
             newBatchSet.clear();
         }
     };
 
 private:
-    HcclResult GetAvailableBatch(const BatchKey &batchKey, ResourceBatch *&batchPtr, uint32_t sqSize);
-    bool FindAvailableBatch(const BatchKey &batchKey, ResourceBatch *&batchPtr) const;
-    HcclResult CreateAndSaveNewBatch(const BatchKey &batchKey,
-        const std::vector<CcuChannelInfo> channelInfos, ResourceBatch *&batchPtr);
+    HcclResult GetAvailableBatch(const BatchKey& batchKey, ResourceBatch*& batchPtr, uint32_t sqSize);
+    bool FindAvailableBatch(const BatchKey& batchKey, ResourceBatch*& batchPtr) const;
+    HcclResult CreateAndSaveNewBatch(
+        const BatchKey& batchKey, const std::vector<CcuChannelInfo> channelInfos, ResourceBatch*& batchPtr);
     HcclResult ReleaseConfirmedChannelRes();
 
 private:
     int32_t devLogicId_{0};
-    bool    isReleased_{true};
+    bool isReleased_{true};
 
     // 本轮下发算子新增分配记录
     UnconfirmedRecord unconfirmedRecord_;

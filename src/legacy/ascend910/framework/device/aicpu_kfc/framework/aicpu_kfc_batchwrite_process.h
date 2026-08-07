@@ -19,10 +19,10 @@ class AicpuKfcBatchwriteProcess {
 public:
     ~AicpuKfcBatchwriteProcess() = default;
     static void FinishProcess();
-    static AicpuServerRole GetVerifiedServerRole(const AicpuComContext &ctx);
-    static HcclResult HandleBatchWriteOperation(const CommonHcclMsg &commonHcclMsg, const AicpuComContext *ctx);
-    static HcclResult RunSlaveRpcServerForApi(AicpuComContext *ctx);
-    static HcclResult BatchWriteProcess(hccl::OpParam &opParam, hccl::HcclCommAicpu &comm, HcclOpResParam &param);
+    static AicpuServerRole GetVerifiedServerRole(const AicpuComContext& ctx);
+    static HcclResult HandleBatchWriteOperation(const CommonHcclMsg& commonHcclMsg, const AicpuComContext* ctx);
+    static HcclResult RunSlaveRpcServerForApi(AicpuComContext* ctx);
+    static HcclResult BatchWriteProcess(hccl::OpParam& opParam, hccl::HcclCommAicpu& comm, HcclOpResParam& param);
 };
 
 #endif

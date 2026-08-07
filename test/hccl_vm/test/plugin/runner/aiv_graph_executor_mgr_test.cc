@@ -12,22 +12,24 @@
 
 #include "aiv_graph_executor_mgr.h"
 
-class AivGraphExecutorMgrTest : public testing::Test {
-};
+class AivGraphExecutorMgrTest : public testing::Test {};
 
-TEST_F(AivGraphExecutorMgrTest, GetInstance_ReturnsSameSingleton) {
+TEST_F(AivGraphExecutorMgrTest, GetInstance_ReturnsSameSingleton)
+{
     AivGraphExecutorMgr& mgr1 = AivGraphExecutorMgr::GetInstance();
     AivGraphExecutorMgr& mgr2 = AivGraphExecutorMgr::GetInstance();
     EXPECT_EQ(&mgr1, &mgr2);
 }
 
-TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_NewLaunchIdx_CreatesNew) {
+TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_NewLaunchIdx_CreatesNew)
+{
     auto& mgr = AivGraphExecutorMgr::GetInstance();
     auto executor = mgr.GetAivGraphExecutor(0, 0);
     EXPECT_NE(executor, nullptr);
 }
 
-TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_SameRankAndLaunchIdx_ReturnsSame) {
+TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_SameRankAndLaunchIdx_ReturnsSame)
+{
     auto& mgr = AivGraphExecutorMgr::GetInstance();
     auto exec1 = mgr.GetAivGraphExecutor(1, 1);
     auto exec2 = mgr.GetAivGraphExecutor(1, 1);
@@ -35,7 +37,8 @@ TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_SameRankAndLaunchIdx_Returns
     EXPECT_EQ(exec1, exec2);
 }
 
-TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_SameRankDifferentLaunchIdx_ReturnsDifferent) {
+TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_SameRankDifferentLaunchIdx_ReturnsDifferent)
+{
     auto& mgr = AivGraphExecutorMgr::GetInstance();
     auto exec1 = mgr.GetAivGraphExecutor(10, 10);
     auto exec2 = mgr.GetAivGraphExecutor(10, 20);
@@ -44,7 +47,8 @@ TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_SameRankDifferentLaunchIdx_R
     EXPECT_NE(exec1, exec2);
 }
 
-TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_DifferentRankSameLaunchIdx_ReturnsDifferent) {
+TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_DifferentRankSameLaunchIdx_ReturnsDifferent)
+{
     auto& mgr = AivGraphExecutorMgr::GetInstance();
     auto exec1 = mgr.GetAivGraphExecutor(10, 30);
     auto exec2 = mgr.GetAivGraphExecutor(20, 30);
@@ -53,7 +57,8 @@ TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_DifferentRankSameLaunchIdx_R
     EXPECT_NE(exec1, exec2);
 }
 
-TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_MultipleLaunches_EachDistinct) {
+TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_MultipleLaunches_EachDistinct)
+{
     auto& mgr = AivGraphExecutorMgr::GetInstance();
     auto exec0 = mgr.GetAivGraphExecutor(100, 100);
     auto exec1 = mgr.GetAivGraphExecutor(100, 200);
@@ -66,7 +71,8 @@ TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_MultipleLaunches_EachDistinc
     EXPECT_NE(exec1, exec2);
 }
 
-TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_RepeatedRetrieval_Consistent) {
+TEST_F(AivGraphExecutorMgrTest, GetAivGraphExecutor_RepeatedRetrieval_Consistent)
+{
     auto& mgr = AivGraphExecutorMgr::GetInstance();
     auto e1 = mgr.GetAivGraphExecutor(42, 42);
     auto e2 = mgr.GetAivGraphExecutor(42, 42);

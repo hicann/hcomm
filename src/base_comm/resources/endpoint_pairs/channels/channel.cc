@@ -32,9 +32,8 @@ namespace hcomm {
 std::unordered_map<ChannelHandle, ChannelHandle> channelD2HHandleMap_;
 
 HcclResult Channel::CreateChannel(
-    EndpointHandle endpointHandle, CommEngine engine, 
-    HcommChannelDesc channelDesc, std::shared_ptr<Channel>& channelPtr,
-    bool isSharedQueue)
+    EndpointHandle endpointHandle, CommEngine engine, HcommChannelDesc channelDesc,
+    std::shared_ptr<Channel>& channelPtr, bool isSharedQueue)
 {
     DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
@@ -42,18 +41,21 @@ HcclResult Channel::CreateChannel(
     switch (engine) {
         case COMM_ENGINE_CPU:
             if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_ROCE) {
-                EXCEPTION_CATCH(uniqueChannelPtr = std::make_unique<HostCpuRoceChannel>(endpointHandle, channelDesc),
+                EXCEPTION_CATCH(
+                    uniqueChannelPtr = std::make_unique<HostCpuRoceChannel>(endpointHandle, channelDesc),
                     return HCCL_E_PARA);
                 break;
             }
-            if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_CTP ||
-                channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_TP) {
-                EXCEPTION_CATCH(uniqueChannelPtr = std::make_unique<HostCpuUrmaChannel>(endpointHandle, channelDesc),
+            if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_CTP
+                || channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_TP) {
+                EXCEPTION_CATCH(
+                    uniqueChannelPtr = std::make_unique<HostCpuUrmaChannel>(endpointHandle, channelDesc),
                     return HCCL_E_PARA);
                 break;
             }
-            HCCL_ERROR("[Channel][%s] Engine[COMM_ENGINE_CPU] not support Protocol[%d]",
-                        __func__, channelDesc.remoteEndpoint.protocol);
+            HCCL_ERROR(
+                "[Channel][%s] Engine[COMM_ENGINE_CPU] not support Protocol[%d]", __func__,
+                channelDesc.remoteEndpoint.protocol);
             return HCCL_E_NOT_SUPPORT;
         case COMM_ENGINE_CPU_TS:
             HCCL_ERROR("[Channel][%s] CommEngine[COMM_ENGINE_CPU_TS] not support", __func__);
@@ -64,8 +66,9 @@ HcclResult Channel::CreateChannel(
                 uniqueChannelPtr.reset(new (std::nothrow) AicpuTsUboeChannel(endpointHandle, channelDesc));
             } else if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBG) {
                 if (deviceType != DevType::DEV_TYPE_950 && deviceType != DevType::DEV_TYPE_960) {
-                    HCCL_ERROR("[Channel][%s] UBG protocol only support DEV_TYPE_950/960, current deviceType=%d",
-                        __func__, static_cast<int>(deviceType));
+                    HCCL_ERROR(
+                        "[Channel][%s] UBG protocol only support DEV_TYPE_950/960, current deviceType=%d", __func__,
+                        static_cast<int>(deviceType));
                     return HCCL_E_NOT_SUPPORT;
                 }
                 uniqueChannelPtr.reset(new (std::nothrow) AicpuTsUbgChannel(endpointHandle, channelDesc));
@@ -77,30 +80,33 @@ HcclResult Channel::CreateChannel(
                 } else {
                     uniqueChannelPtr = std::make_unique<AicpuTsRoceChannel>(endpointHandle, channelDesc);
                 }
-            } else if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_CTP ||
-                       channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_TP) {
+            } else if (
+                channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_CTP
+                || channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_TP) {
                 uniqueChannelPtr.reset(new (std::nothrow) AicpuTsUrmaChannel(endpointHandle, channelDesc));
             } else if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_HCCS) {
-                uniqueChannelPtr.reset(
-                    new (std::nothrow) AicpuTsHccsChannel(endpointHandle, channelDesc));
+                uniqueChannelPtr.reset(new (std::nothrow) AicpuTsHccsChannel(endpointHandle, channelDesc));
             } else {
-                HCCL_ERROR("[Channel][%s] invalid protocol for engine[%s], protocol[%s]",
-                    __func__, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(),
+                HCCL_ERROR(
+                    "[Channel][%s] invalid protocol for engine[%s], protocol[%s]", __func__,
+                    GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(),
                     GetEnumToString(GetCommProtocolStrMap(), channelDesc.remoteEndpoint.protocol).c_str());
                 return HCCL_E_NOT_SUPPORT;
             }
             break;
         case COMM_ENGINE_AIV:
-            if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_ROCE &&
-                (deviceType == DevType::DEV_TYPE_950 || deviceType == DevType::DEV_TYPE_960)) {
+            if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_ROCE
+                && (deviceType == DevType::DEV_TYPE_950 || deviceType == DevType::DEV_TYPE_960)) {
                 uniqueChannelPtr = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, engine);
-            } else if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_CTP ||
-                       channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_TP ||
-                       channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBG) {
-                if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBG &&
-                    deviceType != DevType::DEV_TYPE_950 && deviceType != DevType::DEV_TYPE_960) {
-                    HCCL_ERROR("[Channel][%s] UBG protocol only support DEV_TYPE_950/960, current deviceType=%d",
-                        __func__, static_cast<int>(deviceType));
+            } else if (
+                channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_CTP
+                || channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_TP
+                || channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBG) {
+                if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBG && deviceType != DevType::DEV_TYPE_950
+                    && deviceType != DevType::DEV_TYPE_960) {
+                    HCCL_ERROR(
+                        "[Channel][%s] UBG protocol only support DEV_TYPE_950/960, current deviceType=%d", __func__,
+                        static_cast<int>(deviceType));
                     return HCCL_E_NOT_SUPPORT;
                 }
                 uniqueChannelPtr.reset(new (std::nothrow) AivUrmaChannel(endpointHandle, channelDesc));
@@ -109,8 +115,7 @@ HcclResult Channel::CreateChannel(
             }
             break;
         case COMM_ENGINE_CCU:
-            uniqueChannelPtr.reset(
-                new (std::nothrow) CcuUrmaChannel(endpointHandle, channelDesc));
+            uniqueChannelPtr.reset(new (std::nothrow) CcuUrmaChannel(endpointHandle, channelDesc));
             break;
         default:
             HCCL_ERROR("[Channel][%s] invalid type of CommEngine", __func__);
@@ -141,18 +146,15 @@ ChannelStatus Channel::TransportStatusToChannelStatus(Hccl::TransportStatus ts)
     }
 }
 
-HcclResult Channel::UpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum)
+HcclResult Channel::UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum)
 {
     HCCL_WARNING("[UpdateMemInfo] not support.");
     return HCCL_SUCCESS;
 }
 
-HcommChannelKind Channel::GetChannelKind() const
-{
-    return channelKind_;
-}
+HcommChannelKind Channel::GetChannelKind() const { return channelKind_; }
 
-HcclResult Channel::Serialize(std::shared_ptr<hccl::DeviceMem> &out)
+HcclResult Channel::Serialize(std::shared_ptr<hccl::DeviceMem>& out)
 {
     out.reset();
     return HCCL_E_NOT_SUPPORT;
@@ -167,8 +169,5 @@ void Channel::AddPtrArrayDevMem(std::shared_ptr<hccl::DeviceMem> ptrArrayMem)
     ptrArrayDevMems_.push_back(std::move(ptrArrayMem));
 }
 
-void Channel::ReleasePtrArrayDevMems()
-{
-    ptrArrayDevMems_.clear();
-}
+void Channel::ReleasePtrArrayDevMems() { ptrArrayDevMems_.clear(); }
 } // namespace hcomm

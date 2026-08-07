@@ -19,21 +19,10 @@ using namespace hccl;
 
 class RankGraphV1DirectTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "RankGraphV1DirectTest SetUp" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "RankGraphV1DirectTest TearDown" << std::endl;
-    }
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    static void SetUpTestCase() { std::cout << "RankGraphV1DirectTest SetUp" << std::endl; }
+    static void TearDownTestCase() { std::cout << "RankGraphV1DirectTest TearDown" << std::endl; }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(RankGraphV1DirectTest, Ut_GetTopoInstsByLayer_When_ValidLayer_Expect_Success)
@@ -45,7 +34,7 @@ TEST_F(RankGraphV1DirectTest, Ut_GetTopoInstsByLayer_When_ValidLayer_Expect_Succ
     rankGraph.rankSizeList_[0] = instRanks;
 
     uint32_t netLayer = 0;
-    uint32_t *topoInsts = nullptr;
+    uint32_t* topoInsts = nullptr;
     uint32_t topoInstNum = 0;
 
     HcclResult ret = rankGraph.GetTopoInstsByLayer(netLayer, &topoInsts, &topoInstNum);
@@ -85,7 +74,7 @@ TEST_F(RankGraphV1DirectTest, Ut_GetRanksByTopoInst_When_ValidParams_Expect_Succ
 
     uint32_t netLayer = 0;
     uint32_t topoInstId = 0;
-    uint32_t *ranks = nullptr;
+    uint32_t* ranks = nullptr;
     uint32_t rankNum = 0;
 
     HcclResult ret = rankGraph.GetRanksByTopoInst(netLayer, topoInstId, &ranks, &rankNum);
@@ -146,8 +135,8 @@ TEST_F(RankGraphV1DirectTest, Ut_GetEndpointInfo_When_NormalParams_Expect_Succes
     memset(&queryEndpoint.commAddr.addr, 0, sizeof(queryEndpoint.commAddr.addr));
 
     EndpointAttrBwCoeff bwCoeff = 0;
-    HcclResult ret = rankGraph.GetEndpointInfo(rankId, &queryEndpoint, ENDPOINT_ATTR_BW_COEFF,
-        sizeof(EndpointAttrBwCoeff), &bwCoeff);
+    HcclResult ret = rankGraph.GetEndpointInfo(
+        rankId, &queryEndpoint, ENDPOINT_ATTR_BW_COEFF, sizeof(EndpointAttrBwCoeff), &bwCoeff);
 
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(bwCoeff, 1);
@@ -237,7 +226,7 @@ TEST_F(RankGraphV1DirectTest, Ut_GetProtocolsByConnections_When_Success_Expect_N
     rankGraph.rankGraph_.push_back(rankInfo0);
     rankGraph.rankGraph_.push_back(rankInfo1);
 
-    std::vector<const RankInfo_t *> topoInstRanks;
+    std::vector<const RankInfo_t*> topoInstRanks;
     topoInstRanks.push_back(&rankGraph.rankGraph_[1]);
 
     std::set<CommProtocol> protocols = rankGraph.GetProtocolsByConnections(0, topoInstRanks);
@@ -338,7 +327,9 @@ TEST_F(RankGraphV1DirectTest, Ut_GetLinks_When_NormalCase_Expect_Success)
     rankGraph.netLayer_.push_back(0);
     rankGraph.devType_ = DevType::DEV_TYPE_910_93;
 
-    MOCKER(hrtGetPairDeviceLinkType).stubs().with(mockcpp::any(), mockcpp::any(), outBound(LinkTypeInServer::HCCS_TYPE))
+    MOCKER(hrtGetPairDeviceLinkType)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBound(LinkTypeInServer::HCCS_TYPE))
         .will(returnValue(HCCL_SUCCESS));
 
     RankGraphV1::RankGraphInfo srcGraphInfo;
@@ -513,7 +504,7 @@ TEST_F(RankGraphV1DirectTest, Ut_GetInstSizeByNetLayer_When_RankListNotFound_Exp
 TEST_F(RankGraphV1DirectTest, Ut_GetInstRanksByNetLayer_When_InvalidNetLayer_Expect_EPara)
 {
     RankGraphV1 rankGraph;
-    uint32_t *rankList = nullptr;
+    uint32_t* rankList = nullptr;
     uint32_t rankNum = 0;
     HcclResult ret = rankGraph.GetInstRanksByNetLayer(5, &rankList, &rankNum);
     EXPECT_EQ(ret, HCCL_E_PARA);
@@ -523,7 +514,7 @@ TEST_F(RankGraphV1DirectTest, Ut_GetInstRanksByNetLayer_When_RankListNotFound_Ex
 {
     RankGraphV1 rankGraph;
     rankGraph.netLayer_.push_back(0);
-    uint32_t *rankList = nullptr;
+    uint32_t* rankList = nullptr;
     uint32_t rankNum = 0;
     HcclResult ret = rankGraph.GetInstRanksByNetLayer(0, &rankList, &rankNum);
     EXPECT_EQ(ret, HCCL_E_INTERNAL);
@@ -532,7 +523,7 @@ TEST_F(RankGraphV1DirectTest, Ut_GetInstRanksByNetLayer_When_RankListNotFound_Ex
 TEST_F(RankGraphV1DirectTest, Ut_GetInstSizeListByNetLayer_When_InvalidNetLayer_Expect_EPara)
 {
     RankGraphV1 rankGraph;
-    uint32_t *instSizeList = nullptr;
+    uint32_t* instSizeList = nullptr;
     uint32_t listSize = 0;
     HcclResult ret = rankGraph.GetInstSizeListByNetLayer(5, &instSizeList, &listSize);
     EXPECT_EQ(ret, HCCL_E_PARA);
@@ -542,7 +533,7 @@ TEST_F(RankGraphV1DirectTest, Ut_GetInstSizeListByNetLayer_When_RankSizeListNotF
 {
     RankGraphV1 rankGraph;
     rankGraph.netLayer_.push_back(0);
-    uint32_t *instSizeList = nullptr;
+    uint32_t* instSizeList = nullptr;
     uint32_t listSize = 0;
     HcclResult ret = rankGraph.GetInstSizeListByNetLayer(0, &instSizeList, &listSize);
     EXPECT_EQ(ret, HCCL_E_INTERNAL);
@@ -575,11 +566,10 @@ TEST_F(RankGraphV1DirectTest, Ut_GetEndpointInfo_When_NullPtr_Expect_EPtr)
 {
     RankGraphV1 rankGraph;
     EndpointDesc queryEndpoint;
-    HcclResult ret = rankGraph.GetEndpointInfo(0, nullptr, ENDPOINT_ATTR_BW_COEFF,
-        sizeof(EndpointAttrBwCoeff), &queryEndpoint);
+    HcclResult ret
+        = rankGraph.GetEndpointInfo(0, nullptr, ENDPOINT_ATTR_BW_COEFF, sizeof(EndpointAttrBwCoeff), &queryEndpoint);
     EXPECT_EQ(ret, HCCL_E_PTR);
-    ret = rankGraph.GetEndpointInfo(0, &queryEndpoint, ENDPOINT_ATTR_BW_COEFF,
-        sizeof(EndpointAttrBwCoeff), nullptr);
+    ret = rankGraph.GetEndpointInfo(0, &queryEndpoint, ENDPOINT_ATTR_BW_COEFF, sizeof(EndpointAttrBwCoeff), nullptr);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
@@ -588,8 +578,8 @@ TEST_F(RankGraphV1DirectTest, Ut_GetEndpointInfo_When_RankIndexEmpty_Expect_EInt
     RankGraphV1 rankGraph;
     EndpointDesc queryEndpoint;
     EndpointAttrBwCoeff bwCoeff = 0;
-    HcclResult ret = rankGraph.GetEndpointInfo(0, &queryEndpoint, ENDPOINT_ATTR_BW_COEFF,
-        sizeof(EndpointAttrBwCoeff), &bwCoeff);
+    HcclResult ret
+        = rankGraph.GetEndpointInfo(0, &queryEndpoint, ENDPOINT_ATTR_BW_COEFF, sizeof(EndpointAttrBwCoeff), &bwCoeff);
     EXPECT_EQ(ret, HCCL_E_INTERNAL);
 }
 
@@ -603,8 +593,8 @@ TEST_F(RankGraphV1DirectTest, Ut_GetEndpointInfo_When_RankNotFound_Expect_ENotFo
     queryEndpoint.commAddr.type = COMM_ADDR_TYPE_IP_V4;
     queryEndpoint.protocol = CommProtocol::COMM_PROTOCOL_ROCE;
     EndpointAttrBwCoeff bwCoeff = 0;
-    HcclResult ret = rankGraph.GetEndpointInfo(999, &queryEndpoint, ENDPOINT_ATTR_BW_COEFF,
-        sizeof(EndpointAttrBwCoeff), &bwCoeff);
+    HcclResult ret
+        = rankGraph.GetEndpointInfo(999, &queryEndpoint, ENDPOINT_ATTR_BW_COEFF, sizeof(EndpointAttrBwCoeff), &bwCoeff);
     EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
 }
 
@@ -664,7 +654,7 @@ TEST_F(RankGraphV1DirectTest, Ut_GetHeterogMode_Expect_Success)
 TEST_F(RankGraphV1DirectTest, Ut_GetNetLayers_When_Empty_Expect_EInternal)
 {
     RankGraphV1 rankGraph;
-    uint32_t *netLayers = nullptr;
+    uint32_t* netLayers = nullptr;
     uint32_t netLayerNum = 0;
     HcclResult ret = rankGraph.GetNetLayers(&netLayers, &netLayerNum);
     EXPECT_EQ(ret, HCCL_E_INTERNAL);
@@ -675,7 +665,7 @@ TEST_F(RankGraphV1DirectTest, Ut_GetNetLayers_When_Valid_Expect_Success)
     RankGraphV1 rankGraph;
     rankGraph.netLayer_.push_back(0);
     rankGraph.netLayer_.push_back(1);
-    uint32_t *netLayers = nullptr;
+    uint32_t* netLayers = nullptr;
     uint32_t netLayerNum = 0;
     HcclResult ret = rankGraph.GetNetLayers(&netLayers, &netLayerNum);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -727,7 +717,7 @@ TEST_F(RankGraphV1DirectTest, Ut_GetInstTopoTypeByNetLayer_When_310P3_L0_Expect_
 TEST_F(RankGraphV1DirectTest, Ut_GetRankGraphInfo_When_InvalidType_Expect_ENotSupport)
 {
     RankGraphV1 rankGraph;
-    void *graph = nullptr;
+    void* graph = nullptr;
     uint32_t len = 0;
     HcclResult ret = rankGraph.GetRankGraphInfo(static_cast<GraphType>(999), &graph, &len);
     EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
@@ -736,22 +726,22 @@ TEST_F(RankGraphV1DirectTest, Ut_GetRankGraphInfo_When_InvalidType_Expect_ENotSu
 TEST_F(RankGraphV1DirectTest, Ut_NeedIgnoreEndPoints_When_DiffProtocol_Expect_True)
 {
     RankGraphV1 rankGraph;
-    EXPECT_TRUE(rankGraph.NeedIgnoreEndPoints(CommProtocol::COMM_PROTOCOL_ROCE,
-        CommProtocol::COMM_PROTOCOL_HCCS, CommProtocol::COMM_PROTOCOL_ROCE));
+    EXPECT_TRUE(rankGraph.NeedIgnoreEndPoints(
+        CommProtocol::COMM_PROTOCOL_ROCE, CommProtocol::COMM_PROTOCOL_HCCS, CommProtocol::COMM_PROTOCOL_ROCE));
 }
 
 TEST_F(RankGraphV1DirectTest, Ut_NeedIgnoreEndPoints_When_SameHccsAndSioLink_Expect_False)
 {
     RankGraphV1 rankGraph;
-    EXPECT_FALSE(rankGraph.NeedIgnoreEndPoints(CommProtocol::COMM_PROTOCOL_HCCS,
-        CommProtocol::COMM_PROTOCOL_HCCS, CommProtocol::COMM_PROTOCOL_SIO));
+    EXPECT_FALSE(rankGraph.NeedIgnoreEndPoints(
+        CommProtocol::COMM_PROTOCOL_HCCS, CommProtocol::COMM_PROTOCOL_HCCS, CommProtocol::COMM_PROTOCOL_SIO));
 }
 
 TEST_F(RankGraphV1DirectTest, Ut_NeedIgnoreEndPoints_When_SameProtocolMatchLink_Expect_False)
 {
     RankGraphV1 rankGraph;
-    EXPECT_FALSE(rankGraph.NeedIgnoreEndPoints(CommProtocol::COMM_PROTOCOL_ROCE,
-        CommProtocol::COMM_PROTOCOL_ROCE, CommProtocol::COMM_PROTOCOL_ROCE));
+    EXPECT_FALSE(rankGraph.NeedIgnoreEndPoints(
+        CommProtocol::COMM_PROTOCOL_ROCE, CommProtocol::COMM_PROTOCOL_ROCE, CommProtocol::COMM_PROTOCOL_ROCE));
 }
 
 TEST_F(RankGraphV1DirectTest, Ut_MatchEndpointByAddr_When_NoMatch_Expect_Nullptr)

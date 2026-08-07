@@ -19,8 +19,8 @@ namespace Hccl {
 
 class TimeoutException : public HcclException {
 public:
-    TimeoutException(const std::string &userDefinedMsg)
-        : HcclException(ExceptionType::TIMEOUT_EXCEPTION, userDefinedMsg){};
+    TimeoutException(const std::string& userDefinedMsg)
+        : HcclException(ExceptionType::TIMEOUT_EXCEPTION, userDefinedMsg) {};
 };
 
 } // namespace Hccl

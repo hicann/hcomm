@@ -17,34 +17,39 @@
 namespace Hccl {
 namespace CcuRep {
 
-CcuRepSetLoop::CcuRepSetLoop(const Variable &loopParam, const Executor &executor, const Variable &var)
-    : loopParam(loopParam), executor(executor), var(var)
-{
-    type       = CcuRepType::SET_LOOP;
-    instrCount = 2;  // set loop 指令数量为2
-}
-
-bool CcuRepSetLoop::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
-
-    LoadImdToXnInstr(instr++, loopParam.Id(), GetLoopParam(executor.Id(), 0, 0));
-    LoadXXInstr(instr++, loopParam.Id(), loopParam.Id(), var.Id());
-
-    if (instrId > USHRT_MAX - instrCount) {
-        THROW<InternalException>(StringFormat("[CcuRepSetLoop][Translate] instrId[%u] + instrCount[%u] exceeds the "
-            "maximum value of unsigned short int.", instrId, instrCount));
+    CcuRepSetLoop::CcuRepSetLoop(const Variable& loopParam, const Executor& executor, const Variable& var)
+        : loopParam(loopParam),
+          executor(executor),
+          var(var)
+    {
+        type = CcuRepType::SET_LOOP;
+        instrCount = 2; // set loop 指令数量为2
     }
-    instrId += instrCount;
 
-    return translated;
-}
+    bool CcuRepSetLoop::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-std::string CcuRepSetLoop::Describe()
-{
-    return StringFormat("loopParam[%u] = var[%u], execute on LoopEngine[%u]", loopParam.Id(), var.Id(), executor.Id());
-}
+        LoadImdToXnInstr(instr++, loopParam.Id(), GetLoopParam(executor.Id(), 0, 0));
+        LoadXXInstr(instr++, loopParam.Id(), loopParam.Id(), var.Id());
+
+        if (instrId > USHRT_MAX - instrCount) {
+            THROW<InternalException>(StringFormat(
+                "[CcuRepSetLoop][Translate] instrId[%u] + instrCount[%u] exceeds the "
+                "maximum value of unsigned short int.",
+                instrId, instrCount));
+        }
+        instrId += instrCount;
+
+        return translated;
+    }
+
+    std::string CcuRepSetLoop::Describe()
+    {
+        return StringFormat(
+            "loopParam[%u] = var[%u], execute on LoopEngine[%u]", loopParam.Id(), var.Id(), executor.Id());
+    }
 
 }; // namespace CcuRep
 }; // namespace Hccl

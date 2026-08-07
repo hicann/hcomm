@@ -19,9 +19,9 @@
 
 namespace hccl {
 
-
 class QueueNotifyManager {
-using NotifyPoolNoIPC = std::vector<std::shared_ptr<LocalNotify>>;
+    using NotifyPoolNoIPC = std::vector<std::shared_ptr<LocalNotify>>;
+
 public:
     QueueNotifyManager();
 
@@ -29,26 +29,27 @@ public:
 
     HcclResult Init();
 
-    HcclResult Alloc(const std::string &tag, u32 notifyNum, std::vector<std::shared_ptr<LocalNotify>> &localNotifys,
+    HcclResult Alloc(
+        const std::string& tag, u32 notifyNum, std::vector<std::shared_ptr<LocalNotify>>& localNotifys,
         const NotifyLoadType type = NotifyLoadType::HOST_NOTIFY);
 
     HcclResult Destroy();
 
     HcclResult ResetNotify();
 
-    QueueNotifyManager(QueueNotifyManager const&) = delete;                 // Copy construct
-    QueueNotifyManager(QueueNotifyManager&&) = delete;                      // Move construct
-    QueueNotifyManager& operator=(QueueNotifyManager const&) = delete;      // Copy assign
-    QueueNotifyManager& operator=(QueueNotifyManager &&) = delete;          // Move assign
+    QueueNotifyManager(QueueNotifyManager const&) = delete;            // Copy construct
+    QueueNotifyManager(QueueNotifyManager&&) = delete;                 // Move construct
+    QueueNotifyManager& operator=(QueueNotifyManager const&) = delete; // Copy assign
+    QueueNotifyManager& operator=(QueueNotifyManager&&) = delete;      // Move assign
 
 private:
-    HcclResult AllocNotifies(const NotifyLoadType type, NotifyPoolNoIPC &notifies, u32 notifyNum);
-    HcclResult CreateNotify(std::shared_ptr<LocalNotify> &localNotify, const NotifyLoadType type);
-    HcclResult DestroyNotifies(NotifyPoolNoIPC &notifies);
+    HcclResult AllocNotifies(const NotifyLoadType type, NotifyPoolNoIPC& notifies, u32 notifyNum);
+    HcclResult CreateNotify(std::shared_ptr<LocalNotify>& localNotify, const NotifyLoadType type);
+    HcclResult DestroyNotifies(NotifyPoolNoIPC& notifies);
 
     NotifyPoolNoIPC notifies_;
     NotifyPoolNoIPC deviceNotifies_;
     NotifyPoolNoIPC notifiesForA2A_;
 };
-}  // namespace hccl
+} // namespace hccl
 #endif /* QUEUE_NOTIFY_MANAGER_H */

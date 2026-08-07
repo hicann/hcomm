@@ -17,14 +17,14 @@ namespace Hccl {
 
 class CcuResPackMgr {
 public:
-    void        PrepareAlloc(u32 size);
-    void        Confirm();
-    void        Fallback();
-    CcuResPack &GetCcuResPack(u32 idx);
+    void PrepareAlloc(u32 size);
+    void Confirm();
+    void Fallback();
+    CcuResPack& GetCcuResPack(u32 idx);
 
 private:
     vector<CcuResPack> resPacks;
-    u32                unConfirmedNum{0};
+    u32 unConfirmedNum{0};
 };
 
 } // namespace Hccl

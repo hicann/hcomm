@@ -12,17 +12,20 @@
 
 class HcclCommInitClusterInfoTest : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         BaseInit::SetUp();
         UT_USE_1SERVER_1RANK_AS_DEFAULT;
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }
 };
 
-TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_RankIdInRankTable_Expect_ReturnIsHCCL_SUCCESS) {
+TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_RankIdInRankTable_Expect_ReturnIsHCCL_SUCCESS)
+{
     Ut_Device_Set(0);
     const char* rankTableFile = rankTableFileName;
     u32 rankId = 0;
@@ -33,7 +36,8 @@ TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_RankIdInRank
     Ut_Comm_Destroy(comm);
 }
 
-TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_RankIdNotInRankTable_Expect_ReturnIsHCCL_E_PARA) {
+TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_RankIdNotInRankTable_Expect_ReturnIsHCCL_E_PARA)
+{
     Ut_Device_Set(0);
     const char* rankTableFile = rankTableFileName;
     u32 rankId = 1;
@@ -44,7 +48,9 @@ TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_RankIdNotInR
     Ut_Comm_Destroy(comm);
 }
 
-TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_clusterInfoFileNotExist_Expect_ReturnIsHCCL_E_INTERNAL) {
+TEST_F(
+    HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_clusterInfoFileNotExist_Expect_ReturnIsHCCL_E_INTERNAL)
+{
     Ut_Device_Set(0);
     const char* rankTableFile = "fake.json";
     u32 rankId = 0;
@@ -55,7 +61,10 @@ TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_clusterInfoF
     Ut_Comm_Destroy(comm);
 }
 
-TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_clusterInfoFileContentInvalid_Expect_ReturnIsHCCL_E_INTERNAL) {
+TEST_F(
+    HcclCommInitClusterInfoTest,
+    Ut_HcclCommInitClusterInfo_When_clusterInfoFileContentInvalid_Expect_ReturnIsHCCL_E_INTERNAL)
+{
     Ut_Device_Set(0);
     const char* rankTableFile = rankTableFileName;
     std::ofstream badFile(rankTableFile, std::ios::trunc);
@@ -69,7 +78,8 @@ TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_clusterInfoF
     Ut_Comm_Destroy(comm);
 }
 
-TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_clusterInfoIsNull_Expect_ReturnIsHCCL_E_PTR) {
+TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_clusterInfoIsNull_Expect_ReturnIsHCCL_E_PTR)
+{
     Ut_Device_Set(0);
     const char* rankTableFile = nullptr;
     u32 rankId = 0;
@@ -80,10 +90,9 @@ TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_clusterInfoI
     Ut_Comm_Destroy(comm);
 }
 
-TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_GetDeviceError_Expect_ReturnIsHCCL_E_RUNTIME) {
-    MOCKER(aclrtGetDevice)
-       .stubs()
-       .will(returnValue(ACL_ERROR_RT_CONTEXT_NULL));
+TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_GetDeviceError_Expect_ReturnIsHCCL_E_RUNTIME)
+{
+    MOCKER(aclrtGetDevice).stubs().will(returnValue(ACL_ERROR_RT_CONTEXT_NULL));
     const char* rankTableFile = rankTableFileName;
     u32 rankId = 0;
 
@@ -94,17 +103,19 @@ TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_GetDeviceErr
     Ut_Comm_Destroy(comm);
 }
 
-TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_commIsNull_Expect_ReturnIsHCCL_E_PTR) {
+TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_commIsNull_Expect_ReturnIsHCCL_E_PTR)
+{
     Ut_Device_Set(0);
     const char* rankTableFile = rankTableFileName;
     u32 rankId = 0;
-    void **pComm = nullptr;
+    void** pComm = nullptr;
 
     HcclResult ret = HcclCommInitClusterInfo(rankTableFile, rankId, pComm);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
-TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_MultiInit_Expect_ReturnIsHCCL_E_UNAVAIL) {
+TEST_F(HcclCommInitClusterInfoTest, Ut_HcclCommInitClusterInfo_When_MultiInit_Expect_ReturnIsHCCL_E_UNAVAIL)
+{
     Ut_Device_Set(0);
     const char* rankTableFile = rankTableFileName;
     u32 rankId = 0;

@@ -25,7 +25,7 @@ namespace hcomm {
  */
 class CpuRoceEndpoint : public Endpoint {
 public:
-    explicit CpuRoceEndpoint(const EndpointDesc &endpointDesc);
+    explicit CpuRoceEndpoint(const EndpointDesc& endpointDesc);
 
     ~CpuRoceEndpoint() noexcept override;
 
@@ -34,21 +34,22 @@ public:
     HcclResult ServerSocketListen(const uint32_t port) override;
     HcclResult ServerSocketStopListen(const uint32_t port) override;
     inline HcclResult ServerSocketStopListenImpl(const uint32_t port);
-    HcclResult ServerSocketGetListenPort(uint32_t *port) override;
+    HcclResult ServerSocketGetListenPort(uint32_t* port) override;
 
-    HcclResult RegisterMemory(HcommMem mem, const char *memTag, void **memHandle) override;
+    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
     HcclResult UnregisterMemory(void* memHandle) override;
-    HcclResult MemoryExport(void *memHandle, void **memDesc, uint32_t *memDescLen) override;
-    HcclResult MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem) override;
-    HcclResult MemoryUnimport(const void *memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void **memHandles, uint32_t *memHandleNum) override;
+    HcclResult MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen) override;
+    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
+    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
+    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
 
     struct Capabilities {
         uint64_t maxMsgSize{0};
         int lbMax{0};
         // 按需扩展
     };
-    HcclResult GetCapabilities(Capabilities &caps);
+    HcclResult GetCapabilities(Capabilities& caps);
+
 private:
     std::mutex portMutex_;
     u32 dynamicPort_{HCCL_INVALID_PORT};
@@ -56,5 +57,5 @@ private:
     bool isCapabilitiesAvailable_{false};
     MemMgrCacheKey cacheKey_{};
 };
-}
+} // namespace hcomm
 #endif // ROCE_ENDPOINT_H

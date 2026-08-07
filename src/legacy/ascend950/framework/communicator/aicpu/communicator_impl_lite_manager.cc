@@ -21,11 +21,11 @@ CommunicatorImplLiteMgr::CommunicatorImplLiteMgr()
     HCCL_INFO("CommunicatorImplLiteMgr:: start");
     static auto commandToBackGroud = CommandToBackGroud::Default;
     HCCL_INFO("CommunicatorImplLiteMgr:: gen daemon service run func");
-    static auto daemonServiceRun = [](void *info) {
+    static auto daemonServiceRun = [](void* info) {
         AicpuDaemonService::GetInstance().ServiceRun(info);
     };
     HCCL_INFO("CommunicatorImplLiteMgr:: gen daemon service stop func");
-    static auto daemonServiceStop = [](void *info) {
+    static auto daemonServiceStop = [](void* info) {
         AicpuDaemonService::GetInstance().ServiceStop(info);
     };
 
@@ -47,18 +47,15 @@ CommunicatorImplLiteMgr::CommunicatorImplLiteMgr()
     HCCL_INFO("CommunicatorImplLiteMgr::end");
 }
 
-CommunicatorImplLiteMgr::~CommunicatorImplLiteMgr()
-{
-    HCCL_INFO("CommunicatorImplLiteMgr Destroy");
-}
+CommunicatorImplLiteMgr::~CommunicatorImplLiteMgr() { HCCL_INFO("CommunicatorImplLiteMgr Destroy"); }
 
-CommunicatorImplLiteMgr &CommunicatorImplLiteMgr::GetInstance()
+CommunicatorImplLiteMgr& CommunicatorImplLiteMgr::GetInstance()
 {
     static CommunicatorImplLiteMgr communicatorLiteMgr;
     return communicatorLiteMgr;
 }
 
-CommunicatorImplLite *CommunicatorImplLiteMgr::Get(const u32 commIdIndex)
+CommunicatorImplLite* CommunicatorImplLiteMgr::Get(const u32 commIdIndex)
 {
     std::lock_guard<std::mutex> lock(serialMutex);
     // 通过commIdIndex查找communicatorImplLites中是否存在，不存在再处理资源
@@ -81,10 +78,10 @@ CommunicatorImplLite *CommunicatorImplLiteMgr::Get(const u32 commIdIndex)
     return communicatorImplLites[commIdIndex].get();
 }
 
-std::vector<CommunicatorImplLite *> CommunicatorImplLiteMgr::GetAll()
+std::vector<CommunicatorImplLite*> CommunicatorImplLiteMgr::GetAll()
 {
     std::lock_guard<std::mutex> lock(serialMutex);
-    std::vector<CommunicatorImplLite *> vec;
+    std::vector<CommunicatorImplLite*> vec;
     for (auto iter = communicatorImplLites.begin(); iter != communicatorImplLites.end(); iter++) {
         if (iter->second != nullptr) {
             vec.push_back(iter->second.get());

@@ -32,21 +32,19 @@ using namespace std;
 
 class RankGraph64Plus1Test : public testing::Test {
 protected:
-    static void SetUpTestCase() {
-        cout << "RankGraph64Plus1Test SetUP" << endl;
-    }
- 
-    static void TearDownTestCase() {
-        cout << "RankGraph64Plus1Test TearDown" << endl;
-    }
- 
-    virtual void SetUp() {
-        PhyTopo::GetInstance()->Clear();   // PhyTopo是单例，每个用例开始前需要重置
-        MOCKER_CPP(&DetourService::InsertDetourLinks).stubs();  // 64+1场景暂时不涉及绕路，将绕路接口打桩成空函数
+    static void SetUpTestCase() { cout << "RankGraph64Plus1Test SetUP" << endl; }
+
+    static void TearDownTestCase() { cout << "RankGraph64Plus1Test TearDown" << endl; }
+
+    virtual void SetUp()
+    {
+        PhyTopo::GetInstance()->Clear();                       // PhyTopo是单例，每个用例开始前需要重置
+        MOCKER_CPP(&DetourService::InsertDetourLinks).stubs(); // 64+1场景暂时不涉及绕路，将绕路接口打桩成空函数
         cout << "A Test case in RankGraph64Plus1Test SetUP" << endl;
     }
- 
-    virtual void TearDown() {
+
+    virtual void TearDown()
+    {
         GlobalMockObject::verify();
         cout << "A Test case in RankGraph64Plus1Test TearDown" << endl;
     }
@@ -304,7 +302,8 @@ TEST_F(RankGraph64Plus1Test, test_checkpoint_normal_to_backup)
     parser.ParseFile(topoFilePath, topoInfo);
 
     // 更新 rankTableInfo
-    const char* changeInfoFilePath = "llt/ace/comop/hccl/orion/st/otherFiles/rank_graph_64_plus_1/changeInfo_2x2_normal_to_backup.json";
+    const char* changeInfoFilePath
+        = "llt/ace/comop/hccl/orion/st/otherFiles/rank_graph_64_plus_1/changeInfo_2x2_normal_to_backup.json";
     EXPECT_EQ(DiffRankUpdater(changeInfoFilePath, rankTableInfo), HcclResult::HCCL_SUCCESS);
 
     RankGraphBuilder rankGraphBuilder;

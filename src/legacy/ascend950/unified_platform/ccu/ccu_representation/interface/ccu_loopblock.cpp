@@ -18,22 +18,20 @@
 namespace Hccl {
 namespace CcuRep {
 
-LoopBlock::LoopBlock(CcuRepContext *context, std::string label) : context(context), label(label)
-{
-    repLoopBlock = std::make_shared<CcuRepLoopBlock>(label);
-    AppendToContext(context, repLoopBlock);
+    LoopBlock::LoopBlock(CcuRepContext* context, std::string label) : context(context), label(label)
+    {
+        repLoopBlock = std::make_shared<CcuRepLoopBlock>(label);
+        AppendToContext(context, repLoopBlock);
 
-    curActiveBlock = CurrentBlock(context);
+        curActiveBlock = CurrentBlock(context);
 
-    SetCurrentBlock(context, repLoopBlock);
+        SetCurrentBlock(context, repLoopBlock);
 
-    HCCL_INFO("Enter block %s, last block %s", repLoopBlock->Describe().c_str(), curActiveBlock->Describe().c_str());
-}
+        HCCL_INFO(
+            "Enter block %s, last block %s", repLoopBlock->Describe().c_str(), curActiveBlock->Describe().c_str());
+    }
 
-LoopBlock::~LoopBlock()
-{
-    DECTOR_TRY_CATCH("LoopBlock", SetCurrentBlock(context, curActiveBlock));
-}
+    LoopBlock::~LoopBlock() { DECTOR_TRY_CATCH("LoopBlock", SetCurrentBlock(context, curActiveBlock)); }
 
 }; // namespace CcuRep
 }; // namespace Hccl

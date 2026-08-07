@@ -22,7 +22,6 @@
 #include "log.h"
 #include "aicpu_operator_pub.h"
 
-
 namespace hccl {
 
 constexpr u32 MAX_DEV_NUM = 16;
@@ -31,10 +30,12 @@ class OpretryLinkManage {
 public:
     static OpretryLinkManage& GetInstance(s32 deviceLogicID);
 
-    HcclResult AddLinkInfoByIdentifier(const std::string &identifier, const std::string &newTag, std::vector<u32> &remoteRankList, bool incre);
-    HcclResult GetLinkInfoByIdentifier(const std::string &identifier, const std::string &newTag, std::vector<u32> &remoteRankList);
-    HcclResult GetLinkInfoByIdentifier(const std::string &identifier, std::vector<u32> &remoteRankList);
-    HcclResult DeleteLinkInfoByIdentifier(const std::string &identifier);
+    HcclResult AddLinkInfoByIdentifier(
+        const std::string& identifier, const std::string& newTag, std::vector<u32>& remoteRankList, bool incre);
+    HcclResult
+    GetLinkInfoByIdentifier(const std::string& identifier, const std::string& newTag, std::vector<u32>& remoteRankList);
+    HcclResult GetLinkInfoByIdentifier(const std::string& identifier, std::vector<u32>& remoteRankList);
+    HcclResult DeleteLinkInfoByIdentifier(const std::string& identifier);
 
 private:
     OpretryLinkManage() = default;

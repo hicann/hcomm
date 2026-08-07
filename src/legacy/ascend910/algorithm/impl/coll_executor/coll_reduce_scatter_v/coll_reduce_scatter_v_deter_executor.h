@@ -16,33 +16,36 @@
 namespace hccl {
 class CollReduceScatterVDeterExecutor : public CollReduceScatterVExecutor {
 public:
-    explicit CollReduceScatterVDeterExecutor(const HcclDispatcher dispatcher,
-        std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollReduceScatterVDeterExecutor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceScatterVDeterExecutor() override = default;
 
 private:
     void ParseParam(const OpParam& param) override;
     /* *************** 资源计算 *************** */
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel1CommInfoForMeshTopo(TransportMemType inputType,TransportMemType outputType, 
-        std::vector<LevelNSubCommTransport>& opTransport);
+    HcclResult CalcLevel1CommInfoForMeshTopo(
+        TransportMemType inputType, TransportMemType outputType, std::vector<LevelNSubCommTransport>& opTransport);
     u32 CalReduceStreamNum(const u32& localRankSize);
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult CalcScratchMemSize(u64& scratchMemSize) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType,TransportMemType &outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
     u64 CalcLoopMaxCount(const u32 unitSize) override;
-    HcclResult CalcCurCountsAndCurDispls(const u64 maxTotalCount, std::vector<u64> &countsLeft, std::vector<u64> &displs,
-        std::vector<u64> &curCounts, std::vector<u64> &curDispls, bool &finished) override;
-    bool IsHugeData(const u64 curSize, const OpParam &param) override;
-    bool IsContainZeroSlice(const OpParam &param);
+    HcclResult CalcCurCountsAndCurDispls(
+        const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
+        std::vector<u64>& curDispls, bool& finished) override;
+    bool IsHugeData(const u64 curSize, const OpParam& param) override;
+    bool IsContainZeroSlice(const OpParam& param);
     /* *************** 算法编排 *************** */
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
-    HcclResult RunReduceScattervLevel0(const OpParam &param, ExecMem &execMem, SubCommInfo &level0CommInfo) ;
-    HcclResult RunReduceScattervLevel1ForMeshTopo(const OpParam &param, ExecMem &execMem, SubCommInfo &level0CommInfo);
-    HcclResult CalReduceScatterVSliceData(const OpParam &param, u32 level0RankSize, u32 level1RankSize, std::vector<Slice> &dataSlices);
-    HcclResult RunReduceScattervLevel1(const OpParam &param, ExecMem &execMem, const SubCommInfo &level0CommInfo);
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
+    HcclResult RunReduceScattervLevel0(const OpParam& param, ExecMem& execMem, SubCommInfo& level0CommInfo);
+    HcclResult RunReduceScattervLevel1ForMeshTopo(const OpParam& param, ExecMem& execMem, SubCommInfo& level0CommInfo);
+    HcclResult CalReduceScatterVSliceData(
+        const OpParam& param, u32 level0RankSize, u32 level1RankSize, std::vector<Slice>& dataSlices);
+    HcclResult RunReduceScattervLevel1(const OpParam& param, ExecMem& execMem, const SubCommInfo& level0CommInfo);
     u32 all2allOffset_ = 0;
     u64 maxCount_ = 0;
     bool isNeedSpaceBorrow_ = false;

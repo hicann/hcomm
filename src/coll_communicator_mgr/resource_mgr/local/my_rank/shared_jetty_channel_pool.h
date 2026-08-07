@@ -32,16 +32,16 @@ using EndpointDescPair = std::pair<EndpointDesc, EndpointDesc>;
 // 将参与区分的有效字段序列化到 std::string，复用标准库 std::hash<string> 完成组合，
 // 避免手写魔数/位运算 combine（如 0x9e3779b9）带来的可读性与稳健性问题。
 struct EndpointDescPairHash {
-    static void AppendEndpointDesc(std::string &s, const EndpointDesc &d)
+    static void AppendEndpointDesc(std::string& s, const EndpointDesc& d)
     {
-        s.append(reinterpret_cast<const char *>(&d.protocol), sizeof(d.protocol));
-        s.append(reinterpret_cast<const char *>(&d.commAddr.type), sizeof(d.commAddr.type));
+        s.append(reinterpret_cast<const char*>(&d.protocol), sizeof(d.protocol));
+        s.append(reinterpret_cast<const char*>(&d.commAddr.type), sizeof(d.commAddr.type));
         // commAddr.union 内 raws[36] 覆盖全部 union 存储，可安全用于 hash
-        s.append(reinterpret_cast<const char *>(d.commAddr.raws), sizeof(d.commAddr.raws));
-        s.append(reinterpret_cast<const char *>(&d.loc.locType), sizeof(d.loc.locType));
-        s.append(reinterpret_cast<const char *>(d.loc.raws), sizeof(d.loc.raws));
+        s.append(reinterpret_cast<const char*>(d.commAddr.raws), sizeof(d.commAddr.raws));
+        s.append(reinterpret_cast<const char*>(&d.loc.locType), sizeof(d.loc.locType));
+        s.append(reinterpret_cast<const char*>(d.loc.raws), sizeof(d.loc.raws));
     }
-    std::size_t operator()(const EndpointDescPair &p) const noexcept
+    std::size_t operator()(const EndpointDescPair& p) const noexcept
     {
         std::string buf;
         buf.reserve(sizeof(EndpointDesc) * 2);
@@ -53,18 +53,16 @@ struct EndpointDescPairHash {
 
 // 字段级比较，规避 EndpointDesc padding 字段未初始化导致的误判
 struct EndpointDescPairEqual {
-    bool operator()(const EndpointDescPair &a, const EndpointDescPair &b) const noexcept
+    bool operator()(const EndpointDescPair& a, const EndpointDescPair& b) const noexcept
     {
-        return a.first.protocol == b.first.protocol &&
-               a.first.commAddr.type == b.first.commAddr.type &&
-               std::memcmp(a.first.commAddr.raws, b.first.commAddr.raws, sizeof(a.first.commAddr.raws)) == 0 &&
-               a.first.loc.locType == b.first.loc.locType &&
-               std::memcmp(a.first.loc.raws, b.first.loc.raws, sizeof(a.first.loc.raws)) == 0 &&
-               a.second.protocol == b.second.protocol &&
-               a.second.commAddr.type == b.second.commAddr.type &&
-               std::memcmp(a.second.commAddr.raws, b.second.commAddr.raws, sizeof(a.second.commAddr.raws)) == 0 &&
-               a.second.loc.locType == b.second.loc.locType &&
-               std::memcmp(a.second.loc.raws, b.second.loc.raws, sizeof(a.second.loc.raws)) == 0;
+        return a.first.protocol == b.first.protocol && a.first.commAddr.type == b.first.commAddr.type
+               && std::memcmp(a.first.commAddr.raws, b.first.commAddr.raws, sizeof(a.first.commAddr.raws)) == 0
+               && a.first.loc.locType == b.first.loc.locType
+               && std::memcmp(a.first.loc.raws, b.first.loc.raws, sizeof(a.first.loc.raws)) == 0
+               && a.second.protocol == b.second.protocol && a.second.commAddr.type == b.second.commAddr.type
+               && std::memcmp(a.second.commAddr.raws, b.second.commAddr.raws, sizeof(a.second.commAddr.raws)) == 0
+               && a.second.loc.locType == b.second.loc.locType
+               && std::memcmp(a.second.loc.raws, b.second.loc.raws, sizeof(a.second.loc.raws)) == 0;
     }
 };
 
@@ -83,7 +81,7 @@ public:
         uint32_t nextReturnIdx{0};
     };
 
-    static SharedJettyChannelPool &GetInstance();
+    static SharedJettyChannelPool& GetInstance();
 
     /**
      * @brief 获取或创建共享 Jetty Channel
@@ -96,23 +94,23 @@ public:
      * @param[out] outReusedCount 输出从池中复用的 channel 数量（可选，nullptr 时不输出）
      * @return HcclResult 执行结果
      */
-    HcclResult AcquireChannels(MyRank *myRank, const std::string &tag,
-        const EndpointDescPair &epPair, uint32_t requestedNum,
-        const std::function<HcclResult(uint32_t, ChannelHandle *)> &createFunc,
-        ChannelHandle *outChannels, uint32_t *outReusedCount = nullptr);
+    HcclResult AcquireChannels(
+        MyRank* myRank, const std::string& tag, const EndpointDescPair& epPair, uint32_t requestedNum,
+        const std::function<HcclResult(uint32_t, ChannelHandle*)>& createFunc, ChannelHandle* outChannels,
+        uint32_t* outReusedCount = nullptr);
 
     /**
      * @brief 销毁 MyRank 下所有共享 Jetty Channel（MyRank 析构时调用）
      * @param[in] myRank MyRank 指针
      */
-    HcclResult DestroyAllByMyRank(MyRank *myRank);
+    HcclResult DestroyAllByMyRank(MyRank* myRank);
 
     /**
      * @brief 检查 MyRank 是否有共享 Jetty Channel 未销毁
      * @param[in] myRank MyRank 指针
      * @return HcclResult HCCL_SUCCESS 表示可以销毁，HCCL_E_UNAVAIL 表示仍有 Channel
      */
-    HcclResult CheckMyRankDestroy(MyRank *myRank);
+    HcclResult CheckMyRankDestroy(MyRank* myRank);
 
     /**
      * @brief 从池中移除指定 channel 句柄（建链失败时清理已销毁的句柄）
@@ -122,25 +120,25 @@ public:
      * @param[in] channels 要移除的 channel 句柄数组
      * @param[in] channelNum 数量
      */
-    void RemoveChannels(MyRank *myRank, const std::string &tag,
-        const EndpointDescPair &epPair, const ChannelHandle *channels, uint32_t channelNum);
+    void RemoveChannels(
+        MyRank* myRank, const std::string& tag, const EndpointDescPair& epPair, const ChannelHandle* channels,
+        uint32_t channelNum);
 
 private:
     SharedJettyChannelPool() = default;
     ~SharedJettyChannelPool() = default;
-    SharedJettyChannelPool(const SharedJettyChannelPool &) = delete;
-    SharedJettyChannelPool &operator=(const SharedJettyChannelPool &) = delete;
+    SharedJettyChannelPool(const SharedJettyChannelPool&) = delete;
+    SharedJettyChannelPool& operator=(const SharedJettyChannelPool&) = delete;
 
-    HcclResult ReturnExistingChannels(MyRank *myRank, const std::string &tag,
-        const EndpointDescPair &epPair, uint32_t requestedNum,
-        ChannelHandle *outChannels, uint32_t &returnFromExisting, uint32_t &needCreate);
+    HcclResult ReturnExistingChannels(
+        MyRank* myRank, const std::string& tag, const EndpointDescPair& epPair, uint32_t requestedNum,
+        ChannelHandle* outChannels, uint32_t& returnFromExisting, uint32_t& needCreate);
 
-    using EpPairMap = std::unordered_map<EndpointDescPair, EpPairChannels,
-        EndpointDescPairHash, EndpointDescPairEqual>;
+    using EpPairMap = std::unordered_map<EndpointDescPair, EpPairChannels, EndpointDescPairHash, EndpointDescPairEqual>;
     using TagMap = std::unordered_map<std::string, EpPairMap>;
 
     std::mutex mtx_;
-    std::unordered_map<MyRank *, TagMap> rankPools_;
+    std::unordered_map<MyRank*, TagMap> rankPools_;
 };
 
 } // namespace hccl

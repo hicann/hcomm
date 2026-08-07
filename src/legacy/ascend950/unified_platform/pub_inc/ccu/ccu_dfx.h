@@ -20,8 +20,9 @@
 
 namespace Hccl {
 
-HcclResult GetCcuErrorMsg(s32 deviceId, uint16_t status, const ParaCcu& ccuTaskParam, std::vector<CcuErrorInfo>& errorInfo);
-HcclResult GetCcuJettys(s32 deviceLogicId, const ParaCcu& ccuTaskParam, std::vector<CcuJetty *>& ccuJettys);
+HcclResult
+GetCcuErrorMsg(s32 deviceId, uint16_t status, const ParaCcu& ccuTaskParam, std::vector<CcuErrorInfo>& errorInfo);
+HcclResult GetCcuJettys(s32 deviceLogicId, const ParaCcu& ccuTaskParam, std::vector<CcuJetty*>& ccuJettys);
 
 } // namespace Hccl
 #endif // HCCL_CCU_DFX_H

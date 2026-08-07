@@ -17,18 +17,18 @@ class AivAll2AllGraph91093 : public AivCrossNode91093Base {
 public:
     __aicore__ inline AivAll2AllGraph91093() {}
 
-    template<typename T>
-    __aicore__ inline void Process(GM_ADDR buffOut0, GM_ADDR commInfoAddr, GM_ADDR input, GM_ADDR output,
-        int32_t tag, uint64_t len);
+    template <typename T>
+    __aicore__ inline void
+    Process(GM_ADDR buffOut0, GM_ADDR commInfoAddr, GM_ADDR input, GM_ADDR output, int32_t tag, uint64_t len);
 };
 
-template<typename T>
-__aicore__ inline void AivAll2AllGraph91093::Process(GM_ADDR buffOut0, GM_ADDR commInfoAddr, GM_ADDR input,
-    GM_ADDR output, int32_t tag, uint64_t len)
+template <typename T>
+__aicore__ inline void AivAll2AllGraph91093::Process(
+    GM_ADDR buffOut0, GM_ADDR commInfoAddr, GM_ADDR input, GM_ADDR output, int32_t tag, uint64_t len)
 {
     // 内存准备
-    __gm__ T *inputGM = (__gm__ T *)input;
-    __gm__ T *outputGM = (__gm__ T *)output;
+    __gm__ T* inputGM = (__gm__ T*)input;
+    __gm__ T* outputGM = (__gm__ T*)output;
 
     // 首同步
     BatchRecordWait(tag, buffersOut);
@@ -37,7 +37,7 @@ __aicore__ inline void AivAll2AllGraph91093::Process(GM_ADDR buffOut0, GM_ADDR c
 
     // 读对端userin到usrout
     for (uint32_t i = 0; i < numTargets; i++) {
-        __gm__ T *inputGMOther = (__gm__ T *)(buffersIn[i]);
+        __gm__ T* inputGMOther = (__gm__ T*)(buffersIn[i]);
         CpGM2GM(outputGM + targetRanks[i] * len, inputGMOther + rank_ * len, len);
     }
 
@@ -52,7 +52,7 @@ __aicore__ inline void AivAll2AllGraph91093::Process(GM_ADDR buffOut0, GM_ADDR c
     }
 }
 
-template<typename T>
+template <typename T>
 __aicore__ inline void aiv_all_to_all_91093_graph(KERNEL_ARGS_DEF)
 {
     AivAll2AllGraph91093 op;
@@ -66,13 +66,13 @@ __aicore__ inline void aiv_all_to_all_91093_graph(KERNEL_ARGS_DEF)
 __aicore__ inline void sk_all_to_all_crossnode(SUPERKERNEL_ARGS_DEF)
 {
     AivAll2AllGraph91093 op;
-    
+
     op.InitSuperKernel(hiddenInput, true);
     if (op.dataType_ == HcclDataType::HCCL_DATA_TYPE_INT8) {
         op.Process<int8_t>(op.flagAddrSelf_, op.commAddr_, input, output, op.tag_, op.len_);
     } else if (op.dataType_ == HcclDataType::HCCL_DATA_TYPE_INT16) {
-        op.Process<int16_t>( op.flagAddrSelf_, op.commAddr_, input, output, op.tag_, op.len_);
-    } else if (op.dataType_ ==HCCL_DATA_TYPE_INT32) {
+        op.Process<int16_t>(op.flagAddrSelf_, op.commAddr_, input, output, op.tag_, op.len_);
+    } else if (op.dataType_ == HCCL_DATA_TYPE_INT32) {
         op.Process<int32_t>(op.flagAddrSelf_, op.commAddr_, input, output, op.tag_, op.len_);
     } else if (op.dataType_ == HCCL_DATA_TYPE_FP16) {
         op.Process<half>(op.flagAddrSelf_, op.commAddr_, input, output, op.tag_, op.len_);
@@ -84,13 +84,13 @@ __aicore__ inline void sk_all_to_all_crossnode(SUPERKERNEL_ARGS_DEF)
         op.Process<uint8_t>(op.flagAddrSelf_, op.commAddr_, input, output, op.tag_, op.len_);
     } else if (op.dataType_ == HCCL_DATA_TYPE_UINT16) {
         op.Process<uint16_t>(op.flagAddrSelf_, op.commAddr_, input, output, op.tag_, op.len_);
-    } else if (op.dataType_ == HCCL_DATA_TYPE_UINT32){
+    } else if (op.dataType_ == HCCL_DATA_TYPE_UINT32) {
         op.Process<uint32_t>(op.flagAddrSelf_, op.commAddr_, input, output, op.tag_, op.len_);
     } else if (op.dataType_ == HCCL_DATA_TYPE_INT64) {
         op.Process<int64_t>(op.flagAddrSelf_, op.commAddr_, input, output, op.tag_, op.len_);
     } else if (op.dataType_ == HCCL_DATA_TYPE_UINT64) {
         op.Process<uint64_t>(op.flagAddrSelf_, op.commAddr_, input, output, op.tag_, op.len_);
-    } else if (op.dataType_ == HCCL_DATA_TYPE_FP64){
+    } else if (op.dataType_ == HCCL_DATA_TYPE_FP64) {
         op.Process<double>(op.flagAddrSelf_, op.commAddr_, input, output, op.tag_, op.len_);
     }
 }

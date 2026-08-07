@@ -13,7 +13,6 @@
 
 #include "allltoall_pipeline_mesh_pairwise_ccl_enough_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALLTOALL_PIPELINE_MESH_PAIRWISE_CCL_ENOUGH_H */

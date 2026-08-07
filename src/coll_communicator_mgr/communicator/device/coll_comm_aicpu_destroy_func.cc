@@ -13,7 +13,7 @@
 #include "kernel_entrance.h"
 
 namespace hccl {
-CollCommAicpuDestroyFunc &CollCommAicpuDestroyFunc::GetInstance()
+CollCommAicpuDestroyFunc& CollCommAicpuDestroyFunc::GetInstance()
 {
     static CollCommAicpuDestroyFunc func;
     return func;
@@ -38,11 +38,11 @@ HcclResult CollCommAicpuDestroyFunc::Process()
     {
         std::shared_lock<std::shared_mutex> rwlock(AicpuIndopProcess::AicpuGetCommMutex());
 
-        std::vector<std::pair<std::string, CollCommAicpuMgr *>> aicpuCommInfo;
+        std::vector<std::pair<std::string, CollCommAicpuMgr*>> aicpuCommInfo;
         CHK_RET(AicpuIndopProcess::AicpuGetCommAll(aicpuCommInfo));
 
-        for (auto &commInfo : aicpuCommInfo) {
-            CollCommAicpu *aicpuComm = commInfo.second->GetCollCommAicpu();
+        for (auto& commInfo : aicpuCommInfo) {
+            CollCommAicpu* aicpuComm = commInfo.second->GetCollCommAicpu();
             CHK_PTR_NULL(aicpuComm);
 
             if (aicpuComm->GetCommmStatus() == HcclCommStatus::HCCL_COMM_STATUS_INVALID) {
@@ -65,8 +65,9 @@ HcclResult CollCommAicpuDestroyFunc::Process()
                 }
             }
 
-            HCCL_RUN_INFO("[%s]group[%s] Recv DESTROY_AICPU_COMM cmd and set DESTROY_AICPU_COMM_DONE",
-                __func__, aicpuComm->GetIdentifier().c_str());
+            HCCL_RUN_INFO(
+                "[%s]group[%s] Recv DESTROY_AICPU_COMM cmd and set DESTROY_AICPU_COMM_DONE", __func__,
+                aicpuComm->GetIdentifier().c_str());
         }
     }
 
@@ -75,4 +76,4 @@ HcclResult CollCommAicpuDestroyFunc::Process()
     }
     return HCCL_SUCCESS;
 }
-}  // namespace hccl
+} // namespace hccl

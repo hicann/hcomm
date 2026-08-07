@@ -15,35 +15,43 @@
 namespace hcomm {
 namespace CcuRep {
 
-using namespace Hccl;
+    using namespace Hccl;
 
-CcuRepLoadVar::CcuRepLoadVar(CcuInsGeneratorBase* insGenPtr, const Variable &src, const Variable &var, uint32_t num) :
-    insGeneratorPtr_(insGenPtr), src(src), var(var), num(num)
-{
-    type       = CcuRepType::LOAD_VAR;
-    instrCount = insGeneratorPtr_->GetInstrCount(type);
-}
+    CcuRepLoadVar::CcuRepLoadVar(CcuInsGeneratorBase* insGenPtr, const Variable& src, const Variable& var, uint32_t num)
+        : insGeneratorPtr_(insGenPtr),
+          src(src),
+          var(var),
+          num(num)
+    {
+        type = CcuRepType::LOAD_VAR;
+        instrCount = insGeneratorPtr_->GetInstrCount(type);
+    }
 
-bool CcuRepLoadVar::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    Hccl::CHECK_NULLPTR(instr, "[CcuRepLoadVar::Translate] instr is nullptr!");
-    this->instrId    = instrId;
-    translated       = true;
-    CHK_RET_THROW(Hccl::CcuApiException,
-        Hccl::StringFormat("[CcuRepLoadVar][%s] failed to translate repLoadVar for instrId[%u] ", __func__, instrId),
+    bool CcuRepLoadVar::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        Hccl::CHECK_NULLPTR(instr, "[CcuRepLoadVar::Translate] instr is nullptr!");
+        this->instrId = instrId;
+        translated = true;
+        CHK_RET_THROW(
+            Hccl::CcuApiException,
+            Hccl::StringFormat(
+                "[CcuRepLoadVar][%s] failed to translate repLoadVar for instrId[%u] ", __func__, instrId),
             insGeneratorPtr_->CcuRepLoadVarTranslate(ccuKernel, instr, instrId, this, dep));
-    CHK_PRT_THROW((instrId > UINT16_MAX - instrCount),
-                        HCCL_ERROR("[CcuRepLoadVar::Translate]uint16 integer overflow occurs, instrId = [%hu], instrCount = [%hu]", instrId, instrCount),
-                          Hccl::InternalException, "integer overflow");
-    instrId += instrCount;
+        CHK_PRT_THROW(
+            (instrId > UINT16_MAX - instrCount),
+            HCCL_ERROR(
+                "[CcuRepLoadVar::Translate]uint16 integer overflow occurs, instrId = [%hu], instrCount = [%hu]",
+                instrId, instrCount),
+            Hccl::InternalException, "integer overflow");
+        instrId += instrCount;
 
-    return translated;
-}
+        return translated;
+    }
 
-std::string CcuRepLoadVar::Describe()
-{
-    return Hccl::StringFormat("Load Var([%llu], [%u], [%u])", src.Id(), var.Id(), num);
-}
+    std::string CcuRepLoadVar::Describe()
+    {
+        return Hccl::StringFormat("Load Var([%llu], [%u], [%u])", src.Id(), var.Id(), num);
+    }
 
 }; // namespace CcuRep
 }; // namespace hcomm

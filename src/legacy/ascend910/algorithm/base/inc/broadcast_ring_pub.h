@@ -19,10 +19,11 @@ public:
     explicit BroadcastRing(const HcclDispatcher dispatcher);
     ~BroadcastRing() override;
 
-    HcclResult RunAsync(
-        const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport> > &links) override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult
+    RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
+
 protected:
 private:
     std::shared_ptr<Transport> linkLeft_;
@@ -30,6 +31,6 @@ private:
 
     DeviceMem scratch_; /* * 临时deviceMem */
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* BROADCAST_RING_PUB_H */

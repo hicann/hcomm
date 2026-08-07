@@ -14,7 +14,7 @@
 namespace hccl {
 
 constexpr u32 DUMPTASK_COUNT_UPPER_LIMIT = 1000; // 算子溢出的task最大值为1000，防止内存占用量过大
-constexpr u32 SUBTASK_DEFAULT_VALUE = 10; // subTaskType默认参数
+constexpr u32 SUBTASK_DEFAULT_VALUE = 10;        // subTaskType默认参数
 constexpr u32 REDUCE_INLINE = 0;
 constexpr u32 REDUCE_TBE = 1;
 
@@ -42,16 +42,17 @@ uint32_t TaskOverflow::GetTaskName(TaskType taskType) const
     return taskNameId;
 }
 
-HcclResult TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType &taskType, const TaskParaReduce &paraReduce)
+HcclResult
+TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType& taskType, const TaskParaReduce& paraReduce)
 {
     if (GetExternalInputHcclDumpDebug()) {
         HCCL_DEBUG("HcclDumpInfo save start");
-        HcclDumpInfo hcclDumpInfo {};
+        HcclDumpInfo hcclDumpInfo{};
         hcclDumpInfo.task_id = taskID;
         hcclDumpInfo.stream_id = streamID;
-        hcclDumpInfo.output_addr = const_cast<void *>(paraReduce.dst);
+        hcclDumpInfo.output_addr = const_cast<void*>(paraReduce.dst);
         hcclDumpInfo.output_size = static_cast<u64>(paraReduce.size);
-        hcclDumpInfo.input_addr = const_cast<void *>(paraReduce.src);
+        hcclDumpInfo.input_addr = const_cast<void*>(paraReduce.src);
         hcclDumpInfo.input_size = static_cast<u64>(paraReduce.size);
         hcclDumpInfo.sub_task_type = GetTaskName(taskType);
 
@@ -65,52 +66,51 @@ HcclResult TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, Tas
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskOverflow::Save(u32 &streamID, u32 &taskID, TaskType &taskType, const TaskParaReduce &paraReduce)
+HcclResult TaskOverflow::Save(u32& streamID, u32& taskID, TaskType& taskType, const TaskParaReduce& paraReduce)
 {
     return Save(streamID, streamID, taskID, taskType, paraReduce);
 }
 
-HcclResult TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType &taskType, const TaskParaDMA &paraDMA)
+HcclResult
+TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType& taskType, const TaskParaDMA& paraDMA)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskOverflow::Save(u32 &streamID, u32 &taskID, TaskType &taskType, const TaskParaDMA &paraDMA)
+HcclResult TaskOverflow::Save(u32& streamID, u32& taskID, TaskType& taskType, const TaskParaDMA& paraDMA)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType &taskType, const TaskParaNotify &paraNotify)
+HcclResult
+TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType& taskType, const TaskParaNotify& paraNotify)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskOverflow::Save(u32 &streamID, u32 &taskID, TaskType &taskType, const TaskParaNotify &paraNotify)
+HcclResult TaskOverflow::Save(u32& streamID, u32& taskID, TaskType& taskType, const TaskParaNotify& paraNotify)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, const void *descBuf, size_t descBufLen)
+HcclResult TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, const void* descBuf, size_t descBufLen)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, const TaskParaAiv &paraAiv)
+HcclResult TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, const TaskParaAiv& paraAiv)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskOverflow::Save(u32 streamID, u32 taskID, const TaskParaAiv &paraAiv)
+HcclResult TaskOverflow::Save(u32 streamID, u32 taskID, const TaskParaAiv& paraAiv) { return HCCL_SUCCESS; }
+
+HcclResult TaskOverflow::Save(u32& streamID, u32& taskID, const void* descBuf, size_t descBufLen)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskOverflow::Save(u32 &streamID, u32 &taskID, const void *descBuf, size_t descBufLen)
-{
-    return HCCL_SUCCESS;
-}
-
-HcclResult TaskOverflow::GetandClearOverFlowTasks(std::vector<HcclDumpInfo> &hcclDumpInfoVector)
+HcclResult TaskOverflow::GetandClearOverFlowTasks(std::vector<HcclDumpInfo>& hcclDumpInfoVector)
 {
     hcclDumpInfoVector.assign(dumpInfoVetcor_.begin(), dumpInfoVetcor_.end());
     dumpInfoVetcor_.clear();
@@ -118,18 +118,9 @@ HcclResult TaskOverflow::GetandClearOverFlowTasks(std::vector<HcclDumpInfo> &hcc
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskOverflow::Flush()
-{
-    return HCCL_SUCCESS;
-}
+HcclResult TaskOverflow::Flush() { return HCCL_SUCCESS; }
 
-HcclResult TaskOverflow::Run(const StepData &stepData)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult TaskOverflow::Run(const StepData& stepData) { return HCCL_SUCCESS; }
 
-HcclResult TaskOverflow::SaveToLog(const TaskParaHost &paraHost)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult TaskOverflow::SaveToLog(const TaskParaHost& paraHost) { return HCCL_SUCCESS; }
 } // namespace hccl

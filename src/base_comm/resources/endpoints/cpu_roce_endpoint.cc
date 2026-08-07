@@ -21,14 +21,11 @@
 #include "hccp.h"
 
 using Hccl::HcclException;
-using std::string;
 using std::exception;
- 
+using std::string;
+
 namespace hcomm {
-CpuRoceEndpoint::CpuRoceEndpoint(const EndpointDesc &endpointDesc)
-    : Endpoint(endpointDesc)
-{
-}
+CpuRoceEndpoint::CpuRoceEndpoint(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
 
 CpuRoceEndpoint::~CpuRoceEndpoint() noexcept
 {
@@ -55,23 +52,26 @@ HcclResult CpuRoceEndpoint::Init()
     EXCEPTION_CATCH(Hccl::HccpPeerManager::GetInstance().Init(devId), return HCCL_E_INTERNAL);
     u32 devPhyId = 0;
     CHK_RET(hrtGetDevicePhyIdByIndex(devId, devPhyId));
-    auto &rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
-    TRY_CATCH_RETURN(ctxHandle_ = static_cast<void *>(
-        rdmaHandleMgr.GetByAddr(devPhyId, Hccl::LinkProtoType::RDMA, ipAddr, Hccl::PortDeploymentType::HOST_NET)));
+    auto& rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
+    TRY_CATCH_RETURN(
+        ctxHandle_ = static_cast<void*>(
+            rdmaHandleMgr.GetByAddr(devPhyId, Hccl::LinkProtoType::RDMA, ipAddr, Hccl::PortDeploymentType::HOST_NET)));
     CHK_PTR_NULL(ctxHandle_);
-    HCCL_INFO("CpuRoceEndpoint::%s success, devPhyId[%u], ipAddr[%s], ctxHandle[%p]",
-        __func__,
-        devPhyId,
-        ipAddr.Describe().c_str(),
-        ctxHandle_);
+    HCCL_INFO(
+        "CpuRoceEndpoint::%s success, devPhyId[%u], ipAddr[%s], ctxHandle[%p]", __func__, devPhyId,
+        ipAddr.Describe().c_str(), ctxHandle_);
 
     cacheKey_ = MemMgrCacheKey{devPhyId, COMM_PROTOCOL_ROCE, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
-    auto &cache = ProcRegedMemMgrCache::GetInstance();
-    EXCEPTION_CATCH(regedMemMgr_ = cache.GetOrCreate(cacheKey_, [this]() {
-        auto m = std::make_shared<RoceRegedMemMgr>();
-        m->rdmaHandle_ = this->ctxHandle_;
-        return m;
-    }), return HCCL_E_PARA);
+    auto& cache = ProcRegedMemMgrCache::GetInstance();
+    EXCEPTION_CATCH(
+        regedMemMgr_ = cache.GetOrCreate(
+            cacheKey_,
+            [this]() {
+                auto m = std::make_shared<RoceRegedMemMgr>();
+                m->rdmaHandle_ = this->ctxHandle_;
+                return m;
+            }),
+        return HCCL_E_PARA);
     return HCCL_SUCCESS;
 }
 
@@ -88,11 +88,11 @@ HcclResult CpuRoceEndpoint::ServerSocketListen(const uint32_t port)
     Hccl::DevNetPortType type = Hccl::DevNetPortType(Hccl::ConnectProtoType::RDMA);
     Hccl::PortData localPort = Hccl::PortData(devPhyId, type, 0, ipAddr);
 
-    HCCL_INFO("[CpuRoceEndpoint::%s] devicePhyId[%u] ipAddress[%s]",
-        __func__, devPhyId, ipAddr.Describe().c_str());
+    HCCL_INFO("[CpuRoceEndpoint::%s] devicePhyId[%u] ipAddress[%s]", __func__, devPhyId, ipAddr.Describe().c_str());
 
     uint32_t requestPort = port;
-    CHK_RET(ServerSocketManager::GetInstance().ServerSocketStartListen(localPort, Hccl::NicType::HOST_NIC_TYPE, devPhyId, &requestPort));
+    CHK_RET(ServerSocketManager::GetInstance().ServerSocketStartListen(
+        localPort, Hccl::NicType::HOST_NIC_TYPE, devPhyId, &requestPort));
     return HCCL_SUCCESS;
 }
 
@@ -112,13 +112,10 @@ inline HcclResult CpuRoceEndpoint::ServerSocketStopListenImpl(const uint32_t por
 
     return HCCL_SUCCESS;
 }
- 	 
-HcclResult CpuRoceEndpoint::ServerSocketStopListen(const uint32_t port)
-{
-    return ServerSocketStopListenImpl(port);
-}
 
-HcclResult CpuRoceEndpoint::ServerSocketGetListenPort(uint32_t *port)
+HcclResult CpuRoceEndpoint::ServerSocketStopListen(const uint32_t port) { return ServerSocketStopListenImpl(port); }
+
+HcclResult CpuRoceEndpoint::ServerSocketGetListenPort(uint32_t* port)
 {
     std::lock_guard<std::mutex> lock(portMutex_);
     CHK_PTR_NULL(port);
@@ -133,17 +130,17 @@ HcclResult CpuRoceEndpoint::ServerSocketGetListenPort(uint32_t *port)
     Hccl::DevNetPortType type = Hccl::DevNetPortType(Hccl::ConnectProtoType::RDMA);
     Hccl::PortData localPort = Hccl::PortData(devPhyId, type, 0, ipAddr);
 
-    HCCL_INFO("[CpuRoceEndpoint::%s] devicePhyId[%u] ipAddress[%s]",
-        __func__, devPhyId, ipAddr.Describe().c_str());
+    HCCL_INFO("[CpuRoceEndpoint::%s] devicePhyId[%u] ipAddress[%s]", __func__, devPhyId, ipAddr.Describe().c_str());
 
     // 已有监听端口则直接返回
     if (dynamicPort_ != HCCL_INVALID_PORT) {
         *port = dynamicPort_;
         HCCL_INFO("[CpuRoceEndpoint::%s] already listening, return existing port[%u]", __func__, dynamicPort_);
-        return HCCL_SUCCESS; 
+        return HCCL_SUCCESS;
     }
     uint32_t requestPort = 0;
-    CHK_RET(ServerSocketManager::GetInstance().ServerSocketStartListen(localPort, Hccl::NicType::HOST_NIC_TYPE, devPhyId, &requestPort));
+    CHK_RET(ServerSocketManager::GetInstance().ServerSocketStartListen(
+        localPort, Hccl::NicType::HOST_NIC_TYPE, devPhyId, &requestPort));
     if (requestPort == 0 || requestPort == HCCL_INVALID_PORT) {
         HCCL_ERROR("[CpuRoceEndpoint::%s] get listen port failed, port is invalid", __func__);
         return HCCL_E_NETWORK;
@@ -153,7 +150,7 @@ HcclResult CpuRoceEndpoint::ServerSocketGetListenPort(uint32_t *port)
     return HCCL_SUCCESS;
 }
 
-HcclResult CpuRoceEndpoint::RegisterMemory(HcommMem mem, const char *memTag, void **memHandle)
+HcclResult CpuRoceEndpoint::RegisterMemory(HcommMem mem, const char* memTag, void** memHandle)
 {
     CHK_RET(this->regedMemMgr_->RegisterMemory(mem, memTag, memHandle));
     return HCCL_SUCCESS;
@@ -165,31 +162,31 @@ HcclResult CpuRoceEndpoint::UnregisterMemory(void* memHandle)
     return HCCL_SUCCESS;
 }
 
-HcclResult CpuRoceEndpoint::MemoryExport(void *memHandle, void **memDesc, uint32_t *memDescLen)
+HcclResult CpuRoceEndpoint::MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen)
 {
     CHK_RET(this->regedMemMgr_->MemoryExport(this->endpointDesc_, memHandle, memDesc, memDescLen));
     return HCCL_SUCCESS;
 }
 
-HcclResult CpuRoceEndpoint::MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem)
+HcclResult CpuRoceEndpoint::MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem)
 {
     CHK_RET(this->regedMemMgr_->MemoryImport(memDesc, descLen, outMem));
     return HCCL_SUCCESS;
 }
 
-HcclResult CpuRoceEndpoint::MemoryUnimport(const void *memDesc, uint32_t descLen)
+HcclResult CpuRoceEndpoint::MemoryUnimport(const void* memDesc, uint32_t descLen)
 {
     CHK_RET(this->regedMemMgr_->MemoryUnimport(memDesc, descLen));
     return HCCL_SUCCESS;
 }
 
-HcclResult CpuRoceEndpoint::GetAllMemHandles(void **memHandles, uint32_t *memHandleNum)
+HcclResult CpuRoceEndpoint::GetAllMemHandles(void** memHandles, uint32_t* memHandleNum)
 {
     CHK_RET(this->regedMemMgr_->GetAllMemHandles(memHandles, memHandleNum));
     return HCCL_SUCCESS;
 }
 
-HcclResult CpuRoceEndpoint::GetCapabilities(Capabilities &caps)
+HcclResult CpuRoceEndpoint::GetCapabilities(Capabilities& caps)
 {
     HCCL_INFO("[CpuRoceEndpoint::%s] START.", __func__);
     static constexpr uint64_t RDMA_MAX_WR_LENGTH = 1ULL * 1024 * 1024 * 1024; // 单次RDMA操作最大长度1GB
@@ -198,10 +195,12 @@ HcclResult CpuRoceEndpoint::GetCapabilities(Capabilities &caps)
         capabilities_.maxMsgSize = RDMA_MAX_WR_LENGTH;
         uint32_t ret = RaGetLbMax(this->regedMemMgr_->rdmaHandle_, &(capabilities_.lbMax));
         HCCL_DEBUG("[CpuRoceEndpoint::GetCapabilities] lbMax = %d.", capabilities_.lbMax);
-        CHK_PRT_RET(ret != 0,
-            HCCL_ERROR("[CpuRoceEndpoint::GetCapabilities][GetLbMax]errNo[0x%016llx] RaGetLbMax fail. "
-            "return[%u], params: rdmaHandle[%p], lbMax[%d]",
-            HCCL_ERROR_CODE(HCCL_E_NETWORK), ret, this->regedMemMgr_->rdmaHandle_, capabilities_.lbMax),
+        CHK_PRT_RET(
+            ret != 0,
+            HCCL_ERROR(
+                "[CpuRoceEndpoint::GetCapabilities][GetLbMax]errNo[0x%016llx] RaGetLbMax fail. "
+                "return[%u], params: rdmaHandle[%p], lbMax[%d]",
+                HCCL_ERROR_CODE(HCCL_E_NETWORK), ret, this->regedMemMgr_->rdmaHandle_, capabilities_.lbMax),
             HCCL_E_NETWORK);
         isCapabilitiesAvailable_ = true;
     }
@@ -209,4 +208,4 @@ HcclResult CpuRoceEndpoint::GetCapabilities(Capabilities &caps)
     HCCL_INFO("[CpuRoceEndpoint::%s] SUCCESS.", __func__);
     return HCCL_SUCCESS;
 }
-}
+} // namespace hcomm

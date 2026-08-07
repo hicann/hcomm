@@ -17,10 +17,7 @@
 using namespace checker;
 namespace hccl {
 
-u32 LocalNotify::GetNotifyIdx()
-{
-    return notifyidx_;
-}
+u32 LocalNotify::GetNotifyIdx() { return notifyidx_; }
 
 HcclResult LocalNotify::SetNotifyId(u32 notifyId)
 {
@@ -28,8 +25,8 @@ HcclResult LocalNotify::SetNotifyId(u32 notifyId)
     return HCCL_SUCCESS;
 }
 
-HcclResult LocalNotify::Wait(Stream& stream, HcclDispatcher dispatcherPtr, const std::shared_ptr<LocalNotify> &notify,
-    s32 stage, u32 timeOut)
+HcclResult LocalNotify::Wait(
+    Stream& stream, HcclDispatcher dispatcherPtr, const std::shared_ptr<LocalNotify>& notify, s32 stage, u32 timeOut)
 {
     RankId curRank = RankInfoRecorder::Global()->GetRankId();
     u32 notifyId = notify->GetNotifyIdx();
@@ -49,8 +46,8 @@ HcclResult LocalNotify::Wait(Stream& stream, HcclDispatcher dispatcher, s32 stag
     return HCCL_SUCCESS;
 }
 
-HcclResult LocalNotify::Post(Stream& stream, HcclDispatcher dispatcherPtr, const std::shared_ptr<LocalNotify> &notify,
-    s32 stage)
+HcclResult
+LocalNotify::Post(Stream& stream, HcclDispatcher dispatcherPtr, const std::shared_ptr<LocalNotify>& notify, s32 stage)
 {
     RankId curRank = RankInfoRecorder::Global()->GetRankId();
     u32 notifyId = notify->GetNotifyIdx();
@@ -70,13 +67,7 @@ HcclResult LocalNotify::Post(Stream& stream, HcclDispatcher dispatcherPtr, s32 s
     return HCCL_SUCCESS;
 }
 
-HcclResult Destroy()
-{
-    return HCCL_SUCCESS;
-}
+HcclResult Destroy() { return HCCL_SUCCESS; }
 
-HcclResult SetIpc()
-{
-    return HCCL_SUCCESS;
-}
-}
+HcclResult SetIpc() { return HCCL_SUCCESS; }
+} // namespace hccl

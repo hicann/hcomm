@@ -19,21 +19,21 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepBlock : public CcuRepBase {
-public:
-    explicit CcuRepBlock(const std::string &label = "");
-    bool                Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
-    uint16_t InstrCount() override;
-    const std::string &GetLabel() const;
-    std::vector<std::shared_ptr<CcuRepBase>> &GetReps();
-    void                                      Append(std::shared_ptr<CcuRepBase> rep);
-    std::shared_ptr<CcuRepBase> GetRepByInstrId(uint16_t instrId);
+    class CcuRepBlock : public CcuRepBase {
+    public:
+        explicit CcuRepBlock(const std::string& label = "");
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
+        uint16_t InstrCount() override;
+        const std::string& GetLabel() const;
+        std::vector<std::shared_ptr<CcuRepBase>>& GetReps();
+        void Append(std::shared_ptr<CcuRepBase> rep);
+        std::shared_ptr<CcuRepBase> GetRepByInstrId(uint16_t instrId);
 
-private:
-    std::string label;
-    std::vector<std::shared_ptr<CcuRepBase>> repVec;
-};
+    private:
+        std::string label;
+        std::vector<std::shared_ptr<CcuRepBase>> repVec;
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

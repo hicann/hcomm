@@ -18,15 +18,13 @@
 #include "json_utils.h"
 
 namespace hccl {
-HcclWhitelist &HcclWhitelist::GetInstance()
+HcclWhitelist& HcclWhitelist::GetInstance()
 {
     static HcclWhitelist wl;
     return wl;
 }
 
-HcclWhitelist::HcclWhitelist()
-{
-}
+HcclWhitelist::HcclWhitelist() {}
 
 HcclWhitelist::~HcclWhitelist()
 {
@@ -64,7 +62,8 @@ HcclResult HcclWhitelist::LoadConfigFile(const std::string& realName)
         try {
             infile >> fileContent; // 将文件内容读取到json对象内
         } catch (...) {
-            HCCL_ERROR("[Load][ConfigFile]errNo[0x%016llx] load file[%s] to json fail. please check json file format.",
+            HCCL_ERROR(
+                "[Load][ConfigFile]errNo[0x%016llx] load file[%s] to json fail. please check json file format.",
                 HCOM_ERROR_CODE(HCCL_E_INTERNAL), realName.c_str());
             infile.close();
             return HCCL_E_INTERNAL;
@@ -80,7 +79,8 @@ HcclResult HcclWhitelist::LoadConfigFile(const std::string& realName)
         try {
             ipStr = ipJson.get<std::string>();
         } catch (...) {
-            HCCL_ERROR("[Load][ConfigFile]errNo[0x%016llx]get ipStr from ipJson failed, please check host white list",
+            HCCL_ERROR(
+                "[Load][ConfigFile]errNo[0x%016llx]get ipStr from ipJson failed, please check host white list",
                 HCOM_ERROR_CODE(HCCL_E_INTERNAL));
             return HCCL_E_PARA;
         }
@@ -90,4 +90,4 @@ HcclResult HcclWhitelist::LoadConfigFile(const std::string& realName)
     }
     return HCCL_SUCCESS;
 }
-}
+} // namespace hccl

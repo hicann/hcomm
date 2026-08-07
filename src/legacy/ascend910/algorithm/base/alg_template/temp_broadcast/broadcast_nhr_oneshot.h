@@ -13,7 +13,6 @@
 
 #include "broadcast_nhr_oneshot_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
-#endif  /* BROADCAST_NHR_ONESHOT_H */
+#endif /* BROADCAST_NHR_ONESHOT_H */

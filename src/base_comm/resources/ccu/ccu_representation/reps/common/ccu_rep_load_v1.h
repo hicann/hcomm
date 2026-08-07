@@ -13,24 +13,24 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepLoad : public CcuRepBase {
-public:
-    CcuRepLoad(CcuInsGeneratorBase* insGenPtr, uint64_t addr, const Variable &var, uint32_t num = 1);
-    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
+    class CcuRepLoad : public CcuRepBase {
+    public:
+        CcuRepLoad(CcuInsGeneratorBase* insGenPtr, uint64_t addr, const Variable& var, uint32_t num = 1);
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-    CcuRep::Variable GetVar() { return var; }
-    uint64_t GetAddr() { return addr; }
-    uint32_t GetNum() { return num; }
-    uint16_t GetMask() { return mask; }
+        CcuRep::Variable GetVar() { return var; }
+        uint64_t GetAddr() { return addr; }
+        uint32_t GetNum() { return num; }
+        uint16_t GetMask() { return mask; }
 
-private:
-    CcuInsGeneratorBase* insGeneratorPtr_{nullptr};
-    Variable var;
-    uint64_t addr;
-    uint32_t num;
-    uint16_t mask{1};
-};
+    private:
+        CcuInsGeneratorBase* insGeneratorPtr_{nullptr};
+        Variable var;
+        uint64_t addr;
+        uint32_t num;
+        uint16_t mask{1};
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

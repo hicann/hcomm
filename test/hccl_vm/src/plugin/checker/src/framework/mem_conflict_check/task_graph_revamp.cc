@@ -36,18 +36,20 @@ GraphRevampBilateralSemantics::~GraphRevampBilateralSemantics()
 HcclResult GraphRevampBilateralSemantics::Revamp(TaskNodePtr dummyStart)
 {
     std::map<RankId, TaskNodePtr> rank2Head;
-    CHK_PRT_RET(InitRankHead(dummyStart, rank2Head) != HcclResult::HCCL_SUCCESS,
-                HCCL_ERROR("[GraphRevampBilateralSemantics] Unable to initialize head nodes for each rank."),
-                HcclResult::HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        InitRankHead(dummyStart, rank2Head) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("[GraphRevampBilateralSemantics] Unable to initialize head nodes for each rank."),
+        HcclResult::HCCL_E_INTERNAL);
 
     // revamp the graph for two-side semantics and rdma doorbell specs
-    CHK_PRT_RET(RevampGraph(dummyStart, rank2Head) != HcclResult::HCCL_SUCCESS,
-                HCCL_ERROR("[GraphRevampBilateralSemantics] Unable to revamp graph."), HcclResult::HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        RevampGraph(dummyStart, rank2Head) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("[GraphRevampBilateralSemantics] Unable to revamp graph."), HcclResult::HCCL_E_INTERNAL);
 
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampBilateralSemantics::InitRankHead(TaskNodePtr dummyStart, std::map<RankId, TaskNodePtr> &rank2Head)
+HcclResult GraphRevampBilateralSemantics::InitRankHead(TaskNodePtr dummyStart, std::map<RankId, TaskNodePtr>& rank2Head)
 {
     auto childIter = dummyStart->children.begin();
     for (; childIter != dummyStart->children.end(); childIter++) {
@@ -57,7 +59,7 @@ HcclResult GraphRevampBilateralSemantics::InitRankHead(TaskNodePtr dummyStart, s
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampBilateralSemantics::RevampGraph(TaskNodePtr dummyStart, std::map<RankId, TaskNodePtr> &rank2Head)
+HcclResult GraphRevampBilateralSemantics::RevampGraph(TaskNodePtr dummyStart, std::map<RankId, TaskNodePtr>& rank2Head)
 {
     VirtQueMgr virtQueManager;
     std::queue<TaskNodePtr> graphNodeQue;
@@ -91,8 +93,8 @@ HcclResult GraphRevampBilateralSemantics::RevampGraph(TaskNodePtr dummyStart, st
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampBilateralSemantics::ProceedNode(TaskNodePtr currNode, std::queue<TaskNodePtr> &graphNodeQue,
-                                                      std::set<TaskNodePtr> &isVisited)
+HcclResult GraphRevampBilateralSemantics::ProceedNode(
+    TaskNodePtr currNode, std::queue<TaskNodePtr>& graphNodeQue, std::set<TaskNodePtr>& isVisited)
 {
     for (auto childIter = currNode->children.begin(); childIter != currNode->children.end(); childIter++) {
         if (!(*childIter)->procFlag) {
@@ -105,8 +107,8 @@ HcclResult GraphRevampBilateralSemantics::ProceedNode(TaskNodePtr currNode, std:
     return HcclResult::HCCL_SUCCESS;
 }
 
-bool GraphRevampBilateralSemantics::IsProceedParentNode(TaskNodePtr currNode, std::queue<TaskNodePtr> &graphNodeQue,
-                                                        std::set<TaskNodePtr> &isVisited)
+bool GraphRevampBilateralSemantics::IsProceedParentNode(
+    TaskNodePtr currNode, std::queue<TaskNodePtr>& graphNodeQue, std::set<TaskNodePtr>& isVisited)
 {
     for (auto parentIter = currNode->parents.begin(); parentIter != currNode->parents.end(); parentIter++) {
         if (!(*parentIter)->procFlag) {
@@ -121,8 +123,8 @@ bool GraphRevampBilateralSemantics::IsProceedParentNode(TaskNodePtr currNode, st
     return true;
 }
 
-HcclResult GraphRevampBilateralSemantics::ProcReadNode(TaskNodePtr dummyStart, TaskNodePtr currNode,
-    std::map<RankId, TaskNodePtr> &rank2Head, VirtQueMgr &virtQueManager)
+HcclResult GraphRevampBilateralSemantics::ProcReadNode(
+    TaskNodePtr dummyStart, TaskNodePtr currNode, std::map<RankId, TaskNodePtr>& rank2Head, VirtQueMgr& virtQueManager)
 {
     LinkProtoStub link;
     RankId peerRank;
@@ -133,18 +135,23 @@ HcclResult GraphRevampBilateralSemantics::ProcReadNode(TaskNodePtr dummyStart, T
     if (link == LinkProtoStub::SDMA) {
         CHK_PRT_RET(
             ProcSdmaRWNode(dummyStart, currNode, rank2Head, virtQueManager) != HcclResult::HCCL_SUCCESS,
-            HCCL_ERROR("[GraphRevampBilateralSemantics] fail to proceed READ taskNode locates in Rank [%d] - Que [%u] - Pos [%u], "
-                "reading from Rank [%u].", currNode->rankIdx, currNode->queIdx, currNode->pos, peerRank),
+            HCCL_ERROR(
+                "[GraphRevampBilateralSemantics] fail to proceed READ taskNode locates in Rank [%d] - Que [%u] - Pos "
+                "[%u], "
+                "reading from Rank [%u].",
+                currNode->rankIdx, currNode->queIdx, currNode->pos, peerRank),
             HcclResult::HCCL_E_INTERNAL);
     } else {
-        HCCL_ERROR("[GraphRevampBilateralSemantics] Rank [%d], linkProto %s not supported yet.", currNode->rankIdx, link.Describe().c_str());
+        HCCL_ERROR(
+            "[GraphRevampBilateralSemantics] Rank [%d], linkProto %s not supported yet.", currNode->rankIdx,
+            link.Describe().c_str());
         return HcclResult::HCCL_E_INTERNAL;
     }
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampBilateralSemantics::ProcSdmaRWNode(TaskNodePtr dummyStart, TaskNodePtr currNode,
-    std::map<RankId, TaskNodePtr> &rank2Head, VirtQueMgr &virtQueManager)
+HcclResult GraphRevampBilateralSemantics::ProcSdmaRWNode(
+    TaskNodePtr dummyStart, TaskNodePtr currNode, std::map<RankId, TaskNodePtr>& rank2Head, VirtQueMgr& virtQueManager)
 {
     // Search backward and add beingRead in peerRank
     CHK_RET(SearchBackwardSdmaRW(dummyStart, currNode, rank2Head, virtQueManager));
@@ -155,8 +162,8 @@ HcclResult GraphRevampBilateralSemantics::ProcSdmaRWNode(TaskNodePtr dummyStart,
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampBilateralSemantics::SearchBackwardSdmaRW(TaskNodePtr dummyStart, TaskNodePtr currNode,
-    std::map<RankId, TaskNodePtr> &rank2Head, VirtQueMgr &virtQueManager)
+HcclResult GraphRevampBilateralSemantics::SearchBackwardSdmaRW(
+    TaskNodePtr dummyStart, TaskNodePtr currNode, std::map<RankId, TaskNodePtr>& rank2Head, VirtQueMgr& virtQueManager)
 {
     RankId peerRank;
     CHK_RET(GetPeerRankByTaskNode(currNode, peerRank));
@@ -164,7 +171,8 @@ HcclResult GraphRevampBilateralSemantics::SearchBackwardSdmaRW(TaskNodePtr dummy
     std::queue<TaskNodePtr> candParents;
     std::set<TaskNodePtr> isVisited;
     if (currNode->parents.size() != 1) {
-        HCCL_ERROR("[GraphRevampBilateralSemantics] read taskNode parent num is not 1, is [%d].", currNode->parents.size());
+        HCCL_ERROR(
+            "[GraphRevampBilateralSemantics] read taskNode parent num is not 1, is [%d].", currNode->parents.size());
         return HcclResult::HCCL_E_INTERNAL;
     }
     candParents.push(currNode->parents[0]);
@@ -174,7 +182,7 @@ HcclResult GraphRevampBilateralSemantics::SearchBackwardSdmaRW(TaskNodePtr dummy
         TaskNodePtr candNode = candParents.front();
         candParents.pop();
         if (candNode->task->GetType() == TaskTypeStub::WAIT) {
-            TaskStubWait *candWait = dynamic_cast<TaskStubWait *>(candNode->task);
+            TaskStubWait* candWait = dynamic_cast<TaskStubWait*>(candNode->task);
             if (candWait->GetRemoteRank() == peerRank) {
                 // get Wait(peerRank)
                 return HcclResult::HCCL_SUCCESS;
@@ -199,8 +207,8 @@ HcclResult GraphRevampBilateralSemantics::SearchBackwardSdmaRW(TaskNodePtr dummy
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampBilateralSemantics::SearchForwardSdmaRW(TaskNodePtr dummyStart, TaskNodePtr currNode,
-    std::map<RankId, TaskNodePtr> &rank2Head, VirtQueMgr &virtQueManager)
+HcclResult GraphRevampBilateralSemantics::SearchForwardSdmaRW(
+    TaskNodePtr dummyStart, TaskNodePtr currNode, std::map<RankId, TaskNodePtr>& rank2Head, VirtQueMgr& virtQueManager)
 {
     RankId peerRank;
     CHK_RET(GetPeerRankByTaskNode(currNode, peerRank));
@@ -209,7 +217,8 @@ HcclResult GraphRevampBilateralSemantics::SearchForwardSdmaRW(TaskNodePtr dummyS
     std::queue<TaskNodePtr> candChildren;
     std::set<TaskNodePtr> isVisited;
     if (currNode->children.size() != 1) {
-        HCCL_ERROR("[GraphRevampBilateralSemantics] read taskNode child num is not 1, is [%d].", currNode->children.size());
+        HCCL_ERROR(
+            "[GraphRevampBilateralSemantics] read taskNode child num is not 1, is [%d].", currNode->children.size());
         return HcclResult::HCCL_E_INTERNAL;
     }
     candChildren.push(currNode->children[0]);
@@ -218,7 +227,7 @@ HcclResult GraphRevampBilateralSemantics::SearchForwardSdmaRW(TaskNodePtr dummyS
         TaskNodePtr candNode = candChildren.front();
         candChildren.pop();
         if (candNode->task->GetType() == TaskTypeStub::POST) {
-            TaskStubPost *candPost = dynamic_cast<TaskStubPost *>(candNode->task);
+            TaskStubPost* candPost = dynamic_cast<TaskStubPost*>(candNode->task);
             if (candPost->GetRemoteRank() == peerRank) {
                 // get Post(peerRank)
                 return HcclResult::HCCL_SUCCESS;
@@ -250,8 +259,7 @@ HcclResult GraphRevampBilateralSemantics::InsertNode(TaskNodePtr headNode, TaskN
     auto childIter = headNode->children.begin();
     for (; childIter != headNode->children.end(); childIter++) {
         TaskNodePtr originalNxtNode = (*childIter);
-        if ((originalNxtNode->rankIdx == headNode->rankIdx) && (originalNxtNode->queIdx == headNode->queIdx)
-        ) {
+        if ((originalNxtNode->rankIdx == headNode->rankIdx) && (originalNxtNode->queIdx == headNode->queIdx)) {
             InsertNode(originalNxtNode, insertNode);
             return HcclResult::HCCL_SUCCESS;
         } else if ((originalNxtNode->rankIdx == headNode->rankIdx) && (originalNxtNode->queIdx == headNode->queIdx)) {
@@ -275,8 +283,8 @@ HcclResult GraphRevampBilateralSemantics::InsertNode(TaskNodePtr headNode, TaskN
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampBilateralSemantics::ProcWriteNode(TaskNodePtr dummyStart, TaskNodePtr currNode,
-                                     std::map<RankId, TaskNodePtr> &rank2Head, VirtQueMgr &virtQueManager)
+HcclResult GraphRevampBilateralSemantics::ProcWriteNode(
+    TaskNodePtr dummyStart, TaskNodePtr currNode, std::map<RankId, TaskNodePtr>& rank2Head, VirtQueMgr& virtQueManager)
 {
     LinkProtoStub link;
     RankId peerRank;
@@ -286,26 +294,32 @@ HcclResult GraphRevampBilateralSemantics::ProcWriteNode(TaskNodePtr dummyStart, 
     if (link == LinkProtoStub::RDMA) {
         CHK_PRT_RET(
             ProcRdmaWriteNode(dummyStart, currNode, rank2Head, virtQueManager) != HcclResult::HCCL_SUCCESS,
-            HCCL_ERROR("[GraphRevampBilateralSemantics] fail to proceed WRITE taskNode locates in Rank [%d] - Que [%u] - Pos [%u], "
-                       "reading from Rank [%u].",
-                       currNode->rankIdx, currNode->queIdx, currNode->pos, peerRank),
+            HCCL_ERROR(
+                "[GraphRevampBilateralSemantics] fail to proceed WRITE taskNode locates in Rank [%d] - Que [%u] - Pos "
+                "[%u], "
+                "reading from Rank [%u].",
+                currNode->rankIdx, currNode->queIdx, currNode->pos, peerRank),
             HcclResult::HCCL_E_INTERNAL);
     } else if (link == LinkProtoStub::SDMA) {
         CHK_PRT_RET(
             ProcSdmaRWNode(dummyStart, currNode, rank2Head, virtQueManager) != HcclResult::HCCL_SUCCESS,
-            HCCL_ERROR("[GraphRevampBilateralSemantics] fail to proceed WRITE taskNode locates in Rank [%d] - Que [%u] - Pos [%u], "
-                       "reading from Rank [%u].",
-                       currNode->rankIdx, currNode->queIdx, currNode->pos, peerRank),
+            HCCL_ERROR(
+                "[GraphRevampBilateralSemantics] fail to proceed WRITE taskNode locates in Rank [%d] - Que [%u] - Pos "
+                "[%u], "
+                "reading from Rank [%u].",
+                currNode->rankIdx, currNode->queIdx, currNode->pos, peerRank),
             HcclResult::HCCL_E_INTERNAL);
     } else {
-        HCCL_ERROR("[GraphRevampBilateralSemantics] Rank [%d], linkProto %s not supported yet.", currNode->rankIdx, link.Describe().c_str());
+        HCCL_ERROR(
+            "[GraphRevampBilateralSemantics] Rank [%d], linkProto %s not supported yet.", currNode->rankIdx,
+            link.Describe().c_str());
         return HcclResult::HCCL_E_INTERNAL;
     }
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampBilateralSemantics::ProcRdmaWriteNode(TaskNodePtr dummyStart, TaskNodePtr currNode,
-                                          std::map<RankId, TaskNodePtr> &rank2Head, VirtQueMgr &virtQueManager)
+HcclResult GraphRevampBilateralSemantics::ProcRdmaWriteNode(
+    TaskNodePtr dummyStart, TaskNodePtr currNode, std::map<RankId, TaskNodePtr>& rank2Head, VirtQueMgr& virtQueManager)
 {
     // Search backward and add beingRead in peerRank
     CHK_RET(SearchBackwardRdmaWrite(dummyStart, currNode, rank2Head, virtQueManager));
@@ -317,8 +331,8 @@ HcclResult GraphRevampBilateralSemantics::ProcRdmaWriteNode(TaskNodePtr dummySta
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampBilateralSemantics::SearchBackwardRdmaWrite(TaskNodePtr dummyStart, TaskNodePtr currNode,
-                                   std::map<RankId, TaskNodePtr> &rank2Head, VirtQueMgr &virtQueManager)
+HcclResult GraphRevampBilateralSemantics::SearchBackwardRdmaWrite(
+    TaskNodePtr dummyStart, TaskNodePtr currNode, std::map<RankId, TaskNodePtr>& rank2Head, VirtQueMgr& virtQueManager)
 {
     RankId peerRank;
     CHK_RET(GetPeerRankByTaskNode(currNode, peerRank));
@@ -327,7 +341,8 @@ HcclResult GraphRevampBilateralSemantics::SearchBackwardRdmaWrite(TaskNodePtr du
     std::queue<TaskNodePtr> candParents;
     std::set<TaskNodePtr> isVisited;
     if (currNode->parents.size() != 1) {
-        HCCL_ERROR("[GraphRevampBilateralSemantics] write taskNode parent num is not 1, is [%d].", currNode->parents.size());
+        HCCL_ERROR(
+            "[GraphRevampBilateralSemantics] write taskNode parent num is not 1, is [%d].", currNode->parents.size());
         return HcclResult::HCCL_E_INTERNAL;
     }
     candParents.push(currNode->parents[0]);
@@ -336,11 +351,11 @@ HcclResult GraphRevampBilateralSemantics::SearchBackwardRdmaWrite(TaskNodePtr du
         TaskNodePtr candNode = candParents.front();
         candParents.pop();
         if (candNode->task->GetType() == TaskTypeStub::WAIT) {
-            TaskStubWait *candWait = dynamic_cast<TaskStubWait *>(candNode->task);
+            TaskStubWait* candWait = dynamic_cast<TaskStubWait*>(candNode->task);
             if (candWait->GetRemoteRank() == peerRank) {
                 return HcclResult::HCCL_SUCCESS;
             }
-        } 
+        }
 
         // update candChildren
         auto candParentsIter = candNode->parents.begin();
@@ -356,8 +371,8 @@ HcclResult GraphRevampBilateralSemantics::SearchBackwardRdmaWrite(TaskNodePtr du
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampBilateralSemantics::SearchForwardRdmaWrite(TaskNodePtr dummyStart, TaskNodePtr currNode,
-                                  std::map<RankId, TaskNodePtr> &rank2Head, VirtQueMgr &virtQueManager)
+HcclResult GraphRevampBilateralSemantics::SearchForwardRdmaWrite(
+    TaskNodePtr dummyStart, TaskNodePtr currNode, std::map<RankId, TaskNodePtr>& rank2Head, VirtQueMgr& virtQueManager)
 {
     RankId peerRank;
     CHK_RET(GetPeerRankByTaskNode(currNode, peerRank));
@@ -365,7 +380,9 @@ HcclResult GraphRevampBilateralSemantics::SearchForwardRdmaWrite(TaskNodePtr dum
     std::queue<TaskNodePtr> candChildren;
     std::set<TaskNodePtr> isVisited;
     if (currNode->children.size() != 1) {
-        HCCL_ERROR("[GraphRevampBilateralSemantics] write taskNode children num is not 1, is [%d].", currNode->children.size());
+        HCCL_ERROR(
+            "[GraphRevampBilateralSemantics] write taskNode children num is not 1, is [%d].",
+            currNode->children.size());
         return HcclResult::HCCL_E_INTERNAL;
     }
     candChildren.push(currNode->children[0]);
@@ -375,12 +392,12 @@ HcclResult GraphRevampBilateralSemantics::SearchForwardRdmaWrite(TaskNodePtr dum
         TaskNodePtr candNode = candChildren.front();
         candChildren.pop();
         if (candNode->task->GetType() == TaskTypeStub::POST) {
-            TaskStubPost *candPost = dynamic_cast<TaskStubPost *>(candNode->task);
+            TaskStubPost* candPost = dynamic_cast<TaskStubPost*>(candNode->task);
             if (candPost->GetRemoteRank() == peerRank) {
                 HCCL_ERROR("[GraphRevampBilateralSemantics::SearchForwardRdmaWrite] TaskType POST not support");
             }
         } else if (candNode->task->GetType() == TaskTypeStub::WAIT) {
-            TaskStubWait *candWait = dynamic_cast<TaskStubWait *>(candNode->task);
+            TaskStubWait* candWait = dynamic_cast<TaskStubWait*>(candNode->task);
             if (candWait->GetRemoteRank() == peerRank) {
                 HCCL_ERROR("[GraphRevampBilateralSemantics::SearchForwardRdmaWrite] TaskType WAIT not support");
                 return HcclResult::HCCL_SUCCESS;
@@ -402,37 +419,37 @@ HcclResult GraphRevampBilateralSemantics::SearchForwardRdmaWrite(TaskNodePtr dum
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampBilateralSemantics::GetPeerRankByTaskNode(TaskNodePtr currNode, RankId &peerRank)
+HcclResult GraphRevampBilateralSemantics::GetPeerRankByTaskNode(TaskNodePtr currNode, RankId& peerRank)
 {
     if (currNode->task->GetType() == TaskTypeStub::READ) {
-        TaskStubRead *read = dynamic_cast<TaskStubRead *>(currNode->task);
+        TaskStubRead* read = dynamic_cast<TaskStubRead*>(currNode->task);
         peerRank = read->GetRemoteRank();
     } else if (currNode->task->GetType() == TaskTypeStub::READ_REDUCE) {
-        TaskStubReadReduce *read = dynamic_cast<TaskStubReadReduce *>(currNode->task);
+        TaskStubReadReduce* read = dynamic_cast<TaskStubReadReduce*>(currNode->task);
         peerRank = read->GetRemoteRank();
     } else if (currNode->task->GetType() == TaskTypeStub::WRITE) {
-        TaskStubWrite *write = dynamic_cast<TaskStubWrite *>(currNode->task);
+        TaskStubWrite* write = dynamic_cast<TaskStubWrite*>(currNode->task);
         peerRank = write->GetRemoteRank();
     } else if (currNode->task->GetType() == TaskTypeStub::WRITE_REDUCE) {
-        TaskStubWriteReduce *write = dynamic_cast<TaskStubWriteReduce *>(currNode->task);
+        TaskStubWriteReduce* write = dynamic_cast<TaskStubWriteReduce*>(currNode->task);
         peerRank = write->GetRemoteRank();
     }
     return HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampBilateralSemantics::GetLinkProtoStubByTaskNode(TaskNodePtr currNode, LinkProtoStub &link)
+HcclResult GraphRevampBilateralSemantics::GetLinkProtoStubByTaskNode(TaskNodePtr currNode, LinkProtoStub& link)
 {
     if (currNode->task->GetType() == TaskTypeStub::READ) {
-        TaskStubRead *read = dynamic_cast<TaskStubRead *>(currNode->task);
+        TaskStubRead* read = dynamic_cast<TaskStubRead*>(currNode->task);
         link = read->GetLinkType();
     } else if (currNode->task->GetType() == TaskTypeStub::READ_REDUCE) {
-        TaskStubReadReduce *read = dynamic_cast<TaskStubReadReduce *>(currNode->task);
+        TaskStubReadReduce* read = dynamic_cast<TaskStubReadReduce*>(currNode->task);
         link = read->GetLinkType();
     } else if (currNode->task->GetType() == TaskTypeStub::WRITE) {
-        TaskStubWrite *write = dynamic_cast<TaskStubWrite *>(currNode->task);
+        TaskStubWrite* write = dynamic_cast<TaskStubWrite*>(currNode->task);
         link = write->GetLinkType();
     } else if (currNode->task->GetType() == TaskTypeStub::WRITE_REDUCE) {
-        TaskStubWriteReduce *write = dynamic_cast<TaskStubWriteReduce *>(currNode->task);
+        TaskStubWriteReduce* write = dynamic_cast<TaskStubWriteReduce*>(currNode->task);
         link = write->GetLinkType();
     }
     return HCCL_SUCCESS;
@@ -441,22 +458,22 @@ HcclResult GraphRevampBilateralSemantics::GetLinkProtoStubByTaskNode(TaskNodePtr
 bool GraphRevampBilateralSemantics::IsReadWriteWithSameRank(RankId peerRank, TaskNodePtr candNode)
 {
     if (candNode->task->GetType() == TaskTypeStub::READ) {
-        TaskStubRead *candRead = dynamic_cast<TaskStubRead *>(candNode->task);
+        TaskStubRead* candRead = dynamic_cast<TaskStubRead*>(candNode->task);
         if (candRead->GetRemoteRank() == peerRank) {
             return true;
         }
     } else if (candNode->task->GetType() == TaskTypeStub::WRITE) {
-        TaskStubWrite *candWrite = dynamic_cast<TaskStubWrite *>(candNode->task);
+        TaskStubWrite* candWrite = dynamic_cast<TaskStubWrite*>(candNode->task);
         if (candWrite->GetRemoteRank() == peerRank) {
             return true;
         }
     } else if (candNode->task->GetType() == TaskTypeStub::READ_REDUCE) {
-        TaskStubReadReduce *candReadReduce = dynamic_cast<TaskStubReadReduce *>(candNode->task);
+        TaskStubReadReduce* candReadReduce = dynamic_cast<TaskStubReadReduce*>(candNode->task);
         if (candReadReduce->GetRemoteRank() == peerRank) {
             return true;
         }
     } else if (candNode->task->GetType() == TaskTypeStub::WRITE_REDUCE) {
-        TaskStubWriteReduce *candWriteReduce = dynamic_cast<TaskStubWriteReduce *>(candNode->task);
+        TaskStubWriteReduce* candWriteReduce = dynamic_cast<TaskStubWriteReduce*>(candNode->task);
         if (candWriteReduce->GetRemoteRank() == peerRank) {
             return true;
         }

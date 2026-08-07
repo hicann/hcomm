@@ -189,8 +189,9 @@ TEST_F(CcuResIdAllocatorTest, Ut_Describe_Expect_ReturnNonEmpty)
 
 class CcuResAllocatorTest : public testing::Test {
 protected:
-    void SetUp() override {
-        auto &specs = CcuResSpecifications::GetInstance(0);
+    void SetUp() override
+    {
+        auto& specs = CcuResSpecifications::GetInstance(0);
         specs.initFlag_ = true;
         specs.ccuVersion_ = CcuVersion::CCU_V2;
         specs.dieEnableFlags_[0] = true;

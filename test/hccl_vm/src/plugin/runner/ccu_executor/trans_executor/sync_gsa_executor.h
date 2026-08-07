@@ -22,7 +22,8 @@
 
 class SyncGsaExecutor : public CcuExecutorBase {
 public:
-    explicit SyncGsaExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit SyncGsaExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     SyncGsaExecutor() = default;
@@ -30,7 +31,7 @@ public:
 
     void Parser() override;
     void Run() override;
-    void Process(CcuResourceManager &ccuResMgr) override;
+    void Process(CcuResourceManager& ccuResMgr) override;
     std::string Describe() override;
     CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 
@@ -45,6 +46,6 @@ private:
     uint16_t setCKEMask_{0};
     uint16_t waitCKEId_{0};
     uint16_t waitCKEMask_{0};
-}; 
+};
 
 #endif // HCCL_SIM_SYNC_GSA_EXECUTOR_H

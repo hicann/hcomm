@@ -34,7 +34,7 @@
 
 HcclResult InitMockCcuResourcesForDevice(int32_t devLogicId, hcomm::CcuVersion ccuVersion)
 {
-    auto &ccuResSpecs = hcomm::CcuResSpecifications::GetInstance(devLogicId);
+    auto& ccuResSpecs = hcomm::CcuResSpecifications::GetInstance(devLogicId);
     ccuResSpecs.initFlag_ = true;
     ccuResSpecs.ccuVersion_ = ccuVersion;
     ccuResSpecs.serveMode_ = hcomm::ServeMode::NORMAL;
@@ -42,7 +42,7 @@ HcclResult InitMockCcuResourcesForDevice(int32_t devLogicId, hcomm::CcuVersion c
         ccuResSpecs.dieEnableFlags_[dieId] = true;
 
         ccuResSpecs.resSpecs_[dieId].loopEngineNum = 200;
-        
+
         ccuResSpecs.resSpecs_[dieId].msNum = 1536;
         ccuResSpecs.resSpecs_[dieId].ckeNum = 1024;
 
@@ -77,8 +77,7 @@ HcclResult MockCcuResourcesDefault(int32_t devLogicId, hcomm::CcuVersion ccuVers
     return InitMockCcuResourcesForDevice(devLogicId, ccuVersion);
 }
 
-static int RaGetDevEidInfoListStub(struct RaInfo info, struct HccpDevEidInfo info_list[],
-    unsigned int *num)
+static int RaGetDevEidInfoListStub(struct RaInfo info, struct HccpDevEidInfo info_list[], unsigned int* num)
 {
     strcpy(info_list[0].name, "udma2");
     info_list[0].dieId = 0;
@@ -109,29 +108,26 @@ void MockCcuNetworkDeviceDefault(int32_t devPhyId)
     // 2. ccu 建链申请channel资源，通过eid查询所属的die，匹配不到时将会失败
     constexpr unsigned int fakeEidNum = 3;
     unsigned int eidNum = fakeEidNum;
-    MOCKER(RaGetDevEidInfoNum)
-        .stubs()
-        .with(mockcpp::any(), outBoundP(&eidNum))
-        .will(returnValue(0));
+    MOCKER(RaGetDevEidInfoNum).stubs().with(mockcpp::any(), outBoundP(&eidNum)).will(returnValue(0));
 
-    MOCKER(RaGetDevEidInfoList)
-        .stubs()
-        .will(invoke(RaGetDevEidInfoListStub));
+    MOCKER(RaGetDevEidInfoList).stubs().will(invoke(RaGetDevEidInfoListStub));
 
     MOCKER(hcomm::HccpGetUboeFlagEnable).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(hcomm::HccpCheckUboeSupported).stubs().will(returnValue(false));
 
-    MOCKER_CPP(&Hccl::RdmaHandleManager::GetByIp).stubs()
+    MOCKER_CPP(&Hccl::RdmaHandleManager::GetByIp)
+        .stubs()
         .will(returnValue((void*)0x12345678)); // 大部分场景ctxHandle非空即可
 
-    MOCKER_CPP(&Hccl::RdmaHandleManager::IsHandleValid).stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&Hccl::RdmaHandleManager::IsHandleValid).stubs().will(returnValue(true));
 
     std::pair<Hccl::TokenIdHandle, uint32_t> fakeTokenInfo = std::make_pair(0x12345678, 1);
-    MOCKER_CPP(&Hccl::RdmaHandleManager::GetTokenIdInfo).stubs()
+    MOCKER_CPP(&Hccl::RdmaHandleManager::GetTokenIdInfo)
+        .stubs()
         .will(returnValue(fakeTokenInfo)); // 打桩保证内存注册成功
 
-    MOCKER_CPP(&Hccl::RdmaHandleManager::GetRtpEnable).stubs()
+    MOCKER_CPP(&Hccl::RdmaHandleManager::GetRtpEnable)
+        .stubs()
         .will(returnValue(false)) // 打桩覆盖环回选择不同端口
         .then(returnValue(true));
 }

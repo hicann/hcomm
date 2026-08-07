@@ -18,21 +18,10 @@
 
 class DeviceResetCallbackTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "DeviceResetCallbackTest set up." << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "DeviceResetCallbackTest tear down." << std::endl;
-    }
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    static void SetUpTestCase() { std::cout << "DeviceResetCallbackTest set up." << std::endl; }
+    static void TearDownTestCase() { std::cout << "DeviceResetCallbackTest tear down." << std::endl; }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_F(DeviceResetCallbackTest, Ut_When_RegisterDeviceResetCallback_Expect_AclrtRegDeviceStateCallbackCalled)
@@ -77,15 +66,9 @@ TEST_F(DeviceResetCallbackTest, Ut_When_HccpHdcManagerInitThenDeInit_Expect_Inst
     Hccl::HccpHdcManager::GetInstance().DeInit(0);
 }
 
-TEST_F(DeviceResetCallbackTest, Ut_When_SocketMgrDeInit_Expect_NoCrash)
-{
-    hcomm::SocketMgr::DeInit(0);
-}
+TEST_F(DeviceResetCallbackTest, Ut_When_SocketMgrDeInit_Expect_NoCrash) { hcomm::SocketMgr::DeInit(0); }
 
-TEST_F(DeviceResetCallbackTest, Ut_When_ServerSocketMgrDeInit_Expect_NoCrash)
-{
-    hcomm::ServerSocketMgr::DeInit(0);
-}
+TEST_F(DeviceResetCallbackTest, Ut_When_ServerSocketMgrDeInit_Expect_NoCrash) { hcomm::ServerSocketMgr::DeInit(0); }
 
 TEST_F(DeviceResetCallbackTest, Ut_When_ServerSocketManagerDeInit_Expect_NoCrash)
 {
@@ -205,7 +188,7 @@ TEST_F(DeviceResetCallbackTest, Ut_When_ServerSocketManagerDeInit_SelectiveDevPh
 
 TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_WithRdmaHandle_Expect_CleanupRdmaEntry)
 {
-    auto &mgr = Hccl::RdmaHandleManager::GetInstance();
+    auto& mgr = Hccl::RdmaHandleManager::GetInstance();
     u32 devPhyId = 0;
     RdmaHandle fakeRdmaHandle = (RdmaHandle)0xAAAA;
     Hccl::IpAddress ipAddr("1.0.0.0");
@@ -223,7 +206,7 @@ TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_WithRdmaHandle_E
 
 TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_WithUbHandle_Expect_CleanupUbEntry)
 {
-    auto &mgr = Hccl::RdmaHandleManager::GetInstance();
+    auto& mgr = Hccl::RdmaHandleManager::GetInstance();
     u32 devPhyId = 1;
     RdmaHandle fakeUbHandle = (RdmaHandle)0xBBBB;
     Hccl::IpAddress ipAddr("2.0.0.0");
@@ -237,7 +220,7 @@ TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_WithUbHandle_Exp
 
 TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_WithUbHandleAndTokenInfo_Expect_CleanupTokenAndUb)
 {
-    auto &mgr = Hccl::RdmaHandleManager::GetInstance();
+    auto& mgr = Hccl::RdmaHandleManager::GetInstance();
     u32 devPhyId = 2;
     RdmaHandle fakeUbHandle = (RdmaHandle)0xCCCC;
     Hccl::IpAddress ipAddr("3.0.0.0");
@@ -255,7 +238,7 @@ TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_WithUbHandleAndT
 
 TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_WithJfcHandle_Expect_CleanupJfcEntry)
 {
-    auto &mgr = Hccl::RdmaHandleManager::GetInstance();
+    auto& mgr = Hccl::RdmaHandleManager::GetInstance();
     u32 devPhyId = 0;
     RdmaHandle fakeRdmaHandle = (RdmaHandle)0xDDDD;
     Hccl::IpAddress ipAddr("4.0.0.0");
@@ -271,7 +254,7 @@ TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_WithJfcHandle_Ex
 
 TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_WithMixedHandles_Expect_AllCleaned)
 {
-    auto &mgr = Hccl::RdmaHandleManager::GetInstance();
+    auto& mgr = Hccl::RdmaHandleManager::GetInstance();
     u32 devPhyId = 0;
     RdmaHandle fakeRdmaHandle = (RdmaHandle)0xEEEE;
     RdmaHandle fakeUbHandle = (RdmaHandle)0xFFFF;
@@ -301,7 +284,7 @@ TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_WithMixedHandles
 
 TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDestroyAll_WithDestroyed_Expect_NoCrash)
 {
-    auto &mgr = Hccl::RdmaHandleManager::GetInstance();
+    auto& mgr = Hccl::RdmaHandleManager::GetInstance();
     mgr.destroyed.store(true);
     mgr.DestroyAll();
     mgr.destroyed.store(false);
@@ -320,7 +303,7 @@ TEST_F(DeviceResetCallbackTest, Ut_When_IsHandleValid_HandleNotInActiveHandles_E
 
 TEST_F(DeviceResetCallbackTest, Ut_When_IsHandleValid_HandleInActiveHandles_Expect_True)
 {
-    auto &mgr = Hccl::RdmaHandleManager::GetInstance();
+    auto& mgr = Hccl::RdmaHandleManager::GetInstance();
     Hccl::RdmaHandle fakeHandle = (Hccl::RdmaHandle)0x8887;
     mgr.activeHandles_.insert(fakeHandle);
     EXPECT_TRUE(mgr.IsHandleValid(fakeHandle));
@@ -329,7 +312,7 @@ TEST_F(DeviceResetCallbackTest, Ut_When_IsHandleValid_HandleInActiveHandles_Expe
 
 TEST_F(DeviceResetCallbackTest, Ut_When_IsHandleValid_WithDestroyed_Expect_False)
 {
-    auto &mgr = Hccl::RdmaHandleManager::GetInstance();
+    auto& mgr = Hccl::RdmaHandleManager::GetInstance();
     Hccl::RdmaHandle fakeHandle = (Hccl::RdmaHandle)0x8889;
     mgr.activeHandles_.insert(fakeHandle);
     EXPECT_TRUE(mgr.IsHandleValid(fakeHandle));
@@ -341,7 +324,7 @@ TEST_F(DeviceResetCallbackTest, Ut_When_IsHandleValid_WithDestroyed_Expect_False
 
 TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_Expect_ActiveHandlesRemovedBeforeDestroy)
 {
-    auto &mgr = Hccl::RdmaHandleManager::GetInstance();
+    auto& mgr = Hccl::RdmaHandleManager::GetInstance();
     u32 devPhyId = 0;
     Hccl::RdmaHandle fakeUbHandle = (Hccl::RdmaHandle)0xABCD;
     Hccl::IpAddress ipAddr("7.0.0.0");
@@ -358,7 +341,7 @@ TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_Expect_ActiveHan
 
 TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_WithMultipleHandles_Expect_AllRemovedFromActiveHandles)
 {
-    auto &mgr = Hccl::RdmaHandleManager::GetInstance();
+    auto& mgr = Hccl::RdmaHandleManager::GetInstance();
     u32 devPhyId = 3;
     Hccl::RdmaHandle handle1 = (Hccl::RdmaHandle)0x1111;
     Hccl::RdmaHandle handle2 = (Hccl::RdmaHandle)0x2222;
@@ -380,7 +363,7 @@ TEST_F(DeviceResetCallbackTest, Ut_When_RdmaHandleManagerDeInit_WithMultipleHand
 
 TEST_F(DeviceResetCallbackTest, Ut_When_DeInitDifferentDevPhyId_Expect_OnlyTargetedHandlesRemoved)
 {
-    auto &mgr = Hccl::RdmaHandleManager::GetInstance();
+    auto& mgr = Hccl::RdmaHandleManager::GetInstance();
     Hccl::RdmaHandle handleDev0 = (Hccl::RdmaHandle)0xA0A0;
     Hccl::RdmaHandle handleDev1 = (Hccl::RdmaHandle)0xB1B1;
     Hccl::IpAddress ip0("10.0.0.0");

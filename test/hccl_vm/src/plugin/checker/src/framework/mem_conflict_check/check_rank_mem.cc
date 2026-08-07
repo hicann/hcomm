@@ -24,10 +24,10 @@ bool IsGenFromSync(TaskStub* task)
 {
     bool isGenFromSync = false;
     if (task->GetType() == TaskTypeStub::LOCAL_COPY) {
-        TaskStubLocalCopy *candLocalCopy = dynamic_cast<TaskStubLocalCopy *>(task);
+        TaskStubLocalCopy* candLocalCopy = dynamic_cast<TaskStubLocalCopy*>(task);
         isGenFromSync = candLocalCopy->IsGenFromSync();
     } else if (task->GetType() == TaskTypeStub::READ) {
-        TaskStubRead *candRead = dynamic_cast<TaskStubRead *>(task);
+        TaskStubRead* candRead = dynamic_cast<TaskStubRead*>(task);
         isGenFromSync = candRead->IsGenFromSync();
     }
     return isGenFromSync;
@@ -43,43 +43,41 @@ MemoryStatus operator&(MemoryStatus a, MemoryStatus b)
     return static_cast<MemoryStatus>(static_cast<u32>(a) & static_cast<u32>(b));
 }
 
-MemoryStatus &operator|=(MemoryStatus &a, MemoryStatus b)
-{
-    return a = a | b;
-}
+MemoryStatus& operator|=(MemoryStatus& a, MemoryStatus b) { return a = a | b; }
 
 // 边界节点，用于将一个原语队列切分为多个碎片
 bool IsBoardType(TaskTypeStub type)
 {
-    const std::set<TaskTypeStub> boardTypes = {TaskTypeStub::LOCAL_POST_TO,
-                                                TaskTypeStub::LOCAL_WAIT_FROM,
-                                                TaskTypeStub::LOCAL_POST_TO_SHADOW,
-                                                TaskTypeStub::LOCAL_WAIT_FROM_SHADOW,
-                                                TaskTypeStub::SET_FLAG,
-                                                TaskTypeStub::WAIT_FLAG,
-                                                TaskTypeStub::SET_FLAG_SHADOW,
-                                                TaskTypeStub::WAIT_FLAG_SHADOW,
-                                                TaskTypeStub::PIPE_BARRIER,
-                                                TaskTypeStub::SEND_SYNC,
-                                                TaskTypeStub::RECV_SYNC,
-                                                TaskTypeStub::SEND_SYNC_REDUCE};
+    const std::set<TaskTypeStub> boardTypes
+        = {TaskTypeStub::LOCAL_POST_TO,
+           TaskTypeStub::LOCAL_WAIT_FROM,
+           TaskTypeStub::LOCAL_POST_TO_SHADOW,
+           TaskTypeStub::LOCAL_WAIT_FROM_SHADOW,
+           TaskTypeStub::SET_FLAG,
+           TaskTypeStub::WAIT_FLAG,
+           TaskTypeStub::SET_FLAG_SHADOW,
+           TaskTypeStub::WAIT_FLAG_SHADOW,
+           TaskTypeStub::PIPE_BARRIER,
+           TaskTypeStub::SEND_SYNC,
+           TaskTypeStub::RECV_SYNC,
+           TaskTypeStub::SEND_SYNC_REDUCE};
     return boardTypes.count(type) != 0;
 }
 
-std::string GenFragQueueMemDes(FragQueueMemStatus &fragQueMemStatus)
+std::string GenFragQueueMemDes(FragQueueMemStatus& fragQueMemStatus)
 {
     std::stringstream ret;
     for (auto iter = fragQueMemStatus.begin(); iter != fragQueMemStatus.end(); iter++) {
         BufferType type = iter->first;
         ret << FOUR_INDENT_SPACE << FOUR_INDENT_SPACE << "BufferType is " << type << std::endl;
-        for (auto &ele : iter->second) {
+        for (auto& ele : iter->second) {
             ret << FOUR_INDENT_SPACE << FOUR_INDENT_SPACE << FOUR_INDENT_SPACE << ele.Describe();
         }
     }
     return ret.str();
 }
 
-bool CheckRankMem::CheckCcuInvalidNode(bool isCcuGraph, TaskNode *node)
+bool CheckRankMem::CheckCcuInvalidNode(bool isCcuGraph, TaskNode* node)
 {
     if (node == nullptr) {
         return false;
@@ -97,14 +95,14 @@ bool CheckRankMem::CheckCcuInvalidNode(bool isCcuGraph, TaskNode *node)
     return false;
 }
 
-void CheckRankMem::GenFragQueueInOneQueue(TaskNode *head, std::set<u32> &seenQueues)
+void CheckRankMem::GenFragQueueInOneQueue(TaskNode* head, std::set<u32>& seenQueues)
 {
-    TaskNode *fragStart = nullptr;
-    TaskNode *fragEnd = nullptr;
+    TaskNode* fragStart = nullptr;
+    TaskNode* fragEnd = nullptr;
 
-    std::set<TaskNode *> visitedNodes;
+    std::set<TaskNode*> visitedNodes;
     visitedNodes.insert(head);
-    std::queue<TaskNode *> walkQue;
+    std::queue<TaskNode*> walkQue;
     walkQue.push(head);
 
     // 出于灵活性考虑，一个queue的头节点不一定是Post/Wait类型
@@ -113,9 +111,9 @@ void CheckRankMem::GenFragQueueInOneQueue(TaskNode *head, std::set<u32> &seenQue
     }
 
     while (!walkQue.empty()) {
-        TaskNode *curNode = walkQue.front();
+        TaskNode* curNode = walkQue.front();
         walkQue.pop();
-        for (auto &child : curNode->children) {
+        for (auto& child : curNode->children) {
             // 不是同一个rank上的不考虑
             if (child->rankIdx != head->rankIdx) {
                 continue;
@@ -157,13 +155,13 @@ void CheckRankMem::GenFragQueueInOneQueue(TaskNode *head, std::set<u32> &seenQue
             FragmentQueue ele{head->queIdx, 0, 0, false, fragStart, fragEnd};
             rank2FragQueue_[head->rankIdx].insert(ele);
             fragStart = curNode;
-            fragEnd   = nullptr;
+            fragEnd = nullptr;
         }
     }
     return;
 }
 
-void CheckRankMem::GenFragQueueInOneRank(TaskNode *node)
+void CheckRankMem::GenFragQueueInOneRank(TaskNode* node)
 {
     u32 queueId = node->queIdx;
     // 头结点链接的都应该是主流，queIdx=0
@@ -176,13 +174,14 @@ void CheckRankMem::GenFragQueueInOneRank(TaskNode *node)
 void CheckRankMem::GenFragQueue()
 {
     // 头节点的每个child应该代表了一个rank
-    for (auto &child : graphHead_->children) {
+    for (auto& child : graphHead_->children) {
         GenFragQueueInOneRank(child);
     }
     return;
 }
 
-void CheckRankMem::FindPostWaitNode(TaskNode *node, std::set<TaskNode *> &postNodes, std::set<TaskNode *> &waitNodes) const
+void CheckRankMem::FindPostWaitNode(
+    TaskNode* node, std::set<TaskNode*>& postNodes, std::set<TaskNode*>& waitNodes) const
 {
     if (node == nullptr) {
         return;
@@ -204,9 +203,9 @@ void CheckRankMem::FindPostWaitNode(TaskNode *node, std::set<TaskNode *> &postNo
 
 HcclResult CheckRankMem::FindPostWaitPair(RankId rankId, bool isCcuGraph)
 {
-    std::set<TaskNode *> postNodes;
-    std::set<TaskNode *> waitNodes;
-    for (auto &ele : rank2FragQueue_[rankId]) {
+    std::set<TaskNode*> postNodes;
+    std::set<TaskNode*> waitNodes;
+    for (auto& ele : rank2FragQueue_[rankId]) {
         if (!CheckCcuInvalidNode(isCcuGraph, ele.head)) {
             FindPostWaitNode(ele.head, postNodes, waitNodes);
         }
@@ -215,9 +214,9 @@ HcclResult CheckRankMem::FindPostWaitPair(RankId rankId, bool isCcuGraph)
         }
     }
 
-    for (auto &post : postNodes) {
-        TaskNode *wait = nullptr;
-        for (auto &child : post->children) {
+    for (auto& post : postNodes) {
+        TaskNode* wait = nullptr;
+        for (auto& child : post->children) {
             if (child->queIdx == post->queIdx) {
                 continue;
             }
@@ -236,9 +235,9 @@ HcclResult CheckRankMem::FindPostWaitPair(RankId rankId, bool isCcuGraph)
     return HcclResult::HCCL_SUCCESS;
 }
 
-void CheckRankMem::ProcessEqualToTargetStartAddr(u64 &sliceStartAddr, u64 sliceEndAddr,
-                                                 std::vector<SliceMemoryStatus> &addedEles, MemoryStatus sliceStatus,
-                                                 std::set<SliceMemoryStatus>::iterator target) const
+void CheckRankMem::ProcessEqualToTargetStartAddr(
+    u64& sliceStartAddr, u64 sliceEndAddr, std::vector<SliceMemoryStatus>& addedEles, MemoryStatus sliceStatus,
+    std::set<SliceMemoryStatus>::iterator target) const
 {
     u64 eleEndAddr = target->startAddr + target->size;
     // 已经打过相同的标记位，不需要重复打
@@ -262,9 +261,9 @@ void CheckRankMem::ProcessEqualToTargetStartAddr(u64 &sliceStartAddr, u64 sliceE
     }
 }
 
-void CheckRankMem::ProcessGreatThanTargetStartAddr(u64 &sliceStartAddr, u64 sliceEndAddr,
-                                                   std::vector<SliceMemoryStatus> &addedEles, MemoryStatus sliceStatus,
-                                                   std::set<SliceMemoryStatus>::iterator target) const
+void CheckRankMem::ProcessGreatThanTargetStartAddr(
+    u64& sliceStartAddr, u64 sliceEndAddr, std::vector<SliceMemoryStatus>& addedEles, MemoryStatus sliceStatus,
+    std::set<SliceMemoryStatus>::iterator target) const
 {
     u64 eleEndAddr = target->startAddr + target->size;
     // 已经打过相同的标记位，不需要重复打
@@ -280,28 +279,28 @@ void CheckRankMem::ProcessGreatThanTargetStartAddr(u64 &sliceStartAddr, u64 slic
         SliceMemoryStatus tmp{sliceEndAddr, eleEndAddr - sliceEndAddr, target->status};
         addedEles.push_back(tmp);
 
-        target->size   = sliceStartAddr - target->startAddr;
+        target->size = sliceStartAddr - target->startAddr;
         sliceStartAddr = sliceEndAddr;
     } else if (sliceEndAddr == eleEndAddr) {
         SliceMemoryStatus sliceMemStatus{sliceStartAddr, sliceEndAddr - sliceStartAddr, target->status | sliceStatus};
         addedEles.push_back(sliceMemStatus);
 
-        target->size   = sliceStartAddr - target->startAddr;
+        target->size = sliceStartAddr - target->startAddr;
         sliceStartAddr = sliceEndAddr;
     } else { // sliceEndAddr > eleEndAddr
         SliceMemoryStatus sliceMemStatus{sliceStartAddr, eleEndAddr - sliceStartAddr, target->status | sliceStatus};
         addedEles.push_back(sliceMemStatus);
 
-        target->size   = sliceStartAddr - target->startAddr;
+        target->size = sliceStartAddr - target->startAddr;
         sliceStartAddr = eleEndAddr;
     }
 }
 
-void CheckRankMem::GenSliceMemoryInfo(DataSlice &slice, MemoryStatus sliceStatus, FragQueueMemStatus &result)
+void CheckRankMem::GenSliceMemoryInfo(DataSlice& slice, MemoryStatus sliceStatus, FragQueueMemStatus& result)
 {
     BufferType sliceBufferType = slice.GetType();
-    u64        sliceStartAddr  = slice.GetOffset(); // offset
-    u64        sliceEndAddr    = sliceStartAddr + slice.GetSize();
+    u64 sliceStartAddr = slice.GetOffset(); // offset
+    u64 sliceEndAddr = sliceStartAddr + slice.GetSize();
 
     std::vector<SliceMemoryStatus> addedEles;
     for (auto ele = result[sliceBufferType].begin(); ele != result[sliceBufferType].end(); ele++) {
@@ -328,40 +327,40 @@ void CheckRankMem::GenSliceMemoryInfo(DataSlice &slice, MemoryStatus sliceStatus
     }
 
     // 将addedElem给刷新上去
-    for (auto &ele : addedEles) {
+    for (auto& ele : addedEles) {
         result[sliceBufferType].insert(ele);
     }
     return;
 }
 
-HcclResult CheckRankMem::GenPrimNodeMemoryInfo(TaskNode *node, FragQueueMemStatus &result)
+HcclResult CheckRankMem::GenPrimNodeMemoryInfo(TaskNode* node, FragQueueMemStatus& result)
 {
     std::vector<DataSlice> readSlices;
     std::vector<DataSlice> writeSlices;
     GetReadSlice(node, readSlices);
     GetWriteSlice(node, writeSlices);
 
-    for (auto &ele : readSlices) {
+    for (auto& ele : readSlices) {
         GenSliceMemoryInfo(ele, MemoryStatus::READ, result);
     }
 
-    for (auto &ele : writeSlices) {
+    for (auto& ele : writeSlices) {
         GenSliceMemoryInfo(ele, MemoryStatus::WRITE, result);
     }
 
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CheckRankMem::GenFragQueueMemoryInfo(FragmentQueue &fragQueue, FragQueueMemStatus &result)
+HcclResult CheckRankMem::GenFragQueueMemoryInfo(FragmentQueue& fragQueue, FragQueueMemStatus& result)
 {
-    std::queue<TaskNode *> walkQueue;
+    std::queue<TaskNode*> walkQueue;
     walkQueue.push(fragQueue.head);
 
-    std::set<TaskNode *> visitedNodes;
+    std::set<TaskNode*> visitedNodes;
     visitedNodes.insert(fragQueue.head);
 
     while (!walkQueue.empty()) {
-        TaskNode *curNode = walkQueue.front();
+        TaskNode* curNode = walkQueue.front();
         walkQueue.pop();
 
         // 只有主流最前面的原语碎片才会出现头节点为空的情况，主流最前面的原语碎片不会和其他的原语碎片冲突，不生成内存信息也没关系
@@ -369,13 +368,13 @@ HcclResult CheckRankMem::GenFragQueueMemoryInfo(FragmentQueue &fragQueue, FragQu
             continue;
         }
 
-        for (auto &child : curNode->children) {
+        for (auto& child : curNode->children) {
             if (curNode->isAivNode) {
-                if (child->rankIdx != curNode->rankIdx or child->blockIdx != curNode->blockIdx or child->pipeIdx != curNode->pipeIdx) {
+                if (child->rankIdx != curNode->rankIdx or child->blockIdx != curNode->blockIdx
+                    or child->pipeIdx != curNode->pipeIdx) {
                     continue;
                 }
-            }
-            else {
+            } else {
                 if (child->rankIdx != curNode->rankIdx or child->queIdx != curNode->queIdx) {
                     continue;
                 }
@@ -396,10 +395,10 @@ HcclResult CheckRankMem::GenFragQueueMemoryInfo(FragmentQueue &fragQueue, FragQu
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CheckRankMem::CompareBufferTypeMemoryInfo(std::set<SliceMemoryStatus> &left,
-                                                     std::set<SliceMemoryStatus> &right)
+HcclResult
+CheckRankMem::CompareBufferTypeMemoryInfo(std::set<SliceMemoryStatus>& left, std::set<SliceMemoryStatus>& right)
 {
-    std::set<SliceMemoryStatus>::iterator leftIter  = left.begin();
+    std::set<SliceMemoryStatus>::iterator leftIter = left.begin();
     std::set<SliceMemoryStatus>::iterator rightIter = right.begin();
 
     while (leftIter != left.end() && rightIter != right.end()) {
@@ -442,12 +441,11 @@ HcclResult CheckRankMem::CompareBufferTypeMemoryInfo(std::set<SliceMemoryStatus>
 }
 
 // 仅内部dump使用，不需要对外提供
-HcclResult CheckRankMem::CompareBufferTypeMemoryInfo(std::set<SliceMemoryStatus> &left,
-                                                     std::set<SliceMemoryStatus> &right,
-                                                     SliceMemoryStatus &conflictEleA,
-                                                     SliceMemoryStatus &conflictEleB)
+HcclResult CheckRankMem::CompareBufferTypeMemoryInfo(
+    std::set<SliceMemoryStatus>& left, std::set<SliceMemoryStatus>& right, SliceMemoryStatus& conflictEleA,
+    SliceMemoryStatus& conflictEleB)
 {
-    std::set<SliceMemoryStatus>::iterator leftIter  = left.begin();
+    std::set<SliceMemoryStatus>::iterator leftIter = left.begin();
     std::set<SliceMemoryStatus>::iterator rightIter = right.begin();
 
     while (leftIter != left.end() && rightIter != right.end()) {
@@ -488,7 +486,7 @@ HcclResult CheckRankMem::CompareBufferTypeMemoryInfo(std::set<SliceMemoryStatus>
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CheckRankMem::CompareSliceMemoryInfo(FragQueueMemStatus &left, FragQueueMemStatus &right)
+HcclResult CheckRankMem::CompareSliceMemoryInfo(FragQueueMemStatus& left, FragQueueMemStatus& right)
 {
     for (auto iter = left.begin(); iter != left.end(); iter++) {
         BufferType type = iter->first;
@@ -503,7 +501,7 @@ HcclResult CheckRankMem::CompareSliceMemoryInfo(FragQueueMemStatus &left, FragQu
     return HcclResult::HCCL_SUCCESS;
 }
 
-std::string GenConflictDetailInfo(TaskNode *node)
+std::string GenConflictDetailInfo(TaskNode* node)
 {
     if (node->realPeerNode) {
         return node->realPeerNode->GenPosInfo();
@@ -518,37 +516,31 @@ struct BoundaryAdj {
 };
 using BitRow = std::vector<uint64_t>;
 using ReachMatrix = std::vector<BitRow>;
-static void SetBit(BitRow &row, uint32_t idx)
-{
-    row[idx >> 6] |= (1ULL << (idx & 63));
-}
-static bool TestBit(const BitRow &row, uint32_t idx)
-{
-    return ((row[idx >> 6] >> (idx & 63)) & 1ULL) != 0;
-}
-static bool IsPostLike(TaskNode *node)
+static void SetBit(BitRow& row, uint32_t idx) { row[idx >> 6] |= (1ULL << (idx & 63)); }
+static bool TestBit(const BitRow& row, uint32_t idx) { return ((row[idx >> 6] >> (idx & 63)) & 1ULL) != 0; }
+static bool IsPostLike(TaskNode* node)
 {
     if (node == nullptr || node->task == nullptr) {
         return false;
     }
 
     auto type = GetNodeType(node);
-    return  type == TaskTypeStub::LOCAL_POST_TO || type == TaskTypeStub::LOCAL_POST_TO_SHADOW ||
-            type == TaskTypeStub::SET_FLAG || type == TaskTypeStub::SET_FLAG_SHADOW ||
-            type == TaskTypeStub::SEND_SYNC || type == TaskTypeStub::SEND_SYNC_REDUCE;
+    return type == TaskTypeStub::LOCAL_POST_TO || type == TaskTypeStub::LOCAL_POST_TO_SHADOW
+           || type == TaskTypeStub::SET_FLAG || type == TaskTypeStub::SET_FLAG_SHADOW || type == TaskTypeStub::SEND_SYNC
+           || type == TaskTypeStub::SEND_SYNC_REDUCE;
 }
-static bool IsWaitLike(TaskNode *node)
+static bool IsWaitLike(TaskNode* node)
 {
     if (node == nullptr || node->task == nullptr) {
         return false;
     }
 
     auto type = GetNodeType(node);
-    return  type == TaskTypeStub::LOCAL_WAIT_FROM || type == TaskTypeStub::LOCAL_WAIT_FROM_SHADOW ||
-            type == TaskTypeStub::WAIT_FLAG || type == TaskTypeStub::WAIT_FLAG_SHADOW ||
-            type == TaskTypeStub::RECV_SYNC;
+    return type == TaskTypeStub::LOCAL_WAIT_FROM || type == TaskTypeStub::LOCAL_WAIT_FROM_SHADOW
+           || type == TaskTypeStub::WAIT_FLAG || type == TaskTypeStub::WAIT_FLAG_SHADOW
+           || type == TaskTypeStub::RECV_SYNC;
 }
-static void AddEdge(BoundaryAdj &adj, u32 u, u32 v, std::vector<u32> &indegree)
+static void AddEdge(BoundaryAdj& adj, u32 u, u32 v, std::vector<u32>& indegree)
 {
     if (u == v) {
         return;
@@ -567,7 +559,7 @@ static void AddEdge(BoundaryAdj &adj, u32 u, u32 v, std::vector<u32> &indegree)
     adj.to[adj.deg++] = static_cast<int>(v);
     ++indegree[v];
 }
-static bool CanParallel(const ReachMatrix &reach, u32 i, u32 j)
+static bool CanParallel(const ReachMatrix& reach, u32 i, u32 j)
 {
     if (i == j) {
         return false;
@@ -575,8 +567,8 @@ static bool CanParallel(const ReachMatrix &reach, u32 i, u32 j)
     return !TestBit(reach[i], j) && !TestBit(reach[j], i);
 }
 
-HcclResult CheckRankMem::CompareFragQueStatus(u32 fragQueueSize, std::vector<FragmentQueue> &index2FragQueue,
-                                        std::vector<std::vector<uint64_t>> &fragQueueMatrix)
+HcclResult CheckRankMem::CompareFragQueStatus(
+    u32 fragQueueSize, std::vector<FragmentQueue>& index2FragQueue, std::vector<std::vector<uint64_t>>& fragQueueMatrix)
 {
     std::vector<FragQueueMemStatus> memStatusCache(fragQueueSize);
     std::vector<bool> memStatusValid(fragQueueSize, false);
@@ -604,7 +596,7 @@ HcclResult CheckRankMem::CompareFragQueStatus(u32 fragQueueSize, std::vector<Fra
             if (resultI.second != HCCL_SUCCESS) {
                 return resultI.second;
             }
-            
+
             auto resultJ = getOrGenMemInfo(j);
             if (resultJ.second != HCCL_SUCCESS) {
                 return resultJ.second;
@@ -614,20 +606,20 @@ HcclResult CheckRankMem::CompareFragQueStatus(u32 fragQueueSize, std::vector<Fra
             ret = CompareSliceMemoryInfo(*resultI.first, *resultJ.first);
 
             if (ret != HcclResult::HCCL_SUCCESS) {
-                for (TaskNode *nodeA = index2FragQueue[i].head; nodeA != index2FragQueue[i].tail;) {
-                    for (TaskNode *nodeB = index2FragQueue[j].head; nodeB != index2FragQueue[j].tail;) {
+                for (TaskNode* nodeA = index2FragQueue[i].head; nodeA != index2FragQueue[i].tail;) {
+                    for (TaskNode* nodeB = index2FragQueue[j].head; nodeB != index2FragQueue[j].tail;) {
                         // 判断是否有冲突，如果有，就dump数据
                         SliceMemoryStatus conflictEleA;
                         SliceMemoryStatus conflictEleB;
                         if (IsConfilictBetweenTwoNodes(nodeA, nodeB, conflictEleA, conflictEleB)) {
-                            HCCL_ERROR("memory conflict between node %s and node %s",
-                                nodeA->GenPosInfo().c_str(), nodeB->GenPosInfo().c_str());
+                            HCCL_ERROR(
+                                "memory conflict between node %s and node %s", nodeA->GenPosInfo().c_str(),
+                                nodeB->GenPosInfo().c_str());
                             break;
                         }
                         auto nodeBOld = nodeB;
-                        for (auto &child : nodeB->children) {
+                        for (auto& child : nodeB->children) {
                             if (nodeB->isAivNode) {
-                            
                             } else {
                                 if (child->rankIdx != nodeB->rankIdx || child->queIdx != nodeB->queIdx) {
                                     continue;
@@ -643,9 +635,8 @@ HcclResult CheckRankMem::CompareFragQueStatus(u32 fragQueueSize, std::vector<Fra
                     }
 
                     auto nodeAOld = nodeA;
-                    for (auto &child : nodeA->children) {
+                    for (auto& child : nodeA->children) {
                         if (nodeA->isAivNode) {
-                            
                         } else {
                             if (child->rankIdx != nodeA->rankIdx || child->queIdx != nodeA->queIdx) {
                                 continue;
@@ -667,12 +658,12 @@ HcclResult CheckRankMem::CompareFragQueStatus(u32 fragQueueSize, std::vector<Fra
     return HcclResult::HCCL_SUCCESS;
 }
 
-bool CheckRankMem::IsConfilictBetweenTwoNodes(TaskNode* nodeA, TaskNode* nodeB,
-                                              SliceMemoryStatus &conflictEleA, SliceMemoryStatus &conflictEleB)
+bool CheckRankMem::IsConfilictBetweenTwoNodes(
+    TaskNode* nodeA, TaskNode* nodeB, SliceMemoryStatus& conflictEleA, SliceMemoryStatus& conflictEleB)
 {
     FragQueueMemStatus resultA;
     FragQueueMemStatus resultB;
-    
+
     GenPrimNodeMemoryInfo(nodeA, resultA);
 
     GenPrimNodeMemoryInfo(nodeB, resultB);
@@ -695,10 +686,7 @@ bool CheckRankMem::IsConfilictBetweenTwoNodes(TaskNode* nodeA, TaskNode* nodeB,
 }
 
 // 判断是否是连接AivEnd的最后一个TaskNode
-bool CheckRankMem::IsLastTaskNode(TaskNode* node)
-{
-    return false;
-}
+bool CheckRankMem::IsLastTaskNode(TaskNode* node) { return false; }
 
 HcclResult CheckRankMem::GenFragQueConcurrencyMatrixAndCompare(RankId rankId)
 {
@@ -711,7 +699,7 @@ HcclResult CheckRankMem::GenFragQueConcurrencyMatrixAndCompare(RankId rankId)
     index2FragQueue.reserve(fragQueueSize);
 
     u32 index = 0;
-    for (auto &fragQueue : rank2FragQueue_[rankId]) {
+    for (auto& fragQueue : rank2FragQueue_[rankId]) {
         headNode2FragQueue[fragQueue.head] = fragQueue;
         index2FragQueue.push_back(fragQueue);
         headNode2Index[fragQueue.head] = index;
@@ -721,7 +709,7 @@ HcclResult CheckRankMem::GenFragQueConcurrencyMatrixAndCompare(RankId rankId)
     std::vector<BoundaryAdj> dag(fragQueueSize);
     std::vector<u32> indegree(fragQueueSize, 0);
     for (u32 s = 0; s < fragQueueSize; ++s) {
-        TaskNode *tail = index2FragQueue[s].tail;
+        TaskNode* tail = index2FragQueue[s].tail;
         if (tail == nullptr || tail->task == nullptr) {
             continue;
         }
@@ -735,7 +723,7 @@ HcclResult CheckRankMem::GenFragQueConcurrencyMatrixAndCompare(RankId rankId)
             if (pairIt == postWaitPairs.end() || pairIt->second == nullptr) {
                 continue;
             }
-            TaskNode *waitNode = pairIt->second;
+            TaskNode* waitNode = pairIt->second;
             auto waitFragIdxIt = headNode2Index.find(waitNode);
             if (waitFragIdxIt != headNode2Index.end()) {
                 AddEdge(dag[s], s, waitFragIdxIt->second, indegree);
@@ -767,7 +755,9 @@ HcclResult CheckRankMem::GenFragQueConcurrencyMatrixAndCompare(RankId rankId)
     }
     int topoSize = topoOrder.size();
     if (topoOrder.size() != fragQueueSize) {
-        HCCL_ERROR("[GenFragQueConcurrencyMatrixAndCompare] fragment graph is not a DAG, topo size = %d, ori dag size =  %d", topoSize, dag.size());
+        HCCL_ERROR(
+            "[GenFragQueConcurrencyMatrixAndCompare] fragment graph is not a DAG, topo size = %d, ori dag size =  %d",
+            topoSize, dag.size());
         return HcclResult::HCCL_E_INTERNAL;
     }
     const u32 wordCount = (fragQueueSize + 63U) >> 6U;
@@ -792,59 +782,59 @@ HcclResult CheckRankMem::GenFragQueConcurrencyMatrixAndCompare(RankId rankId)
 }
 
 // 被读的内存块
-void CheckRankMem::GetReadSlice(TaskNode *node, std::vector<DataSlice> &slices)
+void CheckRankMem::GetReadSlice(TaskNode* node, std::vector<DataSlice>& slices)
 {
     TaskTypeStub type = node->task->GetType();
     bool isGenFromSync = IsGenFromSync(node->task);
     if (type == TaskTypeStub::LOCAL_COPY) {
-        auto task = dynamic_cast<TaskStubLocalCopy *>(node->task);
+        auto task = dynamic_cast<TaskStubLocalCopy*>(node->task);
         if (task->GetSrcSlice().GetType() == BufferType::OUTPUT_AIV && isGenFromSync) {
             return;
         }
         slices.push_back(task->GetSrcSlice());
     } else if (type == TaskTypeStub::LOCAL_REDUCE) {
-        auto task = dynamic_cast<TaskStubLocalReduce *>(node->task);
+        auto task = dynamic_cast<TaskStubLocalReduce*>(node->task);
         slices.push_back(task->GetSrcSlice());
     } else if (type == TaskTypeStub::BEING_READ && !isGenFromSync) {
-        auto task = dynamic_cast<TaskStubBeingRead *>(node->task);
+        auto task = dynamic_cast<TaskStubBeingRead*>(node->task);
         slices.push_back(task->GetLocalSlice());
     } else if (type == TaskTypeStub::WRITE) {
-        auto task = dynamic_cast<TaskStubWrite *>(node->task);
+        auto task = dynamic_cast<TaskStubWrite*>(node->task);
         slices.push_back(task->GetLocalSlice());
     } else if (type == TaskTypeStub::BEING_READ_REDUCE && !isGenFromSync) {
-        auto task = dynamic_cast<TaskStubBeingReadReduce *>(node->task);
+        auto task = dynamic_cast<TaskStubBeingReadReduce*>(node->task);
         slices.push_back(task->GetLocalSlice());
     } else if (type == TaskTypeStub::WRITE_REDUCE) {
-        auto task = dynamic_cast<TaskStubWriteReduce *>(node->task);
+        auto task = dynamic_cast<TaskStubWriteReduce*>(node->task);
         slices.push_back(task->GetLocalSlice());
     }
     return;
 }
 
-void CheckRankMem::GetWriteSlice(TaskNode *node, std::vector<DataSlice> &slices)
+void CheckRankMem::GetWriteSlice(TaskNode* node, std::vector<DataSlice>& slices)
 {
     TaskTypeStub type = node->task->GetType();
     bool isGenFromSync = IsGenFromSync(node->task);
     if (type == TaskTypeStub::LOCAL_COPY) {
-        auto task = dynamic_cast<TaskStubLocalCopy *>(node->task);
+        auto task = dynamic_cast<TaskStubLocalCopy*>(node->task);
         if (task->GetDstSlice().GetType() == BufferType::OUTPUT_AIV && isGenFromSync) {
             return;
         }
         slices.push_back(task->GetDstSlice());
     } else if (type == TaskTypeStub::LOCAL_REDUCE && !isGenFromSync) {
-        auto task = dynamic_cast<TaskStubLocalReduce *>(node->task);
+        auto task = dynamic_cast<TaskStubLocalReduce*>(node->task);
         slices.push_back(task->GetDstSlice());
     } else if (type == TaskTypeStub::BEING_WRITTEN && !isGenFromSync) {
-        auto task = dynamic_cast<TaskStubBeingWritten *>(node->task);
+        auto task = dynamic_cast<TaskStubBeingWritten*>(node->task);
         slices.push_back(task->GetLocalSlice());
     } else if (type == TaskTypeStub::READ) {
-        auto task = dynamic_cast<TaskStubRead *>(node->task);
+        auto task = dynamic_cast<TaskStubRead*>(node->task);
         slices.push_back(task->GetLocalSlice());
     } else if (type == TaskTypeStub::BEING_WRITTEN_REDUCE && !isGenFromSync) {
-        auto task = dynamic_cast<TaskStubBeingWrittenReduce *>(node->task);
+        auto task = dynamic_cast<TaskStubBeingWrittenReduce*>(node->task);
         slices.push_back(task->GetLocalSlice());
     } else if (type == TaskTypeStub::READ_REDUCE) {
-        auto task = dynamic_cast<TaskStubReadReduce *>(node->task);
+        auto task = dynamic_cast<TaskStubReadReduce*>(node->task);
         slices.push_back(task->GetLocalSlice());
     }
     return;
@@ -860,7 +850,7 @@ HcclResult CheckRankMem::Execute()
     GenFragQueue();
 
     // 从每个rank中提取post/wait队列
-    for (auto &child : graphHead_->children) {
+    for (auto& child : graphHead_->children) {
         RankId rankId = child->rankIdx;
         CHK_RET(FindPostWaitPair(rankId));
         auto ret = GenFragQueConcurrencyMatrixAndCompare(rankId);
@@ -875,9 +865,9 @@ HcclResult CheckRankMem::Execute()
 
 HcclResult CheckRankMem::CcuGraphMemCheck()
 {
-    for (auto &child : graphHead_->children) {
+    for (auto& child : graphHead_->children) {
         uint32_t queueId = child->queIdx;
-        RankId   rankId  = child->rankIdx;
+        RankId rankId = child->rankIdx;
         // // 头结点链接的都应该是主流，queIdx=0
         if (queueId != 0) {
             HCCL_ERROR("[CcuGraphMemCheck] The node connecting the head node should be the mainstream.");
@@ -908,12 +898,12 @@ HcclResult CheckRankMem::CcuGraphMemCheck()
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CheckRankMem::CollectCcuQueueGraph(TaskNode *ccuNode, RankId rankId, CcuQueueGraph &graph)
+HcclResult CheckRankMem::CollectCcuQueueGraph(TaskNode* ccuNode, RankId rankId, CcuQueueGraph& graph)
 {
     std::queue<TaskNode*> walkQue;
     std::unordered_set<TaskNode*> visited;
 
-    for (auto *child : ccuNode->children) {
+    for (auto* child : ccuNode->children) {
         if (child == nullptr || child->rankIdx != rankId) {
             continue;
         }
@@ -924,15 +914,13 @@ HcclResult CheckRankMem::CollectCcuQueueGraph(TaskNode *ccuNode, RankId rankId, 
 
     std::vector<TaskNode*> allNodes;
     while (!walkQue.empty()) {
-        TaskNode *curNode = walkQue.front();
+        TaskNode* curNode = walkQue.front();
         walkQue.pop();
         allNodes.push_back(curNode);
 
         int sameQueueParentCnt = 0;
-        for (auto *parent : curNode->parents) {
-            if (parent != nullptr &&
-                parent->rankIdx == curNode->rankIdx &&
-                parent->queIdx == curNode->queIdx) {
+        for (auto* parent : curNode->parents) {
+            if (parent != nullptr && parent->rankIdx == curNode->rankIdx && parent->queIdx == curNode->queIdx) {
                 ++sameQueueParentCnt;
             }
         }
@@ -944,12 +932,13 @@ HcclResult CheckRankMem::CollectCcuQueueGraph(TaskNode *ccuNode, RankId rankId, 
             if (it == graph.queueId2Head.end()) {
                 graph.queueId2Head[curNode->queIdx] = curNode;
             } else if (it->second != curNode) {
-                HCCL_ERROR("[CollectCcuQueueGraph] queue %u has multiple head nodes in one ccu sub graph", curNode->queIdx);
+                HCCL_ERROR(
+                    "[CollectCcuQueueGraph] queue %u has multiple head nodes in one ccu sub graph", curNode->queIdx);
                 return HcclResult::HCCL_E_INTERNAL;
             }
         }
 
-        for (auto *child : curNode->children) {
+        for (auto* child : curNode->children) {
             if (child == nullptr || child->rankIdx != rankId) {
                 continue;
             }
@@ -960,7 +949,7 @@ HcclResult CheckRankMem::CollectCcuQueueGraph(TaskNode *ccuNode, RankId rankId, 
     }
 
     std::unordered_set<u32> entrySeen;
-    for (auto *child : ccuNode->children) {
+    for (auto* child : ccuNode->children) {
         if (child == nullptr || child->rankIdx != rankId) {
             continue;
         }
@@ -969,8 +958,8 @@ HcclResult CheckRankMem::CollectCcuQueueGraph(TaskNode *ccuNode, RankId rankId, 
         }
     }
 
-    for (auto *curNode : allNodes) {
-        for (auto *child : curNode->children) {
+    for (auto* curNode : allNodes) {
+        for (auto* child : curNode->children) {
             if (child == nullptr || child->rankIdx != rankId) {
                 continue;
             }
@@ -984,21 +973,21 @@ HcclResult CheckRankMem::CollectCcuQueueGraph(TaskNode *ccuNode, RankId rankId, 
         }
     }
 
-    for (auto &it : graph.queueAdj) {
-        auto &vec = it.second;
+    for (auto& it : graph.queueAdj) {
+        auto& vec = it.second;
         std::sort(vec.begin(), vec.end());
         vec.erase(std::unique(vec.begin(), vec.end()), vec.end());
     }
 
     return HcclResult::HCCL_SUCCESS;
 }
-void CheckRankMem::GenFragQueueInOneQueueOnly(TaskNode *head)
+void CheckRankMem::GenFragQueueInOneQueueOnly(TaskNode* head)
 {
-    TaskNode *fragStart = nullptr;
-    TaskNode *fragEnd = nullptr;
+    TaskNode* fragStart = nullptr;
+    TaskNode* fragEnd = nullptr;
 
-    std::queue<TaskNode *> walkQue;
-    std::unordered_set<TaskNode *> visitedNodes;
+    std::queue<TaskNode*> walkQue;
+    std::unordered_set<TaskNode*> visitedNodes;
     walkQue.push(head);
     visitedNodes.insert(head);
 
@@ -1007,12 +996,12 @@ void CheckRankMem::GenFragQueueInOneQueueOnly(TaskNode *head)
     }
 
     while (!walkQue.empty()) {
-        TaskNode *curNode = walkQue.front();
+        TaskNode* curNode = walkQue.front();
         walkQue.pop();
         std::vector<TaskNode*> sameQueueChildren{};
         int boardChildNum = 0;
 
-        for (auto &child : curNode->children) {
+        for (auto& child : curNode->children) {
             if (child == nullptr) {
                 continue;
             }
@@ -1022,24 +1011,22 @@ void CheckRankMem::GenFragQueueInOneQueueOnly(TaskNode *head)
             if (child->queIdx == head->queIdx) {
                 sameQueueChildren.push_back(child);
                 if (IsBoardType(child->task->GetType()) && IsBoardType(curNode->task->GetType())) {
-                    boardChildNum ++;
+                    boardChildNum++;
                 }
             }
         }
 
         for (size_t i = 0; i < sameQueueChildren.size(); i++) {
-            TaskNode *child = sameQueueChildren[i];
+            TaskNode* child = sameQueueChildren[i];
             if (visitedNodes.count(child) == 0) {
                 if (boardChildNum > 1) {
                     auto type = child->task->GetType();
-                    if (type == TaskTypeStub::LOCAL_WAIT_FROM ||
-                        type == TaskTypeStub::LOCAL_WAIT_FROM_SHADOW) {
-                        HCCL_VM_DEBUG("ccu multi samequeue node found, node: {} "
+                    if (type == TaskTypeStub::LOCAL_WAIT_FROM || type == TaskTypeStub::LOCAL_WAIT_FROM_SHADOW) {
+                        HCCL_VM_DEBUG(
+                            "ccu multi samequeue node found, node: {} "
                             "ignore child: {} addr: {}",
-                            curNode->task->Describe(),
-                            child->task->Describe(),
-                            static_cast<void*>(child));
-                        boardChildNum --;
+                            curNode->task->Describe(), child->task->Describe(), static_cast<void*>(child));
+                        boardChildNum--;
                         continue;
                     } else {
                         walkQue.push(child);
@@ -1067,10 +1054,9 @@ void CheckRankMem::GenFragQueueInOneQueueOnly(TaskNode *head)
         }
     }
 }
-static void CollectReachableQueues(u32 rootQueueId,
-                                   const std::unordered_map<u32, std::vector<u32>> &queueAdj,
-                                   std::unordered_set<u32> &processedQueues,
-                                   std::vector<u32> &componentQueues)
+static void CollectReachableQueues(
+    u32 rootQueueId, const std::unordered_map<u32, std::vector<u32>>& queueAdj,
+    std::unordered_set<u32>& processedQueues, std::vector<u32>& componentQueues)
 {
     std::queue<u32> walkQue;
     walkQue.push(rootQueueId);
@@ -1130,8 +1116,8 @@ HcclResult CheckRankMem::CcuGraphMemCheckProc(RankId rankId, uint32_t queueId, T
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CheckRankMem::ProceedNode(
-    TaskNodePtr currNode, std::queue<TaskNodePtr> &graphNodeQue, std::set<TaskNodePtr> &isVisited)
+HcclResult
+CheckRankMem::ProceedNode(TaskNodePtr currNode, std::queue<TaskNodePtr>& graphNodeQue, std::set<TaskNodePtr>& isVisited)
 {
     for (auto childIter = currNode->children.begin(); childIter != currNode->children.end(); childIter++) {
         if (!isVisited.count(*childIter) && (*childIter)->rankIdx == currNode->rankIdx) {

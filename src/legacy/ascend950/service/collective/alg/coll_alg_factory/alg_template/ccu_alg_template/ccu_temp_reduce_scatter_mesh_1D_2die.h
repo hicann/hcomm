@@ -19,9 +19,9 @@
 namespace Hccl {
 class CcuTempReduceScatterMesh1D2Die : public CcuAlgTemplateBase {
 public:
-    explicit CcuTempReduceScatterMesh1D2Die(const RankId virtualRank, const u32 tempRankSize,
-                                   const std::vector<std::vector<RankId>> &tempVTopo,
-                                   const std::map<RankId, u32>            &tempVirtRankMap);
+    explicit CcuTempReduceScatterMesh1D2Die(
+        const RankId virtualRank, const u32 tempRankSize, const std::vector<std::vector<RankId>>& tempVTopo,
+        const std::map<RankId, u32>& tempVirtRankMap);
     ~CcuTempReduceScatterMesh1D2Die() override;
 
     std::string Describe() const override
@@ -29,12 +29,13 @@ public:
         return StringFormat("Template of ReduceScatter ccu mesh 1D 2die with tempRankSize [%u].", tempRankSize_);
     }
 
-    HcclResult GenExtIns(const TempFuncs &tempFuncs, TemplateDataParams &tempAlgParams,
-                         const ResLinks &tempLinks, std::vector<InsQuePtr> &tempInsQues);
-    HcclResult CalcRes(AlgTempResReq &tempResReq) override;
+    HcclResult GenExtIns(
+        const TempFuncs& tempFuncs, TemplateDataParams& tempAlgParams, const ResLinks& tempLinks,
+        std::vector<InsQuePtr>& tempInsQues);
+    HcclResult CalcRes(AlgTempResReq& tempResReq) override;
     uint64_t GetMaxSliceSize() const;
     u32 CalcScratchMultiple(BufferType inBuffType, BufferType outBuffType) override;
-    void InitReduceInfo(const ReduceOp &reduceOp, const DataType &dataType);
+    void InitReduceInfo(const ReduceOp& reduceOp, const DataType& dataType);
 
 private:
     ReduceOp reduceOp_;

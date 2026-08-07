@@ -13,7 +13,6 @@
 
 #include "scatter_nhr_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* SCATTER_NHR_H */

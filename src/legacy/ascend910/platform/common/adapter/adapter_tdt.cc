@@ -37,7 +37,7 @@ HcclResult hrtOpenTsd()
 #endif
 }
 
-HcclResult __hrtOpenNetService(rtNetServiceOpenArgs *openArgs)
+HcclResult __hrtOpenNetService(rtNetServiceOpenArgs* openArgs)
 {
 #if !defined(CCL_KERNEL) && !defined(HCCD)
     aclError aclret = rtOpenNetService(openArgs);
@@ -74,11 +74,11 @@ weak_alias(__hrtCloseNetService, hrtCloseNetService);
 HcclResult hrtTsdCapabilityGet(uint32_t deviceLogicId, int32_t type, uint64_t ptr)
 {
 #ifndef HCCD
-    uint32_t tdtStatus = DlTdtFunction::GetInstance().\
-        dlTsdCapabilityGet(deviceLogicId, type, ptr);
+    uint32_t tdtStatus = DlTdtFunction::GetInstance().dlTsdCapabilityGet(deviceLogicId, type, ptr);
     if (tdtStatus != 0) {
-        HCCL_ERROR("[Get][TsdCapability]Get TsdCapability failed, tdt error code: %u, error deviceLogicId[%u], ",
-            tdtStatus, deviceLogicId);
+        HCCL_ERROR(
+            "[Get][TsdCapability]Get TsdCapability failed, tdt error code: %u, error deviceLogicId[%u], ", tdtStatus,
+            deviceLogicId);
         return HCCL_E_UNAVAIL;
     }
     HCCL_INFO("Get TsdCapability success. deviceLogicId[%u]", deviceLogicId);
@@ -89,5 +89,5 @@ HcclResult hrtTsdCapabilityGet(uint32_t deviceLogicId, int32_t type, uint64_t pt
 #endif
 }
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif

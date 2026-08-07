@@ -13,16 +13,12 @@
 
 namespace hccl {
 
-BroadcastNB::BroadcastNB(const HcclDispatcher dispatcher) : NBBase(dispatcher)
-{
-}
+BroadcastNB::BroadcastNB(const HcclDispatcher dispatcher) : NBBase(dispatcher) {}
 
-BroadcastNB::~BroadcastNB()
-{
-}
+BroadcastNB::~BroadcastNB() {}
 
-HcclResult BroadcastNB::RunAsync(const u32 rank, const u32 rankSize,
-    const std::vector<std::shared_ptr<Transport> > &links)
+HcclResult
+BroadcastNB::RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links)
 {
     CHK_SMART_PTR_NULL(dispatcher_);
     CHK_PTR_NULL(stream_.ptr());
@@ -32,20 +28,25 @@ HcclResult BroadcastNB::RunAsync(const u32 rank, const u32 rankSize,
         return HCCL_SUCCESS;
     }
 
-    CHK_PRT_RET(links.size() < rankSize,
+    CHK_PRT_RET(
+        links.size() < rankSize,
         HCCL_ERROR("[BroadcastNB][RunAsync]rank[%u] linksize[%llu] is less than rank size", rank, links.size()),
         HCCL_E_INTERNAL);
 
     u32 unitSize = DataUnitSize(dataType_);
-    CHK_PRT_RET(unitSize == 0, HCCL_ERROR("[BroadcastNB][RunAsync]rank[%u] unit data size is zero", rank),
-        HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        unitSize == 0, HCCL_ERROR("[BroadcastNB][RunAsync]rank[%u] unit data size is zero", rank), HCCL_E_INTERNAL);
 
     HcclResult ret = HCCL_SUCCESS;
     if (inputMem_ != outputMem_) {
         ret = HcclD2DMemcpyAsync(dispatcher_, outputMem_, inputMem_, stream_);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[Run][BroadcastOnRootRank]root rank[%u] memcpy async from input[%p] "\
-            "failed to output[%p]", rank, inputMem_.ptr(), outputMem_.ptr()), ret);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[Run][BroadcastOnRootRank]root rank[%u] memcpy async from input[%p] "
+                "failed to output[%p]",
+                rank, inputMem_.ptr(), outputMem_.ptr()),
+            ret);
     }
 
     if (rank == root_) {
@@ -60,27 +61,27 @@ HcclResult BroadcastNB::RunAsync(const u32 rank, const u32 rankSize,
     DeviceMem srcMem = inputMem_.range(baseOffset_, count_ * unitSize);
 
     // 1. 先执行scatter
-    std::unique_ptr<AlgTemplateBase> tempAlgScatter = AlgTemplateRegistry::Instance().GetAlgTemplate(
-        TemplateType::TEMPLATE_SCATTER_NB, dispatcher_);
+    std::unique_ptr<AlgTemplateBase> tempAlgScatter
+        = AlgTemplateRegistry::Instance().GetAlgTemplate(TemplateType::TEMPLATE_SCATTER_NB, dispatcher_);
     CHK_SMART_PTR_NULL(tempAlgScatter);
     tempAlgScatter->CloseBarrier();
-    CHK_RET(tempAlgScatter->Prepare(srcMem, srcMem, srcMem, count_, dataType_, stream_,
-        reductionOp_, root_, slices_, baseOffset_));
+    CHK_RET(tempAlgScatter->Prepare(
+        srcMem, srcMem, srcMem, count_, dataType_, stream_, reductionOp_, root_, slices_, baseOffset_));
 
-    CHK_RET(tempAlgScatter->RegisterProfiler(
-        profilerInput_.planeID, profilerInput_.stage, profilerInput_.step, stream_));
+    CHK_RET(
+        tempAlgScatter->RegisterProfiler(profilerInput_.planeID, profilerInput_.stage, profilerInput_.step, stream_));
     CHK_RET(tempAlgScatter->RunAsync(rank, rankSize, links));
 
     // 2. 再执行allgather
-    std::unique_ptr<AlgTemplateBase> tempAlgAllgather = AlgTemplateRegistry::Instance().GetAlgTemplate(
-        TemplateType::TEMPLATE_ALL_GATHER_NB, dispatcher_);
-	CHK_SMART_PTR_NULL(tempAlgAllgather);
+    std::unique_ptr<AlgTemplateBase> tempAlgAllgather
+        = AlgTemplateRegistry::Instance().GetAlgTemplate(TemplateType::TEMPLATE_ALL_GATHER_NB, dispatcher_);
+    CHK_SMART_PTR_NULL(tempAlgAllgather);
     tempAlgAllgather->CloseBarrier();
-    CHK_RET(tempAlgAllgather->Prepare(srcMem, srcMem, srcMem, count_, dataType_, stream_,
-        reductionOp_, root_, slices_, baseOffset_));
+    CHK_RET(tempAlgAllgather->Prepare(
+        srcMem, srcMem, srcMem, count_, dataType_, stream_, reductionOp_, root_, slices_, baseOffset_));
 
-    CHK_RET(tempAlgAllgather->RegisterProfiler(
-        profilerInput_.planeID, profilerInput_.stage, profilerInput_.step, stream_));
+    CHK_RET(
+        tempAlgAllgather->RegisterProfiler(profilerInput_.planeID, profilerInput_.stage, profilerInput_.step, stream_));
     CHK_RET(tempAlgAllgather->RunAsync(rank, rankSize, links));
 
     HCCL_INFO("BroadcastNB finished: rank[%u] end count[%llu]", rank, count_);
@@ -94,8 +95,8 @@ HcclResult BroadcastNB::PrepareSlice(const u32 rank, const u32 rankSize)
     //  所有的数据平均到每个rank上
     u64 sizeAvg = ((count_ + rankSize - 1) / rankSize) * unitSize;
     u64 sizePerSlice = AlgTemplateBase::RoundUpWithDivisor(sizeAvg, HCCL_MIN_SLICE_ALIGN);
-    HCCL_DEBUG("bcast total count[%llu] sizeAverage[%llu] sizePerSlice after aligns[%llu]", count_, sizeAvg,
-        sizePerSlice);
+    HCCL_DEBUG(
+        "bcast total count[%llu] sizeAverage[%llu] sizePerSlice after aligns[%llu]", count_, sizeAvg, sizePerSlice);
 
     // 准备slice
     slices_.resize(rankSize);
@@ -108,14 +109,14 @@ HcclResult BroadcastNB::PrepareSlice(const u32 rank, const u32 rankSize)
         slices_[i].size = sizePerRound;
 
         sizeResidue -= sizePerRound;
-        HCCL_DEBUG("rank[%u] default slice[%u]: offset: [%llu] size[%llu]", rank, i, slices_[i].offset,
-            slices_[i].size);
+        HCCL_DEBUG(
+            "rank[%u] default slice[%u]: offset: [%llu] size[%llu]", rank, i, slices_[i].offset, slices_[i].size);
     }
     return HCCL_SUCCESS;
 }
 
-HcclResult BroadcastNB::GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                                       const std::vector<LINK> &links, AdjInfo& nslbAdjInfo)
+HcclResult
+BroadcastNB::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo)
 {
     if (rankSize == 1) {
         return HCCL_SUCCESS;
@@ -123,8 +124,9 @@ HcclResult BroadcastNB::GetNslbAdjInfo(const u32 rank, const u32 rankSize,
     if (links.size() < rankSize) {
         return HCCL_SUCCESS;
     }
-    u32 nSteps  = 0;
-    for(u32 temp = rankSize - 1; temp != 0; temp >>= 1, ++nSteps){}
+    u32 nSteps = 0;
+    for (u32 temp = rankSize - 1; temp != 0; temp >>= 1, ++nSteps) {
+    }
 
     u32 deltaRoot = (rank + rankSize - root_) % rankSize;
     // 先执行 scatter 流程
@@ -134,7 +136,7 @@ HcclResult BroadcastNB::GetNslbAdjInfo(const u32 rank, const u32 rankSize,
         }
         if (step != nSteps - 1 || deltaRoot < (rankSize - (1 << step))) {
             u32 deltaRank = 1 << step;
-            u32 sendTo =(rank + deltaRank) % rankSize;
+            u32 sendTo = (rank + deltaRank) % rankSize;
             LINK linkRight = links[sendTo];
             CHK_SMART_PTR_NULL(linkRight);
 
@@ -146,10 +148,10 @@ HcclResult BroadcastNB::GetNslbAdjInfo(const u32 rank, const u32 rankSize,
         }
     }
     u32 begin = nSteps;
-    //后续执行AllGather的NB流程
+    // 后续执行AllGather的NB流程
     for (u32 step = 0; step < nSteps; step++) {
         u32 deltaRank = 1 << (nSteps - 1 - step);
-        u32 sendTo =(rank + deltaRank) % rankSize;
+        u32 sendTo = (rank + deltaRank) % rankSize;
         LINK linkRight = links[sendTo];
         CHK_SMART_PTR_NULL(linkRight);
         NslbDpAdjInfo allGatherInfoStep = {0};
@@ -162,4 +164,4 @@ HcclResult BroadcastNB::GetNslbAdjInfo(const u32 rank, const u32 rankSize,
     return HCCL_SUCCESS;
 }
 REGISTER_TEMPLATE(TemplateType::TEMPLATE_BROADCAST_NB, BroadcastNB);
-}  // namespace hccl
+} // namespace hccl

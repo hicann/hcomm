@@ -18,18 +18,18 @@ namespace Hccl {
 
 class CcuTransportMgr {
 public:
-    CcuTransportMgr(const CommunicatorImpl &comm, const int32_t devLogicId);
+    CcuTransportMgr(const CommunicatorImpl& comm, const int32_t devLogicId);
     virtual ~CcuTransportMgr();
-    CcuTransport       *Get(const LinkData &link);
-    set<CcuTransport *> Get(RankId rank);
-    HcclResult          PrepareCreate(const LinkData &link, CcuTransport *&transport);
+    CcuTransport* Get(const LinkData& link);
+    set<CcuTransport*> Get(RankId rank);
+    HcclResult PrepareCreate(const LinkData& link, CcuTransport*& transport);
 
     void Confirm(); // 用于正常建联流程，失败需要回退
     void Fallback();
     void Destroy();
 
     // 以下接口用于N秒快恢特性
-    void             Clean(){}
+    void Clean() {}
     vector<LinkData> ResumeAll();
 
     unordered_map<LinkData, unique_ptr<CcuTransport>>& GetCcuLink2Transport();
@@ -38,22 +38,22 @@ public:
     void RecoverConfirm(); // 用于快照恢复特性，失败报错不回退
 
 private:
-    const CommunicatorImpl *comm{nullptr};
+    const CommunicatorImpl* comm{nullptr};
     const int32_t devLogicId_{0};
     bool isDestroyed{false};
 
     unordered_map<LinkData, unique_ptr<CcuTransport>> ccuLink2TransportMap;
-    unordered_map<RankId, set<CcuTransport *>>        ccuRank2TransportsMap;
-    unordered_map<uint32_t, RankId>                   ccuChannel2RemoteRankMap; // 暂时保留
-    vector<LinkData>                                  tempTransport;
+    unordered_map<RankId, set<CcuTransport*>> ccuRank2TransportsMap;
+    unordered_map<uint32_t, RankId> ccuChannel2RemoteRankMap; // 暂时保留
+    vector<LinkData> tempTransport;
 
     vector<std::pair<CcuTransport*, LinkData>> GetUnConfirmedTrans();
-    HcclResult CreateTransportByLink(const LinkData &link, CcuTransport *&transport);
-    void       TransportsConnect();
-    void       WaitTransportsReady(vector<std::pair<CcuTransport*, LinkData>> &transports) const;
+    HcclResult CreateTransportByLink(const LinkData& link, CcuTransport*& transport);
+    void TransportsConnect();
+    void WaitTransportsReady(vector<std::pair<CcuTransport*, LinkData>>& transports) const;
 
     void RecoverTransportsConnect();
-    void WaitTransportsRecoverReady(vector<std::pair<CcuTransport*, LinkData>> &transports) const;
+    void WaitTransportsRecoverReady(vector<std::pair<CcuTransport*, LinkData>>& transports) const;
 };
 
 } // namespace Hccl

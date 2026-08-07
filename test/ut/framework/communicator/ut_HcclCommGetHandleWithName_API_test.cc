@@ -12,12 +12,14 @@
 
 class HcclCommGetHandleWithNameTest : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         BaseInit::SetUp();
         UT_USE_RANK_TABLE_910_1SERVER_1RANK;
         UT_COMM_CREATE_DEFAULT(comm);
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         Ut_Comm_Destroy(comm);
         BaseInit::TearDown();
         GlobalMockObject::verify();
@@ -26,7 +28,7 @@ public:
 
 TEST_F(HcclCommGetHandleWithNameTest, HcclGetCommName_When_ParamIsNullptr_Expect_ReturnIsHCCL_E_PTR)
 {
-    const char *commName = nullptr;
+    const char* commName = nullptr;
 
     HcclResult ret = HcclCommGetHandleWithName(commName, &comm);
     EXPECT_EQ(ret, HCCL_E_PTR);

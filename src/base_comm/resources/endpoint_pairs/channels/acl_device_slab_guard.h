@@ -29,25 +29,25 @@ public:
         }
     }
 
-    void Reset(void *ptr, size_t size)
+    void Reset(void* ptr, size_t size)
     {
         ptr_ = ptr;
         size_ = size;
     }
 
-    void *Release()
+    void* Release()
     {
-        void *ptr = ptr_;
+        void* ptr = ptr_;
         ptr_ = nullptr;
         size_ = 0;
         return ptr;
     }
 
 private:
-    void *ptr_{nullptr};
+    void* ptr_{nullptr};
     size_t size_{0};
 };
 
-}  // namespace hcomm
+} // namespace hcomm
 
-#endif  // CHANNEL_ACL_DEVICE_SLAB_GUARD_H
+#endif // CHANNEL_ACL_DEVICE_SLAB_GUARD_H

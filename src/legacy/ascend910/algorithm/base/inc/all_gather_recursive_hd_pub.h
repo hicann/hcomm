@@ -19,20 +19,21 @@ public:
     explicit AllGatherRecursiveHalvingDoubling(const HcclDispatcher dispatcher);
     ~AllGatherRecursiveHalvingDoubling() override;
 
-    HcclResult RunAsync(
-        const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport> > &links) override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult
+    RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
+
 protected:
 private:
     HcclResult CalculateSlices(u64 dataBytes, const u32 rankSize) const;
 
-    HcclResult AllGatherInBlock(u32 rank, u32 rankSize, const std::vector<LINK> &links);
+    HcclResult AllGatherInBlock(u32 rank, u32 rankSize, const std::vector<LINK>& links);
 
-    HcclResult GatherInPartOneToEven(u32 rank, const std::vector<LINK> &links);
+    HcclResult GatherInPartOneToEven(u32 rank, const std::vector<LINK>& links);
 
-    HcclResult GatherInPartOneToOdd(u32 rank, const std::vector<LINK> &links);
+    HcclResult GatherInPartOneToOdd(u32 rank, const std::vector<LINK>& links);
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* __BCAST_RECURSIVE_HALVINGDOUBLING_PUB_H__ */

@@ -25,11 +25,12 @@ constexpr u32 CRC_CALC_10 = 10;
 constexpr s32 STRING_MAX_LENGTH = 40 * 1024 * 1024;
 u32 g_crcCalcTable[CRC_TABLE_LENGTH];
 
-HcclResult CalcCrc::HcclCalcCrc(const char *data, u64 length, u32 &crcValue)
+HcclResult CalcCrc::HcclCalcCrc(const char* data, u64 length, u32& crcValue)
 {
     CHK_PTR_NULL(data);
 
-    CHK_PRT_RET(length <= 0 || length > STRING_MAX_LENGTH,
+    CHK_PRT_RET(
+        length <= 0 || length > STRING_MAX_LENGTH,
         HCCL_ERROR("[Calc][StringCrc]String length[%llu] is empty or over than %d bytes.", length, STRING_MAX_LENGTH),
         HCCL_E_PARA);
     HCCL_DEBUG("data[%s], length[%llu]", data, length);
@@ -58,4 +59,4 @@ __attribute__((constructor)) void InitTable()
         g_crcCalcTable[i] = crc;
     }
 }
-}   // namespace hccl
+} // namespace hccl

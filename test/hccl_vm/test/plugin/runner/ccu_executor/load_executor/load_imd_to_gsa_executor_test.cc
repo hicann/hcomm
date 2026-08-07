@@ -27,32 +27,34 @@ using namespace hcomm::CcuRep;
 
 class LoadImdToGSAExecutorTest : public testing::Test {
 protected:
-    void SetUp() override {
-        auto &mgr = CcuResourceManager::GetInstance();
+    void SetUp() override
+    {
+        auto& mgr = CcuResourceManager::GetInstance();
         mgr.Init(0, 4, RunnerCcuVersion::CCU_V1, {});
     }
     void TearDown() override {}
 };
 
-TEST_F(LoadImdToGSAExecutorTest, StructSize) {
-    EXPECT_GT(sizeof(LoadImdToGSAExecutor), 0);
-}
+TEST_F(LoadImdToGSAExecutorTest, StructSize) { EXPECT_GT(sizeof(LoadImdToGSAExecutor), 0); }
 
-TEST_F(LoadImdToGSAExecutorTest, DefaultConstructor) {
+TEST_F(LoadImdToGSAExecutorTest, DefaultConstructor)
+{
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     LoadImdToGSAExecutor executor(0, 0, 0, instr, nullptr);
     EXPECT_NO_THROW(executor.Describe());
 }
 
-TEST_F(LoadImdToGSAExecutorTest, ParameterizedConstructor) {
+TEST_F(LoadImdToGSAExecutorTest, ParameterizedConstructor)
+{
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     LoadImdToGSAExecutor executor(0, 0, 0, instr, nullptr);
     EXPECT_NO_THROW(executor.Describe());
 }
 
-TEST_F(LoadImdToGSAExecutorTest, ParserZeroValues) {
+TEST_F(LoadImdToGSAExecutorTest, ParserZeroValues)
+{
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     LoadImdToGSAExecutor executor(0, 0, 0, instr, nullptr);
@@ -60,7 +62,8 @@ TEST_F(LoadImdToGSAExecutorTest, ParserZeroValues) {
     EXPECT_NO_THROW(executor.Describe());
 }
 
-TEST_F(LoadImdToGSAExecutorTest, ParserMaxValues) {
+TEST_F(LoadImdToGSAExecutorTest, ParserMaxValues)
+{
     CcuInstr instr;
     memset(&instr, 0xFF, sizeof(instr));
     LoadImdToGSAExecutor executor(0, 0, 0, instr, nullptr);
@@ -68,7 +71,8 @@ TEST_F(LoadImdToGSAExecutorTest, ParserMaxValues) {
     EXPECT_NO_THROW(executor.Describe());
 }
 
-TEST_F(LoadImdToGSAExecutorTest, ParserSpecificParameters) {
+TEST_F(LoadImdToGSAExecutorTest, ParserSpecificParameters)
+{
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     instr.v1.loadImdToGSA.gsaId = 100;
@@ -79,7 +83,8 @@ TEST_F(LoadImdToGSAExecutorTest, ParserSpecificParameters) {
     EXPECT_FALSE(desc.empty());
 }
 
-TEST_F(LoadImdToGSAExecutorTest, DifferentGsaIdCombinations) {
+TEST_F(LoadImdToGSAExecutorTest, DifferentGsaIdCombinations)
+{
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     uint16_t gsaIds[] = {0, 1, SimCcuV1::CCU_RESOURCE_GSA_NUM / 2, SimCcuV1::CCU_RESOURCE_GSA_NUM - 1};
@@ -92,7 +97,8 @@ TEST_F(LoadImdToGSAExecutorTest, DifferentGsaIdCombinations) {
     }
 }
 
-TEST_F(LoadImdToGSAExecutorTest, DescribeContent) {
+TEST_F(LoadImdToGSAExecutorTest, DescribeContent)
+{
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     instr.v1.loadImdToGSA.gsaId = 10;
@@ -104,7 +110,8 @@ TEST_F(LoadImdToGSAExecutorTest, DescribeContent) {
     EXPECT_NE(desc.find("GSA"), std::string::npos);
 }
 
-TEST_F(LoadImdToGSAExecutorTest, InheritanceCheck) {
+TEST_F(LoadImdToGSAExecutorTest, InheritanceCheck)
+{
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     LoadImdToGSAExecutor executor(0, 0, 0, instr, nullptr);
@@ -112,8 +119,9 @@ TEST_F(LoadImdToGSAExecutorTest, InheritanceCheck) {
     EXPECT_NE(base, nullptr);
 }
 
-TEST_F(LoadImdToGSAExecutorTest, Run_BasicImmediate) {
-    auto &mgr = CcuResourceManager::GetInstance();
+TEST_F(LoadImdToGSAExecutorTest, Run_BasicImmediate)
+{
+    auto& mgr = CcuResourceManager::GetInstance();
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     instr.v1.loadImdToGSA.gsaId = 5;
@@ -125,8 +133,9 @@ TEST_F(LoadImdToGSAExecutorTest, Run_BasicImmediate) {
     EXPECT_EQ(result, 12345);
 }
 
-TEST_F(LoadImdToGSAExecutorTest, Run_ZeroImmediate) {
-    auto &mgr = CcuResourceManager::GetInstance();
+TEST_F(LoadImdToGSAExecutorTest, Run_ZeroImmediate)
+{
+    auto& mgr = CcuResourceManager::GetInstance();
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     instr.v1.loadImdToGSA.gsaId = 10;
@@ -138,8 +147,9 @@ TEST_F(LoadImdToGSAExecutorTest, Run_ZeroImmediate) {
     EXPECT_EQ(result, 0);
 }
 
-TEST_F(LoadImdToGSAExecutorTest, Run_LargeImmediate) {
-    auto &mgr = CcuResourceManager::GetInstance();
+TEST_F(LoadImdToGSAExecutorTest, Run_LargeImmediate)
+{
+    auto& mgr = CcuResourceManager::GetInstance();
     CcuInstr instr;
     memset(&instr, 0, sizeof(instr));
     instr.v1.loadImdToGSA.gsaId = 0;

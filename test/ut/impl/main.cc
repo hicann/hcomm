@@ -17,7 +17,8 @@
 #include "env_config.h"
 #include "llt_hccl_stub_pub.h"
 
-GTEST_API_ int main(int argc, char **argv) {
+GTEST_API_ int main(int argc, char** argv)
+{
     printf("Running main() from gtest_main.cc\n");
     setTargetPort(11111, 41114);
     testing::InitGoogleTest(&argc, argv);

@@ -22,18 +22,18 @@ namespace hcomm {
 
 class ServerSocketMgr {
 public:
-    static HcclResult ListenStart(const uint32_t devPhyId, const CommAddr &commAddr, const Hccl::NicType nicType);
+    static HcclResult ListenStart(const uint32_t devPhyId, const CommAddr& commAddr, const Hccl::NicType nicType);
     static void DeInit(u32 devPhyId);
 
 private:
-    static ServerSocketMgr &GetInstance(const uint32_t devicePhyId);
-    HcclResult ListenStart_(const CommAddr &commAddr, const Hccl::NicType nicType);
+    static ServerSocketMgr& GetInstance(const uint32_t devicePhyId);
+    HcclResult ListenStart_(const CommAddr& commAddr, const Hccl::NicType nicType);
 
 private:
     ServerSocketMgr() = default;
     ~ServerSocketMgr() = default;
-    ServerSocketMgr(const ServerSocketMgr &that) = delete;
-    ServerSocketMgr &operator=(const ServerSocketMgr &that) = delete;
+    ServerSocketMgr(const ServerSocketMgr& that) = delete;
+    ServerSocketMgr& operator=(const ServerSocketMgr& that) = delete;
 
     uint32_t devPhyId_{0};
     std::mutex innerMutex_{};

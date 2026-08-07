@@ -13,34 +13,28 @@
 
 namespace hccl {
 
-CollExecutorBase::CollExecutorBase(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher)
-    : dispatcher_(dispatcher), topoMatcher_(topoMatcher)
-{
-}
+CollExecutorBase::CollExecutorBase(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher)
+    : dispatcher_(dispatcher),
+      topoMatcher_(topoMatcher)
+{}
 
 HcclResult CollExecutorBase::SetAlgType(const AlgType algType)
 {
-    const std::vector<AlgTypeLevel0> &l0Algo = desc_.level0SupportedAlgos;
-    const std::vector<AlgTypeLevel1> &l1Algo = desc_.level1SupportedAlgos;
-    const std::vector<AlgTypeLevel2> &l2Algo = desc_.level2SupportedAlgos;
+    const std::vector<AlgTypeLevel0>& l0Algo = desc_.level0SupportedAlgos;
+    const std::vector<AlgTypeLevel1>& l1Algo = desc_.level1SupportedAlgos;
+    const std::vector<AlgTypeLevel2>& l2Algo = desc_.level2SupportedAlgos;
 
     algType_ = algType;
-    if (!l0Algo.empty()
-        && std::find(l0Algo.begin(), l0Algo.end(), algType_.algoLevel0) == l0Algo.end()) {
-        HCCL_WARNING("[%s] not support level0 algo[%d], reset to algo[%d]", __func__,
-            algType_.algoLevel0, l0Algo[0]);
+    if (!l0Algo.empty() && std::find(l0Algo.begin(), l0Algo.end(), algType_.algoLevel0) == l0Algo.end()) {
+        HCCL_WARNING("[%s] not support level0 algo[%d], reset to algo[%d]", __func__, algType_.algoLevel0, l0Algo[0]);
         algType_.algoLevel0 = l0Algo[0];
     }
-    if (!l1Algo.empty()
-        && std::find(l1Algo.begin(), l1Algo.end(), algType_.algoLevel1) == l1Algo.end()) {
-        HCCL_WARNING("[%s] not support level1 algo[%d], reset to algo[%d]", __func__,
-            algType_.algoLevel1, l1Algo[0]);
+    if (!l1Algo.empty() && std::find(l1Algo.begin(), l1Algo.end(), algType_.algoLevel1) == l1Algo.end()) {
+        HCCL_WARNING("[%s] not support level1 algo[%d], reset to algo[%d]", __func__, algType_.algoLevel1, l1Algo[0]);
         algType_.algoLevel1 = l1Algo[0];
     }
-    if (!l2Algo.empty()
-        && std::find(l2Algo.begin(), l2Algo.end(), algType_.algoLevel2) == l2Algo.end()) {
-        HCCL_WARNING("[%s] not support level2 algo[%d], reset to algo[%d]", __func__,
-            algType_.algoLevel2, l2Algo[0]);
+    if (!l2Algo.empty() && std::find(l2Algo.begin(), l2Algo.end(), algType_.algoLevel2) == l2Algo.end()) {
+        HCCL_WARNING("[%s] not support level2 algo[%d], reset to algo[%d]", __func__, algType_.algoLevel2, l2Algo[0]);
         algType_.algoLevel2 = l2Algo[0];
     }
     // 记录刷新后的算法类型到executor的描述中
@@ -60,25 +54,32 @@ HcclResult CollExecutorBase::SetIsSupportSDMAReduce(bool isSupportSDMAReduce)
     return HCCL_SUCCESS;
 }
 
-HcclResult CollExecutorBase::RunTemplate(const std::unique_ptr<AlgTemplateBase> &tempAlg, const SubCommInfo &commInfo)
+HcclResult CollExecutorBase::RunTemplate(const std::unique_ptr<AlgTemplateBase>& tempAlg, const SubCommInfo& commInfo)
 {
     HcclResult ret = tempAlg->RunAsync(commInfo.localRank, commInfo.localRankSize, commInfo.links);
-    CHK_PRT_RET(ret == HCCL_E_AGAIN, HCCL_WARNING("[CollExecutorBase][RunTemplate]" \
-        "group has been destroyed. Break!"), ret);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[CollExecutorBase][RunTemplate]run tempAlg rank[%u] rank size[%u] failed",
-        commInfo.localRank, commInfo.localRankSize), ret);
+    CHK_PRT_RET(
+        ret == HCCL_E_AGAIN,
+        HCCL_WARNING("[CollExecutorBase][RunTemplate]"
+                     "group has been destroyed. Break!"),
+        ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[CollExecutorBase][RunTemplate]run tempAlg rank[%u] rank size[%u] failed", commInfo.localRank,
+            commInfo.localRankSize),
+        ret);
     return HCCL_SUCCESS;
 }
 
-HcclResult CollExecutorBase::GetAivExecParam(const OpParam& param, AlgResourceResponse& algRes, AivSuperKernelArgs &args)
+HcclResult
+CollExecutorBase::GetAivExecParam(const OpParam& param, AlgResourceResponse& algRes, AivSuperKernelArgs& args)
 {
     return HCCL_SUCCESS;
 }
 
 HcclResult CollExecutorBase::PrepareCommInfoToDevice(AlgResourceResponse& algResource)
 {
-    (void) algResource;
+    (void)algResource;
     return HCCL_SUCCESS;
 }
 
@@ -89,20 +90,17 @@ HcclResult CollExecutorBase::SetRmaInfo(void* rmaInfo)
     return HCCL_SUCCESS;
 }
 
-HcclResult CollExecutorBase::CalcIncreLinkRequest(const OpParam& param, std::set<u32>& ranksLinked, 
-    AlgResourceRequest &resourceRequest, bool& needIncreLink)
+HcclResult CollExecutorBase::CalcIncreLinkRequest(
+    const OpParam& param, std::set<u32>& ranksLinked, AlgResourceRequest& resourceRequest, bool& needIncreLink)
 {
-    (void) ranksLinked;
-    (void) needIncreLink;
+    (void)ranksLinked;
+    (void)needIncreLink;
     return HCCL_SUCCESS;
 }
 
-HcclResult CollExecutorBase::CreatePairWiseList(HcclSendRecvItem *sendRecvInfo, u32 itemNum)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult CollExecutorBase::CreatePairWiseList(HcclSendRecvItem* sendRecvInfo, u32 itemNum) { return HCCL_SUCCESS; }
 
-HcclResult CollExecutorBase::GetPairWiseList(std::vector<std::vector<HcclSendRecvItem*>> &sendRecvPairList)
+HcclResult CollExecutorBase::GetPairWiseList(std::vector<std::vector<HcclSendRecvItem*>>& sendRecvPairList)
 {
     return HCCL_SUCCESS;
 }
@@ -137,7 +135,8 @@ HcclResult CollExecutorBase::SetNumBlocks(const u32& numBlocks)
     return HCCL_SUCCESS;
 }
 
-HcclResult CollExecutorBase::GetCache(HcclCacheInfo& cacheInfo){
+HcclResult CollExecutorBase::GetCache(HcclCacheInfo& cacheInfo)
+{
     cacheInfo = cacheInfo_;
     return HCCL_SUCCESS;
 }
@@ -149,7 +148,7 @@ HcclResult CollExecutorBase::SetOpCounter(const OpCounterInfo& opCounter)
 }
 HcclResult CollExecutorBase::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& adjInfo)
 {
-    (void) adjInfo;
+    (void)adjInfo;
     return HCCL_SUCCESS;
 }
 
@@ -159,7 +158,8 @@ HcclResult CollExecutorBase::MarkNeedAlltoallvCache()
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CollExecutorBase::GetHcclOffsetDstRanksMap(std::unordered_map<uint64_t, std::vector<uint32_t>>& hcclOffsetDstRanksMap) const
+HcclResult CollExecutorBase::GetHcclOffsetDstRanksMap(
+    std::unordered_map<uint64_t, std::vector<uint32_t>>& hcclOffsetDstRanksMap) const
 {
     UNUSED_PARAM(hcclOffsetDstRanksMap);
     HCCL_ERROR("[CollExecutorBase][GetHcclOffsetDstRanksMap] not supported for current executor!");
@@ -178,4 +178,4 @@ HcclWorkflowMode CollExecutorBase::GetExecutorWorkflowMode() const
     return HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE;
 }
 
-}
+} // namespace hccl

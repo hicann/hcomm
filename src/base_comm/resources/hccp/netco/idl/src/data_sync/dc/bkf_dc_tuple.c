@@ -145,9 +145,9 @@ BOOL BkfDcTry2FreeTuple(BkfDc *dc, BkfDcTable *table, BkfDcTuple *tuple)
 
     /* 满足条件，free */
     BKF_LOG_DEBUG(dc->log, "dc(%#x), sliceKey(%s)/type(%u, %s)/tupleKey(%s)\n", BKF_MASK_ADDR(dc),
-                  BkfDcGetSliceKeyStr(dc, table->slice->key, sliceBuf, sizeof(sliceBuf)),
-                  table->tableTypeId, BkfDcGetTableTypeIdStr(dc, table->tableTypeId),
-                  BkfDcGetTupleKeyStr(dc, table->tableTypeId, tuple->keyVal, tupleKeyBuf, sizeof(tupleKeyBuf)));
+        BkfDcGetSliceKeyStr(dc, table->slice->key, sliceBuf, sizeof(sliceBuf)), table->tableTypeId,
+        BkfDcGetTableTypeIdStr(dc, table->tableTypeId),
+        BkfDcGetTupleKeyStr(dc, table->tableTypeId, tuple->keyVal, tupleKeyBuf, sizeof(tupleKeyBuf)));
     if (table->tupleCache[hashIdx] == tuple) {
         table->tupleCache[hashIdx] = VOS_NULL;
     }
@@ -168,8 +168,7 @@ BOOL BkfDcTry2FreeAllTuple(BkfDc *dc, BkfDcTable *table)
     void *itor = VOS_NULL;
     BOOL succ = VOS_TRUE;
 
-    for (tuple = BkfDcGetFirstTuple(dc, table, &itor); tuple != VOS_NULL;
-         tuple = BkfDcGetNextTuple(dc, table, &itor)) {
+    for (tuple = BkfDcGetFirstTuple(dc, table, &itor); tuple != VOS_NULL; tuple = BkfDcGetNextTuple(dc, table, &itor)) {
         succ = succ && BkfDcTry2FreeTuple(dc, table, tuple);
     }
     return succ;
@@ -224,7 +223,7 @@ BkfDcTuple *BkfDcGetNextTuple(BkfDc *dc, BkfDcTable *table, void **itorInOut)
 
 #if BKF_BLOCK("tuple limit")
 STATIC uint32_t BkfDcTupleLimitOnSysLogCode(BkfDc *dc, uint16_t *tableTypeId, int32_t *logTimeTupleCntAddUpd,
-                                            F_BKF_SYS_LOG_PRINTF logPrintf, uint32_t logPrintfParam1)
+    F_BKF_SYS_LOG_PRINTF logPrintf, uint32_t logPrintfParam1)
 {
     BkfDcTableType *tableType = VOS_NULL;
 
@@ -233,13 +232,13 @@ STATIC uint32_t BkfDcTupleLimitOnSysLogCode(BkfDc *dc, uint16_t *tableTypeId, in
         return BKF_ERR;
     }
 
-    (void)logPrintf(logPrintfParam1, DIAG_ID_FMT_DC_TUPLE_EXCEED, tableType->vTbl.tableTypeId,
-                    tableType->name, *logTimeTupleCntAddUpd, tableType->vTbl.tupleCntMax);
+    (void)logPrintf(logPrintfParam1, DIAG_ID_FMT_DC_TUPLE_EXCEED, tableType->vTbl.tableTypeId, tableType->name,
+        *logTimeTupleCntAddUpd, tableType->vTbl.tupleCntMax);
     return BKF_OK;
 }
 uint32_t BkfDcTupleLimitInit(BkfDc *dc)
 {
-    BkfSysLogTypeVTbl vTbl = { 0 };
+    BkfSysLogTypeVTbl vTbl = {0};
 
     vTbl.name = dc->name;
     vTbl.cookie = dc;
@@ -285,4 +284,3 @@ uint32_t BkfDcTupleLimitSysLog(BkfDc *dc, uint16_t tableTypeId)
 }
 #endif
 #endif
-

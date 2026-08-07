@@ -25,23 +25,23 @@ class ConnLocalNotifyManager {
     using ConnLocalNotifyPool = unordered_map<RankId, unordered_map<LinkData, vector<unique_ptr<BaseLocalNotify>>>>;
 
 public:
-    explicit ConnLocalNotifyManager(CommunicatorImpl *communicator);
+    explicit ConnLocalNotifyManager(CommunicatorImpl* communicator);
 
     ~ConnLocalNotifyManager();
 
-    void ApplyFor(RankId remoteRankId, const LinkData &linkData);
+    void ApplyFor(RankId remoteRankId, const LinkData& linkData);
 
-    bool Release(RankId remoteRankId, const LinkData &linkData);
+    bool Release(RankId remoteRankId, const LinkData& linkData);
 
-    vector<BaseLocalNotify *> Get(RankId remoteRankId, const LinkData &linkData);
+    vector<BaseLocalNotify*> Get(RankId remoteRankId, const LinkData& linkData);
 
     bool Destroy();
 
 private:
-    CommunicatorImpl   *comm;
+    CommunicatorImpl* comm;
     ConnLocalNotifyPool notifyPool;
 
-    bool IsExist(RankId remoteRankId, const LinkData &linkData);
+    bool IsExist(RankId remoteRankId, const LinkData& linkData);
 };
 } // namespace Hccl
 

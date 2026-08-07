@@ -60,42 +60,42 @@ typedef struct tag_ts_ts_cpu_profile_config {
 } ts_ts_cpu_profile_config_t;
 
 typedef struct tag_ts_ai_cpu_profile_config {
-    uint32_t type;  // 0-task base, 1-sample base
+    uint32_t type; // 0-task base, 1-sample base
     uint32_t period;
     uint32_t event_num;
     uint32_t event[0];
 } ts_ai_cpu_profile_config_t;
 
 typedef struct tag_ts_ai_core_profile_config {
-    uint32_t type;                   // 0-task base, 1-sample base
-    uint32_t almost_full_threshold;  // sample base
-    uint32_t period;                 // sample base
-    uint32_t core_mask;              // sample base
-    uint32_t event_num;              // public
-    uint32_t event[8];               // 8:max event num
-    uint32_t tag;                    // bit0==0-enable immediately, bit0==1-enable delay
+    uint32_t type;                  // 0-task base, 1-sample base
+    uint32_t almost_full_threshold; // sample base
+    uint32_t period;                // sample base
+    uint32_t core_mask;             // sample base
+    uint32_t event_num;             // public
+    uint32_t event[8];              // 8:max event num
+    uint32_t tag;                   // bit0==0-enable immediately, bit0==1-enable delay
 } ts_ai_core_profile_config_t;
 
 typedef struct tag_ts_ai_vector_profile_config {
-    uint32_t type;                   // 0-task base, 1-sample base
-    uint32_t almost_full_threshold;  // sample base
-    uint32_t period;                 // sample base
-    uint32_t core_mask;              // sample base
-    uint32_t event_num;              // public
-    uint32_t event[0];               // public
-    uint32_t tag;                    // bit0==0-enable immediately, bit0==1-enable delay
+    uint32_t type;                  // 0-task base, 1-sample base
+    uint32_t almost_full_threshold; // sample base
+    uint32_t period;                // sample base
+    uint32_t core_mask;             // sample base
+    uint32_t event_num;             // public
+    uint32_t event[0];              // public
+    uint32_t tag;                   // bit0==0-enable immediately, bit0==1-enable delay
 } ts_ai_vector_profile_config_t;
 
 typedef struct tag_ts_ts_fw_profile_config {
     uint32_t period;
-    uint32_t ts_task_track;     // 1-enable,2-disable
-    uint32_t ts_cpu_usage;      // 1-enable,2-disable
-    uint32_t ai_core_status;    // 1-enable,2-disable
-    uint32_t ts_timeline;       // 1-enable,2-disable
-    uint32_t ai_vector_status;  // 1-enable,2-disable
-    uint32_t ts_keypoint;       // 1-enable,2-disable
-    uint32_t ts_taskstep;       // 1-enable,2-disable
-    uint32_t ts_numBlocks;       // 1-enable,2-disable
+    uint32_t ts_task_track;    // 1-enable,2-disable
+    uint32_t ts_cpu_usage;     // 1-enable,2-disable
+    uint32_t ai_core_status;   // 1-enable,2-disable
+    uint32_t ts_timeline;      // 1-enable,2-disable
+    uint32_t ai_vector_status; // 1-enable,2-disable
+    uint32_t ts_keypoint;      // 1-enable,2-disable
+    uint32_t ts_taskstep;      // 1-enable,2-disable
+    uint32_t ts_numBlocks;     // 1-enable,2-disable
 } ts_ts_fw_profile_config_t;
 
 typedef struct tag_ts_l2_profile_config_t {
@@ -104,37 +104,37 @@ typedef struct tag_ts_l2_profile_config_t {
 } ts_l2_profile_config_t;
 
 typedef struct tag_ts_stars_soc_log_config {
-    uint32_t acsq_task;         // 1-enable,2-disable
-    uint32_t acc_pmu;           // 1-enable,2-disable
-    uint32_t cdqm_req;          // 1-enable,2-disable
-    uint32_t dvpp_vpc_block;    // 1-enable,2-disable
-    uint32_t dvpp_jpegd_block;  // 1-enable,2-disable
-    uint32_t dvpp_jpege_block;  // 1-enable,2-disable
-    uint32_t ffts_thread_task;  // 1-enable,2-disable
-    uint32_t ffts_block;        // 1-enable,2-disable
-    uint32_t sdma_dmu;          // 1-enable,2-disable
-    uint32_t tag;               // bit0==0-enable immediately, bit0==1-enable delay
+    uint32_t acsq_task;        // 1-enable,2-disable
+    uint32_t acc_pmu;          // 1-enable,2-disable
+    uint32_t cdqm_req;         // 1-enable,2-disable
+    uint32_t dvpp_vpc_block;   // 1-enable,2-disable
+    uint32_t dvpp_jpegd_block; // 1-enable,2-disable
+    uint32_t dvpp_jpege_block; // 1-enable,2-disable
+    uint32_t ffts_thread_task; // 1-enable,2-disable
+    uint32_t ffts_block;       // 1-enable,2-disable
+    uint32_t sdma_dmu;         // 1-enable,2-disable
+    uint32_t tag;              // bit0==0-enable immediately, bit0==1-enable delay
 } ts_stars_soc_log_config_t;
 
 typedef struct tag_ts_ffts_profile_config {
-    uint32_t type;              // bit0-task base, bit1-sample base, bit2 blk task, bit3 sub task
-    uint32_t period;            // sample base
-    uint32_t core_mask;         // sample base
-    uint32_t event_num;         // public
-    uint16_t event[DHA_DFX_EVENT_MAX_NUM];    // public
+    uint32_t type;                         // bit0-task base, bit1-sample base, bit2 blk task, bit3 sub task
+    uint32_t period;                       // sample base
+    uint32_t core_mask;                    // sample base
+    uint32_t event_num;                    // public
+    uint16_t event[DHA_DFX_EVENT_MAX_NUM]; // public
 } ts_ffts_profile_config_t;
 
 typedef struct tag_ts_stars_ffts_profile_config {
-    uint32_t cfg_mode;   // 0-none,1-aic,2-aiv,3-aic&aiv
+    uint32_t cfg_mode; // 0-none,1-aic,2-aiv,3-aic&aiv
     ts_ffts_profile_config_t aic_cfg;
     ts_ffts_profile_config_t aiv_cfg;
-    uint32_t tag;        // bit0==0-enable immediately, bit0==1-enable delay, high 16bit user_profile_mode
+    uint32_t tag; // bit0==0-enable immediately, bit0==1-enable delay, high 16bit user_profile_mode
 } ts_stars_ffts_profile_config_t;
 
-typedef struct  tag_stars_profile_config {
-    uint32_t inner_switch;   // 1-enable,2-disable
-    uint32_t period;        // ms
-}ts_stars_profile_config_t;
+typedef struct tag_stars_profile_config {
+    uint32_t inner_switch; // 1-enable,2-disable
+    uint32_t period;       // ms
+} ts_stars_profile_config_t;
 
 typedef struct tag_stars_soc_profile_config {
     ts_stars_profile_config_t acc_pmu;
@@ -143,26 +143,26 @@ typedef struct tag_stars_soc_profile_config {
     ts_stars_profile_config_t inter_chip;
     ts_stars_profile_config_t low_power;
     ts_stars_profile_config_t stars_info;
-}ts_stars_soc_profile_config_t;
+} ts_stars_soc_profile_config_t;
 
 typedef struct tag_ts_stars_biu_perf_config {
     uint32_t cycles;
 } ts_stars_biu_perf_config_t;
 
 typedef struct tag_ts_hwts_log_config {
-    uint32_t tag;          // bit0==0-enable immediately, bit0==1-enable delay
+    uint32_t tag; // bit0==0-enable immediately, bit0==1-enable delay
 } ts_hwts_log_config_t;
 
 typedef struct tag_ts_profile_command {
     uint32_t cmd_verify;
     uint32_t channel_id;
     uint32_t cmd_type;
-    uint32_t buffer_len;   // length of chl buf
-    uint64_t buffer_addr;  // chl buf, for ts <--> drv data exchange
+    uint32_t buffer_len;  // length of chl buf
+    uint64_t buffer_addr; // chl buf, for ts <--> drv data exchange
     uint32_t buffer_num;
     uint32_t fid;
-    uint64_t com_buf_addr;  // 1980 only
-    uint32_t com_buf_len;   // 1980 only
+    uint64_t com_buf_addr; // 1980 only
+    uint32_t com_buf_len;  // 1980 only
     uint32_t sub_channel_id;
     uint32_t data_len;
     uint32_t pid;

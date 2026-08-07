@@ -17,26 +17,22 @@
 
 using namespace hccl;
 
-class UtCpuHcommWriteWithNotifyNbiOnThread : public testing::Test
-{
+class UtCpuHcommWriteWithNotifyNbiOnThread : public testing::Test {
 protected:
     virtual void SetUp() override {}
 
-    virtual void TearDown() override
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() override { GlobalMockObject::verify(); }
 
     // thread is unused by HcommWriteWithNotifyNbiOnThread, any value is acceptable.
     ThreadHandle thread = static_cast<ThreadHandle>(0x01);
-    EndpointHandle epHandle = reinterpret_cast<void *>(0x01);
+    EndpointHandle epHandle = reinterpret_cast<void*>(0x01);
     HcommChannelDesc channelDesc{};
     hcomm::HostCpuRoceChannel channelOnHost{epHandle, channelDesc};
     ChannelHandle channel = reinterpret_cast<ChannelHandle>(&channelOnHost);
     char srcBuf[8]{};
     char dstBuf[8]{};
-    void *src = srcBuf;
-    void *dst = dstBuf;
+    void* src = srcBuf;
+    void* dst = dstBuf;
     uint64_t len = sizeof(srcBuf);
     uint32_t remoteNotifyIdx = 0;
     int32_t res{HCCL_E_RESERVED};
@@ -46,64 +42,76 @@ protected:
 
 // 950
 
-TEST_F(UtCpuHcommWriteWithNotifyNbiOnThread, Ut_HcommWriteWithNotifyNbiOnThread_When_950_Normal_Expect_ReturnIsHCCL_SUCCESS)
+TEST_F(
+    UtCpuHcommWriteWithNotifyNbiOnThread,
+    Ut_HcommWriteWithNotifyNbiOnThread_When_950_Normal_Expect_ReturnIsHCCL_SUCCESS)
 {
     MOCKER(&hrtGetDeviceType).stubs().with(outBound(t950)).will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP_VIRTUAL(channelOnHost, &hcomm::HostCpuRoceChannel::WriteWithNotify)
-            .stubs()
-            .with(mockcpp::any(), mockcpp::any())
-            .will(returnValue(HCCL_SUCCESS));
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
     res = HcommWriteWithNotifyNbiOnThread(thread, channel, dst, src, len, remoteNotifyIdx);
     EXPECT_EQ(res, HCCL_SUCCESS);
 }
 
-TEST_F(UtCpuHcommWriteWithNotifyNbiOnThread, Ut_HcommWriteWithNotifyNbiOnThread_When_950_Thread_IsNull_Expect_ReturnIsHCCL_SUCCESS)
+TEST_F(
+    UtCpuHcommWriteWithNotifyNbiOnThread,
+    Ut_HcommWriteWithNotifyNbiOnThread_When_950_Thread_IsNull_Expect_ReturnIsHCCL_SUCCESS)
 {
     MOCKER(&hrtGetDeviceType).stubs().with(outBound(t950)).will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP_VIRTUAL(channelOnHost, &hcomm::HostCpuRoceChannel::WriteWithNotify)
-            .stubs()
-            .with(mockcpp::any(), mockcpp::any())
-            .will(returnValue(HCCL_SUCCESS));
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
     // thread is cast to void — nullptr is acceptable.
     res = HcommWriteWithNotifyNbiOnThread(0, channel, dst, src, len, remoteNotifyIdx);
     EXPECT_EQ(res, HCCL_SUCCESS);
 }
 
-TEST_F(UtCpuHcommWriteWithNotifyNbiOnThread, Ut_HcommWriteWithNotifyNbiOnThread_When_950_Channel_IsNull_Expect_ReturnIsHCCL_E_PTR)
+TEST_F(
+    UtCpuHcommWriteWithNotifyNbiOnThread,
+    Ut_HcommWriteWithNotifyNbiOnThread_When_950_Channel_IsNull_Expect_ReturnIsHCCL_E_PTR)
 {
     MOCKER(&hrtGetDeviceType).stubs().with(outBound(t950)).will(returnValue(HCCL_SUCCESS));
     res = HcommWriteWithNotifyNbiOnThread(thread, 0, dst, src, len, remoteNotifyIdx);
     EXPECT_EQ(res, HCCL_E_PTR);
 }
 
-TEST_F(UtCpuHcommWriteWithNotifyNbiOnThread, Ut_HcommWriteWithNotifyNbiOnThread_When_Src_IsNull_Expect_ReturnIsHCCL_E_PTR)
+TEST_F(
+    UtCpuHcommWriteWithNotifyNbiOnThread, Ut_HcommWriteWithNotifyNbiOnThread_When_Src_IsNull_Expect_ReturnIsHCCL_E_PTR)
 {
     // src is checked before hrtGetDeviceType, so no mock needed.
     res = HcommWriteWithNotifyNbiOnThread(thread, channel, dst, nullptr, len, remoteNotifyIdx);
     EXPECT_EQ(res, HCCL_E_PTR);
 }
 
-TEST_F(UtCpuHcommWriteWithNotifyNbiOnThread, Ut_HcommWriteWithNotifyNbiOnThread_When_Dst_IsNull_Expect_ReturnIsHCCL_E_PTR)
+TEST_F(
+    UtCpuHcommWriteWithNotifyNbiOnThread, Ut_HcommWriteWithNotifyNbiOnThread_When_Dst_IsNull_Expect_ReturnIsHCCL_E_PTR)
 {
     // dst is checked before hrtGetDeviceType, so no mock needed.
     res = HcommWriteWithNotifyNbiOnThread(thread, channel, nullptr, src, len, remoteNotifyIdx);
     EXPECT_EQ(res, HCCL_E_PTR);
 }
 
-TEST_F(UtCpuHcommWriteWithNotifyNbiOnThread, Ut_HcommWriteWithNotifyNbiOnThread_When_950_WriteWithNotify_Fails_Expect_ErrorCodePropagated)
+TEST_F(
+    UtCpuHcommWriteWithNotifyNbiOnThread,
+    Ut_HcommWriteWithNotifyNbiOnThread_When_950_WriteWithNotify_Fails_Expect_ErrorCodePropagated)
 {
     MOCKER(&hrtGetDeviceType).stubs().with(outBound(t950)).will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP_VIRTUAL(channelOnHost, &hcomm::HostCpuRoceChannel::WriteWithNotify)
-            .stubs()
-            .with(mockcpp::any(), mockcpp::any())
-            .will(returnValue(HCCL_E_INTERNAL));
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_E_INTERNAL));
     res = HcommWriteWithNotifyNbiOnThread(thread, channel, dst, src, len, remoteNotifyIdx);
     EXPECT_EQ(res, HCCL_E_INTERNAL);
 }
 
 // 910C
 
-TEST_F(UtCpuHcommWriteWithNotifyNbiOnThread, Ut_HcommWriteWithNotifyNbiOnThread_When_910C_Expect_ReturnIsHCCL_E_NOT_SUPPORT)
+TEST_F(
+    UtCpuHcommWriteWithNotifyNbiOnThread,
+    Ut_HcommWriteWithNotifyNbiOnThread_When_910C_Expect_ReturnIsHCCL_E_NOT_SUPPORT)
 {
     MOCKER(&hrtGetDeviceType).stubs().with(outBound(t910C)).will(returnValue(HCCL_SUCCESS));
     // Non-950 devices are not supported by the NBI write-with-notify path.

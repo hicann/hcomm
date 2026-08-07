@@ -15,36 +15,43 @@
 namespace Hccl {
 namespace CcuRep {
 
-CcuRepRemWaitSem::CcuRepRemWaitSem(const CcuTransport &transport, uint16_t semIndex, uint16_t mask, bool isProfiling)
-    : transport(transport), semIndex(semIndex), mask(mask), isProfiling(isProfiling)
-{
-    type       = CcuRepType::REM_WAIT_SEM;
-    instrCount = 1;
-}
-
-bool CcuRepRemWaitSem::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
-
-    // 需要profiling的使用SetCKEInstr, 否则使用ClearCKEInstr
-    if (isProfiling) {
-        SetCKEInstr(instr++, 0, 0, transport.GetLocCkeByIndex(semIndex), mask, 1);
-    } else {
-        ClearCKEInstr(instr++, 0, 0, transport.GetLocCkeByIndex(semIndex), mask, 1);
+    CcuRepRemWaitSem::CcuRepRemWaitSem(
+        const CcuTransport& transport, uint16_t semIndex, uint16_t mask, bool isProfiling)
+        : transport(transport),
+          semIndex(semIndex),
+          mask(mask),
+          isProfiling(isProfiling)
+    {
+        type = CcuRepType::REM_WAIT_SEM;
+        instrCount = 1;
     }
-    CHK_PRT_THROW(instrId > UINT16_MAX - instrCount,
-                        HCCL_ERROR("[CcuRepRemWaitSem::Translate]uint16 integer overflow occurs, instrId = [%hu], instrCount = [%hu]", instrId, instrCount),
-                          InternalException, "integer overflow");
-    instrId += instrCount;
 
-    return translated;
-}
+    bool CcuRepRemWaitSem::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-std::string CcuRepRemWaitSem::Describe()
-{
-    return StringFormat("Wait, Use semIndex[%u] and mask[%04x]", semIndex, mask);
-}
+        // 需要profiling的使用SetCKEInstr, 否则使用ClearCKEInstr
+        if (isProfiling) {
+            SetCKEInstr(instr++, 0, 0, transport.GetLocCkeByIndex(semIndex), mask, 1);
+        } else {
+            ClearCKEInstr(instr++, 0, 0, transport.GetLocCkeByIndex(semIndex), mask, 1);
+        }
+        CHK_PRT_THROW(
+            instrId > UINT16_MAX - instrCount,
+            HCCL_ERROR(
+                "[CcuRepRemWaitSem::Translate]uint16 integer overflow occurs, instrId = [%hu], instrCount = [%hu]",
+                instrId, instrCount),
+            InternalException, "integer overflow");
+        instrId += instrCount;
+
+        return translated;
+    }
+
+    std::string CcuRepRemWaitSem::Describe()
+    {
+        return StringFormat("Wait, Use semIndex[%u] and mask[%04x]", semIndex, mask);
+    }
 
 }; // namespace CcuRep
 }; // namespace Hccl

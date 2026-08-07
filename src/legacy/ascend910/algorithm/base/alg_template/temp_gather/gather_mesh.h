@@ -13,7 +13,6 @@
 
 #include "gather_mesh_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * GATHER_MESH_H */

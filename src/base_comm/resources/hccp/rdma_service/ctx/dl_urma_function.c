@@ -99,58 +99,54 @@ void RsUbApiDeinit(void)
 STATIC int RsUrmaDeviceApiInit(void)
 {
 #ifndef CA_CONFIG_LLT
-    gUrmaOps.rsUrmaInit = (urma_status_t (*)(urma_init_attr_t *)) HccpDlsym(gUrmaApiHandle, "urma_init");
+    gUrmaOps.rsUrmaInit = (urma_status_t(*)(urma_init_attr_t *))HccpDlsym(gUrmaApiHandle, "urma_init");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaInit, "urma_init");
 
-    gUrmaOps.rsUrmaUninit = (urma_status_t (*)(void)) HccpDlsym(gUrmaApiHandle, "urma_uninit");
+    gUrmaOps.rsUrmaUninit = (urma_status_t(*)(void))HccpDlsym(gUrmaApiHandle, "urma_uninit");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaUninit, "urma_uninit");
 
-    gUrmaOps.rsUrmaGetDeviceList = (urma_device_t **(*)(int *))
-        HccpDlsym(gUrmaApiHandle, "urma_get_device_list");
+    gUrmaOps.rsUrmaGetDeviceList = (urma_device_t * *(*)(int *)) HccpDlsym(gUrmaApiHandle, "urma_get_device_list");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaGetDeviceList, "urma_get_device_list");
 
-    gUrmaOps.rsUrmaGetDeviceByEid = (urma_device_t *(*)(urma_eid_t, urma_transport_type_t))
+    gUrmaOps.rsUrmaGetDeviceByEid = (urma_device_t * (*)(urma_eid_t, urma_transport_type_t))
         HccpDlsym(gUrmaApiHandle, "urma_get_device_by_eid");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaGetDeviceByEid, "urma_get_device_by_eid");
 
-    gUrmaOps.rsUrmaFreeDeviceList = (void (*)(urma_device_t **))
-        HccpDlsym(gUrmaApiHandle, "urma_free_device_list");
+    gUrmaOps.rsUrmaFreeDeviceList = (void (*)(urma_device_t **))HccpDlsym(gUrmaApiHandle, "urma_free_device_list");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaFreeDeviceList, "urma_free_device_list");
 
-    gUrmaOps.rsUrmaGetEidList = (urma_eid_info_t *(*)(urma_device_t *, uint32_t *))
+    gUrmaOps.rsUrmaGetEidList = (urma_eid_info_t * (*)(urma_device_t *, uint32_t *))
         HccpDlsym(gUrmaApiHandle, "urma_get_eid_list");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaGetEidList, "urma_get_eid_list");
 
-    gUrmaOps.rsUrmaFreeEidList = (void (*)(urma_eid_info_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_free_eid_list");
+    gUrmaOps.rsUrmaFreeEidList = (void (*)(urma_eid_info_t *))HccpDlsym(gUrmaApiHandle, "urma_free_eid_list");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaFreeEidList, "urma_free_eid_list");
 
-    gUrmaOps.rsUrmaQueryDevice = (urma_status_t (*)(urma_device_t *, urma_device_attr_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_query_device");
+    gUrmaOps.rsUrmaQueryDevice = (urma_status_t(*)(urma_device_t *, urma_device_attr_t *))HccpDlsym(gUrmaApiHandle,
+        "urma_query_device");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaQueryDevice, "urma_query_device");
 
-    gUrmaOps.rsUrmaGetEidByIp = (urma_status_t (*)(const urma_context_t *, const urma_net_addr_t *, urma_eid_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_get_eid_by_ip");
+    gUrmaOps.rsUrmaGetEidByIp = (urma_status_t(*)(const urma_context_t *, const urma_net_addr_t *,
+        urma_eid_t *))HccpDlsym(gUrmaApiHandle, "urma_get_eid_by_ip");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaGetEidByIp, "urma_get_eid_by_ip");
 
-    gUrmaOps.rsUrmaGetIpByEid = (urma_status_t (*)(const urma_context_t *, const urma_eid_t *, urma_net_addr_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_get_ip_by_eid");
+    gUrmaOps.rsUrmaGetIpByEid = (urma_status_t(*)(const urma_context_t *, const urma_eid_t *,
+        urma_net_addr_t *))HccpDlsym(gUrmaApiHandle, "urma_get_ip_by_eid");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaGetIpByEid, "urma_get_ip_by_eid");
 
-    gUrmaOps.rsUrmaGetSmac = (urma_status_t (*)(const urma_context_t *, uint8_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_get_smac");
+    gUrmaOps.rsUrmaGetSmac = (urma_status_t(*)(const urma_context_t *, uint8_t *))HccpDlsym(gUrmaApiHandle,
+        "urma_get_smac");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaGetSmac, "urma_get_smac");
 
-    gUrmaOps.rsUrmaGetDmac = (urma_status_t (*)(const urma_context_t *, const urma_net_addr_t *, uint8_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_get_dmac");
+    gUrmaOps.rsUrmaGetDmac = (urma_status_t(*)(const urma_context_t *, const urma_net_addr_t *,
+        uint8_t *))HccpDlsym(gUrmaApiHandle, "urma_get_dmac");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaGetDmac, "urma_get_dmac");
 
-    gUrmaOps.rsUrmaCreateContext = (urma_context_t *(*)(urma_device_t *, uint32_t))
+    gUrmaOps.rsUrmaCreateContext = (urma_context_t * (*)(urma_device_t *, uint32_t))
         HccpDlsym(gUrmaApiHandle, "urma_create_context");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaCreateContext, "urma_create_context");
 
-    gUrmaOps.rsUrmaDeleteContext = (urma_status_t (*)(urma_context_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_delete_context");
+    gUrmaOps.rsUrmaDeleteContext = (urma_status_t(*)(urma_context_t *))HccpDlsym(gUrmaApiHandle, "urma_delete_context");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaDeleteContext, "urma_delete_context");
 #endif
     return 0;
@@ -159,80 +155,74 @@ STATIC int RsUrmaDeviceApiInit(void)
 STATIC int RsUrmaJettyApiInit(void)
 {
 #ifndef CA_CONFIG_LLT
-    gUrmaOps.rsUrmaCreateJfr = (urma_jfr_t *(*)(urma_context_t *, urma_jfr_cfg_t *))
+    gUrmaOps.rsUrmaCreateJfr = (urma_jfr_t * (*)(urma_context_t *, urma_jfr_cfg_t *))
         HccpDlsym(gUrmaApiHandle, "urma_create_jfr");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaCreateJfr, "urma_create_jfr");
 
-    gUrmaOps.rsUrmaDeleteJfr = (urma_status_t (*)(urma_jfr_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_delete_jfr");
+    gUrmaOps.rsUrmaDeleteJfr = (urma_status_t(*)(urma_jfr_t *))HccpDlsym(gUrmaApiHandle, "urma_delete_jfr");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaDeleteJfr, "urma_delete_jfr");
 
-    gUrmaOps.rsUrmaDeleteJfrBatch = (urma_status_t (*)(urma_jfr_t **jfrArr, int jfrNum, urma_jfr_t **badJfr))
+    gUrmaOps.rsUrmaDeleteJfrBatch = (urma_status_t(*)(urma_jfr_t * *jfrArr, int jfrNum, urma_jfr_t **badJfr))
         HccpDlsym(gUrmaApiHandle, "urma_delete_jfr_batch");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaDeleteJfrBatch, "urma_delete_jfr_batch");
 
-    gUrmaOps.rsUrmaCreateJetty = (urma_jetty_t *(*)(urma_context_t *, urma_jetty_cfg_t *))
+    gUrmaOps.rsUrmaCreateJetty = (urma_jetty_t * (*)(urma_context_t *, urma_jetty_cfg_t *))
         HccpDlsym(gUrmaApiHandle, "urma_create_jetty");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaCreateJetty, "urma_create_jetty");
 
-    gUrmaOps.rsUrmaModifyJetty = (urma_status_t (*)(urma_jetty_t *, urma_jetty_attr_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_modify_jetty");
+    gUrmaOps.rsUrmaModifyJetty = (urma_status_t(*)(urma_jetty_t *, urma_jetty_attr_t *))HccpDlsym(gUrmaApiHandle,
+        "urma_modify_jetty");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaModifyJetty, "urma_modify_jetty");
 
-    gUrmaOps.rsUrmaQueryJetty = (urma_status_t (*)(urma_jetty_t *, urma_jetty_cfg_t *, urma_jetty_attr_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_query_jetty");
+    gUrmaOps.rsUrmaQueryJetty = (urma_status_t(*)(urma_jetty_t *, urma_jetty_cfg_t *,
+        urma_jetty_attr_t *))HccpDlsym(gUrmaApiHandle, "urma_query_jetty");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaQueryJetty, "urma_query_jetty");
 
-    gUrmaOps.rsUrmaDeleteJetty = (urma_status_t (*)(urma_jetty_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_delete_jetty");
+    gUrmaOps.rsUrmaDeleteJetty = (urma_status_t(*)(urma_jetty_t *))HccpDlsym(gUrmaApiHandle, "urma_delete_jetty");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaDeleteJetty, "urma_delete_jetty");
 
-    gUrmaOps.rsUrmaDeleteJettyBatch = (urma_status_t (*)(urma_jetty_t **jettyArr, int jettyNum,
-        urma_jetty_t **badJetty))HccpDlsym(gUrmaApiHandle, "urma_delete_jetty_batch");
+    gUrmaOps.rsUrmaDeleteJettyBatch = (urma_status_t(*)(urma_jetty_t * *jettyArr, int jettyNum,
+        urma_jetty_t **badJetty)) HccpDlsym(gUrmaApiHandle, "urma_delete_jetty_batch");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaDeleteJettyBatch, "urma_delete_jetty_batch");
 
-    gUrmaOps.rsUrmaImportJetty = (urma_target_jetty_t *(*)(urma_context_t *, urma_rjetty_t *, urma_token_t *))
+    gUrmaOps.rsUrmaImportJetty = (urma_target_jetty_t * (*)(urma_context_t *, urma_rjetty_t *, urma_token_t *))
         HccpDlsym(gUrmaApiHandle, "urma_import_jetty");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaImportJetty, "urma_import_jetty");
 
-    gUrmaOps.rsUrmaUnimportJetty = (urma_status_t (*)(urma_target_jetty_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_unimport_jetty");
+    gUrmaOps.rsUrmaUnimportJetty = (urma_status_t(*)(urma_target_jetty_t *))HccpDlsym(gUrmaApiHandle,
+        "urma_unimport_jetty");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaUnimportJetty, "urma_unimport_jetty");
 
-    gUrmaOps.rsUrmaBindJetty = (urma_status_t (*)(urma_jetty_t *, urma_target_jetty_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_bind_jetty");
+    gUrmaOps.rsUrmaBindJetty = (urma_status_t(*)(urma_jetty_t *, urma_target_jetty_t *))HccpDlsym(gUrmaApiHandle,
+        "urma_bind_jetty");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaBindJetty, "urma_bind_jetty");
 
-    gUrmaOps.rsUrmaUnbindJetty = (urma_status_t (*)(urma_jetty_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_unbind_jetty");
+    gUrmaOps.rsUrmaUnbindJetty = (urma_status_t(*)(urma_jetty_t *))HccpDlsym(gUrmaApiHandle, "urma_unbind_jetty");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaUnbindJetty, "urma_unbind_jetty");
 
-    gUrmaOps.rsUrmaFlushJetty = (int (*)(urma_jetty_t *, int, urma_cr_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_flush_jetty");
+    gUrmaOps.rsUrmaFlushJetty = (int (*)(urma_jetty_t *, int, urma_cr_t *))HccpDlsym(gUrmaApiHandle,
+        "urma_flush_jetty");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaFlushJetty, "urma_flush_jetty");
 
-    gUrmaOps.rsUrmaAllocJetty = (urma_status_t (*)(urma_context_t *, urma_jetty_cfg_t *, urma_jetty_t **))
-        HccpDlsym(gUrmaApiHandle, "urma_alloc_jetty");
+    gUrmaOps.rsUrmaAllocJetty = (urma_status_t(*)(urma_context_t *, urma_jetty_cfg_t *,
+        urma_jetty_t **))HccpDlsym(gUrmaApiHandle, "urma_alloc_jetty");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaAllocJetty, "urma_alloc_jetty");
 
-    gUrmaOps.rsUrmaSetJettyOpt = (urma_status_t (*)(urma_jetty_t *, uint64_t, void *, uint32_t))
-        HccpDlsym(gUrmaApiHandle, "urma_set_jetty_opt");
+    gUrmaOps.rsUrmaSetJettyOpt = (urma_status_t(*)(urma_jetty_t *, uint64_t, void *, uint32_t))HccpDlsym(gUrmaApiHandle,
+        "urma_set_jetty_opt");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaSetJettyOpt, "urma_set_jetty_opt");
 
-    gUrmaOps.rsUrmaActiveJetty = (urma_status_t (*)(urma_jetty_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_active_jetty");
+    gUrmaOps.rsUrmaActiveJetty = (urma_status_t(*)(urma_jetty_t *))HccpDlsym(gUrmaApiHandle, "urma_active_jetty");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaActiveJetty, "urma_active_jetty");
 
-    gUrmaOps.rsUrmaGetJettyOpt = (urma_status_t (*)(urma_jetty_t *, uint64_t, void *, uint32_t))
-        HccpDlsym(gUrmaApiHandle, "urma_get_jetty_opt");
+    gUrmaOps.rsUrmaGetJettyOpt = (urma_status_t(*)(urma_jetty_t *, uint64_t, void *, uint32_t))HccpDlsym(gUrmaApiHandle,
+        "urma_get_jetty_opt");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaGetJettyOpt, "urma_get_jetty_opt");
 
-    gUrmaOps.rsUrmaDeactiveJetty = (urma_status_t (*)(urma_jetty_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_deactive_jetty");
+    gUrmaOps.rsUrmaDeactiveJetty = (urma_status_t(*)(urma_jetty_t *))HccpDlsym(gUrmaApiHandle, "urma_deactive_jetty");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaDeactiveJetty, "urma_deactive_jetty");
 
-    gUrmaOps.rsUrmaFreeJetty = (urma_status_t (*)(urma_jetty_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_free_jetty");
+    gUrmaOps.rsUrmaFreeJetty = (urma_status_t(*)(urma_jetty_t *))HccpDlsym(gUrmaApiHandle, "urma_free_jetty");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaFreeJetty, "urma_free_jetty");
 #endif
     return 0;
@@ -241,56 +231,49 @@ STATIC int RsUrmaJettyApiInit(void)
 STATIC int RsUrmaJfcApiInit(void)
 {
 #ifndef CA_CONFIG_LLT
-    gUrmaOps.rsUrmaCreateJfc = (urma_jfc_t *(*)(urma_context_t *, urma_jfc_cfg_t *))
+    gUrmaOps.rsUrmaCreateJfc = (urma_jfc_t * (*)(urma_context_t *, urma_jfc_cfg_t *))
         HccpDlsym(gUrmaApiHandle, "urma_create_jfc");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaCreateJfc, "urma_create_jfc");
 
-    gUrmaOps.rsUrmaModifyJfc = (urma_status_t (*)(urma_jfc_t *, urma_jfc_attr_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_modify_jfc");
+    gUrmaOps.rsUrmaModifyJfc = (urma_status_t(*)(urma_jfc_t *, urma_jfc_attr_t *))HccpDlsym(gUrmaApiHandle,
+        "urma_modify_jfc");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaModifyJfc, "urma_modify_jfc");
 
-    gUrmaOps.rsUrmaDeleteJfc = (urma_status_t (*)(urma_jfc_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_delete_jfc");
+    gUrmaOps.rsUrmaDeleteJfc = (urma_status_t(*)(urma_jfc_t *))HccpDlsym(gUrmaApiHandle, "urma_delete_jfc");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaDeleteJfc, "urma_delete_jfc");
 
-    gUrmaOps.rsUrmaCreateJfce = (urma_jfce_t *(*)(urma_context_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_create_jfce");
+    gUrmaOps.rsUrmaCreateJfce = (urma_jfce_t * (*)(urma_context_t *)) HccpDlsym(gUrmaApiHandle, "urma_create_jfce");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaCreateJfce, "urma_create_jfce");
 
-    gUrmaOps.rsUrmaDeleteJfce = (urma_status_t (*)(urma_jfce_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_delete_jfce");
+    gUrmaOps.rsUrmaDeleteJfce = (urma_status_t(*)(urma_jfce_t *))HccpDlsym(gUrmaApiHandle, "urma_delete_jfce");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaDeleteJfce, "urma_delete_jfce");
 
-    gUrmaOps.rsUrmaGetAsyncEvent = (urma_status_t (*)(urma_context_t *, urma_async_event_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_get_async_event");
+    gUrmaOps.rsUrmaGetAsyncEvent = (urma_status_t(*)(urma_context_t *, urma_async_event_t *))HccpDlsym(gUrmaApiHandle,
+        "urma_get_async_event");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaGetAsyncEvent, "urma_get_async_event");
 
-    gUrmaOps.rsUrmaAckAsyncEvent = (void (*)(urma_async_event_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_ack_async_event");
+    gUrmaOps.rsUrmaAckAsyncEvent = (void (*)(urma_async_event_t *))HccpDlsym(gUrmaApiHandle, "urma_ack_async_event");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaAckAsyncEvent, "urma_ack_async_event");
 
-    gUrmaOps.rsUrmaAllocJfc = (urma_status_t (*)(urma_context_t *, urma_jfc_cfg_t *, urma_jfc_t **))
-    HccpDlsym(gUrmaApiHandle, "urma_alloc_jfc");
+    gUrmaOps.rsUrmaAllocJfc = (urma_status_t(*)(urma_context_t *, urma_jfc_cfg_t *,
+        urma_jfc_t **))HccpDlsym(gUrmaApiHandle, "urma_alloc_jfc");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaAllocJfc, "urma_alloc_jfc");
 
-    gUrmaOps.rsUrmaSetJfcOpt = (urma_status_t (*)(urma_jfc_t *, uint64_t , void *, uint32_t))
-        HccpDlsym(gUrmaApiHandle, "urma_set_jfc_opt");
+    gUrmaOps.rsUrmaSetJfcOpt = (urma_status_t(*)(urma_jfc_t *, uint64_t, void *, uint32_t))HccpDlsym(gUrmaApiHandle,
+        "urma_set_jfc_opt");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaSetJfcOpt, "urma_set_jfc_opt");
 
-    gUrmaOps.rsUrmaActiveJfc = (urma_status_t (*)(urma_jfc_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_active_jfc");
+    gUrmaOps.rsUrmaActiveJfc = (urma_status_t(*)(urma_jfc_t *))HccpDlsym(gUrmaApiHandle, "urma_active_jfc");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaActiveJfc, "urma_active_jfc");
 
-    gUrmaOps.rsUrmaGetJfcOpt = (urma_status_t (*)(urma_jfc_t *, uint64_t , void *, uint32_t))
-        HccpDlsym(gUrmaApiHandle, "urma_get_jfc_opt");
+    gUrmaOps.rsUrmaGetJfcOpt = (urma_status_t(*)(urma_jfc_t *, uint64_t, void *, uint32_t))HccpDlsym(gUrmaApiHandle,
+        "urma_get_jfc_opt");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaGetJfcOpt, "urma_get_jfc_opt");
 
-    gUrmaOps.rsUrmaDeactiveJfc = (urma_status_t (*)(urma_jfc_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_deactive_jfc");
+    gUrmaOps.rsUrmaDeactiveJfc = (urma_status_t(*)(urma_jfc_t *))HccpDlsym(gUrmaApiHandle, "urma_deactive_jfc");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaDeactiveJfc, "urma_deactive_jfc");
 
-    gUrmaOps.rsUrmaFreeJfc = (urma_status_t (*)(urma_jfc_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_free_jfc");
+    gUrmaOps.rsUrmaFreeJfc = (urma_status_t(*)(urma_jfc_t *))HccpDlsym(gUrmaApiHandle, "urma_free_jfc");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaFreeJfc, "urma_free_jfc");
 #endif
     return 0;
@@ -299,29 +282,27 @@ STATIC int RsUrmaJfcApiInit(void)
 STATIC int RsUrmaSegmentApiInit(void)
 {
 #ifndef CA_CONFIG_LLT
-    gUrmaOps.rsUrmaAllocTokenId = (urma_token_id_t *(*)(urma_context_t *))
+    gUrmaOps.rsUrmaAllocTokenId = (urma_token_id_t * (*)(urma_context_t *))
         HccpDlsym(gUrmaApiHandle, "urma_alloc_token_id");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaAllocTokenId, "urma_alloc_token_id");
 
-    gUrmaOps.rsUrmaFreeTokenId = (urma_status_t (*)(urma_token_id_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_free_token_id");
+    gUrmaOps.rsUrmaFreeTokenId = (urma_status_t(*)(urma_token_id_t *))HccpDlsym(gUrmaApiHandle, "urma_free_token_id");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaFreeTokenId, "urma_free_token_id");
 
-    gUrmaOps.rsUrmaRegisterSeg = (urma_target_seg_t *(*)(urma_context_t *, urma_seg_cfg_t *))
+    gUrmaOps.rsUrmaRegisterSeg = (urma_target_seg_t * (*)(urma_context_t *, urma_seg_cfg_t *))
         HccpDlsym(gUrmaApiHandle, "urma_register_seg");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaRegisterSeg, "urma_register_seg");
 
-    gUrmaOps.rsUrmaUnregisterSeg = (urma_status_t (*)(urma_target_seg_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_unregister_seg");
+    gUrmaOps.rsUrmaUnregisterSeg = (urma_status_t(*)(urma_target_seg_t *))HccpDlsym(gUrmaApiHandle,
+        "urma_unregister_seg");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaUnregisterSeg, "urma_unregister_seg");
 
-    gUrmaOps.rsUrmaImportSeg = (urma_target_seg_t *(*)(urma_context_t *, urma_seg_t *,
-        urma_token_t *, uint64_t, urma_import_seg_flag_t))
+    gUrmaOps.rsUrmaImportSeg = (urma_target_seg_t *
+                                (*)(urma_context_t *, urma_seg_t *, urma_token_t *, uint64_t, urma_import_seg_flag_t))
         HccpDlsym(gUrmaApiHandle, "urma_import_seg");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaImportSeg, "urma_import_seg");
 
-    gUrmaOps.rsUrmaUnimportSeg = (urma_status_t (*)(urma_target_seg_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_unimport_seg");
+    gUrmaOps.rsUrmaUnimportSeg = (urma_status_t(*)(urma_target_seg_t *))HccpDlsym(gUrmaApiHandle, "urma_unimport_seg");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaUnimportSeg, "urma_unimport_seg");
 #endif
     return 0;
@@ -330,48 +311,46 @@ STATIC int RsUrmaSegmentApiInit(void)
 STATIC int RsUrmaDataApiInit(void)
 {
 #ifndef CA_CONFIG_LLT
-    gUrmaOps.rsUrmaPostJettySendWr = (urma_status_t (*)(urma_jetty_t *, urma_jfs_wr_t *, urma_jfs_wr_t **))
-        HccpDlsym(gUrmaApiHandle, "urma_post_jetty_send_wr");
+    gUrmaOps.rsUrmaPostJettySendWr = (urma_status_t(*)(urma_jetty_t *, urma_jfs_wr_t *,
+        urma_jfs_wr_t **))HccpDlsym(gUrmaApiHandle, "urma_post_jetty_send_wr");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaPostJettySendWr, "urma_post_jetty_send_wr");
 
-    gUrmaOps.rsUrmaPostJettyRecvWr = (urma_status_t (*)(urma_jetty_t *, urma_jfr_wr_t *, urma_jfr_wr_t **))
-        HccpDlsym(gUrmaApiHandle, "urma_post_jetty_recv_wr");
+    gUrmaOps.rsUrmaPostJettyRecvWr = (urma_status_t(*)(urma_jetty_t *, urma_jfr_wr_t *,
+        urma_jfr_wr_t **))HccpDlsym(gUrmaApiHandle, "urma_post_jetty_recv_wr");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaPostJettyRecvWr, "urma_post_jetty_recv_wr");
 
-    gUrmaOps.rsUrmaPollJfc = (int (*)(urma_jfc_t *, int, urma_cr_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_poll_jfc");
+    gUrmaOps.rsUrmaPollJfc = (int (*)(urma_jfc_t *, int, urma_cr_t *))HccpDlsym(gUrmaApiHandle, "urma_poll_jfc");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaPollJfc, "urma_poll_jfc");
 
-    gUrmaOps.rsUrmaRearmJfc = (urma_status_t (*)(urma_jfc_t *, bool))
-        HccpDlsym(gUrmaApiHandle, "urma_rearm_jfc");
+    gUrmaOps.rsUrmaRearmJfc = (urma_status_t(*)(urma_jfc_t *, bool))HccpDlsym(gUrmaApiHandle, "urma_rearm_jfc");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaRearmJfc, "urma_rearm_jfc");
 
-    gUrmaOps.rsUrmaWaitJfc = (int (*)(urma_jfce_t *, uint32_t, int, urma_jfc_t *[]))
-        HccpDlsym(gUrmaApiHandle, "urma_wait_jfc");
+    gUrmaOps.rsUrmaWaitJfc = (int (*)(urma_jfce_t *, uint32_t, int, urma_jfc_t *[]))HccpDlsym(gUrmaApiHandle,
+        "urma_wait_jfc");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaWaitJfc, "urma_wait_jfc");
 
-    gUrmaOps.rsUrmaAckJfc = (void (*)(urma_jfc_t *[], uint32_t [], uint32_t))
-        HccpDlsym(gUrmaApiHandle, "urma_ack_jfc");
+    gUrmaOps.rsUrmaAckJfc = (void (*)(urma_jfc_t *[], uint32_t[], uint32_t))HccpDlsym(gUrmaApiHandle, "urma_ack_jfc");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaAckJfc, "urma_ack_jfc");
 
-    gUrmaOps.rsUrmaUserCtl = (urma_status_t (*)(urma_context_t *, urma_user_ctl_in_t *, urma_user_ctl_out_t *))
-        HccpDlsym(gUrmaApiHandle, "urma_user_ctl");
+    gUrmaOps.rsUrmaUserCtl = (urma_status_t(*)(urma_context_t *, urma_user_ctl_in_t *,
+        urma_user_ctl_out_t *))HccpDlsym(gUrmaApiHandle, "urma_user_ctl");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaUserCtl, "urma_user_ctl");
 
-    gUrmaOps.rsUrmaGetTpList = (urma_status_t (*)(urma_context_t *, urma_get_tp_cfg_t *, uint32_t *,
+    gUrmaOps.rsUrmaGetTpList = (urma_status_t(*)(urma_context_t *, urma_get_tp_cfg_t *, uint32_t *,
         urma_tp_info_t *))HccpDlsym(gUrmaApiHandle, "urma_get_tp_list");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaGetTpList, "urma_get_tp_list");
 
-    gUrmaOps.rsUrmaGetTpAttr = (urma_status_t (*)(const urma_context_t *, const uint64_t, uint8_t *, uint32_t *,
+    gUrmaOps.rsUrmaGetTpAttr = (urma_status_t(*)(const urma_context_t *, const uint64_t, uint8_t *, uint32_t *,
         urma_tp_attr_value_t *))HccpDlsym(gUrmaApiHandle, "urma_get_tp_attr");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaGetTpAttr, "urma_get_tp_attr");
 
-    gUrmaOps.rsUrmaSetTpAttr = (urma_status_t (*)(const urma_context_t *, const uint64_t , const uint8_t,
-        const uint32_t, const urma_tp_attr_value_t *))HccpDlsym(gUrmaApiHandle, "urma_set_tp_attr");
+    gUrmaOps.rsUrmaSetTpAttr = (urma_status_t(*)(const urma_context_t *, const uint64_t, const uint8_t, const uint32_t,
+        const urma_tp_attr_value_t *))HccpDlsym(gUrmaApiHandle, "urma_set_tp_attr");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaSetTpAttr, "urma_set_tp_attr");
 
-    gUrmaOps.rsUrmaImportJettyEx = (urma_target_jetty_t *(*)(urma_context_t *, urma_rjetty_t *, urma_token_t *,
-        urma_import_jetty_ex_cfg_t *))HccpDlsym(gUrmaApiHandle, "urma_import_jetty_ex");
+    gUrmaOps.rsUrmaImportJettyEx = (urma_target_jetty_t * (*)(urma_context_t *, urma_rjetty_t *, urma_token_t *,
+                                                              urma_import_jetty_ex_cfg_t *))
+        HccpDlsym(gUrmaApiHandle, "urma_import_jetty_ex");
     DL_API_RET_IS_NULL_CHECK(gUrmaOps.rsUrmaImportJettyEx, "urma_import_jetty_ex");
 #endif
     return 0;
@@ -429,8 +408,11 @@ STATIC int RsUrmaApiInit(void)
     int ret;
 
     ret = RsOpenUrmaSo();
-    CHK_PRT_RETURN(ret, hccp_err("HccpDlopen[liburma.so] failed! ret=[%d], "
-    "Please check network adapter driver has been installed", ret), ret);
+    CHK_PRT_RETURN(ret,
+        hccp_err("HccpDlopen[liburma.so] failed! ret=[%d], "
+                 "Please check network adapter driver has been installed",
+            ret),
+        ret);
 
     ret = RsUrmaDeviceApiInit();
     if (ret != 0) {
@@ -733,8 +715,7 @@ int RsUrmaDeleteJetty(urma_jetty_t *jetty)
     return DlRetConvert(gUrmaOps.rsUrmaDeleteJetty(jetty));
 }
 
-urma_target_jetty_t *RsUrmaImportJetty(urma_context_t *ctx, urma_rjetty_t *rjetty,
-                                          urma_token_t *tokenValue)
+urma_target_jetty_t *RsUrmaImportJetty(urma_context_t *ctx, urma_rjetty_t *rjetty, urma_token_t *tokenValue)
 {
     if (gUrmaOps.rsUrmaImportJetty == NULL) {
 #ifndef CA_CONFIG_LLT
@@ -877,8 +858,8 @@ int RsUrmaUnregisterSeg(urma_target_seg_t *targetSeg)
     return DlRetConvert(gUrmaOps.rsUrmaUnregisterSeg(targetSeg));
 }
 
-urma_target_seg_t *RsUrmaImportSeg(urma_context_t *ctx, urma_seg_t *seg, urma_token_t *tokenValue,
-                                      uint64_t addr, urma_import_seg_flag_t flag)
+urma_target_seg_t *RsUrmaImportSeg(urma_context_t *ctx, urma_seg_t *seg, urma_token_t *tokenValue, uint64_t addr,
+    urma_import_seg_flag_t flag)
 {
     if (gUrmaOps.rsUrmaImportSeg == NULL) {
 #ifndef CA_CONFIG_LLT
@@ -988,8 +969,8 @@ int RsUrmaGetTpList(urma_context_t *ctx, urma_get_tp_cfg_t *cfg, uint32_t *tpCnt
     return DlRetConvert(gUrmaOps.rsUrmaGetTpList(ctx, cfg, tpCnt, tpList));
 }
 
-int RsUrmaGetTpAttr(const urma_context_t *ctx, const uint64_t tpHandle, uint8_t *tpAttrCnt,
-    uint32_t *tpAttrBitmap, urma_tp_attr_value_t *tpAttr)
+int RsUrmaGetTpAttr(const urma_context_t *ctx, const uint64_t tpHandle, uint8_t *tpAttrCnt, uint32_t *tpAttrBitmap,
+    urma_tp_attr_value_t *tpAttr)
 {
     if (gUrmaOps.rsUrmaGetTpAttr == NULL) {
 #ifndef CA_CONFIG_LLT

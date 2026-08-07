@@ -24,22 +24,23 @@ using namespace std;
 class CommunicatorImpl;
 class RemoteRmaBufManager {
 public:
-    explicit RemoteRmaBufManager(const CommunicatorImpl &communicator);
+    explicit RemoteRmaBufManager(const CommunicatorImpl& communicator);
 
-    RemoteRmaBuffer *GetRemoteRmaBuffer(const string &opTag, const LinkData &linkData, BufferType bufType);
+    RemoteRmaBuffer* GetRemoteRmaBuffer(const string& opTag, const LinkData& linkData, BufferType bufType);
 
-    unique_ptr<RemoteRmaBuffer> Create(const LinkData &linkData) const;
+    unique_ptr<RemoteRmaBuffer> Create(const LinkData& linkData) const;
 
-    void Bind(unique_ptr<RemoteRmaBuffer> remoteRmaBuf, const string &opTag, const LinkData &linkData, BufferType bufType);
+    void
+    Bind(unique_ptr<RemoteRmaBuffer> remoteRmaBuf, const string& opTag, const LinkData& linkData, BufferType bufType);
 
 private:
-    CommunicatorImpl *comm;
+    CommunicatorImpl* comm;
 
     // tag -> LinkData -> BufType -> RemoteRmaBuffer
     std::unordered_map<
-        std::string,
-        std::unordered_map<LinkData, std::unordered_map<BufferType, std::unique_ptr<RemoteRmaBuffer>, EnumClassHash>,
-                           hash<Hccl::LinkData>>>
+        std::string, std::unordered_map<
+                         LinkData, std::unordered_map<BufferType, std::unique_ptr<RemoteRmaBuffer>, EnumClassHash>,
+                         hash<Hccl::LinkData>>>
         remoteBufMap;
 };
 

@@ -26,7 +26,7 @@ constexpr u32 CLIENT_ROLE_SOCKET = 1;
 
 constexpr u32 NIC_SOCKET_CONN_LIMIT = 1;
 constexpr u32 VNIC_SOCKET_CONN_LIMIT = 1;
-constexpr u32 SOCKET_BATCH_GET_LIMIT = 16;  // 每次最多建立16个socket连接
+constexpr u32 SOCKET_BATCH_GET_LIMIT = 16; // 每次最多建立16个socket连接
 constexpr u32 HOST_SOCKET_CONN_LIMIT = 16; // 用于host socket建链白名单，限制每个server的socket连接数
 
 enum class HcclSocketType {
@@ -36,9 +36,9 @@ enum class HcclSocketType {
 };
 
 enum class HcclSocketRole {
-    SOCKET_ROLE_SERVER = 0,          /* server 角色 */
-    SOCKET_ROLE_CLIENT = 1,          /* client 角色 */
-    SOCKET_ROLE_RESERVED             /* 作为Listen Socket，或标识无需创建socket连接 */
+    SOCKET_ROLE_SERVER = 0, /* server 角色 */
+    SOCKET_ROLE_CLIENT = 1, /* client 角色 */
+    SOCKET_ROLE_RESERVED    /* 作为Listen Socket，或标识无需创建socket连接 */
 };
 
 enum class HcclSocketStatus {
@@ -57,14 +57,13 @@ using HcclRankLinkInfo = struct HcclRankLinkInfoDef {
     u32 port;
     u32 socketsPerLink;
 
-    HcclRankLinkInfoDef () : userRank(), devicePhyId(), ip(), port(), socketsPerLink()
-    {}
+    HcclRankLinkInfoDef() : userRank(), devicePhyId(), ip(), port(), socketsPerLink() {}
 };
 
 class HcclSocket {
 public:
-    explicit HcclSocket(const std::string &tag, HcclNetDevCtx netDevCtx,
-        const HcclIpAddress &remoteIp, u32 remotePort,
+    explicit HcclSocket(
+        const std::string& tag, HcclNetDevCtx netDevCtx, const HcclIpAddress& remoteIp, u32 remotePort,
         HcclSocketRole localRole);
     explicit HcclSocket(HcclNetDevCtx netDevCtx, u32 localPort = HCCL_INVALID_PORT);
 
@@ -77,21 +76,21 @@ public:
     void Close();
     void SetStatus(HcclSocketStatus status);
     HcclSocketStatus GetStatus();
-    HcclResult Accept(const std::string &tag, std::shared_ptr<HcclSocket> &socket, u32 acceptTimeOut = 0);
-    HcclResult Send(const void *data, u64 size);
-    HcclResult Recv(void *recvBuf, u32 recvBufLen, u32 timeout = 0);
-    HcclResult Send(const std::string &sendMsg);
-    HcclResult Recv(std::string &recvMsg, u32 timeout = 0);
-    HcclResult ISend(void *data, u64 size, u64& compSize);
-    HcclResult IRecv(void *recvBuf, u32 recvBufLen, u64& compSize);
+    HcclResult Accept(const std::string& tag, std::shared_ptr<HcclSocket>& socket, u32 acceptTimeOut = 0);
+    HcclResult Send(const void* data, u64 size);
+    HcclResult Recv(void* recvBuf, u32 recvBufLen, u32 timeout = 0);
+    HcclResult Send(const std::string& sendMsg);
+    HcclResult Recv(std::string& recvMsg, u32 timeout = 0);
+    HcclResult ISend(void* data, u64 size, u64& compSize);
+    HcclResult IRecv(void* recvBuf, u32 recvBufLen, u64& compSize);
 
     static bool IsSupportAsync();
-    HcclResult SendAsync(const void *data, u64 size, u64 *sentSize, void **reqHandle);
-    HcclResult RecvAsync(void *recvBuf, u64 recvBufLen, u64 *receivedSize, void **reqHandle);
-    HcclResult GetAsyncReqResult(void *reqHandle, HcclResult &reqResult);
+    HcclResult SendAsync(const void* data, u64 size, u64* sentSize, void** reqHandle);
+    HcclResult RecvAsync(void* recvBuf, u64 recvBufLen, u64* receivedSize, void** reqHandle);
+    HcclResult GetAsyncReqResult(void* reqHandle, HcclResult& reqResult);
 
-    HcclResult AddWhiteList(std::vector<SocketWlistInfo> &wlistInfoVec);
-    HcclResult DelWhiteList(std::vector<SocketWlistInfo> &wlistInfoVec);
+    HcclResult AddWhiteList(std::vector<SocketWlistInfo>& wlistInfoVec);
+    HcclResult DelWhiteList(std::vector<SocketWlistInfo>& wlistInfoVec);
 
     std::string GetTag() const;
     NicType GetSocketType() const;
@@ -104,12 +103,13 @@ public:
     void SetForceClose(bool forceClose);
     HcclResult SetStopFlag(bool value);
     bool GetStopFlag();
+
 private:
     HcclSocketStatus ConvertRaSocketStatus(int raStatus);
     HcclResult GetNicSocketHandle();
-    HcclResult GetNicSocketHandle(std::map<HcclIpAddress, IpSocket> &socketMap,
-        const HcclIpAddress &ip, SocketHandle &nicSocketHandle);
-    HcclResult ListenHostNet(HcclResult &ret, std::string &errormessage, u32 &port);
+    HcclResult GetNicSocketHandle(
+        std::map<HcclIpAddress, IpSocket>& socketMap, const HcclIpAddress& ip, SocketHandle& nicSocketHandle);
+    HcclResult ListenHostNet(HcclResult& ret, std::string& errormessage, u32& port);
 
     std::string tag_;
     HcclNetDevCtx netDevCtx_;

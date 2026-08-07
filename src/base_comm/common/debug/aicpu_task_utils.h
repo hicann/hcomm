@@ -22,35 +22,36 @@ using Hccl::PLF_TASK;
 
 #ifdef HCCL_V2 // hccl_v2
 // log
-using Hccl::HcclCheckLogLevel;
+using Hccl::CallDlog;
+using Hccl::CallDlogMemError;
+using Hccl::CallDlogNoSzFormat;
+using Hccl::CallDlogPrintError;
 using Hccl::HCCL_LOG_DEBUG;
+using Hccl::HCCL_LOG_ERROR;
 using Hccl::HCCL_LOG_INFO;
 using Hccl::HCCL_LOG_WARN;
-using Hccl::HCCL_LOG_ERROR;
+using Hccl::HCCL_MODULE_ID;
+using Hccl::HcclCheckLogLevel;
+using Hccl::HcclSubModuleID;
 using Hccl::LOG_TMPBUF_SIZE;
 using Hccl::SYSTEM_RESERVE_ERROR;
-using Hccl::HCCL_MODULE_ID;
-using Hccl::HcclSubModuleID;
-using Hccl::CallDlogNoSzFormat;
-using Hccl::CallDlogMemError;
-using Hccl::CallDlogPrintError;
-using Hccl::CallDlog;
 #endif
 
 // 确认ptr应该为空
-#define CHK_PTR_NOTNULL(ptr) \
-    do { \
-        if (UNLIKELY((ptr) != nullptr)) { \
-            HCCL_ERROR("[%s] errNo[0x%016llx] ptr[%s] is 0x%016llx (should be null), return HCCL_E_INTERNAL", \
-                __func__, HCCL_ERROR_CODE(HCCL_E_INTERNAL), #ptr, (ptr)); \
-            return HCCL_E_INTERNAL; \
-        } \
+#define CHK_PTR_NOTNULL(ptr)                                                                                     \
+    do {                                                                                                         \
+        if (UNLIKELY((ptr) != nullptr)) {                                                                        \
+            HCCL_ERROR(                                                                                          \
+                "[%s] errNo[0x%016llx] ptr[%s] is 0x%016llx (should be null), return HCCL_E_INTERNAL", __func__, \
+                HCCL_ERROR_CODE(HCCL_E_INTERNAL), #ptr, (ptr));                                                  \
+            return HCCL_E_INTERNAL;                                                                              \
+        }                                                                                                        \
     } while (0)
 
 // 确认ptrPtr不应该为空, 但*ptrPtr应该为空
-#define CHK_PTRPTR_NULL(ptrPtr) \
-    do { \
-        CHK_PTR_NULL(ptrPtr); \
+#define CHK_PTRPTR_NULL(ptrPtr)     \
+    do {                            \
+        CHK_PTR_NULL(ptrPtr);       \
         CHK_PTR_NOTNULL(*(ptrPtr)); \
     } while (0)
 
@@ -60,14 +61,15 @@ class AicpuTaskUtils {
 public:
     // GLOBAL_LOG_LEVEL=0或者HCCL_DEBUG_CONFIG="TASK"时, 打印task内容
     // 注意: 底层调试的关键DFX能力, 例如打印正常展开与cache刷新的task内容并比对, 确保刷新数量与内容正确
-    static HcclResult DumpSqeContent(const uint8_t *sqePtr);
-    static HcclResult DumpWqeContent(const uint8_t *wqePtr);
+    static HcclResult DumpSqeContent(const uint8_t* sqePtr);
+    static HcclResult DumpWqeContent(const uint8_t* wqePtr);
+
 private:
-    static inline HcclResult DumpUbdmaSqe_(const uint8_t *sqePtr);
-    static inline HcclResult DumpNotifySqe_(const uint8_t *sqePtr);
-    static inline HcclResult DumpSdmaSqe_(const uint8_t *sqePtr);
-    static inline HcclResult DumpReadWriteWqe_(const uint8_t *wqePtr);
-    static inline HcclResult DumpWriteWithNotifyWqe_(const uint8_t *wqePtr);
+    static inline HcclResult DumpUbdmaSqe_(const uint8_t* sqePtr);
+    static inline HcclResult DumpNotifySqe_(const uint8_t* sqePtr);
+    static inline HcclResult DumpSdmaSqe_(const uint8_t* sqePtr);
+    static inline HcclResult DumpReadWriteWqe_(const uint8_t* wqePtr);
+    static inline HcclResult DumpWriteWithNotifyWqe_(const uint8_t* wqePtr);
 };
 
 } // namespace hcomm

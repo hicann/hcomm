@@ -18,15 +18,9 @@
 using namespace Hccl;
 class CommTopoDescTest : public testing::Test {
 public:
-    static void SetUpTestCase()
-    {
-        std::cout << "CommTopoDescTest SetUP" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "CommTopoDescTest SetUP" << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "CommTopoDescTest TearDown" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "CommTopoDescTest TearDown" << std::endl; }
 
     virtual void SetUp()
     {

@@ -11,13 +11,14 @@
 #include "binary_stream.h"
 
 namespace Hccl {
-const vector<LinkData> &ConnectedLinkMgr::GetLinks(RankId dstRank)
+const vector<LinkData>& ConnectedLinkMgr::GetLinks(RankId dstRank)
 {
     for (auto levelMap : levelRankPairLinkDataMap) {
         if (levelRankPairLinkDataMap[levelMap.first].find(dstRank) != levelRankPairLinkDataMap[levelMap.first].end()
             && levelRankPairLinkDataMap[levelMap.first][dstRank].size() > 0) {
-            HCCL_INFO("[ConnectedLinkMgr][GetLinks] level[%u], dstRank[%d], links.size[%u]",
-                levelMap.first, dstRank, levelRankPairLinkDataMap[levelMap.first][dstRank].size());
+            HCCL_INFO(
+                "[ConnectedLinkMgr][GetLinks] level[%u], dstRank[%d], links.size[%u]", levelMap.first, dstRank,
+                levelRankPairLinkDataMap[levelMap.first][dstRank].size());
             return levelRankPairLinkDataMap[levelMap.first][dstRank];
         }
     }
@@ -25,7 +26,7 @@ const vector<LinkData> &ConnectedLinkMgr::GetLinks(RankId dstRank)
     return levelRankPairLinkDataMap[0][dstRank];
 }
 
-const std::vector<LinkData> &ConnectedLinkMgr::GetLinks(u32 level, RankId dstRank)
+const std::vector<LinkData>& ConnectedLinkMgr::GetLinks(u32 level, RankId dstRank)
 {
     if (levelRankPairLinkDataMap.find(level) == levelRankPairLinkDataMap.end()
         || levelRankPairLinkDataMap[level].find(dstRank) == levelRankPairLinkDataMap[level].end()) {
@@ -34,12 +35,9 @@ const std::vector<LinkData> &ConnectedLinkMgr::GetLinks(u32 level, RankId dstRan
     return levelRankPairLinkDataMap[level][dstRank];
 }
 
-void ConnectedLinkMgr::Reset()
-{
-    levelRankPairLinkDataMap.clear();
-}
+void ConnectedLinkMgr::Reset() { levelRankPairLinkDataMap.clear(); }
 
-void ConnectedLinkMgr::ParsePackedData(std::vector<char> &data)
+void ConnectedLinkMgr::ParsePackedData(std::vector<char>& data)
 {
     u32 levelRankPairsNum;
     u32 linkSize;
@@ -79,8 +77,8 @@ void ConnectedLinkMgr::ParsePackedData(std::vector<char> &data)
             linkVec.push_back(allLinkVec[linkIdx++]);
         }
 
-        if (levelRankPairLinkDataMap.find(level) == levelRankPairLinkDataMap.end() ||
-            levelRankPairLinkDataMap[level].find(dRank) == levelRankPairLinkDataMap[level].end()) {
+        if (levelRankPairLinkDataMap.find(level) == levelRankPairLinkDataMap.end()
+            || levelRankPairLinkDataMap[level].find(dRank) == levelRankPairLinkDataMap[level].end()) {
             levelRankPairLinkDataMap[level][dRank] = linkVec;
         }
     }

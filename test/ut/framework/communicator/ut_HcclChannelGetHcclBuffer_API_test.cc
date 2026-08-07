@@ -11,12 +11,14 @@
 #include "hccl_api_base_test.h"
 class HcclChannelGetHcclBufferTest : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         BaseInit::SetUp();
         UT_USE_RANK_TABLE_910_1SERVER_1RANK;
         UT_COMM_CREATE_DEFAULT(comm);
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         Ut_Comm_Destroy(comm);
         BaseInit::TearDown();
         GlobalMockObject::verify();

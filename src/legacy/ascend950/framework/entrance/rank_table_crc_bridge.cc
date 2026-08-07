@@ -21,7 +21,7 @@ RankTableCrcBridge& RankTableCrcBridge::GetInstance()
     return instance;
 }
 
-void RankTableCrcBridge::RecordRankTableJsonCrc(s32 deviceLogicId, const std::string &rankTableJson)
+void RankTableCrcBridge::RecordRankTableJsonCrc(s32 deviceLogicId, const std::string& rankTableJson)
 {
     Hccl::CheckCrc checkCrc;
     u32 crc = 0;

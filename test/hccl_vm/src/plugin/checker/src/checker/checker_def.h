@@ -13,7 +13,24 @@
 
 #include "base.h"
 
-constexpr u32 CHECK_SIZE_TABLE[HcclDataType::HCCL_DATA_TYPE_RESERVED] = {sizeof(s8), sizeof(s16), sizeof(s32),
-    2, sizeof(float), sizeof(s64), sizeof(u64), sizeof(u8), sizeof(u16), sizeof(u32), 8, 2, 16, 2, 1, 1, 1, 1};
+constexpr u32 CHECK_SIZE_TABLE[HcclDataType::HCCL_DATA_TYPE_RESERVED]
+    = {sizeof(s8),
+       sizeof(s16),
+       sizeof(s32),
+       2,
+       sizeof(float),
+       sizeof(s64),
+       sizeof(u64),
+       sizeof(u8),
+       sizeof(u16),
+       sizeof(u32),
+       8,
+       2,
+       16,
+       2,
+       1,
+       1,
+       1,
+       1};
 
 #endif

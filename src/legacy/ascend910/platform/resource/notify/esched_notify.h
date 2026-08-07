@@ -36,11 +36,10 @@ public:
     HcclResult Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut) override;
     HcclResult Post(Stream& stream, HcclDispatcher dispatcher, s32 stage) override;
 
-    HcclResult Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut,
-        u32 userRank, u32 remoteUserRank) override;
+    HcclResult
+    Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut, u32 userRank, u32 remoteUserRank) override;
     HcclResult Wait(Stream& stream, u32 timeOut) override;
-    HcclResult Post(Stream& stream, HcclDispatcher dispatcher, s32 stage,
-        u32 remoteUserRank) override;
+    HcclResult Post(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 remoteUserRank) override;
     HcclResult Post(Stream& stream) override;
 
     HcclResult SetIpc() override;
@@ -48,7 +47,7 @@ public:
     HcclResult Destroy() override;
     void Break() override;
 
-    static void SetEventIdAndTid(const u32 &eventId, const u32 &tid)
+    static void SetEventIdAndTid(const u32& eventId, const u32& tid)
     {
         eventId_ = eventId;
         initialThreadId_ = tid;
@@ -58,7 +57,7 @@ public:
     static void ThreadIdQueInit();
 
 private:
-    HcclResult ThreadIdCreate(uint32_t &threadId);
+    HcclResult ThreadIdCreate(uint32_t& threadId);
 
     static HcclResult InitGroupId();
     static HcclResult GetGroupId();
@@ -73,6 +72,6 @@ private:
     static u32 initialThreadId_;
 };
 
-}
+} // namespace hccl
 
 #endif // ESCHED_NOTIFY_H

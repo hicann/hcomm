@@ -17,57 +17,54 @@
 namespace Hccl {
 namespace CcuRep {
 
-CcuRepLoopBlock::CcuRepLoopBlock(const std::string &label) : CcuRepBlock(label)
-{
-    type = CcuRepType::LOOP_BLOCK;
-}
+    CcuRepLoopBlock::CcuRepLoopBlock(const std::string& label) : CcuRepBlock(label) { type = CcuRepType::LOOP_BLOCK; }
 
-std::string CcuRepLoopBlock::Describe()
-{
-    HCCL_INFO("Begin Describe LoopBlock[%s]", GetLabel().c_str());
-    for (const auto &rep : GetReps()) {
-        HCCL_INFO(" Rep: %s", rep->Describe().c_str());
+    std::string CcuRepLoopBlock::Describe()
+    {
+        HCCL_INFO("Begin Describe LoopBlock[%s]", GetLabel().c_str());
+        for (const auto& rep : GetReps()) {
+            HCCL_INFO(" Rep: %s", rep->Describe().c_str());
+        }
+        return StringFormat("LoopBlock[%s]", GetLabel().c_str());
     }
-    return StringFormat("LoopBlock[%s]", GetLabel().c_str());
-}
 
-void CcuRepLoopBlock::DefineArg(Variable var)
-{
-    args.push_back(CcuRepArg(var));
-    HCCL_INFO("Define Arg: Index[%u], Type[Variable], Id[%u]", args.size(), var.Id());
-}
-
-void CcuRepLoopBlock::DefineArg(Memory mem)
-{
-    args.push_back(CcuRepArg(mem));
-    HCCL_INFO("Define Arg: Index[%u], Type[Memory], Id[%u]", args.size(), mem.addr.Id());
-}
-
-void CcuRepLoopBlock::DefineArg(const std::vector<Variable> varList)
-{
-    args.push_back(CcuRepArg(varList));
-    HCCL_INFO("Define Arg: Index[%u], Type[Variable List]: ", args.size());
-    for (uint32_t index = 0; index < varList.size(); index++) {
-        HCCL_INFO("    Index[%u].Id[%u]", index, varList[index].Id());
+    void CcuRepLoopBlock::DefineArg(Variable var)
+    {
+        args.push_back(CcuRepArg(var));
+        HCCL_INFO("Define Arg: Index[%u], Type[Variable], Id[%u]", args.size(), var.Id());
     }
-}
 
-void CcuRepLoopBlock::DefineArg(const std::vector<Memory> memList)
-{
-    args.push_back(CcuRepArg(memList));
-    HCCL_INFO("Define Arg: Index[%u], Type[Memory List]: ", args.size());
-    for (uint32_t index = 0; index < memList.size(); index++) {
-        HCCL_INFO("Index[%u].Id[%u]", index, memList[index].addr.Id());
+    void CcuRepLoopBlock::DefineArg(Memory mem)
+    {
+        args.push_back(CcuRepArg(mem));
+        HCCL_INFO("Define Arg: Index[%u], Type[Memory], Id[%u]", args.size(), mem.addr.Id());
     }
-}
 
-CcuRepArg &CcuRepLoopBlock::GetArg(uint16_t index)
-{
-    if (index >= args.size()) {
-        THROW<CcuApiException>("CcuLoopBlock Arg Index[%u] Out of Range", index);
+    void CcuRepLoopBlock::DefineArg(const std::vector<Variable> varList)
+    {
+        args.push_back(CcuRepArg(varList));
+        HCCL_INFO("Define Arg: Index[%u], Type[Variable List]: ", args.size());
+        for (uint32_t index = 0; index < varList.size(); index++) {
+            HCCL_INFO("    Index[%u].Id[%u]", index, varList[index].Id());
+        }
     }
-    return args[index];
-}
+
+    void CcuRepLoopBlock::DefineArg(const std::vector<Memory> memList)
+    {
+        args.push_back(CcuRepArg(memList));
+        HCCL_INFO("Define Arg: Index[%u], Type[Memory List]: ", args.size());
+        for (uint32_t index = 0; index < memList.size(); index++) {
+            HCCL_INFO("Index[%u].Id[%u]", index, memList[index].addr.Id());
+        }
+    }
+
+    CcuRepArg& CcuRepLoopBlock::GetArg(uint16_t index)
+    {
+        if (index >= args.size()) {
+            THROW<CcuApiException>("CcuLoopBlock Arg Index[%u] Out of Range", index);
+        }
+        return args[index];
+    }
 
 }; // namespace CcuRep
 }; // namespace Hccl

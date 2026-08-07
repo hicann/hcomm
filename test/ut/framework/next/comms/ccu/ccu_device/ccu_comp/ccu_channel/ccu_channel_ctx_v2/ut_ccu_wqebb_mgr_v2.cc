@@ -22,7 +22,7 @@ using namespace hcomm;
 
 static void SetupCcuResSpecsForWqeBB(int32_t devLogicId, uint8_t dieId, uint32_t jettyNum, uint32_t wqeBBNum)
 {
-    auto &specs = CcuResSpecifications::GetInstance(devLogicId);
+    auto& specs = CcuResSpecifications::GetInstance(devLogicId);
     specs.initFlag_ = true;
     specs.ccuVersion_ = CcuVersion::CCU_V2;
     specs.dieEnableFlags_[dieId] = true;
@@ -33,19 +33,23 @@ static void SetupCcuResSpecsForWqeBB(int32_t devLogicId, uint8_t dieId, uint32_t
 
 class CcuWqeBBMgrV2Test : public testing::Test {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestCase()
+    {
         GlobalMockObject::verify();
         GlobalMockObject::reset();
     }
-    static void TearDownTestCase() {
+    static void TearDownTestCase()
+    {
         GlobalMockObject::verify();
         GlobalMockObject::reset();
     }
-    void SetUp() override {
+    void SetUp() override
+    {
         GlobalMockObject::verify();
         GlobalMockObject::reset();
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         GlobalMockObject::verify();
         GlobalMockObject::reset();
     }

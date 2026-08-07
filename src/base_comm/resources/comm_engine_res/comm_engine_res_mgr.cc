@@ -9,6 +9,4 @@
  */
 #include "comm_engine_res_mgr.h"
 
-namespace hcomm {
-
-}
+namespace hcomm {}

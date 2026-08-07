@@ -13,7 +13,6 @@
 
 #include "comm_star_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * COMM_STAR_H */

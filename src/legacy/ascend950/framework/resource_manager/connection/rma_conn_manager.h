@@ -29,60 +29,60 @@ MAKE_ENUM(UboeStatus, READY, INIT, SOCKET_OK, SOCKET_TIMEOUT);
 
 class RmaConnManager {
 public:
-    explicit RmaConnManager(const CommunicatorImpl &comm);
+    explicit RmaConnManager(const CommunicatorImpl& comm);
     virtual ~RmaConnManager();
 
-    RmaConnection *Create(const std::string &tag, const LinkData &linkData, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL);
+    RmaConnection*
+    Create(const std::string& tag, const LinkData& linkData, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL);
 
-    void                         BatchCreate(vector<LinkData> &links);
+    void BatchCreate(vector<LinkData>& links);
 
-    RmaConnection               *Get(const std::string &tag, const LinkData &linkData);
+    RmaConnection* Get(const std::string& tag, const LinkData& linkData);
 
-    std::vector<RmaConnection *> GetOpTagConns(const std::string &tag) const;
+    std::vector<RmaConnection*> GetOpTagConns(const std::string& tag) const;
 
-    void Release(const std::string &tag, const LinkData &linkData);
+    void Release(const std::string& tag, const LinkData& linkData);
 
     void Destroy();
 
     void Clear();
 
 private:
-    void                      GetDeleteJettys(BatchDeleteJettyInfo &batchDeleteJettyInfo);
-    void                      BatchDeleteJettys();
-    unique_ptr<RmaConnection> CreateRdmaConn(Socket *socket, const std::string &tag, const LinkData &linkData) const;
-    unique_ptr<RmaConnection> CreateUbConn(Socket *socket, const std::string &tag, const LinkData &linkData, 
-                                           const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL);
-    bool                      isDestroyed{false};
+    void GetDeleteJettys(BatchDeleteJettyInfo& batchDeleteJettyInfo);
+    void BatchDeleteJettys();
+    unique_ptr<RmaConnection> CreateRdmaConn(Socket* socket, const std::string& tag, const LinkData& linkData) const;
+    unique_ptr<RmaConnection> CreateUbConn(
+        Socket* socket, const std::string& tag, const LinkData& linkData,
+        const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL);
+    bool isDestroyed{false};
     // tag -> LinkData -> RmaConnection
-    std::unordered_map<
-        std::string,
-        std::unordered_map<LinkData, std::unique_ptr<RmaConnection>, hash<Hccl::LinkData>>>
+    std::unordered_map<std::string, std::unordered_map<LinkData, std::unique_ptr<RmaConnection>, hash<Hccl::LinkData>>>
         rmaConnectionMap;
 
-    u32                     localRank{0};
-    const CommunicatorImpl *comm;
-    
+    u32 localRank{0};
+    const CommunicatorImpl* comm;
+
     IpAddress locAddr;
     IpAddress rmtAddr;
-    UboeStatus  uboeStatus{UboeStatus::INIT};
+    UboeStatus uboeStatus{UboeStatus::INIT};
     MAKE_ENUM(UbStatus, INIT, SOCKET_OK, SEND_DATA, RECV_DATA, SEND_FIN, RECV_FIN, PROCESS_DATA, CONN_OK)
-    UbStatus    ubStatus{UbStatus::INIT};
+    UbStatus ubStatus{UbStatus::INIT};
     vector<char> sendData{};
     vector<char> recvData{};
     u32 exchangeDataSize{0}; // 交换的消息大小
 
-    std::vector<RmaConnection *> GetAllConns() const;
-    void                         RecreateAllConns();
-    void                         BindRemoteRmaBuffers();
+    std::vector<RmaConnection*> GetAllConns() const;
+    void RecreateAllConns();
+    void BindRemoteRmaBuffers();
 
-    bool                         IsSocketReady(Socket *socket, const LinkData &linkData);
-    UboeStatus                   GetUboeSocketStatus(Socket *socket, const LinkData &linkData);
-    void                         WaitUboeSocketReady(Socket *socket, const LinkData &linkData);
-    void                         Ipv4Pack();
-    void                         Ipv4UnPack(BinaryStream& binaryStream);
-    void                         SendExchangeData(Socket *socket, const LinkData &linkData);
-    void                         RecvExchangeData(Socket *socket, const LinkData &linkData);
-    void                         RecvDataProcess(const LinkData &linkData);
+    bool IsSocketReady(Socket* socket, const LinkData& linkData);
+    UboeStatus GetUboeSocketStatus(Socket* socket, const LinkData& linkData);
+    void WaitUboeSocketReady(Socket* socket, const LinkData& linkData);
+    void Ipv4Pack();
+    void Ipv4UnPack(BinaryStream& binaryStream);
+    void SendExchangeData(Socket* socket, const LinkData& linkData);
+    void RecvExchangeData(Socket* socket, const LinkData& linkData);
+    void RecvDataProcess(const LinkData& linkData);
 };
 
 } // namespace Hccl

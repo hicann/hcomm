@@ -39,8 +39,8 @@ BkfDcTable *BkfDcAddTable(BkfDc *dc, BkfDcSlice *slice, uint16_t tableTypeId)
     table->tableType = tableType;
     table->slice = slice;
     table->tableTypeId = tableTypeId;
-    VOS_AVLL_INIT_TREE(table->tupleSet, (AVLL_COMPARE)tableType->vTbl.tupleKeyCmp,
-                       BKF_OFFSET(BkfDcTuple, keyVal[0]), BKF_OFFSET(BkfDcTuple, avlNode));
+    VOS_AVLL_INIT_TREE(table->tupleSet, (AVLL_COMPARE)tableType->vTbl.tupleKeyCmp, BKF_OFFSET(BkfDcTuple, keyVal[0]),
+        BKF_OFFSET(BkfDcTuple, avlNode));
     BKF_DL_INIT(&table->tupleSetBySeq);
     BKF_DL_INIT(&table->tupleSeqItorSet);
     VOS_AVLL_INIT_NODE(table->avlNode);
@@ -90,8 +90,7 @@ void BkfDcDelTable(BkfDc *dc, BkfDcTable *table)
             mayDelTable = VOS_FALSE;
         }
     }
-    for (tuple = BkfDcGetFirstTuple(dc, table, &itor); tuple != VOS_NULL;
-         tuple = BkfDcGetNextTuple(dc, table, &itor)) {
+    for (tuple = BkfDcGetFirstTuple(dc, table, &itor); tuple != VOS_NULL; tuple = BkfDcGetNextTuple(dc, table, &itor)) {
         succ = BkfDcTry2FreeTuple(dc, table, tuple);
         if (!succ) {
             BKF_ASSERT(0);
@@ -110,8 +109,7 @@ void BkfDcDelAllTable(BkfDc *dc, BkfDcSlice *slice)
     BkfDcTable *table = VOS_NULL;
     void *itor = VOS_NULL;
 
-    for (table = BkfDcGetFirstTable(dc, slice, &itor); table != VOS_NULL;
-         table = BkfDcGetNextTable(dc, slice, &itor)) {
+    for (table = BkfDcGetFirstTable(dc, slice, &itor); table != VOS_NULL; table = BkfDcGetNextTable(dc, slice, &itor)) {
         BkfDcDelTable(dc, table);
     }
     return;
@@ -169,4 +167,3 @@ BkfDcTable *BkfDcGetNextTable(BkfDc *dc, BkfDcSlice *slice, void **itorInOut)
 }
 #endif
 #endif
-

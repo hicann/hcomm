@@ -17,28 +17,29 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepOr : public CcuRepBase {
-public:
-    explicit CcuRepOr(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB);
-    explicit CcuRepOr(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varB);
-    bool Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, const TransDep &dep) override;
+    class CcuRepOr : public CcuRepBase {
+    public:
+        explicit CcuRepOr(
+            CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varA, const Variable& varB);
+        explicit CcuRepOr(CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varB);
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, const TransDep& dep) override;
 
-    std::string Describe() override;
+        std::string Describe() override;
 
-    Variable GetVarA() { return varA; }
-    Variable GetVarB() { return varB; }
-    Variable GetVarC() { return varC; }
-    OrSubType GetSubType() { return subType; }
+        Variable GetVarA() { return varA; }
+        Variable GetVarB() { return varB; }
+        Variable GetVarC() { return varC; }
+        OrSubType GetSubType() { return subType; }
 
-private:
-    OrSubType subType{OrSubType::INVALID};
+    private:
+        OrSubType subType{OrSubType::INVALID};
 
-    Variable varA;
-    Variable varB;
-    Variable varC;
+        Variable varA;
+        Variable varB;
+        Variable varC;
 
-    CcuInsGeneratorBase* insGenPtr{nullptr};
-};
+        CcuInsGeneratorBase* insGenPtr{nullptr};
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

@@ -3,11 +3,11 @@
 
 namespace Hccl {
 
-extern HcclResult sal_memset(void *dest, size_t destMaxSize, int c, size_t count);
+extern HcclResult sal_memset(void* dest, size_t destMaxSize, int c, size_t count);
 s32 SalGetPid();
 s32 SalGetTid();
-s32 sal_vsnprintf(char *strDest, size_t destMaxSize, size_t count, const char *format, va_list argList);
+s32 sal_vsnprintf(char* strDest, size_t destMaxSize, size_t count, const char* format, va_list argList);
 
-}
+} // namespace Hccl
 
 #endif

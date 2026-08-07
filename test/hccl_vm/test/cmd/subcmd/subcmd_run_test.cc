@@ -23,7 +23,8 @@ using namespace HcclSim;
 
 class RunCommandTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         app_ = std::make_unique<CLI::App>("test");
         cmd_ = std::make_unique<RunCommand>();
         savedBashFlag_ = g_hcclVmBashFlag;
@@ -31,7 +32,8 @@ protected:
         g_hcclVmBashFlag = false;
         g_hcclVmLevel = 2;
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         g_hcclVmBashFlag = savedBashFlag_;
         g_hcclVmLevel = savedLevel_;
     }
@@ -41,25 +43,26 @@ protected:
     std::uint32_t savedLevel_;
 };
 
-TEST_F(RunCommandTest, StaticName_ShouldReturnRun) {
-    EXPECT_EQ(RunCommand::StaticName(), "run");
-}
+TEST_F(RunCommandTest, StaticName_ShouldReturnRun) { EXPECT_EQ(RunCommand::StaticName(), "run"); }
 
-TEST_F(RunCommandTest, Setup_RegistersRunSubcommand) {
+TEST_F(RunCommandTest, Setup_RegistersRunSubcommand)
+{
     cmd_->Setup(*app_);
     auto sub = app_->get_subcommand("run");
     EXPECT_NE(sub, nullptr);
     EXPECT_EQ(sub->get_name(), "run");
 }
 
-TEST_F(RunCommandTest, Setup_RunSubcommandDescription) {
+TEST_F(RunCommandTest, Setup_RunSubcommandDescription)
+{
     cmd_->Setup(*app_);
     auto run = app_->get_subcommand("run");
     ASSERT_NE(run, nullptr);
     EXPECT_FALSE(std::string(run->get_description()).empty());
 }
 
-TEST_F(RunCommandTest, Setup_HasConfigFileOption) {
+TEST_F(RunCommandTest, Setup_HasConfigFileOption)
+{
     cmd_->Setup(*app_);
     auto run = app_->get_subcommand("run");
     ASSERT_NE(run, nullptr);
@@ -67,7 +70,8 @@ TEST_F(RunCommandTest, Setup_HasConfigFileOption) {
     EXPECT_GE(opts.size(), 1u);
 }
 
-TEST_F(RunCommandTest, Setup_HasLevelOption) {
+TEST_F(RunCommandTest, Setup_HasLevelOption)
+{
     cmd_->Setup(*app_);
     auto run = app_->get_subcommand("run");
     ASSERT_NE(run, nullptr);
@@ -75,14 +79,16 @@ TEST_F(RunCommandTest, Setup_HasLevelOption) {
     EXPECT_GE(opts.size(), 1u);
 }
 
-TEST_F(RunCommandTest, Setup_AllowsExtras) {
+TEST_F(RunCommandTest, Setup_AllowsExtras)
+{
     cmd_->Setup(*app_);
     auto run = app_->get_subcommand("run");
     ASSERT_NE(run, nullptr);
     EXPECT_TRUE(run->get_allow_extras());
 }
 
-TEST_F(RunCommandTest, ParseRun_Help) {
+TEST_F(RunCommandTest, ParseRun_Help)
+{
     cmd_->Setup(*app_);
     try {
         app_->parse("test run --help", true);
@@ -93,7 +99,8 @@ TEST_F(RunCommandTest, ParseRun_Help) {
     }
 }
 
-TEST_F(RunCommandTest, ParseRun_WithConfigFile) {
+TEST_F(RunCommandTest, ParseRun_WithConfigFile)
+{
     cmd_->Setup(*app_);
     try {
         app_->parse("test run 112 -- echo hello", true);
@@ -104,7 +111,8 @@ TEST_F(RunCommandTest, ParseRun_WithConfigFile) {
     }
 }
 
-TEST_F(RunCommandTest, ParseRun_WithLevelOption) {
+TEST_F(RunCommandTest, ParseRun_WithLevelOption)
+{
     cmd_->Setup(*app_);
     try {
         app_->parse("test run 112 --level 2 -- echo hello", true);
@@ -115,12 +123,14 @@ TEST_F(RunCommandTest, ParseRun_WithLevelOption) {
     }
 }
 
-TEST_F(RunCommandTest, ParseRun_WithoutConfigFile_Throws) {
+TEST_F(RunCommandTest, ParseRun_WithoutConfigFile_Throws)
+{
     cmd_->Setup(*app_);
     EXPECT_THROW(app_->parse("test run", true), CLI::RequiredError);
 }
 
-TEST_F(RunCommandTest, CommandRegistry_CreateAll_ContainsRunCommand) {
+TEST_F(RunCommandTest, CommandRegistry_CreateAll_ContainsRunCommand)
+{
     auto commands = CommandRegistry::CreateAll();
     bool found = false;
     for (const auto& cmd : commands) {
@@ -132,7 +142,8 @@ TEST_F(RunCommandTest, CommandRegistry_CreateAll_ContainsRunCommand) {
     EXPECT_TRUE(found);
 }
 
-TEST_F(RunCommandTest, Execute_BashFlagTrue_ReturnsEarly) {
+TEST_F(RunCommandTest, Execute_BashFlagTrue_ReturnsEarly)
+{
     g_hcclVmBashFlag = true;
     cmd_->Setup(*app_);
     try {
@@ -145,7 +156,8 @@ TEST_F(RunCommandTest, Execute_BashFlagTrue_ReturnsEarly) {
     EXPECT_TRUE(g_hcclVmBashFlag);
 }
 
-TEST_F(RunCommandTest, Execute_BashFlagFalse_ParsesConfig) {
+TEST_F(RunCommandTest, Execute_BashFlagFalse_ParsesConfig)
+{
     g_hcclVmBashFlag = false;
     cmd_->Setup(*app_);
     try {
@@ -158,7 +170,8 @@ TEST_F(RunCommandTest, Execute_BashFlagFalse_ParsesConfig) {
     EXPECT_FALSE(g_hcclVmBashFlag);
 }
 
-TEST_F(RunCommandTest, ParseRun_ConfigFileOptionHasValidator) {
+TEST_F(RunCommandTest, ParseRun_ConfigFileOptionHasValidator)
+{
     cmd_->Setup(*app_);
     auto sub = app_->get_subcommand("run");
     ASSERT_NE(sub, nullptr);
@@ -167,7 +180,8 @@ TEST_F(RunCommandTest, ParseRun_ConfigFileOptionHasValidator) {
     EXPECT_NE(opt->get_validator(), nullptr);
 }
 
-TEST_F(RunCommandTest, ParseRun_ConfigFileRequired) {
+TEST_F(RunCommandTest, ParseRun_ConfigFileRequired)
+{
     cmd_->Setup(*app_);
     auto sub = app_->get_subcommand("run");
     ASSERT_NE(sub, nullptr);

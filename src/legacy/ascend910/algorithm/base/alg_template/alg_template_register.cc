@@ -12,18 +12,15 @@
 
 namespace hccl {
 
-AlgTemplateRegistry &AlgTemplateRegistry::Instance()
+AlgTemplateRegistry& AlgTemplateRegistry::Instance()
 {
     static AlgTemplateRegistry globalTempRegistry;
     return globalTempRegistry;
 }
 
-AlgTemplateRegistry::AlgTemplateRegistry()
-{
-    tempCreators_.resize(TemplateType::TEMPLATE_CUSTOM_MAX_NUM, nullptr);
-}
+AlgTemplateRegistry::AlgTemplateRegistry() { tempCreators_.resize(TemplateType::TEMPLATE_CUSTOM_MAX_NUM, nullptr); }
 
-HcclResult AlgTemplateRegistry::Register(const TemplateType type, const AlgTemplateCreator &algTemplateCreator)
+HcclResult AlgTemplateRegistry::Register(const TemplateType type, const AlgTemplateCreator& algTemplateCreator)
 {
     if ((type >= TemplateType::TEMPLATE_NATIVE_MAX_NUM && type <= TemplateType::TEMPLATE_CUSTOM_BEGIN)
         || type >= TemplateType::TEMPLATE_CUSTOM_MAX_NUM) {
@@ -41,8 +38,8 @@ HcclResult AlgTemplateRegistry::Register(const TemplateType type, const AlgTempl
     return HcclResult::HCCL_SUCCESS;
 }
 
-std::unique_ptr<AlgTemplateBase> AlgTemplateRegistry::GetAlgTemplate(const TemplateType type,
-    const HcclDispatcher dispatcher)
+std::unique_ptr<AlgTemplateBase>
+AlgTemplateRegistry::GetAlgTemplate(const TemplateType type, const HcclDispatcher dispatcher)
 {
     if ((type >= TemplateType::TEMPLATE_NATIVE_MAX_NUM && type <= TemplateType::TEMPLATE_CUSTOM_BEGIN)
         || type >= TemplateType::TEMPLATE_CUSTOM_MAX_NUM) {

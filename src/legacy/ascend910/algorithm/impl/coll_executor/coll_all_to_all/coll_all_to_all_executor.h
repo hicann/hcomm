@@ -17,49 +17,50 @@ constexpr u64 SMALL_SIZE_FULLMESH = 262144;
 
 class CollAlltoAllExecutor : public CollNativeExecutorBase {
 public:
-    CollAlltoAllExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollAlltoAllExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAlltoAllExecutor() override = default;
 
     HcclResult Orchestrate(OpParam& param, AlgResourceResponse& algRes) override;
     HcclResult GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& adjInfo) override;
-    virtual HcclResult SetExcutorExtraInfo(const std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo, u64 cclbufferSize);
-    HcclResult CalcResRequest(const OpParam& param, AlgResourceRequest &resourceRequest) override;
-    virtual HcclResult CheckNeedCreateVirtualLinks(AlgResourceRequest &resourceRequest);
+    virtual HcclResult
+    SetExcutorExtraInfo(const std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo, u64 cclbufferSize);
+    HcclResult CalcResRequest(const OpParam& param, AlgResourceRequest& resourceRequest) override;
+    virtual HcclResult CheckNeedCreateVirtualLinks(AlgResourceRequest& resourceRequest);
 
     HcclResult SetVirtualDispatcher(const HcclDispatcher virtualDispatcher);
 
-    HcclResult SetParallelTaskLoader(ParallelTaskLoader *parallelTaskLoader);
+    HcclResult SetParallelTaskLoader(ParallelTaskLoader* parallelTaskLoader);
 
     virtual HcclResult CheckNeedRecreateComm(u64 lastScratchMemSize, bool& needRecreateAlltoallComm);
-    static HcclResult RunAlltoAllTemplate(const std::unique_ptr<AlgTemplateBase> &executor,
-        const SubCommInfo &commInfo);
-    static HcclResult RunAlltoAllVTemplateStaged(const std::unique_ptr<AlgTemplateBase> &executor,
-        const SubCommInfo &commInfo);
-    static HcclResult RunTemplateWithVirtualLink(const std::unique_ptr<AlgTemplateBase> &executor,
-        const SubCommInfo &commInfo);
+    static HcclResult
+    RunAlltoAllTemplate(const std::unique_ptr<AlgTemplateBase>& executor, const SubCommInfo& commInfo);
+    static HcclResult
+    RunAlltoAllVTemplateStaged(const std::unique_ptr<AlgTemplateBase>& executor, const SubCommInfo& commInfo);
+    static HcclResult
+    RunTemplateWithVirtualLink(const std::unique_ptr<AlgTemplateBase>& executor, const SubCommInfo& commInfo);
 
 protected:
     /* *************** 算法编排 *************** */
     // 公共接口
     virtual HcclOpMetaInfo GetOpMeta(HcclCMDType opType, const u64 size);
-    void UpdateAlltoAllZCopyMode(std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo, u64 cclbufferSize);
-    void CalcIntraMeshAggregationAlltoAllMemInfo(const AlltoAllUserRankInfo &userRankInfo,
-        const std::vector<SendRecvInfo> &allSendRecvInfo,
-        std::map<u32, std::list<OneSendRecvAddrInfo>> &sendAddrInfosIntra,
-        std::map<u32, std::list<OneSendRecvAddrInfo>> &recvAddrInfosIntra, u32 meshAggregationRankSize,
-        const bool &isSingleMesh);
-    void CalcIntraMeshAggregationSendInfo(const AlltoAllUserRankInfo &userRankInfo,
-        const SendRecvInfo &mySendRecvInfo, const std::vector<SendRecvInfo> &myMeshAggregationSendRecvInfo,
-        u32 rankInMeshAggregation, u32 infoIndex, OneSendRecvAddrInfo &curSendInfo, u32 meshAggregationRankSize,
-        const bool &isSingleMesh);
-    void CalcIntraMeshAggregationRecvInfo(const AlltoAllUserRankInfo &userRankInfo,
-        const std::vector<SendRecvInfo> &myMeshAggregationSendRecvInfo, u32 infoIndex, OneSendRecvAddrInfo &curRecvInfo,
-        u32 meshAggregationRankSize, const bool &isSingleMesh);
-    void CalcIntraMeshAggregationRecvInfoInMeshAggregation(u32 rankIndex, u32 infoIndex,
-        const std::vector<SendRecvInfo> &myMeshAggregationSendRecvInfo, u64 &localOffset, u32 &offsetCounter,
-        u64 &localLength, u64 &remoteOffset, u32 meshAggregationRankSize);
-    u64 CalAlltoAllVScratchMemSize(u64 &workSpaceMemSize);
-    bool HasMassTasks(std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo);
+    void UpdateAlltoAllZCopyMode(std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo, u64 cclbufferSize);
+    void CalcIntraMeshAggregationAlltoAllMemInfo(
+        const AlltoAllUserRankInfo& userRankInfo, const std::vector<SendRecvInfo>& allSendRecvInfo,
+        std::map<u32, std::list<OneSendRecvAddrInfo>>& sendAddrInfosIntra,
+        std::map<u32, std::list<OneSendRecvAddrInfo>>& recvAddrInfosIntra, u32 meshAggregationRankSize,
+        const bool& isSingleMesh);
+    void CalcIntraMeshAggregationSendInfo(
+        const AlltoAllUserRankInfo& userRankInfo, const SendRecvInfo& mySendRecvInfo,
+        const std::vector<SendRecvInfo>& myMeshAggregationSendRecvInfo, u32 rankInMeshAggregation, u32 infoIndex,
+        OneSendRecvAddrInfo& curSendInfo, u32 meshAggregationRankSize, const bool& isSingleMesh);
+    void CalcIntraMeshAggregationRecvInfo(
+        const AlltoAllUserRankInfo& userRankInfo, const std::vector<SendRecvInfo>& myMeshAggregationSendRecvInfo,
+        u32 infoIndex, OneSendRecvAddrInfo& curRecvInfo, u32 meshAggregationRankSize, const bool& isSingleMesh);
+    void CalcIntraMeshAggregationRecvInfoInMeshAggregation(
+        u32 rankIndex, u32 infoIndex, const std::vector<SendRecvInfo>& myMeshAggregationSendRecvInfo, u64& localOffset,
+        u32& offsetCounter, u64& localLength, u64& remoteOffset, u32 meshAggregationRankSize);
+    u64 CalAlltoAllVScratchMemSize(u64& workSpaceMemSize);
+    bool HasMassTasks(std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo);
 
     OpParam AlltoAllVParam_;
     std::vector<SendRecvInfo> allMeshAggregationSendRecvInfo_;

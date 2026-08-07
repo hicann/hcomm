@@ -26,22 +26,23 @@ public:
 
     // should be called soon after template AllGatherNHR instance create
     HcclResult Prepare(bool needMerge) override;
-    
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
 
 protected:
 private:
-    HcclResult RunAllGather(u32 rank, u32 rankSize, const std::vector<Slice> &outputSlices,
-        const std::vector<LINK> &links);
-    HcclResult SdmaRx(const LINK &linkLeft, const LINK &linkRight, std::vector<Slice> &rxSlices);
-    HcclResult RdmaTxRx(const LINK &linkLeft, const LINK &linkRight, InterServerAlgoStep &stepInfo,
-        std::vector<Slice> &txSlices, std::vector<Slice> &rxSlices);
-    HcclResult Tx(const LINK &link, std::vector<Slice> &txSlices);
-    HcclResult Rx(const LINK &link, std::vector<Slice> &rxSlices);
+    HcclResult
+    RunAllGather(u32 rank, u32 rankSize, const std::vector<Slice>& outputSlices, const std::vector<LINK>& links);
+    HcclResult SdmaRx(const LINK& linkLeft, const LINK& linkRight, std::vector<Slice>& rxSlices);
+    HcclResult RdmaTxRx(
+        const LINK& linkLeft, const LINK& linkRight, InterServerAlgoStep& stepInfo, std::vector<Slice>& txSlices,
+        std::vector<Slice>& rxSlices);
+    HcclResult Tx(const LINK& link, std::vector<Slice>& txSlices);
+    HcclResult Rx(const LINK& link, std::vector<Slice>& rxSlices);
 
-    HcclResult GetStepInfo(u32 step, u32 nSteps, u32 rank, u32 rankSize, InterServerAlgoStep &stepInfo) override;
+    HcclResult GetStepInfo(u32 step, u32 nSteps, u32 rank, u32 rankSize, InterServerAlgoStep& stepInfo) override;
 };
 } // namespace hccl
 

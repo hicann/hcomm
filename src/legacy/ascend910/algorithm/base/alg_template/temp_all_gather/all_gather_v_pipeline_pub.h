@@ -27,22 +27,24 @@ public:
     explicit AllGatherVPipeline(const HcclDispatcher dispatcher);
     ~AllGatherVPipeline() override;
 
-    HcclResult Prepare(HcomCollOpInfo *opInfo, u32 userRank, u64 &count, DeviceMem &cclBufferPartOne,
-        DeviceMem &cclBufferPartTwo, SubCommInfo &level0CommInfo, SubCommInfo &level1CommInfo,
-        Stream &mainStream, std::vector<Stream> &subStream,
-        std::vector<std::shared_ptr<LocalNotify>> &notifyMain, 
-        std::vector<std::shared_ptr<LocalNotify>> &notifySub, std::vector<Slice>& userOutSlice) override;
+    HcclResult Prepare(
+        HcomCollOpInfo* opInfo, u32 userRank, u64& count, DeviceMem& cclBufferPartOne, DeviceMem& cclBufferPartTwo,
+        SubCommInfo& level0CommInfo, SubCommInfo& level1CommInfo, Stream& mainStream, std::vector<Stream>& subStream,
+        std::vector<std::shared_ptr<LocalNotify>>& notifyMain, std::vector<std::shared_ptr<LocalNotify>>& notifySub,
+        std::vector<Slice>& userOutSlice) override;
 
     HcclResult RunAsync() override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                            const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
+
 protected:
     HcclResult MainRecordSub();
     HcclResult SubWaitMain();
     HcclResult MainWaitSub();
     HcclResult SubRecordMain();
+
 protected:
-    HcomCollOpInfo *opInfo_ = nullptr;
+    HcomCollOpInfo* opInfo_ = nullptr;
     u64 memSliceCount_ = 0;
     u32 userRank_ = 0;
 
@@ -64,6 +66,6 @@ protected:
     std::vector<LINK> interLinks_;
     std::vector<Slice> userMemSlice_{};
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* ALL_GATHER_PIPELINE_PUB_H */

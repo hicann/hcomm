@@ -44,182 +44,187 @@ static const std::string HCCLVM_SYN_DATA_FILE = "/%s_hcclvm_syn_data.bin";
 static const std::string HCCLVM_INSTR_DATA_FILE = "/%s_hcclvm_instr_data.bin";
 
 namespace {
-template <typename T>
-bool ReadExtValue(const std::vector<uint8_t> &data, size_t &offset, T &value)
-{
-    if (offset > data.size() || data.size() - offset < sizeof(T)) {
-        return false;
-    }
-    std::memcpy(&value, data.data() + offset, sizeof(T));
-    offset += sizeof(T);
-    return true;
-}
-
-bool ReadVParamExtInfo(const std::vector<uint8_t> &data, uint32_t rankSize, VRankParam &param)
-{
-    if (rankSize == 0) {
-        return false;
-    }
-
-    constexpr size_t fixedSize = sizeof(uint64_t);
-    const uint64_t valueCount = static_cast<uint64_t>(rankSize) * 2U;
-    if (valueCount > (std::numeric_limits<size_t>::max() - fixedSize) / sizeof(uint64_t)) {
-        return false;
-    }
-    const size_t expectedSize = fixedSize + static_cast<size_t>(valueCount) * sizeof(uint64_t);
-    if (data.size() != expectedSize) {
-        return false;
-    }
-
-    VRankParam parsed;
-    parsed.counts.resize(rankSize);
-    parsed.displs.resize(rankSize);
-    size_t offset = 0;
-    if (!ReadExtValue(data, offset, parsed.localCount)) {
-        return false;
-    }
-    for (uint32_t i = 0; i < rankSize; ++i) {
-        if (!ReadExtValue(data, offset, parsed.counts[i])) {
+    template <typename T>
+    bool ReadExtValue(const std::vector<uint8_t>& data, size_t& offset, T& value)
+    {
+        if (offset > data.size() || data.size() - offset < sizeof(T)) {
             return false;
         }
+        std::memcpy(&value, data.data() + offset, sizeof(T));
+        offset += sizeof(T);
+        return true;
     }
-    for (uint32_t i = 0; i < rankSize; ++i) {
-        if (!ReadExtValue(data, offset, parsed.displs[i])) {
+
+    bool ReadVParamExtInfo(const std::vector<uint8_t>& data, uint32_t rankSize, VRankParam& param)
+    {
+        if (rankSize == 0) {
             return false;
         }
-    }
-    param = std::move(parsed);
-    return true;
-}
 
-bool ReadBatchSendRecvExtInfo(const std::vector<uint8_t> &data, BatchSendRecvRankParam &param)
-{
-    if (data.size() != sizeof(uint32_t)) {
-        return false;
-    }
-    std::memcpy(&param.itemNum, data.data(), sizeof(param.itemNum));
-    return true;
-}
+        constexpr size_t fixedSize = sizeof(uint64_t);
+        const uint64_t valueCount = static_cast<uint64_t>(rankSize) * 2U;
+        if (valueCount > (std::numeric_limits<size_t>::max() - fixedSize) / sizeof(uint64_t)) {
+            return false;
+        }
+        const size_t expectedSize = fixedSize + static_cast<size_t>(valueCount) * sizeof(uint64_t);
+        if (data.size() != expectedSize) {
+            return false;
+        }
 
-HcclResult FinalizeVDataDes(CheckerParam &checkerParam, bool isAllGatherV)
-{
-    const uint32_t rankSize = checkerParam.rankSize;
-    if (rankSize == 0 || checkerParam.vRankParams.size() < rankSize) {
-        HCCL_VM_ERROR("Invalid V operator rank parameters, rankSize={}, reportedRanks={}", rankSize,
-                      checkerParam.vRankParams.size());
-        return HcclResult::HCCL_E_PARA;
+        VRankParam parsed;
+        parsed.counts.resize(rankSize);
+        parsed.displs.resize(rankSize);
+        size_t offset = 0;
+        if (!ReadExtValue(data, offset, parsed.localCount)) {
+            return false;
+        }
+        for (uint32_t i = 0; i < rankSize; ++i) {
+            if (!ReadExtValue(data, offset, parsed.counts[i])) {
+                return false;
+            }
+        }
+        for (uint32_t i = 0; i < rankSize; ++i) {
+            if (!ReadExtValue(data, offset, parsed.displs[i])) {
+                return false;
+            }
+        }
+        param = std::move(parsed);
+        return true;
     }
 
-    std::vector<uint64_t> finalCounts(rankSize, 0);
-    for (uint32_t rankId = 0; rankId < rankSize; ++rankId) {
-        const VRankParam &param = checkerParam.vRankParams[rankId];
-        if (param.counts.size() != rankSize || param.displs.size() != rankSize) {
-            HCCL_VM_ERROR("Invalid V operator parameters reported by rank {}, countsSize={}, "
-                          "displsSize={}, rankSize={}",
-                          rankId, param.counts.size(), param.displs.size(), rankSize);
+    bool ReadBatchSendRecvExtInfo(const std::vector<uint8_t>& data, BatchSendRecvRankParam& param)
+    {
+        if (data.size() != sizeof(uint32_t)) {
+            return false;
+        }
+        std::memcpy(&param.itemNum, data.data(), sizeof(param.itemNum));
+        return true;
+    }
+
+    HcclResult FinalizeVDataDes(CheckerParam& checkerParam, bool isAllGatherV)
+    {
+        const uint32_t rankSize = checkerParam.rankSize;
+        if (rankSize == 0 || checkerParam.vRankParams.size() < rankSize) {
+            HCCL_VM_ERROR(
+                "Invalid V operator rank parameters, rankSize={}, reportedRanks={}", rankSize,
+                checkerParam.vRankParams.size());
             return HcclResult::HCCL_E_PARA;
         }
-        finalCounts[rankId] = param.localCount;
+
+        std::vector<uint64_t> finalCounts(rankSize, 0);
+        for (uint32_t rankId = 0; rankId < rankSize; ++rankId) {
+            const VRankParam& param = checkerParam.vRankParams[rankId];
+            if (param.counts.size() != rankSize || param.displs.size() != rankSize) {
+                HCCL_VM_ERROR(
+                    "Invalid V operator parameters reported by rank {}, countsSize={}, "
+                    "displsSize={}, rankSize={}",
+                    rankId, param.counts.size(), param.displs.size(), rankSize);
+                return HcclResult::HCCL_E_PARA;
+            }
+            finalCounts[rankId] = param.localCount;
+        }
+
+        for (uint32_t sourceRank = 0; sourceRank < rankSize; ++sourceRank) {
+            for (uint32_t targetRank = 0; targetRank < rankSize; ++targetRank) {
+                const uint64_t reportedCount = isAllGatherV ? checkerParam.vRankParams[targetRank].counts[sourceRank] :
+                                                              checkerParam.vRankParams[sourceRank].counts[targetRank];
+                if (reportedCount != finalCounts[isAllGatherV ? sourceRank : targetRank]) {
+                    HCCL_VM_ERROR(
+                        "{} V count mismatch, sourceRank={}, targetRank={}, reportedCount={}, "
+                        "expectedCount={}",
+                        isAllGatherV ? "AllGather" : "ReduceScatter", sourceRank, targetRank, reportedCount,
+                        finalCounts[isAllGatherV ? sourceRank : targetRank]);
+                    return HcclResult::HCCL_E_PARA;
+                }
+            }
+        }
+
+        std::vector<uint64_t> displs;
+        displs.reserve(rankSize);
+        uint64_t offset = 0;
+        for (uint64_t count : finalCounts) {
+            displs.push_back(offset);
+            if (count > std::numeric_limits<uint64_t>::max() - offset) {
+                HCCL_VM_ERROR("{} V count prefix sum overflows uint64", isAllGatherV ? "AllGather" : "ReduceScatter");
+                return HcclResult::HCCL_E_PARA;
+            }
+            offset += count;
+        }
+
+        checkerParam.vDataDes = VDataDesTagInner{};
+        checkerParam.vDataDes.dataType = static_cast<uint16_t>(checkerParam.dataType);
+        checkerParam.vDataDes.count = rankSize;
+        checkerParam.vDataDes.counts = std::move(finalCounts);
+        checkerParam.vDataDes.displs = std::move(displs);
+        return HcclResult::HCCL_SUCCESS;
     }
 
-    for (uint32_t sourceRank = 0; sourceRank < rankSize; ++sourceRank) {
-        for (uint32_t targetRank = 0; targetRank < rankSize; ++targetRank) {
-            const uint64_t reportedCount = isAllGatherV
-                ? checkerParam.vRankParams[targetRank].counts[sourceRank]
-                : checkerParam.vRankParams[sourceRank].counts[targetRank];
-            if (reportedCount != finalCounts[isAllGatherV ? sourceRank : targetRank]) {
-                HCCL_VM_ERROR("{} V count mismatch, sourceRank={}, targetRank={}, reportedCount={}, "
-                              "expectedCount={}",
-                              isAllGatherV ? "AllGather" : "ReduceScatter", sourceRank, targetRank,
-                              reportedCount, finalCounts[isAllGatherV ? sourceRank : targetRank]);
+    HcclResult FinalizeBatchSendRecvRing(CheckerParam& checkerParam)
+    {
+        const uint32_t rankSize = checkerParam.rankSize;
+        if (rankSize < 2 || checkerParam.batchSendRecvRankParams.size() != rankSize) {
+            HCCL_VM_ERROR(
+                "Invalid BatchSendRecv ring report set, rankSize={}, reportedRanks={}", rankSize,
+                checkerParam.batchSendRecvRankParams.size());
+            return HcclResult::HCCL_E_PARA;
+        }
+
+        const uint64_t peerCount = checkerParam.batchSendRecvRankParams[0].peerCount;
+        const HcclDataType dataType = checkerParam.batchSendRecvRankParams[0].dataType;
+        for (uint32_t rankId = 0; rankId < rankSize; ++rankId) {
+            const BatchSendRecvRankParam& current = checkerParam.batchSendRecvRankParams[rankId];
+            const uint32_t expectedSendPeer = (rankId + 1U) % rankSize;
+            const uint32_t expectedRecvPeer = (rankId + rankSize - 1U) % rankSize;
+            if (current.itemNum != 2 || current.peerCount != peerCount || current.dataType != dataType
+                || current.sendPeer != expectedSendPeer || current.recvPeer != expectedRecvPeer) {
+                HCCL_VM_ERROR(
+                    "Invalid BatchSendRecv ring parameters at rank {}: itemNum={}, peerCount={}, "
+                    "dataType={}, sendPeer={}, recvPeer={}; expected itemNum=2, peerCount={}, dataType={}, "
+                    "sendPeer={}, recvPeer={}",
+                    rankId, current.itemNum, current.peerCount, static_cast<uint32_t>(current.dataType),
+                    current.sendPeer, current.recvPeer, peerCount, static_cast<uint32_t>(dataType), expectedSendPeer,
+                    expectedRecvPeer);
                 return HcclResult::HCCL_E_PARA;
             }
         }
+
+        checkerParam.dataCount = peerCount;
+        checkerParam.dataType = dataType;
+        return HcclResult::HCCL_SUCCESS;
     }
 
-    std::vector<uint64_t> displs;
-    displs.reserve(rankSize);
-    uint64_t offset = 0;
-    for (uint64_t count : finalCounts) {
-        displs.push_back(offset);
-        if (count > std::numeric_limits<uint64_t>::max() - offset) {
-            HCCL_VM_ERROR("{} V count prefix sum overflows uint64", isAllGatherV ? "AllGather" : "ReduceScatter");
-            return HcclResult::HCCL_E_PARA;
-        }
-        offset += count;
-    }
-
-    checkerParam.vDataDes = VDataDesTagInner{};
-    checkerParam.vDataDes.dataType = static_cast<uint16_t>(checkerParam.dataType);
-    checkerParam.vDataDes.count = rankSize;
-    checkerParam.vDataDes.counts = std::move(finalCounts);
-    checkerParam.vDataDes.displs = std::move(displs);
-    return HcclResult::HCCL_SUCCESS;
-}
-
-HcclResult FinalizeBatchSendRecvRing(CheckerParam &checkerParam)
-{
-    const uint32_t rankSize = checkerParam.rankSize;
-    if (rankSize < 2 || checkerParam.batchSendRecvRankParams.size() != rankSize) {
-        HCCL_VM_ERROR("Invalid BatchSendRecv ring report set, rankSize={}, reportedRanks={}",
-            rankSize, checkerParam.batchSendRecvRankParams.size());
-        return HcclResult::HCCL_E_PARA;
-    }
-
-    const uint64_t peerCount = checkerParam.batchSendRecvRankParams[0].peerCount;
-    const HcclDataType dataType = checkerParam.batchSendRecvRankParams[0].dataType;
-    for (uint32_t rankId = 0; rankId < rankSize; ++rankId) {
-        const BatchSendRecvRankParam &current = checkerParam.batchSendRecvRankParams[rankId];
-        const uint32_t expectedSendPeer = (rankId + 1U) % rankSize;
-        const uint32_t expectedRecvPeer = (rankId + rankSize - 1U) % rankSize;
-        if (current.itemNum != 2 || current.peerCount != peerCount || current.dataType != dataType ||
-            current.sendPeer != expectedSendPeer || current.recvPeer != expectedRecvPeer) {
-            HCCL_VM_ERROR("Invalid BatchSendRecv ring parameters at rank {}: itemNum={}, peerCount={}, "
-                "dataType={}, sendPeer={}, recvPeer={}; expected itemNum=2, peerCount={}, dataType={}, "
-                "sendPeer={}, recvPeer={}", rankId, current.itemNum, current.peerCount,
-                static_cast<uint32_t>(current.dataType), current.sendPeer, current.recvPeer, peerCount,
-                static_cast<uint32_t>(dataType), expectedSendPeer, expectedRecvPeer);
-            return HcclResult::HCCL_E_PARA;
-        }
-    }
-
-    checkerParam.dataCount = peerCount;
-    checkerParam.dataType = dataType;
-    return HcclResult::HCCL_SUCCESS;
-}
-
-void UpdateNotifyPeerRanks(HcclVmTaskMetaData &taskMetaData)
-{
-    std::unordered_map<uint32_t, std::set<uint32_t>> notifyId2Ranks;
-    for (const auto &taskMeta : taskMetaData.task_meta) {
-        if (taskMeta.taskType == HccLTaskMetaType::NOTIFY_RECORD ||
-            taskMeta.taskType == HccLTaskMetaType::NOTIFY_WAIT) {
-            const uint64_t notifyId = taskMeta.taskData.notify.notifyId;
-            notifyId2Ranks[notifyId].insert(taskMeta.rankId);
-        }
-    }
-
-    // AICPU生成的Task需要更新Notify节点的对端信息
-    for (auto &taskMeta : taskMetaData.task_meta) {
-        if (taskMeta.taskType != HccLTaskMetaType::NOTIFY_RECORD &&
-            taskMeta.taskType != HccLTaskMetaType::NOTIFY_WAIT) {
-            continue;
-        }
-        uint32_t rankId = taskMeta.rankId;
-        for (auto id : notifyId2Ranks[taskMeta.taskData.notify.notifyId]) {
-            if (id != rankId) {
-                rankId = id;
-                break;
+    void UpdateNotifyPeerRanks(HcclVmTaskMetaData& taskMetaData)
+    {
+        std::unordered_map<uint32_t, std::set<uint32_t>> notifyId2Ranks;
+        for (const auto& taskMeta : taskMetaData.task_meta) {
+            if (taskMeta.taskType == HccLTaskMetaType::NOTIFY_RECORD
+                || taskMeta.taskType == HccLTaskMetaType::NOTIFY_WAIT) {
+                const uint64_t notifyId = taskMeta.taskData.notify.notifyId;
+                notifyId2Ranks[notifyId].insert(taskMeta.rankId);
             }
         }
 
-        if (taskMeta.taskType == HccLTaskMetaType::NOTIFY_RECORD) {
-            taskMeta.taskData.notify.dstRankId = rankId;
-        } else if (taskMeta.taskType == HccLTaskMetaType::NOTIFY_WAIT) {
-            taskMeta.taskData.notify.srcRankId = rankId;
+        // AICPU生成的Task需要更新Notify节点的对端信息
+        for (auto& taskMeta : taskMetaData.task_meta) {
+            if (taskMeta.taskType != HccLTaskMetaType::NOTIFY_RECORD
+                && taskMeta.taskType != HccLTaskMetaType::NOTIFY_WAIT) {
+                continue;
+            }
+            uint32_t rankId = taskMeta.rankId;
+            for (auto id : notifyId2Ranks[taskMeta.taskData.notify.notifyId]) {
+                if (id != rankId) {
+                    rankId = id;
+                    break;
+                }
+            }
+
+            if (taskMeta.taskType == HccLTaskMetaType::NOTIFY_RECORD) {
+                taskMeta.taskData.notify.dstRankId = rankId;
+            } else if (taskMeta.taskType == HccLTaskMetaType::NOTIFY_WAIT) {
+                taskMeta.taskData.notify.srcRankId = rankId;
+            }
         }
     }
-}
 } // namespace
 
 void StorageManager::Reset(bool clearMemLayout)
@@ -262,9 +267,9 @@ HcclResult StorageManager::Trans2CheckerParam(sim::OpDetailTab& detailTab, ::OpD
     m_checker_param.dataType = static_cast<HcclDataType>(detail.dataType);
     m_checker_param.dataCount = detail.opV1.count;
     m_checker_param.reduceType = static_cast<HcclReduceOp>(detail.reduceType);
-    m_checker_param.srcRank  = detailTab.srcRank;
-    m_checker_param.dstRank  = detailTab.dstRank;
-    m_checker_param.root     = detailTab.root;
+    m_checker_param.srcRank = detailTab.srcRank;
+    m_checker_param.dstRank = detailTab.dstRank;
+    m_checker_param.root = detailTab.root;
     m_checker_param.all2AllDataDes.sendType = detail.opV2.sendDataType;
     m_checker_param.all2AllDataDes.recvType = detail.opV2.recvDataType;
     m_checker_param.all2AllDataDes.sendCount = detail.opV2.sendCount;
@@ -272,26 +277,27 @@ HcclResult StorageManager::Trans2CheckerParam(sim::OpDetailTab& detailTab, ::OpD
     m_checker_param.all2AllDataDes.count = 0;
 
     HcclCMDType curCmdType = static_cast<HcclCMDType>(detail.opType);
-    const bool isSendRecv = curCmdType == HcclCMDType::HCCL_CMD_SEND ||
-                            curCmdType == HcclCMDType::HCCL_CMD_RECEIVE;
+    const bool isSendRecv = curCmdType == HcclCMDType::HCCL_CMD_SEND || curCmdType == HcclCMDType::HCCL_CMD_RECEIVE;
     if (isSendRecv) {
-        if (!m_checker_param.sendRecvPairs.empty() &&
-            (previousParam.rankSize != detailTab.rankSize || previousParam.dataType != m_checker_param.dataType ||
-             previousParam.dataCount != m_checker_param.dataCount)) {
+        if (!m_checker_param.sendRecvPairs.empty()
+            && (previousParam.rankSize != detailTab.rankSize || previousParam.dataType != m_checker_param.dataType
+                || previousParam.dataCount != m_checker_param.dataCount)) {
             HCCL_VM_ERROR("Inconsistent Send/Recv parameters in one op group, rankId={}", detailTab.rankId);
             return HcclResult::HCCL_E_PARA;
         }
-        auto pair = std::find_if(m_checker_param.sendRecvPairs.begin(), m_checker_param.sendRecvPairs.end(),
-            [&detailTab](const SendRecvPairParam &value) {
+        auto pair = std::find_if(
+            m_checker_param.sendRecvPairs.begin(), m_checker_param.sendRecvPairs.end(),
+            [&detailTab](const SendRecvPairParam& value) {
                 return value.srcRank == detailTab.srcRank && value.dstRank == detailTab.dstRank;
             });
         if (pair == m_checker_param.sendRecvPairs.end()) {
             m_checker_param.sendRecvPairs.push_back({detailTab.srcRank, detailTab.dstRank, false, false});
             pair = std::prev(m_checker_param.sendRecvPairs.end());
         }
-        bool &seen = curCmdType == HcclCMDType::HCCL_CMD_SEND ? pair->sendSeen : pair->recvSeen;
+        bool& seen = curCmdType == HcclCMDType::HCCL_CMD_SEND ? pair->sendSeen : pair->recvSeen;
         if (seen) {
-            HCCL_VM_ERROR("Duplicate {} report for Send/Recv pair {} -> {}",
+            HCCL_VM_ERROR(
+                "Duplicate {} report for Send/Recv pair {} -> {}",
                 curCmdType == HcclCMDType::HCCL_CMD_SEND ? "Send" : "Recv", pair->srcRank, pair->dstRank);
             return HcclResult::HCCL_E_PARA;
         }
@@ -314,18 +320,19 @@ HcclResult StorageManager::Trans2CheckerParam(sim::OpDetailTab& detailTab, ::OpD
 
         BatchSendRecvRankParam rankParam;
         if (!ReadBatchSendRecvExtInfo(detailTab.opExtInfo, rankParam)) {
-            HCCL_VM_ERROR("Invalid BatchSendRecv opExtInfo, rankId={}, payloadSize={}",
-                detailTab.rankId, detailTab.opExtInfo.size());
+            HCCL_VM_ERROR(
+                "Invalid BatchSendRecv opExtInfo, rankId={}, payloadSize={}", detailTab.rankId,
+                detailTab.opExtInfo.size());
             return HcclResult::HCCL_E_PARA;
         }
         const uint32_t expectedSendPeer = (detailTab.rankId + 1U) % detailTab.rankSize;
-        const uint32_t expectedRecvPeer =
-            (detailTab.rankId + detailTab.rankSize - 1U) % detailTab.rankSize;
-        if (detailTab.rankSize < 2 || rankParam.itemNum != 2 || detailTab.dstRank != expectedSendPeer ||
-            detailTab.srcRank != expectedRecvPeer) {
-            HCCL_VM_ERROR("BatchSendRecv is not a valid ring at rank {}: itemNum={}, rankSize={}, "
-                "sendPeer={}, recvPeer={}", detailTab.rankId, rankParam.itemNum, detailTab.rankSize,
-                detailTab.dstRank, detailTab.srcRank);
+        const uint32_t expectedRecvPeer = (detailTab.rankId + detailTab.rankSize - 1U) % detailTab.rankSize;
+        if (detailTab.rankSize < 2 || rankParam.itemNum != 2 || detailTab.dstRank != expectedSendPeer
+            || detailTab.srcRank != expectedRecvPeer) {
+            HCCL_VM_ERROR(
+                "BatchSendRecv is not a valid ring at rank {}: itemNum={}, rankSize={}, "
+                "sendPeer={}, recvPeer={}",
+                detailTab.rankId, rankParam.itemNum, detailTab.rankSize, detailTab.dstRank, detailTab.srcRank);
             return HcclResult::HCCL_E_PARA;
         }
         rankParam.peerCount = detail.opV1.count;
@@ -335,8 +342,8 @@ HcclResult StorageManager::Trans2CheckerParam(sim::OpDetailTab& detailTab, ::OpD
         m_checker_param.batchSendRecvRankParams[detailTab.rankId] = rankParam;
     }
 
-    const bool isVOp = curCmdType == HcclCMDType::HCCL_CMD_ALLGATHER_V ||
-                       curCmdType == HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V;
+    const bool isVOp
+        = curCmdType == HcclCMDType::HCCL_CMD_ALLGATHER_V || curCmdType == HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V;
     if (isVOp) {
         if (detailTab.rankId >= detailTab.rankSize) {
             HCCL_VM_ERROR("Invalid V operator rank id {}, rankSize={}", detailTab.rankId, detailTab.rankSize);
@@ -345,27 +352,27 @@ HcclResult StorageManager::Trans2CheckerParam(sim::OpDetailTab& detailTab, ::OpD
         if (m_checker_param.vRankParams.size() < detailTab.rankSize) {
             m_checker_param.vRankParams.resize(detailTab.rankSize);
         }
-        VRankParam &rankParam = m_checker_param.vRankParams[detailTab.rankId];
+        VRankParam& rankParam = m_checker_param.vRankParams[detailTab.rankId];
         if (!rankParam.counts.empty()) {
             HCCL_VM_ERROR("Duplicate V operator parameter report from rank {}", detailTab.rankId);
             return HcclResult::HCCL_E_PARA;
         }
         if (!ReadVParamExtInfo(detailTab.opExtInfo, detailTab.rankSize, rankParam)) {
-            HCCL_VM_ERROR("Invalid V operator opExtInfo, opType={}, rankId={}, rankSize={}, payloadSize={}",
-                          static_cast<uint32_t>(curCmdType), detailTab.rankId, detailTab.rankSize,
-                          detailTab.opExtInfo.size());
+            HCCL_VM_ERROR(
+                "Invalid V operator opExtInfo, opType={}, rankId={}, rankSize={}, payloadSize={}",
+                static_cast<uint32_t>(curCmdType), detailTab.rankId, detailTab.rankSize, detailTab.opExtInfo.size());
             return HcclResult::HCCL_E_PARA;
         }
         if (detail.opV1.count != rankParam.localCount) {
-            HCCL_VM_ERROR("V operator local count mismatch, opType={}, rankId={}, detailCount={}, extInfoCount={}",
-                          static_cast<uint32_t>(curCmdType), detailTab.rankId, detail.opV1.count,
-                          rankParam.localCount);
+            HCCL_VM_ERROR(
+                "V operator local count mismatch, opType={}, rankId={}, detailCount={}, extInfoCount={}",
+                static_cast<uint32_t>(curCmdType), detailTab.rankId, detail.opV1.count, rankParam.localCount);
             return HcclResult::HCCL_E_PARA;
         }
-    } else if ((curCmdType == HcclCMDType::HCCL_CMD_ALLTOALL ||
-                curCmdType == HcclCMDType::HCCL_CMD_ALLTOALLV ||
-                curCmdType == HcclCMDType::HCCL_CMD_ALLTOALLVC) &&
-               detailTab.opExtInfo.size() >= sizeof(uint32_t)) {
+    } else if (
+        (curCmdType == HcclCMDType::HCCL_CMD_ALLTOALL || curCmdType == HcclCMDType::HCCL_CMD_ALLTOALLV
+         || curCmdType == HcclCMDType::HCCL_CMD_ALLTOALLVC)
+        && detailTab.opExtInfo.size() >= sizeof(uint32_t)) {
         uint32_t count = 0;
         std::memcpy(&count, detailTab.opExtInfo.data(), sizeof(uint32_t));
         m_checker_param.all2AllDataDes.count = count;
@@ -380,9 +387,9 @@ HcclResult StorageManager::Trans2CheckerParam(sim::OpDetailTab& detailTab, ::OpD
             currentMatrix.push_back(val);
         }
 
-        bool needMerge = (curCmdType == HcclCMDType::HCCL_CMD_ALLTOALL ||
-                          curCmdType == HcclCMDType::HCCL_CMD_ALLTOALLV ||
-                          curCmdType == HcclCMDType::HCCL_CMD_ALLTOALLVC);
+        bool needMerge
+            = (curCmdType == HcclCMDType::HCCL_CMD_ALLTOALL || curCmdType == HcclCMDType::HCCL_CMD_ALLTOALLV
+               || curCmdType == HcclCMDType::HCCL_CMD_ALLTOALLVC);
 
         if (needMerge) {
             m_all2AllvSendMatrices[detailTab.rankId] = currentMatrix;
@@ -405,11 +412,12 @@ HcclResult StorageManager::FinalizeOpGroup()
             return FinalizeBatchSendRecvRing(m_checker_param);
         case HcclCMDType::HCCL_CMD_SEND:
         case HcclCMDType::HCCL_CMD_RECEIVE:
-            for (const auto &pair : m_checker_param.sendRecvPairs) {
-                if (!pair.sendSeen || !pair.recvSeen || pair.srcRank == pair.dstRank ||
-                    pair.srcRank >= m_checker_param.rankSize || pair.dstRank >= m_checker_param.rankSize) {
-                    HCCL_VM_ERROR("Incomplete or invalid Send/Recv pair {} -> {} (sendSeen={}, recvSeen={})",
-                        pair.srcRank, pair.dstRank, pair.sendSeen, pair.recvSeen);
+            for (const auto& pair : m_checker_param.sendRecvPairs) {
+                if (!pair.sendSeen || !pair.recvSeen || pair.srcRank == pair.dstRank
+                    || pair.srcRank >= m_checker_param.rankSize || pair.dstRank >= m_checker_param.rankSize) {
+                    HCCL_VM_ERROR(
+                        "Incomplete or invalid Send/Recv pair {} -> {} (sendSeen={}, recvSeen={})", pair.srcRank,
+                        pair.dstRank, pair.sendSeen, pair.recvSeen);
                     return HcclResult::HCCL_E_PARA;
                 }
             }
@@ -451,15 +459,17 @@ void StorageManager::MergeAll2AllVSendCountMatrix()
     HCCL_VM_INFO("Merged {} ranks into {}x{} matrix", numRanks, rankSize, rankSize);
 }
 
-HcclResult StorageManager::LoadHcclVmSynthesisData(uint32_t rankId, sim::OpMemInfoTab memInfo, std::vector<sim::CcuChannelTab>& channels)
+HcclResult StorageManager::LoadHcclVmSynthesisData(
+    uint32_t rankId, sim::OpMemInfoTab memInfo, std::vector<sim::CcuChannelTab>& channels)
 {
     // 转换channel映射表
-    for (auto &channel : channels) {
+    for (auto& channel : channels) {
         RemoteDieInfo rmtDieInfo1;
         rmtDieInfo1.dstRank = channel.dstRankId;
         rmtDieInfo1.remoteDieId = channel.dstDieId;
-        HCCL_VM_INFO("[Channel info] channelId= {}, srcRank= {}, srcDie= {}, dstRank= {}, dstDie= {}",
-            channel.channelId, channel.srcRankId, static_cast<uint32_t>(channel.srcDieId), channel.dstRankId, channel.dstDieId);
+        HCCL_VM_INFO(
+            "[Channel info] channelId= {}, srcRank= {}, srcDie= {}, dstRank= {}, dstDie= {}", channel.channelId,
+            channel.srcRankId, static_cast<uint32_t>(channel.srcDieId), channel.dstRankId, channel.dstDieId);
         g_allRankChannelInfo[channel.srcRankId][channel.srcDieId][channel.channelId] = rmtDieInfo1;
     }
 
@@ -469,10 +479,12 @@ HcclResult StorageManager::LoadHcclVmSynthesisData(uint32_t rankId, sim::OpMemIn
         memBlock.bufferType = BufferType::INPUT;
         memBlock.startAddr = memInfo.inputAddr;
         memBlock.size = memInfo.inputSize;
-        memBlock.globalOffset = 0; // todo: 预期一个rank只有一个同类型的buffer时，globalOffset为0。若有多个，需要按照下面json方案计算
+        memBlock.globalOffset
+            = 0; // todo: 预期一个rank只有一个同类型的buffer时，globalOffset为0。若有多个，需要按照下面json方案计算
         m_mem_layout[rankId][BufferType::INPUT][memInfo.inputAddr] = memBlock;
-        HCCL_VM_INFO("[Init MemLayout] rank{}, bufType= {}, startAddr={}, size={}, globalOffset= {}",
-                     rankId, static_cast<int>(BufferType::INPUT), memInfo.inputAddr, memInfo.inputSize, memBlock.globalOffset);
+        HCCL_VM_INFO(
+            "[Init MemLayout] rank{}, bufType= {}, startAddr={}, size={}, globalOffset= {}", rankId,
+            static_cast<int>(BufferType::INPUT), memInfo.inputAddr, memInfo.inputSize, memBlock.globalOffset);
     }
 
     if (memInfo.outputAddr != 0 && memInfo.outputSize > 0) {
@@ -480,10 +492,12 @@ HcclResult StorageManager::LoadHcclVmSynthesisData(uint32_t rankId, sim::OpMemIn
         memBlock.bufferType = BufferType::OUTPUT;
         memBlock.startAddr = memInfo.outputAddr;
         memBlock.size = memInfo.outputSize;
-        memBlock.globalOffset = 0; // todo: 预期一个rank只有一个同类型的buffer时，globalOffset为0。若有多个，需要按照下面json方案计算
+        memBlock.globalOffset
+            = 0; // todo: 预期一个rank只有一个同类型的buffer时，globalOffset为0。若有多个，需要按照下面json方案计算
         m_mem_layout[rankId][BufferType::OUTPUT][memInfo.outputAddr] = memBlock;
-        HCCL_VM_INFO("[Init MemLayout] rank{}, bufType= {}, startAddr={}, size={}, globalOffset= {}",
-                     rankId, static_cast<int>(BufferType::OUTPUT), memInfo.outputAddr, memInfo.outputSize, memBlock.globalOffset);
+        HCCL_VM_INFO(
+            "[Init MemLayout] rank{}, bufType= {}, startAddr={}, size={}, globalOffset= {}", rankId,
+            static_cast<int>(BufferType::OUTPUT), memInfo.outputAddr, memInfo.outputSize, memBlock.globalOffset);
     }
 
     if (memInfo.cclAddr != 0 && memInfo.cclSize > 0) {
@@ -491,15 +505,17 @@ HcclResult StorageManager::LoadHcclVmSynthesisData(uint32_t rankId, sim::OpMemIn
         memBlock.bufferType = BufferType::CCL;
         memBlock.startAddr = memInfo.cclAddr;
         memBlock.size = memInfo.cclSize;
-        memBlock.globalOffset = 0; // todo: 预期一个rank只有一个同类型的buffer时，globalOffset为0。若有多个，需要按照下面json方案计算
+        memBlock.globalOffset
+            = 0; // todo: 预期一个rank只有一个同类型的buffer时，globalOffset为0。若有多个，需要按照下面json方案计算
         m_mem_layout[rankId][BufferType::CCL][memInfo.cclAddr] = memBlock;
-        HCCL_VM_INFO("[Init MemLayout] rank{}, bufType= {}, startAddr={}, size={}, globalOffset= {}",
-                     rankId, static_cast<int>(BufferType::CCL), memInfo.cclAddr, memInfo.cclSize, memBlock.globalOffset);
+        HCCL_VM_INFO(
+            "[Init MemLayout] rank{}, bufType= {}, startAddr={}, size={}, globalOffset= {}", rankId,
+            static_cast<int>(BufferType::CCL), memInfo.cclAddr, memInfo.cclSize, memBlock.globalOffset);
     }
     return HcclResult::HCCL_SUCCESS;
 }
 
-void StorageManager::InitCcuInfo(DevType &devType, std::vector<uint64_t> &resourceBaseAddr)
+void StorageManager::InitCcuInfo(DevType& devType, std::vector<uint64_t>& resourceBaseAddr)
 {
     devType = devType_;
     resourceBaseAddr.clear();
@@ -511,15 +527,16 @@ HcclResult StorageManager::LoadHcclVmInstrData(std::vector<sim::CcuInstrResTab>&
 {
     for (auto& instr : instrRes) {
         if (instr.instrCount == 0 || instr.instrCount > 32 * 1024) {
-            HCCL_VM_WARN("invalid instrCount={}, rankId={}, dieId={}",
-                instr.instrCount, instr.rankId, static_cast<uint32_t>(instr.dieId));
+            HCCL_VM_WARN(
+                "invalid instrCount={}, rankId={}, dieId={}", instr.instrCount, instr.rankId,
+                static_cast<uint32_t>(instr.dieId));
             continue;
         }
 
         MicrocodeInstrInner instrInner;
         instrInner.desc.rank_id = instr.rankId;
-        instrInner.desc.die_id  = static_cast<uint8_t>(instr.dieId);
-        instrInner.desc.count   = static_cast<uint16_t>(instr.instrCount);
+        instrInner.desc.die_id = static_cast<uint8_t>(instr.dieId);
+        instrInner.desc.count = static_cast<uint16_t>(instr.instrCount);
 
         instrInner.data.reserve(instr.instrCount);
         for (uint32_t i = 0; i < instr.instrCount; ++i) {
@@ -530,8 +547,8 @@ HcclResult StorageManager::LoadHcclVmInstrData(std::vector<sim::CcuInstrResTab>&
 
         m_instrData.instr_data.push_back(std::move(instrInner));
 
-        HCCL_VM_INFO("rankId={}, dieId={}, count={}",
-            instr.rankId, static_cast<uint32_t>(instr.dieId), instr.instrCount);
+        HCCL_VM_INFO(
+            "rankId={}, dieId={}, count={}", instr.rankId, static_cast<uint32_t>(instr.dieId), instr.instrCount);
     }
 
     return HcclResult::HCCL_SUCCESS;
@@ -546,13 +563,15 @@ HcclResult StorageManager::LoadHcclVmTaskMetaData(std::vector<std::vector<sim::O
     HCCL_VM_INFO("total tasks: {}, ranks: {}", totalTasks, allTasks.size());
     HcclVmTaskMetaData taskMeataData;
     for (const auto& rankTasks : allTasks) {
-        for (const auto &task : rankTasks) {
+        for (const auto& task : rankTasks) {
             if (task.optaskMeta.size() >= sizeof(HcclTaskMetaData)) {
                 HcclTaskMetaData metaData;
                 std::memcpy(&metaData, task.optaskMeta.data(), sizeof(HcclTaskMetaData));
                 taskMeataData.task_meta.push_back(metaData);
             } else {
-                HCCL_VM_WARN("optaskMeta too small, taskSeq={} src:{:d}, dst:{:d}", task.taskSeq, task.optaskMeta.size(), sizeof(HcclTaskMetaData));
+                HCCL_VM_WARN(
+                    "optaskMeta too small, taskSeq={} src:{:d}, dst:{:d}", task.taskSeq, task.optaskMeta.size(),
+                    sizeof(HcclTaskMetaData));
             }
         }
     }
@@ -561,18 +580,17 @@ HcclResult StorageManager::LoadHcclVmTaskMetaData(std::vector<std::vector<sim::O
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult StorageManager::LoadDecodedHcclVmTaskMetaData(
-    const std::vector<std::vector<HcclTaskMetaData>>& allTaskMetas)
+HcclResult StorageManager::LoadDecodedHcclVmTaskMetaData(const std::vector<std::vector<HcclTaskMetaData>>& allTaskMetas)
 {
     size_t totalTasks = 0;
-    for (const auto &rankTaskMetas : allTaskMetas) {
+    for (const auto& rankTaskMetas : allTaskMetas) {
         totalTasks += rankTaskMetas.size();
     }
     HCCL_VM_INFO("total decoded tasks: {}, ranks: {}", totalTasks, allTaskMetas.size());
 
     HcclVmTaskMetaData taskMeataData;
     taskMeataData.task_meta.reserve(totalTasks);
-    for (const auto &rankTaskMetas : allTaskMetas) {
+    for (const auto& rankTaskMetas : allTaskMetas) {
         taskMeataData.task_meta.insert(taskMeataData.task_meta.end(), rankTaskMetas.begin(), rankTaskMetas.end());
     }
 
@@ -581,7 +599,8 @@ HcclResult StorageManager::LoadDecodedHcclVmTaskMetaData(
     return HcclResult::HCCL_SUCCESS;
 }
 
-uint64_t StorageManager::GetBlockSize(uint32_t rankId, BufferType bufferType) {
+uint64_t StorageManager::GetBlockSize(uint32_t rankId, BufferType bufferType)
+{
     // 1. 定位 Rank
     auto rankIt = m_mem_layout.find(rankId);
     if (rankIt == m_mem_layout.end()) {
@@ -614,7 +633,7 @@ HcclResult StorageManager::GetSlice(uint64_t addr, uint64_t len, DataSlice& data
 {
     dataSlice.SetSize(len);
 
-    for (auto &rankMem : m_mem_layout) {
+    for (auto& rankMem : m_mem_layout) {
         // 2. 遍历该 Rank 下的所有 Buffer 类型 (INPUT, OUTPUT, CCL...)
         // typeEntry.first 是 BufferType, typeEntry.second 是 addrMap
         for (auto const& typeEntry : rankMem.second) {
@@ -631,7 +650,7 @@ HcclResult StorageManager::GetSlice(uint64_t addr, uint64_t len, DataSlice& data
                 if (addr >= block.startAddr && addr < (block.startAddr + block.size)) {
                     // 校验区间完整性（可选）：确保整个 size 都在这个块内
                     // 如果允许跨块，逻辑会更复杂，这里按单块逻辑处理
-                    
+
                     dataSlice.SetBufferType(block.bufferType);
                     dataSlice.SetRawAddr(addr);
                     // 核心转换公式：逻辑基址 + (物理地址 - 物理块基址)
@@ -639,14 +658,15 @@ HcclResult StorageManager::GetSlice(uint64_t addr, uint64_t len, DataSlice& data
                     if (rank != nullptr) {
                         *rank = rankMem.first;
                     }
-                    
+
                     return HcclResult::HCCL_SUCCESS;
                 }
             }
         }
     }
 
-    HCCL_VM_ERROR("{} Failed to resolve data slice from memory layout, addr=0x{:X}, len=0x{:X}",
+    HCCL_VM_ERROR(
+        "{} Failed to resolve data slice from memory layout, addr=0x{:X}, len=0x{:X}",
         MakeErrorCodeText(ErrorCode::GRAPH_ADDRESS_INVALID), addr, len);
     return HcclResult::HCCL_E_MEMORY;
 }
@@ -675,10 +695,11 @@ std::string StorageManager::FindRootPath()
     }
 
     HCCL_VM_INFO("RootPath NOT found.");
-    return ""; 
+    return "";
 }
 
-bool StorageManager::IsDirExists(const std::string& path) {
+bool StorageManager::IsDirExists(const std::string& path)
+{
     struct stat info;
     if (stat(path.c_str(), &info) != 0) {
         return false; // 不存在
@@ -686,18 +707,9 @@ bool StorageManager::IsDirExists(const std::string& path) {
     return (info.st_mode & S_IFDIR); // 存在且是目录
 }
 
-uint32_t StorageManager::GetRankSize() const
-{
-    return m_checker_param.rankSize;
-}
+uint32_t StorageManager::GetRankSize() const { return m_checker_param.rankSize; }
 
-HcclVmInstrData StorageManager::GetHvmInstrData() const
-{
-    return m_instrData;
-}
+HcclVmInstrData StorageManager::GetHvmInstrData() const { return m_instrData; }
 
-HcclVmTaskMetaData StorageManager::GetHvmTaskMetaData() const
-{
-    return m_taskMeataData;
-}
-}
+HcclVmTaskMetaData StorageManager::GetHvmTaskMetaData() const { return m_taskMeataData; }
+} // namespace HcclSim

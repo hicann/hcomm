@@ -35,7 +35,7 @@ void PopcntExecutor::Run()
 {
     uint16_t xsId = GetXnId(xsId_);
     uint16_t xdId = GetXnId(xdId_);
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t xsValue = ccuResMgr.GetXnValue(rankId_, dieId_, xsId);
     uint64_t xdValue = __builtin_popcountll(xsValue);
     HCCL_VM_INFO("Popcnt Xs{}{} to Xd{}{}", xsId, xsValue, xdId_, xdValue);
@@ -47,15 +47,14 @@ void PopcntExecutor::Run()
 
 std::string PopcntExecutor::Describe()
 {
-    return HcclSim::StringFormat("[PopcntExecutor] xdId:[%u],xsId[%u]\n",
-        xdId_, xsId_);
+    return HcclSim::StringFormat("[PopcntExecutor] xdId:[%u],xsId[%u]\n", xdId_, xsId_);
 }
 
 CcuTrace::CcuInstrTraceDetail PopcntExecutor::CollectTraceDetail()
 {
     CcuTrace::CcuInstrTraceDetail detail;
     detail.typeName = "Popcnt";
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     detail.args["xsValue"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xsId_));
     return detail;
 }

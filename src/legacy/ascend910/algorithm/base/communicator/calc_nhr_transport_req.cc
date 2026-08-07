@@ -12,19 +12,16 @@
 #include "calc_ahc_template_register.h"
 
 namespace hccl {
-CalcNHRTransportReq::CalcNHRTransportReq(std::vector<std::vector<u32>> &subCommPlaneVector,
-    std::vector<bool> &isBridgeVector, u32 userRank)
+CalcNHRTransportReq::CalcNHRTransportReq(
+    std::vector<std::vector<u32>>& subCommPlaneVector, std::vector<bool>& isBridgeVector, u32 userRank)
     : CalcTransportReqBase(subCommPlaneVector, isBridgeVector, userRank)
-{
-}
+{}
 
-CalcNHRTransportReq::~CalcNHRTransportReq()
-{
-}
+CalcNHRTransportReq::~CalcNHRTransportReq() {}
 
-HcclResult CalcNHRTransportReq::CalcTransportRequest(const std::string &tag, TransportMemType inputMemType,
-    TransportMemType outputMemType, const CommParaInfo &commParaInfo,
-    std::vector<SingleSubCommTransport> &commTransport, u32 subUserRankRoot)
+HcclResult CalcNHRTransportReq::CalcTransportRequest(
+    const std::string& tag, TransportMemType inputMemType, TransportMemType outputMemType,
+    const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport, u32 subUserRankRoot)
 {
     (void)subUserRankRoot;
     u32 ringSize = subCommPlaneVector_.size();
@@ -41,64 +38,69 @@ HcclResult CalcNHRTransportReq::CalcTransportRequest(const std::string &tag, Tra
         }
 
         u32 rankSize = subCommPlaneVector_[ringIndex].size();
-        SingleSubCommTransport &subCommTransport = commTransport[ringIndex];
+        SingleSubCommTransport& subCommTransport = commTransport[ringIndex];
         subCommTransport.transportRequests.resize(rankSize);
         // 只有一张卡时不需要建链
         if (rankSize == HCCL_RANK_SIZE_EQ_ONE) {
             HCCL_INFO("comm base needn't to create links, rankSize_[%u].", rankSize);
             return HCCL_SUCCESS;
-		}
+        }
 
         for (u32 delta = 1; delta < rankSize; delta <<= 1) {
             const u32 targetRankPos = static_cast<u32>(rank + delta) % rankSize;
-            TransportRequest &tmpTransport = subCommTransport.transportRequests[targetRankPos];
+            TransportRequest& tmpTransport = subCommTransport.transportRequests[targetRankPos];
             tmpTransport.isValid = true;
-            tmpTransport.localUserRank  = userRank_;
+            tmpTransport.localUserRank = userRank_;
             tmpTransport.remoteUserRank = subCommPlaneVector_[ringIndex][targetRankPos];
             tmpTransport.inputMemType = inputMemType;
             tmpTransport.outputMemType = outputMemType;
-            HCCL_INFO("[CommFactory][CalcNHRCommInfo] param_.tag[%s] ringIndex[%u], localRank[%u], "\
-                "remoteRank[%u], inputMemType[%d], outputMemType[%d]", tag.c_str(), ringIndex, userRank_,
-                tmpTransport.remoteUserRank, inputMemType, outputMemType);
+            HCCL_INFO(
+                "[CommFactory][CalcNHRCommInfo] param_.tag[%s] ringIndex[%u], localRank[%u], "
+                "remoteRank[%u], inputMemType[%d], outputMemType[%d]",
+                tag.c_str(), ringIndex, userRank_, tmpTransport.remoteUserRank, inputMemType, outputMemType);
 
             const u32 targetRankNeg = static_cast<u32>(rank + rankSize - delta) % rankSize;
-            TransportRequest &tmpTransportNeg = subCommTransport.transportRequests[targetRankNeg];
+            TransportRequest& tmpTransportNeg = subCommTransport.transportRequests[targetRankNeg];
             tmpTransportNeg.isValid = true;
-            tmpTransportNeg.localUserRank  = userRank_;
+            tmpTransportNeg.localUserRank = userRank_;
             tmpTransportNeg.remoteUserRank = subCommPlaneVector_[ringIndex][targetRankNeg];
             tmpTransportNeg.inputMemType = inputMemType;
             tmpTransportNeg.outputMemType = outputMemType;
-            HCCL_INFO("[CommFactory][CalcNHRCommInfo] param_.tag[%s] ringIndex[%u], localRank[%u], "\
-                "remoteRank[%u], inputMemType[%d], outputMemType[%d]", tag.c_str(), ringIndex, userRank_,
-                tmpTransportNeg.remoteUserRank, inputMemType, outputMemType);
+            HCCL_INFO(
+                "[CommFactory][CalcNHRCommInfo] param_.tag[%s] ringIndex[%u], localRank[%u], "
+                "remoteRank[%u], inputMemType[%d], outputMemType[%d]",
+                tag.c_str(), ringIndex, userRank_, tmpTransportNeg.remoteUserRank, inputMemType, outputMemType);
         }
         subCommTransport.enableUseOneDoorbell = true;
     }
     return HCCL_SUCCESS;
 }
 
-HcclResult CalcNHRTransportReq::CalcDstRanks(const u32 rank, const std::vector<u32> commGroups,
-    std::set<u32> &dstRanks)
+HcclResult CalcNHRTransportReq::CalcDstRanks(const u32 rank, const std::vector<u32> commGroups, std::set<u32>& dstRanks)
 {
-    CHK_PRT_RET(rank >= commGroups.size(),
-        HCCL_ERROR("[CalcNHRTransportReq][CalcDstRanks] rank [%u] exceed commGroups Size [%u] error", 
-        rank, commGroups.size() ), HCCL_E_INTERNAL);
-    
+    CHK_PRT_RET(
+        rank >= commGroups.size(),
+        HCCL_ERROR(
+            "[CalcNHRTransportReq][CalcDstRanks] rank [%u] exceed commGroups Size [%u] error", rank, commGroups.size()),
+        HCCL_E_INTERNAL);
+
     for (auto i = 0; static_cast<u32>(1 << i) < commGroups.size(); ++i) {
         // 正方向第2^i个节点的rank号
         const u32 targetRankPos = static_cast<u32>(rank + (1 << i)) % commGroups.size();
         dstRanks.insert(commGroups[targetRankPos]);
- 
+
         // 反方向第2^i个节点的rank号
         const u32 targetRankNeg = static_cast<u32>(rank + commGroups.size() - (1 << i)) % commGroups.size();
 
-        HCCL_DEBUG("[CalcNHRTransportReq][CalcDstRanks] local rank[%u], remote rank[%u]", commGroups[rank], commGroups[targetRankNeg]);
-    
+        HCCL_DEBUG(
+            "[CalcNHRTransportReq][CalcDstRanks] local rank[%u], remote rank[%u]", commGroups[rank],
+            commGroups[targetRankNeg]);
+
         dstRanks.insert(commGroups[targetRankNeg]);
     }
- 
+
     return HCCL_SUCCESS;
 }
 
 REGISTER_AHC_COMM_CALC_FUNC(AHCTemplateType::AHC_TEMPLATE_NHR, CalcNHRTransportReq, CalcNHRTransportReq::CalcDstRanks);
-}  // namespace hccl
+} // namespace hccl

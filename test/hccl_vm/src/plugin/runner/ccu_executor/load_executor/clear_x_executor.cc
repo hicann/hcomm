@@ -21,7 +21,7 @@ using namespace std;
 using namespace hcomm::CcuRep;
 constexpr uint16_t MAX_LOADX_STOREX_ID_NUM = 16383;
 // 注册ClearXExecutor create Func
-REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::LOAD_TYPE, SimCcuV2::CLEARX_CODE , ClearXExecutor);
+REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::LOAD_TYPE, SimCcuV2::CLEARX_CODE, ClearXExecutor);
 
 void ClearXExecutor::Parser()
 {
@@ -42,7 +42,7 @@ void ClearXExecutor::Run()
     uint16_t xmId = (xmIdMode_ == 0) ? xmId_ : UpdateXnId(xmId_);
     xmId = (xnId <= xmId) ? xmId : MAX_LOADX_STOREX_ID_NUM;
 
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     for (uint16_t i = xnId; i <= xmId; i++) {
         ccuResMgr.UpdateXnValue(rankId_, dieId_, i, 0);
     }
@@ -54,8 +54,8 @@ void ClearXExecutor::Run()
 
 std::string ClearXExecutor::Describe()
 {
-    return HcclSim::StringFormat("[ClearXExecutor] xnId:[%u],xmId[%u],xnIdMode[%u],xmIdMode[%u]\n",
-        xnId_, xmId_, xnIdMode_, xmIdMode_);
+    return HcclSim::StringFormat(
+        "[ClearXExecutor] xnId:[%u],xmId[%u],xnIdMode[%u],xmIdMode[%u]\n", xnId_, xmId_, xnIdMode_, xmIdMode_);
 }
 
 CcuTrace::CcuInstrTraceDetail ClearXExecutor::CollectTraceDetail()

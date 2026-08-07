@@ -12,16 +12,16 @@
 #include "adapter_rts.h"
 
 namespace hccl {
-HostMem::HostMem(void *ptr, u64 size, bool owner, bool isRtsMem) : ptr_(ptr), size_(size), owner_(owner),
-    isRtsMem_(isRtsMem)
-{
-}
+HostMem::HostMem(void* ptr, u64 size, bool owner, bool isRtsMem)
+    : ptr_(ptr),
+      size_(size),
+      owner_(owner),
+      isRtsMem_(isRtsMem)
+{}
 
-HostMem::HostMem(const HostMem &that) : ptr_(that.ptr()), size_(that.size_), owner_(false), isRtsMem_(that.isRtsMem_)
-{
-}
+HostMem::HostMem(const HostMem& that) : ptr_(that.ptr()), size_(that.size_), owner_(false), isRtsMem_(that.isRtsMem_) {}
 
-HostMem::HostMem(HostMem &&that) : ptr_(that.ptr_), size_(that.size_), owner_(that.owner_), isRtsMem_(that.isRtsMem_)
+HostMem::HostMem(HostMem&& that) : ptr_(that.ptr_), size_(that.size_), owner_(that.owner_), isRtsMem_(that.isRtsMem_)
 {
     that.ptr_ = nullptr;
     that.size_ = 0;
@@ -39,7 +39,7 @@ HostMem::~HostMem()
                 HCCL_WARNING("rt_free error, ret[%d]", ret);
             }
         } else {
-            delete[] static_cast<u8 *>(ptr_);
+            delete[] static_cast<u8*>(ptr_);
         }
     }
 }
@@ -55,7 +55,7 @@ void HostMem::free()
                 HCCL_WARNING("[HostMem][free] rt_free error, ret[%d]", ret);
             }
         } else {
-            delete[] static_cast<u8 *>(ptr_);
+            delete[] static_cast<u8*>(ptr_);
         }
         ptr_ = nullptr;
     }
@@ -63,7 +63,7 @@ void HostMem::free()
 
 HostMem HostMem::alloc(u64 size, bool isRtsMem)
 {
-    void *ptr = nullptr;
+    void* ptr = nullptr;
     if (isRtsMem) {
         HcclResult ret = hrtMallocHost(&ptr, size);
         if (ret != HCCL_SUCCESS) {
@@ -79,13 +79,13 @@ HostMem HostMem::alloc(u64 size, bool isRtsMem)
     return mem;
 }
 
-HostMem HostMem::create(void *ptr, u64 size)
+HostMem HostMem::create(void* ptr, u64 size)
 {
     HostMem mem(ptr, size, false);
     return mem;
 }
 
-HostMem &HostMem::operator=(const HostMem &that)
+HostMem& HostMem::operator=(const HostMem& that)
 {
     if (&that != this) {
         ptr_ = that.ptr();
@@ -97,7 +97,7 @@ HostMem &HostMem::operator=(const HostMem &that)
     return *this;
 }
 
-HostMem HostMem::operator=(HostMem &&that)
+HostMem HostMem::operator=(HostMem&& that)
 {
     if (&that != this) {
         ptr_ = that.ptr_;
@@ -117,10 +117,10 @@ HostMem HostMem::range(u64 offset, u64 size) const
 {
     HostMem mem;
     if (ptr_ != nullptr && (offset + size) <= size_) {
-        mem = HostMem(static_cast<void *>(static_cast<s8 *>(ptr_) + offset), size, false);
+        mem = HostMem(static_cast<void*>(static_cast<s8*>(ptr_) + offset), size, false);
     } else {
         HCCL_WARNING("HostMem range[%llu] size[%llu Byte] error or ptr null", offset + size, size_);
     }
     return mem;
 }
-}  // namespace hccl
+} // namespace hccl

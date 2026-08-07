@@ -19,26 +19,26 @@ AlltoAllVStagedCalculator::AlltoAllVStagedCalculator() {}
 AlltoAllVStagedCalculator::~AlltoAllVStagedCalculator() {}
 
 // / STATIC MEMBER FUNCTIONS BEGINS
-void AlltoAllVStagedCalculator::CalcWorkSpaceMemSize(const AlltoAllUserRankInfo &userRankInfo,
-    const std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo, u64 &workspaceMemSize,
-    u32 meshAggregationRankSize)
+void AlltoAllVStagedCalculator::CalcWorkSpaceMemSize(
+    const AlltoAllUserRankInfo& userRankInfo, const std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo,
+    u64& workspaceMemSize, u32 meshAggregationRankSize)
 {
-    for (const auto &oneMeshAggregationSendRecvInfo : allMeshAggregationSendRecvInfo) {
-        for (const auto &sendLength : oneMeshAggregationSendRecvInfo.sendLength) {
+    for (const auto& oneMeshAggregationSendRecvInfo : allMeshAggregationSendRecvInfo) {
+        for (const auto& sendLength : oneMeshAggregationSendRecvInfo.sendLength) {
             HCCL_DEBUG("[CalcWorkSpaceMemSize] sendLength[%llu]", sendLength);
         }
-        for (const auto &sendOffset : oneMeshAggregationSendRecvInfo.sendOffset) {
+        for (const auto& sendOffset : oneMeshAggregationSendRecvInfo.sendOffset) {
             HCCL_DEBUG("[CalcWorkSpaceMemSize] sendOffset[%llu]", sendOffset);
         }
-        for (const auto &recvLength : oneMeshAggregationSendRecvInfo.recvLength) {
+        for (const auto& recvLength : oneMeshAggregationSendRecvInfo.recvLength) {
             HCCL_DEBUG("[CalcWorkSpaceMemSize] recvLength[%llu]", recvLength);
         }
-        for (const auto &recvOffset : oneMeshAggregationSendRecvInfo.recvOffset) {
+        for (const auto& recvOffset : oneMeshAggregationSendRecvInfo.recvOffset) {
             HCCL_DEBUG("[CalcWorkSpaceMemSize] recvOffset[%llu]", recvOffset);
         }
     }
-    if (allMeshAggregationSendRecvInfo.size() % meshAggregationRankSize != 0 ||
-        allMeshAggregationSendRecvInfo.size() == 0) {
+    if (allMeshAggregationSendRecvInfo.size() % meshAggregationRankSize != 0
+        || allMeshAggregationSendRecvInfo.size() == 0) {
         workspaceMemSize = 0;
         HCCL_ERROR("Invalid Send Recv Info Size[%u]", allMeshAggregationSendRecvInfo.size());
         return;
@@ -46,9 +46,10 @@ void AlltoAllVStagedCalculator::CalcWorkSpaceMemSize(const AlltoAllUserRankInfo 
     workspaceMemSize = 0;
     u32 meshAggregationIndex = userRankInfo.userRank / meshAggregationRankSize;
     u32 meshAggregationRankBegin = meshAggregationIndex * meshAggregationRankSize;
-    HCCL_DEBUG("[AlltoAllVStagedCalculator][CalcWorkSpaceMemSize]meshAggregationRankBegin is %u", meshAggregationRankBegin);
+    HCCL_DEBUG(
+        "[AlltoAllVStagedCalculator][CalcWorkSpaceMemSize]meshAggregationRankBegin is %u", meshAggregationRankBegin);
     for (u32 infoIndex = userRankInfo.userRank % meshAggregationRankSize; infoIndex < userRankInfo.userRankSize;
-        infoIndex += meshAggregationRankSize) {
+         infoIndex += meshAggregationRankSize) {
         for (u32 k = meshAggregationRankBegin; k < meshAggregationRankBegin + meshAggregationRankSize; k++) {
             workspaceMemSize += allMeshAggregationSendRecvInfo[k].sendLength[infoIndex];
         }

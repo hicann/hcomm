@@ -17,25 +17,25 @@
 namespace hccl {
 class TypicalWindowMem {
 public:
-    static TypicalWindowMem &GetInstance();
+    static TypicalWindowMem& GetInstance();
 
     // Alloc and free window memory
-    HcclResult AllocWindowMem(void **ptr, size_t size);
-    HcclResult FreeWindowMem(void *ptr);
+    HcclResult AllocWindowMem(void** ptr, size_t size);
+    HcclResult FreeWindowMem(void* ptr);
 
 private:
     TypicalWindowMem();
     ~TypicalWindowMem();
     // Delete copy and move constructors and assign operators
-    TypicalWindowMem(TypicalWindowMem const&) = delete;             // Copy construct
-    TypicalWindowMem(TypicalWindowMem&&) = delete;                  // Move construct
-    TypicalWindowMem& operator=(TypicalWindowMem const&) = delete;  // Copy assign
-    TypicalWindowMem& operator=(TypicalWindowMem &&) = delete;      // Move assign
+    TypicalWindowMem(TypicalWindowMem const&) = delete;            // Copy construct
+    TypicalWindowMem(TypicalWindowMem&&) = delete;                 // Move construct
+    TypicalWindowMem& operator=(TypicalWindowMem const&) = delete; // Copy assign
+    TypicalWindowMem& operator=(TypicalWindowMem&&) = delete;      // Move assign
 
     HcclResult FreeAllWinowMem();
 
     std::mutex windowMemMapMutex_;
-    std::map<uint64_t, uint64_t> windowMemMap_;                     // allocated window mem map
+    std::map<uint64_t, uint64_t> windowMemMap_; // allocated window mem map
 };
-}  // namespace hccl
-#endif  // HCCL_TYPICAL_WINDOW_MEM_H
+} // namespace hccl
+#endif // HCCL_TYPICAL_WINDOW_MEM_H

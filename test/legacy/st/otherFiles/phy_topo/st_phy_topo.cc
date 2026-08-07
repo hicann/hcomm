@@ -157,8 +157,8 @@ TEST_F(PhyTopoLinkTest, St_PhyTopoLink_When_ValidInterface_Expect_ReturnIsSource
 
     std::set<std::string> ports = {"0/1"};
     AddrPosition pos = AddrPosition::DEVICE;
-    std::shared_ptr<PhyTopo::ConnInterface> sourceIface =
-        std::make_shared<PhyTopo::ConnInterface>(ports, pos, linkAttrs.linktype, linkAttrs.protocols);
+    std::shared_ptr<PhyTopo::ConnInterface> sourceIface
+        = std::make_shared<PhyTopo::ConnInterface>(ports, pos, linkAttrs.linktype, linkAttrs.protocols);
     link.SetTargetIface(sourceIface);
     EXPECT_EQ(link.GetTargetIFace(), sourceIface);
 }
@@ -175,8 +175,8 @@ TEST_F(PhyTopoLinkTest, St_PhyTopoLink_When_ValidInterface_Expect_ReturnIsTarget
     PhyTopo::Link link(sourceNode, targetNode, linkAttrs, topoType, topoInstId);
     std::set<std::string> ports = {"0/1"};
     AddrPosition pos = AddrPosition::DEVICE;
-    std::shared_ptr<PhyTopo::ConnInterface> targetIface =
-        std::make_shared<PhyTopo::ConnInterface>(ports, pos, linkAttrs.linktype, linkAttrs.protocols);
+    std::shared_ptr<PhyTopo::ConnInterface> targetIface
+        = std::make_shared<PhyTopo::ConnInterface>(ports, pos, linkAttrs.linktype, linkAttrs.protocols);
     link.SetTargetIface(targetIface);
     EXPECT_EQ(link.GetTargetIFace(), targetIface);
 }
@@ -224,10 +224,10 @@ TEST_F(PhyTopoTest, St_AddTopoGraph_When_TopoNotNullAndNetLayerNotExist_Expect_R
 
 TEST_F(PhyTopoTest, St_GetTopoGraph_When_NetLayerExist_Expect_ReturnTopo)
 {
-    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo1 =
-        std::make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
-    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo2 =
-        std::make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
+    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo1
+        = std::make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
+    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo2
+        = std::make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
     u32 netLayer1 = 1;
     u32 netLayer2 = 2;
     phyTopo.AddTopoGraph(netLayer1, topo1);
@@ -238,8 +238,8 @@ TEST_F(PhyTopoTest, St_GetTopoGraph_When_NetLayerExist_Expect_ReturnTopo)
 
 TEST_F(PhyTopoTest, St_GetTopoGraph_When_NetLayerNoExist_Expect_ReturnNullptr)
 {
-    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo1 =
-        std::make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
+    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo1
+        = std::make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
     u32 netLayer1 = 1;
     u32 netLayer2 = 2;
     phyTopo.AddTopoGraph(netLayer1, topo1);

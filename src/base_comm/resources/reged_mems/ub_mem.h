@@ -9,7 +9,7 @@
  */
 #ifndef UB_MEM_H
 #define UB_MEM_H
- 
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -19,27 +19,29 @@
 #include "local_ub_rma_buffer.h"
 #include "remote_rma_buffer.h"
 #include "../../../../../../legacy/ascend950/unified_platform/resource/buffer/local_ipc_rma_buffer.h"
- 
+
 namespace hcomm {
 
 class UbMemRegedMemMgr : public RegedMemMgr {
 public:
-    using LocalIpcRmaBufferMgr = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalIpcRmaBuffer>>;
- 
+    using LocalIpcRmaBufferMgr
+        = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalIpcRmaBuffer>>;
+
     UbMemRegedMemMgr();
     ~UbMemRegedMemMgr() = default;
- 
-    HcclResult RegisterMemory(HcommMem mem, const char *memTag, void **memHandle) override;
+
+    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
     HcclResult UnregisterMemory(void* memHandle) override;
-    HcclResult MemoryExport(const EndpointDesc endpointDesc, void *memHandle, void **memDesc, uint32_t *memDescLen) override;
-    HcclResult MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem) override;
-    HcclResult MemoryUnimport(const void *memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void **memHandles, uint32_t *memHandleNum) override;
- 
+    HcclResult
+    MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen) override;
+    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
+    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
+    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
+
 private:
     std::unique_ptr<LocalIpcRmaBufferMgr> localIpcRmaBufferMgr_{};
     std::vector<RegedBufferEntry<Hccl::LocalIpcRmaBuffer>> allRegisteredBuffers_;
 };
-}
- 
+} // namespace hcomm
+
 #endif // UB_MEM_H

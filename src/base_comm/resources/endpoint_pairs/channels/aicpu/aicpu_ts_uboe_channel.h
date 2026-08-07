@@ -16,7 +16,7 @@ namespace hcomm {
 
 class AicpuTsUboeChannel : public AicpuTsUboeUbgChannelHelper {
 public:
-    AicpuTsUboeChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc);
+    AicpuTsUboeChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc);
     ~AicpuTsUboeChannel() override;
 
     HcclResult Init() override;
@@ -24,12 +24,9 @@ public:
     HcclResult Clean() override;
     HcclResult Resume() override;
 
-    HcclResult UpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum) override;
+    HcclResult UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum) override;
 
-    HcommChannelKind GetChannelKind() const override
-    {
-        return HcommChannelKind::AICPU_TS_UBOE;
-    }
+    HcommChannelKind GetChannelKind() const override { return HcommChannelKind::AICPU_TS_UBOE; }
 
 protected:
     HcclResult BuildConnection() override;
@@ -45,13 +42,14 @@ private:
     void HandleProcessData();
     void ProcessUboeState();
 
-    HcclResult CheckSocketStatus(const std::string &socketOperator);
+    HcclResult CheckSocketStatus(const std::string& socketOperator);
 
     std::vector<char> sendEidData_{};
     std::vector<char> recvEidData_{};
 
-    MAKE_ENUM(UboeStatus, INIT, SEND_EID, RECV_EID, PROCESS_EID_DATA, BUILD_CONN, SEND_SIZE, RECV_SIZE, SEND_DATA, 
-        RECV_DATA, SEND_FIN, RECV_FIN, PROCESS_DATA, SET_READY, READY)
+    MAKE_ENUM(
+        UboeStatus, INIT, SEND_EID, RECV_EID, PROCESS_EID_DATA, BUILD_CONN, SEND_SIZE, RECV_SIZE, SEND_DATA, RECV_DATA,
+        SEND_FIN, RECV_FIN, PROCESS_DATA, SET_READY, READY)
     UboeStatus uboeStatus{UboeStatus::INIT};
 };
 

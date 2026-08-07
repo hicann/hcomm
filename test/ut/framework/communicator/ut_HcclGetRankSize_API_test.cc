@@ -12,11 +12,13 @@
 
 class HcclGetRankSizeTest : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         BaseInit::SetUp();
         UT_USE_1SERVER_1RANK_AS_DEFAULT;
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }
@@ -35,7 +37,7 @@ TEST_F(HcclGetRankSizeTest, Ut_HcclGetRankSize_When_CommIsNull_Expect_ReturnIsHC
 TEST_F(HcclGetRankSizeTest, Ut_HcclGetRankSize_When_RankSizeIsNull_Expect_ReturnIsHCCL_E_PTR)
 {
     UT_COMM_CREATE_DEFAULT(comm);
-    uint32_t *pRankSize = nullptr;
+    uint32_t* pRankSize = nullptr;
 
     HcclResult ret = HcclGetRankSize(comm, pRankSize);
     EXPECT_EQ(ret, HCCL_E_PTR);

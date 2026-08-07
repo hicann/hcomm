@@ -14,8 +14,8 @@
 #include <cstdint>
 
 extern "C" {
-__attribute__((visibility("default"))) uint32_t RunTransportRoceTx(void *args);
+__attribute__((visibility("default"))) uint32_t RunTransportRoceTx(void* args);
 
-__attribute__((visibility("default"))) uint32_t RunTransportRoceRx(void *args);
+__attribute__((visibility("default"))) uint32_t RunTransportRoceRx(void* args);
 }
 #endif // __MC2_AICPU_INTERFACE_HPP__

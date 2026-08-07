@@ -22,10 +22,11 @@ std::string DumpTaskTypeToString(TaskTypeStub taskType);
 std::string DumpBufferTypeToString(BufferType bufferType);
 std::string DumpReduceOpToString(HcclReduceOp reduceOp);
 
-nlohmann::json DumpDataSliceToJson(const DataSlice &dataSlice);
-nlohmann::json DumpSrcBufToJson(const SrcBufDes &srcBuf);
-nlohmann::json DumpBufferSemanticToJson(const BufferSemantic &bufferSemantic, BufferType bufferType,
-    const std::map<u32, u32> *globalStepToEventId = nullptr);
-}  // namespace HcclSim
+nlohmann::json DumpDataSliceToJson(const DataSlice& dataSlice);
+nlohmann::json DumpSrcBufToJson(const SrcBufDes& srcBuf);
+nlohmann::json DumpBufferSemanticToJson(
+    const BufferSemantic& bufferSemantic, BufferType bufferType,
+    const std::map<u32, u32>* globalStepToEventId = nullptr);
+} // namespace HcclSim
 
-#endif  // HCCL_VM_DUMP_JSON_UTILS_H
+#endif // HCCL_VM_DUMP_JSON_UTILS_H

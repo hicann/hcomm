@@ -27,13 +27,14 @@ public:
 
     bool StreamHasBeenReged(rtStream_t stream);
     HcclResult RegTidAndStream(u64 tid, rtStream_t stream);
-    HcclResult GetStreamByTid(u64 tid, rtStream_t &stream);
+    HcclResult GetStreamByTid(u64 tid, rtStream_t& stream);
     void ReleaseTidAndStream(rtStream_t stream);
+
 private:
     ThreadStreamManager() = default;
     ~ThreadStreamManager() = default;
-    std::map<rtStream_t, u64> streamTidMap_;        // stream被注册的map
-    std::mutex mapMutex_;                           // 锁stream被注册的map
+    std::map<rtStream_t, u64> streamTidMap_; // stream被注册的map
+    std::mutex mapMutex_;                    // 锁stream被注册的map
 };
-}
-#endif  // CALLBACK_THREAD_MANAGER_H
+} // namespace hccl
+#endif // CALLBACK_THREAD_MANAGER_H

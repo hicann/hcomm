@@ -16,12 +16,12 @@
 #include "hccl_res.h"
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
 /**
  * @brief 通信设备Endpoint属性
  */
-typedef  enum {
+typedef enum {
     ENDPOINT_ATTR_INVALID = -1,
     ENDPOINT_ATTR_BW_COEFF = 0,
     ENDPOINT_ATTR_DIE_ID = 1,
@@ -56,7 +56,7 @@ typedef enum {
 } HcclHeterogMode;
 
 const uint32_t COMM_LINK_MAGIC_WORD = 0x0f0e0f0f;
-const uint32_t COMM_LINK_VERSION = 1;    // CommLink末尾非固定区扩展时，COMM_LINK_VERSION + 1
+const uint32_t COMM_LINK_VERSION = 1; // CommLink末尾非固定区扩展时，COMM_LINK_VERSION + 1
 
 /**
  * @brief 通信Link信息
@@ -77,33 +77,33 @@ typedef struct {
 
 /**
  * @brief 初始化CommLink结构体
- * 
+ *
  * @param[inout] commLink 通信link信息列表
  * @param[in] linkNum link数量
  * @return HcclResult 执行结果状态码
  */
-static inline HcclResult CommLinkInit(CommLink *commLink, uint32_t linkNum)
+static inline HcclResult CommLinkInit(CommLink* commLink, uint32_t linkNum)
 {
     for (uint32_t idx = 0; idx < linkNum; idx++) {
         if (commLink != nullptr) {
             // 先用0xFF填充整个结构体
             (void)memset_s(commLink, sizeof(CommLink), 0xFF, sizeof(CommLink));
-            
+
             // 初始化ABI头信息
-            commLink->header.version     = COMM_LINK_VERSION;
-            commLink->header.magicWord   = COMM_LINK_MAGIC_WORD;
-            commLink->header.size        = sizeof(CommLink);
-            commLink->header.reserved    = 0;
+            commLink->header.version = COMM_LINK_VERSION;
+            commLink->header.magicWord = COMM_LINK_MAGIC_WORD;
+            commLink->header.size = sizeof(CommLink);
+            commLink->header.reserved = 0;
 
             // 初始化源端点和目的端点的关键字段
-            if (UNLIKELY(EndpointDescInit(&commLink->srcEndpointDesc, 1) != HCCL_SUCCESS) ||
-                UNLIKELY(EndpointDescInit(&commLink->dstEndpointDesc, 1) != HCCL_SUCCESS)) {
+            if (UNLIKELY(EndpointDescInit(&commLink->srcEndpointDesc, 1) != HCCL_SUCCESS)
+                || UNLIKELY(EndpointDescInit(&commLink->dstEndpointDesc, 1) != HCCL_SUCCESS)) {
                 return HCCL_E_INTERNAL;
             }
             // 初始化链路属性（显式设置保留值）
             commLink->linkAttr.linkProtocol = COMM_PROTOCOL_RESERVED;
-            commLink->linkAttr.hop          = 1;
-            commLink++;  // 移动到下一个描述符
+            commLink->linkAttr.hop = 1;
+            commLink++; // 移动到下一个描述符
         } else {
             return HCCL_E_PTR;
         }
@@ -129,7 +129,7 @@ static inline HcclResult CommLinkInit(CommLink *commLink, uint32_t linkNum)
  * 1、返回的netLayers内存由库内管理，调用者严禁释放
  * 2、应及时复制返回的netLayers数据，同一通信域重复调用可能使前次结果失效
  */
-extern HcclResult HcclRankGraphGetLayers(HcclComm comm, uint32_t **netLayers, uint32_t *netLayerNum);
+extern HcclResult HcclRankGraphGetLayers(HcclComm comm, uint32_t** netLayers, uint32_t* netLayerNum);
 
 /**
  * @brief 给定通信域和netLayer，返回本Rank所在的netInstance中的所有ranks
@@ -150,7 +150,7 @@ extern HcclResult HcclRankGraphGetLayers(HcclComm comm, uint32_t **netLayers, ui
  * // ranks = [0,1,2,…,7],  rankNum=8
  * HcclRankGraphGetRanksByLayer( commTp, netLayer=1, &ranks, &rankNum )
  * // ranks = [0,1,2,…,31],  rankNum=32
- * 
+ *
  * 如果本卡为rank9
  * HcclRankGraphGetRanksByLayer( commTp, netLayer=0, &ranks, &rankNum )
  * // ranks = [8,9,10,…,15],  rankNum=8
@@ -160,11 +160,11 @@ extern HcclResult HcclRankGraphGetLayers(HcclComm comm, uint32_t **netLayers, ui
  * 说明：该接口只反映组网/拓扑情况，不反映算法情况，所以这里的netLayer1查询的是level1可连通的范围，
  * 查询结果List里是32张卡，而不是4张卡。\n
  * 例如算法选择单级全连接算法，就只使用netLayer1的链路
-* @warning 重要约束：
+ * @warning 重要约束：
  * 1、返回的ranks内存由库内管理，调用者严禁释放
  * 2、应及时复制返回的ranks数据，同一通信域重复调用可能使前次结果失效
  */
-extern HcclResult HcclRankGraphGetRanksByLayer(HcclComm comm, uint32_t netLayer, uint32_t **ranks, uint32_t *rankNum);
+extern HcclResult HcclRankGraphGetRanksByLayer(HcclComm comm, uint32_t netLayer, uint32_t** ranks, uint32_t* rankNum);
 
 /**
  * @brief 给定通信域和netLayer，返回rank数量
@@ -184,7 +184,7 @@ extern HcclResult HcclRankGraphGetRanksByLayer(HcclComm comm, uint32_t netLayer,
  * 主要用于不需要返回list的场景，只返回size即可；对于超大规模的集群，
  * 返回list会消耗较多的时间和内存
  */
-extern HcclResult HcclRankGraphGetRankSizeByLayer(HcclComm comm, uint32_t netLayer, uint32_t *rankNum);
+extern HcclResult HcclRankGraphGetRankSizeByLayer(HcclComm comm, uint32_t netLayer, uint32_t* rankNum);
 
 /**
  * @brief 给定通信域和netLayer，查询本rank在该netLayer的硬件连接拓扑
@@ -201,7 +201,7 @@ extern HcclResult HcclRankGraphGetRankSizeByLayer(HcclComm comm, uint32_t netLay
  * HcclRankGraphGetTopoTypeByLayer(commTp, netLayer=1, &topoType); // topoType=2 (clos)
  * @endcode
  */
-extern HcclResult HcclRankGraphGetTopoTypeByLayer(HcclComm comm, uint32_t netLayer, CommTopo *topoType);
+extern HcclResult HcclRankGraphGetTopoTypeByLayer(HcclComm comm, uint32_t netLayer, CommTopo* topoType);
 
 /**
  * @brief 给定通信域和netLayer，查询rankTable在该层分为多少group，以及每个group的size
@@ -224,8 +224,8 @@ extern HcclResult HcclRankGraphGetTopoTypeByLayer(HcclComm comm, uint32_t netLay
  * 1、返回的instSizeList内存由库内管理，调用者严禁释放
  * 2、应及时复制返回的instSizeList数据，同一通信域重复调用可能使前次结果失效
  */
-extern HcclResult HcclRankGraphGetInstSizeListByLayer(HcclComm comm, uint32_t netLayer, uint32_t **instSizeList,
-    uint32_t *listSize);
+extern HcclResult
+HcclRankGraphGetInstSizeListByLayer(HcclComm comm, uint32_t netLayer, uint32_t** instSizeList, uint32_t* listSize);
 
 /**
  * @brief 查询制定层次，源和目的之间的link信息
@@ -240,9 +240,8 @@ extern HcclResult HcclRankGraphGetInstSizeListByLayer(HcclComm comm, uint32_t ne
  * 1、返回的links内存由库内管理，调用者严禁释放
  * 2、应及时复制返回的links数据，同一通信域重复调用可能使前次结果失效
  */
-extern HcclResult HcclRankGraphGetLinks(HcclComm comm, uint32_t netLayer, uint32_t srcRank, uint32_t dstRank,
-    CommLink **links, uint32_t *linkNum);
-
+extern HcclResult HcclRankGraphGetLinks(
+    HcclComm comm, uint32_t netLayer, uint32_t srcRank, uint32_t dstRank, CommLink** links, uint32_t* linkNum);
 
 /**
  * @brief 给定通信域和netLayer，myRank所在的topoInstance集合
@@ -254,10 +253,11 @@ extern HcclResult HcclRankGraphGetLinks(HcclComm comm, uint32_t netLayer, uint32
  * @warning 重要约束：
  * 1、返回的topoInsts内存由库内管理，调用者严禁释放
  * 2、应及时复制返回的topoInsts数据，同一通信域重复调用可能使前次结果失效
- * 
+ *
  * WARNING: experimental API, No compatibility is currently guaranteed for this API
  */
-extern HcclResult HcclRankGraphGetTopoInstsByLayer(HcclComm comm, uint32_t netLayer, uint32_t **topoInsts, uint32_t *topoInstNum);
+extern HcclResult
+HcclRankGraphGetTopoInstsByLayer(HcclComm comm, uint32_t netLayer, uint32_t** topoInsts, uint32_t* topoInstNum);
 
 /**
  * @brief 给定通信域和netLayer，myRank所在的指定topoInstId的topoInstance的topoType
@@ -272,10 +272,10 @@ extern HcclResult HcclRankGraphGetTopoInstsByLayer(HcclComm comm, uint32_t netLa
  * HcclRankGraphGetTopoType(commTp, netLayer=0, topoInstId=0， &topoType); // topoType=1 (1DMesh)
  * HcclRankGraphGetTopoType(commTp, netLayer=1, topoInstId=0， &topoType); // topoType=0 (clos)
  * @endcode
- * 
+ *
  * WARNING: experimental API, No compatibility is currently guaranteed for this API
  */
-extern HcclResult HcclRankGraphGetTopoType(HcclComm comm, uint32_t netLayer, uint32_t topoInstId, CommTopo *topoType);
+extern HcclResult HcclRankGraphGetTopoType(HcclComm comm, uint32_t netLayer, uint32_t topoInstId, CommTopo* topoType);
 
 /**
  * @brief 给定通信域和netLayer，myRank所在的指定topoInstId的topoInstance中包含的rank信息
@@ -293,10 +293,11 @@ extern HcclResult HcclRankGraphGetTopoType(HcclComm comm, uint32_t netLayer, uin
  * @warning 重要约束：
  * 1、返回的ranks内存由库内管理，调用者严禁释放
  * 2、应及时复制返回的ranks数据，同一通信域重复调用可能使前次结果失效
- * 
+ *
  * WARNING: experimental API, No compatibility is currently guaranteed for this API
  */
-extern HcclResult HcclRankGraphGetRanksByTopoInst(HcclComm comm, uint32_t netLayer, uint32_t topoInstId, uint32_t **ranks, uint32_t *rankNum);
+extern HcclResult HcclRankGraphGetRanksByTopoInst(
+    HcclComm comm, uint32_t netLayer, uint32_t topoInstId, uint32_t** ranks, uint32_t* rankNum);
 
 /**
  * @brief 获取通信域的异构组网模式
@@ -325,7 +326,7 @@ extern HcclResult HcclRankGraphGetRanksByTopoInst(HcclComm comm, uint32_t netLay
  * }
  * @endcode
  */
-extern HcclResult HcclGetHeterogMode(HcclComm comm, HcclHeterogMode *mode);
+extern HcclResult HcclGetHeterogMode(HcclComm comm, HcclHeterogMode* mode);
 
 /**
  * @brief 根据layer获取通信域所有endpoint信息
@@ -334,10 +335,10 @@ extern HcclResult HcclGetHeterogMode(HcclComm comm, HcclHeterogMode *mode);
  * @param[in] topoInstId 拓扑实例ID
  * @param[out] num  返回的端点数量
  * @return HcclResult 执行结果状态码
- * 
+ *
  * WARNING: experimental API, No compatibility is currently guaranteed for this API
  */
-extern HcclResult HcclRankGraphGetEndpointNum(HcclComm comm, uint32_t layer, uint32_t topoInstId, uint32_t *num);
+extern HcclResult HcclRankGraphGetEndpointNum(HcclComm comm, uint32_t layer, uint32_t topoInstId, uint32_t* num);
 
 /**
  * @brief 获取拓扑实例的端点描述列表
@@ -348,10 +349,11 @@ extern HcclResult HcclRankGraphGetEndpointNum(HcclComm comm, uint32_t layer, uin
  * @param[out] endpointDesc 通信设备表述数组（由调用方分配内存)
  * @note 数组内存由调用方管理，建议使用栈空间或动态分配
  * @return HcclResult 执行结果状态码
- * 
+ *
  * WARNING: experimental API, No compatibility is currently guaranteed for this API
  */
-extern HcclResult HcclRankGraphGetEndpointDesc(HcclComm comm, uint32_t layer, uint32_t topoInstId, uint32_t *descNum, EndpointDesc *endpointDesc);
+extern HcclResult HcclRankGraphGetEndpointDesc(
+    HcclComm comm, uint32_t layer, uint32_t topoInstId, uint32_t* descNum, EndpointDesc* endpointDesc);
 
 /**
  * @brief 获取指定通信设备的拓扑属性信息
@@ -370,11 +372,13 @@ extern HcclResult HcclRankGraphGetEndpointDesc(HcclComm comm, uint32_t layer, ui
  * uint32_t size = sizeof(EndpointAttrBwCoeff); //必须等于目标类型大小
  * HcclRankGraphGetEndpointInfo(comm, rankId, endpointDesc, ENDPOINT_ATTR_BW_COEFF, size, &bwCoeff);
  * @endcode
- * 
+ *
  * WARNING: experimental API, No compatibility is currently guaranteed for this API
  */
-extern HcclResult HcclRankGraphGetEndpointInfo(HcclComm comm, uint32_t rankId, const EndpointDesc *endpointDesc, EndpointAttr endpointAttr, uint32_t infoLen, void *info);
+extern HcclResult HcclRankGraphGetEndpointInfo(
+    HcclComm comm, uint32_t rankId, const EndpointDesc* endpointDesc, EndpointAttr endpointAttr, uint32_t infoLen,
+    void* info);
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus
 #endif

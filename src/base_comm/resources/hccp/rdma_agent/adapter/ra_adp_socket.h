@@ -30,8 +30,7 @@ struct RsSocketOps {
     int (*acceptCreditAdd)(struct SocketListenInfo conn[], uint32_t num, unsigned int creditLimit);
     int (*getIfnum)(unsigned int phyId, bool isAll, unsigned int *num);
     int (*getIfaddrs)(struct IfaddrInfo ifaddrInfos[], unsigned int *num, unsigned int phyId);
-    int (*getIfaddrsV2)(struct InterfaceInfo interfaceInfos[], unsigned int *num, unsigned int phyId,
-        bool isAll);
+    int (*getIfaddrsV2)(struct InterfaceInfo interfaceInfos[], unsigned int *num, unsigned int phyId, bool isAll);
     int (*getVnicIp)(unsigned int phyId, unsigned int *vnicIp);
     int (*getVnicIpInfos)(unsigned int phyId, enum IdType type, unsigned int ids[], unsigned int num,
         struct IpInfo infos[]);

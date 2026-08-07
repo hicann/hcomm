@@ -39,16 +39,18 @@ std::atomic<bool> g_failFirstTopoInfo(false);
 std::mutex g_modeMutex;
 std::vector<uint32_t> g_observedConfigModes;
 
-HcclResult StubGetCommNameV2(HcclComm comm, char *commName)
+HcclResult StubGetCommNameV2(HcclComm comm, char* commName)
 {
     (void)comm;
-    int32_t ret = snprintf_s(commName, hccl::ROOTINFO_INDENTIFIER_MAX_LENGTH,
-        hccl::ROOTINFO_INDENTIFIER_MAX_LENGTH - 1, "coll_comm_%u", g_commNameIndex.fetch_add(1));
+    int32_t ret = snprintf_s(
+        commName, hccl::ROOTINFO_INDENTIFIER_MAX_LENGTH, hccl::ROOTINFO_INDENTIFIER_MAX_LENGTH - 1, "coll_comm_%u",
+        g_commNameIndex.fetch_add(1));
     return ret < 0 ? HCCL_E_INTERNAL : HCCL_SUCCESS;
 }
 
-HcclResult StubInitCollComm(hccl::hcclComm *comm, void *commV2, void *rankGraph, uint32_t userRank,
-    HcclMem cclBuffer, const std::string &commName, const HcclCommConfig *config, hccl::CollCommInitMode initMode)
+HcclResult StubInitCollComm(
+    hccl::hcclComm* comm, void* commV2, void* rankGraph, uint32_t userRank, HcclMem cclBuffer,
+    const std::string& commName, const HcclCommConfig* config, hccl::CollCommInitMode initMode)
 {
     (void)rankGraph;
     (void)cclBuffer;
@@ -62,41 +64,37 @@ HcclResult StubInitCollComm(hccl::hcclComm *comm, void *commV2, void *rankGraph,
         g_observedConfigModes[callIndex] = configMode;
     }
 
-    comm->collComm_ = std::make_unique<hccl::CollComm>(
-        commV2, userRank, commName, hccl::ManagerCallbacks{}, initMode);
+    comm->collComm_ = std::make_unique<hccl::CollComm>(commV2, userRank, commName, hccl::ManagerCallbacks{}, initMode);
     comm->collComm_->myRank_ = std::make_shared<hccl::MyRank>(
         nullptr, userRank, comm->collComm_->GetCommConfig(), hccl::ManagerCallbacks{}, nullptr, nullptr);
     comm->collComm_->myRank_->opExpansionMode_ = configMode;
     return HCCL_SUCCESS;
 }
 
-HcclResult StubSetGroupTopoInfo(const char *group, uint32_t rankSize)
+HcclResult StubSetGroupTopoInfo(const char* group, uint32_t rankSize)
 {
     (void)group;
     (void)rankSize;
     uint32_t callIndex = g_topoInfoCallCount.fetch_add(1);
     return g_failFirstTopoInfo.load() && callIndex == 0 ? HCCL_E_INTERNAL : HCCL_SUCCESS;
 }
-}
+} // namespace
 
-class HcomInitCollCommTest : public testing::Test
-{
+class HcomInitCollCommTest : public testing::Test {
 protected:
-    virtual void SetUp() override {
-        const char *fakeA5SocName = "Ascend950PR_958b";
+    virtual void SetUp() override
+    {
+        const char* fakeA5SocName = "Ascend950PR_958b";
         MOCKER(aclrtGetSocName).stubs().will(returnValue(fakeA5SocName));
     }
 
-    virtual void TearDown() override
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() override { GlobalMockObject::verify(); }
 };
 
 TEST_F(HcomInitCollCommTest, ut_HcomInitCollComm_When_Normal_Expect_ReturnIsHCCL_SUCCESS)
 {
-    HcomInfo &hcomInfo = HcomGetCtxHomInfo();
-    void *commV2 = nullptr;
+    HcomInfo& hcomInfo = HcomGetCtxHomInfo();
+    void* commV2 = nullptr;
     MOCKER(&HcclGetCommNameV2).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER(&HcclGetCclBuffer).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER(&HcclGetRankGraphV2).stubs().will(returnValue(HCCL_SUCCESS));
@@ -108,7 +106,7 @@ TEST_F(HcomInitCollCommTest, ut_HcomInitCollComm_When_Normal_Expect_ReturnIsHCCL
 
 TEST_F(HcomInitCollCommTest, ut_HcomInitCollComm_When_commV2IsNullptr_Expect_ReturnIsHCCL_E_PARA)
 {
-    HcomInfo &hcomInfo = HcomGetCtxHomInfo();
+    HcomInfo& hcomInfo = HcomGetCtxHomInfo();
     HcclResult ret = HcomInitCollComm(0, nullptr, hcomInfo.pComm);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
@@ -116,12 +114,11 @@ TEST_F(HcomInitCollCommTest, ut_HcomInitCollComm_When_commV2IsNullptr_Expect_Ret
 // 看护空输出指针在解引用前被拒绝。
 TEST_F(HcomInitCollCommTest, Ut_HcclCommInitCollComm_When_CommIsNullptr_Expect_ReturnHcclEPtr)
 {
-    void *commV2 = reinterpret_cast<void *>(0x1);
+    void* commV2 = reinterpret_cast<void*>(0x1);
     EXPECT_EQ(HcclCommInitCollComm(0, &commV2, nullptr, nullptr), HCCL_E_PTR);
 }
 
-class HcclCommInitCollCommGuardTest : public testing::Test
-{
+class HcclCommInitCollCommGuardTest : public testing::Test {
 protected:
     void SetUp() override
     {
@@ -135,7 +132,7 @@ protected:
             g_observedConfigModes.clear();
         }
 
-        const char *fakeA5SocName = "Ascend950PR_958b";
+        const char* fakeA5SocName = "Ascend950PR_958b";
         MOCKER(aclrtGetSocName).stubs().will(returnValue(fakeA5SocName));
         MOCKER(hccl::GetMaxDevNum).stubs().with(outBound(8U)).will(returnValue(HCCL_SUCCESS));
         MOCKER(HcommResMgrInit).stubs().will(returnValue(static_cast<HcommResult>(HCOMM_SUCCESS)));
@@ -154,9 +151,9 @@ protected:
         GlobalMockObject::verify();
     }
 
-    static HcclResult InitComm(const HcclCommConfig &config, HcclComm &comm)
+    static HcclResult InitComm(const HcclCommConfig& config, HcclComm& comm)
     {
-        void *commV2 = reinterpret_cast<void *>(0x1);
+        void* commV2 = reinterpret_cast<void*>(0x1);
         return HcclCommInitCollComm(0, &commV2, &config, &comm);
     }
 
@@ -168,7 +165,7 @@ protected:
 
     static void ResetOpBaseState()
     {
-        HcclOpInfoCtx &opBaseHcom = GetHcclOpInfoCtx();
+        HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
         std::lock_guard<std::mutex> lock(opBaseHcom.opGroupMapMutex);
         opBaseHcom.opGroup2CommMap.clear();
     }
@@ -202,7 +199,7 @@ TEST_F(HcclCommInitCollCommGuardTest, Ut_HcclCommInitCollComm_When_SetGroupTopoI
 
     EXPECT_EQ(InitComm(failedConfig, failedComm), HCCL_E_INTERNAL);
     EXPECT_EQ(failedComm, nullptr);
-    HcclOpInfoCtx &opBaseHcom = GetHcclOpInfoCtx();
+    HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
     {
         std::lock_guard<std::mutex> lock(opBaseHcom.opGroupMapMutex);
         EXPECT_TRUE(opBaseHcom.opGroup2CommMap.empty());

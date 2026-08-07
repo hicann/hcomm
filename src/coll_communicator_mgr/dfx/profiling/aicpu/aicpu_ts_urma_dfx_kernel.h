@@ -14,7 +14,7 @@
 #include <cstdint>
 
 extern "C" {
-__attribute__((visibility("default"))) uint32_t RunAicpuDfxOpInfoInitV2(void *args);
+__attribute__((visibility("default"))) uint32_t RunAicpuDfxOpInfoInitV2(void* args);
 }
 
 #endif // AICPU_TS_URMA_CAHNNEL_KERNEL_H

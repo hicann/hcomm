@@ -15,43 +15,52 @@
 namespace Hccl {
 namespace CcuRep {
 
-CcuRepWaitGroup::CcuRepWaitGroup(const CcuTransportGroup &transportGroup, uint16_t semIndex, uint16_t mask, bool isProfiling)
-    : transportGroup(transportGroup), semIndex(semIndex), mask(mask), isProfiling(isProfiling)
-{
-    type       = CcuRepType::REM_WAIT_GROUP;
-    instrCount = 1;
-}
-
-bool CcuRepWaitGroup::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
-
-    u32 cntCkeId = 0;
-    HcclResult ret = transportGroup.GetCntCkeId(semIndex, cntCkeId);
-    if (ret != HcclResult::HCCL_SUCCESS) {
-        string msg = StringFormat("[Translate]rt get CntCkeId failed. "
-                                "semIndex[%u], cntCkeId[%u] return[%d].", semIndex, cntCkeId, ret);
-        MACRO_THROW(CcuApiException, msg);
+    CcuRepWaitGroup::CcuRepWaitGroup(
+        const CcuTransportGroup& transportGroup, uint16_t semIndex, uint16_t mask, bool isProfiling)
+        : transportGroup(transportGroup),
+          semIndex(semIndex),
+          mask(mask),
+          isProfiling(isProfiling)
+    {
+        type = CcuRepType::REM_WAIT_GROUP;
+        instrCount = 1;
     }
-    // 需要profiling的使用SetCKEInstr, 否则使用ClearCKEInstr
-    if (isProfiling) {
-        SetCKEInstr(instr++, 0, 0, cntCkeId, mask, 1);
-    } else {
-        ClearCKEInstr(instr++, 0, 0, cntCkeId, mask, 1);
+
+    bool CcuRepWaitGroup::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
+
+        u32 cntCkeId = 0;
+        HcclResult ret = transportGroup.GetCntCkeId(semIndex, cntCkeId);
+        if (ret != HcclResult::HCCL_SUCCESS) {
+            string msg = StringFormat(
+                "[Translate]rt get CntCkeId failed. "
+                "semIndex[%u], cntCkeId[%u] return[%d].",
+                semIndex, cntCkeId, ret);
+            MACRO_THROW(CcuApiException, msg);
+        }
+        // 需要profiling的使用SetCKEInstr, 否则使用ClearCKEInstr
+        if (isProfiling) {
+            SetCKEInstr(instr++, 0, 0, cntCkeId, mask, 1);
+        } else {
+            ClearCKEInstr(instr++, 0, 0, cntCkeId, mask, 1);
+        }
+        CHK_PRT_THROW(
+            (instrId > UINT16_MAX - instrCount),
+            HCCL_ERROR(
+                "[CcuRepWaitGroup::Translate]uint16 integer overflow occurs, instrId = [%hu], instrCount = [%hu]",
+                instrId, instrCount),
+            InternalException, "integer overflow");
+        instrId += instrCount;
+
+        return translated;
     }
-    CHK_PRT_THROW((instrId > UINT16_MAX - instrCount),
-                        HCCL_ERROR("[CcuRepWaitGroup::Translate]uint16 integer overflow occurs, instrId = [%hu], instrCount = [%hu]", instrId, instrCount),
-                          InternalException, "integer overflow");
-    instrId += instrCount;
 
-    return translated;
-}
-
-std::string CcuRepWaitGroup::Describe()
-{
-    return StringFormat("Wait, Use semIndex[%u] and mask[%04x]", semIndex, mask);
-}
+    std::string CcuRepWaitGroup::Describe()
+    {
+        return StringFormat("Wait, Use semIndex[%u] and mask[%04x]", semIndex, mask);
+    }
 
 }; // namespace CcuRep
 }; // namespace Hccl

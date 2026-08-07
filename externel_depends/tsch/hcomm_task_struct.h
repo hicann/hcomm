@@ -30,7 +30,7 @@ typedef enum tag_ts_task_type {
     TS_TASK_TYPE_DATA_DUMP = 8,         /**< kernel data dump configure */
     TS_TASK_TYPE_REMOTE_EVENT_WAIT = 9, /* * wait for event on another device */
     TS_TASK_TYPE_PCTRACE_ENABLE = 10,
-    TS_TASK_TYPE_CREATE_L2_ADDR = 11,   /**< create L2 addr info for aicpu kernel */
+    TS_TASK_TYPE_CREATE_L2_ADDR = 11, /**< create L2 addr info for aicpu kernel */
     TS_TASK_TYPE_MODEL_MAINTAINCE = 12,
     TS_TASK_TYPE_MODEL_EXECUTE = 13,
     TS_TASK_TYPE_NOTIFY_WAIT = 14,
@@ -39,17 +39,17 @@ typedef enum tag_ts_task_type {
     TS_TASK_TYPE_L2_SDMA_TASK_MEMCPY = 17, /**< test l2 task memory copy task */
     TS_TASK_TYPE_STREAM_SWITCH = 18,
     TS_TASK_TYPE_STREAM_ACTIVE = 19,
-    TS_TASK_TYPE_LABEL_SET = 20,         /**< set label for control flow ops */
-    TS_TASK_TYPE_LABEL_SWITCH = 21,      /**< switch label for control flow ops */
-    TS_TASK_TYPE_LABEL_GOTO = 22,        /**< goto label for control flow ops */
-    TS_TASK_TYPE_PROFILER_TRACE = 23,    /**< goto label for profiler trace */
-    TS_TASK_TYPE_EVENT_RESET = 24,       /**< event reset task */
-    TS_TASK_TYPE_RDMA_DB_SEND = 25,      /**< HCCL rdma db cpy task*/
-    TS_TASK_TYPE_PROFILER_TRACE_EX = 26, /**< profiler trace task*/
-    TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE = 27,      /* profiler dynamic task */
+    TS_TASK_TYPE_LABEL_SET = 20,                /**< set label for control flow ops */
+    TS_TASK_TYPE_LABEL_SWITCH = 21,             /**< switch label for control flow ops */
+    TS_TASK_TYPE_LABEL_GOTO = 22,               /**< goto label for control flow ops */
+    TS_TASK_TYPE_PROFILER_TRACE = 23,           /**< goto label for profiler trace */
+    TS_TASK_TYPE_EVENT_RESET = 24,              /**< event reset task */
+    TS_TASK_TYPE_RDMA_DB_SEND = 25,             /**< HCCL rdma db cpy task*/
+    TS_TASK_TYPE_PROFILER_TRACE_EX = 26,        /**< profiler trace task*/
+    TS_TASK_TYPE_PROFILER_DYNAMIC_ENABLE = 27,  /* profiler dynamic task */
     TS_TASK_TYPE_PROFILER_DYNAMIC_DISABLE = 28, /* profiler dynamic task */
-    TS_TASK_TYPE_ALLOC_DSA_ADDR = 29,                /* alloc dsa addr task */
-    TS_TASK_TYPE_CCU_LAUNCH = 30,          /* HCCL CCU Launch task */
+    TS_TASK_TYPE_ALLOC_DSA_ADDR = 29,           /* alloc dsa addr task */
+    TS_TASK_TYPE_CCU_LAUNCH = 30,               /* HCCL CCU Launch task */
     TS_TASK_TYPE_PROFILING_ENABLE = 64,
     TS_TASK_TYPE_PROFILING_DISABLE = 65,
     TS_TASK_TYPE_KERNEL_AIVEC = 66,        /**< AI vector task */
@@ -59,8 +59,8 @@ typedef enum tag_ts_task_type {
     TS_TASK_TYPE_DATADUMP_LOADINFO = 70,   /**< load data dump info task */
     TS_TASK_TYPE_STREAM_SWITCH_N = 71,
     TS_TASK_TYPE_HOSTFUNC_CALLBACK = 72,            /**<  Host func Callback task */
-    TS_TASK_TYPE_ONLINEPROF_START = 73,                  /**< start online profiling task */
-    TS_TASK_TYPE_ONLINEPROF_STOP = 74,                   /**< stop online profiling task */
+    TS_TASK_TYPE_ONLINEPROF_START = 73,             /**< start online profiling task */
+    TS_TASK_TYPE_ONLINEPROF_STOP = 74,              /**< stop online profiling task */
     TS_TASK_TYPE_STREAM_LABEL_SWITCH_BY_INDEX = 75, /**< index switch stream label for control flow ops */
     TS_TASK_TYPE_STREAM_LABEL_GOTO = 77,            /**< goto stream label for control flow ops */
     TS_TASK_TYPE_DEBUG_REGISTER = 78,               /* kernel exception overflow debug register */
@@ -71,25 +71,25 @@ typedef enum tag_ts_task_type {
     TS_TASK_TYPE_DEBUG_REGISTER_WITH_STREAM = 84,   /* kernel exception overflow debug register with stream */
     TS_TASK_TYPE_DEBUG_UNREGISTER_WITH_STREAM = 85, /* kernel exception overflow debug unregister with stream */
     TS_TASK_TYPE_TASK_TIMEOUT_SET = 86,
-    TS_TASK_TYPE_GET_DEVICE_MSG = 87,               /* Get device message */
-    TS_TASK_TYPE_GET_FLOAT_STATUS = 88,             /* NPUGetFloatStatus */
-    TS_TASK_TYPE_CLEAR_FLOAT_STATUS = 89,             /* NPUClearFloatStatus */
-    TS_TASK_TYPE_MEMCPY_ASYNC_WITHOUT_SDMA = 90,      /* mem cpy async by place holder sqe */
-    TS_TASK_TYPE_SET_OVERFLOW_SWITCH = 91,          /* Set overflow switch flag */
-    TS_TASK_TYPE_REDUCE_ASYNC_V2 = 92,       /* reduce async v2 */
-    TS_TASK_TYPE_SET_STREAM_GE_OP_TAG = 93,        /* Set stream geOpTag */
-    TS_TASK_TYPE_SET_STREAM_MODE = 94,          /* set stream mode */
-    TS_TASK_TYPE_IPCINT_NOTICE = 95,     /* ipc interrupt D2H notice */
-    TS_TASK_TYPE_MODEL_LOAD = 96,     /* ModelLoad task for lhisi */
+    TS_TASK_TYPE_GET_DEVICE_MSG = 87,            /* Get device message */
+    TS_TASK_TYPE_GET_FLOAT_STATUS = 88,          /* NPUGetFloatStatus */
+    TS_TASK_TYPE_CLEAR_FLOAT_STATUS = 89,        /* NPUClearFloatStatus */
+    TS_TASK_TYPE_MEMCPY_ASYNC_WITHOUT_SDMA = 90, /* mem cpy async by place holder sqe */
+    TS_TASK_TYPE_SET_OVERFLOW_SWITCH = 91,       /* Set overflow switch flag */
+    TS_TASK_TYPE_REDUCE_ASYNC_V2 = 92,           /* reduce async v2 */
+    TS_TASK_TYPE_SET_STREAM_GE_OP_TAG = 93,      /* Set stream geOpTag */
+    TS_TASK_TYPE_SET_STREAM_MODE = 94,           /* set stream mode */
+    TS_TASK_TYPE_IPCINT_NOTICE = 95,             /* ipc interrupt D2H notice */
+    TS_TASK_TYPE_MODEL_LOAD = 96,                /* ModelLoad task for lhisi */
     TS_TASK_TYPE_GET_STARS_VERSION = 97,
-    TS_TASK_TYPE_TASK_FLIP = 98,     /* flip task interrupt */
+    TS_TASK_TYPE_TASK_FLIP = 98,          /* flip task interrupt */
     TS_TASK_TYPE_MODEL_TASK_UPDATE = 101, /* model task update */
     TS_TASK_TYPE_AICPU_INFO_LOAD = 102,
     TS_TASK_TYPE_NOP = 103,
     TS_TASK_TYPE_COMMON_CMD = 104,
-    TS_TASK_TYPE_UB_DB_SEND = 105,     /* HCCL ub db cpy task */
-    TS_TASK_TYPE_DIRECT_SEND = 106,    /* HCCL direct db cpy task */
-    TS_TASK_TYPE_KERNEL_FUSION = 107,  /* fusion kernel task */
+    TS_TASK_TYPE_UB_DB_SEND = 105,    /* HCCL ub db cpy task */
+    TS_TASK_TYPE_DIRECT_SEND = 106,   /* HCCL direct db cpy task */
+    TS_TASK_TYPE_KERNEL_FUSION = 107, /* fusion kernel task */
     TS_TASK_TYPE_RESERVED,
 } ts_task_type_t;
 
@@ -107,14 +107,14 @@ typedef enum tag_ts_task_state {
 } ts_task_state_t;
 
 typedef enum tag_ts_report_type {
-    TS_REPORT_TYPE_TASK = 0, /** task command report */
-    TS_REPORT_TYPE_ERROR_REPORT = 1, /** used for error report */
-    TS_REPORT_TYPE_RECYCLE_SQ_FINISHED = 3, /* recycle sq report */
+    TS_REPORT_TYPE_TASK = 0,                    /** task command report */
+    TS_REPORT_TYPE_ERROR_REPORT = 1,            /** used for error report */
+    TS_REPORT_TYPE_RECYCLE_SQ_FINISHED = 3,     /* recycle sq report */
     TS_REPORT_TYPE_RECYCLE_STREAM_FINISHED = 4, /* recycle streamid report */
     TS_REPORT_TYPE_RECYCLE_NOTIFY_FINISHED = 5, /* recycle notifyid report */
-    TS_REPORT_TYPE_RECYCLE_EVENT_FINISHED = 6, /* recycle eventid report */
-    TS_REPORT_TYPE_RECYCLE_CQ_FINISHED = 7, /* recycle eventid report */
-    TS_REPORT_TYPE_UPDATE_SQ_HEAD = 8, /* notify driver update sq head */
+    TS_REPORT_TYPE_RECYCLE_EVENT_FINISHED = 6,  /* recycle eventid report */
+    TS_REPORT_TYPE_RECYCLE_CQ_FINISHED = 7,     /* recycle eventid report */
+    TS_REPORT_TYPE_UPDATE_SQ_HEAD = 8,          /* notify driver update sq head */
 } ts_report_type_t;
 
 typedef enum tag_ts_conds_sub_type {
@@ -147,12 +147,12 @@ typedef struct tag_ts_task_report_msg {
     volatile uint16_t report_type : 3;
     volatile uint16_t streamID : 10;
     volatile uint16_t taskID;
-    volatile uint32_t pay_load;  /* error code<bit 0--11>; streamid<bit 12--21>; taskid low<bit 22--31>+(reserved) */
+    volatile uint32_t pay_load; /* error code<bit 0--11>; streamid<bit 12--21>; taskid low<bit 22--31>+(reserved) */
     volatile uint16_t SQ_id : 9;
-    volatile uint16_t reserved : 6;  /* taskid high> */
+    volatile uint16_t reserved : 6; /* taskid high> */
     volatile uint16_t phase : 1;
     volatile uint16_t SQ_head : 14;
-    volatile uint16_t stream_id_ex : 1; /* streamID high bit */
+    volatile uint16_t stream_id_ex : 1;       /* streamID high bit */
     volatile uint16_t fault_stream_id_ex : 1; /* fault streamID high bit */
 } ts_task_report_msg_t;
 
@@ -166,14 +166,14 @@ typedef struct tag_ts_driver_msg {
 } ts_driver_msg_t;
 
 typedef struct tag_ts_logic_cq_report_msg {
-    volatile uint16_t phase      : 1;
-    volatile uint16_t SOP        : 1; /* start of packet, indicates this is the first 32bit return payload */
-    volatile uint16_t MOP        : 1; /* middle of packet, indicates the payload is a continuation of previous task
-                                      return payload */
-    volatile uint16_t EOP        : 1; /* end of packet, indicates this is the last 32bit return payload. SOP & EOP
-                                      can appear in the same packet, MOP & EOP can also appear on the same packet. */
-    volatile uint16_t logic_cq_id  : 12;
-    volatile uint16_t stream_id ;
+    volatile uint16_t phase : 1;
+    volatile uint16_t SOP : 1; /* start of packet, indicates this is the first 32bit return payload */
+    volatile uint16_t MOP : 1; /* middle of packet, indicates the payload is a continuation of previous task
+                               return payload */
+    volatile uint16_t EOP : 1; /* end of packet, indicates this is the last 32bit return payload. SOP & EOP
+                               can appear in the same packet, MOP & EOP can also appear on the same packet. */
+    volatile uint16_t logic_cq_id : 12;
+    volatile uint16_t stream_id;
     volatile uint16_t task_id;
     volatile uint8_t error_type;
     volatile uint8_t need_sorting; /* drv need sorting cqe data to user thread */
@@ -182,23 +182,23 @@ typedef struct tag_ts_logic_cq_report_msg {
 } ts_logic_cq_report_msg_t;
 
 /**
-* @ingroup tsch
-* @brief the struct define of callback report msg
-*/
+ * @ingroup tsch
+ * @brief the struct define of callback report msg
+ */
 
 typedef struct tag_ts_host_func_cq_report_msg {
-    volatile uint16_t phase      : 1;
-    volatile uint16_t SOP        : 1; /* start of packet, indicates this is the first 32bit return payload */
-    volatile uint16_t MOP        : 1; /* middle of packet, indicates the payload is a continuation of previous task
-                                      return payload */
-    volatile uint16_t EOP        : 1; /* end of packet, indicates this is the last 32bit return payload. SOP & EOP
-                                      can appear in the same packet, MOP & EOP can also appear on the same packet. */
-    volatile uint16_t cq_id  : 12;
-    volatile uint16_t stream_id ;
+    volatile uint16_t phase : 1;
+    volatile uint16_t SOP : 1; /* start of packet, indicates this is the first 32bit return payload */
+    volatile uint16_t MOP : 1; /* middle of packet, indicates the payload is a continuation of previous task
+                               return payload */
+    volatile uint16_t EOP : 1; /* end of packet, indicates this is the last 32bit return payload. SOP & EOP
+                               can appear in the same packet, MOP & EOP can also appear on the same packet. */
+    volatile uint16_t cq_id : 12;
+    volatile uint16_t stream_id;
     volatile uint16_t task_id;
     volatile uint16_t sq_id;
     volatile uint16_t sq_head;
-    volatile uint16_t sequence_id;   /* for match */
+    volatile uint16_t sequence_id; /* for match */
     volatile uint8_t is_block;
     volatile uint8_t reserved1[2];
     volatile uint8_t cqe_type;
@@ -208,7 +208,7 @@ typedef struct tag_ts_host_func_cq_report_msg {
 
 #define IPCINT_MSGLEN_MAX (0x8U)
 
-#pragma pack(1)  // single-byte alignment
+#pragma pack(1) // single-byte alignment
 struct ts_cb_task {
     uint16_t cq_id;
     uint8_t is_block;
@@ -222,9 +222,9 @@ struct ts_ipcint_notice_task {
     uint16_t ntc_grpId;
     uint16_t ntc_tid;
     uint16_t ntc_subEventId;
-    uint8_t  ntc_eventId;
-    uint8_t  msg_len;
-    uint8_t  msg[IPCINT_MSGLEN_MAX];
+    uint8_t ntc_eventId;
+    uint8_t msg_len;
+    uint8_t msg[IPCINT_MSGLEN_MAX];
     uint16_t phy_devId;
 };
 
@@ -241,7 +241,7 @@ typedef struct tag_ts_callback_report_msg {
         struct ts_ipcint_notice_task ipcint_notice_task;
     } u;
 } ts_callback_report_msg_t;
-#pragma pack()  // Cancels single-byte alignment
+#pragma pack() // Cancels single-byte alignment
 
 typedef struct tag_ts_host_func_sq_send_msg {
     uint16_t phase : 1;
@@ -250,13 +250,13 @@ typedef struct tag_ts_host_func_sq_send_msg {
     uint16_t EOP : 1; /* end of packet, indicates this is the last 32bit return payload.
                      SOP & EOP can appear in the same packet, MOP & EOP can also appear on the same packet. */
     uint16_t reserved : 12;
-    uint16_t stream_id ;
+    uint16_t stream_id;
     uint16_t task_id;
     uint16_t cq_id;
     uint16_t cq_tail;
     uint16_t sequence_id;
     uint32_t reserved1[13];
-}ts_host_func_sq_send_msg_t;
+} ts_host_func_sq_send_msg_t;
 
 /**
  * @ingroup tsch
@@ -274,7 +274,7 @@ typedef struct tag_ts_kernel_task {
     uint8_t l2_in_main;
     uint32_t priority : 3;
     uint32_t l2PreloadVirAddr : 26; // preserve the offset of l2_preload_ctrl's phy addr, not greater than 50M now
-    uint32_t flag : 3; // 1:TS_KERNEL_CONVERT, 2:TS_KERNEL_DUMPFLAG, 4:FUSION_KERNEL_DUMPFLAG
+    uint32_t flag : 3;              // 1:TS_KERNEL_CONVERT, 2:TS_KERNEL_DUMPFLAG, 4:FUSION_KERNEL_DUMPFLAG
 } ts_kernel_task_t;
 
 /**
@@ -299,23 +299,23 @@ typedef struct tag_ts_event_record_task {
  * @brief the struct define of event reset type task
  */
 typedef struct tag_ts_event_reset_task {
-    uint16_t eventID;       /**< offset 8 */
-    uint16_t isNotify;      /**< event to notify */
-    uint8_t reserved[44];   // reserved 44 bytes
+    uint16_t eventID;     /**< offset 8 */
+    uint16_t isNotify;    /**< event to notify */
+    uint8_t reserved[44]; // reserved 44 bytes
 } ts_event_reset_task_t;
 /**
  * @ingroup tsch
  * @brief the struct define of stream wait event type task
  */
 typedef struct tag_ts_stream_wait_event_task {
-    uint16_t eventID;       /**< offset 8 */
-    uint16_t nextStreamIdx; /**< offset 10 */
-    uint16_t isNotify;      /**< event to notify */
-    uint16_t ret_code;  // using ts_error_t, only use by ts
-    uint16_t fault_task_id;    // using report error of operator, only use by ts
-    uint16_t fault_stream_id;  // using report error of operator, only use by ts
-    uint32_t wait_timeout; /* used for 1910p */
-    uint8_t reserved[28];   /**< offset 16, reserved 40 bytes */
+    uint16_t eventID;         /**< offset 8 */
+    uint16_t nextStreamIdx;   /**< offset 10 */
+    uint16_t isNotify;        /**< event to notify */
+    uint16_t ret_code;        // using ts_error_t, only use by ts
+    uint16_t fault_task_id;   // using report error of operator, only use by ts
+    uint16_t fault_stream_id; // using report error of operator, only use by ts
+    uint32_t wait_timeout;    /* used for 1910p */
+    uint8_t reserved[28];     /**< offset 16, reserved 40 bytes */
     uint16_t task_id;
     int16_t timewheel_slot; /**< used only by ts */
 } ts_stream_wait_event_task_t;
@@ -339,11 +339,11 @@ typedef struct tag_ts_ipc_int_notice_task {
     uint16_t ntc_grpId;
     uint16_t ntc_tid;
     uint16_t ntc_subEventId;
-    uint8_t  ntc_eventId;
-    uint8_t  msg_len;
-    uint8_t  msg[IPCINT_MSGLEN_MAX];
+    uint8_t ntc_eventId;
+    uint8_t msg_len;
+    uint8_t msg[IPCINT_MSGLEN_MAX];
     uint16_t phy_devId;
-    uint8_t  reserved[26];
+    uint8_t reserved[26];
 } ts_ipc_int_notice_task_t;
 
 /**
@@ -371,24 +371,20 @@ enum tag_ts_fusion_flag {
     TS_FUSION_END = 1,
 };
 
-#define TS_KERNEL_CONVERT  (0x01U)
+#define TS_KERNEL_CONVERT (0x01U)
 #define TS_KERNEL_DUMPFLAG (0x02U)
 #define TS_ENDGRAPH_DUMPFLAG (0x02U)
 #define TS_ENDGRAPH_INFOFLAG (0x04U)
 #define TS_TASK_UNSINKFLAG (0x08U)
 #define TS_TASK_OVERFLOW_DUMP_FLAG_OFFSET 0x04U
-#define TS_TASK_INVALID_FLAG 0x20U   /* bit 5: The task is invalid. */
-#define TS_TASK_FAST_CQ_FLAG 0x40U  /* bit 6: fast cq flag */
+#define TS_TASK_INVALID_FLAG 0x20U /* bit 5: The task is invalid. */
+#define TS_TASK_FAST_CQ_FLAG 0x40U /* bit 6: fast cq flag */
 
 /**
  * @ingroup tsch
  * @brief the struct define of memory copy type task
  */
-enum rtMemcpyAddrConvertType {
-    TS_NOT_NEED_CONVERT,
-    TS_DMA_ADDR_CONVERT,
-    TS_NO_DMA_ADDR_CONVERT
-};
+enum rtMemcpyAddrConvertType { TS_NOT_NEED_CONVERT, TS_DMA_ADDR_CONVERT, TS_NO_DMA_ADDR_CONVERT };
 
 struct TS_DMA_OFFSET_ADDR {
     uint64_t offset;
@@ -398,7 +394,7 @@ struct TS_DMA_OFFSET_ADDR {
 struct TS_NO_DMA_OFFSET_ADDR {
     uint32_t srcVirAddr;
     uint32_t dstVirAddr;
-    uint32_t dstOffsetLow;  // only TS used for save d2dAddrCpy dstOffset
+    uint32_t dstOffsetLow; // only TS used for save d2dAddrCpy dstOffset
 };
 
 struct TS_D2D_ADDR_OFFSET {
@@ -420,7 +416,7 @@ typedef struct tag_ts_memcpy_task {
     uint8_t reserved2 : 7;
     int16_t timewheel_slot; /**< used only by ts */
     union {
-        struct TS_DMA_OFFSET_ADDR dmaOffsetAddr; // call MemConvertAddr
+        struct TS_DMA_OFFSET_ADDR dmaOffsetAddr;      // call MemConvertAddr
         struct TS_NO_DMA_OFFSET_ADDR noDmaOffsetAddr; // call MemAddressTranslate
         struct TS_D2D_ADDR_OFFSET d2dAddrOffset;
     };
@@ -479,7 +475,7 @@ typedef struct tag_ts_create_stream {
     uint8_t priority;
     uint8_t stream_attr;
     uint8_t group_id;
-    uint8_t device_id;  // runtime: the size is
+    uint8_t device_id; // runtime: the size is
     uint8_t support_log_to_host;
     uint8_t reserved;
 } ts_create_stream_t;
@@ -494,7 +490,7 @@ typedef struct tag_ts_create_l2_addr {
 
 typedef struct tag_ts_profile_enable {
     uint64_t pid;
-    uint8_t pmu_event_id[8];  // should use AI_CORE_MAX_PMU_NUM, but it's bad to include profiling_agent.h
+    uint8_t pmu_event_id[8]; // should use AI_CORE_MAX_PMU_NUM, but it's bad to include profiling_agent.h
     uint64_t global_start_count_cycle;
     uint64_t global_stop_count_cycle;
     uint8_t user_defined_profiling_enable;
@@ -533,15 +529,15 @@ typedef struct tag_ts_mdcprof {
 
 /* *BEGIN    ADD HCCL multi_device feature 2018-01-24    ******** */
 typedef struct tag_ts_remote_event_wait_task {
-    uint64_t src_mailbox_pa;      /* offset 0 */
-    uint64_t src_doorbell_pa;     /* offset 8 */
-    uint64_t dst_doorbell_pa;     /* offset 16 */
-    uint16_t src_event_id;        /* offset 24 */
-    uint16_t src_device_id;       /* offset 26 */
-    uint16_t dst_device_id;       /* offset 28 */
-    uint8_t channel_type;         /* offset 30 */
-    uint8_t reserved[17];         /* offset 31 */
-} ts_remote_event_wait_t; /* *END      ADD HCCL multi_device feature 2018-01-24    ******** */
+    uint64_t src_mailbox_pa;  /* offset 0 */
+    uint64_t src_doorbell_pa; /* offset 8 */
+    uint64_t dst_doorbell_pa; /* offset 16 */
+    uint16_t src_event_id;    /* offset 24 */
+    uint16_t src_device_id;   /* offset 26 */
+    uint16_t dst_device_id;   /* offset 28 */
+    uint8_t channel_type;     /* offset 30 */
+    uint8_t reserved[17];     /* offset 31 */
+} ts_remote_event_wait_t;     /* *END      ADD HCCL multi_device feature 2018-01-24    ******** */
 
 typedef struct tag_tsPCTrace_task {
     uint64_t trace_buf_addr;
@@ -571,14 +567,14 @@ typedef struct tag_ts_model_maintaince_task {
     uint32_t executor_flag;
     uint64_t exec_times_offset;
     uint8_t reserved[22];
-    uint16_t v_model_id;    // use by vm mode, runtime not use it.
+    uint16_t v_model_id; // use by vm mode, runtime not use it.
 } ts_model_maintaince_task_t;
 
 typedef struct tag_ts_maintaince_task {
-    uint8_t  sub_type; // force recycle
-    uint8_t  rsv;
+    uint8_t sub_type; // force recycle
+    uint8_t rsv;
     uint16_t target_id;
-    uint8_t  reserved[44];
+    uint8_t reserved[44];
 } ts_maintaince_task_t;
 
 typedef struct tag_ts_dynamic_profile_enable {
@@ -611,7 +607,7 @@ enum tag_ts_mmt_operation_type {
     TS_MMT_MODEL_DESTROY = 3, /**< model destroy */
     TS_MMT_MODEL_PRE_PROC = 4,
     TS_MMT_STREAM_LOAD_COMPLETE = 5,
-    TS_MMT_MODEL_ABORT = 6,   /**< model abort */
+    TS_MMT_MODEL_ABORT = 6, /**< model abort */
     TS_MMT_RESERVED
 };
 
@@ -697,12 +693,12 @@ typedef struct tag_ts_label_set_task {
 } ts_label_set_task_t;
 
 typedef struct tag_ts_label_switch_task {
-    uint64_t pptr;  // PA
+    uint64_t pptr; // PA
     uint32_t condition;
     uint32_t value;
     uint16_t true_label_id;
     uint16_t true_label_id_to_node_idx;
-    uint16_t next_task_idx_bak;  // backup next_task_idx in persistent_task_pool
+    uint16_t next_task_idx_bak; // backup next_task_idx in persistent_task_pool
     uint16_t true_label_id_to_stream_id;
     uint8_t reserved[20];
     uint32_t virAddr;
@@ -711,7 +707,7 @@ typedef struct tag_ts_label_switch_task {
 typedef struct tag_ts_label_goto_task {
     uint16_t label_id;
     uint16_t label_id_to_node_idx;
-    uint16_t next_task_idx_bak;  // backup next_task_idx in persistent_task_pool
+    uint16_t next_task_idx_bak; // backup next_task_idx in persistent_task_pool
     uint16_t label_id_to_stream_id;
     uint8_t reserved[40];
 } ts_label_goto_task_t;
@@ -729,45 +725,45 @@ typedef struct tag_ts_aicpu_load_info_task {
 } ts_aicpu_load_info_task_t;
 
 /**
-* @ingroup ts
-* @brief the struct define of debug register task
-*/
+ * @ingroup ts
+ * @brief the struct define of debug register task
+ */
 typedef struct tag_ts_debug_register_task {
     uint64_t addr;
     uint32_t model_id;
     uint32_t flag;
-    uint32_t virAddr; /* for addr translation */
-    uint8_t  reserved[20]; /* reserved 20 bytes */
+    uint32_t virAddr;     /* for addr translation */
+    uint8_t reserved[20]; /* reserved 20 bytes */
 } ts_debug_register_task_t;
 
 /**
-* @ingroup ts
-* @brief the struct define of debug unregister task
-*/
+ * @ingroup ts
+ * @brief the struct define of debug unregister task
+ */
 typedef struct tag_ts_debug_unregister_task {
     uint32_t model_id;
-    uint8_t  reserved[44]; // reserved 44 bytes
+    uint8_t reserved[44]; // reserved 44 bytes
 } ts_debug_unregister_task_t;
 
 /**
-* @ingroup ts
-* @brief the struct define of debug register with stream task
-*/
+ * @ingroup ts
+ * @brief the struct define of debug register with stream task
+ */
 typedef struct tag_ts_debug_register_with_stream_task {
     uint64_t addr;
     uint32_t stream_id;
     uint32_t flag;
-    uint32_t virAddr; /* for addr translation */
-    uint8_t  reserved[28]; /* reserved 28 bytes */
+    uint32_t virAddr;     /* for addr translation */
+    uint8_t reserved[28]; /* reserved 28 bytes */
 } ts_debug_register_with_stream_task_t;
 
 /**
-* @ingroup ts
-* @brief the struct define of debug unregister with stream task
-*/
+ * @ingroup ts
+ * @brief the struct define of debug unregister with stream task
+ */
 typedef struct tag_ts_debug_unregister_with_stream_task {
     uint32_t stream_id;
-    uint8_t  reserved[44]; // reserved 44 bytes
+    uint8_t reserved[44]; // reserved 44 bytes
 } ts_debug_unregister_with_stream_task_t;
 
 typedef struct tag_ts_end_graph {
@@ -801,7 +797,7 @@ typedef struct tag_ts_host_func_cb_task {
     uint32_t cb_rpt_cqid;
     uint8_t is_block;
     uint8_t reserved[27];
-}ts_host_func_cb_task_t;
+} ts_host_func_cb_task_t;
 
 typedef struct tag_node_info {
     uint32_t node_idx;
@@ -825,13 +821,13 @@ typedef struct tag_ts_label_dev_info_v2 {
         rt_hwts_info_t hwts_info;
         uint16_t reserved[5];
     } u;
-}ts_label_dev_info_v2_t;
+} ts_label_dev_info_v2_t;
 
 typedef struct tag_ts_label_dev_info {
     uint16_t model_id;
     uint16_t stream_id;
     uint16_t label_id;
-}ts_label_dev_info_t;
+} ts_label_dev_info_t;
 
 typedef struct tag_ts_stream_label_switch_by_index_task_t {
     uint64_t index_ptr;
@@ -855,8 +851,8 @@ typedef struct tag_ts_device_ringbuffer_control_task_t {
     uint64_t ringbuffer_phy_addr;
     uint64_t pid;
     uint32_t total_len;
-    uint8_t  ringbuffer_del_flag; // 0:create 1:delete
-    uint8_t  reserved[19];
+    uint8_t ringbuffer_del_flag; // 0:create 1:delete
+    uint8_t reserved[19];
 } ts_ringbuffer_control_t;
 
 typedef struct tag_ts_timeout_set_task_t {
@@ -889,7 +885,7 @@ typedef struct tag_ts_stream_set_tag_t {
     uint16_t rsv;
     uint32_t geOpTag;
     uint32_t reserved[10];
-}ts_stream_set_tag_t;
+} ts_stream_set_tag_t;
 
 typedef struct tag_ts_set_stream_mode_t {
     uint64_t mode;
@@ -903,7 +899,7 @@ typedef struct tag_ts_flip_task_t {
 
 #ifndef STARS_CTRL_CPU
 typedef struct tag_ts_model_update_task_t { // rtMdlTaskUpdate_t
-    uint64_t desc_buff_offset; // rtFftsPlusTaskInfo_t-->descBuf
+    uint64_t desc_buff_offset;              // rtFftsPlusTaskInfo_t-->descBuf
     uint64_t tiling_key_offset;
     uint64_t num_blocks_offset;
     uint64_t tiling_tab_offset;
@@ -911,7 +907,7 @@ typedef struct tag_ts_model_update_task_t { // rtMdlTaskUpdate_t
     uint16_t des_stream_id;
     uint16_t des_task_id;
     uint16_t exe_stream_id;
-    uint8_t  reserved[8];
+    uint8_t reserved[8];
 } ts_model_update_task_t;
 #else
 typedef struct tag_ts_model_update_task_t { // rtMdlTaskUpdate_t
@@ -930,7 +926,7 @@ typedef struct tag_ts_common_cmd_task {
     uint16_t stream_id; // for streamclear
     uint32_t notify_id; // for notifyreset
     uint16_t step;      // for streamclear
-    uint8_t  reserved[38];
+    uint8_t reserved[38];
 } ts_common_cmd_task_t;
 
 typedef struct tag_ts_get_stars_version {
@@ -949,13 +945,13 @@ typedef struct tag_ts_task {
     uint16_t type;            /**< offset 6 */
     uint16_t next_stream_idx; /**< offset 8 */
     uint16_t task_state;      /**< 10*/
-    uint8_t task_prof_en : 7;     /**< offset 12* */
-    uint8_t isctrl : 1;         /* ctrltask is 1; othertask is 0 */
-    uint8_t task_info_flag;     /* bit 0: is need send cq; bit 1: is bind task;
-                                 * bit 2: endgraph dump, bit 3: unsink flag
-                                 * bit 4: overflow dump, bit 5: invalid flag
-                                   bit 6: fast cq flag */
-    uint16_t task_info; /**< now used in cloud model rmda stream deal */
+    uint8_t task_prof_en : 7; /**< offset 12* */
+    uint8_t isctrl : 1;       /* ctrltask is 1; othertask is 0 */
+    uint8_t task_info_flag;   /* bit 0: is need send cq; bit 1: is bind task;
+                               * bit 2: endgraph dump, bit 3: unsink flag
+                               * bit 4: overflow dump, bit 5: invalid flag
+                                 bit 6: fast cq flag */
+    uint16_t task_info;       /**< now used in cloud model rmda stream deal */
     /* 48 bytes */
     union {
         ts_kernel_task_t kernel_task;
@@ -993,10 +989,10 @@ typedef struct tag_ts_task {
         ts_datadump_load_info_task_t datadump_load_info_task;
         ts_debug_register_task_t debug_register_task;
         ts_debug_unregister_task_t debug_unregister_task;
-        ts_stream_switchN_task_t    stream_switchN_task;
-        ts_host_func_cb_task_t      host_func_cb_task;
-        ts_onlineprof_start_t       onlineprof_start_task;
-        ts_onlineprof_stop_t        onlineprof_stop_task;
+        ts_stream_switchN_task_t stream_switchN_task;
+        ts_host_func_cb_task_t host_func_cb_task;
+        ts_onlineprof_start_t onlineprof_start_task;
+        ts_onlineprof_stop_t onlineprof_stop_task;
         ts_rdma_db_send_task_t rdma_db_send_task;
         ts_stream_label_switch_by_index_task_t stream_label_switch_index_task;
         ts_stream_label_goto_task_t stream_label_goto_task;
@@ -1017,27 +1013,27 @@ typedef struct tag_ts_task {
 } ts_task_t;
 
 enum tag_ts_aicpu_mail_box_cmd_type {
-    AICPU_MODEL_OPERATE = 1,      /* 1 aicpu model operate */
-    AICPU_MODEL_OPERATE_RESPONSE, /* 2 aicpu model operate response */
-    AIC_TASK_REPORT,              /* 3 aic task report */
-    AICPU_ACTIVE_STREAM,          /* 4 aicpu active stream */
-    AICPU_NOTIFY_RECORD,          /* 5 aicpu notify */
-    AICPU_DATADUMP_REPORT,        /* 6 data dump report */
-    AICPU_DATADUMP_LOADINFO,      /* 7 data dump load info */
-    AICPU_DATADUMP_RESPONSE,      /* 8 data dump response */
-    AICPU_ABNORMAL,               /* 9 aicpu abnormal report */
-    AICPU_TASK_ACTIVE_FOR_WAIT,   /* 10 aicpu dvpp task active */
-    AICPU_NOTICE_TS_PID,          /* 11 aicpu pid */
-    AICPU_RECORD,                 /* 12 aicpu record: 1-event_record; 2-notify_record */
-    AICPU_TIMEOUT_CONFIG,         /* 13 aicpu timeout config */
-    AICPU_TIMEOUT_CONFIG_RESPONSE, /* 14 aicpu timeout response */
-    CALLBACK_RECORD,              /* 15 synchronized callback record from runtime, not for aicpu */
-    AICPU_ERR_MSG_REPORT,         /* 16 aicpu err msg report */
+    AICPU_MODEL_OPERATE = 1,         /* 1 aicpu model operate */
+    AICPU_MODEL_OPERATE_RESPONSE,    /* 2 aicpu model operate response */
+    AIC_TASK_REPORT,                 /* 3 aic task report */
+    AICPU_ACTIVE_STREAM,             /* 4 aicpu active stream */
+    AICPU_NOTIFY_RECORD,             /* 5 aicpu notify */
+    AICPU_DATADUMP_REPORT,           /* 6 data dump report */
+    AICPU_DATADUMP_LOADINFO,         /* 7 data dump load info */
+    AICPU_DATADUMP_RESPONSE,         /* 8 data dump response */
+    AICPU_ABNORMAL,                  /* 9 aicpu abnormal report */
+    AICPU_TASK_ACTIVE_FOR_WAIT,      /* 10 aicpu dvpp task active */
+    AICPU_NOTICE_TS_PID,             /* 11 aicpu pid */
+    AICPU_RECORD,                    /* 12 aicpu record: 1-event_record; 2-notify_record */
+    AICPU_TIMEOUT_CONFIG,            /* 13 aicpu timeout config */
+    AICPU_TIMEOUT_CONFIG_RESPONSE,   /* 14 aicpu timeout response */
+    CALLBACK_RECORD,                 /* 15 synchronized callback record from runtime, not for aicpu */
+    AICPU_ERR_MSG_REPORT,            /* 16 aicpu err msg report */
     AICPU_FFTS_PLUS_DATADUMP_REPORT, /* 17 ffts plus data dump report */
     AICPU_INFO_LOAD,                 /* 18 aicpu info load for tiling key sink */
     AICPU_INFO_LOAD_RESPONSE,        /* 19 aicpu info load  response */
-    AIC_ERROR_REPORT,             /* 20 aic task err report */
-    INVALID_AICPU_CMD,            /* invalid flag */
+    AIC_ERROR_REPORT,                /* 20 aic task err report */
+    INVALID_AICPU_CMD,               /* invalid flag */
 };
 
 typedef struct tag_ts_aicpu_model_operate {
@@ -1074,16 +1070,16 @@ typedef struct tag_ts_to_aicpu_aic_err_report {
 
 typedef struct tag_ts_aicpu_notify {
     volatile uint32_t notify_id;
-    volatile uint16_t ret_code;  // using ts_error_t
+    volatile uint16_t ret_code; // using ts_error_t
 } ts_aicpu_notify_t;
 
 typedef struct tag_ts_aicpu_event {
     volatile uint32_t record_id;
     volatile uint8_t record_type;
     volatile uint8_t reserved;
-    volatile uint16_t ret_code;  // using ts_error_t
-    volatile uint16_t fault_task_id;    // using report error of operator
-    volatile uint16_t fault_stream_id;  // using report error of operator
+    volatile uint16_t ret_code;        // using ts_error_t
+    volatile uint16_t fault_task_id;   // using report error of operator
+    volatile uint16_t fault_stream_id; // using report error of operator
 } ts_aicpu_record_t;
 
 typedef struct tag_ts_aicpu_active_stream {
@@ -1094,23 +1090,23 @@ typedef struct tag_ts_aicpu_active_stream {
 
 typedef struct tag_ts_to_aicpu_datadump {
     volatile uint16_t model_id;
-    volatile uint16_t stream_id;      // first dump task info
-    volatile uint16_t task_id;        // first dump task info
-    volatile uint16_t stream_id1;     // second dump task info
-    volatile uint16_t task_id1;       // second dump task info
-    volatile uint16_t ack_stream_id;  // record overflow dump aic task info
-    volatile uint16_t ack_task_id;    // record overflow dump aic task info
+    volatile uint16_t stream_id;     // first dump task info
+    volatile uint16_t task_id;       // first dump task info
+    volatile uint16_t stream_id1;    // second dump task info
+    volatile uint16_t task_id1;      // second dump task info
+    volatile uint16_t ack_stream_id; // record overflow dump aic task info
+    volatile uint16_t ack_task_id;   // record overflow dump aic task info
     volatile uint8_t reserved[2];
 } ts_to_aicpu_datadump_t;
 
 typedef struct tag_ts_to_aicpu_ffts_plus_datadump {
-    volatile uint16_t model_id;       // model id
-    volatile uint16_t stream_id;      // first dump task info
-    volatile uint16_t task_id;        // first dump task info
-    volatile uint16_t stream_id1;     // second dump task info
-    volatile uint16_t task_id1;       // second dump task info
-    volatile uint16_t context_id;     // context id
-    volatile uint16_t thread_id;      // current thread ID
+    volatile uint16_t model_id;   // model id
+    volatile uint16_t stream_id;  // first dump task info
+    volatile uint16_t task_id;    // first dump task info
+    volatile uint16_t stream_id1; // second dump task info
+    volatile uint16_t task_id1;   // second dump task info
+    volatile uint16_t context_id; // context id
+    volatile uint16_t thread_id;  // current thread ID
     volatile uint8_t reserved[2];
 #if (defined(DAVINCI_CLOUD_V2) || defined(DAVINCI_CLOUD_V2_FFTS))
     volatile uint32_t pid;
@@ -1231,11 +1227,11 @@ typedef struct tag_stream_snapshot {
 } ts_stream_snapshot_t;
 
 // ts_to_aicpu_task_report_t  resultcode
-#define TASK_REPORT_RESULT_CODE_FAIL  (1U)
+#define TASK_REPORT_RESULT_CODE_FAIL (1U)
 
 typedef enum tag_ts_aicpu_record_type {
-    AICPU_MSG_EVENT_RECORD = 1,      /* 1 aicpu event record */
-    AICPU_MSG_NOTIFY_RECORD          /* 2 aicpu notify record */
+    AICPU_MSG_EVENT_RECORD = 1, /* 1 aicpu event record */
+    AICPU_MSG_NOTIFY_RECORD     /* 2 aicpu notify record */
 } ts_aicpu_record_type_t;
 
 typedef enum tag_ts_sq_alloc_type {
@@ -1324,53 +1320,53 @@ typedef struct tag_stars_cond_op_function_call {
 } ts_stars_cond_op_function_call_t;
 
 /* stars sqe struct begin */
-#define STARS_SQE_UNIT_LEN             64
-#define STARS_CQE_UNIT_LEN             16
-#define TS_STARS_SQE_TYPE_INVALID      63
+#define STARS_SQE_UNIT_LEN 64
+#define STARS_CQE_UNIT_LEN 16
+#define TS_STARS_SQE_TYPE_INVALID 63
 
 #ifndef STARS_CTRL_CPU
 typedef enum ts_stars_sqe_type {
-    TS_STARS_SQE_TYPE_FFTS            = 0, // FFTS
-    TS_STARS_SQE_TYPE_AICPU           = 1, // AICPU
-    TS_STARS_SQE_TYPE_PLACE_HOLDER    = 3, // PLACE_HOLDER
-    TS_STARS_SQE_TYPE_EVENT_RECORD    = 4, // EVENT_RECORD
-    TS_STARS_SQE_TYPE_EVENT_WAIT      = 5, // EVENT_WAIT
-    TS_STARS_SQE_TYPE_NOTIFY_RECORD   = 6, // NOTIFY_RECORD
-    TS_STARS_SQE_TYPE_NOTIFY_WAIT     = 7, // NOTIFY_WAIT
-    TS_STARS_SQE_TYPE_WRITE_VALUE     = 8, // for EVENT_RESET task
-    TS_STARS_SQE_TYPE_SDMA            = 11, // SDMA
-    TS_STARS_SQE_TYPE_VPC             = 12, // VPC
-    TS_STARS_SQE_TYPE_JPEGE           = 13, // JPEGE
-    TS_STARS_SQE_TYPE_JPEGD           = 14, // JPEGD
-    TS_STARS_SQE_TYPE_DSA             = 15, // DSA
-    TS_STARS_SQE_TYPE_ROCCE           = 16, // RoCCE
-    TS_STARS_SQE_TYPE_PCIE_DMA        = 17, // PCIE_DMA
-    TS_STARS_SQE_TYPE_RESERVE         = 18, // RESERVE
-    TS_STARS_SQE_TYPE_CDQM            = 19, // CDQM
-    TS_STARS_SQE_TYPE_COND            = 20, // condition
+    TS_STARS_SQE_TYPE_FFTS = 0,          // FFTS
+    TS_STARS_SQE_TYPE_AICPU = 1,         // AICPU
+    TS_STARS_SQE_TYPE_PLACE_HOLDER = 3,  // PLACE_HOLDER
+    TS_STARS_SQE_TYPE_EVENT_RECORD = 4,  // EVENT_RECORD
+    TS_STARS_SQE_TYPE_EVENT_WAIT = 5,    // EVENT_WAIT
+    TS_STARS_SQE_TYPE_NOTIFY_RECORD = 6, // NOTIFY_RECORD
+    TS_STARS_SQE_TYPE_NOTIFY_WAIT = 7,   // NOTIFY_WAIT
+    TS_STARS_SQE_TYPE_WRITE_VALUE = 8,   // for EVENT_RESET task
+    TS_STARS_SQE_TYPE_SDMA = 11,         // SDMA
+    TS_STARS_SQE_TYPE_VPC = 12,          // VPC
+    TS_STARS_SQE_TYPE_JPEGE = 13,        // JPEGE
+    TS_STARS_SQE_TYPE_JPEGD = 14,        // JPEGD
+    TS_STARS_SQE_TYPE_DSA = 15,          // DSA
+    TS_STARS_SQE_TYPE_ROCCE = 16,        // RoCCE
+    TS_STARS_SQE_TYPE_PCIE_DMA = 17,     // PCIE_DMA
+    TS_STARS_SQE_TYPE_RESERVE = 18,      // RESERVE
+    TS_STARS_SQE_TYPE_CDQM = 19,         // CDQM
+    TS_STARS_SQE_TYPE_COND = 20,         // condition
     TS_STARS_SQE_TYPE_END
 } ts_stars_sqe_type_t;
 #else
 typedef enum ts_stars_sqe_type {
-    TS_STARS_SQE_TYPE_AIC            = 0,
-    TS_STARS_SQE_TYPE_AIV            = 1,
-    TS_STARS_SQE_TYPE_FUSION         = 2,
-    TS_STARS_SQE_TYPE_PLACE_HOLDER   = 3, // PLACE_HOLDER
-    TS_STARS_SQE_TYPE_AICPU_H        = 4,
-    TS_STARS_SQE_TYPE_AICPU_D        = 5, // NOTIFY_RECORD
-    TS_STARS_SQE_TYPE_NOTIFY_RECORD  = 6,
-    TS_STARS_SQE_TYPE_NOTIFY_WAIT    = 7,
-    TS_STARS_SQE_TYPE_WRITE_VALUE    = 8,
-    TS_STARS_SQE_TYPE_UBDMA          = 9,
-    TS_STARS_SQE_TYPE_ASYNCDMA       = 10,
-    TS_STARS_SQE_TYPE_SDMA           = 11,
-    TS_STARS_SQE_TYPE_VPC            = 12,
-    TS_STARS_SQE_TYPE_JPEGE          = 13,
-    TS_STARS_SQE_TYPE_JPEGD          = 14,
-    TS_STARS_SQE_TYPE_CMO            = 15,
-    TS_STARS_SQE_TYPE_CCU            = 16,
-    TS_STARS_SQE_TYPE_COND           = 20,
-    TS_STARS_SQE_TYPE_END            = 63,
+    TS_STARS_SQE_TYPE_AIC = 0,
+    TS_STARS_SQE_TYPE_AIV = 1,
+    TS_STARS_SQE_TYPE_FUSION = 2,
+    TS_STARS_SQE_TYPE_PLACE_HOLDER = 3, // PLACE_HOLDER
+    TS_STARS_SQE_TYPE_AICPU_H = 4,
+    TS_STARS_SQE_TYPE_AICPU_D = 5, // NOTIFY_RECORD
+    TS_STARS_SQE_TYPE_NOTIFY_RECORD = 6,
+    TS_STARS_SQE_TYPE_NOTIFY_WAIT = 7,
+    TS_STARS_SQE_TYPE_WRITE_VALUE = 8,
+    TS_STARS_SQE_TYPE_UBDMA = 9,
+    TS_STARS_SQE_TYPE_ASYNCDMA = 10,
+    TS_STARS_SQE_TYPE_SDMA = 11,
+    TS_STARS_SQE_TYPE_VPC = 12,
+    TS_STARS_SQE_TYPE_JPEGE = 13,
+    TS_STARS_SQE_TYPE_JPEGD = 14,
+    TS_STARS_SQE_TYPE_CMO = 15,
+    TS_STARS_SQE_TYPE_CCU = 16,
+    TS_STARS_SQE_TYPE_COND = 20,
+    TS_STARS_SQE_TYPE_END = 63,
 } ts_stars_sqe_type_t;
 #endif
 
@@ -1388,12 +1384,12 @@ enum rtTopicType_t {
 };
 
 enum ts_ffts_type {
-    TS_FFTS_TYPE_AIC_ONLY       = 0U, // aic only
-    TS_FFTS_TYPE_AIV_ONLY       = 1U, // aiv only
-    TS_FFTS_TYPE_AUTO_THREAD    = 2U,   // ffts auto thread mode, same as ffts define
-    TS_FFTS_TYPE_MANUAL_THREAD  = 3U, // ffts manual thread mode, same as ffts define
-    TS_FFTS_TYPE_FFTS_PLUS      = 4U, // ffts plus
-    TS_FFTS_TYPE_AIC_AIV_MIX    = 5U  // aic/aiv mixed(1910b)
+    TS_FFTS_TYPE_AIC_ONLY = 0U,      // aic only
+    TS_FFTS_TYPE_AIV_ONLY = 1U,      // aiv only
+    TS_FFTS_TYPE_AUTO_THREAD = 2U,   // ffts auto thread mode, same as ffts define
+    TS_FFTS_TYPE_MANUAL_THREAD = 3U, // ffts manual thread mode, same as ffts define
+    TS_FFTS_TYPE_FFTS_PLUS = 4U,     // ffts plus
+    TS_FFTS_TYPE_AIC_AIV_MIX = 5U    // aic/aiv mixed(1910b)
 };
 
 enum ts_aic_type {
@@ -1411,7 +1407,7 @@ enum ts_stars_write_value_sub_type {
 };
 
 #pragma pack(push)
-#pragma pack (1)
+#pragma pack(1)
 #ifndef STARS_CTRL_CPU
 typedef struct ts_stars_sqe_header {
     uint8_t type : 6;
@@ -1496,7 +1492,7 @@ typedef struct ts_stars_ph_sqe {
         ts_datadumploadinfo_t datadumploadinfo;
         ts_keypoint_task_t keypoint_task;
         ts_dynamic_profile_enable dynamic_profiling_info;
-        ts_debug_register_task_t  model_debug_register_task;
+        ts_debug_register_task_t model_debug_register_task;
         ts_debug_register_with_stream_task_t stream_debug_register_task;
         ts_model_maintaince_task_t model_maintaince_task;
         ts_ringbuffer_control_t ringbuffer_control_task;
@@ -1533,8 +1529,8 @@ typedef struct ts_stars_event_sqe {
     uint16_t res2;
 
     uint16_t res3;
-    uint8_t  kernel_credit;
-    uint8_t  res4;
+    uint8_t kernel_credit;
+    uint8_t res4;
 
     uint32_t exe_result;
     uint32_t timeout;
@@ -1591,7 +1587,7 @@ typedef struct stars_aicpu_sqe {
     uint32_t res6 : 15;
 
     /* word12-13 */
-    uint32_t extra_field_low;  // send task id info to aicpu
+    uint32_t extra_field_low; // send task id info to aicpu
     uint32_t extra_field_high;
 
     /* word14 */
@@ -1615,13 +1611,13 @@ typedef struct ts_stars_vpc_sqe {
     uint8_t res0 : 1;
     uint16_t res1;
     uint16_t stream_id;
-    uint16_t task_id;  // stars sqe header
+    uint16_t task_id; // stars sqe header
     uint32_t res2;
     uint16_t res3;
     uint8_t kernel_credit;
     uint8_t ptr_mode : 1;
-    uint8_t error_times : 2;  // ts defined field, record task error times for vpc task exception
-    uint8_t post_p_bak : 2;   // ts defined field, back post_p flag on exception
+    uint8_t error_times : 2; // ts defined field, record task error times for vpc task exception
+    uint8_t post_p_bak : 2;  // ts defined field, back post_p flag on exception
     uint8_t res4 : 3;
     uint32_t res[12];
 } ts_stars_vpc_sqe_t;
@@ -1637,7 +1633,7 @@ typedef struct ts_stars_jpegd_sqe {
     uint8_t res0 : 1;
     uint16_t res1;
     uint16_t stream_id;
-    uint16_t task_id;  // stars sqe header
+    uint16_t task_id; // stars sqe header
     uint32_t res2;
     uint16_t res3;
     uint8_t kernel_credit;
@@ -1692,14 +1688,14 @@ typedef struct stars_get_float_status_sqe {
 
 #else
 typedef enum tag_david_notify_sub_type {
-    NOTIFY_SUB_TYPE_SINGLE_NOTIFY_RECORD            = 0U,
-    NOTIFY_SUB_TYPE_SINGLE_NOTIFY_WAIT              = 1U,
-    NOTIFY_SUB_TYPE_COUNT_NOTIFY_RECORD             = 2U,
-    NOTIFY_SUB_TYPE_COUNT_NOTIFY_WAIT               = 3U,
-    NOTIFY_SUB_TYPE_EVENT_USE_SINGLE_NOTIFY_RECORD  = 4U,
-    NOTIFY_SUB_TYPE_EVENT_USE_SINGLE_NOTIFY_WAIT    = 5U,
-    NOTIFY_SUB_TYPE_EVENT_USE_COUNT_NOTIFY_RECORD   = 6U,
-    NOTIFY_SUB_TYPE_EVENT_USE_COUNT_NOTIFY_WAIT     = 7U,
+    NOTIFY_SUB_TYPE_SINGLE_NOTIFY_RECORD = 0U,
+    NOTIFY_SUB_TYPE_SINGLE_NOTIFY_WAIT = 1U,
+    NOTIFY_SUB_TYPE_COUNT_NOTIFY_RECORD = 2U,
+    NOTIFY_SUB_TYPE_COUNT_NOTIFY_WAIT = 3U,
+    NOTIFY_SUB_TYPE_EVENT_USE_SINGLE_NOTIFY_RECORD = 4U,
+    NOTIFY_SUB_TYPE_EVENT_USE_SINGLE_NOTIFY_WAIT = 5U,
+    NOTIFY_SUB_TYPE_EVENT_USE_COUNT_NOTIFY_RECORD = 6U,
+    NOTIFY_SUB_TYPE_EVENT_USE_COUNT_NOTIFY_WAIT = 7U,
     NOTIFY_SUB_TYPE_MAX
 } david_notify_sub_type_t;
 
@@ -1721,7 +1717,7 @@ typedef struct ts_stars_sqe_normal {
     uint16_t task_id;
 
     uint32_t res2 : 11;
-    uint32_t sub_type : 5;  // for fusion use
+    uint32_t sub_type : 5; // for fusion use
     uint32_t resv : 16;
 
     uint16_t res3;
@@ -1770,7 +1766,7 @@ typedef struct tag_ts_call_back_info {
     uint32_t fndata_high;
 
     /* word12-13 */
-    uint32_t res2;               // noly vf & topic AICPU & callback msg use for hostpid.
+    uint32_t res2; // noly vf & topic AICPU & callback msg use for hostpid.
     uint32_t res3;
 
     /* word14 */
@@ -1800,17 +1796,17 @@ typedef struct ts_stars_ph_sqe {
     uint16_t stream_id;
     uint16_t task_id;
 
-    uint32_t res1;    // use for RUNTIME_BUILD_VERSION
+    uint32_t res1; // use for RUNTIME_BUILD_VERSION
 
     uint16_t task_type;
     uint8_t kernel_credit;
-    uint8_t timeout_type;  // use for timeout cqe in david
+    uint8_t timeout_type; // use for timeout cqe in david
     union {
         ts_maintaince_task_t maintaince_info;
         ts_datadumploadinfo_t datadumploadinfo;
         ts_keypoint_task_t keypoint_task;
         ts_dynamic_profile_enable dynamic_profiling_info;
-        ts_debug_register_task_t  model_debug_register_task;
+        ts_debug_register_task_t model_debug_register_task;
         ts_debug_register_with_stream_task_t stream_debug_register_task;
         ts_model_maintaince_task_t model_maintaince_task;
         ts_ringbuffer_control_t ringbuffer_control_task;
@@ -1838,7 +1834,7 @@ typedef struct stars_function_call_sqe {
     uint8_t kernel_credit;
     uint8_t reserved3 : 4;
     uint8_t debug_flag : 1;
-    uint8_t sqe_length : 3;  // use reserved filed
+    uint8_t sqe_length : 3; // use reserved filed
 
     ts_stars_cond_op_LHWI_t lhwi1;
     ts_stars_cond_op_LLWI_t llwi1;
@@ -1851,13 +1847,13 @@ typedef struct stars_function_call_sqe {
 typedef struct ts_stars_aic_aiv_sqe {
     /* word0-1 */
     ts_stars_sqe_header_t header;
- 
+
     /* word2 */
     uint16_t group_dim;
     uint16_t group_num_blocks;
- 
+
     /* word3 */
-    uint8_t res0;      // res0 used for DATADUMP BIUPERF L2CACHE flag
+    uint8_t res0; // res0 used for DATADUMP BIUPERF L2CACHE flag
     uint8_t res1;
     uint8_t kernel_credit;
     uint8_t die_friendly : 1;
@@ -1865,11 +1861,11 @@ typedef struct ts_stars_aic_aiv_sqe {
     uint8_t loose : 1;
     uint8_t res2 : 2;
     uint8_t sqe_length : 3;
- 
+
     /* word4-5 */
     uint32_t stack_phy_base_low;
     uint32_t stack_phy_base_high;
- 
+
     /* word6 */
     uint16_t aic_pmg : 2;
     uint16_t aic_ns : 1;
@@ -1880,7 +1876,7 @@ typedef struct ts_stars_aic_aiv_sqe {
     uint16_t aic_wrr_wr : 3;
     uint16_t aic_icache_prefetch_cnt : 5;
     uint16_t aiv_icache_prefetch_cnt : 5;
- 
+
     /* word7 */
     uint16_t aiv_pmg : 2;
     uint16_t aiv_ns : 1;
@@ -1891,15 +1887,15 @@ typedef struct ts_stars_aic_aiv_sqe {
     uint16_t aiv_wrr_wr : 3;
     uint16_t schem : 2;
     uint16_t ratio : 8;
- 
+
     /* word8-9 */
     uint32_t aic_start_pc_low;
     uint32_t aiv_start_pc_low;
- 
+
     /* word10 */
     uint16_t aic_start_pc_high;
     uint16_t aiv_start_pc_high;
- 
+
     /* word11-15 */
     uint32_t aiv_simt_dcu_sm_size;
     uint32_t aic_task_param_ptr_l;
@@ -1907,84 +1903,84 @@ typedef struct ts_stars_aic_aiv_sqe {
     uint32_t aiv_task_param_ptr_l;
     uint32_t aiv_task_param_ptr_h;
 } ts_stars_aic_aiv_sqe_t;
- 
+
 typedef struct ts_memcpy_stride00 {
     /* word7 */
     uint16_t dst_stream_id;
     uint16_t dst_sub_stream_id;
- 
+
     /* word8-9 */
     uint32_t src_addr_low;
     uint32_t src_addr_high;
- 
+
     /* word10-11 */
     uint32_t dst_addr_low;
     uint32_t dst_addr_high;
- 
+
     /* word12 */
     uint32_t length_move;
- 
+
     /* word13-15 */
     uint32_t src_offset_low;
     uint32_t dst_offset_low;
     uint16_t src_offset_high;
     uint16_t dst_offset_high;
 } ts_memcpy_stride00_t;
- 
+
 typedef struct ts_memcpy_stride01 {
     /* word7 */
     uint16_t dst_stream_id;
     uint16_t dst_sub_stream_id;
- 
+
     /* word8-9 */
     uint32_t src_addr_low;
     uint32_t src_addr_high;
- 
+
     /* word10-11 */
     uint32_t dst_addr_low;
     uint32_t dst_addr_high;
- 
+
     /* word12 */
     uint32_t length_move;
- 
+
     /* word13-15 */
     uint32_t src_stride_length;
     uint32_t dst_stride_length;
     uint32_t stride_num;
 } ts_memcpy_stride01_t;
- 
+
 typedef struct ts_memcpy_stride10 {
     /* word7 */
     uint16_t num_outer;
     uint16_t num_inner;
- 
+
     /* word8-9 */
     uint32_t src_addr_low;
     uint32_t src_addr_high;
- 
+
     /* word10-11 */
     uint32_t stride_outer;
     uint32_t stride_inner;
- 
+
     /* word12 */
     uint32_t length_inner;
- 
+
     /* word13-15 */
     uint32_t reserved[3];
 } ts_memcpy_stride10_t;
- 
+
 typedef struct ts_david_stars_memcpy_sqe {
     /* word0-1 */
     ts_stars_sqe_header_t header;
- 
+
     /* word2 */
     uint32_t res1;
- 
+
     /* word3 */
     uint16_t res2;
     uint8_t kernel_credit;
     uint8_t res3;
- 
+
     /* word4 */
     uint32_t opcode : 8;
     uint32_t sssv : 1;
@@ -1998,19 +1994,19 @@ typedef struct ts_david_stars_memcpy_sqe {
     uint32_t comp_en : 1;
     uint32_t va_valid : 1;
     uint32_t res4 : 13;
- 
+
     /* word5 */
     uint16_t sqe_id;
     uint8_t mapam_part_id;
     uint8_t mpamns : 1;
     uint8_t pmg : 2;
     uint8_t qos : 4;
-    uint8_t d2d_offset_flag : 1;       // use reserved filed
- 
+    uint8_t d2d_offset_flag : 1; // use reserved filed
+
     /* word6 */
     uint16_t src_stream_id;
     uint16_t src_sub_stream_id;
- 
+
     /* word7-15 */
     union {
         ts_memcpy_stride00_t stride_mode0;
@@ -2031,17 +2027,17 @@ typedef struct ts_stars_notify_sqe {
 
     /* word3 */
     uint16_t sub_type; // This field is reserved and used by software.
-    uint8_t  kernel_credit;
-    uint8_t  res4 : 5;
-    uint8_t  sqe_length : 3;
+    uint8_t kernel_credit;
+    uint8_t res4 : 5;
+    uint8_t sqe_length : 3;
 
     /* word4 */
     uint32_t cnt_value;
 
     /* word5 */
-    uint32_t wait_mode_bit : 2; // bit 0:equal, bit 1:bigger
+    uint32_t wait_mode_bit : 2;   // bit 0:equal, bit 1:bigger
     uint32_t record_mode_bit : 3; // bit 0:add, bit 1:write, bit 2:clear
-    uint32_t bitmap : 1; // 1: wait bitmap mode, priority is higher than wait_mode_bit
+    uint32_t bitmap : 1;          // 1: wait bitmap mode, priority is higher than wait_mode_bit
     uint32_t res5 : 26;
 
     /* word6 */
@@ -2116,32 +2112,32 @@ typedef struct tag_ts_host_func_call_back_info {
 typedef struct ts_stars_ubdma_direct_wqe_sqe {
     /* word0-1 */
     ts_stars_sqe_header_t header;
- 
+
     /* word2 */
     uint16_t mode : 1;
     uint16_t die_id : 1;
     uint16_t res1 : 13;
     uint16_t wqe_size : 1;
     uint16_t res2;
- 
+
     /* word3 */
     uint16_t res3;
     uint8_t kernel_credit;
     uint8_t res4 : 5;
     uint8_t sqe_length : 3;
- 
+
     /* word4 */
     uint32_t jetty_id : 16;
     uint32_t res5 : 9;
     uint32_t func_id : 7;
- 
+
     /* word5-15 */
     uint32_t res6[11];
 } ts_stars_ubdma_direct_wqe_sqe_t;
 
 typedef struct ts_stars_jpegd_sqe {
     /* word0-1 */
-    ts_stars_sqe_header_t header;  // stars sqe header
+    ts_stars_sqe_header_t header; // stars sqe header
 
     /* word2 */
     uint32_t cmdBufSize;
@@ -2158,7 +2154,7 @@ typedef struct ts_stars_jpegd_sqe {
 
 typedef struct ts_stars_vpc_sqe {
     /* word0-1 */
-    ts_stars_sqe_header_t header;  // stars sqe header
+    ts_stars_sqe_header_t header; // stars sqe header
 
     /* word2 */
     uint32_t cmdBufSize;
@@ -2167,8 +2163,8 @@ typedef struct ts_stars_vpc_sqe {
     uint16_t res1;
     uint8_t kernel_credit;
     uint8_t res2 : 1;
-    uint8_t error_times : 2;  // ts defined field, record task error times for vpc task exception
-    uint8_t post_p_bak : 2;   // ts defined field, back post_p flag on exception
+    uint8_t error_times : 2; // ts defined field, record task error times for vpc task exception
+    uint8_t post_p_bak : 2;  // ts defined field, back post_p flag on exception
     uint8_t res3 : 3;
 
     /* word4-15 */
@@ -2177,7 +2173,7 @@ typedef struct ts_stars_vpc_sqe {
 
 typedef struct stars_aicpu_sqe {
     /* word0-1 */
-    ts_stars_sqe_header_t header;  // stars sqe header
+    ts_stars_sqe_header_t header; // stars sqe header
 
     /* word2 */
     uint16_t res0;
@@ -2211,13 +2207,13 @@ typedef struct stars_aicpu_sqe {
     uint32_t res5 : 16;
 
     /* word10-11 */
-    uint32_t p_l2ctrl_low; // david no use
-    uint32_t p_l2ctrl_high : 16;  // use for aicpu Software decoding
+    uint32_t p_l2ctrl_low;       // david no use
+    uint32_t p_l2ctrl_high : 16; // use for aicpu Software decoding
     uint32_t overflow_en : 1;
     uint32_t res6 : 15;
 
     /* word12-13 */
-    uint32_t extra_field_low;  // send task id info to aicpu
+    uint32_t extra_field_low; // send task id info to aicpu
     uint32_t extra_field_high;
 
     /* word14 */
@@ -2232,24 +2228,23 @@ typedef struct stars_aicpu_sqe {
 
 typedef struct stars_get_float_status_sqe {
     ts_stars_sqe_header_t header;
- 
-    uint8_t conds_sub_type;  // use reserved filed
+
+    uint8_t conds_sub_type; // use reserved filed
     uint16_t reserved0;
     uint8_t reserved1 : 7;
-    uint8_t csc : 1;  // use reserved filed
+    uint8_t csc : 1; // use reserved filed
     uint16_t reserved2;
     uint8_t kernel_credit;
     uint8_t reserved3 : 4;
     uint8_t debug_flag : 1;
-    uint8_t sqe_length : 3;  // use reserved filed
- 
+    uint8_t sqe_length : 3; // use reserved filed
+
     ts_stars_cond_op_loadimm_t ldi;
     ts_stars_cond_op_LLWI_t llwi;
     ts_stars_cond_op_store_t sd_overflow_cnt;
     ts_stars_cond_op_store_t sd_zero[7];
 } ts_stars_get_float_status_sqe_t;
 #endif
-
 
 typedef struct ts_stars_memcpy_async_sqe {
     uint8_t type : 6;
@@ -2377,7 +2372,7 @@ typedef struct ts_stars_pciedma_sqe {
     uint64_t length;
     uint32_t passid;
     uint32_t res5;
-}ts_stars_pciedma_sqe_t;
+} ts_stars_pciedma_sqe_t;
 
 typedef struct ffts_sqe {
     uint8_t type : 6;
@@ -2423,7 +2418,7 @@ typedef struct ts_stars_callback_sqe {
     uint8_t wr_cqe : 1;
     uint8_t reserved : 1;
 
-    uint16_t num_blocks;  // num_blocks or res
+    uint16_t num_blocks; // num_blocks or res
 
     uint16_t rt_stream_id;
     uint16_t header_task_id;
@@ -2460,7 +2455,7 @@ typedef struct ts_stars_callback_sqe {
     uint32_t fndata_high;
 
     /* word12-13 */
-    uint32_t res5;                 // noly vf & topic AICPU & callback use for hostpid.
+    uint32_t res5; // noly vf & topic AICPU & callback use for hostpid.
     uint32_t res6;
 
     /* word14 */
@@ -2555,7 +2550,7 @@ typedef struct ts_stars_write_value_sqe {
     uint32_t awprot : 3;
     uint32_t va : 1; // 1: virtual address; 0: phy addr
 
-    uint32_t res7;  // event id for event reset
+    uint32_t res7; // event id for event reset
     uint32_t sub_type;
 
     uint32_t write_value_part0;
@@ -2567,7 +2562,6 @@ typedef struct ts_stars_write_value_sqe {
     uint32_t write_value_part6;
     uint32_t write_value_part7;
 } ts_stars_write_value_sqe_t;
-
 
 typedef struct ts_stars_ffts_plus_sqe_header {
     uint8_t type : 6;
@@ -2600,31 +2594,31 @@ typedef struct ts_ffts_plus_sqe {
     uint16_t res4 : 5;
     // 12-15 bytes
     uint16_t sqe_index;
-    uint8_t  kernel_credit;
-    uint8_t  sub_type;
+    uint8_t kernel_credit;
+    uint8_t sub_type;
     // 16-23 bytes
     uint32_t stack_phy_base_l;
     uint32_t stack_phy_base_h;
     // 24-31 bytes
-    uint16_t  total_context_num;
-    uint16_t  ready_context_num;
-    uint16_t  preload_context_num;
-    uint16_t  timeout;
+    uint16_t total_context_num;
+    uint16_t ready_context_num;
+    uint16_t preload_context_num;
+    uint16_t timeout;
     // 32-35 bytes
-    uint16_t  res7;
-    uint16_t  prefetch_ost_num : 5;
-    uint16_t  res8 : 3;
-    uint16_t  cmaint_ost_num : 5;
-    uint16_t  res9 : 3;
+    uint16_t res7;
+    uint16_t prefetch_ost_num : 5;
+    uint16_t res8 : 3;
+    uint16_t cmaint_ost_num : 5;
+    uint16_t res9 : 3;
     // 36-39 bytes
-    uint16_t  aic_prefetch_lower : 5;
-    uint16_t  res10 : 3;
-    uint16_t  aic_prefetch_upper : 5;
-    uint16_t  res11 : 3;
-    uint16_t  aiv_prefetch_lower : 5;
-    uint16_t  res12 : 3;
-    uint16_t  aiv_prefetch_upper : 5;
-    uint16_t  res13 : 3;
+    uint16_t aic_prefetch_lower : 5;
+    uint16_t res10 : 3;
+    uint16_t aic_prefetch_upper : 5;
+    uint16_t res11 : 3;
+    uint16_t aiv_prefetch_lower : 5;
+    uint16_t res12 : 3;
+    uint16_t aiv_prefetch_upper : 5;
+    uint16_t res13 : 3;
     // 40-47 bytes
     uint32_t context_address_base_l;
     uint32_t context_address_base_h : 17;
@@ -2635,7 +2629,6 @@ typedef struct ts_ffts_plus_sqe {
     // 52-63 bytes
     uint32_t res15[3];
 } ts_ffts_plus_sqe_t;
-
 
 typedef struct ts_stars_cmo_sqe {
     ts_stars_sqe_header_t header;
@@ -2750,8 +2743,8 @@ typedef struct ts_stars_dsa_sqe {
 
 typedef struct ts_stars_cqe {
     uint16_t phase : 1;
-    uint16_t warn : 1;          /* process warning */
-    uint16_t evt : 1;           /* event record flag */
+    uint16_t warn : 1; /* process warning */
+    uint16_t evt : 1;  /* event record flag */
     uint16_t place_hold : 1;
     uint16_t sq_id : 11;
     uint16_t error_bit : 1;
@@ -2851,29 +2844,29 @@ typedef struct ts_stars_sdma_sqe {
 
     /* payload */
     /* dw0 */
-    uint32_t opcode          : 8;
-    uint32_t sssv            : 1;
-    uint32_t dssv            : 1;
-    uint32_t sns             : 1;
-    uint32_t dns             : 1;
-    uint32_t sro             : 1;
-    uint32_t dro             : 1;
-    uint32_t stride          : 2;
-    uint32_t ie1             : 1;
-    uint32_t comp_en         : 1;
-    uint32_t reserved1       : 14;
+    uint32_t opcode : 8;
+    uint32_t sssv : 1;
+    uint32_t dssv : 1;
+    uint32_t sns : 1;
+    uint32_t dns : 1;
+    uint32_t sro : 1;
+    uint32_t dro : 1;
+    uint32_t stride : 2;
+    uint32_t ie1 : 1;
+    uint32_t comp_en : 1;
+    uint32_t reserved1 : 14;
     /* dw1 */
-    uint32_t sqe_id          : 16;
-    uint32_t mpam_partid     : 8;
-    uint32_t mpamns          : 1;
-    uint32_t pmg             : 2;
-    uint32_t qos             : 4;
-    uint32_t reserved2       : 1;
+    uint32_t sqe_id : 16;
+    uint32_t mpam_partid : 8;
+    uint32_t mpamns : 1;
+    uint32_t pmg : 2;
+    uint32_t qos : 4;
+    uint32_t reserved2 : 1;
     /* dw2 */
-    uint32_t src_streamid    : 16;
+    uint32_t src_streamid : 16;
     uint32_t src_substreamid : 16;
     /* dw3 */
-    uint32_t dst_streamid    : 16;
+    uint32_t dst_streamid : 16;
     uint32_t dst_substreamid : 16;
     /* dw4 dw5 */
     uint32_t src_addr_l;
@@ -2882,11 +2875,11 @@ typedef struct ts_stars_sdma_sqe {
     uint32_t dst_addr_l;
     uint32_t dst_addr_h;
     /* dw8 */
-    uint32_t length_move     : 32;
+    uint32_t length_move : 32;
     /* dw9 dw10 dw11 */
-    uint32_t src_stride_len  : 32;
-    uint32_t dst_stride_len  : 32;
-    uint32_t stride_num      : 32;
+    uint32_t src_stride_len : 32;
+    uint32_t dst_stride_len : 32;
+    uint32_t stride_num : 32;
 } ts_stars_sdma_sqe_t;
 #endif
 typedef struct ts_stars_aic_sqe_t {

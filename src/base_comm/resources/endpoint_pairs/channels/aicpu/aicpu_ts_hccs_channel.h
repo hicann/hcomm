@@ -33,32 +33,32 @@ public:
     struct HccsExchangeInfo {
         s32 memNum = 0;
     };
-    AicpuTsHccsChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc);
+    AicpuTsHccsChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc);
     virtual ~AicpuTsHccsChannel();
 
     HcclResult Init() override;
-    HcclResult GetNotifyNum(uint32_t *notifyNum) const override;
-    HcclResult GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos) override;
+    HcclResult GetNotifyNum(uint32_t* notifyNum) const override;
+    HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos) override;
     ChannelStatus GetStatus() override;
 
-    std::shared_ptr<hccl::Transport> GetTransport() {return transport_;}
+    std::shared_ptr<hccl::Transport> GetTransport() { return transport_; }
     HcclResult Clean() override;
     HcclResult Resume() override;
     const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
 
     // for launch channel kernel data
-    HcclResult Serialize(std::shared_ptr<hccl::DeviceMem> &out) override;
+    HcclResult Serialize(std::shared_ptr<hccl::DeviceMem>& out) override;
     HcommChannelKind GetChannelKind() const override;
 
     // 数据面接口
     HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) override;
     HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) override;
-    HcclResult WriteWithNotify(void *dst, const void *src, const uint64_t len, uint32_t remoteNotifyIdx) override;
-    HcclResult Write(void *dst, const void *src, uint64_t len) override;
-    HcclResult Read(void *dst, const void *src, uint64_t len) override;
+    HcclResult WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx) override;
+    HcclResult Write(void* dst, const void* src, uint64_t len) override;
+    HcclResult Read(void* dst, const void* src, uint64_t len) override;
     HcclResult ChannelFence() override;
 
-    AicpuTsChannelHelper *GetAicpuTsHelper() override { return &aicpuTsHelper_; }
+    AicpuTsChannelHelper* GetAicpuTsHelper() override { return &aicpuTsHelper_; }
 
 private:
     AicpuTsChannelHelper aicpuTsHelper_;
@@ -69,42 +69,42 @@ private:
     void DestroyConnection();
     HcclResult EnableMemAccess();
     void DisableMemAccess();
-    HcclResult GetFirstIpByPhyId(u32 devicePhyId, u32 superDevId, hccl::HcclIpAddress &ip);
-    HcclResult SetMachinePara(hccl::MachinePara &machinePara);
-    void SetTransportParam(hccl::TransportPara &para);
+    HcclResult GetFirstIpByPhyId(u32 devicePhyId, u32 superDevId, hccl::HcclIpAddress& ip);
+    HcclResult SetMachinePara(hccl::MachinePara& machinePara);
+    void SetTransportParam(hccl::TransportPara& para);
     HcclResult TransportInit();
     void TransportDeInit();
-    HcclResult BuildHcclChannelHccsRes(HcclChannelHccsRes &channelHccsRes);
+    HcclResult BuildHcclChannelHccsRes(HcclChannelHccsRes& channelHccsRes);
 
 private:
     // --------------------- 入参 ---------------------
-    EndpointHandle                                              endpointHandle_{nullptr};
-    HcommChannelDesc                                            channelDesc_;
+    EndpointHandle endpointHandle_{nullptr};
+    HcommChannelDesc channelDesc_;
 
     // --------------------- 转换参数 ---------------------
-    EndpointDesc                                                localEp_{};
-    EndpointDesc                                                remoteEp_{};
-    hccl::HcclIpAddress                                         localIp_;
-    hccl::HcclIpAddress                                         remoteIp_;
-    uint32_t                                                    notifyNum_{0};
-    AicpuTsHccsEndpoint                                         *localEpPtr_{nullptr};
-    uint32_t                                                    serverPort_{AICPU_CHANNEL_DEFAULT_PORT};
-    bool                                                        serverInited_{false};
+    EndpointDesc localEp_{};
+    EndpointDesc remoteEp_{};
+    hccl::HcclIpAddress localIp_;
+    hccl::HcclIpAddress remoteIp_;
+    uint32_t notifyNum_{0};
+    AicpuTsHccsEndpoint* localEpPtr_{nullptr};
+    uint32_t serverPort_{AICPU_CHANNEL_DEFAULT_PORT};
+    bool serverInited_{false};
     // --------------------- 具体成员 ---------------------
-    std::shared_ptr<hccl::HcclSocket>                           socket_{nullptr};
-    std::string                                                 socketTag_{};
-    bool                                                        isSocketServer_{false};
+    std::shared_ptr<hccl::HcclSocket> socket_{nullptr};
+    std::string socketTag_{};
+    bool isSocketServer_{false};
     // for create TransportMem
-    HcclDispatcher                                              dispatcher_{nullptr}; // dispatcher放到最后析构
-    DispatcherCtxPtr                                            dispatcherCtx_{nullptr};
-    std::unique_ptr<hccl::NotifyPool>                           notifyPool_;
-    std::shared_ptr<hccl::Transport>                            transport_{nullptr};
+    HcclDispatcher dispatcher_{nullptr}; // dispatcher放到最后析构
+    DispatcherCtxPtr dispatcherCtx_{nullptr};
+    std::unique_ptr<hccl::NotifyPool> notifyPool_;
+    std::shared_ptr<hccl::Transport> transport_{nullptr};
 
     // for get mem temp
-    std::vector<CommMem>                                        remoteIpcRmaBufferVec_;
-    std::vector<HcclMemEx>                                      localIpcRmaBufferVecEx_;
-    std::vector<HcclMemEx>                                      remoteIpcRmaBufferVecEx_;
+    std::vector<CommMem> remoteIpcRmaBufferVec_;
+    std::vector<HcclMemEx> localIpcRmaBufferVecEx_;
+    std::vector<HcclMemEx> remoteIpcRmaBufferVecEx_;
 };
-}
+} // namespace hcomm
 
 #endif // AICPU_TS_HCCS_CHANNEL_H

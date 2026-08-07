@@ -24,21 +24,15 @@ namespace checker {
 
 class ReduceCCUTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "Reduce CCU test set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "Reduce CCU test set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "Reduce CCU test tear down" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "Reduce CCU test tear down" << std::endl; }
 
     virtual void SetUp()
     {
-        const ::testing::TestInfo *const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName =
-            "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -328,4 +322,4 @@ TEST_F(ReduceCCUTest, reduce_ccu_nhr_count)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-}  // namespace checker
+} // namespace checker

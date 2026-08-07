@@ -30,9 +30,10 @@ namespace hccl {
 class GlobalNetDevMgr {
 public:
     static GlobalNetDevMgr& GetInstance(u32 devicePhyId); // 获取单例
-    static void MakeSocketTag(hccl::HcclIpAddress tagServerIp, uint32_t tagServerPort,
-        hccl::HcclIpAddress tagClientIp, std::string &socketTag);
-    static  HcclResult GetDeviceVnicIP(u32 devicePhyId, u32 superDeviceId, hccl::HcclIpAddress &vnicIP);
+    static void MakeSocketTag(
+        hccl::HcclIpAddress tagServerIp, uint32_t tagServerPort, hccl::HcclIpAddress tagClientIp,
+        std::string& socketTag);
+    static HcclResult GetDeviceVnicIP(u32 devicePhyId, u32 superDeviceId, hccl::HcclIpAddress& vnicIP);
     ~GlobalNetDevMgr();
 
     HcclResult RefNetDevCtx(NicType nicType, const HcclIpAddress& ipAddr, u32 port, HcclNetDevCtx& netDevCtx);
@@ -41,21 +42,24 @@ public:
     HcclResult ServerInit(u32 port);
     HcclResult ServerDeInit(u32 port);
 
-    HcclResult ConnectToServer(uint32_t localPort, hccl::HcclIpAddress remoteIp,
-        uint32_t remotePort, std::string &socketTag, std::shared_ptr<hccl::HcclSocket> &socket);
-    HcclResult AcceptClient(uint32_t localPort, hccl::HcclIpAddress remoteIp,
-        std::string &socketTag, std::shared_ptr<hccl::HcclSocket> &socket);
-    void CloseSocket(std::shared_ptr<hccl::HcclSocket> &socket);
+    HcclResult ConnectToServer(
+        uint32_t localPort, hccl::HcclIpAddress remoteIp, uint32_t remotePort, std::string& socketTag,
+        std::shared_ptr<hccl::HcclSocket>& socket);
+    HcclResult AcceptClient(
+        uint32_t localPort, hccl::HcclIpAddress remoteIp, std::string& socketTag,
+        std::shared_ptr<hccl::HcclSocket>& socket);
+    void CloseSocket(std::shared_ptr<hccl::HcclSocket>& socket);
 
 private:
     static HcclResult Init(u32 devicePhyId, u32 deviceLogicId);
     void UnInit();
     HcclResult ServerDeInit(const HcclIpAddress& localIp, u32 port);
-    HcclResult AddListenSocketWhiteList(const HcclIpAddress& localIp, uint32_t port,
-        const std::vector<SocketWlistInfo> &wlistInfos);
-    HcclResult AcceptDataSocket(const HcclIpAddress& localIp, uint32_t port, const std::string &tag,
-        std::shared_ptr<hccl::HcclSocket> &outConnected, uint32_t acceptTimeoutMs);
-    HcclResult WaitClientSocketLinkEstablished(const std::shared_ptr<hccl::HcclSocket> &socket, s32 timeoutSec);
+    HcclResult AddListenSocketWhiteList(
+        const HcclIpAddress& localIp, uint32_t port, const std::vector<SocketWlistInfo>& wlistInfos);
+    HcclResult AcceptDataSocket(
+        const HcclIpAddress& localIp, uint32_t port, const std::string& tag,
+        std::shared_ptr<hccl::HcclSocket>& outConnected, uint32_t acceptTimeoutMs);
+    HcclResult WaitClientSocketLinkEstablished(const std::shared_ptr<hccl::HcclSocket>& socket, s32 timeoutSec);
 
 private:
     static std::map<PortInfo, std::pair<NicType, HcclNetDevCtx>> netDevCtxMap_;

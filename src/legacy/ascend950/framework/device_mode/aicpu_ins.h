@@ -21,30 +21,24 @@ namespace Hccl {
 
 class AicpuInstruction : public Instruction {
 public:
-    AicpuInstruction(const std::string &algName, const CollAlgResReq &collAlgResReq, const TemplateInfo &tmpInfo)
-        : Instruction(InstructionType::AICPU_INS), algName(algName), collAlgResReq(collAlgResReq), tmpInfo(tmpInfo)
-    {
-    }
+    AicpuInstruction(const std::string& algName, const CollAlgResReq& collAlgResReq, const TemplateInfo& tmpInfo)
+        : Instruction(InstructionType::AICPU_INS),
+          algName(algName),
+          collAlgResReq(collAlgResReq),
+          tmpInfo(tmpInfo)
+    {}
 
-    std::string GetAlgName() const
-    {
-        return algName;
-    }
+    std::string GetAlgName() const { return algName; }
 
-    CollAlgResReq GetCollAlgResReq() const
-    {
-        return collAlgResReq;
-    }
+    CollAlgResReq GetCollAlgResReq() const { return collAlgResReq; }
 
-    virtual std::vector<LinkData> GetLinks() const
-    {
-        return collAlgResReq.links;
-    }
+    virtual std::vector<LinkData> GetLinks() const { return collAlgResReq.links; }
 
     std::string Describe() const override
     {
-        return StringFormat("AicpuInstruction[algName=%s, linkNum=%zu, workQueueNum=%u]",
-            algName.c_str(), collAlgResReq.links.size(), collAlgResReq.primQueueNum);
+        return StringFormat(
+            "AicpuInstruction[algName=%s, linkNum=%zu, workQueueNum=%u]", algName.c_str(), collAlgResReq.links.size(),
+            collAlgResReq.primQueueNum);
     }
 
 protected:

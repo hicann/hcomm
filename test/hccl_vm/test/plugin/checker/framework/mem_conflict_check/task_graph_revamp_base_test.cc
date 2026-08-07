@@ -22,25 +22,20 @@ using namespace HcclSim;
 namespace {
 class TestGraphRevamp : public GraphRevampBase {
 public:
-    HcclResult Revamp(TaskNodePtr dummyStart) override {
-        return RevampGraph(dummyStart);
-    }
+    HcclResult Revamp(TaskNodePtr dummyStart) override { return RevampGraph(dummyStart); }
 };
 
 class TestGraphRevampNoOp : public GraphRevampBase {
 public:
-    HcclResult Revamp(TaskNodePtr dummyStart) override {
-        return HcclResult::HCCL_SUCCESS;
-    }
+    HcclResult Revamp(TaskNodePtr dummyStart) override { return HcclResult::HCCL_SUCCESS; }
 };
 
 class TestGraphRevampCustom4Rank : public GraphRevampBase {
 public:
     bool revampGraph4RankCalled = false;
-    HcclResult Revamp(TaskNodePtr dummyStart) override {
-        return RevampGraph(dummyStart);
-    }
-    HcclResult RevampGraph4Rank(TaskNodePtr ccuHead, RankId rankId) override {
+    HcclResult Revamp(TaskNodePtr dummyStart) override { return RevampGraph(dummyStart); }
+    HcclResult RevampGraph4Rank(TaskNodePtr ccuHead, RankId rankId) override
+    {
         revampGraph4RankCalled = true;
         return HcclResult::HCCL_SUCCESS;
     }
@@ -55,13 +50,9 @@ void BuildParentChild(TaskNodePtr parent, TaskNodePtr child)
 
 class GraphRevampBaseTest : public testing::Test {
 protected:
-    void SetUp() override {
-        revamp_ = std::make_unique<TestGraphRevamp>();
-    }
+    void SetUp() override { revamp_ = std::make_unique<TestGraphRevamp>(); }
 
-    void TearDown() override {
-        revamp_.reset();
-    }
+    void TearDown() override { revamp_.reset(); }
 
     std::unique_ptr<TestGraphRevamp> revamp_;
 };
@@ -261,8 +252,8 @@ TEST_F(GraphRevampBaseTest, GetPeerRankByTaskNode_Write)
 
 TEST_F(GraphRevampBaseTest, GetPeerRankByTaskNode_ReadReduce)
 {
-    TaskStubReadReduce readReduce(0, LinkInfo(LinkProtoStub::SDMA), DataSlice(), DataSlice(),
-                                   HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
+    TaskStubReadReduce readReduce(
+        0, LinkInfo(LinkProtoStub::SDMA), DataSlice(), DataSlice(), HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
     TaskNode node(&readReduce, 0, 0, 0);
 
     RankId peerRank = 0;
@@ -274,8 +265,8 @@ TEST_F(GraphRevampBaseTest, GetPeerRankByTaskNode_ReadReduce)
 
 TEST_F(GraphRevampBaseTest, GetPeerRankByTaskNode_WriteReduce)
 {
-    TaskStubWriteReduce writeReduce(0, LinkInfo(LinkProtoStub::SDMA), DataSlice(), DataSlice(),
-                                     HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
+    TaskStubWriteReduce writeReduce(
+        0, LinkInfo(LinkProtoStub::SDMA), DataSlice(), DataSlice(), HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
     TaskNode node(&writeReduce, 0, 0, 0);
 
     RankId peerRank = 0;
@@ -311,8 +302,8 @@ TEST_F(GraphRevampBaseTest, GetLinkProtoStubByTaskNode_Write)
 
 TEST_F(GraphRevampBaseTest, GetLinkProtoStubByTaskNode_ReadReduce)
 {
-    TaskStubReadReduce readReduce(0, LinkInfo(LinkProtoStub::SDMA), DataSlice(), DataSlice(),
-                                   HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
+    TaskStubReadReduce readReduce(
+        0, LinkInfo(LinkProtoStub::SDMA), DataSlice(), DataSlice(), HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
     TaskNode node(&readReduce, 0, 0, 0);
 
     LinkProtoStub link = LinkProtoStub::INVALID_A;
@@ -323,8 +314,8 @@ TEST_F(GraphRevampBaseTest, GetLinkProtoStubByTaskNode_ReadReduce)
 
 TEST_F(GraphRevampBaseTest, GetLinkProtoStubByTaskNode_WriteReduce)
 {
-    TaskStubWriteReduce writeReduce(0, LinkInfo(LinkProtoStub::SDMA), DataSlice(), DataSlice(),
-                                     HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
+    TaskStubWriteReduce writeReduce(
+        0, LinkInfo(LinkProtoStub::SDMA), DataSlice(), DataSlice(), HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
     TaskNode node(&writeReduce, 0, 0, 0);
 
     LinkProtoStub link = LinkProtoStub::INVALID_A;
@@ -358,8 +349,8 @@ TEST_F(GraphRevampBaseTest, GenTaskStubBeingReadOrWrittern_Write)
 
 TEST_F(GraphRevampBaseTest, GenTaskStubBeingReadOrWrittern_ReadReduce)
 {
-    TaskStubReadReduce readReduce(0, LinkInfo(LinkProtoStub::SDMA), DataSlice(), DataSlice(),
-                                   HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
+    TaskStubReadReduce readReduce(
+        0, LinkInfo(LinkProtoStub::SDMA), DataSlice(), DataSlice(), HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
     TaskNode node(&readReduce, 0, 0, 0);
 
     TaskStub* stub = revamp_->GenTaskStubBeingReadOrWrittern(&node);
@@ -369,8 +360,8 @@ TEST_F(GraphRevampBaseTest, GenTaskStubBeingReadOrWrittern_ReadReduce)
 
 TEST_F(GraphRevampBaseTest, GenTaskStubBeingReadOrWrittern_WriteReduce)
 {
-    TaskStubWriteReduce writeReduce(0, LinkInfo(LinkProtoStub::SDMA), DataSlice(), DataSlice(),
-                                     HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
+    TaskStubWriteReduce writeReduce(
+        0, LinkInfo(LinkProtoStub::SDMA), DataSlice(), DataSlice(), HCCL_DATA_TYPE_FP32, HCCL_REDUCE_SUM);
     TaskNode node(&writeReduce, 0, 0, 0);
 
     TaskStub* stub = revamp_->GenTaskStubBeingReadOrWrittern(&node);

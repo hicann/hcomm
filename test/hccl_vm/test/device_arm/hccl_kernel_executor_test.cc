@@ -30,17 +30,17 @@
 using namespace ops_hccl;
 
 extern bool gLibsLoaded;
-extern void *gSlogHandle;
-extern void *gHcommHandle;
-extern void *gHcclKerHandle;
-extern uint32_t (*runAicpuIndOpCommInitPtr)(void *args);
-extern uint32_t (*runAicpuIndOpThreadInitPtr)(void *args);
-extern uint32_t (*runAicpuIndOpChannelInitV2Ptr)(void *args);
-extern uint32_t (*runAicpuDfxOpInfoInitV2Ptr)(void *args);
-extern uint32_t (*runAicpuNotifyWaitPtr)(void *args);
-extern uint32_t (*runAicpuNotifyRecordPtr)(void *args);
-extern unsigned int (*hcclLaunchAicpuKernelPtr)(OpParam *param);
-extern unsigned int (*hcclLaunchP2pAicpuKernelPtr)(void *args);
+extern void* gSlogHandle;
+extern void* gHcommHandle;
+extern void* gHcclKerHandle;
+extern uint32_t (*runAicpuIndOpCommInitPtr)(void* args);
+extern uint32_t (*runAicpuIndOpThreadInitPtr)(void* args);
+extern uint32_t (*runAicpuIndOpChannelInitV2Ptr)(void* args);
+extern uint32_t (*runAicpuDfxOpInfoInitV2Ptr)(void* args);
+extern uint32_t (*runAicpuNotifyWaitPtr)(void* args);
+extern uint32_t (*runAicpuNotifyRecordPtr)(void* args);
+extern unsigned int (*hcclLaunchAicpuKernelPtr)(OpParam* param);
+extern unsigned int (*hcclLaunchP2pAicpuKernelPtr)(void* args);
 extern uint64_t d2hAddr;
 
 namespace {
@@ -53,54 +53,51 @@ static uint32_t g_mockLaunchAicpuKernelCalled = 0;
 static uint32_t g_mockNotifyWaitCalled = 0;
 static uint32_t g_mockNotifyRecordCalled = 0;
 static uint32_t g_mockLaunchP2pKernelCalled = 0;
-static void *g_mockP2pResCtx = nullptr;
+static void* g_mockP2pResCtx = nullptr;
 
-uint32_t MockRunAicpuIndOpCommInit(void *args)
+uint32_t MockRunAicpuIndOpCommInit(void* args)
 {
     g_mockCommInitCalled++;
     return 0;
 }
 
-uint32_t MockRunAicpuIndOpThreadInit(void *args)
+uint32_t MockRunAicpuIndOpThreadInit(void* args)
 {
     g_mockThreadInitCalled++;
     return 0;
 }
 
-uint32_t MockRunAicpuIndOpChannelInitV2(void *args)
+uint32_t MockRunAicpuIndOpChannelInitV2(void* args)
 {
     g_mockChannelInitV2Called++;
     return 0;
 }
 
-uint32_t MockRunAicpuDfxOpInfoInitV2(void *args)
-{
-    return 0;
-}
+uint32_t MockRunAicpuDfxOpInfoInitV2(void* args) { return 0; }
 
-unsigned int MockHcclLaunchAicpuKernel(OpParam *param)
+unsigned int MockHcclLaunchAicpuKernel(OpParam* param)
 {
     g_mockLaunchAicpuKernelCalled++;
     return 0;
 }
 
-uint32_t MockRunAicpuNotifyWait(void *args)
+uint32_t MockRunAicpuNotifyWait(void* args)
 {
     g_mockNotifyWaitCalled++;
     return 0;
 }
 
-uint32_t MockRunAicpuNotifyRecord(void *args)
+uint32_t MockRunAicpuNotifyRecord(void* args)
 {
     g_mockNotifyRecordCalled++;
     return 0;
 }
 
-unsigned int MockHcclLaunchP2pAicpuKernel(void *args)
+unsigned int MockHcclLaunchP2pAicpuKernel(void* args)
 {
     g_mockLaunchP2pKernelCalled++;
-    auto *p2pParam = reinterpret_cast<HcclP2pKernelParamStub *>(args);
-    auto *opParam = reinterpret_cast<OpParam *>(p2pParam->opParams);
+    auto* p2pParam = reinterpret_cast<HcclP2pKernelParamStub*>(args);
+    auto* opParam = reinterpret_cast<OpParam*>(p2pParam->opParams);
     g_mockP2pResCtx = opParam->resCtx;
     return 0;
 }
@@ -115,19 +112,19 @@ void CleanUpDb()
 static uint64_t g_memNameCounter = 0;
 static std::vector<std::string> g_allocatedMemNames;
 
-std::string UniqueMemName(const std::string &base)
+std::string UniqueMemName(const std::string& base)
 {
     return "_ut_hkex_" + base + "_" + std::to_string(++g_memNameCounter);
 }
 
 struct TestMemRegion {
     std::string name;
-    void *hostPtr;
+    void* hostPtr;
     size_t size;
     uint64_t devBaseAddr;
 };
 
-TestMemRegion SetupMemRegion(const std::string &name, size_t size, uint64_t devBaseAddr)
+TestMemRegion SetupMemRegion(const std::string& name, size_t size, uint64_t devBaseAddr)
 {
     TestMemRegion region;
     region.name = name;
@@ -154,7 +151,7 @@ TestMemRegion SetupMemRegion(const std::string &name, size_t size, uint64_t devB
 
 void CleanupMemRegions()
 {
-    for (const auto &name : g_allocatedMemNames) {
+    for (const auto& name : g_allocatedMemNames) {
         sim::MemoryManager::GetInstance().FreeMemByName(name.c_str());
         shm_unlink(name.c_str());
     }
@@ -198,9 +195,9 @@ void ResetGlobalState()
 void SetMockFuncHandles()
 {
     gLibsLoaded = true;
-    gSlogHandle = reinterpret_cast<void *>(0x2);
-    gHcommHandle = reinterpret_cast<void *>(0x3);
-    gHcclKerHandle = reinterpret_cast<void *>(0x4);
+    gSlogHandle = reinterpret_cast<void*>(0x2);
+    gHcommHandle = reinterpret_cast<void*>(0x3);
+    gHcclKerHandle = reinterpret_cast<void*>(0x4);
     runAicpuIndOpCommInitPtr = MockRunAicpuIndOpCommInit;
     runAicpuIndOpThreadInitPtr = MockRunAicpuIndOpThreadInit;
     runAicpuIndOpChannelInitV2Ptr = MockRunAicpuIndOpChannelInitV2;
@@ -210,42 +207,48 @@ void SetMockFuncHandles()
     hcclLaunchAicpuKernelPtr = MockHcclLaunchAicpuKernel;
     hcclLaunchP2pAicpuKernelPtr = MockHcclLaunchP2pAicpuKernel;
 }
-}
+} // namespace
 
 class HcclKernelExecutorTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestData();
         ResetGlobalState();
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         CleanupMemRegions();
         CleanUpDb();
     }
 };
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_EmptyKernelName) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_EmptyKernelName)
+{
     uint32_t rankId = 0;
     std::string kernelName = "";
     uint64_t args = 0;
     EXPECT_NO_THROW(ExecuteAicpuKernel(rankId, kernelName, args));
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_UnknownKernel) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_UnknownKernel)
+{
     uint32_t rankId = 0;
     std::string kernelName = "UnknownKernel";
     uint64_t args = 0;
     EXPECT_NO_THROW(ExecuteAicpuKernel(rankId, kernelName, args));
 }
 
-TEST_F(HcclKernelExecutorTest, InitKernelFuncHandle_MultipleCalls) {
+TEST_F(HcclKernelExecutorTest, InitKernelFuncHandle_MultipleCalls)
+{
     bool result1 = InitKernelFuncHandle();
     bool result2 = InitKernelFuncHandle();
     EXPECT_EQ(result1, result2);
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpCommInit) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpCommInit)
+{
     SetMockFuncHandles();
 
     const uint64_t devBase = 0x10000000;
@@ -253,7 +256,7 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpCommInit) {
     auto region = SetupMemRegion(UniqueMemName("comm_init"), bufSize, devBase);
     ASSERT_NE(region.hostPtr, nullptr);
 
-    CommAicpuParam *hostParam = reinterpret_cast<CommAicpuParam *>(region.hostPtr);
+    CommAicpuParam* hostParam = reinterpret_cast<CommAicpuParam*>(region.hostPtr);
     memset(hostParam, 0, sizeof(CommAicpuParam));
 
     uint64_t innerDevBase = devBase + sizeof(CommAicpuParam);
@@ -269,7 +272,8 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpCommInit) {
     EXPECT_NE(d2hAddr, 0u);
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpThreadInit) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpThreadInit)
+{
     SetMockFuncHandles();
 
     const uint64_t devBase = 0x20000000;
@@ -282,15 +286,15 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpThreadInit) {
     auto paramRegion = SetupMemRegion(UniqueMemName("thread_init_param"), paramBufSize, paramDevBase);
     ASSERT_NE(paramRegion.hostPtr, nullptr);
 
-    uint64_t *ptrValue = reinterpret_cast<uint64_t *>(outerRegion.hostPtr);
+    uint64_t* ptrValue = reinterpret_cast<uint64_t*>(outerRegion.hostPtr);
     *ptrValue = paramDevBase;
 
-    ThreadMgrAicpuParam *hostParam = reinterpret_cast<ThreadMgrAicpuParam *>(paramRegion.hostPtr);
+    ThreadMgrAicpuParam* hostParam = reinterpret_cast<ThreadMgrAicpuParam*>(paramRegion.hostPtr);
     memset(hostParam, 0, sizeof(ThreadMgrAicpuParam));
     hostParam->threadNum = 1;
     hostParam->deviceHandle = nullptr;
 
-    AicpuTsThread *thread = reinterpret_cast<AicpuTsThread *>(hostParam->threadParam[0]);
+    AicpuTsThread* thread = reinterpret_cast<AicpuTsThread*>(hostParam->threadParam[0]);
     thread->devId = 99;
 
     EXPECT_NO_THROW(ExecuteAicpuKernel(5, "RunAicpuIndOpThreadInit", devBase));
@@ -298,7 +302,8 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpThreadInit) {
     EXPECT_EQ(thread->devId, 5u);
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpThreadInit_MultipleThreads) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpThreadInit_MultipleThreads)
+{
     SetMockFuncHandles();
 
     const uint64_t devBase = 0x21000000;
@@ -311,16 +316,16 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpThreadInit_Multip
     auto paramRegion = SetupMemRegion(UniqueMemName("thr_multi_param"), paramBufSize, paramDevBase);
     ASSERT_NE(paramRegion.hostPtr, nullptr);
 
-    uint64_t *ptrValue = reinterpret_cast<uint64_t *>(outerRegion.hostPtr);
+    uint64_t* ptrValue = reinterpret_cast<uint64_t*>(outerRegion.hostPtr);
     *ptrValue = paramDevBase;
 
-    ThreadMgrAicpuParam *hostParam = reinterpret_cast<ThreadMgrAicpuParam *>(paramRegion.hostPtr);
+    ThreadMgrAicpuParam* hostParam = reinterpret_cast<ThreadMgrAicpuParam*>(paramRegion.hostPtr);
     memset(hostParam, 0, sizeof(ThreadMgrAicpuParam));
     hostParam->threadNum = 3;
     hostParam->deviceHandle = nullptr;
 
     for (uint32_t i = 0; i < hostParam->threadNum; i++) {
-        AicpuTsThread *thread = reinterpret_cast<AicpuTsThread *>(hostParam->threadParam[i]);
+        AicpuTsThread* thread = reinterpret_cast<AicpuTsThread*>(hostParam->threadParam[i]);
         thread->devId = 99;
     }
 
@@ -328,12 +333,13 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpThreadInit_Multip
     EXPECT_EQ(g_mockThreadInitCalled, 1u);
 
     for (uint32_t i = 0; i < 3; i++) {
-        AicpuTsThread *thread = reinterpret_cast<AicpuTsThread *>(hostParam->threadParam[i]);
+        AicpuTsThread* thread = reinterpret_cast<AicpuTsThread*>(hostParam->threadParam[i]);
         EXPECT_EQ(thread->devId, 7u);
     }
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpChannelInitV2) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpChannelInitV2)
+{
     SetMockFuncHandles();
 
     const uint64_t devBase = 0x30000000;
@@ -346,10 +352,10 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpChannelInitV2) {
     auto ctxRegion = SetupMemRegion(UniqueMemName("channel_ctx"), ctxBufSize, ctxDevBase);
     ASSERT_NE(ctxRegion.hostPtr, nullptr);
 
-    InitTask *hostTask = reinterpret_cast<InitTask *>(taskRegion.hostPtr);
+    InitTask* hostTask = reinterpret_cast<InitTask*>(taskRegion.hostPtr);
     hostTask->context = ctxDevBase;
 
-    HcclChannelUrmaRes *hostRes = reinterpret_cast<HcclChannelUrmaRes *>(ctxRegion.hostPtr);
+    HcclChannelUrmaRes* hostRes = reinterpret_cast<HcclChannelUrmaRes*>(ctxRegion.hostPtr);
     memset(hostRes, 0, sizeof(HcclChannelUrmaRes));
     hostRes->listNum = 1;
     hostRes->uniqueIdSize = 1024;
@@ -362,23 +368,22 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpChannelInitV2) {
     auto uniqueIdRegion = SetupMemRegion(UniqueMemName("channel_uid"), uniqueIdBufSize, uniqueIdDevBase);
     ASSERT_NE(uniqueIdRegion.hostPtr, nullptr);
 
-    uint8_t *uniqueIdBuf = reinterpret_cast<uint8_t *>(uniqueIdRegion.hostPtr);
+    uint8_t* uniqueIdBuf = reinterpret_cast<uint8_t*>(uniqueIdRegion.hostPtr);
     memset(uniqueIdBuf, 0, uniqueIdBufSize);
 
-    hostRes->uniqueIdAddr = reinterpret_cast<void *>(uniqueIdDevBase);
+    hostRes->uniqueIdAddr = reinterpret_cast<void*>(uniqueIdDevBase);
 
-    uint8_t *headerAddr = uniqueIdBuf + UNIQUEID_HEADER_OFFSET;
-    UniqueIdV2Header *header = reinterpret_cast<UniqueIdV2Header *>(headerAddr);
+    uint8_t* headerAddr = uniqueIdBuf + UNIQUEID_HEADER_OFFSET;
+    UniqueIdV2Header* header = reinterpret_cast<UniqueIdV2Header*>(headerAddr);
     header->type = 0;
     header->notifyNum = 1;
     header->bufferNum = 1;
     header->connNum = 1;
 
-    uint32_t offset = COMMON_DATA_SIZE + header->notifyNum * NOTIFY_ID_SIZE + COMMON_DATA_SIZE +
-                      header->notifyNum * NOTIFY_BUFFER_SIZE + header->bufferNum * LOCAL_BUFFER_SIZE * 2;
+    uint32_t offset = COMMON_DATA_SIZE + header->notifyNum * NOTIFY_ID_SIZE + COMMON_DATA_SIZE
+                      + header->notifyNum * NOTIFY_BUFFER_SIZE + header->bufferNum * LOCAL_BUFFER_SIZE * 2;
 
-    ConnUniqueBlock *block = reinterpret_cast<ConnUniqueBlock *>(
-        headerAddr + UNIQUEID_HEADER_SIZE + offset);
+    ConnUniqueBlock* block = reinterpret_cast<ConnUniqueBlock*>(headerAddr + UNIQUEID_HEADER_SIZE + offset);
 
     const uint64_t sqBuffDevBase = 0x30030000;
     const size_t sqBuffBufSize = 4096;
@@ -392,7 +397,8 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpChannelInitV2) {
     EXPECT_EQ(g_mockChannelInitV2Called, 1u);
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpChannelInitV2_SingleList) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpChannelInitV2_SingleList)
+{
     SetMockFuncHandles();
 
     const uint64_t devBase = 0x32000000;
@@ -405,10 +411,10 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpChannelInitV2_Sin
     auto ctxRegion = SetupMemRegion(UniqueMemName("ch_single_ctx"), ctxBufSize, ctxDevBase);
     ASSERT_NE(ctxRegion.hostPtr, nullptr);
 
-    InitTask *hostTask = reinterpret_cast<InitTask *>(taskRegion.hostPtr);
+    InitTask* hostTask = reinterpret_cast<InitTask*>(taskRegion.hostPtr);
     hostTask->context = ctxDevBase;
 
-    HcclChannelUrmaRes *hostRes = reinterpret_cast<HcclChannelUrmaRes *>(ctxRegion.hostPtr);
+    HcclChannelUrmaRes* hostRes = reinterpret_cast<HcclChannelUrmaRes*>(ctxRegion.hostPtr);
     memset(hostRes, 0, sizeof(HcclChannelUrmaRes));
     hostRes->listNum = 1;
     hostRes->uniqueIdSize = 512;
@@ -421,12 +427,11 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpChannelInitV2_Sin
     auto uniqueIdRegion = SetupMemRegion(UniqueMemName("ch_single_uid"), uniqueIdBufSize, uniqueIdDevBase);
     ASSERT_NE(uniqueIdRegion.hostPtr, nullptr);
 
-    uint8_t *uniqueIdBuf = reinterpret_cast<uint8_t *>(uniqueIdRegion.hostPtr);
+    uint8_t* uniqueIdBuf = reinterpret_cast<uint8_t*>(uniqueIdRegion.hostPtr);
     memset(uniqueIdBuf, 0, uniqueIdBufSize);
-    hostRes->uniqueIdAddr = reinterpret_cast<void *>(uniqueIdDevBase);
+    hostRes->uniqueIdAddr = reinterpret_cast<void*>(uniqueIdDevBase);
 
-    UniqueIdV2Header *header = reinterpret_cast<UniqueIdV2Header *>(
-        uniqueIdBuf + UNIQUEID_HEADER_OFFSET);
+    UniqueIdV2Header* header = reinterpret_cast<UniqueIdV2Header*>(uniqueIdBuf + UNIQUEID_HEADER_OFFSET);
     header->type = 0;
     header->notifyNum = 0;
     header->bufferNum = 0;
@@ -436,7 +441,8 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuIndOpChannelInitV2_Sin
     EXPECT_EQ(g_mockChannelInitV2Called, 1u);
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuDfxOpInfoInitV2) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuDfxOpInfoInitV2)
+{
     SetMockFuncHandles();
 
     const uint64_t devBase = 0x40000000;
@@ -447,7 +453,8 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuDfxOpInfoInitV2) {
     EXPECT_NO_THROW(ExecuteAicpuKernel(0, "RunAicpuDfxOpInfoInitV2", devBase));
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchAicpuKernel) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchAicpuKernel)
+{
     SetMockFuncHandles();
 
     const uint64_t devBase = 0x50000000;
@@ -455,7 +462,7 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchAicpuKernel) {
     auto region = SetupMemRegion(UniqueMemName("launch_kern"), bufSize, devBase);
     ASSERT_NE(region.hostPtr, nullptr);
 
-    OpParam *hostParam = reinterpret_cast<OpParam *>(region.hostPtr);
+    OpParam* hostParam = reinterpret_cast<OpParam*>(region.hostPtr);
     memset(hostParam, 0, sizeof(OpParam));
     hostParam->resCtx = nullptr;
 
@@ -469,7 +476,8 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchAicpuKernel) {
     EXPECT_EQ(g_mockLaunchAicpuKernelCalled, 1u);
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchAicpuKernel_WithResCtx) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchAicpuKernel_WithResCtx)
+{
     SetMockFuncHandles();
 
     const uint64_t devBase = 0x51000000;
@@ -482,9 +490,9 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchAicpuKernel_WithResC
     auto resCtxRegion = SetupMemRegion(UniqueMemName("launch_resctx_data"), resCtxBufSize, resCtxDevBase);
     ASSERT_NE(resCtxRegion.hostPtr, nullptr);
 
-    OpParam *hostParam = reinterpret_cast<OpParam *>(region.hostPtr);
+    OpParam* hostParam = reinterpret_cast<OpParam*>(region.hostPtr);
     memset(hostParam, 0, sizeof(OpParam));
-    hostParam->resCtx = reinterpret_cast<void *>(resCtxDevBase);
+    hostParam->resCtx = reinterpret_cast<void*>(resCtxDevBase);
 
     const uint64_t d2hDevBase = 0x51020000;
     const size_t d2hBufSize = 4096;
@@ -496,14 +504,15 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchAicpuKernel_WithResC
     EXPECT_EQ(g_mockLaunchAicpuKernelCalled, 1u);
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuNotifyWait) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuNotifyWait)
+{
     SetMockFuncHandles();
 
     const uint64_t devBase = 0x51100000;
     auto region = SetupMemRegion(UniqueMemName("notify_wait"), sizeof(ThreadNotifyWaitParam), devBase);
     ASSERT_NE(region.hostPtr, nullptr);
 
-    auto *param = reinterpret_cast<ThreadNotifyWaitParam *>(region.hostPtr);
+    auto* param = reinterpret_cast<ThreadNotifyWaitParam*>(region.hostPtr);
     param->thread = 0x1234;
     param->notifyIdx = 2;
 
@@ -511,7 +520,8 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuNotifyWait) {
     EXPECT_EQ(g_mockNotifyWaitCalled, 1u);
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchP2pAicpuKernel) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchP2pAicpuKernel)
+{
     SetMockFuncHandles();
 
     const uint64_t devBase = 0x51200000;
@@ -522,25 +532,26 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchP2pAicpuKernel) {
     auto resCtxRegion = SetupMemRegion(UniqueMemName("launch_p2p_resctx"), 4096, resCtxDevBase);
     ASSERT_NE(resCtxRegion.hostPtr, nullptr);
 
-    auto *p2pParam = reinterpret_cast<HcclP2pKernelParamStub *>(region.hostPtr);
+    auto* p2pParam = reinterpret_cast<HcclP2pKernelParamStub*>(region.hostPtr);
     memset(p2pParam, 0, sizeof(HcclP2pKernelParamStub));
     p2pParam->sendRecvThread = 0x5678;
-    auto *opParam = reinterpret_cast<OpParam *>(p2pParam->opParams);
-    opParam->resCtx = reinterpret_cast<void *>(resCtxDevBase);
+    auto* opParam = reinterpret_cast<OpParam*>(p2pParam->opParams);
+    opParam->resCtx = reinterpret_cast<void*>(resCtxDevBase);
 
     EXPECT_NO_THROW(ExecuteAicpuKernel(0, "HcclLaunchP2pAicpuKernel", devBase));
     EXPECT_EQ(g_mockLaunchP2pKernelCalled, 1u);
     EXPECT_EQ(g_mockP2pResCtx, resCtxRegion.hostPtr);
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuNotifyRecord) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuNotifyRecord)
+{
     SetMockFuncHandles();
 
     const uint64_t devBase = 0x51300000;
     auto region = SetupMemRegion(UniqueMemName("notify_record"), sizeof(ThreadNotifyRecordParam), devBase);
     ASSERT_NE(region.hostPtr, nullptr);
 
-    auto *param = reinterpret_cast<ThreadNotifyRecordParam *>(region.hostPtr);
+    auto* param = reinterpret_cast<ThreadNotifyRecordParam*>(region.hostPtr);
     param->thread = 0x1234;
     param->dstThread = 0x5678;
     param->dstNotifyIdx = 0;
@@ -549,7 +560,8 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_RunAicpuNotifyRecord) {
     EXPECT_EQ(g_mockNotifyRecordCalled, 1u);
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchAicpuKernel_ZeroD2hAddr) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchAicpuKernel_ZeroD2hAddr)
+{
     SetMockFuncHandles();
 
     const uint64_t devBase = 0x52000000;
@@ -557,7 +569,7 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchAicpuKernel_ZeroD2hA
     auto region = SetupMemRegion(UniqueMemName("launch_zerod2h"), bufSize, devBase);
     ASSERT_NE(region.hostPtr, nullptr);
 
-    OpParam *hostParam = reinterpret_cast<OpParam *>(region.hostPtr);
+    OpParam* hostParam = reinterpret_cast<OpParam*>(region.hostPtr);
     memset(hostParam, 0, sizeof(OpParam));
     hostParam->resCtx = nullptr;
     d2hAddr = 0;
@@ -566,7 +578,8 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_HcclLaunchAicpuKernel_ZeroD2hA
     EXPECT_EQ(g_mockLaunchAicpuKernelCalled, 1u);
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_NotSupportKernel) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_NotSupportKernel)
+{
     SetMockFuncHandles();
 
     const uint64_t devBase = 0x60000000;
@@ -581,14 +594,16 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_NotSupportKernel) {
     EXPECT_EQ(g_mockLaunchAicpuKernelCalled, 0u);
 }
 
-TEST_F(HcclKernelExecutorTest, LoadLibrary_NullDir) {
-    void *handle = LoadLibrary("", "libc.so.6");
+TEST_F(HcclKernelExecutorTest, LoadLibrary_NullDir)
+{
+    void* handle = LoadLibrary("", "libc.so.6");
     if (handle != nullptr) {
         EXPECT_NE(handle, nullptr);
     }
 }
 
-TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_DifferentRankIds) {
+TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_DifferentRankIds)
+{
     SetMockFuncHandles();
 
     for (uint32_t rankId = 0; rankId < 4; rankId++) {
@@ -600,7 +615,7 @@ TEST_F(HcclKernelExecutorTest, ExecuteAicpuKernel_DifferentRankIds) {
         auto region = SetupMemRegion(memName.c_str(), bufSize, devBase);
         ASSERT_NE(region.hostPtr, nullptr) << "rankId=" << rankId;
 
-        CommAicpuParam *hostParam = reinterpret_cast<CommAicpuParam *>(region.hostPtr);
+        CommAicpuParam* hostParam = reinterpret_cast<CommAicpuParam*>(region.hostPtr);
         memset(hostParam, 0, sizeof(CommAicpuParam));
         hostParam->userRank = rankId;
 

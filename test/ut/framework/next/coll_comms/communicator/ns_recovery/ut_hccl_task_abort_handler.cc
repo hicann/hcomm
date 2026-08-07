@@ -18,20 +18,14 @@
 #include "ccu_device_pub.h"
 #undef private
 
-using namespace hccl; 
+using namespace hccl;
 using namespace hcomm;
 
 class HcclTaskAbortHandlerTest : public testing::Test {
 public:
-    static void SetUpTestCase()
-    {
-        std::cout << "HcclTaskAbortHandlerTest SetUP" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "HcclTaskAbortHandlerTest SetUP" << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "HcclTaskAbortHandlerTest TearDown" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "HcclTaskAbortHandlerTest TearDown" << std::endl; }
 
     virtual void SetUp()
     {
@@ -55,15 +49,15 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_pre_succ
     uint32_t timeout = 30U;
 
     // 使用 nullptr 作为测试 communicator 的占位符并注册
-    CollComm *comm = nullptr;
+    CollComm* comm = nullptr;
     HcclTaskAbortHandler::GetInstance().Register(comm);
     void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
 
     // 模拟 Suspend 方法返回成功
-    MOCKER_CPP(&CollComm::Suspend, HcclResult(CollComm:: *)())
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollComm::Suspend, HcclResult(CollComm::*)())
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
 
     // 测试带超时的情况
     auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
@@ -90,8 +84,8 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_with_null_args
 
 TEST_F(HcclTaskAbortHandlerTest, test_unregister_not_found_comm)
 {
-    CollComm *comm1 = reinterpret_cast<CollComm*>(0x1000);
-    CollComm *comm2 = reinterpret_cast<CollComm*>(0x2000);
+    CollComm* comm1 = reinterpret_cast<CollComm*>(0x1000);
+    CollComm* comm2 = reinterpret_cast<CollComm*>(0x2000);
 
     HcclTaskAbortHandler::GetInstance().Register(comm1);
     HcclResult ret = HcclTaskAbortHandler::GetInstance().UnRegister(comm2);
@@ -106,13 +100,11 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_pre_susp
     aclrtDeviceTaskAbortStage stage = aclrtDeviceTaskAbortStage::ACL_RT_DEVICE_TASK_ABORT_PRE;
     uint32_t timeout = 0U;
 
-    CollComm *comm = nullptr;
+    CollComm* comm = nullptr;
     HcclTaskAbortHandler::GetInstance().Register(comm);
     void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
 
-    MOCKER_CPP(&CollComm::Suspend, HcclResult(CollComm:: *)())
-    .stubs()
-    .will(returnValue(HCCL_E_SUSPENDING));
+    MOCKER_CPP(&CollComm::Suspend, HcclResult(CollComm::*)()).stubs().will(returnValue(HCCL_E_SUSPENDING));
 
     auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
     EXPECT_EQ(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS));
@@ -126,7 +118,7 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_sus
     aclrtDeviceTaskAbortStage stage = aclrtDeviceTaskAbortStage::ACL_RT_DEVICE_TASK_ABORT_POST;
     uint32_t timeout = 0U;
 
-    CollComm *comm = nullptr;
+    CollComm* comm = nullptr;
     HcclTaskAbortHandler::GetInstance().Register(comm);
     void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
 
@@ -134,9 +126,7 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_sus
     MOCKER(CcuSetTaskKill).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER(CcuSetTaskKillDone).stubs().will(returnValue(HCCL_SUCCESS));
 
-    MOCKER_CPP(&CollComm::Clean, HcclResult(CollComm:: *)())
-    .stubs()
-    .will(returnValue(HCCL_E_SUSPENDING));
+    MOCKER_CPP(&CollComm::Clean, HcclResult(CollComm::*)()).stubs().will(returnValue(HCCL_E_SUSPENDING));
 
     auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
     EXPECT_EQ(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS));
@@ -150,7 +140,7 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_post_ccu_set_task_kill_fail)
     aclrtDeviceTaskAbortStage stage = aclrtDeviceTaskAbortStage::ACL_RT_DEVICE_TASK_ABORT_POST;
     uint32_t timeout = 0U;
 
-    CollComm *comm = nullptr;
+    CollComm* comm = nullptr;
     HcclTaskAbortHandler::GetInstance().Register(comm);
     void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
 
@@ -165,8 +155,8 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_post_ccu_set_task_kill_fail)
 
 TEST_F(HcclTaskAbortHandlerTest, test_register_and_unregister_multiple)
 {
-    CollComm *comm1 = reinterpret_cast<CollComm*>(0x1000);
-    CollComm *comm2 = reinterpret_cast<CollComm*>(0x2000);
+    CollComm* comm1 = reinterpret_cast<CollComm*>(0x1000);
+    CollComm* comm2 = reinterpret_cast<CollComm*>(0x2000);
 
     HcclResult ret = HcclTaskAbortHandler::GetInstance().Register(comm1);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -192,15 +182,15 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_pre_fail
     uint32_t timeout = 30U;
 
     // 使用 nullptr 作为测试 communicator 的占位符并注册
-    CollComm *comm = nullptr;
+    CollComm* comm = nullptr;
     HcclTaskAbortHandler::GetInstance().Register(comm);
     void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
 
     // 模拟 Suspend 方法返回失败
-    MOCKER_CPP(&CollComm::Suspend, HcclResult(CollComm:: *)())
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(HCCL_E_INTERNAL));
+    MOCKER_CPP(&CollComm::Suspend, HcclResult(CollComm::*)())
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_E_INTERNAL));
 
     // 测试带超时的情况
     auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
@@ -223,7 +213,7 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_suc
     uint32_t timeout = 30U;
 
     // 使用 nullptr 作为测试 communicator 的占位符并注册
-    CollComm *comm = nullptr;
+    CollComm* comm = nullptr;
     HcclTaskAbortHandler::GetInstance().Register(comm);
     void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
 
@@ -233,10 +223,10 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_suc
     MOCKER(CcuSetTaskKillDone).stubs().will(returnValue(HCCL_SUCCESS));
 
     // 模拟 Clean 方法返回成功
-    MOCKER_CPP(&CollComm::Clean, HcclResult(CollComm:: *)())
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollComm::Clean, HcclResult(CollComm::*)())
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
 
     // 测试带超时的情况
     auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
@@ -259,7 +249,7 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_post_skip_taskkill_when_ccu_not
     uint32_t timeout = 30U;
 
     // 使用 nullptr 作为测试 communicator 的占位符并注册
-    CollComm *comm = nullptr;
+    CollComm* comm = nullptr;
     HcclTaskAbortHandler::GetInstance().Register(comm);
     void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
 
@@ -267,10 +257,10 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_post_skip_taskkill_when_ccu_not
     MOCKER(CcuIsInited).stubs().will(returnValue(false));
 
     // 模拟 Clean 方法返回成功
-    MOCKER_CPP(&CollComm::Clean, HcclResult(CollComm:: *)())
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollComm::Clean, HcclResult(CollComm::*)())
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
 
     // 测试带超时的情况
     auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
@@ -293,7 +283,7 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_fai
     uint32_t timeout = 30U;
 
     // 使用 nullptr 作为测试 communicator 的占位符并注册
-    CollComm *comm = nullptr;
+    CollComm* comm = nullptr;
     HcclTaskAbortHandler::GetInstance().Register(comm);
     void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
 
@@ -303,10 +293,10 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_fai
     MOCKER(CcuSetTaskKillDone).stubs().will(returnValue(HCCL_SUCCESS));
 
     // 模拟 Clean 方法返回失败
-    MOCKER_CPP(&CollComm::Clean, HcclResult(CollComm:: *)())
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(HCCL_E_INTERNAL));
+    MOCKER_CPP(&CollComm::Clean, HcclResult(CollComm::*)())
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_E_INTERNAL));
 
     // 测试带超时的情况
     auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);

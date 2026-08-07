@@ -11,16 +11,13 @@
 #include <cstdint>
 #include "hccl/hcom.h"
 
-HcclWorkflowMode GetWorkflowMode()
-{
-    return HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE;
-}
+HcclWorkflowMode GetWorkflowMode() { return HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE; }
 
 namespace error_message {
-int32_t RegisterFormatErrorMessage(const char *error_msg, size_t error_msg_len)
+int32_t RegisterFormatErrorMessage(const char* error_msg, size_t error_msg_len)
 {
-    (void) error_msg;
-    (void) error_msg_len;
+    (void)error_msg;
+    (void)error_msg_len;
     return 0;
 }
-}
+} // namespace error_message

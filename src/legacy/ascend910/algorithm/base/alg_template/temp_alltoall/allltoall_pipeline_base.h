@@ -12,7 +12,6 @@
 #define ALLTOALL_PIPELINE_BASE_H
 
 #include "allltoall_pipeline_base_pub.h"
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALLTOALL_PIPELINE_BASE_H */

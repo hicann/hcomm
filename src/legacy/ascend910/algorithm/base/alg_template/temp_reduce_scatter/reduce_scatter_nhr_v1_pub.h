@@ -20,22 +20,22 @@ public:
     explicit ReduceScatterNHRV1(const HcclDispatcher dispatcher);
     ~ReduceScatterNHRV1() override;
 
-    HcclResult Prepare(u64 reduceAttrBitMap, HcomCollOpInfo *opInfo = nullptr) override;
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo = nullptr) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
 private:
     u64 reduceAttr_ = 0; /* 0x1:表示data_type + reduce_type支持inlinereduce  */
 
-    HcclResult SimpleCheck(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
+    HcclResult SimpleCheck(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
     HcclResult SetDefaultSlices(const u32 rank, const u32 rankSize);
     HcclResult CheckSlices(const u32 rankSize);
-    HcclResult RunReduceScatterBrokenRing(const u32 rank, const std::vector<LINK> &links,
-        const std::vector<Slice> &slices);
-    HcclResult RunReduceScatterOnVertical(const u32 rank, const std::vector<LINK> &links, const RingInfo &info);
-    HcclResult RunReduceScatterOnHorizontal(const u32 rank, const std::vector<LINK> &links, const RingInfo &info);
-    HcclResult RunLastCopyStep(const u32 rank, const std::vector<LINK> &links, const RingInfo &info);
+    HcclResult
+    RunReduceScatterBrokenRing(const u32 rank, const std::vector<LINK>& links, const std::vector<Slice>& slices);
+    HcclResult RunReduceScatterOnVertical(const u32 rank, const std::vector<LINK>& links, const RingInfo& info);
+    HcclResult RunReduceScatterOnHorizontal(const u32 rank, const std::vector<LINK>& links, const RingInfo& info);
+    HcclResult RunLastCopyStep(const u32 rank, const std::vector<LINK>& links, const RingInfo& info);
     HcclResult RunCopyDataToOutputMem(const u32 rank);
 };
-}  // hccl
+} // namespace hccl
 
-#endif  /* REDUCE_SCATTER_NHR_V1_PUB_H */
+#endif /* REDUCE_SCATTER_NHR_V1_PUB_H */

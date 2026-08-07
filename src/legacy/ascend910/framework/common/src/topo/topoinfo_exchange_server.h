@@ -24,52 +24,53 @@
 namespace hccl {
 class TopoInfoExchangeServer : public TopoInfoExchangeBase {
 public:
-    explicit TopoInfoExchangeServer(HcclIpAddress &hostIP, u32 hostPort, const std::vector<HcclIpAddress> whitelist,
-        HcclNetDevCtx netDevCtx, std::shared_ptr<HcclSocket> listenSocket,
-        const std::string &identifier);
-    explicit TopoInfoExchangeServer(HcclIpAddress &hostIP, u32 hostPort, const std::vector<HcclIpAddress> whitelist,
-        HcclNetDevCtx netDevCtx, std::shared_ptr<HcclSocket> listenSocket,
-        std::shared_ptr<HcclSocket> grpLeaderToRoot, const std::string &identifier);
+    explicit TopoInfoExchangeServer(
+        HcclIpAddress& hostIP, u32 hostPort, const std::vector<HcclIpAddress> whitelist, HcclNetDevCtx netDevCtx,
+        std::shared_ptr<HcclSocket> listenSocket, const std::string& identifier);
+    explicit TopoInfoExchangeServer(
+        HcclIpAddress& hostIP, u32 hostPort, const std::vector<HcclIpAddress> whitelist, HcclNetDevCtx netDevCtx,
+        std::shared_ptr<HcclSocket> listenSocket, std::shared_ptr<HcclSocket> grpLeaderToRoot,
+        const std::string& identifier);
     ~TopoInfoExchangeServer() override;
     HcclResult Setup();
     HcclResult SetupGroupLeader();
     HcclResult SetupByMasterInfo();
     HcclResult Teardown();
-    HcclResult GetConnections(std::map<u32, std::shared_ptr<HcclSocket>> &connectSockets);
+    HcclResult GetConnections(std::map<u32, std::shared_ptr<HcclSocket>>& connectSockets);
 
 private:
-    HcclResult Connect(std::map<std::string, std::shared_ptr<HcclSocket>> &connectSockets, u32 &rankSize);
-    HcclResult GroupLeaderConnect(std::map<std::string, std::shared_ptr<HcclSocket>> &connectSockets);
-    HcclResult GetConnection(std::map<std::string, std::shared_ptr<HcclSocket>> &connectSockets);
-    HcclResult Disconnect(std::map<std::string, std::shared_ptr<HcclSocket>> &connectSockets);
-    HcclResult DeleteSocketWhiteList(u32 port, const std::vector<HcclIpAddress> &whitelist);
-    HcclResult StopNetwork(const std::vector<HcclIpAddress> &whitelist,
-        u32 hostPort);
-    HcclResult StopSocketListen(const std::vector<HcclIpAddress> &whitelist,
-        u32 hostPort);
+    HcclResult Connect(std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, u32& rankSize);
+    HcclResult GroupLeaderConnect(std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets);
+    HcclResult GetConnection(std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets);
+    HcclResult Disconnect(std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets);
+    HcclResult DeleteSocketWhiteList(u32 port, const std::vector<HcclIpAddress>& whitelist);
+    HcclResult StopNetwork(const std::vector<HcclIpAddress>& whitelist, u32 hostPort);
+    HcclResult StopSocketListen(const std::vector<HcclIpAddress>& whitelist, u32 hostPort);
     HcclResult RecvGroupLeaderInfo(
-        const std::map<std::string, std::shared_ptr<HcclSocket>> &connectSockets, GroupLeader_t &groupLeader);
+        const std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, GroupLeader_t& groupLeader);
     HcclResult RecvGroupLeaderPortInfo(
-        const std::map<std::string, std::shared_ptr<HcclSocket>> &connectSockets, GroupLeader_t &groupLeader);
-    HcclResult GetRanksBasicInfo(
-        const std::map<std::string, std::shared_ptr<HcclSocket>> &connectSockets, RankTable_t &rankTable);
-    HcclResult GetRanksTransInfo(
-        const std::map<std::string, std::shared_ptr<HcclSocket>> &connectSockets, RankTable_t &rankTable);
-    HcclResult GetRankBasicInfo(std::shared_ptr<HcclSocket> socket, RankTable_t &rankTable);
-    HcclResult GetCommonTopoInfo(RankTable_t &rankTable, const RankTable_t &orginRankTable) const;
-    HcclResult SortRankList(RankTable_t &rankTable) const;
-    HcclResult RecvRemoteAgentID(std::shared_ptr<HcclSocket> socket, std::string &agentID);
-    HcclResult RecvRemoteRankNum(std::shared_ptr<HcclSocket> socket, u32 &remoteRankNum);
+        const std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, GroupLeader_t& groupLeader);
+    HcclResult
+    GetRanksBasicInfo(const std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, RankTable_t& rankTable);
+    HcclResult
+    GetRanksTransInfo(const std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, RankTable_t& rankTable);
+    HcclResult GetRankBasicInfo(std::shared_ptr<HcclSocket> socket, RankTable_t& rankTable);
+    HcclResult GetCommonTopoInfo(RankTable_t& rankTable, const RankTable_t& orginRankTable) const;
+    HcclResult SortRankList(RankTable_t& rankTable) const;
+    HcclResult RecvRemoteAgentID(std::shared_ptr<HcclSocket> socket, std::string& agentID);
+    HcclResult RecvRemoteRankNum(std::shared_ptr<HcclSocket> socket, u32& remoteRankNum);
     HcclResult HierarchicalSendRecv();
-    HcclResult VerifyRemoteRankNum(u32 &previousRankNum, u32 remoteRankNum) const;
+    HcclResult VerifyRemoteRankNum(u32& previousRankNum, u32 remoteRankNum) const;
     HcclResult SendIdentify(std::shared_ptr<HcclSocket> socket, u32 identify) const;
-    HcclResult DisplayConnectedRank(const std::map<std::string, std::shared_ptr<HcclSocket>> &connectSockets, u32 rankNum = 0);
-    HcclResult DisplayConnectingStatus(u32 totalSockets, u32 waitSockets,
-        const std::map<std::string, std::shared_ptr<HcclSocket>> &connectSockets);
-    bool DoServerIdExist(const RankTable_t &rankTable, const std::string &serverId) const;
-    HcclResult GetRemoteFdAndRankSize(std::shared_ptr<HcclSocket> &socket,
-        std::map<std::string, std::shared_ptr<HcclSocket>> &connectSockets, u32 &rankSize);
-    HcclResult FailedConnectionAgentIdString(u32 rankSize, std::string &failedAgentIdList);
+    HcclResult
+    DisplayConnectedRank(const std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, u32 rankNum = 0);
+    HcclResult DisplayConnectingStatus(
+        u32 totalSockets, u32 waitSockets, const std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets);
+    bool DoServerIdExist(const RankTable_t& rankTable, const std::string& serverId) const;
+    HcclResult GetRemoteFdAndRankSize(
+        std::shared_ptr<HcclSocket>& socket, std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets,
+        u32& rankSize);
+    HcclResult FailedConnectionAgentIdString(u32 rankSize, std::string& failedAgentIdList);
     HcclIpAddress hostIP_;
     u32 hostPort_{HCCL_INVALID_PORT};
     SocketHandle socketHandle_;
@@ -87,6 +88,6 @@ private:
     u32 expectSocketNum_ = 1;
     u32 previousRankNum_ = 0;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* TOPOINFO_EXCHANGE_SERVER_H */

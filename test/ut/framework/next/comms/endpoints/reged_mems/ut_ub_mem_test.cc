@@ -26,20 +26,11 @@ using namespace hcomm;
 
 class UbMemRegedMemMgrTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "UbMemRegedMemMgrTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "UbMemRegedMemMgrTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "UbMemRegedMemMgrTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "UbMemRegedMemMgrTest tests tear down." << std::endl; }
 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in UbMemRegedMemMgrTest SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in UbMemRegedMemMgrTest SetUP" << std::endl; }
 
     virtual void TearDown()
     {
@@ -68,13 +59,12 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_ParentChild_Expect_Unregis
     mem0.addr = (void*)0x2000;
     mem0.size = 8192;
     std::string memTag0 = "parent";
-    void *memHandle0 = nullptr;
+    void* memHandle0 = nullptr;
     HcclResult ret = ubMemRegedMemMgr.RegisterMemory(mem0, memTag0.c_str(), &memHandle0);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     auto* parentBuf = static_cast<Hccl::LocalIpcRmaBuffer*>(memHandle0);
-    hccl::BufferKey<uintptr_t, u64> parentKey(parentBuf->GetAddr(),
-        static_cast<uint64_t>(parentBuf->GetSize()));
+    hccl::BufferKey<uintptr_t, u64> parentKey(parentBuf->GetAddr(), static_cast<uint64_t>(parentBuf->GetSize()));
     EXPECT_TRUE(ubMemRegedMemMgr.localIpcRmaBufferMgr_->Find(parentKey).first);
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, parentKey), 1u);
 
@@ -84,7 +74,7 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_ParentChild_Expect_Unregis
     mem1.addr = (void*)0x2000;
     mem1.size = 512;
     std::string memTag1 = "child";
-    void *memHandle1 = nullptr;
+    void* memHandle1 = nullptr;
     ret = ubMemRegedMemMgr.RegisterMemory(mem1, memTag1.c_str(), &memHandle1);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_NE(memHandle1, memHandle0);
@@ -115,8 +105,7 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_MultipleSameRange_Expect_A
     void *h1 = nullptr, *h2 = nullptr, *h3 = nullptr;
     EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem, "t1", &h1), HCCL_SUCCESS);
     auto* parentBuf = static_cast<Hccl::LocalIpcRmaBuffer*>(h1);
-    hccl::BufferKey<uintptr_t, u64> parentKey(parentBuf->GetAddr(),
-        static_cast<uint64_t>(parentBuf->GetSize()));
+    hccl::BufferKey<uintptr_t, u64> parentKey(parentBuf->GetAddr(), static_cast<uint64_t>(parentBuf->GetSize()));
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, parentKey), 1u);
 
     EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem, "t2", &h2), HCCL_SUCCESS);
@@ -146,11 +135,10 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_NonOverlap_Expect_TwoParen
     mem0.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem0.addr = (void*)0x1000;
     mem0.size = 100;
-    void *h0 = nullptr;
+    void* h0 = nullptr;
     EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem0, "t0", &h0), HCCL_SUCCESS);
     auto* buf0 = static_cast<Hccl::LocalIpcRmaBuffer*>(h0);
-    hccl::BufferKey<uintptr_t, u64> key0(buf0->GetAddr(),
-        static_cast<uint64_t>(buf0->GetSize()));
+    hccl::BufferKey<uintptr_t, u64> key0(buf0->GetAddr(), static_cast<uint64_t>(buf0->GetSize()));
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, key0), 1u);
 
     // 不重叠的新范围
@@ -158,11 +146,10 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_NonOverlap_Expect_TwoParen
     mem1.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem1.addr = (void*)0x2000;
     mem1.size = 100;
-    void *h1 = nullptr;
+    void* h1 = nullptr;
     EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem1, "t1", &h1), HCCL_SUCCESS);
     auto* buf1 = static_cast<Hccl::LocalIpcRmaBuffer*>(h1);
-    hccl::BufferKey<uintptr_t, u64> key1(buf1->GetAddr(),
-        static_cast<uint64_t>(buf1->GetSize()));
+    hccl::BufferKey<uintptr_t, u64> key1(buf1->GetAddr(), static_cast<uint64_t>(buf1->GetSize()));
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, key1), 1u);
 
     EXPECT_NE(h0, h1);
@@ -188,11 +175,10 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_UnregisterParentFirst_Expe
     mem0.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem0.addr = (void*)0x6000;
     mem0.size = 4096;
-    void *parentHandle = nullptr;
+    void* parentHandle = nullptr;
     EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem0, "parent", &parentHandle), HCCL_SUCCESS);
     auto* parentBuf = static_cast<Hccl::LocalIpcRmaBuffer*>(parentHandle);
-    hccl::BufferKey<uintptr_t, u64> parentKey(parentBuf->GetAddr(),
-        static_cast<uint64_t>(parentBuf->GetSize()));
+    hccl::BufferKey<uintptr_t, u64> parentKey(parentBuf->GetAddr(), static_cast<uint64_t>(parentBuf->GetSize()));
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, parentKey), 1u);
 
     // 子集注册（alias）
@@ -200,7 +186,7 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_UnregisterParentFirst_Expe
     mem1.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem1.addr = (void*)0x6000;
     mem1.size = 512;
-    void *childHandle = nullptr;
+    void* childHandle = nullptr;
     EXPECT_EQ(ubMemRegedMemMgr.RegisterMemory(mem1, "child", &childHandle), HCCL_SUCCESS);
     EXPECT_NE(childHandle, parentHandle);
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, parentKey), 2u);
@@ -213,15 +199,19 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_UnregisterParentFirst_Expe
 
     // 验证：父在allBuffers_中标记为true（soft-deleted），子标记为false
     EXPECT_EQ(ubMemRegedMemMgr.allRegisteredBuffers_.size(), 2u);
-    auto itParent = std::find_if(ubMemRegedMemMgr.allRegisteredBuffers_.begin(),
-        ubMemRegedMemMgr.allRegisteredBuffers_.end(),
-        [parentBuf](const auto& e) { return e.first.get() == parentBuf; });
+    auto itParent = std::find_if(
+        ubMemRegedMemMgr.allRegisteredBuffers_.begin(), ubMemRegedMemMgr.allRegisteredBuffers_.end(),
+        [parentBuf](const auto& e) {
+            return e.first.get() == parentBuf;
+        });
     ASSERT_NE(itParent, ubMemRegedMemMgr.allRegisteredBuffers_.end());
     EXPECT_TRUE(itParent->second);
 
-    auto itChild = std::find_if(ubMemRegedMemMgr.allRegisteredBuffers_.begin(),
-        ubMemRegedMemMgr.allRegisteredBuffers_.end(),
-        [childHandle](const auto& e) { return e.first.get() == childHandle; });
+    auto itChild = std::find_if(
+        ubMemRegedMemMgr.allRegisteredBuffers_.begin(), ubMemRegedMemMgr.allRegisteredBuffers_.end(),
+        [childHandle](const auto& e) {
+            return e.first.get() == childHandle;
+        });
     ASSERT_NE(itChild, ubMemRegedMemMgr.allRegisteredBuffers_.end());
     EXPECT_FALSE(itChild->second);
 
@@ -231,9 +221,11 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_UnregisterParentFirst_Expe
     EXPECT_EQ(GetRef(*ubMemRegedMemMgr.localIpcRmaBufferMgr_, parentKey), 0u);
 
     // 验证：子已从allBuffers_中移除
-    itChild = std::find_if(ubMemRegedMemMgr.allRegisteredBuffers_.begin(),
-        ubMemRegedMemMgr.allRegisteredBuffers_.end(),
-        [childHandle](const auto& e) { return e.first.get() == childHandle; });
+    itChild = std::find_if(
+        ubMemRegedMemMgr.allRegisteredBuffers_.begin(), ubMemRegedMemMgr.allRegisteredBuffers_.end(),
+        [childHandle](const auto& e) {
+            return e.first.get() == childHandle;
+        });
     EXPECT_EQ(itChild, ubMemRegedMemMgr.allRegisteredBuffers_.end());
 }
 
@@ -241,7 +233,7 @@ TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_UnregisterParentFirst_Expe
 TEST_F(UbMemRegedMemMgrTest, ut_UbMemRegedMemMgr_When_InvalidParams_Expect_Error)
 {
     UbMemRegedMemMgr ubMemRegedMemMgr{};
-    void *h = nullptr;
+    void* h = nullptr;
 
     HcommMem mem0{};
     mem0.type = CommMemType::COMM_MEM_TYPE_DEVICE;

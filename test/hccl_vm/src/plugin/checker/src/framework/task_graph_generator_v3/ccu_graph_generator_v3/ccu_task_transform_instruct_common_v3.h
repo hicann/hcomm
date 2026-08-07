@@ -38,10 +38,10 @@ using namespace hcomm;
 namespace HcclSim {
 namespace TaskGraphGeneratorV3 {
 
-using AllRankChannelInfoV3 = std::map<RankId, std::map<u32, ChannelsPerDie>>;
-extern AllRankChannelInfoV3 &g_allRankChannelInfo;
+    using AllRankChannelInfoV3 = std::map<RankId, std::map<u32, ChannelsPerDie>>;
+    extern AllRankChannelInfoV3& g_allRankChannelInfo;
 
-    std::string ParseMSList(const CcuRep::CcuInstr *instr);
+    std::string ParseMSList(const CcuRep::CcuInstr* instr);
 } // namespace TaskGraphGeneratorV3
 } // namespace HcclSim
 

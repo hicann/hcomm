@@ -22,7 +22,8 @@
 
 class OrExecutor : public CcuExecutorBase {
 public:
-    explicit OrExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit OrExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     OrExecutor() = default;
@@ -32,6 +33,7 @@ public:
     void Run() override;
     std::string Describe() override;
     CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
+
 private:
     uint16_t xdId_{0};
     uint16_t xnId_{0};

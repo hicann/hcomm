@@ -10,17 +10,8 @@
 #include <syslog.h>
 #include <stdio.h>
 
-bool HcclCheckLogLevel(int logType, int moduleId)
-{
-    return (CheckLogLevel(moduleId, logType) == 1) ? true : false;
-}
+bool HcclCheckLogLevel(int logType, int moduleId) { return (CheckLogLevel(moduleId, logType) == 1) ? true : false; }
 
-bool IsErrorToWarn()
-{
-    return false;
-}
+bool IsErrorToWarn() { return false; }
 
-bool IsRunInfoLogPrintToScreen()
-{
-    return false;
-}
+bool IsRunInfoLogPrintToScreen() { return false; }

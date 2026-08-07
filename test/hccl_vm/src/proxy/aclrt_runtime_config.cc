@@ -25,99 +25,98 @@
 #include "db_sim_runner_common.h"
 #include "db_sim_runner_ops.h"
 
-
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
 aclError aclrtSetSysParamOpt(aclSysParamOpt opt, int64_t value)
 {
-    (void) opt;
-    (void) value;
+    (void)opt;
+    (void)value;
     HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetSysParamOpt(aclSysParamOpt opt, int64_t *value)
+aclError aclrtGetSysParamOpt(aclSysParamOpt opt, int64_t* value)
 {
-    (void) opt;
-    (void) value;
+    (void)opt;
+    (void)value;
     HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
 aclError aclrtGetDeviceResLimit(int32_t deviceId, aclrtDevResLimitType type, uint32_t* value)
 {
-    (void) deviceId;
-    (void) type;
-    (void) value;
+    (void)deviceId;
+    (void)type;
+    (void)value;
     HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
 aclError aclrtSetDeviceResLimit(int32_t deviceId, aclrtDevResLimitType type, uint32_t value)
 {
-    (void) deviceId;
-    (void) type;
-    (void) value;
+    (void)deviceId;
+    (void)type;
+    (void)value;
     HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
 aclError aclrtResetDeviceResLimit(int32_t deviceId)
 {
-    (void) deviceId;
+    (void)deviceId;
     HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetStreamResLimit(aclrtStream stream, aclrtDevResLimitType type, uint32_t *value)
+aclError aclrtGetStreamResLimit(aclrtStream stream, aclrtDevResLimitType type, uint32_t* value)
 {
-    (void) stream;
-    (void) type;
-    (void) value;
+    (void)stream;
+    (void)type;
+    (void)value;
     HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
 aclError aclrtSetStreamResLimit(aclrtStream stream, aclrtDevResLimitType type, uint32_t value)
 {
-    (void) stream;
-    (void) type;
-    (void) value;
+    (void)stream;
+    (void)type;
+    (void)value;
     HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
 aclError aclrtResetStreamResLimit(aclrtStream stream)
 {
-    (void) stream;
+    (void)stream;
     HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
 aclError aclrtUseStreamResInCurrentThread(aclrtStream stream)
 {
-    (void) stream;
+    (void)stream;
     HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
 aclError aclrtUnuseStreamResInCurrentThread(aclrtStream stream)
 {
-    (void) stream;
+    (void)stream;
     HCCL_VM_WARN("not support");
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetResInCurrentThread(aclrtDevResLimitType type, uint32_t *value)
+aclError aclrtGetResInCurrentThread(aclrtDevResLimitType type, uint32_t* value)
 {
     (void)type;
     *value = 64;
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetOpTimeOutInterval(uint64_t *interval)
+aclError aclrtGetOpTimeOutInterval(uint64_t* interval)
 {
     if (interval == nullptr) {
         return ACL_ERROR_INVALID_PARAM;
@@ -128,4 +127,4 @@ aclError aclrtGetOpTimeOutInterval(uint64_t *interval)
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus

@@ -18,26 +18,28 @@ class AlignedReduceScatterDoubleRingWithSerialLocalCopy : public AlignedReduceSc
 public:
     explicit AlignedReduceScatterDoubleRingWithSerialLocalCopy(const HcclDispatcher dispatcher);
     ~AlignedReduceScatterDoubleRingWithSerialLocalCopy() override;
-    
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
 protected:
 private:
-    HcclResult MemcpyInitSlices(u64 ringIndex,
-        DeviceMem &dstInit, DeviceMem &srcInit, DeviceMem &dstSubInit, DeviceMem &srcSubInit) override;
+    HcclResult MemcpyInitSlices(
+        u64 ringIndex, DeviceMem& dstInit, DeviceMem& srcInit, DeviceMem& dstSubInit, DeviceMem& srcSubInit) override;
     HcclResult RunMainRingSubStream(const u32 rank, const u32 rankSize);
     HcclResult RunMainInitStep(const u32 rank, const u32 rankSize);
     HcclResult RunSubInitStep(const u32 rank, const u32 rankSize);
     HcclResult PreSync(const u32 ringIndex) override;
-    HcclResult LocalMemcpy(const u32 step, const u32 rankSize, const u32 ringIndex,
-        DeviceMem &localSrcMem, DeviceMem &localDstMem) override;
-    HcclResult RunAllStreams(const u32 step, const u32 rankSize,
-        std::vector<SenderMemoryInfo> &mainTxReduceMems, std::vector<ReducerMemoryInfo> &mainRxReduceMems,
-        std::vector<SenderMemoryInfo> &subTxReduceMems, std::vector<ReducerMemoryInfo> &subRxReduceMems,
-        std::vector<DeviceMem> &mainLocalSrcMems, std::vector<DeviceMem> &mainLocalDstMems,
-        std::vector<DeviceMem> &subLocalSrcMems, std::vector<DeviceMem> &subLocalDstMems) override;
+    HcclResult LocalMemcpy(
+        const u32 step, const u32 rankSize, const u32 ringIndex, DeviceMem& localSrcMem,
+        DeviceMem& localDstMem) override;
+    HcclResult RunAllStreams(
+        const u32 step, const u32 rankSize, std::vector<SenderMemoryInfo>& mainTxReduceMems,
+        std::vector<ReducerMemoryInfo>& mainRxReduceMems, std::vector<SenderMemoryInfo>& subTxReduceMems,
+        std::vector<ReducerMemoryInfo>& subRxReduceMems, std::vector<DeviceMem>& mainLocalSrcMems,
+        std::vector<DeviceMem>& mainLocalDstMems, std::vector<DeviceMem>& subLocalSrcMems,
+        std::vector<DeviceMem>& subLocalDstMems) override;
     HcclResult RunReduceScatter(const u32 rank, const u32 rankSize) override;
-    HcclResult GetActiveSubstreamNumWithSerial(u32 &activeSubstreamNum);
+    HcclResult GetActiveSubstreamNumWithSerial(u32& activeSubstreamNum);
     HcclResult ExecEmptyTasks();
     HcclResult MainRecordSub();
     HcclResult SubWaitMain();

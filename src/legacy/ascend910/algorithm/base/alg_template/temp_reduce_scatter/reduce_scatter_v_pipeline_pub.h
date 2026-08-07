@@ -26,23 +26,23 @@
 namespace hccl {
 class ReduceScatterVPipeline : public ReduceScatterPipeline {
 public:
-    explicit ReduceScatterVPipeline (const HcclDispatcher dispatcher);
+    explicit ReduceScatterVPipeline(const HcclDispatcher dispatcher);
     ~ReduceScatterVPipeline() override;
     using AlgTemplateBase::Prepare;
     // 适配新CollExecutor接口
-    HcclResult Prepare(HcomCollOpInfo *opInfo, DeviceMem &cclBuffer, const u64 bufferSize, const std::vector<Slice> &slices,
-                const SubCommInfo &level0CommInfo, const SubCommInfo &level1CommInfo,
-                Stream &mainStream, std::vector<Stream> &subStream,
-                std::vector<std::shared_ptr<LocalNotify>> &notifyMain,
-                std::vector<std::shared_ptr<LocalNotify>> &notifySub,
-                u64 reduceAttrBitMap) override;
+    HcclResult Prepare(
+        HcomCollOpInfo* opInfo, DeviceMem& cclBuffer, const u64 bufferSize, const std::vector<Slice>& slices,
+        const SubCommInfo& level0CommInfo, const SubCommInfo& level1CommInfo, Stream& mainStream,
+        std::vector<Stream>& subStream, std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
+        std::vector<std::shared_ptr<LocalNotify>>& notifySub, u64 reduceAttrBitMap) override;
 
     HcclResult RunAsync() override;
+
 protected:
     HcclResult RunIntraServer(u32 step, u64 remoteOffset) override;
-    HcclResult RunInterServer(u32 step, const LINK &prevInterLink, const LINK &nextInterLink) override;
+    HcclResult RunInterServer(u32 step, const LINK& prevInterLink, const LINK& nextInterLink) override;
     HcclResult CopyToScratchBuffer(u32 step) override;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* REDUCE_SCATTER_V_PIPELINE_PUB_H */

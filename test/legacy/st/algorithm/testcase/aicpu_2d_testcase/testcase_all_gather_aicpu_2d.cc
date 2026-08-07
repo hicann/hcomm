@@ -24,20 +24,15 @@ namespace checker {
 
 class AllGatherAicpu2DTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "AllGather Aicpu 2D test set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "AllGather Aicpu 2D test set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "AllGather Aicpu 2D test tear down" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "AllGather Aicpu 2D test tear down" << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -53,7 +48,7 @@ protected:
 TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_2_mul_2_rank)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,8,9}}};
+    TopoMeta topoMeta{{{0, 1, 8, 9}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
 
@@ -75,7 +70,7 @@ TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_2_mul_2_rank)
 TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_2_mul_2_rank_offload)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,8,9}}};
+    TopoMeta topoMeta{{{0, 1, 8, 9}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
 
@@ -97,7 +92,7 @@ TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_2_mul_2_rank_offload)
 TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_2_mul_2_rank_offload_0)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,8,9}}};
+    TopoMeta topoMeta{{{0, 1, 8, 9}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
 
@@ -119,7 +114,7 @@ TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_2_mul_2_rank_offload_0)
 TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_2_mul_2_rank_big_data)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,8,9}}};
+    TopoMeta topoMeta{{{0, 1, 8, 9}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
 
@@ -137,13 +132,12 @@ TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_2_mul_2_rank_big_data)
         ret = checker.CheckA5Aicpu(checkerOpParam, topoMeta);
         EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
     }
-
 }
 
 TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_2_mul_2_rank_small_data)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,8,9}}};
+    TopoMeta topoMeta{{{0, 1, 8, 9}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
 
@@ -165,7 +159,7 @@ TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_2_mul_2_rank_small_data)
 TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_2_mul_2_rank_small_data_0)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,8,9}}};
+    TopoMeta topoMeta{{{0, 1, 8, 9}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
 
@@ -187,7 +181,7 @@ TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_2_mul_2_rank_small_data_0
 TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_3_mul_3_rank)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,2,8,9,10,16,17,18}}};
+    TopoMeta topoMeta{{{0, 1, 2, 8, 9, 10, 16, 17, 18}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
 
@@ -209,7 +203,7 @@ TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_3_mul_3_rank)
 TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_4_mul_4_rank)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,2,3,8,9,10,11,16,17,18,19}}};
+    TopoMeta topoMeta{{{0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
 
@@ -228,4 +222,4 @@ TEST_F(AllGatherAicpu2DTest, allgather_aicpu_case_test_4_mul_4_rank)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-}
+} // namespace checker

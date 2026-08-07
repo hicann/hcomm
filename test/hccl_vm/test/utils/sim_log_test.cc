@@ -17,19 +17,17 @@
 
 class HcclVmLogTest : public testing::Test {
 protected:
-    void SetUp() override {
-    }
-    
-    void TearDown() override {
-        DeInitLogger();
-    }
+    void SetUp() override {}
+
+    void TearDown() override { DeInitLogger(); }
 };
 
-TEST_F(HcclVmLogTest, LogConfig_DefaultValues) {
+TEST_F(HcclVmLogTest, LogConfig_DefaultValues)
+{
     LogConfig config;
     EXPECT_EQ(config.consoleLevel, 2);
     EXPECT_EQ(config.fileLevel, 1);
-    EXPECT_EQ(config.maxFileSize, 10*1024*1024);
+    EXPECT_EQ(config.maxFileSize, 10 * 1024 * 1024);
     EXPECT_EQ(config.maxFiles, UINT16_MAX);
     EXPECT_EQ(config.filePath, "logs");
     EXPECT_EQ(config.fileBaseName, "app_log");
@@ -37,20 +35,21 @@ TEST_F(HcclVmLogTest, LogConfig_DefaultValues) {
     EXPECT_EQ(config.enableCompress, false);
 }
 
-TEST_F(HcclVmLogTest, LogConfig_CustomValues) {
+TEST_F(HcclVmLogTest, LogConfig_CustomValues)
+{
     LogConfig config;
     config.consoleLevel = 0;
     config.fileLevel = 0;
-    config.maxFileSize = 1024*1024;
+    config.maxFileSize = 1024 * 1024;
     config.maxFiles = 10;
     config.filePath = "/tmp/test_logs";
     config.fileBaseName = "test_log";
     config.fileSuffix = ".txt";
     config.enableCompress = true;
-    
+
     EXPECT_EQ(config.consoleLevel, 0);
     EXPECT_EQ(config.fileLevel, 0);
-    EXPECT_EQ(config.maxFileSize, 1024*1024);
+    EXPECT_EQ(config.maxFileSize, 1024 * 1024);
     EXPECT_EQ(config.maxFiles, 10);
     EXPECT_EQ(config.filePath, "/tmp/test_logs");
     EXPECT_EQ(config.fileBaseName, "test_log");
@@ -58,27 +57,31 @@ TEST_F(HcclVmLogTest, LogConfig_CustomValues) {
     EXPECT_EQ(config.enableCompress, true);
 }
 
-TEST_F(HcclVmLogTest, InitLogger_DefaultConfig) {
+TEST_F(HcclVmLogTest, InitLogger_DefaultConfig)
+{
     LogConfig config;
     EXPECT_NO_THROW(InitLogger(config));
 }
 
-TEST_F(HcclVmLogTest, InitLogger_CustomConfig) {
+TEST_F(HcclVmLogTest, InitLogger_CustomConfig)
+{
     LogConfig config;
     config.consoleLevel = 0;
     config.fileLevel = 0;
-    config.maxFileSize = 1024*1024;
+    config.maxFileSize = 1024 * 1024;
     config.maxFiles = 5;
     config.filePath = "/tmp";
     EXPECT_NO_THROW(InitLogger(config));
 }
 
-TEST_F(HcclVmLogTest, DeInitLogger_Nullptr) {
+TEST_F(HcclVmLogTest, DeInitLogger_Nullptr)
+{
     DeInitLogger();
     EXPECT_EQ(g_logger, nullptr);
 }
 
-TEST_F(HcclVmLogTest, Logger_MacrosWithNullptr) {
+TEST_F(HcclVmLogTest, Logger_MacrosWithNullptr)
+{
     DeInitLogger();
     EXPECT_NO_THROW(HCCL_VM_TRACE("test trace"));
     EXPECT_NO_THROW(HCCL_VM_DEBUG("test debug"));
@@ -88,11 +91,12 @@ TEST_F(HcclVmLogTest, Logger_MacrosWithNullptr) {
     EXPECT_NO_THROW(HCCL_VM_CRITICAL("test critical"));
 }
 
-TEST_F(HcclVmLogTest, Logger_MacrosWithValidLogger) {
+TEST_F(HcclVmLogTest, Logger_MacrosWithValidLogger)
+{
     LogConfig config;
     config.filePath = "/tmp";
     InitLogger(config);
-    
+
     EXPECT_NO_THROW(HCCL_VM_TRACE("test trace {}", 1));
     EXPECT_NO_THROW(HCCL_VM_DEBUG("test debug {}", 2));
     EXPECT_NO_THROW(HCCL_VM_INFO("test info {}", 3));
@@ -101,30 +105,31 @@ TEST_F(HcclVmLogTest, Logger_MacrosWithValidLogger) {
     EXPECT_NO_THROW(HCCL_VM_CRITICAL("test critical {}", 6));
 }
 
-TEST_F(HcclVmLogTest, Logger_MultipleInit) {
+TEST_F(HcclVmLogTest, Logger_MultipleInit)
+{
     LogConfig config1;
     config1.filePath = "/tmp";
     InitLogger(config1);
     EXPECT_NE(g_logger, nullptr);
-    
+
     LogConfig config2;
     config2.filePath = "/tmp";
     InitLogger(config2);
     EXPECT_NE(g_logger, nullptr);
 }
 
-TEST_F(HcclVmLogTest, LogConfig_StructSize) {
-    EXPECT_GT(sizeof(LogConfig), 0);
-}
+TEST_F(HcclVmLogTest, LogConfig_StructSize) { EXPECT_GT(sizeof(LogConfig), 0); }
 
-TEST_F(HcclVmLogTest, InitLogger_LargeFileSize) {
+TEST_F(HcclVmLogTest, InitLogger_LargeFileSize)
+{
     LogConfig config;
     config.filePath = "/tmp";
-    config.maxFileSize = 100*1024*1024;
+    config.maxFileSize = 100 * 1024 * 1024;
     EXPECT_NO_THROW(InitLogger(config));
 }
 
-TEST_F(HcclVmLogTest, InitLogger_MaxFiles) {
+TEST_F(HcclVmLogTest, InitLogger_MaxFiles)
+{
     LogConfig config;
     config.filePath = "/tmp";
     config.maxFiles = UINT16_MAX;

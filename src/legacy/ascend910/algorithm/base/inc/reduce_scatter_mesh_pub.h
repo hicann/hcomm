@@ -23,8 +23,8 @@ public:
     ~ReduceScatterMesh() override;
 
     HcclResult Prepare(u64 reduceAttrBitMap, u32 streamIndex) override;
-    HcclResult RunAsync(const u32 rank, const u32 rankSize,
-                                   const std::vector<std::shared_ptr<Transport> > &links) override;
+    HcclResult
+    RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links) override;
 
 protected:
 private:
@@ -42,22 +42,20 @@ private:
         }
         return (rank + step) % rankSize;
     }
-    HcclResult RunSourceReducer(const LINK& link, const Slice& txSlice,
-                              const Slice& dstSlice);
+    HcclResult RunSourceReducer(const LINK& link, const Slice& txSlice, const Slice& dstSlice);
 
     HcclResult RunDestRducer(const LINK& link, const Slice& rxSlice, const Slice& dstSlice);
 
-    HcclResult RunReduceScatter(const std::vector<LINK>& links,
-                                    const std::vector<Slice>& inputSlices,
-                                    const std::vector<Slice>& scratchSlices);
+    HcclResult RunReduceScatter(
+        const std::vector<LINK>& links, const std::vector<Slice>& inputSlices, const std::vector<Slice>& scratchSlices);
     std::unique_ptr<Sender> senderInfo_;
     std::unique_ptr<Reducer> reducerInfo_;
-    u32 interRank_ = 0;       // 在所有rank环上的rankid?
+    u32 interRank_ = 0;     // 在所有rank环上的rankid?
     u32 interRankSize_ = 0; // 指的服务器的个数? 应当是所有服务器上rank总数和?
 
-    u64 reduceAttr_ = 0;       /* 0x1:表示data_type + reduce_type支持inlinereduce  */
+    u64 reduceAttr_ = 0; /* 0x1:表示data_type + reduce_type支持inlinereduce  */
     u32 streamIndex_ = 0;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* REDUCE_SCATTER_MESH_PUB_H */

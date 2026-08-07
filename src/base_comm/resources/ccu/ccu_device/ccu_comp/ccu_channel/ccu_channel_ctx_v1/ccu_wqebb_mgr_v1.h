@@ -17,19 +17,17 @@
 
 #include "ccu_res_allocator.h"
 
-
 namespace hcomm {
 
 class CcuWqeBBMgrV1 : public CcuWqeBBMgr {
 public:
-    CcuWqeBBMgrV1(const int32_t devLogicId, const uint8_t dieId)
-        : CcuWqeBBMgr(devLogicId, dieId) {}
+    CcuWqeBBMgrV1(const int32_t devLogicId, const uint8_t dieId) : CcuWqeBBMgr(devLogicId, dieId) {}
     CcuWqeBBMgrV1() = default;
     ~CcuWqeBBMgrV1() override final = default;
 
     HcclResult Init() override final;
-    HcclResult Alloc(const WqeBBReq& wqeBBReq, ResInfo &wqeBBInfo) override final;
-    HcclResult Release(const ResInfo &wqeBBInfo) override final;
+    HcclResult Alloc(const WqeBBReq& wqeBBReq, ResInfo& wqeBBInfo) override final;
+    HcclResult Release(const ResInfo& wqeBBInfo) override final;
 
 private:
     std::unique_ptr<CcuResIdAllocator> idAllocator_{nullptr};

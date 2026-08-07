@@ -18,11 +18,12 @@ namespace Hccl {
 
 class HostDeviceSyncNotifyLiteMgr {
 public:
-    NotifyLite *GetDeviceWaitNotify();
+    NotifyLite* GetDeviceWaitNotify();
 
-    NotifyLite *GetHostWaitNotify();
+    NotifyLite* GetHostWaitNotify();
 
-    void       ParsePackedData(std::vector<char> &data);
+    void ParsePackedData(std::vector<char>& data);
+
 private:
     static constexpr u32 HOST_DEVICE_SYNC_NOTIFY_NUM = 2;
 
@@ -31,5 +32,5 @@ private:
     std::unique_ptr<NotifyLite> notifys[HOST_DEVICE_SYNC_NOTIFY_NUM];
 };
 
-}
+} // namespace Hccl
 #endif

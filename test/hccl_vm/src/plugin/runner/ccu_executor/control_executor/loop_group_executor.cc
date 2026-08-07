@@ -24,17 +24,18 @@ using namespace hcomm::CcuRep;
 REG_CCU_EXECUTOR_CREATE_FUNC(SimCcuV1::CTRL_TYPE, SimCcuV1::LOOPGROUP_CODE, LoopGroupExecutor);
 REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::CTRL_TYPE, SimCcuV2::LOOPGROUP_CODE, LoopGroupExecutor);
 
-void LoopGroupExecutor::Parser() {
+void LoopGroupExecutor::Parser()
+{
     if (version_ == RunnerCcuVersion::CCU_V1) {
         startLoopInstrId_ = instr_.v1.loopGroup.startLoopInstrId;
-        xnId_             = instr_.v1.loopGroup.xnId;
-        xmId_             = instr_.v1.loopGroup.xmId;
-        highPerfModeEn_   = instr_.v1.loopGroup.highPerfModeEn;
+        xnId_ = instr_.v1.loopGroup.xnId;
+        xmId_ = instr_.v1.loopGroup.xmId;
+        highPerfModeEn_ = instr_.v1.loopGroup.highPerfModeEn;
     } else if (version_ == RunnerCcuVersion::CCU_V2) {
         startLoopInstrId_ = instr_.v2.loopGroup.startLoopInstrId;
-        xnId_             = instr_.v2.loopGroup.xnId & 0x7FFF;
-        xmId_             = instr_.v2.loopGroup.xmId & 0x7FFF;
-        xpId_             = instr_.v2.loopGroup.xpId & 0x7FFF;
+        xnId_ = instr_.v2.loopGroup.xnId & 0x7FFF;
+        xmId_ = instr_.v2.loopGroup.xmId & 0x7FFF;
+        xpId_ = instr_.v2.loopGroup.xpId & 0x7FFF;
     } else {
         HCCL_VM_ERROR("Invalid ccu version:{}", RunnerCcuVersionToString(version_));
         ccuSimulator_->SetExecState(CcuExecState::EXEC_FAIL);
@@ -42,8 +43,9 @@ void LoopGroupExecutor::Parser() {
     }
 }
 
-void LoopGroupExecutor::RunV1() {
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+void LoopGroupExecutor::RunV1()
+{
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t offsetCfg = ccuResMgr.GetXnValue(rankId_, dieId_, xmId_);
     uint64_t repeatCfg = ccuResMgr.GetXnValue(rankId_, dieId_, xnId_);
     ccuSimulator_->InitLoopGroupInfo(startLoopInstrId_, offsetCfg, repeatCfg);
@@ -53,20 +55,22 @@ void LoopGroupExecutor::RunV1() {
     ccuSimulator_->SetExecState(CcuExecState::EXEC_NORMAL_INSTR);
 }
 
-void LoopGroupExecutor::RunV2() {
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+void LoopGroupExecutor::RunV2()
+{
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t xnValue = ccuResMgr.GetXnValue(rankId_, dieId_, xnId_);
     uint64_t xmValue = ccuResMgr.GetXnValue(rankId_, dieId_, xmId_);
     uint64_t xpValue = ccuResMgr.GetXnValue(rankId_, dieId_, xpId_);
 
-    ccuSimulator_->InitLoopGroupInfoV2(startLoopInstrId_, xnValue, xmValue, xpValue );
+    ccuSimulator_->InitLoopGroupInfoV2(startLoopInstrId_, xnValue, xmValue, xpValue);
 
     // 执行loop指令
     ccuSimulator_->ExecuteLoopGroup();
     ccuSimulator_->SetExecState(CcuExecState::EXEC_NORMAL_INSTR);
 }
 
-void LoopGroupExecutor::Run() {
+void LoopGroupExecutor::Run()
+{
     if (version_ == RunnerCcuVersion::CCU_V1) {
         RunV1();
     } else if (version_ == RunnerCcuVersion::CCU_V2) {
@@ -78,20 +82,19 @@ void LoopGroupExecutor::Run() {
     }
 }
 
-std::string LoopGroupExecutor::Describe() {
-    return HcclSim::StringFormat("[Simulation Execute] LoopGroup From startLoopInstrId[%u] with loopGroupXn[%u], "
-                              "offsetXn[%u] and highPerfModeEn[%u]\n",
-        startLoopInstrId_,
-        xnId_,
-        xmId_,
-        highPerfModeEn_);
+std::string LoopGroupExecutor::Describe()
+{
+    return HcclSim::StringFormat(
+        "[Simulation Execute] LoopGroup From startLoopInstrId[%u] with loopGroupXn[%u], "
+        "offsetXn[%u] and highPerfModeEn[%u]\n",
+        startLoopInstrId_, xnId_, xmId_, highPerfModeEn_);
 }
 
 CcuTrace::CcuInstrTraceDetail LoopGroupExecutor::CollectTraceDetail()
 {
     CcuTrace::CcuInstrTraceDetail detail;
     detail.typeName = "LoopGroup";
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     if (version_ == RunnerCcuVersion::CCU_V1) {
         detail.args["offsetCfg"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xmId_));
         detail.args["repeatCfg"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xnId_));

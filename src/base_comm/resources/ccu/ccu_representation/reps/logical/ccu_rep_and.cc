@@ -16,48 +16,60 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepAnd::CcuRepAnd(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB)
-    : subType(AndSubType::VAR_AND_VAR_TO_VAR), varA(varA), varB(varB), varC(varC), insGenPtr(insGenPtr)
-{
-    type       = CcuRepType::AND;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
+    CcuRepAnd::CcuRepAnd(
+        CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varA, const Variable& varB)
+        : subType(AndSubType::VAR_AND_VAR_TO_VAR),
+          varA(varA),
+          varB(varB),
+          varC(varC),
+          insGenPtr(insGenPtr)
+    {
+        type = CcuRepType::AND;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
 
-CcuRepAnd::CcuRepAnd(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varB)
-    : subType(AndSubType::SELF_AND_VAR_VARIABLE), varB(varB), varC(varC), insGenPtr(insGenPtr)
-{
-    type       = CcuRepType::AND;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
+    CcuRepAnd::CcuRepAnd(CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varB)
+        : subType(AndSubType::SELF_AND_VAR_VARIABLE),
+          varB(varB),
+          varC(varC),
+          insGenPtr(insGenPtr)
+    {
+        type = CcuRepType::AND;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
 
-bool CcuRepAnd::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, const TransDep &dep)
-{
-    Hccl::CHECK_NULLPTR(instr, "[CcuRepAnd::Translate] instr is nullptr!");
-    this->instrId = curInstrId;
-    translated    = true;
-    instrCount = insGenPtr->GetInstrCount(type);
-    insGenPtr->CcuRepAndTranslate(ccuKernel, instr, this, dep);
-    CHK_PRT_THROW((curInstrId > UINT16_MAX - instrCount),
-        HCCL_ERROR("[CcuRepAnd::Translate]uint16 integer overflow occurs, curInstrId = [%hu], instrCount = [%hu]", curInstrId, instrCount),
-        Hccl::InternalException, "integer overflow");
-    curInstrId += instrCount;
-    return translated;
-}
+    bool CcuRepAnd::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, const TransDep& dep)
+    {
+        Hccl::CHECK_NULLPTR(instr, "[CcuRepAnd::Translate] instr is nullptr!");
+        this->instrId = curInstrId;
+        translated = true;
+        instrCount = insGenPtr->GetInstrCount(type);
+        insGenPtr->CcuRepAndTranslate(ccuKernel, instr, this, dep);
+        CHK_PRT_THROW(
+            (curInstrId > UINT16_MAX - instrCount),
+            HCCL_ERROR(
+                "[CcuRepAnd::Translate]uint16 integer overflow occurs, curInstrId = [%hu], instrCount = [%hu]",
+                curInstrId, instrCount),
+            Hccl::InternalException, "integer overflow");
+        curInstrId += instrCount;
+        return translated;
+    }
 
-std::string CcuRepAnd::Describe()
-{
-    switch (subType) {
-        case AndSubType::VAR_AND_VAR_TO_VAR: {
-            return Hccl::StringFormat("Variable[%u] = Variable[%u] & Variable[%u]", varC.Id(), varA.Id(), varB.Id());
-        }
-        case AndSubType::SELF_AND_VAR_VARIABLE: {
-            return Hccl::StringFormat("Variable[%u] &= Variable[%u]", varC.Id(), varB.Id());
-        }
-        default: {
-            return Hccl::StringFormat("Invalid And");
+    std::string CcuRepAnd::Describe()
+    {
+        switch (subType) {
+            case AndSubType::VAR_AND_VAR_TO_VAR: {
+                return Hccl::StringFormat(
+                    "Variable[%u] = Variable[%u] & Variable[%u]", varC.Id(), varA.Id(), varB.Id());
+            }
+            case AndSubType::SELF_AND_VAR_VARIABLE: {
+                return Hccl::StringFormat("Variable[%u] &= Variable[%u]", varC.Id(), varB.Id());
+            }
+            default: {
+                return Hccl::StringFormat("Invalid And");
+            }
         }
     }
-}
 
 }; // namespace CcuRep
 }; // namespace hcomm

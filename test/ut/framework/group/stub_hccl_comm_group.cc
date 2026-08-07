@@ -17,12 +17,6 @@ HcclResult hcclComm::SetGroupMode(bool isGroup)
 
 } // namespace hccl
 
-HcclResult HcclBatchSendRecvGroup(HcclSendRecvItem*, uint32_t, HcclComm, aclrtStream)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult HcclBatchSendRecvGroup(HcclSendRecvItem*, uint32_t, HcclComm, aclrtStream) { return HCCL_SUCCESS; }
 
-HcclResult hcclStreamSynchronize(HcclRtStream, s32)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult hcclStreamSynchronize(HcclRtStream, s32) { return HCCL_SUCCESS; }

@@ -95,11 +95,10 @@ STATIC int RsSetJfcOpt(struct RsCtxJfcCb *jfcCb, struct ExtJfcAttr *jfcAttr)
     }
 
     ret = RsUrmaSetJfcOpt(jfcAttr->jfc, URMA_JFC_ID, (void *)&jfcAttr->jfcId, sizeof(uint32_t));
-    CHK_PRT_RETURN(ret != 0,
-        hccp_err("rs_urma_set_jfc_opt URMA_JFC_ID failed, ret:%d, errno:%d", ret, errno), -EOPENSRC);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_urma_set_jfc_opt URMA_JFC_ID failed, ret:%d, errno:%d", ret, errno),
+        -EOPENSRC);
 
-    ret = RsUrmaSetJfcOpt(jfcAttr->jfc, URMA_JFC_CQE_BASE_ADDR,
-        (void *)&jfcAttr->cqeBaseAddrVa, sizeof(uint64_t));
+    ret = RsUrmaSetJfcOpt(jfcAttr->jfc, URMA_JFC_CQE_BASE_ADDR, (void *)&jfcAttr->cqeBaseAddrVa, sizeof(uint64_t));
     CHK_PRT_RETURN(ret != 0,
         hccp_err("rs_urma_set_jfc_opt URMA_JFC_CQE_BASE_ADDR failed, ret:%d, errno:%d", ret, errno), -EOPENSRC);
 
@@ -118,14 +117,13 @@ STATIC int RsJfcResAddrMunmap(struct RsCtxJfcCb *jfcCb, struct UdmaVaInfo *vaInf
     resInfoIn.priv_len = sizeof(struct UdmaVaInfo);
     resInfoIn.priv = (void *)vaInfo;
     ret = DlHalResAddrUnmapV2(jfcCb->devCb->rscb->logicId, &resInfoIn);
-    CHK_PRT_RETURN(ret != 0, hccp_err("DlHalResAddrUnmapV2 failed, res_type:%d ret:%d, errno:%d",
-        resInfoIn.res_type, ret, errno), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("DlHalResAddrUnmapV2 failed, res_type:%d ret:%d, errno:%d", resInfoIn.res_type, ret, errno), ret);
 
     return ret;
 }
 
-STATIC int RsJfcResAddrMmap(struct RsCtxJfcCb *jfcCb, struct UdmaVaInfo *vaInfo,
-    struct res_map_info_out *resInfoOut)
+STATIC int RsJfcResAddrMmap(struct RsCtxJfcCb *jfcCb, struct UdmaVaInfo *vaInfo, struct res_map_info_out *resInfoOut)
 {
     struct res_map_info_in resInfoIn = {0};
     int ret = 0;
@@ -137,8 +135,8 @@ STATIC int RsJfcResAddrMmap(struct RsCtxJfcCb *jfcCb, struct UdmaVaInfo *vaInfo,
     resInfoIn.priv_len = sizeof(struct UdmaVaInfo);
     resInfoIn.priv = (void *)vaInfo;
     ret = DlHalResAddrMapV2(jfcCb->devCb->rscb->logicId, &resInfoIn, resInfoOut);
-    CHK_PRT_RETURN(ret != 0, hccp_err("DlHalResAddrMapV2 failed, res_type:%d ret:%d, errno:%d",
-        resInfoIn.res_type, ret, errno), ret);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("DlHalResAddrMapV2 failed, res_type:%d ret:%d, errno:%d", resInfoIn.res_type, ret, errno), ret);
 
     return ret;
 }
@@ -177,8 +175,7 @@ STATIC int RsMmapJfcVa(struct RsCtxJfcCb *jfcCb)
     jfcVaInfo.len = WQE_BB_SIZE * jfcCb->depth;
     jfcVaInfo.pid = getpid();
     ret = RsJfcResAddrMmap(jfcCb, &jfcVaInfo, &resInfoOut);
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_jfc_res_addr_mmap failed, res_type:%u ret:%d", jfcVaInfo.resType, ret),
-        ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_jfc_res_addr_mmap failed, res_type:%u ret:%d", jfcVaInfo.resType, ret), ret);
     jfcCb->bufAddr = resInfoOut.va;
 
     dbVaInfo.resType = RES_ADDR_TYPE_HCCP_URMA_DB;
@@ -197,8 +194,8 @@ STATIC int RsMmapJfcVa(struct RsCtxJfcCb *jfcCb)
 munmap_jfc_buff_va:
     jfcVaInfo.va = jfcCb->bufAddr;
     retTmp = RsJfcResAddrMunmap(jfcCb, &jfcVaInfo);
-    CHK_PRT_RETURN(retTmp != 0, hccp_err("rs_jfc_res_addr_munmap failed, res_type:%u ret:%d",
-        jfcVaInfo.resType, retTmp), retTmp);
+    CHK_PRT_RETURN(retTmp != 0,
+        hccp_err("rs_jfc_res_addr_munmap failed, res_type:%u ret:%d", jfcVaInfo.resType, retTmp), retTmp);
     return ret;
 }
 
@@ -212,12 +209,12 @@ STATIC int RsGetJfcOpt(struct RsCtxJfcCb *jfcCb, urma_jfc_t *jfc)
     }
 
     ret = RsUrmaGetJfcOpt(jfc, URMA_JFC_CQE_BASE_ADDR, &cqBuffVa, sizeof(uint64_t));
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_urma_get_jfc_opt URMA_JFC_CQE_BASE_ADDR failed, ret:%d, errno:%d", ret, errno),
-        -EOPENSRC);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_err("rs_urma_get_jfc_opt URMA_JFC_CQE_BASE_ADDR failed, ret:%d, errno:%d", ret, errno), -EOPENSRC);
 
     ret = RsUrmaGetJfcOpt(jfc, URMA_JFC_DB_ADDR, &dbVa, sizeof(uint64_t));
-    CHK_PRT_RETURN(ret != 0, hccp_err("rs_urma_get_jfc_opt URMA_JFC_DB_ADDR failed, ret:%d, errno:%d",
-        ret, errno), -EOPENSRC);
+    CHK_PRT_RETURN(ret != 0, hccp_err("rs_urma_get_jfc_opt URMA_JFC_DB_ADDR failed, ret:%d, errno:%d", ret, errno),
+        -EOPENSRC);
 
     jfcCb->bufAddr = cqBuffVa;
     jfcCb->swdbAddr = dbVa;

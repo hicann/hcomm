@@ -19,59 +19,35 @@ class IAicpuTsThread {
 public:
     IAicpuTsThread(uint32_t id, uint32_t sqIds, uint32_t phyId, uint32_t cqIds)
     {
-        streamLiteVoidPtr_ = reinterpret_cast<void *>(0x3344);
+        streamLiteVoidPtr_ = reinterpret_cast<void*>(0x3344);
     }
 
-    ~IAicpuTsThread()
-    {
-    }
+    ~IAicpuTsThread() {}
 
-    HcclResult NotifyWait(uint32_t notifyId) const
-    {
-        return HCCL_SUCCESS;
-    }
+    HcclResult NotifyWait(uint32_t notifyId) const { return HCCL_SUCCESS; }
 
-    HcclResult NotifyWait(uint32_t notifyId, uint32_t timeout) const
-    {
-        return HCCL_SUCCESS;
-    }
+    HcclResult NotifyWait(uint32_t notifyId, uint32_t timeout) const { return HCCL_SUCCESS; }
 
-    HcclResult NotifyRecordLoc(uint32_t notifyId) const
+    HcclResult NotifyRecordLoc(uint32_t notifyId) const { return HCCL_SUCCESS; }
+
+    HcclResult SdmaCopy(uint64_t dstAddr, uint64_t srcAddr, uint64_t sizeByte) const { return HCCL_SUCCESS; }
+
+    HcclResult
+    SdmaReduce(uint64_t dstAddr, uint64_t srcAddr, uint64_t sizeByte, uint32_t dataTypeRaw, uint32_t reduceOpRaw) const
     {
         return HCCL_SUCCESS;
     }
 
-    HcclResult SdmaCopy(uint64_t dstAddr, uint64_t srcAddr, uint64_t sizeByte) const
-    {
-        return HCCL_SUCCESS;
-    }
+    inline void* GetStreamLitePtr() const { return streamLiteVoidPtr_; }
 
-    HcclResult SdmaReduce(
-        uint64_t dstAddr, uint64_t srcAddr, uint64_t sizeByte, uint32_t dataTypeRaw, uint32_t reduceOpRaw) const
-    {
-        return HCCL_SUCCESS;
-    }
+    void LaunchTask() const {}
 
-    inline void *GetStreamLitePtr() const
-    {
-        return streamLiteVoidPtr_;
-    }
+    void TryLaunchTask() const {}
 
-    void LaunchTask() const
-    {
-    }
-
-    void TryLaunchTask() const
-    {
-    }
-
-    inline uint32_t GetSqId() const
-    {
-        return 0;
-    }
+    inline uint32_t GetSqId() const { return 0; }
 
 private:
-    void *streamLiteVoidPtr_ = nullptr;
+    void* streamLiteVoidPtr_ = nullptr;
 };
 
 } // namespace Hccl

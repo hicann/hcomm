@@ -11,11 +11,12 @@
 #include "server_socket_manager.h"
 
 namespace hcomm {
-HcclResult ServerSocketManager::ServerSocketStartListen(const Hccl::PortData& localPort, const Hccl::NicType nicType, const uint32_t devPhyId, uint32_t *port)
+HcclResult ServerSocketManager::ServerSocketStartListen(
+    const Hccl::PortData& localPort, const Hccl::NicType nicType, const uint32_t devPhyId, uint32_t* port)
 {
     if (nicType == Hccl::NicType::HOST_NIC_TYPE) {
         CHK_RET(HostSocketListen(localPort, devPhyId, port));
-    } else if (nicType == Hccl::NicType::DEVICE_NIC_TYPE) {  
+    } else if (nicType == Hccl::NicType::DEVICE_NIC_TYPE) {
         CHK_RET(DeviceSocketListen(localPort, devPhyId, port));
     } else {
         HCCL_ERROR("[ServerSocketManager][%s] illegal NicType[%s]", __func__, nicType.Describe().c_str());
@@ -24,29 +25,34 @@ HcclResult ServerSocketManager::ServerSocketStartListen(const Hccl::PortData& lo
     return HCCL_SUCCESS;
 }
 
-HcclResult ServerSocketManager::HostSocketListen(const Hccl::PortData& localPort, const uint32_t devPhyId, uint32_t *port)
+HcclResult
+ServerSocketManager::HostSocketListen(const Hccl::PortData& localPort, const uint32_t devPhyId, uint32_t* port)
 {
     std::lock_guard<std::mutex> lock(hostMutex_);
     uint32_t requestedPort = *port;
-    if (hostServerSocketMap_.find(localPort) != hostServerSocketMap_.end() &&
-        hostServerSocketMap_[localPort].find(requestedPort) != hostServerSocketMap_[localPort].end()){
+    if (hostServerSocketMap_.find(localPort) != hostServerSocketMap_.end()
+        && hostServerSocketMap_[localPort].find(requestedPort) != hostServerSocketMap_[localPort].end()) {
         if (hostServerSocketMap_[localPort][requestedPort].second == UINT32_MAX) {
             HCCL_ERROR("[ServerSocketManager][%s]port listening count overflow UINT32_MAX", __func__);
             return HCCL_E_INTERNAL;
         }
-        hostServerSocketMap_[localPort][requestedPort].second = hostServerSocketMap_[localPort][requestedPort].second + 1; // 计数+1
+        hostServerSocketMap_[localPort][requestedPort].second
+            = hostServerSocketMap_[localPort][requestedPort].second + 1; // 计数+1
         HCCL_INFO("[ServerSocketManager][%s] reuse serverSocket", __func__);
         return HCCL_SUCCESS;
     }
 
     Hccl::SocketHandle socketHandle{};
     EXCEPTION_CATCH(
-            socketHandle = Hccl::HostSocketHandleManager::GetInstance().Create(devPhyId, localPort.GetAddr()), return HCCL_E_PARA);
+        socketHandle = Hccl::HostSocketHandleManager::GetInstance().Create(devPhyId, localPort.GetAddr()),
+        return HCCL_E_PARA);
 
     std::unique_ptr<Hccl::Socket> serverSocket{};
-    EXCEPTION_CATCH(serverSocket = std::make_unique<Hccl::Socket>(
-        socketHandle, localPort.GetAddr(), requestedPort, localPort.GetAddr(), "server", 
-        Hccl::SocketRole::SERVER, Hccl::NicType::HOST_NIC_TYPE), return HCCL_E_PARA); //端口号可能冲突，需要SE做决定
+    EXCEPTION_CATCH(
+        serverSocket = std::make_unique<Hccl::Socket>(
+            socketHandle, localPort.GetAddr(), requestedPort, localPort.GetAddr(), "server", Hccl::SocketRole::SERVER,
+            Hccl::NicType::HOST_NIC_TYPE),
+        return HCCL_E_PARA); // 端口号可能冲突，需要SE做决定
     HCCL_INFO("[ServerSocketManager][%s] listen_socket_info[%s]", __func__, serverSocket->Describe().c_str());
     uint32_t actualPort = requestedPort;
     if (requestedPort == 0) {
@@ -56,23 +62,25 @@ HcclResult ServerSocketManager::HostSocketListen(const Hccl::PortData& localPort
     } else {
         EXCEPTION_CATCH(serverSocket->Listen(), return HCCL_E_INTERNAL);
     }
- 
+
     hostServerSocketMap_[localPort][actualPort] = std::make_pair(std::move(serverSocket), 1);
-    
+
     return HCCL_SUCCESS;
 }
 
-HcclResult ServerSocketManager::DeviceSocketListen(const Hccl::PortData& localPort, const uint32_t devPhyId, uint32_t *port)
+HcclResult
+ServerSocketManager::DeviceSocketListen(const Hccl::PortData& localPort, const uint32_t devPhyId, uint32_t* port)
 {
     std::lock_guard<std::mutex> lock(deviceMutex_);
     uint32_t requestedPort = *port;
-    if (deviceServerSocketMap_.find(localPort) != deviceServerSocketMap_.end() &&
-        deviceServerSocketMap_[localPort].find(requestedPort) != deviceServerSocketMap_[localPort].end()){
+    if (deviceServerSocketMap_.find(localPort) != deviceServerSocketMap_.end()
+        && deviceServerSocketMap_[localPort].find(requestedPort) != deviceServerSocketMap_[localPort].end()) {
         if (deviceServerSocketMap_[localPort][requestedPort].second == UINT32_MAX) {
             HCCL_ERROR("[ServerSocketManager][%s]port listening count overflow UINT32_MAX", __func__);
             return HCCL_E_INTERNAL;
         }
-        deviceServerSocketMap_[localPort][requestedPort].second = deviceServerSocketMap_[localPort][requestedPort].second + 1; // 计数+1
+        deviceServerSocketMap_[localPort][requestedPort].second
+            = deviceServerSocketMap_[localPort][requestedPort].second + 1; // 计数+1
         HCCL_INFO("[ServerSocketManager][%s] reuse serverSocket", __func__);
         return HCCL_SUCCESS;
     }
@@ -85,12 +93,14 @@ HcclResult ServerSocketManager::DeviceSocketListen(const Hccl::PortData& localPo
 
     Hccl::SocketHandle socketHandle{};
     EXCEPTION_CATCH(
-            socketHandle = Hccl::SocketHandleManager::GetInstance().Create(devPhyId, localPort), return HCCL_E_PARA);
+        socketHandle = Hccl::SocketHandleManager::GetInstance().Create(devPhyId, localPort), return HCCL_E_PARA);
 
     std::unique_ptr<Hccl::Socket> serverSocket;
-    EXCEPTION_CATCH(serverSocket = std::make_unique<Hccl::Socket>(
-        socketHandle, localPort.GetAddr(), requestedPort, localPort.GetAddr(), "server", 
-        Hccl::SocketRole::SERVER, Hccl::NicType::DEVICE_NIC_TYPE), return HCCL_E_PARA); //端口号可能冲突，需要SE做决定
+    EXCEPTION_CATCH(
+        serverSocket = std::make_unique<Hccl::Socket>(
+            socketHandle, localPort.GetAddr(), requestedPort, localPort.GetAddr(), "server", Hccl::SocketRole::SERVER,
+            Hccl::NicType::DEVICE_NIC_TYPE),
+        return HCCL_E_PARA); // 端口号可能冲突，需要SE做决定
     HCCL_INFO("[ServerSocketManager][%s] listen_socket_info[%s]", __func__, serverSocket->Describe().c_str());
     uint32_t actualPort = requestedPort;
     if (!isListen) {
@@ -107,11 +117,12 @@ HcclResult ServerSocketManager::DeviceSocketListen(const Hccl::PortData& localPo
     return HCCL_SUCCESS;
 }
 
-HcclResult ServerSocketManager::ServerSocketStopListen(const Hccl::PortData& localPort, const Hccl::NicType nicType, const uint32_t port)
+HcclResult ServerSocketManager::ServerSocketStopListen(
+    const Hccl::PortData& localPort, const Hccl::NicType nicType, const uint32_t port)
 {
     if (nicType == Hccl::NicType::DEVICE_NIC_TYPE) {
         CHK_RET(DeviceSocketStopListen(localPort, port));
-    } else if (nicType == Hccl::NicType::HOST_NIC_TYPE) {  
+    } else if (nicType == Hccl::NicType::HOST_NIC_TYPE) {
         CHK_RET(HostSocketStopListen(localPort, port));
     } else {
         HCCL_ERROR("[ServerSocketManager][%s] illegal NicType[%s]", __func__, nicType.Describe().c_str());
@@ -123,8 +134,8 @@ HcclResult ServerSocketManager::ServerSocketStopListen(const Hccl::PortData& loc
 HcclResult ServerSocketManager::DeviceSocketStopListen(const Hccl::PortData& localPort, const uint32_t port)
 {
     std::lock_guard<std::mutex> lock(deviceMutex_);
-    if (deviceServerSocketMap_.find(localPort) != deviceServerSocketMap_.end() && 
-        deviceServerSocketMap_[localPort].find(port) != deviceServerSocketMap_[localPort].end()) {
+    if (deviceServerSocketMap_.find(localPort) != deviceServerSocketMap_.end()
+        && deviceServerSocketMap_[localPort].find(port) != deviceServerSocketMap_[localPort].end()) {
         if (deviceServerSocketMap_[localPort][port].second == 0) {
             HCCL_ERROR("[ServerSocketManager][%s]port[%u] listening count already zero", __func__, port);
             return HCCL_E_INTERNAL;
@@ -139,7 +150,8 @@ HcclResult ServerSocketManager::DeviceSocketStopListen(const Hccl::PortData& loc
             bool isListen = socketMgrCompat_->CheckServerPortListening(localPort, port);
             if (isListen) {
                 Hccl::PortData portDataCopy(
-                    localPort.GetRankId(), localPort.GetType(), localPort.GetProto(), localPort.GetId(), localPort.GetAddr());
+                    localPort.GetRankId(), localPort.GetType(), localPort.GetProto(), localPort.GetId(),
+                    localPort.GetAddr());
                 if (!socketMgrCompat_->ServerDeInit(portDataCopy)) {
                     return HCCL_E_INTERNAL;
                 }
@@ -150,16 +162,17 @@ HcclResult ServerSocketManager::DeviceSocketStopListen(const Hccl::PortData& loc
         }
         return HCCL_SUCCESS;
     }
-    HCCL_ERROR("[ServerSocketManager][%s] Can not stop listen cause {PortData[%s], port[%u]} is Not Listening",
-             __func__, localPort.Describe().c_str(), port);
+    HCCL_ERROR(
+        "[ServerSocketManager][%s] Can not stop listen cause {PortData[%s], port[%u]} is Not Listening", __func__,
+        localPort.Describe().c_str(), port);
     return HCCL_E_NOT_FOUND;
 }
 
 HcclResult ServerSocketManager::HostSocketStopListen(const Hccl::PortData& localPort, const uint32_t port)
 {
     std::lock_guard<std::mutex> lock(hostMutex_);
-    if (hostServerSocketMap_.find(localPort) != hostServerSocketMap_.end() && 
-        hostServerSocketMap_[localPort].find(port) != hostServerSocketMap_[localPort].end()) {
+    if (hostServerSocketMap_.find(localPort) != hostServerSocketMap_.end()
+        && hostServerSocketMap_[localPort].find(port) != hostServerSocketMap_[localPort].end()) {
         if (hostServerSocketMap_[localPort][port].second == 0) {
             HCCL_ERROR("[ServerSocketManager][%s]port[%u] listening count already zero", __func__, port);
             return HCCL_E_INTERNAL;
@@ -173,8 +186,9 @@ HcclResult ServerSocketManager::HostSocketStopListen(const Hccl::PortData& local
         }
         return HCCL_SUCCESS;
     }
-    HCCL_ERROR("[ServerSocketManager][%s] Can not stop listen cause {PortData[%s], port[%u]} is Not Listening",
-             __func__, localPort.Describe().c_str(), port);
+    HCCL_ERROR(
+        "[ServerSocketManager][%s] Can not stop listen cause {PortData[%s], port[%u]} is Not Listening", __func__,
+        localPort.Describe().c_str(), port);
     return HCCL_E_NOT_FOUND;
 }
 
@@ -183,7 +197,7 @@ void ServerSocketManager::DeInitDeviceSockets(u32 devPhyId)
     std::lock_guard<std::mutex> lock(deviceMutex_);
     for (auto it = deviceServerSocketMap_.begin(); it != deviceServerSocketMap_.end();) {
         if (static_cast<uint32_t>(it->first.GetRankId()) == devPhyId) {
-            for (auto &portEntry : it->second) {
+            for (auto& portEntry : it->second) {
                 if (portEntry.second.first != nullptr) {
                     portEntry.second.first->Destroy();
                     portEntry.second.first.reset();
@@ -201,7 +215,7 @@ void ServerSocketManager::DeInitHostSockets(u32 devPhyId)
     std::lock_guard<std::mutex> lock(hostMutex_);
     for (auto it = hostServerSocketMap_.begin(); it != hostServerSocketMap_.end();) {
         if (static_cast<uint32_t>(it->first.GetRankId()) == devPhyId) {
-            for (auto &portEntry : it->second) {
+            for (auto& portEntry : it->second) {
                 if (portEntry.second.first != nullptr) {
                     portEntry.second.first->Destroy();
                     portEntry.second.first.reset();

@@ -20,13 +20,14 @@ public:
     static HcclResult SignalRecord(u16 streamId, u16 notifyId, bool innerChip, bool preNotify);
     static HcclResult AicpuUnfoldSignalWait(u16 streamId, u16 notifyId, bool innerChip);
     static HcclResult AicpuUnfoldSignalRecord(u16 streamId, u16 notifyId, bool innerChip);
-    static HcclResult SignalWaitWithNotify(u16 streamId, u16 notifyId, bool innerChip, AicpuComSignalInfo *notifyInfo);
-    static HcclResult SignalRecordWithNotify(u16 streamId, u16 notifyId, bool innerChip,
-        AicpuComSignalInfo *notifyInfo);
-    static HcclResult CopyData(u16 streamId, void *src, void *dst, u32 len, HcclDataType dataType,
-        HcclReduceOp reduceOp, u32 remoteRank);
-    static HcclResult CopyData(uint16_t streamId, u64 src, u64 dst, uint32_t len, HcclDataType dataType,
-        HcclReduceOp reduceOp, u32 remoteRank);
+    static HcclResult SignalWaitWithNotify(u16 streamId, u16 notifyId, bool innerChip, AicpuComSignalInfo* notifyInfo);
+    static HcclResult
+    SignalRecordWithNotify(u16 streamId, u16 notifyId, bool innerChip, AicpuComSignalInfo* notifyInfo);
+    static HcclResult
+    CopyData(u16 streamId, void* src, void* dst, u32 len, HcclDataType dataType, HcclReduceOp reduceOp, u32 remoteRank);
+    static HcclResult CopyData(
+        uint16_t streamId, u64 src, u64 dst, uint32_t len, HcclDataType dataType, HcclReduceOp reduceOp,
+        u32 remoteRank);
     static HcclResult LaunchTask(uint32_t streamId);
     static HcclResult AddCcoreWait(uint16_t streamId, u64 waitAddr, uint32_t turnNum, bool isLast);
     static HcclResult AddWaitStartTaskOnMainStream(u16 streamId);

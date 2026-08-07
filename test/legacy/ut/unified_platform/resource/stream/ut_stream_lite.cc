@@ -27,20 +27,21 @@
 using namespace Hccl;
 class StreamLiteTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "StreamLite tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "StreamLite tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "StreamLite tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "StreamLite tests tear down." << std::endl; }
 
-    virtual void SetUp() {
+    virtual void SetUp()
+    {
         MOCKER(HrtGetDeviceType).stubs().will(returnValue((DevType)DevType::DEV_TYPE_910A2));
-        MOCKER_CPP(&RtsqBase::QuerySqBaseAddr).stubs().with(mockcpp::any()).will(returnValue(reinterpret_cast<u64>(&mockSq)));
-        MOCKER_CPP(&RtsqBase::QuerySqDepth).stubs().with(mockcpp::any()).will(returnValue(static_cast<u32>(AC_SQE_MAX_CNT)));
+        MOCKER_CPP(&RtsqBase::QuerySqBaseAddr)
+            .stubs()
+            .with(mockcpp::any())
+            .will(returnValue(reinterpret_cast<u64>(&mockSq)));
+        MOCKER_CPP(&RtsqBase::QuerySqDepth)
+            .stubs()
+            .with(mockcpp::any())
+            .will(returnValue(static_cast<u32>(AC_SQE_MAX_CNT)));
         MOCKER_CPP(&RtsqBase::QuerySqStatusByType).stubs().with(mockcpp::any()).will(returnValue(static_cast<u32>(0)));
         MOCKER_CPP(&RtsqBase::ConfigSqStatusByType).stubs();
 
@@ -53,10 +54,10 @@ protected:
         std::cout << "A Test case in StreamLite TearDown" << std::endl;
     }
     u32 fakeStreamId = 1;
-    u32 fakeSqId     = 2;
+    u32 fakeSqId = 2;
     u32 fakedevPhyId = 3;
 
-    u8  mockSq[AC_SQE_SIZE * AC_SQE_MAX_CNT]{0};
+    u8 mockSq[AC_SQE_SIZE * AC_SQE_MAX_CNT]{0};
 };
 
 TEST_F(StreamLiteTest, stream_lite_given_uniqueId)
@@ -69,12 +70,14 @@ TEST_F(StreamLiteTest, stream_lite_given_uniqueId)
     liteBinaryStream.Dump(uniqueId);
 
     StreamLite stream(uniqueId);
-    RtsqA5     rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
+    RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
     stream.rtsq = std::make_unique<RtsqA5>(rtsq);
-    MOCKER_CPP_VIRTUAL(rtsq, &RtsqA5::SdmaCopy).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
+    MOCKER_CPP_VIRTUAL(rtsq, &RtsqA5::SdmaCopy)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
 
     EXPECT_EQ(fakeStreamId, stream.GetId());
-    EXPECT_EQ(fakeSqId,     stream.GetSqId());
+    EXPECT_EQ(fakeSqId, stream.GetSqId());
     EXPECT_EQ(fakedevPhyId, stream.GetDevPhyId());
     stream.Describe();
 }

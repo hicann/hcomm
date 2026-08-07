@@ -36,13 +36,11 @@ struct AivRuntimeTaskSnapshot {
 class AivTaskSnapshotLoader {
 public:
     static bool LoadRuntimeTaskSnapshotByLaunchDirect(
-        uint32_t rankId,
-        uint32_t launchIndex,
-        AivRuntimeTaskSnapshot &taskSnapshot,
-        std::string *errorMessage = nullptr);
+        uint32_t rankId, uint32_t launchIndex, AivRuntimeTaskSnapshot& taskSnapshot,
+        std::string* errorMessage = nullptr);
 
 private:
-    static void SetError(std::string *errorMessage, const std::string &message);
+    static void SetError(std::string* errorMessage, const std::string& message);
 };
 
 bool IsAivExpansionModeEnabled();

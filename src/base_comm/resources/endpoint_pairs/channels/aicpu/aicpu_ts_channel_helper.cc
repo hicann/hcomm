@@ -20,13 +20,13 @@ using namespace hcomm;
 aclrtBinHandle AicpuTsChannelHelper::g_BinHandle = nullptr;
 std::mutex AicpuTsChannelHelper::g_BinHandleMtx;
 
-
-HcclResult AicpuTsChannelHelper::TryFillCtxList(ChannelHandle *hostChannelHandles, uint32_t listNum,
-    const hccl::DeviceMem &deviceChannelList, void *&outCtxList, bool &isCtxMode)
+HcclResult AicpuTsChannelHelper::TryFillCtxList(
+    ChannelHandle* hostChannelHandles, uint32_t listNum, const hccl::DeviceMem& deviceChannelList, void*& outCtxList,
+    bool& isCtxMode)
 {
-    auto *firstCh = reinterpret_cast<Channel *>(hostChannelHandles[0]);
+    auto* firstCh = reinterpret_cast<Channel*>(hostChannelHandles[0]);
     CHK_PTR_NULL(firstCh);
-    auto *firstHelper = firstCh->GetAicpuTsHelper();
+    auto* firstHelper = firstCh->GetAicpuTsHelper();
     CHK_PTR_NULL(firstHelper);
     isCtxMode = (firstHelper->GetCtxPtr() != nullptr);
     HCCL_INFO("[%s] isCtxMode[%d].", __func__, isCtxMode);
@@ -35,13 +35,13 @@ HcclResult AicpuTsChannelHelper::TryFillCtxList(ChannelHandle *hostChannelHandle
     }
     std::vector<void*> ctxVec(listNum);
     for (uint32_t i = 0; i < listNum; i++) {
-        auto *ch = reinterpret_cast<Channel *>(hostChannelHandles[i]);
+        auto* ch = reinterpret_cast<Channel*>(hostChannelHandles[i]);
         CHK_PTR_NULL(ch);
-        auto *helper = ch->GetAicpuTsHelper();
+        auto* helper = ch->GetAicpuTsHelper();
         ctxVec[i] = helper ? helper->GetCtxPtr() : nullptr;
     }
-    HcclResult ret = hrtMemSyncCopy(deviceChannelList.ptr(), listNum * sizeof(void *),
-        ctxVec.data(), listNum * sizeof(void *),
+    HcclResult ret = hrtMemSyncCopy(
+        deviceChannelList.ptr(), listNum * sizeof(void*), ctxVec.data(), listNum * sizeof(void*),
         HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[TryFillCtxList] hrtMemSyncCopy failed, ret[%d]", ret);
@@ -54,7 +54,8 @@ HcclResult AicpuTsChannelHelper::TryFillCtxList(ChannelHandle *hostChannelHandle
 HcclResult AicpuTsChannelHelper::EnsureKernelBinLoaded(CommEngine engine)
 {
     if (engine != COMM_ENGINE_AICPU && engine != COMM_ENGINE_AICPU_TS) {
-        HCCL_INFO("[%s] engine[%s] kernel loading not required", __func__,
+        HCCL_INFO(
+            "[%s] engine[%s] kernel loading not required", __func__,
             GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
         return HCCL_SUCCESS;
     }
@@ -72,8 +73,9 @@ HcclResult AicpuTsChannelHelper::EnsureKernelBinLoaded(CommEngine engine)
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsChannelHelper::LaunchKernel(const ChannelHandle *channelList, uint32_t listNum, CommEngine engine,
-    const HcommChannelDesc *channelDescs, aclrtBinHandle binHandle)
+HcclResult AicpuTsChannelHelper::LaunchKernel(
+    const ChannelHandle* channelList, uint32_t listNum, CommEngine engine, const HcommChannelDesc* channelDescs,
+    aclrtBinHandle binHandle)
 {
     CHK_PTR_NULL(channelList);
     CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s]Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
@@ -81,15 +83,15 @@ HcclResult AicpuTsChannelHelper::LaunchKernel(const ChannelHandle *channelList, 
     // 过滤出未就绪的子集，避免重复下 kernel 导致 device 侧 channel 对象泄漏
     std::vector<ChannelHandle> subHostHandles;
     std::vector<HcommChannelDesc> subDescs;
-    std::vector<Channel *> subChannels;
+    std::vector<Channel*> subChannels;
     subHostHandles.reserve(listNum);
     subDescs.reserve(listNum);
     subChannels.reserve(listNum);
     for (uint32_t i = 0; i < listNum; i++) {
-        void *ch = nullptr;
+        void* ch = nullptr;
         CHK_RET(ChannelProcess::ChannelGet(channelList[i], &ch));
         CHK_PTR_NULL(ch);
-        auto *channel = static_cast<Channel *>(ch);
+        auto* channel = static_cast<Channel*>(ch);
         if (channel->IsDeviceEntityReady()) {
             continue;
         }
@@ -105,15 +107,16 @@ HcclResult AicpuTsChannelHelper::LaunchKernel(const ChannelHandle *channelList, 
     std::vector<ChannelHandle> devHandles(subHostHandles.size());
     CHK_RET(ChannelProcess::LaunchChannelKernel(
         devHandles.data(), subHostHandles.data(), subDescs.data(), subHostHandles.size(), binHandle));
-    for (auto *channel : subChannels) {
+    for (auto* channel : subChannels) {
         channel->SetDeviceEntityReady();
     }
     HCCL_INFO("[%s] aicpu kernel launch success, launched[%zu]/total[%u].", __func__, subHostHandles.size(), listNum);
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsChannelHelper::HandleStatus(const ChannelHandle *channelList, uint32_t listNum, CommEngine engine,
-    const HcommChannelDesc *channelDescs, const std::vector<int32_t> &linkStatusList, int32_t *statusList)
+HcclResult AicpuTsChannelHelper::HandleStatus(
+    const ChannelHandle* channelList, uint32_t listNum, CommEngine engine, const HcommChannelDesc* channelDescs,
+    const std::vector<int32_t>& linkStatusList, int32_t* statusList)
 {
     bool allReady = true;
     for (uint32_t i = 0; i < listNum; i++) {
@@ -147,7 +150,7 @@ HcclResult AicpuTsChannelHelper::HandleStatus(const ChannelHandle *channelList, 
 }
 
 HcclResult AicpuTsChannelHelper::PreAllocChannels(
-    ChannelHandle *targetChannels, ChannelHandle *userChannels, HcommChannelDesc *channelDescs, uint32_t channelNum)
+    ChannelHandle* targetChannels, ChannelHandle* userChannels, HcommChannelDesc* channelDescs, uint32_t channelNum)
 {
     CHK_PTR_NULL(targetChannels);
     CHK_PTR_NULL(userChannels);
@@ -155,9 +158,9 @@ HcclResult AicpuTsChannelHelper::PreAllocChannels(
         (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
 
     for (uint32_t i = 0; i < channelNum; i++) {
-        auto *channel = reinterpret_cast<Channel *>(targetChannels[i]);
+        auto* channel = reinterpret_cast<Channel*>(targetChannels[i]);
         CHK_PTR_NULL(channel);
-        auto *helper = channel->GetAicpuTsHelper();
+        auto* helper = channel->GetAicpuTsHelper();
         CHK_PTR_NULL(helper);
         CHK_RET(helper->PreAllocCtx(userChannels[i]));
         // 清零 ctx device 内存，防止脏数据 magic 误匹配

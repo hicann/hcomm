@@ -29,8 +29,7 @@
 using namespace std;
 using namespace Hccl;
 
-class UbTransportLiteImplRmtbuffer_UT : public testing::Test
-{
+class UbTransportLiteImplRmtbuffer_UT : public testing::Test {
 protected:
     static void SetUpTestCase()
     {
@@ -40,16 +39,13 @@ protected:
     {
         std::cout << "\033[36m--UbTransportLiteImplRmtbuffer_UT TearDown--\033[0m" << std::endl;
     }
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
-TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_HeaderSerialization_When_RmtbufferDifferentFromBuffer_Expect_FiveFieldsDeserialized)
+TEST_F(
+    UbTransportLiteImplRmtbuffer_UT,
+    Ut_HeaderSerialization_When_RmtbufferDifferentFromBuffer_Expect_FiveFieldsDeserialized)
 {
     u32 type = static_cast<u32>(TransportType::UB);
     u32 notifyNum = 2;
@@ -326,7 +322,8 @@ TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_FullPacketDeserialize_When_RmtbufferD
     readStream >> readRmtBufferUniqueIds;
 }
 
-TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_FullPacketDeserializeV2_When_RmtbufferDifferentFromBuffer_Expect_HeaderCorrect)
+TEST_F(
+    UbTransportLiteImplRmtbuffer_UT, Ut_FullPacketDeserializeV2_When_RmtbufferDifferentFromBuffer_Expect_HeaderCorrect)
 {
     u32 type = static_cast<u32>(TransportType::UB);
     u32 notifyNum = 2;

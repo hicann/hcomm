@@ -20,23 +20,23 @@ namespace Hccl {
 
 class CcuTempReduceMesh1D : public CcuAlgTemplateBase {
 public:
-    explicit CcuTempReduceMesh1D(const RankId virtualRank, const u32 tempRankSize,
-                                            const std::vector<std::vector<RankId>> &tempVTopo,
-                                            const std::map<RankId, u32>            &tempVirtRankMap);
+    explicit CcuTempReduceMesh1D(
+        const RankId virtualRank, const u32 tempRankSize, const std::vector<std::vector<RankId>>& tempVTopo,
+        const std::map<RankId, u32>& tempVirtRankMap);
     ~CcuTempReduceMesh1D() override;
 
     std::string Describe() const override
     {
-        return StringFormat("Template of Reduce ccu mesh 1D, tempRankSize [%u].", 
-                            tempRankSize_);
+        return StringFormat("Template of Reduce ccu mesh 1D, tempRankSize [%u].", tempRankSize_);
     }
 
-    HcclResult CalcRes(AlgTempResReq &tempResReq) override;
-    HcclResult GenExtIns(const TempFuncs &tempFuncs, const TemplateDataParams &templateDataParams, const ResLinks &tempLinks,
-                   std::vector<InsQuePtr> &tempInsQues);
-    HcclResult GenExtIns(const RankGraph *rankGraph, const TemplateInfo &tmpInfo,
-                         const std::vector<InsQuePtr> &tempInsQues) const;
-    void InitReduceInfo(const ReduceOp &reduceOp, const DataType &dataType);
+    HcclResult CalcRes(AlgTempResReq& tempResReq) override;
+    HcclResult GenExtIns(
+        const TempFuncs& tempFuncs, const TemplateDataParams& templateDataParams, const ResLinks& tempLinks,
+        std::vector<InsQuePtr>& tempInsQues);
+    HcclResult
+    GenExtIns(const RankGraph* rankGraph, const TemplateInfo& tmpInfo, const std::vector<InsQuePtr>& tempInsQues) const;
+    void InitReduceInfo(const ReduceOp& reduceOp, const DataType& dataType);
 
 private:
     DataType dataType_;

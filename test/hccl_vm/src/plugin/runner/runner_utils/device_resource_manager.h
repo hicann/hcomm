@@ -32,7 +32,8 @@ public:
     DeviceResourceManager(const DeviceResourceManager&) = delete;
     DeviceResourceManager& operator=(const DeviceResourceManager&) = delete;
 
-    static DeviceResourceManager& GetInstance() {
+    static DeviceResourceManager& GetInstance()
+    {
         static DeviceResourceManager instance;
         return instance;
     }

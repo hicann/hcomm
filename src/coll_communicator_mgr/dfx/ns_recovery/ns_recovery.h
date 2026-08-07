@@ -30,10 +30,11 @@ struct NsRecoveryData {
 
 class NsRecoveryProcessor {
 public:
-    void SetKfcControlTransfer(std::shared_ptr<HDCommunicate> kfcControlTransferH2D, 
-        std::shared_ptr<HDCommunicate> kfcStatusTransferD2H);
-    void AddNsRecoveryData(const CommEngine& engine, const ChannelHandle *const channelHandles, 
-        const ChannelHandle *const hostChannelHandleList, uint32_t channelNum, const std::string &commTag);
+    void SetKfcControlTransfer(
+        std::shared_ptr<HDCommunicate> kfcControlTransferH2D, std::shared_ptr<HDCommunicate> kfcStatusTransferD2H);
+    void AddNsRecoveryData(
+        const CommEngine& engine, const ChannelHandle* const channelHandles,
+        const ChannelHandle* const hostChannelHandleList, uint32_t channelNum, const std::string& commTag);
     HcclResult StopLaunch();
     HcclResult Clean();
     HcclResult Resume(aclrtBinHandle binHandle);
@@ -47,7 +48,6 @@ private:
     std::unordered_map<CommEngine, std::vector<NsRecoveryData>> nsRecoveryDatas_;
 };
 
-}
+} // namespace hccl
 
 #endif
-

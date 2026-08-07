@@ -22,7 +22,8 @@
 
 class SyncAtExecutor : public CcuExecutorBase {
 public:
-    explicit SyncAtExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit SyncAtExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     SyncAtExecutor() = default;

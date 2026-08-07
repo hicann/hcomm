@@ -50,7 +50,6 @@ struct tagBkfXMapX {
     BkfDl cbSetByPrio;
 };
 
-
 typedef struct tagBkfXMapCbKeyWithCookie {
     F_BKF_XMAP_PROC proc;
     void *cookie;
@@ -118,8 +117,8 @@ BkfXMap *BkfXMapInit(BkfXMapInitArg *arg)
     }
     (void)memset_s(xMap, len, 0, len);
     xMap->argInit = *arg;
-    VOS_AVLL_INIT_TREE(xMap->xSet, (AVLL_COMPARE)BkfUIntptrCmp,
-                       BKF_OFFSET(BkfXMapX, key), BKF_OFFSET(BkfXMapX, avlNode));
+    VOS_AVLL_INIT_TREE(xMap->xSet, (AVLL_COMPARE)BkfUIntptrCmp, BKF_OFFSET(BkfXMapX, key),
+        BKF_OFFSET(BkfXMapX, avlNode));
     xMap->name = BkfStrNew(arg->memMng, "%s_xmap", arg->name);
     xMap->argInit.name = xMap->name;
 
@@ -184,7 +183,8 @@ STATIC uint32_t BkfXMapRegExProc(BkfXMap *xMap, uintptr_t key, const char *keySt
     return BKF_OK;
 }
 
-uint32_t BkfXMapRegEx(BkfXMap *xMap, uintptr_t key, const char *keyStr, F_BKF_XMAP_PROC proc, void *cookie, uint8_t prio)
+uint32_t BkfXMapRegEx(BkfXMap *xMap, uintptr_t key, const char *keyStr, F_BKF_XMAP_PROC proc, void *cookie,
+    uint8_t prio)
 {
     BkfXMapCbKey cbKey = {0};
 
@@ -207,7 +207,7 @@ void BkfXMapUnRegEx(BkfXMap *xMap, uintptr_t key, F_BKF_XMAP_PROC proc, void *co
         return;
     }
 
-    BkfXMapCbKey cbKey = { 0 };
+    BkfXMapCbKey cbKey = {0};
     cbKey.type = BKF_XMAP_PROC_TYPE_WITH_COOKIE;
     cbKey.procCookie.proc = proc;
     cbKey.procCookie.cookie = cookie;
@@ -260,8 +260,7 @@ uint32_t BkfXMapDispatch(BkfXMap *xMap, uintptr_t key, void *paramDispatch1, voi
         return BKF_XMAP_DISPATCH_NOT_FIND;
     }
     ret = 0;
-    for (cb = BkfXMapGetFirstCbByPrio(xMap, x, &itor); cb != VOS_NULL;
-         cb = BkfXMapGetNextCbByPrio(xMap, x, &itor)) {
+    for (cb = BkfXMapGetFirstCbByPrio(xMap, x, &itor); cb != VOS_NULL; cb = BkfXMapGetNextCbByPrio(xMap, x, &itor)) {
         ret |= BkfXMapCbDispatch(cb, paramDispatch1, paramDispatch2);
     }
 
@@ -285,8 +284,8 @@ STATIC BkfXMapX *BkfXMapAddX(BkfXMap *xMap, uintptr_t key, const char *keyStr)
     VOS_AVLL_INIT_NODE(x->avlNode);
     x->key = key;
     x->keyStr = keyStr;
-    VOS_AVLL_INIT_TREE(x->cbSet, (AVLL_COMPARE)BkfXMapCmpCbKey,
-                       BKF_OFFSET(BkfXMapCb, key), BKF_OFFSET(BkfXMapCb, avlNode));
+    VOS_AVLL_INIT_TREE(x->cbSet, (AVLL_COMPARE)BkfXMapCmpCbKey, BKF_OFFSET(BkfXMapCb, key),
+        BKF_OFFSET(BkfXMapCb, avlNode));
     BKF_DL_INIT(&x->cbSetByPrio);
     isInsOk = VOS_AVLL_INSERT(xMap->xSet, x->avlNode);
     if (!isInsOk) {
@@ -328,8 +327,7 @@ STATIC void BkfXMapDelAllX(BkfXMap *xMap)
     BkfXMapX *x = VOS_NULL;
     void *itor = VOS_NULL;
 
-    for (x = BkfXMapGetFirstX(xMap, &itor); x != VOS_NULL;
-         x = BkfXMapGetNextX(xMap, &itor)) {
+    for (x = BkfXMapGetFirstX(xMap, &itor); x != VOS_NULL; x = BkfXMapGetNextX(xMap, &itor)) {
         BkfXMapDelX(x);
     }
     return;
@@ -461,8 +459,7 @@ STATIC void BkfXMapDelAllCb(BkfXMap *xMap, BkfXMapX *x)
     BkfXMapCb *cb = VOS_NULL;
     void *itor = VOS_NULL;
 
-    for (cb = BkfXMapGetFirstCbByPrio(xMap, x, &itor); cb != VOS_NULL;
-         cb = BkfXMapGetNextCbByPrio(xMap, x, &itor)) {
+    for (cb = BkfXMapGetFirstCbByPrio(xMap, x, &itor); cb != VOS_NULL; cb = BkfXMapGetNextCbByPrio(xMap, x, &itor)) {
         BkfXMapDelCb(xMap, cb);
     }
     return;
@@ -517,4 +514,3 @@ STATIC BkfXMapCb *BkfXMapGetNextCbByPrio(BkfXMap *xMap, BkfXMapX *x, void **inOu
 }
 #endif
 #endif
-

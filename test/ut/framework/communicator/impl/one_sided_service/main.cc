@@ -10,7 +10,8 @@
 #include "gtest/gtest.h"
 #include "llt_hccl_stub_pub.h"
 
-GTEST_API_ int main(int argc, char **argv) {
+GTEST_API_ int main(int argc, char** argv)
+{
     // testcase测试代码，只跑特定的用例 testing::GTEST_FLAG(filter) = "AllReduceTest.allreduce_cyw_test";
     printf("Running one sided service\n");
     // log_level_set_stub(1);

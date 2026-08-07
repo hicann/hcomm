@@ -14,7 +14,7 @@
 
 namespace hcomm {
 
-HcclResult RtsUbDevQueryInfo(const rtUbDevQueryCmd cmd, rtMemUbTokenInfo &devInfo)
+HcclResult RtsUbDevQueryInfo(const rtUbDevQueryCmd cmd, rtMemUbTokenInfo& devInfo)
 {
     if (cmd != QUERY_PROCESS_TOKEN) {
         HCCL_ERROR("[%s] error cmd[%d].", __func__, cmd);
@@ -23,8 +23,7 @@ HcclResult RtsUbDevQueryInfo(const rtUbDevQueryCmd cmd, rtMemUbTokenInfo &devInf
 
     auto ret = rtUbDevQueryInfo(cmd, &devInfo);
     if (ret != RT_ERROR_NONE) {
-        HCCL_ERROR("[%s] failed[%d], va[0x%llx] size[%llu].",
-            __func__, ret, devInfo.va, devInfo.size);
+        HCCL_ERROR("[%s] failed[%d], va[0x%llx] size[%llu].", __func__, ret, devInfo.va, devInfo.size);
         return HcclResult::HCCL_E_RUNTIME;
     }
 

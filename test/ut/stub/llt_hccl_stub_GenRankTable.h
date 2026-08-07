@@ -27,10 +27,10 @@ class RankTable_For_LLT {
 public:
     explicit RankTable_For_LLT() = default;
     ~RankTable_For_LLT() = default;
-    static HcclResult GenRankTable(TopoMeta topoMate, RankTable_t &rankTable);
-    static HcclResult GenTopoMeta(TopoMeta &topoMate, int arg1 = 2, int arg2 = 2, int arg3 = 8);
+    static HcclResult GenRankTable(TopoMeta topoMate, RankTable_t& rankTable);
+    static HcclResult GenTopoMeta(TopoMeta& topoMate, int arg1 = 2, int arg2 = 2, int arg3 = 8);
 };
 
-}  // namespace hccl
+} // namespace hccl
 
 #endif

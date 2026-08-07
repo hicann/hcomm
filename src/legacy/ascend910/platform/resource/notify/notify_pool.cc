@@ -12,15 +12,9 @@
 #include "notify_pool_impl.h"
 
 namespace hccl {
-NotifyPool::NotifyPool()
-{
-}
+NotifyPool::NotifyPool() {}
 
-NotifyPool::~NotifyPool()
-{
-    pimpl_ = nullptr;
-}
-
+NotifyPool::~NotifyPool() { pimpl_ = nullptr; }
 
 HcclResult NotifyPool::Init(const s32 devicePhyId)
 {
@@ -35,20 +29,21 @@ HcclResult NotifyPool::Destroy()
     return pimpl_->Destroy();
 }
 
-HcclResult NotifyPool::RegisterOp(const std::string &tag)
+HcclResult NotifyPool::RegisterOp(const std::string& tag)
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->RegisterOp(tag);
 }
 
-HcclResult NotifyPool::UnregisterOp(const std::string &tag)
+HcclResult NotifyPool::UnregisterOp(const std::string& tag)
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->UnregisterOp(tag);
 }
 
-HcclResult NotifyPool::Alloc(const std::string &tag, const RemoteRankInfo &info,
-    std::shared_ptr<LocalIpcNotify> &localNotify, const NotifyLoadType type, u32 offsetAlignSize)
+HcclResult NotifyPool::Alloc(
+    const std::string& tag, const RemoteRankInfo& info, std::shared_ptr<LocalIpcNotify>& localNotify,
+    const NotifyLoadType type, u32 offsetAlignSize)
 {
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->Alloc(tag, info, type, localNotify, offsetAlignSize);
@@ -65,4 +60,4 @@ HcclResult NotifyPool::ResetNotifyForDestRank(s64 destRank)
     CHK_SMART_PTR_NULL(pimpl_);
     return pimpl_->ResetNotifyForDestRank(destRank);
 }
-}  // namespace hccl
+} // namespace hccl

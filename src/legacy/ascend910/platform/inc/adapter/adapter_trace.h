@@ -17,8 +17,8 @@
 
 HcclResult hrtOpenTrace();
 void hrtTraceDestroy(TraHandle handle);
-HcclResult hrtTraceSubmit(TraHandle handle, const void *buffer, u32 bufSize);
-HcclResult hrtTraceCreateWithAttr(const char *objName, TraHandle &handle);
-HcclResult hrtTraceSetGlobalAttr(const TraceGlobalAttr *attr);
+HcclResult hrtTraceSubmit(TraHandle handle, const void* buffer, u32 bufSize);
+HcclResult hrtTraceCreateWithAttr(const char* objName, TraHandle& handle);
+HcclResult hrtTraceSetGlobalAttr(const TraceGlobalAttr* attr);
 HcclResult hrtTraceSave(TracerType tracerType, bool syncFlag);
 #endif

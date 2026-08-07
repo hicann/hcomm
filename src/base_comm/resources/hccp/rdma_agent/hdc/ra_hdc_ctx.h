@@ -311,7 +311,7 @@ union OpCtxQpBindData {
     struct {
         unsigned int phyId;
         unsigned int devIndex;
-        unsigned int id; // local qpn(rdma) or local jetty_id(udma)
+        unsigned int id;    // local qpn(rdma) or local jetty_id(udma)
         unsigned int remId; // only for UB, equivalent to rem_jetty_id
         struct QpKey localQpKey;
         struct QpKey remoteQpKey;
@@ -428,47 +428,40 @@ int RaHdcCtxGetAsyncEvents(struct RaCtxHandle *ctxHandle, struct AsyncEvent even
 int RaHdcCtxDeinit(struct RaCtxHandle *ctxHandle);
 void RaHdcPrepareGetEidByIp(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], unsigned int ipNum,
     union OpGetEidByIpData *opData);
-int RaHdcGetEidResults(union OpGetEidByIpData *opData, unsigned int ipNum, union HccpEid eid[],
-    unsigned int *num);
-int RaHdcGetEidByIp(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], union HccpEid eid[],
-    unsigned int *num);
+int RaHdcGetEidResults(union OpGetEidByIpData *opData, unsigned int ipNum, union HccpEid eid[], unsigned int *num);
+int RaHdcGetEidByIp(struct RaCtxHandle *ctxHandle, struct IpInfo ip[], union HccpEid eid[], unsigned int *num);
 void RaHdcPrepareGetIpByEid(struct RaCtxHandle *ctxHandle, union HccpEid eid[], unsigned int eidNum,
     union OpGetIpByEidData *opData);
-int RaHdcGetIpResults(union OpGetIpByEidData *opData, unsigned int eidNum, struct IpInfo ip[],
-    unsigned int *num);
-int RaHdcGetIpByEid(struct RaCtxHandle *ctxHandle, union HccpEid eid[], struct IpInfo ip[],
-    unsigned int *num);
+int RaHdcGetIpResults(union OpGetIpByEidData *opData, unsigned int eidNum, struct IpInfo ip[], unsigned int *num);
+int RaHdcGetIpByEid(struct RaCtxHandle *ctxHandle, union HccpEid eid[], struct IpInfo ip[], unsigned int *num);
 int RaHdcCtxTokenIdAlloc(struct RaCtxHandle *ctxHandle, struct HccpTokenId *info,
     struct RaTokenIdHandle *tokenIdHandle);
 int RaHdcCtxTokenIdFree(struct RaCtxHandle *ctxHandle, struct RaTokenIdHandle *tokenIdHandle);
 int RaHdcCtxPrepareLmemRegister(struct RaCtxHandle *ctxHandle, struct MrRegInfoT *lmemInfo,
     union OpLmemRegInfoData *opData);
-int RaHdcCtxLmemRegister(struct RaCtxHandle *ctxHandle, struct MrRegInfoT *lmemInfo,
-    struct RaLmemHandle *lmemHandle);
+int RaHdcCtxLmemRegister(struct RaCtxHandle *ctxHandle, struct MrRegInfoT *lmemInfo, struct RaLmemHandle *lmemHandle);
 int RaHdcCtxLmemUnregister(struct RaCtxHandle *ctxHandle, struct RaLmemHandle *lmemHandle);
 int RaHdcCtxRmemImport(struct RaCtxHandle *ctxHandle, struct MrImportInfoT *rmemInfo);
 int RaHdcCtxRmemUnimport(struct RaCtxHandle *ctxHandle, struct RaRmemHandle *rmemHandle);
-int RaHdcCtxChanCreate(struct RaCtxHandle *ctxHandle, struct ChanInfoT *chanInfo,
-    struct RaChanHandle *chanHandle);
+int RaHdcCtxChanCreate(struct RaCtxHandle *ctxHandle, struct ChanInfoT *chanInfo, struct RaChanHandle *chanHandle);
 int RaHdcCtxChanDestroy(struct RaCtxHandle *ctxHandle, struct RaChanHandle *chanHandle);
 int RaHdcCtxCqCreate(struct RaCtxHandle *ctxHandle, struct CqInfoT *info, struct RaCqHandle *cqHandle);
 int RaHdcCtxCqDestroy(struct RaCtxHandle *ctxHandle, struct RaCqHandle *cqHandle);
 int RaHdcCtxPrepareQpCreate(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *qpAttr,
     union OpCtxQpCreateData *opData);
-int RaHdcCtxQpCreate(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *qpAttr,
-    struct QpCreateInfo *qpInfo, struct RaCtxQpHandle *qpHandle);
-int RaHdcCtxQpQueryBatch(unsigned int phyId, unsigned int devIndex, unsigned int ids[],
-    struct JettyAttr attr[], unsigned int *num);
+int RaHdcCtxQpCreate(struct RaCtxHandle *ctxHandle, struct QpCreateAttr *qpAttr, struct QpCreateInfo *qpInfo,
+    struct RaCtxQpHandle *qpHandle);
+int RaHdcCtxQpQueryBatch(unsigned int phyId, unsigned int devIndex, unsigned int ids[], struct JettyAttr attr[],
+    unsigned int *num);
 int RaHdcCtxQpDestroy(struct RaCtxQpHandle *qpHandle);
 int RaHdcCtxPrepareQpImport(struct RaCtxHandle *ctxHandle, struct QpImportInfoT *qpInfo,
     union OpCtxQpImportData *opData);
-int RaHdcCtxQpImport(struct RaCtxHandle *ctxHandle, struct QpImportInfoT *qpInfo,
-    struct RaCtxRemQpHandle *remQpHandle);
+int RaHdcCtxQpImport(struct RaCtxHandle *ctxHandle, struct QpImportInfoT *qpInfo, struct RaCtxRemQpHandle *remQpHandle);
 int RaHdcCtxQpUnimport(struct RaCtxRemQpHandle *remQpHandle);
 int RaHdcCtxQpBind(struct RaCtxQpHandle *qpHandle, struct RaCtxRemQpHandle *remQpHandle);
 int RaHdcCtxQpUnbind(struct RaCtxQpHandle *qpHandle);
-int RaHdcCtxBatchSendWr(struct RaCtxQpHandle *qpHandle, struct SendWrData wrList[],
-    struct SendWrResp opResp[], unsigned int sendNum, unsigned int *completeNum);
+int RaHdcCtxBatchSendWr(struct RaCtxQpHandle *qpHandle, struct SendWrData wrList[], struct SendWrResp opResp[],
+    unsigned int sendNum, unsigned int *completeNum);
 int RaHdcCtxUpdateCi(struct RaCtxQpHandle *qpHandle, uint16_t ci);
 int RaHdcCtxGetAuxInfo(struct RaCtxHandle *ctxHandle, struct HccpAuxInfoIn *in, struct HccpAuxInfoOut *out);
 int RaHdcCtxGetCrErrInfoList(struct RaCtxHandle *ctxHandle, struct CrErrInfo *infoList, unsigned int *num);

@@ -12,42 +12,42 @@
 #include <stdlib.h>
 #include "securec.h"
 
-SECUREC_API errno_t memcpy_s(void *dest, size_t destMax, const void *src, size_t count)
+SECUREC_API errno_t memcpy_s(void* dest, size_t destMax, const void* src, size_t count)
 {
-	memcpy(dest, src, count);
-	return 0;
+    memcpy(dest, src, count);
+    return 0;
 }
 
-SECUREC_API errno_t memset_s(void * dest, size_t destMax, int c, size_t count)
+SECUREC_API errno_t memset_s(void* dest, size_t destMax, int c, size_t count)
 {
-	memset(dest, c, count);
-	return 0;
+    memset(dest, c, count);
+    return 0;
 }
 
-SECUREC_API errno_t sscanf_s(const char *buffer, const char *format, ...)
+SECUREC_API errno_t sscanf_s(const char* buffer, const char* format, ...)
 {
-	va_list args;
-	int ret;
-	va_start(args, format);
-	ret = vsscanf(buffer, format, args);
-	va_end (args);
-	return ret;
+    va_list args;
+    int ret;
+    va_start(args, format);
+    ret = vsscanf(buffer, format, args);
+    va_end(args);
+    return ret;
 }
 
-int snprintf_s(char *strDest, size_t destMax, size_t count, const char *format, ...)
+int snprintf_s(char* strDest, size_t destMax, size_t count, const char* format, ...)
 {
-        va_list args;
-        va_start(args, format);
-        vsnprintf(strDest, count, format, args);
-        va_end (args);
-        return 1;
+    va_list args;
+    va_start(args, format);
+    vsnprintf(strDest, count, format, args);
+    va_end(args);
+    return 1;
 }
 
-SECUREC_API int sprintf_s(char *strDest, size_t destMax, const char *format, ...)
+SECUREC_API int sprintf_s(char* strDest, size_t destMax, const char* format, ...)
 {
-        va_list args;
-        va_start(args, format);
-        vsprintf(strDest, format, args);
-        va_end (args);
-        return 1;
+    va_list args;
+    va_start(args, format);
+    vsprintf(strDest, format, args);
+    va_end(args);
+    return 1;
 }

@@ -15,13 +15,10 @@
 
 namespace hcomm {
 namespace {
-#define ALIGN_SIZE(size, align) \
-    ({ \
-        (size) = (((size) + (align) - 1) / (align)) * (align);\
-    })
-}  // namespace
+#define ALIGN_SIZE(size, align) ({ (size) = (((size) + (align) - 1) / (align)) * (align); })
+} // namespace
 
-HcommResult MemAlloc(void **ptr, size_t size)
+HcommResult MemAlloc(void** ptr, size_t size)
 {
     CHK_PTR_NULL(ptr);
     CHK_PRT_RET(size == 0, HCCL_ERROR("[%s] size is zero", __func__), HCCL_E_PARA);
@@ -42,19 +39,22 @@ HcommResult MemAlloc(void **ptr, size_t size)
     size_t allocSize = size;
     size_t granularity = 0;
     ret = aclrtMemGetAllocationGranularity(&prop, ACL_RT_MEM_ALLOC_GRANULARITY_RECOMMENDED, &granularity);
-    CHK_PRT_RET(ret != ACL_SUCCESS || granularity == 0,
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS || granularity == 0,
         HCCL_ERROR("[%s] GetAllocationGranularity failed, granularity[%llu], ret[%d]", __func__, granularity, ret),
         HCCL_E_RUNTIME);
     ALIGN_SIZE(allocSize, granularity);
-    HCCL_INFO("[%s] deviceId[%d], granularity[%llu], size[%llu], allocSize[%llu].",
-        __func__, deviceId, granularity, size, allocSize);
+    HCCL_INFO(
+        "[%s] deviceId[%d], granularity[%llu], size[%llu], allocSize[%llu].", __func__, deviceId, granularity, size,
+        allocSize);
 
     ret = aclrtReserveMemAddress(ptr, allocSize, 0, nullptr, 1);
-    CHK_PRT_RET(ret != ACL_SUCCESS,
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
         HCCL_ERROR("[%s] ReserveMemAddress failed, virPtr[%p] size[%llu], ret[%d]", __func__, ptr, allocSize, ret),
         HCCL_E_RUNTIME);
 
-    void *virPtr = *ptr;
+    void* virPtr = *ptr;
     aclrtDrvMemHandle handle;
     ret = aclrtMallocPhysical(&handle, allocSize, &prop, 0);
     if (ret != ACL_SUCCESS) {
@@ -65,8 +65,8 @@ HcommResult MemAlloc(void **ptr, size_t size)
     HCCL_INFO("[%s] Start to MapMem virPtr[%p], handle[%p]", __func__, virPtr, handle);
     ret = aclrtMapMem(virPtr, allocSize, 0, handle, 0);
     if (ret != ACL_SUCCESS) {
-        HCCL_ERROR("[%s] MapMem virPtr[%p] size[%llu] handle[%p] failed, ret[%d]",
-            __func__, virPtr, allocSize, handle, ret);
+        HCCL_ERROR(
+            "[%s] MapMem virPtr[%p] size[%llu] handle[%p] failed, ret[%d]", __func__, virPtr, allocSize, handle, ret);
         aclrtFreePhysical(handle);
         aclrtReleaseMemAddress(virPtr);
         return HCCL_E_RUNTIME;
@@ -75,7 +75,7 @@ HcommResult MemAlloc(void **ptr, size_t size)
     return HCCL_SUCCESS;
 }
 
-HcommResult MemFree(void *ptr)
+HcommResult MemFree(void* ptr)
 {
     if (ptr == nullptr) {
         HCCL_DEBUG("[%s] virPtr is nullptr.", __func__);
@@ -84,18 +84,21 @@ HcommResult MemFree(void *ptr)
     aclError ret = ACL_SUCCESS;
     aclrtDrvMemHandle handle;
     ret = aclrtMemRetainAllocationHandle(ptr, &handle);
-    CHK_PRT_RET(ret != ACL_SUCCESS,
-        HCCL_ERROR("[%s] RetainAllocationHandle virPtr[%p] failed, ret[%d]", __func__, ptr, ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS, HCCL_ERROR("[%s] RetainAllocationHandle virPtr[%p] failed, ret[%d]", __func__, ptr, ret),
+        HCCL_E_RUNTIME);
     HCCL_INFO("[%s] Start to UnmapMem virPtr[%p], handle[%p]", __func__, ptr, handle);
     ret = aclrtUnmapMem(ptr);
-    CHK_PRT_RET(ret != ACL_SUCCESS,
-        HCCL_ERROR("[%s] UnmapMem virPtr[%p] failed, ret[%d]", __func__, ptr, ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS, HCCL_ERROR("[%s] UnmapMem virPtr[%p] failed, ret[%d]", __func__, ptr, ret), HCCL_E_RUNTIME);
     ret = aclrtFreePhysical(handle);
-    CHK_PRT_RET(ret != ACL_SUCCESS,
-        HCCL_ERROR("[%s] FreePhysical handle[%p] failed, ret[%d]", __func__, handle, ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS, HCCL_ERROR("[%s] FreePhysical handle[%p] failed, ret[%d]", __func__, handle, ret),
+        HCCL_E_RUNTIME);
     ret = aclrtReleaseMemAddress(ptr);
-    CHK_PRT_RET(ret != ACL_SUCCESS,
-        HCCL_ERROR("[%s] ReleaseMemAddress virPtr[%p] failed, ret[%d]", __func__, ptr, ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS, HCCL_ERROR("[%s] ReleaseMemAddress virPtr[%p] failed, ret[%d]", __func__, ptr, ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 }
-}  // namespace hcomm
+} // namespace hcomm

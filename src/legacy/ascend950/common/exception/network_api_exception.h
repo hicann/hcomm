@@ -17,8 +17,8 @@ namespace Hccl {
 
 class NetworkApiException : public HcclException {
 public:
-    explicit NetworkApiException(const std::string &userDefinedMsg)
-        : HcclException(ExceptionType::NETWORK_API_EXCEPTION, userDefinedMsg){};
+    explicit NetworkApiException(const std::string& userDefinedMsg)
+        : HcclException(ExceptionType::NETWORK_API_EXCEPTION, userDefinedMsg) {};
 };
 
 } // namespace Hccl

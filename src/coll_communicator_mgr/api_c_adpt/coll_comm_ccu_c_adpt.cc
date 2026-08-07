@@ -20,16 +20,15 @@
 /**
  * @note 职责：集合通信的通信域CCU管理的C接口的C到C++适配
  */
-HcclResult HcclCommQueryCcuIns(HcclComm comm,
-    CcuInsHandle *insHandles, uint32_t *insNum)
+HcclResult HcclCommQueryCcuIns(HcclComm comm, CcuInsHandle* insHandles, uint32_t* insNum)
 {
     EXCEPTION_HANDLE_BEGIN
 
     HcclUs startut = TIME_NOW();
 
     CHK_PTR_NULL(comm);
-    auto *hcclComm = static_cast<hccl::hcclComm *>(comm);
-    const auto &commId = hcclComm->GetIdentifier();
+    auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
+    const auto& commId = hcclComm->GetIdentifier();
     HCCL_INFO("[%s] CommId[%s] query ccu instance.", __func__, commId.c_str());
 
     CHK_PTR_NULL(insHandles);
@@ -41,25 +40,25 @@ HcclResult HcclCommQueryCcuIns(HcclComm comm,
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
 
-    auto *collComm = hcclComm->GetCollComm();
+    auto* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
-    auto *myRank = collComm->GetMyRank();
+    auto* myRank = collComm->GetMyRank();
     CHK_PTR_NULL(myRank);
 
     // 非CCU通信域允许查询，不认为是错误
     auto ccuInsHandle = myRank->GetCcuInstance();
     if (ccuInsHandle == 0) {
         auto opExpansionMode = myRank->GetOpExpansionMode();
-        HCCL_WARNING("[%s] failed to get ccu instance, commId[%s] op expansion mode[%u].",
-            __func__, commId.c_str(), opExpansionMode);
+        HCCL_WARNING(
+            "[%s] failed to get ccu instance, commId[%s] op expansion mode[%u].", __func__, commId.c_str(),
+            opExpansionMode);
         return HcclResult::HCCL_E_UNAVAIL;
     }
 
     insHandles[0] = ccuInsHandle;
     *insNum = 1;
-    HCCL_INFO("[%s] success, take time [%lld]us.",
-        __func__, DURATION_US(TIME_NOW() - startut).count());
-    
+    HCCL_INFO("[%s] success, take time [%lld]us.", __func__, DURATION_US(TIME_NOW() - startut).count());
+
     EXCEPTION_HANDLE_END
     return HcclResult::HCCL_SUCCESS;
 }
@@ -71,14 +70,16 @@ HcclResult HcclCommAssignCcuIns(HcclComm comm, CcuInsHandle insHandle)
     HcclUs startut = TIME_NOW();
 
     CHK_PTR_NULL(comm);
-    auto *hcclComm = static_cast<hccl::hcclComm *>(comm);
-    const auto &commId = hcclComm->GetIdentifier();
-    HCCL_INFO("[%s] CommId[%s] assign ccu instance[%llu].",
-        __func__, commId.c_str(), static_cast<unsigned long long>(insHandle));
+    auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
+    const auto& commId = hcclComm->GetIdentifier();
+    HCCL_INFO(
+        "[%s] CommId[%s] assign ccu instance[%llu].", __func__, commId.c_str(),
+        static_cast<unsigned long long>(insHandle));
 
     if (insHandle == 0) {
-        HCCL_ERROR("[%s] failed, commId[%s] insHandle[%llu] is invalid.",
-            __func__, commId.c_str(), static_cast<unsigned long long>(insHandle));
+        HCCL_ERROR(
+            "[%s] failed, commId[%s] insHandle[%llu] is invalid.", __func__, commId.c_str(),
+            static_cast<unsigned long long>(insHandle));
         return HcclResult::HCCL_E_PARA;
     }
 
@@ -87,9 +88,9 @@ HcclResult HcclCommAssignCcuIns(HcclComm comm, CcuInsHandle insHandle)
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
 
-    auto *collComm = hcclComm->GetCollComm();
+    auto* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
-    auto *myRank = collComm->GetMyRank();
+    auto* myRank = collComm->GetMyRank();
     CHK_PTR_NULL(myRank);
 
     {
@@ -99,7 +100,8 @@ HcclResult HcclCommAssignCcuIns(HcclComm comm, CcuInsHandle insHandle)
 
         auto oldInsHandle = myRank->GetCcuInstance();
         if (oldInsHandle != 0) {
-            HCCL_ERROR("[%s] failed, commId[%s] already has ccu instance[%llu], "
+            HCCL_ERROR(
+                "[%s] failed, commId[%s] already has ccu instance[%llu], "
                 "new instance[%llu] will not be assigned.",
                 __func__, commId.c_str(), static_cast<unsigned long long>(oldInsHandle),
                 static_cast<unsigned long long>(insHandle));
@@ -107,19 +109,20 @@ HcclResult HcclCommAssignCcuIns(HcclComm comm, CcuInsHandle insHandle)
         }
 
         const auto devLogicId = collComm->GetDeviceLogicId();
-        auto *ccuIns = hcomm::CcuInstanceMgr::GetInstance(devLogicId).Get(insHandle);
+        auto* ccuIns = hcomm::CcuInstanceMgr::GetInstance(devLogicId).Get(insHandle);
         if (ccuIns == nullptr) {
-            HCCL_ERROR("[%s] failed, commId[%s] ccu instance[%llu] is not found.",
-                __func__, commId.c_str(), static_cast<unsigned long long>(insHandle));
+            HCCL_ERROR(
+                "[%s] failed, commId[%s] ccu instance[%llu] is not found.", __func__, commId.c_str(),
+                static_cast<unsigned long long>(insHandle));
             return HcclResult::HCCL_E_NOT_FOUND;
         }
 
         myRank->SetCcuInstance(insHandle);
     }
 
-    HCCL_INFO("[%s] success, commId[%s] ccu instance[%llu], take time [%lld]us.",
-        __func__, commId.c_str(), static_cast<unsigned long long>(insHandle),
-        DURATION_US(TIME_NOW() - startut));
+    HCCL_INFO(
+        "[%s] success, commId[%s] ccu instance[%llu], take time [%lld]us.", __func__, commId.c_str(),
+        static_cast<unsigned long long>(insHandle), DURATION_US(TIME_NOW() - startut));
 
     EXCEPTION_HANDLE_END
     return HcclResult::HCCL_SUCCESS;

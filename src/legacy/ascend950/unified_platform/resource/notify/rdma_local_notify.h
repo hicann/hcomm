@@ -22,26 +22,26 @@ public:
 
     ~RdmaLocalNotify() override;
 
-    RdmaLocalNotify(const RdmaLocalNotify &that) = delete;
+    RdmaLocalNotify(const RdmaLocalNotify& that) = delete;
 
-    RdmaLocalNotify &operator=(const RdmaLocalNotify &that) = delete;
+    RdmaLocalNotify& operator=(const RdmaLocalNotify& that) = delete;
 
-    void Wait(const Stream &stream, u32 timeout) const override;
+    void Wait(const Stream& stream, u32 timeout) const override;
 
-    void Post(const Stream &stream) const override;
+    void Post(const Stream& stream) const override;
 
     string Describe() const override;
 
     std::unique_ptr<Serializable> GetExchangeDto() override;
 
 private:
-    RdmaHandle                 rdmaHandle;
-    u64        addr{0};
-    u32        size{0};
-    u8         key[RDMA_MEM_KEY_MAX_LEN]{0};
-    u32        lkey{0};
-    u32        rkey{0};
-    MrHandle   mrHandle{nullptr};
+    RdmaHandle rdmaHandle;
+    u64 addr{0};
+    u32 size{0};
+    u8 key[RDMA_MEM_KEY_MAX_LEN]{0};
+    u32 lkey{0};
+    u32 rkey{0};
+    MrHandle mrHandle{nullptr};
 };
 
 } // namespace Hccl

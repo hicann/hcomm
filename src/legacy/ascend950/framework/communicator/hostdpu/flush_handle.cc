@@ -16,10 +16,7 @@ namespace Hccl {
 
 FlushHandle::FlushHandle() : flushIsInitialized(false) {}
 
-FlushHandle::~FlushHandle()
-{
-    Destroy();
-}
+FlushHandle::~FlushHandle() { Destroy(); }
 
 HcclResult FlushHandle::Init(IpAddress ip, u32 devPhyId)
 {
@@ -53,7 +50,7 @@ HcclResult FlushHandle::Init(IpAddress ip, u32 devPhyId)
     return HCCL_SUCCESS;
 }
 
-HcclResult FlushHandle::GetLbMax(int *lbMax) const
+HcclResult FlushHandle::GetLbMax(int* lbMax) const
 {
     int ret = RaGetLbMax(rdmaHandle, lbMax);
     if (ret != 0) {
@@ -75,10 +72,10 @@ HcclResult FlushHandle::Destroy()
     return finalResult;
 }
 
-HcclResult FlushHandle::GetRdmaHandle(IpAddress ip, u32 devPhyId, void **rdmaHandle) const
+HcclResult FlushHandle::GetRdmaHandle(IpAddress ip, u32 devPhyId, void** rdmaHandle) const
 {
-    *rdmaHandle =
-        RdmaHandleManager::GetInstance().GetByAddr(devPhyId, LinkProtoType::RDMA, ip, PortDeploymentType::HOST_NET);
+    *rdmaHandle
+        = RdmaHandleManager::GetInstance().GetByAddr(devPhyId, LinkProtoType::RDMA, ip, PortDeploymentType::HOST_NET);
     CHK_PTR_NULL(*rdmaHandle);
 
     HCCL_DEBUG("[GetRdmaHandle]RDMA handle initialized. ");
@@ -139,11 +136,11 @@ HcclResult FlushHandle::RegisterLocalMr()
 
     int localRet = RaRegisterMr(rdmaHandle, &loopBackQpMrLocalInfo, &localMrHandle);
     if (localRet != 0 || localMrHandle == nullptr) {
-        HCCL_ERROR("[RegisterLocalMr]Failed to register local MR. localMrHandle=0x%p, error_code=%d", localMrHandle,
-                   localRet);
+        HCCL_ERROR(
+            "[RegisterLocalMr]Failed to register local MR. localMrHandle=0x%p, error_code=%d", localMrHandle, localRet);
         HcclResult eRet = Destroy();
-        HCCL_ERROR("[RegisterLocalMr]Failed to register local MR. error_code=%d. Destroy Flush code=%d", localRet,
-                   eRet);
+        HCCL_ERROR(
+            "[RegisterLocalMr]Failed to register local MR. error_code=%d. Destroy Flush code=%d", localRet, eRet);
         return HCCL_E_MEMORY;
     }
     HCCL_DEBUG("[RegisterLocalMr]Local MR registered successfully. MR Handle=0x%p", localMrHandle);
@@ -155,15 +152,17 @@ HcclResult FlushHandle::RegisterRemoteMr()
     u64 bufferSize = FLUSH_BUFFER_SIZE;
     loopBackQpMrRemoteInfo.addr = deviceMem;
     loopBackQpMrRemoteInfo.size = bufferSize;
-    loopBackQpMrRemoteInfo.access = RA_ACCESS_REMOTE_WRITE | RA_ACCESS_LOCAL_WRITE | RA_ACCESS_REMOTE_READ | RA_ACCESS_REMOTE_ATOMIC;
+    loopBackQpMrRemoteInfo.access
+        = RA_ACCESS_REMOTE_WRITE | RA_ACCESS_LOCAL_WRITE | RA_ACCESS_REMOTE_READ | RA_ACCESS_REMOTE_ATOMIC;
 
     int remoteRet = RaRegisterMr(rdmaHandle, &loopBackQpMrRemoteInfo, &remoteMrHandle);
     if (remoteRet != 0 || remoteMrHandle == nullptr) {
-        HCCL_ERROR("[RegisterRemoteMr]Failed to register remote MR. remoteMrHandle=0x%p, error_code=%d", remoteMrHandle,
-                   remoteRet);
+        HCCL_ERROR(
+            "[RegisterRemoteMr]Failed to register remote MR. remoteMrHandle=0x%p, error_code=%d", remoteMrHandle,
+            remoteRet);
         HcclResult eRet = Destroy();
-        HCCL_ERROR("[RegisterLocalMr]Failed to register remote MR. error_code=%d. Destroy Flush code=%d", remoteRet,
-                   eRet);
+        HCCL_ERROR(
+            "[RegisterLocalMr]Failed to register remote MR. error_code=%d. Destroy Flush code=%d", remoteRet, eRet);
         return HCCL_E_MEMORY;
     }
     HCCL_DEBUG("[RegisterRemoteMr]Remote MR registered successfully. MR Handle=0x%p", remoteMrHandle);
@@ -171,7 +170,7 @@ HcclResult FlushHandle::RegisterRemoteMr()
 }
 
 // 销毁 MR
-HcclResult FlushHandle::DeregisterMr(MrHandle &mrHandle, std::string logTag) const
+HcclResult FlushHandle::DeregisterMr(MrHandle& mrHandle, std::string logTag) const
 {
     HCCL_DEBUG("[DeregisterMr] Starting to destroy %s MR...", logTag.c_str());
 
@@ -182,8 +181,9 @@ HcclResult FlushHandle::DeregisterMr(MrHandle &mrHandle, std::string logTag) con
 
     int ret = RaDeregisterMr(rdmaHandle, mrHandle);
     if (ret != 0) {
-        HCCL_ERROR("[DeregisterMr] Failed to deregister %s MR, mrHandle=0x%p, error_code=%d.", logTag.c_str(), mrHandle, ret);
-        mrHandle = nullptr;  // 防止重复调用
+        HCCL_ERROR(
+            "[DeregisterMr] Failed to deregister %s MR, mrHandle=0x%p, error_code=%d.", logTag.c_str(), mrHandle, ret);
+        mrHandle = nullptr; // 防止重复调用
         return HCCL_E_INTERNAL;
     }
 
@@ -230,13 +230,13 @@ HcclResult FlushHandle::FreeLocalMemory()
         } else {
             free(localMem);
         }
-    } catch (HcclException &e) {
+    } catch (HcclException& e) {
         HCCL_ERROR("[%s] Exception occurred: %s", __func__, e.what());
         return e.GetErrorCode();
     } catch (...) {
         HCCL_ERROR("[%s] Exception caught while freeing local memory.", __func__);
         return HcclResult::HCCL_E_INTERNAL;
-    }  
+    }
     localMem = nullptr;
     HCCL_DEBUG("[%s] Local memory successfully freed.", __func__);
     return HCCL_SUCCESS;
@@ -257,11 +257,11 @@ HcclResult FlushHandle::FreeDeviceMemory()
         deviceMem = nullptr;
         HCCL_DEBUG("[FreeDeviceMemory] Device memory successfully freed.");
         return HCCL_SUCCESS;
-    } catch(...) {
+    } catch (...) {
         HCCL_ERROR("[FreeDeviceMemory] Exception caught while freeing device memory.");
         deviceMem = nullptr;
         return HCCL_E_RUNTIME;
     }
 }
 
-}  // namespace Hccl
+} // namespace Hccl

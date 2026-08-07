@@ -15,8 +15,8 @@
 namespace hccl {
 class CollReduceScatterMeshGraphExecutor : public CollReduceScatterExecutor {
 public:
-    explicit CollReduceScatterMeshGraphExecutor(const HcclDispatcher dispatcher,
-    std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollReduceScatterMeshGraphExecutor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceScatterMeshGraphExecutor() override = default;
 
 private:
@@ -25,14 +25,14 @@ private:
     HcclResult CalcScratchMemSize(u64& scratchMemSize) override;
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType,
-        TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
 
     /* *************** 算法编排 *************** */
-    bool IsHugeData(const u64 curSize, OpParam *param = nullptr) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    bool IsHugeData(const u64 curSize, OpParam* param = nullptr) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 
     bool meshSinglePlane_ = false;
 };

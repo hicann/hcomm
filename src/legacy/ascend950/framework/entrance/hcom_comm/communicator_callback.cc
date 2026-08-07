@@ -10,14 +10,14 @@
 #include "communicator_callback.h"
 #include "comm_manager.h"
 
-namespace Hccl{
-    
-CommunicatorCallback::CommunicatorCallback(){}
+namespace Hccl {
 
-HcclResult CommunicatorCallback::operator()(const std::string &commId, bool isUsingCcuMs, bool isUsingCcuSched) const
+CommunicatorCallback::CommunicatorCallback() {}
+
+HcclResult CommunicatorCallback::operator()(const std::string& commId, bool isUsingCcuMs, bool isUsingCcuSched) const
 {
-    HcclCommInfoV2 &opbasedCommInfoV2 = GetCommInfoV2();
+    HcclCommInfoV2& opbasedCommInfoV2 = GetCommInfoV2();
     return opbasedCommInfoV2.ccuStatus.InsertCommId(commId, isUsingCcuMs, isUsingCcuSched);
 }
 
-} // namespace hccl
+} // namespace Hccl

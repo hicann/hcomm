@@ -17,35 +17,37 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepShL : public CcuRepBase {
-public:
-    explicit CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Variable &varD, const Variable &varN, const Variable &varM);
-    explicit CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Variable &varD, const Variable &varM);
-    explicit CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Address &addrD, const Variable &varN, const Variable &varM);
-    explicit CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Address &addrD, const Variable &varM);
-    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, const TransDep &dep) override;
+    class CcuRepShL : public CcuRepBase {
+    public:
+        explicit CcuRepShL(
+            CcuInsGeneratorBase* insGenPtr, const Variable& varD, const Variable& varN, const Variable& varM);
+        explicit CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Variable& varD, const Variable& varM);
+        explicit CcuRepShL(
+            CcuInsGeneratorBase* insGenPtr, const Address& addrD, const Variable& varN, const Variable& varM);
+        explicit CcuRepShL(CcuInsGeneratorBase* insGenPtr, const Address& addrD, const Variable& varM);
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, const TransDep& dep) override;
 
-    std::string Describe() override;
+        std::string Describe() override;
 
-private:
-    ShiftSubType subType{ShiftSubType::INVALID};
-    ShiftType    shiftType{ShiftType::INVALID};
-    Variable     varN;
-    Variable     varM;
-    Variable     varD;
-    Address      addrD;
+    private:
+        ShiftSubType subType{ShiftSubType::INVALID};
+        ShiftType shiftType{ShiftType::INVALID};
+        Variable varN;
+        Variable varM;
+        Variable varD;
+        Address addrD;
 
-    CcuInsGeneratorBase* insGenPtr{nullptr};
+        CcuInsGeneratorBase* insGenPtr{nullptr};
 
-public:
-    ShiftSubType GetShiftSubType() { return subType; }
-    ShiftType GetShiftType() { return shiftType; }
-    Variable GetVarN() { return varN; }
-    Variable GetVarM() { return varM; }
-    Variable GetVarD() { return varD; }
-    Address GetAddressD() { return addrD; }
-};
+    public:
+        ShiftSubType GetShiftSubType() { return subType; }
+        ShiftType GetShiftType() { return shiftType; }
+        Variable GetVarN() { return varN; }
+        Variable GetVarM() { return varM; }
+        Variable GetVarD() { return varD; }
+        Address GetAddressD() { return addrD; }
+    };
 
-};  // namespace CcuRep
-};  // namespace hcomm
-#endif  // HCCL_CCU_REPRESENTATION_SHL_H
+}; // namespace CcuRep
+}; // namespace hcomm
+#endif // HCCL_CCU_REPRESENTATION_SHL_H

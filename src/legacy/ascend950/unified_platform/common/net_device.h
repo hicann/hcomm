@@ -19,7 +19,6 @@ namespace Hccl {
 
 class HcclNetDevice {
 public:
-
     static HcclProtoType ConvertHcclProtoToLinkProto(Hccl::LinkProtoType type)
     {
         switch (type) {
@@ -36,36 +35,37 @@ public:
         }
     }
 
-    static HcclNetDevDeployment ConvertDeploymentType(Hccl::PortDeploymentType type) {
-        if(type == Hccl::PortDeploymentType::DEV_NET) {
+    static HcclNetDevDeployment ConvertDeploymentType(Hccl::PortDeploymentType type)
+    {
+        if (type == Hccl::PortDeploymentType::DEV_NET) {
             return HCCL_NETDEV_DEPLOYMENT_DEVICE;
-        } else if(type == Hccl::PortDeploymentType::HOST_NET) {
+        } else if (type == Hccl::PortDeploymentType::HOST_NET) {
             return HCCL_NETDEV_DEPLOYMENT_HOST;
         } else {
-            return HCCL_NETDEV_DEPLOYMENT_RESERVED;        
+            return HCCL_NETDEV_DEPLOYMENT_RESERVED;
         }
     }
-    HcclNetDevice(const NetDevInfo &info);
+    HcclNetDevice(const NetDevInfo& info);
     ~HcclNetDevice();
 
     // NetDevInfo 读写函数
     NetDevInfo GetNetDevInfo() const;
 
     // Getter 方法：返回 ndev_ 的当前值
-    InnerNetDev *GetInnerNetDev() const;
+    InnerNetDev* GetInnerNetDev() const;
 
     // Setter 方法：允许外部修改 ndev_ 的值
-    void SetInnerNetDev(InnerNetDev *value);
+    void SetInnerNetDev(InnerNetDev* value);
 
     RdmaHandle GetRdmaHandle() const;
 
-    std::pair<TokenIdHandle, uint32_t> GetTokenIdInfo(const BufferKey<uintptr_t, u64> &bufKey) const;
-    void PutTokenIdInfo(const BufferKey<uintptr_t, u64> &bufKey, TokenIdHandle tokenIdHandle) const;
+    std::pair<TokenIdHandle, uint32_t> GetTokenIdInfo(const BufferKey<uintptr_t, u64>& bufKey) const;
+    void PutTokenIdInfo(const BufferKey<uintptr_t, u64>& bufKey, TokenIdHandle tokenIdHandle) const;
     bool IsUB();
 
 private:
-    NetDevInfo   netDevInfo_;
-    InnerNetDev *ndev_;
+    NetDevInfo netDevInfo_;
+    InnerNetDev* ndev_;
 };
 
 } // namespace Hccl

@@ -10,13 +10,15 @@
 #include "engine_ctx_mgr.h"
 
 namespace hcomm {
-EngineCtxMgr::~EngineCtxMgr() {
+EngineCtxMgr::~EngineCtxMgr()
+{
     std::lock_guard<std::mutex> lock(mutex_);
     engineCtxs_.clear();
 }
 
-HcclResult EngineCtxMgr::AcquireEngineCtx(CommEngineType engineType, OpTag opTag, uint32_t ctxSize,
-                                         EngineCtx** engineCtx, bool* newCreated) {
+HcclResult EngineCtxMgr::AcquireEngineCtx(
+    CommEngineType engineType, OpTag opTag, uint32_t ctxSize, EngineCtx** engineCtx, bool* newCreated)
+{
     try {
         if (engineCtx == nullptr || newCreated == nullptr) {
             return HcclResult::HCCL_ERROR_INVALID_PARAM;
@@ -50,7 +52,8 @@ HcclResult EngineCtxMgr::AcquireEngineCtx(CommEngineType engineType, OpTag opTag
     }
 }
 
-HcclResult EngineCtxMgr::ReleaseEngineCtx(EngineCtx* engineCtx) {
+HcclResult EngineCtxMgr::ReleaseEngineCtx(EngineCtx* engineCtx)
+{
     try {
         if (engineCtx == nullptr) {
             return HcclResult::HCCL_ERROR_INVALID_PARAM;
@@ -73,7 +76,8 @@ HcclResult EngineCtxMgr::ReleaseEngineCtx(EngineCtx* engineCtx) {
     }
 }
 
-EngineCtx* EngineCtxMgr::FindEngineCtx(CommEngineType engineType, OpTag opTag) {
+EngineCtx* EngineCtxMgr::FindEngineCtx(CommEngineType engineType, OpTag opTag)
+{
     std::lock_guard<std::mutex> lock(mutex_);
 
     std::string key = GenerateCtxKey(engineType, opTag);
@@ -85,7 +89,8 @@ EngineCtx* EngineCtxMgr::FindEngineCtx(CommEngineType engineType, OpTag opTag) {
     return nullptr;
 }
 
-std::string EngineCtxMgr::GenerateCtxKey(CommEngineType engineType, OpTag opTag) {
+std::string EngineCtxMgr::GenerateCtxKey(CommEngineType engineType, OpTag opTag)
+{
     return std::to_string(static_cast<int>(engineType)) + "_" + std::to_string(opTag);
 }
-}
+} // namespace hcomm

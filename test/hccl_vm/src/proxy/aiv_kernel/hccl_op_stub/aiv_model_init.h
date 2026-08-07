@@ -15,22 +15,12 @@
 #include "ascendc_base_stub.h"
 
 extern "C" void aiv_env_init(
-    uint32_t rankId,
-    size_t blockNum,
-    const void *buffIn,
-    uint32_t rankSize,
-    uint64_t input,
-    uint64_t inputSize,
-    uint64_t output,
-    uint64_t outputSize,
-    uint64_t inputGlobalOffsetBase,
-    uint64_t outputGlobalOffsetBase,
-    uint64_t cclBufferSize,
-    uint64_t aivCommInfoSize,
-    AivSim::AivOpParam opParam);
+    uint32_t rankId, size_t blockNum, const void* buffIn, uint32_t rankSize, uint64_t input, uint64_t inputSize,
+    uint64_t output, uint64_t outputSize, uint64_t inputGlobalOffsetBase, uint64_t outputGlobalOffsetBase,
+    uint64_t cclBufferSize, uint64_t aivCommInfoSize, AivSim::AivOpParam opParam);
 
 extern "C" void aiv_set_block_idx(int64_t blockIdx);
 
 extern "C" void aiv_dump_tasks(uint32_t launchIndex);
 
-#endif //AIV_AIV_MODEL_INIT_H
+#endif // AIV_AIV_MODEL_INIT_H

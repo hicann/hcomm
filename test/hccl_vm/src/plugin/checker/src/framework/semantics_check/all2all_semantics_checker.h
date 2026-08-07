@@ -18,8 +18,8 @@
 #include "hccl_types.h"
 
 namespace HcclSim {
-HcclResult TaskCheckAll2AllSemantics(std::map<RankId, RankMemorySemantics> &allRankMemSemantics,
-                                     All2AllDataDesTagInner &all2AllDataDes);
+HcclResult TaskCheckAll2AllSemantics(
+    std::map<RankId, RankMemorySemantics>& allRankMemSemantics, All2AllDataDesTagInner& all2AllDataDes);
 }
 
 #endif

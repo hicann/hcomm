@@ -29,7 +29,7 @@ extern "C" {
  * @param src 源缓冲区
  * @return 执行状态码 HcclResult
  */
-extern HcclResult HcclLocalCopy(StreamHandle streamHandle, HcclBuf *dst, HcclBuf *src);
+extern HcclResult HcclLocalCopy(StreamHandle streamHandle, HcclBuf* dst, HcclBuf* src);
 
 /**
  * @brief 本地拷贝并规约操作
@@ -39,25 +39,26 @@ extern HcclResult HcclLocalCopy(StreamHandle streamHandle, HcclBuf *dst, HcclBuf
  * @param[in] reduceInfo 规约操作信息
  * @return 执行状态码 HcclResult
  */
-extern HcclResult HcclLocalCopyReduce(StreamHandle streamHandle, HcclBuf *dst, HcclBuf *src, HcclReduceInfo reduceInfo);
+extern HcclResult HcclLocalCopyReduce(StreamHandle streamHandle, HcclBuf* dst, HcclBuf* src, HcclReduceInfo reduceInfo);
 
 /**
  * @brief 进行task下发
  * @param stream 指定的stream
  * @param subStreams 指定的子stream
  * @return HcclResult 返回HCCL_SUCCESS
-*/
+ */
 
-extern HcclResult HcclLocalLaunchTaskExtend(aclrtStream &stream, std::vector<aclrtStream> &subStreams);
+extern HcclResult HcclLocalLaunchTaskExtend(aclrtStream& stream, std::vector<aclrtStream>& subStreams);
 
 /**
-  * @brief 初始化task
-  * @param stream 指定的stream
-  * @param enableCache 是否使能cache
-  * @param key 指定的key
-  * @param useGraphConstructorV2 是否使用GraphConstructorV2
-*/
-extern HcclResult HcclLocalInitTask(aclrtStream stream, const bool enableCache, const std::string &key, bool useGraphConstructorV2 = false);
+ * @brief 初始化task
+ * @param stream 指定的stream
+ * @param enableCache 是否使能cache
+ * @param key 指定的key
+ * @param useGraphConstructorV2 是否使用GraphConstructorV2
+ */
+extern HcclResult HcclLocalInitTask(
+    aclrtStream stream, const bool enableCache, const std::string& key, bool useGraphConstructorV2 = false);
 
 /**
  * @brief 记录通知事件（生产者）
@@ -76,9 +77,9 @@ extern HcclResult HcclLocalNotifyRecord(StreamHandle streamHandle, aclrtNotify n
  */
 extern HcclResult HcclLocalNotifyWait(StreamHandle streamHandle, aclrtNotify notify, const uint32_t timeOut);
 
-extern HcclResult HcclTaskPrepare(char *key, uint32_t keyLen);
+extern HcclResult HcclTaskPrepare(char* key, uint32_t keyLen);
 
-extern HcclResult HcclTaskLaunch(hccl::Stream *streams, uint32_t streamNum);
+extern HcclResult HcclTaskLaunch(hccl::Stream* streams, uint32_t streamNum);
 
 /**
  * @brief 记录通知事件（生产者）

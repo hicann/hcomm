@@ -12,15 +12,11 @@
 #include "adapter_rts.h"
 
 namespace hccl {
-DeviceMem::DeviceMem(void *ptr, u64 size, bool owner) : ptr_(ptr), size_(size), owner_(owner)
-{
-}
+DeviceMem::DeviceMem(void* ptr, u64 size, bool owner) : ptr_(ptr), size_(size), owner_(owner) {}
 
-DeviceMem::DeviceMem(const DeviceMem &that) : ptr_(that.ptr()), size_(that.size_), owner_(false)
-{
-}
+DeviceMem::DeviceMem(const DeviceMem& that) : ptr_(that.ptr()), size_(that.size_), owner_(false) {}
 
-DeviceMem::DeviceMem(DeviceMem &&that) noexcept : ptr_(that.ptr()), size_(that.size_), owner_(that.owner_)
+DeviceMem::DeviceMem(DeviceMem&& that) noexcept : ptr_(that.ptr()), size_(that.size_), owner_(that.owner_)
 {
     that.ptr_ = nullptr;
     that.size_ = 0;
@@ -42,7 +38,7 @@ DeviceMem::~DeviceMem()
 DeviceMem DeviceMem::alloc(u64 size, bool level2Address)
 {
     HcclResult ret;
-    void *ptr = nullptr;
+    void* ptr = nullptr;
     ret = hrtMalloc(&ptr, size, level2Address);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[DeviceMem][Alloc]rt_malloc error, ret[%d], size[%llu Byte]", ret, size);
@@ -56,9 +52,9 @@ DeviceMem DeviceMem::alloc(u64 size, bool level2Address)
     return mem;
 }
 
-HcclResult DeviceMem::alloc(DeviceMem &mem, u64 size, bool level2Address)
+HcclResult DeviceMem::alloc(DeviceMem& mem, u64 size, bool level2Address)
 {
-    void *ptr = nullptr;
+    void* ptr = nullptr;
     HcclResult ret = hrtMalloc(&ptr, size, level2Address);
     if (ret != HCCL_SUCCESS || ptr == nullptr) {
         HCCL_ERROR("[DeviceMem][Alloc]rt_malloc error, ptr is nullptr, ret[%d], size[%llu Byte]", ret, size);
@@ -82,13 +78,13 @@ void DeviceMem::free()
     }
 }
 
-DeviceMem DeviceMem::create(void *ptr, u64 size)
+DeviceMem DeviceMem::create(void* ptr, u64 size)
 {
     DeviceMem mem(ptr, size, false);
     return mem;
 }
 
-DeviceMem &DeviceMem::operator=(const DeviceMem &that)
+DeviceMem& DeviceMem::operator=(const DeviceMem& that)
 {
     if (&that != this) {
         ptr_ = that.ptr();
@@ -99,7 +95,7 @@ DeviceMem &DeviceMem::operator=(const DeviceMem &that)
     return *this;
 }
 
-DeviceMem DeviceMem::operator=(DeviceMem &&that)
+DeviceMem DeviceMem::operator=(DeviceMem&& that)
 {
     if (&that != this) {
         ptr_ = that.ptr_;
@@ -117,15 +113,15 @@ DeviceMem DeviceMem::operator=(DeviceMem &&that)
 DeviceMem DeviceMem::range(u64 offset, u64 size) const
 {
     DeviceMem mem;
-    if (ptr_ == nullptr){
+    if (ptr_ == nullptr) {
         HCCL_ERROR("DeviceMem ptr is null");
         return mem;
     }
-    if ((offset + size) > size_){
-        HCCL_ERROR("DeviceMem request range[%llu] is out of size_[%llu]", offset+size, size_);
+    if ((offset + size) > size_) {
+        HCCL_ERROR("DeviceMem request range[%llu] is out of size_[%llu]", offset + size, size_);
         return mem;
     }
-    mem = DeviceMem(static_cast<void *>(static_cast<s8 *>(ptr_) + offset), size, false);
+    mem = DeviceMem(static_cast<void*>(static_cast<s8*>(ptr_) + offset), size, false);
     return mem;
 }
-}  // namespace hccl
+} // namespace hccl

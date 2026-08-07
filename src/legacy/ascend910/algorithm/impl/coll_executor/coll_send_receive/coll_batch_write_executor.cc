@@ -11,33 +11,34 @@
 #include "coll_batch_write_executor.h"
 
 namespace hccl {
-HcclResult CollBatchWriteExecutor::Orchestrate(OpParam &param, AlgResourceResponse &algRes)
+HcclResult CollBatchWriteExecutor::Orchestrate(OpParam& param, AlgResourceResponse& algRes)
 {
-    (void) param;
-    (void) algRes;
+    (void)param;
+    (void)algRes;
     return HCCL_SUCCESS;
 }
 
-HcclResult CollBatchWriteExecutor::CalcResRequest(const OpParam &param, AlgResourceRequest &resourceRequest)
+HcclResult CollBatchWriteExecutor::CalcResRequest(const OpParam& param, AlgResourceRequest& resourceRequest)
 {
-    std::vector<LevelNSubCommTransport> opTransport {
-        std::vector<LevelNSubCommTransport>(static_cast<u32>(COMM_LEVEL_RESERVED))
-    };
+    std::vector<LevelNSubCommTransport> opTransport{
+        std::vector<LevelNSubCommTransport>(static_cast<u32>(COMM_LEVEL_RESERVED))};
     CommParaInfo commCombinePara(COMM_COMBINE_ORDER, CommType::COMM_TAG_MESH);
     commCombinePara.meshSinglePlane = true;
-    CHK_RET(topoMatcher_->CalcCommPlaneInfo(param.tag, commCombinePara, opTransport[COMM_COMBINE_ORDER],
-                                            TransportMemType::CCL_INPUT, TransportMemType::CCL_OUTPUT));
+    CHK_RET(topoMatcher_->CalcCommPlaneInfo(
+        param.tag, commCombinePara, opTransport[COMM_COMBINE_ORDER], TransportMemType::CCL_INPUT,
+        TransportMemType::CCL_OUTPUT));
 
-    LevelNSubCommTransport &commTransportLevel0 = opTransport[COMM_COMBINE_ORDER];
+    LevelNSubCommTransport& commTransportLevel0 = opTransport[COMM_COMBINE_ORDER];
     for (u32 subCommIndex = 0; subCommIndex < commTransportLevel0.size(); subCommIndex++) {
-        for (auto &transportRequest: commTransportLevel0[subCommIndex].transportRequests) {
+        for (auto& transportRequest : commTransportLevel0[subCommIndex].transportRequests) {
             transportRequest.isUsedRdma = false;
         }
     }
     resourceRequest.opTransport = opTransport;
     resourceRequest.streamNum = param.BatchWriteDataDes.queueNum;
-    HCCL_INFO("[Sdma-BatchWrite]Calc resource request for tag %s, stream number %u.",
-              param.tag.c_str(), resourceRequest.streamNum);
+    HCCL_INFO(
+        "[Sdma-BatchWrite]Calc resource request for tag %s, stream number %u.", param.tag.c_str(),
+        resourceRequest.streamNum);
     return HCCL_SUCCESS;
 }
 

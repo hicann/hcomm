@@ -14,34 +14,39 @@
 namespace hccl {
 class CollRunAlltoAllDirectFullmesh : public CollAlltoAllExecutor {
 public:
-    CollRunAlltoAllDirectFullmesh(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollRunAlltoAllDirectFullmesh(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollRunAlltoAllDirectFullmesh() override = default;
     HcclResult Orchestrate(OpParam& param, AlgResourceResponse& algRes) override;
     HcclResult GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& adjInfo) override;
 
     // 用于alltoallv算子的aicpu展开cache
     HcclResult MarkNeedAlltoallvCache() override;
-    HcclResult GetHcclOffsetDstRanksMap(std::unordered_map<uint64_t, std::vector<uint32_t>>& hcclOffsetDstRanksMap) const override;
+    HcclResult
+    GetHcclOffsetDstRanksMap(std::unordered_map<uint64_t, std::vector<uint32_t>>& hcclOffsetDstRanksMap) const override;
+
 private:
     HcclOpMetaInfo GetOpMeta(HcclCMDType opType, const u64 size) override;
     HcclResult CalcStreamNum(u32& streamNum) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
     HcclResult Getlevel1CommRank(SubCommInfo& level1CommInfo) override;
-    HcclResult SelectTempAlg(std::unique_ptr<AlgTemplateBase> &level1TempAlg, u32 level1RankSize) override;
+    HcclResult SelectTempAlg(std::unique_ptr<AlgTemplateBase>& level1TempAlg, u32 level1RankSize) override;
     HcclResult GetDevNumInlocalPod(u32& devNumInlocalPod) override;
-    HcclResult GetAlltoAllvTmpRankSendRecvInfo(const OpParam &param);
-    HcclResult GetLocalSendRecvInfoforAlltoall(const OpParam &param);
-    HcclResult GetLocalSendRecvInfoforAlltoallV(const OpParam &param);
-    HcclResult GetLocalSendRecvInfoforAlltoallVC(const OpParam &param);
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult GetAlltoAllvTmpRankSendRecvInfo(const OpParam& param);
+    HcclResult GetLocalSendRecvInfoforAlltoall(const OpParam& param);
+    HcclResult GetLocalSendRecvInfoforAlltoallV(const OpParam& param);
+    HcclResult GetLocalSendRecvInfoforAlltoallVC(const OpParam& param);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
     HcclResult GetLocalSDMAGroupInfo(const u32 userRank, u32& devNumInlocalPod, u32& rankIdxInPod);
 
     // 用于alltoallv算子的aicpu展开cache
     bool needAlltoallvCache_ = false; // 是否需要对当前alltoallv算子做aicpu cache
-    std::unordered_map<uint64_t, std::vector<uint32_t>> hcclOffsetDstRanksMap_; // Local hccl input buffer中的local hccl offset到remote dst ranks的映射 (用于PrepareIntraData)
+    std::unordered_map<uint64_t, std::vector<uint32_t>>
+        hcclOffsetDstRanksMap_; // Local hccl input buffer中的local hccl offset到remote dst ranks的映射
+                                // (用于PrepareIntraData)
 };
 } // namespace hccl
 #endif

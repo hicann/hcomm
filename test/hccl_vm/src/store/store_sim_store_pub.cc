@@ -28,7 +28,7 @@ void VmPtrReleaser::operator()(void* ptr) const
 }
 
 // Virtual Runtime
-HcclVmResult GetAddrByOffset(uint64_t offset, VmUniquePtr& addrPtr)  // todo
+HcclVmResult GetAddrByOffset(uint64_t offset, VmUniquePtr& addrPtr) // todo
 {
     // 1. 入参合法性检查（避免空指针和无效输出）
     if (addrPtr) {
@@ -36,9 +36,9 @@ HcclVmResult GetAddrByOffset(uint64_t offset, VmUniquePtr& addrPtr)  // todo
         return HcclVmResult::HCCL_SIM_E_PARA;
     }
 
-    void *offserPtr = reinterpret_cast<void *>(static_cast<uintptr_t>(offset));
+    void* offserPtr = reinterpret_cast<void*>(static_cast<uintptr_t>(offset));
     sim::PhyMemBlock phyMem{};
-    void *addr = sim::AcquireDevPtrInNoHostProcess(offserPtr, phyMem);
+    void* addr = sim::AcquireDevPtrInNoHostProcess(offserPtr, phyMem);
     if (addr == nullptr) {
         HCCL_VM_ERROR("错误：无法获取设备地址(addr= {})！", offserPtr);
         return HcclVmResult::HCCL_SIM_E_PTR;
@@ -52,7 +52,7 @@ HcclVmResult GetAddrByOffset(uint64_t offset, VmUniquePtr& addrPtr)  // todo
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult InsertTaskToCollection(HcclTaskMetaData *task, uint32_t *index)
+HcclVmResult InsertTaskToCollection(HcclTaskMetaData* task, uint32_t* index)
 {
     static std::atomic<uint32_t> g_taskSeq{0};
 
@@ -70,15 +70,14 @@ HcclVmResult InsertTaskToCollection(HcclTaskMetaData *task, uint32_t *index)
     // auto &taskMemMgr = sim::TaskMemoryManager::GetInstance();
     // 3. 写入任务信息到数据库
     sim::OpTaskTab opTaskInfo;
-    opTaskInfo.id = 0;   // 数据库自增，无需设置 
-    opTaskInfo.opDetailId = 0;  // 默认关联ID为0，需在上游调用处关联
+    opTaskInfo.id = 0;         // 数据库自增，无需设置
+    opTaskInfo.opDetailId = 0; // 默认关联ID为0，需在上游调用处关联
     opTaskInfo.taskSeq = g_taskSeq.fetch_add(1, std::memory_order_relaxed);
-    
+
     // 序列化 HcclTaskMetaData 到 blob
     opTaskInfo.optaskMeta.assign(
-        reinterpret_cast<const uint8_t*>(task),
-        reinterpret_cast<const uint8_t*>(task) + sizeof(HcclTaskMetaData));
-    
+        reinterpret_cast<const uint8_t*>(task), reinterpret_cast<const uint8_t*>(task) + sizeof(HcclTaskMetaData));
+
     auto ret = sim::InsertOpTask(opTaskInfo);
     if (ret != 0) {
         HCCL_VM_ERROR("错误：插入任务到数据库失败 - {}", ret);

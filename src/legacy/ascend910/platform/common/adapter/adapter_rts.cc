@@ -25,23 +25,23 @@
 using namespace hccl;
 using namespace std;
 
-#define CHK_RT_RET(call)                                 \
-    do {                                                 \
-        s32 ret = call;                                  \
-        if (ret != 0) {                                  \
-            HCCL_ERROR("call trace: ret -> %d", ret);    \
-            return HCCL_E_RUNTIME;                       \
-        }                                                \
+#define CHK_RT_RET(call)                              \
+    do {                                              \
+        s32 ret = call;                               \
+        if (ret != 0) {                               \
+            HCCL_ERROR("call trace: ret -> %d", ret); \
+            return HCCL_E_RUNTIME;                    \
+        }                                             \
     } while (0)
 
-#define REPLACE_NOTIFY_WITH_EVENT(notify, event)         \
-    do {                                                 \
-        s32 result = 0;                                  \
-        if (result != 0) {                               \
-            CHK_RT_RET(event);                           \
-        } else {                                         \
-            CHK_RT_RET(notify);                          \
-        }                                                \
+#define REPLACE_NOTIFY_WITH_EVENT(notify, event) \
+    do {                                         \
+        s32 result = 0;                          \
+        if (result != 0) {                       \
+            CHK_RT_RET(event);                   \
+        } else {                                 \
+            CHK_RT_RET(notify);                  \
+        }                                        \
     } while (0)
 
 inline s32 GetDeviceLogicalId()
@@ -64,31 +64,31 @@ constexpr char ACL_RT_SO_NAME[] = "libacl_rt.so";
 DlRtsFunction<ACL_RT_SO_NAME> g_dlAclrt;
 
 namespace {
-    constexpr char RT_MEMCPY[] = "rtMemcpy";
-    constexpr char RT_POINTER_GET_ATTR[] = "rtPointerGetAttributes";
-    constexpr char RT_IPC_CLOSE_MEM[] = "rtIpcCloseMemory";
-    constexpr char ACL_RT_DESTORY_MEM_NAME[] = "aclrtIpcMemClose";
-    constexpr char ACL_RT_GET_LOGICID_BY_PHYID[] = "rtsGetLogicDevIdByPhyDevId";
-    constexpr char RT_RDMA_DB_SEND[] = "rtRDMADBSend";
-    constexpr char ACL_RT_MALLOC_WITH_CFG[] = "aclrtMallocWithCfg";
-    constexpr char ACL_GET_SOC_NAME[] = "aclrtGetSocName";
-    constexpr char RT_GET_PAIR_PHY_DEVICES_INFO[] = "rtGetPairPhyDevicesInfo";
-    constexpr char ACL_RT_CREATE_CONTEXT[] = "aclrtCreateContext";
-    constexpr char ACL_RT_DESTROY_CONTEXT[] = "aclrtDestroyContext";
-    constexpr char ACL_RT_GET_CURRENT_CONTEXT[] = "aclrtGetCurrentContext";
-    constexpr char ACL_RT_SET_CURRENT_CONTEXT[] = "aclrtSetCurrentContext";
-    constexpr char ACL_RT_SET_DEVICE[] = "aclrtSetDevice";
-    constexpr char ACL_RT_RESET_DEVICE[] = "aclrtResetDevice";
-    constexpr char ACL_RT_FREE[] = "aclrtFree";
-    constexpr char ACL_RT_FREE_HOST[] = "aclrtFreeHost";
-    constexpr char ACL_RT_MALLOC_HOST_WITH_CFG[] = "aclrtMallocHostWithCfg";
-    constexpr char ACL_RT_IPC_MEM_SET_IMPORT_PID[] = "aclrtIpcMemSetImportPid";
-    constexpr char ACL_RT_IPC_MEM_IMPORT_BY_KEY[] = "aclrtIpcMemImportByKey";
-    constexpr char ACL_RT_IPC_MEM_GET_EXPORT_KEY[] = "aclrtIpcMemGetExportKey";
-    constexpr char ACL_RT_MEMCPY[] = "aclrtMemcpy";
-    constexpr char ACL_RT_POINTER_GET_ATTRIBUTES[] = "aclrtPointerGetAttributes";
-    constexpr char ACL_RT_CACHE_LAST_TASK_EXTEND_INFO[] = "aclrtCacheLastTaskExtendInfo";
-}
+constexpr char RT_MEMCPY[] = "rtMemcpy";
+constexpr char RT_POINTER_GET_ATTR[] = "rtPointerGetAttributes";
+constexpr char RT_IPC_CLOSE_MEM[] = "rtIpcCloseMemory";
+constexpr char ACL_RT_DESTORY_MEM_NAME[] = "aclrtIpcMemClose";
+constexpr char ACL_RT_GET_LOGICID_BY_PHYID[] = "rtsGetLogicDevIdByPhyDevId";
+constexpr char RT_RDMA_DB_SEND[] = "rtRDMADBSend";
+constexpr char ACL_RT_MALLOC_WITH_CFG[] = "aclrtMallocWithCfg";
+constexpr char ACL_GET_SOC_NAME[] = "aclrtGetSocName";
+constexpr char RT_GET_PAIR_PHY_DEVICES_INFO[] = "rtGetPairPhyDevicesInfo";
+constexpr char ACL_RT_CREATE_CONTEXT[] = "aclrtCreateContext";
+constexpr char ACL_RT_DESTROY_CONTEXT[] = "aclrtDestroyContext";
+constexpr char ACL_RT_GET_CURRENT_CONTEXT[] = "aclrtGetCurrentContext";
+constexpr char ACL_RT_SET_CURRENT_CONTEXT[] = "aclrtSetCurrentContext";
+constexpr char ACL_RT_SET_DEVICE[] = "aclrtSetDevice";
+constexpr char ACL_RT_RESET_DEVICE[] = "aclrtResetDevice";
+constexpr char ACL_RT_FREE[] = "aclrtFree";
+constexpr char ACL_RT_FREE_HOST[] = "aclrtFreeHost";
+constexpr char ACL_RT_MALLOC_HOST_WITH_CFG[] = "aclrtMallocHostWithCfg";
+constexpr char ACL_RT_IPC_MEM_SET_IMPORT_PID[] = "aclrtIpcMemSetImportPid";
+constexpr char ACL_RT_IPC_MEM_IMPORT_BY_KEY[] = "aclrtIpcMemImportByKey";
+constexpr char ACL_RT_IPC_MEM_GET_EXPORT_KEY[] = "aclrtIpcMemGetExportKey";
+constexpr char ACL_RT_MEMCPY[] = "aclrtMemcpy";
+constexpr char ACL_RT_POINTER_GET_ATTRIBUTES[] = "aclrtPointerGetAttributes";
+constexpr char ACL_RT_CACHE_LAST_TASK_EXTEND_INFO[] = "aclrtCacheLastTaskExtendInfo";
+} // namespace
 u32 g_stubDeviceId = 0;
 static std::unordered_map<s32, s64> g_deviceChipIdMap; // 记录 devLogID 和 chipID 的关系，避免重复查询
 bool g_workModeAicpu = false;                          // AI场景下aicpu工作模式
@@ -99,10 +99,10 @@ namespace {
 static thread_local s32 g_deviceLogicId = INVALID_INT;
 static thread_local u32 g_devicePhyId = INVALID_UINT;
 static thread_local DevType g_deviceType = DevType::DEV_TYPE_COUNT;
-}
+} // namespace
 
 // 根据soc name判断是否支持 hccl v2流程，使用全局变量减少重复调用aclrt接口
-#if (!defined (HCCD)) && (!defined (CCL_KERNEL_AICPU))
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
 enum class HcclV2SupportStatus {
     UNKNOWN,      // 获取soc name失败
     SUPPORTED,    // 支持v2
@@ -112,16 +112,16 @@ enum class HcclV2SupportStatus {
 static thread_local HcclV2SupportStatus g_socV2SupportStatus = HcclV2SupportStatus::UNKNOWN;
 #endif
 
-HcclResult hrtGetHcclV2Support(bool *isSupport)
+HcclResult hrtGetHcclV2Support(bool* isSupport)
 {
-#if (!defined (HCCD)) && (!defined (CCL_KERNEL_AICPU))
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     CHK_PTR_NULL(isSupport);
     if (LIKELY(g_socV2SupportStatus != HcclV2SupportStatus::UNKNOWN)) {
         *isSupport = g_socV2SupportStatus == HcclV2SupportStatus::SUPPORTED;
         return HcclResult::HCCL_SUCCESS;
     }
 
-    const char *socNamePtr = aclrtGetSocName();
+    const char* socNamePtr = aclrtGetSocName();
     CHK_PTR_NULL(socNamePtr);
     if (strstr(socNamePtr, "Ascend950") != nullptr) {
         g_socV2SupportStatus = HcclV2SupportStatus::SUPPORTED;
@@ -149,9 +149,9 @@ HcclResult hrtGetHcclV2Support(bool *isSupport)
 }
 
 #if T_DESC("Device管理", true)
-HcclResult hrtThreadExchangeCaptureMode(aclmdlRICaptureMode *mode);
+HcclResult hrtThreadExchangeCaptureMode(aclmdlRICaptureMode* mode);
 
-HcclResult hrtGetDeviceCount(u32 *count)
+HcclResult hrtGetDeviceCount(u32* count)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -160,8 +160,13 @@ HcclResult hrtGetDeviceCount(u32 *count)
     aclError ret = aclrtGetDeviceCount(count);
 
     HCCL_DEBUG("Call rtGetDeviceCount, return value[%d], para: count[%u].", ret, *count);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[hrtGetDeviceCount]errNo[0x%016llx] aclGet device count fail, "\
-        "return[%d], para:count[%u]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *count), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[hrtGetDeviceCount]errNo[0x%016llx] aclGet device count fail, "
+            "return[%d], para:count[%u]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *count),
+        HCCL_E_RUNTIME);
 
     if (*count == 0) {
         return HCCL_SUCCESS;
@@ -186,20 +191,32 @@ HcclResult hrtSetDevice(s32 deviceLogicId)
 {
 #ifndef HCCD
     aclError ret = aclrtSetDevice(deviceLogicId);
-    HCCL_DEBUG("Call aclrtSetDevice, return value[%d], para: device_id[%d], g_deviceLogicId = %d.",
-        ret, deviceLogicId, g_deviceLogicId);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Set][Device]errNo[0x%016llx] rtSet device fail, return[%d], "\
-        "para:deviceLogicId[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, deviceLogicId), HCCL_E_RUNTIME);
+    HCCL_DEBUG(
+        "Call aclrtSetDevice, return value[%d], para: device_id[%d], g_deviceLogicId = %d.", ret, deviceLogicId,
+        g_deviceLogicId);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Set][Device]errNo[0x%016llx] rtSet device fail, return[%d], "
+            "para:deviceLogicId[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, deviceLogicId),
+        HCCL_E_RUNTIME);
     g_deviceLogicId = INVALID_INT;
     return HCCL_SUCCESS;
 #else
     static auto funcPtr = (aclError(*)(int32_t))g_dlAcl.Handle<ACL_RT_SET_DEVICE>();
     CHK_PTR_NULL(funcPtr);
     aclError ret = funcPtr(deviceLogicId);
-    HCCL_DEBUG("Call aclrtSetDevice, return value[%d], para: device_id[%d], g_deviceLogicId = %d.",
-        ret, deviceLogicId, g_deviceLogicId);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Set][Device]errNo[0x%016llx] rtSet device fail, return[%d], "\
-        "para:deviceLogicId[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, deviceLogicId), HCCL_E_RUNTIME);
+    HCCL_DEBUG(
+        "Call aclrtSetDevice, return value[%d], para: device_id[%d], g_deviceLogicId = %d.", ret, deviceLogicId,
+        g_deviceLogicId);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Set][Device]errNo[0x%016llx] rtSet device fail, return[%d], "
+            "para:deviceLogicId[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, deviceLogicId),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #endif
 }
@@ -211,8 +228,13 @@ HcclResult hrtResetDevice(s32 deviceLogicId)
     aclError ret = aclrtResetDevice(deviceLogicId);
 
     HCCL_DEBUG("Call aclrtResetDevice, return value[%d], para: device_id[%d].", ret, deviceLogicId);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Reset][Device]errNo[0x%016llx] rtReset device fail, return[%d], "\
-        "para: deviceLogicId[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, deviceLogicId), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Reset][Device]errNo[0x%016llx] rtReset device fail, return[%d], "
+            "para: deviceLogicId[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, deviceLogicId),
+        HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 #else
@@ -221,8 +243,13 @@ HcclResult hrtResetDevice(s32 deviceLogicId)
     aclError ret = funcPtr(deviceLogicId);
 
     HCCL_DEBUG("Call aclrtResetDevice, return value[%d], para: device_id[%d].", ret, deviceLogicId);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Reset][Device]errNo[0x%016llx] rtReset device fail, return[%d], "\
-        "para: deviceLogicId[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, deviceLogicId), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Reset][Device]errNo[0x%016llx] rtReset device fail, return[%d], "
+            "para: deviceLogicId[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, deviceLogicId),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #endif
 }
@@ -233,7 +260,7 @@ HcclResult stubSetDevice(u32 deviceLogicId)
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtGetDeviceRefresh(s32 *deviceLogicId)
+HcclResult hrtGetDeviceRefresh(s32* deviceLogicId)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -241,9 +268,13 @@ HcclResult hrtGetDeviceRefresh(s32 *deviceLogicId)
 
     aclError ret = 0;
     ret = aclrtGetDevice(deviceLogicId);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Get][DeviceRefresh]errNo[0x%016llx] rtGet device fail, "\
-        "please make sure that device is set. return[%d], para:deviceLogicId[%d]",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *deviceLogicId), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Get][DeviceRefresh]errNo[0x%016llx] rtGet device fail, "
+            "please make sure that device is set. return[%d], para:deviceLogicId[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *deviceLogicId),
+        HCCL_E_RUNTIME);
     g_deviceLogicId = *deviceLogicId;
     HCCL_INFO("[hrtGetDeviceRefresh]deviceLogicId[%d]", *deviceLogicId);
     return HCCL_SUCCESS;
@@ -265,7 +296,7 @@ HcclResult hrtSetlocalDevice(s32 deviceLogicId)
 #ifdef __cplusplus
 extern "C" {
 #endif
-HcclResult __hrtGetDevice(s32 *deviceLogicId)
+HcclResult __hrtGetDevice(s32* deviceLogicId)
 {
     // 参数有效性检查
     CHK_PTR_NULL(deviceLogicId);
@@ -277,9 +308,13 @@ HcclResult __hrtGetDevice(s32 *deviceLogicId)
     }
     aclError ret = 0;
     ret = aclrtGetDevice(deviceLogicId);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_WARNING("[Get][Device]errNo[0x%016llx] rtGet device fail, "\
-        "please make sure that device is set. return[%d], para:deviceLogicId[%d]",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *deviceLogicId), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_WARNING(
+            "[Get][Device]errNo[0x%016llx] rtGet device fail, "
+            "please make sure that device is set. return[%d], para:deviceLogicId[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *deviceLogicId),
+        HCCL_E_RUNTIME);
     g_deviceLogicId = *deviceLogicId;
     HCCL_INFO("[hrtGetDevice]deviceLogicId[%d]", *deviceLogicId);
     return HCCL_SUCCESS;
@@ -296,11 +331,10 @@ HcclResult __hrtGetDevice(s32 *deviceLogicId)
 }
 weak_alias(__hrtGetDevice, hrtGetDevice);
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-
-HcclResult hrtCtxCreate(aclrtContext *createCtx, uint32_t flags, int32_t devId)
+HcclResult hrtCtxCreate(aclrtContext* createCtx, uint32_t flags, int32_t devId)
 {
     CHK_PTR_NULL(createCtx);
 #ifndef HCCD
@@ -308,13 +342,16 @@ HcclResult hrtCtxCreate(aclrtContext *createCtx, uint32_t flags, int32_t devId)
     // acl 接口的 flag 默认是 rtCtxMode_t::RT_CTX_NORMAL_MODE
     aclError ret = aclrtCreateContext(createCtx, devId);
 #else
-    static auto funcPtr = (aclError(*)(aclrtContext *, int32_t))g_dlAcl.Handle<ACL_RT_CREATE_CONTEXT>();
+    static auto funcPtr = (aclError(*)(aclrtContext*, int32_t))g_dlAcl.Handle<ACL_RT_CREATE_CONTEXT>();
     CHK_PTR_NULL(funcPtr);
     aclError ret = funcPtr(createCtx, devId);
 #endif
-    CHK_PRT_RET(ret != ACL_SUCCESS && ret != ACL_ERROR_RT_CONTEXT_NULL, HCCL_ERROR(
-        "[Get][Device]errNo[0x%016llx] aclrtCreateContext fail, return[%d], para:flags[%u], devId[%d]",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, flags, devId), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS && ret != ACL_ERROR_RT_CONTEXT_NULL,
+        HCCL_ERROR(
+            "[Get][Device]errNo[0x%016llx] aclrtCreateContext fail, return[%d], para:flags[%u], devId[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, flags, devId),
+        HCCL_E_RUNTIME);
     HCCL_INFO("[hrtCtxCreate]deviceLogicId[%d]", devId);
     return HCCL_SUCCESS;
 }
@@ -329,14 +366,16 @@ HcclResult hrtCtxDestroy(aclrtContext destroyCtx)
     CHK_PTR_NULL(funcPtr);
     aclError ret = funcPtr(destroyCtx);
 #endif
-    CHK_PRT_RET(ret != ACL_SUCCESS && ret != ACL_ERROR_RT_CONTEXT_NULL, HCCL_ERROR(
-        "[Get][Device]errNo[0x%016llx] aclrtDestroyContext fail, return[%d]",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS && ret != ACL_ERROR_RT_CONTEXT_NULL,
+        HCCL_ERROR(
+            "[Get][Device]errNo[0x%016llx] aclrtDestroyContext fail, return[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret),
+        HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtCtxGetCurrent(HcclRtContext *ctx)
+HcclResult hrtCtxGetCurrent(HcclRtContext* ctx)
 {
     CHK_PTR_NULL(ctx);
 #ifndef HCCD
@@ -346,10 +385,13 @@ HcclResult hrtCtxGetCurrent(HcclRtContext *ctx)
     CHK_PTR_NULL(funcPtr);
     aclError ret = funcPtr(ctx);
 #endif
-    CHK_PRT_RET(ret != ACL_SUCCESS && ret != ACL_ERROR_RT_CONTEXT_NULL, HCCL_ERROR(
-        "[Get][Device]errNo[0x%016llx] aclrtGetCurrentContext fail, "\
-        "please make sure that DIE is set. return[%d]",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS && ret != ACL_ERROR_RT_CONTEXT_NULL,
+        HCCL_ERROR(
+            "[Get][Device]errNo[0x%016llx] aclrtGetCurrentContext fail, "
+            "please make sure that DIE is set. return[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret),
+        HCCL_E_RUNTIME);
     if (ret == ACL_ERROR_RT_CONTEXT_NULL) {
         HCCL_INFO("[Get][Device] curCtx is nullptr!");
         *ctx = nullptr;
@@ -367,9 +409,13 @@ HcclResult hrtCtxSetCurrent(HcclRtContext ctx)
     CHK_PTR_NULL(funcPtr);
     aclError ret = funcPtr(ctx);
 #endif
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Set][Device]errNo[0x%016llx] aclrtSetCurrentContext fail, "\
-        "please make sure that DIE is set. return[%d]",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Set][Device]errNo[0x%016llx] aclrtSetCurrentContext fail, "
+            "please make sure that DIE is set. return[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret),
+        HCCL_E_RUNTIME);
     HCCL_INFO("[hrtCtxSetCurrent] success");
     return HCCL_SUCCESS;
 }
@@ -377,7 +423,7 @@ HcclResult hrtCtxSetCurrent(HcclRtContext ctx)
 #ifdef __cplusplus
 extern "C" {
 #endif
-HcclResult __hrtGetDevicePhyIdByIndex(u32 deviceLogicId, u32 &devicePhyId, bool isRefresh)
+HcclResult __hrtGetDevicePhyIdByIndex(u32 deviceLogicId, u32& devicePhyId, bool isRefresh)
 {
 #ifndef HCCD
     if (LIKELY(g_devicePhyId != INVALID_UINT) && (!isRefresh)) {
@@ -397,8 +443,10 @@ HcclResult __hrtGetDevicePhyIdByIndex(u32 deviceLogicId, u32 &devicePhyId, bool 
     s32 phyDevId;
     aclError ret = aclrtGetPhyDevIdByLogicDevId(logicDevId, &phyDevId);
     if (ret != ACL_SUCCESS) {
-        HCCL_ERROR("[Get][DevicePhyId]errNo[0x%016llx] rtGet device PhyId by index failed, return[%d], "\
-            "para: devIndex[%d], phyId[%d]", HCCL_ERROR_CODE(HCCL_E_DRV), ret, logicDevId, phyDevId);
+        HCCL_ERROR(
+            "[Get][DevicePhyId]errNo[0x%016llx] rtGet device PhyId by index failed, return[%d], "
+            "para: devIndex[%d], phyId[%d]",
+            HCCL_ERROR_CODE(HCCL_E_DRV), ret, logicDevId, phyDevId);
         return HCCL_E_RUNTIME;
     }
     devicePhyId = static_cast<u32>(phyDevId);
@@ -411,10 +459,10 @@ HcclResult __hrtGetDevicePhyIdByIndex(u32 deviceLogicId, u32 &devicePhyId, bool 
 }
 weak_alias(__hrtGetDevicePhyIdByIndex, hrtGetDevicePhyIdByIndex);
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
-HcclResult hrtGetDeviceIndexByPhyId(u32 devicePhyId, u32 &deviceLogicId)
+HcclResult hrtGetDeviceIndexByPhyId(u32 devicePhyId, u32& deviceLogicId)
 {
     s32 phyDevId = static_cast<s32>(devicePhyId);
     s32 logicDevId;
@@ -428,20 +476,22 @@ HcclResult hrtGetDeviceIndexByPhyId(u32 devicePhyId, u32 &deviceLogicId)
 
     aclError ret = aclrtGetLogicDevIdByPhyDevId(phyDevId, &logicDevId);
 #else
-    static auto funcPtr = (rtError_t(*)(int32_t, int32_t *const))g_dlAclrt.Handle<ACL_RT_GET_LOGICID_BY_PHYID>();
+    static auto funcPtr = (rtError_t(*)(int32_t, int32_t* const))g_dlAclrt.Handle<ACL_RT_GET_LOGICID_BY_PHYID>();
     CHK_PTR_NULL(funcPtr);
     aclError ret = funcPtr(phyDevId, &logicDevId);
 #endif
     if (ret != ACL_SUCCESS) {
-        HCCL_ERROR("[Get][DeviceIndex]errNo[0x%016llx] rtGet device logicid by PhyId failed, return[%d], "\
-            "para: phyId[%d], devIndex[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, phyDevId, logicDevId);
+        HCCL_ERROR(
+            "[Get][DeviceIndex]errNo[0x%016llx] rtGet device logicid by PhyId failed, return[%d], "
+            "para: phyId[%d], devIndex[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, phyDevId, logicDevId);
         return HCCL_E_RUNTIME;
     }
     deviceLogicId = static_cast<u32>(logicDevId);
     return HCCL_SUCCESS;
 };
 
-HcclResult hrtGetLogicDevIdByUserDevId(s32 userDevId, s32 &logicDevId)
+HcclResult hrtGetLogicDevIdByUserDevId(s32 userDevId, s32& logicDevId)
 {
 #ifndef HCCD
     DevType deviceType;
@@ -453,8 +503,10 @@ HcclResult hrtGetLogicDevIdByUserDevId(s32 userDevId, s32 &logicDevId)
 
     aclError ret = aclrtGetLogicDevIdByUserDevId(userDevId, &logicDevId);
     if (ret != ACL_SUCCESS) {
-        HCCL_ERROR("aclrtGetLogicDevIdByUserDevId failed, return[%d], "\
-            "para: userDevId[%d], logicDevId[%d]", ret, userDevId, logicDevId);
+        HCCL_ERROR(
+            "aclrtGetLogicDevIdByUserDevId failed, return[%d], "
+            "para: userDevId[%d], logicDevId[%d]",
+            ret, userDevId, logicDevId);
         return HCCL_E_RUNTIME;
     }
 #else
@@ -464,15 +516,21 @@ HcclResult hrtGetLogicDevIdByUserDevId(s32 userDevId, s32 &logicDevId)
     return HCCL_SUCCESS;
 };
 
-HcclResult hrtGetPhyDeviceInfo(u32 devicePhysicId, s32 moduleType, s32 infoType, s64 &value)
+HcclResult hrtGetPhyDeviceInfo(u32 devicePhysicId, s32 moduleType, s32 infoType, s64& value)
 {
 #ifndef HCCD
-    rtError_t rtRet = rtGetPhyDeviceInfo(devicePhysicId, moduleType, infoType, reinterpret_cast<int64_t *>(&value));
-    HCCL_INFO("[hrtGetPhyDeviceInfo] Call rtGetPhyDeviceInfo, ret[%d], para: devicePhysicId[%u], moduleType[%d], "
-        "infoType[%d], value[%lld]", rtRet, devicePhysicId, moduleType, infoType, value);
-    CHK_PRT_RET(rtRet != RT_ERROR_NONE, HCCL_ERROR("[Get][DeviceInfo]errNo[0x%016llx] rt get pair devices "\
-        "info failed, return[%d], para:devicePhysicId[%u], moduleType[%d], infoType[%d], value[%lld].",\
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), rtRet, devicePhysicId, moduleType, infoType, value), HCCL_E_RUNTIME);
+    rtError_t rtRet = rtGetPhyDeviceInfo(devicePhysicId, moduleType, infoType, reinterpret_cast<int64_t*>(&value));
+    HCCL_INFO(
+        "[hrtGetPhyDeviceInfo] Call rtGetPhyDeviceInfo, ret[%d], para: devicePhysicId[%u], moduleType[%d], "
+        "infoType[%d], value[%lld]",
+        rtRet, devicePhysicId, moduleType, infoType, value);
+    CHK_PRT_RET(
+        rtRet != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[Get][DeviceInfo]errNo[0x%016llx] rt get pair devices "
+            "info failed, return[%d], para:devicePhysicId[%u], moduleType[%d], infoType[%d], value[%lld].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), rtRet, devicePhysicId, moduleType, infoType, value),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtGetPhyDeviceInfo]Does not support this interface.");
@@ -480,12 +538,14 @@ HcclResult hrtGetPhyDeviceInfo(u32 devicePhysicId, s32 moduleType, s32 infoType,
 #endif
 }
 
-HcclResult hrtGetSocVer(std::string &socName)
+HcclResult hrtGetSocVer(std::string& socName)
 {
 #ifndef HCCD
-    const char *socNamePtr = aclrtGetSocName();
-    CHK_PRT_RET((socNamePtr == nullptr), HCCL_ERROR("[Get][SocVer]errNo[0x%016llx] aclrtGet socName failed",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME)), HCCL_E_RUNTIME);
+    const char* socNamePtr = aclrtGetSocName();
+    CHK_PRT_RET(
+        (socNamePtr == nullptr),
+        HCCL_ERROR("[Get][SocVer]errNo[0x%016llx] aclrtGet socName failed", HCCL_ERROR_CODE(HCCL_E_RUNTIME)),
+        HCCL_E_RUNTIME);
 
     socName = socNamePtr;
     return HCCL_SUCCESS;
@@ -499,7 +559,7 @@ HcclResult hrtGetSocVer(std::string &socName)
 #ifdef __cplusplus
 extern "C" {
 #endif
-HcclResult hrtGetDeviceTypeBySocVersion(std::string &socVersion, DevType &devType)
+HcclResult hrtGetDeviceTypeBySocVersion(std::string& socVersion, DevType& devType)
 {
     devType = DevType::DEV_TYPE_COUNT;
     if (socVersion == "Ascend310B1") {
@@ -511,8 +571,7 @@ HcclResult hrtGetDeviceTypeBySocVersion(std::string &socVersion, DevType &devTyp
         return HCCL_SUCCESS;
     }
 
-    if (socVersion.find("Ascend910_96") != std::string::npos
-        || socVersion.find("Ascend960") != std::string::npos
+    if (socVersion.find("Ascend910_96") != std::string::npos || socVersion.find("Ascend960") != std::string::npos
         || socVersion.find("ascend960") != std::string::npos) {
         devType = DevType::DEV_TYPE_960;
         return HCCL_SUCCESS;
@@ -520,7 +579,8 @@ HcclResult hrtGetDeviceTypeBySocVersion(std::string &socVersion, DevType &devTyp
 
     auto iter = SOC_VER_CONVERT.find(socVersion);
     if (iter == SOC_VER_CONVERT.end()) {
-        HCCL_ERROR("[Get][DeviceType]errNo[0x%016llx] rtGetSocVersion get illegal chipver, chip_ver[%s].",
+        HCCL_ERROR(
+            "[Get][DeviceType]errNo[0x%016llx] rtGetSocVersion get illegal chipver, chip_ver[%s].",
             HCCL_ERROR_CODE(HCCL_E_RUNTIME), socVersion.c_str());
         return HCCL_E_RUNTIME;
     }
@@ -544,7 +604,7 @@ HcclResult hrtSetlocalDeviceType(DevType devType)
     return HCCL_SUCCESS;
 }
 
-HcclResult __hrtGetDeviceType(DevType &devType)
+HcclResult __hrtGetDeviceType(DevType& devType)
 {
     if (LIKELY((g_deviceType != DevType::DEV_TYPE_COUNT))) {
         devType = g_deviceType;
@@ -560,12 +620,13 @@ HcclResult __hrtGetDeviceType(DevType &devType)
         return HCCL_SUCCESS;
     }
 
-    static auto funcPtr = (const char *(*)())g_dlAcl.Handle<ACL_GET_SOC_NAME>();
+    static auto funcPtr = (const char* (*)())g_dlAcl.Handle<ACL_GET_SOC_NAME>();
     CHK_PTR_NULL(funcPtr);
-    const char *socNamePtr = funcPtr();
-    CHK_PRT_RET((socNamePtr == nullptr),
-        HCCL_ERROR("[hrtGetDeviceType]errNo[0x%016llx] aclrtGet socName failed",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME)), HCCL_E_RUNTIME);
+    const char* socNamePtr = funcPtr();
+    CHK_PRT_RET(
+        (socNamePtr == nullptr),
+        HCCL_ERROR("[hrtGetDeviceType]errNo[0x%016llx] aclrtGet socName failed", HCCL_ERROR_CODE(HCCL_E_RUNTIME)),
+        HCCL_E_RUNTIME);
     socName = socNamePtr;
 #endif
     //  根据芯片版本号获取芯片类型
@@ -577,8 +638,7 @@ HcclResult __hrtGetDeviceType(DevType &devType)
         return HCCL_SUCCESS;
     }
 
-    if (socName.find("Ascend910_96") != std::string::npos
-        || socName.find("Ascend960") != std::string::npos
+    if (socName.find("Ascend910_96") != std::string::npos || socName.find("Ascend960") != std::string::npos
         || socName.find("ascend960") != std::string::npos) {
         devType = DevType::DEV_TYPE_960;
         g_deviceType = devType;
@@ -588,7 +648,8 @@ HcclResult __hrtGetDeviceType(DevType &devType)
 
     auto iter = SOC_VER_CONVERT.find(socName);
     if (iter == SOC_VER_CONVERT.end()) {
-        HCCL_ERROR("[Get][DeviceType]errNo[0x%016llx] rtGetSocVersion get illegal chipver, chip_ver[%s].", \
+        HCCL_ERROR(
+            "[Get][DeviceType]errNo[0x%016llx] rtGetSocVersion get illegal chipver, chip_ver[%s].",
             HCCL_ERROR_CODE(HCCL_E_RUNTIME), socName.c_str());
         return HCCL_E_RUNTIME;
     }
@@ -598,35 +659,40 @@ HcclResult __hrtGetDeviceType(DevType &devType)
 }
 weak_alias(__hrtGetDeviceType, hrtGetDeviceType);
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
 #endif
 
 #if T_DESC("DeviceMemory管理", true)
 
-HcclResult HrtDevFree(void *devPtr)
+HcclResult HrtDevFree(void* devPtr)
 {
     CHK_PTR_NULL(devPtr);
     s32 deviceId = GetDeviceLogicalId();
     PLF_CONFIG_DEBUG(PLF_RES, "Free DevMem para: deviceId[%d] devPtr[%p]", deviceId, devPtr);
 
-    static auto funcPtr = (aclError(*)(void *))g_dlAcl.Handle<ACL_RT_FREE>();
+    static auto funcPtr = (aclError(*)(void*))g_dlAcl.Handle<ACL_RT_FREE>();
     CHK_PTR_NULL(funcPtr);
     aclError ret = funcPtr(devPtr);
 
     HCCL_DEBUG("Call aclrtFree, ret[%d], devPtr[%p]", ret, devPtr);
-    CHK_PRT_RET((ret != ACL_SUCCESS), HCCL_ERROR("[Free][Mem]errNo[0x%016llx] aclrtFree failed, return[%d]"
-        ", para: devPtr[%p].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, devPtr), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        (ret != ACL_SUCCESS),
+        HCCL_ERROR(
+            "[Free][Mem]errNo[0x%016llx] aclrtFree failed, return[%d]"
+            ", para: devPtr[%p].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, devPtr),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 }
 
-HcclResult HrtDevMalloc(void **devPtr, u64 size)
+HcclResult HrtDevMalloc(void** devPtr, u64 size)
 {
     CHK_PTR_NULL(devPtr);
 
-    static auto funcPtr = (rtError_t(*)(void **, size_t, aclrtMemMallocPolicy,
-        aclrtMallocConfig *))g_dlAcl.Handle<ACL_RT_MALLOC_WITH_CFG>();
+    static auto funcPtr = (rtError_t(*)(
+        void**, size_t, aclrtMemMallocPolicy, aclrtMallocConfig*))g_dlAcl.Handle<ACL_RT_MALLOC_WITH_CFG>();
     CHK_PTR_NULL(funcPtr);
 
     aclrtMallocAttrValue moduleIdValue;
@@ -636,17 +702,20 @@ HcclResult HrtDevMalloc(void **devPtr, u64 size)
 
     aclError ret = funcPtr(devPtr, size, ACL_MEM_TYPE_HIGH_BAND_WIDTH, &cfg);
 
-    CHK_PRT_RET((ret != ACL_SUCCESS || *devPtr == nullptr), HCCL_ERROR("[Malloc][Mem]errNo[0x%016llx] "
-        "aclrtMallocWithCfg failed, return[%d], para: devPtr[%p], size[%llu Byte].", HCCL_ERROR_CODE(HCCL_E_RUNTIME),
-        ret, *devPtr, size), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        (ret != ACL_SUCCESS || *devPtr == nullptr),
+        HCCL_ERROR(
+            "[Malloc][Mem]errNo[0x%016llx] "
+            "aclrtMallocWithCfg failed, return[%d], para: devPtr[%p], size[%llu Byte].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *devPtr, size),
+        HCCL_E_RUNTIME);
 
     s32 deviceId = GetDeviceLogicalId();
-    PLF_CONFIG_DEBUG(PLF_RES, "Malloc DevMem para: deviceId[%d] devPtr[%p] size[%llu Byte]",
-        deviceId, *devPtr, size);
+    PLF_CONFIG_DEBUG(PLF_RES, "Malloc DevMem para: deviceId[%d] devPtr[%p] size[%llu Byte]", deviceId, *devPtr, size);
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtMalloc(void **devPtr, u64 size, bool level2Address)
+HcclResult hrtMalloc(void** devPtr, u64 size, bool level2Address)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -675,14 +744,13 @@ HcclResult hrtMalloc(void **devPtr, u64 size, bool level2Address)
             if (level2Address) { // 310P二级地址刷新时申请内存类型为：RT_MEMORY_TS
                 isTsMem = true;
             } else {
-                policy = static_cast<int>(ACL_MEM_TYPE_LOW_BAND_WIDTH) |
-                    static_cast<int>(ACL_MEM_MALLOC_NORMAL_ONLY_P2P);
+                policy
+                    = static_cast<int>(ACL_MEM_TYPE_LOW_BAND_WIDTH) | static_cast<int>(ACL_MEM_MALLOC_NORMAL_ONLY_P2P);
             }
         } else if (devType == DevType::DEV_TYPE_310P1) {
             policy = static_cast<int>(ACL_MEM_TYPE_LOW_BAND_WIDTH);
         } else {
-            policy = static_cast<int>(ACL_MEM_TYPE_HIGH_BAND_WIDTH) |
-                static_cast<int>(ACL_MEM_MALLOC_HUGE_FIRST);
+            policy = static_cast<int>(ACL_MEM_TYPE_HIGH_BAND_WIDTH) | static_cast<int>(ACL_MEM_MALLOC_HUGE_FIRST);
         }
     }
 
@@ -696,22 +764,35 @@ HcclResult hrtMalloc(void **devPtr, u64 size, bool level2Address)
     } else {
         ret = aclrtMallocWithCfg(devPtr, size, static_cast<aclrtMemMallocPolicy>(policy), &cfg);
     }
-    RPT_ENV_ERR(ret == ACL_ERROR_RT_MEMORY_ALLOCATION, "EI0011",                                                                             
-        std::vector<std::string>({"memory_size"}),                                                          
+    RPT_ENV_ERR(
+        ret == ACL_ERROR_RT_MEMORY_ALLOCATION, "EI0011", std::vector<std::string>({"memory_size"}),
         std::vector<std::string>({std::to_string(size)}));
 
-    CHK_PRT_RET(ret == ACL_ERROR_RT_MEMORY_ALLOCATION, HCCL_ERROR("[Malloc][Mem] rtMalloc failed, "\
-        "Reason: out of memory, return[%d], para: devPtrAddr[%p], size[%llu Byte].", ret, *devPtr, size),
+    CHK_PRT_RET(
+        ret == ACL_ERROR_RT_MEMORY_ALLOCATION,
+        HCCL_ERROR(
+            "[Malloc][Mem] rtMalloc failed, "
+            "Reason: out of memory, return[%d], para: devPtrAddr[%p], size[%llu Byte].",
+            ret, *devPtr, size),
         HCCL_E_OOM);
 
-    RPT_ENV_ERR((ret != ACL_SUCCESS), "EI0007", std::vector<std::string>({"resource_type", "resource_info"}), \
-        std::vector<std::string>({"DeviceMemory", std::string("Malloc, size:") + std::to_string(size)+ " bytes"}));
+    RPT_ENV_ERR(
+        (ret != ACL_SUCCESS), "EI0007", std::vector<std::string>({"resource_type", "resource_info"}),
+        std::vector<std::string>({"DeviceMemory", std::string("Malloc, size:") + std::to_string(size) + " bytes"}));
 
-    CHK_PRT_RET((ret != ACL_SUCCESS), HCCL_ERROR("[%s][%s]errNo[0x%016llx] rtMalloc failed, "\
-        "return[%d], para: devPtrAddr[%p], size[%llu Byte].", LOG_KEYWORDS_INIT_GROUP.c_str(),
-        LOG_KEYWORDS_RESOURCE.c_str(), HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *devPtr, size), HCCL_E_RUNTIME);
-    PLF_CONFIG_INFO(PLF_RES, "Malloc DevMem para: deviceId[%d] devPtr[%p] size[%llu Byte] "\
-        "level2Address[%u]", deviceId, *devPtr, size, level2Address);
+    CHK_PRT_RET(
+        (ret != ACL_SUCCESS),
+        HCCL_ERROR(
+            "[%s][%s]errNo[0x%016llx] rtMalloc failed, "
+            "return[%d], para: devPtrAddr[%p], size[%llu Byte].",
+            LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RESOURCE.c_str(), HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret,
+            *devPtr, size),
+        HCCL_E_RUNTIME);
+    PLF_CONFIG_INFO(
+        PLF_RES,
+        "Malloc DevMem para: deviceId[%d] devPtr[%p] size[%llu Byte] "
+        "level2Address[%u]",
+        deviceId, *devPtr, size, level2Address);
     return HCCL_SUCCESS;
 #else
     // 参数有效性检查
@@ -724,7 +805,7 @@ HcclResult hrtMalloc(void **devPtr, u64 size, bool level2Address)
 #endif
 }
 
-HcclResult hrtMemSyncCopy(void *dst, uint64_t destMax, const void *src, uint64_t count, HcclRtMemcpyKind kind)
+HcclResult hrtMemSyncCopy(void* dst, uint64_t destMax, const void* src, uint64_t count, HcclRtMemcpyKind kind)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -734,20 +815,27 @@ HcclResult hrtMemSyncCopy(void *dst, uint64_t destMax, const void *src, uint64_t
 
     aclmdlRICaptureMode mode = aclmdlRICaptureMode::ACL_MODEL_RI_CAPTURE_MODE_RELAXED;
     HcclResult hcclRet = hrtThreadExchangeCaptureMode(&mode);
-    CHK_PRT_CONT(hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
+    CHK_PRT_CONT(
+        hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
         HCCL_ERROR("[hrtMemSyncCopy] hrtThreadExchangeCaptureMode return [%d]", hcclRet));
 
     aclrtMemcpyKind rtKind;
     CHK_RET(MemcpyKindTranslate(kind, &rtKind));
     aclError ret = aclrtMemcpy(dst, destMax, src, count, rtKind);
-    HCCL_DEBUG("Call aclrtMemcpy, return[%d], para: dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], rtKind[%d]",
-        ret, dst, destMax, src, count, rtKind);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[SyncCopy][Mem]errNo[0x%016llx] aclrtMemcpy failed, "\
-        "return[%d], para: dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], rtKind[%d].",\
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dst, destMax, src, count, rtKind), HCCL_E_RUNTIME);
+    HCCL_DEBUG(
+        "Call aclrtMemcpy, return[%d], para: dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], rtKind[%d]", ret,
+        dst, destMax, src, count, rtKind);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[SyncCopy][Mem]errNo[0x%016llx] aclrtMemcpy failed, "
+            "return[%d], para: dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], rtKind[%d].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dst, destMax, src, count, rtKind),
+        HCCL_E_RUNTIME);
 
     hcclRet = hrtThreadExchangeCaptureMode(&mode);
-    CHK_PRT_CONT(hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
+    CHK_PRT_CONT(
+        hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
         HCCL_ERROR("[hrtMemSyncCopy] hrtThreadExchangeCaptureMode return [%d]", hcclRet));
     return HCCL_SUCCESS;
 #else
@@ -756,7 +844,7 @@ HcclResult hrtMemSyncCopy(void *dst, uint64_t destMax, const void *src, uint64_t
 #endif
 }
 
-HcclResult hrtMemSyncCopyEx(void *dst, uint64_t destMax, const void *src, uint64_t count, HcclRtMemcpyKind kind)
+HcclResult hrtMemSyncCopyEx(void* dst, uint64_t destMax, const void* src, uint64_t count, HcclRtMemcpyKind kind)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -768,11 +856,17 @@ HcclResult hrtMemSyncCopyEx(void *dst, uint64_t destMax, const void *src, uint64
     CHK_RET(MemcpyKindTranslate(kind, &rtKind));
     aclError ret = aclrtMemcpy(dst, destMax, src, count, rtKind);
 
-    HCCL_DEBUG("[hrtMemSyncCopyEx] Call aclrtMemcpy, ret[%d], dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], "
-        "rtKind[%d]", ret, dst, destMax, src, count, rtKind);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[SyncCopy][Mem]errNo[0x%016llx] aclrtMemcpy failed, "\
-        "return[%d], para: dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], rtKind[%d].",\
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dst, destMax, src, count, rtKind), HCCL_E_RUNTIME);
+    HCCL_DEBUG(
+        "[hrtMemSyncCopyEx] Call aclrtMemcpy, ret[%d], dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], "
+        "rtKind[%d]",
+        ret, dst, destMax, src, count, rtKind);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[SyncCopy][Mem]errNo[0x%016llx] aclrtMemcpy failed, "
+            "return[%d], para: dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], rtKind[%d].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dst, destMax, src, count, rtKind),
+        HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 #else
@@ -781,7 +875,7 @@ HcclResult hrtMemSyncCopyEx(void *dst, uint64_t destMax, const void *src, uint64
 #endif
 }
 
-HcclResult hrtFree(void *devPtr)
+HcclResult hrtFree(void* devPtr)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -791,8 +885,13 @@ HcclResult hrtFree(void *devPtr)
 
     aclError ret = aclrtFree(devPtr);
     HCCL_DEBUG("Call aclrtFree, return value[%d], para: dev_ptr[%p].", ret, devPtr);
-    CHK_PRT_RET((ret != ACL_SUCCESS), HCCL_ERROR("[Free][Mem]errNo[0x%016llx] aclrtFree failed, "\
-        "return[%d], para: devPtrAddr[%p].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, devPtr), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        (ret != ACL_SUCCESS),
+        HCCL_ERROR(
+            "[Free][Mem]errNo[0x%016llx] aclrtFree failed, "
+            "return[%d], para: devPtrAddr[%p].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, devPtr),
+        HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 #else
@@ -804,8 +903,9 @@ HcclResult hrtFree(void *devPtr)
 #endif
 }
 
-HcclResult hrtMemcpyAddrAsync(void *dst, uint64_t destMax, uint64_t destOffset, const void *src, uint64_t count,
-    uint64_t srcOffset, rtStream_t stream)
+HcclResult hrtMemcpyAddrAsync(
+    void* dst, uint64_t destMax, uint64_t destOffset, const void* src, uint64_t count, uint64_t srcOffset,
+    rtStream_t stream)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -818,22 +918,29 @@ HcclResult hrtMemcpyAddrAsync(void *dst, uint64_t destMax, uint64_t destOffset, 
         return HCCL_SUCCESS;
     }
 
-    aclError ret = aclrtMemcpyAsyncWithOffset(reinterpret_cast<void **>(dst), destMax, destOffset,
-        reinterpret_cast<const void **>(const_cast<void *>(src)), count, srcOffset, ACL_MEMCPY_INNER_DEVICE_TO_DEVICE,
-        stream);
+    aclError ret = aclrtMemcpyAsyncWithOffset(
+        reinterpret_cast<void**>(dst), destMax, destOffset, reinterpret_cast<const void**>(const_cast<void*>(src)),
+        count, srcOffset, ACL_MEMCPY_INNER_DEVICE_TO_DEVICE, stream);
 
-    HCCL_DEBUG("Call hrtMemcpyAddrAsync, return value[%d], dstAddr[%p], destMax[%llu], destOffset[%llu], "\
-        "srcAddr[%p], count[%llu], srcOffset[%llu]", ret, dst, destMax, destOffset, src, count, srcOffset);
+    HCCL_DEBUG(
+        "Call hrtMemcpyAddrAsync, return value[%d], dstAddr[%p], destMax[%llu], destOffset[%llu], "
+        "srcAddr[%p], count[%llu], srcOffset[%llu]",
+        ret, dst, destMax, destOffset, src, count, srcOffset);
 
     if (ret == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
         HCCL_WARNING("hrtMemcpyAddrAsync is not supported.", ret);
         return HCCL_E_NOT_SUPPORT;
     }
 
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[AsyncCopy][Mem]errNo[0x%016llx] rt memory async copy failed, "\
-        "return[%d], para: dstAddr[%p], destMax[%llu], destOffset[%llu], srcAddr[%p], count[%llu], srcOffset[%llu], "\
-        "stream[%p].",\
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dst, destMax, destOffset, src, count, srcOffset, stream), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[AsyncCopy][Mem]errNo[0x%016llx] rt memory async copy failed, "
+            "return[%d], para: dstAddr[%p], destMax[%llu], destOffset[%llu], srcAddr[%p], count[%llu], "
+            "srcOffset[%llu], "
+            "stream[%p].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dst, destMax, destOffset, src, count, srcOffset, stream),
+        HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 #else
@@ -842,7 +949,7 @@ HcclResult hrtMemcpyAddrAsync(void *dst, uint64_t destMax, uint64_t destOffset, 
 #endif
 }
 
-HcclResult MemcpyKindTranslate(HcclRtMemcpyKind kind, aclrtMemcpyKind *rtKind)
+HcclResult MemcpyKindTranslate(HcclRtMemcpyKind kind, aclrtMemcpyKind* rtKind)
 {
     switch (kind) {
         case HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_HOST: {
@@ -872,8 +979,8 @@ HcclResult MemcpyKindTranslate(HcclRtMemcpyKind kind, aclrtMemcpyKind *rtKind)
     }
 }
 
-HcclResult hrtMemAsyncCopy(void *dst, uint64_t destMax, const void *src, uint64_t count,
-    HcclRtMemcpyKind kind, rtStream_t stream)
+HcclResult
+hrtMemAsyncCopy(void* dst, uint64_t destMax, const void* src, uint64_t count, HcclRtMemcpyKind kind, rtStream_t stream)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -886,12 +993,18 @@ HcclResult hrtMemAsyncCopy(void *dst, uint64_t destMax, const void *src, uint64_
     CHK_RET(MemcpyKindTranslate(kind, &rtKind));
 
     aclError ret = aclrtMemcpyAsync(dst, destMax, src, count, rtKind, stream);
-    HCCL_DEBUG("Call aclrtMemcpyAsync, return value[%d], para: dstAddr[%p], destMax[%llu], "
-               "srcAddr[%p], count[%llu], rtKind[%d]", ret, dst, destMax, src, count, rtKind);
+    HCCL_DEBUG(
+        "Call aclrtMemcpyAsync, return value[%d], para: dstAddr[%p], destMax[%llu], "
+        "srcAddr[%p], count[%llu], rtKind[%d]",
+        ret, dst, destMax, src, count, rtKind);
 
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[AsyncCopy][Mem]errNo[0x%016llx] rt memory async copy failed, "\
-        "return[%d], para: dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], rtKind[%d], stream[%p].",\
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dst, destMax, src, count, rtKind, stream), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[AsyncCopy][Mem]errNo[0x%016llx] rt memory async copy failed, "
+            "return[%d], para: dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], rtKind[%d], stream[%p].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dst, destMax, src, count, rtKind, stream),
+        HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 #else
@@ -900,8 +1013,8 @@ HcclResult hrtMemAsyncCopy(void *dst, uint64_t destMax, const void *src, uint64_
 #endif
 }
 
-HcclResult hrtMemAsyncCopyWithoutCheckKind(void *dst, uint64_t destMax, const void *src, uint64_t count,
-    HcclRtMemcpyKind kind, rtStream_t stream)
+HcclResult hrtMemAsyncCopyWithoutCheckKind(
+    void* dst, uint64_t destMax, const void* src, uint64_t count, HcclRtMemcpyKind kind, rtStream_t stream)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -914,11 +1027,17 @@ HcclResult hrtMemAsyncCopyWithoutCheckKind(void *dst, uint64_t destMax, const vo
     CHK_RET(MemcpyKindTranslate(kind, &rtKind));
     aclError ret = aclrtMemcpyAsync(dst, destMax, src, count, rtKind, stream);
 
-    HCCL_DEBUG("Call rtsMemcpyAsync, return value[%d], dstAddr[%p], destMax[%llu],"\
-        "srcAddr[%p], count[%llu]", ret, dst, destMax, src, count);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[AsyncCopy][Mem]errNo[0x%016llx] rt memory async copy failed, "\
-        "return[%d], para: dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], rtKind[%d], stream[%p].",\
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dst, destMax, src, count, rtKind, stream), HCCL_E_RUNTIME);
+    HCCL_DEBUG(
+        "Call rtsMemcpyAsync, return value[%d], dstAddr[%p], destMax[%llu],"
+        "srcAddr[%p], count[%llu]",
+        ret, dst, destMax, src, count);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[AsyncCopy][Mem]errNo[0x%016llx] rt memory async copy failed, "
+            "return[%d], para: dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], rtKind[%d], stream[%p].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dst, destMax, src, count, rtKind, stream),
+        HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 #else
@@ -927,7 +1046,7 @@ HcclResult hrtMemAsyncCopyWithoutCheckKind(void *dst, uint64_t destMax, const vo
 #endif
 }
 
-HcclResult hrtGetPairDeviceLinkTypeRaw(u32 phyDevId, u32 otherPhyDevId, s32 infoType, s64 *pValue)
+HcclResult hrtGetPairDeviceLinkTypeRaw(u32 phyDevId, u32 otherPhyDevId, s32 infoType, s64* pValue)
 {
     static auto funcPtr = (rtGetPairPhyDevicesInfoPtr)g_dlRts.Handle<RT_GET_PAIR_PHY_DEVICES_INFO>();
     if (funcPtr != nullptr) {
@@ -937,7 +1056,7 @@ HcclResult hrtGetPairDeviceLinkTypeRaw(u32 phyDevId, u32 otherPhyDevId, s32 info
     }
 }
 
-HcclResult hrtGetPairDevicesInfo(u32 phyDevId, u32 otherPhyDevId, s32 infoType, s64 *pValue)
+HcclResult hrtGetPairDevicesInfo(u32 phyDevId, u32 otherPhyDevId, s32 infoType, s64* pValue)
 {
 #ifndef HCCD
     CHK_PTR_NULL(pValue);
@@ -948,12 +1067,17 @@ HcclResult hrtGetPairDevicesInfo(u32 phyDevId, u32 otherPhyDevId, s32 infoType, 
     CHK_RET(hrtGetDeviceIndexByPhyId(otherPhyDevId, logicIdDest));
 
     aclError ret = aclrtGetDevicesTopo(logicIdLocal, logicIdDest, reinterpret_cast<uint64_t*>(pValue));
-    HCCL_DEBUG("aclrt get pair devices info, return[%d], "
+    HCCL_DEBUG(
+        "aclrt get pair devices info, return[%d], "
         "para: phyDevId[%u], otherPhyDevId[%u], logicIdLocal[%u], logicIdDest[%u], value[%lld].",
         ret, phyDevId, otherPhyDevId, logicIdLocal, logicIdDest, *pValue);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Get][PairPhyDevicesInfo]errNo[0x%016llx] rt get pair devices info "
-        "failed, return[%d], para: phyDevId[%u], otherPhyDevId[%u], logicIdLocal[%u], logicIdDest[%u], value[%lld].",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, phyDevId, otherPhyDevId, logicIdLocal, logicIdDest, *pValue),
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Get][PairPhyDevicesInfo]errNo[0x%016llx] rt get pair devices info "
+            "failed, return[%d], para: phyDevId[%u], otherPhyDevId[%u], logicIdLocal[%u], logicIdDest[%u], "
+            "value[%lld].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, phyDevId, otherPhyDevId, logicIdLocal, logicIdDest, *pValue),
         HCCL_E_RUNTIME);
 
     // 当前 aclrtGetDevicesTopo 仅支持返回一种链路类型，将来可能会同时按照二进制位排列返回所支持的多种类型
@@ -973,7 +1097,8 @@ HcclResult hrtGetPairDevicesInfo(u32 phyDevId, u32 otherPhyDevId, s32 infoType, 
     } else if ((*pValue & ACL_RT_DEVS_TOPOLOGY_HCCS_SW) != 0) {
         *pValue = TOPOLOGY_HCCS_SW;
     } else {
-        HCCL_ERROR("aclrt get pair devices info failed, unknown linkType[%lld], "
+        HCCL_ERROR(
+            "aclrt get pair devices info failed, unknown linkType[%lld], "
             "para: phyDevId[%u], otherPhyDevId[%u], logicIdLocal[%u], logicIdDest[%u].",
             *pValue, phyDevId, otherPhyDevId, logicIdLocal, logicIdDest);
         return HCCL_E_RUNTIME;
@@ -985,17 +1110,22 @@ HcclResult hrtGetPairDevicesInfo(u32 phyDevId, u32 otherPhyDevId, s32 infoType, 
 #endif
 }
 
-HcclResult hrtGetPairPhyDevicesInfo(u32 phyDevId, u32 otherPhyDevId, s32 infoType, s64 *pValue,
-                                    rtGetPairPhyDevicesInfoPtr funcPtr)
+HcclResult
+hrtGetPairPhyDevicesInfo(u32 phyDevId, u32 otherPhyDevId, s32 infoType, s64* pValue, rtGetPairPhyDevicesInfoPtr funcPtr)
 {
 #ifndef HCCD
     CHK_PTR_NULL(pValue);
     rtError_t ret = funcPtr(phyDevId, otherPhyDevId, infoType, reinterpret_cast<int64_t*>(pValue));
-    HCCL_DEBUG("rt get pair devices info, return[%d], para: phyDevId[%u], otherPhyDevId[%u], infoType[%d], value[%lld]",
-        ret, phyDevId, otherPhyDevId, infoType, *pValue);
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[Get][PairPhyDevicesInfo]errNo[0x%016llx] rt get pair devices "
-        "info failed, return[%d], para: phyDevId[%u], otherPhyDevId[%u], infoType[%d], value[%lld].",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, phyDevId, otherPhyDevId, infoType, *pValue), HCCL_E_RUNTIME);
+    HCCL_DEBUG(
+        "rt get pair devices info, return[%d], para: phyDevId[%u], otherPhyDevId[%u], infoType[%d], value[%lld]", ret,
+        phyDevId, otherPhyDevId, infoType, *pValue);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[Get][PairPhyDevicesInfo]errNo[0x%016llx] rt get pair devices "
+            "info failed, return[%d], para: phyDevId[%u], otherPhyDevId[%u], infoType[%d], value[%lld].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, phyDevId, otherPhyDevId, infoType, *pValue),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtGetPairPhyDevicesInfo]Does not support this interface.");
@@ -1003,7 +1133,7 @@ HcclResult hrtGetPairPhyDevicesInfo(u32 phyDevId, u32 otherPhyDevId, s32 infoTyp
 #endif
 }
 
-HcclResult hrtGetPairDeviceLinkType(u32 phyDevId, u32 otherPhyDevId, LinkTypeInServer &linkType)
+HcclResult hrtGetPairDeviceLinkType(u32 phyDevId, u32 otherPhyDevId, LinkTypeInServer& linkType)
 {
     if (Is310PDevice()) {
         linkType = LinkTypeInServer::HCCS_TYPE;
@@ -1017,8 +1147,9 @@ HcclResult hrtGetPairDeviceLinkType(u32 phyDevId, u32 otherPhyDevId, LinkTypeInS
     HCCL_ERROR("[hrtGetPairDeviceLinkTypeRaw]Does not support this interface.");
     return HCCL_E_NOT_SUPPORT;
 #endif
-    HCCL_INFO("[hrtGetPairDeviceLinkTypeRaw]phyDevId[%u] otherPhyDevId[%u] linkTypeRaw[%d]",
-        phyDevId, otherPhyDevId, linkTypeRaw);
+    HCCL_INFO(
+        "[hrtGetPairDeviceLinkTypeRaw]phyDevId[%u] otherPhyDevId[%u] linkTypeRaw[%d]", phyDevId, otherPhyDevId,
+        linkTypeRaw);
 
     // 若当前为标卡/虚拟机device间通过HCCS直接互联：HCCS_TYPE，device间通过HCCS交换芯片互联：TOPOLOGY_HCCS_SW
     // Ascend910_93* die间为SIO_TYPE
@@ -1044,15 +1175,17 @@ HcclResult hrtGetPairDeviceLinkType(u32 phyDevId, u32 otherPhyDevId, LinkTypeInS
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtGetPairDevicePhyId(u32 localDevPhyId, u32 &pairDevPhyId)
+HcclResult hrtGetPairDevicePhyId(u32 localDevPhyId, u32& pairDevPhyId)
 {
 #ifndef HCCD
     DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
-    CHK_PRT_RET(deviceType != DevType::DEV_TYPE_910_93,
-        HCCL_ERROR("[hrtGetPairDevicePhyId] is not supported on device type[%d]. Please check device type.", deviceType),
+    CHK_PRT_RET(
+        deviceType != DevType::DEV_TYPE_910_93,
+        HCCL_ERROR(
+            "[hrtGetPairDevicePhyId] is not supported on device type[%d]. Please check device type.", deviceType),
         HCCL_E_NOT_SUPPORT);
- 
+
     // 奇数die对应的phyid - 1，偶数die对应的phyid + 1
     int offset = static_cast<s32>(localDevPhyId) % 2 == 0 ? 1 : -1;
 
@@ -1063,12 +1196,16 @@ HcclResult hrtGetPairDevicePhyId(u32 localDevPhyId, u32 &pairDevPhyId)
     if (linkType != LinkTypeInServer::SIO_TYPE) {
         pairDevPhyId = localDevPhyId - offset;
         CHK_RET(hrtGetPairDeviceLinkType(localDevPhyId, pairDevPhyId, linkType));
-        CHK_PRT_RET(linkType != LinkTypeInServer::SIO_TYPE,
-            HCCL_ERROR("[hrtGetPairDevicePhyId] neither of the two neighbour device is a pair device of dev[%u].",
-            localDevPhyId), HCCL_E_NOT_SUPPORT);
+        CHK_PRT_RET(
+            linkType != LinkTypeInServer::SIO_TYPE,
+            HCCL_ERROR(
+                "[hrtGetPairDevicePhyId] neither of the two neighbour device is a pair device of dev[%u].",
+                localDevPhyId),
+            HCCL_E_NOT_SUPPORT);
     }
-    HCCL_DEBUG("[hrtGetPairDevicePhyId]GetPairDevicePhyId success, phyDevId[%u], pairDevPhyId[%u]",
-        localDevPhyId, pairDevPhyId);
+    HCCL_DEBUG(
+        "[hrtGetPairDevicePhyId]GetPairDevicePhyId success, phyDevId[%u], pairDevPhyId[%u]", localDevPhyId,
+        pairDevPhyId);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtGetPairDevicePhyId]Does not support this interface.");
@@ -1077,81 +1214,99 @@ HcclResult hrtGetPairDevicePhyId(u32 localDevPhyId, u32 &pairDevPhyId)
 }
 
 // 获取指针的属性，主要是页表大小，单位Byte
-HcclResult hrtGetPointAttr(HcclRtPointAttr ptrAttr, const void *ptr)
+HcclResult hrtGetPointAttr(HcclRtPointAttr ptrAttr, const void* ptr)
 {
     // 参数有效性检查
     CHK_PTR_NULL(ptrAttr);
     CHK_PTR_NULL(ptr);
 
 #ifndef HCCD
-    aclError ret = aclrtPointerGetAttributes(ptr, reinterpret_cast<aclrtPtrAttributes *>(ptrAttr));
+    aclError ret = aclrtPointerGetAttributes(ptr, reinterpret_cast<aclrtPtrAttributes*>(ptrAttr));
 #else
-    static auto funcPtr =
-        (aclError(*)(const void *ptr, aclrtPtrAttributes *attributes))g_dlAcl.Handle<ACL_RT_POINTER_GET_ATTRIBUTES>();
+    static auto funcPtr
+        = (aclError(*)(const void* ptr, aclrtPtrAttributes* attributes))g_dlAcl.Handle<ACL_RT_POINTER_GET_ATTRIBUTES>();
     CHK_PTR_NULL(funcPtr);
-    aclError ret = funcPtr(ptr, reinterpret_cast<aclrtPtrAttributes *>(ptrAttr));
+    aclError ret = funcPtr(ptr, reinterpret_cast<aclrtPtrAttributes*>(ptrAttr));
 #endif
     HCCL_DEBUG("Call aclrtPointerGetAttributes, return value[%d], para: ptr[%p].", ret, ptr);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Get][PointAttr]errNo[0x%016llx] rt get point attr failed, "\
-        "return[%d], para: ptrAttrAddr[%p], ptrAddr[%p].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, ptrAttr, ptr),
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Get][PointAttr]errNo[0x%016llx] rt get point attr failed, "
+            "return[%d], para: ptrAttrAddr[%p], ptrAddr[%p].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, ptrAttr, ptr),
         HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtIpcSetMemoryName(void *ptr, u8 *name, u64 ptrMaxLen, u32 nameMaxLen)
+HcclResult hrtIpcSetMemoryName(void* ptr, u8* name, u64 ptrMaxLen, u32 nameMaxLen)
 {
     // 参数有效性检查
     CHK_PTR_NULL(ptr);
     CHK_PTR_NULL(name);
 #ifndef HCCD
     // flag 预留字段填 0
-    aclError rtRet = aclrtIpcMemGetExportKey(ptr, ptrMaxLen, reinterpret_cast<char *>(name), nameMaxLen, 0UL);
+    aclError rtRet = aclrtIpcMemGetExportKey(ptr, ptrMaxLen, reinterpret_cast<char*>(name), nameMaxLen, 0UL);
 #else
-    static auto funcPtr =
-        (aclError(*)(void *, size_t, char *, size_t, uint64_t))g_dlAcl.Handle<ACL_RT_IPC_MEM_GET_EXPORT_KEY>();
+    static auto funcPtr
+        = (aclError(*)(void*, size_t, char*, size_t, uint64_t))g_dlAcl.Handle<ACL_RT_IPC_MEM_GET_EXPORT_KEY>();
     CHK_PTR_NULL(funcPtr);
-    aclError rtRet = funcPtr(ptr, ptrMaxLen, reinterpret_cast<char *>(name), nameMaxLen, 0UL);
+    aclError rtRet = funcPtr(ptr, ptrMaxLen, reinterpret_cast<char*>(name), nameMaxLen, 0UL);
 #endif
-    HCCL_INFO("Call aclrtIpcMemGetExportKey, return value[%d], para: ptr[%p], name[%s], byteCount[%llu], nameLen[%u]",
-        rtRet, ptr, name, ptrMaxLen, nameMaxLen);
-    CHK_PRT_RET(rtRet != ACL_SUCCESS, HCCL_ERROR("[Set][IpcMemoryName]errNo[0x%016llx] rtSet Ipc Memory Name, "\
-        "return[%d], para: ptr[%p] byteCount[%llu]. Possible Cause: The memory addr or size is not aligned with pagesize.",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), rtRet, ptr, ptrMaxLen), HCCL_E_RUNTIME);
+    HCCL_INFO(
+        "Call aclrtIpcMemGetExportKey, return value[%d], para: ptr[%p], name[%s], byteCount[%llu], nameLen[%u]", rtRet,
+        ptr, name, ptrMaxLen, nameMaxLen);
+    CHK_PRT_RET(
+        rtRet != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Set][IpcMemoryName]errNo[0x%016llx] rtSet Ipc Memory Name, "
+            "return[%d], para: ptr[%p] byteCount[%llu]. Possible Cause: The memory addr or size is not aligned with "
+            "pagesize.",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), rtRet, ptr, ptrMaxLen),
+        HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtIpcDestroyMemoryName(const u8 *name)
+HcclResult hrtIpcDestroyMemoryName(const u8* name)
 {
     // 参数有效性检查
     CHK_PTR_NULL(name);
 
 #ifndef HCCD
-    aclError ret = aclrtIpcMemClose(reinterpret_cast<const char *>(name));
+    aclError ret = aclrtIpcMemClose(reinterpret_cast<const char*>(name));
 #else
-    static auto funcPtr = (aclError(*)(const char *))g_dlAcl.Handle<ACL_RT_DESTORY_MEM_NAME>();
+    static auto funcPtr = (aclError(*)(const char*))g_dlAcl.Handle<ACL_RT_DESTORY_MEM_NAME>();
     CHK_PTR_NULL(funcPtr);
-    aclError ret = funcPtr(reinterpret_cast<const char *>(name));
+    aclError ret = funcPtr(reinterpret_cast<const char*>(name));
 #endif
     HCCL_INFO("Call aclrtIpcMemClose, return[%d], para: name[%s]", ret, name);
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[Destroy][IpcMemoryName]errNo[0x%016llx] "\
-        "rtDestroy Ipc memory name fail. return[%d], para: name[%s]",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, name), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[Destroy][IpcMemoryName]errNo[0x%016llx] "
+            "rtDestroy Ipc memory name fail. return[%d], para: name[%s]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, name),
+        HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtIpcSetMemoryAttr(const u8 *name, aclrtIpcMemAttrType type, u64 attr)
+HcclResult hrtIpcSetMemoryAttr(const u8* name, aclrtIpcMemAttrType type, u64 attr)
 {
 #ifndef HCCD
     // 参数有效性检查
     CHK_PTR_NULL(name);
-    rtError_t ret = aclrtIpcMemSetAttr(reinterpret_cast<const char *>(name), type, attr);
+    rtError_t ret = aclrtIpcMemSetAttr(reinterpret_cast<const char*>(name), type, attr);
     HCCL_INFO("Call aclrtIpcMemSetAttr, return[%d], para: name: %s, type: %u, attr: %llu", ret, name, type, attr);
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[%s]errNo[0x%016llx] "\
-        "aclrtIpcMemSetAttr fail. return[%d], para: name: %s, type: %u, attr: %llu",
-        __func__, HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, name, type, attr), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[%s]errNo[0x%016llx] "
+            "aclrtIpcMemSetAttr fail. return[%d], para: name: %s, type: %u, attr: %llu",
+            __func__, HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, name, type, attr),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("Call aclrtIpcMemSetAttr not support");
@@ -1159,45 +1314,55 @@ HcclResult hrtIpcSetMemoryAttr(const u8 *name, aclrtIpcMemAttrType type, u64 att
 #endif
 }
 
-HcclResult hrtIpcOpenMemory(void **ptr, const u8 *name)
+HcclResult hrtIpcOpenMemory(void** ptr, const u8* name)
 {
     CHK_PTR_NULL(ptr);
     CHK_PTR_NULL(name);
 #ifndef HCCD
     // flag 预留字段填 0
-    aclError ret = aclrtIpcMemImportByKey(ptr, reinterpret_cast<const char *>(name), 0UL);
+    aclError ret = aclrtIpcMemImportByKey(ptr, reinterpret_cast<const char*>(name), 0UL);
 #else
     static auto funcPtr = (aclError(*)(void**, const char*, uint64_t))g_dlAcl.Handle<ACL_RT_IPC_MEM_IMPORT_BY_KEY>();
     CHK_PTR_NULL(funcPtr);
-    aclError ret = funcPtr(ptr, reinterpret_cast<const char *>(name), 0UL);
+    aclError ret = funcPtr(ptr, reinterpret_cast<const char*>(name), 0UL);
 #endif
     RPT_CALL_ERR(ret != ACL_SUCCESS, "aclrtIpcMemImportByKey failed. return[%d], ptr[%p], name[%s]", ret, ptr, name);
-    CHK_PRT_RET(ret == ACL_ERROR_RT_MEMORY_ALLOCATION, HCCL_ERROR("[Open][IpcMemory]errNo[0x%016llx] "\
-        "rtIpc memory allocation error. return[%d], para: ptr[%p], name[%s]",
-        HCCL_ERROR_CODE(HCCL_E_MEMORY), ret, *ptr, name), HCCL_E_MEMORY);
+    CHK_PRT_RET(
+        ret == ACL_ERROR_RT_MEMORY_ALLOCATION,
+        HCCL_ERROR(
+            "[Open][IpcMemory]errNo[0x%016llx] "
+            "rtIpc memory allocation error. return[%d], para: ptr[%p], name[%s]",
+            HCCL_ERROR_CODE(HCCL_E_MEMORY), ret, *ptr, name),
+        HCCL_E_MEMORY);
 
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Open][IpcMemory]errNo[0x%016llx] "\
-        "rtOpen ipc memory fail. return[%d], para: ptr[%p], name[%s]",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *ptr, name), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Open][IpcMemory]errNo[0x%016llx] "
+            "rtOpen ipc memory fail. return[%d], para: ptr[%p], name[%s]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *ptr, name),
+        HCCL_E_RUNTIME);
 
     HCCL_INFO("Call aclrtIpcMemImportByKey, return value[%d], para: ptr[%p], name[%s].", ret, *ptr, name);
 
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtIpcSetMemoryPid(const u8 *name, int pid[], int num)
+HcclResult hrtIpcSetMemoryPid(const u8* name, int pid[], int num)
 {
     CHK_PTR_NULL(name);
     CHK_PTR_NULL(pid);
 #ifndef HCCD
-    aclError ret = aclrtIpcMemSetImportPid(reinterpret_cast<const char *>(name), pid, static_cast<size_t>(num));
+    aclError ret = aclrtIpcMemSetImportPid(reinterpret_cast<const char*>(name), pid, static_cast<size_t>(num));
 #else
-    static auto funcPtr = (aclError(*)(const char *, int32_t *, size_t))g_dlAcl.Handle<ACL_RT_IPC_MEM_SET_IMPORT_PID>();
+    static auto funcPtr = (aclError(*)(const char*, int32_t*, size_t))g_dlAcl.Handle<ACL_RT_IPC_MEM_SET_IMPORT_PID>();
     CHK_PTR_NULL(funcPtr);
-    aclError ret = funcPtr(reinterpret_cast<const char *>(name), pid, static_cast<size_t>(num));
+    aclError ret = funcPtr(reinterpret_cast<const char*>(name), pid, static_cast<size_t>(num));
 #endif
-    CHK_PRT_RET(ret != ACL_SUCCESS,
-        HCCL_ERROR("[Set][IpcMemoryPid]errNo[0x%016llx] rtSet ipc memory pid fail. return[%d], num[%d], name[%s]",
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Set][IpcMemoryPid]errNo[0x%016llx] rtSet ipc memory pid fail. return[%d], num[%d], name[%s]",
             HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, num, name),
         HCCL_E_RUNTIME);
     HCCL_INFO("Call aclrtIpcMemSetImportPid, return value[%d], num[%d], name[%s].", ret, num, name);
@@ -1205,7 +1370,7 @@ HcclResult hrtIpcSetMemoryPid(const u8 *name, int pid[], int num)
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtSetIpcMemorySuperPodPid(const u8 *name, s32 peerSdid, s32 peerPid[], s32 pidNum)
+HcclResult hrtSetIpcMemorySuperPodPid(const u8* name, s32 peerSdid, s32 peerPid[], s32 pidNum)
 {
 #ifndef HCCD
     CHK_PTR_NULL(name);
@@ -1213,22 +1378,25 @@ HcclResult hrtSetIpcMemorySuperPodPid(const u8 *name, s32 peerSdid, s32 peerPid[
 
     // 批量设置共享内存的 SDID
     aclrtServerPid serverPid = {};
-    serverPid.sdid = static_cast<u32>(peerSdid);  // 白名单 Server Device Id，整网设备编号，配置在 BIOS 中
-    serverPid.pid = peerPid;                      // Host 侧进程 ID 白名单数组
-    serverPid.num = static_cast<size_t>(pidNum);  // pid 数组长度
-    aclError ret = aclrtIpcMemImportPidInterServer(reinterpret_cast<const char *>(name), &serverPid, 1U);
+    serverPid.sdid = static_cast<u32>(peerSdid); // 白名单 Server Device Id，整网设备编号，配置在 BIOS 中
+    serverPid.pid = peerPid;                     // Host 侧进程 ID 白名单数组
+    serverPid.num = static_cast<size_t>(pidNum); // pid 数组长度
+    aclError ret = aclrtIpcMemImportPidInterServer(reinterpret_cast<const char*>(name), &serverPid, 1U);
     if (ret != ACL_SUCCESS) {
         std::string pidStr;
         for (int i = 0; i < pidNum; ++i) {
             pidStr += std::to_string(*(peerPid + i)) + " ";
         }
-        HCCL_ERROR("[Set][IpcMemorySuperPodPid]errNo[0x%016llx] "\
+        HCCL_ERROR(
+            "[Set][IpcMemorySuperPodPid]errNo[0x%016llx] "
             "rtSet ipc memory pid fail. return[%d], name[%s], peerSdid[%016llx], peerPid[%s], pidNum[%d]",
             HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, name, peerSdid, pidStr.c_str(), pidNum);
         return HCCL_E_RUNTIME;
     }
-    HCCL_INFO("Call aclrtIpcMemImportPidInterServer, return value[%d], name[%s], peerSdid[%016llx], "\
-        "peerPid[%d], pidNum[%d].", ret, name, peerSdid, *peerPid, pidNum);
+    HCCL_INFO(
+        "Call aclrtIpcMemImportPidInterServer, return value[%d], name[%s], peerSdid[%016llx], "
+        "peerPid[%d], pidNum[%d].",
+        ret, name, peerSdid, *peerPid, pidNum);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtSetIpcMemorySuperPodPid]Does not support this interface.");
@@ -1236,7 +1404,7 @@ HcclResult hrtSetIpcMemorySuperPodPid(const u8 *name, s32 peerSdid, s32 peerPid[
 #endif
 }
 
-HcclResult hrtDevMemAlignWithPage(void* &ptr, u64 &size)
+HcclResult hrtDevMemAlignWithPage(void*& ptr, u64& size)
 {
     // 参数有效性检查
     CHK_PTR_NULL(ptr);
@@ -1244,30 +1412,35 @@ HcclResult hrtDevMemAlignWithPage(void* &ptr, u64 &size)
     // 获取页表属性大小
     HcclRtPointAttr ptrAttr = nullptr;
     HcclResult ret = hrtMallocHost(&ptrAttr, sizeof(aclrtPtrAttributes));
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[hrtDevMemAlignWithPage]runtime malloc host fail. return[%d]",
-        ret), HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[hrtDevMemAlignWithPage]runtime malloc host fail. return[%d]", ret),
+        HCCL_E_INTERNAL);
 
     ret = hrtGetPointAttr(ptrAttr, ptr);
     if (ret != HCCL_SUCCESS) {
         ret = hrtFreeHost(ptrAttr);
         ptrAttr = nullptr;
-        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[hrtDevMemAlignWithPage]runtime free host fail.return[%d]",
-            ret), HCCL_E_INTERNAL);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS, HCCL_ERROR("[hrtDevMemAlignWithPage]runtime free host fail.return[%d]", ret),
+            HCCL_E_INTERNAL);
         HCCL_ERROR("[hrtDevMemAlignWithPage]runtime get point attr fail. return[%d]", ret);
         return HCCL_E_INTERNAL;
     }
-    int32_t pageSize = (reinterpret_cast<aclrtPtrAttributes *>(ptrAttr))->pageSize;
-    CHK_PRT_RET(pageSize < 0,
+    int32_t pageSize = (reinterpret_cast<aclrtPtrAttributes*>(ptrAttr))->pageSize;
+    CHK_PRT_RET(
+        pageSize < 0,
         {
             ret = hrtFreeHost(ptrAttr);
             ptrAttr = nullptr;
             HCCL_ERROR("[hrtDevMemAlignWithPage]ptr[%p] pageSize[%d] is invalid", ptr, pageSize);
-        }, HCCL_E_DRV);
+        },
+        HCCL_E_DRV);
     HCCL_INFO("[hrtDevMemAlignWithPage]get pageSize[%d]", pageSize);
     ret = hrtFreeHost(ptrAttr);
     ptrAttr = nullptr;
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[hrtDevMemAlignWithPage]runtime free host fail. return[%d]",
-        ret), HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[hrtDevMemAlignWithPage]runtime free host fail. return[%d]", ret),
+        HCCL_E_INTERNAL);
 
     // 按照page_size = 0当做没有跨进程映射对齐要求
     if (pageSize == 0) {
@@ -1277,7 +1450,7 @@ HcclResult hrtDevMemAlignWithPage(void* &ptr, u64 &size)
     }
     // 按页表大小对齐指针
     u64 tmpPtr = reinterpret_cast<u64>(ptr);
-    ptr = reinterpret_cast<void *>((reinterpret_cast<u64>(ptr)) & (~(static_cast<u64>(pageSize) - 1)));
+    ptr = reinterpret_cast<void*>((reinterpret_cast<u64>(ptr)) & (~(static_cast<u64>(pageSize) - 1)));
     u64 offset = tmpPtr - reinterpret_cast<u64>(ptr);
 
     // 计算size值
@@ -1290,7 +1463,7 @@ HcclResult hrtDevMemAlignWithPage(void* &ptr, u64 &size)
 
 #if T_DESC("host memory管理", true)
 
-HcclResult hrtMallocHost(void **hostPtr, u64 size)
+HcclResult hrtMallocHost(void** hostPtr, u64 size)
 {
     // 参数有效性检查
     CHK_PTR_NULL(hostPtr);
@@ -1301,22 +1474,28 @@ HcclResult hrtMallocHost(void **hostPtr, u64 size)
 #ifndef HCCD
     aclError ret = aclrtMallocHostWithCfg(hostPtr, size, &cfg);
 #else
-    static auto funcPtr =
-        (aclError(*)(void **, uint64_t, aclrtMallocConfig *))g_dlAcl.Handle<ACL_RT_MALLOC_HOST_WITH_CFG>();
+    static auto funcPtr
+        = (aclError(*)(void**, uint64_t, aclrtMallocConfig*))g_dlAcl.Handle<ACL_RT_MALLOC_HOST_WITH_CFG>();
     CHK_PTR_NULL(funcPtr);
     aclError ret = funcPtr(hostPtr, size, &cfg);
 #endif
-    RPT_ENV_ERR((ret != ACL_SUCCESS), "EI0007", std::vector<std::string>({"resource_type", "resource_info"}), \
-        std::vector<std::string>({"HostMemory", std::string("MallocHost, size:") + std::to_string(size)+ " bytes"}));
+    RPT_ENV_ERR(
+        (ret != ACL_SUCCESS), "EI0007", std::vector<std::string>({"resource_type", "resource_info"}),
+        std::vector<std::string>({"HostMemory", std::string("MallocHost, size:") + std::to_string(size) + " bytes"}));
 
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[%s][%s]errNo[0x%016llx] rt malloc host fail. return[%d], "\
-        "para: hostPtr[%p], size[%llu Byte].", LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RESOURCE.c_str(),
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *hostPtr, size), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[%s][%s]errNo[0x%016llx] rt malloc host fail. return[%d], "
+            "para: hostPtr[%p], size[%llu Byte].",
+            LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RESOURCE.c_str(), HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret,
+            *hostPtr, size),
+        HCCL_E_RUNTIME);
     PLF_CONFIG_DEBUG(PLF_RES, "Malloc HostMem para: hostPtr[%p], size[%llu Byte]", *hostPtr, size);
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtFreeHost(void *hostPtr)
+HcclResult hrtFreeHost(void* hostPtr)
 {
     // 参数有效性检查
     CHK_PTR_NULL(hostPtr);
@@ -1328,8 +1507,13 @@ HcclResult hrtFreeHost(void *hostPtr)
     CHK_PTR_NULL(funcPtr);
     aclError ret = funcPtr(hostPtr);
 #endif
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Free][Host]errNo[0x%016llx] rt free host fail. return[%d], "\
-        "para: hostPtr[%p].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, hostPtr), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Free][Host]errNo[0x%016llx] rt free host fail. return[%d], "
+            "para: hostPtr[%p].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, hostPtr),
+        HCCL_E_RUNTIME);
     HCCL_DEBUG("Call aclrtFreeHost, return value[%d].", ret);
     return HCCL_SUCCESS;
 }
@@ -1349,8 +1533,13 @@ HcclResult hrtStreamActive(HcclRtStream activeStream, HcclRtStream stream)
     aclrtStream rtStream = stream;
     aclError ret = aclrtActiveStream(rtActiveStream, rtStream);
     HCCL_DEBUG("Call aclrtActiveStream, return value[%d].", ret);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Activate][Stream]errNo[0x%016llx] "\
-        "rt stream active fail. return[%d].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Activate][Stream]errNo[0x%016llx] "
+            "rt stream active fail. return[%d].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret),
+        HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 #else
@@ -1359,7 +1548,7 @@ HcclResult hrtStreamActive(HcclRtStream activeStream, HcclRtStream stream)
 #endif
 }
 
-HcclResult hrtGetStreamId(HcclRtStream stream, s32 &streamId)
+HcclResult hrtGetStreamId(HcclRtStream stream, s32& streamId)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -1369,8 +1558,13 @@ HcclResult hrtGetStreamId(HcclRtStream stream, s32 &streamId)
     aclError ret = aclrtStreamGetId(aclStream, &streamId);
 
     HCCL_DEBUG("Call aclrtStreamGetId, return value[%d] streamId[%d].", ret, streamId);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Get][StreamId]errNo[0x%016llx] "\
-        "rt get stream ID fail. return[%d].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Get][StreamId]errNo[0x%016llx] "
+            "rt get stream ID fail. return[%d].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret),
+        HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 #else
@@ -1379,14 +1573,18 @@ HcclResult hrtGetStreamId(HcclRtStream stream, s32 &streamId)
 #endif
 }
 
-HcclResult hrtGetTaskIdAndStreamID(u32 &taskId, u32 &streamId)
+HcclResult hrtGetTaskIdAndStreamID(u32& taskId, u32& streamId)
 {
 #ifndef HCCD
     rtError_t ret = rtGetTaskIdAndStreamID(&taskId, &streamId);
-    HCCL_DEBUG("Call rtGetTaskIdAndStreamId, return value[%d], para: taskId[%u], streamId[%u].", \
-        ret, taskId, streamId);
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[Get][TaskIdAndStreamID]errNo[0x%016llx] "\
-        "rt get task ID and stream ID fail. return[%d].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
+    HCCL_DEBUG("Call rtGetTaskIdAndStreamId, return value[%d], para: taskId[%u], streamId[%u].", ret, taskId, streamId);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[Get][TaskIdAndStreamID]errNo[0x%016llx] "
+            "rt get task ID and stream ID fail. return[%d].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret),
+        HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 #else
@@ -1398,18 +1596,24 @@ HcclResult hrtGetTaskIdAndStreamID(u32 &taskId, u32 &streamId)
 #endif
 
 #if T_DESC("event 同步机制", true)
-HcclResult hrtEventCreate(aclrtEvent *event)
+HcclResult hrtEventCreate(aclrtEvent* event)
 {
 #ifndef HCCD
     CHK_PTR_NULL(event);
     aclError ret = aclrtCreateEvent(event);
-    RPT_ENV_ERR(ret != ACL_SUCCESS, "EI0007", std::vector<std::string>({"resource_type","resource_info"}),\
+    RPT_ENV_ERR(
+        ret != ACL_SUCCESS, "EI0007", std::vector<std::string>({"resource_type", "resource_info"}),
         std::vector<std::string>({"event", "null"}));
 
     HCCL_DEBUG("Call aclrtCreateEvent, return value[%d], para: event[%p]", ret, *event);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[%s][%s]errNo[0x%016llx] rt event create, return[%d], "\
-        "event[%p]", LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RESOURCE.c_str(), HCCL_ERROR_CODE(HCCL_E_RUNTIME),
-        ret, event), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[%s][%s]errNo[0x%016llx] rt event create, return[%d], "
+            "event[%p]",
+            LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RESOURCE.c_str(), HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret,
+            event),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtEventCreate]Does not support this interface.");
@@ -1423,8 +1627,13 @@ HcclResult hrtEventDestroy(HcclRtEvent event)
     CHK_PTR_NULL(event);
     aclError ret = aclrtDestroyEvent(event);
     HCCL_DEBUG("Call aclrtDestroyEvent, return value[%d], para: event[%p]", ret, event);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Destroy][Event]errNo[0x%016llx] rt event destroy, return[%d], "\
-        "event[%p]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, event), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Destroy][Event]errNo[0x%016llx] rt event destroy, return[%d], "
+            "event[%p]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, event),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtEventDestroy]Does not support this interface.");
@@ -1439,8 +1648,13 @@ HcclResult hrtEventRecord(aclrtEvent event, aclrtStream stream)
     CHK_PTR_NULL(stream);
     aclError ret = aclrtRecordEvent(event, stream);
     HCCL_DEBUG("Call aclrtRecordEvent, return value[%d], para: event[%p]", ret, event);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Record][Event]errNo[0x%016llx] rt event record, return[%d], "\
-        "event[%p]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, event), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Record][Event]errNo[0x%016llx] rt event record, return[%d], "
+            "event[%p]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, event),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtEventRecord]Does not support this interface.");
@@ -1455,8 +1669,12 @@ HcclResult hrtStreamWaitEvent(aclrtStream stream, aclrtEvent event)
     CHK_PTR_NULL(stream);
     aclError ret = aclrtStreamWaitEvent(stream, event);
     HCCL_DEBUG("Call aclrtStreamWaitEvent, return value[%d], para: event[%p]", ret, event);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("errNo[0x%016llx] rt stream wait event, return[%d], event[%p], ",\
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, event), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "errNo[0x%016llx] rt stream wait event, return[%d], event[%p], ", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret,
+            event),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtStreamWaitEvent]Does not support this interface.");
@@ -1471,9 +1689,12 @@ HcclResult hrtEventQuery(aclrtEvent event)
     aclrtEventRecordedStatus status = ACL_EVENT_RECORDED_STATUS_NOT_READY;
     aclError ret = aclrtQueryEventStatus(event, &status);
     HCCL_DEBUG("Call aclrtQueryEventStatus, return value[%d], status[%d], para: event[%p]", ret, status, event);
-    CHK_PRT_RET(ret != ACL_SUCCESS,
-        HCCL_ERROR("[aclrtQueryEventStatus] query event status failed, event:%p, return value[%d], status[%d].",
-        event, ret, status), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[aclrtQueryEventStatus] query event status failed, event:%p, return value[%d], status[%d].", event, ret,
+            status),
+        HCCL_E_RUNTIME);
     return (status == ACL_EVENT_RECORDED_STATUS_COMPLETE) ? HCCL_SUCCESS : HCCL_E_RUNTIME;
 #else
     HCCL_ERROR("[hrtEventQuery]Does not support this interface.");
@@ -1482,25 +1703,21 @@ HcclResult hrtEventQuery(aclrtEvent event)
 }
 #endif
 
-
 #if T_DESC("RDMA异步", true)
 // 进行单元测试时对改函数打桩可完成条件测试
-bool CompareDevType(DevType left, DevType right)
-{
-    return left == right;
-}
+bool CompareDevType(DevType left, DevType right) { return left == right; }
 
-HcclResult hrtGetNotifySize(u32 &notifySize)
+HcclResult hrtGetNotifySize(u32& notifySize)
 {
 #ifndef HCCD
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType == DevType::DEV_TYPE_910) {
-        notifySize = 8;  // 910A 每个notify占8个字节
+        notifySize = 8; // 910A 每个notify占8个字节
     } else if (deviceType == DevType::DEV_TYPE_910B || deviceType == DevType::DEV_TYPE_910_93) {
-        notifySize = 4;  // 910B & 910_93 每个notify占4个字节
+        notifySize = 4; // 910B & 910_93 每个notify占4个字节
     } else {
-        notifySize = 8;  // 其余芯片类型每个notify占8个字节
+        notifySize = 8; // 其余芯片类型每个notify占8个字节
     }
     return HCCL_SUCCESS;
 #else
@@ -1509,14 +1726,15 @@ HcclResult hrtGetNotifySize(u32 &notifySize)
 #endif
 }
 
-HcclResult hrtNotifyGetOffset(HcclRtNotify notify, u64 &offset)
+HcclResult hrtNotifyGetOffset(HcclRtNotify notify, u64& offset)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
-    auto getEventOffsetFuncPtr = [](HcclRtNotify notify, u64 &offset) -> s32 {
+    auto getEventOffsetFuncPtr = [](HcclRtNotify notify, u64& offset) -> s32 {
         u32 eventId = 0;
         aclError ret = aclrtGetEventId(notify, &eventId);
-        CHK_PRT_RET(ret != ACL_SUCCESS,
+        CHK_PRT_RET(
+            ret != ACL_SUCCESS,
             HCCL_ERROR("[aclrtGetEventId] get event id failed, event:%p, return value[%d].", notify, ret),
             HCCL_E_RUNTIME);
         offset = eventId * 0x8;
@@ -1524,8 +1742,8 @@ HcclResult hrtNotifyGetOffset(HcclRtNotify notify, u64 &offset)
         return HCCL_SUCCESS;
     };
 
-    REPLACE_NOTIFY_WITH_EVENT(rtNotifyGetAddrOffset(notify, reinterpret_cast<uint64_t *>(&offset)),
-                                  getEventOffsetFuncPtr(notify, offset));
+    REPLACE_NOTIFY_WITH_EVENT(
+        rtNotifyGetAddrOffset(notify, reinterpret_cast<uint64_t*>(&offset)), getEventOffsetFuncPtr(notify, offset));
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtNotifyGetOffset]Does not support this interface.");
@@ -1534,11 +1752,11 @@ HcclResult hrtNotifyGetOffset(HcclRtNotify notify, u64 &offset)
 }
 
 // hrtNotifyCreate 要求当前线程设置过 setDevice
-HcclResult hrtNotifyCreate(s32 deviceId, aclrtNotify *notify)
+HcclResult hrtNotifyCreate(s32 deviceId, aclrtNotify* notify)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
-    auto creatEventFuncPtr = [](rtNotify_t *notify) -> s32 {
+    auto creatEventFuncPtr = [](rtNotify_t* notify) -> s32 {
         CHK_RT_RET(aclrtCreateEvent(notify));
         aclrtStream stream = nullptr;
         aclError ret = aclrtCreateStream(&stream);
@@ -1674,8 +1892,13 @@ HcclResult hrtEnableP2P(u32 deviceLogicId, u32 devicePhyId)
 
     HCCL_INFO("rt enableP2P deviceLogicId[%u] and devicePhyId[%u] fail[%d]", deviceLogicId, devicePhyId, ret);
 
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[Enable][P2P]errNo[0x%016llx] rt enableP2P deviceLogicId[%u] and "\
-        "devicePhyId[%u] fail[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), deviceLogicId, devicePhyId, ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[Enable][P2P]errNo[0x%016llx] rt enableP2P deviceLogicId[%u] and "
+            "devicePhyId[%u] fail[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), deviceLogicId, devicePhyId, ret),
+        HCCL_E_RUNTIME);
 
     return HCCL_SUCCESS;
 #else
@@ -1691,8 +1914,13 @@ HcclResult hrtDisableP2P(u32 deviceLogicId, u32 devicePhyId)
 
     HCCL_INFO("rt disableP2P deviceLogicId[%u] and devicePhyId[%u] fail[%d]", deviceLogicId, devicePhyId, ret);
 
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[Disable][P2P]errNo[0x%016llx] rt disableP2P deviceLogicId[%u] and "\
-        "devicePhyId[%u] fail[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), deviceLogicId, devicePhyId, ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[Disable][P2P]errNo[0x%016llx] rt disableP2P deviceLogicId[%u] and "
+            "devicePhyId[%u] fail[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), deviceLogicId, devicePhyId, ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtDisableP2P]Does not support this interface.");
@@ -1700,16 +1928,21 @@ HcclResult hrtDisableP2P(u32 deviceLogicId, u32 devicePhyId)
 #endif
 }
 
-HcclResult hrtGetP2PStatus(u32 deviceLogicId, u32 devicePhyId, uint32_t *status)
+HcclResult hrtGetP2PStatus(u32 deviceLogicId, u32 devicePhyId, uint32_t* status)
 {
 #ifndef HCCD
     rtError_t ret = rtGetP2PStatus(deviceLogicId, devicePhyId, status);
 
-    HCCL_DEBUG("rt getp2pstatus deviceLogicId[%u] and devicePhyId[%u] fail[%d], status[%u]",
-        deviceLogicId, devicePhyId, ret, *status);
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[Get][P2PStatus]errNo[0x%016llx]Call rtGetP2PStatus failed, "
+    HCCL_DEBUG(
+        "rt getp2pstatus deviceLogicId[%u] and devicePhyId[%u] fail[%d], status[%u]", deviceLogicId, devicePhyId, ret,
+        *status);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[Get][P2PStatus]errNo[0x%016llx]Call rtGetP2PStatus failed, "
             "ret[%d], deviceLogicId[%u], devicePhyId[%u]",
-            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, deviceLogicId, devicePhyId), HCCL_E_RUNTIME);
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, deviceLogicId, devicePhyId),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtGetP2PStatus]Does not support this interface.");
@@ -1721,7 +1954,7 @@ HcclResult hrtGetP2PStatus(u32 deviceLogicId, u32 devicePhyId, uint32_t *status)
 s32 GetMsTimeFromExecTimeout(s32 execTimeOut)
 {
     s64 timeOutMs = 0;
-    timeOutMs = (execTimeOut  + HCCL_EXEC_TIME_OUT_OFFSET_S) * TIME_S_TO_MS;
+    timeOutMs = (execTimeOut + HCCL_EXEC_TIME_OUT_OFFSET_S) * TIME_S_TO_MS;
     timeOutMs = (timeOutMs > 0x7FFFFFFF) ? 0x7FFFFFFF : timeOutMs;
     return static_cast<s32>(timeOutMs & (0x7FFFFFFF));
 }
@@ -1731,8 +1964,13 @@ HcclResult hcclStreamSynchronize(HcclRtStream stream, s32 execTimeOut)
 #ifndef HCCD
     CHK_PTR_NULL(stream);
     aclError ret = aclrtSynchronizeStreamWithTimeout(stream, GetMsTimeFromExecTimeout(execTimeOut));
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Synchronize][Stream]errNo[0x%016llx] rt "\
-        "streamsynchronizewithtimeout fail. return[%d].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Synchronize][Stream]errNo[0x%016llx] rt "
+            "streamsynchronizewithtimeout fail. return[%d].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hcclStreamSynchronize]Does not support this interface.");
@@ -1740,12 +1978,17 @@ HcclResult hcclStreamSynchronize(HcclRtStream stream, s32 execTimeOut)
 #endif
 }
 
-HcclResult hrtTaskAbortHandleCallback(aclrtDeviceTaskAbortCallback callback, void *args)
+HcclResult hrtTaskAbortHandleCallback(aclrtDeviceTaskAbortCallback callback, void* args)
 {
 #ifndef HCCD
     aclError ret = aclrtSetDeviceTaskAbortCallback("HCCL", callback, args);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Reg][TaskAbortCallBack]errNo[0x%016llx] rt reg taskabortcallback "\
-        "fail. return[%d], para: callback[%p].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, callback), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Reg][TaskAbortCallBack]errNo[0x%016llx] rt reg taskabortcallback "
+            "fail. return[%d], para: callback[%p].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, callback),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtTaskAbortHandleCallback]Does not support this interface.");
@@ -1753,7 +1996,7 @@ HcclResult hrtTaskAbortHandleCallback(aclrtDeviceTaskAbortCallback callback, voi
 #endif
 }
 
-HcclResult PrintMemoryAttr(const void *memAddr)
+HcclResult PrintMemoryAttr(const void* memAddr)
 {
 #ifndef HCCD
     if (LIKELY(!HcclCheckLogLevel(HCCL_LOG_INFO))) {
@@ -1764,12 +2007,17 @@ HcclResult PrintMemoryAttr(const void *memAddr)
     aclrtPtrAttributes memAttr;
     CHK_PTR_NULL(memAddr);
     s32 sRet = memset_s(&memAttr, sizeof(aclrtPtrAttributes), 0, sizeof(aclrtPtrAttributes));
-    CHK_PRT_RET(sRet != EOK, HCCL_ERROR("[Print][MemoryAttr]errNo[0x%016llx]memory set 0 failed for memAttr. "\
-        "params: dest[%p], destMaxSize[%zu], count[%zu]", HCOM_ERROR_CODE(HCCL_E_MEMORY), &memAttr,
-        sizeof(aclrtPtrAttributes), sizeof(aclrtPtrAttributes)), HCCL_E_MEMORY);
+    CHK_PRT_RET(
+        sRet != EOK,
+        HCCL_ERROR(
+            "[Print][MemoryAttr]errNo[0x%016llx]memory set 0 failed for memAttr. "
+            "params: dest[%p], destMaxSize[%zu], count[%zu]",
+            HCOM_ERROR_CODE(HCCL_E_MEMORY), &memAttr, sizeof(aclrtPtrAttributes), sizeof(aclrtPtrAttributes)),
+        HCCL_E_MEMORY);
     ret = hrtGetPointAttr(&memAttr, memAddr);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Print][MemoryAttr]errNo[0x%016llx] runtime get memory attr failed",
-        HCOM_ERROR_CODE(ret)), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR("[Print][MemoryAttr]errNo[0x%016llx] runtime get memory attr failed", HCOM_ERROR_CODE(ret)), ret);
     HCCL_INFO("memory attributes: address[%p], page size[%u]", memAddr, memAttr.pageSize);
     return HCCL_SUCCESS;
 #else
@@ -1781,8 +2029,13 @@ HcclResult hrtRegTaskFailCallbackByModule(rtTaskFailCallback callback)
 {
 #ifndef HCCD
     rtError_t ret = rtRegTaskFailCallbackByModule("HCCL", callback);
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[Reg][TaskFailCallback]errNo[0x%016llx] rt reg taskFailCallback "\
-        "fail. return[%d], para: callback[%p].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, callback), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[Reg][TaskFailCallback]errNo[0x%016llx] rt reg taskFailCallback "
+            "fail. return[%d], para: callback[%p].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, callback),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtRegTaskFailCallbackByModule]Does not support this interface.");
@@ -1790,12 +2043,17 @@ HcclResult hrtRegTaskFailCallbackByModule(rtTaskFailCallback callback)
 #endif
 }
 
-HcclResult hrtGetStreamAvailableNum(u32 &maxStrCount)
+HcclResult hrtGetStreamAvailableNum(u32& maxStrCount)
 {
 #ifndef HCCD
     aclError ret = aclrtGetStreamAvailableNum(&maxStrCount);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Get][StreamAvailableNum]errNo[0x%016llx] aclrtGetStreamAvailableNum "\
-        "fail. return[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Get][StreamAvailableNum]errNo[0x%016llx] aclrtGetStreamAvailableNum "
+            "fail. return[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtGetStreamAvailableNum]Does not support this interface.");
@@ -1803,24 +2061,34 @@ HcclResult hrtGetStreamAvailableNum(u32 &maxStrCount)
 #endif
 }
 
-HcclResult hrtSubscribeReport(u64 threadId, rtStream_t &stream)
+HcclResult hrtSubscribeReport(u64 threadId, rtStream_t& stream)
 {
 #ifndef HCCD
     aclError ret = aclrtSubscribeReport(threadId, stream);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[HostNic][RegStream]errNo[0x%016llx] aclrtSubscribeReport fail,"
-        "return[%d], para: threadId[%llu].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, threadId), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[HostNic][RegStream]errNo[0x%016llx] aclrtSubscribeReport fail,"
+            "return[%d], para: threadId[%llu].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, threadId),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtSubscribeReport]Does not support this interface.");
     return HCCL_E_NOT_SUPPORT;
 #endif
 }
-HcclResult hrtUnSubscribeReport(uint64_t threadId, aclrtStream &stream)
+HcclResult hrtUnSubscribeReport(uint64_t threadId, aclrtStream& stream)
 {
 #ifndef HCCD
     aclError ret = aclrtUnSubscribeReport(threadId, stream);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Close][HostNicThread]errNo[0x%016llx] aclrtUnSubscribeReport fail,"
-        "return[%d], para: threadId[%llu].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, threadId), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Close][HostNicThread]errNo[0x%016llx] aclrtUnSubscribeReport fail,"
+            "return[%d], para: threadId[%llu].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, threadId),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtUnSubscribeReport]Does not support this interface.");
@@ -1842,14 +2110,19 @@ HcclResult hrtProcessReport(s32 timeout)
 #endif
 }
 
-HcclResult hrtDeviceGetBareTgid(s32 *pid)
+HcclResult hrtDeviceGetBareTgid(s32* pid)
 {
     CHK_PTR_NULL(pid);
 #ifndef HCCD
     aclError ret = aclrtDeviceGetBareTgid(pid);
     HCCL_DEBUG("Call rtDeviceGetBareTgid, return value[%d], rtGet pid[%u].", ret, *pid);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Get][BareTgid]errNo[0x%016llx] rtGet pid fail, "
-        "return[%d], rtGet pid[%u]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *pid), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Get][BareTgid]errNo[0x%016llx] rtGet pid fail, "
+            "return[%d], rtGet pid[%u]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *pid),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     if (g_workModeAicpu) {
@@ -1862,16 +2135,20 @@ HcclResult hrtDeviceGetBareTgid(s32 *pid)
 #endif
 }
 
-HcclResult hrtIpcOpenNotify(aclrtNotify* notify, const u8 *name)
+HcclResult hrtIpcOpenNotify(aclrtNotify* notify, const u8* name)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
     CHK_PTR_NULL(name);
 
-    aclError ret = aclrtNotifyImportByKey(notify, reinterpret_cast<const char *>(name), ACL_NOTIFY_DEFAULT);
+    aclError ret = aclrtNotifyImportByKey(notify, reinterpret_cast<const char*>(name), ACL_NOTIFY_DEFAULT);
     HCCL_INFO("Call aclrtNotifyImportByKey, return value[%d] para: notify[%p], name[%s].", ret, *notify, name);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[rt][IpcOpenNotify]errNo[0x%016llx] rt ipc notify open fail,"\
-        "return[%d]. para: notify[%p], name[%s]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *notify, name),
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[rt][IpcOpenNotify]errNo[0x%016llx] rt ipc notify open fail,"
+            "return[%d]. para: notify[%p], name[%s]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, *notify, name),
         HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
@@ -1888,8 +2165,13 @@ HcclResult hrtSetIpcNotifyPid(aclrtNotify notify, int32_t pid[], int num)
 
     aclError ret = aclrtNotifySetImportPid(notify, pid, num);
     HCCL_DEBUG("Call aclrtNotifySetImportPid, return value[%d]. Params: num[%d].", ret, num);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Set][IpcNotifyPid]errNo[0x%016llx] "
-        "rtSet ipc Notify pid fail. return[%d], num[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, num), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Set][IpcNotifyPid]errNo[0x%016llx] "
+            "rtSet ipc Notify pid fail. return[%d], num[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, num),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtSetIpcNotifyPid]Does not support this interface.");
@@ -1905,22 +2187,25 @@ HcclResult hrtSetIpcNotifySuperPodPid(rtNotify_t notify, s32 peerSdid, s32 peerP
 
     // 批量设置共享 Notify 的 SDID
     aclrtServerPid serverPid = {};
-    serverPid.sdid = static_cast<u32>(peerSdid);  // 白名单 Server Device Id，整网设备编号，配置在 BIOS 中
-    serverPid.pid = peerPid;                      // 白名单进程 ID 数组
-    serverPid.num = static_cast<size_t>(pidNum);  // pid 数组长度
+    serverPid.sdid = static_cast<u32>(peerSdid); // 白名单 Server Device Id，整网设备编号，配置在 BIOS 中
+    serverPid.pid = peerPid;                     // 白名单进程 ID 数组
+    serverPid.num = static_cast<size_t>(pidNum); // pid 数组长度
     aclError ret = aclrtNotifySetImportPidInterServer(notify, &serverPid, 1U); // 设置 1 组 SDID
     if (ret != ACL_SUCCESS) {
         std::string pidStr;
         for (int i = 0; i < pidNum; ++i) {
             pidStr += std::to_string(*(peerPid + i)) + " ";
         }
-        HCCL_ERROR("[Set][IpcNotifyPid]errNo[0x%016llx] "
+        HCCL_ERROR(
+            "[Set][IpcNotifyPid]errNo[0x%016llx] "
             "rtSet ipc Notify pid fail. return[%d], notify[%p], peerSdid[%016llx], peerPid[%s], pidNum[%d]",
             HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, notify, peerSdid, pidStr.c_str(), pidNum);
         return HCCL_E_RUNTIME;
     }
-    HCCL_DEBUG("Call aclrtNotifySetImportPidInterServer, return value[%d]. "\
-        "Params: notify[%p], peerSdid[%016llx], peerPid[%d], pidNum[%d].", ret, notify, peerSdid, *peerPid, pidNum);
+    HCCL_DEBUG(
+        "Call aclrtNotifySetImportPidInterServer, return value[%d]. "
+        "Params: notify[%p], peerSdid[%016llx], peerPid[%d], pidNum[%d].",
+        ret, notify, peerSdid, *peerPid, pidNum);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtSetIpcNotifySuperPodPid]Does not support this interface.");
@@ -1928,15 +2213,20 @@ HcclResult hrtSetIpcNotifySuperPodPid(rtNotify_t notify, s32 peerSdid, s32 peerP
 #endif
 }
 
-HcclResult hrtCtxGetOverflowAddr(void **overflowAddr)
+HcclResult hrtCtxGetOverflowAddr(void** overflowAddr)
 {
 #ifndef HCCD
     CHK_PTR_NULL(overflowAddr);
 
     aclError ret = aclrtCtxGetFloatOverflowAddr(overflowAddr);
     HCCL_DEBUG("Call aclrtCtxGetFloatOverflowAddr, return value[%d].", ret);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[rt][aclrtCtxGetFloatOverflowAddr]errNo[0x%016llx] "
-        "rtCtx get overflow addr fail. return[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[rt][aclrtCtxGetFloatOverflowAddr]errNo[0x%016llx] "
+            "rtCtx get overflow addr fail. return[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtCtxGetOverflowAddr]Does not support this interface.");
@@ -1944,8 +2234,9 @@ HcclResult hrtCtxGetOverflowAddr(void **overflowAddr)
 #endif
 }
 
-HcclResult hrtReduceAsync(void* dst, uint64_t destMax, const void* src, uint64_t count, aclrtReduceKind kind,
-    aclDataType type, aclrtStream stream)
+HcclResult hrtReduceAsync(
+    void* dst, uint64_t destMax, const void* src, uint64_t count, aclrtReduceKind kind, aclDataType type,
+    aclrtStream stream)
 {
 #ifndef HCCD
     CHK_PTR_NULL(dst);
@@ -1953,11 +2244,17 @@ HcclResult hrtReduceAsync(void* dst, uint64_t destMax, const void* src, uint64_t
 
     // reserve 预留字段填 nullptr
     aclError ret = aclrtReduceAsync(dst, src, count, kind, type, stream, nullptr);
-    HCCL_DEBUG("Call aclrtReduceAsync, return value[%d]. para: dst[%p] destMax[%llu] src[%p] count[%llu] rtReduceOp[%d]"
-        " runtimeDataType[%d].", ret, dst, destMax, src, count, kind, type);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[rt][ReduceAsync]errNo[0x%016llx] rt Reduce async fail,"\
-        "return[%d]. para: dst[%p] destMax[%llu] src[%p] count[%llu] rtReduceOp[%d] runtimeDataType[%d].", \
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dst, destMax, src, count, kind, type), HCCL_E_RUNTIME);
+    HCCL_DEBUG(
+        "Call aclrtReduceAsync, return value[%d]. para: dst[%p] destMax[%llu] src[%p] count[%llu] rtReduceOp[%d]"
+        " runtimeDataType[%d].",
+        ret, dst, destMax, src, count, kind, type);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[rt][ReduceAsync]errNo[0x%016llx] rt Reduce async fail,"
+            "return[%d]. para: dst[%p] destMax[%llu] src[%p] count[%llu] rtReduceOp[%d] runtimeDataType[%d].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dst, destMax, src, count, kind, type),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtReduceAsync]Does not support this interface.");
@@ -1965,16 +2262,16 @@ HcclResult hrtReduceAsync(void* dst, uint64_t destMax, const void* src, uint64_t
 #endif
 }
 
-HcclResult hrtCallbackLaunch(aclrtCallback callBackFunc, void *fnData, aclrtStream stream, bool isBlock)
+HcclResult hrtCallbackLaunch(aclrtCallback callBackFunc, void* fnData, aclrtStream stream, bool isBlock)
 {
 #ifndef HCCD
     CHK_PTR_NULL(fnData);
     aclrtCallbackBlockType blockType = isBlock ? ACL_CALLBACK_BLOCK : ACL_CALLBACK_NO_BLOCK;
     aclError ret = aclrtLaunchCallback(callBackFunc, fnData, blockType, stream);
     HCCL_DEBUG("Call aclrtLaunchCallback, return value[%d].", ret);
-    CHK_PRT_RET(ret != ACL_SUCCESS,
-        HCCL_ERROR("[rt][CallbackLaunch]callback launch failed, ret[%d], isBlock[%d]", ret, isBlock),
-        HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR("[rt][CallbackLaunch]callback launch failed, ret[%d], isBlock[%d]", ret, isBlock), HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtCallbackLaunch]Does not support this interface.");
@@ -1987,8 +2284,12 @@ HcclResult hrtRDMASend(u32 qpn, u32 wqe_index, rtStream_t stream)
 #ifndef HCCD
     rtError_t ret = rtRDMASend(qpn, wqe_index, stream);
     HCCL_DEBUG("Call rtRDMASend, return value[%d]. Params: qpn[%u] wqe_index[%u].", ret, qpn, wqe_index);
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[rt][RdmaSend]errNo[0x%016llx] rt rdma send fail, "\
-        "return[%d]. para: qpn[%u] wqe_index[%u].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, qpn, wqe_index),\
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[rt][RdmaSend]errNo[0x%016llx] rt rdma send fail, "
+            "return[%d]. para: qpn[%u] wqe_index[%u].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, qpn, wqe_index),
         HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
@@ -2003,10 +2304,15 @@ HcclResult hrtIpcSetNotifyName(aclrtNotify notify, u8* name, uint32_t len)
     CHK_PTR_NULL(notify);
     CHK_PTR_NULL(name);
 
-    aclError ret = aclrtNotifyGetExportKey(notify, reinterpret_cast<char *>(name), len, 0UL);
+    aclError ret = aclrtNotifyGetExportKey(notify, reinterpret_cast<char*>(name), len, 0UL);
     HCCL_INFO("[hrtIpcSetNotifyName] Call aclrtNotifyGetExportKey, name[%s] return value[%d].", name, ret);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Set][IPCNotify]errNo[0x%016llx] IPC set notify name[%s] fail. "\
-        "return[%d].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), name, ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Set][IPCNotify]errNo[0x%016llx] IPC set notify name[%s] fail. "
+            "return[%d].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), name, ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtIpcSetNotifyName]Does not support this interface.");
@@ -2025,8 +2331,13 @@ HcclResult hrtStreamDestroy(rtStream_t stream)
     HCCL_INFO("Destroy Stream begin, para: deviceId[%d] streamId[%d]", deviceId, streamId);
     aclError ret = aclrtDestroyStreamForce(stream);
     HCCL_INFO("Call aclrtDestroyStreamForce, return value[%d].", ret);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Stream][Destroy]errNo[0x%016llx] rt stream Destroy fail, "
-        "return[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Stream][Destroy]errNo[0x%016llx] rt stream Destroy fail, "
+            "return[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtStreamDestroy]Does not support this interface.");
@@ -2034,15 +2345,20 @@ HcclResult hrtStreamDestroy(rtStream_t stream)
 #endif
 }
 
-HcclResult hrtStreamCreate(aclrtStream *stream)
+HcclResult hrtStreamCreate(aclrtStream* stream)
 {
 #ifndef HCCD
     CHK_PTR_NULL(stream);
 
     aclError ret = aclrtCreateStream(stream);
     HCCL_DEBUG("Call aclrtCreateStream, return value[%d].", ret);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Stream][Create]errNo[0x%016llx] aclrtCreateStream error, "
-        "rtRet[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Stream][Create]errNo[0x%016llx] aclrtCreateStream error, "
+            "rtRet[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret),
+        HCCL_E_RUNTIME);
 
     s32 streamId = 0;
     HcclResult hcclRet = hrtGetStreamId(*stream, streamId);
@@ -2060,14 +2376,19 @@ HcclResult hrtStreamCreate(aclrtStream *stream)
 #endif
 }
 
-HcclResult hrtStreamCreateWithFlags(aclrtStream *stream, int32_t priority, uint32_t flags)
+HcclResult hrtStreamCreateWithFlags(aclrtStream* stream, int32_t priority, uint32_t flags)
 {
 #ifndef HCCD
     CHK_PTR_NULL(stream);
 
     aclError ret = aclrtCreateStreamWithConfig(stream, static_cast<uint32_t>(priority), flags);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Stream][CreateWithFlags]errNo[0x%016llx] aclrtCreateStreamWithConfig "
-        "error, rtRet[%d], flags[%u]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, flags), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Stream][CreateWithFlags]errNo[0x%016llx] aclrtCreateStreamWithConfig "
+            "error, rtRet[%d], flags[%u]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, flags),
+        HCCL_E_RUNTIME);
 
     s32 streamId = 0;
     HcclResult hcclRet = hrtGetStreamId(*stream, streamId);
@@ -2077,8 +2398,9 @@ HcclResult hrtStreamCreateWithFlags(aclrtStream *stream, int32_t priority, uint3
         return hcclRet;
     }
     s32 deviceId = GetDeviceLogicalId();
-    PLF_CONFIG_DEBUG(PLF_RES, "Create Stream para: deviceId[%d] streamId[%d] priority[%d] flags[%u]",
-        deviceId, streamId, priority, flags);
+    PLF_CONFIG_DEBUG(
+        PLF_RES, "Create Stream para: deviceId[%d] streamId[%d] priority[%d] flags[%u]", deviceId, streamId, priority,
+        flags);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtStreamCreateWithFlags]Does not support this interface.");
@@ -2098,8 +2420,13 @@ HcclResult hrtStreamSetMode(HcclRtStream stream, const uint64_t stmMode)
     value.failureMode = stmMode;
     ret = aclrtSetStreamAttribute(stream, ACL_STREAM_ATTR_FAILURE_MODE, &value);
     HCCL_DEBUG("Call aclrtSetStreamAttribute return value[%d]. stmMode[%llu], streamId[%d].", ret, stmMode, streamId);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_WARNING("[Stream][SetMode]errNo[0x%016llx] aclrtSetStreamAttribute fail, "
-        "nothing changed. rtRet[%d], stmMode[%llu]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, stmMode), HCCL_SUCCESS);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_WARNING(
+            "[Stream][SetMode]errNo[0x%016llx] aclrtSetStreamAttribute fail, "
+            "nothing changed. rtRet[%d], stmMode[%llu]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, stmMode),
+        HCCL_SUCCESS);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtStreamSetMode]Does not support this interface.");
@@ -2107,7 +2434,7 @@ HcclResult hrtStreamSetMode(HcclRtStream stream, const uint64_t stmMode)
 #endif
 }
 
-HcclResult hrtStreamGetMode(HcclRtStream const stream, uint64_t *const stmMode)
+HcclResult hrtStreamGetMode(HcclRtStream const stream, uint64_t* const stmMode)
 {
 #ifndef HCCD
     CHK_PTR_NULL(stream);
@@ -2118,8 +2445,13 @@ HcclResult hrtStreamGetMode(HcclRtStream const stream, uint64_t *const stmMode)
 
     aclrtStreamAttrValue value;
     ret = aclrtGetStreamAttribute(stream, ACL_STREAM_ATTR_FAILURE_MODE, &value);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[Stream][GetMode]errNo[0x%016llx] aclrtGetStreamAttribute error, "
-        "rtRet[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[Stream][GetMode]errNo[0x%016llx] aclrtGetStreamAttribute error, "
+            "rtRet[%d]",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret),
+        HCCL_E_RUNTIME);
     *stmMode = value.failureMode;
     HCCL_DEBUG("Call aclrtGetStreamAttribute return value[%d]. stmMode[%llu], streamId[%d].", ret, *stmMode, streamId);
     return HCCL_SUCCESS;
@@ -2129,36 +2461,44 @@ HcclResult hrtStreamGetMode(HcclRtStream const stream, uint64_t *const stmMode)
 #endif
 }
 
-HcclResult hrtMemcpy(void *dst, uint64_t destMax, const void *src, uint64_t count, HcclRtMemcpyKind kind)
+HcclResult hrtMemcpy(void* dst, uint64_t destMax, const void* src, uint64_t count, HcclRtMemcpyKind kind)
 {
     CHK_PTR_NULL(dst);
     CHK_PTR_NULL(src);
-    CHK_PRT_RET(count > destMax, HCCL_ERROR("[hrtMemcpy] count[%llu] exceeds destMax[%llu].",
-        count, destMax), HCCL_E_PARA);
+    CHK_PRT_RET(
+        count > destMax, HCCL_ERROR("[hrtMemcpy] count[%llu] exceeds destMax[%llu].", count, destMax), HCCL_E_PARA);
     aclrtMemcpyKind rtKind;
     CHK_RET(MemcpyKindTranslate(kind, &rtKind));
 #ifndef HCCD
     aclmdlRICaptureMode mode = aclmdlRICaptureMode::ACL_MODEL_RI_CAPTURE_MODE_RELAXED;
     HcclResult hcclRet = hrtThreadExchangeCaptureMode(&mode);
-    CHK_PRT_CONT(hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
+    CHK_PRT_CONT(
+        hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
         HCCL_ERROR("[hrtMemcpy] hrtThreadExchangeCaptureMode return [%d]", hcclRet));
 
     aclError ret = aclrtMemcpy(dst, destMax, src, count, rtKind);
-    HCCL_DEBUG("Call aclrtMemcpy, return[%d], para: dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], rtKind[%d]",
-        ret, dst, destMax, src, count, rtKind);
+    HCCL_DEBUG(
+        "Call aclrtMemcpy, return[%d], para: dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], rtKind[%d]", ret,
+        dst, destMax, src, count, rtKind);
 
     hcclRet = hrtThreadExchangeCaptureMode(&mode);
-    CHK_PRT_CONT(hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
+    CHK_PRT_CONT(
+        hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
         HCCL_ERROR("[hrtMemcpy] hrtThreadExchangeCaptureMode return [%d]", hcclRet));
 #else
     aclError ret = ACL_SUCCESS;
-    static auto funcPtr =
-        (aclError(*)(void *, size_t, const void *, size_t, aclrtMemcpyKind))g_dlAcl.Handle<ACL_RT_MEMCPY>();
+    static auto funcPtr
+        = (aclError(*)(void*, size_t, const void*, size_t, aclrtMemcpyKind))g_dlAcl.Handle<ACL_RT_MEMCPY>();
     CHK_PTR_NULL(funcPtr);
     ret = funcPtr(dst, destMax, src, count, rtKind);
 #endif
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[aclrtMemcpy] rt data memcpy host to device failed,"
-        "size[%llu Byte] src[%p]", destMax, src), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[aclrtMemcpy] rt data memcpy host to device failed,"
+            "size[%llu Byte] src[%p]",
+            destMax, src),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 }
 
@@ -2167,17 +2507,23 @@ HcclResult hrtRDMADBSend(uint32_t dbindex, uint64_t dbinfo, rtStream_t stream)
 #ifndef HCCD
     // stream为空时使用rts内部set device后的默认stream
     rtError_t ret = rtRDMADBSend(dbindex, dbinfo, stream);
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[rtRDMADBSend]errNo[0x%016llx] rt rdma send fail, "
-        "return[%d]. para: dbindex[%u]dbinfo[%llu].", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dbindex,
-        dbinfo), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[rtRDMADBSend]errNo[0x%016llx] rt rdma send fail, "
+            "return[%d]. para: dbindex[%u]dbinfo[%llu].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dbindex, dbinfo),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     static auto funcPtr = (rtError_t(*)(uint32_t, uint64_t, rtStream_t))g_dlRts.Handle<RT_RDMA_DB_SEND>();
     CHK_PTR_NULL(funcPtr);
     rtError_t ret = funcPtr(dbindex, dbinfo, stream);
     HCCL_DEBUG("Call rtRDMADBSend, return value[%d]", ret);
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("rtRDMADBSend errNo[0x%016llx] RDMADBSend fail, return[%d]",
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR("rtRDMADBSend errNo[0x%016llx] RDMADBSend fail, return[%d]", HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #endif
 }
@@ -2190,13 +2536,12 @@ HcclResult hrtSetLocalDeviceSatMode(aclrtFloatOverflowMode floatOverflowMode)
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtGetDeviceSatMode(aclrtFloatOverflowMode *floatOverflowMode)
+HcclResult hrtGetDeviceSatMode(aclrtFloatOverflowMode* floatOverflowMode)
 {
     CHK_PTR_NULL(floatOverflowMode);
 #ifndef HCCD
     aclError ret = aclrtGetDeviceSatMode(floatOverflowMode);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[hrtGetDeviceSatMode]rt get dev satmode failed,"),
-        HCCL_E_RUNTIME);
+    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[hrtGetDeviceSatMode]rt get dev satmode failed,"), HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     if (g_workModeAicpu) {
@@ -2208,7 +2553,7 @@ HcclResult hrtGetDeviceSatMode(aclrtFloatOverflowMode *floatOverflowMode)
 #endif
 }
 
-HcclResult hrtNotifyGetAddr(HcclRtNotify signal, u64 *notifyAddr)
+HcclResult hrtNotifyGetAddr(HcclRtNotify signal, u64* notifyAddr)
 {
 #ifndef HCCD
     uint64_t* const addr = reinterpret_cast<uint64_t*>(notifyAddr);
@@ -2222,7 +2567,7 @@ HcclResult hrtNotifyGetAddr(HcclRtNotify signal, u64 *notifyAddr)
 #endif
 }
 
-HcclResult hrtGetNotifyID(HcclRtNotify signal, u32 *notifyID)
+HcclResult hrtGetNotifyID(HcclRtNotify signal, u32* notifyID)
 {
 #ifndef HCCD
     CHK_PTR_NULL(signal);
@@ -2237,29 +2582,31 @@ HcclResult hrtGetNotifyID(HcclRtNotify signal, u32 *notifyID)
 #endif
 }
 
-HcclResult hrtGetDeviceInfo(u32 deviceId, HcclRtDeviceModuleType hcclModuleType,
-    HcclRtDeviceInfoType hcclInfoType, s64 &val)
+HcclResult
+hrtGetDeviceInfo(u32 deviceId, HcclRtDeviceModuleType hcclModuleType, HcclRtDeviceInfoType hcclInfoType, s64& val)
 {
 #ifndef HCCD
-     static const std::map<HcclRtDeviceInfoType, aclrtDevAttr> systemInfoTypeMap = {
+    static const std::map<HcclRtDeviceInfoType, aclrtDevAttr> systemInfoTypeMap = {
         {HcclRtDeviceInfoType::HCCL_INFO_TYPE_PHY_CHIP_ID, ACL_DEV_ATTR_PHY_CHIP_ID},
         {HcclRtDeviceInfoType::HCCL_INFO_TYPE_SDID, ACL_DEV_ATTR_SUPER_POD_DEVIDE_ID},
         {HcclRtDeviceInfoType::HCCL_INFO_TYPE_SERVER_ID, ACL_DEV_ATTR_SUPER_POD_SERVER_ID},
         {HcclRtDeviceInfoType::HCCL_INFO_TYPE_SUPER_POD_ID, ACL_DEV_ATTR_SUPER_POD_ID},
         {HcclRtDeviceInfoType::HCCL_INFO_TYPE_CUST_OP_ENHANCE, ACL_DEV_ATTR_CUST_OP_PRIVILEGE},
     };
-    CHK_PRT_RET(hcclModuleType != HcclRtDeviceModuleType::HCCL_RT_MODULE_TYPE_SYSTEM,
-        HCCL_ERROR("[hrtGetDeviceInfo]Unsupported moduleType[%d].", hcclModuleType),
-        HCCL_E_NOT_SUPPORT);
+    CHK_PRT_RET(
+        hcclModuleType != HcclRtDeviceModuleType::HCCL_RT_MODULE_TYPE_SYSTEM,
+        HCCL_ERROR("[hrtGetDeviceInfo]Unsupported moduleType[%d].", hcclModuleType), HCCL_E_NOT_SUPPORT);
 
     auto it = systemInfoTypeMap.find(hcclInfoType);
-    CHK_PRT_RET(it == systemInfoTypeMap.end(),
-                HCCL_ERROR("[hrtGetDeviceInfo]Unsupported infoType[%d] for moduleType=SYSTEM.", hcclInfoType),
-                HCCL_E_NOT_SUPPORT);
+    CHK_PRT_RET(
+        it == systemInfoTypeMap.end(),
+        HCCL_ERROR("[hrtGetDeviceInfo]Unsupported infoType[%d] for moduleType=SYSTEM.", hcclInfoType),
+        HCCL_E_NOT_SUPPORT);
     aclrtDevAttr attr = it->second;
- 
-    aclError ret = aclrtGetDeviceInfo(deviceId, attr, reinterpret_cast<int64_t *>(&val));
-    CHK_PRT_RET(ret != ACL_SUCCESS,
+
+    aclError ret = aclrtGetDeviceInfo(deviceId, attr, reinterpret_cast<int64_t*>(&val));
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
         HCCL_ERROR("[hrtGetDeviceInfo]rt get device info failed. ret[%d], attr[%d], val[%ld]", ret, attr, val),
         HCCL_E_RUNTIME);
     HCCL_DEBUG("Call aclrtGetDeviceInfo, ret[%d], attr[%d], val[%ld]", ret, attr, val);
@@ -2270,7 +2617,7 @@ HcclResult hrtGetDeviceInfo(u32 deviceId, HcclRtDeviceModuleType hcclModuleType,
 #endif
 }
 
-HcclResult hrtGetRdmaDoorbellAddr(u32 dbIndex, u64 &dbAddr)
+HcclResult hrtGetRdmaDoorbellAddr(u32 dbIndex, u64& dbAddr)
 {
 #ifndef HCCD
     s32 devLogID = 0;
@@ -2286,7 +2633,8 @@ HcclResult hrtGetRdmaDoorbellAddr(u32 dbIndex, u64 &dbAddr)
         // 若已有记录，则直接获取chipID
         chipID = g_deviceChipIdMap[devLogID];
     } else {
-        CHK_RET(hrtGetDeviceInfo(devLogID, HcclRtDeviceModuleType::HCCL_RT_MODULE_TYPE_SYSTEM,
+        CHK_RET(hrtGetDeviceInfo(
+            devLogID, HcclRtDeviceModuleType::HCCL_RT_MODULE_TYPE_SYSTEM,
             HcclRtDeviceInfoType::HCCL_INFO_TYPE_PHY_CHIP_ID, chipID));
         g_deviceChipIdMap[devLogID] = chipID;
     }
@@ -2303,7 +2651,8 @@ HcclResult hrtGetRdmaDoorbellAddr(u32 dbIndex, u64 &dbAddr)
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType == DevType::DEV_TYPE_910_93) {
-        HCCL_DEBUG("[hrtGetRdmaDoorbellAddr] The roceBaseAddr and dieAddrOffset has changed, when deviceType is 910_93.");
+        HCCL_DEBUG(
+            "[hrtGetRdmaDoorbellAddr] The roceBaseAddr and dieAddrOffset has changed, when deviceType is 910_93.");
         // 910_93 HCCS_SW 组网
         roceBaseAddr = 0x202000000000ULL;
         roceVfDbCfg0Reg = 0x230ULL;
@@ -2320,8 +2669,8 @@ HcclResult hrtGetRdmaDoorbellAddr(u32 dbIndex, u64 &dbAddr)
         dbDieIdShift = 16; // 16 is dbDieIdShift
     }
 
-    dbAddr = roceBaseAddr + roceVfDbCfg0Reg + chipAddrOffset * chipID +
-        dieAddrOffset * ((dbIndex & dbDieIdMask) >> dbDieIdShift);
+    dbAddr = roceBaseAddr + roceVfDbCfg0Reg + chipAddrOffset * chipID
+             + dieAddrOffset * ((dbIndex & dbDieIdMask) >> dbDieIdShift);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtGetRdmaDoorbellAddr]Does not support this interface.");
@@ -2329,7 +2678,7 @@ HcclResult hrtGetRdmaDoorbellAddr(u32 dbIndex, u64 &dbAddr)
 #endif
 }
 
-HcclResult hrtGetDevArgsAddr(rtStream_t stm, rtArgsEx_t *argsInfo, void **devArgsAddr, void **argsHandle)
+HcclResult hrtGetDevArgsAddr(rtStream_t stm, rtArgsEx_t* argsInfo, void** devArgsAddr, void** argsHandle)
 {
 #ifndef HCCD
     rtError_t ret = rtGetDevArgsAddr(stm, argsInfo, devArgsAddr, argsHandle);
@@ -2341,23 +2690,29 @@ HcclResult hrtGetDevArgsAddr(rtStream_t stm, rtArgsEx_t *argsInfo, void **devArg
 #endif
 }
 
-HcclResult hrtMemSet(void *dst, uint64_t destMax, uint64_t count)
+HcclResult hrtMemSet(void* dst, uint64_t destMax, uint64_t count)
 {
 #ifndef HCCD
     // 参数有效性检查
     CHK_PTR_NULL(dst);
     aclmdlRICaptureMode mode = aclmdlRICaptureMode::ACL_MODEL_RI_CAPTURE_MODE_RELAXED;
     HcclResult hcclRet = hrtThreadExchangeCaptureMode(&mode);
-    CHK_PRT_CONT(hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
+    CHK_PRT_CONT(
+        hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
         HCCL_ERROR("[hrtMemSet] hrtThreadExchangeCaptureMode return [%d]", hcclRet));
     aclError ret = aclrtMemset(dst, destMax, 0, count);
 
     HCCL_DEBUG("Call aclrtMemset, return value[%d]", ret);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[AsyncCopy][Mem]errNo[0x%016llx] rt memory async set failed, "\
-        "return[%d], para: dstAddr[%p], destMax[%llu], count[%llu].",\
-        HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dst, destMax, count), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[AsyncCopy][Mem]errNo[0x%016llx] rt memory async set failed, "
+            "return[%d], para: dstAddr[%p], destMax[%llu], count[%llu].",
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dst, destMax, count),
+        HCCL_E_RUNTIME);
     hcclRet = hrtThreadExchangeCaptureMode(&mode);
-    CHK_PRT_CONT(hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
+    CHK_PRT_CONT(
+        hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
         HCCL_ERROR("[hrtMemSet] hrtThreadExchangeCaptureMode return [%d]", hcclRet));
     return HCCL_SUCCESS;
 #else
@@ -2366,15 +2721,20 @@ HcclResult hrtMemSet(void *dst, uint64_t destMax, uint64_t count)
 #endif
 }
 
-HcclResult hrtEventCreateWithFlag(aclrtEvent *evt)
+HcclResult hrtEventCreateWithFlag(aclrtEvent* evt)
 {
 #ifndef HCCD
     CHK_PTR_NULL(evt);
 
     aclError ret = aclrtCreateEventWithFlag(evt, ACL_EVENT_DEVICE_USE_ONLY);
     HCCL_DEBUG("Call aclrtCreateEventWithFlag, return value[%d] evt[%p].", ret, evt);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[aclrtCreateEventWithFlag]rtEvent Create WithFlags failed "\
-        "value[%d] evt[%p].", ret, evt), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[aclrtCreateEventWithFlag]rtEvent Create WithFlags failed "
+            "value[%d] evt[%p].",
+            ret, evt),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[aclrtCreateEventWithFlag]Does not support this interface.");
@@ -2382,15 +2742,20 @@ HcclResult hrtEventCreateWithFlag(aclrtEvent *evt)
 #endif
 }
 
-HcclResult hrtNotifyCreateWithFlag(int32_t deviceId, aclrtNotify *notify)
+HcclResult hrtNotifyCreateWithFlag(int32_t deviceId, aclrtNotify* notify)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
 
     aclError ret = aclrtCreateNotify(notify, ACL_NOTIFY_DEVICE_USE_ONLY);
     HCCL_DEBUG("Call aclrtCreateNotify deviceId:[%d], return value[%d].", deviceId, ret);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[aclrtCreateNotify]rtNotify Create WithFlags failed "\
-        "deviceId:%d, notify:%p, return value[%d].", deviceId, notify, ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[aclrtCreateNotify]rtNotify Create WithFlags failed "
+            "deviceId:%d, notify:%p, return value[%d].",
+            deviceId, notify, ret),
+        HCCL_E_RUNTIME);
 
     u32 notifyId = 0;
     CHK_RET(hrtGetNotifyID(*notify, &notifyId));
@@ -2402,17 +2767,22 @@ HcclResult hrtNotifyCreateWithFlag(int32_t deviceId, aclrtNotify *notify)
 #endif
 }
 
-HcclResult hrtIpcOpenNotifyWithFlag(rtNotify_t *notify, const u8 *name, uint32_t flags)
+HcclResult hrtIpcOpenNotifyWithFlag(rtNotify_t* notify, const u8* name, uint32_t flags)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
     CHK_PTR_NULL(name);
 
-    rtError_t ret = aclrtNotifyImportByKey(notify, reinterpret_cast<const char *>(name), static_cast<uint64_t>(flags));
-    HCCL_DEBUG("Call aclrtNotifyImportByKey notify:[%p], name:[%s], flags[%u], return value[%d].", notify, name,
-        flags, ret);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[aclrtNotifyImportByKey]rtIpc OpenNotify WithFlags failed "\
-        "notify:%p, name:%s, flags[%u], return value[%d].", notify, name, flags, ret), HCCL_E_RUNTIME);
+    rtError_t ret = aclrtNotifyImportByKey(notify, reinterpret_cast<const char*>(name), static_cast<uint64_t>(flags));
+    HCCL_DEBUG(
+        "Call aclrtNotifyImportByKey notify:[%p], name:[%s], flags[%u], return value[%d].", notify, name, flags, ret);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[aclrtNotifyImportByKey]rtIpc OpenNotify WithFlags failed "
+            "notify:%p, name:%s, flags[%u], return value[%d].",
+            notify, name, flags, ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[aclrtNotifyImportByKey]Does not support this interface.");
@@ -2420,19 +2790,24 @@ HcclResult hrtIpcOpenNotifyWithFlag(rtNotify_t *notify, const u8 *name, uint32_t
 #endif
 }
 
-HcclResult hrtNotifyImportByKey(rtNotify_t *notify, const u8 *name)
+HcclResult hrtNotifyImportByKey(rtNotify_t* notify, const u8* name)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
     CHK_PTR_NULL(name);
 
     constexpr u64 notifyFlag = 0;
-    auto ret = aclrtNotifyImportByKey(notify,
-        reinterpret_cast<const char *>(name), notifyFlag);
-    HCCL_DEBUG("Call aclrtNotifyImportByKey notify:[%p], name:[%s], flags[%u], return value[%d].", notify, name,
-        notifyFlag, ret);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[hrtNotifyImportByKey]aclrtIpc OpenNotify WithFlags failed "\
-        "notify:%p, name:%s, return value[%d].", notify, name, ret), HCCL_E_RUNTIME);
+    auto ret = aclrtNotifyImportByKey(notify, reinterpret_cast<const char*>(name), notifyFlag);
+    HCCL_DEBUG(
+        "Call aclrtNotifyImportByKey notify:[%p], name:[%s], flags[%u], return value[%d].", notify, name, notifyFlag,
+        ret);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[hrtNotifyImportByKey]aclrtIpc OpenNotify WithFlags failed "
+            "notify:%p, name:%s, return value[%d].",
+            notify, name, ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtNotifyImportByKey]Does not support this interface.");
@@ -2440,7 +2815,7 @@ HcclResult hrtNotifyImportByKey(rtNotify_t *notify, const u8 *name)
 #endif
 }
 
-HcclResult hrtNotifyGetPhyInfo(rtNotify_t notify, uint32_t *phyDevId, uint32_t *tsId)
+HcclResult hrtNotifyGetPhyInfo(rtNotify_t notify, uint32_t* phyDevId, uint32_t* tsId)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
@@ -2448,10 +2823,15 @@ HcclResult hrtNotifyGetPhyInfo(rtNotify_t notify, uint32_t *phyDevId, uint32_t *
     CHK_PTR_NULL(tsId);
 
     rtError_t ret = rtNotifyGetPhyInfo(notify, phyDevId, tsId);
-    HCCL_DEBUG("Call rtNotifyGetPhyInfo notify:%p, phyDevId:%u, tsId:%u, return value[%d].", notify, *phyDevId,
-        *tsId, ret);
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[rtNotifyGetPhyInfo]rtNotify GetPhy failed notify:%p, phyDevId:%u, "\
-        "tsId:%u, return value[%d].", notify, *phyDevId, *tsId, ret), HCCL_E_RUNTIME);
+    HCCL_DEBUG(
+        "Call rtNotifyGetPhyInfo notify:%p, phyDevId:%u, tsId:%u, return value[%d].", notify, *phyDevId, *tsId, ret);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[rtNotifyGetPhyInfo]rtNotify GetPhy failed notify:%p, phyDevId:%u, "
+            "tsId:%u, return value[%d].",
+            notify, *phyDevId, *tsId, ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[rtNotifyGetPhyInfo]Does not support this interface.");
@@ -2459,19 +2839,24 @@ HcclResult hrtNotifyGetPhyInfo(rtNotify_t notify, uint32_t *phyDevId, uint32_t *
 #endif
 }
 
-HcclResult hrtNotifyGetPhyInfoExt(rtNotify_t notify, rtNotifyPhyInfo *notifyInfo)
+HcclResult hrtNotifyGetPhyInfoExt(rtNotify_t notify, rtNotifyPhyInfo* notifyInfo)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
     CHK_PTR_NULL(notifyInfo);
 
     rtError_t ret = rtNotifyGetPhyInfoExt(notify, notifyInfo);
-    HCCL_DEBUG("Call rtNotifyGetPhyInfoExt notify:%p, phyId:%u, tsId:%u, idType:%u, notifyid:[%u], flag:[%u], "
-        "return value[%d].", notify, notifyInfo->phyId, notifyInfo->tsId, notifyInfo->idType, notifyInfo->shrId,
-        notifyInfo->flag, ret);
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("Call rtNotifyGetPhyInfoExt notify:%p, phyId:%u, tsId:%u, "
-        "idType:%u, notifyid:[%u], flag:[%u], return value[%d].", notify, notifyInfo->phyId, notifyInfo->tsId,
-        notifyInfo->idType, notifyInfo->shrId, notifyInfo->flag, ret), HCCL_E_RUNTIME);
+    HCCL_DEBUG(
+        "Call rtNotifyGetPhyInfoExt notify:%p, phyId:%u, tsId:%u, idType:%u, notifyid:[%u], flag:[%u], "
+        "return value[%d].",
+        notify, notifyInfo->phyId, notifyInfo->tsId, notifyInfo->idType, notifyInfo->shrId, notifyInfo->flag, ret);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "Call rtNotifyGetPhyInfoExt notify:%p, phyId:%u, tsId:%u, "
+            "idType:%u, notifyid:[%u], flag:[%u], return value[%d].",
+            notify, notifyInfo->phyId, notifyInfo->tsId, notifyInfo->idType, notifyInfo->shrId, notifyInfo->flag, ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[rtNotifyGetPhyInfoExt]Does not support this interface.");
@@ -2479,7 +2864,7 @@ HcclResult hrtNotifyGetPhyInfoExt(rtNotify_t notify, rtNotifyPhyInfo *notifyInfo
 #endif
 }
 
-HcclResult hrtGetEventID(rtEvent_t event, uint32_t *eventId)
+HcclResult hrtGetEventID(rtEvent_t event, uint32_t* eventId)
 {
 #ifndef HCCD
     CHK_PTR_NULL(event);
@@ -2487,8 +2872,13 @@ HcclResult hrtGetEventID(rtEvent_t event, uint32_t *eventId)
 
     aclError ret = aclrtGetEventId(event, eventId);
     HCCL_DEBUG("Call aclrtGetEventId event:%p, eventId:%u, return value[%d].", event, *eventId, ret);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[aclrtGetEventId]rtGet EventID failed event:%p, eventId:%u"\
-        "return value[%d].", event, *eventId, ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[aclrtGetEventId]rtGet EventID failed event:%p, eventId:%u"
+            "return value[%d].",
+            event, *eventId, ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtGetEventID]Does not support this interface.");
@@ -2496,7 +2886,7 @@ HcclResult hrtGetEventID(rtEvent_t event, uint32_t *eventId)
 #endif
 }
 
-HcclResult hrtStreamGetSqid(const rtStream_t stm, uint32_t *sqId)
+HcclResult hrtStreamGetSqid(const rtStream_t stm, uint32_t* sqId)
 {
 #ifndef HCCD
     CHK_PTR_NULL(stm);
@@ -2504,8 +2894,13 @@ HcclResult hrtStreamGetSqid(const rtStream_t stm, uint32_t *sqId)
 
     rtError_t ret = rtStreamGetSqid(stm, sqId);
     HCCL_DEBUG("Call rtStreamGetSqid stm:%p, sqId:%u value[%d].", stm, *sqId, ret);
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[rtStreamGetSqid]rtStream Get Sqid failed stm:%p, "\
-        "sqId:%u value[%d].", stm, *sqId, ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[rtStreamGetSqid]rtStream Get Sqid failed stm:%p, "
+            "sqId:%u value[%d].",
+            stm, *sqId, ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[rtStreamGetSqid]Does not support this interface.");
@@ -2513,7 +2908,7 @@ HcclResult hrtStreamGetSqid(const rtStream_t stm, uint32_t *sqId)
 #endif
 }
 
-HcclResult hrtStreamGetCqid(const rtStream_t stm, uint32_t *cqId, uint32_t *logicCqId)
+HcclResult hrtStreamGetCqid(const rtStream_t stm, uint32_t* cqId, uint32_t* logicCqId)
 {
 #ifndef HCCD
     CHK_PTR_NULL(stm);
@@ -2522,8 +2917,13 @@ HcclResult hrtStreamGetCqid(const rtStream_t stm, uint32_t *cqId, uint32_t *logi
 
     rtError_t ret = rtStreamGetCqid(stm, cqId, logicCqId);
     HCCL_DEBUG("Call rtStreamGetCqid stm:%p, cqId:%u, logicCqId:%u value[%d].", stm, *cqId, *logicCqId, ret);
-    CHK_PRT_RET(ret != RT_ERROR_NONE, HCCL_ERROR("[rtStreamGetCqid]rtStream Get logicCqId failed stm:%p, " \
-        "cqId:%u logicCqId:%u value[%d].", stm, *cqId, *logicCqId, ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[rtStreamGetCqid]rtStream Get logicCqId failed stm:%p, "
+            "cqId:%u logicCqId:%u value[%d].",
+            stm, *cqId, *logicCqId, ret),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[rtStreamGetCqid]Does not support this interface.");
@@ -2538,8 +2938,8 @@ HcclResult hrtResourceClean()
     // rts 接口内部通过 GetDevice 获得 deviceId
     rtError_t ret = rtNotifyResetAll();
     HCCL_DEBUG("Call aclrtNotifyBatchReset, ret: %d", ret);
-    CHK_PRT_RET(ret != ACL_SUCCESS,
-        HCCL_ERROR("[hrtResourceClean]aclrtNotifyBatchReset failed, return value[%d].", ret),
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS, HCCL_ERROR("[hrtResourceClean]aclrtNotifyBatchReset failed, return value[%d].", ret),
         HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
@@ -2548,7 +2948,7 @@ HcclResult hrtResourceClean()
 #endif
 }
 
-HcclResult hrtGetHccsPortNum(u32 deviceLogicId, s32 &num)
+HcclResult hrtGetHccsPortNum(u32 deviceLogicId, s32& num)
 {
 #ifndef HCCD
     constexpr s32 HCCS_PORT_NUM_UNKNOWN = -1;
@@ -2571,16 +2971,34 @@ HcclResult hrtGetHccsPortNum(u32 deviceLogicId, s32 &num)
     int64_t val = 0;
     aclError ret = aclrtGetDeviceInfo(deviceLogicId, ACL_DEV_ATTR_MAINBOARD_ID, &val);
     HCCL_DEBUG("Call aclrtGetDeviceInfo deviceLogicId:%u, val: %lld, ret:%d.", deviceLogicId, val, ret);
-    CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[rtGetHccsPortNum]rtGet Hccs Port Num failed deviceLogicId:%u, "
-        "return value[%d].", deviceLogicId, ret), HCCL_E_RUNTIME);
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
+        HCCL_ERROR(
+            "[rtGetHccsPortNum]rtGet Hccs Port Num failed deviceLogicId:%u, "
+            "return value[%d].",
+            deviceLogicId, ret),
+        HCCL_E_RUNTIME);
     switch (val) {
-        case MAINBORDID_910_93_PRODUCT_V1_2_4_4: num = HCCS_PORT_NUM_910_93_6; break;
-        case MAINBORDID_910_93_PRODUCT_V1_4_8_8: num = HCCS_PORT_NUM_910_93_6; break;
-        case MAINBORDID_910_93_PRODUCT_V2_4_8_7: num = HCCS_PORT_NUM_910_93_7; break;
-        case MAINBORDID_910_93_PRODUCT_V2_2_8_7: num = HCCS_PORT_NUM_910_93_7; break;
-        case MAINBORDID_910_93_PRODUCT_V3_4_8_7: num = HCCS_PORT_NUM_910_93_7; break;
-        case MAINBORDID_910_93_PRODUCT_V3_2_8_7: num = HCCS_PORT_NUM_910_93_7; break;
-        default:    num = HCCS_PORT_NUM_910_93_UNKNOWN;
+        case MAINBORDID_910_93_PRODUCT_V1_2_4_4:
+            num = HCCS_PORT_NUM_910_93_6;
+            break;
+        case MAINBORDID_910_93_PRODUCT_V1_4_8_8:
+            num = HCCS_PORT_NUM_910_93_6;
+            break;
+        case MAINBORDID_910_93_PRODUCT_V2_4_8_7:
+            num = HCCS_PORT_NUM_910_93_7;
+            break;
+        case MAINBORDID_910_93_PRODUCT_V2_2_8_7:
+            num = HCCS_PORT_NUM_910_93_7;
+            break;
+        case MAINBORDID_910_93_PRODUCT_V3_4_8_7:
+            num = HCCS_PORT_NUM_910_93_7;
+            break;
+        case MAINBORDID_910_93_PRODUCT_V3_2_8_7:
+            num = HCCS_PORT_NUM_910_93_7;
+            break;
+        default:
+            num = HCCS_PORT_NUM_910_93_UNKNOWN;
     }
     return HCCL_SUCCESS;
 #else
@@ -2589,7 +3007,7 @@ HcclResult hrtGetHccsPortNum(u32 deviceLogicId, s32 &num)
 #endif
 }
 
-HcclResult hrtThreadExchangeCaptureMode(aclmdlRICaptureMode *mode)
+HcclResult hrtThreadExchangeCaptureMode(aclmdlRICaptureMode* mode)
 {
 #ifndef HCCD
     HCCL_DEBUG("Call aclmdlRICaptureThreadExchangeMode mode after: %d", *mode);
@@ -2599,8 +3017,13 @@ HcclResult hrtThreadExchangeCaptureMode(aclmdlRICaptureMode *mode)
         HCCL_INFO("[hrtThreadExchangeCaptureMode]aclmdlRICaptureThreadExchangeMode not support!");
         return HCCL_E_NOT_SUPPORT;
     } else {
-        CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[hrtThreadExchangeCaptureMode]aclmdlRICaptureThreadExchangeMode "
-            "failed mode:%d, return value[%d].", *mode, ret), HCCL_E_RUNTIME);
+        CHK_PRT_RET(
+            ret != ACL_SUCCESS,
+            HCCL_ERROR(
+                "[hrtThreadExchangeCaptureMode]aclmdlRICaptureThreadExchangeMode "
+                "failed mode:%d, return value[%d].",
+                *mode, ret),
+            HCCL_E_RUNTIME);
     }
     return HCCL_SUCCESS;
 #else
@@ -2609,7 +3032,7 @@ HcclResult hrtThreadExchangeCaptureMode(aclmdlRICaptureMode *mode)
 #endif
 }
 
-HcclResult hrtCacheLastTaskExtendInfo(const char *tag, size_t tagLen)
+HcclResult hrtCacheLastTaskExtendInfo(const char* tag, size_t tagLen)
 {
 #ifndef HCCD
     auto funcPtr = (aclError(*)(const char*, size_t))g_dlAcl.Handle<ACL_RT_CACHE_LAST_TASK_EXTEND_INFO>();
@@ -2618,13 +3041,14 @@ HcclResult hrtCacheLastTaskExtendInfo(const char *tag, size_t tagLen)
         return HCCL_E_NOT_SUPPORT;
     }
     aclError ret = funcPtr(tag, tagLen);
-    CHK_PRT_RET(ret != ACL_SUCCESS,
+    CHK_PRT_RET(
+        ret != ACL_SUCCESS,
         HCCL_ERROR("[hrtCacheLastTaskExtendInfo] call aclrtCacheLastTaskExtendInfo fail, return[%d]", ret),
         HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
-        HCCL_ERROR("[hrtCacheLastTaskExtendInfo]Does not support this interface.");
-        return HCCL_E_NOT_SUPPORT;
+    HCCL_ERROR("[hrtCacheLastTaskExtendInfo]Does not support this interface.");
+    return HCCL_E_NOT_SUPPORT;
 #endif
 }
 
@@ -2633,23 +3057,30 @@ __attribute__((constructor)) void CallBackInitRts()
     g_deviceType = DevType::DEV_TYPE_COUNT;
     g_deviceLogicId = INVALID_INT;
     g_devicePhyId = INVALID_UINT;
-    HCCL_RUN_INFO("[adapter_rts.cc][CallBackInitRts] g_deviceType [%d] g_deviceLogicId [%d] g_devicePhyId [%d]",
-        g_deviceType, g_deviceLogicId, g_devicePhyId);
+    HCCL_RUN_INFO(
+        "[adapter_rts.cc][CallBackInitRts] g_deviceType [%d] g_deviceLogicId [%d] g_devicePhyId [%d]", g_deviceType,
+        g_deviceLogicId, g_devicePhyId);
 }
 
-HcclResult hrtMemcpyEx(void *dst, uint64_t destMax, void *src, uint64_t count, rtMemcpyKind_t kind)
+HcclResult hrtMemcpyEx(void* dst, uint64_t destMax, void* src, uint64_t count, rtMemcpyKind_t kind)
 {
 #ifndef HCCD
     CHK_PTR_NULL(dst);
     CHK_PTR_NULL(src);
-    CHK_PRT_RET(count > destMax, HCCL_ERROR("[hrtMemcpyEx] count[%llu] exceeds destMax[%llu].",
-        count, destMax), HCCL_E_PARA);
+    CHK_PRT_RET(
+        count > destMax, HCCL_ERROR("[hrtMemcpyEx] count[%llu] exceeds destMax[%llu].", count, destMax), HCCL_E_PARA);
     rtError_t ret = rtMemcpyEx(dst, destMax, src, count, kind);
-    HCCL_DEBUG("[hrtMemcpyEx] Call rtMemcpyEx, ret[%d], dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], "
-        "rtKind[%d]", ret, dst, destMax, src, count, kind);
-    CHK_PRT_RET(ret != RT_ERROR_NONE,
-        HCCL_ERROR("[hrtMemcpyEx] rtMemcpyEx failed, return[%d], dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], "
-        "rtKind[%d].", ret, dst, destMax, src, count, kind), HCCL_E_RUNTIME);
+    HCCL_DEBUG(
+        "[hrtMemcpyEx] Call rtMemcpyEx, ret[%d], dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], "
+        "rtKind[%d]",
+        ret, dst, destMax, src, count, kind);
+    CHK_PRT_RET(
+        ret != RT_ERROR_NONE,
+        HCCL_ERROR(
+            "[hrtMemcpyEx] rtMemcpyEx failed, return[%d], dstAddr[%p], destMax[%llu], srcAddr[%p], count[%llu], "
+            "rtKind[%d].",
+            ret, dst, destMax, src, count, kind),
+        HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
 #else
     HCCL_ERROR("[hrtMemcpyEx] Does not support this interface.");

@@ -18,13 +18,15 @@ namespace Hccl {
 
 class AivInstruction : public Instruction {
 public:
-    AivInstruction(const std::vector<LinkData> &links, const AivOpArgs &aivOpArgs) : Instruction(InstructionType::AIV_INS), links_(links), aivOpArgs_(aivOpArgs)
-    {
-    }
+    AivInstruction(const std::vector<LinkData>& links, const AivOpArgs& aivOpArgs)
+        : Instruction(InstructionType::AIV_INS),
+          links_(links),
+          aivOpArgs_(aivOpArgs)
+    {}
 
-    std::string                 Describe() const override;
+    std::string Describe() const override;
     const std::vector<LinkData> GetLinks() const;
-    HcclResult GetAivInsArgs(AivOpArgs &aivOpArgs) const;
+    HcclResult GetAivInsArgs(AivOpArgs& aivOpArgs) const;
 
 private:
     std::vector<LinkData> links_;

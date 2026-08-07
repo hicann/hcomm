@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #include "bifrost_cncoi_puber_rank_distribute.h"
 #include "bifrost_cncoi_svc.h"
 #include "bifrost_cncoi_table.h"
@@ -19,7 +18,9 @@
 extern "C" {
 #endif
 
-STATIC int32_t BifrostCncoiPuberRankDistributeOnUpdateCode(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiRankDistributeKeyT *tupleKey, void *tupleVal, void *codeBuf, int32_t bufLen)
+STATIC int32_t BifrostCncoiPuberRankDistributeOnUpdateCode(BifrostCncoiPuber *bifrostCncoiPuber,
+    BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiRankDistributeKeyT *tupleKey, void *tupleVal, void *codeBuf,
+    int32_t bufLen)
 {
     BifrostCncoiPuberRankDistributeVTbl *appVTbl = VOS_NULL;
     int32_t ret = -1;
@@ -56,7 +57,8 @@ error:
     return ret;
 }
 
-STATIC int32_t BifrostCncoiPuberRankDistributeOnDeleteCode(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiRankDistributeKeyT *tupleKey, void *codeBuf, int32_t bufLen)
+STATIC int32_t BifrostCncoiPuberRankDistributeOnDeleteCode(BifrostCncoiPuber *bifrostCncoiPuber,
+    BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiRankDistributeKeyT *tupleKey, void *codeBuf, int32_t bufLen)
 {
     SimpoBuilderT *builder;
     int32_t ret = -1;
@@ -87,8 +89,8 @@ error:
     return ret;
 }
 
-STATIC void BifrostCncoiPuberRankDistributeOnSub(BifrostCncoiPuber *bifrostCncoiPuber,
-    BifrostCncoiSliceKeyT *sliceKey, void *data, int32_t len)
+STATIC void BifrostCncoiPuberRankDistributeOnSub(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
+    void *data, int32_t len)
 {
     BifrostCncoiPuberRankDistributeVTbl *appVTbl = VOS_NULL;
 
@@ -127,17 +129,18 @@ error:
     return;
 }
 
-uint32_t BifrostCncoiPuberRankDistributeReg(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiPuberRankDistributeVTbl *appVTbl)
+uint32_t BifrostCncoiPuberRankDistributeReg(BifrostCncoiPuber *bifrostCncoiPuber,
+    BifrostCncoiPuberRankDistributeVTbl *appVTbl)
 {
-    BkfDcTableTypeVTbl dcVTbl = { 0 };
-    BkfPuberTableTypeVTbl puberVTbl = { 0 };
+    BkfDcTableTypeVTbl dcVTbl = {0};
+    BkfPuberTableTypeVTbl puberVTbl = {0};
     uint32_t ret;
 
     if (bifrostCncoiPuber == VOS_NULL || appVTbl == VOS_NULL) {
         return BKF_ERR;
     }
 
-    dcVTbl.name = BIFROST_CNCOI_SVC_NAME"_rank_distribute";
+    dcVTbl.name = BIFROST_CNCOI_SVC_NAME "_rank_distribute";
     dcVTbl.tableTypeId = BIFROST_CNCOI_TABLE_TYPE_RANK_DISTRIBUTE;
     dcVTbl.cookie = bifrostCncoiPuber;
     dcVTbl.tupleCntMax = appVTbl->tupleCntMax;
@@ -157,7 +160,8 @@ uint32_t BifrostCncoiPuberRankDistributeReg(BifrostCncoiPuber *bifrostCncoiPuber
     puberVTbl.tupleDeleteCode = (F_BKF_PUBER_TUPLE_DELETE_CODE)BifrostCncoiPuberRankDistributeOnDeleteCode;
     puberVTbl.tableOnSub = (F_BKF_PUBER_TABLE_ONSUB)BifrostCncoiPuberRankDistributeOnSub;
     puberVTbl.tableOnUnsub = (F_BKF_PUBER_TABLE_ONUNSUB)BifrostCncoiPuberRankDistributeOnUnsub;
-    ret = BkfPuberAttachTableTypeEx(bifrostCncoiPuber->puber, &puberVTbl, appVTbl, sizeof(BifrostCncoiPuberRankDistributeVTbl));
+    ret = BkfPuberAttachTableTypeEx(bifrostCncoiPuber->puber, &puberVTbl, appVTbl,
+        sizeof(BifrostCncoiPuberRankDistributeVTbl));
     if (ret != BKF_OK) {
         return ret;
     }
@@ -174,7 +178,8 @@ uint32_t BifrostCncoiPuberRankDistributeNotifyTableComplete(BifrostCncoiPuber *b
     return BkfDcNotifyTableTypeComplete(bifrostCncoiPuber->argInit.dc, BIFROST_CNCOI_TABLE_TYPE_RANK_DISTRIBUTE);
 }
 
-uint32_t BifrostCncoiPuberRankDistributeCreateTable(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey)
+uint32_t BifrostCncoiPuberRankDistributeCreateTable(BifrostCncoiPuber *bifrostCncoiPuber,
+    BifrostCncoiSliceKeyT *sliceKey)
 {
     if (bifrostCncoiPuber == VOS_NULL) {
         return BKF_ERR;
@@ -201,16 +206,19 @@ void BifrostCncoiPuberRankDistributeReleaseTable(BifrostCncoiPuber *bifrostCncoi
     BkfDcReleaseTable(bifrostCncoiPuber->argInit.dc, sliceKey, BIFROST_CNCOI_TABLE_TYPE_RANK_DISTRIBUTE);
 }
 
-uint32_t BifrostCncoiPuberRankDistributeUpdate(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiRankDistributeKeyT *tupleKey, void *val)
+uint32_t BifrostCncoiPuberRankDistributeUpdate(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
+    BifrostCncoiRankDistributeKeyT *tupleKey, void *val)
 {
     if (bifrostCncoiPuber == VOS_NULL) {
         return BKF_ERR;
     }
 
-    return BkfDcUpdateTuple(bifrostCncoiPuber->argInit.dc, sliceKey, BIFROST_CNCOI_TABLE_TYPE_RANK_DISTRIBUTE, tupleKey, val, VOS_NULL);
+    return BkfDcUpdateTuple(bifrostCncoiPuber->argInit.dc, sliceKey, BIFROST_CNCOI_TABLE_TYPE_RANK_DISTRIBUTE, tupleKey,
+        val, VOS_NULL);
 }
 
-void BifrostCncoiPuberRankDistributeDelete(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiRankDistributeKeyT *tupleKey)
+void BifrostCncoiPuberRankDistributeDelete(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
+    BifrostCncoiRankDistributeKeyT *tupleKey)
 {
     if (bifrostCncoiPuber == VOS_NULL) {
         return;
@@ -222,7 +230,6 @@ void BifrostCncoiPuberRankDistributeDelete(BifrostCncoiPuber *bifrostCncoiPuber,
 #if __cplusplus
 }
 #endif
-
 
 // auto-generated information:MS4wOzEwOzIyNTsyMDI0MTAxNDtiaWZyb3N0X2NuY29pX3B1YmVyX3JhbmtfZGlzdHJpYnV0ZS5j
 // auto-generated check_sum:94296802b5e576596c761b55d6c9d3188e46e6c11fff28939192568ab38c757e

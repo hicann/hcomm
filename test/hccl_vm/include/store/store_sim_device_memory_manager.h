@@ -20,7 +20,7 @@ class DeviceMemoryManager {
 public:
     // 获取单例实例
     static DeviceMemoryManager& GetInstance();
-    
+
     // 禁止拷贝和赋值
     DeviceMemoryManager(const DeviceMemoryManager&) = delete;
     DeviceMemoryManager& operator=(const DeviceMemoryManager&) = delete;
@@ -36,7 +36,7 @@ public:
 
     // 释放物理内存
     void FreePhyMem(const char* name, uint64_t deviceId);
-    
+
     // 获取物理内存
     void* AcquirePhyMem(const char* name, uint64_t deviceId, size_t size);
 
@@ -45,7 +45,7 @@ public:
 
     // 缓存设备地址到host地址
     void MapDevPtrHostPtr(void* devPtr, void* hostPtr);
-    
+
     // 去缓存设备地址到host地址
     void UnmapDevPtrHostPtr(void* devPtr);
 
@@ -56,11 +56,12 @@ private:
     // 私有构造函数
     DeviceMemoryManager();
     ~DeviceMemoryManager();
+
 private:
     // 静态单例实例
     static DeviceMemoryManager* s_instance;
     static std::mutex s_instanceLock;
-    
+
     std::mutex m_virSizeLock;
     std::map<int, uint64_t> m_deviceMemSizes; // 每个设备的内存大小
 

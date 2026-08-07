@@ -16,7 +16,7 @@ namespace hccl {
 CollCommMgr* CollCommMgr::instance_ = nullptr;
 static std::once_flag instanceFlag;
 
-CollCommMgr* CollCommMgr::GetInstance() 
+CollCommMgr* CollCommMgr::GetInstance()
 {
     std::call_once(instanceFlag, [&] {
         instance_ = new CollCommMgr();
@@ -24,27 +24,28 @@ CollCommMgr* CollCommMgr::GetInstance()
     return instance_;
 }
 
-hcomm::ClusterMonitor &CollCommMgr::GetClusterMonitor(s32 deviceLogicId)
+hcomm::ClusterMonitor& CollCommMgr::GetClusterMonitor(s32 deviceLogicId)
 {
     if (static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM) {
-	    HCCL_WARNING("[ClusterMonitor][%s]deviceLogicId[%d] >= %u, invalid",
-	        __func__, deviceLogicId, MAX_MODULE_DEVICE_NUM);
-	    return clusterMonitor_[0];
-	}
-	return clusterMonitor_[deviceLogicId];
+        HCCL_WARNING(
+            "[ClusterMonitor][%s]deviceLogicId[%d] >= %u, invalid", __func__, deviceLogicId, MAX_MODULE_DEVICE_NUM);
+        return clusterMonitor_[0];
+    }
+    return clusterMonitor_[deviceLogicId];
 }
 
-HcclResult CollCommMgr::TryReserveCcuMsComm(s32 deviceLogicId, const std::string &commId, bool &reserved)
+HcclResult CollCommMgr::TryReserveCcuMsComm(s32 deviceLogicId, const std::string& commId, bool& reserved)
 {
     reserved = false;
     if (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM || commId.empty()) {
-        HCCL_ERROR("[%s] invalid parameter, deviceLogicId[%d], max device num[%u], commId empty[%d].", __func__,
-            deviceLogicId, MAX_MODULE_DEVICE_NUM, commId.empty());
+        HCCL_ERROR(
+            "[%s] invalid parameter, deviceLogicId[%d], max device num[%u], commId empty[%d].", __func__, deviceLogicId,
+            MAX_MODULE_DEVICE_NUM, commId.empty());
         return HCCL_E_PARA;
     }
 
     std::lock_guard<std::mutex> lock(ccuMsCommMutex_);
-    auto &owner = ccuMsCommIds_[deviceLogicId];
+    auto& owner = ccuMsCommIds_[deviceLogicId];
     if (owner.empty()) {
         owner = commId;
         reserved = true;
@@ -52,16 +53,16 @@ HcclResult CollCommMgr::TryReserveCcuMsComm(s32 deviceLogicId, const std::string
     return HCCL_SUCCESS;
 }
 
-void CollCommMgr::ReleaseCcuMsComm(s32 deviceLogicId, const std::string &commId)
+void CollCommMgr::ReleaseCcuMsComm(s32 deviceLogicId, const std::string& commId)
 {
     if (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM) {
-        HCCL_WARNING("[%s] deviceLogicId[%d] is invalid, max device num[%u].", __func__, deviceLogicId,
-            MAX_MODULE_DEVICE_NUM);
+        HCCL_WARNING(
+            "[%s] deviceLogicId[%d] is invalid, max device num[%u].", __func__, deviceLogicId, MAX_MODULE_DEVICE_NUM);
         return;
     }
 
     std::lock_guard<std::mutex> lock(ccuMsCommMutex_);
-    auto &owner = ccuMsCommIds_[deviceLogicId];
+    auto& owner = ccuMsCommIds_[deviceLogicId];
     if (owner == commId) {
         owner.clear();
     }
@@ -84,9 +85,6 @@ void CollCommMgr::UnRegisteCollComm(CollComm* collComm)
     (void)GetClusterMonitor(collComm->GetDeviceLogicId()).UnRegisterToClusterMonitor(collComm);
 }
 
-std::unordered_map<std::string, CollComm*> CollCommMgr::GetAllCollComms()
-{
-    return allCollComms_;
-}
+std::unordered_map<std::string, CollComm*> CollCommMgr::GetAllCollComms() { return allCollComms_; }
 
-}
+} // namespace hccl

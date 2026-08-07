@@ -29,32 +29,34 @@ class TransportUrmaMem;
 
 class HcclOneSidedConn {
 public:
-    HcclOneSidedConn(CommunicatorImpl *comm, LinkData linkData);
+    HcclOneSidedConn(CommunicatorImpl* comm, LinkData linkData);
     ~HcclOneSidedConn();
 
-    HcclResult Connect(const std::string &commId);
-    void       WaitOneSidedTransportReady();
+    HcclResult Connect(const std::string& commId);
+    void WaitOneSidedTransportReady();
 
-    HcclResult ExchangeMemDesc(const HcclMemDescs &localMemDescs, HcclMemDescs &remoteMemDescs, u32 &actualNumOfRemote);
+    HcclResult ExchangeMemDesc(const HcclMemDescs& localMemDescs, HcclMemDescs& remoteMemDescs, u32& actualNumOfRemote);
 
-    HcclResult EnableMemAccess(const HcclMemDesc &remoteMemDesc, HcclMem &remoteMem);
-    HcclResult DisableMemAccess(const HcclMemDesc &remoteMemDesc);
-    HcclResult BatchBufferSlice(const HcclOneSideOpDesc *oneSideDescs, u32 descNum,
-        vector<HcclAicpuLocBufLite> &hostBatchPutGetLocalBufferSliceBufs, vector<HcclAicpuLocBufLite> &hostBatchPutGetRemoteBufferSliceBufs);
+    HcclResult EnableMemAccess(const HcclMemDesc& remoteMemDesc, HcclMem& remoteMem);
+    HcclResult DisableMemAccess(const HcclMemDesc& remoteMemDesc);
+    HcclResult BatchBufferSlice(
+        const HcclOneSideOpDesc* oneSideDescs, u32 descNum,
+        vector<HcclAicpuLocBufLite>& hostBatchPutGetLocalBufferSliceBufs,
+        vector<HcclAicpuLocBufLite>& hostBatchPutGetRemoteBufferSliceBufs);
 
 private:
-    CommunicatorImpl *comm_{nullptr};
-    LinkData          linkData_;
+    CommunicatorImpl* comm_{nullptr};
+    LinkData linkData_;
 
-    Socket                           *socket_{nullptr};
+    Socket* socket_{nullptr};
     std::shared_ptr<TransportUrmaMem> transportMemPtr_{};
 
     RmaBufferMgr<BufferKey<uintptr_t, u64>, shared_ptr<HcclBuf>> remoteHcclBufMgr_{};
-    std::unordered_map<std::string, shared_ptr<HcclBuf>>  desc2HcclBufMapRemoteUb_{};
+    std::unordered_map<std::string, shared_ptr<HcclBuf>> desc2HcclBufMapRemoteUb_{};
     std::unordered_map<std::string, HcclNetDev> desc2netDevMap_{};
 
 private:
-    HcclResult RmaMemDescCopyFromStr(RmaMemDesc &rmaMemDesc, const std::string &memDescStr) const
+    HcclResult RmaMemDescCopyFromStr(RmaMemDesc& rmaMemDesc, const std::string& memDescStr) const
     {
         if (memcpy_s(rmaMemDesc.memDesc, TRANSPORT_EMD_ESC_SIZE, memDescStr.c_str(), memDescStr.size() + 1) != EOK) {
             return HCCL_E_INTERNAL;
@@ -63,13 +65,13 @@ private:
     }
 
     // 从 memDesc 转换为 string
-    std::string RmaMemDescCopyToStr(const RmaMemDesc &rmaMemDesc) const
+    std::string RmaMemDescCopyToStr(const RmaMemDesc& rmaMemDesc) const
     {
         return std::string(rmaMemDesc.memDesc, TRANSPORT_EMD_ESC_SIZE);
     }
 
-    HcclResult SendLocalMemDesc(const HcclMemDescs &localMemDescs);
-    HcclResult ReceiveRemoteMemDesc(HcclMemDescs &remoteMemDescs, u32 &actualNumOfRemote);
+    HcclResult SendLocalMemDesc(const HcclMemDescs& localMemDescs);
+    HcclResult ReceiveRemoteMemDesc(HcclMemDescs& remoteMemDescs, u32& actualNumOfRemote);
 };
 } // namespace Hccl
 #endif // HCCL_ONE_SIDED_CONN_V2_H

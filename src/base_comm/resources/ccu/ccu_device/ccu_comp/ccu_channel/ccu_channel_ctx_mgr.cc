@@ -14,27 +14,28 @@
 
 namespace hcomm {
 
-static void DumpJettyCtxInfo(const JettyInfo &info)
+static void DumpJettyCtxInfo(const JettyInfo& info)
 {
-    HCCL_RUN_INFO("[CcuChannelCtxMgr][%s] local jetty context id[%u], ta jetty id[%u], "
+    HCCL_RUN_INFO(
+        "[CcuChannelCtxMgr][%s] local jetty context id[%u], ta jetty id[%u], "
         "ta jetty type[%s], sq depth[%u], wqe basic block start id[%u].",
-        __func__, info.jettyCtxId, info.taJettyId, info.jettyType.Describe().c_str(),
-        info.sqDepth, info.wqeBBStartId);
+        __func__, info.jettyCtxId, info.taJettyId, info.jettyType.Describe().c_str(), info.sqDepth, info.wqeBBStartId);
 
     if (info.jettyType == CcuJettyType::CCUM_CACHED_JETTY) {
-        HCCL_RUN_INFO("[CcuChannelCtxMgr][%s] sq buffer va[%llu], sq buffer size[%u].",
-            __func__, info.sqBufVa, info.sqBufSize);
+        HCCL_RUN_INFO(
+            "[CcuChannelCtxMgr][%s] sq buffer va[%llu], sq buffer size[%u].", __func__, info.sqBufVa, info.sqBufSize);
     }
 }
 
-void DumpChannelResInfo(const uint32_t feId, const ChannelInfo &info)
+void DumpChannelResInfo(const uint32_t feId, const ChannelInfo& info)
 {
-    const auto &jettyInfos = info.jettyInfos;
-    HCCL_RUN_INFO("[CcuChannelCtxMgr][%s]: fe id[%u], channel id[%u], die id[%u], "
-        "used jetty num[%zu].", __func__, feId, info.channelId, info.dieId,
-        jettyInfos.size());
+    const auto& jettyInfos = info.jettyInfos;
+    HCCL_RUN_INFO(
+        "[CcuChannelCtxMgr][%s]: fe id[%u], channel id[%u], die id[%u], "
+        "used jetty num[%zu].",
+        __func__, feId, info.channelId, info.dieId, jettyInfos.size());
 
-    for (const auto &jettyInfo: jettyInfos) {
+    for (const auto& jettyInfo : jettyInfos) {
         DumpJettyCtxInfo(jettyInfo);
     }
 }
@@ -54,16 +55,18 @@ bool CcuChannelCtxMgr::CheckIfChannelAllocated(const uint32_t channelId) const
 {
     const uint32_t strategy = channelResInfos_.size();
     if (channelId >= strategy) {
-        HCCL_ERROR("[CcuChannelCtxMgr][%s] failed, channelId[%u] is invalid, "
+        HCCL_ERROR(
+            "[CcuChannelCtxMgr][%s] failed, channelId[%u] is invalid, "
             "should be less than the channel strategy[%u], devLogicId[%d], dieId[%u].",
             __func__, channelId, strategy, devLogicId_, dieId_);
         return false;
     }
 
     if (!channelResInfos_[channelId].allocated) {
-        HCCL_ERROR("[CcuChannelCtxMgr][%s] failed, channelId[%u] has not been "
-            "allocated yet, devLogicId[%d], dieId[%u].", __func__, channelId,
-            devLogicId_, dieId_);
+        HCCL_ERROR(
+            "[CcuChannelCtxMgr][%s] failed, channelId[%u] has not been "
+            "allocated yet, devLogicId[%d], dieId[%u].",
+            __func__, channelId, devLogicId_, dieId_);
         return false;
     }
 

@@ -31,7 +31,7 @@ protected:
 
     void SetUp() override
     {
-        Hccl::MirrorTaskManager *mgr = nullptr;
+        Hccl::MirrorTaskManager* mgr = nullptr;
         profiling_ = std::make_unique<HcclCommProfiling>(0, mgr);
     }
     void TearDown() override { GlobalMockObject::verify(); }
@@ -39,28 +39,22 @@ protected:
 
 TEST_F(HcclCommProfilingTest, Constructor_Normal)
 {
-    Hccl::MirrorTaskManager *mgr = nullptr;
+    Hccl::MirrorTaskManager* mgr = nullptr;
     auto prof = std::make_unique<HcclCommProfiling>(42, mgr);
     EXPECT_NE(prof, nullptr);
     EXPECT_FALSE(prof->initializedFlag_);
 }
 
-TEST_F(HcclCommProfilingTest, GetMirrorTaskManager_Null)
-{
-    EXPECT_EQ(profiling_->GetMirrorTaskManager(), nullptr);
-}
+TEST_F(HcclCommProfilingTest, GetMirrorTaskManager_Null) { EXPECT_EQ(profiling_->GetMirrorTaskManager(), nullptr); }
 
 TEST_F(HcclCommProfilingTest, GetMirrorTaskManager_NonNull)
 {
-    Hccl::MirrorTaskManager *mgr = reinterpret_cast<Hccl::MirrorTaskManager *>(0x1234);
+    Hccl::MirrorTaskManager* mgr = reinterpret_cast<Hccl::MirrorTaskManager*>(0x1234);
     auto prof = std::make_unique<HcclCommProfiling>(0, mgr);
     EXPECT_EQ(prof->GetMirrorTaskManager(), mgr);
 }
 
-TEST_F(HcclCommProfilingTest, Init_NotInitialized)
-{
-    HcclResult ret = profiling_->Init();
-}
+TEST_F(HcclCommProfilingTest, Init_NotInitialized) { HcclResult ret = profiling_->Init(); }
 
 TEST_F(HcclCommProfilingTest, Init_AlreadyInitialized)
 {
@@ -69,29 +63,17 @@ TEST_F(HcclCommProfilingTest, Init_AlreadyInitialized)
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
-TEST_F(HcclCommProfilingTest, ReportOp_NotInitialized)
-{
-    EXPECT_NO_THROW(profiling_->ReportOp(1000, false, true));
-}
+TEST_F(HcclCommProfilingTest, ReportOp_NotInitialized) { EXPECT_NO_THROW(profiling_->ReportOp(1000, false, true)); }
 
-TEST_F(HcclCommProfilingTest, SetCurrDfxOpInfo_Null)
-{
-    EXPECT_NO_THROW(profiling_->SetCurrDfxOpInfo(nullptr));
-}
+TEST_F(HcclCommProfilingTest, SetCurrDfxOpInfo_Null) { EXPECT_NO_THROW(profiling_->SetCurrDfxOpInfo(nullptr)); }
 
-TEST_F(HcclCommProfilingTest, UpdateProfStat_NotInitialized)
-{
-    EXPECT_NO_THROW(profiling_->UpdateProfStat());
-}
+TEST_F(HcclCommProfilingTest, UpdateProfStat_NotInitialized) { EXPECT_NO_THROW(profiling_->UpdateProfStat()); }
 
-TEST_F(HcclCommProfilingTest, ReportAllTasks_NotInitialized)
-{
-    EXPECT_NO_THROW(profiling_->ReportAllTasks(false));
-}
+TEST_F(HcclCommProfilingTest, ReportAllTasks_NotInitialized) { EXPECT_NO_THROW(profiling_->ReportAllTasks(false)); }
 
 TEST_F(HcclCommProfilingTest, ReportMc2CommInfo_Normal)
 {
-    Mc2CommInfo info {};
+    Mc2CommInfo info{};
     info.FreeStreamId = 1;
     info.streamsId = {1, 2, 3};
     info.groupname = "test_group";
@@ -103,7 +85,7 @@ TEST_F(HcclCommProfilingTest, ReportMc2CommInfo_Normal)
 
 TEST_F(HcclCommProfilingTest, ReportMc2CommInfo_Empty)
 {
-    Mc2CommInfo info {};
+    Mc2CommInfo info{};
     EXPECT_NO_THROW(profiling_->ReportMc2CommInfo(info));
 }
 
@@ -113,7 +95,7 @@ protected:
 
     void SetUp() override
     {
-        Hccl::MirrorTaskManagerLite *mgr = nullptr;
+        Hccl::MirrorTaskManagerLite* mgr = nullptr;
         profilingLite_ = std::make_unique<HcclCommProfilingLite>(0, mgr);
     }
     void TearDown() override { GlobalMockObject::verify(); }
@@ -121,7 +103,7 @@ protected:
 
 TEST_F(HcclCommProfilingLiteTest, Constructor_Normal)
 {
-    Hccl::MirrorTaskManagerLite *mgr = nullptr;
+    Hccl::MirrorTaskManagerLite* mgr = nullptr;
     auto prof = std::make_unique<HcclCommProfilingLite>(0, mgr);
     EXPECT_NE(prof, nullptr);
     EXPECT_FALSE(prof->initializedFlag_);
@@ -134,7 +116,7 @@ TEST_F(HcclCommProfilingLiteTest, GetMirrorTaskManagerLite_Null)
 
 TEST_F(HcclCommProfilingLiteTest, GetMirrorTaskManagerLite_NonNull)
 {
-    Hccl::MirrorTaskManagerLite *mgr = reinterpret_cast<Hccl::MirrorTaskManagerLite *>(0x5678);
+    Hccl::MirrorTaskManagerLite* mgr = reinterpret_cast<Hccl::MirrorTaskManagerLite*>(0x5678);
     auto prof = std::make_unique<HcclCommProfilingLite>(0, mgr);
     EXPECT_EQ(prof->GetMirrorTaskManagerLite(), mgr);
 }
@@ -146,12 +128,6 @@ TEST_F(HcclCommProfilingLiteTest, Init_AlreadyInitialized)
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
-TEST_F(HcclCommProfilingLiteTest, UpdateProfStat_NotInitialized)
-{
-    EXPECT_NO_THROW(profilingLite_->UpdateProfStat());
-}
+TEST_F(HcclCommProfilingLiteTest, UpdateProfStat_NotInitialized) { EXPECT_NO_THROW(profilingLite_->UpdateProfStat()); }
 
-TEST_F(HcclCommProfilingLiteTest, ReportAllTasks_NotInitialized)
-{
-    EXPECT_NO_THROW(profilingLite_->ReportAllTasks());
-}
+TEST_F(HcclCommProfilingLiteTest, ReportAllTasks_NotInitialized) { EXPECT_NO_THROW(profilingLite_->ReportAllTasks()); }

@@ -12,12 +12,8 @@
 
 class TestHcommChannel : public TestHcommCAdptBase {
 public:
-    void SetUp() override {
-        TestHcommCAdptBase::SetUp();
-    }
-    void TearDown() override {
-        TestHcommCAdptBase::TearDown();
-    }
+    void SetUp() override { TestHcommCAdptBase::SetUp(); }
+    void TearDown() override { TestHcommCAdptBase::TearDown(); }
 };
 
 TEST_F(TestHcommChannel, Ut_TestHcommChannelCreate_When_DescsNullptr_Return_HCCL_E_PTR)
@@ -71,22 +67,22 @@ TEST_F(TestHcommChannel, Ut_TestHcommChannelGet_When_ChannelNullptr_Return_HCCL_
 
 TEST_F(TestHcommChannel, Ut_TestHcommChannelGetStatus_When_ListNullptr_Return_HCCL_E_PTR)
 {
-    int32_t statusList[1] = { -1 };
+    int32_t statusList[1] = {-1};
     HcommResult ret = HcommChannelGetStatus(nullptr, 1, statusList);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
 TEST_F(TestHcommChannel, Ut_TestHcommChannelGetStatus_When_StatusListNullptr_Return_HCCL_E_PTR)
 {
-    ChannelHandle channelList[1] = { 0 };
+    ChannelHandle channelList[1] = {0};
     HcommResult ret = HcommChannelGetStatus(channelList, 1, nullptr);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
 TEST_F(TestHcommChannel, Ut_TestHcommChannelGetStatus_When_NumZero_Return_HCCL_E_PARA)
 {
-    ChannelHandle channelList[1] = { 0 };
-    int32_t statusList[1] = { -1 };
+    ChannelHandle channelList[1] = {0};
+    int32_t statusList[1] = {-1};
     HcommResult ret = HcommChannelGetStatus(channelList, 0, statusList);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
@@ -105,7 +101,7 @@ TEST_F(TestHcommChannel, Ut_TestHcommChannelDestroy_When_ChannelsNullptr_Return_
 
 TEST_F(TestHcommChannel, Ut_TestHcommChannelDestroy_When_NumZero_Return_HCCL_E_PARA)
 {
-    ChannelHandle channels[1] = { 0 };
+    ChannelHandle channels[1] = {0};
     HcommResult ret = HcommChannelDestroy(channels, 0);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }

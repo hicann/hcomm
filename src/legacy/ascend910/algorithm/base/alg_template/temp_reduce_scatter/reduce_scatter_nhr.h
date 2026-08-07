@@ -13,7 +13,6 @@
 
 #include "reduce_scatter_nhr_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
-#endif  /* REDUCE_SCATTER_NHR_H */
+#endif /* REDUCE_SCATTER_NHR_H */

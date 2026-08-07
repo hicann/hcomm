@@ -141,7 +141,7 @@ std::string DumpReduceOpToString(HcclReduceOp reduceOp)
     }
 }
 
-Json DumpDataSliceToJson(const DataSlice &dataSlice)
+Json DumpDataSliceToJson(const DataSlice& dataSlice)
 {
     Json dataSliceJson = Json::object();
     dataSliceJson["buffer_type"] = DumpBufferTypeToString(dataSlice.GetType());
@@ -150,7 +150,7 @@ Json DumpDataSliceToJson(const DataSlice &dataSlice)
     return dataSliceJson;
 }
 
-Json DumpSrcBufToJson(const SrcBufDes &srcBuf)
+Json DumpSrcBufToJson(const SrcBufDes& srcBuf)
 {
     Json srcBufJson = Json::object();
     srcBufJson["rank_id"] = srcBuf.rankId;
@@ -159,8 +159,8 @@ Json DumpSrcBufToJson(const SrcBufDes &srcBuf)
     return srcBufJson;
 }
 
-Json DumpBufferSemanticToJson(const BufferSemantic &bufferSemantic, BufferType bufferType,
-    const std::map<u32, u32> *globalStepToEventId)
+Json DumpBufferSemanticToJson(
+    const BufferSemantic& bufferSemantic, BufferType bufferType, const std::map<u32, u32>* globalStepToEventId)
 {
     Json semanticJson = Json::object();
     semanticJson["buffer_type"] = DumpBufferTypeToString(bufferType);
@@ -169,7 +169,7 @@ Json DumpBufferSemanticToJson(const BufferSemantic &bufferSemantic, BufferType b
     semanticJson["is_reduce"] = bufferSemantic.isReduce;
     semanticJson["reduce_type"] = DumpReduceOpToString(bufferSemantic.reduceType);
     semanticJson["src_bufs"] = Json::array();
-    for (const auto &srcBuf : bufferSemantic.srcBufs) {
+    for (const auto& srcBuf : bufferSemantic.srcBufs) {
         semanticJson["src_bufs"].push_back(DumpSrcBufToJson(srcBuf));
     }
 
@@ -187,4 +187,4 @@ Json DumpBufferSemanticToJson(const BufferSemantic &bufferSemantic, BufferType b
     }
     return semanticJson;
 }
-}  // namespace HcclSim
+} // namespace HcclSim

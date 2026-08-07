@@ -24,7 +24,7 @@ protected:
     static void TearDownTestCase() {}
     void SetUp() override
     {
-        const char *dfsConfig = std::getenv("HCCL_DFS_CONFIG");
+        const char* dfsConfig = std::getenv("HCCL_DFS_CONFIG");
         if (dfsConfig != nullptr) {
             savedDfsConfig_ = dfsConfig;
             hadDfsConfig_ = true;
@@ -62,31 +62,27 @@ EndpointDesc MakeUbgEndpointDesc()
 
 class FakeParseEndpoint : public Endpoint {
 public:
-    FakeParseEndpoint() : Endpoint(MakeUbgEndpointDesc())
-    {
-        ctxHandle_ = reinterpret_cast<void *>(0xDEADBEEF);
-    }
+    FakeParseEndpoint() : Endpoint(MakeUbgEndpointDesc()) { ctxHandle_ = reinterpret_cast<void*>(0xDEADBEEF); }
 
     HcclResult Init() override { return HCCL_SUCCESS; }
     HcclResult ServerSocketListen(const uint32_t) override { return HCCL_SUCCESS; }
-    HcclResult RegisterMemory(HcommMem, const char *, void **) override { return HCCL_SUCCESS; }
-    HcclResult UnregisterMemory(void *) override { return HCCL_SUCCESS; }
-    HcclResult MemoryExport(void *, void **, uint32_t *) override { return HCCL_SUCCESS; }
-    HcclResult MemoryImport(const void *, uint32_t, HcommMem *) override { return HCCL_SUCCESS; }
-    HcclResult MemoryUnimport(const void *, uint32_t) override { return HCCL_SUCCESS; }
-    HcclResult GetAllMemHandles(void **, uint32_t *) override { return HCCL_SUCCESS; }
+    HcclResult RegisterMemory(HcommMem, const char*, void**) override { return HCCL_SUCCESS; }
+    HcclResult UnregisterMemory(void*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryExport(void*, void**, uint32_t*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryImport(const void*, uint32_t, HcommMem*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryUnimport(const void*, uint32_t) override { return HCCL_SUCCESS; }
+    HcclResult GetAllMemHandles(void**, uint32_t*) override { return HCCL_SUCCESS; }
 };
 
-std::shared_ptr<Hccl::LocalUbRmaBuffer> MakeUbgLocalBuffer(uintptr_t addr, u64 size, const char *tag)
+std::shared_ptr<Hccl::LocalUbRmaBuffer> MakeUbgLocalBuffer(uintptr_t addr, u64 size, const char* tag)
 {
     auto buffer = std::make_shared<Hccl::Buffer>(addr, size, HCCL_MEM_TYPE_DEVICE, tag);
     return std::make_shared<Hccl::LocalUbRmaBuffer>(buffer);
 }
 
-HcommResult StubUbgGetAllMemHandlesOne(EndpointHandle, void **memHandles, uint32_t *memHandleNum)
+HcommResult StubUbgGetAllMemHandlesOne(EndpointHandle, void** memHandles, uint32_t* memHandleNum)
 {
-    static std::shared_ptr<Hccl::LocalUbRmaBuffer> localBuffer =
-        MakeUbgLocalBuffer(0x620000U, 0x1000U, "ubg_all");
+    static std::shared_ptr<Hccl::LocalUbRmaBuffer> localBuffer = MakeUbgLocalBuffer(0x620000U, 0x1000U, "ubg_all");
     static std::shared_ptr<Hccl::LocalUbRmaBuffer> localBuffers[1] = {localBuffer};
     *memHandles = localBuffers;
     *memHandleNum = 1;
@@ -97,7 +93,8 @@ HcommResult StubUbgGetAllMemHandlesOne(EndpointHandle, void **memHandles, uint32
 struct FakeEndpoint {
     EndpointDesc desc;
     void* rdmaHandle{reinterpret_cast<void*>(0xDEADBEEF)};
-    FakeEndpoint() {
+    FakeEndpoint()
+    {
         memset(&desc, 0, sizeof(desc));
         Hccl::IpAddress localIp("127.0.0.1");
         desc.protocol = COMM_PROTOCOL_UBG;
@@ -112,16 +109,25 @@ struct FakeEndpoint {
 
 class FakeSocket : public Hccl::Socket {
 public:
-    FakeSocket(Hccl::SocketStatus status = Hccl::SocketStatus::OK) :
-        Hccl::Socket(nullptr, Hccl::IpAddress(), 0, Hccl::IpAddress(), "fake", Hccl::SocketRole::SERVER, Hccl::NicType::DEVICE_NIC_TYPE),
-        status_(status) {}
-    void SendAsync(const void *sendBuf, u32 size) { auto *p = static_cast<const u8 *>(sendBuf); sent_.insert(sent_.end(), p, p + size); }
-    void RecvAsync(u8 *recvBuf, u32 size) {
+    FakeSocket(Hccl::SocketStatus status = Hccl::SocketStatus::OK)
+        : Hccl::Socket(
+              nullptr, Hccl::IpAddress(), 0, Hccl::IpAddress(), "fake", Hccl::SocketRole::SERVER,
+              Hccl::NicType::DEVICE_NIC_TYPE),
+          status_(status)
+    {}
+    void SendAsync(const void* sendBuf, u32 size)
+    {
+        auto* p = static_cast<const u8*>(sendBuf);
+        sent_.insert(sent_.end(), p, p + size);
+    }
+    void RecvAsync(u8* recvBuf, u32 size)
+    {
         if (recvBuf && size) {
             if (!sent_.empty()) {
                 u32 copySize = static_cast<u32>(std::min<size_t>(sent_.size(), static_cast<size_t>(size)));
                 memcpy(recvBuf, sent_.data(), copySize);
-                if (copySize < size) std::memset(recvBuf + copySize, 0, size - copySize);
+                if (copySize < size)
+                    std::memset(recvBuf + copySize, 0, size - copySize);
                 sent_.erase(sent_.begin(), sent_.begin() + copySize);
             } else {
                 std::memset(recvBuf, 0, size);
@@ -138,16 +144,17 @@ public:
 namespace Hccl {
 class FakeLocalUbRmaBuffer : public Hccl::LocalUbRmaBuffer {
 public:
-    FakeLocalUbRmaBuffer(std::shared_ptr<Hccl::Buffer> b, void* rdma): LocalUbRmaBuffer(b, rdma) {}
+    FakeLocalUbRmaBuffer(std::shared_ptr<Hccl::Buffer> b, void* rdma) : LocalUbRmaBuffer(b, rdma) {}
     string Describe() const override { return "hello"; }
 };
 class FakeUbLocalNotify : public Hccl::UbLocalNotify {
 public:
     FakeUbLocalNotify(void* rdma, bool dev) : UbLocalNotify(rdma, dev) {}
 };
-}
+} // namespace Hccl
 
-static HcommChannelDesc MakeFakeChannelDesc(FakeSocket* sock) {
+static HcommChannelDesc MakeFakeChannelDesc(FakeSocket* sock)
+{
     HcommChannelDesc d{};
     d.socket = reinterpret_cast<void*>(sock);
     d.notifyNum = 0;
@@ -157,7 +164,8 @@ static HcommChannelDesc MakeFakeChannelDesc(FakeSocket* sock) {
     return d;
 }
 
-TEST_F(AicpuTsUbgChannelTest, Ut_GetChannelKind_Returns_AICPU_TS_UBG) {
+TEST_F(AicpuTsUbgChannelTest, Ut_GetChannelKind_Returns_AICPU_TS_UBG)
+{
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     AicpuTsUbgChannel ch(ep, desc);
@@ -193,7 +201,8 @@ TEST_F(AicpuTsUbgChannelTest, UT_ParseInputParam_When_ExchangeAllMemsTrue_Expect
     EXPECT_EQ(channel.commonRes_.bufferVec[0]->GetAddr(), 0x620000U);
 }
 
-TEST_F(AicpuTsUbgChannelTest, Ut_BuildConnection_Creates_UbgConn) {
+TEST_F(AicpuTsUbgChannelTest, Ut_BuildConnection_Creates_UbgConn)
+{
     FakeEndpoint fe;
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(&fe);
     auto fakeSock = std::make_unique<FakeSocket>();
@@ -221,25 +230,28 @@ TEST_F(AicpuTsUbgChannelTest, Ut_BuildConnection_Creates_UbgConn) {
     ASSERT_NE(conn, nullptr);
 }
 
-static void stub_Socket_SendAsync(Hccl::Socket *self, const void *sendBuf, u32 size)
+static void stub_Socket_SendAsync(Hccl::Socket* self, const void* sendBuf, u32 size)
 {
-    if (!self || !sendBuf || size == 0) return;
-    auto *fs = dynamic_cast<FakeSocket *>(self);
+    if (!self || !sendBuf || size == 0)
+        return;
+    auto* fs = dynamic_cast<FakeSocket*>(self);
     if (fs) {
-        auto *p = static_cast<const u8 *>(sendBuf);
+        auto* p = static_cast<const u8*>(sendBuf);
         fs->sent_.insert(fs->sent_.end(), p, p + size);
     }
 }
 
-static void stub_Socket_RecvAsync(Hccl::Socket *self, u8 *recvBuf, u32 size)
+static void stub_Socket_RecvAsync(Hccl::Socket* self, u8* recvBuf, u32 size)
 {
-    if (!self || !recvBuf || size == 0) return;
-    auto *fs = dynamic_cast<FakeSocket *>(self);
+    if (!self || !recvBuf || size == 0)
+        return;
+    auto* fs = dynamic_cast<FakeSocket*>(self);
     if (fs) {
         if (!fs->sent_.empty()) {
             u32 copySize = static_cast<u32>(std::min<size_t>(fs->sent_.size(), static_cast<size_t>(size)));
             memcpy(recvBuf, fs->sent_.data(), copySize);
-            if (copySize < size) std::memset(recvBuf + copySize, 0, size - copySize);
+            if (copySize < size)
+                std::memset(recvBuf + copySize, 0, size - copySize);
             fs->sent_.erase(fs->sent_.begin(), fs->sent_.begin() + copySize);
             return;
         }
@@ -247,16 +259,17 @@ static void stub_Socket_RecvAsync(Hccl::Socket *self, u8 *recvBuf, u32 size)
     std::memset(recvBuf, 0, size);
 }
 
-TEST_F(AicpuTsUbgChannelTest, Ut_ProcessUbgState_AllStates_Transitions) {
+TEST_F(AicpuTsUbgChannelTest, Ut_ProcessUbgState_AllStates_Transitions)
+{
     FakeEndpoint fe;
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(&fe);
     auto fakeSock = std::make_unique<FakeSocket>();
 
-    MOCKER_CPP(&Hccl::Socket::SendAsync, void(Hccl::Socket::*)(const void *, u32))
+    MOCKER_CPP(&Hccl::Socket::SendAsync, void(Hccl::Socket::*)(const void*, u32))
         .stubs()
         .with(any(), any())
         .will(invoke(stub_Socket_SendAsync));
-    MOCKER_CPP(&Hccl::Socket::RecvAsync, void(Hccl::Socket::*)(u8 *, u32))
+    MOCKER_CPP(&Hccl::Socket::RecvAsync, void(Hccl::Socket::*)(u8*, u32))
         .stubs()
         .with(any(), any())
         .will(invoke(stub_Socket_RecvAsync));
@@ -292,7 +305,8 @@ TEST_F(AicpuTsUbgChannelTest, Ut_ProcessUbgState_AllStates_Transitions) {
     EXPECT_EQ(ch.channelStatus, ChannelStatus::READY);
 }
 
-TEST_F(AicpuTsUbgChannelTest, Ut_GetStatus_WhenReady_ReturnsReady) {
+TEST_F(AicpuTsUbgChannelTest, Ut_GetStatus_WhenReady_ReturnsReady)
+{
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     AicpuTsUbgChannel ch(ep, desc);
@@ -300,17 +314,18 @@ TEST_F(AicpuTsUbgChannelTest, Ut_GetStatus_WhenReady_ReturnsReady) {
     EXPECT_EQ(ch.GetStatus(), ChannelStatus::READY);
 }
 
-TEST_F(AicpuTsUbgChannelTest, Ut_SendFinish_RecvFinish_NoCrash) {
+TEST_F(AicpuTsUbgChannelTest, Ut_SendFinish_RecvFinish_NoCrash)
+{
     FakeEndpoint fe;
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(&fe);
     auto fakeSock = std::make_unique<FakeSocket>();
     HcommChannelDesc desc = MakeFakeChannelDesc(fakeSock.get());
 
-    MOCKER_CPP(&Hccl::Socket::SendAsync, void(Hccl::Socket::*)(const void *, u32))
+    MOCKER_CPP(&Hccl::Socket::SendAsync, void(Hccl::Socket::*)(const void*, u32))
         .stubs()
         .with(any(), any())
         .will(invoke(stub_Socket_SendAsync));
-    MOCKER_CPP(&Hccl::Socket::RecvAsync, void(Hccl::Socket::*)(u8 *, u32))
+    MOCKER_CPP(&Hccl::Socket::RecvAsync, void(Hccl::Socket::*)(u8*, u32))
         .stubs()
         .with(any(), any())
         .will(invoke(stub_Socket_RecvAsync));
@@ -323,7 +338,8 @@ TEST_F(AicpuTsUbgChannelTest, Ut_SendFinish_RecvFinish_NoCrash) {
     SUCCEED();
 }
 
-TEST_F(AicpuTsUbgChannelTest, Ut_H2DResPack_Packs_Data) {
+TEST_F(AicpuTsUbgChannelTest, Ut_H2DResPack_Packs_Data)
+{
     FakeEndpoint fe;
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(&fe);
     auto fakeSock = std::make_unique<FakeSocket>();
@@ -337,7 +353,7 @@ TEST_F(AicpuTsUbgChannelTest, Ut_H2DResPack_Packs_Data) {
     ch.connNum_ = 1;
 
     auto notifyUptr = std::make_unique<Hccl::FakeUbLocalNotify>(fe.GetRdmaHandle(), true);
-    Hccl::UbLocalNotify *rawNotify = notifyUptr.get();
+    Hccl::UbLocalNotify* rawNotify = notifyUptr.get();
     ch.localNotifies_.push_back(std::move(notifyUptr));
     ch.commonRes_.notifyVec.push_back(rawNotify);
 
@@ -346,7 +362,7 @@ TEST_F(AicpuTsUbgChannelTest, Ut_H2DResPack_Packs_Data) {
 
     auto buffer = std::make_shared<Hccl::Buffer>(0x100, 0x100);
     auto locUbRmaBufPtr = std::make_unique<Hccl::FakeLocalUbRmaBuffer>(buffer, fe.GetRdmaHandle());
-    Hccl::FakeLocalUbRmaBuffer *locUbRmaBuf = locUbRmaBufPtr.get();
+    Hccl::FakeLocalUbRmaBuffer* locUbRmaBuf = locUbRmaBufPtr.get();
     ch.commonRes_.bufferVec.push_back(locUbRmaBuf);
     ch.commonRes_.bufferVec.push_back(nullptr);
 
@@ -354,8 +370,9 @@ TEST_F(AicpuTsUbgChannelTest, Ut_H2DResPack_Packs_Data) {
     ch.rmtBufferVec_.push_back(std::move(rmtBufPtr));
 
     Hccl::IpAddress ipAddress("127.0.0.1");
-    Hccl::DevUbUbgConnection ubgConn(fe.GetRdmaHandle(), ipAddress, ipAddress, Hccl::OpMode::OPBASE, true,
-        Hccl::HrtUbJfcMode::STARS_POLL, ipAddress, ipAddress);
+    Hccl::DevUbUbgConnection ubgConn(
+        fe.GetRdmaHandle(), ipAddress, ipAddress, Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::STARS_POLL, ipAddress,
+        ipAddress);
     ch.commonRes_.connVec.push_back(&ubgConn);
 
     std::vector<char> out{};
@@ -363,7 +380,8 @@ TEST_F(AicpuTsUbgChannelTest, Ut_H2DResPack_Packs_Data) {
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
-TEST_F(AicpuTsUbgChannelTest, Ut_DataPlaneInterfaces_ReturnNotSupport) {
+TEST_F(AicpuTsUbgChannelTest, Ut_DataPlaneInterfaces_ReturnNotSupport)
+{
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     AicpuTsUbgChannel ch(ep, desc);
@@ -376,7 +394,8 @@ TEST_F(AicpuTsUbgChannelTest, Ut_DataPlaneInterfaces_ReturnNotSupport) {
     EXPECT_EQ(ch.ChannelFence(), HCCL_E_NOT_SUPPORT);
 }
 
-TEST_F(AicpuTsUbgChannelTest, Ut_Clean_Resume_ReturnSuccess) {
+TEST_F(AicpuTsUbgChannelTest, Ut_Clean_Resume_ReturnSuccess)
+{
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     AicpuTsUbgChannel ch(ep, desc);
@@ -385,7 +404,8 @@ TEST_F(AicpuTsUbgChannelTest, Ut_Clean_Resume_ReturnSuccess) {
     EXPECT_EQ(ch.Resume(), HCCL_SUCCESS);
 }
 
-TEST_F(AicpuTsUbgChannelTest, Ut_GetNotifyNum_ReturnsValue) {
+TEST_F(AicpuTsUbgChannelTest, Ut_GetNotifyNum_ReturnsValue)
+{
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     AicpuTsUbgChannel ch(ep, desc);
@@ -396,7 +416,8 @@ TEST_F(AicpuTsUbgChannelTest, Ut_GetNotifyNum_ReturnsValue) {
     EXPECT_EQ(num, 5u);
 }
 
-TEST_F(AicpuTsUbgChannelTest, Ut_IsSocketReady_NullptrSocket_ReturnsFalse) {
+TEST_F(AicpuTsUbgChannelTest, Ut_IsSocketReady_NullptrSocket_ReturnsFalse)
+{
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     AicpuTsUbgChannel ch(ep, desc);
@@ -406,7 +427,8 @@ TEST_F(AicpuTsUbgChannelTest, Ut_IsSocketReady_NullptrSocket_ReturnsFalse) {
     EXPECT_EQ(ch.channelStatus, ChannelStatus::INVALID);
 }
 
-TEST_F(AicpuTsUbgChannelTest, Ut_IsResReady_EmptyConnVec_ReturnsTrue) {
+TEST_F(AicpuTsUbgChannelTest, Ut_IsResReady_EmptyConnVec_ReturnsTrue)
+{
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     AicpuTsUbgChannel ch(ep, desc);
@@ -415,7 +437,8 @@ TEST_F(AicpuTsUbgChannelTest, Ut_IsResReady_EmptyConnVec_ReturnsTrue) {
     EXPECT_TRUE(ch.IsResReady());
 }
 
-TEST_F(AicpuTsUbgChannelTest, Ut_IsConnsReady_ZeroConnNum_ReturnsTrue) {
+TEST_F(AicpuTsUbgChannelTest, Ut_IsConnsReady_ZeroConnNum_ReturnsTrue)
+{
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     AicpuTsUbgChannel ch(ep, desc);
@@ -424,7 +447,8 @@ TEST_F(AicpuTsUbgChannelTest, Ut_IsConnsReady_ZeroConnNum_ReturnsTrue) {
     EXPECT_TRUE(ch.IsConnsReady());
 }
 
-TEST_F(AicpuTsUbgChannelTest, Ut_PackingHelpers_EmptyVecs_NoCrash) {
+TEST_F(AicpuTsUbgChannelTest, Ut_PackingHelpers_EmptyVecs_NoCrash)
+{
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     AicpuTsUbgChannel ch(ep, desc);
@@ -444,7 +468,8 @@ TEST_F(AicpuTsUbgChannelTest, Ut_PackingHelpers_EmptyVecs_NoCrash) {
     SUCCEED();
 }
 
-TEST_F(AicpuTsUbgChannelTest, Ut_GetUniqueIdV2_NotReady_Throws) {
+TEST_F(AicpuTsUbgChannelTest, Ut_GetUniqueIdV2_NotReady_Throws)
+{
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     AicpuTsUbgChannel ch(ep, desc);

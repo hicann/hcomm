@@ -13,7 +13,7 @@
 #include "log.h"
 namespace Hccl {
 
-NotifyLite::NotifyLite(std::vector<char> &uniqueId)
+NotifyLite::NotifyLite(std::vector<char>& uniqueId)
 {
     BinaryStream binaryStream(uniqueId);
     binaryStream >> notifyId;
@@ -21,15 +21,9 @@ NotifyLite::NotifyLite(std::vector<char> &uniqueId)
     HCCL_INFO("NotifyLite::NotifyLite:%s", Describe().c_str());
 }
 
-u32 NotifyLite::GetId() const
-{
-    return notifyId;
-}
+u32 NotifyLite::GetId() const { return notifyId; }
 
-u32 NotifyLite::GetDevPhyId() const
-{
-    return devPhyId;
-}
+u32 NotifyLite::GetDevPhyId() const { return devPhyId; }
 
 std::string NotifyLite::Describe() const
 {

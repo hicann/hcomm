@@ -28,7 +28,7 @@ namespace hcomm {
 CcuInstance::~CcuInstance()
 {
     // 主动释放资源保证时序，不得随意调整顺序
-    for (auto &kernelHandle : kernelHandles_) {
+    for (auto& kernelHandle : kernelHandles_) {
         if (kernelHandle != 0) {
             (void)CcuKernelMgr::GetInstance(devLogicId_).UnRegister(kernelHandle);
             kernelHandle = 0;
@@ -49,8 +49,7 @@ CcuInstance::~CcuInstance()
 CcuResult CcuInstance::InitByInsType(const CcuInstanceType insType)
 {
     if (insType >= CcuInstanceType::CCU_UNUSED) {
-        HCCL_ERROR("[CcuInstance][%s] failed, CcuInstanceType[%d] is invalid.",
-            __func__, insType);
+        HCCL_ERROR("[CcuInstance][%s] failed, CcuInstanceType[%d] is invalid.", __func__, insType);
         return CcuResult::CCU_E_PARA;
     }
 
@@ -70,11 +69,10 @@ CcuResult CcuInstance::InitByInsType(const CcuInstanceType insType)
     return CcuResult::CCU_SUCCESS;
 }
 
-CcuResult CcuInstance::InitByResDescs(const CcuResDesc *descs[], uint32_t descNum)
+CcuResult CcuInstance::InitByResDescs(const CcuResDesc* descs[], uint32_t descNum)
 {
     if (descs == nullptr || descNum == 0 || descNum > hcomm::CCU_MAX_IODIE_NUM) {
-        HCCL_ERROR("[CcuInstance][%s] failed, invalid descs[%p] descNum[%u].",
-            __func__, descs, descNum);
+        HCCL_ERROR("[CcuInstance][%s] failed, invalid descs[%p] descNum[%u].", __func__, descs, descNum);
         return CcuResult::CCU_E_PARA;
     }
 
@@ -106,7 +104,7 @@ CcuResult CcuInstance::InitByAllRes()
     // 先查询各 die 是否启用，仅对已使能的 die 调用 CcuGetXXXNum 获取资源总量，
     // 未启用的 die 其 resNum 保持 0（resNum 默认初始化为 0）
     std::array<hcomm::CcuResDesc, hcomm::CCU_MAX_IODIE_NUM> descs{};
-    std::array<const hcomm::CcuResDesc *, hcomm::CCU_MAX_IODIE_NUM> descPtrs{};
+    std::array<const hcomm::CcuResDesc*, hcomm::CCU_MAX_IODIE_NUM> descPtrs{};
     for (uint8_t i = 0; i < hcomm::CCU_MAX_IODIE_NUM; i++) {
         descs[i].dieId = i;
         descPtrs[i] = &descs[i];
@@ -160,21 +158,15 @@ CcuResult CcuInstance::Reset()
     return CcuResult::CCU_SUCCESS;
 }
 
-CcuResPack *CcuInstance::GetResPack()
-{
-    return resPack_.get();
-}
+CcuResPack* CcuInstance::GetResPack() { return resPack_.get(); }
 
-void CcuInstance::SetHandle(CcuInsHandle insHandle)
-{
-    insHandle_ = insHandle;
-}
+void CcuInstance::SetHandle(CcuInsHandle insHandle) { insHandle_ = insHandle; }
 
 // 累加某 die 上某资源 vector 中各 ResInfo::num，得到该 die 该资源的占用数量
-static uint32_t SumResNum(const std::vector<ResInfo> &resInfos, std::string resName)
+static uint32_t SumResNum(const std::vector<ResInfo>& resInfos, std::string resName)
 {
     uint32_t total = 0;
-    for (const auto &info : resInfos) {
+    for (const auto& info : resInfos) {
         total += info.num;
     }
     HCCL_INFO("[CcuInstance][FillTotalResDescs] resType: %s, resNum: %u", resName.c_str(), total);
@@ -187,32 +179,31 @@ CcuResult CcuInstance::FillTotalResDescs()
         HCCL_ERROR("[CcuInstance][%s] failed, resPack_ is nullptr.", __func__);
         return CcuResult::CCU_E_INTERNAL;
     }
-    const auto &resRepo = resPack_->GetCcuResRepo();
+    const auto& resRepo = resPack_->GetCcuResRepo();
 
     for (uint8_t dieId = 0; dieId < CCU_MAX_IODIE_NUM; dieId++) {
         totalResDescs_[dieId].dieId = dieId;
         // 各资源类型占用数量 = block 路径 + 非 block 连续路径之和
-        CCU_CHK_RET(totalResDescs_[dieId].SetResNum(ResType::LOOP,
-            SumResNum(resRepo.blockLoopEngine[dieId], "blockLoopEngine") + SumResNum(resRepo.loopEngine[dieId], "loopEngine")));
-        CCU_CHK_RET(totalResDescs_[dieId].SetResNum(ResType::MS,
-            SumResNum(resRepo.blockMs[dieId], "blockMs") + SumResNum(resRepo.ms[dieId], "ms")));
-        CCU_CHK_RET(totalResDescs_[dieId].SetResNum(ResType::CKE,
-            SumResNum(resRepo.blockCke[dieId], "blockCke") + SumResNum(resRepo.cke[dieId], "cke")));
-        CCU_CHK_RET(totalResDescs_[dieId].SetResNum(ResType::XN,
-            SumResNum(resRepo.blockXn[dieId], "blockXn") + SumResNum(resRepo.xn[dieId], "xn")));
-        CCU_CHK_RET(totalResDescs_[dieId].SetResNum(ResType::GSA,
-            SumResNum(resRepo.blockGsa[dieId], "blockGsa") + SumResNum(resRepo.gsa[dieId], "gsa")));
-        CCU_CHK_RET(totalResDescs_[dieId].SetResNum(ResType::MISSION, SumResNum(resRepo.mission.mission[dieId], "mission")));
+        CCU_CHK_RET(totalResDescs_[dieId].SetResNum(
+            ResType::LOOP, SumResNum(resRepo.blockLoopEngine[dieId], "blockLoopEngine")
+                               + SumResNum(resRepo.loopEngine[dieId], "loopEngine")));
+        CCU_CHK_RET(totalResDescs_[dieId].SetResNum(
+            ResType::MS, SumResNum(resRepo.blockMs[dieId], "blockMs") + SumResNum(resRepo.ms[dieId], "ms")));
+        CCU_CHK_RET(totalResDescs_[dieId].SetResNum(
+            ResType::CKE, SumResNum(resRepo.blockCke[dieId], "blockCke") + SumResNum(resRepo.cke[dieId], "cke")));
+        CCU_CHK_RET(totalResDescs_[dieId].SetResNum(
+            ResType::XN, SumResNum(resRepo.blockXn[dieId], "blockXn") + SumResNum(resRepo.xn[dieId], "xn")));
+        CCU_CHK_RET(totalResDescs_[dieId].SetResNum(
+            ResType::GSA, SumResNum(resRepo.blockGsa[dieId], "blockGsa") + SumResNum(resRepo.gsa[dieId], "gsa")));
+        CCU_CHK_RET(
+            totalResDescs_[dieId].SetResNum(ResType::MISSION, SumResNum(resRepo.mission.mission[dieId], "mission")));
         // INS 当前无对应占用资源项，写 0
         CCU_CHK_RET(totalResDescs_[dieId].SetResNum(ResType::INS, 0));
     }
     return CcuResult::CCU_SUCCESS;
 }
 
-const CcuResDesc &CcuInstance::GetTotalResDescs(uint8_t dieId) const
-{
-    return totalResDescs_[dieId];
-}
+const CcuResDesc& CcuInstance::GetTotalResDescs(uint8_t dieId) const { return totalResDescs_[dieId]; }
 
 CcuResult CcuInstance::SaveKernel(const CcuKernelHandle kernelHandle)
 {
@@ -221,16 +212,15 @@ CcuResult CcuInstance::SaveKernel(const CcuKernelHandle kernelHandle)
     return CcuResult::CCU_SUCCESS;
 }
 
-const std::vector<CcuKernelHandle> &CcuInstance::GetUntranslatedKernels()
-{
-    return untranslatedKernelHandles_;
-}
+const std::vector<CcuKernelHandle>& CcuInstance::GetUntranslatedKernels() { return untranslatedKernelHandles_; }
 
 CcuResult CcuInstance::BeginRegister()
 {
     if (registerState_ == RegisterState::REGISTERING) {
-        HCCL_ERROR("[CcuInstance][%s] failed, previous register round is not ended, "
-            "HcommCcuKernelRegisterEnd is missing before a new HcommCcuKernelRegisterStart.", __func__);
+        HCCL_ERROR(
+            "[CcuInstance][%s] failed, previous register round is not ended, "
+            "HcommCcuKernelRegisterEnd is missing before a new HcommCcuKernelRegisterStart.",
+            __func__);
         return CcuResult::CCU_E_INTERNAL;
     }
     registerState_ = RegisterState::REGISTERING;
@@ -240,8 +230,10 @@ CcuResult CcuInstance::BeginRegister()
 CcuResult CcuInstance::CheckRegistering() const
 {
     if (registerState_ != RegisterState::REGISTERING) {
-        HCCL_ERROR("[CcuInstance][%s] failed, HcommCcuKernelRegister must be called between "
-            "HcommCcuKernelRegisterStart and HcommCcuKernelRegisterEnd.", __func__);
+        HCCL_ERROR(
+            "[CcuInstance][%s] failed, HcommCcuKernelRegister must be called between "
+            "HcommCcuKernelRegisterStart and HcommCcuKernelRegisterEnd.",
+            __func__);
         return CcuResult::CCU_E_INTERNAL;
     }
     return CcuResult::CCU_SUCCESS;
@@ -250,13 +242,17 @@ CcuResult CcuInstance::CheckRegistering() const
 CcuResult CcuInstance::EndRegister()
 {
     if (registerState_ == RegisterState::IDLE) {
-        HCCL_ERROR("[CcuInstance][%s] failed, HcommCcuKernelRegisterEnd is called without a matching "
-            "HcommCcuKernelRegisterStart.", __func__);
+        HCCL_ERROR(
+            "[CcuInstance][%s] failed, HcommCcuKernelRegisterEnd is called without a matching "
+            "HcommCcuKernelRegisterStart.",
+            __func__);
         return CcuResult::CCU_E_INTERNAL;
     }
     if (registerState_ == RegisterState::REGISTER_ABORTED) {
-        HCCL_WARNING("[CcuInstance][%s] previous register round was aborted due to error, "
-            "close it to keep Start/End paired, no kernel will be translated.", __func__);
+        HCCL_WARNING(
+            "[CcuInstance][%s] previous register round was aborted due to error, "
+            "close it to keep Start/End paired, no kernel will be translated.",
+            __func__);
     }
     registerState_ = RegisterState::IDLE;
     return CcuResult::CCU_SUCCESS;

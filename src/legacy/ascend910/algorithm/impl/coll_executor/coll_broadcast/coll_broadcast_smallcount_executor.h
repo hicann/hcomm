@@ -13,25 +13,25 @@
 #include "coll_broadcast_executor.h"
 namespace hccl {
 class CollBroadcastSmallCountExecutor : public CollBroadcastExecutor {
-
 public:
-    CollBroadcastSmallCountExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollBroadcastSmallCountExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollBroadcastSmallCountExecutor() override = default;
 
 private:
     /* *************** 资源计算 *************** */
-    void ParseParam(const OpParam &param) override;
-    HcclResult CalcStreamNum(u32 &streamNum) override;
-    HcclResult CalcScratchMemSize(u64 &scratchMemSize) override;
-    HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport> &opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
-        std::vector<LevelNSubCommTransport> &opTransport) override;
+    void ParseParam(const OpParam& param) override;
+    HcclResult CalcStreamNum(u32& streamNum) override;
+    HcclResult CalcScratchMemSize(u64& scratchMemSize) override;
+    HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
+        std::vector<LevelNSubCommTransport>& opTransport) override;
 
     /* *************** 算法编排 *************** */
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
     u64 totalSize_{0};
 };
 
-}  // namespace hccl
+} // namespace hccl
 
 #endif

@@ -14,7 +14,7 @@
 
 namespace Hccl {
 
-CcuEidInfo &CcuEidInfo::GetInstance(int32_t logicDeviceId)
+CcuEidInfo& CcuEidInfo::GetInstance(int32_t logicDeviceId)
 {
     static CcuEidInfo ccuEidInfo[MAX_MODULE_DEVICE_NUM + 1];
 
@@ -26,20 +26,15 @@ CcuEidInfo &CcuEidInfo::GetInstance(int32_t logicDeviceId)
     return ccuEidInfo[logicDeviceId];
 }
 
-CcuEidInfo::CcuEidInfo()
-{
-}
+CcuEidInfo::CcuEidInfo() {}
 
-CcuEidInfo::~CcuEidInfo()
-{
-    initflag_ = false;
-}
+CcuEidInfo::~CcuEidInfo() { initflag_ = false; }
 
-HcclResult CcuEidInfo::GetEidInfo(int32_t logicDeviceId, std::vector<HrtDevEidInfo> &eidInfo)
+HcclResult CcuEidInfo::GetEidInfo(int32_t logicDeviceId, std::vector<HrtDevEidInfo>& eidInfo)
 {
     if (!initflag_) {
-        HRaInfo                      info(HrtNetworkMode::HDC, HrtGetDevicePhyIdByIndex(logicDeviceId));
-        vector<HrtDevEidInfo> eidInfoList =  HrtRaGetDevEidInfoList(info);
+        HRaInfo info(HrtNetworkMode::HDC, HrtGetDevicePhyIdByIndex(logicDeviceId));
+        vector<HrtDevEidInfo> eidInfoList = HrtRaGetDevEidInfoList(info);
 
         if (eidInfoList.empty()) {
             HCCL_WARNING("[GetEidInfo] Get EidInfo failed, logicDeviceId=%d", logicDeviceId);
@@ -57,10 +52,9 @@ HcclResult CcuEidInfo::GetEidInfo(int32_t logicDeviceId, std::vector<HrtDevEidIn
 
     eidInfo.assign(eidInfoList_.begin(), eidInfoList_.end());
 
-    HCCL_INFO("[GetEidInfo] Get EidInfo success, logicDeviceId=%d, eidInfo size=%u",
-        logicDeviceId, eidInfo.size());
+    HCCL_INFO("[GetEidInfo] Get EidInfo success, logicDeviceId=%d, eidInfo size=%u", logicDeviceId, eidInfo.size());
 
     return HCCL_SUCCESS;
 }
 
-}; // Hccl
+}; // namespace Hccl

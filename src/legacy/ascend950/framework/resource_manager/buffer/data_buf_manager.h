@@ -24,21 +24,20 @@ class DataBufManager {
 public:
     ~DataBufManager();
 
-    Buffer *Register(const std::string &opTag, BufferType type, std::shared_ptr<Buffer> buffer);
+    Buffer* Register(const std::string& opTag, BufferType type, std::shared_ptr<Buffer> buffer);
 
-    void Deregister(const std::string &opTag, BufferType type);
+    void Deregister(const std::string& opTag, BufferType type);
 
-    HcclResult Deregister(const std::string &opTag);
+    HcclResult Deregister(const std::string& opTag);
 
-    Buffer *Get(const std::string &opTag, BufferType type);
+    Buffer* Get(const std::string& opTag, BufferType type);
 
     void Destroy();
 
 private:
-    bool IsExist(const std::string &opTag, BufferType type);
+    bool IsExist(const std::string& opTag, BufferType type);
 
-    std::unordered_map<std::string, std::unordered_map<BufferType, std::shared_ptr<Buffer>, std::EnumClassHash>>
-        bufs;
+    std::unordered_map<std::string, std::unordered_map<BufferType, std::shared_ptr<Buffer>, std::EnumClassHash>> bufs;
 };
 } // namespace Hccl
 #endif // HCCLV2_DATA_BUFFER_MANAGER_H

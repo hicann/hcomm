@@ -43,10 +43,10 @@ static std::vector<char> BuildLocNotifyUniqueIds(u32 notifyNum)
     for (u32 i = 0; i < notifyNum; i++) {
         u32 notifyId = i + 1;
         u32 devPhyId = i + 10;
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&notifyId), reinterpret_cast<char*>(&notifyId) + sizeof(notifyId));
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&devPhyId), reinterpret_cast<char*>(&devPhyId) + sizeof(devPhyId));
+        result.insert(
+            result.end(), reinterpret_cast<char*>(&notifyId), reinterpret_cast<char*>(&notifyId) + sizeof(notifyId));
+        result.insert(
+            result.end(), reinterpret_cast<char*>(&devPhyId), reinterpret_cast<char*>(&devPhyId) + sizeof(devPhyId));
     }
     return result;
 }
@@ -58,20 +58,14 @@ static std::vector<char> BuildRmtNotifyUniqueIds(u32 notifyNum)
         u64 addr = 0x2000 + i * 0x100;
         u64 size = 0x100;
         u32 rkey = 0x200 + i;
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&addr), reinterpret_cast<char*>(&addr) + sizeof(addr));
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + sizeof(size));
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&rkey), reinterpret_cast<char*>(&rkey) + sizeof(rkey));
+        result.insert(result.end(), reinterpret_cast<char*>(&addr), reinterpret_cast<char*>(&addr) + sizeof(addr));
+        result.insert(result.end(), reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + sizeof(size));
+        result.insert(result.end(), reinterpret_cast<char*>(&rkey), reinterpret_cast<char*>(&rkey) + sizeof(rkey));
     }
     return result;
 }
 
-static std::vector<char> BuildNotifyValueBufferUniqueId()
-{
-    return BuildSingleRmaBufferUniqueId(0x3000, 0x200, 0x300);
-}
+static std::vector<char> BuildNotifyValueBufferUniqueId() { return BuildSingleRmaBufferUniqueId(0x3000, 0x200, 0x300); }
 
 static std::vector<char> BuildLocBufferUniqueIds(u32 bufferNum)
 {
@@ -80,12 +74,9 @@ static std::vector<char> BuildLocBufferUniqueIds(u32 bufferNum)
         u64 addr = 0x4000 + i * 0x200;
         u64 size = 0x200;
         u32 lkey = 0x400 + i;
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&addr), reinterpret_cast<char*>(&addr) + sizeof(addr));
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + sizeof(size));
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&lkey), reinterpret_cast<char*>(&lkey) + sizeof(lkey));
+        result.insert(result.end(), reinterpret_cast<char*>(&addr), reinterpret_cast<char*>(&addr) + sizeof(addr));
+        result.insert(result.end(), reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + sizeof(size));
+        result.insert(result.end(), reinterpret_cast<char*>(&lkey), reinterpret_cast<char*>(&lkey) + sizeof(lkey));
     }
     return result;
 }
@@ -97,17 +88,14 @@ static std::vector<char> BuildRmtBufferUniqueIds(u32 bufferNum)
         u64 addr = 0x5000 + i * 0x200;
         u64 size = 0x200;
         u32 rkey = 0x600 + i;
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&addr), reinterpret_cast<char*>(&addr) + sizeof(addr));
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + sizeof(size));
-        result.insert(result.end(),
-            reinterpret_cast<char*>(&rkey), reinterpret_cast<char*>(&rkey) + sizeof(rkey));
+        result.insert(result.end(), reinterpret_cast<char*>(&addr), reinterpret_cast<char*>(&addr) + sizeof(addr));
+        result.insert(result.end(), reinterpret_cast<char*>(&size), reinterpret_cast<char*>(&size) + sizeof(size));
+        result.insert(result.end(), reinterpret_cast<char*>(&rkey), reinterpret_cast<char*>(&rkey) + sizeof(rkey));
     }
     return result;
 }
 
-static std::vector<char> BuildSqUniqueId(const RdmaSqContextLite &sqCtx)
+static std::vector<char> BuildSqUniqueId(const RdmaSqContextLite& sqCtx)
 {
     BinaryStream bs;
     bs << sqCtx.qpn;
@@ -125,7 +113,7 @@ static std::vector<char> BuildSqUniqueId(const RdmaSqContextLite &sqCtx)
     return result;
 }
 
-static std::vector<char> BuildCqUniqueId(const RdmaCqContextLite &cqCtx)
+static std::vector<char> BuildCqUniqueId(const RdmaCqContextLite& cqCtx)
 {
     BinaryStream bs;
     bs << cqCtx.cqn;
@@ -140,17 +128,18 @@ static std::vector<char> BuildCqUniqueId(const RdmaCqContextLite &cqCtx)
     return result;
 }
 
-static std::vector<char> BuildSingleConnUniqueId(u32 dmaMode, const RdmaSqContextLite &sqCtx, const RdmaCqContextLite &cqCtx)
+static std::vector<char>
+BuildSingleConnUniqueId(u32 dmaMode, const RdmaSqContextLite& sqCtx, const RdmaCqContextLite& cqCtx)
 {
     BinaryStream bs;
     bs << dmaMode;
-    
+
     std::vector<char> sqUniqueId = BuildSqUniqueId(sqCtx);
     bs << sqUniqueId;
-    
+
     std::vector<char> cqUniqueId = BuildCqUniqueId(cqCtx);
     bs << cqUniqueId;
-    
+
     std::vector<char> result;
     bs.Dump(result);
     return result;
@@ -221,15 +210,9 @@ static std::vector<char> BuildChannelUniqueId(u32 notifyNum, u32 bufferNum, u32 
 
 class DevAicpuTsRoceChannelV2Test : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "DevAicpuTsRoceChannelV2Test tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "DevAicpuTsRoceChannelV2Test tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "DevAicpuTsRoceChannelV2Test tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "DevAicpuTsRoceChannelV2Test tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
@@ -252,20 +235,20 @@ protected:
 TEST_F(DevAicpuTsRoceChannelV2Test, Ut_When_Construct_Expect_Success)
 {
     std::cout << "Start Ut_When_Construct_Expect_Success" << std::endl;
-    
+
     DevAicpuTsRoceChannelV2 channel(uniqueId_);
-    
+
     std::cout << "End Ut_When_Construct_Expect_Success" << std::endl;
 }
 
 TEST_F(DevAicpuTsRoceChannelV2Test, Ut_When_Describe_Expect_NotEmpty)
 {
     std::cout << "Start Ut_When_Describe_Expect_NotEmpty" << std::endl;
-    
+
     DevAicpuTsRoceChannelV2 channel(uniqueId_);
-    
+
     std::string desc = channel.Describe();
     EXPECT_FALSE(desc.empty());
-    
+
     std::cout << "End Ut_When_Describe_Expect_NotEmpty" << std::endl;
 }

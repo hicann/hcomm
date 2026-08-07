@@ -16,33 +16,36 @@
 
 namespace Hccl {
 
-void SocketAgent::SendMsg(const void *data, u64 dataLen)
+void SocketAgent::SendMsg(const void* data, u64 dataLen)
 {
     HCCL_INFO("[SocketAgent::%s] start, dataLen[%llu].", __func__, dataLen);
 
     // 发送数据长度
-    CHK_PRT_THROW(!socket_->Send(&dataLen, sizeof(dataLen)), HCCL_ERROR("[SocketAgent::%s] Send data len failed", __func__),
-                  SocketException, "Unable to send data");
-    
+    CHK_PRT_THROW(
+        !socket_->Send(&dataLen, sizeof(dataLen)), HCCL_ERROR("[SocketAgent::%s] Send data len failed", __func__),
+        SocketException, "Unable to send data");
+
     // 发送数据
-    CHK_PRT_THROW(!socket_->Send(data, dataLen), HCCL_ERROR("[SocketAgent::%s] Send data failed", __func__),
-                  SocketException, "Unable to send data");
+    CHK_PRT_THROW(
+        !socket_->Send(data, dataLen), HCCL_ERROR("[SocketAgent::%s] Send data failed", __func__), SocketException,
+        "Unable to send data");
 
     HCCL_INFO("[SocketAgent::%s] end.", __func__);
 }
 
-bool SocketAgent::RecvMsg(void *msg, u64 &revMsgLen)
+bool SocketAgent::RecvMsg(void* msg, u64& revMsgLen)
 {
     HCCL_INFO("[SocketAgent::%s] start.", __func__);
 
     // 检查 msg 是否为 nullptr
-    CHK_PRT_THROW(msg == nullptr, 
-        HCCL_ERROR("[RankInfoDetectService::%s] msg is nullptr", __func__), 
-        NullPtrException, "RecvMsg fail");
+    CHK_PRT_THROW(
+        msg == nullptr, HCCL_ERROR("[RankInfoDetectService::%s] msg is nullptr", __func__), NullPtrException,
+        "RecvMsg fail");
 
     // 先接收长度
     EXCEPTION_CATCH(socket_->Recv(&revMsgLen, sizeof(revMsgLen)), return false);
-    CHK_PRT_RET(revMsgLen == 0 || revMsgLen > MAX_BUFFER_LEN,
+    CHK_PRT_RET(
+        revMsgLen == 0 || revMsgLen > MAX_BUFFER_LEN,
         HCCL_ERROR("[SocketAgent::%s] Invalid length[%llu]", __func__, revMsgLen), false);
 
     // 再接收内容

@@ -25,8 +25,8 @@ public:
     ~CommEngineRes();
 
     // 申请线程资源
-    HcclResult AllocateThreads(uint32_t threadNum, uint32_t notifyNumPerThread,
-                              std::vector<ThreadHandle>& threadHandles);
+    HcclResult
+    AllocateThreads(uint32_t threadNum, uint32_t notifyNumPerThread, std::vector<ThreadHandle>& threadHandles);
 
     // 释放线程资源
     HcclResult ReleaseThreads(const std::vector<ThreadHandle>& threadHandles);
@@ -45,6 +45,6 @@ private:
     std::vector<std::shared_ptr<Thread>> threads_{};
     std::vector<std::unique_ptr<EngineCtx>> engineCtxs_{};
 };
-}
+} // namespace hcomm
 
 #endif // COMM_ENGINE_RES_H

@@ -20,34 +20,32 @@ public:
 
     ~AllGatherRing() override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
+
 protected:
 private:
     // 获取向该rank往前的第i个rank
-    inline u32 ForwordRank(u32 rank, u32 rankSize, u32 preNum) const
-    {
-        return (rank + rankSize - preNum) % rankSize;
-    }
-    HcclResult RunAllGather(u32 rank, u32 rankSize, const std::vector<Slice> &outputSlices);
+    inline u32 ForwordRank(u32 rank, u32 rankSize, u32 preNum) const { return (rank + rankSize - preNum) % rankSize; }
+    HcclResult RunAllGather(u32 rank, u32 rankSize, const std::vector<Slice>& outputSlices);
 
-    HcclResult TxVector(const LINK &link, const std::vector<Slice> &txSlices);
-    HcclResult RxVector(const LINK &link, const std::vector<Slice> &rxSlices);
-    HcclResult Tx(const LINK &link, const Slice &txSlice);
-    HcclResult Rx(const LINK &link, const Slice &rxSlice);
+    HcclResult TxVector(const LINK& link, const std::vector<Slice>& txSlices);
+    HcclResult RxVector(const LINK& link, const std::vector<Slice>& rxSlices);
+    HcclResult Tx(const LINK& link, const Slice& txSlice);
+    HcclResult Rx(const LINK& link, const Slice& rxSlice);
 
     // allgather ring chunk实现相关函数
-    HcclResult RunAllGatherChunk(const u32 rank, const u32 rankSize, const std::vector<Slice> &outputSlices);
-    HcclResult HeadAllGatherChunk(u32 rank, u32 rankSize, const std::vector<Slice> &outputSlices);
-    HcclResult MidAllGatherChunk(u32 rank, u32 rankSize, u32 sliceIdx, const std::vector<Slice> &outputSlices);
-    HcclResult TailAllGatherChunk(u32 rank, u32 rankSize, u32 sliceIdx, const std::vector<Slice> &outputSlices);
+    HcclResult RunAllGatherChunk(const u32 rank, const u32 rankSize, const std::vector<Slice>& outputSlices);
+    HcclResult HeadAllGatherChunk(u32 rank, u32 rankSize, const std::vector<Slice>& outputSlices);
+    HcclResult MidAllGatherChunk(u32 rank, u32 rankSize, u32 sliceIdx, const std::vector<Slice>& outputSlices);
+    HcclResult TailAllGatherChunk(u32 rank, u32 rankSize, u32 sliceIdx, const std::vector<Slice>& outputSlices);
     HcclResult AllGatherSlicesPrep(u32 rankSize, u32 nicSize);
 
     // 迭代6新增加
     std::shared_ptr<Transport> linkLeft_;
     std::shared_ptr<Transport> linkRight_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* ALL_GATHER_RING_PUB_H */

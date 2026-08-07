@@ -17,58 +17,42 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepShR : public CcuRepBase {
-public:
-    explicit CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Variable &varD, const Variable &varN, const Variable &varM);
-    explicit CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Variable &varD, const Variable &varM);
-    explicit CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Address &addrD, const Variable &varN, const Variable &varM);
-    explicit CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Address &addrD, const Variable &varM);
-    bool Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, const TransDep &dep) override;
-    ShiftSubType GetShiftSubType()
-    {
-        return subType;
-    }
+    class CcuRepShR : public CcuRepBase {
+    public:
+        explicit CcuRepShR(
+            CcuInsGeneratorBase* insGenPtr, const Variable& varD, const Variable& varN, const Variable& varM);
+        explicit CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Variable& varD, const Variable& varM);
+        explicit CcuRepShR(
+            CcuInsGeneratorBase* insGenPtr, const Address& addrD, const Variable& varN, const Variable& varM);
+        explicit CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Address& addrD, const Variable& varM);
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, const TransDep& dep) override;
+        ShiftSubType GetShiftSubType() { return subType; }
 
-    ShiftType GetShiftType()
-    {
-        return shiftType;
-    }
+        ShiftType GetShiftType() { return shiftType; }
 
-    Variable GetVarN()
-    {
-        return varN;
-    }
+        Variable GetVarN() { return varN; }
 
-    Variable GetVarM()
-    {
-        return varM;
-    }
+        Variable GetVarM() { return varM; }
 
-    Variable GetVarD()
-    {
-        return varD;
-    }
+        Variable GetVarD() { return varD; }
 
-    Address GetAddressD()
-    {
-        return addrD;
-    }
+        Address GetAddressD() { return addrD; }
 
-    std::string Describe() override;
+        std::string Describe() override;
 
-private:
-    ShiftSubType subType{ShiftSubType::INVALID};
+    private:
+        ShiftSubType subType{ShiftSubType::INVALID};
 
-    ShiftType shiftType{ShiftType::INVALID};
+        ShiftType shiftType{ShiftType::INVALID};
 
-    Variable varN;
-    Variable varM;
-    Variable varD;
-    Address addrD;
+        Variable varN;
+        Variable varM;
+        Variable varD;
+        Address addrD;
 
-    CcuInsGeneratorBase* insGenPtr{nullptr};
-};
+        CcuInsGeneratorBase* insGenPtr{nullptr};
+    };
 
-};     // namespace CcuRep
-};     // namespace hcomm
+}; // namespace CcuRep
+}; // namespace hcomm
 #endif // HCCL_CCU_REPRESENTATION_SHR_H

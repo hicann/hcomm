@@ -13,8 +13,7 @@
 
 using namespace hccl;
 
-class UtAicpuTsHcommChannelNotifyWaitOnThread_WithTimeout : public UtAicpuTsBase
-{
+class UtAicpuTsHcommChannelNotifyWaitOnThread_WithTimeout : public UtAicpuTsBase {
 protected:
     static void SetUpTestCase()
     {
@@ -48,31 +47,40 @@ protected:
     int32_t res{HCCL_E_RESERVED};
 };
 
-TEST_F(UtAicpuTsHcommChannelNotifyWaitOnThread_WithTimeout, Ut_HcommChannelNotifyWaitOnThread_WithTimeout_Normal_Success)
+TEST_F(
+    UtAicpuTsHcommChannelNotifyWaitOnThread_WithTimeout, Ut_HcommChannelNotifyWaitOnThread_WithTimeout_Normal_Success)
 {
     res = HcommChannelNotifyWaitOnThread(thread, channel, notifyIdx, timeoutNormal);
     EXPECT_EQ(res, HCCL_SUCCESS);
 }
 
-TEST_F(UtAicpuTsHcommChannelNotifyWaitOnThread_WithTimeout, Ut_HcommChannelNotifyWaitOnThread_WithTimeout_ZeroTimeout_Success)
+TEST_F(
+    UtAicpuTsHcommChannelNotifyWaitOnThread_WithTimeout,
+    Ut_HcommChannelNotifyWaitOnThread_WithTimeout_ZeroTimeout_Success)
 {
     res = HcommChannelNotifyWaitOnThread(thread, channel, notifyIdx, timeoutZero);
     EXPECT_EQ(res, HCCL_SUCCESS);
 }
 
-TEST_F(UtAicpuTsHcommChannelNotifyWaitOnThread_WithTimeout, Ut_HcommChannelNotifyWaitOnThread_WithTimeout_MaxTimeout_Success)
+TEST_F(
+    UtAicpuTsHcommChannelNotifyWaitOnThread_WithTimeout,
+    Ut_HcommChannelNotifyWaitOnThread_WithTimeout_MaxTimeout_Success)
 {
     res = HcommChannelNotifyWaitOnThread(thread, channel, notifyIdx, timeoutMax);
     EXPECT_EQ(res, HCCL_SUCCESS);
 }
 
-TEST_F(UtAicpuTsHcommChannelNotifyWaitOnThread_WithTimeout, Ut_HcommChannelNotifyWaitOnThread_WithTimeout_ThreadIsNull_ReturnHCCL_E_PTR)
+TEST_F(
+    UtAicpuTsHcommChannelNotifyWaitOnThread_WithTimeout,
+    Ut_HcommChannelNotifyWaitOnThread_WithTimeout_ThreadIsNull_ReturnHCCL_E_PTR)
 {
     res = HcommChannelNotifyWaitOnThread(0, channel, notifyIdx, timeoutNormal);
     EXPECT_EQ(res, HCCL_E_PTR);
 }
 
-TEST_F(UtAicpuTsHcommChannelNotifyWaitOnThread_WithTimeout, Ut_HcommChannelNotifyWaitOnThread_WithTimeout_ChannelIsNull_ReturnHCCL_E_PTR)
+TEST_F(
+    UtAicpuTsHcommChannelNotifyWaitOnThread_WithTimeout,
+    Ut_HcommChannelNotifyWaitOnThread_WithTimeout_ChannelIsNull_ReturnHCCL_E_PTR)
 {
     res = HcommChannelNotifyWaitOnThread(thread, 0, notifyIdx, timeoutNormal);
     EXPECT_EQ(res, HCCL_E_PTR);

@@ -16,33 +16,37 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepBufReduce::CcuRepBufReduce(CcuInsGeneratorBase* insGenPtr, const std::vector<CcuBuf> &mem, uint16_t count, uint16_t dataType,
-                                 uint16_t outputDataType, uint16_t opType, CompletedEvent sem, const CcuRep::Variable &len,
-                                 uint16_t mask)
-    : insGenPtr(insGenPtr), mem(mem), count(count), dataType(dataType), outputDataType(outputDataType), opType(opType), sem(sem),
-      xnIdLength_(len), mask(mask)
-{
-    type       = CcuRepType::BUF_REDUCE;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
+    CcuRepBufReduce::CcuRepBufReduce(
+        CcuInsGeneratorBase* insGenPtr, const std::vector<CcuBuf>& mem, uint16_t count, uint16_t dataType,
+        uint16_t outputDataType, uint16_t opType, CompletedEvent sem, const CcuRep::Variable& len, uint16_t mask)
+        : insGenPtr(insGenPtr),
+          mem(mem),
+          count(count),
+          dataType(dataType),
+          outputDataType(outputDataType),
+          opType(opType),
+          sem(sem),
+          xnIdLength_(len),
+          mask(mask)
+    {
+        type = CcuRepType::BUF_REDUCE;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
 
-bool CcuRepBufReduce::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool CcuRepBufReduce::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    instrCount = insGenPtr->GetInstrCount(type);
-    insGenPtr->CcuRepBufReduceTranslate(ccuKernel, instr, this);
+        instrCount = insGenPtr->GetInstrCount(type);
+        insGenPtr->CcuRepBufReduceTranslate(ccuKernel, instr, this);
 
-    instrId += instrCount;
+        instrId += instrCount;
 
-    return translated;
-}
+        return translated;
+    }
 
-std::string CcuRepBufReduce::Describe()
-{
-    return Hccl::StringFormat("Reduce");
-}
+    std::string CcuRepBufReduce::Describe() { return Hccl::StringFormat("Reduce"); }
 
 }; // namespace CcuRep
 }; // namespace hcomm

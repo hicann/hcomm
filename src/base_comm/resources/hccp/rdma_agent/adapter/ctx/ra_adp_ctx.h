@@ -33,14 +33,12 @@ struct RsCtxOps {
         struct TpAttr *attr);
     int (*ctxTokenIdAlloc)(struct RaRsDevInfo *devInfo, unsigned long long *addr, unsigned int *tokenId);
     int (*ctxTokenIdFree)(struct RaRsDevInfo *devInfo, unsigned long long addr);
-    int (*ctxLmemReg)(struct RaRsDevInfo *devInfo, struct MemRegAttrT *memAttr,
-        struct MemRegInfoT *memInfo);
+    int (*ctxLmemReg)(struct RaRsDevInfo *devInfo, struct MemRegAttrT *memAttr, struct MemRegInfoT *memInfo);
     int (*ctxLmemUnreg)(struct RaRsDevInfo *devInfo, unsigned long long addr);
-    int (*ctxRmemImport)(struct RaRsDevInfo *devInfo, struct MemImportAttrT *memAttr,
-        struct MemImportInfoT *memInfo);
+    int (*ctxRmemImport)(struct RaRsDevInfo *devInfo, struct MemImportAttrT *memAttr, struct MemImportInfoT *memInfo);
     int (*ctxRmemUnimport)(struct RaRsDevInfo *devInfo, unsigned long long addr);
-    int (*ctxChanCreate)(struct RaRsDevInfo *devInfo, union DataPlaneCstmFlag dataPlaneFlag,
-        unsigned long long *addr, int *fd);
+    int (*ctxChanCreate)(struct RaRsDevInfo *devInfo, union DataPlaneCstmFlag dataPlaneFlag, unsigned long long *addr,
+        int *fd);
     int (*ctxChanDestroy)(struct RaRsDevInfo *devInfo, unsigned long long addr);
     int (*ctxCqCreate)(struct RaRsDevInfo *devInfo, struct CtxCqAttr *attr, struct CtxCqInfo *info);
     int (*ctxCqDestroy)(struct RaRsDevInfo *devInfo, unsigned long long addr);
@@ -50,19 +48,16 @@ struct RsCtxOps {
     int (*ctxQpImport)(struct RaRsDevInfo *devInfo, struct RsJettyImportAttr *importAttr,
         struct RsJettyImportInfo *importInfo);
     int (*ctxQpUnimport)(struct RaRsDevInfo *devInfo, unsigned char rawRemJettyId[], unsigned int size);
-    int (*ctxQpBind)(struct RaRsDevInfo *devInfo, struct RsCtxQpInfo *localQpInfo,
-        struct RsCtxQpInfo *remoteQpInfo);
+    int (*ctxQpBind)(struct RaRsDevInfo *devInfo, struct RsCtxQpInfo *localQpInfo, struct RsCtxQpInfo *remoteQpInfo);
     int (*ctxQpUnbind)(struct RaRsDevInfo *devInfo, unsigned int qpId);
-    int (*ctxBatchSendWr)(struct WrlistBaseInfo *baseInfo, struct BatchSendWrData *wrData,
-        struct SendWrResp *wrResp, struct WrlistSendCompleteNum *wrlistNum);
+    int (*ctxBatchSendWr)(struct WrlistBaseInfo *baseInfo, struct BatchSendWrData *wrData, struct SendWrResp *wrResp,
+        struct WrlistSendCompleteNum *wrlistNum);
     int (*ctxUpdateCi)(struct RaRsDevInfo *devInfo, unsigned int qpId, uint16_t ci);
-    int (*ctxQpQueryBatch)(struct RaRsDevInfo *devInfo, unsigned int ids[], struct JettyAttr attr[],
-        unsigned int *num);
-    int (*ctxGetAuxInfo)(struct RaRsDevInfo *devInfo, struct HccpAuxInfoIn *infoIn,
-        struct HccpAuxInfoOut *infoOut);
+    int (*ctxQpQueryBatch)(struct RaRsDevInfo *devInfo, unsigned int ids[], struct JettyAttr attr[], unsigned int *num);
+    int (*ctxGetAuxInfo)(struct RaRsDevInfo *devInfo, struct HccpAuxInfoIn *infoIn, struct HccpAuxInfoOut *infoOut);
     int (*ctxGetCrErrInfoList)(struct RaRsDevInfo *devInfo, struct CrErrInfo infoList[], unsigned int *num);
-    int (*ctxGetUbContext)(struct RaRsDevInfo *devInfo, unsigned int id, unsigned int contextType,
-        uint8_t context[], unsigned int *len);
+    int (*ctxGetUbContext)(struct RaRsDevInfo *devInfo, unsigned int id, unsigned int contextType, uint8_t context[],
+        unsigned int *len);
 };
 
 int RaRsGetDevEidInfoNum(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen);

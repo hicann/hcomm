@@ -15,12 +15,28 @@
 #include "hccl/base.h"
 
 // 2 is sizeof(float16), 8 is sizeof(float64), 2 is sizeof(bfloat16)..
-constexpr u32 SIZE_TABLE[HCCL_DATA_TYPE_RESERVED] = {sizeof(s8), sizeof(s16), sizeof(s32),
-    2, sizeof(float), sizeof(s64), sizeof(u64), sizeof(u8), sizeof(u16), sizeof(u32),
-    8, 2, 16, 2, 1, 1, 1, 1};
+constexpr u32 SIZE_TABLE[HCCL_DATA_TYPE_RESERVED]
+    = {sizeof(s8),
+       sizeof(s16),
+       sizeof(s32),
+       2,
+       sizeof(float),
+       sizeof(s64),
+       sizeof(u64),
+       sizeof(u8),
+       sizeof(u16),
+       sizeof(u32),
+       8,
+       2,
+       16,
+       2,
+       1,
+       1,
+       1,
+       1};
 
 // 对内芯片类型
-#define MACRO_DEV_TYPE_NEW  // 兼容性处理，后续删除
+#define MACRO_DEV_TYPE_NEW // 兼容性处理，后续删除
 enum class DevType {
     DEV_TYPE_910 = 0,
     DEV_TYPE_310P3 = 1, // PG
@@ -37,9 +53,9 @@ enum class DevType {
 #ifdef __cplusplus
 extern "C" {
 #endif
-HcclResult hrtGetDeviceType(DevType &devType);
+HcclResult hrtGetDeviceType(DevType& devType);
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
 #endif // DTYPE_COMMON_H

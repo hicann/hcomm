@@ -20,14 +20,15 @@
     fprintf(stderr, "%s, pid(%d), %s(%d): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, ##args)
 #define TUNE_INFO(fmt, args...) \
     fprintf(stderr, "%s, pid(%d), %s(%d): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, ##args)
-#define TUNE_DEBUG(fmt, args...)  \
+#define TUNE_DEBUG(fmt, args...) \
     fprintf(stderr, "%s, pid(%d), %s(%d): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, ##args)
-#define TUNE_EVENT(fmt, args...)  \
+#define TUNE_EVENT(fmt, args...) \
     fprintf(stderr, "%s, pid(%d), %s(%d): " fmt "\n", __TIME__, getpid(), __func__, __LINE__, ##args)
-#define TUNE_CHK_RET(result, exeLog, retCode) do { \
-    if (result) {                                                                       \
-        exeLog;                                                                     \
-        return retCode;                                               \
-    }                                                                                \
-} while (0)
+#define TUNE_CHK_RET(result, exeLog, retCode) \
+    do {                                      \
+        if (result) {                         \
+            exeLog;                           \
+            return retCode;                   \
+        }                                     \
+    } while (0)
 #endif

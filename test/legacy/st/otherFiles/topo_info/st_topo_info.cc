@@ -20,26 +20,22 @@ using namespace Hccl;
 
 class TopoParserTest : public testing::Test {
 protected:
-    static void SetUpTestCase() {
-        std::cout << "TopoParserTest SetUP" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "TopoParserTest SetUP" << std::endl; }
 
-    static void TearDownTestCase() {
-        std::cout << "TopoParserTest TearDown" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "TopoParserTest TearDown" << std::endl; }
 
-    virtual void SetUp() {
-        std::cout << "A Test case in TopoParserTest SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in TopoParserTest SetUP" << std::endl; }
 
-    virtual void TearDown() {
+    virtual void TearDown()
+    {
         GlobalMockObject::verify();
         std::cout << "A Test case in TopoParserTest TearDown" << std::endl;
     }
 };
 
 // 功能用例，PEER2NET的B端口缺省，topoType和topoInstId缺省，正常填写
-TEST_F(TopoParserTest, Ut_Deserialize_When_Normal_Expect_Success) {
+TEST_F(TopoParserTest, Ut_Deserialize_When_Normal_Expect_Success)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -109,13 +105,11 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_Normal_Expect_Success) {
 			    "position": "DEVICE"
 		    }
 	    ]
-        })"; 
+        })";
 
-    JsonParser  topoParser;
+    JsonParser topoParser;
     TopoInfo topoInfo;
-	topoParser.ParseString(topoString, topoInfo);
-
-    
+    topoParser.ParseString(topoString, topoInfo);
 
     TopoInfo expectTopoInfo;
     expectTopoInfo.version = "2.0";
@@ -228,13 +222,14 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_Normal_Expect_Success) {
 }
 
 // 有效字段缺少
-TEST_F(TopoParserTest, Ut_Deserialize_When_NeededFieldMissing_Expect_Exception) {
+TEST_F(TopoParserTest, Ut_Deserialize_When_NeededFieldMissing_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
     std::string topoString = R"({
 	    "hardware_type" : "950-2D-Fullmsh_64_plus_1"
-        })"; 
+        })";
 
     JsonParser topoParser;
     TopoInfo topoInfo;
@@ -242,7 +237,8 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_NeededFieldMissing_Expect_Exception) 
 }
 
 // version = 1.0
-TEST_F(TopoParserTest, Ut_Deserialize_When_InvalidVersion_Expect_Exception) {
+TEST_F(TopoParserTest, Ut_Deserialize_When_InvalidVersion_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -270,15 +266,16 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_InvalidVersion_Expect_Exception) {
 			    "position": "DEVICE"
 		    }
 	    ]
-        })"; 
+        })";
 
-    JsonParser  topoParser;
+    JsonParser topoParser;
     TopoInfo topoInfo;
     EXPECT_THROW(topoParser.ParseString(topoString, topoInfo), InvalidParamsException);
 }
 
 // warning, edge 为 0
-TEST_F(TopoParserTest, Ut_Deserialize_When_ZeroEdge_Expect_Warning) {
+TEST_F(TopoParserTest, Ut_Deserialize_When_ZeroEdge_Expect_Warning)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -292,8 +289,8 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_ZeroEdge_Expect_Warning) {
 	    ],
 	    "edge_count" : 0,
         "edge_list": []
-        })"; 
-    JsonParser  topoParser;
+        })";
+    JsonParser topoParser;
     TopoInfo topoInfo;
     topoParser.ParseString(topoString, topoInfo);
 
@@ -312,7 +309,7 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_ZeroEdge_Expect_Warning) {
     expectTopoInfo.peers.emplace_back(peer2);
 
     expectTopoInfo.edgeCount = 0;
-    
+
     EXPECT_EQ(topoInfo.version, expectTopoInfo.version);
     EXPECT_EQ(topoInfo.peerCount, expectTopoInfo.peerCount);
     EXPECT_EQ(topoInfo.peers.size(), expectTopoInfo.peers.size());
@@ -324,7 +321,8 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_ZeroEdge_Expect_Warning) {
 }
 
 // peer_count != peer_list.size()
-TEST_F(TopoParserTest, Ut_Deserialize_When_PeersSizeUnequalToPeerCount_Expect_Exception) {
+TEST_F(TopoParserTest, Ut_Deserialize_When_PeersSizeUnequalToPeerCount_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -337,19 +335,20 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_PeersSizeUnequalToPeerCount_Expect_Ex
 		    { "local_id" : 1 },
 		    { "local_id" : 2 }
 	    ]
-        })"; 
+        })";
 
-    JsonParser  topoParser;
+    JsonParser topoParser;
     TopoInfo topoInfo;
     EXPECT_THROW(topoParser.ParseString(topoString, topoInfo), InvalidParamsException);
 }
 
 // peer.loadId >= peer_count
-TEST_F(TopoParserTest, Ut_Deserialize_When_PeerIdGreaterThanPeerCount_Expect_Exception) {
+TEST_F(TopoParserTest, Ut_Deserialize_When_PeerIdGreaterThanPeerCount_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
-     std::string topoString = R"({
+    std::string topoString = R"({
 	    "version": "2.0",
 	    "peer_count" : 3,
 		"edge_count" : 0,
@@ -358,19 +357,20 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_PeerIdGreaterThanPeerCount_Expect_Exc
 		    { "local_id" : 0 },
 		    { "local_id" : 2 }
 	    ]
-        })"; 
+        })";
 
-    JsonParser  topoParser;
+    JsonParser topoParser;
     TopoInfo topoInfo;
     EXPECT_THROW(topoParser.ParseString(topoString, topoInfo), InvalidParamsException);
 }
 
 // 重复的peer
-TEST_F(TopoParserTest, Ut_Deserialize_When_DuplicatePeer_Expect_Exception) {
+TEST_F(TopoParserTest, Ut_Deserialize_When_DuplicatePeer_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
-     std::string topoString = R"({
+    std::string topoString = R"({
 	    "version": "2.0",
 	    "peer_count" : 3,
 		"edge_count" : 0,
@@ -379,19 +379,20 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_DuplicatePeer_Expect_Exception) {
 		    { "local_id" : 0 },
 		    { "local_id" : 2 }
 	    ]
-        })"; 
+        })";
 
-    JsonParser  topoParser;
+    JsonParser topoParser;
     TopoInfo topoInfo;
     EXPECT_THROW(topoParser.ParseString(topoString, topoInfo), InvalidParamsException);
 }
 
 // edge_count != edge_list.size()
-TEST_F(TopoParserTest, Ut_Deserialize_When_EdgesSizeUnequalToEdgeCount_Expect_Exception) {
-DevType devType = DevType::DEV_TYPE_910A;
+TEST_F(TopoParserTest, Ut_Deserialize_When_EdgesSizeUnequalToEdgeCount_Expect_Exception)
+{
+    DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
-     std::string topoString = R"({
+    std::string topoString = R"({
 	    "version": "2.0",
 	    "hardware_type" : "950-2D-Fullmsh_64_plus_1",
 	    "peer_count" : 3,
@@ -427,19 +428,20 @@ DevType devType = DevType::DEV_TYPE_910A;
 			    "position": "DEVICE"
 		    }
 			]
-        })"; 
+        })";
 
-    JsonParser  topoParser;
+    JsonParser topoParser;
     TopoInfo topoInfo;
     EXPECT_THROW(topoParser.ParseString(topoString, topoInfo), InvalidParamsException);
 }
 
 // 重复的边 PEER2PEER，localA和localB对调
-TEST_F(TopoParserTest, Ut_Deserialize_When_DuplicateEdge_Expect_Exception) {
-DevType devType = DevType::DEV_TYPE_910A;
+TEST_F(TopoParserTest, Ut_Deserialize_When_DuplicateEdge_Expect_Exception)
+{
+    DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
-     std::string topoString = R"({
+    std::string topoString = R"({
 	    "version": "2.0",
 	    "hardware_type" : "950-2D-Fullmsh_64_plus_1",
 	    "peer_count" : 3,
@@ -475,19 +477,20 @@ DevType devType = DevType::DEV_TYPE_910A;
 			    "position": "DEVICE"
 		    }
 			]
-        })"; 
+        })";
 
-    JsonParser  topoParser;
+    JsonParser topoParser;
     TopoInfo topoInfo;
     EXPECT_THROW(topoParser.ParseString(topoString, topoInfo), InvalidParamsException);
 }
 
 // Endpoint的localId无效
-TEST_F(TopoParserTest, Ut_Deserialize_When_InvalidEndpointLocalId_Expect_Exception) {
-DevType devType = DevType::DEV_TYPE_910A;
+TEST_F(TopoParserTest, Ut_Deserialize_When_InvalidEndpointLocalId_Expect_Exception)
+{
+    DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
-     std::string topoString = R"({
+    std::string topoString = R"({
 	    "version": "2.0",
 	    "hardware_type" : "950-2D-Fullmsh_64_plus_1",
 	    "peer_count" : 3,
@@ -523,19 +526,20 @@ DevType devType = DevType::DEV_TYPE_910A;
 			    "position": "DEVICE"
 		    }
 			]
-        })"; 
+        })";
 
-    JsonParser  topoParser;
+    JsonParser topoParser;
     TopoInfo topoInfo;
     EXPECT_THROW(topoParser.ParseString(topoString, topoInfo), InvalidParamsException);
 }
 
 // 可缺省字段填无效值 "MESH"
-TEST_F(TopoParserTest, Ut_Deserialize_When_InvalidTopoType_Expect_Exception) {
-DevType devType = DevType::DEV_TYPE_910A;
+TEST_F(TopoParserTest, Ut_Deserialize_When_InvalidTopoType_Expect_Exception)
+{
+    DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
-     std::string topoString = R"({
+    std::string topoString = R"({
 	    "version": "2.0",
 	    "hardware_type" : "950-2D-Fullmsh_64_plus_1",
 	    "peer_count" : 3,
@@ -571,15 +575,16 @@ DevType devType = DevType::DEV_TYPE_910A;
 			    "position": "DEVICE"
 		    }
 			]
-        })"; 
+        })";
 
-    JsonParser  topoParser;
+    JsonParser topoParser;
     TopoInfo topoInfo;
     EXPECT_THROW(topoParser.ParseString(topoString, topoInfo), InvalidParamsException);
 }
 
 // 无效的JSON文件
-TEST_F(TopoParserTest, Ut_Deserialize_When_InvalidJson_Expect_Exception) {
+TEST_F(TopoParserTest, Ut_Deserialize_When_InvalidJson_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -595,11 +600,12 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_InvalidJson_Expect_Exception) {
     EXPECT_THROW(topoParser.ParseString(topoString, topoInfo), InvalidParamsException); // ?????????
 }
 
-//字符串输入非法值
-// ranktable对应
+// 字符串输入非法值
+//  ranktable对应
 
 // 越界输入 -1; 9999999999999999999999999999999999
-TEST_F(TopoParserTest, Ut_Deserialize_When_InvalidTopoInstId_Expect_Exception) {
+TEST_F(TopoParserTest, Ut_Deserialize_When_InvalidTopoInstId_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -627,15 +633,15 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_InvalidTopoInstId_Expect_Exception) {
 			    "position": "DEVICE"
 		    }
 	    ]
-        })"; 
+        })";
 
-    JsonParser  topoParser;
+    JsonParser topoParser;
     TopoInfo topoInfo;
     EXPECT_THROW(topoParser.ParseString(topoString, topoInfo), InvalidParamsException);
 }
 
-
-TEST_F(TopoParserTest, Ut_BinaryStream_When_GetBinStreamToReBuild_Expect_Success) {
+TEST_F(TopoParserTest, Ut_BinaryStream_When_GetBinStreamToReBuild_Expect_Success)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -753,7 +759,8 @@ TEST_F(TopoParserTest, Ut_BinaryStream_When_GetBinStreamToReBuild_Expect_Success
     EXPECT_EQ(expectTopoInfo.Describe(), reBuildTopo.Describe());
 }
 
-TEST_F(TopoParserTest, Ut_DeserializeBinaryStream_When_Normal_Expect_Success) {
+TEST_F(TopoParserTest, Ut_DeserializeBinaryStream_When_Normal_Expect_Success)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -13502,9 +13509,9 @@ TEST_F(TopoParserTest, Ut_DeserializeBinaryStream_When_Normal_Expect_Success) {
       "position": "DEVICE"
     }
   ]
-})"; 
+})";
 
-    JsonParser  topoParser;
+    JsonParser topoParser;
     TopoInfo topoInfo;
     topoParser.ParseString(topoString, topoInfo);
 

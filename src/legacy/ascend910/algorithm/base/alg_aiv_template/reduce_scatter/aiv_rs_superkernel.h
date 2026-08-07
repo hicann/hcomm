@@ -7,16 +7,17 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef AIV_RS_SUPERKERNEL_H
 #define AIV_RS_SUPERKERNEL_H
- 
+
 #include "aiv_communication_base.h"
 #include "aiv_reduce_scatter_91093_smalldata.h"
 #include "aiv_reduce_scatter_910B.h"
 // aiv reducescatter
- 
-extern "C" __aicore__ void sk_reducescatter(SUPERKERNEL_LITE_ARGS_DEF) {
+
+extern "C" __aicore__ void sk_reducescatter(SUPERKERNEL_LITE_ARGS_DEF)
+{
     SUPERKERNEL_LITE_ARGS_EXTRACT;
     if (devType == DEV_TYPE_910_93) {
         return sk_reduce_scatter_91093_smalldata(SUPERKERNEL_ARGS_CALL);
@@ -25,5 +26,4 @@ extern "C" __aicore__ void sk_reducescatter(SUPERKERNEL_LITE_ARGS_DEF) {
     }
 }
 
- 
-#endif  /* AIV_RS_SUPERKERNEL_H */
+#endif /* AIV_RS_SUPERKERNEL_H */

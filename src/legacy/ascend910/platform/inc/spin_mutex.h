@@ -21,10 +21,10 @@ public:
     SpinMutex() = default;
     ~SpinMutex() = default;
     // delete copy and move constructors and assign operators
-    SpinMutex(SpinMutex const&) = delete;             // Copy construct
-    SpinMutex(SpinMutex&&) = delete;                  // Move construct
-    SpinMutex& operator=(SpinMutex const&) = delete;  // Copy assign
-    SpinMutex& operator=(SpinMutex &&) = delete;      // Move assign
+    SpinMutex(SpinMutex const&) = delete;            // Copy construct
+    SpinMutex(SpinMutex&&) = delete;                 // Move construct
+    SpinMutex& operator=(SpinMutex const&) = delete; // Copy assign
+    SpinMutex& operator=(SpinMutex&&) = delete;      // Move assign
     void lock()
     {
         bool expected = false;
@@ -32,12 +32,10 @@ public:
             expected = false;
         }
     }
-    void unlock()
-    {
-        flag.store(false);
-    }
+    void unlock() { flag.store(false); }
+
 private:
     std::atomic<bool> flag = ATOMIC_VAR_INIT(false);
 };
-}  // namespace hccl
-#endif  // HCCL_SPIN_MUTEX_H
+} // namespace hccl
+#endif // HCCL_SPIN_MUTEX_H

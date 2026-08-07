@@ -17,12 +17,13 @@
 namespace dfx {
 class AicpuProfilingManager {
 public:
-    static HcclResult ReportTaskExecTimeLine(AicpuComProf *acprof, u32 turnOffset = 0U);
+    static HcclResult ReportTaskExecTimeLine(AicpuComProf* acprof, u32 turnOffset = 0U);
     static HcclResult ReportTaskInfo();
-    static void Init(const AicpuComContext *ctx);
+    static void Init(const AicpuComContext* ctx);
+
 private:
-    static void Ctx2MsprofAicpuMC2HcclInfo(const AicpuComContext *ctx, MsprofAicpuHcclTaskInfo &msprofAicpuMC2HcclInfo);
-    static std::string AicpuKfcProfCommTurnToString(const AicpuKfcProfCommTurn &aicpuKfcProfCommTurn);
+    static void Ctx2MsprofAicpuMC2HcclInfo(const AicpuComContext* ctx, MsprofAicpuHcclTaskInfo& msprofAicpuMC2HcclInfo);
+    static std::string AicpuKfcProfCommTurnToString(const AicpuKfcProfCommTurn& aicpuKfcProfCommTurn);
 };
-}  // namespace dfx
-#endif  // __AICPU_PROFILING_MANAGER_H__
+} // namespace dfx
+#endif // __AICPU_PROFILING_MANAGER_H__

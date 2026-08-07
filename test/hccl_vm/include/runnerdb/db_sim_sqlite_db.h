@@ -98,66 +98,67 @@ private:
     std::vector<std::unique_ptr<sim::TableBase>> m_lazyTables;
 
     template <typename T>
-    void RegisterTable(sim::SqliteTable<T>& table, const std::string& name) {
+    void RegisterTable(sim::SqliteTable<T>& table, const std::string& name)
+    {
         m_tableMap[std::type_index(typeid(T))] = &table;
         m_tableNames.push_back(name);
     }
 
 public:
-    SimRunnerSqliteDB() 
-        : m_serverTbl(m_db.GetDb(), "Server")
-        , m_hostTbl(m_db.GetDb(), "Host")
-        , m_runnerTbl(m_db.GetDb(), "Runner")
-        , m_deviceTbl(m_db.GetDb(), "Device")
-        , m_deviceStatusTbl(m_db.GetDb(), "DeviceStatus")
-        , m_contextTbl(m_db.GetDb(), "Context")
-        , m_streamTbl(m_db.GetDb(), "Stream")
-        , m_notifyTbl(m_db.GetDb(), "Notify")
-        , m_eventTbl(m_db.GetDb(), "Event")
-        , m_virMemTbl(m_db.GetDb(), "VirMem")
-        , m_phyMemTbl(m_db.GetDb(), "PhMem")
-        , m_ipcMemRecordTbl(m_db.GetDb(), "IpcMemRecord")
-        , m_ipcMemWhiteListTbl(m_db.GetDb(), "IpMemWhiteList")
-        , m_fdMemRecordTbl(m_db.GetDb(), "FdMemRecord")
-        , m_fdMemWhiteListTbl(m_db.GetDb(), "FdMemWhiteList")
-        , m_taskTbl(m_db.GetDb(), "Task")
-        , m_eventSyncTaskTbl(m_db.GetDb(), "EventSyncTask")
-        , m_portTbl(m_db.GetDb(), "Port")
-        , m_ccuTbl(m_db.GetDb(), "Ccu")
-        , m_ccuResTbl(m_db.GetDb(), "CcuResource")
-        , m_deviceConnTbl(m_db.GetDb(), "DeviceConnection")
-        , m_endPointTbl(m_db.GetDb(), "EndPoint")
-        , m_endPointPairTbl(m_db.GetDb(), "EndPointPair")
-        , m_endPointPortMappingTbl(m_db.GetDb(), "EndPointPortMapping")
-        , m_linkTbl(m_db.GetDb(), "Link")
-        , m_ccuChannelTbl(m_db.GetDb(), "CcuChannel")
-        , m_taskSchedulerDeviceTbl(m_db.GetDb(), "TaskSchedulerDevice")
-        , m_computeDieTbl(m_db.GetDb(), "ComputeDie")
-        , m_raSocketTbl(m_db.GetDb(), "RaSocket")
-        , m_raSocketPairTbl(m_db.GetDb(), "RaSocketPair")
-        , m_raDeviceTbl(m_db.GetDb(), "RaDevice")
-        , m_raQPTbl(m_db.GetDb(), "RaQP")
-        , m_raCQTbl(m_db.GetDb(), "RaCQ")
-        , m_raCQETbl(m_db.GetDb(), "RaCQE")
-        , m_raMRTbl(m_db.GetDb(), "RaMR")
-        , m_memoryLayoutTbl(m_db.GetDb(), "MemoryLayout")
-        , m_simModelDataTbl(m_db.GetDb(), "SimModelData")
-        , m_rankTbl(m_db.GetDb(), "Rank")
-        , m_ipcNotifyTbl(m_db.GetDb(), "IpcNotify")
-        , m_ipcNotifyVistorListTbl(m_db.GetDb(), "IpcNotifyVistorList")
-        , m_notifyRecordTaskTbl(m_db.GetDb(), "NotifyRecordTask")
-        , m_notifyWaitTaskTbl(m_db.GetDb(), "NotifyWaitTask")
-        , m_raContextTbl(m_db.GetDb(), "RaContext")
-        , m_raChanTbl(m_db.GetDb(), "RaChan")
-        , m_raTokenIdTbl(m_db.GetDb(), "RaTokenId")
-        , m_raTpTbl(m_db.GetDb(), "RaTp")
-        , m_raRmemTbl(m_db.GetDb(), "RaRmem")
-        , m_raLmemTbl(m_db.GetDb(), "RaLmem")
-        , m_raJettyTbl(m_db.GetDb(), "RaJetty")
-        , m_raJfcTbl(m_db.GetDb(), "RaJfc")
-        , m_raCrTbl(m_db.GetDb(), "RaCr")
-        , m_raTlvTbl(m_db.GetDb(), "RaTlv")
-        , m_runModeConfigTbl(m_db.GetDb(), "RunModeConfig")
+    SimRunnerSqliteDB()
+        : m_serverTbl(m_db.GetDb(), "Server"),
+          m_hostTbl(m_db.GetDb(), "Host"),
+          m_runnerTbl(m_db.GetDb(), "Runner"),
+          m_deviceTbl(m_db.GetDb(), "Device"),
+          m_deviceStatusTbl(m_db.GetDb(), "DeviceStatus"),
+          m_contextTbl(m_db.GetDb(), "Context"),
+          m_streamTbl(m_db.GetDb(), "Stream"),
+          m_notifyTbl(m_db.GetDb(), "Notify"),
+          m_eventTbl(m_db.GetDb(), "Event"),
+          m_virMemTbl(m_db.GetDb(), "VirMem"),
+          m_phyMemTbl(m_db.GetDb(), "PhMem"),
+          m_ipcMemRecordTbl(m_db.GetDb(), "IpcMemRecord"),
+          m_ipcMemWhiteListTbl(m_db.GetDb(), "IpMemWhiteList"),
+          m_fdMemRecordTbl(m_db.GetDb(), "FdMemRecord"),
+          m_fdMemWhiteListTbl(m_db.GetDb(), "FdMemWhiteList"),
+          m_taskTbl(m_db.GetDb(), "Task"),
+          m_eventSyncTaskTbl(m_db.GetDb(), "EventSyncTask"),
+          m_portTbl(m_db.GetDb(), "Port"),
+          m_ccuTbl(m_db.GetDb(), "Ccu"),
+          m_ccuResTbl(m_db.GetDb(), "CcuResource"),
+          m_deviceConnTbl(m_db.GetDb(), "DeviceConnection"),
+          m_endPointTbl(m_db.GetDb(), "EndPoint"),
+          m_endPointPairTbl(m_db.GetDb(), "EndPointPair"),
+          m_endPointPortMappingTbl(m_db.GetDb(), "EndPointPortMapping"),
+          m_linkTbl(m_db.GetDb(), "Link"),
+          m_ccuChannelTbl(m_db.GetDb(), "CcuChannel"),
+          m_taskSchedulerDeviceTbl(m_db.GetDb(), "TaskSchedulerDevice"),
+          m_computeDieTbl(m_db.GetDb(), "ComputeDie"),
+          m_raSocketTbl(m_db.GetDb(), "RaSocket"),
+          m_raSocketPairTbl(m_db.GetDb(), "RaSocketPair"),
+          m_raDeviceTbl(m_db.GetDb(), "RaDevice"),
+          m_raQPTbl(m_db.GetDb(), "RaQP"),
+          m_raCQTbl(m_db.GetDb(), "RaCQ"),
+          m_raCQETbl(m_db.GetDb(), "RaCQE"),
+          m_raMRTbl(m_db.GetDb(), "RaMR"),
+          m_memoryLayoutTbl(m_db.GetDb(), "MemoryLayout"),
+          m_simModelDataTbl(m_db.GetDb(), "SimModelData"),
+          m_rankTbl(m_db.GetDb(), "Rank"),
+          m_ipcNotifyTbl(m_db.GetDb(), "IpcNotify"),
+          m_ipcNotifyVistorListTbl(m_db.GetDb(), "IpcNotifyVistorList"),
+          m_notifyRecordTaskTbl(m_db.GetDb(), "NotifyRecordTask"),
+          m_notifyWaitTaskTbl(m_db.GetDb(), "NotifyWaitTask"),
+          m_raContextTbl(m_db.GetDb(), "RaContext"),
+          m_raChanTbl(m_db.GetDb(), "RaChan"),
+          m_raTokenIdTbl(m_db.GetDb(), "RaTokenId"),
+          m_raTpTbl(m_db.GetDb(), "RaTp"),
+          m_raRmemTbl(m_db.GetDb(), "RaRmem"),
+          m_raLmemTbl(m_db.GetDb(), "RaLmem"),
+          m_raJettyTbl(m_db.GetDb(), "RaJetty"),
+          m_raJfcTbl(m_db.GetDb(), "RaJfc"),
+          m_raCrTbl(m_db.GetDb(), "RaCr"),
+          m_raTlvTbl(m_db.GetDb(), "RaTlv"),
+          m_runModeConfigTbl(m_db.GetDb(), "RunModeConfig")
     {
         RegisterTable(m_serverTbl, "Server");
         RegisterTable(m_hostTbl, "Host");
@@ -219,7 +220,8 @@ public:
     SimRunnerSqliteDB(SimRunnerSqliteDB&&) = delete;
     SimRunnerSqliteDB& operator=(SimRunnerSqliteDB&&) = delete;
 
-    static SimRunnerSqliteDB& Instance() {
+    static SimRunnerSqliteDB& Instance()
+    {
         static std::mutex s_mtx;
         static SimRunnerSqliteDB* s_instance = nullptr;
 
@@ -231,7 +233,8 @@ public:
     }
 
     template <typename T>
-    sim::SqliteTable<T>& GetTable() {
+    sim::SqliteTable<T>& GetTable()
+    {
         std::lock_guard<std::mutex> lock(m_lazyMutex);
         auto it = m_tableMap.find(std::type_index(typeid(T)));
         if (it != m_tableMap.end()) {
@@ -248,47 +251,50 @@ public:
     }
 
     template <typename T>
-    std::optional<T> Find(TableKeyType<T> id) {
+    std::optional<T> Find(TableKeyType<T> id)
+    {
         return GetTable<T>().Find(id);
     }
 
     template <typename T>
-    std::pair<TableValue<T>, bool> Query(std::function<bool(const T &)> pred) {
+    std::pair<TableValue<T>, bool> Query(std::function<bool(const T&)> pred)
+    {
         return GetTable<T>().Query(pred);
     }
 
     template <typename T>
-    std::vector<TableValue<T>> QueryList(std::function<bool(const T &)> pred) {
+    std::vector<TableValue<T>> QueryList(std::function<bool(const T&)> pred)
+    {
         return GetTable<T>().QueryList(pred);
     }
 
     template <typename T>
-    TableKeyType<T> Add(T rec) {
+    TableKeyType<T> Add(T rec)
+    {
         return GetTable<T>().Add(rec);
     }
 
     template <typename T>
-    bool Update(TableKeyType<T> id, std::function<void(T &)> updater) {
+    bool Update(TableKeyType<T> id, std::function<void(T&)> updater)
+    {
         return GetTable<T>().Update(id, updater);
     }
 
     template <typename T>
-    bool Delete(TableKeyType<T> id) {
+    bool Delete(TableKeyType<T> id)
+    {
         return GetTable<T>().Delete(id);
     }
 
     template <typename T>
-    bool DeleteAll() {
+    bool DeleteAll()
+    {
         return GetTable<T>().DeleteAll();
     }
 
-    std::vector<std::string> GetAllTableName() const {
-        return m_tableNames;
-    }
+    std::vector<std::string> GetAllTableName() const { return m_tableNames; }
 
-    void ClearAll() {
-        m_db.ClearAllTables();
-    }
+    void ClearAll() { m_db.ClearAllTables(); }
 };
 
 #endif

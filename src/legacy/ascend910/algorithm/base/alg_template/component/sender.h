@@ -13,7 +13,6 @@
 
 #include "sender_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * SENDER_H */

@@ -19,6 +19,6 @@ public:
     explicit CcuTaskArgMc2(uint64_t token) : token_(token) {}
     uint64_t token_;
 };
-}
+} // namespace Hccl
 
 #endif // HCCL_CCU_TASK_ARG_MC2_H

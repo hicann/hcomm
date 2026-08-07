@@ -14,14 +14,9 @@
 namespace hcomm {
 namespace CcuRep {
 
-LoopBlock::LoopBlock(CcuRepContext *context, std::string label) : context(context), label(label)
-{
-}
+    LoopBlock::LoopBlock(CcuRepContext* context, std::string label) : context(context), label(label) {}
 
-LoopBlock::~LoopBlock()
-{
-    SetCurrentBlock(context, curActiveBlock);
-}
+    LoopBlock::~LoopBlock() { SetCurrentBlock(context, curActiveBlock); }
 
 }; // namespace CcuRep
 }; // namespace hcomm

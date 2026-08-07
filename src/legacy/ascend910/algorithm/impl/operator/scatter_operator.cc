@@ -13,26 +13,26 @@
 
 namespace hccl {
 
-ScatterOperator::ScatterOperator(AlgConfigurator* algConfigurator, CCLBufferManager &cclBufferManager,
-    HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher)
+ScatterOperator::ScatterOperator(
+    AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager, HcclDispatcher dispatcher,
+    std::unique_ptr<TopoMatcher>& topoMatcher)
     : CollAlgOperator(algConfigurator, cclBufferManager, dispatcher, topoMatcher, HcclCMDType::HCCL_CMD_SCATTER)
 {
     // 由于scatter只支持server间ring、nb和nhr，其他算法需要重定向到ring
-    if (!(algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NHR) &&
-        !(algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NB) &&
-        !(algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_RING)) {
+    if (!(algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NHR)
+        && !(algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NB)
+        && !(algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_RING)) {
         algType_.algoLevel1 = AlgTypeLevel1::ALG_LEVEL1_RING;
-        HCCL_INFO("[ScatterOperator][ScatterOperator] algType[%s] is not supported, reset algType=ring",
+        HCCL_INFO(
+            "[ScatterOperator][ScatterOperator] algType[%s] is not supported, reset algType=ring",
             AlgTypeToStr(algType_).c_str());
     }
 }
 
-ScatterOperator::~ScatterOperator()
-{
-}
+ScatterOperator::~ScatterOperator() {}
 
-HcclResult ScatterOperator::SelectAlg(const std::string& tag, const OpParam& param, std::string& algName,
-    std::string& newTag)
+HcclResult
+ScatterOperator::SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag)
 {
     if (isDiffDeviceType_) {
         HCCL_ERROR("[ScatterOperator][SelectAlg] Scatter not support diffDeviceType");
@@ -44,8 +44,9 @@ HcclResult ScatterOperator::SelectAlg(const std::string& tag, const OpParam& par
         return HCCL_SUCCESS;
     }
     newTag = param.tag;
-    if (GetWorkflowMode() == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE && (algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_HD
-        || algType_.algoLevel2 == AlgTypeLevel2::ALG_LEVEL2_HD)) {
+    if (GetWorkflowMode() == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE
+        && (algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_HD
+            || algType_.algoLevel2 == AlgTypeLevel2::ALG_LEVEL2_HD)) {
         std::string appendTag = "";
         u32 serverNumPerSuperPod = superPodNum_ == 0 ? moduleNum_ : moduleNum_ / superPodNum_;
         if (algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_HD) {
@@ -57,7 +58,8 @@ HcclResult ScatterOperator::SelectAlg(const std::string& tag, const OpParam& par
         if (algType_.algoLevel2 == AlgTypeLevel2::ALG_LEVEL2_HD) {
             u32 part1Size = FACTOR_TWO * (superPodNum_ - (1 << static_cast<u32>(log2(superPodNum_))));
             u32 rootId = param.root / deviceNumPerAggregation_ / serverNumPerSuperPod;
-            appendTag += (appendTag.empty() ? "L2_" : "_L2_") + std::to_string((rootId >= part1Size) || ((rootId % FACTOR_TWO) == 0));
+            appendTag += (appendTag.empty() ? "L2_" : "_L2_")
+                         + std::to_string((rootId >= part1Size) || ((rootId % FACTOR_TWO) == 0));
         }
         HCCL_DEBUG("[ScatterOperator][SelectAlg]tag is [%s]", tag);
         newTag = newTag + '_' + appendTag;
@@ -67,18 +69,19 @@ HcclResult ScatterOperator::SelectAlg(const std::string& tag, const OpParam& par
     }
 
     // 由于scatter只支持server间ring,nb和NHR，如果不是需要重定向到ring；910_93仅支持server间ring
-    if (!(algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NHR) &&
-        !(algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NB) &&
-        !(algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_RING)) {
-        HCCL_INFO("[ScatterOperator][Scatter] algType[%s] is not supported, reset algType=ring",
+    if (!(algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NHR)
+        && !(algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NB)
+        && !(algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_RING)) {
+        HCCL_INFO(
+            "[ScatterOperator][Scatter] algType[%s] is not supported, reset algType=ring",
             AlgTypeToStr(algType_).c_str());
         algType_.algoLevel1 = AlgTypeLevel1::ALG_LEVEL1_RING;
     }
 
-    bool isMeshTopo = topoType_ == TopoType::TOPO_TYPE_NP_MESH || topoType_ == TopoType::TOPO_TYPE_4P_MESH ||
-        topoType_ == TopoType::TOPO_TYPE_2P_MESH || topoType_ == TopoType::TOPO_TYPE_1P_MESH;
-    bool isRingTopo = topoType_ == TopoType::TOPO_TYPE_NP_SINGLE_RING || topoType_ == TopoType::TOPO_TYPE_8P_RING ||
-        topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING;
+    bool isMeshTopo = topoType_ == TopoType::TOPO_TYPE_NP_MESH || topoType_ == TopoType::TOPO_TYPE_4P_MESH
+                      || topoType_ == TopoType::TOPO_TYPE_2P_MESH || topoType_ == TopoType::TOPO_TYPE_1P_MESH;
+    bool isRingTopo = topoType_ == TopoType::TOPO_TYPE_NP_SINGLE_RING || topoType_ == TopoType::TOPO_TYPE_8P_RING
+                      || topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING;
 
     if (multiModuleDiffDeviceNumMode_ || multiSuperPodDiffServerNumMode_) {
         algName = "ScatterCommExecutor";
@@ -102,4 +105,4 @@ HcclResult ScatterOperator::SelectAlg(const std::string& tag, const OpParam& par
 }
 
 REGISTER_OP(HcclCMDType::HCCL_CMD_SCATTER, Scatter, ScatterOperator);
-}
+} // namespace hccl

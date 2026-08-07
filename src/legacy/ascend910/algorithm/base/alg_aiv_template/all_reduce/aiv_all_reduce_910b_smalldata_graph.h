@@ -21,24 +21,23 @@ public:
 };
 
 template <typename T>
-__aicore__ inline void AivAllReduceSmallGraph910B::Process(GM_ADDR input, GM_ADDR output, uint32_t len,
-    int32_t tag)
+__aicore__ inline void AivAllReduceSmallGraph910B::Process(GM_ADDR input, GM_ADDR output, uint32_t len, int32_t tag)
 {
     uint32_t count = len;
 
     if (blockIdx_ == rank_) {
-        __gm__ T *inputGM = (__gm__ T *)input;
-        __gm__ T *outputGM = (__gm__ T *)output;
+        __gm__ T* inputGM = (__gm__ T*)input;
+        __gm__ T* outputGM = (__gm__ T*)output;
 
         CpGM2GM(outputGM, inputGM, count);
 
         PipeBarrier<PIPE_MTE3>();
-        
+
         // 卡内同步
         Record1vN(tag, CommPattern::intraRank);
     } else {
-        __gm__ T *cclGMOther = (__gm__ T *)(GM_IN[blockIdx_]);
-        __gm__ T *outputGM = (__gm__ T *)output;
+        __gm__ T* cclGMOther = (__gm__ T*)(GM_IN[blockIdx_]);
+        __gm__ T* outputGM = (__gm__ T*)output;
         // 告诉对端可以从本端拉走数据
         Record(tag, blockIdx_, AivNotifyType::ACK);
         Wait(tag, blockIdx_, AivNotifyType::ACK);
@@ -87,24 +86,24 @@ __aicore__ inline void sk_all_reduce_910b_smalldata_graph(SUPERKERNEL_ARGS_DEF)
 {
     AivAllReduceSmallGraph910B op;
     op.Init(SUPERKERNEL_CLASS_INIT, 0, false);
-    #ifdef HCCL_DTYPE_INT8
-        op.Process<int8_t>(input, output, op.len_, op.tag_);
-    #elif defined HCCL_DTYPE_INT16
-        op.Process<int16_t>(input, output, op.len_, op.tag_);
-    #elif defined HCCL_DTYPE_INT32
-        op.Process<int32_t>(input, output, op.len_, op.tag_);
-    #elif defined HCCL_DTYPE_FP16
-        op.Process<half>(input, output, op.len_, op.tag_);
-    #elif defined HCCL_DTYPE_FP32
-        op.Process<float>(input, output, op.len_, op.tag_);
-    #elif defined HCCL_DTYPE_BFP16
-        op.Process<bfloat16_t>(input, output, op.len_, op.tag_);
-    #elif defined HCCL_DTYPE_UINT8
-        op.Process<uint8_t>(input, output, op.len_, op.tag_);
-    #elif defined HCCL_DTYPE_UINT16
-        op.Process<uint16_t>(input, output, op.len_, op.tag_);
-    #elif defined HCCL_DTYPE_UINT32
-        op.Process<uint32_t>(input, output, op.len_, op.tag_);
-    #else
-    #endif
+#ifdef HCCL_DTYPE_INT8
+    op.Process<int8_t>(input, output, op.len_, op.tag_);
+#elif defined HCCL_DTYPE_INT16
+    op.Process<int16_t>(input, output, op.len_, op.tag_);
+#elif defined HCCL_DTYPE_INT32
+    op.Process<int32_t>(input, output, op.len_, op.tag_);
+#elif defined HCCL_DTYPE_FP16
+    op.Process<half>(input, output, op.len_, op.tag_);
+#elif defined HCCL_DTYPE_FP32
+    op.Process<float>(input, output, op.len_, op.tag_);
+#elif defined HCCL_DTYPE_BFP16
+    op.Process<bfloat16_t>(input, output, op.len_, op.tag_);
+#elif defined HCCL_DTYPE_UINT8
+    op.Process<uint8_t>(input, output, op.len_, op.tag_);
+#elif defined HCCL_DTYPE_UINT16
+    op.Process<uint16_t>(input, output, op.len_, op.tag_);
+#elif defined HCCL_DTYPE_UINT32
+    op.Process<uint32_t>(input, output, op.len_, op.tag_);
+#else
+#endif
 }

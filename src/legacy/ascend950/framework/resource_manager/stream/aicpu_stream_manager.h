@@ -18,41 +18,30 @@ namespace Hccl {
 
 class AicpuStreamManager {
 public:
-    explicit AicpuStreamManager()
-    {
-    }
+    explicit AicpuStreamManager() {}
     ~AicpuStreamManager();
 
     void AllocStreams(u32 num);
 
     void Clear();
 
-    u32 SizeOfStreams() const
-    {
-        return streams.size();
-    }
+    u32 SizeOfStreams() const { return streams.size(); }
 
     void AllocFreeStream();
 
-    void AclGraphCaptureFreeStream(const Stream *mainStream) const;
+    void AclGraphCaptureFreeStream(const Stream* mainStream) const;
 
-    Stream *GetFreeStream() const
-    {
-        return freeStream.get();
-    }
+    Stream* GetFreeStream() const { return freeStream.get(); }
 
     std::vector<char> GetPackedData();
 
-    std::vector<Stream*>& GetStreams()
-    {
-        return stream_pointers;
-    }
-    
+    std::vector<Stream*>& GetStreams() { return stream_pointers; }
+
 private:
-    HcclResult                           CaptureFreeStream(const Stream *mainStream, const Stream *slaveStream) const;
+    HcclResult CaptureFreeStream(const Stream* mainStream, const Stream* slaveStream) const;
     std::vector<std::unique_ptr<Stream>> streams;
-    std::unique_ptr<Stream>              freeStream{nullptr};
-    std::vector<Stream*>                 stream_pointers;
+    std::unique_ptr<Stream> freeStream{nullptr};
+    std::vector<Stream*> stream_pointers;
 };
 
 } // namespace Hccl

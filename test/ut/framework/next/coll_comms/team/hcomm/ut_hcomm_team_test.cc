@@ -50,7 +50,7 @@ static void ResetStubCounters()
     g_hrtFreeCallCount = 0;
 }
 
-static HcclResult StubHrtMalloc(void **devPtr, u64 size, bool level2Address)
+static HcclResult StubHrtMalloc(void** devPtr, u64 size, bool level2Address)
 {
     (void)level2Address;
     g_hrtMallocCallCount++;
@@ -61,15 +61,15 @@ static HcclResult StubHrtMalloc(void **devPtr, u64 size, bool level2Address)
     return (*devPtr != nullptr) ? HCCL_SUCCESS : HCCL_E_PTR;
 }
 
-static HcclResult StubHrtFree(void *devPtr)
+static HcclResult StubHrtFree(void* devPtr)
 {
     g_hrtFreeCallCount++;
     free(devPtr);
     return HCCL_SUCCESS;
 }
 
-static HcclResult StubHrtMemSyncCopy(void *dst, uint64_t destMax, const void *src,
-    uint64_t count, HcclRtMemcpyKind kind)
+static HcclResult
+StubHrtMemSyncCopy(void* dst, uint64_t destMax, const void* src, uint64_t count, HcclRtMemcpyKind kind)
 {
     (void)destMax;
     (void)kind;
@@ -108,10 +108,10 @@ public:
 
     void CleanupSingleton()
     {
-        auto &mgr = HcommTeamMgr::GetInstance();
+        auto& mgr = HcommTeamMgr::GetInstance();
         {
             std::unique_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
-            for (auto &pair : mgr.teams_) {
+            for (auto& pair : mgr.teams_) {
                 if (pair.second != nullptr) {
                     mgr.FreeTeamResources(pair.second.get());
                 }
@@ -120,7 +120,7 @@ public:
         }
         {
             std::unique_lock<std::shared_mutex> lock(mgr.windowsRwMutex_);
-            for (auto &pair : mgr.windows_) {
+            for (auto& pair : mgr.windows_) {
                 if (pair.second != nullptr) {
                     mgr.FreeWindowResources(pair.second.get());
                 }
@@ -133,14 +133,13 @@ public:
         }
     }
 
-    HcommResult CreateWorldTeam(uint32_t memberNum, uint32_t selfMemberId,
-        HcommTeamHandle &team, uint64_t &syncMemSize)
+    HcommResult CreateWorldTeam(uint32_t memberNum, uint32_t selfMemberId, HcommTeamHandle& team, uint64_t& syncMemSize)
     {
         return CreateWorldTeam(memberNum, selfMemberId, 1, team, syncMemSize);
     }
 
-    HcommResult CreateWorldTeam(uint32_t memberNum, uint32_t selfMemberId,
-        uint32_t netLayer, HcommTeamHandle &team, uint64_t &syncMemSize)
+    HcommResult CreateWorldTeam(
+        uint32_t memberNum, uint32_t selfMemberId, uint32_t netLayer, HcommTeamHandle& team, uint64_t& syncMemSize)
     {
         std::vector<uint32_t> ids(memberNum);
         for (uint32_t i = 0; i < memberNum; i++) {
@@ -159,8 +158,8 @@ public:
     {
         std::vector<uint32_t> chNums(memberNum, 1);
         std::vector<std::vector<uint64_t>> channels(memberNum, std::vector<uint64_t>{0x100});
-        std::vector<uint64_t *> chPtrs;
-        for (auto &ch : channels) {
+        std::vector<uint64_t*> chPtrs;
+        for (auto& ch : channels) {
             chPtrs.push_back(ch.data());
         }
         HcommTeamBindChannelsDesc desc{};
@@ -373,7 +372,7 @@ TEST_F(TestHcommTeam, Ut_HcommTeamDestroy_When_Valid_Expect_ReturnSuccess)
     ASSERT_EQ(CreateWorldTeam(4, 0, team, syncMemSize), HCOMM_SUCCESS);
     EXPECT_EQ(HcommTeamDestroy(team), HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
+    auto& mgr = HcommTeamMgr::GetInstance();
     std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
     EXPECT_EQ(mgr.teams_.find(team), mgr.teams_.end());
 }
@@ -402,8 +401,9 @@ TEST_F(TestHcommTeam, Ut_HcommTeamWindowRegister_When_Valid_Expect_ReturnSuccess
     EXPECT_EQ(HcommTeamWindowRegister(team, nullptr, &handle, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCOMM_SUCCESS);
     EXPECT_NE(handle, nullptr);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
-    std::shared_lock<std::shared_mutex> winLock(mgr.windowsRwMutex_); std::shared_lock<std::shared_mutex> mapLock(mgr.windowToTeamRwMutex_);
+    auto& mgr = HcommTeamMgr::GetInstance();
+    std::shared_lock<std::shared_mutex> winLock(mgr.windowsRwMutex_);
+    std::shared_lock<std::shared_mutex> mapLock(mgr.windowToTeamRwMutex_);
     EXPECT_NE(mgr.windows_.find(handle), mgr.windows_.end());
     EXPECT_NE(mgr.windowToTeamMap_.find(handle), mgr.windowToTeamMap_.end());
 }
@@ -518,8 +518,9 @@ TEST_F(TestHcommTeam, Ut_HcommTeamWindowDeregister_When_Valid_Expect_ReturnSucce
     ASSERT_EQ(HcommTeamWindowRegister(team, nullptr, &handle, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCOMM_SUCCESS);
     EXPECT_EQ(HcommTeamWindowDeregister(team, handle), HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
-    std::shared_lock<std::shared_mutex> winLock(mgr.windowsRwMutex_); std::shared_lock<std::shared_mutex> mapLock(mgr.windowToTeamRwMutex_);
+    auto& mgr = HcommTeamMgr::GetInstance();
+    std::shared_lock<std::shared_mutex> winLock(mgr.windowsRwMutex_);
+    std::shared_lock<std::shared_mutex> mapLock(mgr.windowToTeamRwMutex_);
     EXPECT_EQ(mgr.windows_.find(handle), mgr.windows_.end());
     EXPECT_EQ(mgr.windowToTeamMap_.find(handle), mgr.windowToTeamMap_.end());
 }
@@ -547,11 +548,9 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindChannels_When_FirstBindValid_Expect_Return
     ASSERT_EQ(CreateWorldTeam(4, 0, team, syncMemSize), HCOMM_SUCCESS);
 
     std::vector<uint32_t> chNums = {2, 2, 2, 2};
-    std::vector<std::vector<uint64_t>> channels = {
-        {0x100, 0x200}, {0x300, 0x400}, {0x500, 0x600}, {0x700, 0x800}
-    };
-    std::vector<uint64_t *> chPtrs;
-    for (auto &ch : channels) {
+    std::vector<std::vector<uint64_t>> channels = {{0x100, 0x200}, {0x300, 0x400}, {0x500, 0x600}, {0x700, 0x800}};
+    std::vector<uint64_t*> chPtrs;
+    for (auto& ch : channels) {
         chPtrs.push_back(ch.data());
     }
     HcommTeamBindChannelsDesc desc{};
@@ -560,9 +559,9 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindChannels_When_FirstBindValid_Expect_Return
     desc.channelsByMemberId = chPtrs.data();
     EXPECT_EQ(HcommTeamBindChannels(team, &desc), HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
+    auto& mgr = HcommTeamMgr::GetInstance();
     std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
-    auto *entry = mgr.FindTeamByHandleLocked(team);
+    auto* entry = mgr.FindTeamByHandleLocked(team);
     ASSERT_NE(entry, nullptr);
     EXPECT_EQ(entry->channelsList.size(), 4u);
     EXPECT_EQ(entry->channelsList[0].size(), 2u);
@@ -580,8 +579,8 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindChannels_When_SecondAppend_Expect_ReturnSu
 
     std::vector<uint32_t> chNums1 = {1, 1, 1, 1};
     std::vector<std::vector<uint64_t>> channels1 = {{0x100}, {0x200}, {0x300}, {0x400}};
-    std::vector<uint64_t *> chPtrs1;
-    for (auto &ch : channels1) {
+    std::vector<uint64_t*> chPtrs1;
+    for (auto& ch : channels1) {
         chPtrs1.push_back(ch.data());
     }
     HcommTeamBindChannelsDesc desc1{};
@@ -592,8 +591,8 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindChannels_When_SecondAppend_Expect_ReturnSu
 
     std::vector<uint32_t> chNums2 = {1, 1, 1, 1};
     std::vector<std::vector<uint64_t>> channels2 = {{0x500}, {0x600}, {0x700}, {0x800}};
-    std::vector<uint64_t *> chPtrs2;
-    for (auto &ch : channels2) {
+    std::vector<uint64_t*> chPtrs2;
+    for (auto& ch : channels2) {
         chPtrs2.push_back(ch.data());
     }
     HcommTeamBindChannelsDesc desc2{};
@@ -602,9 +601,9 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindChannels_When_SecondAppend_Expect_ReturnSu
     desc2.channelsByMemberId = chPtrs2.data();
     EXPECT_EQ(HcommTeamBindChannels(team, &desc2), HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
+    auto& mgr = HcommTeamMgr::GetInstance();
     std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
-    auto *entry = mgr.FindTeamByHandleLocked(team);
+    auto* entry = mgr.FindTeamByHandleLocked(team);
     ASSERT_NE(entry, nullptr);
     EXPECT_EQ(entry->channelsList[0].size(), 2u);
     EXPECT_EQ(entry->channelsList[0][0], 0x100u);
@@ -650,8 +649,8 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindChannels_When_MemberNumMismatch_Expect_Ret
     desc.memberNum = 8;
     std::vector<uint32_t> chNums(8, 1);
     std::vector<std::vector<uint64_t>> channels(8, std::vector<uint64_t>{0x100});
-    std::vector<uint64_t *> chPtrs;
-    for (auto &ch : channels) {
+    std::vector<uint64_t*> chPtrs;
+    for (auto& ch : channels) {
         chPtrs.push_back(ch.data());
     }
     desc.channelNumPerMember = chNums.data();
@@ -677,9 +676,9 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindRemoteSyncMem_When_Valid_Expect_ReturnSucc
     desc.remoteMemNum = 4;
     EXPECT_EQ(HcommTeamBindRemoteSyncMem(team, &desc), HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
+    auto& mgr = HcommTeamMgr::GetInstance();
     std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
-    auto *entry = mgr.FindTeamByHandleLocked(team);
+    auto* entry = mgr.FindTeamByHandleLocked(team);
     ASSERT_NE(entry, nullptr);
     EXPECT_NE(entry->devRemoteMems, nullptr);
     EXPECT_NE(entry->hostRemoteMems, nullptr);
@@ -740,7 +739,8 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindRemoteSyncMem_When_DescNull_Expect_ReturnP
 
 TEST_F(TestHcommTeam, Ut_HcommTeamBindRemoteSyncMem_When_RemoteMemsNull_Expect_ReturnPtrError)
 {
-    // 源码：remoteMems 数组下标为 memberId、长度=memberNum（恒>0），故 remoteMems 必须非空，为 nullptr 返回 HCOMM_E_PTR。
+    // 源码：remoteMems 数组下标为 memberId、长度=memberNum（恒>0），故 remoteMems 必须非空，为 nullptr 返回
+    // HCOMM_E_PTR。
     HcommTeamHandle team = nullptr;
     uint64_t syncMemSize = 0;
     ASSERT_EQ(CreateWorldTeam(4, 0, team, syncMemSize), HCOMM_SUCCESS);
@@ -814,7 +814,7 @@ TEST_F(TestHcommTeam, Ut_HcommTeamCreate_When_HrtMallocFailAfterWorldTeamIds_Exp
     HcommResult ret = HcommTeamCreate(nullptr, &desc, &team, &syncMemSize);
     EXPECT_NE(ret, HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
+    auto& mgr = HcommTeamMgr::GetInstance();
     std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
     EXPECT_EQ(mgr.teams_.size(), 0u);
 }
@@ -828,8 +828,8 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindChannels_When_AppendFail_Expect_Rollback)
 
     std::vector<uint32_t> chNums1 = {1, 1, 1, 1};
     std::vector<std::vector<uint64_t>> channels1 = {{0x100}, {0x200}, {0x300}, {0x400}};
-    std::vector<uint64_t *> chPtrs1;
-    for (auto &ch : channels1) {
+    std::vector<uint64_t*> chPtrs1;
+    for (auto& ch : channels1) {
         chPtrs1.push_back(ch.data());
     }
     HcommTeamBindChannelsDesc desc1{};
@@ -838,11 +838,11 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindChannels_When_AppendFail_Expect_Rollback)
     desc1.channelsByMemberId = chPtrs1.data();
     ASSERT_EQ(HcommTeamBindChannels(team, &desc1), HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
+    auto& mgr = HcommTeamMgr::GetInstance();
     std::vector<std::vector<uint64_t>> oldChannels;
     {
         std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
-        auto *entry = mgr.FindTeamByHandleLocked(team);
+        auto* entry = mgr.FindTeamByHandleLocked(team);
         ASSERT_NE(entry, nullptr);
         oldChannels = entry->channelsList;
     }
@@ -852,8 +852,8 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindChannels_When_AppendFail_Expect_Rollback)
 
     std::vector<uint32_t> chNums2 = {1, 1, 1, 1};
     std::vector<std::vector<uint64_t>> channels2 = {{0x500}, {0x600}, {0x700}, {0x800}};
-    std::vector<uint64_t *> chPtrs2;
-    for (auto &ch : channels2) {
+    std::vector<uint64_t*> chPtrs2;
+    for (auto& ch : channels2) {
         chPtrs2.push_back(ch.data());
     }
     HcommTeamBindChannelsDesc desc2{};
@@ -864,7 +864,7 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindChannels_When_AppendFail_Expect_Rollback)
     EXPECT_NE(ret, HCOMM_SUCCESS);
 
     std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
-    auto *entry = mgr.FindTeamByHandleLocked(team);
+    auto* entry = mgr.FindTeamByHandleLocked(team);
     ASSERT_NE(entry, nullptr);
     EXPECT_EQ(entry->channelsList.size(), oldChannels.size());
     for (size_t i = 0; i < oldChannels.size(); i++) {
@@ -888,7 +888,7 @@ TEST_F(TestHcommTeam, Ut_HcommTeamDestroy_When_BoundResources_Expect_AllFreed)
 
     EXPECT_EQ(HcommTeamDestroy(team), HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
+    auto& mgr = HcommTeamMgr::GetInstance();
     std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
     EXPECT_EQ(mgr.teams_.find(team), mgr.teams_.end());
 }
@@ -977,7 +977,7 @@ TEST_F(TestHcommTeam, Ut_HcommTeam_When_ConcurrentCreate_Expect_NoDataRace)
             results[i] = CreateWorldTeam(4, 0, teams[i], wsSizes[i]);
         });
     }
-    for (auto &t : threads) {
+    for (auto& t : threads) {
         t.join();
     }
 
@@ -1005,7 +1005,7 @@ TEST_F(TestHcommTeam, Ut_HcommTeam_When_ConcurrentCreateDestroy_Expect_NoCrash)
             results[i] = ret;
         });
     }
-    for (auto &t : threads) {
+    for (auto& t : threads) {
         t.join();
     }
 
@@ -1035,9 +1035,9 @@ TEST_F(TestHcommTeam, Ut_HcommTeamWindowBindRemoteMems_When_AfterBind_Expect_Dev
     desc.memberNum = 4;
     ASSERT_EQ(HcommTeamWindowBindRemoteMems(team, handle, &desc), HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
+    auto& mgr = HcommTeamMgr::GetInstance();
     std::shared_lock<std::shared_mutex> lock(mgr.windowsRwMutex_);
-    auto *winEntry = mgr.FindWindowByHandleLocked(handle);
+    auto* winEntry = mgr.FindWindowByHandleLocked(handle);
     ASSERT_NE(winEntry, nullptr);
     EXPECT_NE(winEntry->hostWindow.mems, nullptr);
     EXPECT_EQ(winEntry->hostWindow.memsNum, 4u);
@@ -1066,9 +1066,9 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindRemoteSyncMem_When_AfterBind_Expect_Device
     desc.remoteMemNum = 4;
     ASSERT_EQ(HcommTeamBindRemoteSyncMem(team, &desc), HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
+    auto& mgr = HcommTeamMgr::GetInstance();
     std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
-    auto *entry = mgr.FindTeamByHandleLocked(team);
+    auto* entry = mgr.FindTeamByHandleLocked(team);
     ASSERT_NE(entry, nullptr);
     EXPECT_NE(entry->hostTeam.syncMem.remoteMems, nullptr);
     EXPECT_EQ(entry->hostTeam.syncMem.remoteMemsNum, 4u);
@@ -1111,9 +1111,9 @@ TEST_F(TestHcommTeam, Ut_HcommTeamWindowRegister_When_AfterRegister_Expect_Devic
     HcommWindowHandle handle = nullptr;
     ASSERT_EQ(HcommTeamWindowRegister(team, nullptr, &handle, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
+    auto& mgr = HcommTeamMgr::GetInstance();
     std::shared_lock<std::shared_mutex> lock(mgr.windowsRwMutex_);
-    auto *winEntry = mgr.FindWindowByHandleLocked(handle);
+    auto* winEntry = mgr.FindWindowByHandleLocked(handle);
     ASSERT_NE(winEntry, nullptr);
     EXPECT_NE(winEntry->devWindow, nullptr);
 
@@ -1141,7 +1141,7 @@ TEST_F(TestHcommTeam, Ut_HcommTeamCreate_When_HrtMallocFailForDevWorldTeamIds_Ex
     uint64_t syncMemSize = 0;
     EXPECT_NE(HcommTeamCreate(nullptr, &desc, &team, &syncMemSize), HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
+    auto& mgr = HcommTeamMgr::GetInstance();
     std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
     EXPECT_EQ(mgr.teams_.size(), 0u);
 }
@@ -1162,7 +1162,7 @@ TEST_F(TestHcommTeam, Ut_HcommTeamCreate_When_HrtMemSyncCopyFailInWorldTeamIds_E
     uint64_t syncMemSize = 0;
     EXPECT_NE(HcommTeamCreate(nullptr, &desc, &team, &syncMemSize), HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
+    auto& mgr = HcommTeamMgr::GetInstance();
     std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
     EXPECT_EQ(mgr.teams_.size(), 0u);
 }
@@ -1183,7 +1183,7 @@ TEST_F(TestHcommTeam, Ut_HcommTeamCreate_When_SyncTeamToDeviceFail_Expect_Return
     uint64_t syncMemSize = 0;
     EXPECT_NE(HcommTeamCreate(nullptr, &desc, &team, &syncMemSize), HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
+    auto& mgr = HcommTeamMgr::GetInstance();
     std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
     EXPECT_EQ(mgr.teams_.size(), 0u);
 }
@@ -1320,7 +1320,7 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindChannels_When_InvalidTeamHandle_Expect_Ret
     desc.channelNumPerMember = chNums.data();
     std::vector<uint64_t> ch0 = {0x100};
     std::vector<uint64_t> ch1 = {0x200};
-    std::vector<uint64_t *> chPtrs = {ch0.data(), ch1.data()};
+    std::vector<uint64_t*> chPtrs = {ch0.data(), ch1.data()};
     desc.channelsByMemberId = chPtrs.data();
     EXPECT_EQ(HcommTeamBindChannels(fake, &desc), HCOMM_E_NOT_FOUND);
 }
@@ -1376,11 +1376,11 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindRemoteSyncMem_When_Rebind_Expect_OldShadow
     desc.remoteMemNum = 4;
 
     ASSERT_EQ(HcommTeamBindRemoteSyncMem(team, &desc), HCOMM_SUCCESS);
-    auto &mgr = HcommTeamMgr::GetInstance();
-    void *firstShadow = nullptr;
+    auto& mgr = HcommTeamMgr::GetInstance();
+    void* firstShadow = nullptr;
     {
         std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
-        auto *entry = mgr.FindTeamByHandleLocked(team);
+        auto* entry = mgr.FindTeamByHandleLocked(team);
         ASSERT_NE(entry, nullptr);
         firstShadow = entry->hostTeam.syncMem.shadowMem.addr;
         ASSERT_NE(firstShadow, nullptr);
@@ -1389,10 +1389,10 @@ TEST_F(TestHcommTeam, Ut_HcommTeamBindRemoteSyncMem_When_Rebind_Expect_OldShadow
 
     // 重复 bind：旧 shadowMem 必须先被释放，再申请新的
     ASSERT_EQ(HcommTeamBindRemoteSyncMem(team, &desc), HCOMM_SUCCESS);
-    void *secondShadow = nullptr;
+    void* secondShadow = nullptr;
     {
         std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
-        auto *entry = mgr.FindTeamByHandleLocked(team);
+        auto* entry = mgr.FindTeamByHandleLocked(team);
         ASSERT_NE(entry, nullptr);
         secondShadow = entry->hostTeam.syncMem.shadowMem.addr;
         ASSERT_NE(secondShadow, nullptr);
@@ -1425,9 +1425,9 @@ TEST_F(TestHcommTeam, Ut_HcommTeamDestroy_When_ShadowMemBound_Expect_ShadowMemFr
     ASSERT_EQ(HcommTeamBindRemoteSyncMem(team, &desc), HCOMM_SUCCESS);
     // 确认 shadowMem 已分配
     {
-        auto &mgr = HcommTeamMgr::GetInstance();
+        auto& mgr = HcommTeamMgr::GetInstance();
         std::shared_lock<std::shared_mutex> lock(mgr.teamsRwMutex_);
-        auto *entry = mgr.FindTeamByHandleLocked(team);
+        auto* entry = mgr.FindTeamByHandleLocked(team);
         ASSERT_NE(entry, nullptr);
         ASSERT_NE(entry->hostTeam.syncMem.shadowMem.addr, nullptr);
     }
@@ -1464,9 +1464,9 @@ TEST_F(TestHcommTeam, Ut_HcommTeamWindowBindRemoteMems_When_FirstBind_Expect_Mem
     desc.memberNum = 4;
     ASSERT_EQ(HcommTeamWindowBindRemoteMems(team, handle, &desc), HCOMM_SUCCESS);
 
-    auto &mgr = HcommTeamMgr::GetInstance();
+    auto& mgr = HcommTeamMgr::GetInstance();
     std::shared_lock<std::shared_mutex> lock(mgr.windowsRwMutex_);
-    auto *winEntry = mgr.FindWindowByHandleLocked(handle);
+    auto* winEntry = mgr.FindWindowByHandleLocked(handle);
     ASSERT_NE(winEntry, nullptr);
     EXPECT_EQ(winEntry->hostWindow.memsNum, static_cast<uint64_t>(4));
     EXPECT_NE(winEntry->hostMems, nullptr);
@@ -1490,8 +1490,8 @@ TEST_F(TestHcommTeam, Ut_HcommTeamWindowBindRemoteMems_When_MergeAcrossBinds_Exp
 
     // 首次 bind：填槽 0,1，槽 2,3 为空（addr=nullptr）
     std::vector<CommMem> mems1(4);
-    void *addr0 = malloc(1024);
-    void *addr1 = malloc(1024);
+    void* addr0 = malloc(1024);
+    void* addr1 = malloc(1024);
     mems1[0].addr = addr0;
     mems1[0].size = 1024;
     mems1[0].type = COMM_MEM_TYPE_DEVICE;
@@ -1503,11 +1503,11 @@ TEST_F(TestHcommTeam, Ut_HcommTeamWindowBindRemoteMems_When_MergeAcrossBinds_Exp
     desc1.memberNum = 4;
     ASSERT_EQ(HcommTeamWindowBindRemoteMems(team, handle, &desc1), HCOMM_SUCCESS);
 
-    void *devMemsAfterFirst = nullptr;
+    void* devMemsAfterFirst = nullptr;
     {
-        auto &mgr = HcommTeamMgr::GetInstance();
+        auto& mgr = HcommTeamMgr::GetInstance();
         std::shared_lock<std::shared_mutex> lock(mgr.windowsRwMutex_);
-        auto *winEntry = mgr.FindWindowByHandleLocked(handle);
+        auto* winEntry = mgr.FindWindowByHandleLocked(handle);
         ASSERT_NE(winEntry, nullptr);
         EXPECT_EQ(winEntry->hostMems[0].addr, addr0);
         EXPECT_EQ(winEntry->hostMems[1].addr, addr1);
@@ -1518,8 +1518,8 @@ TEST_F(TestHcommTeam, Ut_HcommTeamWindowBindRemoteMems_When_MergeAcrossBinds_Exp
 
     // 二次 bind：填槽 2,3，槽 0,1 为空（addr=nullptr），不应覆盖已填的 0,1
     std::vector<CommMem> mems2(4);
-    void *addr2 = malloc(1024);
-    void *addr3 = malloc(1024);
+    void* addr2 = malloc(1024);
+    void* addr3 = malloc(1024);
     mems2[2].addr = addr2;
     mems2[2].size = 1024;
     mems2[2].type = COMM_MEM_TYPE_DEVICE;
@@ -1532,9 +1532,9 @@ TEST_F(TestHcommTeam, Ut_HcommTeamWindowBindRemoteMems_When_MergeAcrossBinds_Exp
     ASSERT_EQ(HcommTeamWindowBindRemoteMems(team, handle, &desc2), HCOMM_SUCCESS);
 
     {
-        auto &mgr = HcommTeamMgr::GetInstance();
+        auto& mgr = HcommTeamMgr::GetInstance();
         std::shared_lock<std::shared_mutex> lock(mgr.windowsRwMutex_);
-        auto *winEntry = mgr.FindWindowByHandleLocked(handle);
+        auto* winEntry = mgr.FindWindowByHandleLocked(handle);
         ASSERT_NE(winEntry, nullptr);
         // 累加合并：四槽都有值，首次的 0,1 未被覆盖
         EXPECT_EQ(winEntry->hostMems[0].addr, addr0);
@@ -1578,7 +1578,7 @@ TEST_F(TestHcommTeam, Ut_HcommTeamWindowBindRemoteMems_When_CrossTeamBind_Expect
 
     // worldTeam 首次 bind（worldMemberNum=4 维）
     std::vector<CommMem> worldMems(4);
-    void *wAddr0 = malloc(1024);
+    void* wAddr0 = malloc(1024);
     worldMems[0].addr = wAddr0;
     worldMems[0].size = 1024;
     worldMems[0].type = COMM_MEM_TYPE_DEVICE;
@@ -1589,7 +1589,7 @@ TEST_F(TestHcommTeam, Ut_HcommTeamWindowBindRemoteMems_When_CrossTeamBind_Expect
 
     // subTeam 二次 bind 同一 window（worldMemberNum=4 维，只填自己 member 的槽）
     std::vector<CommMem> subMems(4);
-    void *sAddr2 = malloc(1024);
+    void* sAddr2 = malloc(1024);
     subMems[2].addr = sAddr2; // subTeam 的 peer（world rank 2）对应 worldMemberId=2
     subMems[2].size = 1024;
     subMems[2].type = COMM_MEM_TYPE_DEVICE;
@@ -1599,9 +1599,9 @@ TEST_F(TestHcommTeam, Ut_HcommTeamWindowBindRemoteMems_When_CrossTeamBind_Expect
     EXPECT_EQ(HcommTeamWindowBindRemoteMems(subTeam, handle, &subBindDesc), HCOMM_SUCCESS);
 
     {
-        auto &mgr = HcommTeamMgr::GetInstance();
+        auto& mgr = HcommTeamMgr::GetInstance();
         std::shared_lock<std::shared_mutex> lock(mgr.windowsRwMutex_);
-        auto *winEntry = mgr.FindWindowByHandleLocked(handle);
+        auto* winEntry = mgr.FindWindowByHandleLocked(handle);
         ASSERT_NE(winEntry, nullptr);
         EXPECT_EQ(winEntry->hostWindow.memsNum, static_cast<uint64_t>(4));
         // worldTeam 填的槽 0 + subTeam 填的槽 2 都在，累加合并

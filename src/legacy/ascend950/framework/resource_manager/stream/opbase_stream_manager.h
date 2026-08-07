@@ -21,7 +21,7 @@ class CommunicatorImpl;
 
 class OpbaseStreamManager {
 public:
-    explicit OpbaseStreamManager(CommunicatorImpl *comm) : comm(comm)
+    explicit OpbaseStreamManager(CommunicatorImpl* comm) : comm(comm)
     {
         CHECK_NULLPTR(comm, "[OpbaseStreamManager]comm is nullptr!");
     }
@@ -31,32 +31,23 @@ public:
 
     void Clear();
 
-    Stream *GetMaster() const
-    {
-        return master.get();
-    }
+    Stream* GetMaster() const { return master.get(); }
 
-    Stream *GetOrCreateSlave();
+    Stream* GetOrCreateSlave();
 
-    void ResetIndex(u32 index)
-    {
-        slaveIndex = index;
-    }
+    void ResetIndex(u32 index) { slaveIndex = index; }
 
-    u32 GetSlaveIndex() const
-    {
-        return slaveIndex;
-    }
+    u32 GetSlaveIndex() const { return slaveIndex; }
 
-    Stream *GetSlave(u32 index) const;
+    Stream* GetSlave(u32 index) const;
 
 private:
-    void                                 ReplaceMaster(std::unique_ptr<Stream> stream);
+    void ReplaceMaster(std::unique_ptr<Stream> stream);
 
-    CommunicatorImpl                    *comm{nullptr};
-    std::unique_ptr<Stream>              master{nullptr};
+    CommunicatorImpl* comm{nullptr};
+    std::unique_ptr<Stream> master{nullptr};
     std::vector<std::unique_ptr<Stream>> slaves;
-    u32                                  slaveIndex{0};
+    u32 slaveIndex{0};
 };
 
 } // namespace Hccl

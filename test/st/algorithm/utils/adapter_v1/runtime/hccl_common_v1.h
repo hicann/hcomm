@@ -9,7 +9,7 @@
  */
 
 #ifndef HCCL_COMMON_V1_H
-#define HCCL_COMMON_V1_H    
+#define HCCL_COMMON_V1_H
 
 #include "dtype_common.h"
 
@@ -19,7 +19,7 @@ typedef struct {
 } rtPlaceHolderInfo_t;
 
 typedef enum tagRtStreamCaptureStatus {
-    RT_STREAM_CAPTURE_STATUS_NONE   = 0,
+    RT_STREAM_CAPTURE_STATUS_NONE = 0,
     RT_STREAM_CAPTURE_STATUS_ACTIVE = 1,
     RT_STREAM_CAPTURE_STATUS_INVALIDATED = 2,
     RT_STREAM_CAPTURE_STATUS_MAX

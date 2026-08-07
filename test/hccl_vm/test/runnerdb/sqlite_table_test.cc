@@ -18,6 +18,4 @@ class SqliteTableTest : public testing::Test {
 protected:
 };
 
-TEST_F(SqliteTableTest, TableBase_HasVirtualDestructor) {
-    EXPECT_TRUE(std::has_virtual_destructor<TableBase>::value);
-}
+TEST_F(SqliteTableTest, TableBase_HasVirtualDestructor) { EXPECT_TRUE(std::has_virtual_destructor<TableBase>::value); }

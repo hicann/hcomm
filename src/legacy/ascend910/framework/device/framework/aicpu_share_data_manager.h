@@ -26,11 +26,11 @@ public:
 
     // taskException
     u32 GetOpRingBufferIdx();
-    HcclResult RecordOpInfo(const std::string &newTag, OpParam &opParam, u32 opExecIndex, u32 userRank, bool isCustom);
+    HcclResult RecordOpInfo(const std::string& newTag, OpParam& opParam, u32 opExecIndex, u32 userRank, bool isCustom);
     const AicpuOpInfo* GetAicpuOpInfo(u32 opRingBufferIdx);
 
 private:
-    AicpuCustomParam *aicpuCustomParam_ = nullptr;
+    AicpuCustomParam* aicpuCustomParam_ = nullptr;
 };
-}
+} // namespace hccl
 #endif

@@ -7,13 +7,12 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef REDUCE_SCATTER_RING_CONCURRENT_DIRECT_H
 #define REDUCE_SCATTER_RING_CONCURRENT_DIRECT_H
- 
+
 #include "reduce_scatter_ring_concurrent_direct_pub.h"
- 
-namespace hccl {
-} // namespace hccl
- 
+
+namespace hccl {} // namespace hccl
+
 #endif

@@ -26,6 +26,6 @@ struct CcuTaskParam {
     uint32_t argSize;
     uint64_t args[CCU_SQE_ARGS_LEN];
 };
-}; // namespace Hccl
+}; // namespace HcclSim
 
 #endif // HCCL_CCU_TASK_PARAM_H

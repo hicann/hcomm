@@ -12,10 +12,11 @@
 #include "log.h"
 
 namespace hccl {
-HcclResult JsonUtils::GetJsonProperty(const nlohmann::json &obj, const std::string &propName, u32 &propValue)
+HcclResult JsonUtils::GetJsonProperty(const nlohmann::json& obj, const std::string& propName, u32& propValue)
 {
     /* 查找json对象中是否有该属性, 不存在的属性不能直接访问 */
-    CHK_PRT_RET(obj.find(propName) == obj.end(),
+    CHK_PRT_RET(
+        obj.find(propName) == obj.end(),
         HCCL_ERROR("[Get][JsonProperty]json object has no property called %s", propName.c_str()), HCCL_E_INTERNAL);
 
     /* 所有属性值都必须是字符串 */
@@ -28,10 +29,11 @@ HcclResult JsonUtils::GetJsonProperty(const nlohmann::json &obj, const std::stri
     return HCCL_SUCCESS;
 }
 
-HcclResult JsonUtils::GetJsonProperty(const nlohmann::json &obj, const std::string &propName, std::string &propValue)
+HcclResult JsonUtils::GetJsonProperty(const nlohmann::json& obj, const std::string& propName, std::string& propValue)
 {
     /* 查找json对象中是否有该属性, 不存在的属性不能直接访问 */
-    CHK_PRT_RET(obj.find(propName) == obj.end(),
+    CHK_PRT_RET(
+        obj.find(propName) == obj.end(),
         HCCL_ERROR("[Get][JsonProperty]json object has no property called %s", propName.c_str()), HCCL_E_INTERNAL);
 
     /* 所有属性值都必须是字符串 */
@@ -44,25 +46,28 @@ HcclResult JsonUtils::GetJsonProperty(const nlohmann::json &obj, const std::stri
     }
 }
 
-HcclResult JsonUtils::GetJsonProperty(const nlohmann::json &obj, const std::string &propName, nlohmann::json &propValue)
+HcclResult JsonUtils::GetJsonProperty(const nlohmann::json& obj, const std::string& propName, nlohmann::json& propValue)
 {
     /* 查找json对象中是否有该属性, 不存在的属性不能直接访问 */
-    CHK_PRT_RET(obj.find(propName) == obj.end(),
+    CHK_PRT_RET(
+        obj.find(propName) == obj.end(),
         HCCL_ERROR("[Get][JsonProperty]json object has no property called %s", propName.c_str()), HCCL_E_INTERNAL);
 
     propValue = obj[propName];
     return HCCL_SUCCESS;
 }
 
-HcclResult JsonUtils::ParseInformation(nlohmann::json &parseInformation, const std::string &information)
+HcclResult JsonUtils::ParseInformation(nlohmann::json& parseInformation, const std::string& information)
 {
     try {
         parseInformation = nlohmann::json::parse(information);
     } catch (...) {
-        HCCL_ERROR("[Parse][Information] errNo[0x%016llx] load allocated resource to json fail. "\
-            "please check json input!", HCOM_ERROR_CODE(HCCL_E_PARA));
+        HCCL_ERROR(
+            "[Parse][Information] errNo[0x%016llx] load allocated resource to json fail. "
+            "please check json input!",
+            HCOM_ERROR_CODE(HCCL_E_PARA));
         return HCCL_E_PARA;
     }
     return HCCL_SUCCESS;
 }
-}
+} // namespace hccl

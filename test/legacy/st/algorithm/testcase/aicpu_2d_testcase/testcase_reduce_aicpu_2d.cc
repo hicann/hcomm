@@ -28,20 +28,15 @@ constexpr u64 G = 1024 * M;
 
 class Reduce2DAicpuTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "Reduce2D Aicpu test set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "Reduce2D Aicpu test set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "Reduce2D Aicpu test tear down" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "Reduce2D Aicpu test tear down" << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -55,9 +50,23 @@ protected:
 
     std::vector<u64> GenerateDataCount()
     {
-        std::set<u64> dataCountSet = {
-            1, 2, 4, 8, 16, 128, 1 * K, 2 * K, 256 * K, 512 * K, 1 * M, 200 * M, 256 * M, 500 * M,
-            static_cast<u64>(1.01 * G), static_cast<u64>(1.43 * G)};
+        std::set<u64> dataCountSet
+            = {1,
+               2,
+               4,
+               8,
+               16,
+               128,
+               1 * K,
+               2 * K,
+               256 * K,
+               512 * K,
+               1 * M,
+               200 * M,
+               256 * M,
+               500 * M,
+               static_cast<u64>(1.01 * G),
+               static_cast<u64>(1.43 * G)};
         return std::vector<u64>(dataCountSet.begin(), dataCountSet.end());
     }
 };
@@ -65,7 +74,7 @@ protected:
 TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_2_mul_2_rank)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,8,9}}};
+    TopoMeta topoMeta{{{0, 1, 8, 9}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
     setenv("HCCL_BUFFSIZE", "200", 1);
@@ -90,7 +99,7 @@ TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_2_mul_2_rank)
 TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_2_mul_2_rank_data_count_list)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,8,9}}};
+    TopoMeta topoMeta{{{0, 1, 8, 9}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
     setenv("HCCL_BUFFSIZE", "200", 1);
@@ -105,8 +114,8 @@ TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_2_mul_2_rank_data_count_list)
     checkerOpParam.root = 0;
     checkerOpParam.algName = "InsReduceMesh2D";
 
-    std::vector<u64> dataCountList= GenerateDataCount();
-    for (auto &dataCount : dataCountList) {
+    std::vector<u64> dataCountList = GenerateDataCount();
+    for (auto& dataCount : dataCountList) {
         checkerOpParam.DataDes.count = dataCount;
         Checker checker;
         auto ret = checker.CheckA5Aicpu(checkerOpParam, topoMeta);
@@ -117,7 +126,7 @@ TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_2_mul_2_rank_data_count_list)
 TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_2_mul_3_rank_diagonal_root)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,8,9,16,17}}};
+    TopoMeta topoMeta{{{0, 1, 8, 9, 16, 17}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
     setenv("HCCL_BUFFSIZE", "200", 1);
@@ -142,7 +151,7 @@ TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_2_mul_3_rank_diagonal_root)
 TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_3_mul_3_rank)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,2,8,9,10,16,17,18}}};
+    TopoMeta topoMeta{{{0, 1, 2, 8, 9, 10, 16, 17, 18}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
     setenv("HCCL_BUFFSIZE", "200", 1);
@@ -167,7 +176,7 @@ TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_3_mul_3_rank)
 TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_3_mul_4_rank)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,2,8,9,10,16,17,18,24,25,26}}};
+    TopoMeta topoMeta{{{0, 1, 2, 8, 9, 10, 16, 17, 18, 24, 25, 26}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
     setenv("HCCL_BUFFSIZE", "200", 1);
@@ -192,7 +201,7 @@ TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_3_mul_4_rank)
 TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_4_mul_4_rank)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,2,3,8,9,10,11,16,17,18,19,24,25,26,27}}};
+    TopoMeta topoMeta{{{0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19, 24, 25, 26, 27}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
     setenv("HCCL_BUFFSIZE", "200", 1);
@@ -217,7 +226,7 @@ TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_4_mul_4_rank)
 TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_4_mul_3_rank)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,2,3,8,9,10,11,16,17,18,19}}};
+    TopoMeta topoMeta{{{0, 1, 2, 3, 8, 9, 10, 11, 16, 17, 18, 19}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
     setenv("HCCL_BUFFSIZE", "200", 1);
@@ -242,7 +251,7 @@ TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_4_mul_3_rank)
 TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_4_mul_2_rank)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,2,3,8,9,10,11}}};
+    TopoMeta topoMeta{{{0, 1, 2, 3, 8, 9, 10, 11}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
     setenv("HCCL_BUFFSIZE", "200", 1);
@@ -267,7 +276,7 @@ TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_4_mul_2_rank)
 TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_4_mul_2_rank_0)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,2,3,8,9,10,11}}};
+    TopoMeta topoMeta{{{0, 1, 2, 3, 8, 9, 10, 11}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
     setenv("HCCL_BUFFSIZE", "200", 1);
@@ -292,7 +301,7 @@ TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_4_mul_2_rank_0)
 TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_4_mul_2_rank_offload_0)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,2,3,8,9,10,11}}};
+    TopoMeta topoMeta{{{0, 1, 2, 3, 8, 9, 10, 11}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
     setenv("HCCL_BUFFSIZE", "200", 1);
@@ -317,13 +326,8 @@ TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_4_mul_2_rank_offload_0)
 TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_5_mul_7_rank)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1, 2, 3, 4,
-                         8, 9, 10, 11, 12,
-                         16, 17, 18, 19, 20,
-                         24, 25, 26, 27, 28,
-                         32, 33, 34, 35, 36,
-                         40, 41, 42, 43, 44,
-                         48, 49, 50, 51, 52}}};
+    TopoMeta topoMeta{{{0,  1,  2,  3,  4,  8,  9,  10, 11, 12, 16, 17, 18, 19, 20, 24, 25, 26,
+                        27, 28, 32, 33, 34, 35, 36, 40, 41, 42, 43, 44, 48, 49, 50, 51, 52}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
     setenv("HCCL_BUFFSIZE", "200", 1);
@@ -348,13 +352,8 @@ TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_5_mul_7_rank)
 TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_5_mul_7_rank_diagonal_root)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1, 2, 3, 4,
-                         8, 9, 10, 11, 12,
-                         16, 17, 18, 19, 20,
-                         24, 25, 26, 27, 28,
-                         32, 33, 34, 35, 36,
-                         40, 41, 42, 43, 44,
-                         48, 49, 50, 51, 52}}};
+    TopoMeta topoMeta{{{0,  1,  2,  3,  4,  8,  9,  10, 11, 12, 16, 17, 18, 19, 20, 24, 25, 26,
+                        27, 28, 32, 33, 34, 35, 36, 40, 41, 42, 43, 44, 48, 49, 50, 51, 52}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
     setenv("HCCL_BUFFSIZE", "200", 1);
@@ -379,13 +378,8 @@ TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_5_mul_7_rank_diagonal_root)
 TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_5_mul_7_rank_mid_root)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0, 1, 2, 3, 4,
-                         8, 9, 10, 11, 12,
-                         16, 17, 18, 19, 20,
-                         24, 25, 26, 27, 28,
-                         32, 33, 34, 35, 36,
-                         40, 41, 42, 43, 44,
-                         48, 49, 50, 51, 52}}};
+    TopoMeta topoMeta{{{0,  1,  2,  3,  4,  8,  9,  10, 11, 12, 16, 17, 18, 19, 20, 24, 25, 26,
+                        27, 28, 32, 33, 34, 35, 36, 40, 41, 42, 43, 44, 48, 49, 50, 51, 52}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
     setenv("HCCL_BUFFSIZE", "200", 1);
@@ -406,4 +400,4 @@ TEST_F(Reduce2DAicpuTest, reduce2d_aicpu_case_test_5_mul_7_rank_mid_root)
     ret = checker.CheckA5Aicpu(checkerOpParam, topoMeta);
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
-}
+} // namespace checker

@@ -23,29 +23,29 @@ namespace hcomm {
 
 class CcuInstanceMgr {
 public:
-    static CcuInstanceMgr &GetInstance(const int32_t deviceLogicId);
+    static CcuInstanceMgr& GetInstance(const int32_t deviceLogicId);
 
     CcuResult Init();
     CcuResult Deinit();
 
     // 基于实例类型创建实例
-    CcuResult CreateByInsType(const CcuInstanceType insType, CcuInsHandle &insHandle);
+    CcuResult CreateByInsType(const CcuInstanceType insType, CcuInsHandle& insHandle);
     // 基于资源描述符数组创建实例
-    CcuResult CreateByResDescs(const CcuResDesc *descs[], uint32_t descNum, CcuInsHandle &insHandle);
+    CcuResult CreateByResDescs(const CcuResDesc* descs[], uint32_t descNum, CcuInsHandle& insHandle);
     // 使用当前 Device 上所有已使能 ioDie 的全部资源创建实例
-    CcuResult CreateByAllRes(CcuInsHandle &insHandle);
+    CcuResult CreateByAllRes(CcuInsHandle& insHandle);
     // 查询实例持有的资源描述符
-    CcuResult QueryInsResDesc(CcuInsHandle &ccuInsHandle, uint8_t dieId, HcommCcuResDescHandle &resDesc);
-    CcuInstance *Get(CcuInsHandle insHandle) const;
+    CcuResult QueryInsResDesc(CcuInsHandle& ccuInsHandle, uint8_t dieId, HcommCcuResDescHandle& resDesc);
+    CcuInstance* Get(CcuInsHandle insHandle) const;
     CcuResult Destroy(CcuInsHandle insHandle);
-    CcuResDescMgr &GetResDescMgr();
+    CcuResDescMgr& GetResDescMgr();
 
 private:
     explicit CcuInstanceMgr() = default;
     ~CcuInstanceMgr();
 
-    CcuInstanceMgr(const CcuInstanceMgr &that) = delete;
-    CcuInstanceMgr &operator=(const CcuInstanceMgr &that) = delete;
+    CcuInstanceMgr(const CcuInstanceMgr& that) = delete;
+    CcuInstanceMgr& operator=(const CcuInstanceMgr& that) = delete;
 
 private:
     bool initializedFlag_{false};

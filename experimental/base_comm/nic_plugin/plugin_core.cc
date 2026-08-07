@@ -17,26 +17,15 @@
 #include "log.h"
 
 namespace hcomm_experimental {
-Endpoint::Endpoint(const EndpointDesc &endpointDesc) : endpointDesc_(endpointDesc)
-{
-}
+Endpoint::Endpoint(const EndpointDesc& endpointDesc) : endpointDesc_(endpointDesc) {}
 
-HcclResult Endpoint::CreateEndpoint(const EndpointDesc &, std::unique_ptr<Endpoint> &)
-{
-    return HCCL_E_NOT_SUPPORT;
-}
+HcclResult Endpoint::CreateEndpoint(const EndpointDesc&, std::unique_ptr<Endpoint>&) { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult Endpoint::CreateEndpointBase(const EndpointDesc &, std::unique_ptr<Endpoint> &)
-{
-    return HCCL_E_NOT_SUPPORT;
-}
+HcclResult Endpoint::CreateEndpointBase(const EndpointDesc&, std::unique_ptr<Endpoint>&) { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult Endpoint::GetAsyncEventsContext(uint32_t, struct AsyncEvent [], uint32_t &)
-{
-    return HCCL_E_NOT_SUPPORT;
-}
+HcclResult Endpoint::GetAsyncEventsContext(uint32_t, struct AsyncEvent[], uint32_t&) { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult Channel::CreateChannel(EndpointHandle, CommEngine, HcommChannelDesc, std::shared_ptr<Channel> &)
+HcclResult Channel::CreateChannel(EndpointHandle, CommEngine, HcommChannelDesc, std::shared_ptr<Channel>&)
 {
     return HCCL_E_NOT_SUPPORT;
 }
@@ -58,23 +47,17 @@ ChannelStatus Channel::TransportStatusToChannelStatus(Hccl::TransportStatus ts)
     }
 }
 
-HcclResult Channel::GetUserRemoteMem(CommMem **, char ***, uint32_t *)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult Channel::GetUserRemoteMem(CommMem**, char***, uint32_t*) { return HCCL_SUCCESS; }
 
-HcclResult Channel::UpdateMemInfo(HcommMemHandle *, uint32_t)
+HcclResult Channel::UpdateMemInfo(HcommMemHandle*, uint32_t)
 {
     HCCL_WARNING("[UpdateMemInfo] not support.");
     return HCCL_SUCCESS;
 }
 
-HcommChannelKind Channel::GetChannelKind() const
-{
-    return channelKind_;
-}
+HcommChannelKind Channel::GetChannelKind() const { return channelKind_; }
 
-HcclResult Channel::Serialize(std::shared_ptr<hccl::DeviceMem> &out)
+HcclResult Channel::Serialize(std::shared_ptr<hccl::DeviceMem>& out)
 {
     out.reset();
     return HCCL_E_NOT_SUPPORT;
@@ -89,12 +72,9 @@ void Channel::AddPtrArrayDevMem(std::shared_ptr<hccl::DeviceMem> ptrArrayMem)
     ptrArrayDevMems_.push_back(std::move(ptrArrayMem));
 }
 
-void Channel::ReleasePtrArrayDevMems()
-{
-    ptrArrayDevMems_.clear();
-}
+void Channel::ReleasePtrArrayDevMems() { ptrArrayDevMems_.clear(); }
 
-HcclResult InitHostPeerRaOnce(uint32_t hostResourceId, const char *logPrefix)
+HcclResult InitHostPeerRaOnce(uint32_t hostResourceId, const char* logPrefix)
 {
     static std::mutex peerRaMutex;
     static std::unordered_set<uint32_t> initializedHostResources;
@@ -109,7 +89,8 @@ HcclResult InitHostPeerRaOnce(uint32_t hostResourceId, const char *logPrefix)
     cfg.mode = Hccl::HrtNetworkMode::PEER;
     EXCEPTION_CATCH(Hccl::HrtRaInit(cfg), return HCCL_E_INTERNAL);
     initializedHostResources.insert(hostResourceId);
-    HCCL_INFO("[%s][%s] host peer RA init success, hostResourceId[%u].",
+    HCCL_INFO(
+        "[%s][%s] host peer RA init success, hostResourceId[%u].",
         logPrefix == nullptr ? "ExperimentalEndpoint" : logPrefix, __func__, hostResourceId);
     return HCCL_SUCCESS;
 }

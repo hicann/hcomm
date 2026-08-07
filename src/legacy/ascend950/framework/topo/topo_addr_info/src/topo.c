@@ -30,7 +30,7 @@ int GetTopoFilePathFromFile(const char* filePath, char* topoFilePath, size_t buf
     regmatch_t match[2]; // match[0]整体匹配，match[1]捕获路径值
 
     // 1. 打开JSON文件
-    FILE *fp = fopen(filePath, "rb");
+    FILE* fp = fopen(filePath, "rb");
     if (fp == NULL) {
         return -1;
     }
@@ -49,11 +49,11 @@ int GetTopoFilePathFromFile(const char* filePath, char* topoFilePath, size_t buf
         fclose(fp);
         return -1;
     }
-    memset_s(fileBuf, fileSize+1, 0, fileSize + 1);
+    memset_s(fileBuf, fileSize + 1, 0, fileSize + 1);
     size_t readBytes = fread(fileBuf, 1, fileSize, fp);
     if (readBytes != fileSize) {
         free(fileBuf); // 释放已分配的内存
-        fclose(fp);         // 释放文件
+        fclose(fp);    // 释放文件
         return -1;
     }
     fclose(fp); // 文件内容已读取，提前释放文件资源
@@ -83,23 +83,22 @@ int GetTopoFilePathFromFile(const char* filePath, char* topoFilePath, size_t buf
     return ret;
 }
 
-typedef struct closPorts
-{
+typedef struct closPorts {
     unsigned int mainboardId;
     int dieId;
     int ports[32];
     int portCnt;
-}ClosPortMap;
+} ClosPortMap;
 
 /**
  * 固定写死每种产品类型的端口
  */
 static ClosPortMap closPortMap[2] = {
-    {MAIN_BOARD_ID_SERVER_TYPE1, 0, {4,5,6,7}, 4},
-    {MAIN_BOARD_ID_SERVER_TYPE1, 1, {5,6}, 2},
+    {MAIN_BOARD_ID_SERVER_TYPE1, 0, {4, 5, 6, 7}, 4},
+    {MAIN_BOARD_ID_SERVER_TYPE1, 1, {5, 6}, 2},
 };
 
-int TopoGetClosPort(unsigned int mainboardId, int dieId, int *ports, int *portCnt)
+int TopoGetClosPort(unsigned int mainboardId, int dieId, int* ports, int* portCnt)
 {
     int size = sizeof(closPortMap) / sizeof(ClosPortMap);
     for (int i = 0; i < size; ++i) {
@@ -121,8 +120,7 @@ int TopoGetFilePath(unsigned mainboard_id, unsigned int spod_type, char* buf_siz
         return -1;
     }
     int ret = -1;
-    switch(mainboard_id)
-    {
+    switch (mainboard_id) {
         case MAIN_BOARD_ID_CARD_NOMESH:
             ret = sprintf_s(buf_size, buf_len, "%s/%s", driver_install_path, "driver/topo/950/atlas_350_1.json");
             break;

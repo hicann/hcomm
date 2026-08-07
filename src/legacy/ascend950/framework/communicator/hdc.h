@@ -20,7 +20,7 @@
 namespace Hccl {
 // HDCommunicate为host侧提供host和device之间的单向通道；如接收端未及时读取buffer中的数据，可能会导致数据丢失，需要使用者自行确保收发两端的应答确认机制。
 
-HcclResult HrtDrvMemCpy(void *dst, uint64_t destMax, const void *src, uint64_t count);
+HcclResult HrtDrvMemCpy(void* dst, uint64_t destMax, const void* src, uint64_t count);
 
 class HDCommunicate {
 public:
@@ -32,33 +32,33 @@ public:
 
     struct HDCommunicateParams GetCommunicateParams() const;
 
-    HcclResult Put(u32 offset, u32 length, u8 *value);
+    HcclResult Put(u32 offset, u32 length, u8* value);
 
-    HcclResult Get(u32 offset, u32 length, u8 *value);
+    HcclResult Get(u32 offset, u32 length, u8* value);
 
 private:
     HcclResult VerifyDeviceMemoryRegisterSupport();
     HcclResult AllocShm();
     HcclResult AllocReadCache();
-    HcclResult Write(u32 offset, u32 length, u8 *value);
-    HcclResult Read(u32 offset, u32 length, u8 *value);
+    HcclResult Write(u32 offset, u32 length, u8* value);
+    HcclResult Read(u32 offset, u32 length, u8* value);
     HcclResult UpdateCache(u32 timeoutSec);
 
     std::unique_ptr<DevBuffer> devMem;
     std::unique_ptr<HostBuffer> hostMem;
     std::unique_ptr<DevBuffer> devCache;
     std::unique_ptr<HostBuffer> hostCache;
-    u32 deviceLogicId{ 0xFFFFFFFF };
-    u32 flag{ HCCLV2_HDC_TYPE_D2H };
-    u32 buffLen{ 0 };
+    u32 deviceLogicId{0xFFFFFFFF};
+    u32 flag{HCCLV2_HDC_TYPE_D2H};
+    u32 buffLen{0};
 
-    void *readCacheAddr{ nullptr };
-    u32 *headCntAddr{ nullptr };
-    u32 *tailCntAddr{ nullptr };
-    u32 *devHeadCntAddr{ nullptr };
-    u32 *devTailCntAddr{ nullptr };
-    bool supportDevMemReg{ true }; // device内存直接映射到host，可以提升性能。目前暂不支持
+    void* readCacheAddr{nullptr};
+    u32* headCntAddr{nullptr};
+    u32* tailCntAddr{nullptr};
+    u32* devHeadCntAddr{nullptr};
+    u32* devTailCntAddr{nullptr};
+    bool supportDevMemReg{true}; // device内存直接映射到host，可以提升性能。目前暂不支持
     std::mutex shmLock;
 };
-}
+} // namespace Hccl
 #endif // HCCLV2_HDC_H

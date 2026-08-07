@@ -17,12 +17,12 @@ namespace Hccl {
 class EnvPlfDebugConfig : public BaseConfig {
 public:
     void Parse() override;
-    u64  GetConfigValue() const;
+    u64 GetConfigValue() const;
 
 private:
     u64 plfDebugConfig_ = 0;
 };
 
-}  // namespace Hccl
+} // namespace Hccl
 
-#endif  // HCCLV2_PLF_DEBUG_CONFIG_H
+#endif // HCCLV2_PLF_DEBUG_CONFIG_H

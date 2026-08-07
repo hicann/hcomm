@@ -18,24 +18,23 @@
 extern "C" {
 #endif // __cplusplus
 
-inline uint32_t MC2TilingGetVer(void *tiling) {
-    return *(uint32_t *)tiling;
-}
+inline uint32_t MC2TilingGetVer(void* tiling) { return *(uint32_t*)tiling; }
 
-inline uint32_t MC2TilingGetHcommCnt(void *tiling) {
-    return *(uint32_t *)((uint8_t *)tiling + sizeof(uint32_t));
-}
+inline uint32_t MC2TilingGetHcommCnt(void* tiling) { return *(uint32_t*)((uint8_t*)tiling + sizeof(uint32_t)); }
 
-inline Mc2HcommCfg *MC2TilingGetHcommCfg(void *tiling, uint32_t idx) {
+inline Mc2HcommCfg* MC2TilingGetHcommCfg(void* tiling, uint32_t idx)
+{
     uint32_t cnt = MC2TilingGetHcommCnt(tiling);
     if (idx >= cnt) {
         return nullptr;
     }
-    return (Mc2HcommCfg *)((uint8_t *)tiling + sizeof(uint32_t) + sizeof(uint32_t) + sizeof(Mc2ServerCfg) + idx * sizeof(Mc2HcommCfg));
+    return (Mc2HcommCfg*)((uint8_t*)tiling + sizeof(uint32_t) + sizeof(uint32_t) + sizeof(Mc2ServerCfg)
+                          + idx * sizeof(Mc2HcommCfg));
 }
 
-inline Mc2ServerCfg *MC2TilingGetServerCfg(void *tiling) {
-    return (Mc2ServerCfg *)((uint8_t *)tiling + sizeof(uint32_t) + sizeof(uint32_t));
+inline Mc2ServerCfg* MC2TilingGetServerCfg(void* tiling)
+{
+    return (Mc2ServerCfg*)((uint8_t*)tiling + sizeof(uint32_t) + sizeof(uint32_t));
 }
 
 #ifdef __cplusplus

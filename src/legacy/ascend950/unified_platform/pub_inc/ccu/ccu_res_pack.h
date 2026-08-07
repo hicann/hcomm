@@ -28,10 +28,7 @@ struct CcuResPack {
         }
         return reinterpret_cast<uintptr_t>(handles.front());
     }
-    ~CcuResPack()
-    {
-        HCCL_DEBUG("~CcuResPack");
-    }
+    ~CcuResPack() { HCCL_DEBUG("~CcuResPack"); }
 };
 
 }; // namespace Hccl

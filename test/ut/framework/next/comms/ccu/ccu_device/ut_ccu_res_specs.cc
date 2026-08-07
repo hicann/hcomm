@@ -23,7 +23,7 @@ constexpr int32_t fakeDevLogicId = 45; // 选用一个设备id，避免单例在
 
 static void SetupSpecs(int32_t devLogicId, CcuVersion ccuVersion)
 {
-    auto &specs = CcuResSpecifications::GetInstance(devLogicId);
+    auto& specs = CcuResSpecifications::GetInstance(devLogicId);
     specs.initFlag_ = true;
     specs.ccuVersion_ = ccuVersion;
     specs.serveMode_ = ServeMode::NORMAL;
@@ -53,7 +53,7 @@ static void SetupSpecs(int32_t devLogicId, CcuVersion ccuVersion)
         specs.resSpecs_[0].loopCkeNum = 0;
         specs.resSpecs_[0].channelJettyMap = CcuChannelJettyMap(1, 1);
     }
-    
+
     specs.resSpecs_[0].msNum = 1536;
     specs.resSpecs_[0].ckeNum = 1024;
     specs.resSpecs_[0].jettyNum = 128;
@@ -62,15 +62,9 @@ static void SetupSpecs(int32_t devLogicId, CcuVersion ccuVersion)
     specs.resSpecs_[1] = specs.resSpecs_[0];
 }
 
-static void SetupSpecsV2(int32_t devLogicId)
-{
-    SetupSpecs(devLogicId, CcuVersion::CCU_V2);
-}
+static void SetupSpecsV2(int32_t devLogicId) { SetupSpecs(devLogicId, CcuVersion::CCU_V2); }
 
-static void SetupSpecsV1(int32_t devLogicId)
-{
-    SetupSpecs(devLogicId, CcuVersion::CCU_V1);
-}
+static void SetupSpecsV1(int32_t devLogicId) { SetupSpecs(devLogicId, CcuVersion::CCU_V1); }
 
 class CcuResSpecificationsTest : public testing::Test {
 protected:
@@ -192,14 +186,18 @@ TEST_F(CcuResSpecificationsTest, Ut_GetCkeOffsetCcumBaseAddr_When_V1_Expect_NonZ
 TEST_F(CcuResSpecificationsTest, Ut_GetXnOffsetCcumAddrById_When_Normal_Expect_ReturnSuccess)
 {
     uint64_t addr = 0;
-    EXPECT_EQ(CcuResSpecifications::GetInstance(fakeDevLogicId).GetXnOffsetCcumAddrById(0, 10, addr), HcclResult::HCCL_SUCCESS);
+    EXPECT_EQ(
+        CcuResSpecifications::GetInstance(fakeDevLogicId).GetXnOffsetCcumAddrById(0, 10, addr),
+        HcclResult::HCCL_SUCCESS);
     EXPECT_NE(addr, 0ULL);
 }
 
 TEST_F(CcuResSpecificationsTest, Ut_GetCkeOffsetCcumAddrById_When_Normal_Expect_ReturnSuccess)
 {
     uint64_t addr = 0;
-    EXPECT_EQ(CcuResSpecifications::GetInstance(fakeDevLogicId).GetCkeOffsetCcumAddrById(0, 10, addr), HcclResult::HCCL_SUCCESS);
+    EXPECT_EQ(
+        CcuResSpecifications::GetInstance(fakeDevLogicId).GetCkeOffsetCcumAddrById(0, 10, addr),
+        HcclResult::HCCL_SUCCESS);
     EXPECT_NE(addr, 0ULL);
 }
 

@@ -31,18 +31,17 @@ void SetupTestDb()
     CleanUpDb();
     sim::SqliteDatabase::SetDbPath(kTestDbPath);
 }
-}
+} // namespace
 
 class SimSqliteDbTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestDb();
         SimRunnerSqliteDB::Instance().ClearAll();
     }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimSqliteDbTest, GetAllTableName_ReturnsNonEmptyList)
@@ -280,14 +279,13 @@ TEST_F(SimSqliteDbTest, ClearAll_ClearsAllTables)
 
 class SimSqliteDbHostTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestDb();
         SimRunnerSqliteDB::Instance().ClearAll();
     }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimSqliteDbHostTest, AddHost_InsertsRecord)
@@ -325,14 +323,13 @@ TEST_F(SimSqliteDbHostTest, QueryHostByIpAddr)
 
 class SimSqliteDbContextTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestDb();
         SimRunnerSqliteDB::Instance().ClearAll();
     }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimSqliteDbContextTest, AddContext_InsertsRecord)
@@ -370,14 +367,13 @@ TEST_F(SimSqliteDbContextTest, GetDefaultContext)
 
 class SimSqliteDbStreamTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestDb();
         SimRunnerSqliteDB::Instance().ClearAll();
     }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimSqliteDbStreamTest, AddStream_InsertsRecord)
@@ -437,14 +433,13 @@ TEST_F(SimSqliteDbStreamTest, GetStreamsByCtxId)
 
 class SimSqliteDbTableTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestDb();
         SimRunnerSqliteDB::Instance().ClearAll();
     }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimSqliteDbTableTest, AddRank_InsertsRecord)
@@ -512,20 +507,23 @@ TEST_F(SimSqliteDbTableTest, AddCcuResource_InsertsRecord)
     EXPECT_EQ(found->ccu_id, 1);
 }
 
-TEST_F(SimSqliteDbTest, RunModeConfig_WriteThenRead_RoundTrip) {
+TEST_F(SimSqliteDbTest, RunModeConfig_WriteThenRead_RoundTrip)
+{
     // RunModeConfig 表惰性注册，ClearAll 不一定覆盖到它，写入前先显式清空，避免跨用例残留。
     SimRunnerSqliteDB::Instance().DeleteAll<sim::RunModeConfig>();
     sim::RunModeConfig cfg{};
     cfg.mode = 1;
     SimRunnerSqliteDB::Instance().Add<sim::RunModeConfig>(cfg);
 
-    auto got = SimRunnerSqliteDB::Instance().Query<sim::RunModeConfig>(
-        [](const sim::RunModeConfig&) { return true; });
+    auto got = SimRunnerSqliteDB::Instance().Query<sim::RunModeConfig>([](const sim::RunModeConfig&) {
+        return true;
+    });
     EXPECT_TRUE(got.second);
     EXPECT_EQ(got.first.mode, 1);
 }
 
-TEST_F(SimSqliteDbTest, RunModeConfig_DeleteAllThenWrite_LatestSingleRowWins) {
+TEST_F(SimSqliteDbTest, RunModeConfig_DeleteAllThenWrite_LatestSingleRowWins)
+{
     // RunModeConfig 表惰性注册，ClearAll 不一定覆盖到它，进表前先显式清空，避免跨用例残留。
     SimRunnerSqliteDB::Instance().DeleteAll<sim::RunModeConfig>();
     // 先写仅校验模式行，DeleteAll 清空后再写 clean 行：单行覆盖语义，读到的是清空后的最新值。
@@ -539,8 +537,9 @@ TEST_F(SimSqliteDbTest, RunModeConfig_DeleteAllThenWrite_LatestSingleRowWins) {
     clean.mode = 0;
     SimRunnerSqliteDB::Instance().Add<sim::RunModeConfig>(clean);
 
-    auto all = SimRunnerSqliteDB::Instance().QueryList<sim::RunModeConfig>(
-        [](const sim::RunModeConfig&) { return true; });
+    auto all = SimRunnerSqliteDB::Instance().QueryList<sim::RunModeConfig>([](const sim::RunModeConfig&) {
+        return true;
+    });
     ASSERT_EQ(all.size(), 1);
     EXPECT_EQ(all[0].mode, 0);
 }

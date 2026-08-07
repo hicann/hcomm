@@ -22,26 +22,27 @@ namespace Hccl {
 
 class InsExecutor {
 public:
-    explicit InsExecutor(ResMgrFetcher *resMgrFetcher);
-    void Execute(const InsQueue &insQueue);
-    void ExecuteV82(const InsQueue &insQueue, bool isMc2 = false);
+    explicit InsExecutor(ResMgrFetcher* resMgrFetcher);
+    void Execute(const InsQueue& insQueue);
+    void ExecuteV82(const InsQueue& insQueue, bool isMc2 = false);
 
 private:
-    void ExecuteSingleQue(const InsQueue &insQueue, const StreamLite *streamLite, const bool isMaster = false);
-    void ReportMainStreamTask(const StreamLite &stream, MainStreamTaskType type) const;
-    
-    void ExecuteAllQueues950(const InsQueue &insQueue, StreamLiteMgr *streamLiteMgr);
-    void ExecuteSlaveQueue950(list<InsQueue::Iterator> &slaveQueueIters, StreamLiteMgr *streamLiteMgr, 
-                                    bool &isLaunchTask, std::set<u32> &slaveStreamIndexSet);
-    void ExecuteMasterQueue950(InsQueue::Iterator &masterQueueIter, StreamLite *masterStream, 
-                                    bool &isMasterInsIterEnd, bool &isLaunchTask);
+    void ExecuteSingleQue(const InsQueue& insQueue, const StreamLite* streamLite, const bool isMaster = false);
+    void ReportMainStreamTask(const StreamLite& stream, MainStreamTaskType type) const;
 
-    void AddOpCounter(const StreamLite &stream, bool isHead) const;
-    void CheckPreStreamSync(StreamLiteMgr *streamLiteMgr, u32 slaveQueuesSize);
+    void ExecuteAllQueues950(const InsQueue& insQueue, StreamLiteMgr* streamLiteMgr);
+    void ExecuteSlaveQueue950(
+        list<InsQueue::Iterator>& slaveQueueIters, StreamLiteMgr* streamLiteMgr, bool& isLaunchTask,
+        std::set<u32>& slaveStreamIndexSet);
+    void ExecuteMasterQueue950(
+        InsQueue::Iterator& masterQueueIter, StreamLite* masterStream, bool& isMasterInsIterEnd, bool& isLaunchTask);
+
+    void AddOpCounter(const StreamLite& stream, bool isHead) const;
+    void CheckPreStreamSync(StreamLiteMgr* streamLiteMgr, u32 slaveQueuesSize);
     std::unique_ptr<SqeMgr> sqeMgr;
-    ResMgrFetcher          *resMgrFetcher_{nullptr};
+    ResMgrFetcher* resMgrFetcher_{nullptr};
 
-    bool                   isPreStreamSyncExist_{false};
+    bool isPreStreamSyncExist_{false};
 };
 
 } // namespace Hccl

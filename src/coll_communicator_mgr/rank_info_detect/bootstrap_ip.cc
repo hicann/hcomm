@@ -26,29 +26,37 @@ std::vector<IpAddress> GetHostSocketWhitelist()
 
     // 文件路径在g_externalInput.hcclWhiteList已经做过合法性判断, 无需再次校验
     std::string fileName = EnvConfig::GetInstance().GetHostNicConfig().GetWhiteListFile();
-    CHK_PRT_THROW(fileName.empty(), HCCL_ERROR("[%s] HCCL_WHITELIST_DISABLE variable is [0],but "
-        "HCCL_WHITELIST_FILE is not set", __func__), InternalException, "whiteList file name empty");
+    CHK_PRT_THROW(
+        fileName.empty(),
+        HCCL_ERROR(
+            "[%s] HCCL_WHITELIST_DISABLE variable is [0],but "
+            "HCCL_WHITELIST_FILE is not set",
+            __func__),
+        InternalException, "whiteList file name empty");
 
     Whitelist::GetInstance().LoadConfigFile(fileName);
     Whitelist::GetInstance().GetHostWhiteList(hostSocketWhitelist);
-    CHK_PRT_THROW(hostSocketWhitelist.empty(),
-        HCCL_ERROR("[%s] whitelist file[%s] have no valid host ip.", __func__, fileName.c_str()),
-        InternalException, "whiteList invalid");
+    CHK_PRT_THROW(
+        hostSocketWhitelist.empty(),
+        HCCL_ERROR("[%s] whitelist file[%s] have no valid host ip.", __func__, fileName.c_str()), InternalException,
+        "whiteList invalid");
 
-    HCCL_INFO("[%s] get host socket whitelist success. there are %zu host ip in the whitelist.",
-        __func__, hostSocketWhitelist.size());
+    HCCL_INFO(
+        "[%s] get host socket whitelist success. there are %zu host ip in the whitelist.", __func__,
+        hostSocketWhitelist.size());
     return hostSocketWhitelist;
 }
 
-void GetAllValidHostIfInfos(const std::vector<std::pair<std::string, IpAddress>> &hostIfInfos, 
-    vector<std::pair<std::string, IpAddress>> &ifInfos)
+void GetAllValidHostIfInfos(
+    const std::vector<std::pair<std::string, IpAddress>>& hostIfInfos,
+    vector<std::pair<std::string, IpAddress>>& ifInfos)
 {
     if (!EnvConfig::GetInstance().GetHostNicConfig().GetWhitelistDisable()) {
         auto whitelist = GetHostSocketWhitelist();
-        for (auto &ifInfo : hostIfInfos) {
+        for (auto& ifInfo : hostIfInfos) {
             auto iter = find(whitelist.begin(), whitelist.end(), ifInfo.second);
             if (iter != whitelist.end()) {
-                ifInfos.push_back({ ifInfo.first, ifInfo.second });
+                ifInfos.push_back({ifInfo.first, ifInfo.second});
             }
         }
     } else {
@@ -56,36 +64,39 @@ void GetAllValidHostIfInfos(const std::vector<std::pair<std::string, IpAddress>>
     }
 }
 
-bool FindHostIpbyControlIfIp(const std::vector<std::pair<std::string, IpAddress>> &hostIfInfos, IpAddress &ipAddress)
+bool FindHostIpbyControlIfIp(const std::vector<std::pair<std::string, IpAddress>>& hostIfInfos, IpAddress& ipAddress)
 {
     // 匹配指定IP的网卡信息
-    auto it = std::find_if(hostIfInfos.begin(), hostIfInfos.end(), [&ipAddress](const auto &hostIfInfo) {
+    auto it = std::find_if(hostIfInfos.begin(), hostIfInfos.end(), [&ipAddress](const auto& hostIfInfo) {
         return hostIfInfo.second == ipAddress;
     });
     if (it != hostIfInfos.end()) {
-        HCCL_INFO("[%s] find hostIp success, name[%s] ip[%s]", __func__, it->first.c_str(), ipAddress.GetIpStr().c_str());
+        HCCL_INFO(
+            "[%s] find hostIp success, name[%s] ip[%s]", __func__, it->first.c_str(), ipAddress.GetIpStr().c_str());
         return true;
     }
-    RPT_INPUT_ERR(true, "EI0001",
-        std::vector<std::string>({"value", "env", "expect"}),
-        std::vector<std::string>({ipAddress.GetIpStr(), "HCCL_IF_IP",
-                                  "a valid IP from the available network interfaces"}));
-    HCCL_ERROR("[%s] Env config \"HCCL_IF_IP\" is [%s] which is not found in the nic list.", __func__, ipAddress.GetIpStr().c_str());
+    RPT_INPUT_ERR(
+        true, "EI0001", std::vector<std::string>({"value", "env", "expect"}),
+        std::vector<std::string>(
+            {ipAddress.GetIpStr(), "HCCL_IF_IP", "a valid IP from the available network interfaces"}));
+    HCCL_ERROR(
+        "[%s] Env config \"HCCL_IF_IP\" is [%s] which is not found in the nic list.", __func__,
+        ipAddress.GetIpStr().c_str());
     return false;
 }
 
-bool FindHostIpByIfName(const std::vector<std::pair<std::string, IpAddress>> &hostIfInfos, s32 family,
-                        IpAddress &ipAddress)
+bool FindHostIpByIfName(
+    const std::vector<std::pair<std::string, IpAddress>>& hostIfInfos, s32 family, IpAddress& ipAddress)
 {
     HCCL_INFO("[%s] find host ip start. family[%d]", __func__, family);
 
     // 使用Host网卡名和环境变量HCCL_SOCKET_IFNAME配置的网卡名进行比较
     auto socketIfName = EnvConfig::GetInstance().GetHostNicConfig().GetSocketIfName();
-    for (auto &hostIfInfo : hostIfInfos) {
+    for (auto& hostIfInfo : hostIfInfos) {
         if (hostIfInfo.second.GetFamily() != family) {
             continue;
         }
-        u32  matchLen          = hostIfInfo.first.size();
+        u32 matchLen = hostIfInfo.first.size();
         bool configIfNamesFlag = false;
         for (u32 i = 0; i < socketIfName.configIfNames.size(); i++) {
             matchLen = socketIfName.searchExact ? hostIfInfo.first.size() : socketIfName.configIfNames[i].size();
@@ -95,31 +106,33 @@ bool FindHostIpByIfName(const std::vector<std::pair<std::string, IpAddress>> &ho
         }
         if (configIfNamesFlag != socketIfName.searchNot) {
             configIfNamesFlag = false;
-            ipAddress         = hostIfInfo.second;
-            HCCL_INFO("[%s] find hostIp success by ifName. name[%s] ip[%s]", __func__, hostIfInfo.first.c_str(),
-                      hostIfInfo.second.GetIpStr().c_str());
+            ipAddress = hostIfInfo.second;
+            HCCL_INFO(
+                "[%s] find hostIp success by ifName. name[%s] ip[%s]", __func__, hostIfInfo.first.c_str(),
+                hostIfInfo.second.GetIpStr().c_str());
             return true;
         }
     }
-    
+
     HCCL_WARNING("[%s] find host ip fail by family[%d] ifName.", __func__, family);
     return false;
 }
- 
-bool FindHostIpByIfName(const std::vector<std::pair<std::string, IpAddress>> &hostIfInfos, IpAddress &ipAddress)
+
+bool FindHostIpByIfName(const std::vector<std::pair<std::string, IpAddress>>& hostIfInfos, IpAddress& ipAddress)
 {
-    s32  socketFamily = EnvConfig::GetInstance().GetSocketConfig().GetSocketFamily();
+    s32 socketFamily = EnvConfig::GetInstance().GetSocketConfig().GetSocketFamily();
     socketFamily = (socketFamily == -1) ? AF_INET : socketFamily;
-    bool ret     = FindHostIpByIfName(hostIfInfos, socketFamily, ipAddress);
+    bool ret = FindHostIpByIfName(hostIfInfos, socketFamily, ipAddress);
     if (!ret) {
         socketFamily = (socketFamily == AF_INET) ? AF_INET6 : AF_INET;
-        ret = FindHostIpByIfName(hostIfInfos, socketFamily, ipAddress);        
+        ret = FindHostIpByIfName(hostIfInfos, socketFamily, ipAddress);
     }
     return ret;
 }
 
-bool FindHostIpFromOneNicClass(const std::map<std::string, std::map<std::string, IpAddress>> &nicClassifyInfo, 
-    const std::string &nicClass, IpAddress &ip)
+bool FindHostIpFromOneNicClass(
+    const std::map<std::string, std::map<std::string, IpAddress>>& nicClassifyInfo, const std::string& nicClass,
+    IpAddress& ip)
 {
     auto iterClass = nicClassifyInfo.find(nicClass);
     if (iterClass != nicClassifyInfo.end()) {
@@ -128,18 +141,19 @@ bool FindHostIpFromOneNicClass(const std::map<std::string, std::map<std::string,
             return false;
         }
         ip = iterClass->second.begin()->second;
-        HCCL_INFO("[%s] find host ip success by nic class[%s]. host ifName[%s] ip[%s]", __func__, nicClass.c_str(),
-                  iterClass->second.begin()->first.c_str(), ip.GetIpStr().c_str());
+        HCCL_INFO(
+            "[%s] find host ip success by nic class[%s]. host ifName[%s] ip[%s]", __func__, nicClass.c_str(),
+            iterClass->second.begin()->first.c_str(), ip.GetIpStr().c_str());
         return true;
     }
     return false;
 }
 
-bool FindHostIPByNicClass(const std::vector<std::pair<std::string, IpAddress>> &hostIfInfos, s32 family,
-                          IpAddress &ipAddress)
+bool FindHostIPByNicClass(
+    const std::vector<std::pair<std::string, IpAddress>>& hostIfInfos, s32 family, IpAddress& ipAddress)
 {
     std::map<std::string, std::map<std::string, IpAddress>> nicClassify;
-    for (auto &hostIfInfo : hostIfInfos) {
+    for (auto& hostIfInfo : hostIfInfos) {
         if (hostIfInfo.second.GetFamily() != family) {
             continue;
         }
@@ -150,7 +164,8 @@ bool FindHostIPByNicClass(const std::vector<std::pair<std::string, IpAddress>> &
         } else {
             nicClassify["normal"].insert({hostIfInfo.first, hostIfInfo.second});
         }
-        HCCL_DEBUG("[%s] ifName[%s] addr[%s]", __func__, hostIfInfo.first.c_str(), hostIfInfo.second.GetIpStr().c_str());
+        HCCL_DEBUG(
+            "[%s] ifName[%s] addr[%s]", __func__, hostIfInfo.first.c_str(), hostIfInfo.second.GetIpStr().c_str());
     }
 
     if (FindHostIpFromOneNicClass(nicClassify, "normal", ipAddress)) {
@@ -168,19 +183,19 @@ bool FindHostIPByNicClass(const std::vector<std::pair<std::string, IpAddress>> &
     return false;
 }
 
-bool FindHostIPByNicClass(const std::vector<std::pair<std::string, IpAddress>> &hostIfInfos, IpAddress &ipAddress)
+bool FindHostIPByNicClass(const std::vector<std::pair<std::string, IpAddress>>& hostIfInfos, IpAddress& ipAddress)
 {
-    s32  socketFamily = EnvConfig::GetInstance().GetSocketConfig().GetSocketFamily();
+    s32 socketFamily = EnvConfig::GetInstance().GetSocketConfig().GetSocketFamily();
     socketFamily = (socketFamily == -1) ? AF_INET : socketFamily;
-    bool ret     = FindHostIPByNicClass(hostIfInfos, socketFamily, ipAddress);
+    bool ret = FindHostIPByNicClass(hostIfInfos, socketFamily, ipAddress);
     if (!ret) {
         socketFamily = (socketFamily == AF_INET) ? AF_INET6 : AF_INET;
-        ret = FindHostIPByNicClass(hostIfInfos, socketFamily, ipAddress);        
+        ret = FindHostIPByNicClass(hostIfInfos, socketFamily, ipAddress);
     }
     return ret;
 }
 
-bool FindLocalHostIp(const std::vector<std::pair<std::string, IpAddress>> &hostIfInfos, IpAddress &ipAddress)
+bool FindLocalHostIp(const std::vector<std::pair<std::string, IpAddress>>& hostIfInfos, IpAddress& ipAddress)
 {
     // 根据HCCL_IF_IP查询ips中匹配的LocalHostIP
     ipAddress = EnvConfig::GetInstance().GetHostNicConfig().GetControlIfIp();
@@ -191,17 +206,20 @@ bool FindLocalHostIp(const std::vector<std::pair<std::string, IpAddress>> &hostI
     // 根据HCCL_SOCKET_IFNAME查询ips中匹配的LocalHostIP
     auto ifnames = EnvConfig::GetInstance().GetHostNicConfig().GetSocketIfName();
     if (!ifnames.configIfNames.empty()) {
-        bool ret =  FindHostIpByIfName(hostIfInfos, ipAddress);
+        bool ret = FindHostIpByIfName(hostIfInfos, ipAddress);
         if (!ret) {
-            RPT_INPUT_ERR(true, "EI0001",
-                std::vector<std::string>({"value", "env", "expect"}),
-                std::vector<std::string>({ifnames.configIfNameStr, "HCCL_SOCKET_IFNAME",
-                                          "a valid network interface name from the available interfaces"}));
-            HCCL_ERROR("[Init][EnvVarParam][%s] Env config \"HCCL_SOCKET_IFNAME\" is [%s] which is not found in the nic list", 
+            RPT_INPUT_ERR(
+                true, "EI0001", std::vector<std::string>({"value", "env", "expect"}),
+                std::vector<std::string>(
+                    {ifnames.configIfNameStr, "HCCL_SOCKET_IFNAME",
+                     "a valid network interface name from the available interfaces"}));
+            HCCL_ERROR(
+                "[Init][EnvVarParam][%s] Env config \"HCCL_SOCKET_IFNAME\" is [%s] which is not found in the nic list",
                 __func__, ifnames.configIfNameStr.c_str());
-            for (auto &ifInfo : hostIfInfos) {
-                HCCL_ERROR("[%s] get host ip fail by socket Ifname. nic name[%s] ip[%s]",
-                    __func__, ifInfo.first.c_str(), ifInfo.second.Describe().c_str());
+            for (auto& ifInfo : hostIfInfos) {
+                HCCL_ERROR(
+                    "[%s] get host ip fail by socket Ifname. nic name[%s] ip[%s]", __func__, ifInfo.first.c_str(),
+                    ifInfo.second.Describe().c_str());
             }
         }
         return ret;
@@ -211,34 +229,39 @@ bool FindLocalHostIp(const std::vector<std::pair<std::string, IpAddress>> &hostI
     return FindHostIPByNicClass(hostIfInfos, ipAddress);
 }
 
-const IpAddress &GetBootstrapIp(u32 devPhyId)
+const IpAddress& GetBootstrapIp(u32 devPhyId)
 {
     // 如果已获取过则直接使用ip
     auto it = bootstrapIps.Find(devPhyId);
     if (it.second) {
-        CHK_PRT_RET(!it.first->second.IsInvalid(),
-            HCCL_INFO("[%s] hostIp[%s] already exists.", __func__, it.first->second.GetIpStr().c_str()), it.first->second);
+        CHK_PRT_RET(
+            !it.first->second.IsInvalid(),
+            HCCL_INFO("[%s] hostIp[%s] already exists.", __func__, it.first->second.GetIpStr().c_str()),
+            it.first->second);
     }
 
     // 获取网卡ip
     auto hostIfInfos = HrtGetHostIf(devPhyId);
-    CHK_PRT_THROW(hostIfInfos.empty(), HCCL_ERROR("[%s] there is no host if.", __func__), InternalException, "get host ip error");
-    
+    CHK_PRT_THROW(
+        hostIfInfos.empty(), HCCL_ERROR("[%s] there is no host if.", __func__), InternalException, "get host ip error");
+
     // 若白名单使能则过滤
     vector<std::pair<std::string, IpAddress>> ifInfos;
     GetAllValidHostIfInfos(hostIfInfos, ifInfos);
-    CHK_PRT_THROW(ifInfos.empty(), HCCL_ERROR("[%s] there is no valid host if in whitelist.", __func__), InternalException, "get host ip error");
+    CHK_PRT_THROW(
+        ifInfos.empty(), HCCL_ERROR("[%s] there is no valid host if in whitelist.", __func__), InternalException,
+        "get host ip error");
 
     // 获得有效的bootstrapIp
     IpAddress ipAddress{};
     bool ret = FindLocalHostIp(ifInfos, ipAddress);
     CHK_PRT_THROW(!ret, HCCL_ERROR("[%s] there is no valid host ip.", __func__), InternalException, "no valid host ip");
-    
+
     // 保存有效的bootstrapIp且返回
     bootstrapIps[devPhyId] = ipAddress;
-    
-    HCCL_INFO("[%s] get hostIp success. ipAddress[%s]", __func__, ipAddress.GetIpStr().c_str());    
+
+    HCCL_INFO("[%s] get hostIp success. ipAddress[%s]", __func__, ipAddress.GetIpStr().c_str());
     return bootstrapIps[devPhyId];
 }
 
-}  // namespace Hccl
+} // namespace Hccl

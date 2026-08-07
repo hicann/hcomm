@@ -27,7 +27,7 @@ CcuTaskParam MakeCcuParam(uint32_t startId, uint32_t cnt, uint8_t dieId, uint32_
     p.instStartId = startId;
     p.instCnt = cnt;
     p.missionId = missionId;
-    p.timeout  = 100;
+    p.timeout = 100;
     p.argSize = 3;
     for (int i = 0; i < 3; i++) {
         p.args[i] = static_cast<uint64_t>(i) * 100;
@@ -36,8 +36,7 @@ CcuTaskParam MakeCcuParam(uint32_t startId, uint32_t cnt, uint8_t dieId, uint32_
 }
 } // anonymous namespace
 
-class TaskCcuGraphTest : public testing::Test {
-};
+class TaskCcuGraphTest : public testing::Test {};
 
 TEST_F(TaskCcuGraphTest, UtConstructor_Basic)
 {

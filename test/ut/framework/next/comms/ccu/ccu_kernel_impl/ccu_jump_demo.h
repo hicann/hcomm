@@ -22,16 +22,19 @@ struct CcuIfDemoKernelArg {
 
 CcuResult CcuIfDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuIfDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuIfDemoKernelArg*>(arg);
 
     ccu::Variable var;
     var = args->value;
 
-    CCU_IF(var == args->expected) {
+    CCU_IF(var == args->expected)
+    {
         ccu::Variable thenResult, thenAddend;
         thenAddend = 100;
         thenResult = var + thenAddend;
-    } CCU_ELSE {
+    }
+    CCU_ELSE
+    {
         ccu::Variable elseResult, elseAddend;
         elseAddend = 200;
         elseResult = var + elseAddend;
@@ -49,7 +52,7 @@ struct CcuIfNoElseDemoKernelArg {
 
 CcuResult CcuIfNoElseDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuIfNoElseDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuIfNoElseDemoKernelArg*>(arg);
 
     ccu::Variable var;
     var = args->value;
@@ -60,9 +63,7 @@ CcuResult CcuIfNoElseDemoKernel(CcuKernelArg arg)
     ccu::Variable addend;
     addend = 100;
 
-    CCU_IF(var == args->threshold) {
-        result = var + addend;
-    }
+    CCU_IF(var == args->threshold) { result = var + addend; }
 
     return CcuResult::CCU_SUCCESS;
 }
@@ -78,7 +79,7 @@ struct CcuNestedIfOuterElseDemoKernelArg {
 
 CcuResult CcuNestedIfOuterElseDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuNestedIfOuterElseDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuNestedIfOuterElseDemoKernelArg*>(arg);
 
     ccu::Variable outerVar;
     outerVar = args->outerVal;
@@ -91,14 +92,18 @@ CcuResult CcuNestedIfOuterElseDemoKernel(CcuKernelArg arg)
 
     ccu::Variable addend;
 
-    CCU_IF(outerVar == args->outerExpected) {
-        CCU_IF(innerVar == args->innerExpected) {
+    CCU_IF(outerVar == args->outerExpected)
+    {
+        CCU_IF(innerVar == args->innerExpected)
+        {
             addend = 10;
             result = result + addend;
         }
         addend = 20;
         result = result + addend;
-    } CCU_ELSE {
+    }
+    CCU_ELSE
+    {
         addend = 30;
         result = result + addend;
     }
@@ -117,7 +122,7 @@ struct CcuNestedIfInnerElseDemoKernelArg {
 
 CcuResult CcuNestedIfInnerElseDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuNestedIfInnerElseDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuNestedIfInnerElseDemoKernelArg*>(arg);
 
     ccu::Variable outerVar;
     outerVar = args->outerVal;
@@ -130,11 +135,15 @@ CcuResult CcuNestedIfInnerElseDemoKernel(CcuKernelArg arg)
 
     ccu::Variable addend;
 
-    CCU_IF(outerVar == args->outerExpected) {
-        CCU_IF(innerVar == args->innerExpected) {
+    CCU_IF(outerVar == args->outerExpected)
+    {
+        CCU_IF(innerVar == args->innerExpected)
+        {
             addend = 10;
             result = result + addend;
-        } CCU_ELSE {
+        }
+        CCU_ELSE
+        {
             addend = 20;
             result = result + addend;
         }
@@ -156,7 +165,7 @@ struct CcuNestedIfIfDemoKernelArg {
 
 CcuResult CcuNestedIfIfDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuNestedIfIfDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuNestedIfIfDemoKernelArg*>(arg);
 
     ccu::Variable outerVar;
     outerVar = args->outerVal;
@@ -169,12 +178,13 @@ CcuResult CcuNestedIfIfDemoKernel(CcuKernelArg arg)
 
     ccu::Variable addend;
 
-    CCU_IF(outerVar == args->outerExpected) {
+    CCU_IF(outerVar == args->outerExpected)
+    {
         addend = 10;
         result = result + addend;
-
     }
-    CCU_IF(innerVar == args->innerExpected) {
+    CCU_IF(innerVar == args->innerExpected)
+    {
         addend = 20;
         result = result + addend;
     }
@@ -190,7 +200,7 @@ struct CcuWhileDemoKernelArg {
 
 CcuResult CcuWhileDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuWhileDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuWhileDemoKernelArg*>(arg);
 
     ccu::Variable counter;
     counter = 0;
@@ -207,7 +217,8 @@ CcuResult CcuWhileDemoKernel(CcuKernelArg arg)
     ccu::Variable step;
     step = 10;
 
-    CCU_WHILE(counter != args->loopCount) {
+    CCU_WHILE(counter != args->loopCount)
+    {
         accumulator = accumulator + step;
         counter = counter + one;
     }
@@ -223,7 +234,7 @@ struct CcuDoWhileWhileDemoKernelArg {
 
 CcuResult CcuDoWhileWhileDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuDoWhileWhileDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuDoWhileWhileDemoKernelArg*>(arg);
 
     ccu::Variable counter_1;
     counter_1 = 0;
@@ -239,14 +250,17 @@ CcuResult CcuDoWhileWhileDemoKernel(CcuKernelArg arg)
     ccu::Variable step;
     step = 10;
 
-    CCU_DO {
-        CCU_WHILE(counter_2 != args->loopCount) {
+    CCU_DO
+    {
+        CCU_WHILE(counter_2 != args->loopCount)
+        {
             accumulator = accumulator + step;
             counter_2 = counter_2 + one;
         }
         accumulator = accumulator + step;
         counter_1 = counter_1 + one;
-    } CCU_WHILE(counter_1 != args->loopCount);
+    }
+    CCU_WHILE(counter_1 != args->loopCount);
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -258,7 +272,7 @@ struct CcuDoWhileUnifiedDemoKernelArg {
 
 CcuResult CcuDoWhileUnifiedDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuDoWhileUnifiedDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuDoWhileUnifiedDemoKernelArg*>(arg);
 
     ccu::Variable counter;
     counter = 0;
@@ -272,10 +286,12 @@ CcuResult CcuDoWhileUnifiedDemoKernel(CcuKernelArg arg)
     ccu::Variable step;
     step = 10;
 
-    CCU_DO {
+    CCU_DO
+    {
         accumulator = accumulator + step;
         counter = counter + one;
-    } CCU_WHILE(counter != args->loopCount);
+    }
+    CCU_WHILE(counter != args->loopCount);
 
     return CcuResult::CCU_SUCCESS;
 }
@@ -293,7 +309,7 @@ struct CcuNestedInIfIfDemoKernelArg {
 
 CcuResult CcuNestedInIfIfDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuNestedInIfIfDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuNestedInIfIfDemoKernelArg*>(arg);
 
     ccu::Variable outerVar;
     outerVar = args->outerVal;
@@ -309,12 +325,15 @@ CcuResult CcuNestedInIfIfDemoKernel(CcuKernelArg arg)
 
     ccu::Variable addend;
 
-    CCU_IF(outerVar == args->outerExpected) {
-        CCU_IF(innerVar_1 == args->innerExpected_1) {
+    CCU_IF(outerVar == args->outerExpected)
+    {
+        CCU_IF(innerVar_1 == args->innerExpected_1)
+        {
             addend = 10;
             result = result + addend;
         }
-        CCU_IF(innerVar_2 == args->innerExpected_2) {
+        CCU_IF(innerVar_2 == args->innerExpected_2)
+        {
             addend = 20;
             result = result + addend;
         }
@@ -334,7 +353,7 @@ struct CcuIfRelationalDemoKernelArg {
 
 CcuResult CcuIfRelationalDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuIfRelationalDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuIfRelationalDemoKernelArg*>(arg);
 
     ccu::Variable var;
     var = args->value;
@@ -344,19 +363,23 @@ CcuResult CcuIfRelationalDemoKernel(CcuKernelArg arg)
 
     ccu::Variable addend;
 
-    CCU_IF(var < args->bound) {
+    CCU_IF(var < args->bound)
+    {
         addend = 1;
         result = result + addend;
     }
-    CCU_IF(var <= args->bound) {
+    CCU_IF(var <= args->bound)
+    {
         addend = 2;
         result = result + addend;
     }
-    CCU_IF(var > args->bound) {
+    CCU_IF(var > args->bound)
+    {
         addend = 4;
         result = result + addend;
     }
-    CCU_IF(var >= args->bound) {
+    CCU_IF(var >= args->bound)
+    {
         addend = 8;
         result = result + addend;
     }
@@ -374,7 +397,7 @@ struct CcuIfElseRelationalDemoKernelArg {
 
 CcuResult CcuIfElseRelationalDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuIfElseRelationalDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuIfElseRelationalDemoKernelArg*>(arg);
 
     ccu::Variable var;
     var = args->value;
@@ -384,10 +407,13 @@ CcuResult CcuIfElseRelationalDemoKernel(CcuKernelArg arg)
 
     ccu::Variable addend;
 
-    CCU_IF(var >= args->threshold) {
+    CCU_IF(var >= args->threshold)
+    {
         addend = 100;
         result = result + addend;
-    } CCU_ELSE {
+    }
+    CCU_ELSE
+    {
         addend = 200;
         result = result + addend;
     }
@@ -404,7 +430,7 @@ struct CcuWhileRelationalDemoKernelArg {
 
 CcuResult CcuWhileRelationalDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuWhileRelationalDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuWhileRelationalDemoKernelArg*>(arg);
 
     ccu::Variable counter;
     counter = 0;
@@ -418,7 +444,8 @@ CcuResult CcuWhileRelationalDemoKernel(CcuKernelArg arg)
     ccu::Variable step;
     step = 10;
 
-    CCU_WHILE(counter < args->loopCount) {
+    CCU_WHILE(counter < args->loopCount)
+    {
         accumulator = accumulator + step;
         counter = counter + one;
     }
@@ -435,7 +462,7 @@ struct CcuDoWhileRelationalDemoKernelArg {
 
 CcuResult CcuDoWhileRelationalDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuDoWhileRelationalDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuDoWhileRelationalDemoKernelArg*>(arg);
 
     ccu::Variable counter;
     counter = 0;
@@ -449,10 +476,12 @@ CcuResult CcuDoWhileRelationalDemoKernel(CcuKernelArg arg)
     ccu::Variable step;
     step = 10;
 
-    CCU_DO {
+    CCU_DO
+    {
         accumulator = accumulator + step;
         counter = counter + one;
-    } CCU_WHILE(counter <= args->loopCount);
+    }
+    CCU_WHILE(counter <= args->loopCount);
 
     return CcuResult::CCU_SUCCESS;
 }
@@ -466,7 +495,7 @@ struct CcuVarVarControlFlowDemoKernelArg {
 
 CcuResult CcuVarVarControlFlowDemoKernel(CcuKernelArg arg)
 {
-    auto *args = static_cast<CcuVarVarControlFlowDemoKernelArg *>(arg);
+    auto* args = static_cast<CcuVarVarControlFlowDemoKernelArg*>(arg);
 
     ccu::Variable varA;
     varA = args->valueA;
@@ -479,20 +508,25 @@ CcuResult CcuVarVarControlFlowDemoKernel(CcuKernelArg arg)
 
     ccu::Variable addend;
 
-    CCU_IF(varA == varB) {
+    CCU_IF(varA == varB)
+    {
         addend = 1;
         result = result + addend;
-    } CCU_ELSE {
+    }
+    CCU_ELSE
+    {
         addend = 2;
         result = result + addend;
     }
 
-    CCU_IF(varA < varB) {
+    CCU_IF(varA < varB)
+    {
         addend = 4;
         result = result + addend;
     }
 
-    CCU_IF(varA >= varB) {
+    CCU_IF(varA >= varB)
+    {
         addend = 8;
         result = result + addend;
     }
@@ -506,7 +540,8 @@ CcuResult CcuVarVarControlFlowDemoKernel(CcuKernelArg arg)
     ccu::Variable one;
     one = 1;
 
-    CCU_WHILE(counter < limit) {
+    CCU_WHILE(counter < limit)
+    {
         result = result + one;
         counter = counter + one;
     }
@@ -514,10 +549,12 @@ CcuResult CcuVarVarControlFlowDemoKernel(CcuKernelArg arg)
     ccu::Variable counter2;
     counter2 = 0;
 
-    CCU_DO {
+    CCU_DO
+    {
         result = result + one;
         counter2 = counter2 + one;
-    } CCU_WHILE(counter2 != limit);
+    }
+    CCU_WHILE(counter2 != limit);
 
     return CcuResult::CCU_SUCCESS;
 }

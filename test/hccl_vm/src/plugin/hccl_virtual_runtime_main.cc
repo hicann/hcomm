@@ -42,8 +42,8 @@ namespace {
 using RuntimeClock = std::chrono::steady_clock;
 constexpr uint64_t RUNTIME_NS_PER_MS = 1000000ULL;
 
-static std::vector<std::map<uint32_t, sim::CompositeOpDetail>> TransposeCompositeOpMap(
-    const std::map<uint32_t, std::vector<sim::CompositeOpDetail>>& compositeDataMap)
+static std::vector<std::map<uint32_t, sim::CompositeOpDetail>>
+TransposeCompositeOpMap(const std::map<uint32_t, std::vector<sim::CompositeOpDetail>>& compositeDataMap)
 {
     size_t maxOps = 0;
     for (const auto& entry : compositeDataMap) {
@@ -89,61 +89,99 @@ void DumpRunVirtualRuntimeTimeStats(const RunVirtualRuntimeTimeStats& stats)
         HCCL_VM_INFO("RunVirtualRuntime no execution, runCount=0");
         return;
     }
-    HCCL_VM_INFO("RunVirtualRuntime summary, runCount={}, totalCostMs={}, lastCostMs={}, "
-        "maxCostMs={}", stats.runCount, stats.totalCostMs, stats.lastCostMs, stats.maxCostMs);
+    HCCL_VM_INFO(
+        "RunVirtualRuntime summary, runCount={}, totalCostMs={}, lastCostMs={}, "
+        "maxCostMs={}",
+        stats.runCount, stats.totalCostMs, stats.lastCostMs, stats.maxCostMs);
 }
 
 bool IsAivOpExpansionMode(uint32_t opExpansionMode)
 {
     return opExpansionMode == static_cast<uint32_t>(sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_AIV);
 }
-}
+} // namespace
 
-static const char* HcclCmdTypeToString(HcclCMDType t) {
+static const char* HcclCmdTypeToString(HcclCMDType t)
+{
     switch (t) {
-        case HCCL_CMD_BROADCAST:       return "Broadcast";
-        case HCCL_CMD_ALLREDUCE:       return "AllReduce";
-        case HCCL_CMD_REDUCE:          return "Reduce";
-        case HCCL_CMD_SEND:            return "Send";
-        case HCCL_CMD_RECEIVE:         return "Recv";
-        case HCCL_CMD_ALLGATHER:       return "AllGather";
-        case HCCL_CMD_REDUCE_SCATTER:  return "ReduceScatter";
-        case HCCL_CMD_ALLTOALLV:       return "AllToAllV";
-        case HCCL_CMD_ALLTOALLVC:      return "AllToAllVC";
-        case HCCL_CMD_ALLTOALL:        return "AllToAll";
-        case HCCL_CMD_SCATTER:         return "Scatter";
-        case HCCL_CMD_BATCH_SEND_RECV: return "BatchSendRecv";
-        case HCCL_CMD_ALLGATHER_V:     return "AllGatherV";
-        case HCCL_CMD_REDUCE_SCATTER_V: return "ReduceScatterV";
-        default: return "Unknown";
+        case HCCL_CMD_BROADCAST:
+            return "Broadcast";
+        case HCCL_CMD_ALLREDUCE:
+            return "AllReduce";
+        case HCCL_CMD_REDUCE:
+            return "Reduce";
+        case HCCL_CMD_SEND:
+            return "Send";
+        case HCCL_CMD_RECEIVE:
+            return "Recv";
+        case HCCL_CMD_ALLGATHER:
+            return "AllGather";
+        case HCCL_CMD_REDUCE_SCATTER:
+            return "ReduceScatter";
+        case HCCL_CMD_ALLTOALLV:
+            return "AllToAllV";
+        case HCCL_CMD_ALLTOALLVC:
+            return "AllToAllVC";
+        case HCCL_CMD_ALLTOALL:
+            return "AllToAll";
+        case HCCL_CMD_SCATTER:
+            return "Scatter";
+        case HCCL_CMD_BATCH_SEND_RECV:
+            return "BatchSendRecv";
+        case HCCL_CMD_ALLGATHER_V:
+            return "AllGatherV";
+        case HCCL_CMD_REDUCE_SCATTER_V:
+            return "ReduceScatterV";
+        default:
+            return "Unknown";
     }
 }
 
-static const char* HcclDataTypeToString(HcclDataType t) {
+static const char* HcclDataTypeToString(HcclDataType t)
+{
     switch (t) {
-        case HCCL_DATA_TYPE_INT8:   return "INT8";
-        case HCCL_DATA_TYPE_INT16:  return "INT16";
-        case HCCL_DATA_TYPE_INT32:  return "INT32";
-        case HCCL_DATA_TYPE_FP16:   return "FP16";
-        case HCCL_DATA_TYPE_FP32:   return "FP32";
-        case HCCL_DATA_TYPE_INT64:  return "INT64";
-        case HCCL_DATA_TYPE_UINT64: return "UINT64";
-        case HCCL_DATA_TYPE_UINT8:  return "UINT8";
-        case HCCL_DATA_TYPE_UINT16: return "UINT16";
-        case HCCL_DATA_TYPE_UINT32: return "UINT32";
-        case HCCL_DATA_TYPE_FP64:   return "FP64";
-        case HCCL_DATA_TYPE_BFP16:  return "BFP16";
-        default: return "Unknown";
+        case HCCL_DATA_TYPE_INT8:
+            return "INT8";
+        case HCCL_DATA_TYPE_INT16:
+            return "INT16";
+        case HCCL_DATA_TYPE_INT32:
+            return "INT32";
+        case HCCL_DATA_TYPE_FP16:
+            return "FP16";
+        case HCCL_DATA_TYPE_FP32:
+            return "FP32";
+        case HCCL_DATA_TYPE_INT64:
+            return "INT64";
+        case HCCL_DATA_TYPE_UINT64:
+            return "UINT64";
+        case HCCL_DATA_TYPE_UINT8:
+            return "UINT8";
+        case HCCL_DATA_TYPE_UINT16:
+            return "UINT16";
+        case HCCL_DATA_TYPE_UINT32:
+            return "UINT32";
+        case HCCL_DATA_TYPE_FP64:
+            return "FP64";
+        case HCCL_DATA_TYPE_BFP16:
+            return "BFP16";
+        default:
+            return "Unknown";
     }
 }
 
-static const char* HcclReduceOpToString(HcclReduceOp t) {
+static const char* HcclReduceOpToString(HcclReduceOp t)
+{
     switch (t) {
-        case HCCL_REDUCE_SUM:  return "SUM";
-        case HCCL_REDUCE_PROD: return "PROD";
-        case HCCL_REDUCE_MAX:  return "MAX";
-        case HCCL_REDUCE_MIN:  return "MIN";
-        default: return "Unknown";
+        case HCCL_REDUCE_SUM:
+            return "SUM";
+        case HCCL_REDUCE_PROD:
+            return "PROD";
+        case HCCL_REDUCE_MAX:
+            return "MAX";
+        case HCCL_REDUCE_MIN:
+            return "MIN";
+        default:
+            return "Unknown";
     }
 }
 
@@ -152,7 +190,8 @@ std::atomic<bool> g_keep_running{true};
 loader::Loader g_loader;
 
 // --- stdin 命令处理（与 checker 保持一致） ---
-void ProcessCommand(const std::string& line) {
+void ProcessCommand(const std::string& line)
+{
     try {
         auto j = json::parse(line);
         std::string action = j.value("action", "");
@@ -168,7 +207,8 @@ void ProcessCommand(const std::string& line) {
 }
 
 // --- 业务函数 ---
-void RunVirtualRuntime(HcclSim::StorageManager& storage) {
+void RunVirtualRuntime(HcclSim::StorageManager& storage)
+{
     std::vector<sim::CcuChannelTab> channels;
     g_loader.GetCcuChannelInfo(channels);
 
@@ -189,7 +229,7 @@ void RunVirtualRuntime(HcclSim::StorageManager& storage) {
 
     auto opTasks = TransposeCompositeOpMap(compositeDataMap);
     for (auto& rankTask : opTasks) {
-        for(auto& it: rankTask) {
+        for (auto& it : rankTask) {
             auto& opDetail = it.second;
             storage.LoadHcclVmSynthesisData(opDetail.detail, channels);
             storage.LoadHcclVmTaskMetaData(opDetail.tasks);
@@ -203,7 +243,7 @@ void RunVirtualRuntime(HcclSim::StorageManager& storage) {
             }
         }
     }
-    
+
     std::vector<sim::CcuInstrResTab> instrRes;
     g_loader.GetInstrResInfo(instrRes);
 
@@ -212,15 +252,15 @@ void RunVirtualRuntime(HcclSim::StorageManager& storage) {
 
     HcclSim::CheckerParam param = storage.GetCheckerParam();
     HcclCMDType cmdType = param.cmdType;
-    HCCL_VM_INFO("start check semantic ....: cmdType = {}, reduceOp = {}",
-        static_cast<uint32_t>(cmdType), static_cast<uint32_t>(param.reduceType));
+    HCCL_VM_INFO(
+        "start check semantic ....: cmdType = {}, reduceOp = {}", static_cast<uint32_t>(cmdType),
+        static_cast<uint32_t>(param.reduceType));
 
-    HCCL_VM_INFO("syncIter = {}, op = {}, rankSize = {}, dataType = {}, dataCount = {}, "
-                 "reduceType = {}, srcRank = {}, dstRank = {}, root = {}",
-                 records[0].syncIter, HcclCmdTypeToString(cmdType), param.rankSize,
-                 HcclDataTypeToString(param.dataType), param.dataCount,
-                 HcclReduceOpToString(param.reduceType),
-                 param.srcRank, param.dstRank, param.root);
+    HCCL_VM_INFO(
+        "syncIter = {}, op = {}, rankSize = {}, dataType = {}, dataCount = {}, "
+        "reduceType = {}, srcRank = {}, dstRank = {}, root = {}",
+        records[0].syncIter, HcclCmdTypeToString(cmdType), param.rankSize, HcclDataTypeToString(param.dataType),
+        param.dataCount, HcclReduceOpToString(param.reduceType), param.srcRank, param.dstRank, param.root);
 
     // 获取所有rank的任务队列
     auto rootPath = storage.FindRootPath();
@@ -233,10 +273,13 @@ void RunVirtualRuntime(HcclSim::StorageManager& storage) {
     // 释放内存
     storage.ReleasePhyMem();
     storage.Reset();
-    HCCL_VM_INFO("==============Runner Success Iter :{:d} tasks:{:d}============================", records[0].syncIter, allTaskSize);
+    HCCL_VM_INFO(
+        "==============Runner Success Iter :{:d} tasks:{:d}============================", records[0].syncIter,
+        allTaskSize);
 }
 
-void init_lock() {
+void init_lock()
+{
     int fd = open("/tmp/hccl_vm_runner.lock", O_CREAT | O_RDWR, 0666);
     if (fd == -1) {
         HCCL_VM_ERROR("Failed to open lock file: {}", strerror(errno));
@@ -263,8 +306,8 @@ void init_lock() {
 
 int main(int argc, char* argv[])
 {
-    (void) argc;
-    (void) argv;
+    (void)argc;
+    (void)argv;
     LogConfig config = LoadLogConfig("runner");
     InitLogger(config);
     init_lock();

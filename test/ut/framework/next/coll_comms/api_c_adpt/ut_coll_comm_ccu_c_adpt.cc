@@ -38,8 +38,8 @@ protected:
         GlobalMockObject::verify();
     }
 
-    HcclComm BuildComm(bool isCommunicatorV2 = true, bool hasCollComm = true, bool hasMyRank = true,
-        CcuInsHandle currentInsHandle = 0)
+    HcclComm BuildComm(
+        bool isCommunicatorV2 = true, bool hasCollComm = true, bool hasMyRank = true, CcuInsHandle currentInsHandle = 0)
     {
         comm_ = std::make_unique<hcclComm>(0, 0, "assign_ccu_ut");
         comm_->devType_ = isCommunicatorV2 ? DevType::DEV_TYPE_950 : DevType::DEV_TYPE_COUNT;
@@ -48,15 +48,14 @@ protected:
             return static_cast<HcclComm>(comm_.get());
         }
 
-        comm_->collComm_ = std::make_unique<CollComm>(nullptr, 0, "assign_ccu_ut",
-            ManagerCallbacks{}, CollCommInitMode::simpleMode);
+        comm_->collComm_
+            = std::make_unique<CollComm>(nullptr, 0, "assign_ccu_ut", ManagerCallbacks{}, CollCommInitMode::simpleMode);
         comm_->collComm_->deviceLogicId_ = 0;
         if (!hasMyRank) {
             return static_cast<HcclComm>(comm_.get());
         }
 
-        myRank_ = std::make_shared<MyRank>(nullptr, 0, comm_->collComm_->config_,
-            ManagerCallbacks{}, nullptr, nullptr);
+        myRank_ = std::make_shared<MyRank>(nullptr, 0, comm_->collComm_->config_, ManagerCallbacks{}, nullptr, nullptr);
         myRank_->ccuInsHandle_ = currentInsHandle;
         comm_->collComm_->myRank_ = myRank_;
         return static_cast<HcclComm>(comm_.get());
@@ -64,7 +63,7 @@ protected:
 
     void MockCcuInstanceFound(CcuInsHandle insHandle = validInsHandle_)
     {
-        auto &mgr = CcuInstanceMgr::GetInstance(0);
+        auto& mgr = CcuInstanceMgr::GetInstance(0);
         mgr.initializedFlag_ = true;
         mgr.insMap_.emplace(insHandle, std::make_unique<CcuInstance>());
     }
@@ -74,8 +73,7 @@ protected:
     std::shared_ptr<MyRank> myRank_;
 };
 
-TEST_F(HcclCommAssignCcuInsTest,
-    Ut_HcclCommAssignCcuIns_When_CommHasNoCcuInstance_Expect_ReturnIsHCCL_SUCCESS)
+TEST_F(HcclCommAssignCcuInsTest, Ut_HcclCommAssignCcuIns_When_CommHasNoCcuInstance_Expect_ReturnIsHCCL_SUCCESS)
 {
     constexpr CcuInsHandle insHandle = validInsHandle_;
     HcclComm comm = BuildComm(true, true, true, 0);
@@ -87,17 +85,14 @@ TEST_F(HcclCommAssignCcuInsTest,
     EXPECT_EQ(myRank_->GetCcuInstance(), insHandle);
 }
 
-TEST_F(HcclCommAssignCcuInsTest,
-    Ut_HcclCommAssignCcuIns_When_AssignSuccessAndCommDestroyed_Expect_DestroyCcuInstanceOnce)
+TEST_F(
+    HcclCommAssignCcuInsTest, Ut_HcclCommAssignCcuIns_When_AssignSuccessAndCommDestroyed_Expect_DestroyCcuInstanceOnce)
 {
     constexpr CcuInsHandle insHandle = validInsHandle_;
     HcclComm comm = BuildComm(true, true, true, 0);
     std::weak_ptr<MyRank> myRankWeak = myRank_;
     MockCcuInstanceFound();
-    MOCKER(HcommCcuInsDestroy)
-        .expects(once())
-        .with(insHandle)
-        .will(returnValue(CcuResult::CCU_SUCCESS));
+    MOCKER(HcommCcuInsDestroy).expects(once()).with(insHandle).will(returnValue(CcuResult::CCU_SUCCESS));
 
     HcclResult ret = HcclCommAssignCcuIns(comm, insHandle);
 
@@ -108,8 +103,7 @@ TEST_F(HcclCommAssignCcuInsTest,
     EXPECT_TRUE(myRankWeak.expired());
 }
 
-TEST_F(HcclCommAssignCcuInsTest,
-    Ut_HcclCommAssignCcuIns_When_CommIsNull_Expect_ReturnIsHCCL_E_PTR)
+TEST_F(HcclCommAssignCcuInsTest, Ut_HcclCommAssignCcuIns_When_CommIsNull_Expect_ReturnIsHCCL_E_PTR)
 {
     constexpr CcuInsHandle insHandle = 1;
 
@@ -118,8 +112,7 @@ TEST_F(HcclCommAssignCcuInsTest,
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
-TEST_F(HcclCommAssignCcuInsTest,
-    Ut_HcclCommAssignCcuIns_When_InsHandleIsZero_Expect_ReturnIsHCCL_E_PARA)
+TEST_F(HcclCommAssignCcuInsTest, Ut_HcclCommAssignCcuIns_When_InsHandleIsZero_Expect_ReturnIsHCCL_E_PARA)
 {
     HcclComm comm = BuildComm();
 
@@ -129,8 +122,7 @@ TEST_F(HcclCommAssignCcuInsTest,
     EXPECT_EQ(myRank_->GetCcuInstance(), 0);
 }
 
-TEST_F(HcclCommAssignCcuInsTest,
-    Ut_HcclCommAssignCcuIns_When_CommIsNotV2_Expect_ReturnIsHCCL_E_NOT_SUPPORT)
+TEST_F(HcclCommAssignCcuInsTest, Ut_HcclCommAssignCcuIns_When_CommIsNotV2_Expect_ReturnIsHCCL_E_NOT_SUPPORT)
 {
     constexpr CcuInsHandle insHandle = 1;
     HcclComm comm = BuildComm(false);
@@ -141,8 +133,7 @@ TEST_F(HcclCommAssignCcuInsTest,
     EXPECT_EQ(myRank_->GetCcuInstance(), 0);
 }
 
-TEST_F(HcclCommAssignCcuInsTest,
-    Ut_HcclCommAssignCcuIns_When_CollCommIsNull_Expect_ReturnIsHCCL_E_PTR)
+TEST_F(HcclCommAssignCcuInsTest, Ut_HcclCommAssignCcuIns_When_CollCommIsNull_Expect_ReturnIsHCCL_E_PTR)
 {
     constexpr CcuInsHandle insHandle = 1;
     HcclComm comm = BuildComm(true, false);
@@ -152,8 +143,7 @@ TEST_F(HcclCommAssignCcuInsTest,
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
-TEST_F(HcclCommAssignCcuInsTest,
-    Ut_HcclCommAssignCcuIns_When_MyRankIsNull_Expect_ReturnIsHCCL_E_PTR)
+TEST_F(HcclCommAssignCcuInsTest, Ut_HcclCommAssignCcuIns_When_MyRankIsNull_Expect_ReturnIsHCCL_E_PTR)
 {
     constexpr CcuInsHandle insHandle = 1;
     HcclComm comm = BuildComm(true, true, false);
@@ -163,8 +153,7 @@ TEST_F(HcclCommAssignCcuInsTest,
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
-TEST_F(HcclCommAssignCcuInsTest,
-    Ut_HcclCommAssignCcuIns_When_InsHandleNotFound_Expect_ReturnIsHCCL_E_NOT_FOUND)
+TEST_F(HcclCommAssignCcuInsTest, Ut_HcclCommAssignCcuIns_When_InsHandleNotFound_Expect_ReturnIsHCCL_E_NOT_FOUND)
 {
     constexpr CcuInsHandle insHandle = validInsHandle_;
     HcclComm comm = BuildComm(true, true, true, 0);
@@ -176,8 +165,7 @@ TEST_F(HcclCommAssignCcuInsTest,
     EXPECT_EQ(myRank_->GetCcuInstance(), 0);
 }
 
-TEST_F(HcclCommAssignCcuInsTest,
-    Ut_HcclCommAssignCcuIns_When_CommHasDifferentCcuInstance_Expect_ReturnIsHCCL_E_PARA)
+TEST_F(HcclCommAssignCcuInsTest, Ut_HcclCommAssignCcuIns_When_CommHasDifferentCcuInstance_Expect_ReturnIsHCCL_E_PARA)
 {
     constexpr CcuInsHandle oldInsHandle = validInsHandle_;
     constexpr CcuInsHandle newInsHandle = 200;
@@ -190,8 +178,7 @@ TEST_F(HcclCommAssignCcuInsTest,
     EXPECT_EQ(myRank_->GetCcuInstance(), oldInsHandle);
 }
 
-TEST_F(HcclCommAssignCcuInsTest,
-    Ut_HcclCommAssignCcuIns_When_CommHasSameCcuInstance_Expect_ReturnIsHCCL_E_PARA)
+TEST_F(HcclCommAssignCcuInsTest, Ut_HcclCommAssignCcuIns_When_CommHasSameCcuInstance_Expect_ReturnIsHCCL_E_PARA)
 {
     constexpr CcuInsHandle insHandle = validInsHandle_;
     HcclComm comm = BuildComm(true, true, true, insHandle);
@@ -203,16 +190,12 @@ TEST_F(HcclCommAssignCcuInsTest,
     EXPECT_EQ(myRank_->GetCcuInstance(), insHandle);
 }
 
-TEST_F(HcclCommAssignCcuInsTest,
-    Ut_HcclCommAssignCcuIns_When_InternalExceptionOccurs_Expect_ReturnIsHCCL_E_INTERNAL)
+TEST_F(HcclCommAssignCcuInsTest, Ut_HcclCommAssignCcuIns_When_InternalExceptionOccurs_Expect_ReturnIsHCCL_E_INTERNAL)
 {
     constexpr CcuInsHandle insHandle = validInsHandle_;
     HcclComm comm = BuildComm(true, true, true, 0);
 
-    MOCKER_CPP(&CcuInstanceMgr::Get)
-        .expects(once())
-        .with(insHandle)
-        .will(throws(std::logic_error("test exception")));
+    MOCKER_CPP(&CcuInstanceMgr::Get).expects(once()).with(insHandle).will(throws(std::logic_error("test exception")));
 
     HcclResult ret = HcclCommAssignCcuIns(comm, insHandle);
 
@@ -220,8 +203,7 @@ TEST_F(HcclCommAssignCcuInsTest,
     EXPECT_EQ(myRank_->GetCcuInstance(), 0);
 }
 
-TEST_F(HcclCommAssignCcuInsTest,
-    Ut_HcclCommAssignCcuIns_When_TwoThreadsAssignConcurrently_Expect_OnlyOneSucceeds)
+TEST_F(HcclCommAssignCcuInsTest, Ut_HcclCommAssignCcuIns_When_TwoThreadsAssignConcurrently_Expect_OnlyOneSucceeds)
 {
     constexpr CcuInsHandle firstInsHandle = validInsHandle_;
     constexpr CcuInsHandle secondInsHandle = 200;
@@ -233,7 +215,7 @@ TEST_F(HcclCommAssignCcuInsTest,
     std::atomic<bool> start{false};
     HcclResult firstRet = HCCL_E_INTERNAL;
     HcclResult secondRet = HCCL_E_INTERNAL;
-    auto assign = [&](CcuInsHandle insHandle, HcclResult &ret) {
+    auto assign = [&](CcuInsHandle insHandle, HcclResult& ret) {
         readyCount.fetch_add(1, std::memory_order_release);
         while (!start.load(std::memory_order_acquire)) {
             std::this_thread::yield();

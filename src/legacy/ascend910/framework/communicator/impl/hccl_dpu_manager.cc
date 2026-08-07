@@ -27,28 +27,25 @@ constexpr uint8_t DEVICE_SIGNAL_THIRD = 3;
 constexpr uint32_t TEMP_DEV_TYPE_DPU = 0; // 临时适配，后续rts接口上库之后使用rts的定义
 struct DpuKernelLaunchParam {             // 需要和RunDpuRpcSrvLaunch入参定义保持一致
     u64 memorySize;
-    void *deviceMem;
-    void *hostMem;
+    void* deviceMem;
+    void* hostMem;
     int32_t deviceId;
     std::string commId;
 };
 DpuKernelLaunchParam g_hostArgsTemp;
 
-DpuManager::DpuManager()
-{
-}
+DpuManager::DpuManager() {}
 
-DpuManager::~DpuManager()
-{
-}
+DpuManager::~DpuManager() {}
 
-HcclResult DpuManager::CreateWorkspaceBuf(const char *memTag, uint64_t *size, bool *newCreated)
+HcclResult DpuManager::CreateWorkspaceBuf(const char* memTag, uint64_t* size, bool* newCreated)
 {
     std::string tag = memTag != nullptr ? std::string(memTag) : "";
     if (tagWorkspaceMap_.find(tag) == tagWorkspaceMap_.end()) {
         std::shared_ptr<Hccl::DevBuffer> workspace = std::make_shared<Hccl::DevBuffer>(*size);
         tagWorkspaceMap_.insert(make_pair(tag, workspace));
-        HCCL_INFO("[DpuManager::%s] Create tagMem[%s] WorkspaceBuf success, WorkspaceBuf = %p", __func__, tag.c_str(),
+        HCCL_INFO(
+            "[DpuManager::%s] Create tagMem[%s] WorkspaceBuf success, WorkspaceBuf = %p", __func__, tag.c_str(),
             workspace.get());
         if (newCreated != nullptr) {
             *newCreated = true;
@@ -57,7 +54,7 @@ HcclResult DpuManager::CreateWorkspaceBuf(const char *memTag, uint64_t *size, bo
     return HCCL_SUCCESS;
 }
 
-std::shared_ptr<Hccl::DevBuffer> DpuManager::GetKFCWorkSpace(const char *memTag)
+std::shared_ptr<Hccl::DevBuffer> DpuManager::GetKFCWorkSpace(const char* memTag)
 {
     std::string tag = memTag != nullptr ? std::string(memTag) : "";
     auto it = tagWorkspaceMap_.find(tag);
@@ -107,7 +104,7 @@ HcclResult DpuManager::DestroyKFCWorkSpaceVA()
     return HCCL_SUCCESS;
 }
 
-HcclResult DpuManager::GetKFCWorkSpaceVA(const std::string &memTag, uint64_t *size, void **addr, bool *newCreated)
+HcclResult DpuManager::GetKFCWorkSpaceVA(const std::string& memTag, uint64_t* size, void** addr, bool* newCreated)
 {
     if (memTag != DPUTAG) {
         HCCL_ERROR("DpuManager::GetKFCWorkSpaceVA, memTag is invalid, memTag: %s", memTag.c_str());
@@ -117,10 +114,13 @@ HcclResult DpuManager::GetKFCWorkSpaceVA(const std::string &memTag, uint64_t *si
     if (iter != tagWorkspaceVAMap_.end()) {
         std::shared_ptr<Hccl::DevBuffer> oldWorkspace = iter->second;
         if (*size != static_cast<uint64_t>(oldWorkspace.get()->GetSize())) {
-            HCCL_ERROR("DpuManager::GetKFCWorkSpaceVA, The size of oldWorkspace %p is non-consistent, target size compare now size: %llu->%llu", *addr, *size, oldWorkspace.get()->GetSize());
+            HCCL_ERROR(
+                "DpuManager::GetKFCWorkSpaceVA, The size of oldWorkspace %p is non-consistent, target size compare now "
+                "size: %llu->%llu",
+                *addr, *size, oldWorkspace.get()->GetSize());
             return HCCL_E_PARA;
         }
-        *addr = reinterpret_cast<void *>(oldWorkspace.get()->GetAddr());
+        *addr = reinterpret_cast<void*>(oldWorkspace.get()->GetAddr());
         if (newCreated != nullptr) {
             *newCreated = false;
         }
@@ -128,16 +128,17 @@ HcclResult DpuManager::GetKFCWorkSpaceVA(const std::string &memTag, uint64_t *si
     }
 
     CHK_RET(AllocAndRegKFCWorkSpace(*size));
-    std::shared_ptr<Hccl::DevBuffer> newWorkspace = Hccl::DevBuffer::Create(reinterpret_cast<uintptr_t>(accessVA_), *size);
+    std::shared_ptr<Hccl::DevBuffer> newWorkspace
+        = Hccl::DevBuffer::Create(reinterpret_cast<uintptr_t>(accessVA_), *size);
     tagWorkspaceVAMap_.insert(make_pair(memTag, newWorkspace));
     if (newCreated != nullptr) {
         *newCreated = true;
     }
-    *addr = reinterpret_cast<void *>(newWorkspace.get()->GetAddr());
+    *addr = reinterpret_cast<void*>(newWorkspace.get()->GetAddr());
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult DpuManager::GetDevMemWorkSpace(const std::string &memTag, uint64_t *size, void **addr, bool *newCreated)
+HcclResult DpuManager::GetDevMemWorkSpace(const std::string& memTag, uint64_t* size, void** addr, bool* newCreated)
 {
     if (memTag == DPUTAG) {
         return GetKFCWorkSpaceVA(memTag, size, addr, newCreated);
@@ -146,12 +147,13 @@ HcclResult DpuManager::GetDevMemWorkSpace(const std::string &memTag, uint64_t *s
     if (iter != tagWorkspaceMap_.end()) {
         std::shared_ptr<Hccl::DevBuffer> oldWorkspace = iter->second;
         if (*size != static_cast<uint64_t>(oldWorkspace.get()->GetSize())) {
-            HCCL_ERROR("DpuManager::GetDevMemWorkSpace, The size of oldWorkspace %p is non-consistent, "
-                       "target size compare now size: %llu->%llu",
+            HCCL_ERROR(
+                "DpuManager::GetDevMemWorkSpace, The size of oldWorkspace %p is non-consistent, "
+                "target size compare now size: %llu->%llu",
                 *addr, *size, oldWorkspace.get()->GetSize());
             return HCCL_E_PARA;
         }
-        *addr = reinterpret_cast<void *>(oldWorkspace.get()->GetAddr());
+        *addr = reinterpret_cast<void*>(oldWorkspace.get()->GetAddr());
         if (newCreated != nullptr) {
             *newCreated = false;
         }
@@ -160,31 +162,32 @@ HcclResult DpuManager::GetDevMemWorkSpace(const std::string &memTag, uint64_t *s
 
     std::shared_ptr<Hccl::DevBuffer> newWorkspace = std::make_shared<Hccl::DevBuffer>(*size);
     tagWorkspaceMap_.insert(make_pair(memTag, newWorkspace));
-    HCCL_INFO("Create tagMem[%s] WorkspaceBuf success, WorkspaceBuf: %p -> %p, size[%llu]", memTag.c_str(),
+    HCCL_INFO(
+        "Create tagMem[%s] WorkspaceBuf success, WorkspaceBuf: %p -> %p, size[%llu]", memTag.c_str(),
         newWorkspace.get(), newWorkspace.get()->GetAddr(), *size);
     if (newCreated != nullptr) {
         *newCreated = true;
     }
-    *addr = reinterpret_cast<void *>(newWorkspace.get()->GetAddr());
+    *addr = reinterpret_cast<void*>(newWorkspace.get()->GetAddr());
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult DpuManager::Init(const std::string &commId, u32 deviceLogicId)
+HcclResult DpuManager::Init(const std::string& commId, u32 deviceLogicId)
 {
     commId_ = commId;
     devLogicId_ = deviceLogicId;
     return InitDpuKernel();
 }
 
-HcclResult DpuManager::LaunchDpuKernel(aclrtFuncHandle &funcHandle)
+HcclResult DpuManager::LaunchDpuKernel(aclrtFuncHandle& funcHandle)
 {
     HCCL_INFO("[DpuManager::%s] Launch Dpu Kernel", __func__);
     aclrtLaunchKernelCfg cfg;
     aclrtLaunchKernelAttr kernelAttr;
     kernelAttr.id = ACL_RT_LAUNCH_KERNEL_ATTR_TIMEOUT;
-    kernelAttr.value.timeout = Hccl::NOTIFY_DEFAULT_WAIT_TIME > std::numeric_limits<uint16_t>::max()
-                                   ? std::numeric_limits<uint16_t>::max()
-                                   : Hccl::NOTIFY_DEFAULT_WAIT_TIME;
+    kernelAttr.value.timeout = Hccl::NOTIFY_DEFAULT_WAIT_TIME > std::numeric_limits<uint16_t>::max() ?
+                                   std::numeric_limits<uint16_t>::max() :
+                                   Hccl::NOTIFY_DEFAULT_WAIT_TIME;
     cfg.numAttrs = 1;
     cfg.attrs = &kernelAttr;
     constexpr u32 numBlocks = 1;
@@ -195,7 +198,8 @@ HcclResult DpuManager::LaunchDpuKernel(aclrtFuncHandle &funcHandle)
     g_hostArgsTemp.deviceMem = accessVA_;
     g_hostArgsTemp.deviceId = devLogicId_;
 
-    HCCL_INFO("[DpuManager::%s] DpuKernelLaunchParam{commId:%s; memorySize:%u; deviceMem:%p; hostMem:%p}", __func__,
+    HCCL_INFO(
+        "[DpuManager::%s] DpuKernelLaunchParam{commId:%s; memorySize:%u; deviceMem:%p; hostMem:%p}", __func__,
         g_hostArgsTemp.commId.c_str(), g_hostArgsTemp.memorySize, g_hostArgsTemp.deviceMem, g_hostArgsTemp.hostMem);
 
     size_t argsSize = sizeof(g_hostArgsTemp);
@@ -210,11 +214,11 @@ HcclResult DpuManager::LaunchDpuKernel(aclrtFuncHandle &funcHandle)
     return HCCL_SUCCESS;
 }
 
-HcclResult DpuManager::PrepareDpuKernelResource(aclrtFuncHandle &funcHandle)
+HcclResult DpuManager::PrepareDpuKernelResource(aclrtFuncHandle& funcHandle)
 {
     // 获取二进制文件路径
     std::string jsonPath;
-    const char *envPath = getenv("ASCEND_HOME_PATH");
+    const char* envPath = getenv("ASCEND_HOME_PATH");
     if (envPath != nullptr && envPath[0] != '\0') {
         jsonPath = envPath;
     } else {
@@ -228,7 +232,8 @@ HcclResult DpuManager::PrepareDpuKernelResource(aclrtFuncHandle &funcHandle)
     // cpuKernelMode为1时，json命名需与so命名保持一致， 即libccl_dpu.json与libccl_dpu.so
     jsonPath += "libccl_dpu.json";
     char realPath[PATH_MAX] = {0};
-    CHK_PRT_RET(realpath(jsonPath.c_str(), realPath) == nullptr,
+    CHK_PRT_RET(
+        realpath(jsonPath.c_str(), realPath) == nullptr,
         HCCL_ERROR("[DpuManager::%s]: %s is not a valid real path, err[%d]", __func__, jsonPath.c_str(), errno),
         HCCL_E_INTERNAL);
     HCCL_INFO("[DpuManager::%s] realPath: %s", __func__, realPath);
@@ -347,7 +352,7 @@ HcclResult DpuManager::WaitDpuKernelThreadTerminate()
         HCCL_ERROR("[CommunicatorImpl::%s] accessVA_ is nullptr", __func__);
         return HCCL_E_MEMORY;
     }
-    uint8_t  flag   = DEVICE_SIGNAL_SECOND;
+    uint8_t flag = DEVICE_SIGNAL_SECOND;
     errno_t ret = memcpy_s(accessVA_, sizeof(flag), &flag, sizeof(flag));
     if (ret != EOK) {
         HCCL_ERROR("Terminate TaskRun Fail, return[%d]", ret);
@@ -363,7 +368,6 @@ HcclResult DpuManager::WaitDpuKernelThreadTerminate()
 
     return HCCL_SUCCESS;
 }
-
 
 HcclResult DpuManager::DestroyDpuKernelResource()
 {

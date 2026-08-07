@@ -24,13 +24,13 @@ REG_CCU_EXECUTOR_CREATE_FUNC(SimCcuV1::LOAD_TYPE, SimCcuV1::LOADIMDTOGSA_CODE, L
 
 void LoadImdToGSAExecutor::Parser()
 {
-    gsaId_      = instr_.v1.loadImdToGSA.gsaId;
-    immediate_  = instr_.v1.loadImdToGSA.immediate;
+    gsaId_ = instr_.v1.loadImdToGSA.gsaId;
+    immediate_ = instr_.v1.loadImdToGSA.immediate;
 }
 
 void LoadImdToGSAExecutor::Run()
 {
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     ccuResMgr.UpdateGsaValue(rankId_, dieId_, gsaId_, immediate_);
 }
 

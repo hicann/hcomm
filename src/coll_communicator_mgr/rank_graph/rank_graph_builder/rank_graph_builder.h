@@ -29,12 +29,12 @@ namespace Hccl {
 
 class RankGraphBuilder {
 public:
-    std::unique_ptr<RankGraph> Build(const std::string &ranktableM, const std::string &topoPath, RankId myRank);
-    std::unique_ptr<RankGraph> Build(const RankTableInfo &ranktable, const std::string &topoPath, RankId myRank);
+    std::unique_ptr<RankGraph> Build(const std::string& ranktableM, const std::string& topoPath, RankId myRank);
+    std::unique_ptr<RankGraph> Build(const RankTableInfo& ranktable, const std::string& topoPath, RankId myRank);
     std::unique_ptr<RankTableInfo> GetRankTableInfo();
     std::shared_ptr<TopoInfo> GetTopoInfo();
-    std::unique_ptr<RankGraph> RecoverBuild(
-        const RankTableInfo &rankTableInfo, const TopoInfo &topoInfo, RankId myRank);
+    std::unique_ptr<RankGraph>
+    RecoverBuild(const RankTableInfo& rankTableInfo, const TopoInfo& topoInfo, RankId myRank);
     void SetEndpointDesc();
 
 private:
@@ -52,27 +52,26 @@ private:
     void BuildFromRankTable();
     void BuildPeer2PeerLinks();
     void AddFabricInfo(u32 level);
-    void AddPeer2NetLink(const u32 netLayer, const std::string &netInstId, RankId rankId,
-        const AddressInfo &addrInfo, const std::shared_ptr<NetInstance::Fabric> &fabNode,
-        const std::vector<std::shared_ptr<PhyTopo::Link>> &links);
+    void AddPeer2NetLink(
+        const u32 netLayer, const std::string& netInstId, RankId rankId, const AddressInfo& addrInfo,
+        const std::shared_ptr<NetInstance::Fabric>& fabNode, const std::vector<std::shared_ptr<PhyTopo::Link>>& links);
     void AddTopoDescFabricInfo();
     void UpdateTopoInstForMyRankOnly();
-    const RankLevelInfo &GetRankLevelInfoByNetLayer(const NewRankInfo &rankInfo, u32 netLayer) const;
-    std::shared_ptr<NetInstance> GetNetInstance(const RankLevelInfo &levelInfo);
-    std::shared_ptr<NetInstance> CreateNetInstance(const RankLevelInfo &levelInfo);
+    const RankLevelInfo& GetRankLevelInfoByNetLayer(const NewRankInfo& rankInfo, u32 netLayer) const;
+    std::shared_ptr<NetInstance> GetNetInstance(const RankLevelInfo& levelInfo);
+    std::shared_ptr<NetInstance> CreateNetInstance(const RankLevelInfo& levelInfo);
 };
 
-std::map<PlaneId, FabricId> GetFabricsFromAddrInfo(const std::vector<AddressInfo> &rankAddrs);
+std::map<PlaneId, FabricId> GetFabricsFromAddrInfo(const std::vector<AddressInfo>& rankAddrs);
 std::vector<std::shared_ptr<PhyTopo::Link>> GetPeer2NetPhyLinks(u32 netLayer, LocalId localId);
 std::vector<std::shared_ptr<NetInstance::ConnInterface>> ConstructConnIFromPhyTopoConnIAndPortMap(
     std::shared_ptr<PhyTopo::ConnInterface> phyConnIFace,
-    const std::map<std::string, std::vector<IpAddress>> &portAddrMap,
-    const TopoType topoType, const u32 topoInstId, u32 localDeviceId);
-std::vector<std::shared_ptr<NetInstance::Link>> ConstructLinks(std::shared_ptr<NetInstance::Peer> srcPeer,
-    std::shared_ptr<NetInstance::Peer> dstPeer,
+    const std::map<std::string, std::vector<IpAddress>>& portAddrMap, const TopoType topoType, const u32 topoInstId,
+    u32 localDeviceId);
+std::vector<std::shared_ptr<NetInstance::Link>> ConstructLinks(
+    std::shared_ptr<NetInstance::Peer> srcPeer, std::shared_ptr<NetInstance::Peer> dstPeer,
     std::vector<std::shared_ptr<NetInstance::ConnInterface>> sourceIfaces,
-    std::vector<std::shared_ptr<NetInstance::ConnInterface>> targetIfaces,
-    std::shared_ptr<PhyTopo::Link> phyLink);
+    std::vector<std::shared_ptr<NetInstance::ConnInterface>> targetIfaces, std::shared_ptr<PhyTopo::Link> phyLink);
 std::vector<std::shared_ptr<PhyTopo::Link>> GetPeer2PeerPhyLinks(
     std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> phyTopoGraph, LocalId srcLocalId, LocalId dstLocalId);
 } // namespace Hccl

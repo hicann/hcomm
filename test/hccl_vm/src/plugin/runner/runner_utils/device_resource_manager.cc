@@ -27,7 +27,8 @@ void DeviceResourceManager::Init(uint32_t rankSize)
     deviceResData_.v1Res->Reset(rankSize);
 }
 
-void DeviceResourceManager::InitRankRes(uint32_t rankId, uint32_t streamSize) {
+void DeviceResourceManager::InitRankRes(uint32_t rankId, uint32_t streamSize)
+{
     deviceResData_.v1Res->streamSize_ = streamSize;
     deviceResData_.v1Res->notifyResources_[rankId].resize(streamSize);
 

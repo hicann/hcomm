@@ -22,7 +22,8 @@
 
 class WaitExecutor : public CcuExecutorBase {
 public:
-    explicit WaitExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit WaitExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     WaitExecutor() = default;
@@ -32,6 +33,7 @@ public:
     void Run() override;
     std::string Describe() override;
     CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
+
 private:
     uint16_t expectedXnId_{0};
     uint16_t conditionXnId_{0};

@@ -18,18 +18,12 @@
 
 namespace hccl {
 
-template<typename keyType, typename valueType>
+template <typename keyType, typename valueType>
 class ReferenceMap {
 public:
-    typename std::unordered_map<keyType, valueType>::iterator begin()
-    {
-        return data_.begin();
-    }
+    typename std::unordered_map<keyType, valueType>::iterator begin() { return data_.begin(); }
 
-    typename std::unordered_map<keyType, valueType>::iterator end()
-    {
-        return data_.end();
-    }
+    typename std::unordered_map<keyType, valueType>::iterator end() { return data_.end(); }
 
     u32 insert(const keyType key, const valueType& value)
     {
@@ -60,20 +54,11 @@ public:
         ref_.clear();
     }
 
-    bool has(const keyType key)
-    {
-        return (data_.find(key) != data_.end() ? true : false);
-    }
+    bool has(const keyType key) { return (data_.find(key) != data_.end() ? true : false); }
 
-    u32 count(const keyType key)
-    {
-        return (has(key) ? ref_[key] : 0);
-    }
+    u32 count(const keyType key) { return (has(key) ? ref_[key] : 0); }
 
-    valueType& operator[](const keyType key)
-    {
-        return data_[key];
-    }
+    valueType& operator[](const keyType key) { return data_[key]; }
 
     HcclResult ref(const keyType key)
     {
@@ -95,10 +80,8 @@ public:
         return HCCL_SUCCESS;
     }
 
-    u32 Size()
-    {
-        return data_.size();
-    }
+    u32 Size() { return data_.size(); }
+
 private:
     std::unordered_map<keyType, valueType> data_;
     std::unordered_map<keyType, u32> ref_;

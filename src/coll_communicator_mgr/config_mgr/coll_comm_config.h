@@ -14,8 +14,7 @@
 #include "hccl/hccl_types.h"
 
 namespace hccl {
-HcclResult ApplyHcclCommConfig(const HcclCommConfig *hcclCommConfig, CommConfig &commConfig,
-    uint32_t &opExpansionMode);
-}  // namespace hccl
+HcclResult ApplyHcclCommConfig(const HcclCommConfig* hcclCommConfig, CommConfig& commConfig, uint32_t& opExpansionMode);
+} // namespace hccl
 
 #endif /* COLL_COMM_CONFIG_H */

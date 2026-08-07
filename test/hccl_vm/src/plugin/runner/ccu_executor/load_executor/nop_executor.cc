@@ -19,16 +19,11 @@ using namespace std;
 using namespace hcomm::CcuRep;
 
 // 注册NopExecutor create Func
-REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::LOAD_TYPE, SimCcuV2::NOP_CODE , NopExecutor);
+REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::LOAD_TYPE, SimCcuV2::NOP_CODE, NopExecutor);
 
-void NopExecutor::Parser()
-{
-    ValidateVersionExclusive(RunnerCcuVersion::CCU_V2, "NopExecutor");
-}
+void NopExecutor::Parser() { ValidateVersionExclusive(RunnerCcuVersion::CCU_V2, "NopExecutor"); }
 
-void NopExecutor::Run()
-{
-}
+void NopExecutor::Run() {}
 
 std::string NopExecutor::Describe()
 {

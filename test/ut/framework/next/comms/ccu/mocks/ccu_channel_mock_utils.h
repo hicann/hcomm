@@ -34,13 +34,13 @@
 #undef private
 #undef protected
 
-EndpointDesc MockEndpointDesc(const CommAddr &commAddr, uint32_t devPhyId)
+EndpointDesc MockEndpointDesc(const CommAddr& commAddr, uint32_t devPhyId)
 {
     EndpointDesc epDesc{};
     (void)memset_s(&epDesc, sizeof(epDesc), 0, sizeof(epDesc));
 
     (void)EndpointDescInit(&epDesc, 1);
-    
+
     epDesc.protocol = CommProtocol::COMM_PROTOCOL_UBC_CTP;
     epDesc.commAddr = commAddr;
     epDesc.loc.locType = EndpointLocType::ENDPOINT_LOC_TYPE_DEVICE;
@@ -48,18 +48,17 @@ EndpointDesc MockEndpointDesc(const CommAddr &commAddr, uint32_t devPhyId)
     epDesc.loc.device.superDevId = 0;
     epDesc.loc.device.serverIdx = 0;
     epDesc.loc.device.superPodIdx = 0;
-    
+
     return epDesc;
 }
 
-HcommChannelDesc MockHcommChannelDesc(const EndpointDesc &destEpDesc,
-    const HcommSocket socket, void *&memHandle)
+HcommChannelDesc MockHcommChannelDesc(const EndpointDesc& destEpDesc, const HcommSocket socket, void*& memHandle)
 {
     HcommChannelDesc channelDesc{};
     (void)memset_s(&channelDesc, sizeof(channelDesc), 0, sizeof(channelDesc));
 
     (void)HcommChannelDescInit(&channelDesc, 1);
-    
+
     channelDesc.remoteEndpoint = destEpDesc;
     channelDesc.notifyNum = 1;
     channelDesc.exchangeAllMems = false;
@@ -68,11 +67,11 @@ HcommChannelDesc MockHcommChannelDesc(const EndpointDesc &destEpDesc,
 
     channelDesc.socket = socket;
     channelDesc.port = 0;
-    
+
     return channelDesc;
 }
 
-std::unique_ptr<Hccl::Socket> MockHcclSocket(const CommAddr &srcAddr, const CommAddr &dstAddr)
+std::unique_ptr<Hccl::Socket> MockHcclSocket(const CommAddr& srcAddr, const CommAddr& dstAddr)
 {
     Hccl::SocketHandle socketHandle = (Hccl::SocketHandle)(0x12345678);
     Hccl::IpAddress srcIp{}, dstIp{};
@@ -91,31 +90,30 @@ std::unique_ptr<Hccl::LocalUbRmaBuffer> MockUbRmaBuffer()
     constexpr uint64_t size = 0x1234;
     const HcclMemType memType = HcclMemType::HCCL_MEM_TYPE_DEVICE;
 
-    auto localBuffer = std::make_shared<Hccl::Buffer>(
-        reinterpret_cast<uintptr_t>(addr), size, memType);
+    auto localBuffer = std::make_shared<Hccl::Buffer>(reinterpret_cast<uintptr_t>(addr), size, memType);
     return make_unique<Hccl::LocalUbRmaBuffer>(localBuffer);
 }
 
-CommMemInfo MockCommMemInfo(Hccl::LocalUbRmaBuffer *bufferPtr)
+CommMemInfo MockCommMemInfo(Hccl::LocalUbRmaBuffer* bufferPtr)
 {
     CommMemInfo memInfo{};
-    auto &mem = memInfo.mem;
+    auto& mem = memInfo.mem;
     mem.type = CommMemType::COMM_MEM_TYPE_DEVICE;
     mem.addr = reinterpret_cast<void*>(bufferPtr->GetAddr());
     mem.size = bufferPtr->GetSize();
 
-    memInfo.bufferHandle = static_cast<void *>(bufferPtr);
+    memInfo.bufferHandle = static_cast<void*>(bufferPtr);
     return memInfo;
 }
 
-HcclResult MockCcuConnectionImportJettys(hcomm::CcuConnection *This)
+HcclResult MockCcuConnectionImportJettys(hcomm::CcuConnection* This)
 {
     This->innerStatus_ = hcomm::CcuConnection::InnerStatus::CONNECTED;
     This->status_ = hcomm::CcuConnStatus::CONNECTED;
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult MockCcuTransportGetRmtCke(hcomm::CcuTransport *This, const uint32_t index, uint32_t &rmtCkeId)
+HcclResult MockCcuTransportGetRmtCke(hcomm::CcuTransport* This, const uint32_t index, uint32_t& rmtCkeId)
 {
     if (index > This->locRes_.ckes.size()) {
         return HcclResult::HCCL_E_PARA;
@@ -125,7 +123,7 @@ HcclResult MockCcuTransportGetRmtCke(hcomm::CcuTransport *This, const uint32_t i
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult MockCcuTransportGetRmtXn(hcomm::CcuTransport *This, const uint32_t index, uint32_t &rmtCkeId)
+HcclResult MockCcuTransportGetRmtXn(hcomm::CcuTransport* This, const uint32_t index, uint32_t& rmtCkeId)
 {
     if (index > This->locRes_.xns.size()) {
         return HcclResult::HCCL_E_PARA;

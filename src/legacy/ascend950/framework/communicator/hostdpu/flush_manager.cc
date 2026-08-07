@@ -13,16 +13,13 @@
 namespace Hccl {
 FlushManager::FlushManager() {}
 
-FlushManager &FlushManager::GetInstance()
+FlushManager& FlushManager::GetInstance()
 {
     static FlushManager flushManager;
     return flushManager;
 }
 
-FlushManager::~FlushManager()
-{
-    DestroyAll();
-}
+FlushManager::~FlushManager() { DestroyAll(); }
 
 HcclResult FlushManager::initFlushHandle(IpAddress ip, u32 devPhyId)
 {
@@ -75,9 +72,9 @@ HcclResult FlushManager::Flush()
     for (auto item : flushHandleMap_) {
         auto flushHandlePtr = item.second;
 
-        ibv_qp *loopbackqp0 = static_cast<ibv_qp *>(flushHandlePtr->loopBackQpParam.ibvQp0);
+        ibv_qp* loopbackqp0 = static_cast<ibv_qp*>(flushHandlePtr->loopBackQpParam.ibvQp0);
         CHK_PTR_NULL(loopbackqp0);
-        ibv_cq *cq = loopbackqp0->send_cq;
+        ibv_cq* cq = loopbackqp0->send_cq;
         CHK_PTR_NULL(cq);
         HCCL_DEBUG("[Flush] Successfully retrieved QP and CQ handles: qp=%p, cq=%p", loopbackqp0, cq);
 
@@ -93,8 +90,8 @@ HcclResult FlushManager::Flush()
         HCCL_DEBUG("[FlushParamPrepare] Posting RDMA_READ operation... ");
 
         // 执行读和轮训操作
-        HcclResult loopQpRet = ExecuteRdmaRead(loopbackqp0, cq, swr,
-            Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut());
+        HcclResult loopQpRet
+            = ExecuteRdmaRead(loopbackqp0, cq, swr, Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut());
         if (loopQpRet != HCCL_SUCCESS) {
             HCCL_INFO("[Flush] RDMA_READ operation failed.");
             return loopQpRet;
@@ -104,7 +101,7 @@ HcclResult FlushManager::Flush()
     return HCCL_SUCCESS;
 }
 
-HcclResult FlushManager::FlushParamPrepare(std::shared_ptr<FlushHandle> flushHandlePtr, ibv_send_wr *swr) const
+HcclResult FlushManager::FlushParamPrepare(std::shared_ptr<FlushHandle> flushHandlePtr, ibv_send_wr* swr) const
 {
     CHK_PTR_NULL(swr);
     swr->wr_id = 0;
@@ -121,9 +118,9 @@ HcclResult FlushManager::FlushParamPrepare(std::shared_ptr<FlushHandle> flushHan
     return HCCL_SUCCESS;
 }
 
-HcclResult FlushManager::ExecuteRdmaRead(ibv_qp *loopbackqp0, ibv_cq *cq, ibv_send_wr &swr, int timeoutSec) const
+HcclResult FlushManager::ExecuteRdmaRead(ibv_qp* loopbackqp0, ibv_cq* cq, ibv_send_wr& swr, int timeoutSec) const
 {
-    ibv_send_wr *send_wr = nullptr;
+    ibv_send_wr* send_wr = nullptr;
     int ret = FlushPostSend(loopbackqp0, &swr, &send_wr);
     if (ret != 0) {
         HCCL_ERROR("[ExecuteRdmaRead] ibv_post_send failed: %s", strerror(errno));
@@ -142,8 +139,9 @@ HcclResult FlushManager::ExecuteRdmaRead(ibv_qp *loopbackqp0, ibv_cq *cq, ibv_se
 
         // 超时判断
         if (elapsedSec >= timeoutSec) {
-            HCCL_ERROR("[ExecuteRdmaRead] Failed: Wait for completion queue timeout (elapsed=%d s, max=%d s)",
-                        elapsedSec, timeoutSec);
+            HCCL_ERROR(
+                "[ExecuteRdmaRead] Failed: Wait for completion queue timeout (elapsed=%d s, max=%d s)", elapsedSec,
+                timeoutSec);
             return HCCL_E_TIMEOUT;
         }
 
@@ -156,9 +154,10 @@ HcclResult FlushManager::ExecuteRdmaRead(ibv_qp *loopbackqp0, ibv_cq *cq, ibv_se
         // 成功收到完成事件
         if (numCqes > 0) {
             if (wc.status == IBV_WC_SUCCESS) {
-                HCCL_DEBUG("[ExecuteRdmaRead] RDMA_READ completed successfully. "
-                           "wr_id=%llu, status=%d",
-                           wc.wr_id, wc.status);
+                HCCL_DEBUG(
+                    "[ExecuteRdmaRead] RDMA_READ completed successfully. "
+                    "wr_id=%llu, status=%d",
+                    wc.wr_id, wc.status);
                 return HCCL_SUCCESS;
             } else {
                 HCCL_ERROR("[ExecuteRdmaRead] RDMA_READ operation failed: status=%d, wr_id=%llu", wc.status, wc.wr_id);
@@ -168,4 +167,4 @@ HcclResult FlushManager::ExecuteRdmaRead(ibv_qp *loopbackqp0, ibv_cq *cq, ibv_se
     }
 }
 
-}  // namespace Hccl
+} // namespace Hccl

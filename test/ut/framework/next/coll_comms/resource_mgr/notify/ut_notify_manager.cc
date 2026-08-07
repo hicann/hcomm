@@ -74,14 +74,14 @@ TEST_F(NotifyManagerTest, Constructor_Normal)
 TEST_F(NotifyManagerTest, GetNotify_OutOfRange)
 {
     NotifyManager mgr("test_comm", (aclrtBinHandle)0x1, ManagerCallbacks{});
-    LocalNotify *notify = mgr.GetNotify(0);
+    LocalNotify* notify = mgr.GetNotify(0);
     EXPECT_EQ(notify, nullptr);
 }
 
 TEST_F(NotifyManagerTest, GetNotify_InvalidIndex)
 {
     NotifyManager mgr("test_comm", (aclrtBinHandle)0x1, ManagerCallbacks{});
-    LocalNotify *notify = mgr.GetNotify(100);
+    LocalNotify* notify = mgr.GetNotify(100);
     EXPECT_EQ(notify, nullptr);
 }
 
@@ -93,15 +93,15 @@ protected:
     std::string BuildBinaryNotifys(NotifyLoadType loadType, size_t notifyNum)
     {
         std::ostringstream oss;
-        oss.write(reinterpret_cast<const char *>(&loadType), sizeof(loadType));
-        oss.write(reinterpret_cast<const char *>(&notifyNum), sizeof(notifyNum));
+        oss.write(reinterpret_cast<const char*>(&loadType), sizeof(loadType));
+        oss.write(reinterpret_cast<const char*>(&notifyNum), sizeof(notifyNum));
         for (size_t i = 0; i < notifyNum; i++) {
             HcclSignalInfo info;
             memset(&info, 0, sizeof(info));
             info.resId = static_cast<u32>(i);
             info.tsId = static_cast<s32>(i);
             info.devId = static_cast<u32>(i);
-            oss.write(reinterpret_cast<const char *>(&info), sizeof(info));
+            oss.write(reinterpret_cast<const char*>(&info), sizeof(info));
         }
         return oss.str();
     }
@@ -121,7 +121,7 @@ TEST_F(ParseBinNotifysTest, GetBinNotifys_EmptyList)
     NotifyLoadType loadType;
     size_t notifyNum;
     std::istringstream iss(result);
-    iss.read(reinterpret_cast<char *>(&loadType), sizeof(loadType));
-    iss.read(reinterpret_cast<char *>(&notifyNum), sizeof(notifyNum));
+    iss.read(reinterpret_cast<char*>(&loadType), sizeof(loadType));
+    iss.read(reinterpret_cast<char*>(&notifyNum), sizeof(notifyNum));
     EXPECT_EQ(notifyNum, 0u);
 }

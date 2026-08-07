@@ -17,7 +17,8 @@
 extern "C" {
 #endif
 
-HcclResult ProcessHcclResPackReq(const HcclChannelDesc &channelDesc, HcclChannelDesc &channelDescFinal, hccl::hcclComm *hcclComm);
+HcclResult
+ProcessHcclResPackReq(const HcclChannelDesc& channelDesc, HcclChannelDesc& channelDescFinal, hccl::hcclComm* hcclComm);
 HcclResult HcclGroupStart();
 HcclResult HcclGroupEnd();
 

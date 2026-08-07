@@ -27,15 +27,9 @@ using namespace Hccl;
 
 class TaskServiceTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "TaskServiceTest SetUP" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "TaskServiceTest SetUP" << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "TaskServiceTest TearDown" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "TaskServiceTest TearDown" << std::endl; }
 
     virtual void SetUp()
     {
@@ -43,10 +37,7 @@ protected:
         g_taskExpMemMap.clear();
     }
 
-    virtual void TearDown()
-    {
-        g_taskExpMemMap.clear();
-    }
+    virtual void TearDown() { g_taskExpMemMap.clear(); }
 
 public:
     static int32_t g_callbackResult;
@@ -56,35 +47,35 @@ public:
 int32_t TaskServiceTest::g_callbackResult = 0;
 
 // ===== Helper: set up TASK_OK payload in shared memory =====
-static void SetupOkTask(uint8_t *base, const std::string &taskType,
-                         uint32_t msgId, uint32_t dataSize, uint32_t timeout = 0)
+static void
+SetupOkTask(uint8_t* base, const std::string& taskType, uint32_t msgId, uint32_t dataSize, uint32_t timeout = 0)
 {
-    char *taskTypePtr = reinterpret_cast<char *>(base + 1);
-    memset(static_cast<void *>(taskTypePtr), 0, 256);
+    char* taskTypePtr = reinterpret_cast<char*>(base + 1);
+    memset(static_cast<void*>(taskTypePtr), 0, 256);
     size_t copyLen = taskType.size();
     if (copyLen > 255) {
         copyLen = 255;
     }
-    memcpy(static_cast<void *>(taskTypePtr), taskType.c_str(), copyLen);
+    memcpy(static_cast<void*>(taskTypePtr), taskType.c_str(), copyLen);
     taskTypePtr[copyLen] = '\0';
-    uint32_t *msgIdPtr = reinterpret_cast<uint32_t *>(base + 1 + 256);
+    uint32_t* msgIdPtr = reinterpret_cast<uint32_t*>(base + 1 + 256);
     *msgIdPtr = msgId;
-    uint32_t *timeoutPtr = reinterpret_cast<uint32_t *>(base + 1 + 256 + sizeof(uint32_t));
+    uint32_t* timeoutPtr = reinterpret_cast<uint32_t*>(base + 1 + 256 + sizeof(uint32_t));
     *timeoutPtr = timeout;
-    size_t *dataSizePtr = reinterpret_cast<size_t *>(base + 1 + 256 + sizeof(uint32_t) + sizeof(uint32_t));
+    size_t* dataSizePtr = reinterpret_cast<size_t*>(base + 1 + 256 + sizeof(uint32_t) + sizeof(uint32_t));
     *dataSizePtr = static_cast<size_t>(dataSize);
     base[0] = 1; // TASK_OK
 }
 
 // ===== Helper: wait for TaskRun to enter the while-loop =====
 // deviceMem 初始化为0，模拟 AllocAndRegKFCWorkSpace 在申请注册时已置零
-static void WaitForTaskRunLoop(uint8_t *flagPtr)
+static void WaitForTaskRunLoop(uint8_t* flagPtr)
 {
     auto start = std::chrono::steady_clock::now();
     while (*flagPtr != 0) { // TASK_UNSET
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - start).count();
+        auto elapsed
+            = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
         ASSERT_LT(elapsed, 5000) << "Timeout waiting for TaskRun to enter loop";
     }
 }
@@ -104,9 +95,11 @@ static int32_t FailingCallback(uint64_t /*addr*/, int32_t /*size*/)
 
 // ==================== Existing tests (backward compat) ====================
 
-TEST_F(TaskServiceTest, Ut_TaskRun_When_DataSizeIsZero_Expect_ReturnError) {
+TEST_F(TaskServiceTest, Ut_TaskRun_When_DataSizeIsZero_Expect_ReturnError)
+{
     // shmemSize_ < controlSize => hostSize_ = 0 => TaskRun returns HCCL_E_INTERNAL
-    constexpr int32_t controlSize = sizeof(uint8_t) + sizeof(char) * 256 + sizeof(uint32_t) + sizeof(uint32_t) + sizeof(size_t);
+    constexpr int32_t controlSize
+        = sizeof(uint8_t) + sizeof(char) * 256 + sizeof(uint32_t) + sizeof(uint32_t) + sizeof(size_t);
     constexpr int32_t deviceMemSize = controlSize * 1; // less than controlSize * 2
     constexpr int32_t hostMemSize = 1024;
 
@@ -119,18 +112,19 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_DataSizeIsZero_Expect_ReturnError) {
     EXPECT_EQ(ret, HCCL_E_INTERNAL);
 }
 
-TEST_F(TaskServiceTest, Ut_TaskRun_When_DataSizeExceedsHostMemSize_Expect_ReturnError) {
+TEST_F(TaskServiceTest, Ut_TaskRun_When_DataSizeExceedsHostMemSize_Expect_ReturnError)
+{
     // 测试 dataSize_ > hostMemSize_ 的情况
     constexpr int32_t controlSize = sizeof(uint8_t) + sizeof(char) * 256 + sizeof(uint32_t) + sizeof(uint32_t);
     constexpr int32_t deviceMemSize = (controlSize + 2048) * 2; // dataSize_ = 2048
-    constexpr int32_t hostMemSize = 1024; // hostMemSize_ < dataSize_
-    
+    constexpr int32_t hostMemSize = 1024;                       // hostMemSize_ < dataSize_
+
     // 分配内存
-    void *deviceMem = reinterpret_cast<void *>(0x1234);
-    void *hostMem = reinterpret_cast<void *>(0x4321);
-    
+    void* deviceMem = reinterpret_cast<void*>(0x1234);
+    void* hostMem = reinterpret_cast<void*>(0x4321);
+
     TaskService taskService(deviceMem, deviceMemSize, hostMem, hostMemSize, commId, devId);
-    
+
     // 调用TaskRun,应该返回HCCL_E_INTERNAL
     HcclResult ret = taskService.TaskRun();
     EXPECT_EQ(ret, HCCL_E_INTERNAL);
@@ -187,7 +181,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TerminateFlag_Expect_Success)
 
     WaitForTaskRunLoop(deviceMem.data());
 
-    uint8_t *flagPtr = deviceMem.data();
+    uint8_t* flagPtr = deviceMem.data();
     *flagPtr = 2; // TASK_TERMINATE
 
     taskThread.join();
@@ -212,7 +206,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TerminateResponseFlag_Expect_Success)
 
     WaitForTaskRunLoop(deviceMem.data());
 
-    uint8_t *flagPtr = deviceMem.data();
+    uint8_t* flagPtr = deviceMem.data();
     *flagPtr = 3; // TASK_TERMINATE_RESPONSE
 
     taskThread.join();
@@ -236,7 +230,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_InvalidFlag_Expect_Success)
 
     WaitForTaskRunLoop(deviceMem.data());
 
-    uint8_t *flagPtr = deviceMem.data();
+    uint8_t* flagPtr = deviceMem.data();
     *flagPtr = 255; // unknown / invalid flag
 
     taskThread.join();
@@ -334,7 +328,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkFlow_Expect_Success)
     std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
-    uint8_t *dpu2npuMem = deviceMem.data() + deviceMemSize / 2; // second half
+    uint8_t* dpu2npuMem = deviceMem.data() + deviceMemSize / 2; // second half
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize, commId, devId);
     taskService.TaskRegister("myTask", TrackingCallback);
@@ -360,8 +354,8 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkFlow_Expect_Success)
     auto start = std::chrono::steady_clock::now();
     while (TaskServiceTest::g_callbackResult != 42) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::steady_clock::now() - start).count();
+        auto elapsed
+            = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
         ASSERT_LT(elapsed, 5000) << "Timeout waiting for callback";
     }
 
@@ -380,26 +374,26 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkFlow_Expect_Success)
     EXPECT_EQ(dpu2npuMem[0], 1); // dpu2npu flag should be 1 (sent by SynchronizeControlInfo)
 
     // Verify dpu2npu task type matches
-    char *dpuTaskType = reinterpret_cast<char *>(dpu2npuMem + 1);
+    char* dpuTaskType = reinterpret_cast<char*>(dpu2npuMem + 1);
     EXPECT_STREQ(dpuTaskType, taskType.c_str());
 
     // Verify dpu2npu msgId matches
-    uint32_t *dpuMsgId = reinterpret_cast<uint32_t *>(dpu2npuMem + 1 + 256);
+    uint32_t* dpuMsgId = reinterpret_cast<uint32_t*>(dpu2npuMem + 1 + 256);
     EXPECT_EQ(*dpuMsgId, msgId);
 }
 
 // 测试 TaskProfRegister - 正常注册
 TEST_F(TaskServiceTest, Ut_TaskProfRegister_When_Normal_Expect_ReturnSuccess)
 {
-    void *deviceMem = reinterpret_cast<void *>(0x1234);
-    void *hostMem = reinterpret_cast<void *>(0x4321);
+    void* deviceMem = reinterpret_cast<void*>(0x1234);
+    void* hostMem = reinterpret_cast<void*>(0x4321);
     TaskService taskService(deviceMem, 4096, hostMem, 1024, commId, devId);
-    
+
     // 创建 prof 回调
     Hccl::ProfCallbackTemplate profCallback = [](const Hccl::TaskParam& taskParam, uint64_t handle) -> HcclResult {
         return HCCL_SUCCESS;
     };
-    
+
     HcclResult ret = taskService.TaskProfRegister(profCallback);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -407,19 +401,20 @@ TEST_F(TaskServiceTest, Ut_TaskProfRegister_When_Normal_Expect_ReturnSuccess)
 // 测试 TaskProfRegister - 注册后回调可用
 TEST_F(TaskServiceTest, Ut_TaskProfRegister_When_Registered_Expect_CallbackSet)
 {
-    void *deviceMem = reinterpret_cast<void *>(0x1234);
-    void *hostMem = reinterpret_cast<void *>(0x4321);
+    void* deviceMem = reinterpret_cast<void*>(0x1234);
+    void* hostMem = reinterpret_cast<void*>(0x4321);
     TaskService taskService(deviceMem, 4096 * 2, hostMem, 1024, commId, devId);
-    
+
     bool callbackInvoked = false;
-    Hccl::ProfCallbackTemplate profCallback = [&callbackInvoked](const Hccl::TaskParam& taskParam, uint64_t handle) -> HcclResult {
+    Hccl::ProfCallbackTemplate profCallback
+        = [&callbackInvoked](const Hccl::TaskParam& taskParam, uint64_t handle) -> HcclResult {
         callbackInvoked = true;
         return HCCL_SUCCESS;
     };
-    
+
     HcclResult ret = taskService.TaskProfRegister(profCallback);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    
+
     // 验证注册成功
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -427,20 +422,20 @@ TEST_F(TaskServiceTest, Ut_TaskProfRegister_When_Registered_Expect_CallbackSet)
 // 测试 TaskProfRegister - 多次注册覆盖
 TEST_F(TaskServiceTest, Ut_TaskProfRegister_When_MultipleRegistrations_Expect_LastOneTakesEffect)
 {
-    void *deviceMem = reinterpret_cast<void *>(0x1234);
-    void *hostMem = reinterpret_cast<void *>(0x4321);
+    void* deviceMem = reinterpret_cast<void*>(0x1234);
+    void* hostMem = reinterpret_cast<void*>(0x4321);
     TaskService taskService(deviceMem, 4096, hostMem, 1024, commId, devId);
-    
+
     // 第一次注册
     Hccl::ProfCallbackTemplate profCallback1 = [](const Hccl::TaskParam& taskParam, uint64_t handle) -> HcclResult {
         return HCCL_SUCCESS;
     };
     HcclResult ret1 = taskService.TaskProfRegister(profCallback1);
     EXPECT_EQ(ret1, HCCL_SUCCESS);
-    
+
     // 第二次注册(覆盖)
     Hccl::ProfCallbackTemplate profCallback2 = [](const Hccl::TaskParam& taskParam, uint64_t handle) -> HcclResult {
-        return HCCL_E_INTERNAL;  // 不同的返回值
+        return HCCL_E_INTERNAL; // 不同的返回值
     };
     HcclResult ret2 = taskService.TaskProfRegister(profCallback2);
     EXPECT_EQ(ret2, HCCL_SUCCESS);
@@ -449,15 +444,15 @@ TEST_F(TaskServiceTest, Ut_TaskProfRegister_When_MultipleRegistrations_Expect_La
 // 测试 TaskProfRegister - 注册空操作回调
 TEST_F(TaskServiceTest, Ut_TaskProfRegister_When_EmptyCallback_Expect_ReturnSuccess)
 {
-    void *deviceMem = reinterpret_cast<void *>(0x1234);
-    void *hostMem = reinterpret_cast<void *>(0x4321);
+    void* deviceMem = reinterpret_cast<void*>(0x1234);
+    void* hostMem = reinterpret_cast<void*>(0x4321);
     TaskService taskService(deviceMem, 4096, hostMem, 1024, commId, devId);
-    
+
     // 注册一个空操作的回调
     Hccl::ProfCallbackTemplate profCallback = [](const Hccl::TaskParam& taskParam, uint64_t handle) -> HcclResult {
         return HCCL_SUCCESS;
     };
-    
+
     HcclResult ret = taskService.TaskProfRegister(profCallback);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -621,12 +616,12 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkCallbackFails_Expect_Taskexception
 TEST_F(TaskServiceTest, Ut_RunDpuRpcSrvLaunch_When_TaskExpMemNull_Expect_ReturnPara)
 {
     struct TestDpuKernelLaunchParam {
-        u64      memorySize;
-        void    *deviceMem;
-        void    *hostMem;
+        u64 memorySize;
+        void* deviceMem;
+        void* hostMem;
         uint32_t deviceId;
         std::string commId;
-        void    *taskExpMem;
+        void* taskExpMem;
     };
 
     std::vector<uint8_t> deviceMemBuf(1024);
@@ -641,6 +636,6 @@ TEST_F(TaskServiceTest, Ut_RunDpuRpcSrvLaunch_When_TaskExpMemNull_Expect_ReturnP
     params.commId = testCommId;
     params.taskExpMem = nullptr;
 
-    uint32_t ret = RunDpuRpcSrvLaunch(reinterpret_cast<uint64_t>(reinterpret_cast<void *>(&params)));
+    uint32_t ret = RunDpuRpcSrvLaunch(reinterpret_cast<uint64_t>(reinterpret_cast<void*>(&params)));
     EXPECT_EQ(ret, HCCL_E_PARA);
 }

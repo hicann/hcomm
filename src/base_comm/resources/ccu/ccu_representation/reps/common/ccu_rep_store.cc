@@ -15,31 +15,32 @@
 namespace hcomm {
 namespace CcuRep {
 
-using namespace Hccl;
+    using namespace Hccl;
 
-CcuRepStore::CcuRepStore(CcuInsGeneratorBase* insGenPtr, const Variable &var, uint64_t addr, uint32_t num) :
-    insGeneratorPtr_(insGenPtr), var(var), addr(addr), num(num)
-{
-    type       = CcuRepType::STORE;
-    instrCount = insGeneratorPtr_->GetInstrCount(type);
-}
+    CcuRepStore::CcuRepStore(CcuInsGeneratorBase* insGenPtr, const Variable& var, uint64_t addr, uint32_t num)
+        : insGeneratorPtr_(insGenPtr),
+          var(var),
+          addr(addr),
+          num(num)
+    {
+        type = CcuRepType::STORE;
+        instrCount = insGeneratorPtr_->GetInstrCount(type);
+    }
 
-bool CcuRepStore::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId    = instrId;
-    translated       = true;
-    CHK_RET_THROW(Hccl::CcuApiException,
-        Hccl::StringFormat("[CcuRepStore][%s] failed to translate repStore for instrId[%u] ", __func__, instrId),
+    bool CcuRepStore::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
+        CHK_RET_THROW(
+            Hccl::CcuApiException,
+            Hccl::StringFormat("[CcuRepStore][%s] failed to translate repStore for instrId[%u] ", __func__, instrId),
             insGeneratorPtr_->CcuRepStoreTranslate(ccuKernel, instr, instrId, this, dep));
-    instrId += instrCount;
+        instrId += instrCount;
 
-    return translated;
-}
+        return translated;
+    }
 
-std::string CcuRepStore::Describe()
-{
-    return Hccl::StringFormat("Store([%u], [%llu], [%u])", var.Id(), addr, num);
-}
+    std::string CcuRepStore::Describe() { return Hccl::StringFormat("Store([%u], [%llu], [%u])", var.Id(), addr, num); }
 
 }; // namespace CcuRep
 }; // namespace hcomm

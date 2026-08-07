@@ -31,71 +31,74 @@ class CommunicatorImpl;
 class SocketManager {
 public:
     SocketManager() = default;
-    SocketManager(const CommunicatorImpl &communicator, u32 localRank, u32 devicePhyId, u32 deviceLogicId,
-                  std::function<shared_ptr<Socket>(IpAddress &localIpAddress, IpAddress &remoteIpAddress,
-                                                   u32 listenPort, SocketHandle socketHandle, const std::string &tag,
-                                                   SocketRole socketRole, NicType nicType)>
-                      socketProducer
-                  = nullptr);
+    SocketManager(
+        const CommunicatorImpl& communicator, u32 localRank, u32 devicePhyId, u32 deviceLogicId,
+        std::function<shared_ptr<Socket>(
+            IpAddress& localIpAddress, IpAddress& remoteIpAddress, u32 listenPort, SocketHandle socketHandle,
+            const std::string& tag, SocketRole socketRole, NicType nicType)>
+            socketProducer
+        = nullptr);
 
-    SocketManager(u32 localRank, u32 devicePhyId, u32 deviceLogicId, const std::string &socketTag);
+    SocketManager(u32 localRank, u32 devicePhyId, u32 deviceLogicId, const std::string& socketTag);
 
-    void SetDeviceServerListenPortMap(const std::unordered_map<u32, std::unordered_map<IpAddress, u32>> &rankListenPortMap);
+    void
+    SetDeviceServerListenPortMap(const std::unordered_map<u32, std::unordered_map<IpAddress, u32>>& rankListenPortMap);
 
-    std::unordered_map<u32, std::unordered_map<IpAddress, u32>> GetSubCommDeviceServerListenPortMap(const std::vector<u32> &rankIds) const;
+    std::unordered_map<u32, std::unordered_map<IpAddress, u32>>
+    GetSubCommDeviceServerListenPortMap(const std::vector<u32>& rankIds) const;
 
-    u32 GetDeviceListenPort(const u32 &rankId, const IpAddress &ipAddress);
+    u32 GetDeviceListenPort(const u32& rankId, const IpAddress& ipAddress);
 
-    void BatchCreateSockets(const vector<LinkData> &links);
-    void ServerListen(const SocketConfig &socketConfig);
-    void ConnectSockets(const SocketConfig &socketConfig);
+    void BatchCreateSockets(const vector<LinkData>& links);
+    void ServerListen(const SocketConfig& socketConfig);
+    void ConnectSockets(const SocketConfig& socketConfig);
 
-    void BatchCreateSockets(const SocketConfig &socketConfig);
+    void BatchCreateSockets(const SocketConfig& socketConfig);
 
-    void ServerInit(PortData &localPort);
+    void ServerInit(PortData& localPort);
 
-    static void ServerInitAll(NewRankInfo &rankInfo);
+    static void ServerInitAll(NewRankInfo& rankInfo);
 
-    bool ServerDeInit(PortData &localPort) const;
+    bool ServerDeInit(PortData& localPort) const;
 
-    Socket *CreateConnectedSocket(const SocketConfig &socketConfig);
+    Socket* CreateConnectedSocket(const SocketConfig& socketConfig);
 
-    Socket *GetConnectedSocket(const SocketConfig &socketConfig) const;
+    Socket* GetConnectedSocket(const SocketConfig& socketConfig) const;
 
-    bool CheckServerPortListening(const PortData &portData, const uint32_t port) const;
+    bool CheckServerPortListening(const PortData& portData, const uint32_t port) const;
 
     void DestroyAll();
 
-    void AddWhiteList(PortData &localPort, vector<RaSocketWhitelist> &wlistInfoVec) const;
+    void AddWhiteList(PortData& localPort, vector<RaSocketWhitelist>& wlistInfoVec) const;
 
-    bool DelWhiteList(PortData &localPort, vector<RaSocketWhitelist> &wlistInfoVec) const;
+    bool DelWhiteList(PortData& localPort, vector<RaSocketWhitelist>& wlistInfoVec) const;
 
     ~SocketManager();
 
-    SocketManager(const SocketManager &socketManager) = delete;
+    SocketManager(const SocketManager& socketManager) = delete;
 
-    SocketManager &operator=(const SocketManager &socketManager) = delete;
+    SocketManager& operator=(const SocketManager& socketManager) = delete;
 
 private:
-    void PrepareLinkAndServerInit(const SocketConfig &socketConfig);
-    void BatchServerInit(const vector<LinkData> &links);
-    void BatchAddWhiteList(const vector<LinkData> &links);
-    void BatchCreateConnectedSockets(const vector<LinkData> &links);
-    void AddWhiteList(const SocketConfig &socketConfig);
-    const CommunicatorImpl *comm;
+    void PrepareLinkAndServerInit(const SocketConfig& socketConfig);
+    void BatchServerInit(const vector<LinkData>& links);
+    void BatchAddWhiteList(const vector<LinkData>& links);
+    void BatchCreateConnectedSockets(const vector<LinkData>& links);
+    void AddWhiteList(const SocketConfig& socketConfig);
+    const CommunicatorImpl* comm;
     static std::unordered_map<PortData, shared_ptr<Socket>>& GetServerSocketMap();
-    u32               localRank;
-    u32               devicePhyId;
-    u32               deviceLogicId_;
+    u32 localRank;
+    u32 devicePhyId;
+    u32 deviceLogicId_;
     std::unordered_map<u32, std::unordered_map<IpAddress, u32>> rankListenPortMap_{};
-    std::function<shared_ptr<Socket>(IpAddress &localIpAddress, IpAddress &remoteIpAddress, u32 listenPort,
-                                     SocketHandle socketHandle, const std::string &tag, SocketRole socketRole,
-                                     NicType nicType)>
+    std::function<shared_ptr<Socket>(
+        IpAddress& localIpAddress, IpAddress& remoteIpAddress, u32 listenPort, SocketHandle socketHandle,
+        const std::string& tag, SocketRole socketRole, NicType nicType)>
         socketProducer
-        = [](IpAddress &localIpAddress, IpAddress &remoteIpAddress, u32 listenPort, SocketHandle socketHandle,
-             const std::string &tag, SocketRole socketRole, NicType nicType) -> shared_ptr<Socket> {
-        auto tmpSocket = std::make_shared<Socket>(socketHandle, localIpAddress, listenPort, remoteIpAddress, tag,
-                                                  socketRole, nicType);
+        = [](IpAddress& localIpAddress, IpAddress& remoteIpAddress, u32 listenPort, SocketHandle socketHandle,
+             const std::string& tag, SocketRole socketRole, NicType nicType) -> shared_ptr<Socket> {
+        auto tmpSocket = std::make_shared<Socket>(
+            socketHandle, localIpAddress, listenPort, remoteIpAddress, tag, socketRole, nicType);
         HCCL_INFO("create socket with role %u", static_cast<u32>(socketRole));
         return tmpSocket;
     };
@@ -103,8 +106,8 @@ private:
     std::unordered_map<SocketConfig, shared_ptr<Socket>> connectedSocketMap;
     std::unordered_map<PortData, vector<RaSocketWhitelist>> socketWlistMap{};
 
-    Socket *GetServerListenSocket(const PortData &localPort) const;
-    std::set<LinkData>      availableLinks;
+    Socket* GetServerListenSocket(const PortData& localPort) const;
+    std::set<LinkData> availableLinks;
 
     std::string socketTag_{};
     static std::mutex socketLock;

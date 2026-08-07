@@ -25,10 +25,7 @@ using namespace checker;
 
 class AllReduceMeshOpbasePipelineExecutorSingleTests : public testing::Test {
 public:
-    static void SetUpTestCase()
-    {
-        std::cout << "AllReduceMeshOpbasePipelineExecutor_single set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "AllReduceMeshOpbasePipelineExecutor_single set up." << std::endl; }
 
     static void TearDownTestCase()
     {
@@ -38,7 +35,8 @@ public:
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -51,12 +49,11 @@ public:
     }
 };
 
-std::vector<CheckerReduceOp> reduceopList = {
-    {CheckerReduceOp::REDUCE_SUM},
-    {CheckerReduceOp::REDUCE_PROD},
-    {CheckerReduceOp::REDUCE_MAX},
-    {CheckerReduceOp::REDUCE_MIN}
-};
+std::vector<CheckerReduceOp> reduceopList
+    = {{CheckerReduceOp::REDUCE_SUM},
+       {CheckerReduceOp::REDUCE_PROD},
+       {CheckerReduceOp::REDUCE_MAX},
+       {CheckerReduceOp::REDUCE_MIN}};
 
 TEST_F(AllReduceMeshOpbasePipelineExecutorSingleTests, all_reduce_algo_server_test)
 {
@@ -73,7 +70,7 @@ TEST_F(AllReduceMeshOpbasePipelineExecutorSingleTests, all_reduce_algo_server_te
     checkerOpParam.DataDes.dataType = CheckerDataType::DATA_TYPE_INT32;
     checkerOpParam.algName = "AllReduceMeshOpbasePipelineExecutor";
     HcclResult ret;
-    for (auto &reduceop : reduceopList){
+    for (auto& reduceop : reduceopList) {
         Checker checker;
         checkerOpParam.reduceType = reduceop;
         checker.CloseRankMemCheck();

@@ -25,24 +25,12 @@ extern "C" {
 
 using namespace std;
 
-class RS : public testing::Test
-{
+class RS : public testing::Test {
 protected:
-   static void SetUpTestCase()
-    {
-        std::cout << "\033[36m--RoCE RS SetUP--\033[0m" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "\033[36m--RoCE RS TearDown--\033[0m" << std::endl;
-    }
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-	 GlobalMockObject::verify();
-    }
+    static void SetUpTestCase() { std::cout << "\033[36m--RoCE RS SetUP--\033[0m" << std::endl; }
+    static void TearDownTestCase() { std::cout << "\033[36m--RoCE RS TearDown--\033[0m" << std::endl; }
+    virtual void SetUp() {}
+    virtual void TearDown() { GlobalMockObject::verify(); }
 };
 
 TEST_M(RS, TcRsSocketListen);

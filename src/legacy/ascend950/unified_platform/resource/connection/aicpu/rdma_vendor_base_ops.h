@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #ifndef RDMA_BASE_VENDOR_OPS_H
 #define RDMA_BASE_VENDOR_OPS_H
 
@@ -21,10 +20,10 @@
 #include "exception_util.h"
 #include "internal_exception.h"
 #include "log.h"
-#include "rma_buf_slice_lite.h"      // RmaBufSliceLite
-#include "rmt_rma_buf_slice_lite.h"  // RmtRmaBufSliceLite
-#include "data_type.h"               // DataType
-#include "reduce_op.h"               // ReduceOp
+#include "rma_buf_slice_lite.h"     // RmaBufSliceLite
+#include "rmt_rma_buf_slice_lite.h" // RmtRmaBufSliceLite
+#include "data_type.h"              // DataType
+#include "reduce_op.h"              // ReduceOp
 
 namespace Hccl {
 
@@ -60,42 +59,40 @@ constexpr uint32_t BITS_3BYTE = 24;
 constexpr uint32_t BITS_5BYTE = 40;
 constexpr uint32_t BITS_7BYTE = 56;
 
-inline uint16_t Htons16(uint16_t x) {
-    return (((x & 0xffULL) << BITS_1BYTE) | ((x & 0xff00ULL) >> BITS_1BYTE));
+inline uint16_t Htons16(uint16_t x) { return (((x & 0xffULL) << BITS_1BYTE) | ((x & 0xff00ULL) >> BITS_1BYTE)); }
+
+inline uint32_t Htonl32(uint32_t x)
+{
+    return ((x & 0x000000ffU) << BITS_3BYTE) | ((x & 0x0000ff00U) << BITS_1BYTE) | ((x & 0x00ff0000U) >> BITS_1BYTE)
+           | ((x & 0xff000000U) >> BITS_3BYTE);
 }
 
-inline uint32_t Htonl32(uint32_t x) {
-    return  ((x & 0x000000ffU) << BITS_3BYTE) | ((x & 0x0000ff00U) << BITS_1BYTE)  |
-            ((x & 0x00ff0000U) >> BITS_1BYTE)  | ((x & 0xff000000U) >> BITS_3BYTE);
-}
-
-inline uint64_t Htonll64(uint64_t x) {
-    return  ((x & 0x00000000000000ffULL) << BITS_7BYTE) |
-            ((x & 0x000000000000ff00ULL) << BITS_5BYTE) |
-            ((x & 0x0000000000ff0000ULL) << BITS_3BYTE) |
-            ((x & 0x00000000ff000000ULL) << BITS_1BYTE)  |
-            ((x & 0x000000ff00000000ULL) >> BITS_1BYTE)  |
-            ((x & 0x0000ff0000000000ULL) >> BITS_3BYTE) |
-            ((x & 0x00ff000000000000ULL) >> BITS_5BYTE) |
-            ((x & 0xff00000000000000ULL) >> BITS_7BYTE);
+inline uint64_t Htonll64(uint64_t x)
+{
+    return ((x & 0x00000000000000ffULL) << BITS_7BYTE) | ((x & 0x000000000000ff00ULL) << BITS_5BYTE)
+           | ((x & 0x0000000000ff0000ULL) << BITS_3BYTE) | ((x & 0x00000000ff000000ULL) << BITS_1BYTE)
+           | ((x & 0x000000ff00000000ULL) >> BITS_1BYTE) | ((x & 0x0000ff0000000000ULL) >> BITS_3BYTE)
+           | ((x & 0x00ff000000000000ULL) >> BITS_5BYTE) | ((x & 0xff00000000000000ULL) >> BITS_7BYTE);
 }
 
 enum class CqPollStatus : int32_t {
-    SUCCESS  = 0,   /* indicate poll once cqe successfully; */
-    EMPTY    = -1,  /* indicate the cq is empty when poll cq; */
-    ERROR    = -2,  /* indicate the error when poll cq; */
-    REROLL   = -3,  /* 返回到repoll标识 */
-    CONTINUE = 1,   /* indicate continue the process */
+    SUCCESS = 0,  /* indicate poll once cqe successfully; */
+    EMPTY = -1,   /* indicate the cq is empty when poll cq; */
+    ERROR = -2,   /* indicate the error when poll cq; */
+    REROLL = -3,  /* 返回到repoll标识 */
+    CONTINUE = 1, /* indicate continue the process */
 };
 
 class RdmaBaseOps {
 public:
-    RdmaBaseOps(RdmaSqContextLite *sqContext, RdmaCqContextLite *cqContext)
-        : sqContext_(sqContext), cqContext_(cqContext) {}
+    RdmaBaseOps(RdmaSqContextLite* sqContext, RdmaCqContextLite* cqContext)
+        : sqContext_(sqContext),
+          cqContext_(cqContext)
+    {}
     virtual ~RdmaBaseOps() = default;
 
     // 上层接口，不关心具体vendor类型
-    HcclResult Read(const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg)
+    HcclResult Read(const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg)
     {
         // Read需要占用1个wr位置, 确定Sq存在空位
         constexpr int ReadWqeCount = 1;
@@ -110,7 +107,7 @@ public:
         return HCCL_SUCCESS;
     }
 
-    HcclResult Write(const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg)
+    HcclResult Write(const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg)
     {
         // Write需要占用1个wr位置, 确定Sq存在空位
         constexpr int WriteWqeCount = 1;
@@ -125,7 +122,9 @@ public:
         return HCCL_SUCCESS;
     }
 
-    HcclResult WriteReduce(const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg, DataType dataType, ReduceOp reduceOp)
+    HcclResult WriteReduce(
+        const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg, DataType dataType,
+        ReduceOp reduceOp)
     {
         // Inline Reduce Write需要占用1个wr位置, 确定Sq存在空位
         constexpr int WriteReduceWqeCount = 1;
@@ -140,7 +139,7 @@ public:
         return HCCL_SUCCESS;
     }
 
-    HcclResult PollCq(int32_t numEntries, int32_t timeOut, std::vector<int32_t> &errList)
+    HcclResult PollCq(int32_t numEntries, int32_t timeOut, std::vector<int32_t>& errList)
     {
         auto timeLimit = std::chrono::milliseconds(timeOut);
         auto startTime = std::chrono::steady_clock::now();
@@ -168,41 +167,43 @@ public:
             }
 
             if ((std::chrono::steady_clock::now() - startTime) > timeLimit) {
-                HCCL_ERROR("[RdmaBaseOps::%s][Poll cq] Poll Cq timeout, expected[%d], actual[%d], lastRet[%d]",
-                    __func__, numEntries, totalPollNum, ret);
+                HCCL_ERROR(
+                    "[RdmaBaseOps::%s][Poll cq] Poll Cq timeout, expected[%d], actual[%d], lastRet[%d]", __func__,
+                    numEntries, totalPollNum, ret);
                 return HCCL_E_TIMEOUT;
             }
         }
 
-        HCCL_INFO("[RdmaBaseOps::%s][Poll cq] Poll Cq success, expected[%d], actual[%d]",
-            __func__, numEntries, totalPollNum);
+        HCCL_INFO(
+            "[RdmaBaseOps::%s][Poll cq] Poll Cq success, expected[%d], actual[%d]", __func__, numEntries, totalPollNum);
         return HCCL_SUCCESS;
     }
 
     // 准备Doorbell(厂商实现)
-    virtual HcclResult BuildDoorbell(u64 &dbAddr, u64 &dbValue) = 0;
+    virtual HcclResult BuildDoorbell(u64& dbAddr, u64& dbValue) = 0;
 
     // 准备CqDoorbell(厂商实现)
-    virtual HcclResult BuildCqDoorbell(u64 &dbAddr, u64 &dbValue) = 0;
+    virtual HcclResult BuildCqDoorbell(u64& dbAddr, u64& dbValue) = 0;
 
 protected:
     // 软件侧只维护Sq PI，Sq CI由硬件维护
-    u32  sqHead_{0};
-    u32  sqTail_{0};
+    u32 sqHead_{0};
+    u32 sqTail_{0};
 
-    u32  cqHead_{0};
-    u32  cqTail_{0};
+    u32 cqHead_{0};
+    u32 cqTail_{0};
     bool cqDbFlush_ = false;
 
-    RdmaSqContextLite *sqContext_;
-    RdmaCqContextLite *cqContext_;
+    RdmaSqContextLite* sqContext_;
+    RdmaCqContextLite* cqContext_;
 
     // 默认超时时间 30 ms
     const std::chrono::milliseconds timeout_ = std::chrono::milliseconds(30U);
 
     // vendor扩展点: 每个原子op一个虚函数
     // 默认 NOT_SUPPORT, 各个vendor 只重写自己支持的
-    virtual HcclResult BuildReadWqe(const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg) {
+    virtual HcclResult BuildReadWqe(const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg)
+    {
         (void)loc;
         (void)rmt;
         (void)cfg;
@@ -210,7 +211,9 @@ protected:
         return HCCL_E_NOT_SUPPORT;
     }
 
-    virtual HcclResult BuildWriteWqe(const RmaBufSliceLite &loc, const RmtRmaBufSliceLite &rmt, const SqeConfigLite &cfg) {
+    virtual HcclResult
+    BuildWriteWqe(const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg)
+    {
         (void)loc;
         (void)rmt;
         (void)cfg;
@@ -218,8 +221,10 @@ protected:
         return HCCL_E_NOT_SUPPORT;
     }
 
-    virtual HcclResult BuildWriteReduceWqe(const RmaBufSliceLite &locNotify, const RmtRmaBufSliceLite &notify, const SqeConfigLite &cfg,
-                                           DataType dataType, ReduceOp reduceOp) {
+    virtual HcclResult BuildWriteReduceWqe(
+        const RmaBufSliceLite& locNotify, const RmtRmaBufSliceLite& notify, const SqeConfigLite& cfg, DataType dataType,
+        ReduceOp reduceOp)
+    {
         (void)locNotify;
         (void)notify;
         (void)cfg;
@@ -229,32 +234,33 @@ protected:
         return HCCL_E_NOT_SUPPORT;
     }
 
-    virtual HcclResult WriteInvalidWqebb(uint32_t nextIdx) {
+    virtual HcclResult WriteInvalidWqebb(uint32_t nextIdx)
+    {
         (void)nextIdx;
         return HCCL_SUCCESS;
     }
 
-    virtual int32_t PollCqImpl(int32_t numEntries, std::vector<int32_t> &errList) {
+    virtual int32_t PollCqImpl(int32_t numEntries, std::vector<int32_t>& errList)
+    {
         (void)numEntries;
         HCCL_ERROR("[RdmaBaseOps::%s] This Backend Not support PollCq Now.", __func__);
         return HCCL_E_NOT_SUPPORT;
     }
 
     // 搬运wqe(通用实现), 把 Wqe 写到 SQ
-    HcclResult CommitWqe(const void *wqe, uint32_t wqeSize)
+    HcclResult CommitWqe(const void* wqe, uint32_t wqeSize)
     {
         HCCL_INFO("[RdmaBaseOps::%s] Memcpy wqe start, Now SQ PI: [%u]", __func__, sqHead_);
 
         // 写wqe到va
         auto sqDepth = sqContext_->depth;
         uint32_t sqPIMask = sqDepth - 1;
-        u8 *va = reinterpret_cast<u8 *>(sqContext_->sqVa + (sqHead_ & sqPIMask) * wqeSize);
+        u8* va = reinterpret_cast<u8*>(sqContext_->sqVa + (sqHead_ & sqPIMask) * wqeSize);
 
-        HCCL_INFO("[RdmaBaseOps][Wqe Write] before copy, sqHead[%u], slot[%u], sqVa[0x%llx], dst[0x%llx], size[%u]",
-            sqHead_, sqHead_ & sqPIMask,
-            static_cast<unsigned long long>(sqContext_->sqVa),
-            reinterpret_cast<unsigned long long>(va),
-            wqeSize);
+        HCCL_INFO(
+            "[RdmaBaseOps][Wqe Write] before copy, sqHead[%u], slot[%u], sqVa[0x%llx], dst[0x%llx], size[%u]", sqHead_,
+            sqHead_ & sqPIMask, static_cast<unsigned long long>(sqContext_->sqVa),
+            reinterpret_cast<unsigned long long>(va), wqeSize);
 
         auto ret = memcpy_sp(va, wqeSize, wqe, wqeSize);
         if (UNLIKELY(ret != 0)) {
@@ -271,7 +277,8 @@ protected:
         return HCCL_SUCCESS;
     }
 
-    HcclResult WaitSqFree(uint32_t wqeNum) {
+    HcclResult WaitSqFree(uint32_t wqeNum)
+    {
         // wq_overflow
         bool timeOutFlag = false;
         auto startTime = std::chrono::steady_clock::now();
@@ -292,15 +299,17 @@ protected:
     }
 
     // 将PI更新到硬件可见地址
-    HcclResult UpdateSqPI() {
+    HcclResult UpdateSqPI()
+    {
         // 更新Sq PI指针
         uint32_t sqHeadNum = Htonl32(sqHead_);
 
-        HCCL_INFO("[RdmaBaseOps][Wqe Write] write soft PI, sqHead host[%u], dbSwVa[0x%llx]", 
-                sqHead_, static_cast<unsigned long long>(sqContext_->dbSwVa));
+        HCCL_INFO(
+            "[RdmaBaseOps][Wqe Write] write soft PI, sqHead host[%u], dbSwVa[0x%llx]", sqHead_,
+            static_cast<unsigned long long>(sqContext_->dbSwVa));
 
-        auto status = memcpy_sp(reinterpret_cast<void *>(sqContext_->dbSwVa), sizeof(uint32_t), &sqHeadNum,
-                                sizeof(uint32_t));
+        auto status
+            = memcpy_sp(reinterpret_cast<void*>(sqContext_->dbSwVa), sizeof(uint32_t), &sqHeadNum, sizeof(uint32_t));
         if (UNLIKELY(status != 0)) {
             THROW<InternalException>(StringFormat("[RdmaBaseOps::%s] Ring Sw DB failed, ret = %d", __func__, status));
         }
@@ -308,5 +317,5 @@ protected:
     }
 };
 
-}
-#endif  // RDMA_BASE_VENDOR_OPS_H
+} // namespace Hccl
+#endif // RDMA_BASE_VENDOR_OPS_H

@@ -21,34 +21,38 @@ using namespace hccl;
 namespace {
 Hccl::TlsStatus g_expectedTlsStatus = Hccl::TlsStatus::UNKNOWN;
 
-HcclResult StubHrtGetDeviceSuccess(s32 *deviceLogicId)
+HcclResult StubHrtGetDeviceSuccess(s32* deviceLogicId)
 {
     *deviceLogicId = 1;
     return HCCL_SUCCESS;
 }
 
-HcclResult StubHrtGetDevicePhyIdByIndexSuccess(u32, u32 &devicePhyId, bool)
+HcclResult StubHrtGetDevicePhyIdByIndexSuccess(u32, u32& devicePhyId, bool)
 {
     devicePhyId = 8;
     return HCCL_SUCCESS;
 }
 
-HcclResult StubMyRankHrtRaGetTlsStatus(RaInfo *info, Hccl::TlsStatus &tlsStatus)
+HcclResult StubMyRankHrtRaGetTlsStatus(RaInfo* info, Hccl::TlsStatus& tlsStatus)
 {
     EXPECT_NE(info, nullptr);
     EXPECT_EQ(info->phyId, 8U);
     tlsStatus = g_expectedTlsStatus;
     return HCCL_SUCCESS;
 }
-}
+} // namespace
 
 class MyRankTlsTest : public testing::Test {
 protected:
     void SetUp() override
     {
-        callbacks_.getAicpuCommState = []() { return false; };
+        callbacks_.getAicpuCommState = []() {
+            return false;
+        };
         callbacks_.setAicpuCommState = [](bool) {};
-        callbacks_.kernelLaunchAicpuCommInit = []() { return HCCL_SUCCESS; };
+        callbacks_.kernelLaunchAicpuCommInit = []() {
+            return HCCL_SUCCESS;
+        };
         myRank_.reset(new MyRank(nullptr, 0, config_, callbacks_, nullptr, nullptr));
         g_expectedTlsStatus = Hccl::TlsStatus::UNKNOWN;
     }
@@ -59,9 +63,9 @@ protected:
         myRank_.reset();
     }
 
-    CommConfig config_ {};
-    ManagerCallbacks callbacks_ {};
-    std::unique_ptr<MyRank> myRank_ {};
+    CommConfig config_{};
+    ManagerCallbacks callbacks_{};
+    std::unique_ptr<MyRank> myRank_{};
 };
 
 TEST_F(MyRankTlsTest, Ut_GetLocalTlsStatus_When_HrtGetDeviceFails_Expect_ReturnSameError)

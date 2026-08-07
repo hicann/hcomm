@@ -12,8 +12,8 @@
 
 namespace hccl {
 
-AllGatherVMeshAivExecutor::AllGatherVMeshAivExecutor(const HcclDispatcher dispatcher,
-                                                           std::unique_ptr<TopoMatcher> &topoMatcher)
+AllGatherVMeshAivExecutor::AllGatherVMeshAivExecutor(
+    const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher)
     : CollAllGatherVExecutor(dispatcher, topoMatcher)
 {
     desc_.isAivMode = true;
@@ -28,18 +28,18 @@ HcclResult AllGatherVMeshAivExecutor::CalcCommInfo(std::vector<LevelNSubCommTran
     return HCCL_SUCCESS;
 }
 
-HcclResult AllGatherVMeshAivExecutor::CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType)
+HcclResult AllGatherVMeshAivExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::AIV_OUTPUT;
-    HCCL_INFO("[AllGatherVMeshAivExecutor][CalcTransportMemType] tag[%s] inputType[%d], outputType[%d].",
-        tag_.c_str(), inputType, outputType);
+    HCCL_INFO(
+        "[AllGatherVMeshAivExecutor][CalcTransportMemType] tag[%s] inputType[%d], outputType[%d].", tag_.c_str(),
+        inputType, outputType);
     return HCCL_SUCCESS;
 }
 
-HcclResult AllGatherVMeshAivExecutor::CalcLevel0CommInfo(TransportMemType inputType,
-    TransportMemType outputType,
-    std::vector<LevelNSubCommTransport>& opTransport)
+HcclResult AllGatherVMeshAivExecutor::CalcLevel0CommInfo(
+    TransportMemType inputType, TransportMemType outputType, std::vector<LevelNSubCommTransport>& opTransport)
 {
     CommParaInfo commParaLevel0(COMM_LEVEL0, CommType::COMM_TAG_MESH);
     commParaLevel0.meshSinglePlane = true;
@@ -52,12 +52,16 @@ HcclResult AllGatherVMeshAivExecutor::CalNumBlocks(u32& numBlocks, u32 rankSize,
     numBlocks = rankSize + 1; // 单机场景，单算子AllGather大数据使用(rankSize + 1)个aiv
     u32 bestNumBlocks = numBlocks;
 
-    CHK_PRT_RET(numBlocks_ < numBlocks,
-        HCCL_WARNING("[AllGatherVMeshAivExecutor][CalNumBlocks]aivCore[%u] is invalid, at least need [%u].",
-        numBlocks_, numBlocks), HCCL_E_PARA);
-    
-    HCCL_INFO("[AllGatherVMeshAivExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommanded[%u]",
-        numBlocks, numBlocks_, bestNumBlocks);
+    CHK_PRT_RET(
+        numBlocks_ < numBlocks,
+        HCCL_WARNING(
+            "[AllGatherVMeshAivExecutor][CalNumBlocks]aivCore[%u] is invalid, at least need [%u].", numBlocks_,
+            numBlocks),
+        HCCL_E_PARA);
+
+    HCCL_INFO(
+        "[AllGatherVMeshAivExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommanded[%u]", numBlocks,
+        numBlocks_, bestNumBlocks);
     return HCCL_SUCCESS;
 }
 
@@ -72,30 +76,34 @@ HcclResult AllGatherVMeshAivExecutor::Orchestrate(OpParam& param, AlgResourceRes
 
     execMem.inputPtr = param.inputPtr;
     execMem.outputPtr = param.outputPtr;
-    execMem.count = (static_cast<const u64 *>(param.VDataDes.counts))[topoAttr_.userRank];
+    execMem.count = (static_cast<const u64*>(param.VDataDes.counts))[topoAttr_.userRank];
 
     execMem.inputMem = algRes.cclInputMem;
     execMem.outputMem = algRes.aivOutputMem;
     ret = KernelRun(param, execMem);
 
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[AllGatherVMeshAivExecutor][Orchestrate]errNo[0x%016llx] tag[%s] executor kernel run failed",
-            HCCL_ERROR_CODE(ret), param.tag.c_str()), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[AllGatherVMeshAivExecutor][Orchestrate]errNo[0x%016llx] tag[%s] executor kernel run failed",
+            HCCL_ERROR_CODE(ret), param.tag.c_str()),
+        ret);
 
-    HCCL_INFO("tag[%s], AllGatherVMeshAivExecutor orchestrate success, take time [%lld]us",
-        param.tag.c_str(), DURATION_US(TIME_NOW() - startut));
+    HCCL_INFO(
+        "tag[%s], AllGatherVMeshAivExecutor orchestrate success, take time [%lld]us", param.tag.c_str(),
+        DURATION_US(TIME_NOW() - startut));
     return HCCL_SUCCESS;
 }
 
-HcclResult AllGatherVMeshAivExecutor::KernelRun(const OpParam &param, ExecMem &execMem)
+HcclResult AllGatherVMeshAivExecutor::KernelRun(const OpParam& param, ExecMem& execMem)
 {
     HCCL_INFO("[AllGatherVMeshAivExecutor][KernelRun]AllGatherV aiv enter.");
 
     CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
     SubCommInfo outerCommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
 
-    void *buffersIn[MAX_RANK_SIZE];
-    void *buffersOut[MAX_RANK_SIZE];
+    void* buffersIn[MAX_RANK_SIZE];
+    void* buffersOut[MAX_RANK_SIZE];
 
     u32 localRank = outerCommInfo.localRank;
     u32 localRankSize = outerCommInfo.localRankSize;
@@ -103,8 +111,8 @@ HcclResult AllGatherVMeshAivExecutor::KernelRun(const OpParam &param, ExecMem &e
 
     ExtraArgs extraArgs;
     for (u32 i = 0; i < localRankSize; i++) {
-        extraArgs.recvCounts[i] = *(static_cast<const u64 *>(param.VDataDes.counts) + i);
-        extraArgs.recvDispls[i] = *(static_cast<const u64 *>(param.VDataDes.displs) + i);
+        extraArgs.recvCounts[i] = *(static_cast<const u64*>(param.VDataDes.counts) + i);
+        extraArgs.recvDispls[i] = *(static_cast<const u64*>(param.VDataDes.displs) + i);
         if (i != localRank) {
             CHK_RET(outerCommInfo.links[i]->GetRemoteMem(UserMemType::INPUT_MEM, &(buffersIn[i])));
             CHK_RET(outerCommInfo.links[i]->GetRemoteMem(UserMemType::OUTPUT_MEM, &(buffersOut[i])));
@@ -117,33 +125,31 @@ HcclResult AllGatherVMeshAivExecutor::KernelRun(const OpParam &param, ExecMem &e
             extraArgs.maxCount = extraArgs.recvCounts[i];
         }
     }
-    
+
     bool isOpbase = (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE);
     HCCL_DEBUG("[AllGatherVMeshAivExecutor][KernelRun] isOpbase [%d]", isOpbase);
-    AivOpArgs opArgs {
-        HcclCMDType::HCCL_CMD_ALLGATHER_V, execMem.inputPtr, execMem.outputPtr, extraArgs.maxCount,
-        param.VDataDes.dataType, param.reduceType, param.root, isOpbase
-    };
-    AivTopoArgs topoArgs { localRank, localRankSize };
+    AivOpArgs opArgs{HcclCMDType::HCCL_CMD_ALLGATHER_V, execMem.inputPtr, execMem.outputPtr, extraArgs.maxCount,
+                     param.VDataDes.dataType,           param.reduceType, param.root,        isOpbase};
+    AivTopoArgs topoArgs{localRank, localRankSize};
     u32 numBlocks;
-    CHK_PRT_RET(CalNumBlocks(numBlocks, localRankSize) != HCCL_SUCCESS,
-        HCCL_ERROR("[%s] CalNumBlocks failed", __func__),
+    CHK_PRT_RET(
+        CalNumBlocks(numBlocks, localRankSize) != HCCL_SUCCESS, HCCL_ERROR("[%s] CalNumBlocks failed", __func__),
         HCCL_E_PARA);
     numBlocks_ = numBlocks;
     topoArgs.identify = algoAttr_.identifier;
     HCCL_DEBUG("[AllGatherVMeshAivExecutor][KernelRun] numBlocks_ [%u]", numBlocks_);
-    AivResourceArgs resourceArgs {
-        param.tag, param.stream.ptr(), buffersIn, buffersOut, execMem.inputMem.size(), numBlocks_, param.aivTag
-    };
-    AivAlgArgs algArgs {};
+    AivResourceArgs resourceArgs{param.tag,  param.stream.ptr(), buffersIn, buffersOut, execMem.inputMem.size(),
+                                 numBlocks_, param.aivTag};
+    AivAlgArgs algArgs{};
     algArgs.execTimeOut = topoMatcher_->GetExecTimeOutConfig();
     algArgs.execTimeOutSet = true;
     struct AivProfilingInfo aivProfilingInfo;
     aivProfilingInfo.counter = opCounter_;
 
     HcclResult ret = ExecuteKernelLaunch(opArgs, topoArgs, resourceArgs, algArgs, extraArgs, aivProfilingInfo);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[AllGatherVMeshAivExecutor][KernelRun]AllGatherV aiv failed, return[%d]", ret), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[AllGatherVMeshAivExecutor][KernelRun]AllGatherV aiv failed, return[%d]", ret),
+        ret);
 
     HCCL_INFO("[AllGatherVMeshAivExecutor][KernelRun]AllGatherV aiv run success.");
     return HCCL_SUCCESS;

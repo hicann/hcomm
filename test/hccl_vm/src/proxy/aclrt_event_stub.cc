@@ -25,12 +25,11 @@
 #include "db_sim_runner_ops.h"
 #include "db_sim_runner_common.h"
 
-
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
-aclError aclrtCreateEventWithFlag(aclrtEvent *event, uint32_t flag)
+aclError aclrtCreateEventWithFlag(aclrtEvent* event, uint32_t flag)
 {
     auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
@@ -46,7 +45,7 @@ aclError aclrtCreateEventWithFlag(aclrtEvent *event, uint32_t flag)
         HCCL_VM_ERROR("ctx not found:{:d}", runner.current_ctx_id);
         return ACL_ERROR_INVALID_PARAM;
     }
-    
+
     auto& crrCtxId = currCtx->id;
 
     auto now = std::chrono::system_clock::now();
@@ -61,18 +60,12 @@ aclError aclrtCreateEventWithFlag(aclrtEvent *event, uint32_t flag)
 
     *event = (aclrtEvent)res;
     HCCL_VM_INFO("id:{:d}", res);
-    return ACL_SUCCESS; 
+    return ACL_SUCCESS;
 }
 
-aclError aclrtCreateEventExWithFlag(aclrtEvent *event, uint32_t flag)
-{
-    return aclrtCreateEventWithFlag(event, flag);
-}
+aclError aclrtCreateEventExWithFlag(aclrtEvent* event, uint32_t flag) { return aclrtCreateEventWithFlag(event, flag); }
 
-aclError aclrtCreateEvent(aclrtEvent *event)
-{
-    return aclrtCreateEventWithFlag(event, 0);
-}
+aclError aclrtCreateEvent(aclrtEvent* event) { return aclrtCreateEventWithFlag(event, 0); }
 
 aclError aclrtDestroyEvent(aclrtEvent event)
 {
@@ -102,25 +95,29 @@ aclError aclrtRecordEvent(aclrtEvent event, aclrtStream stream)
     }
 
     uint32_t curRank = (uint32_t)sim::GetCurrRankId();
-    RunnerDB::Update<sim::Event>(eventIdx, [](sim::Event &evt) { evt.status = ACL_EVENT_RECORDED_STATUS_NOT_READY;});
+    RunnerDB::Update<sim::Event>(eventIdx, [](sim::Event& evt) {
+        evt.status = ACL_EVENT_RECORDED_STATUS_NOT_READY;
+    });
 
     return ACL_SUCCESS;
 }
 
 aclError aclrtResetEvent(aclrtEvent event, aclrtStream stream)
 {
-    (void) stream;
+    (void)stream;
     uint64_t eventIdx = (uint32_t)(uintptr_t)event;
     auto currEvent = RunnerDB::GetById<sim::Event>(eventIdx);
     if (!currEvent.has_value()) {
         HCCL_VM_ERROR("event not found:{:d}", eventIdx);
         return ACL_ERROR_INVALID_PARAM;
     }
-    RunnerDB::Update<sim::Event>(eventIdx, [](sim::Event &evt) { evt.status = ACL_EVENT_RECORDED_STATUS_COMPLETE;});
+    RunnerDB::Update<sim::Event>(eventIdx, [](sim::Event& evt) {
+        evt.status = ACL_EVENT_RECORDED_STATUS_COMPLETE;
+    });
     return ACL_SUCCESS;
 }
 
-aclError aclrtQueryEventStatus(aclrtEvent event, aclrtEventRecordedStatus *status)
+aclError aclrtQueryEventStatus(aclrtEvent event, aclrtEventRecordedStatus* status)
 {
     uint64_t eventId = (uint32_t)(uintptr_t)event;
     auto res = RunnerDB::GetById<sim::Event>(eventId);
@@ -133,62 +130,62 @@ aclError aclrtQueryEventStatus(aclrtEvent event, aclrtEventRecordedStatus *statu
     return ACL_SUCCESS;
 }
 
-aclError aclrtQueryEventWaitStatus(aclrtEvent event, aclrtEventWaitStatus *status)
+aclError aclrtQueryEventWaitStatus(aclrtEvent event, aclrtEventWaitStatus* status)
 {
-    (void) event;
-    (void) status;
+    (void)event;
+    (void)status;
     return ACL_SUCCESS;
 }
 
 aclError aclrtSynchronizeEvent(aclrtEvent event)
 {
-    (void) event;
+    (void)event;
     return ACL_SUCCESS;
 }
 
 aclError aclrtSynchronizeEventWithTimeout(aclrtEvent event, int32_t timeout)
 {
-    (void) event;
-    (void) timeout;
+    (void)event;
+    (void)timeout;
     return ACL_SUCCESS;
 }
 
-aclError aclrtEventElapsedTime(float *ms, aclrtEvent startEvent, aclrtEvent endEvent)
+aclError aclrtEventElapsedTime(float* ms, aclrtEvent startEvent, aclrtEvent endEvent)
 {
-    (void) startEvent;
-    (void) endEvent;
+    (void)startEvent;
+    (void)endEvent;
     *ms = 1;
     return ACL_SUCCESS;
 }
 
 aclError aclrtStreamWaitEvent(aclrtStream stream, aclrtEvent event)
 {
-    (void) stream;
-    (void) event;
+    (void)stream;
+    (void)event;
     return ACL_SUCCESS;
 }
 
 aclError aclrtSetOpWaitTimeout(uint32_t timeout)
 {
-    (void) timeout;
+    (void)timeout;
     return ACL_SUCCESS;
 }
 
-aclError aclrtEventGetTimestamp(aclrtEvent event, uint64_t *timestamp)
+aclError aclrtEventGetTimestamp(aclrtEvent event, uint64_t* timestamp)
 {
-    (void) event;
-    (void) timestamp;
+    (void)event;
+    (void)timestamp;
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetEventId(aclrtEvent event, uint32_t *eventId)
+aclError aclrtGetEventId(aclrtEvent event, uint32_t* eventId)
 {
     *eventId = (uint32_t)(uintptr_t)event;
-    (void) eventId;
+    (void)eventId;
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetEventAvailNum(uint32_t *eventCount)
+aclError aclrtGetEventAvailNum(uint32_t* eventCount)
 {
     auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
@@ -207,7 +204,7 @@ aclError aclrtGetEventAvailNum(uint32_t *eventCount)
         HCCL_VM_ERROR("ctx not found:{:d}", runner.current_ctx_id);
         return ACL_ERROR_INVALID_PARAM;
     }
-    
+
     auto& devId = currCtx->device_id;
 
     auto device = RunnerDB::GetById<sim::Device>(devId);
@@ -225,4 +222,4 @@ aclError aclrtGetEventAvailNum(uint32_t *eventCount)
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus

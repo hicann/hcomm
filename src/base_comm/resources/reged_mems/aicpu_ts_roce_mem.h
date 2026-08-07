@@ -29,40 +29,42 @@ public:
     AicpuTsRoceRegedMemMgr(HcclNetDev netDev, RdmaHandle rdmaHandle);
     ~AicpuTsRoceRegedMemMgr() override = default;
 
-    HcclResult RegisterMemory(HcommMem mem, const char *memTag, void **memHandle) override;
-    HcclResult UnregisterMemory(void *memHandle) override;
-    HcclResult MemoryExport(const EndpointDesc endpointDesc, void *memHandle, void **memDesc, uint32_t *memDescLen) override;
-    HcclResult MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem) override;
-    HcclResult MemoryUnimport(const void *memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void **memHandles, uint32_t *memHandleNum) override;
+    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
+    HcclResult UnregisterMemory(void* memHandle) override;
+    HcclResult
+    MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen) override;
+    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
+    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
+    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
 
-    HcclResult GetAllMemDetails(std::vector<RoceMemDetails> &localOut, std::vector<RoceMemDetails> &remoteOut) const;
+    HcclResult GetAllMemDetails(std::vector<RoceMemDetails>& localOut, std::vector<RoceMemDetails>& remoteOut) const;
 
 private:
-    using RemoteRdmaRmaBufferMgr =
-        hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::RemoteRdmaRmaBuffer>>;
+    using RemoteRdmaRmaBufferMgr
+        = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::RemoteRdmaRmaBuffer>>;
 
     struct EndpointDescLess {
-        bool operator()(const EndpointDesc &a, const EndpointDesc &b) const noexcept
+        bool operator()(const EndpointDesc& a, const EndpointDesc& b) const noexcept
         {
             return std::memcmp(&a, &b, sizeof(EndpointDesc)) < 0;
         }
     };
 
-    HcclResult GetParamsFromMemDesc(const void *memDesc, uint32_t descLen, EndpointDesc &endpointDesc, std::string &rdmaBlob);
-    void TrackRegisteredBuffer(const std::shared_ptr<hccl::LocalRdmaRmaBuffer> &localBuffer);
+    HcclResult
+    GetParamsFromMemDesc(const void* memDesc, uint32_t descLen, EndpointDesc& endpointDesc, std::string& rdmaBlob);
+    void TrackRegisteredBuffer(const std::shared_ptr<hccl::LocalRdmaRmaBuffer>& localBuffer);
 
-    HcclResult GatherLocalMemDetails(std::vector<RoceMemDetails> &localOut) const;
-    HcclResult AppendLocalNotifyMemDetails(std::vector<RoceMemDetails> &localOut) const;
-    void GatherRemoteMemDetails(std::vector<RoceMemDetails> &remoteOut) const;
+    HcclResult GatherLocalMemDetails(std::vector<RoceMemDetails>& localOut) const;
+    HcclResult AppendLocalNotifyMemDetails(std::vector<RoceMemDetails>& localOut) const;
+    void GatherRemoteMemDetails(std::vector<RoceMemDetails>& remoteOut) const;
 
     HcclNetDev netDev_{nullptr};
     std::shared_ptr<hccl::NetDevContext::LocalRdmaRmaBufferMgr> localRdmaRmaBufferMgr_{nullptr};
     std::vector<RegedBufferEntry<hccl::LocalRdmaRmaBuffer>> allRegisteredBuffers_;
     std::vector<HcclBuf> hcclBufRecords_;
-    std::unordered_map<hccl::LocalRdmaRmaBuffer *, std::vector<char>> exportDescByBuffer_;
+    std::unordered_map<hccl::LocalRdmaRmaBuffer*, std::vector<char>> exportDescByBuffer_;
     std::map<EndpointDesc, std::unique_ptr<RemoteRdmaRmaBufferMgr>, EndpointDescLess> remoteRdmaRmaBufferMgrs_;
 };
 
-}  // namespace hcomm
-#endif  // AICPU_TS_ROCE_MEM_H
+} // namespace hcomm
+#endif // AICPU_TS_ROCE_MEM_H

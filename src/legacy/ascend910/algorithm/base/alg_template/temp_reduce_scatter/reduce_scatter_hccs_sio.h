@@ -13,7 +13,6 @@
 
 #include "reduce_scatter_hccs_sio_pub.h"
 
-namespace hccl {
-} // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * REDUCE_SCATTER_HCCS_SIO_H */

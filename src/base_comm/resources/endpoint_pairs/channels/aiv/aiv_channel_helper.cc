@@ -16,8 +16,9 @@
 
 using namespace hcomm;
 
-HcclResult AivChannelHelper::FillDevEntities(const ChannelHandle *channelList, uint32_t listNum,
-    const HcommChannelDesc *channelDescs, const int32_t *linkStatusList)
+HcclResult AivChannelHelper::FillDevEntities(
+    const ChannelHandle* channelList, uint32_t listNum, const HcommChannelDesc* channelDescs,
+    const int32_t* linkStatusList)
 {
     CHK_PTR_NULL(channelList);
     CHK_PTR_NULL(linkStatusList);
@@ -28,33 +29,33 @@ HcclResult AivChannelHelper::FillDevEntities(const ChannelHandle *channelList, u
             continue;
         }
         CommProtocol protocol = channelDescs[i].remoteEndpoint.protocol;
-        void *channelPtr = nullptr;
+        void* channelPtr = nullptr;
         CHK_RET(ChannelProcess::ChannelGet(channelList[i], &channelPtr));
         CHK_PTR_NULL(channelPtr);
-        auto *channel = static_cast<Channel *>(channelPtr);
+        auto* channel = static_cast<Channel*>(channelPtr);
         if (channel->IsDeviceEntityReady()) {
             continue;
         }
 
         if (protocol == COMM_PROTOCOL_ROCE) {
-            auto *roceChannel = static_cast<AicpuTsRoceChannelV2 *>(channelPtr);
+            auto* roceChannel = static_cast<AicpuTsRoceChannelV2*>(channelPtr);
             CHK_RET(roceChannel->FillDevChannelEntity());
-        } 
-        
-        if (protocol == COMM_PROTOCOL_UBC_CTP || protocol == COMM_PROTOCOL_UBC_TP ||
-            protocol == COMM_PROTOCOL_UBG) {
-            auto *aivChannel = static_cast<AivUrmaChannel *>(channelPtr);
+        }
+
+        if (protocol == COMM_PROTOCOL_UBC_CTP || protocol == COMM_PROTOCOL_UBC_TP || protocol == COMM_PROTOCOL_UBG) {
+            auto* aivChannel = static_cast<AivUrmaChannel*>(channelPtr);
             CHK_RET(aivChannel->FillChannelEntityToDevice());
-        } 
-        
+        }
+
         channel->SetDeviceEntityReady();
         HCCL_INFO("[%s] channel[%u] fill dev entity success.", __func__, i);
     }
     return HCCL_SUCCESS;
 }
 
-HcclResult AivChannelHelper::HandleStatus(const ChannelHandle *channelList, uint32_t listNum,
-    const HcommChannelDesc *channelDescs, const std::vector<int32_t> &linkStatusList, int32_t *statusList)
+HcclResult AivChannelHelper::HandleStatus(
+    const ChannelHandle* channelList, uint32_t listNum, const HcommChannelDesc* channelDescs,
+    const std::vector<int32_t>& linkStatusList, int32_t* statusList)
 {
     HcclResult fillRet = FillDevEntities(channelList, listNum, channelDescs, linkStatusList.data());
     if (fillRet != HCCL_SUCCESS) {
@@ -68,7 +69,7 @@ HcclResult AivChannelHelper::HandleStatus(const ChannelHandle *channelList, uint
 }
 
 HcclResult AivChannelHelper::PreAllocChannels(
-    ChannelHandle *targetChannels, ChannelHandle *userChannels, HcommChannelDesc *channelDescs, uint32_t channelNum)
+    ChannelHandle* targetChannels, ChannelHandle* userChannels, HcommChannelDesc* channelDescs, uint32_t channelNum)
 {
     CHK_PTR_NULL(targetChannels);
     CHK_PTR_NULL(userChannels);
@@ -81,29 +82,33 @@ HcclResult AivChannelHelper::PreAllocChannels(
 
         if (protocol == COMM_PROTOCOL_ROCE) {
             needD2HMap = true;
-            auto *channel = reinterpret_cast<AicpuTsRoceChannelV2 *>(targetChannels[i]);
+            auto* channel = reinterpret_cast<AicpuTsRoceChannelV2*>(targetChannels[i]);
             CHK_PTR_NULL(channel);
             CHK_RET(channel->PreAllocDevChannelEntity(&userChannels[i]));
-            HCCL_INFO("[%s] channel[%u] pre-alloc dev entity success, devEntityPtr[%p]", __func__, i,
-                reinterpret_cast<void *>(static_cast<uintptr_t>(userChannels[i])));
-        } else if (protocol == COMM_PROTOCOL_UBC_CTP || protocol == COMM_PROTOCOL_UBC_TP ||
-                   protocol == COMM_PROTOCOL_UBG) {
+            HCCL_INFO(
+                "[%s] channel[%u] pre-alloc dev entity success, devEntityPtr[%p]", __func__, i,
+                reinterpret_cast<void*>(static_cast<uintptr_t>(userChannels[i])));
+        } else if (
+            protocol == COMM_PROTOCOL_UBC_CTP || protocol == COMM_PROTOCOL_UBC_TP || protocol == COMM_PROTOCOL_UBG) {
             needD2HMap = true;
-            auto *channel = reinterpret_cast<AivUrmaChannel *>(targetChannels[i]);
+            auto* channel = reinterpret_cast<AivUrmaChannel*>(targetChannels[i]);
             CHK_PTR_NULL(channel);
 
-            void *devChannelEntity = nullptr;
+            void* devChannelEntity = nullptr;
             HcclResult ret = channel->PreAllocChannelEntityToDevice(&devChannelEntity);
-            CHK_PRT_RET(ret != HCCL_SUCCESS,
+            CHK_PRT_RET(
+                ret != HCCL_SUCCESS,
                 HCCL_ERROR("[%s] channel[%u] PreAllocChannelEntityToDevice failed, ret[%d]", __func__, i, ret), ret);
             CHK_PTR_NULL(devChannelEntity);
             userChannels[i] = static_cast<ChannelHandle>(reinterpret_cast<uintptr_t>(devChannelEntity));
-            HCCL_INFO("[%s] channel[%u] pre-alloc dev entity success, devEntityPtr[%p]", __func__, i,
-                reinterpret_cast<void *>(static_cast<uintptr_t>(userChannels[i])));
+            HCCL_INFO(
+                "[%s] channel[%u] pre-alloc dev entity success, devEntityPtr[%p]", __func__, i,
+                reinterpret_cast<void*>(static_cast<uintptr_t>(userChannels[i])));
         } else {
             userChannels[i] = targetChannels[i];
-            HCCL_INFO("[%s] AIV engine channel protocol not supported pre-alloc, idx[%u], protocol[%d]. "
-                      "Return host channel handle.",
+            HCCL_INFO(
+                "[%s] AIV engine channel protocol not supported pre-alloc, idx[%u], protocol[%d]. "
+                "Return host channel handle.",
                 __func__, i, static_cast<int>(protocol));
         }
     }

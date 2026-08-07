@@ -21,9 +21,9 @@ namespace Hccl {
 
 class CcuTempReduceMeshMem2Mem2D : public CcuAlgTemplateBase {
 public:
-    explicit CcuTempReduceMeshMem2Mem2D(const RankId virtualRank, const u32 tempRankSize,
-                                        const std::vector<std::vector<RankId>> &tempVTopo,
-                                        const std::map<RankId, u32>            &tempVirtRankMap);
+    explicit CcuTempReduceMeshMem2Mem2D(
+        const RankId virtualRank, const u32 tempRankSize, const std::vector<std::vector<RankId>>& tempVTopo,
+        const std::map<RankId, u32>& tempVirtRankMap);
     ~CcuTempReduceMeshMem2Mem2D() override;
 
     std::string Describe() const override
@@ -31,14 +31,15 @@ public:
         return StringFormat("Template of Reduce ccu mesh mem2mem 2D with tempRankSize [%u].", tempRankSize_);
     }
 
-    void       InitReduceInfo(const ReduceOp &reduceOp, const DataType &dataType);
-    HcclResult CalcRes(AlgTempResReq &tempResReq) override;
-    HcclResult GenExtIns(const TempFuncs &tempFuncs, const TemplateDataParams &templateDataParams,
-                         const ResLinks &tempLinks, std::vector<InsQuePtr> &tempInsQues);
+    void InitReduceInfo(const ReduceOp& reduceOp, const DataType& dataType);
+    HcclResult CalcRes(AlgTempResReq& tempResReq) override;
+    HcclResult GenExtIns(
+        const TempFuncs& tempFuncs, const TemplateDataParams& templateDataParams, const ResLinks& tempLinks,
+        std::vector<InsQuePtr>& tempInsQues);
 
 private:
-    ReduceOp              reduceOp_;
-    DataType              dataType_;
+    ReduceOp reduceOp_;
+    DataType dataType_;
     std::vector<uint64_t> dimSize_;
     std::vector<LinkData> linksX_;
     std::vector<LinkData> linksY_;

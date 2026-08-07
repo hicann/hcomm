@@ -40,14 +40,12 @@ void HcclUBDmaDBSqe::Config(u16 streamId, u16 taskId, u16 jettyid, u8 funcId, u1
     sqe->funcId1 = funcId;
     sqe->piValue1 = piValue;
     sqe->dieId1 = dieId;
-    HCCL_INFO("[SQE]HcclUBDmaDBSqe streamId=%u, taskId=%u, jettyid=%u, funcId=%u, dieId=%u, piValue=%u",
-               streamId, taskId, jettyid, funcId, dieId, piValue);
+    HCCL_INFO(
+        "[SQE]HcclUBDmaDBSqe streamId=%u, taskId=%u, jettyid=%u, funcId=%u, dieId=%u, piValue=%u", streamId, taskId,
+        jettyid, funcId, dieId, piValue);
 }
 
-u64 HcclUBDmaDBSqe::GetSqe()
-{
-    return reinterpret_cast<u64>(sqe.get());
-}
+u64 HcclUBDmaDBSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
 
 HcclUBNotifyWaitSqe::HcclUBNotifyWaitSqe()
 {
@@ -74,14 +72,11 @@ void HcclUBNotifyWaitSqe::Config(u16 streamId, u16 taskId, u64 notifyId)
     sqe->header.rtStreamId = streamId;
     sqe->header.taskId = taskId;
     sqe->notifyId = notifyId;
-    
+
     HCCL_INFO("[SQE]HcclUBNotifyWaitSqe streamId=%u, taskId=%u, notifyId=%llu", streamId, taskId, notifyId);
 }
 
-u64 HcclUBNotifyWaitSqe::GetSqe()
-{
-    return reinterpret_cast<u64>(sqe.get());
-}
+u64 HcclUBNotifyWaitSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
 
 HcclUBNotifyRecordSqe::HcclUBNotifyRecordSqe()
 {
@@ -96,7 +91,7 @@ HcclUBNotifyRecordSqe::HcclUBNotifyRecordSqe()
     sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT;
     sqe->clrFlag = 0U;
     sqe->cntFlag = 0U;
-    sqe->cntValue =  0U;
+    sqe->cntValue = 0U;
     sqe->waitModeBit = 0U;
     sqe->recordModeBit = 0U;
     sqe->subType = static_cast<uint16_t>(Rt91095NotifySubType::NOTIFY_SUB_TYPE_SINGLE_NOTIFY_RECORD);
@@ -110,10 +105,7 @@ void HcclUBNotifyRecordSqe::Config(u16 streamId, u16 taskId, u64 notifyId)
     HCCL_INFO("[SQE]HcclUBNotifyRecordSqe streamId=%u, taskId=%u, notifyId=%llu", streamId, taskId, notifyId);
 }
 
-u64 HcclUBNotifyRecordSqe::GetSqe()
-{
-    return reinterpret_cast<u64>(sqe.get());
-}
+u64 HcclUBNotifyRecordSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
 
 HcclUBCntNotifyNto1RecordSqe::HcclUBCntNotifyNto1RecordSqe()
 {
@@ -133,14 +125,12 @@ void HcclUBCntNotifyNto1RecordSqe::Config(u16 streamId, u16 taskId, u64 notifyId
     sqe->header.taskId = taskId;
     sqe->notifyId = notifyId;
     sqe->cntValue = cntValue;
-    HCCL_INFO("[SQE]HcclUBCntNotifyNto1RecordSqe streamId=%u, taskId=%u, notifyId=%llu, cntValue=%u",
-                streamId, taskId, notifyId, cntValue);
+    HCCL_INFO(
+        "[SQE]HcclUBCntNotifyNto1RecordSqe streamId=%u, taskId=%u, notifyId=%llu, cntValue=%u", streamId, taskId,
+        notifyId, cntValue);
 }
 
-u64 HcclUBCntNotifyNto1RecordSqe::GetSqe()
-{
-    return reinterpret_cast<u64>(sqe.get());
-}
+u64 HcclUBCntNotifyNto1RecordSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
 
 HcclUBCntNotify1toNWaitSqe::HcclUBCntNotify1toNWaitSqe()
 {
@@ -160,14 +150,12 @@ void HcclUBCntNotify1toNWaitSqe::Config(u16 streamId, u16 taskId, u64 notifyId, 
     sqe->header.taskId = taskId;
     sqe->notifyId = notifyId;
     sqe->cntValue = cntValue;
-    HCCL_INFO("[SQE]HcclUBCntNotify1toNWaitSqe streamId=%u, taskId=%u, notifyId=%llu, cntValue=%u",
-                streamId, taskId, notifyId, cntValue);
+    HCCL_INFO(
+        "[SQE]HcclUBCntNotify1toNWaitSqe streamId=%u, taskId=%u, notifyId=%llu, cntValue=%u", streamId, taskId,
+        notifyId, cntValue);
 }
 
-u64 HcclUBCntNotify1toNWaitSqe::GetSqe()
-{
-    return reinterpret_cast<u64>(sqe.get());
-}
+u64 HcclUBCntNotify1toNWaitSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
 
 HcclUBCntNotifyNto1WaitSqe::HcclUBCntNotifyNto1WaitSqe()
 {
@@ -187,14 +175,12 @@ void HcclUBCntNotifyNto1WaitSqe::Config(u16 streamId, u16 taskId, u64 notifyId, 
     sqe->header.taskId = taskId;
     sqe->notifyId = notifyId;
     sqe->cntValue = cntValue;
-    HCCL_INFO("[SQE]HcclUBCntNotifyNto1WaitSqe streamId=%u, taskId=%u, notifyId=%llu, cntValue=%u",
-                streamId, taskId, notifyId, cntValue);
+    HCCL_INFO(
+        "[SQE]HcclUBCntNotifyNto1WaitSqe streamId=%u, taskId=%u, notifyId=%llu, cntValue=%u", streamId, taskId,
+        notifyId, cntValue);
 }
 
-u64 HcclUBCntNotifyNto1WaitSqe::GetSqe()
-{
-    return reinterpret_cast<u64>(sqe.get());
-}
+u64 HcclUBCntNotifyNto1WaitSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
 
 HcclUBCntNotify1toNRecordSqe::HcclUBCntNotify1toNRecordSqe()
 {
@@ -214,14 +200,12 @@ void HcclUBCntNotify1toNRecordSqe::Config(u16 streamId, u16 taskId, u64 notifyId
     sqe->header.taskId = taskId;
     sqe->notifyId = notifyId;
     sqe->cntValue = cntValue;
-    HCCL_INFO("[SQE]HcclUBCntNotify1toNRecordSqe streamId=%u, taskId=%u, notifyId=%llu, cntValue=%u",
-                streamId, taskId, notifyId, cntValue);
+    HCCL_INFO(
+        "[SQE]HcclUBCntNotify1toNRecordSqe streamId=%u, taskId=%u, notifyId=%llu, cntValue=%u", streamId, taskId,
+        notifyId, cntValue);
 }
 
-u64 HcclUBCntNotify1toNRecordSqe::GetSqe()
-{
-    return reinterpret_cast<u64>(sqe.get());
-}
+u64 HcclUBCntNotify1toNRecordSqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
 
 HcclUBMemcpySqe::HcclUBMemcpySqe()
 {
@@ -240,14 +224,14 @@ HcclUBMemcpySqe::HcclUBMemcpySqe()
 
     sqe->kernelCredit = RT_STARS_DEFAULT_KERNEL_CREDIT;
 
-    sqe->ie2  = 0U;
+    sqe->ie2 = 0U;
     sqe->sssv = 1U;
     sqe->dssv = 1U;
-    sqe->sns  = 1U;
-    sqe->qos  = 0U;
-    sqe->dns  = 1U;
-    sqe->sro  = 0U;
-    sqe->dro  = 0U;
+    sqe->sns = 1U;
+    sqe->qos = 0U;
+    sqe->dns = 1U;
+    sqe->sro = 0U;
+    sqe->dro = 0U;
     sqe->mapamPartId = 0U; // 这里走的memcpy，如果走withcfg,需要传入qoscfg
     sqe->mpamns = 0U;
     sqe->stride = 0U;
@@ -265,40 +249,41 @@ HcclUBMemcpySqe::HcclUBMemcpySqe()
     HCCL_INFO("[SQE]HcclUBMemcpySqe construct end");
 }
 
-void HcclUBMemcpySqe::Config(u16 streamId, u16 taskId, RtDataType rtDataType, RtReduceKind rtReduceOp,
-                             u64 count, const u64 *src, const u64 *dst, u32 partId)
+void HcclUBMemcpySqe::Config(
+    u16 streamId, u16 taskId, RtDataType rtDataType, RtReduceKind rtReduceOp, u64 count, const u64* src, const u64* dst,
+    u32 partId)
 {
     sqe->header.rtStreamId = streamId;
     sqe->header.taskId = taskId;
     const bool isReduce
-        = ((rtReduceOp == RtReduceKind::RT_MEMCPY_SDMA_AUTOMATIC_ADD) || (rtReduceOp == RtReduceKind::RT_MEMCPY_SDMA_AUTOMATIC_MAX)
-           || (rtReduceOp == RtReduceKind::RT_MEMCPY_SDMA_AUTOMATIC_MIN) || (rtReduceOp == RtReduceKind::RT_MEMCPY_SDMA_AUTOMATIC_EQUAL));
-    sqe->opcode = isReduce ? GetUBOpCode( static_cast<u32>(rtReduceOp),  static_cast<u8>(rtDataType)) : 0U;
+        = ((rtReduceOp == RtReduceKind::RT_MEMCPY_SDMA_AUTOMATIC_ADD)
+           || (rtReduceOp == RtReduceKind::RT_MEMCPY_SDMA_AUTOMATIC_MAX)
+           || (rtReduceOp == RtReduceKind::RT_MEMCPY_SDMA_AUTOMATIC_MIN)
+           || (rtReduceOp == RtReduceKind::RT_MEMCPY_SDMA_AUTOMATIC_EQUAL));
+    sqe->opcode = isReduce ? GetUBOpCode(static_cast<u32>(rtReduceOp), static_cast<u8>(rtDataType)) : 0U;
 
     sqe->u.strideMode0.lengthMove = count;
-    sqe->u.strideMode0.srcAddrLow  =
-        static_cast<uint32_t>(static_cast<uint64_t>(*src) & 0x00000000ffffffffU);
-    sqe->u.strideMode0.srcAddrHigh =
-        static_cast<uint32_t>((static_cast<uint64_t>(*src) & 0xffffffff00000000U) >> UINT32_BIT_NUM);
-    sqe->u.strideMode0.dstAddrLow  =
-        static_cast<uint32_t>(static_cast<uint64_t>(*dst) & 0x00000000ffffffffU);
-    sqe->u.strideMode0.dstAddrHigh =
-        static_cast<uint32_t>((static_cast<uint64_t>(*dst) & 0xffffffff00000000U) >> UINT32_BIT_NUM);
+    sqe->u.strideMode0.srcAddrLow = static_cast<uint32_t>(static_cast<uint64_t>(*src) & 0x00000000ffffffffU);
+    sqe->u.strideMode0.srcAddrHigh
+        = static_cast<uint32_t>((static_cast<uint64_t>(*src) & 0xffffffff00000000U) >> UINT32_BIT_NUM);
+    sqe->u.strideMode0.dstAddrLow = static_cast<uint32_t>(static_cast<uint64_t>(*dst) & 0x00000000ffffffffU);
+    sqe->u.strideMode0.dstAddrHigh
+        = static_cast<uint32_t>((static_cast<uint64_t>(*dst) & 0xffffffff00000000U) >> UINT32_BIT_NUM);
     sqe->mapamPartId = partId;
 
-    HCCL_INFO("[SQE]HcclUBMemcpySqe dataType=%u,rtReduceOp =%u, count=%llu, src=%p, dst=%p, partId=%u, streamId=%u, "
-               "taskId=%u", rtDataType, rtReduceOp, count, src, dst, partId, streamId, taskId);
-    HCCL_INFO("[SQE]HcclUBMemcpySqe sqe->opcode=%u sqe->u.strideMode0.srcAddrLow=0x%x, "
-               "sqe->u.strideMode0.srcAddrHigh=0x%x,sqe->u.strideMode0.dstAddrLow=0x%x, "
-               "sqe->u.strideMode0.dstAddrHigh=0x%x", sqe->opcode,
-               sqe->u.strideMode0.srcAddrLow, sqe->u.strideMode0.srcAddrHigh,
-               sqe->u.strideMode0.dstAddrLow, sqe->u.strideMode0.dstAddrHigh);
+    HCCL_INFO(
+        "[SQE]HcclUBMemcpySqe dataType=%u,rtReduceOp =%u, count=%llu, src=%p, dst=%p, partId=%u, streamId=%u, "
+        "taskId=%u",
+        rtDataType, rtReduceOp, count, src, dst, partId, streamId, taskId);
+    HCCL_INFO(
+        "[SQE]HcclUBMemcpySqe sqe->opcode=%u sqe->u.strideMode0.srcAddrLow=0x%x, "
+        "sqe->u.strideMode0.srcAddrHigh=0x%x,sqe->u.strideMode0.dstAddrLow=0x%x, "
+        "sqe->u.strideMode0.dstAddrHigh=0x%x",
+        sqe->opcode, sqe->u.strideMode0.srcAddrLow, sqe->u.strideMode0.srcAddrHigh, sqe->u.strideMode0.dstAddrLow,
+        sqe->u.strideMode0.dstAddrHigh);
 }
 
-u64 HcclUBMemcpySqe::GetSqe()
-{
-    return reinterpret_cast<u64>(sqe.get());
-}
+u64 HcclUBMemcpySqe::GetSqe() { return reinterpret_cast<u64>(sqe.get()); }
 
 // change name: convert
 u8 HcclUBMemcpySqe::ConvertToMemcpyDataType(u8 copyDataType) const
@@ -332,8 +317,8 @@ u8 HcclUBMemcpySqe::ConvertToMemcpyDataType(u8 copyDataType) const
         default: {
             // Should not run here.
             // Only for code style, 0x80 is reserved value of STRAS opcode.
-            MACRO_THROW(NotSupportException,
-                        StringFormat("DataType=%u do not support.", static_cast<u32>(copyDataType)));
+            MACRO_THROW(
+                NotSupportException, StringFormat("DataType=%u do not support.", static_cast<u32>(copyDataType)));
             break;
         }
     }
@@ -371,7 +356,7 @@ u8 HcclUBMemcpySqe::ConvertToMemcpyOpType(u32 copyKind) const
 u8 HcclUBMemcpySqe::GetUBOpCode(u32 copyKind, u8 copyDataType) const
 {
     const u8 memcpyDataType = ConvertToMemcpyDataType(copyDataType);
-    const u8 opType         = ConvertToMemcpyOpType(copyKind);
+    const u8 opType = ConvertToMemcpyOpType(copyKind);
     // opcode: 高4bit为datatype，低4bit为optype
     return memcpyDataType | opType;
 }

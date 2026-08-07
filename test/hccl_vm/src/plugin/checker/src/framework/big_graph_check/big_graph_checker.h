@@ -23,32 +23,32 @@
 namespace HcclSim {
 namespace BigGraphCheckV3 {
 
-class BigGraphCheckerV3 {
-public:
-    BigGraphCheckerV3() = default;
-    ~BigGraphCheckerV3() = default;
+    class BigGraphCheckerV3 {
+    public:
+        BigGraphCheckerV3() = default;
+        ~BigGraphCheckerV3() = default;
 
-    HcclResult LoadOpData(loader::Loader &loader, uint32_t syncIter);
-    const BigGraphData &GetData() const { return data_; }
-    const std::vector<OpParam> &GetOpParams() const { return data_.operators; }
-    const TaskGraphGeneratorV3::TaskGraphGeneratorV3 *GetGraph() const { return graph_.get(); }
+        HcclResult LoadOpData(loader::Loader& loader, uint32_t syncIter);
+        const BigGraphData& GetData() const { return data_; }
+        const std::vector<OpParam>& GetOpParams() const { return data_.operators; }
+        const TaskGraphGeneratorV3::TaskGraphGeneratorV3* GetGraph() const { return graph_.get(); }
 
-    // Future stages intentionally remain separate from the existing V3 path.
-    HcclResult TranslateTask();
-    HcclResult GenerateBigGraph();
-    HcclResult SingleTaskCheck();
-    HcclResult SyncCheck();
-    HcclResult MemConflictCheck();
-    HcclResult SemanticCheck();
+        // Future stages intentionally remain separate from the existing V3 path.
+        HcclResult TranslateTask();
+        HcclResult GenerateBigGraph();
+        HcclResult SingleTaskCheck();
+        HcclResult SyncCheck();
+        HcclResult MemConflictCheck();
+        HcclResult SemanticCheck();
 
-private:
-    BigGraphData data_;
-    BigGraphDataLoader dataLoader_;
-    StorageManager storage_;
-    std::vector<std::unique_ptr<TaskGraphGeneratorV3::TaskNode>> translatedNodes_;
-    TaskGraphGeneratorV3::AllRankNodeQueues translatedTaskQueues_;
-    std::unique_ptr<TaskGraphGeneratorV3::TaskGraphGeneratorV3> graph_;
-};
+    private:
+        BigGraphData data_;
+        BigGraphDataLoader dataLoader_;
+        StorageManager storage_;
+        std::vector<std::unique_ptr<TaskGraphGeneratorV3::TaskNode>> translatedNodes_;
+        TaskGraphGeneratorV3::AllRankNodeQueues translatedTaskQueues_;
+        std::unique_ptr<TaskGraphGeneratorV3::TaskGraphGeneratorV3> graph_;
+    };
 
 } // namespace BigGraphCheckV3
 } // namespace HcclSim

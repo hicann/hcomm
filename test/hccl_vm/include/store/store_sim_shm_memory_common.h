@@ -15,8 +15,8 @@
 
 namespace sim {
 // 在非Host进程中映射可用的设备地址（虚拟地址 --> 进程可用的共享内存地址）
-void* AcquireDevPtrInNoHostProcess(void *virPtr, sim::PhyMemBlock &phyMem);
-void ReleaseInNoHostProcess(const sim::PhyMemBlock &phyMem);
+void* AcquireDevPtrInNoHostProcess(void* virPtr, sim::PhyMemBlock& phyMem);
+void ReleaseInNoHostProcess(const sim::PhyMemBlock& phyMem);
 } // namespace sim
 
 #endif // SIM_SHM_MEMORY_COMMON_H

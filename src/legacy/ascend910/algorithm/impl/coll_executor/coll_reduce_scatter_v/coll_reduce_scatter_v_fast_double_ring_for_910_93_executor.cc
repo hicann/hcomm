@@ -12,20 +12,17 @@
 
 namespace hccl {
 CollReduceScatterVFastDoubleRingFor91093Executor::CollReduceScatterVFastDoubleRingFor91093Executor(
-    const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher)
+    const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher)
     : CollReduceScatterFastDoubleRingFor91093Executor(dispatcher, topoMatcher)
 {
     isReduceScatterV_ = true;
-    desc_.level1SupportedAlgos = {
-        AlgTypeLevel1::ALG_LEVEL1_NHR,
-        AlgTypeLevel1::ALG_LEVEL1_NB,
-        AlgTypeLevel1::ALG_LEVEL1_RING
-    };
+    desc_.level1SupportedAlgos
+        = {AlgTypeLevel1::ALG_LEVEL1_NHR, AlgTypeLevel1::ALG_LEVEL1_NB, AlgTypeLevel1::ALG_LEVEL1_RING};
 }
 
-bool CollReduceScatterVFastDoubleRingFor91093Executor::IsUnifiedMarch(const OpParam &param) const
+bool CollReduceScatterVFastDoubleRingFor91093Executor::IsUnifiedMarch(const OpParam& param) const
 {
-    (void) param;
+    (void)param;
     return false;
 }
 
@@ -35,11 +32,11 @@ u64 CollReduceScatterVFastDoubleRingFor91093Executor::CalcLoopMaxCount(const u32
     return inCCLbufferSize_ / HCCL_MIN_SLICE_ALIGN * HCCL_MIN_SLICE_ALIGN / unitSize;
 }
 
-bool CollReduceScatterVFastDoubleRingFor91093Executor::IsHugeData(const u64 curSize, OpParam *param)
+bool CollReduceScatterVFastDoubleRingFor91093Executor::IsHugeData(const u64 curSize, OpParam* param)
 {
     u32 level2RankSize;
-    if (algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_AHC ||
-        algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_AHC_BROKE) {
+    if (algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_AHC
+        || algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_AHC_BROKE) {
         // AHC非对称场景下没有L2
         level2RankSize = 1;
     } else {
@@ -54,12 +51,13 @@ bool CollReduceScatterVFastDoubleRingFor91093Executor::IsHugeData(const u64 curS
     const u64 TBE_REDUCE_MAX_COUNT = INT32_MAX;
     u64 curCount = curSize / SIZE_TABLE[dataType];
     bool issupportRDMAInlineReduce = IsSupportRDMAReduce(dataType, param->reduceType);
-    bool hugeData = (curSize * level2RankSize > RDMA_SEND_MAX_SIZE) || (curSize > SDMA_SEND_MAX_SIZE) ||
-        ((!isSupportSDMAReduce_) && (curCount > TBE_REDUCE_MAX_COUNT)) ||
-        ((!issupportRDMAInlineReduce) && (curCount * level2RankSize > TBE_REDUCE_MAX_COUNT));
+    bool hugeData = (curSize * level2RankSize > RDMA_SEND_MAX_SIZE) || (curSize > SDMA_SEND_MAX_SIZE)
+                    || ((!isSupportSDMAReduce_) && (curCount > TBE_REDUCE_MAX_COUNT))
+                    || ((!issupportRDMAInlineReduce) && (curCount * level2RankSize > TBE_REDUCE_MAX_COUNT));
     return hugeData;
 }
 
-REGISTER_EXEC("ReduceScatterVFastDoubleRingFor91093Executor", ReduceScatterVFastDoubleRingFor91093,
+REGISTER_EXEC(
+    "ReduceScatterVFastDoubleRingFor91093Executor", ReduceScatterVFastDoubleRingFor91093,
     CollReduceScatterVFastDoubleRingFor91093Executor);
-}
+} // namespace hccl

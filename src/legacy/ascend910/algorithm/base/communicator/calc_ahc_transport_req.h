@@ -12,20 +12,22 @@
 #define CALC_AHC_TRANSPORT_REQ_H
 
 #include "calc_ahc_transport_req_base.h"
- 
+
 namespace hccl {
 class CalcAHCTransportReq : public CalcAHCTransportReqBase {
 public:
-    explicit CalcAHCTransportReq(std::vector<std::vector<u32>> &subCommPlaneVector,
-        std::vector<bool> &isBridgeVector, u32 userRank, std::vector<std::vector<std::vector<u32>>> &globalSubGroups,
-        std::map<AHCConcOpType, TemplateType> &ahcAlgOption, std::unordered_map<u32, bool>  &isUsedRdmaMap);
- 
+    explicit CalcAHCTransportReq(
+        std::vector<std::vector<u32>>& subCommPlaneVector, std::vector<bool>& isBridgeVector, u32 userRank,
+        std::vector<std::vector<std::vector<u32>>>& globalSubGroups,
+        std::map<AHCConcOpType, TemplateType>& ahcAlgOption, std::unordered_map<u32, bool>& isUsedRdmaMap);
+
     ~CalcAHCTransportReq() override;
- 
-    HcclResult CalcDstRanks(u32 rank, std::set<u32> &dstRanks, u32 ringIndex) override;
+
+    HcclResult CalcDstRanks(u32 rank, std::set<u32>& dstRanks, u32 ringIndex) override;
+
 private:
     HcclResult DisposeSubGroups(u32 rank) override;
-    HcclResult CommAHCInfoInit(std::vector<std::vector<u32>> &subGroups) override;
+    HcclResult CommAHCInfoInit(std::vector<std::vector<u32>>& subGroups) override;
 };
 } // namespace hccl
 #endif /* CALC_AHC_TRANSPORT_REQ_H */

@@ -23,7 +23,7 @@ struct HcommChannelConfigData {
     bool isSharedQueue{false};
 };
 
-HcommResult ChannelConfigCreate(HcommChannelConfig *config);
+HcommResult ChannelConfigCreate(HcommChannelConfig* config);
 HcommResult ChannelConfigDestroy(HcommChannelConfig config);
 HcommResult ChannelConfigSetInt(HcommChannelConfig config, HcommChannelConfigType type, uint32_t value);
 

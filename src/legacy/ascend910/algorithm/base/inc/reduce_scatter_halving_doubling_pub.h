@@ -22,41 +22,40 @@ public:
 
     ~ReduceScatterHalvingDoubling() override;
 
-    HcclResult Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem, 
-        const u64 count, const HcclDataType dataType, const Stream &stream, 
-        const HcclReduceOp reductionOp, const u32 root,
-        const std::vector<Slice> &slices, const u64 baseOffset, 
-        const u32 blockSize, const u64 reduceAttrBitMap,
-        const UserMemType hdInputMemType, const UserMemType hdOutputMemType) override;
+    HcclResult Prepare(
+        DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+        const Stream& stream, const HcclReduceOp reductionOp, const u32 root, const std::vector<Slice>& slices,
+        const u64 baseOffset, const u32 blockSize, const u64 reduceAttrBitMap, const UserMemType hdInputMemType,
+        const UserMemType hdOutputMemType) override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
 
 protected:
 private:
-    HcclResult RunReduceScatter(const u32 rank, const u32 stepNum,
-                                    const HcclDispatcher dispatcher,
-                                    const std::vector<LINK> &links);
-    HcclResult RunSourceReducer(const LINK &link, const Slice &txSlice);
-    HcclResult RunDestRducer(const LINK &link, const HcclDispatcher dispatcher,
-                                 const Slice &rxSlice, const DstMemType reduceDst);
+    HcclResult RunReduceScatter(
+        const u32 rank, const u32 stepNum, const HcclDispatcher dispatcher, const std::vector<LINK>& links);
+    HcclResult RunSourceReducer(const LINK& link, const Slice& txSlice);
+    HcclResult
+    RunDestRducer(const LINK& link, const HcclDispatcher dispatcher, const Slice& rxSlice, const DstMemType reduceDst);
 
     u32 GetBlockStep(u32 blocksize) const;
-    HcclResult CalculateSlices(const u64 size, const u32 sliceNum, std::vector<Slice> &slicesOut);
-    HcclResult CalcStepSlices(const std::vector<Slice> &inputSlices,
-        const u32 stepNum, const u32 rank, const SliceType type, std::vector<Slice> &slicesOut);
+    HcclResult CalculateSlices(const u64 size, const u32 sliceNum, std::vector<Slice>& slicesOut);
+    HcclResult CalcStepSlices(
+        const std::vector<Slice>& inputSlices, const u32 stepNum, const u32 rank, const SliceType type,
+        std::vector<Slice>& slicesOut);
     u32 blockSize_ = 0;
     std::vector<Slice> txSlices_; // 下标为step, 标识每个step的tx_size
     std::vector<Slice> rxSlices_; // 下标为step, 标识每个step的tx_size
-    u64 reduceAttr_ = 0;               /* 0x1:表示data_type + reduce_type支持inlinereduce  */
+    u64 reduceAttr_ = 0;          /* 0x1:表示data_type + reduce_type支持inlinereduce  */
 
-    UserMemType hdInputMemType_;   // 算法使用的input mem对应用户mem的类型
-    UserMemType hdOutputMemType_;  // 算法使用的output mem对应用户mem的类型
+    UserMemType hdInputMemType_;  // 算法使用的input mem对应用户mem的类型
+    UserMemType hdOutputMemType_; // 算法使用的output mem对应用户mem的类型
 
     std::unique_ptr<Sender> senderInfo_;
     std::unique_ptr<Reducer> reducerInfo_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* REDUCE_SCATTER_HALVING_DOUBLING_PUB_H */

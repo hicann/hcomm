@@ -12,14 +12,12 @@
 
 class HcclRecvTest : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         BaseInit::SetUp();
         UT_USE_1SERVER_2RANK_AS_DEFAULT;
         // 将enableEntryLog默认返回为true
-        MOCKER(GetExternalInputHcclEnableEntryLog)
-            .stubs()
-            .with(mockcpp::any())
-            .will(returnValue(true));
+        MOCKER(GetExternalInputHcclEnableEntryLog).stubs().with(mockcpp::any()).will(returnValue(true));
         // MOCK掉对communicator层的依赖，保证分层测试
         HcclCommunicator commun_mock;
         MOCKER_CPP_VIRTUAL(commun_mock, &HcclCommunicator::ReceiveOutPlace)
@@ -27,12 +25,14 @@ public:
             .with(mockcpp::any())
             .will(returnValue(HCCL_SUCCESS));
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }
+
 protected:
-    s8 *recvBuf = nullptr;
+    s8* recvBuf = nullptr;
     u64 count = 0;
 };
 
@@ -123,8 +123,7 @@ TEST_F(HcclRecvTest, Ut_HcclRecv_When_Exec20times_Expect_ReturnIsHCCL_SUCCESS)
     UT_COMM_CREATE_DEFAULT(comm);
     UT_STREAM_CREATE_DEFAULT(stream);
 
-    for(int k = 0; k < LOOP_TIMES; k++) {
-
+    for (int k = 0; k < LOOP_TIMES; k++) {
         HcclResult ret = HcclRecvInner(recvBuf, count, HCCL_DATA_TYPE_INT8, destRank, comm, stream);
         EXPECT_EQ(ret, HCCL_SUCCESS);
 
@@ -148,10 +147,7 @@ TEST_F(HcclRecvTest, Ut_HcclRecv_When_2Server4Rank_Expect_ReturnIsHCCL_SUCCESS)
 
 TEST_F(HcclRecvTest, Ut_HcclRecv_When_GroupModeSuccess_Expect_ReturnIsHCCL_SUCCESS)
 {
-    MOCKER(taskAppend)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(taskAppend).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
     UT_SET_RECVBUF_COUNT(HCCL_COM_DATA_SIZE, HCCL_COM_DATA_SIZE);
     int destRank = 1;
     UT_COMM_CREATE_DEFAULT(comm);

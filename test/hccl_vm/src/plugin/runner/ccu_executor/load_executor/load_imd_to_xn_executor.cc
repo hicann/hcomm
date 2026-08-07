@@ -27,13 +27,13 @@ REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::LOAD_TYPE, SimCcuV2::LOADIMDTOX_CODE, 
 void LoadImdToXnExecutor::Parser()
 {
     if (version_ == RunnerCcuVersion::CCU_V1) {
-        xnId_       = instr_.v1.loadImdToXn.xnId;
-        immediate_  = instr_.v1.loadImdToXn.immediate;
-    } else if(version_ == RunnerCcuVersion::CCU_V2) {
-        xnId_       = instr_.v2.loadImdToX.xnId;
-        immediate_  = instr_.v2.loadImdToX.immediate;
-        ckeId_      = instr_.v2.loadImdToX.setCKEId;
-        ckeMask_    = instr_.v2.loadImdToX.setCKEMask;
+        xnId_ = instr_.v1.loadImdToXn.xnId;
+        immediate_ = instr_.v1.loadImdToXn.immediate;
+    } else if (version_ == RunnerCcuVersion::CCU_V2) {
+        xnId_ = instr_.v2.loadImdToX.xnId;
+        immediate_ = instr_.v2.loadImdToX.immediate;
+        ckeId_ = instr_.v2.loadImdToX.setCKEId;
+        ckeMask_ = instr_.v2.loadImdToX.setCKEMask;
     } else {
         HCCL_VM_ERROR("Invalid ccu version:{}", RunnerCcuVersionToString(version_));
         ccuSimulator_->SetExecState(CcuExecState::EXEC_FAIL);
@@ -43,19 +43,19 @@ void LoadImdToXnExecutor::Parser()
 
 void LoadImdToXnExecutor::Run()
 {
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     ccuResMgr.UpdateXnValue(rankId_, dieId_, xnId_, immediate_);
     if (version_ == RunnerCcuVersion::CCU_V2) {
         uint16_t ckeId = UpdateCkeId(ckeId_);
         SetCkeSignal(ccuResMgr, ckeId, ckeMask_);
     }
-    HCCL_VM_DEBUG("Load immediate: locCcu[{}:{}], XnId=[{}], immediate=[{}]",
-        rankId_, dieId_, xnId_, immediate_);
+    HCCL_VM_DEBUG("Load immediate: locCcu[{}:{}], XnId=[{}], immediate=[{}]", rankId_, dieId_, xnId_, immediate_);
 }
 
 std::string LoadImdToXnExecutor::Describe()
 {
-    return HcclSim::StringFormat("[Simulation Execute] locCcu[%d:%d], Load immediate[%lu] to Xn[%u]\n", rankId_, dieId_, immediate_, xnId_);
+    return HcclSim::StringFormat(
+        "[Simulation Execute] locCcu[%d:%d], Load immediate[%lu] to Xn[%u]\n", rankId_, dieId_, immediate_, xnId_);
 }
 
 CcuTrace::CcuInstrTraceDetail LoadImdToXnExecutor::CollectTraceDetail()

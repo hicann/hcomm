@@ -13,5 +13,4 @@
 constexpr u32 MAX_MODULE_DEVICE_NUM = 65;
 #endif
 
-
 #endif

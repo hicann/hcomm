@@ -14,25 +14,13 @@
 
 class CheckUbAttrTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "CheckUbAttrTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "CheckUbAttrTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "CheckUbAttrTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "CheckUbAttrTest tests tear down." << std::endl; }
 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in CheckUbAttrTest SetUp" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in CheckUbAttrTest SetUp" << std::endl; }
 
-    virtual void TearDown()
-    {
-        std::cout << "A Test case in CheckUbAttrTest TearDown" << std::endl;
-    }
+    virtual void TearDown() { std::cout << "A Test case in CheckUbAttrTest TearDown" << std::endl; }
 };
 
 TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIsZero_Expect_ReturnHCCL_SUCCESS)
@@ -109,25 +97,13 @@ TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs100_Expect_ReturnHCCL_SUCCE
 
 class HcommChannelDescInitTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "HcommChannelDescInitTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "HcommChannelDescInitTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "HcommChannelDescInitTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "HcommChannelDescInitTest tests tear down." << std::endl; }
 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in HcommChannelDescInitTest SetUp" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in HcommChannelDescInitTest SetUp" << std::endl; }
 
-    virtual void TearDown()
-    {
-        std::cout << "A Test case in HcommChannelDescInitTest TearDown" << std::endl;
-    }
+    virtual void TearDown() { std::cout << "A Test case in HcommChannelDescInitTest TearDown" << std::endl; }
 };
 
 TEST_F(HcommChannelDescInitTest, Ut_HcommChannelDescInit_When_Normal_Expect_SqDepthIsZero)

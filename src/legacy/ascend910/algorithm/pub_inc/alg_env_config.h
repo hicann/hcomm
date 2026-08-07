@@ -24,17 +24,14 @@ struct AlgEnvConfig {
 
     std::map<HcclCMDType, std::vector<HcclAlgoType>> hcclAlgoConfig;
 
-    AlgEnvConfig()
-    {
-        SetDefaultParams();
-    }
+    AlgEnvConfig() { SetDefaultParams(); }
     void SetDefaultParams()
     {
         initialized = false;
         // 环境变量参数
         for (u32 opType = 0; opType < static_cast<u32>(HcclCMDType::HCCL_CMD_MAX); opType++) {
-            hcclAlgoConfig[static_cast<HcclCMDType>(opType)] =
-                std::vector<HcclAlgoType>(HCCL_ALGO_LEVEL_NUM, HcclAlgoType::HCCL_ALGO_TYPE_DEFAULT);
+            hcclAlgoConfig[static_cast<HcclCMDType>(opType)]
+                = std::vector<HcclAlgoType>(HCCL_ALGO_LEVEL_NUM, HcclAlgoType::HCCL_ALGO_TYPE_DEFAULT);
         }
     }
 };
@@ -61,19 +58,19 @@ HcclResult ResetAlgEnvConfigInitState();
 
 const std::vector<HcclAlgoType> GetExternalInputHcclAlgoConfig(HcclCMDType opType = HcclCMDType::HCCL_CMD_ALL);
 
-HcclResult SetCommonAlgType(std::vector<std::string> &algos);
+HcclResult SetCommonAlgType(std::vector<std::string>& algos);
 
-HcclResult SetSpecificAlgType(std::vector<std::string> &algos);
+HcclResult SetSpecificAlgType(std::vector<std::string>& algos);
 
-HcclResult ParserHcclAlgoLevel(const std::string &algoLevel, u32 &level, HcclAlgoType &algoType);
+HcclResult ParserHcclAlgoLevel(const std::string& algoLevel, u32& level, HcclAlgoType& algoType);
 
-HcclResult ParseAlgoString(std::string opName, std::string &algoString, std::vector<HcclAlgoType> &algType);
+HcclResult ParseAlgoString(std::string opName, std::string& algoString, std::vector<HcclAlgoType>& algType);
 
-HcclResult SplitHcclOpType(const std::string &algoConfig, std::vector<std::string> &algos);
+HcclResult SplitHcclOpType(const std::string& algoConfig, std::vector<std::string>& algos);
 
-HcclResult CheckAlgoConfigValid(std::vector<std::string> &algos, bool& anyCommonConfig, bool& anySpecificConfig);
+HcclResult CheckAlgoConfigValid(std::vector<std::string>& algos, bool& anyCommonConfig, bool& anySpecificConfig);
 
-HcclResult SplitHcclAlgoLevel(const std::string &algoConfig, std::vector<std::string> &algos);
+HcclResult SplitHcclAlgoLevel(const std::string& algoConfig, std::vector<std::string>& algos);
 
 s32 GetInternalExecTimeOut();
 #endif // HCCL_ALG_ENV_CONFIG_H

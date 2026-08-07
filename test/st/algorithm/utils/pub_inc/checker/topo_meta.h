@@ -30,8 +30,8 @@ class RankTable_For_LLT {
 public:
     explicit RankTable_For_LLT() = default;
     ~RankTable_For_LLT() = default;
-    static HcclResult GenTopoMeta(TopoMeta &topoMate, int superPodNum, int serverNum, int rankNum);
+    static HcclResult GenTopoMeta(TopoMeta& topoMate, int superPodNum, int serverNum, int rankNum);
 };
-}  // namespace checker
+} // namespace checker
 
 #endif

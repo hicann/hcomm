@@ -17,6 +17,6 @@ bool ProbeCheckOnlyMode();
 
 // 进程内只读一次并缓存结果。
 bool IsCheckOnlyMode();
-}  // namespace sim
+} // namespace sim
 
-#endif  // STORE_SIM_RUN_MODE_H
+#endif // STORE_SIM_RUN_MODE_H

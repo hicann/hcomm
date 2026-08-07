@@ -12,10 +12,9 @@
 
 class HcclGetConfigTest : public BaseInit {
 public:
-    void SetUp() override {
-        BaseInit::SetUp();
-    }
-    void TearDown() override {
+    void SetUp() override { BaseInit::SetUp(); }
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }
@@ -57,7 +56,7 @@ TEST_F(HcclGetConfigTest, Ut_HcclGetConfig_When_SetFailed_Expect_ReturnValueIsDE
     hcclConfigValue.value = 2;
     HcclResult ret = HcclSetConfig(HCCL_DETERMINISTIC, hcclConfigValue);
     EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
-    
+
     ret = HcclGetConfig(HCCL_DETERMINISTIC, &hcclConfigValueRet);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(hcclConfigValueRet.value, DETERMINISTIC_DISABLE);

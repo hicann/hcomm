@@ -13,8 +13,6 @@
 
 #include "recursive_halvingdoubling_base_pub.h"
 
-namespace hccl {
-}  // hccl
+namespace hccl {} // namespace hccl
 
-#endif  /* RECURSIVE_HALVINGDOUBLING_BASE_H */
-
+#endif /* RECURSIVE_HALVINGDOUBLING_BASE_H */

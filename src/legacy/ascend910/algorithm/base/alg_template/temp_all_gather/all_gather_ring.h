@@ -13,7 +13,6 @@
 
 #include "all_gather_ring_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALL_GATHER_RING_H */

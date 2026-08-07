@@ -24,9 +24,9 @@ public:
 
     ~HostBuffer() override;
 
-    HostBuffer(const HostBuffer &that) = delete;
+    HostBuffer(const HostBuffer& that) = delete;
 
-    HostBuffer &operator=(const HostBuffer &that) = delete;
+    HostBuffer& operator=(const HostBuffer& that) = delete;
 
     std::string Describe() const override;
 

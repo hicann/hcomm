@@ -24,17 +24,19 @@ namespace Hccl {
 
 inline HcclReduceOp ConvertReduceOpToHcclReduceOp(ReduceOp reduceOp)
 {
-    static std::map<ReduceOp, HcclReduceOp> reduceTypeMap = {{ReduceOp::SUM, HcclReduceOp::HCCL_REDUCE_SUM},
-                                                             {ReduceOp::PROD, HcclReduceOp::HCCL_REDUCE_PROD},
-                                                             {ReduceOp::MAX, HcclReduceOp::HCCL_REDUCE_MAX},
-                                                             {ReduceOp::MIN, HcclReduceOp::HCCL_REDUCE_MIN}};
+    static std::map<ReduceOp, HcclReduceOp> reduceTypeMap
+        = {{ReduceOp::SUM, HcclReduceOp::HCCL_REDUCE_SUM},
+           {ReduceOp::PROD, HcclReduceOp::HCCL_REDUCE_PROD},
+           {ReduceOp::MAX, HcclReduceOp::HCCL_REDUCE_MAX},
+           {ReduceOp::MIN, HcclReduceOp::HCCL_REDUCE_MIN}};
     if (UNLIKELY(reduceTypeMap.find(reduceOp) == reduceTypeMap.end())) {
         THROW<InternalException>(StringFormat("reduceOp[%u] is invalid", reduceOp));
     }
     return reduceTypeMap[reduceOp];
 }
 
-MAKE_ENUM(TransferType, WRITE, WRITE_REDUCE, WRITE_WITH_NOTIFY, WRITE_REDUCE_WITH_NOTIFY, READ, READ_REDUCE, NOTIFY_RECORD)
+MAKE_ENUM(
+    TransferType, WRITE, WRITE_REDUCE, WRITE_WITH_NOTIFY, WRITE_REDUCE_WITH_NOTIFY, READ, READ_REDUCE, NOTIFY_RECORD)
 
 class BaseTransportLiteImpl {
 public:
@@ -42,10 +44,7 @@ public:
 
     virtual ~BaseTransportLiteImpl() = default;
 
-    virtual std::string Describe() const
-    {
-        return "BaseTransportLiteImpl";
-    }
+    virtual std::string Describe() const { return "BaseTransportLiteImpl"; }
 
     struct TransferOp {
         TransferType transType;
@@ -58,7 +57,7 @@ public:
         return Buffer(0, 0);
     }
 
-    virtual HcclResult BuildLocRmaBufferLite(const uintptr_t addr, const size_t size, RmaBufferLite &rmaBufferLite)
+    virtual HcclResult BuildLocRmaBufferLite(const uintptr_t addr, const size_t size, RmaBufferLite& rmaBufferLite)
     {
         (void)addr;
         (void)size;
@@ -66,50 +65,41 @@ public:
         return HCCL_SUCCESS;
     }
 
-    virtual void Post(u32 index, const StreamLite &stream)
+    virtual void Post(u32 index, const StreamLite& stream)
     {
         (void)index;
         (void)stream;
     }
 
-    virtual void Wait(u32 index, const StreamLite &stream)
+    virtual void Wait(u32 index, const StreamLite& stream)
     {
         (void)index;
         (void)stream;
     }
 
-    virtual void WaitWithTimeout(u32 index, const StreamLite &stream, u32 timeout)
+    virtual void WaitWithTimeout(u32 index, const StreamLite& stream, u32 timeout)
     {
         (void)index;
         (void)stream;
         (void)timeout;
     }
 
-    virtual void Read(const RmaBufferLite &loc, const Buffer &rmt, const StreamLite &stream)
+    virtual void Read(const RmaBufferLite& loc, const Buffer& rmt, const StreamLite& stream)
     {
         (void)loc;
         (void)rmt;
         (void)stream;
     }
 
-    virtual void Write(const RmaBufferLite &loc, const Buffer &rmt, const StreamLite &stream)
+    virtual void Write(const RmaBufferLite& loc, const Buffer& rmt, const StreamLite& stream)
     {
         (void)loc;
         (void)rmt;
         (void)stream;
     }
 
-    virtual void ReadReduce(const RmaBufferLite &loc, const Buffer &rmt, const ReduceIn &reduceIn,
-                            const StreamLite &stream)
-    {
-        (void)loc;
-        (void)rmt;
-        (void)reduceIn;
-        (void)stream;
-    }
-
-    virtual void WriteReduce(const RmaBufferLite &loc, const Buffer &rmt, const ReduceIn &reduceIn,
-                             const StreamLite &stream)
+    virtual void
+    ReadReduce(const RmaBufferLite& loc, const Buffer& rmt, const ReduceIn& reduceIn, const StreamLite& stream)
     {
         (void)loc;
         (void)rmt;
@@ -117,8 +107,17 @@ public:
         (void)stream;
     }
 
-    virtual void WriteWithNotify(const RmaBufferLite &loc, const Buffer &rmt, const WithNotifyIn &withNotify,
-                                 const StreamLite &stream)
+    virtual void
+    WriteReduce(const RmaBufferLite& loc, const Buffer& rmt, const ReduceIn& reduceIn, const StreamLite& stream)
+    {
+        (void)loc;
+        (void)rmt;
+        (void)reduceIn;
+        (void)stream;
+    }
+
+    virtual void WriteWithNotify(
+        const RmaBufferLite& loc, const Buffer& rmt, const WithNotifyIn& withNotify, const StreamLite& stream)
     {
         (void)loc;
         (void)rmt;
@@ -126,8 +125,9 @@ public:
         (void)stream;
     }
 
-    virtual void WriteReduceWithNotify(const RmaBufferLite &loc, const Buffer &rmt, const ReduceIn &reduceIn,
-                                       const WithNotifyIn &withNotify, const StreamLite &stream)
+    virtual void WriteReduceWithNotify(
+        const RmaBufferLite& loc, const Buffer& rmt, const ReduceIn& reduceIn, const WithNotifyIn& withNotify,
+        const StreamLite& stream)
     {
         (void)loc;
         (void)rmt;
@@ -136,24 +136,25 @@ public:
         (void)stream;
     }
 
-    virtual void BatchOneSidedWrite(const std::vector<RmaBufSliceLite> &loc, const std::vector<RmtRmaBufSliceLite> &rmt,
-        const StreamLite &stream)
+    virtual void BatchOneSidedWrite(
+        const std::vector<RmaBufSliceLite>& loc, const std::vector<RmtRmaBufSliceLite>& rmt, const StreamLite& stream)
     {
         (void)loc;
         (void)rmt;
         (void)stream;
     }
 
-    virtual void BatchOneSidedRead(const std::vector<RmaBufSliceLite> &loc, const std::vector<RmtRmaBufSliceLite> &rmt,
-        const StreamLite &stream)
+    virtual void BatchOneSidedRead(
+        const std::vector<RmaBufSliceLite>& loc, const std::vector<RmtRmaBufSliceLite>& rmt, const StreamLite& stream)
     {
         (void)loc;
         (void)rmt;
         (void)stream;
     }
 
-    virtual void BatchTransfer(const std::vector<RmaBufferLite> &loc, const std::vector<Buffer> &rmt,
-                                const std::vector<TransferOp> &transferOp, const StreamLite &stream)
+    virtual void BatchTransfer(
+        const std::vector<RmaBufferLite>& loc, const std::vector<Buffer>& rmt,
+        const std::vector<TransferOp>& transferOp, const StreamLite& stream)
     {
         (void)loc;
         (void)rmt;
@@ -161,15 +162,9 @@ public:
         (void)stream;
     }
 
-    virtual void Drain(const StreamLite &stream)
-    {
-        (void)stream;
-    }
+    virtual void Drain(const StreamLite& stream) { (void)stream; }
 
-    virtual HcclResult Fence()
-    {
-        return HCCL_SUCCESS;
-    }
+    virtual HcclResult Fence() { return HCCL_SUCCESS; }
 
     // 自定义算子流程上报task的Callback
     HcclResult SetAddTaskInfoCallback(std::function<HcclResult(u32, u32, const TaskParam&, u64)> callback)
@@ -178,8 +173,10 @@ public:
         newCallback_ = callback;
         return HCCL_SUCCESS;
     }
+
 protected:
     std::function<HcclResult(u32, u32, const TaskParam&, u64)> newCallback_{nullptr};
+
 private:
 };
 

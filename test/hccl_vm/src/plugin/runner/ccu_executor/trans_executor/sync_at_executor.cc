@@ -25,12 +25,12 @@ REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::TRANS_TYPE, SimCcuV2::SYNCATX_CODE, Sy
 void SyncAtExecutor::Parser()
 {
     ValidateVersionExclusive(RunnerCcuVersion::CCU_V2, "SyncAtExecutor");
-    xdId_       = instr_.v2.syncAtX.xdId;
-    xdtId_      = instr_.v2.syncAtX.xdtId;
-    xsId_       = instr_.v2.syncAtX.xsId;
-    xcId_       = instr_.v2.syncAtX.xcId;
-    parMode_    = instr_.v2.syncAtX.parMode;
-    setCKEId_   = instr_.v2.syncAtX.setCKEId;
+    xdId_ = instr_.v2.syncAtX.xdId;
+    xdtId_ = instr_.v2.syncAtX.xdtId;
+    xsId_ = instr_.v2.syncAtX.xsId;
+    xcId_ = instr_.v2.syncAtX.xcId;
+    parMode_ = instr_.v2.syncAtX.parMode;
+    setCKEId_ = instr_.v2.syncAtX.setCKEId;
     setCKEMask_ = instr_.v2.syncAtX.setCKEMask;
 }
 
@@ -38,13 +38,14 @@ void SyncAtExecutor::Run()
 {
     HCCL_VM_ERROR("SyncAtExecutor unsupport run");
     ccuSimulator_->SetExecState(CcuExecState::EXEC_FAIL);
-    return ;
+    return;
 }
 
 std::string SyncAtExecutor::Describe()
 {
-    return HcclSim::StringFormat("[SyncAtExecutor] xdId[%u] xdtId[%u] xsId[%u] xcId[%u] "
-                                  "parMode[%u] setCKEId[%u] setCKEMask[0x%04x]\n",
+    return HcclSim::StringFormat(
+        "[SyncAtExecutor] xdId[%u] xdtId[%u] xsId[%u] xcId[%u] "
+        "parMode[%u] setCKEId[%u] setCKEMask[0x%04x]\n",
         xdId_, xdtId_, xsId_, xcId_, parMode_, setCKEId_, setCKEMask_);
 }
 

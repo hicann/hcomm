@@ -18,35 +18,28 @@ namespace Hccl {
 
 class ExchangeUbConnDto : public Serializable { // UB建链需要交换的信息
 public:
-    ExchangeUbConnDto()
-    {
-    }
+    ExchangeUbConnDto() {}
 
-    ExchangeUbConnDto(u32 tokenValue, u32 qpKeySize, u64 tpHandle, u32 psn) :
-        tokenValue(tokenValue), qpKeySize(qpKeySize), tpHandle(tpHandle), psn(psn)
-    {
-    }
+    ExchangeUbConnDto(u32 tokenValue, u32 qpKeySize, u64 tpHandle, u32 psn)
+        : tokenValue(tokenValue),
+          qpKeySize(qpKeySize),
+          tpHandle(tpHandle),
+          psn(psn)
+    {}
 
-    void Serialize(Hccl::BinaryStream &stream) override
-    {
-        stream << tokenValue << qpKey << eid << tpHandle << psn;
-    }
+    void Serialize(Hccl::BinaryStream& stream) override { stream << tokenValue << qpKey << eid << tpHandle << psn; }
 
-    void Deserialize(Hccl::BinaryStream &stream) override
-    {
-        stream >> tokenValue >> qpKey >> eid >> tpHandle >> psn;
-    }
+    void Deserialize(Hccl::BinaryStream& stream) override { stream >> tokenValue >> qpKey >> eid >> tpHandle >> psn; }
 
     std::string Describe() const override
     {
-        return StringFormat("ExchangeUbConnDto=[qpKeySize=%u, tpHandle=0x%llx, psn=%u]",
-                            qpKeySize, tpHandle, psn);
+        return StringFormat("ExchangeUbConnDto=[qpKeySize=%u, tpHandle=0x%llx, psn=%u]", qpKeySize, tpHandle, psn);
     }
 
     u32 tokenValue{0};
     u32 qpKeySize{HRT_UB_QP_KEY_MAX_LEN};
-    u8  qpKey[HRT_UB_QP_KEY_MAX_LEN]{0};
-    u8  eid[16]{0};
+    u8 qpKey[HRT_UB_QP_KEY_MAX_LEN]{0};
+    u8 eid[16]{0};
     u64 tpHandle{0};
     u32 psn{0};
 };

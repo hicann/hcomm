@@ -13,21 +13,22 @@ using namespace std;
 
 static s32 stub_log_level = DLOG_ERROR;
 static s32 stub_checker_level = DLOG_ERROR;
-constexpr s32  LOG_TIME_STAMP_SIZE = 27;
+constexpr s32 LOG_TIME_STAMP_SIZE = 27;
 constexpr u32 TIME_FROM_1900 = 1900;
 void initLogLevel() __attribute__((constructor));
 
 /* 华为安全函数返回值转换 */
-#define HUAWEI_SECC_RET_CHECK_AND_RETURN(ret) do { \
-    switch (ret) {                        \
-        case EOK:                         \
-            return HCCL_SUCCESS;          \
-        case EINVAL:                      \
-            return HCCL_E_PARA;           \
-        default:                          \
-            return HCCL_E_INTERNAL;       \
-    }                                     \
-} while (0)
+#define HUAWEI_SECC_RET_CHECK_AND_RETURN(ret) \
+    do {                                      \
+        switch (ret) {                        \
+            case EOK:                         \
+                return HCCL_SUCCESS;          \
+            case EINVAL:                      \
+                return HCCL_E_PARA;           \
+            default:                          \
+                return HCCL_E_INTERNAL;       \
+        }                                     \
+    } while (0)
 
 #define HUAWEI_SECC_RET_TRANSFORM(ret) ((ret == EOK) ? HCCL_SUCCESS : ((ret == EINVAL) ? HCCL_E_PARA : HCCL_E_INTERNAL))
 
@@ -38,13 +39,9 @@ int CheckLogLevel(int moduleId, int logLevel)
     return 1;
 }
 
-s32 log_level_get_stub() {
-    return stub_log_level;
-}
+s32 log_level_get_stub() { return stub_log_level; }
 
-void log_level_set_stub(s32 log_level) {
-	stub_log_level = log_level;
-}
+void log_level_set_stub(s32 log_level) { stub_log_level = log_level; }
 
 int32_t dlog_setlevel(int32_t moduleId, int32_t level, int32_t enableEvent)
 {
@@ -52,11 +49,11 @@ int32_t dlog_setlevel(int32_t moduleId, int32_t level, int32_t enableEvent)
     return 0;
 }
 
-HcclResult sal_get_current_time(char *timeStr, u32 len)
+HcclResult sal_get_current_time(char* timeStr, u32 len)
 {
     struct timeval tv;
     time_t tmpt;
-    struct tm *now;
+    struct tm* now;
 
     if (timeStr == NULL) {
         return HCCL_E_PARA;
@@ -72,20 +69,21 @@ HcclResult sal_get_current_time(char *timeStr, u32 len)
         return HCCL_E_INTERNAL;
     }
 
-    int iLen = snprintf_s(timeStr, len, len, "%04d-%02d-%02d %02d:%0d:%02d.%06u",\
-        now->tm_year + TIME_FROM_1900,
-        now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, (u32)tv.tv_usec);
+    int iLen = snprintf_s(
+        timeStr, len, len, "%04d-%02d-%02d %02d:%0d:%02d.%06u", now->tm_year + TIME_FROM_1900, now->tm_mon + 1,
+        now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec, (u32)tv.tv_usec);
     if (iLen == -1) {
-        HCCL_WARNING("Print time failed[%d]." \
-            "params: time[%s], len[%u], time_format:%04d-%02d-%02d %02d:%02d:%02d.%06u",\
-            iLen, timeStr, len, now->tm_year + TIME_FROM_1900, now->tm_mon + 1, now->tm_mday,
-            now->tm_hour, now->tm_min, now->tm_sec, (u32)tv.tv_usec);
+        HCCL_WARNING(
+            "Print time failed[%d]."
+            "params: time[%s], len[%u], time_format:%04d-%02d-%02d %02d:%02d:%02d.%06u",
+            iLen, timeStr, len, now->tm_year + TIME_FROM_1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min,
+            now->tm_sec, (u32)tv.tv_usec);
     }
 
     return HCCL_SUCCESS;
 }
 
-string get_log_str_from_type_stub(s32          type)
+string get_log_str_from_type_stub(s32 type)
 {
     string str = "";
     switch (type) {
@@ -110,38 +108,39 @@ string get_log_str_from_type_stub(s32          type)
     return str;
 }
 
-HcclResult sal_memset(void *dest, size_t destMaxSize, int c, size_t count)
+HcclResult sal_memset(void* dest, size_t destMaxSize, int c, size_t count)
 {
     CHK_PTR_NULL(dest);
     s32 ret = memset_s(dest, destMaxSize, c, count);
     if (ret != EOK) {
-        HCCL_ERROR("errNo[0x%016llx] In sal_memset, memset_s failed. errorno[%d], params: dest[%p], "\
-            "destMaxSize[%d], c[%d], count[%d]", HCCL_ERROR_CODE(HUAWEI_SECC_RET_TRANSFORM(ret)), ret, dest, \
-            destMaxSize, c, count);
+        HCCL_ERROR(
+            "errNo[0x%016llx] In sal_memset, memset_s failed. errorno[%d], params: dest[%p], "
+            "destMaxSize[%d], c[%d], count[%d]",
+            HCCL_ERROR_CODE(HUAWEI_SECC_RET_TRANSFORM(ret)), ret, dest, destMaxSize, c, count);
     }
     HUAWEI_SECC_RET_CHECK_AND_RETURN(ret);
 }
 
-void sal_dlog_printf_stub(int level,char* log_buffer)
+void sal_dlog_printf_stub(int level, char* log_buffer)
 {
-    char            time_stamp[LOG_TIME_STAMP_SIZE]   = {0};   /* 缓存时间戳  */
+    char time_stamp[LOG_TIME_STAMP_SIZE] = {0}; /* 缓存时间戳  */
 
     /* 获取时间标签 */
     (void)sal_memset(time_stamp, LOG_TIME_STAMP_SIZE, 0, sizeof(time_stamp));
     (void)sal_get_current_time(time_stamp, LOG_TIME_STAMP_SIZE);
 
-     string str_type= get_log_str_from_type_stub(level);
-     printf("[%-26s][pid:%u]%s%s\n", time_stamp, getpid(), str_type.c_str(), log_buffer);
+    string str_type = get_log_str_from_type_stub(level);
+    printf("[%-26s][pid:%u]%s%s\n", time_stamp, getpid(), str_type.c_str(), log_buffer);
 }
 
-void DlogRecord(int moduleId, int level, const char *fmt, ...)
+void DlogRecord(int moduleId, int level, const char* fmt, ...)
 {
-    if((moduleId == HCCL && level < stub_log_level) || (moduleId != HCCL && level < stub_checker_level)){
-    	return;
+    if ((moduleId == HCCL && level < stub_log_level) || (moduleId != HCCL && level < stub_checker_level)) {
+        return;
     }
-    char            stack_log_buffer[LOG_TMPBUF_SIZE];          /* 优先使用栈中的buffer, 小而快  */
-    va_list         arg;
-    (void)va_start(arg, fmt);   //lint !e530
+    char stack_log_buffer[LOG_TMPBUF_SIZE]; /* 优先使用栈中的buffer, 小而快  */
+    va_list arg;
+    (void)va_start(arg, fmt); // lint !e530
     (void)sal_memset(stack_log_buffer, LOG_TMPBUF_SIZE, 0, sizeof(stack_log_buffer));
     /*
         C库标准的vsnprintf()函数在字符串超出缓存长度后返回需要的缓存空间.
@@ -153,14 +152,14 @@ void DlogRecord(int moduleId, int level, const char *fmt, ...)
     sal_dlog_printf_stub(level, stack_log_buffer);
 }
 
-void DlogInner(int moduleId, int level, const char *fmt, ...)
+void DlogInner(int moduleId, int level, const char* fmt, ...)
 {
-    if((moduleId == HCCL && level < stub_log_level) || (moduleId != HCCL && level < stub_checker_level)){
-    	return;
+    if ((moduleId == HCCL && level < stub_log_level) || (moduleId != HCCL && level < stub_checker_level)) {
+        return;
     }
-    char            stack_log_buffer[LOG_TMPBUF_SIZE];          /* 优先使用栈中的buffer, 小而快  */
-    va_list         arg;
-    (void)va_start(arg, fmt);   //lint !e530
+    char stack_log_buffer[LOG_TMPBUF_SIZE]; /* 优先使用栈中的buffer, 小而快  */
+    va_list arg;
+    (void)va_start(arg, fmt); // lint !e530
     (void)sal_memset(stack_log_buffer, LOG_TMPBUF_SIZE, 0, sizeof(stack_log_buffer));
     /*
         C库标准的vsnprintf()函数在字符串超出缓存长度后返回需要的缓存空间.
@@ -175,11 +174,10 @@ void DlogInner(int moduleId, int level, const char *fmt, ...)
 void initLogLevel()
 {
     auto setLogEnv = [](const char* env, s32& log_level) {
-        char *env_var = getenv(env);
+        char* env_var = getenv(env);
         if (env_var) {
             // 将环境变量的值转换为整数
-            if(strlen(env_var) > 1 || env_var[0] < '0' || env_var[0] > '3')
-            {
+            if (strlen(env_var) > 1 || env_var[0] < '0' || env_var[0] > '3') {
                 return;
             }
             log_level = static_cast<s32>(atoi(env_var));

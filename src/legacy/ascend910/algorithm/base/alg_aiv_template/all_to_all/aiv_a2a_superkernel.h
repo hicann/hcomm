@@ -7,15 +7,16 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef AIV_A2A_SUPERKERNEL_H
 #define AIV_A2A_SUPERKERNEL_H
- 
+
 #include "aiv_communication_base.h"
 #include "aiv_all_to_all_91093_single.h"
 #include "aiv_all_to_all_910B_single.h"
 
-extern "C" __aicore__ void sk_alltoall(SUPERKERNEL_LITE_ARGS_DEF) {
+extern "C" __aicore__ void sk_alltoall(SUPERKERNEL_LITE_ARGS_DEF)
+{
     SUPERKERNEL_LITE_ARGS_EXTRACT;
     if (devType == DEV_TYPE_910_93) {
         return sk_all_to_all_91093_single(SUPERKERNEL_ARGS_CALL);
@@ -23,6 +24,5 @@ extern "C" __aicore__ void sk_alltoall(SUPERKERNEL_LITE_ARGS_DEF) {
         return sk_all_to_all_910B_single(SUPERKERNEL_ARGS_CALL);
     }
 }
- 
- 
-#endif  /* AIV_A2A_SUPERKERNEL_H */
+
+#endif /* AIV_A2A_SUPERKERNEL_H */

@@ -12,22 +12,16 @@
 
 namespace hccl {
 
+NBBase::NBBase(const HcclDispatcher dispatcher) : AlgTemplateBase(dispatcher) {}
 
-NBBase::NBBase(const HcclDispatcher dispatcher)
-    : AlgTemplateBase(dispatcher)
-{
-}
-
-NBBase::~NBBase()
-{
-}
+NBBase::~NBBase() {}
 
 u32 NBBase::CalcCeilLog2(const u32 num)
 {
     u32 ans = 0;
-    for (u32 tmp = num - 1; tmp != 0; tmp >>= 1, ++ans) {}
+    for (u32 tmp = num - 1; tmp != 0; tmp >>= 1, ++ans) {
+    }
     return ans;
 }
 
-
-}   // ~~ namespace hccl
+} // namespace hccl

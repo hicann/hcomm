@@ -8,22 +8,21 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <string>
-#include "adapter_error_manager.h" 
+#include "adapter_error_manager.h"
 #include "base/err_mgr.h"
 #include "log.h"
 
 ErrContext hrtErrMGetErrorContext(void)
 {
     error_message::ErrorManagerContext sdk_ctx = error_message::GetErrMgrContext();
-    
+
     ErrContext local_ctx;
     local_ctx.work_stream_id = sdk_ctx.work_stream_id;
     // 复制 reserved 数组
-    errno_t ret = memcpy_s(local_ctx.reserved, sizeof(local_ctx.reserved), 
-        sdk_ctx.reserved, sizeof(sdk_ctx.reserved));
+    errno_t ret = memcpy_s(local_ctx.reserved, sizeof(local_ctx.reserved), sdk_ctx.reserved, sizeof(sdk_ctx.reserved));
 
     CHK_PRT_RET(ret != EOK, HCCL_ERROR("[%s]memcpy failed. errorno[%d]:", __func__, ret), local_ctx);
-    
+
     return local_ctx;
 }
 
@@ -32,10 +31,10 @@ void hrtErrMSetErrorContext(ErrContext error_context)
     error_message::ErrorManagerContext sdk_ctx;
     sdk_ctx.work_stream_id = error_context.work_stream_id;
     // 复制 reserved 数组
-    errno_t ret = memcpy_s(sdk_ctx.reserved, sizeof(sdk_ctx.reserved),
-        error_context.reserved, sizeof(error_context.reserved) );
+    errno_t ret
+        = memcpy_s(sdk_ctx.reserved, sizeof(sdk_ctx.reserved), error_context.reserved, sizeof(error_context.reserved));
 
-    if( ret != EOK) {
+    if (ret != EOK) {
         HCCL_ERROR("[%s]memcpy failed. errorno[%d]:", __func__, ret);
         return;
     }

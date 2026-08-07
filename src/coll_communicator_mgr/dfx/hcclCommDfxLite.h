@@ -22,7 +22,7 @@ namespace hccl {
 // are NOT thread-safe. If used in multi-threaded environments, external synchronization is required.
 class HcclCommDfxLite {
 public:
-     // 构造函数（接收CommunicatorImplLite中已经存在的MirrorTaskManager指针）
+    // 构造函数（接收CommunicatorImplLite中已经存在的MirrorTaskManager指针）
     explicit HcclCommDfxLite();
 
     // 初始化DFX系统 - 修改为返回HcclResult类型
@@ -35,13 +35,12 @@ public:
     HcclResult ReportHcclOpInfo(const Hccl::DfxOpInfo& hcclOpInfo);
     HcclResult UpdateProfStat();
     HcclResult SetCurrDfxOpInfo(std::shared_ptr<Hccl::DfxOpInfo> dfxOpInfo);
-    std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> GetCallback() const {
-        return addTaskCallback_;
-    }
+    std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> GetCallback() const { return addTaskCallback_; }
     // 将remoteRankId添加到channelRemoteRankId_表中
     void AddChannelRemoteRankId(u64 handle, u32 remoteRankId);
     // 在channelRemoteRankId_表中对remoteRankId进行查找
     u32 GetChannelRemoteRankId(u64 handle);
+
 private:
     std::unique_ptr<Hccl::MirrorTaskManagerLite> mirrorTaskManagerLite_{nullptr};
     std::unique_ptr<HcclCommProfilingLite> profilingImpl_{nullptr};
@@ -53,5 +52,5 @@ private:
     bool initializedFlag_{false};
 };
 
-}
+} // namespace hccl
 #endif

@@ -22,23 +22,27 @@
 #include "log.h"
 
 namespace hccl {
-struct OrderLaunchResMgr
-{
+struct OrderLaunchResMgr {
     u64 context;
-    Stream opbaseStream; // 单算子模式使用
+    Stream opbaseStream;   // 单算子模式使用
     Stream aclgraphStream; // aclgraph模式使用
     bool resValid;
     bool contextInitialized; // 标记context是否已初始化，一旦初始化就不会变回INVALID_U64）
 
-    OrderLaunchResMgr() : context(INVALID_U64), opbaseStream(), aclgraphStream(), resValid(false), contextInitialized(false) {}
+    OrderLaunchResMgr()
+        : context(INVALID_U64),
+          opbaseStream(),
+          aclgraphStream(),
+          resValid(false),
+          contextInitialized(false)
+    {}
 
     // 检查context是否匹配，不匹配时需要更新context但保留stream
-    bool IsCtxMatch(u64 currentContext) const {
-        return context == currentContext && resValid;
-    }
+    bool IsCtxMatch(u64 currentContext) const { return context == currentContext && resValid; }
 
     // 更新context
-    void UpdateContext(u64 newContext) {
+    void UpdateContext(u64 newContext)
+    {
         if (context != newContext) {
             HCCL_INFO("[OrderLaunchResMgr] context updated: [0x%llx] -> [0x%llx]", context, newContext);
             context = newContext;
@@ -47,7 +51,8 @@ struct OrderLaunchResMgr
     }
 
     // 设置context为已初始化状态（一旦调用，context就不会再变回INVALID_U64）
-    void MarkContextInitialized(u64 newContext) {
+    void MarkContextInitialized(u64 newContext)
+    {
         if (context == INVALID_U64 || context != newContext) {
             HCCL_INFO("[OrderLaunchResMgr] Mark context initialized: [0x%llx] -> [0x%llx]", context, newContext);
             context = newContext;
@@ -57,7 +62,8 @@ struct OrderLaunchResMgr
     }
 
     // 析构资源
-    void DestroyResources() {
+    void DestroyResources()
+    {
         // 析构资源位置预留，后续根据需要实现
     }
 };
@@ -65,18 +71,21 @@ struct OrderLaunchResMgr
 class OrderLaunch {
 public:
     static OrderLaunch& GetInstance(s32 deviceLogicID);
-    HcclResult RegisterOrderLaunch(const std::string &group);
-    HcclResult UnRegisterOrderLaunch(const std::string &group);
+    HcclResult RegisterOrderLaunch(const std::string& group);
+    HcclResult UnRegisterOrderLaunch(const std::string& group);
 
-    HcclResult AclgraphLaunchInOrderToOrderStream(std::string &group, const Stream& kernelStream,
-        std::shared_ptr<LocalNotify> notify0, std::shared_ptr<LocalNotify> notify1, u32 timeOut, HcclRtEvent event);
-    HcclResult AclgraphLaunchInOrderToKernelStream(std::string &group, const Stream& kernelStream, HcclRtEvent event);
+    HcclResult AclgraphLaunchInOrderToOrderStream(
+        std::string& group, const Stream& kernelStream, std::shared_ptr<LocalNotify> notify0,
+        std::shared_ptr<LocalNotify> notify1, u32 timeOut, HcclRtEvent event);
+    HcclResult AclgraphLaunchInOrderToKernelStream(std::string& group, const Stream& kernelStream, HcclRtEvent event);
 
-    HcclResult OpbaseLaunchInOrder(std::string &group, const Stream& kernelStream,
-        std::shared_ptr<LocalNotify> notify0, std::shared_ptr<LocalNotify> notify1, u32 timeOut);
+    HcclResult OpbaseLaunchInOrder(
+        std::string& group, const Stream& kernelStream, std::shared_ptr<LocalNotify> notify0,
+        std::shared_ptr<LocalNotify> notify1, u32 timeOut);
 
-    HcclResult HcomLaunchInOrder(std::string &group, const Stream& kernelStream, u32 graphId,
-        std::shared_ptr<LocalNotify> notify0, std::shared_ptr<LocalNotify> notify1, u32 timeOut);
+    HcclResult HcomLaunchInOrder(
+        std::string& group, const Stream& kernelStream, u32 graphId, std::shared_ptr<LocalNotify> notify0,
+        std::shared_ptr<LocalNotify> notify1, u32 timeOut);
 
     HcclResult SetHcomStream(u32 graphId, const Stream& hcomAttachedStream);
 
@@ -85,18 +94,19 @@ private:
     ~OrderLaunch();
 
     void DestroyRes();
-    HcclResult LaunchInOrder(std::string &group, const Stream &kernelStream, const Stream &hostOrderStream,
+    HcclResult LaunchInOrder(
+        std::string& group, const Stream& kernelStream, const Stream& hostOrderStream,
         std::shared_ptr<LocalNotify> notify0, std::shared_ptr<LocalNotify> notify1, u32 timeOut);
-    HcclResult InitGroupCtx(const std::string &group);
-    HcclResult EnsureOrderStreamForGroup(std::string &group, u64 context, Stream &orderStream);
-    HcclResult GetCurrentContext(u64 &currentContext);
+    HcclResult InitGroupCtx(const std::string& group);
+    HcclResult EnsureOrderStreamForGroup(std::string& group, u64 context, Stream& orderStream);
+    HcclResult GetCurrentContext(u64& currentContext);
 
     std::mutex streamMutex_;
-    std::unordered_map<std::string, u64> groupCtxMap_; // group -> context 映射
+    std::unordered_map<std::string, u64> groupCtxMap_;                          // group -> context 映射
     std::unordered_map<u64, std::unordered_set<std::string>> contextGroupsMap_; // context -> groups 映射
     std::unordered_map<u64, OrderLaunchResMgr> contextResMgrMap_; // context -> OrderLaunchResMgr (stream由context管理)
-    std::unordered_map<u32, Stream> hcomStreamMap_; // 图模式使用
+    std::unordered_map<u32, Stream> hcomStreamMap_;               // 图模式使用
     bool initialized_ = false;
 };
-}
+} // namespace hccl
 #endif

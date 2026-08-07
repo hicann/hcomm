@@ -12,18 +12,17 @@
 
 class OpBaseMiscTest : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         BaseInit::SetUp();
 
         UT_USE_1SERVER_1RANK_AS_DEFAULT;
         // 将enableEntryLog默认返回为true
-        MOCKER(GetExternalInputHcclEnableEntryLog)
-            .stubs()
-            .with(mockcpp::any())
-            .will(returnValue(true));
+        MOCKER(GetExternalInputHcclEnableEntryLog).stubs().with(mockcpp::any()).will(returnValue(true));
     }
-    
-    void TearDown() override {
+
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }
@@ -32,9 +31,10 @@ public:
 TEST_F(OpBaseMiscTest, Ut_HcclConfigGetInfo_When_CollCommIsNotInit_Expect_ReturnIsHCCL_E_PTR)
 {
     UT_COMM_CREATE_DEFAULT(comm);
-    void *info = nullptr;
+    void* info = nullptr;
     HcclOpExpansionMode opExpansionMode = HcclOpExpansionMode::HCCL_OP_EXPANSION_MODE_INVALID;
-    HcclResult ret = HcclConfigGetInfo(comm, HcclConfigType::HCCL_CONFIG_TYPE_OP_EXPANSION_MODE, sizeof(HcclOpExpansionMode), &opExpansionMode);
+    HcclResult ret = HcclConfigGetInfo(
+        comm, HcclConfigType::HCCL_CONFIG_TYPE_OP_EXPANSION_MODE, sizeof(HcclOpExpansionMode), &opExpansionMode);
     EXPECT_EQ(ret, HCCL_E_PTR);
     Ut_Comm_Destroy(comm);
 }

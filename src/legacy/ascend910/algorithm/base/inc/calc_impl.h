@@ -23,7 +23,6 @@
 #include "calc_nb_transport_req.h"
 #include "calc_hccs_plus_sio_transport_req_pub.h"
 
-namespace hccl {
-}
+namespace hccl {}
 
 #endif /* CALC_IMPL_H */

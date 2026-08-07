@@ -22,9 +22,9 @@
 #include "hccl_types.h"
 
 namespace HcclSim {
-extern  std::map<DataType, HcclDataType> g_DataType2CheckerDataType_aicpu;
+extern std::map<DataType, HcclDataType> g_DataType2CheckerDataType_aicpu;
 
-extern  std::map<uint16_t, HcclReduceOp> g_ReduceOp2CheckerReduceOp_ccu;
-} // namespace Hccl
+extern std::map<uint16_t, HcclReduceOp> g_ReduceOp2CheckerReduceOp_ccu;
+} // namespace HcclSim
 
 #endif // HCCLV2_TRANSFORM_FUNS_TYPE_H

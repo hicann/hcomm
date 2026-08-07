@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #include "dump/dump_memory_timeline.h"
 #include <algorithm>
 #include <cstdint>
@@ -23,24 +23,18 @@
 
 namespace HcclSim {
 using Json = nlohmann::json;
-using EventIdToEventMap = std::unordered_map<u32, const TimelineEvent *>;
-using GlobalStepToEventMap = std::unordered_map<u32, const TimelineEvent *>;
+using EventIdToEventMap = std::unordered_map<u32, const TimelineEvent*>;
+using GlobalStepToEventMap = std::unordered_map<u32, const TimelineEvent*>;
 static constexpr size_t SNAPSHOT_CHUNK_SIZE = 128;
 
 struct SourceEventLookupCache {
-    const TimelineEvent *fallbackEvent = nullptr;
-    std::unordered_map<RankId, const TimelineEvent *> matchedEventByRank;
+    const TimelineEvent* fallbackEvent = nullptr;
+    std::unordered_map<RankId, const TimelineEvent*> matchedEventByRank;
 };
 
-static u32 ConvertBufferTypeToCode(BufferType bufferType)
-{
-    return static_cast<u32>(bufferType);
-}
+static u32 ConvertBufferTypeToCode(BufferType bufferType) { return static_cast<u32>(bufferType); }
 
-static u32 ConvertReduceOpToCode(HcclReduceOp reduceOp)
-{
-    return static_cast<u32>(reduceOp);
-}
+static u32 ConvertReduceOpToCode(HcclReduceOp reduceOp) { return static_cast<u32>(reduceOp); }
 
 static std::string BuildRankSnapshotManifestPath(RankId rankId)
 {
@@ -55,15 +49,15 @@ static std::string BuildRankSnapshotChunkPath(RankId rankId, size_t chunkId)
 static Json CreateReservedArray(size_t reserveSize)
 {
     Json arrayJson = Json::array();
-    arrayJson.get_ref<Json::array_t &>().reserve(reserveSize);
+    arrayJson.get_ref<Json::array_t&>().reserve(reserveSize);
     return arrayJson;
 }
 
-static EventIdToEventMap BuildEventIdToEventMap(const std::vector<TimelineEvent> &timelineEvents)
+static EventIdToEventMap BuildEventIdToEventMap(const std::vector<TimelineEvent>& timelineEvents)
 {
     EventIdToEventMap eventIdToEvent;
     eventIdToEvent.reserve(timelineEvents.size());
-    for (const auto &timelineEvent : timelineEvents) {
+    for (const auto& timelineEvent : timelineEvents) {
         if (!timelineEvent.isMemoryEvent) {
             continue;
         }
@@ -72,12 +66,12 @@ static EventIdToEventMap BuildEventIdToEventMap(const std::vector<TimelineEvent>
     return eventIdToEvent;
 }
 
-static GlobalStepToEventMap BuildGlobalStepToEventMap(const std::map<u32, u32> &globalStepToEventId,
-    const EventIdToEventMap &eventIdToEvent)
+static GlobalStepToEventMap
+BuildGlobalStepToEventMap(const std::map<u32, u32>& globalStepToEventId, const EventIdToEventMap& eventIdToEvent)
 {
     GlobalStepToEventMap globalStepToEvent;
     globalStepToEvent.reserve(globalStepToEventId.size());
-    for (const auto &stepToEventId : globalStepToEventId) {
+    for (const auto& stepToEventId : globalStepToEventId) {
         const auto eventIter = eventIdToEvent.find(stepToEventId.second);
         if (eventIter == eventIdToEvent.end()) {
             continue;
@@ -87,7 +81,7 @@ static GlobalStepToEventMap BuildGlobalStepToEventMap(const std::map<u32, u32> &
     return globalStepToEvent;
 }
 
-static bool EventAffectsRank(const TimelineEvent *timelineEvent, RankId rankId)
+static bool EventAffectsRank(const TimelineEvent* timelineEvent, RankId rankId)
 {
     if (timelineEvent == nullptr) {
         return false;
@@ -95,28 +89,29 @@ static bool EventAffectsRank(const TimelineEvent *timelineEvent, RankId rankId)
     if (timelineEvent->rankId == rankId) {
         return true;
     }
-    return std::find(timelineEvent->affectedRanks.begin(), timelineEvent->affectedRanks.end(), rankId) !=
-        timelineEvent->affectedRanks.end();
+    return std::find(timelineEvent->affectedRanks.begin(), timelineEvent->affectedRanks.end(), rankId)
+           != timelineEvent->affectedRanks.end();
 }
 
-static SourceEventLookupCache BuildSourceEventLookupCache(const BufferSemantic &bufferSemantic,
-    const GlobalStepToEventMap &globalStepToEvent)
+static SourceEventLookupCache
+BuildSourceEventLookupCache(const BufferSemantic& bufferSemantic, const GlobalStepToEventMap& globalStepToEvent)
 {
     SourceEventLookupCache sourceEventLookupCache;
     std::unordered_set<RankId> pendingSourceRanks;
     pendingSourceRanks.reserve(bufferSemantic.srcBufs.size());
-    for (const auto &srcBuf : bufferSemantic.srcBufs) {
+    for (const auto& srcBuf : bufferSemantic.srcBufs) {
         pendingSourceRanks.insert(srcBuf.rankId);
     }
     sourceEventLookupCache.matchedEventByRank.reserve(pendingSourceRanks.size());
 
-    for (auto iter = bufferSemantic.affectedGlobalSteps.rbegin(); iter != bufferSemantic.affectedGlobalSteps.rend(); ++iter) {
+    for (auto iter = bufferSemantic.affectedGlobalSteps.rbegin(); iter != bufferSemantic.affectedGlobalSteps.rend();
+         ++iter) {
         const auto eventIter = globalStepToEvent.find(*iter);
         if (eventIter == globalStepToEvent.end()) {
             continue;
         }
 
-        const TimelineEvent *timelineEvent = eventIter->second;
+        const TimelineEvent* timelineEvent = eventIter->second;
         if (sourceEventLookupCache.fallbackEvent == nullptr) {
             sourceEventLookupCache.fallbackEvent = timelineEvent;
         }
@@ -137,8 +132,8 @@ static SourceEventLookupCache BuildSourceEventLookupCache(const BufferSemantic &
     return sourceEventLookupCache;
 }
 
-static const TimelineEvent *ResolveSourceEvent(const SrcBufDes &srcBuf,
-    const SourceEventLookupCache &sourceEventLookupCache)
+static const TimelineEvent*
+ResolveSourceEvent(const SrcBufDes& srcBuf, const SourceEventLookupCache& sourceEventLookupCache)
 {
     const auto matchIter = sourceEventLookupCache.matchedEventByRank.find(srcBuf.rankId);
     if (matchIter != sourceEventLookupCache.matchedEventByRank.end()) {
@@ -147,8 +142,9 @@ static const TimelineEvent *ResolveSourceEvent(const SrcBufDes &srcBuf,
     return sourceEventLookupCache.fallbackEvent;
 }
 
-static void MsgpackWriteSourceRef(MsgpackWriter &writer, const SrcBufDes &srcBuf,
-    const BufferSemantic &bufferSemantic, const SourceEventLookupCache &sourceEventLookupCache)
+static void MsgpackWriteSourceRef(
+    MsgpackWriter& writer, const SrcBufDes& srcBuf, const BufferSemantic& bufferSemantic,
+    const SourceEventLookupCache& sourceEventLookupCache)
 {
     writer.WriteMapHeader(3);
 
@@ -159,7 +155,7 @@ static void MsgpackWriteSourceRef(MsgpackWriter &writer, const SrcBufDes &srcBuf
     writer.WriteUInt(srcBuf.srcAddr);
     writer.WriteUInt(bufferSemantic.size);
 
-    const TimelineEvent *sourceEvent = ResolveSourceEvent(srcBuf, sourceEventLookupCache);
+    const TimelineEvent* sourceEvent = ResolveSourceEvent(srcBuf, sourceEventLookupCache);
     writer.WriteString("snapshot");
     writer.WriteUInt(sourceEvent == nullptr ? 0 : sourceEvent->logicalEndStep);
 
@@ -171,8 +167,8 @@ static void MsgpackWriteSourceRef(MsgpackWriter &writer, const SrcBufDes &srcBuf
     }
 }
 
-static void MsgpackWriteBufferSemantic(MsgpackWriter &writer, const BufferSemantic &bufferSemantic,
-    const GlobalStepToEventMap &globalStepToEvent)
+static void MsgpackWriteBufferSemantic(
+    MsgpackWriter& writer, const BufferSemantic& bufferSemantic, const GlobalStepToEventMap& globalStepToEvent)
 {
     const size_t semanticMapSize = bufferSemantic.isReduce ? 5 : 4;
     writer.WriteMapHeader(semanticMapSize);
@@ -193,18 +189,19 @@ static void MsgpackWriteBufferSemantic(MsgpackWriter &writer, const BufferSemant
 
     writer.WriteString("srcs");
     writer.WriteArrayHeader(bufferSemantic.srcBufs.size());
-    const SourceEventLookupCache sourceEventLookupCache =
-        BuildSourceEventLookupCache(bufferSemantic, globalStepToEvent);
-    for (const auto &srcBuf : bufferSemantic.srcBufs) {
+    const SourceEventLookupCache sourceEventLookupCache
+        = BuildSourceEventLookupCache(bufferSemantic, globalStepToEvent);
+    for (const auto& srcBuf : bufferSemantic.srcBufs) {
         MsgpackWriteSourceRef(writer, srcBuf, bufferSemantic, sourceEventLookupCache);
     }
 }
 
-static void MsgpackWriteLayout(MsgpackWriter &writer, const RankMemorySemantics &rankMemorySemantics,
-    const GlobalStepToEventMap &globalStepToEvent)
+static void MsgpackWriteLayout(
+    MsgpackWriter& writer, const RankMemorySemantics& rankMemorySemantics,
+    const GlobalStepToEventMap& globalStepToEvent)
 {
     writer.WriteArrayHeader(rankMemorySemantics.size());
-    for (const auto &bufferEntry : rankMemorySemantics) {
+    for (const auto& bufferEntry : rankMemorySemantics) {
         writer.WriteMapHeader(2);
 
         writer.WriteString("buffer_type");
@@ -212,15 +209,15 @@ static void MsgpackWriteLayout(MsgpackWriter &writer, const RankMemorySemantics 
 
         writer.WriteString("semantics");
         writer.WriteArrayHeader(bufferEntry.second.size());
-        for (const auto &bufferSemantic : bufferEntry.second) {
+        for (const auto& bufferSemantic : bufferEntry.second) {
             MsgpackWriteBufferSemantic(writer, bufferSemantic, globalStepToEvent);
         }
     }
 }
 
-static void MsgpackWriteSnapshot(MsgpackWriter &writer, u32 logicalStep,
-    const std::vector<std::string> &memoryTaskIds,
-    const RankMemorySemantics &fullLayout, const GlobalStepToEventMap &globalStepToEvent)
+static void MsgpackWriteSnapshot(
+    MsgpackWriter& writer, u32 logicalStep, const std::vector<std::string>& memoryTaskIds,
+    const RankMemorySemantics& fullLayout, const GlobalStepToEventMap& globalStepToEvent)
 {
     writer.WriteMapHeader(3);
 
@@ -229,7 +226,7 @@ static void MsgpackWriteSnapshot(MsgpackWriter &writer, u32 logicalStep,
 
     writer.WriteString("memory_task_ids");
     writer.WriteArrayHeader(memoryTaskIds.size());
-    for (const auto &taskId : memoryTaskIds) {
+    for (const auto& taskId : memoryTaskIds) {
         writer.WriteString(taskId);
     }
 
@@ -237,9 +234,9 @@ static void MsgpackWriteSnapshot(MsgpackWriter &writer, u32 logicalStep,
     MsgpackWriteLayout(writer, fullLayout, globalStepToEvent);
 }
 
-static HcclResult BuildSnapshotEntryMsgpack(std::vector<uint8_t> &snapshotEntries, u32 logicalStep,
-    const std::vector<std::string> &memoryTaskIds, const RankMemorySemantics &fullLayout,
-    const GlobalStepToEventMap &globalStepToEvent)
+static HcclResult BuildSnapshotEntryMsgpack(
+    std::vector<uint8_t>& snapshotEntries, u32 logicalStep, const std::vector<std::string>& memoryTaskIds,
+    const RankMemorySemantics& fullLayout, const GlobalStepToEventMap& globalStepToEvent)
 {
     MsgpackWriter writer(snapshotEntries);
     writer.WriteString(std::to_string(logicalStep));
@@ -247,8 +244,8 @@ static HcclResult BuildSnapshotEntryMsgpack(std::vector<uint8_t> &snapshotEntrie
     return HcclResult::HCCL_SUCCESS;
 }
 
-static HcclResult WriteSnapshotChunkMsgpack(std::ostream &out, RankId rankId, size_t chunkId, size_t snapshotCount,
-    const std::vector<uint8_t> &snapshotEntries)
+static HcclResult WriteSnapshotChunkMsgpack(
+    std::ostream& out, RankId rankId, size_t chunkId, size_t snapshotCount, const std::vector<uint8_t>& snapshotEntries)
 {
     MsgpackWriter writer(out);
     writer.WriteMapHeader(4);
@@ -272,8 +269,9 @@ static HcclResult WriteSnapshotChunkMsgpack(std::ostream &out, RankId rankId, si
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult MemoryTimelineDumpStream::Initialize(const std::vector<RankId> &rankIds,
-    const std::vector<TimelineEvent> &timelineEvents, const std::map<u32, u32> &globalStepToEventId)
+HcclResult MemoryTimelineDumpStream::Initialize(
+    const std::vector<RankId>& rankIds, const std::vector<TimelineEvent>& timelineEvents,
+    const std::map<u32, u32>& globalStepToEventId)
 {
     m_enabled = DumpManager::GetInstance().IsMemorySnapshotEnabled();
     m_globalStepToEvent.clear();
@@ -285,8 +283,9 @@ HcclResult MemoryTimelineDumpStream::Initialize(const std::vector<RankId> &rankI
 
     const EventIdToEventMap eventIdToEvent = BuildEventIdToEventMap(timelineEvents);
     m_globalStepToEvent = BuildGlobalStepToEventMap(globalStepToEventId, eventIdToEvent);
-    HCCL_VM_INFO("start dump memory timeline, rank_count={}, event_count={}, step_event_count={}",
-        rankIds.size(), eventIdToEvent.size(), m_globalStepToEvent.size());
+    HCCL_VM_INFO(
+        "start dump memory timeline, rank_count={}, event_count={}, step_event_count={}", rankIds.size(),
+        eventIdToEvent.size(), m_globalStepToEvent.size());
 
     for (RankId rankId : rankIds) {
         RankDumpState rankDumpState;
@@ -297,7 +296,7 @@ HcclResult MemoryTimelineDumpStream::Initialize(const std::vector<RankId> &rankI
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult MemoryTimelineDumpStream::FlushOpenChunk(RankId rankId, RankDumpState &rankDumpState)
+HcclResult MemoryTimelineDumpStream::FlushOpenChunk(RankId rankId, RankDumpState& rankDumpState)
 {
     if (!m_enabled || rankDumpState.openChunkSnapshotCount == 0) {
         return HcclResult::HCCL_SUCCESS;
@@ -306,10 +305,10 @@ HcclResult MemoryTimelineDumpStream::FlushOpenChunk(RankId rankId, RankDumpState
     const size_t chunkId = rankDumpState.nextChunkId;
     const std::string chunkPath = BuildRankSnapshotChunkPath(rankId, chunkId);
 
-    HcclResult ret = DumpManager::GetInstance().WriteMsgpackStream(chunkPath,
-        [&rankDumpState, rankId, chunkId](std::ostream &out) -> HcclResult {
-            return WriteSnapshotChunkMsgpack(out, rankId, chunkId, rankDumpState.openChunkSnapshotCount,
-                rankDumpState.openChunkSnapshotEntries);
+    HcclResult ret = DumpManager::GetInstance().WriteMsgpackStream(
+        chunkPath, [&rankDumpState, rankId, chunkId](std::ostream& out) -> HcclResult {
+            return WriteSnapshotChunkMsgpack(
+                out, rankId, chunkId, rankDumpState.openChunkSnapshotCount, rankDumpState.openChunkSnapshotEntries);
         });
     if (ret != HcclResult::HCCL_SUCCESS) {
         HCCL_VM_WARN("failed to dump rank [{}] snapshot chunk [{}].", rankId, chunkId);
@@ -330,8 +329,9 @@ HcclResult MemoryTimelineDumpStream::FlushOpenChunk(RankId rankId, RankDumpState
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult MemoryTimelineDumpStream::AppendSnapshot(RankId rankId, u32 logicalStep,
-    const std::vector<std::string> &memoryTaskIds, const RankMemorySemantics &fullLayout)
+HcclResult MemoryTimelineDumpStream::AppendSnapshot(
+    RankId rankId, u32 logicalStep, const std::vector<std::string>& memoryTaskIds,
+    const RankMemorySemantics& fullLayout)
 {
     if (!m_enabled) {
         return HcclResult::HCCL_SUCCESS;
@@ -343,7 +343,7 @@ HcclResult MemoryTimelineDumpStream::AppendSnapshot(RankId rankId, u32 logicalSt
         rankDumpState.manifestChunks = Json::array();
         rankStateIter = m_rankDumpStates.emplace(rankId, std::move(rankDumpState)).first;
     }
-    RankDumpState &rankDumpState = rankStateIter->second;
+    RankDumpState& rankDumpState = rankStateIter->second;
 
     if (rankDumpState.openChunkSnapshotCount == 0) {
         rankDumpState.openChunkBeginStep = logicalStep;
@@ -351,8 +351,8 @@ HcclResult MemoryTimelineDumpStream::AppendSnapshot(RankId rankId, u32 logicalSt
         rankDumpState.openChunkSnapshotEntries.reserve(8 * 1024 * 1024);
     }
 
-    HcclResult ret = BuildSnapshotEntryMsgpack(rankDumpState.openChunkSnapshotEntries, logicalStep, memoryTaskIds,
-        fullLayout, m_globalStepToEvent);
+    HcclResult ret = BuildSnapshotEntryMsgpack(
+        rankDumpState.openChunkSnapshotEntries, logicalStep, memoryTaskIds, fullLayout, m_globalStepToEvent);
     if (ret != HcclResult::HCCL_SUCCESS) {
         return ret;
     }
@@ -380,9 +380,9 @@ HcclResult MemoryTimelineDumpStream::Finalize()
     size_t totalSnapshotCount = 0;
     size_t totalChunkCount = 0;
 
-    for (auto &rankEntry : m_rankDumpStates) {
+    for (auto& rankEntry : m_rankDumpStates) {
         const RankId rankId = rankEntry.first;
-        RankDumpState &rankDumpState = rankEntry.second;
+        RankDumpState& rankDumpState = rankEntry.second;
 
         HcclResult ret = FlushOpenChunk(rankId, rankDumpState);
         if (ret != HcclResult::HCCL_SUCCESS) {
@@ -416,4 +416,4 @@ HcclResult MemoryTimelineDumpStream::Finalize()
     HCCL_VM_INFO("finish dump memory timeline, rank_count={}", m_rankDumpStates.size());
     return HcclResult::HCCL_SUCCESS;
 }
-}  // namespace HcclSim
+} // namespace HcclSim

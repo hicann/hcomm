@@ -13,18 +13,16 @@
 
 namespace hcomm {
 
-UbMemRegedMemMgr::UbMemRegedMemMgr()
-{
-    localIpcRmaBufferMgr_ = std::make_unique<LocalIpcRmaBufferMgr>();
-}
-    
-HcclResult UbMemRegedMemMgr::RegisterMemory(HcommMem mem, const char *memTag, void **memHandle)
+UbMemRegedMemMgr::UbMemRegedMemMgr() { localIpcRmaBufferMgr_ = std::make_unique<LocalIpcRmaBufferMgr>(); }
+
+HcclResult UbMemRegedMemMgr::RegisterMemory(HcommMem mem, const char* memTag, void** memHandle)
 {
     HCCL_INFO("[%s] Begin", __func__);
     CHK_PTR_NULL(localIpcRmaBufferMgr_);
     std::lock_guard<std::mutex> lock(memMtx_);
-    return RegisterMemoryImpl(mem, memTag, memHandle,
-        localIpcRmaBufferMgr_, allRegisteredBuffers_, static_cast<std::vector<std::shared_ptr<Hccl::LocalIpcRmaBuffer>>*>(nullptr), "UbMemRegedMemMgr",
+    return RegisterMemoryImpl(
+        mem, memTag, memHandle, localIpcRmaBufferMgr_, allRegisteredBuffers_,
+        static_cast<std::vector<std::shared_ptr<Hccl::LocalIpcRmaBuffer>>*>(nullptr), "UbMemRegedMemMgr",
         [&](auto& bufPtr, auto& parent) {
             return std::make_shared<Hccl::LocalIpcRmaBuffer>(bufPtr, *parent);
         },
@@ -38,32 +36,39 @@ HcclResult UbMemRegedMemMgr::UnregisterMemory(void* memHandle)
     HCCL_INFO("[%s] Begin", __func__);
     CHK_PTR_NULL(localIpcRmaBufferMgr_);
     std::lock_guard<std::mutex> lock(memMtx_);
-    return UnregisterMemoryImpl(memHandle, localIpcRmaBufferMgr_, allRegisteredBuffers_, static_cast<std::vector<std::shared_ptr<Hccl::LocalIpcRmaBuffer>>*>(nullptr),
-        [](auto* b) { return b->GetIpcPtr(); },
-        [](auto a, auto b) { return a == b; });
+    return UnregisterMemoryImpl(
+        memHandle, localIpcRmaBufferMgr_, allRegisteredBuffers_,
+        static_cast<std::vector<std::shared_ptr<Hccl::LocalIpcRmaBuffer>>*>(nullptr),
+        [](auto* b) {
+            return b->GetIpcPtr();
+        },
+        [](auto a, auto b) {
+            return a == b;
+        });
 }
 
-HcclResult UbMemRegedMemMgr::MemoryExport(const EndpointDesc endpointDesc, void *memHandle, void **memDesc, uint32_t *memDescLen)
+HcclResult
+UbMemRegedMemMgr::MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen)
 {
     HCCL_INFO("UbMemRegedMemMgr MemoryExport is not supported.");
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemRegedMemMgr::MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem)
+HcclResult UbMemRegedMemMgr::MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem)
 {
     HCCL_INFO("UbMemRegedMemMgr MemoryImport is not supported.");
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemRegedMemMgr::MemoryUnimport(const void *memDesc, uint32_t descLen)
+HcclResult UbMemRegedMemMgr::MemoryUnimport(const void* memDesc, uint32_t descLen)
 {
     HCCL_INFO("UbMemRegedMemMgr MemoryUnimport is not supported.");
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemRegedMemMgr::GetAllMemHandles(void **memHandles, uint32_t *memHandleNum)
+HcclResult UbMemRegedMemMgr::GetAllMemHandles(void** memHandles, uint32_t* memHandleNum)
 {
     HCCL_INFO("UbMemRegedMemMgr GetAllMemHandles is not supported.");
     return HCCL_SUCCESS;
 }
-}
+} // namespace hcomm

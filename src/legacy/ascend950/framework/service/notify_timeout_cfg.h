@@ -18,7 +18,7 @@ namespace Hccl {
 class NotifyTimeoutCfg {
 public:
     static constexpr Timeout NOTIFY_DEFAULT_WAIT_TIME = 27 * 68;
-    static constexpr Timeout NOTIFY_MAX_WAIT_TIME     = 255 * 68;
+    static constexpr Timeout NOTIFY_MAX_WAIT_TIME = 255 * 68;
 
     void Init()
     {
@@ -26,15 +26,9 @@ public:
         HCCL_INFO("[NotifyTimeoutCfg][Init] set notifyTimeout[%u]s", notifyTimeout);
     }
 
-    Timeout GetBarrierTimeout() const
-    {
-        return barrierTimeout;
-    }
+    Timeout GetBarrierTimeout() const { return barrierTimeout; }
 
-    Timeout GetNotifyTimeout() const
-    {
-        return notifyTimeout;
-    }
+    Timeout GetNotifyTimeout() const { return notifyTimeout; }
 
 private:
     Timeout barrierTimeout{NOTIFY_MAX_WAIT_TIME};

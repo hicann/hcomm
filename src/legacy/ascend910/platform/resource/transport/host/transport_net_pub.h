@@ -16,12 +16,12 @@
 namespace hccl {
 class TransportNet : public TransportBase {
 public:
-    explicit TransportNet(DispatcherPub *dispatcher,
-                          const std::unique_ptr<NotifyPool> &notifyPool,
-                          MachinePara &machinePara, std::chrono::milliseconds timeout);
+    explicit TransportNet(
+        DispatcherPub* dispatcher, const std::unique_ptr<NotifyPool>& notifyPool, MachinePara& machinePara,
+        std::chrono::milliseconds timeout);
     ~TransportNet() override;
+
 protected:
 };
-}  // namespace hccl
+} // namespace hccl
 #endif /* * TRANSPORT_NET_PUB_H */
-

@@ -16,7 +16,8 @@
 
 void ClearHcclEnv();
 std::vector<u64> GenerateSendCountMatrix(u64 count, u32 rankSize);
-void GenAllToAllVParams(u32 rankSize, u64 count, std::vector<u64>& sendCounts, std::vector<u64>& sdispls,
-                        std::vector<u64>& recvCounts, std::vector<u64>& rdispls);
+void GenAllToAllVParams(
+    u32 rankSize, u64 count, std::vector<u64>& sendCounts, std::vector<u64>& sdispls, std::vector<u64>& recvCounts,
+    std::vector<u64>& rdispls);
 
 #endif

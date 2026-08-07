@@ -50,10 +50,7 @@ public:
     HcclResult GetNotifyWaitTimeOut(uint32_t& timeout);
     HcclResult SetSqFullTimeOut(uint32_t timeout);
     uint32_t GetSqFullTimeOut();
-    inline bool IsBatchLaunchMode() const
-    {
-        return mode_ == HCOMM_LAUNCH_MODE_BATCH;
-    }
+    inline bool IsBatchLaunchMode() const { return mode_ == HCOMM_LAUNCH_MODE_BATCH; }
     HcclResult HandleDispatchAllStreams();
 
 private:
@@ -62,7 +59,8 @@ private:
     HcclResult HandleClear();
 
     std::string launchTag_; // 当前tag
-    std::unordered_map<std::string, std::unordered_set<ThreadHandle>> launchModeMap_; // 按tag粒度记录当前线程使用的thread
+    std::unordered_map<std::string, std::unordered_set<ThreadHandle>>
+        launchModeMap_;                   // 按tag粒度记录当前线程使用的thread
     std::vector<ThreadHandle> threadVec_; // 不区分tag，记录当前线程使用的thread
 
     struct NotifyWaitTimeoutConfig {

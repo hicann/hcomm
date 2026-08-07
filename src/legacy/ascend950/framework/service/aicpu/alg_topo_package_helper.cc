@@ -13,11 +13,11 @@
 namespace Hccl {
 
 template <typename U, typename V>
-BinaryStream &operator<<(BinaryStream &binaryStream, const std::map<U, V> &m)
+BinaryStream& operator<<(BinaryStream& binaryStream, const std::map<U, V>& m)
 {
     size_t mapSize = m.size();
     binaryStream << mapSize;
-    for (const auto &mapPair : m) {
+    for (const auto& mapPair : m) {
         binaryStream << mapPair.first;
         binaryStream << mapPair.second;
     }
@@ -25,7 +25,7 @@ BinaryStream &operator<<(BinaryStream &binaryStream, const std::map<U, V> &m)
 }
 
 template <typename U, typename V>
-BinaryStream &operator>>(BinaryStream &binaryStream, std::map<U, V> &m)
+BinaryStream& operator>>(BinaryStream& binaryStream, std::map<U, V>& m)
 {
     size_t mapSize;
     binaryStream >> mapSize;
@@ -39,10 +39,10 @@ BinaryStream &operator>>(BinaryStream &binaryStream, std::map<U, V> &m)
     return binaryStream;
 }
 
-std::vector<char> AlgTopoPackageHelper::GetPackedData(const AlgTopoInfo &algTopo) const
+std::vector<char> AlgTopoPackageHelper::GetPackedData(const AlgTopoInfo& algTopo) const
 {
     std::vector<char> result;
-    BinaryStream      binaryStream;
+    BinaryStream binaryStream;
 
     binaryStream << algTopo.virtRanks;
     binaryStream << algTopo.virtRankMap;
@@ -52,9 +52,9 @@ std::vector<char> AlgTopoPackageHelper::GetPackedData(const AlgTopoInfo &algTopo
     return result;
 }
 
-AlgTopoInfo AlgTopoPackageHelper::GetAlgTopoInfo(std::vector<char> &packedData) const
+AlgTopoInfo AlgTopoPackageHelper::GetAlgTopoInfo(std::vector<char>& packedData) const
 {
-    AlgTopoInfo  algTopo;
+    AlgTopoInfo algTopo;
     BinaryStream binaryStream(packedData);
 
     binaryStream >> algTopo.virtRanks;

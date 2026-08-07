@@ -15,25 +15,16 @@
 namespace hcomm {
 namespace CcuRep {
 
-Condition::Condition(CcuRepContext *context, CcuRelationalOperator<Variable, uint64_t> rel) : context(context)
-{
-    std::string label = "Condition";
-}
+    Condition::Condition(CcuRepContext* context, CcuRelationalOperator<Variable, uint64_t> rel) : context(context)
+    {
+        std::string label = "Condition";
+    }
 
-Condition::~Condition()
-{
-    AppendToContext(context, endLabel);
-}
+    Condition::~Condition() { AppendToContext(context, endLabel); }
 
-bool Condition::Check() const
-{
-    return !isExecuted;
-}
+    bool Condition::Check() const { return !isExecuted; }
 
-void Condition::Run()
-{
-    isExecuted = true;
-}
+    void Condition::Run() { isExecuted = true; }
 
 }; // namespace CcuRep
 }; // namespace hcomm

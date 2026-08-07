@@ -20,48 +20,47 @@
 namespace hccl {
 
 class NotifyManager {
-struct NotifyInfo {
-    CommEngine commEngine;
-    ::NotifyType notifyType;
-    bool isAicpu;
-    NotifyHandle notifyHandle;
-};
-public:
+    struct NotifyInfo {
+        CommEngine commEngine;
+        ::NotifyType notifyType;
+        bool isAicpu;
+        NotifyHandle notifyHandle;
+    };
 
+public:
 #ifndef CCL_KERNEL_AICPU
     NotifyManager(std::string commId, aclrtBinHandle binHandle, const ManagerCallbacks& callbacks);
     ~NotifyManager() = default;
 #endif
 
-    static HcclResult ParseBinNotifys(const std::string& uniqueIdStr,
-        std::vector<std::unique_ptr<LocalNotify>> &newNotifys);
+    static HcclResult
+    ParseBinNotifys(const std::string& uniqueIdStr, std::vector<std::unique_ptr<LocalNotify>>& newNotifys);
 #ifndef CCL_KERNEL_AICPU
-    static std::string GetBinNotifys(std::vector<std::unique_ptr<LocalNotify>> &newNotifys,
-        const NotifyLoadType notifyType);
+    static std::string
+    GetBinNotifys(std::vector<std::unique_ptr<LocalNotify>>& newNotifys, const NotifyLoadType notifyType);
 
-    HcclResult HcclAllocNotify(CommEngine commEngine, ::NotifyType notifyType, uint32_t notifyNum,
-        NotifyHandle **notifyHandleList);
-    HcclResult HcommFreeNotify(uint32_t notifyNum, NotifyHandle *notifyHandleList);
+    HcclResult HcclAllocNotify(
+        CommEngine commEngine, ::NotifyType notifyType, uint32_t notifyNum, NotifyHandle** notifyHandleList);
+    HcclResult HcommFreeNotify(uint32_t notifyNum, NotifyHandle* notifyHandleList);
 
-    inline LocalNotify* GetNotify(u32 index) const {
+    inline LocalNotify* GetNotify(u32 index) const
+    {
         if (index > notifyNum_) {
-            HCCL_ERROR("[NotifyManager][GetNotify]notifyNum[%u], notifyIdx[%u] out of range, maxIndex[%u]", \
-                notifyNum_, index, (notifyNum_ == 0 ? 0 : notifyNum_ - 1));
+            HCCL_ERROR(
+                "[NotifyManager][GetNotify]notifyNum[%u], notifyIdx[%u] out of range, maxIndex[%u]", notifyNum_, index,
+                (notifyNum_ == 0 ? 0 : notifyNum_ - 1));
             return nullptr;
         }
         return notifys_[index].get();
     }
 
-    inline u32 GetNotifyNum()
-    {
-        return notifyNum_;
-    }
+    inline u32 GetNotifyNum() { return notifyNum_; }
 #endif
 private:
-    static HcclResult InitNotifys(std::istringstream &iss, size_t notifyNum,
-        std::vector<std::unique_ptr<LocalNotify>> &newNotifys);
+    static HcclResult
+    InitNotifys(std::istringstream& iss, size_t notifyNum, std::vector<std::unique_ptr<LocalNotify>>& newNotifys);
 #ifndef CCL_KERNEL_AICPU
-    HcclResult NotifyTypeToNotifyLoadType(::NotifyType notifyType, NotifyLoadType &notifyLoadType);
+    HcclResult NotifyTypeToNotifyLoadType(::NotifyType notifyType, NotifyLoadType& notifyLoadType);
     std::string commId_;
     aclrtBinHandle binHandle_;
     std::mutex notifyMutex_;
@@ -73,6 +72,6 @@ private:
     ManagerCallbacks callbacks_;
 #endif
 };
-}
+} // namespace hccl
 
 #endif

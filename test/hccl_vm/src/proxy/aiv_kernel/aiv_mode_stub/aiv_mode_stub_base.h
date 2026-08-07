@@ -32,7 +32,7 @@ struct AivOpParam {
     char kernelName[AIV_OP_KERNEL_NAME_MAX_LEN];
 };
 
-enum class AivBufferType :uint32_t {
+enum class AivBufferType : uint32_t {
     INPUT = 0,
     OUTPUT,
     CCL,
@@ -40,7 +40,8 @@ enum class AivBufferType :uint32_t {
     AIV_COMM,
 };
 
-std::string inline GetAivBufferTypeName(AivBufferType bufferType) {
+std::string inline GetAivBufferTypeName(AivBufferType bufferType)
+{
     switch (bufferType) {
         case AivBufferType::INPUT:
             return "INPUT";
@@ -68,24 +69,26 @@ public:
     void SetOffset(uint64_t offset) { offset_ = offset; }
     void SetSize(uint64_t size) { size_ = size; }
 
-    std::string Describe() const {
+    std::string Describe() const
+    {
         std::stringstream ss;
-        ss << "DataSlice[type=" << GetAivBufferTypeName(type_)
-           << ", offset=0x" << std::uppercase << std::hex << offset_ << std::dec
-           << ", size=" << size_ << "]";
+        ss << "DataSlice[type=" << GetAivBufferTypeName(type_) << ", offset=0x" << std::uppercase << std::hex << offset_
+           << std::dec << ", size=" << size_ << "]";
         return ss.str();
     }
+
 private:
     AivBufferType type_;
-    uint64_t   offset_;
-    uint64_t   size_;
+    uint64_t offset_;
+    uint64_t size_;
 };
 
 struct Mem {
     uint64_t addr{0};
     uint64_t size{0};
 
-    std::string Describe() const {
+    std::string Describe() const
+    {
         std::stringstream ss;
         ss << "{Addr=0x" << std::hex << addr << std::dec << ", Size=" << size << "}";
         return ss.str();
@@ -100,7 +103,8 @@ enum class ReduceOp : uint32_t {
     REDUCE_RESERVED,
 };
 
-std::string inline GetReduceOpName(ReduceOp reduceOp) {
+std::string inline GetReduceOpName(ReduceOp reduceOp)
+{
     switch (reduceOp) {
         case ReduceOp::REDUCE_SUM:
             return "SUM";
@@ -114,6 +118,6 @@ std::string inline GetReduceOpName(ReduceOp reduceOp) {
             return "UNKNOWN";
     }
 }
-}
+} // namespace AivSim
 
-#endif //AIV_AIV_MODE_STUB_BASE_H
+#endif // AIV_AIV_MODE_STUB_BASE_H

@@ -25,13 +25,14 @@ HcclResult HcclLegacyAsyncJobLaunch();
 #ifdef __cplusplus
 }
 #endif
-namespace hccl{
-  
+namespace hccl {
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-HcclResult commInitTaskAppend(std::shared_ptr<struct hcclAsyncJob> job, HcclResult (*func)(struct hcclAsyncJob*), HcclComm* comm);
+HcclResult
+commInitTaskAppend(std::shared_ptr<struct hcclAsyncJob> job, HcclResult (*func)(struct hcclAsyncJob*), HcclComm* comm);
 
 HcclResult taskAppend(HcclComm comm, hcclOpInfo& info);
 
@@ -39,8 +40,7 @@ HcclResult taskAppend(HcclComm comm, hcclOpInfo& info);
 }
 #endif
 
-
-}// namespace hccl
+} // namespace hccl
 
 u64 calcOpDataVolume(const hccl::hcclOpInfo& info);
 std::vector<hccl::hcclOpInfo> sortGroupTasks(const std::deque<hccl::hcclOpInfo>& tasks);

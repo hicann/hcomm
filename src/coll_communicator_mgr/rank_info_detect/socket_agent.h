@@ -18,15 +18,13 @@ namespace Hccl {
 
 class SocketAgent {
 public:
-    explicit SocketAgent(Socket *socket) : socket_(socket)
-    {
-    }
+    explicit SocketAgent(Socket* socket) : socket_(socket) {}
 
-    void SendMsg(const void *data, u64 dataLen);
-    bool RecvMsg(void *msg, u64 &revMsgLen);
+    void SendMsg(const void* data, u64 dataLen);
+    bool RecvMsg(void* msg, u64& revMsgLen);
 
 private:
-    Socket *socket_{nullptr};
+    Socket* socket_{nullptr};
 };
 
 } // namespace Hccl

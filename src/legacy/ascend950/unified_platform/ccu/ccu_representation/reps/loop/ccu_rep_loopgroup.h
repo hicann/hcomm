@@ -18,22 +18,22 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepLoopGroup : public CcuRepBase {
-public:
-    explicit CcuRepLoopGroup(const Variable& parallelParam, const Variable& offsetParam);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
+    class CcuRepLoopGroup : public CcuRepBase {
+    public:
+        explicit CcuRepLoopGroup(const Variable& parallelParam, const Variable& offsetParam);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-    std::shared_ptr<CcuRepBase> SetParallelParam(Variable var);
-    std::shared_ptr<CcuRepBase> SetOffsetParam(Variable var);
-    uint16_t GetStartLoopInstrId() const;
+        std::shared_ptr<CcuRepBase> SetParallelParam(Variable var);
+        std::shared_ptr<CcuRepBase> SetOffsetParam(Variable var);
+        uint16_t GetStartLoopInstrId() const;
 
-private:
-    Variable parallelParam;
-    Variable offsetParam;
+    private:
+        Variable parallelParam;
+        Variable offsetParam;
 
-    friend class Hccl::CcuErrorHandler;
-};
+        friend class Hccl::CcuErrorHandler;
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

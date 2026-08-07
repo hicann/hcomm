@@ -139,50 +139,46 @@ inline std::string ReduceOpToString(HcclReduceOp reduceOp)
 }
 
 struct SrcBufDes {
-    RankId      rankId;  // 数据源的rankId
-    BufferType  bufType; // 数据源的内存类型
-    u64         srcAddr; // 数据源的地址
-    SrcBufDes(RankId id, BufferType type, u64 addr) : rankId(id), bufType(type), srcAddr(addr)
-    {
-    }
-    inline bool operator<(const SrcBufDes &another) const
-    {
-        return rankId < another.rankId;
-    }
+    RankId rankId;      // 数据源的rankId
+    BufferType bufType; // 数据源的内存类型
+    u64 srcAddr;        // 数据源的地址
+    SrcBufDes(RankId id, BufferType type, u64 addr) : rankId(id), bufType(type), srcAddr(addr) {}
+    inline bool operator<(const SrcBufDes& another) const { return rankId < another.rankId; }
 
     std::string Describe() const
     {
         std::stringstream ret;
-        ret << "    - sourceRank=" << rankId
-            << ", sourceBufferType=" << BufferTypeToString(bufType)
+        ret << "    - sourceRank=" << rankId << ", sourceBufferType=" << BufferTypeToString(bufType)
             << ", sourceAddr=0x" << std::hex << srcAddr << std::dec << '\n';
         return ret.str();
     }
 };
 
 struct BufferSemantic {
-    u64                         startAddr;  // 起始地址
-    mutable u64                 size;       // 大小
-    mutable bool                isReduce;   // 是否做了reduce操作
-    mutable HcclReduceOp        reduceType; // reduce操作的类型
-    mutable std::set<SrcBufDes> srcBufs;    // 这块数据来自哪个或哪些rank
-    std::vector<u32>            affectedGlobalSteps;  // 表示这个语义块被哪个、哪些节点影响了，用于图形化界面展示
+    u64 startAddr;                       // 起始地址
+    mutable u64 size;                    // 大小
+    mutable bool isReduce;               // 是否做了reduce操作
+    mutable HcclReduceOp reduceType;     // reduce操作的类型
+    mutable std::set<SrcBufDes> srcBufs; // 这块数据来自哪个或哪些rank
+    std::vector<u32> affectedGlobalSteps; // 表示这个语义块被哪个、哪些节点影响了，用于图形化界面展示
 
-    BufferSemantic(u64 startAddr, u64 size, bool isReduce = false,
-        HcclReduceOp reduceType = HcclReduceOp::HCCL_REDUCE_RESERVED)
-        : startAddr(startAddr), size(size), isReduce(isReduce), reduceType(reduceType)
-    {
-    }
+    BufferSemantic(
+        u64 startAddr, u64 size, bool isReduce = false, HcclReduceOp reduceType = HcclReduceOp::HCCL_REDUCE_RESERVED)
+        : startAddr(startAddr),
+          size(size),
+          isReduce(isReduce),
+          reduceType(reduceType)
+    {}
 
     BufferSemantic(u64 startAddr, u64 size, bool isReduce, HcclReduceOp reduceType, std::set<SrcBufDes> srcBufs)
-        : startAddr(startAddr), size(size), isReduce(isReduce), reduceType(reduceType), srcBufs(srcBufs)
-    {
-    }
+        : startAddr(startAddr),
+          size(size),
+          isReduce(isReduce),
+          reduceType(reduceType),
+          srcBufs(srcBufs)
+    {}
 
-    inline bool operator<(const BufferSemantic &another) const
-    {
-        return startAddr < another.startAddr;
-    }
+    inline bool operator<(const BufferSemantic& another) const { return startAddr < another.startAddr; }
 
     std::string Describe() const
     {
@@ -194,7 +190,7 @@ struct BufferSemantic {
         }
         ret << ", sourceCount=" << srcBufs.size() << '\n';
         ret << "  sources:\n";
-        for (const auto &ele : srcBufs) {
+        for (const auto& ele : srcBufs) {
             ret << ele.Describe();
         }
         return ret.str();
@@ -204,16 +200,17 @@ struct BufferSemantic {
 using RankMemorySemantics = std::map<BufferType, std::set<BufferSemantic>>;
 
 // SrcBufDes 会放进 std::set 里，地址平移时必须重建集合，不能原地修改 key。
-std::set<SrcBufDes> OffsetSrcBufs(const std::set<SrcBufDes> &srcBufs, u64 offset);
+std::set<SrcBufDes> OffsetSrcBufs(const std::set<SrcBufDes>& srcBufs, u64 offset);
 
-TaskTypeStub GetNodeType(const TaskNode *node);
-void CalcInputOutputSize(HcclCMDType opType, uint32_t rankSize, uint64_t count, HcclDataType dataType,
-    u64 &inputSize, u64 &outputSize, RankId myRank, RankId srcRank = 0, RankId dstRank = 0,
-    VDataDesTagInner vDataDes = VDataDesTagInner{}, All2AllDataDesTagInner all2AllDataDes = All2AllDataDesTagInner{});
-void CalcDataSize(HcclCMDType opType, uint64_t count, HcclDataType dataType, u64 &dataSize);
+TaskTypeStub GetNodeType(const TaskNode* node);
+void CalcInputOutputSize(
+    HcclCMDType opType, uint32_t rankSize, uint64_t count, HcclDataType dataType, u64& inputSize, u64& outputSize,
+    RankId myRank, RankId srcRank = 0, RankId dstRank = 0, VDataDesTagInner vDataDes = VDataDesTagInner{},
+    All2AllDataDesTagInner all2AllDataDes = All2AllDataDesTagInner{});
+void CalcDataSize(HcclCMDType opType, uint64_t count, HcclDataType dataType, u64& dataSize);
 bool IsAllToAllSeries(HcclCMDType opType);
-void GenTopoMeta(TopoMeta &topoMate, int superPodNum, int serverNum, int rankNum);
-u32 CalRankSize(const TopoMeta &topoMeta);
+void GenTopoMeta(TopoMeta& topoMate, int superPodNum, int serverNum, int rankNum);
+u32 CalRankSize(const TopoMeta& topoMeta);
 } // namespace HcclSim
 
 #endif

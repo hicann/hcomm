@@ -10,6 +10,4 @@
 
 #include "hccl_exception.h"
 
-namespace Hccl {
-
-} // namespace Hccl
+namespace Hccl {} // namespace Hccl

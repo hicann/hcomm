@@ -22,20 +22,15 @@ using namespace checker;
 
 class SendRecvTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "SendRecvTest set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "SendRecvTest set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "SendRecvTest tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "SendRecvTest tear down." << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -156,7 +151,6 @@ TEST_F(SendRecvTest, send_recv_dma_reduce_superPods_opbase_test)
     ret = checker.Check(checkerOpParam, topoMeta);
 
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
-
 }
 
 TEST_F(SendRecvTest, batch_write_opbase_test)

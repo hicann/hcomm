@@ -16,24 +16,19 @@
 #include "adapter_rts_common.h"
 #include "network_manager_pub.h"
 
-namespace hccl{
-//预留后续扩展多个池子信息，使用逗号,间隔resv_mem_$dev_id=$type_$pool_id_$total_mem_size_$page_size
+namespace hccl {
+// 预留后续扩展多个池子信息，使用逗号,间隔resv_mem_$dev_id=$type_$pool_id_$total_mem_size_$page_size
 #define HCCN_RESV_MEM_TYPE_OFFSET (0)
 #define HCCN_RESV_MEM_POOLID_OFFSET (1)
 #define HCCN_RESV_MEM_PAGESIZE_OFFSET (3)
 #define HCCN_RSCV_MEM_COUNT (4)
 #define HCCN_RESV_MEM_PAGESIZE_64K (64)
 constexpr u32 RETRY_CQE_ARRAY_SIZE = 128; // 重执行时获取的CQE数组的最大数量，最大128
-RdmaResourceManager::RdmaResourceManager() : nicDeploy_(NICDeployment::NIC_DEPLOYMENT_DEVICE)
-{
-}
+RdmaResourceManager::RdmaResourceManager() : nicDeploy_(NICDeployment::NIC_DEPLOYMENT_DEVICE) {}
 
-RdmaResourceManager::~RdmaResourceManager()
-{
-    DeInit();
-}
+RdmaResourceManager::~RdmaResourceManager() { DeInit(); }
 
-RdmaResourceManager& RdmaResourceManager::GetInstance() 
+RdmaResourceManager& RdmaResourceManager::GetInstance()
 {
     static RdmaResourceManager rdmaInstance[MAX_MODULE_DEVICE_NUM + 1];
     s32 deviceLogicId = INVALID_INT;
@@ -49,21 +44,27 @@ RdmaResourceManager& RdmaResourceManager::GetInstance()
 HcclResult RdmaResourceManager::Init()
 {
     HcclResult ret = InitExternalInput();
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[RdmaResourceManager][Init]errNo[0x%016llx] init external input error.",
-        HCCL_ERROR_CODE(ret)), HCCL_E_PARA);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR("[RdmaResourceManager][Init]errNo[0x%016llx] init external input error.", HCCL_ERROR_CODE(ret)),
+        HCCL_E_PARA);
     HCCL_INFO("[RdmaResourceManager][Init] Init ExternalInput success!");
 
     CHK_RET(hrtGetDevice(&deviceLogicId_));
     CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<u32>(deviceLogicId_), devicePhyId_, true));
     CHK_RET(NetworkManager::GetInstance(deviceLogicId_).Init(nicDeploy_, false, devicePhyId_, true));
-    HCCL_DEBUG("[RdmaResourceManager][Init] NetworkManager Init, deviceLogicId[%d], devicePhyId[%u], nicDeployment_[%d]",
+    HCCL_DEBUG(
+        "[RdmaResourceManager][Init] NetworkManager Init, deviceLogicId[%d], devicePhyId[%u], nicDeployment_[%d]",
         deviceLogicId_, devicePhyId_, nicDeploy_);
-        
+
     std::vector<HcclIpAddress> deviceIPs;
     CHK_RET(hrtRaGetDeviceIP(devicePhyId_, deviceIPs));
-    CHK_PRT_RET(deviceIPs.size() < 1,
-        HCCL_ERROR("[RdmaResourceManager][Init] Get ip address failed, deviceLogicId[%d], devicePhyId[%u]",
-        deviceLogicId_, devicePhyId_), HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        deviceIPs.size() < 1,
+        HCCL_ERROR(
+            "[RdmaResourceManager][Init] Get ip address failed, deviceLogicId[%d], devicePhyId[%u]", deviceLogicId_,
+            devicePhyId_),
+        HCCL_E_INTERNAL);
 
     for (u32 ipIdex = 0; ipIdex < deviceIPs.size(); ipIdex++) {
         if (deviceIPs[ipIdex].IsInvalid()) {
@@ -71,8 +72,10 @@ HcclResult RdmaResourceManager::Init()
         }
         // port传入的值为无效值0xFFFFFFFF, 不启动监听
         ret = NetworkManager::GetInstance(deviceLogicId_).StartNic(deviceIPs[ipIdex], port_, true);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[RdmaResourceManager][Init] Start nic ipaddr[%s] failed", deviceIPs[ipIdex].GetReadableAddress()),
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[RdmaResourceManager][Init] Start nic ipaddr[%s] failed", deviceIPs[ipIdex].GetReadableAddress()),
             ret);
         ipAddr_ = deviceIPs[ipIdex];
         break;
@@ -83,18 +86,19 @@ HcclResult RdmaResourceManager::Init()
     }
     CHK_RET(NetworkManager::GetInstance(deviceLogicId_).GetRdmaHandleByIpAddr(ipAddr_, rdmaHandle_));
     CHK_PTR_NULL(rdmaHandle_);
-    HCCL_INFO("[RdmaResourceManager][Init] Start nic, devicePhyId is [%u], ip address[%s], port[%u].",
-        devicePhyId_, this->ipAddr_.GetReadableAddress(), this->port_);
+    HCCL_INFO(
+        "[RdmaResourceManager][Init] Start nic, devicePhyId is [%u], ip address[%s], port[%u].", devicePhyId_,
+        this->ipAddr_.GetReadableAddress(), this->port_);
 
     CHK_RET(HrtRaGetNotifyBaseAddr(rdmaHandle_, &notifyBaseVa_, &notifyTotalSize_));
-    HCCL_INFO("[RdmaResourceManager][Init] NotifyBaseAddr addr[%llu] size[%llu].", notifyBaseVa_,
-        notifyTotalSize_);
- 
+    HCCL_INFO("[RdmaResourceManager][Init] NotifyBaseAddr addr[%llu] size[%llu].", notifyBaseVa_, notifyTotalSize_);
+
     notifyMrInfo_.addr = reinterpret_cast<void*>(notifyBaseVa_);
     notifyMrInfo_.size = notifyTotalSize_;
     notifyMrInfo_.access = RA_ACCESS_REMOTE_WRITE | RA_ACCESS_LOCAL_WRITE | RA_ACCESS_REMOTE_READ;
     CHK_RET(hrtRaRegGlobalMr(rdmaHandle_, notifyMrInfo_, mrHandle_));
-    HCCL_RUN_INFO("[RdmaResourceManager][Init] Register NotifyBaseAddr addr[%p] size[%llu] key[%u]", notifyMrInfo_.addr,
+    HCCL_RUN_INFO(
+        "[RdmaResourceManager][Init] Register NotifyBaseAddr addr[%p] size[%llu] key[%u]", notifyMrInfo_.addr,
         notifyMrInfo_.size, notifyMrInfo_.lkey);
     CHK_RET(InitResvMemInfo());
     return HCCL_SUCCESS;
@@ -124,19 +128,20 @@ HcclResult RdmaResourceManager::DeInit()
     CHK_RET(hrtRaDeRegGlobalMr(rdmaHandle_, mrHandle_));
     CHK_RET(NetworkManager::GetInstance(deviceLogicId_).StopNic(ipAddr_, port_));
     rdmaHandle_ = nullptr;
-    HCCL_INFO("[RdmaResourceManager][DeInit] Stop nic, devicePhyId is [%u], ip address[%s], port[%u].",
-        devicePhyId_, ipAddr_.GetReadableAddress(), port_);
+    HCCL_INFO(
+        "[RdmaResourceManager][DeInit] Stop nic, devicePhyId is [%u], ip address[%s], port[%u].", devicePhyId_,
+        ipAddr_.GetReadableAddress(), port_);
     CHK_RET(NetworkManager::GetInstance(deviceLogicId_).DeInit(nicDeploy_));
     return HCCL_SUCCESS;
 }
 
-HcclResult RdmaResourceManager::GetCqeErrInfo(struct CqeErrInfo *infoList, u32 *num)
+HcclResult RdmaResourceManager::GetCqeErrInfo(struct CqeErrInfo* infoList, u32* num)
 {
     CHK_PTR_NULL(rdmaHandle_);
     return hrtRaGetCqeErrInfoList(rdmaHandle_, infoList, num);
 }
 
-HcclResult RdmaResourceManager::GetCqeErrInfoByQpn(u32 qpn, struct HcclErrCqeInfo *errCqeList, u32 *num)
+HcclResult RdmaResourceManager::GetCqeErrInfoByQpn(u32 qpn, struct HcclErrCqeInfo* errCqeList, u32* num)
 {
     CHK_PTR_NULL(rdmaHandle_);
     u32 qpnNum = RETRY_CQE_ARRAY_SIZE;
@@ -155,7 +160,7 @@ HcclResult RdmaResourceManager::GetCqeErrInfoByQpn(u32 qpn, struct HcclErrCqeInf
         if (*num > listLen) {
             *num = listLen;
             HCCL_WARNING("[GetCqeErrInfoByQpn] GetCqeErrInfo num is larger than infoList user given.");
-        } 
+        }
         u32 i = 0;
         while (!cqeErrPerQP_[qpn].empty() && i < listLen) {
             errCqeList[i].qpn = cqeErrPerQP_[qpn].front().qpn;
@@ -164,15 +169,12 @@ HcclResult RdmaResourceManager::GetCqeErrInfoByQpn(u32 qpn, struct HcclErrCqeInf
             time_t tmpt = static_cast<time_t>(errCqeList[i].time.tv_sec);
             struct tm errTime;
             localtime_r(&tmpt, &errTime);
-            HCCL_INFO("[GetCqeErrInfoByQpn] Err Cqe status[%d], qpn[%d], time[%04u-%02d-%02d %02d:%0d:%02d.%06u]", 
-                errCqeList[i].status, errCqeList[i].qpn, errTime.tm_year + TIME_FROM_1900,
-                errTime.tm_mon + 1,
-                errTime.tm_mday,
-                errTime.tm_hour,
-                errTime.tm_min,
-                errTime.tm_sec,
+            HCCL_INFO(
+                "[GetCqeErrInfoByQpn] Err Cqe status[%d], qpn[%d], time[%04u-%02d-%02d %02d:%0d:%02d.%06u]",
+                errCqeList[i].status, errCqeList[i].qpn, errTime.tm_year + TIME_FROM_1900, errTime.tm_mon + 1,
+                errTime.tm_mday, errTime.tm_hour, errTime.tm_min, errTime.tm_sec,
                 static_cast<u32>(errCqeList[i].time.tv_usec));
-            cqeErrPerQP_[qpn].pop();    
+            cqeErrPerQP_[qpn].pop();
             i++;
         }
     }
@@ -187,13 +189,14 @@ HcclResult RdmaResourceManager::GetNotifyMrInfo(struct MrInfoT& mrInfo)
     return HCCL_SUCCESS;
 }
 
-HcclResult RdmaResourceManager::InitResvMemInfo() {
+HcclResult RdmaResourceManager::InitResvMemInfo()
+{
     std::string flagValue;
     std::vector<std::string> parts;
     std::vector<std::string> tokens;
     std::string token;
-    HcclResult vRet = HrtRaGetHccnCfg(static_cast<std::uint32_t>(nicDeploy_), devicePhyId_,
-        HccnCfgKeyT::HCCN_RESV_MEM_INFO, flagValue);
+    HcclResult vRet = HrtRaGetHccnCfg(
+        static_cast<std::uint32_t>(nicDeploy_), devicePhyId_, HccnCfgKeyT::HCCN_RESV_MEM_INFO, flagValue);
     if ((vRet != HCCL_SUCCESS) || (flagValue.empty())) {
         return vRet;
     }
@@ -202,18 +205,18 @@ HcclResult RdmaResourceManager::InitResvMemInfo() {
     while (std::getline(partStream, token, ',')) {
         parts.push_back(token);
     }
-    for (auto s:parts) {
+    for (auto s : parts) {
         std::istringstream tokenStream(s);
         while (std::getline(tokenStream, token, '_')) {
             tokens.push_back(token);
         }
         if (tokens.size() != HCCN_RSCV_MEM_COUNT) {
-            HCCL_ERROR("[InitResvMemInfo] resvMemInfo count[%u] is not equal [%u].",
-                tokens.size(), HCCN_RSCV_MEM_COUNT);
+            HCCL_ERROR(
+                "[InitResvMemInfo] resvMemInfo count[%u] is not equal [%u].", tokens.size(), HCCN_RSCV_MEM_COUNT);
             return HCCL_E_PARA;
         }
-        for (u32 i=0; i<tokens.size(); i++) {
-            for (char c:tokens[i]) {
+        for (u32 i = 0; i < tokens.size(); i++) {
+            for (char c : tokens[i]) {
                 if (!std::isdigit(c)) {
                     HCCL_ERROR("[InitResvMemInfo] resvMemInfo[%s] is invalid.", tokens[i].c_str());
                     return HCCL_E_PARA;
@@ -249,4 +252,4 @@ HcclResult RdmaResourceManager::GetResvMemPoolIdByType(u32 type, u32& poolId)
     return HCCL_SUCCESS;
 }
 
-}
+} // namespace hccl

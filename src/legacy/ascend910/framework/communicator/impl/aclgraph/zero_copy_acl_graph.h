@@ -25,21 +25,22 @@ class ZeroCopyAclGraph {
 public:
     ZeroCopyAclGraph();
     ~ZeroCopyAclGraph() = default;
-    bool SetAclGraphZeroCopyMode(DevType deviceType, HcclCMDType opType, OpParam &opParam,
-        HcclAlg* impl, u64 bufferSize);
+    bool
+    SetAclGraphZeroCopyMode(DevType deviceType, HcclCMDType opType, OpParam& opParam, HcclAlg* impl, u64 bufferSize);
     std::string GetTagPrefix();
     void SetRetryEnable(bool retryEnable);
 
 private:
-    bool IsAlgoSupportAclGraphZeroCopyMode(HcclCMDType opType, OpParam &opParam, HcclAlg* impl, u64 bufferSize);
-    bool IsScratchMemorySupportAclGraphZeroCopyMode(const OpParam &opParam, u64 bufferSize, u64 scratchMemSize);
-    bool SetGraphMode(HcclCMDType opType, OpParam &opParam, HcclAlg* impl, u64 bufferSize);
-    bool AlgoCheck(OpParam &opParam, std::unique_ptr<CollAlgOperator> &algo, u64 bufferSize);
-    bool IsAclGraphZeroCopyAlgAvailable(HcclCMDType opType, OpParam &opParam);
+    bool IsAlgoSupportAclGraphZeroCopyMode(HcclCMDType opType, OpParam& opParam, HcclAlg* impl, u64 bufferSize);
+    bool IsScratchMemorySupportAclGraphZeroCopyMode(const OpParam& opParam, u64 bufferSize, u64 scratchMemSize);
+    bool SetGraphMode(HcclCMDType opType, OpParam& opParam, HcclAlg* impl, u64 bufferSize);
+    bool AlgoCheck(OpParam& opParam, std::unique_ptr<CollAlgOperator>& algo, u64 bufferSize);
+    bool IsAclGraphZeroCopyAlgAvailable(HcclCMDType opType, OpParam& opParam);
+
 private:
     std::atomic<u32> tagResourceIndex_;
     std::set<HcclCMDType> algoSet_;
     bool retryEnable_;
 };
-}  // namespace hccl
-#endif  // end of ZERO_COPY_ACL_GRAPH_H
+} // namespace hccl
+#endif // end of ZERO_COPY_ACL_GRAPH_H

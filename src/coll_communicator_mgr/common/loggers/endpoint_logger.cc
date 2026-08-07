@@ -15,40 +15,40 @@
 namespace hcomm {
 namespace logger {
 
-void EndpointLogger::PrintDeviceLocation(uint32_t idx, const char* endpointName, const EndpointLoc& loc)
-{
-    HCCL_INFO("[%s] channelDescs[%u] %s loc: locType[%d], devPhyId[%u], superDevId[%u], serverIdx[%u], superPodIdx[%u]",
-        __func__, idx, endpointName, loc.locType,
-        loc.device.devPhyId, loc.device.superDevId,
-        loc.device.serverIdx, loc.device.superPodIdx);
-}
-
-void EndpointLogger::PrintHostLocation(uint32_t idx, const char* endpointName, const EndpointLoc& loc)
-{
-    HCCL_INFO("[%s] channelDescs[%u] %s loc: locType[%d], host.id[%u]",
-        __func__, idx, endpointName, loc.locType, loc.host.id);
-}
-
-void EndpointLogger::PrintLocation(uint32_t idx, const char* endpointName, const EndpointLoc& loc)
-{
-    if (loc.locType == ENDPOINT_LOC_TYPE_DEVICE) {
-        PrintDeviceLocation(idx, endpointName, loc);
-    } else if (loc.locType == ENDPOINT_LOC_TYPE_HOST) {
-        PrintHostLocation(idx, endpointName, loc);
-    } else {
-        HCCL_INFO("[%s] channelDescs[%u] %s loc: locType[%d]",
-            __func__, idx, endpointName, loc.locType);
+    void EndpointLogger::PrintDeviceLocation(uint32_t idx, const char* endpointName, const EndpointLoc& loc)
+    {
+        HCCL_INFO(
+            "[%s] channelDescs[%u] %s loc: locType[%d], devPhyId[%u], superDevId[%u], serverIdx[%u], superPodIdx[%u]",
+            __func__, idx, endpointName, loc.locType, loc.device.devPhyId, loc.device.superDevId, loc.device.serverIdx,
+            loc.device.superPodIdx);
     }
-}
 
-void EndpointLogger::Print(uint32_t idx, const char* endpointName, const EndpointDesc& endpointDesc)
-{
-    // 打印通信地址
-    CommAddrLogger::Print(idx, endpointName, endpointDesc.commAddr);
+    void EndpointLogger::PrintHostLocation(uint32_t idx, const char* endpointName, const EndpointLoc& loc)
+    {
+        HCCL_INFO(
+            "[%s] channelDescs[%u] %s loc: locType[%d], host.id[%u]", __func__, idx, endpointName, loc.locType,
+            loc.host.id);
+    }
 
-    // 打印位置信息
-    PrintLocation(idx, endpointName, endpointDesc.loc);
-}
+    void EndpointLogger::PrintLocation(uint32_t idx, const char* endpointName, const EndpointLoc& loc)
+    {
+        if (loc.locType == ENDPOINT_LOC_TYPE_DEVICE) {
+            PrintDeviceLocation(idx, endpointName, loc);
+        } else if (loc.locType == ENDPOINT_LOC_TYPE_HOST) {
+            PrintHostLocation(idx, endpointName, loc);
+        } else {
+            HCCL_INFO("[%s] channelDescs[%u] %s loc: locType[%d]", __func__, idx, endpointName, loc.locType);
+        }
+    }
+
+    void EndpointLogger::Print(uint32_t idx, const char* endpointName, const EndpointDesc& endpointDesc)
+    {
+        // 打印通信地址
+        CommAddrLogger::Print(idx, endpointName, endpointDesc.commAddr);
+
+        // 打印位置信息
+        PrintLocation(idx, endpointName, endpointDesc.loc);
+    }
 
 } // namespace logger
 } // namespace hcomm

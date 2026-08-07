@@ -23,8 +23,8 @@
 
 using namespace hcomm;
 
-HcommResult HcommMemReg(
-    EndpointHandle endpointHandle, const char *memTag, const CommMem *mem, HcommMemHandle *memHandle)
+HcommResult
+HcommMemReg(EndpointHandle endpointHandle, const char* memTag, const CommMem* mem, HcommMemHandle* memHandle)
 {
     CHK_PTR_NULL(memHandle);
     EXCEPTION_HANDLE_BEGIN
@@ -41,10 +41,11 @@ HcommResult HcommMemReg(
 #endif
 
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
-    CHK_PRT_RET(endpoint == nullptr,
-        HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle), HCCL_E_NOT_FOUND);
+    CHK_PRT_RET(
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
+        HCCL_E_NOT_FOUND);
     CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
-    CHK_RET(endpoint->RegisterMemory(*mem, memTag, reinterpret_cast<void **>(memHandle)));
+    CHK_RET(endpoint->RegisterMemory(*mem, memTag, reinterpret_cast<void**>(memHandle)));
     EXCEPTION_HANDLE_END
     return HCCL_SUCCESS;
 }
@@ -64,16 +65,17 @@ HcommResult HcommMemUnreg(EndpointHandle endpointHandle, HcommMemHandle memHandl
 #endif
 
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
-    CHK_PRT_RET(endpoint == nullptr,
-        HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle), HCCL_E_NOT_FOUND);
+    CHK_PRT_RET(
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
+        HCCL_E_NOT_FOUND);
     CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
     CHK_RET(endpoint->UnregisterMemory(memHandle));
     EXCEPTION_HANDLE_END
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommMemExport(
-    EndpointHandle endpointHandle, HcommMemHandle memHandle, void **memDesc, uint32_t *memDescLen)
+HcommResult
+HcommMemExport(EndpointHandle endpointHandle, HcommMemHandle memHandle, void** memDesc, uint32_t* memDescLen)
 {
     CHK_PTR_NULL(memHandle);
     CHK_PTR_NULL(memDesc);
@@ -89,14 +91,15 @@ HcommResult HcommMemExport(
 #endif
 
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
-    CHK_PRT_RET(endpoint == nullptr,
-        HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle), HCCL_E_NOT_FOUND);
+    CHK_PRT_RET(
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
+        HCCL_E_NOT_FOUND);
     CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
     CHK_RET(endpoint->MemoryExport(memHandle, memDesc, memDescLen));
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommMemImport(EndpointHandle endpointHandle, const void *memDesc, uint32_t descLen, CommMem *outMem)
+HcommResult HcommMemImport(EndpointHandle endpointHandle, const void* memDesc, uint32_t descLen, CommMem* outMem)
 {
     CHK_PTR_NULL(memDesc);
     CHK_PTR_NULL(outMem);
@@ -112,8 +115,9 @@ HcommResult HcommMemImport(EndpointHandle endpointHandle, const void *memDesc, u
 #endif
 
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
-    CHK_PRT_RET(endpoint == nullptr,
-        HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle), HCCL_E_NOT_FOUND);
+    CHK_PRT_RET(
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
+        HCCL_E_NOT_FOUND);
     CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
     CHK_PTR_NULL(outMem);
     CommMem importedMem{};
@@ -122,7 +126,7 @@ HcommResult HcommMemImport(EndpointHandle endpointHandle, const void *memDesc, u
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommMemUnimport(EndpointHandle endpointHandle, const void *memDesc, uint32_t descLen)
+HcommResult HcommMemUnimport(EndpointHandle endpointHandle, const void* memDesc, uint32_t descLen)
 {
     CHK_PTR_NULL(memDesc);
     (void)HcommResMgrInit();
@@ -136,50 +140,47 @@ HcommResult HcommMemUnimport(EndpointHandle endpointHandle, const void *memDesc,
 #endif
 
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
-    CHK_PRT_RET(endpoint == nullptr,
-        HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle), HCCL_E_NOT_FOUND);
+    CHK_PRT_RET(
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
+        HCCL_E_NOT_FOUND);
     CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
     CHK_RET(endpoint->MemoryUnimport(memDesc, descLen));
     return HCCL_SUCCESS;
 }
 
 /* 暂未实现 */
-HcommResult HcommMemGrant(EndpointHandle endpointHandle, const HcommMemGrantInfo *remoteGrantInfo)
+HcommResult HcommMemGrant(EndpointHandle endpointHandle, const HcommMemGrantInfo* remoteGrantInfo)
 {
     CHK_PTR_NULL(remoteGrantInfo);
     HCCL_INFO("[%s] START. endpointHandle[0x%llx].", __func__, endpointHandle);
 
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
-    CHK_PRT_RET(endpoint == nullptr,
-        HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle), HCCL_E_NOT_FOUND);
+    CHK_PRT_RET(
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
+        HCCL_E_NOT_FOUND);
     CHK_RET(endpoint->MemoryGrant(remoteGrantInfo));
     return HCCL_SUCCESS;
 }
 
 /* 暂未实现 */
-HcommResult HcommMemRemap(const EndpointHandle endpointHandle, const CommMem *memArray, uint64_t arraySize)
+HcommResult HcommMemRemap(const EndpointHandle endpointHandle, const CommMem* memArray, uint64_t arraySize)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcommResult HcommMemGetAllMemHandles(EndpointHandle endpointHandle, void **memHandles, uint32_t *memHandleNum)
+HcommResult HcommMemGetAllMemHandles(EndpointHandle endpointHandle, void** memHandles, uint32_t* memHandleNum)
 {
     CHK_PTR_NULL(memHandles);
     CHK_PTR_NULL(memHandleNum);
 
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
-    CHK_PRT_RET(endpoint == nullptr,
-        HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle), HCCL_E_NOT_FOUND);
+    CHK_PRT_RET(
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
+        HCCL_E_NOT_FOUND);
     CHK_RET(endpoint->GetAllMemHandles(memHandles, memHandleNum));
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommMemAlloc(void **ptr, size_t size)
-{
-    return hcomm::MemAlloc(ptr, size);
-}
+HcommResult HcommMemAlloc(void** ptr, size_t size) { return hcomm::MemAlloc(ptr, size); }
 
-HcommResult HcommMemFree(void *ptr)
-{
-    return hcomm::MemFree(ptr);
-}
+HcommResult HcommMemFree(void* ptr) { return hcomm::MemFree(ptr); }

@@ -21,9 +21,23 @@
 #include "ccu_resource_manager.h"
 
 class ReduceMinExecutor : public CcuExecutorBase {
-    enum DataType {ADD_FP32, ADD_FP16, ADD_BF16, ADD_HIF8, ADD_FP8_E4M3, ADD_FP8_E5M2, ADD_INT8, ADD_UINT8, ADD_INT16, ADD_INT32, ADD_RESERVED};
+    enum DataType {
+        ADD_FP32,
+        ADD_FP16,
+        ADD_BF16,
+        ADD_HIF8,
+        ADD_FP8_E4M3,
+        ADD_FP8_E5M2,
+        ADD_INT8,
+        ADD_UINT8,
+        ADD_INT16,
+        ADD_INT32,
+        ADD_RESERVED
+    };
+
 public:
-    explicit ReduceMinExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit ReduceMinExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {
         (void)memset(msId_, 0, sizeof(uint16_t) * hcomm::CcuRep::CCU_REDUCE_MAX_MS);
@@ -35,7 +49,7 @@ public:
     void Run() override;
     void RunV1();
     void RunV2();
-    void Process(CcuResourceManager &ccuResMgr) override;
+    void Process(CcuResourceManager& ccuResMgr) override;
     std::string Describe() override;
     CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 

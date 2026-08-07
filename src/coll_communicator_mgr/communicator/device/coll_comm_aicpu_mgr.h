@@ -16,17 +16,18 @@
 class CollCommAicpuMgr {
 public:
     HcclResult AcquireCollCommAicpu();
-    HcclResult InitAicpuIndOp(CommAicpuParam *commAicpuParam);
-    HcclResult InitThreads(ThreadMgrAicpuParam *param);
-    HcclResult AllocChannelResource(HcclChannelUrmaRes *commParam);
-    HcclResult UpdateChannelResource(HcclChannelUrmaRes *commParam);
-    HcclResult NotifyFree(NotifyMgrAicpuParam *param);
-    HcclResult NotifyAlloc(NotifyMgrAicpuParam *param);
+    HcclResult InitAicpuIndOp(CommAicpuParam* commAicpuParam);
+    HcclResult InitThreads(ThreadMgrAicpuParam* param);
+    HcclResult AllocChannelResource(HcclChannelUrmaRes* commParam);
+    HcclResult UpdateChannelResource(HcclChannelUrmaRes* commParam);
+    HcclResult NotifyFree(NotifyMgrAicpuParam* param);
+    HcclResult NotifyAlloc(NotifyMgrAicpuParam* param);
 
     bool IsUsed();
     void SetUsed(bool used);
-    void SetOldA5Comm(void *oldA5Comm);
+    void SetOldA5Comm(void* oldA5Comm);
     CollCommAicpu* GetCollCommAicpu() { return collCommAicpu_.get(); }
+
 private:
     void* oldA5Comm_{nullptr};
     std::unique_ptr<CollCommAicpu> collCommAicpu_{nullptr};

@@ -21,13 +21,12 @@ MAKE_ENUM(RDMA_NOTIFY_TYPE, DATA_NOTIFY_MEM, ACK_NOTIFY_MEM, DATA_ACK_NOTIFY_MEM
 
 class DevAicpuTsRoceChannelV2 : public ::DevAicpuTsChannel {
 public:
-    explicit DevAicpuTsRoceChannelV2(std::vector<char> &uniqueId);
+    explicit DevAicpuTsRoceChannelV2(std::vector<char>& uniqueId);
     DevAicpuTsRoceChannelV2() = default;
     ~DevAicpuTsRoceChannelV2() override;
 
-    HcclResult Create(const void *blob, u64 blobBytes,
-                      const HcommDeviceInfo &deviceInfo,
-                      ChannelHandle &outHandle) override;
+    HcclResult
+    Create(const void* blob, u64 blobBytes, const HcommDeviceInfo& deviceInfo, ChannelHandle& outHandle) override;
     bool Destroy(ChannelHandle handle) override;
 
     std::string Describe() const;

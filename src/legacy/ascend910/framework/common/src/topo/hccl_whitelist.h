@@ -19,10 +19,7 @@
 #include "sal_pub.h"
 
 namespace hccl {
-enum class HcclWhiteListType {
-    HCCL_WHITELIST_HOST = 0,
-    HCCL_WHITELIST_RESERVED
-};
+enum class HcclWhiteListType { HCCL_WHITELIST_HOST = 0, HCCL_WHITELIST_RESERVED };
 
 class HcclWhitelist {
 public:
@@ -33,9 +30,9 @@ public:
 private:
     HcclWhitelist();
     ~HcclWhitelist();
-    std::map<HcclWhiteListType, std::vector<HcclIpAddress> > whiteLists_;
+    std::map<HcclWhiteListType, std::vector<HcclIpAddress>> whiteLists_;
     std::mutex whiteListsMutex_;
 };
-}
+} // namespace hccl
 
 #endif // HCCL_WHITELIST_H

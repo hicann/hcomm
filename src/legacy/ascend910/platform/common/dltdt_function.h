@@ -20,7 +20,7 @@ namespace hccl {
 class DlTdtFunction {
 public:
     virtual ~DlTdtFunction();
-    static DlTdtFunction &GetInstance();
+    static DlTdtFunction& GetInstance();
     HcclResult DlTdtFunctionInit();
     HcclResult DlTdtFunctionHeterogInit();
 
@@ -30,12 +30,12 @@ public:
 
 protected:
 private:
-    void *handle_;
+    void* handle_;
     std::mutex handleMutex_;
     DlTdtFunction(const DlTdtFunction&);
-    DlTdtFunction &operator=(const DlTdtFunction&);
+    DlTdtFunction& operator=(const DlTdtFunction&);
     DlTdtFunction();
 };
-}  // namespace hccl
+} // namespace hccl
 
-#endif  // HCCL_SRC_DLTDTFUNCTION_H
+#endif // HCCL_SRC_DLTDTFUNCTION_H

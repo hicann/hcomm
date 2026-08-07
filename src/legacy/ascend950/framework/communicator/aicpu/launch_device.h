@@ -16,22 +16,22 @@
 #include "kernel_param_lite.h"
 namespace Hccl {
 
-void LoadBinaryFromFile(const char *binPath, aclrtBinaryLoadOptionType optionType, uint32_t cpuKernelMode,
-    aclrtBinHandle& binHandle);
-void GetKernelFilePath(std::string &binaryPath);
-class AicpuBinaryHolder
-{
-    public:
-        AicpuBinaryHolder();
-        ~AicpuBinaryHolder() noexcept ;
-        void Load();
-        void Unload();
-        // 调用前请检查是否Load期间有注册对应的kernelName funcHandle
-        aclrtFuncHandle GetAicpuKernelFuncHandle(const char *kernelName) const;
-    private:
-        aclrtBinHandle handle_;
-        bool loaded_;
-        std::unordered_map<std::string, aclrtFuncHandle> aicpuFuncMap_;
+void LoadBinaryFromFile(
+    const char* binPath, aclrtBinaryLoadOptionType optionType, uint32_t cpuKernelMode, aclrtBinHandle& binHandle);
+void GetKernelFilePath(std::string& binaryPath);
+class AicpuBinaryHolder {
+public:
+    AicpuBinaryHolder();
+    ~AicpuBinaryHolder() noexcept;
+    void Load();
+    void Unload();
+    // 调用前请检查是否Load期间有注册对应的kernelName funcHandle
+    aclrtFuncHandle GetAicpuKernelFuncHandle(const char* kernelName) const;
+
+private:
+    aclrtBinHandle handle_;
+    bool loaded_;
+    std::unordered_map<std::string, aclrtFuncHandle> aicpuFuncMap_;
 };
-}
+} // namespace Hccl
 #endif // LEGACY_LAUNCH_DEVICE_H

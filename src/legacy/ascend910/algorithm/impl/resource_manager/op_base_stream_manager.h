@@ -13,7 +13,6 @@
 
 #include "op_base_stream_manager_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* OP_BASE_STREAM_MANAGER_H */

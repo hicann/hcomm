@@ -16,30 +16,29 @@ class AivAll2AllRdma910B : public AivCommBase {
 public:
     __aicore__ inline AivAll2AllRdma910B() {}
 
-    template<typename T>
+    template <typename T>
     __aicore__ inline void Process(GM_ADDR input, GM_ADDR output, int32_t tag, int64_t sendCount, int32_t serverNum);
 };
 
-template<typename T>
-__aicore__ inline void AivAll2AllRdma910B::Process(GM_ADDR input, GM_ADDR output, int32_t tag,
-    int64_t sendCount, int32_t serverNum)
+template <typename T>
+__aicore__ inline void
+AivAll2AllRdma910B::Process(GM_ADDR input, GM_ADDR output, int32_t tag, int64_t sendCount, int32_t serverNum)
 {
     if (blockIdx_ >= rankSize_) {
-        return ;
+        return;
     }
     uint32_t targetRank = blockIdx_; // 每个aicore处理的rank
 
     // 内存准备
-    __gm__ T *inputGM = (__gm__ T *)input;
-    __gm__ T *cclGMOther = (__gm__ T *)(GM_IN[targetRank]);
+    __gm__ T* inputGM = (__gm__ T*)input;
+    __gm__ T* cclGMOther = (__gm__ T*)(GM_IN[targetRank]);
 
     if (blockIdx_ == rank_) {
         // 前同步，记录当前rank就绪
-        Record1vN(tag, CommPattern::interRank); 
+        Record1vN(tag, CommPattern::interRank);
     } else {
-
-    // 检查对端就绪 & 跨片拷贝
-    	WaitNv1(tag, blockIdx_);
+        // 检查对端就绪 & 跨片拷贝
+        WaitNv1(tag, blockIdx_);
     }
     pipe_barrier(PIPE_ALL);
 
@@ -61,10 +60,10 @@ __aicore__ inline void AivAll2AllRdma910B::Process(GM_ADDR input, GM_ADDR output
     // 检查本卡上是否已接收到所有对端发送的数据
     Wait(tag, blockIdx_, AivNotifyType::DataSignal);
 
-    return ;
+    return;
 }
 
-template<typename T>
+template <typename T>
 __aicore__ inline void aiv_all_to_all_rdma_910b(KERNEL_ARGS_DEF)
 {
     AivAll2AllRdma910B op;

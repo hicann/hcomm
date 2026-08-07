@@ -26,15 +26,15 @@ class UbLocalNotify : public BaseLocalNotify {
 public:
     explicit UbLocalNotify(RdmaHandle rdmaHandle, bool devUsed = false);
 
-    UbLocalNotify(const UbLocalNotify &that) = delete;
+    UbLocalNotify(const UbLocalNotify& that) = delete;
 
-    UbLocalNotify &operator=(const UbLocalNotify &that) = delete;
+    UbLocalNotify& operator=(const UbLocalNotify& that) = delete;
 
     string Describe() const override;
 
-    void Wait(const Stream &stream, u32 timeout) const override;
+    void Wait(const Stream& stream, u32 timeout) const override;
 
-    void Post(const Stream &stream) const override;
+    void Post(const Stream& stream) const override;
 
     std::unique_ptr<Serializable> GetExchangeDto() override; // 先实现UB Notify的exchange dto，IPC/RDMA待补充
 
@@ -42,18 +42,18 @@ public:
 
 private:
     RdmaHandle rdmaHandle{nullptr};
-    u32        tokenValue{0};
-    u64        addr{0};
-    u32        size{0};
-    u8         key[HRT_UB_MEM_KEY_MAX_LEN]{0};
-    u32        tokenId{0};
+    u32 tokenValue{0};
+    u64 addr{0};
+    u32 size{0};
+    u8 key[HRT_UB_MEM_KEY_MAX_LEN]{0};
+    u32 tokenId{0};
     TokenIdHandle tokenIdHandle_{0};
-    u64        memHandle{0};
-    u32        keySize{0};
+    u64 memHandle{0};
+    u32 keySize{0};
 
-    HrtRaUbLocalMemRegOutParam    reqReg;
-    void*                         lmemHandle{nullptr};
-    BufferKey<uintptr_t, u64>     bufKey_{0, 0};
+    HrtRaUbLocalMemRegOutParam reqReg;
+    void* lmemHandle{nullptr};
+    BufferKey<uintptr_t, u64> bufKey_{0, 0};
 
     void ReleaseResource() const;
 };

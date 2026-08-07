@@ -31,19 +31,13 @@ std::string ZeroCopyAclGraph::GetTagPrefix()
     return ss.str();
 }
 
-void ZeroCopyAclGraph::SetRetryEnable(bool retryEnable)
-{
-    this->retryEnable_ = retryEnable;
-}
+void ZeroCopyAclGraph::SetRetryEnable(bool retryEnable) { this->retryEnable_ = retryEnable; }
 
-bool ZeroCopyAclGraph::IsAclGraphZeroCopyAlgAvailable(HcclCMDType opType, OpParam &opParam)
+bool ZeroCopyAclGraph::IsAclGraphZeroCopyAlgAvailable(HcclCMDType opType, OpParam& opParam)
 {
-    bool isReduceOps = (
-        opType == HCCL_CMD_ALLREDUCE ||
-        opType == HCCL_CMD_REDUCE ||
-        opType == HCCL_CMD_REDUCE_SCATTER ||
-        opType == HCCL_CMD_REDUCE_SCATTER_V
-    );
+    bool isReduceOps
+        = (opType == HCCL_CMD_ALLREDUCE || opType == HCCL_CMD_REDUCE || opType == HCCL_CMD_REDUCE_SCATTER
+           || opType == HCCL_CMD_REDUCE_SCATTER_V);
     // 非Reduce类算子，不受aclGraphZeroCopyEnable 用户配置值的影响，继续配置AclGraphZeroCopy的算法选择模式
     if (!isReduceOps == true) {
         return true;
@@ -58,7 +52,7 @@ bool ZeroCopyAclGraph::IsAclGraphZeroCopyAlgAvailable(HcclCMDType opType, OpPara
 }
 
 bool ZeroCopyAclGraph::SetAclGraphZeroCopyMode(
-    DevType deviceType, HcclCMDType opType, OpParam &opParam, HcclAlg *impl, u64 bufferSize)
+    DevType deviceType, HcclCMDType opType, OpParam& opParam, HcclAlg* impl, u64 bufferSize)
 {
     bool isInGraphCaputureZeroCopy = false;
     aclmdlRI rtModel = nullptr;
@@ -68,14 +62,15 @@ bool ZeroCopyAclGraph::SetAclGraphZeroCopyMode(
     }
 
     if (deviceType != DevType::DEV_TYPE_910_93) {
-        HCCL_INFO("[ZeroCopyAclGraph][SetAclGraphZeroCopyMode] Hccl doesn't support graph zero copy mode. current "
-                  "device is %d not DEV_TYPE_910_93",
+        HCCL_INFO(
+            "[ZeroCopyAclGraph][SetAclGraphZeroCopyMode] Hccl doesn't support graph zero copy mode. current "
+            "device is %d not DEV_TYPE_910_93",
             deviceType);
         return false;
     }
 
-    bool isActivateAddr = ZeroCopyMemoryAgent::IsActivateCommMemoryAddr(opParam.inputPtr, opParam.inputSize) || 
-        ZeroCopyMemoryAgent::IsActivateCommMemoryAddr(opParam.outputPtr, opParam.outputSize);
+    bool isActivateAddr = ZeroCopyMemoryAgent::IsActivateCommMemoryAddr(opParam.inputPtr, opParam.inputSize)
+                          || ZeroCopyMemoryAgent::IsActivateCommMemoryAddr(opParam.outputPtr, opParam.outputSize);
     if (opParam.isZeroCopy || opParam.supportZeroCopy || opParam.supportSymmetricMemory || isActivateAddr) {
         HCCL_INFO("[ZeroCopyAclGraph][SetAclGraphZeroCopyMode] Hccl can't support graph zero copy mode and operator "
                   "zero copy at the same time.");
@@ -93,27 +88,29 @@ bool ZeroCopyAclGraph::SetAclGraphZeroCopyMode(
     return isInGraphCaputureZeroCopy;
 }
 
-bool ZeroCopyAclGraph::SetGraphMode(HcclCMDType opType, OpParam &opParam, HcclAlg *impl, u64 bufferSize)
+bool ZeroCopyAclGraph::SetGraphMode(HcclCMDType opType, OpParam& opParam, HcclAlg* impl, u64 bufferSize)
 {
-    if (!opParam.aicpuUnfoldMode || (GetExternalInputHcclAivMode() && (opType == HCCL_CMD_ALLTOALLV || opType == HCCL_CMD_BROADCAST))) {
-        HCCL_INFO("[ZeroCopyAclGraph][SetAclGraphZeroCopyMode] Hccl can't support graph zero copy "
-                  "mode. Only support on aicpu mode aicpuUnfoldMode %d aiv %d",
-            opParam.aicpuUnfoldMode,
-            GetExternalInputHcclAivMode());
+    if (!opParam.aicpuUnfoldMode
+        || (GetExternalInputHcclAivMode() && (opType == HCCL_CMD_ALLTOALLV || opType == HCCL_CMD_BROADCAST))) {
+        HCCL_INFO(
+            "[ZeroCopyAclGraph][SetAclGraphZeroCopyMode] Hccl can't support graph zero copy "
+            "mode. Only support on aicpu mode aicpuUnfoldMode %d aiv %d",
+            opParam.aicpuUnfoldMode, GetExternalInputHcclAivMode());
         return false;
     }
     if (IsAlgoSupportAclGraphZeroCopyMode(opType, opParam, impl, bufferSize)) {
         SetWorkflowMode(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB);
-        HCCL_INFO("[ZeroCopyAclGraph][SetAclGraphZeroCopyMode] Hccl set op %d workflow mode to "
-                  "HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB "
-                  "graph zero copy mode.",
+        HCCL_INFO(
+            "[ZeroCopyAclGraph][SetAclGraphZeroCopyMode] Hccl set op %d workflow mode to "
+            "HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB "
+            "graph zero copy mode.",
             opType);
         return true;
     }
     return false;
 }
 
-bool ZeroCopyAclGraph::AlgoCheck(OpParam &opParam, std::unique_ptr<CollAlgOperator> &algo, u64 bufferSize)
+bool ZeroCopyAclGraph::AlgoCheck(OpParam& opParam, std::unique_ptr<CollAlgOperator>& algo, u64 bufferSize)
 {
     std::string algName;
     std::string newTag;
@@ -143,7 +140,7 @@ bool ZeroCopyAclGraph::AlgoCheck(OpParam &opParam, std::unique_ptr<CollAlgOperat
 }
 
 bool ZeroCopyAclGraph::IsAlgoSupportAclGraphZeroCopyMode(
-    HcclCMDType opType, OpParam &opParam, HcclAlg *impl, u64 bufferSize)
+    HcclCMDType opType, OpParam& opParam, HcclAlg* impl, u64 bufferSize)
 {
     if (algoSet_.find(opType) != algoSet_.end()) {
         HcclWorkflowMode oldMode = GetWorkflowMode();
@@ -164,19 +161,17 @@ bool ZeroCopyAclGraph::IsAlgoSupportAclGraphZeroCopyMode(
 }
 
 bool ZeroCopyAclGraph::IsScratchMemorySupportAclGraphZeroCopyMode(
-    const OpParam &opParam, u64 bufferSize, u64 scratchMemSize)
+    const OpParam& opParam, u64 bufferSize, u64 scratchMemSize)
 {
     if (scratchMemSize <= bufferSize) {
-        HCCL_INFO("[ZeroCopyAclGraph] OP %d support acl graph zero copy. scratchmemsize=%ul cclbuffer size=%ul",
-            opParam.opType,
-            scratchMemSize,
-            bufferSize);
+        HCCL_INFO(
+            "[ZeroCopyAclGraph] OP %d support acl graph zero copy. scratchmemsize=%ul cclbuffer size=%ul",
+            opParam.opType, scratchMemSize, bufferSize);
         return true;
     }
-    HCCL_INFO("[ZeroCopyAclGraph] OP %d doesn't support acl graph zero copy. scratchmemsize=%ul cclbuffer size=%ul",
-        opParam.opType,
-        scratchMemSize,
-        bufferSize);
+    HCCL_INFO(
+        "[ZeroCopyAclGraph] OP %d doesn't support acl graph zero copy. scratchmemsize=%ul cclbuffer size=%ul",
+        opParam.opType, scratchMemSize, bufferSize);
     return false;
 }
-}  // namespace hccl
+} // namespace hccl

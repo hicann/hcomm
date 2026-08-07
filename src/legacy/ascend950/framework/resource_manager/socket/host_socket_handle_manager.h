@@ -27,17 +27,17 @@ using hostSocketHandleRef = std::pair<SocketHandle, Referenced>;
 
 class HostSocketHandleManager {
 public:
-    static HostSocketHandleManager &GetInstance();
+    static HostSocketHandleManager& GetInstance();
 
-    SocketHandle Create(DevId devicePhyId, const IpAddress &hostIp);
-    SocketHandle Get(DevId devicePhyId, const IpAddress &hostIp);
-    void         Destroy(DevId devicePhyId, const IpAddress &hostIp);
+    SocketHandle Create(DevId devicePhyId, const IpAddress& hostIp);
+    SocketHandle Get(DevId devicePhyId, const IpAddress& hostIp);
+    void Destroy(DevId devicePhyId, const IpAddress& hostIp);
 
 private:
     bool isDestroy{false};
 
     std::vector<unordered_map<string, hostSocketHandleRef>> hostSocketHandleMap;
-    
+
     std::mutex socketHandleLock;
 
     HostSocketHandleManager();
@@ -46,9 +46,9 @@ private:
 
     void DestroyAll();
 
-    HostSocketHandleManager(const HostSocketHandleManager &hostSocketHandleManager) = delete;
+    HostSocketHandleManager(const HostSocketHandleManager& hostSocketHandleManager) = delete;
 
-    HostSocketHandleManager &operator=(const HostSocketHandleManager &hostSocketHandleManager) = delete;
+    HostSocketHandleManager& operator=(const HostSocketHandleManager& hostSocketHandleManager) = delete;
 };
 
 } // namespace Hccl

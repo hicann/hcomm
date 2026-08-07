@@ -18,25 +18,25 @@
 #include "ccu_datatype.h"
 #include "ccu_device_manager.h"
 
-namespace Hccl { 
+namespace Hccl {
 
 // Context资源
 struct CcuRepResource {
-    std::array<std::vector<CcuRep::CcuBuffer>, MAX_CCU_IODIE_NUM>  ccubuffers;
-    std::array<std::vector<CcuRep::CcuBuffer>, MAX_CCU_IODIE_NUM>  blockCcubuffers;
-    std::array<std::vector<CcuRep::Executor>, MAX_CCU_IODIE_NUM>   executor;
-    std::array<std::vector<CcuRep::Executor>, MAX_CCU_IODIE_NUM>   blockExecutor;
+    std::array<std::vector<CcuRep::CcuBuffer>, MAX_CCU_IODIE_NUM> ccubuffers;
+    std::array<std::vector<CcuRep::CcuBuffer>, MAX_CCU_IODIE_NUM> blockCcubuffers;
+    std::array<std::vector<CcuRep::Executor>, MAX_CCU_IODIE_NUM> executor;
+    std::array<std::vector<CcuRep::Executor>, MAX_CCU_IODIE_NUM> blockExecutor;
     std::array<std::vector<CcuRep::MaskSignal>, MAX_CCU_IODIE_NUM> maskSignal;
     std::array<std::vector<CcuRep::MaskSignal>, MAX_CCU_IODIE_NUM> blockMaskSignal;
-    std::array<std::vector<CcuRep::Address>, MAX_CCU_IODIE_NUM>    address;
-    std::array<std::vector<CcuRep::Address>, MAX_CCU_IODIE_NUM>    blockAddress;
-    std::array<std::vector<CcuRep::Variable>, MAX_CCU_IODIE_NUM>   continuousVariable;
-    std::array<std::vector<CcuRep::Variable>, MAX_CCU_IODIE_NUM>   variable;
+    std::array<std::vector<CcuRep::Address>, MAX_CCU_IODIE_NUM> address;
+    std::array<std::vector<CcuRep::Address>, MAX_CCU_IODIE_NUM> blockAddress;
+    std::array<std::vector<CcuRep::Variable>, MAX_CCU_IODIE_NUM> continuousVariable;
+    std::array<std::vector<CcuRep::Variable>, MAX_CCU_IODIE_NUM> variable;
 };
 
 // Context共享资源
 struct CcuSharedResource {
-    std::unordered_map<std::string, CcuRep::Variable>   sharedVar;
+    std::unordered_map<std::string, CcuRep::Variable> sharedVar;
     std::unordered_map<std::string, CcuRep::MaskSignal> sharedSig;
 };
 

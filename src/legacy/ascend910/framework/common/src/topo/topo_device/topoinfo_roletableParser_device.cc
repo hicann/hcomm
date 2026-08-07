@@ -16,32 +16,18 @@
 using namespace std;
 using namespace hccl;
 
-TopoinfoRoletable::TopoinfoRoletable(const std::string &rankTableM)
-    : TopoInfoRanktableParser(rankTableM, "0")
-{
-}
+TopoinfoRoletable::TopoinfoRoletable(const std::string& rankTableM) : TopoInfoRanktableParser(rankTableM, "0") {}
 
-TopoinfoRoletable::~TopoinfoRoletable()
-{
-}
+TopoinfoRoletable::~TopoinfoRoletable() {}
 
-HcclResult TopoinfoRoletable::GetSingleNode(const nlohmann::json &NodeListObj, u32 objIndex,
-    std::vector<RoleTableNodeInfo> &nodes)
+HcclResult
+TopoinfoRoletable::GetSingleNode(const nlohmann::json& NodeListObj, u32 objIndex, std::vector<RoleTableNodeInfo>& nodes)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRoletable::GetServersInfo(std::vector<RoleTableNodeInfo> &servers)
-{
-    return HCCL_E_NOT_SUPPORT;
-}
+HcclResult TopoinfoRoletable::GetServersInfo(std::vector<RoleTableNodeInfo>& servers) { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult TopoinfoRoletable::GetClientsInfo(std::vector<RoleTableNodeInfo> &clients)
-{
-    return HCCL_E_NOT_SUPPORT;
-}
+HcclResult TopoinfoRoletable::GetClientsInfo(std::vector<RoleTableNodeInfo>& clients) { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult TopoinfoRoletable::ParserRoleTable(RoleTableInfo &roleTableInfo)
-{
-    return HCCL_E_NOT_SUPPORT;
-}
+HcclResult TopoinfoRoletable::ParserRoleTable(RoleTableInfo& roleTableInfo) { return HCCL_E_NOT_SUPPORT; }

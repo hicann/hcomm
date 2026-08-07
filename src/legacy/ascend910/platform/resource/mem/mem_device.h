@@ -13,7 +13,6 @@
 
 #include "mem_device_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * MEM_DEVICE_H */

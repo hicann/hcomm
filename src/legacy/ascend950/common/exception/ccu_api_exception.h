@@ -17,8 +17,8 @@ namespace Hccl {
 
 class CcuApiException : public HcclException {
 public:
-    explicit CcuApiException(const std::string &userDefinedMsg)
-        : HcclException(ExceptionType::CCU_API_EXCEPTION, userDefinedMsg){};
+    explicit CcuApiException(const std::string& userDefinedMsg)
+        : HcclException(ExceptionType::CCU_API_EXCEPTION, userDefinedMsg) {};
 };
 
 } // namespace Hccl

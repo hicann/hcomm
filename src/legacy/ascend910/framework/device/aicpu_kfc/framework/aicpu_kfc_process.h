@@ -18,23 +18,23 @@
 class AicpuKfcProcess {
 public:
     ~AicpuKfcProcess() = default;
-    static u32 AicpuRpcResInit(HccCommResParamTask *commParam);
+    static u32 AicpuRpcResInit(HccCommResParamTask* commParam);
     static u32 GetStreamRankIdx(s32 actualStreamId);
-    static HcclResult DealReturnValue(const AicpuComContext *ctx, const HcclResult ret);
-    static HcclResult AddTaskForHcclMsg(AicpuComContext *ctx, AicpuKfcRpcServer &rpc, CommonHcclMsg *hcclMsg,
-                                        AivAicpuOpParam *msg, u64 tilingBase);
-    static HcclResult RunRpcServerApi(AicpuComContext *ctx, AicpuKfcRpcServer &rpc, u64 tilingBase = 0UL);
-    static HcclResult AicpuRunRpcServerForApi(AicpuComContext *ctx, u64 tilingBase);
-    static u32 AicpuRunRpcServerForMC2V2(KFCTaskV2 *task, const HcclApi::Mc2InitTilingInner *tilingData);
-    static u32 AicpuRunRpcServerForMC2(KFCTaskV2 *task);
+    static HcclResult DealReturnValue(const AicpuComContext* ctx, const HcclResult ret);
+    static HcclResult AddTaskForHcclMsg(
+        AicpuComContext* ctx, AicpuKfcRpcServer& rpc, CommonHcclMsg* hcclMsg, AivAicpuOpParam* msg, u64 tilingBase);
+    static HcclResult RunRpcServerApi(AicpuComContext* ctx, AicpuKfcRpcServer& rpc, u64 tilingBase = 0UL);
+    static HcclResult AicpuRunRpcServerForApi(AicpuComContext* ctx, u64 tilingBase);
+    static u32 AicpuRunRpcServerForMC2V2(KFCTaskV2* task, const HcclApi::Mc2InitTilingInner* tilingData);
+    static u32 AicpuRunRpcServerForMC2(KFCTaskV2* task);
 
 private:
     friend class AicpuKfcDeprecatedProcess;
-    static HcclResult AicpuCcOpExe(AivAicpuOpParam *commParam, AivAicpuOpParam *commParamNext, AicpuComContext *ctx);
-    static HcclResult WaitTaskFinish(AicpuComContext *ctx, bool isWaitTask = true);
-    static HcclResult ResetSqBuff(AicpuComContext *ctx);
-    static u32 GetActiveSqId(AicpuComContext *ctx);
-    static HcclResult InitStreamInfo(HccCommResParamTask *commParam, AicpuComContext *ctx);
+    static HcclResult AicpuCcOpExe(AivAicpuOpParam* commParam, AivAicpuOpParam* commParamNext, AicpuComContext* ctx);
+    static HcclResult WaitTaskFinish(AicpuComContext* ctx, bool isWaitTask = true);
+    static HcclResult ResetSqBuff(AicpuComContext* ctx);
+    static u32 GetActiveSqId(AicpuComContext* ctx);
+    static HcclResult InitStreamInfo(HccCommResParamTask* commParam, AicpuComContext* ctx);
 };
 
 #endif

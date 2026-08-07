@@ -16,32 +16,34 @@
 namespace hccl {
 class CollAllReduceExecutor : public CollCommExecutor {
 public:
-    CollAllReduceExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollAllReduceExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAllReduceExecutor() override = default;
 
     HcclResult Orchestrate(OpParam& param, AlgResourceResponse& algRes) override;
+
 protected:
     /* *************** 算法编排 *************** */
     // AllReduce Loop Executor公共接口
     virtual u64 CalcLoopMaxCount(const u64 cclBuffSize, const u32 unitSize);
     virtual bool IsHugeData(const u64 curSize);
     virtual bool IsSmallData(const u64 totalSize, const u64 curSize);
-    HcclResult RunLoop(OpParam &param, AlgResourceResponse &algRes);
-    HcclResult AvoidSubgraphLoop(OpParam &param, AlgResourceResponse &algRes);
+    HcclResult RunLoop(OpParam& param, AlgResourceResponse& algRes);
+    HcclResult AvoidSubgraphLoop(OpParam& param, AlgResourceResponse& algRes);
 
     // 工具类
-    HcclResult GetSliceNum(const u64 totalSize, const bool isSmallData, u64& sliceNum, u32 unitSize=0);
+    HcclResult GetSliceNum(const u64 totalSize, const bool isSmallData, u64& sliceNum, u32 unitSize = 0);
     bool IsAllReduceSmallData(u64 size);
-    HcclResult PrepareSliceDataWithAlignSize(u64 totalSize, u32 sliceNum,
-        u64 piplineOffset, std::vector<Slice>& dataSlice, u64 alignSize);
-    HcclResult PrepareAivBuffers(u32 rankSize, u32 rankId, u32 rankOffset,
-        DeviceMem &inputMem, DeviceMem &outputMem, std::vector<LINK> &links, void **dataBuffers, void **flagBuffers,
-        UserMemType dataMemType, UserMemType flagMemType, u32 dataMemOffset, u32 flagMemOffset);
+    HcclResult PrepareSliceDataWithAlignSize(
+        u64 totalSize, u32 sliceNum, u64 piplineOffset, std::vector<Slice>& dataSlice, u64 alignSize);
+    HcclResult PrepareAivBuffers(
+        u32 rankSize, u32 rankId, u32 rankOffset, DeviceMem& inputMem, DeviceMem& outputMem, std::vector<LINK>& links,
+        void** dataBuffers, void** flagBuffers, UserMemType dataMemType, UserMemType flagMemType, u32 dataMemOffset,
+        u32 flagMemOffset);
 
     bool CCLMemSlice_{true};    // 每次Loop是否需要对CCLMem进行切片
     bool DMAReduceFlag_{false}; // 是否DMA消减
 private:
-    virtual HcclResult RunLoopInner(OpParam &param, const ReduceType &reduceType, ExecMem &execMem);
+    virtual HcclResult RunLoopInner(OpParam& param, const ReduceType& reduceType, ExecMem& execMem);
 };
 
 } // namespace hccl

@@ -26,15 +26,9 @@ using namespace hcomm;
 
 class UrmaEndpointTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "UrmaEndpointTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "UrmaEndpointTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "UrmaEndpointTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "UrmaEndpointTest tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
@@ -204,7 +198,10 @@ TEST_F(UrmaEndpointTest, Ut_When_GetAsyncEvents_CtxHandleInvalidated_Expect_HCCL
     u32 num = ASYNC_EVENT_MAX_NUM;
     u32 interfaceVersion = 2;
 
-    MOCKER(RaGetInterfaceVersion).stubs().with(mockcpp::any(), mockcpp::any(), outBoundP(&interfaceVersion, sizeof(interfaceVersion))).will(returnValue(0));
+    MOCKER(RaGetInterfaceVersion)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&interfaceVersion, sizeof(interfaceVersion)))
+        .will(returnValue(0));
 
     EXPECT_EQ(endpoint->GetAsyncEvents(devPhyId, events, num), HCCL_E_INTERNAL);
     GlobalMockObject::verify();
@@ -223,7 +220,10 @@ TEST_F(UrmaEndpointTest, Ut_When_GetAsyncEvents_CtxHandleValid_Expect_RaCtxGetAs
     u32 num = ASYNC_EVENT_MAX_NUM;
     u32 interfaceVersion = 2;
 
-    MOCKER(RaGetInterfaceVersion).stubs().with(mockcpp::any(), mockcpp::any(), outBoundP(&interfaceVersion, sizeof(interfaceVersion))).will(returnValue(0));
+    MOCKER(RaGetInterfaceVersion)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&interfaceVersion, sizeof(interfaceVersion)))
+        .will(returnValue(0));
     MOCKER(RaCtxGetAsyncEvents).stubs().will(returnValue(0));
 
     EXPECT_EQ(endpoint->GetAsyncEvents(devPhyId, events, num), HCCL_SUCCESS);
@@ -244,7 +244,10 @@ TEST_F(UrmaEndpointTest, Ut_When_GetAsyncEvents_Expect_HCCL_E_INTERNAL)
     u32 num = ASYNC_EVENT_MAX_NUM;
     u32 interfaceVersion = 2;
 
-    MOCKER(RaGetInterfaceVersion).stubs().with(mockcpp::any(), mockcpp::any(), outBoundP(&interfaceVersion, sizeof(interfaceVersion))).will(returnValue(0));
+    MOCKER(RaGetInterfaceVersion)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), outBoundP(&interfaceVersion, sizeof(interfaceVersion)))
+        .will(returnValue(0));
     MOCKER(RaCtxGetAsyncEvents).stubs().will(returnValue(4));
 
     EXPECT_EQ(endpoint->GetAsyncEvents(devPhyId, events, num), HCCL_E_INTERNAL);

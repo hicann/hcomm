@@ -18,24 +18,25 @@
 namespace hccl {
 class TopoinfoRanktableOffline : public TopoInfoRanktableParser {
 public:
-    explicit TopoinfoRanktableOffline(const std::string &rankTableM);
+    explicit TopoinfoRanktableOffline(const std::string& rankTableM);
     ~TopoinfoRanktableOffline() override;
 
     HcclResult Init() override;
-    HcclResult GetClusterInfo(RankTable_t &clusterInfo) override;
-    HcclResult GetDeviceNumPerServer(s32 &deviceNum);
+    HcclResult GetClusterInfo(RankTable_t& clusterInfo) override;
+    HcclResult GetDeviceNumPerServer(s32& deviceNum);
+
 protected:
 private:
     // 所有集群信息
     TopoinfoRanktableOffline(const TopoinfoRanktableOffline&);
     TopoinfoRanktableOffline& operator=(const TopoinfoRanktableOffline&);
-    HcclResult ParserClusterInfo(hccl::RankTable_t &rankTable);
-    HcclResult GetRanktableInfo(RankTable_t &clusterInfo);
-    HcclResult GetSingleNode(const nlohmann::json &NodeListObj, u32 objIndex, RankTable_t &clusterInfo, u32 &serverIdx);
-    HcclResult GetSingleRank(const nlohmann::json &ranksObj, u32 objIndex, RankTable_t &clusterInfo,
-        u32 &serverIdx, std::string &nodeId);
+    HcclResult ParserClusterInfo(hccl::RankTable_t& rankTable);
+    HcclResult GetRanktableInfo(RankTable_t& clusterInfo);
+    HcclResult GetSingleNode(const nlohmann::json& NodeListObj, u32 objIndex, RankTable_t& clusterInfo, u32& serverIdx);
+    HcclResult GetSingleRank(
+        const nlohmann::json& ranksObj, u32 objIndex, RankTable_t& clusterInfo, u32& serverIdx, std::string& nodeId);
     s32 deviceNumPerServer_;
     s32 curServerDeviceNum_;
 };
-}  // namespace hccl
+} // namespace hccl
 #endif

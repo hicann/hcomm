@@ -12,28 +12,25 @@
 
 class HcclGetCommNameTest : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         BaseInit::SetUp();
         UT_USE_RANK_TABLE_910_1SERVER_1RANK;
         // 将enableEntryLog默认返回为true
-        MOCKER(GetExternalInputHcclEnableEntryLog)
-            .stubs()
-            .with(mockcpp::any())
-            .will(returnValue(true));
+        MOCKER(GetExternalInputHcclEnableEntryLog).stubs().with(mockcpp::any()).will(returnValue(true));
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }
 };
 
-TEST_F(HcclGetCommNameTest, Ut_HcclGetCommName_When_CommNameIsNull_Expect_ReturnIsHCCL_E_PTR)
-{
-}
+TEST_F(HcclGetCommNameTest, Ut_HcclGetCommName_When_CommNameIsNull_Expect_ReturnIsHCCL_E_PTR) {}
 
 TEST_F(HcclGetCommNameTest, Ut_HcclGetCommName_When_CommIsNull_Expect_ReturnIsHCCL_E_PTR)
 {
-    char *commName = new char[ROOTINFO_INDENTIFIER_MAX_LENGTH];
+    char* commName = new char[ROOTINFO_INDENTIFIER_MAX_LENGTH];
 
     HcclResult ret = HcclGetCommName(comm, commName);
     EXPECT_EQ(ret, HCCL_E_PTR);
@@ -43,12 +40,10 @@ TEST_F(HcclGetCommNameTest, Ut_HcclGetCommName_When_CommIsNull_Expect_ReturnIsHC
 
 TEST_F(HcclGetCommNameTest, HcclGetCommName_When_InputNoInit_Expect_ReturnIsHCCL_E_PTR)
 {
-    char *commName = nullptr;
+    char* commName = nullptr;
 
     HcclResult ret = HcclGetCommName(&comm, commName);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
-TEST_F(HcclGetCommNameTest, HcclGetCommName_When_Normal_Expect_ReturnIsHCCL_SUCCESS)
-{
-}
+TEST_F(HcclGetCommNameTest, HcclGetCommName_When_Normal_Expect_ReturnIsHCCL_SUCCESS) {}

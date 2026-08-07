@@ -26,9 +26,10 @@ using namespace hcomm::CcuRep;
 REG_CCU_EXECUTOR_CREATE_FUNC_V1(SimCcuV1::LOAD_TYPE, SimCcuV1::LOADSQEARGSTOXN_CODE, LoadSqeArgsToXnExecutor);
 REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::LOAD_TYPE, SimCcuV2::LOADSQEARGSTOXN_CODE, LoadSqeArgsToXnExecutor);
 
-void LoadSqeArgsToXnExecutor::Parser() {
+void LoadSqeArgsToXnExecutor::Parser()
+{
     if (version_ == RunnerCcuVersion::CCU_V1) {
-        xnId_     = instr_.v1.loadSqeArgsToXn.xnId;
+        xnId_ = instr_.v1.loadSqeArgsToXn.xnId;
         sqeArgId_ = instr_.v1.loadSqeArgsToXn.sqeArgsId;
     } else if (version_ == RunnerCcuVersion::CCU_V2) {
         sqeArgId_ = instr_.v2.loadSqeArgsToX.sqeArgsId;
@@ -40,13 +41,14 @@ void LoadSqeArgsToXnExecutor::Parser() {
     }
 }
 
-void LoadSqeArgsToXnExecutor::Run() {
+void LoadSqeArgsToXnExecutor::Run()
+{
     // 加载sqe参数至xn寄存器，只需更新对应dev的ccu资源映射表即可
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t sqeArgValue = ccuResMgr.GetSqeArgValue(rankId_, dieId_, sqeArgId_);
 
-    HCCL_VM_DEBUG("Load arg: locCcu[{}:{}], XnId=[{}], argId=[{}], value=[{}]",
-        rankId_, dieId_, xnId_, sqeArgId_, sqeArgValue);
+    HCCL_VM_DEBUG(
+        "Load arg: locCcu[{}:{}], XnId=[{}], argId=[{}], value=[{}]", rankId_, dieId_, xnId_, sqeArgId_, sqeArgValue);
     ccuResMgr.UpdateXnValue(rankId_, dieId_, xnId_, sqeArgValue);
     if (version_ == RunnerCcuVersion::CCU_V2) {
         uint16_t ckeId = UpdateCkeId(ckeId_);
@@ -54,9 +56,11 @@ void LoadSqeArgsToXnExecutor::Run() {
     }
 }
 
-std::string LoadSqeArgsToXnExecutor::Describe() {
+std::string LoadSqeArgsToXnExecutor::Describe()
+{
     // Describe() 仅包含静态信息（指令 ID、目标寄存器），不含运行时 sqeArgValue
-    return HcclSim::StringFormat("[Simulation Execute] locCcu[%d:%d], Load SqeArg[%u] to Xn[%u]\n", rankId_, dieId_, sqeArgId_, xnId_);
+    return HcclSim::StringFormat(
+        "[Simulation Execute] locCcu[%d:%d], Load SqeArg[%u] to Xn[%u]\n", rankId_, dieId_, sqeArgId_, xnId_);
 }
 
 CcuTrace::CcuInstrTraceDetail LoadSqeArgsToXnExecutor::CollectTraceDetail()
@@ -65,7 +69,7 @@ CcuTrace::CcuInstrTraceDetail LoadSqeArgsToXnExecutor::CollectTraceDetail()
     detail.typeName = "LoadSqeArgsToXn";
 
     // 运行时动态参数：sqeArgValue 随 SQE 任务不同可能不同
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t sqeArgValue = ccuResMgr.GetSqeArgValue(rankId_, dieId_, sqeArgId_);
 
     detail.args["sqeArgValue"] = std::to_string(sqeArgValue);

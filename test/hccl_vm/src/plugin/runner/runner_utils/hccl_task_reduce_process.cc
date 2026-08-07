@@ -16,7 +16,7 @@
 namespace VirtualRunTime {
 // 对不同类型的做Sum的Reduce操作
 template <typename T>
-void MemReduceSumTemplate(void *dst_addr, const void *src_addr, uint64_t length)
+void MemReduceSumTemplate(void* dst_addr, const void* src_addr, uint64_t length)
 {
     T* dst = reinterpret_cast<T*>(dst_addr);
     const T* src = reinterpret_cast<const T*>(src_addr);
@@ -28,7 +28,7 @@ void MemReduceSumTemplate(void *dst_addr, const void *src_addr, uint64_t length)
 
 // 对不同类型的做MIN的Reduce操作
 template <typename T>
-void MemReduceMinTemplate(void *dst_addr, const void *src_addr, uint64_t length)
+void MemReduceMinTemplate(void* dst_addr, const void* src_addr, uint64_t length)
 {
     T* dst = reinterpret_cast<T*>(dst_addr);
     const T* src = reinterpret_cast<const T*>(src_addr);
@@ -42,7 +42,7 @@ void MemReduceMinTemplate(void *dst_addr, const void *src_addr, uint64_t length)
 
 // 对不同类型的做MAX的Reduce操作
 template <typename T>
-void MemReduceMaxTemplate(void *dst_addr, const void *src_addr, uint64_t length)
+void MemReduceMaxTemplate(void* dst_addr, const void* src_addr, uint64_t length)
 {
     T* dst = reinterpret_cast<T*>(dst_addr);
     const T* src = reinterpret_cast<const T*>(src_addr);
@@ -140,4 +140,4 @@ void MemReduceMax(void* src, void* dst, uint32_t length, HcclDataType dataType)
         }
     }
 }
-}
+} // namespace VirtualRunTime

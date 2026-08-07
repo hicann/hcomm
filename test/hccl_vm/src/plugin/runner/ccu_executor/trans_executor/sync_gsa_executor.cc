@@ -22,21 +22,23 @@ using namespace hcomm::CcuRep;
 // 注册SyncGsaExecutor create Func
 REG_CCU_EXECUTOR_CREATE_FUNC(SimCcuV1::TRANS_TYPE, SimCcuV1::SYNCGSA_CODE, SyncGsaExecutor);
 
-void SyncGsaExecutor::Parser() {
+void SyncGsaExecutor::Parser()
+{
     ValidateVersionExclusive(RunnerCcuVersion::CCU_V1, "SyncGsaExecutor");
-    rmtGSAId_      = instr_.v1.syncGSA.rmtGSAId;
-    locGSAId_      = instr_.v1.syncGSA.locGSAId;
-    channelId_     = instr_.v1.syncGSA.channelId;
-    setRmtCKEId_   = instr_.v1.syncGSA.setRmtCKEId;
+    rmtGSAId_ = instr_.v1.syncGSA.rmtGSAId;
+    locGSAId_ = instr_.v1.syncGSA.locGSAId;
+    channelId_ = instr_.v1.syncGSA.channelId;
+    setRmtCKEId_ = instr_.v1.syncGSA.setRmtCKEId;
     setRmtCKEMask_ = instr_.v1.syncGSA.setRmtCKEMask;
-    clearType_     = instr_.v1.syncGSA.clearType;
-    setCKEId_      = instr_.v1.syncGSA.setCKEId;
-    setCKEMask_    = instr_.v1.syncGSA.setCKEMask;
-    waitCKEId_     = instr_.v1.syncGSA.waitCKEId;
-    waitCKEMask_   = instr_.v1.syncGSA.waitCKEMask;
+    clearType_ = instr_.v1.syncGSA.clearType;
+    setCKEId_ = instr_.v1.syncGSA.setCKEId;
+    setCKEMask_ = instr_.v1.syncGSA.setCKEMask;
+    waitCKEId_ = instr_.v1.syncGSA.waitCKEId;
+    waitCKEMask_ = instr_.v1.syncGSA.waitCKEMask;
 }
 
-void SyncGsaExecutor::Process(CcuResourceManager &ccuResMgr) {
+void SyncGsaExecutor::Process(CcuResourceManager& ccuResMgr)
+{
     // 根据channel id获取remote rank id
     auto rmtCcu = ccuResMgr.GetRmtCcu(rankId_, dieId_, channelId_);
     // 获取地址
@@ -51,24 +53,16 @@ void SyncGsaExecutor::Process(CcuResourceManager &ccuResMgr) {
     SetCkeSignal(ccuResMgr, setCKEId_, setCKEMask_);
 }
 
-void SyncGsaExecutor::Run() {
-    WaitCkeProcess(waitCKEId_, waitCKEMask_, clearType_, "SyncGsa");
-}
+void SyncGsaExecutor::Run() { WaitCkeProcess(waitCKEId_, waitCKEMask_, clearType_, "SyncGsa"); }
 
-std::string SyncGsaExecutor::Describe() {
-    return HcclSim::StringFormat("[Simulation Execute] Wait CKE[%u:%04x], Sync locGSAId[%u] To rmtGSAId[%u] Use "
-                              "Channel[%u], Set rmtCKE[%u:%04x], Set "
-                              "CKE[%u:%04x], clearType[%u]\n",
-        waitCKEId_,
-        waitCKEMask_,
-        locGSAId_,
-        rmtGSAId_,
-        channelId_,
-        setRmtCKEId_,
-        setRmtCKEMask_,
-        setCKEId_,
-        setCKEMask_,
-        clearType_);
+std::string SyncGsaExecutor::Describe()
+{
+    return HcclSim::StringFormat(
+        "[Simulation Execute] Wait CKE[%u:%04x], Sync locGSAId[%u] To rmtGSAId[%u] Use "
+        "Channel[%u], Set rmtCKE[%u:%04x], Set "
+        "CKE[%u:%04x], clearType[%u]\n",
+        waitCKEId_, waitCKEMask_, locGSAId_, rmtGSAId_, channelId_, setRmtCKEId_, setRmtCKEMask_, setCKEId_,
+        setCKEMask_, clearType_);
 }
 
 CcuTrace::CcuInstrTraceDetail SyncGsaExecutor::CollectTraceDetail()

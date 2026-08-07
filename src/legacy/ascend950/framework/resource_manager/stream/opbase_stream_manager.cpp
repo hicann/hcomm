@@ -16,10 +16,7 @@
 
 namespace Hccl {
 
-OpbaseStreamManager::~OpbaseStreamManager()
-{
-    DECTOR_TRY_CATCH("OpbaseStreamManager", Clear());
-}
+OpbaseStreamManager::~OpbaseStreamManager() { DECTOR_TRY_CATCH("OpbaseStreamManager", Clear()); }
 
 void OpbaseStreamManager::ReplaceMaster(std::unique_ptr<Stream> stream)
 {
@@ -45,12 +42,9 @@ void OpbaseStreamManager::RegisterMaster(std::unique_ptr<Stream> stream)
     HCCL_INFO("[OpbaseStreamManager::%s] end.", __func__);
 }
 
-void OpbaseStreamManager::Clear()
-{
-    slaves.clear();
-}
+void OpbaseStreamManager::Clear() { slaves.clear(); }
 
-Stream *OpbaseStreamManager::GetOrCreateSlave()
+Stream* OpbaseStreamManager::GetOrCreateSlave()
 {
     HCCL_INFO("[OpbaseStreamManager::%s] start.", __func__);
 
@@ -59,7 +53,7 @@ Stream *OpbaseStreamManager::GetOrCreateSlave()
     HCCL_INFO("[OpbaseStreamManager::%s] slavesSize[%u] slaveIndex[%u]", __func__, slavesSize, slaveIndex);
     if (slaveIndex >= slavesSize) {
         slaves.emplace_back(std::make_unique<Stream>(comm->GetOpAiCpuTSFeatureFlag(), false)); // 算子粒度
-        if (master != nullptr && !comm->GetOpAiCpuTSFeatureFlag()) {  // 算子粒度
+        if (master != nullptr && !comm->GetOpAiCpuTSFeatureFlag()) {                           // 算子粒度
             slaves[slaveIndex]->SetStmMode(master->GetMode());
         }
     }
@@ -68,7 +62,7 @@ Stream *OpbaseStreamManager::GetOrCreateSlave()
     return slaves[slaveIndex++].get();
 }
 
-Stream *OpbaseStreamManager::GetSlave(u32 index) const
+Stream* OpbaseStreamManager::GetSlave(u32 index) const
 {
     if (index >= slaves.size()) {
         THROW<InvalidParamsException>(StringFormat("[OpbaseStreamManager::%s] index[%u] is invalid.", __func__, index));

@@ -12,13 +12,13 @@
 
 namespace hccl {
 
-CollAlgExecRegistry &CollAlgExecRegistry::Instance()
+CollAlgExecRegistry& CollAlgExecRegistry::Instance()
 {
     static CollAlgExecRegistry globalExecRegistry;
     return globalExecRegistry;
 }
 
-HcclResult CollAlgExecRegistry::Register(const std::string &tag, const CollExecCreator &collExecCreator)
+HcclResult CollAlgExecRegistry::Register(const std::string& tag, const CollExecCreator& collExecCreator)
 {
     const std::lock_guard<std::mutex> lock(mu_);
     if (execCreators_.find(tag) != execCreators_.end()) {
@@ -30,7 +30,7 @@ HcclResult CollAlgExecRegistry::Register(const std::string &tag, const CollExecC
 }
 
 std::unique_ptr<CollExecutorBase> CollAlgExecRegistry::GetAlgExec(
-    const std::string &tag, const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher)
+    const std::string& tag, const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher)
 {
     if (execCreators_.find(tag) == execCreators_.end()) {
         HCCL_DEBUG("[CollAlgExecRegistry]Creator for executor tag[%s] has not registered.", tag.c_str());
@@ -40,4 +40,4 @@ std::unique_ptr<CollExecutorBase> CollAlgExecRegistry::GetAlgExec(
     return std::unique_ptr<CollExecutorBase>(execCreators_[tag](dispatcher, topoMatcher));
 }
 
-} // namespace Hccl
+} // namespace hccl

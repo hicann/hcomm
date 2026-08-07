@@ -13,6 +13,6 @@
 
 #include "all_reduce_reduce_broadcast_pub.h"
 
-namespace hccl {}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * __ALL_REDUCE_REDUCE_BROADCAST_H__ */

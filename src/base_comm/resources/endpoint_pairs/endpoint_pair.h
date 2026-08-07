@@ -22,7 +22,8 @@
 using EndpointDescPair = std::pair<EndpointDesc, EndpointDesc>;
 
 // 重载 == 操作符，用于 EndpointDesc 在 std::unordered_map 比较
-inline bool operator==(const EndpointDesc& a, const EndpointDesc& b) noexcept {
+inline bool operator==(const EndpointDesc& a, const EndpointDesc& b) noexcept
+{
     return std::memcmp(&a, &b, sizeof(EndpointDesc)) == 0;
 }
 
@@ -30,16 +31,15 @@ namespace std {
 
 template <>
 struct hash<EndpointDesc> {
-    size_t operator()(const EndpointDesc& e) const noexcept {
+    size_t operator()(const EndpointDesc& e) const noexcept
+    {
         // FNV-1a（64位）对字节序列做hash
         const uint8_t* p = reinterpret_cast<const uint8_t*>(&e);
-        size_t h = sizeof(size_t) == 8
-            ? static_cast<size_t>(14695981039346656037ull)
-            : static_cast<size_t>(2166136261u);
+        size_t h
+            = sizeof(size_t) == 8 ? static_cast<size_t>(14695981039346656037ull) : static_cast<size_t>(2166136261u);
 
-        const size_t prime = sizeof(size_t) == 8
-            ? static_cast<size_t>(1099511628211ull)
-            : static_cast<size_t>(16777619u);
+        const size_t prime
+            = sizeof(size_t) == 8 ? static_cast<size_t>(1099511628211ull) : static_cast<size_t>(16777619u);
 
         for (size_t i = 0; i < sizeof(EndpointDesc); ++i) {
             h ^= static_cast<size_t>(p[i]);
@@ -51,7 +51,8 @@ struct hash<EndpointDesc> {
 
 template <>
 struct hash<EndpointDescPair> {
-    size_t operator()(const EndpointDescPair& p) const noexcept {
+    size_t operator()(const EndpointDescPair& p) const noexcept
+    {
         size_t h1 = std::hash<EndpointDesc>{}(p.first);
         size_t h2 = std::hash<EndpointDesc>{}(p.second);
         size_t h = h1;
@@ -69,31 +70,34 @@ namespace hcomm {
  */
 class EndpointPair {
 public:
-    EndpointPair(EndpointDesc localEndpointDesc, EndpointDesc remoteEndpointDesc,
-        const Hccl::RankIpPortMapPtr& rankIpPortMap)
+    EndpointPair(
+        EndpointDesc localEndpointDesc, EndpointDesc remoteEndpointDesc, const Hccl::RankIpPortMapPtr& rankIpPortMap)
         : localEndpointDesc_(localEndpointDesc),
           remoteEndpointDesc_(remoteEndpointDesc),
           rankIpPortMap_(rankIpPortMap)
-    {
-    }
+    {}
     ~EndpointPair();
 
     HcclResult Init();
-    
+
     // 临时方案：新增临时接口用于支持混跑
-    HcclResult GetSocket(const uint32_t myRank, const uint32_t rmtRank,
-        const std::string &socketTag, u32 reuseIdx, const uint32_t listenPort, Hccl::Socket *&socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId);
-    HcclResult GetHostSocketWithRank(const uint32_t myRank, const uint32_t rmtRank, const std::string &socketTag,
-        const uint32_t listenPort, u32 reuseIdx, Hccl::Socket*& socket);
+    HcclResult GetSocket(
+        const uint32_t myRank, const uint32_t rmtRank, const std::string& socketTag, u32 reuseIdx,
+        const uint32_t listenPort, Hccl::Socket*& socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId);
+    HcclResult GetHostSocketWithRank(
+        const uint32_t myRank, const uint32_t rmtRank, const std::string& socketTag, const uint32_t listenPort,
+        u32 reuseIdx, Hccl::Socket*& socket);
 
-    HcclResult ServerInit(const uint32_t myRank, const uint32_t rmtRank,
-        const std::string &socketTag, u32 reuseIdx, uint32_t devicePhyId, uint32_t remoteDevicePhyId);
-    HcclResult GetConnectedSocket(const uint32_t myRank, const uint32_t rmtRank,
-        const std::string &socketTag, u32 reuseIdx, const uint32_t listenPort,
-        Hccl::Socket*& socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId);
+    HcclResult ServerInit(
+        const uint32_t myRank, const uint32_t rmtRank, const std::string& socketTag, u32 reuseIdx, uint32_t devicePhyId,
+        uint32_t remoteDevicePhyId);
+    HcclResult GetConnectedSocket(
+        const uint32_t myRank, const uint32_t rmtRank, const std::string& socketTag, u32 reuseIdx,
+        const uint32_t listenPort, Hccl::Socket*& socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId);
 
-    HcclResult CreateChannel(EndpointHandle endpointHandle, CommEngine engine, u32 reuseIdx,
-        HcommChannelDesc *channelDescs, ChannelHandle *channels);
+    HcclResult CreateChannel(
+        EndpointHandle endpointHandle, CommEngine engine, u32 reuseIdx, HcommChannelDesc* channelDescs,
+        ChannelHandle* channels);
 
     HcclResult DestroyChannel(CommEngine engine, u32 reuseIdx);
 
@@ -102,14 +106,16 @@ public:
     const std::unordered_map<CommEngine, std::vector<ChannelHandle>>& GetChannelHandles();
 
 private:
-    HcclResult EnsureSocketMgrCompat(const uint32_t myRank, const std::string &socketTag);
-    Hccl::SocketConfig BuildSocketConfig(const Hccl::LinkData &linkData, const std::string &socketTag);
-    HcclResult HandleHostSocketOrBuildLinkData(const uint32_t myRank, const uint32_t rmtRank,
-        const std::string &socketTag, u32 reuseIdx, const uint32_t listenPort, Hccl::Socket*& socket,
-        uint32_t devicePhyId, uint32_t remoteDevicePhyId, Hccl::LinkData &linkData, bool &isHost);
-    HcclResult GetSocketInternal(const uint32_t myRank, const uint32_t rmtRank,
-        const std::string &socketTag, u32 reuseIdx, const uint32_t listenPort,
-        Hccl::Socket*& socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId, bool connectMode);
+    HcclResult EnsureSocketMgrCompat(const uint32_t myRank, const std::string& socketTag);
+    Hccl::SocketConfig BuildSocketConfig(const Hccl::LinkData& linkData, const std::string& socketTag);
+    HcclResult HandleHostSocketOrBuildLinkData(
+        const uint32_t myRank, const uint32_t rmtRank, const std::string& socketTag, u32 reuseIdx,
+        const uint32_t listenPort, Hccl::Socket*& socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId,
+        Hccl::LinkData& linkData, bool& isHost);
+    HcclResult GetSocketInternal(
+        const uint32_t myRank, const uint32_t rmtRank, const std::string& socketTag, u32 reuseIdx,
+        const uint32_t listenPort, Hccl::Socket*& socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId,
+        bool connectMode);
 
     EndpointDesc localEndpointDesc_{};
     EndpointDesc remoteEndpointDesc_{};

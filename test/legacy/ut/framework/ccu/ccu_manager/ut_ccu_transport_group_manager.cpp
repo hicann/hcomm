@@ -27,29 +27,24 @@
 
 using namespace Hccl;
 
-
 class CcuTransportGroupMgrTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "CcuTransportGroupMgrTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "CcuTransportGroupMgrTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "CcuTransportGroupMgrTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "CcuTransportGroupMgrTest tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
         std::cout << "A Test case in CcuTransportGroupMgrTest SetUP" << std::endl;
         MOCKER(memset_s).stubs().with(mockcpp::any()).will(returnValue(0));
-        MOCKER_CPP(&RdmaHandleManager::GetDieAndFuncId).defaults().will(returnValue(std::pair<uint32_t,uint32_t>{0,0}));
+        MOCKER_CPP(&RdmaHandleManager::GetDieAndFuncId)
+            .defaults()
+            .will(returnValue(std::pair<uint32_t, uint32_t>{0, 0}));
     }
 
     virtual void TearDown()
     {
-        GlobalMockObject::verify();     // 避免用例之间的联系，防止上一个用例的打桩函数在本用例生效
+        GlobalMockObject::verify(); // 避免用例之间的联系，防止上一个用例的打桩函数在本用例生效
         std::cout << "A Test case in CcuTransportGroupMgrTest TearDown" << std::endl;
     }
 
@@ -59,11 +54,11 @@ protected:
         return ipAddress;
     }
 
-    Hccl::SocketManager *socketManager;
-    void                *hccpSocketHandle;
-    Socket              *fakeSocket;
-    IpAddress           localIp;
-    IpAddress           remoteIp;
+    Hccl::SocketManager* socketManager;
+    void* hccpSocketHandle;
+    Socket* fakeSocket;
+    IpAddress localIp;
+    IpAddress remoteIp;
 };
 
 static void MockerCcuFeature()
@@ -79,45 +74,46 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_001)
 {
     // 创建linkData
     BasePortType portType(PortDeploymentType::P2P, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     u32 utCntCke = 3;
     vector<CcuTransport*> utTransports;
 
     // 创建CommunicatorImpl
-    u32 localRank  = 0;
+    u32 localRank = 0;
     u32 remoteRank = 1;
     CommunicatorImpl impl;
-    CommParams       commParams;
-    commParams.commId   = "commId";
-    commParams.myRank   = localRank;
+    CommParams commParams;
+    commParams.commId = "commId";
+    commParams.myRank = localRank;
     commParams.rankSize = 8;
-    HcclCommConfig    config;
-    commParams.devType  = DevType::DEV_TYPE_910A;
+    HcclCommConfig config;
+    commParams.devType = DevType::DEV_TYPE_910A;
     GenRankTableFile1Ser8Dev();
 
-    void *devPtr = nullptr;
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(devPtr));
+    void* devPtr = nullptr;
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(devPtr));
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(commParams.devType));
     MOCKER(HrtMemcpy).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
     MOCKER_CPP(&CommunicatorImpl::InitCollService).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     impl.rankGraph = make_unique<RankGraph>(0);
     impl.rankGraph->peers_[0] = make_shared<NetInstance::Peer>(0, 0, 0, 0);
-    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string &))
-        .stubs().with(mockcpp::any()).will(ignoreReturnValue());
+    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any())
+        .will(ignoreReturnValue());
     MockerCcuFeature();
 
     impl.Init(commParams, "ranktable.json", config);
 
     // 创建Socket
-    Socket *socket
-        = new Socket(hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
-    std::string  socketTag = impl.GetEstablishLinkSocketTag();
+    Socket* socket = new Socket(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    std::string socketTag = impl.GetEstablishLinkSocketTag();
     SocketConfig socketConfig(remoteRank, linkData, socketTag);
-    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(hccpSocketHandle, GetAnIpAddress(),
-                                                                                        0, GetAnIpAddress(), "stub",
-                                                                                        SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
     MOCKER_CPP(&Socket::GetStatus)
         .stubs()
@@ -129,8 +125,8 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_001)
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
     RdmaHandle rdmaHandle = new int(1);
-    u32 jettyNum = 1;   // 当前迭代，jettyNum默认为1
-    u32 sqSize = 128;   // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
+    u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
+    u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
     MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
@@ -150,12 +146,14 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_001)
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
-    vector<CcuJetty *> ccuJettys;
-    auto connection = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
+    vector<CcuJetty*> ccuJettys;
+    auto connection
+        = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
 
     // 创建utCcuTransport
     CcuTransport::CclBufferInfo locCclBufInfo;
-    std::unique_ptr<CcuTransport> utCcuTransport = std::make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
+    std::unique_ptr<CcuTransport> utCcuTransport
+        = std::make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
     utTransports.push_back(std::move(utCcuTransport.get()));
 
     // 打桩CcuTransportGroup构造函数中调用的函数
@@ -163,7 +161,8 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_001)
     MOCKER_CPP(&CcuTransportGroup::CheckTransports).stubs().with(mockcpp::any()).will(returnValue(true));
 
     // 创建utCcuTransportGroup
-    std::unique_ptr<CcuTransportGroup> utCcuTransportGroup = std::make_unique<CcuTransportGroup>(utTransports, utCntCke);
+    std::unique_ptr<CcuTransportGroup> utCcuTransportGroup
+        = std::make_unique<CcuTransportGroup>(utTransports, utCntCke);
 
     // 创建utCcuTransportGroupMgr，并在linkGrp2TransportGrpMap中建立utlinkGroup与utCcuTransportGroup的映射
     LinkGroup utLinkGroup{vector<LinkInfo>{LinkInfo{linkData}}};
@@ -182,46 +181,47 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_002)
 {
     // 创建linkData
     BasePortType portType(PortDeploymentType::P2P, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     u32 utCntCke = 3;
     vector<CcuTransport*> utTransports;
 
     // 创建CommunicatorImpl
-    u32 localRank  = 0;
+    u32 localRank = 0;
     u32 remoteRank = 1;
     CommunicatorImpl impl;
-    CommParams       commParams;
-    commParams.commId   = "commId";
-    commParams.myRank   = localRank;
+    CommParams commParams;
+    commParams.commId = "commId";
+    commParams.myRank = localRank;
     commParams.rankSize = 8;
-    HcclCommConfig    config;
-    commParams.devType  = DevType::DEV_TYPE_910A;
+    HcclCommConfig config;
+    commParams.devType = DevType::DEV_TYPE_910A;
     GenRankTableFile1Ser8Dev();
 
-    void *devPtr = nullptr;
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(devPtr));
+    void* devPtr = nullptr;
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(devPtr));
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(commParams.devType));
     MOCKER(HrtMemcpy).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
     MOCKER_CPP(&CommunicatorImpl::InitCollService).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     impl.rankGraph = make_unique<RankGraph>(0);
     impl.rankGraph->peers_[0] = make_shared<NetInstance::Peer>(0, 0, 0, 0);
-    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string &))
-        .stubs().with(mockcpp::any()).will(ignoreReturnValue());
- 
+    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any())
+        .will(ignoreReturnValue());
+
     MockerCcuFeature();
 
     impl.Init(commParams, "ranktable.json", config);
 
     // 创建Socket
-    Socket *socket
-        = new Socket(hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
-    std::string  socketTag = impl.GetEstablishLinkSocketTag();
+    Socket* socket = new Socket(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    std::string socketTag = impl.GetEstablishLinkSocketTag();
     SocketConfig socketConfig(remoteRank, linkData, socketTag);
-    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(hccpSocketHandle, GetAnIpAddress(),
-                                                                                        0, GetAnIpAddress(), "stub",
-                                                                                        SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
     MOCKER_CPP(&Socket::GetStatus)
         .stubs()
@@ -240,37 +240,39 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_002)
     delete socket;
 }
 
-//测试PrepareCreate接口，预期成功获取linkGroup对应的ccuTransportGroup
+// 测试PrepareCreate接口，预期成功获取linkGroup对应的ccuTransportGroup
 TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_003)
 {
     // 创建linkData
     BasePortType portType(PortDeploymentType::P2P, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     u32 utCntCke = 3;
 
     // 创建CommunicatorImpl
-    u32 localRank  = 0;
+    u32 localRank = 0;
     u32 remoteRank = 1;
     CommunicatorImpl impl;
-    CommParams       commParams;
-    commParams.commId   = "commId";
-    commParams.myRank   = localRank;
+    CommParams commParams;
+    commParams.commId = "commId";
+    commParams.myRank = localRank;
     commParams.rankSize = 8;
-    HcclCommConfig    config;
-    commParams.devType  = DevType::DEV_TYPE_910A;
+    HcclCommConfig config;
+    commParams.devType = DevType::DEV_TYPE_910A;
     GenRankTableFile1Ser8Dev();
 
-    void *devPtr = nullptr;
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(devPtr));
+    void* devPtr = nullptr;
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(devPtr));
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(commParams.devType));
     MOCKER(HrtMemcpy).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
     MOCKER_CPP(&CommunicatorImpl::InitCollService).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     impl.rankGraph = make_unique<RankGraph>(0);
     impl.rankGraph->peers_[0] = make_shared<NetInstance::Peer>(0, 0, 0, 0);
-    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string &))
-        .stubs().with(mockcpp::any()).will(ignoreReturnValue());
+    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any())
+        .will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::ExecAlgSelect).stubs().will(ignoreReturnValue());
 
     MockerCcuFeature();
@@ -280,13 +282,12 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_003)
     impl.collService = &collService;
 
     // 创建Socket
-    Socket *socket
-        = new Socket(hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
-    std::string  socketTag = impl.GetEstablishLinkSocketTag();
+    Socket* socket = new Socket(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    std::string socketTag = impl.GetEstablishLinkSocketTag();
     SocketConfig socketConfig(remoteRank, linkData, socketTag);
-    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(hccpSocketHandle, GetAnIpAddress(),
-                                                                                        0, GetAnIpAddress(), "stub",
-                                                                                        SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
     MOCKER_CPP(&Socket::GetStatus)
         .stubs()
@@ -298,8 +299,8 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_003)
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
     RdmaHandle rdmaHandle = new int(1);
-    u32 jettyNum = 1;   // 当前迭代，jettyNum默认为1
-    u32 sqSize = 128;   // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
+    u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
+    u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
     MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
@@ -319,18 +320,23 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_003)
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
-    vector<CcuJetty *> ccuJettys;
-    auto connection = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
+    vector<CcuJetty*> ccuJettys;
+    auto connection
+        = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
 
     // 创建utCcuTransport
     CcuTransport::CclBufferInfo locCclBufInfo;
-    std::unique_ptr<CcuTransport> utCcuTransport = make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
+    std::unique_ptr<CcuTransport> utCcuTransport
+        = make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
 
     set<CcuTransport*> utCcuTransportSet;
     utCcuTransportSet.insert(std::move(utCcuTransport.get()));
 
     // 打桩ccuTransportMgr.Get()
-    MOCKER_CPP(&CcuTransportMgr::Get, set<CcuTransport*>(CcuTransportMgr::*)(RankId)).stubs().with(mockcpp::any()).will(returnValue(utCcuTransportSet));
+    MOCKER_CPP(&CcuTransportMgr::Get, set<CcuTransport*>(CcuTransportMgr::*)(RankId))
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(utCcuTransportSet));
 
     // 打桩CcuTransportGroup构造函数中调用的函数
     MOCKER_CPP(&CcuTransportGroup::CheckTransportCntCke).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
@@ -351,46 +357,47 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_004)
 {
     // 创建linkData
     BasePortType portType(PortDeploymentType::P2P, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     u32 utCntCke = 3;
     vector<CcuTransport*> utTransports;
 
     // 创建CommunicatorImpl
-    u32 localRank  = 0;
+    u32 localRank = 0;
     u32 remoteRank = 1;
     CommunicatorImpl impl;
-    CommParams       commParams;
-    commParams.commId   = "commId";
-    commParams.myRank   = localRank;
+    CommParams commParams;
+    commParams.commId = "commId";
+    commParams.myRank = localRank;
     commParams.rankSize = 8;
-    HcclCommConfig    config;
-    commParams.devType  = DevType::DEV_TYPE_910A;
+    HcclCommConfig config;
+    commParams.devType = DevType::DEV_TYPE_910A;
     GenRankTableFile1Ser8Dev();
 
-    void *devPtr = nullptr;
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(devPtr));
+    void* devPtr = nullptr;
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(devPtr));
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(commParams.devType));
     MOCKER(HrtMemcpy).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
     MOCKER_CPP(&CommunicatorImpl::InitCollService).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     impl.rankGraph = make_unique<RankGraph>(0);
     impl.rankGraph->peers_[0] = make_shared<NetInstance::Peer>(0, 0, 0, 0);
-    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string &))
-        .stubs().with(mockcpp::any()).will(ignoreReturnValue());
+    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any())
+        .will(ignoreReturnValue());
 
     MockerCcuFeature();
 
     impl.Init(commParams, "ranktable.json", config);
 
     // 创建Socket
-    Socket *socket
-        = new Socket(hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
-    std::string  socketTag = impl.GetEstablishLinkSocketTag();
+    Socket* socket = new Socket(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    std::string socketTag = impl.GetEstablishLinkSocketTag();
     SocketConfig socketConfig(remoteRank, linkData, socketTag);
-    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(hccpSocketHandle, GetAnIpAddress(),
-                                                                                        0, GetAnIpAddress(), "stub",
-                                                                                        SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
     MOCKER_CPP(&Socket::GetStatus)
         .stubs()
@@ -402,8 +409,8 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_004)
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
     RdmaHandle rdmaHandle = new int(1);
-    u32 jettyNum = 1;   // 当前迭代，jettyNum默认为1
-    u32 sqSize = 128;   // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
+    u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
+    u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
     MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
@@ -423,12 +430,14 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_004)
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
-    vector<CcuJetty *> ccuJettys;
-    auto connection = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
+    vector<CcuJetty*> ccuJettys;
+    auto connection
+        = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
 
     // 创建utCcuTransport
     CcuTransport::CclBufferInfo locCclBufInfo;
-    std::unique_ptr<CcuTransport> utCcuTransport = make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
+    std::unique_ptr<CcuTransport> utCcuTransport
+        = make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
     utTransports.push_back(std::move(utCcuTransport.get()));
 
     // 打桩CcuTransportGroup构造函数中调用的函数
@@ -455,43 +464,44 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_005)
 {
     // 创建linkData
     BasePortType portType(PortDeploymentType::P2P, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     // 创建CommunicatorImpl
-    u32 localRank  = 0;
+    u32 localRank = 0;
     u32 remoteRank = 1;
     CommunicatorImpl impl;
-    CommParams       commParams;
-    commParams.commId   = "commId";
-    commParams.myRank   = localRank;
+    CommParams commParams;
+    commParams.commId = "commId";
+    commParams.myRank = localRank;
     commParams.rankSize = 8;
-    HcclCommConfig    config;
-    commParams.devType  = DevType::DEV_TYPE_910A;
+    HcclCommConfig config;
+    commParams.devType = DevType::DEV_TYPE_910A;
     GenRankTableFile1Ser8Dev();
 
-    void *devPtr = nullptr;
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(devPtr));
+    void* devPtr = nullptr;
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(devPtr));
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(commParams.devType));
     MOCKER(HrtMemcpy).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
     MOCKER_CPP(&CommunicatorImpl::InitCollService).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     impl.rankGraph = make_unique<RankGraph>(0);
     impl.rankGraph->peers_[0] = make_shared<NetInstance::Peer>(0, 0, 0, 0);
-    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string &))
-        .stubs().with(mockcpp::any()).will(ignoreReturnValue());
- 
+    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any())
+        .will(ignoreReturnValue());
+
     MockerCcuFeature();
 
     impl.Init(commParams, "ranktable.json", config);
 
     // 创建Socket
-    Socket *socket
-        = new Socket(hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
-    std::string  socketTag = impl.GetEstablishLinkSocketTag();
+    Socket* socket = new Socket(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    std::string socketTag = impl.GetEstablishLinkSocketTag();
     SocketConfig socketConfig(remoteRank, linkData, socketTag);
-    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(hccpSocketHandle, GetAnIpAddress(),
-                                                                                        0, GetAnIpAddress(), "stub",
-                                                                                        SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
     MOCKER_CPP(&Socket::GetStatus)
         .stubs()
@@ -517,45 +527,46 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_006)
 {
     // 创建linkData
     BasePortType portType(PortDeploymentType::P2P, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);      // linkData创建完成
+    LinkData linkData(portType, 0, 1, 0, 1); // linkData创建完成
 
     u32 utCntCke = 3;
 
     // 创建CommunicatorImpl
-    u32 localRank  = 0;
+    u32 localRank = 0;
     u32 remoteRank = 1;
     CommunicatorImpl impl;
-    CommParams       commParams;
-    commParams.commId   = "commId";
-    commParams.myRank   = localRank;
+    CommParams commParams;
+    commParams.commId = "commId";
+    commParams.myRank = localRank;
     commParams.rankSize = 8;
-    HcclCommConfig    config;
-    commParams.devType  = DevType::DEV_TYPE_910A;
+    HcclCommConfig config;
+    commParams.devType = DevType::DEV_TYPE_910A;
     GenRankTableFile1Ser8Dev();
 
-    void *devPtr = nullptr;
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(devPtr));
+    void* devPtr = nullptr;
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(devPtr));
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(commParams.devType));
     MOCKER(HrtMemcpy).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
     MOCKER_CPP(&CommunicatorImpl::InitCollService).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     impl.rankGraph = make_unique<RankGraph>(0);
     impl.rankGraph->peers_[0] = make_shared<NetInstance::Peer>(0, 0, 0, 0);
-    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string &))
-        .stubs().with(mockcpp::any()).will(ignoreReturnValue());
- 
+    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any())
+        .will(ignoreReturnValue());
+
     MockerCcuFeature();
 
     impl.Init(commParams, "ranktable.json", config);
 
     // 创建Socket
-    Socket *socket
-        = new Socket(hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
-    std::string  socketTag = impl.GetEstablishLinkSocketTag();
+    Socket* socket = new Socket(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    std::string socketTag = impl.GetEstablishLinkSocketTag();
     SocketConfig socketConfig(remoteRank, linkData, socketTag);
-    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(hccpSocketHandle, GetAnIpAddress(),
-                                                                                        0, GetAnIpAddress(), "stub",
-                                                                                        SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
     MOCKER_CPP(&Socket::GetStatus)
         .stubs()
@@ -567,8 +578,8 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_006)
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
     RdmaHandle rdmaHandle = new int(1);
-    u32 jettyNum = 1;   // 当前迭代，jettyNum默认为1
-    u32 sqSize = 128;   // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
+    u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
+    u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
     MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
@@ -588,12 +599,14 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_006)
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
-    vector<CcuJetty *> ccuJettys;
-    auto connection = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
+    vector<CcuJetty*> ccuJettys;
+    auto connection
+        = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
 
     // 创建utCcuTransport
     CcuTransport::CclBufferInfo locCclBufInfo;
-    std::unique_ptr<CcuTransport> utCcuTransport = make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
+    std::unique_ptr<CcuTransport> utCcuTransport
+        = make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
 
     vector<CcuTransport*> utCcuTransportVec;
     utCcuTransportVec.emplace_back(std::move(utCcuTransport.get()));
@@ -603,7 +616,8 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_006)
     MOCKER_CPP(&CcuTransportGroup::CheckTransports).stubs().with(mockcpp::any()).will(returnValue(true));
 
     // 创建utCcuTransportGroup
-    std::unique_ptr<CcuTransportGroup> utCcuTransportGroup = make_unique<CcuTransportGroup>(utCcuTransportVec, utCntCke);
+    std::unique_ptr<CcuTransportGroup> utCcuTransportGroup
+        = make_unique<CcuTransportGroup>(utCcuTransportVec, utCntCke);
 
     // 创建utCcuTransportGroupMgr，并在linkGrp2TransportGrpMap中建立utLinkGroup与utCcuTransportGroup的映射
     CcuTransportGroupMgr utCcuTransportGroupMgr(impl);
@@ -627,43 +641,44 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_007)
 {
     // 创建linkData
     BasePortType portType(PortDeploymentType::P2P, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     // 创建CommunicatorImpl
-    u32 localRank  = 0;
+    u32 localRank = 0;
     u32 remoteRank = 1;
     CommunicatorImpl impl;
-    CommParams       commParams;
-    commParams.commId   = "commId";
-    commParams.myRank   = localRank;
+    CommParams commParams;
+    commParams.commId = "commId";
+    commParams.myRank = localRank;
     commParams.rankSize = 8;
-    HcclCommConfig    config;
-    commParams.devType  = DevType::DEV_TYPE_910A;
+    HcclCommConfig config;
+    commParams.devType = DevType::DEV_TYPE_910A;
     GenRankTableFile1Ser8Dev();
 
-    void *devPtr = nullptr;
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(devPtr));
+    void* devPtr = nullptr;
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(devPtr));
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(commParams.devType));
     MOCKER(HrtMemcpy).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
     MOCKER_CPP(&CommunicatorImpl::InitCollService).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     impl.rankGraph = make_unique<RankGraph>(0);
     impl.rankGraph->peers_[0] = make_shared<NetInstance::Peer>(0, 0, 0, 0);
-    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string &))
-        .stubs().with(mockcpp::any()).will(ignoreReturnValue());
- 
+    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any())
+        .will(ignoreReturnValue());
+
     MockerCcuFeature();
 
     impl.Init(commParams, "ranktable.json", config);
 
     // 创建Socket
-    Socket *socket
-        = new Socket(hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
-    std::string  socketTag = impl.GetEstablishLinkSocketTag();
+    Socket* socket = new Socket(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    std::string socketTag = impl.GetEstablishLinkSocketTag();
     SocketConfig socketConfig(remoteRank, linkData, socketTag);
-    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(hccpSocketHandle, GetAnIpAddress(),
-                                                                                        0, GetAnIpAddress(), "stub",
-                                                                                        SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
     MOCKER_CPP(&Socket::GetStatus)
         .stubs()
@@ -688,25 +703,25 @@ TEST_F(CcuTransportGroupMgrTest, GetAllTransportGroups)
 
     // 创建linkData
     BasePortType portType(PortDeploymentType::P2P, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     u32 utCntCke = 3;
     vector<CcuTransport*> utTransports;
 
     // 创建CommunicatorImpl
-    u32 localRank  = 0;
+    u32 localRank = 0;
     u32 remoteRank = 1;
     CommunicatorImpl impl;
-    CommParams       commParams;
-    commParams.commId   = "commId";
-    commParams.myRank   = localRank;
+    CommParams commParams;
+    commParams.commId = "commId";
+    commParams.myRank = localRank;
     commParams.rankSize = 8;
-    HcclCommConfig    config;
-    commParams.devType  = DevType::DEV_TYPE_910A;
+    HcclCommConfig config;
+    commParams.devType = DevType::DEV_TYPE_910A;
     GenRankTableFile1Ser8Dev();
 
-    void *devPtr = nullptr;
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(devPtr));
+    void* devPtr = nullptr;
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(devPtr));
     MOCKER(HrtMemset).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(commParams.devType));
     MOCKER(HrtMemcpy).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
@@ -714,25 +729,26 @@ TEST_F(CcuTransportGroupMgrTest, GetAllTransportGroups)
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     impl.rankGraph = make_unique<RankGraph>(0);
     impl.rankGraph->peers_[0] = make_shared<NetInstance::Peer>(0, 0, 0, 0);
-    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string &))
-        .stubs().with(mockcpp::any()).will(ignoreReturnValue());
+    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any())
+        .will(ignoreReturnValue());
     MOCKER(HrtGetDevice).defaults().will(returnValue(0));
     MOCKER(memset_s).stubs().with(mockcpp::any()).will(returnValue(0));
- 
+
     MockerCcuFeature();
 
     impl.Init(commParams, "ranktable.json", config);
 
     // 创建Socket
-    void *hccpSocketHandle;
+    void* hccpSocketHandle;
     hccpSocketHandle = new int(0);
-    Socket *socket
-        = new Socket(hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
-    std::string  socketTag = impl.GetEstablishLinkSocketTag();
+    Socket* socket = new Socket(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    std::string socketTag = impl.GetEstablishLinkSocketTag();
     SocketConfig socketConfig(remoteRank, linkData, socketTag);
-    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(hccpSocketHandle, GetAnIpAddress(),
-                                                                                        0, GetAnIpAddress(), "stub",
-                                                                                        SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
     MOCKER_CPP(&Socket::GetStatus)
         .stubs()
@@ -744,8 +760,8 @@ TEST_F(CcuTransportGroupMgrTest, GetAllTransportGroups)
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
     RdmaHandle rdmaHandle = new int(1);
-    u32 jettyNum = 1;   // 当前迭代，jettyNum默认为1
-    u32 sqSize = 128;   // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
+    u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
+    u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
     MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
@@ -765,20 +781,23 @@ TEST_F(CcuTransportGroupMgrTest, GetAllTransportGroups)
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
-    vector<CcuJetty *> ccuJettys;
-    auto connection = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
+    vector<CcuJetty*> ccuJettys;
+    auto connection
+        = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
 
     // 创建utCcuTransport
     CcuTransport::CclBufferInfo locCclBufInfo;
-    std::unique_ptr<CcuTransport> utCcuTransport = std::make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
+    std::unique_ptr<CcuTransport> utCcuTransport
+        = std::make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
     utTransports.push_back(std::move(utCcuTransport.get()));
 
     // 打桩CcuTransportGroup构造函数中调用的函数
     MOCKER_CPP(&CcuTransportGroup::CheckTransportCntCke).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER_CPP(&CcuTransportGroup::CheckTransports).stubs().with(mockcpp::any()).will(returnValue(true));
-    
+
     // 创建utCcuTransportGroup
-    std::unique_ptr<CcuTransportGroup> utCcuTransportGroup = std::make_unique<CcuTransportGroup>(utTransports, utCntCke);
+    std::unique_ptr<CcuTransportGroup> utCcuTransportGroup
+        = std::make_unique<CcuTransportGroup>(utTransports, utCntCke);
 
     // 创建utCcuTransportGroupMgr，并在linkGrp2TransportGrpMap中建立utLinkGroup与utCcuTransportGroup的映射
     CcuTransportGroupMgr utCcuTransportGroupMgr(impl);
@@ -797,44 +816,44 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_008)
 {
     // 创建linkData
     BasePortType portType(PortDeploymentType::P2P, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     // 创建CommunicatorImpl
-    u32 localRank  = 0;
+    u32 localRank = 0;
     u32 remoteRank = 1;
     CommunicatorImpl impl;
-    CommParams       commParams;
-    commParams.commId   = "commId";
-    commParams.myRank   = localRank;
+    CommParams commParams;
+    commParams.commId = "commId";
+    commParams.myRank = localRank;
     commParams.rankSize = 8;
-    HcclCommConfig    config;
-    commParams.devType  = DevType::DEV_TYPE_910A;
+    HcclCommConfig config;
+    commParams.devType = DevType::DEV_TYPE_910A;
     GenRankTableFile1Ser8Dev();
 
-    void *devPtr = nullptr;
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(devPtr));
+    void* devPtr = nullptr;
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(devPtr));
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(commParams.devType));
     MOCKER(HrtMemcpy).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
     MOCKER_CPP(&CommunicatorImpl::InitCollService).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     impl.rankGraph = make_unique<RankGraph>(0);
     impl.rankGraph->peers_[0] = make_shared<NetInstance::Peer>(0, 0, 0, 0);
-    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string &))
-        .stubs().with(mockcpp::any()).will(ignoreReturnValue());
- 
+    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any())
+        .will(ignoreReturnValue());
+
     MockerCcuFeature();
 
     impl.Init(commParams, "ranktable.json", config);
 
     // 创建Socket
-    Socket *socket
-        = new Socket(hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
-    std::string  socketTag = impl.GetEstablishLinkSocketTag();
+    Socket* socket = new Socket(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    std::string socketTag = impl.GetEstablishLinkSocketTag();
     SocketConfig socketConfig(remoteRank, linkData, socketTag);
-    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(hccpSocketHandle,
-                                                                                        GetAnIpAddress(),
-                                                                                        0, GetAnIpAddress(), "stub",
-                                                                                        SocketRole::CLIENT,NicType::DEVICE_NIC_TYPE);
+    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
     MOCKER_CPP(&Socket::GetStatus)
         .stubs()
@@ -851,39 +870,41 @@ TEST_F(CcuTransportGroupMgrTest, Test_CcuTransportGroupMgr_008)
     delete socket;
 }
 
-//测试ResumeTransportGroup接口，预期成功获取linkGroup对应的ccuTransportGroup
+// 测试ResumeTransportGroup接口，预期成功获取linkGroup对应的ccuTransportGroup
 TEST_F(CcuTransportGroupMgrTest, should_return_ccuTransportGroup_when_calling_ResumeTransportGroup)
 {
     // 创建linkData
     BasePortType portType(PortDeploymentType::P2P, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     u32 utCntCke = 3;
 
     // 创建CommunicatorImpl
-    u32 localRank  = 0;
+    u32 localRank = 0;
     u32 remoteRank = 1;
     CommunicatorImpl impl;
-    CommParams       commParams;
-    commParams.commId   = "commId";
-    commParams.myRank   = localRank;
+    CommParams commParams;
+    commParams.commId = "commId";
+    commParams.myRank = localRank;
     commParams.rankSize = 8;
-    HcclCommConfig    config;
-    commParams.devType  = DevType::DEV_TYPE_950;
+    HcclCommConfig config;
+    commParams.devType = DevType::DEV_TYPE_950;
     GenRankTableFile1Ser8Dev();
 
-    void *devPtr = nullptr;
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(devPtr));
+    void* devPtr = nullptr;
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(devPtr));
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(commParams.devType));
     MOCKER(HrtMemcpy).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
     MOCKER_CPP(&CommunicatorImpl::InitCollService).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     impl.rankGraph = make_unique<RankGraph>(0);
     impl.rankGraph->peers_[0] = make_shared<NetInstance::Peer>(0, 0, 0, 0);
-    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string &))
-        .stubs().with(mockcpp::any()).will(ignoreReturnValue());
+    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any())
+        .will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::ExecAlgSelect).stubs().will(ignoreReturnValue());
- 
+
     MockerCcuFeature();
 
     impl.Init(commParams, "ranktable.json", config);
@@ -891,14 +912,12 @@ TEST_F(CcuTransportGroupMgrTest, should_return_ccuTransportGroup_when_calling_Re
     impl.collService = &collService;
 
     // 创建Socket
-    Socket *socket
-        = new Socket(hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
-    std::string  socketTag = impl.GetEstablishLinkSocketTag();
+    Socket* socket = new Socket(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    std::string socketTag = impl.GetEstablishLinkSocketTag();
     SocketConfig socketConfig(remoteRank, linkData, socketTag);
-    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(hccpSocketHandle,
-                                                                                        GetAnIpAddress(),
-                                                                                        0, GetAnIpAddress(), "stub",
-                                                                                        SocketRole::CLIENT,NicType::DEVICE_NIC_TYPE);
+    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
     MOCKER_CPP(&Socket::GetStatus)
         .stubs()
@@ -910,8 +929,8 @@ TEST_F(CcuTransportGroupMgrTest, should_return_ccuTransportGroup_when_calling_Re
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
     RdmaHandle rdmaHandle = new int(1);
-    u32 jettyNum = 1;   // 当前迭代，jettyNum默认为1
-    u32 sqSize = 128;   // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
+    u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
+    u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
     MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
@@ -930,18 +949,23 @@ TEST_F(CcuTransportGroupMgrTest, should_return_ccuTransportGroup_when_calling_Re
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
-    vector<CcuJetty *> ccuJettys;
-    auto connection = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
+    vector<CcuJetty*> ccuJettys;
+    auto connection
+        = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
 
     // 创建utCcuTransport
     CcuTransport::CclBufferInfo locCclBufInfo;
-    std::unique_ptr<CcuTransport> utCcuTransport = make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
+    std::unique_ptr<CcuTransport> utCcuTransport
+        = make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
 
     set<CcuTransport*> utCcuTransportSet;
     utCcuTransportSet.insert(std::move(utCcuTransport.get()));
 
     // 打桩ccuTransportMgr.Get()
-    MOCKER_CPP(&CcuTransportMgr::Get, set<CcuTransport*>(CcuTransportMgr::*)(RankId)).stubs().with(mockcpp::any()).will(returnValue(utCcuTransportSet));
+    MOCKER_CPP(&CcuTransportMgr::Get, set<CcuTransport*>(CcuTransportMgr::*)(RankId))
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(utCcuTransportSet));
 
     // 打桩CcuTransportGroup构造函数中调用的函数
     MOCKER_CPP(&CcuTransportGroup::CheckTransportCntCke).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
@@ -957,37 +981,39 @@ TEST_F(CcuTransportGroupMgrTest, should_return_ccuTransportGroup_when_calling_Re
     delete rdmaHandle;
 }
 
-//测试ResumeTransportGroup接口，预期创建失败，抛出异常
+// 测试ResumeTransportGroup接口，预期创建失败，抛出异常
 TEST_F(CcuTransportGroupMgrTest, should_throw_if_transportGroup_init_fail_when_calling_ResumeTransportGroup)
 {
     // 创建linkData
     BasePortType portType(PortDeploymentType::P2P, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     u32 utCntCke = 3;
 
     // 创建CommunicatorImpl
-    u32 localRank  = 0;
+    u32 localRank = 0;
     u32 remoteRank = 1;
     CommunicatorImpl impl;
-    CommParams       commParams;
-    commParams.commId   = "commId";
-    commParams.myRank   = localRank;
+    CommParams commParams;
+    commParams.commId = "commId";
+    commParams.myRank = localRank;
     commParams.rankSize = 8;
-    HcclCommConfig    config;
-    commParams.devType  = DevType::DEV_TYPE_950;
+    HcclCommConfig config;
+    commParams.devType = DevType::DEV_TYPE_950;
     GenRankTableFile1Ser8Dev();
 
-    void *devPtr = nullptr;
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(devPtr));
+    void* devPtr = nullptr;
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(devPtr));
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(commParams.devType));
     MOCKER(HrtMemcpy).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
     MOCKER_CPP(&CommunicatorImpl::InitCollService).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     impl.rankGraph = make_unique<RankGraph>(0);
     impl.rankGraph->peers_[0] = make_shared<NetInstance::Peer>(0, 0, 0, 0);
-    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string &))
-        .stubs().with(mockcpp::any()).will(ignoreReturnValue());
+    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any())
+        .will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::ExecAlgSelect).stubs().will(ignoreReturnValue());
 
     MockerCcuFeature();
@@ -997,14 +1023,12 @@ TEST_F(CcuTransportGroupMgrTest, should_throw_if_transportGroup_init_fail_when_c
     impl.collService = &collService;
 
     // 创建Socket
-    Socket *socket
-        = new Socket(hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
-    std::string  socketTag = impl.GetEstablishLinkSocketTag();
+    Socket* socket = new Socket(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    std::string socketTag = impl.GetEstablishLinkSocketTag();
     SocketConfig socketConfig(remoteRank, linkData, socketTag);
-    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(hccpSocketHandle,
-                                                                                        GetAnIpAddress(),
-                                                                                        0, GetAnIpAddress(), "stub",
-                                                                                        SocketRole::CLIENT,NicType::DEVICE_NIC_TYPE);
+    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
     MOCKER_CPP(&Socket::GetStatus)
         .stubs()
@@ -1016,8 +1040,8 @@ TEST_F(CcuTransportGroupMgrTest, should_throw_if_transportGroup_init_fail_when_c
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
     RdmaHandle rdmaHandle = new int(1);
-    u32 jettyNum = 1;   // 当前迭代，jettyNum默认为1
-    u32 sqSize = 128;   // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
+    u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
+    u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
     MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
@@ -1036,18 +1060,23 @@ TEST_F(CcuTransportGroupMgrTest, should_throw_if_transportGroup_init_fail_when_c
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
-    vector<CcuJetty *> ccuJettys;
-    auto connection = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
+    vector<CcuJetty*> ccuJettys;
+    auto connection
+        = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
 
     // 创建utCcuTransport
     CcuTransport::CclBufferInfo locCclBufInfo;
-    std::unique_ptr<CcuTransport> utCcuTransport = make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
+    std::unique_ptr<CcuTransport> utCcuTransport
+        = make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
 
     set<CcuTransport*> utCcuTransportSet;
     utCcuTransportSet.insert(std::move(utCcuTransport.get()));
 
     // 打桩ccuTransportMgr.Get()
-    MOCKER_CPP(&CcuTransportMgr::Get, set<CcuTransport*>(CcuTransportMgr::*)(RankId)).stubs().with(mockcpp::any()).will(returnValue(utCcuTransportSet));
+    MOCKER_CPP(&CcuTransportMgr::Get, set<CcuTransport*>(CcuTransportMgr::*)(RankId))
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(utCcuTransportSet));
 
     // 打桩CcuTransportGroup构造函数中调用的函数
     MOCKER_CPP(&CcuTransportGroup::CheckTransportCntCke).stubs().will(returnValue(HcclResult::HCCL_E_INTERNAL));
@@ -1063,38 +1092,40 @@ TEST_F(CcuTransportGroupMgrTest, should_throw_if_transportGroup_init_fail_when_c
     delete rdmaHandle;
 }
 
-//测试ResumeTransportGroup接口，预期创建失败
+// 测试ResumeTransportGroup接口，预期创建失败
 TEST_F(CcuTransportGroupMgrTest, should_no_throw_if_linkgroup_empty_when_calling_ResumeTransportGroup)
 {
     // 创建linkData
     BasePortType portType(PortDeploymentType::P2P, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     RankId rankId = 0;
     u32 utCntCke = 3;
 
     // 创建CommunicatorImpl
-    u32 localRank  = 0;
+    u32 localRank = 0;
     u32 remoteRank = 1;
     CommunicatorImpl impl;
-    CommParams       commParams;
-    commParams.commId   = "commId";
-    commParams.myRank   = localRank;
+    CommParams commParams;
+    commParams.commId = "commId";
+    commParams.myRank = localRank;
     commParams.rankSize = 8;
-    HcclCommConfig    config;
-    commParams.devType  = DevType::DEV_TYPE_950;
+    HcclCommConfig config;
+    commParams.devType = DevType::DEV_TYPE_950;
     GenRankTableFile1Ser8Dev();
 
-    void *devPtr = nullptr;
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(devPtr));
+    void* devPtr = nullptr;
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(devPtr));
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(commParams.devType));
     MOCKER(HrtMemcpy).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
     MOCKER_CPP(&CommunicatorImpl::InitCollService).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(HrtSetDevice).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     impl.rankGraph = make_unique<RankGraph>(0);
     impl.rankGraph->peers_[0] = make_shared<NetInstance::Peer>(0, 0, 0, 0);
-    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string &))
-        .stubs().with(mockcpp::any()).will(ignoreReturnValue());
+    MOCKER_CPP(&CommunicatorImpl::InitRankGraph, void(CommunicatorImpl::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any())
+        .will(ignoreReturnValue());
     MOCKER_CPP(&CommunicatorImpl::ExecAlgSelect).stubs().will(ignoreReturnValue());
 
     MockerCcuFeature();
@@ -1104,14 +1135,12 @@ TEST_F(CcuTransportGroupMgrTest, should_no_throw_if_linkgroup_empty_when_calling
     impl.collService = &collService;
 
     // 创建Socket
-    Socket *socket
-        = new Socket(hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
-    std::string  socketTag = impl.GetEstablishLinkSocketTag();
+    Socket* socket = new Socket(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    std::string socketTag = impl.GetEstablishLinkSocketTag();
     SocketConfig socketConfig(remoteRank, linkData, socketTag);
-    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(hccpSocketHandle,
-                                                                                        GetAnIpAddress(),
-                                                                                        0, GetAnIpAddress(), "stub",
-                                                                                        SocketRole::CLIENT,NicType::DEVICE_NIC_TYPE);
+    impl.GetSocketManager().connectedSocketMap[socketConfig] = std::make_shared<Socket>(
+        hccpSocketHandle, GetAnIpAddress(), 0, GetAnIpAddress(), "stub", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
 
     MOCKER_CPP(&Socket::GetStatus)
         .stubs()
@@ -1123,8 +1152,8 @@ TEST_F(CcuTransportGroupMgrTest, should_no_throw_if_linkgroup_empty_when_calling
     // 打桩CcuConnection构造函数中调用的函数
     JfcHandle jfcHandle = 1;
     RdmaHandle rdmaHandle = new int(1);
-    u32 jettyNum = 1;   // 当前迭代，jettyNum默认为1
-    u32 sqSize = 128;   // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
+    u32 jettyNum = 1; // 当前迭代，jettyNum默认为1
+    u32 sqSize = 128; // 当前迭代，默认使用MS，故sqSize固定为128。sqSize就是jetty深度
 
     MOCKER(CcuDeviceManager::AllocXn).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
     MOCKER(CcuDeviceManager::AllocCke).defaults().will(returnValue(HcclResult::HCCL_SUCCESS));
@@ -1143,18 +1172,23 @@ TEST_F(CcuTransportGroupMgrTest, should_no_throw_if_linkgroup_empty_when_calling
 
     // 创建utConnection
     CcuChannelInfo channelInfo;
-    vector<CcuJetty *> ccuJettys;
-    auto connection = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
+    vector<CcuJetty*> ccuJettys;
+    auto connection
+        = std::make_unique<CcuConnection>(linkData.GetLocalAddr(), linkData.GetRemoteAddr(), channelInfo, ccuJettys);
 
     // 创建utCcuTransport
     CcuTransport::CclBufferInfo locCclBufInfo;
-    std::unique_ptr<CcuTransport> utCcuTransport = make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
+    std::unique_ptr<CcuTransport> utCcuTransport
+        = make_unique<CcuTransport>(socket, std::move(connection), locCclBufInfo);
 
     set<CcuTransport*> utCcuTransportSet;
     utCcuTransportSet.insert(std::move(utCcuTransport.get()));
 
     // 打桩ccuTransportMgr.Get()
-    MOCKER_CPP(&CcuTransportMgr::Get, set<CcuTransport*>(CcuTransportMgr::*)(RankId)).stubs().with(mockcpp::any()).will(returnValue(utCcuTransportSet));
+    MOCKER_CPP(&CcuTransportMgr::Get, set<CcuTransport*>(CcuTransportMgr::*)(RankId))
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(utCcuTransportSet));
 
     // 打桩CcuTransportGroup构造函数中调用的函数
     MOCKER_CPP(&CcuTransportGroup::CheckTransportCntCke).stubs().will(returnValue(HcclResult::HCCL_E_INTERNAL));

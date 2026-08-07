@@ -19,10 +19,10 @@ extern "C" {
 #endif // __cplusplus
 
 typedef enum {
-    CCU_DEFAULT = 0,   /**< default, now is scheduler mode */
-    CCU_SCHED   = 1,   /**< scheduler mode, with less loop resource */
-    CCU_MS      = 2,   /**< memory slices mode, with more loop resouce */
-    CCU_UNUSED  = 254,
+    CCU_DEFAULT = 0, /**< default, now is scheduler mode */
+    CCU_SCHED = 1,   /**< scheduler mode, with less loop resource */
+    CCU_MS = 2,      /**< memory slices mode, with more loop resouce */
+    CCU_UNUSED = 254,
     CCU_RESERVED = 255 /**< reserved */
 } CcuInstanceType;
 
@@ -32,7 +32,7 @@ typedef enum {
  * @param[out] ccuInsHandle 创建成功后返回的 CCU 实例句柄，不可为 nullptr。
  * @return CcuResult。
  */
-extern CcuResult HcommCcuInsCreateLegacy(const CcuInstanceType insType, CcuInsHandle *ccuInsHandle);
+extern CcuResult HcommCcuInsCreateLegacy(const CcuInstanceType insType, CcuInsHandle* ccuInsHandle);
 
 #ifdef __cplusplus
 }

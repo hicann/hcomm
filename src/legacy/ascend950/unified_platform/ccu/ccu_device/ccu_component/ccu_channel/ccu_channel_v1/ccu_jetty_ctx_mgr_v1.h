@@ -27,25 +27,26 @@ public:
     CcuJettyCtxMgrV1() = default;
     ~CcuJettyCtxMgrV1() override = default;
 
-    HcclResult Alloc(const uint32_t feId, const uint32_t jettyNum, const uint32_t sqSize,
+    HcclResult Alloc(
+        const uint32_t feId, const uint32_t jettyNum, const uint32_t sqSize,
         std::vector<JettyInfo>& jettyInfos) override;
-    HcclResult Config(const uint32_t feId, const std::vector<JettyInfo> &jettyInfos,
-        const std::vector<JettyCfg>& jettyCfgs) override;
-    HcclResult Release(const uint32_t feId, const std::vector<JettyInfo> &jettyInfos) override;
+    HcclResult Config(
+        const uint32_t feId, const std::vector<JettyInfo>& jettyInfos, const std::vector<JettyCfg>& jettyCfgs) override;
+    HcclResult Release(const uint32_t feId, const std::vector<JettyInfo>& jettyInfos) override;
 
 private:
     struct JettyAllocator {
         PfeJettyStrategy strategy;
         std::unique_ptr<CcuResIdAllocator> idAllocator;
-        
-        explicit JettyAllocator(PfeJettyStrategy pfeJettyStrategy): strategy(pfeJettyStrategy)
+
+        explicit JettyAllocator(PfeJettyStrategy pfeJettyStrategy) : strategy(pfeJettyStrategy)
         {
             idAllocator = std::make_unique<CcuResIdAllocator>(strategy.size);
         }
     };
 
     std::unique_ptr<JettyAllocator> allocator_;
-    HcclResult GetJettyAllocator(uint32_t feId, JettyAllocator* &allocatorHandle);
+    HcclResult GetJettyAllocator(uint32_t feId, JettyAllocator*& allocatorHandle);
 };
 
 }; // namespace Hccl

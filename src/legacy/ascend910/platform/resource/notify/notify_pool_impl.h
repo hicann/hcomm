@@ -26,8 +26,8 @@ using NotifyPoolIPCSub = std::vector<std::shared_ptr<LocalIpcNotify>>;
 using NotifyPoolNoIPCSub = std::vector<std::shared_ptr<LocalIpcNotify>>;
 
 using NotifyPoolIndicator = struct NotifyPoolIndicatorDef {
-    std::map<s64, u32> notifyPoolIPC;       // key: remote, value: index
-    std::map<s64, u32> notifyPoolNoIPC;     // key: remote, value: index
+    std::map<s64, u32> notifyPoolIPC;   // key: remote, value: index
+    std::map<s64, u32> notifyPoolNoIPC; // key: remote, value: index
 };
 
 constexpr u32 NOTIFY_RES_MGR_NUM = 3; // notifyResMgr_ 长度
@@ -50,49 +50,54 @@ public:
     ~NotifyPoolImpl();
     HcclResult Init();
     HcclResult Destroy();
-    HcclResult RegisterOp(const std::string &tag);
-    HcclResult UnregisterOp(const std::string &tag);
+    HcclResult RegisterOp(const std::string& tag);
+    HcclResult UnregisterOp(const std::string& tag);
     // local notify申请
-    HcclResult Alloc(const std::string &tag, const RemoteRankInfo &info, const NotifyLoadType type,
-        std::shared_ptr<LocalIpcNotify> &localNotify, u32 offsetAlignSize);
+    HcclResult Alloc(
+        const std::string& tag, const RemoteRankInfo& info, const NotifyLoadType type,
+        std::shared_ptr<LocalIpcNotify>& localNotify, u32 offsetAlignSize);
 
     HcclResult ResetNotify();
     HcclResult ResetNotifyForDestRank(s64 destRank);
+
 private:
-    HcclResult CreateNotify(std::shared_ptr<LocalIpcNotify> &localNotify, const s32 localDeviceId,
-        const s32 remoteDeviceId, const NotifyLoadType type, bool withIpc = false,  s64 recvId = -1,
-        u32 offsetAlignSize = INVALID_UINT);
+    HcclResult CreateNotify(
+        std::shared_ptr<LocalIpcNotify>& localNotify, const s32 localDeviceId, const s32 remoteDeviceId,
+        const NotifyLoadType type, bool withIpc = false, s64 recvId = -1, u32 offsetAlignSize = INVALID_UINT);
 
-    HcclResult AllocIpc(const std::string &tag, s64 remote, s64 recvId,
-        const s32 localDeviceId, const s32 remoteDeviceId, const NotifyLoadType type,
-        std::shared_ptr<LocalIpcNotify> &localNotify, std::mutex &registeredOpMapMutex,
-        std::map<std::string, NotifyPoolIndicator> &registeredOpMap, std::mutex &notifyPoolIPCAsignedMapMutex,
-        std::map<s64, NotifyPoolIPCSub> &notifyPoolIPCAsignedMap, u32 offsetAlignSize);
-    HcclResult Alloc(const std::string &tag, s64 remote, s64 recvId, const s32 localDeviceId,
-        const s32 remoteDeviceId, const NotifyLoadType type, std::shared_ptr<LocalIpcNotify> &localNotify,
-        u32 offsetAlignSize);
+    HcclResult AllocIpc(
+        const std::string& tag, s64 remote, s64 recvId, const s32 localDeviceId, const s32 remoteDeviceId,
+        const NotifyLoadType type, std::shared_ptr<LocalIpcNotify>& localNotify, std::mutex& registeredOpMapMutex,
+        std::map<std::string, NotifyPoolIndicator>& registeredOpMap, std::mutex& notifyPoolIPCAsignedMapMutex,
+        std::map<s64, NotifyPoolIPCSub>& notifyPoolIPCAsignedMap, u32 offsetAlignSize);
+    HcclResult Alloc(
+        const std::string& tag, s64 remote, s64 recvId, const s32 localDeviceId, const s32 remoteDeviceId,
+        const NotifyLoadType type, std::shared_ptr<LocalIpcNotify>& localNotify, u32 offsetAlignSize);
 
-    HcclResult AllocNoIpc(const std::string &tag, s64 remote, const s32 deviceId,
-        const NotifyLoadType type, std::shared_ptr<LocalIpcNotify> &localNotify, std::mutex &registeredOpMapMutex,
-        std::map<std::string, NotifyPoolIndicator> &registeredOpMap, std::mutex &notifyPoolNoIPCAsignedMapMutex,
-        std::map<s64, NotifyPoolNoIPCSub> &notifyPoolNoIPCAsignedMap, u32 offsetAlignSize);
-    HcclResult Alloc(const std::string &tag, s64 remote, const s32 deviceId, const NotifyLoadType type,
-        std::shared_ptr<LocalIpcNotify> &localNotify, u32 offsetAlignSize);
-    HcclResult IsNotifyOffsetAligned(std::shared_ptr<LocalIpcNotify> &localNotify, u32 offsetAlignSize, bool &isAligned);
+    HcclResult AllocNoIpc(
+        const std::string& tag, s64 remote, const s32 deviceId, const NotifyLoadType type,
+        std::shared_ptr<LocalIpcNotify>& localNotify, std::mutex& registeredOpMapMutex,
+        std::map<std::string, NotifyPoolIndicator>& registeredOpMap, std::mutex& notifyPoolNoIPCAsignedMapMutex,
+        std::map<s64, NotifyPoolNoIPCSub>& notifyPoolNoIPCAsignedMap, u32 offsetAlignSize);
+    HcclResult Alloc(
+        const std::string& tag, s64 remote, const s32 deviceId, const NotifyLoadType type,
+        std::shared_ptr<LocalIpcNotify>& localNotify, u32 offsetAlignSize);
+    HcclResult
+    IsNotifyOffsetAligned(std::shared_ptr<LocalIpcNotify>& localNotify, u32 offsetAlignSize, bool& isAligned);
 
     HcclResult DestroyRegisteredOpMap(u32 index);
     HcclResult DestroyNotifyPoolIPCAsignedMap(u32 index);
     HcclResult DestroyNotifyPoolNoIPCAsignedMap(u32 index);
     HcclResult DestroyNotifyPoolDevIPCAsignedMap(u32 index);
     HcclResult DestroyNotifyPoolDevNoIPCAsignedMap(u32 index);
-    HcclResult RegisterOpMap(const std::string &tag, std::map<std::string, NotifyPoolIndicator> &registeredOpMap);
-    HcclResult UnregisterOpMap(const std::string &tag, std::map<std::string, NotifyPoolIndicator> &registeredOpMap);
-    HcclResult DestroyNotify(std::shared_ptr<LocalIpcNotify> &localNotify);
-    u32 GetNotifyResIdx(const std::string &tag, u32 offsetAlignSize);
+    HcclResult RegisterOpMap(const std::string& tag, std::map<std::string, NotifyPoolIndicator>& registeredOpMap);
+    HcclResult UnregisterOpMap(const std::string& tag, std::map<std::string, NotifyPoolIndicator>& registeredOpMap);
+    HcclResult DestroyNotify(std::shared_ptr<LocalIpcNotify>& localNotify);
+    u32 GetNotifyResIdx(const std::string& tag, u32 offsetAlignSize);
 
     std::array<NotifyResMgr, NOTIFY_RES_MGR_NUM> notifyResMgr_;
     s32 devicePhyId_;
     s32 pid_;
 };
-}  // namespace hccl
+} // namespace hccl
 #endif /* NOTIFY_POOL_IMPL_H */

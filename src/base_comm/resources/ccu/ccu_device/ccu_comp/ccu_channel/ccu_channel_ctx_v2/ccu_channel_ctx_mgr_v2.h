@@ -27,18 +27,15 @@ struct ChannelDataV2 {
     uint16_t vtpLow{0};
     /********18 Bytes**********/
 
-    uint16_t vtpHigh   : 8;
-    uint16_t ioDieId   : 1;
-    uint16_t rsv3Bits  : 7;
+    uint16_t vtpHigh : 8;
+    uint16_t ioDieId : 1;
+    uint16_t rsv3Bits : 7;
     /********20 Bytes**********/
 
     uint16_t rsv[6] = {0};
     /********32 Bytes**********/
-    
-    ChannelDataV2()
-        : vtpHigh(0), ioDieId{0}, rsv3Bits{0}
-    {
-    }
+
+    ChannelDataV2() : vtpHigh(0), ioDieId{0}, rsv3Bits{0} {}
 };
 #pragma pack(pop)
 
@@ -50,8 +47,8 @@ public:
     ~CcuChannelCtxMgrV2() override final = default;
 
     HcclResult Init() override final;
-    HcclResult Alloc(const ChannelPara &channelPara, std::vector<ChannelInfo> &channelInfos) override final;
-    HcclResult Config(const ChannelCfg &channelCfg) override final;
+    HcclResult Alloc(const ChannelPara& channelPara, std::vector<ChannelInfo>& channelInfos) override final;
+    HcclResult Config(const ChannelCfg& channelCfg) override final;
     HcclResult Release(const uint32_t channelId) override final;
 
 private:
@@ -59,9 +56,9 @@ private:
 
     CcuJettyCtxMgrV2 jettyCtxMgr_{};
 
-    void AllocateChannelResources(const ChannelPara &channelPara,
-        const std::vector<CcuJettyInfo> &jettyInfos, uint32_t startChannelId,
-        std::vector<ChannelInfo> &channelInfos);
+    void AllocateChannelResources(
+        const ChannelPara& channelPara, const std::vector<CcuJettyInfo>& jettyInfos, uint32_t startChannelId,
+        std::vector<ChannelInfo>& channelInfos);
 };
 
 }; // namespace hcomm

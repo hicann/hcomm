@@ -17,48 +17,45 @@
 namespace Hccl {
 namespace CcuRep {
 
-template <typename lhsT, typename rhsT> class CcuOperator {
-public:
-    CcuOperator(lhsT lhs, rhsT rhs) : lhs(lhs), rhs(rhs)
-    {
-    }
-    lhsT lhs;
-    rhsT rhs;
-};
+    template <typename lhsT, typename rhsT>
+    class CcuOperator {
+    public:
+        CcuOperator(lhsT lhs, rhsT rhs) : lhs(lhs), rhs(rhs) {}
+        lhsT lhs;
+        rhsT rhs;
+    };
 
-enum class CcuArithmeticOperatorType { ADDITION, INVALID };
+    enum class CcuArithmeticOperatorType { ADDITION, INVALID };
 
-template <typename lhsT, typename rhsT> class CcuArithmeticOperator : public CcuOperator<lhsT, rhsT> {
-public:
-    CcuArithmeticOperator(lhsT lhs, rhsT rhs, CcuArithmeticOperatorType type)
-        : CcuOperator<lhsT, rhsT>(lhs, rhs), type(type)
-    {
-        Check();
-    }
-    void Check() const
-    {
-        THROW<CcuApiException>("Invalid Arithmetic Operator");
-    }
+    template <typename lhsT, typename rhsT>
+    class CcuArithmeticOperator : public CcuOperator<lhsT, rhsT> {
+    public:
+        CcuArithmeticOperator(lhsT lhs, rhsT rhs, CcuArithmeticOperatorType type)
+            : CcuOperator<lhsT, rhsT>(lhs, rhs),
+              type(type)
+        {
+            Check();
+        }
+        void Check() const { THROW<CcuApiException>("Invalid Arithmetic Operator"); }
 
-    CcuArithmeticOperatorType type{CcuArithmeticOperatorType::INVALID};
-};
+        CcuArithmeticOperatorType type{CcuArithmeticOperatorType::INVALID};
+    };
 
-enum class CcuRelationalOperatorType { EQUAL, NOT_EQUAL, INVALID };
+    enum class CcuRelationalOperatorType { EQUAL, NOT_EQUAL, INVALID };
 
-template <typename lhsT, typename rhsT> class CcuRelationalOperator : public CcuOperator<lhsT, rhsT> {
-public:
-    CcuRelationalOperator(lhsT lhs, rhsT rhs, CcuRelationalOperatorType type)
-        : CcuOperator<lhsT, rhsT>(lhs, rhs), type(type)
-    {
-        Check();
-    }
-    void Check() const
-    {
-        THROW<CcuApiException>("Invalid Relational Operator");
-    }
+    template <typename lhsT, typename rhsT>
+    class CcuRelationalOperator : public CcuOperator<lhsT, rhsT> {
+    public:
+        CcuRelationalOperator(lhsT lhs, rhsT rhs, CcuRelationalOperatorType type)
+            : CcuOperator<lhsT, rhsT>(lhs, rhs),
+              type(type)
+        {
+            Check();
+        }
+        void Check() const { THROW<CcuApiException>("Invalid Relational Operator"); }
 
-    CcuRelationalOperatorType type{CcuRelationalOperatorType::INVALID};
-};
+        CcuRelationalOperatorType type{CcuRelationalOperatorType::INVALID};
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

@@ -46,8 +46,7 @@ EnvHostNicConfig MakeHostNicConfig(bool whitelistDisable, bool setIfFields = tru
     EnvHostNicConfig fakeEnvConfig;
     fakeEnvConfig.whitelistDisable = CfgField<bool>{"HCCL_WHITELIST_DISABLE", whitelistDisable, CastBin2Bool};
     fakeEnvConfig.whitelistDisable.isParsed = true;
-    fakeEnvConfig.hcclWhiteListFile =
-        CfgField<std::string>{"HCCL_WHITELIST_FILE", "unused", Str2T<std::string>};
+    fakeEnvConfig.hcclWhiteListFile = CfgField<std::string>{"HCCL_WHITELIST_FILE", "unused", Str2T<std::string>};
     fakeEnvConfig.hcclWhiteListFile.isParsed = true;
     if (setIfFields) {
         fakeEnvConfig.hcclIfIp.isParsed = true;
@@ -56,28 +55,16 @@ EnvHostNicConfig MakeHostNicConfig(bool whitelistDisable, bool setIfFields = tru
     return fakeEnvConfig;
 }
 
-std::vector<IpAddress> ReturnLocalHostWhitelist()
-{
-    return {IpAddress("127.0.0.1")};
-}
+std::vector<IpAddress> ReturnLocalHostWhitelist() { return {IpAddress("127.0.0.1")}; }
 } // namespace
 
 class GetBootstrapIpTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "GetBootstrapIpTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "GetBootstrapIpTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "GetBootstrapIpTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "GetBootstrapIpTest tests tear down." << std::endl; }
 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in GetBootstrapIpTest SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in GetBootstrapIpTest SetUP" << std::endl; }
 
     virtual void TearDown()
     {
@@ -155,7 +142,6 @@ TEST_F(GetBootstrapIpTest, Ut_FindLocalHostIp_When_ifInfos_normal_Expect_Right)
     EXPECT_EQ(GetBootstrapIp(5), IpAddress("127.0.0.1"));
 }
 
-
 TEST_F(GetBootstrapIpTest, Ut_FindLocalHostIp_When_ifInfos_error_Expect_Right)
 {
     // when
@@ -190,14 +176,14 @@ TEST_F(GetBootstrapIpTest, Ut_FindLocalHostIp_When_Config_HCCL_SOCKET_IFNAME_Exp
     hostIfInfos.push_back(std::make_pair("lo", IpAddress("127.0.0.3")));
     MOCKER(HrtGetHostIf).stubs().with(mockcpp::any()).will(returnValue(hostIfInfos));
     auto fakeEnvConfig = MakeHostNicConfig(true);
-    fakeEnvConfig.hcclSocketIfName = CfgField<SocketIfName>{"HCCL_SOCKET_IFNAME", SocketIfName(std::vector<std::string>{"lo"}, false, false), CastSocketIfName};
+    fakeEnvConfig.hcclSocketIfName = CfgField<SocketIfName>{
+        "HCCL_SOCKET_IFNAME", SocketIfName(std::vector<std::string>{"lo"}, false, false), CastSocketIfName};
     fakeEnvConfig.hcclSocketIfName.isParsed = true;
     MOCKER_CPP(&EnvConfig::GetHostNicConfig).stubs().will(returnValue(fakeEnvConfig));
 
     // check
     EXPECT_EQ(GetBootstrapIp(8), IpAddress("127.0.0.3"));
 }
-
 
 TEST_F(GetBootstrapIpTest, Ut_FindLocalHostIp_When_Config_HCCL_SOCKET_IFNAME_Expect_THROW)
 {
@@ -206,7 +192,8 @@ TEST_F(GetBootstrapIpTest, Ut_FindLocalHostIp_When_Config_HCCL_SOCKET_IFNAME_Exp
     hostIfInfos.push_back(std::make_pair("lo", IpAddress("127.0.0.3")));
     MOCKER(HrtGetHostIf).stubs().with(mockcpp::any()).will(returnValue(hostIfInfos));
     auto fakeEnvConfig = MakeHostNicConfig(true);
-    fakeEnvConfig.hcclSocketIfName = CfgField<SocketIfName>{"HCCL_SOCKET_IFNAME", SocketIfName(std::vector<std::string>{"po"}, false, false), CastSocketIfName};
+    fakeEnvConfig.hcclSocketIfName = CfgField<SocketIfName>{
+        "HCCL_SOCKET_IFNAME", SocketIfName(std::vector<std::string>{"po"}, false, false), CastSocketIfName};
     fakeEnvConfig.hcclSocketIfName.isParsed = true;
     MOCKER_CPP(&EnvConfig::GetHostNicConfig).stubs().will(returnValue(fakeEnvConfig));
 

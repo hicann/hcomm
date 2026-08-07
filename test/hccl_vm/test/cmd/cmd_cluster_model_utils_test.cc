@@ -26,24 +26,21 @@ public:
     EnvGuard() = default;
     ~EnvGuard() {}
 };
-}
+} // namespace
 
 class ClearHvmModelEnvTest : public testing::Test {
 protected:
-    void SetUp() override {
-    }
-    void TearDown() override {
-    }
+    void SetUp() override {}
+    void TearDown() override {}
 };
 
 class ParseYamlTopoWithModelMetaTest : public testing::Test {
 protected:
     std::string modelDir_;
-    void SetUp() override {
-        modelDir_ = GetBinLocation() + "/cluster_model";
-    }
+    void SetUp() override { modelDir_ = GetBinLocation() + "/cluster_model"; }
     void TearDown() override {}
-    std::string GetBinLocation() {
+    std::string GetBinLocation()
+    {
         std::error_code ec;
         auto exePath = std::filesystem::read_symlink("/proc/self/exe", ec);
         if (ec) {
@@ -51,19 +48,22 @@ protected:
         }
         return exePath.parent_path().string();
     }
-    void WriteYaml(const std::string& name, const std::string& content) {
+    void WriteYaml(const std::string& name, const std::string& content)
+    {
         std::string path = modelDir_ + "/" + name + ".yaml";
         std::ofstream ofs(path);
         ofs << content;
         ofs.close();
     }
-    void RemoveYaml(const std::string& name) {
+    void RemoveYaml(const std::string& name)
+    {
         std::string path = modelDir_ + "/" + name + ".yaml";
         std::filesystem::remove(path);
     }
 };
 
-TEST_F(ParseYamlTopoWithModelMetaTest, Parse112WithModelMeta) {
+TEST_F(ParseYamlTopoWithModelMetaTest, Parse112WithModelMeta)
+{
     TopoMeta topo;
 
     bool result = ParseYamlTopo("112", topo);
@@ -71,7 +71,8 @@ TEST_F(ParseYamlTopoWithModelMetaTest, Parse112WithModelMeta) {
     EXPECT_EQ(topo.size(), 1u);
 }
 
-TEST_F(ParseYamlTopoWithModelMetaTest, Parse118WithModelMeta) {
+TEST_F(ParseYamlTopoWithModelMetaTest, Parse118WithModelMeta)
+{
     TopoMeta topo;
 
     bool result = ParseYamlTopo("118", topo);
@@ -79,7 +80,8 @@ TEST_F(ParseYamlTopoWithModelMetaTest, Parse118WithModelMeta) {
     EXPECT_EQ(topo.size(), 1u);
 }
 
-TEST_F(ParseYamlTopoWithModelMetaTest, ParseWithoutModelMeta) {
+TEST_F(ParseYamlTopoWithModelMetaTest, ParseWithoutModelMeta)
+{
     TopoMeta topo;
 
     bool result = ParseYamlTopo("112", topo);
@@ -87,7 +89,8 @@ TEST_F(ParseYamlTopoWithModelMetaTest, ParseWithoutModelMeta) {
     EXPECT_EQ(topo.size(), 1u);
 }
 
-TEST_F(ParseYamlTopoWithModelMetaTest, WrongSocVersionWithModelMeta) {
+TEST_F(ParseYamlTopoWithModelMetaTest, WrongSocVersionWithModelMeta)
+{
     WriteYaml("ut_wrong_soc_meta", R"(
 meta:
   podNum: 1
@@ -107,7 +110,8 @@ topology:
     RemoveYaml("ut_wrong_soc_meta");
 }
 
-TEST_F(ParseYamlTopoWithModelMetaTest, Ascend950WithModelMeta) {
+TEST_F(ParseYamlTopoWithModelMetaTest, Ascend950WithModelMeta)
+{
     WriteYaml("ut_950_meta", R"(
 meta:
   podNum: 1
@@ -128,7 +132,8 @@ topology:
     RemoveYaml("ut_950_meta");
 }
 
-TEST_F(ParseYamlTopoWithModelMetaTest, NonUniformWithModelMeta) {
+TEST_F(ParseYamlTopoWithModelMetaTest, NonUniformWithModelMeta)
+{
     WriteYaml("ut_non_uniform_meta", R"(
 meta:
   podNum: 1
@@ -152,7 +157,8 @@ topology:
     RemoveYaml("ut_non_uniform_meta");
 }
 
-TEST_F(ParseYamlTopoWithModelMetaTest, ServerCountMismatchWithModelMeta) {
+TEST_F(ParseYamlTopoWithModelMetaTest, ServerCountMismatchWithModelMeta)
+{
     WriteYaml("ut_server_mismatch_meta", R"(
 meta:
   podNum: 1
@@ -172,7 +178,8 @@ topology:
     RemoveYaml("ut_server_mismatch_meta");
 }
 
-TEST_F(ParseYamlTopoWithModelMetaTest, ZeroPodNumYaml) {
+TEST_F(ParseYamlTopoWithModelMetaTest, ZeroPodNumYaml)
+{
     WriteYaml("ut_zero_pod", R"(
 meta:
   podNum: 0
@@ -190,7 +197,8 @@ topology:
     RemoveYaml("ut_zero_pod");
 }
 
-TEST_F(ParseYamlTopoWithModelMetaTest, ZeroSerNumYaml) {
+TEST_F(ParseYamlTopoWithModelMetaTest, ZeroSerNumYaml)
+{
     WriteYaml("ut_zero_ser", R"(
 meta:
   podNum: 1
@@ -208,7 +216,8 @@ topology:
     RemoveYaml("ut_zero_ser");
 }
 
-TEST_F(ParseYamlTopoWithModelMetaTest, ZeroRankNumYaml) {
+TEST_F(ParseYamlTopoWithModelMetaTest, ZeroRankNumYaml)
+{
     WriteYaml("ut_zero_rank", R"(
 meta:
   podNum: 1
@@ -226,7 +235,8 @@ topology:
     RemoveYaml("ut_zero_rank");
 }
 
-TEST_F(ParseYamlTopoWithModelMetaTest, MissingTopologyWithoutModelMeta) {
+TEST_F(ParseYamlTopoWithModelMetaTest, MissingTopologyWithoutModelMeta)
+{
     WriteYaml("ut_no_topo_nometa", R"(
 meta:
   podNum: 1
@@ -238,7 +248,8 @@ meta:
     RemoveYaml("ut_no_topo_nometa");
 }
 
-TEST_F(ParseYamlTopoWithModelMetaTest, EmptyTopologyList) {
+TEST_F(ParseYamlTopoWithModelMetaTest, EmptyTopologyList)
+{
     WriteYaml("ut_empty_topo", R"(
 meta:
   podNum: 1
@@ -253,7 +264,8 @@ topology: []
     RemoveYaml("ut_empty_topo");
 }
 
-TEST_F(ParseYamlTopoWithModelMetaTest, PodWithoutServers) {
+TEST_F(ParseYamlTopoWithModelMetaTest, PodWithoutServers)
+{
     WriteYaml("ut_no_servers", R"(
 meta:
   podNum: 1
@@ -269,7 +281,8 @@ topology:
     RemoveYaml("ut_no_servers");
 }
 
-TEST_F(ParseYamlTopoWithModelMetaTest, ServerWithoutRanks) {
+TEST_F(ParseYamlTopoWithModelMetaTest, ServerWithoutRanks)
+{
     WriteYaml("ut_no_ranks", R"(
 meta:
   podNum: 1
@@ -288,7 +301,8 @@ topology:
     RemoveYaml("ut_no_ranks");
 }
 
-TEST_F(ParseYamlTopoWithModelMetaTest, CaseInsensitiveSocVersion) {
+TEST_F(ParseYamlTopoWithModelMetaTest, CaseInsensitiveSocVersion)
+{
     WriteYaml("ut_upper_soc", R"(
 meta:
   podNum: 1
@@ -309,8 +323,6 @@ topology:
 
 class ExportAndShellCompatIntegrationTest : public testing::Test {
 protected:
-    void SetUp() override {
-    }
-    void TearDown() override {
-    }
+    void SetUp() override {}
+    void TearDown() override {}
 };

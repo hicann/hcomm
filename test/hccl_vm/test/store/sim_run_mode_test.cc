@@ -14,13 +14,15 @@
 #include "sim_models.h"
 
 // 表为空时 ProbeCheckOnlyMode 返回 false。
-TEST(RunModeTest, ProbeCheckOnlyMode_EmptyTable_False) {
+TEST(RunModeTest, ProbeCheckOnlyMode_EmptyTable_False)
+{
     RunnerDB::DeleteAll<sim::RunModeConfig>();
     EXPECT_FALSE(sim::ProbeCheckOnlyMode());
 }
 
 // 写入 mode=1 后 ProbeCheckOnlyMode 返回 true。
-TEST(RunModeTest, ProbeCheckOnlyMode_CheckOnlyRow_True) {
+TEST(RunModeTest, ProbeCheckOnlyMode_CheckOnlyRow_True)
+{
     RunnerDB::DeleteAll<sim::RunModeConfig>();
     sim::RunModeConfig cfg{};
     cfg.mode = 1;
@@ -29,7 +31,8 @@ TEST(RunModeTest, ProbeCheckOnlyMode_CheckOnlyRow_True) {
 }
 
 // IsCheckOnlyMode 进程内 latch：第二次调用与第一次一致。
-TEST(RunModeTest, IsCheckOnlyMode_Latches) {
+TEST(RunModeTest, IsCheckOnlyMode_Latches)
+{
     bool first = sim::IsCheckOnlyMode();
     bool second = sim::IsCheckOnlyMode();
     EXPECT_EQ(first, second);

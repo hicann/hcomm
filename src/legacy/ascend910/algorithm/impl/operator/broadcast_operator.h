@@ -16,10 +16,13 @@
 namespace hccl {
 class BroadCastOperator : public CollAlgOperator {
 public:
-    BroadCastOperator(AlgConfigurator* algConfigurator, CCLBufferManager &cclBufferManager,
-        HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    BroadCastOperator(
+        AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager, HcclDispatcher dispatcher,
+        std::unique_ptr<TopoMatcher>& topoMatcher);
     ~BroadCastOperator() override;
-    HcclResult SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag) override;
+    HcclResult
+    SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag) override;
+
 private:
     HcclResult SelectAlgforMix(const OpParam& param, std::string& algName);
 
@@ -35,6 +38,6 @@ private:
 
     bool isAivMode_ = false;
 };
-}
+} // namespace hccl
 
 #endif /** _BROADCAST_OPERATOR_H__ */

@@ -15,67 +15,52 @@
 namespace Hccl {
 namespace CcuRep {
 
-CcuRepBlock::CcuRepBlock(const std::string &label) : label(label)
-{
-    type = CcuRepType::BLOCK;
-}
+    CcuRepBlock::CcuRepBlock(const std::string& label) : label(label) { type = CcuRepType::BLOCK; }
 
-std::vector<std::shared_ptr<CcuRepBase>> &CcuRepBlock::GetReps()
-{
-    return repVec;
-}
+    std::vector<std::shared_ptr<CcuRepBase>>& CcuRepBlock::GetReps() { return repVec; }
 
-void CcuRepBlock::Append(std::shared_ptr<CcuRepBase> rep)
-{
-    repVec.push_back(rep);
-}
+    void CcuRepBlock::Append(std::shared_ptr<CcuRepBase> rep) { repVec.push_back(rep); }
 
-const std::string &CcuRepBlock::GetLabel() const
-{
-    return label;
-}
+    const std::string& CcuRepBlock::GetLabel() const { return label; }
 
-uint16_t CcuRepBlock::InstrCount()
-{
-    instrCount = 0;
-    for (const auto &repInBlock : repVec) {
-        instrCount += repInBlock->InstrCount();
-    }
-    return instrCount;
-}
-
-bool CcuRepBlock::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
-
-    for (const auto &repInBlock : GetReps()) {
-        repInBlock->Translate(instr, instrId, dep);
-    }
-
-    return translated;
-}
-
-std::string CcuRepBlock::Describe()
-{
-    return StringFormat("RepBlock");
-}
-
-std::shared_ptr<CcuRepBase> CcuRepBlock::GetRepByInstrId(uint16_t instrId)
-{
-    for (const auto& rep : GetReps()) {
-        const uint16_t repInstrCount = rep->InstrCount();
-        if (repInstrCount == 0) {
-            continue;
+    uint16_t CcuRepBlock::InstrCount()
+    {
+        instrCount = 0;
+        for (const auto& repInBlock : repVec) {
+            instrCount += repInBlock->InstrCount();
         }
-        const uint16_t startId = rep->StartInstrId();
-        const uint16_t endId = startId + repInstrCount - 1;
-        if (instrId >= startId && instrId <= endId) {
-            return rep;
-        }
+        return instrCount;
     }
-    return nullptr;
-}
+
+    bool CcuRepBlock::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
+
+        for (const auto& repInBlock : GetReps()) {
+            repInBlock->Translate(instr, instrId, dep);
+        }
+
+        return translated;
+    }
+
+    std::string CcuRepBlock::Describe() { return StringFormat("RepBlock"); }
+
+    std::shared_ptr<CcuRepBase> CcuRepBlock::GetRepByInstrId(uint16_t instrId)
+    {
+        for (const auto& rep : GetReps()) {
+            const uint16_t repInstrCount = rep->InstrCount();
+            if (repInstrCount == 0) {
+                continue;
+            }
+            const uint16_t startId = rep->StartInstrId();
+            const uint16_t endId = startId + repInstrCount - 1;
+            if (instrId >= startId && instrId <= endId) {
+                return rep;
+            }
+        }
+        return nullptr;
+    }
 
 }; // namespace CcuRep
 }; // namespace Hccl

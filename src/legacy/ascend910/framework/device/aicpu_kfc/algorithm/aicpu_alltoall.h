@@ -15,15 +15,16 @@
 
 class AicpuAllToAll : public AicpuAlgorithm {
 public:
-    explicit AicpuAllToAll(AicpuComContext *ctx) : AicpuAlgorithm(ctx) {}
+    explicit AicpuAllToAll(AicpuComContext* ctx) : AicpuAlgorithm(ctx) {}
     ~AicpuAllToAll() override = default;
 
-    HcclResult RunAlgorithm(HcclReduceOp opType, void *sendBuffer, void *recvBuffer, u64 dataCount,
-                            HcclDataType dataType, u64 strideLen = 0, AivAicpuOpParam *nextTask = nullptr) override;
+    HcclResult RunAlgorithm(
+        HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType,
+        u64 strideLen = 0, AivAicpuOpParam* nextTask = nullptr) override;
 
 private:
-    HcclResult RunAllToAllWinIn(void *recvBuffer, u64 dataCount, HcclDataType dataType, u64 strideLen);
-    HcclResult RunAllToAll(void *sendBuffer, void *recvBuffer, u64 dataCount, HcclDataType dataType, u64 strideLen);
+    HcclResult RunAllToAllWinIn(void* recvBuffer, u64 dataCount, HcclDataType dataType, u64 strideLen);
+    HcclResult RunAllToAll(void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType, u64 strideLen);
 };
 
 #endif

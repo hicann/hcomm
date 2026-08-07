@@ -25,13 +25,14 @@ public:
     static void SetDebugMode(uint8_t debugMode);
     static bool IsDebugModeEquals(const uint8_t mode);
     static bool NeedRecordTimeTaken();
-    static AicpuComProf *GetCurrentAicpuProf();
-    static void OutputProfLog(bool debugFlag, AicpuComProf *profInfo, AicpuComProf *backupProfInfo = nullptr);
+    static AicpuComProf* GetCurrentAicpuProf();
+    static void OutputProfLog(bool debugFlag, AicpuComProf* profInfo, AicpuComProf* backupProfInfo = nullptr);
     static void AddProfLoopCnt(u32 addCnt = 1U);
-    static AicpuComProf &GetProInst(AicpuComContext &ctx);
-    static AicpuComProf *GetaicpuProfInst();
+    static AicpuComProf& GetProInst(AicpuComContext& ctx);
+    static AicpuComProf* GetaicpuProfInst();
+
 private:
     static void SetProfLoopCnt(uint32_t setCnt);
     static uint8_t debugMode_;
 };
-#endif  // __AICPU_PROF_H__
+#endif // __AICPU_PROF_H__

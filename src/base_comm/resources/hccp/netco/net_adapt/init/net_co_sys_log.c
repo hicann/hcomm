@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #define BKF_LOG_HND ((co)->log)
 #define BKF_MOD_NAME ((co)->name)
 #include "net_co_sys_log.h"
@@ -97,4 +96,3 @@ void NetCoSysLogOutStrSpy(char *outStr, uint32_t bufLen)
 #ifdef __cplusplus
 }
 #endif
-

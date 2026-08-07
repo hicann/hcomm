@@ -16,8 +16,8 @@
 namespace Hccl {
 class HostIpNotFoundException : public HcclException {
 public:
-    explicit HostIpNotFoundException(const std::string &userDefinedMsg)
-        : HcclException(ExceptionType::HOST_IP_NOT_FOUND_EXCEPTION, userDefinedMsg){};
+    explicit HostIpNotFoundException(const std::string& userDefinedMsg)
+        : HcclException(ExceptionType::HOST_IP_NOT_FOUND_EXCEPTION, userDefinedMsg) {};
 };
 } // namespace Hccl
 

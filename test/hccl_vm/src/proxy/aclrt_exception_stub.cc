@@ -24,116 +24,115 @@
 #include "sim_log.h"
 #include "db_sim_runner_ops.h"
 
-
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
 aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCallback callback)
 {
-    (void) callback;
+    (void)callback;
     HCCL_VM_TRACE("not supported");
     return ACL_SUCCESS;
 }
 
-uint32_t aclrtGetTaskIdFromExceptionInfo(const aclrtExceptionInfo *info)
+uint32_t aclrtGetTaskIdFromExceptionInfo(const aclrtExceptionInfo* info)
 {
-    (void) info;
+    (void)info;
     HCCL_VM_TRACE("not supported");
     return ACL_SUCCESS;
 }
 
-uint32_t aclrtGetStreamIdFromExceptionInfo(const aclrtExceptionInfo *info)
+uint32_t aclrtGetStreamIdFromExceptionInfo(const aclrtExceptionInfo* info)
 {
-    (void) info;
+    (void)info;
     HCCL_VM_TRACE("not supported");
     return ACL_SUCCESS;
 }
 
-uint32_t aclrtGetThreadIdFromExceptionInfo(const aclrtExceptionInfo *info)
+uint32_t aclrtGetThreadIdFromExceptionInfo(const aclrtExceptionInfo* info)
 {
-    (void) info;
+    (void)info;
     HCCL_VM_TRACE("not supported");
     return ACL_SUCCESS;
 }
 
-uint32_t aclrtGetDeviceIdFromExceptionInfo(const aclrtExceptionInfo *info)
+uint32_t aclrtGetDeviceIdFromExceptionInfo(const aclrtExceptionInfo* info)
 {
-    (void) info;
+    (void)info;
     HCCL_VM_TRACE("not supported");
     return ACL_SUCCESS;
 }
 
-uint32_t aclrtGetErrorCodeFromExceptionInfo(const aclrtExceptionInfo *info)
+uint32_t aclrtGetErrorCodeFromExceptionInfo(const aclrtExceptionInfo* info)
 {
-    (void) info;
+    (void)info;
     HCCL_VM_TRACE("not supported");
     return ACL_SUCCESS;
 }
 
 aclError aclrtPeekAtLastError(aclrtLastErrLevel level)
 {
-    (void) level;
+    (void)level;
     HCCL_VM_TRACE("not supported");
     return ACL_SUCCESS;
 }
 
 aclError aclrtGetLastError(aclrtLastErrLevel level)
 {
-    (void) level;
+    (void)level;
     HCCL_VM_TRACE("not supported");
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetMemUceInfo(int32_t deviceId, aclrtMemUceInfo *memUceInfoArray, size_t arraySize, size_t *retSize)
+aclError aclrtGetMemUceInfo(int32_t deviceId, aclrtMemUceInfo* memUceInfoArray, size_t arraySize, size_t* retSize)
 {
-    (void) deviceId;
-    (void) memUceInfoArray;
-    (void) arraySize;
-    (void) retSize;
+    (void)deviceId;
+    (void)memUceInfoArray;
+    (void)arraySize;
+    (void)retSize;
     HCCL_VM_TRACE("not supported");
     return ACL_SUCCESS;
 }
 
-aclError aclrtMemUceRepair(int32_t deviceId, aclrtMemUceInfo *memUceInfoArray, size_t arraySize)
+aclError aclrtMemUceRepair(int32_t deviceId, aclrtMemUceInfo* memUceInfoArray, size_t arraySize)
 {
-    (void) deviceId;
-    (void) memUceInfoArray;
-    (void) arraySize;
+    (void)deviceId;
+    (void)memUceInfoArray;
+    (void)arraySize;
     HCCL_VM_TRACE("not supported");
     return ACL_SUCCESS;
 }
 
 aclError aclrtDeviceTaskAbort(int32_t deviceId, uint32_t timeout)
 {
-    (void) deviceId;
-    (void) timeout;
+    (void)deviceId;
+    (void)timeout;
     HCCL_VM_TRACE("not supported");
     return ACL_SUCCESS;
 }
 
 aclError aclRecoverAllHcclTasks(int32_t deviceId)
 {
-    (void) deviceId;
+    (void)deviceId;
     HCCL_VM_TRACE("not supported");
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetErrorVerbose(int32_t deviceId, aclrtErrorInfo *errorInfo)
+aclError aclrtGetErrorVerbose(int32_t deviceId, aclrtErrorInfo* errorInfo)
 {
-    (void) deviceId;
-    (void) errorInfo;
+    (void)deviceId;
+    (void)errorInfo;
     HCCL_VM_TRACE("not supported");
     return ACL_SUCCESS;
 }
 
-aclError aclrtRepairError(int32_t deviceId, const aclrtErrorInfo *errorInfo)
+aclError aclrtRepairError(int32_t deviceId, const aclrtErrorInfo* errorInfo)
 {
-    (void) deviceId;
-    (void) errorInfo;
+    (void)deviceId;
+    (void)errorInfo;
     HCCL_VM_TRACE("not supported");
     return ACL_SUCCESS;
 }
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus

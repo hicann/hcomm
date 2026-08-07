@@ -12,13 +12,13 @@
 
 namespace hccl {
 RecursiveHalvingDoublingBase::RecursiveHalvingDoublingBase(const HcclDispatcher dispatcher)
-    : AlgTemplateBase(dispatcher), blockSize_(0), part1Size_(0), round_(0)
-{
-}
+    : AlgTemplateBase(dispatcher),
+      blockSize_(0),
+      part1Size_(0),
+      round_(0)
+{}
 
-RecursiveHalvingDoublingBase::~RecursiveHalvingDoublingBase()
-{
-}
+RecursiveHalvingDoublingBase::~RecursiveHalvingDoublingBase() {}
 
 HcclResult RecursiveHalvingDoublingBase::CalcPartOneSizeAndBlockSize(const u32 rankSize)
 {
@@ -36,19 +36,19 @@ HcclResult RecursiveHalvingDoublingBase::CalcPartOneSizeAndBlockSize(const u32 r
     return HCCL_SUCCESS;
 }
 
-HcclResult RecursiveHalvingDoublingBase::BuildSubLinks(const std::vector<LINK> &links, std::vector<LINK> &subLinks,
-                                                       u32 rankSize) const
+HcclResult RecursiveHalvingDoublingBase::BuildSubLinks(
+    const std::vector<LINK>& links, std::vector<LINK>& subLinks, u32 rankSize) const
 {
     std::vector<LINK>::const_iterator iter = links.begin();
     subLinks.resize(blockSize_);
 
     for (u32 i = 0; i < rankSize; i++) {
-        if (i < part1Size_ && (i % 2) == 1) {   // 模2余1代表当前rank在part1的奇数位置上，不参与block内的建链
+        if (i < part1Size_ && (i % 2) == 1) { // 模2余1代表当前rank在part1的奇数位置上，不参与block内的建链
             continue;
-        } else if (i < part1Size_ && (i % 2) == 0) {  // 模2余0代表当前rank在part1的偶数位置上
+        } else if (i < part1Size_ && (i % 2) == 0) { // 模2余0代表当前rank在part1的偶数位置上
             std::vector<LINK>::const_iterator niter = std::next(iter, i);
             if (niter != links.end()) {
-                subLinks[i / 2] = *niter;              // 除2计算出在block内的rank号
+                subLinks[i / 2] = *niter; // 除2计算出在block内的rank号
             }
         } else {
             std::vector<LINK>::const_iterator niter = std::next(iter, i);
@@ -92,4 +92,4 @@ HcclResult RecursiveHalvingDoublingBase::CalculateSlices(u64 dataBytes) const
 
     return HCCL_SUCCESS;
 }
-} // hccl
+} // namespace hccl

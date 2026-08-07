@@ -18,15 +18,9 @@
 
 namespace hcomm {
 
-UboeEndpoint::UboeEndpoint(const EndpointDesc &endpointDesc)
-    : UboeUbgEndpointHelper(endpointDesc)
-{
-}
+UboeEndpoint::UboeEndpoint(const EndpointDesc& endpointDesc) : UboeUbgEndpointHelper(endpointDesc) {}
 
-UboeEndpoint::~UboeEndpoint() noexcept
-{
-    ProcRegedMemMgrCache::GetInstance().Release(cacheKey_);
-}
+UboeEndpoint::~UboeEndpoint() noexcept { ProcRegedMemMgrCache::GetInstance().Release(cacheKey_); }
 
 HcclResult UboeEndpoint::Init()
 {
@@ -42,25 +36,30 @@ HcclResult UboeEndpoint::Init()
     endpointDesc_.loc.device.devPhyId = devPhyId;
 
     Hccl::HccpHdcManager::GetInstance().Init(deviceLogicId);
-    auto &rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
+    auto& rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
     Hccl::IpAddress eidAddress{};
     rdmaHandleMgr.UboeIpv4ToEid(ipAddr, eidAddress, devPhyId);
-    EXCEPTION_CATCH(ctxHandle_ = static_cast<void *>(rdmaHandleMgr.GetByIp(endpointDesc_.loc.device.devPhyId, eidAddress)), 
+    EXCEPTION_CATCH(
+        ctxHandle_ = static_cast<void*>(rdmaHandleMgr.GetByIp(endpointDesc_.loc.device.devPhyId, eidAddress)),
         return HCCL_E_PARA);
     CHK_PTR_NULL(ctxHandle_);
-    HCCL_INFO("%s success, devPhyId[%u], eidAddress[%s], ctxHandle[%p]",
-        __func__, devPhyId, eidAddress.Describe().c_str(), ctxHandle_);
+    HCCL_INFO(
+        "%s success, devPhyId[%u], eidAddress[%s], ctxHandle[%p]", __func__, devPhyId, eidAddress.Describe().c_str(),
+        ctxHandle_);
 
     cacheKey_ = MemMgrCacheKey{devPhyId, COMM_PROTOCOL_UBC_CTP, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
-    auto &cache = ProcRegedMemMgrCache::GetInstance();
-    EXCEPTION_CATCH(regedMemMgr_ = cache.GetOrCreate(cacheKey_, [this]() {
-        auto m = std::make_shared<UbRegedMemMgr>();
-        m->rdmaHandle_ = this->ctxHandle_;
-        return m;
-    }), return HCCL_E_INTERNAL);
+    auto& cache = ProcRegedMemMgrCache::GetInstance();
+    EXCEPTION_CATCH(
+        regedMemMgr_ = cache.GetOrCreate(
+            cacheKey_,
+            [this]() {
+                auto m = std::make_shared<UbRegedMemMgr>();
+                m->rdmaHandle_ = this->ctxHandle_;
+                return m;
+            }),
+        return HCCL_E_INTERNAL);
 
     return HcclResult::HCCL_SUCCESS;
 }
 
-}
-
+} // namespace hcomm

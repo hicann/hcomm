@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #include "net_vo_tbl_demo.h"
 
 #ifdef __cplusplus
@@ -57,4 +56,3 @@ char *NetTblDemoValGetStr(NetTblDemoVal *val, uint8_t *buf, int32_t bufLen)
 #ifdef __cplusplus
 }
 #endif
-

@@ -12,7 +12,7 @@
 
 #include "gtest/gtest.h"
 
-GTEST_API_ int main(int argc, char **argv)
+GTEST_API_ int main(int argc, char** argv)
 {
     printf("Running aicpu_task_cache_entry UT\n");
     testing::InitGoogleTest(&argc, argv);

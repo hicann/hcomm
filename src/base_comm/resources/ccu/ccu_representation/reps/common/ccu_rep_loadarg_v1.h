@@ -13,23 +13,23 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepLoadArg : public CcuRepBase {
-public:
-    CcuRepLoadArg(CcuInsGeneratorBase* insGenPtr, const Variable &var, uint16_t argId, uint16_t fullArgId);
-    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
+    class CcuRepLoadArg : public CcuRepBase {
+    public:
+        CcuRepLoadArg(CcuInsGeneratorBase* insGenPtr, const Variable& var, uint16_t argId, uint16_t fullArgId);
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-    CcuRep::Variable GetVar() { return var; }
-    uint16_t GetArgId() { return argId; }
-    uint16_t GetVarId() const { return var.Id(); }
-    uint16_t GetFullArgId() const { return fullArgId; }
+        CcuRep::Variable GetVar() { return var; }
+        uint16_t GetArgId() { return argId; }
+        uint16_t GetVarId() const { return var.Id(); }
+        uint16_t GetFullArgId() const { return fullArgId; }
 
-private:
-    CcuInsGeneratorBase* insGeneratorPtr_{nullptr};
-    Variable var;
-    uint16_t argId{0};
-    uint16_t fullArgId{0};
-};
+    private:
+        CcuInsGeneratorBase* insGeneratorPtr_{nullptr};
+        Variable var;
+        uint16_t argId{0};
+        uint16_t fullArgId{0};
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

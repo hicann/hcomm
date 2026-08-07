@@ -18,39 +18,40 @@
 
 using namespace hccl;
 
-HcclResult HcclChannelGetNotifyNum(HcclComm comm, ChannelHandle channel, uint32_t *notifyNum)
+HcclResult HcclChannelGetNotifyNum(HcclComm comm, ChannelHandle channel, uint32_t* notifyNum)
 {
     CHK_PTR_NULL(notifyNum);
     CHK_PTR_NULL(comm);
 
-    hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);
+    hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
     HcclResult ret = HCCL_SUCCESS;
     if (hcclComm->IsCommunicatorV2()) {
         ret = static_cast<HcclResult>(HcommChannelGetNotifyNum(channel, notifyNum));
-    }
-    else {
+    } else {
         auto& channelMgr = hcclComm->GetIndependentOp().GetChannelManager();
         ret = channelMgr.ChannelCommGetNotifyNum(channel, notifyNum);
     }
 
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[%s] Failed to get channel notifyNum, group[%s], channel[%llu], ret[%d]",
-           __func__, hcclComm->GetIdentifier().c_str(), static_cast<unsigned long long>(channel), ret);
+        HCCL_ERROR(
+            "[%s] Failed to get channel notifyNum, group[%s], channel[%llu], ret[%d]", __func__,
+            hcclComm->GetIdentifier().c_str(), static_cast<unsigned long long>(channel), ret);
         return ret;
     }
 
-    HCCL_RUN_INFO("[%s] get channel notifyNum success, group[%s], channel[%llu], notifyNum[%u], ret[%d]",
-         __func__, hcclComm->GetIdentifier().c_str(), static_cast<unsigned long long>(channel), *notifyNum, ret);
+    HCCL_RUN_INFO(
+        "[%s] get channel notifyNum success, group[%s], channel[%llu], notifyNum[%u], ret[%d]", __func__,
+        hcclComm->GetIdentifier().c_str(), static_cast<unsigned long long>(channel), *notifyNum, ret);
     return HCCL_SUCCESS;
 }
 
-HcclResult CommChannelDestroy(HcclComm comm, ChannelHandle *channelList, uint32_t channelNum)
+HcclResult CommChannelDestroy(HcclComm comm, ChannelHandle* channelList, uint32_t channelNum)
 {
     CHK_PTR_NULL(comm);
     CHK_PTR_NULL(channelList);
-    CHK_PRT_RET(channelNum == 0, HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]",
-        __func__, channelNum), HCCL_E_PARA);
-    hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);
+    CHK_PRT_RET(
+        channelNum == 0, HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
+    hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
     HcclResult ret = HCCL_SUCCESS;
     if (hcclComm->IsCommunicatorV2()) {
         CollComm* collComm = hcclComm->GetCollComm();
@@ -58,43 +59,43 @@ HcclResult CommChannelDestroy(HcclComm comm, ChannelHandle *channelList, uint32_
         ChannelManager* channelMgr = collComm->GetChannelManager();
         CHK_PTR_NULL(channelMgr);
         ret = channelMgr->ChannelCommDestroy(channelList, channelNum);
-    }
-    else {
+    } else {
         auto& channelMgr = hcclComm->GetIndependentOp().GetChannelManager();
         ret = channelMgr.ChannelCommDestroy(channelList, channelNum);
     }
-    
+
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[%s] Failed to destroy channel, group[%s], channelList[%p], channelNum[%u], ret[%d]",
-           __func__, hcclComm->GetIdentifier().c_str(), channelList, channelNum, ret);
+        HCCL_ERROR(
+            "[%s] Failed to destroy channel, group[%s], channelList[%p], channelNum[%u], ret[%d]", __func__,
+            hcclComm->GetIdentifier().c_str(), channelList, channelNum, ret);
         return ret;
     }
 
-    HCCL_RUN_INFO("[%s] destroy channel success, group[%s], channelList[%p], channelNum[%u], ret[%d]", 
-        __func__, hcclComm->GetIdentifier().c_str(), channelList, channelNum, ret);
+    HCCL_RUN_INFO(
+        "[%s] destroy channel success, group[%s], channelList[%p], channelNum[%u], ret[%d]", __func__,
+        hcclComm->GetIdentifier().c_str(), channelList, channelNum, ret);
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclChannelGetHcclBuffer(HcclComm comm, ChannelHandle channel, void **buffer, uint64_t *size)
+HcclResult HcclChannelGetHcclBuffer(HcclComm comm, ChannelHandle channel, void** buffer, uint64_t* size)
 {
     CHK_PTR_NULL(comm);
     CHK_PTR_NULL(buffer);
     CHK_PTR_NULL(size);
-#if (!defined (HCCD)) && (!defined (CCL_KERNEL_AICPU))
-    HCCLV2_FUNC_RUN(
-        [&]() -> HcclResult {
-            hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);
-            CollComm* collComm = hcclComm->GetCollComm();
-            CHK_PTR_NULL(collComm);
-            auto myRank = collComm->GetMyRank();
-            CHK_PTR_NULL(myRank);
-            CHK_RET(myRank->ChannelGetHcclBuffer(channel, buffer, size));
-            return HCCL_SUCCESS;
-        }());
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+    HCCLV2_FUNC_RUN([&]() -> HcclResult {
+        hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
+        CollComm* collComm = hcclComm->GetCollComm();
+        CHK_PTR_NULL(collComm);
+        auto myRank = collComm->GetMyRank();
+        CHK_PTR_NULL(myRank);
+        CHK_RET(myRank->ChannelGetHcclBuffer(channel, buffer, size));
+        return HCCL_SUCCESS;
+    }());
 #endif
-    hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);
+    hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
     CollComm* collComm = hcclComm->GetCollComm();
-    hccl::MyRank *myRank = nullptr;
+    hccl::MyRank* myRank = nullptr;
     if (collComm != nullptr) {
         myRank = collComm->GetMyRank();
     }
@@ -102,44 +103,45 @@ HcclResult HcclChannelGetHcclBuffer(HcclComm comm, ChannelHandle channel, void *
         CHK_RET(myRank->ChannelGetHcclBuffer(channel, buffer, size));
         return HCCL_SUCCESS;
     }
-    
+
     CommBuffer commBuffer;
     auto& channelMgr = hcclComm->GetIndependentOp().GetChannelManager();
     HcclResult ret = channelMgr.ChannelCommGetHcclBuffer(channel, &commBuffer);
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[%s] Failed to get channel hccl buffer, group[%s], channel[%llu], ret[%d]",
-           __func__, hcclComm->GetIdentifier().c_str(), static_cast<unsigned long long>(channel), ret);
+        HCCL_ERROR(
+            "[%s] Failed to get channel hccl buffer, group[%s], channel[%llu], ret[%d]", __func__,
+            hcclComm->GetIdentifier().c_str(), static_cast<unsigned long long>(channel), ret);
         return ret;
     }
     *buffer = commBuffer.addr;
     *size = commBuffer.size;
 
-    HCCL_RUN_INFO("[%s] get channel hccl buffer success, group[%s], channel[%llu], "
-        "buffer[type:%d, addr:%p, size:%llu], ret[%d]", __func__, hcclComm->GetIdentifier().c_str(),
-        static_cast<unsigned long long>(channel), commBuffer.type, commBuffer.addr,
-        static_cast<unsigned long long>(commBuffer.size), ret);
+    HCCL_RUN_INFO(
+        "[%s] get channel hccl buffer success, group[%s], channel[%llu], "
+        "buffer[type:%d, addr:%p, size:%llu], ret[%d]",
+        __func__, hcclComm->GetIdentifier().c_str(), static_cast<unsigned long long>(channel), commBuffer.type,
+        commBuffer.addr, static_cast<unsigned long long>(commBuffer.size), ret);
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclChannelGetRemoteMems(HcclComm comm, ChannelHandle channel, uint32_t *memNum, CommMem **remoteMems,
-    char ***memTags)
+HcclResult
+HcclChannelGetRemoteMems(HcclComm comm, ChannelHandle channel, uint32_t* memNum, CommMem** remoteMems, char*** memTags)
 {
     CHK_PTR_NULL(comm);
     CHK_PTR_NULL(remoteMems);
     CHK_PTR_NULL(memTags);
     CHK_PTR_NULL(memNum);
 
-#if (!defined (HCCD)) && (!defined (CCL_KERNEL_AICPU))
-    HCCLV2_FUNC_RUN(
-        [&]() -> HcclResult {
-            hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);
-            CollComm* collComm = hcclComm->GetCollComm();
-            CHK_PTR_NULL(collComm);
-            auto myRank = collComm->GetMyRank();
-            CHK_PTR_NULL(myRank);
-            CHK_RET(myRank->ChannelGetRemoteMems(channel, memNum, remoteMems, memTags));
-            return HCCL_SUCCESS;
-        }());
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+    HCCLV2_FUNC_RUN([&]() -> HcclResult {
+        hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
+        CollComm* collComm = hcclComm->GetCollComm();
+        CHK_PTR_NULL(collComm);
+        auto myRank = collComm->GetMyRank();
+        CHK_PTR_NULL(myRank);
+        CHK_RET(myRank->ChannelGetRemoteMems(channel, memNum, remoteMems, memTags));
+        return HCCL_SUCCESS;
+    }());
 #endif
     HCCL_RUN_INFO("HcclChannelGetRemoteMems is not supported.");
     return HCCL_SUCCESS;

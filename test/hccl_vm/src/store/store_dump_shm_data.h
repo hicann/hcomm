@@ -21,17 +21,18 @@
 
 namespace HcclSim {
 std::string GenDataId();
-HcclVmResult DumpDataToFile(const std::string &dataId);
+HcclVmResult DumpDataToFile(const std::string& dataId);
 
-HcclVmResult DumpHcclVmFlagData(HcclSim::HcclVmFlagData &flagData);
-HcclVmResult GetHcclVmFlagData(HcclSim::HcclVmFlagData &waitFlag);
-HcclVmResult DumpHcclVmSynthesisData(const std::string &dataId);
-HcclVmResult DumpHcclVmInstrData(const std::string &dataId);
-HcclVmResult DumpHcclVmTask(const std::string &dataId);
-HcclVmResult CreateChannelInfo(HcclVmSynData &hvmSynData);
-HcclVmResult CreateJettyInfo(HcclVmSynData &hvmSynData);
-HcclVmResult CreateMemoryInfo(HcclVmSynData &hvmSynData, const sim::OpMemInfoTab &memInfo, uint32_t rankId);
-HcclVmResult CreateSimTaskMetaData(HcclVmTaskMetaData &hvmTaskMetaData, 
-                                     const std::map<uint32_t, std::vector<sim::CompositeOpDetail>> &compositeDataMap);
-}
+HcclVmResult DumpHcclVmFlagData(HcclSim::HcclVmFlagData& flagData);
+HcclVmResult GetHcclVmFlagData(HcclSim::HcclVmFlagData& waitFlag);
+HcclVmResult DumpHcclVmSynthesisData(const std::string& dataId);
+HcclVmResult DumpHcclVmInstrData(const std::string& dataId);
+HcclVmResult DumpHcclVmTask(const std::string& dataId);
+HcclVmResult CreateChannelInfo(HcclVmSynData& hvmSynData);
+HcclVmResult CreateJettyInfo(HcclVmSynData& hvmSynData);
+HcclVmResult CreateMemoryInfo(HcclVmSynData& hvmSynData, const sim::OpMemInfoTab& memInfo, uint32_t rankId);
+HcclVmResult CreateSimTaskMetaData(
+    HcclVmTaskMetaData& hvmTaskMetaData,
+    const std::map<uint32_t, std::vector<sim::CompositeOpDetail>>& compositeDataMap);
+} // namespace HcclSim
 #endif

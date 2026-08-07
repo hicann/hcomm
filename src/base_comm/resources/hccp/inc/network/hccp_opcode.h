@@ -19,39 +19,39 @@ extern "C" {
  * @ingroup libinit
  * init module error code conversion
  */
-#define HCCP_EAGAIN        128001   /* EAGAIN: try again */
-#define HCCP_EINVALIDIPS   328008   /* EINVALIDIPS: ranktable中ip和物理网卡的ip不一致 */
-#define HCCP_ELINKDOWN     328004   /* ELINKDOWN: 网口down */
+#define HCCP_EAGAIN 128001      /* EAGAIN: try again */
+#define HCCP_EINVALIDIPS 328008 /* EINVALIDIPS: ranktable中ip和物理网卡的ip不一致 */
+#define HCCP_ELINKDOWN 328004   /* ELINKDOWN: 网口down */
 
 /**
  * @ingroup librdma
  * @ingroup libudma
  * rdma/udma module error code conversion
  */
-#define ROCE_EAGAIN        128101   /* EAGAIN: try again */
-#define ROCE_ENOENT        228100   /* ENOENT: means mr async not success right now, revoke the function again */
-#define ROCE_ENOMEM        328100   /* ENOMEM: roce module has ENOMEM error */
-#define ROCE_EOPENSRC      528101   /* EOPENSRC: open source verbs error */
+#define ROCE_EAGAIN 128101   /* EAGAIN: try again */
+#define ROCE_ENOENT 228100   /* ENOENT: means mr async not success right now, revoke the function again */
+#define ROCE_ENOMEM 328100   /* ENOMEM: roce module has ENOMEM error */
+#define ROCE_EOPENSRC 528101 /* EOPENSRC: open source verbs error */
 
 /**
  * @ingroup libsocket
  * socket module error code conversion
  */
-#define SOCK_EAGAIN        128201   /* EAGAIN: no data received by socket */
-#define SOCK_CLOSE         128203   /* EINVAL: device异常关闭时作为心跳返回值返回给hccl*/
-#define SOCK_EADDRINUSE    128205   /* EADDRINUSE：check if IP has been listened when SOCK_EADDRINUSE is returned */
-#define SOCK_EADDRNOTAVAIL 128206   /* EADDRNOTAVAIL：check if IP exist when SOCK_EADDRNOTAVAIL is returned */
-#define SOCK_ESOCKCLOSED   128207   /* ESOCKCLOSED：socket has been closed */
-#define SOCK_ENOENT        228200   /* ENOENT: means socket not success right now, revoke the function again */
-#define SOCK_ENODEV        228202   /* ENODEV: socket 设备不存在 */
+#define SOCK_EAGAIN 128201        /* EAGAIN: no data received by socket */
+#define SOCK_CLOSE 128203         /* EINVAL: device异常关闭时作为心跳返回值返回给hccl*/
+#define SOCK_EADDRINUSE 128205    /* EADDRINUSE：check if IP has been listened when SOCK_EADDRINUSE is returned */
+#define SOCK_EADDRNOTAVAIL 128206 /* EADDRNOTAVAIL：check if IP exist when SOCK_EADDRNOTAVAIL is returned */
+#define SOCK_ESOCKCLOSED 128207   /* ESOCKCLOSED：socket has been closed */
+#define SOCK_ENOENT 228200        /* ENOENT: means socket not success right now, revoke the function again */
+#define SOCK_ENODEV 228202        /* ENODEV: socket 设备不存在 */
 
 /**
  * @ingroup libcommon
  * others module error code conversion
  */
-#define OTHERS_EAGAIN    128301   /* EAGAIN: try again */
-#define OTHERS_EUSERS    128308
-#define OTHERS_ENOTSUPP  528302   /* ENOTSUPP: operation not supported */
+#define OTHERS_EAGAIN 128301 /* EAGAIN: try again */
+#define OTHERS_EUSERS 128308
+#define OTHERS_ENOTSUPP 528302 /* ENOTSUPP: operation not supported */
 
 enum HccnCfgKey {
     HCCN_CFG_UDP_PORT_MODE = 0,

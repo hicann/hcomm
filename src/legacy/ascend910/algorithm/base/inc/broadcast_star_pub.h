@@ -19,21 +19,21 @@ public:
     explicit BroadcastStar(const HcclDispatcher dispatcher);
     ~BroadcastStar() override;
 
-    HcclResult Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem, 
-        const u64 count, const HcclDataType dataType, const Stream &stream, 
-        const HcclReduceOp reductionOp, const u32 root, 
-        const std::vector<Slice> &slices, const u64 baseOffset, 
-        std::vector<u32> nicRankList, u32 userRank) override;
+    HcclResult Prepare(
+        DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+        const Stream& stream, const HcclReduceOp reductionOp, const u32 root, const std::vector<Slice>& slices,
+        const u64 baseOffset, std::vector<u32> nicRankList, u32 userRank) override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize,
-        const std::vector<std::shared_ptr<Transport>> &links) override;
+    HcclResult
+    RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links) override;
+
 protected:
 private:
-    HcclResult RunRecvBroadcast(const u32 srcRank, const u32 dstRank, const Slice &slice,
-        const std::vector<std::shared_ptr<Transport>> &links);
-    HcclResult RunSendBroadcast(const u32 dstRank, const Slice &slice,
-        const std::vector<std::shared_ptr<Transport>> &links);
-    HcclResult ExecuteBarrierSrcRank(std::shared_ptr<Transport> link, Stream &stream) const;
+    HcclResult RunRecvBroadcast(
+        const u32 srcRank, const u32 dstRank, const Slice& slice, const std::vector<std::shared_ptr<Transport>>& links);
+    HcclResult
+    RunSendBroadcast(const u32 dstRank, const Slice& slice, const std::vector<std::shared_ptr<Transport>>& links);
+    HcclResult ExecuteBarrierSrcRank(std::shared_ptr<Transport> link, Stream& stream) const;
 
     u32 userRank_ = 0;
 };

@@ -15,7 +15,7 @@
 
 namespace Hccl {
 
-AicpuCommDestroyFunc &AicpuCommDestroyFunc::GetInstance()
+AicpuCommDestroyFunc& AicpuCommDestroyFunc::GetInstance()
 {
     static AicpuCommDestroyFunc func;
     return func;
@@ -23,8 +23,8 @@ AicpuCommDestroyFunc &AicpuCommDestroyFunc::GetInstance()
 
 void AicpuCommDestroyFunc::Call()
 {
-    std::vector<CommunicatorImplLite *> commLites = CommunicatorImplLiteMgr::GetInstance().GetAll();
-    for (auto &comm : commLites) {
+    std::vector<CommunicatorImplLite*> commLites = CommunicatorImplLiteMgr::GetInstance().GetAll();
+    for (auto& comm : commLites) {
         if (!comm->IsCommReady()) {
             continue;
         }
@@ -41,4 +41,4 @@ void AicpuCommDestroyFunc::Call()
     }
 }
 
-}
+} // namespace Hccl

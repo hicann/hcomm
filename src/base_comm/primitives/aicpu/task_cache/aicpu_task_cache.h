@@ -25,13 +25,13 @@ public:
     explicit AicpuTaskCache(const uint64_t maxCacheBytes = AICPU_TASK_CACHE_CAPACITY);
     ~AicpuTaskCache();
 
-    HcclResult FindEntry(const char *cacheTag, AicpuTaskCacheEntry **entryPtrPtr) const;
+    HcclResult FindEntry(const char* cacheTag, AicpuTaskCacheEntry** entryPtrPtr) const;
 
     // Cache miss
-    HcclResult AddEntry(const char *cacheTag, AicpuTaskCacheEntry **entryPtrPtr); // 如果cache满了, 则设置nullptr
-    HcclResult IncCacheBytes(const char *cacheTag, const uint64_t entryBytes);
+    HcclResult AddEntry(const char* cacheTag, AicpuTaskCacheEntry** entryPtrPtr); // 如果cache满了, 则设置nullptr
+    HcclResult IncCacheBytes(const char* cacheTag, const uint64_t entryBytes);
 
-    HcclResult ClearEntry(const char *cacheTag);
+    HcclResult ClearEntry(const char* cacheTag);
 
 private:
     using CacheHashMap = std::unordered_map<std::string, AicpuTaskCacheEntry*>;

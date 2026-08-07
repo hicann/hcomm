@@ -19,19 +19,18 @@
 #include "hccl/dtype_common.h"
 #include "sim_log.h"
 
-
 namespace ops_hccl {
 bool RunIndependentOpExpansion(DevType deviceType)
 {
-    (void) deviceType;
+    (void)deviceType;
     HCCL_VM_INFO("return true");
     return true;
 }
 
 bool IsAiCpuMode(DevType deviceType, u32 rankSize)
 {
-    (void) deviceType;
-    (void) rankSize;
+    (void)deviceType;
+    (void)rankSize;
     const char* env = getenv("HCCL_OP_EXPANSION_MODE");
     HCCL_VM_INFO("env = {}", env);
     // 判断是否是AI_CPU
@@ -40,4 +39,4 @@ bool IsAiCpuMode(DevType deviceType, u32 rankSize)
     }
     return false;
 }
-}
+} // namespace ops_hccl

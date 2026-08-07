@@ -20,40 +20,56 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepRead::CcuRepRead(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, LocalAddr loc, RemoteAddr rem, Variable len, CompletedEvent sem,
-                       uint16_t mask)
-    : insGenPtr(insGenPtr), channel(channel), loc(loc), rem(rem), len(len), sem(sem), mask(mask)
-{
-    type       = CcuRepType::READ;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
+    CcuRepRead::CcuRepRead(
+        CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, LocalAddr loc, RemoteAddr rem, Variable len,
+        CompletedEvent sem, uint16_t mask)
+        : insGenPtr(insGenPtr),
+          channel(channel),
+          loc(loc),
+          rem(rem),
+          len(len),
+          sem(sem),
+          mask(mask)
+    {
+        type = CcuRepType::READ;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
 
-CcuRepRead::CcuRepRead(CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, LocalAddr loc, RemoteAddr rem, Variable len, uint16_t dataType,
-                       uint16_t opType, CompletedEvent sem, uint16_t mask)
-    : insGenPtr(insGenPtr), channel(channel), loc(loc), rem(rem), len(len), sem(sem), mask(mask), dataType(dataType), opType(opType),
-      reduceFlag(1)
-{
-    type       = CcuRepType::READ;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
+    CcuRepRead::CcuRepRead(
+        CcuInsGeneratorBase* insGenPtr, const ChannelHandle channel, LocalAddr loc, RemoteAddr rem, Variable len,
+        uint16_t dataType, uint16_t opType, CompletedEvent sem, uint16_t mask)
+        : insGenPtr(insGenPtr),
+          channel(channel),
+          loc(loc),
+          rem(rem),
+          len(len),
+          sem(sem),
+          mask(mask),
+          dataType(dataType),
+          opType(opType),
+          reduceFlag(1)
+    {
+        type = CcuRepType::READ;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
 
-bool CcuRepRead::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool CcuRepRead::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    insGenPtr->CcuRepReadTranslate(ccuKernel, instr, this);
-    instrId += instrCount;
+        insGenPtr->CcuRepReadTranslate(ccuKernel, instr, this);
+        instrId += instrCount;
 
-    return translated;
-}
+        return translated;
+    }
 
-std::string CcuRepRead::Describe()
-{
-    return Hccl::StringFormat(
-        "Read LocalAddr[%u] To RemoteAddr[%u], length[%u], set sem[%u] with mask[%04x], dataType[%u], opType[%u]",
-        rem.addr.Id(), loc.addr.Id(), len.Id(), sem.Id(), mask, dataType, opType);
-}
+    std::string CcuRepRead::Describe()
+    {
+        return Hccl::StringFormat(
+            "Read LocalAddr[%u] To RemoteAddr[%u], length[%u], set sem[%u] with mask[%04x], dataType[%u], opType[%u]",
+            rem.addr.Id(), loc.addr.Id(), len.Id(), sem.Id(), mask, dataType, opType);
+    }
 
 }; // namespace CcuRep
 }; // namespace hcomm

@@ -10,7 +10,7 @@
 
 #ifndef URMA_MEMORY_H
 #define URMA_MEMORY_H
- 
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -20,35 +20,38 @@
 #include "local_ub_rma_buffer.h"
 #include "remote_rma_buffer.h"
 #include "exchange_ub_buffer_dto.h"
- 
+
 namespace hcomm {
 /**
  * @note 职责：用于通信设备EndPoint的注册内存信息管理，支持基于RmaBufferMgr类的重叠内存的检测报错等。
  */
 class UbRegedMemMgr : public RegedMemMgr {
 public:
-    using LocalUbRmaBufferMgr = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalUbRmaBuffer>>;
-    using RemoteUbRmaBufferMgr = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::RemoteUbRmaBuffer>>;
- 
+    using LocalUbRmaBufferMgr
+        = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalUbRmaBuffer>>;
+    using RemoteUbRmaBufferMgr
+        = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::RemoteUbRmaBuffer>>;
+
     UbRegedMemMgr();
     ~UbRegedMemMgr() = default;
- 
-    HcclResult RegisterMemory(HcommMem mem, const char *memTag, void **memHandle) override;
+
+    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
     HcclResult UnregisterMemory(void* memHandle) override;
-    HcclResult MemoryExport(const EndpointDesc endpointDesc, void *memHandle, void **memDesc, uint32_t *memDescLen) override;
-    HcclResult MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem) override;
-    HcclResult MemoryUnimport(const void *memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void **memHandles, uint32_t *memHandleNum) override;
-    HcclResult GetMemDesc(const EndpointDesc endpointDesc, Hccl::LocalUbRmaBuffer *localUbRmaBuffer);
-    HcclResult GetParamsFromMemDesc(const void *memDesc, uint32_t descLen, 
-                                        EndpointDesc &endpointDesc, Hccl::ExchangeUbBufferDto &dto);
- 
+    HcclResult
+    MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen) override;
+    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
+    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
+    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
+    HcclResult GetMemDesc(const EndpointDesc endpointDesc, Hccl::LocalUbRmaBuffer* localUbRmaBuffer);
+    HcclResult GetParamsFromMemDesc(
+        const void* memDesc, uint32_t descLen, EndpointDesc& endpointDesc, Hccl::ExchangeUbBufferDto& dto);
+
 private:
     std::unique_ptr<LocalUbRmaBufferMgr> localUbRmaBufferMgr_{};
     std::vector<RegedBufferEntry<Hccl::LocalUbRmaBuffer>> allRegisteredBuffers_;
     std::vector<std::shared_ptr<Hccl::LocalUbRmaBuffer>> handlesRecords_;
     std::unordered_map<EndpointDesc, std::unique_ptr<RemoteUbRmaBufferMgr>> remoteUbRmaBufferMgrs_;
 };
-}
- 
-#endif //URMA_ENDPOINT_H
+} // namespace hcomm
+
+#endif // URMA_ENDPOINT_H

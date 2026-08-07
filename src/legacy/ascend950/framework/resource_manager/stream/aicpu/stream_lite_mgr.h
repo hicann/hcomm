@@ -16,20 +16,20 @@
 namespace Hccl {
 class StreamLiteMgr {
 public:
-    StreamLite *GetMaster();
-    StreamLite *GetSlave(u32 index);
-    u32         SizeOfSlaves();
-    std::vector<StreamLite *> GetAllStreams();
+    StreamLite* GetMaster();
+    StreamLite* GetSlave(u32 index);
+    u32 SizeOfSlaves();
+    std::vector<StreamLite*> GetAllStreams();
 
-    void        Reset();
+    void Reset();
 
-    void ParsePackedData(std::vector<char> &givenData);
+    void ParsePackedData(std::vector<char>& givenData);
     ~StreamLiteMgr();
 
 private:
     std::vector<std::unique_ptr<StreamLite>> streams;
 
-    void ParseLiteData(std::vector<char> &data, u32 num, u32 sizePerDto);
+    void ParseLiteData(std::vector<char>& data, u32 num, u32 sizePerDto);
 };
-}
+} // namespace Hccl
 #endif

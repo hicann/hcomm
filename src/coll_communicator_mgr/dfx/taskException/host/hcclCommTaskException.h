@@ -24,16 +24,18 @@
 namespace hcomm {
 using RdmaHandle = void*;
 
-using GetAicpuCqeErrInfoCallBackHcomm = void (*)(u32 RemoteLocalId, u32 LocDeviceId, uint16_t status, std::string LocalEid, std::string RemoteEid, std::string RemoteInsId); // 获取远端rankId的回调函数类型
-void RegisterGetAicpuCqeErrInfoCallBackHcomm(GetAicpuCqeErrInfoCallBackHcomm p1); // 注册获取远端rankId的回调函数   
+using GetAicpuCqeErrInfoCallBackHcomm = void (*)(
+    u32 RemoteLocalId, u32 LocDeviceId, uint16_t status, std::string LocalEid, std::string RemoteEid,
+    std::string RemoteInsId); // 获取远端rankId的回调函数类型
+void RegisterGetAicpuCqeErrInfoCallBackHcomm(GetAicpuCqeErrInfoCallBackHcomm p1); // 注册获取远端rankId的回调函数
 
 using AicpuGetErrStatusVecCallBack = std::vector<std::string> (*)(s32 deviceLogicID);
 void RegisterAicpuGetErrStatusVecCallBack(AicpuGetErrStatusVecCallBack p1);
 
 struct DpuTaskexceptionParams {
     HcclResult ret;
-    uint32_t   devId; // todo 好像无用
-    char       commId[COMM_NAME_MAX_LENGTH]; // todo好像无用
+    uint32_t devId;                    // todo 好像无用
+    char commId[COMM_NAME_MAX_LENGTH]; // todo好像无用
 };
 
 class TaskExceptionHost {
@@ -44,26 +46,36 @@ public:
 
     HcclResult Register(u64 commHandle);
     HcclResult UnRegister(u64 commHandle);
-    static void ProcessCallback(rtExceptionInfo_t *exceptionInfo);
+    static void ProcessCallback(rtExceptionInfo_t* exceptionInfo);
 
 private:
-    void Process(rtExceptionInfo_t *exceptionInfo);
-    void HandleAicpuErrorReport(rtExceptionInfo_t *exceptionInfo, const Hccl::ErrorMessageReport &errorMessage, const Hccl::TaskInfo &taskInfo) const;
-    void HandleHostErrorReport(rtExceptionInfo_t *exceptionInfo, const Hccl::TaskInfo &taskInfo) const;
-    void ReportErrorMsg(const Hccl::TaskInfo &exceptionTaskInfo, const std::string &groupRankContent,
-        const Hccl::ErrorMessageReport &errorMessage, rtExceptionInfo_t *exceptionInfo) const;
+    void Process(rtExceptionInfo_t* exceptionInfo);
+    void HandleAicpuErrorReport(
+        rtExceptionInfo_t* exceptionInfo, const Hccl::ErrorMessageReport& errorMessage,
+        const Hccl::TaskInfo& taskInfo) const;
+    void HandleHostErrorReport(rtExceptionInfo_t* exceptionInfo, const Hccl::TaskInfo& taskInfo) const;
+    void ReportErrorMsg(
+        const Hccl::TaskInfo& exceptionTaskInfo, const std::string& groupRankContent,
+        const Hccl::ErrorMessageReport& errorMessage, rtExceptionInfo_t* exceptionInfo) const;
 
     std::string GetGroupRankInfo(const Hccl::TaskInfo& taskInfo) const;
     void ProcessException(rtExceptionInfo_t* exceptionInfo, const Hccl::TaskInfo& taskInfo);
     void PrintTaskContextInfo(uint32_t deviceId, uint32_t streamId, uint32_t taskId) const;
-    void PrintUbDfxInfo(rtExceptionInfo_t *exceptionInfo, const Hccl::ErrorMessageReport &errorMessage) const;
-    void PrintGroupErrorMessage(const Hccl::ErrorMessageReport &errorMessage, const Hccl::TaskInfo &exceptionTaskInfo, std::string &groupRankContent, std::string &stageErrInfo) const;
-    void PrintOpDataErrorMessage(u32 deviceId, const Hccl::ErrorMessageReport &errorMessage, std::string &stageErrInfo) const;
+    void PrintUbDfxInfo(rtExceptionInfo_t* exceptionInfo, const Hccl::ErrorMessageReport& errorMessage) const;
+    void PrintGroupErrorMessage(
+        const Hccl::ErrorMessageReport& errorMessage, const Hccl::TaskInfo& exceptionTaskInfo,
+        std::string& groupRankContent, std::string& stageErrInfo) const;
+    void PrintOpDataErrorMessage(
+        u32 deviceId, const Hccl::ErrorMessageReport& errorMessage, std::string& stageErrInfo) const;
     HcclResult PrintUbRegisters(s32 devLogicId, const RdmaHandle rdmaHandle) const;
-    void ClusterMoniterGetAicpuCqeErrInfo(u32 remoteLocalId, u32 locDeviceId, uint16_t status, std::string localEid, std::string remoteEid, std::string remoteInsId) const;
-    void GetAicpuCqeErrInfo(rtExceptionInfo_t* exceptionInfo, const Hccl::ErrorMessageReport &errorMessage, const Hccl::TaskInfo& taskInfo) const;
-    void GetAicpuCqeErrRemoteLocalIdByRankId(hccl::CollComm* collComm, uint32_t rankid, u32 &remoteLocalId) const;
-    void GetAicpuCqeErrNetInstanceByRankId(hccl::CollComm* collComm, uint32_t rankid, std::string &netInstanceId) const;
+    void ClusterMoniterGetAicpuCqeErrInfo(
+        u32 remoteLocalId, u32 locDeviceId, uint16_t status, std::string localEid, std::string remoteEid,
+        std::string remoteInsId) const;
+    void GetAicpuCqeErrInfo(
+        rtExceptionInfo_t* exceptionInfo, const Hccl::ErrorMessageReport& errorMessage,
+        const Hccl::TaskInfo& taskInfo) const;
+    void GetAicpuCqeErrRemoteLocalIdByRankId(hccl::CollComm* collComm, uint32_t rankid, u32& remoteLocalId) const;
+    void GetAicpuCqeErrNetInstanceByRankId(hccl::CollComm* collComm, uint32_t rankid, std::string& netInstanceId) const;
     bool ProcessDpuException(const rtExceptionInfo_t* exceptionInfo) const;
 
 private:
@@ -71,6 +83,6 @@ private:
     std::unordered_set<u64> CommRegisterMap_;
     bool hasAicpuReport_{false};
 };
-} // namespace hccl
+} // namespace hcomm
 
 #endif

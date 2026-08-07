@@ -25,7 +25,7 @@ using namespace hcomm;
 
 static void SetupCcuResSpecsForJetty(int32_t devLogicId, uint8_t dieId)
 {
-    auto &specs = CcuResSpecifications::GetInstance(devLogicId);
+    auto& specs = CcuResSpecifications::GetInstance(devLogicId);
     specs.initFlag_ = true;
     specs.ccuVersion_ = CcuVersion::CCU_V2;
     specs.dieEnableFlags_[dieId] = true;
@@ -37,7 +37,7 @@ static void SetupCcuResSpecsForJetty(int32_t devLogicId, uint8_t dieId)
     specs.resSpecs_[dieId].channelJettyMap = CcuChannelJettyMap(8, 1);
 }
 
-static void InjectPfeStrategy(CcuJettyCtxMgrV2 &mgr, uint32_t feId)
+static void InjectPfeStrategy(CcuJettyCtxMgrV2& mgr, uint32_t feId)
 {
     PfeJettyStrategy strategy{};
     strategy.feId = feId;
@@ -50,20 +50,24 @@ static void InjectPfeStrategy(CcuJettyCtxMgrV2 &mgr, uint32_t feId)
 
 class CcuJettyCtxMgrV2Test : public testing::Test {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestCase()
+    {
         GlobalMockObject::verify();
         GlobalMockObject::reset();
     }
-    static void TearDownTestCase() {
+    static void TearDownTestCase()
+    {
         GlobalMockObject::verify();
         GlobalMockObject::reset();
     }
-    void SetUp() override {
+    void SetUp() override
+    {
         GlobalMockObject::verify();
         GlobalMockObject::reset();
         SetupCcuResSpecsForJetty(0, 0);
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         GlobalMockObject::verify();
         GlobalMockObject::reset();
     }

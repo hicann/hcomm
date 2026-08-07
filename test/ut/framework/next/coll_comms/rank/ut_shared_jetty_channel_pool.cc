@@ -38,7 +38,7 @@ EndpointDescPair MakeEpPair(uint32_t localIp, uint32_t remoteIp)
 
 ChannelHandle g_nextHandle = 0x1000;
 
-HcclResult CreateChannelsStub(uint32_t num, ChannelHandle *out)
+HcclResult CreateChannelsStub(uint32_t num, ChannelHandle* out)
 {
     for (uint32_t i = 0; i < num; ++i) {
         out[i] = g_nextHandle++;
@@ -46,7 +46,7 @@ HcclResult CreateChannelsStub(uint32_t num, ChannelHandle *out)
     return HCCL_SUCCESS;
 }
 
-HcclResult CreateChannelsFailStub(uint32_t num, ChannelHandle *out)
+HcclResult CreateChannelsFailStub(uint32_t num, ChannelHandle* out)
 {
     (void)num;
     (void)out;
@@ -85,35 +85,40 @@ TEST_F(SharedJettyChannelPoolTest, Ut_AcquireChannels_When_NullMyRank_Expect_HCC
 {
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out[2];
-    EXPECT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        nullptr, "tag1", epPair, 2, CreateChannelsStub, out), HCCL_E_PARA);
+    EXPECT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(nullptr, "tag1", epPair, 2, CreateChannelsStub, out),
+        HCCL_E_PARA);
 }
 
 TEST_F(SharedJettyChannelPoolTest, Ut_AcquireChannels_When_ZeroRequestedNum_Expect_HCCL_E_PARA)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out[2];
-    EXPECT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 0, CreateChannelsStub, out), HCCL_E_PARA);
+    EXPECT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag1", epPair, 0, CreateChannelsStub, out),
+        HCCL_E_PARA);
 }
 
 TEST_F(SharedJettyChannelPoolTest, Ut_AcquireChannels_When_NullOutChannels_Expect_HCCL_E_PARA)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
-    EXPECT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 2, CreateChannelsStub, nullptr), HCCL_E_PARA);
+    EXPECT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag1", epPair, 2, CreateChannelsStub, nullptr),
+        HCCL_E_PARA);
 }
 
 TEST_F(SharedJettyChannelPoolTest, Ut_AcquireChannels_When_FirstCreate_Expect_Success)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out[2];
     uint32_t reusedCount = 0;
-    EXPECT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 2, CreateChannelsStub, out, &reusedCount), HCCL_SUCCESS);
+    EXPECT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(
+            myRank, "tag1", epPair, 2, CreateChannelsStub, out, &reusedCount),
+        HCCL_SUCCESS);
     EXPECT_EQ(reusedCount, 0U);
     EXPECT_EQ(out[0], 0x1000);
     EXPECT_EQ(out[1], 0x1001);
@@ -121,65 +126,77 @@ TEST_F(SharedJettyChannelPoolTest, Ut_AcquireChannels_When_FirstCreate_Expect_Su
 
 TEST_F(SharedJettyChannelPoolTest, Ut_AcquireChannels_When_AllReuse_Expect_Success)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out1[2];
-    ASSERT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 2, CreateChannelsStub, out1), HCCL_SUCCESS);
+    ASSERT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag1", epPair, 2, CreateChannelsStub, out1),
+        HCCL_SUCCESS);
 
     ChannelHandle out2[2];
     uint32_t reusedCount = 0;
-    EXPECT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 2, CreateChannelsStub, out2, &reusedCount), HCCL_SUCCESS);
+    EXPECT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(
+            myRank, "tag1", epPair, 2, CreateChannelsStub, out2, &reusedCount),
+        HCCL_SUCCESS);
     EXPECT_EQ(reusedCount, 2U);
 }
 
 TEST_F(SharedJettyChannelPoolTest, Ut_AcquireChannels_When_PartialReuse_Expect_Success)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out1[2];
-    ASSERT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 2, CreateChannelsStub, out1), HCCL_SUCCESS);
+    ASSERT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag1", epPair, 2, CreateChannelsStub, out1),
+        HCCL_SUCCESS);
 
     ChannelHandle out2[3];
     uint32_t reusedCount = 0;
-    EXPECT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 3, CreateChannelsStub, out2, &reusedCount), HCCL_SUCCESS);
+    EXPECT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(
+            myRank, "tag1", epPair, 3, CreateChannelsStub, out2, &reusedCount),
+        HCCL_SUCCESS);
     EXPECT_EQ(reusedCount, 2U);
 }
 
 TEST_F(SharedJettyChannelPoolTest, Ut_AcquireChannels_When_CreateFuncFails_Expect_ReturnError)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out[2];
-    EXPECT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 2, CreateChannelsFailStub, out), HCCL_E_INTERNAL);
+    EXPECT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag1", epPair, 2, CreateChannelsFailStub, out),
+        HCCL_E_INTERNAL);
 }
 
 TEST_F(SharedJettyChannelPoolTest, Ut_AcquireChannels_When_DifferentTags_Expect_IndependentPools)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out1[2];
-    ASSERT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 2, CreateChannelsStub, out1), HCCL_SUCCESS);
+    ASSERT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag1", epPair, 2, CreateChannelsStub, out1),
+        HCCL_SUCCESS);
 
     ChannelHandle out2[2];
     uint32_t reusedCount = 1;
-    EXPECT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag2", epPair, 2, CreateChannelsStub, out2, &reusedCount), HCCL_SUCCESS);
+    EXPECT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(
+            myRank, "tag2", epPair, 2, CreateChannelsStub, out2, &reusedCount),
+        HCCL_SUCCESS);
     EXPECT_EQ(reusedCount, 0U);
 }
 
 TEST_F(SharedJettyChannelPoolTest, Ut_AcquireChannels_When_OutReusedCountNull_Expect_Success)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out[1];
-    EXPECT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 1, CreateChannelsStub, out, nullptr), HCCL_SUCCESS);
+    EXPECT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(
+            myRank, "tag1", epPair, 1, CreateChannelsStub, out, nullptr),
+        HCCL_SUCCESS);
 }
 
 TEST_F(SharedJettyChannelPoolTest, Ut_DestroyAllByMyRank_When_NullMyRank_Expect_Success)
@@ -189,17 +206,18 @@ TEST_F(SharedJettyChannelPoolTest, Ut_DestroyAllByMyRank_When_NullMyRank_Expect_
 
 TEST_F(SharedJettyChannelPoolTest, Ut_DestroyAllByMyRank_When_NoPool_Expect_Success)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EXPECT_EQ(SharedJettyChannelPool::GetInstance().DestroyAllByMyRank(myRank), HCCL_SUCCESS);
 }
 
 TEST_F(SharedJettyChannelPoolTest, Ut_DestroyAllByMyRank_When_HasChannels_Expect_Success)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out[2];
-    ASSERT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 2, CreateChannelsStub, out), HCCL_SUCCESS);
+    ASSERT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag1", epPair, 2, CreateChannelsStub, out),
+        HCCL_SUCCESS);
 
     SharedJettyChannelPool::GetInstance().RemoveChannels(myRank, "tag1", epPair, out, 2);
     EXPECT_EQ(SharedJettyChannelPool::GetInstance().DestroyAllByMyRank(myRank), HCCL_SUCCESS);
@@ -208,14 +226,16 @@ TEST_F(SharedJettyChannelPoolTest, Ut_DestroyAllByMyRank_When_HasChannels_Expect
 
 TEST_F(SharedJettyChannelPoolTest, Ut_DestroyAllByMyRank_When_MultipleTags_Expect_Success)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out1[1];
     ChannelHandle out2[1];
-    ASSERT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 1, CreateChannelsStub, out1), HCCL_SUCCESS);
-    ASSERT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag2", epPair, 1, CreateChannelsStub, out2), HCCL_SUCCESS);
+    ASSERT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag1", epPair, 1, CreateChannelsStub, out1),
+        HCCL_SUCCESS);
+    ASSERT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag2", epPair, 1, CreateChannelsStub, out2),
+        HCCL_SUCCESS);
 
     SharedJettyChannelPool::GetInstance().RemoveChannels(myRank, "tag1", epPair, out1, 1);
     SharedJettyChannelPool::GetInstance().RemoveChannels(myRank, "tag2", epPair, out2, 1);
@@ -225,28 +245,30 @@ TEST_F(SharedJettyChannelPoolTest, Ut_DestroyAllByMyRank_When_MultipleTags_Expec
 
 TEST_F(SharedJettyChannelPoolTest, Ut_CheckMyRankDestroy_When_NoPool_Expect_Success)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EXPECT_EQ(SharedJettyChannelPool::GetInstance().CheckMyRankDestroy(myRank), HCCL_SUCCESS);
 }
 
 TEST_F(SharedJettyChannelPoolTest, Ut_CheckMyRankDestroy_When_HasChannels_Expect_HCCL_E_UNAVAIL)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out[2];
-    ASSERT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 2, CreateChannelsStub, out), HCCL_SUCCESS);
+    ASSERT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag1", epPair, 2, CreateChannelsStub, out),
+        HCCL_SUCCESS);
 
     EXPECT_EQ(SharedJettyChannelPool::GetInstance().CheckMyRankDestroy(myRank), HCCL_E_UNAVAIL);
 }
 
 TEST_F(SharedJettyChannelPoolTest, Ut_CheckMyRankDestroy_When_AfterDestroy_Expect_Success)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out[2];
-    ASSERT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 2, CreateChannelsStub, out), HCCL_SUCCESS);
+    ASSERT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag1", epPair, 2, CreateChannelsStub, out),
+        HCCL_SUCCESS);
 
     SharedJettyChannelPool::GetInstance().RemoveChannels(myRank, "tag1", epPair, out, 2);
     ASSERT_EQ(SharedJettyChannelPool::GetInstance().DestroyAllByMyRank(myRank), HCCL_SUCCESS);
@@ -255,50 +277,53 @@ TEST_F(SharedJettyChannelPoolTest, Ut_CheckMyRankDestroy_When_AfterDestroy_Expec
 
 TEST_F(SharedJettyChannelPoolTest, Ut_RemoveChannels_When_Normal_Expect_Removed)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out[3];
-    ASSERT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 3, CreateChannelsStub, out), HCCL_SUCCESS);
+    ASSERT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag1", epPair, 3, CreateChannelsStub, out),
+        HCCL_SUCCESS);
 
     ChannelHandle toRemove[] = {out[0]};
     SharedJettyChannelPool::GetInstance().RemoveChannels(myRank, "tag1", epPair, toRemove, 1);
 
-    auto &rankPool = SharedJettyChannelPool::GetInstance().rankPools_[myRank];
-    auto &epChannels = rankPool["tag1"][epPair];
+    auto& rankPool = SharedJettyChannelPool::GetInstance().rankPools_[myRank];
+    auto& epChannels = rankPool["tag1"][epPair];
     EXPECT_EQ(epChannels.channels.size(), 2U);
 }
 
 TEST_F(SharedJettyChannelPoolTest, Ut_RemoveChannels_When_AllRemoved_Expect_EmptyAndResetIdx)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out[2];
-    ASSERT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 2, CreateChannelsStub, out), HCCL_SUCCESS);
+    ASSERT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag1", epPair, 2, CreateChannelsStub, out),
+        HCCL_SUCCESS);
 
     ChannelHandle toRemove[] = {out[0], out[1]};
     SharedJettyChannelPool::GetInstance().RemoveChannels(myRank, "tag1", epPair, toRemove, 2);
 
-    auto &rankPool = SharedJettyChannelPool::GetInstance().rankPools_[myRank];
-    auto &epChannels = rankPool["tag1"][epPair];
+    auto& rankPool = SharedJettyChannelPool::GetInstance().rankPools_[myRank];
+    auto& epChannels = rankPool["tag1"][epPair];
     EXPECT_EQ(epChannels.channels.size(), 0U);
     EXPECT_EQ(epChannels.nextReturnIdx, 0U);
 }
 
 TEST_F(SharedJettyChannelPoolTest, Ut_RemoveChannels_When_NotFound_Expect_NoChange)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out[2];
-    ASSERT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 2, CreateChannelsStub, out), HCCL_SUCCESS);
+    ASSERT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag1", epPair, 2, CreateChannelsStub, out),
+        HCCL_SUCCESS);
 
     ChannelHandle toRemove[] = {0xDEAD};
     SharedJettyChannelPool::GetInstance().RemoveChannels(myRank, "tag1", epPair, toRemove, 1);
 
-    auto &rankPool = SharedJettyChannelPool::GetInstance().rankPools_[myRank];
-    auto &epChannels = rankPool["tag1"][epPair];
+    auto& rankPool = SharedJettyChannelPool::GetInstance().rankPools_[myRank];
+    auto& epChannels = rankPool["tag1"][epPair];
     EXPECT_EQ(epChannels.channels.size(), 2U);
 }
 
@@ -312,14 +337,15 @@ TEST_F(SharedJettyChannelPoolTest, Ut_RemoveChannels_When_NullMyRank_Expect_Noop
 
 TEST_F(SharedJettyChannelPoolTest, Ut_RemoveChannels_When_NoMatchingTag_Expect_Noop)
 {
-    MyRank *myRank = reinterpret_cast<MyRank *>(0x1);
+    MyRank* myRank = reinterpret_cast<MyRank*>(0x1);
     EndpointDescPair epPair = MakeEpPair(0x01000001, 0x02000001);
     ChannelHandle out[2];
-    ASSERT_EQ(SharedJettyChannelPool::GetInstance().AcquireChannels(
-        myRank, "tag1", epPair, 2, CreateChannelsStub, out), HCCL_SUCCESS);
+    ASSERT_EQ(
+        SharedJettyChannelPool::GetInstance().AcquireChannels(myRank, "tag1", epPair, 2, CreateChannelsStub, out),
+        HCCL_SUCCESS);
 
     ChannelHandle toRemove[] = {out[0]};
     SharedJettyChannelPool::GetInstance().RemoveChannels(myRank, "nonexistent", epPair, toRemove, 1);
-    auto &rankPool = SharedJettyChannelPool::GetInstance().rankPools_[myRank];
+    auto& rankPool = SharedJettyChannelPool::GetInstance().rankPools_[myRank];
     EXPECT_EQ(rankPool["tag1"][epPair].channels.size(), 2U);
 }

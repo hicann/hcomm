@@ -24,11 +24,12 @@ struct CcuChannelPara {
     uint32_t sqSize{0};
 
     CcuChannelPara() = default;
-    CcuChannelPara(const IpAddress &ip, const uint32_t channelNum,
-        const uint32_t jettyNum, const uint32_t sqSize)
-        : ipAddr(ip), channelNum(channelNum), jettyNum(jettyNum), sqSize(sqSize)
-    {
-    }
+    CcuChannelPara(const IpAddress& ip, const uint32_t channelNum, const uint32_t jettyNum, const uint32_t sqSize)
+        : ipAddr(ip),
+          channelNum(channelNum),
+          jettyNum(jettyNum),
+          sqSize(sqSize)
+    {}
 };
 
 MAKE_ENUM(CcuJettyType, CCUM_CACHED_JETTY, TA_CACHED_JETTY, INVALID_JETTY);
@@ -44,10 +45,12 @@ struct CcuJettyInfo {
     uint64_t sqBufVa{0};
     uint32_t sqBufSize{0};
 
-    std::string ToString() const {
-        return StringFormat("jettyType=%d, jettyCtxId=%u, taJettyId=%u, sqDepth=%u, "
-                            "wqeBBStartId=%u, sqBufVa=%llu, sqBufSize=%u.",
-                            jettyType, jettyCtxId, taJettyId, sqDepth, wqeBBStartId, sqBufVa, sqBufSize);
+    std::string ToString() const
+    {
+        return StringFormat(
+            "jettyType=%d, jettyCtxId=%u, taJettyId=%u, sqDepth=%u, "
+            "wqeBBStartId=%u, sqBufVa=%llu, sqBufSize=%u.",
+            jettyType, jettyCtxId, taJettyId, sqDepth, wqeBBStartId, sqBufVa, sqBufSize);
     }
 };
 
@@ -66,8 +69,8 @@ struct CcuChannelInfo {
  * @return HcclResult 返回HcclResult类型的结果
  * @note 返回批量的channel资源总数可能超过申请数量，jettyNum为0时由平台层决定分配数量
  */
-HcclResult CcuAllocChannels(const int32_t deviceLogicId, const CcuChannelPara &ccuChannelPara,
-    std::vector<CcuChannelInfo> &ccuChannelInfos);
+HcclResult CcuAllocChannels(
+    const int32_t deviceLogicId, const CcuChannelPara& ccuChannelPara, std::vector<CcuChannelInfo>& ccuChannelInfos);
 
 /**
  * @brief 释放ccu channel资源
@@ -89,7 +92,7 @@ HcclResult CcuReleaseChannel(const int32_t deviceLogicId, const uint8_t dieId, c
  * @return HcclResult 返回HcclResult类型的结果
  * @note 无
  */
-HcclResult CcuGetChannelSpecNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t &channelNum);
+HcclResult CcuGetChannelSpecNum(const int32_t deviceLogicId, const uint8_t dieId, uint32_t& channelNum);
 
 /**
  * @brief 查询CCU设备是否已完成初始化

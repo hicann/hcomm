@@ -13,5 +13,4 @@
 
 #include "transport_virtural_pub.h"
 
-
 #endif /* TRANSPORT_VIRTURAL_H */

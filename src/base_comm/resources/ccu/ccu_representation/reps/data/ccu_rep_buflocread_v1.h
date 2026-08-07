@@ -13,33 +13,34 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepBufLocRead : public CcuRepBase {
-public:
-    CcuRepBufLocRead(CcuInsGeneratorBase* insGenPtr, LocalAddr src, CcuBuf dst, Variable len, CompletedEvent sem, uint16_t mask);
-    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
-    uint16_t GetSrcAddrId() { return src.addr.Id(); }
-    uint16_t GetSrcTokenId() { return src.token.Id(); }
-    uint16_t GetDstId() { return dst.Id(); }
-    uint16_t GetLenId() { return len.Id();}
-    uint16_t GetSemId() { return sem.Id(); }
+    class CcuRepBufLocRead : public CcuRepBase {
+    public:
+        CcuRepBufLocRead(
+            CcuInsGeneratorBase* insGenPtr, LocalAddr src, CcuBuf dst, Variable len, CompletedEvent sem, uint16_t mask);
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
+        uint16_t GetSrcAddrId() { return src.addr.Id(); }
+        uint16_t GetSrcTokenId() { return src.token.Id(); }
+        uint16_t GetDstId() { return dst.Id(); }
+        uint16_t GetLenId() { return len.Id(); }
+        uint16_t GetSemId() { return sem.Id(); }
 
-    LocalAddr GetSrc() { return src; }
-    CcuBuf GetDst() { return dst; }
-    Variable GetLen() { return len; }
-    CompletedEvent GetSem() { return sem; }
-    uint16_t GetMask() { return mask; }
+        LocalAddr GetSrc() { return src; }
+        CcuBuf GetDst() { return dst; }
+        Variable GetLen() { return len; }
+        CompletedEvent GetSem() { return sem; }
+        uint16_t GetMask() { return mask; }
 
-private:
-    CcuInsGeneratorBase* insGenPtr{nullptr};
-    LocalAddr    src;
-    CcuBuf dst;
-    Variable  len;
+    private:
+        CcuInsGeneratorBase* insGenPtr{nullptr};
+        LocalAddr src;
+        CcuBuf dst;
+        Variable len;
 
-    CompletedEvent sem;
-    uint16_t   mask{0};
-};
+        CompletedEvent sem;
+        uint16_t mask{0};
+    };
 
-};     // namespace CcuRep
-};     // namespace hcomm
+}; // namespace CcuRep
+}; // namespace hcomm
 #endif // HCOMM_CCU_REPRESENTATION_BUFLOCREAD_H

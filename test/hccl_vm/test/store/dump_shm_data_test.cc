@@ -32,15 +32,16 @@ using namespace HcclSim;
 extern uint8_t g_opExpansionMode;
 namespace HcclSim {
 std::string GetBinLocation();
-HcclVmResult CreateSimSynData(HcclVmSynData &hvmSynData);
-HcclVmResult CreateSimInstrData(HcclVmInstrData &hvmInstrData);
-HcclVmResult CreateSimTaskMetaData(HcclVmTaskMetaData &hvmTaskMetaData);
-}
+HcclVmResult CreateSimSynData(HcclVmSynData& hvmSynData);
+HcclVmResult CreateSimInstrData(HcclVmInstrData& hvmInstrData);
+HcclVmResult CreateSimTaskMetaData(HcclVmTaskMetaData& hvmTaskMetaData);
+} // namespace HcclSim
 
 static const std::string kSynDataFile = "/%s_hcclvm_syn_data.bin";
 static const std::string kTaskDataFile = "/%s_hcclvm_task_data.bin";
 
-static void ClearAllDbTables() {
+static void ClearAllDbTables()
+{
     SimRunnerSqliteDB::Instance().ClearAll();
     RunnerDB::DeleteAll<sim::SimModelData>();
     RunnerDB::DeleteAll<sim::Server>();
@@ -59,44 +60,49 @@ static void ClearAllDbTables() {
 
 class DumpShmDataTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         ClearAllDbTables();
         std::filesystem::create_directories("data");
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         ClearAllDbTables();
         g_opExpansionMode = 0;
     }
 };
 
-TEST_F(DumpShmDataTest, ShmOps_CheckConstants) {
+TEST_F(DumpShmDataTest, ShmOps_CheckConstants)
+{
     EXPECT_EQ(SHM_MAGIC, 0x53484D50);
     EXPECT_EQ(SHM_VERSION, 1);
 }
 
-TEST_F(DumpShmDataTest, GetBinLocation_ReturnsNonEmpty) {
+TEST_F(DumpShmDataTest, GetBinLocation_ReturnsNonEmpty)
+{
     std::string loc = GetBinLocation();
     EXPECT_FALSE(loc.empty());
 }
 
-TEST_F(DumpShmDataTest, GenDataId_ReturnsNonEmpty) {
+TEST_F(DumpShmDataTest, GenDataId_ReturnsNonEmpty)
+{
     std::string dataId = GenDataId();
     EXPECT_FALSE(dataId.empty());
     EXPECT_GE(dataId.size(), 17);
 }
 
-TEST_F(DumpShmDataTest, GenDataId_ContainsTimestamp) {
+TEST_F(DumpShmDataTest, GenDataId_ContainsTimestamp)
+{
     std::string dataId = GenDataId();
     EXPECT_NE(dataId.find("_"), std::string::npos);
     EXPECT_EQ(dataId[0], '2');
     EXPECT_EQ(dataId[1], '0');
 }
 
-TEST_F(DumpShmDataTest, g_opExpansionMode_DefaultZero) {
-    EXPECT_EQ(g_opExpansionMode, 0);
-}
+TEST_F(DumpShmDataTest, g_opExpansionMode_DefaultZero) { EXPECT_EQ(g_opExpansionMode, 0); }
 
-TEST_F(DumpShmDataTest, DumpHcclVmFlagData_FileCreation) {
+TEST_F(DumpShmDataTest, DumpHcclVmFlagData_FileCreation)
+{
     HcclVmFlagData flagData{};
     flagData.header.magic = HCCLVM_FLAG_FILE_MAGIC;
     flagData.header.header_size = sizeof(FileHeader);
@@ -107,7 +113,8 @@ TEST_F(DumpShmDataTest, DumpHcclVmFlagData_FileCreation) {
     EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataTest, DumpHcclVmFlagData_ThenGetHcclVmFlagData) {
+TEST_F(DumpShmDataTest, DumpHcclVmFlagData_ThenGetHcclVmFlagData)
+{
     HcclVmFlagData writtenData{};
     writtenData.header.magic = HCCLVM_FLAG_FILE_MAGIC;
     writtenData.header.header_size = sizeof(FileHeader);
@@ -125,7 +132,8 @@ TEST_F(DumpShmDataTest, DumpHcclVmFlagData_ThenGetHcclVmFlagData) {
     EXPECT_EQ(readData.runner_status, writtenData.runner_status);
 }
 
-TEST_F(DumpShmDataTest, DumpHcclVmFlagData_WriteFail_ReturnsError) {
+TEST_F(DumpShmDataTest, DumpHcclVmFlagData_WriteFail_ReturnsError)
+{
     HcclVmFlagData flagData{};
     flagData.header.magic = HCCLVM_FLAG_FILE_MAGIC;
     flagData.header.header_size = 0;
@@ -134,7 +142,7 @@ TEST_F(DumpShmDataTest, DumpHcclVmFlagData_WriteFail_ReturnsError) {
 
     std::string rootPath = GetBinLocation();
     std::string fullPath = rootPath + DATA_FILE_PATH + "/hcclvm_flag_data.bin";
-    FILE *fp = fopen(fullPath.c_str(), "wb");
+    FILE* fp = fopen(fullPath.c_str(), "wb");
     if (fp) {
         auto ret = HcclVmFlagDataWrite(fp, flagData);
         fclose(fp);
@@ -145,7 +153,8 @@ TEST_F(DumpShmDataTest, DumpHcclVmFlagData_WriteFail_ReturnsError) {
     }
 }
 
-TEST_F(DumpShmDataTest, GetHcclVmFlagData_FileNotExist_ReturnsError) {
+TEST_F(DumpShmDataTest, GetHcclVmFlagData_FileNotExist_ReturnsError)
+{
     HcclVmFlagData readData{};
     std::string rootPath = GetBinLocation();
     std::string fullPath = rootPath + DATA_FILE_PATH + "/hcclvm_flag_data.bin";
@@ -154,7 +163,8 @@ TEST_F(DumpShmDataTest, GetHcclVmFlagData_FileNotExist_ReturnsError) {
     EXPECT_NE(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataTest, DumpHcclVmFlagData_StatusStart) {
+TEST_F(DumpShmDataTest, DumpHcclVmFlagData_StatusStart)
+{
     HcclVmFlagData flagData{};
     flagData.header.magic = HCCLVM_FLAG_FILE_MAGIC;
     flagData.header.header_size = sizeof(FileHeader);
@@ -170,7 +180,8 @@ TEST_F(DumpShmDataTest, DumpHcclVmFlagData_StatusStart) {
     EXPECT_EQ(readData.runner_status, 1);
 }
 
-TEST_F(DumpShmDataTest, DumpHcclVmFlagData_StatusExit) {
+TEST_F(DumpShmDataTest, DumpHcclVmFlagData_StatusExit)
+{
     HcclVmFlagData flagData{};
     flagData.header.magic = HCCLVM_FLAG_FILE_MAGIC;
     flagData.header.header_size = sizeof(FileHeader);
@@ -188,16 +199,19 @@ TEST_F(DumpShmDataTest, DumpHcclVmFlagData_StatusExit) {
 
 class DumpShmDataWithDBTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         ClearAllDbTables();
         std::filesystem::create_directories("data");
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         ClearAllDbTables();
         g_opExpansionMode = 0;
     }
 
-    void InsertSimModelData_CCU() {
+    void InsertSimModelData_CCU()
+    {
         sim::SimModelData model;
         model.rank_id = 0;
         model.src_rank = 0;
@@ -223,7 +237,8 @@ protected:
         RunnerDB::Add<sim::SimModelData>(model);
     }
 
-    void InsertSimModelData_AICPU() {
+    void InsertSimModelData_AICPU()
+    {
         sim::SimModelData model;
         model.rank_id = 0;
         model.src_rank = 0;
@@ -246,7 +261,8 @@ protected:
         RunnerDB::Add<sim::SimModelData>(model);
     }
 
-    void InsertSimModelData_AllToAllV() {
+    void InsertSimModelData_AllToAllV()
+    {
         sim::SimModelData model0;
         model0.rank_id = 0;
         model0.src_rank = 0;
@@ -288,7 +304,8 @@ protected:
         RunnerDB::Add<sim::SimModelData>(model1);
     }
 
-    void InsertBasicTopology() {
+    void InsertBasicTopology()
+    {
         sim::Server server{};
         uint64_t serverId = RunnerDB::Add<sim::Server>(server);
         sim::Host host{};
@@ -331,7 +348,8 @@ protected:
         RunnerDB::Add<sim::MemoryLayout>(mem1);
     }
 
-    void InsertChannelTopology() {
+    void InsertChannelTopology()
+    {
         InsertBasicTopology();
 
         sim::EndPoint localEp{};
@@ -358,7 +376,8 @@ protected:
         RunnerDB::Add<sim::CcuChannel>(channel);
     }
 
-    void InsertJettyTopology() {
+    void InsertJettyTopology()
+    {
         InsertBasicTopology();
 
         sim::EndPoint localEp{};
@@ -375,7 +394,7 @@ protected:
         strncpy(remoteEp.ip_addr, "192.2.5.5", sizeof(remoteEp.ip_addr) - 1);
         uint64_t remoteEpId = RunnerDB::Add<sim::EndPoint>(remoteEp);
 
-sim::RaContext raCtx{};
+        sim::RaContext raCtx{};
         raCtx.endpoint_id = localEpId;
         uint64_t raCtxId = RunnerDB::Add<sim::RaContext>(raCtx);
 
@@ -391,7 +410,8 @@ sim::RaContext raCtx{};
         RunnerDB::Add<sim::EndPointPair>(epPair);
     }
 
-    void InsertCcuResourceTopology() {
+    void InsertCcuResourceTopology()
+    {
         sim::Server server{};
         uint64_t serverId = RunnerDB::Add<sim::Server>(server);
         sim::Host host{};
@@ -447,14 +467,16 @@ sim::RaContext raCtx{};
     }
 };
 
-TEST_F(DumpShmDataWithDBTest, CreateSimSynData_NoSimModel_ReturnsError) {
+TEST_F(DumpShmDataWithDBTest, CreateSimSynData_NoSimModel_ReturnsError)
+{
     InsertBasicTopology();
     HcclVmSynData synData;
     HcclVmResult ret = CreateSimSynData(synData);
     EXPECT_NE(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateSimSynData_CCU_Success) {
+TEST_F(DumpShmDataWithDBTest, CreateSimSynData_CCU_Success)
+{
     InsertSimModelData_CCU();
     InsertChannelTopology();
 
@@ -466,8 +488,9 @@ TEST_F(DumpShmDataWithDBTest, CreateSimSynData_CCU_Success) {
     EXPECT_EQ(synData.header.version, 1);
     EXPECT_EQ(synData.header.count, 1);
     EXPECT_EQ(synData.model_info.comm.rank_size, 2u);
-    EXPECT_EQ(synData.model_info.comm.op_expansion_mode,
-              static_cast<uint32_t>(sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_CCU));
+    EXPECT_EQ(
+        synData.model_info.comm.op_expansion_mode,
+        static_cast<uint32_t>(sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_CCU));
     EXPECT_EQ(synData.channel_info.count, 1u);
     EXPECT_EQ(synData.channel_info.data.size(), 1u);
     if (!synData.channel_info.data.empty()) {
@@ -477,7 +500,8 @@ TEST_F(DumpShmDataWithDBTest, CreateSimSynData_CCU_Success) {
     EXPECT_GE(synData.memory_info.count, 2u);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateSimSynData_AICPU_JettyInfo) {
+TEST_F(DumpShmDataWithDBTest, CreateSimSynData_AICPU_JettyInfo)
+{
     InsertSimModelData_AICPU();
     InsertJettyTopology();
 
@@ -485,12 +509,14 @@ TEST_F(DumpShmDataWithDBTest, CreateSimSynData_AICPU_JettyInfo) {
     HcclVmResult ret = CreateSimSynData(synData);
     EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 
-    EXPECT_EQ(synData.model_info.comm.op_expansion_mode,
-              static_cast<uint32_t>(sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_AICPU));
+    EXPECT_EQ(
+        synData.model_info.comm.op_expansion_mode,
+        static_cast<uint32_t>(sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_AICPU));
     EXPECT_GE(synData.channel_info.count, 1u);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateSimSynData_AllToAllV) {
+TEST_F(DumpShmDataWithDBTest, CreateSimSynData_AllToAllV)
+{
     InsertSimModelData_AllToAllV();
     InsertChannelTopology();
 
@@ -498,12 +524,12 @@ TEST_F(DumpShmDataWithDBTest, CreateSimSynData_AllToAllV) {
     HcclVmResult ret = CreateSimSynData(synData);
     EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 
-    EXPECT_EQ(synData.model_info.comm.op_type,
-              static_cast<uint16_t>(HcclCMDType::HCCL_CMD_ALLTOALLV));
+    EXPECT_EQ(synData.model_info.comm.op_type, static_cast<uint16_t>(HcclCMDType::HCCL_CMD_ALLTOALLV));
     EXPECT_GT(synData.model_info.all2AllDataDes.sendCountMatrix.size(), 0u);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateChannelInfo_NoChannel_SuccessEmpty) {
+TEST_F(DumpShmDataWithDBTest, CreateChannelInfo_NoChannel_SuccessEmpty)
+{
     InsertBasicTopology();
     HcclVmSynData synData;
     HcclVmResult ret = CreateChannelInfo(synData);
@@ -511,7 +537,8 @@ TEST_F(DumpShmDataWithDBTest, CreateChannelInfo_NoChannel_SuccessEmpty) {
     EXPECT_EQ(synData.channel_info.count, 0u);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateChannelInfo_ChannelWithEndpoint_Success) {
+TEST_F(DumpShmDataWithDBTest, CreateChannelInfo_ChannelWithEndpoint_Success)
+{
     InsertChannelTopology();
     HcclVmSynData synData;
     HcclVmResult ret = CreateChannelInfo(synData);
@@ -527,7 +554,8 @@ TEST_F(DumpShmDataWithDBTest, CreateChannelInfo_ChannelWithEndpoint_Success) {
     }
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateChannelInfo_MissingLocalEndpoint_ReturnsError) {
+TEST_F(DumpShmDataWithDBTest, CreateChannelInfo_MissingLocalEndpoint_ReturnsError)
+{
     InsertBasicTopology();
     sim::EndPoint remoteEp{};
     remoteEp.device_id = 1;
@@ -546,7 +574,8 @@ TEST_F(DumpShmDataWithDBTest, CreateChannelInfo_MissingLocalEndpoint_ReturnsErro
     EXPECT_NE(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateChannelInfo_MissingRemoteEndpoint_ReturnsError) {
+TEST_F(DumpShmDataWithDBTest, CreateChannelInfo_MissingRemoteEndpoint_ReturnsError)
+{
     InsertBasicTopology();
     sim::EndPoint localEp{};
     localEp.device_id = 0;
@@ -565,7 +594,8 @@ TEST_F(DumpShmDataWithDBTest, CreateChannelInfo_MissingRemoteEndpoint_ReturnsErr
     EXPECT_NE(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_NoJetty_SuccessEmpty) {
+TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_NoJetty_SuccessEmpty)
+{
     InsertBasicTopology();
     HcclVmSynData synData;
     HcclVmResult ret = CreateJettyInfo(synData);
@@ -573,7 +603,8 @@ TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_NoJetty_SuccessEmpty) {
     EXPECT_EQ(synData.channel_info.count, 0u);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_JettyWithContext_Success) {
+TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_JettyWithContext_Success)
+{
     InsertJettyTopology();
     HcclVmSynData synData;
     HcclVmResult ret = CreateJettyInfo(synData);
@@ -581,7 +612,8 @@ TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_JettyWithContext_Success) {
     EXPECT_GE(synData.channel_info.count, 1u);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_MissingRaContext_Continues) {
+TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_MissingRaContext_Continues)
+{
     InsertBasicTopology();
 
     sim::RaJetty jetty{};
@@ -596,7 +628,8 @@ TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_MissingRaContext_Continues) {
     EXPECT_EQ(synData.channel_info.data.size(), 0u);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_MissingEndPointPair_Continues) {
+TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_MissingEndPointPair_Continues)
+{
     InsertJettyTopology();
 
     RunnerDB::DeleteAll<sim::EndPointPair>();
@@ -606,7 +639,8 @@ TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_MissingEndPointPair_Continues) {
     EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_MissingLocalEndPoint_Continues) {
+TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_MissingLocalEndPoint_Continues)
+{
     InsertBasicTopology();
 
     sim::RaContext raCtx{};
@@ -624,7 +658,8 @@ TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_MissingLocalEndPoint_Continues) {
     EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataWithDBTest, DumpHcclVmSynthesisData_Success) {
+TEST_F(DumpShmDataWithDBTest, DumpHcclVmSynthesisData_Success)
+{
     InsertSimModelData_CCU();
     InsertChannelTopology();
 
@@ -638,7 +673,7 @@ TEST_F(DumpShmDataWithDBTest, DumpHcclVmSynthesisData_Success) {
     std::string fullPath = rootPath + DATA_FILE_PATH + fileName;
     EXPECT_TRUE(std::filesystem::exists(fullPath));
 
-    FILE *fp = fopen(fullPath.c_str(), "rb");
+    FILE* fp = fopen(fullPath.c_str(), "rb");
     if (fp) {
         HcclVmSynData readData;
         ret = HcclVmSynDataRead(fp, readData, HCCLVM_SYN_FILE_MAGIC);
@@ -650,14 +685,16 @@ TEST_F(DumpShmDataWithDBTest, DumpHcclVmSynthesisData_Success) {
     }
 }
 
-TEST_F(DumpShmDataWithDBTest, DumpHcclVmSynthesisData_NoSimModel_Fails) {
+TEST_F(DumpShmDataWithDBTest, DumpHcclVmSynthesisData_NoSimModel_Fails)
+{
     InsertBasicTopology();
     std::string dataId = GenDataId();
     HcclVmResult ret = DumpHcclVmSynthesisData(dataId);
     EXPECT_NE(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateSimInstrData_NoCcuResource_SuccessEmpty) {
+TEST_F(DumpShmDataWithDBTest, CreateSimInstrData_NoCcuResource_SuccessEmpty)
+{
     InsertBasicTopology();
     HcclVmInstrData instrData;
     HcclVmResult ret = CreateSimInstrData(instrData);
@@ -665,7 +702,8 @@ TEST_F(DumpShmDataWithDBTest, CreateSimInstrData_NoCcuResource_SuccessEmpty) {
     EXPECT_EQ(instrData.header.count, 0u);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateSimInstrData_WithCcuResource_Success) {
+TEST_F(DumpShmDataWithDBTest, CreateSimInstrData_WithCcuResource_Success)
+{
     InsertCcuResourceTopology();
     HcclVmInstrData instrData;
     HcclVmResult ret = CreateSimInstrData(instrData);
@@ -675,7 +713,8 @@ TEST_F(DumpShmDataWithDBTest, CreateSimInstrData_WithCcuResource_Success) {
     EXPECT_EQ(instrData.instr_data.size(), instrData.header.count);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateSimInstrData_MissingCcu_ReturnsError) {
+TEST_F(DumpShmDataWithDBTest, CreateSimInstrData_MissingCcu_ReturnsError)
+{
     InsertBasicTopology();
 
     sim::CcuResource ccuRes{};
@@ -689,7 +728,8 @@ TEST_F(DumpShmDataWithDBTest, CreateSimInstrData_MissingCcu_ReturnsError) {
     EXPECT_NE(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataWithDBTest, DumpHcclVmInstrData_CCU_WithInstr_Success) {
+TEST_F(DumpShmDataWithDBTest, DumpHcclVmInstrData_CCU_WithInstr_Success)
+{
     g_opExpansionMode = sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_CCU;
     InsertSimModelData_CCU();
     InsertCcuResourceTopology();
@@ -699,7 +739,8 @@ TEST_F(DumpShmDataWithDBTest, DumpHcclVmInstrData_CCU_WithInstr_Success) {
     EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataWithDBTest, DumpHcclVmInstrData_AICPU_NoInstrDump_Success) {
+TEST_F(DumpShmDataWithDBTest, DumpHcclVmInstrData_AICPU_NoInstrDump_Success)
+{
     g_opExpansionMode = sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_AICPU;
     InsertSimModelData_AICPU();
     InsertBasicTopology();
@@ -709,7 +750,8 @@ TEST_F(DumpShmDataWithDBTest, DumpHcclVmInstrData_AICPU_NoInstrDump_Success) {
     EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataWithDBTest, DumpHcclVmInstrData_CCU_NoInstr_ReturnsError) {
+TEST_F(DumpShmDataWithDBTest, DumpHcclVmInstrData_CCU_NoInstr_ReturnsError)
+{
     g_opExpansionMode = sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_CCU;
     InsertSimModelData_CCU();
     InsertBasicTopology();
@@ -719,7 +761,8 @@ TEST_F(DumpShmDataWithDBTest, DumpHcclVmInstrData_CCU_NoInstr_ReturnsError) {
     EXPECT_NE(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataWithDBTest, DumpDataToFile_Success) {
+TEST_F(DumpShmDataWithDBTest, DumpDataToFile_Success)
+{
     InsertSimModelData_CCU();
     InsertChannelTopology();
     InsertCcuResourceTopology();
@@ -729,14 +772,16 @@ TEST_F(DumpShmDataWithDBTest, DumpDataToFile_Success) {
     EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataWithDBTest, DumpDataToFile_SynFail_PropagatesError) {
+TEST_F(DumpShmDataWithDBTest, DumpDataToFile_SynFail_PropagatesError)
+{
     InsertBasicTopology();
     std::string dataId = GenDataId();
     HcclVmResult ret = DumpDataToFile(dataId);
     EXPECT_NE(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataWithDBTest, DumpDataToFile_TaskFail_PropagatesError) {
+TEST_F(DumpShmDataWithDBTest, DumpDataToFile_TaskFail_PropagatesError)
+{
     InsertSimModelData_CCU();
     InsertChannelTopology();
 
@@ -747,36 +792,36 @@ TEST_F(DumpShmDataWithDBTest, DumpDataToFile_TaskFail_PropagatesError) {
 
 class DumpShmDataTaskTest : public DumpShmDataWithDBTest {
 protected:
-    void SetUp() override {
-        DumpShmDataWithDBTest::SetUp();
-    }
-    void TearDown() override {
-        DumpShmDataWithDBTest::TearDown();
-    }
+    void SetUp() override { DumpShmDataWithDBTest::SetUp(); }
+    void TearDown() override { DumpShmDataWithDBTest::TearDown(); }
 };
 
-TEST_F(DumpShmDataTaskTest, CreateSimTaskMetaData_NoTask_ReturnsError) {
+TEST_F(DumpShmDataTaskTest, CreateSimTaskMetaData_NoTask_ReturnsError)
+{
     HcclVmTaskMetaData taskMeta;
     HcclVmResult ret = CreateSimTaskMetaData(taskMeta, {});
     EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_SUCCESS);
     EXPECT_EQ(taskMeta.header.count, 0u);
 }
 
-TEST_F(DumpShmDataTaskTest, CreateSimTaskMetaData_WithTask_Success) {
+TEST_F(DumpShmDataTaskTest, CreateSimTaskMetaData_WithTask_Success)
+{
     HcclVmTaskMetaData taskMeta;
     HcclVmResult ret = CreateSimTaskMetaData(taskMeta, {});
     EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_SUCCESS);
     EXPECT_EQ(taskMeta.header.count, 0u);
 }
 
-TEST_F(DumpShmDataTaskTest, CreateSimTaskMetaData_AivGraphTask_NoTaskMeta) {
+TEST_F(DumpShmDataTaskTest, CreateSimTaskMetaData_AivGraphTask_NoTaskMeta)
+{
     HcclVmTaskMetaData taskMeta;
     HcclVmResult ret = CreateSimTaskMetaData(taskMeta, {});
     EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_SUCCESS);
     EXPECT_EQ(taskMeta.header.count, 0u);
 }
 
-TEST_F(DumpShmDataTaskTest, DumpHcclVmTask_WithModels_Success) {
+TEST_F(DumpShmDataTaskTest, DumpHcclVmTask_WithModels_Success)
+{
     g_opExpansionMode = sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_CCU;
     InsertSimModelData_CCU();
     InsertChannelTopology();
@@ -786,13 +831,15 @@ TEST_F(DumpShmDataTaskTest, DumpHcclVmTask_WithModels_Success) {
     EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataTaskTest, DumpHcclVmTask_NoTask_ReturnsError) {
+TEST_F(DumpShmDataTaskTest, DumpHcclVmTask_NoTask_ReturnsError)
+{
     std::string dataId = GenDataId();
     HcclVmResult ret = DumpHcclVmTask(dataId);
     EXPECT_NE(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_JettyWithEndPointPair_Success) {
+TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_JettyWithEndPointPair_Success)
+{
     InsertSimModelData_AICPU();
     InsertJettyTopology();
 
@@ -802,7 +849,8 @@ TEST_F(DumpShmDataWithDBTest, CreateJettyInfo_JettyWithEndPointPair_Success) {
     EXPECT_GE(synData.channel_info.count, 1u);
 }
 
-TEST_F(DumpShmDataWithDBTest, DumpHcclVmInstrData_CCU_WithNullCcuSimulator) {
+TEST_F(DumpShmDataWithDBTest, DumpHcclVmInstrData_CCU_WithNullCcuSimulator)
+{
     g_opExpansionMode = sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_CCU;
     InsertSimModelData_CCU();
     InsertCcuResourceTopology();
@@ -812,7 +860,8 @@ TEST_F(DumpShmDataWithDBTest, DumpHcclVmInstrData_CCU_WithNullCcuSimulator) {
     EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(DumpShmDataWithDBTest, CreateSimInstrData_MultipleCcuResources) {
+TEST_F(DumpShmDataWithDBTest, CreateSimInstrData_MultipleCcuResources)
+{
     InsertBasicTopology();
 
     sim::Server server{};
@@ -866,14 +915,16 @@ TEST_F(DumpShmDataWithDBTest, CreateSimInstrData_MultipleCcuResources) {
     EXPECT_EQ(instrData.header.count, 2u);
 }
 
-TEST_F(DumpShmDataTaskTest, CreateSimTaskMetaData_CCU_NoTaskMeta) {
+TEST_F(DumpShmDataTaskTest, CreateSimTaskMetaData_CCU_NoTaskMeta)
+{
     HcclVmTaskMetaData taskMeta;
     HcclVmResult ret = CreateSimTaskMetaData(taskMeta, {});
     EXPECT_EQ(ret, HcclVmResult::HCCL_SIM_SUCCESS);
     EXPECT_EQ(taskMeta.header.count, 0u);
 }
 
-TEST_F(DumpShmDataTaskTest, DumpHcclVmTask_WithCcuAndChannel_Success) {
+TEST_F(DumpShmDataTaskTest, DumpHcclVmTask_WithCcuAndChannel_Success)
+{
     g_opExpansionMode = sim::SimOpExpansionMode::SIM_OP_EXPANSION_MODE_CCU;
     InsertSimModelData_CCU();
     InsertChannelTopology();

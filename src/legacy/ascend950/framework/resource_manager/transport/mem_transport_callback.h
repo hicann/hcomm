@@ -13,16 +13,16 @@
 #include "mirror_task_manager.h"
 #include "virtual_topo.h"
 
-namespace Hccl{
+namespace Hccl {
 class MemTransportCallback {
-    private:
-        const LinkData link_;
-        MirrorTaskManager &mirrorTaskManager_;
+private:
+    const LinkData link_;
+    MirrorTaskManager& mirrorTaskManager_;
 
-    public:
-        MemTransportCallback(const LinkData link, MirrorTaskManager &mirrorTaskManager);
-        void operator()(u32 streamId, u32 taskId, const TaskParam &taskParam);
+public:
+    MemTransportCallback(const LinkData link, MirrorTaskManager& mirrorTaskManager);
+    void operator()(u32 streamId, u32 taskId, const TaskParam& taskParam);
 };
 
-}
+} // namespace Hccl
 #endif

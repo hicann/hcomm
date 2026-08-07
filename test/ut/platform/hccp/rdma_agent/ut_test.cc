@@ -30,23 +30,12 @@ extern "C" {
 
 using namespace std;
 
-class RdmaAgent : public testing::Test
-{
+class RdmaAgent : public testing::Test {
 protected:
-   static void SetUpTestCase()
-    {
-        std::cout << "\033[36m--RoCE RdmaAgent SetUP--\033[0m" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "\033[36m--RoCE RdmaAgent TearDown--\033[0m" << std::endl;
-    }
-    virtual void SetUp()
-    {
-    }
-    virtual void TearDown()
-    {
-    }
+    static void SetUpTestCase() { std::cout << "\033[36m--RoCE RdmaAgent SetUP--\033[0m" << std::endl; }
+    static void TearDownTestCase() { std::cout << "\033[36m--RoCE RdmaAgent TearDown--\033[0m" << std::endl; }
+    virtual void SetUp() {}
+    virtual void TearDown() {}
 };
 
 TEST_M(RdmaAgent, TcHdcSocketBatchConnect);

@@ -13,13 +13,14 @@
 
 namespace hccl {
 ParallelTaskLoader::ParallelTaskLoader(const s32 deviceLogicId, const HcclDispatcher dispatcher)
-    : deviceLogicId_(deviceLogicId), dispatcher_(dispatcher), taskLoaderNum_(0)
+    : deviceLogicId_(deviceLogicId),
+      dispatcher_(dispatcher),
+      taskLoaderNum_(0)
 {}
 
-ParallelTaskLoader::~ParallelTaskLoader()
-{}
+ParallelTaskLoader::~ParallelTaskLoader() {}
 
-HcclResult ParallelTaskLoader::Prepare(std::vector<Stream *> streamsPtr, SubCommInfo level0CommInfo)
+HcclResult ParallelTaskLoader::Prepare(std::vector<Stream*> streamsPtr, SubCommInfo level0CommInfo)
 {
     // 参数保存
     streamsPtr_.resize(streamsPtr.size());
@@ -41,7 +42,8 @@ HcclResult ParallelTaskLoader::Prepare(std::vector<Stream *> streamsPtr, SubComm
         streamTaskLoader_[streamIndex].reset(new (std::nothrow) TaskLoader(deviceLogicId_, dispatcher_));
         CHK_SMART_PTR_NULL(streamTaskLoader_[streamIndex]);
         HcclResult ret = streamTaskLoader_[streamIndex]->Init();
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
             HCCL_ERROR("[ParallelTaskLoader][Init]streamIndex[%u] TaskLoader failed, return[%d]", streamIndex, ret),
             ret);
     }
@@ -90,4 +92,4 @@ HcclResult ParallelTaskLoader::ClearTagCommInfo()
     }
     return HCCL_SUCCESS;
 }
-}  // namespace hccl
+} // namespace hccl

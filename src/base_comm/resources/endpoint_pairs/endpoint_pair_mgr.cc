@@ -12,24 +12,21 @@
 
 namespace hcomm {
 
-HcclResult EndpointPairMgr::Get(const EndpointDescPair &endpointDescPair, EndpointPair *&out,
-    const Hccl::RankIpPortMapPtr& rankIpPortMap)
+HcclResult EndpointPairMgr::Get(
+    const EndpointDescPair& endpointDescPair, EndpointPair*& out, const Hccl::RankIpPortMapPtr& rankIpPortMap)
 {
     if (endpointPairMap_.find(endpointDescPair) != endpointPairMap_.end()) {
         out = endpointPairMap_[endpointDescPair].get();
         return HCCL_SUCCESS;
     }
- 
+
     std::unique_ptr<EndpointPair> endpointPair = nullptr;
     EXCEPTION_CATCH(
-        (endpointPair = std::make_unique<EndpointPair>(
-            endpointDescPair.first,
-            endpointDescPair.second,
-            rankIpPortMap)),
+        (endpointPair = std::make_unique<EndpointPair>(endpointDescPair.first, endpointDescPair.second, rankIpPortMap)),
         return HCCL_E_PTR);
     CHK_SMART_PTR_NULL(endpointPair);
     CHK_RET(endpointPair->Init());
- 
+
     out = endpointPair.get();
     endpointPairMap_.emplace(endpointDescPair, std::move(endpointPair));
 
@@ -39,7 +36,7 @@ HcclResult EndpointPairMgr::Get(const EndpointDescPair &endpointDescPair, Endpoi
 EpChannelMap EndpointPairMgr::GetEpChannelMap()
 {
     EpChannelMap epChannelMap;
-    for (const auto& endpointPair: endpointPairMap_) {
+    for (const auto& endpointPair : endpointPairMap_) {
         auto channelList = endpointPair.second->GetChannelHandles();
         epChannelMap[endpointPair.first] = channelList;
     }

@@ -13,7 +13,6 @@
 
 #include "aligned_reduce_scatter_double_ring_with_serial_local_copy_pub.h"
 
-namespace hccl {
-} // namespace hccl
- 
+namespace hccl {} // namespace hccl
+
 #endif

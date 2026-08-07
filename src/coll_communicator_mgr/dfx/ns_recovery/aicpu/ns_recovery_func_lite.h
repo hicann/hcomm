@@ -40,22 +40,14 @@ using ts_ctrl_msg_body_t = struct {
     } u; // 40 bytes
 }; // 44 bytes
 
-MAKE_ENUM(OPERATION_TYPE,
-          OP_ABORT_APP,
-          OP_QUERY_ABORT_STATUS,
-          OP_INVALID)
+MAKE_ENUM(OPERATION_TYPE, OP_ABORT_APP, OP_QUERY_ABORT_STATUS, OP_INVALID)
 
-MAKE_ENUM(APP_ABORT_STS_QUERY_CHOICE,
-          APP_ABORT_STS_QUERY_BY_SQ,
-          APP_ABORT_STS_QUERY_BY_PID,
-          APP_ABORT_STS_QUERY_INVALID)
+MAKE_ENUM(
+    APP_ABORT_STS_QUERY_CHOICE, APP_ABORT_STS_QUERY_BY_SQ, APP_ABORT_STS_QUERY_BY_PID, APP_ABORT_STS_QUERY_INVALID)
 
-MAKE_ENUM(APP_ABORT_STAUTS,
-          APP_ABORT_TERMINATE_FAIL,
-          APP_ABORT_INIT,
-          APP_ABORT_KILL_FINISH,
-          APP_ABORT_TERMINATE_FINISH,
-          APP_ABORT_STATUS_INVALID)
+MAKE_ENUM(
+    APP_ABORT_STAUTS, APP_ABORT_TERMINATE_FAIL, APP_ABORT_INIT, APP_ABORT_KILL_FINISH, APP_ABORT_TERMINATE_FINISH,
+    APP_ABORT_STATUS_INVALID)
 
 /**
  * @note N秒快恢device侧的处理
@@ -63,12 +55,13 @@ MAKE_ENUM(APP_ABORT_STAUTS,
 
 class NsRecoveryFuncLite : public Hccl::DaemonFunc {
 public:
-    static NsRecoveryFuncLite &GetInstance();
+    static NsRecoveryFuncLite& GetInstance();
     virtual void Call() override;
+
 private:
-    void HandleStopLaunch(CollCommAicpu *comm) const;
-    void HandleClean(CollCommAicpu *comm);
-    void StreamClean(CollCommAicpu *comm);
+    void HandleStopLaunch(CollCommAicpu* comm) const;
+    void HandleClean(CollCommAicpu* comm);
+    void StreamClean(CollCommAicpu* comm);
     HcclResult DeviceQuery(const uint32_t devId, const uint32_t step, const uint64_t timeout);
 
     NsRecoveryFuncLite() = default;
@@ -76,6 +69,6 @@ private:
     NsRecoveryFuncLite& operator=(const NsRecoveryFuncLite&) = delete;
 };
 
-}
+} // namespace hccl
 
 #endif

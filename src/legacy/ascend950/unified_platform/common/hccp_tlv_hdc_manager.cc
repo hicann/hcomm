@@ -14,23 +14,20 @@
 
 namespace Hccl {
 
-HccpTlvHdcManager::HccpTlvHdcManager()
-{
-    tlvHandleMap.resize(MAX_DEVICE_NUM);
-}                                                                                                                                   
+HccpTlvHdcManager::HccpTlvHdcManager() { tlvHandleMap.resize(MAX_DEVICE_NUM); }
 
-HccpTlvHdcManager &HccpTlvHdcManager::GetInstance()
+HccpTlvHdcManager& HccpTlvHdcManager::GetInstance()
 {
     static HccpTlvHdcManager HccpTlvHdcManager;
     return HccpTlvHdcManager;
 }
 
-void* HccpTlvHdcManager::GetTlvHandle(s32 deviceLogicId) 
+void* HccpTlvHdcManager::GetTlvHandle(s32 deviceLogicId)
 {
     if (tlvHandleMap[deviceLogicId] == nullptr) {
         Init(deviceLogicId);
     }
-    return tlvHandleMap[deviceLogicId]; 
+    return tlvHandleMap[deviceLogicId];
 }
 
 void HccpTlvHdcManager::Init(s32 deviceLogicId)
@@ -40,11 +37,11 @@ void HccpTlvHdcManager::Init(s32 deviceLogicId)
         return;
     }
 
-    HRaTlvInitConfig  cfg;
+    HRaTlvInitConfig cfg;
     cfg.phyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
-    cfg.mode  = HrtNetworkMode::HDC;  
+    cfg.mode = HrtNetworkMode::HDC;
     cfg.version = 1;
-    tlvHandleMap[deviceLogicId] = HrtRaTlvInit(cfg); 
+    tlvHandleMap[deviceLogicId] = HrtRaTlvInit(cfg);
 
     instances.insert(deviceLogicId);
 }
@@ -66,9 +63,6 @@ void HccpTlvHdcManager::DestroyAll()
     instances.clear();
 }
 
-HccpTlvHdcManager::~HccpTlvHdcManager()
-{
-    DECTOR_TRY_CATCH("HccpTlvHdcManager", DestroyAll());
-}
+HccpTlvHdcManager::~HccpTlvHdcManager() { DECTOR_TRY_CATCH("HccpTlvHdcManager", DestroyAll()); }
 
 } // namespace Hccl

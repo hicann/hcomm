@@ -22,7 +22,7 @@ namespace hcomm {
 struct JettyCtxGroup {
     uint32_t startJettyCtxId{0};
     uint32_t startTaJettyId{0};
-    uint32_t useCnt{0};  // 记录对应channel是否已经全部释放
+    uint32_t useCnt{0};     // 记录对应channel是否已经全部释放
     bool configured{false}; // 记录是否已经配置jettyCtx表
 };
 
@@ -32,13 +32,15 @@ public:
 
     CcuJettyCtxMgrV2() = default;
     ~CcuJettyCtxMgrV2() override final = default;
-    
+
     HcclResult Init() override final;
-    HcclResult Alloc(const uint32_t feId, const uint32_t jettyNum, const uint32_t sqSize,
+    HcclResult Alloc(
+        const uint32_t feId, const uint32_t jettyNum, const uint32_t sqSize,
         std::vector<JettyInfo>& jettyInfos) override final;
-    HcclResult Config(const uint32_t feId, const std::vector<JettyInfo> &jettyInfos,
+    HcclResult Config(
+        const uint32_t feId, const std::vector<JettyInfo>& jettyInfos,
         const std::vector<JettyCfg>& jettyCfgs) override final;
-    HcclResult Release(const uint32_t feId, const std::vector<JettyInfo> &jettyInfos) override final;
+    HcclResult Release(const uint32_t feId, const std::vector<JettyInfo>& jettyInfos) override final;
 
 private:
     CcuChannelJettyMap channelJettyMap_{8, 1}; // 默认配比8:1

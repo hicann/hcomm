@@ -19,7 +19,7 @@
 namespace Hccl {
 
 // 获取bootstrapIp
-const IpAddress &GetBootstrapIp(u32 devPhyId);
+const IpAddress& GetBootstrapIp(u32 devPhyId);
 
 } // namespace Hccl
 

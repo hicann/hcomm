@@ -17,46 +17,53 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepMul : public CcuRepBase {
-public:
-    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB);
-    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, uint16_t immedB);
-    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varA, const Variable &varB);
-    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varA, const uint16_t immedB);
+    class CcuRepMul : public CcuRepBase {
+    public:
+        explicit CcuRepMul(
+            CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varA, const Variable& varB);
+        explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varA, uint16_t immedB);
+        explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable& varA, const Variable& varB);
+        explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable& varA, const uint16_t immedB);
 
-    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Variable &varA, const Variable &varB);
-    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Variable &varA, const Address &addrB);
-    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrA, const Variable &varB);
-    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Address &addrA, const uint16_t immedB);
-    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrC, const Variable &varA, const uint16_t immedB);
-    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address &addrA, const uint16_t immedB);
+        explicit CcuRepMul(
+            CcuInsGeneratorBase* insGenPtr, const Address& addrC, const Variable& varA, const Variable& varB);
+        explicit CcuRepMul(
+            CcuInsGeneratorBase* insGenPtr, const Address& addrC, const Variable& varA, const Address& addrB);
+        explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address& addrA, const Variable& varB);
+        explicit CcuRepMul(
+            CcuInsGeneratorBase* insGenPtr, const Address& addrC, const Address& addrA, const uint16_t immedB);
+        explicit CcuRepMul(
+            CcuInsGeneratorBase* insGenPtr, const Address& addrC, const Variable& varA, const uint16_t immedB);
+        explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Address& addrA, const uint16_t immedB);
 
-    explicit CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Address &addrA, const uint16_t immedB);
+        explicit CcuRepMul(
+            CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Address& addrA, const uint16_t immedB);
 
-    bool          Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string   Describe() override;
-    Address     GetAddrA();
-    Address     GetAddrB();
-    Address     GetAddrC();
-    Variable    GetVarA();
-    Variable    GetVarB();
-    Variable    GetVarC();
-    uint16_t    GetImmedB();
-    MulSubType  GetSubType();
-private:
-    void SetCommonInfo();
-    void ValidateInsGenPtrForMul();
-    CcuInsGeneratorBase* insGenPtr{nullptr};
-    MulSubType  subType{MulSubType::INVALID};
-    Variable varA;
-    Variable varB;
-    Variable varC;
-    Address addrA;
-    Address addrB;
-    Address addrC;
-    uint16_t immedB{0};
-    bool supportCcuV1{false};
-};
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
+        Address GetAddrA();
+        Address GetAddrB();
+        Address GetAddrC();
+        Variable GetVarA();
+        Variable GetVarB();
+        Variable GetVarC();
+        uint16_t GetImmedB();
+        MulSubType GetSubType();
+
+    private:
+        void SetCommonInfo();
+        void ValidateInsGenPtrForMul();
+        CcuInsGeneratorBase* insGenPtr{nullptr};
+        MulSubType subType{MulSubType::INVALID};
+        Variable varA;
+        Variable varB;
+        Variable varC;
+        Address addrA;
+        Address addrB;
+        Address addrC;
+        uint16_t immedB{0};
+        bool supportCcuV1{false};
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

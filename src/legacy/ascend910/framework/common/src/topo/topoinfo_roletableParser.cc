@@ -10,21 +10,15 @@
 
 #include "topoinfo_roletableParser.h"
 
-
 using namespace std;
 using namespace hccl;
 
-TopoinfoRoletable::TopoinfoRoletable(const std::string &rankTableM)
-    : TopoInfoRanktableParser(rankTableM, "0")
-{
-}
+TopoinfoRoletable::TopoinfoRoletable(const std::string& rankTableM) : TopoInfoRanktableParser(rankTableM, "0") {}
 
-TopoinfoRoletable::~TopoinfoRoletable()
-{
-}
+TopoinfoRoletable::~TopoinfoRoletable() {}
 
-HcclResult TopoinfoRoletable::GetSingleNode(const nlohmann::json &NodeListObj, u32 objIndex,
-    std::vector<RoleTableNodeInfo> &nodes)
+HcclResult
+TopoinfoRoletable::GetSingleNode(const nlohmann::json& NodeListObj, u32 objIndex, std::vector<RoleTableNodeInfo>& nodes)
 {
     u32 id;
     std::string ip;
@@ -49,7 +43,7 @@ HcclResult TopoinfoRoletable::GetSingleNode(const nlohmann::json &NodeListObj, u
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoinfoRoletable::GetServersInfo(std::vector<RoleTableNodeInfo> &servers)
+HcclResult TopoinfoRoletable::GetServersInfo(std::vector<RoleTableNodeInfo>& servers)
 {
     nlohmann::json serverList;
     CHK_RET(GetJsonProperty(fileContent_, SERVER_LIST, serverList, false));
@@ -61,7 +55,7 @@ HcclResult TopoinfoRoletable::GetServersInfo(std::vector<RoleTableNodeInfo> &ser
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoinfoRoletable::GetClientsInfo(std::vector<RoleTableNodeInfo> &clients)
+HcclResult TopoinfoRoletable::GetClientsInfo(std::vector<RoleTableNodeInfo>& clients)
 {
     nlohmann::json clientList;
     CHK_RET(GetJsonProperty(fileContent_, CLIENT_LIST, clientList, false));
@@ -73,7 +67,7 @@ HcclResult TopoinfoRoletable::GetClientsInfo(std::vector<RoleTableNodeInfo> &cli
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoinfoRoletable::ParserRoleTable(RoleTableInfo &roleTableInfo)
+HcclResult TopoinfoRoletable::ParserRoleTable(RoleTableInfo& roleTableInfo)
 {
     CHK_RET(LoadConfigString(rankTableFile_));
     HCCL_INFO("ParserRoleTable [%s].", rankTableFile_.c_str());

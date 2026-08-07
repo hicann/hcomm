@@ -17,12 +17,12 @@
 #include "dlprof_function.h"
 #include "hccl/base.h"
 
-uint64_t hrtMsprofGetHashId(const char *hashInfo, uint32_t length);
+uint64_t hrtMsprofGetHashId(const char* hashInfo, uint32_t length);
 uint64_t hrtMsprofSysCycleTime(void);
 
-HcclResult hrtMsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char *typeName);
+HcclResult hrtMsprofRegTypeInfo(uint16_t level, uint32_t typeId, const char* typeName);
 HcclResult hrtMsprofRegisterCallback(uint32_t moduleId, ProfCommandHandle handle);
-HcclResult hrtMsprofReportApi(uint32_t agingFlag, const MsprofApi *api);
+HcclResult hrtMsprofReportApi(uint32_t agingFlag, const MsprofApi* api);
 HcclResult hrtMsprofReportCompactInfo(uint32_t agingFlag, const VOID_PTR data, uint32_t length);
 HcclResult hrtMsprofReportAdditionalInfo(uint32_t agingFlag, const VOID_PTR data, uint32_t length);
 

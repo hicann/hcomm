@@ -13,15 +13,15 @@
 #include "externalinput_pub.h"
 
 using namespace hccl;
-PluginRunner::PluginRunner(ProfilerBase *profiler) : profiler_(profiler) {}
+PluginRunner::PluginRunner(ProfilerBase* profiler) : profiler_(profiler) {}
 
 PluginRunner::~PluginRunner() {}
 
-template <typename T> 
-void PluginRunner::operator () (rtStream_t stream, TaskType taskType, const T &para) const
-{   
-    //capture模式下hrtGetStreamId获取的是原来的流对应ID，与实际执行流不是同一个
-    //capture模式下hrtGetTaskIdAndStreamID获取实际执行的streamID和taskID
+template <typename T>
+void PluginRunner::operator()(rtStream_t stream, TaskType taskType, const T& para) const
+{
+    // capture模式下hrtGetStreamId获取的是原来的流对应ID，与实际执行流不是同一个
+    // capture模式下hrtGetTaskIdAndStreamID获取实际执行的streamID和taskID
     u32 threadLastTaskID = 0;
     u32 threadLastStreamID = 0;
     s32 streamID = 0;
@@ -41,30 +41,32 @@ void PluginRunner::operator () (rtStream_t stream, TaskType taskType, const T &p
     }
 
     HcclResult ret;
-    if (GetExternalInputHcclEnableFfts() &&
-        GetWorkflowMode() == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE && !isOneSideTask) {
+    if (GetExternalInputHcclEnableFfts() && GetWorkflowMode() == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE
+        && !isOneSideTask) {
         ret = hrtGetStreamId(stream, streamID);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[PluginRunner][Operator]rtGet stream id fail. return[%d]", ret),);
+        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[PluginRunner][Operator]rtGet stream id fail. return[%d]", ret), );
 
         u32 castStreamID = static_cast<u32>(streamID);
         if (isCapture) {
             ret = hrtGetTaskIdAndStreamID(threadLastTaskID, threadLastStreamID);
-            CHK_PRT_RET(ret != HCCL_SUCCESS,
-                HCCL_ERROR("[PluginRunner][Operator]rtGet task id and stream id fail. return[%d]", ret),);
+            CHK_PRT_RET(
+                ret != HCCL_SUCCESS,
+                HCCL_ERROR("[PluginRunner][Operator]rtGet task id and stream id fail. return[%d]", ret), );
             profiler_->Save(castStreamID, threadLastStreamID, threadLastTaskID, taskType, para);
         } else {
             profiler_->Save(castStreamID, threadLastTaskID, taskType, para);
         }
     } else {
         ret = hrtGetTaskIdAndStreamID(threadLastTaskID, threadLastStreamID);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[PluginRunner][Operator]rtGet task id and stream id fail. return[%d]", ret),);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR("[PluginRunner][Operator]rtGet task id and stream id fail. return[%d]", ret), );
 
         if (isCapture) {
             ret = hrtGetStreamId(stream, streamID);
-            CHK_PRT_RET(ret != HCCL_SUCCESS,
-                HCCL_ERROR("[PluginRunner][Operator]rtGet task id and stream id fail. return[%d]", ret),);
+            CHK_PRT_RET(
+                ret != HCCL_SUCCESS,
+                HCCL_ERROR("[PluginRunner][Operator]rtGet task id and stream id fail. return[%d]", ret), );
             u32 castStreamID = static_cast<u32>(streamID);
             profiler_->Save(castStreamID, threadLastStreamID, threadLastTaskID, taskType, para);
         } else {
@@ -73,11 +75,11 @@ void PluginRunner::operator () (rtStream_t stream, TaskType taskType, const T &p
     }
 }
 
-template void PluginRunner::operator ()<TaskParaDMA>(rtStream_t, TaskType, const TaskParaDMA&) const;
-template void PluginRunner::operator ()<TaskParaReduce>(rtStream_t, TaskType, const TaskParaReduce&) const;
-template void PluginRunner::operator ()<TaskParaNotify>(rtStream_t, TaskType, const TaskParaNotify&) const;
+template void PluginRunner::operator()<TaskParaDMA>(rtStream_t, TaskType, const TaskParaDMA&) const;
+template void PluginRunner::operator()<TaskParaReduce>(rtStream_t, TaskType, const TaskParaReduce&) const;
+template void PluginRunner::operator()<TaskParaNotify>(rtStream_t, TaskType, const TaskParaNotify&) const;
 
-void PluginRunner::operator () (rtStream_t stream, const void *descBuf, size_t descBufLen) const
+void PluginRunner::operator()(rtStream_t stream, const void* descBuf, size_t descBufLen) const
 {
     u32 threadLastTaskID = 0;
     u32 threadLastStreamID = 0;
@@ -86,15 +88,14 @@ void PluginRunner::operator () (rtStream_t stream, const void *descBuf, size_t d
     bool isCapture = false;
     CHK_PRT(isStreamCapture(stream, isCapture));
 
-    CHK_PRT_RET(profiler_ == nullptr, HCCL_WARNING("profiler_ is nullptr"),);
+    CHK_PRT_RET(profiler_ == nullptr, HCCL_WARNING("profiler_ is nullptr"), );
     ret = hrtGetTaskIdAndStreamID(threadLastTaskID, threadLastStreamID);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-    HCCL_ERROR("[PluginRunner][Operator]rtGet task id and stream id fail. return[%d]", ret),);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[PluginRunner][Operator]rtGet task id and stream id fail. return[%d]", ret), );
 
     if (isCapture) {
         ret = hrtGetStreamId(stream, streamID);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[PluginRunner][Operator]rtGet stream id fail. return[%d]", ret),);
+        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[PluginRunner][Operator]rtGet stream id fail. return[%d]", ret), );
         u32 castStreamID = static_cast<u32>(streamID);
         profiler_->Save(castStreamID, threadLastStreamID, threadLastTaskID, descBuf, descBufLen);
     } else {
@@ -102,14 +103,14 @@ void PluginRunner::operator () (rtStream_t stream, const void *descBuf, size_t d
     }
 }
 
-void PluginRunner::operator () (const TaskParaHost &paraHost) const
+void PluginRunner::operator()(const TaskParaHost& paraHost) const
 {
     if (profiler_ != nullptr) {
         profiler_->SaveToLog(paraHost);
     }
 }
 
-void PluginRunner::operator () (rtStream_t stream, const TaskParaAiv &paraAiv) const
+void PluginRunner::operator()(rtStream_t stream, const TaskParaAiv& paraAiv) const
 {
     u32 threadLastTaskID = 0;
     u32 threadLastStreamID = 0;
@@ -118,13 +119,14 @@ void PluginRunner::operator () (rtStream_t stream, const TaskParaAiv &paraAiv) c
     bool isCapture = false;
     CHK_PRT(isStreamCapture(stream, isCapture));
     result = hrtGetTaskIdAndStreamID(threadLastTaskID, threadLastStreamID);
-    CHK_PRT_RET(result != HCCL_SUCCESS,
-            HCCL_ERROR("[PluginRunner][Operator]rtGet task id and stream id fail. return[%d]", result),);
-    CHK_PRT_RET(profiler_ == nullptr, HCCL_WARNING("profiler_ is nullptr"),);
+    CHK_PRT_RET(
+        result != HCCL_SUCCESS,
+        HCCL_ERROR("[PluginRunner][Operator]rtGet task id and stream id fail. return[%d]", result), );
+    CHK_PRT_RET(profiler_ == nullptr, HCCL_WARNING("profiler_ is nullptr"), );
     if (isCapture) {
         result = hrtGetStreamId(stream, streamID);
-        CHK_PRT_RET(result != HCCL_SUCCESS,
-            HCCL_ERROR("[PluginRunner][Operator]rtGet stream id fail. return[%d]", result),);
+        CHK_PRT_RET(
+            result != HCCL_SUCCESS, HCCL_ERROR("[PluginRunner][Operator]rtGet stream id fail. return[%d]", result), );
         u32 castStreamID = static_cast<u32>(streamID);
         profiler_->Save(castStreamID, threadLastStreamID, threadLastTaskID, paraAiv);
     } else {

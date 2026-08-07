@@ -24,9 +24,11 @@ namespace Hccl {
 
 HcclResult GenCcuGraph(TaskNode* dummyStart);
 
-HcclResult TransformInstr(const CcuRep::CcuInstr *instr, uint32_t rankId, uint32_t queId, TaskNode* &preNode, bool& isContinue);
+HcclResult
+TransformInstr(const CcuRep::CcuInstr* instr, uint32_t rankId, uint32_t queId, TaskNode*& preNode, bool& isContinue);
 
-HcclResult TransformInstr(const CcuRep::CcuInstrInfo& instrInfo, uint32_t rankId, uint32_t queId, TaskNode* &preNode, bool isFinished);
+HcclResult TransformInstr(
+    const CcuRep::CcuInstrInfo& instrInfo, uint32_t rankId, uint32_t queId, TaskNode*& preNode, bool isFinished);
 
 HcclResult GetHcclDataTypeFromCCUDataType(uint16_t ccuDataType, uint16_t ccuReduceType, DataType& dataType);
 
@@ -34,11 +36,11 @@ struct LoopGroupParam {
     std::vector<LoopXm> loopXms;
     LoopGroupXn loopGroupXn;
     LoopGroupXm loopGroupXm;
-    u32 curLoopIdx = 0;                   // 表示当前处理第几个loop
-    u32 curExpandCnt = 0;                 // 该loop被第几次展开
-    u32 curLoopCnt = 0;                   // 表示当前Loop第几次循环
+    u32 curLoopIdx = 0;   // 表示当前处理第几个loop
+    u32 curExpandCnt = 0; // 该loop被第几次展开
+    u32 curLoopCnt = 0;   // 表示当前Loop第几次循环
 };
 
-}
+} // namespace Hccl
 
 #endif

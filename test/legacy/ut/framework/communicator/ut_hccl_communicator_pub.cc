@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
@@ -34,20 +33,11 @@ using namespace Hccl;
 
 class HcclCommunicatorTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "HcclCommunicatorTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "HcclCommunicatorTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "HcclCommunicatorTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "HcclCommunicatorTest tests tear down." << std::endl; }
 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in HcclCommunicatorTest SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in HcclCommunicatorTest SetUP" << std::endl; }
 
     virtual void TearDown()
     {
@@ -58,7 +48,9 @@ protected:
 
 TEST_F(HcclCommunicatorTest, should_success_when_calling_init_with_valid_params)
 {
-    MOCKER_CPP(static_cast<HcclResult (CommunicatorImpl::*)(const CommParams &, const std::string &, const HcclCommConfig &)>(&CommunicatorImpl::Init))
+    MOCKER_CPP(
+        static_cast<HcclResult (CommunicatorImpl::*)(const CommParams&, const std::string&, const HcclCommConfig&)>(
+            &CommunicatorImpl::Init))
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
@@ -69,7 +61,7 @@ TEST_F(HcclCommunicatorTest, should_success_when_calling_init_with_valid_params)
     MOCKER_CPP(&HccpHdcManager::Init).stubs().with(mockcpp::any());
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
- 
+
     GenRankTableFile1Ser8Dev();
     CommParams commParams;
     auto comm = std::make_unique<HcclCommunicator>(commParams);
@@ -80,7 +72,9 @@ TEST_F(HcclCommunicatorTest, should_success_when_calling_init_with_valid_params)
 
 TEST_F(HcclCommunicatorTest, should_failed_when_calling_init_with_invalid_params)
 {
-    MOCKER_CPP(static_cast<HcclResult (CommunicatorImpl::*)(const CommParams &, const std::string &, const HcclCommConfig &)>(&CommunicatorImpl::Init))
+    MOCKER_CPP(
+        static_cast<HcclResult (CommunicatorImpl::*)(const CommParams&, const std::string&, const HcclCommConfig&)>(
+            &CommunicatorImpl::Init))
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_E_PARA));
@@ -91,21 +85,27 @@ TEST_F(HcclCommunicatorTest, should_failed_when_calling_init_with_invalid_params
     MOCKER_CPP(&HccpHdcManager::Init).stubs().with(mockcpp::any());
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
- 
+
     GenRankTableFile1Ser8Dev();
     CommParams commParams;
     auto comm = new HcclCommunicator(commParams);
     auto res = comm->Init("ranktable.json");
     delete comm;
     DelRankTableFile();
- 
+
     EXPECT_EQ(HCCL_E_PARA, res);
 }
 
 TEST_F(HcclCommunicatorTest, should_success_when_calling_collop_with_valid_params)
 {
-    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string &)).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&CommunicatorImpl::LoadOpbasedCollOp).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CommunicatorImpl::LoadOpbasedCollOp)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
     CommParams commParams;
     auto comm = new HcclCommunicator(commParams);
     comm->Init("ranktable.json");
@@ -117,8 +117,14 @@ TEST_F(HcclCommunicatorTest, should_success_when_calling_collop_with_valid_param
 
 TEST_F(HcclCommunicatorTest, should_failed_when_calling_collop_with_invalid_params)
 {
-    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string &)).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&CommunicatorImpl::LoadOpbasedCollOp).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_E_PARA));
+    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CommunicatorImpl::LoadOpbasedCollOp)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_E_PARA));
     CommParams commParams;
     auto comm = new HcclCommunicator(commParams);
     comm->Init("ranktable.json");
@@ -130,7 +136,10 @@ TEST_F(HcclCommunicatorTest, should_failed_when_calling_collop_with_invalid_para
 
 TEST_F(HcclCommunicatorTest, should_success_when_calling_calc_coll_offload_op_res_with_valid_params)
 {
-    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string &)).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&CommunicatorImpl::CalcCollOffloadOpRes).stubs().will(returnValue(HCCL_SUCCESS));
     CommParams commParams;
     auto comm = new HcclCommunicator(commParams);
@@ -144,13 +153,16 @@ TEST_F(HcclCommunicatorTest, should_success_when_calling_calc_coll_offload_op_re
 
 TEST_F(HcclCommunicatorTest, should_success_when_calling_set_coll_offload_slave_streams_with_valid_params)
 {
-    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string &)).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&CommunicatorImpl::SetCollOffloadSlaveStreams).stubs().will(returnValue(HCCL_SUCCESS));
     CommParams commParams;
     auto comm = new HcclCommunicator(commParams);
     comm->Init("ranktable.json");
     CollOpParams opParams;
-    std::vector<void *> stubStreams;
+    std::vector<void*> stubStreams;
     std::string opTag = "test";
     auto res = comm->SetCollOffloadSlaveStreams(opTag, stubStreams);
     delete comm;
@@ -159,7 +171,10 @@ TEST_F(HcclCommunicatorTest, should_success_when_calling_set_coll_offload_slave_
 
 TEST_F(HcclCommunicatorTest, should_success_when_calling_set_coll_offload_scratch_buf_with_valid_params)
 {
-    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string &)).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&CommunicatorImpl::SetCollOffloadScratchBuf).stubs().will(returnValue(HCCL_SUCCESS));
     CommParams commParams;
     auto comm = new HcclCommunicator(commParams);
@@ -173,7 +188,10 @@ TEST_F(HcclCommunicatorTest, should_success_when_calling_set_coll_offload_scratc
 
 TEST_F(HcclCommunicatorTest, should_success_when_calling_colloffloadop_with_valid_params)
 {
-    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string &)).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&CommunicatorImpl::LoadOffloadCollOp).stubs().will(returnValue(HCCL_SUCCESS));
     CommParams commParams;
     auto comm = new HcclCommunicator(commParams);
@@ -187,8 +205,13 @@ TEST_F(HcclCommunicatorTest, should_success_when_calling_colloffloadop_with_vali
 
 TEST_F(HcclCommunicatorTest, should_return_success_when_calling_communicator_create_sub_group)
 {
-    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string &)).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(static_cast<HcclResult (CommunicatorImpl::*)(const CommParams &subCommParams, const std::vector<u32> &rankIds, CommunicatorImpl *subCommImpl, HcclCommConfig &subConfig)>(&CommunicatorImpl::CreateSubComm))
+    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(static_cast<HcclResult (CommunicatorImpl::*)(
+                   const CommParams& subCommParams, const std::vector<u32>& rankIds, CommunicatorImpl* subCommImpl,
+                   HcclCommConfig& subConfig)>(&CommunicatorImpl::CreateSubComm))
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
@@ -209,8 +232,13 @@ TEST_F(HcclCommunicatorTest, should_return_success_when_calling_communicator_cre
 
 TEST_F(HcclCommunicatorTest, should_return_success_when_calling_communicator_create_sub_group_1)
 {
-    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string &)).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(static_cast<HcclResult (CommunicatorImpl::*)(const CommParams &subCommParams, const std::vector<u32> &rankIds, CommunicatorImpl *subCommImpl)>(&CommunicatorImpl::CreateSubComm))
+    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(static_cast<HcclResult (CommunicatorImpl::*)(
+                   const CommParams& subCommParams, const std::vector<u32>& rankIds, CommunicatorImpl* subCommImpl)>(
+                   &CommunicatorImpl::CreateSubComm))
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
@@ -232,17 +260,13 @@ TEST_F(HcclCommunicatorTest, alloc_comm_resource_test)
 {
     CommParams params;
     HcclCommunicator hcclCommunicator(params);
-    void *commContext = nullptr;
-    MOCKER_CPP(&CommunicatorImpl::AllocCommResource)
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(HCCL_SUCCESS));
+    void* commContext = nullptr;
+    MOCKER_CPP(&CommunicatorImpl::AllocCommResource).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
     Mc2Tiling tiling;
     HcclResult ret = hcclCommunicator.AllocCommResource(&tiling, &commContext);
     EXPECT_EQ(HCCL_SUCCESS, ret);
-
 }
- 
+
 TEST_F(HcclCommunicatorTest, should_return_success_when_calling_communicator_suspend)
 {
     MOCKER_CPP(&CommunicatorImpl::Suspend).stubs().will(returnValue(HCCL_SUCCESS));
@@ -266,7 +290,7 @@ TEST_F(HcclCommunicatorTest, should_return_success_when_calling_communicator_res
     HcclCommunicator comm(params);
     EXPECT_EQ(HCCL_SUCCESS, comm.Resume());
 }
- 
+
 TEST_F(HcclCommunicatorTest, should_return_fail_when_calling_communicator_suspend)
 {
     MOCKER_CPP(&CommunicatorImpl::Suspend).stubs().will(returnValue(HCCL_E_INTERNAL));
@@ -274,7 +298,7 @@ TEST_F(HcclCommunicatorTest, should_return_fail_when_calling_communicator_suspen
     HcclCommunicator comm(params);
     EXPECT_EQ(HCCL_E_INTERNAL, comm.Suspend());
 }
- 
+
 TEST_F(HcclCommunicatorTest, should_return_fail_when_calling_communicator_resume)
 {
     MOCKER_CPP(&CommunicatorImpl::Resume).stubs().will(returnValue(HCCL_E_INTERNAL));
@@ -290,7 +314,9 @@ TEST_F(HcclCommunicatorTest, should_get_rank_size_when_calling_communicator_get_
     HcclCommConfig config;
     HcclCommConfigInit(&config);
     HcclCommunicator comm(params, &config);
-    MOCKER_CPP(static_cast<HcclResult (CommunicatorImpl::*)(const CommParams &, const std::string &, const HcclCommConfig &)>(&CommunicatorImpl::Init))
+    MOCKER_CPP(
+        static_cast<HcclResult (CommunicatorImpl::*)(const CommParams&, const std::string&, const HcclCommConfig&)>(
+            &CommunicatorImpl::Init))
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
@@ -342,18 +368,9 @@ TEST_F(HcclCommunicatorTest, should_return_true)
 TEST_F(HcclCommunicatorTest, CollOperator_CollOpToString)
 {
     CollOperator collOp;
-    vector<OpType> optypes = {
-        OpType::REDUCESCATTER,
-        OpType::ALLREDUCE,
-        OpType::ALLGATHER,
-        OpType::SCATTER,
-        OpType::ALLTOALL,
-        OpType::ALLTOALLV,
-        OpType::ALLTOALLVC,
-        OpType::SEND,
-        OpType::RECV,
-        OpType::REDUCE
-    };
+    vector<OpType> optypes
+        = {OpType::REDUCESCATTER, OpType::ALLREDUCE,  OpType::ALLGATHER, OpType::SCATTER, OpType::ALLTOALL,
+           OpType::ALLTOALLV,     OpType::ALLTOALLVC, OpType::SEND,      OpType::RECV,    OpType::REDUCE};
     for (auto optype : optypes) {
         collOp.opType = optype;
         std::cout << CollOpToString(collOp);
@@ -380,7 +397,7 @@ TEST_F(HcclCommunicatorTest, get_snap_shot_dynamic_buf_should_success)
 
     comm.pimpl->collService = new CollServiceDefaultImpl(comm.pimpl.get());
 
-    BinaryStream bs {};
+    BinaryStream bs{};
     void* buf = &bs;
     EXPECT_EQ(comm.GetSnapShotDynamicBuf(buf), HcclResult::HCCL_SUCCESS);
     delete comm.pimpl->collService;
@@ -393,13 +410,14 @@ TEST_F(HcclCommunicatorTest, recover_comm_should_success)
     HcclCommConfigInit(&config);
     HcclCommunicator comm(params, &config);
 
-    MOCKER_CPP(static_cast<HcclResult (CommunicatorImpl::*)(SnapShotComm &, u32, const char *)>(&CommunicatorImpl::RecoverComm))
+    MOCKER_CPP(
+        static_cast<HcclResult (CommunicatorImpl::*)(SnapShotComm&, u32, const char*)>(&CommunicatorImpl::RecoverComm))
         .stubs()
         .with(mockcpp::any(), mockcpp::any())
         .will(returnValue(HcclResult::HCCL_SUCCESS));
-    SnapShotComm snapShotComm {};
+    SnapShotComm snapShotComm{};
     void* ptr = &snapShotComm;
-    const char * filePath = "test";
+    const char* filePath = "test";
     EXPECT_EQ(comm.RecoverComm(ptr, 0, filePath), HcclResult::HCCL_SUCCESS);
 }
 
@@ -414,7 +432,7 @@ TEST_F(HcclCommunicatorTest, recover_sub_comm_should_success)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HcclResult::HCCL_SUCCESS));
-    SnapShotSubComm snapShotSubComm {};
+    SnapShotSubComm snapShotSubComm{};
     void* ptr = &snapShotSubComm;
     std::shared_ptr<HcclCommunicator> subCommPtr;
     EXPECT_EQ(comm.RecoverSubComm(ptr, subCommPtr, 0), HcclResult::HCCL_SUCCESS);
@@ -432,7 +450,9 @@ TEST_F(HcclCommunicatorTest, get_static_binary_info_should_success)
 
 TEST_F(HcclCommunicatorTest, should_success_when_IsUsingCcu)
 {
-    MOCKER_CPP(static_cast<HcclResult (CommunicatorImpl::*)(const CommParams &, const std::string &, const HcclCommConfig &)>(&CommunicatorImpl::Init))
+    MOCKER_CPP(
+        static_cast<HcclResult (CommunicatorImpl::*)(const CommParams&, const std::string&, const HcclCommConfig&)>(
+            &CommunicatorImpl::Init))
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
@@ -443,7 +463,7 @@ TEST_F(HcclCommunicatorTest, should_success_when_IsUsingCcu)
     MOCKER_CPP(&HccpHdcManager::Init).stubs().with(mockcpp::any());
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
- 
+
     GenRankTableFile1Ser8Dev();
     CommParams commParams;
     auto comm = std::make_unique<HcclCommunicator>(commParams);
@@ -458,29 +478,29 @@ TEST_F(HcclCommunicatorTest, should_success_when_IsUsingCcu)
 
 TEST_F(HcclCommunicatorTest, Ut_GetLocalCclBuffer_When_Normal_Expect_OK)
 {
-    void *bufAddr = reinterpret_cast<void *>(0x12345678);
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(bufAddr));
+    void* bufAddr = reinterpret_cast<void*>(0x12345678);
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(bufAddr));
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType(DevType::DEV_TYPE_950)));
- 
+
     shared_ptr<DevBuffer> cclBuf = std::make_shared<DevBuffer>(10);
     GenRankTableFile1Ser8Dev();
     CommParams commParams;
     auto comm = std::make_unique<HcclCommunicator>(commParams);
     auto res = comm->Init("ranktable.json");
     comm->pimpl->inCclBuffer = std::make_shared<DevBuffer>(10);
-    void *addr = nullptr;
+    void* addr = nullptr;
     uint64_t size = 0;
     auto res1 = comm->GetLocalCclBuffer(&addr, &size);
- 
+
     EXPECT_EQ(10, size);
     EXPECT_NE(nullptr, addr);
     EXPECT_EQ(HCCL_SUCCESS, res1);
 }
- 
+
 TEST_F(HcclCommunicatorTest, Ut_GetDevMemWorkSpace_When_Tag_Fill_Expect_OK)
 {
-    void *bufAddr = reinterpret_cast<void *>(0x12345678);
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(bufAddr));
+    void* bufAddr = reinterpret_cast<void*>(0x12345678);
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(bufAddr));
     GenRankTableFile1Ser8Dev();
     CommParams commParams;
     auto comm = std::make_unique<HcclCommunicator>(commParams);
@@ -488,7 +508,7 @@ TEST_F(HcclCommunicatorTest, Ut_GetDevMemWorkSpace_When_Tag_Fill_Expect_OK)
 
     std::string memTag = "";
     uint64_t size = 100;
-    void *addr = nullptr;
+    void* addr = nullptr;
     bool newCreated = false;
     auto res1 = comm->GetDevMemWorkSpace(memTag, &size, &addr, &newCreated);
     EXPECT_EQ(100, size);
@@ -499,8 +519,8 @@ TEST_F(HcclCommunicatorTest, Ut_GetDevMemWorkSpace_When_Tag_Fill_Expect_OK)
 
 TEST_F(HcclCommunicatorTest, Ut_GetDevMemWorkSpace_When_Tag_Empty_Expect_OK)
 {
-    void *bufAddr = reinterpret_cast<void *>(0x12345678);
-    MOCKER(HrtMalloc).stubs().with(mockcpp::any(),mockcpp::any()).will(returnValue(bufAddr));
+    void* bufAddr = reinterpret_cast<void*>(0x12345678);
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(bufAddr));
     GenRankTableFile1Ser8Dev();
     CommParams commParams;
     auto comm = std::make_unique<HcclCommunicator>(commParams);
@@ -508,7 +528,7 @@ TEST_F(HcclCommunicatorTest, Ut_GetDevMemWorkSpace_When_Tag_Empty_Expect_OK)
 
     std::string memTag = "";
     uint64_t size = 100;
-    void *addr = nullptr;
+    void* addr = nullptr;
     auto res1 = comm->GetDevMemWorkSpace(memTag, &size, &addr, nullptr);
     EXPECT_EQ(100, size);
     EXPECT_NE(nullptr, addr);
@@ -523,13 +543,16 @@ TEST_F(HcclCommunicatorTest, Ut_GetDevMemWorkSpace_When_Tag_Empty_Expect_OK)
 // 测试 GetStreamId - 正常情况
 TEST_F(HcclCommunicatorTest, Ut_GetStreamId_When_Normal_Expect_ReturnSuccess)
 {
-    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string &)).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&CommunicatorImpl::GetDpuStreamId).stubs().will(returnValue(12345U));
-    
+
     CommParams commParams;
     auto comm = std::make_unique<HcclCommunicator>(commParams);
     comm->Init("ranktable.json");
-    
+
     u32 streamId = 0;
     auto res = comm->GetStreamId(streamId);
     EXPECT_EQ(HCCL_SUCCESS, res);
@@ -539,18 +562,21 @@ TEST_F(HcclCommunicatorTest, Ut_GetStreamId_When_Normal_Expect_ReturnSuccess)
 // 测试 GetStreamId - 多次调用
 TEST_F(HcclCommunicatorTest, Ut_GetStreamId_When_MultipleCalls_Expect_ReturnSameValue)
 {
-    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string &)).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&CommunicatorImpl::GetDpuStreamId).stubs().will(returnValue(54321U));
-    
+
     CommParams commParams;
     auto comm = std::make_unique<HcclCommunicator>(commParams);
     comm->Init("ranktable.json");
-    
+
     u32 streamId1 = 0;
     u32 streamId2 = 0;
     comm->GetStreamId(streamId1);
     comm->GetStreamId(streamId2);
-    
+
     EXPECT_EQ(54321U, streamId1);
     EXPECT_EQ(54321U, streamId2);
 }
@@ -558,13 +584,16 @@ TEST_F(HcclCommunicatorTest, Ut_GetStreamId_When_MultipleCalls_Expect_ReturnSame
 // 测试 GetStreamId - 流 ID 为 0
 TEST_F(HcclCommunicatorTest, Ut_GetStreamId_When_StreamIdZero_Expect_ReturnSuccess)
 {
-    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string &)).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclCommunicator::Init, HcclResult(HcclCommunicator::*)(const std::string&))
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&CommunicatorImpl::GetDpuStreamId).stubs().will(returnValue(0U));
-    
+
     CommParams commParams;
     auto comm = std::make_unique<HcclCommunicator>(commParams);
     comm->Init("ranktable.json");
-    
+
     u32 streamId = 0;
     auto res = comm->GetStreamId(streamId);
     EXPECT_EQ(HCCL_SUCCESS, res);

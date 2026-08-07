@@ -53,10 +53,10 @@ enum class CheckerStatus : uint8_t { SUCCESS, FAILED, DISABLE, NOT_EXECUTED };
 using CheckerResult = std::array<CheckerStatus, 2>;
 static constexpr size_t OLD_CHECKER_RESULT = 0;
 static constexpr size_t NEW_CHECKER_RESULT = 1;
-static constexpr const char *CHECKER_STATUS_TEXT[] = {"success", "failed", "disable", "not_executed"};
+static constexpr const char* CHECKER_STATUS_TEXT[] = {"success", "failed", "disable", "not_executed"};
 
-static std::vector<std::map<uint32_t, sim::CompositeOpDetail>> TransposeCompositeOpMap(
-    const std::map<uint32_t, std::vector<sim::CompositeOpDetail>>& compositeDataMap)
+static std::vector<std::map<uint32_t, sim::CompositeOpDetail>>
+TransposeCompositeOpMap(const std::map<uint32_t, std::vector<sim::CompositeOpDetail>>& compositeDataMap)
 {
     size_t maxOps = 0;
     for (const auto& entry : compositeDataMap) {
@@ -73,7 +73,7 @@ static std::vector<std::map<uint32_t, sim::CompositeOpDetail>> TransposeComposit
     return opGroups;
 }
 
-json BuildOpParamSummaryJson(const HcclSim::CheckerParam &param);
+json BuildOpParamSummaryJson(const HcclSim::CheckerParam& param);
 
 static bool IsAivOpExpansionMode(uint32_t opExpansionMode)
 {
@@ -81,10 +81,10 @@ static bool IsAivOpExpansionMode(uint32_t opExpansionMode)
     return opExpansionMode == SIM_OP_EXPANSION_MODE_AIV;
 }
 
-static bool HasAivGraphTask(const std::vector<std::vector<sim::OpTaskTab>> &allTasks)
+static bool HasAivGraphTask(const std::vector<std::vector<sim::OpTaskTab>>& allTasks)
 {
-    for (const auto &rankTasks : allTasks) {
-        for (const auto &task : rankTasks) {
+    for (const auto& rankTasks : allTasks) {
+        for (const auto& task : rankTasks) {
             if (task.optaskMeta.size() < sizeof(HcclTaskMetaData)) {
                 continue;
             }
@@ -98,29 +98,27 @@ static bool HasAivGraphTask(const std::vector<std::vector<sim::OpTaskTab>> &allT
     return false;
 }
 
-static bool IsSingleRankWithNoTask(
-    const std::map<uint32_t, sim::CompositeOpDetail> &opGroup)
+static bool IsSingleRankWithNoTask(const std::map<uint32_t, sim::CompositeOpDetail>& opGroup)
 {
     if (opGroup.size() != 1) {
         return false;
     }
 
-    const sim::CompositeOpDetail &op = opGroup.begin()->second;
+    const sim::CompositeOpDetail& op = opGroup.begin()->second;
     return op.detail.rankSize == 1 && op.tasks.empty();
 }
 
-static bool IsSingleRankWithNoTask(
-    const HcclSim::BigGraphCheckV3::BigGraphData &data)
+static bool IsSingleRankWithNoTask(const HcclSim::BigGraphCheckV3::BigGraphData& data)
 {
     if (data.operators.empty()) {
         return false;
     }
 
-    for (const HcclSim::BigGraphCheckV3::OpParam &opParam : data.operators) {
+    for (const HcclSim::BigGraphCheckV3::OpParam& opParam : data.operators) {
         if (opParam.ranks.size() != 1) {
             return false;
         }
-        const HcclSim::BigGraphCheckV3::OperatorRankData &rankData = opParam.ranks.front();
+        const HcclSim::BigGraphCheckV3::OperatorRankData& rankData = opParam.ranks.front();
         if (rankData.op.detail.rankSize != 1 || !rankData.taskMetas.empty()) {
             return false;
         }
@@ -128,17 +126,23 @@ static bool IsSingleRankWithNoTask(
     return true;
 }
 
-static const char* HcclReduceOpToString(HcclReduceOp t) {
+static const char* HcclReduceOpToString(HcclReduceOp t)
+{
     switch (t) {
-        case HCCL_REDUCE_SUM:  return "SUM";
-        case HCCL_REDUCE_PROD: return "PROD";
-        case HCCL_REDUCE_MAX:  return "MAX";
-        case HCCL_REDUCE_MIN:  return "MIN";
-        default: return "Unknown";
+        case HCCL_REDUCE_SUM:
+            return "SUM";
+        case HCCL_REDUCE_PROD:
+            return "PROD";
+        case HCCL_REDUCE_MAX:
+            return "MAX";
+        case HCCL_REDUCE_MIN:
+            return "MIN";
+        default:
+            return "Unknown";
     }
 }
 
-static void AppendApplicableRoleFields(std::ostringstream &os, const HcclSim::CheckerParam &param)
+static void AppendApplicableRoleFields(std::ostringstream& os, const HcclSim::CheckerParam& param)
 {
     switch (param.cmdType) {
         case HCCL_CMD_SEND:
@@ -156,29 +160,29 @@ static void AppendApplicableRoleFields(std::ostringstream &os, const HcclSim::Ch
 }
 
 static HcclResult LoadCheckerDataBase(
-    std::vector<sim::CcuChannelTab>& channels,
-    std::vector<sim::CcuInstrResTab>& instrRes,
-    std::vector<sim::SyncRecordTab>& syncRecords,
-    uint32_t& syncIterMaxNum)
+    std::vector<sim::CcuChannelTab>& channels, std::vector<sim::CcuInstrResTab>& instrRes,
+    std::vector<sim::SyncRecordTab>& syncRecords, uint32_t& syncIterMaxNum)
 {
     HcclResult ret = g_loader.GetCcuChannelInfo(channels);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("{} Failed to load CCU channel information",
+        HCCL_VM_ERROR(
+            "{} Failed to load CCU channel information",
             HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR));
         return ret;
     }
 
     ret = g_loader.GetInstrResInfo(instrRes);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("{} Failed to load CCU instruction resource information",
+        HCCL_VM_ERROR(
+            "{} Failed to load CCU instruction resource information",
             HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR));
         return ret;
     }
 
     ret = g_loader.GetSyncInfo(syncRecords);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("{} Failed to load sync records",
-            HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR));
+        HCCL_VM_ERROR(
+            "{} Failed to load sync records", HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR));
         return ret;
     }
 
@@ -192,15 +196,14 @@ static HcclResult LoadCheckerDataBase(
     });
 
     syncIterMaxNum = syncRecords.back().syncIter;
-    HCCL_VM_INFO("Checker database loaded, channelCount={}, instrResCount={}, syncRecordCount={}, "
+    HCCL_VM_INFO(
+        "Checker database loaded, channelCount={}, instrResCount={}, syncRecordCount={}, "
         "syncIterMaxNum={}",
-                 channels.size(), instrRes.size(), syncRecords.size(), syncIterMaxNum);
+        channels.size(), instrRes.size(), syncRecords.size(), syncIterMaxNum);
     return HcclResult::HCCL_SUCCESS;
 }
 
-static HcclResult DispatchCheckByCmdType(
-    HcclSim::AllRankTaskQueues& taskQueues,
-    HcclSim::CheckerParam& param)
+static HcclResult DispatchCheckByCmdType(HcclSim::AllRankTaskQueues& taskQueues, HcclSim::CheckerParam& param)
 {
     HcclCMDType cmdType = param.cmdType;
     switch (cmdType) {
@@ -211,16 +214,14 @@ static HcclResult DispatchCheckByCmdType(
         case HcclCMDType::HCCL_CMD_REDUCE_SCATTER:
             return CheckReduceScatter(taskQueues, param.rankSize, param.dataType, param.dataCount, param.reduceType);
         case HcclCMDType::HCCL_CMD_SEND:
-            return CheckSend(taskQueues, param.rankSize, param.dataType, param.dataCount, param.srcRank,
-                             param.dstRank);
+            return CheckSend(taskQueues, param.rankSize, param.dataType, param.dataCount, param.srcRank, param.dstRank);
         case HcclCMDType::HCCL_CMD_RECEIVE:
-            return CheckRecv(taskQueues, param.rankSize, param.dataType, param.dataCount, param.srcRank,
-                             param.dstRank);
+            return CheckRecv(taskQueues, param.rankSize, param.dataType, param.dataCount, param.srcRank, param.dstRank);
         case HcclCMDType::HCCL_CMD_BROADCAST:
             return CheckBroadcast(taskQueues, param.rankSize, param.dataType, param.dataCount, param.root);
         case HcclCMDType::HCCL_CMD_REDUCE:
-            return CheckReduce(taskQueues, param.rankSize, param.dataType, param.dataCount, param.reduceType,
-                               param.root);
+            return CheckReduce(
+                taskQueues, param.rankSize, param.dataType, param.dataCount, param.reduceType, param.root);
         case HcclCMDType::HCCL_CMD_SCATTER:
             return CheckScatter(taskQueues, param.rankSize, param.dataType, param.dataCount, param.root);
         case HcclCMDType::HCCL_CMD_BATCH_SEND_RECV:
@@ -230,46 +231,50 @@ static HcclResult DispatchCheckByCmdType(
         case HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V:
             return CheckReduceScatterV(taskQueues, param.rankSize, param.reduceType, param.vDataDes);
         case HcclCMDType::HCCL_CMD_ALLTOALL:
-            return CheckAll2All(taskQueues, param.rankSize,
-                                static_cast<HcclDataType>(param.all2AllDataDes.sendType), param.all2AllDataDes.sendCount);
+            return CheckAll2All(
+                taskQueues, param.rankSize, static_cast<HcclDataType>(param.all2AllDataDes.sendType),
+                param.all2AllDataDes.sendCount);
         case HcclCMDType::HCCL_CMD_ALLTOALLVC:
-            return CheckAll2AllVC(taskQueues, param.rankSize,
-                                  static_cast<HcclDataType>(param.all2AllDataDes.sendType), param.all2AllDataDes.sendCountMatrix);
+            return CheckAll2AllVC(
+                taskQueues, param.rankSize, static_cast<HcclDataType>(param.all2AllDataDes.sendType),
+                param.all2AllDataDes.sendCountMatrix);
         case HcclCMDType::HCCL_CMD_ALLTOALLV:
             HCCL_VM_WARN("Checker does not support AllToAllV and will use the AllToAllVC validation path");
-            return CheckAll2AllVC(taskQueues, param.rankSize,
-                                  static_cast<HcclDataType>(param.all2AllDataDes.sendType), param.all2AllDataDes.sendCountMatrix);
+            return CheckAll2AllVC(
+                taskQueues, param.rankSize, static_cast<HcclDataType>(param.all2AllDataDes.sendType),
+                param.all2AllDataDes.sendCountMatrix);
         default:
-            HCCL_VM_ERROR("{} Unsupported collective type, collectiveTypeCode={}",
+            HCCL_VM_ERROR(
+                "{} Unsupported collective type, collectiveTypeCode={}",
                 HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), static_cast<u32>(cmdType));
             return HcclResult::HCCL_E_NOT_SUPPORT;
     }
 }
 
 static HcclResult LoadOpDataForOneRank(
-    HcclSim::StorageManager& storage,
-    std::vector<sim::CcuChannelTab>& channels,
-    std::vector<sim::CcuInstrResTab>& instrRes,
-    uint32_t rankId,
-    sim::CompositeOpDetail& op)
+    HcclSim::StorageManager& storage, std::vector<sim::CcuChannelTab>& channels,
+    std::vector<sim::CcuInstrResTab>& instrRes, uint32_t rankId, sim::CompositeOpDetail& op)
 {
     HcclResult ret = storage.LoadHcclVmSynthesisData(rankId, op.memInfo, channels);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("{} Failed to load synthesized memory information for this rank, rankId={}",
-                      HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), rankId);
+        HCCL_VM_ERROR(
+            "{} Failed to load synthesized memory information for this rank, rankId={}",
+            HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), rankId);
         return ret;
     }
 
     ret = storage.LoadHcclVmInstrData(instrRes);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("{} Failed to load instruction data for this rank, rankId={}",
-                      HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), rankId);
+        HCCL_VM_ERROR(
+            "{} Failed to load instruction data for this rank, rankId={}",
+            HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), rankId);
         return ret;
     }
 
     if (op.detail.opDetail.size() < sizeof(::OpDetails)) {
-        HCCL_VM_ERROR("{} Op detail payload is too small to parse, rankId={}",
-                      HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), rankId);
+        HCCL_VM_ERROR(
+            "{} Op detail payload is too small to parse, rankId={}",
+            HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), rankId);
         return HcclResult::HCCL_E_PARA;
     }
 
@@ -277,27 +282,25 @@ static HcclResult LoadOpDataForOneRank(
     std::memcpy(&opDetails, op.detail.opDetail.data(), sizeof(::OpDetails));
     ret = storage.Trans2CheckerParam(op.detail, opDetails);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("{} Failed to convert this rank into checker input parameters, rankId={}",
-                      HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), rankId);
+        HCCL_VM_ERROR(
+            "{} Failed to convert this rank into checker input parameters, rankId={}",
+            HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), rankId);
         return ret;
     }
     return HcclResult::HCCL_SUCCESS;
 }
 
 static HcclResult ProcessOneOpGroup(
-    HcclSim::StorageManager &storage,
-    std::vector<sim::CcuChannelTab> &channels,
-    std::vector<sim::CcuInstrResTab> &instrRes,
-    uint32_t opIdx,
-    std::map<uint32_t, sim::CompositeOpDetail> &opGroup,
-    CheckerResult &checkerResult)
+    HcclSim::StorageManager& storage, std::vector<sim::CcuChannelTab>& channels,
+    std::vector<sim::CcuInstrResTab>& instrRes, uint32_t opIdx, std::map<uint32_t, sim::CompositeOpDetail>& opGroup,
+    CheckerResult& checkerResult)
 {
     HcclSim::ValidationIssueRecorder::GetInstance().Reset();
     HcclSim::AllRankParamRecorder::Global()->Reset();
     HcclSim::TaskGraphGeneratorV3::AllRankParamRecorder::Global()->Reset();
     HcclSim::g_ccuGraphTaskOri2New.clear();
-    HcclSim::DumpManager &dumpManager = HcclSim::DumpManager::GetInstance();
-    HcclSim::SettingManager &settingManager = HcclSim::SettingManager::GetInstance();
+    HcclSim::DumpManager& dumpManager = HcclSim::DumpManager::GetInstance();
+    HcclSim::SettingManager& settingManager = HcclSim::SettingManager::GetInstance();
     bool enableNewChecker = settingManager.IsNewCheckerEnabled();
     bool enableOldChecker = settingManager.IsOldCheckerEnabled();
     bool usesAivExpansionMode = false;
@@ -307,8 +310,10 @@ static HcclResult ProcessOneOpGroup(
     if (IsSingleRankWithNoTask(opGroup)) {
         checkerResult[OLD_CHECKER_RESULT] = enableOldChecker ? CheckerStatus::SUCCESS : CheckerStatus::DISABLE;
         checkerResult[NEW_CHECKER_RESULT] = enableNewChecker ? CheckerStatus::SUCCESS : CheckerStatus::DISABLE;
-        HCCL_VM_WARN("Single-op check is skipped and treated as success because this is a single-rank "
-            "operation with no tasks, opIndex={}", opIdx);
+        HCCL_VM_WARN(
+            "Single-op check is skipped and treated as success because this is a single-rank "
+            "operation with no tasks, opIndex={}",
+            opIdx);
         return HcclResult::HCCL_SUCCESS;
     }
 
@@ -323,24 +328,26 @@ static HcclResult ProcessOneOpGroup(
         allTasks.push_back(op.tasks);
         HcclResult ret = LoadOpDataForOneRank(storage, channels, instrRes, rankId, op);
         if (ret != HcclResult::HCCL_SUCCESS) {
-            HCCL_VM_ERROR("{} Failed to load one rank from this op group, opIndex={}, rankId={}",
+            HCCL_VM_ERROR(
+                "{} Failed to load one rank from this op group, opIndex={}, rankId={}",
                 HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), opIdx, rankId);
             return ret;
         }
     }
 
     if (!enableNewChecker && !enableOldChecker) {
-        HCCL_VM_ERROR("{} This op is skipped because both the new checker and the old checker are disabled, "
+        HCCL_VM_ERROR(
+            "{} This op is skipped because both the new checker and the old checker are disabled, "
             "opIndex={}, newCheckerEnabled={}, oldCheckerEnabled={}",
-            HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::SETTING_WARNING), opIdx, enableNewChecker,
-            enableOldChecker);
+            HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::SETTING_WARNING), opIdx, enableNewChecker, enableOldChecker);
         return HcclResult::HCCL_SUCCESS;
     }
 
     HcclResult ret = storage.FinalizeOpGroup();
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("{} Failed to finalize operator parameters for this op group, opIndex={}",
-                      HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), opIdx);
+        HCCL_VM_ERROR(
+            "{} Failed to finalize operator parameters for this op group, opIndex={}",
+            HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), opIdx);
         return ret;
     }
 
@@ -353,22 +360,26 @@ static HcclResult ProcessOneOpGroup(
 
     ret = storage.LoadHcclVmTaskMetaData(allTasks);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("{} Failed to load V3 task metadata for this op group",
-                      HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR));
+        HCCL_VM_ERROR(
+            "{} Failed to load V3 task metadata for this op group",
+            HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR));
         return ret;
     }
     const bool hasAivGraphTask = HasAivGraphTask(allTasks);
     const bool isAivOp = usesAivExpansionMode || hasAivGraphTask;
     if (isAivOp) {
         if (!enableNewChecker) {
-            HCCL_VM_ERROR("{} This AIV op requires the V3 checker, but V3 is disabled by configuration, "
+            HCCL_VM_ERROR(
+                "{} This AIV op requires the V3 checker, but V3 is disabled by configuration, "
                 "opIndex={}, action=abort, newCheckerEnabled={}",
                 HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::SETTING_WARNING), opIdx, enableNewChecker);
             return HcclResult::HCCL_E_NOT_SUPPORT;
         }
         if (enableOldChecker) {
-            HCCL_VM_WARN("AIV op detected, the old checker is skipped and only CheckerV3 will run, "
-                "opIndex={}, oldCheckerEnabled={}", opIdx, enableOldChecker);
+            HCCL_VM_WARN(
+                "AIV op detected, the old checker is skipped and only CheckerV3 will run, "
+                "opIndex={}, oldCheckerEnabled={}",
+                opIdx, enableOldChecker);
             enableOldChecker = false;
             checkerResult[OLD_CHECKER_RESULT] = CheckerStatus::DISABLE;
         }
@@ -385,8 +396,7 @@ static HcclResult ProcessOneOpGroup(
                 << ", elementCount=" << checkerParamBrief.dataCount
                 << ", reduceType=" << HcclReduceOpToString(checkerParamBrief.reduceType);
         AppendApplicableRoleFields(summary, checkerParamBrief);
-        summary << ", opGroupSize=" << opGroup.size()
-                << ", usesAivExpansionMode=" << usesAivExpansionMode
+        summary << ", opGroupSize=" << opGroup.size() << ", usesAivExpansionMode=" << usesAivExpansionMode
                 << ", hasAivGraphTask=" << hasAivGraphTask;
         HCCL_VM_INFO("{}", summary.str());
     }
@@ -397,8 +407,8 @@ static HcclResult ProcessOneOpGroup(
         newCheckerRet = HcclSim::GenAndCheckGraphV3();
         HCCL_VM_INFO("----------[CheckerV3 Finished]----------");
         HCCL_VM_INFO("CheckerV3 finished for this op, opIndex={}", opIdx);
-        checkerResult[NEW_CHECKER_RESULT] = newCheckerRet == HcclResult::HCCL_SUCCESS ?
-            CheckerStatus::SUCCESS : CheckerStatus::FAILED;
+        checkerResult[NEW_CHECKER_RESULT]
+            = newCheckerRet == HcclResult::HCCL_SUCCESS ? CheckerStatus::SUCCESS : CheckerStatus::FAILED;
     } else {
         HCCL_VM_INFO("CheckerV3 is disabled by configuration");
     }
@@ -406,20 +416,20 @@ static HcclResult ProcessOneOpGroup(
     HcclResult oldCheckerRet = HcclResult::HCCL_SUCCESS;
     if (enableOldChecker) {
         HCCL_VM_INFO("----------[Start Old Checker]----------");
-        HCCL_VM_INFO("Start running the old checker, opIndex={}, dataId={}", opIdx,
-            storage.GetDataId());
+        HCCL_VM_INFO("Start running the old checker, opIndex={}, dataId={}", opIdx, storage.GetDataId());
         HcclSim::AllRankTaskQueues taskQueues;
         const HcclResult convertRet = HcclSim::ConvertTaskQueue(taskQueues);
         if (convertRet != HcclResult::HCCL_SUCCESS) {
-            HCCL_VM_ERROR("{} Failed to convert tasks, opIndex={}",
+            HCCL_VM_ERROR(
+                "{} Failed to convert tasks, opIndex={}",
                 HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), opIdx);
             oldCheckerRet = convertRet;
         } else {
             auto checkerParam = storage.GetCheckerParam();
             oldCheckerRet = DispatchCheckByCmdType(taskQueues, checkerParam);
         }
-        checkerResult[OLD_CHECKER_RESULT] = oldCheckerRet == HcclResult::HCCL_SUCCESS ?
-            CheckerStatus::SUCCESS : CheckerStatus::FAILED;
+        checkerResult[OLD_CHECKER_RESULT]
+            = oldCheckerRet == HcclResult::HCCL_SUCCESS ? CheckerStatus::SUCCESS : CheckerStatus::FAILED;
         HCCL_VM_INFO("----------[Old Checker Finished]----------");
         HCCL_VM_INFO("Old checker finished for this op, opIndex={}", opIdx);
     } else {
@@ -427,8 +437,10 @@ static HcclResult ProcessOneOpGroup(
     }
 
     if (!isAivOp && enableNewChecker && enableOldChecker && newCheckerRet != oldCheckerRet) {
-        HCCL_VM_WARN("CheckerV3 result differs from old checker result, opIndex={}, checkerV3Ret={}, "
-            "oldCheckerRet={}", opIdx, static_cast<u32>(newCheckerRet), static_cast<u32>(oldCheckerRet));
+        HCCL_VM_WARN(
+            "CheckerV3 result differs from old checker result, opIndex={}, checkerV3Ret={}, "
+            "oldCheckerRet={}",
+            opIdx, static_cast<u32>(newCheckerRet), static_cast<u32>(oldCheckerRet));
     }
     if (enableNewChecker && newCheckerRet != HcclResult::HCCL_SUCCESS) {
         return newCheckerRet;
@@ -436,8 +448,8 @@ static HcclResult ProcessOneOpGroup(
     return oldCheckerRet;
 }
 
-static HcclResult ProcessOneBigGraphSyncIter(loader::Loader &loader, uint32_t syncIter,
-    HcclSim::BigGraphCheckV3::BigGraphCheckerV3 &bigGraphChecker)
+static HcclResult ProcessOneBigGraphSyncIter(
+    loader::Loader& loader, uint32_t syncIter, HcclSim::BigGraphCheckV3::BigGraphCheckerV3& bigGraphChecker)
 {
     HCCL_VM_INFO("----------[Start BigGraphCheckerV3]----------");
     HCCL_VM_INFO("Start building the big graph for one sync iteration, syncIter={}", syncIter);
@@ -447,21 +459,25 @@ static HcclResult ProcessOneBigGraphSyncIter(loader::Loader &loader, uint32_t sy
     HcclSim::TaskGraphGeneratorV3::AllRankParamRecorder::Global()->Reset();
     HcclResult ret = bigGraphChecker.LoadOpData(loader, syncIter);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("{} Failed to load multi-operator data for big graph, syncIter={}, ret={}",
+        HCCL_VM_ERROR(
+            "{} Failed to load multi-operator data for big graph, syncIter={}, ret={}",
             HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), syncIter,
             static_cast<uint32_t>(ret));
         return ret;
     }
 
     if (IsSingleRankWithNoTask(bigGraphChecker.GetData())) {
-        HCCL_VM_WARN("Big-graph check is skipped and treated as success because this sync iteration "
-            "contains only single-rank operations with no tasks, syncIter={}", syncIter);
+        HCCL_VM_WARN(
+            "Big-graph check is skipped and treated as success because this sync iteration "
+            "contains only single-rank operations with no tasks, syncIter={}",
+            syncIter);
         return HcclResult::HCCL_SUCCESS;
     }
 
     ret = bigGraphChecker.TranslateTask();
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("{} Failed to translate multi-operator tasks for big graph, syncIter={}, ret={}",
+        HCCL_VM_ERROR(
+            "{} Failed to translate multi-operator tasks for big graph, syncIter={}, ret={}",
             HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), syncIter,
             static_cast<uint32_t>(ret));
         return ret;
@@ -469,7 +485,8 @@ static HcclResult ProcessOneBigGraphSyncIter(loader::Loader &loader, uint32_t sy
 
     ret = bigGraphChecker.GenerateBigGraph();
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("{} Failed to generate big graph, syncIter={}, ret={}",
+        HCCL_VM_ERROR(
+            "{} Failed to generate big graph, syncIter={}, ret={}",
             HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), syncIter,
             static_cast<uint32_t>(ret));
         return ret;
@@ -477,22 +494,25 @@ static HcclResult ProcessOneBigGraphSyncIter(loader::Loader &loader, uint32_t sy
 
     ret = bigGraphChecker.SyncCheck();
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("{} Big graph sync-conflict check failed, syncIter={}, ret={}",
+        HCCL_VM_ERROR(
+            "{} Big graph sync-conflict check failed, syncIter={}, ret={}",
             HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::CHECKER_RUNTIME_ERROR), syncIter,
             static_cast<uint32_t>(ret));
         return ret;
     }
 
-    const auto *graph = bigGraphChecker.GetGraph();
+    const auto* graph = bigGraphChecker.GetGraph();
     const size_t nodeCount = graph == nullptr ? 0 : graph->GetNodes().size();
     const size_t rankCount = graph == nullptr ? 0 : graph->GetTaskQueues().size();
-    HCCL_VM_INFO("BigGraphCheckerV3 generated graph successfully, syncIter={}, operatorCount={}, "
-        "nodeCount={}, rankCount={}", syncIter, bigGraphChecker.GetOpParams().size(), nodeCount, rankCount);
+    HCCL_VM_INFO(
+        "BigGraphCheckerV3 generated graph successfully, syncIter={}, operatorCount={}, "
+        "nodeCount={}, rankCount={}",
+        syncIter, bigGraphChecker.GetOpParams().size(), nodeCount, rankCount);
     HCCL_VM_INFO("----------[BigGraphCheckerV3 Finished]----------");
     return HcclResult::HCCL_SUCCESS;
 }
 
-json BuildOpParamSummaryJson(const HcclSim::CheckerParam &param)
+json BuildOpParamSummaryJson(const HcclSim::CheckerParam& param)
 {
     json opParamJson = json::object();
     opParamJson["cmd_type"] = static_cast<u32>(param.cmdType);
@@ -500,27 +520,22 @@ json BuildOpParamSummaryJson(const HcclSim::CheckerParam &param)
     opParamJson["data_type"] = static_cast<u32>(param.dataType);
     opParamJson["data_count"] = param.dataCount;
 
-    if (param.cmdType == HcclCMDType::HCCL_CMD_ALLREDUCE ||
-        param.cmdType == HcclCMDType::HCCL_CMD_REDUCE_SCATTER ||
-        param.cmdType == HcclCMDType::HCCL_CMD_REDUCE ||
-        param.cmdType == HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V) {
+    if (param.cmdType == HcclCMDType::HCCL_CMD_ALLREDUCE || param.cmdType == HcclCMDType::HCCL_CMD_REDUCE_SCATTER
+        || param.cmdType == HcclCMDType::HCCL_CMD_REDUCE || param.cmdType == HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V) {
         opParamJson["reduce_type"] = static_cast<u32>(param.reduceType);
     }
 
-    if (param.cmdType == HcclCMDType::HCCL_CMD_SEND ||
-        param.cmdType == HcclCMDType::HCCL_CMD_RECEIVE) {
+    if (param.cmdType == HcclCMDType::HCCL_CMD_SEND || param.cmdType == HcclCMDType::HCCL_CMD_RECEIVE) {
         opParamJson["src_rank"] = param.srcRank;
         opParamJson["dst_rank"] = param.dstRank;
     }
 
-    if (param.cmdType == HcclCMDType::HCCL_CMD_BROADCAST ||
-        param.cmdType == HcclCMDType::HCCL_CMD_REDUCE ||
-        param.cmdType == HcclCMDType::HCCL_CMD_SCATTER) {
+    if (param.cmdType == HcclCMDType::HCCL_CMD_BROADCAST || param.cmdType == HcclCMDType::HCCL_CMD_REDUCE
+        || param.cmdType == HcclCMDType::HCCL_CMD_SCATTER) {
         opParamJson["root"] = param.root;
     }
 
-    if (param.cmdType == HcclCMDType::HCCL_CMD_ALLGATHER_V ||
-        param.cmdType == HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V) {
+    if (param.cmdType == HcclCMDType::HCCL_CMD_ALLGATHER_V || param.cmdType == HcclCMDType::HCCL_CMD_REDUCE_SCATTER_V) {
         json vDataDesJson = json::object();
         vDataDesJson["data_type"] = param.vDataDes.dataType;
         vDataDesJson["rank_count"] = param.vDataDes.count;
@@ -531,9 +546,8 @@ json BuildOpParamSummaryJson(const HcclSim::CheckerParam &param)
         opParamJson["v_data_des"] = std::move(vDataDesJson);
     }
 
-    if (param.cmdType == HcclCMDType::HCCL_CMD_ALLTOALL ||
-        param.cmdType == HcclCMDType::HCCL_CMD_ALLTOALLVC ||
-        param.cmdType == HcclCMDType::HCCL_CMD_ALLTOALLV) {
+    if (param.cmdType == HcclCMDType::HCCL_CMD_ALLTOALL || param.cmdType == HcclCMDType::HCCL_CMD_ALLTOALLVC
+        || param.cmdType == HcclCMDType::HCCL_CMD_ALLTOALLV) {
         json all2AllDataDesJson = json::object();
         all2AllDataDesJson["send_type"] = param.all2AllDataDes.sendType;
         all2AllDataDesJson["recv_type"] = param.all2AllDataDes.recvType;
@@ -547,7 +561,8 @@ json BuildOpParamSummaryJson(const HcclSim::CheckerParam &param)
 }
 
 // --- 业务函数修正 ---
-void RunChecker(const std::string& data_id) {
+void RunChecker(const std::string& data_id)
+{
     std::lock_guard<std::mutex> runLock(g_run_checker_mutex);
     HcclSim::StorageManager& storage = HcclSim::StorageManager::GetInstance();
     storage.Reset();
@@ -556,26 +571,31 @@ void RunChecker(const std::string& data_id) {
     if (settingRefreshRet != HcclResult::HCCL_SUCCESS) {
         HCCL_VM_WARN("Failed to refresh manifest settings, the previous checker settings will be kept");
     }
-    HcclSim::DumpManager &dumpManager = HcclSim::DumpManager::GetInstance();
+    HcclSim::DumpManager& dumpManager = HcclSim::DumpManager::GetInstance();
     dumpManager.Reset();
     HcclResult dumpInitRet = dumpManager.Initialize(data_id);
     if (dumpInitRet != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("{} Failed to initialize the old checker dump manager, old checker output files "
-            "cannot be written, dataId={}", HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::DUMP_FAILED), data_id);
+        HCCL_VM_ERROR(
+            "{} Failed to initialize the old checker dump manager, old checker output files "
+            "cannot be written, dataId={}",
+            HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::DUMP_FAILED), data_id);
         return;
     }
-    HcclSim::DumpV3Manager &dumpV3Manager = HcclSim::DumpV3Manager::GetInstance();
+    HcclSim::DumpV3Manager& dumpV3Manager = HcclSim::DumpV3Manager::GetInstance();
     dumpV3Manager.Reset();
     dumpInitRet = dumpV3Manager.Initialize(data_id);
     if (dumpInitRet != HcclResult::HCCL_SUCCESS) {
-        HCCL_VM_ERROR("{} Failed to initialize the V3 dump manager, checker output files cannot be written, "
-            "dataId={}", HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::DUMP_FAILED), data_id);
+        HCCL_VM_ERROR(
+            "{} Failed to initialize the V3 dump manager, checker output files cannot be written, "
+            "dataId={}",
+            HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::DUMP_FAILED), data_id);
         return;
     }
     HcclSim::DumpRunManifest::GetInstance().Reset(data_id);
     HcclSim::AllRankParamRecorder::Global()->Reset();
     HcclSim::TaskGraphGeneratorV3::AllRankParamRecorder::Global()->Reset();
-    storage.InitCcuInfo(HcclSim::AllRankParamRecorder::Global()->devType_,
+    storage.InitCcuInfo(
+        HcclSim::AllRankParamRecorder::Global()->devType_,
         HcclSim::AllRankParamRecorder::Global()->ccu_resource_base_addr_);
     HcclSim::g_ccuGraphTaskOri2New.clear();
 
@@ -600,26 +620,25 @@ void RunChecker(const std::string& data_id) {
     const bool enableSingleOpChecker = checkerSettings.enableNewChecker || checkerSettings.enableOldChecker;
     std::vector<uint32_t> bigGraphSyncIters;
     bigGraphSyncIters.reserve(syncRecords.size());
-    for (const auto &syncRecord : syncRecords) {
+    for (const auto& syncRecord : syncRecords) {
         if (bigGraphSyncIters.empty() || bigGraphSyncIters.back() != syncRecord.syncIter) {
             bigGraphSyncIters.push_back(syncRecord.syncIter);
         }
     }
-    std::vector<CheckerStatus> multiOpCheckerResults(bigGraphSyncIters.size(),
-        enableBigGraphChecker ? CheckerStatus::NOT_EXECUTED : CheckerStatus::DISABLE);
+    std::vector<CheckerStatus> multiOpCheckerResults(
+        bigGraphSyncIters.size(), enableBigGraphChecker ? CheckerStatus::NOT_EXECUTED : CheckerStatus::DISABLE);
     std::vector<CheckerResult> checkerResults;
     HcclSim::BigGraphCheckV3::BigGraphCheckerV3 bigGraphChecker;
 
     if (enableBigGraphChecker) {
         for (size_t iterIndex = 0; iterIndex < bigGraphSyncIters.size(); ++iterIndex) {
             const uint32_t syncIter = bigGraphSyncIters[iterIndex];
-            const HcclResult bigGraphRet = ProcessOneBigGraphSyncIter(
-                g_loader, syncIter, bigGraphChecker);
-            multiOpCheckerResults[iterIndex] = bigGraphRet == HcclResult::HCCL_SUCCESS ?
-                CheckerStatus::SUCCESS : CheckerStatus::FAILED;
+            const HcclResult bigGraphRet = ProcessOneBigGraphSyncIter(g_loader, syncIter, bigGraphChecker);
+            multiOpCheckerResults[iterIndex]
+                = bigGraphRet == HcclResult::HCCL_SUCCESS ? CheckerStatus::SUCCESS : CheckerStatus::FAILED;
             if (bigGraphRet != HcclResult::HCCL_SUCCESS) {
-                HCCL_VM_ERROR("BigGraphCheckerV3 failed, syncIter={}, ret={}", syncIter,
-                    static_cast<uint32_t>(bigGraphRet));
+                HCCL_VM_ERROR(
+                    "BigGraphCheckerV3 failed, syncIter={}, ret={}", syncIter, static_cast<uint32_t>(bigGraphRet));
             }
         }
     }
@@ -643,26 +662,27 @@ void RunChecker(const std::string& data_id) {
                     HcclSim::DumpRunManifest::GetInstance().SetCheckResult(ret);
                     const HcclResult flushRet = HcclSim::ValidationIssueRecorder::GetInstance().Flush();
                     if (flushRet != HcclResult::HCCL_SUCCESS) {
-                        HCCL_VM_WARN("{} Failed to flush the validation issue dump, dataId={}, opIndex={}, "
-                            "dumpType=validation_issues", HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::DUMP_FAILED),
-                            data_id, currentOpIdx);
+                        HCCL_VM_WARN(
+                            "{} Failed to flush the validation issue dump, dataId={}, opIndex={}, "
+                            "dumpType=validation_issues",
+                            HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::DUMP_FAILED), data_id, currentOpIdx);
                     }
                     const HcclResult manifestRet = HcclSim::DumpRunManifest::GetInstance().Flush();
                     if (manifestRet != HcclResult::HCCL_SUCCESS) {
-                        HCCL_VM_WARN("{} Failed to flush the dump manifest, dataId={}, opIndex={}",
+                        HCCL_VM_WARN(
+                            "{} Failed to flush the dump manifest, dataId={}, opIndex={}",
                             HcclSim::MakeErrorCodeText(HcclSim::ErrorCode::DUMP_FAILED), data_id, currentOpIdx);
                     }
                 }
-                const bool checkerResultFailed =
-                    checkerResult[OLD_CHECKER_RESULT] == CheckerStatus::FAILED ||
-                    checkerResult[NEW_CHECKER_RESULT] == CheckerStatus::FAILED;
+                const bool checkerResultFailed = checkerResult[OLD_CHECKER_RESULT] == CheckerStatus::FAILED
+                                                 || checkerResult[NEW_CHECKER_RESULT] == CheckerStatus::FAILED;
                 if (ret != HcclResult::HCCL_SUCCESS || checkerResultFailed) {
                     HCCL_VM_ERROR("op[{}] Checker failed", currentOpIdx);
                     continue;
                 }
-                const bool checkerResultNotExecuted =
-                    checkerResult[OLD_CHECKER_RESULT] == CheckerStatus::NOT_EXECUTED ||
-                    checkerResult[NEW_CHECKER_RESULT] == CheckerStatus::NOT_EXECUTED;
+                const bool checkerResultNotExecuted
+                    = checkerResult[OLD_CHECKER_RESULT] == CheckerStatus::NOT_EXECUTED
+                      || checkerResult[NEW_CHECKER_RESULT] == CheckerStatus::NOT_EXECUTED;
                 if (checkerResultNotExecuted) {
                     HCCL_VM_INFO("op[{}] Checker not executed", currentOpIdx);
                     continue;
@@ -678,17 +698,15 @@ void RunChecker(const std::string& data_id) {
         HCCL_VM_INFO("Single-op checker result:");
         std::ostringstream header;
         header << "| " << std::left << std::setw(OP_COLUMN_WIDTH) << "op[id]"
-            << " | " << std::setw(CHECKER_COLUMN_WIDTH) << "old checker"
-            << " | " << std::setw(CHECKER_COLUMN_WIDTH) << "new checker" << " |";
+               << " | " << std::setw(CHECKER_COLUMN_WIDTH) << "old checker"
+               << " | " << std::setw(CHECKER_COLUMN_WIDTH) << "new checker" << " |";
         HCCL_VM_INFO("{}", header.str());
         for (size_t opIdx = 0; opIdx < checkerResults.size(); ++opIdx) {
-            const CheckerResult &checkerResult = checkerResults[opIdx];
+            const CheckerResult& checkerResult = checkerResults[opIdx];
             std::ostringstream row;
-            row << "| " << std::left << std::setw(OP_COLUMN_WIDTH)
-                << opIdx
-                << " | " << std::setw(CHECKER_COLUMN_WIDTH)
-                << CHECKER_STATUS_TEXT[static_cast<size_t>(checkerResult[OLD_CHECKER_RESULT])]
-                << " | " << std::setw(CHECKER_COLUMN_WIDTH)
+            row << "| " << std::left << std::setw(OP_COLUMN_WIDTH) << opIdx << " | " << std::setw(CHECKER_COLUMN_WIDTH)
+                << CHECKER_STATUS_TEXT[static_cast<size_t>(checkerResult[OLD_CHECKER_RESULT])] << " | "
+                << std::setw(CHECKER_COLUMN_WIDTH)
                 << CHECKER_STATUS_TEXT[static_cast<size_t>(checkerResult[NEW_CHECKER_RESULT])] << " |";
             HCCL_VM_INFO("{}", row.str());
         }
@@ -701,12 +719,12 @@ void RunChecker(const std::string& data_id) {
         HCCL_VM_INFO("Multi-op checker result:");
         std::ostringstream header;
         header << "| " << std::left << std::setw(SYNC_ITER_COLUMN_WIDTH) << "syncIter"
-            << " | " << std::setw(MULTI_OP_COLUMN_WIDTH) << "multi op checker" << " |";
+               << " | " << std::setw(MULTI_OP_COLUMN_WIDTH) << "multi op checker" << " |";
         HCCL_VM_INFO("{}", header.str());
         for (size_t iterIndex = 0; iterIndex < multiOpCheckerResults.size(); ++iterIndex) {
             std::ostringstream row;
-            row << "| " << std::left << std::setw(SYNC_ITER_COLUMN_WIDTH) << bigGraphSyncIters[iterIndex]
-                << " | " << std::setw(MULTI_OP_COLUMN_WIDTH)
+            row << "| " << std::left << std::setw(SYNC_ITER_COLUMN_WIDTH) << bigGraphSyncIters[iterIndex] << " | "
+                << std::setw(MULTI_OP_COLUMN_WIDTH)
                 << CHECKER_STATUS_TEXT[static_cast<size_t>(multiOpCheckerResults[iterIndex])] << " |";
             HCCL_VM_INFO("{}", row.str());
         }
@@ -714,38 +732,42 @@ void RunChecker(const std::string& data_id) {
     bool hasCheckerFailure = false;
     bool hasCheckerExecution = false;
     bool hasCheckerNotExecuted = false;
-    for (const auto &checkerResult : checkerResults) {
+    for (const auto& checkerResult : checkerResults) {
         for (const CheckerStatus status : checkerResult) {
             hasCheckerFailure = hasCheckerFailure || status == CheckerStatus::FAILED;
-            hasCheckerExecution = hasCheckerExecution || status == CheckerStatus::SUCCESS ||
-                status == CheckerStatus::FAILED;
+            hasCheckerExecution
+                = hasCheckerExecution || status == CheckerStatus::SUCCESS || status == CheckerStatus::FAILED;
             hasCheckerNotExecuted = hasCheckerNotExecuted || status == CheckerStatus::NOT_EXECUTED;
         }
     }
     for (const CheckerStatus status : multiOpCheckerResults) {
         hasCheckerFailure = hasCheckerFailure || status == CheckerStatus::FAILED;
-        hasCheckerExecution = hasCheckerExecution || status == CheckerStatus::SUCCESS ||
-            status == CheckerStatus::FAILED;
+        hasCheckerExecution
+            = hasCheckerExecution || status == CheckerStatus::SUCCESS || status == CheckerStatus::FAILED;
         hasCheckerNotExecuted = hasCheckerNotExecuted || status == CheckerStatus::NOT_EXECUTED;
     }
     if (hasCheckerExecution && !hasCheckerFailure && !hasCheckerNotExecuted) {
-        HCCL_VM_INFO("[CHECKER_RUN_SUMMARY] All Success (Total Op: {}, Total SyncIter: {})",
-            checkerResults.size(), multiOpCheckerResults.size());
+        HCCL_VM_INFO(
+            "[CHECKER_RUN_SUMMARY] All Success (Total Op: {}, Total SyncIter: {})", checkerResults.size(),
+            multiOpCheckerResults.size());
     } else {
-        HCCL_VM_INFO("[CHECKER_RUN_SUMMARY] Failed (Total Op: {}, Total SyncIter: {})",
-            checkerResults.size(), multiOpCheckerResults.size());
+        HCCL_VM_INFO(
+            "[CHECKER_RUN_SUMMARY] Failed (Total Op: {}, Total SyncIter: {})", checkerResults.size(),
+            multiOpCheckerResults.size());
     }
     std::cout << "(hvm)$> " << std::flush;
     FlushLog(); // 将本轮完整日志落盘
 }
 
-void StartCheckerWorker(const std::string &dataId)
+void StartCheckerWorker(const std::string& dataId)
 {
     std::lock_guard<std::mutex> workerLock(g_worker_mutex);
     if (g_worker_thread.joinable()) {
         g_worker_thread.join();
     }
-    g_worker_thread = std::thread([dataId]() { RunChecker(dataId); });
+    g_worker_thread = std::thread([dataId]() {
+        RunChecker(dataId);
+    });
 }
 
 void JoinCheckerWorker()
@@ -758,7 +780,8 @@ void JoinCheckerWorker()
 
 // --- 分发函数修正 ---
 // 不再使用 exit(0)，而是通过标记位通知主线程
-void ProcessCommand(const std::string& line) {
+void ProcessCommand(const std::string& line)
+{
     try {
         auto j = json::parse(line);
         std::string action = j.value("action", "");
@@ -778,8 +801,7 @@ void ProcessCommand(const std::string& line) {
 
             std::string data_id = payload.value("data_id", "");
             StartCheckerWorker(data_id);
-        } 
-        else if (action == "stop") {
+        } else if (action == "stop") {
             HCCL_VM_INFO("Received checker stop signal, shutdown...");
             g_keep_running.store(false); // 仅仅修改标志位
         }
@@ -789,7 +811,8 @@ void ProcessCommand(const std::string& line) {
     }
 }
 
-int main() {
+int main()
+{
     LogConfig config = LoadLogConfig("checker");
     InitLogger(config);
 
@@ -801,7 +824,8 @@ int main() {
     // 循环会卡在 getline。但在插件管理场景下，发送完 stop 后通常会关闭管道，
     // 导致 getline 返回 false。
     while (g_keep_running.load() && std::getline(std::cin, line)) {
-        if (line.empty()) continue;
+        if (line.empty())
+            continue;
         ProcessCommand(line);
     }
 

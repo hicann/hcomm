@@ -58,17 +58,19 @@ void SetupTestData()
     device.super_device_id = 0;
     RunnerDB::Add<sim::Device>(device);
 }
-}
+} // namespace
 
 class HcclDevicePubTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         g_rankId = 0;
         sqTailMap.clear();
         SetupTestData();
     }
 
-    void TearDown() override {
+    void TearDown() override
+    {
         RunnerDB::DeleteAll<sim::Rank>();
         RunnerDB::DeleteAll<sim::EndPoint>();
         RunnerDB::DeleteAll<sim::VirtualMemBlock>();
@@ -77,91 +79,98 @@ protected:
     }
 };
 
-TEST_F(HcclDevicePubTest, SetCurRankId_Valid) {
+TEST_F(HcclDevicePubTest, SetCurRankId_Valid)
+{
     uint32_t rankId = 5;
     HcclVmResult result = SetCurRankId(rankId);
     EXPECT_EQ(result, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(HcclDevicePubTest, SetCurRankId_Zero) {
+TEST_F(HcclDevicePubTest, SetCurRankId_Zero)
+{
     HcclVmResult result = SetCurRankId(0);
     EXPECT_EQ(result, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(HcclDevicePubTest, SetCurRankId_MaxValue) {
+TEST_F(HcclDevicePubTest, SetCurRankId_MaxValue)
+{
     HcclVmResult result = SetCurRankId(UINT32_MAX);
     EXPECT_EQ(result, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(HcclDevicePubTest, GetCurRankId_AfterSet) {
+TEST_F(HcclDevicePubTest, GetCurRankId_AfterSet)
+{
     uint32_t setRankId = 10;
     SetCurRankId(setRankId);
-    
+
     uint32_t getRankId = 0;
     HcclVmResult result = GetCurRankId(&getRankId);
     EXPECT_EQ(result, HcclVmResult::HCCL_SIM_SUCCESS);
     EXPECT_EQ(getRankId, setRankId);
 }
 
-TEST_F(HcclDevicePubTest, GetSqBufferAddr_Valid) {
-    uint8_t *sqBuff = nullptr;
+TEST_F(HcclDevicePubTest, GetSqBufferAddr_Valid)
+{
+    uint8_t* sqBuff = nullptr;
     HcclVmResult result = GetSqBufferAddr(&sqBuff);
     EXPECT_EQ(result, HcclVmResult::HCCL_SIM_SUCCESS);
     EXPECT_NE(sqBuff, nullptr);
 }
 
-TEST_F(HcclDevicePubTest, GetSqBufferAddr_BufferSize) {
-    uint8_t *sqBuff = nullptr;
+TEST_F(HcclDevicePubTest, GetSqBufferAddr_BufferSize)
+{
+    uint8_t* sqBuff = nullptr;
     GetSqBufferAddr(&sqBuff);
     EXPECT_NE(sqBuff, nullptr);
 }
 
-TEST_F(HcclDevicePubTest, UpdatePiValByJettyId_Valid) {
+TEST_F(HcclDevicePubTest, UpdatePiValByJettyId_Valid)
+{
     uint32_t jettyId = 1;
     uint32_t piValue = 100;
-    
+
     HcclVmResult result = UpdatePiValByJettyId(jettyId, piValue);
     EXPECT_EQ(result, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(HcclDevicePubTest, GetPiValByJettyId_AfterUpdate) {
+TEST_F(HcclDevicePubTest, GetPiValByJettyId_AfterUpdate)
+{
     uint32_t jettyId = 2;
     uint32_t piValue = 200;
-    
+
     UpdatePiValByJettyId(jettyId, piValue);
-    
+
     uint32_t getValue = 0;
     HcclVmResult result = GetPiValByJettyId(jettyId, &getValue);
     EXPECT_EQ(result, HcclVmResult::HCCL_SIM_SUCCESS);
     EXPECT_EQ(getValue, piValue);
 }
 
-TEST_F(HcclDevicePubTest, GetPiValByJettyId_NotExist) {
+TEST_F(HcclDevicePubTest, GetPiValByJettyId_NotExist)
+{
     uint32_t jettyId = 9999;
     uint32_t getValue = 0;
-    
+
     HcclVmResult result = GetPiValByJettyId(jettyId, &getValue);
     EXPECT_EQ(result, HcclVmResult::HCCL_SIM_SUCCESS);
 }
 
-TEST_F(HcclDevicePubTest, UpdataKfcStatus_ZeroAddr) {
-    EXPECT_NO_THROW(UpdataKfcStatus(0));
-}
+TEST_F(HcclDevicePubTest, UpdataKfcStatus_ZeroAddr) { EXPECT_NO_THROW(UpdataKfcStatus(0)); }
 
-TEST_F(HcclDevicePubTest, UpdataKfcStatus_ValidAddr) {
+TEST_F(HcclDevicePubTest, UpdataKfcStatus_ValidAddr)
+{
     constexpr uint32_t kfcBufSize = 4096;
     std::vector<uint8_t> kfcBuf(kfcBufSize, 0);
     uint64_t d2hAddr = reinterpret_cast<uint64_t>(kfcBuf.data());
     EXPECT_NO_THROW(UpdataKfcStatus(d2hAddr));
 }
 
-TEST_F(HcclDevicePubTest, RegisterSignalHandler_NoThrow) {
-    EXPECT_NO_THROW(RegisterSignalHandler());
-}
+TEST_F(HcclDevicePubTest, RegisterSignalHandler_NoThrow) { EXPECT_NO_THROW(RegisterSignalHandler()); }
 
 // ==================== GetSqTail / UpdateSqTail Tests ====================
 
-TEST_F(HcclDevicePubTest, UpdateSqTail_And_GetSqTail) {
+TEST_F(HcclDevicePubTest, UpdateSqTail_And_GetSqTail)
+{
     uint32_t sqId = 1;
     uint32_t newTail = 42;
 
@@ -171,14 +180,16 @@ TEST_F(HcclDevicePubTest, UpdateSqTail_And_GetSqTail) {
     EXPECT_EQ(tail, newTail);
 }
 
-TEST_F(HcclDevicePubTest, GetSqTail_NotExist) {
+TEST_F(HcclDevicePubTest, GetSqTail_NotExist)
+{
     uint32_t sqId = 99;
     uint32_t tail = GetSqTail(sqId);
 
     EXPECT_EQ(tail, 0);
 }
 
-TEST_F(HcclDevicePubTest, UpdateSqTail_Overwrite) {
+TEST_F(HcclDevicePubTest, UpdateSqTail_Overwrite)
+{
     uint32_t sqId = 2;
     UpdateSqTail(sqId, 10);
     UpdateSqTail(sqId, 20);
@@ -189,14 +200,16 @@ TEST_F(HcclDevicePubTest, UpdateSqTail_Overwrite) {
 
 // ==================== GetRankIdByDevAddr Tests ====================
 
-TEST_F(HcclDevicePubTest, GetRankIdByDevAddr_NotFound) {
+TEST_F(HcclDevicePubTest, GetRankIdByDevAddr_NotFound)
+{
     uint64_t devAddr = 0x1000;
     uint32_t rankId = GetRankIdByDevAddr(devAddr);
 
     EXPECT_EQ(rankId, 0);
 }
 
-TEST_F(HcclDevicePubTest, GetRankIdByDevAddr_Found) {
+TEST_F(HcclDevicePubTest, GetRankIdByDevAddr_Found)
+{
     auto devRet = RunnerDB::GetOneByPred<sim::Device>([](const sim::Device& d) {
         return d.physical_id == 0;
     });
@@ -232,7 +245,8 @@ TEST_F(HcclDevicePubTest, GetRankIdByDevAddr_Found) {
     EXPECT_EQ(rankId, 5);
 }
 
-TEST_F(HcclDevicePubTest, GetRankIdByDevAddr_VirMemFound_ButPhyMemNotFound) {
+TEST_F(HcclDevicePubTest, GetRankIdByDevAddr_VirMemFound_ButPhyMemNotFound)
+{
     auto devRet = RunnerDB::GetOneByPred<sim::Device>([](const sim::Device& d) {
         return d.physical_id == 0;
     });
@@ -255,7 +269,8 @@ TEST_F(HcclDevicePubTest, GetRankIdByDevAddr_VirMemFound_ButPhyMemNotFound) {
     EXPECT_EQ(rankId, 0);
 }
 
-TEST_F(HcclDevicePubTest, GetRankIdByDevAddr_RankNotFound) {
+TEST_F(HcclDevicePubTest, GetRankIdByDevAddr_RankNotFound)
+{
     auto devRet = RunnerDB::GetOneByPred<sim::Device>([](const sim::Device& d) {
         return d.physical_id == 0;
     });
@@ -294,13 +309,15 @@ TEST_F(HcclDevicePubTest, GetRankIdByDevAddr_RankNotFound) {
 
 // ==================== GetRankIdByIpAddr Tests ====================
 
-TEST_F(HcclDevicePubTest, GetRankIdByIpAddr_NotFound) {
+TEST_F(HcclDevicePubTest, GetRankIdByIpAddr_NotFound)
+{
     uint32_t rankId = GetRankIdByIpAddr("192.168.1.999");
 
     EXPECT_EQ(rankId, 0);
 }
 
-TEST_F(HcclDevicePubTest, GetRankIdByIpAddr_Found) {
+TEST_F(HcclDevicePubTest, GetRankIdByIpAddr_Found)
+{
     auto devRet = RunnerDB::GetOneByPred<sim::Device>([](const sim::Device& d) {
         return d.physical_id == 0;
     });
@@ -322,7 +339,8 @@ TEST_F(HcclDevicePubTest, GetRankIdByIpAddr_Found) {
     EXPECT_EQ(rankId, 7);
 }
 
-TEST_F(HcclDevicePubTest, GetRankIdByIpAddr_RankNotFound) {
+TEST_F(HcclDevicePubTest, GetRankIdByIpAddr_RankNotFound)
+{
     auto devRet = RunnerDB::GetOneByPred<sim::Device>([](const sim::Device& d) {
         return d.physical_id == 0;
     });
@@ -347,14 +365,16 @@ TEST_F(HcclDevicePubTest, GetRankIdByIpAddr_RankNotFound) {
 
 // ==================== GetDevMapperAddrByDevAddr Tests ====================
 
-TEST_F(HcclDevicePubTest, GetDevMapperAddrByDevAddr_NotFound) {
+TEST_F(HcclDevicePubTest, GetDevMapperAddrByDevAddr_NotFound)
+{
     uint64_t devAddr = 0xDEADBEEF;
     uint64_t realAddr = GetDevMapperAddrByDevAddr(devAddr);
 
     EXPECT_EQ(realAddr, 0ULL);
 }
 
-TEST_F(HcclDevicePubTest, GetDevMapperAddrByDevAddr_FoundButShmNotExist) {
+TEST_F(HcclDevicePubTest, GetDevMapperAddrByDevAddr_FoundButShmNotExist)
+{
     auto devRet = RunnerDB::GetOneByPred<sim::Device>([](const sim::Device& d) {
         return d.physical_id == 0;
     });
@@ -388,7 +408,8 @@ TEST_F(HcclDevicePubTest, GetDevMapperAddrByDevAddr_FoundButShmNotExist) {
     EXPECT_EQ(realAddr, 0ULL);
 }
 
-TEST_F(HcclDevicePubTest, GetDevMapperAddrByDevAddr_PhyMemNotFound) {
+TEST_F(HcclDevicePubTest, GetDevMapperAddrByDevAddr_PhyMemNotFound)
+{
     auto devRet = RunnerDB::GetOneByPred<sim::Device>([](const sim::Device& d) {
         return d.physical_id == 0;
     });

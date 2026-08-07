@@ -30,31 +30,30 @@ public:
     explicit ReduceNHROneshot(const HcclDispatcher dispatcher);
     ~ReduceNHROneshot() override;
 
-    /* 新增的两段式构造函数，获取实例后要无脑调用实现构造函数功能,后续还要调用其它的基类Prepare函数实现其它成员变量初始化 */
-    HcclResult Prepare(u64 reduceAttrBitMap, HcomCollOpInfo *opInfo = nullptr) override;
+    /* 新增的两段式构造函数，获取实例后要无脑调用实现构造函数功能,后续还要调用其它的基类Prepare函数实现其它成员变量初始化
+     */
+    HcclResult Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo = nullptr) override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
 protected:
 private:
-    HcclResult SimpleCheck(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
+    HcclResult SimpleCheck(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
 
-    HcclResult SdmaRx(LINK &linkLeft, LINK &linkRight, InterServerAlgoStep &stepInfo,
-        const std::vector<LINK> &links);
-    HcclResult RdmaTxRx(LINK &linkLeft, LINK &linkRight, InterServerAlgoStep &stepInfo,
-        const std::vector<LINK> &links);
+    HcclResult SdmaRx(LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInfo, const std::vector<LINK>& links);
+    HcclResult RdmaTxRx(LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInfo, const std::vector<LINK>& links);
 
-    HcclResult RunReduceNHROneshot(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
+    HcclResult RunReduceNHROneshot(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
 
-    HcclResult GetStepInfo(u32 step, u32 nSteps, u32 rank, u32 rankSize, InterServerAlgoStep &stepInfo) override;
+    HcclResult GetStepInfo(u32 step, u32 nSteps, u32 rank, u32 rankSize, InterServerAlgoStep& stepInfo) override;
 
-    HcclResult ExecuteBarrier(const std::shared_ptr<Transport> &preLink, const std::shared_ptr<Transport> &aftLink);
+    HcclResult ExecuteBarrier(const std::shared_ptr<Transport>& preLink, const std::shared_ptr<Transport>& aftLink);
 
     u64 reduceAttr_; /* 0x1:表示data_type + reduce_type支持inlinereduce  */
 
     std::unique_ptr<Sender> senderInfo_;
     std::unique_ptr<Reducer> reducerInfo_;
 };
-} // hccl
+} // namespace hccl
 
 #endif /* REDUCE_NHR_ONESHOT_PUB_H */

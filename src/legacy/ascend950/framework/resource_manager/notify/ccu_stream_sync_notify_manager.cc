@@ -7,14 +7,14 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #include "ccu_stream_sync_notify_manager.h"
- 
+
 namespace Hccl {
 
-RtsCntNotify *CcuStreamSyncNotifyManager::GetRtsNTo1CntNotify(u32 streamId, u32 topicId)
+RtsCntNotify* CcuStreamSyncNotifyManager::GetRtsNTo1CntNotify(u32 streamId, u32 topicId)
 {
-    RtsCntNotify *cntNotify = queueWaitGroupCntNotifyManager.Get(streamId, topicId);
+    RtsCntNotify* cntNotify = queueWaitGroupCntNotifyManager.Get(streamId, topicId);
     if (cntNotify == nullptr) {
         queueWaitGroupCntNotifyManager.ApplyFor(streamId, topicId);
     }
@@ -22,9 +22,9 @@ RtsCntNotify *CcuStreamSyncNotifyManager::GetRtsNTo1CntNotify(u32 streamId, u32 
     return cntNotify;
 }
 
-Rts1ToNCntNotify *CcuStreamSyncNotifyManager::GetRts1ToNCntNotify(u32 streamId, u32 topicId)
+Rts1ToNCntNotify* CcuStreamSyncNotifyManager::GetRts1ToNCntNotify(u32 streamId, u32 topicId)
 {
-    Rts1ToNCntNotify *cntNotify1ToN = queueBcastPostCntNotifyManager.Get(streamId, topicId);
+    Rts1ToNCntNotify* cntNotify1ToN = queueBcastPostCntNotifyManager.Get(streamId, topicId);
     if (cntNotify1ToN == nullptr) {
         queueBcastPostCntNotifyManager.ApplyFor(streamId, topicId);
     }

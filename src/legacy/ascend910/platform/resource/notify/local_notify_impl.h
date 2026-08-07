@@ -21,17 +21,17 @@ public:
     ~LocalNotifyImpl();
     HcclResult Init(const NotifyLoadType type);
     HcclResult Init(const s32 localDeviceId, const s32 remoteDeviceId, const NotifyLoadType type);
-    HcclResult Init(const HcclSignalInfo &notifyInfo,
-                    const NotifyLoadType type = NotifyLoadType::DEVICE_NOTIFY); // aicpu侧依据notifyinfo初始化notify
+    HcclResult Init(
+        const HcclSignalInfo& notifyInfo,
+        const NotifyLoadType type = NotifyLoadType::DEVICE_NOTIFY); // aicpu侧依据notifyinfo初始化notify
 
     HcclResult Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut);
     HcclResult Post(Stream& stream, HcclDispatcher dispatcher, s32 stage);
 
-    HcclResult Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut,
-        u32 userRank, u32 remoteUserRank);
+    HcclResult
+    Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut, u32 userRank, u32 remoteUserRank);
     HcclResult Wait(Stream& stream, u32 timeOut);
-    HcclResult Post(Stream& stream, HcclDispatcher dispatcher, s32 stage,
-        u32 remoteUserRank);
+    HcclResult Post(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 remoteUserRank);
 
     HcclResult Post(Stream& stream);
 
@@ -41,26 +41,24 @@ public:
 
     void Break();
 
-    HcclResult Serialize(std::vector<u8> &byteVector);
+    HcclResult Serialize(std::vector<u8>& byteVector);
 
     // mc2获取aicpu notify信息  local&remote
-    HcclResult GetNotifyData(HcclSignalInfo &notifyInfo);
+    HcclResult GetNotifyData(HcclSignalInfo& notifyInfo);
     // aicpu device侧 set notify信息
-    HcclResult SetNotifyData(HcclSignalInfo &notifyInfo);
+    HcclResult SetNotifyData(HcclSignalInfo& notifyInfo);
 
-    inline HcclRtNotify ptr()
-    {
-        return notify_->ptr();
-    }
+    inline HcclRtNotify ptr() { return notify_->ptr(); }
     // 获取offset
-    HcclResult GetNotifyOffset(u64 &notifyOffset);
+    HcclResult GetNotifyOffset(u64& notifyOffset);
 
     void SetEventIdAndTid(const u32 eventId, const u32 tid);
+
 private:
     std::unique_ptr<NotifyBase> notify_;
     static std::atomic<bool> tidQueueInit_;
 };
 
-}
+} // namespace hccl
 
 #endif // LOCAL_NOTIFY_IMPL_H

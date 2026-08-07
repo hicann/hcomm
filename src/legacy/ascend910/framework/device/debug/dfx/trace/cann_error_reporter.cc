@@ -15,11 +15,7 @@
 namespace dfx {
 constexpr uint64_t DEFAULT_SENSOR_HANDLE = 0xFFFFFFFF;
 
-
-CannErrorReporter::CannErrorReporter()
-    : sensorHandle_(DEFAULT_SENSOR_HANDLE), devId_(0)
-{
-}
+CannErrorReporter::CannErrorReporter() : sensorHandle_(DEFAULT_SENSOR_HANDLE), devId_(0) {}
 
 CannErrorReporter::~CannErrorReporter()
 {
@@ -43,9 +39,9 @@ HcclResult CannErrorReporter::Init(uint32_t deviceId)
         void Clear();
     }
 
-    CHK_PRT_RET(RegisterSensorNode(deviceId, &sensorHandle_) != HCCL_SUCCESS,
-        HCCL_RUN_WARNING("[CannErrorReporter][Init] init sensor node fail, deviceId[%u].",
-        deviceId), HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        RegisterSensorNode(deviceId, &sensorHandle_) != HCCL_SUCCESS,
+        HCCL_RUN_WARNING("[CannErrorReporter][Init] init sensor node fail, deviceId[%u].", deviceId), HCCL_E_INTERNAL);
     devId_ = deviceId;
     return HCCL_SUCCESS;
 }
@@ -55,11 +51,13 @@ HcclResult CannErrorReporter::Clear()
     if (sensorHandle_ != DEFAULT_SENSOR_HANDLE) {
         HcclResult ret = UnRegisterSensorNode(devId_, sensorHandle_);
         if (ret != HCCL_SUCCESS) {
-            HCCL_RUN_WARNING("[CannErrorReporter][Clear] unregister sensor node fail, handle[%llu], deviceId[%u].",
-                sensorHandle_, devId_);
+            HCCL_RUN_WARNING(
+                "[CannErrorReporter][Clear] unregister sensor node fail, handle[%llu], deviceId[%u].", sensorHandle_,
+                devId_);
         } else {
-            HCCL_INFO("[CannErrorReporter][Clear] unregister sensor node success, handle[%llu], devId[%u].",
-                sensorHandle_, devId_);
+            HCCL_INFO(
+                "[CannErrorReporter][Clear] unregister sensor node success, handle[%llu], devId[%u].", sensorHandle_,
+                devId_);
         }
     }
     sensorHandle_ = DEFAULT_SENSOR_HANDLE;
@@ -70,7 +68,8 @@ HcclResult CannErrorReporter::Clear()
 HcclResult CannErrorReporter::UpdateSensorNode(uint32_t deviceId, ReportStatus reportStatus)
 {
     if (sensorHandle_ == DEFAULT_SENSOR_HANDLE || devId_ != deviceId) {
-        CHK_PRT_RET(Init(deviceId) != HCCL_SUCCESS,
+        CHK_PRT_RET(
+            Init(deviceId) != HCCL_SUCCESS,
             HCCL_RUN_WARNING("[CannErrorReporter][UpdateSensorNode] fail to get a valid node sensor."),
             HCCL_E_INTERNAL);
     }
@@ -78,7 +77,8 @@ HcclResult CannErrorReporter::UpdateSensorNode(uint32_t deviceId, ReportStatus r
 
     auto iter = status2Event_.find(reportStatus);
     if (iter == status2Event_.end()) {
-        HCCL_RUN_WARNING("[CannErrorReporter][UpdateSensorNode] "
+        HCCL_RUN_WARNING(
+            "[CannErrorReporter][UpdateSensorNode] "
             "unknown reportStatus[%d], fail to find corresponding event type, update node sensor fail.",
             static_cast<int>(reportStatus));
         return HCCL_E_NOT_SUPPORT;
@@ -86,44 +86,55 @@ HcclResult CannErrorReporter::UpdateSensorNode(uint32_t deviceId, ReportStatus r
     int32_t eventType = static_cast<int32_t>(iter->second.first);
     HcclGeneralEventType eventAssert = iter->second.second;
 
-    HCCL_INFO("[CannErrorReporter][UpdateSensorNode]updating sensor, "
+    HCCL_INFO(
+        "[CannErrorReporter][UpdateSensorNode]updating sensor, "
         "deviceId[%u], reportStatus[%d], event val[%d], event assert[%d].",
         deviceId, static_cast<int>(reportStatus), eventType, static_cast<int>(eventAssert));
 
-    CHK_PRT_RET(hrtHalSensorNodeUpdateState(deviceId, handle, eventType, eventAssert) != HCCL_SUCCESS,
-        HCCL_RUN_WARNING("[CannErrorReporter][UpdateSensorNode] "
+    CHK_PRT_RET(
+        hrtHalSensorNodeUpdateState(deviceId, handle, eventType, eventAssert) != HCCL_SUCCESS,
+        HCCL_RUN_WARNING(
+            "[CannErrorReporter][UpdateSensorNode] "
             "update sensor node fail, deviceId[%u], reportStatus[%d], val[%d], handle[%llu].",
             deviceId, static_cast<int>(reportStatus), eventType, handle),
         HCCL_E_INTERNAL);
 
-    HCCL_RUN_INFO("[CannErrorReporter][UpdateSensorNode] send report success, "
+    HCCL_RUN_INFO(
+        "[CannErrorReporter][UpdateSensorNode] send report success, "
         "deviceId[%u], reportStatus[%d], val[%d], handle[%llu].",
         deviceId, static_cast<int>(reportStatus), eventType, handle);
     return HCCL_SUCCESS;
 }
 
-HcclResult CannErrorReporter::RegisterSensorNode(uint32_t deviceId, uint64_t *handle)
+HcclResult CannErrorReporter::RegisterSensorNode(uint32_t deviceId, uint64_t* handle)
 {
     HcclResult ret = hrtHalSensorNodeRegister(deviceId, handle);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
         HCCL_RUN_WARNING("[CannErrorReporter][RegisterSensorNode] register sensor node fail, device id[%u].", deviceId),
         HCCL_E_INTERNAL);
 
-    HCCL_INFO("[CannErrorReporter][RegisterSensorNode] register node sensor success, deviceId[%u], handle[%llu].",
-        deviceId, *handle);
+    HCCL_INFO(
+        "[CannErrorReporter][RegisterSensorNode] register node sensor success, deviceId[%u], handle[%llu].", deviceId,
+        *handle);
     return HCCL_SUCCESS;
 }
 
 HcclResult CannErrorReporter::UnRegisterSensorNode(uint32_t deviceId, uint64_t handle)
 {
     HcclResult ret = hrtHalSensorNodeUnregister(deviceId, handle);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_RUN_WARNING("[CannErrorReporter][UnRegisterSensorNode] "
-        "unregister sensor node fail, device id[%u], handle[%llu].", deviceId, handle), HCCL_E_INTERNAL);
-    HCCL_INFO("[CannErrorReporter][UnRegisterSensorNode] unregister sensor success, device id[%u], handle[%llu].",
-        deviceId, handle);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_RUN_WARNING(
+            "[CannErrorReporter][UnRegisterSensorNode] "
+            "unregister sensor node fail, device id[%u], handle[%llu].",
+            deviceId, handle),
+        HCCL_E_INTERNAL);
+    HCCL_INFO(
+        "[CannErrorReporter][UnRegisterSensorNode] unregister sensor success, device id[%u], handle[%llu].", deviceId,
+        handle);
 
     return HCCL_SUCCESS;
 }
 
-} // namespace
+} // namespace dfx

@@ -14,22 +14,22 @@
 namespace hccl {
 class CollAlignedAllGatherDoubleRingFor91093Executor : public CollAllGatherRingFor91093Executor {
 public:
-    explicit CollAlignedAllGatherDoubleRingFor91093Executor(const HcclDispatcher dispatcher,
-        std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollAlignedAllGatherDoubleRingFor91093Executor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAlignedAllGatherDoubleRingFor91093Executor() override = default;
 
 private:
     /* *************** 算法编排 *************** */
-    HcclResult DoubleRingAllGather(const std::string &tag, DeviceMem inputMem, DeviceMem outputMem, const u64 count,
-        const HcclDataType dataType,
-        const std::vector<std::vector<Slice> > multRingsSliceZero, Stream stream,
-        s32 profStage, const u64 baseOffset = 0, const HcomCollOpInfo *opInfo = nullptr,
-        const std::vector<std::vector<Slice>> multRingsUserMemSlice = std::vector<std::vector<Slice>> (0));
-    HcclResult RunIntraSeverAllGather(const std::string &tag, DeviceMem &inputMem, DeviceMem &outputMem,
-        const u64 count, const HcclDataType &dataType,
-        const std::vector<std::vector<Slice>> &multRingsSliceZero, const Stream &stream,
-        s32 profStage, const u64 baseOffset = 0, const HcomCollOpInfo *opInfo = nullptr,
-        const std::vector<std::vector<Slice>> &multRingsUserMemSlice = std::vector<std::vector<Slice>> (0)) override;
+    HcclResult DoubleRingAllGather(
+        const std::string& tag, DeviceMem inputMem, DeviceMem outputMem, const u64 count, const HcclDataType dataType,
+        const std::vector<std::vector<Slice>> multRingsSliceZero, Stream stream, s32 profStage,
+        const u64 baseOffset = 0, const HcomCollOpInfo* opInfo = nullptr,
+        const std::vector<std::vector<Slice>> multRingsUserMemSlice = std::vector<std::vector<Slice>>(0));
+    HcclResult RunIntraSeverAllGather(
+        const std::string& tag, DeviceMem& inputMem, DeviceMem& outputMem, const u64 count,
+        const HcclDataType& dataType, const std::vector<std::vector<Slice>>& multRingsSliceZero, const Stream& stream,
+        s32 profStage, const u64 baseOffset = 0, const HcomCollOpInfo* opInfo = nullptr,
+        const std::vector<std::vector<Slice>>& multRingsUserMemSlice = std::vector<std::vector<Slice>>(0)) override;
 };
 
 } // namespace hccl

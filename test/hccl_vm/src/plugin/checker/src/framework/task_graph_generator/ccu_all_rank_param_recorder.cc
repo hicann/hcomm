@@ -30,10 +30,7 @@ void AllRankParamRecorder::Reset()
     return;
 }
 
-void AllRankParamRecorder::InitParam()
-{
-    return;
-}
+void AllRankParamRecorder::InitParam() { return; }
 
 HcclResult AllRankParamRecorder::SetXn(uint32_t rankId, uint32_t dieId, uint16_t xnId, uint64_t xnValue)
 {
@@ -55,7 +52,7 @@ HcclResult AllRankParamRecorder::SetCKE(uint32_t rankId, uint32_t dieId, uint16_
 
 HcclResult AllRankParamRecorder::GetXn(uint32_t rankId, uint32_t dieId, uint16_t xnId, uint64_t& xnValue)
 {
-    if(curXn.find(rankId) != curXn.end()) {
+    if (curXn.find(rankId) != curXn.end()) {
         if (curXn[rankId].find(dieId) != curXn[rankId].end()) {
             if (curXn[rankId][dieId].find(xnId) != curXn[rankId][dieId].end()) {
                 xnValue = curXn[rankId][dieId][xnId];
@@ -67,9 +64,9 @@ HcclResult AllRankParamRecorder::GetXn(uint32_t rankId, uint32_t dieId, uint16_t
     return HCCL_E_PARA;
 }
 
-HcclResult  AllRankParamRecorder::GetGSA(uint32_t rankId, uint32_t dieId, uint16_t gsaId, uint64_t& gsaValue)
+HcclResult AllRankParamRecorder::GetGSA(uint32_t rankId, uint32_t dieId, uint16_t gsaId, uint64_t& gsaValue)
 {
-    if(curGSA.find(rankId) != curGSA.end()) {
+    if (curGSA.find(rankId) != curGSA.end()) {
         if (curGSA[rankId].find(dieId) != curGSA[rankId].end()) {
             if (curGSA[rankId][dieId].find(gsaId) != curGSA[rankId][dieId].end()) {
                 gsaValue = curGSA[rankId][dieId][gsaId];
@@ -83,7 +80,7 @@ HcclResult  AllRankParamRecorder::GetGSA(uint32_t rankId, uint32_t dieId, uint16
 
 HcclResult AllRankParamRecorder::GetCKE(uint32_t rankId, uint32_t dieId, uint16_t ckeId, uint16_t& ckeValue)
 {
-    if(curCKE.find(rankId) != curCKE.end()) {
+    if (curCKE.find(rankId) != curCKE.end()) {
         if (curCKE[rankId].find(dieId) != curCKE[rankId].end()) {
             if (curCKE[rankId][dieId].find(ckeId) != curCKE[rankId][dieId].end()) {
                 ckeValue = curCKE[rankId][dieId][ckeId];
@@ -102,7 +99,7 @@ HcclResult AllRankParamRecorder::CheckAllPostMatch()
         RankId rank = rankPair.first;
         for (const auto& diePair : rankPair.second) {
             uint32_t dieId = diePair.first;
-            for (const auto& regPair: diePair.second) {
+            for (const auto& regPair : diePair.second) {
                 uint16_t regId = regPair.first;
                 for (auto& post : seenPost[rank][dieId][regId]) {
                     HCCL_WARNING("unmatched LocalPost/Post: %s", post->task->Describe().c_str());
@@ -114,10 +111,11 @@ HcclResult AllRankParamRecorder::CheckAllPostMatch()
     return HCCL_SUCCESS;
 }
 
-HcclResult AllRankParamRecorder::SetHBM(uint32_t rankId, uint32_t dieId, uint64_t hbmAddr,
-    const std::vector<uint64_t>& data) {
+HcclResult
+AllRankParamRecorder::SetHBM(uint32_t rankId, uint32_t dieId, uint64_t hbmAddr, const std::vector<uint64_t>& data)
+{
     // 合法性校验
-    if (data.size() % 8 != 0){
+    if (data.size() % 8 != 0) {
         HCCL_ERROR("hbm data size is not 8 bytes aligned");
         return HCCL_E_PARA;
     }
@@ -125,8 +123,9 @@ HcclResult AllRankParamRecorder::SetHBM(uint32_t rankId, uint32_t dieId, uint64_
     return HCCL_SUCCESS;
 }
 
-HcclResult AllRankParamRecorder::GetHBM(uint32_t rankId, uint32_t dieId, uint64_t hbmAddr, std::vector<uint64_t>& data) {
-    if(curHBM.find(rankId) != curHBM.end()) {
+HcclResult AllRankParamRecorder::GetHBM(uint32_t rankId, uint32_t dieId, uint64_t hbmAddr, std::vector<uint64_t>& data)
+{
+    if (curHBM.find(rankId) != curHBM.end()) {
         if (curHBM[rankId].find(dieId) != curHBM[rankId].end()) {
             if (curHBM[rankId][dieId].find(hbmAddr) != curHBM[rankId][dieId].end()) {
                 data = curHBM[rankId][dieId][hbmAddr];
@@ -149,22 +148,23 @@ const uint64_t XN_CCUA0_MS_ADDR_A6 = 0x4000000; // MS的起始地址CCU0为64M
 const uint64_t XN_CCUA1_MS_ADDR_A6 = 0x4200000; // MS的起始地址CCU1为66M
 const uint64_t XN_CCUA2_MS_ADDR_A6 = 0x4400000; // MS的起始地址CCU2为68M
 const uint64_t XN_CCUA3_MS_ADDR_A6 = 0x4600000; // MS的起始地址CCU3为70M
-const uint64_t XN_MS_SIZE_A6 = 4000; // 每个MS占用4k 
-const uint64_t MS_INTERLEAVE_NUM = 8; // 每组8个MS
-const uint64_t CCUA_MS_ADDR_GAP = 0x200000; // CCUA寄存器的MS地址间隔
+const uint64_t XN_MS_SIZE_A6 = 4000;            // 每个MS占用4k
+const uint64_t MS_INTERLEAVE_NUM = 8;           // 每组8个MS
+const uint64_t CCUA_MS_ADDR_GAP = 0x200000;     // CCUA寄存器的MS地址间隔
 const uint64_t CCUA_NUM_A6 = 4;
-const uint64_t GROUP_TOTAL_MS = MS_INTERLEAVE_NUM * CCUA_NUM_A6;// 一组总共32个MS
+const uint64_t GROUP_TOTAL_MS = MS_INTERLEAVE_NUM * CCUA_NUM_A6; // 一组总共32个MS
 
-const uint64_t CCU_MS_START_ADDR[4] = {XN_CCUA0_MS_ADDR_A6, XN_CCUA1_MS_ADDR_A6,
-                                      XN_CCUA2_MS_ADDR_A6, XN_CCUA3_MS_ADDR_A6};
+const uint64_t CCU_MS_START_ADDR[4]
+    = {XN_CCUA0_MS_ADDR_A6, XN_CCUA1_MS_ADDR_A6, XN_CCUA2_MS_ADDR_A6, XN_CCUA3_MS_ADDR_A6};
 
-HcclResult AllRankParamRecorder::GetMSIdByAddr(uint32_t dieId,  uint64_t addr, uint16_t& msId) {
+HcclResult AllRankParamRecorder::GetMSIdByAddr(uint32_t dieId, uint64_t addr, uint16_t& msId)
+{
     if (dieId >= ccu_resource_base_addr_.size()) {
         HCCL_ERROR("dieId is out of range, dieId=[%u]", dieId);
         return HCCL_E_PARA;
     }
     uint64_t msAddr = addr - ccu_resource_base_addr_[dieId];
-    uint64_t ccuIndex {UINT64_MAX};
+    uint64_t ccuIndex{UINT64_MAX};
     for (uint64_t i = 0; i < CCUA_NUM_A6; ++i) {
         uint64_t ccuEnd = CCU_MS_START_ADDR[i] + CCUA_MS_ADDR_GAP;
         if (msAddr >= CCU_MS_START_ADDR[i] && msAddr < ccuEnd) {
@@ -185,7 +185,8 @@ HcclResult AllRankParamRecorder::GetMSIdByAddr(uint32_t dieId,  uint64_t addr, u
 }
 
 // 根据type的类型找基础地址
-uint64_t findBaseAddr(CcuComponerntType type) {
+uint64_t findBaseAddr(CcuComponerntType type)
+{
     if (type == CcuComponerntType::XN_A6) {
         return XN_OFFSET_ADDR_A6;
     } else if (type == CcuComponerntType::CKE_A6) {
@@ -206,7 +207,8 @@ uint64_t findBaseAddr(CcuComponerntType type) {
 }
 
 // 根据地址值来找到类型
-CcuComponerntType findTypeByAddr(uint64_t addr) {
+CcuComponerntType findTypeByAddr(uint64_t addr)
+{
     if (addr >= XN_OFFSET_ADDR_A6 && addr < XN_CKB_ADDR_A6) {
         return CcuComponerntType::XN_A6;
     } else if (addr >= XN_CKB_ADDR_A6 && addr < XN_PFE_ADDR_A6) {
@@ -227,13 +229,15 @@ CcuComponerntType findTypeByAddr(uint64_t addr) {
 }
 
 // 根据type的类型返回寄存器每块的数量
-uint16_t findBaseSize(CcuComponerntType type) {
-    if (type == CcuComponerntType::XN_A6 || type == CcuComponerntType::CKE_A6 || type == CcuComponerntType::PFE_A6 ){
+uint16_t findBaseSize(CcuComponerntType type)
+{
+    if (type == CcuComponerntType::XN_A6 || type == CcuComponerntType::CKE_A6 || type == CcuComponerntType::PFE_A6) {
         return 8;
-    } else if (type == CcuComponerntType::CHANNEL_A6 || type == CcuComponerntType::JETTY_A6  ||
-        type == CcuComponerntType::LOOP_A6) {
+    } else if (
+        type == CcuComponerntType::CHANNEL_A6 || type == CcuComponerntType::JETTY_A6
+        || type == CcuComponerntType::LOOP_A6) {
         return 32;
-    } else if(type == CcuComponerntType::MISSION_A6) {
+    } else if (type == CcuComponerntType::MISSION_A6) {
         return 64;
     } else {
         return 0;
@@ -241,26 +245,30 @@ uint16_t findBaseSize(CcuComponerntType type) {
 }
 
 // 通过XnId所在的地址值来找到XnId
-HcclResult AllRankParamRecorder::GetXnAndTypeIdByAddr(uint32_t dieId,  uint64_t xnAddr, CcuComponerntType& type, uint16_t& xnId) {
+HcclResult
+AllRankParamRecorder::GetXnAndTypeIdByAddr(uint32_t dieId, uint64_t xnAddr, CcuComponerntType& type, uint16_t& xnId)
+{
     if (dieId >= ccu_resource_base_addr_.size()) {
         HCCL_ERROR("dieId is out of range, dieId=[%u]", dieId);
         return HCCL_E_PARA;
     }
     type = findTypeByAddr(xnAddr - ccu_resource_base_addr_[dieId]);
     if (type == CcuComponerntType::UNKNOWN) {
-        HCCL_ERROR("unknown type, addr=[%llu],dieId=[%u],ccu_resource_base_addr_[dieId]=[%llu]", xnAddr, dieId,
+        HCCL_ERROR(
+            "unknown type, addr=[%llu],dieId=[%u],ccu_resource_base_addr_[dieId]=[%llu]", xnAddr, dieId,
             ccu_resource_base_addr_[dieId]);
         return HCCL_E_PARA;
     }
     uint64_t baseAddr = findBaseAddr(type) + ccu_resource_base_addr_[dieId];
     uint16_t sizeofXn = findBaseSize(type);
     xnId = static_cast<uint16_t>((xnAddr - baseAddr) / static_cast<uint64_t>(sizeofXn));
-    return  HCCL_SUCCESS;
+    return HCCL_SUCCESS;
 }
 
 // 通过XnId所在的地址值来找到XnId
-HcclResult AllRankParamRecorder::GetXnIdByAddr(uint32_t dieId, CcuComponerntType type, uint64_t xnAddr, uint16_t& xnId) {
-    if(dieId >= ccu_resource_base_addr_.size()) {
+HcclResult AllRankParamRecorder::GetXnIdByAddr(uint32_t dieId, CcuComponerntType type, uint64_t xnAddr, uint16_t& xnId)
+{
+    if (dieId >= ccu_resource_base_addr_.size()) {
         HCCL_ERROR("dieId is out of range, dieId=[%u]", dieId);
         return HCCL_E_PARA;
     }
@@ -268,13 +276,14 @@ HcclResult AllRankParamRecorder::GetXnIdByAddr(uint32_t dieId, CcuComponerntType
     uint64_t baseAddr = findBaseAddr(type) + ccu_resource_base_addr_[dieId];
     uint16_t sizeofXn = findBaseSize(type);
     xnId = static_cast<uint16_t>((xnAddr - baseAddr) / static_cast<uint64_t>(sizeofXn));
-    return  HCCL_SUCCESS;
+    return HCCL_SUCCESS;
 }
 
 // 通过XnId所在的地址值来找到XnId
-HcclResult AllRankParamRecorder::GetAddrByXnId(uint32_t dieId, CcuComponerntType type, uint16_t xnId, uint64_t& xnAddr) {
+HcclResult AllRankParamRecorder::GetAddrByXnId(uint32_t dieId, CcuComponerntType type, uint16_t xnId, uint64_t& xnAddr)
+{
     // 需要判断界限  todo
-    if(dieId >= ccu_resource_base_addr_.size()) {
+    if (dieId >= ccu_resource_base_addr_.size()) {
         HCCL_ERROR("dieId is out of range, dieId=[%u]", dieId);
         return HCCL_E_PARA;
     }
@@ -283,4 +292,4 @@ HcclResult AllRankParamRecorder::GetAddrByXnId(uint32_t dieId, CcuComponerntType
     xnAddr = baseAddr + static_cast<uint64_t>(xnId) * sizeofXn;
     return HCCL_SUCCESS;
 }
-}
+} // namespace HcclSim

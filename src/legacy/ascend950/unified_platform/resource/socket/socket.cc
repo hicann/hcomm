@@ -16,10 +16,10 @@
 
 namespace Hccl {
 
-constexpr u32 MAX_TRANSFER_SIZE         = 20 * 1024 * 1024;
-constexpr u32 MAX_LOG_TIMEOUT_MS        = 30000;
+constexpr u32 MAX_TRANSFER_SIZE = 20 * 1024 * 1024;
+constexpr u32 MAX_LOG_TIMEOUT_MS = 30000;
 constexpr u32 ONE_MILLISECOND_OF_USLEEP = 1000;
-constexpr u32 AUTO_LISTEN_PORT          = 0;
+constexpr u32 AUTO_LISTEN_PORT = 0;
 
 Socket::~Socket()
 {
@@ -38,14 +38,17 @@ void Socket::Listen()
     socketStatus = SocketStatus::LISTENING;
 }
 
-bool Socket::Listen(u32 &port)
+bool Socket::Listen(u32& port)
 {
     HCCL_INFO("[Socket::%s] trying to listen on port[%u]", __func__, port);
     HrtNetworkMode netMode = nicType == NicType::HOST_NIC_TYPE ? HrtNetworkMode::PEER : HrtNetworkMode::HDC;
     RaSocketListenParam param(socketHandle, port, localIp);
     bool ret = HrtRaSocketTryListenOneStart(param, netMode);
-    CHK_PRT_RET(!ret, HCCL_WARNING("[Socket::%s] socket[%s] listen unsuccessful, port[%u] is in use",
-                                 __func__, Describe().c_str(), port), ret);
+    CHK_PRT_RET(
+        !ret,
+        HCCL_WARNING(
+            "[Socket::%s] socket[%s] listen unsuccessful, port[%u] is in use", __func__, Describe().c_str(), port),
+        ret);
 
     port = port == AUTO_LISTEN_PORT ? param.port : port;
     listenPort = port;
@@ -88,18 +91,15 @@ SocketStatus Socket::GetStatus(u32 timeout)
     RaSocketGetParam param(socketHandle, remoteIp, tag, fdHandle);
     RaSocketFdHandleParam result(nullptr, 0);
     TRY_CATCH_PROCESS_THROW(
-        NetworkApiException,
-        result = HrtRaBlockGetOneSocket(static_cast<u32>(role), param, timeout),
-        "Socket::GetStatus failed",
-        PrintErrorSocketInfo()
-    );
+        NetworkApiException, result = HrtRaBlockGetOneSocket(static_cast<u32>(role), param, timeout),
+        "Socket::GetStatus failed", PrintErrorSocketInfo());
 
     fdHandle = result.fdHandle;
 
     // socket status:0 not connected 1:connected 2:connect timeout 3:connecting
     if (result.status == SOCKET_CONNECTED) {
         socketStatus = SocketStatus::OK;
-        isConnected  = true;
+        isConnected = true;
     } else if (result.status == SOCKET_CONNECT_TIMEOUT) {
         socketStatus = SocketStatus::TIMEOUT;
     } else if (result.status == SOCKET_CONNECTING) {
@@ -107,34 +107,34 @@ SocketStatus Socket::GetStatus(u32 timeout)
     } else {
         socketStatus = SocketStatus::INIT;
     }
-    HCCL_INFO("socketinfo.tag=%s status=%s, role=%s", tag.c_str(), socketStatus.Describe().c_str(),
-               role.Describe().c_str());
+    HCCL_INFO(
+        "socketinfo.tag=%s status=%s, role=%s", tag.c_str(), socketStatus.Describe().c_str(), role.Describe().c_str());
     return socketStatus;
 }
 
-bool Socket::Send(const void *sendBuf, u32 size) const
+bool Socket::Send(const void* sendBuf, u32 size) const
 {
     HrtRaSocketBlockSend(fdHandle, sendBuf, size);
     return true;
 }
 
-bool Socket::Recv(void *recvBuf, u32 size) const
+bool Socket::Recv(void* recvBuf, u32 size) const
 {
     HrtRaSocketBlockRecv(fdHandle, recvBuf, size);
     return true;
 }
 
-bool Socket::ISend(void *data, u64 size, u64& compSize) const
+bool Socket::ISend(void* data, u64 size, u64& compSize) const
 {
     return HrtRaSocketNonBlockSend(fdHandle, data, size, &compSize);
 }
 
-HcclResult Socket::ISendWithHeart(void *data, u64 size, u64& compSize) const
+HcclResult Socket::ISendWithHeart(void* data, u64 size, u64& compSize) const
 {
     return HrtRaSocketNonBlockSendHeart(fdHandle, data, size, &compSize);
 }
 
-HcclResult Socket::IRecvWithHeart(void *data, u64 size, u64& compSize) const
+HcclResult Socket::IRecvWithHeart(void* data, u64 size, u64& compSize) const
 {
     return HrtRaSocketNonBlockRecvHeart(fdHandle, data, size, &compSize);
 }
@@ -165,7 +165,7 @@ void Socket::StopListen()
 }
 
 // 抑制日志刷屏，同一类型日志超时前只打印一次
-inline bool CheckLogTime(std::chrono::steady_clock::time_point &lastTime)
+inline bool CheckLogTime(std::chrono::steady_clock::time_point& lastTime)
 {
     auto nowTime = std::chrono::steady_clock::now();
     if (nowTime - lastTime <= std::chrono::milliseconds(MAX_LOG_TIMEOUT_MS)) {
@@ -179,8 +179,9 @@ inline bool CheckLogTime(std::chrono::steady_clock::time_point &lastTime)
 inline void HandleSocketEAgain(RequestHandle lastReqHandle, std::chrono::steady_clock::time_point lastLogTime)
 {
     if (CheckLogTime(lastLogTime)) {
-        HCCL_WARNING("[Socket][%s] reqhandle[%llu] get request result [SOCK_EAGAIN], sleep 1ms and retry.",
-            __func__, lastReqHandle);
+        HCCL_WARNING(
+            "[Socket][%s] reqhandle[%llu] get request result [SOCK_EAGAIN], sleep 1ms and retry.", __func__,
+            lastReqHandle);
     }
 
     SaluSleep(ONE_MILLISECOND_OF_USLEEP);
@@ -196,8 +197,9 @@ bool Socket::CheckStartRequestResult()
     ReqHandleResult result = HrtRaGetAsyncReqResult(reqHandle);
     if (result == ReqHandleResult::NOT_COMPLETED) {
         if (CheckLogTime(lastLogTime)) {
-            HCCL_INFO("[Socket][%s] connect is not completed, reqHandle[%llu], [%s].",
-                __func__, lastReqHandle, this->Describe().c_str());
+            HCCL_INFO(
+                "[Socket][%s] connect is not completed, reqHandle[%llu], [%s].", __func__, lastReqHandle,
+                this->Describe().c_str());
         }
 
         return false;
@@ -212,9 +214,9 @@ bool Socket::CheckStartRequestResult()
     } else if (result == ReqHandleResult::SOCK_E_AGAIN) {
         HandleSocketEAgain(lastReqHandle, lastLogTime);
     } else {
-        THROW<SocketException>(
-            StringFormat("[Socket][%s] failed, request handle[%llu] result[%s] is unexpected, [%s].",
-            __func__, lastReqHandle, result.Describe().c_str(), this->Describe().c_str()));
+        THROW<SocketException>(StringFormat(
+            "[Socket][%s] failed, request handle[%llu] result[%s] is unexpected, [%s].", __func__, lastReqHandle,
+            result.Describe().c_str(), this->Describe().c_str()));
     }
 
     if (socketStatus == SocketStatus::CONNECT_STARTING) {
@@ -222,9 +224,9 @@ bool Socket::CheckStartRequestResult()
     } else if (socketStatus == SocketStatus::LISTEN_STARTING) {
         ListenAsync();
     } else {
-        THROW<SocketException>(
-            StringFormat("[Socket][%s] failed, socket status[%s] is not expected, [%s].",
-            __func__, socketStatus.Describe().c_str(), this->Describe().c_str()));
+        THROW<SocketException>(StringFormat(
+            "[Socket][%s] failed, socket status[%s] is not expected, [%s].", __func__, socketStatus.Describe().c_str(),
+            this->Describe().c_str()));
     }
 
     return false;
@@ -240,17 +242,19 @@ bool Socket::CheckSendRequestResult()
     ReqHandleResult result = HrtRaGetAsyncReqResult(reqHandle);
     if (result == ReqHandleResult::NOT_COMPLETED) {
         if (CheckLogTime(lastLogTime)) {
-            HCCL_INFO("[Socket][%s] reqHandle[%llu] send is not completed, [%s].",
-                __func__, lastReqHandle, this->Describe().c_str());
+            HCCL_INFO(
+                "[Socket][%s] reqHandle[%llu] send is not completed, [%s].", __func__, lastReqHandle,
+                this->Describe().c_str());
         }
 
         return false;
     }
 
     if (sendSize > sendLeftSize) {
-        THROW<SocketException>(StringFormat("[Socket][%s] prev send request handle[%llu] failed, "
-            "send size[%u] is greater than expected[%u], [%s].", __func__,
-            lastReqHandle, sendSize, sendLeftSize, this->Describe().c_str()));
+        THROW<SocketException>(StringFormat(
+            "[Socket][%s] prev send request handle[%llu] failed, "
+            "send size[%u] is greater than expected[%u], [%s].",
+            __func__, lastReqHandle, sendSize, sendLeftSize, this->Describe().c_str()));
     }
 
     // COMPLETED 表示调用接口成功，可以更新数据信息
@@ -258,33 +262,35 @@ bool Socket::CheckSendRequestResult()
     // 其余结果为异常场景，抛出异常
     if (result == ReqHandleResult::COMPLETED) {
         totalSendSize += sendSize;
-        sendLeftSize  -= sendSize;
+        sendLeftSize -= sendSize;
     } else if (result == ReqHandleResult::SOCK_E_AGAIN) {
         HandleSocketEAgain(lastReqHandle, lastLogTime);
     } else {
-        THROW<SocketException>(
-            StringFormat("[Socket][%s] failed, request handle[%llu] result[%s] is unexpected, [%s].",
-                __func__, lastReqHandle, result.Describe().c_str(), this->Describe().c_str()));
+        THROW<SocketException>(StringFormat(
+            "[Socket][%s] failed, request handle[%llu] result[%s] is unexpected, [%s].", __func__, lastReqHandle,
+            result.Describe().c_str(), this->Describe().c_str()));
     }
 
     // 如果仍有数据未处理，则继续调用接口
     if (sendLeftSize != 0) {
         sendSize = 0;
-        reqHandle = HrtRaSocketSendAsync(fdHandle,
-            reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(sendDataBuff) + totalSendSize),
-            sendLeftSize, sendSize);
+        reqHandle = HrtRaSocketSendAsync(
+            fdHandle, reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(sendDataBuff) + totalSendSize), sendLeftSize,
+            sendSize);
 
         if (CheckLogTime(lastLogTime)) {
-            HCCL_INFO("[Socket][%s] reqHandle[%llu] need to retry send, start to send left size[%u], [%s].",
-                __func__, reqHandle, sendLeftSize, this->Describe().c_str());
+            HCCL_INFO(
+                "[Socket][%s] reqHandle[%llu] need to retry send, start to send left size[%u], [%s].", __func__,
+                reqHandle, sendLeftSize, this->Describe().c_str());
         }
 
         return false;
     }
 
     lastLogTime = {};
-    HCCL_INFO("[Socket][%s] pre send request[%llu] is completed, total send size[%u], [%s]",
-        __func__, lastReqHandle, totalSendSize, this->Describe().c_str());
+    HCCL_INFO(
+        "[Socket][%s] pre send request[%llu] is completed, total send size[%u], [%s]", __func__, lastReqHandle,
+        totalSendSize, this->Describe().c_str());
     return true;
 }
 
@@ -298,17 +304,19 @@ bool Socket::CheckRecvRequestResult()
     ReqHandleResult result = HrtRaGetAsyncReqResult(reqHandle);
     if (result == ReqHandleResult::NOT_COMPLETED) {
         if (CheckLogTime(lastLogTime)) {
-            HCCL_INFO("[Socket][%s] reqHandle[%llu] recv is not completed, [%s].",
-                __func__, lastReqHandle, this->Describe().c_str());
+            HCCL_INFO(
+                "[Socket][%s] reqHandle[%llu] recv is not completed, [%s].", __func__, lastReqHandle,
+                this->Describe().c_str());
         }
 
         return false;
     }
 
     if (recvSize > recvLeftSize) {
-        THROW<SocketException>(StringFormat("[Socket][%s] prev recv request handle[%llu] failed, "
-            "recv size[%u] is greater than expected[%u], [%s].", __func__,
-            lastReqHandle, recvSize, recvLeftSize, this->Describe().c_str()));
+        THROW<SocketException>(StringFormat(
+            "[Socket][%s] prev recv request handle[%llu] failed, "
+            "recv size[%u] is greater than expected[%u], [%s].",
+            __func__, lastReqHandle, recvSize, recvLeftSize, this->Describe().c_str()));
     }
 
     // COMPLETED 表示调用接口成功，可以更新数据信息
@@ -316,33 +324,35 @@ bool Socket::CheckRecvRequestResult()
     // 其余结果为异常场景，抛出异常
     if (result == ReqHandleResult::COMPLETED) {
         totalRecvSize += recvSize;
-        recvLeftSize  -= recvSize;
+        recvLeftSize -= recvSize;
     } else if (result == ReqHandleResult::SOCK_E_AGAIN) {
         HandleSocketEAgain(lastReqHandle, lastLogTime);
     } else {
-        THROW<SocketException>(
-            StringFormat("[Socket][%s] failed, request handle[%llu] result[%s] is unexpected, [%s].",
-            __func__, lastReqHandle, result.Describe().c_str(), this->Describe().c_str()));
+        THROW<SocketException>(StringFormat(
+            "[Socket][%s] failed, request handle[%llu] result[%s] is unexpected, [%s].", __func__, lastReqHandle,
+            result.Describe().c_str(), this->Describe().c_str()));
     }
 
     // 如果仍有数据未处理，则继续调用接口
     if (recvLeftSize != 0) {
         recvSize = 0;
-        reqHandle = HrtRaSocketRecvAsync(fdHandle,
-            reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(recvDataBuff) + totalRecvSize),
-            recvLeftSize, recvSize);
+        reqHandle = HrtRaSocketRecvAsync(
+            fdHandle, reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(recvDataBuff) + totalRecvSize), recvLeftSize,
+            recvSize);
 
         if (CheckLogTime(lastLogTime)) {
-            HCCL_INFO("[Socket][%s] reqHandle[%llu] need to retry recv, start to recv left size[%u], [%s].",
-                __func__, reqHandle, recvLeftSize, this->Describe().c_str());
+            HCCL_INFO(
+                "[Socket][%s] reqHandle[%llu] need to retry recv, start to recv left size[%u], [%s].", __func__,
+                reqHandle, recvLeftSize, this->Describe().c_str());
         }
 
         return false;
     }
 
     lastLogTime = {};
-    HCCL_INFO("[Socket][%s] pre recv request[%llu] is completed, total recv size[%u], [%s].",
-        __func__, lastReqHandle, totalRecvSize, this->Describe().c_str());
+    HCCL_INFO(
+        "[Socket][%s] pre recv request[%llu] is completed, total recv size[%u], [%s].", __func__, lastReqHandle,
+        totalRecvSize, this->Describe().c_str());
     return true;
 }
 
@@ -391,7 +401,7 @@ SocketStatus Socket::GetAsyncStatus()
 void Socket::GetOneSocket()
 {
     RaSocketGetParam param(socketHandle, remoteIp, tag, fdHandle);
-    
+
     RaSocketFdHandleParam fdHandleParam(nullptr, 0);
     EXCEPTION_CATCH(fdHandleParam = RaGetOneSocket(static_cast<u32>(role), param), return);
     // socket status:0 not connected 1:connected 2:connect timeout 3:connecting
@@ -399,13 +409,13 @@ void Socket::GetOneSocket()
         // sockete 准备好时，可以读取信息
         fdHandle = fdHandleParam.fdHandle;
         socketStatus = SocketStatus::OK;
-        isConnected  = true;
+        isConnected = true;
         lastLogTime = {};
     } else if (fdHandleParam.status == SOCKET_CONNECT_TIMEOUT) {
         socketStatus = SocketStatus::TIMEOUT;
     } else if (fdHandleParam.status == SOCKET_CONNECTING) {
         if (CheckLogTime(lastLogTime)) {
-            HCCL_INFO("[Socket][%s] socket is connecting, [%s]",  __func__, this->Describe().c_str());
+            HCCL_INFO("[Socket][%s] socket is connecting, [%s]", __func__, this->Describe().c_str());
         }
 
         socketStatus = SocketStatus::CONNECTING;
@@ -436,28 +446,34 @@ void Socket::ConnectAsync()
     socketStatus = SocketStatus::CONNECT_STARTING;
 }
 
-void Socket::SendAsync(const void *sendBuf, u32 size)
+void Socket::SendAsync(const void* sendBuf, u32 size)
 {
     if (!sendBuf) {
-        THROW<SocketException>(StringFormat("[Socket][%s] failed to send, "
-            "sendBuf is nullptr, [%s].", __func__, this->Describe().c_str()));
+        THROW<SocketException>(StringFormat(
+            "[Socket][%s] failed to send, "
+            "sendBuf is nullptr, [%s].",
+            __func__, this->Describe().c_str()));
     }
 
     if (size == 0) {
-        THROW<SocketException>(StringFormat("[Socket][%s] failed to send, "
-            "size is 0, [%s].", __func__, this->Describe().c_str()));
+        THROW<SocketException>(StringFormat(
+            "[Socket][%s] failed to send, "
+            "size is 0, [%s].",
+            __func__, this->Describe().c_str()));
     }
 
     if (size > MAX_TRANSFER_SIZE) {
-        THROW<SocketException>(StringFormat("[Socket][%s] failed to send, "
+        THROW<SocketException>(StringFormat(
+            "[Socket][%s] failed to send, "
             "size[%u] is greater than max size[%u], [%s]",
             __func__, size, MAX_TRANSFER_SIZE, this->Describe().c_str()));
     }
 
     if (socketStatus != SocketStatus::OK) {
-        THROW<SocketException>(StringFormat("[Socket][%s] failed to send, "
-            "status[%s] is not ok, [%s].", __func__,
-            socketStatus.Describe().c_str(), this->Describe().c_str()));
+        THROW<SocketException>(StringFormat(
+            "[Socket][%s] failed to send, "
+            "status[%s] is not ok, [%s].",
+            __func__, socketStatus.Describe().c_str(), this->Describe().c_str()));
     }
 
     sendSize = 0;
@@ -466,46 +482,54 @@ void Socket::SendAsync(const void *sendBuf, u32 size)
     sendDataBuff = sendBuf;
 
     reqHandle = HrtRaSocketSendAsync(fdHandle, sendBuf, sendLeftSize, sendSize);
-    HCCL_INFO("[Socket][%s] reqHandle[%llu] start to send size[%u], [%s].",
-        __func__, reqHandle, sendLeftSize, this->Describe().c_str());
-    
+    HCCL_INFO(
+        "[Socket][%s] reqHandle[%llu] start to send size[%u], [%s].", __func__, reqHandle, sendLeftSize,
+        this->Describe().c_str());
+
     lastLogTime = {};
     socketStatus = SocketStatus::SENDING;
 }
 
-void Socket::RecvAsync(u8 *recvBuf, u32 size)
+void Socket::RecvAsync(u8* recvBuf, u32 size)
 {
     if (!recvBuf) {
-        THROW<SocketException>(StringFormat("[Socket][%s] failed to recv, "
-            "recvBuf is nullptr, [%s].", __func__, this->Describe().c_str()));
+        THROW<SocketException>(StringFormat(
+            "[Socket][%s] failed to recv, "
+            "recvBuf is nullptr, [%s].",
+            __func__, this->Describe().c_str()));
     }
 
     if (size == 0) {
-        THROW<SocketException>(StringFormat("[Socket][%s] failed to recv, "
-            "size is 0, [%s].", __func__, this->Describe().c_str()));
+        THROW<SocketException>(StringFormat(
+            "[Socket][%s] failed to recv, "
+            "size is 0, [%s].",
+            __func__, this->Describe().c_str()));
     }
 
     if (size > MAX_TRANSFER_SIZE) {
-        THROW<SocketException>(StringFormat("[Socket][%s] failed to recv, "
+        THROW<SocketException>(StringFormat(
+            "[Socket][%s] failed to recv, "
             "size[%u] is greater than max size[%u], [%s].",
             __func__, size, MAX_TRANSFER_SIZE, this->Describe().c_str()));
     }
 
     if (socketStatus != SocketStatus::OK) {
-        THROW<SocketException>(StringFormat("[Socket][%s] failed to recv, "
-            "status[%s] is not ok, [%s].", __func__,
-            socketStatus.Describe().c_str(), this->Describe().c_str()));
+        THROW<SocketException>(StringFormat(
+            "[Socket][%s] failed to recv, "
+            "status[%s] is not ok, [%s].",
+            __func__, socketStatus.Describe().c_str(), this->Describe().c_str()));
     }
 
     recvSize = 0;
     totalRecvSize = 0;
     recvLeftSize = size;
-    recvDataBuff = static_cast<void *>(recvBuf);
+    recvDataBuff = static_cast<void*>(recvBuf);
 
     reqHandle = HrtRaSocketRecvAsync(fdHandle, recvDataBuff, recvLeftSize, recvSize);
-    HCCL_INFO("[Socket][%s] reqHandle[%llu] start to recv size[%u], [%s].",
-        __func__, reqHandle, recvLeftSize, this->Describe().c_str());
-    
+    HCCL_INFO(
+        "[Socket][%s] reqHandle[%llu] start to recv size[%u], [%s].", __func__, reqHandle, recvLeftSize,
+        this->Describe().c_str());
+
     lastLogTime = {};
     socketStatus = SocketStatus::RECVING;
 }

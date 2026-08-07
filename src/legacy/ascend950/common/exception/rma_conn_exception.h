@@ -16,8 +16,8 @@
 namespace Hccl {
 class RmaConnException : public HcclException {
 public:
-    explicit RmaConnException(const std::string &userDefinedMsg)
-        : HcclException(ExceptionType::RMA_CONN_EXCEPTION, userDefinedMsg){};
+    explicit RmaConnException(const std::string& userDefinedMsg)
+        : HcclException(ExceptionType::RMA_CONN_EXCEPTION, userDefinedMsg) {};
 };
 } // namespace Hccl
 

@@ -19,35 +19,35 @@
 #include "hccl_nslbdp_pub.h"
 
 namespace hccl {
-constexpr u32 NSLB_MD5_TOTAL = 64; 
-constexpr u32 NSLB_MD5_RESERVE = 32; 
-constexpr u32 NSLB_MD5_DIGEST = 16; 
+constexpr u32 NSLB_MD5_TOTAL = 64;
+constexpr u32 NSLB_MD5_RESERVE = 32;
+constexpr u32 NSLB_MD5_DIGEST = 16;
 constexpr u32 NSLB_MD5ENCODE_COUNT = 8;
-constexpr u32 NSLB_MD5_120 = 120; 
-constexpr u32 NSLB_MD5_56 = 56; 
+constexpr u32 NSLB_MD5_120 = 120;
+constexpr u32 NSLB_MD5_56 = 56;
 
-constexpr u32 NSLB_MD5_4 = 4; 
-constexpr u32 NSLB_MD5_5 = 5; 
-constexpr u32 NSLB_MD5_6 = 6; 
-constexpr u32 NSLB_MD5_7 = 7; 
-constexpr u32 NSLB_MD5_8 = 8; 
-constexpr u32 NSLB_MD5_9 = 9; 
-constexpr u32 NSLB_MD5_10 = 10; 
-constexpr u32 NSLB_MD5_11 = 11; 
-constexpr u32 NSLB_MD5_12 = 12; 
-constexpr u32 NSLB_MD5_13 = 13; 
-constexpr u32 NSLB_MD5_14 = 14; 
-constexpr u32 NSLB_MD5_15 = 15; 
-constexpr u32 NSLB_MD5_16 = 16; 
-constexpr u32 NSLB_MD5_17 = 17; 
-constexpr u32 NSLB_MD5_18 = 18; 
-constexpr u32 NSLB_MD5_19 = 19; 
-constexpr u32 NSLB_MD5_20 = 20; 
-constexpr u32 NSLB_MD5_21 = 21; 
-constexpr u32 NSLB_MD5_22 = 22; 
-constexpr u32 NSLB_MD5_23 = 23; 
-constexpr u32 NSLB_MD5_24 = 24; 
-constexpr u32 NSLB_MD5_25 = 25; 
+constexpr u32 NSLB_MD5_4 = 4;
+constexpr u32 NSLB_MD5_5 = 5;
+constexpr u32 NSLB_MD5_6 = 6;
+constexpr u32 NSLB_MD5_7 = 7;
+constexpr u32 NSLB_MD5_8 = 8;
+constexpr u32 NSLB_MD5_9 = 9;
+constexpr u32 NSLB_MD5_10 = 10;
+constexpr u32 NSLB_MD5_11 = 11;
+constexpr u32 NSLB_MD5_12 = 12;
+constexpr u32 NSLB_MD5_13 = 13;
+constexpr u32 NSLB_MD5_14 = 14;
+constexpr u32 NSLB_MD5_15 = 15;
+constexpr u32 NSLB_MD5_16 = 16;
+constexpr u32 NSLB_MD5_17 = 17;
+constexpr u32 NSLB_MD5_18 = 18;
+constexpr u32 NSLB_MD5_19 = 19;
+constexpr u32 NSLB_MD5_20 = 20;
+constexpr u32 NSLB_MD5_21 = 21;
+constexpr u32 NSLB_MD5_22 = 22;
+constexpr u32 NSLB_MD5_23 = 23;
+constexpr u32 NSLB_MD5_24 = 24;
+constexpr u32 NSLB_MD5_25 = 25;
 
 constexpr u32 NSLB_MD5_HASH1 = 1;
 constexpr u32 NSLB_MD5_HASH2 = 2;
@@ -110,6 +110,6 @@ public:
     static const char HEX[16];
 };
 
-}
+} // namespace hccl
 
 #endif /* HCCL_NSLB_MD5_H */

@@ -30,20 +30,21 @@
 using namespace hcomm;
 
 namespace {
-HcclResult ValidateEndpointDesc(const EndpointDesc *endpoint, EndpointHandle *endpointHandle)
+HcclResult ValidateEndpointDesc(const EndpointDesc* endpoint, EndpointHandle* endpointHandle)
 {
     CHK_PTR_NULL(endpoint);
     CHK_PTR_NULL(endpointHandle);
     if (endpoint->loc.locType != ENDPOINT_LOC_TYPE_DEVICE && endpoint->loc.locType != ENDPOINT_LOC_TYPE_HOST) {
-        HCCL_ERROR("[%s] Only support END_POINT_LOCATION_DEVICE AND END_POINT_LOCATION_HOST, but "
-                   "endpoint->loc.locType is %d",
+        HCCL_ERROR(
+            "[%s] Only support END_POINT_LOCATION_DEVICE AND END_POINT_LOCATION_HOST, but "
+            "endpoint->loc.locType is %d",
             __func__, endpoint->loc.locType);
         return HCCL_E_PARA;
     }
     return HCCL_SUCCESS;
 }
 
-HcclResult RegisterDeviceEndpointMonitorIfNeeded(const EndpointDesc *endpoint, EndpointHandle handle)
+HcclResult RegisterDeviceEndpointMonitorIfNeeded(const EndpointDesc* endpoint, EndpointHandle handle)
 {
     if ((endpoint->loc.locType != ENDPOINT_LOC_TYPE_DEVICE)
         || ((endpoint->protocol != COMM_PROTOCOL_UBC_CTP) && (endpoint->protocol != COMM_PROTOCOL_UBC_TP))) {
@@ -51,13 +52,14 @@ HcclResult RegisterDeviceEndpointMonitorIfNeeded(const EndpointDesc *endpoint, E
     }
 
     s32 devLogicIdSigned = HcclGetThreadDeviceId();
-    CHK_PRT_RET(devLogicIdSigned < 0,
-        HCCL_ERROR("[%s] HcclGetThreadDeviceId failed, ret[%d]", __func__, devLogicIdSigned), HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        devLogicIdSigned < 0, HCCL_ERROR("[%s] HcclGetThreadDeviceId failed, ret[%d]", __func__, devLogicIdSigned),
+        HCCL_E_INTERNAL);
     EndpointMonitor::GetInstance(devLogicIdSigned).RegisterToEndpointMonitor(devLogicIdSigned, handle);
     return HCCL_SUCCESS;
 }
 
-HcclResult CreateBuiltinEndpoint(const EndpointDesc *endpoint, EndpointHandle *endpointHandle)
+HcclResult CreateBuiltinEndpoint(const EndpointDesc* endpoint, EndpointHandle* endpointHandle)
 {
     CHK_RET(RefreshEndpointContext(*endpoint));
     std::unique_ptr<Endpoint> endpointPtr = nullptr;
@@ -78,13 +80,14 @@ HcclResult CreateBuiltinEndpoint(const EndpointDesc *endpoint, EndpointHandle *e
     EXCEPTION_CATCH(GetEndpointMap().AddEndpoint(handle, std::move(endpointPtr)), return HCCL_E_INTERNAL);
     *endpointHandle = handle;
     CHK_RET(RegisterDeviceEndpointMonitorIfNeeded(endpoint, handle));
-    HCCL_INFO("[%s] endpointDesc.protocol [%d] and endpointDesc.loc.locType [%d] create endpointHandle [%p] done.",
-        __func__, endpoint->protocol, endpoint->loc.locType, handle);
+    HCCL_INFO(
+        "[%s] endpointDesc.protocol [%d] and endpointDesc.loc.locType [%d] create endpointHandle [%p] done.", __func__,
+        endpoint->protocol, endpoint->loc.locType, handle);
     return HCCL_SUCCESS;
 }
 } // namespace
 
-HcommResult HcommEndpointGet(EndpointHandle endpointHandle, void **endpoint) // 根据endpointHandle返回Endpoint对象指针
+HcommResult HcommEndpointGet(EndpointHandle endpointHandle, void** endpoint) // 根据endpointHandle返回Endpoint对象指针
 {
     CHK_PTR_NULL(endpoint);
 #ifdef ENABLE_EXPERIMENTAL
@@ -96,25 +99,28 @@ HcommResult HcommEndpointGet(EndpointHandle endpointHandle, void **endpoint) // 
 #endif
 
     auto it = GetEndpointMap().GetEndpoint(endpointHandle);
-    CHK_PRT_RET(it == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
+    CHK_PRT_RET(
+        it == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
 
-    *endpoint = static_cast<void *>(it);
-    HCCL_INFO("[%s] START. endpointHandle[%p] endpoint[%p].", __func__, static_cast<void*>(endpointHandle), static_cast<void*>(endpoint));
+    *endpoint = static_cast<void*>(it);
+    HCCL_INFO(
+        "[%s] START. endpointHandle[%p] endpoint[%p].", __func__, static_cast<void*>(endpointHandle),
+        static_cast<void*>(endpoint));
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommEndpointCreate(const EndpointDesc *endpoint, EndpointHandle *endpointHandle)
+HcommResult HcommEndpointCreate(const EndpointDesc* endpoint, EndpointHandle* endpointHandle)
 {
-    EXCEPTION_HANDLE_BEGIN
-    (void) HcommResMgrInit();
+    EXCEPTION_HANDLE_BEGIN(void) HcommResMgrInit();
     CHK_RET(ValidateEndpointDesc(endpoint, endpointHandle));
 #ifdef ENABLE_EXPERIMENTAL
     bool pluginHandled = false;
     CHK_RET(static_cast<HcclResult>(PluginEndpointCreate(endpoint, endpointHandle, pluginHandled)));
     if (pluginHandled) {
-        HCCL_INFO("[NicPluginDebug][%s] plugin endpoint created, protocol[%d], handle[%p].", __func__,
-            endpoint->protocol, *endpointHandle);
+        HCCL_INFO(
+            "[NicPluginDebug][%s] plugin endpoint created, protocol[%d], handle[%p].", __func__, endpoint->protocol,
+            *endpointHandle);
         return HCCL_SUCCESS;
     }
 #endif
@@ -132,9 +138,11 @@ HcommResult HcommEndpointDestroy(EndpointHandle endpointHandle)
     // 无论 plugin 还是 builtin 路径, 均需校验共享 jetty channel 是否已全部销毁，
     // 否则残留 channel 持有的 jetty 引用会在 endpoint 销毁后成为悬空引用。
     HcclResult jettyRet = hcomm::SharedJettyMgr::GetInstance().CheckEndpointDestroy(endpointHandle);
-    CHK_PRT_RET(jettyRet != HCCL_SUCCESS,
-        HCCL_ERROR("[%s] cannot destroy endpointHandle[0x%llx], shared jetty channels still exist.",
-            __func__, endpointHandle), jettyRet);
+    CHK_PRT_RET(
+        jettyRet != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[%s] cannot destroy endpointHandle[0x%llx], shared jetty channels still exist.", __func__, endpointHandle),
+        jettyRet);
 #ifdef ENABLE_EXPERIMENTAL
     bool handled = false;
     CHK_RET(static_cast<HcclResult>(PluginEndpointDestroy(endpointHandle, handled)));
@@ -148,21 +156,24 @@ HcommResult HcommEndpointDestroy(EndpointHandle endpointHandle)
         CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
     }
     s32 devLogicIdSigned = HcclGetThreadDeviceId();
-    CHK_PRT_RET(devLogicIdSigned < 0,
-        HCCL_ERROR("[%s] HcclGetThreadDeviceId failed, ret[%d]", __func__, devLogicIdSigned), HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        devLogicIdSigned < 0, HCCL_ERROR("[%s] HcclGetThreadDeviceId failed, ret[%d]", __func__, devLogicIdSigned),
+        HCCL_E_INTERNAL);
     EndpointMonitor::GetInstance(devLogicIdSigned).RemoveEpHandleFromEndpointMonitor(endpointHandle);
     auto ret = GetEndpointMap().RemoveEndpoint(endpointHandle);
-    CHK_PRT_RET(ret == false, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
+    CHK_PRT_RET(
+        ret == false, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommEndpointStartListen(EndpointHandle endpointHandle, uint32_t port, HcommEndpointListenConfig *config)
+HcommResult HcommEndpointStartListen(EndpointHandle endpointHandle, uint32_t port, HcommEndpointListenConfig* config)
 {
     (void)config;
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
-    CHK_PRT_RET(endpoint == nullptr,
-        HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle), HCCL_E_NOT_FOUND);
+    CHK_PRT_RET(
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
+        HCCL_E_NOT_FOUND);
     CHK_RET(endpoint->ServerSocketListen(port));
     return HCCL_SUCCESS;
 }
@@ -170,13 +181,14 @@ HcommResult HcommEndpointStartListen(EndpointHandle endpointHandle, uint32_t por
 HcommResult HcommEndpointStopListen(EndpointHandle endpointHandle, uint32_t port)
 {
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
-    CHK_PRT_RET(endpoint == nullptr,
-        HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle), HCCL_E_NOT_FOUND);
+    CHK_PRT_RET(
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
+        HCCL_E_NOT_FOUND);
     CHK_RET(endpoint->ServerSocketStopListen(port));
     return HCCL_SUCCESS;
 }
 
-HcommResult HcommEndpointGetListenPort(EndpointHandle endpointHandle, uint32_t *port)
+HcommResult HcommEndpointGetListenPort(EndpointHandle endpointHandle, uint32_t* port)
 {
     CHK_PTR_NULL(port);
     (void)HcommResMgrInit();
@@ -187,14 +199,15 @@ HcommResult HcommEndpointGetListenPort(EndpointHandle endpointHandle, uint32_t *
 #endif
 
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
-    CHK_PRT_RET(endpoint == nullptr,
-        HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle), HCCL_E_NOT_FOUND);
+    CHK_PRT_RET(
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
+        HCCL_E_NOT_FOUND);
     CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
     return endpoint->ServerSocketGetListenPort(port);
 }
 
-HcommResult HcommEndpointCheckFeature(
-    HcommEndpointFeatureType featureType, const EndpointDesc *endpointDesc, bool *value)
+HcommResult
+HcommEndpointCheckFeature(HcommEndpointFeatureType featureType, const EndpointDesc* endpointDesc, bool* value)
 {
     CHK_PTR_NULL(endpointDesc);
     CHK_PTR_NULL(value);

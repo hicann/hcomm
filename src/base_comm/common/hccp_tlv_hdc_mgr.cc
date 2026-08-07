@@ -16,14 +16,16 @@
 
 namespace hcomm {
 
-HccpTlvHdcMgr &HccpTlvHdcMgr::GetInstance(const uint32_t devicePhyId)
+HccpTlvHdcMgr& HccpTlvHdcMgr::GetInstance(const uint32_t devicePhyId)
 {
     static HccpTlvHdcMgr hccpTlvHdcMgr[MAX_MODULE_DEVICE_NUM + 1];
-    
+
     uint32_t devPhyId = devicePhyId;
     if (devPhyId >= MAX_MODULE_DEVICE_NUM) {
-        HCCL_WARNING("[HccpTlvHdcMgr][%s] use the backup device, devPhyId[%u] should be "
-            "less than %u.", __func__, devPhyId, MAX_MODULE_DEVICE_NUM);
+        HCCL_WARNING(
+            "[HccpTlvHdcMgr][%s] use the backup device, devPhyId[%u] should be "
+            "less than %u.",
+            __func__, devPhyId, MAX_MODULE_DEVICE_NUM);
         devPhyId = MAX_MODULE_DEVICE_NUM; // 使用备份设备
     }
 
@@ -34,7 +36,7 @@ HccpTlvHdcMgr &HccpTlvHdcMgr::GetInstance(const uint32_t devicePhyId)
 inline TlvInitInfo GetCfgInfo(const uint32_t devPhyId)
 {
     constexpr u32 tlvVersion = 1;
-    struct TlvInitInfo tlvInfo{};
+    struct TlvInitInfo tlvInfo {};
     tlvInfo.phyId = devPhyId;
     tlvInfo.nicPosition = NetworkMode::NETWORK_OFFLINE;
     tlvInfo.version = tlvVersion;
@@ -42,20 +44,20 @@ inline TlvInitInfo GetCfgInfo(const uint32_t devPhyId)
     return tlvInfo;
 }
 
-static HcclResult HccpTlvInit(const uint32_t devPhyId, TlvHandle &tlvHandle)
+static HcclResult HccpTlvInit(const uint32_t devPhyId, TlvHandle& tlvHandle)
 {
     TlvInitInfo cfgInfo = GetCfgInfo(devPhyId);
     unsigned int bufferSize{0}; // 当前未使用
 
     int32_t ret = RaTlvInit(&cfgInfo, &bufferSize, &tlvHandle);
     if (ret != 0 || tlvHandle == nullptr) {
-        HCCL_ERROR("[Init][RaTlv]errNo[0x%016llx] ra tlv init fail. params: mode[%u]. return: ret[%d]", 
-                   static_cast<unsigned long long>(HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK)), cfgInfo.nicPosition, ret);
+        HCCL_ERROR(
+            "[Init][RaTlv]errNo[0x%016llx] ra tlv init fail. params: mode[%u]. return: ret[%d]",
+            static_cast<unsigned long long>(HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK)), cfgInfo.nicPosition, ret);
         return HcclResult::HCCL_E_NETWORK;
     }
 
-    HCCL_INFO("[%s] success, device id[%u] tlv handle[%p]",
-        __func__, cfgInfo.phyId, tlvHandle);
+    HCCL_INFO("[%s] success, device id[%u] tlv handle[%p]", __func__, cfgInfo.phyId, tlvHandle);
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -71,17 +73,15 @@ HcclResult HccpTlvHdcMgr::Init()
     return HcclResult::HCCL_SUCCESS;
 }
 
-TlvHandle HccpTlvHdcMgr::GetHandle()
-{
-    return tlvHandle_;
-}
+TlvHandle HccpTlvHdcMgr::GetHandle() { return tlvHandle_; }
 
 static HcclResult HccpTlvDeinit(const TlvHandle tlvHandle)
 {
     int32_t ret = RaTlvDeinit(tlvHandle);
     if (ret != 0) {
-        HCCL_ERROR("[DeInit][RaTlv]errNo[0x%016llx] ra tlv deinit fail. return: ret[%d]", 
-                   static_cast<unsigned long long>(HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK)), ret);
+        HCCL_ERROR(
+            "[DeInit][RaTlv]errNo[0x%016llx] ra tlv deinit fail. return: ret[%d]",
+            static_cast<unsigned long long>(HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK)), ret);
         return HcclResult::HCCL_E_NETWORK;
     }
 
@@ -101,9 +101,6 @@ HcclResult HccpTlvHdcMgr::Deinit()
     return HcclResult::HCCL_SUCCESS;
 }
 
-HccpTlvHdcMgr::~HccpTlvHdcMgr()
-{
-    (void)Deinit();
-}
+HccpTlvHdcMgr::~HccpTlvHdcMgr() { (void)Deinit(); }
 
-} // namespace hcom
+} // namespace hcomm

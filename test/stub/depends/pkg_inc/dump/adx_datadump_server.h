@@ -11,7 +11,7 @@
 /*!
  * \file adx_datadump_server.h
  * \brief
-*/
+ */
 
 #ifndef ADX_DATADUMP_SERVER_H
 #define ADX_DATADUMP_SERVER_H
@@ -45,4 +45,3 @@ ADX_API int AdxDataDumpServerUnInit();
 }
 #endif
 #endif
-

@@ -34,21 +34,15 @@ public:
 
     HcclResult SdmaCopy(uint64_t dstAddr, uint64_t srcAddr, uint64_t sizeByte) const;
 
-    HcclResult SdmaReduce(uint64_t dstAddr, uint64_t srcAddr, uint64_t sizeByte, uint32_t dataTypeRaw,
-                          uint32_t reduceOpRaw) const;
+    HcclResult
+    SdmaReduce(uint64_t dstAddr, uint64_t srcAddr, uint64_t sizeByte, uint32_t dataTypeRaw, uint32_t reduceOpRaw) const;
 
-    inline void* GetStreamLitePtr() const
-    {
-        return streamLiteVoidPtr_;
-    }
+    inline void* GetStreamLitePtr() const { return streamLiteVoidPtr_; }
 
-    inline uint32_t GetSqId() const
-    {
-        return static_cast<StreamLite *>(streamLiteVoidPtr_)->GetSqId();
-    }
+    inline uint32_t GetSqId() const { return static_cast<StreamLite*>(streamLiteVoidPtr_)->GetSqId(); }
 
 private:
-    void *streamLiteVoidPtr_{nullptr};
+    void* streamLiteVoidPtr_{nullptr};
 };
 
 } // namespace Hccl

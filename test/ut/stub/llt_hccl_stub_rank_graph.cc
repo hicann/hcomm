@@ -12,9 +12,11 @@
 
 namespace hccl {
 
-std::shared_ptr<Hccl::NetInstance::Peer> RankGraphStub::InitPeer(Hccl::RankId rankId, Hccl::LocalId localId, Hccl::DeviceId deviceId, uint32_t listenPort)
+std::shared_ptr<Hccl::NetInstance::Peer>
+RankGraphStub::InitPeer(Hccl::RankId rankId, Hccl::LocalId localId, Hccl::DeviceId deviceId, uint32_t listenPort)
 {
-    std::shared_ptr<Hccl::NetInstance::Peer> peer = std::make_shared<Hccl::NetInstance::Peer>(rankId, localId, localId, deviceId, listenPort);
+    std::shared_ptr<Hccl::NetInstance::Peer> peer
+        = std::make_shared<Hccl::NetInstance::Peer>(rankId, localId, localId, deviceId, listenPort);
     return peer;
 }
 
@@ -37,13 +39,14 @@ std::shared_ptr<Hccl::NetInstance::ConnInterface> RankGraphStub::InitConnInterfa
     std::set<std::string> ports = {"0/1"};
     Hccl::TopoType topoType = Hccl::TopoType::CLOS;
     uint32_t topoInstId = 0;
-    std::shared_ptr<Hccl::NetInstance::ConnInterface> iface = std::make_shared<Hccl::NetInstance::ConnInterface>(addr, ports, pos, inputLinkType, inputLinkProtocol, topoType, topoInstId);
+    std::shared_ptr<Hccl::NetInstance::ConnInterface> iface = std::make_shared<Hccl::NetInstance::ConnInterface>(
+        addr, ports, pos, inputLinkType, inputLinkProtocol, topoType, topoInstId);
     return iface;
 }
 
 std::shared_ptr<Hccl::RankGraph> RankGraphStub::Create2PGraph()
 {
-    Hccl::RankGraph  rankGraph(0);
+    Hccl::RankGraph rankGraph(0);
     std::shared_ptr<Hccl::NetInstance> netInstLayer0 = InitNetInstance(0, "layer0");
     std::shared_ptr<Hccl::NetInstance::Peer> peer0 = InitPeer(0, 0, 0, 60001);
     std::shared_ptr<Hccl::NetInstance::Peer> peer1 = InitPeer(1, 1, 1, 60002);
@@ -56,7 +59,7 @@ std::shared_ptr<Hccl::RankGraph> RankGraphStub::Create2PGraph()
     topoInstance->ranks = std::move(rankSet);
     topoInsts_[topoInstId] = topoInstance;
     netInstLayer0->topoInsts_ = std::move(topoInsts_);
-    
+
     peer0->AddNetInstance(netInstLayer0);
     peer1->AddNetInstance(netInstLayer0);
     netInstLayer0->AddRankId(peer0->GetRankId());
@@ -77,7 +80,7 @@ std::shared_ptr<Hccl::RankGraph> RankGraphStub::Create2PGraph()
 
     Hccl::LinkType type = Hccl::LinkType::PEER2PEER;
     std::set<Hccl::LinkProtocol> protocols = {Hccl::LinkProtocol::UB_CTP};
-    auto link = std::make_shared<Hccl::NetInstance::Link>(peer0,peer1,iface0,iface1,type,protocols);
+    auto link = std::make_shared<Hccl::NetInstance::Link>(peer0, peer1, iface0, iface1, type, protocols);
     netInstLayer0->AddLink(link);
 
     rankGraph.AddPeer(peer0);

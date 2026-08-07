@@ -16,7 +16,7 @@
 #include "env_config.h"
 
 using namespace hccl;
-HcclResult SetHcclAlgoConfig(const std::string &hcclAlgo)
+HcclResult SetHcclAlgoConfig(const std::string& hcclAlgo)
 {
     std::string algoConfig = hcclAlgo;
     algoConfig.erase(std::remove(algoConfig.begin(), algoConfig.end(), ' '), algoConfig.end());

@@ -7,31 +7,31 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef COLL_ALLGATHER_HCCS_SIO_EXECUTOR_H
 #define COLL_ALLGATHER_HCCS_SIO_EXECUTOR_H
 #include "coll_all_gather_executor.h"
 namespace hccl {
 class CollAllGatherHccsSioExecutor : public CollAllGatherExecutor {
 public:
-    explicit CollAllGatherHccsSioExecutor(const HcclDispatcher dispatcher,
-        std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollAllGatherHccsSioExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAllGatherHccsSioExecutor() override = default;
- 
+
 private:
     /* *************** 资源计算 *************** */
     u64 CalcLoopMaxCount(const u64 cclBuffSize, const u32 unitSize) override;
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
- 
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
- 
+
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+
     /* *************** 算法编排 *************** */
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 };
- 
+
 } // namespace hccl
- 
+
 #endif

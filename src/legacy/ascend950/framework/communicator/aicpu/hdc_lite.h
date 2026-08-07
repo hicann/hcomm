@@ -23,28 +23,28 @@ class HDCommunicateLite {
 public:
     HDCommunicateLite() = default;
 
-    HcclResult Init(const struct HDCommunicateParams &params);
+    HcclResult Init(const struct HDCommunicateParams& params);
 
-    HcclResult Put(u32 offset, u32 length, u8 *value);
+    HcclResult Put(u32 offset, u32 length, u8* value);
 
-    HcclResult Get(u32 offset, u32 length, u8 *value);
+    HcclResult Get(u32 offset, u32 length, u8* value);
 
 private:
-    HcclResult Write(u32 offset, u32 length, u8 *value);
-    HcclResult Read(u32 offset, u32 length, u8 *value);
+    HcclResult Write(u32 offset, u32 length, u8* value);
+    HcclResult Read(u32 offset, u32 length, u8* value);
     HcclResult UpdateCache(u32 timeoutSec);
 
     std::unique_ptr<Buffer> devMem;
-    u32 deviceLogicId{ 0xFFFFFFFF };
-    u32 flag{ HCCLV2_HDC_TYPE_D2H };
-    u32 buffLen{ 0 };
+    u32 deviceLogicId{0xFFFFFFFF};
+    u32 flag{HCCLV2_HDC_TYPE_D2H};
+    u32 buffLen{0};
 
-    void *readCacheAddr{ nullptr };
-    u32 *headCntAddr{ nullptr };
-    u32 *tailCntAddr{ nullptr };
-    u32 *devHeadCntAddr{ nullptr };
-    u32 *devTailCntAddr{ nullptr };
+    void* readCacheAddr{nullptr};
+    u32* headCntAddr{nullptr};
+    u32* tailCntAddr{nullptr};
+    u32* devHeadCntAddr{nullptr};
+    u32* devTailCntAddr{nullptr};
     std::mutex shmLock;
 };
-}
+} // namespace Hccl
 #endif // HCCLV2_HDC_LITE_H

@@ -25,35 +25,28 @@
 
 #define SHM_HEAD_SIZE sizeof(ShmHead)
 
-static void* GetShmHead(void* shm) {
-    return (char*)shm - SHM_HEAD_SIZE;
-}
+static void* GetShmHead(void* shm) { return (char*)shm - SHM_HEAD_SIZE; }
 
-static size_t GetShmTotalSize(size_t dataSize) {
-    return SHM_HEAD_SIZE + dataSize;
-}
+static size_t GetShmTotalSize(size_t dataSize) { return SHM_HEAD_SIZE + dataSize; }
 
 // 大小端转换函数
-static uint32_t Swap32(uint32_t value) {
-    return ((value & 0x000000FF) << 24) |
-           ((value & 0x0000FF00) << 8) |
-           ((value & 0x00FF0000) >> 8) |
-           ((value & 0xFF000000) >> 24);
+static uint32_t Swap32(uint32_t value)
+{
+    return ((value & 0x000000FF) << 24) | ((value & 0x0000FF00) << 8) | ((value & 0x00FF0000) >> 8)
+           | ((value & 0xFF000000) >> 24);
 }
 
-static uint64_t Swap64(uint64_t value) {
-    return ((value & 0x00000000000000FFULL) << 56) |
-           ((value & 0x000000000000FF00ULL) << 40) |
-           ((value & 0x0000000000FF0000ULL) << 24) |
-           ((value & 0x00000000FF000000ULL) << 8) |
-           ((value & 0x000000FF00000000ULL) >> 8) |
-           ((value & 0x0000FF0000000000ULL) >> 24) |
-           ((value & 0x00FF000000000000ULL) >> 40) |
-           ((value & 0xFF00000000000000ULL) >> 56);
+static uint64_t Swap64(uint64_t value)
+{
+    return ((value & 0x00000000000000FFULL) << 56) | ((value & 0x000000000000FF00ULL) << 40)
+           | ((value & 0x0000000000FF0000ULL) << 24) | ((value & 0x00000000FF000000ULL) << 8)
+           | ((value & 0x000000FF00000000ULL) >> 8) | ((value & 0x0000FF0000000000ULL) >> 24)
+           | ((value & 0x00FF000000000000ULL) >> 40) | ((value & 0xFF00000000000000ULL) >> 56);
 }
 
 // 检测当前架构是否为大端
-static int IsBigEndian() {
+static int IsBigEndian()
+{
     union {
         uint32_t i;
         char c[4];
@@ -62,35 +55,40 @@ static int IsBigEndian() {
 }
 
 // 平台相关的字节序转换
-static uint32_t ToLe32(uint32_t value) {
+static uint32_t ToLe32(uint32_t value)
+{
     if (IsBigEndian()) {
         return Swap32(value);
     }
     return value;
 }
 
-static uint64_t ToLe64(uint64_t value) {
+static uint64_t ToLe64(uint64_t value)
+{
     if (IsBigEndian()) {
         return Swap64(value);
     }
     return value;
 }
 
-static uint32_t FromLe32(uint32_t value) {
+static uint32_t FromLe32(uint32_t value)
+{
     if (IsBigEndian()) {
         return Swap32(value);
     }
     return value;
 }
 
-static uint64_t FromLe64(uint64_t value) {
+static uint64_t FromLe64(uint64_t value)
+{
     if (IsBigEndian()) {
         return Swap64(value);
     }
     return value;
 }
 
-void* ShmCreate(const char* name, size_t size) {
+void* ShmCreate(const char* name, size_t size)
+{
     if (!name || size == 0) {
         HCCL_VM_ERROR("create: name is nullptr or size is 0");
         return nullptr;
@@ -128,11 +126,14 @@ void* ShmCreate(const char* name, size_t size) {
     head->size = ToLe64(size);
     head->lock = 0;
     head->refCount = 1;
-    HCCL_VM_INFO("create name: {}, size: {:d}, ptr: {:p} ref:{:d}", head->name, size, (char*)addr + SHM_HEAD_SIZE, (int)head->refCount);
+    HCCL_VM_INFO(
+        "create name: {}, size: {:d}, ptr: {:p} ref:{:d}", head->name, size, (char*)addr + SHM_HEAD_SIZE,
+        (int)head->refCount);
     return (char*)addr + SHM_HEAD_SIZE;
 }
 
-void* ShmOpen(const char* name, size_t* size) {
+void* ShmOpen(const char* name, size_t* size)
+{
     if (!name) {
         HCCL_VM_ERROR("open: name is nullptr");
         return nullptr;
@@ -155,7 +156,7 @@ void* ShmOpen(const char* name, size_t* size) {
     int err = errno;
     close(shmFd);
 
-    if (addr == MAP_FAILED) {   
+    if (addr == MAP_FAILED) {
         HCCL_VM_ERROR("open: mmap failed, name: {} errno:{}", name, err);
         return nullptr;
     }
@@ -215,16 +216,16 @@ int ShmLock(void* shm)
     while (1) {
         uint32_t expected = 0;
         uint32_t desired = ToLe32(1);
-        
+
         if (__sync_bool_compare_and_swap(&head->lock, 0, desired)) {
             break;
         }
-        sched_yield(); 
+        sched_yield();
     }
     return 0;
 }
 
-int ShmUnlock(void* shm) 
+int ShmUnlock(void* shm)
 {
     if (!shm) {
         HCCL_VM_ERROR("ShmUnlock: shm is nullptr");

@@ -27,70 +27,79 @@ class TopoInfoDetect {
 public:
     explicit TopoInfoDetect();
     ~TopoInfoDetect();
-    HcclResult SetupGroupMember(u32 rankSize, u32 myrank, const HcclRootHandle &rootInfo); // Group内成员rank
-    HcclResult SetupAgent(u32 rankSize, u32 myrank, const HcclRootHandle &rootInfo, const HcclRankHandle &rankHandle, const CommConfig &commConfig);  // 分层建链时使用的SetupAgent
-    HcclResult PrepareHandle (HcclRankHandle &rankHandle, std::vector<HcclIpAddress> &whitelist); //准备要发送的agent
-    HcclResult SetupRank(std::shared_ptr<HcclSocket> &agentConnRoot); //分层建链时获得每个GroupLeader的监听端口
-    HcclResult SetupAgentByMasterInfo(HcclIpAddress &localHostIp, const HcclRootHandle &rootInfo);
-    HcclResult SetupServer(HcclRootHandle &rootInfo);
-    HcclResult GroupLeaderAccept(HcclRankHandle &grpLeaderInfo, std::vector<HcclIpAddress> whitelist,
+    HcclResult SetupGroupMember(u32 rankSize, u32 myrank, const HcclRootHandle& rootInfo); // Group内成员rank
+    HcclResult SetupAgent(
+        u32 rankSize, u32 myrank, const HcclRootHandle& rootInfo, const HcclRankHandle& rankHandle,
+        const CommConfig& commConfig); // 分层建链时使用的SetupAgent
+    HcclResult PrepareHandle(HcclRankHandle& rankHandle, std::vector<HcclIpAddress>& whitelist); // 准备要发送的agent
+    HcclResult SetupRank(std::shared_ptr<HcclSocket>& agentConnRoot); // 分层建链时获得每个GroupLeader的监听端口
+    HcclResult SetupAgentByMasterInfo(HcclIpAddress& localHostIp, const HcclRootHandle& rootInfo);
+    HcclResult SetupServer(HcclRootHandle& rootInfo);
+    HcclResult GroupLeaderAccept(
+        HcclRankHandle& grpLeaderInfo, std::vector<HcclIpAddress> whitelist,
         std::shared_ptr<HcclSocket> grpLeaderToRoot);
-    HcclResult GroupLeaderListen(HcclRankHandle &rankHandle, std::vector<HcclIpAddress> &whitelist);
-    HcclResult SetupServerByMasterInfo(const HcclIpAddress &masterIP, u32 masterPort, const HcclRootHandle &rootInfo);
+    HcclResult GroupLeaderListen(HcclRankHandle& rankHandle, std::vector<HcclIpAddress>& whitelist);
+    HcclResult SetupServerByMasterInfo(const HcclIpAddress& masterIP, u32 masterPort, const HcclRootHandle& rootInfo);
     HcclResult Teardown();
-    HcclResult WaitComplete(const HcclRootHandle &rootInfo);
-    HcclResult GetCluterInfo(RankTable_t &clusterInfo);
-    HcclResult GetLocalRankInfo(HcclBasicRankInfo &rankInfo);
-    HcclResult GetRankId(u32 &rankId);
-    HcclResult TransformRankTableStr(const RankTable_t &clusterInfo, std::string &ranktableStr);
-    HcclResult GetServerConnections(std::map<u32, std::shared_ptr<HcclSocket>> &connectSockets);
-    HcclResult GetAgentConnection(std::shared_ptr<HcclSocket> &connectSocket);
-    HcclResult SendGroupLeaderPort(std::shared_ptr<HcclSocket> &connectSocket, HcclRankHandle &rankHandle);
-    HcclResult GetAgentListenSocket(HcclSocketPortConfig &commPortConfig);
-    HcclResult GenerateRootInfo(const HcclIpAddress &hostIP, u32 hostPort, u32 devicePhysicID, HcclRootHandle &rootInfo);
-    HcclResult GetGroupLeader(HcclRankHandle &rankHandle);
+    HcclResult WaitComplete(const HcclRootHandle& rootInfo);
+    HcclResult GetCluterInfo(RankTable_t& clusterInfo);
+    HcclResult GetLocalRankInfo(HcclBasicRankInfo& rankInfo);
+    HcclResult GetRankId(u32& rankId);
+    HcclResult TransformRankTableStr(const RankTable_t& clusterInfo, std::string& ranktableStr);
+    HcclResult GetServerConnections(std::map<u32, std::shared_ptr<HcclSocket>>& connectSockets);
+    HcclResult GetAgentConnection(std::shared_ptr<HcclSocket>& connectSocket);
+    HcclResult SendGroupLeaderPort(std::shared_ptr<HcclSocket>& connectSocket, HcclRankHandle& rankHandle);
+    HcclResult GetAgentListenSocket(HcclSocketPortConfig& commPortConfig);
+    HcclResult
+    GenerateRootInfo(const HcclIpAddress& hostIP, u32 hostPort, u32 devicePhysicID, HcclRootHandle& rootInfo);
+    HcclResult GetGroupLeader(HcclRankHandle& rankHandle);
     HcclResult SetIsInterSuperPodRetryEnable(bool isRetry);
 
 protected:
 private:
     HcclResult TeardownAgent();
     HcclResult TeardownServer();
-    HcclResult Struct2JsonRankTable(const RankTable_t &clusterInfo, nlohmann::json &ClusterJson);
-    HcclResult GetRootHostIP(const std::vector<HcclIpAddress> &whitelist, HcclIpAddress &ip, u32 devPhyId);
-    HcclResult StartNetwork(HcclIpAddress &hostIP, bool bInitDevNic);
-    HcclResult StopNetwork(HcclIpAddress &hostIP, bool bInitDevNic);
-    HcclResult StartRootNetwork(const HcclIpAddress &hostIP, u32 &usePort, const std::vector<HcclSocketPortRange> &portRanges);
-    HcclResult StartGroupLeaderNetwork(const std::vector<HcclIpAddress> &whitelist,
-        const HcclIpAddress &hostIP, u32 &bindPort, const std::vector<HcclSocketPortRange> &portRanges);
-    HcclResult AddSocketWhiteList(u32 port,
-        const std::vector<HcclIpAddress> &whitelist) const;
-    HcclResult GenerateLocalRankInfo(u32 rankSize, u32 rankID, HcclBasicRankInfo &localRankInfo);
-    HcclResult GetSuperPodInfo(s32 deviceLogicId, std::string &superPodId, u32 &superDeviceId);
-    HcclResult ReadHostSocketWhitelist(std::vector<HcclIpAddress> &whitelist) const;
-    HcclResult GetAllHostIfInfos(std::vector<std::pair<std::string, HcclIpAddress>> &ifInfos, u32 devPhyId) const;
-    HcclResult GetAllValidHostIfInfos(const std::vector<HcclIpAddress> &whitelist,
-        std::vector<std::pair<std::string, HcclIpAddress>> &ifInfos, u32 devPhyId);
-    HcclResult TransformDeviceList(const RankTable_t &clusterInfo, std::vector<RankInfo_t> &tmpRankList,
-        nlohmann::json &perServerJson, u32 serverIndex);
-    HcclResult TransformSuperPodList(const std::vector<RankInfo_t> &rankInfo, nlohmann::json &superPodListJson) const;
-    void SetupTopoExchangeServer(s32 devicePhysicID, s32 deviceLogicID, HcclIpAddress hostIP, u32 hostPort,
-        std::vector<HcclIpAddress> whitelist, HcclNetDevCtx netDevCtx,
-       std::shared_ptr<HcclSocket> listenSocket, bool isMasterInfo = false);
-    void SetupTopoGroupLeader(s32 devicePhysicID, s32 deviceLogicID, HcclIpAddress hostIP, u32 hostPort,
-        std::vector<HcclIpAddress> whitelist, HcclNetDevCtx netDevCtx, std::shared_ptr<HcclSocket> listenSocket,
-        std::shared_ptr<HcclSocket> grpLeaderToRoot, bool isMasterInfo = false);
+    HcclResult Struct2JsonRankTable(const RankTable_t& clusterInfo, nlohmann::json& ClusterJson);
+    HcclResult GetRootHostIP(const std::vector<HcclIpAddress>& whitelist, HcclIpAddress& ip, u32 devPhyId);
+    HcclResult StartNetwork(HcclIpAddress& hostIP, bool bInitDevNic);
+    HcclResult StopNetwork(HcclIpAddress& hostIP, bool bInitDevNic);
+    HcclResult
+    StartRootNetwork(const HcclIpAddress& hostIP, u32& usePort, const std::vector<HcclSocketPortRange>& portRanges);
+    HcclResult StartGroupLeaderNetwork(
+        const std::vector<HcclIpAddress>& whitelist, const HcclIpAddress& hostIP, u32& bindPort,
+        const std::vector<HcclSocketPortRange>& portRanges);
+    HcclResult AddSocketWhiteList(u32 port, const std::vector<HcclIpAddress>& whitelist) const;
+    HcclResult GenerateLocalRankInfo(u32 rankSize, u32 rankID, HcclBasicRankInfo& localRankInfo);
+    HcclResult GetSuperPodInfo(s32 deviceLogicId, std::string& superPodId, u32& superDeviceId);
+    HcclResult ReadHostSocketWhitelist(std::vector<HcclIpAddress>& whitelist) const;
+    HcclResult GetAllHostIfInfos(std::vector<std::pair<std::string, HcclIpAddress>>& ifInfos, u32 devPhyId) const;
+    HcclResult GetAllValidHostIfInfos(
+        const std::vector<HcclIpAddress>& whitelist, std::vector<std::pair<std::string, HcclIpAddress>>& ifInfos,
+        u32 devPhyId);
+    HcclResult TransformDeviceList(
+        const RankTable_t& clusterInfo, std::vector<RankInfo_t>& tmpRankList, nlohmann::json& perServerJson,
+        u32 serverIndex);
+    HcclResult TransformSuperPodList(const std::vector<RankInfo_t>& rankInfo, nlohmann::json& superPodListJson) const;
+    void SetupTopoExchangeServer(
+        s32 devicePhysicID, s32 deviceLogicID, HcclIpAddress hostIP, u32 hostPort, std::vector<HcclIpAddress> whitelist,
+        HcclNetDevCtx netDevCtx, std::shared_ptr<HcclSocket> listenSocket, bool isMasterInfo = false);
+    void SetupTopoGroupLeader(
+        s32 devicePhysicID, s32 deviceLogicID, HcclIpAddress hostIP, u32 hostPort, std::vector<HcclIpAddress> whitelist,
+        HcclNetDevCtx netDevCtx, std::shared_ptr<HcclSocket> listenSocket, std::shared_ptr<HcclSocket> grpLeaderToRoot,
+        bool isMasterInfo = false);
     HcclResult WaitTopoExchangeServerCompelte(u32 idx) const;
-    void SetBootstrapHostIP(HcclIpAddress &ip);
+    void SetBootstrapHostIP(HcclIpAddress& ip);
     HcclIpAddress GetBootstrapHostIP() const;
-    HcclResult FilterDevIPs(std::vector<HcclIpAddress> &sourceDeviceIPs,
-        std::vector<HcclIpAddress> &targetDeviceIPs) const;
-    HcclResult CalcGroupSizeAndRank(const u32 nRanks, const u32 rank, u32 &groupSize, u32 &groupRank);
-    HcclResult PreemptDeviceNicPort(const u32 devPhyId, const s32 devLogicId, const HcclIpAddress &deviceIp,
-        u32 &usePort);
-    HcclResult PreemptBackupDeviceNicPort(const u32 devPhyId, const s32 devLogicId, const HcclIpAddress &deviceIp,
-        const HcclIpAddress &backupDeviceIp, u32 &usePort);
-    HcclResult PreemptDeviceVnicPort(HcclBasicRankInfo &localRankInfo);
-    HcclResult GetDeviceBackupNicInfo(HcclBasicRankInfo &localRankInfo);
+    HcclResult
+    FilterDevIPs(std::vector<HcclIpAddress>& sourceDeviceIPs, std::vector<HcclIpAddress>& targetDeviceIPs) const;
+    HcclResult CalcGroupSizeAndRank(const u32 nRanks, const u32 rank, u32& groupSize, u32& groupRank);
+    HcclResult
+    PreemptDeviceNicPort(const u32 devPhyId, const s32 devLogicId, const HcclIpAddress& deviceIp, u32& usePort);
+    HcclResult PreemptBackupDeviceNicPort(
+        const u32 devPhyId, const s32 devLogicId, const HcclIpAddress& deviceIp, const HcclIpAddress& backupDeviceIp,
+        u32& usePort);
+    HcclResult PreemptDeviceVnicPort(HcclBasicRankInfo& localRankInfo);
+    HcclResult GetDeviceBackupNicInfo(HcclBasicRankInfo& localRankInfo);
     s32 deviceLogicID_;
     HcclBasicRankInfo localRankInfo_;
     RankTable_t clusterTopoInfo_;
@@ -111,5 +120,5 @@ private:
     bool isInterSuperPodRetryEnable_;
     CommConfig commConfig_;
 };
-}  // namespace hccl
+} // namespace hccl
 #endif /* TOPOINFO_DETECT_H */

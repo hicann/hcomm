@@ -17,15 +17,15 @@
 namespace hccl {
 class TopoinfoRoletable : public TopoInfoRanktableParser {
 public:
-    explicit TopoinfoRoletable(const std::string &rankTableM);
+    explicit TopoinfoRoletable(const std::string& rankTableM);
     ~TopoinfoRoletable() override;
 
-    HcclResult ParserRoleTable(RoleTableInfo &roleTableInfo);
+    HcclResult ParserRoleTable(RoleTableInfo& roleTableInfo);
+
 private:
-    HcclResult GetSingleNode(const nlohmann::json &NodeListObj, u32 objIndex,
-        std::vector<RoleTableNodeInfo> &nodes);
-    HcclResult GetServersInfo(std::vector<RoleTableNodeInfo> &servers);
-    HcclResult GetClientsInfo(std::vector<RoleTableNodeInfo> &clients);
+    HcclResult GetSingleNode(const nlohmann::json& NodeListObj, u32 objIndex, std::vector<RoleTableNodeInfo>& nodes);
+    HcclResult GetServersInfo(std::vector<RoleTableNodeInfo>& servers);
+    HcclResult GetClientsInfo(std::vector<RoleTableNodeInfo>& clients);
 };
-}  // namespace hccl
-#endif  // TOPOINFO_ROLETABLE_H
+} // namespace hccl
+#endif // TOPOINFO_ROLETABLE_H

@@ -18,15 +18,15 @@
 
 namespace HcclSim {
 namespace TaskGraphGeneratorV3 {
-struct SemanticCheckStats {
-    size_t handledNodeCount{0};
-    size_t rankCount{0};
-    size_t normalSemanticCount{0};
-    uint64_t normalSemanticBytes{0};
-    size_t msBucketCount{0};
-};
+    struct SemanticCheckStats {
+        size_t handledNodeCount{0};
+        size_t rankCount{0};
+        size_t normalSemanticCount{0};
+        uint64_t normalSemanticBytes{0};
+        size_t msBucketCount{0};
+    };
 
-HcclResult CheckSemantics(const TaskNode *start, SemanticCheckStats *stats = nullptr);
+    HcclResult CheckSemantics(const TaskNode* start, SemanticCheckStats* stats = nullptr);
 } // namespace TaskGraphGeneratorV3
 } // namespace HcclSim
 

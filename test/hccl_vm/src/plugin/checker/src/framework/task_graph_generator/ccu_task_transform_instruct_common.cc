@@ -19,7 +19,7 @@
 
 std::map<RankId, std::map<u32, HcclSim::ChannelsPerDie>> g_allRankChannelInfo;
 
-std::string HcclSim::ParseMSList(const CcuRep::CcuInstr *instr)
+std::string HcclSim::ParseMSList(const CcuRep::CcuInstr* instr)
 {
     uint16_t msId[CcuRep::CCU_REDUCE_MAX_MS];
     uint16_t count = instr->v1.add.count;

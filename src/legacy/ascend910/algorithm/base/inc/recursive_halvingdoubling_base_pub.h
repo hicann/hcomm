@@ -21,8 +21,7 @@ public:
 
 protected:
     HcclResult CalcPartOneSizeAndBlockSize(const u32 rankSize);
-    HcclResult BuildSubLinks(const std::vector<LINK> &links, std::vector<LINK> &subLinks,
-                               u32 rankSize) const;
+    HcclResult BuildSubLinks(const std::vector<LINK>& links, std::vector<LINK>& subLinks, u32 rankSize) const;
     HcclResult CalculateSlices(u64 dataBytes) const;
 
     u32 blockSize_;
@@ -31,6 +30,6 @@ protected:
 
 private:
 };
-}  // hccl
+} // namespace hccl
 
-#endif  /* RECURSIVE_HALVINGDOUBLING_BASE_PUB_H */
+#endif /* RECURSIVE_HALVINGDOUBLING_BASE_PUB_H */

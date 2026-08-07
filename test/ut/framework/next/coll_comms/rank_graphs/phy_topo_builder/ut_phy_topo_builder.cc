@@ -26,50 +26,62 @@
 
 using namespace Hccl;
 
-std::shared_ptr<TopoInfo> LoadTopoInfoStub(PhyTopoBuilder *This, const std::string &topoPath)
+std::shared_ptr<TopoInfo> LoadTopoInfoStub(PhyTopoBuilder* This, const std::string& topoPath)
 {
     (void)This;
     (void)topoPath;
-    return std::make_shared<TopoInfo>(test::MakeTopoInfo({0, 1, 2}, {
-        test::MakeEdge(0, LinkType::PEER2PEER, 0, {"0/0"}, 1, {"0/1"}, LinkProtocol::UB_CTP,
-            AddrPosition::DEVICE, 0, TopoType::MESH_1D),
-        test::MakeEdge(0, LinkType::PEER2PEER, 1, {"0/1"}, 2, {"0/2"}, LinkProtocol::UB_CTP,
-            AddrPosition::DEVICE, 0, TopoType::MESH_1D),
-        test::MakeEdge(0, LinkType::PEER2NET, 1, {"0/1"}, 0, {}, LinkProtocol::UB_CTP,
-            AddrPosition::DEVICE, 0, TopoType::MESH_1D),
-        test::MakeEdge(1, LinkType::PEER2NET, 0, {"1/3", "1/4", "0/3", "0/4"}, 0, {},
-            LinkProtocol::UB_MEM, AddrPosition::DEVICE, 1, TopoType::MESH_1D),
-    }));
+    return std::make_shared<TopoInfo>(test::MakeTopoInfo(
+        {0, 1, 2}, {
+                       test::MakeEdge(
+                           0, LinkType::PEER2PEER, 0, {"0/0"}, 1, {"0/1"}, LinkProtocol::UB_CTP, AddrPosition::DEVICE,
+                           0, TopoType::MESH_1D),
+                       test::MakeEdge(
+                           0, LinkType::PEER2PEER, 1, {"0/1"}, 2, {"0/2"}, LinkProtocol::UB_CTP, AddrPosition::DEVICE,
+                           0, TopoType::MESH_1D),
+                       test::MakeEdge(
+                           0, LinkType::PEER2NET, 1, {"0/1"}, 0, {}, LinkProtocol::UB_CTP, AddrPosition::DEVICE, 0,
+                           TopoType::MESH_1D),
+                       test::MakeEdge(
+                           1, LinkType::PEER2NET, 0, {"1/3", "1/4", "0/3", "0/4"}, 0, {}, LinkProtocol::UB_MEM,
+                           AddrPosition::DEVICE, 1, TopoType::MESH_1D),
+                   }));
 }
 
-std::shared_ptr<TopoInfo> LoadTopoInfoWithDiffProtocols(PhyTopoBuilder *This, const std::string &topoPath)
+std::shared_ptr<TopoInfo> LoadTopoInfoWithDiffProtocols(PhyTopoBuilder* This, const std::string& topoPath)
 {
     (void)This;
     (void)topoPath;
-    return std::make_shared<TopoInfo>(test::MakeTopoInfo({0, 1, 2}, {
-        test::MakeEdge(0, LinkType::PEER2PEER, 1, {"0/1"}, 2, {"0/2"}, LinkProtocol::UB_CTP,
-            AddrPosition::DEVICE, 0, TopoType::MESH_1D),
-        test::MakeEdge(0, LinkType::PEER2PEER, 1, {"0/1"}, 0, {"0/1"}, LinkProtocol::UB_MEM),
-        test::MakeEdge(0, LinkType::PEER2NET, 0, {"0/1"}, 0, {}, LinkProtocol::UB_CTP,
-            AddrPosition::DEVICE, 0, TopoType::MESH_1D),
-        test::MakeEdge(0, LinkType::PEER2NET, 1, {"0/1"}, 0, {}, LinkProtocol::TCP,
-            AddrPosition::DEVICE, 0, TopoType::MESH_1D),
-    }));
+    return std::make_shared<TopoInfo>(test::MakeTopoInfo(
+        {0, 1, 2}, {
+                       test::MakeEdge(
+                           0, LinkType::PEER2PEER, 1, {"0/1"}, 2, {"0/2"}, LinkProtocol::UB_CTP, AddrPosition::DEVICE,
+                           0, TopoType::MESH_1D),
+                       test::MakeEdge(0, LinkType::PEER2PEER, 1, {"0/1"}, 0, {"0/1"}, LinkProtocol::UB_MEM),
+                       test::MakeEdge(
+                           0, LinkType::PEER2NET, 0, {"0/1"}, 0, {}, LinkProtocol::UB_CTP, AddrPosition::DEVICE, 0,
+                           TopoType::MESH_1D),
+                       test::MakeEdge(
+                           0, LinkType::PEER2NET, 1, {"0/1"}, 0, {}, LinkProtocol::TCP, AddrPosition::DEVICE, 0,
+                           TopoType::MESH_1D),
+                   }));
 }
 
-std::shared_ptr<TopoInfo> LoadTopoInfoWithRepeatEdge(PhyTopoBuilder *This, const std::string &topoPath)
+std::shared_ptr<TopoInfo> LoadTopoInfoWithRepeatEdge(PhyTopoBuilder* This, const std::string& topoPath)
 {
     (void)This;
     (void)topoPath;
-    return std::make_shared<TopoInfo>(test::MakeTopoInfo({0, 1}, {
-        test::MakeEdge(0, LinkType::PEER2PEER, 0, {"0/1"}, 1, {"0/2"}, LinkProtocol::UB_CTP,
-            AddrPosition::DEVICE, 0, TopoType::MESH_1D),
-        test::MakeEdge(0, LinkType::PEER2PEER, 0, {"0/1"}, 1, {"0/2"}, LinkProtocol::UB_CTP,
-            AddrPosition::DEVICE, 0, TopoType::MESH_1D),
-    }));
+    return std::make_shared<TopoInfo>(test::MakeTopoInfo(
+        {0, 1}, {
+                    test::MakeEdge(
+                        0, LinkType::PEER2PEER, 0, {"0/1"}, 1, {"0/2"}, LinkProtocol::UB_CTP, AddrPosition::DEVICE, 0,
+                        TopoType::MESH_1D),
+                    test::MakeEdge(
+                        0, LinkType::PEER2PEER, 0, {"0/1"}, 1, {"0/2"}, LinkProtocol::UB_CTP, AddrPosition::DEVICE, 0,
+                        TopoType::MESH_1D),
+                }));
 }
 
-std::unique_ptr<PhyTopo> PhyTopoBuilderBuildStub(const std::string &topoPath)
+std::unique_ptr<PhyTopo> PhyTopoBuilderBuildStub(const std::string& topoPath)
 {
     if (topoPath.empty()) {
         THROW<InvalidParamsException>("[PhyTopoBuilder::%s]Topo path is empty.", __func__);
@@ -80,7 +92,7 @@ std::unique_ptr<PhyTopo> PhyTopoBuilderBuildStub(const std::string &topoPath)
     PhyTopoBuilder phyTopoBuilder;
     auto topoInfo = phyTopoBuilder.LoadTopoInfo(topoPath);
     // 根据topoInfo，按netLayer构造Graph
-    for (const auto &iter : topoInfo->edges) {
+    for (const auto& iter : topoInfo->edges) {
         auto netLayer = iter.first;
         auto graph = phyTopoBuilder.CreateGraph(iter.second);
         phyTopo->AddTopoGraph(netLayer, graph);
@@ -89,7 +101,7 @@ std::unique_ptr<PhyTopo> PhyTopoBuilderBuildStub(const std::string &topoPath)
     return phyTopo;
 }
 
-int StatLargeTopoFile(const char *path, struct stat *fileStat)
+int StatLargeTopoFile(const char* path, struct stat* fileStat)
 {
     (void)path;
     if (fileStat == nullptr) {
@@ -101,20 +113,11 @@ int StatLargeTopoFile(const char *path, struct stat *fileStat)
 
 class PhyTopoBuilderTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "PhyTopoBuilderTest SetUP" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "PhyTopoBuilderTest SetUP" << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "PhyTopoBuilderTest TearDown" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "PhyTopoBuilderTest TearDown" << std::endl; }
 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in PhyTopoBuilderTest SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in PhyTopoBuilderTest SetUP" << std::endl; }
 
     virtual void TearDown()
     {
@@ -157,18 +160,17 @@ TEST_F(PhyTopoBuilderTest, Ut_PhyTopoBuilder_When_ValidTopoPath_Expect_ReturnEdg
     size_t totalEdgeNum = 0;
 
     // 遍历所有源节点
-    for (const auto &srcEntry : graph->edges) {
-        const auto &dstMap = srcEntry.second;
+    for (const auto& srcEntry : graph->edges) {
+        const auto& dstMap = srcEntry.second;
         // 遍历该源节点下的所有目标节点
-        for (const auto &dstEntry : dstMap) {
-            const auto &edgesVec = dstEntry.second;  // 该源->目标的所有边
+        for (const auto& dstEntry : dstMap) {
+            const auto& edgesVec = dstEntry.second; // 该源->目标的所有边
             totalEdgeNum += edgesVec.size();
         }
     }
 
     EXPECT_EQ(totalEdgeNum, 6);
 }
-
 
 TEST_F(PhyTopoBuilderTest, Ut_PhyTopoBuilder_When_EdgeRepeat_Expect_ReturnEdgeNum)
 {
@@ -179,8 +181,8 @@ TEST_F(PhyTopoBuilderTest, Ut_PhyTopoBuilder_When_EdgeRepeat_Expect_ReturnEdgeNu
     ASSERT_NE(graph, nullptr);
 
     size_t totalEdgeNum = 0;
-    for (const auto &srcEntry : graph->edges) {
-        for (const auto &dstEntry : srcEntry.second) {
+    for (const auto& srcEntry : graph->edges) {
+        for (const auto& dstEntry : srcEntry.second) {
             totalEdgeNum += dstEntry.second.size();
         }
     }
@@ -196,14 +198,13 @@ TEST_F(PhyTopoBuilderTest, Ut_PhyTopoBuilder_When_DiffProtocols_Expect_ReturnEdg
     size_t totalEdgeNum = 0;
 
     // 遍历所有源节点
-    for (const auto &srcEntry : graph->edges) {
-        const auto &dstMap = srcEntry.second;
+    for (const auto& srcEntry : graph->edges) {
+        const auto& dstMap = srcEntry.second;
         // 遍历该源节点下的所有目标节点
-        for (const auto &dstEntry : dstMap) {
-            const auto &edgesVec = dstEntry.second;  // 该源->目标的所有边
+        for (const auto& dstEntry : dstMap) {
+            const auto& edgesVec = dstEntry.second; // 该源->目标的所有边
             totalEdgeNum += edgesVec.size();
         }
     }
     EXPECT_EQ(totalEdgeNum, 8);
-
 }

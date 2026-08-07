@@ -35,22 +35,20 @@ typedef struct {
     char reserved[256];            // 预留字段
 } SocketDesc;                      // SocketDesc
 
-typedef void *SocketHandler;
+typedef void* SocketHandler;
 // 此处前缀改一下 取消掉HcclComm前缀
 enum SocketStates { SOCKET_OK, SOCKET_CONNECTING, SOCKET_TIMEOUT };
 
-HcclResult SocketCreate(
-    SocketDesc *socketDesc, SocketHandler *socketHandle); // HcclCommSocketCreate接口，创建socket连接
+HcclResult
+SocketCreate(SocketDesc* socketDesc, SocketHandler* socketHandle); // HcclCommSocketCreate接口，创建socket连接
 
 HcclResult SocketDestroy(SocketHandler socketHandle);
 
-HcclResult SocketGetStatus(SocketHandler socketHandle, SocketStates *status);
+HcclResult SocketGetStatus(SocketHandler socketHandle, SocketStates* status);
 
-HcclResult SocketSendNb(
-    SocketHandler socketHandle, void *sendbuffer, uint64_t sendSize, uint64_t *sentSize);
+HcclResult SocketSendNb(SocketHandler socketHandle, void* sendbuffer, uint64_t sendSize, uint64_t* sentSize);
 
-HcclResult SocketRecvNb(
-    SocketHandler socketHandle, void *recvBuffer, uint64_t recvSize, uint64_t *recvedSize);
+HcclResult SocketRecvNb(SocketHandler socketHandle, void* recvBuffer, uint64_t recvSize, uint64_t* recvedSize);
 
 #ifdef __cplusplus
 }

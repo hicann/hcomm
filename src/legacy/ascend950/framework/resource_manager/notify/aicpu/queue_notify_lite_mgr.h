@@ -17,15 +17,15 @@ namespace Hccl {
 
 class QueueNotifyLiteMgr {
 public:
-    NotifyLite *Get(u32 postQId, u32 waitQId, u32 topicId);
+    NotifyLite* Get(u32 postQId, u32 waitQId, u32 topicId);
 
     void Reset();
 
-    void ParsePackedData(std::vector<char> &data);
+    void ParsePackedData(std::vector<char>& data);
 
 private:
     std::map<std::tuple<u32, u32, u32>, std::unique_ptr<NotifyLite>> notifys;
 };
 
-}
+} // namespace Hccl
 #endif

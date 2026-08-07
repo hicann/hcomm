@@ -13,6 +13,6 @@
 
 #include "inc_all_reduce_deter/all_reduce_chunk_mesh_pub.h"
 
-namespace hccl {}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALL_REDUCE_CHUNK_MESH_H */

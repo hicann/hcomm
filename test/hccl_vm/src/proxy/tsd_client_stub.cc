@@ -19,19 +19,18 @@
 
 #include "sim_log.h"
 
-
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
 uint32_t TsdCapabilityGet(const uint32_t logicDeviceId, const int32_t type, const uint64_t ptr)
 {
-    (void) logicDeviceId;
-    (void) type;
-    (void) ptr;
+    (void)logicDeviceId;
+    (void)type;
+    (void)ptr;
     HCCL_VM_WARN("is empty");
     return 0;
 }
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus

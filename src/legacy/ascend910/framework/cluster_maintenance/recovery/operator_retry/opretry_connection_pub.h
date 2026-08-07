@@ -23,14 +23,16 @@ public:
     static bool IsOpRetryConnEnable();
 
     /* 初始化group中的链接 */
-    static HcclResult Init(const std::string &group, u32 rankSize, const OpRetryServerInfo& serverInfo,
-        const OpRetryAgentInfo& agentInfo, u32 rootRank = 0);
+    static HcclResult Init(
+        const std::string& group, u32 rankSize, const OpRetryServerInfo& serverInfo, const OpRetryAgentInfo& agentInfo,
+        u32 rootRank = 0);
     /* 释放group对应的链接资源 */
-    static void DeInit(const std::string &group);
+    static void DeInit(const std::string& group);
     /* 获取对应链路，只有isRoot为真时，server中才会有有效链接 */
-    static HcclResult GetConns(const std::string &group, bool &isRoot, std::shared_ptr<HcclSocket> &agent,
-        std::map<u32, std::shared_ptr<HcclSocket>> &server);
+    static HcclResult GetConns(
+        const std::string& group, bool& isRoot, std::shared_ptr<HcclSocket>& agent,
+        std::map<u32, std::shared_ptr<HcclSocket>>& server);
 };
-}
+} // namespace hccl
 
 #endif

@@ -14,9 +14,9 @@
 
 namespace Hccl {
 
-HcclResult GetStreamCaptureInfo(rtStream_t stream, rtModel_t &rtModel, bool &isCapture);
-HcclResult AddStreamToModel(rtStream_t stream, rtModel_t &rtModel);
-HcclResult GetModelId(rtModel_t &rtModel, u32 &modelId);
+HcclResult GetStreamCaptureInfo(rtStream_t stream, rtModel_t& rtModel, bool& isCapture);
+HcclResult AddStreamToModel(rtStream_t stream, rtModel_t& rtModel);
+HcclResult GetModelId(rtModel_t& rtModel, u32& modelId);
 
 } // namespace Hccl
 

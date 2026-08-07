@@ -13,7 +13,6 @@
 
 #include "all_reduce_ring_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALL_REDUCE_RING_H */

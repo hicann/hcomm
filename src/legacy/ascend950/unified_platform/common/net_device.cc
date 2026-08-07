@@ -10,29 +10,17 @@
 #include "net_device.h"
 
 namespace Hccl {
-HcclNetDevice::HcclNetDevice(const NetDevInfo &info)
+HcclNetDevice::HcclNetDevice(const NetDevInfo& info)
 {
     netDevInfo_ = info;
     HCCL_DEBUG("HcclNetDevice created: %p", this);
 }
 
-HcclNetDevice::~HcclNetDevice()
-{    
-    HCCL_DEBUG("HcclNetDevice destroyed: %p", this);
-}
+HcclNetDevice::~HcclNetDevice() { HCCL_DEBUG("HcclNetDevice destroyed: %p", this); }
 
-NetDevInfo HcclNetDevice::GetNetDevInfo() const
-{
-    return netDevInfo_;
-}
-InnerNetDev *HcclNetDevice::GetInnerNetDev() const
-{
-    return ndev_;
-}
-void HcclNetDevice::SetInnerNetDev(InnerNetDev *value)
-{
-    ndev_ = value;
-}
+NetDevInfo HcclNetDevice::GetNetDevInfo() const { return netDevInfo_; }
+InnerNetDev* HcclNetDevice::GetInnerNetDev() const { return ndev_; }
+void HcclNetDevice::SetInnerNetDev(InnerNetDev* value) { ndev_ = value; }
 
 RdmaHandle HcclNetDevice::GetRdmaHandle() const
 {
@@ -42,7 +30,7 @@ RdmaHandle HcclNetDevice::GetRdmaHandle() const
     return nullptr;
 }
 
-std::pair<TokenIdHandle, uint32_t> HcclNetDevice::GetTokenIdInfo(const BufferKey<uintptr_t, u64> &bufKey) const
+std::pair<TokenIdHandle, uint32_t> HcclNetDevice::GetTokenIdInfo(const BufferKey<uintptr_t, u64>& bufKey) const
 {
     if (ndev_) {
         return ndev_->getTokenIdInfo(bufKey);
@@ -50,16 +38,13 @@ std::pair<TokenIdHandle, uint32_t> HcclNetDevice::GetTokenIdInfo(const BufferKey
     return std::pair<TokenIdHandle, uint32_t>{};
 }
 
-void HcclNetDevice::PutTokenIdInfo(const BufferKey<uintptr_t, u64> &bufKey, TokenIdHandle tokenIdHandle) const
+void HcclNetDevice::PutTokenIdInfo(const BufferKey<uintptr_t, u64>& bufKey, TokenIdHandle tokenIdHandle) const
 {
     if (ndev_) {
         ndev_->putTokenIdInfo(bufKey, tokenIdHandle);
     }
 }
 
-bool HcclNetDevice::IsUB()
-{
-    return netDevInfo_.protoType == LinkProtoType::UB;
-}
+bool HcclNetDevice::IsUB() { return netDevInfo_.protoType == LinkProtoType::UB; }
 
 } // namespace Hccl

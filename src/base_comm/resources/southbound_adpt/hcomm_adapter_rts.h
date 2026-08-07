@@ -25,7 +25,7 @@ typedef struct {
     uint32_t tokenValue;
 } rtMemUbTokenInfo;
 
-HcclResult RtsUbDevQueryInfo(const rtUbDevQueryCmd cmd, rtMemUbTokenInfo &devInfo);
+HcclResult RtsUbDevQueryInfo(const rtUbDevQueryCmd cmd, rtMemUbTokenInfo& devInfo);
 
 } // namespace hcomm
 #endif // HCOMM_ADAPTER_RTS_H

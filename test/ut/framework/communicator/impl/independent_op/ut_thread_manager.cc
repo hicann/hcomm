@@ -20,20 +20,26 @@ using namespace hccl;
 
 class ThreadManagerTest : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         std::cout << "ThreadManagerTest SetUp" << std::endl;
         BaseInit::SetUp();
-        MOCKER(AicpuAclKernelLaunch)
-            .stubs()
-            .will(returnValue(HCCL_SUCCESS));
+        MOCKER(AicpuAclKernelLaunch).stubs().will(returnValue(HCCL_SUCCESS));
         ManagerCallbacks callbacks;
-        callbacks.getAicpuCommState = []() { return true; };
+        callbacks.getAicpuCommState = []() {
+            return true;
+        };
         callbacks.setAicpuCommState = [](bool) {};
-        callbacks.kernelLaunchAicpuCommInit = []() { return HCCL_SUCCESS; };
-        callbacks.reportProfilingKernel = [](uint64_t, std::string) { return HCCL_SUCCESS; };
+        callbacks.kernelLaunchAicpuCommInit = []() {
+            return HCCL_SUCCESS;
+        };
+        callbacks.reportProfilingKernel = [](uint64_t, std::string) {
+            return HCCL_SUCCESS;
+        };
         threadManager = std::make_unique<ThreadMgr>(1, 1, "test", nullptr, callbacks);
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         std::cout << "ThreadManagerTest TearDown" << std::endl;
         BaseInit::TearDown();
         GlobalMockObject::verify();
@@ -46,17 +52,14 @@ private:
     ThreadHandle exportedThreads[1] = {0};
 };
 
-void MockGetRunSideIsDevice() {
-    MOCKER(GetRunSideIsDevice)
-        .stubs()
-        .with(outBound(bool{false}))
-        .will(returnValue(HCCL_SUCCESS));
+void MockGetRunSideIsDevice()
+{
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(bool{false})).will(returnValue(HCCL_SUCCESS));
 }
 
-void MockThreadKernelLaunchForComm() {
-    MOCKER_CPP(&AicpuLaunchMgr::ThreadKernelLaunchForComm)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+void MockThreadKernelLaunchForComm()
+{
+    MOCKER_CPP(&AicpuLaunchMgr::ThreadKernelLaunchForComm).stubs().will(returnValue(HCCL_SUCCESS));
 }
 
 TEST_F(ThreadManagerTest, Ut_ThreadExportToCommEngineAicpu_When_InvalidThreadHandle_Expect_HCCL_E_PARA)

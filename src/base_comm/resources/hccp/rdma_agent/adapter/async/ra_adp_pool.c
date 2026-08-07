@@ -22,7 +22,7 @@ STATIC void *RaHdcWorkerThread(void *arg)
     pthread_t tidp = pthread_self();
     struct RaHdcTask task = {0};
 
-    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_rs_work", 0, 0, 0);
+    (void)prctl(PR_SET_NAME, (uintptr_t) "hccp_rs_work", 0, 0, 0);
 
     while (1) {
         RA_PTHREAD_MUTEX_LOCK(&pool->poolMutex);

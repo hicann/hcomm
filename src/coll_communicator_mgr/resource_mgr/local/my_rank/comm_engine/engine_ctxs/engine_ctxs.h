@@ -23,14 +23,15 @@ class EngineCtxs {
 public:
     EngineCtxs();
     ~EngineCtxs();
-    HcclResult CreateCommEngineCtx(const std::string &tag, CommEngine engine, uint64_t size, void **ctx);
-    HcclResult GetCommEngineCtx(const std::string &tag, CommEngine engine, void **ctx, uint64_t *size);
-    HcclResult CopyCommEngineCtx(const std::string &tag, CommEngine engine, const void *srcCtx, uint64_t size,
-        uint64_t dstCtxOffset);
-    HcclResult DestroyEngineCtx(const std::string &tag, CommEngine engine);
+    HcclResult CreateCommEngineCtx(const std::string& tag, CommEngine engine, uint64_t size, void** ctx);
+    HcclResult GetCommEngineCtx(const std::string& tag, CommEngine engine, void** ctx, uint64_t* size);
+    HcclResult CopyCommEngineCtx(
+        const std::string& tag, CommEngine engine, const void* srcCtx, uint64_t size, uint64_t dstCtxOffset);
+    HcclResult DestroyEngineCtx(const std::string& tag, CommEngine engine);
+
 private:
     std::unordered_map<std::string, std::unordered_map<CommEngine, HcclMem, CommEngineHash>> contextMap_;
     std::mutex mutex_;
 };
-}
-#endif  // ENGINE_CTXS_H
+} // namespace hccl
+#endif // ENGINE_CTXS_H

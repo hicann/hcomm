@@ -6,7 +6,7 @@
 
 namespace Hccl {
 
-CcuTransportGroup *CcuTransportGroupMgr::PrepareCreate(const LinkGroup &linkGrp, u32 cntCkeNum)
+CcuTransportGroup* CcuTransportGroupMgr::PrepareCreate(const LinkGroup& linkGrp, u32 cntCkeNum)
 {
     // 如果ccuRankGrp2TransportGrpMap中存在rankGrp对应的transportGroup，则直接返回
     auto linkGrpIter = linkGrp2TransportGrpMap.find(linkGrp);
@@ -14,12 +14,15 @@ CcuTransportGroup *CcuTransportGroupMgr::PrepareCreate(const LinkGroup &linkGrp,
         return linkGrpIter->second.get();
     }
 
-    CcuTransportMgr *ccuTransportMgr = dynamic_cast<CollServiceStub *>(comm->GetCollService())->GetCcuInsPreprocessor()->GetCcuComm()->GetCcuTransportMgr();
+    CcuTransportMgr* ccuTransportMgr = dynamic_cast<CollServiceStub*>(comm->GetCollService())
+                                           ->GetCcuInsPreprocessor()
+                                           ->GetCcuComm()
+                                           ->GetCcuTransportMgr();
     vector<CcuTransport*> ccuTransports;
-    for (auto &linkInfo : linkGrp.GetLinks()) {
+    for (auto& linkInfo : linkGrp.GetLinks()) {
         const auto transportsPerRemoteRank = ccuTransportMgr->Get(linkInfo.rankId);
         if (transportsPerRemoteRank.size() != 0) {
-            for (auto &transport : transportsPerRemoteRank) {
+            for (auto& transport : transportsPerRemoteRank) {
                 if (transport->GetDieId() == linkInfo.dieId) {
                     // 待修改，CcuTransport::GetDieId()为平台层接口，框架层不能用
                     ccuTransports.emplace_back(transport);
@@ -30,7 +33,8 @@ CcuTransportGroup *CcuTransportGroupMgr::PrepareCreate(const LinkGroup &linkGrp,
         }
     }
 
-    std::unique_ptr<CcuTransportGroup> newTransportGroup = std::make_unique<CcuTransportGroup>(ccuTransports, cntCkeNum);
+    std::unique_ptr<CcuTransportGroup> newTransportGroup
+        = std::make_unique<CcuTransportGroup>(ccuTransports, cntCkeNum);
 
     // TransportGroup如果创建失败，则返回nullptr，并抛异
     if (newTransportGroup->GetGrpStatus() != TransportGrpStatus::INIT) {
@@ -44,22 +48,12 @@ CcuTransportGroup *CcuTransportGroupMgr::PrepareCreate(const LinkGroup &linkGrp,
     return linkGrp2TransportGrpMap[linkGrp].get();
 }
 
-CcuTransportGroupMgr::CcuTransportGroupMgr(CommunicatorImpl &comm) : comm(&comm)
-{
-    isDestroyed = false;
-}
+CcuTransportGroupMgr::CcuTransportGroupMgr(CommunicatorImpl& comm) : comm(&comm) { isDestroyed = false; }
 
-CcuTransportGroupMgr::~CcuTransportGroupMgr()
-{
-}
+CcuTransportGroupMgr::~CcuTransportGroupMgr() {}
 
-void CcuTransportGroupMgr::Confirm()
-{
-   tempTransportGrp.clear();
-}
+void CcuTransportGroupMgr::Confirm() { tempTransportGrp.clear(); }
 
-void CcuTransportGroupMgr::Fallback()
-{
-}
+void CcuTransportGroupMgr::Fallback() {}
 
-}
+} // namespace Hccl

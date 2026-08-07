@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #ifndef __AICPU_CHANNEL_PROCESS_H__
 #define __AICPU_CHANNEL_PROCESS_H__
 
@@ -23,11 +22,11 @@
 class AicpuChannelProcess {
 public:
     ~AicpuChannelProcess() = default;
-    static HcclResult ParsePackData(std::vector<char> &data, ChannelHandle &handle);
-    static HcclResult InitUrmaChannel(HcclChannelUrmaRes *commParam);
-    static HcclResult AicpuChannelInit(HcclChannelUrmaRes *commParam);
-    static HcclResult AicpuChannelDestroy(HcclChannelUrmaRes *commParam);
-    static HcclResult InitHcommChannelRes(HcommChannelRes *commParam);
+    static HcclResult ParsePackData(std::vector<char>& data, ChannelHandle& handle);
+    static HcclResult InitUrmaChannel(HcclChannelUrmaRes* commParam);
+    static HcclResult AicpuChannelInit(HcclChannelUrmaRes* commParam);
+    static HcclResult AicpuChannelDestroy(HcclChannelUrmaRes* commParam);
+    static HcclResult InitHcommChannelRes(HcommChannelRes* commParam);
 
 private:
     static std::mutex mutex_;

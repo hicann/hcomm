@@ -20,7 +20,6 @@
 #include "dlhal_function.h"
 #include "device_capacity.h"
 
-
 constexpr u32 INLINEREDUCE_ALIGN_BYTES_910A = 128;
 constexpr u32 INLINEREDUCE_ALIGN_BYTES_310P = 2;
 constexpr u32 INLINEREDUCE_ALIGN_BYTES_910_93 = 1; // A2和A3场景的inline reduce不受地址对齐限制
@@ -48,36 +47,37 @@ bool g_is310PDevice = false;
 
 bool IsSupportAIVCopy(HcclDataType dataType)
 {
-    return (dataType == HCCL_DATA_TYPE_FP16 || dataType == HCCL_DATA_TYPE_INT16 || dataType == HCCL_DATA_TYPE_UINT16 ||
-        dataType == HCCL_DATA_TYPE_FP32 || dataType == HCCL_DATA_TYPE_INT32 || dataType == HCCL_DATA_TYPE_UINT32 ||
-        dataType == HCCL_DATA_TYPE_INT8 || dataType == HCCL_DATA_TYPE_UINT8 || dataType == HCCL_DATA_TYPE_BFP16 ||
-        dataType == HCCL_DATA_TYPE_INT64 || dataType == HCCL_DATA_TYPE_UINT64 || dataType == HCCL_DATA_TYPE_FP64);
+    return (
+        dataType == HCCL_DATA_TYPE_FP16 || dataType == HCCL_DATA_TYPE_INT16 || dataType == HCCL_DATA_TYPE_UINT16
+        || dataType == HCCL_DATA_TYPE_FP32 || dataType == HCCL_DATA_TYPE_INT32 || dataType == HCCL_DATA_TYPE_UINT32
+        || dataType == HCCL_DATA_TYPE_INT8 || dataType == HCCL_DATA_TYPE_UINT8 || dataType == HCCL_DATA_TYPE_BFP16
+        || dataType == HCCL_DATA_TYPE_INT64 || dataType == HCCL_DATA_TYPE_UINT64 || dataType == HCCL_DATA_TYPE_FP64);
 }
 
 bool IsSupportAIVReduce(HcclDataType dataType, HcclReduceOp op)
 {
-    bool checkDataType =
-        (dataType == HCCL_DATA_TYPE_FP32 || dataType == HCCL_DATA_TYPE_FP16 || dataType == HCCL_DATA_TYPE_INT8 ||
-         dataType == HCCL_DATA_TYPE_INT16 || dataType == HCCL_DATA_TYPE_INT32 || dataType == HCCL_DATA_TYPE_BFP16);
+    bool checkDataType
+        = (dataType == HCCL_DATA_TYPE_FP32 || dataType == HCCL_DATA_TYPE_FP16 || dataType == HCCL_DATA_TYPE_INT8
+           || dataType == HCCL_DATA_TYPE_INT16 || dataType == HCCL_DATA_TYPE_INT32 || dataType == HCCL_DATA_TYPE_BFP16);
     bool checkReduceType = (op == HCCL_REDUCE_SUM || op == HCCL_REDUCE_MAX || op == HCCL_REDUCE_MIN);
 
     return checkDataType && checkReduceType;
 }
 
-bool IsAddressAlign(const void *inputPtr, const void *outputPtr, DevType devType)
+bool IsAddressAlign(const void* inputPtr, const void* outputPtr, DevType devType)
 {
     switch (devType) {
         case DevType::DEV_TYPE_910:
-            return (reinterpret_cast<intptr_t>(inputPtr) % INLINEREDUCE_ALIGN_BYTES_910A) ==
-                (reinterpret_cast<intptr_t>(outputPtr) % INLINEREDUCE_ALIGN_BYTES_910A);
+            return (reinterpret_cast<intptr_t>(inputPtr) % INLINEREDUCE_ALIGN_BYTES_910A)
+                   == (reinterpret_cast<intptr_t>(outputPtr) % INLINEREDUCE_ALIGN_BYTES_910A);
         case DevType::DEV_TYPE_910B:
         case DevType::DEV_TYPE_910_93:
-            return (reinterpret_cast<intptr_t>(inputPtr) % INLINEREDUCE_ALIGN_BYTES_910_93) ==
-                (reinterpret_cast<intptr_t>(outputPtr) % INLINEREDUCE_ALIGN_BYTES_910_93);
+            return (reinterpret_cast<intptr_t>(inputPtr) % INLINEREDUCE_ALIGN_BYTES_910_93)
+                   == (reinterpret_cast<intptr_t>(outputPtr) % INLINEREDUCE_ALIGN_BYTES_910_93);
         case DevType::DEV_TYPE_310P3:
         case DevType::DEV_TYPE_310P1:
-            return (reinterpret_cast<intptr_t>(inputPtr) % INLINEREDUCE_ALIGN_BYTES_310P) ==
-                (reinterpret_cast<intptr_t>(outputPtr) % INLINEREDUCE_ALIGN_BYTES_310P);
+            return (reinterpret_cast<intptr_t>(inputPtr) % INLINEREDUCE_ALIGN_BYTES_310P)
+                   == (reinterpret_cast<intptr_t>(outputPtr) % INLINEREDUCE_ALIGN_BYTES_310P);
         default:
             HCCL_WARNING("device type[%d] is out of range", static_cast<s32>(devType));
             return false;
@@ -89,15 +89,16 @@ bool IsDataTypeSupport(HcclDataType dataType, DevType devType)
     switch (devType) {
         case DevType::DEV_TYPE_910B:
         case DevType::DEV_TYPE_910_93:
-            return (dataType == HCCL_DATA_TYPE_FP32 || dataType == HCCL_DATA_TYPE_FP16 ||
-                    dataType == HCCL_DATA_TYPE_INT8 || dataType == HCCL_DATA_TYPE_INT16 ||
-                    dataType == HCCL_DATA_TYPE_INT32 || dataType == HCCL_DATA_TYPE_BFP16);
+            return (
+                dataType == HCCL_DATA_TYPE_FP32 || dataType == HCCL_DATA_TYPE_FP16 || dataType == HCCL_DATA_TYPE_INT8
+                || dataType == HCCL_DATA_TYPE_INT16 || dataType == HCCL_DATA_TYPE_INT32
+                || dataType == HCCL_DATA_TYPE_BFP16);
         case DevType::DEV_TYPE_910:
         case DevType::DEV_TYPE_310P1:
             return dataType == HCCL_DATA_TYPE_FP32;
         case DevType::DEV_TYPE_310P3:
-            return (dataType == HCCL_DATA_TYPE_FP32 || dataType == HCCL_DATA_TYPE_INT16 ||
-                    dataType == HCCL_DATA_TYPE_FP16);
+            return (
+                dataType == HCCL_DATA_TYPE_FP32 || dataType == HCCL_DATA_TYPE_INT16 || dataType == HCCL_DATA_TYPE_FP16);
         default:
             HCCL_WARNING("device type[%d] is out of range", static_cast<s32>(devType));
             return false;
@@ -120,31 +121,31 @@ bool IsRedOpSupport(HcclReduceOp op, DevType devType)
     }
 }
 
-bool IsSupportSDMAReduce(const void *inputPtr, const void *outputPtr, HcclDataType dataType, HcclReduceOp op)
+bool IsSupportSDMAReduce(const void* inputPtr, const void* outputPtr, HcclDataType dataType, HcclReduceOp op)
 {
     DevType devType;
     CHK_RET(hrtGetDeviceType(devType));
-    return IsAddressAlign(inputPtr, outputPtr, devType) && IsDataTypeSupport(dataType, devType) &&
-        IsRedOpSupport(op, devType);
+    return IsAddressAlign(inputPtr, outputPtr, devType) && IsDataTypeSupport(dataType, devType)
+           && IsRedOpSupport(op, devType);
 }
 
 bool IsSupportRDMAReduce(HcclDataType dataType, HcclReduceOp op)
 {
-    bool checkDataType =
-        (dataType == HCCL_DATA_TYPE_FP32 || dataType == HCCL_DATA_TYPE_FP16 || dataType == HCCL_DATA_TYPE_INT8 ||
-        dataType == HCCL_DATA_TYPE_INT16 || dataType == HCCL_DATA_TYPE_INT32 || dataType == HCCL_DATA_TYPE_BFP16);
+    bool checkDataType
+        = (dataType == HCCL_DATA_TYPE_FP32 || dataType == HCCL_DATA_TYPE_FP16 || dataType == HCCL_DATA_TYPE_INT8
+           || dataType == HCCL_DATA_TYPE_INT16 || dataType == HCCL_DATA_TYPE_INT32 || dataType == HCCL_DATA_TYPE_BFP16);
     bool checkReduceType = (op == HCCL_REDUCE_SUM || op == HCCL_REDUCE_MAX || op == HCCL_REDUCE_MIN);
     bool isInfNanMode = IsOverFlowInfNanMode();
     return checkDataType && checkReduceType && isInfNanMode;
 }
 
-HcclResult GetBandWidthPerNPU(u32 level, u32 userRankSize, u32 deviceNumPerAggregation, float &bandWidth)
+HcclResult GetBandWidthPerNPU(u32 level, u32 userRankSize, u32 deviceNumPerAggregation, float& bandWidth)
 {
     DevType devType;
     CHK_RET(hrtGetDeviceType(devType));
     // 处理 level=1、910B 的特殊条件
-    if (level == 1 && (devType == DevType::DEV_TYPE_910B || devType == DevType::DEV_TYPE_910_93) &&
-        userRankSize == deviceNumPerAggregation * 2) // 2: 910B 16p形态 单server场景
+    if (level == 1 && (devType == DevType::DEV_TYPE_910B || devType == DevType::DEV_TYPE_910_93)
+        && userRankSize == deviceNumPerAggregation * 2) // 2: 910B 16p形态 单server场景
     {
         bandWidth = BANDWIDTH_PCIE_GEN5;
         return HCCL_SUCCESS;
@@ -153,20 +154,20 @@ HcclResult GetBandWidthPerNPU(u32 level, u32 userRankSize, u32 deviceNumPerAggre
     static const std::map<std::pair<u32, DevType>, float> bwTable = {
         // level 0
         {{0, DevType::DEV_TYPE_310P3}, BANDWIDTH_PCIE_GEN3},
-        {{0, DevType::DEV_TYPE_910},   BANDWIDTH_HCCS_910A},
-        {{0, DevType::DEV_TYPE_910B},  BANDWIDTH_HCCS_910B},
-        {{0, DevType::DEV_TYPE_910_93},BANDWIDTH_HCCS_910B},
+        {{0, DevType::DEV_TYPE_910}, BANDWIDTH_HCCS_910A},
+        {{0, DevType::DEV_TYPE_910B}, BANDWIDTH_HCCS_910B},
+        {{0, DevType::DEV_TYPE_910_93}, BANDWIDTH_HCCS_910B},
         // level 1
-        {{1, DevType::DEV_TYPE_910},   BANDWIDTH_RDMA_910A},
-        {{1, DevType::DEV_TYPE_910B},  BANDWIDTH_RDMA_910B},
-        {{1, DevType::DEV_TYPE_910_93},BANDWIDTH_RDMA_910B},
+        {{1, DevType::DEV_TYPE_910}, BANDWIDTH_RDMA_910A},
+        {{1, DevType::DEV_TYPE_910B}, BANDWIDTH_RDMA_910B},
+        {{1, DevType::DEV_TYPE_910_93}, BANDWIDTH_RDMA_910B},
         // level 2
-        {{2, DevType::DEV_TYPE_910_93},BANDWIDTH_HBM_910_93},
+        {{2, DevType::DEV_TYPE_910_93}, BANDWIDTH_HBM_910_93},
         // level 3
-        {{3, DevType::DEV_TYPE_910_93},BANDWIDTH_SIO_910_93},
+        {{3, DevType::DEV_TYPE_910_93}, BANDWIDTH_SIO_910_93},
     };
     auto key = std::make_pair(level, devType);
-    auto it  = bwTable.find(key);
+    auto it = bwTable.find(key);
     if (it != bwTable.end()) {
         bandWidth = it->second;
         return HCCL_SUCCESS;
@@ -178,8 +179,9 @@ HcclResult GetBandWidthPerNPU(u32 level, u32 userRankSize, u32 deviceNumPerAggre
 HcclResult CheckDeviceType(const DevType deviceType)
 {
     if ((deviceType >= DevType::DEV_TYPE_COUNT) || (deviceType < DevType::DEV_TYPE_910)) {
-        HCCL_ERROR("[Check][DeviceType]errNo[0x%016llx] device Type[%d] out of range[%d, %d]",
-            HCCL_ERROR_CODE(HCCL_E_PARA), deviceType, DevType::DEV_TYPE_910, DevType::DEV_TYPE_NOSOC);
+        HCCL_ERROR(
+            "[Check][DeviceType]errNo[0x%016llx] device Type[%d] out of range[%d, %d]", HCCL_ERROR_CODE(HCCL_E_PARA),
+            deviceType, DevType::DEV_TYPE_910, DevType::DEV_TYPE_NOSOC);
         return HCCL_E_PARA;
     }
 
@@ -196,10 +198,7 @@ bool IsOverFlowInfNanMode()
     return (!GetExternalInputHcclDumpDebug()) && (floatOverflowMode == ACL_RT_OVERFLOW_MODE_INFNAN);
 }
 
-bool Is310PDevice()
-{
-    return g_is310PDevice;
-}
+bool Is310PDevice() { return g_is310PDevice; }
 
 bool IsUseSdidForDeviceId(const u32 superDeviceId)
 {
@@ -211,7 +210,7 @@ bool IsUseSdidForDeviceId(const u32 superDeviceId)
     return false;
 }
 
-HcclResult IsSuperPodMode(bool &useSuperPodMode)
+HcclResult IsSuperPodMode(bool& useSuperPodMode)
 {
     useSuperPodMode = false;
     DevType devType;
@@ -221,12 +220,15 @@ HcclResult IsSuperPodMode(bool &useSuperPodMode)
         s32 deviceLogicId;
         HcclResult ret = hrtGetDevice(&deviceLogicId);
         CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[IsSuperPodMode]Get device id fail"), ret);
-        CHK_RET(hrtGetDeviceInfo(deviceLogicId, HcclRtDeviceModuleType::HCCL_RT_MODULE_TYPE_SYSTEM,
+        CHK_RET(hrtGetDeviceInfo(
+            deviceLogicId, HcclRtDeviceModuleType::HCCL_RT_MODULE_TYPE_SYSTEM,
             HcclRtDeviceInfoType::HCCL_INFO_TYPE_SERVER_ID, serverId));
         useSuperPodMode = (serverId != INVALID_SUPERPOD_SERVERID);
         if (!useSuperPodMode) {
-            HCCL_WARNING("If server Id is not configured, the network port may need to be " \
-                "kept up to ensure normal service running, server id[%016llx]", serverId);
+            HCCL_WARNING(
+                "If server Id is not configured, the network port may need to be "
+                "kept up to ensure normal service running, server id[%016llx]",
+                serverId);
         }
     }
     HCCL_INFO("[IsSuperPodMode]ret[%d], devType[%d], serverId[%016llx]", useSuperPodMode, devType, serverId);
@@ -237,8 +239,8 @@ HcclResult GetMaxDevNum(u32& MaxDevNum)
 {
     // 静态缓存最大设备数
     static u32 cachedMaxDevNum;
-    static std::once_flag initFlag;  // 用于确保初始化只执行一次
-    static std::mutex initMutex;     // 用于保护call_once调用
+    static std::once_flag initFlag; // 用于确保初始化只执行一次
+    static std::mutex initMutex;    // 用于保护call_once调用
 
     // 使用mutex保护call_once调用
     std::lock_guard<std::mutex> lock(initMutex);
@@ -271,12 +273,17 @@ HcclResult GetMaxDevNum(u32& MaxDevNum)
 }
 
 #ifndef OPEN_HCCL_TEST
-HcclResult IsSupportAicpuNormalQP(const u32& devicePhyId, bool &isSupportNormalQP)
+HcclResult IsSupportAicpuNormalQP(const u32& devicePhyId, bool& isSupportNormalQP)
 {
     u32 aiQpCreateVersion = 0;
     HcclResult ret = hrtRaGetInterfaceVersion(devicePhyId, AI_QP_CREATE, &aiQpCreateVersion);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[IsSupportAicpuNormalQP] ret[%d]"
-        "devicePhyId[%u] not support" , ret, devicePhyId), HCCL_E_NETWORK);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[IsSupportAicpuNormalQP] ret[%d]"
+            "devicePhyId[%u] not support",
+            ret, devicePhyId),
+        HCCL_E_NETWORK);
     if (aiQpCreateVersion >= AI_NORMAL_QP_CREATE_VERSION) {
         isSupportNormalQP = true;
     } else {
@@ -288,12 +295,17 @@ HcclResult IsSupportAicpuNormalQP(const u32& devicePhyId, bool &isSupportNormalQ
 #endif
 
 #ifndef OPEN_HCCL_TEST
-HcclResult IsSupportAIVNormalQP(const u32& devicePhyId, bool &isSupport)
+HcclResult IsSupportAIVNormalQP(const u32& devicePhyId, bool& isSupport)
 {
     u32 version = 0;
     HcclResult ret = hrtRaGetInterfaceVersion(devicePhyId, AI_QP_CREATE_WITH_ATTRS, &version);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[hrtRaGetInterfaceVersion] ret[%d]"
-        "devicePhyId[%u] not support" , ret, devicePhyId), HCCL_E_NETWORK);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[hrtRaGetInterfaceVersion] ret[%d]"
+            "devicePhyId[%u] not support",
+            ret, devicePhyId),
+        HCCL_E_NETWORK);
 
     if (version >= AI_QP_CREATE_WITH_ATTRS_VERSION) {
         isSupport = true;
@@ -310,12 +322,12 @@ bool IsSupportRDMALite(const s32 deviceLogicId)
 {
     return NetworkManager::GetInstance(deviceLogicId).GetRdmaLiteStatus();
 }
-HcclResult IsSupportHccsAndSio(bool &flag)
+HcclResult IsSupportHccsAndSio(bool& flag)
 {
     flag = false;
     size_t outputLen = 0;
-    supportFeaturePara inputPara = { 0 };
-    supportFeaturePara outputPara = { 0 };
+    supportFeaturePara inputPara = {0};
+    supportFeaturePara outputPara = {0};
     s32 deviceId = 0;
     CHK_RET(hrtGetDevice(&deviceId));
     s32 logicDevId = 0;
@@ -361,8 +373,9 @@ u32 GetNotifyMaxWaitTime()
     if (UNLIKELY(!init)) {
         DevType deviceType;
         if (hrtGetDeviceType(deviceType) == HCCL_SUCCESS) {
-            notifyMaxWaitTime = (deviceType == DevType::DEV_TYPE_910_93 || deviceType == DevType::DEV_TYPE_910B) ?\
-                NOTIFY_MAX_WAIT_TIME_910_93 : NOTIFY_MAX_WAIT_TIME;
+            notifyMaxWaitTime = (deviceType == DevType::DEV_TYPE_910_93 || deviceType == DevType::DEV_TYPE_910B) ?
+                                    NOTIFY_MAX_WAIT_TIME_910_93 :
+                                    NOTIFY_MAX_WAIT_TIME;
             init = true;
         }
     }
@@ -376,15 +389,18 @@ HcclResult IsSupportAtomicWrite(DevType deviceType, u32 devicePhyId, bool& isSup
     if (deviceType == DevType::DEV_TYPE_910_93 || deviceType == DevType::DEV_TYPE_910B) {
         u32 version = 0;
         HcclResult ret = hrtRaGetInterfaceVersion(devicePhyId, RA_RS_GET_ROCE_API, &version);
-        CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("%s call hrtRaGetInterfaceVersion ret[%d] devicePhyId[%u]",
-            __func__, ret, devicePhyId), HCCL_E_NETWORK);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR("%s call hrtRaGetInterfaceVersion ret[%d] devicePhyId[%u]", __func__, ret, devicePhyId),
+            HCCL_E_NETWORK);
         isSupportAtomicWrite = (version >= RA_RS_ATOMIC_WRITE_VERSION);
-        HCCL_INFO("%s deviceType[%d] devicePhyId[%u], version[%u], isSupportAtomicWrite[%d]",
-            __func__, deviceType, devicePhyId, version, isSupportAtomicWrite);
+        HCCL_INFO(
+            "%s deviceType[%d] devicePhyId[%u], version[%u], isSupportAtomicWrite[%d]", __func__, deviceType,
+            devicePhyId, version, isSupportAtomicWrite);
     } else {
         isSupportAtomicWrite = false;
         HCCL_INFO("%s deviceType[%d] not support", __func__, deviceType);
     }
     return HCCL_SUCCESS;
 }
-}
+} // namespace hccl

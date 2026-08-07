@@ -20,7 +20,7 @@ using Json = nlohmann::json;
 static const std::string VALIDATION_ISSUE_DUMP_TYPE = "validation_issues";
 static const std::string VALIDATION_ISSUE_DUMP_PATH = "validation/issues.msgpack";
 
-static Json DumpIssueTaskNodeRefToJson(const TaskNode *node)
+static Json DumpIssueTaskNodeRefToJson(const TaskNode* node)
 {
     Json nodeRefJson = Json::object();
     if (node == nullptr) {
@@ -32,7 +32,7 @@ static Json DumpIssueTaskNodeRefToJson(const TaskNode *node)
     return nodeRefJson;
 }
 
-Json DumpIssueTaskNodeToJson(TaskNode *node, const std::string &nodeId)
+Json DumpIssueTaskNodeToJson(TaskNode* node, const std::string& nodeId)
 {
     Json nodeJson = Json::object();
     if (node == nullptr) {
@@ -59,8 +59,8 @@ void ValidationIssueRecorder::Reset()
     issues_.clear();
 }
 
-void ValidationIssueRecorder::RecordIssue(const std::string &severity, const std::string &stage, const std::string &code,
-    const nlohmann::json &detail)
+void ValidationIssueRecorder::RecordIssue(
+    const std::string& severity, const std::string& stage, const std::string& code, const nlohmann::json& detail)
 {
     if (!DumpManager::GetInstance().IsEnabled()) {
         return;
@@ -77,7 +77,7 @@ void ValidationIssueRecorder::RecordIssue(const std::string &severity, const std
 
 HcclResult ValidationIssueRecorder::Flush() const
 {
-    DumpManager &dumpManager = DumpManager::GetInstance();
+    DumpManager& dumpManager = DumpManager::GetInstance();
     if (!dumpManager.IsEnabled()) {
         return HcclResult::HCCL_SUCCESS;
     }
@@ -95,4 +95,4 @@ HcclResult ValidationIssueRecorder::Flush() const
     DumpRunManifest::GetInstance().SetErrorCount(issuesSnapshot.size());
     return dumpManager.Write(VALIDATION_ISSUE_DUMP_PATH, issueDumpJson);
 }
-}  // namespace HcclSim
+} // namespace HcclSim

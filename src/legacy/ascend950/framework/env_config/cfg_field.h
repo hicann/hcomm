@@ -23,12 +23,20 @@
 
 namespace Hccl {
 
-template <typename T> class CfgField {
+template <typename T>
+class CfgField {
 public:
-    CfgField(std::string name, const T &defaultValue, const std::function<T(const std::string &)> cast,
-             const std::function<void(const T &)> validate = {}, const std::function<void(T &)> postProc = {})
-        : name(std::move(name)), value(defaultValue), defaultBackup(defaultValue), cast(cast), validate(validate), postProc(postProc),
-          isParsed(false), isSetByEnvironment_(false){};
+    CfgField(
+        std::string name, const T& defaultValue, const std::function<T(const std::string&)> cast,
+        const std::function<void(const T&)> validate = {}, const std::function<void(T&)> postProc = {})
+        : name(std::move(name)),
+          value(defaultValue),
+          defaultBackup(defaultValue),
+          cast(cast),
+          validate(validate),
+          postProc(postProc),
+          isParsed(false),
+          isSetByEnvironment_(false) {};
 
     void Parse()
     {
@@ -43,14 +51,17 @@ public:
         if (cast) {
             try {
                 value = cast(str);
-            } catch (const InvalidParamsException &e) {
+            } catch (const InvalidParamsException& e) {
                 // 有异常上报故障码EI0001
-                RPT_ENV_ERR(true, "EI0001", std::vector<std::string>({"value", "env", "expect"}),
-                            std::vector<std::string>({str, name, e.what()}));
-                THROW<InvalidParamsException>(StringFormat("[Init][EnvVarParam]Env config \"%s\" value is invalid.%s", name.c_str(), e.what()));
-            } catch (const NotSupportException &e) { // 临时修改方案 HCCL_SOCKET_IFNAME等当前不支持配置 且需要报错
-                THROW<NotSupportException>(
-                    StringFormat("[Init][EnvVarParam]Env config \"%s\" or its value is currently unsupported.%s", name.c_str(), e.what()));
+                RPT_ENV_ERR(
+                    true, "EI0001", std::vector<std::string>({"value", "env", "expect"}),
+                    std::vector<std::string>({str, name, e.what()}));
+                THROW<InvalidParamsException>(
+                    StringFormat("[Init][EnvVarParam]Env config \"%s\" value is invalid.%s", name.c_str(), e.what()));
+            } catch (const NotSupportException& e) { // 临时修改方案 HCCL_SOCKET_IFNAME等当前不支持配置 且需要报错
+                THROW<NotSupportException>(StringFormat(
+                    "[Init][EnvVarParam]Env config \"%s\" or its value is currently unsupported.%s", name.c_str(),
+                    e.what()));
             }
         } else {
             THROW<InvalidParamsException>(
@@ -60,11 +71,13 @@ public:
         if (validate) {
             try {
                 validate(value);
-            } catch (const InvalidParamsException &e) {
+            } catch (const InvalidParamsException& e) {
                 // 有异常上报故障码EI0001
-                RPT_ENV_ERR(true, "EI0001", std::vector<std::string>({"value", "env", "expect"}),
-                            std::vector<std::string>({str, name, e.what()}));
-                THROW<InvalidParamsException>(StringFormat("[Init][EnvVarParam]Env config \"%s\" value is invalid.%s", name.c_str(), e.what()));
+                RPT_ENV_ERR(
+                    true, "EI0001", std::vector<std::string>({"value", "env", "expect"}),
+                    std::vector<std::string>({str, name, e.what()}));
+                THROW<InvalidParamsException>(
+                    StringFormat("[Init][EnvVarParam]Env config \"%s\" value is invalid.%s", name.c_str(), e.what()));
             }
         }
         // 后处理
@@ -74,12 +87,9 @@ public:
         isParsed = true;
     }
 
-    const std::string &GetEnvName() const
-    {
-        return name;
-    }
+    const std::string& GetEnvName() const { return name; }
 
-    const T &Get() const
+    const T& Get() const
     {
         if (UNLIKELY(!isParsed)) {
             THROW<InvalidParamsException>(
@@ -88,23 +98,17 @@ public:
         return value;
     }
 
-    bool IsSetByEnvironment() const
-    {
-        return isSetByEnvironment_;
-    }
+    bool IsSetByEnvironment() const { return isSetByEnvironment_; }
 
-    const char* GetSource() const
-    {
-        return isSetByEnvironment_ ? "environment" : "default";
-    }
+    const char* GetSource() const { return isSetByEnvironment_ ? "environment" : "default"; }
 
 private:
-    std::string                           name;
-    T                                     value;
-    T                                     defaultBackup; // 将默认值备份一份，便于后续恢复
-    std::function<T(const std::string &)> cast;
-    std::function<void(const T &)>        validate;
-    std::function<void(T &)>              postProc;
+    std::string name;
+    T value;
+    T defaultBackup; // 将默认值备份一份，便于后续恢复
+    std::function<T(const std::string&)> cast;
+    std::function<void(const T&)> validate;
+    std::function<void(T&)> postProc;
     bool isParsed;
     bool isSetByEnvironment_;
 };

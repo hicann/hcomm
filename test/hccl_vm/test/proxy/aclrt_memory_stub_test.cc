@@ -15,7 +15,7 @@
 
 #include <cstdint>
 #include <cstring>
-#include <sys/mman.h>   // shm_unlink
+#include <sys/mman.h> // shm_unlink
 #include <gtest/gtest.h>
 
 #include "acl/acl_base.h"
@@ -28,15 +28,16 @@
 #include "sim_models.h"
 
 extern "C" {
-    aclError aclrtMallocHost(void **hostPtr, size_t size);
-    aclError aclrtFreeHost(void *hostPtr);
-    aclError aclrtMallocHostWithCfg(void **ptr, uint64_t size, aclrtMallocConfig *cfg);
+aclError aclrtMallocHost(void** hostPtr, size_t size);
+aclError aclrtFreeHost(void* hostPtr);
+aclError aclrtMallocHostWithCfg(void** ptr, uint64_t size, aclrtMallocConfig* cfg);
 }
 
 // 复用区在整个套件期间保持存活，套件开头建池一次，结束再回收。
 class AclrtMemStubTest : public testing::Test {
 protected:
-    static void SetUpTestSuite() {
+    static void SetUpTestSuite()
+    {
         // 在套件初始化（已过 main、RunnerDB/sqlite 就绪）时把 mode=1 写进 DB，再主动触发一次
         // IsCheckOnlyMode() 的懒加载，使进程内 static 缓存 latch 成仅校验模式；不依赖任何加载期构造器。
         RunnerDB::DeleteAll<sim::RunModeConfig>();
@@ -46,10 +47,13 @@ protected:
         ASSERT_TRUE(sim::IsCheckOnlyMode());
         // 清掉上次异常退出残留的 /dev/shm/HcclCommPool（ShmCreate 用 O_EXCL，残留会建池失败）。
         shm_unlink(sim::CommPoolPolicy::kPoolName);
-        ASSERT_NE(sim::MemoryManager::GetInstance().AllocMemByName(
-            sim::CommPoolPolicy::kPoolName, sim::CommPoolPolicy::kPoolSize), nullptr);
+        ASSERT_NE(
+            sim::MemoryManager::GetInstance().AllocMemByName(
+                sim::CommPoolPolicy::kPoolName, sim::CommPoolPolicy::kPoolSize),
+            nullptr);
     }
-    static void TearDownTestSuite() {
+    static void TearDownTestSuite()
+    {
         // 关闭并 unlink，保证 /dev/shm 不泄漏，独立重跑不撞 O_EXCL。
         sim::MemoryManager::GetInstance().FreeMemByName(sim::CommPoolPolicy::kPoolName);
         // 清掉本套件写进共享 DB 的仅校验模式行，避免给其它测试二进制留下 check-only(mode=1)。
@@ -58,20 +62,21 @@ protected:
 };
 
 // 主机大块两次申请归同一池首址，且与设备侧大块同址，主机与设备共用 HcclCommPool。
-TEST_F(AclrtMemStubTest, MallocHost_BigBlock_TwiceSameAddr_SharesDevicePool) {
-    EXPECT_TRUE(sim::IsCheckOnlyMode());   // SetUpTestSuite 已写入 mode=1 并预热缓存，须为 true。
-    const size_t big = sim::CommPoolPolicy::kBigBlockThreshold;  // 200MB
+TEST_F(AclrtMemStubTest, MallocHost_BigBlock_TwiceSameAddr_SharesDevicePool)
+{
+    EXPECT_TRUE(sim::IsCheckOnlyMode()); // SetUpTestSuite 已写入 mode=1 并预热缓存，须为 true。
+    const size_t big = sim::CommPoolPolicy::kBigBlockThreshold; // 200MB
     void* h1 = nullptr;
     void* h2 = nullptr;
     ASSERT_EQ(aclrtMallocHost(&h1, big), ACL_SUCCESS);
     ASSERT_EQ(aclrtMallocHost(&h2, big), ACL_SUCCESS);
     ASSERT_NE(h1, nullptr);
-    EXPECT_EQ(h1, h2);   // 两次大块同址
+    EXPECT_EQ(h1, h2); // 两次大块同址
 
     // 设备侧大块也归同一池基址
     auto& mgr = sim::DeviceMemoryManager::GetInstance();
     void* d = mgr.AllocPhyMem("host_share_probe", 0, big);
-    EXPECT_EQ(h1, d);    // 主机与设备共用同一池
+    EXPECT_EQ(h1, d); // 主机与设备共用同一池
     mgr.FreePhyMem("host_share_probe", 0);
 
     EXPECT_EQ(aclrtFreeHost(h1), ACL_SUCCESS);
@@ -79,7 +84,8 @@ TEST_F(AclrtMemStubTest, MallocHost_BigBlock_TwiceSameAddr_SharesDevicePool) {
 }
 
 // 主机小块走真实 malloc，独立于池，内容正确。
-TEST_F(AclrtMemStubTest, MallocHost_SmallBlock_RealAlloc_NotPool) {
+TEST_F(AclrtMemStubTest, MallocHost_SmallBlock_RealAlloc_NotPool)
+{
     void* big = nullptr;
     ASSERT_EQ(aclrtMallocHost(&big, sim::CommPoolPolicy::kBigBlockThreshold), ACL_SUCCESS);
 
@@ -89,8 +95,8 @@ TEST_F(AclrtMemStubTest, MallocHost_SmallBlock_RealAlloc_NotPool) {
     ASSERT_EQ(aclrtMallocHost(&s2, 4096), ACL_SUCCESS);
     ASSERT_NE(s1, nullptr);
     ASSERT_NE(s2, nullptr);
-    EXPECT_NE(s1, s2);     // 两个小块各自独立分配
-    EXPECT_NE(s1, big);    // 小块不进池
+    EXPECT_NE(s1, s2);  // 两个小块各自独立分配
+    EXPECT_NE(s1, big); // 小块不进池
 
     // 小块内容正确，互不覆盖
     memset(s1, 0xAA, 4096);
@@ -104,15 +110,17 @@ TEST_F(AclrtMemStubTest, MallocHost_SmallBlock_RealAlloc_NotPool) {
 }
 
 // 主机大块 >4GB 报错，不引流也不真实分配。
-TEST_F(AclrtMemStubTest, MallocHost_ExceedCeiling_Reject) {
-    void* p = reinterpret_cast<void*>(0xDEADBEEF);  // 哨兵：失败时不应被改写
+TEST_F(AclrtMemStubTest, MallocHost_ExceedCeiling_Reject)
+{
+    void* p = reinterpret_cast<void*>(0xDEADBEEF); // 哨兵：失败时不应被改写
     aclError ret = aclrtMallocHost(&p, sim::CommPoolPolicy::kPoolSize + 1);
     EXPECT_NE(ret, ACL_SUCCESS);
-    EXPECT_EQ(p, reinterpret_cast<void*>(0xDEADBEEF));  // 报错路径未写出指针
+    EXPECT_EQ(p, reinterpret_cast<void*>(0xDEADBEEF)); // 报错路径未写出指针
 }
 
 // aclrtFreeHost 身份判定：池内地址 noop，池外真实地址正常 free。
-TEST_F(AclrtMemStubTest, FreeHost_PoolAddrNoop_RealAddrFree) {
+TEST_F(AclrtMemStubTest, FreeHost_PoolAddrNoop_RealAddrFree)
+{
     const size_t big = sim::CommPoolPolicy::kBigBlockThreshold;
     void* poolPtr = nullptr;
     ASSERT_EQ(aclrtMallocHost(&poolPtr, big), ACL_SUCCESS);
@@ -131,13 +139,14 @@ TEST_F(AclrtMemStubTest, FreeHost_PoolAddrNoop_RealAddrFree) {
 }
 
 // MallocHostWithCfg 委托 MallocHost：大块同样引流到池。
-TEST_F(AclrtMemStubTest, MallocHostWithCfg_BigBlock_DelegatesToPool) {
+TEST_F(AclrtMemStubTest, MallocHostWithCfg_BigBlock_DelegatesToPool)
+{
     void* viaPlain = nullptr;
     void* viaCfg = nullptr;
     const size_t big = sim::CommPoolPolicy::kBigBlockThreshold;
     ASSERT_EQ(aclrtMallocHost(&viaPlain, big), ACL_SUCCESS);
     ASSERT_EQ(aclrtMallocHostWithCfg(&viaCfg, big, nullptr), ACL_SUCCESS);
-    EXPECT_EQ(viaPlain, viaCfg);   // 两条入口归同一池
+    EXPECT_EQ(viaPlain, viaCfg); // 两条入口归同一池
     aclrtFreeHost(viaPlain);
     aclrtFreeHost(viaCfg);
 }

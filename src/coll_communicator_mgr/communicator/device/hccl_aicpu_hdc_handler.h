@@ -18,18 +18,19 @@ namespace hccl {
 
 class HcclAicpuHdcHandler {
 public:
-    HcclAicpuHdcHandler(const std::shared_ptr<HDCommunicate> &h2dTransfer, const std::shared_ptr<HDCommunicate> &d2hTransfer);
+    HcclAicpuHdcHandler(
+        const std::shared_ptr<HDCommunicate>& h2dTransfer, const std::shared_ptr<HDCommunicate>& d2hTransfer);
     ~HcclAicpuHdcHandler() = default;
 
-    HcclResult GetKfcCommand(Hccl::KfcCommand &cmd);
+    HcclResult GetKfcCommand(Hccl::KfcCommand& cmd);
     void SetKfcExecStatus(Hccl::KfcStatus state, Hccl::KfcErrType errorCode);
 
 private:
     std::shared_ptr<HDCommunicate> h2dTransfer_{nullptr};
     std::shared_ptr<HDCommunicate> d2hTransfer_{nullptr};
-    Hccl::KfcCommand         lastCmd_{Hccl::KfcCommand::NONE};
+    Hccl::KfcCommand lastCmd_{Hccl::KfcCommand::NONE};
 };
 
-}
+} // namespace hccl
 
 #endif // HCCL_AICPU_HDC_HANDLER_H

@@ -20,9 +20,9 @@
 namespace Hccl {
 class CcuTempAllReduceMeshTwoShotMem2Mem2D : public CcuAlgTemplateBase {
 public:
-    explicit CcuTempAllReduceMeshTwoShotMem2Mem2D(const RankId virtualRank, const u32 tempRankSize,
-                                                  const std::vector<std::vector<RankId>> &tempVTopo,
-                                                  const std::map<RankId, u32>            &tempVirtRankMap);
+    explicit CcuTempAllReduceMeshTwoShotMem2Mem2D(
+        const RankId virtualRank, const u32 tempRankSize, const std::vector<std::vector<RankId>>& tempVTopo,
+        const std::map<RankId, u32>& tempVirtRankMap);
     ~CcuTempAllReduceMeshTwoShotMem2Mem2D() override;
 
     std::string Describe() const override
@@ -30,23 +30,24 @@ public:
         return StringFormat("Template of All Reduce ccu mesh Mem2Mem 2D with tempRankSize [%u].", tempRankSize_);
     }
 
-    HcclResult Run(const TempFuncs &tempFuncs, const RankSliceInfo &sliceInfoVec, const BuffInfo &buffInfo,
-                   const ResLinks &tempLinks, std::vector<InsQuePtr> &tempInsQues) override;
-    HcclResult CalcRes(AlgTempResReq &tempResReq) override;
-    HcclResult CalcSliceInfo(const AllignInfo &allignInfo, const u64 dataSize, RankSliceInfo &sliceInfoVec) override;
+    HcclResult
+    Run(const TempFuncs& tempFuncs, const RankSliceInfo& sliceInfoVec, const BuffInfo& buffInfo,
+        const ResLinks& tempLinks, std::vector<InsQuePtr>& tempInsQues) override;
+    HcclResult CalcRes(AlgTempResReq& tempResReq) override;
+    HcclResult CalcSliceInfo(const AllignInfo& allignInfo, const u64 dataSize, RankSliceInfo& sliceInfoVec) override;
     // init reduceInfo
-    void InitReduceInfo(const ReduceOp &reduceOp, const DataType &dataType);
+    void InitReduceInfo(const ReduceOp& reduceOp, const DataType& dataType);
 
 private:
-    HcclResult PrepareLinks(const ResLinks &tempLinks);
+    HcclResult PrepareLinks(const ResLinks& tempLinks);
     HcclResult PrepareRankGroups();
-    HcclResult GetBufferAddr(const TempFuncs &tempFuncs, uint64_t &inputAddr, uint64_t &outputAddr);
+    HcclResult GetBufferAddr(const TempFuncs& tempFuncs, uint64_t& inputAddr, uint64_t& outputAddr);
 
     // 内部计算用到的变量
-    ReduceOp              reduceOp_;
-    DataType              dataType_;
-    RankGroup             rankGroupY_;
-    RankGroup             rankGroupX_;
+    ReduceOp reduceOp_;
+    DataType dataType_;
+    RankGroup rankGroupY_;
+    RankGroup rankGroupX_;
     std::vector<uint64_t> dimSize_;
     std::vector<LinkData> linksX_;
     std::vector<LinkData> linksY_;

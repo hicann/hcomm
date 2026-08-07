@@ -26,23 +26,20 @@ static const char* RANKTABLE_FILE_NAME = nullptr;
 
 class HcclIndependentOpEngineTest : public BaseInit {
 public:
-    void SetUp() override {
-        MOCKER(HcclTbeTaskInit)
-            .stubs()
-            .will(returnValue(HCCL_SUCCESS));
+    void SetUp() override
+    {
+        MOCKER(HcclTbeTaskInit).stubs().will(returnValue(HCCL_SUCCESS));
         BaseInit::SetUp();
         bool isDeviceSide = false;
-        MOCKER(GetRunSideIsDevice)
-            .stubs()
-            .with(outBound(isDeviceSide))
-            .will(returnValue(HCCL_SUCCESS));
+        MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
         UT_USE_1SERVER_1RANK_AS_DEFAULT;
         UT_COMM_CREATE_DEFAULT(comm);
         RANKTABLE_FILE_NAME = rankTableFileName;
         EXPECT_EQ(RANKTABLE_FILE_NAME != nullptr, true);
         EXPECT_EQ(comm != nullptr, true);
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
         Ut_Comm_Destroy(comm);
@@ -52,60 +49,50 @@ public:
 TEST_F(HcclIndependentOpEngineTest, Ut_HcclThreadAcquire_When_Param_Is_Invalid_Expect_Para_Error)
 {
     ThreadHandle threads[2] = {0};
-    HcclResult ret = HcclThreadAcquire(nullptr, CommEngine::COMM_ENGINE_CPU_TS , 2, 1, threads);
+    HcclResult ret = HcclThreadAcquire(nullptr, CommEngine::COMM_ENGINE_CPU_TS, 2, 1, threads);
     EXPECT_EQ(ret, HCCL_E_PTR);
 
-    ret = HcclThreadAcquire(comm, CommEngine::COMM_ENGINE_CPU_TS , 2, 1, nullptr);
+    ret = HcclThreadAcquire(comm, CommEngine::COMM_ENGINE_CPU_TS, 2, 1, nullptr);
     EXPECT_EQ(ret, HCCL_E_PTR);
     ret = HcclThreadAcquire(comm, CommEngine::COMM_ENGINE_RESERVED, 2, 1, threads);
     EXPECT_EQ(ret, HCCL_E_PARA);
-    ret = HcclThreadAcquire(comm, CommEngine::COMM_ENGINE_CPU_TS , 2, 1, threads);
+    ret = HcclThreadAcquire(comm, CommEngine::COMM_ENGINE_CPU_TS, 2, 1, threads);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     MOCKER_CPP(&CommEngineResMgr::HcclThreadAcquire).stubs().will(returnValue(HCCL_E_UNAVAIL));
-    ret = HcclThreadAcquire(comm, CommEngine::COMM_ENGINE_CPU_TS , 199, 1, threads);
+    ret = HcclThreadAcquire(comm, CommEngine::COMM_ENGINE_CPU_TS, 199, 1, threads);
     EXPECT_EQ(ret, HCCL_E_UNAVAIL);
-    ret = HcclThreadAcquire(comm, CommEngine::COMM_ENGINE_CPU_TS , 1, 65537, threads);
+    ret = HcclThreadAcquire(comm, CommEngine::COMM_ENGINE_CPU_TS, 1, 65537, threads);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
 
 // -----HcclThreadAcquire接口host侧用例-------
-HcclResult hrtDrvGetPlatformInfoStub(uint32_t *info)
+HcclResult hrtDrvGetPlatformInfoStub(uint32_t* info)
 {
     *info = 1;
     return HCCL_SUCCESS;
 }
 
-void LocalCopyFfts(ThreadHandle thread) {
-    MOCKER(hrtDrvGetPlatformInfo)
-    .stubs()
-    .will(invoke(hrtDrvGetPlatformInfoStub));
+void LocalCopyFfts(ThreadHandle thread)
+{
+    MOCKER(hrtDrvGetPlatformInfo).stubs().will(invoke(hrtDrvGetPlatformInfoStub));
 
-    MOCKER(GetExternalInputHcclEnableFfts)
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(true));
+    MOCKER(GetExternalInputHcclEnableFfts).stubs().with(mockcpp::any()).will(returnValue(true));
 
     DevType deviceType = DevType::DEV_TYPE_910B;
-    MOCKER(hrtGetDeviceType)
-    .stubs()
-    .with(outBound(deviceType))
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
 
-    MOCKER(GetExternalInputHcclAicpuUnfold)
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(false));
+    MOCKER(GetExternalInputHcclAicpuUnfold).stubs().with(mockcpp::any()).will(returnValue(false));
 
     MOCKER(GetWorkflowMode)
-    .stubs()
-    .with(mockcpp::any())
-    .will(returnValue(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE));
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE));
 
     DispatcherCtxPtr ctx;
     HcclResult ret = CreateDispatcherCtx(&ctx, 0);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
-    DispatcherCtx *ctxPtr = static_cast<DispatcherCtx *>(ctx);
+    DispatcherCtx* ctxPtr = static_cast<DispatcherCtx*>(ctx);
     EXPECT_NE(ctxPtr->GetDispatcher(), nullptr);
     EXPECT_NE(GetDispatcherCtx(), nullptr);
 
@@ -124,16 +111,10 @@ const CommEngine g_hostEngine = CommEngine::COMM_ENGINE_CPU;
 TEST_F(HcclIndependentOpEngineTest, Ut_HcclThreadAcquire_When_Alloced_Threads_Morethan_Quota_Expect_Unavailable)
 {
     bool isDeviceSide = false;
-    MOCKER(GetRunSideIsDevice)
-    .stubs()
-    .with(outBound(isDeviceSide))
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
 
     u32 info = 1;
-    MOCKER(hrtDrvGetPlatformInfo)
-    .stubs()
-    .with(outBoundP(&info, sizeof(info)))
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtDrvGetPlatformInfo).stubs().with(outBoundP(&info, sizeof(info))).will(returnValue(HCCL_SUCCESS));
 
     ThreadHandle thread1[2] = {0};
     HcclResult ret = HcclThreadAcquire(comm, g_hostEngine, 2, 2, thread1);
@@ -168,10 +149,7 @@ TEST_F(HcclIndependentOpEngineTest, Ut_HcclThreadAcquire_When_Alloced_Notify_Mor
 TEST_F(HcclIndependentOpEngineTest, Ut_CommGetNotifyNumInThread_When_Alloced_And_Get_Notify_Success)
 {
     bool isDeviceSide = false;
-    MOCKER(GetRunSideIsDevice)
-    .stubs()
-    .with(outBound(isDeviceSide))
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
     ThreadHandle thread1[1] = {0};
     uint32_t notifyNum = 2;
     HcclResult ret = HcclThreadAcquire(comm, g_hostEngine, 1, notifyNum, thread1);
@@ -241,9 +219,9 @@ TEST_F(HcclIndependentOpEngineTest, Ut_HcclThreadExportToCommEngine_When_Engine_
     HcclResult ret = HcclThreadExportToCommEngine(comm, 1, threads, CommEngine::COMM_ENGINE_CPU, exportedThreads);
     EXPECT_EQ(ret, HCCL_E_PARA);
 
-    // 添加thread 
-    hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);
-    auto &threadMgr = hcclComm->GetIndependentOp().GetCommEngineResMgr().threadMgr_;
+    // 添加thread
+    hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
+    auto& threadMgr = hcclComm->GetIndependentOp().GetCommEngineResMgr().threadMgr_;
     threadMgr->threadHandleOthersToCpu_[threads[0]] = exportedThreads[0];
     ret = HcclThreadExportToCommEngine(comm, 1, threads, CommEngine::COMM_ENGINE_CPU, exportedThreads);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -258,11 +236,11 @@ TEST_F(HcclIndependentOpEngineTest, Ut_HcclThreadExportToCommEngine_When_Engine_
     HcclResult ret = HcclThreadExportToCommEngine(comm, 1, threads, CommEngine::COMM_ENGINE_AICPU_TS, exportedThreads);
     EXPECT_EQ(ret, HCCL_E_PARA);
 
-    // 添加thread 
+    // 添加thread
     MOCKER(AicpuAclKernelLaunch).stubs().will(returnValue(HCCL_SUCCESS));
 
-    hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);
-    auto &threadMgr = hcclComm->GetIndependentOp().GetCommEngineResMgr().threadMgr_;
+    hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
+    auto& threadMgr = hcclComm->GetIndependentOp().GetCommEngineResMgr().threadMgr_;
     threadMgr->HcclThreadAcquireWithStream(CommEngine::COMM_ENGINE_CPU, nullptr, 1, threads);
     ret = HcclThreadExportToCommEngine(comm, 1, threads, CommEngine::COMM_ENGINE_AICPU_TS, exportedThreads);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -276,14 +254,14 @@ TEST_F(HcclIndependentOpEngineTest, Ut_HcclThreadExportToCommEngine_When_Engine_
     MOCKER_CPP(&HcclCommProfiling::ReportKernel).stubs().will(returnValue(0));
     MOCKER_CPP(&CommEngineResMgr::HcclThreadExportToCommEngine).stubs().will(returnValue(HCCL_SUCCESS));
 
-    void *commV2 = (void *)0x2000;
+    void* commV2 = (void*)0x2000;
     RankGraphStub rankGraphStub;
     std::shared_ptr<Hccl::RankGraph> rankGraphV2 = rankGraphStub.Create2PGraph();
     u32 rank = 1;
     HcclMem cclBuffer;
     cclBuffer.size = 1;
     cclBuffer.type = HcclMemType::HCCL_MEM_TYPE_HOST;
-    cclBuffer.addr = (void *)0x1000;
+    cclBuffer.addr = (void*)0x1000;
 
     char commName[ROOTINFO_INDENTIFIER_MAX_LENGTH] = {};
     HcclCommConfig config;

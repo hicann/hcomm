@@ -23,12 +23,12 @@
 using namespace HcclSim;
 
 namespace {
-std::vector<uint8_t> ToBlob(const HcclTaskMetaData &task)
+std::vector<uint8_t> ToBlob(const HcclTaskMetaData& task)
 {
-    const auto *begin = reinterpret_cast<const uint8_t *>(&task);
+    const auto* begin = reinterpret_cast<const uint8_t*>(&task);
     return std::vector<uint8_t>(begin, begin + sizeof(HcclTaskMetaData));
 }
-}  // namespace
+} // namespace
 
 TEST(HcclDataDumpTest, DumpData_FillsFinishedStatusAndDataId)
 {

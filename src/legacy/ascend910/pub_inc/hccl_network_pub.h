@@ -14,7 +14,7 @@
 #include "hccl_common.h"
 #include "hccl_ip_address.h"
 
-using HcclNetDevCtx = void *;
+using HcclNetDevCtx = void*;
 
 struct HcclNetDevInfo {
     s32 devicePhyId;
@@ -23,32 +23,27 @@ struct HcclNetDevInfo {
     u32 rsvd;
 };
 
-enum class NicType {
-    VNIC_TYPE = 0,
-    DEVICE_NIC_TYPE,
-    HOST_NIC_TYPE
-};
+enum class NicType { VNIC_TYPE = 0, DEVICE_NIC_TYPE, HOST_NIC_TYPE };
 
 enum class TlsStatus {
     UNKNOWN = -1, // 不支持查询
-    DISABLE = 0, //  未使能
-    ENABLE,      //  使能
+    DISABLE = 0,  //  未使能
+    ENABLE,       //  使能
 };
 
-HcclResult HcclNetInit(NICDeployment nicDeploy, s32 devicePhyId, s32 deviceLogicId, 
-    bool enableWhitelistFlag, bool hasBackup = false);
-HcclResult HcclNetDeInit(NICDeployment nicDeploy, s32 devicePhyId, s32 deviceLogicId,
-    bool hasBackup = false);
+HcclResult HcclNetInit(
+    NICDeployment nicDeploy, s32 devicePhyId, s32 deviceLogicId, bool enableWhitelistFlag, bool hasBackup = false);
+HcclResult HcclNetDeInit(NICDeployment nicDeploy, s32 devicePhyId, s32 deviceLogicId, bool hasBackup = false);
 
 HcclResult HcclNetOpenDev(
-    HcclNetDevCtx *netDevCtx, NicType nicType, s32 devicePhyId, s32 deviceLogicId, hccl::HcclIpAddress localIp, 
+    HcclNetDevCtx* netDevCtx, NicType nicType, s32 devicePhyId, s32 deviceLogicId, hccl::HcclIpAddress localIp,
     hccl::HcclIpAddress backupIp = hccl::HcclIpAddress(0));
 void HcclNetCloseDev(HcclNetDevCtx netDevCtx);
 
-HcclResult HcclNetDevGetNicType(HcclNetDevCtx netDevCtx, NicType *nicType);
-HcclResult HcclNetDevGetLocalIp(HcclNetDevCtx netDevCtx, hccl::HcclIpAddress &localIp);
-HcclResult HcclNetDevGetProtoType(HcclNetDevCtx netDevCtx, u32 &proto);
+HcclResult HcclNetDevGetNicType(HcclNetDevCtx netDevCtx, NicType* nicType);
+HcclResult HcclNetDevGetLocalIp(HcclNetDevCtx netDevCtx, hccl::HcclIpAddress& localIp);
+HcclResult HcclNetDevGetProtoType(HcclNetDevCtx netDevCtx, u32& proto);
 HcclResult HcclNetDevSetProtoType(HcclNetDevCtx netDevCtx, u32 proto);
-HcclResult HcclNetDevGetPortStatus(HcclNetDevCtx netDevCtx, bool &portStatus);
-HcclResult HcclNetDevGetTlsStatus(HcclNetDevCtx netDevCtx, TlsStatus *tlsStatus);
+HcclResult HcclNetDevGetPortStatus(HcclNetDevCtx netDevCtx, bool& portStatus);
+HcclResult HcclNetDevGetTlsStatus(HcclNetDevCtx netDevCtx, TlsStatus* tlsStatus);
 #endif

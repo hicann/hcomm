@@ -22,7 +22,8 @@
 
 class LoadImdToGSAExecutor : public CcuExecutorBase {
 public:
-    explicit LoadImdToGSAExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit LoadImdToGSAExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     LoadImdToGSAExecutor() = default;

@@ -34,20 +34,15 @@ using namespace hccl;
 
 class BatchSendRecvTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "BatchSendRecvTest set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "BatchSendRecvTest set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "BatchSendRecvTest tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "BatchSendRecvTest tear down." << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -205,9 +200,10 @@ TEST_F(BatchSendRecvTest, batch_send_recv_Orchestrate)
     hccl::HcclAlgoInfo algoInfo;
     hccl::HcclExternalEnable externalEnable;
     std::vector<std::vector<std::vector<u32>>> serverAndSuperPodToRank;
-    std::unique_ptr<hccl::TopoMatcher> topoMatcher = std::make_unique<hccl::TopoMatcher>(commPlaneRanks, isBridgeVector,
-        topoInfo, algoInfo, externalEnable, serverAndSuperPodToRank);
-    hccl::CollBatchSendRecvRetryExecutor *collBatchSendRecvExecutor = new hccl::CollBatchSendRecvRetryExecutor(dispatcher, topoMatcher);
+    std::unique_ptr<hccl::TopoMatcher> topoMatcher = std::make_unique<hccl::TopoMatcher>(
+        commPlaneRanks, isBridgeVector, topoInfo, algoInfo, externalEnable, serverAndSuperPodToRank);
+    hccl::CollBatchSendRecvRetryExecutor* collBatchSendRecvExecutor
+        = new hccl::CollBatchSendRecvRetryExecutor(dispatcher, topoMatcher);
     DeviceMem inputMem = DeviceMem::alloc(4096);
     DeviceMem outputMem = DeviceMem::alloc(4096);
 
@@ -249,14 +245,9 @@ TEST_F(BatchSendRecvTest, batch_send_recv_Orchestrate)
     sendRecvPair[1]->dataType = HCCL_DATA_TYPE_FP32;
     sendRecvPair[1]->sendRecvType = HcclSendRecvType::HCCL_RECV;
 
+    MOCKER_CPP(&CollBatchSendRecvRetryExecutor::CalcSendSlices).stubs().will(returnValue(HCCL_SUCCESS));
 
-    MOCKER_CPP(&CollBatchSendRecvRetryExecutor::CalcSendSlices)
-    .stubs()
-    .will(returnValue(HCCL_SUCCESS));
-
-    MOCKER_CPP(&CollBatchSendRecvRetryExecutor::CalcRecvSlices)
-    .stubs()
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollBatchSendRecvRetryExecutor::CalcRecvSlices).stubs().will(returnValue(HCCL_SUCCESS));
 
     MachinePara machinePara;
     std::chrono::milliseconds timeout;

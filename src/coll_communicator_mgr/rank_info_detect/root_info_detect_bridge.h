@@ -25,17 +25,18 @@ namespace Hccl {
 struct RootInfoDetectBridge {
     // 调用方持有该类型擦除的所有权句柄，保证探测对象在通信域初始化结束前不被析构。
     using DetectContext = std::shared_ptr<void>;
-    using GetRootInfoFunc = HcclResult (*)(HcclRootInfo *rootInfo);
-    using DetectRankTableFunc = HcclResult (*)(u32 nRanks, u32 rank, const HcclRootHandleV2 &rootHandle,
-        RankTableInfo &rankTable, DetectContext &detectContext);
+    using GetRootInfoFunc = HcclResult (*)(HcclRootInfo* rootInfo);
+    using DetectRankTableFunc = HcclResult (*)(
+        u32 nRanks, u32 rank, const HcclRootHandleV2& rootHandle, RankTableInfo& rankTable,
+        DetectContext& detectContext);
 
     GetRootInfoFunc getRootInfo{nullptr};
     DetectRankTableFunc detectRankTable{nullptr};
 };
 
 // hcomm 加载时注册一次完整回调表；注册完成前查询返回 nullptr。
-HcclResult RegisterRootInfoDetectBridge(const RootInfoDetectBridge &bridge);
-const RootInfoDetectBridge *GetRootInfoDetectBridge();
+HcclResult RegisterRootInfoDetectBridge(const RootInfoDetectBridge& bridge);
+const RootInfoDetectBridge* GetRootInfoDetectBridge();
 
 } // namespace Hccl
 

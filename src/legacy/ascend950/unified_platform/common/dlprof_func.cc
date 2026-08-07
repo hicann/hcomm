@@ -7,23 +7,20 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #include "dlprof_func.h"
 #include "log.h"
 #include "exception_util.h"
- 
+
 namespace Hccl {
-DlProfFunc &DlProfFunc::GetInstance()
+DlProfFunc& DlProfFunc::GetInstance()
 {
     static DlProfFunc hcclDlProfFunction;
     return hcclDlProfFunction;
 }
- 
-bool DlProfFunc::isStubMode()
-{
-    return false;
-}
- 
+
+bool DlProfFunc::isStubMode() { return false; }
+
 DlProfFunc::DlProfFunc()
 {
     if (isStubMode()) {
@@ -32,7 +29,7 @@ DlProfFunc::DlProfFunc()
         DlProfFunctionInit();
     }
 }
- 
+
 DlProfFunc::~DlProfFunc()
 {
     if (handle_ != nullptr) {
@@ -40,34 +37,30 @@ DlProfFunc::~DlProfFunc()
         handle_ = nullptr;
     }
 }
- 
+
 static uint64_t HcclMsprofSysCycleTimeStub()
 {
     HCCL_WARNING("Entry HcclMsprofSysCycleTimeStub");
     return 0;
 }
- 
-void DlProfFunc::DlProfFunctionStubInit()
-{
-    dlMsprofSysCycleTime = (uint64_t(*)(void))HcclMsprofSysCycleTimeStub;
-}
- 
+
+void DlProfFunc::DlProfFunctionStubInit() { dlMsprofSysCycleTime = (uint64_t(*)(void))HcclMsprofSysCycleTimeStub; }
+
 HcclResult DlProfFunc::DlProfFunctionInterInit()
 {
     CHECK_NULLPTR(handle_, "[DlProfFunc::DlProfFunctionInterInit] handle_ is nullptr!");
-    dlMsprofSysCycleTime = (uint64_t(*)(void))dlsym(handle_,
-        "MsprofSysCycleTime");
+    dlMsprofSysCycleTime = (uint64_t(*)(void))dlsym(handle_, "MsprofSysCycleTime");
     CHK_PTR_NULL(dlMsprofSysCycleTime);
- 
+
     return HCCL_SUCCESS;
 }
- 
+
 HcclResult DlProfFunc::DlProfFunctionInit()
 {
     if (initializedFlag_) {
         return HCCL_SUCCESS;
     }
- 
+
     std::lock_guard<std::mutex> lock(handleMutex_);
     if (handle_ == nullptr) {
         handle_ = dlopen("libprofapi.so", RTLD_NOW);
@@ -78,4 +71,4 @@ HcclResult DlProfFunc::DlProfFunctionInit()
     initializedFlag_ = true;
     return HCCL_SUCCESS;
 }
-}
+} // namespace Hccl

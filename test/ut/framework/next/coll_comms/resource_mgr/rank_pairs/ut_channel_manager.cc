@@ -54,7 +54,7 @@ TEST_F(ChannelManagerTest, ChannelCommDestroy_EmptyList)
 TEST_F(ChannelManagerTest, RegisterHandle_NewChannel)
 {
     mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
-    HcclChannelDesc desc {};
+    HcclChannelDesc desc{};
     memset(&desc, 0, sizeof(desc));
     desc.remoteRank = 1;
     desc.channelProtocol = COMM_PROTOCOL_HCCS;
@@ -66,7 +66,7 @@ TEST_F(ChannelManagerTest, RegisterHandle_NewChannel)
 TEST_F(ChannelManagerTest, RegisterHandle_DuplicateChannel)
 {
     mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
-    HcclChannelDesc desc {};
+    HcclChannelDesc desc{};
     memset(&desc, 0, sizeof(desc));
     desc.remoteRank = 1;
     desc.channelProtocol = COMM_PROTOCOL_HCCS;
@@ -85,7 +85,7 @@ TEST_F(ChannelManagerTest, IsChannelExist_NotExist)
 TEST_F(ChannelManagerTest, IsChannelExist_Exist)
 {
     mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
-    HcclChannelDesc desc {};
+    HcclChannelDesc desc{};
     memset(&desc, 0, sizeof(desc));
     desc.remoteRank = 1;
     desc.channelProtocol = COMM_PROTOCOL_HCCS;
@@ -104,7 +104,7 @@ TEST_F(ChannelManagerTest, UnregisterHandle_NotExist)
 TEST_F(ChannelManagerTest, UnregisterHandle_Exist)
 {
     mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
-    HcclChannelDesc desc {};
+    HcclChannelDesc desc{};
     memset(&desc, 0, sizeof(desc));
     desc.remoteRank = 1;
     desc.channelProtocol = COMM_PROTOCOL_HCCS;
@@ -258,8 +258,8 @@ TEST_F(ChannelManagerTest, PrepareHandleArray_AllNew)
     std::vector<HcclChannelDesc> needCreateDescs;
     std::vector<uint32_t> needCreateIndices;
 
-    HcclResult ret = mgr.PrepareHandleArray("tag", COMM_ENGINE_CPU, desc, 2, handleArray,
-        needCreateDescs, needCreateIndices);
+    HcclResult ret
+        = mgr.PrepareHandleArray("tag", COMM_ENGINE_CPU, desc, 2, handleArray, needCreateDescs, needCreateIndices);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(needCreateDescs.size(), 2u);
     EXPECT_EQ(needCreateIndices.size(), 2u);
@@ -283,8 +283,8 @@ TEST_F(ChannelManagerTest, PrepareHandleArray_PartialExist)
     std::vector<HcclChannelDesc> needCreateDescs;
     std::vector<uint32_t> needCreateIndices;
 
-    HcclResult ret = mgr.PrepareHandleArray("tag", COMM_ENGINE_CPU, desc, 2, handleArray,
-        needCreateDescs, needCreateIndices);
+    HcclResult ret
+        = mgr.PrepareHandleArray("tag", COMM_ENGINE_CPU, desc, 2, handleArray, needCreateDescs, needCreateIndices);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(needCreateDescs.size(), 1u);
     EXPECT_EQ(needCreateIndices.size(), 1u);
@@ -296,14 +296,14 @@ TEST_F(ChannelManagerTest, BuildChannelRequests_Normal)
 {
     mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
     std::vector<HcclChannelDesc> descs;
-    HcclChannelDesc desc1 {};
+    HcclChannelDesc desc1{};
     memset(&desc1, 0, sizeof(desc1));
     desc1.remoteRank = 1;
     desc1.channelProtocol = COMM_PROTOCOL_HCCS;
     desc1.notifyNum = 2;
     descs.push_back(desc1);
 
-    HcclChannelDesc desc2 {};
+    HcclChannelDesc desc2{};
     memset(&desc2, 0, sizeof(desc2));
     desc2.remoteRank = 2;
     desc2.channelProtocol = COMM_PROTOCOL_ROCE;
@@ -358,7 +358,7 @@ TEST_F(ChannelManagerTest, ClearOpTransportResponseLinks_Normal)
     mgr.ClearOpTransportResponseLinks(opTransport);
     EXPECT_EQ(opTransport[0][0].links.size(), 2u);
     EXPECT_EQ(opTransport[0][0].status.size(), 2u);
-    for (const auto &s : opTransport[0][0].status) {
+    for (const auto& s : opTransport[0][0].status) {
         EXPECT_EQ(s, TransportStatus::INIT);
     }
 }
@@ -366,7 +366,7 @@ TEST_F(ChannelManagerTest, ClearOpTransportResponseLinks_Normal)
 TEST_F(ChannelManagerTest, GetHostChannel_NonAicpuEngine)
 {
     mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
-    HcclChannelDesc desc {};
+    HcclChannelDesc desc{};
     memset(&desc, 0, sizeof(desc));
     desc.remoteRank = 1;
     desc.channelProtocol = COMM_PROTOCOL_HCCS;
@@ -382,7 +382,7 @@ TEST_F(ChannelManagerTest, GetHostChannel_NonAicpuEngine)
 TEST_F(ChannelManagerTest, GetHostChannel_AicpuWithoutPair)
 {
     mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
-    HcclChannelDesc desc {};
+    HcclChannelDesc desc{};
     memset(&desc, 0, sizeof(desc));
     desc.remoteRank = 1;
     desc.channelProtocol = COMM_PROTOCOL_HCCS;
@@ -397,7 +397,7 @@ TEST_F(ChannelManagerTest, GetHostChannel_AicpuWithoutPair)
 TEST_F(ChannelManagerTest, GetHostChannel_AicpuWithPair)
 {
     mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
-    HcclChannelDesc desc {};
+    HcclChannelDesc desc{};
     memset(&desc, 0, sizeof(desc));
     desc.remoteRank = 1;
     desc.channelProtocol = COMM_PROTOCOL_HCCS;
@@ -414,7 +414,7 @@ TEST_F(ChannelManagerTest, GetHostChannel_AicpuWithPair)
 TEST_F(ChannelManagerTest, ChannelCommDestroy_RegisteredChannel)
 {
     mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
-    HcclChannelDesc desc {};
+    HcclChannelDesc desc{};
     memset(&desc, 0, sizeof(desc));
     desc.remoteRank = 1;
     desc.channelProtocol = COMM_PROTOCOL_HCCS;
@@ -433,12 +433,12 @@ TEST_F(ChannelManagerTest, ChannelCommDestroy_RegisteredChannel)
 TEST_F(ChannelManagerTest, ChannelCommDestroy_MixedChannels)
 {
     mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
-    HcclChannelDesc desc1 {};
+    HcclChannelDesc desc1{};
     memset(&desc1, 0, sizeof(desc1));
     desc1.remoteRank = 1;
     desc1.channelProtocol = COMM_PROTOCOL_HCCS;
 
-    HcclChannelDesc desc2 {};
+    HcclChannelDesc desc2{};
     memset(&desc2, 0, sizeof(desc2));
     desc2.remoteRank = 2;
     desc2.channelProtocol = COMM_PROTOCOL_ROCE;

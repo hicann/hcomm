@@ -25,15 +25,15 @@ namespace hcomm {
 
 class EidInfoMgr {
 public:
-    static EidInfoMgr &GetInstance(const uint32_t devicePhyId);
-    HcclResult GetEidInfos(std::vector<DevEidInfo> &eidInfos);
-    HcclResult GetEidInfoByAddr(const CommAddr &commAddr, DevEidInfo &eidInfo);
+    static EidInfoMgr& GetInstance(const uint32_t devicePhyId);
+    HcclResult GetEidInfos(std::vector<DevEidInfo>& eidInfos);
+    HcclResult GetEidInfoByAddr(const CommAddr& commAddr, DevEidInfo& eidInfo);
 
 private:
     explicit EidInfoMgr() = default;
     ~EidInfoMgr() = default;
-    EidInfoMgr(const EidInfoMgr &that) = delete;
-    EidInfoMgr &operator=(const EidInfoMgr &that) = delete;
+    EidInfoMgr(const EidInfoMgr& that) = delete;
+    EidInfoMgr& operator=(const EidInfoMgr& that) = delete;
 
     HcclResult Init();
 

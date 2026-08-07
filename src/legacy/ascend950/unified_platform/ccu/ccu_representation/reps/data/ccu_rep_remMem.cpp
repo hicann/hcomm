@@ -16,39 +16,35 @@
 namespace Hccl {
 namespace CcuRep {
 
-CcuRepRemMem::CcuRepRemMem(const CcuTransport &transport, Memory rem)
-    : transport(transport), rem(rem)
-{
-    type = CcuRepType::REM_MEM;
-    instrCount = 2;  // 指令数为2个
-}
+    CcuRepRemMem::CcuRepRemMem(const CcuTransport& transport, Memory rem) : transport(transport), rem(rem)
+    {
+        type = CcuRepType::REM_MEM;
+        instrCount = 2; // 指令数为2个
+    }
 
-bool CcuRepRemMem::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool CcuRepRemMem::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    CcuTransport::CclBufferInfo cclBufferInfo;
-    uint32_t index = 0;
-    transport.GetRmtBuffer(cclBufferInfo, index);
-    auto addr = cclBufferInfo.addr;
-    auto tokenId = cclBufferInfo.tokenId;
-    auto tokenValue = cclBufferInfo.tokenValue;
+        CcuTransport::CclBufferInfo cclBufferInfo;
+        uint32_t index = 0;
+        transport.GetRmtBuffer(cclBufferInfo, index);
+        auto addr = cclBufferInfo.addr;
+        auto tokenId = cclBufferInfo.tokenId;
+        auto tokenValue = cclBufferInfo.tokenValue;
 
-    auto tokenInfo = GetToken(tokenId, tokenValue, 1);
+        auto tokenInfo = GetToken(tokenId, tokenValue, 1);
 
-    LoadImdToGSAInstr(instr++, rem.addr.Id(), addr);
-    LoadImdToXnInstr(instr++, rem.token.Id(), tokenInfo, CCU_LOAD_TO_XN_SEC_INFO);
-    
-    instrId += instrCount;
+        LoadImdToGSAInstr(instr++, rem.addr.Id(), addr);
+        LoadImdToXnInstr(instr++, rem.token.Id(), tokenInfo, CCU_LOAD_TO_XN_SEC_INFO);
 
-    return translated;
-}
+        instrId += instrCount;
 
-std::string CcuRepRemMem::Describe()
-{
-    return StringFormat("Get Remote Buffer Addr and TokenInfo By Transport");
-}
+        return translated;
+    }
+
+    std::string CcuRepRemMem::Describe() { return StringFormat("Get Remote Buffer Addr and TokenInfo By Transport"); }
 
 }; // namespace CcuRep
 }; // namespace Hccl

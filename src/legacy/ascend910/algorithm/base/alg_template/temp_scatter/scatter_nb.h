@@ -13,7 +13,6 @@
 
 #include "scatter_nb_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* SCATTER_NB_H */

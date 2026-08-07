@@ -20,7 +20,7 @@ namespace hcomm {
  */
 class UboeEndpoint : public UboeUbgEndpointHelper {
 public:
-    explicit UboeEndpoint(const EndpointDesc &endpointDesc);
+    explicit UboeEndpoint(const EndpointDesc& endpointDesc);
     ~UboeEndpoint() noexcept override;
 
     HcclResult Init() override;
@@ -28,6 +28,6 @@ public:
 private:
     MemMgrCacheKey cacheKey_{};
 };
-}
+} // namespace hcomm
 
 #endif // UBOE_ENDPOINT_H

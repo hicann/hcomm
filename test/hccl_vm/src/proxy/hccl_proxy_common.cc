@@ -19,16 +19,14 @@
 #include <nlohmann_json/json.hpp>
 
 namespace sim {
-bool IsDeviceAddress(void *addr)
+bool IsDeviceAddress(void* addr)
 {
     uint64_t devPtr = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(addr));
-    auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>(
-        [devPtr](const sim::VirtualMemBlock &virMem) {
-            return ((virMem.dev_mapped_ptr <= devPtr) &&
-                    (devPtr < (virMem.dev_mapped_ptr + virMem.size)) &&
-                    (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV));
-        }
-    );
+    auto virMemRes = RunnerDB::GetOneByPred<sim::VirtualMemBlock>([devPtr](const sim::VirtualMemBlock& virMem) {
+        return (
+            (virMem.dev_mapped_ptr <= devPtr) && (devPtr < (virMem.dev_mapped_ptr + virMem.size))
+            && (virMem.src_type == (uint8_t)sim::VIR_MEM_TYPE_DEV));
+    });
     if (!virMemRes.second) {
         HCCL_VM_INFO("this buff offset ptr not found:{:p} in VirtualMemBlock.", addr);
         return false;
@@ -41,9 +39,7 @@ bool ParseKernelJson(const std::string& jsonPath, std::map<std::string, std::str
 {
     // 校验文件后缀是否为.json
     std::string suffix = ".json";
-    if (jsonPath.size() < suffix.size() ||
-        jsonPath.substr(jsonPath.size() - suffix.size()) != suffix)
-    {
+    if (jsonPath.size() < suffix.size() || jsonPath.substr(jsonPath.size() - suffix.size()) != suffix) {
         // 也会加载AIV的.o文件
         HCCL_VM_WARN("path is not json file: {}", jsonPath);
         return true;
@@ -62,9 +58,7 @@ bool ParseKernelJson(const std::string& jsonPath, std::map<std::string, std::str
     }
 
     for (auto& [key, val] : j.items()) {
-        if (!val.contains("opInfo") ||
-            !val["opInfo"].contains("functionName") ||
-            !val["opInfo"].contains("kernelSo")) {
+        if (!val.contains("opInfo") || !val["opInfo"].contains("functionName") || !val["opInfo"].contains("kernelSo")) {
             HCCL_VM_ERROR("skip entry '{}', missing required fields.", key);
             continue;
         }
@@ -78,4 +72,4 @@ bool ParseKernelJson(const std::string& jsonPath, std::map<std::string, std::str
     return true;
 }
 
-}
+} // namespace sim

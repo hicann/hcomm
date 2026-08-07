@@ -15,12 +15,11 @@
 #include <acl/acl.h>
 #include "hccl_mem.h"
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
-typedef void *StreamHandle;
+typedef void* StreamHandle;
 
 /**
  * @struct HcclReduceInfo

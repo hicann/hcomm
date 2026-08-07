@@ -43,7 +43,7 @@ public:
     /* Host侧对象构造函数，在Init()中会进行Device侧内存申请 */
     explicit PetersonLock(u64 timeoutSec);
     /* Device侧对象构造函数，devPtr是在Host申请的设备侧内存地址 */
-    PetersonLock(void *devPtr, u64 timeoutSec);
+    PetersonLock(void* devPtr, u64 timeoutSec);
     ~PetersonLock();
 
     HcclResult Init();
@@ -56,28 +56,26 @@ public:
     HcclResult Unlock();
 
     /* 显式禁用所有copy、move构造函数，因为锁不可复制，不可移动 */
-    PetersonLock(const PetersonLock &) = delete;
-    PetersonLock(PetersonLock &&) = delete;
-    PetersonLock& operator=(const PetersonLock &) = delete;
-    PetersonLock& operator=(PetersonLock &&) = delete;
+    PetersonLock(const PetersonLock&) = delete;
+    PetersonLock(PetersonLock&&) = delete;
+    PetersonLock& operator=(const PetersonLock&) = delete;
+    PetersonLock& operator=(PetersonLock&&) = delete;
+
 private:
     HcclResult AllocDeviceMem();
 
     HcclResult WriteSelfFlag(u32 selfFlag);
     HcclResult WriteTurn();
-    HcclResult ReadPeerFlag(u32 &peerFlag);
-    HcclResult ReadTurn(u32 &peerTurn);
+    HcclResult ReadPeerFlag(u32& peerFlag);
+    HcclResult ReadTurn(u32& peerTurn);
 
     static constexpr size_t MIN_SHM_LEN = 32; /* 最小的共享内存大小 */
-    enum class Type : int {
-        HOST = 0,
-        DEVICE = 1
-    };
+    enum class Type : int { HOST = 0, DEVICE = 1 };
 
-    static constexpr u32 TURN_FOR_HOST    = 1;
-    static constexpr u32 TURN_FOR_DEVICE  = 0;
-    static constexpr u32 FLAG_LOCK   = 1;    /* 获取锁 */
-    static constexpr u32 FLAG_UNLOCK = 0;    /* 释放锁 */
+    static constexpr u32 TURN_FOR_HOST = 1;
+    static constexpr u32 TURN_FOR_DEVICE = 0;
+    static constexpr u32 FLAG_LOCK = 1;   /* 获取锁 */
+    static constexpr u32 FLAG_UNLOCK = 0; /* 释放锁 */
 
     void MemFence() const
     {
@@ -101,9 +99,9 @@ private:
     /*
      * 这里变量使用volatile修饰，是为了Device直接读写内存数据，而不是CPU cache
      */
-    volatile u32 *turn_ = nullptr;
-    volatile u32 *hostFlag_ = nullptr;
-    volatile u32 *deviceFlag_ = nullptr;
+    volatile u32* turn_ = nullptr;
+    volatile u32* hostFlag_ = nullptr;
+    volatile u32* deviceFlag_ = nullptr;
 };
 /**
  * 使用RAII特性使用PetersonLock，在该对象构造时加锁，析构时释放锁
@@ -111,23 +109,21 @@ private:
  */
 class PetersonLockGuard {
 public:
-    explicit PetersonLockGuard(PetersonLock *lock);
+    explicit PetersonLockGuard(PetersonLock* lock);
     ~PetersonLockGuard();
 
-    bool IsLockFailed() const
-    {
-        return lockFailed_;
-    }
+    bool IsLockFailed() const { return lockFailed_; }
 
     /* 显式禁用所有copy、move构造函数，因为锁不可复制，不可移动 */
-    PetersonLockGuard(const PetersonLockGuard &) = delete;
-    PetersonLockGuard(PetersonLockGuard &&) = delete;
-    PetersonLockGuard& operator=(const PetersonLockGuard &) = delete;
-    PetersonLockGuard& operator=(PetersonLockGuard &&) = delete;
+    PetersonLockGuard(const PetersonLockGuard&) = delete;
+    PetersonLockGuard(PetersonLockGuard&&) = delete;
+    PetersonLockGuard& operator=(const PetersonLockGuard&) = delete;
+    PetersonLockGuard& operator=(PetersonLockGuard&&) = delete;
+
 private:
-    PetersonLock *lock_ = nullptr;
+    PetersonLock* lock_ = nullptr;
     bool lockFailed_ = false;
 };
-}
+} // namespace hccl
 
 #endif

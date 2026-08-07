@@ -29,8 +29,8 @@
 #undef private
 #include "adapter_rts_common.h"
 
-extern HcclResult CommTaskLaunch(ThreadHandle *threads, uint32_t threadNum); // host ffts+或aicpu stars使用
-extern HcclResult DispatchAllStreams(ThreadHandle *threads, uint32_t threadNum);
+extern HcclResult CommTaskLaunch(ThreadHandle* threads, uint32_t threadNum); // host ffts+或aicpu stars使用
+extern HcclResult DispatchAllStreams(ThreadHandle* threads, uint32_t threadNum);
 
 /**
  * @class UtAicpuTsHcommBatchModeStart
@@ -39,13 +39,9 @@ extern HcclResult DispatchAllStreams(ThreadHandle *threads, uint32_t threadNum);
  * 该测试类用于验证HcommBatchModeStart接口的基本功能。
  * 测试场景包括正常调用启动批量操作。
  */
-class UtLaunchContext : public testing::Test
-{
+class UtLaunchContext : public testing::Test {
 protected:
-    virtual void TearDown() override
-    {
-        GlobalMockObject::verify();
-    }
+    virtual void TearDown() override { GlobalMockObject::verify(); }
 };
 
 /**

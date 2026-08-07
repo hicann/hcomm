@@ -13,39 +13,18 @@
 
 namespace Hccl {
 
-CcuResPackMgr *CcuCommunicator::GetCcuResPackMgr()
-{
-    return &ccuResPackMgr;
-}
+CcuResPackMgr* CcuCommunicator::GetCcuResPackMgr() { return &ccuResPackMgr; }
 
-CcuTransportGroupMgr *CcuCommunicator::GetCcuTransportGrpMgr()
-{
-    return &ccuTransportGroupMgr;
-}
+CcuTransportGroupMgr* CcuCommunicator::GetCcuTransportGrpMgr() { return &ccuTransportGroupMgr; }
 
-CcuJettyMgr *CcuCommunicator::GetCcuJettyMgr()
-{
-    return &ccuJettyMgr;
-}
+CcuJettyMgr* CcuCommunicator::GetCcuJettyMgr() { return &ccuJettyMgr; }
 
-CcuTransportMgr *CcuCommunicator::GetCcuTransportMgr()
-{
-    return &ccuTransportMgr;
-}
+CcuTransportMgr* CcuCommunicator::GetCcuTransportMgr() { return &ccuTransportMgr; }
 
-RegisteredCcuCtxMgr  *CcuCommunicator::GetRegisteredCcuCtxMgr()
-{
-    return &registeredCcuCtxMgr;
-}
+RegisteredCcuCtxMgr* CcuCommunicator::GetRegisteredCcuCtxMgr() { return &registeredCcuCtxMgr; }
 
-int32_t CcuCommunicator::GetDeviceLogicId() const
-{
-    return devLogicId;
-}
+int32_t CcuCommunicator::GetDeviceLogicId() const { return devLogicId; }
 
-void CcuCommunicator::AcceleratorFallback() const
-{
-    comm->AcceleratorFallback();
-}
+void CcuCommunicator::AcceleratorFallback() const { comm->AcceleratorFallback(); }
 
 } // namespace Hccl

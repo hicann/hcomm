@@ -13,7 +13,8 @@
 using namespace std;
 
 namespace AivSim {
-string GetTypeName(AivTaskType taskType) {
+string GetTypeName(AivTaskType taskType)
+{
     switch (taskType) {
         case AivTaskType::MEM_COPY:
             return "MemCopy";
@@ -35,4 +36,4 @@ string GetTypeName(AivTaskType taskType) {
             return "UnknownTask";
     }
 }
-}
+} // namespace AivSim

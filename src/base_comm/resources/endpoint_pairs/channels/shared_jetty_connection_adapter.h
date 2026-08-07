@@ -33,21 +33,20 @@ namespace hcomm {
  * @param[in] endpointTag Endpoint 不透明标签（透传给 releaseCb）
  * @param[in] releaseCb connection 销毁时回调（由调用方注入 Endpoint::ReleaseSharedJetty）
  */
-HcclResult InjectSharedJettyToConn(void *rawConnection,
-    const Endpoint::SharedJettyCtx &ctx, void *endpointTag,
-    std::function<void(void *)> releaseCb);
+HcclResult InjectSharedJettyToConn(
+    void* rawConnection, const Endpoint::SharedJettyCtx& ctx, void* endpointTag, std::function<void(void*)> releaseCb);
 
 /**
  * @brief 从已完成 jetty 创建的 connection 提取衍生字段（首次创建路径）
  * @param[in] rawConnection 不透明 connection 指针
  * @param[out] ctx 输出的 jetty 上下文（仅 jetty 相关字段，refCount 不填）
  */
-HcclResult ExtractJettyInfoFromConn(void *rawConnection, Endpoint::SharedJettyCtx &ctx);
+HcclResult ExtractJettyInfoFromConn(void* rawConnection, Endpoint::SharedJettyCtx& ctx);
 
 /**
  * @brief 标记 connection 转交 jetty 所有权，析构不再销毁 jetty（首次创建后调用）
  */
-HcclResult TransferConnJettyOwnership(void *rawConnection);
+HcclResult TransferConnJettyOwnership(void* rawConnection);
 
 } // namespace hcomm
 

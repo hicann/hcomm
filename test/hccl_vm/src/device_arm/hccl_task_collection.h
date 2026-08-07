@@ -12,6 +12,6 @@
 #define HCCL_TASK_COLLECTION_H
 #include "sim_common_defs.h"
 
-void InsertTaskToCollectionDev(HcclTaskMetaData *task);
+void InsertTaskToCollectionDev(HcclTaskMetaData* task);
 
 #endif

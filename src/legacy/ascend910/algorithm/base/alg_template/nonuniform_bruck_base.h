@@ -13,8 +13,6 @@
 
 #include "nonuniform_bruck_base_pub.h"
 
-namespace hccl {
-}  // hccl
+namespace hccl {} // namespace hccl
 
-#endif  /* NONUNIFORM_BRUCK_BASE_H */
-
+#endif /* NONUNIFORM_BRUCK_BASE_H */

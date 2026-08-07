@@ -22,7 +22,8 @@
 
 class TransRmtMSToLocMSExecutor : public CcuExecutorBase {
 public:
-    explicit TransRmtMSToLocMSExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit TransRmtMSToLocMSExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     TransRmtMSToLocMSExecutor() = default;
@@ -30,13 +31,13 @@ public:
 
     void Parser() override;
     void Run() override;
-    void Process(CcuResourceManager &ccuResMgr) override;
+    void Process(CcuResourceManager& ccuResMgr) override;
     std::string Describe() override;
     CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 
 private:
-    uint8_t  rmtDieId_{0};
-    uint8_t  locDieId_{0};
+    uint8_t rmtDieId_{0};
+    uint8_t locDieId_{0};
     uint16_t locMSId_{0};
     uint16_t rmtMSId_{0};
     uint16_t lengthXnId_{0};

@@ -35,47 +35,41 @@ namespace hcomm {
 
 class CcuComponent {
 public:
-    static CcuComponent &GetInstance(const int32_t deviceLogicId);
+    static CcuComponent& GetInstance(const int32_t deviceLogicId);
     HcclResult Init();
     HcclResult Deinit();
 
-    HcclResult GetCcuResourceSpaceBufInfo(const uint8_t dieId, uint64_t &addr, uint64_t &size) const;
-    HcclResult GetCcuResourceSpaceTokenInfo(const uint8_t dieId, uint64_t &tokenId,
-        uint64_t &tokenValue) const;
+    HcclResult GetCcuResourceSpaceBufInfo(const uint8_t dieId, uint64_t& addr, uint64_t& size) const;
+    HcclResult GetCcuResourceSpaceTokenInfo(const uint8_t dieId, uint64_t& tokenId, uint64_t& tokenValue) const;
 
-    HcclResult AllocChannels(const uint8_t dieId, const ChannelPara &channelPara,
-        std::vector<ChannelInfo> &channelInfos);
-    HcclResult ConfigChannel(const uint8_t dieId, const ChannelCfg &cfg);
+    HcclResult
+    AllocChannels(const uint8_t dieId, const ChannelPara& channelPara, std::vector<ChannelInfo>& channelInfos);
+    HcclResult ConfigChannel(const uint8_t dieId, const ChannelCfg& cfg);
     HcclResult ReleaseChannel(const uint8_t dieId, const uint32_t channelId);
-    
-    HcclResult GetLoopChannelId(const uint8_t srcDieId, const uint8_t dstDieId,
-        uint32_t &channelId) const;
 
-    HcclResult AllocRes(const uint8_t dieId, const ResType resType, const uint32_t num,
-        const bool consecutive, std::vector<ResInfo> &resInfos);
-    HcclResult ReleaseRes(const uint8_t dieId, const ResType resType, const uint32_t startId,
-        const uint32_t num);
-    
-    HcclResult AllocIns(const uint8_t dieId, const uint32_t num, ResInfo &insInfo);
-    HcclResult ReleaseIns(const uint8_t dieId, const ResInfo &insInfo);
+    HcclResult GetLoopChannelId(const uint8_t srcDieId, const uint8_t dstDieId, uint32_t& channelId) const;
+
+    HcclResult AllocRes(
+        const uint8_t dieId, const ResType resType, const uint32_t num, const bool consecutive,
+        std::vector<ResInfo>& resInfos);
+    HcclResult ReleaseRes(const uint8_t dieId, const ResType resType, const uint32_t startId, const uint32_t num);
+
+    HcclResult AllocIns(const uint8_t dieId, const uint32_t num, ResInfo& insInfo);
+    HcclResult ReleaseIns(const uint8_t dieId, const ResInfo& insInfo);
     uint32_t GetInsConsecutiveRemainSize(const uint8_t dieId) const;
-    HcclResult AllocCke(const uint8_t dieId, const uint32_t num, std::vector<ResInfo> &ckeInfos);
-    HcclResult ReleaseCke(const uint8_t dieId, const std::vector<ResInfo> &ckeInfos);
-    HcclResult AllocXn(const uint8_t dieId, const uint32_t num, std::vector<ResInfo> &xnInfos);
-    HcclResult ReleaseXn(const uint8_t dieId, const std::vector<ResInfo> &xnInfos);
+    HcclResult AllocCke(const uint8_t dieId, const uint32_t num, std::vector<ResInfo>& ckeInfos);
+    HcclResult ReleaseCke(const uint8_t dieId, const std::vector<ResInfo>& ckeInfos);
+    HcclResult AllocXn(const uint8_t dieId, const uint32_t num, std::vector<ResInfo>& xnInfos);
+    HcclResult ReleaseXn(const uint8_t dieId, const std::vector<ResInfo>& xnInfos);
 
     // 0.5rtt专用接口
-    HcclResult AllocWishCntXn(const uint8_t dieId,
-        const std::string &resGroupTag, uint32_t &wishCntXn);
-    HcclResult ReleaseWishCntXn(const uint8_t dieId,
-        const std::string &resGroupTag, uint32_t wishCntXn);
-    HcclResult GetCntXnBlock(const uint8_t dieId,
-        const std::string &resGroupTag,
-        std::pair<uint32_t, uint32_t> &cntXnPair);
-    HcclResult GetTotalCntXn(const uint8_t dieId,
-        const std::string &resGroupTag, uint32_t &totalCntXn);
+    HcclResult AllocWishCntXn(const uint8_t dieId, const std::string& resGroupTag, uint32_t& wishCntXn);
+    HcclResult ReleaseWishCntXn(const uint8_t dieId, const std::string& resGroupTag, uint32_t wishCntXn);
+    HcclResult
+    GetCntXnBlock(const uint8_t dieId, const std::string& resGroupTag, std::pair<uint32_t, uint32_t>& cntXnPair);
+    HcclResult GetTotalCntXn(const uint8_t dieId, const std::string& resGroupTag, uint32_t& totalCntXn);
 
-    const std::array<bool, CCU_MAX_IODIE_NUM> &GetDieEnableFlags() const;
+    const std::array<bool, CCU_MAX_IODIE_NUM>& GetDieEnableFlags() const;
 
     HcclResult CleanTaskKillState() const;
     HcclResult CleanDieCkes(const uint8_t dieId) const;
@@ -86,23 +80,22 @@ public:
 private:
     explicit CcuComponent() = default;
     ~CcuComponent();
-    CcuComponent(const CcuComponent &that) = delete;
-    CcuComponent &operator=(const CcuComponent &that) = delete;
+    CcuComponent(const CcuComponent& that) = delete;
+    CcuComponent& operator=(const CcuComponent& that) = delete;
 
     HcclResult CheckDiesEnable();
-    HcclResult ChooseLoopEids(const std::array<bool, CCU_MAX_IODIE_NUM> &dieDrvEnableFlags);
-    HcclResult GetLoopFeIpByDieId(const uint8_t dieId, uint32_t &feId, CommAddr &commAddr);
+    HcclResult ChooseLoopEids(const std::array<bool, CCU_MAX_IODIE_NUM>& dieDrvEnableFlags);
+    HcclResult GetLoopFeIpByDieId(const uint8_t dieId, uint32_t& feId, CommAddr& commAddr);
     HcclResult CreateCcuRmaBuffer();
     HcclResult CreateResourceManagers();
     HcclResult CreateLoopChannels();
-    HcclResult CreateLoopChannel(const uint8_t dieId, uint32_t &channelId);
-    HcclResult CreateAndImportLoopJettys(const uint8_t dieId, const CommAddr &commAddr,
-        const std::vector<JettyInfo> &jettyInfos);
-    HcclResult GetLoopTpInfo(const uint8_t dieId, const CommAddr &commAddr, TpInfo &tpInfo);
-    HcclResult GetLoopTpAttr(const uint8_t dieId, const CommAddr &commAddr, TpAttrInfo &tpAttrInfo);
+    HcclResult CreateLoopChannel(const uint8_t dieId, uint32_t& channelId);
+    HcclResult
+    CreateAndImportLoopJettys(const uint8_t dieId, const CommAddr& commAddr, const std::vector<JettyInfo>& jettyInfos);
+    HcclResult GetLoopTpInfo(const uint8_t dieId, const CommAddr& commAddr, TpInfo& tpInfo);
+    HcclResult GetLoopTpAttr(const uint8_t dieId, const CommAddr& commAddr, TpAttrInfo& tpAttrInfo);
     uint32_t GetNewPsn();
-    HcclResult ConfigLoopChannel(const uint8_t dieId, const CommAddr &commAddr,
-        const ChannelInfo &channelInfo);
+    HcclResult ConfigLoopChannel(const uint8_t dieId, const CommAddr& commAddr, const ChannelInfo& channelInfo);
     HcclResult ConfigMsIdToken();
 
     HcclResult ReleaseJettyRes();
@@ -114,9 +107,10 @@ private:
     HcclResult CcuSetTaskKillDone(const int32_t deviceLogicId);
 
     // 0.5rtt专用接口
-    HcclResult ConfirmCntXns(const uint8_t dieId, const std::string &resGroupTag, const ResInfo &cntXnInfos);
+    HcclResult ConfirmCntXns(const uint8_t dieId, const std::string& resGroupTag, const ResInfo& cntXnInfos);
     HcclResult GetAvailableTotalCntXnIndex(uint32_t& index) const;
-    HcclResult SetTotalCntXnProcess(uint8_t dieId, uint32_t index, uint32_t fromId, uint32_t toId, uint32_t totalId) const;
+    HcclResult
+    SetTotalCntXnProcess(uint8_t dieId, uint32_t index, uint32_t fromId, uint32_t toId, uint32_t totalId) const;
 
     HcclResult SetSplitUnit(uint8_t dieId, uint32_t splitPktUnit) const;
     HcclResult SetTotalCntXn(uint8_t dieId, uint32_t fromId, uint32_t toId, uint32_t totalId, uint32_t index);
@@ -130,7 +124,7 @@ private:
     int32_t devLogicId_{static_cast<int32_t>(INVALID_DEV_ID)};
     uint32_t devPhyId_{INVALID_DEV_ID};
     CcuVersion ccuVersion_{CcuVersion::CCU_INVALID};
-    
+
     // 根据资源规格的记录可用的die，要求drv可用，且环回eid存在
     std::array<bool, CCU_MAX_IODIE_NUM> dieEnableFlags_{};
 
@@ -151,17 +145,18 @@ private:
     std::unordered_map<uint8_t, std::vector<ImportOutParamPair>> importedOutParamMap_{};
     std::unordered_map<uint8_t, TpInfo> tpInfoMap_{};
     std::unordered_map<uint8_t, TpAttrInfo> tpAttrInfoMap_{};
-    enum class CcuTaskKillStatus : uint8_t { INIT = 0, TASK_KILL = 1, KILL_DONE = 2, CLEAN_TIF = 3, INVALID = 4};
+    enum class CcuTaskKillStatus : uint8_t { INIT = 0, TASK_KILL = 1, KILL_DONE = 2, CLEAN_TIF = 3, INVALID = 4 };
     CcuTaskKillStatus status{CcuTaskKillStatus::INVALID};
 
     struct CntXnBlock {
-        ResInfo resInfo{};                 // cntXn resInfo
-        std::stack<uint32_t>   wishCntXns; // wishCntXn Id
-        uint32_t totalCntXn{0};            // totalCntXn Id
-        uint32_t blockIdx{0};              // wishCntXn和totalCntXn绑定时的idx
+        ResInfo resInfo{};               // cntXn resInfo
+        std::stack<uint32_t> wishCntXns; // wishCntXn Id
+        uint32_t totalCntXn{0};          // totalCntXn Id
+        uint32_t blockIdx{0};            // wishCntXn和totalCntXn绑定时的idx
     };
     std::mutex cntXnBlockMutex_;
-    std::unordered_map<uint8_t, std::unordered_map<std::string, struct CntXnBlock>> cntXnBlocks_;  // {dieId, {resGroupTag, CntXnBlock}}
+    std::unordered_map<uint8_t, std::unordered_map<std::string, struct CntXnBlock>>
+        cntXnBlocks_; // {dieId, {resGroupTag, CntXnBlock}}
     // 已使用的0.5RTT配置寄存器的index
     std::array<bool, CCU_V2_RESOURCE_TOTAL_CNT_XNS_NUM> usedTotalCntXnFlags_{};
 };

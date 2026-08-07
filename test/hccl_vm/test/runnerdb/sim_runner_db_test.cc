@@ -49,17 +49,13 @@ void SetupTestData()
     device.physical_id = 0;
     RunnerDB::Add<sim::Device>(device);
 }
-}
+} // namespace
 
 class SimRunnerDbTest : public testing::Test {
 protected:
-    void SetUp() override {
-        SetupTestData();
-    }
+    void SetUp() override { SetupTestData(); }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimRunnerDbTest, GetAllTableName_ReturnsNonEmptyList)
@@ -231,7 +227,9 @@ TEST_F(SimRunnerDbTest, DeleteAll_RemovesAllRecords)
     bool ret = RunnerDB::DeleteAll<sim::Server>();
     EXPECT_TRUE(ret);
 
-    auto results = RunnerDB::GetByPred<sim::Server>([](const sim::Server&) { return true; });
+    auto results = RunnerDB::GetByPred<sim::Server>([](const sim::Server&) {
+        return true;
+    });
     EXPECT_EQ(results.size(), 0);
 }
 
@@ -245,14 +243,17 @@ TEST_F(SimRunnerDbTest, MultipleAdd_MaintainsDataIntegrity)
         RunnerDB::Add<sim::Device>(device);
     }
 
-    auto results = RunnerDB::GetByPred<sim::Device>([](const sim::Device&) { return true; });
+    auto results = RunnerDB::GetByPred<sim::Device>([](const sim::Device&) {
+        return true;
+    });
 
     EXPECT_GE(results.size(), 11);
 }
 
 class SimRunnerDbRankTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestData();
 
         sim::Device device{};
@@ -267,14 +268,14 @@ protected:
         RunnerDB::Add<sim::Rank>(rank);
     }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimRunnerDbRankTest, Add_And_GetById_Rank)
 {
-    auto results = RunnerDB::GetByPred<sim::Rank>([](const sim::Rank&) { return true; });
+    auto results = RunnerDB::GetByPred<sim::Rank>([](const sim::Rank&) {
+        return true;
+    });
 
     EXPECT_GE(results.size(), 1);
     EXPECT_EQ(results[0].rank_id, 0);
@@ -298,7 +299,8 @@ TEST_F(SimRunnerDbRankTest, QueryRankByDeviceId)
 
 class SimRunnerDbContextTest : public testing::Test {
 protected:
-    void SetUp() override {
+    void SetUp() override
+    {
         SetupTestData();
 
         sim::Device device{};
@@ -314,14 +316,14 @@ protected:
         RunnerDB::Add<sim::Context>(ctx);
     }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimRunnerDbContextTest, GetById_Context)
 {
-    auto results = RunnerDB::GetByPred<sim::Context>([](const sim::Context&) { return true; });
+    auto results = RunnerDB::GetByPred<sim::Context>([](const sim::Context&) {
+        return true;
+    });
 
     EXPECT_GE(results.size(), 1);
     EXPECT_EQ(results[0].is_default, 1);
@@ -339,13 +341,9 @@ TEST_F(SimRunnerDbContextTest, GetDefaultContext)
 
 class SimRunnerDbStreamTest : public testing::Test {
 protected:
-    void SetUp() override {
-        SetupTestData();
-    }
+    void SetUp() override { SetupTestData(); }
 
-    void TearDown() override {
-        CleanUpDb();
-    }
+    void TearDown() override { CleanUpDb(); }
 };
 
 TEST_F(SimRunnerDbStreamTest, Add_Stream)

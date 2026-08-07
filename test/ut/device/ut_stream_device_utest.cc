@@ -25,19 +25,10 @@ using namespace std;
 
 class Stream_Device_UT : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "Stream_Device_UT SetUP" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "Stream_Device_UT TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "Stream_Device_UT SetUP" << std::endl; }
+    static void TearDownTestCase() { std::cout << "Stream_Device_UT TearDown" << std::endl; }
     // Some expensive resource shared by all tests.
-    virtual void SetUp()
-    {
-        std::cout << "A Test SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test SetUP" << std::endl; }
     virtual void TearDown()
     {
         GlobalMockObject::verify();
@@ -45,7 +36,8 @@ protected:
     }
 };
 
-TEST_F(Stream_Device_UT, StreamDeviceTest) {
+TEST_F(Stream_Device_UT, StreamDeviceTest)
+{
     rtStream_t aicpuStream;
     aclmdlRI rtModel = nullptr;
     bool isCapture = false;
@@ -55,14 +47,16 @@ TEST_F(Stream_Device_UT, StreamDeviceTest) {
     GetModelId(rtModel, modelId);
 }
 
-TEST_F(Stream_Device_UT, EnvDeviceTest) {
+TEST_F(Stream_Device_UT, EnvDeviceTest)
+{
     std::string opName = "llt";
     std::vector<HcclAlgoType> algType;
     ParseAlgoString(opName, opName, algType);
     SetHcclAlgoConfig(opName);
 }
 
-TEST_F(Stream_Device_UT, OpBaseDeviceTest) {
+TEST_F(Stream_Device_UT, OpBaseDeviceTest)
+{
     aclrtStream stream;
     aclmdlRICaptureStatus captureStatus = ACL_MODEL_RI_CAPTURE_STATUS_NONE;
     uint64_t modelId = 0;

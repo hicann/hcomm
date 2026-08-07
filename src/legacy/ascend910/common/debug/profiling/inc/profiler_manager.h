@@ -21,18 +21,19 @@ public:
     ProfilerManager(s32 devicePhyId, s32 deviceLogicId, u32 realUserRank, u32 rankSize);
     ~ProfilerManager();
     HcclResult InitProfiler();
-    HcclResult GetandClearOverFlowTasks(std::vector<HcclDumpInfo> &hcclDumpInfo);
-    void TaskSdmaProfiler(ProfilerType profilerType, HcclRtStream stream, TaskParaDMA &para);
-    void TaskRdmaProfiler(ProfilerType profilerType, HcclRtStream stream, TaskParaDMA &para);
-    void TaskReduceInlineProfiler(ProfilerType profilerType, HcclRtStream stream, TaskParaReduce &para);
-    void TaskReduceTbeProfiler(ProfilerType profilerType, HcclRtStream stream, TaskParaReduce &para);
-    void TaskRecordProfiler(ProfilerType profilerType, HcclRtStream stream, TaskParaNotify &para);
-    void TaskWaitProfiler(ProfilerType profilerType, HcclRtStream stream, TaskParaNotify &para);
-    void TaskAivProfiler(ProfilerType profilerType, HcclRtStream stream, TaskParaAiv &para);
+    HcclResult GetandClearOverFlowTasks(std::vector<HcclDumpInfo>& hcclDumpInfo);
+    void TaskSdmaProfiler(ProfilerType profilerType, HcclRtStream stream, TaskParaDMA& para);
+    void TaskRdmaProfiler(ProfilerType profilerType, HcclRtStream stream, TaskParaDMA& para);
+    void TaskReduceInlineProfiler(ProfilerType profilerType, HcclRtStream stream, TaskParaReduce& para);
+    void TaskReduceTbeProfiler(ProfilerType profilerType, HcclRtStream stream, TaskParaReduce& para);
+    void TaskRecordProfiler(ProfilerType profilerType, HcclRtStream stream, TaskParaNotify& para);
+    void TaskWaitProfiler(ProfilerType profilerType, HcclRtStream stream, TaskParaNotify& para);
+    void TaskAivProfiler(ProfilerType profilerType, HcclRtStream stream, TaskParaAiv& para);
     void TaskProfiler(ProfilerType profilerType, HcclRtStream stream);
-    void TaskProfiler(ProfilerType profilerType, TaskParaHost &para);
-    void TaskProfilerHandle(void *param, u32 length);
-    void TaskAivProfilerHandle(void *param, u32 length);
+    void TaskProfiler(ProfilerType profilerType, TaskParaHost& para);
+    void TaskProfilerHandle(void* param, u32 length);
+    void TaskAivProfilerHandle(void* param, u32 length);
+
 private:
     std::unique_ptr<ProfilerManagerImpl> pimpl_;
 };

@@ -18,10 +18,9 @@
 
 class HcclSetConfigTest : public BaseInit {
 public:
-    void SetUp() override {
-        BaseInit::SetUp();
-    }
-    void TearDown() override {
+    void SetUp() override { BaseInit::SetUp(); }
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }
@@ -36,16 +35,14 @@ TEST_F(HcclSetConfigTest, Ut_HcclSetConfig_When_ConfigValueIsNotInDeterministicE
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
 
-TEST_F(HcclSetConfigTest, Ut_HcclSetConfig_When_ConfigValueIsSTRICTButDevTypeIsNot910B_Expect_ReturnIsHCCL_E_NOT_SUPPORT)
+TEST_F(
+    HcclSetConfigTest, Ut_HcclSetConfig_When_ConfigValueIsSTRICTButDevTypeIsNot910B_Expect_ReturnIsHCCL_E_NOT_SUPPORT)
 {
     HcclConfigValue value;
     value.value = DETERMINISTIC_STRICT;
     DevType deviceType = DevType::DEV_TYPE_910_93;
-    MOCKER(hrtGetDeviceType)
-        .stubs()
-        .with(outBound(deviceType))
-        .will(returnValue(HCCL_SUCCESS));
-    
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
+
     HcclResult ret = HcclSetConfig(HCCL_DETERMINISTIC, value);
     EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
 }
@@ -72,7 +69,7 @@ TEST_F(HcclSetConfigTest, Ut_HcclSetConfig_When_SetEnvHCCL_DETERMINISTIC_Expect_
 
     HcclResult ret = HcclSetConfig(HCCL_DETERMINISTIC, value);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    
+
     unsetenv("HCCL_DETERMINISTIC");
 }
 
@@ -88,16 +85,16 @@ TEST_F(HcclSetConfigTest, ut_CommChannelGetStatus_When_Normal_Expect_ReturnIsHCC
         .expects(once())
         .with(mockcpp::any(), mockcpp::any(), outBoundP(statusListCopy.data()))
         .will(returnValue(HCCL_SUCCESS));
- 
+
     // 执行：调用被测函数
     HcclResult result = HcclChannelGetStatus(comm, channelList.get(), listNum, statusList.data());
- 
+
     // 验证：结果正确
     EXPECT_EQ(result, HCCL_SUCCESS);
     EXPECT_EQ(statusList[0], 1);
     Ut_Comm_Destroy(comm);
 }
- 
+
 TEST_F(HcclSetConfigTest, ut_CommChannelGetStatus_When_commNULL_Expect_ReturnIsHCCL_ERROR)
 {
     HcclResult result = HcclChannelGetStatus(nullptr, nullptr, 0, {0});

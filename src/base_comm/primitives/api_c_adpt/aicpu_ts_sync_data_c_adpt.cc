@@ -18,8 +18,8 @@
 
 constexpr uint32_t SYNC_WAIT_TIMEOUT_SECONDS = 205;
 constexpr size_t MSG_TAG_SIZE_BYTE = 256;
-constexpr uint32_t TIMEOUT_SIZE_BYTE = 4; // timeout字段长度为4字节，表示超时时间，单位为秒
-constexpr uint32_t CTRL_HDR_DATA_SIZE_LEN  = 8; // size_t 在不同平台上长度不同，取最大值
+constexpr uint32_t TIMEOUT_SIZE_BYTE = 4;      // timeout字段长度为4字节，表示超时时间，单位为秒
+constexpr uint32_t CTRL_HDR_DATA_SIZE_LEN = 8; // size_t 在不同平台上长度不同，取最大值
 
 // Msg 数据格式如下（单位：字节）：
 // +----------+--------------+-----------+-------------+---------------+-----------------+
@@ -28,7 +28,7 @@ constexpr uint32_t CTRL_HDR_DATA_SIZE_LEN  = 8; // size_t 在不同平台上长�
 // ^
 // handle
 
-static HcclResult WaitFlagReady(uint8_t *srcFlagPtr, uint8_t *srcTimeoutPtr)
+static HcclResult WaitFlagReady(uint8_t* srcFlagPtr, uint8_t* srcTimeoutPtr)
 {
     HCCL_INFO("[%s] Polling flag START.", __func__);
     const auto timeStart = std::chrono::steady_clock::now();
@@ -50,8 +50,8 @@ static HcclResult WaitFlagReady(uint8_t *srcFlagPtr, uint8_t *srcTimeoutPtr)
         if (flagReadValue == 1) {
             break;
         }
-        const auto elapsed =
-            std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - timeStart);
+        const auto elapsed
+            = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - timeStart);
         if (elapsed > timeoutSec) {
             HCCL_ERROR("[%s] Polling flag TIMEOUT.", __func__);
             return HCCL_E_TIMEOUT;
@@ -63,22 +63,24 @@ static HcclResult WaitFlagReady(uint8_t *srcFlagPtr, uint8_t *srcTimeoutPtr)
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
-int32_t HcommSendRequest(MsgHandle handle, const char *msgTag, const void *src, size_t sizeByte, uint32_t *msgId)
+#endif // __cplusplus
+int32_t HcommSendRequest(MsgHandle handle, const char* msgTag, const void* src, size_t sizeByte, uint32_t* msgId)
 {
-    uint8_t *const dstOnDevShmem = reinterpret_cast<uint8_t *>(handle);
+    uint8_t* const dstOnDevShmem = reinterpret_cast<uint8_t*>(handle);
     CHK_PTR_NULL(dstOnDevShmem);
     CHK_PTR_NULL(msgTag);
     CHK_PTR_NULL(src);
 
-    HCCL_INFO("[%s] START. msgHandle[0x%llx], msgTag[%s], src[0x%llx], sizeByte[%zu].", __func__, handle, msgTag, src, sizeByte);
+    HCCL_INFO(
+        "[%s] START. msgHandle[0x%llx], msgTag[%s], src[0x%llx], sizeByte[%zu].", __func__, handle, msgTag, src,
+        sizeByte);
 
     static uint32_t s_msgId{0};
     const uint8_t flagWriteValue{1};
-    uint8_t *const dstFlagPtr = dstOnDevShmem;
-    uint8_t *const dstMsgTagPtr = dstFlagPtr + sizeof(flagWriteValue);
-    uint8_t *const dstMsgIdPtr = dstMsgTagPtr + MSG_TAG_SIZE_BYTE;
-    uint8_t *const dstDataPtr = dstMsgIdPtr + sizeof(s_msgId) + TIMEOUT_SIZE_BYTE;
+    uint8_t* const dstFlagPtr = dstOnDevShmem;
+    uint8_t* const dstMsgTagPtr = dstFlagPtr + sizeof(flagWriteValue);
+    uint8_t* const dstMsgIdPtr = dstMsgTagPtr + MSG_TAG_SIZE_BYTE;
+    uint8_t* const dstDataPtr = dstMsgIdPtr + sizeof(s_msgId) + TIMEOUT_SIZE_BYTE;
     errno_t ret = EOK;
 
     HCCL_INFO("[%s] Writing %zu bytes data from src to shared mem START.", __func__, sizeByte);
@@ -99,22 +101,22 @@ int32_t HcommSendRequest(MsgHandle handle, const char *msgTag, const void *src, 
     HCCL_INFO("[%s] Writing %zu bytes msgTag to shared mem SUCCESS.", __func__, MSG_TAG_SIZE_BYTE);
 
     asm volatile("dmb sy" ::: "memory"); // 确保之前的内存写入对其他线程可见
-    
+
     HCCL_INFO("[%s] Setting flag = 1 on shared mem START.", __func__);
     ret = memcpy_s(dstFlagPtr, sizeof(flagWriteValue), &flagWriteValue, sizeof(flagWriteValue));
     CHK_PRT_RET(ret != EOK, HCCL_ERROR("[%s][memcpy_s] Setting flag ERROR[%d].", __func__, ret), HCCL_E_INTERNAL);
     HCCL_INFO("[%s] Setting flag = 1 on shared mem SUCCESS.", __func__);
 
     *msgId = s_msgId;
-    ++s_msgId;  // Auto goes back to 0 once it reaches UINT32_MAX
+    ++s_msgId; // Auto goes back to 0 once it reaches UINT32_MAX
 
     HCCL_INFO("[%s] SUCCESS. msgId[%u].", __func__, *msgId);
     return HCCL_SUCCESS;
 }
 
-int32_t HcommWaitResponse(MsgHandle handle, void *dst, size_t sizeByte, uint32_t *msgId)
+int32_t HcommWaitResponse(MsgHandle handle, void* dst, size_t sizeByte, uint32_t* msgId)
 {
-    uint8_t *const srcOnDevShmem = reinterpret_cast<uint8_t *>(handle);
+    uint8_t* const srcOnDevShmem = reinterpret_cast<uint8_t*>(handle);
     CHK_PTR_NULL(srcOnDevShmem);
     if (sizeByte > 0) {
         CHK_PTR_NULL(dst);
@@ -125,10 +127,10 @@ int32_t HcommWaitResponse(MsgHandle handle, void *dst, size_t sizeByte, uint32_t
 
     constexpr size_t sizeByteMsgId = sizeof(uint32_t);
     uint8_t flagReadValue{0};
-    uint8_t *const srcFlagPtr = srcOnDevShmem;
-    uint8_t *const srcMsgIdPtr = srcFlagPtr + sizeof(flagReadValue) + MSG_TAG_SIZE_BYTE;
-    uint8_t *const srcTimeoutPtr = srcMsgIdPtr + sizeByteMsgId;
-    uint8_t *const srcDataPtr = srcTimeoutPtr + TIMEOUT_SIZE_BYTE;
+    uint8_t* const srcFlagPtr = srcOnDevShmem;
+    uint8_t* const srcMsgIdPtr = srcFlagPtr + sizeof(flagReadValue) + MSG_TAG_SIZE_BYTE;
+    uint8_t* const srcTimeoutPtr = srcMsgIdPtr + sizeByteMsgId;
+    uint8_t* const srcDataPtr = srcTimeoutPtr + TIMEOUT_SIZE_BYTE;
     errno_t ret = EOK;
 
     CHK_RET(WaitFlagReady(srcFlagPtr, srcTimeoutPtr));
@@ -156,14 +158,14 @@ int32_t HcommWaitResponse(MsgHandle handle, void *dst, size_t sizeByte, uint32_t
 
 int32_t HcommThreadSynchronize(ThreadHandle thread)
 {
-    hccl::Thread *threadPtr = reinterpret_cast<hccl::Thread *>(thread);
+    hccl::Thread* threadPtr = reinterpret_cast<hccl::Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
     HCCL_INFO("[%s] START. thread[0x%llx].", __func__, thread);
 
     if (threadPtr->IsDeviceA5()) {
         HCCL_INFO("[%s] Running on A5.", __func__);
-        hccl::AicpuTsThread *aicpuTsThreadPtr = dynamic_cast<hccl::AicpuTsThread *>(threadPtr);
+        hccl::AicpuTsThread* aicpuTsThreadPtr = dynamic_cast<hccl::AicpuTsThread*>(threadPtr);
         uint32_t sqHead{0};
         uint32_t sqTail{0};
         HCCL_INFO("[%s] Start waiting for RTSQ's head == tail.", __func__);
@@ -179,4 +181,4 @@ int32_t HcommThreadSynchronize(ThreadHandle thread)
 }
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus

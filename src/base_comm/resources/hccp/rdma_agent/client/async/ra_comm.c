@@ -22,7 +22,7 @@ HCCP_ATTRI_VISI_DEF int RaGetAsyncReqResult(void *reqHandle, int *reqResult)
         ConverReturnCode(OTHERS, -EINVAL));
 
     reqHandleTmp = (struct RaRequestHandle *)reqHandle;
-    if (!reqHandleTmp->isDone){
+    if (!reqHandleTmp->isDone) {
         return ConverReturnCode(OTHERS, -EAGAIN);
     }
 

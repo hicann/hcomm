@@ -18,9 +18,9 @@ class DevAicpuTsChannel {
 public:
     virtual ~DevAicpuTsChannel() = default;
 
-    virtual HcclResult Create(const void *blob, u64 blobBytes,
-                              const HcommDeviceInfo &deviceInfo,
-                              ChannelHandle &outHandle) = 0;
+    virtual HcclResult
+    Create(const void* blob, u64 blobBytes, const HcommDeviceInfo& deviceInfo, ChannelHandle& outHandle)
+        = 0;
     virtual bool Destroy(ChannelHandle handle) = 0;
 };
 

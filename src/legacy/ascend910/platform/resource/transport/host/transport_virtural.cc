@@ -13,21 +13,17 @@
 
 namespace hccl {
 
-TransportVirtural::TransportVirtural(DispatcherPub *dispatcher,
-    const std::unique_ptr<NotifyPool> &notifyPool,
-    MachinePara &machinePara,
+TransportVirtural::TransportVirtural(
+    DispatcherPub* dispatcher, const std::unique_ptr<NotifyPool>& notifyPool, MachinePara& machinePara,
     std::chrono::milliseconds timeout, u32 index)
-    : TransportBase(dispatcher, notifyPool, machinePara, timeout), currentIndex_(index)
-{
-}
+    : TransportBase(dispatcher, notifyPool, machinePara, timeout),
+      currentIndex_(index)
+{}
 
-TransportVirtural::~TransportVirtural()
-{
-    HCCL_DEBUG("~TransportVirtural Enter!");
-}
+TransportVirtural::~TransportVirtural() { HCCL_DEBUG("~TransportVirtural Enter!"); }
 
 /* 发送ack消息(同步模式) */
-HcclResult TransportVirtural::TxAck(Stream &stream)
+HcclResult TransportVirtural::TxAck(Stream& stream)
 {
     TaskLogicInfo info(currentIndex_, TaskLogicType::TRANSPORT_TYPE, TaskLogicFuncType::TRANSPORT_TXACK_TYPE);
     stream.PushTaskLogicInfo(info);
@@ -35,67 +31,53 @@ HcclResult TransportVirtural::TxAck(Stream &stream)
 }
 
 /* 接收ack消息(同步模式) */
-HcclResult TransportVirtural::RxAck(Stream &stream)
+HcclResult TransportVirtural::RxAck(Stream& stream)
 {
     TaskLogicInfo info(currentIndex_, TaskLogicType::TRANSPORT_TYPE, TaskLogicFuncType::TRANSPORT_RXACK_TYPE);
     stream.PushTaskLogicInfo(info);
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportVirtural::TxAsync(std::vector<TxMemoryInfo>& txMems, Stream &stream)
+HcclResult TransportVirtural::TxAsync(std::vector<TxMemoryInfo>& txMems, Stream& stream)
 {
-    TaskLogicInfo info(currentIndex_, TaskLogicType::TRANSPORT_TYPE, TaskLogicFuncType::TRANSPORT_TXASYNC_TYPE,
-        txMems);
+    TaskLogicInfo info(currentIndex_, TaskLogicType::TRANSPORT_TYPE, TaskLogicFuncType::TRANSPORT_TXASYNC_TYPE, txMems);
     stream.PushTaskLogicInfo(info);
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportVirtural::RxAsync(std::vector<RxMemoryInfo>& rxMems, Stream &stream)
+HcclResult TransportVirtural::RxAsync(std::vector<RxMemoryInfo>& rxMems, Stream& stream)
 {
-    TaskLogicInfo info(currentIndex_, TaskLogicType::TRANSPORT_TYPE, TaskLogicFuncType::TRANSPORT_RXASYNC_TYPE,
-        rxMems);
+    TaskLogicInfo info(currentIndex_, TaskLogicType::TRANSPORT_TYPE, TaskLogicFuncType::TRANSPORT_RXASYNC_TYPE, rxMems);
     stream.PushTaskLogicInfo(info);
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportVirtural::TxDataSignal(Stream &stream)
+HcclResult TransportVirtural::TxDataSignal(Stream& stream)
 {
     TaskLogicInfo info(currentIndex_, TaskLogicType::TRANSPORT_TYPE, TaskLogicFuncType::TRANSPORT_TXDATASIGNAL_TYPE);
     stream.PushTaskLogicInfo(info);
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportVirtural::RxDataSignal(Stream &stream)
+HcclResult TransportVirtural::RxDataSignal(Stream& stream)
 {
     TaskLogicInfo info(currentIndex_, TaskLogicType::TRANSPORT_TYPE, TaskLogicFuncType::TRANSPORT_RXDATASIGNAL_TYPE);
     stream.PushTaskLogicInfo(info);
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportVirtural::TxPrepare(Stream &stream)
+HcclResult TransportVirtural::TxPrepare(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportVirtural::RxPrepare(Stream& stream) { return HCCL_SUCCESS; }
+
+HcclResult TransportVirtural::TxData(UserMemType dstMemType, u64 dstOffset, const void* src, u64 len, Stream& stream)
 {
     return HCCL_SUCCESS;
 }
-HcclResult TransportVirtural::RxPrepare(Stream &stream)
+HcclResult TransportVirtural::RxData(UserMemType srcMemType, u64 srcOffset, void* dst, u64 len, Stream& stream)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportVirtural::TxData(UserMemType dstMemType, u64 dstOffset, const void *src, u64 len, Stream &stream)
-{
-    return HCCL_SUCCESS;
-}
-HcclResult TransportVirtural::RxData(UserMemType srcMemType, u64 srcOffset, void *dst, u64 len, Stream &stream)
-{
-    return HCCL_SUCCESS;
-}
-
-HcclResult TransportVirtural::TxDone(Stream &stream)
-{
-    return HCCL_SUCCESS;
-}
-HcclResult TransportVirtural::RxDone(Stream &stream)
-{
-    return HCCL_SUCCESS;
-}
-}  // namespace hccl
+HcclResult TransportVirtural::TxDone(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportVirtural::RxDone(Stream& stream) { return HCCL_SUCCESS; }
+} // namespace hccl

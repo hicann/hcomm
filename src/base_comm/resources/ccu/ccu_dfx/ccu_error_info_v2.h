@@ -133,19 +133,16 @@ struct CcuLoopContextV2 {
 
     uint16_t GetCurrentIns() const
     {
-        return (part5.currentIns << 9) | (part4.currentIns);  // 偏移9位
+        return (part5.currentIns << 9) | (part4.currentIns); // 偏移9位
     }
 
-    uint16_t GetCurrentCnt() const
-    {
-        return part10.currentCnt;
-    }
+    uint16_t GetCurrentCnt() const { return part10.currentCnt; }
 
     uint32_t GetAddrStride() const
     {
         const uint32_t low = static_cast<uint32_t>(part5.addrStride);
-        const uint32_t mid = static_cast<uint32_t>(part6.addrStride) << 9;  // 偏移9位
-        const uint32_t high = static_cast<uint32_t>(part7.addrStride) << 25;  // 偏移25位
+        const uint32_t mid = static_cast<uint32_t>(part6.addrStride) << 9;   // 偏移9位
+        const uint32_t high = static_cast<uint32_t>(part7.addrStride) << 25; // 偏移25位
         return high | mid | low;
     }
 };
@@ -250,22 +247,22 @@ struct CcuMissionContextV2 {
 
     uint16_t GetStatus() const
     {
-        return (part3.statusHi << 13) | (part2.statusLo);  // 偏移13位
+        return (part3.statusHi << 13) | (part2.statusLo); // 偏移13位
     }
 
     uint16_t GetCurrentIns() const
     {
-        return (part5.currentIns << 9) | (part4.currentIns);  // 偏移9位
+        return (part5.currentIns << 9) | (part4.currentIns); // 偏移9位
     }
 
     uint16_t GetStartIns() const
     {
-        return (part7.startIns << 9) | (part6.startIns);  // 偏移9位
+        return (part7.startIns << 9) | (part6.startIns); // 偏移9位
     }
 
     uint16_t GetEndIns() const
     {
-        return (part6.endIns << 9) | (part5.endIns);  // 偏移9位
+        return (part6.endIns << 9) | (part5.endIns); // 偏移9位
     }
 };
 

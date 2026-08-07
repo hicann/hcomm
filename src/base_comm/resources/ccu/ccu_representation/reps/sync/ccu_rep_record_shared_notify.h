@@ -17,27 +17,22 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepRecordSharedNotify : public CcuRepBase {
-public:
-    CcuRepRecordSharedNotify(CcuInsGeneratorBase* insGenPtr, const LocalNotify &notify, uint16_t mask);
-    bool        Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
-    uint16_t GetNotifyId() { return notify_.Id(); }
-    LocalNotify GetNotify()
-    {
-        return notify_;
-    }
+    class CcuRepRecordSharedNotify : public CcuRepBase {
+    public:
+        CcuRepRecordSharedNotify(CcuInsGeneratorBase* insGenPtr, const LocalNotify& notify, uint16_t mask);
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
+        uint16_t GetNotifyId() { return notify_.Id(); }
+        LocalNotify GetNotify() { return notify_; }
 
-    uint16_t GetMask()
-    {
-        return mask_;
-    }
-private:
-    CcuInsGeneratorBase* insGenPtr{nullptr};
-    LocalNotify notify_{};
-    uint16_t   mask_{0};
-};
+        uint16_t GetMask() { return mask_; }
 
-};     // namespace CcuRep
-};     // namespace hcomm
+    private:
+        CcuInsGeneratorBase* insGenPtr{nullptr};
+        LocalNotify notify_{};
+        uint16_t mask_{0};
+    };
+
+}; // namespace CcuRep
+}; // namespace hcomm
 #endif // HCOMM_CCU_REPRESENTATION_RECORD_SHARED_NOTIFY_H

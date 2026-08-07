@@ -21,8 +21,9 @@
 
 namespace hcomm {
 
-AicpuTsUboeChannel::AicpuTsUboeChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc)
-    : AicpuTsUboeUbgChannelHelper(endpointHandle, channelDesc) {}
+AicpuTsUboeChannel::AicpuTsUboeChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc)
+    : AicpuTsUboeUbgChannelHelper(endpointHandle, channelDesc)
+{}
 
 AicpuTsUboeChannel::~AicpuTsUboeChannel() = default;
 
@@ -53,23 +54,28 @@ HcclResult AicpuTsUboeChannel::BuildConnection()
 
     Hccl::OpMode opMode = Hccl::OpMode::OPBASE;
     bool devUsed = true; // aicpu 为 true
-    HCCL_INFO("[AicpuTsUboeChannel::%s] LinkProtocol[%s], locIpv4Addr[%s], rmtIpv4Addr[%s]",
-        __func__, ctx.protocol.Describe().c_str(), ctx.locAddr.Describe().c_str(), ctx.rmtAddr.Describe().c_str());
-    HCCL_INFO("[AicpuTsUboeChannel::%s] locAddr_[%s], rmtAddr_[%s]",
-        __func__, locAddr_.Describe().c_str(), rmtAddr_.Describe().c_str());
+    HCCL_INFO(
+        "[AicpuTsUboeChannel::%s] LinkProtocol[%s], locIpv4Addr[%s], rmtIpv4Addr[%s]", __func__,
+        ctx.protocol.Describe().c_str(), ctx.locAddr.Describe().c_str(), ctx.rmtAddr.Describe().c_str());
+    HCCL_INFO(
+        "[AicpuTsUboeChannel::%s] locAddr_[%s], rmtAddr_[%s]", __func__, locAddr_.Describe().c_str(),
+        rmtAddr_.Describe().c_str());
 
-    std::unique_ptr<Hccl::DevUbConnection> ubConn = std::make_unique<Hccl::DevUbUboeConnection>(rdmaHandle_,
-        locAddr_, rmtAddr_, opMode, devUsed, Hccl::HrtUbJfcMode::STARS_POLL, ctx.locAddr, ctx.rmtAddr, ctx.qosPre);
+    std::unique_ptr<Hccl::DevUbConnection> ubConn = std::make_unique<Hccl::DevUbUboeConnection>(
+        rdmaHandle_, locAddr_, rmtAddr_, opMode, devUsed, Hccl::HrtUbJfcMode::STARS_POLL, ctx.locAddr, ctx.rmtAddr,
+        ctx.qosPre);
     CHK_SMART_PTR_NULL(ubConn);
 
     if (devBaseAttr_.maxReadSize == 0 || devBaseAttr_.maxWriteSize == 0) {
-        HCCL_ERROR("[AicpuTsUboeChannel][%s] maxReadSize[%u] or maxWriteSize[%u] must not be zero", __func__,
+        HCCL_ERROR(
+            "[AicpuTsUboeChannel][%s] maxReadSize[%u] or maxWriteSize[%u] must not be zero", __func__,
             devBaseAttr_.maxReadSize, devBaseAttr_.maxWriteSize);
         return HCCL_E_PARA;
     }
     ubConn->SetMaxReadSize(devBaseAttr_.maxReadSize);
     ubConn->SetMaxWriteSize(devBaseAttr_.maxWriteSize);
-    HCCL_INFO("[AicpuTsUboeChannel][%s] maxReadSize[%u], maxWriteSize[%u]", __func__, devBaseAttr_.maxReadSize,
+    HCCL_INFO(
+        "[AicpuTsUboeChannel][%s] maxReadSize[%u], maxWriteSize[%u]", __func__, devBaseAttr_.maxReadSize,
         devBaseAttr_.maxWriteSize);
 
     commonRes_.connVec.clear();
@@ -85,8 +91,9 @@ void AicpuTsUboeChannel::EidPack()
     CommAddrToIpAddress(localEp_.commAddr, locIpv4Addr);
     Hccl::RdmaHandleManager::GetInstance().GetEidByIpv4Addr(locIpv4Addr, locAddr_);
     sendEidData_ = locAddr_.GetUniqueId();
-    HCCL_INFO("[AicpuTsUboeChannel::%s] locIpv4Addr[%s], locAddr_[%s], sendEidData_ size[%u]",
-        __func__, locIpv4Addr.Describe().c_str(), locAddr_.Describe().c_str(), sendEidData_.size());
+    HCCL_INFO(
+        "[AicpuTsUboeChannel::%s] locIpv4Addr[%s], locAddr_[%s], sendEidData_ size[%u]", __func__,
+        locIpv4Addr.Describe().c_str(), locAddr_.Describe().c_str(), sendEidData_.size());
 }
 
 void AicpuTsUboeChannel::SendEidData()
@@ -99,14 +106,11 @@ void AicpuTsUboeChannel::SendEidData()
 void AicpuTsUboeChannel::RecvEidData()
 {
     recvEidData_.resize(sendEidData_.size());
-    socket_->RecvAsync(reinterpret_cast<u8 *>(recvEidData_.data()), recvEidData_.size());
+    socket_->RecvAsync(reinterpret_cast<u8*>(recvEidData_.data()), recvEidData_.size());
     HCCL_INFO("[AicpuTsUboeChannel::%s] recv eid data, size=%llu", __func__, recvEidData_.size());
 }
 
-void AicpuTsUboeChannel::RecvEidDataProcess()
-{
-    RmtEidUnpackProc(rmtAddr_);
-}
+void AicpuTsUboeChannel::RecvEidDataProcess() { RmtEidUnpackProc(rmtAddr_); }
 
 void AicpuTsUboeChannel::RmtEidUnpackProc(Hccl::IpAddress& rmtAddr)
 {
@@ -127,7 +131,7 @@ void AicpuTsUboeChannel::RecvFinish()
 {
     recvFinishMsg_.resize(FINISH_MSG_SIZE);
     HCCL_INFO("start recv Finish Msg [%s]", FINISH_MSG);
-    socket_->RecvAsync(reinterpret_cast<u8 *>(recvFinishMsg_.data()), FINISH_MSG_SIZE);
+    socket_->RecvAsync(reinterpret_cast<u8*>(recvFinishMsg_.data()), FINISH_MSG_SIZE);
     HCCL_INFO("end recv Finish Msg [%s]", FINISH_MSG);
 }
 
@@ -143,54 +147,72 @@ void AicpuTsUboeChannel::HandleProcessData()
 
 void AicpuTsUboeChannel::ProcessUboeState()
 {
-    auto SetState = [this](UboeStatus next, ChannelStatus ch) { this->uboeStatus = next; this->channelStatus = ch; };
+    auto SetState = [this](UboeStatus next, ChannelStatus ch) {
+        this->uboeStatus = next;
+        this->channelStatus = ch;
+    };
 
     switch (uboeStatus) {
         case UboeStatus::INIT:
             SetState(UboeStatus::SEND_EID, ChannelStatus::SOCKET_OK);
             break;
         case UboeStatus::SEND_EID:
-            SendEidData(); SetState(UboeStatus::RECV_EID, channelStatus);
+            SendEidData();
+            SetState(UboeStatus::RECV_EID, channelStatus);
             break;
         case UboeStatus::RECV_EID:
-            RecvEidData(); SetState(UboeStatus::PROCESS_EID_DATA, channelStatus);
+            RecvEidData();
+            SetState(UboeStatus::PROCESS_EID_DATA, channelStatus);
             break;
         case UboeStatus::PROCESS_EID_DATA:
-            RecvEidDataProcess(); SetState(UboeStatus::BUILD_CONN, channelStatus);
+            RecvEidDataProcess();
+            SetState(UboeStatus::BUILD_CONN, channelStatus);
             break;
         case UboeStatus::BUILD_CONN:
-            BuildConn(); SetState(UboeStatus::SEND_SIZE, channelStatus);
+            BuildConn();
+            SetState(UboeStatus::SEND_SIZE, channelStatus);
             break;
         case UboeStatus::SEND_SIZE:
-            if (IsResReady()) { SendDataSize(); SetState(UboeStatus::RECV_SIZE, channelStatus); }
+            if (IsResReady()) {
+                SendDataSize();
+                SetState(UboeStatus::RECV_SIZE, channelStatus);
+            }
             break;
         case UboeStatus::RECV_SIZE:
-            RecvDataSize(); SetState(isRecvFirst_ ? UboeStatus::RECV_DATA : UboeStatus::SEND_DATA, channelStatus);
+            RecvDataSize();
+            SetState(isRecvFirst_ ? UboeStatus::RECV_DATA : UboeStatus::SEND_DATA, channelStatus);
             break;
         case UboeStatus::SEND_DATA:
-            SendExchangeData(); SetState(isRecvFirst_ ? UboeStatus::PROCESS_DATA : UboeStatus::RECV_DATA, channelStatus);
+            SendExchangeData();
+            SetState(isRecvFirst_ ? UboeStatus::PROCESS_DATA : UboeStatus::RECV_DATA, channelStatus);
             break;
         case UboeStatus::RECV_DATA:
-            RecvExchangeData(); SetState(isRecvFirst_ ? UboeStatus::SEND_DATA : UboeStatus::PROCESS_DATA, channelStatus);
+            RecvExchangeData();
+            SetState(isRecvFirst_ ? UboeStatus::SEND_DATA : UboeStatus::PROCESS_DATA, channelStatus);
             break;
         case UboeStatus::PROCESS_DATA:
             HandleProcessData();
             break;
         case UboeStatus::SEND_FIN:
-            if (IsConnsReady()) { SendFinish(); SetState(UboeStatus::RECV_FIN, channelStatus); }
+            if (IsConnsReady()) {
+                SendFinish();
+                SetState(UboeStatus::RECV_FIN, channelStatus);
+            }
             break;
         case UboeStatus::RECV_FIN:
-            RecvFinish(); SetState(UboeStatus::SET_READY, channelStatus);
+            RecvFinish();
+            SetState(UboeStatus::SET_READY, channelStatus);
             break;
         case UboeStatus::SET_READY:
-            channelStatus = ChannelStatus::READY; SetState(UboeStatus::READY, ChannelStatus::READY);
+            channelStatus = ChannelStatus::READY;
+            SetState(UboeStatus::READY, ChannelStatus::READY);
             break;
         default:
             break;
     }
 }
 
-HcclResult AicpuTsUboeChannel::CheckSocketStatus(const std::string &socketOperator)
+HcclResult AicpuTsUboeChannel::CheckSocketStatus(const std::string& socketOperator)
 {
     CHK_PTR_NULL(socket_);
     auto timeout = std::chrono::seconds(Hccl::EnvConfig::GetInstance().GetSocketConfig().GetLinkTimeOut());
@@ -199,17 +221,21 @@ HcclResult AicpuTsUboeChannel::CheckSocketStatus(const std::string &socketOperat
     while (true) {
         Hccl::SocketStatus socketStatus = socket_->GetAsyncStatus();
         if (socketStatus == Hccl::SocketStatus::OK) {
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - startTime).count();
-            HCCL_INFO("[AicpuTsUboeChannel][%s] socket operation[%s] success, elapsed[%lld]ms, retryCount[%u]",
-                __func__, socketOperator.c_str(), elapsed, retryCount);
+            auto elapsed
+                = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime)
+                      .count();
+            HCCL_INFO(
+                "[AicpuTsUboeChannel][%s] socket operation[%s] success, elapsed[%lld]ms, retryCount[%u]", __func__,
+                socketOperator.c_str(), elapsed, retryCount);
             break;
         }
-        if ((std::chrono::steady_clock::now() - startTime) >= timeout ||
-            socketStatus == Hccl::SocketStatus::TIMEOUT) {
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - startTime).count();
-            HCCL_ERROR("[AicpuTsUboeChannel][%s] socket operation[%s] timeout, socketStatus[%u], elapsed[%lld]ms, retryCount[%u]",
+        if ((std::chrono::steady_clock::now() - startTime) >= timeout || socketStatus == Hccl::SocketStatus::TIMEOUT) {
+            auto elapsed
+                = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime)
+                      .count();
+            HCCL_ERROR(
+                "[AicpuTsUboeChannel][%s] socket operation[%s] timeout, socketStatus[%u], elapsed[%lld]ms, "
+                "retryCount[%u]",
                 __func__, socketOperator.c_str(), static_cast<uint32_t>(socketStatus), elapsed, retryCount);
             return HCCL_E_TIMEOUT;
         }
@@ -218,9 +244,9 @@ HcclResult AicpuTsUboeChannel::CheckSocketStatus(const std::string &socketOperat
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsUboeChannel::UpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum)
+HcclResult AicpuTsUboeChannel::UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum)
 {
-    std::vector<Hccl::LocalRmaBuffer *> bufferVecTemp;
+    std::vector<Hccl::LocalRmaBuffer*> bufferVecTemp;
     CHK_RET(MakeRmaBufferVecFromMemHandles(memHandles, memHandleNum, bufferVecTemp, "AicpuTsUboeChannel"));
 
     if (bufferVecTemp.size() == 0) {
@@ -241,7 +267,7 @@ HcclResult AicpuTsUboeChannel::UpdateMemInfo(HcommMemHandle *memHandles, uint32_
     CHK_RET(CheckSocketStatus("SendDataSize"));
 
     u32 recvSize = 0;
-    socket_->RecvAsync(reinterpret_cast<u8 *>(&recvSize), sizeof(recvSize));
+    socket_->RecvAsync(reinterpret_cast<u8*>(&recvSize), sizeof(recvSize));
     CHK_RET(CheckSocketStatus("RecvDataSize"));
     HCCL_INFO("[AicpuTsUboeChannel][%s] Recv size[%u] of data.", __func__, recvSize);
 
@@ -250,7 +276,7 @@ HcclResult AicpuTsUboeChannel::UpdateMemInfo(HcommMemHandle *memHandles, uint32_
     CHK_RET(CheckSocketStatus("SendExchangeData"));
 
     std::vector<char> localRecvData(recvSize);
-    socket_->RecvAsync(reinterpret_cast<u8 *>(localRecvData.data()), localRecvData.size());
+    socket_->RecvAsync(reinterpret_cast<u8*>(localRecvData.data()), localRecvData.size());
     CHK_RET(CheckSocketStatus("RecvExchangeData"));
     HCCL_INFO("[AicpuTsUboeChannel][%s] Recv data success.", __func__);
 
@@ -258,7 +284,8 @@ HcclResult AicpuTsUboeChannel::UpdateMemInfo(HcommMemHandle *memHandles, uint32_
     Hccl::BinaryStream recvStream(localRecvData);
     RmtBufferVecUnpackProc(static_cast<u32>(bufferVecTemp.size()), recvStream, rmtBufferTemp, UboeRmtBufType::BUFFER);
 
-    rmtBufferVec_.insert(rmtBufferVec_.end(), std::make_move_iterator(rmtBufferTemp.begin()),
+    rmtBufferVec_.insert(
+        rmtBufferVec_.end(), std::make_move_iterator(rmtBufferTemp.begin()),
         std::make_move_iterator(rmtBufferTemp.end()));
     commonRes_.bufferVec.insert(commonRes_.bufferVec.end(), bufferVecTemp.begin(), bufferVecTemp.end());
     cacheValid_ = false;
@@ -313,9 +340,11 @@ ChannelStatus AicpuTsUboeChannel::GetStatus()
     if (channelStatus == ChannelStatus::READY) {
         return channelStatus;
     }
-    if (channelStatus == ChannelStatus::INIT) uboeStatus = UboeStatus::INIT;
+    if (channelStatus == ChannelStatus::INIT)
+        uboeStatus = UboeStatus::INIT;
 
-    if (!IsSocketReady()) return channelStatus;
+    if (!IsSocketReady())
+        return channelStatus;
 
     ProcessUboeState();
 

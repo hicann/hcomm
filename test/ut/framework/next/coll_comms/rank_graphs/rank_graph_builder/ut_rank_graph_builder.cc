@@ -31,15 +31,9 @@ using namespace Hccl;
 
 class RankGraphBuilderTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "RankGraphBuilderTest SetUP" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "RankGraphBuilderTest SetUP" << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "RankGraphBuilderTest TearDown" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "RankGraphBuilderTest TearDown" << std::endl; }
 
     virtual void SetUp()
     {
@@ -94,8 +88,8 @@ TEST_F(RankGraphBuilderTest, Ut_Build_When_1pRankTable_Expect_Success)
 {
     PhyTopo::GetInstance()->Clear();
     RankGraphBuilder rankGraphBuilder;
-    std::unique_ptr<RankGraph> rankGraph = rankGraphBuilder.RecoverBuild(test::MakeRankTable1p(),
-        test::MakeOnePeerTopo(true), 0);
+    std::unique_ptr<RankGraph> rankGraph
+        = rankGraphBuilder.RecoverBuild(test::MakeRankTable1p(), test::MakeOnePeerTopo(true), 0);
     EXPECT_NE(nullptr, rankGraph);
     auto path1 = rankGraph->GetPaths(0, 0, 1);
     EXPECT_EQ(0, path1.size());
@@ -114,8 +108,8 @@ TEST_F(RankGraphBuilderTest, Ut_Build_When_OnePTopoFileWithoutEdge_Expect_Succes
     PhyTopo::GetInstance()->AddTopoGraph(0, graph);
     PhyTopo::GetInstance()->InitFinish();
     RankGraphBuilder rankGraphBuilder;
-    std::unique_ptr<RankGraph> rankGraph = rankGraphBuilder.RecoverBuild(test::MakeRankTable1p(),
-        test::MakeOnePeerTopo(false), 0);
+    std::unique_ptr<RankGraph> rankGraph
+        = rankGraphBuilder.RecoverBuild(test::MakeRankTable1p(), test::MakeOnePeerTopo(false), 0);
     EXPECT_NE(nullptr, rankGraph);
     auto rankSize = rankGraph->GetRankSize();
     EXPECT_EQ(rankSize, 1);
@@ -136,9 +130,11 @@ TEST_F(RankGraphBuilderTest, Ut_BuildFromRankTable_When_NetLayerInconsistent_Exp
     // then
     RankGraphBuilder rankGraphBuilder;
     RankTableInfo rankTable = test::MakeRankTable2p();
-    rankTable.ranks[0].rankLevelInfos.emplace_back(test::MakeRankLevel(2, "missing-layer", NetType::CLOS, {
-        test::MakeAddress("192.168.200.1", {"0/1"}),
-    }));
+    rankTable.ranks[0].rankLevelInfos.emplace_back(test::MakeRankLevel(
+        2, "missing-layer", NetType::CLOS,
+        {
+            test::MakeAddress("192.168.200.1", {"0/1"}),
+        }));
     EXPECT_THROW(rankGraphBuilder.Build(rankTable, "topo.json", 0), InvalidParamsException);
 }
 
@@ -146,13 +142,13 @@ TEST_F(RankGraphBuilderTest, ut_Build_When_4pRankTable_Expect_Success)
 {
     PhyTopo::GetInstance()->Clear();
     RankGraphBuilder rankGraphBuilder;
-    std::unique_ptr<RankGraph> rankGraph = rankGraphBuilder.RecoverBuild(test::MakeRankTable4pForBuilder(),
-        test::MakeFourPeerBuilderTopo(), 0);
+    std::unique_ptr<RankGraph> rankGraph
+        = rankGraphBuilder.RecoverBuild(test::MakeRankTable4pForBuilder(), test::MakeFourPeerBuilderTopo(), 0);
     EXPECT_NE(nullptr, rankGraph);
     std::vector<std::string> netIds = {"az0-rack0", "az0", "all"};
     for (s32 rankId = 0; rankId < 3; rankId++) {
-                for (u32 netLayer = 0; netLayer < 3; netLayer++) {
-            const NetInstance *fabGroup = rankGraph->GetNetInstanceByRankId(netLayer, rankId);
+        for (u32 netLayer = 0; netLayer < 3; netLayer++) {
+            const NetInstance* fabGroup = rankGraph->GetNetInstanceByRankId(netLayer, rankId);
             EXPECT_EQ(netIds[netLayer], fabGroup->GetNetInstId());
 
             EXPECT_EQ(true, fabGroup->HasNode(NetInstance::Peer(rankId, 0, 0, 0).GetLocalId()));

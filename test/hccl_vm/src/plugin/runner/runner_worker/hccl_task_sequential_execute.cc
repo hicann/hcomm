@@ -68,24 +68,21 @@ static uint32_t GetFlushInterval()
     return DEFAULT_TRACE_FLUSH_INTERVAL;
 }
 
-SqeuentialExecutor::SqeuentialExecutor(AllRankTaskQueues &allRankTaskQueues, const std::string& rootPath)
+SqeuentialExecutor::SqeuentialExecutor(AllRankTaskQueues& allRankTaskQueues, const std::string& rootPath)
 {
     allRankTaskQueues_ = allRankTaskQueues;
     rootPath_ = rootPath;
 }
 
-const std::map<HccLTaskMetaType, const std::string> SqeuentialExecutor::taskNames_ = {
-    {HccLTaskMetaType::REDUCE, "reduce"},
-    {HccLTaskMetaType::MEM_CPY, "mem_cpy"},
-    {HccLTaskMetaType::NOTIFY_RECORD, "record"},
-    {HccLTaskMetaType::CCU_GRAPH, "ccu_graph"},
-    {HccLTaskMetaType::AIV_GRAPH, "aiv_graph"},
-    {HccLTaskMetaType::NOTIFY_WAIT, "wait"}};
+const std::map<HccLTaskMetaType, const std::string> SqeuentialExecutor::taskNames_
+    = {{HccLTaskMetaType::REDUCE, "reduce"},        {HccLTaskMetaType::MEM_CPY, "mem_cpy"},
+       {HccLTaskMetaType::NOTIFY_RECORD, "record"}, {HccLTaskMetaType::CCU_GRAPH, "ccu_graph"},
+       {HccLTaskMetaType::AIV_GRAPH, "aiv_graph"},  {HccLTaskMetaType::NOTIFY_WAIT, "wait"}};
 
 HcclVmResult SqeuentialExecutor::Execute()
 {
     auto rankSize = allRankTaskQueues_.size();
-    auto &devResMgr = DeviceResourceManager::GetInstance();
+    auto& devResMgr = DeviceResourceManager::GetInstance();
     devResMgr.Init(rankSize);
 
     // ===== Trace 初始化 =====
@@ -127,14 +124,14 @@ HcclVmResult SqeuentialExecutor::Execute()
                     if (ret == HcclVmResult::HCCL_SIM_VRT_HOLD_CMD) {
                         break;
                     } else if (ret != HcclVmResult::HCCL_SIM_SUCCESS) {
-                        HCCL_VM_ERROR("ExecuteOneTask failed, ret: {}, rankId = {}, type= {}",
-                            static_cast<int>(ret), rankId, taskNames_.at(task.taskType));
+                        HCCL_VM_ERROR(
+                            "ExecuteOneTask failed, ret: {}, rankId = {}, type= {}", static_cast<int>(ret), rankId,
+                            taskNames_.at(task.taskType));
                         // 异常退出前也尝试 dump 已采集的 trace
                         if (traceCollector.IsEnabled()) {
                             traceCollector.EndRun();
                             CcuTrace::CcuTraceSerializer::DumpToFile(
-                                traceCollector.GetTraceRun(),
-                                g_crashDumpPathStorage);
+                                traceCollector.GetTraceRun(), g_crashDumpPathStorage);
                             HCCL_VM_INFO("Dumped trace on error exit");
                         }
                         return ret;
@@ -206,4 +203,4 @@ bool SqeuentialExecutor::HasTask()
     }
     return false;
 }
-}
+} // namespace VirtualRunTime

@@ -20,23 +20,24 @@ namespace Hccl {
 class CommunicatorImpl;
 class CcuTransportGroupMgr {
 public:
-    explicit             CcuTransportGroupMgr(CommunicatorImpl &comm);
-    virtual             ~CcuTransportGroupMgr();
-    CcuTransportGroup   *PrepareCreate(const LinkGroup &linkGrp, u32 cntCkeNum);
-    void                 Confirm();
-    void                 Fallback();
-    void                 Destroy();
-    vector<LinkGroup>    GetAllTransportGroups();
-    void                 Clean();
-    void                 ResumeAll(u32 cntCkeNum);
-private:
-    unordered_map<LinkGroup, unique_ptr<CcuTransportGroup>>                         linkGrp2TransportGrpMap;
-    vector<LinkGroup>                                                               tempTransportGrp;
+    explicit CcuTransportGroupMgr(CommunicatorImpl& comm);
+    virtual ~CcuTransportGroupMgr();
+    CcuTransportGroup* PrepareCreate(const LinkGroup& linkGrp, u32 cntCkeNum);
+    void Confirm();
+    void Fallback();
+    void Destroy();
+    vector<LinkGroup> GetAllTransportGroups();
+    void Clean();
+    void ResumeAll(u32 cntCkeNum);
 
-    bool                                                                            isDestroyed{false};
-    CommunicatorImpl                                                               *comm;
-    CcuTransportGroup   *CreateTransportGroupByLinkGrp(const LinkGroup &linkGrp, u32 cntCkeNum);
-    CcuTransportGroup   *Get(const LinkGroup &linkGrp);
+private:
+    unordered_map<LinkGroup, unique_ptr<CcuTransportGroup>> linkGrp2TransportGrpMap;
+    vector<LinkGroup> tempTransportGrp;
+
+    bool isDestroyed{false};
+    CommunicatorImpl* comm;
+    CcuTransportGroup* CreateTransportGroupByLinkGrp(const LinkGroup& linkGrp, u32 cntCkeNum);
+    CcuTransportGroup* Get(const LinkGroup& linkGrp);
 };
 
 } // namespace Hccl

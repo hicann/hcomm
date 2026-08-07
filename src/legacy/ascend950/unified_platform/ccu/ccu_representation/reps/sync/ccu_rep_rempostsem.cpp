@@ -15,33 +15,38 @@
 namespace Hccl {
 namespace CcuRep {
 
-CcuRepRemPostSem::CcuRepRemPostSem(const CcuTransport &transport, uint16_t semIndex, uint16_t mask, bool single)
-    : transport(transport), semIndex(semIndex), mask(mask) ,single(single)
-{
-    type       = CcuRepType::REM_POST_SEM;
-    instrCount = 1;
-}
+    CcuRepRemPostSem::CcuRepRemPostSem(const CcuTransport& transport, uint16_t semIndex, uint16_t mask, bool single)
+        : transport(transport),
+          semIndex(semIndex),
+          mask(mask),
+          single(single)
+    {
+        type = CcuRepType::REM_POST_SEM;
+        instrCount = 1;
+    }
 
-bool CcuRepRemPostSem::Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool CcuRepRemPostSem::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    auto ckeId = single?transport.GetRmtCkeByIndex(semIndex):transport.GetRmtCntCkeByIndex(semIndex);
-    SyncCKEInstr(instr++, ckeId, dep.reserveCkeId, mask, transport.GetChannelId(), 0,
-                 0, 0, 0, 1);
-    CHK_PRT_THROW((instrId > UINT16_MAX - instrCount),
-                        HCCL_ERROR("[CcuRepRemPostSem::Translate]uint16 integer overflow occurs, instrId = [%hu], instrCount = [%hu]", instrId, instrCount),
-                          InternalException, "integer overflow");
-    instrId += instrCount;
+        auto ckeId = single ? transport.GetRmtCkeByIndex(semIndex) : transport.GetRmtCntCkeByIndex(semIndex);
+        SyncCKEInstr(instr++, ckeId, dep.reserveCkeId, mask, transport.GetChannelId(), 0, 0, 0, 0, 1);
+        CHK_PRT_THROW(
+            (instrId > UINT16_MAX - instrCount),
+            HCCL_ERROR(
+                "[CcuRepRemPostSem::Translate]uint16 integer overflow occurs, instrId = [%hu], instrCount = [%hu]",
+                instrId, instrCount),
+            InternalException, "integer overflow");
+        instrId += instrCount;
 
-    return translated;
-}
+        return translated;
+    }
 
-std::string CcuRepRemPostSem::Describe()
-{
-    return StringFormat("Post, Use semIndex[%u] and mask[%04x]", semIndex, mask);
-}
+    std::string CcuRepRemPostSem::Describe()
+    {
+        return StringFormat("Post, Use semIndex[%u] and mask[%04x]", semIndex, mask);
+    }
 
 }; // namespace CcuRep
 }; // namespace Hccl

@@ -12,29 +12,18 @@
 #include <mockcpp/mockcpp.hpp>
 #include "adapter_error_manager_pub.h"
 #include "adapter_rts.h"
- 
-class HcclErrManagerTest : public testing::Test
-{
+
+class HcclErrManagerTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "HcclErrManagerTest SetUP" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "HcclErrManagerTest TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "HcclErrManagerTest SetUP" << std::endl; }
+    static void TearDownTestCase() { std::cout << "HcclErrManagerTest TearDown" << std::endl; }
     // Some expensive resource shared by all tests.
-    virtual void SetUp()
-    {
-        std::cout << "A Test SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test SetUP" << std::endl; }
     virtual void TearDown()
     {
         GlobalMockObject::verify();
         std::cout << "A Test TearDown" << std::endl;
     }
- 
 };
 
 #if 0

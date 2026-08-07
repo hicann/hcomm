@@ -27,11 +27,7 @@ using namespace Hccl;
 namespace {
 class StubEndpointForHelper : public Endpoint {
 public:
-    StubEndpointForHelper()
-        : Endpoint(MakeDesc())
-    {
-        ctxHandle_ = reinterpret_cast<void *>(0x1);
-    }
+    StubEndpointForHelper() : Endpoint(MakeDesc()) { ctxHandle_ = reinterpret_cast<void*>(0x1); }
 
     ~StubEndpointForHelper() override
     {
@@ -42,12 +38,12 @@ public:
 
     HcclResult Init() override { return HCCL_SUCCESS; }
     HcclResult ServerSocketListen(const uint32_t) override { return HCCL_SUCCESS; }
-    HcclResult RegisterMemory(HcommMem, const char *, void **) override { return HCCL_SUCCESS; }
-    HcclResult UnregisterMemory(void *) override { return HCCL_SUCCESS; }
-    HcclResult MemoryExport(void *, void **, uint32_t *) override { return HCCL_SUCCESS; }
-    HcclResult MemoryImport(const void *, uint32_t, HcommMem *) override { return HCCL_SUCCESS; }
-    HcclResult MemoryUnimport(const void *, uint32_t) override { return HCCL_SUCCESS; }
-    HcclResult GetAllMemHandles(void **, uint32_t *) override { return HCCL_SUCCESS; }
+    HcclResult RegisterMemory(HcommMem, const char*, void**) override { return HCCL_SUCCESS; }
+    HcclResult UnregisterMemory(void*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryExport(void*, void**, uint32_t*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryImport(const void*, uint32_t, HcommMem*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryUnimport(const void*, uint32_t) override { return HCCL_SUCCESS; }
+    HcclResult GetAllMemHandles(void**, uint32_t*) override { return HCCL_SUCCESS; }
 
 private:
     static EndpointDesc MakeDesc()
@@ -98,7 +94,9 @@ protected:
 TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_NullEndpoint_Expect_HCCL_E_PARA)
 {
     auto conn = MakeTestConnection();
-    auto factory = []() { return MakeTestConnection(); };
+    auto factory = []() {
+        return MakeTestConnection();
+    };
     Endpoint::SharedJettyCtx outCtx;
     EXPECT_EQ(AcquireSharedJettyForChannel(nullptr, conn.get(), factory, outCtx), HCCL_E_PARA);
 }
@@ -106,7 +104,9 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_NullEn
 TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_NullConnection_Expect_HCCL_E_PARA)
 {
     StubEndpointForHelper endpoint;
-    auto factory = []() { return MakeTestConnection(); };
+    auto factory = []() {
+        return MakeTestConnection();
+    };
     Endpoint::SharedJettyCtx outCtx;
     EXPECT_EQ(AcquireSharedJettyForChannel(&endpoint, nullptr, factory, outCtx), HCCL_E_PARA);
 }
@@ -154,7 +154,9 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_Releas
 {
     StubEndpointForHelper endpoint;
     auto conn = MakeTestConnection();
-    auto factory = []() { return MakeTestConnection(); };
+    auto factory = []() {
+        return MakeTestConnection();
+    };
 
     Endpoint::SharedJettyCtx outCtx;
     ASSERT_EQ(AcquireSharedJettyForChannel(&endpoint, conn.get(), factory, outCtx), HCCL_SUCCESS);

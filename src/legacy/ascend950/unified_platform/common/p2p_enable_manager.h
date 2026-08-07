@@ -26,11 +26,7 @@
 
 namespace Hccl {
 
-enum class P2PStatus {
-    P2P_STATUS_DISABLED = 0,
-    P2P_STATUS_ENABLING,
-    P2P_STATUS_ENABLED
-};
+enum class P2PStatus { P2P_STATUS_DISABLED = 0, P2P_STATUS_ENABLING, P2P_STATUS_ENABLED };
 
 using P2PConnectionInfo = struct P2PConnectionInfoDef {
     uint32_t reference = 0;
@@ -39,13 +35,10 @@ using P2PConnectionInfo = struct P2PConnectionInfoDef {
 
 class P2PEnableManager {
 public:
-    static P2PEnableManager &GetInstance();
+    static P2PEnableManager& GetInstance();
 
     // 测试使用
-    std::set<std::pair<u32, u32>> GetSet()
-    {
-        return devicePairs;
-    }
+    std::set<std::pair<u32, u32>> GetSet() { return devicePairs; }
 
     HcclResult EnableP2P(std::vector<uint32_t> remoteDevices);
     HcclResult WaitP2PEnabled(std::vector<uint32_t> remoteDevices);
@@ -58,9 +51,9 @@ private:
 
     P2PEnableManager() = default;
 
-    P2PEnableManager(const P2PEnableManager &other) = delete;
+    P2PEnableManager(const P2PEnableManager& other) = delete;
 
-    P2PEnableManager &operator=(const P2PEnableManager &other) = delete;
+    P2PEnableManager& operator=(const P2PEnableManager& other) = delete;
 
     HcclResult EnableP2P(uint32_t localDeviceLogicID, uint32_t remoteDevicePhysicID);
     HcclResult WaitP2PEnabled(uint32_t localDeviceLogicID, uint32_t remoteDevicePhysicID);

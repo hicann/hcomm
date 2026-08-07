@@ -44,67 +44,64 @@
 extern uint32_t RsGenerateUeInfo(uint32_t dieId, uint32_t funcId);
 extern uint32_t RsGenerateDevIndex(uint32_t devCnt, uint32_t dieId, uint32_t funcId);
 extern uint32_t RsGenerateMmapResId(uint32_t id, uint32_t dieId, uint32_t funcId);
-extern int RsUbGetRdevCb(struct rs_cb *rsCb, unsigned int rdevIndex, struct RsUbDevCb **devCb);
+extern int RsUbGetRdevCb(struct rs_cb* rsCb, unsigned int rdevIndex, struct RsUbDevCb** devCb);
 extern int RsUrmaDeviceApiInit(void);
 extern int RsOpenUrmaSo(void);
 extern int RsUrmaApiInit(void);
-extern void RsUbCtxExtJettyCreateTaCache(struct RsCtxJettyCb *jettyCb, urma_jetty_cfg_t *jettyCfg);
-extern int RsUbDevCbInit(struct CtxInitAttr *attr, struct RsUbDevCb *devCb, struct rs_cb *rscb,
-    int *devIndex, struct DevBaseAttr *devAttr);
-extern void RsJfcCallbackProcess(struct RsCtxJettyCb *jettyCb, urma_cr_t *cr, urma_jfc_t *jfc);
+extern void RsUbCtxExtJettyCreateTaCache(struct RsCtxJettyCb* jettyCb, urma_jetty_cfg_t* jettyCfg);
+extern int RsUbDevCbInit(
+    struct CtxInitAttr* attr, struct RsUbDevCb* devCb, struct rs_cb* rscb, int* devIndex, struct DevBaseAttr* devAttr);
+extern void RsJfcCallbackProcess(struct RsCtxJettyCb* jettyCb, urma_cr_t* cr, urma_jfc_t* jfc);
 extern int RsUrmaJettyApiInit(void);
 extern int RsUrmaJfcApiInit(void);
 extern int RsUrmaSegmentApiInit(void);
 extern int RsUrmaDataApiInit(void);
-extern urma_device_t **RsUrmaGetDeviceList(int *numDevices);
-extern urma_eid_info_t *RsUrmaGetEidList(urma_device_t *dev, uint32_t *cnt);
-extern void RsUrmaFreeDeviceList(urma_device_t **deviceList);
-extern void RsUrmaFreeEidList(urma_eid_info_t *eidList);
-extern int RsUrmaGetEidByIp(const urma_context_t *ctx, const urma_net_addr_t *netAddr, urma_eid_t *eid);
-extern int RsUrmaGetIpByEid(const urma_context_t *ctx, const urma_eid_t *eid, urma_net_addr_t *netAddr);
-extern void RsUbCtxExtJettyCreate(struct RsCtxJettyCb *jettyCb, urma_jetty_cfg_t *jettyCfg);
-extern void RsUbCtxExtJettyDelete(struct RsCtxJettyCb *jettyCb);
-extern int RsUbCtxRegJettyDb(struct RsCtxJettyCb *jettyCb, struct udma_u_jetty_info *jettyInfo);
-extern int RsInitRscbCfg(struct rs_cb *rscb, struct RsInitConfig *cfg);
-extern int RsUbCreateCtx(urma_device_t *urmaDev, unsigned int eidIndex, urma_context_t **urmaCtx);
-extern int RsUbGetUeInfo(urma_context_t *urmaCtx, struct DevBaseAttr *devBaseAttr);
-extern int RsUbGetDevAttr(struct RsUbDevCb *devCb, struct DevBaseAttr *devAttr, unsigned int *devIndex);
-extern int RsUbGetJfcCb(struct RsUbDevCb *devCb, unsigned long long addr, struct RsCtxJfcCb **jfcCb);
-extern void RsUbFreeSegCbList(struct RsUbDevCb *devCb, struct RsListHead *lsegList,
-    struct RsListHead *rsegList);
-extern void RsUbFreeJettyCbList(struct RsUbDevCb *devCb, struct RsListHead *jettyList,
-    struct RsListHead *rjettyList);
-extern void RsUbFreeJfcCbList(struct RsUbDevCb *devCb, struct RsListHead *jfcList);
-extern void RsUbFreeJfceCbList(struct RsUbDevCb *devCb, struct RsListHead *jfceList);
-extern void RsUbFreeTokenIdCbList(struct RsUbDevCb *devCb, struct RsListHead *tokenIdList);
-extern int RsUbGetTokenIdCb(struct RsUbDevCb *devCb, unsigned long long addr,
-    struct RsTokenIdCb **tokenIdCb);
-extern int RsUbInitSegCb(struct MemRegAttrT *memAttr, struct RsUbDevCb *devCb, struct RsSegCb *segCb);
-extern int RsUbCtxJfcCreateExt(struct RsCtxJfcCb *ctxJfcCb, urma_jfc_cfg_t jfcCfg, urma_jfc_t **jfc);
-extern int RsUbCtxInitJettyCb(struct RsUbDevCb *devCb, struct CtxQpAttr *attr,
-    struct RsCtxJettyCb **jettyCb);
-extern int RsUbQueryJfcCb(struct RsUbDevCb *devCb, unsigned long long scqIndex, unsigned long long rcqIndex,
-                              struct RsCtxJfcCb **sendJfcCb, struct RsCtxJfcCb **recvJfcCb);
-extern void RsUbCtxFreeJettyCb(struct RsCtxJettyCb *jettyCb);
-extern int RsUbCtxDrvJettyCreate(struct RsCtxJettyCb *jettyCb, struct RsCtxJfcCb *sendJfcCb,
-    struct RsCtxJfcCb *recvJfcCb);
-extern int RsUbFillJettyInfo(struct RsCtxJettyCb *jettyCb, struct QpCreateInfo *jettyInfo);
-extern void RsUbCtxDrvJettyDelete(struct RsCtxJettyCb *jettyCb);
-extern int RsUbCtxInitRjettyCb(struct RsUbDevCb *devCb, struct RsJettyImportAttr *importAttr,
-    struct RsCtxRemJettyCb **rjettyCb);
-extern int RsUbCtxDrvJettyImport(struct RsCtxRemJettyCb *rjettyCb);
-extern int RsUbGetJettyCb(struct RsUbDevCb *devCb, unsigned int jettyId, struct RsCtxJettyCb **jettyCb);
+extern urma_device_t** RsUrmaGetDeviceList(int* numDevices);
+extern urma_eid_info_t* RsUrmaGetEidList(urma_device_t* dev, uint32_t* cnt);
+extern void RsUrmaFreeDeviceList(urma_device_t** deviceList);
+extern void RsUrmaFreeEidList(urma_eid_info_t* eidList);
+extern int RsUrmaGetEidByIp(const urma_context_t* ctx, const urma_net_addr_t* netAddr, urma_eid_t* eid);
+extern int RsUrmaGetIpByEid(const urma_context_t* ctx, const urma_eid_t* eid, urma_net_addr_t* netAddr);
+extern void RsUbCtxExtJettyCreate(struct RsCtxJettyCb* jettyCb, urma_jetty_cfg_t* jettyCfg);
+extern void RsUbCtxExtJettyDelete(struct RsCtxJettyCb* jettyCb);
+extern int RsUbCtxRegJettyDb(struct RsCtxJettyCb* jettyCb, struct udma_u_jetty_info* jettyInfo);
+extern int RsInitRscbCfg(struct rs_cb* rscb, struct RsInitConfig* cfg);
+extern int RsUbCreateCtx(urma_device_t* urmaDev, unsigned int eidIndex, urma_context_t** urmaCtx);
+extern int RsUbGetUeInfo(urma_context_t* urmaCtx, struct DevBaseAttr* devBaseAttr);
+extern int RsUbGetDevAttr(struct RsUbDevCb* devCb, struct DevBaseAttr* devAttr, unsigned int* devIndex);
+extern int RsUbGetJfcCb(struct RsUbDevCb* devCb, unsigned long long addr, struct RsCtxJfcCb** jfcCb);
+extern void RsUbFreeSegCbList(struct RsUbDevCb* devCb, struct RsListHead* lsegList, struct RsListHead* rsegList);
+extern void RsUbFreeJettyCbList(struct RsUbDevCb* devCb, struct RsListHead* jettyList, struct RsListHead* rjettyList);
+extern void RsUbFreeJfcCbList(struct RsUbDevCb* devCb, struct RsListHead* jfcList);
+extern void RsUbFreeJfceCbList(struct RsUbDevCb* devCb, struct RsListHead* jfceList);
+extern void RsUbFreeTokenIdCbList(struct RsUbDevCb* devCb, struct RsListHead* tokenIdList);
+extern int RsUbGetTokenIdCb(struct RsUbDevCb* devCb, unsigned long long addr, struct RsTokenIdCb** tokenIdCb);
+extern int RsUbInitSegCb(struct MemRegAttrT* memAttr, struct RsUbDevCb* devCb, struct RsSegCb* segCb);
+extern int RsUbCtxJfcCreateExt(struct RsCtxJfcCb* ctxJfcCb, urma_jfc_cfg_t jfcCfg, urma_jfc_t** jfc);
+extern int RsUbCtxInitJettyCb(struct RsUbDevCb* devCb, struct CtxQpAttr* attr, struct RsCtxJettyCb** jettyCb);
+extern int RsUbQueryJfcCb(
+    struct RsUbDevCb* devCb, unsigned long long scqIndex, unsigned long long rcqIndex, struct RsCtxJfcCb** sendJfcCb,
+    struct RsCtxJfcCb** recvJfcCb);
+extern void RsUbCtxFreeJettyCb(struct RsCtxJettyCb* jettyCb);
+extern int
+RsUbCtxDrvJettyCreate(struct RsCtxJettyCb* jettyCb, struct RsCtxJfcCb* sendJfcCb, struct RsCtxJfcCb* recvJfcCb);
+extern int RsUbFillJettyInfo(struct RsCtxJettyCb* jettyCb, struct QpCreateInfo* jettyInfo);
+extern void RsUbCtxDrvJettyDelete(struct RsCtxJettyCb* jettyCb);
+extern int
+RsUbCtxInitRjettyCb(struct RsUbDevCb* devCb, struct RsJettyImportAttr* importAttr, struct RsCtxRemJettyCb** rjettyCb);
+extern int RsUbCtxDrvJettyImport(struct RsCtxRemJettyCb* rjettyCb);
+extern int RsUbGetJettyCb(struct RsUbDevCb* devCb, unsigned int jettyId, struct RsCtxJettyCb** jettyCb);
 extern void RsCloseUrmaSo(void);
-extern int RsUbDestroyJettyCbBatch(struct JettyDestroyBatchInfo *batchInfo, unsigned int *num);
-extern int RsUbGetJettyDestroyBatchInfo(struct RsUbDevCb *devCb, unsigned int jettyIds[],
-    struct JettyDestroyBatchInfo *batchInfo, unsigned int *num);
-extern int RsUbCallocJettyBatchInfo(struct JettyDestroyBatchInfo *batchInfo, unsigned int num);
-extern void RsUbFreeJettyCbBatch(struct JettyDestroyBatchInfo *batchInfo,
-    unsigned int *num, urma_jetty_t *badJetty, urma_jfr_t *badJfr);
-extern int RsUbCtxJfcCreateNormal(struct RsUbDevCb *devCb, urma_jfc_cfg_t *jfcCfg, urma_jfc_t **outJfc);
-extern int RsUbGetJfceCb(struct RsUbDevCb *devCb, unsigned long long addr, struct RsCtxJfceCb **jfceCb);
-extern int RsHandleEpollPollJfc(struct RsUbDevCb *devCb, urma_jfce_t *jfce);
-extern int RsUbJettyCbBuffAlloc(struct RsUbDevCb *devCb, struct RsCtxJettyCb *jettyCb, enum JfcMode jfcType);
+extern int RsUbDestroyJettyCbBatch(struct JettyDestroyBatchInfo* batchInfo, unsigned int* num);
+extern int RsUbGetJettyDestroyBatchInfo(
+    struct RsUbDevCb* devCb, unsigned int jettyIds[], struct JettyDestroyBatchInfo* batchInfo, unsigned int* num);
+extern int RsUbCallocJettyBatchInfo(struct JettyDestroyBatchInfo* batchInfo, unsigned int num);
+extern void RsUbFreeJettyCbBatch(
+    struct JettyDestroyBatchInfo* batchInfo, unsigned int* num, urma_jetty_t* badJetty, urma_jfr_t* badJfr);
+extern int RsUbCtxJfcCreateNormal(struct RsUbDevCb* devCb, urma_jfc_cfg_t* jfcCfg, urma_jfc_t** outJfc);
+extern int RsUbGetJfceCb(struct RsUbDevCb* devCb, unsigned long long addr, struct RsCtxJfceCb** jfceCb);
+extern int RsHandleEpollPollJfc(struct RsUbDevCb* devCb, urma_jfce_t* jfce);
+extern int RsUbJettyCbBuffAlloc(struct RsUbDevCb* devCb, struct RsCtxJettyCb* jettyCb, enum JfcMode jfcType);
 
 struct RsConnInfo gConn = {0};
 char gRevBuf[RS_BUF_SIZE] = {0};
@@ -113,27 +110,27 @@ extern struct RsUbDevCb stubDevCb;
 struct RsCtxJettyCb jettyCbStub = {0};
 struct RsCtxJfceCb gJfceCb = {0};
 
-int RsUbGetJfceCbStub(struct RsUbDevCb *devCb, unsigned long long addr, struct RsCtxJfceCb **jfceCb)
+int RsUbGetJfceCbStub(struct RsUbDevCb* devCb, unsigned long long addr, struct RsCtxJfceCb** jfceCb)
 {
     *jfceCb = &gJfceCb;
     return 0;
 }
 
-int RsUbGetJettyCbStub(struct RsUbDevCb *devCb, unsigned int jettyId, struct RsCtxJettyCb **jettyCb)
+int RsUbGetJettyCbStub(struct RsUbDevCb* devCb, unsigned int jettyId, struct RsCtxJettyCb** jettyCb)
 {
     *jettyCb = &jettyCbStub;
     return 0;
 }
 
-void RsUbFreeJettyCbBatchStub(struct JettyDestroyBatchInfo *batchInfo,
-    unsigned int *num, urma_jetty_t *badJetty, urma_jfr_t *badJfr)
+void RsUbFreeJettyCbBatchStub(
+    struct JettyDestroyBatchInfo* batchInfo, unsigned int* num, urma_jetty_t* badJetty, urma_jfr_t* badJfr)
 {
     return;
 }
 
 void TcRsUbGetRdevCb()
 {
-    struct RsUbDevCb *rdevCbOut = NULL;
+    struct RsUbDevCb* rdevCbOut = NULL;
     struct RsUbDevCb rdevCb = {0};
     unsigned int rdevIndex = 0;
     struct rs_cb rsCb = {0};
@@ -201,7 +198,7 @@ void TcRsUrmaApiInitAbnormal()
 
 void TcRsUbV2()
 {
-    struct RsUbDevCb *devCb = NULL;
+    struct RsUbDevCb* devCb = NULL;
     struct DevBaseAttr attr = {0};
     struct RsInitConfig cfg = {0};
     struct CtxInitAttr info = {0};
@@ -215,7 +212,7 @@ void TcRsUbV2()
     struct MemRegInfoT lmemInfo = {0};
     struct MemImportAttrT rmemAttr = {0};
     struct MemImportInfoT rmemInfo = {0};
-    void *addr = malloc(1);
+    void* addr = malloc(1);
     lmemAttr.mem.addr = (uintptr_t)addr;
     lmemAttr.mem.size = 1;
     lmemAttr.ub.flags.bs.tokenIdValid = 1;
@@ -255,15 +252,15 @@ void TcRsUbV2()
     addr = NULL;
 
     ret = RsDeinit(&cfg);
-	EXPECT_INT_EQ(ret, 0);
+    EXPECT_INT_EQ(ret, 0);
 }
 
 urma_device_t tcUrmaDev = {0};
-urma_device_t *tcUrmaDeviceList[1] = {&tcUrmaDev};
+urma_device_t* tcUrmaDeviceList[1] = {&tcUrmaDev};
 urma_eid_info_t tcUrmaEidList[1] = {0};
 urma_eid_info_t tcUrmaEidList2[2] = {0};
 
-urma_device_t **TcRsUrmaGetDeviceListStub(int *numDevices)
+urma_device_t** TcRsUrmaGetDeviceListStub(int* numDevices)
 {
     *numDevices = 1;
     return tcUrmaDeviceList;
@@ -301,19 +298,19 @@ void TcRsUbGetDevEidInfoNum()
     mocker_clean();
 }
 
-int RsUbGetDevEidInfoNumStub(unsigned int phyId, unsigned int *num)
+int RsUbGetDevEidInfoNumStub(unsigned int phyId, unsigned int* num)
 {
     *num = 1;
     return 0;
 }
 
-urma_eid_info_t *RsUrmaGetEidListStub(urma_device_t *dev, uint32_t *cnt)
+urma_eid_info_t* RsUrmaGetEidListStub(urma_device_t* dev, uint32_t* cnt)
 {
     *cnt = 1;
     return tcUrmaEidList;
 }
 
-urma_eid_info_t *RsUrmaGetEidListStub2(urma_device_t *dev, uint32_t *cnt)
+urma_eid_info_t* RsUrmaGetEidListStub2(urma_device_t* dev, uint32_t* cnt)
 {
     *cnt = 2;
     return tcUrmaEidList2;
@@ -396,13 +393,13 @@ void TcRsUbGetDevEidInfoList()
     mocker_clean();
 }
 
-struct rs_cb *TcRsUbV2Init(int mode, unsigned int *devIndex)
+struct rs_cb* TcRsUbV2Init(int mode, unsigned int* devIndex)
 {
     int ret = 0;
     struct DevBaseAttr attr = {0};
     struct RsInitConfig cfg = {0};
     struct CtxInitAttr info = {0};
-    struct rs_cb *rsCb = NULL;
+    struct rs_cb* rsCb = NULL;
     cfg.hccpMode = mode;
 
     ret = RsInit(&cfg);
@@ -417,12 +414,12 @@ struct rs_cb *TcRsUbV2Init(int mode, unsigned int *devIndex)
     return rsCb;
 }
 
-void TcRsUbV2Deinit(struct rs_cb *rsCb, int mode, unsigned int devIndex)
+void TcRsUbV2Deinit(struct rs_cb* rsCb, int mode, unsigned int devIndex)
 {
     int ret = 0;
     struct RsInitConfig cfg = {0};
     cfg.hccpMode = mode;
-    struct RsUbDevCb *devCb = NULL;
+    struct RsUbDevCb* devCb = NULL;
 
     ret = RsUbGetDevCb(rsCb, devIndex, &devCb);
     EXPECT_INT_EQ(0, ret);
@@ -430,7 +427,7 @@ void TcRsUbV2Deinit(struct rs_cb *rsCb, int mode, unsigned int devIndex)
     ret = RsUbCtxDeinit(devCb);
     EXPECT_INT_EQ(ret, 0);
     ret = RsDeinit(&cfg);
-	EXPECT_INT_EQ(ret, 0);
+    EXPECT_INT_EQ(ret, 0);
     mocker_clean();
 }
 
@@ -446,8 +443,8 @@ void TcRsUbCtxTokenIdAlloc1()
     unsigned long long addr = 0;
     unsigned int devIndex = 0;
     unsigned int tokenId = 0;
-    struct rs_cb *tcRsCb = NULL;
-    struct RsUbDevCb *devCb = NULL;
+    struct rs_cb* tcRsCb = NULL;
+    struct RsUbDevCb* devCb = NULL;
     int ret = 0;
 
     tcRsCb = TcRsUbV2Init(NETWORK_OFFLINE, &devIndex);
@@ -469,8 +466,8 @@ void TcRsUbCtxTokenIdAlloc2()
     unsigned long long addr = 0;
     unsigned int devIndex = 0;
     unsigned int tokenId = 0;
-    struct rs_cb *tcRsCb = NULL;
-    struct RsUbDevCb *devCb = NULL;
+    struct rs_cb* tcRsCb = NULL;
+    struct RsUbDevCb* devCb = NULL;
     int ret = 0;
 
     tcRsCb = TcRsUbV2Init(NETWORK_OFFLINE, &devIndex);
@@ -492,8 +489,8 @@ void TcRsUbCtxTokenIdAlloc3()
     unsigned int devIndex = 0;
     unsigned int tokenId = 0;
     unsigned int tokenId1 = 0;
-    struct rs_cb *tcRsCb = NULL;
-    struct RsUbDevCb *devCb = NULL;
+    struct rs_cb* tcRsCb = NULL;
+    struct RsUbDevCb* devCb = NULL;
     int ret = 0;
 
     tcRsCb = TcRsUbV2Init(NETWORK_OFFLINE, &devIndex);
@@ -519,10 +516,10 @@ void TcRsUbCtxTokenIdAlloc3()
 void TcRsUbCtxJfceCreate()
 {
     union DataPlaneCstmFlag dataPlaneFlag = {0};
-    struct RsUbDevCb *devCb = NULL;
+    struct RsUbDevCb* devCb = NULL;
     unsigned long long addr = 0;
     unsigned int devIndex = 0;
-    struct rs_cb *tcRsCb = NULL;
+    struct rs_cb* tcRsCb = NULL;
     int fd = 0;
     int ret = 0;
 
@@ -546,10 +543,10 @@ void TcRsUbCtxJfcCreate()
 {
     int ret = 0;
     unsigned int devIndex = 0;
-    struct rs_cb *tcRsCb = NULL;
+    struct rs_cb* tcRsCb = NULL;
     struct CtxCqAttr attr = {0};
     struct CtxCqInfo info = {0};
-    struct RsUbDevCb *devCb = NULL;
+    struct RsUbDevCb* devCb = NULL;
 
     tcRsCb = TcRsUbV2Init(NETWORK_OFFLINE, &devIndex);
     attr.ub.mode = JFC_MODE_STARS_POLL;
@@ -595,12 +592,12 @@ void TcRsUbCtxJfcCreateNormal()
 {
     struct RsUbDevCb devCb = {0};
     urma_jfc_cfg_t jfcCfg = {0};
-    urma_jfc_t *outJfc = NULL;
+    urma_jfc_t* outJfc = NULL;
     urma_jfce_t jfce = {0};
     int ret = 0;
 
     gJfceCb.jfceAddr = 1;
-    jfcCfg.jfce = (urma_jfce_t *)(uintptr_t)gJfceCb.jfceAddr;
+    jfcCfg.jfce = (urma_jfce_t*)(uintptr_t)gJfceCb.jfceAddr;
     mocker_clean();
     mocker(RsUbGetJfceCb, 1, -1);
     ret = RsUbCtxJfcCreateNormal(&devCb, &jfcCfg, &outJfc);
@@ -631,12 +628,12 @@ void TcRsUbCtxJettyCreate()
 {
     int ret = 0;
     unsigned int devIndex = 0;
-    struct rs_cb *tcRsCb = NULL;
+    struct rs_cb* tcRsCb = NULL;
     struct CtxQpAttr qpAttr = {0};
     struct QpCreateInfo qpInfo = {0};
     struct CtxCqAttr cqAttr = {0};
     struct CtxCqInfo cqInfo = {0};
-    struct RsUbDevCb *devCb = NULL;
+    struct RsUbDevCb* devCb = NULL;
     unsigned long long tokenIdAddr = 0;
     unsigned int tokenIdNum = 0;
 
@@ -702,8 +699,8 @@ void TcRsUbCtxJettyImport()
 {
     int ret = 0;
     unsigned int devIndex = 0;
-    struct rs_cb *tcRsCb = NULL;
-    struct RsUbDevCb *devCb = NULL;
+    struct rs_cb* tcRsCb = NULL;
+    struct RsUbDevCb* devCb = NULL;
     struct CtxQpAttr qpAttr = {0};
     struct QpCreateInfo qpInfo = {0};
     struct CtxCqAttr cqAttr = {0};
@@ -742,8 +739,8 @@ void TcRsUbCtxJettyBind()
 {
     int ret = 0;
     unsigned int devIndex = 0;
-    struct rs_cb *tcRsCb = NULL;
-    struct RsUbDevCb *devCb = NULL;
+    struct rs_cb* tcRsCb = NULL;
+    struct RsUbDevCb* devCb = NULL;
     struct CtxQpAttr qpAttr = {0};
     struct QpCreateInfo qpInfo = {0};
     struct CtxCqAttr cqAttr = {0};
@@ -829,14 +826,13 @@ void TcRsUbCtxJettyBind()
     RsUbCtxExtJettyDelete(&jettyCb);
 
     TcRsUbV2Deinit(tcRsCb, NETWORK_OFFLINE, devIndex);
-
 }
 
 void TcRsUbCtxBatchSendWr()
 {
     int ret = 0;
     unsigned int devIndex = 0;
-    struct rs_cb *tcRsCb = NULL;
+    struct rs_cb* tcRsCb = NULL;
     struct CtxQpAttr qpAttr = {0};
     struct QpCreateInfo qpInfo = {0};
     struct CtxCqAttr cqAttr = {0};
@@ -848,22 +844,22 @@ void TcRsUbCtxBatchSendWr()
     struct BatchSendWrData wrDataNop[1] = {0};
     struct BatchSendWrData wrData[1] = {0};
     struct SendWrResp wrResp[1] = {0};
-    struct WrlistSendCompleteNum wrlistNum= {0};
+    struct WrlistSendCompleteNum wrlistNum = {0};
     struct MemRegAttrT memRegAttr = {0};
     struct MemRegInfoT memRegInfo = {0};
     struct MemImportAttrT memImportAttr = {0};
     struct MemImportInfoT memImportInfo = {0};
-    urma_token_id_t *tokenId = NULL;
+    urma_token_id_t* tokenId = NULL;
     unsigned long long tokenIdAddr = 0;
     unsigned int tokenIdNum = 0;
     unsigned int completeNum = 0;
-    struct RsUbDevCb *devCb = NULL;
+    struct RsUbDevCb* devCb = NULL;
 
     tcRsCb = TcRsUbV2Init(NETWORK_OFFLINE, &devIndex);
     cqAttr.ub.mode = JFC_MODE_STARS_POLL;
     wrlistNum.sendNum = 1;
     wrlistNum.completeNum = &completeNum;
-    void *addr = malloc(1);
+    void* addr = malloc(1);
     memRegAttr.mem.addr = (uintptr_t)addr;
     memRegAttr.mem.size = 1;
     memRegAttr.ub.flags.bs.tokenIdValid = 1;
@@ -951,7 +947,7 @@ void TcRsUbFreeCbList()
 {
     int ret = 0;
     unsigned int devIndex = 0;
-    struct rs_cb *tcRsCb = NULL;
+    struct rs_cb* tcRsCb = NULL;
     struct CtxQpAttr qpAttr = {0};
     struct QpCreateInfo qpInfo = {0};
     struct CtxCqAttr cqAttr = {0};
@@ -967,13 +963,13 @@ void TcRsUbFreeCbList()
     unsigned long long tokenIdAddr = 0;
     unsigned int tokenId = 0;
     unsigned int completeNum = 0;
-    struct RsUbDevCb *devCb = NULL;
+    struct RsUbDevCb* devCb = NULL;
     union DataPlaneCstmFlag dataPlaneFlag = {0};
     int fd = 0;
 
     tcRsCb = TcRsUbV2Init(NETWORK_OFFLINE, &devIndex);
     cqAttr.ub.mode = JFC_MODE_STARS_POLL;
-    void *addr = malloc(1);
+    void* addr = malloc(1);
     memRegAttr.mem.addr = (uintptr_t)addr;
     memRegAttr.mem.size = 1;
     memRegAttr.ub.flags.bs.tokenIdValid = 1;
@@ -1015,10 +1011,10 @@ void TcRsUbFreeCbList()
 
 void TcRsUbCtxExtJettyCreate()
 {
-    struct RsCtxJettyCb jettyCb = { 0 };
-    struct RsUbDevCb devCb = { 0 };
-    urma_jetty_cfg_t jettyCfg = { 0 };
-    struct rs_cb rscb = { 0 };
+    struct RsCtxJettyCb jettyCb = {0};
+    struct RsUbDevCb devCb = {0};
+    urma_jetty_cfg_t jettyCfg = {0};
+    struct rs_cb rscb = {0};
 
     devCb.rscb = &rscb;
     jettyCb.devCb = &devCb;
@@ -1116,7 +1112,7 @@ void TcRsUbCtxExtJettyDelete()
 {
     struct RsCtxJettyCb jettyCb = {0};
     struct RsUbDevCb devCb = {0};
-    urma_jetty_t *jetty = (urma_jetty_t *)calloc(1, sizeof(urma_jetty_t));
+    urma_jetty_t* jetty = (urma_jetty_t*)calloc(1, sizeof(urma_jetty_t));
     jettyCb.jetty = jetty;
 
     jettyCb.devCb = &devCb;
@@ -1149,7 +1145,7 @@ void TcRsUbCtxChanCreate()
 
 void TcRsUbCtxDeinit()
 {
-    struct RsUbDevCb *devCb = (struct RsUbDevCb *)calloc(1, sizeof(struct RsUbDevCb));
+    struct RsUbDevCb* devCb = (struct RsUbDevCb*)calloc(1, sizeof(struct RsUbDevCb));
     struct rs_cb rsCb = {0};
     int ret = 0;
 
@@ -1194,7 +1190,7 @@ void TcRsUbCtxLmemReg()
     mocker_clean();
 
     mocker(RsUrmaImportSeg, 1, NULL);
-    ret = RsUbCtxRmemImport(&devCb, (struct MemImportAttrT *)&memAttr, (struct MemImportInfoT *)&memInfo);
+    ret = RsUbCtxRmemImport(&devCb, (struct MemImportAttrT*)&memAttr, (struct MemImportInfoT*)&memInfo);
     EXPECT_INT_NE(0, ret);
     mocker_clean();
 }
@@ -1217,7 +1213,7 @@ void TcRsUbCtxJfcCreateFail()
 
 void TcRsUbCtxInitJettyCb()
 {
-    struct RsCtxJettyCb *jettyCb = NULL;
+    struct RsCtxJettyCb* jettyCb = NULL;
     struct RsUbDevCb devCb = {0};
     struct CtxQpAttr attr = {0};
     int ret = 0;
@@ -1230,8 +1226,9 @@ void TcRsUbCtxInitJettyCb()
 
 static struct RsCtxJfcCb gSendJfcCb = {0};
 
-int RsUbQueryJfcCbStub(struct RsUbDevCb *devCb, unsigned long long scqIndex, unsigned long long rcqIndex,
-    struct RsCtxJfcCb **sendJfcCb, struct RsCtxJfcCb **recvJfcCb)
+int RsUbQueryJfcCbStub(
+    struct RsUbDevCb* devCb, unsigned long long scqIndex, unsigned long long rcqIndex, struct RsCtxJfcCb** sendJfcCb,
+    struct RsCtxJfcCb** recvJfcCb)
 {
     gSendJfcCb.jfcType = JFC_MODE_NORMAL;
     *sendJfcCb = &gSendJfcCb;
@@ -1254,8 +1251,8 @@ void TcRsUbCtxJettyCreateFail()
     mocker_clean();
 
     mocker(RsUbCtxInitJettyCb, 1, 0);
-    mocker_invoke_p5("RsUbQueryJfcCb", "RsUbQueryJfcCbStub",
-        (stub_fn_t)RsUbQueryJfcCb, (stub_fn_t)RsUbQueryJfcCbStub, 10);
+    mocker_invoke_p5(
+        "RsUbQueryJfcCb", "RsUbQueryJfcCbStub", (stub_fn_t)RsUbQueryJfcCb, (stub_fn_t)RsUbQueryJfcCbStub, 10);
     mocker(RsUbCtxDrvJettyCreate, 1, 0);
     mocker(RsUbFillJettyInfo, 1, -1);
     mocker(RsUbCtxDrvJettyDelete, 1, -1);

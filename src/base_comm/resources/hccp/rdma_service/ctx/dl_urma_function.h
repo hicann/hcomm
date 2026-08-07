@@ -58,8 +58,8 @@ struct RsUrmaOps {
     urma_status_t (*rsUrmaFreeTokenId)(urma_token_id_t *tokenId);
     urma_target_seg_t *(*rsUrmaRegisterSeg)(urma_context_t *ctx, urma_seg_cfg_t *segCfg);
     urma_status_t (*rsUrmaUnregisterSeg)(urma_target_seg_t *targetSeg);
-    urma_target_seg_t *(*rsUrmaImportSeg)(urma_context_t *ctx, urma_seg_t *seg,
-        urma_token_t *tokenValue, uint64_t addr, urma_import_seg_flag_t flag);
+    urma_target_seg_t *(*rsUrmaImportSeg)(urma_context_t *ctx, urma_seg_t *seg, urma_token_t *tokenValue, uint64_t addr,
+        urma_import_seg_flag_t flag);
     urma_status_t (*rsUrmaUnimportSeg)(urma_target_seg_t *tseg);
     urma_status_t (*rsUrmaPostJettySendWr)(urma_jetty_t *jetty, urma_jfs_wr_t *wr, urma_jfs_wr_t **badWr);
     urma_status_t (*rsUrmaPostJettyRecvWr)(urma_jetty_t *jetty, urma_jfr_wr_t *wr, urma_jfr_wr_t **badWr);
@@ -71,12 +71,12 @@ struct RsUrmaOps {
     urma_status_t (*rsUrmaUserCtl)(urma_context_t *ctx, urma_user_ctl_in_t *in, urma_user_ctl_out_t *out);
     urma_status_t (*rsUrmaGetTpList)(urma_context_t *ctx, urma_get_tp_cfg_t *cfg, uint32_t *tpCnt,
         urma_tp_info_t *tpList);
-    urma_status_t (*rsUrmaGetTpAttr)(const urma_context_t *ctx, const uint64_t tpHandle,
-        uint8_t *tpAttrCnt, uint32_t *tpAttrBitmap, urma_tp_attr_value_t *tpAttr);
-    urma_status_t (*rsUrmaSetTpAttr)(const urma_context_t *ctx, const uint64_t tpHandle,
-        const uint8_t tpAttrCnt, const uint32_t tpAttrBitmap, const urma_tp_attr_value_t *tpAttr);
-    urma_target_jetty_t *(*rsUrmaImportJettyEx)(urma_context_t *ctx, urma_rjetty_t *rjetty,
-        urma_token_t *tokenValue, urma_import_jetty_ex_cfg_t *cfg);
+    urma_status_t (*rsUrmaGetTpAttr)(const urma_context_t *ctx, const uint64_t tpHandle, uint8_t *tpAttrCnt,
+        uint32_t *tpAttrBitmap, urma_tp_attr_value_t *tpAttr);
+    urma_status_t (*rsUrmaSetTpAttr)(const urma_context_t *ctx, const uint64_t tpHandle, const uint8_t tpAttrCnt,
+        const uint32_t tpAttrBitmap, const urma_tp_attr_value_t *tpAttr);
+    urma_target_jetty_t *(*rsUrmaImportJettyEx)(urma_context_t *ctx, urma_rjetty_t *rjetty, urma_token_t *tokenValue,
+        urma_import_jetty_ex_cfg_t *cfg);
     urma_status_t (*rsUrmaAllocJetty)(urma_context_t *urmaCtx, urma_jetty_cfg_t *cfg, urma_jetty_t **jetty);
     urma_status_t (*rsUrmaSetJettyOpt)(urma_jetty_t *jetty, uint64_t opt, void *buf, uint32_t len);
     urma_status_t (*rsUrmaGetJettyOpt)(urma_jetty_t *jetty, uint64_t opt, void *buf, uint32_t len);
@@ -132,8 +132,8 @@ urma_target_seg_t *RsUrmaRegisterSeg(urma_context_t *ctx, urma_seg_cfg_t *segCfg
 int RsUrmaUnregisterSeg(urma_target_seg_t *targetSeg);
 urma_token_id_t *RsUrmaAllocTokenId(urma_context_t *ctx);
 int RsUrmaFreeTokenId(urma_token_id_t *tokenId);
-urma_target_seg_t *RsUrmaImportSeg(urma_context_t *ctx, urma_seg_t *seg, urma_token_t *tokenValue,
-    uint64_t addr, urma_import_seg_flag_t flag);
+urma_target_seg_t *RsUrmaImportSeg(urma_context_t *ctx, urma_seg_t *seg, urma_token_t *tokenValue, uint64_t addr,
+    urma_import_seg_flag_t flag);
 int RsUrmaUnimportSeg(urma_target_seg_t *tseg);
 int RsUrmaPostJettySendWr(urma_jetty_t *jetty, urma_jfs_wr_t *wr, urma_jfs_wr_t **badWr);
 int RsUrmaPostJettyRecvWr(urma_jetty_t *jetty, urma_jfr_wr_t *wr, urma_jfr_wr_t **badWr);
@@ -143,8 +143,8 @@ int RsUrmaWaitJfc(urma_jfce_t *jfce, uint32_t jfcCnt, int timeOut, urma_jfc_t *j
 void RsUrmaAckJfc(urma_jfc_t *jfc[], uint32_t nevents[], uint32_t jfcCnt);
 int RsUrmaUserCtl(urma_context_t *ctx, urma_user_ctl_in_t *in, urma_user_ctl_out_t *out);
 int RsUrmaGetTpList(urma_context_t *ctx, urma_get_tp_cfg_t *cfg, uint32_t *tpCnt, urma_tp_info_t *tpList);
-int RsUrmaGetTpAttr(const urma_context_t *ctx, const uint64_t tpHandle, uint8_t *tpAttrCnt,
-    uint32_t *tpAttrBitmap, urma_tp_attr_value_t *tpAttr);
+int RsUrmaGetTpAttr(const urma_context_t *ctx, const uint64_t tpHandle, uint8_t *tpAttrCnt, uint32_t *tpAttrBitmap,
+    urma_tp_attr_value_t *tpAttr);
 int RsUrmaSetTpAttr(const urma_context_t *ctx, const uint64_t tpHandle, const uint8_t tpAttrCnt,
     const uint32_t tpAttrBitmap, const urma_tp_attr_value_t *tpAttr);
 urma_target_jetty_t *RsUrmaImportJettyEx(urma_context_t *ctx, urma_rjetty_t *rjetty, urma_token_t *tokenValue,

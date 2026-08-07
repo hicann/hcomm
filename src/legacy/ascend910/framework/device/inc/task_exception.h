@@ -19,9 +19,9 @@
 namespace hccl {
 constexpr u32 OP_INFO_MAX_SIZE = 2048;
 struct IndOpInfo {
-    uint8_t opInfo[OP_INFO_MAX_SIZE] {0};
+    uint8_t opInfo[OP_INFO_MAX_SIZE]{0};
     HcommGetOpInfoCallback callback = nullptr;
-    uint32_t opIndex = 0;                // 记录算子下发index
+    uint32_t opIndex = 0; // 记录算子下发index
 };
 
 class TaskException {
@@ -29,18 +29,18 @@ public:
     TaskException();
     ~TaskException();
 
-    HcclResult Init(u32 devId, u32 localUserRank, const std::string &identifier);
+    HcclResult Init(u32 devId, u32 localUserRank, const std::string& identifier);
     HcclResult RegisterOpInfo(void* opInfo, u32 size);
     HcclResult RegisterOpInfoCallback(HcommGetOpInfoCallback callback);
     HcclResult PrintTaskException(Stream& stream);
-    HcclResult PrintTaskExceptionByTaskId(u8 sqeType, u16 taskId, hccl::Stream &stream, u32 tail);
+    HcclResult PrintTaskExceptionByTaskId(u8 sqeType, u16 taskId, hccl::Stream& stream, u32 tail);
 
     inline u32 GetOpRingBufferIdx() const { return opRingBufferIdx_; }
 
 private:
-    std::string GetTaskExceptionTaskInfo(u32 sqHead, SqeRingBuffer *sqeContextBuffer);
-    void PrintTaskExceptionTaskQue(u32 sqIdx, SqeRingBuffer *sqeContextBuffer); // 打印当前位置的前序task
-    std::string GetTaskBriefsInfo(u32 idx, SqeRingBuffer *sqeContextBuffer);
+    std::string GetTaskExceptionTaskInfo(u32 sqHead, SqeRingBuffer* sqeContextBuffer);
+    void PrintTaskExceptionTaskQue(u32 sqIdx, SqeRingBuffer* sqeContextBuffer); // 打印当前位置的前序task
+    std::string GetTaskBriefsInfo(u32 idx, SqeRingBuffer* sqeContextBuffer);
     void PrintTaskExceptionOpInfo(IndOpInfo& indOp);
 
     bool IsRepeatPrint(u32 streamId, u32 opIndex, u32 sqHead);
@@ -51,7 +51,7 @@ private:
     u32 localUserRank_ = 0;
     std::string identifier_;
     // streamId -> <opIndex, sqHead> : 记录每条流上一次打印taskException的opIndex和head，避免重复打印
-    std::unordered_map<u32, std::pair<u32, u32> > threadPrintState_;
+    std::unordered_map<u32, std::pair<u32, u32>> threadPrintState_;
 };
-}
+} // namespace hccl
 #endif

@@ -17,14 +17,9 @@ protected:
 // Resume when communicator is V2 -> should call CollComm::Resume
 TEST_F(HcclCommHostTest, Ut_ResumeWhenIsCommunicatorV2ExpectSuccess)
 {
-    MOCKER(hrtGetDeviceType)
-        .stubs()
-        .with(outBound(DevType::DEV_TYPE_950))
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER(IsSupportHCCLV2)
-        .stubs()
-        .will(returnValue(true));
-    setenv("HCCL_INDEPENDENT_OP","1",1);
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(IsSupportHCCLV2).stubs().will(returnValue(true));
+    setenv("HCCL_INDEPENDENT_OP", "1", 1);
 
     void* commV2 = (void*)0x2000;
     RankGraphStub rankGraphStub;
@@ -39,16 +34,10 @@ TEST_F(HcclCommHostTest, Ut_ResumeWhenIsCommunicatorV2ExpectSuccess)
     std::shared_ptr<hccl::hcclComm> hcclCommPtr = std::make_shared<hccl::hcclComm>(1, 1, commName);
 
     // Mock CollComm::Init and GetHDCommunicate so InitCollComm succeeds and collComm_ is created
-    MOCKER_CPP(&CollComm::Init)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&CollComm::GetHDCommunicate)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollComm::Init).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollComm::GetHDCommunicate).stubs().will(returnValue(HCCL_SUCCESS));
     // Stub CollComm::Resume to return success
-    MOCKER_CPP(&CollComm::Resume)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollComm::Resume).stubs().will(returnValue(HCCL_SUCCESS));
 
     HcclCommConfig config{};
     unsetenv("HCCL_DFS_CONFIG");
@@ -63,14 +52,9 @@ TEST_F(HcclCommHostTest, Ut_ResumeWhenIsCommunicatorV2ExpectSuccess)
 
 TEST_F(HcclCommHostTest, Ut_ResumeWhenIsCommunicatorV2AndCollResumeFailsExpectError)
 {
-    MOCKER(hrtGetDeviceType)
-        .stubs()
-        .with(outBound(DevType::DEV_TYPE_950))
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER(IsSupportHCCLV2)
-        .stubs()
-        .will(returnValue(true));
-    setenv("HCCL_INDEPENDENT_OP","1",1);
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(IsSupportHCCLV2).stubs().will(returnValue(true));
+    setenv("HCCL_INDEPENDENT_OP", "1", 1);
 
     void* commV2 = (void*)0x2000;
     RankGraphStub rankGraphStub;
@@ -84,16 +68,10 @@ TEST_F(HcclCommHostTest, Ut_ResumeWhenIsCommunicatorV2AndCollResumeFailsExpectEr
 
     std::shared_ptr<hccl::hcclComm> hcclCommPtr = std::make_shared<hccl::hcclComm>(1, 1, commName);
 
-    MOCKER_CPP(&CollComm::Init)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&CollComm::GetHDCommunicate)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollComm::Init).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollComm::GetHDCommunicate).stubs().will(returnValue(HCCL_SUCCESS));
     // Fail resume
-    MOCKER_CPP(&CollComm::Resume)
-        .stubs()
-        .will(returnValue(HCCL_E_INTERNAL));
+    MOCKER_CPP(&CollComm::Resume).stubs().will(returnValue(HCCL_E_INTERNAL));
 
     HcclCommConfig config{};
     unsetenv("HCCL_DFS_CONFIG");
@@ -107,14 +85,9 @@ TEST_F(HcclCommHostTest, Ut_ResumeWhenIsCommunicatorV2AndCollResumeFailsExpectEr
 
 TEST_F(HcclCommHostTest, Ut_GetCommStatusWhenIsCommunicatorV2ExpectCollStatus)
 {
-    MOCKER(hrtGetDeviceType)
-        .stubs()
-        .with(outBound(DevType::DEV_TYPE_950))
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER(IsSupportHCCLV2)
-        .stubs()
-        .will(returnValue(true));
-    setenv("HCCL_INDEPENDENT_OP","1",1);
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(IsSupportHCCLV2).stubs().will(returnValue(true));
+    setenv("HCCL_INDEPENDENT_OP", "1", 1);
 
     void* commV2 = (void*)0x2000;
     RankGraphStub rankGraphStub;
@@ -128,16 +101,10 @@ TEST_F(HcclCommHostTest, Ut_GetCommStatusWhenIsCommunicatorV2ExpectCollStatus)
 
     std::shared_ptr<hccl::hcclComm> hcclCommPtr = std::make_shared<hccl::hcclComm>(1, 1, commName);
 
-    MOCKER_CPP(&CollComm::Init)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&CollComm::GetHDCommunicate)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollComm::Init).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollComm::GetHDCommunicate).stubs().will(returnValue(HCCL_SUCCESS));
     // stub GetCommStatus to return SUSPENDING
-    MOCKER_CPP(&CollComm::GetCommStatus)
-        .stubs()
-        .will(returnValue(HcclCommStatus::HCCL_COMM_STATUS_SUSPENDING));
+    MOCKER_CPP(&CollComm::GetCommStatus).stubs().will(returnValue(HcclCommStatus::HCCL_COMM_STATUS_SUSPENDING));
 
     HcclCommConfig config{};
     unsetenv("HCCL_DFS_CONFIG");
@@ -183,9 +150,7 @@ TEST_F(HcclCommHostTest, Ut_BinaryUnLoad_When_BinHandleNotNullAndUnloadFailed_Ex
 
     hcclCommPtr->binHandle_ = reinterpret_cast<aclrtBinHandle>(0x1234);
 
-    MOCKER(aclrtBinaryUnLoad)
-        .stubs()
-        .will(returnValue(1));
+    MOCKER(aclrtBinaryUnLoad).stubs().will(returnValue(1));
 
     hcclCommPtr->BinaryUnLoad();
 
@@ -209,9 +174,7 @@ TEST_F(HcclCommHostTest, Ut_BinaryUnLoad_When_BinHandleNotNullAndUnloadSuccess_E
 
     hcclCommPtr->binHandle_ = reinterpret_cast<aclrtBinHandle>(0x1234);
 
-    MOCKER(aclrtBinaryUnLoad)
-        .stubs()
-        .will(returnValue(0));
+    MOCKER(aclrtBinaryUnLoad).stubs().will(returnValue(0));
 
     hcclCommPtr->BinaryUnLoad();
 

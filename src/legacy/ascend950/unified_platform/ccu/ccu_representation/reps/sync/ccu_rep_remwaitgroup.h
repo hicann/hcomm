@@ -18,23 +18,24 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepWaitGroup : public CcuRepBase {
-public:
-    CcuRepWaitGroup(const CcuTransportGroup &transportGroup, uint16_t semIndex, uint16_t mask, bool isProfiling=true);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
-    uint32_t    GetMask() const { return mask; }
-    uint32_t    GetId() const { return instrId; }
-    HcclResult  GetChannelId(uint16_t& channelId);
+    class CcuRepWaitGroup : public CcuRepBase {
+    public:
+        CcuRepWaitGroup(
+            const CcuTransportGroup& transportGroup, uint16_t semIndex, uint16_t mask, bool isProfiling = true);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
+        uint32_t GetMask() const { return mask; }
+        uint32_t GetId() const { return instrId; }
+        HcclResult GetChannelId(uint16_t& channelId);
 
-private:
-    const CcuTransportGroup &transportGroup;
-    uint16_t          semIndex{0};
-    uint16_t          mask{0};
-    bool              isProfiling{true};
+    private:
+        const CcuTransportGroup& transportGroup;
+        uint16_t semIndex{0};
+        uint16_t mask{0};
+        bool isProfiling{true};
 
-    friend class Hccl::CcuErrorHandler;
-};
+        friend class Hccl::CcuErrorHandler;
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

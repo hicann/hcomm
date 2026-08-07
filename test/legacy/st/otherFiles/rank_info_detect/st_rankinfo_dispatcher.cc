@@ -15,7 +15,7 @@
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <unistd.h>
-#include <functional> 
+#include <functional>
 #define private public
 #include "base_config.h"
 #include "env_config.h"
@@ -30,25 +30,15 @@ using namespace Hccl;
 
 class RankInfoDispatherTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "RankInfoDispatherTest SetUP" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "RankInfoDispatherTest TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "RankInfoDispatherTest SetUP" << std::endl; }
+    static void TearDownTestCase() { std::cout << "RankInfoDispatherTest TearDown" << std::endl; }
     // Some expensive resource shared by all tests.
-    virtual void SetUp()
-    {
-        std::cout << "A Test SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test SetUP" << std::endl; }
     virtual void TearDown()
     {
         GlobalMockObject::verify();
         std::cout << "A Test TearDown" << std::endl;
     }
-    
 };
 
 TEST_F(RankInfoDispatherTest, St_ProcessOneSendEvent_When_Input_Right_Expect_Send_Ok)
@@ -56,14 +46,14 @@ TEST_F(RankInfoDispatherTest, St_ProcessOneSendEvent_When_Input_Right_Expect_Sen
     // when
     MOCKER_CPP(&RankInfoDispather::SendState::Send).stubs().with(mockcpp::any()).will(returnValue(true));
     MOCKER_CPP(&RankInfoDispather::SendState::IsOk).stubs().with(mockcpp::any()).will(returnValue(true));
-    
+
     // then
     IpAddress remoteIp;
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
     RankInfoDispather::SendState txS;
@@ -84,8 +74,8 @@ TEST_F(RankInfoDispatherTest, St_ProcessOneSendEvent_When_Input_Error_Expect_Sto
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
 
@@ -94,7 +84,11 @@ TEST_F(RankInfoDispatherTest, St_ProcessOneSendEvent_When_Input_Error_Expect_Sto
     EXPECT_EQ(workers.stop_, true);
 
     // when
-    MOCKER_CPP(&RankInfoDispather::SendState::Send).stubs().with(mockcpp::any()).will(returnValue(false)).then(returnValue(true));
+    MOCKER_CPP(&RankInfoDispather::SendState::Send)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(false))
+        .then(returnValue(true));
     RankInfoDispather::SendState txS;
     RankInfoDispather::FdContext fdCtx;
     fdCtx.txState = txS;
@@ -116,21 +110,24 @@ TEST_F(RankInfoDispatherTest, St_ProcessOneSendEvent_When_Input_Error_Expect_Sto
 TEST_F(RankInfoDispatherTest, St_SendHeader_When_ISend_Ok_Expect_Return_True)
 {
     // when
-    MOCKER(HrtRaSocketNonBlockSend).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(true));
+    MOCKER(HrtRaSocketNonBlockSend)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(true));
 
     // then
     IpAddress remoteIp;
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
-    
+
     // check
     RankInfoDispather::SendState txS;
-    char *buf;
+    char* buf;
     size_t dataLen = 100;
     size_t sendedLen = 80;
     EXPECT_EQ(txS.SendHelper(socket, buf, dataLen, sendedLen), true);
@@ -139,42 +136,47 @@ TEST_F(RankInfoDispatherTest, St_SendHeader_When_ISend_Ok_Expect_Return_True)
 TEST_F(RankInfoDispatherTest, St_SendHeader_When_ISend_False_Expect_Return_False)
 {
     // when
-    MOCKER(HrtRaSocketNonBlockSend).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(false));
+    MOCKER(HrtRaSocketNonBlockSend)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(false));
 
     // then
     IpAddress remoteIp;
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
-    
+
     // check
     RankInfoDispather::SendState txS;
-    char *buf;
+    char* buf;
     size_t dataLen = 100;
     size_t sendedLen = 80;
     EXPECT_EQ(txS.SendHelper(socket, buf, dataLen, sendedLen), false);
 }
 
-
 TEST_F(RankInfoDispatherTest, St_SendState_Send_When_ISend_Ok_Expect_SendHeader)
 {
     // when
-    MOCKER(HrtRaSocketNonBlockSend).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(true));
-    
+    MOCKER(HrtRaSocketNonBlockSend)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(true));
+
     // then
     IpAddress remoteIp;
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
-    
+
     // check
     RankInfoDispather::SendState txS;
     EXPECT_EQ(txS.Send(socket), true);
@@ -183,18 +185,21 @@ TEST_F(RankInfoDispatherTest, St_SendState_Send_When_ISend_Ok_Expect_SendHeader)
 TEST_F(RankInfoDispatherTest, St_SendState_Send_When_ISend_Ok_Expect_SendBody)
 {
     // when
-    MOCKER(HrtRaSocketNonBlockSend).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(true));
-    
+    MOCKER(HrtRaSocketNonBlockSend)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(true));
+
     // then
     IpAddress remoteIp;
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
-    
+
     // check
     RankInfoDispather::SendState txS;
     txS.headerSended = 1;
@@ -207,18 +212,21 @@ TEST_F(RankInfoDispatherTest, St_SendState_Send_When_ISend_Ok_Expect_SendBody)
 TEST_F(RankInfoDispatherTest, St_SendState_Send_When_ISend_False_Expect_Return_False)
 {
     // when
-    MOCKER(HrtRaSocketNonBlockSend).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(false));
+    MOCKER(HrtRaSocketNonBlockSend)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(false));
 
-    //when
+    // when
     IpAddress remoteIp;
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
-    
+
     // check
     RankInfoDispather::SendState txS;
     EXPECT_EQ(txS.Send(socket), false);
@@ -227,7 +235,10 @@ TEST_F(RankInfoDispatherTest, St_SendState_Send_When_ISend_False_Expect_Return_F
 TEST_F(RankInfoDispatherTest, St_ProcessSend_When_Send_Again_Expect_Return_TimeOut)
 {
     // when
-    MOCKER(HrtRaSocketNonBlockSend).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(false));
+    MOCKER(HrtRaSocketNonBlockSend)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(false));
     MOCKER_CPP(&RankInfoDispather::SendOnce).stubs().with().will(ignoreReturnValue());
     u32 eventsNum1 = 1;
     MOCKER(HrtRaWaitEventHandle)
@@ -236,7 +247,7 @@ TEST_F(RankInfoDispatherTest, St_ProcessSend_When_Send_Again_Expect_Return_TimeO
         .will(returnValue(HCCL_SUCCESS));
 
     EnvSocketConfig envConfig;
-    EnvSocketConfig &fakeEnvConfig = envConfig;
+    EnvSocketConfig& fakeEnvConfig = envConfig;
     fakeEnvConfig.linkTimeOut = CfgField<s32>{"HCCL_CONNECT_TIMEOUT", s32(1), Str2T<s32>};
     fakeEnvConfig.linkTimeOut.isParsed = true;
     MOCKER_CPP(&EnvConfig::GetSocketConfig).stubs().will(returnValue(fakeEnvConfig));
@@ -246,8 +257,8 @@ TEST_F(RankInfoDispatherTest, St_ProcessSend_When_Send_Again_Expect_Return_TimeO
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
 
@@ -256,11 +267,13 @@ TEST_F(RankInfoDispatherTest, St_ProcessSend_When_Send_Again_Expect_Return_TimeO
     EXPECT_THROW(workers.ProcessSend(), TimeoutException);
 }
 
-
 TEST_F(RankInfoDispatherTest, St_ProcessSend_When_EventsNum_Error_Expect_Return_TimeOut)
 {
     // when
-    MOCKER(HrtRaSocketNonBlockSend).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(false));
+    MOCKER(HrtRaSocketNonBlockSend)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(false));
     MOCKER_CPP(&RankInfoDispather::SendOnce).stubs().with().will(ignoreReturnValue());
     u32 eventsNum = 0;
     MOCKER(HrtRaWaitEventHandle)
@@ -273,8 +286,8 @@ TEST_F(RankInfoDispatherTest, St_ProcessSend_When_EventsNum_Error_Expect_Return_
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
 
@@ -288,14 +301,14 @@ TEST_F(RankInfoDispatherTest, St_SendOnce_When_InputValue_Expect_NO_THROW)
     // when
     MOCKER_CPP(&RankInfoDispather::SendState::Send).stubs().with(mockcpp::any()).will(returnValue(true));
     MOCKER_CPP(&RankInfoDispather::SendState::IsOk).stubs().with(mockcpp::any()).will(returnValue(true));
-    
+
     // then
     IpAddress remoteIp;
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
     RankInfoDispather::SendState txS;
@@ -308,20 +321,23 @@ TEST_F(RankInfoDispatherTest, St_SendOnce_When_InputValue_Expect_NO_THROW)
     EXPECT_EQ(workers.sendDoneCount_, 1);
 }
 
-
 TEST_F(RankInfoDispatherTest, St_SendOnce_When_Input_Error_Expect_THROW)
 {
     // when
-    MOCKER_CPP(&RankInfoDispather::SendState::Send).stubs().with(mockcpp::any()).will(returnValue(false)).then(returnValue(true));
+    MOCKER_CPP(&RankInfoDispather::SendState::Send)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(false))
+        .then(returnValue(true));
     MOCKER_CPP(&RankInfoDispather::SendState::IsOk).stubs().with(mockcpp::any()).will(returnValue(false));
-    
+
     // then
     IpAddress remoteIp;
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
     RankInfoDispather::SendState txS;
@@ -339,14 +355,14 @@ TEST_F(RankInfoDispatherTest, St_CleanResource_When_Input_Expect_NO_THROW)
 {
     // when
     MOCKER_CPP(&RankInfoDispather::WakeWoker).stubs().with().will(ignoreReturnValue());
-    
+
     // then
     IpAddress remoteIp;
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
 
@@ -365,8 +381,8 @@ TEST_F(RankInfoDispatherTest, St_PrepareResource_When_Input_Expect_NO_THROW)
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
 
@@ -375,7 +391,7 @@ TEST_F(RankInfoDispatherTest, St_PrepareResource_When_Input_Expect_NO_THROW)
     connectSockets["0"] = socket;
     std::string failedAgentIdList;
     RankTableInfo clusterInfo;
-    RankInfoDetectClient client(0,1,0,socket);
+    RankInfoDetectClient client(0, 1, 0, socket);
     client.ConstructSingleRank(clusterInfo);
     EXPECT_NO_THROW(workers.PrepareResource(connectSockets, clusterInfo, failedAgentIdList, 0));
     EXPECT_EQ(workers.fdHandleToFdContextMap_.size(), 1);
@@ -391,8 +407,8 @@ TEST_F(RankInfoDispatherTest, St_PrepareResource_When_Input_Expect_THROW)
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
 
@@ -400,7 +416,7 @@ TEST_F(RankInfoDispatherTest, St_PrepareResource_When_Input_Expect_THROW)
     std::unordered_map<std::string, std::shared_ptr<Socket>> connectSockets;
     connectSockets["abc"] = socket;
     RankTableInfo clusterInfo;
-    RankInfoDetectClient client(0,1,0,socket);
+    RankInfoDetectClient client(0, 1, 0, socket);
     client.ConstructSingleRank(clusterInfo);
     std::string failedAgentIdList;
     EXPECT_THROW(workers.PrepareResource(connectSockets, clusterInfo, failedAgentIdList, 0), InvalidParamsException);
@@ -414,8 +430,8 @@ TEST_F(RankInfoDispatherTest, St_GetTask_When_Input_Null_Expect_Return_false)
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
 
@@ -431,8 +447,8 @@ TEST_F(RankInfoDispatherTest, St_InitWorkerThread_When_Input_Expect_Return_NO_TH
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
 
@@ -448,8 +464,8 @@ TEST_F(RankInfoDispatherTest, St_WorkerWait_When_Input_Expect_Return_NO_THROW)
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
 
@@ -469,8 +485,8 @@ TEST_F(RankInfoDispatherTest, St_BroadcastRankTable_When_Input_Expect_NO_THROW)
     IpAddress localIp;
     SocketHandle socketHandle;
     std::string tag = "test";
-    std::shared_ptr<Socket> socket = std::make_shared<Socket>(socketHandle, localIp, 0, remoteIp, tag,
-        SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+    std::shared_ptr<Socket> socket = std::make_shared<Socket>(
+        socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
     RankInfoDetectService topoServer(0, socket, "test", {});
     RankInfoDispather workers(&topoServer);
 
@@ -479,9 +495,7 @@ TEST_F(RankInfoDispatherTest, St_BroadcastRankTable_When_Input_Expect_NO_THROW)
     connectSockets["0"] = socket;
     std::string failedAgentIdList;
     RankTableInfo clusterInfo;
-    RankInfoDetectClient client(0,1,0,socket);
+    RankInfoDetectClient client(0, 1, 0, socket);
     client.ConstructSingleRank(clusterInfo);
     EXPECT_NO_THROW(workers.BroadcastRankTable(connectSockets, clusterInfo, failedAgentIdList, 0));
 }
-
-

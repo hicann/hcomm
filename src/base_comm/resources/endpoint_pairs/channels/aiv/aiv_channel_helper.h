@@ -19,14 +19,17 @@
  */
 class AivChannelHelper {
 public:
-    static HcclResult HandleStatus(const ChannelHandle *channelList, uint32_t listNum,
-        const HcommChannelDesc *channelDescs, const std::vector<int32_t> &linkStatusList, int32_t *statusList);
-    static HcclResult PreAllocChannels(ChannelHandle *targetChannels, ChannelHandle *userChannels,
-        HcommChannelDesc *channelDescs, uint32_t channelNum);
+    static HcclResult HandleStatus(
+        const ChannelHandle* channelList, uint32_t listNum, const HcommChannelDesc* channelDescs,
+        const std::vector<int32_t>& linkStatusList, int32_t* statusList);
+    static HcclResult PreAllocChannels(
+        ChannelHandle* targetChannels, ChannelHandle* userChannels, HcommChannelDesc* channelDescs,
+        uint32_t channelNum);
 
 private:
-    static HcclResult FillDevEntities(const ChannelHandle *channelList, uint32_t listNum,
-        const HcommChannelDesc *channelDescs, const int32_t *linkStatusList);
+    static HcclResult FillDevEntities(
+        const ChannelHandle* channelList, uint32_t listNum, const HcommChannelDesc* channelDescs,
+        const int32_t* linkStatusList);
 };
 
 #endif // AIV_CHANNEL_HELPER_H

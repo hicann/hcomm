@@ -24,8 +24,8 @@ using namespace Hccl;
 namespace {
 // ibv_post_send 为 static inline，通过 qp->context->ops.post_send 函数指针调用；
 // 这里提供桩函数控制其返回值，避免依赖真实 RDMA 驱动。
-int StubPostSendOk(struct ibv_qp *, struct ibv_send_wr *, struct ibv_send_wr **) { return 0; }
-int StubPostSendFail(struct ibv_qp *, struct ibv_send_wr *, struct ibv_send_wr **) { return -1; }
+int StubPostSendOk(struct ibv_qp*, struct ibv_send_wr*, struct ibv_send_wr**) { return 0; }
+int StubPostSendFail(struct ibv_qp*, struct ibv_send_wr*, struct ibv_send_wr**) { return -1; }
 } // namespace
 
 class FlushManagerTest : public testing::Test {

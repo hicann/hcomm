@@ -10,7 +10,6 @@ namespace Hccl {
 extern std::map<RdmaHandle, std::pair<uint32_t, uint32_t>> g_rdmaHandle2DieIdAndFuncId;
 extern RdmaHandle g_rdmaHandlePtr;
 
-}
+} // namespace Hccl
 
 #endif
-

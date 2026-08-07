@@ -25,8 +25,5 @@ void SetAivProfilingInfoBeginTime(AivProfilingInfo& aivProfilingInfo)
     aivProfilingInfo.beginTime = MsprofSysCycleTime();
 }
 
-void SetAivProfilingInfoBeginTime(uint64_t& beginTime)
-{
-    beginTime = MsprofSysCycleTime();
-}
-}
+void SetAivProfilingInfoBeginTime(uint64_t& beginTime) { beginTime = MsprofSysCycleTime(); }
+} // namespace hccl

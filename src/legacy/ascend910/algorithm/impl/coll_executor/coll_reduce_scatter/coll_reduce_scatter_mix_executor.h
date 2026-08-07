@@ -14,7 +14,7 @@
 namespace hccl {
 class CollReduceScatterMixExecutor : public CollReduceScatterExecutor {
 public:
-    explicit CollReduceScatterMixExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollReduceScatterMixExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceScatterMixExecutor() override = default;
 
 private:
@@ -23,22 +23,26 @@ private:
     HcclResult CalcScratchMemSize(u64& scratchMemSize) override;
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
 
     /* *************** 算法编排 *************** */
     u64 CalcLoopMaxCount(const u32 unitSize) override;
-    bool IsHugeData(const u64 curSize, OpParam *param = nullptr) override;
+    bool IsHugeData(const u64 curSize, OpParam* param = nullptr) override;
     bool IsSmallData(const u64 totalSize, const u64 curSize) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
     /* **************** 数据准备*************** */
-    void FillMultiRingSlice(const ExecMem &execMem, const std::vector<std::vector<Slice>> &multiStreamSlice,
-        u32 sliceNum, u32 level1RankSize, const u32 ringIndex, std::vector<Slice> &dataSlice);
-    void CalLevel0DataSegsSlice(const ExecMem &execMem, const std::vector<std::vector<Slice>> &multiStreamSlice,
-        u32 sliceNum, u32 level1RankSize, std::vector<std::vector<Slice>> &level0DataSegsSlice);
-    HcclResult CalLevel1DataSegsSlice(const ExecMem &execMem, const u32 &commIndex,
-        u32 sliceNum, u32 level1RankSize, std::vector<Slice> &level1DataSegsSlice);
+    void FillMultiRingSlice(
+        const ExecMem& execMem, const std::vector<std::vector<Slice>>& multiStreamSlice, u32 sliceNum,
+        u32 level1RankSize, const u32 ringIndex, std::vector<Slice>& dataSlice);
+    void CalLevel0DataSegsSlice(
+        const ExecMem& execMem, const std::vector<std::vector<Slice>>& multiStreamSlice, u32 sliceNum,
+        u32 level1RankSize, std::vector<std::vector<Slice>>& level0DataSegsSlice);
+    HcclResult CalLevel1DataSegsSlice(
+        const ExecMem& execMem, const u32& commIndex, u32 sliceNum, u32 level1RankSize,
+        std::vector<Slice>& level1DataSegsSlice);
 
     bool meshSinglePlane_ = false;
 };

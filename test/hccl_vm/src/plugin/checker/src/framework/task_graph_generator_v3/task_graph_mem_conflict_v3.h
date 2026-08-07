@@ -18,19 +18,19 @@
 
 namespace HcclSim {
 namespace TaskGraphGeneratorV3 {
-struct MemConflictCheckStats {
-    size_t nodeCount{0};
-    size_t dataTaskNodeCount{0};
-    size_t processedDataTaskNodeCount{0};
-    size_t accessIntervalCount{0};
-    size_t memoryBucketCount{0};
-    size_t overlapCandidatePairCount{0};
-    size_t overlapCandidateTaskNodeCount{0};
-    size_t orderedCandidatePairCount{0};
-    size_t parallelCandidatePairCount{0};
-};
+    struct MemConflictCheckStats {
+        size_t nodeCount{0};
+        size_t dataTaskNodeCount{0};
+        size_t processedDataTaskNodeCount{0};
+        size_t accessIntervalCount{0};
+        size_t memoryBucketCount{0};
+        size_t overlapCandidatePairCount{0};
+        size_t overlapCandidateTaskNodeCount{0};
+        size_t orderedCandidatePairCount{0};
+        size_t parallelCandidatePairCount{0};
+    };
 
-HcclResult CheckDataMoveTaskMemConflict(const TaskNode *start, MemConflictCheckStats *stats = nullptr);
+    HcclResult CheckDataMoveTaskMemConflict(const TaskNode* start, MemConflictCheckStats* stats = nullptr);
 } // namespace TaskGraphGeneratorV3
 } // namespace HcclSim
 

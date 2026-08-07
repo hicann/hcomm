@@ -20,24 +20,19 @@
 #include "operator_param_type.h"
 
 namespace hccl {
-using HcclOpPtr = void *;
-using TaskInfoPtr = void *;
+using HcclOpPtr = void*;
+using TaskInfoPtr = void*;
 
 template <typename ParamType>
 class HcclOperator {
 public:
-friend class OpExecutor;
+    friend class OpExecutor;
 
 public:
     explicit HcclOperator() = default;
-    explicit HcclOperator(ParamType &param) : param_(param)
-    {
-    }
+    explicit HcclOperator(ParamType& param) : param_(param) {}
     virtual ~HcclOperator() = default;
-    void PushTask(OpTaskPtr &&opTask)
-    {
-        taskQue_.push(std::forward<OpTaskPtr &&>(opTask));
-    }
+    void PushTask(OpTaskPtr&& opTask) { taskQue_.push(std::forward<OpTaskPtr&&>(opTask)); }
     void Clear()
     {
         while (!taskQue_.empty()) {
@@ -53,5 +48,5 @@ private:
     std::queue<OpTaskPtr> taskQue_;
 };
 
-}
+} // namespace hccl
 #endif

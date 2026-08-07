@@ -14,15 +14,13 @@
 namespace hccl {
 using namespace std;
 
-AlltoAllVStagedBase::AlltoAllVStagedBase(const HcclDispatcher dispatcher)
-    : AlgTemplateBase(dispatcher)
-{
-}
+AlltoAllVStagedBase::AlltoAllVStagedBase(const HcclDispatcher dispatcher) : AlgTemplateBase(dispatcher) {}
 
 AlltoAllVStagedBase::~AlltoAllVStagedBase() {}
 
-HcclResult AlltoAllVStagedBase::Prepare(DeviceMem &sendMem, DeviceMem &recvMem, StageAlltoAllVAddrInfo& sendAddrInfo,
-    StageAlltoAllVAddrInfo& recvAddrInfo, bool isAlltoAllZCopyMode, Stream &mainStream)
+HcclResult AlltoAllVStagedBase::Prepare(
+    DeviceMem& sendMem, DeviceMem& recvMem, StageAlltoAllVAddrInfo& sendAddrInfo, StageAlltoAllVAddrInfo& recvAddrInfo,
+    bool isAlltoAllZCopyMode, Stream& mainStream)
 {
     sendMem_ = sendMem;
     recvMem_ = recvMem;
@@ -41,9 +39,9 @@ HcclResult AlltoAllVStagedBase::LocalCopy(u32 rank)
     }
 
     for (auto it = sendAddrInfo_[rank].begin(); it != sendAddrInfo_[rank].end(); it++) {
-        u8 *dstAddr = static_cast<u8 *>(recvMem_.ptr()) + it->remoteOffset;
+        u8* dstAddr = static_cast<u8*>(recvMem_.ptr()) + it->remoteOffset;
         u64 destMax = it->remoteLength;
-        u8 *srcAddr = static_cast<u8 *>(sendMem_.ptr()) + it->localOffset;
+        u8* srcAddr = static_cast<u8*>(sendMem_.ptr()) + it->localOffset;
         u64 size = it->localLength;
         DeviceMem dst = DeviceMem::create(dstAddr, destMax);
         DeviceMem src = DeviceMem::create(srcAddr, size);
@@ -56,4 +54,4 @@ HcclResult AlltoAllVStagedBase::LocalCopy(u32 rank)
 
     return HCCL_SUCCESS;
 }
-} 
+} // namespace hccl

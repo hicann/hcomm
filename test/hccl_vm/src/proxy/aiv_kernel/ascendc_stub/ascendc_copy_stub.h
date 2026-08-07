@@ -24,8 +24,8 @@ const uint8_t DEFAULT_DATA_COPY_STRIDE = 0;
 struct DataCopyParams {
     __aicore__ DataCopyParams() {}
 
-    __aicore__ DataCopyParams(const uint16_t count, const uint16_t len, const uint16_t srcStrideIn,
-        const uint16_t dstStrideIn)
+    __aicore__
+    DataCopyParams(const uint16_t count, const uint16_t len, const uint16_t srcStrideIn, const uint16_t dstStrideIn)
         : blockCount(count),
           blockLen(len),
           srcStride(srcStrideIn),
@@ -41,8 +41,9 @@ struct DataCopyParams {
 struct DataCopyExtParams {
     __aicore__ DataCopyExtParams() {}
 
-    __aicore__ DataCopyExtParams(const uint16_t count, const uint32_t len, const uint32_t srcStrideIn,
-        const uint32_t dstStrideIn, const uint32_t rsvIn)
+    __aicore__ DataCopyExtParams(
+        const uint16_t count, const uint32_t len, const uint32_t srcStrideIn, const uint32_t dstStrideIn,
+        const uint32_t rsvIn)
         : blockCount(count),
           blockLen(len),
           srcStride(srcStrideIn),
@@ -61,8 +62,8 @@ template <typename T>
 struct DataCopyPadExtParams {
     __aicore__ DataCopyPadExtParams() {}
 
-    __aicore__ DataCopyPadExtParams(const bool isPadValue, const uint8_t leftPadValue, const uint8_t rightPadValue,
-        T padValue)
+    __aicore__
+    DataCopyPadExtParams(const bool isPadValue, const uint8_t leftPadValue, const uint8_t rightPadValue, T padValue)
         : isPad(isPadValue),
           leftPadding(leftPadValue),
           rightPadding(rightPadValue),
@@ -76,7 +77,8 @@ struct DataCopyPadExtParams {
 };
 
 template <typename T>
-__aicore__ void DataCopy(const GlobalTensor<T>& dst, const LocalTensor<T>& src, const uint32_t count) {
+__aicore__ void DataCopy(const GlobalTensor<T>& dst, const LocalTensor<T>& src, const uint32_t count)
+{
     const auto curBlockIdx = GetBlockIdx();
     auto aiv = AivSim::AivKernelExecutor::GetInstance().GetAivCore(curBlockIdx);
     if (aiv == nullptr) {
@@ -91,8 +93,8 @@ __aicore__ void DataCopy(const GlobalTensor<T>& dst, const LocalTensor<T>& src, 
     // dst DataSlice
     AivSim::RankId dstRank = UINT32_MAX;
     const auto dstAddr = reinterpret_cast<uint64_t>(dst.GetPhyAddr());
-    const AivSim::AivDataSlice dstSlice =
-        AivSim::AivKernelExecutor::GetInstance().ResolveGlobalDataSlice(dstAddr, len, &dstRank);
+    const AivSim::AivDataSlice dstSlice
+        = AivSim::AivKernelExecutor::GetInstance().ResolveGlobalDataSlice(dstAddr, len, &dstRank);
     if (dstRank == UINT32_MAX) {
         HCCL_VM_ERROR("DataCopy resolved data slice failed, addr=0x{:x} len={:d}", dstAddr, len);
         return;
@@ -110,7 +112,8 @@ __aicore__ void DataCopy(const GlobalTensor<T>& dst, const LocalTensor<T>& src, 
 }
 
 template <typename T>
-__aicore__ void DataCopy(const LocalTensor<T>& dst, const GlobalTensor<T>& src, const uint32_t count) {
+__aicore__ void DataCopy(const LocalTensor<T>& dst, const GlobalTensor<T>& src, const uint32_t count)
+{
     const auto curBlockIdx = GetBlockIdx();
     auto aiv = AivSim::AivKernelExecutor::GetInstance().GetAivCore(curBlockIdx);
     if (aiv == nullptr) {
@@ -125,8 +128,8 @@ __aicore__ void DataCopy(const LocalTensor<T>& dst, const GlobalTensor<T>& src, 
     // src DataSlice
     AivSim::RankId srcRank = UINT32_MAX;
     const auto srcAddr = reinterpret_cast<uint64_t>(src.GetPhyAddr());
-    const AivSim::AivDataSlice srcSlice =
-        AivSim::AivKernelExecutor::GetInstance().ResolveGlobalDataSlice(srcAddr, len, &srcRank);
+    const AivSim::AivDataSlice srcSlice
+        = AivSim::AivKernelExecutor::GetInstance().ResolveGlobalDataSlice(srcAddr, len, &srcRank);
     if (srcRank == UINT32_MAX) {
         HCCL_VM_ERROR("DataCopy resolved data slice failed, addr=0x{:x} len={:d}", srcAddr, len);
         return;
@@ -136,7 +139,8 @@ __aicore__ void DataCopy(const LocalTensor<T>& dst, const GlobalTensor<T>& src, 
     aiv->AppendMTE2(task);
 }
 
-__aicore__ inline void SetAtomicNone() {
+__aicore__ inline void SetAtomicNone()
+{
     auto curBlockIdx = GetBlockIdx();
     auto aiv = AivSim::AivKernelExecutor::GetInstance().GetAivCore(curBlockIdx);
     if (aiv == nullptr) {
@@ -147,7 +151,8 @@ __aicore__ inline void SetAtomicNone() {
 }
 
 template <typename T>
-__aicore__ void SetAtomicAdd() {
+__aicore__ void SetAtomicAdd()
+{
     auto curBlockIdx = GetBlockIdx();
     auto aiv = AivSim::AivKernelExecutor::GetInstance().GetAivCore(curBlockIdx);
     if (aiv == nullptr) {
@@ -158,7 +163,8 @@ __aicore__ void SetAtomicAdd() {
 }
 
 template <typename T>
-__aicore__ void SetAtomicMax() {
+__aicore__ void SetAtomicMax()
+{
     auto curBlockIdx = GetBlockIdx();
     auto aiv = AivSim::AivKernelExecutor::GetInstance().GetAivCore(curBlockIdx);
     if (aiv == nullptr) {
@@ -169,7 +175,8 @@ __aicore__ void SetAtomicMax() {
 }
 
 template <typename T>
-__aicore__ void SetAtomicMin() {
+__aicore__ void SetAtomicMin()
+{
     auto curBlockIdx = GetBlockIdx();
     auto aiv = AivSim::AivKernelExecutor::GetInstance().GetAivCore(curBlockIdx);
     if (aiv == nullptr) {
@@ -180,7 +187,8 @@ __aicore__ void SetAtomicMin() {
 }
 
 template <typename T>
-__aicore__ void Duplicate(const LocalTensor<T>& dstLocal, const T& scalar, const int32_t& count) {}
-}
+__aicore__ void Duplicate(const LocalTensor<T>& dstLocal, const T& scalar, const int32_t& count)
+{}
+} // namespace AscendC
 
 #endif // ASCEND_C_COPY_STUB_H

@@ -7,7 +7,7 @@ using namespace Hccl;
 
 namespace checker {
 
-std::string GenMsg(const char* fileName, s32 lineNum, const char *fmt, ...)
+std::string GenMsg(const char* fileName, s32 lineNum, const char* fmt, ...)
 {
     char buffer[LOG_TMPBUF_SIZE];
     va_list arg;
@@ -22,4 +22,4 @@ std::string GenMsg(const char* fileName, s32 lineNum, const char *fmt, ...)
     return std::string(ret);
 }
 
-}
+} // namespace checker

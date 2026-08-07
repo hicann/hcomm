@@ -13,7 +13,6 @@
 
 #include "all_reduce_graph_pipeline_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
-#endif  /* ALL_REDUCE_GRAPH_PIPELINE_H */
+#endif /* ALL_REDUCE_GRAPH_PIPELINE_H */

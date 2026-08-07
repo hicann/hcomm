@@ -12,15 +12,13 @@
 #include "log.h"
 
 namespace hccl {
-DlRtFunction &DlRtFunction::GetInstance()
+DlRtFunction& DlRtFunction::GetInstance()
 {
     static DlRtFunction hcclDlRtFunction;
     return hcclDlRtFunction;
 }
 
-DlRtFunction::DlRtFunction()
-{
-}
+DlRtFunction::DlRtFunction() {}
 
 DlRtFunction::~DlRtFunction()
 {
@@ -44,8 +42,8 @@ HcclResult DlRtFunction::DlRtFunctionStubInit()
 
 HcclResult DlRtFunction::DlRtFunctionInterInit()
 {
-    dlrtProfRegisterCtrlCallback = (rtError_t(*)(uint32_t, rtProfCtrlHandle))dlsym(handle_,
-        "rtProfRegisterCtrlCallback");
+    dlrtProfRegisterCtrlCallback
+        = (rtError_t(*)(uint32_t, rtProfCtrlHandle))dlsym(handle_, "rtProfRegisterCtrlCallback");
     return HCCL_SUCCESS;
 }
 
@@ -63,4 +61,4 @@ HcclResult DlRtFunction::DlRtFunctionInit()
     }
     return HCCL_SUCCESS;
 }
-}
+} // namespace hccl

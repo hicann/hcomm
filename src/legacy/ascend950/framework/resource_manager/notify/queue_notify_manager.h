@@ -25,7 +25,7 @@ class QueueNotifyManager {
 public:
     static constexpr u32 MAX_NUM_FOR_QPAIR = 12;
 
-    explicit QueueNotifyManager(const CommunicatorImpl &comm);
+    explicit QueueNotifyManager(const CommunicatorImpl& comm);
 
     ~QueueNotifyManager();
 
@@ -33,15 +33,15 @@ public:
 
     bool Release(QId postQid, QId waitQid, u32 topicId);
 
-    RtsNotify *Get(QId postQid, QId waitQid, u32 topicId);
+    RtsNotify* Get(QId postQid, QId waitQid, u32 topicId);
 
     bool Destroy();
 
     vector<char> GetPackedData();
 
 private:
-    CommunicatorImpl *comm;
-    QueueNotifyPool   notifyPool;
+    CommunicatorImpl* comm;
+    QueueNotifyPool notifyPool;
 
     bool IsExist(QId postQid, QId waitQid, u32 topicId);
 };

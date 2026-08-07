@@ -19,15 +19,9 @@ using namespace hccl;
 
 class ExchangeInfoMgrTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "ExchangeInfoMgrTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "ExchangeInfoMgrTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "ExchangeInfoMgrTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "ExchangeInfoMgrTest tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
@@ -69,14 +63,12 @@ static HcclResult InitCollComm(std::shared_ptr<hccl::hcclComm> hcclCommPtr)
 TEST_F(ExchangeInfoMgrTest, Ut_WaitAllAsyncComplete_When_AllOk_Expect_Success)
 {
     // mock Socket::GetAsyncStatus返回OK
-    MOCKER_CPP(&Hccl::Socket::GetAsyncStatus)
-        .stubs()
-        .will(returnValue(Hccl::SocketStatus(Hccl::SocketStatus::OK)));
+    MOCKER_CPP(&Hccl::Socket::GetAsyncStatus).stubs().will(returnValue(Hccl::SocketStatus(Hccl::SocketStatus::OK)));
 
     aclrtBinHandle binHandle;
     CommConfig config;
     ManagerCallbacks callbacks;
-    void *rankGraphPtr = (void*)0x114514;
+    void* rankGraphPtr = (void*)0x114514;
     std::shared_ptr<RankGraph> rankGraph = std::make_shared<RankGraphV2>(rankGraphPtr);
     MyRank myRank(binHandle, 0, config, callbacks, rankGraph.get(), rankIpPortMap);
 
@@ -95,34 +87,24 @@ TEST_F(ExchangeInfoMgrTest, Ut_BatchExchange_When_NewRankConsistent_Expect_Succe
     ASSERT_EQ(InitCollComm(hcclCommPtr), HCCL_SUCCESS);
     hccl::CollComm* collComm = hcclCommPtr->GetCollComm();
     hccl::MyRank* myRank = collComm->GetMyRank();
-    CollCommConfigConsistency &collCommConfigConsistency = myRank->GetCollCommConfigConsistency();
+    CollCommConfigConsistency& collCommConfigConsistency = myRank->GetCollCommConfigConsistency();
     std::vector<u8> localData = {0xDE, 0xAD, 0xBE, 0xEF};
     ret = collCommConfigConsistency.AddExchangeInfo(localData.data(), localData.size());
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     // mock Socket异步接口：GetAsyncStatus返回OK
-    MOCKER_CPP(&Hccl::Socket::GetAsyncStatus)
-        .stubs()
-        .will(returnValue(Hccl::SocketStatus(Hccl::SocketStatus::OK)));
+    MOCKER_CPP(&Hccl::Socket::GetAsyncStatus).stubs().will(returnValue(Hccl::SocketStatus(Hccl::SocketStatus::OK)));
     // mock SendAsync/RecvAsync成功
-    MOCKER_CPP(&Hccl::Socket::SendAsync)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&Hccl::Socket::RecvAsync)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::Socket::SendAsync).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::Socket::RecvAsync).stubs().will(returnValue(HCCL_SUCCESS));
     // mock 超时配置
-    MOCKER_CPP(&Hccl::EnvSocketConfig::GetLinkTimeOut)
-        .stubs()
-        .will(returnValue((s32)1));
-    MOCKER_CPP(&RankConsistencyCheckerV2::CompareCheckFrameV2)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::EnvSocketConfig::GetLinkTimeOut).stubs().will(returnValue((s32)1));
+    MOCKER_CPP(&RankConsistencyCheckerV2::CompareCheckFrameV2).stubs().will(returnValue(HCCL_SUCCESS));
 
     HcclChannelDesc channelDescs[1];
     channelDescs[0].remoteRank = 1;
     HcommChannelDesc hcommDesc;
-    hcommDesc.socket = (HcommSocket)0x1;  // 非空socket
+    hcommDesc.socket = (HcommSocket)0x1; // 非空socket
     hcommDesc.role = HCOMM_SOCKET_ROLE_CLIENT;
     std::vector<HcommChannelDesc> hcommDescVec;
     hcommDescVec.push_back(hcommDesc);
@@ -145,29 +127,19 @@ TEST_F(ExchangeInfoMgrTest, Ut_BatchExchange_When_NewRankConsistent_Expect_Succe
     // 添加交换信息
     hccl::CollComm* collComm = hcclCommPtr->GetCollComm();
     hccl::MyRank* myRank = collComm->GetMyRank();
-    CollCommConfigConsistency &collCommConfigConsistency = myRank->GetCollCommConfigConsistency();
+    CollCommConfigConsistency& collCommConfigConsistency = myRank->GetCollCommConfigConsistency();
     std::vector<u8> localData = {0xDE, 0xAD, 0xBE, 0xEF};
     ret = collCommConfigConsistency.AddExchangeInfo(localData.data(), localData.size());
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     // mock socket接口
-    MOCKER_CPP(&Hccl::Socket::GetAsyncStatus)
-        .stubs()
-        .will(returnValue(Hccl::SocketStatus(Hccl::SocketStatus::OK)));
-    MOCKER_CPP(&Hccl::Socket::Send)
-        .stubs()
-        .will(returnValue(true));
-    MOCKER_CPP(&Hccl::Socket::Recv)
-        .stubs()
-        .will(returnValue(true));
+    MOCKER_CPP(&Hccl::Socket::GetAsyncStatus).stubs().will(returnValue(Hccl::SocketStatus(Hccl::SocketStatus::OK)));
+    MOCKER_CPP(&Hccl::Socket::Send).stubs().will(returnValue(true));
+    MOCKER_CPP(&Hccl::Socket::Recv).stubs().will(returnValue(true));
     // mock 超时配置
-    MOCKER_CPP(&Hccl::EnvSocketConfig::GetLinkTimeOut)
-        .stubs()
-        .will(returnValue((s32)1));
+    MOCKER_CPP(&Hccl::EnvSocketConfig::GetLinkTimeOut).stubs().will(returnValue((s32)1));
     // mock 比对结果
-    MOCKER_CPP(&RankConsistencyCheckerV2::CompareCheckFrameV2)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&RankConsistencyCheckerV2::CompareCheckFrameV2).stubs().will(returnValue(HCCL_SUCCESS));
 
     // 构造 hcclDesc
     HcclChannelDesc channelDescs[1];
@@ -175,7 +147,7 @@ TEST_F(ExchangeInfoMgrTest, Ut_BatchExchange_When_NewRankConsistent_Expect_Succe
     channelDescs[0].localEndpoint.loc.locType = ENDPOINT_LOC_TYPE_HOST; // host 网卡场景
     // 构造 hcommDescs
     HcommChannelDesc hcommDesc;
-    hcommDesc.socket = (HcommSocket)0x1;  // 非空socket
+    hcommDesc.socket = (HcommSocket)0x1; // 非空socket
     hcommDesc.role = HCOMM_SOCKET_ROLE_CLIENT;
     std::vector<HcommChannelDesc> hcommDescVec;
     hcommDescVec.push_back(hcommDesc);
@@ -200,19 +172,16 @@ TEST_F(ExchangeInfoMgrTest, Ut_BatchExchange_When_NewRankConsistent_Expect_Succe
 // ============================================================================================
 
 // 正常路径：第一阶段 isServerRecv=true，SERVER 角色 Recv、CLIENT 角色 Send
-TEST_F(ExchangeInfoMgrTest, Ut_ExchangeAsyncDataPhase_When_ServerRecvFirst_Expect_Success) {
+TEST_F(ExchangeInfoMgrTest, Ut_ExchangeAsyncDataPhase_When_ServerRecvFirst_Expect_Success)
+{
     // 构造本地交换数据，使 GetExchangeInfoBuf 在 Send 分支返回非空 buffer
     CollCommConfigConsistency collCommConfigConsistency;
     std::vector<u8> localData = {0xAA, 0xBB, 0xCC, 0xDD};
     ASSERT_EQ(collCommConfigConsistency.AddExchangeInfo(localData.data(), localData.size()), HCCL_SUCCESS);
 
     // mock Socket 异步收发接口（非虚成员函数，MOCKER_CPP 经 API hook 拦截）
-    MOCKER_CPP(&Hccl::Socket::SendAsync)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&Hccl::Socket::RecvAsync)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::Socket::SendAsync).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::Socket::RecvAsync).stubs().will(returnValue(HCCL_SUCCESS));
 
     // 构造 2 个对端：rank1=SERVER(Recv)、rank2=CLIENT(Send)
     std::vector<Hccl::Socket*> sockets = {(Hccl::Socket*)0x1, (Hccl::Socket*)0x2};
@@ -223,27 +192,25 @@ TEST_F(ExchangeInfoMgrTest, Ut_ExchangeAsyncDataPhase_When_ServerRecvFirst_Expec
     std::vector<std::vector<u8>> remoteUserDatas(sockets.size());
 
     ExchangeInfoMgr exchangeInfoMgr;
-    HcclResult ret = exchangeInfoMgr.ExchangeAsyncDataPhase(sockets, roles, remoteRanks, remoteUserDatas,
-        remoteExchangeInfoLens, localExchangeInfoLen, collCommConfigConsistency, true);
+    HcclResult ret = exchangeInfoMgr.ExchangeAsyncDataPhase(
+        sockets, roles, remoteRanks, remoteUserDatas, remoteExchangeInfoLens, localExchangeInfoLen,
+        collCommConfigConsistency, true);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     // SERVER 角色应完成 Recv，remoteUserDatas[0] 应被 resize
     EXPECT_EQ(remoteUserDatas[0].size(), 4ULL);
 }
 
 // 正常路径：第二阶段 isServerRecv=false，SERVER 角色 Send、CLIENT 角色 Recv
-TEST_F(ExchangeInfoMgrTest, Ut_ExchangeAsyncDataPhase_When_ServerSendSecond_Expect_Success) {
+TEST_F(ExchangeInfoMgrTest, Ut_ExchangeAsyncDataPhase_When_ServerSendSecond_Expect_Success)
+{
     // 构造本地交换数据
     CollCommConfigConsistency collCommConfigConsistency;
     std::vector<u8> localData = {0x11, 0x22, 0x33};
     ASSERT_EQ(collCommConfigConsistency.AddExchangeInfo(localData.data(), localData.size()), HCCL_SUCCESS);
 
     // mock Socket 异步收发接口
-    MOCKER_CPP(&Hccl::Socket::SendAsync)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&Hccl::Socket::RecvAsync)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::Socket::SendAsync).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::Socket::RecvAsync).stubs().will(returnValue(HCCL_SUCCESS));
 
     // 构造 2 个对端：rank1=SERVER(Send)、rank2=CLIENT(Recv)
     std::vector<Hccl::Socket*> sockets = {(Hccl::Socket*)0x1, (Hccl::Socket*)0x2};
@@ -254,26 +221,24 @@ TEST_F(ExchangeInfoMgrTest, Ut_ExchangeAsyncDataPhase_When_ServerSendSecond_Expe
     std::vector<std::vector<u8>> remoteUserDatas(sockets.size());
 
     ExchangeInfoMgr exchangeInfoMgr;
-    HcclResult ret = exchangeInfoMgr.ExchangeAsyncDataPhase(sockets, roles, remoteRanks, remoteUserDatas,
-        remoteExchangeInfoLens, localExchangeInfoLen, collCommConfigConsistency, false);
+    HcclResult ret = exchangeInfoMgr.ExchangeAsyncDataPhase(
+        sockets, roles, remoteRanks, remoteUserDatas, remoteExchangeInfoLens, localExchangeInfoLen,
+        collCommConfigConsistency, false);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     // CLIENT 角色应完成 Recv，remoteUserDatas[1] 应被 resize
     EXPECT_EQ(remoteUserDatas[1].size(), 3ULL);
 }
 
 // 边界条件：remoteExchangeInfoLens 超过 HCCL_EXCHANGE_INFO_LEN(2048)，应返回 HCCL_E_PARA
-TEST_F(ExchangeInfoMgrTest, Ut_ExchangeAsyncDataPhase_When_LenExceedsMax_Expect_ParaError) {
+TEST_F(ExchangeInfoMgrTest, Ut_ExchangeAsyncDataPhase_When_LenExceedsMax_Expect_ParaError)
+{
     CollCommConfigConsistency collCommConfigConsistency;
     std::vector<u8> localData = {0x01};
     ASSERT_EQ(collCommConfigConsistency.AddExchangeInfo(localData.data(), localData.size()), HCCL_SUCCESS);
 
     // mock Socket 异步收发接口（本用例不应实际触发收发）
-    MOCKER_CPP(&Hccl::Socket::SendAsync)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&Hccl::Socket::RecvAsync)
-        .stubs()
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::Socket::SendAsync).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::Socket::RecvAsync).stubs().will(returnValue(HCCL_SUCCESS));
 
     // SERVER 角色 + isServerRecv=true -> 走 Recv 分支，触发长度越界校验
     std::vector<Hccl::Socket*> sockets = {(Hccl::Socket*)0x1};
@@ -285,7 +250,8 @@ TEST_F(ExchangeInfoMgrTest, Ut_ExchangeAsyncDataPhase_When_LenExceedsMax_Expect_
     std::vector<std::vector<u8>> remoteUserDatas(sockets.size());
 
     ExchangeInfoMgr exchangeInfoMgr;
-    HcclResult ret = exchangeInfoMgr.ExchangeAsyncDataPhase(sockets, roles, remoteRanks, remoteUserDatas,
-        remoteExchangeInfoLens, localExchangeInfoLen, collCommConfigConsistency, true);
+    HcclResult ret = exchangeInfoMgr.ExchangeAsyncDataPhase(
+        sockets, roles, remoteRanks, remoteUserDatas, remoteExchangeInfoLens, localExchangeInfoLen,
+        collCommConfigConsistency, true);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }

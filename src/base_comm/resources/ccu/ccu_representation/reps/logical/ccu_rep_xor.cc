@@ -17,48 +17,60 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepXor::CcuRepXor(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varA, const Variable &varB)
-    : subType(XorSubType::VAR_XOR_VAR_TO_VAR), varA(varA), varB(varB), varC(varC), insGenPtr(insGenPtr)
-{
-    type       = CcuRepType::XOR;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
+    CcuRepXor::CcuRepXor(
+        CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varA, const Variable& varB)
+        : subType(XorSubType::VAR_XOR_VAR_TO_VAR),
+          varA(varA),
+          varB(varB),
+          varC(varC),
+          insGenPtr(insGenPtr)
+    {
+        type = CcuRepType::XOR;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
 
-CcuRepXor::CcuRepXor(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varB)
-    : subType(XorSubType::SELF_XOR_VAR_VARIABLE), varB(varB), varC(varC), insGenPtr(insGenPtr)
-{
-    type       = CcuRepType::XOR;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
+    CcuRepXor::CcuRepXor(CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varB)
+        : subType(XorSubType::SELF_XOR_VAR_VARIABLE),
+          varB(varB),
+          varC(varC),
+          insGenPtr(insGenPtr)
+    {
+        type = CcuRepType::XOR;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
 
-bool CcuRepXor::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, const TransDep &dep)
-{
-    Hccl::CHECK_NULLPTR(instr, "[CcuRepXor::Translate] instr is nullptr!");
-    this->instrId = curInstrId;
-    translated    = true;
-    instrCount = insGenPtr->GetInstrCount(type);
-    insGenPtr->CcuRepXorTranslate(ccuKernel, instr, this, dep);
-    CHK_PRT_THROW((curInstrId > UINT16_MAX - instrCount),
-        HCCL_ERROR("[CcuRepXor::Translate]uint16 integer overflow occurs, curInstrId = [%hu], instrCount = [%hu]", curInstrId, instrCount),
-        Hccl::InternalException, "integer overflow");
-    curInstrId += instrCount;
-    return translated;
-}
+    bool CcuRepXor::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, const TransDep& dep)
+    {
+        Hccl::CHECK_NULLPTR(instr, "[CcuRepXor::Translate] instr is nullptr!");
+        this->instrId = curInstrId;
+        translated = true;
+        instrCount = insGenPtr->GetInstrCount(type);
+        insGenPtr->CcuRepXorTranslate(ccuKernel, instr, this, dep);
+        CHK_PRT_THROW(
+            (curInstrId > UINT16_MAX - instrCount),
+            HCCL_ERROR(
+                "[CcuRepXor::Translate]uint16 integer overflow occurs, curInstrId = [%hu], instrCount = [%hu]",
+                curInstrId, instrCount),
+            Hccl::InternalException, "integer overflow");
+        curInstrId += instrCount;
+        return translated;
+    }
 
-std::string CcuRepXor::Describe()
-{
-    switch (subType) {
-        case XorSubType::VAR_XOR_VAR_TO_VAR: {
-            return Hccl::StringFormat("Variable[%u] = Variable[%u] ^ Variable[%u]", varC.Id(), varA.Id(), varB.Id());
-        }
-        case XorSubType::SELF_XOR_VAR_VARIABLE: {
-            return Hccl::StringFormat("Variable[%u] ^= Variable[%u]", varC.Id(), varB.Id());
-        }
-        default: {
-            return Hccl::StringFormat("Invalid Xor");
+    std::string CcuRepXor::Describe()
+    {
+        switch (subType) {
+            case XorSubType::VAR_XOR_VAR_TO_VAR: {
+                return Hccl::StringFormat(
+                    "Variable[%u] = Variable[%u] ^ Variable[%u]", varC.Id(), varA.Id(), varB.Id());
+            }
+            case XorSubType::SELF_XOR_VAR_VARIABLE: {
+                return Hccl::StringFormat("Variable[%u] ^= Variable[%u]", varC.Id(), varB.Id());
+            }
+            default: {
+                return Hccl::StringFormat("Invalid Xor");
+            }
         }
     }
-}
 
 }; // namespace CcuRep
 }; // namespace hcomm

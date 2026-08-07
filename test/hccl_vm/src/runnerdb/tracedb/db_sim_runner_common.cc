@@ -19,9 +19,9 @@
 uint64_t g_cur_server_key = 0;
 
 namespace sim {
-aclError GetDeviceByLogicId(uint32_t deviceId, sim::Device &device)
+aclError GetDeviceByLogicId(uint32_t deviceId, sim::Device& device)
 {
-    auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceId](const sim::Device &d) {
+    auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceId](const sim::Device& d) {
         return d.server_id == g_cur_server_key && d.logic_id == deviceId;
     });
     if (!ret.second) {
@@ -33,11 +33,11 @@ aclError GetDeviceByLogicId(uint32_t deviceId, sim::Device &device)
     return ACL_SUCCESS;
 }
 
-aclError GetDeviceByRankId(uint32_t rankId, sim::Device &device)
+aclError GetDeviceByRankId(uint32_t rankId, sim::Device& device)
 {
     // 目前deviceId = rankId
     // 查看rank表，根据rankId获取device
-    auto rankRet = RunnerDB::GetOneByPred<sim::Rank>([rankId](const sim::Rank &d) {
+    auto rankRet = RunnerDB::GetOneByPred<sim::Rank>([rankId](const sim::Rank& d) {
         return d.rank_id == rankId;
     });
     if (!rankRet.second) {
@@ -57,13 +57,14 @@ aclError GetDeviceByRankId(uint32_t rankId, sim::Device &device)
     return ACL_SUCCESS;
 }
 
-aclError GetDeviceByPhysicalId(uint32_t deviceId, sim::Device &device)
+aclError GetDeviceByPhysicalId(uint32_t deviceId, sim::Device& device)
 {
-    auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceId](const sim::Device &d) {
+    auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceId](const sim::Device& d) {
         return d.server_id == g_cur_server_key && d.physical_id == deviceId;
     });
     if (!ret.second) {
-        HCCL_VM_ERROR("[{}] cannot find device by physical id {:d}, server_key {:d}", __func__, deviceId, g_cur_server_key);
+        HCCL_VM_ERROR(
+            "[{}] cannot find device by physical id {:d}, server_key {:d}", __func__, deviceId, g_cur_server_key);
         return ACL_ERROR_INVALID_PARAM;
     }
 
@@ -71,9 +72,9 @@ aclError GetDeviceByPhysicalId(uint32_t deviceId, sim::Device &device)
     return ACL_SUCCESS;
 }
 
-aclError GetServerByKey(uint64_t serverKey, sim::Server &server)
+aclError GetServerByKey(uint64_t serverKey, sim::Server& server)
 {
-    auto ret = RunnerDB::GetOneByPred<sim::Server>([serverKey](const sim::Server &d) {
+    auto ret = RunnerDB::GetOneByPred<sim::Server>([serverKey](const sim::Server& d) {
         return d.id == serverKey;
     });
     if (!ret.second) {
@@ -85,9 +86,9 @@ aclError GetServerByKey(uint64_t serverKey, sim::Server &server)
     return ACL_SUCCESS;
 }
 
-aclError GetDeviceByServerKeyAndPhysicalId(uint64_t serverKey, uint32_t deviceId, sim::Device &device)
+aclError GetDeviceByServerKeyAndPhysicalId(uint64_t serverKey, uint32_t deviceId, sim::Device& device)
 {
-    auto ret = RunnerDB::GetOneByPred<sim::Device>([serverKey, deviceId](const sim::Device &d) {
+    auto ret = RunnerDB::GetOneByPred<sim::Device>([serverKey, deviceId](const sim::Device& d) {
         return d.server_id == serverKey && d.physical_id == deviceId;
     });
     if (!ret.second) {
@@ -108,10 +109,10 @@ aclError UpdateDeviceLogicId(uint64_t serverKey, uint32_t phyDevId, uint32_t log
     }
 
     auto deviceKey = device.id;
-    RunnerDB::Update<sim::Device>(deviceKey, [deviceKey, logicDevId, userId](sim::Device &dev) { 
+    RunnerDB::Update<sim::Device>(deviceKey, [deviceKey, logicDevId, userId](sim::Device& dev) {
         dev.logic_id = logicDevId;
         dev.user_id = userId;
-        dev.status = 1;// 设备状态设置为可用
+        dev.status = 1; // 设备状态设置为可用
     });
 
     return ACL_SUCCESS;
@@ -119,7 +120,7 @@ aclError UpdateDeviceLogicId(uint64_t serverKey, uint32_t phyDevId, uint32_t log
 
 bool ResetAllDeviceLogicId()
 {
-    auto allDevices = RunnerDB::GetByPred<sim::Device>([](const sim::Device &d) {
+    auto allDevices = RunnerDB::GetByPred<sim::Device>([](const sim::Device& d) {
         return true;
     });
     if (allDevices.empty()) {
@@ -127,11 +128,11 @@ bool ResetAllDeviceLogicId()
         return false;
     }
 
-    for (auto &device : allDevices) {
+    for (auto& device : allDevices) {
         auto deviceKey = device.id;
-        RunnerDB::Update<sim::Device>(deviceKey, [deviceKey](sim::Device &dev) {
+        RunnerDB::Update<sim::Device>(deviceKey, [deviceKey](sim::Device& dev) {
             dev.logic_id = 0xFFFF;
-            dev.status = 0;  // 重置设备状态，防止残留 status=1 干扰后续 aclrtGetDeviceCount
+            dev.status = 0; // 重置设备状态，防止残留 status=1 干扰后续 aclrtGetDeviceCount
             dev.user_id = 0xFFFF;
         });
     }
@@ -148,16 +149,16 @@ aclError UpdateSuperDeviceId(uint32_t logicDevId, uint32_t superDeviceId)
     }
 
     auto deviceKey = device.id;
-    RunnerDB::Update<sim::Device>(deviceKey, [deviceKey, superDeviceId](sim::Device &dev) { 
+    RunnerDB::Update<sim::Device>(deviceKey, [deviceKey, superDeviceId](sim::Device& dev) {
         dev.super_device_id = superDeviceId;
     });
 
     return ACL_SUCCESS;
 }
 
-aclError GetCcuFromDeviceByDieId(uint64_t deviceKey, uint8_t dieId, sim::Ccu &ccu)
+aclError GetCcuFromDeviceByDieId(uint64_t deviceKey, uint8_t dieId, sim::Ccu& ccu)
 {
-    auto ret = RunnerDB::GetOneByPred<sim::Ccu>([deviceKey, dieId](const sim::Ccu &c) {
+    auto ret = RunnerDB::GetOneByPred<sim::Ccu>([deviceKey, dieId](const sim::Ccu& c) {
         return c.device_id == deviceKey && c.die_id == dieId;
     });
     if (!ret.second) {
@@ -169,9 +170,9 @@ aclError GetCcuFromDeviceByDieId(uint64_t deviceKey, uint8_t dieId, sim::Ccu &cc
     return ACL_SUCCESS;
 }
 
-aclError GetCcuResourceByCcu(uint64_t ccuKey, sim::CcuResource &ccuRes)
+aclError GetCcuResourceByCcu(uint64_t ccuKey, sim::CcuResource& ccuRes)
 {
-    auto ret = RunnerDB::GetOneByPred<sim::CcuResource>([ccuKey](const sim::CcuResource &cr) {
+    auto ret = RunnerDB::GetOneByPred<sim::CcuResource>([ccuKey](const sim::CcuResource& cr) {
         return cr.ccu_id == ccuKey;
     });
     if (!ret.second) {
@@ -183,9 +184,9 @@ aclError GetCcuResourceByCcu(uint64_t ccuKey, sim::CcuResource &ccuRes)
     return ACL_SUCCESS;
 }
 
-aclError GetContextByDevId(uint32_t deviceId, sim::Context &context)
+aclError GetContextByDevId(uint32_t deviceId, sim::Context& context)
 {
-    auto ret = RunnerDB::GetOneByPred<sim::Context>([deviceId](const sim::Context &ctx) {
+    auto ret = RunnerDB::GetOneByPred<sim::Context>([deviceId](const sim::Context& ctx) {
         return ctx.device_id == deviceId && ctx.is_default == 1;
     });
     if (!ret.second) {
@@ -197,7 +198,7 @@ aclError GetContextByDevId(uint32_t deviceId, sim::Context &context)
     return ACL_SUCCESS;
 }
 
-aclError GetPortByName(uint64_t serverKey, uint32_t phyDevId, const std::string &name, sim::Port &port)
+aclError GetPortByName(uint64_t serverKey, uint32_t phyDevId, const std::string& name, sim::Port& port)
 {
     sim::Device device{};
     auto ret1 = GetDeviceByServerKeyAndPhysicalId(serverKey, phyDevId, device);
@@ -207,7 +208,7 @@ aclError GetPortByName(uint64_t serverKey, uint32_t phyDevId, const std::string 
     }
 
     auto deviceKey = device.id;
-    auto ret2 = RunnerDB::GetOneByPred<sim::Port>([deviceKey, name](const sim::Port &p) {
+    auto ret2 = RunnerDB::GetOneByPred<sim::Port>([deviceKey, name](const sim::Port& p) {
         return deviceKey == p.device_id && strcmp(p.name, name.c_str()) == 0;
     });
     if (!ret2.second) {
@@ -219,9 +220,9 @@ aclError GetPortByName(uint64_t serverKey, uint32_t phyDevId, const std::string 
     return ACL_SUCCESS;
 }
 
-aclError GetEndPointByIpAddr(const std::string &ip, sim::EndPoint &endPoint)
+aclError GetEndPointByIpAddr(const std::string& ip, sim::EndPoint& endPoint)
 {
-    auto ret = RunnerDB::GetOneByPred<sim::EndPoint>([ip](const sim::EndPoint &ep) {
+    auto ret = RunnerDB::GetOneByPred<sim::EndPoint>([ip](const sim::EndPoint& ep) {
         return strcmp(ep.ip_addr, ip.c_str()) == 0;
     });
     if (!ret.second) {
@@ -232,9 +233,9 @@ aclError GetEndPointByIpAddr(const std::string &ip, sim::EndPoint &endPoint)
     return ACL_SUCCESS;
 }
 
-aclError GetPortById(uint64_t portId, sim::Port &port)
+aclError GetPortById(uint64_t portId, sim::Port& port)
 {
-    auto ret = RunnerDB::GetOneByPred<sim::Port>([portId](const sim::Port &p) {
+    auto ret = RunnerDB::GetOneByPred<sim::Port>([portId](const sim::Port& p) {
         return portId == p.id;
     });
     if (!ret.second) {
@@ -262,7 +263,7 @@ int GetRankIdByDeviceId(uint32_t deviceId)
 uint32_t GetAICpuCount(uint64_t deviceId)
 {
     // ACL_DEV_ATTR_AICPU_CORE_NUM AI CPU数量。
-    auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceId](const sim::Device &d) {
+    auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceId](const sim::Device& d) {
         return d.logic_id == deviceId;
     });
     if (!ret.second) {
@@ -272,7 +273,7 @@ uint32_t GetAICpuCount(uint64_t deviceId)
 
     auto deviceIdx = ret.first.id;
 
-    auto aiCpus = RunnerDB::GetByPred<sim::TaskSchedulerDevice>([deviceIdx](const sim::TaskSchedulerDevice &tsDev) {
+    auto aiCpus = RunnerDB::GetByPred<sim::TaskSchedulerDevice>([deviceIdx](const sim::TaskSchedulerDevice& tsDev) {
         return tsDev.device_id == deviceIdx && tsDev.type == (uint8_t)TS_DEV_TYPE_CPU;
     });
 
@@ -282,7 +283,7 @@ uint32_t GetAICpuCount(uint64_t deviceId)
 uint32_t GetAICoreCount(uint64_t deviceId)
 {
     // ACL_DEV_ATTR_AICORE_CORE_NUM AI CPU数量。
-    auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceId](const sim::Device &d) {
+    auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceId](const sim::Device& d) {
         return d.logic_id == deviceId;
     });
     if (!ret.second) {
@@ -292,7 +293,7 @@ uint32_t GetAICoreCount(uint64_t deviceId)
 
     auto deviceIdx = ret.first.id;
 
-    auto scalars = RunnerDB::GetByPred<sim::TaskSchedulerDevice>([deviceIdx](const sim::TaskSchedulerDevice &tsDev) {
+    auto scalars = RunnerDB::GetByPred<sim::TaskSchedulerDevice>([deviceIdx](const sim::TaskSchedulerDevice& tsDev) {
         return tsDev.device_id == deviceIdx && tsDev.type == (uint8_t)TS_DEV_TYPE_SCALAR;
     });
 
@@ -302,7 +303,7 @@ uint32_t GetAICoreCount(uint64_t deviceId)
 uint32_t GetVectorCoreCount(uint64_t deviceId)
 {
     // ACL_DEV_ATTR_VECTOR_CORE_NUM AI CPU数量。
-    auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceId](const sim::Device &d) {
+    auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceId](const sim::Device& d) {
         return d.logic_id == deviceId;
     });
     if (!ret.second) {
@@ -312,14 +313,14 @@ uint32_t GetVectorCoreCount(uint64_t deviceId)
 
     auto deviceIdx = ret.first.id;
 
-    auto scalars = RunnerDB::GetByPred<sim::TaskSchedulerDevice>([deviceIdx](const sim::TaskSchedulerDevice &tsDev) {
+    auto scalars = RunnerDB::GetByPred<sim::TaskSchedulerDevice>([deviceIdx](const sim::TaskSchedulerDevice& tsDev) {
         return tsDev.device_id == deviceIdx && tsDev.type == (uint8_t)TS_DEV_TYPE_SCALAR;
     });
 
     uint32_t vectorCoreCount = 0;
     for (auto scalar : scalars) {
         auto tsIdx = scalar.id;
-        auto vectorCores = RunnerDB::GetByPred<sim::ComputeDie>([tsIdx](const sim::ComputeDie &die) {
+        auto vectorCores = RunnerDB::GetByPred<sim::ComputeDie>([tsIdx](const sim::ComputeDie& die) {
             return die.ts_id == tsIdx && die.type == (uint8_t)COMPUTE_TYPE_VECTOR;
         });
 
@@ -330,7 +331,7 @@ uint32_t GetVectorCoreCount(uint64_t deviceId)
 
 uint32_t GetCubeCoreCount(uint64_t deviceId)
 {
-    auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceId](const sim::Device &d) {
+    auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceId](const sim::Device& d) {
         return d.logic_id == deviceId;
     });
     if (!ret.second) {
@@ -340,14 +341,14 @@ uint32_t GetCubeCoreCount(uint64_t deviceId)
 
     auto deviceIdx = ret.first.id;
 
-    auto scalars = RunnerDB::GetByPred<sim::TaskSchedulerDevice>([deviceIdx](const sim::TaskSchedulerDevice &tsDev) {
+    auto scalars = RunnerDB::GetByPred<sim::TaskSchedulerDevice>([deviceIdx](const sim::TaskSchedulerDevice& tsDev) {
         return tsDev.device_id == deviceIdx && tsDev.type == (uint8_t)TS_DEV_TYPE_SCALAR;
     });
 
     uint32_t vectorCoreCount = 0;
     for (auto scalar : scalars) {
         auto tsIdx = scalar.id;
-        auto vectorCores = RunnerDB::GetByPred<sim::ComputeDie>([tsIdx](const sim::ComputeDie &die) {
+        auto vectorCores = RunnerDB::GetByPred<sim::ComputeDie>([tsIdx](const sim::ComputeDie& die) {
             return die.ts_id == tsIdx && die.type == (uint8_t)COMPUTE_TYPE_CUBE;
         });
 
@@ -363,9 +364,9 @@ std::set<uint64_t> GetUsedServerNum()
             return d.state == 1;
         });
         std::set<uint64_t> usedServerIds;
-        for (auto &rank : allRanks) {
+        for (auto& rank : allRanks) {
             auto deviceKey = rank.device_id;
-            auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceKey](const sim::Device &d) {
+            auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceKey](const sim::Device& d) {
                 return d.id == deviceKey;
             });
             if (!ret.second) {
@@ -375,16 +376,16 @@ std::set<uint64_t> GetUsedServerNum()
             usedServerIds.insert(serverId);
         }
         return usedServerIds;
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
         HCCL_VM_ERROR("exception: {}", e.what());
         return {};
     }
 }
 
-bool GetRankIdByMPI(uint32_t &rankId, uint64_t &serverId)
+bool GetRankIdByMPI(uint32_t& rankId, uint64_t& serverId)
 {
-    const char *ompiRankStr = std::getenv("OMPI_COMM_WORLD_RANK");
-    const char *mpichRankStr = std::getenv("PMI_RANK");
+    const char* ompiRankStr = std::getenv("OMPI_COMM_WORLD_RANK");
+    const char* mpichRankStr = std::getenv("PMI_RANK");
     if (ompiRankStr == nullptr && mpichRankStr == nullptr) {
         // 单server用例，默认serverId为1
         auto usedServerIds = GetUsedServerNum();
@@ -432,4 +433,4 @@ uint64_t GetCurServerId()
     g_cur_server_key = serverId;
     return serverId;
 }
-}
+} // namespace sim

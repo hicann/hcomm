@@ -17,34 +17,25 @@
 namespace hcomm {
 namespace CcuRep {
 
-class CcuRepNot : public CcuRepBase {
-public:
-    CcuRepNot(CcuInsGeneratorBase* insGenPtr, const Variable &varC, const Variable &varB);
-    bool Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &curInstrId, const TransDep &dep) override;
-    Variable GetVarB()
-    {
-        return varB;
-    }
-    Variable GetVarC()
-    {
-        return varC;
-    }
+    class CcuRepNot : public CcuRepBase {
+    public:
+        CcuRepNot(CcuInsGeneratorBase* insGenPtr, const Variable& varC, const Variable& varB);
+        bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, const TransDep& dep) override;
+        Variable GetVarB() { return varB; }
+        Variable GetVarC() { return varC; }
 
-    NotSubType GetSubType()
-    {
-        return subType;
-    }
+        NotSubType GetSubType() { return subType; }
 
-    std::string Describe() override;
+        std::string Describe() override;
 
-private:
-    NotSubType subType{NotSubType::INVALID};
+    private:
+        NotSubType subType{NotSubType::INVALID};
 
-    Variable varB;
-    Variable varC;
+        Variable varB;
+        Variable varC;
 
-    CcuInsGeneratorBase* insGenPtr{nullptr};
-};
+        CcuInsGeneratorBase* insGenPtr{nullptr};
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

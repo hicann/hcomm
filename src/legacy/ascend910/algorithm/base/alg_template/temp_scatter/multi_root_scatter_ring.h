@@ -20,7 +20,7 @@ struct SliceSendRange {
     u32 endRank = 0;
 };
 
-bool DscendSortWithSliceSendEnd(const SliceSendRange &a, const SliceSendRange &b);
-}  // namespace hccl
+bool DscendSortWithSliceSendEnd(const SliceSendRange& a, const SliceSendRange& b);
+} // namespace hccl
 
 #endif

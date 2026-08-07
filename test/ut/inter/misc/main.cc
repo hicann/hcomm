@@ -16,10 +16,11 @@
 #include "../../../../stub/llt_hccl_stub_pub.h"
 #include "env_config.h"
 
-GTEST_API_ int main(int argc, char **argv) {
+GTEST_API_ int main(int argc, char** argv)
+{
     printf("Running main() from gtest_main.cc\n");
     setTargetPort(27742, 31119);
-    //testing::GTEST_FLAG(filter) = "HcomKernelInfoTest.ut_LoadTask_comm";
+    // testing::GTEST_FLAG(filter) = "HcomKernelInfoTest.ut_LoadTask_comm";
     testing::InitGoogleTest(&argc, argv);
     setenv("HCCL_DFS_CONFIG", "connection_fault_detction_time:0", 1);
     InitEnvParam();

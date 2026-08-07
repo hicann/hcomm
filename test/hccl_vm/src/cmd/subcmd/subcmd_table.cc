@@ -17,7 +17,8 @@
 #include "subcmd_table.h"
 
 namespace HcclSim {
-void TableCommand::Setup(CLI::App& app) {
+void TableCommand::Setup(CLI::App& app)
+{
     auto tableCmd = app.add_subcommand("table", "table opt");
     tableCmd->require_subcommand(1);
     auto showCmd = tableCmd->add_subcommand("show", "show table");
@@ -27,7 +28,7 @@ void TableCommand::Setup(CLI::App& app) {
         if (showStr == "all") {
             std::vector<std::string> tables;
             tables = RunnerDB::GetAllTableName();
-            for (auto &tbl : tables) {
+            for (auto& tbl : tables) {
                 HCCL_VM_INFO("{}", tbl);
             }
         } else {
@@ -42,8 +43,10 @@ void TableCommand::Setup(CLI::App& app) {
     updateCmd->add_option("column", columnName, "Column to update (e.g., soc_version)")->required();
     updateCmd->add_option("value", newValue, "New value (as string)")->required();
 
-    updateCmd->callback([&]() { CmdTableUpdate(tableName, rowId, columnName, newValue); });
+    updateCmd->callback([&]() {
+        CmdTableUpdate(tableName, rowId, columnName, newValue);
+    });
 }
 
 static inline CommandAutoRegister<TableCommand> g_table_cmd_reg{};
-}
+} // namespace HcclSim

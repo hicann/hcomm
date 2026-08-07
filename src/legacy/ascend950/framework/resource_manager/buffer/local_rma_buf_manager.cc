@@ -21,34 +21,33 @@
 
 namespace Hccl {
 
-LocalRmaBufManager::LocalRmaBufManager(const CommunicatorImpl &communicator)
-    : comm(const_cast<CommunicatorImpl *>(&communicator))
-{
-}
+LocalRmaBufManager::LocalRmaBufManager(const CommunicatorImpl& communicator)
+    : comm(const_cast<CommunicatorImpl*>(&communicator))
+{}
 
-LocalRmaBufManager::~LocalRmaBufManager()
-{
-    DECTOR_TRY_CATCH("LocalRmaBufManager", Destroy());
-}
+LocalRmaBufManager::~LocalRmaBufManager() { DECTOR_TRY_CATCH("LocalRmaBufManager", Destroy()); }
 
-bool LocalRmaBufManager::IsExist(const string &opTag, const PortData &portData, BufferType bufferType)
+bool LocalRmaBufManager::IsExist(const string& opTag, const PortData& portData, BufferType bufferType)
 {
     return bufs.find(opTag) != bufs.end() && bufs[opTag].find(portData) != bufs[opTag].end()
            && bufs[opTag][portData].find(bufferType) != bufs[opTag][portData].end();
 }
 
-LocalRmaBuffer *LocalRmaBufManager::Reg(const string &opTag, BufferType bufferType, std::shared_ptr<Buffer> buffer, const PortData &portData, LinkProtocol linkProtocol)
+LocalRmaBuffer* LocalRmaBufManager::Reg(
+    const string& opTag, BufferType bufferType, std::shared_ptr<Buffer> buffer, const PortData& portData,
+    LinkProtocol linkProtocol)
 {
     if (buffer == nullptr) {
         HCCL_ERROR("input buffer is null");
         return nullptr;
     }
-    HCCL_INFO("LocalRmaBufManager::Reg, buffer[%s], opTag[%s], bufferType[%u], portData[%s]",
-        buffer->Describe().c_str(), opTag.c_str(), bufferType, portData.Describe().c_str());
+    HCCL_INFO(
+        "LocalRmaBufManager::Reg, buffer[%s], opTag[%s], bufferType[%u], portData[%s]", buffer->Describe().c_str(),
+        opTag.c_str(), bufferType, portData.Describe().c_str());
     if (IsExist(opTag, portData, bufferType)) {
-        string msg = StringFormat("opTag=%s bufferType=%s, buffer=%s already reg to portData=%s", opTag.c_str(),
-                                  bufferType.Describe().c_str(),
-                                  buffer->Describe().c_str(), portData.Describe().c_str());
+        string msg = StringFormat(
+            "opTag=%s bufferType=%s, buffer=%s already reg to portData=%s", opTag.c_str(),
+            bufferType.Describe().c_str(), buffer->Describe().c_str(), portData.Describe().c_str());
         HCCL_DEBUG(msg.c_str());
         return bufs[opTag][portData][bufferType].get();
     }
@@ -57,16 +56,17 @@ LocalRmaBuffer *LocalRmaBufManager::Reg(const string &opTag, BufferType bufferTy
         return bufs[opTag][portData][bufferType].get();
     } else {
         if (portData.GetProto() == LinkProtoType::RDMA) {
-            RdmaHandle rdmaHandle = RdmaHandleManager::GetInstance().Get(comm->GetDevicePhyId(), portData, linkProtocol);
-            bufs[opTag][portData][bufferType]
-                = make_unique<LocalRdmaRmaBuffer>(buffer, rdmaHandle);
+            RdmaHandle rdmaHandle
+                = RdmaHandleManager::GetInstance().Get(comm->GetDevicePhyId(), portData, linkProtocol);
+            bufs[opTag][portData][bufferType] = make_unique<LocalRdmaRmaBuffer>(buffer, rdmaHandle);
             return bufs[opTag][portData][bufferType].get();
         } else if (portData.GetProto() == LinkProtoType::UB) {
             HCCL_INFO("LocalRmaBufManager::Reg, comm->GetOpAiCpuTSFeatureFlag[%d]", comm->GetOpAiCpuTSFeatureFlag());
             if (comm->GetOpAiCpuTSFeatureFlag()) { // 算子粒度
                 bufs[opTag][portData][bufferType] = make_unique<LocalUbRmaBuffer>(buffer);
             } else {
-                RdmaHandle rdmaHandle = RdmaHandleManager::GetInstance().Get(comm->GetDevicePhyId(), portData, linkProtocol);
+                RdmaHandle rdmaHandle
+                    = RdmaHandleManager::GetInstance().Get(comm->GetDevicePhyId(), portData, linkProtocol);
                 bufs[opTag][portData][bufferType] = make_unique<LocalUbRmaBuffer>(buffer, rdmaHandle);
             }
             return bufs[opTag][portData][bufferType].get();
@@ -77,23 +77,23 @@ LocalRmaBuffer *LocalRmaBufManager::Reg(const string &opTag, BufferType bufferTy
     }
 }
 
-LocalRmaBuffer *LocalRmaBufManager::Get(const string &opTag, const PortData &portData, BufferType bufferType)
+LocalRmaBuffer* LocalRmaBufManager::Get(const string& opTag, const PortData& portData, BufferType bufferType)
 {
     if (IsExist(opTag, portData, bufferType)) { // if localRmaBuffer exists
-        HCCL_INFO("[LocalRmaBufManager][%s] LocalUbRmaBuffer[%s]", __func__, bufs[opTag][portData][bufferType]->Describe().c_str());
+        HCCL_INFO(
+            "[LocalRmaBufManager][%s] LocalUbRmaBuffer[%s]", __func__,
+            bufs[opTag][portData][bufferType]->Describe().c_str());
         return bufs[opTag][portData][bufferType].get();
     }
-    HCCL_WARNING("LocalRmaBuffer doesn't exist:opTag[%s], bufferType[%u], portData[%s]",
-        opTag.c_str(), bufferType, portData.Describe().c_str());
+    HCCL_WARNING(
+        "LocalRmaBuffer doesn't exist:opTag[%s], bufferType[%u], portData[%s]", opTag.c_str(), bufferType,
+        portData.Describe().c_str());
     return nullptr;
 }
 
-void LocalRmaBufManager::Destroy()
-{
-    bufs.clear();
-}
+void LocalRmaBufManager::Destroy() { bufs.clear(); }
 
-LocalRmaBuffer *LocalRmaBufManager::Get(const PortData &portData)
+LocalRmaBuffer* LocalRmaBufManager::Get(const PortData& portData)
 {
     if (Contain(ccuBufs, portData)) {
         return ccuBufs[portData].get();
@@ -102,7 +102,7 @@ LocalRmaBuffer *LocalRmaBufManager::Get(const PortData &portData)
     return nullptr;
 }
 
-HcclResult LocalRmaBufManager::Dereg(const string &opTag)
+HcclResult LocalRmaBufManager::Dereg(const string& opTag)
 {
     if (bufs.find(opTag) == bufs.end()) {
         HCCL_WARNING("[LocalRmaBufManager::%s] opTag[%s] Cannot find Buffer in bufs.", __func__, opTag.c_str());

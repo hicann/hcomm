@@ -19,22 +19,19 @@
 namespace hccl {
 class RemoteRdmaRmaBufferImpl : public RmaBuffer {
 public:
-	RemoteRdmaRmaBufferImpl();
+    RemoteRdmaRmaBufferImpl();
 
-	HcclResult Deserialize(const std::string& msg);
+    HcclResult Deserialize(const std::string& msg);
 
     ~RemoteRdmaRmaBufferImpl() override;
 
-    RemoteRdmaRmaBufferImpl(const RemoteRdmaRmaBufferImpl &that) = delete;
-    RemoteRdmaRmaBufferImpl &operator=(const RemoteRdmaRmaBufferImpl &that) = delete;
+    RemoteRdmaRmaBufferImpl(const RemoteRdmaRmaBufferImpl& that) = delete;
+    RemoteRdmaRmaBufferImpl& operator=(const RemoteRdmaRmaBufferImpl& that) = delete;
 
-    inline u32 GetKey() const
-    {
-        return rkey;
-    }
+    inline u32 GetKey() const { return rkey; }
 
 private:
-    u32         rkey{0};
+    u32 rkey{0};
 };
-}
+} // namespace hccl
 #endif //  REMOTE_RDMA_RMA_BUFFER_IMPL_H

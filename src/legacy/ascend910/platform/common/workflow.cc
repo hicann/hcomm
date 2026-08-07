@@ -19,7 +19,7 @@ static std::mutex g_workFlowModeMutex;
 static thread_local HcclWorkflowMode g_workflowMode = HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE;
 
 static bool g_isLaunchKernel = false; // 是否为对接GE接口场景
-static bool g_isTaskNumCal = false; // 是否为tasknum精确评估
+static bool g_isTaskNumCal = false;   // 是否为tasknum精确评估
 
 HcclResult InitWorkflowMode(HcclWorkflowMode mode)
 {
@@ -33,27 +33,12 @@ HcclResult SetWorkflowMode(HcclWorkflowMode mode)
     return HCCL_SUCCESS;
 }
 
-HcclWorkflowMode GetWorkflowMode()
-{
-    return g_workflowMode;
-}
+HcclWorkflowMode GetWorkflowMode() { return g_workflowMode; }
 
-void SetLaunchKernelMode(bool state)
-{
-    g_isLaunchKernel = state;
-}
+void SetLaunchKernelMode(bool state) { g_isLaunchKernel = state; }
 
-bool IsLaunchKernelMode(void)
-{
-    return g_isLaunchKernel;
-}
+bool IsLaunchKernelMode(void) { return g_isLaunchKernel; }
 
-void SetTaskNumCalMode(bool state)
-{
-    g_isTaskNumCal = state;
-}
+void SetTaskNumCalMode(bool state) { g_isTaskNumCal = state; }
 
-bool IsTaskNumCalMode(void)
-{
-    return g_isTaskNumCal;
-}
+bool IsTaskNumCalMode(void) { return g_isTaskNumCal; }

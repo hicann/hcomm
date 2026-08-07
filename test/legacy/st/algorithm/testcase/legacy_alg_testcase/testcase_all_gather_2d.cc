@@ -23,20 +23,15 @@
 
 class AllGather2DTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "AllGather 2D test set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "AllGather 2D test set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "AllGather 2D test tear down" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "AllGather 2D test tear down" << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -52,7 +47,7 @@ protected:
 TEST_F(AllGather2DTest, AllGatherParallel_opbase_2x2_small)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,8,9}, {0,1,8,9}}};
+    TopoMeta topoMeta{{{0, 1, 8, 9}, {0, 1, 8, 9}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
 
@@ -75,7 +70,7 @@ TEST_F(AllGather2DTest, AllGatherParallel_opbase_2x2_small)
 TEST_F(AllGather2DTest, AllGatherParallel_opbase_4n8)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,8,9}, {0,1,8,9,16,17,24,25}}};
+    TopoMeta topoMeta{{{0, 1, 8, 9}, {0, 1, 8, 9, 16, 17, 24, 25}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
 
@@ -98,7 +93,7 @@ TEST_F(AllGather2DTest, AllGatherParallel_opbase_4n8)
 TEST_F(AllGather2DTest, AllGatherParallel_opbase_4n8_2)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,8,9}, {2,3,10,11,18,19,26,27}}};
+    TopoMeta topoMeta{{{0, 1, 8, 9}, {2, 3, 10, 11, 18, 19, 26, 27}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
 
@@ -121,7 +116,7 @@ TEST_F(AllGather2DTest, AllGatherParallel_opbase_4n8_2)
 TEST_F(AllGather2DTest, AllGatherParallel_opbase_4n8n12)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,8,9}, {2,3,10,11,18,19,26,27},{4,5,12,13,20,21,28,29,36,37,44,45}}};
+    TopoMeta topoMeta{{{0, 1, 8, 9}, {2, 3, 10, 11, 18, 19, 26, 27}, {4, 5, 12, 13, 20, 21, 28, 29, 36, 37, 44, 45}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
 
@@ -144,7 +139,7 @@ TEST_F(AllGather2DTest, AllGatherParallel_opbase_4n8n12)
 TEST_F(AllGather2DTest, AllGatherParallel_opbase_4n8n8)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,8,9}, {2,3,10,11,18,19,26,27},{4,5,12,13,20,21,28,29}}};
+    TopoMeta topoMeta{{{0, 1, 8, 9}, {2, 3, 10, 11, 18, 19, 26, 27}, {4, 5, 12, 13, 20, 21, 28, 29}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
 
@@ -167,7 +162,7 @@ TEST_F(AllGather2DTest, AllGatherParallel_opbase_4n8n8)
 TEST_F(AllGather2DTest, AllGatherParallel_opbase_6n6)
 {
     RankTable_For_LLT gen;
-    TopoMeta topoMeta {{{0,1,2,8,9,10}, {4,5,6,12,13,14}}};
+    TopoMeta topoMeta{{{0, 1, 2, 8, 9, 10}, {4, 5, 6, 12, 13, 14}}};
 
     setenv("HCCL_IODIE_NUM", "2", 1);
 

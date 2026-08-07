@@ -14,7 +14,6 @@
 #include <hccl/hccl_types.h>
 #include "hccl/base.h"
 
-
 namespace hccl {
 class CalcCrc {
 public:
@@ -25,7 +24,7 @@ public:
     CalcCrc& operator=(CalcCrc const&) = delete;
     CalcCrc& operator=(CalcCrc&&) = delete;
 
-    static HcclResult HcclCalcCrc(const char *data, u64 length, u32 &crcValue);
+    static HcclResult HcclCalcCrc(const char* data, u64 length, u32& crcValue);
 };
-}
-#endif  // CALC_CRC_H
+} // namespace hccl
+#endif // CALC_CRC_H

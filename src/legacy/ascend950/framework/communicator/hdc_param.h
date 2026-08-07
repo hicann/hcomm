@@ -17,13 +17,13 @@ constexpr u32 HCCLV2_HDC_TYPE_D2H = 0;
 constexpr u32 HCCLV2_HDC_TYPE_H2D = 1;
 
 struct HDCommunicateParams {
-    u64 hostAddr{ 0 };
-    u64 deviceAddr{ 0 };
-    u64 readCacheAddr{ 0 };
-    u32 devMemSize{ 0 };
-    u32 buffLen{ 0 };
-    u32 flag{ 0};
+    u64 hostAddr{0};
+    u64 deviceAddr{0};
+    u64 readCacheAddr{0};
+    u32 devMemSize{0};
+    u32 buffLen{0};
+    u32 flag{0};
 };
 
-}
+} // namespace Hccl
 #endif // HCCLV2_HDC_PARAM_H

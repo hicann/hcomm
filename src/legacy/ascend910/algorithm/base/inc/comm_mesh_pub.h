@@ -16,17 +16,15 @@
 namespace hccl {
 class CommMesh : public CommBase {
 public:
-    explicit CommMesh(const std::string &collectiveId, const u32 userRank,
-                      const u32 userRankSize, const u32 rank, const u32 rankSize, const TopoType topoFlag,
-                      const HcclDispatcher dispatcher, const std::unique_ptr<NotifyPool> &notifyPool,
-                      std::map<HcclIpAddress, HcclNetDevCtx> &netDevCtxMap,
-                      const IntraExchanger &exchanger, const std::vector<RankInfo> paraVector,
-                      const DeviceMem& inputMem, const DeviceMem& outputMem, const bool isUsedRdmaLevel0,
-                      const std::string &tag, bool isAlltoAllCommMesh = false,
-                      const NICDeployment nicDeployInner = NICDeployment::NIC_DEPLOYMENT_DEVICE,
-                      const bool useOneDoorbell = false, const bool isAicpuModeEn = false,
-                      const bool isHaveCpuRank = false, const bool useSuperPodMode = false,
-                      DeviceMem expMem = DeviceMem());
+    explicit CommMesh(
+        const std::string& collectiveId, const u32 userRank, const u32 userRankSize, const u32 rank, const u32 rankSize,
+        const TopoType topoFlag, const HcclDispatcher dispatcher, const std::unique_ptr<NotifyPool>& notifyPool,
+        std::map<HcclIpAddress, HcclNetDevCtx>& netDevCtxMap, const IntraExchanger& exchanger,
+        const std::vector<RankInfo> paraVector, const DeviceMem& inputMem, const DeviceMem& outputMem,
+        const bool isUsedRdmaLevel0, const std::string& tag, bool isAlltoAllCommMesh = false,
+        const NICDeployment nicDeployInner = NICDeployment::NIC_DEPLOYMENT_DEVICE, const bool useOneDoorbell = false,
+        const bool isAicpuModeEn = false, const bool isHaveCpuRank = false, const bool useSuperPodMode = false,
+        DeviceMem expMem = DeviceMem());
 
     ~CommMesh() override;
 
@@ -36,6 +34,6 @@ protected:
 
 private:
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* COMM_MESH_PUB_H */

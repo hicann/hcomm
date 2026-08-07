@@ -12,7 +12,7 @@
 
 namespace hccl {
 CollAllReduceARSFor91093Executor::CollAllReduceARSFor91093Executor(
-    const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher)
+    const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher)
     : CollAllReduceRingFor91093Executor(dispatcher, topoMatcher)
 {
     DMAReduceFlag_ = false;
@@ -29,9 +29,8 @@ HcclResult CollAllReduceARSFor91093Executor::CalcStreamNum(u32& streamNum)
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAllReduceARSFor91093Executor::CalcLevel0CommInfo(TransportMemType inputType,
-    TransportMemType outputType,
-    std::vector<LevelNSubCommTransport>& opTransport)
+HcclResult CollAllReduceARSFor91093Executor::CalcLevel0CommInfo(
+    TransportMemType inputType, TransportMemType outputType, std::vector<LevelNSubCommTransport>& opTransport)
 {
     CHK_RET(SetCommInfoForARS(intraRingSize_));
     CommParaInfo commParaLevel0(COMM_LEVEL0, CommType::COMM_TAG_RING_INNER);
@@ -41,24 +40,22 @@ HcclResult CollAllReduceARSFor91093Executor::CalcLevel0CommInfo(TransportMemType
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAllReduceARSFor91093Executor::CalcLevel1CommInfo(TransportMemType inputType,
-    TransportMemType outputType,
-    std::vector<LevelNSubCommTransport>& opTransport)
+HcclResult CollAllReduceARSFor91093Executor::CalcLevel1CommInfo(
+    TransportMemType inputType, TransportMemType outputType, std::vector<LevelNSubCommTransport>& opTransport)
 {
     if (algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_RING) {
         HCCL_DEBUG("[CalcARSInterCommInfo] use ring comm type");
         CommParaInfo commARSInter(COMM_LEVEL1_LOGICAL, CommType::COMM_TAG_RING_INNER);
         CHK_RET(CalcCommPlaneInfo(tag_, commARSInter, opTransport[COMM_LEVEL1_LOGICAL], inputType, outputType));
-    } else if(algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NB) {
+    } else if (algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NB) {
         HCCL_DEBUG("[CalcARSInterCommInfo] use NB comm type");
         CommParaInfo commARSInter(COMM_LEVEL1_LOGICAL, CommType::COMM_TAG_NONUNIFORM_BRUCK);
         CHK_RET(CalcCommPlaneInfo(tag_, commARSInter, opTransport[COMM_LEVEL1_LOGICAL], inputType, outputType));
-    } else if(algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NHR_V1) {
+    } else if (algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NHR_V1) {
         HCCL_DEBUG("[CalcARSInterCommInfo] use NHR-V1 comm type");
         CommParaInfo commARSInter(COMM_LEVEL1_LOGICAL, CommType::COMM_TAG_NONUNIFORM_HIERARCHICAL_RING_V1);
         CHK_RET(CalcCommPlaneInfo(tag_, commARSInter, opTransport[COMM_LEVEL1_LOGICAL], inputType, outputType));
-    }
-    else {
+    } else {
         HCCL_DEBUG("[CalcARSInterCommInfo] use NHR comm type");
         CommParaInfo commARSInter(COMM_LEVEL1_LOGICAL, CommType::COMM_TAG_NONUNIFORM_HIERARCHICAL_RING);
         CHK_RET(CalcCommPlaneInfo(tag_, commARSInter, opTransport[COMM_LEVEL1_LOGICAL], inputType, outputType));
@@ -79,9 +76,10 @@ HcclResult CollAllReduceARSFor91093Executor::GetLevelCommInfo()
 
 HcclResult CollAllReduceARSFor91093Executor::CalcOptimalIntraRing(const OpParam& param)
 {
-    intraRingSize_ = CalcOptimalIntraRingsize(param.DataDes.count, param.DataDes.dataType, HcclCMDType::HCCL_CMD_ALLREDUCE);
-    HCCL_INFO("intraRingSize_[%u]",intraRingSize_);
+    intraRingSize_
+        = CalcOptimalIntraRingsize(param.DataDes.count, param.DataDes.dataType, HcclCMDType::HCCL_CMD_ALLREDUCE);
+    HCCL_INFO("intraRingSize_[%u]", intraRingSize_);
     return HCCL_SUCCESS;
 }
 REGISTER_EXEC("AllReduceARSFor91093Executor", AllReduceARSFor91093, CollAllReduceARSFor91093Executor);
-}
+} // namespace hccl

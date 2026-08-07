@@ -13,35 +13,27 @@ namespace Hccl {
 
 void CcuInsGroup::SetExecId(u64 id)
 {
-    for (auto &ins : ccuInstructions) {
+    for (auto& ins : ccuInstructions) {
         ins->SetExecId(id);
     }
 
     execId = id;
 }
 
-u64 CcuInsGroup::GetExecId() const
-{
-    return execId;
-}
+u64 CcuInsGroup::GetExecId() const { return execId; }
 
-void CcuInsGroup::Append(std::unique_ptr<CcuInstruction> ins)
-{
-    ccuInstructions.emplace_back(std::move(ins));
-}
+void CcuInsGroup::Append(std::unique_ptr<CcuInstruction> ins) { ccuInstructions.emplace_back(std::move(ins)); }
 
-const std::vector<std::unique_ptr<CcuInstruction>> &CcuInsGroup::GetCcuInstructions() const
-{
-    return ccuInstructions;
-}
+const std::vector<std::unique_ptr<CcuInstruction>>& CcuInsGroup::GetCcuInstructions() const { return ccuInstructions; }
 
 CcuCtxSignature CcuInsGroup::GetCtxSignature() const
 {
     HCCL_INFO("[CcuInsGroup::GetCtxSignature] start");
     CcuCtxSignature ctxSignature;
-    for (auto &ins : ccuInstructions) {
+    for (auto& ins : ccuInstructions) {
         ctxSignature.Append(ins->GetCtxArg()->GetCtxSignature());
-        HCCL_INFO("[CcuInsGroup::GetCtxSignature] ins->GetCtxSignature()[%s], ctxSignature[%s]", 
+        HCCL_INFO(
+            "[CcuInsGroup::GetCtxSignature] ins->GetCtxSignature()[%s], ctxSignature[%s]",
             ins->GetCtxSignature().Describe().c_str(), ctxSignature.Describe().c_str());
     }
     HCCL_INFO("[CcuInsGroup::GetCtxSignature] end, ctxSignature[%s]", ctxSignature.Describe().c_str());
@@ -53,10 +45,7 @@ std::string CcuInsGroup::Describe() const
     return StringFormat("CcuInsGroup[ccuInstructions_size=%zu, execId=%llu]", ccuInstructions.size(), execId);
 }
 
-CcuInstType CcuInsGroup::GetInstType() const
-{
-    return CcuInstType::CCU_INS_GROUP;
-}
+CcuInstType CcuInsGroup::GetInstType() const { return CcuInstType::CCU_INS_GROUP; }
 
 std::unique_ptr<CcuTaskArg> CcuInsGroup::GetTaskArg() const
 {
@@ -75,7 +64,7 @@ std::unique_ptr<CcuCtxArg> CcuInsGroup::GetCtxArg() const
 std::vector<LinkData> CcuInsGroup::GetLinks() const
 {
     vector<LinkData> links;
-    for (const auto &ins : GetCcuInstructions()) {
+    for (const auto& ins : GetCcuInstructions()) {
         vector<LinkData> tmpLinks = ins->GetLinks();
         links.insert(links.end(), tmpLinks.begin(), tmpLinks.end());
     }

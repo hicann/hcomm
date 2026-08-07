@@ -14,7 +14,7 @@
 #include <cstdint>
 
 extern "C" {
-__attribute__((visibility("default"))) uint32_t RunAicpuIndOpChannelInit(void *args);
+__attribute__((visibility("default"))) uint32_t RunAicpuIndOpChannelInit(void* args);
 }
 
 #endif // CHANNEL_AICPU_INTERFACE_H

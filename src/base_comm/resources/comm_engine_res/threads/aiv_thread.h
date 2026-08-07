@@ -27,5 +27,5 @@ public:
 private:
     uint32_t notifyNum_{};
 };
-}
+} // namespace hccl
 #endif // AIV_THREAD_H

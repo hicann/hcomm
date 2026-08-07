@@ -16,30 +16,32 @@
 
 namespace dfx_tracer {
 class AicpuExecutorTracer {
-explicit AicpuExecutorTracer();
+    explicit AicpuExecutorTracer();
+
 public:
-    static void HandleBackGround(AicpuComContext *const ctx);
-    static void StopLaunchCommandHandle(AicpuComContext *const ctx);
-    static void KfcCommandHandle(AicpuComContext *const ctx);
-    static void HandleCqeStatus(AicpuComContext *const ctx);
-    static void StopKfcThread(AicpuComContext *const ctx,
-                              std::vector<std::pair<std::string, hccl::HcclCommAicpu *>> aicpuCommInfo);
-    static void SetCqeQueryInput(const uint32_t devId, const HcclComStreamInfo &streamInfo,
-                                 CqeQueryInput &cqeQueryInput);
+    static void HandleBackGround(AicpuComContext* const ctx);
+    static void StopLaunchCommandHandle(AicpuComContext* const ctx);
+    static void KfcCommandHandle(AicpuComContext* const ctx);
+    static void HandleCqeStatus(AicpuComContext* const ctx);
+    static void
+    StopKfcThread(AicpuComContext* const ctx, std::vector<std::pair<std::string, hccl::HcclCommAicpu*>> aicpuCommInfo);
+    static void
+    SetCqeQueryInput(const uint32_t devId, const HcclComStreamInfo& streamInfo, CqeQueryInput& cqeQueryInput);
 
 private:
-    static void HandleCqeStatusByRank(AicpuComContext *const ctx, uint32_t rank);
-    static void PrintTaskException(const rtLogicCqReport_t &reportOfOne);
+    static void HandleCqeStatusByRank(AicpuComContext* const ctx, uint32_t rank);
+    static void PrintTaskException(const rtLogicCqReport_t& reportOfOne);
     static uint8_t getTrailingZeros(uint8_t num);
 };
 
 class KfcCommandHandles {
 public:
-    static void ClearFunc(AicpuComContext *const ctx);
-    static void StopFunc(AicpuComContext *const ctx);
+    static void ClearFunc(AicpuComContext* const ctx);
+    static void StopFunc(AicpuComContext* const ctx);
+
 private:
-    static void ClearCq(AicpuComContext *const ctx);
+    static void ClearCq(AicpuComContext* const ctx);
 };
 
-}
+} // namespace dfx_tracer
 #endif // __AICPU_EXECUTOR_TRACER_H__

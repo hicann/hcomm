@@ -16,7 +16,8 @@ namespace AscendC {
 int64_t block_num = 0;
 thread_local int64_t block_idx = 0;
 
-std::string GetPipeName(pipe_t pipe) {
+std::string GetPipeName(pipe_t pipe)
+{
     switch (pipe) {
         case PIPE_ALL:
             return "PIPE_ALL";
@@ -30,4 +31,4 @@ std::string GetPipeName(pipe_t pipe) {
             return "UNKNOWN";
     }
 }
-}
+} // namespace AscendC

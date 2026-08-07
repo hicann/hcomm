@@ -18,16 +18,16 @@
 namespace Hccl {
 
 DevType HrtGetDeviceType();
-void HrtGetSocVer(char_t *chipVer, const u32 size);
-void HrtUbDevQueryInfo(rtUbDevQueryCmd cmd, void *devInfo);
+void HrtGetSocVer(char_t* chipVer, const u32 size);
+void HrtUbDevQueryInfo(rtUbDevQueryCmd cmd, void* devInfo);
 u32 HrtGetDevicePhyIdByIndex(u32 deviceLogicId);
-void *HrtMalloc(u64 size, aclrtMemType_t memType);
-void HrtFree(void *devPtr);
-void HrtMemcpy(void *dst, uint64_t destMax, const void *src, uint64_t count, rtMemcpyKind_t kind);
+void* HrtMalloc(u64 size, aclrtMemType_t memType);
+void HrtFree(void* devPtr);
+void HrtMemcpy(void* dst, uint64_t destMax, const void* src, uint64_t count, rtMemcpyKind_t kind);
 s32 HrtGetDevice();
 
 class HcclMainboardId;
-HcclResult HrtGetMainboardId(uint32_t deviceLogicId, HcclMainboardId &hcclMainboardId);
+HcclResult HrtGetMainboardId(uint32_t deviceLogicId, HcclMainboardId& hcclMainboardId);
 
 } // namespace Hccl
 

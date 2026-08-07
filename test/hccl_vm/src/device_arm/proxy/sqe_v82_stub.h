@@ -13,39 +13,39 @@
 #include <cstdint>
 
 enum class Rt91095StarsSqeType {
-    RT_91095_SQE_TYPE_AIC             = 0, // AIC
-    RT_91095_SQE_TYPE_AIV             = 1, // AIV
-    RT_91095_SQE_TYPE_FUSION          = 2, // FUSION
-    RT_91095_SQE_TYPE_PLACE_HOLDER    = 3, // PLACE_HOLDER
-    RT_91095_SQE_TYPE_AICPU_H         = 4, // AICPU_H
-    RT_91095_SQE_TYPE_AICPU_D         = 5, // AICPU_D
-    RT_91095_SQE_TYPE_NOTIFY_RECORD   = 6, // NOTIFY_RECORD
-    RT_91095_SQE_TYPE_NOTIFY_WAIT     = 7, // NOTIFY_WAIT
-    RT_91095_SQE_TYPE_WRITE_VALUE     = 8, // WRITE_VALUE
-    RT_91095_SQE_TYPE_UBDMA           = 9, // UBDMA
-    RT_91095_SQE_TYPE_ASYNCDMA        = 10, // ASYNCDMA
-    RT_91095_SQE_TYPE_SDMA            = 11, // SDMA
-    RT_91095_SQE_TYPE_VPC             = 12, // VPC
-    RT_91095_SQE_TYPE_JPEGE           = 13, // JPEGE
-    RT_91095_SQE_TYPE_JPEGD           = 14, // JPEGD
-    RT_91095_SQE_TYPE_CMO             = 15, // CMO
-    RT_91095_SQE_TYPE_COND            = 20, // condition
-    RT_91095_SQE_TYPE_END             = 21,
+    RT_91095_SQE_TYPE_AIC = 0,           // AIC
+    RT_91095_SQE_TYPE_AIV = 1,           // AIV
+    RT_91095_SQE_TYPE_FUSION = 2,        // FUSION
+    RT_91095_SQE_TYPE_PLACE_HOLDER = 3,  // PLACE_HOLDER
+    RT_91095_SQE_TYPE_AICPU_H = 4,       // AICPU_H
+    RT_91095_SQE_TYPE_AICPU_D = 5,       // AICPU_D
+    RT_91095_SQE_TYPE_NOTIFY_RECORD = 6, // NOTIFY_RECORD
+    RT_91095_SQE_TYPE_NOTIFY_WAIT = 7,   // NOTIFY_WAIT
+    RT_91095_SQE_TYPE_WRITE_VALUE = 8,   // WRITE_VALUE
+    RT_91095_SQE_TYPE_UBDMA = 9,         // UBDMA
+    RT_91095_SQE_TYPE_ASYNCDMA = 10,     // ASYNCDMA
+    RT_91095_SQE_TYPE_SDMA = 11,         // SDMA
+    RT_91095_SQE_TYPE_VPC = 12,          // VPC
+    RT_91095_SQE_TYPE_JPEGE = 13,        // JPEGE
+    RT_91095_SQE_TYPE_JPEGD = 14,        // JPEGD
+    RT_91095_SQE_TYPE_CMO = 15,          // CMO
+    RT_91095_SQE_TYPE_COND = 20,         // condition
+    RT_91095_SQE_TYPE_END = 21,
 };
 
 struct Rt91095StarsSqeHeader {
     /* word0 */
-    uint8_t  type : 6;
-    uint8_t  lock : 1;
-    uint8_t  unlock : 1;
-    uint8_t  ie : 1;
-    uint8_t  preP : 1;
-    uint8_t  postP : 1;
-    uint8_t  wrCqe : 1;
-    uint8_t  ptrMode : 1;
-    uint8_t  rttMode : 1;
-    uint8_t  headUpdate : 1;
-    uint8_t  reserved : 1;
+    uint8_t type : 6;
+    uint8_t lock : 1;
+    uint8_t unlock : 1;
+    uint8_t ie : 1;
+    uint8_t preP : 1;
+    uint8_t postP : 1;
+    uint8_t wrCqe : 1;
+    uint8_t ptrMode : 1;
+    uint8_t rttMode : 1;
+    uint8_t headUpdate : 1;
+    uint8_t reserved : 1;
     uint16_t numBlocks;
 
     /* word1 */
@@ -127,8 +127,8 @@ struct Rt91095StarsMemcpySqe {
 
     /* word3 */
     uint16_t res2;
-    uint8_t  kernelCredit;
-    uint8_t  res3;
+    uint8_t kernelCredit;
+    uint8_t res3;
 
     /* word4 */
     uint32_t opcode : 8;
@@ -145,11 +145,11 @@ struct Rt91095StarsMemcpySqe {
 
     /* word5 */
     uint16_t sqeId;
-    uint8_t  mapamPartId;
-    uint8_t  mpamns : 1;
-    uint8_t  pmg : 2;
-    uint8_t  qos : 4;
-    uint8_t  d2dOffsetFlag : 1; // use reserved filed
+    uint8_t mapamPartId;
+    uint8_t mpamns : 1;
+    uint8_t pmg : 2;
+    uint8_t qos : 4;
+    uint8_t d2dOffsetFlag : 1; // use reserved filed
 
     /* word6 */
     uint16_t srcStreamId;
@@ -175,9 +175,9 @@ struct Rt91095StarsNotifySqe {
 
     /* word3 */
     uint16_t subType; // This field is reserved and used by software.
-    uint8_t  kernelCredit;
-    uint8_t  res4 : 5;
-    uint8_t  sqeLength : 3;
+    uint8_t kernelCredit;
+    uint8_t res4 : 5;
+    uint8_t sqeLength : 3;
 
     /* word4 */
     uint32_t cntValue;
@@ -210,9 +210,9 @@ struct Rt91095StarsUbdmaDBmodeSqe {
 
     /* word3 */
     uint16_t res2;
-    uint8_t  kernelCredit;
-    uint8_t  res3 : 5;
-    uint8_t  sqeLength : 3;
+    uint8_t kernelCredit;
+    uint8_t res3 : 5;
+    uint8_t sqeLength : 3;
 
     /* word4 */
     uint32_t jettyId1 : 16;

@@ -28,7 +28,7 @@
 
 using namespace Hccl;
 
-class CcuComponentTest: public testing::Test {
+class CcuComponentTest : public testing::Test {
 protected:
     static void SetUpTestCase()
     {
@@ -36,21 +36,21 @@ protected:
         GlobalMockObject::reset();
         std::cout << "CcuComponentTest tests set up." << std::endl;
     }
- 
+
     static void TearDownTestCase()
     {
         GlobalMockObject::verify();
         GlobalMockObject::reset();
         std::cout << "CcuComponentTest tests tear down." << std::endl;
     }
- 
+
     virtual void SetUp()
     {
         GlobalMockObject::verify();
         GlobalMockObject::reset();
         std::cout << "A Test case in CcuComponentTest SetUP" << std::endl;
     }
- 
+
     virtual void TearDown()
     {
         GlobalMockObject::verify();
@@ -67,13 +67,13 @@ void MockCcuResources(const int32_t devLogicId, const CcuVersion ccuVersion)
 {
     MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(MAX_MODULE_DEVICE_NUM));
 
-    auto &ccuResSpecs = CcuResSpecifications::GetInstance(devLogicId);
+    auto& ccuResSpecs = CcuResSpecifications::GetInstance(devLogicId);
     ccuResSpecs.ccuVersion = ccuVersion;
     for (uint8_t dieId = 0; dieId < MAX_CCU_IODIE_NUM; dieId++) {
         ccuResSpecs.dieEnableFlags[dieId] = true;
 
         ccuResSpecs.resSpecs[dieId].loopEngineNum = 200;
-        
+
         ccuResSpecs.resSpecs[dieId].msNum = 1536;
         ccuResSpecs.resSpecs[dieId].ckeNum = 1024;
 
@@ -101,23 +101,20 @@ void MockCcuResources(const int32_t devLogicId, const CcuVersion ccuVersion)
 void MockCcuNetworkDevice(const int32_t devLogicId)
 {
     vector<HrtDevEidInfo> eidInfoListStbu;
-    HrtDevEidInfo         eidInfo;
-    eidInfo.name    = "udma0";
-    eidInfo.dieId   = 0;
-    eidInfo.funcId  = 3;
-    eidInfo.chipId  = static_cast<uint32_t>(devLogicId);
+    HrtDevEidInfo eidInfo;
+    eidInfo.name = "udma0";
+    eidInfo.dieId = 0;
+    eidInfo.funcId = 3;
+    eidInfo.chipId = static_cast<uint32_t>(devLogicId);
     eidInfoListStbu.push_back(eidInfo);
 
-    eidInfo.name    = "udma1";
-    eidInfo.dieId   = 1;
-    eidInfo.funcId  = 4;
-    eidInfo.chipId  = static_cast<uint32_t>(devLogicId);
+    eidInfo.name = "udma1";
+    eidInfo.dieId = 1;
+    eidInfo.funcId = 4;
+    eidInfo.chipId = static_cast<uint32_t>(devLogicId);
     eidInfoListStbu.push_back(eidInfo);
 
-    MOCKER(HrtRaGetDevEidInfoList)
-        .stubs()
-        .with(mockcpp::any())
-        .will(returnValue(eidInfoListStbu));
+    MOCKER(HrtRaGetDevEidInfoList).stubs().with(mockcpp::any()).will(returnValue(eidInfoListStbu));
     MOCKER(HraGetRtpEnable).stubs().with(mockcpp::any()).will(returnValue(true));
 
     MOCKER_CPP(&RdmaHandleManager::GetByIp).stubs().will(returnValue((void*)0x12345678));
@@ -190,7 +187,7 @@ TEST_F(CcuComponentTest, St_AllocInsAndCkeAndXn_When_ResNumIsOk_Expect_Return_Ok
 
     ret = ccuComponent.ReleaseCke(dieId, resInfos);
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
-    
+
     // Xn 资源
     ret = ccuComponent.AllocXn(dieId, req, resInfos);
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
@@ -282,7 +279,7 @@ TEST_F(CcuComponentTest, St_AllocInsAndCkeAndXn_When_ResNumExceedsLeftNum_Expect
     // 3. 申请错误的die的资源
     ret = ccuComponent.AllocIns(errorDieId, req, errorResInfo);
     EXPECT_NE(ret, HcclResult::HCCL_SUCCESS);
-    
+
     ret = ccuComponent.ReleaseIns(errorDieId, errorResInfo);
     EXPECT_NE(ret, HcclResult::HCCL_SUCCESS);
 
@@ -324,12 +321,12 @@ TEST_F(CcuComponentTest, St_ReleaseRes_When_ResNumIsInvalid_Expect_Return_NotOk)
     ret = ccuComponent.ReleaseCke(dieId, resInfos);
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 
-    resInfos[0].startId += req / 2;  // 恢复正确值
-    resInfos[0].startId -= 1;        // 构造错误用例
+    resInfos[0].startId += req / 2; // 恢复正确值
+    resInfos[0].startId -= 1;       // 构造错误用例
     ret = ccuComponent.ReleaseCke(dieId, resInfos);
     EXPECT_EQ(ret, HcclResult::HCCL_E_PARA);
 
-    resInfos[0].startId += 1; // 恢复正确值
+    resInfos[0].startId += 1;               // 恢复正确值
     resInfos[0].startId += resInfos[0].num; // 构造错误用例
     ret = ccuComponent.ReleaseCke(dieId, resInfos);
     EXPECT_EQ(ret, HcclResult::HCCL_E_PARA);
@@ -423,13 +420,13 @@ TEST_F(CcuComponentTest, St_AllocChannels_When_CcuV1ResNumIsBoundary_Expect_Retu
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
     EXPECT_EQ(1, channelInfos.size());
 
-    auto &channelInfo = channelInfos[0];
+    auto& channelInfo = channelInfos[0];
     EXPECT_EQ(channelInfo.jettyInfos.size(), 1);
     EXPECT_EQ(channelInfo.jettyInfos[0].taJettyId, CCU_START_TA_JETTY_ID + LOOP_CHANNEL_NUM);
 
     ChannelCfg channelCfg;
     channelCfg.channelId = LOOP_CHANNEL_NUM; // 环回Channel占用 die 数量个
-    channelCfg.remoteEid.in6 ={0x1234, 0x5678};
+    channelCfg.remoteEid.in6 = {0x1234, 0x5678};
     channelCfg.remoteCcuVa = 0x87654321;
     channelCfg.memTokenId = 1;
     channelCfg.memTokenValue = 1;
@@ -470,7 +467,7 @@ TEST_F(CcuComponentTest, St_AllocChannels_When_CcuV1AndParaError_Expect_Return_N
     // 配置错误的channel
     ChannelCfg channelCfg;
     channelCfg.channelId = CCU_V1_MAX_CHANNEL_NUM;
-    channelCfg.remoteEid.in6 ={0x1234, 0x5678};
+    channelCfg.remoteEid.in6 = {0x1234, 0x5678};
     channelCfg.remoteCcuVa = 0x87654321;
     channelCfg.memTokenId = 5;
     channelCfg.memTokenValue = 8;
@@ -484,7 +481,7 @@ TEST_F(CcuComponentTest, St_AllocChannels_When_CcuV1AndParaError_Expect_Return_N
     uint32_t baseId = LOOP_CHANNEL_NUM;
     JettyCfg cfg1 = {baseId, 1, 2, 3};
     JettyCfg cfg2 = {baseId + 1, 1, 2, 3};
-    
+
     channelCfg.jettyCfgs.push_back(cfg1);
     channelCfg.jettyCfgs.push_back(cfg2);
 
@@ -506,7 +503,7 @@ TEST_F(CcuComponentTest, St_AllocChannels_When_CcuV1AndParaError_Expect_Return_N
     ChannelInfo channelInfo2;
     ret = ccuComponent.AllocChannels(dieId, channelPara, channelInfos);
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
-    
+
     auto channelInfo = channelInfos[0];
     ret = ccuComponent.ReleaseChannel(dieId, channelInfo.channelId);
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
@@ -517,7 +514,7 @@ TEST_F(CcuComponentTest, St_AllocChannels_When_CcuV1AndParaError_Expect_Return_N
 
     // 配置环回Channel
     channelCfg.channelId = 0;
-    ret = ccuComponent.ConfigChannel(dieId, channelCfg); 
+    ret = ccuComponent.ConfigChannel(dieId, channelCfg);
     EXPECT_NE(ret, HcclResult::HCCL_SUCCESS);
 
     // 释放环回Channel

@@ -21,14 +21,14 @@ struct ProfilingExtendInfo {
 };
 
 class ProfilingExtendInfoHelper {
-    using Handle = void (*)(const SqeInfo &sqeInfo, MsprofAicpuHcclTaskInfo &msprofAicpuMC2HcclInfo);
+    using Handle = void (*)(const SqeInfo& sqeInfo, MsprofAicpuHcclTaskInfo& msprofAicpuMC2HcclInfo);
 
 public:
-    static void SqeInfo2MsprofAicpuMC2HcclInfo(const SqeInfo &sqeInfo, MsprofAicpuHcclTaskInfo &msprofAicpuMC2HcclInfo);
-    static std::string MsprofAicpuMC2HcclInfoToString(const MsprofAicpuHcclTaskInfo &msprofAicpuMC2HcclInfo);
+    static void SqeInfo2MsprofAicpuMC2HcclInfo(const SqeInfo& sqeInfo, MsprofAicpuHcclTaskInfo& msprofAicpuMC2HcclInfo);
+    static std::string MsprofAicpuMC2HcclInfoToString(const MsprofAicpuHcclTaskInfo& msprofAicpuMC2HcclInfo);
     static void InitProfItemId();
-    static void AssembleProfInfoByType(const SqeInfo &sqeInfo, MsprofAicpuHcclTaskInfo &msprofAicpuMC2HcclInfo);
-    static void InitHcclInfo(MsprofAicpuHcclTaskInfo &msprofAicpuMC2HcclInfo);
+    static void AssembleProfInfoByType(const SqeInfo& sqeInfo, MsprofAicpuHcclTaskInfo& msprofAicpuMC2HcclInfo);
+    static void InitHcclInfo(MsprofAicpuHcclTaskInfo& msprofAicpuMC2HcclInfo);
 };
-}  // namespace dfx
-#endif  // ASCEND_ACE_COMOP_HCCL_HCCL_AI_CPU_KERNEL_DFX_PROFILING_PROFILING_EXTEND_INFO_H_
+} // namespace dfx
+#endif // ASCEND_ACE_COMOP_HCCL_HCCL_AI_CPU_KERNEL_DFX_PROFILING_PROFILING_EXTEND_INFO_H_

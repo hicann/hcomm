@@ -23,27 +23,24 @@ namespace Hccl {
 class CommunicatorImpl;
 class CollServiceStub {
 public:
-    explicit CollServiceStub(CommunicatorImpl *comm)
-        : comm_(comm), ccuInsPreprocessor_(comm)
-    {
-    }
-    HcclResult GenRankSize(TopoMetaParam &topoMetaParam, TopoMeta &topoMate);
-    HcclResult Orchestrate(CheckerOpParam &checkerOpParam, TopoMeta &topoMeta, DavidAlgConfig &config);
-    shared_ptr<InsQueue> Orchestrate(CollAlgOperator &op, std::string& algName);
+    explicit CollServiceStub(CommunicatorImpl* comm) : comm_(comm), ccuInsPreprocessor_(comm) {}
+    HcclResult GenRankSize(TopoMetaParam& topoMetaParam, TopoMeta& topoMate);
+    HcclResult Orchestrate(CheckerOpParam& checkerOpParam, TopoMeta& topoMeta, DavidAlgConfig& config);
+    shared_ptr<InsQueue> Orchestrate(CollAlgOperator& op, std::string& algName);
 
-    void LoadWithOpBasedMode(CollOperator &op, std::string& algName);
-    void LoadWithOffloadMode(CollOperator &op);
+    void LoadWithOpBasedMode(CollOperator& op, std::string& algName);
+    void LoadWithOffloadMode(CollOperator& op);
     void Init();
     void CollAlgComponentInit();
     CcuInsPreprocessor* GetCcuInsPreprocessor();
     void TransformTask();
+
 private:
     shared_ptr<InsQueue> insQue_;
-    CommunicatorImpl *comm_;
+    CommunicatorImpl* comm_;
     CcuInsPreprocessor ccuInsPreprocessor_;
     shared_ptr<CollAlgComponent> collAlgComponent_;
 };
 
-
-}// namespace Hccl
+} // namespace Hccl
 #endif

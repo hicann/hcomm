@@ -42,23 +42,15 @@ const uint8_t DEFAULT_DATA_COPY_STRIDE = 0;
 const uint32_t ONE_CORE_DUMP_SIZE = 1024;
 const uint32_t CACHE_LINE_SIZE = 128;
 
-enum class CacheLine : uint64_t {
-  SINGLE_CACHE_LINE = 0,
-  ENTIRE_DATA_CACHE
-};
+enum class CacheLine : uint64_t { SINGLE_CACHE_LINE = 0, ENTIRE_DATA_CACHE };
 
-enum class DcciDst : uint64_t {
-  CACHELINE_ALL = 0,
-  CACHELINE_U8,
-  CACHELINE_OUT,
-  CACHELINE_ATOMIC
-};
+enum class DcciDst : uint64_t { CACHELINE_ALL = 0, CACHELINE_U8, CACHELINE_OUT, CACHELINE_ATOMIC };
 
 typedef enum {
-  PIPE_S = 0,  // Scalar Pipe
-  PIPE_MTE2 = 1,   // OUT ->{L1, L0{A,B}, UB}
-  PIPE_MTE3 = 2,   // UB ->{OUT,L1}
-  PIPE_ALL,
+    PIPE_S = 0,    // Scalar Pipe
+    PIPE_MTE2 = 1, // OUT ->{L1, L0{A,B}, UB}
+    PIPE_MTE3 = 2, // UB ->{OUT,L1}
+    PIPE_ALL,
 } pipe_t;
 
 enum class HardEvent : uint8_t {
@@ -113,21 +105,22 @@ enum class DumpType : uint8_t {
 };
 
 struct MemDetails {
-  uint64_t size;
-  uint64_t addr;
-  uint32_t key;
+    uint64_t size;
+    uint64_t addr;
+    uint32_t key;
 };
 
-extern __aicore__ inline int64_t GetBlockIdx() {return block_idx;};
-extern __aicore__ inline int64_t GetBlockNum() {return numBlocks_;};
-extern __aicore__ inline int64_t GetSystemCycle() {return 0;};
-extern __aicore__ inline void PRINTF(const char *__restrict format, ...) {
+extern __aicore__ inline int64_t GetBlockIdx() { return block_idx; };
+extern __aicore__ inline int64_t GetBlockNum() { return numBlocks_; };
+extern __aicore__ inline int64_t GetSystemCycle() { return 0; };
+extern __aicore__ inline void PRINTF(const char* __restrict format, ...)
+{
     va_list args;
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
-  };
-extern __aicore__ inline void trap() {return;};
-}
+};
+extern __aicore__ inline void trap() { return; };
+} // namespace AscendC
 
 #endif

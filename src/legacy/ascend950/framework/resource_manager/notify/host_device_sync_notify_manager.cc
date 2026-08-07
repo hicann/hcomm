@@ -16,26 +16,20 @@ HostDeviceSyncNotifyManager::HostDeviceSyncNotifyManager()
     notifys[1] = std::make_unique<RtsNotify>(false);
 }
 
-RtsNotify *HostDeviceSyncNotifyManager::GetDeviceWaitNotify()
-{
-    return notifys[0].get();
-}
+RtsNotify* HostDeviceSyncNotifyManager::GetDeviceWaitNotify() { return notifys[0].get(); }
 
-RtsNotify *HostDeviceSyncNotifyManager::GetHostWaitNotify()
-{
-    return notifys[1].get();
-}
+RtsNotify* HostDeviceSyncNotifyManager::GetHostWaitNotify() { return notifys[1].get(); }
 
 void HostDeviceSyncNotifyManager::GetMc2AiCpuNotifys(u8 aicpuNotifyNum, void** aicpuNotify)
 {
     if (mc2AicpuNotifys_.size() < aicpuNotifyNum) {
-        for (u16 i = mc2AicpuNotifys_.size(); i < aicpuNotifyNum; i++) { 
+        for (u16 i = mc2AicpuNotifys_.size(); i < aicpuNotifyNum; i++) {
             shared_ptr<RtsNotify> rtsNotify = make_shared<RtsNotify>(true);
             mc2AicpuNotifys_.push_back(rtsNotify);
         }
     }
     for (u16 i = 0; i < aicpuNotifyNum; i++) {
-        *(aicpuNotify + i) = reinterpret_cast<void *>(mc2AicpuNotifys_[i].get()->GetHandleAddr());
+        *(aicpuNotify + i) = reinterpret_cast<void*>(mc2AicpuNotifys_[i].get()->GetHandleAddr());
     }
 }
 

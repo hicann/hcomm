@@ -13,43 +13,57 @@
 #include "../../../../legacy/ascend950/framework/dfx/profiling/dlprof_function.h"
 namespace hccl {
 
-HcclResult HcclCommProfiling::ReportKernel(uint64_t beginTime, const std::string& commTag, const std::string& kernelName, uint32_t threadId, bool cachedReq) const {
+HcclResult HcclCommProfiling::ReportKernel(
+    uint64_t beginTime, const std::string& commTag, const std::string& kernelName, uint32_t threadId,
+    bool cachedReq) const
+{
     u64 endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
     uint64_t cmdItemId = Hccl::DlProfFunction::GetInstance().dlMsprofStr2Id(kernelName.c_str(), kernelName.length());
-    EXCEPTION_CATCH(Hccl::ProfilingHandler::GetInstance().ReportNodeApi(beginTime, endTime, cmdItemId, threadId, cachedReq), return HCCL_E_PTR);
-    EXCEPTION_CATCH(Hccl::ProfilingHandler::GetInstance().ReportNodeBasicInfo(endTime, cmdItemId, threadId, cachedReq), return HCCL_E_PTR);
-    HCCL_INFO("[HcclCommProfiling][ReportKernel] beginTime [%llu] endTime[%llu] kernelName[%s] commTag[%s] threadId[%u]",
-            beginTime, endTime, kernelName.c_str(), commTag.c_str(), threadId);
+    EXCEPTION_CATCH(
+        Hccl::ProfilingHandler::GetInstance().ReportNodeApi(beginTime, endTime, cmdItemId, threadId, cachedReq),
+        return HCCL_E_PTR);
+    EXCEPTION_CATCH(
+        Hccl::ProfilingHandler::GetInstance().ReportNodeBasicInfo(endTime, cmdItemId, threadId, cachedReq),
+        return HCCL_E_PTR);
+    HCCL_INFO(
+        "[HcclCommProfiling][ReportKernel] beginTime [%llu] endTime[%llu] kernelName[%s] commTag[%s] threadId[%u]",
+        beginTime, endTime, kernelName.c_str(), commTag.c_str(), threadId);
     return HCCL_SUCCESS;
 }
 
 HcclCommProfiling::HcclCommProfiling(u32 deviceId, Hccl::MirrorTaskManager* mirrorTaskManager)
-    : mirrorTaskManager_(mirrorTaskManager) { (void)deviceId; }
+    : mirrorTaskManager_(mirrorTaskManager)
+{
+    (void)deviceId;
+}
 
-HcclResult HcclCommProfiling::Init() {
+HcclResult HcclCommProfiling::Init()
+{
     if (initializedFlag_) {
         return HCCL_SUCCESS;
     }
     CHK_RET(Hccl::ProfilingHandler::GetInstance().Init());
-    profilingReporter_ = std::make_unique<Hccl::ProfilingReporter>(mirrorTaskManager_, &Hccl::ProfilingHandler::GetInstance());
+    profilingReporter_
+        = std::make_unique<Hccl::ProfilingReporter>(mirrorTaskManager_, &Hccl::ProfilingHandler::GetInstance());
     CHK_RET(profilingReporter_->Init());
     initializedFlag_ = true;
     return HCCL_SUCCESS;
 }
 
 // HcclCommProfiling任务上报
-void HcclCommProfiling::ReportAllTasks(bool cachedReq) const {
-    profilingReporter_->ReportAllTasks(cachedReq);
-}
+void HcclCommProfiling::ReportAllTasks(bool cachedReq) const { profilingReporter_->ReportAllTasks(cachedReq); }
 
 // HcclCommProfiling::ReportOp实现
-void HcclCommProfiling::ReportOp(uint64_t beginTime, bool cachedReq, bool isOpBase) {
+void HcclCommProfiling::ReportOp(uint64_t beginTime, bool cachedReq, bool isOpBase)
+{
     profilingReporter_->ReportOp(beginTime, cachedReq, isOpBase);
 }
 
-void HcclCommProfiling::ReportMc2CommInfo(const Mc2CommInfo& mc2CommInfo) {
-    profilingReporter_->CallReportMc2CommInfo(mc2CommInfo.FreeStreamId, mc2CommInfo.streamsId, 
-        mc2CommInfo.groupname, mc2CommInfo.myRankId, mc2CommInfo.rankSize, mc2CommInfo.parentRankId);
+void HcclCommProfiling::ReportMc2CommInfo(const Mc2CommInfo& mc2CommInfo)
+{
+    profilingReporter_->CallReportMc2CommInfo(
+        mc2CommInfo.FreeStreamId, mc2CommInfo.streamsId, mc2CommInfo.groupname, mc2CommInfo.myRankId,
+        mc2CommInfo.rankSize, mc2CommInfo.parentRankId);
 }
 
 void HcclCommProfiling::SetCurrDfxOpInfo(std::shared_ptr<Hccl::DfxOpInfo> dfxOpInfo)
@@ -58,10 +72,6 @@ void HcclCommProfiling::SetCurrDfxOpInfo(std::shared_ptr<Hccl::DfxOpInfo> dfxOpI
 }
 
 // HcclCommProfiling::UpdateProfStat实现
-void HcclCommProfiling::UpdateProfStat() {
-    profilingReporter_->UpdateProfStat();
-}
-Hccl::MirrorTaskManager* HcclCommProfiling::GetMirrorTaskManager() const {
-    return mirrorTaskManager_;
-}
-}// namespace hccl
+void HcclCommProfiling::UpdateProfStat() { profilingReporter_->UpdateProfStat(); }
+Hccl::MirrorTaskManager* HcclCommProfiling::GetMirrorTaskManager() const { return mirrorTaskManager_; }
+} // namespace hccl

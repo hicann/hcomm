@@ -23,9 +23,9 @@ struct AlltoAllUserRankInfo {
 
 class AlltoAllVStagedCalculator {
 public:
-    static void CalcWorkSpaceMemSize(const AlltoAllUserRankInfo &userRankInfo,
-        const std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo, u64 &workspaceMemSize,
-        u32 meshAggregationRankSize);
+    static void CalcWorkSpaceMemSize(
+        const AlltoAllUserRankInfo& userRankInfo, const std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo,
+        u64& workspaceMemSize, u32 meshAggregationRankSize);
 
 protected:
 private:

@@ -13,6 +13,6 @@
 
 #include "all_reduce_mesh_oneshot_pub.h"
 
-namespace hccl {}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * ALL_REDUCE_MESH_ONESHOT_H */

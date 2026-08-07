@@ -15,10 +15,16 @@
 
 namespace AscendC {
 template <typename T>
-__aicore__ uint64_t max(const T src0, const T src1) { return std::max(src0, src1); }
-
-template <typename T>
-__aicore__ uint64_t min(const T src0, const T src1) { return std::min(src0, src1); }
+__aicore__ uint64_t max(const T src0, const T src1)
+{
+    return std::max(src0, src1);
 }
 
-#endif //HCCL_VM_ASCENDC_UTILS_STUB_H
+template <typename T>
+__aicore__ uint64_t min(const T src0, const T src1)
+{
+    return std::min(src0, src1);
+}
+} // namespace AscendC
+
+#endif // HCCL_VM_ASCENDC_UTILS_STUB_H

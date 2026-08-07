@@ -47,13 +47,14 @@ public:
     HcclResult Init();
     HcclResult Deinit();
 
-    HcclResult AllocResHandle(const CcuResReq& resReq, CcuResHandle &resHandle);
+    HcclResult AllocResHandle(const CcuResReq& resReq, CcuResHandle& resHandle);
     HcclResult ReleaseResHandle(const CcuResHandle& handle);
-    HcclResult GetResource(const CcuResHandle& handle, CcuResRepository &ccuResRepo);
-    HcclResult QueryRemainRes(uint8_t dieId, ResType resType, uint32_t &remainNum) const;
+    HcclResult GetResource(const CcuResHandle& handle, CcuResRepository& ccuResRepo);
+    HcclResult QueryRemainRes(uint8_t dieId, ResType resType, uint32_t& remainNum) const;
     // 获取指定 die 上可分配的块类型资源数量 = 预分配块数量 × CcuBlockResStrategy 对应块大小
     // 仅支持 ResType::LOOP / MS / CKE / XN / GSA
-    HcclResult GetAllocatableMaxBlockResNum(ResType resType, uint8_t dieId, uint32_t &num) const;
+    HcclResult GetAllocatableMaxBlockResNum(ResType resType, uint8_t dieId, uint32_t& num) const;
+
 private:
     class CcuMissionMgr {
     public:
@@ -61,11 +62,10 @@ private:
         ~CcuMissionMgr() = default;
 
         void Reset();
-        HcclResult PreAlloc(const int32_t devLogicId, const uint32_t blockSize,
-            const std::array<bool, CCU_MAX_IODIE_NUM> &dieFlags);
-        HcclResult Alloc(const uintptr_t handleKey, const MissionReq &missionReq,
-            MissionResInfo &missionInfos);
-        void Release(MissionResInfo &missionInfos);
+        HcclResult PreAlloc(
+            const int32_t devLogicId, const uint32_t blockSize, const std::array<bool, CCU_MAX_IODIE_NUM>& dieFlags);
+        HcclResult Alloc(const uintptr_t handleKey, const MissionReq& missionReq, MissionResInfo& missionInfos);
+        void Release(MissionResInfo& missionInfos);
         const std::vector<BlockInfo>& GetBlocks() const { return blocks_; }
 
     private:
@@ -76,24 +76,23 @@ private:
 
 private:
     explicit CcuResBatchAllocator() = default;
-    CcuResBatchAllocator(const CcuResBatchAllocator &that) = delete;
-    CcuResBatchAllocator& operator=(const CcuResBatchAllocator &that) = delete;
+    CcuResBatchAllocator(const CcuResBatchAllocator& that) = delete;
+    CcuResBatchAllocator& operator=(const CcuResBatchAllocator& that) = delete;
     ~CcuResBatchAllocator() = default; // 不允许在析构中调用CcuComponent，会引起未定义行为
 
     HcclResult PreAllocBlockRes();
-    HcclResult TryAllocResHandle(const uintptr_t handleKey, const CcuResReq& resReq,
-        std::unique_ptr<CcuResRepository>& resRepoPtr);
-    HcclResult AllocBlockRes(const uintptr_t handleKey, const CcuResReq& resReq,
-        std::unique_ptr<CcuResRepository> &resRepoPtr);
-    HcclResult AllocConsecutiveRes(const CcuResReq& resReq,
-        std::unique_ptr<CcuResRepository>& resRepoPtr) const;
-    HcclResult AllocDiscreteRes(const CcuResReq& resReq,
-        std::unique_ptr<CcuResRepository>& resRepoPtr) const;
+    HcclResult TryAllocResHandle(
+        const uintptr_t handleKey, const CcuResReq& resReq, std::unique_ptr<CcuResRepository>& resRepoPtr);
+    HcclResult
+    AllocBlockRes(const uintptr_t handleKey, const CcuResReq& resReq, std::unique_ptr<CcuResRepository>& resRepoPtr);
+    HcclResult AllocConsecutiveRes(const CcuResReq& resReq, std::unique_ptr<CcuResRepository>& resRepoPtr) const;
+    HcclResult AllocDiscreteRes(const CcuResReq& resReq, std::unique_ptr<CcuResRepository>& resRepoPtr) const;
     HcclResult ReleaseResource(std::unique_ptr<CcuResRepository>& resRepoPtr);
-    void ReleaseBlockResource(std::unique_ptr<CcuResRepository> &resRepoPtr);
+    void ReleaseBlockResource(std::unique_ptr<CcuResRepository>& resRepoPtr);
     HcclResult ReleaseNonBlockTypeRes(std::unique_ptr<CcuResRepository>& resRepoPtr) const;
     // 根据 resType 解析对应的 blocks 指针，用于 QueryRemainRes 降低圈复杂度
     HcclResult ResolveBlocksPtr(uint8_t dieId, ResType resType, const std::vector<BlockInfo>*& blocksPtr) const;
+
 private:
     mutable std::mutex innerMutex_;
     int32_t devLogicId_{0};

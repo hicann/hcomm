@@ -19,18 +19,18 @@ namespace Hccl {
 class CommunicatorImpl;
 class ConnectionsBuilder {
 public:
-    explicit ConnectionsBuilder(CommunicatorImpl &communicator);
+    explicit ConnectionsBuilder(CommunicatorImpl& communicator);
 
-    void BatchBuild(const std::string &opTag, const vector<LinkData> &links);
+    void BatchBuild(const std::string& opTag, const vector<LinkData>& links);
 
     vector<LinkData> GetAvailableLinksVec() const;
 
 private:
-    void CreateRmaConnections(const std::string &opTag, const vector<LinkData> &links) const;
+    void CreateRmaConnections(const std::string& opTag, const vector<LinkData>& links) const;
 
-    RmaConnManager         *connManager{nullptr};
-    CommunicatorImpl       *comm{nullptr};
-    std::set<LinkData>      availableLinks;
+    RmaConnManager* connManager{nullptr};
+    CommunicatorImpl* comm{nullptr};
+    std::set<LinkData> availableLinks;
 };
 
 } // namespace Hccl

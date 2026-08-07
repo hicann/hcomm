@@ -35,10 +35,10 @@ const uint8_t DEFAULT_DATA_COPY_STRIDE = 0;
 const uint32_t ONE_CORE_DUMP_SIZE = 1024;
 
 typedef enum {
-  PIPE_S = 0,  // Scalar Pipe
-  PIPE_MTE2 = 1,   // OUT ->{L1, L0{A,B}, UB}
-  PIPE_MTE3 = 2,   // UB ->{OUT,L1}
-  PIPE_ALL,
+    PIPE_S = 0,    // Scalar Pipe
+    PIPE_MTE2 = 1, // OUT ->{L1, L0{A,B}, UB}
+    PIPE_MTE3 = 2, // UB ->{OUT,L1}
+    PIPE_ALL,
 } pipe_t;
 
 enum class HardEvent : uint8_t {
@@ -92,22 +92,24 @@ enum class DumpType : uint8_t {
     DUMP_SIMT,
 };
 
-extern __aicore__ inline int64_t GetBlockIdx() {return block_idx;};
-extern __aicore__ inline int64_t GetBlockNum() {return block_num;};
-extern __aicore__ inline void InitDump(bool dump, uint8_t* dumpAddr, u32 dumpSize) {return;};
-extern __aicore__ inline void PRINTF(const char *__restrict format, ...) {
-    va_list args;
-    va_start(args, format);
-    vprintf(format, args);
-    va_end(args);
-  };
-extern __aicore__ inline void PrintfImpl(DumpType dumpType, const char *__restrict format, ...) {
+extern __aicore__ inline int64_t GetBlockIdx() { return block_idx; };
+extern __aicore__ inline int64_t GetBlockNum() { return block_num; };
+extern __aicore__ inline void InitDump(bool dump, uint8_t* dumpAddr, u32 dumpSize) { return; };
+extern __aicore__ inline void PRINTF(const char* __restrict format, ...)
+{
     va_list args;
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
 };
-extern __aicore__ inline void trap() {return;};
-}
+extern __aicore__ inline void PrintfImpl(DumpType dumpType, const char* __restrict format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+};
+extern __aicore__ inline void trap() { return; };
+} // namespace AscendC
 
 #endif

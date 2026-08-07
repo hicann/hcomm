@@ -15,6 +15,6 @@
 
 namespace hccl {
 constexpr s32 HCCL_S32_NUM_128 = 128;
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* * _SCATTER_MESH_H__ */

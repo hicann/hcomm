@@ -14,7 +14,8 @@
 namespace hccl {
 class CollAllGatherRingZerocopyExecutor : public CollAllGatherExecutor {
 public:
-    explicit CollAllGatherRingZerocopyExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollAllGatherRingZerocopyExecutor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAllGatherRingZerocopyExecutor() override = default;
 
 protected:
@@ -29,23 +30,25 @@ protected:
 private:
     /* *************** 资源计算 *************** */
     HcclResult CalcStreamNum(u32& streamNum) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
     u64 CalcLoopMaxCount(const u64 cclBuffSize, const u32 unitSize) override;
     void ParseParam(const OpParam& param) override;
 
     /* *************** 算法编排 *************** */
     HcclResult SemiRingAllGather(
-        const std::string &tag, DeviceMem &inputMem, DeviceMem &outputMem,
-        const u64 count, const HcclDataType &dataType, const std::vector<std::vector<Slice>> &multRingsSliceZero,
-        const Stream &stream, s32 profStage, const u64 baseOffset, const HcomCollOpInfo *opInfo,
-        const std::vector<std::vector<Slice>> &multRingsUserMemSlice);
-    virtual HcclResult KernelRunInterServerPreProcess(const OpParam &param, const ExecMem &execMem);
-    HcclResult KernelRunInterServer(const OpParam &param, ExecMem &execMem) override;
-    HcclResult KernelRunIntraServerPost(const OpParam &param, ExecMem &execMem) override;
-    virtual HcclResult CalcLevel0DataSlices(const OpParam &param, const ExecMem &execMem, std::vector<Slice> &dataSegsSlice);
-    virtual HcclResult KernelRunInterServerPostProcess(const OpParam &param, const ExecMem &execMem);
+        const std::string& tag, DeviceMem& inputMem, DeviceMem& outputMem, const u64 count,
+        const HcclDataType& dataType, const std::vector<std::vector<Slice>>& multRingsSliceZero, const Stream& stream,
+        s32 profStage, const u64 baseOffset, const HcomCollOpInfo* opInfo,
+        const std::vector<std::vector<Slice>>& multRingsUserMemSlice);
+    virtual HcclResult KernelRunInterServerPreProcess(const OpParam& param, const ExecMem& execMem);
+    HcclResult KernelRunInterServer(const OpParam& param, ExecMem& execMem) override;
+    HcclResult KernelRunIntraServerPost(const OpParam& param, ExecMem& execMem) override;
+    virtual HcclResult
+    CalcLevel0DataSlices(const OpParam& param, const ExecMem& execMem, std::vector<Slice>& dataSegsSlice);
+    virtual HcclResult KernelRunInterServerPostProcess(const OpParam& param, const ExecMem& execMem);
 };
 
 } // namespace hccl

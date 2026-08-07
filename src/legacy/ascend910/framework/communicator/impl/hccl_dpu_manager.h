@@ -28,32 +28,29 @@ public:
     DpuManager();
     ~DpuManager();
 
-    HcclResult Init(const std::string &commId, u32 deviceLogicId);
+    HcclResult Init(const std::string& commId, u32 deviceLogicId);
     HcclResult InitDpuKernel();
     HcclResult DeInitDpuKernel();
 
-    bool IsDpuKernelLaunched() const
-    {
-        return isDpuKernelLaunched_;
-    }
+    bool IsDpuKernelLaunched() const { return isDpuKernelLaunched_; }
 
-    HcclResult CreateWorkspaceBuf(const char *memTag, uint64_t *size, bool *newCreated);
-    std::shared_ptr<Hccl::DevBuffer> GetKFCWorkSpace(const char *memTag);
-    HcclResult GetDevMemWorkSpace(const std::string &memTag, uint64_t *size, void **addr, bool *newCreated);
-    HcclResult GetKFCWorkSpaceVA(const std::string &memTag, uint64_t *size, void **addr, bool *newCreated);
+    HcclResult CreateWorkspaceBuf(const char* memTag, uint64_t* size, bool* newCreated);
+    std::shared_ptr<Hccl::DevBuffer> GetKFCWorkSpace(const char* memTag);
+    HcclResult GetDevMemWorkSpace(const std::string& memTag, uint64_t* size, void** addr, bool* newCreated);
+    HcclResult GetKFCWorkSpaceVA(const std::string& memTag, uint64_t* size, void** addr, bool* newCreated);
     HcclResult AllocAndRegKFCWorkSpace(uint64_t size);
     HcclResult DestroyKFCWorkSpaceVA();
     HcclResult DestroyDpuKernelResource();
 
 private:
     HcclResult InitAndLaunchDpuKernel();
-    HcclResult PrepareDpuKernelResource(aclrtFuncHandle &funcHandle);
-    HcclResult LaunchDpuKernel(aclrtFuncHandle &funcHandle);
+    HcclResult PrepareDpuKernelResource(aclrtFuncHandle& funcHandle);
+    HcclResult LaunchDpuKernel(aclrtFuncHandle& funcHandle);
     HcclResult WaitDpuKernelThreadTerminate();
 
     std::string commId_;
     u32 devLogicId_{0};
-    void *hostShareBuf_{nullptr};
+    void* hostShareBuf_{nullptr};
     void* va_{nullptr};
     void* accessVA_{nullptr};
     std::unordered_map<std::string, std::shared_ptr<Hccl::DevBuffer>> tagWorkspaceVAMap_;

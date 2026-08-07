@@ -14,23 +14,22 @@
 
 namespace hccl {
 class CollReduceExecutor : public CollCommExecutor {
-
 public:
-    CollReduceExecutor(const HcclDispatcher dispatcher,
-    std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollReduceExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceExecutor() override = default;
 
     HcclResult Orchestrate(OpParam& param, AlgResourceResponse& algRes) override;
+
 protected:
     /* *************** 算法编排 *************** */
     // Reduce Loop Executor公共接口
     virtual u64 CalcLoopMaxCount(const u32 unitSize, const AlgResourceResponse& algRes);
     virtual bool IsHugeData(const u64 curSize);
-    HcclResult RunLoop(OpParam &param, AlgResourceResponse &algRes);
-    HcclResult RetryPostSync(OpParam& param, ExecMem &execMem);
+    HcclResult RunLoop(OpParam& param, AlgResourceResponse& algRes);
+    HcclResult RetryPostSync(OpParam& param, ExecMem& execMem);
 
 private:
-    HcclResult RunLoopInner(OpParam &param, const ReduceType &reduceType, ExecMem &execMem);
+    HcclResult RunLoopInner(OpParam& param, const ReduceType& reduceType, ExecMem& execMem);
 };
 
 } // namespace hccl

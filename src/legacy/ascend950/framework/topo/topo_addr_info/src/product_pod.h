@@ -16,13 +16,12 @@
 extern "C" {
 #endif
 
-int PodGetRootinfoLen(size_t *len);
+int PodGetRootinfoLen(size_t* len);
 
-int PodGetRootinfo(int npu_id, unsigned int mainboard_id, void *buf, size_t* len);
+int PodGetRootinfo(int npu_id, unsigned int mainboard_id, void* buf, size_t* len);
 
 #ifdef __cplusplus
 }
 #endif
 
-
-#endif  // __PRODUCT_POD_H__
+#endif // __PRODUCT_POD_H__

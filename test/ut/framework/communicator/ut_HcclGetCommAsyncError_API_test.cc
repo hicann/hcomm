@@ -12,7 +12,8 @@
 
 class HcclGetCommAsyncErrorTest : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         BaseInit::SetUp();
         UT_USE_1SERVER_2RANK_AS_DEFAULT;
         // MOCK掉对communicator层的依赖，保证分层测试
@@ -22,7 +23,8 @@ public:
             .with(mockcpp::any())
             .will(returnValue(HCCL_SUCCESS));
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }

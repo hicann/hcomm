@@ -16,13 +16,13 @@
 namespace hccl {
 class CollReduceScatterVRingFor91093Executor : public CollReduceScatterRingFor91093Executor {
 public:
-    CollReduceScatterVRingFor91093Executor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollReduceScatterVRingFor91093Executor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceScatterVRingFor91093Executor() override = default;
 
 private:
     /* *************** 算法编排 *************** */
     u64 CalcLoopMaxCount(const u32 unitSize) override;
-    bool IsHugeData(const u64 curSize, OpParam *param = nullptr) override;
+    bool IsHugeData(const u64 curSize, OpParam* param = nullptr) override;
 };
 
 } // namespace hccl

@@ -17,24 +17,25 @@ namespace Hccl {
 class CommunicatorImpl;
 class UbMemoryTransportMgr {
 public:
-    explicit UbMemoryTransportMgr(const CommunicatorImpl &communicator);
+    explicit UbMemoryTransportMgr(const CommunicatorImpl& communicator);
     virtual ~UbMemoryTransportMgr();
-    UbMemoryTransportMgr       *Get(const LinkData &link);
-    set<UbMemoryTransportMgr *> Get(RankId rank);
-    HcclResult BatchCreateTransport(const std::vector<LinkData> &links);
-    void       TransportsConnect();
+    UbMemoryTransportMgr* Get(const LinkData& link);
+    set<UbMemoryTransportMgr*> Get(RankId rank);
+    HcclResult BatchCreateTransport(const std::vector<LinkData>& links);
+    void TransportsConnect();
     std::vector<std::pair<RankId, RemoteIpcRmaBuffer*>> GetRmtRankId2RmtIpcRmaBufList();
     std::vector<std::pair<RankId, uintptr_t>> GetAllRankId2AivTagBufAddrList();
     std::vector<std::pair<RankId, uintptr_t>> GetAllRankId2AivOffloadTagBufAddrList();
+
 private:
-    vector<LinkData>                                       tempTransport;
-    const CommunicatorImpl                                *comm;
+    vector<LinkData> tempTransport;
+    const CommunicatorImpl* comm;
     unordered_map<LinkData, unique_ptr<UbMemoryTransport>> ubMemLink2TransportMap;
 
-    HcclResult CreateTransportByLink(const LinkData &link);
+    HcclResult CreateTransportByLink(const LinkData& link);
 
-    void       WaitTransportsReady(vector<std::pair<UbMemoryTransport *, LinkData>> &transports) const;
-    vector<std::pair<UbMemoryTransport *, LinkData>> GetUnconfirmedTrans();
+    void WaitTransportsReady(vector<std::pair<UbMemoryTransport*, LinkData>>& transports) const;
+    vector<std::pair<UbMemoryTransport*, LinkData>> GetUnconfirmedTrans();
 };
 } // namespace Hccl
 #endif

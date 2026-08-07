@@ -32,17 +32,10 @@
 using namespace std;
 using namespace hccl;
 
-class ExchangeInfoTest : public testing::Test
-{
+class ExchangeInfoTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "ExchangeInfoTest SetUp" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "ExchangeInfoTest TearDown" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "ExchangeInfoTest SetUp" << std::endl; }
+    static void TearDownTestCase() { std::cout << "ExchangeInfoTest TearDown" << std::endl; }
     virtual void SetUp()
     {
         setenv("HCCL_DFS_CONFIG", "task_exception:on", 1);
@@ -79,7 +72,7 @@ HcclResult InitCollComm(std::shared_ptr<hccl::hcclComm> hcclCommPtr)
     return hcclCommPtr->InitCollComm(commV2, rankGraphV2.get(), rank, cclBuffer, commName, &config);
 }
 
-void AssertCollCommReady(const std::shared_ptr<hccl::hcclComm> &hcclCommPtr)
+void AssertCollCommReady(const std::shared_ptr<hccl::hcclComm>& hcclCommPtr)
 {
     ASSERT_EQ(InitCollComm(hcclCommPtr), HCCL_SUCCESS);
     ASSERT_NE(hcclCommPtr->GetCollComm(), nullptr);
@@ -103,7 +96,7 @@ TEST_F(ExchangeInfoTest, Ut_CApiGetExchangeInfo_When_ParamValid_Expect_Success)
     hccl::CollComm* collComm = hcclCommPtr_->GetCollComm();
     hccl::MyRank* myRank = collComm->GetMyRank();
     ASSERT_NE(myRank, nullptr);
-    CollCommConfigConsistency &collCommConfigConsistency = myRank->GetCollCommConfigConsistency();
+    CollCommConfigConsistency& collCommConfigConsistency = myRank->GetCollCommConfigConsistency();
     collCommConfigConsistency.StoreRemoteExchangeInfo(0, remoteData);
 
     HcclComm comm = static_cast<HcclComm>(hcclCommPtr_.get());
@@ -131,7 +124,7 @@ TEST_F(ExchangeInfoTest, Ut_EndToEnd_When_AddStoreGet_Expect_Consistent)
     hccl::CollComm* collComm = hcclCommPtr_->GetCollComm();
     hccl::MyRank* myRank = collComm->GetMyRank();
     ASSERT_NE(myRank, nullptr);
-    CollCommConfigConsistency &collCommConfigConsistency = myRank->GetCollCommConfigConsistency();
+    CollCommConfigConsistency& collCommConfigConsistency = myRank->GetCollCommConfigConsistency();
     HcclResult ret = collCommConfigConsistency.AddExchangeInfo(localData.data(), localData.size());
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
@@ -153,4 +146,3 @@ TEST_F(ExchangeInfoTest, Ut_EndToEnd_When_AddStoreGet_Expect_Consistent)
     ret = collCommConfigConsistency.GetExchangeInfo(1, recvBufSize, recvBuf.data(), &actualLen);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
-

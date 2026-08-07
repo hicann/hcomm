@@ -18,26 +18,27 @@ namespace Hccl {
 class CommunicatorImpl;
 class HcclCommunicator {
 public:
-    explicit HcclCommunicator(const CommParams &commParams);
-    HcclCommunicator(const CommParams &commParams, const HcclCommConfig *config);
+    explicit HcclCommunicator(const CommParams& commParams);
+    HcclCommunicator(const CommParams& commParams, const HcclCommConfig* config);
     ~HcclCommunicator();
 
-    HcclResult Init(const std::string &ranktableM, std::string& topoPath);
+    HcclResult Init(const std::string& ranktableM, std::string& topoPath);
     void DeInit() const;
 
-    HcclResult LoadOpbasedCollOp(CollOpParams &opParams, std::string& algName);
-    HcclResult LoadOffloadCollOp(std::string &opTag, CollOpParams &opParams);
+    HcclResult LoadOpbasedCollOp(CollOpParams& opParams, std::string& algName);
+    HcclResult LoadOffloadCollOp(std::string& opTag, CollOpParams& opParams);
 
     // MC2 流程专用
-    HcclResult GetRankSize(uint32_t *rankSize);
-    HcclResult GetRankId(uint32_t &rankId);
+    HcclResult GetRankSize(uint32_t* rankSize);
+    HcclResult GetRankId(uint32_t& rankId);
     CcuInsPreprocessor* GetCcuInsPreprocessor();
     void TransformTask();
+
 private:
-    CommParams                        commParams;
-    HcclCommConfig                    config{};
+    CommParams commParams;
+    HcclCommConfig config{};
     std::unique_ptr<CommunicatorImpl> pimpl;
-    CommunicatorImpl *GetCommImpl();
+    CommunicatorImpl* GetCommImpl();
     std::mutex serialMutex;
 };
 

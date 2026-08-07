@@ -7,10 +7,10 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef HCCL_DISPATCHER_VIRTURAL_H
 #define HCCL_DISPATCHER_VIRTURAL_H
- 
+
 #include "dispatcher_virtural_pub.h"
- 
+
 #endif //  HCCL_DISPATCHER_VIRTURAL_H

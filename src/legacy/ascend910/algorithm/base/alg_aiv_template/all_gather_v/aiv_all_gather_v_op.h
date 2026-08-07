@@ -17,20 +17,21 @@
 #include "aiv_all_gather_v_910b_bigdata.h"
 
 // aiv allgatherv
-#define AIV_ALL_GATHER_V_KERNEL_BATCH_DEF(type) \
-extern "C" __global__ __aicore__ void aiv_all_gather_v_##type(EXTERN_KERNEL_ARGS_DEF) { \
-    AIV_INFO_HINT; \
-    if (isOpBase) { \
-        if (sizeof(type) * extraArgs.maxCount > AIV_ALL_GATHER_SMALL_SIZE) { \
-            return aiv_all_gather_v_910b_bigdata<type>(EXTERN_KERNEL_ARGS_CALL); \
-        } else { \
-            return aiv_all_gather_v_910b_smalldata<type>(EXTERN_KERNEL_ARGS_CALL); \
-        } \
-    } \
-} \
-EXPORT_AIV_META_INFO(aiv_all_gather_v_##type)
+#define AIV_ALL_GATHER_V_KERNEL_BATCH_DEF(type)                                           \
+    extern "C" __global__ __aicore__ void aiv_all_gather_v_##type(EXTERN_KERNEL_ARGS_DEF) \
+    {                                                                                     \
+        AIV_INFO_HINT;                                                                    \
+        if (isOpBase) {                                                                   \
+            if (sizeof(type) * extraArgs.maxCount > AIV_ALL_GATHER_SMALL_SIZE) {          \
+                return aiv_all_gather_v_910b_bigdata<type>(EXTERN_KERNEL_ARGS_CALL);      \
+            } else {                                                                      \
+                return aiv_all_gather_v_910b_smalldata<type>(EXTERN_KERNEL_ARGS_CALL);    \
+            }                                                                             \
+        }                                                                                 \
+    }                                                                                     \
+    EXPORT_AIV_META_INFO(aiv_all_gather_v_##type)
 
 // 定义算子各数据类型Kernel入口
 AIV_COPY_DATA_TYPE_DEF(AIV_ALL_GATHER_V_KERNEL_BATCH_DEF);
 
-#endif  /* AIV_ALL_GATHER_V_OP_H */
+#endif /* AIV_ALL_GATHER_V_OP_H */

@@ -23,22 +23,17 @@
 #include "checker.h"
 using namespace checker;
 
-class ReduceScatterGeneralizationTest: public ::testing::TestWithParam<std::tuple<int, CheckerDataType, vector<int>>> {
+class ReduceScatterGeneralizationTest : public ::testing::TestWithParam<std::tuple<int, CheckerDataType, vector<int>>> {
 public:
-    static void SetUpTestCase()
-    {
-        std::cout << "ReduceScatterGeneralizationTest set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "ReduceScatterGeneralizationTest set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "ReduceScatterGeneralizationTest tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "ReduceScatterGeneralizationTest tear down." << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -82,11 +77,10 @@ TEST_P(ReduceScatterGeneralizationTest, reduce_scatter_test)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-INSTANTIATE_TEST_SUITE_P(ReduceScatterCaseTestGeneralization, ReduceScatterGeneralizationTest,
-    testing::Combine
-    (
+INSTANTIATE_TEST_SUITE_P(
+    ReduceScatterCaseTestGeneralization, ReduceScatterGeneralizationTest,
+    testing::Combine(
         testing::Values(800, 1000000008, 5000000008),
-        testing::Values(CheckerDataType::DATA_TYPE_INT32, CheckerDataType::DATA_TYPE_INT8, CheckerDataType::DATA_TYPE_BFP16),
-        testing::ValuesIn(std::vector<std::vector<int>>{{1,1,16}, {1,4,16}, {1,2,8}, {1,2,7}})
-    )
-);
+        testing::Values(
+            CheckerDataType::DATA_TYPE_INT32, CheckerDataType::DATA_TYPE_INT8, CheckerDataType::DATA_TYPE_BFP16),
+        testing::ValuesIn(std::vector<std::vector<int>>{{1, 1, 16}, {1, 4, 16}, {1, 2, 8}, {1, 2, 7}})));

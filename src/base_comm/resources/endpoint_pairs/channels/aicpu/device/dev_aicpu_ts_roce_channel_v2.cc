@@ -12,16 +12,14 @@
 #include "log.h"
 #include "aicpu_res_package_helper.h"
 
- namespace Hccl {
+namespace Hccl {
 
-DevAicpuTsRoceChannelV2::DevAicpuTsRoceChannelV2(std::vector<char> &uniqueId)
+DevAicpuTsRoceChannelV2::DevAicpuTsRoceChannelV2(std::vector<char>& uniqueId)
 {
     transport_ = std::make_unique<RoceTransportLiteImpl>(uniqueId);
 }
 
-DevAicpuTsRoceChannelV2::~DevAicpuTsRoceChannelV2()
-{
-}
+DevAicpuTsRoceChannelV2::~DevAicpuTsRoceChannelV2() {}
 
 std::string DevAicpuTsRoceChannelV2::Describe() const
 {
@@ -31,12 +29,11 @@ std::string DevAicpuTsRoceChannelV2::Describe() const
     return "DevAicpuTsRoceChannelV2[transport=nullptr]";
 }
 
-HcclResult DevAicpuTsRoceChannelV2::Create(const void *blob, u64 blobBytes,
-    const HcommDeviceInfo &deviceInfo, ChannelHandle &outHandle)
+HcclResult DevAicpuTsRoceChannelV2::Create(
+    const void* blob, u64 blobBytes, const HcommDeviceInfo& deviceInfo, ChannelHandle& outHandle)
 {
     CHK_PTR_NULL(blob);
-    CHK_PRT_RET(blobBytes == 0,
-        HCCL_ERROR("[DevAicpuTsRoceChannelV2][Create] blobBytes is 0"), HCCL_E_PARA);
+    CHK_PRT_RET(blobBytes == 0, HCCL_ERROR("[DevAicpuTsRoceChannelV2][Create] blobBytes is 0"), HCCL_E_PARA);
 
     std::vector<char> data(blobBytes);
     CHK_SAFETY_FUNC_RET(memcpy_s(data.data(), data.size(), blob, blobBytes));
@@ -46,7 +43,8 @@ HcclResult DevAicpuTsRoceChannelV2::Create(const void *blob, u64 blobBytes,
 
     Hccl::AicpuResMgrType resType = Hccl::AicpuResMgrType::STREAM;
     if (static_cast<u32>(resType) >= dataVec.size()) {
-        HCCL_ERROR("[DevAicpuTsRoceChannelV2][%s] fail, resType[%d], dataVec size[%u]", __func__, resType, dataVec.size());
+        HCCL_ERROR(
+            "[DevAicpuTsRoceChannelV2][%s] fail, resType[%d], dataVec size[%u]", __func__, resType, dataVec.size());
         return HCCL_E_PARA;
     }
 
@@ -56,7 +54,8 @@ HcclResult DevAicpuTsRoceChannelV2::Create(const void *blob, u64 blobBytes,
 
     outHandle = reinterpret_cast<ChannelHandle>(transport_.get());
 
-    HCCL_INFO("[DevAicpuTsRoceChannelV2][Create] success blobBytes[%llu] handle[0x%llx]",
+    HCCL_INFO(
+        "[DevAicpuTsRoceChannelV2][Create] success blobBytes[%llu] handle[0x%llx]",
         static_cast<unsigned long long>(blobBytes),
         static_cast<unsigned long long>(reinterpret_cast<uintptr_t>(outHandle)));
     return HCCL_SUCCESS;
@@ -67,11 +66,11 @@ bool DevAicpuTsRoceChannelV2::Destroy(ChannelHandle handle)
     if (transport_ != nullptr && reinterpret_cast<ChannelHandle>(transport_.get()) == handle) {
         transport_.reset();
     } else {
-        auto *transport = reinterpret_cast<RoceTransportLiteImpl *>(handle);
+        auto* transport = reinterpret_cast<RoceTransportLiteImpl*>(handle);
         delete transport;
     }
     HCCL_DEBUG("[DevAicpuTsRoceChannelV2][Destroy] destroyed handle[0x%llx]", handle);
     return true;
 }
 
-}
+} // namespace Hccl

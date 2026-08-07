@@ -12,7 +12,7 @@
 
 namespace Hccl {
 
-CcuCtxCreatorRegistry &CcuCtxCreatorRegistry::GetInstance()
+CcuCtxCreatorRegistry& CcuCtxCreatorRegistry::GetInstance()
 {
     static CcuCtxCreatorRegistry ccuCtxRegister;
     return ccuCtxRegister;
@@ -22,8 +22,8 @@ CcuCtxCreatorRegistry::CreateCtxFunc CcuCtxCreatorRegistry::GetCreateFunc(CcuIns
 {
     auto it = creators.find(ccuInstType);
     if (it == creators.end()) {
-        THROW<NotSupportException>(StringFormat("[CcuCtxCreatorRegistry::%s] ccuInstType[%s] is not supported",
-                                                __func__, ccuInstType.Describe().c_str()));
+        THROW<NotSupportException>(StringFormat(
+            "[CcuCtxCreatorRegistry::%s] ccuInstType[%s] is not supported", __func__, ccuInstType.Describe().c_str()));
     }
     return it->second;
 }

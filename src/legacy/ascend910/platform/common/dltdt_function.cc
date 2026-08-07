@@ -15,15 +15,13 @@
 #include "dltdt_function.h"
 
 namespace hccl {
-DlTdtFunction &DlTdtFunction::GetInstance()
+DlTdtFunction& DlTdtFunction::GetInstance()
 {
     static DlTdtFunction hcclDlTdtFunction;
     return hcclDlTdtFunction;
 }
 
-DlTdtFunction::DlTdtFunction() : handle_(nullptr)
-{
-}
+DlTdtFunction::DlTdtFunction() : handle_(nullptr) {}
 
 DlTdtFunction::~DlTdtFunction()
 {
@@ -39,12 +37,15 @@ HcclResult DlTdtFunction::DlTdtFunctionInit()
     if (handle_ == nullptr) {
         handle_ = HcclDlopen("libtsdclient.so", RTLD_NOW);
         const char* errMsg = dlerror();
-        CHK_PRT_RET(handle_ == nullptr, HCCL_ERROR("dlopen [%s] failed, %s", "libtsdclient.so",\
-            (errMsg == nullptr) ? "please check the file exist or permission denied." : errMsg),\
+        CHK_PRT_RET(
+            handle_ == nullptr,
+            HCCL_ERROR(
+                "dlopen [%s] failed, %s", "libtsdclient.so",
+                (errMsg == nullptr) ? "please check the file exist or permission denied." : errMsg),
             HCCL_E_OPEN_FILE_FAILURE);
     }
-    dlTsdCapabilityGet = (uint32_t(*)(uint32_t deviceLogicId, int32_t type, uint64_t ptr))\
-        HcclDlsym(handle_, "TsdCapabilityGet");
+    dlTsdCapabilityGet
+        = (uint32_t(*)(uint32_t deviceLogicId, int32_t type, uint64_t ptr))HcclDlsym(handle_, "TsdCapabilityGet");
     CHK_SMART_PTR_NULL(dlTsdCapabilityGet);
     return HCCL_SUCCESS;
 #else
@@ -59,11 +60,14 @@ HcclResult DlTdtFunction::DlTdtFunctionHeterogInit()
     if (handle_ == nullptr) {
         handle_ = HcclDlopen("libtsdclient.so", RTLD_NOW);
         const char* errMsg = dlerror();
-        CHK_PRT_RET(handle_ == nullptr, HCCL_ERROR("dlopen [%s] failed, %s", "libtsdclient.so",\
-            (errMsg == nullptr) ? "please check the file exist or permission denied." : errMsg),\
+        CHK_PRT_RET(
+            handle_ == nullptr,
+            HCCL_ERROR(
+                "dlopen [%s] failed, %s", "libtsdclient.so",
+                (errMsg == nullptr) ? "please check the file exist or permission denied." : errMsg),
             HCCL_E_OPEN_FILE_FAILURE);
     }
     return HCCL_SUCCESS;
 }
 
-}
+} // namespace hccl

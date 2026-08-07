@@ -35,12 +35,12 @@ struct ThreadNotifyWaitParam {
 };
 
 struct HDCommunicateParams {
-    uint64_t hostAddr{ 0 };
-    uint64_t deviceAddr{ 0 };
-    uint64_t readCacheAddr{ 0 };
-    uint32_t devMemSize{ 0 };
-    uint32_t buffLen{ 0 };
-    uint32_t flag{ 0};
+    uint64_t hostAddr{0};
+    uint64_t deviceAddr{0};
+    uint64_t readCacheAddr{0};
+    uint32_t devMemSize{0};
+    uint32_t buffLen{0};
+    uint32_t flag{0};
 };
 
 struct DevAicpuCommConfig {

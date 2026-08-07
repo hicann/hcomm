@@ -12,9 +12,7 @@
 
 namespace Hccl {
 
-QueueWaitGroupCntNotifyManager::QueueWaitGroupCntNotifyManager()
-{
-}
+QueueWaitGroupCntNotifyManager::QueueWaitGroupCntNotifyManager() {}
 
 QueueWaitGroupCntNotifyManager::~QueueWaitGroupCntNotifyManager()
 {
@@ -24,13 +22,13 @@ QueueWaitGroupCntNotifyManager::~QueueWaitGroupCntNotifyManager()
 void QueueWaitGroupCntNotifyManager::ApplyFor(QId qid, u32 topicId)
 {
     HCCL_INFO("[QueueWaitGroupCntNotifyManager][%s] start, qid[%u] topicId[%u]", __func__, qid, topicId);
-    const auto &pair = make_pair(qid, topicId);
+    const auto& pair = make_pair(qid, topicId);
     if (notifyPool[pair] == nullptr) {
         notifyPool[pair] = make_unique<RtsCntNotify>();
     }
 }
 
-RtsCntNotify *QueueWaitGroupCntNotifyManager::Get(QId qid, u32 topicId)
+RtsCntNotify* QueueWaitGroupCntNotifyManager::Get(QId qid, u32 topicId)
 {
     if (!IsExist(qid, topicId)) {
         HCCL_WARNING("Count Notify for qid[%u] and topic Id[%u] does not exist", qid, topicId);
@@ -54,10 +52,7 @@ bool QueueWaitGroupCntNotifyManager::IsExist(QId qid, u32 topicId)
     return notifyPool.count(make_pair(qid, topicId)) != 0;
 }
 
-void QueueWaitGroupCntNotifyManager::Destroy()
-{
-    notifyPool.clear();
-}
+void QueueWaitGroupCntNotifyManager::Destroy() { notifyPool.clear(); }
 
 std::vector<char> QueueWaitGroupCntNotifyManager::GetPackedData()
 {
@@ -67,7 +62,7 @@ std::vector<char> QueueWaitGroupCntNotifyManager::GetPackedData()
     u32 poolSize = notifyPool.size();
     binaryStream << poolSize;
 
-    for (auto &it : notifyPool) {
+    for (auto& it : notifyPool) {
         binaryStream << it.first.first;
         binaryStream << it.first.second;
         binaryStream << it.second->GetUniqueId();

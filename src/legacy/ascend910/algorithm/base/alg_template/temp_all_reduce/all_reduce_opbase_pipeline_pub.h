@@ -28,40 +28,35 @@ namespace hccl {
 class AllReduceOpbasePipeline : public AlgTemplateBase {
 public:
     using AlgTemplateBase::Prepare;
-    explicit AllReduceOpbasePipeline (const HcclDispatcher dispatcher);
+    explicit AllReduceOpbasePipeline(const HcclDispatcher dispatcher);
     ~AllReduceOpbasePipeline() override;
 
     // 新增的两段式构造函数，获取实例后要无脑调用实现构造函数功能，后续还要调用其它的基类Prepare函数实现其它成员变量初始化
-    HcclResult Prepare(u64 reduceAttrBitMap, HcomCollOpInfo *opInfo = nullptr) override;
+    HcclResult Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo = nullptr) override;
 
-    HcclResult Prepare(const HcomCollOpInfo *opInfo,
-                       DeviceMem &cclBufferA,
-                       DeviceMem &cclBufferB,
-                       const u64 count,
-                       const SubCommInfo &level1CommInfo,
-                       const SubCommInfo &level0CommInfo,
-                       Stream &mainStream,
-                       std::vector<Stream> &subStream,
-                       std::vector<std::shared_ptr<LocalNotify>> &notifyMain,
-                       std::vector<std::shared_ptr<LocalNotify>> &notifySub) override;
+    HcclResult Prepare(
+        const HcomCollOpInfo* opInfo, DeviceMem& cclBufferA, DeviceMem& cclBufferB, const u64 count,
+        const SubCommInfo& level1CommInfo, const SubCommInfo& level0CommInfo, Stream& mainStream,
+        std::vector<Stream>& subStream, std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
+        std::vector<std::shared_ptr<LocalNotify>>& notifySub) override;
 
     HcclResult RunAsync();
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
-protected:
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
 
+protected:
 private:
     HcclResult RunReduceScatterIntraServer(u32 step);
-    HcclResult RunReduceScatterInterServer(u32 step, const LINK &prevInterLink, const LINK &nextInterLink);
+    HcclResult RunReduceScatterInterServer(u32 step, const LINK& prevInterLink, const LINK& nextInterLink);
     HcclResult RunAllGatherIntraServer(u32 step);
-    HcclResult RunAllGatherInterServer(u32 step, const LINK &prevInterLink, const LINK &nextInterLink);
+    HcclResult RunAllGatherInterServer(u32 step, const LINK& prevInterLink, const LINK& nextInterLink);
     HcclResult CopyToScratchBuffer(u32 step);
     HcclResult MainWaitSub();
     HcclResult SubRecordMain();
     HcclResult MainRecordSub();
     HcclResult SubWaitMain();
 
-    HcomCollOpInfo *opInfo_;
+    HcomCollOpInfo* opInfo_;
 
     void* usrInMem_ = nullptr;
     void* usrOutMem_ = nullptr;
@@ -97,6 +92,6 @@ private:
     std::vector<LINK> intraLinks_;
     std::vector<LINK> interLinks_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* ALL_REDUCE_OPBASE_PIPELINE_PUB_H */

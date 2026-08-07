@@ -17,39 +17,39 @@
 #include "mem_device.h"
 
 namespace hccl {
-using HcclRtSignal = void *;
+using HcclRtSignal = void*;
 
 class TypicalSyncMem {
 public:
-    static TypicalSyncMem &GetInstance();
+    static TypicalSyncMem& GetInstance();
 
     // Alloc and free notify memory for sync
-    HcclResult AllocSyncMem(int32_t **ptr);
-    HcclResult FreeSyncMem(int32_t *ptr);
-    HcclResult GetNotifyHandle(u64 notifyVa, HcclRtNotify &notifyHandle);
-    HcclResult GetNotifySrcMem(struct MrInfoT &mrInfo);
+    HcclResult AllocSyncMem(int32_t** ptr);
+    HcclResult FreeSyncMem(int32_t* ptr);
+    HcclResult GetNotifyHandle(u64 notifyVa, HcclRtNotify& notifyHandle);
+    HcclResult GetNotifySrcMem(struct MrInfoT& mrInfo);
 
 private:
     TypicalSyncMem();
     ~TypicalSyncMem();
     // Delete copy and move constructors and assign operators
-    TypicalSyncMem(TypicalSyncMem const&) = delete;             // Copy construct
-    TypicalSyncMem(TypicalSyncMem&&) = delete;                  // Move construct
-    TypicalSyncMem& operator=(TypicalSyncMem const&) = delete;  // Copy assign
-    TypicalSyncMem& operator=(TypicalSyncMem &&) = delete;      // Move assign
+    TypicalSyncMem(TypicalSyncMem const&) = delete;            // Copy construct
+    TypicalSyncMem(TypicalSyncMem&&) = delete;                 // Move construct
+    TypicalSyncMem& operator=(TypicalSyncMem const&) = delete; // Copy assign
+    TypicalSyncMem& operator=(TypicalSyncMem&&) = delete;      // Move assign
 
     HcclResult InitNotifySrcMem();
     HcclResult DeInitNotifySrcMem();
-    HcclResult CreateEmptyNotify(HcclRtNotify &notifyHandle);
+    HcclResult CreateEmptyNotify(HcclRtNotify& notifyHandle);
     HcclResult DestroyNotify(HcclRtNotify notifyHandle);
     HcclResult FreeAllSyncMem();
 
     RdmaHandle rdmaHandle_ = nullptr;
-    struct MrInfoT notifySrcMrInfo_{};
+    struct MrInfoT notifySrcMrInfo_ {};
     MrHandle notifySrcMrHandle_;
     std::mutex syncMemMapMutex_;
     DeviceMem srcDevMem_;
-    std::map<u64, HcclRtSignal> syncMemMap_{};                     // notifyVa - notify map
+    std::map<u64, HcclRtSignal> syncMemMap_{}; // notifyVa - notify map
 };
-}  // namespace hccl
-#endif  // HCCL_TYPICAL_WINDOW_MEM_H
+} // namespace hccl
+#endif // HCCL_TYPICAL_WINDOW_MEM_H

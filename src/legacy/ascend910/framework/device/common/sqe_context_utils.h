@@ -34,7 +34,7 @@ struct SqeInfo {
     uint8_t type = 0;
     uint8_t subType = 0;
     uint8_t valid = 0; // 是否有效标记位
-    union TaskRelatedType{
+    union TaskRelatedType {
         uint8_t rdmaType; // rdma类型 是payload还是notify
         uint8_t linkType; // 链路类型 SIO
     } taskRelated;
@@ -44,7 +44,7 @@ struct SqeInfo {
 class SqeContextUtils {
 public:
     static std::string RtsqTaskTypeToStr(uint8_t type);
-    static HcclResult QuerySqeInfo(const uint8_t *sqeLocal, uint8_t sqeType, uint32_t addInfo, SqeInfo *info);
+    static HcclResult QuerySqeInfo(const uint8_t* sqeLocal, uint8_t sqeType, uint32_t addInfo, SqeInfo* info);
 };
 
 #endif // __SQE_AICPU_CONTEXT_UTILS_H__

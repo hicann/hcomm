@@ -44,7 +44,7 @@ typedef struct {
  * 从标签的属性列表中按 name 查找属性值。
  * @return 指向 value 的指针，未找到返回 NULL
  */
-const char *TagFindAttr(const TagEntry *e, const char *name);
+const char* TagFindAttr(const TagEntry* e, const char* name);
 
 /**
  * 解析 XML 文件，提取所有标签到 TagEntry 数组。
@@ -54,7 +54,7 @@ const char *TagFindAttr(const TagEntry *e, const char *name);
  * @param maxTags 数组容量
  * @return HCCL_SUCCESS=成功, 其他=错误码
  */
-TopoAddrResult ParseXmlTags(const char *xmlPath, TagEntry *tags, unsigned int *tagCount, unsigned int maxTags);
+TopoAddrResult ParseXmlTags(const char* xmlPath, TagEntry* tags, unsigned int* tagCount, unsigned int maxTags);
 
 #ifdef __cplusplus
 }

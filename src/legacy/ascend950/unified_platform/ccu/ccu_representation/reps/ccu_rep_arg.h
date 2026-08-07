@@ -19,35 +19,25 @@
 namespace Hccl {
 namespace CcuRep {
 
-enum class CcuArgType {
-    VARIABLE,
-    MEMORY,
-    VARIABLE_LIST,
-    MEMORY_LIST,
-};
- 
-struct CcuRepArg {
-    explicit CcuRepArg(const Variable &var) : type(CcuArgType::VARIABLE), var(var)
-    {
-    }
-    explicit CcuRepArg(const Memory &mem) : type(CcuArgType::MEMORY), mem(mem)
-    {
-    }
-    explicit CcuRepArg(const std::vector<Variable> &varList)
-        : type(CcuArgType::VARIABLE_LIST), varList(varList)
-    {
-    }
-    explicit CcuRepArg(const std::vector<Memory> &memList)
-        : type(CcuArgType::MEMORY_LIST), memList(memList)
-    {
-    }
- 
-    CcuArgType            type;
-    Variable              var;
-    Memory                mem;
-    std::vector<Variable> varList;
-    std::vector<Memory>   memList;
-};
+    enum class CcuArgType {
+        VARIABLE,
+        MEMORY,
+        VARIABLE_LIST,
+        MEMORY_LIST,
+    };
+
+    struct CcuRepArg {
+        explicit CcuRepArg(const Variable& var) : type(CcuArgType::VARIABLE), var(var) {}
+        explicit CcuRepArg(const Memory& mem) : type(CcuArgType::MEMORY), mem(mem) {}
+        explicit CcuRepArg(const std::vector<Variable>& varList) : type(CcuArgType::VARIABLE_LIST), varList(varList) {}
+        explicit CcuRepArg(const std::vector<Memory>& memList) : type(CcuArgType::MEMORY_LIST), memList(memList) {}
+
+        CcuArgType type;
+        Variable var;
+        Memory mem;
+        std::vector<Variable> varList;
+        std::vector<Memory> memList;
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

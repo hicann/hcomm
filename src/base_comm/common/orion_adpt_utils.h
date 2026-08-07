@@ -20,27 +20,27 @@
 
 namespace hcomm {
 
-HcclResult CommAddrToIpAddress(const CommAddr &commAddr, Hccl::IpAddress &ipAddr);
-HcclResult IpAddressToCommAddr(const Hccl::IpAddress &ipAddr, CommAddr &commAddr);
-HcclResult CommProtocolToLinkProtocol(CommProtocol commProtocol, Hccl::LinkProtocol &linkProtocol);
-HcclResult CommAddrTypeToHcclAddressType(CommAddrType commAddrType, HcclAddressType &hcclAddressType);
+HcclResult CommAddrToIpAddress(const CommAddr& commAddr, Hccl::IpAddress& ipAddr);
+HcclResult IpAddressToCommAddr(const Hccl::IpAddress& ipAddr, CommAddr& commAddr);
+HcclResult CommProtocolToLinkProtocol(CommProtocol commProtocol, Hccl::LinkProtocol& linkProtocol);
+HcclResult CommAddrTypeToHcclAddressType(CommAddrType commAddrType, HcclAddressType& hcclAddressType);
 Hccl::LinkData BuildDefaultLinkData();
-HcclResult EndpointDescPairToLinkData(const EndpointDesc &locEp, const EndpointDesc &rmtEp, Hccl::LinkData &linkData,
-    u32 reuseIdx = 0);
-HcclResult EndpointDescPairToLinkDataWithRankIds(const uint32_t myRank, const uint32_t rmtRank,
-    const EndpointDesc &locEp, const EndpointDesc &rmtEp, Hccl::LinkData &linkData, uint32_t devicePhyId, uint32_t remoteDevicePhyId,
-    u32 reuseIdx = 0);
+HcclResult EndpointDescPairToLinkData(
+    const EndpointDesc& locEp, const EndpointDesc& rmtEp, Hccl::LinkData& linkData, u32 reuseIdx = 0);
+HcclResult EndpointDescPairToLinkDataWithRankIds(
+    const uint32_t myRank, const uint32_t rmtRank, const EndpointDesc& locEp, const EndpointDesc& rmtEp,
+    Hccl::LinkData& linkData, uint32_t devicePhyId, uint32_t remoteDevicePhyId, u32 reuseIdx = 0);
 
 struct UbConnBuildContext {
     Hccl::LinkProtocol protocol{};
-    Hccl::IpAddress    locAddr{};
-    Hccl::IpAddress    rmtAddr{};
-    s32                deviceLogicId{0};
-    u8                 qosPre{0};
+    Hccl::IpAddress locAddr{};
+    Hccl::IpAddress rmtAddr{};
+    s32 deviceLogicId{0};
+    u8 qosPre{0};
 };
 
-HcclResult PrepareUbConnBuildContext(const EndpointDesc &locEp, const EndpointDesc &rmtEp, uint32_t channelQos,
-    UbConnBuildContext &ctx);
+HcclResult PrepareUbConnBuildContext(
+    const EndpointDesc& locEp, const EndpointDesc& rmtEp, uint32_t channelQos, UbConnBuildContext& ctx);
 
 } // namespace hcomm
 

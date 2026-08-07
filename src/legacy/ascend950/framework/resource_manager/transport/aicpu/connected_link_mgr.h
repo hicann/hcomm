@@ -15,22 +15,21 @@
 #include "virtual_topo.h"
 #include "types.h"
 
-
 namespace Hccl {
 class ConnectedLinkMgr {
 public:
-    const std::vector<LinkData> &GetLinks(RankId dstRank);
+    const std::vector<LinkData>& GetLinks(RankId dstRank);
 
-    const std::vector<LinkData> &GetLinks(u32 level, RankId dstRank); // 待修改, 搞成迭代器
+    const std::vector<LinkData>& GetLinks(u32 level, RankId dstRank); // 待修改, 搞成迭代器
 
-    void                         Reset();
+    void Reset();
 
-    void                         ParsePackedData(std::vector<char> &data);
+    void ParsePackedData(std::vector<char>& data);
 
 private:
     std::unordered_map<RankId, std::vector<LinkData>> links;
 
     std::unordered_map<u32, std::unordered_map<RankId, std::vector<LinkData>>> levelRankPairLinkDataMap;
 };
-}
+} // namespace Hccl
 #endif

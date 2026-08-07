@@ -26,9 +26,9 @@ public:
 
     void Algorithm() override;
 
-    void SetAlgoTemplateInfo(const std::map<uint64_t, uint32_t> &algoTemplateInfo);
+    void SetAlgoTemplateInfo(const std::map<uint64_t, uint32_t>& algoTemplateInfo);
     void SetMissionNumAndId(uint32_t miNum, uint32_t miIndex);
-    void MissionPreSync(CcuRep::Variable &func);
+    void MissionPreSync(CcuRep::Variable& func);
     void MissionPostSync();
 
 protected:
@@ -58,16 +58,16 @@ public:
     void SetCommAddr(uint64_t syncAddr, uint64_t paramAddr);
     void SetDieNum(uint32_t dieNum);
 
-    std::vector<uint64_t> GeneArgs(const CcuTaskArg &arg) override;
+    std::vector<uint64_t> GeneArgs(const CcuTaskArg& arg) override;
 
 protected:
     void GenCircularQueue() override;
 
 private:
-
-    void WaitTurnStartSig(const CcuRep::Variable &hbmSigAddr, CcuRep::Variable &turnStartSig);
-    void SetTurnEndSig(const CcuRep::Variable &hbmSigAddr, const CcuRep::Variable &turnEndSig);
-    void LoadFuncParamFromMemory(CcuRep::Variable &paramAddr, std::array<CcuRep::Variable, CCU_PARAM_NUM_PER_DIE> &param);
+    void WaitTurnStartSig(const CcuRep::Variable& hbmSigAddr, CcuRep::Variable& turnStartSig);
+    void SetTurnEndSig(const CcuRep::Variable& hbmSigAddr, const CcuRep::Variable& turnEndSig);
+    void
+    LoadFuncParamFromMemory(CcuRep::Variable& paramAddr, std::array<CcuRep::Variable, CCU_PARAM_NUM_PER_DIE>& param);
 
 private:
     // HBM上的每轮开始信号的首地址
@@ -89,7 +89,7 @@ public:
     Mc2SlaveContext() = default;
     ~Mc2SlaveContext() override {}
 
-    std::vector<uint64_t> GeneArgs(const CcuTaskArg &arg) override;
+    std::vector<uint64_t> GeneArgs(const CcuTaskArg& arg) override;
 
 protected:
     void GenCircularQueue() override;

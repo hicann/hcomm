@@ -23,7 +23,8 @@
 
 class TransLocMemToLocMemExecutor : public CcuExecutorBase {
 public:
-    explicit TransLocMemToLocMemExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit TransLocMemToLocMemExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     TransLocMemToLocMemExecutor() = default;
@@ -33,7 +34,7 @@ public:
     void Run() override;
     void RunV1();
     void RunV2();
-    void Process(CcuResourceManager &ccuResMgr) override;
+    void Process(CcuResourceManager& ccuResMgr) override;
     std::string Describe() override;
     CcuTrace::CcuInstrTraceDetail CollectTraceDetail() override;
 

@@ -22,5 +22,5 @@ public:
     CpuRoceChannel();
     virtual ~CpuRoceChannel() = default;
 };
-}
+} // namespace hcomm
 #endif // CPU_ROCE_CHANNEL_H

@@ -28,109 +28,87 @@
 using namespace std;
 using namespace hccl;
 
-
-TopoinfoRanktableStandard::TopoinfoRanktableStandard(const std::string &rankTableM, const std::string &identify)
+TopoinfoRanktableStandard::TopoinfoRanktableStandard(const std::string& rankTableM, const std::string& identify)
     : TopoInfoRanktableParser(rankTableM, identify)
-{
-}
+{}
 
-TopoinfoRanktableStandard::~TopoinfoRanktableStandard()
-{
-}
+TopoinfoRanktableStandard::~TopoinfoRanktableStandard() {}
 
-HcclResult TopoinfoRanktableStandard::Init()
+HcclResult TopoinfoRanktableStandard::Init() { return HCCL_E_NOT_SUPPORT; }
+
+HcclResult TopoinfoRanktableStandard::GetSelfClusterInfo(HcclCommParams& params) { return HCCL_E_NOT_SUPPORT; }
+
+HcclResult TopoinfoRanktableStandard::GetClusterInfo(hccl::HcclCommParams& params, hccl::RankTable_t& rankTable)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
+HcclResult TopoinfoRanktableStandard::GetClusterInfo(RankTable_t& clusterInfo) { return HCCL_E_NOT_SUPPORT; }
+
+HcclResult TopoinfoRanktableStandard::ParserClusterInfo(hccl::HcclCommParams& params, hccl::RankTable_t& rankTable)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableStandard::GetSelfClusterInfo(HcclCommParams &params)
+HcclResult TopoinfoRanktableStandard::GetHcomInfo(hccl::HcclCommParams& params, hccl::RankTable_t& rankTable)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableStandard::GetClusterInfo(hccl::HcclCommParams &params,
-    hccl::RankTable_t &rankTable)
-{
-    return HCCL_E_NOT_SUPPORT;
-}
-HcclResult TopoinfoRanktableStandard::GetClusterInfo(RankTable_t &clusterInfo)
+HcclResult TopoinfoRanktableStandard::GetServerList(
+    const nlohmann::json& obj, u32 objIndex, hccl::RankTable_t& rankTable, u32 serverNum)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableStandard::ParserClusterInfo(hccl::HcclCommParams &params, hccl::RankTable_t &rankTable)
+HcclResult TopoinfoRanktableStandard::GetSingleServer(
+    const nlohmann::json& serverListObj, u32 objIndex, hccl::RankTable_t& rankTable)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableStandard::GetHcomInfo(hccl::HcclCommParams &params, hccl::RankTable_t &rankTable)
+HcclResult TopoinfoRanktableStandard::GetCloudHcomInfo(
+    hccl::HcclCommParams& params, hccl::RankTable_t& rankTable, const std::string& identify, u32& rank)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableStandard::GetServerList(const nlohmann::json &obj, u32 objIndex,
-    hccl::RankTable_t &rankTable, u32 serverNum)
+HcclResult TopoinfoRanktableStandard::GetSortClouldRankList(hccl::RankTable_t& rankTable) { return HCCL_E_NOT_SUPPORT; }
+
+HcclResult TopoinfoRanktableStandard::GetSingleGroupDeviceCount(
+    nlohmann::json& obj, u32 objIndex, hccl::RankTable_t& rankTable, u32& deviceNum)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableStandard::GetSingleServer(const nlohmann::json &serverListObj, u32 objIndex,
-    hccl::RankTable_t &rankTable)
+HcclResult TopoinfoRanktableStandard::GetLabSingleGroup(
+    nlohmann::json& obj, u32 objIndex, hccl::HcclCommParams& params, hccl::RankTable_t& rankTable, u32 instanceNum)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableStandard::GetCloudHcomInfo(hccl::HcclCommParams &params, hccl::RankTable_t &rankTable,
-    const std::string &identify, u32 &rank)
+HcclResult TopoinfoRanktableStandard::GetGroupList(hccl::HcclCommParams& params, hccl::RankTable_t& rankTable)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-
-HcclResult TopoinfoRanktableStandard::GetSortClouldRankList(hccl::RankTable_t &rankTable)
+HcclResult TopoinfoRanktableStandard::GetInstanceList(
+    nlohmann::json& instanceList, hccl::HcclCommParams& params, hccl::RankTable_t& rankTable, u32 instanceNum,
+    u32 deviceNum)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-
-HcclResult TopoinfoRanktableStandard::GetSingleGroupDeviceCount(nlohmann::json &obj, u32 objIndex,
-    hccl::RankTable_t &rankTable, u32 &deviceNum)
+HcclResult TopoinfoRanktableStandard::GetCloudDevList(
+    nlohmann::json& instanceList, u32 podIndex, nlohmann::json& deviceList, std::string& serverId, u32& serverIdx)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableStandard::GetLabSingleGroup(nlohmann::json &obj, u32 objIndex, hccl::HcclCommParams &params,
-    hccl::RankTable_t &rankTable, u32 instanceNum)
+HcclResult TopoinfoRanktableStandard::GetDevList(
+    nlohmann::json& instanceList, u32 podIndex, nlohmann::json& deviceList, hccl::HcclCommParams& params,
+    hccl::RankTable_t& rankTable, std::string& serverId, u32& serverIdx)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-
-HcclResult TopoinfoRanktableStandard::GetGroupList(hccl::HcclCommParams &params, hccl::RankTable_t &rankTable)
-{
-    return HCCL_E_NOT_SUPPORT;
-}
-
-HcclResult TopoinfoRanktableStandard::GetInstanceList(nlohmann::json &instanceList, hccl::HcclCommParams &params,
-    hccl::RankTable_t &rankTable, u32 instanceNum, u32 deviceNum)
-{
-    return HCCL_E_NOT_SUPPORT;
-}
-
-HcclResult TopoinfoRanktableStandard::GetCloudDevList(nlohmann::json &instanceList, u32 podIndex,
-    nlohmann::json &deviceList, std::string &serverId, u32 &serverIdx)
-{
-    return HCCL_E_NOT_SUPPORT;
-}
-
-HcclResult TopoinfoRanktableStandard::GetDevList(nlohmann::json &instanceList, u32 podIndex,
-    nlohmann::json &deviceList, hccl::HcclCommParams &params, hccl::RankTable_t &rankTable,
-    std::string &serverId, u32 &serverIdx)
-{
-    return HCCL_E_NOT_SUPPORT;
-}
-
-HcclResult TopoinfoRanktableStandard::GetDeployMode(bool &cloudFlag) const
-{
-    return HCCL_E_NOT_SUPPORT;
-}
+HcclResult TopoinfoRanktableStandard::GetDeployMode(bool& cloudFlag) const { return HCCL_E_NOT_SUPPORT; }

@@ -19,12 +19,12 @@ namespace hcomm {
  */
 class UbgEndpoint : public UboeUbgEndpointHelper {
 public:
-    explicit UbgEndpoint(const EndpointDesc &endpointDesc);
+    explicit UbgEndpoint(const EndpointDesc& endpointDesc);
     ~UbgEndpoint() = default;
 
     HcclResult Init() override;
 };
 
-}
+} // namespace hcomm
 
 #endif // UBG_ENDPOINT_H

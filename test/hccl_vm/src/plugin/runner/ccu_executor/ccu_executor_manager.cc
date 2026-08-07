@@ -14,7 +14,8 @@
 
 using namespace std;
 
-CcuExecutorCreateFuncMgr& CcuExecutorCreateFuncMgr::Instance() {
+CcuExecutorCreateFuncMgr& CcuExecutorCreateFuncMgr::Instance()
+{
     static CcuExecutorCreateFuncMgr instance;
     return instance;
 }

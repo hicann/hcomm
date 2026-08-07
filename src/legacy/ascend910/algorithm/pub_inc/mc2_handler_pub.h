@@ -23,13 +23,14 @@ class Mc2HandlerPub {
 public:
     Mc2HandlerPub();
 
-    HcclResult Mc2WaitValue(HcclDispatcher dispatcherPtr, hccl::Stream &stream, Mc2Handler *mc2Handler, u32 step);
-    HcclResult Mc2WriteValue(HcclDispatcher dispatcherPtr, hccl::Stream &stream, Mc2Handler *mc2Handler);
+    HcclResult Mc2WaitValue(HcclDispatcher dispatcherPtr, hccl::Stream& stream, Mc2Handler* mc2Handler, u32 step);
+    HcclResult Mc2WriteValue(HcclDispatcher dispatcherPtr, hccl::Stream& stream, Mc2Handler* mc2Handler);
+
 private:
     u32 mc2TurnNum_[MC2_MAX_TURN * MC2_MAX_RANK_NUM];
     u32 turnNumForWrite_ = 0;
 };
 
-}
+} // namespace hccl
 
 #endif

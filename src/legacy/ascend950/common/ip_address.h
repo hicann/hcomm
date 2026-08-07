@@ -30,15 +30,15 @@ using namespace std;
 
 constexpr uint32_t URMA_EID_LEN = 16;
 constexpr uint32_t URMA_EID_NUM_TWO = 2;
-constexpr uint32_t MAX_IPV4_LEN = 15;   // 最大IPv4地址长度
-constexpr uint32_t MIN_IPV4_LEN = 7;    // 最小IPv4地址长度
-constexpr uint32_t BASE = 10;           // 进制基数
-constexpr uint32_t MAX_DOT_COUNT = 3;   // IPv4地址.分割符的最大个数
-constexpr uint32_t MAX_IPV4_SEGMENT_VALUE = 255;     // 每个段的最大值
+constexpr uint32_t MAX_IPV4_LEN = 15;            // 最大IPv4地址长度
+constexpr uint32_t MIN_IPV4_LEN = 7;             // 最小IPv4地址长度
+constexpr uint32_t BASE = 10;                    // 进制基数
+constexpr uint32_t MAX_DOT_COUNT = 3;            // IPv4地址.分割符的最大个数
+constexpr uint32_t MAX_IPV4_SEGMENT_VALUE = 255; // 每个段的最大值
 constexpr uint32_t URMA_EID_IPV4_PREFIX = 0x0;
-constexpr uint32_t EID_WORD_SHIFT_0 = 48;  // EID 64位值中第0个16位字的右移位数
-constexpr uint32_t EID_WORD_SHIFT_1 = 32;  // EID 64位值中第1个16位字的右移位数
-constexpr uint32_t EID_WORD_SHIFT_2 = 16;  // EID 64位值中第2个16位字的右移位数
+constexpr uint32_t EID_WORD_SHIFT_0 = 48; // EID 64位值中第0个16位字的右移位数
+constexpr uint32_t EID_WORD_SHIFT_1 = 32; // EID 64位值中第1个16位字的右移位数
+constexpr uint32_t EID_WORD_SHIFT_2 = 16; // EID 64位值中第2个16位字的右移位数
 
 union Eid {
     uint8_t raw[URMA_EID_LEN]{0};
@@ -56,48 +56,39 @@ union Eid {
     {
         uint64_t subnet = be64toh(in6.subnetPrefix);
         uint64_t ifId = be64toh(in6.interfaceId);
-        return StringFormat("%04llx:%04llx:%04llx:%04llx:%04llx:%04llx:%04llx:%04llx",
-                            static_cast<unsigned long long>((subnet >> EID_WORD_SHIFT_0) & 0xFFFF),
-                            static_cast<unsigned long long>((subnet >> EID_WORD_SHIFT_1) & 0xFFFF),
-                            static_cast<unsigned long long>((subnet >> EID_WORD_SHIFT_2) & 0xFFFF),
-                            static_cast<unsigned long long>(subnet & 0xFFFF),
-                            static_cast<unsigned long long>((ifId >> EID_WORD_SHIFT_0) & 0xFFFF),
-                            static_cast<unsigned long long>((ifId >> EID_WORD_SHIFT_1) & 0xFFFF),
-                            static_cast<unsigned long long>((ifId >> EID_WORD_SHIFT_2) & 0xFFFF),
-                            static_cast<unsigned long long>(ifId & 0xFFFF));
+        return StringFormat(
+            "%04llx:%04llx:%04llx:%04llx:%04llx:%04llx:%04llx:%04llx",
+            static_cast<unsigned long long>((subnet >> EID_WORD_SHIFT_0) & 0xFFFF),
+            static_cast<unsigned long long>((subnet >> EID_WORD_SHIFT_1) & 0xFFFF),
+            static_cast<unsigned long long>((subnet >> EID_WORD_SHIFT_2) & 0xFFFF),
+            static_cast<unsigned long long>(subnet & 0xFFFF),
+            static_cast<unsigned long long>((ifId >> EID_WORD_SHIFT_0) & 0xFFFF),
+            static_cast<unsigned long long>((ifId >> EID_WORD_SHIFT_1) & 0xFFFF),
+            static_cast<unsigned long long>((ifId >> EID_WORD_SHIFT_2) & 0xFFFF),
+            static_cast<unsigned long long>(ifId & 0xFFFF));
     }
 
-    bool operator==(const Eid &that) const
-    {
-        return memcmp(&raw, &that.raw, sizeof(raw)) == 0;
-    }
+    bool operator==(const Eid& that) const { return memcmp(&raw, &that.raw, sizeof(raw)) == 0; }
 
-    bool operator<(const Eid &that) const
-    {
-        return memcmp(&raw, &that.raw, sizeof(raw)) < 0;
-    }
+    bool operator<(const Eid& that) const { return memcmp(&raw, &that.raw, sizeof(raw)) < 0; }
 };
 
 union BinaryAddr {
-    struct in_addr  addr;
+    struct in_addr addr;
     struct in6_addr addr6;
 };
 class IpAddress {
 public:
     IpAddress()
     {
-        scopeID_                = 0;
-        family_                 = AF_INET;
+        scopeID_ = 0;
+        family_ = AF_INET;
         binaryAddr_.addr.s_addr = 0;
     }
 
-    explicit IpAddress(const string &ip, s32 family = AF_INET) : family_(family)
-    {
-        InitBinaryAddr(ip);
-    }
+    explicit IpAddress(const string& ip, s32 family = AF_INET) : family_(family) { InitBinaryAddr(ip); }
 
-    explicit IpAddress(const union BinaryAddr &ip, s32 family, const uint8_t* eid)
-    : family_(family)
+    explicit IpAddress(const union BinaryAddr& ip, s32 family, const uint8_t* eid) : family_(family)
     {
         binaryAddr_ = ip;
         if (eid != nullptr) {
@@ -109,12 +100,13 @@ public:
         }
     }
 
-    explicit IpAddress(const union BinaryAddr &ip, s32 family, s32 scopeID = 0) : family_(family), scopeID_(scopeID)
+    explicit IpAddress(const union BinaryAddr& ip, s32 family, s32 scopeID = 0) : family_(family), scopeID_(scopeID)
     {
         binaryAddr_ = ip;
         // 区分ipv4和ipv6转eid
         if (family_ == AF_INET6) {
-            s32 sRet = memcpy_s(eid_.raw, sizeof(eid_.raw), binaryAddr_.addr6.s6_addr, sizeof(binaryAddr_.addr6.s6_addr));
+            s32 sRet
+                = memcpy_s(eid_.raw, sizeof(eid_.raw), binaryAddr_.addr6.s6_addr, sizeof(binaryAddr_.addr6.s6_addr));
             if (sRet != 0) {
                 THROW<InternalException>("[IpAddress]memcpy_s failed");
             }
@@ -128,14 +120,14 @@ public:
         struct in_addr addr {
             address
         };
-        family_          = AF_INET;
+        family_ = AF_INET;
         binaryAddr_.addr = addr;
         ipv4AddrToEid(address);
     }
 
-    explicit IpAddress(std::vector<char> &uniqueId) // 基于序列化数据得到IpAddress
+    explicit IpAddress(std::vector<char>& uniqueId) // 基于序列化数据得到IpAddress
     {
-        char        dst[INET6_ADDRSTRLEN]{0};
+        char dst[INET6_ADDRSTRLEN]{0};
         BinaryStream binaryStream(uniqueId);
         binaryStream >> family_;
         binaryStream >> scopeID_;
@@ -145,7 +137,7 @@ public:
         InitBinaryAddr(ip);
         binaryStream >> eid_.raw; // 恢复eid.raw，覆盖eid
     }
-    explicit IpAddress(const Eid &eidInput)
+    explicit IpAddress(const Eid& eidInput)
     {
         for (uint32_t i = 0; i < URMA_EID_LEN; i++) {
             eid_.raw[i] = eidInput.raw[i];
@@ -155,15 +147,16 @@ public:
         family_ = AF_INET6;
         (void)memcpy_s(binaryAddr_.addr6.s6_addr, sizeof(eid_.raw), eid_.raw, sizeof(eid_.raw));
     }
- 
+
     std::vector<char> GetUniqueId() const // 获取序列化数据
     {
         std::string ipStr = GetIpStr();
-        char        dst[INET6_ADDRSTRLEN]{0};
+        char dst[INET6_ADDRSTRLEN]{0};
         int sret = strcpy_s(dst, sizeof(dst), ipStr.data());
         if (sret != 0) {
-            auto msg = StringFormat("[Get][UniqueId]errNo[0x%016llx] memory copy failed. ret[%d]",
-                                    HCOM_ERROR_CODE(HcclResult::HCCL_E_MEMORY), sret);
+            auto msg = StringFormat(
+                "[Get][UniqueId]errNo[0x%016llx] memory copy failed. ret[%d]",
+                HCOM_ERROR_CODE(HcclResult::HCCL_E_MEMORY), sret);
             THROW<InternalException>(msg);
         }
         BinaryStream binaryStream;
@@ -176,30 +169,15 @@ public:
         return result;
     }
 
-    void SetScopeID(s32 scope)
-    {
-        this->scopeID_ = scope;
-    }
+    void SetScopeID(s32 scope) { this->scopeID_ = scope; }
 
-    s32 GetScopeID() const
-    {
-        return scopeID_;
-    }
+    s32 GetScopeID() const { return scopeID_; }
 
-    s32 GetFamily() const
-    {
-        return family_;
-    }
+    s32 GetFamily() const { return family_; }
 
-    union BinaryAddr GetBinaryAddress() const
-    {
-        return binaryAddr_;
-    }
+    union BinaryAddr GetBinaryAddress() const { return binaryAddr_; }
 
-    bool IsIPv6() const
-    {
-        return (family_ == AF_INET6);
-    }
+    bool IsIPv6() const { return (family_ == AF_INET6); }
 
     /*The following IPV6 formats can be verified:
         dotted quad at the end, multiple zeroes collapsed: fe80::204:61ff:254.157.241.86
@@ -212,7 +190,7 @@ public:
         link-local prefix: fe80::
         localhost: ::1
     */
-    static bool IsIPv6(const string &str)
+    static bool IsIPv6(const string& str)
     {
         if (str.find('\0') != string::npos) {
             return false;
@@ -230,7 +208,8 @@ public:
         0.0.0.0 can only be used as the source address.
         255.255.255.255 is broadcast address.
     */
-    static bool IsIPv4(const std::string& str) {
+    static bool IsIPv4(const std::string& str)
+    {
         // 快速长度检查
         size_t len = str.length();
         if (len < MIN_IPV4_LEN || len > MAX_IPV4_LEN) {
@@ -296,7 +275,7 @@ public:
 
     string GetIpStr() const
     {
-        const void *src = nullptr;
+        const void* src = nullptr;
         if (family_ == AF_INET) {
             src = &binaryAddr_.addr;
         } else if (family_ == AF_INET6) {
@@ -304,23 +283,17 @@ public:
         } else {
             THROW<NotSupportException>(StringFormat("Unsupported Address Family: %d", family_));
         }
-        char        dst[INET6_ADDRSTRLEN];
-        const char *res = inet_ntop(family_, src, dst, INET6_ADDRSTRLEN);
+        char dst[INET6_ADDRSTRLEN];
+        const char* res = inet_ntop(family_, src, dst, INET6_ADDRSTRLEN);
         if (res == nullptr) {
             THROW<InvalidParamsException>("Invalid Binary Network Address");
         }
         return dst;
     }
 
-    Eid GetEid() const
-    {
-        return eid_;
-    }
+    Eid GetEid() const { return eid_; }
 
-    void SetEid(Eid eid)
-    {
-        eid_ = eid;
-    }
+    void SetEid(Eid eid) { eid_ = eid; }
 
     Eid GetReverseEid() const
     {
@@ -330,11 +303,11 @@ public:
         }
         return eidOut;
     }
- 
+
     string Describe() const
     {
         string desc = StringFormat("IpAddress[%s, ", eid_.Describe().c_str());
-        
+
         if (family_ == AF_INET) {
             desc += StringFormat("AF=IPv4, addr=%s]", GetIpStr().c_str());
         } else {
@@ -343,7 +316,7 @@ public:
         return desc;
     }
 
-    bool operator==(const IpAddress &that) const
+    bool operator==(const IpAddress& that) const
     {
         if (this->family_ != that.family_) {
             return false;
@@ -354,7 +327,7 @@ public:
         return true;
     }
 
-    bool operator<(const IpAddress &that) const
+    bool operator<(const IpAddress& that) const
     {
         if (this->family_ < that.family_) {
             return true;
@@ -368,47 +341,45 @@ public:
         return false;
     }
 
-    explicit IpAddress(BinaryStream &binaryStream) // 基于序列化数据得到IpAddress
+    explicit IpAddress(BinaryStream& binaryStream) // 基于序列化数据得到IpAddress
     {
         binaryStream >> family_ >> scopeID_;
         // 打印family_、scopeID_
-        HCCL_INFO("[IpAddress::%s] family_[%d], scopeID_[%d]",
-            __func__, family_, scopeID_);
-        char        dst[INET6_ADDRSTRLEN]{0};
+        HCCL_INFO("[IpAddress::%s] family_[%d], scopeID_[%d]", __func__, family_, scopeID_);
+        char dst[INET6_ADDRSTRLEN]{0};
         binaryStream >> dst;
-        std::string ip = dst; 
+        std::string ip = dst;
         // 打印ip
         HCCL_INFO("[IpAddress::%s] ip_[%s]", __func__, ip.c_str());
         InitBinaryAddr(ip);
         binaryStream >> eid_.raw; // 恢复eid.raw，覆盖eid
     }
 
-    void GetBinStream(BinaryStream &binaryStream) const {
+    void GetBinStream(BinaryStream& binaryStream) const
+    {
         std::string ipStr = GetIpStr();
-        char        dst[INET6_ADDRSTRLEN]{0};
+        char dst[INET6_ADDRSTRLEN]{0};
         int sret = strcpy_s(dst, sizeof(dst), ipStr.data());
         if (sret != 0) {
-            auto msg = StringFormat("[Get][UniqueId]errNo[0x%016llx] memory copy failed. ret[%d]",
-                                    HCOM_ERROR_CODE(HcclResult::HCCL_E_MEMORY), sret);
+            auto msg = StringFormat(
+                "[Get][UniqueId]errNo[0x%016llx] memory copy failed. ret[%d]",
+                HCOM_ERROR_CODE(HcclResult::HCCL_E_MEMORY), sret);
             THROW<InternalException>(msg);
         }
         binaryStream << family_ << scopeID_ << dst;
         binaryStream << eid_.raw; // 保存eid.raw
     }
 
-    bool IsInvalid() const
-    {
-        return ((family_ == AF_INET) && (binaryAddr_.addr.s_addr == 0));
-    }
+    bool IsInvalid() const { return ((family_ == AF_INET) && (binaryAddr_.addr.s_addr == 0)); }
 
 private:
-    union BinaryAddr binaryAddr_{}; // 二进制IP地址
+    union BinaryAddr binaryAddr_ {}; // 二进制IP地址
     s32 family_{AF_INET};
     s32 scopeID_{0};
     Eid eid_{};
-    void InitBinaryAddr(const string &ip)
+    void InitBinaryAddr(const string& ip)
     {
-        void *dst;
+        void* dst;
         int cnt = std::count(ip.begin(), ip.end(), ':');
         if (cnt >= 2) { // ipv6地址中至少有2个":"
             family_ = AF_INET6;
@@ -425,7 +396,8 @@ private:
         }
 
         if (family_ == AF_INET6) {
-            s32 sRet = memcpy_s(eid_.raw, sizeof(eid_.raw), binaryAddr_.addr6.s6_addr, sizeof(binaryAddr_.addr6.s6_addr));
+            s32 sRet
+                = memcpy_s(eid_.raw, sizeof(eid_.raw), binaryAddr_.addr6.s6_addr, sizeof(binaryAddr_.addr6.s6_addr));
             if (sRet != 0) {
                 THROW<InternalException>("[InitBinaryAddr]memcpy_s failed");
             }
@@ -434,7 +406,7 @@ private:
         }
     }
 
-    void ipv4AddrToEid(const uint32_t &inAddr)
+    void ipv4AddrToEid(const uint32_t& inAddr)
     {
         eid_.in4.reserved = 0;
         eid_.in4.prefix = URMA_EID_IPV4_PREFIX;
@@ -445,39 +417,37 @@ private:
 
 namespace std {
 
-template <> class equal_to<Hccl::Eid> {
+template <>
+class equal_to<Hccl::Eid> {
 public:
-    bool operator()(const Hccl::Eid &p1, const Hccl::Eid &p2) const
-    {
-        return p1 == p2;
-    }
+    bool operator()(const Hccl::Eid& p1, const Hccl::Eid& p2) const { return p1 == p2; }
 };
 
-template <> class hash<Hccl::Eid> {
+template <>
+class hash<Hccl::Eid> {
 public:
-    size_t operator()(const Hccl::Eid &eid) const
+    size_t operator()(const Hccl::Eid& eid) const
     {
         auto subnetPrefixHash = hash<uint64_t>{}(be64toh(eid.in6.subnetPrefix));
         auto interfaceIdHash = hash<uint64_t>{}(be64toh(eid.in6.interfaceId));
         return Hccl::HashCombine({subnetPrefixHash, interfaceIdHash});
     }
 };
-    
-template <> class equal_to<Hccl::IpAddress> {
+
+template <>
+class equal_to<Hccl::IpAddress> {
 public:
-    bool operator()(const Hccl::IpAddress &p1, const Hccl::IpAddress &p2) const
-    {
-        return p1 == p2;
-    }
+    bool operator()(const Hccl::IpAddress& p1, const Hccl::IpAddress& p2) const { return p1 == p2; }
 };
 
-template <> class hash<Hccl::IpAddress> {
+template <>
+class hash<Hccl::IpAddress> {
 public:
-    size_t operator()(const Hccl::IpAddress &ip) const
+    size_t operator()(const Hccl::IpAddress& ip) const
     {
         auto scopeIDHash = hash<s32>{}(ip.GetScopeID());
         auto familyHash = hash<s32>{}(ip.GetFamily());
-        auto addrHash = hash<size_t>{}(ip.GetBinaryAddress().addr.s_addr); //Ipv4地址hash
+        auto addrHash = hash<size_t>{}(ip.GetBinaryAddress().addr.s_addr); // Ipv4地址hash
         auto eidSubnetPrefix = hash<uint64_t>{}(ip.GetEid().in6.subnetPrefix);
         auto eidInterfaceId = hash<uint64_t>{}(ip.GetEid().in6.interfaceId);
 

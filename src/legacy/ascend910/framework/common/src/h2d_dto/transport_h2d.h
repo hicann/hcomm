@@ -15,24 +15,24 @@
 
 // 全部 Transport QP/Mem 信息
 struct HcclAiRMAInfo {
-    u32 curRankId;  // 当前rankId
-    u32 rankNum;  // rank数量
-    u32 qpNum;  // 单个Transport的QP数量
+    u32 curRankId; // 当前rankId
+    u32 rankNum;   // rank数量
+    u32 qpNum;     // 单个Transport的QP数量
 
     u32 sizeOfAiRMAWQ;  // sizeof(HcclAiRMAWQ)
     u32 sizeOfAiRMACQ;  // sizeof(HcclAiRMACQ)
-    u32 sizeOfAiRMAMem;  // sizeof(HcclAiRMAMemInfo)
+    u32 sizeOfAiRMAMem; // sizeof(HcclAiRMAMemInfo)
 
     // HcclAiRMAWQ二维数组首地址
     // QP个数: rankNum * qpNum
     // 计算偏移获取SQ指针：sqPtr + dstRankId * qpNum * sizeOfAiRMAWQ + qpIndex
     void* sqPtr;
-    
+
     // HcclAiRMACQ二维数组首地址
     // QP个数: rankNum * qpNum
     // 计算偏移获取SCQ指针：scqPtr + dstRankId * qpNum * sizeOfAiRMACQ + qpIndex
     void* scqPtr;
-    
+
     // HcclAiRMAWQ二维数组首地址
     // QP个数: rankNum * qpNum
     // 计算偏移获取RQ指针：rqPtr + dstRankId * qpNum * sizeOfAiRMAWQ + qpIndex
@@ -51,10 +51,18 @@ struct HcclAiRMAInfo {
 
     // 可往后追加字段
 
-    HcclAiRMAInfo() :
-        curRankId(0), rankNum(0), qpNum(0),
-        sizeOfAiRMAWQ(0), sizeOfAiRMACQ(0), sizeOfAiRMAMem(0),
-        sqPtr(nullptr), scqPtr(nullptr), rqPtr(nullptr), rcqPtr(nullptr), memPtr(nullptr)
+    HcclAiRMAInfo()
+        : curRankId(0),
+          rankNum(0),
+          qpNum(0),
+          sizeOfAiRMAWQ(0),
+          sizeOfAiRMACQ(0),
+          sizeOfAiRMAMem(0),
+          sqPtr(nullptr),
+          scqPtr(nullptr),
+          rqPtr(nullptr),
+          rcqPtr(nullptr),
+          memPtr(nullptr)
     {}
 };
 

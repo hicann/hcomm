@@ -44,8 +44,8 @@ HcclResult ExceptionHandler::HandleException(const char* functionName)
     }
 }
 
-void ExceptionHandler::ThrowIfErrorCode(HcclResult errorCode, const string &errString, const char* fileName,
-    s32 lineNum, const char* functionName)
+void ExceptionHandler::ThrowIfErrorCode(
+    HcclResult errorCode, const string& errString, const char* fileName, s32 lineNum, const char* functionName)
 {
     if (LIKELY(errorCode == HCCL_SUCCESS)) {
         return;
@@ -73,4 +73,4 @@ void ExceptionHandler::ThrowIfErrorCode(HcclResult errorCode, const string &errS
     }
 }
 
-}
+} // namespace hccl

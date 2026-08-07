@@ -40,8 +40,7 @@ extern HcclResult HcclCommAssignCcuIns(HcclComm comm, CcuInsHandle insHandle);
  * @note 返回的 CCU 实例句柄仅供借用，不转移所有权，调用方不得销毁该句柄。
  * @note 调用方必须保证本接口不与 HcclCommAssignCcuIns 或 HcclCommDestroy 并发执行。
  */
-extern HcclResult HcclCommQueryCcuIns(HcclComm comm,
-    CcuInsHandle *insHandles, uint32_t *insNum);
+extern HcclResult HcclCommQueryCcuIns(HcclComm comm, CcuInsHandle* insHandles, uint32_t* insNum);
 
 #ifdef __cplusplus
 }

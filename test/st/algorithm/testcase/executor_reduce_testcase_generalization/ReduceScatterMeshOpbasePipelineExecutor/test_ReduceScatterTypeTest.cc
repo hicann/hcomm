@@ -23,22 +23,17 @@
 #include "checker.h"
 using namespace checker;
 
-class ReduceScatterGeneralizationTypeTest: public ::testing::TestWithParam<std::tuple<CheckerReduceOp>> {
+class ReduceScatterGeneralizationTypeTest : public ::testing::TestWithParam<std::tuple<CheckerReduceOp>> {
 public:
-    static void SetUpTestCase()
-    {
-        std::cout << "ReduceScatterGeneralizationTypeTest set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "ReduceScatterGeneralizationTypeTest set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "ReduceScatterGeneralizationTypeTest tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "ReduceScatterGeneralizationTypeTest tear down." << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -76,6 +71,8 @@ TEST_P(ReduceScatterGeneralizationTypeTest, ReduceScatter_test)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-INSTANTIATE_TEST_SUITE_P(ReduceScatterCaseTestType, ReduceScatterGeneralizationTypeTest,
-        testing::Values(CheckerReduceOp::REDUCE_SUM, CheckerReduceOp::REDUCE_PROD, CheckerReduceOp::REDUCE_MAX, CheckerReduceOp::REDUCE_MIN)
-);
+INSTANTIATE_TEST_SUITE_P(
+    ReduceScatterCaseTestType, ReduceScatterGeneralizationTypeTest,
+    testing::Values(
+        CheckerReduceOp::REDUCE_SUM, CheckerReduceOp::REDUCE_PROD, CheckerReduceOp::REDUCE_MAX,
+        CheckerReduceOp::REDUCE_MIN));

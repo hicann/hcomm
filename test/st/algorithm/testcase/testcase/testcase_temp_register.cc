@@ -26,20 +26,15 @@ using namespace hccl;
 
 class TemplateRegisterTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "TemplateRegisterTest set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "TemplateRegisterTest set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "TemplateRegisterTest tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "TemplateRegisterTest tear down." << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -55,8 +50,8 @@ protected:
 TEST_F(TemplateRegisterTest, template_regist_rereg)
 {
     HcclResult ret;
-    ret = hccl::AlgTemplateRegistry::Instance().Register(TemplateType::TEMPLATE_BROADCAST_NHR_V1,
-        DefaultTemplateCreator<BroadcastNHRV1>);
+    ret = hccl::AlgTemplateRegistry::Instance().Register(
+        TemplateType::TEMPLATE_BROADCAST_NHR_V1, DefaultTemplateCreator<BroadcastNHRV1>);
 
     EXPECT_NE(ret, HcclResult::HCCL_SUCCESS);
 }
@@ -64,8 +59,8 @@ TEST_F(TemplateRegisterTest, template_regist_rereg)
 TEST_F(TemplateRegisterTest, template_regist_outofrange)
 {
     HcclResult ret;
-    ret = hccl::AlgTemplateRegistry::Instance().Register(static_cast<TemplateType>(TEMPLATE_NATIVE_MAX_NUM),
-        DefaultTemplateCreator<BroadcastNHRV1>);
+    ret = hccl::AlgTemplateRegistry::Instance().Register(
+        static_cast<TemplateType>(TEMPLATE_NATIVE_MAX_NUM), DefaultTemplateCreator<BroadcastNHRV1>);
 
     EXPECT_NE(ret, HcclResult::HCCL_SUCCESS);
 }
@@ -73,8 +68,8 @@ TEST_F(TemplateRegisterTest, template_regist_outofrange)
 TEST_F(TemplateRegisterTest, template_get_outofrange)
 {
     HcclDispatcher dispatcher_;
-    auto ret = hccl::AlgTemplateRegistry::Instance().GetAlgTemplate(static_cast<TemplateType>(TEMPLATE_NATIVE_MAX_NUM),
-        dispatcher_);
+    auto ret = hccl::AlgTemplateRegistry::Instance().GetAlgTemplate(
+        static_cast<TemplateType>(TEMPLATE_NATIVE_MAX_NUM), dispatcher_);
 
     EXPECT_EQ(ret, nullptr);
 }

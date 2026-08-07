@@ -18,7 +18,7 @@
 
 namespace Hccl {
 
-PhyTopoBuilder &PhyTopoBuilder::GetInstance()
+PhyTopoBuilder& PhyTopoBuilder::GetInstance()
 {
     static PhyTopoBuilder phyTopoBuilder;
     return phyTopoBuilder;
@@ -34,20 +34,22 @@ std::shared_ptr<PhyTopo::Node> CreateNode(const PhyTopo::Node::NodeType nodeType
     }
 }
 
-void PhyTopoBuilder::Build(const std::string &topoPath)
+void PhyTopoBuilder::Build(const std::string& topoPath)
 {
     std::lock_guard<std::mutex> lock(phyTopoMutex);
-    
+
     if (PhyTopo::GetInstance()->IsInitFinished()) {
         HCCL_INFO("PhyTopo has been initialized and does not need to be rebuilt");
         return;
     }
 
     if (topoPath.empty()) {
-        RPT_INPUT_ERR(true, "EI0004", std::vector<std::string>({"ranktable_path", "error_reason"}),
-                      std::vector<std::string>({"Please check the path configuration of the topo json file.",
-                     "The rankTable file path does not exist, the permission is insufficient, or the JSON format is incorrect."
-                      }));
+        RPT_INPUT_ERR(
+            true, "EI0004", std::vector<std::string>({"ranktable_path", "error_reason"}),
+            std::vector<std::string>(
+                {"Please check the path configuration of the topo json file.",
+                 "The rankTable file path does not exist, the permission is insufficient, or the JSON format is "
+                 "incorrect."}));
         THROW<InvalidParamsException>("[PhyTopoBuilder::%s] Topo path is empty.", __func__);
     }
 
@@ -55,7 +57,7 @@ void PhyTopoBuilder::Build(const std::string &topoPath)
 
     auto topoInfo = LoadTopoInfo(topoPath);
     // 根据topoInfo，按netLayer构造Graph
-    for (const auto &iter : topoInfo->edges) {
+    for (const auto& iter : topoInfo->edges) {
         auto netLayer = iter.first;
         auto graph = CreateGraph(iter.second);
         PhyTopo::GetInstance()->AddTopoGraph(netLayer, graph);
@@ -69,7 +71,7 @@ void PhyTopoBuilder::Build(const std::string &topoPath)
         graph = make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
         PhyTopo::GetInstance()->AddTopoGraph(0, graph);
     }
-    for (const auto &iter : topoInfo->peers) {
+    for (const auto& iter : topoInfo->peers) {
         // 判断当前layer0的graph有没有这个节点
         if (!graph->HasNode(iter.localId)) {
             auto node = CreateNode(PhyTopo::Node::NodeType::PEER, iter.localId);
@@ -83,39 +85,43 @@ void PhyTopoBuilder::Build(const std::string &topoPath)
     PhyTopo::GetInstance()->Dump();
 }
 
-std::shared_ptr<TopoInfo> PhyTopoBuilder::LoadTopoInfo(const std::string &topoPath)
+std::shared_ptr<TopoInfo> PhyTopoBuilder::LoadTopoInfo(const std::string& topoPath)
 {
     std::shared_ptr<TopoInfo> topoInfo = std::make_shared<TopoInfo>();
     // 检查是否为非法路径以及size的大小。
     struct stat fileStat;
     if (stat(topoPath.c_str(), &fileStat) != 0) {
-        HCCL_ERROR("[PhyTopoBuilder][LoadTopoInfo] Get file stat failed, file path:%s, errno:%d, error: %s",
-                    topoPath.c_str(), errno, strerror(errno));
-        THROW<InvalidParamsException>("[PhyTopoBuilder][LoadTopoInfo]Get file stat failed, file path:%s, errno:%d, error: %s",
-                                            topoPath.c_str(), errno, strerror(errno));
+        HCCL_ERROR(
+            "[PhyTopoBuilder][LoadTopoInfo] Get file stat failed, file path:%s, errno:%d, error: %s", topoPath.c_str(),
+            errno, strerror(errno));
+        THROW<InvalidParamsException>(
+            "[PhyTopoBuilder][LoadTopoInfo]Get file stat failed, file path:%s, errno:%d, error: %s", topoPath.c_str(),
+            errno, strerror(errno));
     }
 
     u64 topoFileSize = static_cast<u64>(fileStat.st_size);
     if (topoFileSize > SUPPORT_MAX_TOPOFILE_SIZE || topoFileSize <= 0) {
-        HCCL_ERROR("[PhyTopoBuilder][LoadTopoInfo] topoFileSize size: %llu, topoFile must be greater than 0 and less than %u", topoFileSize, SUPPORT_MAX_TOPOFILE_SIZE);
+        HCCL_ERROR(
+            "[PhyTopoBuilder][LoadTopoInfo] topoFileSize size: %llu, topoFile must be greater than 0 and less than %u",
+            topoFileSize, SUPPORT_MAX_TOPOFILE_SIZE);
         THROW<InvalidParamsException>(StringFormat(
             "[PhyTopoBuilder][LoadTopoInfo]file %s size (%llu bytes) exceeds max allowed size (%u bytes)",
-             topoPath.c_str(), topoFileSize, SUPPORT_MAX_TOPOFILE_SIZE));
+            topoPath.c_str(), topoFileSize, SUPPORT_MAX_TOPOFILE_SIZE));
     }
-    
-    JsonParser                topoParser;
+
+    JsonParser topoParser;
     topoParser.ParseFile(topoPath, *topoInfo);
     topoInfo_ = topoInfo;
     return topoInfo;
 }
 
-shared_ptr<PhyTopo::Link> CreatePeer2PeerLink(const LinkParams &params)
+shared_ptr<PhyTopo::Link> CreatePeer2PeerLink(const LinkParams& params)
 {
     LinkType linkType = LinkType::PEER2PEER;
-    auto srcIface =
-        std::make_shared<PhyTopo::ConnInterface>(params.localAPorts, params.position, linkType, params.protocols);
-    auto dstIface =
-        std::make_shared<PhyTopo::ConnInterface>(params.localBPorts, params.position, linkType, params.protocols);
+    auto srcIface
+        = std::make_shared<PhyTopo::ConnInterface>(params.localAPorts, params.position, linkType, params.protocols);
+    auto dstIface
+        = std::make_shared<PhyTopo::ConnInterface>(params.localBPorts, params.position, linkType, params.protocols);
     PhyTopo::LinkAttributes linkAttrs;
     linkAttrs.linktype = linkType;
     linkAttrs.protocols = params.protocols;
@@ -128,14 +134,14 @@ shared_ptr<PhyTopo::Link> CreatePeer2PeerLink(const LinkParams &params)
     return {link};
 }
 
-
-shared_ptr<PhyTopo::Link> CreatePeer2NetLink(const LinkParams &params)
+shared_ptr<PhyTopo::Link> CreatePeer2NetLink(const LinkParams& params)
 {
     LinkType linkType = LinkType::PEER2NET;
-    auto srcIface = std::make_shared<PhyTopo::ConnInterface>(params.localAPorts, params.position, linkType, params.protocols);
+    auto srcIface
+        = std::make_shared<PhyTopo::ConnInterface>(params.localAPorts, params.position, linkType, params.protocols);
     // fabric 没有ports
     std::set<std::string> ports{};
-    auto dstIface =std::make_shared<PhyTopo::ConnInterface>(ports, params.position, linkType, params.protocols);
+    auto dstIface = std::make_shared<PhyTopo::ConnInterface>(ports, params.position, linkType, params.protocols);
     PhyTopo::LinkAttributes linkAttrs;
     linkAttrs.linktype = linkType;
     linkAttrs.protocols = params.protocols;
@@ -149,7 +155,7 @@ shared_ptr<PhyTopo::Link> CreatePeer2NetLink(const LinkParams &params)
 }
 
 // 根据链路类型建链
-shared_ptr<PhyTopo::Link> CreateLink(const LinkType linkType, const LinkParams &params)
+shared_ptr<PhyTopo::Link> CreateLink(const LinkType linkType, const LinkParams& params)
 {
     if (linkType == LinkType::PEER2PEER) {
         return CreatePeer2PeerLink(params);
@@ -158,12 +164,12 @@ shared_ptr<PhyTopo::Link> CreateLink(const LinkType linkType, const LinkParams &
     }
 }
 
-NodeId GetNodeId(const PhyTopo::Node::NodeType nodeType, LocalId localId) 
+NodeId GetNodeId(const PhyTopo::Node::NodeType nodeType, LocalId localId)
 {
     switch (nodeType) {
-        case  PhyTopo::Node::NodeType::PEER:
+        case PhyTopo::Node::NodeType::PEER:
             return PhyTopo::Peer::GetId(localId);
-        case  PhyTopo::Node::NodeType::FABRIC:
+        case PhyTopo::Node::NodeType::FABRIC:
             return PhyTopo::Fabric::GetId();
         default:
             THROW<InvalidParamsException>(StringFormat("[PhyTopoBuilder]Invalid NodeType."));
@@ -171,12 +177,12 @@ NodeId GetNodeId(const PhyTopo::Node::NodeType nodeType, LocalId localId)
     }
 }
 
-std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> PhyTopoBuilder::CreateGraph(
-    const std::vector<EdgeInfo> &edges) const
+std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>>
+PhyTopoBuilder::CreateGraph(const std::vector<EdgeInfo>& edges) const
 {
     auto graph = std::make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
 
-    for (const auto &edgeInfo : edges) {
+    for (const auto& edgeInfo : edges) {
         std::shared_ptr<PhyTopo::Node> nodeA;
         std::shared_ptr<PhyTopo::Node> nodeB;
 
@@ -189,7 +195,7 @@ std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> PhyTopoBuilder::CreateGraph
             HCCL_DEBUG("[PhyTopoBuilder::%s] Add node[%llu] success.", __func__, nodeAId);
         } else {
             // 使用 TraverseNode 查找 nodeA
-            graph->TraverseNode([&nodeA, nodeAId](NodeId id, const std::shared_ptr<PhyTopo::Node> &n) {
+            graph->TraverseNode([&nodeA, nodeAId](NodeId id, const std::shared_ptr<PhyTopo::Node>& n) {
                 if (id == nodeAId) {
                     nodeA = n;
                 }
@@ -217,7 +223,7 @@ std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> PhyTopoBuilder::CreateGraph
             HCCL_DEBUG("[PhyTopoBuilder::%s] Add node[%llu] success.", __func__, nodeBId);
         } else {
             // 使用 TraverseNode 查找 nodeB
-            graph->TraverseNode([&nodeB, nodeBId](NodeId id, const std::shared_ptr<PhyTopo::Node> &n) {
+            graph->TraverseNode([&nodeB, nodeBId](NodeId id, const std::shared_ptr<PhyTopo::Node>& n) {
                 if (id == nodeBId) {
                     nodeB = n;
                 }
@@ -238,8 +244,7 @@ std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> PhyTopoBuilder::CreateGraph
             edgeInfo.position,
             edgeInfo.topoType,
             edgeInfo.topoInstId,
-            edgeInfo.protocols
-        };
+            edgeInfo.protocols};
         auto abLinks = CreateLink(edgeInfo.linkType, abLinkParams);
         graph->AddEdge(nodeAId, nodeBId, abLinks);
         LinkParams baLinkParams{
@@ -250,8 +255,7 @@ std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> PhyTopoBuilder::CreateGraph
             edgeInfo.position,
             edgeInfo.topoType,
             edgeInfo.topoInstId,
-            edgeInfo.protocols
-        };
+            edgeInfo.protocols};
         auto baLinks = CreateLink(edgeInfo.linkType, baLinkParams);
         graph->AddEdge(nodeBId, nodeAId, baLinks);
     }
@@ -259,8 +263,7 @@ std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> PhyTopoBuilder::CreateGraph
     return graph;
 }
 
-
-void PhyTopoBuilder::RecoverBuild(const TopoInfo &topoInfo)
+void PhyTopoBuilder::RecoverBuild(const TopoInfo& topoInfo)
 {
     std::lock_guard<std::mutex> lock(phyTopoMutex);
 
@@ -269,7 +272,7 @@ void PhyTopoBuilder::RecoverBuild(const TopoInfo &topoInfo)
         return;
     }
     // 根据topoInfo，按netLayer构造Graph
-    for (const auto &iter : topoInfo.edges) {
+    for (const auto& iter : topoInfo.edges) {
         auto netLayer = iter.first;
         auto graph = CreateGraph(iter.second);
         PhyTopo::GetInstance()->AddTopoGraph(netLayer, graph);
@@ -282,9 +285,6 @@ void PhyTopoBuilder::RecoverBuild(const TopoInfo &topoInfo)
     PhyTopo::GetInstance()->Dump();
 }
 
-std::shared_ptr<TopoInfo> PhyTopoBuilder::GetTopoInfo() const
-{
-    return topoInfo_;
-}
+std::shared_ptr<TopoInfo> PhyTopoBuilder::GetTopoInfo() const { return topoInfo_; }
 
 } // namespace Hccl

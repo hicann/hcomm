@@ -13,51 +13,52 @@
 #include "coll_all_to_all_executor.h"
 namespace hccl {
 class CollRunAlltoAllVStaged : public CollAlltoAllExecutor {
-
 public:
-    CollRunAlltoAllVStaged(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollRunAlltoAllVStaged(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollRunAlltoAllVStaged() override = default;
 
     HcclResult CheckNeedRecreateComm(u64 lastScratchMemSize, bool& needRecreateAlltoallComm) override;
-    HcclResult CheckNeedCreateVirtualLinks(AlgResourceRequest &resourceRequest) override;
-    HcclResult ParallelTaskLoaderProcess(const std::string &tag, Stream &stream, SubCommInfo &level0CommInfo,
-        std::vector<Stream> &ringStreams);
+    HcclResult CheckNeedCreateVirtualLinks(AlgResourceRequest& resourceRequest) override;
+    HcclResult ParallelTaskLoaderProcess(
+        const std::string& tag, Stream& stream, SubCommInfo& level0CommInfo, std::vector<Stream>& ringStreams);
 
 private:
     HcclResult CalcStreamNum(u32& streamNum) override;
-    void CalcWorkSpaceMemSize(const AlltoAllUserRankInfo &userRankInfo,
-        const std::vector<SendRecvInfo> &allMeshAggregationSendRecvInfo, u64 &workspaceMemSize,
-        u32 meshAggregationRankSize);
+    void CalcWorkSpaceMemSize(
+        const AlltoAllUserRankInfo& userRankInfo, const std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo,
+        u64& workspaceMemSize, u32 meshAggregationRankSize);
     HcclResult CalcScratchMemSize(u64& scratchMemSize) override;
 
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel1CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel1CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel2CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel2CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalStagedAlltoallVCommInfo(TransportMemType inputType, TransportMemType outputType,
-        std::vector<LevelNSubCommTransport>& opTransport);
+    HcclResult CalStagedAlltoallVCommInfo(
+        TransportMemType inputType, TransportMemType outputType, std::vector<LevelNSubCommTransport>& opTransport);
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 
-    HcclResult PrepareAlltoAllVStaged1(DeviceMem &sendBuf, DeviceMem &recvBuf, DeviceMem &scratchMem,
-        std::map<u32, std::list<OneSendRecvAddrInfo>> &sendAddrInfosIntra,
-        std::map<u32, std::list<OneSendRecvAddrInfo>> &recvAddrInfosIntra,
-        Stream &stream, const std::string &tag, std::unique_ptr<AlgTemplateBase> &alltoallLevel0,
-        ExecMem &execMem);
-    void CalcInterMeshAggregationRecvRemoteOffset(const AlltoAllUserRankInfo &userRankInfo,
-        const std::vector<SendRecvInfo> &allSendRecvInfo, u32 index, u64 &remoteOffset, u32 meshAggregationRankSize);
+    HcclResult PrepareAlltoAllVStaged1(
+        DeviceMem& sendBuf, DeviceMem& recvBuf, DeviceMem& scratchMem,
+        std::map<u32, std::list<OneSendRecvAddrInfo>>& sendAddrInfosIntra,
+        std::map<u32, std::list<OneSendRecvAddrInfo>>& recvAddrInfosIntra, Stream& stream, const std::string& tag,
+        std::unique_ptr<AlgTemplateBase>& alltoallLevel0, ExecMem& execMem);
+    void CalcInterMeshAggregationRecvRemoteOffset(
+        const AlltoAllUserRankInfo& userRankInfo, const std::vector<SendRecvInfo>& allSendRecvInfo, u32 index,
+        u64& remoteOffset, u32 meshAggregationRankSize);
     void CalcInterMeshAggregationAlltoAllMemInfo(
-        const AlltoAllUserRankInfo &userRankInfo, const std::vector<SendRecvInfo> &allSendRecvInfo,
-        std::map<u32, std::list<OneSendRecvAddrInfo>> &sendAddrInfosInter,
-        std::map<u32, std::list<OneSendRecvAddrInfo>> &recvAddrInfosInter,
-        u32 meshAggregationRankSize);
-    HcclResult PrepareAlltoAllVStaged2(DeviceMem &recvBuf, DeviceMem &scratchMem,
-        std::map<u32, std::list<OneSendRecvAddrInfo>> &sendAddrInfosInter,
-        std::map<u32, std::list<OneSendRecvAddrInfo>> &recvAddrInfosInter,
-        Stream &stream, const std::string &tag, std::unique_ptr<AlgTemplateBase> &alltoallLevel1,
-        ExecMem &execMem);
+        const AlltoAllUserRankInfo& userRankInfo, const std::vector<SendRecvInfo>& allSendRecvInfo,
+        std::map<u32, std::list<OneSendRecvAddrInfo>>& sendAddrInfosInter,
+        std::map<u32, std::list<OneSendRecvAddrInfo>>& recvAddrInfosInter, u32 meshAggregationRankSize);
+    HcclResult PrepareAlltoAllVStaged2(
+        DeviceMem& recvBuf, DeviceMem& scratchMem, std::map<u32, std::list<OneSendRecvAddrInfo>>& sendAddrInfosInter,
+        std::map<u32, std::list<OneSendRecvAddrInfo>>& recvAddrInfosInter, Stream& stream, const std::string& tag,
+        std::unique_ptr<AlgTemplateBase>& alltoallLevel1, ExecMem& execMem);
 };
 
 } // namespace hccl

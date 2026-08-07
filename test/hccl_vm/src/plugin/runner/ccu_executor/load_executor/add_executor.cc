@@ -39,7 +39,7 @@ void AddExecutor::Run()
     uint16_t xmId = GetXnId(xmId_);
     uint16_t xdId = GetXnId(xdId_);
     uint64_t xdValue = 0;
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t xnValue = ccuResMgr.GetXnValue(rankId_, dieId_, xnId);
     if (parMode_ == 0) {
         xdValue = xnValue + xmId_;
@@ -57,15 +57,15 @@ void AddExecutor::Run()
 
 std::string AddExecutor::Describe()
 {
-    return HcclSim::StringFormat("[AddExecutor] xdId:[%u],xnId_[%u],xmId[%u],parMode[%u]\n",
-        xdId_, xnId_, xmId_, parMode_);
+    return HcclSim::StringFormat(
+        "[AddExecutor] xdId:[%u],xnId_[%u],xmId[%u],parMode[%u]\n", xdId_, xnId_, xmId_, parMode_);
 }
 
 CcuTrace::CcuInstrTraceDetail AddExecutor::CollectTraceDetail()
 {
     CcuTrace::CcuInstrTraceDetail detail;
     detail.typeName = "Add";
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     detail.args["xnValue"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xnId_));
     detail.args["xmValue"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xmId_));
     return detail;

@@ -20,15 +20,15 @@ public:
 
     ~BroadcastNB() override;
 
-    HcclResult RunAsync(
-        const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport> > &links) override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult
+    RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
 
 protected:
 private:
     HcclResult PrepareSlice(const u32 rank, const u32 rankSize);
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* BROADCAST_NB_PUB_H */

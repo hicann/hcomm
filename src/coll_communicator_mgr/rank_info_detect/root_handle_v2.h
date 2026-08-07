@@ -17,19 +17,19 @@
 namespace Hccl {
 
 // HcclRootHandleV2 定义
-constexpr u32     IP_ADDRESS_BUFFER_LEN          = 64;
-constexpr u32     ROOTINFO_IDENTIFIER_MAX_LENGTH = 128;
-const std::string RANK_INFO_DETECT_TAG           = "rank_info_detect_default_tag";
+constexpr u32 IP_ADDRESS_BUFFER_LEN = 64;
+constexpr u32 ROOTINFO_IDENTIFIER_MAX_LENGTH = 128;
+const std::string RANK_INFO_DETECT_TAG = "rank_info_detect_default_tag";
 
 using HcclRootHandleV2 = struct HcclRootHandleDefV2 {
-    char         ip[IP_ADDRESS_BUFFER_LEN];
-    u32          listenPort{HCCL_INVALID_PORT};
+    char ip[IP_ADDRESS_BUFFER_LEN];
+    u32 listenPort{HCCL_INVALID_PORT};
     HrtNetworkMode netMode{HrtNetworkMode::HDC};
-    char         identifier[ROOTINFO_IDENTIFIER_MAX_LENGTH];
+    char identifier[ROOTINFO_IDENTIFIER_MAX_LENGTH];
 };
 
 // buffer大小
-constexpr u32 MAX_BUFFER_LEN  = 100 * 1024 * 1024; // 100M
+constexpr u32 MAX_BUFFER_LEN = 100 * 1024 * 1024; // 100M
 
 constexpr u32 ONE_MILLISECOND_OF_USLEEP = 1000;
 

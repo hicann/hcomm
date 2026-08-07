@@ -26,7 +26,7 @@
 namespace hccl {
 constexpr u32 MAX_REMOTE_MEM_NUM = 256;
 
-using RemoteRmaBufferMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, void*>; // (addr, size) handle 
+using RemoteRmaBufferMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, void*>; // (addr, size) handle
 class HcclOneSidedConn {
 public:
     struct ProcessInfo {
@@ -42,58 +42,60 @@ public:
     };
 
     // 参数超过5个，最终交付前完成优化
-    HcclOneSidedConn(const HcclNetDevCtx &netDevCtx, const HcclRankLinkInfo &localRankInfo,
-        const HcclRankLinkInfo &remoteRankInfo, std::unique_ptr<HcclSocketManager> &socketManager,
-        std::unique_ptr<NotifyPool> &notifyPool, const HcclDispatcher &dispatcher, const bool &useRdma, u32 sdid,
-        u32 serverId, u32 trafficClass = HCCL_COMM_TRAFFIC_CLASS_CONFIG_NOT_SET,
+    HcclOneSidedConn(
+        const HcclNetDevCtx& netDevCtx, const HcclRankLinkInfo& localRankInfo, const HcclRankLinkInfo& remoteRankInfo,
+        std::unique_ptr<HcclSocketManager>& socketManager, std::unique_ptr<NotifyPool>& notifyPool,
+        const HcclDispatcher& dispatcher, const bool& useRdma, u32 sdid, u32 serverId,
+        u32 trafficClass = HCCL_COMM_TRAFFIC_CLASS_CONFIG_NOT_SET,
         u32 serviceLevel = HCCL_COMM_SERVICE_LEVEL_CONFIG_NOT_SET, bool aicpuUnfoldMode = false,
         bool isStandardCard = false, bool isNeedEnableP2P = false);
 
     ~HcclOneSidedConn();
 
-    HcclResult Connect(const std::string &commIdentifier, s32 timeoutSec);
-    HcclResult ExchangeIpcProcessInfo(const ProcessInfo &localProcess, ProcessInfo &remoteProcess);
-    HcclResult ExchangeMemDesc(const HcclMemDescs &localMemDescs, HcclMemDescs &remoteMemDescs, u32 &actualNumOfRemote);
+    HcclResult Connect(const std::string& commIdentifier, s32 timeoutSec);
+    HcclResult ExchangeIpcProcessInfo(const ProcessInfo& localProcess, ProcessInfo& remoteProcess);
+    HcclResult ExchangeMemDesc(const HcclMemDescs& localMemDescs, HcclMemDescs& remoteMemDescs, u32& actualNumOfRemote);
 
-    void EnableMemAccess(const HcclMemDesc &remoteMemDesc, HcclMem &remoteMem);
-    void DisableMemAccess(const HcclMemDesc &remoteMemDesc);
+    void EnableMemAccess(const HcclMemDesc& remoteMemDesc, HcclMem& remoteMem);
+    void DisableMemAccess(const HcclMemDesc& remoteMemDesc);
 
     void BatchWrite(const HcclOneSideOpDesc* oneSideDescs, u32 descNum, const rtStream_t& stream);
     void BatchRead(const HcclOneSideOpDesc* oneSideDescs, u32 descNum, const rtStream_t& stream);
 
-    HcclResult GetTransInfo(HcclOneSideOpDescParam* descParam, const HcclOneSideOpDesc* desc, u32 descNum,
-        u64 &transportDataAddr, u64 &transportDataSize);
-    HcclResult WaitOpFence(const rtStream_t &stream);
+    HcclResult GetTransInfo(
+        HcclOneSideOpDescParam* descParam, const HcclOneSideOpDesc* desc, u32 descNum, u64& transportDataAddr,
+        u64& transportDataSize);
+    HcclResult WaitOpFence(const rtStream_t& stream);
 
-    HcclResult ConnectWithRemote(const std::string &commIdentifier, ProcessInfo localProcess, s32 timeoutSec);
+    HcclResult ConnectWithRemote(const std::string& commIdentifier, ProcessInfo localProcess, s32 timeoutSec);
     HcclResult GetRemoteProcessInfo(ProcessInfo& remoteProcess);
 
-    HcclResult ExchangeMemDesc(const HcclMemDescs &localMemDescs);
+    HcclResult ExchangeMemDesc(const HcclMemDescs& localMemDescs);
     HcclResult EnableMemAccess();
     HcclResult DisableMemAccess();
-    void CleanSocketResource(const std::string &commIdentifier);
+    void CleanSocketResource(const std::string& commIdentifier);
 
 private:
-    std::string RmaMemDescCopyToStr(const RmaMemDesc &rmaMemDesc) const
+    std::string RmaMemDescCopyToStr(const RmaMemDesc& rmaMemDesc) const
     {
         return std::string(rmaMemDesc.memDesc, TRANSPORT_EMD_ESC_SIZE);
     }
-    HcclResult GetMemType(const char *description, RmaMemType &memType);
+    HcclResult GetMemType(const char* description, RmaMemType& memType);
     HcclNetDevCtx netDevCtx_{};
 
-    const HcclRankLinkInfo &localRankInfo_;
+    const HcclRankLinkInfo& localRankInfo_;
     HcclRankLinkInfo remoteRankInfo_{};
-    std::unique_ptr<HcclSocketManager> &socketManager_;
+    std::unique_ptr<HcclSocketManager>& socketManager_;
 
     std::shared_ptr<HcclSocket> socket_{};
     std::shared_ptr<HcclSocket> rdmaSocket_{};
 
-    std::unique_ptr<NotifyPool> &notifyPool_;
+    std::unique_ptr<NotifyPool>& notifyPool_;
 
     std::shared_ptr<TransportMem> transportMemPtr_{};
 
     RemoteRmaBufferMgr remoteRmaBufferMgr_{};
-    std::unordered_map <std::string, HcclBuf> memDescMap_;
+    std::unordered_map<std::string, HcclBuf> memDescMap_;
     bool useRdma_{true};
 
     ProcessInfo remoteProcess_{};
@@ -107,5 +109,5 @@ private:
     bool isNeedEnableP2P_{false};
     std::vector<u32> enableP2PDevices_;
 };
-}
+} // namespace hccl
 #endif

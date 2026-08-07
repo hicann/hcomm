@@ -15,8 +15,8 @@
 namespace hccl {
 class CollAllReduceDeterPipelineExecutor : public CollAllReduceExecutor {
 public:
-    explicit CollAllReduceDeterPipelineExecutor(const HcclDispatcher dispatcher,
-        std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollAllReduceDeterPipelineExecutor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAllReduceDeterPipelineExecutor() override = default;
 
 private:
@@ -24,19 +24,21 @@ private:
     /* *************** 资源计算 *************** */
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel1CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel1CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
 
     /* *************** 算法编排 *************** */
-    HcclResult RunLoopInner(OpParam &param, const ReduceType &reduceType, ExecMem &execMem) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult RunLoopInner(OpParam& param, const ReduceType& reduceType, ExecMem& execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 
     /* **************** 数据准备*************** */
-    u64 CalcCountPerSlice(const u64 &totalCount, const u32 &unitSize);
-    HcclResult PrepareDataSlice(const ExecMem &execMem, const u32 &unitSize, std::vector<Slice> &bufferSlices);
+    u64 CalcCountPerSlice(const u64& totalCount, const u32& unitSize);
+    HcclResult PrepareDataSlice(const ExecMem& execMem, const u32& unitSize, std::vector<Slice>& bufferSlices);
     u64 totalSize_{0U};
 };
 

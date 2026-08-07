@@ -20,25 +20,15 @@
 using namespace std;
 using namespace hccl;
 
-class OpBaseStreamManagerTest : public testing::Test
-{
+class OpBaseStreamManagerTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "\033[36m--OpBaseStreamManagerTest SetUP--\033[0m" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "\033[36m--OpBaseStreamManagerTest TearDown--\033[0m" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "\033[36m--OpBaseStreamManagerTest SetUP--\033[0m" << std::endl; }
+    static void TearDownTestCase() { std::cout << "\033[36m--OpBaseStreamManagerTest TearDown--\033[0m" << std::endl; }
     // Some expensive resource shared by all tests.
     virtual void SetUp()
     {
         s32 portNum = 7;
-        MOCKER(hrtGetHccsPortNum)
-            .stubs()
-            .with(mockcpp::any(), outBound(portNum))
-            .will(returnValue(HCCL_SUCCESS));
+        MOCKER(hrtGetHccsPortNum).stubs().with(mockcpp::any(), outBound(portNum)).will(returnValue(HCCL_SUCCESS));
         master = Stream(StreamType::STREAM_TYPE_OFFLINE);
         master.SetMode(1);
         manager.RegisterMaster(master);
@@ -127,9 +117,7 @@ TEST_F(OpBaseStreamManagerTest, ut_get_slave_exceed_fail)
 
 TEST_F(OpBaseStreamManagerTest, ut_get_slave_stream_alloc_fail)
 {
-    MOCKER(aclrtCreateStream)
-    .stubs()
-    .will(returnValue(1));
+    MOCKER(aclrtCreateStream).stubs().will(returnValue(1));
 
     std::vector<Stream> outStream = manager.AllocSlaves(StreamType::STREAM_TYPE_OFFLINE, 5);
     EXPECT_EQ(outStream.size(), 0);

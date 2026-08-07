@@ -16,31 +16,33 @@
 namespace hccl {
 class CollReduceScatterMeshOpbaseSmallCountDeterministicExecutor : public CollReduceScatterExecutor {
 public:
-    CollReduceScatterMeshOpbaseSmallCountDeterministicExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollReduceScatterMeshOpbaseSmallCountDeterministicExecutor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceScatterMeshOpbaseSmallCountDeterministicExecutor() override = default;
 
 private:
     /**************** 资源计算 *************** */
-    HcclResult CalcStreamNum(u32 &streamNum) override;
-    HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport> &opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType,
-                                  TransportMemType outputType,
-                                  std::vector<LevelNSubCommTransport> &opTransport) override;
-    HcclResult CalcLevel1CommInfo(TransportMemType inputType,
-        TransportMemType outputType,
+    HcclResult CalcStreamNum(u32& streamNum) override;
+    HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcLevel1CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
+        std::vector<LevelNSubCommTransport>& opTransport) override;
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
     /* *************** 任务编排 *************** */
     u64 CalcLoopMaxCount(const u32 unitSize) override;
-    bool IsHugeData(const u64 curSize, OpParam *param = nullptr) override;
+    bool IsHugeData(const u64 curSize, OpParam* param = nullptr) override;
     bool IsSmallData(const u64 totalSize, const u64 curSize) override;
-    bool IsPreloadCopyOptimizeCondition(const OpParam &param, ExecMem &execMem) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    bool IsPreloadCopyOptimizeCondition(const OpParam& param, ExecMem& execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
     bool IsPowerOfTwo(u32 num);
-    HcclResult CopyFromUserInToCclIn(const OpParam &param, ExecMem &execMem);
-    HcclResult RunAlgLevel1(const OpParam &param, u64 reduceAttr, ExecMem &execMem, SubCommInfo &level1CommInfo);
-    HcclResult RunAlgLevel0(const OpParam &param, u64 reduceAttr, ExecMem &execMem, SubCommInfo &level0CommInfo, 
-        SubCommInfo &level1CommInfo);
+    HcclResult CopyFromUserInToCclIn(const OpParam& param, ExecMem& execMem);
+    HcclResult RunAlgLevel1(const OpParam& param, u64 reduceAttr, ExecMem& execMem, SubCommInfo& level1CommInfo);
+    HcclResult RunAlgLevel0(
+        const OpParam& param, u64 reduceAttr, ExecMem& execMem, SubCommInfo& level0CommInfo,
+        SubCommInfo& level1CommInfo);
 };
 
 } // namespace hccl

@@ -25,14 +25,11 @@ protected:
     void TearDown() override { GlobalMockObject::verify(); }
 };
 
-TEST_F(EndpointMgrTest, IsMemExist_Empty)
-{
-    EXPECT_FALSE(mgr.IsMemExist((EndpointHandle)0x1));
-}
+TEST_F(EndpointMgrTest, IsMemExist_Empty) { EXPECT_FALSE(mgr.IsMemExist((EndpointHandle)0x1)); }
 
 TEST_F(EndpointMgrTest, IsDescExist_Empty)
 {
-    EndpointDesc desc {};
+    EndpointDesc desc{};
     memset(&desc, 0, sizeof(desc));
     EXPECT_FALSE(mgr.IsDescExist(desc));
 }
@@ -63,7 +60,7 @@ TEST_F(EndpointMgrTest, AddMemHandle_ExistingEndpoint)
 {
     std::vector<MemHandle> handles1 = {(MemHandle)0x10};
     std::vector<MemHandle> handles2 = {(MemHandle)0x20, (MemHandle)0x30};
-    
+
     HcclResult ret = mgr.AddMemHandle((EndpointHandle)0x1, handles1);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
@@ -93,7 +90,7 @@ TEST_F(EndpointMgrTest, GetAllRegisteredMemory_Success)
 
 TEST_F(EndpointMgrTest, Get_CreateNewEndpoint)
 {
-    EndpointDesc desc {};
+    EndpointDesc desc{};
     memset(&desc, 0, sizeof(desc));
     desc.protocol = COMM_PROTOCOL_HCCS;
     desc.commAddr.type = COMM_ADDR_TYPE_IP_V4;

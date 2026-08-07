@@ -14,25 +14,23 @@
 
 namespace Hccl {
 
-constexpr u32 AIV_TAG_BUF_INDEX = 1; // aiv tag buf的下标
+constexpr u32 AIV_TAG_BUF_INDEX = 1;         // aiv tag buf的下标
 constexpr u32 AIV_OFFLOAD_TAG_BUF_INDEX = 2; // aiv offload tag buf的下标
-UbMemoryTransportMgr::UbMemoryTransportMgr(const CommunicatorImpl &communicator) : comm(&communicator)
-{
-}
+UbMemoryTransportMgr::UbMemoryTransportMgr(const CommunicatorImpl& communicator) : comm(&communicator) {}
 
 UbMemoryTransportMgr::~UbMemoryTransportMgr()
 {
     tempTransport.clear();
     ubMemLink2TransportMap.clear();
 }
-HcclResult UbMemoryTransportMgr::BatchCreateTransport(const std::vector<LinkData> &links)
+HcclResult UbMemoryTransportMgr::BatchCreateTransport(const std::vector<LinkData>& links)
 {
     HCCL_INFO("[%s] start", __func__);
-    for (auto &link : links) {
+    for (auto& link : links) {
         auto ret = CreateTransportByLink(link);
         if (ret != HcclResult::HCCL_SUCCESS) {
-            HCCL_ERROR("[UbMemoryTransportMgr::%s] CreateTransportByLink fail link[%s]", __func__,
-                       link.Describe().c_str());
+            HCCL_ERROR(
+                "[UbMemoryTransportMgr::%s] CreateTransportByLink fail link[%s]", __func__, link.Describe().c_str());
             return ret;
         }
     }
@@ -40,13 +38,13 @@ HcclResult UbMemoryTransportMgr::BatchCreateTransport(const std::vector<LinkData
     return HcclResult::HCCL_SUCCESS;
 }
 
-std::vector<std::pair<RankId, RemoteIpcRmaBuffer *>> UbMemoryTransportMgr::GetRmtRankId2RmtIpcRmaBufList()
+std::vector<std::pair<RankId, RemoteIpcRmaBuffer*>> UbMemoryTransportMgr::GetRmtRankId2RmtIpcRmaBufList()
 {
     HCCL_INFO("[%s] start", __func__);
-    std::vector<std::pair<RankId, RemoteIpcRmaBuffer *>> rankId2RmtIpcRmaBufList{};
+    std::vector<std::pair<RankId, RemoteIpcRmaBuffer*>> rankId2RmtIpcRmaBufList{};
 
-    for (const auto &ubMemLink2TransportIter : ubMemLink2TransportMap) {
-        auto rmtRank      = ubMemLink2TransportIter.first.GetRemoteRankId();
+    for (const auto& ubMemLink2TransportIter : ubMemLink2TransportMap) {
+        auto rmtRank = ubMemLink2TransportIter.first.GetRemoteRankId();
         auto rmtMemBuffer = ubMemLink2TransportIter.second->GetRmtMemBuffer(0);
         rankId2RmtIpcRmaBufList.push_back(std::make_pair(rmtRank, rmtMemBuffer));
     }
@@ -59,8 +57,8 @@ std::vector<std::pair<RankId, uintptr_t>> UbMemoryTransportMgr::GetAllRankId2Aiv
     HCCL_INFO("[%s] start", __func__);
     std::vector<std::pair<RankId, uintptr_t>> rankId2AivTagBufList{};
 
-    for (const auto &ubMemLink2TransportIter : ubMemLink2TransportMap) {
-        auto      rmtRank            = ubMemLink2TransportIter.first.GetRemoteRankId();
+    for (const auto& ubMemLink2TransportIter : ubMemLink2TransportMap) {
+        auto rmtRank = ubMemLink2TransportIter.first.GetRemoteRankId();
         uintptr_t rmtAivTagufferAddr = ubMemLink2TransportIter.second->GetRmtMemBuffer(AIV_TAG_BUF_INDEX)->GetAddr();
         rankId2AivTagBufList.push_back(std::make_pair(rmtRank, rmtAivTagufferAddr));
     }
@@ -70,23 +68,24 @@ std::vector<std::pair<RankId, uintptr_t>> UbMemoryTransportMgr::GetAllRankId2Aiv
 }
 
 std::vector<std::pair<RankId, uintptr_t>> UbMemoryTransportMgr::GetAllRankId2AivOffloadTagBufAddrList()
- 
+
 {
     HCCL_INFO("[%s] start", __func__);
 
     std::vector<std::pair<RankId, uintptr_t>> rankId2AivOffloadTagBufList{};
- 
-    for (const auto &ubMemLink2TransportIter : ubMemLink2TransportMap) {
-        auto      rmtRank            = ubMemLink2TransportIter.first.GetRemoteRankId();
-        uintptr_t rmtAivTagBufferAddr = ubMemLink2TransportIter.second->GetRmtMemBuffer(AIV_OFFLOAD_TAG_BUF_INDEX)->GetAddr();
+
+    for (const auto& ubMemLink2TransportIter : ubMemLink2TransportMap) {
+        auto rmtRank = ubMemLink2TransportIter.first.GetRemoteRankId();
+        uintptr_t rmtAivTagBufferAddr
+            = ubMemLink2TransportIter.second->GetRmtMemBuffer(AIV_OFFLOAD_TAG_BUF_INDEX)->GetAddr();
         rankId2AivOffloadTagBufList.push_back(std::make_pair(rmtRank, rmtAivTagBufferAddr));
     }
     rankId2AivOffloadTagBufList.push_back(std::make_pair(comm->GetMyRank(), comm->GetAivOffloadTagBuffer()->GetAddr()));
- 
+
     return rankId2AivOffloadTagBufList;
 }
 
-HcclResult UbMemoryTransportMgr::CreateTransportByLink(const LinkData &link)
+HcclResult UbMemoryTransportMgr::CreateTransportByLink(const LinkData& link)
 {
     HCCL_INFO("[%s] start", __func__);
     auto linkIter = ubMemLink2TransportMap.find(link);
@@ -94,9 +93,9 @@ HcclResult UbMemoryTransportMgr::CreateTransportByLink(const LinkData &link)
         return HcclResult::HCCL_SUCCESS;
     }
     // 创建socket
-    std::string  socketTag = comm->GetEstablishLinkSocketTag();
+    std::string socketTag = comm->GetEstablishLinkSocketTag();
     SocketConfig socketConfig(link.GetRemoteRankId(), link, socketTag);
-    Socket      *socket = comm->GetSocketManager().GetConnectedSocket(socketConfig);
+    Socket* socket = comm->GetSocketManager().GetConnectedSocket(socketConfig);
     if (socket == nullptr) {
         HCCL_WARNING("[UbMemoryTransportMgr::%s] Fail to get socket via link %s, ", __func__, link.Describe().c_str());
 
@@ -104,7 +103,8 @@ HcclResult UbMemoryTransportMgr::CreateTransportByLink(const LinkData &link)
     }
 
     std::unique_ptr<UbMemoryTransport> transport = make_unique<UbMemoryTransport>(
-        comm->GetCclBuffer(), comm->GetAivTagBuffer(), comm->GetAivOffloadTagBuffer(), socket, comm->GetDeviceLogicId());
+        comm->GetCclBuffer(), comm->GetAivTagBuffer(), comm->GetAivOffloadTagBuffer(), socket,
+        comm->GetDeviceLogicId());
 
     if (transport->Init() != HcclResult::HCCL_SUCCESS) {
         HCCL_ERROR("[UbMemoryTransportMgr][%s] transport init fail, link %s", __func__, link.Describe().c_str());
@@ -115,11 +115,11 @@ HcclResult UbMemoryTransportMgr::CreateTransportByLink(const LinkData &link)
     ubMemLink2TransportMap[link] = std::move(transport);
     return HcclResult::HCCL_SUCCESS;
 }
-void UbMemoryTransportMgr::WaitTransportsReady(vector<std::pair<UbMemoryTransport *, LinkData>> &transports) const
+void UbMemoryTransportMgr::WaitTransportsReady(vector<std::pair<UbMemoryTransport*, LinkData>>& transports) const
 {
     HCCL_INFO("[%s] start", __func__);
 
-    auto   timeout   = std::chrono::seconds(EnvConfig::GetInstance().GetSocketConfig().GetLinkTimeOut());
+    auto timeout = std::chrono::seconds(EnvConfig::GetInstance().GetSocketConfig().GetLinkTimeOut());
     HcclUs startTime = std::chrono::steady_clock::now();
     while (!transports.empty()) {
         for (auto transIter = transports.begin(); transIter != transports.end();) {
@@ -127,15 +127,18 @@ void UbMemoryTransportMgr::WaitTransportsReady(vector<std::pair<UbMemoryTranspor
             if (status == UbMemoryTransport::UBTransportStatus::READY) {
                 transIter = transports.erase(transIter);
             } else if (status == UbMemoryTransport::UBTransportStatus::CONNECT_FAILED) {
-                THROW<InternalException>(StringFormat("Invalid status occurs when creating transport connection %s!",
-                                                      (*transIter).first->Describe().c_str()));
+                THROW<InternalException>(StringFormat(
+                    "Invalid status occurs when creating transport connection %s!",
+                    (*transIter).first->Describe().c_str()));
             } else if (status == UbMemoryTransport::UBTransportStatus::SOCKET_TIMEOUT) {
-                RPT_INPUT_ERR(true, "EI0006", std::vector<std::string>({"reason"}),
-                            std::vector<std::string>({"UbMemoryTransport wait SOCKET_TIMEOUT."}));
-                THROW<TimeoutException>(StringFormat("[UbMemoryTransportMgr][%s] [UbMemoryTransport]%s [LinkData]%s "
-                                                     "socket timeout, commId[%s], please check",
-                                                     __func__, (*transIter).first->Describe().c_str(),
-                                                     (*transIter).second.Describe().c_str(), comm->GetId().c_str()));
+                RPT_INPUT_ERR(
+                    true, "EI0006", std::vector<std::string>({"reason"}),
+                    std::vector<std::string>({"UbMemoryTransport wait SOCKET_TIMEOUT."}));
+                THROW<TimeoutException>(StringFormat(
+                    "[UbMemoryTransportMgr][%s] [UbMemoryTransport]%s [LinkData]%s "
+                    "socket timeout, commId[%s], please check",
+                    __func__, (*transIter).first->Describe().c_str(), (*transIter).second.Describe().c_str(),
+                    comm->GetId().c_str()));
             } else {
                 ++transIter;
             }
@@ -143,23 +146,25 @@ void UbMemoryTransportMgr::WaitTransportsReady(vector<std::pair<UbMemoryTranspor
 
         if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
             // 上报故障码EI0006
-            RPT_INPUT_ERR(true, "EI0006", std::vector<std::string>({"reason"}),
-                            std::vector<std::string>({"UbMemoryTransportMgr wait transports ready timeout."}));
-            THROW<InternalException>("UbMemoryTransportMgr::WaitTransportReady timeout, commId[%s]", comm->GetId().c_str());
+            RPT_INPUT_ERR(
+                true, "EI0006", std::vector<std::string>({"reason"}),
+                std::vector<std::string>({"UbMemoryTransportMgr wait transports ready timeout."}));
+            THROW<InternalException>(
+                "UbMemoryTransportMgr::WaitTransportReady timeout, commId[%s]", comm->GetId().c_str());
         }
     }
 }
 
-vector<std::pair<UbMemoryTransport *, LinkData>> UbMemoryTransportMgr::GetUnconfirmedTrans()
+vector<std::pair<UbMemoryTransport*, LinkData>> UbMemoryTransportMgr::GetUnconfirmedTrans()
 {
     HCCL_INFO("[%s] start", __func__);
     if (tempTransport.size() == 0) {
         HCCL_WARNING("[UbMemoryTransportMgr::%s] UnConfirmedTrans does not exist, please check.", __func__);
-        return vector<std::pair<UbMemoryTransport *, LinkData>>();
+        return vector<std::pair<UbMemoryTransport*, LinkData>>();
     }
 
-    vector<std::pair<UbMemoryTransport *, LinkData>> unConfirmedTrans;
-    for (const auto &linkId : tempTransport) {
+    vector<std::pair<UbMemoryTransport*, LinkData>> unConfirmedTrans;
+    for (const auto& linkId : tempTransport) {
         auto iterLink = ubMemLink2TransportMap.find(linkId);
         unConfirmedTrans.emplace_back(std::make_pair(iterLink->second.get(), linkId));
     }
@@ -170,11 +175,11 @@ void UbMemoryTransportMgr::TransportsConnect()
 {
     HCCL_INFO("[%s] start", __func__);
     // transport建链
-    vector<std::pair<UbMemoryTransport *, LinkData>> transLinkPairs = GetUnconfirmedTrans();
-    auto                                             op             = comm->GetCurrentCollOperator();
+    vector<std::pair<UbMemoryTransport*, LinkData>> transLinkPairs = GetUnconfirmedTrans();
+    auto op = comm->GetCurrentCollOperator();
     auto accelerator = comm->GetOpExecuteConfig().accState;
     HCCL_INFO("[UbMemoryTransportMgr::TransportsConnect] accelerator[%s]", accelerator.Describe().c_str());
-    for (auto &pair : transLinkPairs) {
+    for (auto& pair : transLinkPairs) {
         auto transport = pair.first;
         transport->SetLocalOpAcceState(accelerator);
         transport->SetHandshakeMsg(op->GetUniqueId());

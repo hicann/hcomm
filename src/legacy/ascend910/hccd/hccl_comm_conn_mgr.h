@@ -21,17 +21,17 @@ namespace hccl {
 
 class HcclCommConnMgr {
 public:
-    static HcclCommConnMgr &GetInstance();
+    static HcclCommConnMgr& GetInstance();
 
-    HcclResult AddAndGetCommConn(HcclCommConn *&commConn);
+    HcclResult AddAndGetCommConn(HcclCommConn*& commConn);
 
-    HcclResult AddCommConn(HcclCommConn *&commConn);
+    HcclResult AddCommConn(HcclCommConn*& commConn);
 
-    HcclResult DelCommConn(HcclCommConn *commConn);
+    HcclResult DelCommConn(HcclCommConn* commConn);
     bool IsExceedMaxLinkNum(u32 role);
-    bool IsExistCommConn(HcclAddr &connectAddr);
-    void InsertConnectCommMap(HcclAddr &connectAddr, HcclConn &conn);
-    void DeleteConnectCommMap(HcclAddr &connectAddr);
+    bool IsExistCommConn(HcclAddr& connectAddr);
+    void InsertConnectCommMap(HcclAddr& connectAddr, HcclConn& conn);
+    void DeleteConnectCommMap(HcclAddr& connectAddr);
 
 private:
     HcclCommConnMgr();
@@ -40,15 +40,15 @@ private:
     HcclResult UninitRa();
 
     static constexpr u32 COMM_CONN_NUM_ONE = 1;
-    std::unordered_set<HcclCommConn *> commConnSet_{};
+    std::unordered_set<HcclCommConn*> commConnSet_{};
     mutable std::mutex commConnMtx_{};
-    s32 defaultDevId_{ 0 };
-    bool raInited_{ false };
-    RaInitConfig raConfig_{ DEFAULT_INIT_PHY_ID, DEFAULT_INIT_NIC_POS, DEFAULT_HDC_TYPE, false };
+    s32 defaultDevId_{0};
+    bool raInited_{false};
+    RaInitConfig raConfig_{DEFAULT_INIT_PHY_ID, DEFAULT_INIT_NIC_POS, DEFAULT_HDC_TYPE, false};
 
     std::mutex connectCommMapMtx_{};
     std::map<uint32_t, HcclConn> connectCommMap_{};
 };
-}
+} // namespace hccl
 
 #endif

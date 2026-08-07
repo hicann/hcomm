@@ -15,59 +15,51 @@
 #include "profiling_manager_pub.h"
 
 namespace hccl {
-HcclResult ProfilingManagerPub::CallMsprofReportMultiThreadInfo(const std::vector<uint32_t> &tidInfo)
+HcclResult ProfilingManagerPub::CallMsprofReportMultiThreadInfo(const std::vector<uint32_t>& tidInfo)
 {
     return ProfilingManager::Instance().CallMsprofReportMultiThreadInfo(tidInfo);
 }
 
-bool ProfilingManagerPub::GetAdditionInfoState()
+bool ProfilingManagerPub::GetAdditionInfoState() { return ProfilingManager::Instance().GetAdditionInfoState(); }
+
+bool ProfilingManagerPub::GetTaskApiState() { return ProfilingManager::Instance().GetTaskApiState(); }
+HcclResult ProfilingManagerPub::CallMsprofReportHostApi(
+    HcclCMDType cmdType, uint64_t beginTime, u64 count, HcclDataType dataType, AlgType algType, uint64_t groupName,
+    u32 numBlocks)
 {
-    return ProfilingManager::Instance().GetAdditionInfoState();
+    return ProfilingManager::Instance().CallMsprofReportHostApi(
+        cmdType, beginTime, count, dataType, algType, groupName, numBlocks);
 }
 
-bool ProfilingManagerPub::GetTaskApiState()
-{
-    return ProfilingManager::Instance().GetTaskApiState();
-}
-HcclResult ProfilingManagerPub::CallMsprofReportHostApi(HcclCMDType cmdType, uint64_t beginTime, u64 count,
-    HcclDataType dataType, AlgType algType, uint64_t groupName, u32 numBlocks)
-{
-    return ProfilingManager::Instance().CallMsprofReportHostApi(cmdType, beginTime, count,
-        dataType, algType, groupName, numBlocks);
-}
-
-HcclResult ProfilingManagerPub::CallMsprofReportMc2CommInfo(uint64_t timeStamp, const void *data, int len)
+HcclResult ProfilingManagerPub::CallMsprofReportMc2CommInfo(uint64_t timeStamp, const void* data, int len)
 {
     CHK_PTR_NULL(data);
     return ProfilingManager::Instance().CallMsprofReportMc2CommInfo(timeStamp, data, len);
 }
- 
-HcclResult ProfilingManagerPub::CallMsprofReportHostNodeApi(uint64_t beginTime, uint64_t endTime,
-    const std::string profName, uint32_t threadId)
+
+HcclResult ProfilingManagerPub::CallMsprofReportHostNodeApi(
+    uint64_t beginTime, uint64_t endTime, const std::string profName, uint32_t threadId)
 {
     uint64_t itemId = hrtMsprofGetHashId(profName.c_str(), profName.length());
 
     return ProfilingManager::Instance().CallMsprofReportHostNodeApi(beginTime, endTime, itemId, threadId);
 }
 
-HcclResult ProfilingManagerPub::CallMsprofReportHostNodeBasicInfo(uint64_t endTime, const std::string profName,
-    uint32_t threadId)
+HcclResult
+ProfilingManagerPub::CallMsprofReportHostNodeBasicInfo(uint64_t endTime, const std::string profName, uint32_t threadId)
 {
     uint64_t itemId = hrtMsprofGetHashId(profName.c_str(), profName.length());
 
     return ProfilingManager::Instance().CallMsprofReportHostNodeBasicInfo(endTime, itemId, threadId);
 }
 
-HcclResult ProfilingManagerPub::CallMsprofReportNodeInfo(uint64_t beginTime, uint64_t endTime,
-        const std::string profName, uint32_t threadId)
+HcclResult ProfilingManagerPub::CallMsprofReportNodeInfo(
+    uint64_t beginTime, uint64_t endTime, const std::string profName, uint32_t threadId)
 {
     return ProfilingManager::Instance().CallMsprofReportNodeInfo(beginTime, endTime, profName, threadId);
 }
 
-bool ProfilingManagerPub::GetAllState()
-{
-    return ProfilingManager::Instance().GetAllState();
-}
+bool ProfilingManagerPub::GetAllState() { return ProfilingManager::Instance().GetAllState(); }
 
 HcclResult ProfilingManagerPub::ClearStoragedProfilingInfo()
 {
@@ -79,14 +71,11 @@ void ProfilingManagerPub::SetThreadCaptureStatus(s32 threadID, bool isCapture)
     ProfilingManager::Instance().SetThreadCaptureStatus(threadID, isCapture);
 }
 
-bool ProfilingManagerPub::GetThreadCaptureStatus()
-{
-    return ProfilingManager::Instance().GetThreadCaptureStatus();
-}
+bool ProfilingManagerPub::GetThreadCaptureStatus() { return ProfilingManager::Instance().GetThreadCaptureStatus(); }
 
 void ProfilingManagerPub::DeleteThreadCaptureStatus(s32 threadID)
 {
     ProfilingManager::Instance().DeleteThreadCaptureStatus(threadID);
 }
 
-}
+} // namespace hccl

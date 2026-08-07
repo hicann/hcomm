@@ -16,8 +16,8 @@
 namespace Hccl {
 class SocketException : public HcclException {
 public:
-    explicit SocketException(const std::string &userDefinedMsg)
-        : HcclException(ExceptionType::SOCKET_EXCEPTION, userDefinedMsg){};
+    explicit SocketException(const std::string& userDefinedMsg)
+        : HcclException(ExceptionType::SOCKET_EXCEPTION, userDefinedMsg) {};
 };
 } // namespace Hccl
 

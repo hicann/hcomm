@@ -23,18 +23,18 @@
 
 namespace Hccl {
 
-constexpr u32 MAX_DEVICE_NUM      = 65;
+constexpr u32 MAX_DEVICE_NUM = 65;
 constexpr u32 LINK_PROTO_TYPE_NUM = static_cast<u32>(LinkProtoType::__COUNT__);
-constexpr u32 MAX_PORT_NUM        = 16;
+constexpr u32 MAX_PORT_NUM = 16;
 
-using SocketHandle = void *;
+using SocketHandle = void*;
 class SocketHandleManager {
 public:
-    static SocketHandleManager &GetInstance();
+    static SocketHandleManager& GetInstance();
 
-    SocketHandle Create(u32 devicePhyId, const PortData &localPort);
+    SocketHandle Create(u32 devicePhyId, const PortData& localPort);
 
-    SocketHandle Get(u32 devicePhyId, const PortData &localPort);
+    SocketHandle Get(u32 devicePhyId, const PortData& localPort);
 
     void DeInit(u32 devPhyId);
 
@@ -48,9 +48,9 @@ private:
 
     void DestroyAll();
 
-    SocketHandleManager(const SocketHandleManager &socketHandleManager) = delete;
+    SocketHandleManager(const SocketHandleManager& socketHandleManager) = delete;
 
-    SocketHandleManager &operator=(const SocketHandleManager &socketHandleManager) = delete;
+    SocketHandleManager& operator=(const SocketHandleManager& socketHandleManager) = delete;
 
     std::mutex socketHandleLock;
     std::atomic<bool> destroyed{false};

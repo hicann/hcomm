@@ -27,25 +27,25 @@ REG_CCU_EXECUTOR_CREATE_FUNC_V2(SimCcuV2::TRANS_TYPE, SimCcuV2::TRANSLOCMSTOLOCM
 void TransLocMSToLocMemExecutor::Parser()
 {
     if (version_ == RunnerCcuVersion::CCU_V1) {
-        locGSAId_    = instr_.v1.transLocMSToLocMem.locGSAId;
-        locXnId_     = instr_.v1.transLocMSToLocMem.locXnId;
-        locMSId_     = instr_.v1.transLocMSToLocMem.locMSId & 0x7FFF;
-        locDieId_    = instr_.v1.transLocMSToLocMem.locMSId >> 15;
-        lengthXnId_  = instr_.v1.transLocMSToLocMem.lengthXnId;
-        channelId_   = instr_.v1.transLocMSToLocMem.channelId;
-        clearType_   = instr_.v1.transLocMSToLocMem.clearType;
-        lengthEn_    = instr_.v1.transLocMSToLocMem.lengthEn;
-        setCKEId_    = instr_.v1.transLocMSToLocMem.setCKEId;
-        setCKEMask_  = instr_.v1.transLocMSToLocMem.setCKEMask;
-        waitCKEId_   = instr_.v1.transLocMSToLocMem.waitCKEId;
+        locGSAId_ = instr_.v1.transLocMSToLocMem.locGSAId;
+        locXnId_ = instr_.v1.transLocMSToLocMem.locXnId;
+        locMSId_ = instr_.v1.transLocMSToLocMem.locMSId & 0x7FFF;
+        locDieId_ = instr_.v1.transLocMSToLocMem.locMSId >> 15;
+        lengthXnId_ = instr_.v1.transLocMSToLocMem.lengthXnId;
+        channelId_ = instr_.v1.transLocMSToLocMem.channelId;
+        clearType_ = instr_.v1.transLocMSToLocMem.clearType;
+        lengthEn_ = instr_.v1.transLocMSToLocMem.lengthEn;
+        setCKEId_ = instr_.v1.transLocMSToLocMem.setCKEId;
+        setCKEMask_ = instr_.v1.transLocMSToLocMem.setCKEMask;
+        waitCKEId_ = instr_.v1.transLocMSToLocMem.waitCKEId;
         waitCKEMask_ = instr_.v1.transLocMSToLocMem.waitCKEMask;
     } else if (version_ == RunnerCcuVersion::CCU_V2) {
-        xdId_      = instr_.v2.transLocMSToLocMem.xdId;
-        xdtId_     = instr_.v2.transLocMSToLocMem.xdtId;
-        msId_      = instr_.v2.transLocMSToLocMem.msId & 0x7FFF;
-        xlId_      = instr_.v2.transLocMSToLocMem.xlId;
-        xoId_      = instr_.v2.transLocMSToLocMem.xoId;
-        setCKEId_  = instr_.v2.transLocMSToLocMem.setCKEId;
+        xdId_ = instr_.v2.transLocMSToLocMem.xdId;
+        xdtId_ = instr_.v2.transLocMSToLocMem.xdtId;
+        msId_ = instr_.v2.transLocMSToLocMem.msId & 0x7FFF;
+        xlId_ = instr_.v2.transLocMSToLocMem.xlId;
+        xoId_ = instr_.v2.transLocMSToLocMem.xoId;
+        setCKEId_ = instr_.v2.transLocMSToLocMem.setCKEId;
         setCKEMask_ = instr_.v2.transLocMSToLocMem.setCKEMask;
     } else {
         HCCL_VM_ERROR("Invalid ccu version:{}", RunnerCcuVersionToString(version_));
@@ -54,26 +54,28 @@ void TransLocMSToLocMemExecutor::Parser()
     }
 }
 
-void TransLocMSToLocMemExecutor::Process(CcuResourceManager &ccuResMgr)
+void TransLocMSToLocMemExecutor::Process(CcuResourceManager& ccuResMgr)
 {
     uint64_t locAddr = ccuResMgr.GetGsaValue(rankId_, dieId_, locGSAId_);
     transLength_ = (lengthEn_ == 0) ? HcclSim::BYTE_NUM_4K : ccuResMgr.GetXnValue(rankId_, dieId_, lengthXnId_);
     if (ccuSimulator_->GetState() == CcuExecState::EXEC_LOOP_INSTR) {
         auto addrOffset = ccuSimulator_->GetLoopGsaAddrOffset();
-        auto msOffset   = ccuSimulator_->GetLoopMsOffset();
-        auto ckeOffset   = ccuSimulator_->GetLoopCKEOffset();
-        locAddr  += addrOffset;
+        auto msOffset = ccuSimulator_->GetLoopMsOffset();
+        auto ckeOffset = ccuSimulator_->GetLoopCKEOffset();
+        locAddr += addrOffset;
         locMSId_ += msOffset;
         setCKEId_ += ckeOffset;
-        HCCL_VM_DEBUG("locCcu[{}:{}], Get gsa addr offset = [{:04x}], ms offset = [{}], "
-                   "cke offset = [{:04x}]", rankId_, dieId_, addrOffset, msOffset, ckeOffset);
+        HCCL_VM_DEBUG(
+            "locCcu[{}:{}], Get gsa addr offset = [{:04x}], ms offset = [{}], "
+            "cke offset = [{:04x}]",
+            rankId_, dieId_, addrOffset, msOffset, ckeOffset);
     }
-    HCCL_VM_DEBUG("locCcu[{}:{}] Trans data "
-           "from locMsId[{}] to locGSAId[{}] locAddr[{:x}], "
-           "with lengthXnId[{}] transLength[{}], lengthEn_[{}].",
-           rankId_, dieId_, locMSId_, locGSAId_, locAddr, lengthXnId_,
-           transLength_, lengthEn_);
-    bool ret = ccuResMgr.TransMSToMem(rankId_, dieId_, locMSId_, reinterpret_cast<void *>(locAddr), transLength_);
+    HCCL_VM_DEBUG(
+        "locCcu[{}:{}] Trans data "
+        "from locMsId[{}] to locGSAId[{}] locAddr[{:x}], "
+        "with lengthXnId[{}] transLength[{}], lengthEn_[{}].",
+        rankId_, dieId_, locMSId_, locGSAId_, locAddr, lengthXnId_, transLength_, lengthEn_);
+    bool ret = ccuResMgr.TransMSToMem(rankId_, dieId_, locMSId_, reinterpret_cast<void*>(locAddr), transLength_);
     if (!ret) {
         ccuSimulator_->SetExecState(CcuExecState::EXEC_FAIL);
         return;
@@ -81,14 +83,11 @@ void TransLocMSToLocMemExecutor::Process(CcuResourceManager &ccuResMgr)
     SetCkeSignal(ccuResMgr, setCKEId_, setCKEMask_);
 }
 
-void TransLocMSToLocMemExecutor::RunV1()
-{
-    WaitCkeProcess(waitCKEId_, waitCKEMask_, clearType_, "LocMSToLocMem");
-}
+void TransLocMSToLocMemExecutor::RunV1() { WaitCkeProcess(waitCKEId_, waitCKEMask_, clearType_, "LocMSToLocMem"); }
 
 void TransLocMSToLocMemExecutor::RunV2()
 {
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
 
     uint16_t xdId = GetXnId(xdId_);
     uint64_t dstLocMemAddr = ccuResMgr.GetXnValue(rankId_, dieId_, xdId);
@@ -108,10 +107,9 @@ void TransLocMSToLocMemExecutor::RunV2()
 
     uint16_t locMsId = UpdateMSId(msId_);
 
-    HCCL_VM_DEBUG("Trans data from msId[{}] to dstMemAddr[0x{:x}], length[{}].",
-        locMsId, dstLocMemAddr, len);
+    HCCL_VM_DEBUG("Trans data from msId[{}] to dstMemAddr[0x{:x}], length[{}].", locMsId, dstLocMemAddr, len);
 
-    bool ret = ccuResMgr.TransMSToMem(rankId_, dieId_, locMsId, reinterpret_cast<void *>(dstLocMemAddr), len);
+    bool ret = ccuResMgr.TransMSToMem(rankId_, dieId_, locMsId, reinterpret_cast<void*>(dstLocMemAddr), len);
     if (!ret) {
         ccuSimulator_->SetExecState(CcuExecState::EXEC_FAIL);
         return;
@@ -139,13 +137,16 @@ void TransLocMSToLocMemExecutor::Run()
 std::string TransLocMSToLocMemExecutor::Describe()
 {
     if (version_ == RunnerCcuVersion::CCU_V1) {
-        return HcclSim::StringFormat("ParseTransLocMSToLocMemInstr Wait CKE[%u:%04x], Trans LocMS[%u:%u] To LocMem[%u:%u] With LengthXn[%u] Use Channel[%u], Set "
-                            "CKE[%u:%04x], clearType[%u], lengthEn[%u]",
-                            waitCKEId_, waitCKEMask_, locMSId_ / 0x8000, locMSId_ % 0x8000, locGSAId_, locXnId_, lengthXnId_,
-                            channelId_, setCKEId_, setCKEMask_, clearType_, lengthEn_);
+        return HcclSim::StringFormat(
+            "ParseTransLocMSToLocMemInstr Wait CKE[%u:%04x], Trans LocMS[%u:%u] To LocMem[%u:%u] With LengthXn[%u] Use "
+            "Channel[%u], Set "
+            "CKE[%u:%04x], clearType[%u], lengthEn[%u]",
+            waitCKEId_, waitCKEMask_, locMSId_ / 0x8000, locMSId_ % 0x8000, locGSAId_, locXnId_, lengthXnId_,
+            channelId_, setCKEId_, setCKEMask_, clearType_, lengthEn_);
     } else {
-        return HcclSim::StringFormat("[TransLocMSToLocMemExecutor] xdId[%u] xdtId[%u] msId[%u] "
-                                      "xlId[%u] xoId[%u] setCKEId[%u] setCKEMask[0x%04x]\n",
+        return HcclSim::StringFormat(
+            "[TransLocMSToLocMemExecutor] xdId[%u] xdtId[%u] msId[%u] "
+            "xlId[%u] xoId[%u] setCKEId[%u] setCKEMask[0x%04x]\n",
             xdId_, xdtId_, msId_, xlId_, xoId_, setCKEId_, setCKEMask_);
     }
 }

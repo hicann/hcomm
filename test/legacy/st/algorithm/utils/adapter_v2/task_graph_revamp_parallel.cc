@@ -19,9 +19,9 @@ namespace checker {
 HcclResult GraphRevampParallel::Revamp(TaskNodePtr dummyStart)
 {
     // revamp the graph for loop and async node parallel revamp
-    CHK_PRT_RET(RevampGraph(dummyStart) != HcclResult::HCCL_SUCCESS,
-        HCCL_ERROR("[GraphRevampBilateralCcu] Unable to revamp graph."),
-        HcclResult::HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        RevampGraph(dummyStart) != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR("[GraphRevampBilateralCcu] Unable to revamp graph."), HcclResult::HCCL_E_INTERNAL);
 
     return HcclResult::HCCL_SUCCESS;
 }
@@ -30,12 +30,14 @@ HcclResult GraphRevampParallel::RevampGraph4Rank(TaskNodePtr ccuHead, RankId ran
 {
     HCCL_INFO("[RevampGraph4Rank] Start ccu parallel revamp for rank [%d].", rankId);
     // revamp the graph for loop nodes parallelization
-    CHK_PRT_RET(ProcCcuNode4Loop(ccuHead, rankId) != HcclResult::HCCL_SUCCESS,
+    CHK_PRT_RET(
+        ProcCcuNode4Loop(ccuHead, rankId) != HcclResult::HCCL_SUCCESS,
         HCCL_ERROR("[GraphRevampParallel] Rank[%d] Unable to revamp graph for loop.", rankId),
         HcclResult::HCCL_E_INTERNAL);
-    
+
     // revamp the graph for async node parallelization
-    CHK_PRT_RET(ProcCcuNode4Async(ccuHead, rankId) != HcclResult::HCCL_SUCCESS,
+    CHK_PRT_RET(
+        ProcCcuNode4Async(ccuHead, rankId) != HcclResult::HCCL_SUCCESS,
         HCCL_ERROR("[GraphRevampParallel] Rank[%d] Unable to revamp graph for async node.", rankId),
         HcclResult::HCCL_E_INTERNAL);
 
@@ -45,9 +47,9 @@ HcclResult GraphRevampParallel::RevampGraph4Rank(TaskNodePtr ccuHead, RankId ran
 
 HcclResult GraphRevampParallel::ProcCcuNode4Loop(TaskNodePtr ccuHead, RankId rankId)
 {
-    TaskStubCcuGraph *curCcuTask = dynamic_cast<TaskStubCcuGraph *>(ccuHead->task);
+    TaskStubCcuGraph* curCcuTask = dynamic_cast<TaskStubCcuGraph*>(ccuHead->task);
 
-    for (auto &groupInfo : curCcuTask->loopGroupInfo_) {
+    for (auto& groupInfo : curCcuTask->loopGroupInfo_) {
         LoopHeadTailPairs loopGroup;
         for (auto& loopInfo : groupInfo) {
             loopGroup.push_back(std::make_pair(loopInfo.loopStart, loopInfo.loopEnd));
@@ -59,8 +61,8 @@ HcclResult GraphRevampParallel::ProcCcuNode4Loop(TaskNodePtr ccuHead, RankId ran
 
 HcclResult GraphRevampParallel::ProcCcuNode4Async(TaskNodePtr ccuHead, RankId rankId)
 {
-    TaskStubCcuGraph *curCcuTask = dynamic_cast<TaskStubCcuGraph *>(ccuHead->task);
-    for (auto &asyncNode : curCcuTask->parallelNodes_) {
+    TaskStubCcuGraph* curCcuTask = dynamic_cast<TaskStubCcuGraph*>(ccuHead->task);
+    for (auto& asyncNode : curCcuTask->parallelNodes_) {
         CHK_RET(ProcAsyncNode(ccuHead, asyncNode, curCcuTask->queueNum_++));
     }
     return HcclResult::HCCL_SUCCESS;
@@ -77,16 +79,16 @@ HcclResult GraphRevampParallel::ProcAsyncNode(TaskNodePtr ccuHead, TaskNodePtr c
     CHK_RET(PorcessAsyncHeadTailNode(currNode, locPostNode, beforeAsynNodes, locPostAsynChild));
 
     // 修改真实流：头尾节点断开连接
-    for (auto &child : beforeAsynNodes) {
+    for (auto& child : beforeAsynNodes) {
         RemoveNodeRelation(child, currNode);
     }
 
     // 创建虚拟流：依次添加localWait(新增节点) -> currNode -> postNode
     // 创建虚拟流：生成loop头节点{localPost, localWait}
-    TaskStub *localPostHead = new TaskStubLocalPostTo(currRank, queId, queId);
-    auto localPostHeadNode  = new TaskNode(localPostHead, currRank, queId, beforeAsynNodes[0]->pos + 1);
-    TaskStub *localWaitHead = new TaskStubLocalWaitFrom(currRank, virtualQueId, virtualQueId);
-    auto localWaitHeadNode  = new TaskNode(localWaitHead, currRank, virtualQueId, 0);
+    TaskStub* localPostHead = new TaskStubLocalPostTo(currRank, queId, queId);
+    auto localPostHeadNode = new TaskNode(localPostHead, currRank, queId, beforeAsynNodes[0]->pos + 1);
+    TaskStub* localWaitHead = new TaskStubLocalWaitFrom(currRank, virtualQueId, virtualQueId);
+    auto localWaitHeadNode = new TaskNode(localWaitHead, currRank, virtualQueId, 0);
 
     localPostHeadNode->asynParallel = true;
     localWaitHeadNode->asynParallel = true;
@@ -97,7 +99,7 @@ HcclResult GraphRevampParallel::ProcAsyncNode(TaskNodePtr ccuHead, TaskNodePtr c
 
     AddNodeRelation(localPostHeadNode, localWaitHeadNode);
     AddNodeRelation(localWaitHeadNode, currNode);
-    
+
     // 恢复真实流中原本与locPostNode的连接关系
     if (locPostNode != nullptr) {
         CHK_RET(RestorRealFlowConnection4Async(ccuHead, locPostNode, localPostHeadNode, locPostAsynChild));
@@ -111,26 +113,26 @@ HcclResult GraphRevampParallel::ProcAsyncNode(TaskNodePtr ccuHead, TaskNodePtr c
     }
 
     // 修改节点流ID
-    currNode->queIdx      = virtualQueId;
+    currNode->queIdx = virtualQueId;
     if (locPostNode != nullptr) {
-        locPostNode->queIdx   = virtualQueId;
+        locPostNode->queIdx = virtualQueId;
     }
 
     // 修改节点POS
-    currNode->pos         = 1;
+    currNode->pos = 1;
     if (locPostNode != nullptr) {
-        locPostNode->pos      = currNode->pos + 1;
+        locPostNode->pos = currNode->pos + 1;
     }
 
     // 修改真实流：currNode和postNode断开连接，替换为localPost(新增节点)
-    for (auto &child : beforeAsynNodes) {
+    for (auto& child : beforeAsynNodes) {
         AddNodeRelation(child, localPostHeadNode);
     }
 
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampParallel::ProcLoopNode(TaskNodePtr ccuHead, LoopHeadTailPairs &loopNodes, RankId rankId)
+HcclResult GraphRevampParallel::ProcLoopNode(TaskNodePtr ccuHead, LoopHeadTailPairs& loopNodes, RankId rankId)
 {
     if (loopNodes.empty()) {
         return HcclResult::HCCL_SUCCESS;
@@ -167,8 +169,9 @@ HcclResult GraphRevampParallel::ProcLoopNode(TaskNodePtr ccuHead, LoopHeadTailPa
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampParallel::RestorRealFlowConnection4Async(TaskNodePtr ccuHead, TaskNodePtr locPostNode,
-    TaskNodePtr localPostHeadNode, std::vector<TaskNodePtr> &locPostAsynChild)
+HcclResult GraphRevampParallel::RestorRealFlowConnection4Async(
+    TaskNodePtr ccuHead, TaskNodePtr locPostNode, TaskNodePtr localPostHeadNode,
+    std::vector<TaskNodePtr>& locPostAsynChild)
 {
     if (locPostAsynChild.empty()) {
         return HcclResult::HCCL_SUCCESS;
@@ -186,12 +189,12 @@ HcclResult GraphRevampParallel::RestorRealFlowConnection4Async(TaskNodePtr ccuHe
     }
 
     /**-----------------------------------------------------------------------------------
-    连续Async节点场景： 
+    连续Async节点场景：
        1. 配对locWait子节点  ———— 不删除原有连接关系；
        2. 非配对子节点 ———— 删除原有连接关系，并与localPostHeadNode建立新连接关系
     --------------------------------------------------------------------------------------**/
-    for (auto &child : locPostAsynChild) {
-        TaskStubCcuGraph *curCcuTask = dynamic_cast<TaskStubCcuGraph *>(ccuHead->task);
+    for (auto& child : locPostAsynChild) {
+        TaskStubCcuGraph* curCcuTask = dynamic_cast<TaskStubCcuGraph*>(ccuHead->task);
         if (child->task->GetType() == TaskTypeStub::LOCAL_WAIT_FROM) {
             auto locWaitIt = curCcuTask->localPostWaitPairs_.find(locPostNode);
             if (locWaitIt == curCcuTask->localPostWaitPairs_.end()) {
@@ -211,7 +214,8 @@ HcclResult GraphRevampParallel::RestorRealFlowConnection4Async(TaskNodePtr ccuHe
 }
 
 HcclResult GraphRevampParallel::PorcessLoopHeadTailNode(
-    const LoopHeadTailPairs &loopNodes, uint32_t loopCnt, TaskNodePtr &beforLoopNode, TaskNodePtr &afterLoopNode, RankId rankId)
+    const LoopHeadTailPairs& loopNodes, uint32_t loopCnt, TaskNodePtr& beforLoopNode, TaskNodePtr& afterLoopNode,
+    RankId rankId)
 {
     // 查找真实流中，loop块(以{LoopStart, LoopEnd}包含的指令块)的前后节点
     auto firstLoopStart = loopNodes[0].first;
@@ -245,30 +249,33 @@ HcclResult GraphRevampParallel::PorcessLoopHeadTailNode(
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampParallel::CreateLoopVirStream(RankId currRank, TaskNodePtr ccuHead, const LoopHeadTailPairs &loopNodes, std::vector<LoopPostWaitNodes> &loopHeadTailNodes)
+HcclResult GraphRevampParallel::CreateLoopVirStream(
+    RankId currRank, TaskNodePtr ccuHead, const LoopHeadTailPairs& loopNodes,
+    std::vector<LoopPostWaitNodes>& loopHeadTailNodes)
 {
-    TaskStubCcuGraph *curCcuTask = dynamic_cast<TaskStubCcuGraph *>(ccuHead->task);
+    TaskStubCcuGraph* curCcuTask = dynamic_cast<TaskStubCcuGraph*>(ccuHead->task);
     for (auto loopPair : loopNodes) {
         auto loopStart = loopPair.first;
         auto loopEnd = loopPair.second;
         // 创建虚拟流：生成loop头节点{localPost, localWait}
-        TaskStub *localPostHead = new TaskStubLocalPostTo(currRank, loopStart->queIdx, loopStart->queIdx);
-        auto localPostHeadNode  = new TaskNode(localPostHead, currRank, loopStart->queIdx, loopStart->pos + 1);
-        TaskStub *localWaitHead = new TaskStubLocalWaitFrom(currRank, loopStart->queIdx, loopStart->queIdx);
-        auto localWaitHeadNode  = new TaskNode(localWaitHead, currRank, loopStart->queIdx, 0); // 虚拟流的头结点
+        TaskStub* localPostHead = new TaskStubLocalPostTo(currRank, loopStart->queIdx, loopStart->queIdx);
+        auto localPostHeadNode = new TaskNode(localPostHead, currRank, loopStart->queIdx, loopStart->pos + 1);
+        TaskStub* localWaitHead = new TaskStubLocalWaitFrom(currRank, loopStart->queIdx, loopStart->queIdx);
+        auto localWaitHeadNode = new TaskNode(localWaitHead, currRank, loopStart->queIdx, 0); // 虚拟流的头结点
         toDeleteTaskResource_.push_back(localPostHead);
         toDeleteTaskNodeResource_.push_back(localPostHeadNode);
         toDeleteTaskResource_.push_back(localWaitHead);
         toDeleteTaskNodeResource_.push_back(localWaitHeadNode);
 
         // 创建虚拟流：生成loop尾节点{localPost, localWait}
-        TaskStub *localPostTail = new TaskStubLocalPostTo(currRank, loopStart->queIdx, loopStart->queIdx);
-        auto localPostTailNode  = new TaskNode(localPostTail, currRank, loopStart->queIdx, loopStart->pos + 1);
-        TaskStub *localWaitTail = new TaskStubLocalWaitFrom(currRank, loopStart->queIdx, loopStart->queIdx);
-        auto localWaitTailNode  = new TaskNode(localWaitTail, currRank, loopStart->queIdx, 0); // todo: 真实流中的pos
+        TaskStub* localPostTail = new TaskStubLocalPostTo(currRank, loopStart->queIdx, loopStart->queIdx);
+        auto localPostTailNode = new TaskNode(localPostTail, currRank, loopStart->queIdx, loopStart->pos + 1);
+        TaskStub* localWaitTail = new TaskStubLocalWaitFrom(currRank, loopStart->queIdx, loopStart->queIdx);
+        auto localWaitTailNode = new TaskNode(localWaitTail, currRank, loopStart->queIdx, 0); // todo: 真实流中的pos
 
         // 修改节点流ID、节点pos
-        LoopPostWaitNodes loopPostWaitNodes = {localPostHeadNode, localWaitHeadNode, localPostTailNode, localWaitTailNode};
+        LoopPostWaitNodes loopPostWaitNodes
+            = {localPostHeadNode, localWaitHeadNode, localPostTailNode, localWaitTailNode};
         CHK_RET(ModifyNodeQueIdx(curCcuTask->queueNum_++, loopStart->queIdx, loopStart, loopPostWaitNodes));
 
         // 新建节点与原loop指令块建立连接关系
@@ -281,13 +288,14 @@ HcclResult GraphRevampParallel::CreateLoopVirStream(RankId currRank, TaskNodePtr
         toDeleteTaskNodeResource_.push_back(localPostTailNode);
         toDeleteTaskResource_.push_back(localWaitTail);
         toDeleteTaskNodeResource_.push_back(localWaitTailNode);
-    
+
         loopHeadTailNodes.push_back({localPostHeadNode, localWaitHeadNode, localPostTailNode, localWaitTailNode});
     }
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampParallel::ModifyNodeQueIdx(uint32_t virtualQueId, uint32_t relQueId, TaskNodePtr loopStart, LoopPostWaitNodes &loopPostWaitNodes)
+HcclResult GraphRevampParallel::ModifyNodeQueIdx(
+    uint32_t virtualQueId, uint32_t relQueId, TaskNodePtr loopStart, LoopPostWaitNodes& loopPostWaitNodes)
 {
     // 首尾的localPost和localWait节点，仍在真实流上
     loopPostWaitNodes.localPostHead->queIdx = relQueId;
@@ -334,8 +342,9 @@ HcclResult GraphRevampParallel::ModifyNodeQueIdx(uint32_t virtualQueId, uint32_t
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GraphRevampParallel::PorcessAsyncHeadTailNode(TaskNodePtr currNode, TaskNodePtr &locPostNode,
-    std::vector<TaskNodePtr> &beforeAsynNodes, std::vector<TaskNodePtr> &locPostAsynChild)
+HcclResult GraphRevampParallel::PorcessAsyncHeadTailNode(
+    TaskNodePtr currNode, TaskNodePtr& locPostNode, std::vector<TaskNodePtr>& beforeAsynNodes,
+    std::vector<TaskNodePtr>& locPostAsynChild)
 {
     // 获取真实流中asyncNode相关的首节点
     for (auto parentIter = currNode->parents.begin(); parentIter != currNode->parents.end(); parentIter++) {

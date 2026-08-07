@@ -37,7 +37,7 @@ public:
     }
 
     HcclResult Reg(const HcclMem* mem, void** memRecordHandle); // 登记一段内存
-    HcclResult DeReg(void* memRecordHandle); // 删除一段内存记录
+    HcclResult DeReg(void* memRecordHandle);                    // 删除一段内存记录
     HcclResult GetNetDevCtx(NicType nicType, const HcclIpAddress& ipAddr, u32 port, HcclNetDevCtx& netDevCtx);
     HcclResult InitNic();
     HcclResult DeInitNic();
@@ -45,11 +45,13 @@ public:
 
 private:
     HcclResult CheckOverlapAndInsert(GlobalMemRecord& memRecord, void** memRecordHandle);
-    HcclResult CheckOneSidedBackupAndSetDevId(const HcclIpAddress &ipAddr, u32 &backupDevPhyId, u32 &backupDevLogicId, std::vector<HcclIpAddress> &localIpList, bool &isOneSidedTaskAndBackupInitA3);
+    HcclResult CheckOneSidedBackupAndSetDevId(
+        const HcclIpAddress& ipAddr, u32& backupDevPhyId, u32& backupDevLogicId,
+        std::vector<HcclIpAddress>& localIpList, bool& isOneSidedTaskAndBackupInitA3);
 
     std::set<GlobalMemRecord> memRecordSet_{}; // 内存记录，按照type>addr>size排序
     std::unordered_set<void*> validHandlePtrSet{}; // 记录handle地址，用于校验用户传入的是否是handle的地址
-    std::mutex lock_;   // 锁保证多线程访问安全
+    std::mutex lock_;                              // 锁保证多线程访问安全
     std::map<PortInfo, std::pair<NicType, HcclNetDevCtx>> netDevCtxMap_{};
     u32 devicePhyId_{INVALID_UINT};
     s32 deviceLogicId_{INVALID_INT};

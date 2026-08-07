@@ -24,14 +24,15 @@ using LocalRdmaRmaBufferMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, std::share
 
 class LocalRdmaRmaBufferManager {
 public:
-    static LocalRdmaRmaBufferMgr *GetInstance();
+    static LocalRdmaRmaBufferMgr* GetInstance();
+
 private:
     LocalRdmaRmaBufferManager() = default;
     ~LocalRdmaRmaBufferManager() = default;
-    LocalRdmaRmaBufferManager(const LocalRdmaRmaBufferManager &)            = delete;
-    LocalRdmaRmaBufferManager &operator=(const LocalRdmaRmaBufferManager &) = delete;
+    LocalRdmaRmaBufferManager(const LocalRdmaRmaBufferManager&) = delete;
+    LocalRdmaRmaBufferManager& operator=(const LocalRdmaRmaBufferManager&) = delete;
 };
 
-}   // namespace Hccl
+} // namespace Hccl
 
-#endif //LOCAL_RDMA_RMA_BUFFER_MANAGER_H
+#endif // LOCAL_RDMA_RMA_BUFFER_MANAGER_H

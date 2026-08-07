@@ -15,35 +15,36 @@
 
 namespace hccl {
 class CollAllReduceRingZerocopyExecutor : public CollAllReduceExecutor {
-
 public:
-    CollAllReduceRingZerocopyExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollAllReduceRingZerocopyExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAllReduceRingZerocopyExecutor() override = default;
 
 private:
     /* *************** 资源计算 *************** */
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType,
-        TransportMemType outputType, std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
+        std::vector<LevelNSubCommTransport>& opTransport) override;
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
 
     /* *************** 算法编排 *************** */
-    HcclResult DoubleRingReduceScatter(const std::string &tag,
-        DeviceMem inputMem, DeviceMem outputMem, const u64 count, const HcclDataType dataType,
+    HcclResult DoubleRingReduceScatter(
+        const std::string& tag, DeviceMem inputMem, DeviceMem outputMem, const u64 count, const HcclDataType dataType,
         const HcclReduceOp reductionOp, const std::vector<std::vector<Slice>> multRingsSliceZero, Stream stream,
-        s32 profStage, const u64 baseOffset, const HcomCollOpInfo *opInfo,
+        s32 profStage, const u64 baseOffset, const HcomCollOpInfo* opInfo,
         const std::vector<std::vector<Slice>> multRingsUserMemSlice);
     HcclResult DoubleRingAllGather(
-        const std::string &tag, DeviceMem inputMem, DeviceMem outputMem,
-        const u64 count, const HcclDataType dataType, const std::vector<std::vector<Slice> > multRingsSliceZero,
-        Stream stream, s32 profStage, const u64 baseOffset, HcomCollOpInfo *opInfo,
-        const std::vector<std::vector<Slice>> multRingsUserMemSlice);
-    HcclResult KernelRunInterServerAllReduceSingleSuperpod(const OpParam &param, const ExecMem &execMem, const u64 level1DataSize);
-    HcclResult KernelRunInterServerAllReduceMultiSuperpod(const OpParam &param, const ExecMem &execMem, const u64 level1DataSize);
-    HcclResult KernelRunIntraServerPre(const OpParam &param, ExecMem &execMem) override;
-    HcclResult KernelRunInterServer(const OpParam &param, ExecMem &execMem) override;
-    HcclResult KernelRunIntraServerPost(const OpParam &param, ExecMem &execMem) override;
+        const std::string& tag, DeviceMem inputMem, DeviceMem outputMem, const u64 count, const HcclDataType dataType,
+        const std::vector<std::vector<Slice>> multRingsSliceZero, Stream stream, s32 profStage, const u64 baseOffset,
+        HcomCollOpInfo* opInfo, const std::vector<std::vector<Slice>> multRingsUserMemSlice);
+    HcclResult
+    KernelRunInterServerAllReduceSingleSuperpod(const OpParam& param, const ExecMem& execMem, const u64 level1DataSize);
+    HcclResult
+    KernelRunInterServerAllReduceMultiSuperpod(const OpParam& param, const ExecMem& execMem, const u64 level1DataSize);
+    HcclResult KernelRunIntraServerPre(const OpParam& param, ExecMem& execMem) override;
+    HcclResult KernelRunInterServer(const OpParam& param, ExecMem& execMem) override;
+    HcclResult KernelRunIntraServerPost(const OpParam& param, ExecMem& execMem) override;
 
     std::vector<std::vector<Slice>> level0MultiRingDataSlices_;
     u32 level0Rank_ = INVALID_VALUE_RANKID;

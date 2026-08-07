@@ -21,15 +21,15 @@ MAKE_ENUM(WhiteListType, HCCL_WHITELIST_HOST, HCCL_WHITELIST_RESERVED)
 
 class Whitelist {
 public:
-    static Whitelist &GetInstance();
-    void              LoadConfigFile(const std::string &realName);
-    void              GetHostWhiteList(std::vector<IpAddress> &whiteList);
-    nlohmann::json    GetHostIp(nlohmann::json fileContent) const;
+    static Whitelist& GetInstance();
+    void LoadConfigFile(const std::string& realName);
+    void GetHostWhiteList(std::vector<IpAddress>& whiteList);
+    nlohmann::json GetHostIp(nlohmann::json fileContent) const;
 
 private:
     ~Whitelist();
     std::map<WhiteListType, std::vector<IpAddress>> whiteLists;
-    std::mutex                                      whiteListsMutex;
+    std::mutex whiteListsMutex;
 };
 } // namespace Hccl
 

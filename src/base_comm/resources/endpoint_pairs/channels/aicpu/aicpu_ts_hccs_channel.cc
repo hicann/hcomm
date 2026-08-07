@@ -22,36 +22,40 @@
 #include "inner/remote_rdma_rma_buffer.h"
 #include "hccl_network.h"
 
-using LocalIpcRmaBufferMgr =
-    hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::LocalIpcRmaBuffer>>;
-using RemoteIpcRmaBufferMgr =
-    hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::RemoteIpcRmaBuffer>>;
+using LocalIpcRmaBufferMgr
+    = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::LocalIpcRmaBuffer>>;
+using RemoteIpcRmaBufferMgr
+    = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::RemoteIpcRmaBuffer>>;
 
 using namespace hccl;
 
 namespace hcomm {
-AicpuTsHccsChannel::AicpuTsHccsChannel(EndpointHandle endpointHandle, const HcommChannelDesc &channelDesc):
-    endpointHandle_(endpointHandle), channelDesc_(channelDesc) 
-{
-}
+AicpuTsHccsChannel::AicpuTsHccsChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc)
+    : endpointHandle_(endpointHandle),
+      channelDesc_(channelDesc)
+{}
 
 AicpuTsHccsChannel::~AicpuTsHccsChannel()
 {
     try {
         TransportDeInit();
-    } catch (...) { }
+    } catch (...) {
+    }
 
     try {
         DisableMemAccess();
-    } catch (...) { }
+    } catch (...) {
+    }
 
     try {
         DestroyConnection();
-    } catch (...) { }
+    } catch (...) {
+    }
 
     try {
         DisableP2P();
-    } catch (...) { }
+    } catch (...) {
+    }
 }
 
 HcclResult AicpuTsHccsChannel::ParseInputParam()
@@ -64,7 +68,7 @@ HcclResult AicpuTsHccsChannel::ParseInputParam()
     remoteEp_ = channelDesc_.remoteEndpoint;
     notifyNum_ = channelDesc_.notifyNum;
 
-    serverPort_ = channelDesc_.port != 0 ?  channelDesc_.port : AICPU_CHANNEL_DEFAULT_PORT;
+    serverPort_ = channelDesc_.port != 0 ? channelDesc_.port : AICPU_CHANNEL_DEFAULT_PORT;
 
     CHK_RET(GetFirstIpByPhyId(localEp_.loc.device.devPhyId, localEp_.loc.device.superDevId, localIp_));
     CHK_RET(GetFirstIpByPhyId(remoteEp_.loc.device.devPhyId, remoteEp_.loc.device.superDevId, remoteIp_));
@@ -74,28 +78,30 @@ HcclResult AicpuTsHccsChannel::ParseInputParam()
     if (channelDesc_.role == HCOMM_SOCKET_ROLE_SERVER) {
         isSocketServer_ = true;
     } else if (channelDesc_.role != HCOMM_SOCKET_ROLE_CLIENT) {
-        HCCL_WARNING("[AicpuTsHccsChannel] unexpected channelDesc.role[%d]; "
-                "using inner logic to decide socket role based on endpoint IPs",
-                static_cast<int>(channelDesc_.role));
+        HCCL_WARNING(
+            "[AicpuTsHccsChannel] unexpected channelDesc.role[%d]; "
+            "using inner logic to decide socket role based on endpoint IPs",
+            static_cast<int>(channelDesc_.role));
         if (localReadableAddress < remoteReadableAddress) {
             isSocketServer_ = true;
         }
     }
 
-    HCCL_INFO("[AicpuTsHccsChannel][ParseInputParam] local devPhyId [%u] ip[%u] remote devPhyId[%u] ip[%s], "
+    HCCL_INFO(
+        "[AicpuTsHccsChannel][ParseInputParam] local devPhyId [%u] ip[%u] remote devPhyId[%u] ip[%s], "
         "isSocketServer_[%u], serverPort_[%u]",
-        localEp_.loc.device.devPhyId, localReadableAddress.c_str(),
-        remoteEp_.loc.device.devPhyId, remoteReadableAddress.c_str(),
-        static_cast<u32>(isSocketServer_), serverPort_);
+        localEp_.loc.device.devPhyId, localReadableAddress.c_str(), remoteEp_.loc.device.devPhyId,
+        remoteReadableAddress.c_str(), static_cast<u32>(isSocketServer_), serverPort_);
 
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsHccsChannel::GetFirstIpByPhyId(u32 devicePhyId, u32 superDevId, HcclIpAddress &ip)
+HcclResult AicpuTsHccsChannel::GetFirstIpByPhyId(u32 devicePhyId, u32 superDevId, HcclIpAddress& ip)
 {
     CHK_RET(GlobalNetDevMgr::GetDeviceVnicIP(devicePhyId, superDevId, ip));
-    HCCL_INFO("[AicpuTsHccsChannel][GetFirstIpByPhyId]devicePhyId[%u] superDevId[%u] linkInfo.ip[%s]",
-        devicePhyId, superDevId, ip.GetReadableAddress());
+    HCCL_INFO(
+        "[AicpuTsHccsChannel][GetFirstIpByPhyId]devicePhyId[%u] superDevId[%u] linkInfo.ip[%s]", devicePhyId,
+        superDevId, ip.GetReadableAddress());
     return HCCL_SUCCESS;
 }
 
@@ -109,9 +115,10 @@ HcclResult AicpuTsHccsChannel::BuildConnection()
     std::string localReadableAddress = localIp_.GetReadableAddress();
     std::string remoteReadableAddress = remoteIp_.GetReadableAddress();
 
-    HCCL_INFO("[AicpuTsHccsChannel][BuildConnection] local devPhyId [%u] ip[%u] remote devPhyId[%u] ip[%s]",
-        localEp_.loc.device.devPhyId, localReadableAddress.c_str(),
-        remoteEp_.loc.device.devPhyId, remoteReadableAddress.c_str());
+    HCCL_INFO(
+        "[AicpuTsHccsChannel][BuildConnection] local devPhyId [%u] ip[%u] remote devPhyId[%u] ip[%s]",
+        localEp_.loc.device.devPhyId, localReadableAddress.c_str(), remoteEp_.loc.device.devPhyId,
+        remoteReadableAddress.c_str());
 
     if (channelDesc_.channelName != nullptr) {
         socketTag_ = std::string(channelDesc_.channelName);
@@ -122,16 +129,17 @@ HcclResult AicpuTsHccsChannel::BuildConnection()
     }
 
     if (isSocketServer_) {
-        CHK_RET(GlobalNetDevMgr::GetInstance(localEp_.loc.device.devPhyId).AcceptClient(serverPort_,
-            remoteIp_, socketTag_, socket_));
+        CHK_RET(GlobalNetDevMgr::GetInstance(localEp_.loc.device.devPhyId)
+                    .AcceptClient(serverPort_, remoteIp_, socketTag_, socket_));
     } else {
-        CHK_RET(GlobalNetDevMgr::GetInstance(localEp_.loc.device.devPhyId).ConnectToServer(serverPort_,
-            remoteIp_, serverPort_, socketTag_, socket_));
+        CHK_RET(GlobalNetDevMgr::GetInstance(localEp_.loc.device.devPhyId)
+                    .ConnectToServer(serverPort_, remoteIp_, serverPort_, socketTag_, socket_));
     }
-    HCCL_INFO("[AicpuTsHccsChannel][BuildConnection] local devPhyId [%u] ip[%u] "
+    HCCL_INFO(
+        "[AicpuTsHccsChannel][BuildConnection] local devPhyId [%u] ip[%u] "
         "remote devPhyId[%u] ip[%s] socketTag_[%s]",
-        localEp_.loc.device.devPhyId, localReadableAddress.c_str(),
-        remoteEp_.loc.device.devPhyId, remoteReadableAddress.c_str(), socketTag_.c_str());
+        localEp_.loc.device.devPhyId, localReadableAddress.c_str(), remoteEp_.loc.device.devPhyId,
+        remoteReadableAddress.c_str(), socketTag_.c_str());
     return HCCL_SUCCESS;
 }
 
@@ -140,7 +148,7 @@ void AicpuTsHccsChannel::DestroyConnection()
     if (socket_ != nullptr) {
         GlobalNetDevMgr::GetInstance(localEp_.loc.device.devPhyId).CloseSocket(socket_);
     }
-    
+
     if (serverInited_) {
         (void)hccl::GlobalNetDevMgr::GetInstance(localEp_.loc.device.devPhyId).ServerDeInit(serverPort_);
         serverInited_ = false;
@@ -148,7 +156,7 @@ void AicpuTsHccsChannel::DestroyConnection()
     HCCL_INFO("[AicpuTsHccsChannel][%s] finish DestroyConnection", __func__);
 }
 
-HcclResult AicpuTsHccsChannel::SetMachinePara(hccl::MachinePara &machinePara)
+HcclResult AicpuTsHccsChannel::SetMachinePara(hccl::MachinePara& machinePara)
 {
     CHK_RET(hrtGetDeviceType(machinePara.deviceType));
 
@@ -157,10 +165,11 @@ HcclResult AicpuTsHccsChannel::SetMachinePara(hccl::MachinePara &machinePara)
     machinePara.deviceLogicId = static_cast<s32>(deviceLogicId);
     machinePara.tag = socketTag_;
     machinePara.notifyNum = channelDesc_.notifyNum;
-    machinePara.linkMode = hccl::LinkMode::LINK_DUPLEX_MODE;;
+    machinePara.linkMode = hccl::LinkMode::LINK_DUPLEX_MODE;
+    ;
     machinePara.specifyLink = LinkTypeInServer::RESERVED_LINK_TYPE;
-    machinePara.machineType = isSocketServer_ ? hccl::MachineType::MACHINE_SERVER_TYPE :
-        hccl::MachineType::MACHINE_CLIENT_TYPE;
+    machinePara.machineType
+        = isSocketServer_ ? hccl::MachineType::MACHINE_SERVER_TYPE : hccl::MachineType::MACHINE_CLIENT_TYPE;
     machinePara.serverId = localEp_.loc.device.serverIdx;
     machinePara.localDeviceId = localEp_.loc.device.devPhyId;
     machinePara.remoteDeviceId = remoteEp_.loc.device.devPhyId;
@@ -177,7 +186,7 @@ HcclResult AicpuTsHccsChannel::SetMachinePara(hccl::MachinePara &machinePara)
     return HCCL_SUCCESS;
 }
 
-void AicpuTsHccsChannel::SetTransportParam(hccl::TransportPara &para)
+void AicpuTsHccsChannel::SetTransportParam(hccl::TransportPara& para)
 {
     std::chrono::milliseconds kdefaultTimeout = std::chrono::seconds(GetExternalInputHcclLinkTimeOut());
     para.timeout = kdefaultTimeout;
@@ -205,8 +214,8 @@ HcclResult AicpuTsHccsChannel::TransportInit()
     CHK_RET(notifyPool_->Init(localEp_.loc.device.devPhyId));
     CHK_RET(notifyPool_->RegisterOp(machinePara.tag));
 
-    transport_.reset(new (std::nothrow) Transport(TransportType::TRANS_TYPE_P2P, para,
-        dispatcher_, notifyPool_, machinePara));
+    transport_.reset(new (std::nothrow)
+                         Transport(TransportType::TRANS_TYPE_P2P, para, dispatcher_, notifyPool_, machinePara));
 
     CHK_RET(transport_->Init());
 
@@ -290,7 +299,7 @@ void AicpuTsHccsChannel::DisableMemAccess()
 }
 
 HcclResult AicpuTsHccsChannel::Init()
-{  
+{
     CHK_RET(ParseInputParam());
     CHK_RET(EnableP2P());
     HcclResult ret = BuildConnection();
@@ -320,7 +329,7 @@ HcclResult AicpuTsHccsChannel::Init()
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsHccsChannel::GetRemoteMems(uint32_t *memNum, CommMem **remoteMem, char ***memInfos)
+HcclResult AicpuTsHccsChannel::GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos)
 {
     remoteIpcRmaBufferVec_.clear();
     CHK_RET(localEpPtr_->GetRemoteIpcRmaBuffer(remoteIpcRmaBufferVec_));
@@ -335,18 +344,18 @@ ChannelStatus AicpuTsHccsChannel::GetStatus()
     return out;
 }
 
-HcclResult AicpuTsHccsChannel::GetNotifyNum(uint32_t *notifyNum) const
+HcclResult AicpuTsHccsChannel::GetNotifyNum(uint32_t* notifyNum) const
 {
     *notifyNum = notifyNum_;
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsHccsChannel::BuildHcclChannelHccsRes(HcclChannelHccsRes &channelHccsRes)
+HcclResult AicpuTsHccsChannel::BuildHcclChannelHccsRes(HcclChannelHccsRes& channelHccsRes)
 {
-    HcclChannelP2p &linkp2p = channelHccsRes.channelP2p;
+    HcclChannelP2p& linkp2p = channelHccsRes.channelP2p;
 
-    CHK_SAFETY_FUNC_RET(memcpy_s(channelHccsRes.channelTag, sizeof(channelHccsRes.channelTag) - 1,
-        socketTag_.c_str(), socketTag_.length()));
+    CHK_SAFETY_FUNC_RET(memcpy_s(
+        channelHccsRes.channelTag, sizeof(channelHccsRes.channelTag) - 1, socketTag_.c_str(), socketTag_.length()));
     HCCL_DEBUG("[AicpuTsHccsChannel][%s] channelHccsRes.channelTag[%s]", __func__, channelHccsRes.channelTag);
 
     linkp2p.remoteHcclbuffer.addr = nullptr;
@@ -358,7 +367,8 @@ HcclResult AicpuTsHccsChannel::BuildHcclChannelHccsRes(HcclChannelHccsRes &chann
 
     u64 notifyNum = 0;
     channelHccsRes.p2pNotifyNum = transport_->GetNotifyNum();
-    HCCL_DEBUG("[AicpuTsHccsChannel][%s] finish set localnotify & remotenotify info, "
+    HCCL_DEBUG(
+        "[AicpuTsHccsChannel][%s] finish set localnotify & remotenotify info, "
         "notifyNum[%llu], p2pNotifyNum[%llu]",
         __func__, notifyNum, channelHccsRes.p2pNotifyNum);
     CHK_RET(transport_->GetTransportAttr(linkp2p.transportAttr));
@@ -368,8 +378,8 @@ HcclResult AicpuTsHccsChannel::BuildHcclChannelHccsRes(HcclChannelHccsRes &chann
     channelHccsRes.deviceType = static_cast<u32>(devType);
     channelHccsRes.remoteDevicePhyId = remoteEp_.loc.device.devPhyId;
     channelHccsRes.localDevicePhyId = localEp_.loc.device.devPhyId;
-    channelHccsRes.machineType = isSocketServer_ ? hccl::MachineType::MACHINE_SERVER_TYPE :
-        hccl::MachineType::MACHINE_CLIENT_TYPE;
+    channelHccsRes.machineType
+        = isSocketServer_ ? hccl::MachineType::MACHINE_SERVER_TYPE : hccl::MachineType::MACHINE_CLIENT_TYPE;
     u32 deviceLogicId;
     CHK_RET(hrtGetDeviceIndexByPhyId(localEp_.loc.device.devPhyId, deviceLogicId));
     channelHccsRes.localDeviceLogicId = static_cast<s32>(deviceLogicId);
@@ -388,7 +398,7 @@ HcclResult AicpuTsHccsChannel::BuildHcclChannelHccsRes(HcclChannelHccsRes &chann
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsHccsChannel::Serialize(std::shared_ptr<hccl::DeviceMem> &out)
+HcclResult AicpuTsHccsChannel::Serialize(std::shared_ptr<hccl::DeviceMem>& out)
 {
     HCCL_DEBUG("[AicpuTsHccsChannel][%s] start", __func__);
     HcclChannelHccsRes hostChannelHccsRes;
@@ -408,31 +418,33 @@ HcclResult AicpuTsHccsChannel::Serialize(std::shared_ptr<hccl::DeviceMem> &out)
     // cal remote buf mem
     size_t remoteBufSize = hostChannelHccsRes.remoteBufSize * sizeof(HcclMemEx);
     outSize += remoteBufSize;
-    EXCEPTION_CATCH((out = std::make_shared<hccl::DeviceMem>(hccl::DeviceMem::alloc(outSize))),
-                            return HCCL_E_PTR);
+    EXCEPTION_CATCH((out = std::make_shared<hccl::DeviceMem>(hccl::DeviceMem::alloc(outSize))), return HCCL_E_PTR);
 
-    void *dstPtr = nullptr;
-    // 复制 local buf    
+    void* dstPtr = nullptr;
+    // 复制 local buf
     if (hostChannelHccsRes.localBufSize > 0 && hostChannelHccsRes.localBufMem != nullptr) {
         // 使用设备地址重置 local buf的地址
-        dstPtr = reinterpret_cast<uint8_t *>(out.get()->ptr()) + baseSize;
+        dstPtr = reinterpret_cast<uint8_t*>(out.get()->ptr()) + baseSize;
         deviceChannelHccsRes.localBufMem = reinterpret_cast<HcclMemEx*>(dstPtr);
-        CHK_RET(hrtMemSyncCopy(deviceChannelHccsRes.localBufMem, localBufSize, hostChannelHccsRes.localBufMem,
-            localBufSize, HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
+        CHK_RET(hrtMemSyncCopy(
+            deviceChannelHccsRes.localBufMem, localBufSize, hostChannelHccsRes.localBufMem, localBufSize,
+            HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
     }
 
     // 复制 remote buf
     if (hostChannelHccsRes.remoteBufSize > 0 && hostChannelHccsRes.remoteBufMem != nullptr) {
         // 使用设备地址重置 remote buf的地址
-        dstPtr = reinterpret_cast<uint8_t *>(out.get()->ptr()) + baseSize + localBufSize;
+        dstPtr = reinterpret_cast<uint8_t*>(out.get()->ptr()) + baseSize + localBufSize;
         deviceChannelHccsRes.remoteBufMem = reinterpret_cast<HcclMemEx*>(dstPtr);
-        CHK_RET(hrtMemSyncCopy(deviceChannelHccsRes.remoteBufMem, remoteBufSize, hostChannelHccsRes.remoteBufMem,
-            remoteBufSize, HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
+        CHK_RET(hrtMemSyncCopy(
+            deviceChannelHccsRes.remoteBufMem, remoteBufSize, hostChannelHccsRes.remoteBufMem, remoteBufSize,
+            HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
     }
 
     // 复制 base
-    CHK_RET(hrtMemSyncCopy(out.get()->ptr(), sizeof(HcclChannelHccsRes), &deviceChannelHccsRes,
-        sizeof(HcclChannelHccsRes), HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
+    CHK_RET(hrtMemSyncCopy(
+        out.get()->ptr(), sizeof(HcclChannelHccsRes), &deviceChannelHccsRes, sizeof(HcclChannelHccsRes),
+        HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
 
     HCCL_DEBUG("[AicpuTsHccsChannel][%s] end", __func__);
     return HCCL_SUCCESS;
@@ -440,22 +452,17 @@ HcclResult AicpuTsHccsChannel::Serialize(std::shared_ptr<hccl::DeviceMem> &out)
 
 HcclResult AicpuTsHccsChannel::Clean()
 {
-    HCCL_INFO("[AicpuTsHccsChannel][%s] Clean not implemented, no resume needed for AICPU TS Hccs channel",
-        __func__);
+    HCCL_INFO("[AicpuTsHccsChannel][%s] Clean not implemented, no resume needed for AICPU TS Hccs channel", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult AicpuTsHccsChannel::Resume()
 {
-    HCCL_INFO("[AicpuTsHccsChannel][%s] Resume not implemented, no resume needed for AICPU TS Hccs channel",
-        __func__);
+    HCCL_INFO("[AicpuTsHccsChannel][%s] Resume not implemented, no resume needed for AICPU TS Hccs channel", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcommChannelKind AicpuTsHccsChannel::GetChannelKind() const
-{
-    return HcommChannelKind::AICPU_TS_HCCS;
-}
+HcommChannelKind AicpuTsHccsChannel::GetChannelKind() const { return HcommChannelKind::AICPU_TS_HCCS; }
 
 HcclResult AicpuTsHccsChannel::NotifyRecord(const uint32_t remoteNotifyIdx)
 {
@@ -469,20 +476,19 @@ HcclResult AicpuTsHccsChannel::NotifyWait(const uint32_t localNotifyIdx, const u
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsHccsChannel::WriteWithNotify(void *dst, const void *src, const uint64_t len,
-    uint32_t remoteNotifyIdx)
+HcclResult AicpuTsHccsChannel::WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[AicpuTsHccsChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsHccsChannel::Write(void *dst, const void *src, uint64_t len)
+HcclResult AicpuTsHccsChannel::Write(void* dst, const void* src, uint64_t len)
 {
     HCCL_INFO("[AicpuTsHccsChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsHccsChannel::Read(void *dst, const void *src, uint64_t len)
+HcclResult AicpuTsHccsChannel::Read(void* dst, const void* src, uint64_t len)
 {
     HCCL_INFO("[AicpuTsHccsChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
@@ -493,4 +499,4 @@ HcclResult AicpuTsHccsChannel::ChannelFence()
     HCCL_INFO("[AicpuTsHccsChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
-}
+} // namespace hcomm

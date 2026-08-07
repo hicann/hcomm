@@ -12,33 +12,30 @@
 #include "reduce_ring.h"
 
 namespace hccl {
-ReduceRing::ReduceRing(const HcclDispatcher dispatcher) : AlgTemplateBase(dispatcher)
-{
-}
+ReduceRing::ReduceRing(const HcclDispatcher dispatcher) : AlgTemplateBase(dispatcher) {}
 
-ReduceRing::~ReduceRing()
-{
-}
+ReduceRing::~ReduceRing() {}
 
-HcclResult ReduceRing::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo *opInfo)
+HcclResult ReduceRing::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo)
 {
     reduceAttr_ = reduceAttrBitMap;
     return HCCL_SUCCESS;
 }
 
 // reduce算法的入口函数
-HcclResult ReduceRing::RunAsync(const u32 rank, const u32 rankSize,
-    const std::vector<std::shared_ptr<Transport> > &links)
+HcclResult
+ReduceRing::RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::shared_ptr<Transport>>& links)
 {
     CHK_SMART_PTR_NULL(dispatcher_);
     CHK_PTR_NULL(stream_.ptr());
     bool bRetNull = (!outputMem_ || !inputMem_);
-    CHK_PRT_RET(bRetNull, HCCL_ERROR("[ReduceRing][RunAsync]rank[%u] inputmem or outputmem is null", rank),
-        HCCL_E_PARA);
+    CHK_PRT_RET(
+        bRetNull, HCCL_ERROR("[ReduceRing][RunAsync]rank[%u] inputmem or outputmem is null", rank), HCCL_E_PARA);
 
     HcclResult ret = HCCL_SUCCESS;
-    HCCL_INFO("ReduceRing run: rank[%u] totalrank[%u] root[%u] inputmem[%p] output[%p] count[%llu]", \
-        rank, rankSize, root_, inputMem_.ptr(), outputMem_.ptr(), count_);
+    HCCL_INFO(
+        "ReduceRing run: rank[%u] totalrank[%u] root[%u] inputmem[%p] output[%p] count[%llu]", rank, rankSize, root_,
+        inputMem_.ptr(), outputMem_.ptr(), count_);
 
     // 如果ranksize为1, inline reduce和普通跨片reduce操作一致，从input->output
     if (rankSize == 1) {
@@ -92,9 +89,10 @@ HcclResult ReduceRing::RunAsync(const u32 rank, const u32 rankSize,
         HCCL_DEBUG("rank [%u] recv data offset[%llu] size[%llu] reduce", rank, 0, length);
 
         // 需要从前一节点接收数据,替换reducer接口
-        ret = reducerInfo_->run(dispatcher_, linkLeft_, baseOffset_, localSrc, dst, dst,
-            stream_, DstMemType::RESULT_OUTPUT_MEM);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
+        ret = reducerInfo_->run(
+            dispatcher_, linkLeft_, baseOffset_, localSrc, dst, dst, stream_, DstMemType::RESULT_OUTPUT_MEM);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
             HCCL_ERROR("[ReduceRing][RunAsync]rank[%u] reduce data offset[%llu] size[%llu]", rank, 0, length), ret);
 
         // 给前一节点发送同步
@@ -109,9 +107,13 @@ HcclResult ReduceRing::RunAsync(const u32 rank, const u32 rankSize,
         HCCL_DEBUG("rank [%u] send offset[%llu] size[%llu]", rank, 0, length);
 
         ret = senderInfo_->run(linkRight_, baseOffset_, localSrc, stream_);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
-            HCCL_ERROR("[ReduceRing][RunAsync]rank[%u] send scratch offset[%llu] size[%llu] "\
-            "failed", rank, baseOffset_, length), ret);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[ReduceRing][RunAsync]rank[%u] send scratch offset[%llu] size[%llu] "
+                "failed",
+                rank, baseOffset_, length),
+            ret);
 
         // 等待后一节点同步信号
         CHK_RET(linkRight_->RxAck(stream_));
@@ -127,9 +129,10 @@ HcclResult ReduceRing::RunAsync(const u32 rank, const u32 rankSize,
         // 用reduce接口封装
         HCCL_DEBUG("rank[%u] recv data reduce offset[%llu] size[%llu]", rank, 0, length);
 
-        ret = reducerInfo_->run(dispatcher_, linkLeft_, baseOffset_, localSrc, localSrc, dst,
-            stream_, DstMemType::RESULT_INPUT_MEM);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
+        ret = reducerInfo_->run(
+            dispatcher_, linkLeft_, baseOffset_, localSrc, localSrc, dst, stream_, DstMemType::RESULT_INPUT_MEM);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
             HCCL_ERROR("[ReduceRing][RunAsync]rank[%u] reducer offset[%llu] size[%llu] failed", rank, 0, length), ret);
 
         // 给前一节点发送同步
@@ -141,7 +144,8 @@ HcclResult ReduceRing::RunAsync(const u32 rank, const u32 rankSize,
         HCCL_DEBUG("rank[%u] send localSrc offset[%llu] size[%llu]", rank, 0, length);
 
         ret = senderInfo_->run(linkRight_, baseOffset_, localSrc, stream_);
-        CHK_PRT_RET(ret != HCCL_SUCCESS,
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
             HCCL_ERROR("[ReduceRing][RunAsync]rank[%u] sender offset[%llu] failed", rank, baseOffset_), ret);
 
         // 等待后一节点同步信号
@@ -153,8 +157,8 @@ HcclResult ReduceRing::RunAsync(const u32 rank, const u32 rankSize,
     HCCL_INFO("ReduceRing finished: rank[%u]", rank);
     return HCCL_SUCCESS;
 }
-HcclResult ReduceRing::GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                                             const std::vector<LINK> &links, AdjInfo& nslbAdjInfo)
+HcclResult
+ReduceRing::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo)
 {
     if (rankSize == 1) {
         return HCCL_E_NOT_SUPPORT;
@@ -173,4 +177,4 @@ HcclResult ReduceRing::GetNslbAdjInfo(const u32 rank, const u32 rankSize,
 }
 
 REGISTER_TEMPLATE(TemplateType::TEMPLATE_REDUCE_RING, ReduceRing);
-}  // namespace hccl
+} // namespace hccl

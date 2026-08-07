@@ -18,32 +18,39 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepLocWaitNotify::CcuRepLocWaitNotify(CcuInsGeneratorBase* insGenPtr, const LocalNotify &notify, const uint32_t mask, bool isProfiling)
-    : insGenPtr(insGenPtr), notify_(notify), mask_(mask), isProfiling_(isProfiling)
-{
-    type       = CcuRepType::LOC_WAIT_NOTIFY;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
+    CcuRepLocWaitNotify::CcuRepLocWaitNotify(
+        CcuInsGeneratorBase* insGenPtr, const LocalNotify& notify, const uint32_t mask, bool isProfiling)
+        : insGenPtr(insGenPtr),
+          notify_(notify),
+          mask_(mask),
+          isProfiling_(isProfiling)
+    {
+        type = CcuRepType::LOC_WAIT_NOTIFY;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
 
-bool CcuRepLocWaitNotify::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool CcuRepLocWaitNotify::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    insGenPtr->CcuRepLocWaitNotifyTranslate(ccuKernel, instr, this);
-    CHK_PRT_THROW((instrId > UINT16_MAX - instrCount),
-        HCCL_ERROR("[CcuRepLocWaitNotify::Translate]uint16 integer overflow occurs, "
-            "instrId = [%hu], instrCount = [%hu]", instrId, instrCount),
-        Hccl::CcuApiException, "integer overflow");
+        insGenPtr->CcuRepLocWaitNotifyTranslate(ccuKernel, instr, this);
+        CHK_PRT_THROW(
+            (instrId > UINT16_MAX - instrCount),
+            HCCL_ERROR(
+                "[CcuRepLocWaitNotify::Translate]uint16 integer overflow occurs, "
+                "instrId = [%hu], instrCount = [%hu]",
+                instrId, instrCount),
+            Hccl::CcuApiException, "integer overflow");
 
-    instrId += instrCount;
-    return translated;
-}
+        instrId += instrCount;
+        return translated;
+    }
 
-std::string CcuRepLocWaitNotify::Describe()
-{
-    return Hccl::StringFormat("CcuRepLocWaitNotify=id[%u], mask[%04x]", notify_.Id(), mask_);
-}
+    std::string CcuRepLocWaitNotify::Describe()
+    {
+        return Hccl::StringFormat("CcuRepLocWaitNotify=id[%u], mask[%04x]", notify_.Id(), mask_);
+    }
 
 }; // namespace CcuRep
 }; // namespace hcomm

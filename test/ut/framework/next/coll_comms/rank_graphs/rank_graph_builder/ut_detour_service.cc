@@ -18,8 +18,9 @@
 #include "detour_service.h"
 
 namespace Hccl {
-void SetDetourTable2P(const std::set<u32> &tableIdSet,
-                      std::unordered_map<LocalId, std::unordered_map<LocalId, std::vector<LocalId>>> &detourTable);
+void SetDetourTable2P(
+    const std::set<u32>& tableIdSet,
+    std::unordered_map<LocalId, std::unordered_map<LocalId, std::vector<LocalId>>>& detourTable);
 }
 
 using namespace Hccl;

@@ -16,7 +16,7 @@
 namespace hcomm {
 
 // 轮询临时 connection 状态机到 EXCHANGEABLE（jetty 已创建），或超时失败
-static HcclResult WaitForJettyCreated(Hccl::DevUbConnection &conn, uint32_t timeoutMs)
+static HcclResult WaitForJettyCreated(Hccl::DevUbConnection& conn, uint32_t timeoutMs)
 {
     auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
     while (true) {
@@ -41,7 +41,7 @@ static HcclResult WaitForJettyCreated(Hccl::DevUbConnection &conn, uint32_t time
 }
 
 // 分配 device 内存并清零：PI/CI 必须初值为 0，否则生产者索引非 0 会导致首条 WQE 越界
-static HcclResult AllocAndZeroQueueIndex(void **ptr, uint64_t size, const char *name)
+static HcclResult AllocAndZeroQueueIndex(void** ptr, uint64_t size, const char* name)
 {
     HcclResult allocRet = hrtMalloc(ptr, size);
     if (allocRet != HCCL_SUCCESS || *ptr == nullptr) {
@@ -59,8 +59,8 @@ static HcclResult AllocAndZeroQueueIndex(void **ptr, uint64_t size, const char *
 }
 
 // 首次创建共享 jetty：用临时 connection 走完整 jetty 创建流程，分配共享 PI/CI device 内存
-static HcclResult ProvideSharedJettyCtx(const TempConnFactory &tempConnFactory,
-    uint64_t sharedQueueIndexMemSize, Endpoint::SharedJettyCtx &ctx)
+static HcclResult ProvideSharedJettyCtx(
+    const TempConnFactory& tempConnFactory, uint64_t sharedQueueIndexMemSize, Endpoint::SharedJettyCtx& ctx)
 {
     std::unique_ptr<Hccl::DevUbConnection> tempConn = tempConnFactory();
     CHK_SMART_PTR_NULL(tempConn);
@@ -72,19 +72,34 @@ static HcclResult ProvideSharedJettyCtx(const TempConnFactory &tempConnFactory,
     // 分配共享 PI/CI device 内存并清零，供同 endpoint 下后续 channel 复用。
     // 失败时释放已分配的指针，避免 device 内存泄漏。
     auto cleanup = [&ctx]() {
-        if (ctx.sqPiPtr != nullptr) { (void)hrtFree(ctx.sqPiPtr); ctx.sqPiPtr = nullptr; }
-        if (ctx.sqCiPtr != nullptr) { (void)hrtFree(ctx.sqCiPtr); ctx.sqCiPtr = nullptr; }
-        if (ctx.cqPiPtr != nullptr) { (void)hrtFree(ctx.cqPiPtr); ctx.cqPiPtr = nullptr; }
-        if (ctx.cqCiPtr != nullptr) { (void)hrtFree(ctx.cqCiPtr); ctx.cqCiPtr = nullptr; }
+        if (ctx.sqPiPtr != nullptr) {
+            (void)hrtFree(ctx.sqPiPtr);
+            ctx.sqPiPtr = nullptr;
+        }
+        if (ctx.sqCiPtr != nullptr) {
+            (void)hrtFree(ctx.sqCiPtr);
+            ctx.sqCiPtr = nullptr;
+        }
+        if (ctx.cqPiPtr != nullptr) {
+            (void)hrtFree(ctx.cqPiPtr);
+            ctx.cqPiPtr = nullptr;
+        }
+        if (ctx.cqCiPtr != nullptr) {
+            (void)hrtFree(ctx.cqCiPtr);
+            ctx.cqCiPtr = nullptr;
+        }
     };
-    struct QueueIndexEntry { void **ptr; const char *name; };
+    struct QueueIndexEntry {
+        void** ptr;
+        const char* name;
+    };
     QueueIndexEntry entries[] = {
         {&ctx.sqPiPtr, "sqPiPtr"},
         {&ctx.sqCiPtr, "sqCiPtr"},
         {&ctx.cqPiPtr, "cqPiPtr"},
         {&ctx.cqCiPtr, "cqCiPtr"},
     };
-    for (const auto &entry : entries) {
+    for (const auto& entry : entries) {
         HcclResult allocRet = AllocAndZeroQueueIndex(entry.ptr, sharedQueueIndexMemSize, entry.name);
         if (allocRet != HCCL_SUCCESS) {
             cleanup();
@@ -104,9 +119,9 @@ static HcclResult ProvideSharedJettyCtx(const TempConnFactory &tempConnFactory,
     return HCCL_SUCCESS;
 }
 
-HcclResult AcquireSharedJettyForChannel(Endpoint *endpoint,
-    Hccl::DevUbConnection *connection, const TempConnFactory &tempConnFactory,
-    Endpoint::SharedJettyCtx &outCtx)
+HcclResult AcquireSharedJettyForChannel(
+    Endpoint* endpoint, Hccl::DevUbConnection* connection, const TempConnFactory& tempConnFactory,
+    Endpoint::SharedJettyCtx& outCtx)
 {
     if (endpoint == nullptr || connection == nullptr) {
         return HCCL_E_PARA;
@@ -115,22 +130,20 @@ HcclResult AcquireSharedJettyForChannel(Endpoint *endpoint,
     // 共享 jetty 下每个 channel 单 conn，PI/CI 每段大小 = connNum(1) * sizeof(void*)。
     // 同 endpoint 下多 channel 共用这块 PI/CI device 内存，避免各 channel 各自分配指向同一 SQ
     // 导致生产者索引无法协调前进、WQE 互相覆盖、doorbell 不前进、notify 超时。
-    constexpr uint64_t sharedQueueIndexMemSize = sizeof(void *);
-    auto provideCtx = [&tempConnFactory, sharedQueueIndexMemSize]
-        (Endpoint::SharedJettyCtx &ctx) -> HcclResult {
+    constexpr uint64_t sharedQueueIndexMemSize = sizeof(void*);
+    auto provideCtx = [&tempConnFactory, sharedQueueIndexMemSize](Endpoint::SharedJettyCtx& ctx) -> HcclResult {
         return ProvideSharedJettyCtx(tempConnFactory, sharedQueueIndexMemSize, ctx);
     };
 
     Endpoint::SharedJettyCtx ctx{};
     HcclResult ret = endpoint->AcquireSharedJetty(provideCtx, ctx);
-    CHK_PRT_RET(ret != HCCL_SUCCESS,
-        HCCL_ERROR("[%s] Acquire shared jetty failed, ret[%d].", __func__, ret), ret);
+    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s] Acquire shared jetty failed, ret[%d].", __func__, ret), ret);
     outCtx = ctx;
 
     // 命中复用或首次创建完成：通过适配层注入 jetty 到主 connection
     // releaseCb: connection 销毁时通知 Endpoint 减引用计数
-    auto releaseCb = [](void *tag) {
-        Endpoint *ep = static_cast<Endpoint *>(tag);
+    auto releaseCb = [](void* tag) {
+        Endpoint* ep = static_cast<Endpoint*>(tag);
         if (ep != nullptr) {
             (void)ep->ReleaseSharedJetty();
         }
@@ -141,9 +154,9 @@ HcclResult AcquireSharedJettyForChannel(Endpoint *endpoint,
         (void)endpoint->ReleaseSharedJetty();
         return injectRet;
     }
-    HCCL_INFO("[%s] shared jetty acquired and injected, handle[0x%llx], sqPi[%p] sqCi[%p] cqPi[%p] cqCi[%p].",
-        __func__, static_cast<unsigned long long>(ctx.handle),
-        ctx.sqPiPtr, ctx.sqCiPtr, ctx.cqPiPtr, ctx.cqCiPtr);
+    HCCL_INFO(
+        "[%s] shared jetty acquired and injected, handle[0x%llx], sqPi[%p] sqCi[%p] cqPi[%p] cqCi[%p].", __func__,
+        static_cast<unsigned long long>(ctx.handle), ctx.sqPiPtr, ctx.sqCiPtr, ctx.cqPiPtr, ctx.cqCiPtr);
     return HCCL_SUCCESS;
 }
 

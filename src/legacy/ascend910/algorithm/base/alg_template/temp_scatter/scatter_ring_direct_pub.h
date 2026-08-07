@@ -22,29 +22,30 @@ public:
     ~ScatterRingDirect() override;
 
     // should be called soon after template ScatterRingDirect instance created
-    HcclResult Prepare(HcomCollOpInfo *opInfo, const u32 userRank,
-        const std::vector<u32> &ringsOrders, const std::vector<Slice> &userMemInputSlices) override;
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult Prepare(
+        HcomCollOpInfo* opInfo, const u32 userRank, const std::vector<u32>& ringsOrders,
+        const std::vector<Slice>& userMemInputSlices) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
 protected:
 private:
-    HcclResult CheckParameters(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
+    HcclResult CheckParameters(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
     HcclResult OneRankMemcpy();
-    HcclResult GetInitializedNeighborLinks(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
+    HcclResult GetInitializedNeighborLinks(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
     HcclResult SetSlices(const u32 rank, const u32 rankSize);
     HcclResult RunScatter(const u32 rank, const u32 rankSize);
-    HcclResult RunScatterOnOtherRank(const u32 stepsFromRank2Root, const u32 step, const Slice &txSlice,
-                                     const Slice &rxSlice, const u32 rankSize);
-    HcclResult RunScatterOnRootRank(const u32 step, const Slice &subSlice, const Slice &cclSlice, const u32 rank,
-                                    const u32 rankSize); 
+    HcclResult RunScatterOnOtherRank(
+        const u32 stepsFromRank2Root, const u32 step, const Slice& txSlice, const Slice& rxSlice, const u32 rankSize);
+    HcclResult RunScatterOnRootRank(
+        const u32 step, const Slice& subSlice, const Slice& cclSlice, const u32 rank, const u32 rankSize);
     LINK leftLink_;
     LINK rightLink_;
 
-    HcomCollOpInfo                     *opInfo_{nullptr};
-    u32                                 userRank_;
-    std::vector<u32>                    ringsOrder_;
-    std::vector<Slice>                  userMemInputSlices_;
-    u64                                       lastStepOffset_ = 0;
+    HcomCollOpInfo* opInfo_{nullptr};
+    u32 userRank_;
+    std::vector<u32> ringsOrder_;
+    std::vector<Slice> userMemInputSlices_;
+    u64 lastStepOffset_ = 0;
 };
 } // namespace hccl
 

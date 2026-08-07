@@ -32,8 +32,9 @@ int InsertSyncRecord(SyncRecordTab& rec);
 int InsertCcuInstrRes(CcuInstrResTab& rec);
 int InsertCcuInstr(CcuInstrTab& rec);
 
-int UpdateAndInsertByCcuId(uint64_t& ccuId, uint32_t deviceId, uint32_t rankId, uint32_t dieId,
-    uint32_t instrCount, uint32_t instrOffset, uint32_t instrInfoSize, const void *instrInfo);
+int UpdateAndInsertByCcuId(
+    uint64_t& ccuId, uint32_t deviceId, uint32_t rankId, uint32_t dieId, uint32_t instrCount, uint32_t instrOffset,
+    uint32_t instrInfoSize, const void* instrInfo);
 int UpdateSyncRecordStatus(std::vector<SyncRecordTab>& syncRecord);
 int UpdateOpMemCclBuffer(uint64_t cclAddr, uint64_t cclSize);
 int UpdateOpExpansionMode(uint8_t mode);
@@ -47,6 +48,6 @@ int QueryNewestOpDeatailIdByPid(uint64_t pid, uint32_t& OpDetailId);
 int QueryCurrentOpMemInfoByRank(uint32_t rankId, OpMemInfoTab& out);
 int QuerySyncRecordByStatus(uint8_t status, std::vector<SyncRecordTab>& out);
 int QueryCompositeOpDetailBySyncIter(uint32_t syncIter, std::map<uint32_t, std::vector<CompositeOpDetail>>& detail);
-}
+} // namespace sim
 
 #endif

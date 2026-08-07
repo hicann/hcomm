@@ -13,21 +13,19 @@
 #include "../coll_broadcast_executor.h"
 namespace hccl {
 class CollBroadcastFor310PCommExecutor : public CollBroadcastExecutor {
-
 public:
-    CollBroadcastFor310PCommExecutor(const HcclDispatcher dispatcher,
-                                        std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollBroadcastFor310PCommExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollBroadcastFor310PCommExecutor() override = default;
 
 private:
     /* *************** 资源计算 *************** */
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType,
-        TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
 
     /* *************** 算法编排 *************** */
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 };
 } // namespace hccl
 

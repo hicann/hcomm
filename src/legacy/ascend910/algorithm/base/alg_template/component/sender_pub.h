@@ -40,22 +40,23 @@ public:
      输出参数  : 无
      返 回 值  : HcclResult
     **********************************************************************/
-    HcclResult run(const std::shared_ptr<Transport> &link, const u64 dstOffset, DeviceMem &src, Stream &stream,
+    HcclResult
+    run(const std::shared_ptr<Transport>& link, const u64 dstOffset, DeviceMem& src, Stream& stream,
         const UserMemType dstMemType = UserMemType::INPUT_MEM) const;
 
-    HcclResult run(const std::shared_ptr<Transport> &link, const std::vector<SenderMemoryInfo> &senderMems,
-        Stream &stream) const;
+    HcclResult
+    run(const std::shared_ptr<Transport>& link, const std::vector<SenderMemoryInfo>& senderMems, Stream& stream) const;
 
-    HcclResult run(const std::shared_ptr<Transport> &link, const std::vector<SenderMemoryInfo> &senderMems,
-        u32 notifyIdx, Stream &stream) const;
+    HcclResult
+    run(const std::shared_ptr<Transport>& link, const std::vector<SenderMemoryInfo>& senderMems, u32 notifyIdx,
+        Stream& stream) const;
 
 protected:
-
 private:
     const HcclDataType dataType_;
     const HcclReduceOp reductionOp_;
     const u64 reduceAttribute_;
 };
-}  // namespace hccl
+} // namespace hccl
 
 #endif /* SENDER_PUB_H */

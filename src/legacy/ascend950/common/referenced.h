@@ -12,40 +12,29 @@
 #define HCCL_REFERENCED_H
 
 namespace Hccl {
-    
+
 class Referenced {
 public:
     // 初始化这个类，引用计数设为1，并且将p指向传入的地址
-    Referenced(): refCount(0) {}
+    Referenced() : refCount(0) {}
 
     // 引用计数加1
-    int Ref()
-    {
-        return ++refCount;
-    }
+    int Ref() { return ++refCount; }
 
     // 引用计数减1
-    int Unref()
-    {
-        return --refCount;
-    }
+    int Unref() { return --refCount; }
 
     // 返回引用计数
-    int Count() const
-    {
-        return refCount;
-    }
+    int Count() const { return refCount; }
 
     int Clear()
     {
         refCount = 0;
         return refCount;
     }
-    bool IsZero() const
-    {
-        return refCount == 0;
-    }
+    bool IsZero() const { return refCount == 0; }
     ~Referenced() {}
+
 private:
     int refCount; // 引用计数，表示有多少个变量引用这块内存
 };

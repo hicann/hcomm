@@ -20,7 +20,8 @@
 namespace hcomm {
 
 CcuChannelCtxMgrV2::CcuChannelCtxMgrV2(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId)
-    : CcuChannelCtxMgr(devLogicId, dieId, devPhyId), jettyCtxMgr_(devLogicId, dieId, devPhyId)
+    : CcuChannelCtxMgr(devLogicId, dieId, devPhyId),
+      jettyCtxMgr_(devLogicId, dieId, devPhyId)
 {
     (void)CcuResSpecifications::GetInstance(devLogicId).GetChannelJettyMap(dieId, channelJettyMap_);
 }
@@ -31,34 +32,35 @@ HcclResult CcuChannelCtxMgrV2::Init()
     (void)CcuResSpecifications::GetInstance(devLogicId_).GetChannelNum(dieId_, strategy);
     channelResInfos_.resize(strategy);
     CHK_RET(jettyCtxMgr_.Init());
-    return  HcclResult::HCCL_SUCCESS;
+    return HcclResult::HCCL_SUCCESS;
 }
 
-static uint32_t CheckAndAdjustJettyNum(const ChannelPara &channelPara,
-    const CcuChannelJettyMap &channelJettyMap)
+static uint32_t CheckAndAdjustJettyNum(const ChannelPara& channelPara, const CcuChannelJettyMap& channelJettyMap)
 {
     uint32_t jettyNum = channelPara.jettyNum;
     const uint32_t jettyGroupSize = channelJettyMap.jettyNum;
     if (jettyNum != jettyGroupSize) {
-        HCCL_INFO("[CcuChannelCtxMgrV2][%s] jetty num[%u] reset to channelJettyMap."
-            "jettyNum[%u], feId[%u].", __func__, jettyNum,
-            jettyGroupSize, channelPara.feId);
+        HCCL_INFO(
+            "[CcuChannelCtxMgrV2][%s] jetty num[%u] reset to channelJettyMap."
+            "jettyNum[%u], feId[%u].",
+            __func__, jettyNum, jettyGroupSize, channelPara.feId);
         jettyNum = jettyGroupSize;
     }
     return jettyNum;
 }
 
-static HcclResult GetStartChannelId(const uint32_t jettyCtxStartId,
-    const CcuChannelJettyMap &channelJettyMap,
-    uint32_t &channelId)
+static HcclResult
+GetStartChannelId(const uint32_t jettyCtxStartId, const CcuChannelJettyMap& channelJettyMap, uint32_t& channelId)
 {
     // channelJettyMap来自静态定义，认为其不会为0
     const uint32_t channelGroupSize = channelJettyMap.channelNum;
     const uint32_t jettyGroupSize = channelJettyMap.jettyNum;
     const uint32_t jettyGroupId = jettyCtxStartId / jettyGroupSize;
     if (UINT32_MAX / channelGroupSize < jettyGroupId) {
-        HCCL_ERROR("[CcuChannelCtxMgrV2][%s] failed, channelId result overflow "
-            "UINT32_MAX, jettyStartId[%u].", __func__, jettyCtxStartId);
+        HCCL_ERROR(
+            "[CcuChannelCtxMgrV2][%s] failed, channelId result overflow "
+            "UINT32_MAX, jettyStartId[%u].",
+            __func__, jettyCtxStartId);
         return HcclResult::HCCL_E_INTERNAL;
     }
 
@@ -67,19 +69,23 @@ static HcclResult GetStartChannelId(const uint32_t jettyCtxStartId,
 }
 
 static HcclResult CheckChannelRangeAllocatable(
-    const uint32_t startChannelId, const uint32_t channelNum, std::vector<ChannelResInfo> &channelResInfos)
+    const uint32_t startChannelId, const uint32_t channelNum, std::vector<ChannelResInfo>& channelResInfos)
 {
     const uint32_t endChannelId = startChannelId + channelNum;
-    CHK_PRT_RET(channelResInfos.size() < endChannelId || startChannelId >= endChannelId,
-        HCCL_ERROR("[CcuChannelCtxMgrV2][%s] failed, channel id range[%u, %u) is not expected, "
-            "should be less than channelResInfos size[%zu].", __func__, startChannelId,
-            endChannelId, channelResInfos.size()),
+    CHK_PRT_RET(
+        channelResInfos.size() < endChannelId || startChannelId >= endChannelId,
+        HCCL_ERROR(
+            "[CcuChannelCtxMgrV2][%s] failed, channel id range[%u, %u) is not expected, "
+            "should be less than channelResInfos size[%zu].",
+            __func__, startChannelId, endChannelId, channelResInfos.size()),
         HcclResult::HCCL_E_INTERNAL);
 
     for (uint32_t i = startChannelId; i < endChannelId; i++) {
         if (channelResInfos[i].allocated) {
-            HCCL_WARNING("[CcuChannelCtxMgrV2][%s] failed, channel id[%u] is already allocated, "
-                "channel group range[%u, %u).", __func__, i, startChannelId, endChannelId);
+            HCCL_WARNING(
+                "[CcuChannelCtxMgrV2][%s] failed, channel id[%u] is already allocated, "
+                "channel group range[%u, %u).",
+                __func__, i, startChannelId, endChannelId);
             return HcclResult::HCCL_E_UNAVAIL;
         }
     }
@@ -87,8 +93,7 @@ static HcclResult CheckChannelRangeAllocatable(
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuChannelCtxMgrV2::Alloc(const ChannelPara &channelPara,
-    std::vector<ChannelInfo> &channelInfos)
+HcclResult CcuChannelCtxMgrV2::Alloc(const ChannelPara& channelPara, std::vector<ChannelInfo>& channelInfos)
 {
     const uint32_t feId = channelPara.feId;
     uint32_t jettyNum = CheckAndAdjustJettyNum(channelPara, channelJettyMap_);
@@ -98,9 +103,12 @@ HcclResult CcuChannelCtxMgrV2::Alloc(const ChannelPara &channelPara,
     std::vector<JettyInfo> jettyInfos;
     // sqsize 每个jetty预留32分配
     auto ret = jettyCtxMgr_.Alloc(feId, jettyNum, channelPara.sqSize, jettyInfos);
-    CHK_PRT_RET(ret != HcclResult::HCCL_SUCCESS,
-        HCCL_WARNING("[CcuChannelCtxMgrV2][%s] failed to allocate jetty contexts of feId[%u], "
-            "devLogicId[%d], dieId[%u].", __func__, feId, devLogicId_, dieId_),
+    CHK_PRT_RET(
+        ret != HcclResult::HCCL_SUCCESS,
+        HCCL_WARNING(
+            "[CcuChannelCtxMgrV2][%s] failed to allocate jetty contexts of feId[%u], "
+            "devLogicId[%d], dieId[%u].",
+            __func__, feId, devLogicId_, dieId_),
         ret);
 
     const uint32_t channelGroupSize = channelJettyMap_.channelNum;
@@ -110,7 +118,8 @@ HcclResult CcuChannelCtxMgrV2::Alloc(const ChannelPara &channelPara,
     CHK_RET(GetStartChannelId(jettyCtxStartId, channelJettyMap_, startChannelId));
     ret = CheckChannelRangeAllocatable(startChannelId, channelGroupSize, channelResInfos_);
     if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_WARNING("[CcuChannelCtxMgrV2][%s] failed to find free channels, "
+        HCCL_WARNING(
+            "[CcuChannelCtxMgrV2][%s] failed to find free channels, "
             "jettyCtxStartId[%u], jettyNum[%u], need to release temp jetty contexts.",
             __func__, jettyCtxStartId, jettyNum);
 
@@ -124,9 +133,9 @@ HcclResult CcuChannelCtxMgrV2::Alloc(const ChannelPara &channelPara,
     return HcclResult::HCCL_SUCCESS;
 }
 
-void CcuChannelCtxMgrV2::AllocateChannelResources(const ChannelPara &channelPara,
-    const std::vector<CcuJettyInfo> &jettyInfos, uint32_t startChannelId,
-    std::vector<ChannelInfo> &channelInfos)
+void CcuChannelCtxMgrV2::AllocateChannelResources(
+    const ChannelPara& channelPara, const std::vector<CcuJettyInfo>& jettyInfos, uint32_t startChannelId,
+    std::vector<ChannelInfo>& channelInfos)
 {
     // ccu v2按配比关系以组的粒度分配channel，同channel组复用jettyCtx
     // 调用者不处理channel组的概念，认为各channel独立
@@ -140,34 +149,35 @@ void CcuChannelCtxMgrV2::AllocateChannelResources(const ChannelPara &channelPara
         channelInfo.dieId = dieId_;
         channelInfo.jettyInfos = jettyInfos; // 拷贝相同的jetty信息
 
-        auto &channelResInfo = channelResInfos_[channelId];
+        auto& channelResInfo = channelResInfos_[channelId];
         channelResInfo.feId = feId;
         channelResInfo.channelInfo = channelInfo;
         channelResInfo.allocated = true;
         channelInfos.emplace_back(std::move(channelInfo));
     }
 
-    HCCL_INFO("[CcuChannelCtxMgrV2][%s] allocated channels[%u, %u) successfully, "
-        "devLogicId[%d], ioDie[%u], channelNum[%u].", __func__, startChannelId,
-        startChannelId + channelGroupSize, devLogicId_, dieId_, channelGroupSize);
+    HCCL_INFO(
+        "[CcuChannelCtxMgrV2][%s] allocated channels[%u, %u) successfully, "
+        "devLogicId[%d], ioDie[%u], channelNum[%u].",
+        __func__, startChannelId, startChannelId + channelGroupSize, devLogicId_, dieId_, channelGroupSize);
     // 只打印首channel，避免刷屏，分配成功保证数量不为0
     HCCL_INFO("[CcuChannelCtxMgrV2][%s] the start channel: ", __func__);
     DumpChannelResInfo(feId, channelInfos[0]);
 }
 
-static ChannelDataV2 BuildChannelDataV2(const ChannelCfg &cfg, const uint8_t dieId)
+static ChannelDataV2 BuildChannelDataV2(const ChannelCfg& cfg, const uint8_t dieId)
 {
     ChannelDataV2 data{};
     (void)memcpy_s(&data.eidRaw[0], URMA_EID_LEN, &cfg.remoteEid, URMA_EID_LEN);
 
-    data.vtpLow   = cfg.tpn & MASK_VTP_LOW;
-    data.vtpHigh  = ((cfg.tpn & MASK_VTP) >> Hccl::SHIFT_16BITS) & MASK_VTP_HIGH;
-    data.ioDieId  = static_cast<uint16_t>(dieId);
+    data.vtpLow = cfg.tpn & MASK_VTP_LOW;
+    data.vtpHigh = ((cfg.tpn & MASK_VTP) >> Hccl::SHIFT_16BITS) & MASK_VTP_HIGH;
+    data.ioDieId = static_cast<uint16_t>(dieId);
 
     return data;
 }
 
-static void DumpChannelDataV2(struct ChannelDataV2 &tmp)
+static void DumpChannelDataV2(struct ChannelDataV2& tmp)
 {
     if (IsEidEmpty(tmp.eidRaw)) {
         return;
@@ -178,44 +188,45 @@ static void DumpChannelDataV2(struct ChannelDataV2 &tmp)
         dstEidInfo += Hccl::StringFormat("0x%02x, ", tmp.eidRaw[i]);
     }
     dstEidInfo += Hccl::StringFormat("0x%02x", tmp.eidRaw[URMA_EID_LEN - 1]);
-    HCCL_INFO("[ChannelDataV2][%s] dstEidInfo is %s ",__func__, dstEidInfo.c_str());
-    HCCL_INFO("vtpLow: 0x%04x, vtpHigh: 0x%04x, ioDieId: 0x%04x.",
-        tmp.vtpLow, tmp.vtpHigh, tmp.ioDieId);
+    HCCL_INFO("[ChannelDataV2][%s] dstEidInfo is %s ", __func__, dstEidInfo.c_str());
+    HCCL_INFO("vtpLow: 0x%04x, vtpHigh: 0x%04x, ioDieId: 0x%04x.", tmp.vtpLow, tmp.vtpHigh, tmp.ioDieId);
 }
 
-static HcclResult ConfigChannelCtxDataV2(int32_t devLogicId, const uint32_t devPhyId,
-    const uint8_t dieId, const uint32_t channelId, ChannelDataV2 &channelData)
+static HcclResult ConfigChannelCtxDataV2(
+    int32_t devLogicId, const uint32_t devPhyId, const uint8_t dieId, const uint32_t channelId,
+    ChannelDataV2& channelData)
 {
-    CustomChannelInfoIn  inBuff{};
+    CustomChannelInfoIn inBuff{};
     CustomChannelInfoOut outBuff{};
 
-    constexpr uint32_t dataArraySize   = 1; // 每次配置1个Channel
-    inBuff.op                          = CcuOpcodeType::CCU_U_OP_SET_CHANNEL;
-    inBuff.data.dataInfo.udieIdx       = dieId;
+    constexpr uint32_t dataArraySize = 1; // 每次配置1个Channel
+    inBuff.op = CcuOpcodeType::CCU_U_OP_SET_CHANNEL;
+    inBuff.data.dataInfo.udieIdx = dieId;
     inBuff.data.dataInfo.dataArraySize = dataArraySize;
-    inBuff.data.dataInfo.dataLen       = sizeof(struct ChannelDataV2) * dataArraySize;
-    inBuff.offsetStartIdx              = channelId;
+    inBuff.data.dataInfo.dataLen = sizeof(struct ChannelDataV2) * dataArraySize;
+    inBuff.offsetStartIdx = channelId;
 
-    HCCL_INFO("[CcuChannelCtxMgrV2][%s] config data to ccu driver, devPhyId[%u], "
-        "ioDie[%u], idx[%u], size[%u].", __func__, devPhyId, dieId, channelId,
-        sizeof(struct ChannelDataV2));
+    HCCL_INFO(
+        "[CcuChannelCtxMgrV2][%s] config data to ccu driver, devPhyId[%u], "
+        "ioDie[%u], idx[%u], size[%u].",
+        __func__, devPhyId, dieId, channelId, sizeof(struct ChannelDataV2));
     DumpChannelDataV2(channelData);
 
-    (void)memcpy_s(inBuff.data.dataInfo.dataArray, sizeof(struct ChannelDataV2), &channelData,
-                   sizeof(struct ChannelDataV2));
+    (void)memcpy_s(
+        inBuff.data.dataInfo.dataArray, sizeof(struct ChannelDataV2), &channelData, sizeof(struct ChannelDataV2));
 
-    auto ret = HccpRaTlvCcuCustomChannel(devLogicId,
-        static_cast<void *>(&inBuff), static_cast<void *>(&outBuff));
+    auto ret = HccpRaTlvCcuCustomChannel(devLogicId, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
     if (ret != 0) {
-        HCCL_ERROR("[CcuChannelCtxMgrV2][%s] failed to call ccu driver, "
-            "devLogicId[%d] devPhyId[%u] dieId[%d] op[%s] ret[%d].", __func__,
-            devLogicId, devPhyId, dieId, "SET_CHANNEL", ret);
+        HCCL_ERROR(
+            "[CcuChannelCtxMgrV2][%s] failed to call ccu driver, "
+            "devLogicId[%d] devPhyId[%u] dieId[%d] op[%s] ret[%d].",
+            __func__, devLogicId, devPhyId, dieId, "SET_CHANNEL", ret);
         return ret;
     }
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuChannelCtxMgrV2::Config(const ChannelCfg &channelCfg)
+HcclResult CcuChannelCtxMgrV2::Config(const ChannelCfg& channelCfg)
 {
     std::lock_guard<std::mutex> lock(innerMutex_);
     uint32_t channelId = channelCfg.channelId;
@@ -223,14 +234,16 @@ HcclResult CcuChannelCtxMgrV2::Config(const ChannelCfg &channelCfg)
         return HcclResult::HCCL_E_PARA; // 日志已在判断处处理
     }
 
-    const auto &channelResInfo = channelResInfos_[channelId];
+    const auto& channelResInfo = channelResInfos_[channelId];
     const uint32_t feId = channelResInfo.feId;
-    const std::vector<JettyInfo> &jettyInfos = channelResInfo.channelInfo.jettyInfos;
+    const std::vector<JettyInfo>& jettyInfos = channelResInfo.channelInfo.jettyInfos;
     auto ret = jettyCtxMgr_.Config(feId, jettyInfos, channelCfg.jettyCfgs);
-    CHK_PRT_RET(ret != HcclResult::HCCL_SUCCESS,
-        HCCL_ERROR("[CcuChannelCtxMgrV2][%s] failed to config jetty contexts of channelId[%u], "
-            "feId[%u], devLogicId[%d], dieId[%u].", __func__, channelId, feId,
-            devLogicId_, static_cast<uint32_t>(dieId_)),
+    CHK_PRT_RET(
+        ret != HcclResult::HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[CcuChannelCtxMgrV2][%s] failed to config jetty contexts of channelId[%u], "
+            "feId[%u], devLogicId[%d], dieId[%u].",
+            __func__, channelId, feId, devLogicId_, static_cast<uint32_t>(dieId_)),
         ret);
 
     ChannelDataV2 data = BuildChannelDataV2(channelCfg, dieId_);
@@ -245,13 +258,14 @@ HcclResult CcuChannelCtxMgrV2::Release(const uint32_t channelId)
         return HcclResult::HCCL_E_PARA; // 日志已在判断处处理
     };
 
-    const auto &channelResInfo = channelResInfos_[channelId];
-    auto ret = jettyCtxMgr_.Release(channelResInfo.feId,
-        channelResInfo.channelInfo.jettyInfos);
-    CHK_PRT_RET(ret != HcclResult::HCCL_SUCCESS,
-        HCCL_WARNING("[CcuChannelCtxMgrV2][%s] failed to release jetty contexts "
-            "of channelId[%u], feId[%u], devLogicId[%d], dieId[%u].", __func__,
-            channelId, channelResInfos_[channelId].feId, devLogicId_, dieId_),
+    const auto& channelResInfo = channelResInfos_[channelId];
+    auto ret = jettyCtxMgr_.Release(channelResInfo.feId, channelResInfo.channelInfo.jettyInfos);
+    CHK_PRT_RET(
+        ret != HcclResult::HCCL_SUCCESS,
+        HCCL_WARNING(
+            "[CcuChannelCtxMgrV2][%s] failed to release jetty contexts "
+            "of channelId[%u], feId[%u], devLogicId[%d], dieId[%u].",
+            __func__, channelId, channelResInfos_[channelId].feId, devLogicId_, dieId_),
         ret);
 
     channelResInfos_[channelId] = ChannelResInfo{};

@@ -12,16 +12,13 @@
 #include "log.h"
 
 namespace hccl {
-DlProfFunc &DlProfFunc::GetInstance()
+DlProfFunc& DlProfFunc::GetInstance()
 {
     static DlProfFunc hcclDlProfFunction;
     return hcclDlProfFunction;
 }
 
-DlProfFunc::DlProfFunc()
-{
-    DlProfFunctionStubInit();
-}
+DlProfFunc::DlProfFunc() { DlProfFunctionStubInit(); }
 
 DlProfFunc::~DlProfFunc()
 {
@@ -37,15 +34,11 @@ uint64_t HcclMsprofSysCycleTimeStub()
     return 0;
 }
 
-void DlProfFunc::DlProfFunctionStubInit()
-{
-    dlMsprofSysCycleTime = (uint64_t(*)(void))HcclMsprofSysCycleTimeStub;
-}
+void DlProfFunc::DlProfFunctionStubInit() { dlMsprofSysCycleTime = (uint64_t(*)(void))HcclMsprofSysCycleTimeStub; }
 
 HcclResult DlProfFunc::DlProfFunctionInterInit()
 {
-    dlMsprofSysCycleTime = (uint64_t(*)(void))dlsym(handle_,
-        "MsprofSysCycleTime");
+    dlMsprofSysCycleTime = (uint64_t(*)(void))dlsym(handle_, "MsprofSysCycleTime");
     CHK_SMART_PTR_NULL(dlMsprofSysCycleTime);
 
     return HCCL_SUCCESS;
@@ -62,4 +55,4 @@ HcclResult DlProfFunc::DlProfFunctionInit()
     }
     return HCCL_SUCCESS;
 }
-}
+} // namespace hccl

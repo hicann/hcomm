@@ -13,7 +13,6 @@
 
 #include "mem_host_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * MEM_HOST_H */

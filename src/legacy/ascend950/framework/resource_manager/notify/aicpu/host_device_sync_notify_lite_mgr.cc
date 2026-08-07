@@ -12,17 +12,11 @@
 
 namespace Hccl {
 
-NotifyLite *HostDeviceSyncNotifyLiteMgr::GetDeviceWaitNotify()
-{
-    return notifys[0].get();
-}
+NotifyLite* HostDeviceSyncNotifyLiteMgr::GetDeviceWaitNotify() { return notifys[0].get(); }
 
-NotifyLite *HostDeviceSyncNotifyLiteMgr::GetHostWaitNotify()
-{
-    return notifys[1].get();
-}
+NotifyLite* HostDeviceSyncNotifyLiteMgr::GetHostWaitNotify() { return notifys[1].get(); }
 
-void HostDeviceSyncNotifyLiteMgr::ParsePackedData(std::vector<char> &data)
+void HostDeviceSyncNotifyLiteMgr::ParsePackedData(std::vector<char>& data)
 {
     BinaryStream binaryStream(data);
 

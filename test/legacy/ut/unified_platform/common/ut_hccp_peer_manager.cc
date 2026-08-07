@@ -20,20 +20,11 @@ using namespace Hccl;
 
 class HccpPeerManagerTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "HccpPeerManagerTest SetUP" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "HccpPeerManagerTest SetUP" << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "HccpPeerManagerTest TearDown" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "HccpPeerManagerTest TearDown" << std::endl; }
 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in HccpPeerManagerTest SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in HccpPeerManagerTest SetUP" << std::endl; }
 
     virtual void TearDown()
     {
@@ -45,8 +36,8 @@ protected:
 TEST_F(HccpPeerManagerTest, hccp_peer_manager_getInstance)
 {
     // Given
-    DevId fakedevPhyId  = 3;
-	DevId fakedevPhyId1  = 4;
+    DevId fakedevPhyId = 3;
+    DevId fakedevPhyId1 = 4;
     MOCKER(HrtGetDevicePhyIdByIndex)
         .stubs()
         .with(mockcpp::any())
@@ -72,11 +63,8 @@ TEST_F(HccpPeerManagerTest, hccp_peer_manager_init)
     s32 deviceLogicId = 0;
     s32 deviceLogicId1 = 1;
     s32 deviceLogicId2 = 2;
-	DevId fakedevPhyId   = 3;
-    MOCKER(HrtGetDevicePhyIdByIndex)
-        .stubs()
-        .with(mockcpp::any())
-        .will(returnValue(fakedevPhyId));
+    DevId fakedevPhyId = 3;
+    MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(fakedevPhyId));
     MOCKER(HrtRaDeInit).stubs().with();
     MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
 

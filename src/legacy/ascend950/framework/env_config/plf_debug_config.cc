@@ -56,19 +56,13 @@ static u64 ParseDebugConfig(const char* envName, u64 domainMask)
 
 void EnvPlfDebugConfig::Parse()
 {
-    plfDebugConfig_  = ParseDebugConfig("HCCL_DEBUG_CONFIG", PLF_TASK | PLF_ALG | PLF_RES);
+    plfDebugConfig_ = ParseDebugConfig("HCCL_DEBUG_CONFIG", PLF_TASK | PLF_ALG | PLF_RES);
     plfDebugConfig_ |= ParseDebugConfig("HCOMM_DEBUG_CONFIG", PLF_TASK | PLF_DATA_OP);
     HCCL_RUN_INFO("[HCCL_ENV] plfDebugConfig set to [0x%llx]", plfDebugConfig_);
 }
 
-u64 EnvPlfDebugConfig::GetConfigValue() const
-{
-    return plfDebugConfig_;
-}
+u64 EnvPlfDebugConfig::GetConfigValue() const { return plfDebugConfig_; }
 
-u64 GetPlfDebugConfigValue()
-{
-    return EnvConfig::GetInstance().GetPlfDebugConfig().GetConfigValue();
-}
+u64 GetPlfDebugConfigValue() { return EnvConfig::GetInstance().GetPlfDebugConfig().GetConfigValue(); }
 
-}  // namespace Hccl
+} // namespace Hccl

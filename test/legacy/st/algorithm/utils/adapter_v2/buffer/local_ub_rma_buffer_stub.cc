@@ -4,40 +4,23 @@
 namespace Hccl {
 
 LocalUbRmaBuffer::LocalUbRmaBuffer(std::shared_ptr<Buffer> buf, RdmaHandle rdmaHandle)
-    : LocalRmaBuffer(buf, RmaType::UB), rdmaHandle(rdmaHandle)
+    : LocalRmaBuffer(buf, RmaType::UB),
+      rdmaHandle(rdmaHandle)
 {
     ;
 }
 
-LocalUbRmaBuffer::~LocalUbRmaBuffer()
-{
-    ;
-}
+LocalUbRmaBuffer::~LocalUbRmaBuffer() { ; }
 
-string LocalUbRmaBuffer::Describe() const
-{
-    return "";
-}
+string LocalUbRmaBuffer::Describe() const { return ""; }
 
-std::unique_ptr<Serializable> LocalUbRmaBuffer::GetExchangeDto()
-{
-    return std::unique_ptr<Serializable>(nullptr);
-}
+std::unique_ptr<Serializable> LocalUbRmaBuffer::GetExchangeDto() { return std::unique_ptr<Serializable>(nullptr); }
 
-u32 LocalUbRmaBuffer::GetTokenId() const
-{
-    return tokenId;
-}
+u32 LocalUbRmaBuffer::GetTokenId() const { return tokenId; }
 
-u32 LocalUbRmaBuffer::GetTokenValue() const
-{
-    return tokenValue;
-}
+u32 LocalUbRmaBuffer::GetTokenValue() const { return tokenValue; }
 
-TokenIdHandle LocalUbRmaBuffer::GetTokenIdHandle() const
-{
-    return tokenIdHandle;
-}
+TokenIdHandle LocalUbRmaBuffer::GetTokenIdHandle() const { return tokenIdHandle; }
 
 u32 GetUbToken()
 {
@@ -45,4 +28,4 @@ u32 GetUbToken()
     return tokenValue;
 }
 
-}
+} // namespace Hccl

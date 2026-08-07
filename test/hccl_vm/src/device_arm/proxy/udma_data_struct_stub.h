@@ -32,8 +32,8 @@ enum UdmaSqOpcode {
 
 struct UdfExtDate { // UDF扩展数据
     uint32_t udfType : 8;
-    uint32_t reduceType: 4;
-    uint32_t reduceOp: 4;
+    uint32_t reduceType : 4;
+    uint32_t reduceOp : 4;
     uint32_t rsv : 16;
 };
 
@@ -77,7 +77,8 @@ struct UdmaNormalSge {
 
     std::string Desc() const
     {
-        return "length = " + std::to_string(length) + " dataAddrLow = " + std::to_string(dataAddrLow) + " dataAddrHigh = " + std::to_string(dataAddrHigh);
+        return "length = " + std::to_string(length) + " dataAddrLow = " + std::to_string(dataAddrLow)
+               + " dataAddrHigh = " + std::to_string(dataAddrHigh);
     }
 };
 
@@ -85,7 +86,7 @@ struct UdmaInlineData {
     uint8_t data[16];
 };
 
-union LocalValueU{
+union LocalValueU {
     UdmaNormalSge sge;
     UdmaInlineData inlineData;
 };
@@ -105,8 +106,9 @@ struct UdmaSqeNotify {
     uint32_t notifyDataHigh;
     std::string Desc() const
     {
-        return "notifyAddrLow = " + std::to_string(notifyAddrLow) + " notifyAddrHigh = " + std::to_string(notifyAddrHigh) +
-               " notifyDataLow = " + std::to_string(notifyDataLow) + " notifyDataHigh = " + std::to_string(notifyDataHigh);
+        return "notifyAddrLow = " + std::to_string(notifyAddrLow) + " notifyAddrHigh = "
+               + std::to_string(notifyAddrHigh) + " notifyDataLow = " + std::to_string(notifyDataLow)
+               + " notifyDataHigh = " + std::to_string(notifyDataHigh);
     }
 };
 

@@ -25,14 +25,15 @@ using DataTypeSupportMap = std::unordered_map<OpType, DataTypeBitmap, std::EnumC
 
 class OpParamsChecker {
 public:
-    static HcclResult CheckOpDataTypeOpbase(const CollOpParams &opParams, bool ccuEnable, bool isDevUsed, bool isAiv);
-    static HcclResult CheckOpDataTypeOffload(const CollOpParams &opParams, bool ccuEnable, bool isDevUsed, bool isAiv = false);
-    static HcclResult CheckOpDataTypeMC2(const Mc2CommConfig &config);
-    static HcclResult CheckOpDataTypeMC2V2(const Mc2CcTilingInner &config);
+    static HcclResult CheckOpDataTypeOpbase(const CollOpParams& opParams, bool ccuEnable, bool isDevUsed, bool isAiv);
+    static HcclResult
+    CheckOpDataTypeOffload(const CollOpParams& opParams, bool ccuEnable, bool isDevUsed, bool isAiv = false);
+    static HcclResult CheckOpDataTypeMC2(const Mc2CommConfig& config);
+    static HcclResult CheckOpDataTypeMC2V2(const Mc2CcTilingInner& config);
 
 private:
-    static DataType GetDataType(const CollOpParams &opParams);
-    static HcclResult CheckOpDataTypeByMap(const CollOpParams &opParams, const DataTypeSupportMap &opData2TypeMap);
+    static DataType GetDataType(const CollOpParams& opParams);
+    static HcclResult CheckOpDataTypeByMap(const CollOpParams& opParams, const DataTypeSupportMap& opData2TypeMap);
 
     static DataTypeBitmap dataTypeWithReduceAiv;
     static DataTypeBitmap dataTypeWithoutReduceAiv;
@@ -56,6 +57,6 @@ private:
     static DataTypeSupportMap opDataTypeSupportMapMC2;
 };
 
-}
+} // namespace Hccl
 
 #endif // HCCLV2_OP_PARAMS_CHECKER_H

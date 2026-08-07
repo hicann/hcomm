@@ -47,7 +47,7 @@ std::map<ExceptionType, HcclResult> ExceptionInfo::errorCodeMap{
     {ExceptionType::CCU_API_EXCEPTION, HcclResult::HCCL_E_INTERNAL},
     {ExceptionType::SUSPENDING_EXCEPTION, HcclResult::HCCL_E_SUSPENDING}};
 
-HcclResult ExceptionInfo::GetErrorCode(const ExceptionType &type)
+HcclResult ExceptionInfo::GetErrorCode(const ExceptionType& type)
 {
     if (errorCodeMap.find(type) == errorCodeMap.end()) {
         return HCCL_E_RESERVED;
@@ -55,8 +55,5 @@ HcclResult ExceptionInfo::GetErrorCode(const ExceptionType &type)
     return errorCodeMap.at(type);
 }
 
-std::string ExceptionInfo::GetErrorMsg(const ExceptionType &type)
-{
-    return errorMsgMap.at(type);
-}
+std::string ExceptionInfo::GetErrorMsg(const ExceptionType& type) { return errorMsgMap.at(type); }
 } // namespace Hccl

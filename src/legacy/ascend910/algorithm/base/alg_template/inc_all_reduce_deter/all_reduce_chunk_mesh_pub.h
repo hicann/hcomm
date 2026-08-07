@@ -20,12 +20,14 @@ public:
     explicit AllReduceChunkMesh(const HcclDispatcher dispatcher);
     ~AllReduceChunkMesh() override;
 
-    /* 新增的两段式构造函数，获取实例后要无脑调用实现构造函数功能,后续还要调用其它的基类Prepare函数实现其它成员变量初始化 */
-    HcclResult Prepare(u64 reduceAttrBitMap, std::vector<Stream> &meshStreams,
-        std::vector<std::shared_ptr<LocalNotify>> &meshSignal, std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux,
-        u32 interRank, u32 interRankSize, u32 userRank, HcomCollOpInfo *opInfo) override;
+    /* 新增的两段式构造函数，获取实例后要无脑调用实现构造函数功能,后续还要调用其它的基类Prepare函数实现其它成员变量初始化
+     */
+    HcclResult Prepare(
+        u64 reduceAttrBitMap, std::vector<Stream>& meshStreams, std::vector<std::shared_ptr<LocalNotify>>& meshSignal,
+        std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux, u32 interRank, u32 interRankSize, u32 userRank,
+        HcomCollOpInfo* opInfo) override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
 protected:
 private:
@@ -33,12 +35,12 @@ private:
     HcclResult SubWaitMain();
     HcclResult MainWaitSub();
     HcclResult SubRecordMain();
-    HcclResult PrepareSlice(u64 dataCount, u32 unitSize, u32 sliceNum, std::vector<Slice> &dataSlice);
+    HcclResult PrepareSlice(u64 dataCount, u32 unitSize, u32 sliceNum, std::vector<Slice>& dataSlice);
     HcclResult PrepareAllreduceSliceData();
-    HcclResult WaitPrevStep(u32 rank, u32 step, const std::vector<LINK> &links);
-    HcclResult RecordNextStep(u32 rank, u32 step, const std::vector<LINK> &links);
-    HcclResult RunReduceScatter(u32 rank, u32 rankSize, const std::vector<LINK> &links);
-    HcclResult RunAllGather(u32 rank, u32 rankSize, const std::vector<LINK> &links);
+    HcclResult WaitPrevStep(u32 rank, u32 step, const std::vector<LINK>& links);
+    HcclResult RecordNextStep(u32 rank, u32 step, const std::vector<LINK>& links);
+    HcclResult RunReduceScatter(u32 rank, u32 rankSize, const std::vector<LINK>& links);
+    HcclResult RunAllGather(u32 rank, u32 rankSize, const std::vector<LINK>& links);
     HcclResult PrepareAllreduceRing();
     inline u32 BackwardRank(u32 rank, u32 rankSize, u32 step) const
     {
@@ -53,10 +55,10 @@ private:
     u32 userRank_;
     std::map<u32, std::vector<u32>> ringMap;
     std::map<u32, std::vector<Slice>> sliceMap;
-    std::vector<Stream> meshStreams_;               /* * 多stream* */
-    std::vector<std::shared_ptr<LocalNotify>> *meshSignal_{nullptr};    /* 每个ring创建一个signal */
-    std::vector<std::shared_ptr<LocalNotify>> *meshSignalAux_{nullptr}; /* 从stream wait，主stream record */
-    HcomCollOpInfo *opInfo_{nullptr};
+    std::vector<Stream> meshStreams_;                                   /* * 多stream* */
+    std::vector<std::shared_ptr<LocalNotify>>* meshSignal_{nullptr};    /* 每个ring创建一个signal */
+    std::vector<std::shared_ptr<LocalNotify>>* meshSignalAux_{nullptr}; /* 从stream wait，主stream record */
+    HcomCollOpInfo* opInfo_{nullptr};
 };
-}  // namespace hccl
+} // namespace hccl
 #endif /* ALL_REDUCE_CHUNK_MESH_PUB_H */

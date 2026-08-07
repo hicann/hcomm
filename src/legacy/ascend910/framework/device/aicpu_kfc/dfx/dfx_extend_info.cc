@@ -11,16 +11,16 @@
 #include "dfx_extend_info.h"
 
 namespace dfx {
-void DfxExtendInfoHelper::ResetTryRestartTimes(DfxExtendInfo &dfxExtendInfo)
+void DfxExtendInfoHelper::ResetTryRestartTimes(DfxExtendInfo& dfxExtendInfo)
 {
     dfxExtendInfo.kfcRestartConfig.tryRestartTimes = 0U;
 }
-bool DfxExtendInfoHelper::TryRestartTooManyTimes(const DfxExtendInfo &dfxExtendInfo)
+bool DfxExtendInfoHelper::TryRestartTooManyTimes(const DfxExtendInfo& dfxExtendInfo)
 {
     return dfxExtendInfo.kfcRestartConfig.tryRestartTimes > dfxExtendInfo.kfcRestartConfig.maxRestartTimes;
 }
-void DfxExtendInfoHelper::TryRestartOnceMore(DfxExtendInfo &dfxExtendInfo)
+void DfxExtendInfoHelper::TryRestartOnceMore(DfxExtendInfo& dfxExtendInfo)
 {
     dfxExtendInfo.kfcRestartConfig.tryRestartTimes++;
 }
-}
+} // namespace dfx

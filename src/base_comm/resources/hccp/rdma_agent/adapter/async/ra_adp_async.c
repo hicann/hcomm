@@ -18,9 +18,9 @@
 #include "ra_adp_pool.h"
 #include "ra_adp_async.h"
 
-struct RaHdcAsyncInfo gHdcAsync[RA_MAX_PHY_ID_NUM] = { 0 };
-struct RaHdcInitPara gHdcAsyncInitPara = { 0 };
-struct RsPthreadInfo gRaAsyncThreadInfo = { 0 };
+struct RaHdcAsyncInfo gHdcAsync[RA_MAX_PHY_ID_NUM] = {0};
+struct RaHdcInitPara gHdcAsyncInitPara = {0};
+struct RsPthreadInfo gRaAsyncThreadInfo = {0};
 
 int RaHwAsyncInit(unsigned int chipId, pid_t pid)
 {
@@ -101,15 +101,15 @@ STATIC void *RaAsyncPthread(void *arg)
     ret = pthread_detach(pthread_self());
     CHK_PRT_RETURN(ret != 0, hccp_err("pthread detach failed ret %d", ret), NULL);
 
-    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_ra_async", 0, 0, 0);
+    (void)prctl(PR_SET_NAME, (uintptr_t) "hccp_ra_async", 0, 0, 0);
 
     RA_PTHREAD_MUTEX_LOCK(&gHdcAsyncInitPara.mutex);
     gHdcAsyncInitPara.threadStatus = THREAD_RUNNING;
     RA_PTHREAD_MUTEX_UNLOCK(&gHdcAsyncInitPara.mutex);
 
     RsGetCurTime(&gRaAsyncThreadInfo.lastCheckTime);
-    ret = strncpy_s((char *)gRaAsyncThreadInfo.pthreadName, sizeof(gRaAsyncThreadInfo.pthreadName),
-        "ra_async_thread", strlen("ra_async_thread"));
+    ret = strncpy_s((char *)gRaAsyncThreadInfo.pthreadName, sizeof(gRaAsyncThreadInfo.pthreadName), "ra_async_thread",
+        strlen("ra_async_thread"));
     CHK_PRT_RETURN(ret != 0, hccp_err("strncpy_s pthread name failed, ret[%d]", ret), NULL);
 
     hccp_run_info("pthread[%s] is alive!", gRaAsyncThreadInfo.pthreadName);
@@ -155,7 +155,7 @@ STATIC void RaHwAsyncHdcInit(void *arg)
         return;
     }
 
-    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_hw_async", 0, 0, 0);
+    (void)prctl(PR_SET_NAME, (uintptr_t) "hccp_hw_async", 0, 0, 0);
 
     hccp_info("chip_id(%u)", chipId);
     gHdcAsyncInitPara.hdcFlag = 1;
@@ -190,8 +190,8 @@ STATIC void RaHwAsyncHdcInit(void *arg)
 
 void RaHwAsyncDeinit(void)
 {
-   pthread_mutex_destroy(&gHdcAsync[gHdcAsyncInitPara.chipId].sendMutex);
-   pthread_mutex_destroy(&gHdcAsyncInitPara.mutex);
+    pthread_mutex_destroy(&gHdcAsync[gHdcAsyncInitPara.chipId].sendMutex);
+    pthread_mutex_destroy(&gHdcAsyncInitPara.mutex);
 }
 
 int RaRsAsyncHdcSessionConnect(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
@@ -202,8 +202,7 @@ int RaRsAsyncHdcSessionConnect(char *inBuf, char *outBuf, int *outLen, int *opRe
     pthread_t tidp;
     int ret;
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpAsyncHdcConnectData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpAsyncHdcConnectData), sizeof(struct MsgHead), rcvBufLen, opResult);
     asyncData = (union OpAsyncHdcConnectData *)(inBuf + sizeof(struct MsgHead));
     HCCP_CHECK_PARAM_LEN_RET_HOST(asyncData->txData.queueSize, 0, MAX_POOL_QUEUE_SIZE, opResult);
     HCCP_CHECK_PARAM_LEN_RET_HOST(asyncData->txData.threadNum, 0, MAX_POOL_THREAD_NUM, opResult);
@@ -211,8 +210,8 @@ int RaRsAsyncHdcSessionConnect(char *inBuf, char *outBuf, int *outLen, int *opRe
     phyId = gHdcAsyncInitPara.chipId;
     gHdcAsync[phyId].pool = RaHdcPoolCreate(asyncData->txData.queueSize, asyncData->txData.threadNum);
     if (gHdcAsync[phyId].pool == NULL) {
-        hccp_err("ra_hdc_pool_create failed, queueSize:%u threadNum:%u phyId:%u",
-            asyncData->txData.queueSize, asyncData->txData.threadNum, asyncData->txData.phyId);
+        hccp_err("ra_hdc_pool_create failed, queueSize:%u threadNum:%u phyId:%u", asyncData->txData.queueSize,
+            asyncData->txData.threadNum, asyncData->txData.phyId);
         *opResult = -ESYSFUNC;
         return 0;
     }
@@ -249,8 +248,7 @@ int RaRsAsyncHdcSessionClose(char *inBuf, char *outBuf, int *outLen, int *opResu
     int tryAgain = HDC_TRY_TIME;
     unsigned int phyId = 0;
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpAsyncHdcCloseData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpAsyncHdcCloseData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     RA_PTHREAD_MUTEX_LOCK(&gHdcAsyncInitPara.mutex);
     gHdcAsyncInitPara.threadStatus = THREAD_DESTROYING;

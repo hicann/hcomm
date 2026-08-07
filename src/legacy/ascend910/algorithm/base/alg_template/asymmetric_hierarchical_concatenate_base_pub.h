@@ -15,8 +15,6 @@
 #include <algorithm>
 #include "device_capacity.h"
 
-namespace hccl {
-
-} // hccl
+namespace hccl {} // namespace hccl
 
 #endif /* ASYMMETRIC_HIERARCHICAL_CONCATENATE_BASE_PUB_H */

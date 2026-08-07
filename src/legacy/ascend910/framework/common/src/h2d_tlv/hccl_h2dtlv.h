@@ -31,11 +31,12 @@ public:
     bool GetH2dTlvInitFlag();
     unsigned int GetH2dTlvBufferSize();
     void* GetH2dTlvHandle();
+
 private:
-    std::atomic<bool>hcclH2dTlvInitFlag_ = {false};
+    std::atomic<bool> hcclH2dTlvInitFlag_ = {false};
     void* hcclH2dTlvHandle_ = nullptr;
     unsigned int hcclH2dTlvBuffsize_ = 0;
 };
 
-}
+} // namespace hccl
 #endif /* HCCL_H2DTLV_H */

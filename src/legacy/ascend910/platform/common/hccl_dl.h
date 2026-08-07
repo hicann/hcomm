@@ -17,11 +17,11 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-void *HcclDlopen(const char *libName, int mode);
-void *HcclDlsym(void *handle, const char *funcName);
-int HcclDlclose(void *handle);
+void* HcclDlopen(const char* libName, int mode);
+void* HcclDlsym(void* handle, const char* funcName);
+int HcclDlclose(void* handle);
 #ifdef __cplusplus
-}  // extern "C"
+} // extern "C"
 #endif
 
 #endif

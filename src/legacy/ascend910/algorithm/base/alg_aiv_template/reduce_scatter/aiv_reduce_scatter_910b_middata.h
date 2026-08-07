@@ -15,12 +15,12 @@ using namespace AscendC;
 class AivReduceScatterMid910B : public AivCommBase {
 public:
     __aicore__ inline AivReduceScatterMid910B() {}
-    
-    template<typename T>
+
+    template <typename T>
     __aicore__ inline void Process(GM_ADDR input, GM_ADDR output, uint64_t len, int32_t tag);
 };
 
-template<typename T>
+template <typename T>
 __aicore__ inline void AivReduceScatterMid910B::Process(GM_ADDR input, GM_ADDR output, uint64_t len, int32_t tag)
 {
     uint64_t count = len;
@@ -29,10 +29,10 @@ __aicore__ inline void AivReduceScatterMid910B::Process(GM_ADDR input, GM_ADDR o
     bool ifPingpong = (tag % 2 == 0);
     uint32_t dataOffset = (tag % 2 == 0) ? AIV_INIT_OFFSET : AIV_PING_PONG_SIZE;
 
-    __gm__ T *inputGm = (__gm__ T *)input;
-    __gm__ T *outputGm = (__gm__ T *)output;
-    __gm__ T *cclGmSelf = (__gm__ T *)(GM_IN[rank_] + dataOffset);
-    __gm__ T *cclGmOther = (__gm__ T *)(GM_IN[blockIdx_] + dataOffset);
+    __gm__ T* inputGm = (__gm__ T*)input;
+    __gm__ T* outputGm = (__gm__ T*)output;
+    __gm__ T* cclGmSelf = (__gm__ T*)(GM_IN[rank_] + dataOffset);
+    __gm__ T* cclGmOther = (__gm__ T*)(GM_IN[blockIdx_] + dataOffset);
     if (blockIdx_ != rank_) {
         CpGM2GM(cclGmSelf + blockIdx_ * count, inputGm + blockIdx_ * count, count);
         // 卡内同步
@@ -50,7 +50,7 @@ __aicore__ inline void AivReduceScatterMid910B::Process(GM_ADDR input, GM_ADDR o
     }
 }
 
-template<typename T>
+template <typename T>
 __aicore__ inline void aiv_reduce_scatter_910b_middata(KERNEL_ARGS_DEF)
 {
     AivReduceScatterMid910B op;

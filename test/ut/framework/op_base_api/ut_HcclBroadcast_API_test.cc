@@ -12,14 +12,12 @@
 
 class HcclBroadcastTest : public BaseInit {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         BaseInit::SetUp();
         UT_USE_1SERVER_1RANK_AS_DEFAULT;
         // 将enableEntryLog默认返回为true
-        MOCKER(GetExternalInputHcclEnableEntryLog)
-            .stubs()
-            .with(mockcpp::any())
-            .will(returnValue(true));
+        MOCKER(GetExternalInputHcclEnableEntryLog).stubs().with(mockcpp::any()).will(returnValue(true));
         // MOCK掉对communicator层的依赖，保证分层测试
         HcclCommunicator commun_mock;
         MOCKER_CPP_VIRTUAL(commun_mock, &HcclCommunicator::BroadcastOutPlace)
@@ -27,12 +25,14 @@ public:
             .with(mockcpp::any())
             .will(returnValue(HCCL_SUCCESS));
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         BaseInit::TearDown();
         GlobalMockObject::verify();
     }
+
 protected:
-    s8 *sendBuf = nullptr;
+    s8* sendBuf = nullptr;
     u64 count = 0;
 };
 
@@ -65,7 +65,7 @@ TEST_F(HcclBroadcastTest, Ut_HcclBroadcast_When_CountIsZero_Expect_ReturnIsHCCL_
 TEST_F(HcclBroadcastTest, Ut_HcclBroadcast_When_RootIsInvalid_Expect_ReturnIsHCCL_SUCCESS)
 {
     UT_SET_SENDBUF_COUNT(HCCL_COM_DATA_SIZE, HCCL_COM_DATA_SIZE);
-    int root = 2;   // 默认初始化，本通信域只有一个rank
+    int root = 2; // 默认初始化，本通信域只有一个rank
     UT_COMM_CREATE_DEFAULT(comm);
     UT_STREAM_CREATE_DEFAULT(stream);
 
@@ -122,7 +122,7 @@ TEST_F(HcclBroadcastTest, Ut_HcclBroadcast_When_Exec20times_Expect_ReturnIsHCCL_
     UT_COMM_CREATE_DEFAULT(comm);
     UT_STREAM_CREATE_DEFAULT(stream);
 
-    for(int k = 0; k < LOOP_TIMES; k++) {
+    for (int k = 0; k < LOOP_TIMES; k++) {
         HcclResult ret = HcclBroadcastInner(sendBuf, count, HCCL_DATA_TYPE_INT8, root, comm, stream);
         EXPECT_EQ(ret, HCCL_SUCCESS);
 
@@ -147,10 +147,7 @@ TEST_F(HcclBroadcastTest, Ut_HcclBroadcast_When_2Server4Rank_Expect_ReturnIsHCCL
 
 TEST_F(HcclBroadcastTest, Ut_HcclBroadcast_When_GroupModeSuccess_Expect_ReturnIsHCCL_SUCCESS)
 {
-    MOCKER(taskAppend)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(HCCL_SUCCESS));
+    MOCKER(taskAppend).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
     UT_SET_SENDBUF_COUNT(HCCL_COM_DATA_SIZE, HCCL_COM_DATA_SIZE);
     int root = 0;
     UT_COMM_CREATE_DEFAULT(comm);

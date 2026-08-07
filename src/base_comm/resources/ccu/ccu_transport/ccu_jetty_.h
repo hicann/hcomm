@@ -20,7 +20,7 @@ namespace hcomm {
 
 class CcuJetty final {
 public:
-    CcuJetty(const Hccl::IpAddress &ipAddr, const CcuJettyInfo &jettyInfo);   //暂时改为使用Hccl
+    CcuJetty(const Hccl::IpAddress& ipAddr, const CcuJettyInfo& jettyInfo); // 暂时改为使用Hccl
     ~CcuJetty();
 
     HcclResult Init();
@@ -37,10 +37,11 @@ public:
     RdmaHandle GetRdmaHandle() const { return rdmaHandle_; }
 
 private:
-    CcuJetty(const CcuJetty &that) = delete;
-    CcuJetty &operator=(const CcuJetty &that) = delete;
-    CcuJetty(CcuJetty &&that) = delete;
-    CcuJetty &operator=(CcuJetty &&that) = delete;
+    CcuJetty(const CcuJetty& that) = delete;
+    CcuJetty& operator=(const CcuJetty& that) = delete;
+    CcuJetty(CcuJetty&& that) = delete;
+    CcuJetty& operator=(CcuJetty&& that) = delete;
+
 private:
     int32_t devLogicId_{0};
     Hccl::IpAddress ipAddr_{};
@@ -52,19 +53,19 @@ private:
 
     RequestHandle reqHandle_{0};
     std::vector<char> reqDataBuffer_{};
-    void *jettyHandlePtr_{nullptr};
+    void* jettyHandlePtr_{nullptr};
 
     HrtRaUbCreateJettyParam inParam_{};
     HrtRaUbJettyCreatedOutParam outParam_{};
-    bool  mappedJettyPrioritySet_{false};
+    bool mappedJettyPrioritySet_{false};
     uint8_t mappedJettyPriority_{0};
 
     HcclResult HandleAsyncRequest();
     RdmaHandle rdmaHandle_{nullptr};
 };
 
-HcclResult CcuCreateJetty(const Hccl::IpAddress &ipAddr, const CcuJettyInfo &jettyInfo,
-    std::unique_ptr<CcuJetty> &ccuJetty);
+HcclResult
+CcuCreateJetty(const Hccl::IpAddress& ipAddr, const CcuJettyInfo& jettyInfo, std::unique_ptr<CcuJetty>& ccuJetty);
 
 } // namespace hcomm
 #endif // HCOMM_CCU_JETTY_H

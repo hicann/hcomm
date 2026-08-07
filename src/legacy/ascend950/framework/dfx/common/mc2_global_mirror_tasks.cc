@@ -16,7 +16,7 @@ namespace Hccl {
 
 using namespace std;
 
-MC2GlobalMirrorTasks &MC2GlobalMirrorTasks::GetInstance()
+MC2GlobalMirrorTasks& MC2GlobalMirrorTasks::GetInstance()
 {
     static MC2GlobalMirrorTasks instance;
     return instance;
@@ -46,8 +46,10 @@ void MC2GlobalMirrorTasks::AddTaskInfo(u32 devLogicId, shared_ptr<TaskInfo> task
 
     taskQueues_[devLogicId].push_back(taskInfo);
 
-    HCCL_INFO("[MC2GlobalMirrorTasks][%s] deviceId[%u], dieId[%u], missionId[%u], instrId[%u], executeId[%llu]", __func__,
-        devLogicId, static_cast<u32>(ccuPara.dieId), static_cast<u32>(ccuPara.missionId), ccuPara.instrId, ccuPara.executeId);
+    HCCL_INFO(
+        "[MC2GlobalMirrorTasks][%s] deviceId[%u], dieId[%u], missionId[%u], instrId[%u], executeId[%llu]", __func__,
+        devLogicId, static_cast<u32>(ccuPara.dieId), static_cast<u32>(ccuPara.missionId), ccuPara.instrId,
+        ccuPara.executeId);
 }
 
 shared_ptr<TaskInfo> MC2GlobalMirrorTasks::GetTaskInfo(u32 devLogicId, u8 dieId, u8 missionId, u32 instrId) const

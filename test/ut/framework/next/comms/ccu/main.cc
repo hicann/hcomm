@@ -16,7 +16,8 @@
 #include "comm.h"
 #include "llt_hccl_stub_pub.h"
 
-GTEST_API_ int main(int argc, char **argv) {
+GTEST_API_ int main(int argc, char** argv)
+{
     setTargetPort(27743, 31123);
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

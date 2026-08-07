@@ -33,8 +33,9 @@ namespace fs = std::filesystem;
 #include "db_sim_runner_ops.h"
 
 namespace {
-    // 辅助函数：将单个十六进制字符转为对应数值
-static uint8_t hex_char_to_val(char c) {
+// 辅助函数：将单个十六进制字符转为对应数值
+static uint8_t hex_char_to_val(char c)
+{
     if (c >= '0' && c <= '9') {
         return static_cast<int>(c) - '0';
     }
@@ -50,13 +51,14 @@ static uint8_t hex_char_to_val(char c) {
 // 核心函数：34位十六进制EID字符串转16字节uint8_t数组
 // 参数：eid_str - 输入字符串(如"0x00000000000000000000000000000018")
 //       eid_out - 输出数组(长度必须为16)
-void eid_hex_to_uint8(const char* eid_str, uint8_t* eid_out) {
+void eid_hex_to_uint8(const char* eid_str, uint8_t* eid_out)
+{
     // 1. 跳过0x前缀，指向有效十六进制数据
     const char* hex_data = eid_str + 2;
-    
+
     // 2. 清空输出数组（初始化全0）
     memset(eid_out, 0, 16);
-    
+
     // 3. 每2个字符转换为1个uint8_t字节，共转换16字节
     for (int i = 0; i < 16; i++) {
         // 高4位 + 低4位 组合成1个字节
@@ -67,7 +69,8 @@ void eid_hex_to_uint8(const char* eid_str, uint8_t* eid_out) {
 }
 
 // EID 字符串转 IPv4 字符串
-std::string eidToIP(const std::string& eid) {
+std::string eidToIP(const std::string& eid)
+{
     // 1. 取最后 8 个十六进制字符（IPv4 所在位置）
     std::string ipv4_hex = eid.substr(eid.size() - 8, 8);
 
@@ -78,22 +81,19 @@ std::string eidToIP(const std::string& eid) {
     uint8_t o4 = (uint8_t)strtoul(ipv4_hex.substr(6, 2).c_str(), nullptr, 16);
 
     // 3. 拼接成 IP 字符串
-    return std::to_string(o1) + "." +
-           std::to_string(o2) + "." +
-           std::to_string(o3) + "." +
-           std::to_string(o4);
+    return std::to_string(o1) + "." + std::to_string(o2) + "." + std::to_string(o3) + "." + std::to_string(o4);
 }
-}
+} // namespace
 /*
  * @brief 初始化集群拓扑数据
- * 
+ *
  * @param clusterDir 集群拓扑文件目录
  * @return HcclVmResult 状态码
- * 
+ *
  * @note 该函数会解析clusterDir目录下的所有文件，生成IR数据，初始化至DB层。
  * 初始化静态DB表数据：Server/Host/Device/Ccu/Port/EndPoint/EndPointPortMapping
  */
-HcclVmResult AscendClusterTopoParser::InitClusterTopo(const std::string &clusterDir)
+HcclVmResult AscendClusterTopoParser::InitClusterTopo(const std::string& clusterDir)
 {
     HCCL_VM_DEBUG("Enter InitClusterTopo: {}", clusterDir);
     // 1. 解析集群拓扑文件
@@ -128,15 +128,15 @@ HcclVmResult AscendClusterTopoParser::InitClusterTopo(const std::string &cluster
 
 /*
  * @brief 初始化集群通信域表项
- * 
+ *
  * @param topoMeta 集群拓扑元数据
  * @return HcclVmResult 状态码
- * 
+ *
  * @note 该函数会解析topoMeta，生成IR数据，初始化至DB层。
  * 初始化本次算子的动态DB数据：Rank/Link等
  * 更新静态表字段：Device.logic_id
  */
-HcclVmResult AscendClusterTopoParser::ParseRanktableAndInitCommDomain(const std::string &ranktablePath)
+HcclVmResult AscendClusterTopoParser::ParseRanktableAndInitCommDomain(const std::string& ranktablePath)
 {
     HCCL_VM_DEBUG("Enter ParseRanktableAndInitCommDomain, ranktablePath: {}", ranktablePath);
 
@@ -150,10 +150,10 @@ HcclVmResult AscendClusterTopoParser::ParseRanktableAndInitCommDomain(const std:
 
 /*
  * @brief 初始化集群通信域表项
- * 
+ *
  * @param topoMeta 集群拓扑元数据
  * @return HcclVmResult 状态码
- * 
+ *
  * @note 该函数会解析topoMeta，生成IR数据，初始化至DB层。
  * 初始化本次算子的动态DB数据：Rank/Link等
  * 更新静态表字段：Device.logic_id
@@ -213,10 +213,9 @@ HcclVmResult AscendClusterTopoParser::InitDynamicModelData(const TopoMeta& topoM
                 // rankId % deviceCount 是应用实际选择的 logicDevId
                 uint32_t targetLogicDevId = rankId % deviceCount;
                 // 查找该 server 上 logic_id == targetLogicDevId 的 Device
-                auto devRet = RunnerDB::GetOneByPred<sim::Device>(
-                    [serverKey, targetLogicDevId](const sim::Device &d) {
-                        return d.server_id == serverKey && d.logic_id == targetLogicDevId;
-                    });
+                auto devRet = RunnerDB::GetOneByPred<sim::Device>([serverKey, targetLogicDevId](const sim::Device& d) {
+                    return d.server_id == serverKey && d.logic_id == targetLogicDevId;
+                });
                 if (!devRet.second) {
                     HCCL_VM_ERROR("device not found: serverKey={}, logicDevId={}", serverKey, targetLogicDevId);
                     return HcclVmResult::HCCL_SIM_E_INTERNAL;
@@ -229,16 +228,17 @@ HcclVmResult AscendClusterTopoParser::InitDynamicModelData(const TopoMeta& topoM
                 rank.device_id = deviceKey;
                 rank.state = 1;
                 RunnerDB::Add<sim::Rank>(rank);
-                HCCL_VM_DEBUG("Init Rank: rankId={}, deviceKey={}, logicDevId={}, phyDevId={}",
-                    rankId, deviceKey, devRet.first.logic_id, devRet.first.physical_id);
+                HCCL_VM_DEBUG(
+                    "Init Rank: rankId={}, deviceKey={}, logicDevId={}, phyDevId={}", rankId, deviceKey,
+                    devRet.first.logic_id, devRet.first.physical_id);
 
                 // 初始化该 device 关联的 CCU 资源
                 auto deviceAllCcu = RunnerDB::GetByPred<sim::Ccu>([deviceKey](const sim::Ccu& d) {
                     return d.device_id == deviceKey;
                 });
-                if (deviceAllCcu.empty()) { 
-                    HCCL_VM_ERROR("get device all ccu failed"); 
-                    return HcclVmResult::HCCL_SIM_E_INTERNAL; 
+                if (deviceAllCcu.empty()) {
+                    HCCL_VM_ERROR("get device all ccu failed");
+                    return HcclVmResult::HCCL_SIM_E_INTERNAL;
                 }
                 for (const auto& ccu : deviceAllCcu) {
                     InitCcuResource(ccu.id);
@@ -252,15 +252,13 @@ HcclVmResult AscendClusterTopoParser::InitDynamicModelData(const TopoMeta& topoM
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-HcclVmResult AscendClusterTopoParser::BuildLevelList(const Server &server, int srcDevPhyId,
-                                                      const std::set<int> &commDomainLocalIds,
-                                                      uint32_t spIdx, uint32_t srvIdx,
-                                                      json &levelList)
+HcclVmResult AscendClusterTopoParser::BuildLevelList(
+    const Server& server, int srcDevPhyId, const std::set<int>& commDomainLocalIds, uint32_t spIdx, uint32_t srvIdx,
+    json& levelList)
 {
     const Device* device = server.GetDevice(srcDevPhyId);
     if (!device) {
-        HCCL_VM_ERROR("cannot find device by phyDevId {:d} in superpod{:d}/server{:d}",
-                      srcDevPhyId, spIdx, srvIdx);
+        HCCL_VM_ERROR("cannot find device by phyDevId {:d} in superpod{:d}/server{:d}", srcDevPhyId, spIdx, srvIdx);
         return HCCL_SIM_E_NOT_FOUND;
     }
 
@@ -387,9 +385,9 @@ HcclVmResult AscendClusterTopoParser::BuildLevelList(const Server &server, int s
     return HcclVmResult::HCCL_SIM_SUCCESS;
 }
 
-json AscendClusterTopoParser::BuildRankEntry(const Server &server, int srcDevPhyId,
-                                              const std::set<int> &commDomainLocalIds,
-                                              uint32_t spIdx, uint32_t srvIdx, uint32_t rankId)
+json AscendClusterTopoParser::BuildRankEntry(
+    const Server& server, int srcDevPhyId, const std::set<int>& commDomainLocalIds, uint32_t spIdx, uint32_t srvIdx,
+    uint32_t rankId)
 {
     json rankEntry;
     rankEntry["device_id"] = srcDevPhyId;
@@ -402,7 +400,7 @@ json AscendClusterTopoParser::BuildRankEntry(const Server &server, int srcDevPhy
     return rankEntry;
 }
 
-HcclVmResult AscendClusterTopoParser::CreateRankTableFile(const TopoMeta &topoMeta)
+HcclVmResult AscendClusterTopoParser::CreateRankTableFile(const TopoMeta& topoMeta)
 {
     json rankTable;
     rankTable["rank_count"] = ShmGetPhyDeviceTotalCount(topoMeta);
@@ -459,7 +457,7 @@ HcclVmResult AscendClusterTopoParser::CreateRankTableFile(const TopoMeta &topoMe
 }
 
 HcclVmResult AscendClusterTopoParser::InitClusterStaticTopoData()
-{ 
+{
     for (const auto& superPod : network_.superPods) {
         for (const auto& server : superPod.servers) {
             if (server.hostEid.empty()) {
@@ -549,8 +547,7 @@ uint64_t AscendClusterTopoParser::InitDevice(uint64_t serverKey, const Device& d
     deviceDb.overflow_mode = 0;
     if (!deviceIn.socVersion.empty()) {
         // todo: 从yaml文件中获取soc版本
-        strncpy(deviceDb.soc_version, deviceIn.socVersion.c_str(),
-                sizeof(deviceDb.soc_version) - 1);
+        strncpy(deviceDb.soc_version, deviceIn.socVersion.c_str(), sizeof(deviceDb.soc_version) - 1);
         deviceDb.soc_version[sizeof(deviceDb.soc_version) - 1] = '\0';
     }
     deviceDb.status = 0;
@@ -566,13 +563,14 @@ uint64_t AscendClusterTopoParser::InitDevice(uint64_t serverKey, const Device& d
     return deviceKey;
 }
 
-HcclVmResult AscendClusterTopoParser::AddLinkInfo(const LinkPortRef *srcPort, const LinkPortRef *dstPort, uint32_t netLayer, const std::vector<Protocol> &protocols)
+HcclVmResult AscendClusterTopoParser::AddLinkInfo(
+    const LinkPortRef* srcPort, const LinkPortRef* dstPort, uint32_t netLayer, const std::vector<Protocol>& protocols)
 {
-    (void) protocols;
+    (void)protocols;
     uint64_t srcEndPointId = 0;
     if (srcPort != nullptr && srcPort->localId != -1 && !srcPort->eid.empty()) {
         std::string srcIp = eidToIP(srcPort->eid);
-        auto ret = RunnerDB::GetOneByPred<sim::EndPoint>([&srcIp](const sim::EndPoint &d) {
+        auto ret = RunnerDB::GetOneByPred<sim::EndPoint>([&srcIp](const sim::EndPoint& d) {
             return strcmp(d.ip_addr, srcIp.c_str()) == 0;
         });
         if (!ret.second) {
@@ -581,13 +579,15 @@ HcclVmResult AscendClusterTopoParser::AddLinkInfo(const LinkPortRef *srcPort, co
         }
         srcEndPointId = ret.first.id;
         // 更新Endpoint status
-        RunnerDB::Update<sim::EndPoint>(srcEndPointId, [](sim::EndPoint &ep) { ep.status = 1;});
+        RunnerDB::Update<sim::EndPoint>(srcEndPointId, [](sim::EndPoint& ep) {
+            ep.status = 1;
+        });
     }
 
     uint64_t dstEndPointId = 0;
     if (dstPort != nullptr && dstPort->localId != -1 && !dstPort->eid.empty()) {
         std::string dstIp = eidToIP(dstPort->eid);
-        auto ret = RunnerDB::GetOneByPred<sim::EndPoint>([&dstIp](const sim::EndPoint &d) {
+        auto ret = RunnerDB::GetOneByPred<sim::EndPoint>([&dstIp](const sim::EndPoint& d) {
             return strcmp(d.ip_addr, dstIp.c_str()) == 0;
         });
         if (!ret.second) {
@@ -596,7 +596,9 @@ HcclVmResult AscendClusterTopoParser::AddLinkInfo(const LinkPortRef *srcPort, co
         }
         dstEndPointId = ret.first.id;
         // 更新Endpoint status
-        RunnerDB::Update<sim::EndPoint>(dstEndPointId, [](sim::EndPoint &ep) { ep.status = 1;});
+        RunnerDB::Update<sim::EndPoint>(dstEndPointId, [](sim::EndPoint& ep) {
+            ep.status = 1;
+        });
     }
 
     sim::Link link{};
@@ -609,7 +611,7 @@ HcclVmResult AscendClusterTopoParser::AddLinkInfo(const LinkPortRef *srcPort, co
 }
 
 // 解析用户提供的ranktable文件，得到topoMeta信息，并初始化通信域相关数据库表项
-HcclVmResult AscendClusterTopoParser::ParseRanktable(const std::string &ranktablePath, TopoMeta &topoMeta)
+HcclVmResult AscendClusterTopoParser::ParseRanktable(const std::string& ranktablePath, TopoMeta& topoMeta)
 {
     std::ifstream ifs(ranktablePath);
     if (!ifs.is_open()) {
@@ -700,8 +702,8 @@ HcclVmResult AscendClusterTopoParser::ParseRanktable(const std::string &ranktabl
         topoMeta.push_back(spMeta);
     }
 
-    if (!network_.superPods.empty() && !network_.superPods[0].servers.empty() &&
-        !network_.superPods[0].servers[0].devices.empty()) {
+    if (!network_.superPods.empty() && !network_.superPods[0].servers.empty()
+        && !network_.superPods[0].servers[0].devices.empty()) {
         HCCL_VM_ERROR("network superpord is error");
         return HcclVmResult::HCCL_SIM_E_INTERNAL;
     }

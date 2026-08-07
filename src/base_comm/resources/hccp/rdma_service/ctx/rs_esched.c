@@ -32,12 +32,13 @@ STATIC void RsEschedJettyDestroy(struct rs_cb *rscb, TsUbTaskReportT *taskInfo)
         ret = RsUbCtxJettyFree(rscb, ueInfo, taskInfo->array[i].jettyId);
         if (ret != 0) {
             hccp_run_warn("rs_ub_ctx_jetty_free unsuccessful, ret[%d] task_index[%d] logicId[%u] dieId[%u] "
-                "funcId[%u] jettyId[%u]", ret, i, rscb->logicId, dieId, funcId, taskInfo->array[i].jettyId);
+                          "funcId[%u] jettyId[%u]",
+                ret, i, rscb->logicId, dieId, funcId, taskInfo->array[i].jettyId);
             continue;
         }
 
-        hccp_info("jetty destroy task success, task_index[%d] logicId[%u] dieId[%u] funcId[%u] jettyId[%u]",
-            i, rscb->logicId, dieId, funcId, taskInfo->array[i].jettyId);
+        hccp_info("jetty destroy task success, task_index[%d] logicId[%u] dieId[%u] funcId[%u] jettyId[%u]", i,
+            rscb->logicId, dieId, funcId, taskInfo->array[i].jettyId);
     }
     return;
 }
@@ -67,8 +68,7 @@ STATIC void RsEschedCleanAllResource(struct rs_cb *rscb)
 
     RS_LIST_GET_HEAD_ENTRY(devCbCurr, devCbNext, &rscb->udevList, list, struct RsUbDevCb);
     for (; (&devCbCurr->list) != &rscb->udevList;
-         devCbCurr = devCbNext,
-         devCbNext = list_entry(devCbNext->list.next, struct RsUbDevCb, list)) {
+         devCbCurr = devCbNext, devCbNext = list_entry(devCbNext->list.next, struct RsUbDevCb, list)) {
         hccp_info("logicId[%u] devIndex[%u] start clean", rscb->logicId, devCbCurr->index);
         RsUbFreeJettyCbList(devCbCurr, &devCbCurr->jettyList, &devCbCurr->rjettyList);
     }
@@ -85,8 +85,9 @@ STATIC int RsEschedProcessEvent(struct rs_cb *rscb, struct event_info *eventData
     int ret = 0;
 
     CHK_PRT_RETURN(eventData->priv.msg_len != sizeof(struct TagTsHccpMsg),
-        hccp_err("event invalid, msg_len[%u] != [%u], event_id[%d] subeventId[%u]",
-        eventData->priv.msg_len, sizeof(struct TagTsHccpMsg), eventData->comm.event_id, subeventId), -EINVAL);
+        hccp_err("event invalid, msg_len[%u] != [%u], event_id[%d] subeventId[%u]", eventData->priv.msg_len,
+            sizeof(struct TagTsHccpMsg), eventData->comm.event_id, subeventId),
+        -EINVAL);
 
     msg = (struct TagTsHccpMsg *)eventData->priv.msg;
     isAppExit = msg->isAppExit;
@@ -158,7 +159,7 @@ STATIC void *RsEschedHandle(void *arg)
 
     ret = pthread_detach(pthread_self());
     CHK_PRT_RETURN(ret, hccp_err("pthread detach failed ret %d", ret), NULL);
-    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_rs_esched", 0, 0, 0);
+    (void)prctl(PR_SET_NAME, (uintptr_t) "hccp_rs_esched", 0, 0, 0);
     gRsEschedInfo.threadStatus = THREAD_RUNNING;
 
     while (1) {
@@ -185,17 +186,15 @@ int RsEschedInit(struct rs_cb *rscb)
     }
 
     ret = DlHalEschedAttachDevice(rscb->logicId);
-    CHK_PRT_RETURN(ret != 0, hccp_err("halEschedSubscribeEvent failed, ret[%d] logicId[%u]",
-        ret, rscb->logicId), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("halEschedSubscribeEvent failed, ret[%d] logicId[%u]", ret, rscb->logicId), ret);
 
     ret = DlHalEschedCreateGrp(rscb->logicId, ESCHED_GRP_TS_HCCP, GRP_TYPE_BIND_CP_CPU);
-    CHK_PRT_RETURN(ret != 0, hccp_err("DlHalEschedCreateGrp failed, ret[%d] logicId[%u]",
-        ret, rscb->logicId), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("DlHalEschedCreateGrp failed, ret[%d] logicId[%u]", ret, rscb->logicId), ret);
 
     ret = DlHalEschedSubscribeEvent(rscb->logicId, ESCHED_GRP_TS_HCCP, ESCHED_THREAD_ID_TS_HCCP,
         (1UL << EVENT_HCCP_MSG));
-    CHK_PRT_RETURN(ret != 0, hccp_err("DlHalEschedSubscribeEvent failed, ret[%d] logicId[%u]",
-        ret, rscb->logicId), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("DlHalEschedSubscribeEvent failed, ret[%d] logicId[%u]", ret, rscb->logicId),
+        ret);
 
     ret = pthread_create(&rsEschedTid, NULL, RsEschedHandle, (void *)rscb);
     CHK_PRT_RETURN(ret != 0, hccp_err("pthread create failed, ret[%d] logicId[%u]", ret, rscb->logicId), -ESYSFUNC);

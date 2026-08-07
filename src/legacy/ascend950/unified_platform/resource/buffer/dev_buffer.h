@@ -30,9 +30,9 @@ public:
 
     ~DevBuffer() override;
 
-    DevBuffer(const DevBuffer &that) = delete;
+    DevBuffer(const DevBuffer& that) = delete;
 
-    DevBuffer &operator=(const DevBuffer &that) = delete;
+    DevBuffer& operator=(const DevBuffer& that) = delete;
 
     std::string Describe() const override;
 

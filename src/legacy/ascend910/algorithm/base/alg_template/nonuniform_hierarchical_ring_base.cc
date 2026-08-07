@@ -13,14 +13,9 @@
 
 namespace hccl {
 
-NHRBase::NHRBase(const HcclDispatcher dispatcher)
-    : AlgTemplateBase(dispatcher)
-{
-}
+NHRBase::NHRBase(const HcclDispatcher dispatcher) : AlgTemplateBase(dispatcher) {}
 
-NHRBase::~NHRBase()
-{
-}
+NHRBase::~NHRBase() {}
 
 void NHRBase::GetRankMapping(const u32 rankSize, bool keepOrder)
 {
@@ -79,12 +74,9 @@ void NHRBase::GetRankMapping(const u32 rankSize, bool keepOrder)
     return;
 }
 
-void NHRBase::FetchRankMapping(std::vector<u32> &sliceMap)
-{
-    sliceMap = sliceMap_;
-}
+void NHRBase::FetchRankMapping(std::vector<u32>& sliceMap) { sliceMap = sliceMap_; }
 
-void NHRBase::ReorderSequence(u32 start, u32 end, u32 len, std::vector<u32> &tree, std::vector<u32> &tmp)
+void NHRBase::ReorderSequence(u32 start, u32 end, u32 len, std::vector<u32>& tree, std::vector<u32>& tmp)
 {
     const u32 DIVIDE_TWO = 2;
 
@@ -99,7 +91,7 @@ void NHRBase::ReorderSequence(u32 start, u32 end, u32 len, std::vector<u32> &tre
 }
 
 // 合并连续的内存块，slice数量可能会因此减少
-void NHRBase::MergeSlices(std::vector<Slice> &slices)
+void NHRBase::MergeSlices(std::vector<Slice>& slices)
 {
     if (!isNeedMerge) {
         return;
@@ -109,7 +101,7 @@ void NHRBase::MergeSlices(std::vector<Slice> &slices)
         return;
     }
 
-    std::sort(slices.begin(), slices.end(), [](const Slice &s1, const Slice &s2) {
+    std::sort(slices.begin(), slices.end(), [](const Slice& s1, const Slice& s2) {
         return s1.offset == s2.offset ? s1.size < s2.size : s1.offset < s2.offset;
     });
 
@@ -136,7 +128,7 @@ void NHRBase::MergeSlices(std::vector<Slice> &slices)
     slices[mergedIdx].size = tmpSliceSize;
     slices[mergedIdx].offset = tmpSliceOffset;
     mergedIdx += 1;
-    
+
     // 原地清理
     slices.erase(slices.begin() + mergedIdx, slices.end());
 
@@ -155,7 +147,7 @@ u32 NHRBase::GetStepNumInterServer(u32 rankSize)
 }
 
 // NHR每步的算法描述原理函数
-HcclResult NHRBase::GetStepInfo(u32 step, u32 nSteps, u32 rank, u32 rankSize, InterServerAlgoStep &stepInfo)
+HcclResult NHRBase::GetStepInfo(u32 step, u32 nSteps, u32 rank, u32 rankSize, InterServerAlgoStep& stepInfo)
 {
     (void)step;
     (void)nSteps;
@@ -165,7 +157,7 @@ HcclResult NHRBase::GetStepInfo(u32 step, u32 nSteps, u32 rank, u32 rankSize, In
     return HCCL_SUCCESS;
 }
 
-HcclResult NHRBase::ExecuteBarrier(const std::shared_ptr<Transport> &preLink, const std::shared_ptr<Transport> &aftLink)
+HcclResult NHRBase::ExecuteBarrier(const std::shared_ptr<Transport>& preLink, const std::shared_ptr<Transport>& aftLink)
 {
     CHK_RET(preLink->TxAck(stream_));
     CHK_RET(aftLink->RxAck(stream_));
@@ -178,4 +170,4 @@ HcclResult NHRBase::ExecuteBarrier(const std::shared_ptr<Transport> &preLink, co
 
     return HCCL_SUCCESS;
 }
-}   // ~~ namespace hccl
+} // namespace hccl

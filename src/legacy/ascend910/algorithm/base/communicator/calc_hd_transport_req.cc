@@ -12,19 +12,16 @@
 #include "calc_hd_transport_req.h"
 
 namespace hccl {
-CalcHDTransportReq::CalcHDTransportReq(std::vector<std::vector<u32>> &subCommPlaneVector,
-    std::vector<bool> &isBridgeVector, u32 userRank)
+CalcHDTransportReq::CalcHDTransportReq(
+    std::vector<std::vector<u32>>& subCommPlaneVector, std::vector<bool>& isBridgeVector, u32 userRank)
     : CalcTransportReqBase(subCommPlaneVector, isBridgeVector, userRank)
-{
-}
+{}
 
-CalcHDTransportReq::~CalcHDTransportReq()
-{
-}
+CalcHDTransportReq::~CalcHDTransportReq() {}
 
-HcclResult CalcHDTransportReq::CalcTransportRequest(const std::string &tag, TransportMemType inputMemType,
-    TransportMemType outputMemType, const CommParaInfo &commParaInfo,
-    std::vector<SingleSubCommTransport> &commTransport, u32 subUserRankRoot)
+HcclResult CalcHDTransportReq::CalcTransportRequest(
+    const std::string& tag, TransportMemType inputMemType, TransportMemType outputMemType,
+    const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport, u32 subUserRankRoot)
 {
     u32 ringSize = subCommPlaneVector_.size();
     commTransport.resize(ringSize);
@@ -40,7 +37,7 @@ HcclResult CalcHDTransportReq::CalcTransportRequest(const std::string &tag, Tran
         }
 
         u32 rankSize = subCommPlaneVector_[ringIndex].size();
-        SingleSubCommTransport &subCommTransport = commTransport[ringIndex];
+        SingleSubCommTransport& subCommTransport = commTransport[ringIndex];
         subCommTransport.transportRequests.resize(rankSize);
         // 只有一张卡时不需要建链
         if (rankSize == HCCL_RANK_SIZE_EQ_ONE) {
@@ -53,20 +50,21 @@ HcclResult CalcHDTransportReq::CalcTransportRequest(const std::string &tag, Tran
             CHK_RET(GetRankByUserRank(subCommPlaneVector_[ringIndex], subUserRankRoot, subRoot));
         }
 
-        std::vector<bool> linkRelation =  AlgTemplateBase::CalcLinksRelation(rank, rankSize, subRoot,
-            HalvingDoublingType::RECURSIVE_HALVING_DOUBLING);
+        std::vector<bool> linkRelation = AlgTemplateBase::CalcLinksRelation(
+            rank, rankSize, subRoot, HalvingDoublingType::RECURSIVE_HALVING_DOUBLING);
 
         for (u32 rankIndex = 0; rankIndex < rankSize; rankIndex++) {
-            TransportRequest &tmpTransport = subCommTransport.transportRequests[rankIndex];
+            TransportRequest& tmpTransport = subCommTransport.transportRequests[rankIndex];
             if (linkRelation[rankIndex] == true) {
                 tmpTransport.isValid = true;
-                tmpTransport.localUserRank  = userRank_;
+                tmpTransport.localUserRank = userRank_;
                 tmpTransport.remoteUserRank = subCommPlaneVector_[ringIndex][rankIndex];
                 tmpTransport.inputMemType = inputMemType;
                 tmpTransport.outputMemType = outputMemType;
-                HCCL_INFO("[CommFactory][CalcHDCommInfo] param_.tag[%s] ringIndex[%u], localRank[%u], " \
-                    "remoteRank[%u], inputMemType[%d], outputMemType[%d]", tag.c_str(), ringIndex, userRank_,
-                    tmpTransport.remoteUserRank, inputMemType, outputMemType);
+                HCCL_INFO(
+                    "[CommFactory][CalcHDCommInfo] param_.tag[%s] ringIndex[%u], localRank[%u], "
+                    "remoteRank[%u], inputMemType[%d], outputMemType[%d]",
+                    tag.c_str(), ringIndex, userRank_, tmpTransport.remoteUserRank, inputMemType, outputMemType);
             } else {
                 tmpTransport.isValid = false;
             }
@@ -76,4 +74,4 @@ HcclResult CalcHDTransportReq::CalcTransportRequest(const std::string &tag, Tran
     return HCCL_SUCCESS;
 }
 
-}  // namespace hccl
+} // namespace hccl

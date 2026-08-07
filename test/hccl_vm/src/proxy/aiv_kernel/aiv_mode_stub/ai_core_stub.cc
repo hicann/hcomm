@@ -16,12 +16,14 @@
 #include "sim_log.h"
 
 namespace AivSim {
-AivKernelExecutor& AivKernelExecutor::GetInstance() {
+AivKernelExecutor& AivKernelExecutor::GetInstance()
+{
     static AivKernelExecutor instance;
     return instance;
 }
 
-void AivKernelExecutor::Init(RankId rankId, size_t blockNum, uint32_t rankSize) {
+void AivKernelExecutor::Init(RankId rankId, size_t blockNum, uint32_t rankSize)
+{
     Reset();
     rankId_ = rankId;
     rankSize_ = std::min(rankSize, MAX_RANK_NUM);
@@ -33,7 +35,8 @@ void AivKernelExecutor::Init(RankId rankId, size_t blockNum, uint32_t rankSize) 
     }
 }
 
-void AivKernelExecutor::Reset() {
+void AivKernelExecutor::Reset()
+{
     aivCores_.clear();
     taskIdGen_.store(0);
     rankId_ = UINT32_MAX;
@@ -43,21 +46,18 @@ void AivKernelExecutor::Reset() {
     outBuffer_ = {};
     inputGlobalOffsetBase_ = 0;
     outputGlobalOffsetBase_ = 0;
-    std::fill(std::begin(cclBuffer_), std::end(cclBuffer_), Mem {});
-    std::fill(std::begin(aivCommInfoBuffer_), std::end(aivCommInfoBuffer_), Mem {});
+    std::fill(std::begin(cclBuffer_), std::end(cclBuffer_), Mem{});
+    std::fill(std::begin(aivCommInfoBuffer_), std::end(aivCommInfoBuffer_), Mem{});
 }
 
-std::shared_ptr<AivCore> AivKernelExecutor::GetAivCore(int64_t blockIdx) {
+std::shared_ptr<AivCore> AivKernelExecutor::GetAivCore(int64_t blockIdx)
+{
     return (blockIdx >= 0 && blockIdx < aivCores_.size()) ? aivCores_[blockIdx] : nullptr;
 }
 
 void AivKernelExecutor::SetIoBuffer(
-    uint64_t inBuffer,
-    uint64_t inBufferSize,
-    uint64_t outBuffer,
-    uint64_t outBufferSize,
-    uint64_t inputGlobalOffsetBase,
-    uint64_t outputGlobalOffsetBase)
+    uint64_t inBuffer, uint64_t inBufferSize, uint64_t outBuffer, uint64_t outBufferSize,
+    uint64_t inputGlobalOffsetBase, uint64_t outputGlobalOffsetBase)
 {
     inBuffer_ = {inBuffer, inBufferSize};
     outBuffer_ = {outBuffer, outBufferSize};
@@ -66,10 +66,7 @@ void AivKernelExecutor::SetIoBuffer(
 }
 
 void AivKernelExecutor::SetCommBuffer(
-    RankId rankId,
-    uint64_t cclBuffer,
-    uint64_t cclBufferSize,
-    uint64_t aivCommInfoBuffer,
+    RankId rankId, uint64_t cclBuffer, uint64_t cclBufferSize, uint64_t aivCommInfoBuffer,
     uint64_t aivCommInfoBufferSize)
 {
     if (rankId >= MAX_RANK_NUM) {
@@ -80,7 +77,7 @@ void AivKernelExecutor::SetCommBuffer(
     aivCommInfoBuffer_[rankId] = {aivCommInfoBuffer, aivCommInfoBufferSize};
 }
 
-bool AivBufferContains(const Mem &buffer, uint64_t addr, uint64_t size)
+bool AivBufferContains(const Mem& buffer, uint64_t addr, uint64_t size)
 {
     if (buffer.addr == 0 || buffer.size == 0 || addr < buffer.addr) {
         return false;
@@ -95,13 +92,8 @@ bool AivBufferContains(const Mem &buffer, uint64_t addr, uint64_t size)
 }
 
 bool AivBufferMatch(
-    uint64_t addr,
-    uint64_t size,
-    const Mem &buffer,
-    AivBufferType type,
-    RankId rank,
-    AivDataSlice &slice,
-    RankId *matchedRank)
+    uint64_t addr, uint64_t size, const Mem& buffer, AivBufferType type, RankId rank, AivDataSlice& slice,
+    RankId* matchedRank)
 {
     if (!AivBufferContains(buffer, addr, size)) {
         return false;
@@ -114,7 +106,7 @@ bool AivBufferMatch(
     return true;
 }
 
-AivDataSlice AivKernelExecutor::ResolveGlobalDataSlice(uint64_t addr, uint64_t size, RankId *rankId) const
+AivDataSlice AivKernelExecutor::ResolveGlobalDataSlice(uint64_t addr, uint64_t size, RankId* rankId) const
 {
     if (rankId != nullptr) {
         *rankId = UINT32_MAX;
@@ -131,8 +123,7 @@ AivDataSlice AivKernelExecutor::ResolveGlobalDataSlice(uint64_t addr, uint64_t s
         if (AivBufferMatch(addr, size, cclBuffer_[i], AivBufferType::CCL, i, matchedSlice, rankId)) {
             return matchedSlice;
         }
-        if (AivBufferMatch(addr, size, aivCommInfoBuffer_[i], AivBufferType::AIV_COMM, i, matchedSlice,
-            rankId)) {
+        if (AivBufferMatch(addr, size, aivCommInfoBuffer_[i], AivBufferType::AIV_COMM, i, matchedSlice, rankId)) {
             return matchedSlice;
         }
     }
@@ -140,7 +131,8 @@ AivDataSlice AivKernelExecutor::ResolveGlobalDataSlice(uint64_t addr, uint64_t s
     return {};
 }
 
-void AivKernelExecutor::DumpAllTasks() const {
+void AivKernelExecutor::DumpAllTasks() const
+{
     HCCL_VM_DEBUG("");
     HCCL_VM_DEBUG("[rankId={}]", GetRankId());
 
@@ -149,7 +141,8 @@ void AivKernelExecutor::DumpAllTasks() const {
     }
 }
 
-void AivCore::AppendScalar(const std::shared_ptr<AivTask>& task) {
+void AivCore::AppendScalar(const std::shared_ptr<AivTask>& task)
+{
     task->SetRankId(AivKernelExecutor::GetInstance().GetRankId());
     task->SetBlockId(blockIdx_);
     task->SetTaskId(AivKernelExecutor::GetInstance().NextTaskId());
@@ -157,7 +150,8 @@ void AivCore::AppendScalar(const std::shared_ptr<AivTask>& task) {
     pipeScalar_.push_back(task);
 }
 
-void AivCore::AppendMTE2(const std::shared_ptr<AivTask>& task) {
+void AivCore::AppendMTE2(const std::shared_ptr<AivTask>& task)
+{
     task->SetRankId(AivKernelExecutor::GetInstance().GetRankId());
     task->SetBlockId(blockIdx_);
     task->SetTaskId(AivKernelExecutor::GetInstance().NextTaskId());
@@ -165,7 +159,8 @@ void AivCore::AppendMTE2(const std::shared_ptr<AivTask>& task) {
     pipeMTE2_.push_back(task);
 }
 
-void AivCore::AppendMTE3(const std::shared_ptr<AivTask>& task) {
+void AivCore::AppendMTE3(const std::shared_ptr<AivTask>& task)
+{
     task->SetRankId(AivKernelExecutor::GetInstance().GetRankId());
     task->SetBlockId(blockIdx_);
     task->SetTaskId(AivKernelExecutor::GetInstance().NextTaskId());
@@ -173,7 +168,8 @@ void AivCore::AppendMTE3(const std::shared_ptr<AivTask>& task) {
     pipeMTE3_.push_back(task);
 }
 
-void AivCore::DumpAllTasks() const {
+void AivCore::DumpAllTasks() const
+{
     HCCL_VM_DEBUG("[blockIdx={:d}]", blockIdx_);
 
     HCCL_VM_DEBUG("[SCALAR] ");
@@ -191,4 +187,4 @@ void AivCore::DumpAllTasks() const {
         HCCL_VM_DEBUG("    {:s}", task->Describe());
     }
 }
-}
+} // namespace AivSim

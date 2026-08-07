@@ -26,20 +26,16 @@ using namespace Hccl;
 
 class LocalRmaBufManagerTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "LocalRmaBufManagerTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "LocalRmaBufManagerTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "LocalRmaBufManagerTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "LocalRmaBufManagerTest tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
         MOCKER(HrtIpcSetMemoryName).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
-        MOCKER(HrtDevMemAlignWithPage).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
+        MOCKER(HrtDevMemAlignWithPage)
+            .stubs()
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any());
         MOCKER(HrtIpcDestroyMemoryName).stubs().with(mockcpp::any());
         MOCKER(GetUbToken).stubs().will(returnValue(1));
 
@@ -54,15 +50,15 @@ protected:
     }
 
     shared_ptr<DevBuffer> devBuffer;
-    BufferType            bufferType = BufferType::SCRATCH;
+    BufferType bufferType = BufferType::SCRATCH;
 };
 
 TEST_F(LocalRmaBufManagerTest, get_return_null_ptr)
 {
-    CommunicatorImpl   comm;
+    CommunicatorImpl comm;
     LocalRmaBufManager localRmaBufManager(comm);
-    BasePortType       basePortType(PortDeploymentType::P2P, ConnectProtoType::RDMA);
-    PortData           port(0, basePortType, 0, IpAddress());
+    BasePortType basePortType(PortDeploymentType::P2P, ConnectProtoType::RDMA);
+    PortData port(0, basePortType, 0, IpAddress());
 
     auto res = localRmaBufManager.Get("opTag", port, bufferType);
     EXPECT_EQ(nullptr, res);
@@ -70,11 +66,11 @@ TEST_F(LocalRmaBufManagerTest, get_return_null_ptr)
 
 TEST_F(LocalRmaBufManagerTest, reg_invalid_port)
 {
-    CommunicatorImpl   comm;
+    CommunicatorImpl comm;
     LocalRmaBufManager localRmaBufManager(comm);
-    BasePortType       basePortType(PortDeploymentType::DEV_NET, ConnectProtoType::TCP);
-    PortData           port(0, basePortType, 0, IpAddress());
-    string             opTag = "optag";
+    BasePortType basePortType(PortDeploymentType::DEV_NET, ConnectProtoType::TCP);
+    PortData port(0, basePortType, 0, IpAddress());
+    string opTag = "optag";
 
     EXPECT_THROW(localRmaBufManager.Reg(opTag, bufferType, devBuffer, port, LinkProtocol::UB_CTP), InternalException);
 }
@@ -87,7 +83,7 @@ TEST_F(LocalRmaBufManagerTest, reg_port_ub_first_time_get_then_second_throw)
     PortData port(0, basePortType, 0, IpAddress());
     string opTag = "optag";
 
-    void *rdmaHandle = (void *)0x200;
+    void* rdmaHandle = (void*)0x200;
 
     MOCKER(HrtRaUbCtxInit).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(rdmaHandle));
     MOCKER_CPP(&RdmaHandleManager::Get).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(rdmaHandle));
@@ -98,7 +94,7 @@ TEST_F(LocalRmaBufManagerTest, reg_port_ub_first_time_get_then_second_throw)
     EXPECT_EQ(RmaType::UB, res->GetRmaType());
 
     auto res2 = localRmaBufManager.Get(opTag, port, bufferType);
-    EXPECT_EQ(res, res2);    
+    EXPECT_EQ(res, res2);
     localRmaBufManager.Destroy();
 }
 
@@ -111,12 +107,12 @@ TEST_F(LocalRmaBufManagerTest, reg_port_ub_first_time_get_then_second_no_throw_a
     BasePortType basePortType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
     PortData port(0, basePortType, 0, IpAddress());
     string opTag = "optag";
- 
-    void *rdmaHandle = (void *)0x200;
- 
+
+    void* rdmaHandle = (void*)0x200;
+
     MOCKER(HrtRaUbCtxInit).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(rdmaHandle));
     MOCKER_CPP(&RdmaHandleManager::Get).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(rdmaHandle));
- 
+
     auto res = localRmaBufManager.Reg(opTag, bufferType, devBuffer, port, LinkProtocol::UB_CTP);
     EXPECT_NE(nullptr, res);
     EXPECT_EQ(RmaType::UB, res->GetRmaType());

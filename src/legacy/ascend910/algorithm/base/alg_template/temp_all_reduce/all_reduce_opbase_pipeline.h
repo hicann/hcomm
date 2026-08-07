@@ -13,7 +13,6 @@
 
 #include "all_reduce_opbase_pipeline_pub.h"
 
-namespace hccl {
-}  // namespace hccl
+namespace hccl {} // namespace hccl
 
-#endif  /* ALL_REDUCE_OPBASE_PIPELINE */
+#endif /* ALL_REDUCE_OPBASE_PIPELINE */

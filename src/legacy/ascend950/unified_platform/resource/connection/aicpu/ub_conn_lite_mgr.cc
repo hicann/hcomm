@@ -11,16 +11,11 @@
 
 namespace Hccl {
 
-UbConnLiteMgr::UbConnLiteMgr()
-{
-}
+UbConnLiteMgr::UbConnLiteMgr() {}
 
-UbConnLiteMgr::~UbConnLiteMgr()
-{
-    ubConnLiteMap.clear();
-}
+UbConnLiteMgr::~UbConnLiteMgr() { ubConnLiteMap.clear(); }
 
-std::string UbConnLiteMgr::GetKey(const UbConnLiteParam &liteParam) const
+std::string UbConnLiteMgr::GetKey(const UbConnLiteParam& liteParam) const
 {
     // dieId + funcId + jettyId + tp + eid 可唯一确定一个connection
     std::string result;
@@ -30,7 +25,7 @@ std::string UbConnLiteMgr::GetKey(const UbConnLiteParam &liteParam) const
     return result;
 }
 
-bool UbConnLiteMgr::IsExist(const std::string &key)
+bool UbConnLiteMgr::IsExist(const std::string& key)
 {
     if (ubConnLiteMap.find(key) == ubConnLiteMap.end()) {
         return false;
@@ -38,16 +33,16 @@ bool UbConnLiteMgr::IsExist(const std::string &key)
     return true;
 }
 
-UbConnLiteMgr &UbConnLiteMgr::GetInstance()
+UbConnLiteMgr& UbConnLiteMgr::GetInstance()
 {
     static UbConnLiteMgr ubConnLiteMgr;
     return ubConnLiteMgr;
 }
 
-RmaConnLite *UbConnLiteMgr::Get(std::vector<char> &uniqueId)
+RmaConnLite* UbConnLiteMgr::Get(std::vector<char>& uniqueId)
 {
     UbConnLiteParam liteParam(uniqueId);
-    auto            key = GetKey(liteParam);
+    auto key = GetKey(liteParam);
     if (IsExist(key)) {
         return ubConnLiteMap[key].get();
     }
@@ -56,10 +51,10 @@ RmaConnLite *UbConnLiteMgr::Get(std::vector<char> &uniqueId)
     return ubConnLiteMap[key].get();
 }
 
-void UbConnLiteMgr::Clear(std::vector<char> &uniqueId)
+void UbConnLiteMgr::Clear(std::vector<char>& uniqueId)
 {
     UbConnLiteParam liteParam(uniqueId);
-    auto            key = GetKey(liteParam);
+    auto key = GetKey(liteParam);
     if (!IsExist(key)) {
         return;
     }

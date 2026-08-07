@@ -33,23 +33,17 @@ using namespace Hccl;
 
 class RankGraphBuilderTest : public testing::Test {
 protected:
-    static void SetUpTestCase() {
-        std::cout << "RankGraphBuilderTest SetUP" << std::endl;
-    }
- 
-    static void TearDownTestCase() {
-        std::cout << "RankGraphBuilderTest TearDown" << std::endl;
-    }
- 
-    virtual void SetUp() {
-        std::cout << "A Test case in RankGraphBuilderTest SetUP" << std::endl;
-    }
- 
-    virtual void TearDown() {
+    static void SetUpTestCase() { std::cout << "RankGraphBuilderTest SetUP" << std::endl; }
+
+    static void TearDownTestCase() { std::cout << "RankGraphBuilderTest TearDown" << std::endl; }
+
+    virtual void SetUp() { std::cout << "A Test case in RankGraphBuilderTest SetUP" << std::endl; }
+
+    virtual void TearDown()
+    {
         GlobalMockObject::verify();
         std::cout << "A Test case in RankGraphBuilderTest TearDown" << std::endl;
     }
-    
 };
 
 TEST_F(RankGraphBuilderTest, st_Build_When_Normal_Expect_Success)
@@ -116,8 +110,8 @@ TEST_F(RankGraphBuilderTest, st_Build_When_4pRankTable_Expect_Success)
     EXPECT_NE(nullptr, rankGraph);
     std::vector<std::string> netIds = {"az0-rack0", "az0", "all"};
     for (s32 rankId = 0; rankId < 3; rankId++) {
-                for (u32 netLayer = 0; netLayer < 3; netLayer++) {
-            const NetInstance *fabGroup = rankGraph->GetNetInstanceByRankId(netLayer, rankId);
+        for (u32 netLayer = 0; netLayer < 3; netLayer++) {
+            const NetInstance* fabGroup = rankGraph->GetNetInstanceByRankId(netLayer, rankId);
             EXPECT_EQ(netIds[netLayer], fabGroup->GetNetInstId());
 
             EXPECT_EQ(true, fabGroup->HasNode(NetInstance::Peer(rankId, 0, 0, 0).GetLocalId()));

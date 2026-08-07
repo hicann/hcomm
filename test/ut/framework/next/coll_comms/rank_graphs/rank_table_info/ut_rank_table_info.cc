@@ -21,25 +21,21 @@ using namespace Hccl;
 
 class RankTableInfoParserTest : public testing::Test {
 protected:
-    static void SetUpTestCase() {
-        std::cout << "RankTableInfoParserTest SetUP" << std::endl;
-    }
- 
-    static void TearDownTestCase() {
-        std::cout << "RankTableInfoParserTest TearDown" << std::endl;
-    }
- 
-    virtual void SetUp() {
-        std::cout << "A Test case in RankTableInfoParserTest SetUP" << std::endl;
-    }
- 
-    virtual void TearDown() {
+    static void SetUpTestCase() { std::cout << "RankTableInfoParserTest SetUP" << std::endl; }
+
+    static void TearDownTestCase() { std::cout << "RankTableInfoParserTest TearDown" << std::endl; }
+
+    virtual void SetUp() { std::cout << "A Test case in RankTableInfoParserTest SetUP" << std::endl; }
+
+    virtual void TearDown()
+    {
         GlobalMockObject::verify();
         std::cout << "A Test case in RankTableInfoParserTest TearDown" << std::endl;
     }
 };
 
-TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_Normal_Expect_Success) {
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_Normal_Expect_Success)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -95,72 +91,88 @@ TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_Normal_Expect_Success) {
 
     RankTableInfo expecetedRankTableInfo;
     expecetedRankTableInfo.version = "2.0";
-    expecetedRankTableInfo.detour=true;
-    expecetedRankTableInfo.rankCount=1;
+    expecetedRankTableInfo.detour = true;
+    expecetedRankTableInfo.rankCount = 1;
     NewRankInfo newRankInfo0;
     newRankInfo0.rankId = 0;
 
-    newRankInfo0.deviceId=0;
+    newRankInfo0.deviceId = 0;
     newRankInfo0.localId = 0;
-    newRankInfo0.devicePort=6666;
+    newRankInfo0.devicePort = 6666;
 
     RankLevelInfo rankLevelInfo0;
     rankLevelInfo0.netLayer = 0;
     rankLevelInfo0.netInstId = "superPod0-rack3";
     rankLevelInfo0.netType = NetType::TOPO_FILE_DESC;
 
-    
-    AddressInfo  addressInfo0;
-    addressInfo0.addrType=AddrType::IPV4;
+    AddressInfo addressInfo0;
+    addressInfo0.addrType = AddrType::IPV4;
     IpAddress ipAddress0("192.168.100.100", AF_INET);
-    addressInfo0.addr=ipAddress0;
+    addressInfo0.addr = ipAddress0;
     addressInfo0.ports.emplace("0/1");
     addressInfo0.ports.emplace("0/2");
-    addressInfo0.planeId="planeA";
+    addressInfo0.planeId = "planeA";
 
-    AddressInfo  addressInfo1;
-    addressInfo1.addrType=AddrType::IPV4;
+    AddressInfo addressInfo1;
+    addressInfo1.addrType = AddrType::IPV4;
     IpAddress ipAddress1("192.168.100.100", AF_INET);
-    addressInfo1.addr=ipAddress1;
+    addressInfo1.addr = ipAddress1;
     addressInfo1.ports.emplace("1/1");
     addressInfo1.ports.emplace("1/2");
-    addressInfo1.planeId="planeB";
+    addressInfo1.planeId = "planeB";
 
     rankLevelInfo0.rankAddrs.push_back(addressInfo0);
     rankLevelInfo0.rankAddrs.push_back(addressInfo1);
 
     newRankInfo0.rankLevelInfos.push_back(rankLevelInfo0);
     expecetedRankTableInfo.ranks.push_back(newRankInfo0);
-    
+
     EXPECT_EQ(expecetedRankTableInfo.version, rankTableInfo.version);
     EXPECT_EQ(expecetedRankTableInfo.detour, rankTableInfo.detour);
     EXPECT_EQ(expecetedRankTableInfo.rankCount, rankTableInfo.rankCount);
 
     ASSERT_EQ(expecetedRankTableInfo.ranks.size(), rankTableInfo.ranks.size());
-    for(auto i = 0 ; i < rankTableInfo.ranks.size(); i++) {
+    for (auto i = 0; i < rankTableInfo.ranks.size(); i++) {
         EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankId, rankTableInfo.ranks[i].rankId);
         EXPECT_EQ(expecetedRankTableInfo.ranks[i].localId, rankTableInfo.ranks[i].localId);
         EXPECT_EQ(expecetedRankTableInfo.ranks[i].deviceId, rankTableInfo.ranks[i].deviceId);
         EXPECT_EQ(expecetedRankTableInfo.ranks[i].devicePort, rankTableInfo.ranks[i].devicePort);
 
         ASSERT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos.size(), rankTableInfo.ranks[i].rankLevelInfos.size());
-        for(auto j = 0 ; j < rankTableInfo.ranks[i].rankLevelInfos.size(); j++) {
-            EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netLayer, rankTableInfo.ranks[i].rankLevelInfos[j].netLayer);
-            EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netInstId, rankTableInfo.ranks[i].rankLevelInfos[j].netInstId);
-            EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netType, rankTableInfo.ranks[i].rankLevelInfos[j].netType);
+        for (auto j = 0; j < rankTableInfo.ranks[i].rankLevelInfos.size(); j++) {
+            EXPECT_EQ(
+                expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netLayer,
+                rankTableInfo.ranks[i].rankLevelInfos[j].netLayer);
+            EXPECT_EQ(
+                expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netInstId,
+                rankTableInfo.ranks[i].rankLevelInfos[j].netInstId);
+            EXPECT_EQ(
+                expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netType,
+                rankTableInfo.ranks[i].rankLevelInfos[j].netType);
 
-            ASSERT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size(), rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size());
-            for(auto k = 0 ; k < rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size(); k++) {
-                EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addrType, rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addrType);
-                EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addr, rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addr);
-                EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].ports, rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].ports);
-                EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].planeId, rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].planeId);
+            ASSERT_EQ(
+                expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size(),
+                rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size());
+            for (auto k = 0; k < rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size(); k++) {
+                EXPECT_EQ(
+                    expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addrType,
+                    rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addrType);
+                EXPECT_EQ(
+                    expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addr,
+                    rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addr);
+                EXPECT_EQ(
+                    expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].ports,
+                    rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].ports);
+                EXPECT_EQ(
+                    expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].planeId,
+                    rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].planeId);
             }
         }
     }
 }
 
-TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_OptionalFieldsMissing_Expect_Success) {
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_OptionalFieldsMissing_Expect_Success)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -206,11 +218,11 @@ TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_OptionalFieldsMissing_Expect
 
     RankTableInfo expecetedRankTableInfo;
     expecetedRankTableInfo.version = "2.0";
-    expecetedRankTableInfo.rankCount=1;
+    expecetedRankTableInfo.rankCount = 1;
 
     NewRankInfo newRankInfo0;
     newRankInfo0.rankId = 0;
-    newRankInfo0.deviceId=0;
+    newRankInfo0.deviceId = 0;
     newRankInfo0.localId = 0;
 
     RankLevelInfo rankLevelInfo0;
@@ -218,18 +230,17 @@ TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_OptionalFieldsMissing_Expect
     rankLevelInfo0.netInstId = "superPod0-rack3";
     rankLevelInfo0.netType = NetType::TOPO_FILE_DESC;
 
-    
-    AddressInfo  addressInfo0;
-    addressInfo0.addrType=AddrType::IPV4;
+    AddressInfo addressInfo0;
+    addressInfo0.addrType = AddrType::IPV4;
     IpAddress ipAddress0("192.168.100.100", AF_INET);
-    addressInfo0.addr=ipAddress0;
+    addressInfo0.addr = ipAddress0;
     addressInfo0.ports.emplace("0/1");
     addressInfo0.ports.emplace("0/2");
 
-    AddressInfo  addressInfo1;
-    addressInfo1.addrType=AddrType::IPV4;
+    AddressInfo addressInfo1;
+    addressInfo1.addrType = AddrType::IPV4;
     IpAddress ipAddress1("192.168.100.100", AF_INET);
-    addressInfo1.addr=ipAddress1;
+    addressInfo1.addr = ipAddress1;
     addressInfo1.ports.emplace("1/1");
     addressInfo1.ports.emplace("1/2");
 
@@ -238,39 +249,54 @@ TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_OptionalFieldsMissing_Expect
 
     newRankInfo0.rankLevelInfos.push_back(rankLevelInfo0);
     expecetedRankTableInfo.ranks.push_back(newRankInfo0);
-    
+
     EXPECT_EQ(expecetedRankTableInfo.version, rankTableInfo.version);
     EXPECT_EQ(expecetedRankTableInfo.rankCount, rankTableInfo.rankCount);
 
     ASSERT_EQ(expecetedRankTableInfo.ranks.size(), rankTableInfo.ranks.size());
-    for(auto i = 0 ; i < rankTableInfo.ranks.size(); i++) {
+    for (auto i = 0; i < rankTableInfo.ranks.size(); i++) {
         EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankId, rankTableInfo.ranks[i].rankId);
         EXPECT_EQ(expecetedRankTableInfo.ranks[i].localId, rankTableInfo.ranks[i].localId);
         EXPECT_EQ(expecetedRankTableInfo.ranks[i].deviceId, rankTableInfo.ranks[i].deviceId);
 
         ASSERT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos.size(), rankTableInfo.ranks[i].rankLevelInfos.size());
-        for(auto j = 0 ; j < rankTableInfo.ranks[i].rankLevelInfos.size(); j++) {
-            EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netLayer, rankTableInfo.ranks[i].rankLevelInfos[j].netLayer);
-            EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netInstId, rankTableInfo.ranks[i].rankLevelInfos[j].netInstId);
-            EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netType, rankTableInfo.ranks[i].rankLevelInfos[j].netType);
+        for (auto j = 0; j < rankTableInfo.ranks[i].rankLevelInfos.size(); j++) {
+            EXPECT_EQ(
+                expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netLayer,
+                rankTableInfo.ranks[i].rankLevelInfos[j].netLayer);
+            EXPECT_EQ(
+                expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netInstId,
+                rankTableInfo.ranks[i].rankLevelInfos[j].netInstId);
+            EXPECT_EQ(
+                expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netType,
+                rankTableInfo.ranks[i].rankLevelInfos[j].netType);
 
-            ASSERT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size(), rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size());
-            for(auto k = 0 ; k < rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size(); k++) {
-                EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addrType, rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addrType);
-                EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addr, rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addr);
-                EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].ports, rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].ports);
+            ASSERT_EQ(
+                expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size(),
+                rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size());
+            for (auto k = 0; k < rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size(); k++) {
+                EXPECT_EQ(
+                    expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addrType,
+                    rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addrType);
+                EXPECT_EQ(
+                    expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addr,
+                    rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addr);
+                EXPECT_EQ(
+                    expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].ports,
+                    rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].ports);
             }
         }
     }
 
     BinaryStream binStream;
-    rankTableInfo.GetBinStream(true,binStream);
+    rankTableInfo.GetBinStream(true, binStream);
     RankTableInfo rankTableInfo1(binStream);
     EXPECT_EQ(rankTableInfo1.version, rankTableInfo.version);
     EXPECT_EQ(rankTableInfo1.rankCount, rankTableInfo.rankCount);
 }
 
-TEST_F(RankTableInfoParserTest, Ut_GetBinStream_When_Normal_Expect_Success) {
+TEST_F(RankTableInfoParserTest, Ut_GetBinStream_When_Normal_Expect_Success)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
@@ -315,40 +341,54 @@ TEST_F(RankTableInfoParserTest, Ut_GetBinStream_When_Normal_Expect_Success) {
     rankTableParser.ParseString(rankTableString, rankTableInfo);
     BinaryStream binStream;
     rankTableInfo.GetUniqueId(true);
-    rankTableInfo.GetBinStream(true,binStream);
+    rankTableInfo.GetBinStream(true, binStream);
     RankTableInfo expecetedRankTableInfo(binStream);
-    
+
     EXPECT_EQ(expecetedRankTableInfo.version, rankTableInfo.version);
     EXPECT_EQ(expecetedRankTableInfo.rankCount, rankTableInfo.rankCount);
 
     ASSERT_EQ(expecetedRankTableInfo.ranks.size(), rankTableInfo.ranks.size());
-    for(auto i = 0 ; i < rankTableInfo.ranks.size(); i++) {
+    for (auto i = 0; i < rankTableInfo.ranks.size(); i++) {
         EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankId, rankTableInfo.ranks[i].rankId);
         EXPECT_EQ(expecetedRankTableInfo.ranks[i].localId, rankTableInfo.ranks[i].localId);
         EXPECT_EQ(expecetedRankTableInfo.ranks[i].deviceId, rankTableInfo.ranks[i].deviceId);
 
         ASSERT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos.size(), rankTableInfo.ranks[i].rankLevelInfos.size());
-        for(auto j = 0 ; j < rankTableInfo.ranks[i].rankLevelInfos.size(); j++) {
-            EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netLayer, rankTableInfo.ranks[i].rankLevelInfos[j].netLayer);
-            EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netInstId, rankTableInfo.ranks[i].rankLevelInfos[j].netInstId);
-            EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netType, rankTableInfo.ranks[i].rankLevelInfos[j].netType);
+        for (auto j = 0; j < rankTableInfo.ranks[i].rankLevelInfos.size(); j++) {
+            EXPECT_EQ(
+                expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netLayer,
+                rankTableInfo.ranks[i].rankLevelInfos[j].netLayer);
+            EXPECT_EQ(
+                expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netInstId,
+                rankTableInfo.ranks[i].rankLevelInfos[j].netInstId);
+            EXPECT_EQ(
+                expecetedRankTableInfo.ranks[i].rankLevelInfos[j].netType,
+                rankTableInfo.ranks[i].rankLevelInfos[j].netType);
 
-            ASSERT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size(), rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size());
-            for(auto k = 0 ; k < rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size(); k++) {
-                EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addrType, rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addrType);
-                EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addr, rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addr);
-                EXPECT_EQ(expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].ports, rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].ports);
+            ASSERT_EQ(
+                expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size(),
+                rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size());
+            for (auto k = 0; k < rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs.size(); k++) {
+                EXPECT_EQ(
+                    expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addrType,
+                    rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addrType);
+                EXPECT_EQ(
+                    expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addr,
+                    rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].addr);
+                EXPECT_EQ(
+                    expecetedRankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].ports,
+                    rankTableInfo.ranks[i].rankLevelInfos[j].rankAddrs[k].ports);
             }
         }
     }
-
 }
 
-TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidParameter_Expect_Exception) {
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidParameter_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
- std::string rankTableString = R"(
+    std::string rankTableString = R"(
     {
     "status": "completed",         
     "detour": "true",  
@@ -397,11 +437,12 @@ TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidParameter_Expect_Exce
     EXPECT_THROW(rankTableParser.ParseString(rankTableString, rankTableInfo), InvalidParamsException);
 }
 
-TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidVersion_Expect_Exception) {
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidVersion_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
- 
- std::string rankTableString = R"(
+
+    std::string rankTableString = R"(
     {
     "version": "8.0",  
     "status": "completed",         
@@ -445,19 +486,19 @@ TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidVersion_Expect_Except
       ]
      }
     )";
- 
+
     JsonParser rankTableParser;
     RankTableInfo rankTableInfo;
- 
+
     EXPECT_THROW(rankTableParser.ParseString(rankTableString, rankTableInfo), InvalidParamsException);
 }
 
-
-TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidRank_Expect_Exception) {
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidRank_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
- 
- std::string rankTableString = R"(
+
+    std::string rankTableString = R"(
     {
     "version": "2.0",  
     "status": "completed",         
@@ -501,18 +542,19 @@ TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidRank_Expect_Exception
       ]
      }
     )";
- 
+
     JsonParser rankTableParser;
     RankTableInfo rankTableInfo;
- 
+
     EXPECT_THROW(rankTableParser.ParseString(rankTableString, rankTableInfo), InvalidParamsException);
 }
 
-TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_RankCountExceedsMax_Expect_Exception) {
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_RankCountExceedsMax_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
- 
- std::string rankTableString = R"(
+
+    std::string rankTableString = R"(
     {
     "version": "2.0",  
     "status": "completed",         
@@ -556,17 +598,18 @@ TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_RankCountExceedsMax_Expect_E
       ]
      }
     )";
- 
+
     JsonParser rankTableParser;
     RankTableInfo rankTableInfo;
- 
+
     EXPECT_THROW(rankTableParser.ParseString(rankTableString, rankTableInfo), InvalidParamsException);
 }
 
-TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidRankCount_Expect_Exception) {
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidRankCount_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
- 
+
     std::string rankTableString = R"(
     {
     "version": "2.0",  
@@ -611,17 +654,18 @@ TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidRankCount_Expect_Exce
       ]
      }
     )";
- 
+
     JsonParser rankTableParser;
     RankTableInfo rankTableInfo;
- 
+
     EXPECT_THROW(rankTableParser.ParseString(rankTableString, rankTableInfo), InvalidParamsException);
 }
 
-TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidRankId_Expect_Exception) {
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidRankId_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
- 
+
     std::string rankTableString = R"(
     {
     "version": "2.0",  
@@ -666,17 +710,18 @@ TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidRankId_Expect_Excepti
       ]
      }
     )";
- 
+
     JsonParser rankTableParser;
     RankTableInfo rankTableInfo;
- 
+
     EXPECT_THROW(rankTableParser.ParseString(rankTableString, rankTableInfo), InvalidParamsException);
 }
 
-TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_SameRankId_Expect_Exception) {
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_SameRankId_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
- 
+
     std::string rankTableString = R"(
     {
     "version": "2.0",  
@@ -743,18 +788,19 @@ TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_SameRankId_Expect_Exception)
       ]
      }
     )";
- 
+
     JsonParser rankTableParser;
     RankTableInfo rankTableInfo;
- 
+
     EXPECT_THROW(rankTableParser.ParseString(rankTableString, rankTableInfo), InvalidParamsException);
 }
 
-TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidDetour_Expect_Exception) {
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidDetour_Expect_Exception)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
- 
- std::string rankTableString = R"(
+
+    std::string rankTableString = R"(
     {
     "version": "2.0",  
     "status": "completed",         
@@ -798,18 +844,19 @@ TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_InvalidDetour_Expect_Excepti
       ]
      }
     )";
- 
+
     JsonParser rankTableParser;
     RankTableInfo rankTableInfo;
- 
+
     EXPECT_THROW(rankTableParser.ParseString(rankTableString, rankTableInfo), InvalidParamsException);
 }
 
-TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_Normal_Expect_check_zero_Success) {
+TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_Normal_Expect_check_zero_Success)
+{
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
- 
- std::string rankTableString = R"(
+
+    std::string rankTableString = R"(
     {
     "version": "2.0",  
     "status": "completed",         
@@ -853,14 +900,15 @@ TEST_F(RankTableInfoParserTest, Ut_Deserialize_When_Normal_Expect_check_zero_Suc
       ]
      }
     )";
- 
+
     JsonParser rankTableParser;
     RankTableInfo rankTableInfo;
- 
+
     EXPECT_THROW(rankTableParser.ParseString(rankTableString, rankTableInfo), InvalidParamsException);
 }
 
-TEST_F(RankTableInfoParserTest, Ut_RankTableInfo_When_RankNEQ_Expect_InvalidParamsException) {
+TEST_F(RankTableInfoParserTest, Ut_RankTableInfo_When_RankNEQ_Expect_InvalidParamsException)
+{
     RankTableInfo rankTableInfo;
     rankTableInfo.version = "2.0";
     rankTableInfo.rankCount = 1;

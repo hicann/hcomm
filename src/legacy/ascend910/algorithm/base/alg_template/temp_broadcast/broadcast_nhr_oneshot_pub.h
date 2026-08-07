@@ -24,23 +24,21 @@ public:
 
     ~BroadcastNHROneshot() override;
 
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
-    HcclResult RunAsyncForAllReduce(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
+    HcclResult RunAsyncForAllReduce(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
 
 protected:
 private:
-    HcclResult RunBroadcastNHROneshot(u32 rank, u32 rankSize, const std::vector<LINK> &links);
+    HcclResult RunBroadcastNHROneshot(u32 rank, u32 rankSize, const std::vector<LINK>& links);
 
-    HcclResult SimpleCheck(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
+    HcclResult SimpleCheck(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
 
-    HcclResult SdmaRx(LINK &linkLeft, LINK &linkRight, InterServerAlgoStep &stepInfo,
-        const std::vector<LINK> &links);
-        
-    HcclResult RdmaTxRx(LINK &linkLeft, LINK &linkRight, InterServerAlgoStep &stepInfo,
-        const std::vector<LINK> &links);
+    HcclResult SdmaRx(LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInfo, const std::vector<LINK>& links);
 
-    HcclResult GetStepInfo(u32 step, u32 nSteps, u32 rank, u32 rankSize, InterServerAlgoStep &stepInfo) override;
+    HcclResult RdmaTxRx(LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInfo, const std::vector<LINK>& links);
+
+    HcclResult GetStepInfo(u32 step, u32 nSteps, u32 rank, u32 rankSize, InterServerAlgoStep& stepInfo) override;
 
     u64 localBaseOffset_;
     bool isForAllReduce_;

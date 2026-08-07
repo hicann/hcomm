@@ -13,6 +13,6 @@
 
 #include "reduce_scatter_graph_pipeline_pub.h"
 
-namespace hccl {}  // namespace hccl
+namespace hccl {} // namespace hccl
 
 #endif /* * REDUCE_SCATTER_GRAPH_PIPELINE_H */

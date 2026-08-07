@@ -20,9 +20,9 @@ namespace Hccl {
 
 class RtsNotify {
 public:
-    RtsNotify(const RtsNotify &that) = delete;
+    RtsNotify(const RtsNotify& that) = delete;
 
-    RtsNotify &operator=(const RtsNotify &that) = delete;
+    RtsNotify& operator=(const RtsNotify& that) = delete;
 
     explicit RtsNotify(bool devUsed = false);
 
@@ -30,9 +30,9 @@ public:
 
     string Describe() const;
 
-    void Wait(const Stream &stream, u32 timeout) const;
+    void Wait(const Stream& stream, u32 timeout) const;
 
-    void Post(const Stream &stream) const;
+    void Post(const Stream& stream) const;
 
     std::string SetIpcName() const;
 
@@ -53,33 +53,33 @@ public:
     std::vector<char> GetUniqueId() const;
 
 private:
-    u32        devPhyId;
-    bool       devUsed;
+    u32 devPhyId;
+    bool devUsed;
     RtNotify_t handle{};
-    u32        id{0};
+    u32 id{0};
 };
 
 struct IpcNotifyExchangeData {
     char_t name[RTS_IPC_MEM_NAME_LEN]{0};
-    u64    handleAddr{0}; // 两rank处于相同Server, 相同进程下, 携带指针 RtNotify 的值
-    u32    id{0};
-    u32    pid{0};
-    u32    devPhyId{0};
-    bool   devUsed{false};
+    u64 handleAddr{0}; // 两rank处于相同Server, 相同进程下, 携带指针 RtNotify 的值
+    u32 id{0};
+    u32 pid{0};
+    u32 devPhyId{0};
+    bool devUsed{false};
 };
 
 struct RdmaNotifyExchangeData {
     u64 addr{0};
     u32 id{0};
     u32 size{0};
-    u8  key[RDMA_MEM_KEY_MAX_LEN]{0};
+    u8 key[RDMA_MEM_KEY_MAX_LEN]{0};
 };
 
 struct UbNotifyExchangeData {
     u64 addr{0};
     u32 id{0};
     u32 size{0};
-    u8  key[HRT_UB_MEM_KEY_MAX_LEN]{0};
+    u8 key[HRT_UB_MEM_KEY_MAX_LEN]{0};
     u32 tokenValue{0};
     u32 tokenId{0};
     u32 keySize{0};

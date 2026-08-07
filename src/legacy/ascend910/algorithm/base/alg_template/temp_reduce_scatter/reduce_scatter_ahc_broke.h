@@ -7,13 +7,12 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef REDUCE_SCATTER_AHC_BROKE_H
 #define REDUCE_SCATTER_AHC_BROKE_H
- 
+
 #include "reduce_scatter_ahc_broke_pub.h"
- 
-namespace hccl {
-}  // hccl
- 
-#endif  /* REDUCE_SCATTER_AHC_BROKE_H */
+
+namespace hccl {} // namespace hccl
+
+#endif /* REDUCE_SCATTER_AHC_BROKE_H */

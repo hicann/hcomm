@@ -19,13 +19,13 @@ public:
     explicit BroadcastHD(const HcclDispatcher dispatcher);
     ~BroadcastHD() override;
 
-    HcclResult Prepare(DeviceMem &inputMem, DeviceMem &outputMem, DeviceMem &scratchMem, const u64 count,
-        const HcclDataType dataType, const Stream &stream, 
-        const HcclReduceOp reductionOp, const u32 root, std::vector<Stream> &meshStreams, 
-        const std::vector<std::shared_ptr<LocalNotify>> &meshSignal,
-        const std::vector<std::shared_ptr<LocalNotify>> &meshSignalAux, 
-        u32 interRank, const HcomCollOpInfo *opInfo) override;
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult Prepare(
+        DeviceMem& inputMem, DeviceMem& outputMem, DeviceMem& scratchMem, const u64 count, const HcclDataType dataType,
+        const Stream& stream, const HcclReduceOp reductionOp, const u32 root, std::vector<Stream>& meshStreams,
+        const std::vector<std::shared_ptr<LocalNotify>>& meshSignal,
+        const std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux, u32 interRank,
+        const HcomCollOpInfo* opInfo) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
 protected:
 private:
@@ -34,21 +34,21 @@ private:
     HcclResult MainWaitSub();
     HcclResult SubRecordMain();
     HcclResult PrepareStep(u32 rankSize);
-    HcclResult RunFinalStep(u32 rank, u32 rankSize, const std::vector<LINK> &links);
-    HcclResult RunSend(u32 rank, u32 step, u32 rankSize, const std::vector<LINK> &links);
-    HcclResult RunSendFirst(u32 rank, u32 rankSize, const std::vector<LINK> &links);
-    HcclResult RunReceive(u32 rank, u32 step, u32 rankSize, const std::vector<LINK> &links);
-    HcclResult RunReceiveFirst(u32 rank, u32 rankSize, const std::vector<LINK> &links);
+    HcclResult RunFinalStep(u32 rank, u32 rankSize, const std::vector<LINK>& links);
+    HcclResult RunSend(u32 rank, u32 step, u32 rankSize, const std::vector<LINK>& links);
+    HcclResult RunSendFirst(u32 rank, u32 rankSize, const std::vector<LINK>& links);
+    HcclResult RunReceive(u32 rank, u32 step, u32 rankSize, const std::vector<LINK>& links);
+    HcclResult RunReceiveFirst(u32 rank, u32 rankSize, const std::vector<LINK>& links);
     u32 GetDstRank(u32 rank, u32 step, u32 rankSize);
     u32 localRank_ = 0;
-    std::vector<Stream> meshStreams_;                                /* * 多steam* */
-    const std::vector<std::shared_ptr<LocalNotify>> *meshSignalPtr_{nullptr};    /* 每个ring创建一个signal */
-    const std::vector<std::shared_ptr<LocalNotify>> *meshSignalAuxPtr_{nullptr}; /* 从stream wait，主steam record */
-    const HcomCollOpInfo *opInfo_{nullptr};
+    std::vector<Stream> meshStreams_;                                            /* * 多steam* */
+    const std::vector<std::shared_ptr<LocalNotify>>* meshSignalPtr_{nullptr};    /* 每个ring创建一个signal */
+    const std::vector<std::shared_ptr<LocalNotify>>* meshSignalAuxPtr_{nullptr}; /* 从stream wait，主steam record */
+    const HcomCollOpInfo* opInfo_{nullptr};
     DeviceMem emptyMem_;
     std::map<u32, u32> stepMap_;
     u32 nSteps_ = 0;
     const u32 base = 2;
 };
-}  // namespace hccl
+} // namespace hccl
 #endif /* BROADCAST_ONESHOT_PUB_H */

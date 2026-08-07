@@ -19,21 +19,19 @@ namespace Hccl {
 
 class CcuInsGroup : public CcuInstruction {
 public:
-    CcuInsGroup() : CcuInstruction()
-    {
-    }
+    CcuInsGroup() : CcuInstruction() {}
 
-    void                                                SetExecId(u64 id) override;
-    void                                                Append(std::unique_ptr<CcuInstruction> ins);
-    const std::vector<std::unique_ptr<CcuInstruction>> &GetCcuInstructions() const;
-    CcuCtxSignature                                     GetCtxSignature() const override;
-    u64                                                 GetExecId() const override;
-    std::string                                         Describe() const override;
-    CcuInstType                                         GetInstType() const override;
-    std::unique_ptr<CcuCtxArg>                          GetCtxArg() const override;
-    std::unique_ptr<CcuTaskArg>                         GetTaskArg() const override;
-    std::vector<LinkData>                               GetLinks() const override;
-    RankGroup                                           GetRankGroup() const override;
+    void SetExecId(u64 id) override;
+    void Append(std::unique_ptr<CcuInstruction> ins);
+    const std::vector<std::unique_ptr<CcuInstruction>>& GetCcuInstructions() const;
+    CcuCtxSignature GetCtxSignature() const override;
+    u64 GetExecId() const override;
+    std::string Describe() const override;
+    CcuInstType GetInstType() const override;
+    std::unique_ptr<CcuCtxArg> GetCtxArg() const override;
+    std::unique_ptr<CcuTaskArg> GetTaskArg() const override;
+    std::vector<LinkData> GetLinks() const override;
+    RankGroup GetRankGroup() const override;
 
 private:
     std::vector<std::unique_ptr<CcuInstruction>> ccuInstructions;

@@ -24,18 +24,17 @@
 extern "C" {
 #endif
 
-#define ACL_DUMP_MAX_FILE_PATH_LENGTH    4096
-typedef struct acldumpChunk  {
-    char       fileName[ACL_DUMP_MAX_FILE_PATH_LENGTH];   // file name, absolute path
-    uint32_t   bufLen;                           // dataBuf length
-    uint32_t   isLastChunk;                      // is last chunk. 0: not 1: yes
-    int64_t    offset;                           // Offset in file. -1: append write
-    int32_t    flag;                             // flag
-    uint8_t    dataBuf[0];                       // data buffer
+#define ACL_DUMP_MAX_FILE_PATH_LENGTH 4096
+typedef struct acldumpChunk {
+    char fileName[ACL_DUMP_MAX_FILE_PATH_LENGTH]; // file name, absolute path
+    uint32_t bufLen;                              // dataBuf length
+    uint32_t isLastChunk;                         // is last chunk. 0: not 1: yes
+    int64_t offset;                               // Offset in file. -1: append write
+    int32_t flag;                                 // flag
+    uint8_t dataBuf[0];                           // data buffer
 } acldumpChunk;
 
-ACL_DUMP_API aclError acldumpRegCallback(int32_t (* const messageCallback)(const acldumpChunk *, int32_t),
-    int32_t flag);
+ACL_DUMP_API aclError acldumpRegCallback(int32_t (*const messageCallback)(const acldumpChunk*, int32_t), int32_t flag);
 ACL_DUMP_API void acldumpUnregCallback();
 
 #define ACL_OP_DUMP_OP_AICORE_ARGS 0x00000001U
@@ -50,7 +49,7 @@ ACL_DUMP_API void acldumpUnregCallback();
  * @retval ACL_SUCCESS The function is successfully executed.
  * @retval OtherValues Failure
  */
-ACL_FUNC_VISIBILITY aclError aclopStartDumpArgs(uint32_t dumpType, const char *path);
+ACL_FUNC_VISIBILITY aclError aclopStartDumpArgs(uint32_t dumpType, const char* path);
 
 /**
  * @ingroup AscendCL

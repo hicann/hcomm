@@ -20,33 +20,36 @@ public:
     explicit AlltoAllVStagedPairwise(const HcclDispatcher dispatcher);
 
     ~AlltoAllVStagedPairwise() override;
-    HcclResult Prepare(DeviceMem &sendMem, DeviceMem &recvMem, StageAlltoAllVAddrInfo &sendAddrInfo,
-        StageAlltoAllVAddrInfo &recvAddrInfo, bool isAlltoAllZCopyMode, Stream &mainStream) override;
-    HcclResult Prepare(DeviceMem &sendMem, DeviceMem &recvMem, DeviceMem &scratchInputMem,
-        DeviceMem &scratchOutputMem, StageAlltoAllVAddrInfo &sendAddrInfo, StageAlltoAllVAddrInfo &recvAddrInfo,
-        bool isAlltoAllZCopyMode, Stream &mainStream) override;
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
+    HcclResult Prepare(
+        DeviceMem& sendMem, DeviceMem& recvMem, StageAlltoAllVAddrInfo& sendAddrInfo,
+        StageAlltoAllVAddrInfo& recvAddrInfo, bool isAlltoAllZCopyMode, Stream& mainStream) override;
+    HcclResult Prepare(
+        DeviceMem& sendMem, DeviceMem& recvMem, DeviceMem& scratchInputMem, DeviceMem& scratchOutputMem,
+        StageAlltoAllVAddrInfo& sendAddrInfo, StageAlltoAllVAddrInfo& recvAddrInfo, bool isAlltoAllZCopyMode,
+        Stream& mainStream) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
 
 protected:
 private:
-    HcclResult RunZCopyAlltoAll(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
-    HcclResult RunBCopyAlltoAll(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
+    HcclResult RunZCopyAlltoAll(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
+    HcclResult RunBCopyAlltoAll(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
 
     // 单算子执行相关接口 start
-    void CalcSendRecvTimes(u64 &sendTimes, u64 &recvTimes, const u32 prevRank, const u32 nextRank);
-    void LoadPolicies(const u32 rank, StageAlltoAllVAddrInfo &addrInfos,
-        std::vector<std::list<OneSendRecvAddrInfo>> &policies);
-    HcclResult CheckPolicies(const u64 times, const std::vector<std::list<OneSendRecvAddrInfo>> &policies) const;
-    void SplitSendRecvAddrInfo(OneSendRecvAddrInfo &curLastInfo, OneSendRecvAddrInfo &addrInfo,
-        const u64 &curCCLBufSize) const;
-    HcclResult SendRecv(const u64 curSendTime, const std::vector<std::list<OneSendRecvAddrInfo>> &sendPolicies,
-        const u64 curRecvTime, const std::vector<std::list<OneSendRecvAddrInfo>> &recvPolicies,
-        std::shared_ptr<Transport> prevTransport, std::shared_ptr<Transport> nextTransport);
+    void CalcSendRecvTimes(u64& sendTimes, u64& recvTimes, const u32 prevRank, const u32 nextRank);
+    void LoadPolicies(
+        const u32 rank, StageAlltoAllVAddrInfo& addrInfos, std::vector<std::list<OneSendRecvAddrInfo>>& policies);
+    HcclResult CheckPolicies(const u64 times, const std::vector<std::list<OneSendRecvAddrInfo>>& policies) const;
+    void SplitSendRecvAddrInfo(
+        OneSendRecvAddrInfo& curLastInfo, OneSendRecvAddrInfo& addrInfo, const u64& curCCLBufSize) const;
+    HcclResult SendRecv(
+        const u64 curSendTime, const std::vector<std::list<OneSendRecvAddrInfo>>& sendPolicies, const u64 curRecvTime,
+        const std::vector<std::list<OneSendRecvAddrInfo>>& recvPolicies, std::shared_ptr<Transport> prevTransport,
+        std::shared_ptr<Transport> nextTransport);
     // 单算子执行相关接口 end
 
     HcclResult ExecuteBarrier(std::shared_ptr<Transport> preLink, std::shared_ptr<Transport> aftLink);
-    HcclResult ExecuteBarrier(bool hasSend, bool hasRecv, std::shared_ptr<Transport> preLink,
-        std::shared_ptr<Transport> aftLink);
+    HcclResult
+    ExecuteBarrier(bool hasSend, bool hasRecv, std::shared_ptr<Transport> preLink, std::shared_ptr<Transport> aftLink);
 
     // 单算子CCLbuf
     DeviceMem scratchInputMem_;

@@ -20,22 +20,23 @@
 namespace hccl {
 class TopoinfoRanktablePartition {
 public:
-    explicit TopoinfoRanktablePartition(hccl::HcclCommParams &globalParams, hccl::RankTable_t &globalRankTable);
+    explicit TopoinfoRanktablePartition(hccl::HcclCommParams& globalParams, hccl::RankTable_t& globalRankTable);
     ~TopoinfoRanktablePartition();
 
-    HcclResult GenerateSubRankTable(const uint32_t rankNum, const uint32_t *rankIds, hccl::RankTable_t &subRankTable);
-    HcclResult GenerateSubParams(const hccl::RankTable_t &subRankTable, const uint32_t subCommRankId,
-        hccl::HcclCommParams &subParams);
-    HcclResult GetRankTableStr(const hccl::RankTable_t &subRankTable, std::string &rankTableStr);
-private:
-    hccl::HcclCommParams &globalParams_;
-    hccl::RankTable_t &globalRankTable_;
+    HcclResult GenerateSubRankTable(const uint32_t rankNum, const uint32_t* rankIds, hccl::RankTable_t& subRankTable);
+    HcclResult GenerateSubParams(
+        const hccl::RankTable_t& subRankTable, const uint32_t subCommRankId, hccl::HcclCommParams& subParams);
+    HcclResult GetRankTableStr(const hccl::RankTable_t& subRankTable, std::string& rankTableStr);
 
-    HcclResult TransformRankInfo(const RankTable_t &clusterInfo, nlohmann::json &perRankJson, u32 rankIndex);
-    HcclResult TransformServerList(const RankTable_t &clusterInfo, nlohmann::json &rankListJson);
-    HcclResult Struct2JsonRankTable(const RankTable_t &clusterInfo, const DevType deviceType,
-        nlohmann::json& ClusterJson);
-    HcclResult GenerateSubSuperPodId(hccl::RankTable_t &subRankTable);
+private:
+    hccl::HcclCommParams& globalParams_;
+    hccl::RankTable_t& globalRankTable_;
+
+    HcclResult TransformRankInfo(const RankTable_t& clusterInfo, nlohmann::json& perRankJson, u32 rankIndex);
+    HcclResult TransformServerList(const RankTable_t& clusterInfo, nlohmann::json& rankListJson);
+    HcclResult
+    Struct2JsonRankTable(const RankTable_t& clusterInfo, const DevType deviceType, nlohmann::json& ClusterJson);
+    HcclResult GenerateSubSuperPodId(hccl::RankTable_t& subRankTable);
 };
-}  // namespace hccl
-#endif  // TOPOINFO_RANKTABLE_PARTITION_H
+} // namespace hccl
+#endif // TOPOINFO_RANKTABLE_PARTITION_H

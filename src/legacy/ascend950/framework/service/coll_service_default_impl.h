@@ -31,37 +31,38 @@ namespace Hccl {
 
 class CollServiceDefaultImpl : public CollServiceBase {
 public:
-    explicit CollServiceDefaultImpl(CommunicatorImpl *comm) : CollServiceBase(comm){};
+    explicit CollServiceDefaultImpl(CommunicatorImpl* comm) : CollServiceBase(comm) {};
 
     void Init() override;
 
-    void LoadWithOpBasedMode(CollOperator &op, unique_ptr<Stream> stream) override;
+    void LoadWithOpBasedMode(CollOperator& op, unique_ptr<Stream> stream) override;
 
-    void LoadWithOffloadMode(CollOperator &op, std::unique_ptr<Stream> stream) override;
+    void LoadWithOffloadMode(CollOperator& op, std::unique_ptr<Stream> stream) override;
 
-    void RecoverTransport(vector<LinkData> &links, vector<std::pair<LinkGroup, u32>> linkGroupPair) override;
+    void RecoverTransport(vector<LinkData>& links, vector<std::pair<LinkGroup, u32>> linkGroupPair) override;
 
-    void ReLoadWithOpBasedMode(CollOperator &op) override;
+    void ReLoadWithOpBasedMode(CollOperator& op) override;
 
-    void ReLoadWithOffloadMode(CollOperator &op) override;
+    void ReLoadWithOffloadMode(CollOperator& op) override;
+
 private:
-    shared_ptr<PrimQueue> OrchestrateWithPrim(const CollAlgOperator &op) const;
+    shared_ptr<PrimQueue> OrchestrateWithPrim(const CollAlgOperator& op) const;
 
-    shared_ptr<InsQueue> OrchestrateWithIns(const CollAlgOperator &op) const;
+    shared_ptr<InsQueue> OrchestrateWithIns(const CollAlgOperator& op) const;
 
-    void AllocNotifies(const vector<LinkData> &links);
+    void AllocNotifies(const vector<LinkData>& links);
 
-    void AllocOneLocCntNotify(const Instruction &ins) const;
+    void AllocOneLocCntNotify(const Instruction& ins) const;
 
-    void AllocLocCntNotifies(const InsQueue &insQueue) const;
+    void AllocLocCntNotifies(const InsQueue& insQueue) const;
 
-    void AddNop(const std::string &opTag, const vector<LinkData> &linkDataVec) const;
+    void AddNop(const std::string& opTag, const vector<LinkData>& linkDataVec) const;
 
-    void UpdateUbCiIfNeed(const std::string &opTag);
+    void UpdateUbCiIfNeed(const std::string& opTag);
 
-    void LoadWithOpBasedModeNoRegister(CollOperator &op);
+    void LoadWithOpBasedModeNoRegister(CollOperator& op);
 
-    void LoadWithOffloadModeNoRegister(CollOperator &op);
+    void LoadWithOffloadModeNoRegister(CollOperator& op);
 
     unique_ptr<PrimTranslator> primTranslator;
 

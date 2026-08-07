@@ -14,7 +14,8 @@
 
 namespace hccl {
 
-CommMemType ConvertHcclToCommMemType(HcclMemType hcclType) {
+CommMemType ConvertHcclToCommMemType(HcclMemType hcclType)
+{
     switch (hcclType) {
         case HCCL_MEM_TYPE_DEVICE:
             return COMM_MEM_TYPE_DEVICE;
@@ -25,7 +26,8 @@ CommMemType ConvertHcclToCommMemType(HcclMemType hcclType) {
     }
 }
 
-HcclMemType ConvertCommToHcclMemType(CommMemType commType) {
+HcclMemType ConvertCommToHcclMemType(CommMemType commType)
+{
     switch (commType) {
         case COMM_MEM_TYPE_DEVICE:
             return HCCL_MEM_TYPE_DEVICE;
@@ -36,27 +38,23 @@ HcclMemType ConvertCommToHcclMemType(CommMemType commType) {
     }
 }
 
-CommMems::CommMems(uint64_t bufferSize)
-    : bufferSize_(bufferSize)
+CommMems::CommMems(uint64_t bufferSize) : bufferSize_(bufferSize)
 {
     cclMemInfo_.mem.addr = nullptr;
     cclMemInfo_.mem.size = 0;
     cclMemInfo_.mem.type = CommMemType::COMM_MEM_TYPE_DEVICE;
 }
 
-HcclResult CommMems::Add(void *addr, uint64_t len)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult CommMems::Add(void* addr, uint64_t len) { return HCCL_SUCCESS; }
 
-HcclResult CommMems::GetHcclBuffer(void *&addr, uint64_t &len)
+HcclResult CommMems::GetHcclBuffer(void*& addr, uint64_t& len)
 {
     addr = reinterpret_cast<void*>(cclMemInfo_.mem.addr);
     len = static_cast<uint64_t>(cclMemInfo_.mem.size);
     return HCCL_SUCCESS;
 }
 
-HcclResult CommMems::HcclBufferMemset(void *&addr, uint64_t &len, bool clearFlag) const
+HcclResult CommMems::HcclBufferMemset(void*& addr, uint64_t& len, bool clearFlag) const
 {
     if (!clearFlag) {
         HCCL_DEBUG("[CommMems][HcclBufferMemset] clearFlag[%d] is false, skip memset.", clearFlag);
@@ -79,13 +77,12 @@ HcclResult CommMems::Init(HcclMem cclBuffer)
     cclMemInfo_.mem.type = ConvertHcclToCommMemType(cclBuffer.type);
     std::string memTag = "HcclBuffer";
     errno_t sRet = strncpy_s(cclMemInfo_.memTag, HCOMM_RES_TAG_MAX_LEN, memTag.c_str(), memTag.size());
-    CHK_PRT_RET(sRet != EOK,
-        HCCL_ERROR("[CommMems][Init] strncpy_s failed, return [%d].", sRet), HCCL_E_MEMORY);
+    CHK_PRT_RET(sRet != EOK, HCCL_ERROR("[CommMems][Init] strncpy_s failed, return [%d].", sRet), HCCL_E_MEMORY);
     HCCL_INFO("[CommMems][Init] addr[%p] size[%llu] memType[%u]", cclBuffer.addr, cclBuffer.size, cclBuffer.type);
     return HCCL_SUCCESS;
 }
 
-HcclResult CommMems::GetMemoryHandles(std::vector<HcclMem> &mem)
+HcclResult CommMems::GetMemoryHandles(std::vector<HcclMem>& mem)
 {
     HcclMem memTemp;
     memTemp.size = cclMemInfo_.mem.size;
@@ -93,19 +90,21 @@ HcclResult CommMems::GetMemoryHandles(std::vector<HcclMem> &mem)
     memTemp.addr = cclMemInfo_.mem.addr;
     mem.push_back(memTemp);
 
-    HCCL_INFO("[CommMems][%s] HcclMem: size[%llu], addr[%p], type[%d]", 
-        __func__, memTemp.size, memTemp.addr, (int)memTemp.type
-    );
+    HCCL_INFO(
+        "[CommMems][%s] HcclMem: size[%llu], addr[%p], type[%d]", __func__, memTemp.size, memTemp.addr,
+        (int)memTemp.type);
 
     return HCCL_SUCCESS;
 }
 
-HcclResult CommMems::CommRegMem(const std::string& memTag, const CommMem& mem,
-    void **memHandle)
+HcclResult CommMems::CommRegMem(const std::string& memTag, const CommMem& mem, void** memHandle)
 {
-    CHK_PRT_RET(memHandle == nullptr, HCCL_ERROR("[CommRegMem] memHandle is null. tag[%s]", memTag.c_str()), HCCL_E_PARA);
-    CHK_PRT_RET(mem.addr == nullptr || mem.size == 0, HCCL_ERROR("[CommRegMem] invalid mem. addr[%p] size[%llu]",
-        mem.addr, (unsigned long long)mem.size), HCCL_E_PARA);
+    CHK_PRT_RET(
+        memHandle == nullptr, HCCL_ERROR("[CommRegMem] memHandle is null. tag[%s]", memTag.c_str()), HCCL_E_PARA);
+    CHK_PRT_RET(
+        mem.addr == nullptr || mem.size == 0,
+        HCCL_ERROR("[CommRegMem] invalid mem. addr[%p] size[%llu]", mem.addr, (unsigned long long)mem.size),
+        HCCL_E_PARA);
     if (UNLIKELY(memTag.size() >= HCOMM_RES_TAG_MAX_LEN)) {
         HCCL_ERROR("[CommRegMem] memTag.size() exceeds limit[%u]", HCOMM_RES_TAG_MAX_LEN);
         return HCCL_E_PARA;
@@ -114,81 +113,85 @@ HcclResult CommMems::CommRegMem(const std::string& memTag, const CommMem& mem,
     // 组装句柄（仅域内管理，无进程级注册）
     Handle h;
     EXCEPTION_CATCH(h = std::make_shared<CommMemInfo>(), return HCCL_E_PTR);
-    h->mem.addr    = mem.addr;
-    h->mem.size    = mem.size;
-    h->mem.type    = mem.type;
+    h->mem.addr = mem.addr;
+    h->mem.size = mem.size;
+    h->mem.type = mem.type;
     errno_t sRet = strncpy_s(h->memTag, HCOMM_RES_TAG_MAX_LEN, memTag.c_str(), memTag.size());
-    CHK_PRT_RET(sRet != EOK,
-        HCCL_ERROR("[CommRegMem] strncpy_s failed, return [%d].", sRet), HCCL_E_MEMORY);
+    CHK_PRT_RET(sRet != EOK, HCCL_ERROR("[CommRegMem] strncpy_s failed, return [%d].", sRet), HCCL_E_MEMORY);
 
     const auto key = MakeKey(mem.addr, static_cast<size_t>(mem.size));
- 
+
     std::lock_guard<std::mutex> addLock(memMutex_);
 
     auto opIt = opBindings_.find(memTag);
     if (opIt != opBindings_.end()) {
-        HCCL_ERROR("[CommRegMem] memTag[%s] already registered: old addr[%p] size[%llu], new addr[%p] size[%llu].",
-            memTag.c_str(), opIt->second->mem.addr, static_cast<unsigned long long>(opIt->second->mem.size),
-            mem.addr, static_cast<unsigned long long>(mem.size));
+        HCCL_ERROR(
+            "[CommRegMem] memTag[%s] already registered: old addr[%p] size[%llu], new addr[%p] size[%llu].",
+            memTag.c_str(), opIt->second->mem.addr, static_cast<unsigned long long>(opIt->second->mem.size), mem.addr,
+            static_cast<unsigned long long>(mem.size));
         return HCCL_E_PARA;
     }
 
     auto& reg = tagRegs_[memTag];
- 
+
     // 同tag内做区间冲突/幂等复用
     reg.table.AddWithoutCheck(key, h);
 
     // 加入绑定map
     opBindings_.emplace(memTag, h);
- 
+
     *memHandle = h.get();
-    HCCL_INFO("[CommRegMem] ok. tag[%s] memHandle[%p] size[%llu]", memTag.c_str(), *memHandle,
+    HCCL_INFO(
+        "[CommRegMem] ok. tag[%s] memHandle[%p] size[%llu]", memTag.c_str(), *memHandle,
         static_cast<unsigned long long>(h->mem.size));
     return HCCL_SUCCESS;
 }
- 
+
 HcclResult CommMems::CommUnregMem(const std::string& memTag, const void* memHandle) // 待确认是否要解注册
 {
     CHK_PRT_RET(memHandle == nullptr, HCCL_ERROR("[CommUnregMem] memHandle is null"), HCCL_E_PARA);
     CHK_PRT_RET(memTag.empty(), HCCL_ERROR("[CommUnregMem] memTag is null or empty"), HCCL_E_PARA);
- 
+
     std::lock_guard<std::mutex> addLock(memMutex_);
- 
+
     auto itTag = opBindings_.find(memTag);
-    CHK_PRT_RET(itTag == opBindings_.end(),
-        HCCL_WARNING("[CommUnregMem] tag[%s] not found in bindings", memTag.c_str()), HCCL_E_NOT_FOUND);
- 
-    auto &h = itTag->second;           // Handle under this tag
-    auto &reg = tagRegs_[itTag->first];       // TagRegistry for this tag
-    size_t unboundCount = 0;  // 本次解绑命中的句柄个数（即便 Del 未真正擦除也计数）
-    size_t erasedCount  = 0;  // RmaBufferMgr::Del 返回 true 的次数（ref 归零而“擦除”）
-    
+    CHK_PRT_RET(
+        itTag == opBindings_.end(), HCCL_WARNING("[CommUnregMem] tag[%s] not found in bindings", memTag.c_str()),
+        HCCL_E_NOT_FOUND);
+
+    auto& h = itTag->second;            // Handle under this tag
+    auto& reg = tagRegs_[itTag->first]; // TagRegistry for this tag
+    size_t unboundCount = 0;            // 本次解绑命中的句柄个数（即便 Del 未真正擦除也计数）
+    size_t erasedCount = 0;             // RmaBufferMgr::Del 返回 true 的次数（ref 归零而“擦除”）
+
     if (h.get() == memHandle) {
         const auto key = MakeKey(h->mem.addr, static_cast<size_t>(h->mem.size));
         try {
             if (reg.table.Del(key)) {
-                ++erasedCount;            // 该 key 的引用归零并从表中移除
+                ++erasedCount; // 该 key 的引用归零并从表中移除
             }
-        } catch (const std::out_of_range &) {
+        } catch (const std::out_of_range&) {
             HCCL_ERROR("[CommUnregMem] tag[%s] key not found on Del (maybe already removed)", itTag->first.c_str());
         }
-        ++unboundCount;                   // 从绑定列表移除，无论 Del 是否真正擦除
+        ++unboundCount; // 从绑定列表移除，无论 Del 是否真正擦除
         opBindings_.erase(itTag);
         if (reg.table.size() == 0) {
             tagRegs_.erase(std::string(memTag));
         }
     }
- 
-    CHK_PRT_RET(unboundCount == 0,
-        HCCL_WARNING("[CommUnregMem] tag[%s] memHandle[%p] not found", memTag.c_str(), memHandle), HCCL_E_NOT_FOUND);
- 
-    HCCL_INFO("[CommUnregMem] tag[%s] memHandle[%p] unbound=%zu, erased=%zu",
-              memTag.c_str(), memHandle, unboundCount, erasedCount);
+
+    CHK_PRT_RET(
+        unboundCount == 0, HCCL_WARNING("[CommUnregMem] tag[%s] memHandle[%p] not found", memTag.c_str(), memHandle),
+        HCCL_E_NOT_FOUND);
+
+    HCCL_INFO(
+        "[CommUnregMem] tag[%s] memHandle[%p] unbound=%zu, erased=%zu", memTag.c_str(), memHandle, unboundCount,
+        erasedCount);
     return HCCL_SUCCESS;
 }
- 
-HcclResult CommMems::GetTagMemoryHandles(void** memHandles, uint32_t memHandleNum, std::vector<HcclMem> &memVec, 
-    std::vector<std::string> &memTag)
+
+HcclResult CommMems::GetTagMemoryHandles(
+    void** memHandles, uint32_t memHandleNum, std::vector<HcclMem>& memVec, std::vector<std::string>& memTag)
 {
     HcclMem memTemp;
     memTemp.size = cclMemInfo_.mem.size;
@@ -196,7 +199,7 @@ HcclResult CommMems::GetTagMemoryHandles(void** memHandles, uint32_t memHandleNu
     memTemp.addr = cclMemInfo_.mem.addr;
     memVec.push_back(memTemp);
     memTag.push_back("HcclBuffer");
- 
+
     // 增加入参检查
     std::lock_guard<std::mutex> lock(memMutex_);
     CommMemInfo** handles = reinterpret_cast<CommMemInfo**>(memHandles);
@@ -215,4 +218,4 @@ HcclResult CommMems::GetTagMemoryHandles(void** memHandles, uint32_t memHandleNu
     return HCCL_SUCCESS;
 }
 
-}
+} // namespace hccl

@@ -19,16 +19,16 @@ namespace Hccl {
 
 class Cnt1tonNotifyLiteMgr {
 public:
-    Cnt1tonNotifyLite *Get(u32 postQId, u32 topicId);
+    Cnt1tonNotifyLite* Get(u32 postQId, u32 topicId);
 
     void Reset();
 
-    void ParsePackedData(std::vector<char> &data);
+    void ParsePackedData(std::vector<char>& data);
 
 private:
     std::map<std::pair<u32, u32>, std::unique_ptr<Cnt1tonNotifyLite>> notifys;
 };
 
-} // namesapce Hccl
+} // namespace Hccl
 
 #endif // HCCLV2_CNT_1TON_NOTIFY_LITE_MGR_H

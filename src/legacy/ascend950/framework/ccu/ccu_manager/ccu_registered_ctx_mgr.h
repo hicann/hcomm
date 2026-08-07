@@ -19,19 +19,18 @@ namespace Hccl {
 
 class RegisteredCcuCtxMgr {
 public:
-    explicit RegisteredCcuCtxMgr(DevId devLogicId) : devLogicId(devLogicId)
-    {
-    }
+    explicit RegisteredCcuCtxMgr(DevId devLogicId) : devLogicId(devLogicId) {}
 
-    bool HasRegistered(const CcuCtxSignature &ctxSignature, const uintptr_t &resPackId, u64 &execId);
+    bool HasRegistered(const CcuCtxSignature& ctxSignature, const uintptr_t& resPackId, u64& execId);
 
-    u64 Register(std::unique_ptr<CcuCtxGroup> ccuCtxGroupPtr, const CcuCtxSignature &ctxSignature,
-                 const uintptr_t &resPackId, bool isFuncBlock);
+    u64 Register(
+        std::unique_ptr<CcuCtxGroup> ccuCtxGroupPtr, const CcuCtxSignature& ctxSignature, const uintptr_t& resPackId,
+        bool isFuncBlock);
 
     ~RegisteredCcuCtxMgr();
 
 private:
-    DevId                                                         devLogicId;
+    DevId devLogicId;
     unordered_map<CcuCtxSignature, unordered_map<uintptr_t, u64>> registeredIds;
 };
 

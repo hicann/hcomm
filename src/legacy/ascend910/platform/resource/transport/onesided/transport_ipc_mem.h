@@ -23,50 +23,52 @@ public:
 
     struct ProcessInfo {
         u32 pid;
-        u32 sdid;  // super device id
-        u32 serverId;  // server id
+        u32 sdid;     // super device id
+        u32 serverId; // server id
     };
 
-    TransportIpcMem(const std::unique_ptr<NotifyPool> &notifyPool, const HcclNetDevCtx &netDevCtx,
-        const HcclDispatcher &dispatcher, AttrInfo &attrInfo, bool aicpuUnfoldMode = false);
+    TransportIpcMem(
+        const std::unique_ptr<NotifyPool>& notifyPool, const HcclNetDevCtx& netDevCtx, const HcclDispatcher& dispatcher,
+        AttrInfo& attrInfo, bool aicpuUnfoldMode = false);
     ~TransportIpcMem() override;
-    HcclResult ExchangeMemDesc(
-        const RmaMemDescs &localMemDescs, RmaMemDescs &remoteMemDescs, u32 &actualNumOfRemote) override;
-    HcclResult EnableMemAccess(const RmaMemDesc &remoteMemDesc, RmaMem &remoteMem) override;
-    HcclResult DisableMemAccess(const RmaMemDesc &remoteMemDesc) override;
-    HcclResult SetSocket(const std::shared_ptr<HcclSocket> &socket) override;
+    HcclResult
+    ExchangeMemDesc(const RmaMemDescs& localMemDescs, RmaMemDescs& remoteMemDescs, u32& actualNumOfRemote) override;
+    HcclResult EnableMemAccess(const RmaMemDesc& remoteMemDesc, RmaMem& remoteMem) override;
+    HcclResult DisableMemAccess(const RmaMemDesc& remoteMemDesc) override;
+    HcclResult SetSocket(const std::shared_ptr<HcclSocket>& socket) override;
     HcclResult Connect(s32 timeoutSec) override;
-    HcclResult Write(const HcclBuf &remoteMem, const HcclBuf &localMem, const rtStream_t &stream) override;
-    HcclResult Read(const HcclBuf &localMem, const HcclBuf &remoteMem, const rtStream_t &stream) override;
-    HcclResult Write(const RmaOpMem &remoteMem, const RmaOpMem &localMem, const rtStream_t &stream) override;
-    HcclResult Read(const RmaOpMem &localMem, const RmaOpMem &remoteMem, const rtStream_t &stream) override;
-    HcclResult AddOpFence(const rtStream_t &stream) override;
+    HcclResult Write(const HcclBuf& remoteMem, const HcclBuf& localMem, const rtStream_t& stream) override;
+    HcclResult Read(const HcclBuf& localMem, const HcclBuf& remoteMem, const rtStream_t& stream) override;
+    HcclResult Write(const RmaOpMem& remoteMem, const RmaOpMem& localMem, const rtStream_t& stream) override;
+    HcclResult Read(const RmaOpMem& localMem, const RmaOpMem& remoteMem, const rtStream_t& stream) override;
+    HcclResult AddOpFence(const rtStream_t& stream) override;
 
-    HcclResult GetTransInfo(HcclQpInfoV2 &qpInfo, u32 *lkey, u32 *rkey, HcclBuf *localMem, HcclBuf *remoteMem,
-        u32 num) override;
-    HcclResult WaitOpFence(const rtStream_t &stream) override;
+    HcclResult
+    GetTransInfo(HcclQpInfoV2& qpInfo, u32* lkey, u32* rkey, HcclBuf* localMem, HcclBuf* remoteMem, u32 num) override;
+    HcclResult WaitOpFence(const rtStream_t& stream) override;
 
-    HcclResult BatchWrite(const std::vector<MemDetails> &remoteMems, const std::vector<MemDetails> &localMems,
-        Stream &stream) override;
-    HcclResult BatchRead(const std::vector<MemDetails> &localMems, const std::vector<MemDetails> &remoteMems,
-        Stream &stream) override;
-    HcclResult AddOpFence(const MemDetails &localFenceMem, const MemDetails &remoteFenceMem,
-        Stream &stream) override;
+    HcclResult BatchWrite(
+        const std::vector<MemDetails>& remoteMems, const std::vector<MemDetails>& localMems, Stream& stream) override;
+    HcclResult BatchRead(
+        const std::vector<MemDetails>& localMems, const std::vector<MemDetails>& remoteMems, Stream& stream) override;
+    HcclResult AddOpFence(const MemDetails& localFenceMem, const MemDetails& remoteFenceMem, Stream& stream) override;
 
 private:
     HcclResult TransportIpc(
-        const RmaBufferSlice &dstRmaBufferSlice, const RmaBufferSlice &srcRmaBufferSlice, const rtStream_t &stream);
+        const RmaBufferSlice& dstRmaBufferSlice, const RmaBufferSlice& srcRmaBufferSlice, const rtStream_t& stream);
 
-    HcclResult FillRmaBufferSlice(const HcclBuf &localMem, const HcclBuf &remoteMem,
-        RmaBufferSlice &localRmaBufferSlice, RmaBufferSlice &remoteRmaBufferSlice);
+    HcclResult FillRmaBufferSlice(
+        const HcclBuf& localMem, const HcclBuf& remoteMem, RmaBufferSlice& localRmaBufferSlice,
+        RmaBufferSlice& remoteRmaBufferSlice);
 
-    HcclResult FillRmaBufferSlice(const RmaOpMem &localMem, const RmaOpMem &remoteMem,
-        RmaBufferSlice &localRmaBufferSlice, RmaBufferSlice &remoteRmaBufferSlice);
+    HcclResult FillRmaBufferSlice(
+        const RmaOpMem& localMem, const RmaOpMem& remoteMem, RmaBufferSlice& localRmaBufferSlice,
+        RmaBufferSlice& remoteRmaBufferSlice);
 
-    HcclResult GetMemInfo(u32 &lkey, u32 &rkey, HcclBuf &localMem, HcclBuf &remoteMem);
+    HcclResult GetMemInfo(u32& lkey, u32& rkey, HcclBuf& localMem, HcclBuf& remoteMem);
     RemoteIpcRmaBufferMgr remoteIpcRmaBufferMgr_{};
     u32 sdid_;
     u32 serverId_;
 };
-}  // namespace hccl
+} // namespace hccl
 #endif

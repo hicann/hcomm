@@ -24,20 +24,15 @@ namespace checker {
 
 class AllGatherCCUTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "AllGather CCU test set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "AllGather CCU test set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "AllGather CCU test tear down" << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "AllGather CCU test tear down" << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -465,7 +460,7 @@ TEST_F(AllGatherCCUTest, allgather_ccu_case_test_nhr)
     Checker checker;
     HcclResult ret;
     ret = checker.CheckA5Aicpu(checkerOpParam, topoMeta);
-    EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS); 
+    EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-}
+} // namespace checker

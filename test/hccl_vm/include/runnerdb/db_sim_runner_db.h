@@ -17,28 +17,28 @@
 
 #include "sim_models.h"
 #include "sim_runner_impl.inl"
-namespace RunnerDB { 
-    template <typename T> 
-    uint64_t Add(T& rec); 
+namespace RunnerDB {
+template <typename T>
+uint64_t Add(T& rec);
 
-    template <typename T> 
-    std::optional<T> GetById(uint64_t id); 
+template <typename T>
+std::optional<T> GetById(uint64_t id);
 
-    template <typename T> 
-    std::vector<T> GetByPred(std::function<bool(const T&)> pred); 
+template <typename T>
+std::vector<T> GetByPred(std::function<bool(const T&)> pred);
 
-    template <typename T> 
-    std::pair<T, bool> GetOneByPred(std::function<bool(const T&)> pred); 
+template <typename T>
+std::pair<T, bool> GetOneByPred(std::function<bool(const T&)> pred);
 
-    template <typename T> 
-    bool Update(uint64_t id, std::function<void(T&)> updater); 
+template <typename T>
+bool Update(uint64_t id, std::function<void(T&)> updater);
 
-    template <typename T> 
-    bool Delete(uint64_t id); 
+template <typename T>
+bool Delete(uint64_t id);
 
-    template <typename T> 
-    bool DeleteAll(); 
+template <typename T>
+bool DeleteAll();
 
-    std::vector<std::string> GetAllTableName(); 
-}
+std::vector<std::string> GetAllTableName();
+} // namespace RunnerDB
 #endif

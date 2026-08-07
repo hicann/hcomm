@@ -15,7 +15,4 @@
 #include "env_config.h"
 
 using namespace hccl;
-HcclResult SetHcclAlgoConfig(const std::string &hcclAlgo)
-{
-    return HCCL_SUCCESS;
-}
+HcclResult SetHcclAlgoConfig(const std::string& hcclAlgo) { return HCCL_SUCCESS; }

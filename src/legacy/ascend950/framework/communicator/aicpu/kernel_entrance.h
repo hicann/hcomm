@@ -19,11 +19,11 @@
 extern std::unordered_map<std::string, void*> g_taskExpDevMemMap;
 extern std::mutex g_taskExpDevMemMapMutex;
 extern "C" {
-__attribute__((visibility("default"))) uint32_t HcclKernelEntrance(void *args);
+__attribute__((visibility("default"))) uint32_t HcclKernelEntrance(void* args);
 
-__attribute__((visibility("default"))) uint32_t HcclUpdateCommKernelEntrance(void *args);
+__attribute__((visibility("default"))) uint32_t HcclUpdateCommKernelEntrance(void* args);
 
-__attribute__((visibility("default"))) uint32_t HcclDpuTaskexpShmemRestore(void *args);
+__attribute__((visibility("default"))) uint32_t HcclDpuTaskexpShmemRestore(void* args);
 };
 
 #endif // HCCL_KERNEL_ENTRANCE_H

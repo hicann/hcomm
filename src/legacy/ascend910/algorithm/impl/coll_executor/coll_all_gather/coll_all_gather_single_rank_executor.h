@@ -13,13 +13,13 @@
 #include "coll_all_gather_executor.h"
 namespace hccl {
 class CollAllGatherSingleRankExecutor : public CollAllGatherExecutor {
-
 public:
-    explicit CollAllGatherSingleRankExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollAllGatherSingleRankExecutor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollAllGatherSingleRankExecutor() override = default;
 
 private:
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 };
 
 } // namespace hccl

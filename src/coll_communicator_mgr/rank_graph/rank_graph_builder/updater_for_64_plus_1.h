@@ -22,26 +22,29 @@ namespace Hccl {
 
 constexpr LocalId DEVICE_NUM_PER_AXIS = 8;
 constexpr LocalId DEVICE_HALF_NUM_PER_AXIS = 4;
-constexpr u32     BACKUP_TO_PLANE_ADDR_NUM = 4;
-constexpr u32     BACKUP_PLANE_NUM = 4;
+constexpr u32 BACKUP_TO_PLANE_ADDR_NUM = 4;
+constexpr u32 BACKUP_PLANE_NUM = 4;
 
 class UpdaterFor64Plus1 {
 public:
     UpdaterFor64Plus1() = default;
     ~UpdaterFor64Plus1() = default;
-    UpdaterFor64Plus1(const UpdaterFor64Plus1 &) = delete;
+    UpdaterFor64Plus1(const UpdaterFor64Plus1&) = delete;
     UpdaterFor64Plus1& operator=(const UpdaterFor64Plus1&) = delete;
 
     void SaveReplaceInfo(const NewRankInfo& rank);
     void UpdateRankGraph(RankGraph* rankGraph, const RankTableInfo* rankTable) const;
 
 private:
-    void UpdateNetInstance(NetInstance* fabricGroup, LocalId localId, LocalId replacedLocalId, const RankTableInfo* rankTable) const;
-    std::string GetPortFromSet(std::set<string> &ports, u32 linkIdx) const;
-    std::shared_ptr<PhyTopo::Link> GetPeer2PlaneEdges(u32 backupPlaneId, shared_ptr<NetInstance::Peer> peer, 
+    void UpdateNetInstance(
+        NetInstance* fabricGroup, LocalId localId, LocalId replacedLocalId, const RankTableInfo* rankTable) const;
+    std::string GetPortFromSet(std::set<string>& ports, u32 linkIdx) const;
+    std::shared_ptr<PhyTopo::Link> GetPeer2PlaneEdges(
+        u32 backupPlaneId, shared_ptr<NetInstance::Peer> peer,
         std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> phyTopoGraph) const;
-    void AddPeer2BackupLinks(std::shared_ptr<NetInstance::Peer> peer, std::shared_ptr<NetInstance::Peer> backupPeer,
-                             LocalId replacedLocalId, NetInstance* netInstance, const RankTableInfo* rankTable) const;
+    void AddPeer2BackupLinks(
+        std::shared_ptr<NetInstance::Peer> peer, std::shared_ptr<NetInstance::Peer> backupPeer, LocalId replacedLocalId,
+        NetInstance* netInstance, const RankTableInfo* rankTable) const;
     bool IsSameX(LocalId srcLocalId, LocalId dstLocalId) const;
     bool IsSameY(LocalId srcLocalId, LocalId dstLocalId) const;
     std::pair<u32, u32> GetLinkIndex(LocalId localId, LocalId replacedLocalId) const; // <BackupPlaneId, addr idx>
@@ -51,4 +54,4 @@ private:
 
 } // namespace Hccl
 
-#endif //UPDATER_FOR_64_PLUS_1_H
+#endif // UPDATER_FOR_64_PLUS_1_H

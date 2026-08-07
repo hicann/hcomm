@@ -15,7 +15,8 @@
 
 namespace hcomm {
 /**
- * @note 职责：同步信号Notify的C++派生，当前主要支持AicpuTs通信引擎kernel内的主Thread等和kernel外部Stream等之间的信号同步。
+ * @note
+ * 职责：同步信号Notify的C++派生，当前主要支持AicpuTs通信引擎kernel内的主Thread等和kernel外部Stream等之间的信号同步。
  */
 class AicpuTsRtsNotify : public Notify {
 public:
@@ -28,6 +29,6 @@ private:
     std::vector<Notify> notifys_{};
     uint32_t notifyNum_{};
 };
-}
+} // namespace hcomm
 
 #endif // AICPU_TS_RTS_NOTIFY_H

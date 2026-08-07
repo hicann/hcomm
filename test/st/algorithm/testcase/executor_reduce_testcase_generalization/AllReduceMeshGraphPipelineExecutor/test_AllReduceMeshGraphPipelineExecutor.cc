@@ -23,22 +23,17 @@
 #include "checker.h"
 using namespace checker;
 
-class AllReduceGeneralizationTest: public ::testing::TestWithParam<std::tuple<int, CheckerDataType, vector<int>>> {
+class AllReduceGeneralizationTest : public ::testing::TestWithParam<std::tuple<int, CheckerDataType, vector<int>>> {
 public:
-    static void SetUpTestCase()
-    {
-        std::cout << "AllReduceMeshGraphPipelineExecutor set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "AllReduceMeshGraphPipelineExecutor set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "AllReduceMeshGraphPipelineExecutor tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "AllReduceMeshGraphPipelineExecutor tear down." << std::endl; }
 
     virtual void SetUp()
     {
         const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        std::string caseName = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
+        std::string caseName
+            = "analysis_result_" + std::string(test_info->test_case_name()) + "_" + std::string(test_info->name());
         Checker::SetDumpFileName(caseName);
     }
 
@@ -57,7 +52,8 @@ TEST_P(AllReduceGeneralizationTest, all_reduce_mesh_graph_pipeline_test)
     // 打印一下mytuple当前的参数
     std::cout << "checkerOpParam.DataDes.count : " << std::get<0>(mytuple) << std::endl;
     std::cout << "checkerOpParam.DataDes.dataType : " << std::get<1>(mytuple) << std::endl;
-    std::cout << "checkerOpParam.TopoMeta : " << std::get<2>(mytuple)[0]  << " , " << std::get<2>(mytuple)[1] << " , " << std::get<2>(mytuple)[2] << std::endl;
+    std::cout << "checkerOpParam.TopoMeta : " << std::get<2>(mytuple)[0] << " , " << std::get<2>(mytuple)[1] << " , "
+              << std::get<2>(mytuple)[2] << std::endl;
 
     RankTable_For_LLT gen;
     TopoMeta topoMeta;
@@ -83,10 +79,10 @@ TEST_P(AllReduceGeneralizationTest, all_reduce_mesh_graph_pipeline_test)
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
 }
 
-INSTANTIATE_TEST_SUITE_P(AllReduceCaseTest, AllReduceGeneralizationTest,
+INSTANTIATE_TEST_SUITE_P(
+    AllReduceCaseTest, AllReduceGeneralizationTest,
     testing::Combine(
         testing::Values(1024),
-        testing::Values(CheckerDataType::DATA_TYPE_FP32, CheckerDataType::DATA_TYPE_INT32, CheckerDataType::DATA_TYPE_BFP16),
-        testing::ValuesIn(std::vector<std::vector<int>>{{1, 2, 8}, {1, 2, 7}, {1, 3, 8}})
-        )
-);
+        testing::Values(
+            CheckerDataType::DATA_TYPE_FP32, CheckerDataType::DATA_TYPE_INT32, CheckerDataType::DATA_TYPE_BFP16),
+        testing::ValuesIn(std::vector<std::vector<int>>{{1, 2, 8}, {1, 2, 7}, {1, 3, 8}})));

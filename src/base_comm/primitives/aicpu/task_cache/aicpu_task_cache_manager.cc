@@ -20,7 +20,7 @@ AicpuTaskCache AicpuTaskCacheManager::aicpuTaskCache;
 // 全局线程变量定义
 thread_local std::string AicpuTaskCacheManager::cacheTag = "";
 thread_local bool AicpuTaskCacheManager::isHit = false;
-thread_local AicpuTaskCacheEntry *AicpuTaskCacheManager::cacheEntryPtr = nullptr;
+thread_local AicpuTaskCacheEntry* AicpuTaskCacheManager::cacheEntryPtr = nullptr;
 
 bool AicpuTaskCacheManager::NeedCacheTask()
 {
@@ -28,14 +28,16 @@ bool AicpuTaskCacheManager::NeedCacheTask()
     return !isHit && cacheEntryPtr != nullptr;
 }
 
-HcclResult AicpuTaskCacheManager::AddWqeArray(UbConnLite *ubConnLitePtr, UbTransportLiteImpl *ubTransportLiteImplPtr,
-    const std::vector<WqeTask> &wqeTasks, const uint32_t streamId, const uint32_t dbSqeIdx, const bool isReportTask,
-    const DbSqeProfInfo &dbSqeProfInfo)
+HcclResult AicpuTaskCacheManager::AddWqeArray(
+    UbConnLite* ubConnLitePtr, UbTransportLiteImpl* ubTransportLiteImplPtr, const std::vector<WqeTask>& wqeTasks,
+    const uint32_t streamId, const uint32_t dbSqeIdx, const bool isReportTask, const DbSqeProfInfo& dbSqeProfInfo)
 {
     // 注意: 只有需要cache task时, UbTransportLiteImpl才会调用本函数
-    CHK_PRT_RET(NeedCacheTask() == false,
-        HCCL_ERROR("[AicpuTaskCacheManager][AddWqeArray] should not invoke if isHit[%d] cacheEntryPtr[0x%016llx]",
-            isHit, cacheEntryPtr),
+    CHK_PRT_RET(
+        NeedCacheTask() == false,
+        HCCL_ERROR(
+            "[AicpuTaskCacheManager][AddWqeArray] should not invoke if isHit[%d] cacheEntryPtr[0x%016llx]", isHit,
+            cacheEntryPtr),
         HCCL_E_INTERNAL);
 
     CHK_PTR_NULL(ubConnLitePtr);
@@ -46,13 +48,16 @@ HcclResult AicpuTaskCacheManager::AddWqeArray(UbConnLite *ubConnLitePtr, UbTrans
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTaskCacheManager::AddSqeArray(RtsqA5 *rtsqPtr, AicpuTsThread *aicpuTsThreadPtr, const uint64_t sqeCount,
-    const uint8_t *sqeArray, const uint32_t streamId)
+HcclResult AicpuTaskCacheManager::AddSqeArray(
+    RtsqA5* rtsqPtr, AicpuTsThread* aicpuTsThreadPtr, const uint64_t sqeCount, const uint8_t* sqeArray,
+    const uint32_t streamId)
 {
     // 注意: 只有需要cache task时, RtsqA5才会调用本函数
-    CHK_PRT_RET(NeedCacheTask() == false,
-        HCCL_ERROR("[AicpuTaskCacheManager][AddSqeArray] should not invoke if isHit[%d] cacheEntryPtr[0x%016llx]",
-            isHit, cacheEntryPtr),
+    CHK_PRT_RET(
+        NeedCacheTask() == false,
+        HCCL_ERROR(
+            "[AicpuTaskCacheManager][AddSqeArray] should not invoke if isHit[%d] cacheEntryPtr[0x%016llx]", isHit,
+            cacheEntryPtr),
         HCCL_E_INTERNAL);
 
     CHK_PTR_NULL(rtsqPtr);

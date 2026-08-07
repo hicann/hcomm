@@ -26,68 +26,41 @@ using namespace hcomm;
 
 class EndpointMonitorTest : public ::testing::Test {
 public:
-    void SetUp() override {
-        testing::Test::SetUp();
-    }
-    void TearDown() override {
+    void SetUp() override { testing::Test::SetUp(); }
+    void TearDown() override
+    {
         testing::Test::TearDown();
         GlobalMockObject::verify();
     }
 
-    EndpointMonitor &g_monitor = EndpointMonitor::GetInstance(0);
+    EndpointMonitor& g_monitor = EndpointMonitor::GetInstance(0);
 };
 
 class UtStubEndpoint : public Endpoint {
-    UtStubEndpoint(const EndpointDesc &endpointDesc) : Endpoint(endpointDesc)
-    {
-    }
+    UtStubEndpoint(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
 
-    HcclResult Init()
-    {
-        return HCCL_SUCCESS;
-    }
+    HcclResult Init() { return HCCL_SUCCESS; }
 
-    HcclResult ServerSocketListen(const uint32_t port)
-    {
-        return HCCL_SUCCESS;
-    }
+    HcclResult ServerSocketListen(const uint32_t port) { return HCCL_SUCCESS; }
 
     // 注册内存
-    HcclResult RegisterMemory(HcommMem mem, const char *memTag, void **memHandle)
-    {
-        return HCCL_SUCCESS;
-    }
+    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) { return HCCL_SUCCESS; }
 
     // 注销内存
-    HcclResult UnregisterMemory(void *memHandle)
-    {
-        return HCCL_SUCCESS;
-    }
+    HcclResult UnregisterMemory(void* memHandle) { return HCCL_SUCCESS; }
 
     // 导出指定内存描述，用于交换
-    HcclResult MemoryExport(void *memHandle, void **memDesc, uint32_t *memDescLen)
-    {
-        return HCCL_SUCCESS;
-    }
+    HcclResult MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen) { return HCCL_SUCCESS; }
 
     // 基于内存描述，导入获得内存
-    HcclResult MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem)
-    {
-        return HCCL_SUCCESS;
-    }
+    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) { return HCCL_SUCCESS; }
 
     // 关闭内存
-    HcclResult MemoryUnimport(const void *memDesc, uint32_t descLen)
-    {
-        return HCCL_SUCCESS;
-    }
+    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) { return HCCL_SUCCESS; }
 
-    HcclResult GetAllMemHandles(void **memHandles, uint32_t *memHandleNum)
-    {
-        return HCCL_SUCCESS;
-    }
+    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) { return HCCL_SUCCESS; }
 
-    HcclResult GetAsyncEvents(uint32_t devPhyId, struct AsyncEvent events[], uint32_t &num)
+    HcclResult GetAsyncEvents(uint32_t devPhyId, struct AsyncEvent events[], uint32_t& num)
     {
         (void)devPhyId;
         (void)events;

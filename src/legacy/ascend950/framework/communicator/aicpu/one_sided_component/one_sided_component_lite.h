@@ -21,22 +21,27 @@ namespace Hccl {
 
 class OneSidedComponentLite {
 public:
-    OneSidedComponentLite(RankId myRank, u32 rankSize, DevType devType, u64 scratchBufferSize, ConnectedLinkMgr *linkMgr,
-        RmtDataBufferMgr *rmaDataBufferMgr) : myRank_(myRank), rankSize_(rankSize), devType_(devType),
-        scratchBufferSize_(scratchBufferSize), linkMgr_(linkMgr), rmaDataBufferMgr_(rmaDataBufferMgr)
-    {
-    }
+    OneSidedComponentLite(
+        RankId myRank, u32 rankSize, DevType devType, u64 scratchBufferSize, ConnectedLinkMgr* linkMgr,
+        RmtDataBufferMgr* rmaDataBufferMgr)
+        : myRank_(myRank),
+          rankSize_(rankSize),
+          devType_(devType),
+          scratchBufferSize_(scratchBufferSize),
+          linkMgr_(linkMgr),
+          rmaDataBufferMgr_(rmaDataBufferMgr)
+    {}
     virtual ~OneSidedComponentLite() = default;
 
-    virtual HcclResult Orchestrate(const HcclAicpuOpLite &op, InsQuePtr queue);
+    virtual HcclResult Orchestrate(const HcclAicpuOpLite& op, InsQuePtr queue);
 
 protected:
-    u32               myRank_            = INVALID_RANKID;
-    u32               rankSize_          = 0;
-    DevType           devType_           = DevType::DEV_TYPE_NOSOC;
-    u64               scratchBufferSize_ = 0;
-    ConnectedLinkMgr *linkMgr_           = nullptr;
-    RmtDataBufferMgr *rmaDataBufferMgr_{ nullptr };
+    u32 myRank_ = INVALID_RANKID;
+    u32 rankSize_ = 0;
+    DevType devType_ = DevType::DEV_TYPE_NOSOC;
+    u64 scratchBufferSize_ = 0;
+    ConnectedLinkMgr* linkMgr_ = nullptr;
+    RmtDataBufferMgr* rmaDataBufferMgr_{nullptr};
 };
 
 using OneSidedComponentLitePtr = std::shared_ptr<OneSidedComponentLite>;

@@ -15,7 +15,7 @@
 namespace hccl {
 class CollAllReduceOrderPreservedExecutor : public CollAllReduceExecutor {
 public:
-    CollAllReduceOrderPreservedExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollAllReduceOrderPreservedExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
 
 private:
     void ParseParam(const OpParam& param) override;
@@ -24,22 +24,25 @@ private:
     u32 CalReduceStreamNum(const u32& localRankSize);
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel1CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel1CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
-    void CalGroupSlices(const OpParam &param, const ExecMem &execMem);
-    void CalcSizePerBlock(const OpParam &param, ExecMem &execMem);
-    HcclResult RunReduceScatterLevel0SingleRank(const OpParam &param, ExecMem &execMem, const SubCommInfo &level0CommInfo) const;
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    void CalGroupSlices(const OpParam& param, const ExecMem& execMem);
+    void CalcSizePerBlock(const OpParam& param, ExecMem& execMem);
+    HcclResult
+    RunReduceScatterLevel0SingleRank(const OpParam& param, ExecMem& execMem, const SubCommInfo& level0CommInfo) const;
 
     /* *************** 算法编排 *************** */
     bool IsHugeData(const u64 curSize) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
-    HcclResult RunReduceScatterLevel0(const OpParam &param, ExecMem &execMem, SubCommInfo &level0CommInfo);
-    HcclResult RunReduceScatterLevel1(const OpParam &param, ExecMem &execMem, SubCommInfo &level0CommInfo);
-    HcclResult RunAllGatherLevel0(const OpParam &param, ExecMem &execMem, SubCommInfo &level0CommInfo);
-    HcclResult RunAllGatherLevel1(const OpParam &param, ExecMem &execMem, const SubCommInfo &level0CommInfo);
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
+    HcclResult RunReduceScatterLevel0(const OpParam& param, ExecMem& execMem, SubCommInfo& level0CommInfo);
+    HcclResult RunReduceScatterLevel1(const OpParam& param, ExecMem& execMem, SubCommInfo& level0CommInfo);
+    HcclResult RunAllGatherLevel0(const OpParam& param, ExecMem& execMem, SubCommInfo& level0CommInfo);
+    HcclResult RunAllGatherLevel1(const OpParam& param, ExecMem& execMem, const SubCommInfo& level0CommInfo);
 
     u64 sizePerBlock_{0};        // 单块数据的大小
     std::vector<u64> groupSize_; // input切分每块数据的大小

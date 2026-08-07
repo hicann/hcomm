@@ -9,19 +9,20 @@
  */
 #include "mem_transport_callback.h"
 
-namespace Hccl{
-    
-MemTransportCallback::MemTransportCallback(const LinkData link, MirrorTaskManager &mirrorTaskManager)
-: link_(link), mirrorTaskManager_(mirrorTaskManager)
+namespace Hccl {
+
+MemTransportCallback::MemTransportCallback(const LinkData link, MirrorTaskManager& mirrorTaskManager)
+    : link_(link),
+      mirrorTaskManager_(mirrorTaskManager)
 {}
 
-void MemTransportCallback::operator()(u32 streamId, u32 taskId, const TaskParam &taskParam)
+void MemTransportCallback::operator()(u32 streamId, u32 taskId, const TaskParam& taskParam)
 {
-    std::unique_ptr<TaskInfo> taskInfo = std::make_unique<TaskInfo>(streamId, taskId,
-        link_.GetRemoteRankId(), taskParam, mirrorTaskManager_.GetCurrDfxOpInfo());
-        
+    std::unique_ptr<TaskInfo> taskInfo = std::make_unique<TaskInfo>(
+        streamId, taskId, link_.GetRemoteRankId(), taskParam, mirrorTaskManager_.GetCurrDfxOpInfo());
+
     mirrorTaskManager_.AddTaskInfo(std::move(taskInfo));
     return;
 }
 
-} // namespace hccl
+} // namespace Hccl

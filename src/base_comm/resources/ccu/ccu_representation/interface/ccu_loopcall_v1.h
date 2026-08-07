@@ -13,46 +13,46 @@
 namespace hcomm {
 namespace CcuRep {
 
-class LoopCall {
-public:
-    LoopCall(CcuRepContext *context, const std::string &label);
-    const std::string &GetLabel() const
-    {
-        return label;
-    }
+    class LoopCall {
+    public:
+        LoopCall(CcuRepContext* context, const std::string& label);
+        const std::string& GetLabel() const { return label; }
 
-    template <typename... Arguments> LoopCall &operator()(const Arguments &...args)
-    {
-        SetArgHelper(args...);
-        AppendToContext();
-        return *this;
-    }
+        template <typename... Arguments>
+        LoopCall& operator()(const Arguments&... args)
+        {
+            SetArgHelper(args...);
+            AppendToContext();
+            return *this;
+        }
 
-    LoopCall &operator()()
-    {
-        AppendToContext();
-        return *this;
-    }
+        LoopCall& operator()()
+        {
+            AppendToContext();
+            return *this;
+        }
 
-    void AppendToContext();
+        void AppendToContext();
 
-private:
-    template <typename First> void SetArgHelper(const First &first)
-    {
-        repLoopCall->SetInArg(first);
-    }
+    private:
+        template <typename First>
+        void SetArgHelper(const First& first)
+        {
+            repLoopCall->SetInArg(first);
+        }
 
-    template <typename First, typename... Rest> void SetArgHelper(const First &first, const Rest &...rest)
-    {
-        repLoopCall->SetInArg(first);
-        SetArgHelper(rest...);
-    }
+        template <typename First, typename... Rest>
+        void SetArgHelper(const First& first, const Rest&... rest)
+        {
+            repLoopCall->SetInArg(first);
+            SetArgHelper(rest...);
+        }
 
-    CcuRepContext *context{nullptr};
-    std::string    label;
+        CcuRepContext* context{nullptr};
+        std::string label;
 
-    std::shared_ptr<CcuRepLoopCall> repLoopCall{nullptr};
-};
+        std::shared_ptr<CcuRepLoopCall> repLoopCall{nullptr};
+    };
 
 }; // namespace CcuRep
 }; // namespace hcomm

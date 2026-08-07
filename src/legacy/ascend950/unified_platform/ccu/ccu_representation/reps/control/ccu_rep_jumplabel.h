@@ -16,11 +16,11 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepJumpLabel : public CcuRepBlock {
-public:
-    explicit CcuRepJumpLabel(const std::string &label);
-    std::string Describe() override;
-};
+    class CcuRepJumpLabel : public CcuRepBlock {
+    public:
+        explicit CcuRepJumpLabel(const std::string& label);
+        std::string Describe() override;
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

@@ -55,7 +55,7 @@ namespace {
 HcommTeamHandle g_fakeWorldTeam = reinterpret_cast<HcommTeamHandle>(0x10000);
 HcommTeamHandle g_fakeSubTeam = reinterpret_cast<HcommTeamHandle>(0x20000);
 HcommWindowHandle g_fakeWindow = reinterpret_cast<HcommWindowHandle>(0x30000);
-void *g_fakeWsPtr = reinterpret_cast<void *>(0x40000);
+void* g_fakeWsPtr = reinterpret_cast<void*>(0x40000);
 HcclMemHandle g_fakeUserMemHandle = reinterpret_cast<HcclMemHandle>(0x60000);
 ChannelHandle g_fakeChannel = static_cast<ChannelHandle>(0x70000);
 
@@ -63,8 +63,8 @@ ChannelHandle g_fakeChannel = static_cast<ChannelHandle>(0x70000);
 uint32_t g_worldTeamIds4[4] = {1, 3, 5, 7};
 
 // ===================== mockcpp invoke 桩：为带出参的 Hcomm/Hccl 接口填充返回值 =====================
-HcommResult StubTeamCreateFillWorld(HcommTeamHandle worldTeam, const HcommTeamCreateDesc *desc, HcommTeamHandle *team,
-    uint64_t *outSyncMemSize)
+HcommResult StubTeamCreateFillWorld(
+    HcommTeamHandle worldTeam, const HcommTeamCreateDesc* desc, HcommTeamHandle* team, uint64_t* outSyncMemSize)
 {
     (void)worldTeam;
     (void)desc;
@@ -72,8 +72,8 @@ HcommResult StubTeamCreateFillWorld(HcommTeamHandle worldTeam, const HcommTeamCr
     *outSyncMemSize = 4096;
     return 0;
 }
-HcommResult StubTeamCreateZeroWs(HcommTeamHandle worldTeam, const HcommTeamCreateDesc *desc, HcommTeamHandle *team,
-    uint64_t *outSyncMemSize)
+HcommResult StubTeamCreateZeroWs(
+    HcommTeamHandle worldTeam, const HcommTeamCreateDesc* desc, HcommTeamHandle* team, uint64_t* outSyncMemSize)
 {
     (void)worldTeam;
     (void)desc;
@@ -84,8 +84,8 @@ HcommResult StubTeamCreateZeroWs(HcommTeamHandle worldTeam, const HcommTeamCreat
 // 按 worldTeam 参数区分：worldTeam==nullptr（world team 创建）返回 g_fakeWorldTeam + syncMemSize=4096；
 // 否则（sub team 创建）返回 g_fakeSubTeam + syncMemSize=4096。用于同一用例内先建 world 再建 sub 的场景，
 // 避免 FIFO 下两次 MOCKER(HcommTeamCreate).stubs() 只命中首个桩的问题。
-HcommResult StubTeamCreateByWorldArg(HcommTeamHandle worldTeam, const HcommTeamCreateDesc *desc,
-    HcommTeamHandle *team, uint64_t *outSyncMemSize)
+HcommResult StubTeamCreateByWorldArg(
+    HcommTeamHandle worldTeam, const HcommTeamCreateDesc* desc, HcommTeamHandle* team, uint64_t* outSyncMemSize)
 {
     (void)desc;
     *team = (worldTeam == nullptr) ? g_fakeWorldTeam : g_fakeSubTeam;
@@ -94,8 +94,8 @@ HcommResult StubTeamCreateByWorldArg(HcommTeamHandle worldTeam, const HcommTeamC
 }
 // 按 worldTeam 参数区分：world team 创建成功（返回 g_fakeWorldTeam），sub team 创建失败（返回 HCCL_E_INTERNAL）。
 // 用于 HcclSubTeamCreate 失败用例的前置 worldTeam 创建 + sub 创建失败场景。
-HcommResult StubTeamCreateWorldOkSubFail(HcommTeamHandle worldTeam, const HcommTeamCreateDesc *desc,
-    HcommTeamHandle *team, uint64_t *outSyncMemSize)
+HcommResult StubTeamCreateWorldOkSubFail(
+    HcommTeamHandle worldTeam, const HcommTeamCreateDesc* desc, HcommTeamHandle* team, uint64_t* outSyncMemSize)
 {
     (void)desc;
     if (worldTeam == nullptr) {
@@ -107,31 +107,32 @@ HcommResult StubTeamCreateWorldOkSubFail(HcommTeamHandle worldTeam, const HcommT
     *outSyncMemSize = 0;
     return static_cast<HcommResult>(HCCL_E_INTERNAL);
 }
-// 按 worldTeam 参数区分：world team 创建成功（syncMemSize=4096，HcclWorldTeamCreate/HcclSubTeamCreate 现要求 syncMemSize>0），
-// sub team 创建成功但 syncMemSize=0（触发 HcclSubTeamCreate 的 syncMemSize=0 → HCCL_E_PARA 错误路径）。
-HcommResult StubTeamCreateWorldOkSubZeroWs(HcommTeamHandle worldTeam, const HcommTeamCreateDesc *desc,
-    HcommTeamHandle *team, uint64_t *outSyncMemSize)
+// 按 worldTeam 参数区分：world team 创建成功（syncMemSize=4096，HcclWorldTeamCreate/HcclSubTeamCreate 现要求
+// syncMemSize>0）， sub team 创建成功但 syncMemSize=0（触发 HcclSubTeamCreate 的 syncMemSize=0 → HCCL_E_PARA
+// 错误路径）。
+HcommResult StubTeamCreateWorldOkSubZeroWs(
+    HcommTeamHandle worldTeam, const HcommTeamCreateDesc* desc, HcommTeamHandle* team, uint64_t* outSyncMemSize)
 {
     (void)desc;
     *team = (worldTeam == nullptr) ? g_fakeWorldTeam : g_fakeSubTeam;
     *outSyncMemSize = (worldTeam == nullptr) ? 4096 : 0;
     return 0;
 }
-HcommResult StubTeamGetIds4(HcommTeamHandle team, uint32_t **worldTeamIds, uint32_t *memberNum)
+HcommResult StubTeamGetIds4(HcommTeamHandle team, uint32_t** worldTeamIds, uint32_t* memberNum)
 {
     (void)team;
     *worldTeamIds = g_worldTeamIds4;
     *memberNum = 4;
     return 0;
 }
-HcommResult StubTeamGetNetLayerZero(HcommTeamHandle team, uint32_t *netLayer)
+HcommResult StubTeamGetNetLayerZero(HcommTeamHandle team, uint32_t* netLayer)
 {
     (void)team;
     *netLayer = 0;
     return 0;
 }
-HcommResult StubTeamWindowRegisterFill(HcommTeamHandle worldTeam, const HcommTeamWindowDesc *desc,
-    HcommWindowHandle *handle, HcommTeamWindowFlag flag)
+HcommResult StubTeamWindowRegisterFill(
+    HcommTeamHandle worldTeam, const HcommTeamWindowDesc* desc, HcommWindowHandle* handle, HcommTeamWindowFlag flag)
 {
     (void)worldTeam;
     (void)desc;
@@ -141,8 +142,8 @@ HcommResult StubTeamWindowRegisterFill(HcommTeamHandle worldTeam, const HcommTea
 }
 
 // —— HcommTeamCreate 桩：返回 ok 但 *team=nullptr（触发 E_INTERNAL 分支）——
-HcommResult StubTeamCreateReturnNullTeam(HcommTeamHandle worldTeam, const HcommTeamCreateDesc *desc,
-    HcommTeamHandle *team, uint64_t *outSyncMemSize)
+HcommResult StubTeamCreateReturnNullTeam(
+    HcommTeamHandle worldTeam, const HcommTeamCreateDesc* desc, HcommTeamHandle* team, uint64_t* outSyncMemSize)
 {
     (void)worldTeam;
     (void)desc;
@@ -153,9 +154,9 @@ HcommResult StubTeamCreateReturnNullTeam(HcommTeamHandle worldTeam, const HcommT
 
 // —— HcommTeamGetWorldTeamIds 桩：可配置返回的 ids/num（通过全局变量）——
 // 用于 MemberInfoAbnormal / LinkFail 等用例，按子场景设置 g_stubIds / g_stubIdNum。
-uint32_t *g_stubIds = nullptr;
+uint32_t* g_stubIds = nullptr;
 uint32_t g_stubIdNum = 0;
-HcommResult StubTeamGetIdsConfigurable(HcommTeamHandle team, uint32_t **worldTeamIds, uint32_t *memberNum)
+HcommResult StubTeamGetIdsConfigurable(HcommTeamHandle team, uint32_t** worldTeamIds, uint32_t* memberNum)
 {
     (void)team;
     *worldTeamIds = g_stubIds;
@@ -164,8 +165,8 @@ HcommResult StubTeamGetIdsConfigurable(HcommTeamHandle team, uint32_t **worldTea
 }
 
 // —— HcclRankGraphGetLinks 桩：无 link（linkNum=0）→ E_NOT_FOUND ——
-HcclResult StubRankGraphGetLinksEmpty(HcclComm comm, uint32_t netLayer, uint32_t srcRank, uint32_t dstRank,
-    CommLink **links, uint32_t *linkNum)
+HcclResult StubRankGraphGetLinksEmpty(
+    HcclComm comm, uint32_t netLayer, uint32_t srcRank, uint32_t dstRank, CommLink** links, uint32_t* linkNum)
 {
     (void)comm;
     (void)netLayer;
@@ -180,7 +181,7 @@ HcclResult StubRankGraphGetLinksEmpty(HcclComm comm, uint32_t netLayer, uint32_t
 // 用于"前置 worldTeam 创建成功 + sub team hrtMalloc 失败"场景，避免 expects(once()) 误命中前置调用。
 uint32_t g_hrtMallocOkCount = 0;
 uint32_t g_hrtMallocCallCnt = 0;
-HcclResult StubHrtMallocCountFail(void **devPtr, u64 size, bool level2Address)
+HcclResult StubHrtMallocCountFail(void** devPtr, u64 size, bool level2Address)
 {
     (void)size;
     (void)level2Address;
@@ -194,7 +195,7 @@ HcclResult StubHrtMallocCountFail(void **devPtr, u64 size, bool level2Address)
 }
 
 // HcclCommMemReg 出参桩：返回 user mem 句柄。
-HcclResult StubMemRegFillUser(HcclComm comm, const char *memTag, const CommMem *mem, HcclMemHandle *memHandle)
+HcclResult StubMemRegFillUser(HcclComm comm, const char* memTag, const CommMem* mem, HcclMemHandle* memHandle)
 {
     (void)comm;
     (void)memTag;
@@ -204,7 +205,7 @@ HcclResult StubMemRegFillUser(HcclComm comm, const char *memTag, const CommMem *
 }
 
 // hrtMalloc 出参桩：填入伪指针。
-HcclResult StubHrtMallocFill(void **devPtr, u64 size, bool level2Address)
+HcclResult StubHrtMallocFill(void** devPtr, u64 size, bool level2Address)
 {
     (void)size;
     (void)level2Address;
@@ -214,8 +215,8 @@ HcclResult StubHrtMallocFill(void **devPtr, u64 size, bool level2Address)
 
 // HcclRankGraphGetLinks 出参桩：返回单条 ROCE 链路。
 CommLink g_fakeLink{};
-HcclResult StubRankGraphGetLinks(HcclComm comm, uint32_t netLayer, uint32_t srcRank, uint32_t dstRank,
-    CommLink **links, uint32_t *linkNum)
+HcclResult StubRankGraphGetLinks(
+    HcclComm comm, uint32_t netLayer, uint32_t srcRank, uint32_t dstRank, CommLink** links, uint32_t* linkNum)
 {
     (void)comm;
     (void)netLayer;
@@ -233,8 +234,8 @@ HcclResult StubRankGraphGetLinks(HcclComm comm, uint32_t netLayer, uint32_t srcR
 }
 
 // HcclChannelAcquire 出参桩：每个 channel 填入伪造句柄。
-HcclResult StubChannelAcquireFill(HcclComm comm, CommEngine engine, const HcclChannelDesc *channelDescs,
-    uint32_t channelNum, ChannelHandle *channels)
+HcclResult StubChannelAcquireFill(
+    HcclComm comm, CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle* channels)
 {
     (void)comm;
     (void)engine;
@@ -257,17 +258,17 @@ struct RemoteMemScenario {
 };
 RemoteMemScenario g_remoteScenario;
 CommMem g_remoteMemsBuf[4];
-char *g_remoteTagsBuf[4];
+char* g_remoteTagsBuf[4];
 char g_wsTagBuf[128];
 char g_userTagBuf[128];
 
-HcclResult StubChannelGetRemoteMems(HcclComm comm, ChannelHandle channel, uint32_t *memNum, CommMem **remoteMems,
-    char ***memTags)
+HcclResult
+StubChannelGetRemoteMems(HcclComm comm, ChannelHandle channel, uint32_t* memNum, CommMem** remoteMems, char*** memTags)
 {
     (void)comm;
     (void)channel;
     uint32_t n = 0;
-    auto appendMem = [&](CommMem mem, const std::string &tag, char *tagBuf) {
+    auto appendMem = [&](CommMem mem, const std::string& tag, char* tagBuf) {
         g_remoteMemsBuf[n] = mem;
         (void)std::strncpy(tagBuf, tag.c_str(), 127);
         tagBuf[127] = '\0';
@@ -295,24 +296,24 @@ HcclResult StubChannelGetRemoteMems(HcclComm comm, ChannelHandle channel, uint32
 // ===================== 公共辅助：构造真实 hcclComm（rank=1, rankSize=2） =====================
 // rankGraphV2 必须由调用方持有（fixture 成员），因为 InitCollComm → CollComm::Init → IRankGraph 只存裸指针、
 // 不获取所有权；若 rankGraphV2 为函数局部 shared_ptr，函数返回后悬空，后续 GetRankSize() 解引用已释放内存。
-void BuildV2HcclComm(std::shared_ptr<hccl::hcclComm> &hcclCommPtr, std::shared_ptr<Hccl::RankGraph> &rankGraphV2)
+void BuildV2HcclComm(std::shared_ptr<hccl::hcclComm>& hcclCommPtr, std::shared_ptr<Hccl::RankGraph>& rankGraphV2)
 {
     MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
     MOCKER(IsSupportHCCLV2).stubs().will(returnValue(true));
 
-    void *commV2 = reinterpret_cast<void *>(0x2000);
+    void* commV2 = reinterpret_cast<void*>(0x2000);
     RankGraphStub rankGraphStub;
     rankGraphV2 = rankGraphStub.Create2PGraph();
     u32 rank = 1;
     HcclMem cclBuffer;
     cclBuffer.size = 1024;
     cclBuffer.type = HcclMemType::HCCL_MEM_TYPE_HOST;
-    cclBuffer.addr = reinterpret_cast<void *>(0x1000);
+    cclBuffer.addr = reinterpret_cast<void*>(0x1000);
     char commName[ROOTINFO_INDENTIFIER_MAX_LENGTH] = {};
     hcclCommPtr = make_shared<hccl::hcclComm>(1, 1, commName);
     HcclCommConfig config;
     UtInitHcclCommConfig(config);
-    config.hcclOpExpansionMode = 1;             // 非CCU模式
+    config.hcclOpExpansionMode = 1; // 非CCU模式
     config.hcclRdmaTrafficClass = 0xFFFFFFFF;
     config.hcclRdmaServiceLevel = 0xFFFFFFFF;
     HcclResult ret = hcclCommPtr->InitCollComm(commV2, rankGraphV2.get(), rank, cclBuffer, commName, &config);
@@ -320,8 +321,8 @@ void BuildV2HcclComm(std::shared_ptr<hccl::hcclComm> &hcclCommPtr, std::shared_p
 }
 
 // 构造并初始化 HcclTeamCreateDesc。
-void BuildTeamCreateDesc(HcclTeamCreateDesc &desc, const uint32_t *rankIds, uint32_t rankNum, uint32_t selfRankId,
-    uint32_t netLayer = 1)
+void BuildTeamCreateDesc(
+    HcclTeamCreateDesc& desc, const uint32_t* rankIds, uint32_t rankNum, uint32_t selfRankId, uint32_t netLayer = 1)
 {
     (void)HcclTeamCreateDescInit(&desc);
     desc.rankIds = rankIds;
@@ -335,7 +336,7 @@ void BuildTeamCreateDesc(HcclTeamCreateDesc &desc, const uint32_t *rankIds, uint
     desc.requirement.barrierCount = 1;
 }
 
-void BuildChannelDesc(HcclTeamCreateChannelsDesc &desc, CommEngine engine, uint32_t channelCnt, uint32_t notifyNum = 8)
+void BuildChannelDesc(HcclTeamCreateChannelsDesc& desc, CommEngine engine, uint32_t channelCnt, uint32_t notifyNum = 8)
 {
     (void)HcclTeamCreateChannelsDescInit(&desc);
     desc.engine = engine;
@@ -343,7 +344,7 @@ void BuildChannelDesc(HcclTeamCreateChannelsDesc &desc, CommEngine engine, uint3
     desc.protocol = COMM_PROTOCOL_UBC_CTP;
     desc.channelCnt = channelCnt;
 }
-}  // namespace
+} // namespace
 
 // ===================== 测试夹具 =====================
 class TestCollCommTeamCAdpt : public BaseInit {
@@ -351,7 +352,7 @@ public:
     void SetUp() override
     {
         BaseInit::SetUp();
-        const char *fakeA5SocName = "Ascend950PR_958b";
+        const char* fakeA5SocName = "Ascend950PR_958b";
         MOCKER(aclrtGetSocName).stubs().will(returnValue(fakeA5SocName));
         // 先构造真实 hcclComm（InitCollComm 内部会调用真实 hrtMalloc/hrtFree 等，必须在其完成后再
         // mock 这些接口，否则桩返回的伪指针会被 InitCollComm 解引用导致 SEGFAULT）。
@@ -406,7 +407,7 @@ protected:
 // 同时通过 mock HcommTeamCreate 出参 selfMemberId/netLayer 透传逻辑。
 TEST_F(TestCollCommTeamCAdpt, Ut_HcclWorldTeamCreate_When_NormalDesc_Expect_ReturnSuccessAndWorldTeamFilled)
 {
-    SetupSuccessMocks(); // HcommTeamCreate=FillWorld, hrtMalloc=Fill, HcommTeamDestroy=0, hrtFree=0
+    SetupSuccessMocks();          // HcommTeamCreate=FillWorld, hrtMalloc=Fill, HcommTeamDestroy=0, hrtFree=0
     uint32_t rankIds[2] = {0, 1}; // rankSize=2, selfRank=1
     HcclTeamCreateDesc desc;
     BuildTeamCreateDesc(desc, rankIds, 2, 1, 1);
@@ -569,12 +570,12 @@ TEST_F(TestCollCommTeamCAdpt, Ut_ClearByCollComm_When_TeamAndWindowExist_Expect_
     // 手动给 worldTeam 注册一个 window（AddWorldTeamWindow 直接写 teamMap 的 windows 列表）
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0x50000);
+    localMem.addr = reinterpret_cast<void*>(0x50000);
     localMem.size = 1024;
-    HcclTeamMgr::GetInstance().AddWorldTeamWindow(worldTeam, g_fakeWindow, localMem, g_fakeUserMemHandle,
-        "__hccl_team_usermem__test");
+    HcclTeamMgr::GetInstance().AddWorldTeamWindow(
+        worldTeam, g_fakeWindow, localMem, g_fakeUserMemHandle, "__hccl_team_usermem__test");
 
-    CollComm *collComm = hcclCommPtr->GetCollComm();
+    CollComm* collComm = hcclCommPtr->GetCollComm();
     ASSERT_NE(collComm, nullptr);
     HcclTeamMgr::GetInstance().ClearByCollComm(collComm);
 
@@ -795,7 +796,8 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamDestroy_When_HcommDestroyFail_Expect_Re
 // 异常：未注册 team 不崩溃，HcommTeamDestroy 仍被调用。
 TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamDestroy_When_TeamUnregistered_Expect_NoCrashAndHcommDestroyCalled)
 {
-    // 未注册 team：FindWorldTeam 返回 nullptr（非 worldTeam，跳过 window 销毁），UnregisterTeam 静默，HcommTeamDestroy 仍被调用。
+    // 未注册 team：FindWorldTeam 返回 nullptr（非 worldTeam，跳过 window 销毁），UnregisterTeam 静默，HcommTeamDestroy
+    // 仍被调用。
     MOCKER(HcommTeamDestroy).stubs().will(returnValue(0));
     EXPECT_EQ(HcclTeamDestroy(g_fakeSubTeam), HCCL_SUCCESS); // g_fakeSubTeam 未注册
 }
@@ -816,10 +818,10 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamDestroy_When_WorldTeamHasWindow_Expect_
     // 手动给 worldTeam 注册一个 window
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0x58000);
+    localMem.addr = reinterpret_cast<void*>(0x58000);
     localMem.size = 1024;
-    HcclTeamMgr::GetInstance().AddWorldTeamWindow(worldTeam, g_fakeWindow, localMem, g_fakeUserMemHandle,
-        "__hccl_team_usermem__destroy_test");
+    HcclTeamMgr::GetInstance().AddWorldTeamWindow(
+        worldTeam, g_fakeWindow, localMem, g_fakeUserMemHandle, "__hccl_team_usermem__destroy_test");
 
     // HcclTeamDestroy 应连带销毁 window（HcommTeamWindowDeregister）+ team（HcommTeamDestroy）
     EXPECT_EQ(HcclTeamDestroy(worldTeam), HCCL_SUCCESS);
@@ -871,7 +873,7 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamWindowRegister_When_FirstRegister_Expec
     // 首次注册：FindReusableWindow=false → 新建 window；user mem 注册一次。
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0xAA00);
+    localMem.addr = reinterpret_cast<void*>(0xAA00);
     localMem.size = 1024;
     HcommWindowHandle window = nullptr;
 
@@ -901,7 +903,7 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamWindowRegister_When_SubTeam_Expect_Retu
 
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0xAA01);
+    localMem.addr = reinterpret_cast<void*>(0xAA01);
     localMem.size = 1024;
     HcommWindowHandle window = nullptr;
     EXPECT_EQ(HcclTeamWindowRegister(comm, subTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_E_PARA);
@@ -928,15 +930,17 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamWindowRegister_When_WsAlreadyRegistered
     // (1) 首次注册：新建 window。
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0xBB00);
+    localMem.addr = reinterpret_cast<void*>(0xBB00);
     localMem.size = 1024;
     HcommWindowHandle window = nullptr;
-    EXPECT_EQ(HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
+    EXPECT_EQ(
+        HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
     EXPECT_EQ(window, g_fakeWindow);
 
     // (2) 同 addr 同 size 再次注册：FindReusableWindow 命中（子集/全等）→ 复用同一 window。
     HcommWindowHandle window2 = nullptr;
-    EXPECT_EQ(HcclTeamWindowRegister(comm, worldTeam, &localMem, &window2, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
+    EXPECT_EQ(
+        HcclTeamWindowRegister(comm, worldTeam, &localMem, &window2, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
     EXPECT_EQ(window2, g_fakeWindow);
 
     EXPECT_EQ(HcclTeamDestroy(worldTeam), HCCL_SUCCESS);
@@ -957,32 +961,38 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamWindowRegister_When_ReuseWindow_Expect_
     // 首次注册：addr=B(0xC000), size=2048。
     CommMem baseMem{};
     baseMem.type = COMM_MEM_TYPE_DEVICE;
-    baseMem.addr = reinterpret_cast<void *>(0xC000);
+    baseMem.addr = reinterpret_cast<void*>(0xC000);
     baseMem.size = 2048;
     HcommWindowHandle baseWindow = nullptr;
-    EXPECT_EQ(HcclTeamWindowRegister(comm, worldTeam, &baseMem, &baseWindow, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
+    EXPECT_EQ(
+        HcclTeamWindowRegister(comm, worldTeam, &baseMem, &baseWindow, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
 
     // (1) 子集：addr=B, size=512 → 复用同一 window（FindReusableWindow 命中，不调 Hcomm 层 WindowRegister/MemReg）。
     CommMem subsetMem{};
     subsetMem.type = COMM_MEM_TYPE_DEVICE;
-    subsetMem.addr = reinterpret_cast<void *>(0xC000);
+    subsetMem.addr = reinterpret_cast<void*>(0xC000);
     subsetMem.size = 512;
     HcommWindowHandle subsetWindow = nullptr;
-    EXPECT_EQ(HcclTeamWindowRegister(comm, worldTeam, &subsetMem, &subsetWindow, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
+    EXPECT_EQ(
+        HcclTeamWindowRegister(comm, worldTeam, &subsetMem, &subsetWindow, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC),
+        HCCL_SUCCESS);
     EXPECT_EQ(subsetWindow, baseWindow);
 
     // (2) 完全相同：addr=B, size=2048 → 复用同一 window。
     HcommWindowHandle sameWindow = nullptr;
-    EXPECT_EQ(HcclTeamWindowRegister(comm, worldTeam, &baseMem, &sameWindow, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
+    EXPECT_EQ(
+        HcclTeamWindowRegister(comm, worldTeam, &baseMem, &sameWindow, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
     EXPECT_EQ(sameWindow, baseWindow);
 
     // (3) 非子集：addr=B+4096, size=512 → 新建 window（g_fakeWindow）。
     CommMem disjointMem{};
     disjointMem.type = COMM_MEM_TYPE_DEVICE;
-    disjointMem.addr = reinterpret_cast<void *>(0xC000 + 4096);
+    disjointMem.addr = reinterpret_cast<void*>(0xC000 + 4096);
     disjointMem.size = 512;
     HcommWindowHandle newWindow = nullptr;
-    EXPECT_EQ(HcclTeamWindowRegister(comm, worldTeam, &disjointMem, &newWindow, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
+    EXPECT_EQ(
+        HcclTeamWindowRegister(comm, worldTeam, &disjointMem, &newWindow, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC),
+        HCCL_SUCCESS);
     EXPECT_EQ(newWindow, g_fakeWindow);
 
     EXPECT_EQ(HcclTeamDestroy(worldTeam), HCCL_SUCCESS);
@@ -1003,7 +1013,7 @@ TEST_F(TestCollCommTeamCAdpt, Ut_FindReusableWindow_When_MultipleSortedWindows_E
     auto addWin = [worldTeam](uintptr_t addr, uint64_t size, HcommWindowHandle handle) {
         CommMem mem{};
         mem.type = COMM_MEM_TYPE_DEVICE;
-        mem.addr = reinterpret_cast<void *>(addr);
+        mem.addr = reinterpret_cast<void*>(addr);
         mem.size = size;
         HcclTeamMgr::GetInstance().AddWorldTeamWindow(worldTeam, handle, mem, g_fakeUserMemHandle, "tag");
     };
@@ -1016,7 +1026,7 @@ TEST_F(TestCollCommTeamCAdpt, Ut_FindReusableWindow_When_MultipleSortedWindows_E
     // addr=0x20100, size=512 → 完全落在 [0x20000, 0x21000) 内，应命中 0xA200。
     CommMem midSubset{};
     midSubset.type = COMM_MEM_TYPE_DEVICE;
-    midSubset.addr = reinterpret_cast<void *>(0x20100);
+    midSubset.addr = reinterpret_cast<void*>(0x20100);
     midSubset.size = 512;
     HcommWindowHandle found = nullptr;
     EXPECT_TRUE(HcclTeamMgr::GetInstance().FindReusableWindow(worldTeam, midSubset, found));
@@ -1025,7 +1035,7 @@ TEST_F(TestCollCommTeamCAdpt, Ut_FindReusableWindow_When_MultipleSortedWindows_E
     // 查找首 window（0x10000）的子集 → 应命中 0xA100
     CommMem firstSubset{};
     firstSubset.type = COMM_MEM_TYPE_DEVICE;
-    firstSubset.addr = reinterpret_cast<void *>(0x10000);
+    firstSubset.addr = reinterpret_cast<void*>(0x10000);
     firstSubset.size = 1024;
     found = nullptr;
     EXPECT_TRUE(HcclTeamMgr::GetInstance().FindReusableWindow(worldTeam, firstSubset, found));
@@ -1034,7 +1044,7 @@ TEST_F(TestCollCommTeamCAdpt, Ut_FindReusableWindow_When_MultipleSortedWindows_E
     // 查找未覆盖区间（0x50000）→ 不命中
     CommMem missMem{};
     missMem.type = COMM_MEM_TYPE_DEVICE;
-    missMem.addr = reinterpret_cast<void *>(0x50000);
+    missMem.addr = reinterpret_cast<void*>(0x50000);
     missMem.size = 512;
     found = nullptr;
     EXPECT_FALSE(HcclTeamMgr::GetInstance().FindReusableWindow(worldTeam, missMem, found));
@@ -1047,20 +1057,26 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamWindowRegister_When_NullptrParams_Expec
 {
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0xDD00);
+    localMem.addr = reinterpret_cast<void*>(0xDD00);
     localMem.size = 1024;
     HcommWindowHandle window = nullptr;
 
-    EXPECT_EQ(HcclTeamWindowRegister(nullptr, g_fakeWorldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_E_PTR);
+    EXPECT_EQ(
+        HcclTeamWindowRegister(nullptr, g_fakeWorldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC),
+        HCCL_E_PTR);
     EXPECT_EQ(HcclTeamWindowRegister(comm, nullptr, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_E_PTR);
-    EXPECT_EQ(HcclTeamWindowRegister(comm, g_fakeWorldTeam, &localMem, nullptr, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_E_PTR);
+    EXPECT_EQ(
+        HcclTeamWindowRegister(comm, g_fakeWorldTeam, &localMem, nullptr, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC),
+        HCCL_E_PTR);
 
     // addr=nullptr 先于复用检查
     CommMem nullAddrMem{};
     nullAddrMem.type = COMM_MEM_TYPE_DEVICE;
     nullAddrMem.addr = nullptr;
     nullAddrMem.size = 1024;
-    EXPECT_EQ(HcclTeamWindowRegister(comm, g_fakeWorldTeam, &nullAddrMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_E_PTR);
+    EXPECT_EQ(
+        HcclTeamWindowRegister(comm, g_fakeWorldTeam, &nullAddrMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC),
+        HCCL_E_PTR);
 }
 
 // 异常：localMem.size=0 返回 E_PARA。
@@ -1068,10 +1084,12 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamWindowRegister_When_SizeZero_Expect_Ret
 {
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0xEE00);
+    localMem.addr = reinterpret_cast<void*>(0xEE00);
     localMem.size = 0;
     HcommWindowHandle window = nullptr;
-    EXPECT_EQ(HcclTeamWindowRegister(comm, g_fakeWorldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_E_PARA);
+    EXPECT_EQ(
+        HcclTeamWindowRegister(comm, g_fakeWorldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC),
+        HCCL_E_PARA);
 }
 
 // 异常：归属校验失败（FindWorldTeam=nullptr / commId 不一致 / GetCollComm=nullptr）。
@@ -1079,15 +1097,18 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamWindowRegister_When_OwnershipFail_Expec
 {
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0xFF00);
+    localMem.addr = reinterpret_cast<void*>(0xFF00);
     localMem.size = 1024;
     HcommWindowHandle window = nullptr;
 
     // (1) team 不是 worldTeam（FindWorldTeam 返回 nullptr ≠ team）→ HCCL_E_PARA。
-    EXPECT_EQ(HcclTeamWindowRegister(comm, g_fakeSubTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_E_PARA);
+    EXPECT_EQ(
+        HcclTeamWindowRegister(comm, g_fakeSubTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_E_PARA);
 
     // (2) GetCollComm=nullptr：comm=nullptr → E_PTR（先于归属校验）。
-    EXPECT_EQ(HcclTeamWindowRegister(nullptr, g_fakeWorldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_E_PTR);
+    EXPECT_EQ(
+        HcclTeamWindowRegister(nullptr, g_fakeWorldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC),
+        HCCL_E_PTR);
 }
 
 // 异常：Hcomm 层 WindowRegister 失败：window=nullptr，返回 ret。
@@ -1108,7 +1129,7 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamWindowRegister_When_HcommWindowRegister
 
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0x12200);
+    localMem.addr = reinterpret_cast<void*>(0x12200);
     localMem.size = 1024;
     HcommWindowHandle window = nullptr;
     HcclResult ret = HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC);
@@ -1134,10 +1155,11 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamWindowDeregister_When_Normal_Expect_Ret
     // 先注册一个 window，使 windows 列表非空。
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0xA000);
+    localMem.addr = reinterpret_cast<void*>(0xA000);
     localMem.size = 1024;
     HcommWindowHandle window = nullptr;
-    ASSERT_EQ(HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
+    ASSERT_EQ(
+        HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
     ASSERT_EQ(window, g_fakeWindow);
     // 确认 window 已记录到 worldTeam 的 window 列表。
     ASSERT_EQ(HcclTeamMgr::GetInstance().GetWorldTeamWindows(worldTeam).size(), 1U);
@@ -1181,10 +1203,11 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamWindowDeregister_When_HcommWindowDestro
     // 注册一个 window。
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0xB000);
+    localMem.addr = reinterpret_cast<void*>(0xB000);
     localMem.size = 1024;
     HcommWindowHandle window = nullptr;
-    ASSERT_EQ(HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
+    ASSERT_EQ(
+        HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
 
     // 注销时 HcommTeamWindowDeregister 失败 → 返回 HCCL_E_INTERNAL。
     // 注：RemoveWorldTeamWindow 已先执行（window 记录已移除），但 Hcomm 层 window 销毁失败。
@@ -1229,10 +1252,11 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamChannelsCreate_When_FullFlow_Expect_Suc
     // 注册一个 user window，使 windows 列表非空。
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0x22200);
+    localMem.addr = reinterpret_cast<void*>(0x22200);
     localMem.size = 1024;
     HcommWindowHandle window = nullptr;
-    ASSERT_EQ(HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
+    ASSERT_EQ(
+        HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
 
     // memberNum=4（桩给出 [1,3,5,7]），selfRank=1 → selfMemberId=0；3 个 peer。
     HcclTeamCreateChannelsDesc chDesc;
@@ -1257,13 +1281,13 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamChannelsCreate_When_MultiChannelMultiWi
     // 注册 2 个不相交 window。
     CommMem mem1{};
     mem1.type = COMM_MEM_TYPE_DEVICE;
-    mem1.addr = reinterpret_cast<void *>(0x30000);
+    mem1.addr = reinterpret_cast<void*>(0x30000);
     mem1.size = 1024;
     HcommWindowHandle win1 = nullptr;
     ASSERT_EQ(HcclTeamWindowRegister(comm, worldTeam, &mem1, &win1, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
     CommMem mem2{};
     mem2.type = COMM_MEM_TYPE_DEVICE;
-    mem2.addr = reinterpret_cast<void *>(0x31000);
+    mem2.addr = reinterpret_cast<void*>(0x31000);
     mem2.size = 1024;
     HcommWindowHandle win2 = nullptr;
     ASSERT_EQ(HcclTeamWindowRegister(comm, worldTeam, &mem2, &win2, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
@@ -1291,10 +1315,11 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamChannelsCreate_When_RemoteMemTagDispatc
     // 注册一个 user window。
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0x40000);
+    localMem.addr = reinterpret_cast<void*>(0x40000);
     localMem.size = 1024;
     HcommWindowHandle window = nullptr;
-    ASSERT_EQ(HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
+    ASSERT_EQ(
+        HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
 
     // 从 HcclTeamMgr 取出 window 注册时生成的 localMemTag，用作远端 mem tag，使 tag 匹配命中。
     std::vector<WindowInfo> wins = HcclTeamMgr::GetInstance().GetWorldTeamWindows(worldTeam);
@@ -1307,7 +1332,7 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamChannelsCreate_When_RemoteMemTagDispatc
     g_remoteScenario.hasWs = false;
     g_remoteScenario.hasUser = true;
     g_remoteScenario.userMem.type = COMM_MEM_TYPE_DEVICE;
-    g_remoteScenario.userMem.addr = reinterpret_cast<void *>(0x41000);
+    g_remoteScenario.userMem.addr = reinterpret_cast<void*>(0x41000);
     g_remoteScenario.userMem.size = 1024;
     g_remoteScenario.multiMems = true;
     g_remoteScenario.userTag = userTag;
@@ -1320,10 +1345,12 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamChannelsCreate_When_RemoteMemTagDispatc
     EXPECT_EQ(HcclTeamDestroy(worldTeam), HCCL_SUCCESS);
 }
 
-// 功能：无 window / peer 无 ws tag 边界。注：worldTeam 现必有 ws（syncMemSize>0），self 槽填本地 ws，peer 无 ws tag 则其槽为零值。
+// 功能：无 window / peer 无 ws tag 边界。注：worldTeam 现必有 ws（syncMemSize>0），self 槽填本地 ws，peer 无 ws tag
+// 则其槽为零值。
 TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamChannelsCreate_When_NoWsNoWindowEmptyRemote_Expect_Success)
 {
-    // worldTeam 用 syncMemSize=4096（源码现要求 syncMemSize>0）；无 window → 跳过 BindWindow；远端仅 user tag → peer 的 ws 槽为零值。
+    // worldTeam 用 syncMemSize=4096（源码现要求 syncMemSize>0）；无 window → 跳过 BindWindow；远端仅 user tag → peer 的
+    // ws 槽为零值。
     MOCKER(HcommTeamCreate).stubs().will(invoke(StubTeamCreateByWorldArg));
     SetupSuccessMocks();
     uint32_t worldRankIds[2] = {0, 1};
@@ -1336,7 +1363,7 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamChannelsCreate_When_NoWsNoWindowEmptyRe
     g_remoteScenario.hasWs = false;
     g_remoteScenario.hasUser = true;
     g_remoteScenario.userMem.type = COMM_MEM_TYPE_DEVICE;
-    g_remoteScenario.userMem.addr = reinterpret_cast<void *>(0x42000);
+    g_remoteScenario.userMem.addr = reinterpret_cast<void*>(0x42000);
     g_remoteScenario.userMem.size = 1024;
     g_remoteScenario.userTag = "any_user_tag";
 
@@ -1465,10 +1492,11 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamChannelsCreate_When_BindChannelsFail_Ex
     // 注册一个 window，使 BindWindow 路径可达。
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0x50000);
+    localMem.addr = reinterpret_cast<void*>(0x50000);
     localMem.size = 1024;
     HcommWindowHandle window = nullptr;
-    ASSERT_EQ(HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
+    ASSERT_EQ(
+        HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
 
     HcclTeamCreateChannelsDesc chDesc;
     BuildChannelDesc(chDesc, COMM_ENGINE_AICPU_TS, 1, 8);
@@ -1495,10 +1523,11 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamChannelsCreate_When_GetRemoteMemsFail_E
 
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0x50000);
+    localMem.addr = reinterpret_cast<void*>(0x50000);
     localMem.size = 1024;
     HcommWindowHandle window = nullptr;
-    ASSERT_EQ(HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
+    ASSERT_EQ(
+        HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
 
     HcclTeamCreateChannelsDesc chDesc;
     BuildChannelDesc(chDesc, COMM_ENGINE_AICPU_TS, 1, 8);
@@ -1524,10 +1553,11 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamChannelsCreate_When_BindWindowFail_Expe
 
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0x50000);
+    localMem.addr = reinterpret_cast<void*>(0x50000);
     localMem.size = 1024;
     HcommWindowHandle window = nullptr;
-    ASSERT_EQ(HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
+    ASSERT_EQ(
+        HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
 
     HcclTeamCreateChannelsDesc chDesc;
     BuildChannelDesc(chDesc, COMM_ENGINE_AICPU_TS, 1, 8);
@@ -1553,10 +1583,11 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclTeamChannelsCreate_When_BindSyncMemFail_Exp
 
     CommMem localMem{};
     localMem.type = COMM_MEM_TYPE_DEVICE;
-    localMem.addr = reinterpret_cast<void *>(0x50000);
+    localMem.addr = reinterpret_cast<void*>(0x50000);
     localMem.size = 1024;
     HcommWindowHandle window = nullptr;
-    ASSERT_EQ(HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
+    ASSERT_EQ(
+        HcclTeamWindowRegister(comm, worldTeam, &localMem, &window, HCOMM_TEAM_WINDOW_FLAG_SYMMETRIC), HCCL_SUCCESS);
 
     HcclTeamCreateChannelsDesc chDesc;
     BuildChannelDesc(chDesc, COMM_ENGINE_AICPU_TS, 1, 8);

@@ -13,5 +13,4 @@
 
 #include "transport_ibverbs_pub.h"
 
-
 #endif /* TRANSPORT_IBVERBS_H */

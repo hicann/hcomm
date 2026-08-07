@@ -29,54 +29,62 @@ public:
     ~ReduceScatterNHR() override;
 
     HcclResult Prepare(u64 reduceAttrBitMap, bool needMerge) override;
-    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK> &links) override;
-    HcclResult GetNslbAdjInfo(const u32 rank, const u32 rankSize,
-                              const std::vector<LINK> &links, AdjInfo& nslbAdjInfo) override;
+    HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
+    HcclResult
+    GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
 
 protected:
 private:
-    HcclResult SimpleCheck(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
-    HcclResult CheckSlices(const std::vector<Slice> &checkSlices, const u32 rankSize);
+    HcclResult SimpleCheck(const u32 rank, const u32 rankSize, const std::vector<LINK>& links);
+    HcclResult CheckSlices(const std::vector<Slice>& checkSlices, const u32 rankSize);
 
-    HcclResult RunReduceScatterNHR(const u32 rank, const u32 rankSize, const std::vector<LINK> &links,
-        const std::vector<Slice> &inputSlices, const std::vector<Slice> &outputSlices);
-    HcclResult RunSourceSender(const LINK &link, InterServerAlgoStep &stepInfo, const std::vector<Slice> &inputSlices,
-        const std::vector<Slice> &outputSlices);
-    HcclResult RunDestReducer(const LINK &link, InterServerAlgoStep &stepInfo, const std::vector<Slice> &inputSlices,
-        const std::vector<Slice> &outputSlices);
+    HcclResult RunReduceScatterNHR(
+        const u32 rank, const u32 rankSize, const std::vector<LINK>& links, const std::vector<Slice>& inputSlices,
+        const std::vector<Slice>& outputSlices);
+    HcclResult RunSourceSender(
+        const LINK& link, InterServerAlgoStep& stepInfo, const std::vector<Slice>& inputSlices,
+        const std::vector<Slice>& outputSlices);
+    HcclResult RunDestReducer(
+        const LINK& link, InterServerAlgoStep& stepInfo, const std::vector<Slice>& inputSlices,
+        const std::vector<Slice>& outputSlices);
 
-    HcclResult GetStepInfo(u32 step, u32 nSteps, u32 rank, u32 rankSize, InterServerAlgoStep &stepInfo) override;
+    HcclResult GetStepInfo(u32 step, u32 nSteps, u32 rank, u32 rankSize, InterServerAlgoStep& stepInfo) override;
 
-    HcclResult InlineReducer(const LINK &linkLeft, const std::vector<ReducerMemoryInfo> &rxReduceMems);
+    HcclResult InlineReducer(const LINK& linkLeft, const std::vector<ReducerMemoryInfo>& rxReduceMems);
 
-    HcclResult InlineReduceRx(const LINK &linkLeft, std::vector<Slice> &rxSlices, std::vector<Slice> &rxSlicestemp);
+    HcclResult InlineReduceRx(const LINK& linkLeft, std::vector<Slice>& rxSlices, std::vector<Slice>& rxSlicestemp);
 
-    HcclResult InlineReduceRxLastStep(const LINK &linkLeft, InterServerAlgoStep &stepInfo,
-        const std::vector<Slice> &inputSlices, const std::vector<Slice> &outputSlices);
+    HcclResult InlineReduceRxLastStep(
+        const LINK& linkLeft, InterServerAlgoStep& stepInfo, const std::vector<Slice>& inputSlices,
+        const std::vector<Slice>& outputSlices);
 
-    HcclResult TbeReduceRx(const LINK &linkLeft, std::vector<Slice> &rxSlices, std::vector<Slice> &rxSlicestemp);
+    HcclResult TbeReduceRx(const LINK& linkLeft, std::vector<Slice>& rxSlices, std::vector<Slice>& rxSlicestemp);
 
-    HcclResult TbeReduceRxLastStep(const LINK &linkLeft, InterServerAlgoStep &stepInfo,
-        const std::vector<Slice> &inputSlices, const std::vector<Slice> &outputSlices);
+    HcclResult TbeReduceRxLastStep(
+        const LINK& linkLeft, InterServerAlgoStep& stepInfo, const std::vector<Slice>& inputSlices,
+        const std::vector<Slice>& outputSlices);
 
-    HcclResult RunDestReducerLastStep(const LINK &linkLeft, InterServerAlgoStep &stepInfo,
-        const std::vector<Slice> &inputSlices, const std::vector<Slice> &outputSlices);
+    HcclResult RunDestReducerLastStep(
+        const LINK& linkLeft, InterServerAlgoStep& stepInfo, const std::vector<Slice>& inputSlices,
+        const std::vector<Slice>& outputSlices);
 
-    HcclResult GetRxSlices(std::vector<Slice> &rxSlices, std::vector<Slice> &rxSlicestemp,
-        InterServerAlgoStep &stepInfo, const std::vector<Slice> &inputSlices, const std::vector<Slice> &outputSlices);
+    HcclResult GetRxSlices(
+        std::vector<Slice>& rxSlices, std::vector<Slice>& rxSlicestemp, InterServerAlgoStep& stepInfo,
+        const std::vector<Slice>& inputSlices, const std::vector<Slice>& outputSlices);
 
-    HcclResult SdmaReducer(const u32 nSteps, const LINK &linkLeft, InterServerAlgoStep &stepInfo,
-        const std::vector<Slice> &inputSlices, const std::vector<Slice> &outputSlices);
+    HcclResult SdmaReducer(
+        const u32 nSteps, const LINK& linkLeft, InterServerAlgoStep& stepInfo, const std::vector<Slice>& inputSlices,
+        const std::vector<Slice>& outputSlices);
 
     void GetSliceMap(const u32 rankSize);
 
-    static void Reorder(u32 start, u32 end, u32 len, std::vector<u32> &tree, std::vector<u32> &tmp);
+    static void Reorder(u32 start, u32 end, u32 len, std::vector<u32>& tree, std::vector<u32>& tmp);
 
     u64 reduceAttr_ = 0; /* 0x1:表示data_type + reduce_type支持inlinereduce  */
 
     std::unique_ptr<Sender> senderInfo_;
     std::unique_ptr<Reducer> reducerInfo_;
 };
-} // hccl
+} // namespace hccl
 
 #endif /* REDUCE_SCATTER_NHR_PUB_H */

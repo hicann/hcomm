@@ -17,53 +17,50 @@
 
 namespace hccl {
 
-TopoinfoRanktablePartition::TopoinfoRanktablePartition(hccl::HcclCommParams &globalParams,
-    hccl::RankTable_t &globalRankTable)
-    : globalParams_(globalParams), globalRankTable_(globalRankTable)
-{
-}
+TopoinfoRanktablePartition::TopoinfoRanktablePartition(
+    hccl::HcclCommParams& globalParams, hccl::RankTable_t& globalRankTable)
+    : globalParams_(globalParams),
+      globalRankTable_(globalRankTable)
+{}
 
-TopoinfoRanktablePartition::~TopoinfoRanktablePartition()
-{
-}
+TopoinfoRanktablePartition::~TopoinfoRanktablePartition() {}
 
-HcclResult TopoinfoRanktablePartition::GenerateSubRankTable(const uint32_t rankNum, const uint32_t *rankIds,
-    hccl::RankTable_t &subRankTable)
+HcclResult TopoinfoRanktablePartition::GenerateSubRankTable(
+    const uint32_t rankNum, const uint32_t* rankIds, hccl::RankTable_t& subRankTable)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktablePartition::GenerateSubSuperPodId(hccl::RankTable_t &subRankTable)
+HcclResult TopoinfoRanktablePartition::GenerateSubSuperPodId(hccl::RankTable_t& subRankTable)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktablePartition::GenerateSubParams(const hccl::RankTable_t &subRankTable,
-    const uint32_t subCommRankId, hccl::HcclCommParams &subParams)
+HcclResult TopoinfoRanktablePartition::GenerateSubParams(
+    const hccl::RankTable_t& subRankTable, const uint32_t subCommRankId, hccl::HcclCommParams& subParams)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktablePartition::GetRankTableStr(const hccl::RankTable_t &subRankTable, std::string &rankTableStr)
+HcclResult TopoinfoRanktablePartition::GetRankTableStr(const hccl::RankTable_t& subRankTable, std::string& rankTableStr)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktablePartition::TransformRankInfo(const RankTable_t &clusterInfo,
-    nlohmann::json &perRankJson, u32 rankIndex)
+HcclResult TopoinfoRanktablePartition::TransformRankInfo(
+    const RankTable_t& clusterInfo, nlohmann::json& perRankJson, u32 rankIndex)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktablePartition::TransformServerList(const RankTable_t &clusterInfo,
-    nlohmann::json &rankListJson)
+HcclResult TopoinfoRanktablePartition::TransformServerList(const RankTable_t& clusterInfo, nlohmann::json& rankListJson)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktablePartition::Struct2JsonRankTable(const RankTable_t &clusterInfo, const DevType deviceType,
-    nlohmann::json& ClusterJson)
+HcclResult TopoinfoRanktablePartition::Struct2JsonRankTable(
+    const RankTable_t& clusterInfo, const DevType deviceType, nlohmann::json& ClusterJson)
 {
     return HCCL_E_NOT_SUPPORT;
 }
-}  // namespace hccl
+} // namespace hccl

@@ -19,91 +19,106 @@
 #include "exception_util.h"
 
 namespace Hccl {
-void  CheakDeviceIdAndDevicePort(u32 deviceId, u32& devicePort){
-    if (deviceId > MAX_VALUE_DEVICEID) {
-            THROW<InvalidParamsException>(StringFormat("device_id [%u] is out of range [%u] to [%u]", deviceId, MIN_VALUE_U32, MAX_VALUE_DEVICEID));
-        }
-    if (devicePort > MAX_VALUE_TCPPORT || devicePort < MIN_VALUE_TCPPORT) {
-        THROW<InvalidParamsException>(StringFormat("device_port [%u] is out of range [%u] to [%u]", devicePort, MIN_VALUE_TCPPORT, MAX_VALUE_TCPPORT));
-    }
-}
-
-void CheakLevelJsonsSize(u64 levelJsonsSize){
-    if(levelJsonsSize > MAX_LEVEL_lIST) {
-        THROW<InvalidParamsException>(StringFormat("level_list size [%u], exceeds the maximum limit [%u]", levelJsonsSize, MAX_LEVEL_lIST));
-    }
-}
-
-void NewRankInfo::Deserialize(const nlohmann::json &newRankInfoJson)
+void CheakDeviceIdAndDevicePort(u32 deviceId, u32& devicePort)
 {
-    std::string msgRankid  = "error occurs when parser object of propName \"rank_id\"";
+    if (deviceId > MAX_VALUE_DEVICEID) {
+        THROW<InvalidParamsException>(
+            StringFormat("device_id [%u] is out of range [%u] to [%u]", deviceId, MIN_VALUE_U32, MAX_VALUE_DEVICEID));
+    }
+    if (devicePort > MAX_VALUE_TCPPORT || devicePort < MIN_VALUE_TCPPORT) {
+        THROW<InvalidParamsException>(StringFormat(
+            "device_port [%u] is out of range [%u] to [%u]", devicePort, MIN_VALUE_TCPPORT, MAX_VALUE_TCPPORT));
+    }
+}
+
+void CheakLevelJsonsSize(u64 levelJsonsSize)
+{
+    if (levelJsonsSize > MAX_LEVEL_lIST) {
+        THROW<InvalidParamsException>(
+            StringFormat("level_list size [%u], exceeds the maximum limit [%u]", levelJsonsSize, MAX_LEVEL_lIST));
+    }
+}
+
+void NewRankInfo::Deserialize(const nlohmann::json& newRankInfoJson)
+{
+    std::string msgRankid = "error occurs when parser object of propName \"rank_id\"";
     std::string msgLocalid = "error occurs when parser object of propName \"local_id\"";
     TRY_CATCH_THROW(InvalidParamsException, msgRankid, rankId = GetJsonPropertyUInt(newRankInfoJson, "rank_id"););
     TRY_CATCH_THROW(InvalidParamsException, msgLocalid, localId = GetJsonPropertyUInt(newRankInfoJson, "local_id"););
     if (localId > BACKUP_LOCAL_ID) {
-        THROW<InvalidParamsException>(StringFormat("local_id [%u] is out of range [%u] to [%u]", localId, MIN_VALUE_U32, BACKUP_LOCAL_ID));
+        THROW<InvalidParamsException>(
+            StringFormat("local_id [%u] is out of range [%u] to [%u]", localId, MIN_VALUE_U32, BACKUP_LOCAL_ID));
     }
     if (localId == BACKUP_LOCAL_ID) {
         std::string msgReplacedId = "error occurs when parser object of propName \"replaced_local_id\"";
-        TRY_CATCH_THROW(InvalidParamsException, msgReplacedId, replacedLocalId = GetJsonPropertyUInt(newRankInfoJson, "replaced_local_id"););
-        if (replacedLocalId > BACKUP_LOCAL_ID-1) {
-        THROW<InvalidParamsException>(StringFormat("replaced_local_id [%u] is out of range [%u] to [%u]", replacedLocalId, MIN_VALUE_U32, BACKUP_LOCAL_ID-1));
+        TRY_CATCH_THROW(InvalidParamsException, msgReplacedId,
+                        replacedLocalId = GetJsonPropertyUInt(newRankInfoJson, "replaced_local_id"););
+        if (replacedLocalId > BACKUP_LOCAL_ID - 1) {
+            THROW<InvalidParamsException>(StringFormat(
+                "replaced_local_id [%u] is out of range [%u] to [%u]", replacedLocalId, MIN_VALUE_U32,
+                BACKUP_LOCAL_ID - 1));
         }
     } else {
         replacedLocalId = localId;
     }
-    std::string msgDeviceid  = "error occurs when parser object of propName \"device_id\"";
+    std::string msgDeviceid = "error occurs when parser object of propName \"device_id\"";
     std::string msgdeviceport = "error occurs when parser object of propName \"device_port\"";
     std::string msghostport = "error occurs when parser object of propName \"host_port\"";
     TRY_CATCH_THROW(InvalidParamsException, msgDeviceid, deviceId = GetJsonPropertyUInt(newRankInfoJson, "device_id"););
-    TRY_CATCH_THROW(InvalidParamsException, msgdeviceport, devicePort = GetJsonPropertyUInt(newRankInfoJson, "device_port", false, DEFAULT_VALUE_TCPPORT););
-    TRY_CATCH_THROW(InvalidParamsException, msghostport, hostPort = GetJsonPropertyUInt(newRankInfoJson, "host_port", false, DEFAULT_VALUE_TCPPORT););
+    TRY_CATCH_THROW(InvalidParamsException, msgdeviceport,
+                    devicePort = GetJsonPropertyUInt(newRankInfoJson, "device_port", false, DEFAULT_VALUE_TCPPORT););
+    TRY_CATCH_THROW(InvalidParamsException, msghostport,
+                    hostPort = GetJsonPropertyUInt(newRankInfoJson, "host_port", false, DEFAULT_VALUE_TCPPORT););
     CheakDeviceIdAndDevicePort(deviceId, devicePort);
     if (hostPort > MAX_VALUE_TCPPORT || hostPort < MIN_VALUE_TCPPORT) {
-        THROW<InvalidParamsException>(StringFormat("host_port [%u] is out of range [%u] to [%u]", hostPort, MIN_VALUE_TCPPORT, MAX_VALUE_TCPPORT));
+        THROW<InvalidParamsException>(StringFormat(
+            "host_port [%u] is out of range [%u] to [%u]", hostPort, MIN_VALUE_TCPPORT, MAX_VALUE_TCPPORT));
     }
     nlohmann::json levelJsons;
     std::string msgLevellist = "error occurs when parser object of propName \"level_list\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgLevellist, GetJsonPropertyList(newRankInfoJson, "level_list", levelJsons););
+    TRY_CATCH_THROW(InvalidParamsException, msgLevellist,
+                    GetJsonPropertyList(newRankInfoJson, "level_list", levelJsons););
     CheakLevelJsonsSize(levelJsons.size());
-    for (auto &levelJson : levelJsons) {
+    for (auto& levelJson : levelJsons) {
         RankLevelInfo levelInfo;
         levelInfo.Deserialize(levelJson);
-        for (auto &addrsInfo : levelInfo.rankAddrs) {
+        for (auto& addrsInfo : levelInfo.rankAddrs) {
             addrsInfo.socketPort_ = devicePort;
         }
         rankLevelInfos.emplace_back(levelInfo);
     }
 
     std::vector<u32> levelSequence;
-    for (auto &levelInfos : rankLevelInfos) {
+    for (auto& levelInfos : rankLevelInfos) {
         levelSequence.emplace_back(levelInfos.netLayer);
     }
 
     for (u32 i = 1; i < levelSequence.size(); i++) {
         if (levelSequence[i] <= levelSequence[i - 1]) {
-            THROW<InvalidParamsException>(StringFormat("[NewRankInfo::%s] failed with level is not increased "
-                                                       "in sequence. rankId[%d], localId[%d], levelSequence[%u]",
-                                                       __func__, rankId, localId, levelSequence.size()));
+            THROW<InvalidParamsException>(StringFormat(
+                "[NewRankInfo::%s] failed with level is not increased "
+                "in sequence. rankId[%d], localId[%d], levelSequence[%u]",
+                __func__, rankId, localId, levelSequence.size()));
         }
     }
 
-    if(newRankInfoJson.contains("control_plane")){
-    nlohmann::json controlJsons;
-    std::string msgControlPlane = "error occurs when parser object of propName \"control_plane\"";
-    controlJsons=newRankInfoJson.at("control_plane");
-    controlPlane.Deserialize(controlJsons);
+    if (newRankInfoJson.contains("control_plane")) {
+        nlohmann::json controlJsons;
+        std::string msgControlPlane = "error occurs when parser object of propName \"control_plane\"";
+        controlJsons = newRankInfoJson.at("control_plane");
+        controlPlane.Deserialize(controlJsons);
     }
 }
 
 std::string NewRankInfo::Describe() const
 {
-    return StringFormat("NewRankInfo[rankId=%d, localId=%d, replacedLocalId=%d, ranklevelInfos size=%d, device_port=%d, "
-        "host_port=%d, tlsStatus=%d]", rankId, localId, replacedLocalId, rankLevelInfos.size(), devicePort, hostPort,
-        static_cast<int>(tlsStatus));
+    return StringFormat(
+        "NewRankInfo[rankId=%d, localId=%d, replacedLocalId=%d, ranklevelInfos size=%d, device_port=%d, "
+        "host_port=%d, tlsStatus=%d]",
+        rankId, localId, replacedLocalId, rankLevelInfos.size(), devicePort, hostPort, static_cast<int>(tlsStatus));
 }
 
-NewRankInfo::NewRankInfo(BinaryStream &binStream)
+NewRankInfo::NewRankInfo(BinaryStream& binStream)
 {
     binStream >> rankId >> localId >> replacedLocalId >> deviceId >> devicePort >> hostPort;
     HCCL_DEBUG("[NewRankInfo] localId[%d]", localId);
@@ -114,24 +129,24 @@ NewRankInfo::NewRankInfo(BinaryStream &binStream)
         rankLevelInfos.emplace_back(levelInfo);
     }
     ControlPlane controlPlanes(binStream);
-    controlPlane=controlPlanes;
+    controlPlane = controlPlanes;
     binStream >> tlsStatus;
 }
 
-void NewRankInfo::GetBinStream(bool isContainLoaId, BinaryStream &binStream) const
+void NewRankInfo::GetBinStream(bool isContainLoaId, BinaryStream& binStream) const
 {
     if (rankLevelInfos.size() == 0) {
         std::string msg = StringFormat("rankLevelInfos size is zero.");
         THROW<InvalidParamsException>(msg);
     }
     if (isContainLoaId) {
-        binStream << rankId << localId << replacedLocalId<<deviceId<<devicePort<<hostPort;
+        binStream << rankId << localId << replacedLocalId << deviceId << devicePort << hostPort;
     } else {
-        binStream << rankId << INVALID_RANKID << INVALID_RANKID<< deviceId << devicePort<<hostPort;
+        binStream << rankId << INVALID_RANKID << INVALID_RANKID << deviceId << devicePort << hostPort;
     }
     binStream << rankLevelInfos.size();
     HCCL_INFO("[NewRankInfo] rankLevelInfos size[%u], rankId[%d]", rankLevelInfos.size(), rankId);
-    for (auto &it : rankLevelInfos) {
+    for (auto& it : rankLevelInfos) {
         it.GetBinStream(binStream);
     }
     controlPlane.GetBinStream(binStream);

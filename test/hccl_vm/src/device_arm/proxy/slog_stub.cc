@@ -12,12 +12,12 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
+#endif // __cplusplus
 
-int dlog_getlevel(int moduleId, int *enableEvent)
+int dlog_getlevel(int moduleId, int* enableEvent)
 {
-    (void) moduleId;
-    (void) enableEvent;
+    (void)moduleId;
+    (void)enableEvent;
     return 0;
 }
 

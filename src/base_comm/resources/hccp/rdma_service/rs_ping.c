@@ -84,16 +84,16 @@ STATIC void *RsPingHandle(void *arg)
     RS_CHECK_POINTER_NULL_RETURN_NULL(arg);
 
     hccp_info("<PING> thread begin! thread_id:%lu, pid:%d, ppid:%d", pthread_self(), getpid(), getppid());
-    CHK_PRT_RETURN(pthread_detach(pthread_self()) != 0, hccp_err("pthread_detach failed! thread_id:%lu, errno:%d",
-        pthread_self(), errno), NULL);
+    CHK_PRT_RETURN(pthread_detach(pthread_self()) != 0,
+        hccp_err("pthread_detach failed! thread_id:%lu, errno:%d", pthread_self(), errno), NULL);
 
-    (void)prctl(PR_SET_NAME, (uintptr_t)"hccp_ping", 0, 0, 0);
+    (void)prctl(PR_SET_NAME, (uintptr_t) "hccp_ping", 0, 0, 0);
 
     rsCb = (struct rs_cb *)arg;
 
     RsGetCurTime(&gPingThreadInfo.lastCheckTime);
-    ret = strncpy_s((char *)gPingThreadInfo.pthreadName, sizeof(gPingThreadInfo.pthreadName),
-        "ping_pthread", strlen("ping_pthread"));
+    ret = strncpy_s((char *)gPingThreadInfo.pthreadName, sizeof(gPingThreadInfo.pthreadName), "ping_pthread",
+        strlen("ping_pthread"));
     CHK_PRT_RETURN(ret != 0, hccp_err("strncpy_s pthread name failed, ret[%d]", ret), NULL);
 
     hccp_run_info("pthread[%s] is alive!", gPingThreadInfo.pthreadName);
@@ -114,14 +114,13 @@ STATIC void *RsPingHandle(void *arg)
 
         RS_LIST_GET_HEAD_ENTRY(targetCurr, targetNext, &rsCb->pingCb.pingList, list, struct RsPingTargetInfo);
         for (; rsCb->pingCb.taskStatus == RS_PING_TASK_RUNNING && (&targetCurr->list) != &rsCb->pingCb.pingList;
-            targetCurr = targetNext,
-            targetNext = list_entry(targetNext->list.next, struct RsPingTargetInfo, list)) {
+             targetCurr = targetNext, targetNext = list_entry(targetNext->list.next, struct RsPingTargetInfo, list)) {
             if (targetCurr->state != RS_PING_PONG_TARGET_READY) {
                 usleep(rsCb->pingCb.taskAttr.packetInterval * RS_PING_MSEC_TO_USEC);
                 continue;
             }
 
-            ret = rsCb->pingCb.pingPongOps->pingPostSend(&rsCb->pingCb, targetCurr); 
+            ret = rsCb->pingCb.pingPongOps->pingPostSend(&rsCb->pingCb, targetCurr);
             if (ret != 0) {
                 hccp_warn("ping_post_send unsuccessful, ret:%d", ret);
                 usleep(rsCb->pingCb.taskAttr.packetInterval * RS_PING_MSEC_TO_USEC);
@@ -248,8 +247,8 @@ RS_ATTRI_VISI_DEF int RsPingHandleDeinit(unsigned int chipId)
 
     // thread not in finish running status, report timeout
     if (rsCb->pingCb.threadStatus != RS_PING_THREAD_FINISH) {
-        hccp_run_info("<PING> wait thread tid:%lu finish running timeout, thread status:%d",
-            rsCb->pingCb.tid, rsCb->pingCb.threadStatus);
+        hccp_run_info("<PING> wait thread tid:%lu finish running timeout, thread status:%d", rsCb->pingCb.tid,
+            rsCb->pingCb.threadStatus);
     }
 
     (void)pthread_mutex_destroy(&rsCb->pingCb.pingMutex);
@@ -352,8 +351,7 @@ STATIC int RsGetPingCb(struct RaRsDevInfo *rdev, struct RsPingCtxCb **pingCb)
     CHK_PRT_RETURN(ret != 0, hccp_err("RsGetRsCb failed, phyId[%u] invalid, ret %d", phyId, ret), ret);
 
     CHK_PRT_RETURN(rdev->devIndex != rsCb->pingCb.devIndex,
-        hccp_err("param error, devIndex:%u != pingCb.devIndex:%u", rdev->devIndex, rsCb->pingCb.devIndex),
-        -ENODEV);
+        hccp_err("param error, devIndex:%u != pingCb.devIndex:%u", rdev->devIndex, rsCb->pingCb.devIndex), -ENODEV);
 
     CHK_PRT_RETURN(rsCb->pingCb.threadStatus != RS_PING_THREAD_RUNNING,
         hccp_err("thread_status:%d is not running", rsCb->pingCb.threadStatus), -ESRCH);
@@ -422,8 +420,9 @@ RS_ATTRI_VISI_DEF int RsPingTaskStart(struct RaRsDevInfo *rdev, struct PingTaskA
         return -EEXIST;
     }
     CHK_PRT_RETURN(attr->packetCnt == 0 || attr->packetInterval == 0 || attr->timeoutInterval == 0,
-        hccp_err("param error, packetCnt:%u or packetInterval:%u or timeoutInterval:%u is 0",
-        attr->packetCnt, attr->packetInterval, attr->timeoutInterval), -EINVAL);
+        hccp_err("param error, packetCnt:%u or packetInterval:%u or timeoutInterval:%u is 0", attr->packetCnt,
+            attr->packetInterval, attr->timeoutInterval),
+        -EINVAL);
 
     pingCb->pingPongOps->resetRecvBuffer(pingCb);
 
@@ -431,10 +430,10 @@ RS_ATTRI_VISI_DEF int RsPingTaskStart(struct RaRsDevInfo *rdev, struct PingTaskA
     pingCb->taskId++;
     (void)memcpy_s(&pingCb->taskAttr, sizeof(struct PingTaskAttr), attr, sizeof(struct PingTaskAttr));
     RS_LIST_GET_HEAD_ENTRY(targetCurr, targetNext, &pingCb->pingList, list, struct RsPingTargetInfo);
-    for(; (&targetCurr->list) != &pingCb->pingList;
-        targetCurr = targetNext, targetNext = list_entry(targetNext->list.next, struct RsPingTargetInfo, list)) {
-        (void)memset_s(&targetCurr->resultSummary, sizeof(struct PingResultSummary),
-            0, sizeof(struct PingResultSummary));
+    for (; (&targetCurr->list) != &pingCb->pingList;
+         targetCurr = targetNext, targetNext = list_entry(targetNext->list.next, struct RsPingTargetInfo, list)) {
+        (void)memset_s(&targetCurr->resultSummary, sizeof(struct PingResultSummary), 0,
+            sizeof(struct PingResultSummary));
         (void)memcpy_s(&targetCurr->resultSummary.taskAttr, sizeof(struct PingTaskAttr), attr,
             sizeof(struct PingTaskAttr));
         targetCurr->resultSummary.rttMin = ~0;
@@ -451,8 +450,8 @@ RS_ATTRI_VISI_DEF int RsPingTaskStart(struct RaRsDevInfo *rdev, struct PingTaskA
     return 0;
 }
 
-RS_ATTRI_VISI_DEF int RsPingGetResults(struct RaRsDevInfo *rdev, struct PingTargetCommInfo target[],
-    unsigned int *num, struct PingResultInfo result[])
+RS_ATTRI_VISI_DEF int RsPingGetResults(struct RaRsDevInfo *rdev, struct PingTargetCommInfo target[], unsigned int *num,
+    struct PingResultInfo result[])
 {
     struct RsPingCtxCb *pingCb = NULL;
     unsigned int expectedNum;
@@ -504,8 +503,7 @@ RS_ATTRI_VISI_DEF int RsPingTaskStop(struct RaRsDevInfo *rdev)
     return 0;
 }
 
-RS_ATTRI_VISI_DEF int RsPingTargetDel(struct RaRsDevInfo *rdev, struct PingTargetCommInfo target[],
-    unsigned int *num)
+RS_ATTRI_VISI_DEF int RsPingTargetDel(struct RaRsDevInfo *rdev, struct PingTargetCommInfo target[], unsigned int *num)
 {
     struct RsPingTargetInfo *targetInfo = NULL;
     struct RsPingCtxCb *pingCb = NULL;

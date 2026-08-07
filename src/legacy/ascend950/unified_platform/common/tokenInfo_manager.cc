@@ -12,7 +12,7 @@
 
 namespace Hccl {
 
-TokenInfo TokenInfoManager::GetTokenInfo(const BufferKey<uintptr_t, u64> &bufKey)
+TokenInfo TokenInfoManager::GetTokenInfo(const BufferKey<uintptr_t, u64>& bufKey)
 {
     std::lock_guard<std::mutex> lock(tokenInfoMgrMutex_);
 
@@ -24,12 +24,13 @@ TokenInfo TokenInfoManager::GetTokenInfo(const BufferKey<uintptr_t, u64> &bufKey
     } else {
         tokenRefMap_.insert(index, tokenRefMap_[index]);
     }
-    HCCL_INFO("[TokenInfoManager::%s] rdmahandle[%p] index[%u] refCount[%u]",
-              __func__, rdmahandle_, index, tokenRefMap_.count(index));
+    HCCL_INFO(
+        "[TokenInfoManager::%s] rdmahandle[%p] index[%u] refCount[%u]", __func__, rdmahandle_, index,
+        tokenRefMap_.count(index));
     return tokenRefMap_[index];
 }
 
-void TokenInfoManager::PutTokenInfo(const BufferKey<uintptr_t, u64> &bufKey, TokenIdHandle tokenIdHandle)
+void TokenInfoManager::PutTokenInfo(const BufferKey<uintptr_t, u64>& bufKey, TokenIdHandle tokenIdHandle)
 {
     std::lock_guard<std::mutex> lock(tokenInfoMgrMutex_);
 
@@ -45,10 +46,11 @@ void TokenInfoManager::PutTokenInfo(const BufferKey<uintptr_t, u64> &bufKey, Tok
         return;
     }
 
-    auto &bufferKeys = bufferKeysMap_[devId_];
+    auto& bufferKeys = bufferKeysMap_[devId_];
     if (index < bufferKeys.size()) {
-        auto it = std::find_if(bufferKeys[index].begin(), bufferKeys[index].end(),
-            [bufKey](const auto &curBufKey) { return bufKey == curBufKey; });
+        auto it = std::find_if(bufferKeys[index].begin(), bufferKeys[index].end(), [bufKey](const auto& curBufKey) {
+            return bufKey == curBufKey;
+        });
         if (it != bufferKeys[index].end()) {
             bufferKeys[index].erase(it);
         }
@@ -56,8 +58,7 @@ void TokenInfoManager::PutTokenInfo(const BufferKey<uintptr_t, u64> &bufKey, Tok
 
     TokenInfo erasedInfo{};
     u32 remain = tokenRefMap_.eraseAndGet(index, erasedInfo);
-    HCCL_DEBUG("[TokenInfoManager::%s] rdmahandle[%p] index[%u] remain[%u]",
-              __func__, rdmahandle_, index, remain);
+    HCCL_DEBUG("[TokenInfoManager::%s] rdmahandle[%p] index[%u] remain[%u]", __func__, rdmahandle_, index, remain);
 
     if (remain == 0) {
         DECTOR_TRY_CATCH("token id handle free", RaUbFreeTokenIdHandle(rdmahandle_, erasedInfo.first));
@@ -68,24 +69,22 @@ void TokenInfoManager::PutTokenInfo(const BufferKey<uintptr_t, u64> &bufKey, Tok
     }
 }
 
-bool HasIntersect(const vector<BufferKey<uintptr_t, u64>> &bufKeys, const BufferKey<uintptr_t, u64> &inputBufKey)
+bool HasIntersect(const vector<BufferKey<uintptr_t, u64>>& bufKeys, const BufferKey<uintptr_t, u64>& inputBufKey)
 {
     // 遍历bufKeys, 若bufKeys中存在和inputBufKey相交的bufKey则返回true, 否则fasle
-    auto it = std::find_if(bufKeys.begin(), bufKeys.end(),
-                           [inputBufKey](const auto &curBufKeyInVec) {
-                                return inputBufKey.IsIntersect(curBufKeyInVec);
-                           });
+    auto it = std::find_if(bufKeys.begin(), bufKeys.end(), [inputBufKey](const auto& curBufKeyInVec) {
+        return inputBufKey.IsIntersect(curBufKeyInVec);
+    });
     return it != bufKeys.end();
 }
 
-BufKeyVecIndex TokenInfoManager::GetBufferVecIndex(const BufferKey<uintptr_t, u64> &inputBufKey)
+BufKeyVecIndex TokenInfoManager::GetBufferVecIndex(const BufferKey<uintptr_t, u64>& inputBufKey)
 {
-    auto &bufferKeys = bufferKeysMap_[devId_];
+    auto& bufferKeys = bufferKeysMap_[devId_];
     u32 size = bufferKeys.size();
-    auto it = std::find_if(bufferKeys.begin(), bufferKeys.end(),
-                           [inputBufKey](const auto &unOverlapBufVec) {
-                                return !HasIntersect(unOverlapBufVec, inputBufKey);
-                            });
+    auto it = std::find_if(bufferKeys.begin(), bufferKeys.end(), [inputBufKey](const auto& unOverlapBufVec) {
+        return !HasIntersect(unOverlapBufVec, inputBufKey);
+    });
     // 若不存在一组bufferKey与inputBufKey不相交, 需要申请新的token, 返回新的索引
     u32 idx = std::distance(bufferKeys.begin(), it);
     if (idx == size) {
@@ -103,8 +102,7 @@ void TokenInfoManager::Destroy()
 {
     HCCL_INFO("[TokenInfoManager::%s] rdmahandle[%p]", __func__, rdmahandle_);
     for (auto it = tokenRefMap_.begin(); it != tokenRefMap_.end(); ++it) {
-        DECTOR_TRY_CATCH("token id handle destroy",
-                         RaUbFreeTokenIdHandle(rdmahandle_, it->second.first));
+        DECTOR_TRY_CATCH("token id handle destroy", RaUbFreeTokenIdHandle(rdmahandle_, it->second.first));
     }
     tokenRefMap_.clear();
     tokenIdToIndex_.clear();

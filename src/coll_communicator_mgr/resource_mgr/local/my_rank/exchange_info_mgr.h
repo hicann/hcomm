@@ -27,56 +27,37 @@ public:
     ~ExchangeInfoMgr();
 
     HcclResult BatchExchangeAndCheckConsistency(
-        const HcclChannelDesc* channelDescs,
-        const std::vector<HcommChannelDesc> &hcommDescs,
-        uint32_t channelNum,
-        const std::vector<std::pair<u32, u32>> &newChannels,
-        CollCommConfigConsistency &collCommConfigConsistency,
+        const HcclChannelDesc* channelDescs, const std::vector<HcommChannelDesc>& hcommDescs, uint32_t channelNum,
+        const std::vector<std::pair<u32, u32>>& newChannels, CollCommConfigConsistency& collCommConfigConsistency,
         CommEngine engine) const;
     HcclResult CheckHcommInfo(
-        const HcclChannelDesc* channelDescs,
-        const std::vector<HcommChannelDesc> &hcommDescs,
-        const std::vector<Hccl::Socket*> &sockets,
-        const std::vector<u32> &remoteRanks,
-        const std::vector<HcommSocketRole> &roles,
-        const std::vector<std::pair<u32, u32>> &newChannels,
+        const HcclChannelDesc* channelDescs, const std::vector<HcommChannelDesc>& hcommDescs,
+        const std::vector<Hccl::Socket*>& sockets, const std::vector<u32>& remoteRanks,
+        const std::vector<HcommSocketRole>& roles, const std::vector<std::pair<u32, u32>>& newChannels,
         bool isAsync) const;
     HcclResult ExchangeUserInfo(
-        const std::vector<Hccl::Socket*> &sockets,
-        const std::vector<u32> &remoteRanks,
-        const std::vector<HcommSocketRole> &roles,
-        CollCommConfigConsistency &collCommConfigConsistency) const;
+        const std::vector<Hccl::Socket*>& sockets, const std::vector<u32>& remoteRanks,
+        const std::vector<HcommSocketRole>& roles, CollCommConfigConsistency& collCommConfigConsistency) const;
     HcclResult ExchangeUserInfoAsync(
-        const std::vector<Hccl::Socket*> &sockets,
-        const std::vector<u32> &remoteRanks,
-        const std::vector<HcommSocketRole> &roles,
-        CollCommConfigConsistency &collCommConfigConsistency) const;
+        const std::vector<Hccl::Socket*>& sockets, const std::vector<u32>& remoteRanks,
+        const std::vector<HcommSocketRole>& roles, CollCommConfigConsistency& collCommConfigConsistency) const;
     HcclResult BatchExchangeFixedData(
-        const std::vector<Hccl::Socket*> &sockets,
-        const std::vector<u32> &remoteRanks,
-        const std::vector<HcommSocketRole> &roles,
-        const u8 *sendData, u32 sendLen,
-        u8 *recvData, u32 recvLen, bool isAsync) const;
-    HcclResult WaitAllAsyncComplete(const std::vector<Hccl::Socket*> &sockets,
-        const std::vector<u32> &remoteRanks) const;
+        const std::vector<Hccl::Socket*>& sockets, const std::vector<u32>& remoteRanks,
+        const std::vector<HcommSocketRole>& roles, const u8* sendData, u32 sendLen, u8* recvData, u32 recvLen,
+        bool isAsync) const;
+    HcclResult
+    WaitAllAsyncComplete(const std::vector<Hccl::Socket*>& sockets, const std::vector<u32>& remoteRanks) const;
     HcclResult WaitActiveAsyncComplete(
-        const std::vector<Hccl::Socket*> &sockets,
-        const std::vector<u32> &remoteRanks,
-        const std::vector<HcommSocketRole> &roles,
-        const std::vector<u32> &remoteExchangeInfoLens,
-        u32 localExchangeInfoLen,
-        bool isFirstPass) const;
+        const std::vector<Hccl::Socket*>& sockets, const std::vector<u32>& remoteRanks,
+        const std::vector<HcommSocketRole>& roles, const std::vector<u32>& remoteExchangeInfoLens,
+        u32 localExchangeInfoLen, bool isFirstPass) const;
 
 private:
     HcclResult ExchangeAsyncDataPhase(
-        const std::vector<Hccl::Socket*> &sockets,
-        const std::vector<HcommSocketRole> &roles,
-        const std::vector<u32> &remoteRanks,
-        std::vector<std::vector<u8>> &remoteUserDatas,
-        const std::vector<u32> &remoteExchangeInfoLens,
-        u32 localExchangeInfoLen,
-        CollCommConfigConsistency &collCommConfigConsistency,
-        bool isServerRecv) const;
+        const std::vector<Hccl::Socket*>& sockets, const std::vector<HcommSocketRole>& roles,
+        const std::vector<u32>& remoteRanks, std::vector<std::vector<u8>>& remoteUserDatas,
+        const std::vector<u32>& remoteExchangeInfoLens, u32 localExchangeInfoLen,
+        CollCommConfigConsistency& collCommConfigConsistency, bool isServerRecv) const;
 };
 } // namespace hccl
 

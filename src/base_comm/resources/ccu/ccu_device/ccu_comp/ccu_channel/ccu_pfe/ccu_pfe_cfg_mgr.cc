@@ -8,7 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-
 #include "ccu_pfe_cfg_mgr.h"
 
 #include <unordered_set>
@@ -19,14 +18,16 @@
 
 namespace hcomm {
 
-CcuPfeCfgMgr &CcuPfeCfgMgr::GetInstance(const int32_t deviceLogicId)
+CcuPfeCfgMgr& CcuPfeCfgMgr::GetInstance(const int32_t deviceLogicId)
 {
     static CcuPfeCfgMgr ccuPfeCfgMgr[MAX_MODULE_DEVICE_NUM + 1];
 
     int32_t devLogicId = deviceLogicId;
     if (devLogicId < 0 || static_cast<uint32_t>(devLogicId) >= MAX_MODULE_DEVICE_NUM) {
-        HCCL_WARNING("[CcuPfeCfgMgr][%s] use the backup device, devLogicId[%d] should be "
-            "less than %u.", __func__, devLogicId, MAX_MODULE_DEVICE_NUM);
+        HCCL_WARNING(
+            "[CcuPfeCfgMgr][%s] use the backup device, devLogicId[%d] should be "
+            "less than %u.",
+            __func__, devLogicId, MAX_MODULE_DEVICE_NUM);
         devLogicId = MAX_MODULE_DEVICE_NUM; // 使用备份设备
     }
 
@@ -48,7 +49,7 @@ HcclResult CcuPfeCfgMgr::Init()
 
     bool dieEnableFlags[CCU_MAX_IODIE_NUM] = {false, false};
     for (uint8_t i = 0; i < CCU_MAX_IODIE_NUM; i++) {
-        const auto &ccuResSpecs = CcuResSpecifications::GetInstance(devLogicId_);
+        const auto& ccuResSpecs = CcuResSpecifications::GetInstance(devLogicId_);
         (void)ccuResSpecs.GetDieEnableFlag(i, dieEnableFlags[i]);
     }
 
@@ -77,9 +78,10 @@ HcclResult CcuPfeCfgMgr::Init()
         pfeJettyCtxCfgs_[dieId].emplace_back(std::move(cfg));
         dieFuncIdSet[dieId].insert(feId);
 
-        HCCL_RUN_INFO("[CcuPfeCfgMgr] new pfe cfg set: dieId[%u] feId[%u] startJettyCtxId[%u] "
-            "startTaJettyId[%u] pfeJettyNum[%u].", dieId, feId, startJettyCtxId, startTaJettyId,
-            pfeJettyNum);
+        HCCL_RUN_INFO(
+            "[CcuPfeCfgMgr] new pfe cfg set: dieId[%u] feId[%u] startJettyCtxId[%u] "
+            "startTaJettyId[%u] pfeJettyNum[%u].",
+            dieId, feId, startJettyCtxId, startTaJettyId, pfeJettyNum);
     }
 
     initFlag_ = true;
@@ -88,7 +90,7 @@ HcclResult CcuPfeCfgMgr::Init()
 
 HcclResult CcuPfeCfgMgr::Deinit()
 {
-    for (auto &cfg : pfeJettyCtxCfgs_) {
+    for (auto& cfg : pfeJettyCtxCfgs_) {
         cfg.clear();
     }
     initFlag_ = false;

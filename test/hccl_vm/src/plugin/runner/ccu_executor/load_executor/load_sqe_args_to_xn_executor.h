@@ -22,7 +22,8 @@
 
 class LoadSqeArgsToXnExecutor : public CcuExecutorBase {
 public:
-    explicit LoadSqeArgsToXnExecutor(int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr &instr, CcuSimulator *ccuSimulator)
+    explicit LoadSqeArgsToXnExecutor(
+        int streamId, int rankId, int dieId, const hcomm::CcuRep::CcuInstr& instr, CcuSimulator* ccuSimulator)
         : CcuExecutorBase(streamId, rankId, dieId, instr, ccuSimulator)
     {}
     LoadSqeArgsToXnExecutor() = default;
@@ -36,7 +37,7 @@ public:
 private:
     uint16_t xnId_{SimCcuV1::CCU_RESOURCE_XN_MAX};
     uint16_t sqeArgId_{RT_CCU_SQE_ARGS_LEN};
-    uint16_t ckeId_ {0};
+    uint16_t ckeId_{0};
     uint16_t ckeMask_{0};
 };
 

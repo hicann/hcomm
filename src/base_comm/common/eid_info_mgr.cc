@@ -15,14 +15,16 @@
 
 namespace hcomm {
 
-EidInfoMgr &EidInfoMgr::GetInstance(const uint32_t devicePhyId)
+EidInfoMgr& EidInfoMgr::GetInstance(const uint32_t devicePhyId)
 {
     static EidInfoMgr eidInfoMgr[MAX_MODULE_DEVICE_NUM + 1];
 
     uint32_t devPhyId = devicePhyId;
     if (devPhyId >= MAX_MODULE_DEVICE_NUM) {
-        HCCL_WARNING("[EidInfoMgr][%s] use the backup device, devPhyId[%u] should be "
-            "less than %u.", __func__, devPhyId, MAX_MODULE_DEVICE_NUM);
+        HCCL_WARNING(
+            "[EidInfoMgr][%s] use the backup device, devPhyId[%u] should be "
+            "less than %u.",
+            __func__, devPhyId, MAX_MODULE_DEVICE_NUM);
         devPhyId = MAX_MODULE_DEVICE_NUM; // 使用备份设备
     }
 
@@ -37,8 +39,10 @@ HcclResult EidInfoMgr::Init()
 
     initflag_ = true;
     if (eidInfos_.empty()) {
-        HCCL_ERROR("[EidInfoMgr][%s] failed to find any eid info, "
-            "devPhyId[%u].", __func__, devPhyId_);
+        HCCL_ERROR(
+            "[EidInfoMgr][%s] failed to find any eid info, "
+            "devPhyId[%u].",
+            __func__, devPhyId_);
         return HcclResult::HCCL_E_NOT_FOUND;
     }
 
@@ -51,7 +55,7 @@ HcclResult EidInfoMgr::Init()
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult EidInfoMgr::GetEidInfos(std::vector<DevEidInfo> &eidInfos)
+HcclResult EidInfoMgr::GetEidInfos(std::vector<DevEidInfo>& eidInfos)
 {
     std::unique_lock<std::mutex> lock(innerMutex_);
     if (!initflag_) {
@@ -61,13 +65,12 @@ HcclResult EidInfoMgr::GetEidInfos(std::vector<DevEidInfo> &eidInfos)
     // 不允许外部修改eidInfo，传递拷贝结果
     eidInfos.assign(eidInfos_.begin(), eidInfos_.end());
 
-    HCCL_INFO("[EidInfoMgr][%s] found %zu eid info, devPhyId[%u].",
-        __func__, eidInfos.size(), devPhyId_);
+    HCCL_INFO("[EidInfoMgr][%s] found %zu eid info, devPhyId[%u].", __func__, eidInfos.size(), devPhyId_);
 
     return HCCL_SUCCESS;
 }
 
-HcclResult EidInfoMgr::GetEidInfoByAddr(const CommAddr &commAddr, DevEidInfo &eidInfo)
+HcclResult EidInfoMgr::GetEidInfoByAddr(const CommAddr& commAddr, DevEidInfo& eidInfo)
 {
     std::unique_lock<std::mutex> lock(innerMutex_);
     if (!initflag_) {
@@ -81,8 +84,10 @@ HcclResult EidInfoMgr::GetEidInfoByAddr(const CommAddr &commAddr, DevEidInfo &ei
 
     const auto addrIter = eidInfoMap_.find(eidAddr);
     if (addrIter == eidInfoMap_.end()) {
-        HCCL_ERROR("[EidInfoMgr][%s] failed to find eid info by ip addr[%s], "
-            "devPhyId[%u].", __func__, ipAddr.Describe().c_str(), devPhyId_);
+        HCCL_ERROR(
+            "[EidInfoMgr][%s] failed to find eid info by ip addr[%s], "
+            "devPhyId[%u].",
+            __func__, ipAddr.Describe().c_str(), devPhyId_);
         return HcclResult::HCCL_E_NOT_FOUND;
     }
 

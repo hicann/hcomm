@@ -18,30 +18,16 @@
 #include "notify_pool.h"
 #include "sal.h"
 
-
 using namespace std;
 using namespace hccl;
 
-class NotifyPoolTest : public testing::Test
-{
+class NotifyPoolTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "\033[36m--NotifyPoolTest SetUP--\033[0m" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "\033[36m--NotifyPoolTest TearDown--\033[0m" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "\033[36m--NotifyPoolTest SetUP--\033[0m" << std::endl; }
+    static void TearDownTestCase() { std::cout << "\033[36m--NotifyPoolTest TearDown--\033[0m" << std::endl; }
     // Some expensive resource shared by all tests.
-    virtual void SetUp()
-    {
-        std::cout << "A Test SetUP" << std::endl;
-    }
-    virtual void TearDown()
-    {
-        std::cout << "A Test TearDown" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test SetUP" << std::endl; }
+    virtual void TearDown() { std::cout << "A Test TearDown" << std::endl; }
 };
 
 TEST_F(NotifyPoolTest, ut_alloc_notify_ipc_ok)
@@ -113,7 +99,7 @@ TEST_F(NotifyPoolTest, ut_alloc_notify_no_ipc_ok)
     ret = pool.Alloc(tag, info, localNotify, NotifyLoadType::DEVICE_NOTIFY);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
-    ret =pool.UnregisterOp(tag);
+    ret = pool.UnregisterOp(tag);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     ret = pool.Destroy();
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -152,29 +138,29 @@ TEST_F(NotifyPoolTest, ut_alloc_notify_no_ipc_fail_tag_invalid)
 TEST_F(NotifyPoolTest, ut_alloc_notify_aligned)
 {
     s32 ret = HCCL_SUCCESS;
- 
+
     NotifyPool pool;
     ret = pool.Init(0);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     std::string tag = "test_signal_create";
     ret = pool.RegisterOp(tag);
     EXPECT_EQ(ret, HCCL_SUCCESS);
- 
+
     std::shared_ptr<LocalIpcNotify> localNotify1 = nullptr;
     RemoteRankInfo info1(0, 0, 0);
     ret = pool.Alloc(tag, info1, localNotify1, NotifyLoadType::DEVICE_NOTIFY);
     EXPECT_EQ(ret, HCCL_SUCCESS);
- 
+
     std::shared_ptr<LocalIpcNotify> localNotify3 = nullptr;
     RemoteRankInfo info3(0, 0, 0);
     ret = pool.Alloc(tag, info3, localNotify3, NotifyLoadType::DEVICE_NOTIFY, 8);
     EXPECT_EQ(ret, HCCL_SUCCESS);
- 
+
     std::shared_ptr<LocalIpcNotify> localNotify4 = nullptr;
     RemoteRankInfo info4(0, 0, 0);
     ret = pool.Alloc(tag, info4, localNotify4, NotifyLoadType::DEVICE_NOTIFY, 3);
     EXPECT_NE(ret, HCCL_SUCCESS);
- 
+
     ret = pool.UnregisterOp(tag);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     ret = pool.Destroy();

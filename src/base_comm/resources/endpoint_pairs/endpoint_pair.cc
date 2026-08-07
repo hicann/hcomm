@@ -15,15 +15,14 @@
 #include "channel_process.h"
 #include "comm_engine_utils.h"
 
-
 #include "hcom_common.h"
 #include "exception_handler.h"
 
 namespace hcomm {
 
-EndpointPair::~EndpointPair() 
+EndpointPair::~EndpointPair()
 {
-    for (auto &channels : channelHandles_) {
+    for (auto& channels : channelHandles_) {
         if (channels.second.empty()) {
             continue;
         }
@@ -42,8 +41,9 @@ HcclResult EndpointPair::Init()
     return HCCL_SUCCESS;
 }
 
-HcclResult EndpointPair::GetHostSocketWithRank(const uint32_t myRank, const uint32_t rmtRank, const std::string &socketTag,
-    const uint32_t listenPort, u32 reuseIdx, Hccl::Socket*& socket)
+HcclResult EndpointPair::GetHostSocketWithRank(
+    const uint32_t myRank, const uint32_t rmtRank, const std::string& socketTag, const uint32_t listenPort,
+    u32 reuseIdx, Hccl::Socket*& socket)
 {
     uint32_t connectMode = 0;
     Hccl::LinkData linkData = BuildDefaultLinkData();
@@ -66,14 +66,14 @@ HcclResult EndpointPair::GetHostSocketWithRank(const uint32_t myRank, const uint
     return HCCL_SUCCESS;
 }
 
-HcclResult EndpointPair::EnsureSocketMgrCompat(const uint32_t myRank, const std::string &socketTag)
+HcclResult EndpointPair::EnsureSocketMgrCompat(const uint32_t myRank, const std::string& socketTag)
 {
     if (!socketMgrCompat_) {
         int32_t devLogicId = HcclGetThreadDeviceId();
         uint32_t devPhyId{0};
         CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(devLogicId), devPhyId));
-        EXCEPTION_CATCH(socketMgrCompat_ =
-            std::make_unique<Hccl::SocketManager>(myRank, devPhyId, devLogicId, socketTag),
+        EXCEPTION_CATCH(
+            socketMgrCompat_ = std::make_unique<Hccl::SocketManager>(myRank, devPhyId, devLogicId, socketTag),
             return HCCL_E_PTR);
         CHK_PTR_NULL(rankIpPortMap_);
         socketMgrCompat_->SetDeviceServerListenPortMap(*rankIpPortMap_);
@@ -81,7 +81,7 @@ HcclResult EndpointPair::EnsureSocketMgrCompat(const uint32_t myRank, const std:
     return HCCL_SUCCESS;
 }
 
-Hccl::SocketConfig EndpointPair::BuildSocketConfig(const Hccl::LinkData &linkData, const std::string &socketTag)
+Hccl::SocketConfig EndpointPair::BuildSocketConfig(const Hccl::LinkData& linkData, const std::string& socketTag)
 {
     std::string linkTag = socketTag;
     if (linkData.GetReuseIdx() != "0") {
@@ -90,9 +90,10 @@ Hccl::SocketConfig EndpointPair::BuildSocketConfig(const Hccl::LinkData &linkDat
     return Hccl::SocketConfig(linkData.GetRemoteRankId(), linkData, linkTag);
 }
 
-HcclResult EndpointPair::HandleHostSocketOrBuildLinkData(const uint32_t myRank, const uint32_t rmtRank,
-    const std::string &socketTag, u32 reuseIdx, const uint32_t listenPort, Hccl::Socket*& socket,
-    uint32_t devicePhyId, uint32_t remoteDevicePhyId, Hccl::LinkData &linkData, bool &isHost)
+HcclResult EndpointPair::HandleHostSocketOrBuildLinkData(
+    const uint32_t myRank, const uint32_t rmtRank, const std::string& socketTag, u32 reuseIdx,
+    const uint32_t listenPort, Hccl::Socket*& socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId,
+    Hccl::LinkData& linkData, bool& isHost)
 {
     if (localEndpointDesc_.loc.locType == EndpointLocType::ENDPOINT_LOC_TYPE_HOST) {
         std::string socketTagPrefix = socketTag;
@@ -106,19 +107,20 @@ HcclResult EndpointPair::HandleHostSocketOrBuildLinkData(const uint32_t myRank, 
         return HCCL_SUCCESS;
     }
     isHost = false;
-    CHK_RET(EndpointDescPairToLinkDataWithRankIds(myRank, rmtRank,
-        localEndpointDesc_, remoteEndpointDesc_, linkData, devicePhyId, remoteDevicePhyId, reuseIdx));
+    CHK_RET(EndpointDescPairToLinkDataWithRankIds(
+        myRank, rmtRank, localEndpointDesc_, remoteEndpointDesc_, linkData, devicePhyId, remoteDevicePhyId, reuseIdx));
     return HCCL_SUCCESS;
 }
 
-HcclResult EndpointPair::GetSocketInternal(const uint32_t myRank, const uint32_t rmtRank,
-    const std::string &socketTag, u32 reuseIdx, const uint32_t listenPort, Hccl::Socket*& socket,
-    uint32_t devicePhyId, uint32_t remoteDevicePhyId, bool connectMode)
+HcclResult EndpointPair::GetSocketInternal(
+    const uint32_t myRank, const uint32_t rmtRank, const std::string& socketTag, u32 reuseIdx,
+    const uint32_t listenPort, Hccl::Socket*& socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId,
+    bool connectMode)
 {
     Hccl::LinkData linkData = BuildDefaultLinkData();
     bool isHost = false;
-    CHK_RET(HandleHostSocketOrBuildLinkData(myRank, rmtRank, socketTag, reuseIdx, listenPort, socket,
-        devicePhyId, remoteDevicePhyId, linkData, isHost));
+    CHK_RET(HandleHostSocketOrBuildLinkData(
+        myRank, rmtRank, socketTag, reuseIdx, listenPort, socket, devicePhyId, remoteDevicePhyId, linkData, isHost));
     if (isHost) {
         return HCCL_SUCCESS;
     }
@@ -137,8 +139,9 @@ HcclResult EndpointPair::GetSocketInternal(const uint32_t myRank, const uint32_t
     return HCCL_SUCCESS;
 }
 
-HcclResult EndpointPair::ServerInit(const uint32_t myRank, const uint32_t rmtRank,
-    const std::string &socketTag, u32 reuseIdx, uint32_t devicePhyId, uint32_t remoteDevicePhyId)
+HcclResult EndpointPair::ServerInit(
+    const uint32_t myRank, const uint32_t rmtRank, const std::string& socketTag, u32 reuseIdx, uint32_t devicePhyId,
+    uint32_t remoteDevicePhyId)
 {
     if (localEndpointDesc_.loc.locType == EndpointLocType::ENDPOINT_LOC_TYPE_HOST) {
         // host网卡不走device的socket监听
@@ -146,8 +149,8 @@ HcclResult EndpointPair::ServerInit(const uint32_t myRank, const uint32_t rmtRan
     }
     // server监听
     Hccl::LinkData linkData = BuildDefaultLinkData();
-    CHK_RET(EndpointDescPairToLinkDataWithRankIds(myRank, rmtRank, localEndpointDesc_,
-        remoteEndpointDesc_, linkData, devicePhyId, remoteDevicePhyId, reuseIdx));
+    CHK_RET(EndpointDescPairToLinkDataWithRankIds(
+        myRank, rmtRank, localEndpointDesc_, remoteEndpointDesc_, linkData, devicePhyId, remoteDevicePhyId, reuseIdx));
     EXCEPTION_HANDLE_BEGIN
     CHK_RET(EnsureSocketMgrCompat(myRank, socketTag));
     Hccl::SocketConfig socketConfig = BuildSocketConfig(linkData, socketTag);
@@ -158,35 +161,39 @@ HcclResult EndpointPair::ServerInit(const uint32_t myRank, const uint32_t rmtRan
     return HCCL_SUCCESS;
 }
 
-HcclResult EndpointPair::GetConnectedSocket(const uint32_t myRank, const uint32_t rmtRank,
-    const std::string &socketTag, u32 reuseIdx, const uint32_t listenPort, Hccl::Socket*& socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId)
+HcclResult EndpointPair::GetConnectedSocket(
+    const uint32_t myRank, const uint32_t rmtRank, const std::string& socketTag, u32 reuseIdx,
+    const uint32_t listenPort, Hccl::Socket*& socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId)
 {
     // 该接口内进行建链和获取socket
-    return GetSocketInternal(myRank, rmtRank, socketTag, reuseIdx, listenPort, socket,
-        devicePhyId, remoteDevicePhyId, true);
+    return GetSocketInternal(
+        myRank, rmtRank, socketTag, reuseIdx, listenPort, socket, devicePhyId, remoteDevicePhyId, true);
 }
 
-HcclResult EndpointPair::GetSocket(const uint32_t myRank, const uint32_t rmtRank,
-    const std::string &socketTag, u32 reuseIdx, const uint32_t listenPort, Hccl::Socket*& socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId)
+HcclResult EndpointPair::GetSocket(
+    const uint32_t myRank, const uint32_t rmtRank, const std::string& socketTag, u32 reuseIdx,
+    const uint32_t listenPort, Hccl::Socket*& socket, uint32_t devicePhyId, uint32_t remoteDevicePhyId)
 {
     // 临时方案：支持混跑新增，非Roce场景走orion socketMgr实现server socket复用
-    return GetSocketInternal(myRank, rmtRank, socketTag, reuseIdx, listenPort, socket,
-        devicePhyId, remoteDevicePhyId, false);
+    return GetSocketInternal(
+        myRank, rmtRank, socketTag, reuseIdx, listenPort, socket, devicePhyId, remoteDevicePhyId, false);
 }
 
-HcclResult EndpointPair::CreateChannel(EndpointHandle endpointHandle, CommEngine engine, u32 reuseIdx,
-        HcommChannelDesc *channelDescs, ChannelHandle *channels)
+HcclResult EndpointPair::CreateChannel(
+    EndpointHandle endpointHandle, CommEngine engine, u32 reuseIdx, HcommChannelDesc* channelDescs,
+    ChannelHandle* channels)
 {
     if (channelHandles_.find(engine) == channelHandles_.end() || channelHandles_[engine].size() <= reuseIdx) {
-        CHK_RET_UNAVAIL(static_cast<HcclResult>(
-            HcommCollectiveChannelCreate(endpointHandle, engine, channelDescs, 1, channels)));
+        CHK_RET_UNAVAIL(
+            static_cast<HcclResult>(HcommCollectiveChannelCreate(endpointHandle, engine, channelDescs, 1, channels)));
         channelHandles_[engine].push_back(channels[0]);
         return HCCL_SUCCESS;
     }
 
     channels[0] = channelHandles_[engine][reuseIdx];
     if (channelDescs->memHandleNum > 1) {
-        CHK_RET(static_cast<HcclResult>(HcommChannelUpdateMemInfo(channelDescs->memHandles + 1, channelDescs->memHandleNum - 1, channels[0])));
+        CHK_RET(static_cast<HcclResult>(
+            HcommChannelUpdateMemInfo(channelDescs->memHandles + 1, channelDescs->memHandleNum - 1, channels[0])));
     }
     return HCCL_SUCCESS;
 }
@@ -195,18 +202,24 @@ HcclResult EndpointPair::CreateChannel(EndpointHandle endpointHandle, CommEngine
 HcclResult EndpointPair::DestroyChannel(CommEngine engine, u32 reuseIdx)
 {
     if (IsChannelNotExist(engine, reuseIdx)) {
-        HCCL_WARNING("EndpointPair::DestroyChannel: engine[%s] reuseIdx[%u], channelHandle size[%u],"
-                     "channel not found, skip destroy channel", GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx, channelHandles_[engine].size());
+        HCCL_WARNING(
+            "EndpointPair::DestroyChannel: engine[%s] reuseIdx[%u], channelHandle size[%u],"
+            "channel not found, skip destroy channel",
+            GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx, channelHandles_[engine].size());
         return HCCL_SUCCESS;
     }
-    HCCL_INFO("EndpointPair::DestroyChannel: engine[%s] reuseIdx[%u], channelHandle size[%u],"
-              "start destroy channel", GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx, channelHandles_[engine].size());
+    HCCL_INFO(
+        "EndpointPair::DestroyChannel: engine[%s] reuseIdx[%u], channelHandle size[%u],"
+        "start destroy channel",
+        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx, channelHandles_[engine].size());
     ChannelHandle channelHandle = channelHandles_[engine][reuseIdx];
     CHK_RET(static_cast<HcclResult>(HcommChannelDestroy(&channelHandle, 1)));
     // 去掉channelHandles_中reuseIdx位置的channelHandle
     channelHandles_[engine].erase(channelHandles_[engine].begin() + reuseIdx);
-    HCCL_INFO("EndpointPair::DestroyChannel: engine[%s] reuseIdx[%u] destroy channel success,"
-              "channelHandle size[%u]", GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx, channelHandles_[engine].size());
+    HCCL_INFO(
+        "EndpointPair::DestroyChannel: engine[%s] reuseIdx[%u] destroy channel success,"
+        "channelHandle size[%u]",
+        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx, channelHandles_[engine].size());
     return HCCL_SUCCESS;
 }
 

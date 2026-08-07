@@ -22,19 +22,19 @@ struct PipePair {
     int writeFd;
 };
 
-int PipeBlockRead(int fd, void *buf, size_t len);
+int PipeBlockRead(int fd, void* buf, size_t len);
 
-int PipeBlockWrite(int fd, const void *buf, size_t len);
+int PipeBlockWrite(int fd, const void* buf, size_t len);
 
-int PipeSendMsg(int fd, uint8_t cmd, const void *data, uint32_t len);
+int PipeSendMsg(int fd, uint8_t cmd, const void* data, uint32_t len);
 
-int PipeRecvMsg(int fd, uint8_t &outCmd, void *outData, uint32_t maxLen, uint32_t &outLen);
+int PipeRecvMsg(int fd, uint8_t& outCmd, void* outData, uint32_t maxLen, uint32_t& outLen);
 
-int PipeCreate(PipePair &pair);
+int PipeCreate(PipePair& pair);
 
-void PipeClose(int &fd);
+void PipeClose(int& fd);
 
-int PipeChildSetup(PipePair &h2d, PipePair &d2h, int targetReadFd, int targetWriteFd);
+int PipeChildSetup(PipePair& h2d, PipePair& d2h, int targetReadFd, int targetWriteFd);
 
 } // namespace sim
 

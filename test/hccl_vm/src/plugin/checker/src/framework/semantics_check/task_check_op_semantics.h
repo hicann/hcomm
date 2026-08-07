@@ -31,11 +31,11 @@ enum class SliceOp {
 };
 
 struct SliceOpPair {
-    RankId    srcRank;
-    RankId    dstRank;
+    RankId srcRank;
+    RankId dstRank;
     DataSlice srcSlice;
     DataSlice dstSlice;
-    SliceOp   sliceOp;
+    SliceOp sliceOp;
 
     std::string Describe() const
     {
@@ -62,7 +62,7 @@ struct LocalStep {
 };
 
 struct TimelineEvent {
-    TaskNode *node = nullptr;
+    TaskNode* node = nullptr;
     u32 eventId = 0;
     std::string nodeId;
     u32 simGlobalStep = 0;
@@ -86,79 +86,67 @@ struct RankMemoryTimeline {
 
 class TaskCheckOpSemantics {
 public:
-    TaskCheckOpSemantics(u32 rankSize, HcclCMDType opType, HcclDataType dataType, u64 dataCount) :
-        rankSize_(rankSize),
-        opType_(opType),
-        dataType_(dataType),
-        dataCount_(dataCount)
+    TaskCheckOpSemantics(u32 rankSize, HcclCMDType opType, HcclDataType dataType, u64 dataCount)
+        : rankSize_(rankSize),
+          opType_(opType),
+          dataType_(dataType),
+          dataCount_(dataCount)
     {
         CalcDataSize(opType, dataCount, dataType, dataSize_);
     }
     HcclResult Execute();
-    void SetGraphHead(TaskNode *graphHead)
-    {
-        graphHead_ = graphHead;
-    };
-    void SetReduceType(HcclReduceOp reduceType)
-    {
-        reduceType_ = reduceType;
-    };
-    void SetSrcRank(RankId srcRank)
-    {
-        srcRank_ = srcRank;
-    };
-    void SetDstRank(RankId dstRank)
-    {
-        dstRank_ = dstRank;
-    };
-    void SetRoot(RankId root)
-    {
-        root_ = root;
-    };
-    void SetVDataDes(VDataDesTagInner vDataDes)
-    {
-        vDataDes_ = vDataDes;
-    }
-    void SetAll2AllDataDes(All2AllDataDesTagInner all2AllDataDes)
-    {
-        all2AllDataDes_ = all2AllDataDes;
-    }
+    void SetGraphHead(TaskNode* graphHead) { graphHead_ = graphHead; };
+    void SetReduceType(HcclReduceOp reduceType) { reduceType_ = reduceType; };
+    void SetSrcRank(RankId srcRank) { srcRank_ = srcRank; };
+    void SetDstRank(RankId dstRank) { dstRank_ = dstRank; };
+    void SetRoot(RankId root) { root_ = root; };
+    void SetVDataDes(VDataDesTagInner vDataDes) { vDataDes_ = vDataDes; }
+    void SetAll2AllDataDes(All2AllDataDesTagInner all2AllDataDes) { all2AllDataDes_ = all2AllDataDes; }
 
 private:
     void InitInputBuffer();
     void InitInputBuffer(RankId root);
-    void UpdateStep(TaskNode *simNode);
-    HcclResult RecordNodeSemantics(TaskNode *simNode, const std::vector<SliceOpPair> &sliceOpPairs);
+    void UpdateStep(TaskNode* simNode);
+    HcclResult RecordNodeSemantics(TaskNode* simNode, const std::vector<SliceOpPair>& sliceOpPairs);
 
-    void       GetSrcIntersectionAddr(SliceOpPair &slicePair, const BufferSemantic &srcBufSemantic, u64 &srcStartAddr,
-                                      u64 &srcEndAddr) const;
-    HcclResult CheckBufSemantics(std::vector<BufferSemantic *> &bufSemantics, u64 startAddr, u64 size, bool ignoreError = false) const;
-    void RemoveAffectedBufSemantics(SliceOpPair &slicePair, std::map<RankId, RankMemorySemantics> &rankMemSemantics,
-        std::vector<BufferSemantic *> &affectedDstBufSemantics);
-    void       ApplyOverrideSrcBufSemantic(SliceOpPair &slicePair, std::map<RankId, RankMemorySemantics> &rankMemSemantics,
-        u32 effectGlobalStep, const BufferSemantic srcBufSemantic);
-    HcclResult ReduceToAffectedBufSemantic(const BufferSemantic         &srcBufSemantic,
-                                           std::vector<BufferSemantic *> toAddReduceInfoSemantics, u64 srcStartAddr);
-    HcclResult ApplyReduceSrcBufSemantic(SliceOpPair &slicePair, std::map<RankId, RankMemorySemantics> &rankMemSemantics,
-        u32 effectGlobalStep, const BufferSemantic &srcBufSemantic, std::vector<BufferSemantic *> &affectedDstBufSemantics);
-    void       GetAffectedBufSemantics(SliceOpPair &slicePair, const BufferSemantic &srcBufSemantic,
-        std::map<RankId, RankMemorySemantics> &rankMemSemantics, std::vector<BufferSemantic *> &affectedDstBufSemantics);
-    void GetAffectedBufSemantics(SliceOpPair &slicePair, std::map<RankId, RankMemorySemantics> &rankMemSemantics,
-        std::vector<BufferSemantic *> &affectedDstBufSemantics);
-    HcclResult ApplySrcBufSemanticsToDst(SliceOpPair &slicePair, std::map<RankId, RankMemorySemantics> &rankMemSemantics,
-        std::map<RankId, bool> &memSemanticsChange, u32 effectGlobalStep, std::vector<BufferSemantic *> srcBufSemantics);
+    void GetSrcIntersectionAddr(
+        SliceOpPair& slicePair, const BufferSemantic& srcBufSemantic, u64& srcStartAddr, u64& srcEndAddr) const;
+    HcclResult CheckBufSemantics(
+        std::vector<BufferSemantic*>& bufSemantics, u64 startAddr, u64 size, bool ignoreError = false) const;
+    void RemoveAffectedBufSemantics(
+        SliceOpPair& slicePair, std::map<RankId, RankMemorySemantics>& rankMemSemantics,
+        std::vector<BufferSemantic*>& affectedDstBufSemantics);
+    void ApplyOverrideSrcBufSemantic(
+        SliceOpPair& slicePair, std::map<RankId, RankMemorySemantics>& rankMemSemantics, u32 effectGlobalStep,
+        const BufferSemantic srcBufSemantic);
+    HcclResult ReduceToAffectedBufSemantic(
+        const BufferSemantic& srcBufSemantic, std::vector<BufferSemantic*> toAddReduceInfoSemantics, u64 srcStartAddr);
+    HcclResult ApplyReduceSrcBufSemantic(
+        SliceOpPair& slicePair, std::map<RankId, RankMemorySemantics>& rankMemSemantics, u32 effectGlobalStep,
+        const BufferSemantic& srcBufSemantic, std::vector<BufferSemantic*>& affectedDstBufSemantics);
+    void GetAffectedBufSemantics(
+        SliceOpPair& slicePair, const BufferSemantic& srcBufSemantic,
+        std::map<RankId, RankMemorySemantics>& rankMemSemantics, std::vector<BufferSemantic*>& affectedDstBufSemantics);
+    void GetAffectedBufSemantics(
+        SliceOpPair& slicePair, std::map<RankId, RankMemorySemantics>& rankMemSemantics,
+        std::vector<BufferSemantic*>& affectedDstBufSemantics);
+    HcclResult ApplySrcBufSemanticsToDst(
+        SliceOpPair& slicePair, std::map<RankId, RankMemorySemantics>& rankMemSemantics,
+        std::map<RankId, bool>& memSemanticsChange, u32 effectGlobalStep, std::vector<BufferSemantic*> srcBufSemantics);
 
-    HcclResult ProcessSliceOpPair(SliceOpPair &slicePair, std::map<RankId, RankMemorySemantics> &rankMemSemantics,
-        std::map<RankId, bool> &memSemanticsChange, u32 effectGlobalStep);
-    void       GetSliceOpPair(TaskNode *simNodes, std::vector<SliceOpPair> &sliceOpPairs) const;
-    HcclResult ProcessNodeSemantics(TaskNode *simNode);
+    HcclResult ProcessSliceOpPair(
+        SliceOpPair& slicePair, std::map<RankId, RankMemorySemantics>& rankMemSemantics,
+        std::map<RankId, bool>& memSemanticsChange, u32 effectGlobalStep);
+    void GetSliceOpPair(TaskNode* simNodes, std::vector<SliceOpPair>& sliceOpPairs) const;
+    HcclResult ProcessNodeSemantics(TaskNode* simNode);
 
-    bool       IsReadyForSimulate(const TaskNode *node, std::set<TaskNode *> &simulatedNodes) const;
+    bool IsReadyForSimulate(const TaskNode* node, std::set<TaskNode*>& simulatedNodes) const;
 
-    void       AddChildrenToQueue(TaskNode *node, std::set<TaskNode *> &visitedNodes,
-                                  std::queue<TaskNode *> &walkQue, std::set<TaskNode *>& simulatedNodes) const;
+    void AddChildrenToQueue(
+        TaskNode* node, std::set<TaskNode*>& visitedNodes, std::queue<TaskNode*>& walkQue,
+        std::set<TaskNode*>& simulatedNodes) const;
     void PrepareTimelineContext();
-    void EnsureRankMemoryEntries(std::map<RankId, RankMemorySemantics> &rankMemSemantics) const;
+    void EnsureRankMemoryEntries(std::map<RankId, RankMemorySemantics>& rankMemSemantics) const;
     HcclResult GenerateMemoryTimeline();
     HcclResult BuildLogicalSchedule();
     HcclResult ReplayTimelineEvents();
@@ -175,12 +163,12 @@ private:
     VDataDesTagInner vDataDes_;
     All2AllDataDesTagInner all2AllDataDes_;
 
-    TaskNodePtr                           graphHead_;
-    u64                                   dataSize_ = 0;
-    u64                                   inputDataSize_ = 0;
-    u64                                   outputDataSize_ = 0;
+    TaskNodePtr graphHead_;
+    u64 dataSize_ = 0;
+    u64 inputDataSize_ = 0;
+    u64 outputDataSize_ = 0;
     std::map<RankId, RankMemorySemantics> allRankMemSemantics_;
-    u32                                   rankSize_;
+    u32 rankSize_;
 
     // 语义信息dump相关的环境变量
     u32 globalStep_ = 0;
@@ -188,8 +176,8 @@ private:
     std::map<RankId, std::map<u32, u32>> localStep2GlobalStep_;
     std::map<u32, LocalStep> globalStep2LocalStep_;
     std::map<RankId, bool> memSemanticsChange_;
-    std::vector<TaskNode *> graphNodes_;
-    std::map<TaskNode *, std::string> nodeIdMap_;
+    std::vector<TaskNode*> graphNodes_;
+    std::map<TaskNode*, std::string> nodeIdMap_;
     std::vector<TimelineEvent> timelineEvents_;
     std::map<u32, u32> globalStepToEventId_;
     std::map<RankId, RankMemorySemantics> initialRankMemSemantics_;

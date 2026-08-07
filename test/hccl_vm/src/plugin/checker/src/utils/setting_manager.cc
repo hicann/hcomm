@@ -26,7 +26,7 @@ static const std::string SETTING_KEY_ENABLE_NEW_CHECKER = "enable_new_checker";
 static const std::string SETTING_KEY_ENABLE_OLD_CHECKER = "enable_old_checker";
 static const std::string SETTING_KEY_ENABLE_BIG_GRAPH_CHECKER = "enable_big_graph_checker";
 
-}  // namespace
+} // namespace
 
 namespace HcclSim {
 
@@ -65,7 +65,7 @@ HcclResult SettingManager::Refresh()
         newSettings.enableNewChecker = settings.value(SETTING_KEY_ENABLE_NEW_CHECKER, true);
         newSettings.enableOldChecker = settings.value(SETTING_KEY_ENABLE_OLD_CHECKER, true);
         newSettings.enableBigGraphChecker = settings.value(SETTING_KEY_ENABLE_BIG_GRAPH_CHECKER, false);
-    } catch (const std::exception &ex) {
+    } catch (const std::exception& ex) {
         HCCL_VM_ERROR("parse manifest failed: {}", ex.what());
         return HcclResult::HCCL_E_INTERNAL;
     }
@@ -77,17 +77,18 @@ HcclResult SettingManager::Refresh()
         m_manifestPath = manifestPath;
     }
 
-    HCCL_VM_INFO("settings refreshed: insight_dump={}, memory_snapshot_dump={}, "
-        "new_checker={}, old_checker={}, big_graph_checker={}", newSettings.enableInsightDump,
-        newSettings.enableMemorySnapshotDump, newSettings.enableNewChecker, newSettings.enableOldChecker,
-        newSettings.enableBigGraphChecker);
+    HCCL_VM_INFO(
+        "settings refreshed: insight_dump={}, memory_snapshot_dump={}, "
+        "new_checker={}, old_checker={}, big_graph_checker={}",
+        newSettings.enableInsightDump, newSettings.enableMemorySnapshotDump, newSettings.enableNewChecker,
+        newSettings.enableOldChecker, newSettings.enableBigGraphChecker);
     return HcclResult::HCCL_SUCCESS;
 }
 
 void SettingManager::Reset()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_settings = CheckerSettings {};
+    m_settings = CheckerSettings{};
     m_pluginRootDir.clear();
     m_manifestPath.clear();
 }
@@ -128,4 +129,4 @@ bool SettingManager::IsBigGraphCheckerEnabled() const
     return m_settings.enableBigGraphChecker;
 }
 
-}  // namespace HcclSim
+} // namespace HcclSim

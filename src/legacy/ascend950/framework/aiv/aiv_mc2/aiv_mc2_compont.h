@@ -20,23 +20,22 @@ namespace Hccl {
 
 class AivMc2Compont {
 public:
-    explicit AivMc2Compont(CommunicatorImpl *comm) : comm(comm)
-    {
-    }
+    explicit AivMc2Compont(CommunicatorImpl* comm) : comm(comm) {}
     ~AivMc2Compont();
-    void AllocCommResource(void *mc2Tiling, void **commContext);
+    void AllocCommResource(void* mc2Tiling, void** commContext);
 
 private:
-    void GenerateCommContext(void **commContext);
-    void AivMC2AllocCommRes(Mc2Tiling *mc2TilingPtr) const;
-    void AivMC2AllocCommResV2(Mc2InitTilingInner *mc2TilingPtr) const;
-    void FillCollOperator(const Mc2CommConfig &config) const;
-    void FillCollOperatorV2(const Mc2CcTilingInner &config) const;
-private:
-    void GenerateAivMemoryCommContext(HcclCombinOpParam &combinOpParam);
- 	void GenerateAivUrmaCommContext(HcclCombinOpParam &combinOpParam) const;
+    void GenerateCommContext(void** commContext);
+    void AivMC2AllocCommRes(Mc2Tiling* mc2TilingPtr) const;
+    void AivMC2AllocCommResV2(Mc2InitTilingInner* mc2TilingPtr) const;
+    void FillCollOperator(const Mc2CommConfig& config) const;
+    void FillCollOperatorV2(const Mc2CcTilingInner& config) const;
 
-    CommunicatorImpl          *comm;
+private:
+    void GenerateAivMemoryCommContext(HcclCombinOpParam& combinOpParam);
+    void GenerateAivUrmaCommContext(HcclCombinOpParam& combinOpParam) const;
+
+    CommunicatorImpl* comm;
     std::shared_ptr<DevBuffer> workspaceBuffer{nullptr};
     std::shared_ptr<DevBuffer> combinOpParamBuffer{nullptr};
     std::shared_ptr<DevBuffer> comParamBuffer{nullptr};

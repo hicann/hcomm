@@ -23,12 +23,12 @@
 
 namespace hccl {
 struct HDCommunicateParams {
-    u64 hostAddr{ 0 };
-    u64 deviceAddr{ 0 };
-    u64 readCacheAddr{ 0 };
-    u32 devMemSize{ 0 };
-    u32 buffLen{ 0 };
-    u32 flag{ 0};
+    u64 hostAddr{0};
+    u64 deviceAddr{0};
+    u64 readCacheAddr{0};
+    u32 devMemSize{0};
+    u32 buffLen{0};
+    u32 flag{0};
 };
 
 // NOTE:
@@ -44,18 +44,18 @@ public:
 
     struct HDCommunicateParams GetCommunicateParams();
 
-    HcclResult InitDevice(const struct HDCommunicateParams &params);
+    HcclResult InitDevice(const struct HDCommunicateParams& params);
 
-    HcclResult Put(u32 offset, u32 length, u8 *value);
+    HcclResult Put(u32 offset, u32 length, u8* value);
 
-    HcclResult Get(u32 offset, u32 length, u8 *value);
+    HcclResult Get(u32 offset, u32 length, u8* value);
 
 private:
     HcclResult VerifyDeviceMemoryRegisterSupport();
-    HcclResult AllocShm(u32 devid, DeviceMem &devShm, HostMem &hostShm);
-    HcclResult AllocReadCache(u32 flag, void *&readCacheAddr);
-    HcclResult Write(u32 offset, u32 length, u8 *value);
-    HcclResult Read(u32 offset, u32 length, u8 *value);
+    HcclResult AllocShm(u32 devid, DeviceMem& devShm, HostMem& hostShm);
+    HcclResult AllocReadCache(u32 flag, void*& readCacheAddr);
+    HcclResult Write(u32 offset, u32 length, u8* value);
+    HcclResult Read(u32 offset, u32 length, u8* value);
     HcclResult UpdateCache(u32 timeoutSec);
     DeviceMem devMem_;
     HostMem hostMem_;
@@ -65,15 +65,15 @@ private:
     u32 flag_;
     u32 buffLen_;
 
-    void *readCacheAddr_{ nullptr };
-    u32 *headCntAddr_{ nullptr };
-    u32 *tailCntAddr_{ nullptr };
-    u32 *devHeadCntAddr_{ nullptr };
-    u32 *devTailCntAddr_{ nullptr };
-    bool isHost_{ true };
-    bool supportDevMemReg_{ true };
+    void* readCacheAddr_{nullptr};
+    u32* headCntAddr_{nullptr};
+    u32* tailCntAddr_{nullptr};
+    u32* devHeadCntAddr_{nullptr};
+    u32* devTailCntAddr_{nullptr};
+    bool isHost_{true};
+    bool supportDevMemReg_{true};
     std::shared_mutex lock_;
 };
 
-}
+} // namespace hccl
 #endif // HCCL_HDC_PUB_H

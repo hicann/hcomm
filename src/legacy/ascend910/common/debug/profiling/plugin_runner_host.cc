@@ -14,7 +14,7 @@
 #include "acl/error_codes/rt_error_codes.h"
 
 using namespace hccl;
-HcclResult PluginRunner::isStreamCapture(rtStream_t stream, bool &isCapture) const
+HcclResult PluginRunner::isStreamCapture(rtStream_t stream, bool& isCapture) const
 {
     isCapture = false;
     DevType devType;
@@ -30,8 +30,10 @@ HcclResult PluginRunner::isStreamCapture(rtStream_t stream, bool &isCapture) con
         HCCL_WARNING("[PluginRunner][isStreamCapture]Stream capture does not support!");
         return HCCL_SUCCESS;
     } else {
-        CHK_PRT_RET(ret != ACL_SUCCESS,
-                    HCCL_ERROR("[PluginRunner][isStreamCapture]rtGet stream get capture status fail. return[%d]", ret), HCCL_E_RUNTIME);
+        CHK_PRT_RET(
+            ret != ACL_SUCCESS,
+            HCCL_ERROR("[PluginRunner][isStreamCapture]rtGet stream get capture status fail. return[%d]", ret),
+            HCCL_E_RUNTIME);
     }
 
     switch (captureStatus) {

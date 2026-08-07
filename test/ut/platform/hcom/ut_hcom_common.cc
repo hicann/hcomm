@@ -43,26 +43,13 @@
 using namespace std;
 using namespace hccl;
 
-class HcomCommonTest : public testing::Test
-{
+class HcomCommonTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "HcomCommon_UT SetUP--\033[0m" << std::endl;
-    }
-    static void TearDownTestCase()
-    {
-        std::cout << "HcomCommon_UT TearDown--\033[0m" << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "HcomCommon_UT SetUP--\033[0m" << std::endl; }
+    static void TearDownTestCase() { std::cout << "HcomCommon_UT TearDown--\033[0m" << std::endl; }
     // Some expensive resource shared by all tests.
-    virtual void SetUp()
-    {
-        std::cout << "A Test SetUP" << std::endl;
-    }
-    virtual void TearDown()
-    {
-        std::cout << "A Test TearDown" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test SetUP" << std::endl; }
+    virtual void TearDown() { std::cout << "A Test TearDown" << std::endl; }
 };
 
 TEST_F(HcomCommonTest, ut_hcom_common_HcomGetSecAddrCopyFlag)
@@ -75,29 +62,18 @@ TEST_F(HcomCommonTest, ut_hcom_common_HcomGetSecAddrCopyFlag)
 
 TEST_F(HcomCommonTest, ut_hcom_HcomCreateCommCCLbuffer)
 {
-    MOCKER(HcomCheckGroupName)
-    .stubs()
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER(HcomCheckGroupName).stubs().will(returnValue(HCCL_SUCCESS));
 
-    MOCKER_CPP(&hcclComm::GetInCCLbuffer)
-    .stubs()
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&hcclComm::GetInCCLbuffer).stubs().will(returnValue(HCCL_SUCCESS));
 
-    MOCKER_CPP(&hcclComm::GetOutCCLbuffer)
-    .stubs()
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&hcclComm::GetOutCCLbuffer).stubs().will(returnValue(HCCL_SUCCESS));
 
     std::shared_ptr<hccl::hcclComm> h = std::make_shared<hccl::hcclComm>();
-    MOCKER(HcomGetCommByGroup)
-    .stubs()
-    .with(mockcpp::any(), outBound(h))
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER(HcomGetCommByGroup).stubs().with(mockcpp::any(), outBound(h)).will(returnValue(HCCL_SUCCESS));
 
-    MOCKER_CPP(&HcclCommunicator::CreateCommCCLbuffer)
-    .stubs()
-    .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclCommunicator::CreateCommCCLbuffer).stubs().will(returnValue(HCCL_SUCCESS));
 
-    const char *group = "123";
+    const char* group = "123";
     HcclResult ret = HcomCreateCommCCLbuffer(group);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
@@ -111,23 +87,17 @@ TEST_F(HcomCommonTest, ut_hcom_HcomCreateCommCCLbuffer)
 }
 
 TEST_F(HcomCommonTest, ut_hcom_common_HcomGetAicpuOpStreamNotify)
-{   
+{
     std::string identifier = "aa";
     HcclRtStream opStream;
     void* aicpuNotify;
     HcclResult ret;
 
-    MOCKER(HcomCheckGroupName)
-    .stubs()
-    .will(returnValue(HcclResult::HCCL_SUCCESS));
+    MOCKER(HcomCheckGroupName).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
 
-    MOCKER(HcclGetCommHandle)
-    .stubs()
-    .will(returnValue(HcclResult::HCCL_SUCCESS));
+    MOCKER(HcclGetCommHandle).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
 
-    MOCKER_CPP(&hcclComm::GetAicpuOpStreamNotify)
-    .stubs()
-    .will(returnValue(HcclResult::HCCL_SUCCESS));
+    MOCKER_CPP(&hcclComm::GetAicpuOpStreamNotify).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
 
     ret = HcomGetAicpuOpStreamNotify(identifier.c_str(), &opStream, 1, &aicpuNotify);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -136,22 +106,16 @@ TEST_F(HcomCommonTest, ut_hcom_common_HcomGetAicpuOpStreamNotify)
 }
 
 TEST_F(HcomCommonTest, ut_hcom_common_HcomMc2AiCpuStreamAllocAndGet)
-{   
+{
     std::string identifier = "aa";
     rtStream_t aiCpuStream;
     HcclResult ret;
 
-    MOCKER(HcomCheckGroupName)
-    .stubs()
-    .will(returnValue(HcclResult::HCCL_SUCCESS));
+    MOCKER(HcomCheckGroupName).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
 
-    MOCKER(HcclGetCommHandle)
-    .stubs()
-    .will(returnValue(HcclResult::HCCL_SUCCESS));
+    MOCKER(HcclGetCommHandle).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
 
-    MOCKER_CPP(&hcclComm::Mc2AiCpuStreamAllocAndGet)
-    .stubs()
-    .will(returnValue(HcclResult::HCCL_SUCCESS));
+    MOCKER_CPP(&hcclComm::Mc2AiCpuStreamAllocAndGet).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
 
     ret = HcomMc2AiCpuStreamAllocAndGet(identifier.c_str(), 1, &aiCpuStream);
     EXPECT_EQ(ret, HCCL_SUCCESS);

@@ -15,44 +15,45 @@
 
 namespace Hccl {
 
-/// UBC Jetty / TP 默认 QoS（0–7）；与 `src/framework/common/src/config/env_config.h` 中 `EnvConfig::UB_QOS_DEFAULT` 数值一致。放在命名空间级避免 `EnvConfig::` 在默认实参等场景下解析失败。
+/// UBC Jetty / TP 默认 QoS（0–7）；与 `src/framework/common/src/config/env_config.h` 中 `EnvConfig::UB_QOS_DEFAULT`
+/// 数值一致。放在命名空间级避免 `EnvConfig::` 在默认实参等场景下解析失败。
 constexpr u32 UB_QOS_DEFAULT = 4U;
 
 class EnvConfig {
 public:
-    static EnvConfig &GetInstance();
+    static EnvConfig& GetInstance();
 
-    const EnvHostNicConfig &GetHostNicConfig();
+    const EnvHostNicConfig& GetHostNicConfig();
 
-    const EnvSocketConfig &GetSocketConfig();
+    const EnvSocketConfig& GetSocketConfig();
 
-    const EnvRtsConfig &GetRtsConfig();
+    const EnvRtsConfig& GetRtsConfig();
 
-    const EnvRdmaConfig &GetRdmaConfig();
+    const EnvRdmaConfig& GetRdmaConfig();
 
-    const EnvAlgoConfig &GetAlgoConfig();
+    const EnvAlgoConfig& GetAlgoConfig();
 
-    const EnvLogConfig &GetLogConfig();
+    const EnvLogConfig& GetLogConfig();
 
-    const EnvDetourConfig &GetDetourConfig();
+    const EnvDetourConfig& GetDetourConfig();
 
-    const EnvPlfDebugConfig &GetPlfDebugConfig();
+    const EnvPlfDebugConfig& GetPlfDebugConfig();
 
-    EnvConfig(const EnvConfig &envConfig) = delete;
+    EnvConfig(const EnvConfig& envConfig) = delete;
 
-    EnvConfig &operator=(const EnvConfig &envConfig) = delete;
+    EnvConfig& operator=(const EnvConfig& envConfig) = delete;
 
     void Parse();
 
 private:
-    EnvHostNicConfig       hostNicCfg;
-    EnvSocketConfig        socketCfg;
-    EnvRtsConfig           rtsCfg;
-    EnvRdmaConfig          rdmaCfg;
-    EnvAlgoConfig          algoCfg;
-    EnvLogConfig           logCfg;
-    EnvDetourConfig        detourCfg;
-    EnvPlfDebugConfig      plfDebugCfg;
+    EnvHostNicConfig hostNicCfg;
+    EnvSocketConfig socketCfg;
+    EnvRtsConfig rtsCfg;
+    EnvRdmaConfig rdmaCfg;
+    EnvAlgoConfig algoCfg;
+    EnvLogConfig logCfg;
+    EnvDetourConfig detourCfg;
+    EnvPlfDebugConfig plfDebugCfg;
     EnvConfig();
 };
 

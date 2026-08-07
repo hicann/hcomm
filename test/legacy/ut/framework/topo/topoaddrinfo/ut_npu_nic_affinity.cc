@@ -26,7 +26,7 @@
 #include "securec.h"
 #include "topo_addr_info_log.h"
 
-static void TestLogRecord(int moduleId, int level, const char *fmt, ...)
+static void TestLogRecord(int moduleId, int level, const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
@@ -36,27 +36,21 @@ static void TestLogRecord(int moduleId, int level, const char *fmt, ...)
     va_end(args);
 }
 
-static int TestCheckLogLevel(int moduleId, int logLevel)
-{
-    return 1; /* 允许所有级别 */
-}
+static int TestCheckLogLevel(int moduleId, int logLevel) { return 1; /* 允许所有级别 */ }
 
 /* ──────── Wrap getifaddrs / freeifaddrs ──────── */
 
-static struct ifaddrs *g_fakeIfaddr = NULL;
+static struct ifaddrs* g_fakeIfaddr = NULL;
 
-extern "C" int __wrap_getifaddrs(struct ifaddrs **ifap)
+extern "C" int __wrap_getifaddrs(struct ifaddrs** ifap)
 {
     *ifap = g_fakeIfaddr;
     return 0;
 }
 
-extern "C" void __wrap_freeifaddrs(struct ifaddrs *ifa)
-{
-    /* 我们的假数据是静态管理的，不需要释放 */
-}
+extern "C" void __wrap_freeifaddrs(struct ifaddrs* ifa) { /* 我们的假数据是静态管理的，不需要释放 */ }
 
-static void SetupFakeNet(const char *ethName, const char *ipStr)
+static void SetupFakeNet(const char* ethName, const char* ipStr)
 {
     if (g_fakeIfaddr != NULL) {
         free(g_fakeIfaddr->ifa_name);
@@ -65,15 +59,15 @@ static void SetupFakeNet(const char *ethName, const char *ipStr)
         g_fakeIfaddr = NULL;
     }
 
-    struct ifaddrs *ifa = (struct ifaddrs *)calloc(1, sizeof(struct ifaddrs));
+    struct ifaddrs* ifa = (struct ifaddrs*)calloc(1, sizeof(struct ifaddrs));
     ASSERT_NE(ifa, nullptr);
     ifa->ifa_next = NULL;
     ifa->ifa_name = strdup(ethName);
     ASSERT_NE(ifa->ifa_name, nullptr);
     ifa->ifa_flags = IFF_UP;
-    ifa->ifa_addr = (struct sockaddr *)calloc(1, sizeof(struct sockaddr_in));
+    ifa->ifa_addr = (struct sockaddr*)calloc(1, sizeof(struct sockaddr_in));
     ASSERT_NE(ifa->ifa_addr, nullptr);
-    struct sockaddr_in *sin = (struct sockaddr_in *)ifa->ifa_addr;
+    struct sockaddr_in* sin = (struct sockaddr_in*)ifa->ifa_addr;
     sin->sin_family = AF_INET;
     inet_pton(AF_INET, ipStr, &sin->sin_addr);
     g_fakeIfaddr = ifa;
@@ -90,13 +84,13 @@ static void TeardownFakeNet()
 }
 
 /* ──────── 创建 /tmp/ut_hca/<hca>/device/net/<eth> ──────── */
-static void SetupFakeHca(const char *hca, const char *eth)
+static void SetupFakeHca(const char* hca, const char* eth)
 {
     char path[512];
     sprintf_s(path, sizeof(path), "/tmp/ut_hca/%s/device/net", hca);
     char p[512];
     strncpy_s(p, sizeof(p), path, sizeof(p) - 1);
-    for (char *c = p + 1; *c; c++) {
+    for (char* c = p + 1; *c; c++) {
         if (*c == '/') {
             *c = '\0';
             mkdir(p, 0755);
@@ -119,9 +113,9 @@ static void TeardownFakeHca()
 /* ──────── Mock HAL ──────── */
 static struct dcmi_pcie_info_all g_pi[MAX_NPU_COUNT];
 static unsigned int g_pc = 0;
-static bool g_visibleMask[MAX_NPU_COUNT];  // true=该 phyId 对运行时可见
+static bool g_visibleMask[MAX_NPU_COUNT]; // true=该 phyId 对运行时可见
 
-extern "C" int mock_pi(int phyId, struct dcmi_pcie_info_all *info)
+extern "C" int mock_pi(int phyId, struct dcmi_pcie_info_all* info)
 {
     if (phyId >= 0 && (unsigned int)phyId < g_pc && g_visibleMask[phyId]) {
         *info = g_pi[phyId];
@@ -131,7 +125,7 @@ extern "C" int mock_pi(int phyId, struct dcmi_pcie_info_all *info)
 }
 
 /* 模拟 hal_get_userdevid_by_phyid：对照 g_visibleMask 判断可见性 */
-extern "C" int mock_userdevid(int phyId, int *userDevId)
+extern "C" int mock_userdevid(int phyId, int* userDevId)
 {
     if (phyId >= 0 && phyId < (int)MAX_NPU_COUNT && g_visibleMask[phyId]) {
         *userDevId = phyId;
@@ -149,10 +143,7 @@ protected:
            hal_get_device_pcie_info / hal_get_userdevid_by_phyid，
            完全绕过 load_dcmi() 路径。 */
         g_pc = 0;
-        MOCKER(hal_get_device_pcie_info)
-            .stubs()
-            .with(mockcpp::any(), mockcpp::any())
-            .will(mockcpp::invoke(mock_pi));
+        MOCKER(hal_get_device_pcie_info).stubs().with(mockcpp::any(), mockcpp::any()).will(mockcpp::invoke(mock_pi));
         MOCKER(hal_get_userdevid_by_phyid)
             .stubs()
             .with(mockcpp::any(), mockcpp::any())
@@ -160,7 +151,7 @@ protected:
 
         remove("/tmp/ut_virtualTopology.xml");
         memset_s(g_pi, sizeof(g_pi), 0, sizeof(g_pi));
-        memset(g_visibleMask, 1, sizeof(g_visibleMask));  // all visible by default
+        memset(g_visibleMask, 1, sizeof(g_visibleMask)); // all visible by default
         SetupFakeHca("hrn5_0", "eth0");
         SetupFakeNet("eth0", "10.0.0.1");
 
@@ -177,9 +168,9 @@ protected:
         g_topo_CheckLogLevel = NULL;
         GlobalMockObject::verify();
     }
-    void W(const char *c)
+    void W(const char* c)
     {
-        FILE *fp = fopen("/tmp/ut_virtualTopology.xml", "w");
+        FILE* fp = fopen("/tmp/ut_virtualTopology.xml", "w");
         ASSERT_NE(fp, nullptr);
         fputs(c, fp);
         fclose(fp);
@@ -208,7 +199,7 @@ protected:
         }
     }
     /* 校验 GetRoceIpFromXml 成功并返回期望 IP */
-    void AssertRoceIpOk(unsigned int npuId, const char *expectIp)
+    void AssertRoceIpOk(unsigned int npuId, const char* expectIp)
     {
         char ip[64] = {0};
         EXPECT_EQ(GetRoceIpFromXml(npuId, ip, sizeof(ip)), 0);
@@ -393,10 +384,7 @@ TEST_F(NpuNicAffinityTest, UB_NicInSubUb)
  *  异常 / 边界
  * ══════════════════════════════════════════════════════════════ */
 
-TEST_F(NpuNicAffinityTest, Error_FileNotFound)
-{
-    AssertRoceIpFail(0);
-}
+TEST_F(NpuNicAffinityTest, Error_FileNotFound) { AssertRoceIpFail(0); }
 
 TEST_F(NpuNicAffinityTest, Error_EmptyFile)
 {
@@ -580,11 +568,11 @@ TEST_F(NpuNicAffinityTest, VisibleDevices_NonContiguous_PCIE)
     SetVisibleDevices({0, 3, 7});
 
     g_pi[0].domain = 0;
-    g_pi[0].bdf_busid = 3;   /* → "0000:03:00.0" */
+    g_pi[0].bdf_busid = 3; /* → "0000:03:00.0" */
     g_pi[3].domain = 0;
-    g_pi[3].bdf_busid = 7;   /* → "0000:07:00.0" */
+    g_pi[3].bdf_busid = 7; /* → "0000:07:00.0" */
     g_pi[7].domain = 0;
-    g_pi[7].bdf_busid = 10;  /* → "0000:0a:00.0" */
+    g_pi[7].bdf_busid = 10; /* → "0000:0a:00.0" */
 
     W("<system version=\"1.0\">\n<cpu numaid=\"0\">\n"
       "<pci busid=\"0000:01:00.0\">\n"
@@ -672,16 +660,14 @@ TEST_F(NpuNicAffinityTest, NameIsEthName_TopoAddrInfoGet)
     dcmi_urma_eid_info_t eidList[MAX_EID_NUM];
     memset_s(eidList, sizeof(eidList), 0, sizeof(eidList));
     size_t eidNum = 0;
-    MOCKER(hal_get_mainboard_id).stubs()
-        .with(mockcpp::any(), outBoundP(&mainboardId))
-        .will(returnValue(0));
-    MOCKER(hal_get_driver_install_path).stubs()
+    MOCKER(hal_get_mainboard_id).stubs().with(mockcpp::any(), outBoundP(&mainboardId)).will(returnValue(0));
+    MOCKER(hal_get_driver_install_path)
+        .stubs()
         .with(outBoundP(drvPath, strlen(drvPath)), mockcpp::any())
         .will(returnValue(0));
-    MOCKER(hal_get_eid_list_by_phy_id).stubs()
-        .with(mockcpp::any(),
-              outBoundP(eidList, eidNum * sizeof(dcmi_urma_eid_info_t)),
-              outBoundP(&eidNum))
+    MOCKER(hal_get_eid_list_by_phy_id)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(eidList, eidNum * sizeof(dcmi_urma_eid_info_t)), outBoundP(&eidNum))
         .will(returnValue(0));
 
     char buf[4096] = {0};
@@ -696,42 +682,27 @@ TEST_F(NpuNicAffinityTest, NameIsEthName_TopoAddrInfoGet)
  * ══════════════════════════════════════════════════════════════ */
 
 /* 校验 TopoAddrInfoGet 输出的 JSON 中包含所有预期字段 */
-static void AssertJsonContains(const char *json, const char *const expectFields[], const std::string &desc)
+static void AssertJsonContains(const char* json, const char* const expectFields[], const std::string& desc)
 {
     for (int i = 0; expectFields[i] != nullptr; i++) {
-        EXPECT_NE(strstr(json, expectFields[i]), nullptr)
-            << desc << " JSON 应包含: " << expectFields[i];
+        EXPECT_NE(strstr(json, expectFields[i]), nullptr) << desc << " JSON 应包含: " << expectFields[i];
     }
 }
 
 /* 校验 TopoAddrInfoGet 输出的 JSON 中不包含某字段 */
-static void AssertJsonNotContains(const char *json, const char *field, const std::string &desc)
+static void AssertJsonNotContains(const char* json, const char* field, const std::string& desc)
 {
-    EXPECT_EQ(strstr(json, field), nullptr)
-        << desc << " JSON 不应包含: " << field;
+    EXPECT_EQ(strstr(json, field), nullptr) << desc << " JSON 不应包含: " << field;
 }
 
 /* ROCE 层预期字段（phyId 可见时） */
-static const char *g_roceJsonFields[] = {
-    "\"net_layer\": 3",
-    "\"net_instance_id\": \"cluster\"",
-    "\"net_type\": \"CLOS\"",
-    "\"rank_addr_list\":",
-    "\"addr\": \"10.0.0.1\"",
-    "\"plane_id\": \"plane0\"",
-    "\"ports\": [\"d2h\"]",
-    nullptr
-};
+static const char* g_roceJsonFields[]
+    = {"\"net_layer\": 3",       "\"net_instance_id\": \"cluster\"", "\"net_type\": \"CLOS\"", "\"rank_addr_list\":",
+       "\"addr\": \"10.0.0.1\"", "\"plane_id\": \"plane0\"",         "\"ports\": [\"d2h\"]",   nullptr};
 
 /* RootInfo 层预期字段 */
-static const char *g_rootInfoJsonFields[] = {
-    "\"version\": \"2.0\"",
-    "\"rank_count\": 1",
-    "\"rank_list\":",
-    "\"device_id\":",
-    "\"local_id\":",
-    nullptr
-};
+static const char* g_rootInfoJsonFields[]
+    = {"\"version\": \"2.0\"", "\"rank_count\": 1", "\"rank_list\":", "\"device_id\":", "\"local_id\":", nullptr};
 
 /* ══════════════════════════════════════════════════════════════
  *  全量 mainboard × PCIE/UB × 可见模式 正交覆盖
@@ -739,20 +710,19 @@ static const char *g_rootInfoJsonFields[] = {
 
 struct TopoParam {
     unsigned int mainboardId;
-    const char *name;
-    bool isCard;    // true→hal_get_eid_list, false→HalGetUBEntityList+hal_get_spod_info
-    bool isPcie;    // true→PCIE XML, false→UB XML
-    bool isSparse;  // true→{0,3,7}, false→全量 {0..7}
+    const char* name;
+    bool isCard;   // true→hal_get_eid_list, false→HalGetUBEntityList+hal_get_spod_info
+    bool isPcie;   // true→PCIE XML, false→UB XML
+    bool isSparse; // true→{0,3,7}, false→全量 {0..7}
 };
 
-std::ostream &operator<<(std::ostream &os, const TopoParam &p)
+std::ostream& operator<<(std::ostream& os, const TopoParam& p)
 {
-    return os << p.name << "_" << (p.isPcie ? "PCIE" : "UB")
-              << "_" << (p.isSparse ? "Sparse" : "All");
+    return os << p.name << "_" << (p.isPcie ? "PCIE" : "UB") << "_" << (p.isSparse ? "Sparse" : "All");
 }
 
 /* 构建 XML 字符串 */
-static std::string BuildXml(bool isPcie, const std::vector<int> &ids)
+static std::string BuildXml(bool isPcie, const std::vector<int>& ids)
 {
     std::string xml;
     if (isPcie) {
@@ -778,16 +748,12 @@ static std::string BuildXml(bool isPcie, const std::vector<int> &ids)
     return xml;
 }
 
-class TopoAddrInfoAllMainboardTest : public NpuNicAffinityTest,
-                                      public testing::WithParamInterface<TopoParam>
-{};
+class TopoAddrInfoAllMainboardTest : public NpuNicAffinityTest, public testing::WithParamInterface<TopoParam> {};
 
 TEST_P(TopoAddrInfoAllMainboardTest, EndToEnd)
 {
-    const TopoParam &param = GetParam();
-    std::vector<int> visibleIds = param.isSparse
-        ? std::vector<int>{0, 3, 7}
-        : std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7};
+    const TopoParam& param = GetParam();
+    std::vector<int> visibleIds = param.isSparse ? std::vector<int>{0, 3, 7} : std::vector<int>{0, 1, 2, 3, 4, 5, 6, 7};
 
     S(8, param.isPcie ? 8 : 0);
     SetVisibleDevices(visibleIds);
@@ -807,20 +773,18 @@ TEST_P(TopoAddrInfoAllMainboardTest, EndToEnd)
     {
         unsigned int mid = param.mainboardId;
         char drvPath[256] = "/usr/local/Ascend2";
-        MOCKER(hal_get_mainboard_id).stubs()
-            .with(mockcpp::any(), outBoundP(&mid))
-            .will(returnValue(0));
-        MOCKER(hal_get_driver_install_path).stubs()
+        MOCKER(hal_get_mainboard_id).stubs().with(mockcpp::any(), outBoundP(&mid)).will(returnValue(0));
+        MOCKER(hal_get_driver_install_path)
+            .stubs()
             .with(outBoundP(drvPath, strlen(drvPath)), mockcpp::any())
             .will(returnValue(0));
         if (param.isCard) {
             dcmi_urma_eid_info_t eidList[MAX_EID_NUM];
             memset_s(eidList, sizeof(eidList), 0, sizeof(eidList));
             size_t eidNum = 0;
-            MOCKER(hal_get_eid_list_by_phy_id).stubs()
-                .with(mockcpp::any(),
-                      outBoundP(eidList, eidNum * sizeof(dcmi_urma_eid_info_t)),
-                      outBoundP(&eidNum))
+            MOCKER(hal_get_eid_list_by_phy_id)
+                .stubs()
+                .with(mockcpp::any(), outBoundP(eidList, eidNum * sizeof(dcmi_urma_eid_info_t)), outBoundP(&eidNum))
                 .will(returnValue(0));
         } else {
             /* server/pod 用空 UEList + spod_info，
@@ -835,12 +799,8 @@ TEST_P(TopoAddrInfoAllMainboardTest, EndToEnd)
             spinfo.super_pod_id = 1;
             spinfo.server_index = 1;
 
-            MOCKER(HalGetUBEntityList).stubs()
-                .with(mockcpp::any(), outBoundP(&ueList))
-                .will(returnValue(0));
-            MOCKER(hal_get_spod_info).stubs()
-                .with(mockcpp::any(), outBoundP(&spinfo))
-                .will(returnValue(0));
+            MOCKER(HalGetUBEntityList).stubs().with(mockcpp::any(), outBoundP(&ueList)).will(returnValue(0));
+            MOCKER(hal_get_spod_info).stubs().with(mockcpp::any(), outBoundP(&spinfo)).will(returnValue(0));
         }
     }
 
@@ -849,10 +809,8 @@ TEST_P(TopoAddrInfoAllMainboardTest, EndToEnd)
         char buf[8192] = {0};
         size_t bufSize = sizeof(buf);
         ASSERT_EQ(TopoAddrInfoGet(id, buf, &bufSize), 0);
-        AssertJsonContains(buf, g_rootInfoJsonFields,
-            std::string(param.name) + " phyId=" + std::to_string(id));
-        AssertJsonContains(buf, g_roceJsonFields,
-            std::string(param.name) + " phyId=" + std::to_string(id));
+        AssertJsonContains(buf, g_rootInfoJsonFields, std::string(param.name) + " phyId=" + std::to_string(id));
+        AssertJsonContains(buf, g_roceJsonFields, std::string(param.name) + " phyId=" + std::to_string(id));
     }
 
     /* 不可见 NPU → 无 ROCE 层 */
@@ -863,58 +821,53 @@ TEST_P(TopoAddrInfoAllMainboardTest, EndToEnd)
         char buf[8192] = {0};
         size_t bufSize = sizeof(buf);
         ASSERT_EQ(TopoAddrInfoGet(id, buf, &bufSize), 0);
-        AssertJsonNotContains(buf, "\"addr\": \"10.0.0.1\"",
-            std::string(param.name) + " (invis) phyId=" + std::to_string(id));
+        AssertJsonNotContains(
+            buf, "\"addr\": \"10.0.0.1\"", std::string(param.name) + " (invis) phyId=" + std::to_string(id));
     }
 }
 
 /* 四正交：All/PCIE + All/UB + Sparse/PCIE + Sparse/UB */
-#define MB4(mainboardId, name, isCard) \
-    { mainboardId, name, isCard, true, false },  { mainboardId, name, isCard, true, true }, \
-    { mainboardId, name, isCard, false, false }, { mainboardId, name, isCard, false, true }
+#define MB4(mainboardId, name, isCard)                                                 \
+    {mainboardId, name, isCard, true, false}, {mainboardId, name, isCard, true, true}, \
+        {mainboardId, name, isCard, false, false},                                     \
+    {                                                                                  \
+        mainboardId, name, isCard, false, true                                         \
+    }
 
 static const TopoParam g_allTopoParams[] = {
     /* ─── Card ─── */
-    MB4(MAIN_BOARD_ID_CARD_NOMESH,          "CARD_NOMESH",          true),
-    MB4(MAIN_BOARD_ID_CARD_2PMESH,          "CARD_2PMESH",          true),
-    MB4(MAIN_BOARD_ID_CARD_4PMESH,          "CARD_4PMESH",          true),
+    MB4(MAIN_BOARD_ID_CARD_NOMESH, "CARD_NOMESH", true), MB4(MAIN_BOARD_ID_CARD_2PMESH, "CARD_2PMESH", true),
+    MB4(MAIN_BOARD_ID_CARD_4PMESH, "CARD_4PMESH", true),
     /* ─── Server ───
      * 说明：SERVER_TYPE1(0x23) 的 g_netInfoList 条目未初始化 instanceIdFunc，
      * ProcessLayer 调用 NULL 函数指针会崩溃。属于产品侧数据缺陷，暂不覆盖。 */
-    MB4(MAIN_BOARD_ID_SERVER_8PMESH,        "SERVER_8PMESH",        false),
-    MB4(MAIN_BOARD_ID_SERVER_8PMESH_UBOE,   "SERVER_8PMESH_UBOE",   false),
-    MB4(MAIN_BOARD_ID_SERVER_8PMESH_NOSP,   "SERVER_8PMESH_NOSP",   false),
+    MB4(MAIN_BOARD_ID_SERVER_8PMESH, "SERVER_8PMESH", false),
+    MB4(MAIN_BOARD_ID_SERVER_8PMESH_UBOE, "SERVER_8PMESH_UBOE", false),
+    MB4(MAIN_BOARD_ID_SERVER_8PMESH_NOSP, "SERVER_8PMESH_NOSP", false),
     MB4(MAIN_BOARD_ID_SERVER_8PMESH_NOSP_UBOE, "SERVER_8PMESH_NOSP_UBOE", false),
-    MB4(MAIN_BOARD_ID_SERVER_UBX,           "SERVER_UBX",           false),
+    MB4(MAIN_BOARD_ID_SERVER_UBX, "SERVER_UBX", false),
     /* ─── Pod ─── */
-    MB4(MAIN_BOARD_ID_POD,                  "POD",                  false),
-    MB4(MAIN_BOARD_ID_POD_2D,               "POD_2D",               false)
-};
+    MB4(MAIN_BOARD_ID_POD, "POD", false), MB4(MAIN_BOARD_ID_POD_2D, "POD_2D", false)};
 
-INSTANTIATE_TEST_SUITE_P(
-    VisibleDevices_Contiguity,
-    TopoAddrInfoAllMainboardTest,
-    testing::ValuesIn(g_allTopoParams)
-);
+INSTANTIATE_TEST_SUITE_P(VisibleDevices_Contiguity, TopoAddrInfoAllMainboardTest, testing::ValuesIn(g_allTopoParams));
 
 /* ─── 多组 UB XML 端到端验证 ─── */
 TEST_F(NpuNicAffinityTest, MultiGroupUbAffinity)
 {
     /* 构造 8 组 fake 网络接口 */
-    const char *nicNames[] = {"ens0f0", "ens1f0", "ens0f1", "ens1f1",
-                               "ens0f2", "ens1f2", "ens0f3", "ens1f3"};
-    struct ifaddrs *head = NULL;
+    const char* nicNames[] = {"ens0f0", "ens1f0", "ens0f1", "ens1f1", "ens0f2", "ens1f2", "ens0f3", "ens1f3"};
+    struct ifaddrs* head = NULL;
     for (int i = 0; i < 8; i++) {
-        struct ifaddrs *ifa = (struct ifaddrs *)calloc(1, sizeof(struct ifaddrs));
+        struct ifaddrs* ifa = (struct ifaddrs*)calloc(1, sizeof(struct ifaddrs));
         ifa->ifa_next = head;
         ifa->ifa_name = strdup(nicNames[i]);
         ifa->ifa_flags = IFF_UP;
-        struct sockaddr_in *sin = (struct sockaddr_in *)calloc(1, sizeof(struct sockaddr_in));
+        struct sockaddr_in* sin = (struct sockaddr_in*)calloc(1, sizeof(struct sockaddr_in));
         sin->sin_family = AF_INET;
         char ip[16];
         sprintf_s(ip, sizeof(ip), "10.0.%d.%d", i / 4, (i % 4) + 1);
         inet_pton(AF_INET, ip, &sin->sin_addr);
-        ifa->ifa_addr = (struct sockaddr *)sin;
+        ifa->ifa_addr = (struct sockaddr*)sin;
         head = ifa;
     }
     g_fakeIfaddr = head;
@@ -969,15 +922,15 @@ TEST_F(NpuNicAffinityTest, MultiGroupUbAffinity)
 
     /* 每个 NPU 应从自己的亲和组中分配到 NIC，且取到正确的 IP */
     /* 去重后 8 个 NIC 各占一个 nicIdx，全局游标逐一分配 */
-    const char *expectedIps[8] = {
-        "10.0.0.1",  // NPU0 → ens0f0
-        "10.0.0.2",  // NPU1 → ens1f0
-        "10.0.0.3",  // NPU2 → ens0f1
-        "10.0.0.4",  // NPU3 → ens1f1
-        "10.0.1.1",  // NPU4 → ens0f2
-        "10.0.1.2",  // NPU5 → ens1f2
-        "10.0.1.3",  // NPU6 → ens0f3
-        "10.0.1.4",  // NPU7 → ens1f3
+    const char* expectedIps[8] = {
+        "10.0.0.1", // NPU0 → ens0f0
+        "10.0.0.2", // NPU1 → ens1f0
+        "10.0.0.3", // NPU2 → ens0f1
+        "10.0.0.4", // NPU3 → ens1f1
+        "10.0.1.1", // NPU4 → ens0f2
+        "10.0.1.2", // NPU5 → ens1f2
+        "10.0.1.3", // NPU6 → ens0f3
+        "10.0.1.4", // NPU7 → ens1f3
     };
     for (int i = 0; i < 8; i++) {
         char ip[64] = {0};
@@ -990,23 +943,21 @@ TEST_F(NpuNicAffinityTest, MultiGroupUbAffinity)
 TEST_F(NpuNicAffinityTest, MultiGroupPcieAffinity)
 {
     /* 6 个唯一 NIC 名，各配唯一 IP */
-    const char *nicNames[] = {"ens0f0", "ens1f0", "ens0f2", "ens1f2",
-                               "ens0f3", "ens1f3"};
-    const char *fakeIps[] = {"10.0.0.1", "10.0.0.2", "10.0.1.1",
-                             "10.0.1.2", "10.0.1.3", "10.0.1.4"};
-    struct ifaddrs *head = NULL;
+    const char* nicNames[] = {"ens0f0", "ens1f0", "ens0f2", "ens1f2", "ens0f3", "ens1f3"};
+    const char* fakeIps[] = {"10.0.0.1", "10.0.0.2", "10.0.1.1", "10.0.1.2", "10.0.1.3", "10.0.1.4"};
+    struct ifaddrs* head = NULL;
     for (int i = 0; i < 6; i++) {
-        struct ifaddrs *ifa = (struct ifaddrs *)calloc(1, sizeof(struct ifaddrs));
+        struct ifaddrs* ifa = (struct ifaddrs*)calloc(1, sizeof(struct ifaddrs));
         ASSERT_NE(ifa, nullptr);
         ifa->ifa_next = head;
         ifa->ifa_name = strdup(nicNames[i]);
         ASSERT_NE(ifa->ifa_name, nullptr);
         ifa->ifa_flags = IFF_UP;
-        struct sockaddr_in *sin = (struct sockaddr_in *)calloc(1, sizeof(struct sockaddr_in));
+        struct sockaddr_in* sin = (struct sockaddr_in*)calloc(1, sizeof(struct sockaddr_in));
         ASSERT_NE(sin, nullptr);
         sin->sin_family = AF_INET;
         inet_pton(AF_INET, fakeIps[i], &sin->sin_addr);
-        ifa->ifa_addr = (struct sockaddr *)sin;
+        ifa->ifa_addr = (struct sockaddr*)sin;
         head = ifa;
     }
     g_fakeIfaddr = head;
@@ -1055,15 +1006,15 @@ TEST_F(NpuNicAffinityTest, MultiGroupPcieAffinity)
 
     /* 去重后 nicIdx: {0:ens0f0, 1:ens1f0, 2:ens0f2, 3:ens1f2, 4:ens0f3, 5:ens1f3}
        Group 0/1 共享 nicIdx {0,1}，Group 2 用 {2,3}，Group 3 用 {4,5} */
-    const char *expectedIps[8] = {
-        "10.0.0.1",  // NPU 0 → ens0f0
-        "10.0.0.2",  // NPU 1 → ens1f0
-        "10.0.0.1",  // NPU 2 → ens0f0 (去重同 nicIdx 0)
-        "10.0.0.2",  // NPU 3 → ens1f0 (去重同 nicIdx 1)
-        "10.0.1.1",  // NPU 4 → ens0f2
-        "10.0.1.2",  // NPU 5 → ens1f2
-        "10.0.1.3",  // NPU 6 → ens0f3
-        "10.0.1.4",  // NPU 7 → ens1f3
+    const char* expectedIps[8] = {
+        "10.0.0.1", // NPU 0 → ens0f0
+        "10.0.0.2", // NPU 1 → ens1f0
+        "10.0.0.1", // NPU 2 → ens0f0 (去重同 nicIdx 0)
+        "10.0.0.2", // NPU 3 → ens1f0 (去重同 nicIdx 1)
+        "10.0.1.1", // NPU 4 → ens0f2
+        "10.0.1.2", // NPU 5 → ens1f2
+        "10.0.1.3", // NPU 6 → ens0f3
+        "10.0.1.4", // NPU 7 → ens1f3
     };
     for (int i = 0; i < 8; i++) {
         char ip[64] = {0};
@@ -1114,7 +1065,7 @@ TEST_F(NpuNicAffinityTest, ProcessLayerRoce_FileNotFound)
 /* NIC 故障：HCA sysfs 目录不存在 */
 TEST_F(NpuNicAffinityTest, Nic_HcaSysfsMissing)
 {
-    TeardownFakeHca();  /* 清除 SetUp 创建的 hrn5_0 HCA 目录 */
+    TeardownFakeHca(); /* 清除 SetUp 创建的 hrn5_0 HCA 目录 */
     S(1, 1);
     g_pi[0].domain = 0;
     g_pi[0].bdf_busid = 3;
@@ -1133,7 +1084,7 @@ TEST_F(NpuNicAffinityTest, Nic_HcaSysfsMissing)
 TEST_F(NpuNicAffinityTest, Nic_HcaSysfsEmptyDir)
 {
     TeardownFakeHca();
-    system("mkdir -p /tmp/ut_hca/hrn5_0/device/net");  /* 只创空目录，不放 eth */
+    system("mkdir -p /tmp/ut_hca/hrn5_0/device/net"); /* 只创空目录，不放 eth */
     S(1, 1);
     g_pi[0].domain = 0;
     g_pi[0].bdf_busid = 3;
@@ -1159,14 +1110,14 @@ TEST_F(NpuNicAffinityTest, Nic_EthNotInIfaddrs)
     /* XML 中 name 直接是 eth 名，但 getifaddrs 只返回 lo，没有 eth0 */
     TeardownFakeNet();
     {
-        struct ifaddrs *ifa = (struct ifaddrs *)calloc(1, sizeof(struct ifaddrs));
+        struct ifaddrs* ifa = (struct ifaddrs*)calloc(1, sizeof(struct ifaddrs));
         ifa->ifa_next = NULL;
         ifa->ifa_name = strdup("lo");
         ifa->ifa_flags = IFF_UP;
-        struct sockaddr_in *sin = (struct sockaddr_in *)calloc(1, sizeof(struct sockaddr_in));
+        struct sockaddr_in* sin = (struct sockaddr_in*)calloc(1, sizeof(struct sockaddr_in));
         sin->sin_family = AF_INET;
         inet_pton(AF_INET, "127.0.0.1", &sin->sin_addr);
-        ifa->ifa_addr = (struct sockaddr *)sin;
+        ifa->ifa_addr = (struct sockaddr*)sin;
         g_fakeIfaddr = ifa;
     }
     W("<system version=\"1.0\">\n<cpu numaid=\"0\">\n"
@@ -1188,11 +1139,11 @@ TEST_F(NpuNicAffinityTest, Nic_EthIfaAddrNull)
     g_pi[0].bdf_funcid = 0;
     TeardownFakeNet();
     {
-        struct ifaddrs *ifa = (struct ifaddrs *)calloc(1, sizeof(struct ifaddrs));
+        struct ifaddrs* ifa = (struct ifaddrs*)calloc(1, sizeof(struct ifaddrs));
         ifa->ifa_next = NULL;
         ifa->ifa_name = strdup("eth0");
         ifa->ifa_flags = IFF_UP;
-        ifa->ifa_addr = NULL;  /* 地址为空 */
+        ifa->ifa_addr = NULL; /* 地址为空 */
         g_fakeIfaddr = ifa;
     }
     W("<system version=\"1.0\">\n<cpu numaid=\"0\">\n"
@@ -1214,13 +1165,13 @@ TEST_F(NpuNicAffinityTest, Nic_EthOnlyIpv6)
     g_pi[0].bdf_funcid = 0;
     TeardownFakeNet();
     {
-        struct ifaddrs *ifa = (struct ifaddrs *)calloc(1, sizeof(struct ifaddrs));
+        struct ifaddrs* ifa = (struct ifaddrs*)calloc(1, sizeof(struct ifaddrs));
         ifa->ifa_next = NULL;
         ifa->ifa_name = strdup("eth0");
         ifa->ifa_flags = IFF_UP;
-        struct sockaddr_in6 *sin6 = (struct sockaddr_in6 *)calloc(1, sizeof(struct sockaddr_in6));
+        struct sockaddr_in6* sin6 = (struct sockaddr_in6*)calloc(1, sizeof(struct sockaddr_in6));
         sin6->sin6_family = AF_INET6;
-        ifa->ifa_addr = (struct sockaddr *)sin6;
+        ifa->ifa_addr = (struct sockaddr*)sin6;
         g_fakeIfaddr = ifa;
     }
     W("<system version=\"1.0\">\n<cpu numaid=\"0\">\n"
@@ -1275,7 +1226,7 @@ TEST_F(NpuNicAffinityTest, Npu_BdfNoMatch)
 /* NPU 故障：hal_get_device_pcie_info 全失败 → BDF 表全空 → 无匹配 */
 TEST_F(NpuNicAffinityTest, Npu_PcieInfoAllFail)
 {
-    S(1, 0);  /* pcie=0 → 不 mock hal_get_device_pcie_info */
+    S(1, 0); /* pcie=0 → 不 mock hal_get_device_pcie_info */
     W("<system version=\"1.0\">\n<cpu numaid=\"0\">\n"
       "<pci busid=\"0000:00:01.0\">\n"
       "<nic>\n<net name=\"hrn5_0\"/>\n</nic>\n"

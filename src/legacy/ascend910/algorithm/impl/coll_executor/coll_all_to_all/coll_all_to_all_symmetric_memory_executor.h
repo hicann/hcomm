@@ -14,22 +14,24 @@
 namespace hccl {
 class CollRunAlltoAllFullMeshSymmetricMemory : public CollAlltoAllExecutor {
 public:
-    CollRunAlltoAllFullMeshSymmetricMemory(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    CollRunAlltoAllFullMeshSymmetricMemory(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollRunAlltoAllFullMeshSymmetricMemory() override = default;
     HcclResult Orchestrate(OpParam& param, AlgResourceResponse& algRes) override;
+
 private:
     HcclResult CalcStreamNum(u32& streamNum) override;
-    HcclResult CalcLevel0CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel0CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
-    HcclResult GetAlltoAllTmpRankSendRecvInfo(const OpParam &param);
-    HcclResult GetLocalSendRecvInfoforAlltoall(const OpParam &param);
-    HcclResult GetLocalSendRecvInfoforAlltoallVC(const OpParam &param);
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType) const;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
+    HcclResult GetAlltoAllTmpRankSendRecvInfo(const OpParam& param);
+    HcclResult GetLocalSendRecvInfoforAlltoall(const OpParam& param);
+    HcclResult GetLocalSendRecvInfoforAlltoallVC(const OpParam& param);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const;
     HcclResult GetLocalSDMAGroupInfo(u32& devNumInlocalPod, u32& rankIdxInPod) const;
     ZCopySendRecvInfo sendRecvInfo_;
-    const ZCopySendRecvInfo *sendRecvInfoPtr = nullptr;
+    const ZCopySendRecvInfo* sendRecvInfoPtr = nullptr;
 };
 } // namespace hccl
 #endif

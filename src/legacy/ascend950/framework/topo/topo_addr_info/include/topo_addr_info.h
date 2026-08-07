@@ -24,7 +24,6 @@ extern "C" {
  */
 int TopoAddrInfoGetSize(int phyId, size_t* size);
 
-
 /**
  * 获取拓扑文件的路径
  * param[in] phyId   NPU物理ID
@@ -39,7 +38,7 @@ int TopoAddrInfoGetTopoFilePath(int phyId, char* filePath, size_t bufSize);
  * param[out] rankInfo   rankinfo的内容，为json格式的字符串
  * param[out] bufSize   实际大小
  */
-int TopoAddrInfoGet(int phyId, char* rankInfo, size_t *bufSize);
+int TopoAddrInfoGet(int phyId, char* rankInfo, size_t* bufSize);
 
 #ifdef __cplusplus
 }

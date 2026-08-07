@@ -11,16 +11,13 @@
 #include "new/hccl_primitive_local.h"
 
 constexpr u32 THREAD_VECTOR_DEFAULT_SIZE = 128; // 设置vector初始长度，避免频繁扩容
-constexpr u32 NOTIFY_WAIT_TIMEOUT_OFFSET = 27; // AICPU device侧notify等待超时偏移量
+constexpr u32 NOTIFY_WAIT_TIMEOUT_OFFSET = 27;  // AICPU device侧notify等待超时偏移量
 
-extern HcclResult CommTaskLaunch(ThreadHandle *threads, uint32_t threadNum); // host ffts+或aicpu stars使用"
-extern HcclResult CommTaskPrepare(char *key, uint32_t keyLen); // host ffts+使用
-extern HcclResult DispatchAllStreams(ThreadHandle *threads, uint32_t threadNum);
+extern HcclResult CommTaskLaunch(ThreadHandle* threads, uint32_t threadNum); // host ffts+或aicpu stars使用"
+extern HcclResult CommTaskPrepare(char* key, uint32_t keyLen);               // host ffts+使用
+extern HcclResult DispatchAllStreams(ThreadHandle* threads, uint32_t threadNum);
 
-LaunchContext::LaunchContext()
-{
-    threadVec_.reserve(THREAD_VECTOR_DEFAULT_SIZE);
-}
+LaunchContext::LaunchContext() { threadVec_.reserve(THREAD_VECTOR_DEFAULT_SIZE); }
 
 HcclResult LaunchContext::HandleEagerMode()
 {
@@ -66,8 +63,8 @@ HcclResult LaunchContext::HandleClear()
     if (!launchModeMap_.empty()) {
         launchModeMap_.erase(launchTag_);
     }
-    HCCL_INFO("[%s] begin clear, launchTag[%s], launchMode[%d].",
-        __func__, launchTag_.c_str(), static_cast<int32_t>(mode_));
+    HCCL_INFO(
+        "[%s] begin clear, launchTag[%s], launchMode[%d].", __func__, launchTag_.c_str(), static_cast<int32_t>(mode_));
 
     DevType devType = DevType::DEV_TYPE_COUNT;
     hrtGetDeviceType(devType);
@@ -103,10 +100,7 @@ HcclResult LaunchContext::SetSqFullTimeOut(uint32_t timeout)
     return HCCL_SUCCESS;
 }
 
-uint32_t LaunchContext::GetSqFullTimeOut()
-{
-    return sqFullTimeoutConfig_.sqFullTimeout;
-}
+uint32_t LaunchContext::GetSqFullTimeOut() { return sqFullTimeoutConfig_.sqFullTimeout; }
 
 /*
     1 AICPU_TS模式
@@ -142,8 +136,9 @@ HcclResult LaunchContext::SetLaunchMode(const char* launchTag, HcommLaunchMode m
     // 统一处理 launchTag
     bool defaultTag = (launchTag == nullptr);
     launchTag_ = defaultTag ? "" : std::string(launchTag);
-    HCCL_INFO("[%s] SetLaunchMode begin, launchTag[%s], launchMode[%d].",
-        __func__, launchTag_.c_str(), static_cast<int32_t>(mode));
+    HCCL_INFO(
+        "[%s] SetLaunchMode begin, launchTag[%s], launchMode[%d].", __func__, launchTag_.c_str(),
+        static_cast<int32_t>(mode));
 
 #ifndef CCL_KERNEL_AICPU
     DevType devType = DevType::DEV_TYPE_COUNT;
@@ -176,4 +171,3 @@ HcclResult LaunchContext::SetLaunchMode(const char* launchTag, HcommLaunchMode m
             return HCCL_SUCCESS;
     }
 }
-

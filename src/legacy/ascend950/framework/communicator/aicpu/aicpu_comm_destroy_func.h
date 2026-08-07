@@ -17,15 +17,16 @@ namespace Hccl {
 
 class AicpuCommDestroyFunc : public DaemonFunc {
 public:
-    static AicpuCommDestroyFunc &GetInstance();
+    static AicpuCommDestroyFunc& GetInstance();
     ~AicpuCommDestroyFunc() override = default;
     void Call() override;
+
 private:
     AicpuCommDestroyFunc() = default;
     AicpuCommDestroyFunc(const AicpuCommDestroyFunc&) = delete;
     AicpuCommDestroyFunc& operator=(const AicpuCommDestroyFunc&) = delete;
 };
 
-}
+} // namespace Hccl
 
 #endif

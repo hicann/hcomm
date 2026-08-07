@@ -26,10 +26,7 @@ RtsNotify::RtsNotify(bool devUsed) : devPhyId(HrtGetDevicePhyIdByIndex(HrtGetDev
     id = HrtGetNotifyID(handle);
 }
 
-RtsNotify::~RtsNotify()
-{
-    DECTOR_TRY_CATCH("RtsNotify", HrtNotifyDestroy(handle));
-}
+RtsNotify::~RtsNotify() { DECTOR_TRY_CATCH("RtsNotify", HrtNotifyDestroy(handle)); }
 
 std::string RtsNotify::SetIpcName() const
 {
@@ -38,41 +35,19 @@ std::string RtsNotify::SetIpcName() const
     return ipcName;
 }
 
+void RtsNotify::SetIpcPid(s32 pid) const { HrtSetIpcNotifyPid(handle, pid); }
 
-void RtsNotify::SetIpcPid(s32 pid) const
-{
-    HrtSetIpcNotifyPid(handle, pid);
-}
+u32 RtsNotify::GetId() const { return id; }
 
-u32 RtsNotify::GetId() const
-{
-    return id;
-}
+u64 RtsNotify::GetOffset() const { return HrtNotifyGetOffset(handle); }
 
-u64 RtsNotify::GetOffset() const
-{
-    return HrtNotifyGetOffset(handle);
-}
+u64 RtsNotify::GetHandleAddr() const { return reinterpret_cast<u64>(handle); }
 
-u64 RtsNotify::GetHandleAddr() const
-{
-    return reinterpret_cast<u64>(handle);
-}
+u32 RtsNotify::GetSize() const { return DevCapability::GetInstance().GetNotifySize(); }
 
-u32 RtsNotify::GetSize() const
-{
-    return DevCapability::GetInstance().GetNotifySize();
-}
+bool RtsNotify::IsDevUsed() const { return devUsed; }
 
-bool RtsNotify::IsDevUsed() const
-{
-    return devUsed;
-}
-
-u32 RtsNotify::GetDevPhyId() const
-{
-    return devPhyId;
-}
+u32 RtsNotify::GetDevPhyId() const { return devPhyId; }
 
 std::vector<char> RtsNotify::GetUniqueId() const
 {
@@ -85,15 +60,12 @@ std::vector<char> RtsNotify::GetUniqueId() const
     return result;
 }
 
-void RtsNotify::Wait(const Stream &stream, u32 timeout) const
+void RtsNotify::Wait(const Stream& stream, u32 timeout) const
 {
     HrtNotifyWaitWithTimeOut(handle, stream.GetPtr(), timeout);
 }
 
-void RtsNotify::Post(const Stream &stream) const
-{
-    HrtNotifyRecord(handle, stream.GetPtr());
-}
+void RtsNotify::Post(const Stream& stream) const { HrtNotifyRecord(handle, stream.GetPtr()); }
 
 string RtsNotify::Describe() const
 {

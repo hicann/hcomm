@@ -20,23 +20,20 @@ public:
     ~RemoteNotifyImpl();
 
     HcclResult Init(const std::vector<u8>& byteVector);
-    HcclResult Init(const HcclSignalInfo &notifyInfo,
-                    const NotifyLoadType type = NotifyLoadType::DEVICE_NOTIFY);
+    HcclResult Init(const HcclSignalInfo& notifyInfo, const NotifyLoadType type = NotifyLoadType::DEVICE_NOTIFY);
 
     HcclResult Open();
     HcclResult Close();
     HcclResult Post(Stream& stream, HcclDispatcher dispatcher, s32 stage);
-    HcclResult GetNotifyData(HcclSignalInfo &notifyInfo);
-    HcclResult SetNotifyData(HcclSignalInfo &notifyInfo);
-    inline HcclRtNotify ptr()
-    {
-        return notify_->ptr();
-    }
+    HcclResult GetNotifyData(HcclSignalInfo& notifyInfo);
+    HcclResult SetNotifyData(HcclSignalInfo& notifyInfo);
+    inline HcclRtNotify ptr() { return notify_->ptr(); }
     // 获取offset
-    HcclResult GetNotifyOffset(u64 &notifyOffset);
+    HcclResult GetNotifyOffset(u64& notifyOffset);
+
 private:
     std::unique_ptr<NotifyBase> notify_;
 };
-}
+} // namespace hccl
 
 #endif // REMOTE_NOTIFY_IMPL_H

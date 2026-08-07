@@ -22,7 +22,7 @@
 #include "sim_aicpu_pipe_handler.h"
 #include "sim_kernel_lib_mgr.h"
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     LogConfig config = LoadLogConfig("device_aarch64");
     InitLogger(config);
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     RegisterSignalHandler();
     setvbuf(stdout, nullptr, _IOLBF, 0);
     HCCL_VM_INFO("[device] main process start.");
-    
+
     if (argc < 4) {
         HCCL_VM_ERROR("[device] Usage: {} <rankId> <h2d_read_fd> <d2h_write_fd>", argv[0]);
         return -1;
@@ -40,7 +40,9 @@ int main(int argc, char *argv[])
     uint32_t devKey = static_cast<uint32_t>(std::atoi(argv[2]));
     int h2dReadFd = std::atoi(argv[3]);
     int d2hWriteFd = std::atoi(argv[4]);
-    HCCL_VM_INFO("[device] parse input args: rankId={} devKey={} h2dReadFd={} d2hWriteFd={}", rankId, devKey, h2dReadFd, d2hWriteFd);
+    HCCL_VM_INFO(
+        "[device] parse input args: rankId={} devKey={} h2dReadFd={} d2hWriteFd={}", rankId, devKey, h2dReadFd,
+        d2hWriteFd);
 
     SetCurRankId(rankId);
     SetCurDeviceKey(devKey);

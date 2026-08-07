@@ -25,7 +25,7 @@ namespace hcomm {
  * FUSION_MULTIPLE_DIE missionid连续，跨die的missionid相同
  * FUSION_ONE_DIE missionid连续，单die
  * NO_FUSION_ONE_DIE missionid不要求连续，单die
-*/
+ */
 enum class MissionReqType {
     COMM_ENGINE_RESERVED = -1,
     FUSION_MULTIPLE_DIE = 0,
@@ -35,12 +35,13 @@ enum class MissionReqType {
 
 class ResInfo {
 public:
-    ResInfo(): startId(0), num(0){};
-    ResInfo(uint32_t startId, uint32_t num) : startId(startId), num(num){};
+    ResInfo() : startId(0), num(0) {};
+    ResInfo(uint32_t startId, uint32_t num) : startId(startId), num(num) {};
     uint32_t startId{0};
     uint32_t num{0};
 
-    std::string Describe() const {
+    std::string Describe() const
+    {
         std::ostringstream oss;
         oss << "ResInfo[startId=" << startId << ", num=" << num << "]";
         return oss.str();

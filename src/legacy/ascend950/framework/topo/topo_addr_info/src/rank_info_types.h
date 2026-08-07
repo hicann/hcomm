@@ -75,29 +75,29 @@ typedef struct stRootInfo {
     Rank ranks[MAX_RANK_NUM];
 } RootInfo;
 
-char *AddrToString(const Addr *addr);
-void AddrInit(Addr *addr);
-void AddrSetEID(Addr *addr, const dcmi_urma_eid_t *eid);
-void AddrSetIP(Addr *addr, const char *ip_addr);
-void AddrSetPlaneId(Addr *addr, const char *plane_id);
-int AddrAddPort(Addr *addr, const char *port);
+char* AddrToString(const Addr* addr);
+void AddrInit(Addr* addr);
+void AddrSetEID(Addr* addr, const dcmi_urma_eid_t* eid);
+void AddrSetIP(Addr* addr, const char* ip_addr);
+void AddrSetPlaneId(Addr* addr, const char* plane_id);
+int AddrAddPort(Addr* addr, const char* port);
 
-void NetLayerInit(NetLayer *net_layer, int level, const char *layer_id);
-void NetLayerSetNetInstanceId(NetLayer *net_layer, const char *net_instance_id);
-void NetLayerAddAddr(NetLayer *net_layer, const Addr *addr);
-void NetLayerSetAddrAt(NetLayer *net_layer, const Addr *addr, int index);
-void NetLayerSetNetType(NetLayer *layer, const char *net_type);
-char *NetLayerToString(const NetLayer *net_layer);
+void NetLayerInit(NetLayer* net_layer, int level, const char* layer_id);
+void NetLayerSetNetInstanceId(NetLayer* net_layer, const char* net_instance_id);
+void NetLayerAddAddr(NetLayer* net_layer, const Addr* addr);
+void NetLayerSetAddrAt(NetLayer* net_layer, const Addr* addr, int index);
+void NetLayerSetNetType(NetLayer* layer, const char* net_type);
+char* NetLayerToString(const NetLayer* net_layer);
 
-void RankInit(Rank *rank, int device_id, int local_id);
-void RankAddNetLayer(Rank *rank, const NetLayer *layer);
-char *RankToString(const Rank *rank);
+void RankInit(Rank* rank, int device_id, int local_id);
+void RankAddNetLayer(Rank* rank, const NetLayer* layer);
+char* RankToString(const Rank* rank);
 
-void RootInfoInit(RootInfo *root_info);
-void RootInfoAddRank(RootInfo *root_info, const Rank *rank);
-char *RootInfoToString(const RootInfo *root_info);
+void RootInfoInit(RootInfo* root_info);
+void RootInfoAddRank(RootInfo* root_info, const Rank* rank);
+char* RootInfoToString(const RootInfo* root_info);
 
-TopoAddrResult ProcessLayerRoce(int npu_id, NetLayer *layer);
+TopoAddrResult ProcessLayerRoce(int npu_id, NetLayer* layer);
 
 #ifdef __cplusplus
 }

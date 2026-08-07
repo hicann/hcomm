@@ -31,10 +31,7 @@ using namespace Hccl;
 
 class DevUbConnectionTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "DevUbConnection tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "DevUbConnection tests set up." << std::endl; }
 
     static void TearDownTestCase()
     {
@@ -45,7 +42,8 @@ protected:
     virtual void SetUp()
     {
         GlobalMockObject::verify();
-        MOCKER_CPP(&TpManager::GetTpInfo).stubs()
+        MOCKER_CPP(&TpManager::GetTpInfo)
+            .stubs()
             .will(returnValue(HcclResult::HCCL_E_AGAIN))
             .then(returnValue(HcclResult::HCCL_SUCCESS));
         std::cout << "A Test case in DevUbConnection SetUP" << std::endl;
@@ -65,10 +63,10 @@ protected:
 TEST_F(DevUbConnectionTest, rma_ub_connection_get_status_return_exchanging_and_ok)
 {
     // Given
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
     std::string tag = "test";
 
     // construct DevUbConnection
@@ -94,7 +92,7 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_get_status_return_exchanging_and_o
     status = devUbConnection.GetStatus();
     EXPECT_EQ(RmaConnStatus::READY, status);
     EXPECT_EQ(DevUbConnection::UbConnStatus::READY, devUbConnection.ubConnStatus);
- 
+
     status = devUbConnection.GetStatus();
     EXPECT_EQ(RmaConnStatus::READY, status);
 
@@ -107,12 +105,12 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_get_rma_conn_lite)
 {
     // Given: socket time out
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::TIMEOUT));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     char targetChipVer[CHIP_VERSION_MAX_LEN] = "Ascend910B1";
 
@@ -139,33 +137,33 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_get_rma_conn_lite)
 TEST_F(DevUbConnectionTest, rma_ub_connection_getstatus_change_status_ready)
 {
     // construct DevUbConnection
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
     std::string tag = "test";
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
     devUbConnection.tpProtocol = TpProtocol::CTP;
     EXPECT_EQ(RmaConnStatus::INIT, devUbConnection.status);
     //  When:
-    
+
     // Then
     RmaConnStatus status = devUbConnection.GetStatus();
     EXPECT_EQ(RmaConnStatus::INIT, status);
     status = devUbConnection.GetStatus();
     EXPECT_EQ(RmaConnStatus::EXCHANGEABLE, status);
     EXPECT_EQ(DevUbConnection::UbConnStatus::JETTY_CREATED, devUbConnection.ubConnStatus);
- 
+
     auto rmtDto = devUbConnection.GetExchangeDto();
     devUbConnection.ParseRmtExchangeDto(*rmtDto);
     devUbConnection.ImportRmtDto();
     EXPECT_EQ(RmaConnStatus::EXCHANGEABLE, status);
     EXPECT_EQ(DevUbConnection::UbConnStatus::JETTY_IMPORTING, devUbConnection.ubConnStatus);
- 
+
     status = devUbConnection.GetStatus();
     EXPECT_EQ(RmaConnStatus::READY, status);
     EXPECT_EQ(DevUbConnection::UbConnStatus::READY, devUbConnection.ubConnStatus);
- 
+
     status = devUbConnection.GetStatus();
     EXPECT_EQ(RmaConnStatus::READY, status);
     EXPECT_EQ(DevUbConnection::UbConnStatus::READY, devUbConnection.ubConnStatus);
@@ -178,17 +176,17 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_getstatus_change_status_ready)
 TEST_F(DevUbConnectionTest, rma_ub_connection_getstatus_change_status_invalid)
 {
     // construct DevUbConnection
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
     std::string tag = "test";
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
     devUbConnection.tpProtocol = TpProtocol::CTP;
-    
+
     //  When:
     devUbConnection.ubConnStatus = DevUbConnection::UbConnStatus::INVALID;
- 
+
     // Then
     EXPECT_THROW(devUbConnection.GetStatus(), RmaConnException);
 }
@@ -197,20 +195,20 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_getstatus_change_status_invalid)
 TEST_F(DevUbConnectionTest, rma_ub_connection_suspend_change_status_suspend)
 {
     // construct DevUbConnection
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
     std::string tag = "test";
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
-    
+
     //  When:
     MOCKER(HrtFree).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     devUbConnection.jettyHandle = 1;
     devUbConnection.sqBuffVa = 0x1000000;
     devUbConnection.status = RmaConnStatus::READY;
     devUbConnection.ubConnStatus = DevUbConnection::UbConnStatus::READY;
-    
+
     // Then
     EXPECT_EQ(true, devUbConnection.Suspend());
     EXPECT_EQ(true, devUbConnection.Suspend());
@@ -219,21 +217,21 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_suspend_change_status_suspend)
 TEST_F(DevUbConnectionTest, rma_ub_connection_suspend_change_status_invalid)
 {
     // construct DevUbConnection
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
     std::string tag = "test";
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
-    
+
     //  When:
     MOCKER(HrtFree).stubs().with(mockcpp::any()).will(ignoreReturnValue());
-     
+
     // Then
     devUbConnection.status = RmaConnStatus::CLOSE;
     EXPECT_THROW(devUbConnection.Suspend(), RmaConnException);
     EXPECT_EQ(RmaConnStatus::CONN_INVALID, devUbConnection.status);
- 
+
     string msg = devUbConnection.Describe();
     EXPECT_NE(0, msg.length());
 }
@@ -241,12 +239,12 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_suspend_change_status_invalid)
 TEST_F(DevUbConnectionTest, rma_net_connection_prepare_write_task_with_db_send)
 {
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::OK));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     MOCKER(HrtRaQpCreate).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(fakeQpHandle));
 
@@ -276,20 +274,17 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_write_task_with_db_send)
 TEST_F(DevUbConnectionTest, rma_net_connection_prepare_write_task_with_dwqe)
 {
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::OK));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     MOCKER(HrtRaQpCreate).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(fakeQpHandle));
     HrtRaUbSendWrRespParam postSendRes;
     postSendRes.dwqeSize = 128;
-    MOCKER(HrtRaUbPostSend)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(postSendRes));
+    MOCKER(HrtRaUbPostSend).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(postSendRes));
 
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
 
@@ -317,12 +312,12 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_read_task_with_db_send)
 {
     // Given
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::OK));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
@@ -339,18 +334,15 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_read_task_with_dwqe)
 {
     // Given
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::OK));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
     HrtRaUbSendWrRespParam postSendRes;
     postSendRes.dwqeSize = 128;
-    MOCKER(HrtRaUbPostSend)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(postSendRes));
+    MOCKER(HrtRaUbPostSend).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(postSendRes));
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
@@ -367,12 +359,12 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_read_reduce_task_with_db_
 {
     // Given
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::OK));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
@@ -381,7 +373,8 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_read_reduce_task_with_db_
     MemoryBuffer remoteMemBuffer(2000, 1000, 0);
     SqeConfig config{};
     config.wqeMode = WqeMode::DB_SEND;
-    auto task = devUbConnection.PrepareReadReduce(remoteMemBuffer, localMemBuffer, DataType::INT8, ReduceOp::SUM, config);
+    auto task
+        = devUbConnection.PrepareReadReduce(remoteMemBuffer, localMemBuffer, DataType::INT8, ReduceOp::SUM, config);
     EXPECT_NE(nullptr, task);
 }
 
@@ -389,18 +382,15 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_read_reduce_task_with_dwq
 {
     // Given
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::OK));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
     HrtRaUbSendWrRespParam postSendRes;
     postSendRes.dwqeSize = 128;
-    MOCKER(HrtRaUbPostSend)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(postSendRes));
+    MOCKER(HrtRaUbPostSend).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(postSendRes));
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
@@ -409,19 +399,20 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_read_reduce_task_with_dwq
     MemoryBuffer remoteMemBuffer(2000, 1000, 0);
     SqeConfig config{};
     config.wqeMode = WqeMode::DWQE;
-    auto task = devUbConnection.PrepareReadReduce(remoteMemBuffer, localMemBuffer, DataType::INT8, ReduceOp::SUM, config);
+    auto task
+        = devUbConnection.PrepareReadReduce(remoteMemBuffer, localMemBuffer, DataType::INT8, ReduceOp::SUM, config);
     EXPECT_NE(nullptr, task);
 }
 
 TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_write_reduce_task_with_db_send)
 {
     // Given
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
@@ -431,7 +422,8 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_write_reduce_task_with_db_
     SqeConfig config{};
     config.wqeMode = WqeMode::DB_SEND;
 
-    auto task = devUbConnection.PrepareWriteReduce(remoteMemBuffer, localMemBuffer, DataType::INT8, ReduceOp::SUM, config);
+    auto task
+        = devUbConnection.PrepareWriteReduce(remoteMemBuffer, localMemBuffer, DataType::INT8, ReduceOp::SUM, config);
     EXPECT_NE(nullptr, task);
     EXPECT_EQ(TaskType::UB_SEND, task->GetType());
 }
@@ -439,18 +431,15 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_write_reduce_task_with_db_
 TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_write_reduce_task_with_dwqe)
 {
     // Given
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
     HrtRaUbSendWrRespParam postSendRes;
     postSendRes.dwqeSize = 128;
-    MOCKER(HrtRaUbPostSend)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(postSendRes));
+    MOCKER(HrtRaUbPostSend).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(postSendRes));
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
@@ -460,7 +449,8 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_write_reduce_task_with_dwq
     SqeConfig config{};
     config.wqeMode = WqeMode::DWQE;
 
-    auto task = devUbConnection.PrepareWriteReduce(remoteMemBuffer, localMemBuffer, DataType::INT8, ReduceOp::SUM, config);
+    auto task
+        = devUbConnection.PrepareWriteReduce(remoteMemBuffer, localMemBuffer, DataType::INT8, ReduceOp::SUM, config);
     EXPECT_NE(nullptr, task);
     EXPECT_EQ(TaskType::UB_DIRECT_SEND, task->GetType());
 }
@@ -468,12 +458,12 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_write_reduce_task_with_dwq
 TEST_F(DevUbConnectionTest, rma_net_connection_prepare_write_with_notify_task_with_db_send)
 {
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::OK));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     MOCKER(HrtRaQpCreate).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(fakeQpHandle));
 
@@ -486,7 +476,8 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_write_with_notify_task_wi
     SqeConfig config{};
     config.wqeMode = WqeMode::DB_SEND;
 
-    auto task = devUbConnection.PrepareWriteWithNotify(remoteMemBuffer, localMemBuffer, 1, remoteNotifyMemBuffer, config);
+    auto task
+        = devUbConnection.PrepareWriteWithNotify(remoteMemBuffer, localMemBuffer, 1, remoteNotifyMemBuffer, config);
     EXPECT_NE(nullptr, task);
     EXPECT_EQ(TaskType::UB_SEND, task->GetType());
 }
@@ -494,20 +485,17 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_write_with_notify_task_wi
 TEST_F(DevUbConnectionTest, rma_net_connection_prepare_write_with_notify_task_with_dwqe)
 {
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::OK));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     MOCKER(HrtRaQpCreate).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(fakeQpHandle));
     HrtRaUbSendWrRespParam postSendRes;
     postSendRes.dwqeSize = 128;
-    MOCKER(HrtRaUbPostSend)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(postSendRes));
+    MOCKER(HrtRaUbPostSend).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(postSendRes));
 
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
 
@@ -518,7 +506,8 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_write_with_notify_task_wi
     SqeConfig config{};
     config.wqeMode = WqeMode::DWQE;
 
-    auto task = devUbConnection.PrepareWriteWithNotify(remoteMemBuffer, localMemBuffer, 1, remoteNotifyMemBuffer, config);
+    auto task
+        = devUbConnection.PrepareWriteWithNotify(remoteMemBuffer, localMemBuffer, 1, remoteNotifyMemBuffer, config);
     EXPECT_NE(nullptr, task);
     EXPECT_EQ(TaskType::UB_DIRECT_SEND, task->GetType());
 }
@@ -526,12 +515,12 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_write_with_notify_task_wi
 TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_write_reduce_with_notify_task_with_db_send)
 {
     // Given
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
@@ -542,7 +531,8 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_write_reduce_with_notify_t
     SqeConfig config{};
     config.wqeMode = WqeMode::DB_SEND;
 
-    auto task = devUbConnection.PrepareWriteReduceWithNotify(remoteMemBuffer, localMemBuffer, DataType::INT8, ReduceOp::SUM, 1, remoteNotifyMemBuffer, config);
+    auto task = devUbConnection.PrepareWriteReduceWithNotify(
+        remoteMemBuffer, localMemBuffer, DataType::INT8, ReduceOp::SUM, 1, remoteNotifyMemBuffer, config);
     EXPECT_NE(nullptr, task);
     EXPECT_EQ(TaskType::UB_SEND, task->GetType());
 }
@@ -550,18 +540,15 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_write_reduce_with_notify_t
 TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_write_reduce_with_notify_task_with_dwqe)
 {
     // Given
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
     HrtRaUbSendWrRespParam postSendRes;
     postSendRes.dwqeSize = 128;
-    MOCKER(HrtRaUbPostSend)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(postSendRes));
+    MOCKER(HrtRaUbPostSend).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(postSendRes));
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
@@ -572,7 +559,8 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_write_reduce_with_notify_t
     SqeConfig config{};
     config.wqeMode = WqeMode::DWQE;
 
-    auto task = devUbConnection.PrepareWriteReduceWithNotify(remoteMemBuffer, localMemBuffer, DataType::INT8, ReduceOp::SUM, 1, remoteNotifyMemBuffer, config);
+    auto task = devUbConnection.PrepareWriteReduceWithNotify(
+        remoteMemBuffer, localMemBuffer, DataType::INT8, ReduceOp::SUM, 1, remoteNotifyMemBuffer, config);
     EXPECT_NE(nullptr, task);
     EXPECT_EQ(TaskType::UB_DIRECT_SEND, task->GetType());
 }
@@ -580,12 +568,12 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_write_reduce_with_notify_t
 TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_inline_write_task_with_db_send)
 {
     // Given
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
@@ -598,16 +586,16 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_inline_write_task_with_db_
     EXPECT_NE(nullptr, task);
     EXPECT_EQ(TaskType::UB_SEND, task->GetType());
 }
-//1011
+// 1011
 TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_inline_write_tasks_with_writeval_send)
 {
     // Given
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
@@ -615,28 +603,24 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_inline_write_tasks_with_wr
     MemoryBuffer remoteMemBuffer(2000, 1000, 0);
     SqeConfig config{};
     config.wqeMode = WqeMode::WRITE_VALUE;
-    
+
     auto task = devUbConnection.PrepareInlineWrite(remoteMemBuffer, 1, config);
     EXPECT_NE(task, nullptr);
     EXPECT_EQ(TaskType::WRITE_VALUE, task->GetType());
 }
 
-
 TEST_F(DevUbConnectionTest, rma_ub_connection_prepare_inline_write_task_with_dwqe)
 {
     // Given
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
     HrtRaUbSendWrRespParam postSendRes;
     postSendRes.dwqeSize = 128;
-    MOCKER(HrtRaUbPostSend)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(postSendRes));
+    MOCKER(HrtRaUbPostSend).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(postSendRes));
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
@@ -653,12 +637,12 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_write_task_in_offload_mod
 {
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::OK));
     MOCKER_CPP(&RdmaHandleManager::GetTokenIdInfo).stubs().will(returnValue(pair<u64, u32>{}));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     MOCKER(HrtRaQpCreate).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any()).will(returnValue(fakeQpHandle));
     HrtRaUbSendWrRespParam postSendRes1;
@@ -683,25 +667,31 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_write_task_in_offload_mod
     SqeConfig config{};
     config.wqeMode = WqeMode::DB_SEND;
     // When
-    auto result1 = devUbConnection.PrepareWriteReduce(remoteMemBuffer1, localMemBuffer1, DataType::INT8, ReduceOp::SUM, config);
+    auto result1
+        = devUbConnection.PrepareWriteReduce(remoteMemBuffer1, localMemBuffer1, DataType::INT8, ReduceOp::SUM, config);
     // Then
 
     MemoryBuffer localMemBuffer2(0, 100, 0);
     MemoryBuffer remoteMemBuffer2(2000, 100, 0);
-    auto result2 = devUbConnection.PrepareWriteReduce(remoteMemBuffer2, localMemBuffer2, DataType::INT8, ReduceOp::SUM, config);
+    auto result2
+        = devUbConnection.PrepareWriteReduce(remoteMemBuffer2, localMemBuffer2, DataType::INT8, ReduceOp::SUM, config);
     EXPECT_NE(nullptr, result2);
     EXPECT_EQ(TaskType::UB_SEND, result2->GetType());
 
-    auto result3 = devUbConnection.PrepareWriteReduce(remoteMemBuffer2, localMemBuffer2, DataType::INT8, ReduceOp::SUM, config);
+    auto result3
+        = devUbConnection.PrepareWriteReduce(remoteMemBuffer2, localMemBuffer2, DataType::INT8, ReduceOp::SUM, config);
     EXPECT_NE(nullptr, result3);
     EXPECT_EQ(TaskType::UB_SEND, result3->GetType());
 
-    EXPECT_THROW(devUbConnection.PrepareWriteReduce(remoteMemBuffer2, localMemBuffer2, DataType::INT8, ReduceOp::SUM, config),
-                 InvalidParamsException);
+    EXPECT_THROW(
+        devUbConnection.PrepareWriteReduce(remoteMemBuffer2, localMemBuffer2, DataType::INT8, ReduceOp::SUM, config),
+        InvalidParamsException);
 
     MemoryBuffer localMemBuffer10(0, 0, 0);
     MemoryBuffer remoteMemBuffer10(2000, 10, 0);
-    EXPECT_THROW(devUbConnection.PrepareWriteReduce(remoteMemBuffer10, localMemBuffer10, DataType::INT8, ReduceOp::SUM, config), InvalidParamsException);
+    EXPECT_THROW(
+        devUbConnection.PrepareWriteReduce(remoteMemBuffer10, localMemBuffer10, DataType::INT8, ReduceOp::SUM, config),
+        InvalidParamsException);
 
     MOCKER(HrtRaUbPostNops).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any());
     MOCKER(HrtUbDbSend).stubs().with(mockcpp::any(), mockcpp::any());
@@ -713,7 +703,8 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_write_task_in_offload_mod
     devUbConnection.piVal = 9999;
     EXPECT_THROW(devUbConnection.AddNop(stream), InvalidParamsException);
 
-    DevUbConnection devUbConnection1(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);;
+    DevUbConnection devUbConnection1(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
+    ;
     EXPECT_NO_THROW(devUbConnection1.AddNop(stream));
 }
 
@@ -721,12 +712,12 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_get_pi_ci_sqDepth_ok)
 {
     // Given: socket time out
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::TIMEOUT));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
@@ -741,12 +732,12 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_get_jfcMode_and_jettyHandle_ok)
 {
     // Given: socket time out
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::TIMEOUT));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
@@ -762,18 +753,18 @@ TEST_F(DevUbConnectionTest, GetStarsPollUbConns_ok)
 {
     // Given: socket time out
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::TIMEOUT));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
-    std::vector<RmaConnection *> conns;
+    std::vector<RmaConnection*> conns;
     conns.push_back(&devUbConnection);
-    std::vector<DevUbConnection *> devUbConns = GetStarsPollUbConns(conns);
+    std::vector<DevUbConnection*> devUbConns = GetStarsPollUbConns(conns);
 
     // Then
     EXPECT_EQ(devUbConns.size(), 1);
@@ -783,18 +774,18 @@ TEST_F(DevUbConnectionTest, IfNeedUpdatingUbCi_false)
 {
     // Given: socket time out
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::TIMEOUT));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
     devUbConnection.piVal = 10;
     devUbConnection.ciVal = 0;
-    std::vector<DevUbConnection *> conns;
+    std::vector<DevUbConnection*> conns;
     conns.push_back(&devUbConnection);
     bool ret = IfNeedUpdatingUbCi(conns);
 
@@ -806,18 +797,18 @@ TEST_F(DevUbConnectionTest, IfNeedUpdatingUbCi_true)
 {
     // Given: socket time out
     MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::TIMEOUT));
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     string tag = "SENDRECV";
-    QpHandle fakeQpHandle = (void *)0x1000000;
+    QpHandle fakeQpHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
     devUbConnection.piVal = 4000;
     devUbConnection.ciVal = 0;
-    std::vector<DevUbConnection *> conns;
+    std::vector<DevUbConnection*> conns;
     conns.push_back(&devUbConnection);
     bool ret = IfNeedUpdatingUbCi(conns);
 
@@ -828,9 +819,9 @@ TEST_F(DevUbConnectionTest, IfNeedUpdatingUbCi_true)
 TEST_F(DevUbConnectionTest, getExchangeDto_test)
 {
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
 
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
 
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
     devUbConnection.status = RmaConnStatus::READY;
@@ -841,9 +832,9 @@ TEST_F(DevUbConnectionTest, getExchangeDto_test)
 TEST_F(DevUbConnectionTest, rma_ub_connection_ready_import_jetty)
 {
     // construct DevUbConnection
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
     std::string tag = "test";
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
     EXPECT_EQ(RmaConnStatus::INIT, devUbConnection.status);
@@ -859,10 +850,10 @@ TEST_F(DevUbConnectionTest, tp_import_test)
 {
     MOCKER(HrtGetDevicePhyIdByIndex).defaults().will(returnValue(static_cast<s32>(0)));
     // construct DevUbConnection
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 10, 11, 10, 11);
+    LinkData linkData(portType, 10, 11, 10, 11);
     linkData.localAddr_ = IpAddress("10.0.0.1");
     linkData.remoteAddr_ = IpAddress("10.0.0.2");
     linkData.linkProtocol_ = LinkProtocol::UB_TP;
@@ -886,10 +877,10 @@ TEST_F(DevUbConnectionTest, tp_import_test)
 TEST_F(DevUbConnectionTest, ctp_import_test)
 {
     // construct DevUbConnection
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 10, 11, 10, 11);
+    LinkData linkData(portType, 10, 11, 10, 11);
     linkData.localAddr_ = IpAddress("11.0.0.1");
     linkData.remoteAddr_ = IpAddress("11.0.0.2");
     linkData.linkProtocol_ = LinkProtocol::UB_CTP;
@@ -908,14 +899,14 @@ TEST_F(DevUbConnectionTest, ctp_import_test)
     EXPECT_EQ(devUbConnection.GetStatus(), RmaConnStatus::READY);
     EXPECT_EQ(DevUbConnection::UbConnStatus::READY, devUbConnection.ubConnStatus);
 
-    devUbConnection.tpInfo.tpHandle = 1; // 控制非0
+    devUbConnection.tpInfo.tpHandle = 1;                // 控制非0
     EXPECT_NO_THROW(devUbConnection.ReleaseResource()); // 释放tp报错但是不影响流程
     GlobalMockObject::verify();
 }
 
 constexpr uint64_t expectSqBuffVa = 10;
-RequestHandle RaUbCreateJettyAsync_stub(const RdmaHandle handle, const HrtRaUbCreateJettyParam &in,
-    vector<char_t> &out, void *&jettyHandle)
+RequestHandle RaUbCreateJettyAsync_stub(
+    const RdmaHandle handle, const HrtRaUbCreateJettyParam& in, vector<char_t>& out, void*& jettyHandle)
 {
     struct QpCreateInfo info;
     info.ub.sqBuffVa = expectSqBuffVa;
@@ -925,15 +916,15 @@ RequestHandle RaUbCreateJettyAsync_stub(const RdmaHandle handle, const HrtRaUbCr
     info.ub.dbAddr = 0;
     out.resize(sizeof(info));
     memcpy(out.data(), &info, sizeof(info));
-    jettyHandle = reinterpret_cast<void *>(0x12345678ULL);
+    jettyHandle = reinterpret_cast<void*>(0x12345678ULL);
     return static_cast<RequestHandle>(0x12345678ULL);
 }
 TEST_F(DevUbConnectionTest, Ut_CreateJetty_When_CorrectParams_ReturnIsOk)
 {
     // construct DevUbConnection
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 10, 11, 10, 11);
+    LinkData linkData(portType, 10, 11, 10, 11);
     linkData.remoteAddr_ = IpAddress("11.0.0.2");
     linkData.linkProtocol_ = LinkProtocol::UB_CTP;
     std::string tag = "test";
@@ -951,10 +942,10 @@ TEST_F(DevUbConnectionTest, Ut_CreateJetty_When_CorrectParams_ReturnIsOk)
 TEST_F(DevUbConnectionTest, Ut_Describe_Tp_Mode)
 {
     // construct DevUbConnection
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 10, 11, 10, 11);
+    LinkData linkData(portType, 10, 11, 10, 11);
     linkData.localAddr_ = IpAddress("10.0.0.1");
     linkData.remoteAddr_ = IpAddress("10.0.0.2");
     linkData.linkProtocol_ = LinkProtocol::UB_TP;
@@ -975,10 +966,10 @@ TEST_F(DevUbConnectionTest, Ut_ImportRmtDto)
 {
     MOCKER_CPP(&DevUbConnection::ThrowAbnormalStatus).stubs();
     // Given
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
 
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
     std::string tag = "test";
 
     // construct DevUbConnection
@@ -992,20 +983,21 @@ TEST_F(DevUbConnectionTest, Ut_ImportRmtDto)
 
 TEST_F(DevUbConnectionTest, Ut_UbgConnection_Constructor_SetsTpProtocol)
 {
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
-    LinkData     linkData(portType, 0, 1, 0, 1);
+    LinkData linkData(portType, 0, 1, 0, 1);
     Hccl::IpAddress locIpv4Addr("10.0.0.1");
     Hccl::IpAddress rmtIpv4Addr("10.0.0.2");
 
-    DevUbUbgConnection ubgConn(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(),
-        OpMode::OPBASE, true, HrtUbJfcMode::STARS_POLL, locIpv4Addr, rmtIpv4Addr);
+    DevUbUbgConnection ubgConn(
+        rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE, true, HrtUbJfcMode::STARS_POLL,
+        locIpv4Addr, rmtIpv4Addr);
 
     EXPECT_EQ(ubgConn.tpProtocol, TpProtocol::UBG);
     EXPECT_EQ(ubgConn.jettyTimeOut, 16);
 }
 
-static HcclResult StubGetTpInfoWithMappedQos(TpManager *, const RaUbGetTpInfoParam &, TpInfo &tpInfo, bool)
+static HcclResult StubGetTpInfoWithMappedQos(TpManager*, const RaUbGetTpInfoParam&, TpInfo& tpInfo, bool)
 {
     tpInfo.tpHandle = 0x555ULL;
     tpInfo.hasMappedJettyPriority = true;
@@ -1014,17 +1006,17 @@ static HcclResult StubGetTpInfoWithMappedQos(TpManager *, const RaUbGetTpInfoPar
 }
 
 static u8 gCapturedJettyCreateQos = 0U;
-RequestHandle CaptureQosRaUbCreateJettyAsync(const RdmaHandle handle, const HrtRaUbCreateJettyParam &in,
-    vector<char_t> &out, void *&jettyHandle)
+RequestHandle CaptureQosRaUbCreateJettyAsync(
+    const RdmaHandle handle, const HrtRaUbCreateJettyParam& in, vector<char_t>& out, void*& jettyHandle)
 {
     gCapturedJettyCreateQos = in.qos;
-    struct QpCreateInfo info{};
+    struct QpCreateInfo info {};
     info.ub.sqBuffVa = expectSqBuffVa;
     info.ub.id = 1;
     info.key.size = 0;
     out.resize(sizeof(info));
     memcpy(out.data(), &info, sizeof(info));
-    jettyHandle = reinterpret_cast<void *>(0x12345678ULL);
+    jettyHandle = reinterpret_cast<void*>(0x12345678ULL);
     return static_cast<RequestHandle>(0x12345678ULL);
 }
 
@@ -1033,12 +1025,9 @@ TEST_F(DevUbConnectionTest, Ut_DevUsed_DeferJettyUntilTpReady_And_MapQos)
     GlobalMockObject::verify();
     gCapturedJettyCreateQos = 0U;
     MOCKER(RaUbCreateJettyAsync).stubs().will(invoke(CaptureQosRaUbCreateJettyAsync));
-    MOCKER_CPP(&TpManager::GetTpInfo)
-        .stubs()
-        .will(returnValue(HCCL_E_AGAIN))
-        .then(invoke(StubGetTpInfoWithMappedQos));
+    MOCKER_CPP(&TpManager::GetTpInfo).stubs().will(returnValue(HCCL_E_AGAIN)).then(invoke(StubGetTpInfoWithMappedQos));
 
-    RdmaHandle rdmaHandle = reinterpret_cast<void *>(0x1000000);
+    RdmaHandle rdmaHandle = reinterpret_cast<void*>(0x1000000);
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
     LinkData linkData(portType, 20, 21, 20, 21);
     linkData.localAddr_ = IpAddress("12.0.0.1");
@@ -1046,8 +1035,9 @@ TEST_F(DevUbConnectionTest, Ut_DevUsed_DeferJettyUntilTpReady_And_MapQos)
     linkData.linkProtocol_ = LinkProtocol::UB_CTP;
 
     const u8 requestQos = 3U;
-    DevUbCtpConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE,
-        true, HrtUbJfcMode::STARS_POLL, IpAddress(), IpAddress(), requestQos);
+    DevUbCtpConnection devUbConnection(
+        rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE, true, HrtUbJfcMode::STARS_POLL,
+        IpAddress(), IpAddress(), requestQos);
     devUbConnection.tpProtocol = TpProtocol::CTP;
 
     EXPECT_EQ(devUbConnection.GetStatus(), RmaConnStatus::INIT);
@@ -1065,13 +1055,14 @@ TEST_F(DevUbConnectionTest, Ut_CreateJetty_PassesConfiguredQos)
     gCapturedJettyCreateQos = 0U;
     MOCKER(RaUbCreateJettyAsync).stubs().will(invoke(CaptureQosRaUbCreateJettyAsync));
 
-    RdmaHandle rdmaHandle = reinterpret_cast<void *>(0x1000000);
+    RdmaHandle rdmaHandle = reinterpret_cast<void*>(0x1000000);
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
     LinkData linkData(portType, 10, 11, 10, 11);
     linkData.linkProtocol_ = LinkProtocol::UB_CTP;
 
-    DevUbCtpConnection devUbCtpConn(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE,
-        false, HrtUbJfcMode::STARS_POLL, IpAddress(), IpAddress(), 5U);
+    DevUbCtpConnection devUbCtpConn(
+        rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE, false, HrtUbJfcMode::STARS_POLL,
+        IpAddress(), IpAddress(), 5U);
     devUbCtpConn.tpInfo.tpHandle = 0x100ULL;
     devUbCtpConn.tpInfo.hasMappedJettyPriority = true;
     devUbCtpConn.tpInfo.mappedJettyPriority = 5U;
@@ -1082,13 +1073,13 @@ TEST_F(DevUbConnectionTest, Ut_CreateJetty_PassesConfiguredQos)
 
 TEST_F(DevUbConnectionTest, Ut_AivEngine_Constructor_CreatesAivUrmaJfc)
 {
-    RdmaHandle rdmaHandle = (void *)0x1000000;
+    RdmaHandle rdmaHandle = (void*)0x1000000;
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
     LinkData linkData(portType, 0, 1, 0, 1);
 
-    DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE,
-        false, HrtUbJfcMode::STARS_POLL, IpAddress(), IpAddress(), static_cast<u8>(UB_QOS_DEFAULT),
-        COMM_ENGINE_AIV);
+    DevUbConnection devUbConnection(
+        rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE, false, HrtUbJfcMode::STARS_POLL,
+        IpAddress(), IpAddress(), static_cast<u8>(UB_QOS_DEFAULT), COMM_ENGINE_AIV);
 
     EXPECT_EQ(devUbConnection.engine_, COMM_ENGINE_AIV);
     EXPECT_EQ(devUbConnection.jfcHandle, static_cast<JfcHandle>(0x0));

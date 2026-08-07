@@ -17,7 +17,8 @@
 namespace Hccl {
 using namespace std;
 
-HcclResult GetCcuErrorMsg(s32 deviceId, uint16_t status, const ParaCcu &ccuTaskParam, std::vector<CcuErrorInfo> &errorInfo)
+HcclResult
+GetCcuErrorMsg(s32 deviceId, uint16_t status, const ParaCcu& ccuTaskParam, std::vector<CcuErrorInfo>& errorInfo)
 {
     TRY_CATCH_RETURN(
         HCCL_RUN_INFO(
@@ -26,20 +27,20 @@ HcclResult GetCcuErrorMsg(s32 deviceId, uint16_t status, const ParaCcu &ccuTaskP
             static_cast<u32>(ccuTaskParam.execMissionId), ccuTaskParam.executeId);
 
         // 入参校验
-        CHK_PRT_RET((deviceId < 0 || static_cast<u32>(deviceId) >= MAX_MODULE_DEVICE_NUM),
-                    HCCL_ERROR("[CcuDfx][GetCcuErrorMsg]deviceId[%d] error, MAX_MODULE_DEVICE_NUM[%u].", 
-                                deviceId, MAX_MODULE_DEVICE_NUM), HcclResult::HCCL_E_PARA);
+        CHK_PRT_RET(
+            (deviceId < 0 || static_cast<u32>(deviceId) >= MAX_MODULE_DEVICE_NUM),
+            HCCL_ERROR(
+                "[CcuDfx][GetCcuErrorMsg]deviceId[%d] error, MAX_MODULE_DEVICE_NUM[%u].", deviceId,
+                MAX_MODULE_DEVICE_NUM),
+            HcclResult::HCCL_E_PARA);
 
-        CcuErrorHandler::GetCcuErrorMsg(deviceId, status, ccuTaskParam, errorInfo);
-    );
+        CcuErrorHandler::GetCcuErrorMsg(deviceId, status, ccuTaskParam, errorInfo););
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult GetCcuJettys(s32 deviceLogicId, const ParaCcu& ccuTaskParam, std::vector<CcuJetty *>& ccuJettys)
+HcclResult GetCcuJettys(s32 deviceLogicId, const ParaCcu& ccuTaskParam, std::vector<CcuJetty*>& ccuJettys)
 {
-    TRY_CATCH_RETURN(
-        CcuErrorHandler::GetCcuJettys(deviceLogicId, ccuTaskParam, ccuJettys);
-    );
+    TRY_CATCH_RETURN(CcuErrorHandler::GetCcuJettys(deviceLogicId, ccuTaskParam, ccuJettys););
     return HcclResult::HCCL_SUCCESS;
 }
 

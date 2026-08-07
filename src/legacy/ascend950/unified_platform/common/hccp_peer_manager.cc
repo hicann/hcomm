@@ -14,7 +14,7 @@
 
 namespace Hccl {
 
-HccpPeerManager &HccpPeerManager::GetInstance()
+HccpPeerManager& HccpPeerManager::GetInstance()
 {
     static HccpPeerManager hccpPeerManager;
     return hccpPeerManager;
@@ -26,13 +26,14 @@ void HccpPeerManager::Init(s32 deviceLogicId)
 
     if (instances_.count(deviceLogicId) != 0) {
         instances_[deviceLogicId].Ref();
-        HCCL_INFO("[HccpPeerManager::%s] deviceLogicId[%d] ra has initialized, ref[%d].",
-                   __func__, deviceLogicId, instances_[deviceLogicId].Count());
+        HCCL_INFO(
+            "[HccpPeerManager::%s] deviceLogicId[%d] ra has initialized, ref[%d].", __func__, deviceLogicId,
+            instances_[deviceLogicId].Count());
         return;
     }
     HRaInitConfig cfg;
     cfg.phyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
-    cfg.mode  = HrtNetworkMode::PEER;
+    cfg.mode = HrtNetworkMode::PEER;
     HrtRaInit(cfg);
 
     instances_[deviceLogicId].Ref();
@@ -60,10 +61,10 @@ void HccpPeerManager::DeInit(s32 deviceLogicId)
     HCCL_INFO("[HccpPeerManager::%s] devLogicId[%d] release one, ref[%u].", __func__, deviceLogicId, count);
 
     // 若引用计数为0, 则释放资源
-    if (count == 0){
+    if (count == 0) {
         HRaInitConfig cfg;
         cfg.phyId = HrtGetDevicePhyIdByIndex(deviceLogicId);
-        cfg.mode  = HrtNetworkMode::PEER;
+        cfg.mode = HrtNetworkMode::PEER;
         HrtRaDeInit(cfg);
         instances_.erase(deviceLogicId);
         HCCL_INFO("[HccpPeerManager::%s] devLogicId [%d] ra deinit success.", __func__, deviceLogicId);
@@ -75,13 +76,16 @@ void HccpPeerManager::DeInitAll()
     std::lock_guard<std::mutex> lock(managerMutex_);
     isDestroy = true;
 
-    for (auto const &instance : instances_) {
+    for (auto const& instance : instances_) {
         u32 count = instance.second.Count();
-        CHK_PRT_CONT(count != 0, HCCL_WARNING("[HccpPeerManager::%s] release is not as expected, "
-                        "devLogicId[%d] ref[%u]", __func__, instance.first, count));
+        CHK_PRT_CONT(
+            count != 0, HCCL_WARNING(
+                            "[HccpPeerManager::%s] release is not as expected, "
+                            "devLogicId[%d] ref[%u]",
+                            __func__, instance.first, count));
         HRaInitConfig cfg;
         cfg.phyId = HrtGetDevicePhyIdByIndex(instance.first);
-        cfg.mode  = HrtNetworkMode::PEER;
+        cfg.mode = HrtNetworkMode::PEER;
         HrtRaDeInit(cfg);
         HCCL_INFO("[HccpPeerManager::%s] devLogicId [%d] ra deinit success.", __func__, instance.first);
     }
@@ -89,8 +93,5 @@ void HccpPeerManager::DeInitAll()
     instances_.clear();
 }
 
-HccpPeerManager::~HccpPeerManager()
-{
-    DECTOR_TRY_CATCH("HccpPeerManager", DeInitAll());
-}
+HccpPeerManager::~HccpPeerManager() { DECTOR_TRY_CATCH("HccpPeerManager", DeInitAll()); }
 } // namespace Hccl

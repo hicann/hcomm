@@ -22,10 +22,12 @@
 namespace HcclSim {
 class MemoryTimelineDumpStream {
 public:
-    HcclResult Initialize(const std::vector<RankId> &rankIds, const std::vector<TimelineEvent> &timelineEvents,
-        const std::map<u32, u32> &globalStepToEventId);
-    HcclResult AppendSnapshot(RankId rankId, u32 logicalStep, const std::vector<std::string> &memoryTaskIds,
-        const RankMemorySemantics &fullLayout);
+    HcclResult Initialize(
+        const std::vector<RankId>& rankIds, const std::vector<TimelineEvent>& timelineEvents,
+        const std::map<u32, u32>& globalStepToEventId);
+    HcclResult AppendSnapshot(
+        RankId rankId, u32 logicalStep, const std::vector<std::string>& memoryTaskIds,
+        const RankMemorySemantics& fullLayout);
     HcclResult Finalize();
 
 private:
@@ -39,12 +41,12 @@ private:
         nlohmann::json manifestChunks = nlohmann::json::array();
     };
 
-    HcclResult FlushOpenChunk(RankId rankId, RankDumpState &rankDumpState);
+    HcclResult FlushOpenChunk(RankId rankId, RankDumpState& rankDumpState);
 
     bool m_enabled = false;
-    std::unordered_map<u32, const TimelineEvent *> m_globalStepToEvent;
+    std::unordered_map<u32, const TimelineEvent*> m_globalStepToEvent;
     std::map<RankId, RankDumpState> m_rankDumpStates;
 };
-}  // namespace HcclSim
+} // namespace HcclSim
 
-#endif  // HCCL_VM_DUMP_MEMORY_TIMELINE_H
+#endif // HCCL_VM_DUMP_MEMORY_TIMELINE_H

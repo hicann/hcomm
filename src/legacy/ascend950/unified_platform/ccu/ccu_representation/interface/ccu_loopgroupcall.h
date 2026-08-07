@@ -22,21 +22,20 @@
 namespace Hccl {
 namespace CcuRep {
 
-class LoopGroupCall {
-public:
-    explicit LoopGroupCall(CcuRepContext *context, std::string label = "") : context(context), label(label)
-    {
-    }
-    void Run(const std::vector<LoopCall> &loopVec, const std::vector<Variable> &loopCfg,
-             const std::vector<Executor> &executors, Variable paraCfgIn, Variable offsetCfgIn) const;
+    class LoopGroupCall {
+    public:
+        explicit LoopGroupCall(CcuRepContext* context, std::string label = "") : context(context), label(label) {}
+        void
+        Run(const std::vector<LoopCall>& loopVec, const std::vector<Variable>& loopCfg,
+            const std::vector<Executor>& executors, Variable paraCfgIn, Variable offsetCfgIn) const;
 
-private:
-    CcuRepContext *context;
-    std::string    label;
+    private:
+        CcuRepContext* context;
+        std::string label;
 
-    uint64_t paraCfg{0};
-    uint64_t offsetCfg{0};
-};
+        uint64_t paraCfg{0};
+        uint64_t offsetCfg{0};
+    };
 
 }; // namespace CcuRep
 }; // namespace Hccl

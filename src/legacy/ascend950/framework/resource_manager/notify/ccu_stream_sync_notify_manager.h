@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef HCCLV2_CCU_STREAM_SYNC_NOTIFY_MANAGER_H
 #define HCCLV2_CCU_STREAM_SYNC_NOTIFY_MANAGER_H
 
@@ -17,17 +17,17 @@
 #include "queue_wait_group_cnt_notify_manager.h"
 
 namespace Hccl {
- 
+
 class CcuStreamSyncNotifyManager {
 public:
-    RtsCntNotify     *GetRtsNTo1CntNotify(u32 streamId, u32 topicId = 0);
-    Rts1ToNCntNotify *GetRts1ToNCntNotify(u32 streamId, u32 topicId = 0);
+    RtsCntNotify* GetRtsNTo1CntNotify(u32 streamId, u32 topicId = 0);
+    Rts1ToNCntNotify* GetRts1ToNCntNotify(u32 streamId, u32 topicId = 0);
 
 private:
     QueueWaitGroupCntNotifyManager queueWaitGroupCntNotifyManager;
     QueueBcastPostCntNotifyManager queueBcastPostCntNotifyManager;
 };
- 
+
 } // namespace Hccl
- 
+
 #endif // HCCLV2_CCU_STREAM_SYNC_NOTIFY_MANAGER_H

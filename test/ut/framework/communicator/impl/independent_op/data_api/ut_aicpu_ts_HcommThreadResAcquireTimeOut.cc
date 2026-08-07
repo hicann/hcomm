@@ -12,13 +12,9 @@
 
 using namespace hccl;
 
-class UtAicpuTsHcommThreadResAcquireTimeOut : public UtAicpuTsBase
-{
+class UtAicpuTsHcommThreadResAcquireTimeOut : public UtAicpuTsBase {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "UtAicpuTsHcommThreadResAcquireTimeOut tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "UtAicpuTsHcommThreadResAcquireTimeOut tests set up." << std::endl; }
 
     static void TearDownTestCase()
     {
@@ -41,14 +37,18 @@ TEST_F(UtAicpuTsHcommThreadResAcquireTimeOut, Ut_HcommThreadResAcquireTimeOut_Wh
     EXPECT_EQ(res, HCCL_SUCCESS);
 }
 
-TEST_F(UtAicpuTsHcommThreadResAcquireTimeOut, Ut_HcommThreadResAcquireTimeOut_When_Timeout_IsZero_Expect_ReturnIsHCCL_SUCCESS)
+TEST_F(
+    UtAicpuTsHcommThreadResAcquireTimeOut,
+    Ut_HcommThreadResAcquireTimeOut_When_Timeout_IsZero_Expect_ReturnIsHCCL_SUCCESS)
 {
     timeout = 0;
     res = HcommThreadResAcquireTimeOut(timeout);
     EXPECT_EQ(res, HCCL_SUCCESS);
 }
 
-TEST_F(UtAicpuTsHcommThreadResAcquireTimeOut, Ut_HcommThreadResAcquireTimeOut_When_Timeout_IsLarge_Expect_ReturnIsHCCL_SUCCESS)
+TEST_F(
+    UtAicpuTsHcommThreadResAcquireTimeOut,
+    Ut_HcommThreadResAcquireTimeOut_When_Timeout_IsLarge_Expect_ReturnIsHCCL_SUCCESS)
 {
     timeout = 100000;
     res = HcommThreadResAcquireTimeOut(timeout);

@@ -26,9 +26,8 @@ public:
     DevAicpuTsRoceChannel() = default;
     ~DevAicpuTsRoceChannel() override;
 
-    HcclResult Create(const void *blob, u64 blobBytes,
-                      const HcommDeviceInfo &deviceInfo,
-                      ChannelHandle &outHandle) override;
+    HcclResult
+    Create(const void* blob, u64 blobBytes, const HcommDeviceInfo& deviceInfo, ChannelHandle& outHandle) override;
     bool Destroy(ChannelHandle handle) override;
 
 private:

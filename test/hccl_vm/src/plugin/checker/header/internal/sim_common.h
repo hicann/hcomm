@@ -28,9 +28,9 @@ using RankId = uint32_t;
 using PodId = uint32_t;
 using SerId = uint32_t;
 using PhyId = uint32_t;
-constexpr uint64_t SIM_MEM_BLOCK_SIZE = 0x10000000000;  // 内存分配起始地址
+constexpr uint64_t SIM_MEM_BLOCK_SIZE = 0x10000000000; // 内存分配起始地址
 constexpr uint64_t SIM_MEM_MASKER = 0xFFFFFF0000000000;
-constexpr uint64_t SIZE_200MB = 200ULL * 1024 * 1024;  // CCL 200MB
+constexpr uint64_t SIZE_200MB = 200ULL * 1024 * 1024; // CCL 200MB
 constexpr uint32_t MAX_STREAM_COUNT = 40;
 constexpr uint32_t MAX_NOTIFY_COUNT = 64;
 
@@ -44,23 +44,12 @@ using SuperPodMeta = std::vector<ServerMeta>;
 using TopoMeta = std::vector<SuperPodMeta>;
 
 struct NpuPos {
-    PodId superpodId;  // 超节点Id
-    SerId serverId;    // ServerId
-    PhyId phyId;       // Server内物理Id
+    PodId superpodId; // 超节点Id
+    SerId serverId;   // ServerId
+    PhyId phyId;      // Server内物理Id
 };
 
-enum BufferType {
-    INPUT = 0,
-    OUTPUT,
-    CCL,
-    SCRATCH,
-    INPUT_AIV,
-    OUTPUT_AIV,
-    AIV_COMMINFO,
-    USERBUF_AIV,
-    MS,
-    RESERVED
-};
+enum BufferType { INPUT = 0, OUTPUT, CCL, SCRATCH, INPUT_AIV, OUTPUT_AIV, AIV_COMMINFO, USERBUF_AIV, MS, RESERVED };
 
 struct MemBlock {
     BufferType bufferType;

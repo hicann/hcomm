@@ -20,32 +20,32 @@ using namespace hcomm;
 
 class AppendToContextTest : public testing::Test {
 protected:
-    static void SetUpTestCase() {
+    static void SetUpTestCase()
+    {
         mockcpp::GlobalMockObject::verify();
         mockcpp::GlobalMockObject::reset();
     }
-    static void TearDownTestCase() {
+    static void TearDownTestCase()
+    {
         mockcpp::GlobalMockObject::verify();
         mockcpp::GlobalMockObject::reset();
     }
-    void SetUp() override {
+    void SetUp() override
+    {
         mockcpp::GlobalMockObject::verify();
         mockcpp::GlobalMockObject::reset();
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         mockcpp::GlobalMockObject::verify();
         mockcpp::GlobalMockObject::reset();
     }
-
 };
 
 TEST_F(AppendToContextTest, Ut_AppendToContext_When_NullContext_Expect_ShouldThrowException)
 {
     CcuRep::CcuInsGeneratorV1 insGen;
     std::shared_ptr<CcuRep::CcuRepBase> rep = std::make_shared<CcuRep::CcuRepBlock>(&insGen, "test_rep");
-    
-    EXPECT_THROW(
-        AppendToContext(nullptr,rep),
-        Hccl::CcuApiException
-    );
+
+    EXPECT_THROW(AppendToContext(nullptr, rep), Hccl::CcuApiException);
 }

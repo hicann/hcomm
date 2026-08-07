@@ -25,11 +25,10 @@
 #include "db_sim_runner_ops.h"
 #include "db_sim_runner_common.h"
 
-
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
-aclError aclrtCreateContext(aclrtContext *context, int32_t deviceId)
+#endif // __cplusplus
+aclError aclrtCreateContext(aclrtContext* context, int32_t deviceId)
 {
     auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
@@ -40,7 +39,7 @@ aclError aclrtCreateContext(aclrtContext *context, int32_t deviceId)
         return ACL_ERROR_INVALID_PARAM;
     }
     auto ret = RunnerDB::GetOneByPred<sim::Device>([deviceId](const sim::Device& d) {
-        return d.logic_id  == (uint32_t)deviceId;
+        return d.logic_id == (uint32_t)deviceId;
     });
     if (!ret.second) {
         HCCL_VM_ERROR("device not found:{:d}", deviceId);
@@ -67,7 +66,7 @@ aclError aclrtDestroyContext(aclrtContext context)
     uint64_t ctxId = (uint64_t)(uintptr_t)context;
 
     auto ret = RunnerDB::GetOneByPred<sim::Stream>([ctxId](const sim::Stream& stm) {
-        return stm.ctx_id  == ctxId && stm.is_primary_default == 1;
+        return stm.ctx_id == ctxId && stm.is_primary_default == 1;
     });
     if (!ret.second) {
         HCCL_VM_ERROR("stream not found ctxId:{:d}", ctxId);
@@ -86,7 +85,7 @@ aclError aclrtSetCurrentContext(aclrtContext context)
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetCurrentContext(aclrtContext *context)
+aclError aclrtGetCurrentContext(aclrtContext* context)
 {
     auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
@@ -100,7 +99,7 @@ aclError aclrtGetCurrentContext(aclrtContext *context)
     return ACL_SUCCESS;
 }
 
-aclError aclrtCtxGetCurrentDefaultStream(aclrtStream *stream)
+aclError aclrtCtxGetCurrentDefaultStream(aclrtStream* stream)
 {
     auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
@@ -112,7 +111,7 @@ aclError aclrtCtxGetCurrentDefaultStream(aclrtStream *stream)
     }
     auto curCtxId = runner.current_ctx_id;
     auto stm = RunnerDB::GetOneByPred<sim::Stream>([curCtxId](const sim::Stream& stm) {
-        return stm.ctx_id  == curCtxId && stm.is_primary_default == 1;
+        return stm.ctx_id == curCtxId && stm.is_primary_default == 1;
     });
     if (!stm.second) {
         HCCL_VM_ERROR("stream not found ctxId:{:d}", curCtxId);
@@ -123,10 +122,10 @@ aclError aclrtCtxGetCurrentDefaultStream(aclrtStream *stream)
     return ACL_SUCCESS;
 }
 
-aclError aclrtGetPrimaryCtxState(int32_t deviceId, uint32_t *flags, int32_t *active)
+aclError aclrtGetPrimaryCtxState(int32_t deviceId, uint32_t* flags, int32_t* active)
 {
-    (void) deviceId;
-    (void) flags;
+    (void)deviceId;
+    (void)flags;
     auto serverId = sim::GetCurServerId();
     if (serverId == 0) {
         return ACL_ERROR_INVALID_PARAM;
@@ -148,24 +147,24 @@ aclError aclrtGetPrimaryCtxState(int32_t deviceId, uint32_t *flags, int32_t *act
 
 aclError aclrtCtxSetSysParamOpt(aclSysParamOpt opt, int64_t value)
 {
-    (void) opt;
-    (void) value;
+    (void)opt;
+    (void)value;
     return ACL_SUCCESS;
 }
 
-aclError aclrtCtxGetSysParamOpt(aclSysParamOpt opt, int64_t *value)
+aclError aclrtCtxGetSysParamOpt(aclSysParamOpt opt, int64_t* value)
 {
-    (void) opt;
-    (void) value;
+    (void)opt;
+    (void)value;
     return ACL_SUCCESS;
 }
 
-aclError aclrtCtxGetFloatOverflowAddr(void **overflowAddr)
+aclError aclrtCtxGetFloatOverflowAddr(void** overflowAddr)
 {
-    (void) overflowAddr;
+    (void)overflowAddr;
     return ACL_SUCCESS;
 }
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus

@@ -68,34 +68,32 @@ public:
 
     // ------------------ 控制面接口 ------------------
     virtual HcclResult Init() = 0;
-    virtual HcclResult GetNotifyNum(uint32_t *notifyNum) const = 0;
-    virtual HcclResult GetRemoteMem(HcclMem **remoteMem, uint32_t *memNum, char **memTags) = 0;
+    virtual HcclResult GetNotifyNum(uint32_t* notifyNum) const = 0;
+    virtual HcclResult GetRemoteMem(HcclMem** remoteMem, uint32_t* memNum, char** memTags) = 0;
     virtual ChannelStatus GetStatus() = 0;
-    virtual HcclResult GetUserRemoteMem(CommMem **remoteMem, char ***memTag, uint32_t *memNum);
-    virtual HcclResult UpdateMemInfo(HcommMemHandle *memHandles, uint32_t memHandleNum);
+    virtual HcclResult GetUserRemoteMem(CommMem** remoteMem, char*** memTag, uint32_t* memNum);
+    virtual HcclResult UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum);
 
-    virtual HcclResult Clean()        = 0;
-    virtual HcclResult Resume()       = 0;
+    virtual HcclResult Clean() = 0;
+    virtual HcclResult Resume() = 0;
 
     virtual HcommChannelKind GetChannelKind() const;
-    virtual HcclResult Serialize(std::shared_ptr<hccl::DeviceMem> &out);
+    virtual HcclResult Serialize(std::shared_ptr<hccl::DeviceMem>& out);
     virtual void AddPtrArrayDevMem(std::shared_ptr<hccl::DeviceMem> ptrArrayMem);
     // ------------------ 数据面接口 ------------------
     virtual HcclResult NotifyRecord(const uint32_t remoteNotifyIdx) = 0;
     virtual HcclResult NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout) = 0;
-    virtual HcclResult WriteWithNotify(void *dst, const void *src, const uint64_t len, uint32_t remoteNotifyIdx) = 0;
-    virtual HcclResult Write(void *dst, const void *src, uint64_t len) = 0;
-    virtual HcclResult Read(void *dst, const void *src, uint64_t len) = 0;
+    virtual HcclResult WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx) = 0;
+    virtual HcclResult Write(void* dst, const void* src, uint64_t len) = 0;
+    virtual HcclResult Read(void* dst, const void* src, uint64_t len) = 0;
     virtual HcclResult ChannelFence() = 0;
 
     // ------------------ 工具方法 ------------------
     static ChannelStatus TransportStatusToChannelStatus(Hccl::TransportStatus ts);
 
     // ------------------ 工厂 ------------------
-    static HcclResult CreateChannel(EndpointHandle endpointHandle, 
-                                    CommEngine engine, 
-                                    HcommChannelDesc channelDesc,
-                                    std::shared_ptr<Channel>& out);
+    static HcclResult CreateChannel(
+        EndpointHandle endpointHandle, CommEngine engine, HcommChannelDesc channelDesc, std::shared_ptr<Channel>& out);
 
 protected:
     void ReleasePtrArrayDevMems();

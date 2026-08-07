@@ -19,10 +19,10 @@
 
 #define MAX_PORTS_STR_LEN (512)
 
-char *AddrToString(const Addr *addr)
+char* AddrToString(const Addr* addr)
 {
     const size_t max_buffer_size = 102400;
-    char *buf = (char *)malloc(max_buffer_size);
+    char* buf = (char*)malloc(max_buffer_size);
     int ret = 0;
     if (buf == NULL) {
         return NULL;
@@ -49,9 +49,9 @@ char *AddrToString(const Addr *addr)
             }
         }
     }
-    ret = sprintf_s(buf, max_buffer_size,
-        "{\"addr_type\": \"%s\", \"addr\": \"%s\", \"plane_id\": \"%s\", \"ports\": [%s]}", addr->addr_type, addr->addr,
-        addr->plane_id, ports);
+    ret = sprintf_s(
+        buf, max_buffer_size, "{\"addr_type\": \"%s\", \"addr\": \"%s\", \"plane_id\": \"%s\", \"ports\": [%s]}",
+        addr->addr_type, addr->addr, addr->plane_id, ports);
     if (ret < 0) {
         free(buf);
         buf = NULL;
@@ -59,7 +59,7 @@ char *AddrToString(const Addr *addr)
     return buf;
 }
 
-void NetLayerInit(NetLayer *layer, int level, const char *layer_id)
+void NetLayerInit(NetLayer* layer, int level, const char* layer_id)
 {
     memset_s(layer, sizeof(NetLayer), 0, sizeof(NetLayer));
     layer->net_layer = level;
@@ -67,12 +67,12 @@ void NetLayerInit(NetLayer *layer, int level, const char *layer_id)
     (void)strcpy_s(layer->net_instance_id, sizeof(layer->net_instance_id), layer_id);
 }
 
-void NetLayerSetNetType(NetLayer *layer, const char *net_type)
+void NetLayerSetNetType(NetLayer* layer, const char* net_type)
 {
     (void)strcpy_s(layer->net_type, sizeof(layer->net_type), net_type);
 }
 
-void NetLayerAddAddr(NetLayer *layer, const Addr *addr)
+void NetLayerAddAddr(NetLayer* layer, const Addr* addr)
 {
     if (layer->addr_count >= MAX_ADDR_NUM) {
         return;
@@ -81,7 +81,7 @@ void NetLayerAddAddr(NetLayer *layer, const Addr *addr)
     layer->addr_count++;
 }
 
-void NetLayerSetAddrAt(NetLayer *layer, const Addr *addr, int index)
+void NetLayerSetAddrAt(NetLayer* layer, const Addr* addr, int index)
 {
     if (index < 0 || index >= MAX_ADDR_NUM) {
         return;
@@ -90,14 +90,14 @@ void NetLayerSetAddrAt(NetLayer *layer, const Addr *addr, int index)
     layer->addr_count++;
 }
 
-char *NetLayerToString(const NetLayer *layer)
+char* NetLayerToString(const NetLayer* layer)
 {
     const size_t max_buffer_size = 102400;
-    char *buf = (char *)malloc(max_buffer_size);
+    char* buf = (char*)malloc(max_buffer_size);
     if (buf == NULL) {
         return NULL;
     }
-    char *addr_list = (char *)malloc(max_buffer_size);
+    char* addr_list = (char*)malloc(max_buffer_size);
     if (addr_list == NULL) {
         free(buf);
         return NULL;
@@ -105,7 +105,7 @@ char *NetLayerToString(const NetLayer *layer)
     memset_s(addr_list, max_buffer_size, 0, max_buffer_size);
     memset_s(buf, max_buffer_size, 0, max_buffer_size);
     for (int i = 0; i < layer->addr_count; i++) {
-        char *addr = AddrToString(&layer->rank_addr_list[i]);
+        char* addr = AddrToString(&layer->rank_addr_list[i]);
         if (addr == NULL) {
             continue;
         }
@@ -121,7 +121,8 @@ char *NetLayerToString(const NetLayer *layer)
         }
         free(addr);
     }
-    int ret = sprintf_s(buf, max_buffer_size,
+    int ret = sprintf_s(
+        buf, max_buffer_size,
         "{\"net_layer\": %d, \"net_instance_id\": \"%s\", \"net_type\": \"%s\",\"net_attr\":\"%s\","
         "\"rank_addr_list\": [%s]}",
         layer->net_layer, layer->net_instance_id, layer->net_type, layer->net_attr, addr_list);
@@ -133,16 +134,16 @@ char *NetLayerToString(const NetLayer *layer)
     return buf;
 }
 
-char *RankListToString(const RootInfo *rootinfo)
+char* RankListToString(const RootInfo* rootinfo)
 {
     const size_t max_buffer_size = 102400;
-    char *buf = (char *)malloc(max_buffer_size);
+    char* buf = (char*)malloc(max_buffer_size);
     if (buf == NULL) {
         return NULL;
     }
     memset_s(buf, max_buffer_size, 0, max_buffer_size);
     for (int i = 0; i < rootinfo->rank_count; i++) {
-        char *rank = RankToString(&rootinfo->ranks[i]);
+        char* rank = RankToString(&rootinfo->ranks[i]);
         errno_t ret = strcat_s(buf, max_buffer_size, rank);
         if (ret != 0) {
             free(rank);
@@ -159,7 +160,7 @@ char *RankListToString(const RootInfo *rootinfo)
     return buf;
 }
 
-void RankInit(Rank *rank, int deviceId, int localId)
+void RankInit(Rank* rank, int deviceId, int localId)
 {
     memset_s(rank, sizeof(Rank), 0, sizeof(Rank));
     rank->device_id = deviceId;
@@ -167,7 +168,7 @@ void RankInit(Rank *rank, int deviceId, int localId)
     rank->level_count = 0;
 }
 
-void RankAddNetLayer(Rank *rank, const NetLayer *layer)
+void RankAddNetLayer(Rank* rank, const NetLayer* layer)
 {
     if (rank->level_count >= MAX_NET_LEVEL_NUM) {
         return;
@@ -176,16 +177,17 @@ void RankAddNetLayer(Rank *rank, const NetLayer *layer)
     rank->level_count++;
 }
 
-char *RootInfoToString(const RootInfo *rootinfo)
+char* RootInfoToString(const RootInfo* rootinfo)
 {
     const size_t max_buffer_size = 102400;
-    char *buf = (char *)malloc(max_buffer_size);
+    char* buf = (char*)malloc(max_buffer_size);
     if (buf == NULL) {
         return NULL;
     }
     memset_s(buf, max_buffer_size, 0, max_buffer_size);
-    char *rank_list = RankListToString(rootinfo);
-    int ret = sprintf_s(buf, max_buffer_size,
+    char* rank_list = RankListToString(rootinfo);
+    int ret = sprintf_s(
+        buf, max_buffer_size,
         "{\"version\": \"%s\", \"topo_file_path\": \"%s\","
         "\"rank_count\": %d, \"rank_list\": [%s]}",
         rootinfo->version, rootinfo->topo_file_path, rootinfo->rank_count, rank_list);
@@ -197,14 +199,14 @@ char *RootInfoToString(const RootInfo *rootinfo)
     return buf;
 }
 
-void RootInfoInit(RootInfo *rootinfo)
+void RootInfoInit(RootInfo* rootinfo)
 {
     memset_s(rootinfo, sizeof(RootInfo), 0, sizeof(RootInfo));
     strcpy_s(rootinfo->version, sizeof(rootinfo->version), "2.0");
     rootinfo->rank_count = 0;
 }
 
-void RootInfoAddRank(RootInfo *rootinfo, const Rank *rank)
+void RootInfoAddRank(RootInfo* rootinfo, const Rank* rank)
 {
     if (rootinfo->rank_count >= MAX_RANK_NUM) {
         return;
@@ -213,12 +215,9 @@ void RootInfoAddRank(RootInfo *rootinfo, const Rank *rank)
     rootinfo->rank_count++;
 }
 
-void AddrInit(Addr *addr)
-{
-    memset_s(addr, sizeof(Addr), 0, sizeof(Addr));
-}
+void AddrInit(Addr* addr) { memset_s(addr, sizeof(Addr), 0, sizeof(Addr)); }
 
-void AddrSetEID(Addr *addr, const dcmi_urma_eid_t *eid)
+void AddrSetEID(Addr* addr, const dcmi_urma_eid_t* eid)
 {
     for (int i = 0; i < DCMI_URMA_EID_SIZE; i++) {
         int ret = sprintf_s(&addr->addr[i * 2], MAX_NET_ADDR_LEN - (i * 2), "%02x", eid->raw[i]);
@@ -229,18 +228,18 @@ void AddrSetEID(Addr *addr, const dcmi_urma_eid_t *eid)
     (void)strcpy_s(addr->addr_type, sizeof(addr->addr_type), "EID");
 }
 
-void AddrSetIP(Addr *addr, const char *ip)
+void AddrSetIP(Addr* addr, const char* ip)
 {
     (void)strcpy_s(addr->addr, sizeof(addr->addr), ip);
     (void)strcpy_s(addr->addr_type, sizeof(addr->addr_type), "IPV4");
 }
 
-void AddrSetPlaneId(Addr *addr, const char *plane_id)
+void AddrSetPlaneId(Addr* addr, const char* plane_id)
 {
     (void)strcpy_s(addr->plane_id, sizeof(addr->plane_id), plane_id);
 }
 
-int AddrAddPort(Addr *addr, const char *port)
+int AddrAddPort(Addr* addr, const char* port)
 {
     if (addr->port_count >= (MAX_PORT_NUM - 1)) {
         return -1;
@@ -248,14 +247,14 @@ int AddrAddPort(Addr *addr, const char *port)
     return strcpy_s(addr->ports[addr->port_count++], MAX_PORT_LEN, port);
 }
 
-char *RankToString(const Rank *rank)
+char* RankToString(const Rank* rank)
 {
     const size_t max_buf_size = 102400;
-    char *buf = (char *)malloc(max_buf_size);
+    char* buf = (char*)malloc(max_buf_size);
     if (buf == NULL) {
         return NULL;
     }
-    char *level_list = (char *)malloc(max_buf_size);
+    char* level_list = (char*)malloc(max_buf_size);
     if (level_list == NULL) {
         free(buf);
         return NULL;
@@ -263,7 +262,7 @@ char *RankToString(const Rank *rank)
     (void)memset_s(buf, max_buf_size, 0, max_buf_size);
     (void)memset_s(level_list, max_buf_size, 0, max_buf_size);
     for (int i = 0; i < rank->level_count; ++i) {
-        char *layer = NetLayerToString(&rank->level_list[i]);
+        char* layer = NetLayerToString(&rank->level_list[i]);
         if (strcat_s(level_list, max_buf_size, layer) != 0) {
             free(layer);
             break;
@@ -276,8 +275,9 @@ char *RankToString(const Rank *rank)
         }
         free(layer);
     }
-    int ret = sprintf_s(buf, max_buf_size, "{\"device_id\": %d, \"local_id\": %d, \"level_list\": [%s]}",
-        rank->device_id, rank->local_id, level_list);
+    int ret = sprintf_s(
+        buf, max_buf_size, "{\"device_id\": %d, \"local_id\": %d, \"level_list\": [%s]}", rank->device_id,
+        rank->local_id, level_list);
     free(level_list);
     if (ret < 0) {
         free(buf);
@@ -286,7 +286,7 @@ char *RankToString(const Rank *rank)
     return buf;
 }
 
-TopoAddrResult ProcessLayerRoce(int npu_id, NetLayer *layer)
+TopoAddrResult ProcessLayerRoce(int npu_id, NetLayer* layer)
 {
     TOPO_PERF_BEGIN(ProcessLayerRoce);
 #define PROC_ROCE_LEVEL (3)

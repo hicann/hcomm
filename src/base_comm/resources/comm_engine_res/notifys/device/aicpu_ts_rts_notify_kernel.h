@@ -15,7 +15,8 @@
 
 namespace hcomm {
 /**
- * @note 职责：AICPU_TS通信引擎的Notify的Host和Device aicpu kernel间的数据结构定义和接口声明。还有对应kernel函数实现的.cc文件。
+ * @note 职责：AICPU_TS通信引擎的Notify的Host和Device aicpu
+ * kernel间的数据结构定义和接口声明。还有对应kernel函数实现的.cc文件。
  */
 }
 

@@ -21,7 +21,8 @@ public:
     static StreamActiveManager& GetInstance(s32 deviceLogicID);
     HcclResult Init();
     HcclResult StreamActive(HcclRtStream activeStream, HcclRtStream stream);
-    HcclResult StreamsUnactive(const std::vector<Stream> &streams);
+    HcclResult StreamsUnactive(const std::vector<Stream>& streams);
+
 private:
     StreamActiveManager();
     ~StreamActiveManager();
@@ -29,5 +30,5 @@ private:
     std::mutex streamActiveManagerMutex_;
     static std::atomic<bool> initFlag_;
 };
-}  // namespace hccl
+} // namespace hccl
 #endif // STREAM_ACTIVE_MANAGER_H

@@ -19,47 +19,46 @@
 
 namespace hccl {
 
-struct EnumClassHash
-{
-    template<typename T>
+struct EnumClassHash {
+    template <typename T>
     std::size_t operator()(T t) const
     {
         return static_cast<std::size_t>(t);
     }
 };
 
-using CollAlgOpCreator = std::function<CollAlgOperator *(AlgConfigurator* algConfigurator, CCLBufferManager &,
-    HcclDispatcher, std::unique_ptr<TopoMatcher> &)>;
+using CollAlgOpCreator = std::function<CollAlgOperator*(
+    AlgConfigurator* algConfigurator, CCLBufferManager&, HcclDispatcher, std::unique_ptr<TopoMatcher>&)>;
 
-template <typename P> static CollAlgOperator *DefaultOpCreator(AlgConfigurator* algConfigurator,
-                                                               CCLBufferManager &cclBufferManager,
-                                                               HcclDispatcher dispatcher,
-                                                               std::unique_ptr<TopoMatcher> &topoMatcher)
+template <typename P>
+static CollAlgOperator* DefaultOpCreator(
+    AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager, HcclDispatcher dispatcher,
+    std::unique_ptr<TopoMatcher>& topoMatcher)
 {
     static_assert(std::is_base_of<CollAlgOperator, P>::value, "CollAlgOp type must derived from Hccl::CollAlgOperator");
     return new (std::nothrow) P(algConfigurator, cclBufferManager, dispatcher, topoMatcher);
 }
-   
+
 class CollAlgOpRegistry {
 public:
-    static CollAlgOpRegistry &Instance();
-    HcclResult Register(const HcclCMDType &opType, const CollAlgOpCreator &collAlgOpCreator);
-    std::unique_ptr<CollAlgOperator> GetAlgOp(const HcclCMDType &opType, AlgConfigurator* algConfigurator,
-        CCLBufferManager &cclBufferManager, HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher> &topoMatcher);
+    static CollAlgOpRegistry& Instance();
+    HcclResult Register(const HcclCMDType& opType, const CollAlgOpCreator& collAlgOpCreator);
+    std::unique_ptr<CollAlgOperator> GetAlgOp(
+        const HcclCMDType& opType, AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager,
+        HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
 
 private:
     std::unordered_map<HcclCMDType, const CollAlgOpCreator, EnumClassHash> opCreators_;
     mutable std::mutex mu_;
 };
 
-#define REGISTER_OP_HELPER(ctr, type, name, collOpBase)       \
-    static HcclResult g_func_##name##_##ctr             \
-        = CollAlgOpRegistry::Instance().Register(type, DefaultOpCreator<collOpBase>)
+#define REGISTER_OP_HELPER(ctr, type, name, collOpBase) \
+    static HcclResult g_func_##name##_##ctr = CollAlgOpRegistry::Instance().Register(type, DefaultOpCreator<collOpBase>)
 
 #define REGISTER_OP_HELPER_1(ctr, type, name, collOpBase) REGISTER_OP_HELPER(ctr, type, name, collOpBase)
 
 #define REGISTER_OP(type, name, collOpBase) REGISTER_OP_HELPER_1(__COUNTER__, type, name, collOpBase)
 
-}   // namespace hccl
+} // namespace hccl
 
 #endif

@@ -16,7 +16,8 @@ ErrContextPub hrtErrMGetErrorContextPub(void)
     ErrContext errorContext = hrtErrMGetErrorContext();
     ErrContextPub errorContextPub;
     errorContextPub.work_stream_id = errorContext.work_stream_id;
-    (void)memcpy_s(errorContextPub.reserved, sizeof(errorContextPub.reserved), errorContext.reserved, 
+    (void)memcpy_s(
+        errorContextPub.reserved, sizeof(errorContextPub.reserved), errorContext.reserved,
         sizeof(errorContext.reserved));
     return errorContextPub;
 }
@@ -25,7 +26,8 @@ void hrtErrMSetErrorContextPub(ErrContextPub errorContextPub)
 {
     ErrContext errorContext;
     errorContext.work_stream_id = errorContextPub.work_stream_id;
-    (void)memcpy_s(errorContext.reserved, sizeof(errorContext.reserved), errorContextPub.reserved, 
+    (void)memcpy_s(
+        errorContext.reserved, sizeof(errorContext.reserved), errorContextPub.reserved,
         sizeof(errorContextPub.reserved));
     hrtErrMSetErrorContext(errorContext);
 }

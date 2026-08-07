@@ -20,9 +20,9 @@ namespace Hccl {
 
 class CcuTempReduceMesh2D : public CcuAlgTemplateBase {
 public:
-    explicit CcuTempReduceMesh2D(const RankId virtualRank, const u32 tempRankSize,
-                                    const std::vector<std::vector<RankId>> &tempVTopo,
-                                    const std::map<RankId, u32>            &tempVirtRankMap);
+    explicit CcuTempReduceMesh2D(
+        const RankId virtualRank, const u32 tempRankSize, const std::vector<std::vector<RankId>>& tempVTopo,
+        const std::map<RankId, u32>& tempVirtRankMap);
     ~CcuTempReduceMesh2D() override;
 
     std::string Describe() const override
@@ -30,11 +30,12 @@ public:
         return StringFormat("Template of Reduce ccu mesh 2D with tempRankSize [%u].", tempRankSize_);
     }
 
-    HcclResult Run(const TempFuncs &tempFuncs, const RankSliceInfo &sliceInfoVec, const BuffInfo &buffInfo,
-                            const ResLinks &tempLinks, std::vector<InsQuePtr> &tempInsQues) override;
-    HcclResult CalcSliceInfo(const AllignInfo &allignInfo, const u64 dataSize, RankSliceInfo &sliceInfoVec) override;
-    HcclResult CalcRes(AlgTempResReq &tempResReq) override;
-    void InitReduceInfo(const ReduceOp &reduceOp, const DataType &dataType);
+    HcclResult
+    Run(const TempFuncs& tempFuncs, const RankSliceInfo& sliceInfoVec, const BuffInfo& buffInfo,
+        const ResLinks& tempLinks, std::vector<InsQuePtr>& tempInsQues) override;
+    HcclResult CalcSliceInfo(const AllignInfo& allignInfo, const u64 dataSize, RankSliceInfo& sliceInfoVec) override;
+    HcclResult CalcRes(AlgTempResReq& tempResReq) override;
+    void InitReduceInfo(const ReduceOp& reduceOp, const DataType& dataType);
 
 private:
     ReduceOp reduceOp_;

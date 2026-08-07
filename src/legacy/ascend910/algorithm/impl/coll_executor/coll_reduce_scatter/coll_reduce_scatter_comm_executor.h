@@ -15,8 +15,7 @@
 namespace hccl {
 class CollReduceScatterCommExecutor : public CollReduceScatterExecutor {
 public:
-    explicit CollReduceScatterCommExecutor(const HcclDispatcher dispatcher,
-    std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollReduceScatterCommExecutor(const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
     ~CollReduceScatterCommExecutor() override = default;
 
 private:
@@ -24,16 +23,15 @@ private:
     /* *************** 资源计算 *************** */
     HcclResult CalcScratchMemSize(u64& scratchMemSize) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcCombinedCommInfo(TransportMemType inputType,
-        TransportMemType outputType,
-        std::vector<LevelNSubCommTransport>& opTransport);
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType);
+    HcclResult CalcCombinedCommInfo(
+        TransportMemType inputType, TransportMemType outputType, std::vector<LevelNSubCommTransport>& opTransport);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
 
     /* *************** 算法编排 *************** */
     u64 CalcLoopMaxCount(const u32 unitSize) override;
     bool IsSmallData(const u64 totalSize, const u64 curSize) override;
-    bool IsHugeData(const u64 curSize, OpParam *param = nullptr) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
+    bool IsHugeData(const u64 curSize, OpParam* param = nullptr) override;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 };
 
 } // namespace hccl

@@ -12,17 +12,14 @@
 #include "exception_util.h"
 namespace Hccl {
 
-DataBufManager::~DataBufManager()
-{
-    DECTOR_TRY_CATCH("DataBufManager", Destroy());
-}
+DataBufManager::~DataBufManager() { DECTOR_TRY_CATCH("DataBufManager", Destroy()); }
 
-bool DataBufManager::IsExist(const std::string &opTag, BufferType type)
+bool DataBufManager::IsExist(const std::string& opTag, BufferType type)
 {
     return bufs.find(opTag) != bufs.end() && bufs[opTag].find(type) != bufs[opTag].end();
 }
 
-Buffer *DataBufManager::Register(const std::string &opTag, BufferType type, std::shared_ptr<Buffer> buffer)
+Buffer* DataBufManager::Register(const std::string& opTag, BufferType type, std::shared_ptr<Buffer> buffer)
 {
     if (buffer == nullptr) {
         HCCL_WARNING("opTag[%s] type[%s] 's buffer is nullptr", opTag.c_str(), type.Describe().c_str());
@@ -32,7 +29,7 @@ Buffer *DataBufManager::Register(const std::string &opTag, BufferType type, std:
     return bufs[opTag][type].get();
 }
 
-void DataBufManager::Deregister(const std::string &opTag, BufferType type)
+void DataBufManager::Deregister(const std::string& opTag, BufferType type)
 {
     if (!IsExist(opTag, type)) {
         HCCL_WARNING("Cannot find Buffer in map.");
@@ -44,7 +41,7 @@ void DataBufManager::Deregister(const std::string &opTag, BufferType type)
     }
 }
 
-HcclResult DataBufManager::Deregister(const std::string &opTag)
+HcclResult DataBufManager::Deregister(const std::string& opTag)
 {
     if (bufs.find(opTag) == bufs.end()) {
         HCCL_WARNING("[DataBufManager::%s] opTag[%s] Cannot find Buffer in bufs.", __func__, opTag.c_str());
@@ -54,7 +51,7 @@ HcclResult DataBufManager::Deregister(const std::string &opTag)
     return HCCL_SUCCESS;
 }
 
-Buffer *DataBufManager::Get(const std::string &opTag, BufferType type)
+Buffer* DataBufManager::Get(const std::string& opTag, BufferType type)
 {
     if (bufs.find(opTag) != bufs.end() && bufs[opTag].find(type) != bufs[opTag].end()) {
         return bufs[opTag][type].get();
@@ -63,9 +60,6 @@ Buffer *DataBufManager::Get(const std::string &opTag, BufferType type)
     return nullptr;
 }
 
-void DataBufManager::Destroy()
-{
-    bufs.clear();
-}
+void DataBufManager::Destroy() { bufs.clear(); }
 
 } // namespace Hccl

@@ -46,7 +46,7 @@ Hccl::WqeTask MakeManagerWqeTaskRead()
 {
     Hccl::WqeTask wqe;
     memset(&wqe, 0, sizeof(wqe));
-    UdmaSqeCommon *common = reinterpret_cast<UdmaSqeCommon *>(&wqe);
+    UdmaSqeCommon* common = reinterpret_cast<UdmaSqeCommon*>(&wqe);
     common->opcode = static_cast<uint8_t>(Hccl::UdmaSqOpcode::UDMA_OPC_READ);
     return wqe;
 }
@@ -63,14 +63,14 @@ Hccl::DbSqeProfInfo MakeManagerDbSqeProfInfo(bool isValid)
 class AicpuTaskCacheManagerTest : public testing::Test {
 protected:
     std::unique_ptr<Hccl::RtsqA5> rtsq_;
-    Hccl::RtsqA5 *rtsqPtr_ = nullptr;
+    Hccl::RtsqA5* rtsqPtr_ = nullptr;
     std::unique_ptr<hccl::AicpuTsThread> aicpuTsThread_;
     std::unique_ptr<Hccl::UbConnLite> ubConnLite_;
     std::unique_ptr<Hccl::UbTransportLiteImpl> ubTransport_;
     std::unique_ptr<AicpuTaskCacheEntry> entry_;
     std::vector<char> emptyUniqueId_;
     bool savedIsHit_ = false;
-    AicpuTaskCacheEntry *savedCacheEntryPtr_ = nullptr;
+    AicpuTaskCacheEntry* savedCacheEntryPtr_ = nullptr;
 
     void SetUp() override
     {
@@ -97,13 +97,13 @@ protected:
         AicpuTaskCacheManager::cacheTag = "";
     }
 
-    void SetNeedCacheTaskState(AicpuTaskCacheEntry *entryPtr)
+    void SetNeedCacheTaskState(AicpuTaskCacheEntry* entryPtr)
     {
         AicpuTaskCacheManager::isHit = false;
         AicpuTaskCacheManager::cacheEntryPtr = entryPtr;
     }
 
-    void SetCacheHitState(AicpuTaskCacheEntry *entryPtr)
+    void SetCacheHitState(AicpuTaskCacheEntry* entryPtr)
     {
         AicpuTaskCacheManager::isHit = true;
         AicpuTaskCacheManager::cacheEntryPtr = entryPtr;
@@ -149,8 +149,9 @@ TEST_F(AicpuTaskCacheManagerTest, AddWqeArray_NeedCacheTaskFalse_ReturnsInternal
 {
     SetCacheFullState();
     std::vector<Hccl::WqeTask> wqeTasks = {MakeManagerWqeTaskRead()};
-    EXPECT_EQ(AicpuTaskCacheManager::AddWqeArray(
-                  ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeManagerDbSqeProfInfo(false)),
+    EXPECT_EQ(
+        AicpuTaskCacheManager::AddWqeArray(
+            ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeManagerDbSqeProfInfo(false)),
         HCCL_E_INTERNAL);
 }
 
@@ -158,8 +159,9 @@ TEST_F(AicpuTaskCacheManagerTest, AddWqeArray_CacheHit_ReturnsInternal)
 {
     SetCacheHitState(entry_.get());
     std::vector<Hccl::WqeTask> wqeTasks = {MakeManagerWqeTaskRead()};
-    EXPECT_EQ(AicpuTaskCacheManager::AddWqeArray(
-                  ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeManagerDbSqeProfInfo(false)),
+    EXPECT_EQ(
+        AicpuTaskCacheManager::AddWqeArray(
+            ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeManagerDbSqeProfInfo(false)),
         HCCL_E_INTERNAL);
 }
 
@@ -167,8 +169,9 @@ TEST_F(AicpuTaskCacheManagerTest, AddWqeArray_NullUbConnLite_ReturnsPtrError)
 {
     SetNeedCacheTaskState(entry_.get());
     std::vector<Hccl::WqeTask> wqeTasks = {MakeManagerWqeTaskRead()};
-    EXPECT_EQ(AicpuTaskCacheManager::AddWqeArray(
-                  nullptr, ubTransport_.get(), wqeTasks, 0, 0, false, MakeManagerDbSqeProfInfo(false)),
+    EXPECT_EQ(
+        AicpuTaskCacheManager::AddWqeArray(
+            nullptr, ubTransport_.get(), wqeTasks, 0, 0, false, MakeManagerDbSqeProfInfo(false)),
         HCCL_E_PTR);
 }
 
@@ -176,8 +179,9 @@ TEST_F(AicpuTaskCacheManagerTest, AddWqeArray_Success_DelegatesToEntry)
 {
     SetNeedCacheTaskState(entry_.get());
     std::vector<Hccl::WqeTask> wqeTasks = {MakeManagerWqeTaskRead()};
-    EXPECT_EQ(AicpuTaskCacheManager::AddWqeArray(
-                  ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeManagerDbSqeProfInfo(false)),
+    EXPECT_EQ(
+        AicpuTaskCacheManager::AddWqeArray(
+            ubConnLite_.get(), ubTransport_.get(), wqeTasks, 0, 0, false, MakeManagerDbSqeProfInfo(false)),
         HCCL_SUCCESS);
     EXPECT_EQ(entry_->wqeTaskArrayInfos_.size(), 1U);
 }
@@ -188,7 +192,7 @@ TEST_F(AicpuTaskCacheManagerTest, AddSqeArray_NeedCacheTaskFalse_ReturnsInternal
 {
     SetCacheFullState();
     std::vector<uint8_t> sqeArray(Hccl::AC_SQE_SIZE, 0);
-    Rt91095StarsSqeHeader *header = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeArray.data());
+    Rt91095StarsSqeHeader* header = reinterpret_cast<Rt91095StarsSqeHeader*>(sqeArray.data());
     header->type = static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_WAIT);
     EXPECT_EQ(
         AicpuTaskCacheManager::AddSqeArray(rtsqPtr_, aicpuTsThread_.get(), 1, sqeArray.data(), 0), HCCL_E_INTERNAL);
@@ -198,7 +202,7 @@ TEST_F(AicpuTaskCacheManagerTest, AddSqeArray_CacheHit_ReturnsInternal)
 {
     SetCacheHitState(entry_.get());
     std::vector<uint8_t> sqeArray(Hccl::AC_SQE_SIZE, 0);
-    Rt91095StarsSqeHeader *header = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeArray.data());
+    Rt91095StarsSqeHeader* header = reinterpret_cast<Rt91095StarsSqeHeader*>(sqeArray.data());
     header->type = static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_WAIT);
     EXPECT_EQ(
         AicpuTaskCacheManager::AddSqeArray(rtsqPtr_, aicpuTsThread_.get(), 1, sqeArray.data(), 0), HCCL_E_INTERNAL);
@@ -222,7 +226,7 @@ TEST_F(AicpuTaskCacheManagerTest, AddSqeArray_Success_DelegatesToEntry)
 {
     SetNeedCacheTaskState(entry_.get());
     std::vector<uint8_t> sqeArray(Hccl::AC_SQE_SIZE, 0);
-    Rt91095StarsSqeHeader *header = reinterpret_cast<Rt91095StarsSqeHeader *>(sqeArray.data());
+    Rt91095StarsSqeHeader* header = reinterpret_cast<Rt91095StarsSqeHeader*>(sqeArray.data());
     header->type = static_cast<uint8_t>(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_WAIT);
     EXPECT_EQ(AicpuTaskCacheManager::AddSqeArray(rtsqPtr_, aicpuTsThread_.get(), 1, sqeArray.data(), 0), HCCL_SUCCESS);
     EXPECT_EQ(entry_->sqeArrayInfos_.size(), 1U);
@@ -249,7 +253,7 @@ TEST_F(AicpuTaskCacheManagerTest, StaticMembers_SetAndGet)
 
 TEST_F(AicpuTaskCacheManagerTest, AicpuTaskCache_GlobalInstance_Usable)
 {
-    AicpuTaskCacheEntry *entryPtr = nullptr;
+    AicpuTaskCacheEntry* entryPtr = nullptr;
     ASSERT_EQ(AicpuTaskCacheManager::aicpuTaskCache.AddEntry("manager_test_tag", &entryPtr), HCCL_SUCCESS);
     ASSERT_NE(entryPtr, nullptr);
     EXPECT_EQ(AicpuTaskCacheManager::aicpuTaskCache.ClearEntry("manager_test_tag"), HCCL_SUCCESS);

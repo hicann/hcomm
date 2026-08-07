@@ -21,24 +21,23 @@ extern "C" {
  * @brief CCU return value definition
  */
 typedef enum {
-    CCU_SUCCESS = 0,               /**< success */
-    CCU_E_PARA = 1,                /**< parameter error */
-    CCU_E_PTR = 2,                 /**< empty pointer */
-    CCU_E_INTERNAL = 4,            /**< internal error */
-    CCU_E_NOT_SUPPORT = 5,         /**< not support feature */
-    CCU_E_NOT_FOUND = 6,           /**< not found specific resource */
-    CCU_E_UNAVAIL = 7,             /**< resource unavailable */
-    CCU_E_RUNTIME = 15,             /**< runtime error */
+    CCU_SUCCESS = 0,       /**< success */
+    CCU_E_PARA = 1,        /**< parameter error */
+    CCU_E_PTR = 2,         /**< empty pointer */
+    CCU_E_INTERNAL = 4,    /**< internal error */
+    CCU_E_NOT_SUPPORT = 5, /**< not support feature */
+    CCU_E_NOT_FOUND = 6,   /**< not found specific resource */
+    CCU_E_UNAVAIL = 7,     /**< resource unavailable */
+    CCU_E_RUNTIME = 15,    /**< runtime error */
     CCU_E_DRV_START = 4096,
 
     CCU_E_DRV_INIT_FAILED = 4097,
-    CCU_E_DRV_BUSY  = 4098,
+    CCU_E_DRV_BUSY = 4098,
 
     CCU_E_DRV_END = 4224,
 
     CCU_E_RESERVED = 9216
 } CcuResult;
-
 
 /**
  * @brief CCU condition type for conditional jump
@@ -95,7 +94,7 @@ typedef struct {
     uint32_t addrOffset;
     uint32_t ccuBufferOffset;
     uint32_t eventOffset;
-    uint32_t varOffset;   // A6 专属,旧 CcuLoopGroupConfig 不含此字段
+    uint32_t varOffset; // A6 专属,旧 CcuLoopGroupConfig 不含此字段
     uint32_t reserved[8];
 } CcuLoopGroupCfg;
 
@@ -115,14 +114,14 @@ typedef uint64_t CcuLocalAddrHandle;
 
 typedef uint64_t CcuRemoteAddrHandle;
 
-typedef void *CcuKernelArg;
+typedef void* CcuKernelArg;
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 
 #ifdef __cplusplus
-static inline void CcuLoopCfgInit(CcuLoopCfg *cfg)
+static inline void CcuLoopCfgInit(CcuLoopCfg* cfg)
 {
     cfg->header.magic = CCU_CFG_MAGIC_WORD;
     cfg->header.version = CCU_LOOP_CFG_VERSION;
@@ -130,7 +129,7 @@ static inline void CcuLoopCfgInit(CcuLoopCfg *cfg)
     cfg->header.reserved = 0u;
 }
 
-static inline void CcuLoopGroupCfgInit(CcuLoopGroupCfg *cfg)
+static inline void CcuLoopGroupCfgInit(CcuLoopGroupCfg* cfg)
 {
     cfg->header.magic = CCU_CFG_MAGIC_WORD;
     cfg->header.version = CCU_LOOPGROUP_CFG_VERSION;

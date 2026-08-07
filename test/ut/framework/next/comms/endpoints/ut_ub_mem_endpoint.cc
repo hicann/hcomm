@@ -13,20 +13,11 @@
 
 class AivUbMemEndpointTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "AivUbMemEndpointTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "AivUbMemEndpointTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "AivUbMemEndpointTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "AivUbMemEndpointTest tests tear down." << std::endl; }
 
-    virtual void SetUp()
-    {
-        std::cout << "A Test case in AivUbMemEndpointTest SetUP" << std::endl;
-    }
+    virtual void SetUp() { std::cout << "A Test case in AivUbMemEndpointTest SetUP" << std::endl; }
 
     virtual void TearDown()
     {
@@ -63,7 +54,7 @@ TEST_F(AivUbMemEndpointTest, Ut_When_Register_Memory_NORMAL_Expect_Return_SUCCES
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     CommMem mem = CreateCommMem((void*)0x01, 10, COMM_MEM_TYPE_DEVICE);
-    void *memHandle;
+    void* memHandle;
 
     ret = HcommMemReg(endpointHandle, "memTag", &mem, &memHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -91,16 +82,16 @@ TEST_F(AivUbMemEndpointTest, Ut_When_Double_Unregister_After_Register_Expect_Ret
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     CommMem mem = CreateCommMem((void*)0x01, 10, COMM_MEM_TYPE_DEVICE);
-    void *memHandle;
+    void* memHandle;
 
     // 正常注册
     ret = HcommMemReg(endpointHandle, "memTag", &mem, &memHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    
+
     // 第一次注销，应该成功
     ret = HcommMemUnreg(endpointHandle, memHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    
+
     // 第二次注销同一个memHandle，应该失败
     ret = HcommMemUnreg(endpointHandle, memHandle);
     EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
@@ -114,7 +105,7 @@ TEST_F(AivUbMemEndpointTest, Ut_When_Register_Null_Memory_Expect_Return_Error)
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     CommMem mem = CreateCommMem(nullptr, 10, COMM_MEM_TYPE_DEVICE);
-    void *memHandle;
+    void* memHandle;
 
     ret = HcommMemReg(endpointHandle, "memTag", &mem, &memHandle);
     EXPECT_EQ(ret, HCCL_E_PTR);
@@ -128,7 +119,7 @@ TEST_F(AivUbMemEndpointTest, Ut_When_Register_Zero_Size_Memory_Expect_Return_Err
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     CommMem mem = CreateCommMem((void*)0x01, 0, COMM_MEM_TYPE_DEVICE);
-    void *memHandle;
+    void* memHandle;
 
     ret = HcommMemReg(endpointHandle, "memTag", &mem, &memHandle);
     EXPECT_EQ(ret, HCCL_E_PARA);
@@ -142,7 +133,7 @@ TEST_F(AivUbMemEndpointTest, Ut_When_Register_Invalid_MemType_Expect_Return_Erro
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     CommMem mem = CreateCommMem((void*)0x01, 10, COMM_MEM_TYPE_INVALID);
-    void *memHandle;
+    void* memHandle;
 
     ret = HcommMemReg(endpointHandle, "memTag", &mem, &memHandle);
     EXPECT_EQ(ret, HCCL_E_PARA);
@@ -177,19 +168,19 @@ TEST_F(AivUbMemEndpointTest, Ut_When_Unregister_Wrong_Handle_Expect_Return_Error
     // 在第一个endpoint上注册内存
     ret = HcommMemReg(endpointHandle1, "memTag1", &mem1, &memHandle1);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    
+
     // 在第二个endpoint上注册内存
     ret = HcommMemReg(endpointHandle2, "memTag2", &mem2, &memHandle2);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    
+
     // 使用第二个endpoint的memHandle2去第一个endpoint注销失败
     ret = HcommMemUnreg(endpointHandle1, memHandle2);
     EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
-    
+
     // 使用第一个endpoint的memHandle1去第二个endpoint注销失败
     ret = HcommMemUnreg(endpointHandle2, memHandle1);
     EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
-    
+
     // 正确注销：各自在自己的endpoint上注销自己的内存
     ret = HcommMemUnreg(endpointHandle1, memHandle1);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -205,7 +196,7 @@ TEST_F(AivUbMemEndpointTest, Ut_When_Double_Register_Unregister_Memory_Expect_Re
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     CommMem mem = CreateCommMem((void*)0x01, 10, COMM_MEM_TYPE_DEVICE);
-    void *memHandle;
+    void* memHandle;
 
     ret = HcommMemReg(endpointHandle, "memTag", &mem, &memHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);

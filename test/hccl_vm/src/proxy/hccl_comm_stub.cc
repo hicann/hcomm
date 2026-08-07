@@ -27,20 +27,19 @@
 #include "db_sim_runner_common.h"
 #include "db_sim_runner_ops.h"
 
-
 #ifdef __cplusplus
 extern "C" {
-#endif  // __cplusplus
-extern HcclResult HcclGetRootInfo(HcclRootInfo *rootInfo);
-extern HcclResult HcclCommInitRootInfo(uint32_t nRanks, const HcclRootInfo *rootInfo, uint32_t rank, HcclComm *comm);
-extern HcclResult HcclCommInitRootInfoConfig(uint32_t nRanks, const HcclRootInfo *rootInfo, uint32_t rank,
-    const HcclCommConfig *config, HcclComm *comm);
-extern HcclResult HcclCommInitClusterInfo(const char *clusterInfo, uint32_t rank, HcclComm *comm);
-extern HcclResult HcclCommInitClusterInfoConfig(const char *clusterInfo, uint32_t rank,
-    HcclCommConfig *config, HcclComm *comm);
+#endif // __cplusplus
+extern HcclResult HcclGetRootInfo(HcclRootInfo* rootInfo);
+extern HcclResult HcclCommInitRootInfo(uint32_t nRanks, const HcclRootInfo* rootInfo, uint32_t rank, HcclComm* comm);
+extern HcclResult HcclCommInitRootInfoConfig(
+    uint32_t nRanks, const HcclRootInfo* rootInfo, uint32_t rank, const HcclCommConfig* config, HcclComm* comm);
+extern HcclResult HcclCommInitClusterInfo(const char* clusterInfo, uint32_t rank, HcclComm* comm);
+extern HcclResult
+HcclCommInitClusterInfoConfig(const char* clusterInfo, uint32_t rank, HcclCommConfig* config, HcclComm* comm);
 extern HcclResult HcclCommDestroy(HcclComm comm);
 
-void SimimSetThreadName(const std::string &threadStr)
+void SimimSetThreadName(const std::string& threadStr)
 {
     // 线程名应限制在15个字符内，防止被截断
     s32 sRet = pthread_setname_np(pthread_self(), threadStr.c_str());
@@ -49,16 +48,16 @@ void SimimSetThreadName(const std::string &threadStr)
     }
 }
 
-HcclResult HcclGetRootInfo(HcclRootInfo *rootInfo)
+HcclResult HcclGetRootInfo(HcclRootInfo* rootInfo)
 {
-    (void) rootInfo;
+    (void)rootInfo;
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommInitRootInfo(uint32_t nRanks, const HcclRootInfo *rootInfo, uint32_t rank, HcclComm *comm)
+HcclResult HcclCommInitRootInfo(uint32_t nRanks, const HcclRootInfo* rootInfo, uint32_t rank, HcclComm* comm)
 {
-    (void) nRanks;
-    (void) rootInfo;
+    (void)nRanks;
+    (void)rootInfo;
     // 解析ranktable文件，初始化通信域相关数据库表项
     const char* clusterInfo = std::getenv("RANK_TABLE_FILE");
     if (!clusterInfo) {
@@ -69,21 +68,21 @@ HcclResult HcclCommInitRootInfo(uint32_t nRanks, const HcclRootInfo *rootInfo, u
     return HcclCommInitClusterInfo(clusterInfo, rank, comm);
 }
 
-HcclResult HcclCommInitRootInfoConfig(uint32_t nRanks, const HcclRootInfo *rootInfo, uint32_t rank,
-    const HcclCommConfig *config, HcclComm *comm)
+HcclResult HcclCommInitRootInfoConfig(
+    uint32_t nRanks, const HcclRootInfo* rootInfo, uint32_t rank, const HcclCommConfig* config, HcclComm* comm)
 {
     HCCL_VM_INFO("xxxxxxxxxx");
-    (void) nRanks;
-    (void) rootInfo;
+    (void)nRanks;
+    (void)rootInfo;
     const char* clusterInfo = getenv("RANK_TABLE_FILE");
-    HcclCommConfig *cfg = const_cast<HcclCommConfig *>(config);
+    HcclCommConfig* cfg = const_cast<HcclCommConfig*>(config);
     return HcclCommInitClusterInfoConfig(clusterInfo, rank, cfg, comm);
 }
 
-HcclResult SimGetDeviceComm(uint32_t ndev, const uint32_t rank, const uint32_t logicDeviceId, HcclComm &comm)
+HcclResult SimGetDeviceComm(uint32_t ndev, const uint32_t rank, const uint32_t logicDeviceId, HcclComm& comm)
 {
     HCCL_VM_INFO("rank[{}] Get device comm...", rank);
-    //给当前线程添加名字
+    // 给当前线程添加名字
     SimimSetThreadName("Hccl_GetDevComm");
 
     if (aclrtSetDevice(logicDeviceId) != ACL_SUCCESS) {
@@ -110,7 +109,7 @@ HcclResult SimGetDeviceComm(uint32_t ndev, const uint32_t rank, const uint32_t l
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommInitAll(uint32_t ndev, int32_t *devices, HcclComm *comms)
+HcclResult HcclCommInitAll(uint32_t ndev, int32_t* devices, HcclComm* comms)
 {
     HCCL_VM_INFO("xxxxxxxxxx");
     HCCL_VM_INFO("Init all comm...");
@@ -128,8 +127,8 @@ HcclResult HcclCommInitAll(uint32_t ndev, int32_t *devices, HcclComm *comms)
 
     std::vector<std::unique_ptr<std::thread>> threads(ndev);
     for (uint32_t rankId = 0; rankId < ndev; rankId++) {
-        threads[rankId].reset(new (std::nothrow) std::thread(&SimGetDeviceComm, ndev, rankId,
-            devices[rankId], std::ref(comms[rankId])));
+        threads[rankId].reset(
+            new (std::nothrow) std::thread(&SimGetDeviceComm, ndev, rankId, devices[rankId], std::ref(comms[rankId])));
         if (!threads[rankId]) {
             HCCL_VM_ERROR("threads[{}] start failed ", rankId);
             return HcclResult::HCCL_E_INTERNAL;
@@ -167,4 +166,4 @@ HcclResult HcclCommInitAll(uint32_t ndev, int32_t *devices, HcclComm *comms)
 
 #ifdef __cplusplus
 }
-#endif  // __cplusplus
+#endif // __cplusplus

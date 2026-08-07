@@ -15,8 +15,8 @@
 namespace hccl {
 class CollReduceScatterOrderPreservedFor91093Executor : public CollReduceScatterExecutor {
 public:
-    explicit CollReduceScatterOrderPreservedFor91093Executor(const HcclDispatcher dispatcher,
-        std::unique_ptr<TopoMatcher> &topoMatcher);
+    explicit CollReduceScatterOrderPreservedFor91093Executor(
+        const HcclDispatcher dispatcher, std::unique_ptr<TopoMatcher>& topoMatcher);
 
 private:
     void ParseParam(const OpParam& param) override;
@@ -25,18 +25,21 @@ private:
     u32 CalReduceStreamNum(const u32& localRankSize) const;
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel1CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel1CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcLevel2CommInfo(TransportMemType inputType, TransportMemType outputType,
+    HcclResult CalcLevel2CommInfo(
+        TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType &inputType, TransportMemType &outputType) const;
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const;
 
     /* *************** 算法编排 *************** */
     bool IsSmallData(const u64 totalSize, const u64 curSize) override;
-    HcclResult KernelRun(const OpParam &param, ExecMem &execMem) override;
-    HcclResult RunReduceScatterLevel1(const OpParam &param, ExecMem &execMem, SubCommInfo &level1CommInfo);
-    HcclResult RunReduceScatterLevel2(const OpParam &param, ExecMem &execMem, SubCommInfo &level1CommInfo);
-    HcclResult RunReduceScatterLevel1SingleRank(const OpParam &param, ExecMem &execMem, const SubCommInfo &level1CommInfo) const;
+    HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
+    HcclResult RunReduceScatterLevel1(const OpParam& param, ExecMem& execMem, SubCommInfo& level1CommInfo);
+    HcclResult RunReduceScatterLevel2(const OpParam& param, ExecMem& execMem, SubCommInfo& level1CommInfo);
+    HcclResult
+    RunReduceScatterLevel1SingleRank(const OpParam& param, ExecMem& execMem, const SubCommInfo& level1CommInfo) const;
 
     u32 all2allOffset_ = 0;
 };

@@ -9,7 +9,8 @@
  */
 #include "gtest/gtest.h"
 
-GTEST_API_ int main(int argc, char **argv) {
+GTEST_API_ int main(int argc, char** argv)
+{
     // testcase调试代码，只跑特定的用例
     // testing::GTEST_FLAG(filter) = "BroadCastCCUTest.broadcast_ccu_case_test_4rank_512k_count";
     testing::InitGoogleTest(&argc, argv);

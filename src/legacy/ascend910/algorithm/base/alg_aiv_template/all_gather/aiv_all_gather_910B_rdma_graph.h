@@ -17,15 +17,16 @@ using namespace AscendC;
 
 #define FORCE_INLINE_AICORE __attribute__((always_inline)) inline __aicore__
 
-template<typename T>
+template <typename T>
 class AivAllGather910BRdmaGraph : public AivCommBase {
 public:
-    FORCE_INLINE_AICORE  AivAllGather910BRdmaGraph() {}
+    FORCE_INLINE_AICORE AivAllGather910BRdmaGraph() {}
 
     /**
      *  8个核就够拉整个8个不同卡cclOut到userOut了
      */
-    FORCE_INLINE_AICORE void Process(GM_ADDR input, GM_ADDR output, uint64_t len, int32_t tag, uint64_t bufferSize, uint64_t serverNum)
+    FORCE_INLINE_AICORE void
+    Process(GM_ADDR input, GM_ADDR output, uint64_t len, int32_t tag, uint64_t bufferSize, uint64_t serverNum)
     {
         if (blockIdx_ >= rankSize_) {
             return;
@@ -33,22 +34,24 @@ public:
 
         if (blockIdx_ == 0) {
             // 本卡该片数据已经可以被跨片读取
-            SetSignalValue((__gm__ int32_t *)(GM_IN[rank_]), localSetTensor, tag); 
+            SetSignalValue((__gm__ int32_t*)(GM_IN[rank_]), localSetTensor, tag);
         }
-        WaitSignalValue((__gm__ int32_t *)(GM_IN[blockIdx_]), localCheckTensor, tag);
+        WaitSignalValue((__gm__ int32_t*)(GM_IN[blockIdx_]), localCheckTensor, tag);
 
         for (int i = 0; i < serverNum; i++) {
             if (blockIdx_ == rank_) {
                 break;
             }
             int64_t receiveSizeOffset = (i * rankSize_ + blockIdx_) * len * sizeof(T);
-            CpGM2GM<T>((__gm__ T*)((__gm__ char*)output + receiveSizeOffset), (__gm__ T*)((__gm__ char*)(GM_OUT[blockIdx_]) + receiveSizeOffset), len);
+            CpGM2GM<T>(
+                (__gm__ T*)((__gm__ char*)output + receiveSizeOffset),
+                (__gm__ T*)((__gm__ char*)(GM_OUT[blockIdx_]) + receiveSizeOffset), len);
         }
 
         if (blockIdx_ == 0) {
-            SetSignalValue((__gm__ int32_t *)(GM_IN[rank_]) + 8, localSetTensor, tag); 
+            SetSignalValue((__gm__ int32_t*)(GM_IN[rank_]) + 8, localSetTensor, tag);
         }
-        WaitSignalValue((__gm__ int32_t *)(GM_IN[blockIdx_]) + 8, localCheckTensor, tag);
+        WaitSignalValue((__gm__ int32_t*)(GM_IN[blockIdx_]) + 8, localCheckTensor, tag);
     }
 };
 

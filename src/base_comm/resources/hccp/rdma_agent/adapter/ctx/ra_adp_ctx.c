@@ -57,12 +57,10 @@ struct RsCtxOps gRaRsCtxOps = {
 
 int RaRsGetDevEidInfoNum(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
-    union OpGetDevEidInfoNumData *opData = (union OpGetDevEidInfoNumData *)(inBuf +
-        sizeof(struct MsgHead));
+    union OpGetDevEidInfoNumData *opData = (union OpGetDevEidInfoNumData *)(inBuf + sizeof(struct MsgHead));
     unsigned int num = 0;
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetDevEidInfoNumData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetDevEidInfoNumData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     *opResult = gRaRsCtxOps.getDevEidInfoNum(opData->txData.phyId, &num);
     CHK_PRT_RETURN(*opResult != 0, hccp_err("[get][eid]get_dev_eid_info_num failed, ret[%d].", *opResult), 0);
@@ -74,21 +72,19 @@ int RaRsGetDevEidInfoNum(char *inBuf, char *outBuf, int *outLen, int *opResult, 
 
 int RaRsGetDevEidInfoList(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
-    union OpGetDevEidInfoListData *opData = (union OpGetDevEidInfoListData *)(inBuf +
-        sizeof(struct MsgHead));
+    union OpGetDevEidInfoListData *opData = (union OpGetDevEidInfoListData *)(inBuf + sizeof(struct MsgHead));
     struct HccpDevEidInfo infoList[MAX_DEV_INFO_TRANS_NUM] = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetDevEidInfoListData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetDevEidInfoListData), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_LEN_RET_HOST(opData->txData.count, 0, MAX_DEV_INFO_TRANS_NUM, opResult);
 
-    *opResult = gRaRsCtxOps.getDevEidInfoList(opData->txData.phyId, infoList,
-        opData->txData.startIndex, opData->txData.count);
+    *opResult = gRaRsCtxOps.getDevEidInfoList(opData->txData.phyId, infoList, opData->txData.startIndex,
+        opData->txData.count);
     CHK_PRT_RETURN(*opResult != 0, hccp_err("[get][eid]get_dev_eid_info_list failed, ret[%d].", *opResult), 0);
 
     opData = (union OpGetDevEidInfoListData *)(outBuf + sizeof(struct MsgHead));
-    (void)memcpy_s(opData->rxData.infoList, sizeof(struct HccpDevEidInfo) * MAX_DEV_INFO_TRANS_NUM,
-        infoList, sizeof(struct HccpDevEidInfo) * MAX_DEV_INFO_TRANS_NUM);
+    (void)memcpy_s(opData->rxData.infoList, sizeof(struct HccpDevEidInfo) * MAX_DEV_INFO_TRANS_NUM, infoList,
+        sizeof(struct HccpDevEidInfo) * MAX_DEV_INFO_TRANS_NUM);
     return 0;
 }
 
@@ -99,8 +95,7 @@ int RaRsCtxInit(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBu
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxInitData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
-    *opResult = gRaRsCtxOps.ctxInit(&opData->txData.attr, &opDataOut->rxData.devIndex,
-        &opDataOut->rxData.devAttr);
+    *opResult = gRaRsCtxOps.ctxInit(&opData->txData.attr, &opDataOut->rxData.devIndex, &opDataOut->rxData.devAttr);
     if (*opResult != 0) {
         hccp_err("[init][ra_rs_ctx]init failed, ret[%d]", *opResult);
     }
@@ -110,23 +105,19 @@ int RaRsCtxInit(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBu
 
 int RaRsCtxGetAsyncEvents(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
-    union OpCtxGetAsyncEventsData *opDataOut =
-        (union OpCtxGetAsyncEventsData *)(outBuf + sizeof(struct MsgHead));
-    union OpCtxGetAsyncEventsData *opData =
-        (union OpCtxGetAsyncEventsData *)(inBuf + sizeof(struct MsgHead));
+    union OpCtxGetAsyncEventsData *opDataOut = (union OpCtxGetAsyncEventsData *)(outBuf + sizeof(struct MsgHead));
+    union OpCtxGetAsyncEventsData *opData = (union OpCtxGetAsyncEventsData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxGetAsyncEventsData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxGetAsyncEventsData), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_LEN_RET_HOST(opData->txData.num, 0, ASYNC_EVENT_MAX_NUM, opResult);
 
     opDataOut->rxData.num = opData->txData.num;
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
-    *opResult = gRaRsCtxOps.ctxGetAsyncEvents(&devInfo, opDataOut->rxData.events,
-        &opDataOut->rxData.num);
+    *opResult = gRaRsCtxOps.ctxGetAsyncEvents(&devInfo, opDataOut->rxData.events, &opDataOut->rxData.num);
     if (*opResult != 0) {
-        hccp_err("[get][async_events]ctx_get_async_events failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[get][async_events]ctx_get_async_events failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult,
+            devInfo.phyId, devInfo.devIndex);
     }
 
     return 0;
@@ -142,8 +133,8 @@ int RaRsCtxDeinit(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcv
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     *opResult = gRaRsCtxOps.ctxDeinit(&devInfo);
     if (*opResult != 0) {
-        hccp_err("[deinit][ra_rs_ctx]deinit failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[deinit][ra_rs_ctx]deinit failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
 
     return 0;
@@ -160,11 +151,9 @@ int RaRsGetEidByIp(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
 
     opDataOut->rxData.num = opData->txData.num;
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
-    *opResult = gRaRsCtxOps.getEidByIp(&devInfo, opData->txData.ip, opDataOut->rxData.eid,
-        &opDataOut->rxData.num);
+    *opResult = gRaRsCtxOps.getEidByIp(&devInfo, opData->txData.ip, opDataOut->rxData.eid, &opDataOut->rxData.num);
     if (*opResult != 0) {
-        hccp_err("[get][eid_by_ip]get_eid_by_ip failed, ret[%d], phyId[%u]", *opResult,
-            opData->txData.phyId);
+        hccp_err("[get][eid_by_ip]get_eid_by_ip failed, ret[%d], phyId[%u]", *opResult, opData->txData.phyId);
     }
 
     return 0;
@@ -181,11 +170,9 @@ int RaRsGetIpByEid(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
 
     opDataOut->rxData.num = opData->txData.num;
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
-    *opResult = gRaRsCtxOps.getIpByEid(&devInfo, opData->txData.eid, opDataOut->rxData.ip,
-        &opDataOut->rxData.num);
+    *opResult = gRaRsCtxOps.getIpByEid(&devInfo, opData->txData.eid, opDataOut->rxData.ip, &opDataOut->rxData.num);
     if (*opResult != 0) {
-        hccp_err("[get][IpByEid]getIpByEid failed, ret[%d], phyId[%u]", *opResult,
-            opData->txData.phyId);
+        hccp_err("[get][IpByEid]getIpByEid failed, ret[%d], phyId[%u]", *opResult, opData->txData.phyId);
     }
 
     return 0;
@@ -197,8 +184,7 @@ int RaRsGetTpInfoList(char *inBuf, char *outBuf, int *outLen, int *opResult, int
     union OpGetTpInfoListData *opData = (union OpGetTpInfoListData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetTpInfoListData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetTpInfoListData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(opData->txData.num, 0, HCCP_MAX_TPID_INFO_NUM, opResult);
     opDataOut->rxData.num = opData->txData.num;
@@ -206,8 +192,8 @@ int RaRsGetTpInfoList(char *inBuf, char *outBuf, int *outLen, int *opResult, int
     *opResult = gRaRsCtxOps.getTpInfoList(&devInfo, &opData->txData.cfg, opDataOut->rxData.infoList,
         &opDataOut->rxData.num);
     if (*opResult != 0) {
-        hccp_err("[get][ra_rs_ctx]get_tp_info_list failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[get][ra_rs_ctx]get_tp_info_list failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
 
     return 0;
@@ -219,13 +205,12 @@ int RaRsGetTpAttr(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcv
     union OpGetTpAttrData *opData = (union OpGetTpAttrData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetTpAttrData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetTpAttrData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     opDataOut->rxData.attrBitmap = opData->txData.attrBitmap;
-    *opResult = gRaRsCtxOps.getTpAttr(&devInfo, &opDataOut->rxData.attrBitmap,
-        opData->txData.tpHandle, &opDataOut->rxData.attr);
+    *opResult = gRaRsCtxOps.getTpAttr(&devInfo, &opDataOut->rxData.attrBitmap, opData->txData.tpHandle,
+        &opDataOut->rxData.attr);
     if (*opResult != 0) {
         hccp_err("[get_tp_attr][ra_rs_ctx]get attr failed, ret[%d], phyId[%u]", *opResult, opData->txData.phyId);
     }
@@ -238,12 +223,11 @@ int RaRsSetTpAttr(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcv
     union OpSetTpAttrData *opData = (union OpSetTpAttrData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSetTpAttrData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSetTpAttrData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
-    *opResult = gRaRsCtxOps.setTpAttr(&devInfo, opData->txData.attrBitmap,
-        opData->txData.tpHandle, &opData->txData.attr);
+    *opResult = gRaRsCtxOps.setTpAttr(&devInfo, opData->txData.attrBitmap, opData->txData.tpHandle,
+        &opData->txData.attr);
     if (*opResult != 0) {
         hccp_err("[set_tp_attr][ra_rs_ctx]set attr failed, ret[%d], phyId[%u]", *opResult, opData->txData.phyId);
     }
@@ -257,15 +241,13 @@ int RaRsCtxTokenIdAlloc(char *inBuf, char *outBuf, int *outLen, int *opResult, i
     union OpTokenIdAllocData *opData = (union OpTokenIdAllocData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpTokenIdAllocData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpTokenIdAllocData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
-    *opResult = gRaRsCtxOps.ctxTokenIdAlloc(&devInfo, &opDataOut->rxData.addr,
-        &opDataOut->rxData.tokenId);
+    *opResult = gRaRsCtxOps.ctxTokenIdAlloc(&devInfo, &opDataOut->rxData.addr, &opDataOut->rxData.tokenId);
     if (*opResult != 0) {
-        hccp_err("[init][ra_rs_token_id]alloc failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[init][ra_rs_token_id]alloc failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
     return 0;
 }
@@ -275,14 +257,13 @@ int RaRsCtxTokenIdFree(char *inBuf, char *outBuf, int *outLen, int *opResult, in
     union OpTokenIdFreeData *opData = (union OpTokenIdFreeData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpTokenIdFreeData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpTokenIdFreeData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     *opResult = gRaRsCtxOps.ctxTokenIdFree(&devInfo, opData->txData.addr);
     if (*opResult != 0) {
-        hccp_err("[deinit][ra_rs_token_id]free failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[deinit][ra_rs_token_id]free failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
     return 0;
 }
@@ -298,8 +279,8 @@ int RaRsLmemReg(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBu
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     *opResult = gRaRsCtxOps.ctxLmemReg(&devInfo, &opData->txData.memAttr, &opDataOut->rxData.memInfo);
     if (*opResult != 0) {
-        hccp_err("[init][ra_rs_lmem]reg failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[init][ra_rs_lmem]reg failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
 
     return 0;
@@ -310,14 +291,13 @@ int RaRsLmemUnreg(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcv
     union OpLmemUnregInfoData *opData = (union OpLmemUnregInfoData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpLmemUnregInfoData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpLmemUnregInfoData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     *opResult = gRaRsCtxOps.ctxLmemUnreg(&devInfo, opData->txData.addr);
     if (*opResult != 0) {
-        hccp_err("[deinit][ra_rs_lmem]unreg failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[deinit][ra_rs_lmem]unreg failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
 
     return 0;
@@ -329,14 +309,13 @@ int RaRsRmemImport(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
     union OpRmemImportInfoData *opData = (union OpRmemImportInfoData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpRmemImportInfoData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpRmemImportInfoData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     *opResult = gRaRsCtxOps.ctxRmemImport(&devInfo, &opData->txData.memAttr, &opDataOut->rxData.memInfo);
     if (*opResult != 0) {
-        hccp_err("[init][ra_rs_rmem]import failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[init][ra_rs_rmem]import failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
 
     return 0;
@@ -347,14 +326,13 @@ int RaRsRmemUnimport(char *inBuf, char *outBuf, int *outLen, int *opResult, int 
     union OpRmemUnimportInfoData *opData = (union OpRmemUnimportInfoData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpRmemUnimportInfoData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpRmemUnimportInfoData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     *opResult = gRaRsCtxOps.ctxRmemUnimport(&devInfo, opData->txData.addr);
     if (*opResult != 0) {
-        hccp_err("[deinit][ra_rs_rmem]unimport failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[deinit][ra_rs_rmem]unimport failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
 
     return 0;
@@ -366,15 +344,14 @@ int RaRsCtxChanCreate(char *inBuf, char *outBuf, int *outLen, int *opResult, int
     union OpCtxChanCreateData *opData = (union OpCtxChanCreateData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxChanCreateData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxChanCreateData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
-    *opResult = gRaRsCtxOps.ctxChanCreate(&devInfo, opData->txData.dataPlaneFlag,
-        &opDataOut->rxData.addr, &opDataOut->rxData.fd);
+    *opResult = gRaRsCtxOps.ctxChanCreate(&devInfo, opData->txData.dataPlaneFlag, &opDataOut->rxData.addr,
+        &opDataOut->rxData.fd);
     if (*opResult != 0) {
-        hccp_err("[init][ra_rs_chan]create failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[init][ra_rs_chan]create failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
 
     return 0;
@@ -390,8 +367,8 @@ int RaRsCtxChanDestroy(char *inBuf, char *outBuf, int *outLen, int *opResult, in
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     *opResult = gRaRsCtxOps.ctxChanDestroy(&devInfo, opData->txData.addr);
     if (*opResult != 0) {
-        hccp_err("[deinit][ra_rs_chan]destroy failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[deinit][ra_rs_chan]destroy failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
 
     return 0;
@@ -408,8 +385,8 @@ int RaRsCtxCqCreate(char *inBuf, char *outBuf, int *outLen, int *opResult, int r
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     *opResult = gRaRsCtxOps.ctxCqCreate(&devInfo, &opData->txData.attr, &opDataOut->rxData.info);
     if (*opResult != 0) {
-        hccp_err("[init][ra_rs_cq]create failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[init][ra_rs_cq]create failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
 
     return 0;
@@ -420,14 +397,13 @@ int RaRsCtxCqDestroy(char *inBuf, char *outBuf, int *outLen, int *opResult, int 
     union OpCtxCqDestroyData *opData = (union OpCtxCqDestroyData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxCqDestroyData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxCqDestroyData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     *opResult = gRaRsCtxOps.ctxCqDestroy(&devInfo, opData->txData.addr);
     if (*opResult != 0) {
-        hccp_err("[deinit][ra_rs_cq]destroy failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[deinit][ra_rs_cq]destroy failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
 
     return 0;
@@ -444,8 +420,8 @@ int RaRsCtxQpCreate(char *inBuf, char *outBuf, int *outLen, int *opResult, int r
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     *opResult = gRaRsCtxOps.ctxQpCreate(&devInfo, &opData->txData.qpAttr, &opDataOut->rxData.qpInfo);
     if (*opResult != 0) {
-        hccp_err("[init][ra_rs_qp]create failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[init][ra_rs_qp]create failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
 
     return 0;
@@ -454,12 +430,10 @@ int RaRsCtxQpCreate(char *inBuf, char *outBuf, int *outLen, int *opResult, int r
 int RaRsCtxQpQueryBatch(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
     union OpCtxQpQueryBatchData *opData = (union OpCtxQpQueryBatchData *)(inBuf + sizeof(struct MsgHead));
-    union OpCtxQpQueryBatchData *opDataOut = (union OpCtxQpQueryBatchData *)(outBuf +
-        sizeof(struct MsgHead));
+    union OpCtxQpQueryBatchData *opDataOut = (union OpCtxQpQueryBatchData *)(outBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxQpQueryBatchData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxQpQueryBatchData), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_LEN_RET_HOST(opData->txData.num, 0, HCCP_MAX_QP_QUERY_NUM, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
@@ -478,29 +452,31 @@ int RaRsCtxQpDestroy(char *inBuf, char *outBuf, int *outLen, int *opResult, int 
     union OpCtxQpDestroyData *opData = (union OpCtxQpDestroyData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxQpDestroyData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxQpDestroyData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
 
     *opResult = gRaRsCtxOps.ctxQpDestroy(&devInfo, opData->txData.id);
-    CHK_PRT_RETURN(*opResult == -ENODEV, hccp_warn("[deinit][ra_rs_qp]jetty not found, ret[%d] phyId[%u] "
-        "devIndex[0x%x] qpId[%u]", *opResult, devInfo.phyId, devInfo.devIndex, opData->txData.id), 0);
-    CHK_PRT_RETURN(*opResult != 0, hccp_err("[deinit][ra_rs_qp]destroy failed, ret[%d] phyId[%u] devIndex[0x%x] "
-        "qpId[%u]", *opResult, devInfo.phyId, devInfo.devIndex, opData->txData.id), 0);
+    CHK_PRT_RETURN(*opResult == -ENODEV,
+        hccp_warn("[deinit][ra_rs_qp]jetty not found, ret[%d] phyId[%u] "
+                  "devIndex[0x%x] qpId[%u]",
+            *opResult, devInfo.phyId, devInfo.devIndex, opData->txData.id),
+        0);
+    CHK_PRT_RETURN(*opResult != 0,
+        hccp_err("[deinit][ra_rs_qp]destroy failed, ret[%d] phyId[%u] devIndex[0x%x] "
+                 "qpId[%u]",
+            *opResult, devInfo.phyId, devInfo.devIndex, opData->txData.id),
+        0);
     return 0;
 }
 
 int RaRsCtxQpDestroyBatch(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
-    union OpCtxQpDestroyBatchData *opDataOut = (union OpCtxQpDestroyBatchData *)(outBuf +
-        sizeof(struct MsgHead));
-    union OpCtxQpDestroyBatchData *opData = (union OpCtxQpDestroyBatchData *)(inBuf +
-        sizeof(struct MsgHead));
+    union OpCtxQpDestroyBatchData *opDataOut = (union OpCtxQpDestroyBatchData *)(outBuf + sizeof(struct MsgHead));
+    union OpCtxQpDestroyBatchData *opData = (union OpCtxQpDestroyBatchData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxQpDestroyBatchData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxQpDestroyBatchData), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_LEN_RET_HOST(opData->txData.num, 0, HCCP_MAX_QP_DESTROY_BATCH_NUM, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
@@ -528,8 +504,8 @@ int RaRsCtxQpImport(char *inBuf, char *outBuf, int *outLen, int *opResult, int r
     importAttr.attr = opData->txData.attr;
     *opResult = gRaRsCtxOps.ctxQpImport(&devInfo, &importAttr, &importInfo);
     if (*opResult != 0) {
-        hccp_err("[init][ra_rs_qp]import failed, ret[%d] phyId[%u] devIndex[0x%x]",
-            *opResult, devInfo.phyId, devInfo.devIndex);
+        hccp_err("[init][ra_rs_qp]import failed, ret[%d] phyId[%u] devIndex[0x%x]", *opResult, devInfo.phyId,
+            devInfo.devIndex);
     }
 
     opDataOut->rxData.remJettyId = importInfo.remJettyId;
@@ -586,8 +562,8 @@ int RaRsCtxQpBind(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcv
     remoteQpInfo.key = opData->txData.remoteQpKey;
     *opResult = gRaRsCtxOps.ctxQpBind(&devInfo, &localQpInfo, &remoteQpInfo);
     if (*opResult != 0) {
-        hccp_err("[init][ra_rs_qp]bind failed, ret[%d] phyId[%u] devIndex[0x%x] qpId[%u] rem_qp_id[%u]",
-            *opResult, devInfo.phyId, devInfo.devIndex, opData->txData.id, opData->txData.remId);
+        hccp_err("[init][ra_rs_qp]bind failed, ret[%d] phyId[%u] devIndex[0x%x] qpId[%u] rem_qp_id[%u]", *opResult,
+            devInfo.phyId, devInfo.devIndex, opData->txData.id, opData->txData.remId);
     }
 
     return 0;
@@ -603,30 +579,34 @@ int RaRsCtxQpUnbind(char *inBuf, char *outBuf, int *outLen, int *opResult, int r
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
 
     *opResult = gRaRsCtxOps.ctxQpUnbind(&devInfo, opData->txData.id);
-    CHK_PRT_RETURN(*opResult == -ENODEV, hccp_warn("[deinit][ra_rs_qp]jetty not found, ret[%d] phyId[%u] "
-        "devIndex[0x%x] qpId[%u]", *opResult, devInfo.phyId, devInfo.devIndex, opData->txData.id), 0);
-    CHK_PRT_RETURN(*opResult != 0, hccp_err("[deinit][ra_rs_qp]unbind failed, ret[%d] phyId[%u] devIndex[0x%x] "
-        "qpId[%u]", *opResult, devInfo.phyId, devInfo.devIndex, opData->txData.id), 0);
+    CHK_PRT_RETURN(*opResult == -ENODEV,
+        hccp_warn("[deinit][ra_rs_qp]jetty not found, ret[%d] phyId[%u] "
+                  "devIndex[0x%x] qpId[%u]",
+            *opResult, devInfo.phyId, devInfo.devIndex, opData->txData.id),
+        0);
+    CHK_PRT_RETURN(*opResult != 0,
+        hccp_err("[deinit][ra_rs_qp]unbind failed, ret[%d] phyId[%u] devIndex[0x%x] "
+                 "qpId[%u]",
+            *opResult, devInfo.phyId, devInfo.devIndex, opData->txData.id),
+        0);
     return 0;
 }
 
 int RaRsCtxBatchSendWr(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
     union OpCtxBatchSendWrData *opData = (union OpCtxBatchSendWrData *)(inBuf + sizeof(struct MsgHead));
-    union OpCtxBatchSendWrData *opDataOut = (union OpCtxBatchSendWrData *)(outBuf +
-        sizeof(struct MsgHead));
+    union OpCtxBatchSendWrData *opDataOut = (union OpCtxBatchSendWrData *)(outBuf + sizeof(struct MsgHead));
     struct WrlistSendCompleteNum wrlistNum = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxBatchSendWrData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxBatchSendWrData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     wrlistNum.sendNum = opData->txData.sendNum;
     wrlistNum.completeNum = &opDataOut->rxData.completeNum;
-    *opResult = gRaRsCtxOps.ctxBatchSendWr(&opData->txData.baseInfo, opData->txData.wrData,
-        opDataOut->rxData.wrResp, &wrlistNum);
+    *opResult = gRaRsCtxOps.ctxBatchSendWr(&opData->txData.baseInfo, opData->txData.wrData, opDataOut->rxData.wrResp,
+        &wrlistNum);
     if (*opResult != 0) {
-        hccp_err("[send][ra_rs_ctx]batch send wr failed, ret[%d] qpId[%u] sendNum[%d] completeNum[%d]",
-            *opResult, opData->txData.baseInfo.qpn, wrlistNum.sendNum, *wrlistNum.completeNum);
+        hccp_err("[send][ra_rs_ctx]batch send wr failed, ret[%d] qpId[%u] sendNum[%d] completeNum[%d]", *opResult,
+            opData->txData.baseInfo.qpn, wrlistNum.sendNum, *wrlistNum.completeNum);
     }
 
     return 0;
@@ -642,8 +622,8 @@ int RaRsCtxUpdateCi(char *inBuf, char *outBuf, int *outLen, int *opResult, int r
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     *opResult = gRaRsCtxOps.ctxUpdateCi(&devInfo, opData->txData.jettyId, opData->txData.ci);
     if (*opResult != 0) {
-        hccp_err("[update_ci][ra_rs_ctx]update ci failed, ret[%d] phyId[%u] devIndex[0x%x] qpId[%u]",
-            *opResult, devInfo.phyId, devInfo.devIndex, opData->txData.jettyId);
+        hccp_err("[update_ci][ra_rs_ctx]update ci failed, ret[%d] phyId[%u] devIndex[0x%x] qpId[%u]", *opResult,
+            devInfo.phyId, devInfo.devIndex, opData->txData.jettyId);
     }
 
     return 0;
@@ -655,8 +635,7 @@ int RaRsCtxGetAuxInfo(char *inBuf, char *outBuf, int *outLen, int *opResult, int
     union OpCtxGetAuxInfoData *opData = (union OpCtxGetAuxInfoData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxGetAuxInfoData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxGetAuxInfoData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     *opResult = gRaRsCtxOps.ctxGetAuxInfo(&devInfo, &opData->txData.info, &opDataOut->rxData.info);
@@ -670,23 +649,18 @@ int RaRsCtxGetAuxInfo(char *inBuf, char *outBuf, int *outLen, int *opResult, int
 
 int RaRsCtxGetCrErrInfoList(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
-    union OpCtxGetCrErrInfoListData *opDataOut =
-        (union OpCtxGetCrErrInfoListData *)(outBuf + sizeof(struct MsgHead));
-    union OpCtxGetCrErrInfoListData *opData =
-        (union OpCtxGetCrErrInfoListData *)(inBuf + sizeof(struct MsgHead));
+    union OpCtxGetCrErrInfoListData *opDataOut = (union OpCtxGetCrErrInfoListData *)(outBuf + sizeof(struct MsgHead));
+    union OpCtxGetCrErrInfoListData *opData = (union OpCtxGetCrErrInfoListData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxGetCrErrInfoListData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxGetCrErrInfoListData), sizeof(struct MsgHead), rcvBufLen, opResult);
     HCCP_CHECK_PARAM_LEN_RET_HOST(opData->txData.num, 0, CR_ERR_INFO_MAX_NUM, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     opDataOut->rxData.num = opData->txData.num;
-    *opResult = gRaRsCtxOps.ctxGetCrErrInfoList(&devInfo, opDataOut->rxData.infoList,
-        &opDataOut->rxData.num);
+    *opResult = gRaRsCtxOps.ctxGetCrErrInfoList(&devInfo, opDataOut->rxData.infoList, &opDataOut->rxData.num);
     if (*opResult != 0) {
-        hccp_err("[get][cr_err]ctx_get_cr_err_info_list failed, ret[%d], phyId[%u]", *opResult,
-            opData->txData.phyId);
+        hccp_err("[get][cr_err]ctx_get_cr_err_info_list failed, ret[%d], phyId[%u]", *opResult, opData->txData.phyId);
     }
 
     return 0;
@@ -694,19 +668,16 @@ int RaRsCtxGetCrErrInfoList(char *inBuf, char *outBuf, int *outLen, int *opResul
 
 int RaRsCtxGetUbContext(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
-    union OpCtxGetContextData *opDataOut =
-        (union OpCtxGetContextData *)(outBuf + sizeof(struct MsgHead));
-    union OpCtxGetContextData *opData =
-        (union OpCtxGetContextData *)(inBuf + sizeof(struct MsgHead));
+    union OpCtxGetContextData *opDataOut = (union OpCtxGetContextData *)(outBuf + sizeof(struct MsgHead));
+    union OpCtxGetContextData *opData = (union OpCtxGetContextData *)(inBuf + sizeof(struct MsgHead));
     struct RaRsDevInfo devInfo = {0};
 
-    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxGetContextData), sizeof(struct MsgHead), rcvBufLen,
-        opResult);
+    HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpCtxGetContextData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
     RaRsSetDevInfo(&devInfo, opData->txData.phyId, opData->txData.devIndex);
     opDataOut->rxData.len = opData->txData.len;
-    *opResult = gRaRsCtxOps.ctxGetUbContext(&devInfo, opData->txData.id, opData->txData.contextType, opDataOut->rxData.context,
-        &opDataOut->rxData.len);
+    *opResult = gRaRsCtxOps.ctxGetUbContext(&devInfo, opData->txData.id, opData->txData.contextType,
+        opDataOut->rxData.context, &opDataOut->rxData.len);
     if (*opResult != 0) {
         hccp_err("[get][jettyContext]ctxGetJettyContext failed, ret:%d, phyId:%u devIndex:0x%x", *opResult,
             devInfo.phyId, devInfo.devIndex);

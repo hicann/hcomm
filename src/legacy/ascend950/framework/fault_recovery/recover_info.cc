@@ -12,58 +12,52 @@
 #include "invalid_params_exception.h"
 
 namespace Hccl {
- 
-static void ReportRecoverInfoCheckFailed(const std::string &paraName, uint32_t localPara, uint32_t remotePara)
+
+static void ReportRecoverInfoCheckFailed(const std::string& paraName, uint32_t localPara, uint32_t remotePara)
 {
-    THROW<InvalidParamsException>(
-        StringFormat("[recover_info][ReportOpInfoCheckFailed]recover information %s check fail. local[%u], remote[%u]",
-                     paraName.c_str(), localPara, remotePara));
-}
- 
-RecoverInfo::RecoverInfo(const RecoverInfoData &recoverInfoData, RankId myRank)
-    : recoverInfoData(recoverInfoData), myRank(myRank)
-{
+    THROW<InvalidParamsException>(StringFormat(
+        "[recover_info][ReportOpInfoCheckFailed]recover information %s check fail. local[%u], remote[%u]",
+        paraName.c_str(), localPara, remotePara));
 }
 
-RecoverInfo::RecoverInfo(const std::vector<char> &v)
+RecoverInfo::RecoverInfo(const RecoverInfoData& recoverInfoData, RankId myRank)
+    : recoverInfoData(recoverInfoData),
+      myRank(myRank)
+{}
+
+RecoverInfo::RecoverInfo(const std::vector<char>& v)
 {
     size_t recoverInfoDataSize = sizeof(RecoverInfoData);
     if (v.size() != recoverInfoDataSize) {
         THROW<InternalException>(StringFormat("Vector size does not match RecoverInfoData size"));
     }
-    
+
     int ret = memcpy_s(&this->recoverInfoData, recoverInfoDataSize, &v[0], v.size());
     if (ret != 0) {
         THROW<InternalException>(StringFormat("Vector size does not match RecoverInfoData size"));
     }
 }
 
-std::string RecoverInfo::Describe() const
-{
-    return recoverInfoData.Describe();
-}
+std::string RecoverInfo::Describe() const { return recoverInfoData.Describe(); }
 
 std::vector<char> RecoverInfo::GetUniqueId() const
 {
     std::vector<char> byteVector = ReCoverCustomTypeToCharVector<RecoverInfoData>(recoverInfoData);
- 
+
     return byteVector;
 }
 
-void RecoverInfo::SetCrcValue(u32 crcValue)
-{
-    recoverInfoData.crcValue = crcValue;
-}
+void RecoverInfo::SetCrcValue(u32 crcValue) { recoverInfoData.crcValue = crcValue; }
 
 // 功能说明：一致性校验
 // 输入说明：const std::vector<char> &rmtUniqueId：对端数据
-void RecoverInfo::Check(const std::vector<char> &rmtUniqueId) const
+void RecoverInfo::Check(const std::vector<char>& rmtUniqueId) const
 {
     RecoverInfoData rmtRecoverInfoData = RecoverCharVectorToCustomType<RecoverInfoData>(rmtUniqueId);
     CompareRecoverInfo(rmtRecoverInfoData);
 }
 
-void RecoverInfo::CompareRecoverInfo(const RecoverInfoData &otherRecoverInfoData) const
+void RecoverInfo::CompareRecoverInfo(const RecoverInfoData& otherRecoverInfoData) const
 {
     if (recoverInfoData.collOpIndex != otherRecoverInfoData.collOpIndex) {
         ReportRecoverInfoCheckFailed("collOpIndex", recoverInfoData.collOpIndex, otherRecoverInfoData.collOpIndex);

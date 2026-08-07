@@ -31,14 +31,11 @@ struct SocketMapKey {
     uint32_t devicePhyId;
     uint32_t port;
 
-    bool operator==(const SocketMapKey &other) const
-    {
-        return devicePhyId == other.devicePhyId && port == other.port;
-    }
+    bool operator==(const SocketMapKey& other) const { return devicePhyId == other.devicePhyId && port == other.port; }
 };
 
 struct SocketMapKeyHash {
-    size_t operator()(const SocketMapKey &k) const
+    size_t operator()(const SocketMapKey& k) const
     {
         return std::hash<uint32_t>()(k.devicePhyId) ^ (std::hash<uint32_t>()(k.port) << 1);
     }
@@ -51,46 +48,46 @@ struct AicpuTsNetDevSlot {
 
 class AicpuTsRoceEndpoint : public Endpoint {
 public:
-    explicit AicpuTsRoceEndpoint(const EndpointDesc &endpointDesc);
+    explicit AicpuTsRoceEndpoint(const EndpointDesc& endpointDesc);
     ~AicpuTsRoceEndpoint() override;
 
     HcclResult Init() override;
 
     HcclResult ServerSocketListen(const uint32_t port) override;
 
-    HcclResult RegisterMemory(HcommMem mem, const char *memTag, void **memHandle) override;
+    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
     HcclResult UnregisterMemory(void* memHandle) override;
-    HcclResult MemoryExport(void *memHandle, void **memDesc, uint32_t *memDescLen) override;
-    HcclResult MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem) override;
-    HcclResult MemoryUnimport(const void *memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void **memHandles, uint32_t *memHandleNum) override;
+    HcclResult MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen) override;
+    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
+    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
+    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
 
     HcclNetDev GetNetDev() const { return netDev_; }
 
-    HcclResult GetSocket(uint32_t port, const std::string &tag,
-        std::shared_ptr<hccl::HcclSocket> &outConnected);
-    HcclResult AcceptDataSocket(uint32_t port, const std::string &tag,
-        std::shared_ptr<hccl::HcclSocket> &outConnected, uint32_t acceptTimeoutMs = 0);
+    HcclResult GetSocket(uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected);
+    HcclResult AcceptDataSocket(
+        uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected,
+        uint32_t acceptTimeoutMs = 0);
 
-    HcclResult AddListenSocketWhiteList(uint32_t port, const std::vector<SocketWlistInfo> &wlistInfos);
+    HcclResult AddListenSocketWhiteList(uint32_t port, const std::vector<SocketWlistInfo>& wlistInfos);
 
 private:
-    static std::unordered_map<SocketMapKey, AicpuTsListenSocketSlot, SocketMapKeyHash> &GetServerSocketMap();
-    static std::mutex &ListenSocketMapMutex();
-    bool ReuseListenSocketIfExist(const SocketMapKey &key, const char *logPrefix);
+    static std::unordered_map<SocketMapKey, AicpuTsListenSocketSlot, SocketMapKeyHash>& GetServerSocketMap();
+    static std::mutex& ListenSocketMapMutex();
+    bool ReuseListenSocketIfExist(const SocketMapKey& key, const char* logPrefix);
     void ReleaseListenSocketRefs();
 
-    static std::unordered_map<uint32_t, AicpuTsNetDevSlot> &GetNetDevMap();
-    static std::mutex &NetDevMapMutex();
-    HcclResult AcquireSharedNetDev(uint32_t devicePhyId, const HcclNetDevInfos &info);
+    static std::unordered_map<uint32_t, AicpuTsNetDevSlot>& GetNetDevMap();
+    static std::mutex& NetDevMapMutex();
+    HcclResult AcquireSharedNetDev(uint32_t devicePhyId, const HcclNetDevInfos& info);
     void ReleaseSharedNetDev();
     void ReleaseNicSocketHandle(HcclNetDev netDev);
-    HcclResult AcquireRdmaContext(uint32_t devPhyId, const EndpointDesc &endpointDesc);
+    HcclResult AcquireRdmaContext(uint32_t devPhyId, const EndpointDesc& endpointDesc);
 
     HcclNetDev netDev_{nullptr};
     uint32_t netDevRefPhyId_{UINT32_MAX};
     std::vector<SocketMapKey> listenRefKeys_{};
     bool hasListenSocketRef_{false};
 };
-}
+} // namespace hcomm
 #endif // AICPUTS_ROCE_ENDPOINT_H

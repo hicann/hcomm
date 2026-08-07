@@ -15,7 +15,7 @@
 #include "hccl_dl.h"
 #include "log.h"
 
-template<const char *soName>
+template <const char* soName>
 class DlRtsFunction {
 public:
     explicit DlRtsFunction() = default;
@@ -27,7 +27,8 @@ public:
         }
     }
 
-    template<const char *funcName> void *Handle()
+    template <const char* funcName>
+    void* Handle()
     {
         Init();
         if (handle_ == nullptr) {
@@ -35,6 +36,7 @@ public:
         }
         return HcclDlsym(handle_, funcName);
     }
+
 private:
     void Init()
     {
@@ -45,11 +47,14 @@ private:
         HCCL_INFO("open so: %s", soName);
         handle_ = HcclDlopen(soName, RTLD_NOW);
         const char* errMsg = dlerror();
-        CHK_PRT_RET(handle_ == nullptr, HCCL_ERROR("dlopen [%s] failed, %s", soName,\
-            (errMsg == nullptr) ? "please check the file exist or permission denied." : errMsg),);
+        CHK_PRT_RET(
+            handle_ == nullptr,
+            HCCL_ERROR(
+                "dlopen [%s] failed, %s", soName,
+                (errMsg == nullptr) ? "please check the file exist or permission denied." : errMsg), );
         isInit_ = true;
     }
-    void *handle_ = nullptr;
+    void* handle_ = nullptr;
     std::mutex handleMutex_;
     bool isInit_ = false;
 };

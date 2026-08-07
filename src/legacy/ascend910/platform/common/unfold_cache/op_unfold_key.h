@@ -23,18 +23,19 @@ namespace hccl {
 // 作为展开算子的标识符
 // 注意: 由于给定通信域下, 相同数据量相同算子的算法选择是固定的, 不需要在标识符中维护algType或algName
 // 注意: 图模式或单算子模式是全局固定的, 不需要在标识符中维护
-struct OpUnfoldKey{
+struct OpUnfoldKey {
     explicit OpUnfoldKey();
     explicit OpUnfoldKey(const OpUnfoldKey& other); // 拷贝构造函数 (make_pair需要)
 
-    HcclResult Init(const HcclCMDType curOpType, const HcclDataType curDataType, const HcclReduceOp curReduceType, const bool curIsZeroCopy,
-        const uint64_t curInputSize, const bool curIsInplacePreSync, const HcclWorkflowMode curWorkflowMode, const bool curIsCapture,
-        const uint32_t curRoot = 0);
+    HcclResult Init(
+        const HcclCMDType curOpType, const HcclDataType curDataType, const HcclReduceOp curReduceType,
+        const bool curIsZeroCopy, const uint64_t curInputSize, const bool curIsInplacePreSync,
+        const HcclWorkflowMode curWorkflowMode, const bool curIsCapture, const uint32_t curRoot = 0);
 
     // 用于debug
     std::string GetKeyString() const;
 
-    bool operator==(const OpUnfoldKey& other) const; // 重载operator==用于std::unordered_map中相等比较
+    bool operator==(const OpUnfoldKey& other) const;        // 重载operator==用于std::unordered_map中相等比较
     const OpUnfoldKey& operator=(const OpUnfoldKey& other); // 拷贝赋值操作符
 
     HcclCMDType opType;
@@ -47,7 +48,8 @@ struct OpUnfoldKey{
     // 注意: 对于alltoallv算子, cache查询不依赖具体数据量, inputSize用来区分isBigCount (0: false; 1: true)
     uint64_t inputSize;
 
-    // ReduceScatter和AllReduce在开启重执行、in-place update、UserInMem > HcclBuffSize的时候，会触发前同步 (与正常算子展开逻辑不同)
+    // ReduceScatter和AllReduce在开启重执行、in-place update、UserInMem > HcclBuffSize的时候，会触发前同步
+    // (与正常算子展开逻辑不同)
     bool isInplacePreSync;
 
     // 是否为图模式 (可能存在同一个通信域下的同一个算子, 既执行图模式又执行单算子模式下的算法)
@@ -68,9 +70,10 @@ struct OpUnfoldKey{
 namespace std {
 
 // 全特化std::hash<OpUnfoldKey>, 用于std::unordered_map中计算哈希值
-template<>
+template <>
 struct hash<hccl::OpUnfoldKey> {
-    size_t operator()(const hccl::OpUnfoldKey& key) const {
+    size_t operator()(const hccl::OpUnfoldKey& key) const
+    {
         // 使用std::hash计算key中每个字段的哈希值
         std::hash<bool> hashBool;
         std::hash<uint8_t> hashUint8;

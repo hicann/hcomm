@@ -177,12 +177,12 @@ typedef struct {
     uint32_t remoteBufferNum;
     uint32_t sqNum;
     uint32_t cqNum;
-    RegedNotifyEntity *localNotifyAddr;
-    RegedNotifyEntity *remoteNotifyAddr;
-    RegedBufferEntity *localBufferAddr;
-    RegedBufferEntity *remoteBufferAddr;
-    SqContext *sqContextAddr;
-    CqContext *cqContextAddr;
+    RegedNotifyEntity* localNotifyAddr;
+    RegedNotifyEntity* remoteNotifyAddr;
+    RegedBufferEntity* localBufferAddr;
+    RegedBufferEntity* remoteBufferAddr;
+    SqContext* sqContextAddr;
+    CqContext* cqContextAddr;
     uint8_t reserve[160];
 } ChannelEntity; // 256B
 

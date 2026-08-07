@@ -21,8 +21,8 @@ extern std::map<u32, map<std::string, HrtDevEidInfo>> g_devId2PortId2EidInfo;
 
 HcclResult InitGenRankTableJson(TopoMeta& topoMeta, const CheckerOpParam& param, std::string& rankTableString);
 HcclResult InitGenRankTableJsonHF(TopoMeta& topoMeta, std::string& rankTableString);
-HcclResult InitGenTopoJson(std::string &topoFileName, const CheckerOpParam& param, bool is1DTopo);
-HcclResult InitGenTopoJsonHF(std::string &topoFileName, bool is1DTopo);
-}
+HcclResult InitGenTopoJson(std::string& topoFileName, const CheckerOpParam& param, bool is1DTopo);
+HcclResult InitGenTopoJsonHF(std::string& topoFileName, bool is1DTopo);
+} // namespace Hccl
 
 #endif

@@ -16,8 +16,8 @@
 
 namespace hcomm {
 
-CcuJettyCtxMgrV2::CcuJettyCtxMgrV2(const int32_t devLogicId, const uint8_t dieId,
-    const uint32_t devPhyId) : CcuJettyCtxMgr(devLogicId, dieId, devPhyId)
+CcuJettyCtxMgrV2::CcuJettyCtxMgrV2(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId)
+    : CcuJettyCtxMgr(devLogicId, dieId, devPhyId)
 {
     (void)CcuResSpecifications::GetInstance(devLogicId).GetChannelJettyMap(dieId, channelJettyMap_);
 }
@@ -49,15 +49,20 @@ HcclResult CcuJettyCtxMgrV2::CheckCtxGroupsByFeId(const uint32_t feId)
     const uint32_t startTaJettyId = strategy.startTaJettyId;
     const uint32_t startJettyCtxId = strategy.startLocalJettyCtxId;
     const uint32_t jettyGroupSize = channelJettyMap_.jettyNum;
-    CHK_PRT_RET((jettySpecNum_ < jettyNum || startJettyCtxId > jettySpecNum_ - jettyNum),
-        HCCL_ERROR("[CcuJettyCtxMgrV2][%s] failed, allocated jettyCtxId[%u] is invalid, "
-            "jettyCtxId should in [0, %u).", __func__, startJettyCtxId, jettySpecNum_ - jettyNum),
+    CHK_PRT_RET(
+        (jettySpecNum_ < jettyNum || startJettyCtxId > jettySpecNum_ - jettyNum),
+        HCCL_ERROR(
+            "[CcuJettyCtxMgrV2][%s] failed, allocated jettyCtxId[%u] is invalid, "
+            "jettyCtxId should in [0, %u).",
+            __func__, startJettyCtxId, jettySpecNum_ - jettyNum),
         HcclResult::HCCL_E_INTERNAL);
 
-    CHK_PRT_RET(jettyNum < jettyGroupSize || jettyGroupSize == 0, // fe策略不够分1个jetty组，认为资源不足
-        HCCL_WARNING("[CcuJettyCtxMgrV2][%s] failed, jettyNum[%u] of feId[%u] is too small to "
-            "allocated a jetty group, groupSize[%u], devLogicId[%d], dieId[%u].", __func__,
-            jettyNum, feId, jettyGroupSize, devLogicId_, dieId_),
+    CHK_PRT_RET(
+        jettyNum < jettyGroupSize || jettyGroupSize == 0, // fe策略不够分1个jetty组，认为资源不足
+        HCCL_WARNING(
+            "[CcuJettyCtxMgrV2][%s] failed, jettyNum[%u] of feId[%u] is too small to "
+            "allocated a jetty group, groupSize[%u], devLogicId[%d], dieId[%u].",
+            __func__, jettyNum, feId, jettyGroupSize, devLogicId_, dieId_),
         HcclResult::HCCL_E_UNAVAIL);
 
     // ccu v2 按组的粒度分配，保证jettyNum为不大于分配规格的整除最大数
@@ -70,11 +75,10 @@ HcclResult CcuJettyCtxMgrV2::CheckCtxGroupsByFeId(const uint32_t feId)
     return HcclResult::HCCL_SUCCESS;
 }
 
-static HcclResult FindFreeCtxGroup(const std::vector<JettyCtxGroup> &ctxGroups,
-    uint32_t &freeGroupId)
+static HcclResult FindFreeCtxGroup(const std::vector<JettyCtxGroup>& ctxGroups, uint32_t& freeGroupId)
 {
-    CHK_PRT_RET(ctxGroups.empty(),
-        HCCL_ERROR("[CcuJettyCtxMgrV2][%s] failed, ctxGroups is empty.", __func__),
+    CHK_PRT_RET(
+        ctxGroups.empty(), HCCL_ERROR("[CcuJettyCtxMgrV2][%s] failed, ctxGroups is empty.", __func__),
         HcclResult::HCCL_E_PARA);
     // 任意jettyCtx组均可，选择首个可用的
     const uint32_t groupSize = ctxGroups.size();
@@ -89,21 +93,27 @@ static HcclResult FindFreeCtxGroup(const std::vector<JettyCtxGroup> &ctxGroups,
     return HcclResult::HCCL_E_UNAVAIL;
 }
 
-HcclResult CcuJettyCtxMgrV2::Alloc(const uint32_t feId, const uint32_t jettyNum,
-    const uint32_t sqSize, std::vector<JettyInfo>& jettyInfos)
+HcclResult CcuJettyCtxMgrV2::Alloc(
+    const uint32_t feId, const uint32_t jettyNum, const uint32_t sqSize, std::vector<JettyInfo>& jettyInfos)
 {
     // 检查feId对应jettyCtx信息是否初始化
     auto ret = CheckCtxGroupsByFeId(feId);
-    CHK_PRT_RET(ret != HcclResult::HCCL_SUCCESS,
-        HCCL_WARNING("[CcuJettyCtxMgrV2][%s] failed to find jetty contexts by feId[%u], "
-            "devLogicId[%d], dieId[%u].", __func__, feId, devLogicId_, dieId_),
+    CHK_PRT_RET(
+        ret != HcclResult::HCCL_SUCCESS,
+        HCCL_WARNING(
+            "[CcuJettyCtxMgrV2][%s] failed to find jetty contexts by feId[%u], "
+            "devLogicId[%d], dieId[%u].",
+            __func__, feId, devLogicId_, dieId_),
         ret);
 
     uint32_t freeGroupId = 0;
     ret = FindFreeCtxGroup(ctxGroups_, freeGroupId);
-    CHK_PRT_RET(ret != HcclResult::HCCL_SUCCESS,
-        HCCL_WARNING("[CcuJettyCtxMgrV2][%s] failed to find free jetty contexts of feId[%u], "
-            "devLogicId[%d], dieId[%u].", __func__, feId, devLogicId_, dieId_),
+    CHK_PRT_RET(
+        ret != HcclResult::HCCL_SUCCESS,
+        HCCL_WARNING(
+            "[CcuJettyCtxMgrV2][%s] failed to find free jetty contexts of feId[%u], "
+            "devLogicId[%d], dieId[%u].",
+            __func__, feId, devLogicId_, dieId_),
         ret);
     HCCL_INFO("[CcuJettyCtxMgrV2][%s] freeGroupId[%u].", __func__, freeGroupId);
     const uint32_t jettyCtxStartId = ctxGroups_[freeGroupId].startJettyCtxId;
@@ -113,16 +123,19 @@ HcclResult CcuJettyCtxMgrV2::Alloc(const uint32_t feId, const uint32_t jettyNum,
 
     uint32_t allocSqSize = sqSize;
     if (allocSqSize != CCU_V2_FIXED_SQ_SIZE) {
-        HCCL_RUN_WARNING("[CcuJettyCtxMgr][%s] failed, sqSize is not equal 32, "
-            "sqSize is [%u]", __func__, allocSqSize);
+        HCCL_RUN_WARNING(
+            "[CcuJettyCtxMgr][%s] failed, sqSize is not equal 32, "
+            "sqSize is [%u]",
+            __func__, allocSqSize);
         allocSqSize = CCU_V2_FIXED_SQ_SIZE;
     }
 
     ret = TryAllocWqeBBResource(allocSqSize, jettyCtxStartId, taJettyStartId, jettyType_, jettyInfos);
     if (ret != HCCL_SUCCESS) {
-        HCCL_RUN_WARNING("[CcuJettyCtxMgrV2][%s] failed to alloc wqebb resource to jetty contexts "
-            "of feId[%u], request sq size[%u], devLogicId[%d], dieId[%u].", __func__, feId,
-            allocSqSize, devLogicId_, dieId_);
+        HCCL_RUN_WARNING(
+            "[CcuJettyCtxMgrV2][%s] failed to alloc wqebb resource to jetty contexts "
+            "of feId[%u], request sq size[%u], devLogicId[%d], dieId[%u].",
+            __func__, feId, allocSqSize, devLogicId_, dieId_);
         CHK_RET(ReleaseWqeBBResource(jettyInfos));
         return ret;
     }
@@ -133,9 +146,8 @@ HcclResult CcuJettyCtxMgrV2::Alloc(const uint32_t feId, const uint32_t jettyNum,
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuJettyCtxMgrV2::Config(const uint32_t feId,
-    const std::vector<JettyInfo> &jettyInfos,
-    const std::vector<JettyCfg>& jettyCfgs)
+HcclResult CcuJettyCtxMgrV2::Config(
+    const uint32_t feId, const std::vector<JettyInfo>& jettyInfos, const std::vector<JettyCfg>& jettyCfgs)
 {
     CHK_RET(CheckIfJettyCfgsValid(jettyInfos, jettyCfgs));
     CHK_RET(CheckCtxGroupsByFeId(feId));
@@ -144,20 +156,24 @@ HcclResult CcuJettyCtxMgrV2::Config(const uint32_t feId,
     // 创建ctxGroup校验已保证ctxGroupMap[feId]非空
     const uint32_t feStartjettyCtxId = ctxGroups_[0].startJettyCtxId;
     const uint32_t groupId = (startJettyCtxId - feStartjettyCtxId) / channelJettyMap_.jettyNum;
-    auto &ctxGroup = ctxGroups_[groupId];
-    HCCL_INFO("[CcuJettyCtxMgrV2][%s]jetty contexts[start id[%u], num[%u], feStartjettyCtxId[%u], groupId[%u]] "
-        "of feId[%u] have not been allocated yet, devLogicId[%d], dieId[%u].", __func__,
-        startJettyCtxId, channelJettyMap_.jettyNum, feStartjettyCtxId, groupId, feId, devLogicId_, dieId_);
-    CHK_PRT_RET(ctxGroup.useCnt == 0,
-        HCCL_ERROR("[CcuJettyCtxMgrV2][%s] failed, jetty contexts[start id[%u], num[%u]] "
-            "of feId[%u] have not been allocated yet, devLogicId[%d], dieId[%u].", __func__,
-            startJettyCtxId, channelJettyMap_.jettyNum, feId, devLogicId_, dieId_),
+    auto& ctxGroup = ctxGroups_[groupId];
+    HCCL_INFO(
+        "[CcuJettyCtxMgrV2][%s]jetty contexts[start id[%u], num[%u], feStartjettyCtxId[%u], groupId[%u]] "
+        "of feId[%u] have not been allocated yet, devLogicId[%d], dieId[%u].",
+        __func__, startJettyCtxId, channelJettyMap_.jettyNum, feStartjettyCtxId, groupId, feId, devLogicId_, dieId_);
+    CHK_PRT_RET(
+        ctxGroup.useCnt == 0,
+        HCCL_ERROR(
+            "[CcuJettyCtxMgrV2][%s] failed, jetty contexts[start id[%u], num[%u]] "
+            "of feId[%u] have not been allocated yet, devLogicId[%d], dieId[%u].",
+            __func__, startJettyCtxId, channelJettyMap_.jettyNum, feId, devLogicId_, dieId_),
         HcclResult::HCCL_E_PARA);
 
     if (ctxGroup.configured) {
-        HCCL_INFO("[CcuJettyCtxMgrV2][%s] passed, jetty contexts[start id[%u], num[%u]] "
-            "of feId[%u] have been configured, devLogicId[%d], dieId[%u].", __func__,
-            startJettyCtxId, channelJettyMap_.jettyNum, feId, devLogicId_, dieId_);
+        HCCL_INFO(
+            "[CcuJettyCtxMgrV2][%s] passed, jetty contexts[start id[%u], num[%u]] "
+            "of feId[%u] have been configured, devLogicId[%d], dieId[%u].",
+            __func__, startJettyCtxId, channelJettyMap_.jettyNum, feId, devLogicId_, dieId_);
         return HcclResult::HCCL_SUCCESS;
     }
 
@@ -172,10 +188,11 @@ HcclResult CcuJettyCtxMgrV2::Config(const uint32_t feId,
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuJettyCtxMgrV2::Release(const uint32_t feId, const std::vector<JettyInfo> &jettyInfos)
+HcclResult CcuJettyCtxMgrV2::Release(const uint32_t feId, const std::vector<JettyInfo>& jettyInfos)
 {
     if (jettyInfos.empty()) {
-        HCCL_INFO("[CcuJettyCtxMgrV2][%s] passed, jettyInfos is empty, no need to release, ",
+        HCCL_INFO(
+            "[CcuJettyCtxMgrV2][%s] passed, jettyInfos is empty, no need to release, ",
             "devLogicId[%d], dieId[%u], feId[%u].", __func__, devLogicId_, dieId_, feId);
         return HcclResult::HCCL_SUCCESS;
     }
@@ -185,18 +202,21 @@ HcclResult CcuJettyCtxMgrV2::Release(const uint32_t feId, const std::vector<Jett
     // 创建ctxGroup校验已保证ctxGroupMap[feId]非空
     const uint32_t feStartjettyCtxId = ctxGroups_[0].startJettyCtxId;
     const uint32_t groupId = (startJettyCtxId - feStartjettyCtxId) / channelJettyMap_.jettyNum;
-    auto &ctxGroup = ctxGroups_[groupId];
-    CHK_PRT_RET(ctxGroup.useCnt == 0,
-        HCCL_ERROR("[CcuJettyCtxMgrV2][%s] failed, jetty contexts[start id[%u], num[%u]] "
-            "of feId[%u] have not been allocated yet, devLogicId[%d], dieId[%u].", __func__,
-            startJettyCtxId, channelJettyMap_.jettyNum, feId, devLogicId_, dieId_),
+    auto& ctxGroup = ctxGroups_[groupId];
+    CHK_PRT_RET(
+        ctxGroup.useCnt == 0,
+        HCCL_ERROR(
+            "[CcuJettyCtxMgrV2][%s] failed, jetty contexts[start id[%u], num[%u]] "
+            "of feId[%u] have not been allocated yet, devLogicId[%d], dieId[%u].",
+            __func__, startJettyCtxId, channelJettyMap_.jettyNum, feId, devLogicId_, dieId_),
         HcclResult::HCCL_E_PARA);
 
     if (ctxGroup.useCnt > 1) {
         ctxGroup.useCnt -= 1;
-        HCCL_INFO("[CcuJettyCtxMgr][%s] passed, jetty contexts[start id[%u], num[%u]] is "
-            "still in use, left use count is %u, devLogicId[%d], dieId[%u].", __func__,
-            startJettyCtxId, channelJettyMap_.jettyNum, ctxGroup.useCnt, devLogicId_, dieId_);
+        HCCL_INFO(
+            "[CcuJettyCtxMgr][%s] passed, jetty contexts[start id[%u], num[%u]] is "
+            "still in use, left use count is %u, devLogicId[%d], dieId[%u].",
+            __func__, startJettyCtxId, channelJettyMap_.jettyNum, ctxGroup.useCnt, devLogicId_, dieId_);
         return HcclResult::HCCL_SUCCESS;
     }
     CHK_RET(ReleaseWqeBBResource(jettyInfos));
@@ -207,4 +227,3 @@ HcclResult CcuJettyCtxMgrV2::Release(const uint32_t feId, const std::vector<Jett
 }
 
 }; // namespace hcomm
-

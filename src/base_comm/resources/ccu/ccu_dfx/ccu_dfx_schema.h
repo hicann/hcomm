@@ -30,14 +30,14 @@ struct CcuLoopInfo {
 
 // V1/V2 schema 分派表项：按设备类型选取对应的一组解码/打印实现。
 struct CcuVersionOps {
-    const char *name;
-    void (*printCcumDfxInfo)(const void *rawData, std::ostringstream &oss);
-    HcclResult (*getMissionInfo)(const void *rawData, CcuMissionInfo *out);
-    HcclResult (*getLoopInfo)(const void *rawData, CcuLoopInfo *out);
+    const char* name;
+    void (*printCcumDfxInfo)(const void* rawData, std::ostringstream& oss);
+    HcclResult (*getMissionInfo)(const void* rawData, CcuMissionInfo* out);
+    HcclResult (*getLoopInfo)(const void* rawData, CcuLoopInfo* out);
 };
 
 // 按当前设备类型解析出对应的 V1/V2 schema 操作集。
-HcclResult GetCcuOps(const CcuVersionOps *&ops);
+HcclResult GetCcuOps(const CcuVersionOps*& ops);
 } // namespace hcomm
 
 #endif // CCU_DFX_SCHEMA_H

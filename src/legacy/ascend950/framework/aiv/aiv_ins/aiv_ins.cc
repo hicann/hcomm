@@ -12,17 +12,11 @@
 
 namespace Hccl {
 
-std::string AivInstruction::Describe() const
-{
-    return StringFormat("AivInstruction[links_size=%zu]", links_.size());
-}
+std::string AivInstruction::Describe() const { return StringFormat("AivInstruction[links_size=%zu]", links_.size()); }
 
-const std::vector<LinkData> AivInstruction::GetLinks() const
-{
-    return links_;
-}
+const std::vector<LinkData> AivInstruction::GetLinks() const { return links_; }
 
-HcclResult AivInstruction::GetAivInsArgs(AivOpArgs &aivOpArgs) const
+HcclResult AivInstruction::GetAivInsArgs(AivOpArgs& aivOpArgs) const
 {
     aivOpArgs = aivOpArgs_;
     return HCCL_SUCCESS;

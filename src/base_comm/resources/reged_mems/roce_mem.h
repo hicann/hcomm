@@ -9,7 +9,7 @@
  */
 #ifndef ROCE_MEM_H
 #define ROCE_MEM_H
- 
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -20,35 +20,38 @@
 #include "remote_rma_buffer.h"
 #include "exchange_rdma_buffer_dto.h"
 #include "local_rdma_rma_buffer.h"
- 
+
 namespace hcomm {
 /**
  * @note 职责：用于通信设备EndPoint的注册内存信息管理，支持基于RmaBufferMgr类的重叠内存的检测报错等。
  */
 class RoceRegedMemMgr : public RegedMemMgr {
 public:
-    using LocalRdmaRmaBufferMgr = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalRdmaRmaBuffer>>;
-    using RemoteRdmaRmaBufferMgr = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::RemoteRdmaRmaBuffer>>;
- 
+    using LocalRdmaRmaBufferMgr
+        = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalRdmaRmaBuffer>>;
+    using RemoteRdmaRmaBufferMgr
+        = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::RemoteRdmaRmaBuffer>>;
+
     RoceRegedMemMgr();
     ~RoceRegedMemMgr() = default;
- 
-    HcclResult RegisterMemory(HcommMem mem, const char *memTag, void **memHandle) override;
+
+    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
     HcclResult UnregisterMemory(void* memHandle) override;
-    HcclResult MemoryExport(const EndpointDesc endpointDesc, void *memHandle, void **memDesc, uint32_t *memDescLen) override;
-    HcclResult MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem) override;
-    HcclResult MemoryUnimport(const void *memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void **memHandles, uint32_t *memHandleNum) override;
-    HcclResult GetMemDesc(const EndpointDesc endpointDesc, Hccl::LocalRdmaRmaBuffer *localRdmaRmaBuffer);
-    HcclResult GetParamsFromMemDesc(const void *memDesc, uint32_t descLen, 
-                                        EndpointDesc &endpointDesc, Hccl::ExchangeRdmaBufferDto &dto);
- 
+    HcclResult
+    MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen) override;
+    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
+    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
+    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
+    HcclResult GetMemDesc(const EndpointDesc endpointDesc, Hccl::LocalRdmaRmaBuffer* localRdmaRmaBuffer);
+    HcclResult GetParamsFromMemDesc(
+        const void* memDesc, uint32_t descLen, EndpointDesc& endpointDesc, Hccl::ExchangeRdmaBufferDto& dto);
+
 private:
     std::unique_ptr<LocalRdmaRmaBufferMgr> localRdmaRmaBufferMgr_{};
     std::vector<RegedBufferEntry<Hccl::LocalRdmaRmaBuffer>> allRegisteredBuffers_;
     std::vector<std::shared_ptr<Hccl::LocalRdmaRmaBuffer>> handlesRecords_;
     std::unordered_map<EndpointDesc, std::unique_ptr<RemoteRdmaRmaBufferMgr>> remoteRdmaRmaBufferMgrs_;
 };
-}
- 
+} // namespace hcomm
+
 #endif // ROCE_MEM_H

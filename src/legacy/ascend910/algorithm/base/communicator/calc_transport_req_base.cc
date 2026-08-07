@@ -11,25 +11,23 @@
 #include "calc_transport_req_base.h"
 
 namespace hccl {
-CalcTransportReqBase::CalcTransportReqBase(const std::vector<std::vector<u32>> &subCommPlaneVector,
-    const std::vector<bool> &isBridgeVector, u32 userRank)
-    : subCommPlaneVector_(subCommPlaneVector), isBridgeVector_(isBridgeVector),
-    userRank_(userRank)
-{
-}
+CalcTransportReqBase::CalcTransportReqBase(
+    const std::vector<std::vector<u32>>& subCommPlaneVector, const std::vector<bool>& isBridgeVector, u32 userRank)
+    : subCommPlaneVector_(subCommPlaneVector),
+      isBridgeVector_(isBridgeVector),
+      userRank_(userRank)
+{}
 
-CalcTransportReqBase::~CalcTransportReqBase()
-{
-}
+CalcTransportReqBase::~CalcTransportReqBase() {}
 
-HcclResult CalcTransportReqBase::CalcTransportRequest(const std::string &tag, TransportMemType inputMemType,
-    TransportMemType outputMemType, const CommParaInfo &commParaInfo,
-    std::vector<SingleSubCommTransport> &commTransport, u32 subUserRankRoot)
+HcclResult CalcTransportReqBase::CalcTransportRequest(
+    const std::string& tag, TransportMemType inputMemType, TransportMemType outputMemType,
+    const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport, u32 subUserRankRoot)
 {
     return HCCL_SUCCESS;
 }
 
-u32 CalcTransportReqBase::GetSubCollectiveRank(const std::vector<u32> &vecPara) const
+u32 CalcTransportReqBase::GetSubCollectiveRank(const std::vector<u32>& vecPara) const
 {
     // 在vecPara数据中，查询本user rank，查询到的vec下标就是rank值
     u32 tmpRank = INVALID_VALUE_RANKID;
@@ -44,8 +42,7 @@ u32 CalcTransportReqBase::GetSubCollectiveRank(const std::vector<u32> &vecPara) 
     return tmpRank;
 }
 
-HcclResult CalcTransportReqBase::GetRankByUserRank(const std::vector<u32> &vecPara,
-    const u32 userRank, u32 &rank) const
+HcclResult CalcTransportReqBase::GetRankByUserRank(const std::vector<u32>& vecPara, const u32 userRank, u32& rank) const
 {
     // 在vecPara数据中，查询指定userRank，查询到的vec下标就是rank值
     rank = INVALID_VALUE_RANKID;
@@ -60,4 +57,4 @@ HcclResult CalcTransportReqBase::GetRankByUserRank(const std::vector<u32> &vecPa
     return HCCL_SUCCESS;
 }
 
-}  // namespace hccl
+} // namespace hccl

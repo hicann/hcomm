@@ -26,7 +26,7 @@ namespace hcomm {
  */
 class UrmaEndpoint : public Endpoint {
 public:
-    explicit UrmaEndpoint(const EndpointDesc &endpointDesc);
+    explicit UrmaEndpoint(const EndpointDesc& endpointDesc);
     ~UrmaEndpoint() noexcept override;
 
     HcclResult Init() override;
@@ -34,21 +34,19 @@ public:
     HcclResult ServerSocketListen(const uint32_t port) override;
     HcclResult ServerSocketStopListen(const uint32_t port) override;
     inline HcclResult ServerSocketStopListenImpl(const uint32_t port);
-    HcclResult ServerSocketGetListenPort(uint32_t *port) override;
+    HcclResult ServerSocketGetListenPort(uint32_t* port) override;
 
-    std::shared_ptr<RegedMemMgr> GetRegedMemMgr() override {
-        return regedMemMgr_;
-    }
+    std::shared_ptr<RegedMemMgr> GetRegedMemMgr() override { return regedMemMgr_; }
 
-    CcuChannelCtxPool *GetCcuChannelCtxPool();
+    CcuChannelCtxPool* GetCcuChannelCtxPool();
 
-    HcclResult RegisterMemory(HcommMem mem, const char *memTag, void **memHandle) override;
+    HcclResult RegisterMemory(HcommMem mem, const char* memTag, void** memHandle) override;
     HcclResult UnregisterMemory(void* memHandle) override;
-    HcclResult MemoryExport(void *memHandle, void **memDesc, uint32_t *memDescLen) override;
-    HcclResult MemoryImport(const void *memDesc, uint32_t descLen, HcommMem *outMem) override;
-    HcclResult MemoryUnimport(const void *memDesc, uint32_t descLen) override;
-    HcclResult GetAllMemHandles(void **memHandles, uint32_t *memHandleNum) override;
-    HcclResult GetAsyncEvents(uint32_t devPhyId, struct AsyncEvent events[], uint32_t &num) override;
+    HcclResult MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen) override;
+    HcclResult MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem) override;
+    HcclResult MemoryUnimport(const void* memDesc, uint32_t descLen) override;
+    HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) override;
+    HcclResult GetAsyncEvents(uint32_t devPhyId, struct AsyncEvent events[], uint32_t& num) override;
 
 private:
     std::mutex portMutex_;
@@ -56,6 +54,6 @@ private:
     std::unique_ptr<CcuChannelCtxPool> ccuChannelCtxPool_{nullptr};
     MemMgrCacheKey cacheKey_{};
 };
-}
+} // namespace hcomm
 
 #endif // URMA_ENDPOINT_H

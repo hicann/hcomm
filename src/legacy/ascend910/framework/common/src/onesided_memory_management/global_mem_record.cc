@@ -7,27 +7,36 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
- #include "global_mem_record.h"
- #include <sstream>
+
+#include "global_mem_record.h"
+#include <sstream>
 
 namespace hccl {
 GlobalMemRecord::GlobalMemRecord(const HcclMem* mem)
-    : type_(mem->type), addr_(mem->addr), size_(mem->size), pLock_(std::make_unique<std::mutex>())
+    : type_(mem->type),
+      addr_(mem->addr),
+      size_(mem->size),
+      pLock_(std::make_unique<std::mutex>())
 {}
 
 GlobalMemRecord::GlobalMemRecord(const HcclMem& mem)
-    : type_(mem.type), addr_(mem.addr), size_(mem.size), pLock_(std::make_unique<std::mutex>())
+    : type_(mem.type),
+      addr_(mem.addr),
+      size_(mem.size),
+      pLock_(std::make_unique<std::mutex>())
 {}
 
-GlobalMemRecord::GlobalMemRecord(GlobalMemRecord &&other) noexcept
-    : type_(other.type_), addr_(other.addr_), size_(other.size_), pLock_(std::move(other.pLock_)),
+GlobalMemRecord::GlobalMemRecord(GlobalMemRecord&& other) noexcept
+    : type_(other.type_),
+      addr_(other.addr_),
+      size_(other.size_),
+      pLock_(std::move(other.pLock_)),
       boundComm_(std::move(other.boundComm_))
 {}
 
 bool GlobalMemRecord::HasOverlap(const GlobalMemRecord& other) const
 {
-    if(type_ != other.GetMemType()) {
+    if (type_ != other.GetMemType()) {
         // 不同类型不判断
         return false;
     }
@@ -40,32 +49,40 @@ bool GlobalMemRecord::HasOverlap(const GlobalMemRecord& other) const
     return (thisBegin < otherEnd) && (otherBegin < thisEnd);
 }
 
-HcclResult GlobalMemRecord::BindToComm(const std::string &commIdentifier)
+HcclResult GlobalMemRecord::BindToComm(const std::string& commIdentifier)
 {
     std::unique_lock<std::mutex> lock(*pLock_);
     const auto insertRet = boundComm_.insert(commIdentifier);
-    
-    CHK_PRT_RET(insertRet.second == false,
-        HCCL_ERROR("[GlobalMemRecord][BindToComm] The mem[%s] has been bound to the comm[%s] already.",
-            PrintInfo().c_str(), commIdentifier.c_str()), HCCL_E_PARA);
 
-    HCCL_INFO("[GlobalMemRecord][BindToComm] The mem[%s] is bound to the comm[%s].",
-        PrintInfo().c_str(), commIdentifier.c_str());
+    CHK_PRT_RET(
+        insertRet.second == false,
+        HCCL_ERROR(
+            "[GlobalMemRecord][BindToComm] The mem[%s] has been bound to the comm[%s] already.", PrintInfo().c_str(),
+            commIdentifier.c_str()),
+        HCCL_E_PARA);
+
+    HCCL_INFO(
+        "[GlobalMemRecord][BindToComm] The mem[%s] is bound to the comm[%s].", PrintInfo().c_str(),
+        commIdentifier.c_str());
 
     return HCCL_SUCCESS;
 }
 
-HcclResult GlobalMemRecord::UnbindFromComm(const std::string &commIdentifier)
+HcclResult GlobalMemRecord::UnbindFromComm(const std::string& commIdentifier)
 {
     std::unique_lock<std::mutex> lock(*pLock_);
     const auto eraseCount = boundComm_.erase(commIdentifier);
 
-    CHK_PRT_RET(eraseCount == 0,
-        HCCL_ERROR("[GlobalMemRecord][UnbindFromComm] The mem[%s] is not bound to the comm[%s].",
-            PrintInfo().c_str(), commIdentifier.c_str()), HCCL_E_PARA);
+    CHK_PRT_RET(
+        eraseCount == 0,
+        HCCL_ERROR(
+            "[GlobalMemRecord][UnbindFromComm] The mem[%s] is not bound to the comm[%s].", PrintInfo().c_str(),
+            commIdentifier.c_str()),
+        HCCL_E_PARA);
 
-    HCCL_INFO("[GlobalMemRecord][UnbindFromComm] The mem[%s] has been unbound from the comm[%s].",
-        PrintInfo().c_str(), commIdentifier.c_str());
+    HCCL_INFO(
+        "[GlobalMemRecord][UnbindFromComm] The mem[%s] has been unbound from the comm[%s].", PrintInfo().c_str(),
+        commIdentifier.c_str());
 
     return HCCL_SUCCESS;
 }

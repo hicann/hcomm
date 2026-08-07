@@ -15,7 +15,7 @@
 #include "internal_exception.h"
 
 namespace Hccl {
-NsRecoveryHandlerFunc &NsRecoveryHandlerFunc::GetInstance()
+NsRecoveryHandlerFunc& NsRecoveryHandlerFunc::GetInstance()
 {
     static NsRecoveryHandlerFunc func;
     return func;
@@ -23,8 +23,8 @@ NsRecoveryHandlerFunc &NsRecoveryHandlerFunc::GetInstance()
 
 void NsRecoveryHandlerFunc::Call()
 {
-    std::vector<CommunicatorImplLite *> commLites = CommunicatorImplLiteMgr::GetInstance().GetAll();
-    for (auto &comm : commLites) {
+    std::vector<CommunicatorImplLite*> commLites = CommunicatorImplLiteMgr::GetInstance().GetAll();
+    for (auto& comm : commLites) {
         if (!comm->IsCommReady()) {
             continue;
         }
@@ -33,7 +33,7 @@ void NsRecoveryHandlerFunc::Call()
     }
 }
 
-void NsRecoveryHandlerFunc::HandleStopLaunch(CommunicatorImplLite *comm) const
+void NsRecoveryHandlerFunc::HandleStopLaunch(CommunicatorImplLite* comm) const
 {
     if (comm->IsSuspended()) {
         return;
@@ -50,7 +50,7 @@ void NsRecoveryHandlerFunc::HandleStopLaunch(CommunicatorImplLite *comm) const
     HCCL_INFO("[NsRecovery][BackGround] send KfcStatus[STOP_LAUNCH_DONE]");
 }
 
-void NsRecoveryHandlerFunc::HandleClean(CommunicatorImplLite *comm)
+void NsRecoveryHandlerFunc::HandleClean(CommunicatorImplLite* comm)
 {
     if (!comm->IsNeedClean()) {
         return;
@@ -68,14 +68,15 @@ void NsRecoveryHandlerFunc::HandleClean(CommunicatorImplLite *comm)
     HCCL_INFO("[NsRecovery][BackGround] send KfcStatus[CLEAN_DONE]");
 }
 
-void NsRecoveryHandlerFunc::StreamClean(CommunicatorImplLite *comm)
+void NsRecoveryHandlerFunc::StreamClean(CommunicatorImplLite* comm)
 {
     // 查询停流是否完成
-    u32 localDevId=0;
+    u32 localDevId = 0;
     auto ret = drvGetLocalDevIDByHostDevID(comm->GetDevPhyId(), &localDevId);
     if (ret != DRV_ERROR_NONE) {
         std::string formatStr = StringFormat(
-            "NsRecoveryHandlerFunc::%s call drvGetLocalDevIDByHostDevID failed, devPhyId %u, ret %d", __func__, comm->GetDevPhyId(), ret);
+            "NsRecoveryHandlerFunc::%s call drvGetLocalDevIDByHostDevID failed, devPhyId %u, ret %d", __func__,
+            comm->GetDevPhyId(), ret);
         THROW<DrvApiException>(formatStr);
     }
     if (DeviceQuery(localDevId, APP_ABORT_STAUTS::APP_ABORT_KILL_FINISH, 0U) != HCCL_SUCCESS) {
@@ -119,8 +120,9 @@ HcclResult NsRecoveryHandlerFunc::DeviceQuery(const uint32_t devId, const uint32
         para.tsid = 0;
         para.msg_len = sizeof(ts_ctrl_msg_body_t);
         para.msg = static_cast<void*>(&queryIn);
-        const drvError_t ret = halTsdrvCtl(devId, TSDRV_CTL_CMD_CTRL_MSG,
-            static_cast<void*>(&para), sizeof(tsdrv_ctrl_msg), static_cast<void*>(&queryAck), &ackCount);
+        const drvError_t ret = halTsdrvCtl(
+            devId, TSDRV_CTL_CMD_CTRL_MSG, static_cast<void*>(&para), sizeof(tsdrv_ctrl_msg),
+            static_cast<void*>(&queryAck), &ackCount);
         if ((ret != DRV_ERROR_NONE) || (ackCount != sizeof(ts_ctrl_msg_body_t))) {
             HCCL_ERROR("halTsdrvCtl failed. ret = %d", ret);
             return HcclResult::HCCL_E_DRV;
@@ -141,4 +143,4 @@ HcclResult NsRecoveryHandlerFunc::DeviceQuery(const uint32_t devId, const uint32
     return HcclResult::HCCL_SUCCESS;
 }
 
-}
+} // namespace Hccl

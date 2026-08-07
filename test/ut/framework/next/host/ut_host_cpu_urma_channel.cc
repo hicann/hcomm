@@ -23,7 +23,7 @@
 using namespace hcomm;
 
 namespace {
-std::shared_ptr<Hccl::LocalUbRmaBuffer> MakeHostLocalBuffer(uintptr_t addr, u64 size, const char *tag)
+std::shared_ptr<Hccl::LocalUbRmaBuffer> MakeHostLocalBuffer(uintptr_t addr, u64 size, const char* tag)
 {
     auto buffer = std::make_shared<Hccl::Buffer>(addr, size, HCCL_MEM_TYPE_DEVICE, tag);
     return std::make_shared<Hccl::LocalUbRmaBuffer>(buffer);
@@ -31,23 +31,16 @@ std::shared_ptr<Hccl::LocalUbRmaBuffer> MakeHostLocalBuffer(uintptr_t addr, u64 
 
 class NonUbRmaBuffer : public Hccl::LocalRmaBuffer {
 public:
-    explicit NonUbRmaBuffer(std::shared_ptr<Hccl::Buffer> buffer)
-        : Hccl::LocalRmaBuffer(buffer, Hccl::RmaType::RDMA)
-    {
-    }
+    explicit NonUbRmaBuffer(std::shared_ptr<Hccl::Buffer> buffer) : Hccl::LocalRmaBuffer(buffer, Hccl::RmaType::RDMA) {}
 
-    std::string Describe() const override
-    {
-        return "NonUbRmaBuffer";
-    }
+    std::string Describe() const override { return "NonUbRmaBuffer"; }
 };
 
-HcommResult StubHostGetAllMemHandlesOne(EndpointHandle, void **memHandles, uint32_t *memHandleNum)
+HcommResult StubHostGetAllMemHandlesOne(EndpointHandle, void** memHandles, uint32_t* memHandleNum)
 {
-    static std::shared_ptr<Hccl::Buffer> buffer =
-        std::make_shared<Hccl::Buffer>(0x730000U, 0x1000U, HCCL_MEM_TYPE_DEVICE, "host_all");
-    static std::shared_ptr<Hccl::LocalUbRmaBuffer> localBuffer =
-        std::make_shared<Hccl::LocalUbRmaBuffer>(buffer);
+    static std::shared_ptr<Hccl::Buffer> buffer
+        = std::make_shared<Hccl::Buffer>(0x730000U, 0x1000U, HCCL_MEM_TYPE_DEVICE, "host_all");
+    static std::shared_ptr<Hccl::LocalUbRmaBuffer> localBuffer = std::make_shared<Hccl::LocalUbRmaBuffer>(buffer);
     static std::shared_ptr<Hccl::LocalUbRmaBuffer> localBuffers[1] = {localBuffer};
     *memHandles = localBuffers;
     *memHandleNum = 1;
@@ -57,15 +50,9 @@ HcommResult StubHostGetAllMemHandlesOne(EndpointHandle, void **memHandles, uint3
 
 class HostCpuUrmaChannelTest : public testing::Test {
 protected:
-    static void SetUpTestCase()
-    {
-        std::cout << "HostCpuUrmaChannelTest tests set up." << std::endl;
-    }
+    static void SetUpTestCase() { std::cout << "HostCpuUrmaChannelTest tests set up." << std::endl; }
 
-    static void TearDownTestCase()
-    {
-        std::cout << "HostCpuUrmaChannelTest tests tear down." << std::endl;
-    }
+    static void TearDownTestCase() { std::cout << "HostCpuUrmaChannelTest tests tear down." << std::endl; }
 
     virtual void SetUp()
     {
@@ -93,8 +80,8 @@ protected:
         channelDesc.exchangeAllMems = false;
         channelDesc.port = 60001;
 
-        fakeSocket = new Hccl::Socket(nullptr, localIp, 60001, remoteIp, "_0_1_",
-                                      Hccl::SocketRole::SERVER, Hccl::NicType::HOST_NIC_TYPE);
+        fakeSocket = new Hccl::Socket(
+            nullptr, localIp, 60001, remoteIp, "_0_1_", Hccl::SocketRole::SERVER, Hccl::NicType::HOST_NIC_TYPE);
         channelDesc.socket = static_cast<void*>(fakeSocket);
 
         localBufferPtr = std::make_shared<Hccl::Buffer>(666);
@@ -203,7 +190,10 @@ TEST_F(HostCpuUrmaChannelTest, Ut_When_ParseInputParam_NullSocket_Expect_Success
     MOCKER(HcommEndpointStartListen).stubs().will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
     MOCKER(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(rdmaHandle_));
     MOCKER(RaSocketSetWhiteListStatus).stubs().will(returnValue(0));
-    MOCKER_CPP(&hcomm::SocketMgr::GetSocket).stubs().with(mockcpp::any(), outBound(fakeSocket)).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&hcomm::SocketMgr::GetSocket)
+        .stubs()
+        .with(mockcpp::any(), outBound(fakeSocket))
+        .will(returnValue(HCCL_SUCCESS));
 
     auto impl = std::make_unique<HostCpuUrmaChannel>(endpointHandle, channelDesc);
     // ParseInputParam should succeed, BuildSocket will create a new socket
@@ -292,9 +282,7 @@ TEST_F(HostCpuUrmaChannelTest, Ut_When_Init_WithExchangeAllMems_Expect_Success)
     MOCKER(HcommEndpointStartListen).stubs().will(returnValue(static_cast<HcommResult>(HCCL_SUCCESS)));
     MOCKER(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(rdmaHandle_));
     MOCKER(RaSocketSetWhiteListStatus).stubs().will(returnValue(0));
-    MOCKER(HcommMemGetAllMemHandles)
-        .stubs()
-        .will(invoke(StubHostGetAllMemHandlesOne));
+    MOCKER(HcommMemGetAllMemHandles).stubs().will(invoke(StubHostGetAllMemHandlesOne));
 
     auto impl = std::make_unique<HostCpuUrmaChannel>(endpointHandle, channelDesc);
     ASSERT_EQ(impl->Init(), HCCL_SUCCESS);

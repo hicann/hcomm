@@ -19,20 +19,20 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepRemMem : public CcuRepBase {
-public:
-    CcuRepRemMem(const CcuTransport &transport, Memory rem);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
+    class CcuRepRemMem : public CcuRepBase {
+    public:
+        CcuRepRemMem(const CcuTransport& transport, Memory rem);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
 
-private:
-    const CcuTransport &transport;
+    private:
+        const CcuTransport& transport;
 
-    Memory   rem;
+        Memory rem;
 
-    friend class Hccl::CcuErrorHandler;
-};
+        friend class Hccl::CcuErrorHandler;
+    };
 
-};     // namespace CcuRep
-};     // namespace Hccl
+}; // namespace CcuRep
+}; // namespace Hccl
 #endif // HCCL_CCU_REPRESENTATION_REM_MEM_H

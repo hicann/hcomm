@@ -19,31 +19,33 @@
 namespace Hccl {
 namespace CcuRep {
 
-class CcuRepWrite : public CcuRepBase {
-public:
-    CcuRepWrite(const CcuTransport &transport, Memory rem, Memory loc, Variable len, MaskSignal sem, uint16_t mask);
-    CcuRepWrite(const CcuTransport &transport, Memory rem, Memory loc, Variable len, uint16_t dataType, uint16_t opType,
-                MaskSignal sem, uint16_t mask);
-    bool        Translate(CcuInstr *&instr, uint16_t &instrId, const TransDep &dep) override;
-    std::string Describe() override;
-    uint32_t GetTransportChannelId() { return transport.GetChannelId(); }
-private:
-    const CcuTransport &transport;
+    class CcuRepWrite : public CcuRepBase {
+    public:
+        CcuRepWrite(const CcuTransport& transport, Memory rem, Memory loc, Variable len, MaskSignal sem, uint16_t mask);
+        CcuRepWrite(
+            const CcuTransport& transport, Memory rem, Memory loc, Variable len, uint16_t dataType, uint16_t opType,
+            MaskSignal sem, uint16_t mask);
+        bool Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
+        std::string Describe() override;
+        uint32_t GetTransportChannelId() { return transport.GetChannelId(); }
 
-    Memory   rem;
-    Memory   loc;
-    Variable len;
+    private:
+        const CcuTransport& transport;
 
-    MaskSignal sem;
-    uint16_t   mask{0};
+        Memory rem;
+        Memory loc;
+        Variable len;
 
-    uint16_t dataType{0};
-    uint16_t opType{0};
-    uint16_t reduceFlag{0};
+        MaskSignal sem;
+        uint16_t mask{0};
 
-    friend class Hccl::CcuErrorHandler;
-};
+        uint16_t dataType{0};
+        uint16_t opType{0};
+        uint16_t reduceFlag{0};
 
-};     // namespace CcuRep
-};     // namespace Hccl
+        friend class Hccl::CcuErrorHandler;
+    };
+
+}; // namespace CcuRep
+}; // namespace Hccl
 #endif // HCCL_CCU_REPRESENTATION_WRITE_H

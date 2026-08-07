@@ -17,7 +17,7 @@
 #include "rdma_handle_manager.h"
 
 namespace Hccl {
-constexpr u64 FLUSH_BUFFER_SIZE = 8;  // 每次读取8字节
+constexpr u64 FLUSH_BUFFER_SIZE = 8; // 每次读取8字节
 class FlushHandle {
 public:
     FlushHandle();
@@ -30,32 +30,27 @@ public:
     HcclResult Destroy();
 
     // 成员变量
-    MrInfoT        loopBackQpMrRemoteInfo = {};
-    MrInfoT        loopBackQpMrLocalInfo = {};
+    MrInfoT loopBackQpMrRemoteInfo = {};
+    MrInfoT loopBackQpMrLocalInfo = {};
     LoopbackQpPair loopBackQpParam = {};
 
-    bool GetFlushOpcodeSupport() const
-    {
-        return flushOpcodeSupport_;
-    }
+    bool GetFlushOpcodeSupport() const { return flushOpcodeSupport_; }
 
-    void SetFlushOpcodeSupport() {
-        flushOpcodeSupport_ = true;
-    }
+    void SetFlushOpcodeSupport() { flushOpcodeSupport_ = true; }
 
 private:
-    bool           flushOpcodeSupport_{false};
-    bool           flushIsInitialized{false};
-    void*          localMem{nullptr};
-    void*          deviceMem{nullptr};
-    MrHandle       localMrHandle{nullptr};
-    MrHandle       remoteMrHandle{nullptr};
-    QpHandle       qpHandle{nullptr};
-    RdmaHandle     rdmaHandle{nullptr};
+    bool flushOpcodeSupport_{false};
+    bool flushIsInitialized{false};
+    void* localMem{nullptr};
+    void* deviceMem{nullptr};
+    MrHandle localMrHandle{nullptr};
+    MrHandle remoteMrHandle{nullptr};
+    QpHandle qpHandle{nullptr};
+    RdmaHandle rdmaHandle{nullptr};
 
     // 初始化方法
-    HcclResult GetRdmaHandle(IpAddress ip, u32 devPhyId, void **rdmaHandle) const;
-    HcclResult GetLbMax(int *lbMax) const;
+    HcclResult GetRdmaHandle(IpAddress ip, u32 devPhyId, void** rdmaHandle) const;
+    HcclResult GetLbMax(int* lbMax) const;
     HcclResult AllocateDeviceMemory();
     HcclResult AllocateLocalMemory();
     HcclResult CreateLoopbackQp();
@@ -63,7 +58,7 @@ private:
     HcclResult RegisterRemoteMr();
 
     // 销毁方法
-    HcclResult DeregisterMr(MrHandle &mrHandle, std::string logTag) const;
+    HcclResult DeregisterMr(MrHandle& mrHandle, std::string logTag) const;
     HcclResult DestroyLoopbackQp();
     HcclResult FreeLocalMemory();
     HcclResult FreeDeviceMemory();

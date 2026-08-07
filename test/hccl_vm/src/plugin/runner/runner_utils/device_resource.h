@@ -36,7 +36,7 @@ public:
 private:
     uint32_t rankSize_{0};
     uint32_t streamSize_{0};
-    friend DeviceResourceManager;                  // 声明资源管理类为友元类
+    friend DeviceResourceManager; // 声明资源管理类为友元类
     // notify资源<rankId, streamId>
     std::vector<std::vector<StreamNotify>> notifyResources_;
 };

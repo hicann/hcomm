@@ -7,11 +7,10 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
- 
+
 #ifndef HCCL_SRC_DLPROFFUNC_H
 #define HCCL_SRC_DLPROFFUNC_H
- 
- 
+
 #include <functional>
 #include <mutex>
 #include <dlfcn.h>
@@ -22,20 +21,20 @@ class DlProfFunc {
 public:
     bool isStubMode();
     virtual ~DlProfFunc();
-    static DlProfFunc &GetInstance();
+    static DlProfFunc& GetInstance();
     HcclResult DlProfFunctionInit();
     std::function<uint64_t(void)> dlMsprofSysCycleTime{};
- 
+
 private:
     bool initializedFlag_{false};
- 
-    void *handle_{};
+
+    void* handle_{};
     std::mutex handleMutex_;
     DlProfFunc(const DlProfFunc&) = delete;
-    DlProfFunc &operator=(const DlProfFunc&) = delete;
+    DlProfFunc& operator=(const DlProfFunc&) = delete;
     DlProfFunc();
     HcclResult DlProfFunctionInterInit();
     void DlProfFunctionStubInit();
 };
-}  // namespace hccl
+} // namespace Hccl
 #endif

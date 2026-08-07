@@ -26,36 +26,27 @@ public:
 
     ~LocalRdmaRmaBuffer() override;
 
-    LocalRdmaRmaBuffer(const LocalRdmaRmaBuffer &that) = delete;
+    LocalRdmaRmaBuffer(const LocalRdmaRmaBuffer& that) = delete;
 
-    LocalRdmaRmaBuffer &operator=(const LocalRdmaRmaBuffer &that) = delete;
+    LocalRdmaRmaBuffer& operator=(const LocalRdmaRmaBuffer& that) = delete;
 
     std::string Describe() const override;
 
     std::unique_ptr<Serializable> GetExchangeDto() override;
 
-    u32 GetLkey() const
-    {
-        return lkey;
-    }
-    u32 GetRkey() const
-    {
-        return rkey;
-    }
-    MrHandle GetMrHandle() const
-    {
-        return mrHandle;
-    }
-    std::pair<uintptr_t, u64> GetBufferInfo() {return make_pair(buf->GetAddr(), buf->GetSize());}
+    u32 GetLkey() const { return lkey; }
+    u32 GetRkey() const { return rkey; }
+    MrHandle GetMrHandle() const { return mrHandle; }
+    std::pair<uintptr_t, u64> GetBufferInfo() { return make_pair(buf->GetAddr(), buf->GetSize()); }
 
     std::vector<char> Desc;
-    
+
 private:
     RdmaHandle rdmaHandle;
-    u8         key[RDMA_MEM_KEY_MAX_LEN]{0};
-    u32        lkey{0};
-    u32        rkey{0};
-    MrHandle   mrHandle{nullptr};
+    u8 key[RDMA_MEM_KEY_MAX_LEN]{0};
+    u32 lkey{0};
+    u32 rkey{0};
+    MrHandle mrHandle{nullptr};
 };
 
 } // namespace Hccl

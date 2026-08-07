@@ -15,32 +15,39 @@
 namespace hcomm {
 namespace CcuRep {
 
-CcuRepRecordSharedNotify::CcuRepRecordSharedNotify(CcuInsGeneratorBase* insGenPtr, const LocalNotify &notify, uint16_t mask)
-    : insGenPtr(insGenPtr), notify_(notify), mask_(mask)
-{
-    type       = CcuRepType::RECORD_SHARED_NOTIFY;
-    instrCount = insGenPtr->GetInstrCount(type);
-}
+    CcuRepRecordSharedNotify::CcuRepRecordSharedNotify(
+        CcuInsGeneratorBase* insGenPtr, const LocalNotify& notify, uint16_t mask)
+        : insGenPtr(insGenPtr),
+          notify_(notify),
+          mask_(mask)
+    {
+        type = CcuRepType::RECORD_SHARED_NOTIFY;
+        instrCount = insGenPtr->GetInstrCount(type);
+    }
 
-bool CcuRepRecordSharedNotify::Translate(CcuKernel* ccuKernel, CcuInstr *&instr, uint16_t &instrId, const TransDep &dep)
-{
-    this->instrId = instrId;
-    translated    = true;
+    bool
+    CcuRepRecordSharedNotify::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    {
+        this->instrId = instrId;
+        translated = true;
 
-    insGenPtr->CcuRepRecordSharedNotifyTranslate(ccuKernel, instr, this, dep);
-    CHK_PRT_THROW((instrId > UINT16_MAX - instrCount),
-        HCCL_ERROR("[CcuRepRecordSharedNotify::Translate]uint16 integer overflow occurs, "
-            "instrId = [%hu], instrCount = [%hu]", instrId, instrCount),
-        Hccl::InternalException, "integer overflow");
-    instrId += instrCount;
+        insGenPtr->CcuRepRecordSharedNotifyTranslate(ccuKernel, instr, this, dep);
+        CHK_PRT_THROW(
+            (instrId > UINT16_MAX - instrCount),
+            HCCL_ERROR(
+                "[CcuRepRecordSharedNotify::Translate]uint16 integer overflow occurs, "
+                "instrId = [%hu], instrCount = [%hu]",
+                instrId, instrCount),
+            Hccl::InternalException, "integer overflow");
+        instrId += instrCount;
 
-    return translated;
-}
+        return translated;
+    }
 
-std::string CcuRepRecordSharedNotify::Describe()
-{
-    return Hccl::StringFormat("Post, Use semIndex[%u] and mask[%04x]", notify_.Id(), mask_);
-}
+    std::string CcuRepRecordSharedNotify::Describe()
+    {
+        return Hccl::StringFormat("Post, Use semIndex[%u] and mask[%04x]", notify_.Id(), mask_);
+    }
 
 }; // namespace CcuRep
 }; // namespace hcomm

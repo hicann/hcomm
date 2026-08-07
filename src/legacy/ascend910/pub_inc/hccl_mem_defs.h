@@ -29,8 +29,8 @@ typedef enum {
 } HcclMemType;
 
 /* 网络设备句柄 */
-typedef void *HcclNetDev;
-using HcclNetDevCtx = void *;
+typedef void* HcclNetDev;
+using HcclNetDevCtx = void*;
 
 /**
  * @struct HcclBuf
@@ -40,9 +40,9 @@ using HcclNetDevCtx = void *;
  * @var handle - 内存管理句柄
  */
 typedef struct {
-    void *addr;
+    void* addr;
     uint64_t len;
-    void *handle;
+    void* handle;
 } HcclBuf;
 
 /**
@@ -54,15 +54,15 @@ typedef struct {
  */
 typedef struct {
     HcclMemType type;
-    void *addr;
+    void* addr;
     uint64_t size;
 } HcclMem;
 
 typedef struct {
     HcclMemType type;
-    void *addr;
+    void* addr;
     uint64_t size;
-    void *devAddr;
+    void* devAddr;
 } HcclMemEx;
 
 #ifdef __cplusplus

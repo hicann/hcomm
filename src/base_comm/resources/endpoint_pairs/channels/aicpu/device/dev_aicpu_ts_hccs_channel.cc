@@ -15,7 +15,7 @@
 namespace hccl {
 DevAicpuTsHccsChannel::~DevAicpuTsHccsChannel()
 {
-    for (auto &pair : slots_) {
+    for (auto& pair : slots_) {
         if (pair.second.transport != nullptr) {
             (void)pair.second.transport->DeInit();
             pair.second.transport.reset();
@@ -24,8 +24,8 @@ DevAicpuTsHccsChannel::~DevAicpuTsHccsChannel()
     slots_.clear();
 }
 
-HcclResult DevAicpuTsHccsChannel::SetTransportMachinePara(hccl::MachinePara &machinePara,
-    const HcclChannelHccsRes &channelHccsRes)
+HcclResult
+DevAicpuTsHccsChannel::SetTransportMachinePara(hccl::MachinePara& machinePara, const HcclChannelHccsRes& channelHccsRes)
 {
     machinePara.linkAttribute = 0x03; /* 0x03同时支持目的端和源端发起 */
 
@@ -46,29 +46,28 @@ HcclResult DevAicpuTsHccsChannel::SetTransportMachinePara(hccl::MachinePara &mac
     machinePara.localBufMem = channelHccsRes.localBufMem;
     machinePara.remoteBufMem = channelHccsRes.remoteBufMem;
 
-    HCCL_INFO("%s success, linkAttribute[%x], localUserRank[%u], remoteWorldRank[%u], "
+    HCCL_INFO(
+        "%s success, linkAttribute[%x], localUserRank[%u], remoteWorldRank[%u], "
         "remoteUserrank[%u], deviceLogicId[%d], localDeviceId[%d], deviceType[%d], newTag[%s], "
         "specifyLink[%d], machineType[%u], localBufSize[%u],remoteBufSize[%u], localBufMem[%p], remoteBufMem[%p]",
-        __func__, machinePara.linkAttribute, machinePara.localUserrank,
-        machinePara.remoteWorldRank, machinePara.remoteUserrank, machinePara.deviceLogicId, machinePara.localDeviceId,
-        machinePara.deviceType, machinePara.tag.c_str(), machinePara.specifyLink,
-        static_cast<u32>(machinePara.machineType), machinePara.localBufSize,
-        machinePara.remoteBufSize, machinePara.localBufMem, machinePara.remoteBufMem);
+        __func__, machinePara.linkAttribute, machinePara.localUserrank, machinePara.remoteWorldRank,
+        machinePara.remoteUserrank, machinePara.deviceLogicId, machinePara.localDeviceId, machinePara.deviceType,
+        machinePara.tag.c_str(), machinePara.specifyLink, static_cast<u32>(machinePara.machineType),
+        machinePara.localBufSize, machinePara.remoteBufSize, machinePara.localBufMem, machinePara.remoteBufMem);
     return HCCL_SUCCESS;
 }
 
-HcclResult DevAicpuTsHccsChannel::Create(const void *blob, u64 blobBytes,
-    const HcommDeviceInfo &deviceInfo, ChannelHandle &outHandle)
+HcclResult DevAicpuTsHccsChannel::Create(
+    const void* blob, u64 blobBytes, const HcommDeviceInfo& deviceInfo, ChannelHandle& outHandle)
 {
     CHK_PTR_NULL(blob);
     if (blobBytes < sizeof(HcclChannelHccsRes)) {
-        HCCL_ERROR("[DevAicpuTsHccsChannel][Create] blob too small[%llu]",
-            static_cast<unsigned long long>(blobBytes));
+        HCCL_ERROR("[DevAicpuTsHccsChannel][Create] blob too small[%llu]", static_cast<unsigned long long>(blobBytes));
         return HCCL_E_PARA;
     }
 
-    const HcclChannelHccsRes &channelHccsRes = *static_cast<const HcclChannelHccsRes *>(blob);
-    const HcclChannelP2p &channelP2p = channelHccsRes.channelP2p;
+    const HcclChannelHccsRes& channelHccsRes = *static_cast<const HcclChannelHccsRes*>(blob);
+    const HcclChannelP2p& channelP2p = channelHccsRes.channelP2p;
 
     // 创建Transport对象
     MachinePara machinePara;
@@ -81,7 +80,7 @@ HcclResult DevAicpuTsHccsChannel::Create(const void *blob, u64 blobBytes,
 
     //  获取transportAttr信息
     transDevP2pData.transportAttr = channelP2p.transportAttr;
- 
+
     //  创建Transport对象
     TransportPara para{};
     const std::unique_ptr<hccl::NotifyPool> notifyPool;
@@ -95,14 +94,13 @@ HcclResult DevAicpuTsHccsChannel::Create(const void *blob, u64 blobBytes,
     }
     CHK_PTR_NULL(dispatcherCtx);
 
-    DispatcherCtx *ctx = static_cast<DispatcherCtx *>(dispatcherCtx);
+    DispatcherCtx* ctx = static_cast<DispatcherCtx*>(dispatcherCtx);
     CHK_PRT(ctx->SetDispatcherHcclQos(channelHccsRes.channelP2p.qos)); // 调度器添加hcclQos
     CHK_PTR_NULL(ctx);
 
     std::shared_ptr<Transport> transport;
     transport.reset(new (std::nothrow) Transport(
-        TransportType::TRANS_TYPE_DEVICE_P2P, para, ctx->GetDispatcher(),
-        notifyPool, machinePara, transDevP2pData));
+        TransportType::TRANS_TYPE_DEVICE_P2P, para, ctx->GetDispatcher(), notifyPool, machinePara, transDevP2pData));
     CHK_SMART_PTR_NULL(transport);
 
     CHK_RET(transport->Init()); // 初始化需要增加远端用户注册内存
@@ -139,4 +137,4 @@ bool DevAicpuTsHccsChannel::Destroy(ChannelHandle handle)
     HCCL_DEBUG("[DevAicpuTsHccsChannel][Destroy] destroyed handle[0x%llx]", handle);
     return true;
 }
-}
+} // namespace hccl

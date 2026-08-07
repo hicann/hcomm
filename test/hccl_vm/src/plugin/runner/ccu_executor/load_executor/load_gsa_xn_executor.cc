@@ -34,7 +34,7 @@ void LoadGsaXnExecutor::Parser()
 
 void LoadGsaXnExecutor::Run()
 {
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     uint64_t gsaVal = ccuResMgr.GetGsaValue(rankId_, dieId_, gsAmId_);
     uint64_t xnVal = ccuResMgr.GetXnValue(rankId_, dieId_, xnId_);
     uint64_t val = gsaVal + xnVal;
@@ -50,7 +50,7 @@ CcuTrace::CcuInstrTraceDetail LoadGsaXnExecutor::CollectTraceDetail()
 {
     CcuTrace::CcuInstrTraceDetail detail;
     detail.typeName = "LoadGsaXn";
-    auto &ccuResMgr = CcuResourceManager::GetInstance();
+    auto& ccuResMgr = CcuResourceManager::GetInstance();
     detail.args["gsaVal"] = std::to_string(ccuResMgr.GetGsaValue(rankId_, dieId_, gsAmId_));
     detail.args["xnVal"] = std::to_string(ccuResMgr.GetXnValue(rankId_, dieId_, xnId_));
     return detail;
