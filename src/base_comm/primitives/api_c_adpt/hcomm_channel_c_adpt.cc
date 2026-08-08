@@ -67,6 +67,25 @@ HcommResult CheckUbAttr(HcommChannelDesc& channelDesc)
     return HCCL_SUCCESS;
 }
 
+HcommResult CheckUbMemAttr(HcommChannelDesc& channelDesc)
+{
+    if (channelDesc.remoteEndpoint.protocol != COMM_PROTOCOL_UB_MEM) {
+        return HCOMM_SUCCESS;
+    }
+
+    if (channelDesc.ubMemAttr.pathMode == 0xFF) {
+        HCCL_INFO("[%s] use default ubMemAttr.pathMode, set to 0.", __func__);
+        channelDesc.ubMemAttr.pathMode = 0;
+        return HCOMM_SUCCESS;
+    }
+
+    if (channelDesc.ubMemAttr.pathMode > 2) {
+        HCCL_ERROR("[%s] invalid ubMemAttr.pathMode[%u], should be 0 ~ 2.", __func__, channelDesc.ubMemAttr.pathMode);
+        return HCCL_E_PARA;
+    }
+    return HCOMM_SUCCESS;
+}
+
 HcommResult CheckRoceAttr(HcommChannelDesc& channelDesc)
 {
     if (channelDesc.remoteEndpoint.protocol != COMM_PROTOCOL_ROCE) {
@@ -179,6 +198,11 @@ HcommResult NormalizeHcommChannelDescs(
         ret = CheckUbAttr(channelDescFinal);
         if (ret != HCOMM_SUCCESS) {
             HCCL_ERROR("[%s] CheckUbAttr failed, ret[%d].", __func__, ret);
+            return ret;
+        }
+        ret = CheckUbMemAttr(channelDescFinal);
+        if (ret != HCOMM_SUCCESS) {
+            HCCL_ERROR("[%s] CheckUbMemAttr failed, ret[%d].", __func__, ret);
             return ret;
         }
         ret = CheckRoceAttr(channelDescFinal);

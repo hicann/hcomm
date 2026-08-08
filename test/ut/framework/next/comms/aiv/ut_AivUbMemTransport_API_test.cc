@@ -217,3 +217,51 @@ TEST_F(AivUbMemTransportTest, ut_AivUbMemTransport_UpdateMemInfo_When_bufferNumI
     HcclResult ret = aivTransport->UpdateMemInfo(memHandles, 0);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
+
+// 验证 ExchangeIpcBufferDto 序列化/反序列化保留字段，且 Describe 输出
+TEST_F(AivUbMemTransportTest, ut_ExchangeIpcBufferDto_SerializeDeserialize_KeepsFields)
+{
+    Hccl::ExchangeIpcBufferDto out(0x100, 0x200, 0x10, 12345, "memInfo_test");
+    Hccl::BinaryStream bs;
+    out.Serialize(bs);
+
+    std::string data = bs.GetString();
+    std::vector<char> vec(data.begin(), data.end());
+    Hccl::BinaryStream bsIn(vec);
+    Hccl::ExchangeIpcBufferDto in;
+    in.Deserialize(bsIn);
+
+    EXPECT_EQ(in.addr, 0x100ULL);
+    EXPECT_EQ(in.size, 0x200ULL);
+    EXPECT_EQ(in.offset, 0x10ULL);
+    EXPECT_EQ(in.pid, 12345u);
+    EXPECT_EQ(in.memInfo, std::string("memInfo_test"));
+
+    std::string descStr = in.Describe();
+    EXPECT_NE(descStr.find("memInfo_test"), std::string::npos);
+}
+
+// 验证 RmtBufferUnpackProc 构造 RemoteIpcRmaBuffer 后从 channelDesc_ 注入 pathMode
+TEST_F(AivUbMemTransportTest, ut_RmtBufferUnpackProc_InjectsPathModeFromChannelDesc)
+{
+    HcommChannelDesc desc{};
+    desc.remoteEndpoint.protocol = COMM_PROTOCOL_UB_MEM;
+    desc.ubMemAttr.pathMode = 2;
+    auto aivTransport = CreateAivTransport(desc);
+
+    // 构造一个非空 DTO 并序列化
+    Hccl::ExchangeIpcBufferDto out(0x1000, 0x1000, 0x0, 12345, "ubMemBuffer");
+    Hccl::BinaryStream bs;
+    u32 vecSize = 1;
+    bs << vecSize;
+    out.Serialize(bs);
+
+    std::string data = bs.GetString();
+    std::vector<char> vec(data.begin(), data.end());
+    Hccl::BinaryStream bsIn(vec);
+
+    aivTransport->RmtBufferUnpackProc(bsIn);
+
+    // 验证 RemoteIpcRmaBuffer 的 pathMode_ 被注入为 channelDesc_.ubMemAttr.pathMode
+    EXPECT_EQ(aivTransport->rmtBufferVec_[0]->pathMode_, 2);
+}

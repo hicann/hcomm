@@ -64,8 +64,12 @@ public:
 
     std::string Describe() const override;
 
+    void SetPathMode(uint8_t pathMode) { pathMode_ = pathMode; }
+
 private:
     void Close() const;
+
+    uint8_t pathMode_{0};
 
     char ipcName[RTS_IPC_MEM_NAME_LEN]{0};
     u64 ipcAddr{0};

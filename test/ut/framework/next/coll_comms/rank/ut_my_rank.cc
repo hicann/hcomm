@@ -1,3 +1,13 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
 #include <iostream>
 #include "gtest/gtest.h"
 #include "mockcpp/mokc.h"
@@ -164,16 +174,19 @@ TEST_F(MyRankTest, Ut_When_BatchCreateChannels_Expect_SUCCESS)
     channelDesc[0].notifyNum = 2;
     channelDesc[0].localEndpoint = localEp;
     channelDesc[0].remoteEndpoint = rmtEp;
+    channelDesc[0].ubMemAttr.pathMode = 0;
     channelDesc[1].channelProtocol = COMM_PROTOCOL_UB_MEM;
     channelDesc[1].remoteRank = 1;
     channelDesc[1].notifyNum = 2;
     channelDesc[1].localEndpoint = localEp;
     channelDesc[1].remoteEndpoint = rmtEp;
+    channelDesc[1].ubMemAttr.pathMode = 0;
     channelDesc[2].channelProtocol = COMM_PROTOCOL_UB_MEM;
     channelDesc[2].remoteRank = 2;
     channelDesc[2].notifyNum = 2;
     channelDesc[2].localEndpoint = localEp;
     channelDesc[2].remoteEndpoint = rmtEp2;
+    channelDesc[2].ubMemAttr.pathMode = 0;
 
     u32 channelIdx0 = 0u;
     u32 channelIdx1 = 1u;
@@ -657,6 +670,43 @@ TEST_F(MyRankTest, Ut_ChannelDescHccl2Hcomm_When_Roce_DoesNotUseUbAttrBranch)
     EXPECT_EQ(out.roceAttr.sl, 4u);
 }
 
+TEST_F(MyRankTest, Ut_ChannelDescHccl2Hcomm_When_UbMem_Sets_PathMode_FromInput)
+{
+    CommConfig commConfig("ut");
+    HcclChannelDesc in{};
+    ASSERT_EQ(HcclChannelDescInit(&in, 1), HCCL_SUCCESS);
+    in.channelProtocol = COMM_PROTOCOL_UB_MEM;
+    in.ubMemAttr.pathMode = 2u;
+    HcommChannelDesc out = MyRankUtils::ChannelDescHccl2Hcomm(in, commConfig);
+    EXPECT_EQ(out.ubMemAttr.pathMode, 2u);
+}
+
+TEST_F(MyRankTest, Ut_ChannelDescHccl2Hcomm_When_UbMem_PathModeZero_PassedThrough)
+{
+    CommConfig commConfig("ut");
+    HcclChannelDesc in{};
+    ASSERT_EQ(HcclChannelDescInit(&in, 1), HCCL_SUCCESS);
+    in.channelProtocol = COMM_PROTOCOL_UB_MEM;
+    in.ubMemAttr.pathMode = 0u;
+    HcommChannelDesc out = MyRankUtils::ChannelDescHccl2Hcomm(in, commConfig);
+    EXPECT_EQ(out.ubMemAttr.pathMode, 0u);
+}
+
+TEST_F(MyRankTest, Ut_ChannelDescHccl2Hcomm_When_UbcCtp_DoesNotSetPathMode)
+{
+    // UBC_CTP 走 qos 分支，不进入 UB_MEM 的 pathMode 显式设置分支；
+    // pathMode 仅经 union raws 拷贝传递，这里验证 ubMemAttr.pathMode 仍随 raws 透传
+    CommConfig commConfig("ut");
+    ASSERT_EQ(commConfig.SetConfigHcclQos(5u), HCCL_SUCCESS);
+    HcclChannelDesc in{};
+    ASSERT_EQ(HcclChannelDescInit(&in, 1), HCCL_SUCCESS);
+    in.channelProtocol = COMM_PROTOCOL_UBC_CTP;
+    in.ubMemAttr.pathMode = 2u;
+    HcommChannelDesc out = MyRankUtils::ChannelDescHccl2Hcomm(in, commConfig);
+    EXPECT_EQ(out.qos, 5u);
+    EXPECT_EQ(out.ubMemAttr.pathMode, 2u);
+}
+
 TEST_F(MyRankTest, Ut_ConfigSqDepthByExpansionMode_When_CCU_MSModel_WithCommConfig)
 {
     HcommChannelDesc in{};
@@ -732,6 +782,7 @@ TEST_F(MyRankTest, Ut_CreateChannels_When_BatchExchangeAndCheckConsistency_Timeo
     channelDesc[0].notifyNum = 2;
     channelDesc[0].localEndpoint = localEp;
     channelDesc[0].remoteEndpoint = rmtEp;
+    channelDesc[0].ubMemAttr.pathMode = 0;
 
     ChannelHandle channelHandles[1];
     HcclResult ret = myRank->CreateChannels(COMM_ENGINE_AICPU_TS, "test", channelDesc, 1, channelHandles);

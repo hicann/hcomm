@@ -37,6 +37,7 @@
 #include "hcomm_res.h"
 #include "channel_config.h"
 #include "hcclCommDfx.h"
+#include "coll_comm_res_c_adpt.h"
 
 using namespace hccl;
 /**
@@ -263,7 +264,10 @@ ProcessHcclChannelDesc(const HcclChannelDesc& channelDesc, HcclChannelDesc& chan
         case COMM_PROTOCOL_HCCS_ONLY:
         case COMM_PROTOCOL_PCIE:
         case COMM_PROTOCOL_SIO:
+            break;
         case COMM_PROTOCOL_UB_MEM:
+            channelDescFinal.ubMemAttr.pathMode = channelDesc.ubMemAttr.pathMode;
+            HCCL_INFO("[%s] ubMemAttr.pathMode[%u]", __func__, channelDescFinal.ubMemAttr.pathMode);
             break;
         case COMM_PROTOCOL_UBC_CTP:
         case COMM_PROTOCOL_UBC_TP:

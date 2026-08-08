@@ -124,6 +124,10 @@ namespace hcomm {
              */
             static void PrintRoceAttributes(uint32_t idx, const HcclChannelDesc& channelDesc);
 
+            static void PrintUbMemAttributes(uint32_t idx, const HcclChannelDesc& channelDesc);
+
+            static bool IsUbMemProtocol(const HcclChannelDesc& channelDesc);
+
             // ========== 新增：私有辅助函数（消除重复代码） ==========
 
             /**

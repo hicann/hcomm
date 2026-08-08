@@ -55,6 +55,10 @@ typedef struct {
             uint8_t tc;             ///< 流量类别(QoS)
             uint8_t sl;             ///< 服务等级(QoS)
         } roceAttr;
+        struct {
+            uint8_t
+                pathMode; ///< UB_MEM访问路径模式：0表示默认路径(有单路径走单路径，无单路径走多路径)，1为单路径，2为多路径；0xFF表示使用默认值0
+        } ubMemAttr;
     };
 } HcclChannelDesc;
 

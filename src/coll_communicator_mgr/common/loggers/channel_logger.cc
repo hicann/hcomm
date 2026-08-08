@@ -45,6 +45,9 @@ namespace logger {
 
         // ROCE 协议特有属性
         PrintRoceAttributes(idx, channelDesc);
+
+        // UB_MEM 协议特有属性
+        PrintUbMemAttributes(idx, channelDesc);
     }
 
     void ChannelLogger::PrintDescTableHeader()
@@ -193,6 +196,19 @@ namespace logger {
     {
         outLocalAddr = CommAddrLogger::ToString(channelDesc.localEndpoint.commAddr);
         outRemoteAddr = CommAddrLogger::ToString(channelDesc.remoteEndpoint.commAddr);
+    }
+
+    void ChannelLogger::PrintUbMemAttributes(uint32_t idx, const HcclChannelDesc& channelDesc)
+    {
+        if (!IsUbMemProtocol(channelDesc)) {
+            return;
+        }
+        HCCL_INFO("[%s] channelDescs[%u] ubMemAttr: pathMode[%u]", __func__, idx, channelDesc.ubMemAttr.pathMode);
+    }
+
+    bool ChannelLogger::IsUbMemProtocol(const HcclChannelDesc& channelDesc)
+    {
+        return channelDesc.channelProtocol == COMM_PROTOCOL_UB_MEM;
     }
 
 } // namespace logger

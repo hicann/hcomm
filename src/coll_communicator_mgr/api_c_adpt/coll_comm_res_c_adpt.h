@@ -19,6 +19,10 @@ extern "C" {
 
 HcclResult
 ProcessHcclResPackReq(const HcclChannelDesc& channelDesc, HcclChannelDesc& channelDescFinal, hccl::hcclComm* hcclComm);
+
+HcclResult
+ProcessHcclChannelDesc(const HcclChannelDesc& channelDesc, HcclChannelDesc& channelDescFinal, hccl::hcclComm* hcclComm);
+
 HcclResult HcclGroupStart();
 HcclResult HcclGroupEnd();
 

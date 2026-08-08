@@ -264,6 +264,10 @@ typedef struct {
         struct {
             uint32_t sqDepth; ///< UB队列深度，0表示使用默认值
         } ubAttr;
+        struct {
+            uint8_t
+                pathMode; ///< UB_MEM访问路径模式：0表示默认路径(有单路径走单路径，无单路径走多路径)，1为单路径，2为多路径；0xFF表示使用默认值0
+        } ubMemAttr;
     };
     uint32_t qos;            ///< 通信域QoS 与协议解耦
     const char* channelName; ///< channel业务匹配标识，两端需相同；NULL表示匿名channel

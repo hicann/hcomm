@@ -74,8 +74,8 @@ string RemoteIpcRmaBuffer::Describe() const
     return StringFormat(
         "RemoteIpcRmaBuffer[addr=0x%llx, size=0x%llx, myPid=%u, "
         "remotePid=%u, ipcAddr=0x%llx, ipcOffset=0x%llx, ipcPtr=%p, ipcName=%s, "
-        "isOpened=%d]",
-        addr, size, myPid, remotePid, ipcAddr, ipcOffset, ipcPtr, ipcName, isOpened);
+        "isOpened=%d, pathMode=%u]",
+        addr, size, myPid, remotePid, ipcAddr, ipcOffset, ipcPtr, ipcName, isOpened, pathMode_);
 }
 
 RemoteRdmaRmaBuffer::RemoteRdmaRmaBuffer(RdmaHandle rdmaHandle)

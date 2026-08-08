@@ -1,3 +1,13 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
 #include "gtest/gtest.h"
 #include "../../hccl_api_base_test.h"
 #include "hccl/hccl_res.h"
@@ -19,6 +29,7 @@
 #include "my_rank.h"
 #include "aiv_urma_channel.h"
 #include "channel_process.h"
+#include "coll_comm_res_c_adpt.h"
 
 #define private public
 
@@ -399,6 +410,57 @@ TEST_F(HcclChannelDescTest, Ut_ProcessUbChannelDesc_When_Uboe_QosUnset_UsesCommH
     in.channelProtocol = COMM_PROTOCOL_UBOE;
     ret = ProcessUbChannelDesc(in, out, hcclCommPtr.get());
     EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+// ProcessHcclChannelDesc 的 UB_MEM/HCCS 分支仅做 pathMode 拷贝，不依赖 hcclComm，
+// 使用轻量 fixture 避免重型通信域初始化，便于在无设备环境独立运行。
+class ProcessHcclChannelDescTest : public testing::Test {
+protected:
+    HcclResult ret{HCCL_SUCCESS};
+};
+
+TEST_F(ProcessHcclChannelDescTest, Ut_ProcessHcclChannelDesc_When_UbMem_CopiesPathMode)
+{
+    HcclChannelDesc in{};
+    HcclChannelDesc out{};
+    ASSERT_EQ(HcclChannelDescInit(&in, 1), HCCL_SUCCESS);
+    ASSERT_EQ(HcclChannelDescInit(&out, 1), HCCL_SUCCESS);
+    in.channelProtocol = COMM_PROTOCOL_UB_MEM;
+    in.ubMemAttr.pathMode = 2u;
+
+    ret = ProcessHcclChannelDesc(in, out, nullptr);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(out.channelProtocol, COMM_PROTOCOL_UB_MEM);
+    EXPECT_EQ(out.ubMemAttr.pathMode, 2u);
+}
+
+TEST_F(ProcessHcclChannelDescTest, Ut_ProcessHcclChannelDesc_When_UbMem_PathModeZero_CopiesZero)
+{
+    HcclChannelDesc in{};
+    HcclChannelDesc out{};
+    ASSERT_EQ(HcclChannelDescInit(&in, 1), HCCL_SUCCESS);
+    ASSERT_EQ(HcclChannelDescInit(&out, 1), HCCL_SUCCESS);
+    in.channelProtocol = COMM_PROTOCOL_UB_MEM;
+    in.ubMemAttr.pathMode = 0u;
+
+    ret = ProcessHcclChannelDesc(in, out, nullptr);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(out.ubMemAttr.pathMode, 0u);
+}
+
+TEST_F(ProcessHcclChannelDescTest, Ut_ProcessHcclChannelDesc_When_Hccs_DoesNotCopyUnion)
+{
+    HcclChannelDesc in{};
+    HcclChannelDesc out{};
+    ASSERT_EQ(HcclChannelDescInit(&in, 1), HCCL_SUCCESS);
+    ASSERT_EQ(HcclChannelDescInit(&out, 1), HCCL_SUCCESS);
+    in.channelProtocol = COMM_PROTOCOL_HCCS;
+    in.ubMemAttr.pathMode = 1u;
+
+    ret = ProcessHcclChannelDesc(in, out, nullptr);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(out.channelProtocol, COMM_PROTOCOL_HCCS);
+    EXPECT_EQ(out.ubMemAttr.pathMode, 0xFFu);
 }
 
 TEST_F(HcclChannelDescTest, Ut_HcclChannelAcquire_When_AicpuUrma_AppendSymmetricMemHandle)

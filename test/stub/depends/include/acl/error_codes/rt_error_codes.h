@@ -157,7 +157,7 @@ extern "C" {
 #define ACL_ERROR_RT_AICPU_INFO_LOAD_RSP_ERR 507902         // aicpu info load response error
 #define ACL_ERROR_RT_STREAM_CAPTURE_INVALIDATED 507903      // capture status is invalidated
 #define ACL_ERROR_RT_COMM_OP_RETRY_FAIL 507904              // hccl operation retry failed
-
+#define ACL_ERROR_RT_LINK_TYPE_NOT_SUPPORTED 207021         // link type not support
 #ifdef __cplusplus
 }
 #endif

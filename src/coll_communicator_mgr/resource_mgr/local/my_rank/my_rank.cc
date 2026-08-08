@@ -64,6 +64,10 @@ HcommChannelDesc ChannelDescHccl2Hcomm(const HcclChannelDesc& hcclDesc, const hc
     if (hcclDesc.channelProtocol == COMM_PROTOCOL_UBC_CTP || hcclDesc.channelProtocol == COMM_PROTOCOL_UBC_TP
         || hcclDesc.channelProtocol == COMM_PROTOCOL_UBOE || hcclDesc.channelProtocol == COMM_PROTOCOL_UBG) {
         hcommDesc.qos = ResolveUbCommDomainQos(commConfig);
+        return hcommDesc;
+    }
+    if (hcclDesc.channelProtocol == COMM_PROTOCOL_UB_MEM) {
+        hcommDesc.ubMemAttr.pathMode = hcclDesc.ubMemAttr.pathMode;
     }
     return hcommDesc;
 }

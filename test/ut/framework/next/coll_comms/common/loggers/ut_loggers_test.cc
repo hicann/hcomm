@@ -176,11 +176,13 @@ namespace logger {
         protected:
             HcclChannelDesc desc{};
             HcclChannelDesc descRoce{};
+            HcclChannelDesc descUbMem{};
 
             void SetUp() override
             {
                 memset(&desc, 0, sizeof(desc));
                 memset(&descRoce, 0, sizeof(descRoce));
+                memset(&descUbMem, 0, sizeof(descUbMem));
 
                 desc.remoteRank = 1;
                 desc.channelProtocol = COMM_PROTOCOL_HCCS;
@@ -200,6 +202,10 @@ namespace logger {
                 descRoce.roceAttr.retryInterval = 20;
                 descRoce.roceAttr.tc = 0;
                 descRoce.roceAttr.sl = 0;
+
+                descUbMem = desc;
+                descUbMem.channelProtocol = COMM_PROTOCOL_UB_MEM;
+                descUbMem.ubMemAttr.pathMode = 2;
             }
         };
 
@@ -282,6 +288,33 @@ namespace logger {
         TEST_F(ChannelLoggerTest, PrintDescInfo_Roce)
         {
             ChannelLogger::PrintDescInfo(0, descRoce);
+            SUCCEED();
+        }
+
+        TEST_F(ChannelLoggerTest, IsUbMemProtocol_UbMem) { EXPECT_TRUE(ChannelLogger::IsUbMemProtocol(descUbMem)); }
+
+        TEST_F(ChannelLoggerTest, IsUbMemProtocol_NonUbMem)
+        {
+            EXPECT_FALSE(ChannelLogger::IsUbMemProtocol(desc));
+            EXPECT_FALSE(ChannelLogger::IsUbMemProtocol(descRoce));
+        }
+
+        TEST_F(ChannelLoggerTest, PrintUbMemAttributes_UbMem)
+        {
+            ChannelLogger::PrintUbMemAttributes(0, descUbMem);
+            SUCCEED();
+        }
+
+        TEST_F(ChannelLoggerTest, PrintUbMemAttributes_NonUbMem)
+        {
+            // 非UB_MEM协议应直接返回，不打印
+            ChannelLogger::PrintUbMemAttributes(0, desc);
+            SUCCEED();
+        }
+
+        TEST_F(ChannelLoggerTest, PrintDescInfo_UbMem)
+        {
+            ChannelLogger::PrintDescInfo(0, descUbMem);
             SUCCEED();
         }
 

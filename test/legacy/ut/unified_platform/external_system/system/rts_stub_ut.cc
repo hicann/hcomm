@@ -163,6 +163,8 @@ aclError aclrtIpcMemImportByKey(void** devPtr, const char* key, uint64_t flag) {
 
 aclError aclrtIpcMemSetImportPid(const char* key, int32_t* pid, size_t num) { return ACL_SUCCESS; }
 
+aclError aclrtIpcMemSetAttr(const char* key, aclrtIpcMemAttrType type, uint64_t attr) { return ACL_SUCCESS; }
+
 aclError aclrtMallocHostWithCfg(void** ptr, uint64_t size, aclrtMallocConfig* cfg) { return ACL_SUCCESS; }
 
 rtError_t aclrtFreeHost(void* hostPtr) { return RT_ERROR_NONE; }

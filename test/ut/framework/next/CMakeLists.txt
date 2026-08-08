@@ -27,6 +27,7 @@ set(src_to_test_list
     comms/endpoint_pairs/ut_endpoint_pair.cc
     comms/api_c_adpt/ut_hcomm_c_adpt.cc
     comms/api_c_adpt/ut_hcomm_c_adpt_ubattr.cc
+    comms/api_c_adpt/ut_hcomm_c_adpt_ubmemattr.cc
     coll_comms/rank/ut_my_rank.cc
     coll_comms/rank/ut_ccu_ms_per_device_exclusive.cc
     coll_comms/rank/comm_mems/test_getHcclBuffer_api.cc
