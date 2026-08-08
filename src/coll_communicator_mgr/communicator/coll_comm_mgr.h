@@ -18,6 +18,7 @@
 #include <array>
 #include "coll_comm.h"
 #include "cluster_monitor.h"
+#include "order_launch_thread_mgr.h"
 
 namespace hccl {
 /**
@@ -32,12 +33,14 @@ public:
     hcomm::ClusterMonitor& GetClusterMonitor(s32 deviceLogicId);
     HcclResult TryReserveCcuMsComm(s32 deviceLogicId, const std::string& commId, bool& reserved);
     void ReleaseCcuMsComm(s32 deviceLogicId, const std::string& commId);
+    OrderLaunchThreadMgr& GetOrderLaunchThreadMgr(s32 deviceLogicId);
 
 private:
     static CollCommMgr* instance_;
     std::unordered_map<std::string, CollComm*> allCollComms_;
     std::array<hcomm::ClusterMonitor, MAX_MODULE_DEVICE_NUM> clusterMonitor_;
     std::array<std::string, MAX_MODULE_DEVICE_NUM> ccuMsCommIds_{};
+    std::array<OrderLaunchThreadMgr, MAX_MODULE_DEVICE_NUM> orderLaunchThreadMgrs_;
 
     std::mutex mutex_;
     std::mutex ccuMsCommMutex_;

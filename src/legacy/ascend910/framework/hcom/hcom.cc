@@ -2372,29 +2372,6 @@ HcomSetWorkspaceResource(const char* tag, const char* group, rtStream_t* stream,
     return HCCL_SUCCESS;
 }
 
-HcclResult HcomSetAttachedStream(const char* group, u32 graphId, const rtStream_t* stream, s32 len)
-{
-    if (len < 0) {
-        HCCL_ERROR("[HcomSetAttachedStream] len is %d", len);
-        return HCCL_E_PARA;
-    }
-    if (group == nullptr) {
-        group = HCCL_WORLD_GROUP;
-    }
-
-    HCCLV2_FUNC_RUN(HcomSetAttachedStreamV2());
-    std::shared_ptr<hccl::hcclComm> hcclComm = nullptr;
-    std::vector<rtStream_t> rtStream(stream, stream + len);
-    if (HcomGetCommByGroup(group, hcclComm) == HCCL_SUCCESS) {
-        CHK_RET(hcclComm->SetAttachedStream(graphId, rtStream));
-    } else {
-        // HcclCommBase 场景暂是不支持设置附属从流
-        HCCL_WARNING("[HcomSetAttachedStream] HcclCommBase now don't support set attached stream");
-        return HCCL_SUCCESS;
-    }
-    return HCCL_SUCCESS;
-}
-
 HcclResult HcclCommSetAttachedStream(s64 opBaseHcom, u32 graphId, const std::vector<rtStream_t>& stream)
 {
     hccl::hcclComm* hcclComm = reinterpret_cast<hccl::hcclComm*>(opBaseHcom);

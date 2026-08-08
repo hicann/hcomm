@@ -388,12 +388,6 @@ extern HcclResult HcclCommMemReg(HcclComm comm, const char* memTag, const CommMe
 extern HcclResult
 HcclChannelGetRemoteMems(HcclComm comm, ChannelHandle channel, uint32_t* memNum, CommMem** remoteMems, char*** memTags);
 
-// 支持获取的底层资源类型
-typedef enum {
-    THREAD_RES_TYPE_INVALID = -1,
-    THREAD_RES_TYPE_STREAM = 0,
-} ThreadResType;
-
 typedef aclrtStream ThreadResTypeStream;
 
 /**

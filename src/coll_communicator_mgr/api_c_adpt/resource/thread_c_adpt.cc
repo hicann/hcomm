@@ -20,8 +20,19 @@
 #include "hccl_independent_common.h"
 #include "coll_comm_profiling.h"
 #include "comm_engine_utils.h"
+#include "coll_comm_mgr.h"
+#include "orion_adapter_rts.h"
+#include "hccl_common.h"
+#include "adapter_rts.h"
+#include "hcclCommOp.h"
 using namespace hccl;
 constexpr u32 MAX_EXPORT_THREAD_NUM = 40U;
+static const std::unordered_set<HcclDedicatedThreadType> ORDER_LAUNCH_TYPES = {
+    HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_OPBASE,
+    HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_ACLGRAPH,
+    HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_GE,
+    HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE,
+};
 
 HcclResult HcclGetNotifyNumInThread(HcclComm comm, ThreadHandle thread, CommEngine engine, uint32_t* notifyNum)
 {
@@ -343,6 +354,7 @@ HcclResult HcclThreadAcquireWithStream(
 HcclResult HcclDedicatedThreadAcquire(
     HcclComm comm, HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle* thread)
 {
+    EXCEPTION_HANDLE_BEGIN
     CHK_PRT_RET(comm == nullptr, HCCL_ERROR("[%s] comm is null", __func__), HCCL_E_PTR);
     CHK_PRT_RET(thread == nullptr, HCCL_ERROR("[%s] thread is null", __func__), HCCL_E_PTR);
     CHK_PRT_RET(
@@ -355,12 +367,28 @@ HcclResult HcclDedicatedThreadAcquire(
         notifyNumPerThread);
     hccl::CollComm* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
+    /* 保序场景：委托给 OrderLaunchThreadMgr（进程粒度） */
+    if (ORDER_LAUNCH_TYPES.find(useType) != ORDER_LAUNCH_TYPES.end()) {
+        s32 deviceLogicId = Hccl::HrtGetDevice();
+        auto& resMgr = hccl::CollCommMgr::GetInstance()->GetOrderLaunchThreadMgr(deviceLogicId);
+        ThreadHandle th = 0;
+        HcclResult ret = resMgr.OrderLaunchThreadAcquire(useType, collComm, commId, notifyNumPerThread, th);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[%s] OrderLaunchThreadAcquire fail, ret[%d], useType[%d]", __func__, ret, static_cast<s32>(useType)),
+            ret);
+        *thread = th;
+        return HCCL_SUCCESS;
+    }
+
     CommEngineResMgr* engineResMgr = collComm->GetCommEngineResMgr();
     CHK_PTR_NULL(engineResMgr);
     CHK_RET(engineResMgr->HcclDedicatedThreadAcquire(useType, notifyNumPerThread, thread));
     HCCL_INFO(
         "[%s] success, dedThreadType[%u], thread[0x%llx], notifyNumPerThread[%u]", __func__, useType, *thread,
         notifyNumPerThread);
+    EXCEPTION_HANDLE_END
 
     return HCCL_SUCCESS;
 }

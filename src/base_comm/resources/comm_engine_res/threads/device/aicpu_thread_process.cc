@@ -20,6 +20,7 @@ std::vector<std::shared_ptr<hccl::Thread>> AicpuThreadProcess::threads_;
 std::mutex AicpuThreadProcess::bgThreadMutex_;
 bool AicpuThreadProcess::daemonFuncRegistered_ = false;
 Hccl::CommandToBackGroud AicpuThreadProcess::commandToBackGroud_ = Hccl::CommandToBackGroud::Default;
+std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> AicpuThreadProcess::defaultDfxCallback_;
 
 HcclResult AicpuThreadProcess::InitThreads(ThreadMgrAicpuParam* param)
 {
@@ -30,12 +31,25 @@ HcclResult AicpuThreadProcess::InitThreads(ThreadMgrAicpuParam* param)
     std::string hcomId(param->hcomId);
     CHK_RET(AicpuThreadProcess::ResumeThread(param, outThreads, false));
 
+    // 由调用方 AicpuThreadInit 持有 mutex_ 写锁保护，此处 check-then-set 无并发风险
+    if (!defaultDfxCallback_) { // HcommThreadAlloc接口暂未适配profiling和上报task的能力
+        defaultDfxCallback_ = [](u32 streamId, u32 taskId, const Hccl::TaskParam& taskParam, u64 handle) {
+            HCCL_DEBUG("[AicpuThreadProcess] order launch dfx callback, streamId[%u], taskId[%u]", streamId, taskId);
+            return HCCL_SUCCESS;
+        };
+    }
+
     ThreadHandle* threadArray = static_cast<ThreadHandle*>(param->deviceHandle);
     // 空指针校验
     CHK_PTR_NULL(threadArray);
     for (size_t i = 0; i < threadNum; ++i) {
         threadArray[i] = reinterpret_cast<ThreadHandle>(outThreads[i].get()); // 拷贝裸指针
         HCCL_INFO("[AicpuThreadProcess][%s] threadArray[%zu] = [%lu]", __func__, i, threadArray[i]);
+        int32_t ret = HcommThreadRegisterDfx(threadArray[i], defaultDfxCallback_);
+        if (ret != 0) {
+            HCCL_WARNING(
+                "[AicpuThreadProcess][%s] HcommThreadRegisterDfx failed, ret[%d], threadArray[%zu]", __func__, ret, i);
+        }
     }
     threads_.insert(
         threads_.end(), std::make_move_iterator(outThreads.begin()), std::make_move_iterator(outThreads.end()));

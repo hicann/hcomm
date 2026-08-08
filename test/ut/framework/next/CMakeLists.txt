@@ -148,6 +148,7 @@ target_include_directories(hccl_utest_test_next_resource PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/coll_comms/rank_graphs/common
     ${CMAKE_CURRENT_SOURCE_DIR}/coll_comms/rank_graphs/rank_graph_64_plus_1
     ${CMAKE_CURRENT_SOURCE_DIR}/coll_comms/rank_graphs/rank_graph_builder
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine/notify
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/dfx/cluster_monitor
 )
 

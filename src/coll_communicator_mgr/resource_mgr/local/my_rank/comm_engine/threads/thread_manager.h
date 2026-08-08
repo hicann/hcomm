@@ -12,6 +12,7 @@
 #define THREAD_MANAGER_H
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <memory>
 #include <mutex>
 #include "hccl/hccl_res.h"
@@ -43,6 +44,7 @@ public:
     HcclResult HcclThreadResGetInfo(ThreadHandle thread, ThreadResType resType, uint32_t infoLen, void** info);
     HcclResult
     HcclDedicatedThreadAcquire(HcclDedicatedThreadType useType, uint32_t notifyNumPerThread, ThreadHandle* thread);
+    HcclResult RegisterOrderLaunchThread(ThreadHandle thread);
     u32 GetThreadNum() const { return threadNum_; }
     u32 GetNotifyNumPerThread() const { return notifyNumPerThread_; }
 
@@ -64,6 +66,12 @@ private:
     HcclResult GetExportedThread(
         const ThreadHandle threadHandle, CommEngine commEngine, Thread*& exportedThread,
         std::shared_ptr<Thread>& threadOut);
+    HcclResult ExportHostThreadsToAicpu(
+        std::vector<std::shared_ptr<Thread>>& hostThreads, const std::vector<u32>& index, const ThreadHandle* threads,
+        CommEngine dstCommEngine, ThreadHandle* exportedThreads);
+    HcclResult ExportOrderLaunchThreadsToAicpu(
+        std::vector<std::shared_ptr<Thread>>& orderLaunchHostThreads, const std::vector<u32>& orderLaunchIndex,
+        const ThreadHandle* threads, CommEngine dstCommEngine, ThreadHandle* exportedThreads);
     HcclResult CreateAndInitThreads(
         CommEngine engine, StreamType streamType, NotifyLoadType notifyLoadType, uint32_t threadNum,
         const ThreadConfig* config, std::vector<std::shared_ptr<Thread>>& newThreads);
@@ -102,6 +110,9 @@ private:
 
     std::mutex dedicatedThreadMutex_;
     std::unordered_map<HcclDedicatedThreadType, ThreadHandle> dedicatedThreadMap_;
+
+    std::unordered_set<ThreadHandle>
+        orderLaunchThreads_; // 保序流（非所有权，资源由 OrderLaunchThreadMgr 管理，同 comm 操作串行无需加锁）
 };
 } // namespace hccl
 #endif

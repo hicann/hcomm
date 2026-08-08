@@ -369,6 +369,11 @@ typedef enum {
      *    设为 true 时，使用 HcommChannelCreateWithConfig 创建的多个 Channel 共享一个 Jetty。 */
     HCOMM_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE = 0,
 } HcommChannelConfigType;
+// 支持获取的底层资源类型
+typedef enum {
+    THREAD_RES_TYPE_INVALID = -1,
+    THREAD_RES_TYPE_STREAM = 0,
+} ThreadResType;
 
 #ifdef __cplusplus
 }

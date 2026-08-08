@@ -505,16 +505,99 @@ HcclResult ThreadMgr::GetExportedThread(
         }
     }
 
+    if (orderLaunchThreads_.find(threadHandle) != orderLaunchThreads_.end()) {
+        exportedThread = threadPtr->FindThreadByCommEngine(commEngine);
+        threadOut = std::shared_ptr<Thread>(threadPtr, [](Thread*) {});
+        HCCL_DEBUG(
+            "[ThreadMgr][%s] found order launch thread[0x%llx] in comm[%s]", __func__, threadHandle, commId_.c_str());
+        return HCCL_SUCCESS;
+    }
+
     HCCL_ERROR("[ThreadMgr][%s]Unknown ThreadHandle[%llu]", __func__, threadHandle);
     return HCCL_E_PARA;
 }
+HcclResult ThreadMgr::RegisterOrderLaunchThread(ThreadHandle thread)
+{
+    orderLaunchThreads_.insert(thread);
+    HCCL_INFO(
+        "[ThreadMgr][%s] register order launch thread[0x%llx], comm[%s], total[%zu]", __func__, thread, commId_.c_str(),
+        orderLaunchThreads_.size());
+    return HCCL_SUCCESS;
+}
 
+HcclResult ThreadMgr::ExportHostThreadsToAicpu(
+    std::vector<std::shared_ptr<Thread>>& hostThreads, const std::vector<u32>& index, const ThreadHandle* threads,
+    CommEngine dstCommEngine, ThreadHandle* exportedThreads)
+{
+    if (hostThreads.empty()) {
+        return HCCL_SUCCESS;
+    }
+    std::lock_guard<std::mutex> lock(threadMapMutex_);
+    if (!callbacks_.getAicpuCommState()) {
+        HcclResult ret = callbacks_.kernelLaunchAicpuCommInit();
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS, HCCL_ERROR("[%s] kernelLaunchAicpuCommInit failed, return [%d].", __func__, ret), ret);
+        callbacks_.setAicpuCommState(true);
+    }
+    std::unique_ptr<ThreadHandle[]> aicpuHandle;
+    EXCEPTION_CATCH(aicpuHandle = std::make_unique<ThreadHandle[]>(hostThreads.size()), return HCCL_E_PTR);
+    uint64_t beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    HcclResult ret = AicpuLaunchMgr::ThreadKernelLaunchForComm(hostThreads, commId_, aicpuHandle, binHandle_);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR("[ThreadMgr][HcclThreadExportToCommEngine] AiCpuKernelLaunch failed, return [%d].", ret), ret);
+    if (callbacks_.reportProfilingKernel != nullptr) {
+        ret = callbacks_.reportProfilingKernel(beginTime, "RunAicpuIndOpThreadInit");
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[ThreadMgr][HcclThreadExportToCommEngine] ReportProfilingAiCpuKernelLaunch failed, return [%d].", ret),
+            ret);
+    }
+    for (size_t i = 0; i < hostThreads.size(); ++i) {
+        exportedThreads[index[i]] = aicpuHandle[i];
+        CHK_RET(hostThreads[i]->AddThreadHandleToMap(dstCommEngine, aicpuHandle[i]));
+        threadHandleOthersToCpu_[aicpuHandle[i]] = threads[index[i]];
+        HCCL_INFO("[ThreadMgr][%s] aicpu threadArray[%u] = [%llu]", __func__, i, aicpuHandle[i]);
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult ThreadMgr::ExportOrderLaunchThreadsToAicpu(
+    std::vector<std::shared_ptr<Thread>>& orderLaunchHostThreads, const std::vector<u32>& orderLaunchIndex,
+    const ThreadHandle* threads, CommEngine dstCommEngine, ThreadHandle* exportedThreads)
+{
+    if (orderLaunchHostThreads.empty()) {
+        return HCCL_SUCCESS;
+    }
+    std::unique_ptr<ThreadHandle[]> aicpuHandle;
+    EXCEPTION_CATCH(aicpuHandle = std::make_unique<ThreadHandle[]>(orderLaunchHostThreads.size()), return HCCL_E_PTR);
+    HcclResult ret = AicpuLaunchMgr::ThreadKernelLaunchForBase(orderLaunchHostThreads, aicpuHandle, binHandle_);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[ThreadMgr][HcclThreadExportToCommEngine] order launch ThreadKernelLaunchForBase failed, return [%d].",
+            ret),
+        ret);
+    for (size_t i = 0; i < orderLaunchHostThreads.size(); ++i) {
+        exportedThreads[orderLaunchIndex[i]] = aicpuHandle[i];
+        CHK_RET(orderLaunchHostThreads[i]->AddThreadHandleToMap(dstCommEngine, aicpuHandle[i]));
+        threadHandleOthersToCpu_[aicpuHandle[i]] = threads[orderLaunchIndex[i]];
+        HCCL_INFO("[ThreadMgr][%s] order launch aicpu threadArray[%u] = [%llu]", __func__, i, aicpuHandle[i]);
+    }
+    return HCCL_SUCCESS;
+}
 HcclResult ThreadMgr::ThreadExportToCommEngineAicpu(
     uint32_t threadNum, const ThreadHandle* threads, CommEngine dstCommEngine, ThreadHandle* exportedThreads)
 {
     std::vector<std::shared_ptr<Thread>> hostThreads;
+    std::vector<std::shared_ptr<Thread>> orderLaunchHostThreads;
     std::vector<u32> index;
     Thread* exportedThread;
+    std::vector<u32> orderLaunchIndex;
+    HCCL_INFO(
+        "[ThreadMgr][%s] begin, threadNum[%u], dstCommEngine[%s], comm[%s]", __func__, threadNum,
+        GetEnumToString(GetCommEngineStatusStrMap(), dstCommEngine).c_str(), commId_.c_str());
     for (u32 i = 0; i < threadNum; i++) {
         std::shared_ptr<Thread> handle;
         CHK_RET(GetExportedThread(threads[i], dstCommEngine, exportedThread, handle));
@@ -522,42 +605,20 @@ HcclResult ThreadMgr::ThreadExportToCommEngineAicpu(
             exportedThreads[i] = reinterpret_cast<ThreadHandle>(exportedThread);
             continue;
         } else {
-            hostThreads.push_back(handle);
-            index.push_back(i);
+            bool inOrderLaunch = (orderLaunchThreads_.find(threads[i]) != orderLaunchThreads_.end());
+            if (inOrderLaunch) {
+                orderLaunchHostThreads.push_back(handle);
+                orderLaunchIndex.push_back(i);
+            } else {
+                hostThreads.push_back(handle);
+                index.push_back(i);
+            }
         }
     }
-    if (!hostThreads.empty()) {
-        std::lock_guard<std::mutex> lock(threadMapMutex_);
-        if (!callbacks_.getAicpuCommState()) {
-            HcclResult ret = callbacks_.kernelLaunchAicpuCommInit();
-            CHK_PRT_RET(
-                ret != HCCL_SUCCESS, HCCL_ERROR("[%s] kernelLaunchAicpuCommInit failed, return [%d].", __func__, ret),
-                ret);
-            callbacks_.setAicpuCommState(true);
-        }
-        std::unique_ptr<ThreadHandle[]> aicpuHandle;
-        EXCEPTION_CATCH(aicpuHandle = std::make_unique<ThreadHandle[]>(hostThreads.size()), return HCCL_E_PTR);
-        uint64_t beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
-        HcclResult ret = AicpuLaunchMgr::ThreadKernelLaunchForComm(hostThreads, commId_, aicpuHandle, binHandle_);
-        CHK_PRT_RET(
-            ret != HCCL_SUCCESS,
-            HCCL_ERROR("[ThreadMgr][HcclThreadExportToCommEngine] AiCpuKernelLaunch failed, return [%d].", ret), ret);
-        if (callbacks_.reportProfilingKernel != nullptr) {
-            ret = callbacks_.reportProfilingKernel(beginTime, "RunAicpuIndOpThreadInit");
-            CHK_PRT_RET(
-                ret != HCCL_SUCCESS,
-                HCCL_ERROR(
-                    "[ThreadMgr][HcclThreadExportToCommEngine] ReportProfilingAiCpuKernelLaunch failed, return [%d].",
-                    ret),
-                ret);
-        }
-        for (size_t i = 0; i < hostThreads.size(); ++i) {
-            exportedThreads[index[i]] = aicpuHandle[i];
-            CHK_RET(hostThreads[i]->AddThreadHandleToMap(dstCommEngine, aicpuHandle[i]));
-            threadHandleOthersToCpu_[aicpuHandle[i]] = threads[index[i]];
-            HCCL_INFO("[ThreadMgr][%s] aicpu threadArray[%u] = [%llu]", __func__, i, aicpuHandle[i]);
-        }
-    }
+
+    CHK_RET(ExportHostThreadsToAicpu(hostThreads, index, threads, dstCommEngine, exportedThreads));
+    CHK_RET(ExportOrderLaunchThreadsToAicpu(
+        orderLaunchHostThreads, orderLaunchIndex, threads, dstCommEngine, exportedThreads));
     return HCCL_SUCCESS;
 }
 

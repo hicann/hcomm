@@ -109,4 +109,10 @@ HcclResult CommEngineResMgr::HcclDedicatedThreadAcquire(
     return threadMgr_->HcclDedicatedThreadAcquire(useType, notifyNumPerThread, thread);
 }
 
+HcclResult CommEngineResMgr::RegisterOrderLaunchThread(ThreadHandle thread)
+{
+    CHK_SMART_PTR_NULL(threadMgr_);
+    return threadMgr_->RegisterOrderLaunchThread(thread);
+}
+
 } // namespace hccl

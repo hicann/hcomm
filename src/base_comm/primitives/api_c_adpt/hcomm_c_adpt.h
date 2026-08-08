@@ -110,6 +110,8 @@ HcommResult HcommThreadAllocWithStream(CommEngine engine, rtStream_t stream, uin
 HcommResult HcommThreadAllocWithConfig(
     CommEngine engine, uint32_t threadNum, ThreadType type, const ThreadConfig* config, ThreadHandle* threads);
 
+HcommResult HcommThreadFreeWithStream(const ThreadHandle* threads, uint32_t threadNum);
+
 HcommResult HcommEngineCtxCreate(CommEngine engine, uint64_t size, void** ctx);
 
 HcommResult HcommEngineCtxDestroy(CommEngine engine, void* ctx);

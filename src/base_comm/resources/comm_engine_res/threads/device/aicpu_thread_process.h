@@ -17,6 +17,7 @@
 #include "aicpu_launch_manager.h"
 #include "aicpu_ts_thread.h"
 #include "aicpu_daemon_service.h"
+#include "hcclCommOp.h"
 
 class AicpuThreadProcess {
 public:
@@ -38,5 +39,6 @@ private:
     static std::mutex bgThreadMutex_;
     static bool daemonFuncRegistered_;
     static Hccl::CommandToBackGroud commandToBackGroud_;
+    static std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> defaultDfxCallback_;
 };
 #endif // __AICPU_THREAD_PROCESS_H__

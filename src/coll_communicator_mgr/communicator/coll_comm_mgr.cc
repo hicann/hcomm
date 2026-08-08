@@ -68,12 +68,23 @@ void CollCommMgr::ReleaseCcuMsComm(s32 deviceLogicId, const std::string& commId)
     }
 }
 
+OrderLaunchThreadMgr& CollCommMgr::GetOrderLaunchThreadMgr(s32 deviceLogicId)
+{
+    if (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM) {
+        HCCL_WARNING(
+            "[CollCommMgr][%s]deviceLogicId[%d] >= %u, invalid", __func__, deviceLogicId, MAX_MODULE_DEVICE_NUM);
+        return orderLaunchThreadMgrs_[0];
+    }
+    return orderLaunchThreadMgrs_[deviceLogicId];
+}
+
 void CollCommMgr::RegisteCollComm(CollComm* collComm)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     allCollComms_[collComm->GetCommId()] = collComm;
     // 注册到需要的地方
     HcclTaskAbortHandler::GetInstance().Register(collComm);
+    (void)GetOrderLaunchThreadMgr(collComm->GetDeviceLogicId()).RegisterOrderLaunch(collComm->GetCommId());
 }
 
 void CollCommMgr::UnRegisteCollComm(CollComm* collComm)
@@ -83,6 +94,7 @@ void CollCommMgr::UnRegisteCollComm(CollComm* collComm)
     // 从通信域里面注销
     HcclTaskAbortHandler::GetInstance().UnRegister(collComm);
     (void)GetClusterMonitor(collComm->GetDeviceLogicId()).UnRegisterToClusterMonitor(collComm);
+    (void)GetOrderLaunchThreadMgr(collComm->GetDeviceLogicId()).UnRegisterOrderLaunch(collComm->GetCommId());
 }
 
 std::unordered_map<std::string, CollComm*> CollCommMgr::GetAllCollComms() { return allCollComms_; }

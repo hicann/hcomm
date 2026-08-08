@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -26,6 +27,7 @@
 
 namespace hcomm {
 static std::unordered_map<ThreadHandle, std::shared_ptr<hccl::Thread>> g_ThreadMap;
+static std::mutex g_ThreadMapMtx;
 } // namespace hcomm
 
 using namespace hcomm;
@@ -166,11 +168,77 @@ HcommResult HcommThreadAllocWithStream(CommEngine engine, rtStream_t stream, uin
 
     // 返回第一个句柄
     *thread = reinterpret_cast<ThreadHandle>(handle.get());
-    hcomm::g_ThreadMap.emplace(*thread, handle);
+    {
+        std::lock_guard<std::mutex> lock(hcomm::g_ThreadMapMtx);
+        hcomm::g_ThreadMap.emplace(*thread, handle);
+    }
 
     HCCL_INFO(
         "[ThreadMgr] ThreadAcquireWithStream done: engine[%s] stream[%p], "
         "notifyNum[%u]",
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), stream, notifyNum);
+    return HCCL_SUCCESS;
+}
+
+HcommResult HcommThreadFreeWithStream(const ThreadHandle* threads, uint32_t threadNum)
+{
+    CHK_PTR_NULL(threads);
+    if (threadNum == 0U) {
+        HCCL_ERROR("[%s] threadNum is 0", __func__);
+        return HCCL_E_PARA;
+    }
+    HcommResult ret = HCCL_SUCCESS;
+    std::lock_guard<std::mutex> lock(hcomm::g_ThreadMapMtx);
+    for (uint32_t i = 0; i < threadNum; ++i) {
+        ThreadHandle handle = threads[i];
+        auto it = hcomm::g_ThreadMap.find(handle);
+        if (it == hcomm::g_ThreadMap.end()) {
+            HCCL_WARNING("[%s] thread handle[0x%llx] not found in g_ThreadMap, skip", __func__, handle);
+            continue;
+        }
+        HcclResult deInitRet = it->second->DeInit();
+        if (deInitRet != HCCL_SUCCESS) {
+            HCCL_WARNING("[%s] thread DeInit failed, ret[%d], handle[0x%llx]", __func__, deInitRet, handle);
+            ret = static_cast<HcommResult>(deInitRet);
+        }
+        hcomm::g_ThreadMap.erase(it);
+        HCCL_INFO("[%s] thread freed, handle[0x%llx]", __func__, handle);
+    }
+    return ret;
+}
+
+HcommResult HcommThreadResGetInfo(ThreadHandle thread, ThreadResType resType, uint32_t infoLen, void** info)
+{
+    CHK_PTR_NULL(info);
+    CHK_PRT_RET(thread == 0, HCCL_ERROR("[%s] thread is 0", __func__), HCCL_E_PTR);
+
+    HCCL_INFO(
+        "[%s] begin, thread[0x%llx], resType[%d], infoLen[%u]", __func__, thread, static_cast<int32_t>(resType),
+        infoLen);
+
+    /* ThreadHandle 是 Thread* 的 reinterpret_cast，可直接转换 */
+    auto* threadPtr = reinterpret_cast<hccl::Thread*>(thread);
+
+    if (resType != ThreadResType::THREAD_RES_TYPE_STREAM) {
+        HCCL_ERROR("[%s] resType[%d] is not supported", __func__, static_cast<int32_t>(resType));
+        return HCCL_E_NOT_SUPPORT;
+    }
+
+    CHK_PRT_RET(
+        infoLen != sizeof(ThreadResTypeStream),
+        HCCL_ERROR(
+            "[%s] infoLen[%u] mismatch sizeof(ThreadResTypeStream)[%zu]", __func__, infoLen,
+            sizeof(ThreadResTypeStream)),
+        HCCL_E_PARA);
+
+    hccl::Stream* streamPtr = threadPtr->GetStream();
+    CHK_PTR_NULL(streamPtr);
+    ThreadResTypeStream stream = streamPtr->ptr();
+    CHK_PTR_NULL(stream);
+
+    *info = stream;
+
+    HCCL_INFO(
+        "[%s] success, thread[0x%llx] resType[%d] stream[%p]", __func__, thread, static_cast<int32_t>(resType), *info);
     return HCCL_SUCCESS;
 }

@@ -13,6 +13,7 @@ set(src_list
     comm_mem_c_adpt.cc
     engine_ctx_c_adpt.cc
     thread_c_adpt.cc
+    legacy_thread_c_adapt.cc
 )
 
 if(TARGET hcomm)

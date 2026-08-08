@@ -94,6 +94,8 @@ extern HcommResult HcommThreadFree(const ThreadHandle* threads, uint32_t threadN
 
 extern HcommResult HcommEndpointGetListenPort(EndpointHandle endpointHandle, uint32_t* port);
 
+extern HcommResult HcommThreadResGetInfo(ThreadHandle thread, ThreadResType resType, uint32_t infoLen, void** info);
+
 extern HcommResult
 HcommEndpointCheckFeature(HcommEndpointFeatureType featureType, const EndpointDesc* endpointDesc, bool* value);
 
