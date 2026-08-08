@@ -14,15 +14,9 @@ namespace Hccl {
 
 GlobalMirrorTasks GlobalMirrorTasks::ins_;
 
-GlobalMirrorTasks::GlobalMirrorTasks()
-{
-    HCCL_INFO("[GlobalMirrorTasks][GlobalMirrorTasks]GlobalMirrorTasks Contruct");
-}
+GlobalMirrorTasks::GlobalMirrorTasks() {}
 
-GlobalMirrorTasks::~GlobalMirrorTasks()
-{
-    HCCL_INFO("[GlobalMirrorTasks][~GlobalMirrorTasks]GlobalMirrorTasks Destroy");
-}
+GlobalMirrorTasks::~GlobalMirrorTasks() {}
 
 GlobalMirrorTasks& GlobalMirrorTasks::Instance() { return ins_; }
 

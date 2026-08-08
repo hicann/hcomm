@@ -33,11 +33,11 @@ std::mutex GlobalNetDevMgr::serverMapMutex_;
 static GlobalNetDevMgr netDevMgrInstance[MAX_MODULE_DEVICE_NUM + 1];
 GlobalNetDevMgr::~GlobalNetDevMgr()
 {
-    HCCL_INFO("[GlobalNetDevMgr][%s] start.", __func__);
     if (isInited_) {
+        HCCL_INFO("[GlobalNetDevMgr][%s] start.", __func__);
         UnInit();
+        HCCL_INFO("[GlobalNetDevMgr][%s] end.", __func__);
     }
-    HCCL_INFO("[GlobalNetDevMgr][%s] end.", __func__);
 }
 
 GlobalNetDevMgr& GlobalNetDevMgr::GetInstance(u32 devicePhyId)

@@ -9,15 +9,12 @@
  */
 #include "coll_comm_c_adpt.h"
 #include "coll_comm_mgr.h"
-#include <memory>
 
 using namespace hccl;
-static std::unique_ptr<CollCommMgr> g_collCommMgr = std::make_unique<CollCommMgr>();
 
 /**
  * @note 职责：集合通信的通信域管理的C接口的C到C++适配
  */
-
 HcclResult HcclCommGetStatus(const char* commId, HcclCommStatus* status)
 {
     CHK_PTR_NULL(commId);
@@ -28,12 +25,3 @@ HcclResult HcclCommGetStatus(const char* commId, HcclCommStatus* status)
     CHK_PRT_RET(comm == nullptr, HCCL_ERROR("%s hcclComm is nullptr, commId[%s]", __func__, commId), HCCL_E_PTR);
     return static_cast<hccl::hcclComm*>(comm)->GetCommStatus(*status);
 }
-
-/**
- * @note C接口适配参考示例
- * @code {.c}
- * HcclResult HcclCommDestroy(HcclComm comm) {
- *     return g_collCommMgr->DestroyComm(comm);
- * }
- * @endcode
- */
