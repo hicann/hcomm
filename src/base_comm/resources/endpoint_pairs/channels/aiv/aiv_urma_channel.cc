@@ -424,7 +424,8 @@ HcclResult AivUrmaChannel::CreateUbConnectionByProtocol(
         case Hccl::LinkProtocol::UBG:
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbUbgConnection>(
-                    rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, ctx.locAddr, ctx.rmtAddr),
+                    rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, ctx.locAddr, ctx.rmtAddr,
+                    ctx.qosPre),
                 return HCCL_E_PTR);
             break;
         default:

@@ -114,10 +114,8 @@ DevUbUboeConnection::DevUbUboeConnection(
 DevUbUbgConnection::DevUbUbgConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locAddrEid, const IpAddress& rmtAddrEid,
-    CommEngine engine)
-    : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid,
-          static_cast<u8>(UB_QOS_DEFAULT), engine)
+    const u8 qos, CommEngine engine)
+    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, engine)
 {
     tpProtocol = TpProtocol::UBG;
     // UBG与UBOE同属UB传输，Jetty异步创建超时一致，均为16秒
