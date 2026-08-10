@@ -540,6 +540,20 @@ TEST_F(ProfilingHandlerTest, ReportAclApi_test)
     handler.ReportAclApi(cmdType, beginTime, endTime, cmdItemId, threadId, false);
 }
 
+TEST_F(ProfilingHandlerTest, ReportAclApi_CachedReq_test)
+{
+    ProfilingHandler& handler = Hccl::ProfilingHandler::GetInstance();
+    uint32_t cmdType = 0;
+    uint64_t beginTime = 0;
+    uint64_t endTime = 1;
+    uint64_t cmdItemId = 0;
+    uint32_t threadId = 0;
+    bool cachedReq = true;
+    size_t beforeSize = handler.cachedAclApiInfo_.size();
+    handler.ReportAclApi(cmdType, beginTime, endTime, cmdItemId, threadId, cachedReq);
+    EXPECT_EQ(handler.cachedAclApiInfo_.size(), beforeSize + 1);
+}
+
 TEST_F(ProfilingHandlerTest, ReportNodeApi_test)
 {
     ProfilingHandler& handler = Hccl::ProfilingHandler::GetInstance();

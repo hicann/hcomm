@@ -831,7 +831,7 @@ void ProfilingHandler::ReportAclApi(
     if (cachedReq) {
         std::lock_guard<std::mutex> lock(cachedAclApiInfoMutex_);
         HCCL_INFO(
-            "ReportAclApi MSPROF_REPORT_ACL_LEVEL type[%d] beginTime[%llu]", reporterData.type, reporterData.beginTime);
+            "ReportAclApi MSPROF_REPORT_ACL_LEVEL type[%u] beginTime[%llu]", reporterData.type, reporterData.beginTime);
         cachedAclApiInfo_.push(reporterData);
     }
 
