@@ -116,6 +116,7 @@ private:
     ManagerCallbacks callbacks_;               // 存储回调函数
     ChannelManagerCallbacks channelCallbacks_; // channelMgr的回调函数
     u32 hcclQos_;
+    std::vector<HcclMemHandle> CollectMemHandles(const std::vector<HcclChannelDesc>& descs) const;
 };
 
 } // namespace hccl

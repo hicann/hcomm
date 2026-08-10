@@ -410,9 +410,12 @@ public:
 #endif
     // A5communicator相关
 
-    HcclResult IndOpTransportAlloc(const std::string& tag, OpCommTransport& opCommTransport, bool isAicpuModeEn);
+    HcclResult IndOpTransportAlloc(
+        const std::string& tag, OpCommTransport& opCommTransport, bool isAicpuModeEn, const HcclMemHandle* memHandles,
+        uint32_t memHandleNum);
 
-    HcclResult PrepareChannelMem(const std::string& tag, TransportIOMem& transMem);
+    HcclResult PrepareChannelMem(
+        const std::string& tag, TransportIOMem& transMem, const HcclMemHandle* memHandles, uint32_t memHandleNum);
 
     // Decouple for MC2
     HcclResult GetLocalCCLBuf(void** addr, uint64_t* size);

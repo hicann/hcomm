@@ -80,8 +80,19 @@ HcclResult HcclCommMemReg(HcclComm comm, const char* memTag, const CommMem* mem,
         return HCCL_SUCCESS;
     }());
 #endif
+    auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
+    CHK_PTR_NULL(hcclComm);
+    HcclMem hcclMem;
+    hcclMem.addr = mem->addr;
+    hcclMem.size = mem->size;
+    hcclMem.type = (mem->type == COMM_MEM_TYPE_DEVICE) ? HCCL_MEM_TYPE_DEVICE : HCCL_MEM_TYPE_HOST;
+    HcclRegMemAttr attr;
+    attr.value = 0;
+    HcclResult ret = hcclComm->GetIndependentOp().GetCommMemMgr().CommRegMem(memTagStr, hcclMem, attr, memHandle);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[HcclCommMemReg]legcy Bind failed. memTag[%s], ret[%d]", memTag, ret), ret);
+    HCCL_INFO("[HcclCommMemReg]legcy success: raw handle[%p]", *memHandle);
 
-    HCCL_RUN_INFO("HcclCommMemReg is not supported");
     return HCCL_SUCCESS;
 }
 

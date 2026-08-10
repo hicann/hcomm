@@ -12,6 +12,9 @@
 #include "mockcpp/mokc.h"
 #include <mockcpp/mockcpp.hpp>
 
+// 允许 UT 直接访问 ChannelManager 的 private 成员（对齐 ut_notify_manager.cc 的写法）
+#define private public
+
 #include "channel_manager.h"
 #include "hccl/hccl_res.h"
 
@@ -240,7 +243,7 @@ TEST_F(ChannelManagerTest, CheckChannelParam_UnsupportedEngine)
     desc[0].channelProtocol = COMM_PROTOCOL_HCCS;
     desc[0].notifyNum = 2;
 
-    HcclResult ret = mgr.CheckChannelParam(COMM_ENGINE_AIV, desc, 1);
+    HcclResult ret = mgr.CheckChannelParam(COMM_ENGINE_CCU, desc, 1);
     EXPECT_NE(ret, HCCL_SUCCESS);
 }
 
@@ -452,4 +455,277 @@ TEST_F(ChannelManagerTest, ChannelCommDestroy_MixedChannels)
     EXPECT_EQ(channelList[0], (ChannelHandle)0);
     EXPECT_EQ(channelList[1], (ChannelHandle)0);
     EXPECT_EQ(channelList[2], (ChannelHandle)0);
+}
+
+// ============ BuildChannelKey (memHandles 纳入 key) 相关测试 ============
+// BuildChannelKey 是文件内 static 函数，通过 RegisterHandle + PrepareHandleArray 间接验证：
+// 相同 memHandle 的 desc 命中复用；不同 memHandle 的 desc 不命中、进入 needCreateDescs。
+
+TEST_F(ChannelManagerTest, PrepareHandleArray_SameMemHandle_Reused)
+{
+    mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
+    HcclMemHandle handle = reinterpret_cast<HcclMemHandle>(0x1000);
+    HcclChannelDesc desc{};
+    memset(&desc, 0, sizeof(desc));
+    desc.remoteRank = 1;
+    desc.channelProtocol = COMM_PROTOCOL_HCCS;
+    desc.memHandles = &handle;
+    desc.memHandleNum = 1;
+
+    // 先注册一个 channel
+    mgr.RegisterHandle("tag", COMM_ENGINE_CPU, desc, (ChannelHandle)0x100);
+
+    // 用相同 memHandle 再次准备：应命中复用，needCreateDescs 为空
+    ChannelHandle handleArray[1] = {0};
+    std::vector<HcclChannelDesc> needCreateDescs;
+    std::vector<uint32_t> needCreateIndices;
+    HcclResult ret
+        = mgr.PrepareHandleArray("tag", COMM_ENGINE_CPU, &desc, 1, handleArray, needCreateDescs, needCreateIndices);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(needCreateDescs.size(), 0u);
+    EXPECT_EQ(handleArray[0], (ChannelHandle)0x100);
+}
+
+TEST_F(ChannelManagerTest, PrepareHandleArray_DifferentMemHandle_NotReused)
+{
+    mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
+    HcclMemHandle handleA = reinterpret_cast<HcclMemHandle>(0x1000);
+    HcclChannelDesc descA{};
+    memset(&descA, 0, sizeof(descA));
+    descA.remoteRank = 1;
+    descA.channelProtocol = COMM_PROTOCOL_HCCS;
+    descA.memHandles = &handleA;
+    descA.memHandleNum = 1;
+
+    // 先用 handleA 注册
+    mgr.RegisterHandle("tag", COMM_ENGINE_CPU, descA, (ChannelHandle)0x100);
+
+    // 用不同 memHandle 的 desc 再次准备：不应命中，应进入 needCreateDescs
+    HcclMemHandle handleB = reinterpret_cast<HcclMemHandle>(0x2000);
+    HcclChannelDesc descB{};
+    memset(&descB, 0, sizeof(descB));
+    descB.remoteRank = 1;
+    descB.channelProtocol = COMM_PROTOCOL_HCCS;
+    descB.memHandles = &handleB;
+    descB.memHandleNum = 1;
+
+    ChannelHandle handleArray[1] = {0};
+    std::vector<HcclChannelDesc> needCreateDescs;
+    std::vector<uint32_t> needCreateIndices;
+    HcclResult ret
+        = mgr.PrepareHandleArray("tag", COMM_ENGINE_CPU, &descB, 1, handleArray, needCreateDescs, needCreateIndices);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(needCreateDescs.size(), 1u);
+    EXPECT_EQ(handleArray[0], (ChannelHandle)0);
+}
+
+TEST_F(ChannelManagerTest, PrepareHandleArray_ZeroMemHandleNum_TreatedAsNoMem)
+{
+    mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
+    HcclChannelDesc desc{};
+    memset(&desc, 0, sizeof(desc));
+    desc.remoteRank = 1;
+    desc.channelProtocol = COMM_PROTOCOL_HCCS;
+    desc.memHandles = nullptr;
+    desc.memHandleNum = 0;
+
+    // memHandleNum=0 注册
+    mgr.RegisterHandle("tag", COMM_ENGINE_CPU, desc, (ChannelHandle)0x100);
+
+    // 再次用 memHandleNum=0 准备：应命中复用（都走 ":0" 分支）
+    ChannelHandle handleArray[1] = {0};
+    std::vector<HcclChannelDesc> needCreateDescs;
+    std::vector<uint32_t> needCreateIndices;
+    HcclResult ret
+        = mgr.PrepareHandleArray("tag", COMM_ENGINE_CPU, &desc, 1, handleArray, needCreateDescs, needCreateIndices);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(needCreateDescs.size(), 0u);
+    EXPECT_EQ(handleArray[0], (ChannelHandle)0x100);
+}
+
+TEST_F(ChannelManagerTest, PrepareHandleArray_ZeroMemHandleNumThenNonZero_NotReused)
+{
+    mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
+    HcclChannelDesc descNoMem{};
+    memset(&descNoMem, 0, sizeof(descNoMem));
+    descNoMem.remoteRank = 1;
+    descNoMem.channelProtocol = COMM_PROTOCOL_HCCS;
+    descNoMem.memHandles = nullptr;
+    descNoMem.memHandleNum = 0;
+
+    // 先用 memHandleNum=0 注册
+    mgr.RegisterHandle("tag", COMM_ENGINE_CPU, descNoMem, (ChannelHandle)0x100);
+
+    // 再用 memHandleNum=1 准备：key 不同（":0" vs ":handle"），不应命中
+    HcclMemHandle handle = reinterpret_cast<HcclMemHandle>(0x1000);
+    HcclChannelDesc descWithMem{};
+    memset(&descWithMem, 0, sizeof(descWithMem));
+    descWithMem.remoteRank = 1;
+    descWithMem.channelProtocol = COMM_PROTOCOL_HCCS;
+    descWithMem.memHandles = &handle;
+    descWithMem.memHandleNum = 1;
+
+    ChannelHandle handleArray[1] = {0};
+    std::vector<HcclChannelDesc> needCreateDescs;
+    std::vector<uint32_t> needCreateIndices;
+    HcclResult ret = mgr.PrepareHandleArray(
+        "tag", COMM_ENGINE_CPU, &descWithMem, 1, handleArray, needCreateDescs, needCreateIndices);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(needCreateDescs.size(), 1u);
+    EXPECT_EQ(handleArray[0], (ChannelHandle)0);
+}
+
+TEST_F(ChannelManagerTest, PrepareHandleArray_MultipleMemHandles_AllCompared)
+{
+    mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
+    HcclMemHandle handlesA[2] = {reinterpret_cast<HcclMemHandle>(0x1000), reinterpret_cast<HcclMemHandle>(0x2000)};
+    HcclChannelDesc descA{};
+    memset(&descA, 0, sizeof(descA));
+    descA.remoteRank = 1;
+    descA.channelProtocol = COMM_PROTOCOL_HCCS;
+    descA.memHandles = handlesA;
+    descA.memHandleNum = 2;
+
+    // 用 handlesA 注册
+    mgr.RegisterHandle("tag", COMM_ENGINE_CPU, descA, (ChannelHandle)0x100);
+
+    // 第二个 handle 不同，应不命中
+    HcclMemHandle handlesB[2] = {reinterpret_cast<HcclMemHandle>(0x1000), reinterpret_cast<HcclMemHandle>(0x3000)};
+    HcclChannelDesc descB{};
+    memset(&descB, 0, sizeof(descB));
+    descB.remoteRank = 1;
+    descB.channelProtocol = COMM_PROTOCOL_HCCS;
+    descB.memHandles = handlesB;
+    descB.memHandleNum = 2;
+
+    ChannelHandle handleArray[1] = {0};
+    std::vector<HcclChannelDesc> needCreateDescs;
+    std::vector<uint32_t> needCreateIndices;
+    HcclResult ret
+        = mgr.PrepareHandleArray("tag", COMM_ENGINE_CPU, &descB, 1, handleArray, needCreateDescs, needCreateIndices);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(needCreateDescs.size(), 1u);
+    EXPECT_EQ(handleArray[0], (ChannelHandle)0);
+}
+
+TEST_F(ChannelManagerTest, PrepareHandleArray_MultipleMemHandles_AllSame_Reused)
+{
+    mgr.Init((aclrtBinHandle)0x1, 0, ManagerCallbacks{});
+    HcclMemHandle handlesA[2] = {reinterpret_cast<HcclMemHandle>(0x1000), reinterpret_cast<HcclMemHandle>(0x2000)};
+    HcclChannelDesc descA{};
+    memset(&descA, 0, sizeof(descA));
+    descA.remoteRank = 1;
+    descA.channelProtocol = COMM_PROTOCOL_HCCS;
+    descA.memHandles = handlesA;
+    descA.memHandleNum = 2;
+
+    mgr.RegisterHandle("tag", COMM_ENGINE_CPU, descA, (ChannelHandle)0x100);
+
+    // 两个 handle 全部相同，应命中复用
+    HcclMemHandle handlesB[2] = {reinterpret_cast<HcclMemHandle>(0x1000), reinterpret_cast<HcclMemHandle>(0x2000)};
+    HcclChannelDesc descB{};
+    memset(&descB, 0, sizeof(descB));
+    descB.remoteRank = 1;
+    descB.channelProtocol = COMM_PROTOCOL_HCCS;
+    descB.memHandles = handlesB;
+    descB.memHandleNum = 2;
+
+    ChannelHandle handleArray[1] = {0};
+    std::vector<HcclChannelDesc> needCreateDescs;
+    std::vector<uint32_t> needCreateIndices;
+    HcclResult ret
+        = mgr.PrepareHandleArray("tag", COMM_ENGINE_CPU, &descB, 1, handleArray, needCreateDescs, needCreateIndices);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(needCreateDescs.size(), 0u);
+    EXPECT_EQ(handleArray[0], (ChannelHandle)0x100);
+}
+
+// ============ CollectMemHandles (memHandles 去重收集) 相关测试 ============
+// CollectMemHandles 从 descs 中收集去重后的 memHandles，用于建链时一次性透传。
+
+TEST_F(ChannelManagerTest, CollectMemHandles_EmptyDescs)
+{
+    std::vector<HcclChannelDesc> descs;
+    std::vector<HcclMemHandle> handles = mgr.CollectMemHandles(descs);
+    EXPECT_TRUE(handles.empty());
+}
+
+TEST_F(ChannelManagerTest, CollectMemHandles_Deduplicate)
+{
+    HcclMemHandle handle = reinterpret_cast<HcclMemHandle>(0x1000);
+    std::vector<HcclChannelDesc> descs(2);
+    for (auto& d : descs) {
+        memset(&d, 0, sizeof(d));
+        d.memHandles = &handle;
+        d.memHandleNum = 1;
+    }
+    std::vector<HcclMemHandle> handles = mgr.CollectMemHandles(descs);
+    EXPECT_EQ(handles.size(), 1u);
+    EXPECT_EQ(handles[0], handle);
+}
+
+TEST_F(ChannelManagerTest, CollectMemHandles_DistinctKept)
+{
+    HcclMemHandle h1 = reinterpret_cast<HcclMemHandle>(0x1000);
+    HcclMemHandle h2 = reinterpret_cast<HcclMemHandle>(0x2000);
+    std::vector<HcclChannelDesc> descs(2);
+    memset(&descs[0], 0, sizeof(descs[0]));
+    descs[0].memHandles = &h1;
+    descs[0].memHandleNum = 1;
+    memset(&descs[1], 0, sizeof(descs[1]));
+    descs[1].memHandles = &h2;
+    descs[1].memHandleNum = 1;
+
+    std::vector<HcclMemHandle> handles = mgr.CollectMemHandles(descs);
+    EXPECT_EQ(handles.size(), 2u);
+    EXPECT_EQ(handles[0], h1);
+    EXPECT_EQ(handles[1], h2);
+}
+
+TEST_F(ChannelManagerTest, CollectMemHandles_NullMemHandlesSkipped)
+{
+    std::vector<HcclChannelDesc> descs(2);
+    memset(&descs[0], 0, sizeof(descs[0]));
+    descs[0].memHandles = nullptr;
+    descs[0].memHandleNum = 1;
+
+    HcclMemHandle handle = reinterpret_cast<HcclMemHandle>(0x1000);
+    memset(&descs[1], 0, sizeof(descs[1]));
+    descs[1].memHandles = &handle;
+    descs[1].memHandleNum = 1;
+
+    std::vector<HcclMemHandle> handles = mgr.CollectMemHandles(descs);
+    EXPECT_EQ(handles.size(), 1u);
+    EXPECT_EQ(handles[0], handle);
+}
+
+TEST_F(ChannelManagerTest, CollectMemHandles_ZeroNumSkipped)
+{
+    HcclMemHandle handle = reinterpret_cast<HcclMemHandle>(0x1000);
+    std::vector<HcclChannelDesc> descs(2);
+    memset(&descs[0], 0, sizeof(descs[0]));
+    descs[0].memHandles = &handle;
+    descs[0].memHandleNum = 0;
+
+    memset(&descs[1], 0, sizeof(descs[1]));
+    descs[1].memHandles = &handle;
+    descs[1].memHandleNum = 1;
+
+    std::vector<HcclMemHandle> handles = mgr.CollectMemHandles(descs);
+    EXPECT_EQ(handles.size(), 1u);
+    EXPECT_EQ(handles[0], handle);
+}
+
+TEST_F(ChannelManagerTest, CollectMemHandles_MultipleHandlesOneDesc)
+{
+    HcclMemHandle handles[2] = {reinterpret_cast<HcclMemHandle>(0x1000), reinterpret_cast<HcclMemHandle>(0x2000)};
+    std::vector<HcclChannelDesc> descs(1);
+    memset(&descs[0], 0, sizeof(descs[0]));
+    descs[0].memHandles = handles;
+    descs[0].memHandleNum = 2;
+
+    std::vector<HcclMemHandle> result = mgr.CollectMemHandles(descs);
+    EXPECT_EQ(result.size(), 2u);
+    EXPECT_EQ(result[0], handles[0]);
+    EXPECT_EQ(result[1], handles[1]);
 }

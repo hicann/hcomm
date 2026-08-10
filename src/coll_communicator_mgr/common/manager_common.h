@@ -31,7 +31,8 @@ struct ManagerCallbacks {
 
 struct ChannelManagerCallbacks {
     // channel建链
-    std::function<HcclResult(const std::string&, OpCommTransport&, bool)> indOpTransportAlloc;
+    std::function<HcclResult(const std::string&, OpCommTransport&, bool, const HcclMemHandle*, uint32_t)>
+        indOpTransportAlloc;
     std::function<std::vector<RankInfo>()> getRankLists;
 };
 

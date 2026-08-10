@@ -46,6 +46,8 @@ public:
     HcclResult CommRegMem(const std::string& memTag, const HcclMem& mem, HcclRegMemAttr attr, void** memHandle);
     HcclResult CommUnregMem(const std::string& memTag, const void* memHandle);
     HcclResult CommGetLocalRegMemByTag(const std::string& tag, std::vector<HcclMem>& memVec);
+    HcclResult
+    CommGetLocalRegMemByHandles(const HcclMemHandle* memHandles, uint32_t memHandleNum, std::vector<HcclMem>& memVec);
 
 private:
     static inline MemKey MakeKey(void* addr, uint64_t size)

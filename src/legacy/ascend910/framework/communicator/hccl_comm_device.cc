@@ -38,8 +38,14 @@ HcclResult hcclComm::SetIndependentOpConfig(const CommConfig& commConfig, const 
 
 HcclResult hcclComm::InitIndependentOp() { return HCCL_SUCCESS; }
 
-HcclResult hcclComm::PrepareChannelMem(const std::string& tag, TransportIOMem& transMem) { return HCCL_SUCCESS; }
-HcclResult hcclComm::IndOpTransportAlloc(const std::string& tag, OpCommTransport& opCommTransport, bool isAicpuModeEn)
+HcclResult hcclComm::PrepareChannelMem(
+    const std::string& tag, TransportIOMem& transMem, const HcclMemHandle* memHandles, uint32_t memHandleNum)
+{
+    return HCCL_SUCCESS;
+}
+HcclResult hcclComm::IndOpTransportAlloc(
+    const std::string& tag, OpCommTransport& opCommTransport, bool isAicpuModeEn, const HcclMemHandle* memHandles,
+    uint32_t memHandleNum)
 {
     return HCCL_SUCCESS;
 }

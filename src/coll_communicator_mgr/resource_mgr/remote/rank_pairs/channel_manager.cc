@@ -38,6 +38,20 @@ HcclResult ChannelManager::SetChannelCallbacks(const ChannelManagerCallbacks& ch
     return HCCL_SUCCESS;
 }
 
+std::vector<HcclMemHandle> ChannelManager::CollectMemHandles(const std::vector<HcclChannelDesc>& descs) const
+{
+    std::vector<HcclMemHandle> handles;
+    std::unordered_set<HcclMemHandle> seen;
+    for (const auto& desc : descs) {
+        for (uint32_t i = 0; i < desc.memHandleNum; ++i) {
+            if (desc.memHandles != nullptr && seen.insert(desc.memHandles[i]).second) {
+                handles.push_back(desc.memHandles[i]);
+            }
+        }
+    }
+    return handles;
+}
+
 HcclResult ChannelManager::CheckChannelParam(CommEngine engine, const HcclChannelDesc* channelDesc, uint32_t descNum)
 {
     std::unordered_set<HcclChannelDesc, std::hash<HcclChannelDesc>, HcclChannelDescEqual> descSet;
@@ -50,12 +64,6 @@ HcclResult ChannelManager::CheckChannelParam(CommEngine engine, const HcclChanne
                 "[%s]Channeldesc[%u] invalid notifyNum, notifyNum[%u], max notify num[%u]", __func__, descIdx,
                 channelDesc[descIdx].notifyNum, NOTIFY_NUM_MAX),
             HCCL_E_PARA);
-        // 检查memHandleNum是否大于0
-        if (channelDesc[descIdx].memHandleNum != 0) {
-            HCCL_WARNING(
-                "[%s]Channeldesc[%u] memHandleNum[%u] is non-zero, memHandle exchange is not supported.", __func__,
-                descIdx, channelDesc[descIdx].memHandleNum);
-        }
         // 检查HcclChannelDesc是否有重复元素
         CHK_PRT_RET(
             descSet.find(channelDesc[descIdx]) != descSet.end(),
@@ -66,19 +74,30 @@ HcclResult ChannelManager::CheckChannelParam(CommEngine engine, const HcclChanne
             channelDesc[descIdx].remoteRank == userRank_,
             HCCL_ERROR("[%s]Local rank found in channeldesc, userRank_ = %u.", __func__, userRank_), HCCL_E_PARA);
         // 检查是否有不支持协议
-        CHK_PRT_RET(
-            channelDesc[descIdx].channelProtocol != COMM_PROTOCOL_HCCS
-                && channelDesc[descIdx].channelProtocol != COMM_PROTOCOL_ROCE
-                && channelDesc[descIdx].channelProtocol != COMM_PROTOCOL_HCCS_ONLY
-                && channelDesc[descIdx].channelProtocol != COMM_PROTOCOL_SIO,
-            HCCL_ERROR(
-                "[%s]Unsupported protocol[%d] found in channeldesc, protocol: %d.", __func__, descIdx,
-                channelDesc[descIdx].channelProtocol),
-            HCCL_E_PARA);
+        if (engine == COMM_ENGINE_AIV) {
+            CHK_PRT_RET(
+                channelDesc[descIdx].channelProtocol != COMM_PROTOCOL_HCCS
+                    && channelDesc[descIdx].channelProtocol != COMM_PROTOCOL_HCCS_ONLY
+                    && channelDesc[descIdx].channelProtocol != COMM_PROTOCOL_SIO,
+                HCCL_ERROR(
+                    "[%s]AIV engine Unsupported protocol[%d] found in channeldesc, protocol: %d.", __func__, descIdx,
+                    channelDesc[descIdx].channelProtocol),
+                HCCL_E_PARA);
+        } else {
+            CHK_PRT_RET(
+                channelDesc[descIdx].channelProtocol != COMM_PROTOCOL_HCCS
+                    && channelDesc[descIdx].channelProtocol != COMM_PROTOCOL_ROCE
+                    && channelDesc[descIdx].channelProtocol != COMM_PROTOCOL_HCCS_ONLY
+                    && channelDesc[descIdx].channelProtocol != COMM_PROTOCOL_SIO,
+                HCCL_ERROR(
+                    "[%s]Unsupported protocol[%d] found in channeldesc, protocol: %d.", __func__, descIdx,
+                    channelDesc[descIdx].channelProtocol),
+                HCCL_E_PARA);
+        }
 
         // 检查engine支持情况
         if (engine != COMM_ENGINE_CPU && engine != COMM_ENGINE_CPU_TS && engine != COMM_ENGINE_AICPU
-            && engine != COMM_ENGINE_AICPU_TS) {
+            && engine != COMM_ENGINE_AICPU_TS && engine != COMM_ENGINE_AIV) {
             HCCL_ERROR(
                 "[%s]Unsupported engine for channel, engine: %s.", __func__,
                 GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
@@ -88,11 +107,25 @@ HcclResult ChannelManager::CheckChannelParam(CommEngine engine, const HcclChanne
     return HCCL_SUCCESS;
 }
 
+static std::string BuildChannelKey(const std::string& tag, CommEngine engine, const HcclChannelDesc& channelDesc)
+{
+    std::string key = tag + ":" + std::to_string(engine) + ":" + std::to_string(channelDesc.remoteRank) + ":"
+                      + std::to_string(channelDesc.channelProtocol);
+    // 将 memHandles 纳入 key，使得上层更换交换内存时会强制新建 channel，避免复用旧 channel 导致远端地址错配
+    if (channelDesc.memHandleNum > 0 && channelDesc.memHandles != nullptr) {
+        for (uint32_t i = 0; i < channelDesc.memHandleNum; i++) {
+            key += ":" + std::to_string(reinterpret_cast<uintptr_t>(channelDesc.memHandles[i]));
+        }
+    } else {
+        key += ":0";
+    }
+    return key;
+}
+
 HcclResult ChannelManager::RegisterHandle(
     const std::string& tag, CommEngine engine, const HcclChannelDesc& channelDesc, ChannelHandle channelHandle)
 {
-    std::string channelKey = tag + ":" + std::to_string(engine) + ":" + std::to_string(channelDesc.remoteRank) + ":"
-                             + std::to_string(channelDesc.channelProtocol);
+    std::string channelKey = BuildChannelKey(tag, engine, channelDesc);
 
     CHK_PRT_RET(
         (channelHandleMap_.find(channelKey) != channelHandleMap_.end()),
@@ -118,9 +151,7 @@ HcclResult ChannelManager::PrepareHandleArray(
 
     for (uint32_t descIdx = 0; descIdx < descNum; descIdx++) {
         // 组合channelKey
-        std::string channelKey = tag + ":" + std::to_string(engine) + ":"
-                                 + std::to_string(channelDesc[descIdx].remoteRank) + ":"
-                                 + std::to_string(channelDesc[descIdx].channelProtocol);
+        std::string channelKey = BuildChannelKey(tag, engine, channelDesc[descIdx]);
         if (channelHandleMap_.find(channelKey) != channelHandleMap_.end()) {
             channelHandleArray[descIdx] = channelHandleMap_[channelKey];
             continue;
@@ -717,7 +748,9 @@ HcclResult ChannelManager::ChannelCommCreate(
         if (engine == COMM_ENGINE_AICPU || engine == COMM_ENGINE_AICPU_TS) {
             isAicpuModeEn = true;
         }
-        CHK_RET(channelCallbacks_.indOpTransportAlloc(linkTag, opCommTransport, isAicpuModeEn));
+        std::vector<HcclMemHandle> memHandles = CollectMemHandles(needCreateDescs);
+        CHK_RET(channelCallbacks_.indOpTransportAlloc(
+            linkTag, opCommTransport, isAicpuModeEn, memHandles.data(), static_cast<uint32_t>(memHandles.size())));
 
         uint32_t level0 = 0;
         std::vector<LINK> links = opCommTransport[level0][level0].links;

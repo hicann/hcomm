@@ -15,6 +15,9 @@
 #include "channel_manager.h"
 #include "hcomm_c_adpt.h"
 #include "param_check_pub.h"
+#include "hccl_one_sided_conn.h"
+#include <array>
+#include <vector>
 
 using namespace hccl;
 
@@ -143,6 +146,32 @@ HcclChannelGetRemoteMems(HcclComm comm, ChannelHandle channel, uint32_t* memNum,
         return HCCL_SUCCESS;
     }());
 #endif
-    HCCL_RUN_INFO("HcclChannelGetRemoteMems is not supported.");
+
+    hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
+    std::string commId = hcclComm->GetIdentifier();
+    HCCL_RUN_INFO("legacy Entry-%s:comm[%s]", __func__, commId.c_str());
+    HcclMem* remoteMem = nullptr;
+    HcclResult ret
+        = hcclComm->GetIndependentOp().GetChannelManager().ChannelCommGetRemoteMem(channel, &remoteMem, memNum);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR("[HcclChannelGetRemoteMems]legacy failed. channel[%llu], ret[%d]", channel, ret), ret);
+    *remoteMems = reinterpret_cast<CommMem*>(remoteMem);
+    if (*memNum > 0) {
+        // A2/A3 tag为非真实tag，无法获取到，统一使用固定字符串。
+        static const char* HCCL_BUFFER_TAG = "HcclBuffer";
+        static thread_local std::array<char*, MAX_REMOTE_MEM_NUM> tagPtrs;
+        CHK_PRT_RET(
+            *memNum > MAX_REMOTE_MEM_NUM,
+            HCCL_ERROR("[HcclChannelGetRemoteMems] memNum[%u] exceeds max[%u]", *memNum, MAX_REMOTE_MEM_NUM),
+            HCCL_E_PARA);
+        for (uint32_t i = 0; i < *memNum; ++i) {
+            tagPtrs[i] = const_cast<char*>(HCCL_BUFFER_TAG);
+        }
+        *memTags = tagPtrs.data();
+    } else {
+        *memTags = nullptr;
+    }
+    HCCL_INFO("[HcclChannelGetRemoteMems]legacy success: memNum[%u]", *memNum);
     return HCCL_SUCCESS;
 }

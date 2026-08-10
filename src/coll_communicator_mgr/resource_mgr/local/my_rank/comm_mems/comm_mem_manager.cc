@@ -159,4 +159,42 @@ HcclResult CommMemMgr::CommGetLocalRegMemByTag(const std::string& tag, std::vect
     }
     return HCCL_SUCCESS;
 }
+
+HcclResult CommMemMgr::CommGetLocalRegMemByHandles(
+    const HcclMemHandle* memHandles, uint32_t memHandleNum, std::vector<HcclMem>& memVec)
+{
+    if (memHandleNum == 0) {
+        return HCCL_SUCCESS;
+    }
+    CHK_PTR_NULL(memHandles);
+
+    std::lock_guard<std::mutex> lock(memMutex_);
+    memVec.clear();
+    memVec.reserve(memHandleNum);
+
+    for (uint32_t i = 0; i < memHandleNum; ++i) {
+        bool found = false;
+        for (const auto& tagBinding : opBindings_) {
+            for (const auto& handle : tagBinding.second) {
+                if (handle != nullptr && handle.get() == memHandles[i]) {
+                    HcclMem mem;
+                    mem.addr = handle->addr;
+                    mem.size = handle->size;
+                    mem.type = handle->memType;
+                    memVec.push_back(mem);
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                break;
+            }
+        }
+        if (!found) {
+            HCCL_ERROR("[CommGetLocalRegMemByHandles] memHandle[%p] not found in any tag", memHandles[i]);
+            return HCCL_E_NOT_FOUND;
+        }
+    }
+    return HCCL_SUCCESS;
+}
 } // namespace hccl

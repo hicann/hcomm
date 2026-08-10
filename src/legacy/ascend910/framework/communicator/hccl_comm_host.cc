@@ -176,8 +176,10 @@ HcclResult hcclComm::InitIndependentOp()
     }
     ChannelManagerCallbacks channelCallbacks;
     channelCallbacks.indOpTransportAlloc
-        = [this](const std::string& tag, OpCommTransport& opCommTransport, bool isAicpuModeEn) -> HcclResult {
-        return this->IndOpTransportAlloc(tag, opCommTransport, isAicpuModeEn);
+        = [this](
+              const std::string& tag, OpCommTransport& opCommTransport, bool isAicpuModeEn,
+              const HcclMemHandle* memHandles, uint32_t memHandleNum) -> HcclResult {
+        return this->IndOpTransportAlloc(tag, opCommTransport, isAicpuModeEn, memHandles, memHandleNum);
     };
     channelCallbacks.getRankLists = [this]() -> std::vector<RankInfo> {
         return this->GetRankLists();
@@ -186,7 +188,8 @@ HcclResult hcclComm::InitIndependentOp()
 }
 
 IndependentOp& hcclComm::GetIndependentOp() { return independentOp_; }
-HcclResult hcclComm::PrepareChannelMem(const std::string& tag, TransportIOMem& transMem)
+HcclResult hcclComm::PrepareChannelMem(
+    const std::string& tag, TransportIOMem& transMem, const HcclMemHandle* memHandles, uint32_t memHandleNum)
 {
     // 获取本地cclbuffer
     CommBuffer commBuffer;
@@ -197,7 +200,7 @@ HcclResult hcclComm::PrepareChannelMem(const std::string& tag, TransportIOMem& t
     // 获取通信域内存
     IndOpMem indOpMem{};
     std::vector<HcclMem> localMemVec{};
-    CHK_RET(GetIndependentOp().GetCommMemMgr().CommGetLocalRegMemByTag(tag, localMemVec));
+    CHK_RET(GetIndependentOp().GetCommMemMgr().CommGetLocalRegMemByHandles(memHandles, memHandleNum, localMemVec));
     for (const HcclMem& mem : localMemVec) {
         if (mem.type == HCCL_MEM_TYPE_HOST) {
             indOpMem.userHostMem.push_back(HostMem::create(mem.addr, mem.size));
@@ -212,11 +215,13 @@ HcclResult hcclComm::PrepareChannelMem(const std::string& tag, TransportIOMem& t
     transMem.cclOutputMem = cclbuffer;
     return HCCL_SUCCESS;
 }
-HcclResult hcclComm::IndOpTransportAlloc(const std::string& tag, OpCommTransport& opCommTransport, bool isAicpuModeEn)
+HcclResult hcclComm::IndOpTransportAlloc(
+    const std::string& tag, OpCommTransport& opCommTransport, bool isAicpuModeEn, const HcclMemHandle* memHandles,
+    uint32_t memHandleNum)
 {
     CHK_SMART_PTR_NULL(communicator_);
     TransportIOMem transMem;
-    CHK_RET(PrepareChannelMem(tag, transMem));
+    CHK_RET(PrepareChannelMem(tag, transMem, memHandles, memHandleNum));
     std::string commId = GetIdentifier();
     return communicator_->IndOpTransportAlloc(tag, opCommTransport, transMem, isAicpuModeEn);
 }

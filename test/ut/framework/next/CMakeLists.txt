@@ -84,6 +84,8 @@ set(src_to_test_list
     coll_comms/communicator/ns_recovery/aicpu/ut_ns_recovery_func_lite.cc
     coll_comms/communicator/ns_recovery/aicpu/ut_ns_recovery_lite.cc
     coll_comms/rank_pairs/ut_rank_pair.cc
+    coll_comms/resource_mgr/rank_pairs/ut_channel_manager.cc
+    coll_comms/resource_mgr/local/my_rank/comm_mems/ut_comm_mem_manager.cc
     coll_comms/communicator/ns_recovery/ut_hccl_task_abort_handler.cc
     coll_comms/communicator/aicpu/ut_coll_comm_aicpu.cc
     coll_comms/communicator/aicpu/ut_coll_comm_aicpu_destroy_func.cc
@@ -129,6 +131,7 @@ target_include_directories(hccl_utest_test_next_resource PRIVATE
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/team/hcomm
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/team/hccl
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_mems
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/group_schedule_mgr/
 
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/endpoints
