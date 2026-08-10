@@ -5466,10 +5466,12 @@ HcclResult HcclCommStateNotify(HcclComm comm, HcclCommStatePhase state)
         HcclCommStateCallback cb = cbPair.first;
         void* args = cbPair.second;
         HCCL_RUN_INFO(
-            "[%s]comm[%p], state[%d], regName[%s], args[%p] callback begin.", __func__, comm, state, regName, args);
+            "[%s]comm[%p], state[%d], regName[%s], args[%p] callback begin.", __func__, comm, state, regName.c_str(),
+            args);
         CHK_RET(cb(comm, state, args));
         HCCL_RUN_INFO(
-            "[%s]comm[%p], state[%d], regName[%s], args[%p] callback success.", __func__, comm, state, regName, args);
+            "[%s]comm[%p], state[%d], regName[%s], args[%p] callback success.", __func__, comm, state, regName.c_str(),
+            args);
     }
     return HCCL_SUCCESS;
 }
