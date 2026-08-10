@@ -36,7 +36,7 @@ const char *HcclGetErrorString(HcclResult code)
 
 ## 返回值
 
-[HcclResult](./data_type_definition/HcclResult.md)类型错误码的解析结果。
+`const char *` 指针，指向 [HcclResult](./data_type_definition/HcclResult.md) 类型错误码对应的字符串描述。
 
 ## 约束说明
 
