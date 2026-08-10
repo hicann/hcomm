@@ -1952,7 +1952,7 @@ HcclResult SetIncreSaveExecTimeOut(const s32 execTimeout)
     }
 
     HCCL_RUN_INFO(
-        "setIncreSaveExecTimeOut execTimeout[%d] increSaveExecTimeOut[%d]", execTimeout,
+        "setIncreSaveExecTimeOut execTimeout[%d s] increSaveExecTimeOut[%d s]", execTimeout,
         g_externalInput.increSaveExecTimeOut);
     return HCCL_SUCCESS;
 }

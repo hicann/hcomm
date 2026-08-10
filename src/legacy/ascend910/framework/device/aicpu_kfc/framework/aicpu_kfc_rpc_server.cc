@@ -369,10 +369,12 @@ bool AicpuKfcRpcServer::ReadAddrMsg(HcclMsg* hcclMsg, uint32_t msgPos)
     // 打印读消息的时间
     if (eventPrintTurn > 1) {
         HCCL_RUN_INFO(
-            "[AicpuKfcRpcServer][ReadAddrMsg] Read HcclMsg[%u] cost %llu", msgPos, GetCurCpuTimestamp() - startUsec);
+            "[AicpuKfcRpcServer][ReadAddrMsg] Read HcclMsg[%u] cost[%llu ns]", msgPos,
+            GetCurCpuTimestamp() - startUsec);
     } else {
         HCCL_INFO(
-            "[AicpuKfcRpcServer][ReadAddrMsg] Read HcclMsg[%u] cost %llu", msgPos, GetCurCpuTimestamp() - startUsec);
+            "[AicpuKfcRpcServer][ReadAddrMsg] Read HcclMsg[%u] cost[%llu ns]", msgPos,
+            GetCurCpuTimestamp() - startUsec);
     }
 
     PrintMsg(hcclMsg, msgPos);

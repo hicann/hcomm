@@ -2618,7 +2618,7 @@ aclError aclrtRecordNotify(aclrtNotify notify, aclrtStream stream)
 aclError aclrtWaitAndResetNotify(aclrtNotify notify, aclrtStream stream, uint32_t timeout)
 {
     if (nullptr == notify || nullptr == stream || !timeout) {
-        HCCL_ERROR("parameter error : notify[%p], stream[%p], timeOut[%d]", notify, stream, timeout);
+        HCCL_ERROR("parameter error : notify[%p], stream[%p], timeOut[%u ms]", notify, stream, timeout);
         return ACL_ERROR_RT_PARAM_INVALID;
     }
 

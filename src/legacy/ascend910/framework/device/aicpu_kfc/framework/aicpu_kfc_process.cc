@@ -1586,8 +1586,8 @@ u32 AicpuKfcProcess::AicpuRpcResInit(HccCommResParamTask* commParam)
     ctx->retryHoldTime = commParam->config.retryHoldTime;
     ctx->retryIntervalTime = commParam->config.retryIntervalTime;
     HCCL_DEBUG(
-        "[%s] ctx->retryEnable [%d], ctx->retryHoldTime [%u], ctx->retryIntervalTime [%u]", __func__, ctx->retryEnable,
-        ctx->retryHoldTime, ctx->retryIntervalTime);
+        "[%s] ctx->retryEnable [%d], ctx->retryHoldTime [%u ms], ctx->retryIntervalTime [%u ms]", __func__,
+        ctx->retryEnable, ctx->retryHoldTime, ctx->retryIntervalTime);
     CHK_RET(InitChipType(ctx));
     ctx->overflowAddr = commParam->overFlowAddr;
     ctx->onlyRead = commParam->onlyRead;

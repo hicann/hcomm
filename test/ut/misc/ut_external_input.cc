@@ -321,7 +321,7 @@ TEST_F(ExternalInputTest, ut_external_input_env_variables_params_exec_timeout)
     HcclResult ret;
 
     timeout = GetExternalInputHcclExecTimeOut();
-    HCCL_INFO("the timeout is %d", timeout);
+    HCCL_INFO("the timeout is [%d s]", timeout);
     timeout == NOTIFY_DEFAULT_WAIT_TIME ? ret = HCCL_SUCCESS : ret = HCCL_E_PARA;
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
@@ -350,7 +350,7 @@ TEST_F(ExternalInputTest, ut_external_input_env_variables_params_exec_timeout)
     EXPECT_EQ(ret, HCCL_E_PARA);
 
     timeout = GetExternalInputHcclExecTimeOut();
-    HCCL_INFO("the timeout is %d", timeout);
+    HCCL_INFO("the timeout is [%d s]", timeout);
     timeout == HCCL_EXEC_TIME_OUT_S ? ret = HCCL_SUCCESS : ret = HCCL_E_PARA;
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
@@ -359,7 +359,7 @@ TEST_F(ExternalInputTest, ut_external_input_env_variables_params_exec_timeout)
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     timeout = GetExternalInputHcclExecTimeOut();
-    HCCL_INFO("the timeout is %d", timeout);
+    HCCL_INFO("the timeout is [%d s]", timeout);
     timeout == 68 ? ret = HCCL_SUCCESS : ret = HCCL_E_PARA;
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
@@ -368,7 +368,7 @@ TEST_F(ExternalInputTest, ut_external_input_env_variables_params_exec_timeout)
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     timeout = GetExternalInputHcclExecTimeOut();
-    HCCL_INFO("the timeout is %d", timeout);
+    HCCL_INFO("the timeout is [%d s]", timeout);
     timeout == 9996 ? ret = HCCL_SUCCESS : ret = HCCL_E_PARA;
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
@@ -378,7 +378,7 @@ TEST_F(ExternalInputTest, ut_external_input_env_variables_params_exec_timeout)
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     timeout = GetExternalInputHcclExecTimeOut();
-    HCCL_INFO("the timeout is %d", timeout);
+    HCCL_INFO("the timeout is [%d s]", timeout);
     timeout == HCCL_EXEC_TIME_OUT_S ? ret = HCCL_SUCCESS : ret = HCCL_E_PARA;
     EXPECT_EQ(ret, HCCL_SUCCESS);
 

@@ -2293,7 +2293,7 @@ HCCP_ATTRI_VISI_DEF int RaWaitEventHandle(int eventHandle, struct SocketEventInf
     }
 
     if (timeout < -1) {
-        hccp_err("[ra_wait_event_handle]timeout[%d] is invalid", timeout);
+        hccp_err("[ra_wait_event_handle]timeout[%d ms] is invalid", timeout);
         return ConverReturnCode(SOCKET_OP, -EINVAL);
     }
 

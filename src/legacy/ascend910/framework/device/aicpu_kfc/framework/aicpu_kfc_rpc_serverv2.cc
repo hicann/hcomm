@@ -402,11 +402,11 @@ bool AicpuKfcRpcServerV2::ReadAddrMsg(HcclMsg* hcclMsg, HcclMsg* msgList, u32 qu
         u64 prepareTime = GetCurCpuTimestamp();
         if (eventPrintTurn_ > 1) {
             HCCL_RUN_INFO(
-                "[AicpuKfcRpcServerV2][ReadAddrMsg] Read HcclMsg[%u] cost %llu", msgPos,
+                "[AicpuKfcRpcServerV2][ReadAddrMsg] Read HcclMsg[%u] cost[%llu ns]", msgPos,
                 prepareTime - prepareTime_[queueIdx]);
         } else {
             HCCL_INFO(
-                "[AicpuKfcRpcServerV2][ReadAddrMsg] Read HcclMsg[%u] cost %llu", msgPos,
+                "[AicpuKfcRpcServerV2][ReadAddrMsg] Read HcclMsg[%u] cost[%llu ns]", msgPos,
                 prepareTime - prepareTime_[queueIdx]);
         }
         prepareTime_[queueIdx] = prepareTime;

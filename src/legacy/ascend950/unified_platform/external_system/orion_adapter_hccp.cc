@@ -549,7 +549,7 @@ void HrtRaSocketListenOneStop(RaSocketListenParam& in)
 void RaBlockGetSockets(u32 role, SocketInfoT conn[], u32 num, u32 timeoutSec) // 修改为内部函数，不对外
 {
     CHECK_NULLPTR(conn, "[RaBlockGetSockets] conn is nullptr!");
-    HCCL_INFO("[GetSockets][RaBlock] Input params: role=%u, num=%u, timeoutSec=%u", role, num, timeoutSec);
+    HCCL_INFO("[GetSockets][RaBlock] Input params: role=[%u], num=[%u], timeoutSec=[%u s]", role, num, timeoutSec);
     s32 sockRet;
     u32 gotSocketsCnt = 0;
     auto startTime = std::chrono::steady_clock::now();
@@ -1182,7 +1182,7 @@ void HrtRaGetNotifyBaseAddr(RdmaHandle rdmaHandle, u64* va, u64* size)
             if (bTimeout != 0) {
                 HCCL_ERROR(
                     "[Get][RaNotifyBaseAddr]errNo[0x%016llx] ra get notify base addr "
-                    "timeout[%d]. return[%d], params: rdmaHandle[%p], va[0x%llx], size[%llu]",
+                    "timeout[%lld s]. return[%d], params: rdmaHandle[%p], va[0x%llx], size[%llu]",
                     HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK), timeout, ret, rdmaHandle, notifyVa, notifySize);
             }
             SaluSleep(ONE_MILLISECOND_OF_USLEEP);
@@ -1267,7 +1267,7 @@ void HrtRaQpConnectAsync(QpHandle qpHandle, FdHandle fdHandle)
             if (bTimeout != 0) {
                 HCCL_ERROR(
                     "[ConnectAsync][RaQp]errNo[0x%016llx] ra qp connect async "
-                    "timeout[%lld]. qpHandle=%p, fdHandle=%p, return[%d].",
+                    "timeout[%lld s]. qpHandle=[%p], fdHandle=[%p], return[%d].",
                     HCCL_ERROR_CODE(HcclResult::HCCL_E_NETWORK), timeout, qpHandle, fdHandle, ret);
             }
             SaluSleep(ONE_MILLISECOND_OF_USLEEP);

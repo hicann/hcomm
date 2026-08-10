@@ -435,7 +435,7 @@ void HcclStreamSynchronize(HcclRtStream ptr)
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat(
             "[Synchronize][Stream]errNo[0x%016llx] rt "
-            "streamsynchronizewithtimeout fail. return[%d], stream[%p], timeout[%d].",
+            "streamsynchronizewithtimeout fail. return[%d], stream[%p], timeout[%d ms].",
             HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, ptr, timeout);
         MACRO_THROW(RuntimeApiException, msg);
     }

@@ -46,7 +46,7 @@ bool IsSupportReduce(HcommDataType dataType, HcommReduceOp op)
 int32_t HcommSetNotifyWaitTimeOut(float timeOut)
 {
     if (std::isnan(timeOut) || timeOut < 0.0f || timeOut > static_cast<float>(UINT32_MAX)) {
-        HCCL_ERROR("[%s] in cpu timeOut[%f] is invalid.", __func__, timeOut);
+        HCCL_ERROR("[%s] in cpu timeOut[%f s] is invalid.", __func__, timeOut);
         return HCCL_E_PARA;
     }
     uint32_t timeOutInt = static_cast<uint32_t>(timeOut);
@@ -56,7 +56,7 @@ int32_t HcommSetNotifyWaitTimeOut(float timeOut)
 
 int32_t HcommThreadResAcquireTimeOut(float timeOut)
 {
-    HCCL_ERROR("[%s] timeOut[%f], not support in cpu.", __func__, timeOut);
+    HCCL_ERROR("[%s] timeOut[%f s], not support in cpu.", __func__, timeOut);
     return HCCL_E_NOT_SUPPORT;
 }
 

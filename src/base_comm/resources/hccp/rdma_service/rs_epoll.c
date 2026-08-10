@@ -849,7 +849,7 @@ RS_ATTRI_VISI_DEF int RsWaitEventHandle(int eventHandle, struct SocketEventInfoT
     }
 
     if (timeout < -1) {
-        hccp_err("timeout[%d] is invalid", timeout);
+        hccp_err("timeout[%d ms] is invalid", timeout);
         return -EINVAL;
     }
 

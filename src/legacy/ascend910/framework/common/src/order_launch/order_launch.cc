@@ -217,7 +217,7 @@ HcclResult OrderLaunch::OpbaseLaunchInOrder(
 {
     std::unique_lock<std::mutex> mapLock(streamMutex_);
     HCCL_INFO(
-        "[OrderLaunch][OpbaseLaunchInOrder] group[%s], kernelStreamId[%u], timeOut[%d]", group.c_str(),
+        "[OrderLaunch][OpbaseLaunchInOrder] group[%s], kernelStreamId[%u], timeOut[%d ms]", group.c_str(),
         kernelStream.id(), timeOut);
     // group未注册过，或者未记录过算子下发阶段的线程context
     if (groupCtxMap_.find(group) == groupCtxMap_.end() || groupCtxMap_[group] == INVALID_U64) {

@@ -274,7 +274,7 @@ HccnResult HccnRpingAddTargetWithCfg(
         HCCN_E_PARA);
     // 校验指针，并将其转换为pingmesh指针
     CHK_PRT_RET(rpingCtx == nullptr, HCCL_ERROR("[HccnRpingAddTargetWithCfg]rpingCtx is null."), HCCN_E_PARA);
-    HCCL_DEBUG("[HccnRpingAddTargetWithCfg]targetNum:%u connectTimeout:%u", targetNum, config->connectTimeout);
+    HCCL_DEBUG("[HccnRpingAddTargetWithCfg]targetNum:[%u] connectTimeout:[%u ms]", targetNum, config->connectTimeout);
     PingMesh* rping = static_cast<PingMesh*>(rpingCtx);
     // 获取device id
     s32 devLogicId = 0;

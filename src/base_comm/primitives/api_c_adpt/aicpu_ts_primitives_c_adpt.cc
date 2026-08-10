@@ -396,7 +396,7 @@ inline HcclResult CheckDataTypeAndReduceOp(HcommDataType dataType, HcommReduceOp
 int32_t HcommSetNotifyWaitTimeOut(float timeOut)
 {
     if (std::isnan(timeOut) || timeOut < 0.0f || timeOut > static_cast<float>(UINT32_MAX)) {
-        HCCL_ERROR("[%s] in aicpu_ts timeOut[%f] is invalid.", __func__, timeOut);
+        HCCL_ERROR("[%s] in aicpu_ts timeOut[%f s] is invalid.", __func__, timeOut);
         return HCCL_E_PARA;
     }
     uint32_t timeOutInt = static_cast<uint32_t>(timeOut);
@@ -407,7 +407,7 @@ int32_t HcommSetNotifyWaitTimeOut(float timeOut)
 int32_t HcommThreadResAcquireTimeOut(float timeOut)
 {
     if (std::isnan(timeOut) || timeOut < 0.0f || timeOut > static_cast<float>(UINT32_MAX)) {
-        HCCL_ERROR("[%s] in aicpu_ts timeOut[%f] is invalid.", __func__, timeOut);
+        HCCL_ERROR("[%s] in aicpu_ts timeOut[%f s] is invalid.", __func__, timeOut);
         return HCCL_E_PARA;
     }
     uint32_t timeOutInt = static_cast<uint32_t>(timeOut);
