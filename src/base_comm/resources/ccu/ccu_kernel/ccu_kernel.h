@@ -326,6 +326,8 @@ private:
         const uint64_t* taskArgs, uint32_t argSize, const std::unordered_map<uint16_t, uint32_t>& varId2ArgIndexMap,
         const std::unordered_map<uint16_t, uint16_t>& varId2VarIdMap);
 
+    CcuRep::Variable CreateJumpTargetVar();
+
     struct IfLabelEntry {
         const char* label{nullptr};
         bool bodyDone{false};
@@ -480,6 +482,11 @@ private:
     uint32_t loadArgIndex_{0};
 
     CcuVersion ccuVersion_{CcuVersion::CCU_INVALID};
+
+    // A5(CCU_V1) 专用：CCU_IF,CCU_ELSE 跳转共用一个 Xn；当前仅CCU_IF和CCU_ELSE复用，While和DoWhile暂未复用
+    // A5 上 CCU_IF和ELSE的targetVar 仅用于LoadImdToXn + 紧接 Jump，生命周期不跨越其他指令，可安全复用。
+    // A6不复用，保持每次独立分配的语义。
+    std::unique_ptr<CcuRep::Variable> sharedJumpTargetVar_;
 
     CcuSharedResource exportedRes_{};
     CcuSharedResource importedRes_{};

@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <acl/acl.h>
+#include <set>
 #include "hccl_api_base_test.h"
 
 #define private public
@@ -45,6 +46,7 @@
 #include "ccu_kernel_impl/ccu_loop_add_demo.h"
 #include "ccu_kernel_impl/ccu_func_call_demo.h"
 #include "ccu_kernel_impl/ccu_jump_demo.h"
+#include "ccu_kernel_impl/ccu_micro_sim.h"
 #include "ccu_kernel_impl/ccu_reduce_scatter_mesh1d_demo.h"
 #include "ccu_kernel_impl/ccu_reduce_scatter_mesh1d_a6_demo.h"
 #include "ccu_kernel_impl/ccu_groupcopy_demo.h"
@@ -986,6 +988,317 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelDoWhileUnified_When_AllFine_Expe
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
     DestroyCcuResDescs(resDescs);
 }
+
+// A5(CCU_V1): CCU_IF 的 targetVar 共用一个 Xn，验证所有跳转 rep 的 targetInstrId 指向同一个 Xn
+TEST_F(HcommCcuControlApiTest, Ut_CcuIfSharedTargetVar_When_V1_Expect_XnReduced)
+{
+    CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 10;
+    constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V1;
+    int32_t fakeDeviceLogicId = MockCcuDeviceEnv(fakeDevId, fakeCcuVersion);
+
+    HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM] = {0, 0};
+    CreateCcuResDescsPair(resDescs, fakeCcuVersion);
+    constexpr uint32_t descNum = 2;
+    CcuInsHandle insHandle{0};
+    ccuRet = HcommCcuInsCreate(resDescs, descNum, &insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuKernelRegisterStart(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    CcuIfSharedVarDemoKernelArg demoArg{};
+    demoArg.value = 0;
+    demoArg.expect = 0;
+    CcuKernelArg kernelArg = static_cast<CcuKernelArg>(&demoArg);
+    const void* kernelArgs[] = {kernelArg};
+    auto kernelFunc = reinterpret_cast<void*>(CcuIfSharedVarDemoKernel);
+    char* kernelFuncName = "ccu_if_shared_var_demo";
+    CcuKernelHandle kernelHandle{0};
+    constexpr uint32_t fakeDieId = 0;
+    constexpr uint32_t kernelArgNum = 1;
+    ccuRet = HcommCcuKernelRegister(
+        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    auto* kernel = hcomm::CcuKernelMgr::GetInstance(fakeDeviceLogicId).GetKernel(kernelHandle);
+    ASSERT_NE(kernel, nullptr);
+
+    // sharedJumpTargetVar_ 应已初始化（A5 共用路径生效）
+    EXPECT_TRUE(kernel->sharedJumpTargetVar_ != nullptr);
+
+    // 收集所有条件跳转 rep 的 targetInstrId，验证它们指向同一个 Xn
+    uint32_t jumpRepCount = 0;
+    std::set<uint16_t> jumpTargetIds;
+    for (const auto& rep : kernel->GetRepSequence()) {
+        auto t = rep->Type();
+        if (t == hcomm::CcuRep::CcuRepType::JUMP_NE || t == hcomm::CcuRep::CcuRepType::JUMP_EQ
+            || t == hcomm::CcuRep::CcuRepType::JUMP) {
+            auto* jump = dynamic_cast<hcomm::CcuRep::CcuRepJumpBase*>(rep.get());
+            if (jump != nullptr) {
+                jumpRepCount++;
+                jumpTargetIds.insert(jump->GetTargetInstrId().Id());
+            }
+        }
+    }
+
+    // A5 共用：所有 targetInstrId 应为同一个 Xn ID
+    EXPECT_EQ(jumpRepCount, 10);
+    EXPECT_EQ(jumpTargetIds.size(), 1u);
+
+    ccuRet = HcommCcuInsDestroy(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+    DestroyCcuResDescs(resDescs);
+}
+
+// A6(CCU_V2): targetVar 不共用，验证多个 CCU_IF 的 targetInstrId都不相同
+TEST_F(HcommCcuControlApiTest, Ut_CcuIfSharedTargetVar_When_V2_Expect_NoSharing)
+{
+    CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 11;
+    constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V2;
+    int32_t fakeDeviceLogicId = MockCcuDeviceEnv(fakeDevId, fakeCcuVersion);
+
+    HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM] = {0, 0};
+    CreateCcuResDescsPair(resDescs, fakeCcuVersion);
+    constexpr uint32_t descNum = 2;
+    CcuInsHandle insHandle{0};
+    ccuRet = HcommCcuInsCreate(resDescs, descNum, &insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuKernelRegisterStart(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    CcuIfSharedVarDemoKernelArg demoArg{};
+    demoArg.value = 0;
+    demoArg.expect = 0;
+    CcuKernelArg kernelArg = static_cast<CcuKernelArg>(&demoArg);
+    const void* kernelArgs[] = {kernelArg};
+    auto kernelFunc = reinterpret_cast<void*>(CcuIfSharedVarDemoKernel);
+    char* kernelFuncName = "ccu_if_shared_var_demo_v2";
+    CcuKernelHandle kernelHandle{0};
+    constexpr uint32_t fakeDieId = 0;
+    constexpr uint32_t kernelArgNum = 1;
+    ccuRet = HcommCcuKernelRegister(
+        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    auto* kernel = hcomm::CcuKernelMgr::GetInstance(fakeDeviceLogicId).GetKernel(kernelHandle);
+    ASSERT_NE(kernel, nullptr);
+
+    // sharedJumpTargetVar_ 应未初始化（A6 不共用）
+    EXPECT_TRUE(kernel->sharedJumpTargetVar_ == nullptr);
+
+    // 收集所有条件跳转 rep 的 targetInstrId，验证它们互不相同
+    uint32_t jumpRepCount = 0;
+    std::set<uint16_t> jumpTargetIds;
+    for (const auto& rep : kernel->GetRepSequence()) {
+        auto t = rep->Type();
+        if (t == hcomm::CcuRep::CcuRepType::JUMP_NE || t == hcomm::CcuRep::CcuRepType::JUMP_EQ
+            || t == hcomm::CcuRep::CcuRepType::JUMP) {
+            auto* jump = dynamic_cast<hcomm::CcuRep::CcuRepJumpBase*>(rep.get());
+            if (jump != nullptr) {
+                jumpRepCount++;
+                jumpTargetIds.insert(jump->GetTargetInstrId().Id());
+            }
+        }
+    }
+    // A6 不共用：每个跳转 rep 的 targetInstrId 互不相同
+    ASSERT_EQ(jumpRepCount, 10u);
+    EXPECT_EQ(jumpTargetIds.size(), jumpRepCount);
+
+    ccuRet = HcommCcuInsDestroy(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+    DestroyCcuResDescs(resDescs);
+}
+
+// 参考实现:用纯 C++ 复现 CcuIfSharedVarDemoKernel 各场景的控制流逻辑,不依赖 CCU 代码,
+// 用于与解释器执行结果逐场景对比。value 为 uint32,在 Xn 中按 64 位比较,故统一提升到 uint64_t。
+// 返回四个结果变量的期望值,顺序与 kIfSharedVarScenarios 一致。
+struct CcuIfSharedVarResult {
+    uint64_t r_if;     // 场景1: 单层 IF
+    uint64_t r_ifelse; // 场景2: IF + ELSE
+    uint64_t r_nest;   // 场景3: 嵌套 IF + ELSE
+    uint64_t r_for;    // 场景4: for 循环内 IF
+};
+// 计算参考实现期望结果:用与 CcuIfSharedVarDemoKernel 相同的控制流结构推演四个结果变量的终值,
+// 不依赖 CCU 代码。命中值 10、未命中值 20、各场景未触发时保留的标记值,均与 kernel 内常量一致。
+static CcuIfSharedVarResult CcuIfSharedVarExpectedResult(uint32_t value, uint64_t expect)
+{
+    // 与 kernel 一致:变量初值(未命中/未触发时保留的标记值)。
+    uint64_t r_if = 1001;     // 场景1
+    uint64_t r_ifelse = 1002; // 场景2
+    uint64_t r_nest = 1003;   // 场景3
+    uint64_t r_for = 1004;    // 场景4
+    const uint64_t hit = 10;  // 命中取值
+    const uint64_t miss = 20; // 未命中取值
+    const uint64_t v = static_cast<uint64_t>(value);
+
+    // 场景1: 单层 IF,无 else。命中则 r_if=hit,否则保持标记 1001。
+    if (v == expect) {
+        r_if = hit;
+    }
+
+    // 场景2: IF + ELSE。命中走 then(hit),否则走 else(miss)。
+    if (v == expect) {
+        r_ifelse = hit;
+    } else {
+        r_ifelse = miss;
+    }
+
+    // 场景3: 嵌套 IF + ELSE。外层 v==expect 才进入;内层条件与外层相同,外层真时内层走 then(hit)。
+    //         外层假时整块跳过,r_nest 保持标记 1003。
+    if (v == expect) {
+        if (v == expect) {
+            r_nest = hit;
+        } else {
+            r_nest = miss;
+        }
+    }
+
+    // 场景4: for 循环内 IF。循环 4 次,v==i 命中则 r_for=hit(赋值,至多命中一次)。
+    for (int i = 0; i < 4; ++i) {
+        if (v == static_cast<uint64_t>(i)) {
+            r_for = hit;
+        }
+    }
+
+    return {r_if, r_ifelse, r_nest, r_for};
+}
+
+// 各场景结果变量的标记值(即 kernel 中的初值立即数)与名称。
+// 测试通过扫描 LoadImdToXn 指令中 immediate 等于标记值的指令,定位各结果变量的 Xn 编号。
+struct IfSharedVarScenario {
+    uint64_t marker;
+    const char* name;
+};
+static constexpr IfSharedVarScenario kIfSharedVarScenarios[4] = {
+    {1001, "r_if(单层IF)"},
+    {1002, "r_ifelse(IF+ELSE)"},
+    {1003, "r_nest(嵌套IF+ELSE)"},
+    {1004, "r_for(for循环内IF)"},
+};
+
+// 执行结果验证:在指定设备上以给定输入注册并翻译 CcuIfSharedVarDemoKernel,
+// 将翻译生成的指令序列载入 CcuMicroSim 执行,读取四个结果变量的最终值,
+// 与参考实现 CcuIfSharedVarExpectedResult 逐场景对比。设备相关的 mock 由调用方(TEST_P)完成。
+static void VerifyIfSharedVarExecDiff(int32_t fakeDeviceLogicId, uint32_t value, uint64_t expect)
+{
+    CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
+    HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM] = {0, 0};
+    CreateCcuResDescsPair(resDescs, hcomm::CcuVersion::CCU_V1);
+    constexpr uint32_t descNum = 2;
+    CcuInsHandle insHandle{0};
+    ccuRet = HcommCcuInsCreate(resDescs, descNum, &insHandle);
+    ASSERT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    ccuRet = HcommCcuKernelRegisterStart(insHandle);
+    ASSERT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    CcuIfSharedVarDemoKernelArg demoArg{};
+    demoArg.value = value;
+    demoArg.expect = expect;
+    CcuKernelArg kernelArg = static_cast<CcuKernelArg>(&demoArg);
+    const void* kernelArgs[] = {kernelArg};
+    auto kernelFunc = reinterpret_cast<void*>(CcuIfSharedVarDemoKernel);
+    constexpr uint32_t fakeDieId = 0;
+    constexpr uint32_t kernelArgNum = 1;
+    CcuKernelHandle kernelHandle{0};
+    ccuRet = HcommCcuKernelRegister(
+        insHandle, fakeDieId, "ccu_if_shared_var_exec_diff", kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
+    ASSERT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    // RegisterEnd 触发翻译并调用 SetCcuInstrInfo,此后 kernel->instrInfo_ 中即为翻译后的指令序列。
+    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
+    ASSERT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+
+    auto* kernel = hcomm::CcuKernelMgr::GetInstance(fakeDeviceLogicId).GetKernel(kernelHandle);
+    ASSERT_NE(kernel, nullptr);
+
+    // 确认当前走在 V1 跳转寄存器复用路径上(与结构测试 Ut_CcuIfSharedTargetVar_When_V1_Expect_XnReduced 呼应)。
+    EXPECT_TRUE(kernel->sharedJumpTargetVar_ != nullptr);
+
+    // 通过标记值定位各结果变量的 Xn 编号:扫 LoadImdToXn 指令,immediate 等于标记值者即为对应变量的初值指令。
+    uint16_t accXnId[4] = {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF};
+    const auto& instrVec = kernel->instrInfo_.instrVec;
+    for (const auto& ins : instrVec) {
+        if (ins.header.type != hcomm::CcuRep::MicroSimV1::LOAD_TYPE
+            || ins.header.code != hcomm::CcuRep::MicroSimV1::LOADIMDTOXN_CODE) {
+            continue;
+        }
+        for (size_t k = 0; k < 4; ++k) {
+            if (ins.v1.loadImdToXn.immediate == kIfSharedVarScenarios[k].marker) {
+                accXnId[k] = ins.v1.loadImdToXn.xnId;
+            }
+        }
+    }
+    for (size_t k = 0; k < 4; ++k) {
+        ASSERT_NE(accXnId[k], 0xFFFF) << "结果变量未定位到 Xn 编号: " << kIfSharedVarScenarios[k].name;
+    }
+
+    // 执行翻译后的指令序列。
+    hcomm::CcuRep::CcuMicroSim sim;
+    sim.Load(kernel->instrInfo_);
+    ASSERT_TRUE(sim.Run()) << "sim run failed";
+
+    // 逐场景断言,失败信息标注具体场景,便于定位。
+    const auto exp = CcuIfSharedVarExpectedResult(value, expect);
+    EXPECT_EQ(sim.GetXn(accXnId[0]), exp.r_if) << "场景1 " << kIfSharedVarScenarios[0].name;
+    EXPECT_EQ(sim.GetXn(accXnId[1]), exp.r_ifelse) << "场景2 " << kIfSharedVarScenarios[1].name;
+    EXPECT_EQ(sim.GetXn(accXnId[2]), exp.r_nest) << "场景3 " << kIfSharedVarScenarios[2].name;
+    EXPECT_EQ(sim.GetXn(accXnId[3]), exp.r_for) << "场景4 " << kIfSharedVarScenarios[3].name;
+
+    ccuRet = HcommCcuInsDestroy(insHandle);
+    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+    DestroyCcuResDescs(resDescs);
+}
+
+// 执行结果验证:在 CCU_V1(跳转寄存器复用)路径下翻译并执行 CcuIfSharedVarDemoKernel
+// (覆盖 CCU_IF / 嵌套 CCU_IF / CCU_ELSE / for 循环内 CCU_IF 四类场景),将执行结果与参考实现对比。
+// 采用参数化测试,每组输入使用独立的 fakeDevId 以隔离设备资源池,覆盖:
+//   全命中 / IF 未命中走 else / 全未命中 / for 命中不同 i / value 超出 0..3 等场景。
+struct CcuIfExecDiffParam {
+    uint32_t value;
+    uint64_t expect;
+    uint32_t devIdOffset; // fakeDevId = MAX_MODULE_DEVICE_NUM - devIdOffset,用于隔离设备资源池
+    const char* label;    // 参数化测试实例名(仅字母数字下划线)
+};
+
+class CcuIfSharedTargetVarExecDiffTest :
+    public HcommCcuControlApiTest,
+    public testing::WithParamInterface<CcuIfExecDiffParam> {};
+
+TEST_P(CcuIfSharedTargetVarExecDiffTest, V1_MatchesOracle)
+{
+    const auto& p = GetParam();
+    const uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - p.devIdOffset;
+    int32_t fakeDeviceLogicId = MockCcuDeviceEnv(fakeDevId, hcomm::CcuVersion::CCU_V1);
+
+    SCOPED_TRACE(
+        std::string(p.label) + " (value=" + std::to_string(p.value) + ", expect=" + std::to_string(p.expect) + ")");
+    VerifyIfSharedVarExecDiff(fakeDeviceLogicId, p.value, p.expect);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    CcuIfSharedTargetVar_ExecDiff_V1, CcuIfSharedTargetVarExecDiffTest,
+    testing::Values(
+        CcuIfExecDiffParam{2, 2, 20, "AllHit_ForHitI2"},     // 全命中,for 命中 i=2
+        CcuIfExecDiffParam{2, 5, 21, "IfMiss_ElseHit"},      // IF 未命中走 else,for 命中 i=2
+        CcuIfExecDiffParam{5, 5, 22, "Hit_ForMiss"},         // IF/嵌套命中,for 未命中
+        CcuIfExecDiffParam{5, 3, 23, "AllMiss"},             // 全未命中(走 else),for 未命中
+        CcuIfExecDiffParam{0, 0, 24, "AllHit_ForHitI0"},     // 全命中,for 命中 i=0
+        CcuIfExecDiffParam{3, 3, 25, "AllHit_ForHitI3"},     // 全命中,for 命中 i=3
+        CcuIfExecDiffParam{7, 7, 26, "Hit_ForMiss_BigValue"} // 命中但 value 超出 0..3,for 未命中
+        ),
+    [](const testing::TestParamInfo<CcuIfExecDiffParam>& info) {
+        return info.param.label;
+    });
 
 TEST_F(HcommCcuControlApiTest, Ut_DoWhileLabelStackPopForWhile_When_Adjacent_Expect_ReturnLabel)
 {

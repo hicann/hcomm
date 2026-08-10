@@ -1282,7 +1282,7 @@ CcuKernel::IfBegin(CcuVariableHandle varHandle, uint64_t immediate, CcuCondition
     std::string endLabelStr = labelStr + "_end";
     auto elseLabel = std::make_shared<CcuRep::CcuRepJumpLabel>(insGenerator, elseLabelStr);
     auto endLabel = std::make_shared<CcuRep::CcuRepJumpLabel>(insGenerator, endLabelStr);
-    auto targetVar = CcuRep::CreateVariable(this);
+    auto targetVar = CreateJumpTargetVar();
     auto expectVar = CreateExpectVar();
 
     // 反转条件："if <cond>, 执行块" 等价于 "!<cond> 时跳过块"。
@@ -1329,7 +1329,7 @@ CcuResult CcuKernel::IfBeginVar(
     std::string elseLabelStr = labelStr + "_else";
     auto endLabel = std::make_shared<CcuRep::CcuRepJumpLabel>(insGenerator, endLabelStr);
     auto elseLabel = std::make_shared<CcuRep::CcuRepJumpLabel>(insGenerator, elseLabelStr);
-    auto targetVar = CcuRep::CreateVariable(this);
+    auto targetVar = CreateJumpTargetVar();
 
     auto jump = MakeInvertedCondJumpVar(insGenerator, elseLabelStr, targetVar, *lhsVar, *rhsVar, condType, __func__);
     if (jump == nullptr) {
@@ -1371,7 +1371,7 @@ CcuResult CcuKernel::IfElse(const char* label)
 
     // At end of then-block: unconditional jump past else-block to endLabel
     std::string endLabelStr = labelStr + "_end";
-    auto skipElseVar = CcuRep::CreateVariable(this);
+    auto skipElseVar = CreateJumpTargetVar();
     auto skipElseJump = std::make_shared<CcuRep::CcuRepJump>(insGenerator, endLabelStr, skipElseVar);
     skipElseJump->Reference(iter->second.endLabel);
     Append(skipElseJump);
@@ -2682,6 +2682,18 @@ CcuRep::Variable CcuKernel::CreateExpectVar()
         return CreateVariable();
     }
     return CcuRep::Variable(this);
+}
+
+CcuRep::Variable CcuKernel::CreateJumpTargetVar()
+{
+    if (ccuVersion_ == CcuVersion::CCU_V1) {
+        // A5(CCU_V1): 没有指令重排，可复用同一个 Xn 存放跳转目标地址。targetVar 仅用于 LoadImdToXn + 紧接 Jump。
+        if (!sharedJumpTargetVar_) {
+            sharedJumpTargetVar_ = std::make_unique<CcuRep::Variable>(CreateVariable());
+        }
+        return *sharedJumpTargetVar_;
+    }
+    return CcuRep::CreateVariable(this);
 }
 
 CcuRep::Address CcuKernel::CreateAddress()

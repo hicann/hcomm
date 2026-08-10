@@ -558,3 +558,62 @@ CcuResult CcuVarVarControlFlowDemoKernel(CcuKernelArg arg)
 
     return CcuResult::CCU_SUCCESS;
 }
+
+// ======================== CCU IF Shared Var Demo (单 kernel 覆盖 4 类控制流场景) ========================
+// 用一个 kernel 覆盖 CCU_IF / 嵌套 CCU_IF / CCU_ELSE / for 循环内 CCU_IF 四类场景,
+// 一次翻译即可产生足够多的跳转指令以验证 CCU_V1 跳转寄存器复用的正确性。
+// 每个场景使用独立的结果变量(而非累加到同一变量),执行出错时可定位到具体场景。
+// 各结果变量初值取唯一标记值(1001..1004),测试据此从指令序列定位其 Xn 编号;
+// 命中与未命中赋不同的可区分值,确保走错分支必然发散。
+
+struct CcuIfSharedVarDemoKernelArg {
+    uint32_t value;
+    uint64_t expect;
+};
+
+CcuResult CcuIfSharedVarDemoKernel(CcuKernelArg arg)
+{
+    auto* args = static_cast<CcuIfSharedVarDemoKernelArg*>(arg);
+
+    ccu::Variable v;
+    v = args->value;
+
+    // 各场景结果变量,初值为标记值(测试通过该立即数定位 Xn 编号)。
+    ccu::Variable r_if;
+    r_if = 1001; // 场景1: 单层 CCU_IF(无 else)
+    ccu::Variable r_ifelse;
+    r_ifelse = 1002; // 场景2: CCU_IF + CCU_ELSE
+    ccu::Variable r_nest;
+    r_nest = 1003; // 场景3: 嵌套 CCU_IF + CCU_ELSE
+    ccu::Variable r_for;
+    r_for = 1004; // 场景4: for 循环内 CCU_IF
+
+    ccu::Variable hit;
+    hit = 10; // 命中取值
+    ccu::Variable miss;
+    miss = 20; // 未命中取值(与 hit 区分,走错分支必发散)
+
+    // 场景1: 单层 IF,无 else。v==expect 命中则 r_if=10,否则保持标记 1001。
+    CCU_IF(v == args->expect) { r_if = hit; }
+
+    // 场景2: IF + ELSE。v==expect 走 then(10),否则走 else(20)。
+    CCU_IF(v == args->expect) { r_ifelse = hit; }
+    CCU_ELSE { r_ifelse = miss; }
+
+    // 场景3: 嵌套 IF + ELSE。外层 v==expect 才进入;内层条件与外层相同,外层真时内层必走 then(10)。
+    //         外层假时整块跳过,r_nest 保持 1003;若跳转寄存器复用失效导致外层误入,
+    //         内层 v==expect 为假走 else(20),与期望(1003)发散,即可暴露问题。
+    CCU_IF(v == args->expect)
+    {
+        CCU_IF(v == args->expect) { r_nest = hit; }
+        CCU_ELSE { r_nest = miss; }
+    }
+
+    // 场景4: for 循环内 IF。循环 4 次,v==i 命中则 r_for=10(赋值,v∈{0..3} 至多命中一次)。
+    //         v∈{0,1,2,3} 命中一次 r_for=10;v≥4 全不命中 r_for 保持 1004。
+    for (int i = 0; i < 4; ++i) {
+        CCU_IF(v == i) { r_for = hit; }
+    }
+
+    return CcuResult::CCU_SUCCESS;
+}
