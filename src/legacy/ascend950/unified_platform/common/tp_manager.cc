@@ -684,24 +684,26 @@ HcclResult TpManager::ReleaseTpInfo(const RaUbGetTpInfoParam& param, const TpInf
     // 未入缓存的并发 GetTpInfo 结果：与缓存 tpHandle 不一致，无需操作缓存。
     if (tpInfo.tpHandle != qit->second.tpInfo.tpHandle) {
         HCCL_INFO(
-            "[TpManager][%s] skip, tpHandle mismatch, local[%llu] cached[%llu] param[%s].", __func__,
+            "[TpManager][%s] skip, tpHandle mismatch, local[%llu] cached[%llu] locAddr[%s] rmtAddr[%s].", __func__,
             static_cast<unsigned long long>(tpInfo.tpHandle),
-            static_cast<unsigned long long>(qit->second.tpInfo.tpHandle), param.Describe().c_str());
+            static_cast<unsigned long long>(qit->second.tpInfo.tpHandle), param.locAddr.Describe().c_str(),
+            param.rmtAddr.Describe().c_str());
         return HcclResult::HCCL_SUCCESS;
     }
 
     if (qit->second.useCnt > 1) {
         qit->second.useCnt -= 1;
         HCCL_INFO(
-            "[TpManager][%s] ref decrement, useCnt[%u -> %u] tpHandle[%llu] param[%s].", __func__,
+            "[TpManager][%s] ref decrement, useCnt[%u -> %u] tpHandle[%llu] locAddr[%s] rmtAddr[%s].", __func__,
             qit->second.useCnt + 1U, qit->second.useCnt, static_cast<unsigned long long>(tpInfo.tpHandle),
-            param.Describe().c_str());
+            param.locAddr.Describe().c_str(), param.rmtAddr.Describe().c_str());
         return HcclResult::HCCL_SUCCESS;
     }
 
     HCCL_INFO(
-        "[TpManager][%s] last ref, erase cache entry, useCnt[%u] tpHandle[%llu] param[%s].", __func__,
-        qit->second.useCnt, static_cast<unsigned long long>(tpInfo.tpHandle), param.Describe().c_str());
+        "[TpManager][%s] last ref, erase cache entry, useCnt[%u] tpHandle[%llu] locAddr[%s] rmtAddr[%s].", __func__,
+        qit->second.useCnt, static_cast<unsigned long long>(tpInfo.tpHandle), param.locAddr.Describe().c_str(),
+        param.rmtAddr.Describe().c_str());
     rit->second.erase(qit);
     if (rit->second.empty()) {
         lit->second.erase(rit);
