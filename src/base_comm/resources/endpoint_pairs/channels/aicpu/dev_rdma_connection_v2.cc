@@ -15,9 +15,10 @@
 namespace hcomm {
 constexpr uint32_t DEFAULT_CQN = 0;
 
-DevRdmaConnectionV2::DevRdmaConnectionV2(Hccl::Socket* socket, RdmaHandle rdmaHandle)
+DevRdmaConnectionV2::DevRdmaConnectionV2(Hccl::Socket* socket, RdmaHandle rdmaHandle, uint32_t cqAttrFlags)
     : socket_(socket),
-      rdmaHandle_(rdmaHandle)
+      rdmaHandle_(rdmaHandle),
+      cqAttrFlags_(cqAttrFlags)
 {}
 
 HcclResult DevRdmaConnectionV2::Init()
@@ -139,7 +140,19 @@ HcclResult DevRdmaConnectionV2::CreateQp()
         return HCCL_E_AGAIN;
     }
 
-    CHK_RET(Hccl::HrtRaNdaCqCreate(rdmaHandle_, &ndaOps_, dmaMode_, &ndaCqInfo_, &cqHandle_));
+    // cqAttrFlags不为默认值0时，仅QBUF_DMA_MODE_DEFAULT（云脉网卡）支持配置，NPU网卡（INDEP_UB）不支持
+    uint32_t cqAttrFlags = 0;
+    if (cqAttrFlags_ != 0) {
+        if (dmaMode_ == QBUF_DMA_MODE_INDEP_UB) {
+            HCCL_ERROR(
+                "[DevRdmaConnectionV2::CreateQp] NPU NIC does not support configuring cqAttrFlags[%u].", cqAttrFlags_);
+            return HCCL_E_NOT_SUPPORT;
+        }
+        cqAttrFlags = cqAttrFlags_;
+        HCCL_WARNING("[DevRdmaConnectionV2::CreateQp] CqAttrFlags is configured to [%u].", cqAttrFlags);
+    }
+
+    CHK_RET(Hccl::HrtRaNdaCqCreate(rdmaHandle_, &ndaOps_, dmaMode_, cqAttrFlags, &ndaCqInfo_, &cqHandle_));
 
     CHK_RET(Hccl::HrtRaNdaQpCreate(rdmaHandle_, &ndaOps_, dmaMode_, &ndaCqInfo_, &ndaQpInfo_, &qpHandle_));
 

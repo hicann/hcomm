@@ -257,6 +257,8 @@ typedef struct {
             uint8_t tc;             ///< 流量类别（QoS)
             uint8_t sl;             ///< 服务等级（QoS)
             uint32_t qpThreshold;   ///< 多QP场景下，每个QP最小数据量(B)
+            uint32_t cqAttrFlags; ///< CQ属性标志位，用于配置ibv_cq_init_attr_ex的flags标志位，默认0。
+                                  ///< 备注：NPU网卡不支持该配置；第三方网卡场景下是否有效，与各自网卡能力相关
         } roceAttr;
         struct {
             uint32_t qos; ///< HCCS QoS

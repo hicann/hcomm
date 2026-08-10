@@ -43,7 +43,7 @@ protected:
             .will(returnValue(HCCL_SUCCESS));
         MOCKER(Hccl::HrtRaNdaCqCreate)
             .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+            .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
             .will(returnValue(HCCL_SUCCESS));
         MOCKER(Hccl::HrtRaNdaCqDestroy).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(HCCL_SUCCESS));
         MOCKER(Hccl::HrtRaQpDestroy).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
@@ -65,7 +65,7 @@ TEST_F(DevRdmaConnectionV2Test, Ut_When_Normal_Call_Expect_Status_Consistent)
     std::cout << "Start Ut_When_Normal_Call_Expect_Status_Consistent" << std::endl;
 
     RdmaHandle rdmaHandle = (void*)0x1000000;
-    DevRdmaConnectionV2 connection(fakeSocket, rdmaHandle);
+    DevRdmaConnectionV2 connection(fakeSocket, rdmaHandle, 0);
 
     EXPECT_EQ(connection.rdmaConnStatus_, DevRdmaConnectionV2::RdmaConnStatus::CLOSED);
 
@@ -124,7 +124,7 @@ TEST_F(DevRdmaConnectionV2Test, Ut_When_Describe_Expect_NotEmpty)
     std::cout << "Start Ut_When_Describe_Expect_NotEmpty" << std::endl;
 
     RdmaHandle rdmaHandle = (void*)0x1000000;
-    DevRdmaConnectionV2 connection(fakeSocket, rdmaHandle);
+    DevRdmaConnectionV2 connection(fakeSocket, rdmaHandle, 0);
 
     HcclResult ret = connection.Init();
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -140,7 +140,7 @@ TEST_F(DevRdmaConnectionV2Test, Ut_When_BuildSqContext_Expect_Success)
     std::cout << "Start Ut_When_BuildSqContext_Expect_Success" << std::endl;
 
     RdmaHandle rdmaHandle = (void*)0x1000000;
-    DevRdmaConnectionV2 connection(fakeSocket, rdmaHandle);
+    DevRdmaConnectionV2 connection(fakeSocket, rdmaHandle, 0);
 
     HcclResult ret = connection.Init();
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -167,7 +167,7 @@ TEST_F(DevRdmaConnectionV2Test, Ut_When_BuildCqContext_Expect_Success)
     std::cout << "Start Ut_When_BuildCqContext_Expect_Success" << std::endl;
 
     RdmaHandle rdmaHandle = (void*)0x1000000;
-    DevRdmaConnectionV2 connection(fakeSocket, rdmaHandle);
+    DevRdmaConnectionV2 connection(fakeSocket, rdmaHandle, 0);
 
     HcclResult ret = connection.Init();
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -194,7 +194,7 @@ TEST_F(DevRdmaConnectionV2Test, Ut_When_GetUniqueId_Expect_NotEmpty)
     std::cout << "Start Ut_When_GetUniqueId_Expect_NotEmpty" << std::endl;
 
     RdmaHandle rdmaHandle = (void*)0x1000000;
-    DevRdmaConnectionV2 connection(fakeSocket, rdmaHandle);
+    DevRdmaConnectionV2 connection(fakeSocket, rdmaHandle, 0);
 
     HcclResult ret = connection.Init();
     EXPECT_EQ(ret, HCCL_SUCCESS);

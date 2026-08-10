@@ -97,6 +97,11 @@ HcommResult CheckRoceAttr(HcommChannelDesc& channelDesc)
         HCCL_INFO("[%s] set roceAttr.queueNum to 1.", __func__);
     }
 
+    if (channelDesc.roceAttr.cqAttrFlags == INVALID_UINT) {
+        channelDesc.roceAttr.cqAttrFlags = 0;
+        HCCL_INFO("[%s] set roceAttr.cqAttrFlags to 0.", __func__);
+    }
+
     return HCCL_SUCCESS;
 }
 

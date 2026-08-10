@@ -40,7 +40,7 @@ public:
         }
     };
     MAKE_ENUM(RdmaConnStatus, CLOSED, INIT, QP_CREATED, QP_MODIFIED, SOCKET_TIMEOUT)
-    DevRdmaConnectionV2(Hccl::Socket* socket, RdmaHandle rdmaHandle);
+    DevRdmaConnectionV2(Hccl::Socket* socket, RdmaHandle rdmaHandle, uint32_t cqAttrFlags);
     ~DevRdmaConnectionV2();
 
     HcclResult Init();
@@ -70,6 +70,7 @@ private:
     Hccl::RdmaHandle rdmaHandle_{nullptr};
     int32_t directFlag_{0};
     uint32_t dmaMode_{0};
+    uint32_t cqAttrFlags_{0};
     NdaOps ndaOps_{};
 
     Hccl::QpHandle qpHandle_;

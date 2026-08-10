@@ -2899,12 +2899,14 @@ HcclResult HrtRaNdaQpCreate(
     return HCCL_SUCCESS;
 }
 
-HcclResult
-HrtRaNdaCqCreate(RdmaHandle rdmaHandle, NdaOps* ndaOps, uint32_t dmaMode, NdaCqInfo* cqInfo, CqHandle* cqHandle)
+HcclResult HrtRaNdaCqCreate(
+    RdmaHandle rdmaHandle, NdaOps* ndaOps, uint32_t dmaMode, uint32_t cqAttrFlags, NdaCqInfo* cqInfo,
+    CqHandle* cqHandle)
 {
     CHK_PTR_NULL(rdmaHandle);
     CHK_PTR_NULL(ndaOps);
-    HCCL_INFO("[HrtRaNdaCqCreate] Input params: rdmaHandle=%p dmaMode=%u", rdmaHandle, dmaMode);
+    HCCL_INFO(
+        "[HrtRaNdaCqCreate] Input params: rdmaHandle=%p dmaMode=%u cqAttrFlags=%u", rdmaHandle, dmaMode, cqAttrFlags);
 
     struct ibv_cq_init_attr_ex ibCqAttr;
     CHK_SAFETY_FUNC_RET(memset_s(&ibCqAttr, sizeof(ibv_cq_init_attr_ex), 0, sizeof(ibv_cq_init_attr_ex)));
@@ -2918,7 +2920,7 @@ HrtRaNdaCqCreate(RdmaHandle rdmaHandle, NdaOps* ndaOps, uint32_t dmaMode, NdaCqI
     ibCqAttr.comp_vector = 0;
     ibCqAttr.wc_flags = 0;
     ibCqAttr.comp_mask = 0;
-    ibCqAttr.flags = 0;
+    ibCqAttr.flags = cqAttrFlags;
 
     struct NdaCqInitAttr cqAttr;
     cqAttr.attr = ibCqAttr;

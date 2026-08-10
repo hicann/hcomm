@@ -1370,7 +1370,7 @@ TEST_F(AdapterHccpTest, ut_HrtRaNdaCqCreate_When_IndepUbMode_Expect_UbnacDepth)
     NdaCqInfo cqInfo;
     CqHandle cqHandle = nullptr;
 
-    HcclResult ret = HrtRaNdaCqCreate(rdmaHandle, &ndaOps, QBUF_DMA_MODE_INDEP_UB, &cqInfo, &cqHandle);
+    HcclResult ret = HrtRaNdaCqCreate(rdmaHandle, &ndaOps, QBUF_DMA_MODE_INDEP_UB, 0, &cqInfo, &cqHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
@@ -1385,7 +1385,7 @@ TEST_F(AdapterHccpTest, ut_HrtRaNdaCqCreate_When_DefaultMode_Expect_XscdvDepth)
     NdaCqInfo cqInfo;
     CqHandle cqHandle = nullptr;
 
-    HcclResult ret = HrtRaNdaCqCreate(rdmaHandle, &ndaOps, QBUF_DMA_MODE_DEFAULT, &cqInfo, &cqHandle);
+    HcclResult ret = HrtRaNdaCqCreate(rdmaHandle, &ndaOps, QBUF_DMA_MODE_DEFAULT, 0, &cqInfo, &cqHandle);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 

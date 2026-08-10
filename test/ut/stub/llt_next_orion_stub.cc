@@ -1754,8 +1754,9 @@ HcclResult HrtRaNdaQpCreate(
     return HCCL_SUCCESS;
 }
 
-HcclResult
-HrtRaNdaCqCreate(RdmaHandle rdmaHandle, NdaOps* ndaOps, uint32_t dmaMode, NdaCqInfo* cqInfo, CqHandle* cqHandle)
+HcclResult HrtRaNdaCqCreate(
+    RdmaHandle rdmaHandle, NdaOps* ndaOps, uint32_t dmaMode, uint32_t cqAttrFlags, NdaCqInfo* cqInfo,
+    CqHandle* cqHandle)
 {
     return HCCL_SUCCESS;
 }
