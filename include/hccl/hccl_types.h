@@ -125,7 +125,7 @@ typedef struct HcclRootInfoDef {
 
 const uint32_t HCCL_COMM_CONFIG_INFO_BYTES = 24;
 const uint32_t HCCL_COMM_CONFIG_MAGIC_WORD = 0xf0f0f0f0;
-const uint32_t HCCL_COMM_CONFIG_VERSION = 10;
+const uint32_t HCCL_COMM_CONFIG_VERSION = 11;
 const uint32_t HCCL_COMM_DEFAULT_BUFFSIZE = 200;
 const uint32_t HCCL_COMM_BUFFSIZE_CONFIG_NOT_SET = 0xffffffff;
 const uint32_t HCCL_COMM_DEFAULT_DETERMINISTIC = 0;
@@ -137,6 +137,7 @@ const uint32_t HCCL_COMM_SERVICE_LEVEL_CONFIG_NOT_SET = 0xffffffff;
 const int32_t HCCL_COMM_EXECTIMEOUT_CONFIG_NOT_SET = 0xffffffff;
 // 0xffffffff表示用户未配置QoS
 const uint32_t HCCL_COMM_QOS_CONFIG_NOT_SET = 0xffffffff;
+const uint32_t HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET = 0xffffffff;
 const uint64_t HCCL_DEFAULT_SYMMETRIC_MEMORY_STRIDE = 16ULL;
 
 typedef struct HcclCommConfigDef {
@@ -160,6 +161,7 @@ typedef struct HcclCommConfigDef {
     char hcclBufferName[BUFFER_NAME_MAX_LENGTH];
     uint32_t hcclQos;
     uint64_t hcclSymWinMaxMemSizePerRank; // 对称内存预留VA大小, 单位GB
+    uint32_t hcclChannelSqDepth;
 } HcclCommConfig;
 
 typedef enum {

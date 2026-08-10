@@ -31,6 +31,10 @@ TEST_F(HcclCommConfigInitTest, Ut_HcclCommConfigInit_When_Normal_Expect_Normal)
     u32 rankId = 0;
     HcclCommConfig commConfig;
     HcclCommConfigInit(&commConfig);
+    const auto* configInfo = reinterpret_cast<const CommConfigInfo*>(commConfig.reserved);
+    EXPECT_EQ(configInfo->version, 11U);
+    EXPECT_EQ(configInfo->configSize, sizeof(HcclCommConfig));
+    EXPECT_EQ(commConfig.hcclChannelSqDepth, HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET);
     commConfig.hcclBufferSize = 400;
     HcclResult ret = HcclCommInitClusterInfoConfig(rankTableFile, rankId, &commConfig, &comm);
     EXPECT_EQ(ret, HCCL_SUCCESS);

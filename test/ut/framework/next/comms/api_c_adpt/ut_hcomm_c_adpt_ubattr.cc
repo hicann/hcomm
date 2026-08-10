@@ -26,18 +26,20 @@ protected:
 TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIsZero_Expect_ReturnHCCL_SUCCESS)
 {
     HcommChannelDesc channelDesc{};
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UBC_CTP;
     channelDesc.ubAttr.sqDepth = 0;
 
-    HcommResult ret = CheckUbAttr(channelDesc);
+    HcommResult ret = CheckUbAttr(channelDesc, COMM_ENGINE_AICPU);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
 TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs16_Expect_ReturnHCCL_SUCCESS_And_AdjustTo16)
 {
     HcommChannelDesc channelDesc{};
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UBC_CTP;
     channelDesc.ubAttr.sqDepth = 16;
 
-    HcommResult ret = CheckUbAttr(channelDesc);
+    HcommResult ret = CheckUbAttr(channelDesc, COMM_ENGINE_AICPU);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(channelDesc.ubAttr.sqDepth, 16);
 }
@@ -45,31 +47,34 @@ TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs16_Expect_ReturnHCCL_SUCCES
 TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs256_Expect_ReturnHCCL_SUCCESS_And_AdjustTo256)
 {
     HcommChannelDesc channelDesc{};
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UBC_CTP;
     channelDesc.ubAttr.sqDepth = 256;
 
-    HcommResult ret = CheckUbAttr(channelDesc);
+    HcommResult ret = CheckUbAttr(channelDesc, COMM_ENGINE_AICPU);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(channelDesc.ubAttr.sqDepth, 256);
 }
 
-TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs15_Expect_ReturnHCCL_E_PARA)
+TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs15_Expect_ReturnHCCL_SUCCESS_And_AdjustTo16)
 {
     HcommChannelDesc channelDesc{};
     channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UBC_CTP; // 设置为UB协议以触发sqDepth检查
     channelDesc.ubAttr.sqDepth = 15;
 
-    HcommResult ret = CheckUbAttr(channelDesc);
-    EXPECT_EQ(ret, HCCL_E_PARA);
+    HcommResult ret = CheckUbAttr(channelDesc, COMM_ENGINE_AICPU);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(channelDesc.ubAttr.sqDepth, 16U);
 }
 
-TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs300_Expect_ReturnHCCL_E_PARA)
+TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs300_Expect_ReturnHCCL_SUCCESS_And_AdjustTo512)
 {
     HcommChannelDesc channelDesc{};
     channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UBC_CTP; // 设置为UB协议以触发sqDepth检查
     channelDesc.ubAttr.sqDepth = 300;
 
-    HcommResult ret = CheckUbAttr(channelDesc);
-    EXPECT_EQ(ret, HCCL_E_PARA);
+    HcommResult ret = CheckUbAttr(channelDesc, COMM_ENGINE_AICPU);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(channelDesc.ubAttr.sqDepth, 512U);
 }
 
 TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs17_Expect_ReturnHCCL_SUCCESS_And_AdjustTo32)
@@ -78,7 +83,7 @@ TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs17_Expect_ReturnHCCL_SUCCES
     channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UBC_CTP; // 设置为UB协议以触发sqDepth检查
     channelDesc.ubAttr.sqDepth = 17;
 
-    HcommResult ret = CheckUbAttr(channelDesc);
+    HcommResult ret = CheckUbAttr(channelDesc, COMM_ENGINE_AICPU);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(channelDesc.ubAttr.sqDepth, 32);
 }
@@ -90,7 +95,7 @@ TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs100_Expect_ReturnHCCL_SUCCE
 
     channelDesc.ubAttr.sqDepth = 100;
 
-    HcommResult ret = CheckUbAttr(channelDesc);
+    HcommResult ret = CheckUbAttr(channelDesc, COMM_ENGINE_AICPU);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(channelDesc.ubAttr.sqDepth, 128);
 }
@@ -106,13 +111,18 @@ protected:
     virtual void TearDown() { std::cout << "A Test case in HcommChannelDescInitTest TearDown" << std::endl; }
 };
 
-TEST_F(HcommChannelDescInitTest, Ut_HcommChannelDescInit_When_Normal_Expect_SqDepthIsZero)
+TEST_F(
+    HcommChannelDescInitTest,
+    Ut_HcommChannelDescInitAndCheckUbAttr_When_SqDepthIsNotConfigured_Expect_RemainsNotConfigured)
 {
     HcommChannelDesc channelDesc{};
-    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UBC_CTP; // 设置为UB协议以触发sqDepth检查
-    channelDesc.ubAttr.sqDepth = 0xFFFFFFFF;
 
     HcommResult ret = HcommChannelDescInit(&channelDesc, 1);
+    ASSERT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(channelDesc.ubAttr.sqDepth, HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET);
+
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UBC_CTP;
+    ret = CheckUbAttr(channelDesc, COMM_ENGINE_AIV);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_EQ(channelDesc.ubAttr.sqDepth, 0xFFFFFFFF);
+    EXPECT_EQ(channelDesc.ubAttr.sqDepth, HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET);
 }

@@ -30,7 +30,8 @@ enum CommConfigVersion {
     COMM_CONFIG_VERSION_SEVEN = 7,
     COMM_CONFIG_VERSION_EIGHT = 8,
     COMM_CONFIG_VERSION_NINE = 9,
-    COMM_CONFIG_VERSION_TEN = 10 // 当前支持的最高版本
+    COMM_CONFIG_VERSION_TEN = 10,
+    COMM_CONFIG_VERSION_ELEVEN = 11 // 当前支持的最高版本
 };
 
 enum CommConfigOpExpansion {
@@ -69,6 +70,7 @@ using CommConfigHandle = struct CommConfigHandleDef {
     char bufferName[BUFFER_NAME_MAX_LENGTH];            // cclbuffer名称
     u32 hcclQos = HCCL_COMM_QOS_CONFIG_NOT_SET;
     uint64_t symmetricMemoryStride; // 对称内存预留VA大小
+    u32 sqDepth = HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET;
 };
 
 namespace hccl {
@@ -105,9 +107,11 @@ public:
     const std::string& GetConfigBufferName() const;
     u32 GetConfigHcclQos() const;
     u64 GetConfigSymmetricMemoryStride() const;
+    u32 GetConfigSqDepth() const;
     HcclResult SetConfigTrafficClass(u32 trafficClass);
     HcclResult SetConfigServiceLevel(u32 serviceLevel);
     HcclResult SetConfigHcclQos(u32 hcclQos);
+    HcclResult SetConfigSqDepth(u32 sqDepth);
 
 private:
     void InitAlgoConfig();
@@ -151,6 +155,7 @@ private:
     std::string bufferName_; // CCL buffer名称
     u32 hcclQos_;
     u64 symmetricMemoryStride_; // 对称内存预留VA大小，单位GB
+    u32 sqDepth_;
 };
 } // namespace hccl
 #endif /* HCCL_COMM_CONFIG_PUB_H */

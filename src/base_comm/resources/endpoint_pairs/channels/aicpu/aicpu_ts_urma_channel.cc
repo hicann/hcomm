@@ -93,7 +93,7 @@ HcclResult AicpuTsUrmaChannel::BuildAttr()
 HcclResult AicpuTsUrmaChannel::BuildConnection()
 {
     UbConnBuildContext ctx;
-    CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_.qos, ctx));
+    CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_, ctx));
 
     Hccl::OpMode opMode = Hccl::OpMode::OPBASE;
     bool devUsed = true; // aicpu 为 true
@@ -103,14 +103,14 @@ HcclResult AicpuTsUrmaChannel::BuildConnection()
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbTpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, Hccl::HrtUbJfcMode::STARS_POLL,
-                    Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre),
+                    Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AICPU_TS, ctx.sqDepth),
                 return HCCL_E_PTR);
             break;
         case Hccl::LinkProtocol::UB_CTP:
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbCtpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, Hccl::HrtUbJfcMode::STARS_POLL,
-                    Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre),
+                    Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AICPU_TS, ctx.sqDepth),
                 return HCCL_E_PTR);
             break;
         default:

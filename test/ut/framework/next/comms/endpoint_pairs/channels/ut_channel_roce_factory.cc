@@ -20,6 +20,7 @@
 #include "ccu_urma_channel.h"
 #include "channel.h"
 #include "host/host_cpu_roce_channel.h"
+#include "hcomm_c_adpt.h"
 #include "hcomm_res_defs.h"
 #include "endpoint.h"
 #include "tp_manager.h"
@@ -203,6 +204,7 @@ TEST_F(UtChannelRoceFactory, CreateChannel_AivUbg_On950_ReturnsAivUrmaChannel)
 
     HcommChannelDesc desc{};
     desc.remoteEndpoint = ep;
+    desc.ubAttr.sqDepth = UB_SQ_DEPTH_NOT_SET;
     Hccl::Socket socket(
         nullptr, Hccl::IpAddress(), 0, Hccl::IpAddress(), "ut", Hccl::SocketRole::CLIENT,
         Hccl::NicType::DEVICE_NIC_TYPE);

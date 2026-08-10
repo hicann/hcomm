@@ -29,7 +29,7 @@ constexpr u32 UB_MAX_TRANS_SIZE = 256 * 1024 * 1024; // UB单次最大传输量2
 DevUbConnection::DevUbConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr, u8 qos,
-    CommEngine engine)
+    CommEngine engine, u32 inSqDepth)
     : RmaConnection(nullptr, RmaConnType::UB),
       rdmaHandle(rdmaHandle),
       locAddr(locAddr),
@@ -42,7 +42,8 @@ DevUbConnection::DevUbConnection(
       rmtEid(rmtAddr.GetReverseEid()),
       locEid(locAddr.GetReverseEid()),
       qos_(qos),
-      devUsed_(devUsed)
+      devUsed_(devUsed),
+      sqDepth(inSqDepth)
 {
     HCCL_INFO(
         "[DevUbConnection::DevUbConnection] rmtEid=%s, engine=%d", rmtEid.Describe().c_str(),
@@ -62,11 +63,15 @@ DevUbConnection::DevUbConnection(
     }
     isdevUsed = devUsed;
 
-    sqDepth = OPBASED_UB_SQ_DEPTH_MAX;
-    if (opMode == OpMode::OFFLOAD && devUsed == false) {
-        sqDepth = UB_SQ_OFFLOAD_DEPTH;
+    if (sqDepth == UB_SQ_DEPTH_NOT_SET) {
+        sqDepth = OPBASED_UB_SQ_DEPTH_MAX;
+        if (opMode == OpMode::OFFLOAD && !devUsed) {
+            sqDepth = UB_SQ_OFFLOAD_DEPTH;
+        }
     }
-    HCCL_INFO("[DevUbConnection][Constructor] set sqDepth[%u]", sqDepth);
+    HCCL_INFO(
+        "[DevUbConnection][Constructor] sqDepth[%u], opMode[%d], devUsed[%d]", sqDepth, static_cast<s32>(opMode),
+        devUsed);
 
     if (sqDepth > (UINT32_MAX / UB_SQ_WQEBB_SIZE / WQE_NUM_PER_SQE)) {
         THROW<InternalException>("integer overflow occurs");
@@ -86,8 +91,9 @@ DevUbConnection::DevUbConnection(
 DevUbTpConnection::DevUbTpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr, u8 qos,
-    CommEngine engine)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine)
+    CommEngine engine, u32 sqDepth)
+    : DevUbConnection(
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth)
 {
     tpProtocol = TpProtocol::TP;
 }
@@ -95,8 +101,9 @@ DevUbTpConnection::DevUbTpConnection(
 DevUbCtpConnection::DevUbCtpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr, u8 qos,
-    CommEngine engine)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine)
+    CommEngine engine, u32 sqDepth)
+    : DevUbConnection(
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth)
 {
     tpProtocol = TpProtocol::CTP;
 }
@@ -114,8 +121,9 @@ DevUbUboeConnection::DevUbUboeConnection(
 DevUbUbgConnection::DevUbUbgConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locAddrEid, const IpAddress& rmtAddrEid,
-    const u8 qos, CommEngine engine)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, engine)
+    const u8 qos, CommEngine engine, u32 sqDepth)
+    : DevUbConnection(
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, engine, sqDepth)
 {
     tpProtocol = TpProtocol::UBG;
     // UBG与UBOE同属UB传输，Jetty异步创建超时一致，均为16秒

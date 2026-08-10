@@ -65,6 +65,7 @@ TEST_F(CommConfigTest, utCommConfig_load)
 
     userConfig.hcclBufferSize = 300;
     userConfig.hcclDeterministic = 1;
+    userConfig.hcclChannelSqDepth = 128;
     strcpy_s(userConfig.hcclCommName, COMM_NAME_MAX_LENGTH, "Comm1");
 
     HcclResult ret = commConfig.Load(&userConfig);
@@ -74,6 +75,19 @@ TEST_F(CommConfigTest, utCommConfig_load)
     EXPECT_EQ(commConfig.GetConfigBufferSize(), 300 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE);
     EXPECT_EQ(commConfig.GetConfigDeterministic(), 1);
     EXPECT_EQ(commConfig.GetConfigCommName(), "Comm1");
+    EXPECT_EQ(commConfig.GetConfigSqDepth(), 128U);
+
+    CommConfig legacyCommConfig("legacy_comm_ID");
+    HcclCommConfig legacyUserConfig;
+    HcclCommConfigInit(&legacyUserConfig);
+    auto* legacyConfigInfo = reinterpret_cast<CommConfigInfo*>(legacyUserConfig.reserved);
+    legacyConfigInfo->version = CommConfigVersion::COMM_CONFIG_VERSION_TEN;
+    legacyUserConfig.hcclChannelSqDepth = 128U;
+
+    ret = legacyCommConfig.Load(&legacyUserConfig);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(legacyCommConfig.GetConfigSqDepth(), HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET);
     GlobalMockObject::verify();
 }
 

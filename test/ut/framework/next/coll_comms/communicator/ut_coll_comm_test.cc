@@ -165,12 +165,14 @@ TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_ValidConfig_Expect_Success)
     config.hcclRdmaTrafficClass = 120U;
     config.hcclRdmaServiceLevel = 3U;
     config.hcclQos = 5U;
+    config.hcclChannelSqDepth = 128U;
     uint32_t opExpansionMode = 0U;
     EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), HCCL_SUCCESS);
     EXPECT_EQ(opExpansionMode, 2U);
     EXPECT_EQ(coll.GetCommConfig().GetConfigHcclQos(), 5U);
     EXPECT_EQ(coll.GetCommConfig().GetConfigTrafficClass(), 120U);
     EXPECT_EQ(coll.GetCommConfig().GetConfigServiceLevel(), 3U);
+    EXPECT_EQ(coll.GetCommConfig().GetConfigSqDepth(), 128U);
 }
 
 TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_NullConfig_Expect_Success)
@@ -179,6 +181,39 @@ TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_NullConfig_Expect_Success)
     uint32_t opExpansionMode = 9U;
     EXPECT_EQ(ApplyHcclCommConfig(nullptr, coll.GetCommConfig(), opExpansionMode), HCCL_SUCCESS);
     EXPECT_EQ(opExpansionMode, 0U);
+    EXPECT_EQ(coll.GetCommConfig().GetConfigSqDepth(), HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET);
+}
+
+TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_SqDepthVaries_Expect_VersionRules)
+{
+    struct TestCase {
+        uint32_t version;
+        uint32_t sqDepth;
+        HcclResult expectedResult;
+        uint32_t expectedSqDepth;
+    };
+
+    const TestCase testCases[] = {
+        {11U, 16U, HCCL_SUCCESS, 16U},
+        {11U, 8192U, HCCL_SUCCESS, 8192U},
+        {11U, 15U, HCCL_SUCCESS, 15U},
+        {11U, 8193U, HCCL_SUCCESS, 8193U},
+        {10U, 128U, HCCL_SUCCESS, HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET},
+    };
+
+    for (const auto& testCase : testCases) {
+        SCOPED_TRACE(testing::Message() << "version=" << testCase.version << ", sqDepth=" << testCase.sqDepth);
+        hccl::CollComm coll(nullptr, 0, "ut_sqdepth", hccl::ManagerCallbacks{});
+        HcclCommConfig config{};
+        UtInitHcclCommConfig(config);
+        auto* configInfo = reinterpret_cast<CommConfigInfo*>(config.reserved);
+        configInfo->version = testCase.version;
+        config.hcclChannelSqDepth = testCase.sqDepth;
+        uint32_t opExpansionMode = 0U;
+
+        EXPECT_EQ(ApplyHcclCommConfig(&config, coll.GetCommConfig(), opExpansionMode), testCase.expectedResult);
+        EXPECT_EQ(coll.GetCommConfig().GetConfigSqDepth(), testCase.expectedSqDepth);
+    }
 }
 
 TEST_F(TestCollComm, Ut_ApplyHcclCommConfig_When_InvalidHcclQos_Expect_EPara)

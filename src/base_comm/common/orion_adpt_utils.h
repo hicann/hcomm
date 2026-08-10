@@ -13,6 +13,7 @@
 #include "hccl/hccl_types.h"
 #include "hcomm_res_defs.h"
 #include "hccl_net_dev_defs.h"
+#include "hccp_ctx.h"
 
 // Orion
 #include "ip_address.h"
@@ -37,10 +38,13 @@ struct UbConnBuildContext {
     Hccl::IpAddress rmtAddr{};
     s32 deviceLogicId{0};
     u8 qosPre{0};
+    u32 sqDepth{0xFFFFFFFFU};
 };
 
 HcclResult PrepareUbConnBuildContext(
-    const EndpointDesc& locEp, const EndpointDesc& rmtEp, uint32_t channelQos, UbConnBuildContext& ctx);
+    const EndpointDesc& locEp, const EndpointDesc& rmtEp, const HcommChannelDesc& channelDesc, UbConnBuildContext& ctx);
+
+HcclResult CheckUbSqDepth(const UbConnBuildContext& ctx, const DevBaseAttr& devBaseAttr);
 
 } // namespace hcomm
 

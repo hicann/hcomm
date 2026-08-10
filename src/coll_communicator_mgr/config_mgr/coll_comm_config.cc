@@ -57,6 +57,28 @@ static HcclResult ApplyHcclQos(const HcclCommConfig* hcclCommConfig, CommConfig&
     return HCCL_SUCCESS;
 }
 
+static HcclResult ApplyHcclSqDepth(const HcclCommConfig* hcclCommConfig, CommConfig& commConfig)
+{
+    if (hcclCommConfig == nullptr) {
+        return HCCL_SUCCESS;
+    }
+
+    uint32_t configVersion = 0U;
+    CHK_RET(GetHcclCommConfigVersion(hcclCommConfig, configVersion));
+    if (configVersion < HCCL_COMM_CONFIG_SQ_DEPTH_VERSION) {
+        HCCL_INFO(
+            "[ApplyHcclSqDepth] skip hcclSqDepth by version, configVersion[%u] < "
+            "HCCL_COMM_CONFIG_SQ_DEPTH_VERSION[%u]",
+            configVersion, HCCL_COMM_CONFIG_SQ_DEPTH_VERSION);
+        return commConfig.SetConfigSqDepth(HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET);
+    }
+
+    const uint32_t sqDepth = hcclCommConfig->hcclChannelSqDepth;
+    CHK_RET(commConfig.SetConfigSqDepth(sqDepth));
+    HCCL_INFO("[ApplyHcclSqDepth] hcclSqDepth[%u]", sqDepth);
+    return HCCL_SUCCESS;
+}
+
 static HcclResult ApplyTrafficClassAndServiceLevel(const HcclCommConfig* hcclCommConfig, CommConfig& commConfig)
 {
     if (hcclCommConfig == nullptr) {
@@ -95,6 +117,7 @@ HcclResult ApplyHcclCommConfig(const HcclCommConfig* hcclCommConfig, CommConfig&
     opExpansionMode = hcclCommConfig->hcclOpExpansionMode;
     CHK_RET(ApplyTrafficClassAndServiceLevel(hcclCommConfig, commConfig));
     CHK_RET(ApplyHcclQos(hcclCommConfig, commConfig));
+    CHK_RET(ApplyHcclSqDepth(hcclCommConfig, commConfig));
     return HCCL_SUCCESS;
 }
 } // namespace hccl

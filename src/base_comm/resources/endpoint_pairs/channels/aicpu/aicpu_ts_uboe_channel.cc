@@ -50,7 +50,7 @@ HcclResult AicpuTsUboeChannel::Init()
 HcclResult AicpuTsUboeChannel::BuildConnection()
 {
     UbConnBuildContext ctx;
-    CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_.qos, ctx));
+    CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_, ctx));
 
     Hccl::OpMode opMode = Hccl::OpMode::OPBASE;
     bool devUsed = true; // aicpu 为 true

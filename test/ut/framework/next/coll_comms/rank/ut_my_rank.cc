@@ -710,6 +710,7 @@ TEST_F(MyRankTest, Ut_ChannelDescHccl2Hcomm_When_UbcCtp_DoesNotSetPathMode)
 TEST_F(MyRankTest, Ut_ConfigSqDepthByExpansionMode_When_CCU_MSModel_WithCommConfig)
 {
     HcommChannelDesc in{};
+    ASSERT_EQ(myRank->config_.SetConfigSqDepth(512U), HCCL_SUCCESS);
     myRank->opExpansionMode_ = CCU_MS_MODE;
     HcclResult ret = myRank->ConfigSqDepthByExpansionMode(COMM_ENGINE_CCU, in);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -719,10 +720,45 @@ TEST_F(MyRankTest, Ut_ConfigSqDepthByExpansionMode_When_CCU_MSModel_WithCommConf
 TEST_F(MyRankTest, Ut_ConfigSqDepthByExpansionMode_When_CCU_SCHEDModel_WithCommConfig)
 {
     HcommChannelDesc in{};
+    ASSERT_EQ(myRank->config_.SetConfigSqDepth(512U), HCCL_SUCCESS);
     myRank->opExpansionMode_ = CCU_SCHED_MODE;
     HcclResult out = myRank->ConfigSqDepthByExpansionMode(COMM_ENGINE_CCU, in);
     EXPECT_EQ(out, HCCL_SUCCESS);
     EXPECT_EQ(in.ubAttr.sqDepth, 16);
+}
+
+TEST_F(MyRankTest, Ut_ConfigSqDepthByExpansionMode_When_EngineAndProtocolVary_Expect_ScopedPropagation)
+{
+    struct TestCase {
+        CommEngine engine;
+        CommProtocol protocol;
+        uint32_t configuredSqDepth;
+        uint32_t initialSqDepth;
+        uint32_t expectedSqDepth;
+    };
+
+    const TestCase testCases[] = {
+        {COMM_ENGINE_AIV, COMM_PROTOCOL_UBC_TP, 128U, 64U, 128U},
+        {COMM_ENGINE_AIV, COMM_PROTOCOL_UBC_CTP, 128U, 64U, 128U},
+        {COMM_ENGINE_AIV, COMM_PROTOCOL_UBG, 128U, 64U, 128U},
+        {COMM_ENGINE_AIV, COMM_PROTOCOL_UBC_TP, HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET, HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET,
+         HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET},
+        {COMM_ENGINE_AIV, COMM_PROTOCOL_UBOE, 128U, 64U, 64U},
+        {COMM_ENGINE_AICPU_TS, COMM_PROTOCOL_UBC_TP, 128U, 64U, 64U},
+    };
+
+    for (const auto& testCase : testCases) {
+        SCOPED_TRACE(
+            testing::Message() << "engine=" << testCase.engine << ", protocol=" << testCase.protocol
+                               << ", configuredSqDepth=" << testCase.configuredSqDepth);
+        ASSERT_EQ(myRank->config_.SetConfigSqDepth(testCase.configuredSqDepth), HCCL_SUCCESS);
+        HcommChannelDesc channelDesc{};
+        channelDesc.remoteEndpoint.protocol = testCase.protocol;
+        channelDesc.ubAttr.sqDepth = testCase.initialSqDepth;
+
+        EXPECT_EQ(myRank->ConfigSqDepthByExpansionMode(testCase.engine, channelDesc), HCCL_SUCCESS);
+        EXPECT_EQ(channelDesc.ubAttr.sqDepth, testCase.expectedSqDepth);
+    }
 }
 
 // 测试TryInitCcuInstance在DEFAULT_MODE(0)时映射为CCU_UNUSED，提前返回成功且不拉起CCU

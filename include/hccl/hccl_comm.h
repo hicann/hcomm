@@ -236,6 +236,7 @@ static inline void HcclCommConfigInit(HcclCommConfig* config)
     config->hcclBufferName[0] = '\0';
     config->hcclQos = HCCL_COMM_QOS_CONFIG_NOT_SET;
     config->hcclSymWinMaxMemSizePerRank = HCCL_DEFAULT_SYMMETRIC_MEMORY_STRIDE;
+    config->hcclChannelSqDepth = HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET;
 }
 
 /**

@@ -24,6 +24,8 @@ using namespace hcomm;
 using namespace Hccl;
 
 namespace {
+constexpr uint32_t DEFAULT_OPBASE_UB_SQ_DEPTH = 8192U;
+
 std::unique_ptr<DevUbConnection> MakeTestConnection()
 {
     IpAddress locIp("1.0.0.1");
@@ -136,14 +138,14 @@ TEST_F(SharedJettyConnAdaptTest, Ut_ExtractInfo_When_Normal_Expect_Success)
     EXPECT_EQ(memcmp(extractCtx.localQpKey, injectCtx.localQpKey, HRT_UB_QP_KEY_MAX_LEN), 0);
 }
 
-TEST_F(SharedJettyConnAdaptTest, Ut_ExtractInfo_When_EmptyConnection_Expect_ZeroValues)
+TEST_F(SharedJettyConnAdaptTest, Ut_ExtractInfo_When_EmptyConnection_Expect_DefaultSqDepth)
 {
     auto conn = MakeTestConnection();
     Endpoint::SharedJettyCtx ctx;
     EXPECT_EQ(ExtractJettyInfoFromConn(conn.get(), ctx), HCCL_SUCCESS);
     EXPECT_EQ(ctx.handle, static_cast<JettyHandle>(0));
     EXPECT_EQ(ctx.jettyId, 0U);
-    EXPECT_EQ(ctx.sqDepth, 0U);
+    EXPECT_EQ(ctx.sqDepth, DEFAULT_OPBASE_UB_SQ_DEPTH);
     EXPECT_EQ(ctx.rdmaHandle, nullptr);
     EXPECT_EQ(ctx.jfcHandle, 0U);
 }

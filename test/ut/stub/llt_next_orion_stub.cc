@@ -411,7 +411,7 @@ AicpuResPackageHelper::GetPackedData(std::vector<Hccl::ModuleData, std::allocato
 DevUbConnection::DevUbConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr,
-    const u8 qos, CommEngine engine)
+    const u8 qos, CommEngine engine, u32 inSqDepth)
     : RmaConnection(nullptr, RmaConnType::UB),
       rdmaHandle(rdmaHandle),
       locAddr(locAddr),
@@ -423,14 +423,23 @@ DevUbConnection::DevUbConnection(
       rmtIpv4Addr(rmtIpv4Addr),
       rmtEid(rmtAddr.GetReverseEid()),
       locEid(locAddr.GetReverseEid()),
-      qos_(qos)
-{}
+      qos_(qos),
+      sqDepth(inSqDepth)
+{
+    if (sqDepth == UB_SQ_DEPTH_NOT_SET) {
+        sqDepth = 8192U;
+        if (opMode == OpMode::OFFLOAD && !devUsed) {
+            sqDepth = 128U;
+        }
+    }
+}
 
 DevUbTpConnection::DevUbTpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr,
-    const u8 qos, CommEngine engine)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine)
+    const u8 qos, CommEngine engine, u32 sqDepth)
+    : DevUbConnection(
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth)
 {
     tpProtocol = TpProtocol::TP;
 }
@@ -438,8 +447,9 @@ DevUbTpConnection::DevUbTpConnection(
 DevUbCtpConnection::DevUbCtpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr,
-    const u8 qos, CommEngine engine)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine)
+    const u8 qos, CommEngine engine, u32 sqDepth)
+    : DevUbConnection(
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth)
 {
     tpProtocol = TpProtocol::CTP;
 }
@@ -456,8 +466,9 @@ DevUbUboeConnection::DevUbUboeConnection(
 DevUbUbgConnection::DevUbUbgConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locAddrEid, const IpAddress& rmtAddrEid,
-    const u8 qos, CommEngine engine)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, engine)
+    const u8 qos, CommEngine engine, u32 sqDepth)
+    : DevUbConnection(
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, engine, sqDepth)
 {
     tpProtocol = TpProtocol::UBG;
 }
@@ -664,7 +675,7 @@ u32 DevUbConnection::GetPiVal() const { return 4; }
 
 u32 DevUbConnection::GetCiVal() const { return 3; }
 
-u32 DevUbConnection::GetSqDepth() const { return 2; }
+u32 DevUbConnection::GetSqDepth() const { return sqDepth; }
 
 void DevUbConnection::UpdateCiVal(u32 ci) {}
 

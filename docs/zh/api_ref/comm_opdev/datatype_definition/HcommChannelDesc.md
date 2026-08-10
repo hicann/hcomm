@@ -35,7 +35,7 @@ typedef struct {
             uint32_t qos;             /* HCCS QoS */
         } hccsAttr;
         struct {
-            uint32_t sqDepth;         /* UB队列深度，0表示使用默认值 */
+            uint32_t sqDepth;         /* UB队列深度，0和0xffffffff表示使用默认值 */
         } ubAttr;
         struct {
             uint8_t pathMode;         /* UB_MEM访问路径模式，取值范围：0、1、2和0xFF(默认值为0，配置为0xFF时按照0处理）。0：自动模式(优先单路径，若无则使用多路径），1：强制单路径模式，2：强制多路径模式 */

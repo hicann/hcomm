@@ -411,21 +411,21 @@ HcclResult AivUrmaChannel::CreateUbConnectionByProtocol(
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbTpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, Hccl::IpAddress(),
-                    Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AIV),
+                    Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AIV, ctx.sqDepth),
                 return HCCL_E_PTR);
             break;
         case Hccl::LinkProtocol::UB_CTP:
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbCtpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, Hccl::IpAddress(),
-                    Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AIV),
+                    Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AIV, ctx.sqDepth),
                 return HCCL_E_PTR);
             break;
         case Hccl::LinkProtocol::UBG:
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbUbgConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, ctx.locAddr, ctx.rmtAddr,
-                    ctx.qosPre),
+                    ctx.qosPre, COMM_ENGINE_AIV, ctx.sqDepth),
                 return HCCL_E_PTR);
             break;
         default:
@@ -441,17 +441,17 @@ AivUrmaChannel::AcquireSharedJettyInBuildConnection(const UbConnBuildContext& ct
     // 共享 jetty 模式：复用同 Endpoint 下已创建的 jetty
     Endpoint* endpoint = reinterpret_cast<Endpoint*>(endpointHandle_);
     auto tempFactory = [rdmaHandle = rdmaHandle_, &ctxLoc = ctx.locAddr, &ctxRmt = ctx.rmtAddr, qosPre = ctx.qosPre,
-                        protocol = ctx.protocol]() -> std::unique_ptr<Hccl::DevUbConnection> {
+                        protocol = ctx.protocol, sqDepth = ctx.sqDepth]() -> std::unique_ptr<Hccl::DevUbConnection> {
         // 与主 switch 保持对称的协议判断，避免 UBG/未知协议误降级为 CTP
         switch (protocol) {
             case Hccl::LinkProtocol::UB_TP:
                 return std::make_unique<Hccl::DevUbTpConnection>(
                     rdmaHandle, ctxLoc, ctxRmt, Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL,
-                    Hccl::IpAddress(), Hccl::IpAddress(), qosPre, COMM_ENGINE_AIV);
+                    Hccl::IpAddress(), Hccl::IpAddress(), qosPre, COMM_ENGINE_AIV, sqDepth);
             case Hccl::LinkProtocol::UB_CTP:
                 return std::make_unique<Hccl::DevUbCtpConnection>(
                     rdmaHandle, ctxLoc, ctxRmt, Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL,
-                    Hccl::IpAddress(), Hccl::IpAddress(), qosPre, COMM_ENGINE_AIV);
+                    Hccl::IpAddress(), Hccl::IpAddress(), qosPre, COMM_ENGINE_AIV, sqDepth);
             default:
                 HCCL_ERROR(
                     "[AivUrmaChannel][tempFactory] unsupported protocol[%s], return nullptr.",
@@ -472,7 +472,8 @@ AivUrmaChannel::AcquireSharedJettyInBuildConnection(const UbConnBuildContext& ct
 HcclResult AivUrmaChannel::BuildConnection()
 {
     UbConnBuildContext ctx;
-    CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_.qos, ctx));
+    CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_, ctx));
+    CHK_RET(CheckUbSqDepth(ctx, devBaseAttr_));
 
     std::unique_ptr<Hccl::DevUbConnection> ubConn = nullptr;
     CHK_RET(CreateUbConnectionByProtocol(ctx, ubConn));
@@ -719,6 +720,8 @@ HcclResult AivUrmaChannel::Init()
     CHK_RET(StartListen());
     CHK_RET(BuildSocket());
     CHK_RET(BuildAttr());
+
+    CHK_RET(HccpRaGetDevBaseAttr(rdmaHandle_, &devBaseAttr_));
     CHK_RET(BuildConnection());
     CHK_RET(BuildAivUrmaTransport());
     return HCCL_SUCCESS;

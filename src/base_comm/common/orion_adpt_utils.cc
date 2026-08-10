@@ -15,6 +15,8 @@
 #include "tp_manager.h"
 #include "topo_common_types.h"
 #include "virtual_topo.h"
+#include "hcomm_c_adpt.h"
+#include "hcomm_adapter_hccp.h"
 
 namespace hcomm {
 
@@ -217,20 +219,35 @@ HcclResult EndpointDescPairToLinkDataWithRankIds(
 }
 
 HcclResult PrepareUbConnBuildContext(
-    const EndpointDesc& locEp, const EndpointDesc& rmtEp, uint32_t channelQos, UbConnBuildContext& ctx)
+    const EndpointDesc& locEp, const EndpointDesc& rmtEp, const HcommChannelDesc& channelDesc, UbConnBuildContext& ctx)
 {
     CHK_RET(CommProtocolToLinkProtocol(locEp.protocol, ctx.protocol));
     CHK_RET(CommAddrToIpAddress(locEp.commAddr, ctx.locAddr));
     CHK_RET(CommAddrToIpAddress(rmtEp.commAddr, ctx.rmtAddr));
     CHK_RET(hrtGetDevice(&ctx.deviceLogicId));
     Hccl::TpManager::GetInstance(ctx.deviceLogicId).Init();
-    if (channelQos > 7U) {
+    if (channelDesc.qos > 7U) {
         HCCL_WARNING(
-            "[PrepareUbConnBuildContext] invalid channelQos[%u], expect [0, 7], use default qos[%u].", channelQos,
+            "[PrepareUbConnBuildContext] invalid channelQos[%u], expect [0, 7], use default qos[%u].", channelDesc.qos,
             Hccl::kRaUbGetTpInfoParamDefaultQos);
         ctx.qosPre = static_cast<u8>(Hccl::kRaUbGetTpInfoParamDefaultQos);
     } else {
-        ctx.qosPre = static_cast<u8>(channelQos);
+        ctx.qosPre = static_cast<u8>(channelDesc.qos);
+    }
+    ctx.sqDepth = channelDesc.ubAttr.sqDepth;
+    return HCCL_SUCCESS;
+}
+
+HcclResult CheckUbSqDepth(const UbConnBuildContext& ctx, const DevBaseAttr& devBaseAttr)
+{
+    if (ctx.sqDepth == UB_SQ_DEPTH_NOT_SET) {
+        return HCCL_SUCCESS;
+    }
+    if (ctx.sqDepth < 1 || ctx.sqDepth > devBaseAttr.sqMaxDepth) {
+        HCCL_ERROR(
+            "[%s] invalid ubAttr.sqDepth[%u], aligned range is [%u, %u] (aligned to power-of-two before compared).",
+            __func__, ctx.sqDepth, 1, devBaseAttr.sqMaxDepth);
+        return HCCL_E_PARA;
     }
     return HCCL_SUCCESS;
 }

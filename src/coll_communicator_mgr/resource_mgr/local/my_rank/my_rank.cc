@@ -894,6 +894,22 @@ MyRank::BatchConnectChannels(const HcclChannelDesc* channelDescs, ChannelHandle*
 
 HcclResult MyRank::ConfigSqDepthByExpansionMode(CommEngine engine, HcommChannelDesc& hcommDesc) const
 {
+    const u32 configuredSqDepth = config_.GetConfigSqDepth();
+    if (configuredSqDepth != HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET) {
+        const CommProtocol remoteProtocol = hcommDesc.remoteEndpoint.protocol;
+        if (engine == COMM_ENGINE_AIV
+            && (remoteProtocol == COMM_PROTOCOL_UBC_TP || remoteProtocol == COMM_PROTOCOL_UBC_CTP
+                || remoteProtocol == COMM_PROTOCOL_UBG)) {
+            hcommDesc.ubAttr.sqDepth = configuredSqDepth;
+            return HCCL_SUCCESS;
+        } else {
+            HCCL_WARNING(
+                "[%s] configured sqDepth[%u] is not supported when engine[%s] protocol[%s].", __func__,
+                configuredSqDepth, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(),
+                MyRankUtils::GetCommProtocolEnumStr(remoteProtocol).c_str());
+        }
+    }
+
     constexpr u32 CCU_MS_MODE_DEPTH = 128;
     constexpr u32 CCU_SCHED_MODE_DEPTH = 16;
     if (engine == COMM_ENGINE_CCU) {

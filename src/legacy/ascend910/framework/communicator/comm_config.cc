@@ -35,7 +35,8 @@ CommConfig::CommConfig(const std::string& commName)
       retryIntervalTime_(GetExternalInputRetryIntervalTime()),
       bufferName_(""),
       hcclQos_(HCCL_COMM_QOS_CONFIG_NOT_SET),
-      symmetricMemoryStride_(HCCL_DEFAULT_SYMMETRIC_MEMORY_STRIDE)
+      symmetricMemoryStride_(HCCL_DEFAULT_SYMMETRIC_MEMORY_STRIDE),
+      sqDepth_(HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET)
 {
     InitAlgoConfig();
     InitRetryEnable();
@@ -59,7 +60,8 @@ CommConfig::CommConfig()
       retryIntervalTime_(GetExternalInputRetryIntervalTime()),
       bufferName_(""),
       hcclQos_(HCCL_COMM_QOS_CONFIG_NOT_SET),
-      symmetricMemoryStride_(HCCL_DEFAULT_SYMMETRIC_MEMORY_STRIDE)
+      symmetricMemoryStride_(HCCL_DEFAULT_SYMMETRIC_MEMORY_STRIDE),
+      sqDepth_(HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET)
 {
     InitAlgoConfig();
     InitRetryEnable();
@@ -148,18 +150,18 @@ HcclResult CommConfig::CheckMagicWord(const CommConfigHandle& config)
 
 HcclResult CommConfig::SetConfigByVersion(const CommConfigHandle& config)
 {
-    if (config.info.version > CommConfigVersion::COMM_CONFIG_VERSION_TEN) {
+    if (config.info.version > CommConfigVersion::COMM_CONFIG_VERSION_ELEVEN) {
         // 传入的config的版本高于当前版本，警告不支持的配置项将被忽略
         HCCL_WARNING(
             "[SetConfigByVersion] The version of provided config[%u] is higher than the current version[%u], "
             "unsupported configuration will be ignored.",
-            config.info.version, CommConfigVersion::COMM_CONFIG_VERSION_TEN);
-    } else if (config.info.version < CommConfigVersion::COMM_CONFIG_VERSION_TEN) {
+            config.info.version, CommConfigVersion::COMM_CONFIG_VERSION_ELEVEN);
+    } else if (config.info.version < CommConfigVersion::COMM_CONFIG_VERSION_ELEVEN) {
         // 传入的config的版本低于当前版本，警告高版本支持的配置项将被忽略
         HCCL_WARNING(
             "[SetConfigByVersion] The version of provided config[%u] is lower than the current version[%u], "
             "configurations supported by later versions will be ignored.",
-            config.info.version, CommConfigVersion::COMM_CONFIG_VERSION_TEN);
+            config.info.version, CommConfigVersion::COMM_CONFIG_VERSION_ELEVEN);
     }
 
     if (config.info.version >= CommConfigVersion::COMM_CONFIG_VERSION_ONE) {
@@ -232,6 +234,11 @@ HcclResult CommConfig::SetConfigByVersion(const CommConfigHandle& config)
         hcclQos_ = config.hcclQos;
         // 版本大于等于10，支持配置对称内存每个rank的预留VA大小
         symmetricMemoryStride_ = config.symmetricMemoryStride;
+    }
+
+    if (config.info.version >= CommConfigVersion::COMM_CONFIG_VERSION_ELEVEN) {
+        // 版本大于等于11，支持配置通信域级别的sqDepth
+        sqDepth_ = config.sqDepth;
     }
     HCCL_INFO("NSLBDP-VERSION config.info.version = [%u] .", config.info.version);
     return HCCL_SUCCESS;
@@ -685,6 +692,12 @@ HcclResult CommConfig::SetConfigHcclQos(u32 hcclQos)
     return HCCL_SUCCESS;
 }
 
+HcclResult CommConfig::SetConfigSqDepth(u32 sqDepth)
+{
+    sqDepth_ = sqDepth;
+    return HCCL_SUCCESS;
+}
+
 HcclResult CommConfig::SetConfigExecTimeOut(s32 execTimeOut)
 {
     execTimeOut_ = execTimeOut;
@@ -744,4 +757,6 @@ u32 CommConfig::GetConfigHcclQos() const
 }
 
 u64 CommConfig::GetConfigSymmetricMemoryStride() const { return symmetricMemoryStride_; }
+
+u32 CommConfig::GetConfigSqDepth() const { return sqDepth_; }
 } // namespace hccl

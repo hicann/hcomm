@@ -1,3 +1,13 @@
+/**
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
 #include "gtest/gtest.h"
 #include "mockcpp/mokc.h"
 #include <cstdint>
@@ -19,6 +29,7 @@ using namespace hcomm;
 using namespace Hccl;
 
 namespace {
+
 uint32_t g_listenPort = 0;
 
 HcommResult StubEndpointStartListen(EndpointHandle, uint32_t port, HcommEndpointListenConfig*)
@@ -125,7 +136,8 @@ void BuildReadyTransport(AivUrmaChannel& ch, DevUbCtpConnection& conn)
 
     BaseMemTransport::Attribution attr{};
     LinkData linkData = MakeDefaultLinkData();
-    static Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    static Socket socket(
+        nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     ch.transport_
         = std::make_unique<AivUrmaTransport>(commonRes, attr, linkData, socket, reinterpret_cast<RdmaHandle>(0x1));
     ch.transport_->transportStatus_ = TransportStatus::READY;
@@ -223,11 +235,62 @@ TEST_F(AivUrmaChannelTest, Ut_BuildAttr_WhenCalled_FillsAivOpBaseAttr)
     EXPECT_EQ(ch.attr_.opAcceState, AcceleratorState::AIV);
 }
 
+TEST_F(AivUrmaChannelTest, Ut_BuildConnection_When_UbProtocol_Expect_RetainsConfiguredSqDepth)
+{
+    enum class ConnectionType {
+        TP,
+        CTP,
+        UBG,
+    };
+
+    struct TestCase {
+        CommProtocol protocol;
+        ConnectionType connectionType;
+    };
+
+    const TestCase testCases[] = {
+        {COMM_PROTOCOL_UBC_TP, ConnectionType::TP},
+        {COMM_PROTOCOL_UBC_CTP, ConnectionType::CTP},
+        {COMM_PROTOCOL_UBG, ConnectionType::UBG},
+    };
+
+    MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_SUCCESS));
+    for (const auto& testCase : testCases) {
+        SCOPED_TRACE(testing::Message() << "protocol=" << testCase.protocol);
+        HcommChannelDesc desc = MakeDefaultDesc();
+        desc.ubAttr.sqDepth = 512U;
+        AivUrmaChannel ch(reinterpret_cast<EndpointHandle>(0x1), desc);
+        ch.localEp_.protocol = testCase.protocol;
+        ch.localEp_.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+        ch.localEp_.commAddr.addr = IpAddress("1.0.0.1").GetBinaryAddress().addr;
+        ch.remoteEp_.protocol = testCase.protocol;
+        ch.remoteEp_.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+        ch.remoteEp_.commAddr.addr = IpAddress("2.0.0.1").GetBinaryAddress().addr;
+        ch.rdmaHandle_ = reinterpret_cast<RdmaHandle>(0x1);
+        ch.devBaseAttr_.sqMaxDepth = 1024U;
+
+        ASSERT_EQ(ch.BuildConnection(), HCCL_SUCCESS);
+        ASSERT_EQ(ch.connections_.size(), 1U);
+        EXPECT_EQ(ch.connections_[0]->GetSqDepth(), 512U);
+        switch (testCase.connectionType) {
+            case ConnectionType::TP:
+                EXPECT_NE(dynamic_cast<DevUbTpConnection*>(ch.connections_[0].get()), nullptr);
+                break;
+            case ConnectionType::CTP:
+                EXPECT_NE(dynamic_cast<DevUbCtpConnection*>(ch.connections_[0].get()), nullptr);
+                break;
+            case ConnectionType::UBG:
+                EXPECT_NE(dynamic_cast<DevUbUbgConnection*>(ch.connections_[0].get()), nullptr);
+                break;
+        }
+    }
+}
+
 TEST_F(AivUrmaChannelTest, Ut_BuildSocket_WhenSocketExists_Returns_SUCCESS)
 {
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     AivUrmaChannel ch(ep, MakeDefaultDesc());
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     ch.socket_ = &socket;
 
     EXPECT_EQ(ch.BuildSocket(), HCCL_SUCCESS);
@@ -241,7 +304,7 @@ TEST_F(AivUrmaChannelTest, Ut_BuildSocket_WhenSocketNull_GetsSocketFromSocketMgr
     desc.port = 61001;
     desc.role = HCOMM_SOCKET_ROLE_SERVER;
     AivUrmaChannel ch(ep, desc);
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     ch.socket_ = nullptr;
     ch.localEp_.loc.device.devPhyId = 3;
 
@@ -263,7 +326,7 @@ TEST_F(AivUrmaChannelTest, Ut_BuildSocket_WhenRoleReserved_PreservesNoRankIdMatc
     desc.port = 61002;
     desc.role = HCOMM_SOCKET_ROLE_RESERVED;
     AivUrmaChannel ch(ep, desc);
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     ch.socket_ = nullptr;
     ch.localEp_.loc.device.devPhyId = 3;
 
@@ -345,7 +408,7 @@ TEST_F(AivUrmaChannelTest, Ut_PutSocketIfNeeded_WhenCalledTwice_OnlyKeepsSocketN
 {
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     AivUrmaChannel ch(ep, MakeDefaultDesc());
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     std::string socketTag = "ut";
     Hccl::SocketConfig socketConfig(MakeDefaultLinkData(), socketTag, true);
     ch.socket_ = &socket;
@@ -479,7 +542,7 @@ TEST_F(AivUrmaChannelTest, Ut_GetStatus_WhenTransportStatusTimeout_Returns_SOCKE
     commonRes.connVec.emplace_back(&conn);
     BaseMemTransport::Attribution attr{};
     LinkData linkData = MakeDefaultLinkData();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     ch.transport_
         = std::make_unique<AivUrmaTransport>(commonRes, attr, linkData, socket, reinterpret_cast<RdmaHandle>(0x1));
     SocketStatus fakeSocketStatus = SocketStatus::TIMEOUT;
@@ -602,7 +665,7 @@ TEST_F(AivUrmaTransportTest, Ut_Construct_WhenConnNull_ThrowsInvalidParamsExcept
     commonRes.connVec.emplace_back(nullptr);
     BaseMemTransport::Attribution attr{};
     LinkData linkData = MakeDefaultLinkData();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
 
     EXPECT_THROW(
         AivUrmaTransport transport(commonRes, attr, linkData, socket, reinterpret_cast<RdmaHandle>(0x1)),
@@ -612,7 +675,7 @@ TEST_F(AivUrmaTransportTest, Ut_Construct_WhenConnNull_ThrowsInvalidParamsExcept
 TEST_F(AivUrmaTransportTest, Ut_DescribeAndLinkDesc_WhenCalled_ReturnsNonEmpty)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
 
     EXPECT_FALSE(transport->Describe().empty());
@@ -622,7 +685,7 @@ TEST_F(AivUrmaTransportTest, Ut_DescribeAndLinkDesc_WhenCalled_ReturnsNonEmpty)
 TEST_F(AivUrmaTransportTest, Ut_CheckCommonLocRes_WhenConnValid_Returns)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
 
     EXPECT_NO_THROW(transport->CheckLocBuffer(commonRes_));
@@ -633,7 +696,7 @@ TEST_F(AivUrmaTransportTest, Ut_CheckCommonLocRes_WhenConnValid_Returns)
 TEST_F(AivUrmaTransportTest, Ut_HandshakePackUnpack_WhenEmptyMsg_Returns)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     BinaryStream binaryStream;
 
@@ -645,7 +708,7 @@ TEST_F(AivUrmaTransportTest, Ut_HandshakePackUnpack_WhenEmptyMsg_Returns)
 TEST_F(AivUrmaTransportTest, Ut_HandshakeUnpack_WhenAcceleratorMismatch_Throws)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     BinaryStream binaryStream;
     binaryStream << static_cast<uint32_t>(AcceleratorState::CCU_MS);
@@ -657,7 +720,7 @@ TEST_F(AivUrmaTransportTest, Ut_HandshakeUnpack_WhenAcceleratorMismatch_Throws)
 TEST_F(AivUrmaTransportTest, Ut_HandshakeUnpack_WhenMsgSizeMismatch_Throws)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     BinaryStream binaryStream;
     binaryStream << static_cast<uint32_t>(AcceleratorState::AIV);
@@ -669,7 +732,7 @@ TEST_F(AivUrmaTransportTest, Ut_HandshakeUnpack_WhenMsgSizeMismatch_Throws)
 TEST_F(AivUrmaTransportTest, Ut_BufferVecPack_WhenCalled_FillsBinaryStream)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     BinaryStream binaryStream;
 
@@ -680,7 +743,7 @@ TEST_F(AivUrmaTransportTest, Ut_IsResReadyAndConnsReady_WhenConnReady_ReturnsTru
 {
     auto conn = MakeConn();
     conn->status = RmaConnStatus::READY;
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
 
     EXPECT_TRUE(transport->IsResReady());
@@ -690,7 +753,7 @@ TEST_F(AivUrmaTransportTest, Ut_IsResReadyAndConnsReady_WhenConnReady_ReturnsTru
 TEST_F(AivUrmaTransportTest, Ut_PrepareGetStatus_WhenAlreadyReady_ReturnsFalse)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     transport->transportStatus_ = TransportStatus::READY;
 
@@ -701,7 +764,7 @@ TEST_F(AivUrmaTransportTest, Ut_PrepareGetStatus_WhenAlreadyReady_ReturnsFalse)
 TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenInit_SetsSocketOk)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     transport->urmaStatus_ = AivUrmaTransport::UrmaStatus::INIT;
 
@@ -714,7 +777,7 @@ TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenInit_SetsSocketOk)
 TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenSocketOkAndResNotReady_StaysSocketOk)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     transport->urmaStatus_ = AivUrmaTransport::UrmaStatus::SOCKET_OK;
 
@@ -728,7 +791,7 @@ TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenSocketOkAndResNotReady_Sta
 TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenSocketOkAndResReady_SendsData)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     transport->urmaStatus_ = AivUrmaTransport::UrmaStatus::SOCKET_OK;
 
@@ -743,7 +806,7 @@ TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenSocketOkAndResReady_SendsD
 TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenSendData_RecvsData)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     transport->urmaStatus_ = AivUrmaTransport::UrmaStatus::SEND_DATA;
 
@@ -757,7 +820,7 @@ TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenSendData_RecvsData)
 TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenRecvDataNeedsFinish_ProcessesData)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     transport->urmaStatus_ = AivUrmaTransport::UrmaStatus::RECV_DATA;
 
@@ -771,7 +834,7 @@ TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenRecvDataNeedsFinish_Proces
 TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenRecvDataNeedsNoFinish_BecomesReady)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     transport->urmaStatus_ = AivUrmaTransport::UrmaStatus::RECV_DATA;
 
@@ -786,7 +849,7 @@ TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenRecvDataNeedsNoFinish_Beco
 TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenProcessDataAndConnsReady_SendsFinish)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     transport->urmaStatus_ = AivUrmaTransport::UrmaStatus::PROCESS_DATA;
 
@@ -801,7 +864,7 @@ TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenProcessDataAndConnsReady_S
 TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenConnOk_RecvsFinish)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     transport->urmaStatus_ = AivUrmaTransport::UrmaStatus::CONN_OK;
 
@@ -815,7 +878,7 @@ TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenConnOk_RecvsFinish)
 TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenSendFin_BecomesReady)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     transport->urmaStatus_ = AivUrmaTransport::UrmaStatus::SEND_FIN;
 
@@ -828,7 +891,7 @@ TEST_F(AivUrmaTransportTest, Ut_ProcessUrmaStatus_WhenSendFin_BecomesReady)
 TEST_F(AivUrmaTransportTest, Ut_RmtBufferVecUnpackProc_WhenZeroSizeDto_AppendsNullBuffer)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     BinaryStream binaryStream;
     ExchangeUbBufferDto dto{};
@@ -846,7 +909,7 @@ TEST_F(AivUrmaTransportTest, Ut_RmtBufferVecUnpackProc_WhenZeroSizeDto_AppendsNu
 TEST_F(AivUrmaTransportTest, Ut_RmtBufferVecUnpackProc_WhenNumMismatch_Throws)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     BinaryStream binaryStream;
     binaryStream << static_cast<uint32_t>(2);
@@ -858,7 +921,7 @@ TEST_F(AivUrmaTransportTest, Ut_RmtBufferVecUnpackProc_WhenNumMismatch_Throws)
 TEST_F(AivUrmaTransportTest, Ut_ConnVecUnpackProc_WhenConnNumZero_ReturnsFalse)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     transport->connNum_ = 0;
     BinaryStream binaryStream;
@@ -870,7 +933,7 @@ TEST_F(AivUrmaTransportTest, Ut_ConnVecUnpackProc_WhenConnNumZero_ReturnsFalse)
 TEST_F(AivUrmaTransportTest, Ut_ConnVecUnpackProc_WhenConnNumMismatch_Throws)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     BinaryStream binaryStream;
     binaryStream << static_cast<uint32_t>(2);
@@ -881,7 +944,7 @@ TEST_F(AivUrmaTransportTest, Ut_ConnVecUnpackProc_WhenConnNumMismatch_Throws)
 TEST_F(AivUrmaTransportTest, Ut_GetRemoteMems_WhenParamNull_Returns_E_PARA)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     CommMem* remoteMem = nullptr;
     char** memInfos = nullptr;
@@ -895,7 +958,7 @@ TEST_F(AivUrmaTransportTest, Ut_GetRemoteMems_WhenParamNull_Returns_E_PARA)
 TEST_F(AivUrmaTransportTest, Ut_GetRemoteMems_WhenNoRemoteBuffer_Returns_SUCCESS)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     CommMem* remoteMem = reinterpret_cast<CommMem*>(0x1);
     char** memInfos = reinterpret_cast<char**>(0x1);
@@ -907,7 +970,7 @@ TEST_F(AivUrmaTransportTest, Ut_GetRemoteMems_WhenNoRemoteBuffer_Returns_SUCCESS
 TEST_F(AivUrmaTransportTest, Ut_GetRemoteMems_WhenOnlyReservedRemoteBuffer_Returns_SUCCESS)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     void* rdmaHandle = (void*)0x100;
     auto remoteRmaBuffer = std::make_unique<Hccl::RemoteUbRmaBuffer>(rdmaHandle);
@@ -923,7 +986,7 @@ TEST_F(AivUrmaTransportTest, Ut_GetRemoteMems_WhenOnlyReservedRemoteBuffer_Retur
 TEST_F(AivUrmaTransportTest, Ut_GetStatus_WhenSocketTimeout_Returns_SOCKET_TIMEOUT)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     SocketStatus fakeSocketStatus = SocketStatus::TIMEOUT;
 
@@ -938,7 +1001,7 @@ TEST_F(AivUrmaTransportTest, Ut_GetStatus_WhenSocketTimeout_Returns_SOCKET_TIMEO
 TEST_F(AivUrmaTransportTest, Ut_GetHostChannelEntity_WhenNotReady_ThrowsInternalException)
 {
     auto conn = MakeConn();
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     ChannelEntity hostChannel{};
 
@@ -960,7 +1023,7 @@ TEST_F(AivUrmaTransportTest, Ut_GetHostChannelEntity_WhenReady_FillsSqAndCqConte
     conn->cqInfo_.cqDepth = 8;
     conn->cqInfo_.swdbAddr = 0x4000;
 
-    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, NicType::DEVICE_NIC_TYPE);
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
     auto transport = MakeTransport(*conn, socket);
     transport->transportStatus_ = TransportStatus::READY;
     ChannelEntity hostChannel{};

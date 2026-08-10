@@ -127,7 +127,9 @@ HcommResult HcommCollectiveChannelCreate(
     ChannelHandle* channels);
 HcommResult HcommChannelUpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum, ChannelHandle channelHandle);
 
-HcommResult CheckUbAttr(HcommChannelDesc& channelDesc);
+constexpr uint32_t UB_SQ_DEPTH_NOT_SET = 0xFFFFFFFFU;
+
+HcommResult CheckUbAttr(HcommChannelDesc& channelDesc, CommEngine engine);
 
 HcommResult CheckUbMemAttr(HcommChannelDesc& channelDesc);
 

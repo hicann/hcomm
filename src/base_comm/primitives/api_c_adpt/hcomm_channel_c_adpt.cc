@@ -29,7 +29,7 @@
 
 using namespace hcomm;
 
-HcommResult CheckUbAttr(HcommChannelDesc& channelDesc)
+HcommResult CheckUbAttr(HcommChannelDesc& channelDesc, CommEngine engine)
 {
     if (channelDesc.remoteEndpoint.protocol != COMM_PROTOCOL_UBC_TP
         && channelDesc.remoteEndpoint.protocol != COMM_PROTOCOL_UBOE
@@ -38,17 +38,15 @@ HcommResult CheckUbAttr(HcommChannelDesc& channelDesc)
         return HCCL_SUCCESS;
     }
 
-    // check sqDepth
-    if (channelDesc.ubAttr.sqDepth == 0xFFFFFFFF) { // 0xFFFFFFFF表示使用默认值
-        HCCL_INFO("[%s] use default ubAttr.sqDepth.", __func__);
+    // 暂不支持UBOE场景下配置SqDepth
+    if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBOE) {
         return HCCL_SUCCESS;
     }
 
-    // sqDepth的合理范围在[16, 256]
-    if (channelDesc.ubAttr.sqDepth < 16 || channelDesc.ubAttr.sqDepth > 256) {
-        HCCL_ERROR(
-            "[%s] invalid ubAttr.sqDepth[%u], should be 0 or >= 16 and <= 256.", __func__, channelDesc.ubAttr.sqDepth);
-        return HCCL_E_PARA;
+    // check sqDepth
+    if (channelDesc.ubAttr.sqDepth == UB_SQ_DEPTH_NOT_SET) {
+        HCCL_INFO("[%s] use default ubAttr.sqDepth.", __func__);
+        return HCCL_SUCCESS;
     }
 
     // channelDesc.ubAttr.sqDepth调整到2的整数次幂
@@ -185,7 +183,8 @@ HcommResult ProcessHcommChannelDescs(const HcommChannelDesc& channelDesc, HcommC
 }
 
 HcommResult NormalizeHcommChannelDescs(
-    HcommChannelDesc* channelDescs, uint32_t channelNum, std::vector<HcommChannelDesc>& channelDescFinals)
+    HcommChannelDesc* channelDescs, uint32_t channelNum, std::vector<HcommChannelDesc>& channelDescFinals,
+    CommEngine engine)
 {
     channelDescFinals.clear();
     channelDescFinals.reserve(channelNum);
@@ -200,7 +199,7 @@ HcommResult NormalizeHcommChannelDescs(
             HCCL_ERROR("[%s] failed to normalize channelDesc[%u], ret[%d].", __func__, idx, ret);
             return ret;
         }
-        ret = CheckUbAttr(channelDescFinal);
+        ret = CheckUbAttr(channelDescFinal, engine);
         if (ret != HCOMM_SUCCESS) {
             HCCL_ERROR("[%s] CheckUbAttr failed, ret[%d].", __func__, ret);
             return ret;
@@ -236,7 +235,7 @@ HcommResult HcommCollectiveChannelCreate(
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum);
 
     std::vector<HcommChannelDesc> channelDescFinals;
-    CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals)));
+    CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals, engine)));
     return ChannelProcess::CreateChannelsLoop(endpointHandle, engine, channelDescFinals.data(), channelNum, channels);
 }
 
@@ -273,7 +272,7 @@ HcommResult HcommChannelCreate(
     }
     (void)HcommResMgrInit();
     std::vector<HcommChannelDesc> channelDescFinals;
-    CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals)));
+    CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals, engine)));
 
 #ifdef ENABLE_EXPERIMENTAL
     bool pluginHandled = false;
@@ -568,7 +567,7 @@ HcommResult HcommChannelCreateWithConfig(
     (void)HcommResMgrInit();
 
     std::vector<HcommChannelDesc> channelDescFinals;
-    CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals)));
+    CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals, engine)));
     // NormalizeHcommChannelDescs 内部已调 CheckUbAttr，此处仅补共享模式专有校验
     CHK_RET(ValidateSharedQueueConfig(channelDescFinals));
 

@@ -660,6 +660,7 @@ TEST_F(DevUbConnectionTest, rma_net_connection_prepare_write_task_in_offload_mod
         .then(returnValue(postSendRes3));
 
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OFFLOAD);
+    EXPECT_EQ(devUbConnection.GetSqDepth(), 128U);
 
     // Given
     MemoryBuffer localMemBuffer1(0, 0, 0);
@@ -905,9 +906,14 @@ TEST_F(DevUbConnectionTest, ctp_import_test)
 }
 
 constexpr uint64_t expectSqBuffVa = 10;
+constexpr uint32_t expectJettySqDepth = 512U;
+uint32_t capturedJettySqDepth = 0U;
+uint32_t capturedJettySqBufSize = 0U;
 RequestHandle RaUbCreateJettyAsync_stub(
     const RdmaHandle handle, const HrtRaUbCreateJettyParam& in, vector<char_t>& out, void*& jettyHandle)
 {
+    capturedJettySqDepth = in.sqDepth;
+    capturedJettySqBufSize = in.sqBufSize;
     struct QpCreateInfo info;
     info.ub.sqBuffVa = expectSqBuffVa;
     info.ub.id = 1;
@@ -930,13 +936,19 @@ TEST_F(DevUbConnectionTest, Ut_CreateJetty_When_CorrectParams_ReturnIsOk)
     std::string tag = "test";
 
     // When
+    capturedJettySqDepth = 0U;
+    capturedJettySqBufSize = 0U;
     MOCKER(RaUbCreateJettyAsync).stubs().will(invoke(RaUbCreateJettyAsync_stub));
-    DevUbCtpConnection devUbCtpConn(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
+    DevUbCtpConnection devUbCtpConn(
+        rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE, false, HrtUbJfcMode::STARS_POLL,
+        IpAddress(), IpAddress(), static_cast<u8>(UB_QOS_DEFAULT), COMM_ENGINE_RESERVED, expectJettySqDepth);
 
     // Then
     devUbCtpConn.CreateJetty(false);
     devUbCtpConn.SetJettyInfo();
     EXPECT_EQ(devUbCtpConn.sqBuffVa, expectSqBuffVa);
+    EXPECT_EQ(capturedJettySqDepth, expectJettySqDepth);
+    EXPECT_EQ(capturedJettySqBufSize, expectJettySqDepth * 64U * 4U);
 }
 
 TEST_F(DevUbConnectionTest, Ut_Describe_Tp_Mode)
@@ -983,6 +995,7 @@ TEST_F(DevUbConnectionTest, Ut_ImportRmtDto)
 
 TEST_F(DevUbConnectionTest, Ut_UbgConnection_Constructor_SetsTpProtocolAndQos)
 {
+    constexpr u32 expectedSqDepth = 512U;
     RdmaHandle rdmaHandle = (void*)0x1000000;
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
     LinkData linkData(portType, 0, 1, 0, 1);
@@ -992,11 +1005,12 @@ TEST_F(DevUbConnectionTest, Ut_UbgConnection_Constructor_SetsTpProtocolAndQos)
 
     DevUbUbgConnection ubgConn(
         rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE, true, HrtUbJfcMode::STARS_POLL,
-        locIpv4Addr, rmtIpv4Addr, qos);
+        locIpv4Addr, rmtIpv4Addr, qos, COMM_ENGINE_RESERVED, expectedSqDepth);
 
     EXPECT_EQ(ubgConn.tpProtocol, TpProtocol::UBG);
     EXPECT_EQ(ubgConn.jettyTimeOut, 16);
     EXPECT_EQ(ubgConn.qos_, qos);
+    EXPECT_EQ(ubgConn.GetSqDepth(), expectedSqDepth);
 }
 
 static HcclResult StubGetTpInfoWithMappedQos(TpManager*, const RaUbGetTpInfoParam&, TpInfo& tpInfo, bool)

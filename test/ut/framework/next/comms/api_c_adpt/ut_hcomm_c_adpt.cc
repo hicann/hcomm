@@ -588,15 +588,38 @@ TEST_F(HcommCAdptTest, ut_HcommChannelGetRemoteMems_Plugin_When_Normal_Expect_Di
     EXPECT_EQ(memInfos, g_fakeRemoteTags);
 }
 
+namespace {
+
+uint32_t gCapturedChannelDescQos = 0U;
+uint32_t gCapturedChannelDescSqDepth = 0U;
+const char* gCapturedChannelDescChannelName = nullptr;
+
+HcclResult CaptureCreateChannelsLoop(
+    EndpointHandle, CommEngine, HcommChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle*)
+{
+    if (channelDescs != nullptr && channelNum > 0U) {
+        gCapturedChannelDescQos = channelDescs[0].qos;
+        gCapturedChannelDescSqDepth = channelDescs[0].ubAttr.sqDepth;
+        gCapturedChannelDescChannelName = channelDescs[0].channelName;
+    }
+    return HCCL_SUCCESS;
+}
+
+} // namespace
+
 TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_When_Normal_Expect_Success)
 {
+    gCapturedChannelDescSqDepth = 0U;
     EndpointHandle endpointHandle = reinterpret_cast<EndpointHandle>(0x12345);
     HcommChannelDesc channelDesc{};
-    (void)HcommChannelDescInit(&channelDesc, 1);
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UBC_TP;
+    channelDesc.ubAttr.sqDepth = 300U;
     ChannelHandle channels[1] = {0};
-    MOCKER(ChannelProcess::CreateChannelsLoop).stubs().will(returnValue(HCCL_SUCCESS));
-    HcommResult ret = HcommCollectiveChannelCreate(endpointHandle, COMM_ENGINE_AICPU_TS, &channelDesc, 1, channels);
+    MOCKER(ChannelProcess::CreateChannelsLoop).stubs().will(invoke(CaptureCreateChannelsLoop));
+    HcommResult ret = HcommCollectiveChannelCreate(endpointHandle, COMM_ENGINE_AIV, &channelDesc, 1, channels);
     EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(gCapturedChannelDescSqDepth, 512U);
 }
 
 TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_When_ChannelDescsNull_Expect_E_PTR)
@@ -1007,23 +1030,6 @@ TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_CCU_Expect_Success)
     HcommResult ret = HcommCollectiveChannelCreate(endpointHandle, COMM_ENGINE_CCU, &channelDesc, 1, channels);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
-
-namespace {
-
-uint32_t gCapturedChannelDescQos = 0U;
-const char* gCapturedChannelDescChannelName = nullptr;
-
-HcclResult CaptureCreateChannelsLoop(
-    EndpointHandle, CommEngine, HcommChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle*)
-{
-    if (channelDescs != nullptr && channelNum > 0U) {
-        gCapturedChannelDescQos = channelDescs[0].qos;
-        gCapturedChannelDescChannelName = channelDescs[0].channelName;
-    }
-    return HCCL_SUCCESS;
-}
-
-} // namespace
 
 TEST_F(HcommCAdptTest, ut_HcommCollectiveChannelCreate_V1Desc_ClearsQosField)
 {

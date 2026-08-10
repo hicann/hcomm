@@ -18,6 +18,7 @@
 #include "resource/notify/ub_local_notify.h"
 #include "resource/socket/socket.h"
 #include "socket_mgr.h"
+#include "hcomm_adapter_hccp.h"
 
 namespace hcomm {
 
@@ -82,6 +83,7 @@ private:
     void* devChannelEntitySlab_{nullptr};
     size_t devChannelEntitySlabSize_{0};
     std::vector<hccl::DeviceMem> deviceMemories_{};
+    DevBaseAttr devBaseAttr_{};
     std::unique_ptr<Hccl::SocketConfig> socketConfigHolder_{nullptr};
     const Hccl::SocketConfig* socketConfig_{nullptr};
     uint32_t devicePhyId_{};

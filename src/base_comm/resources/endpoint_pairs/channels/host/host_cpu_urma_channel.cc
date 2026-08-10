@@ -121,7 +121,7 @@ HcclResult HostCpuUrmaChannel::BuildSocket()
 HcclResult HostCpuUrmaChannel::BuildConnection()
 {
     UbConnBuildContext ctx;
-    CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_.qos, ctx));
+    CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_, ctx));
 
     Hccl::OpMode opMode = Hccl::OpMode::OPBASE;
     std::unique_ptr<Hccl::HostUbConnection> ubConn = nullptr;
