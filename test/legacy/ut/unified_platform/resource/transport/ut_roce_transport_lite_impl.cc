@@ -495,21 +495,15 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_Write)
         .with(eq(1), eq(5), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
-    u32 reportCount = 0;
-    ASSERT_EQ(
-        transport.SetAddTaskInfoCallback([&reportCount](u32, u32, const TaskParam& taskParam, u64) {
-            EXPECT_EQ(taskParam.taskType, TaskParamType::TASK_RDMA);
-            EXPECT_EQ(taskParam.taskPara.DMA.dmaOp, DmaOp::HCCL_DMA_WRITE);
-            EXPECT_EQ(taskParam.taskPara.DMA.linkType, DfxLinkType::ROCE);
-            EXPECT_EQ(taskParam.taskPara.DMA.size, 2048u);
-            EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.DMA.src), 0x4000u);
-            EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.DMA.dst), 0x5000u);
-            ++reportCount;
-            return HCCL_SUCCESS;
-        }),
-        HCCL_SUCCESS);
     EXPECT_NO_THROW(transport.Write(locBuf, rmtBuf, stream));
-    EXPECT_EQ(reportCount, 1u);
+    TaskInfoCircularQueue* queue = stream.GetTaskInfos();
+    ASSERT_NE(queue, nullptr);
+    ASSERT_FALSE(queue->IsEmpty());
+    DfxTaskInfo* slot = queue->GetSlot(0);
+    ASSERT_NE(slot, nullptr);
+    EXPECT_EQ(slot->taskType, static_cast<u8>(TaskParamTypeVal::TASK_RDMA));
+    EXPECT_EQ(slot->linkType, static_cast<u8>(DfxLinkTypeVal::LINK_ROCE));
+    EXPECT_EQ(slot->transportType, static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_ROCE));
 
     std::cout << "End Ut_RoceTransportLite_Write" << std::endl;
 }
@@ -540,20 +534,15 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_WriteWithNotify)
         .with(eq(2), eq(5), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
-    u32 reportCount = 0;
-    ASSERT_EQ(
-        transport.SetAddTaskInfoCallback([&reportCount](u32, u32, const TaskParam& taskParam, u64) {
-            EXPECT_EQ(taskParam.taskType, TaskParamType::TASK_WRITE_WITH_NOTIFY);
-            EXPECT_EQ(taskParam.taskPara.DMA.notifyID, static_cast<u64>(UINT32_MAX));
-            EXPECT_EQ(taskParam.taskPara.DMA.notifyValue, 1u);
-            EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.DMA.src), 0x4000u);
-            EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.DMA.dst), 0x5000u);
-            ++reportCount;
-            return HCCL_SUCCESS;
-        }),
-        HCCL_SUCCESS);
     EXPECT_NO_THROW(transport.WriteWithNotify(locBuf, rmtBuf, withNotify, stream));
-    EXPECT_EQ(reportCount, 1u);
+    TaskInfoCircularQueue* queue = stream.GetTaskInfos();
+    ASSERT_NE(queue, nullptr);
+    ASSERT_FALSE(queue->IsEmpty());
+    DfxTaskInfo* slot = queue->GetSlot(0);
+    ASSERT_NE(slot, nullptr);
+    EXPECT_EQ(slot->taskType, static_cast<u8>(TaskParamTypeVal::TASK_WRITE_WITH_NOTIFY));
+    EXPECT_EQ(slot->linkType, static_cast<u8>(DfxLinkTypeVal::LINK_ROCE));
+    EXPECT_EQ(slot->transportType, static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_ROCE));
 
     std::cout << "End Ut_RoceTransportLite_WriteWithNotify" << std::endl;
 }
@@ -581,20 +570,15 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_Post)
         .with(eq(1), eq(5), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
-    u32 reportCount = 0;
-    ASSERT_EQ(
-        transport.SetAddTaskInfoCallback([&reportCount](u32, u32, const TaskParam& taskParam, u64) {
-            EXPECT_EQ(taskParam.taskType, TaskParamType::TASK_RDMA);
-            EXPECT_EQ(taskParam.taskPara.DMA.notifyID, static_cast<u64>(UINT32_MAX));
-            EXPECT_EQ(taskParam.taskPara.DMA.notifyValue, 1u);
-            EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.DMA.src), 0x3000u);
-            EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.DMA.dst), 0x2000u);
-            ++reportCount;
-            return HCCL_SUCCESS;
-        }),
-        HCCL_SUCCESS);
     EXPECT_NO_THROW(transport.Post(remoteNotifyIdx, stream));
-    EXPECT_EQ(reportCount, 1u);
+    TaskInfoCircularQueue* queue = stream.GetTaskInfos();
+    ASSERT_NE(queue, nullptr);
+    ASSERT_FALSE(queue->IsEmpty());
+    DfxTaskInfo* slot = queue->GetSlot(0);
+    ASSERT_NE(slot, nullptr);
+    EXPECT_EQ(slot->taskType, static_cast<u8>(TaskParamTypeVal::TASK_RDMA));
+    EXPECT_EQ(slot->linkType, static_cast<u8>(DfxLinkTypeVal::LINK_ROCE));
+    EXPECT_EQ(slot->transportType, static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_ROCE));
 
     std::cout << "End Ut_RoceTransportLite_Post" << std::endl;
 }
@@ -631,22 +615,15 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_Read)
         .with(eq(1), eq(5), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
-    u32 reportCount = 0;
-    ASSERT_EQ(
-        transport.SetAddTaskInfoCallback([&reportCount](u32, u32, const TaskParam& taskParam, u64) {
-            EXPECT_EQ(taskParam.taskType, TaskParamType::TASK_RDMA);
-            EXPECT_EQ(taskParam.taskPara.DMA.dmaOp, DmaOp::HCCL_DMA_READ);
-            EXPECT_EQ(taskParam.taskPara.DMA.notifyID, INVALID_VALUE_NOTIFYID);
-            EXPECT_EQ(taskParam.taskPara.DMA.size, 0x200u);
-            EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.DMA.src), 0x4000u);
-            EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.DMA.dst), 0x5000u);
-            ++reportCount;
-            return HCCL_SUCCESS;
-        }),
-        HCCL_SUCCESS);
-
     EXPECT_NO_THROW(transport.Read(locBuf, rmtBuf, stream));
-    EXPECT_EQ(reportCount, 1u);
+    TaskInfoCircularQueue* queue = stream.GetTaskInfos();
+    ASSERT_NE(queue, nullptr);
+    ASSERT_FALSE(queue->IsEmpty());
+    DfxTaskInfo* slot = queue->GetSlot(0);
+    ASSERT_NE(slot, nullptr);
+    EXPECT_EQ(slot->taskType, static_cast<u8>(TaskParamTypeVal::TASK_RDMA));
+    EXPECT_EQ(slot->linkType, static_cast<u8>(DfxLinkTypeVal::LINK_ROCE));
+    EXPECT_EQ(slot->transportType, static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_ROCE));
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_WriteReduce)
@@ -672,22 +649,18 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_WriteReduce)
         .with(eq(1), eq(5), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
-    u32 reportCount = 0;
-    ASSERT_EQ(
-        transport.SetAddTaskInfoCallback([&reportCount](u32, u32, const TaskParam& taskParam, u64) {
-            EXPECT_EQ(taskParam.taskType, TaskParamType::TASK_REDUCE_INLINE);
-            EXPECT_EQ(taskParam.taskPara.Reduce.notifyID, INVALID_VALUE_NOTIFYID);
-            EXPECT_EQ(taskParam.taskPara.Reduce.linkType, DfxLinkType::ROCE);
-            EXPECT_EQ(taskParam.taskPara.Reduce.size, 0x200u);
-            EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.Reduce.src), 0x4000u);
-            EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.Reduce.dst), 0x5000u);
-            ++reportCount;
-            return HCCL_SUCCESS;
-        }),
-        HCCL_SUCCESS);
-
     EXPECT_NO_THROW(transport.WriteReduce(locBuf, rmtBuf, reduceIn, stream));
-    EXPECT_EQ(reportCount, 1u);
+    TaskInfoCircularQueue* queue = stream.GetTaskInfos();
+    ASSERT_NE(queue, nullptr);
+    ASSERT_FALSE(queue->IsEmpty());
+    DfxTaskInfo* slot = queue->GetSlot(0);
+    ASSERT_NE(slot, nullptr);
+    EXPECT_EQ(slot->taskType, static_cast<u8>(TaskParamTypeVal::TASK_REDUCE_INLINE));
+    EXPECT_EQ(slot->linkType, static_cast<u8>(DfxLinkTypeVal::LINK_ROCE));
+    EXPECT_EQ(slot->transportType, static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_ROCE));
+    EXPECT_EQ(slot->taskPara.Reduce.srcAddr, 0x4000u);
+    EXPECT_EQ(slot->taskPara.Reduce.dstAddr, 0x5000u);
+    EXPECT_EQ(slot->taskPara.Reduce.size, 0x200u);
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_WriteReduceWithNotify)
@@ -715,22 +688,18 @@ TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_WriteReduceWithNotify)
         .with(eq(2), eq(5), mockcpp::any(), mockcpp::any(), mockcpp::any())
         .will(returnValue(HCCL_SUCCESS));
 
-    u32 reportCount = 0;
-    ASSERT_EQ(
-        transport.SetAddTaskInfoCallback([&reportCount](u32, u32, const TaskParam& taskParam, u64) {
-            EXPECT_EQ(taskParam.taskType, TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY);
-            EXPECT_EQ(taskParam.taskPara.Reduce.notifyID, static_cast<u64>(UINT32_MAX));
-            EXPECT_EQ(taskParam.taskPara.Reduce.notifyValue, 1u);
-            EXPECT_EQ(taskParam.taskPara.Reduce.size, 0x200u);
-            EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.Reduce.src), 0x4000u);
-            EXPECT_EQ(reinterpret_cast<uintptr_t>(taskParam.taskPara.Reduce.dst), 0x5000u);
-            ++reportCount;
-            return HCCL_SUCCESS;
-        }),
-        HCCL_SUCCESS);
-
     EXPECT_NO_THROW(transport.WriteReduceWithNotify(locBuf, rmtBuf, reduceIn, withNotify, stream));
-    EXPECT_EQ(reportCount, 1u);
+    TaskInfoCircularQueue* queue = stream.GetTaskInfos();
+    ASSERT_NE(queue, nullptr);
+    ASSERT_FALSE(queue->IsEmpty());
+    DfxTaskInfo* slot = queue->GetSlot(0);
+    ASSERT_NE(slot, nullptr);
+    EXPECT_EQ(slot->taskType, static_cast<u8>(TaskParamTypeVal::TASK_WRITE_REDUCE_WITH_NOTIFY));
+    EXPECT_EQ(slot->linkType, static_cast<u8>(DfxLinkTypeVal::LINK_ROCE));
+    EXPECT_EQ(slot->transportType, static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_ROCE));
+    EXPECT_EQ(slot->taskPara.Reduce.srcAddr, 0x4000u);
+    EXPECT_EQ(slot->taskPara.Reduce.dstAddr, 0x5000u);
+    EXPECT_EQ(slot->taskPara.Reduce.size, 0x200u);
 }
 
 TEST_F(RoceTransportLiteImplTest, Ut_RoceTransportLite_PollCq_Expect_ResultPropagated)

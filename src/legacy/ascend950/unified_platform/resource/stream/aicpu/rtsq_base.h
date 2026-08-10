@@ -186,6 +186,8 @@ public:
         MACRO_THROW(NotSupportException, StringFormat("not supported."));
     }
 
+    virtual u64 GetSqeAddr() const { return 0; }
+
     u32 QuerySqHead() const;
     u32 QuerySqTail() const;
 

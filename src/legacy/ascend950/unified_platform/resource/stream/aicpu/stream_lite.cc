@@ -49,4 +49,41 @@ std::string StreamLite::Describe() const
     return StringFormat("StreamLite[id=%u, sqid=%u, devPhyId=%u]", id, sqId, devPhyId);
 }
 
+TaskInfoCircularQueue* StreamLite::GetTaskInfos() const { return &taskInfos_; }
+
+DfxTaskInfo* StreamLite::NextTaskSlot() const
+{
+    if (taskInfos_.IsFull()) {
+        ReportStreamTask();
+    }
+    return static_cast<DfxTaskInfo*>(taskInfos_.NextSlot());
+}
+
+void StreamLite::SetReportStreamTaskCallback(std::function<void(TaskInfoCircularQueue*)> callback)
+{
+    reportStreamTaskCallback_ = std::move(callback);
+}
+
+bool StreamLite::HasReportStreamTaskCallback() const { return reportStreamTaskCallback_ != nullptr; }
+
+void StreamLite::ReportStreamTask() const
+{
+    if (reportStreamTaskCallback_ != nullptr) {
+        reportStreamTaskCallback_(&taskInfos_);
+    }
+}
+
+void StreamLite::SetGetLatestDfxOpInfoCallback(std::function<const void*()> callback)
+{
+    getLatestDfxOpInfoCallback_ = std::move(callback);
+}
+
+const void* StreamLite::GetLatestDfxOpInfo() const
+{
+    if (getLatestDfxOpInfoCallback_ != nullptr) {
+        return getLatestDfxOpInfoCallback_();
+    }
+    return nullptr;
+}
+
 } // namespace Hccl

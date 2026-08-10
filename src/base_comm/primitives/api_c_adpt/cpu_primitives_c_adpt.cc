@@ -1151,7 +1151,7 @@ HcclResult HcclReportAicpuKernel(HcclComm comm, uint64_t beginTime, char* kernel
     CHK_RET(hrtGetTaskIdAndStreamID(taskId, streamId));
     HCCL_INFO("[%s] taskId[%u], streamId[%u].", __func__, taskId, streamId);
     hcclCommDfx->SetAicpuTaskIdAndStreamId(taskId, streamId);
-    CHK_RET(hcclCommDfx->AddTaskInfoCallback(streamId, taskId, taskParam, INVALID_U64));
+    CHK_RET(hcclCommDfx->AddTaskInfoCallback(streamId, taskId, taskParam, DFX_INVALID_U64));
     HCCL_INFO("[HcclReportAicpuKernel] HcclReportAicpuKernel success");
     return HCCL_SUCCESS;
 }
@@ -1179,7 +1179,7 @@ extern HcclResult HcclReportAivKernel(HcclComm comm, uint64_t beginTime)
     uint32_t taskId = INVALID_UINT;
     uint32_t streamId = INVALID_UINT;
     CHK_RET(hrtGetTaskIdAndStreamID(taskId, streamId));
-    CHK_RET(hcclCommDfx->AddTaskInfoCallback(streamId, taskId, taskParam, INVALID_U64));
+    CHK_RET(hcclCommDfx->AddTaskInfoCallback(streamId, taskId, taskParam, DFX_INVALID_U64));
     HCCL_INFO("[HcclReportAivKernel] HcclReportAivKernel success");
     return HCCL_SUCCESS;
 }

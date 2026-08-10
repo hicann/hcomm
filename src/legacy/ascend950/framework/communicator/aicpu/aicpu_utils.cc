@@ -18,6 +18,7 @@
 #include "task_exception_func.h"
 #include "task_exception_handler_lite.h"
 #include "coll_operator.h"
+#include "profiling_handler_lite.h"
 using namespace Hccl;
 
 AicpuUtils::AicpuUtils() {}

@@ -258,7 +258,7 @@ static CcuResult ReportCcuTaskDfx(const ThreadHandle threadHandle, const Hccl::T
     u32 streamId = INVALID_UINT;
     u32 taskId = INVALID_UINT;
     CCU_CHK_RET(hrtGetTaskIdAndStreamID(taskId, streamId));
-    CCU_CHK_RET(callback(streamId, taskId, taskParam, INVALID_U64));
+    CCU_CHK_RET(callback(streamId, taskId, taskParam, DFX_INVALID_U64));
     return CcuResult::CCU_SUCCESS;
 }
 

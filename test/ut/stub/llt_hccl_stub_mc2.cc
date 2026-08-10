@@ -234,6 +234,8 @@ int32_t AdprofCheckFeatureIsOn(uint64_t feature) { return 0; }
 
 int32_t AdprofReportAdditionalInfo(uint32_t agingFlag, const void* data, uint32_t length) { return 0; }
 
+int32_t AdprofReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void* data, uint32_t length) { return 0; }
+
 uint64_t AdprofGetHashId(const char* hashInfo, size_t length)
 {
     return std::hash<std::string>{}(std::string(hashInfo));

@@ -187,6 +187,8 @@ inline uint32_t RunAicpuKfcResInitV2Stub(void* args)
 // }
 extern "C" {
 __attribute__((default)) int32_t AdprofReportAdditionalInfo(uint32_t agingFlag, const void* data, uint32_t length);
+__attribute__((default)) int32_t
+AdprofReportBatchAdditionalInfo(uint32_t nonPersistantFlag, const void* data, uint32_t length);
 __attribute__((default)) int32_t MsprofReportAdditionalInfo(uint32_t agingFlag, const VOID_PTR data, uint32_t length);
 __attribute__((default)) int32_t AdprofCheckFeatureIsOn(uint64_t feature);
 __attribute__((default)) uint64_t AdprofGetHashId(const char* hashInfo, size_t length);

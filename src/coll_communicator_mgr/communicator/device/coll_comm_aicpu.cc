@@ -11,12 +11,13 @@
 #include "coll_comm_aicpu.h"
 #include "adapter_hal_pub.h"
 #include "aicpu_ts_thread.h"
+#include "hcclCommOp.h"
 #include "aicpu_res_package_helper.h"
 #include "ub_transport_lite_impl.h"
 #include "notify_manager.h"
 #include "ns_recovery/aicpu/ns_recovery_func_lite.h"
 #include "dlhal_function_v2.h"
-#include "profiling_command_handle_lite.h"
+#include "dfx_profiling_command_handle_lite.h"
 #include "aicpu_daemon_service.h"
 #include "hcclCommTaskExceptionLite.h"
 #include "coll_comm_aicpu_destroy_func.h"
@@ -57,7 +58,7 @@ HcclResult CollCommAicpu::InitAicpuIndOp(CommAicpuParam* commAicpuParam)
     CHK_RET(hrtSetlocalDevice(topoInfo_.deviceLogicId));
     CHK_RET(hrtSetlocalDeviceType(topoInfo_.deviceType));
     CHK_RET(hrtDrvGetLocalDevIDByHostDevID(topoInfo_.devicePhyId, &devId_));
-    CHK_RET(dfx_.Init(devId_, identifier_, topoInfo_.userRankSize));
+    CHK_RET(dfx_.Init(devId_, identifier_, topoInfo_.userRankSize, topoInfo_.userRank));
     CHK_RET(RegisterProfCallBack());
     CHK_RET(InitHDCommunicate(commAicpuParam));
 
@@ -166,24 +167,36 @@ HcclResult CollCommAicpu::InitThreads(ThreadMgrAicpuParam* param)
 
 HcclResult CollCommAicpu::RegisterThreadAddDfxTaskInfo(ThreadHandle thread)
 {
-    int32_t ret = HcommThreadRegisterDfx(thread, dfx_.GetCallback());
-    if (ret != 0) {
-        HCCL_ERROR(
-            "[%s] HcommThreadRegisterDfx failed, ret[%d], thread[0x%llx], dfx_.GetCallback[%p]", __func__, ret,
-            static_cast<unsigned long long>(thread), dfx_.GetCallback());
-        return HCCL_E_PTR;
-    }
-
     std::function<HcclResult(bool)> checkExecStatusCallback = [this](bool isTimeout) {
         return this->CheckIndOpExecStatus(isTimeout);
     };
-    ret = HcommThreadRegisterCheckExecStatus(thread, checkExecStatusCallback);
+    int32_t ret = HcommThreadRegisterCheckExecStatus(thread, checkExecStatusCallback);
     if (ret != 0) {
         HCCL_ERROR(
             "[%s]HcommThreadRegisterCheckExecStatus failed, ret[%d], thread[0x%llx], checkExecStatusCallback[%p]",
             __func__, ret, static_cast<unsigned long long>(thread), static_cast<const void*>(&checkExecStatusCallback));
         return HCCL_E_PTR;
     }
+
+    std::function<void(Hccl::TaskInfoCircularQueue*)> reportCallback = [this](Hccl::TaskInfoCircularQueue* taskQueue) {
+        dfx_.ReportStreamTask(taskQueue);
+    };
+    ret = HcommNewThreadRegisterDfx(thread, reportCallback);
+    if (ret != 0) {
+        HCCL_ERROR("[%s] HcommNewThreadRegisterDfx failed, ret[%d], thread[0x%llx]", __func__, ret, thread);
+        return HCCL_E_PTR;
+    }
+
+    std::function<const void*()> getLatestOpInfoCallback = [this]() -> const void* {
+        return dfx_.GetLatestDfxOpInfo();
+    };
+    ret = HcommNewThreadRegisterGetLatestDfxOpInfo(thread, getLatestOpInfoCallback);
+    if (ret != 0) {
+        HCCL_ERROR(
+            "[%s] HcommNewThreadRegisterGetLatestDfxOpInfo failed, ret[%d], thread[0x%llx]", __func__, ret, thread);
+        return HCCL_E_PTR;
+    }
+
     return HCCL_SUCCESS;
 }
 
@@ -247,9 +260,7 @@ HcclResult CollCommAicpu::ProcessUrmaRes(HcclChannelUrmaRes* commParam, bool isI
         ChannelHandle channelHandle{0};
         if (isInit) {
             CHK_RET(ParsePackData(dataVec[resType].data, channelHandle));
-            // 恢复出的channelHandle回填到commParam中
             channelList[index] = channelHandle;
-            CHK_RET(RegisterChannelAddDfxTaskInfo(channelHandle));
             CHK_RET(RegisterChannelCacheCallback(channelHandle)); // 注册回调函数用于aicpu task cache
             dfx_.AddChannelRemoteRankId(channelHandle, commParam->remoteRankList[index]);
         } else {
@@ -313,12 +324,6 @@ HcclResult CollCommAicpu::ParsePackData(std::vector<char>& data, ChannelHandle& 
     }
 
     return HCCL_SUCCESS;
-}
-
-HcclResult CollCommAicpu::RegisterChannelAddDfxTaskInfo(ChannelHandle channel)
-{
-    int hert = HcommChannelRegisterDfx(channel, dfx_.GetCallback());
-    return static_cast<HcclResult>(hert);
 }
 
 HcclResult CollCommAicpu::RegisterChannelCacheCallback(ChannelHandle channel)
@@ -518,16 +523,6 @@ HcclResult CollCommAicpu::SendErrorMessageReportToHost(Hccl::ErrorMessageReport&
     return HCCL_SUCCESS;
 }
 
-HcclResult CollCommAicpu::RegisterProfCallBack()
-{
-    if (MsprofRegisterCallback != nullptr) {
-        HCCL_INFO("[%s]RegisterProfCallBack not null", __func__);
-        int32_t ret = MsprofRegisterCallback(AICPU, &Hccl::DeviceCommandHandle);
-        CHK_PRT_RET((ret != 0), HCCL_ERROR("[%s] failed. ret = [%d]", __func__, ret), HCCL_E_PARA);
-    } else {
-        HCCL_INFO("[%s]RegisterProfCallBack is null", __func__);
-    }
-    return HCCL_SUCCESS;
-}
+HcclResult CollCommAicpu::RegisterProfCallBack() { return Hccl::DfxRegisterProfCallBack(); }
 
 u32 CollCommAicpu::UpdateIndex() { return index_ += 1; }

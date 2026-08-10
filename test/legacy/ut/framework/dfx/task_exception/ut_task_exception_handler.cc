@@ -536,18 +536,20 @@ TEST_F(TaskExceptionHandlerTest, test_get_rank_id_by_channel_id)
     auto taskInfo = InitTaskInfo();
 
     taskInfo->taskParam_.taskType = TaskParamType::TASK_NOTIFY_WAIT;
-    EXPECT_EQ(TaskExceptionHandler::GetRankIdByChannelId(1, *taskInfo), INVALID_RANKID); // task type error
+    EXPECT_EQ(TaskExceptionHandler::GetRankIdByChannelId(1, *taskInfo), Hccl::INVALID_RANKID); // task type error
 
     taskInfo->taskParam_.taskType = TaskParamType::TASK_CCU;
     taskInfo->dfxOpInfo_ = shared_ptr<DfxOpInfo>(nullptr);
-    EXPECT_EQ(TaskExceptionHandler::GetRankIdByChannelId(1, *taskInfo), INVALID_RANKID); // communicator is nullptr
+    EXPECT_EQ(
+        TaskExceptionHandler::GetRankIdByChannelId(1, *taskInfo), Hccl::INVALID_RANKID); // communicator is nullptr
 
     taskInfo->dfxOpInfo_ = make_shared<DfxOpInfo>();
     // Mock CommunicatorImpl
     CommunicatorImpl communicator{};
     taskInfo->dfxOpInfo_->comm_ = &communicator;
     communicator.collServices[AcceleratorState::CCU_SCHED] = nullptr;
-    EXPECT_EQ(TaskExceptionHandler::GetRankIdByChannelId(1, *taskInfo), INVALID_RANKID); // Failed to get collService
+    EXPECT_EQ(
+        TaskExceptionHandler::GetRankIdByChannelId(1, *taskInfo), Hccl::INVALID_RANKID); // Failed to get collService
 
     // Mock collService
     auto dieChannelId = make_pair(taskInfo->taskParam_.taskPara.Ccu.dieId, 1);

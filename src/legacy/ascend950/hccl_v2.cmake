@@ -56,16 +56,22 @@ target_link_libraries(hccl_v2 PRIVATE
 target_include_directories(hccl_v2 PRIVATE
     # src/legacy 头文件
     ${LEGACY_ASCEND950_INCLUDE_LIST}
+    # coll_communicator_mgr dfx 头文件 (stream_lite.h -> res_pub.h)
+    ${HCOMM_DIR}/src/coll_communicator_mgr/dfx
+    ${HCOMM_DIR}/src/coll_communicator_mgr/dfx/profiling/aicpu
+    ${HCOMM_DIR}/src/coll_communicator_mgr/dfx/profiling/aicpu/common
     # 内部头文件
     ${HCOMM_DIR}/include
     ${HCOMM_DIR}/include/hccl/
     ${HCOMM_DIR}/pkg_inc
     ${HCOMM_DIR}/pkg_inc/legacy
+    ${HCOMM_DIR}/pkg_inc/legacy/hccl
     # pub_inc 头文件 (legacy/ascend910)
     ${HCOMM_DIR}/src/legacy/ascend910/pub_inc
     ${HCOMM_DIR}/src/legacy/ascend910/pub_inc/new
     ${HCOMM_DIR}/src/legacy/ascend910/common/error_manager
     ${HCOMM_DIR}/src/legacy/ascend910/common
+    ${HCOMM_DIR}/src/legacy/ascend910/common/debug/profiling/inc
     # src/algorithm 头文件 (legacy/ascend910)
     ${HCOMM_DIR}/src/legacy/ascend910/algorithm/pub_inc
     ${HCOMM_DIR}/src/legacy/ascend910/algorithm/impl/resource_manager
@@ -78,6 +84,7 @@ target_include_directories(hccl_v2 PRIVATE
     ${HCOMM_DIR}/src/base_comm/resources/hccp/orion/hcomm_dev/inc/network
     # base_comm 公共头文件
     ${HCOMM_DIR}/src/base_comm/common
+    ${HCOMM_DIR}/src/base_comm/resources/comm_engine_res/threads
     # 外部依赖
     ${HCOMM_DIR}/externel_depends/tsch
 )

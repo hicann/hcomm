@@ -17,6 +17,7 @@
 #include "common.h"
 #include "op_mode.h"
 #include "task_info.h"
+#include "dfx_circular_queue.h"
 #include "hccl_diag.h"
 
 namespace hccl {
@@ -26,6 +27,8 @@ std::shared_ptr<Hccl::DfxOpInfo> ConvertToDfxOpInfo(const HcclDfxOpInfo& dfxOpIn
 int32_t
 HcommThreadRegisterDfx(ThreadHandle thread, std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> callback);
 int32_t HcommThreadRegisterCheckExecStatus(ThreadHandle thread, std::function<HcclResult(bool)> callback);
+int32_t HcommNewThreadRegisterDfx(ThreadHandle thread, std::function<void(Hccl::TaskInfoCircularQueue*)> callback);
+int32_t HcommNewThreadRegisterGetLatestDfxOpInfo(ThreadHandle thread, std::function<const void*()> callback);
 int32_t HcommChannelRegisterDfx(
     ChannelHandle channel, std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> callback);
 int32_t

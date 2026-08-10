@@ -676,7 +676,7 @@ uint64_t CcuTaskException::GetCcuGSAValue(int32_t deviceId, uint32_t dieId, uint
 
     auto tlvHandle = Hccl::HccpTlvHdcManager::GetInstance().GetTlvHandle(deviceId);
     CHK_PRT_RET(
-        tlvHandle == nullptr, HCCL_ERROR("[%s]tlvHandle is null, deviceId[%d]", __func__, deviceId), INVALID_U64);
+        tlvHandle == nullptr, HCCL_ERROR("[%s]tlvHandle is null, deviceId[%d]", __func__, deviceId), DFX_INVALID_U64);
 
     CustomChannelInfoIn inBuff{};
     CustomChannelInfoOut outBuff{};
@@ -691,10 +691,10 @@ uint64_t CcuTaskException::GetCcuGSAValue(int32_t deviceId, uint32_t dieId, uint
         tlvHandle, MSG_TYPE_CCU_DISPATCH_CMD, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[%s]HccpRaTlvRequestForCustomChannel fail, ret[%d]", __func__, ret),
-        INVALID_U64);
+        DFX_INVALID_U64);
 
     auto sret = memcpy_s(&gsaVal, sizeof(gsaVal), outBuff.data.dataInfo.dataArray, inBuff.data.dataInfo.dataLen);
-    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memcpy failed. errorno[%d]:", __func__, sret), INVALID_U64);
+    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memcpy failed. errorno[%d]:", __func__, sret), DFX_INVALID_U64);
     return gsaVal;
 }
 
@@ -702,7 +702,7 @@ uint64_t CcuTaskException::GetCcuXnValue(int32_t deviceId, uint32_t dieId, uint3
 {
     auto tlvHandle = Hccl::HccpTlvHdcManager::GetInstance().GetTlvHandle(deviceId);
     CHK_PRT_RET(
-        tlvHandle == nullptr, HCCL_ERROR("[%s]tlvHandle is null, deviceId[%d]", __func__, deviceId), INVALID_U64);
+        tlvHandle == nullptr, HCCL_ERROR("[%s]tlvHandle is null, deviceId[%d]", __func__, deviceId), DFX_INVALID_U64);
     uint64_t xnVal{0};
 
     CustomChannelInfoIn inBuff{};
@@ -719,10 +719,10 @@ uint64_t CcuTaskException::GetCcuXnValue(int32_t deviceId, uint32_t dieId, uint3
 
     CHK_PRT_RET(
         ret != HCCL_SUCCESS, HCCL_ERROR("[%s]HccpRaTlvRequestForCustomChannel fail, ret[%d]", __func__, ret),
-        INVALID_U64);
+        DFX_INVALID_U64);
 
     auto sret = memcpy_s(&xnVal, sizeof(xnVal), outBuff.data.dataInfo.dataArray, inBuff.data.dataInfo.dataLen);
-    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memcpy failed. errorno[%d]:", __func__, sret), INVALID_U64);
+    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memcpy failed. errorno[%d]:", __func__, sret), DFX_INVALID_U64);
     return xnVal;
 }
 
@@ -1231,7 +1231,7 @@ void CcuTaskException::GetCcuCqeErrRemoteLocalIdByRankId(hccl::CollComm* collCom
         return;
     }
 
-    if (rankid == INVALID_VALUE_RANKID) {
+    if (rankid == Hccl::DFX_INVALID_RANKID) {
         HCCL_ERROR("[GetCcuCqeErrRemoteLocalIdByRankId] RemoteLocalId is already set, rankId[%u]", rankid);
         return;
     }
@@ -1269,7 +1269,7 @@ void CcuTaskException::GetCcuCqeErrNetInstanceByRankId(
         HCCL_ERROR("[GetCcuCqeErrNetInstanceByRankId] collComm is nullptr");
         return;
     }
-    if (rankid == INVALID_VALUE_RANKID) {
+    if (rankid == Hccl::DFX_INVALID_RANKID) {
         HCCL_ERROR("[GetCcuCqeErrNetInstanceByRankId] RemoteLocalId is already set, rankId[%u]", rankid);
         return;
     }
@@ -1306,7 +1306,7 @@ void CcuTaskException::GetCcuCqeErrorInfo(
     auto pair = GetAddrPairByChannelId(channelId, taskInfo, locDeviceId);
     RankId remoteRankId = GetRankIdByChannelId(channelId, taskInfo, locDeviceId);
     hccl::CollComm* collComm = static_cast<hccl::CollComm*>(taskInfo.dfxOpInfo_->comm_);
-    u32 remoteLocalId = INVALID_VALUE_RANKID;
+    u32 remoteLocalId = Hccl::DFX_INVALID_RANKID;
     GetCcuCqeErrRemoteLocalIdByRankId(collComm, remoteRankId, remoteLocalId);
     std::string netInstanceId = "";
     GetCcuCqeErrNetInstanceByRankId(collComm, remoteRankId, netInstanceId);
@@ -1437,7 +1437,7 @@ CcuTaskException::GetCcuJettys(const CcuErrorInfo& errorInfo, std::pair<CcuChann
     uint16_t channelId = GetChannleIdByCcuErrorInfo(errorInfo);
 
     // channelId -> channelHandle
-    u64 channelHandle = INVALID_U64;
+    u64 channelHandle = DFX_INVALID_U64;
     CHK_RET(GetCcuChannelHandleById(channelId, channelHandle));
 
     // channelHandle -> CcuUrmaChannel
@@ -1811,7 +1811,7 @@ RankId CcuTaskException::GetRankIdByChannelId(uint16_t channelId, const Hccl::Ta
         return INVALID_UINT;
     }
 
-    u64 channelHandle = INVALID_U64;
+    u64 channelHandle = DFX_INVALID_U64;
     if (GetCcuChannelHandleById(channelId, channelHandle) != HCCL_SUCCESS) {
         HCCL_ERROR(
             "[%s]GetCcuChannelHandleById fail, deviceId[%u], channelId[%u], channelHandle[0x%llx]", __func__, deviceId,
@@ -1849,7 +1849,7 @@ CcuTaskException::GetAddrPairByChannelId(uint16_t channelId, const Hccl::TaskInf
         return dummy;
     }
 
-    u64 channelHandle = INVALID_U64;
+    u64 channelHandle = DFX_INVALID_U64;
     if (GetCcuChannelHandleById(channelId, channelHandle) != HCCL_SUCCESS) {
         HCCL_ERROR(
             "[%s]GetCcuChannelHandleById fail, deviceId[%u], channelId[%u], channelHandle[0x%llx]", __func__, deviceId,

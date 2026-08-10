@@ -9,12 +9,13 @@
  */
 #ifndef HCCL_COMM_DFX_LITE_H
 #define HCCL_COMM_DFX_LITE_H
-#include "mirror_task_manager_lite.h"
 #include "hcclCommProfilingLite.h"
 #include "hccl_common.h"
 #include "buffer.h"
 #include "common.h"
+#include "res_pub.h"
 #include "hcclCommOp.h"
+#include <vector>
 
 namespace hccl {
 // NOTE: HcclCommDfxLite is designed for AICPU single-threaded environments.
@@ -22,35 +23,28 @@ namespace hccl {
 // are NOT thread-safe. If used in multi-threaded environments, external synchronization is required.
 class HcclCommDfxLite {
 public:
-    // 构造函数（接收CommunicatorImplLite中已经存在的MirrorTaskManager指针）
     explicit HcclCommDfxLite();
+    ~HcclCommDfxLite();
 
-    // 初始化DFX系统 - 修改为返回HcclResult类型
-    HcclResult Init(u32 deviceId, const std::string& commTag, u32 rankSize);
-    // 获取MirrorTaskManager
-    Hccl::MirrorTaskManagerLite* GetMirrorTaskManagerLite() const;
-
-    // Profiling相关接口（直接暴露，不通过GetProfilingImpl）- 全部修改为返回HcclResult类型
-    HcclResult ReportAllTasks();
-    HcclResult ReportHcclOpInfo(const Hccl::DfxOpInfo& hcclOpInfo);
+    HcclResult Init(u32 deviceId, const std::string& commTag, u32 rankSize, u32 localRank);
+    void ReportAllTasks(const std::vector<hccl::Thread*>& threads);
+    HcclResult ReportStreamTask(Hccl::TaskInfoCircularQueue* taskQueue);
     HcclResult UpdateProfStat();
-    HcclResult SetCurrDfxOpInfo(std::shared_ptr<Hccl::DfxOpInfo> dfxOpInfo);
-    std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> GetCallback() const { return addTaskCallback_; }
-    // 将remoteRankId添加到channelRemoteRankId_表中
+    HcclResult SetCurrDfxOpInfo(const Hccl::DfxDfxOpInfo* newDfxOpInfo);
+    const void* GetLatestDfxOpInfo() const;
     void AddChannelRemoteRankId(u64 handle, u32 remoteRankId);
-    // 在channelRemoteRankId_表中对remoteRankId进行查找
     u32 GetChannelRemoteRankId(u64 handle);
 
 private:
-    std::unique_ptr<Hccl::MirrorTaskManagerLite> mirrorTaskManagerLite_{nullptr};
-    std::unique_ptr<HcclCommProfilingLite> profilingImpl_{nullptr};
+    HcclCommProfilingLite* profilingImpl_{nullptr};
+    void* opInfoQueue_{nullptr};
+    bool queueInitialized_{false};
     std::unordered_map<u64, u32> channelRemoteRankIdLite_{};
     std::string commTag_{};
     u32 deviceId_{0};
     u32 rankSize_{0};
-    std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> addTaskCallback_{};
+    u32 localRank_{0};
     bool initializedFlag_{false};
 };
-
 } // namespace hccl
-#endif
+#endif // HCCL_COMM_DFX_LITE_H

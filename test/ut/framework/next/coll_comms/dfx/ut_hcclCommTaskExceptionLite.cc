@@ -23,6 +23,7 @@
 #include "hcclCommTaskException.h"
 #include "rtsq_base.h"
 #include "kernel_entrance.h"
+#include "dfx_profiling_handler_lite.h"
 
 using namespace hccl;
 using namespace hcomm;
@@ -39,6 +40,12 @@ protected:
         MOCKER(HrtHalDrvQueryProcessHostPid).stubs().will(returnValue(HCCL_SUCCESS));
         Hccl::DlHalFunctionV2::GetInstance().dlHalEschedSubmitEvent
             = [](unsigned int, struct event_summary*) -> drvError_t {
+            return DRV_ERROR_NONE;
+        };
+        Hccl::DlHalFunctionV2::GetInstance().dlHalDrvQueryProcessHostPid
+            = [](int, unsigned int*, unsigned int* vfid, unsigned int* hostpid, unsigned int*) -> drvError_t {
+            *vfid = 0;
+            *hostpid = 12345;
             return DRV_ERROR_NONE;
         };
         HcclCommTaskExceptionLite::GetInstance().Init(0);
@@ -166,17 +173,17 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_PrintCommTaskException)
     EXPECT_EQ(thread->InitStreamLite(streamParam, 0), HCCL_SUCCESS);
 
     aicpuComm.threads_.push_back(thread);
-    EXPECT_EQ(aicpuComm.dfx_.Init(aicpuComm.devId_, aicpuComm.identifier_, 0), HCCL_SUCCESS);
-    auto dfxOpInfoOnce = std::make_shared<Hccl::DfxOpInfo>();
-    aicpuComm.dfx_.mirrorTaskManagerLite_->SetCurrDfxOpInfo(dfxOpInfoOnce);
+    EXPECT_EQ(aicpuComm.dfx_.Init(aicpuComm.devId_, aicpuComm.identifier_, 0, 0), HCCL_SUCCESS);
+    auto dfxOpInfoOnce = std::make_shared<Hccl::DfxDfxOpInfo>();
+    aicpuComm.dfx_.SetCurrDfxOpInfo(dfxOpInfoOnce.get());
 
-    Hccl::TaskParam taskParam{};
-    taskParam.taskType = Hccl::TaskParamType::TASK_NOTIFY_RECORD;
-    taskParam.taskPara.Notify.notifyID = 101;
-    taskParam.taskPara.Notify.value = 1;
-
-    auto taskInfo = std::make_shared<Hccl::TaskInfo>(streamId, taskId, INVALID_U64, taskParam, dfxOpInfoOnce);
-    MOCKER_CPP(&Hccl::MirrorTaskManagerLite::GetTaskInfo).stubs().will(returnValue(taskInfo.get()));
+    Hccl::StreamLite* streamLite = static_cast<Hccl::StreamLite*>(thread->GetStreamLitePtr());
+    Hccl::DfxTaskInfo* taskSlot = streamLite->NextTaskSlot();
+    taskSlot->dfxOpInfo = DFX_INVALID_U64;
+    taskSlot->channelHandle = DFX_INVALID_U64;
+    taskSlot->sqId = streamParam.sqIds;
+    taskSlot->taskId = (static_cast<u32>(taskId) << 16) | static_cast<u32>(streamId);
+    taskSlot->taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_SDMA);
 
     EXPECT_EQ(hcomm::HcclCommTaskExceptionLite::GetInstance().PrintCommTaskException(&aicpuComm), HCCL_SUCCESS);
 }
@@ -276,7 +283,6 @@ TEST_F(
     CollCommAicpu aicpuComm;
     aicpuComm.identifier_ = testCommId;
     aicpuComm.dfx_ = HcclCommDfxLite();
-    aicpuComm.dfx_.mirrorTaskManagerLite_.reset();
     g_taskExpDevMemMap[testCommId] = shmem.data();
 
     HcclResult ret = HcclCommTaskExceptionLite::GetInstance().HandleDpuTaskexception(&aicpuComm);
@@ -294,7 +300,7 @@ TEST_F(
 
     CollCommAicpu aicpuComm;
     aicpuComm.identifier_ = testCommId;
-    aicpuComm.dfx_.Init(0, testCommId, 0);
+    aicpuComm.dfx_.Init(0, testCommId, 0, 0);
     g_taskExpDevMemMap[testCommId] = shmem.data();
 
     HcclResult ret = HcclCommTaskExceptionLite::GetInstance().HandleDpuTaskexception(&aicpuComm);
@@ -312,10 +318,10 @@ TEST_F(
 
     CollCommAicpu aicpuComm;
     aicpuComm.identifier_ = testCommId;
-    aicpuComm.dfx_.Init(0, testCommId, 0);
-    auto dfxOpInfo = std::make_shared<Hccl::DfxOpInfo>();
-    dfxOpInfo->cpuWaitAicpuNotifyId_ = 10;
-    MOCKER_CPP(&Hccl::MirrorTaskManagerLite::GetCurrDfxOpInfo).stubs().will(returnValue(dfxOpInfo));
+    aicpuComm.dfx_.Init(0, testCommId, 0, 0);
+    Hccl::DfxDfxOpInfo dfxOpInfo;
+    dfxOpInfo.cpuWaitAicpuNotifyId = 10;
+    aicpuComm.dfx_.SetCurrDfxOpInfo(&dfxOpInfo);
     g_taskExpDevMemMap[testCommId] = shmem.data();
 
     HcclResult ret = HcclCommTaskExceptionLite::GetInstance().HandleDpuTaskexception(&aicpuComm);
@@ -336,4 +342,202 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_Call_ReturnHCCL_SUCCESS_When_CommStatus
     EXPECT_EQ(AicpuIndopProcess::AicpuIndOpCommInit(&commAicpuParam), HCCL_SUCCESS);
     MOCKER_CPP(&CollCommAicpu::GetCommmStatus).stubs().will(returnValue(HcclCommStatus::HCCL_COMM_STATUS_SUSPENDING));
     hcomm::HcclCommTaskExceptionLite::GetInstance().Call();
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_GetConciseTaskName_When_NotifyWait_Expect_ReturnName)
+{
+    Hccl::DfxTaskInfo taskInfo{};
+    taskInfo.taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_NOTIFY_WAIT);
+    taskInfo.dfxOpInfo = DFX_INVALID_U64;
+    std::string name = HcclCommTaskExceptionLite::GetInstance().GetConciseTaskName(taskInfo);
+    EXPECT_FALSE(name.empty());
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_GetConciseTaskName_When_Sdma_Expect_ReturnName)
+{
+    Hccl::DfxTaskInfo taskInfo{};
+    taskInfo.taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_SDMA);
+    taskInfo.dfxOpInfo = DFX_INVALID_U64;
+    std::string name = HcclCommTaskExceptionLite::GetInstance().GetConciseTaskName(taskInfo);
+    EXPECT_FALSE(name.empty());
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_GetNotifyInfo_When_UbDma_Expect_ReturnNotifyId)
+{
+    Hccl::DfxTaskInfo taskInfo{};
+    taskInfo.taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_UB_INLINE_WRITE);
+    taskInfo.taskPara.ubDma.notifyId = 42;
+    std::string info = HcclCommTaskExceptionLite::GetInstance().GetNotifyInfo(taskInfo);
+    EXPECT_EQ(info, "42");
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_GetNotifyInfo_When_ReducWithNotify_Expect_ReturnNotifyId)
+{
+    Hccl::DfxTaskInfo taskInfo{};
+    taskInfo.taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_WRITE_REDUCE_WITH_NOTIFY);
+    taskInfo.taskPara.Reduce.notifyId = 99;
+    std::string info = HcclCommTaskExceptionLite::GetInstance().GetNotifyInfo(taskInfo);
+    EXPECT_EQ(info, "99");
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_GetNotifyInfo_When_DefaultTask_Expect_ReturnSlash)
+{
+    Hccl::DfxTaskInfo taskInfo{};
+    taskInfo.taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_SDMA);
+    std::string info = HcclCommTaskExceptionLite::GetInstance().GetNotifyInfo(taskInfo);
+    EXPECT_EQ(info, "/");
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_GetRemoteRankId_When_DfxOpInfoInvalid_Expect_ReturnInvalidRankId)
+{
+    Hccl::DfxTaskInfo taskInfo{};
+    taskInfo.dfxOpInfo = DFX_INVALID_U64;
+    u32 rankId = HcclCommTaskExceptionLite::GetInstance().GetRemoteRankId(taskInfo);
+    EXPECT_EQ(rankId, Hccl::DFX_INVALID_RANKID);
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_GetRemoteRankId_When_OpInfoNull_Expect_ReturnInvalidRankId)
+{
+    Hccl::DfxTaskInfo taskInfo{};
+    Hccl::DfxDfxOpInfo opInfo{};
+    opInfo.hcclCommDfxLite = nullptr;
+    taskInfo.dfxOpInfo = reinterpret_cast<u64>(&opInfo);
+    u32 rankId = HcclCommTaskExceptionLite::GetInstance().GetRemoteRankId(taskInfo);
+    EXPECT_EQ(rankId, Hccl::DFX_INVALID_RANKID);
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_PrintEid_When_UbTask_Expect_NoThrow)
+{
+    Hccl::DfxTaskInfo taskInfo{};
+    taskInfo.taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_UB);
+    taskInfo.channelHandle = DFX_INVALID_U64;
+    EXPECT_NO_THROW(HcclCommTaskExceptionLite::GetInstance().PrintEid(taskInfo));
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_PrintEid_When_SdmaTask_Expect_NoThrow)
+{
+    Hccl::DfxTaskInfo taskInfo{};
+    taskInfo.taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_SDMA);
+    EXPECT_NO_THROW(HcclCommTaskExceptionLite::GetInstance().PrintEid(taskInfo));
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_PrintTaskContextInfo_When_QueueNull_Expect_ReturnParaError)
+{
+    CollCommAicpu aicpuComm;
+    aicpuComm.identifier_ = "test_context";
+    HcclResult ret = HcclCommTaskExceptionLite::GetInstance().PrintTaskContextInfo(&aicpuComm, 0, 0);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_CollectTaskContext_When_QueueNull_Expect_ReturnParaError)
+{
+    CollCommAicpu aicpuComm;
+    aicpuComm.identifier_ = "test_collect";
+    std::vector<Hccl::DfxTaskInfo*> taskContext;
+    HcclResult ret = HcclCommTaskExceptionLite::GetInstance().CollectTaskContext(&aicpuComm, 0, 0, taskContext);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_GenerateErrorMessageReport_When_DfxOpInfoInvalid_Expect_ReturnPtrError)
+{
+    CollCommAicpu aicpuComm;
+    aicpuComm.identifier_ = "test_gen_err";
+    Hccl::DfxTaskInfo taskInfo{};
+    taskInfo.dfxOpInfo = DFX_INVALID_U64;
+    rtLogicCqReport_t exceptionInfo{};
+    Hccl::ErrorMessageReport errMsgInfo{};
+    HcclResult ret = HcclCommTaskExceptionLite::GetInstance().GenerateErrorMessageReport(
+        &aicpuComm, taskInfo, exceptionInfo, errMsgInfo);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_ReportErrMsg_When_CommNull_Expect_ReturnPtrError)
+{
+    rtLogicCqReport_t exceptionInfo{};
+    HcclResult ret = HcclCommTaskExceptionLite::GetInstance().ReportErrMsg(nullptr, exceptionInfo);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+class MockThreadForReportErr : public Thread {
+public:
+    MockThreadForReportErr(void* streamPtr) : streamPtr_(streamPtr) {}
+    HcclResult Init() override { return HCCL_SUCCESS; }
+    HcclResult DeInit() override { return HCCL_SUCCESS; }
+    std::string& GetUniqueId() override { return uniqueId_; }
+    uint32_t GetNotifyNum() const override { return 0; }
+    LocalNotify* GetNotify(uint32_t index) const override { return nullptr; }
+    HcclResult SupplementNotify(uint32_t notifyNum) override { return HCCL_SUCCESS; }
+    bool IsDeviceA5() const override { return true; }
+    Stream* GetStream() const override { return nullptr; }
+    void* GetStreamLitePtr() const override { return streamPtr_; }
+    void LaunchTask() const override {}
+    void TryLaunchTask() const override {}
+    HcclResult LocalNotifyRecord(uint32_t notifyId) const override { return HCCL_SUCCESS; }
+    HcclResult LocalNotifyWait(uint32_t notifyId) const override { return HCCL_SUCCESS; }
+    HcclResult LocalNotifyRecord(ThreadHandle dstThread, uint32_t dstNotifyIdx) const override { return HCCL_SUCCESS; }
+    HcclResult LocalNotifyWait(uint32_t notifyIdx, uint32_t timeOut) const override { return HCCL_SUCCESS; }
+    HcclResult LocalCopy(void* dst, const void* src, uint64_t sizeByte) const override { return HCCL_SUCCESS; }
+    HcclResult LocalReduce(
+        void* dst, const void* src, uint64_t sizeByte, HcommDataType dataType, HcommReduceOp reduceOp) const override
+    {
+        return HCCL_SUCCESS;
+    }
+    bool GetMaster() const override { return false; }
+    void SetIsMaster(bool isMaster) override {}
+
+private:
+    void* streamPtr_;
+    std::string uniqueId_{"mock_thread"};
+};
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_ReportErrMsg_When_FindDfxTaskInfoNull_Expect_ReturnPtrError)
+{
+    CollCommAicpu aicpuComm;
+    aicpuComm.identifier_ = "test_report_err";
+    rtLogicCqReport_t exceptionInfo{};
+    exceptionInfo.taskId = 1;
+    exceptionInfo.streamId = 0;
+    exceptionInfo.sqId = 99;
+    HcclResult ret = HcclCommTaskExceptionLite::GetInstance().ReportErrMsg(&aicpuComm, exceptionInfo);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_ReportErrMsg_When_DfxOpInfoInvalid_Expect_ReturnPtrError)
+{
+    CollCommAicpu aicpuComm;
+    aicpuComm.identifier_ = "test_report_err";
+    auto streamLite = std::make_shared<Hccl::StreamLite>(0, 0, 0, 0);
+    Hccl::DfxTaskInfo* slot = static_cast<Hccl::DfxTaskInfo*>(streamLite->taskInfos_.NextSlot());
+    ASSERT_NE(slot, nullptr);
+    slot->taskId = (1U << 16) | 0U;
+    slot->dfxOpInfo = DFX_INVALID_U64;
+    auto thread = std::make_shared<MockThreadForReportErr>(streamLite.get());
+    aicpuComm.threads_.push_back(thread);
+    rtLogicCqReport_t exceptionInfo{};
+    exceptionInfo.taskId = 1;
+    exceptionInfo.streamId = 0;
+    exceptionInfo.sqId = 0;
+    HcclResult ret = HcclCommTaskExceptionLite::GetInstance().ReportErrMsg(&aicpuComm, exceptionInfo);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_ReportErrMsg_When_ErrorAlreadyReported_Expect_ReturnSuccess)
+{
+    CollCommAicpu aicpuComm;
+    aicpuComm.identifier_ = "test_report_err";
+    aicpuComm.isErrorReported_ = true;
+    auto streamLite = std::make_shared<Hccl::StreamLite>(0, 0, 0, 0);
+    Hccl::DfxTaskInfo* slot = static_cast<Hccl::DfxTaskInfo*>(streamLite->taskInfos_.NextSlot());
+    ASSERT_NE(slot, nullptr);
+    slot->taskId = (1U << 16) | 0U;
+    Hccl::DfxDfxOpInfo opInfo{};
+    slot->dfxOpInfo = reinterpret_cast<u64>(&opInfo);
+    auto thread = std::make_shared<MockThreadForReportErr>(streamLite.get());
+    aicpuComm.threads_.push_back(thread);
+    rtLogicCqReport_t exceptionInfo{};
+    exceptionInfo.taskId = 1;
+    exceptionInfo.streamId = 0;
+    exceptionInfo.sqId = 0;
+    HcclResult ret = HcclCommTaskExceptionLite::GetInstance().ReportErrMsg(&aicpuComm, exceptionInfo);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
 }

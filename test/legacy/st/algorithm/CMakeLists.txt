@@ -240,6 +240,7 @@ include_directories(
     ${HCOMM_ROOT_PATH}/include/hcomm
     ${HCOMM_ROOT_PATH}/pkg_inc
     ${HCOMM_ROOT_PATH}/pkg_inc/legacy
+    ${HCOMM_ROOT_PATH}/src/base_comm/resources/comm_engine_res/threads
 )
 
 add_subdirectory(testcase)

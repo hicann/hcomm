@@ -14,6 +14,8 @@
 #include "hcclCommDfxLite.h"
 #include <shared_mutex>
 #include "env_config/env_config.h"
+#include "dfx_profiling_handler_lite.h"
+#include "res_pub.h"
 
 using namespace hccl;
 
@@ -293,27 +295,34 @@ HcclResult AicpuIndopProcess::AicpuDfxOpInfoInit(HcclDfxOpInfo* aicpuDfxInfo, co
 {
     HCCL_INFO(
         "[%s]group[%s], algTag[%s], profiling L0[%d], L1[%d]", __func__, commTag.c_str(), aicpuDfxInfo->algTag,
-        Hccl::ProfilingHandlerLite::GetInstance().GetProfL0State(),
-        Hccl::ProfilingHandlerLite::GetInstance().GetProfL1State());
+        Hccl::DfxProfilingHandlerLite::GetInstance().GetProfL0State(),
+        Hccl::DfxProfilingHandlerLite::GetInstance().GetProfL1State());
 
-    // 获取device侧的通信域
     CHK_PRT_RET(
         g_hcclComm == nullptr, HCCL_ERROR("%s g_hcclComm is null, commTag[%s]", __func__, commTag.c_str()), HCCL_E_PTR);
     CollCommAicpu* collComm = g_hcclComm->GetCollCommAicpu();
     CHK_PTR_NULL(collComm);
 
-    // HcclDfxOpInfo 转为DfxOpInfo
-    std::shared_ptr<Hccl::DfxOpInfo> dfxOpInfoOnce = ConvertToDfxOpInfo(*aicpuDfxInfo);
-    dfxOpInfoOnce->opIndex_ = collComm->UpdateIndex();
-    dfxOpInfoOnce->comm_ = reinterpret_cast<void*>(collComm);
-    dfxOpInfoOnce->isIndop_ = true;
-    dfxOpInfoOnce->rankSize_ = collComm->GetTopoInfo().userRankSize;
-    dfxOpInfoOnce->op_.myRank = static_cast<Hccl::RankId>(collComm->GetTopoInfo().userRank);
+    Hccl::DfxDfxOpInfo newDfxOpInfo{};
+    newDfxOpInfo.opType = static_cast<u8>(aicpuDfxInfo->opType);
+    newDfxOpInfo.dataType = static_cast<u8>(aicpuDfxInfo->dataType);
 
-    // 注册
+    newDfxOpInfo.commHandle = reinterpret_cast<void*>(collComm);
+    newDfxOpInfo.count = aicpuDfxInfo->dataCount;
+    newDfxOpInfo.srcAddr = aicpuDfxInfo->inputMemAddr;
+    newDfxOpInfo.dstAddr = aicpuDfxInfo->outputMemAddr;
+    newDfxOpInfo.srcSize = aicpuDfxInfo->inputMemSize;
+    newDfxOpInfo.dstSize = aicpuDfxInfo->outputMemSize;
+    newDfxOpInfo.opIndex = collComm->UpdateIndex();
+    newDfxOpInfo.cpuWaitAicpuNotifyId = aicpuDfxInfo->cpuWaitAicpuNotifyId;
+    newDfxOpInfo.algType = static_cast<u8>(Hccl::AlgTypeVal::ALG_TYPE_NOT_SPECIFIED);
+    auto algTagLen = strnlen(aicpuDfxInfo->algTag, sizeof(newDfxOpInfo.algTag) - 1);
+    CHK_SAFETY_FUNC_RET(
+        memcpy_s(newDfxOpInfo.algTag, sizeof(newDfxOpInfo.algTag) - 1, aicpuDfxInfo->algTag, algTagLen));
+
     HcclCommDfxLite* hcclCommDfxLite = collComm->GetHcclCommDfxLite();
     CHK_PTR_NULL(hcclCommDfxLite);
-    CHK_RET(hcclCommDfxLite->SetCurrDfxOpInfo(dfxOpInfoOnce));
+    CHK_RET(hcclCommDfxLite->SetCurrDfxOpInfo(&newDfxOpInfo));
     return HCCL_SUCCESS;
 }
 
@@ -325,15 +334,22 @@ HcclResult AicpuIndopProcess::ProfilingReportDeviceOp()
     CHK_PTR_NULL(collCommAicpu);
     // 注册
     HcclCommDfxLite* hcclCommDfxLite = collCommAicpu->GetHcclCommDfxLite();
-    Hccl::MirrorTaskManagerLite* mirrorTaskMgrLite = hcclCommDfxLite->GetMirrorTaskManagerLite();
-    auto currDfxOpInfo = mirrorTaskMgrLite->GetCurrDfxOpInfo();
+    CHK_PTR_NULL(hcclCommDfxLite);
+    auto* currDfxOpInfo = static_cast<const Hccl::DfxDfxOpInfo*>(hcclCommDfxLite->GetLatestDfxOpInfo());
     if (currDfxOpInfo == nullptr) {
         HCCL_WARNING("[%s] no op info registered , skip ProfilingReportDeviceOp.", __func__);
         return HCCL_SUCCESS;
     }
 
-    CHK_RET(hcclCommDfxLite->ReportAllTasks());
-    EXCEPTION_CATCH(Hccl::ProfilingHandlerLite::GetInstance().ReportHcclOpInfo(*currDfxOpInfo), return HCCL_E_INTERNAL);
+    const auto& sharedThreads = collCommAicpu->GetAllThread();
+    std::vector<hccl::Thread*> threads;
+    threads.reserve(sharedThreads.size());
+    for (const auto& t : sharedThreads) {
+        threads.push_back(t.get());
+    }
+    hcclCommDfxLite->ReportAllTasks(threads);
+    EXCEPTION_CATCH(
+        Hccl::DfxProfilingHandlerLite::GetInstance().ReportHcclOpInfo(*currDfxOpInfo), return HCCL_E_INTERNAL);
     return HCCL_SUCCESS;
 }
 

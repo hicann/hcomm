@@ -210,3 +210,73 @@ TEST_F(TestAicpuTsThread, Ut_GetNotify_When_IndexOutOfRange_Expect_Return_Nullpt
     LocalNotify* notify = aicpuThread.GetNotify(5);
     EXPECT_EQ(nullptr, notify);
 }
+
+TEST_F(TestAicpuTsThread, Ut_GetTaskInfoCount_When_A5Device_Expect_ReturnSuccess)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+
+    AicpuTsThread aicpuThread(StreamType::STREAM_TYPE_DEVICE, 2, NotifyLoadType::DEVICE_NOTIFY);
+    HcclResult ret = aicpuThread.Init();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    std::string mainStr = aicpuThread.GetUniqueId();
+    isDeviceSide = true;
+    GlobalMockObject::verify();
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+
+    AicpuTsThread mainDevThread(mainStr);
+    ret = mainDevThread.Init();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    u32 count = 0;
+    ret = mainDevThread.GetTaskInfoCount(count);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(TestAicpuTsThread, Ut_GetTaskInfos_When_A5Device_Expect_ReturnNotNull)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+
+    AicpuTsThread aicpuThread(StreamType::STREAM_TYPE_DEVICE, 2, NotifyLoadType::DEVICE_NOTIFY);
+    HcclResult ret = aicpuThread.Init();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    std::string mainStr = aicpuThread.GetUniqueId();
+    isDeviceSide = true;
+    GlobalMockObject::verify();
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+
+    AicpuTsThread mainDevThread(mainStr);
+    ret = mainDevThread.Init();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    Hccl::TaskInfoCircularQueue* taskInfos = mainDevThread.GetTaskInfos();
+    EXPECT_NE(taskInfos, nullptr);
+}
+
+TEST_F(TestAicpuTsThread, Ut_SetReportStreamTaskCallback_When_A5Device_Expect_NoThrow)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+
+    AicpuTsThread aicpuThread(StreamType::STREAM_TYPE_DEVICE, 2, NotifyLoadType::DEVICE_NOTIFY);
+    HcclResult ret = aicpuThread.Init();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    std::string mainStr = aicpuThread.GetUniqueId();
+    isDeviceSide = true;
+    GlobalMockObject::verify();
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+
+    AicpuTsThread mainDevThread(mainStr);
+    ret = mainDevThread.Init();
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    EXPECT_NO_THROW(mainDevThread.SetReportStreamTaskCallback([](Hccl::TaskInfoCircularQueue*) {}));
+    EXPECT_NO_THROW(mainDevThread.SetReportStreamTaskCallback(nullptr));
+}

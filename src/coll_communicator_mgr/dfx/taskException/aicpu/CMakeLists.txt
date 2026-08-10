@@ -17,5 +17,7 @@ if(TARGET ccl_kernel)
     )
     target_include_directories(ccl_kernel PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../profiling/aicpu/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/../common
     )
 endif()

@@ -111,6 +111,7 @@ public:
     void RefreshSqeHeaderTaskField(Rt91095StarsSqeHeader* sqeHeaderPtr);
 
     void LaunchNewTask(uint8_t* sqeArray, uint32_t sqeCount);
+    u64 GetSqeAddr() const override;
 
 private:
     u32 pendingSqeCnt{0};
@@ -120,6 +121,8 @@ private:
     bool isPreStreamSync = false;
 
     bool launchFlag_ = false;
+
+    u64 lastSqeAddr_{0};
 
     u8 locBuf[RTSQ_SQE_SIZE * PER_LAUNCH_SQE_CNT]{0};
 

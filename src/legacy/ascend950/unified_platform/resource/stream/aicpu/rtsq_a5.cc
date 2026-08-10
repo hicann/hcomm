@@ -321,7 +321,13 @@ void RtsqA5::TryLaunchTask()
         sqHead_, sqTail_);
 }
 
-u8* RtsqA5::GetCurrSqeBuffer() { return locBuf + pendingSqeCnt * RTSQ_SQE_SIZE; }
+u8* RtsqA5::GetCurrSqeBuffer()
+{
+    lastSqeAddr_ = sqBaseAddr_ + static_cast<u64>((sqTail_ + pendingSqeCnt) % sqDepth_) * RTSQ_SQE_SIZE;
+    return locBuf + pendingSqeCnt * RTSQ_SQE_SIZE;
+}
+
+u64 RtsqA5::GetSqeAddr() const { return lastSqeAddr_; }
 
 void RtsqA5::RefreshInfo()
 {

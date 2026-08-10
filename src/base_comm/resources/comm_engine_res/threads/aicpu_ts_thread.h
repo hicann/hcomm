@@ -11,8 +11,10 @@
 #define AICPU_TS_THREAD_H
 
 #include <vector>
+#include <functional>
 #include "thread.h"
 #include "aicpu_ts_thread_interface.h"
+#include "dfx_circular_queue.h"
 
 namespace hccl {
 class AicpuTsThread : public Thread {
@@ -62,8 +64,12 @@ public:
 
     HcclResult SetCheckExecStatusCallback(std::function<HcclResult(bool)> callback) override;
 
+    Hccl::TaskInfoCircularQueue* GetTaskInfos() const;
+    HcclResult GetTaskInfoCount(u32& count) const;
+    void SetReportStreamTaskCallback(std::function<void(Hccl::TaskInfoCircularQueue*)> callback);
+    void SetGetLatestDfxOpInfoCallback(std::function<const void*()> callback);
+
 private:
-    bool isMaster_{false};
     struct HcclStreamInfo {
         s32 streamIds;
         uint32_t sqIds;
@@ -100,6 +106,7 @@ private:
     DeviceMem sqCqeContext_;
     DevType devType_ = DevType::DEV_TYPE_COUNT;
     std::unique_ptr<Hccl::IAicpuTsThread> pImpl_{nullptr};
+    bool isMaster_{false};
 };
 
 } // namespace hccl

@@ -378,7 +378,7 @@ HcclResult HcclGetRankId(HcclComm comm, uint32_t* rank)
         return HCCL_SUCCESS;
     }());
     hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
-    u32 tmpRankId = INVALID_VALUE_RANKID;
+    u32 tmpRankId = Hccl::DFX_INVALID_RANKID;
     CHK_RET(hcclComm->GetUserRank(tmpRankId));
     *rank = tmpRankId;
     /* 关键状态记录 */

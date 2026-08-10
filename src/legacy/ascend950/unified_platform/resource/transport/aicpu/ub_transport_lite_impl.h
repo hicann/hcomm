@@ -124,7 +124,6 @@ public:
     }
 
     std::function<void(u32, u32, const TaskParam&)> GetCallback() { return callback_; }
-    std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> GetNewCallback() { return newCallback_; }
 
     friend class hcomm::AicpuTaskCacheEntry;
 
@@ -272,10 +271,6 @@ private:
     {
         if (callback_ != nullptr) {
             callback_(stream.GetSqId(), taskId, taskParam);
-        }
-
-        if (newCallback_ != nullptr) {
-            newCallback_(stream.GetSqId(), taskId, taskParam, reinterpret_cast<u64>(this));
         }
     }
 
@@ -549,6 +544,18 @@ private:
             }
         }
     }
+
+    void FillSlotUbDmaInfo(
+        DfxTaskInfo* slot, const StreamLite& stream, u32 taskId, u64 srcAddr, u64 dstAddr, u64 size, u32 notifyId);
+    void FillSlotReduceInfo(
+        DfxTaskInfo* slot, const StreamLite& stream, u32 taskId, u64 srcAddr, u64 dstAddr, u64 size, u32 notifyId,
+        u8 reduceOp);
+    void ReportWriteWithNotifyTask(
+        const RmaBufSliceLite& locSlice, const RmtRmaBufSliceLite& rmtSlice, const RmtRmaBufSliceLite& rmtNotifySlice,
+        const StreamLite& stream, u32 taskId);
+    void ReportWriteReduceWithNotifyTask(
+        const RmaBufSliceLite& locSlice, const RmtRmaBufSliceLite& rmtSlice, const RmtRmaBufSliceLite& rmtNotifySlice,
+        const ReduceIn& reduceIn, const StreamLite& stream, u32 taskId);
 };
 
 } // namespace Hccl

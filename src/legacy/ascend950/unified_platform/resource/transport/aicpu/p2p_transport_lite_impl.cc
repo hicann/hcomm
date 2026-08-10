@@ -4,7 +4,7 @@
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
@@ -13,6 +13,7 @@
 #include "binary_stream.h"
 #include "exception_util.h"
 #include "communicator_impl_lite_manager.h"
+#include "res_pub.h"
 
 namespace Hccl {
 constexpr u32 NOTIFY_RECORD_WRITE_VALUE = 1;
@@ -254,7 +255,7 @@ void P2PTransportLiteImpl::BuildP2PRead(const StreamLite& stream, const RmaBuffe
             "P2PTransportLiteImpl::%s, srcA:0x%llx dstA:0x%llx,size=0x%llx, taskId=%u", __func__, src, dst, blockSize,
             taskId);
 
-        if (callback_ || newCallback_) {
+        if (callback_) {
             TaskParam taskParam{};
             taskParam.taskType = TaskParamType::TASK_SDMA;
             taskParam.beginTime = ProfGetCurCpuTimestamp();
@@ -264,15 +265,18 @@ void P2PTransportLiteImpl::BuildP2PRead(const StreamLite& stream, const RmaBuffe
             taskParam.taskPara.DMA.notifyID = INVALID_VALUE_NOTIFYID;
             taskParam.taskPara.DMA.linkType = DfxLinkType::PCIE;
             taskParam.taskPara.DMA.dmaOp = DmaOp::HCCL_DMA_READ;
-            if (callback_) {
-                callback_(stream.GetSqId(), taskId, taskParam);
-            }
-            if (newCallback_) {
-                newCallback_(stream.GetSqId(), taskId, taskParam, reinterpret_cast<u64>(this));
-            }
-        } else {
-            HCCL_WARNING("[P2PTransportLiteImpl][%s] callback_ is nullptr.", __func__);
+            callback_(stream.GetSqId(), taskId, taskParam);
         }
+        DfxTaskInfo* slot = stream.NextTaskSlot();
+        slot->taskType = TaskParamTypeVal::TASK_SDMA;
+        slot->sqId = stream.GetSqId();
+        slot->taskId = taskId;
+        const void* opInfo = stream.GetLatestDfxOpInfo();
+        slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : INVALID_U64;
+        slot->linkType = DfxLinkTypeVal::LINK_PCIE;
+        slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_SDMA);
+        slot->channelHandle = reinterpret_cast<u64>(this);
+        slot->taskPara.Dma.sqeAddr = stream.GetRtsq()->GetSqeAddr();
         src += offset;
         dst += offset;
     }
@@ -319,7 +323,7 @@ void P2PTransportLiteImpl::BuildP2PReadReduce(
             "P2PTransportLiteImpl::%s, srcA:0x%llx dstA:0x%llx,size=0x%llx, reduceIn=%s, taskId=%u", __func__, src, dst,
             blockSize, reduceIn.Describe(), taskId);
 
-        if (callback_ || newCallback_) {
+        if (callback_) {
             TaskParam taskParam{};
             taskParam.taskType = TaskParamType::TASK_REDUCE_INLINE;
             taskParam.beginTime = ProfGetCurCpuTimestamp();
@@ -330,15 +334,23 @@ void P2PTransportLiteImpl::BuildP2PReadReduce(
             taskParam.taskPara.Reduce.linkType = DfxLinkType::PCIE;
             taskParam.taskPara.Reduce.reduceOp = ConvertReduceOpToHcclReduceOp(reduceIn.reduceOp);
             taskParam.taskPara.Reduce.dataType = DataTypeToHcclDataType(reduceIn.dataType);
-            if (callback_) {
-                callback_(stream.GetSqId(), taskId, taskParam);
-            }
-            if (newCallback_) {
-                newCallback_(stream.GetSqId(), taskId, taskParam, reinterpret_cast<u64>(this));
-            }
-        } else {
-            HCCL_WARNING("[P2PTransportLiteImpl][%s] callback_ is nullptr.", __func__);
+            callback_(stream.GetSqId(), taskId, taskParam);
         }
+        DfxTaskInfo* slot = stream.NextTaskSlot();
+        slot->taskType = TaskParamTypeVal::TASK_REDUCE_INLINE;
+        slot->sqId = stream.GetSqId();
+        slot->taskId = taskId;
+        const void* opInfo = stream.GetLatestDfxOpInfo();
+        slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : INVALID_U64;
+        slot->linkType = DfxLinkTypeVal::LINK_PCIE;
+        slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_SDMA);
+        slot->channelHandle = reinterpret_cast<u64>(this);
+        slot->taskPara.Reduce.sqeAddr = stream.GetRtsq()->GetSqeAddr();
+        slot->taskPara.Reduce.srcAddr = src;
+        slot->taskPara.Reduce.dstAddr = dst;
+        slot->taskPara.Reduce.size = blockSize;
+        slot->taskPara.Reduce.notifyId = INVALID_U32;
+        slot->taskPara.Reduce.reduceOp = static_cast<u8>(ConvertReduceOpToHcclReduceOp(reduceIn.reduceOp));
         src += offset;
         dst += offset;
     }
@@ -364,21 +376,24 @@ void P2PTransportLiteImpl::Post(u32 index, const StreamLite& stream)
         "P2PTransportLiteImpl::Post rmtNotifyAddr[0x%llx], notifyId[%u], taskId[%u]", rmtNotifyAddr,
         rmtNotifyVec[index].id, taskId);
 
-    if (callback_ || newCallback_) {
+    if (callback_) {
         TaskParam taskParam{};
         taskParam.taskType = TaskParamType::TASK_NOTIFY_RECORD;
         taskParam.beginTime = ProfGetCurCpuTimestamp();
         taskParam.taskPara.Notify.notifyID = rmtNotifyVec[index].id;
         taskParam.taskPara.Notify.value = 1;
-        if (callback_) {
-            callback_(stream.GetSqId(), taskId, taskParam);
-        }
-        if (newCallback_) {
-            newCallback_(stream.GetSqId(), taskId, taskParam, reinterpret_cast<u64>(this));
-        }
-    } else {
-        HCCL_WARNING("[P2PTransportLiteImpl] callback_ is nullptr.");
+        callback_(stream.GetSqId(), taskId, taskParam);
     }
+    DfxTaskInfo* slot = stream.NextTaskSlot();
+    slot->taskType = TaskParamTypeVal::TASK_NOTIFY_RECORD;
+    slot->sqId = stream.GetSqId();
+    slot->taskId = taskId;
+    const void* opInfo = stream.GetLatestDfxOpInfo();
+    slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : INVALID_U64;
+    slot->linkType = DfxLinkTypeVal::LINK_PCIE;
+    slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_SDMA);
+    slot->channelHandle = reinterpret_cast<u64>(this);
+    slot->taskPara.Notify.sqeAddr = stream.GetRtsq()->GetSqeAddr();
     return;
 }
 
@@ -395,21 +410,24 @@ void P2PTransportLiteImpl::WaitWithTimeout(u32 index, const StreamLite& stream, 
 
     HCCL_INFO(
         "P2PTransportLiteImpl::WaitWithTimeout notifyId[%u], taskId[%u], timeout[%u ms]", notifyId, taskId, timeout);
-    if (callback_ || newCallback_) {
+    if (callback_) {
         TaskParam taskParam{};
         taskParam.taskType = TaskParamType::TASK_NOTIFY_WAIT;
         taskParam.beginTime = ProfGetCurCpuTimestamp();
         taskParam.taskPara.Notify.notifyID = notifyId;
         taskParam.taskPara.Notify.value = 1;
-        if (callback_) {
-            callback_(stream.GetSqId(), taskId, taskParam);
-        }
-        if (newCallback_) {
-            newCallback_(stream.GetSqId(), taskId, taskParam, reinterpret_cast<u64>(this));
-        }
-    } else {
-        HCCL_WARNING("[P2PTransportLiteImpl] callback_ is nullptr.");
+        callback_(stream.GetSqId(), taskId, taskParam);
     }
+    DfxTaskInfo* slot = stream.NextTaskSlot();
+    slot->taskType = TaskParamTypeVal::TASK_NOTIFY_WAIT;
+    slot->sqId = stream.GetSqId();
+    slot->taskId = taskId;
+    const void* opInfo = stream.GetLatestDfxOpInfo();
+    slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : INVALID_U64;
+    slot->linkType = DfxLinkTypeVal::LINK_PCIE;
+    slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_SDMA);
+    slot->channelHandle = reinterpret_cast<u64>(this);
+    slot->taskPara.Notify.sqeAddr = stream.GetRtsq()->GetSqeAddr();
     return;
 }
 

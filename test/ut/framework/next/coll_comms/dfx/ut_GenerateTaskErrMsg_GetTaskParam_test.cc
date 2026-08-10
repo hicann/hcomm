@@ -29,6 +29,7 @@
 #include "rtsq_base.h"
 #include "task_param.h"
 #include "error_message_v2.h"
+#include "sqe_a5.h"
 
 using namespace hccl;
 using namespace hcomm;
@@ -52,11 +53,21 @@ protected:
     void TearDown() override { GlobalMockObject::verify(); }
 };
 
-static Hccl::TaskInfo MakeTaskInfo(Hccl::TaskParam& taskParam)
+static Hccl::DfxTaskInfo MakeDfxTaskInfo(u8 taskType)
 {
-    auto dfxOpInfo = std::make_shared<Hccl::DfxOpInfo>();
-    Hccl::TaskInfo taskInfo(0, 0, 0, taskParam, dfxOpInfo, true);
+    Hccl::DfxTaskInfo taskInfo = {};
+    taskInfo.taskType = taskType;
     return taskInfo;
+}
+
+static Hccl::Rt91095StarsNotifySqe
+MakeNotifySqe(uint32_t notifyId, uint32_t cntValue, Hccl::Rt91095StarsSqeType sqeType)
+{
+    Hccl::Rt91095StarsNotifySqe sqe = {};
+    sqe.header.type = static_cast<uint8_t>(sqeType);
+    sqe.notifyId = notifyId;
+    sqe.cntValue = cntValue;
+    return sqe;
 }
 
 static rtLogicCqReport_t MakeExceptionInfo(uint32_t errorCode = 0xAB, uint8_t errorType = 1)
@@ -69,12 +80,9 @@ static rtLogicCqReport_t MakeExceptionInfo(uint32_t errorCode = 0xAB, uint8_t er
 
 TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_NotifyWait_Expect_NotifyFieldsSet)
 {
-    Hccl::ParaNotify paraNotify = {.notifyID = 100, .value = 200};
-    Hccl::TaskParam taskParam = {
-        .taskType = Hccl::TaskParamType::TASK_NOTIFY_WAIT,
-        .taskPara = {.Notify = paraNotify},
-    };
-    auto taskInfo = MakeTaskInfo(taskParam);
+    auto sqe = MakeNotifySqe(100, 200, Hccl::Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_WAIT);
+    auto taskInfo = MakeDfxTaskInfo(static_cast<u8>(Hccl::TaskParamTypeVal::TASK_NOTIFY_WAIT));
+    taskInfo.taskPara.Notify.sqeAddr = reinterpret_cast<u64>(&sqe);
     auto exceptionInfo = MakeExceptionInfo();
     Hccl::ErrorMessageReport errMsgInfo{};
 
@@ -87,12 +95,9 @@ TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_NotifyWait_Expect_NotifyFields
 
 TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_NotifyRecord_Expect_NotifyFieldsSet)
 {
-    Hccl::ParaNotify paraNotify = {.notifyID = 300, .value = 400};
-    Hccl::TaskParam taskParam = {
-        .taskType = Hccl::TaskParamType::TASK_NOTIFY_RECORD,
-        .taskPara = {.Notify = paraNotify},
-    };
-    auto taskInfo = MakeTaskInfo(taskParam);
+    auto sqe = MakeNotifySqe(300, 400, Hccl::Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_RECORD);
+    auto taskInfo = MakeDfxTaskInfo(static_cast<u8>(Hccl::TaskParamTypeVal::TASK_NOTIFY_RECORD));
+    taskInfo.taskPara.Notify.sqeAddr = reinterpret_cast<u64>(&sqe);
     auto exceptionInfo = MakeExceptionInfo();
     Hccl::ErrorMessageReport errMsgInfo{};
 
@@ -105,58 +110,40 @@ TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_NotifyRecord_Expect_NotifyFiel
 
 TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_UbReduceInline_Expect_ReduceFieldsSet)
 {
-    Hccl::ParaReduce paraReduce = {};
-    paraReduce.notifyID = 500;
-    paraReduce.notifyValue = 600;
-    paraReduce.linkType = Hccl::DfxLinkType::HCCS;
-    paraReduce.size = 1024;
-    paraReduce.reduceOp = HcclReduceOp::HCCL_REDUCE_SUM;
-    uint8_t srcBuf[16] = {};
-    uint8_t dstBuf[16] = {};
-    paraReduce.src = srcBuf;
-    paraReduce.dst = dstBuf;
-
-    Hccl::TaskParam taskParam = {
-        .taskType = Hccl::TaskParamType::TASK_UB_REDUCE_INLINE,
-        .taskPara = {.Reduce = paraReduce},
-    };
-    auto taskInfo = MakeTaskInfo(taskParam);
+    auto taskInfo = MakeDfxTaskInfo(static_cast<u8>(Hccl::TaskParamTypeVal::TASK_UB_REDUCE_INLINE));
+    taskInfo.taskPara.Reduce.notifyId = 500;
+    taskInfo.taskPara.Reduce.reduceOp = static_cast<u8>(HcclReduceOp::HCCL_REDUCE_SUM);
+    taskInfo.taskPara.Reduce.srcAddr = 0x1000;
+    taskInfo.taskPara.Reduce.dstAddr = 0x2000;
+    taskInfo.taskPara.Reduce.size = 1024;
+    taskInfo.linkType = static_cast<u8>(Hccl::DfxLinkType::HCCS);
     auto exceptionInfo = MakeExceptionInfo(0x1234);
     Hccl::ErrorMessageReport errMsgInfo{};
 
     HcclCommTaskExceptionLite::GetInstance().GenerateTaskErrMsg(taskInfo, errMsgInfo, exceptionInfo);
 
     EXPECT_EQ(errMsgInfo.notifyId, 500u);
-    EXPECT_EQ(errMsgInfo.notifyValue, 600u);
     EXPECT_EQ(errMsgInfo.reduceType, static_cast<uint32_t>(HcclReduceOp::HCCL_REDUCE_SUM));
     EXPECT_EQ(errMsgInfo.ubCqeStatus, 0x34u);
     EXPECT_EQ(errMsgInfo.linkType, Hccl::DfxLinkType::HCCS);
     EXPECT_EQ(errMsgInfo.size, 1024u);
-    EXPECT_EQ(errMsgInfo.taskSrcAddr, reinterpret_cast<u64>(srcBuf));
-    EXPECT_EQ(errMsgInfo.taskDstAddr, reinterpret_cast<u64>(dstBuf));
+    EXPECT_EQ(errMsgInfo.taskSrcAddr, 0x1000u);
+    EXPECT_EQ(errMsgInfo.taskDstAddr, 0x2000u);
 }
 
 TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_WriteReduceWithNotify_Expect_ReduceFieldsSet)
 {
-    Hccl::ParaReduce paraReduce = {};
-    paraReduce.notifyID = 700;
-    paraReduce.notifyValue = 800;
-    paraReduce.linkType = Hccl::DfxLinkType::PCIE;
-    paraReduce.size = 2048;
-    paraReduce.reduceOp = HcclReduceOp::HCCL_REDUCE_MAX;
-
-    Hccl::TaskParam taskParam = {
-        .taskType = Hccl::TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY,
-        .taskPara = {.Reduce = paraReduce},
-    };
-    auto taskInfo = MakeTaskInfo(taskParam);
+    auto taskInfo = MakeDfxTaskInfo(static_cast<u8>(Hccl::TaskParamTypeVal::TASK_WRITE_REDUCE_WITH_NOTIFY));
+    taskInfo.taskPara.Reduce.notifyId = 700;
+    taskInfo.taskPara.Reduce.reduceOp = static_cast<u8>(HcclReduceOp::HCCL_REDUCE_MAX);
+    taskInfo.taskPara.Reduce.size = 2048;
+    taskInfo.linkType = static_cast<u8>(Hccl::DfxLinkType::PCIE);
     auto exceptionInfo = MakeExceptionInfo(0x5678);
     Hccl::ErrorMessageReport errMsgInfo{};
 
     HcclCommTaskExceptionLite::GetInstance().GenerateTaskErrMsg(taskInfo, errMsgInfo, exceptionInfo);
 
     EXPECT_EQ(errMsgInfo.notifyId, 700u);
-    EXPECT_EQ(errMsgInfo.notifyValue, 800u);
     EXPECT_EQ(errMsgInfo.reduceType, static_cast<uint32_t>(HcclReduceOp::HCCL_REDUCE_MAX));
     EXPECT_EQ(errMsgInfo.ubCqeStatus, 0x78u);
     EXPECT_EQ(errMsgInfo.linkType, Hccl::DfxLinkType::PCIE);
@@ -165,14 +152,8 @@ TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_WriteReduceWithNotify_Expect_R
 
 TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_ReduceInline_Expect_OnlyReduceTypeSet)
 {
-    Hccl::ParaReduce paraReduce = {};
-    paraReduce.reduceOp = HcclReduceOp::HCCL_REDUCE_PROD;
-
-    Hccl::TaskParam taskParam = {
-        .taskType = Hccl::TaskParamType::TASK_REDUCE_INLINE,
-        .taskPara = {.Reduce = paraReduce},
-    };
-    auto taskInfo = MakeTaskInfo(taskParam);
+    auto taskInfo = MakeDfxTaskInfo(static_cast<u8>(Hccl::TaskParamTypeVal::TASK_REDUCE_INLINE));
+    taskInfo.taskPara.Reduce.reduceOp = static_cast<u8>(HcclReduceOp::HCCL_REDUCE_PROD);
     auto exceptionInfo = MakeExceptionInfo();
     Hccl::ErrorMessageReport errMsgInfo{};
 
@@ -180,119 +161,74 @@ TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_ReduceInline_Expect_OnlyReduce
 
     EXPECT_EQ(errMsgInfo.reduceType, static_cast<uint32_t>(HcclReduceOp::HCCL_REDUCE_PROD));
     EXPECT_EQ(errMsgInfo.notifyId, 0u);
-    EXPECT_EQ(errMsgInfo.notifyValue, 0u);
 }
 
 TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_UbInlineWrite_Expect_DmaFieldsSet)
 {
-    Hccl::ParaDMA paraDMA = {};
-    paraDMA.notifyID = 1100;
-    paraDMA.notifyValue = 1200;
-    paraDMA.linkType = Hccl::DfxLinkType::ROCE;
-    paraDMA.size = 4096;
-    uint8_t srcBuf[16] = {};
-    uint8_t dstBuf[16] = {};
-    paraDMA.src = srcBuf;
-    paraDMA.dst = dstBuf;
-
-    Hccl::TaskParam taskParam = {
-        .taskType = Hccl::TaskParamType::TASK_UB_INLINE_WRITE,
-        .taskPara = {.DMA = paraDMA},
-    };
-    auto taskInfo = MakeTaskInfo(taskParam);
+    auto taskInfo = MakeDfxTaskInfo(static_cast<u8>(Hccl::TaskParamTypeVal::TASK_UB_INLINE_WRITE));
+    taskInfo.taskPara.ubDma.notifyId = 1100;
+    taskInfo.taskPara.ubDma.srcAddr = 0x3000;
+    taskInfo.taskPara.ubDma.dstAddr = 0x4000;
+    taskInfo.taskPara.ubDma.size = 4096;
+    taskInfo.linkType = static_cast<u8>(Hccl::DfxLinkType::ROCE);
     auto exceptionInfo = MakeExceptionInfo(0x9ABC);
     Hccl::ErrorMessageReport errMsgInfo{};
 
     HcclCommTaskExceptionLite::GetInstance().GenerateTaskErrMsg(taskInfo, errMsgInfo, exceptionInfo);
 
     EXPECT_EQ(errMsgInfo.notifyId, 1100u);
-    EXPECT_EQ(errMsgInfo.notifyValue, 1200u);
     EXPECT_EQ(errMsgInfo.reduceType, 255u);
     EXPECT_EQ(errMsgInfo.ubCqeStatus, 0xBCu);
     EXPECT_EQ(errMsgInfo.linkType, Hccl::DfxLinkType::ROCE);
     EXPECT_EQ(errMsgInfo.size, 4096u);
-    EXPECT_EQ(errMsgInfo.taskSrcAddr, reinterpret_cast<u64>(srcBuf));
-    EXPECT_EQ(errMsgInfo.taskDstAddr, reinterpret_cast<u64>(dstBuf));
+    EXPECT_EQ(errMsgInfo.taskSrcAddr, 0x3000u);
+    EXPECT_EQ(errMsgInfo.taskDstAddr, 0x4000u);
 }
 
 TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_WriteWithNotify_Expect_DmaFieldsSet)
 {
-    Hccl::ParaDMA paraDMA = {};
-    paraDMA.notifyID = 1300;
-    paraDMA.notifyValue = 1400;
-
-    Hccl::TaskParam taskParam = {
-        .taskType = Hccl::TaskParamType::TASK_WRITE_WITH_NOTIFY,
-        .taskPara = {.DMA = paraDMA},
-    };
-    auto taskInfo = MakeTaskInfo(taskParam);
+    auto taskInfo = MakeDfxTaskInfo(static_cast<u8>(Hccl::TaskParamTypeVal::TASK_WRITE_WITH_NOTIFY));
+    taskInfo.taskPara.ubDma.notifyId = 1300;
     auto exceptionInfo = MakeExceptionInfo();
     Hccl::ErrorMessageReport errMsgInfo{};
 
     HcclCommTaskExceptionLite::GetInstance().GenerateTaskErrMsg(taskInfo, errMsgInfo, exceptionInfo);
 
     EXPECT_EQ(errMsgInfo.notifyId, 1300u);
-    EXPECT_EQ(errMsgInfo.notifyValue, 1400u);
     EXPECT_EQ(errMsgInfo.reduceType, 255u);
 }
 
 TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_Ub_Expect_UbFieldsSet)
 {
-    Hccl::ParaDMA paraDMA = {};
-    paraDMA.linkType = Hccl::DfxLinkType::UB;
-    paraDMA.size = 2048;
-    uint8_t srcBuf[16] = {};
-    uint8_t dstBuf[16] = {};
-    paraDMA.src = srcBuf;
-    paraDMA.dst = dstBuf;
-
-    Hccl::TaskParam taskParam = {
-        .taskType = Hccl::TaskParamType::TASK_UB,
-        .taskPara = {.DMA = paraDMA},
-    };
-    auto taskInfo = MakeTaskInfo(taskParam);
+    auto taskInfo = MakeDfxTaskInfo(static_cast<u8>(Hccl::TaskParamTypeVal::TASK_UB));
+    taskInfo.taskPara.ubDma.srcAddr = 0x1000;
+    taskInfo.taskPara.ubDma.dstAddr = 0x2000;
+    taskInfo.taskPara.ubDma.size = 2048;
+    taskInfo.linkType = static_cast<u8>(Hccl::DfxLinkType::UB);
     auto exceptionInfo = MakeExceptionInfo(0x1234);
     Hccl::ErrorMessageReport errMsgInfo{};
 
     HcclCommTaskExceptionLite::GetInstance().GenerateTaskErrMsg(taskInfo, errMsgInfo, exceptionInfo);
 
-    EXPECT_EQ(errMsgInfo.notifyId, 0u);
-    EXPECT_EQ(errMsgInfo.notifyValue, 0u);
     EXPECT_EQ(errMsgInfo.linkType, Hccl::DfxLinkType::UB);
     EXPECT_EQ(errMsgInfo.size, 2048u);
     EXPECT_EQ(errMsgInfo.ubCqeStatus, 0x34u);
     EXPECT_EQ(errMsgInfo.reduceType, 255u);
-    EXPECT_EQ(errMsgInfo.taskSrcAddr, reinterpret_cast<u64>(srcBuf));
-    EXPECT_EQ(errMsgInfo.taskDstAddr, reinterpret_cast<u64>(dstBuf));
+    EXPECT_EQ(errMsgInfo.taskSrcAddr, 0x1000u);
+    EXPECT_EQ(errMsgInfo.taskDstAddr, 0x2000u);
 }
 
 TEST_F(TaskErrMsgTest, Ut_GenerateTaskErrMsg_When_Sdma_Expect_BasicDmaFieldsSet)
 {
-    Hccl::ParaDMA paraDMA = {};
-    paraDMA.linkType = Hccl::DfxLinkType::ROCE;
-    paraDMA.size = 8192;
-    uint8_t srcBuf[16] = {};
-    uint8_t dstBuf[16] = {};
-    paraDMA.src = srcBuf;
-    paraDMA.dst = dstBuf;
-
-    Hccl::TaskParam taskParam = {
-        .taskType = Hccl::TaskParamType::TASK_SDMA,
-        .taskPara = {.DMA = paraDMA},
-    };
-    auto taskInfo = MakeTaskInfo(taskParam);
+    auto taskInfo = MakeDfxTaskInfo(static_cast<u8>(Hccl::TaskParamTypeVal::TASK_SDMA));
+    taskInfo.linkType = static_cast<u8>(Hccl::DfxLinkType::ROCE);
     auto exceptionInfo = MakeExceptionInfo();
     Hccl::ErrorMessageReport errMsgInfo{};
 
     HcclCommTaskExceptionLite::GetInstance().GenerateTaskErrMsg(taskInfo, errMsgInfo, exceptionInfo);
 
-    EXPECT_EQ(errMsgInfo.notifyId, 0u);
-    EXPECT_EQ(errMsgInfo.notifyValue, 0u);
     EXPECT_EQ(errMsgInfo.linkType, Hccl::DfxLinkType::ROCE);
-    EXPECT_EQ(errMsgInfo.size, 8192u);
     EXPECT_EQ(errMsgInfo.reduceType, 255u);
-    EXPECT_EQ(errMsgInfo.taskSrcAddr, reinterpret_cast<u64>(srcBuf));
-    EXPECT_EQ(errMsgInfo.taskDstAddr, reinterpret_cast<u64>(dstBuf));
 }
 
 TEST_F(TaskErrMsgTest, Ut_GetTaskParam_When_NotifyWait_Expect_NotifyFieldsSet)

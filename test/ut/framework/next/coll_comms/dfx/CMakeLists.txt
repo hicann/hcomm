@@ -21,6 +21,9 @@ set(src_to_test_list
     ut_GenerateTaskErrMsg_GetTaskParam_test.cc
     ut_hcclCommDfx.cc
     ut_hcclCommProfiling_test.cc
+    ut_dfx_profiling_handler_lite.cc
+    ut_dfx_profiling_reporter_lite.cc
+    ut_dfx_profiling_command_handle_lite.cc
 )
 
 add_executable(hccl_utest_test_dfx_resource ${src_to_test_list})
@@ -29,6 +32,7 @@ add_executable(hccl_utest_test_dfx_resource ${src_to_test_list})
 target_include_directories(hccl_utest_test_dfx_resource PRIVATE
     ${UT_COMMON_INCLUDE_LIST}
     ${HCCL_CODE_ROOT}/externel_depends/tsch
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/dfx/profiling/aicpu/common
 )
  
 target_compile_definitions(hccl_utest_test_dfx_resource PRIVATE

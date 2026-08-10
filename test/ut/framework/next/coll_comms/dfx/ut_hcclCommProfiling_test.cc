@@ -93,32 +93,15 @@ class HcclCommProfilingLiteTest : public testing::Test {
 protected:
     std::unique_ptr<HcclCommProfilingLite> profilingLite_;
 
-    void SetUp() override
-    {
-        Hccl::MirrorTaskManagerLite* mgr = nullptr;
-        profilingLite_ = std::make_unique<HcclCommProfilingLite>(0, mgr);
-    }
+    void SetUp() override { profilingLite_ = std::make_unique<HcclCommProfilingLite>(0); }
     void TearDown() override { GlobalMockObject::verify(); }
 };
 
 TEST_F(HcclCommProfilingLiteTest, Constructor_Normal)
 {
-    Hccl::MirrorTaskManagerLite* mgr = nullptr;
-    auto prof = std::make_unique<HcclCommProfilingLite>(0, mgr);
+    auto prof = std::make_unique<HcclCommProfilingLite>(0);
     EXPECT_NE(prof, nullptr);
     EXPECT_FALSE(prof->initializedFlag_);
-}
-
-TEST_F(HcclCommProfilingLiteTest, GetMirrorTaskManagerLite_Null)
-{
-    EXPECT_EQ(profilingLite_->GetMirrorTaskManagerLite(), nullptr);
-}
-
-TEST_F(HcclCommProfilingLiteTest, GetMirrorTaskManagerLite_NonNull)
-{
-    Hccl::MirrorTaskManagerLite* mgr = reinterpret_cast<Hccl::MirrorTaskManagerLite*>(0x5678);
-    auto prof = std::make_unique<HcclCommProfilingLite>(0, mgr);
-    EXPECT_EQ(prof->GetMirrorTaskManagerLite(), mgr);
 }
 
 TEST_F(HcclCommProfilingLiteTest, Init_AlreadyInitialized)
@@ -130,4 +113,8 @@ TEST_F(HcclCommProfilingLiteTest, Init_AlreadyInitialized)
 
 TEST_F(HcclCommProfilingLiteTest, UpdateProfStat_NotInitialized) { EXPECT_NO_THROW(profilingLite_->UpdateProfStat()); }
 
-TEST_F(HcclCommProfilingLiteTest, ReportAllTasks_NotInitialized) { EXPECT_NO_THROW(profilingLite_->ReportAllTasks()); }
+TEST_F(HcclCommProfilingLiteTest, ReportAllTasks_NotInitialized)
+{
+    std::vector<hccl::Thread*> threads;
+    EXPECT_NO_THROW(profilingLite_->ReportAllTasks(threads));
+}

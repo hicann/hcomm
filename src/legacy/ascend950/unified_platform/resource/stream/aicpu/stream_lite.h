@@ -12,8 +12,10 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <functional>
 #include "types.h"
 #include "rtsq_base.h"
+#include "dfx_circular_queue.h"
 namespace Hccl {
 
 class StreamLite {
@@ -34,6 +36,16 @@ public:
 
     std::string Describe() const;
 
+    TaskInfoCircularQueue* GetTaskInfos() const;
+    DfxTaskInfo* NextTaskSlot() const;
+    void SetReportStreamTaskCallback(std::function<void(TaskInfoCircularQueue*)> callback);
+    bool HasReportStreamTaskCallback() const;
+    void ReportStreamTask() const;
+
+    void SetGetLatestDfxOpInfoCallback(std::function<const void*()> callback);
+
+    const void* GetLatestDfxOpInfo() const;
+
 private:
     u32 id;
     u32 sqId;
@@ -41,6 +53,9 @@ private:
     u32 cqId{0};
 
     std::unique_ptr<RtsqBase> rtsq;
+    mutable TaskInfoCircularQueue taskInfos_;
+    std::function<void(TaskInfoCircularQueue*)> reportStreamTaskCallback_{nullptr};
+    std::function<const void*()> getLatestDfxOpInfoCallback_{nullptr};
 };
 
 } // namespace Hccl

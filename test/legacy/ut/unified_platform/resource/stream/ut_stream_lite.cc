@@ -81,3 +81,69 @@ TEST_F(StreamLiteTest, stream_lite_given_uniqueId)
     EXPECT_EQ(fakedevPhyId, stream.GetDevPhyId());
     stream.Describe();
 }
+
+TEST_F(StreamLiteTest, Ut_GetTaskInfos_When_Normal_Expect_ReturnNotNull)
+{
+    StreamLite stream(fakeStreamId, fakeSqId, fakedevPhyId, 4);
+    TaskInfoCircularQueue* taskInfos = stream.GetTaskInfos();
+    EXPECT_NE(taskInfos, nullptr);
+}
+
+TEST_F(StreamLiteTest, Ut_SetReportStreamTaskCallback_When_Normal_Expect_CallbackSet)
+{
+    StreamLite stream(fakeStreamId, fakeSqId, fakedevPhyId, 4);
+    bool callbackCalled = false;
+    stream.SetReportStreamTaskCallback([&callbackCalled](TaskInfoCircularQueue*) {
+        callbackCalled = true;
+    });
+    EXPECT_EQ(stream.HasReportStreamTaskCallback(), true);
+}
+
+TEST_F(StreamLiteTest, Ut_HasReportStreamTaskCallback_When_NotSet_Expect_ReturnFalse)
+{
+    StreamLite stream(fakeStreamId, fakeSqId, fakedevPhyId, 4);
+    EXPECT_EQ(stream.HasReportStreamTaskCallback(), false);
+}
+
+TEST_F(StreamLiteTest, Ut_HasReportStreamTaskCallback_When_Set_Expect_ReturnTrue)
+{
+    StreamLite stream(fakeStreamId, fakeSqId, fakedevPhyId, 4);
+    stream.SetReportStreamTaskCallback([](TaskInfoCircularQueue*) {});
+    EXPECT_EQ(stream.HasReportStreamTaskCallback(), true);
+}
+
+TEST_F(StreamLiteTest, Ut_ReportStreamTask_When_NoCallback_Expect_NoThrow)
+{
+    StreamLite stream(fakeStreamId, fakeSqId, fakedevPhyId, 4);
+    EXPECT_NO_THROW(stream.ReportStreamTask());
+}
+
+TEST_F(StreamLiteTest, Ut_ReportStreamTask_When_CallbackSet_Expect_CallbackInvoked)
+{
+    StreamLite stream(fakeStreamId, fakeSqId, fakedevPhyId, 4);
+    bool callbackCalled = false;
+    stream.SetReportStreamTaskCallback([&callbackCalled](TaskInfoCircularQueue*) {
+        callbackCalled = true;
+    });
+    stream.ReportStreamTask();
+    EXPECT_EQ(callbackCalled, true);
+}
+
+TEST_F(StreamLiteTest, Ut_SetGetLatestDfxOpInfoCallback_When_Normal_Expect_CallbackSet)
+{
+    StreamLite stream(fakeStreamId, fakeSqId, fakedevPhyId, 4);
+    int dummyData = 42;
+    stream.SetGetLatestDfxOpInfoCallback([&dummyData]() -> const void* {
+        return &dummyData;
+    });
+    const void* result = stream.GetLatestDfxOpInfo();
+    EXPECT_NE(result, nullptr);
+    EXPECT_EQ(result, &dummyData);
+}
+
+TEST_F(StreamLiteTest, Ut_GetLatestDfxOpInfo_When_NoCallback_Expect_ReturnNullptr)
+{
+    StreamLite stream(fakeStreamId, fakeSqId, fakedevPhyId, 4);
+    const void* result = stream.GetLatestDfxOpInfo();
+    EXPECT_EQ(result, nullptr);
+}

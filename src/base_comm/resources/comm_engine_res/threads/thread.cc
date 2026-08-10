@@ -15,7 +15,7 @@
 #include "task_info.h"
 #include "comm_engine_utils.h"
 #include "aicpu_launch_manager.h"
-#include "profiling_handler_lite.h"
+#include "dfx_profiling_handler_lite.h"
 #include "aicpu_indop_env.h"
 #include "adapter_rts_common.h"
 
@@ -422,7 +422,7 @@ HcclResult Thread::ReportAicpuNotifyWaitTask(u64 notifyId, u64 beginTime, u32 ta
     taskParam.taskPara.Notify.value = 1;
     taskParam.endTime = ProfGetCurCpuTimestamp();
     CHK_PTR_NULL(callback_);
-    CHK_RET(callback_(sqId, taskId, taskParam, INVALID_U64));
+    CHK_RET(callback_(sqId, taskId, taskParam, DFX_INVALID_U64));
     HCCL_INFO(
         "[Thread][%s] sqId[%u], taskId[%u], notifyId[%llu], %s", __func__, sqId, taskId, notifyId,
         taskParam.Describe().c_str());
@@ -444,7 +444,7 @@ HcclResult Thread::ReportHostNotifyWaitTask(u64 notifyId, u64 beginTime, bool is
     taskParam.endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
     HCCL_INFO("[ReportHostNotifyWaitTask] time is %llu", taskParam.endTime);
     CHK_PTR_NULL(callback_);
-    CHK_RET(callback_(streamId, taskId, taskParam, INVALID_U64));
+    CHK_RET(callback_(streamId, taskId, taskParam, DFX_INVALID_U64));
     HCCL_INFO(
         "[Thread][%s] streamId[%u], taskId[%u], notifyId[%llu], %s", __func__, streamId, taskId, notifyId,
         taskParam.Describe().c_str());
@@ -464,7 +464,7 @@ HcclResult Thread::ReportAicpuNotifyRecordTask(u64 notifyId, u64 beginTime, u32 
     taskParam.taskPara.Notify.value = 1;
     taskParam.endTime = ProfGetCurCpuTimestamp();
     CHK_PTR_NULL(callback_);
-    CHK_RET(callback_(sqId, taskId, taskParam, INVALID_U64));
+    CHK_RET(callback_(sqId, taskId, taskParam, DFX_INVALID_U64));
     HCCL_INFO(
         "[Thread][%s] sqId[%u], taskId[%u], notifyId[%llu], %s", __func__, sqId, taskId, notifyId,
         taskParam.Describe().c_str());
@@ -486,7 +486,7 @@ HcclResult Thread::ReportHostNotifyRecordTask(u64 notifyId, u64 beginTime, bool 
     taskParam.endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
     HCCL_INFO("[ReportHostNotifyRecordTask] time is %llu", taskParam.endTime);
     CHK_PTR_NULL(callback_);
-    CHK_RET(callback_(streamId, taskId, taskParam, INVALID_U64));
+    CHK_RET(callback_(streamId, taskId, taskParam, DFX_INVALID_U64));
     HCCL_INFO(
         "[Thread][%s] streamId[%u], taskId[%u], notifyId[%llu], %s", __func__, streamId, taskId, notifyId,
         taskParam.Describe().c_str());
@@ -504,7 +504,7 @@ Thread::ReportHostLocalCopyTask(void* dst, const void* src, uint64_t sizeByte, u
     taskParam.taskPara.DMA.src = src;
     taskParam.taskPara.DMA.dst = dst;
     taskParam.taskPara.DMA.size = sizeByte;
-    taskParam.taskPara.DMA.notifyID = INVALID_U64;
+    taskParam.taskPara.DMA.notifyID = DFX_INVALID_U64;
     taskParam.taskPara.DMA.linkType = Hccl::DfxLinkType::ONCHIP;
     taskParam.taskPara.DMA.dmaOp = Hccl::DmaOp::HCCL_DMA_READ;
     taskParam.isMaster = isMaster;
@@ -514,7 +514,7 @@ Thread::ReportHostLocalCopyTask(void* dst, const void* src, uint64_t sizeByte, u
     hrtGetTaskIdAndStreamID(taskId, streamId);
     taskParam.endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
     CHK_PTR_NULL(callback_);
-    CHK_RET(callback_(streamId, taskId, taskParam, INVALID_U64));
+    CHK_RET(callback_(streamId, taskId, taskParam, DFX_INVALID_U64));
     HCCL_INFO(
         "[Thread][%s] streamId[%u], taskId[%u], src[%p], dst[%p], len[%llu] %s", __func__, streamId, taskId, src, dst,
         sizeByte, taskParam.Describe().c_str());
@@ -534,12 +534,12 @@ HcclResult Thread::ReportAicpuLocalCopyTask(
     taskParam.taskPara.DMA.src = src;
     taskParam.taskPara.DMA.dst = dst;
     taskParam.taskPara.DMA.size = sizeByte;
-    taskParam.taskPara.DMA.notifyID = INVALID_U64;
+    taskParam.taskPara.DMA.notifyID = DFX_INVALID_U64;
     taskParam.taskPara.DMA.linkType = Hccl::DfxLinkType::ONCHIP;
     taskParam.taskPara.DMA.dmaOp = Hccl::DmaOp::HCCL_DMA_READ;
     taskParam.endTime = ProfGetCurCpuTimestamp();
     CHK_PTR_NULL(callback_);
-    CHK_RET(callback_(sqId, taskId, taskParam, INVALID_U64));
+    CHK_RET(callback_(sqId, taskId, taskParam, DFX_INVALID_U64));
     HCCL_INFO(
         "[Thread][%s] sqId[%u], taskId[%u], src[%p], dst[%p], len[%llu] %s", __func__, sqId, taskId, src, dst, sizeByte,
         taskParam.Describe().c_str());
@@ -559,12 +559,12 @@ HcclResult Thread::ReportAicpuLocalReduceTask(
     taskParam.taskPara.Reduce.src = src;
     taskParam.taskPara.Reduce.dst = dst;
     taskParam.taskPara.Reduce.size = sizeByte;
-    taskParam.taskPara.Reduce.notifyID = INVALID_U64;
+    taskParam.taskPara.Reduce.notifyID = DFX_INVALID_U64;
     taskParam.taskPara.Reduce.linkType = Hccl::DfxLinkType::ONCHIP;
     taskParam.taskPara.Reduce.dataType = static_cast<HcclDataType>(dataType);
     taskParam.taskPara.Reduce.reduceOp = static_cast<HcclReduceOp>(reduceOp);
     CHK_PTR_NULL(callback_);
-    CHK_RET(callback_(sqId, taskId, taskParam, INVALID_U64));
+    CHK_RET(callback_(sqId, taskId, taskParam, DFX_INVALID_U64));
     HCCL_INFO(
         "[Thread][%s] sqId[%u], taskId[%u], src[%p], dst[%p], len[%llu], dataType[%d], reduceOp[%d], %s", __func__,
         sqId, taskId, src, dst, sizeByte, dataType, reduceOp, taskParam.Describe().c_str());
@@ -582,7 +582,7 @@ HcclResult Thread::ReportHostLocalReduceTask(
     taskParam.taskPara.Reduce.src = src;
     taskParam.taskPara.Reduce.dst = dst;
     taskParam.taskPara.Reduce.size = sizeByte;
-    taskParam.taskPara.Reduce.notifyID = INVALID_U64;
+    taskParam.taskPara.Reduce.notifyID = DFX_INVALID_U64;
     taskParam.taskPara.Reduce.linkType = Hccl::DfxLinkType::ONCHIP;
     taskParam.taskPara.Reduce.dataType = static_cast<HcclDataType>(dataType);
     taskParam.taskPara.Reduce.reduceOp = static_cast<HcclReduceOp>(reduceOp);
@@ -592,7 +592,8 @@ HcclResult Thread::ReportHostLocalReduceTask(
     hrtGetTaskIdAndStreamID(taskId, streamId);
     taskParam.endTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
 
-    CHK_RET(callback_(streamId, taskId, taskParam, INVALID_U64));
+    CHK_PTR_NULL(callback_);
+    CHK_RET(callback_(streamId, taskId, taskParam, DFX_INVALID_U64));
     HCCL_INFO(
         "[Thread][%s] streamId[%u], taskId[%u], src[%p], dst[%p], len[%llu], dataType[%d], reduceOp[%d] %s", __func__,
         streamId, taskId, src, dst, sizeByte, dataType, reduceOp, taskParam.Describe().c_str());
@@ -603,7 +604,7 @@ HcclResult Thread::ReportHostLocalReduceTask(
 bool Thread::IsReportTask() const
 {
 #ifdef CCL_KERNEL_AICPU
-    return hcomm::GetTaskExceptionEnable() || Hccl::ProfilingHandlerLite::GetInstance().GetProfL1State();
+    return hcomm::GetTaskExceptionEnable() || Hccl::DfxProfilingHandlerLite::GetInstance().GetProfL1State();
 #endif
     return true;
 }

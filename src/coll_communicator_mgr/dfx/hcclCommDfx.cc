@@ -94,7 +94,7 @@ void HcclCommDfx::AddTaskInfoCallbackLog(
 HcclResult HcclCommDfx::AddTaskInfoCallback(u32 streamId, u32 taskId, const Hccl::TaskParam& taskParam, u64 handle)
 {
     u32 remoteRankId = INVALID_UINT;
-    if (handle != INVALID_U64) {
+    if (handle != DFX_INVALID_U64) {
         CHK_RET(GetChannelRemoteRankId(commTag_, handle, remoteRankId));
     }
 

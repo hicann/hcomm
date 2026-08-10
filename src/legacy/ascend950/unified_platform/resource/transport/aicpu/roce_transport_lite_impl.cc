@@ -11,7 +11,7 @@
 #include "roce_transport_lite_impl.h"
 #include "binary_stream.h"
 #include "log.h"
-#include "profiling_handler_lite.h"
+#include "dfx_profiling_handler_lite.h"
 #include "sal.h"
 
 namespace Hccl {
@@ -547,29 +547,21 @@ void RoceTransportLiteImpl::ReportDmaTask(
         return;
     }
 
-    // 填充DMA任务信息
-    TaskParam taskParam{};
-    taskParam.taskType = taskType;
-    taskParam.beginTime = ProfGetCurCpuTimestamp();
-    taskParam.taskPara.DMA.src = src;
-    taskParam.taskPara.DMA.dst = dst;
-    taskParam.taskPara.DMA.size = size;
-    taskParam.taskPara.DMA.notifyID = notifyId;
-    taskParam.taskPara.DMA.notifyValue = notifyValue;
-    taskParam.taskPara.DMA.linkType = DfxLinkType::ROCE;
-    taskParam.taskPara.DMA.dmaOp = dmaOp;
-
     HCCL_INFO(
         "[RoceTransportLiteImpl::%s][ProfilingTaskParam] sqId[%u], taskId[%u], taskType[%s], "
-        "beginTime[%llu], src[%p], dst[%p], size[%zu], notifyId[%llu], notifyValue[%u], linkType[%s], "
-        "dmaOp[%s]",
-        funcName, stream.GetSqId(), taskId, taskParam.taskType.Describe().c_str(), taskParam.beginTime,
-        taskParam.taskPara.DMA.src, taskParam.taskPara.DMA.dst, taskParam.taskPara.DMA.size,
-        taskParam.taskPara.DMA.notifyID, taskParam.taskPara.DMA.notifyValue,
-        taskParam.taskPara.DMA.linkType.Describe().c_str(), taskParam.taskPara.DMA.dmaOp.Describe().c_str());
+        "src[%p], dst[%p], size[%zu], notifyId[%llu], notifyValue[%u]",
+        funcName, stream.GetSqId(), taskId, taskType.Describe().c_str(), src, dst, size, notifyId, notifyValue);
 
-    // 保存任务信息
-    newCallback_(stream.GetSqId(), taskId, taskParam, reinterpret_cast<u64>(this));
+    DfxTaskInfo* slot = stream.NextTaskSlot();
+    slot->taskType = static_cast<u8>(taskType);
+    slot->sqId = stream.GetSqId();
+    slot->taskId = taskId;
+    const void* opInfo = stream.GetLatestDfxOpInfo();
+    slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : DFX_INVALID_U64;
+    slot->linkType = DfxLinkTypeVal::LINK_ROCE;
+    slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_ROCE);
+    slot->channelHandle = reinterpret_cast<u64>(this);
+    slot->taskPara.Dma.sqeAddr = stream.GetRtsq()->GetSqeAddr();
 }
 
 void RoceTransportLiteImpl::ReportReduceTask(
@@ -581,31 +573,27 @@ void RoceTransportLiteImpl::ReportReduceTask(
         return;
     }
 
-    // 填充Reduce任务信息
-    TaskParam taskParam{};
-    taskParam.taskType = taskType;
-    taskParam.beginTime = ProfGetCurCpuTimestamp();
-    taskParam.taskPara.Reduce.src = src;
-    taskParam.taskPara.Reduce.dst = dst;
-    taskParam.taskPara.Reduce.size = size;
-    taskParam.taskPara.Reduce.notifyID = notifyId;
-    taskParam.taskPara.Reduce.notifyValue = notifyValue;
-    taskParam.taskPara.Reduce.linkType = DfxLinkType::ROCE;
-    taskParam.taskPara.Reduce.reduceOp = ConvertReduceOpToHcclReduceOp(reduceIn.reduceOp);
-    taskParam.taskPara.Reduce.dataType = DataTypeToHcclDataType(reduceIn.dataType);
-
     HCCL_INFO(
         "[RoceTransportLiteImpl::%s][ProfilingTaskParam] sqId[%u], taskId[%u], taskType[%s], "
-        "beginTime[%llu], src[%p], dst[%p], size[%zu], notifyId[%llu], notifyValue[%u], linkType[%s], "
-        "dataType[%d], reduceOp[%d]",
-        funcName, stream.GetSqId(), taskId, taskParam.taskType.Describe().c_str(), taskParam.beginTime,
-        taskParam.taskPara.Reduce.src, taskParam.taskPara.Reduce.dst, taskParam.taskPara.Reduce.size,
-        taskParam.taskPara.Reduce.notifyID, taskParam.taskPara.Reduce.notifyValue,
-        taskParam.taskPara.Reduce.linkType.Describe().c_str(), static_cast<int>(taskParam.taskPara.Reduce.dataType),
-        static_cast<int>(taskParam.taskPara.Reduce.reduceOp));
+        "src[%p], dst[%p], size[%zu], notifyId[%llu], notifyValue[%u], dataType[%d], reduceOp[%d]",
+        funcName, stream.GetSqId(), taskId, taskType.Describe().c_str(), src, dst, size, notifyId, notifyValue,
+        static_cast<int>(reduceIn.dataType), static_cast<int>(reduceIn.reduceOp));
 
-    // 保存任务信息
-    newCallback_(stream.GetSqId(), taskId, taskParam, reinterpret_cast<u64>(this));
+    DfxTaskInfo* slot = stream.NextTaskSlot();
+    slot->taskType = static_cast<u8>(taskType);
+    slot->sqId = stream.GetSqId();
+    slot->taskId = taskId;
+    const void* opInfo = stream.GetLatestDfxOpInfo();
+    slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : DFX_INVALID_U64;
+    slot->linkType = DfxLinkTypeVal::LINK_ROCE;
+    slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_ROCE);
+    slot->channelHandle = reinterpret_cast<u64>(this);
+    slot->taskPara.Reduce.sqeAddr = stream.GetRtsq()->GetSqeAddr();
+    slot->taskPara.Reduce.srcAddr = reinterpret_cast<u64>(src);
+    slot->taskPara.Reduce.dstAddr = reinterpret_cast<u64>(dst);
+    slot->taskPara.Reduce.size = size;
+    slot->taskPara.Reduce.notifyId = static_cast<u32>(notifyId);
+    slot->taskPara.Reduce.reduceOp = static_cast<u8>(ConvertReduceOpToHcclReduceOp(reduceIn.reduceOp));
 }
 
 void RoceTransportLiteImpl::ReportNotifyWaitTask(u64 notifyId, const StreamLite& stream, u32 taskId)
@@ -615,27 +603,26 @@ void RoceTransportLiteImpl::ReportNotifyWaitTask(u64 notifyId, const StreamLite&
         return;
     }
 
-    // 填充Wait任务信息
-    TaskParam taskParam{};
-    taskParam.taskType = TaskParamType::TASK_NOTIFY_WAIT;
-    taskParam.beginTime = ProfGetCurCpuTimestamp();
-    taskParam.taskPara.Notify.notifyID = notifyId;
-    taskParam.taskPara.Notify.value = 1;
-
     HCCL_INFO(
-        "[RoceTransportLiteImpl::%s][ProfilingTaskParam] sqId[%u], taskId[%u], taskType[%s], "
-        "beginTime[%llu], notifyId[%llu], notifyValue[%u]",
-        __func__, stream.GetSqId(), taskId, taskParam.taskType.Describe().c_str(), taskParam.beginTime,
-        taskParam.taskPara.Notify.notifyID, taskParam.taskPara.Notify.value);
+        "[RoceTransportLiteImpl::%s][ProfilingTaskParam] sqId[%u], taskId[%u], notifyId[%llu]", __func__,
+        stream.GetSqId(), taskId, notifyId);
 
-    // 保存任务信息
-    newCallback_(stream.GetSqId(), taskId, taskParam, reinterpret_cast<u64>(this));
+    DfxTaskInfo* slot = stream.NextTaskSlot();
+    slot->taskType = static_cast<u8>(TaskParamTypeVal::TASK_NOTIFY_WAIT);
+    slot->sqId = stream.GetSqId();
+    slot->taskId = taskId;
+    const void* opInfo = stream.GetLatestDfxOpInfo();
+    slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : DFX_INVALID_U64;
+    slot->linkType = DfxLinkTypeVal::LINK_ROCE;
+    slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_ROCE);
+    slot->channelHandle = reinterpret_cast<u64>(this);
+    slot->taskPara.Notify.sqeAddr = stream.GetRtsq()->GetSqeAddr();
 }
 
 bool RoceTransportLiteImpl::IsReportTask()
 {
-    // TaskException或Profiling开启且Callback已注册时，允许上报
-    return (taskExceptionEnable_ || ProfilingHandlerLite::GetInstance().GetProfL1State()) && newCallback_ != nullptr;
+    // TaskException或Profiling开启时，允许上报
+    return taskExceptionEnable_ || DfxProfilingHandlerLite::GetInstance().GetProfL1State();
 }
 
 } // namespace Hccl

@@ -107,6 +107,7 @@
 #include "../../../legacy/ascend950/framework/dfx/profiling/profiling_reporter.h"
 #include "../../../legacy/ascend950/framework/dfx/aicpu/profiling/profiling_handler_lite.h"
 #include "../../../legacy/ascend950/framework/dfx/aicpu/profiling/profiling_reporter_lite.h"
+#include "dfx_profiling_reporter_lite.h"
 #include "../../../legacy/ascend950/unified_platform/common/dlhal_function_v2.h"
 #include "../../../legacy/ascend950/framework/dfx/profiling/dlprof_function.h"
 #include "../../../legacy/ascend950/framework/communicator/aicpu/daemon/aicpu_daemon_service.h"
@@ -358,6 +359,37 @@ StreamLite::StreamLite(u32 id, u32 sqIds, u32 phyId, u32 cqIds, bool launchFlag)
 }
 
 RtsqBase* StreamLite::GetRtsq() const { return rtsq.get(); }
+
+TaskInfoCircularQueue* StreamLite::GetTaskInfos() const { return &taskInfos_; }
+
+DfxTaskInfo* StreamLite::NextTaskSlot() const { return static_cast<DfxTaskInfo*>(taskInfos_.NextSlot()); }
+
+void StreamLite::SetReportStreamTaskCallback(std::function<void(TaskInfoCircularQueue*)> callback)
+{
+    reportStreamTaskCallback_ = std::move(callback);
+}
+
+bool StreamLite::HasReportStreamTaskCallback() const { return reportStreamTaskCallback_ != nullptr; }
+
+void StreamLite::ReportStreamTask() const
+{
+    if (reportStreamTaskCallback_ != nullptr) {
+        reportStreamTaskCallback_(&taskInfos_);
+    }
+}
+
+void StreamLite::SetGetLatestDfxOpInfoCallback(std::function<const void*()> callback)
+{
+    getLatestDfxOpInfoCallback_ = std::move(callback);
+}
+
+const void* StreamLite::GetLatestDfxOpInfo() const
+{
+    if (getLatestDfxOpInfoCallback_ != nullptr) {
+        return getLatestDfxOpInfoCallback_();
+    }
+    return nullptr;
+}
 
 u32 GetKernelExecTimeoutFromEnvConfig() { return 0; }
 
@@ -2060,6 +2092,20 @@ u32 RankTableCrcBridge::ConsumeRankTableJsonCrc(s32 deviceLogicId) { return 0; }
 
 namespace Hccl {
 
+DfxProfilingReporterLite::DfxProfilingReporterLite(DfxProfilingHandlerLite* profilingHandlerLite)
+    : profilingHandlerLite_(profilingHandlerLite)
+{}
+
+DfxProfilingReporterLite::~DfxProfilingReporterLite() {}
+
+HcclResult DfxProfilingReporterLite::Init() { return HCCL_SUCCESS; }
+
+void DfxProfilingReporterLite::ReportAllTasks(const std::vector<hccl::Thread*>& threads) {}
+
+void DfxProfilingReporterLite::ReportStreamTask(TaskInfoCircularQueue* taskQueue) {}
+
+void DfxProfilingReporterLite::UpdateProfStat() {}
+
 void EnvPlfDebugConfig::Parse() {}
 
 u64 EnvPlfDebugConfig::GetConfigValue() const { return 0; }
@@ -2067,9 +2113,22 @@ u64 EnvPlfDebugConfig::GetConfigValue() const { return 0; }
 void PrintTaskLog(u32 streamId, u32 taskId, const TaskParam& taskParam, u32 remoteRankId)
 {
     (void)streamId;
-    (void)taskId;
     (void)taskParam;
     (void)remoteRankId;
 }
 
 } // namespace Hccl
+
+int32_t HcommNewThreadRegisterDfx(ThreadHandle thread, std::function<void(Hccl::TaskInfoCircularQueue*)> callback)
+{
+    (void)thread;
+    (void)callback;
+    return 0;
+}
+
+int32_t HcommNewThreadRegisterGetLatestDfxOpInfo(ThreadHandle thread, std::function<const void*()> callback)
+{
+    (void)thread;
+    (void)callback;
+    return 0;
+}

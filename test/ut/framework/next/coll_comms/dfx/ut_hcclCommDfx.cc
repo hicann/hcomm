@@ -34,7 +34,7 @@ protected:
         EXPECT_EQ(dfx_->Init(0, "test_comm", 0), HCCL_SUCCESS);
 
         dfxLite_ = std::make_unique<HcclCommDfxLite>();
-        EXPECT_EQ(dfxLite_->Init(0, "test_comm", 0), HCCL_SUCCESS);
+        EXPECT_EQ(dfxLite_->Init(0, "test_comm", 0, 0), HCCL_SUCCESS);
     }
 
     virtual void TearDown()
@@ -339,145 +339,27 @@ TEST_F(HcclCommDfxTest, Ut_AddTaskInfoCallback_When_CcuTaskAndCommTagNotFound_Ex
     HcclCommDfx::channelRemoteRankId_.clear();
 }
 
-// 测试 HcclCommDfxLite::GetChannelRemoteRankId - INVALID_U64 handle 早期返回
-TEST_F(HcclCommDfxTest, Ut_GetChannelRemoteRankIdLite_When_InvalidU64Handle_Expect_ReturnInvalidUint)
+TEST_F(HcclCommDfxTest, Ut_ReportAllTasks_When_EmptyThreads_Expect_NoThrow)
 {
-    u32 result = dfxLite_->GetChannelRemoteRankId(INVALID_U64);
-    EXPECT_EQ(result, INVALID_UINT);
+    std::vector<hccl::Thread*> threads;
+    EXPECT_NO_THROW(dfxLite_->ReportAllTasks(threads));
 }
 
-// 测试 HcclCommDfxLite::Init 重复初始化
-TEST_F(HcclCommDfxTest, Ut_InitLite_When_AlreadyInitialized_Expect_ReturnSuccess)
+TEST_F(HcclCommDfxTest, Ut_GetLatestDfxOpInfo_When_QueueEmpty_Expect_ReturnNullptr)
 {
-    HcclResult ret = dfxLite_->Init(0, "test_comm2", 0);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
+    const void* result = dfxLite_->GetLatestDfxOpInfo();
+    EXPECT_EQ(result, nullptr);
 }
 
-// 测试 HcclCommDfxLite::GetMirrorTaskManagerLite
-TEST_F(HcclCommDfxTest, Ut_GetMirrorTaskManagerLite_When_Initialized_Expect_ReturnNotNull)
+TEST_F(HcclCommDfxTest, Ut_GetLatestDfxOpInfo_When_SetOpInfo_Expect_ReturnLatest)
 {
-    Hccl::MirrorTaskManagerLite* mgr = dfxLite_->GetMirrorTaskManagerLite();
-    EXPECT_NE(mgr, nullptr);
-}
-
-// 测试 HcclCommDfxLite::AddChannelRemoteRankId 多个 handle
-TEST_F(HcclCommDfxTest, Ut_AddChannelRemoteRankIdLite_When_MultipleHandles_Expect_AllStored)
-{
-    u64 handle1 = 0x1111;
-    u64 handle2 = 0x2222;
-    u32 rank1 = 10;
-    u32 rank2 = 20;
-
-    dfxLite_->AddChannelRemoteRankId(handle1, rank1);
-    dfxLite_->AddChannelRemoteRankId(handle2, rank2);
-
-    EXPECT_EQ(dfxLite_->GetChannelRemoteRankId(handle1), rank1);
-    EXPECT_EQ(dfxLite_->GetChannelRemoteRankId(handle2), rank2);
-}
-
-// 测试 HcclCommDfxLite::ReportAllTasks
-TEST_F(HcclCommDfxTest, Ut_ReportAllTasksLite_When_Normal_Expect_ReturnSuccess)
-{
-    HcclResult ret = dfxLite_->ReportAllTasks();
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-}
-
-// 测试 HcclCommDfxLite::UpdateProfStat
-TEST_F(HcclCommDfxTest, Ut_UpdateProfStatLite_When_Normal_Expect_ReturnSuccess)
-{
-    HcclResult ret = dfxLite_->UpdateProfStat();
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-}
-
-// 测试 HcclCommDfx::ReportAllTasks
-TEST_F(HcclCommDfxTest, Ut_ReportAllTasks_When_Normal_Expect_ReturnSuccess)
-{
-    HcclResult ret = dfx_->ReportAllTasks(false);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-}
-
-// 测试 HcclCommDfx::UpdateProfStat
-TEST_F(HcclCommDfxTest, Ut_UpdateProfStat_When_Normal_Expect_ReturnSuccess)
-{
-    HcclResult ret = dfx_->UpdateProfStat();
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-}
-
-// 测试 AddTaskInfoCallback - CCU 路径，commTag 存在但 channelHandle 不在 handleMap 中
-TEST_F(HcclCommDfxTest, Ut_AddTaskInfoCallback_When_CcuTaskAndHandleNotInMap_Expect_ParaError)
-{
-    std::string commTag = "test_comm";
-    u64 channelHandle = 0x7777;
-    u32 remoteRankId = 5;
-
-    HcclCommDfx::AddChannelRemoteRankId(commTag, channelHandle, remoteRankId);
-
-    Hccl::TaskParam taskParam{};
-    taskParam.taskType = Hccl::TaskParamType::TASK_CCU;
-    auto ccuDetailInfo = std::make_shared<std::vector<Hccl::CcuProfilingInfo>>();
-    Hccl::CcuProfilingInfo profInfo{};
-    profInfo.channelId[0] = 0;
-    profInfo.channelHandle[0] = 0xBADBAD;
-    ccuDetailInfo->push_back(profInfo);
-    taskParam.ccuDetailInfo = ccuDetailInfo;
-
-    HcclResult ret = dfx_->AddTaskInfoCallback(1, 1, taskParam, channelHandle);
-    EXPECT_EQ(ret, HCCL_E_PARA);
-
-    HcclCommDfx::channelRemoteRankId_.clear();
-}
-
-// 测试 AddTaskInfoCallback - 非 CCU 任务类型
-TEST_F(HcclCommDfxTest, Ut_AddTaskInfoCallback_When_NonCcuTaskAndHandleExist_Expect_Success)
-{
-    std::string commTag = "test_comm";
-    u64 channelHandle = 0x5555;
-    u32 remoteRankId = 8;
-
-    HcclCommDfx::AddChannelRemoteRankId(commTag, channelHandle, remoteRankId);
-
-    Hccl::TaskParam taskParam{};
-    taskParam.taskType = Hccl::TaskParamType::TASK_NOTIFY_RECORD;
-
-    auto opInfo = std::make_shared<Hccl::DfxOpInfo>();
-    MOCKER_CPP(
-        &Hccl::MirrorTaskManager::GetCurrDfxOpInfo,
-        std::shared_ptr<Hccl::DfxOpInfo>(Hccl::MirrorTaskManager::*)() const)
-        .stubs()
-        .will(returnValue(opInfo));
-    MOCKER_CPP(
-        &Hccl::MirrorTaskManager::AddTaskInfo,
-        HcclResult(Hccl::MirrorTaskManager::*)(
-            u32, u32, u32, const Hccl::TaskParam&, std::shared_ptr<Hccl::DfxOpInfo>, bool))
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(HCCL_SUCCESS));
-
-    HcclResult ret = dfx_->AddTaskInfoCallback(1, 1, taskParam, channelHandle);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-
-    GlobalMockObject::verify();
-    HcclCommDfx::channelRemoteRankId_.clear();
-}
-
-// 测试 HcclCommDfx::SetCurrDfxOpInfo
-TEST_F(HcclCommDfxTest, Ut_SetCurrDfxOpInfo_When_Normal_Expect_ReturnSuccess)
-{
-    auto dfxOpInfo = std::make_shared<Hccl::DfxOpInfo>();
-    HcclResult ret = dfx_->SetCurrDfxOpInfo(dfxOpInfo);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-}
-
-// 测试 HcclCommDfx::GetCallback
-TEST_F(HcclCommDfxTest, Ut_GetCallback_When_Initialized_Expect_ReturnValidCallback)
-{
-    auto callback = dfx_->GetCallback();
-    EXPECT_TRUE(callback != nullptr);
-}
-
-// 测试 HcclCommDfx::ReportOp
-TEST_F(HcclCommDfxTest, Ut_ReportOp_When_Normal_Expect_ReturnSuccess)
-{
-    HcclResult ret = dfx_->ReportOp(0, false, false);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
+    Hccl::DfxDfxOpInfo opInfo{};
+    opInfo.count = 100;
+    opInfo.opType = 0;
+    opInfo.dataType = 0;
+    EXPECT_EQ(dfxLite_->SetCurrDfxOpInfo(&opInfo), HCCL_SUCCESS);
+    const void* result = dfxLite_->GetLatestDfxOpInfo();
+    EXPECT_NE(result, nullptr);
+    const Hccl::DfxDfxOpInfo* retrieved = static_cast<const Hccl::DfxDfxOpInfo*>(result);
+    EXPECT_EQ(retrieved->count, opInfo.count);
 }

@@ -51,7 +51,6 @@ HcclResult ProfilingHandler::Init()
     if (initializedFlag_) {
         return HCCL_SUCCESS;
     }
-    InitLog();
     if (Hccl::DlProfFunction::GetInstance().DlProfFunctionInit() != HCCL_SUCCESS) {
         HCCL_ERROR("[ProfilingHandler][Init] DlProfFunctionInit failed.");
         return HCCL_E_INTERNAL;
@@ -73,6 +72,7 @@ HcclResult ProfilingHandler::Init()
     SetCachedCclTag();
     cachedAlgTypeHashId_ = GetProfHashId("AlgType::NHR", strlen("AlgType::NHR"));
     initializedFlag_ = true;
+    InitLog();
     return HCCL_SUCCESS;
 }
 

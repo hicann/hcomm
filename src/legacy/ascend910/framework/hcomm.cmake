@@ -103,6 +103,10 @@ target_include_directories(hcomm PRIVATE
     # src/legacy 头文件 (legacy/ascend950)
     ${LEGACY_ASCEND950_INCLUDE_LIST}
 
+    # coll_communicator_mgr dfx 头文件 (stream_lite.h -> res_pub.h)
+    ${HCOMM_DIR}/src/coll_communicator_mgr/dfx/profiling/aicpu
+    ${HCOMM_DIR}/src/coll_communicator_mgr/dfx/profiling/aicpu/common
+
     # 三方件头文件
     ${URMA_INCLUDE_DIR}
 )

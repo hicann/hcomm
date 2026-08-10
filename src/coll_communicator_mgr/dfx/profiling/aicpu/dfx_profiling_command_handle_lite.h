@@ -7,27 +7,18 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#ifndef HCCL_COMM_PROFILING_LITE_H
-#define HCCL_COMM_PROFILING_LITE_H
-#include "dfx_profiling_reporter_lite.h"
+#ifndef DFXPROFILING_COMMAND_HANDLE_LITE_H
+#define DFXPROFILING_COMMAND_HANDLE_LITE_H
 #include "hccl/hccl_types.h"
-#include <vector>
 
-namespace hccl {
-
-class HcclCommProfilingLite {
-public:
-    HcclCommProfilingLite(u32 deviceId);
-    ~HcclCommProfilingLite();
-    HcclResult Init();
-    void ReportAllTasks(const std::vector<hccl::Thread*>& threads);
-    void UpdateProfStat();
-    void ReportStreamTask(Hccl::TaskInfoCircularQueue* taskQueue);
-
-private:
-    Hccl::DfxProfilingReporterLite* profilingReporterLite_{nullptr};
-    bool initializedFlag_{false};
-};
-} // namespace hccl
-
+namespace Hccl {
+using Prof_Status = uint32_t;
+const Prof_Status PROF_SUCCESS = 0x0;
+const Prof_Status PROF_FAILED = 0xFFFFFFFF;
+#define ADPROF_TASK_TIME_L0 0x00000008ULL
+#define ADPROF_TASK_TIME_L1 0x00000010ULL
+#define ADPROF_TASK_TIME_L2 0x00000020ULL
+HcclResult DfxRegisterProfCallBack();
+int32_t DfxDeviceCommandHandle(uint32_t profType, void* data, uint32_t len);
+} // namespace Hccl
 #endif

@@ -308,23 +308,23 @@ std::string TaskExceptionHost::GetGroupRankInfo(const Hccl::TaskInfo& taskInfo) 
 void TaskExceptionHost::GetAicpuCqeErrRemoteLocalIdByRankId(
     hccl::CollComm* collComm, uint32_t rankid, u32& remoteLocalId) const
 {
-    if (collComm == nullptr || rankid == INVALID_VALUE_RANKID) {
+    if (collComm == nullptr || rankid == Hccl::DFX_INVALID_RANKID) {
         HCCL_ERROR("[GetAicpuCqeErrRemoteLocalIdByRankId]collComm is nullptr or rankId is invalid, rankId[%u]", rankid);
-        remoteLocalId = INVALID_VALUE_RANKID;
+        remoteLocalId = Hccl::DFX_INVALID_RANKID;
         return;
     }
 
     Hccl::HcclCommunicator* commV2 = static_cast<Hccl::HcclCommunicator*>(collComm->GetCommunicatorV2());
     if (commV2 == nullptr) {
         HCCL_ERROR("[GetAicpuCqeErrRemoteLocalIdByRankId]commV2 is nullptr, rankId[%u]", rankid);
-        remoteLocalId = INVALID_VALUE_RANKID;
+        remoteLocalId = Hccl::DFX_INVALID_RANKID;
         return;
     }
     void* rankGraph = nullptr;
     HcclResult ret = commV2->GetRankGraphV2(rankGraph);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[GetAicpuCqeErrRemoteLocalIdByRankId]GetRankGraphV2 failed, rankId[%u], ret[%d]", rankid, ret);
-        remoteLocalId = INVALID_VALUE_RANKID;
+        remoteLocalId = Hccl::DFX_INVALID_RANKID;
         return;
     }
     Hccl::RankGraph* rankGraphv2 = static_cast<Hccl::RankGraph*>(rankGraph);
@@ -336,7 +336,7 @@ void TaskExceptionHost::GetAicpuCqeErrRemoteLocalIdByRankId(
 void TaskExceptionHost::GetAicpuCqeErrNetInstanceByRankId(
     hccl::CollComm* collComm, uint32_t rankid, std::string& netInstanceId) const
 {
-    if (collComm == nullptr || rankid == INVALID_VALUE_RANKID) {
+    if (collComm == nullptr || rankid == Hccl::DFX_INVALID_RANKID) {
         HCCL_ERROR("[GetAicpuCqeErrNetInstanceByRankId]collComm is nullptr or rankId is invalid, rankId[%u]", rankid);
         netInstanceId = "";
         return;
@@ -372,7 +372,7 @@ void TaskExceptionHost::GetAicpuCqeErrInfo(
     const Hccl::TaskInfo& taskInfo) const
 {
     hccl::CollComm* collComm = static_cast<hccl::CollComm*>(taskInfo.dfxOpInfo_->comm_);
-    u32 remoteLocalId = INVALID_VALUE_RANKID;
+    u32 remoteLocalId = Hccl::DFX_INVALID_RANKID;
     GetAicpuCqeErrRemoteLocalIdByRankId(collComm, errorMessage.remoteUserRank, remoteLocalId);
     std::string netInstanceId = "";
     GetAicpuCqeErrNetInstanceByRankId(collComm, errorMessage.remoteUserRank, netInstanceId);
@@ -620,11 +620,11 @@ void TaskExceptionHost::ReportErrorMsg(
         hccl::CollComm* collComm = static_cast<hccl::CollComm*>(exceptionTaskInfo.dfxOpInfo_->comm_);
         std::string localServerId = "";
         GetAicpuCqeErrNetInstanceByRankId(collComm, errorMessage.rankId, localServerId);
-        u32 localDeviceId = INVALID_VALUE_RANKID;
+        u32 localDeviceId = Hccl::DFX_INVALID_RANKID;
         GetAicpuCqeErrRemoteLocalIdByRankId(collComm, errorMessage.rankId, localDeviceId);
         std::string remoteServerId = "";
         GetAicpuCqeErrNetInstanceByRankId(collComm, errorMessage.remoteUserRank, remoteServerId);
-        u32 remoteDeviceId = INVALID_VALUE_RANKID;
+        u32 remoteDeviceId = Hccl::DFX_INVALID_RANKID;
         GetAicpuCqeErrRemoteLocalIdByRankId(collComm, errorMessage.remoteUserRank, remoteDeviceId);
         Hccl::IpAddress localAddr(errorMessage.locEid);
         Hccl::IpAddress remoteAddr(errorMessage.rmtEid);

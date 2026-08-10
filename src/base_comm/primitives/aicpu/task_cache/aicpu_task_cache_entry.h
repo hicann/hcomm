@@ -19,9 +19,10 @@
 #include "udma_data_struct.h"
 #include "ub_transport_lite_impl.h"
 #include "rtsq_a5.h"
-#include "profiling_handler_lite.h"
+#include "dfx_profiling_handler_lite.h"
 #include "aicpu_ts_thread.h"
 #include "sqe.h"
+#include "res_pub.h"
 
 using std::vector;
 
@@ -29,7 +30,7 @@ using Hccl::AC_SQE_SIZE;
 using hccl::AicpuTsThread;
 using Hccl::DbSqeProfInfo;
 using Hccl::RtsqA5;
-using Hccl::TaskParamType;
+using Hccl::TaskParamTypeVal;
 using Hccl::UbConnLite;
 using Hccl::UbTransportLiteImpl;
 using Hccl::WqeTask;
@@ -135,7 +136,7 @@ struct DbSqeTmpInfo {
     DbSqeProfInfo dbSqeProfInfo;
 };
 
-// DbSqe的profiling信息, 用于cache hit时构造profiling TaskParam
+// DbSqe的profiling信息, 用于cache hit时填充DfxTaskInfo
 struct DbSqeProfAndRefreshInfo {
     DbSqeProfInfo dbSqeProfInfo;
 
@@ -157,7 +158,7 @@ struct TokenInfo {
 
 // aicpu task cache单向依赖RtsqA5/UbConnLite, 下发SQE/WQE
 // aicpu task cache单向依赖UbTransportLiteImpl, 获取token id/value
-// aicpu task cache单向依赖AicpuTsThread/UbTransportLiteImpl, 按需构造TaskParam并上报profiling
+// aicpu task cache单向依赖AicpuTsThread/UbTransportLiteImpl, 按需填充DfxTaskInfo并上报profiling
 // 注意: aicpu task cache通过在RtsqA5/UbConnLite注册回调函数, 捕捉下发的SQE/WQE并插入缓存
 class AicpuTaskCacheEntry {
 public:
@@ -177,7 +178,7 @@ public:
     inline uint64_t GetEntryBytes() const { return entryBytes_; }
 
     // Cache hit
-    // 注意: 如果需要支持profiling, 参考AicpuTsThread和UbTransportLiteImpl构建TaskParam并调用profiling callback
+    // 注意: 如果需要支持profiling, 参考AicpuTsThread和UbTransportLiteImpl填充DfxTaskInfo并经NextTaskSlot上报
     // 注意: inplace刷新缓存的task, 下发完成后需要更新缓存的user input/output memory range
     HcclResult RefreshAndLaunch(const uint64_t* baseAddrs, const uint64_t* memSizes, const uint32_t count);
 
@@ -245,15 +246,15 @@ private:
         uint32_t& tokenId, uint32_t& tokenValue, const AddrRefreshInfo& addrRefreshInfo,
         const vector<TokenInfo>& tokenInfos) const;
 
-    // 使能profiling时, 对每个刷新的SQE构造profiling TaskParam并上报
+    // 使能profiling时, 对每个刷新的SQE填充DfxTaskInfo并经NextTaskSlot上报
     HcclResult ReportSqeArrayProfiling_(
-        size_t arrayIdx, const uint64_t* baseAddrs, const uint64_t* memSizes, const uint32_t count, u64 beginTime);
+        size_t arrayIdx, const uint64_t* baseAddrs, const uint64_t* memSizes, const uint32_t count);
     HcclResult ReportSqeProfiling_(
         uint8_t* sqePtr, size_t arrayIdx, uint32_t sqeIdx, const uint64_t* baseAddrs, const uint64_t* memSizes,
-        const uint32_t count, u64 beginTime, const u32 sqId);
+        const uint32_t count, StreamLite* streamLite, const u32 sqId);
     HcclResult ReportDbSqeProfiling_(
         uint8_t* dbSqePtr, size_t arrayIdx, uint32_t dbSqeIdx, const uint64_t* baseAddrs, const uint64_t* memSizes,
-        const uint32_t count, Hccl::TaskParam* taskParam, const u32 sqId);
+        const uint32_t count, StreamLite* streamLite, const u32 sqId, const u32 taskId);
 
     // SubmitCacheEntry子方法
     inline HcclResult SubmitSqeAddrRefreshInfo_();
@@ -286,19 +287,25 @@ private:
         const uint64_t* baseAddrs, const vector<TokenInfo>& tokenInfos);
 
     // ReportDbSqeProfiling_子方法
-    inline HcclResult
-    FillTaskParamDma_(Hccl::TaskParam* taskParam, const DbSqeProfAndRefreshInfo& profAndRefreshInfo) const;
-    inline HcclResult
-    FillTaskParamReduce_(Hccl::TaskParam* taskParam, const DbSqeProfAndRefreshInfo& profAndRefreshInfo) const;
+    inline HcclResult FillSlotUbDma_(
+        Hccl::DfxTaskInfo* slot, const uint8_t* sqePtr, const DbSqeProfAndRefreshInfo& profAndRefreshInfo,
+        UbTransportLiteImpl* ubTransportLiteImplPtr, StreamLite* streamLite, u32 taskId) const;
+    inline HcclResult FillSlotReduce_(
+        Hccl::DfxTaskInfo* slot, const uint8_t* sqePtr, const DbSqeProfAndRefreshInfo& profAndRefreshInfo,
+        UbTransportLiteImpl* ubTransportLiteImplPtr, StreamLite* streamLite, u32 taskId) const;
     inline HcclResult RefreshDbSqeProfAddrs_(
         DbSqeProfAndRefreshInfo& profAndRefreshInfo, const uint64_t* baseAddrs, const uint64_t* memSizes,
         const uint32_t count);
-    inline void
-    ReportDbSqeCallback_(UbTransportLiteImpl* ubTransportLitePtr, u32 sqId, u32 taskId, Hccl::TaskParam* taskParam);
 
     // ReportSqeProfiling_子方法
-    inline HcclResult FillTaskParamNotify_(Hccl::TaskParam& taskParam, const uint8_t* sqePtr, u64 beginTime) const;
-    inline HcclResult FillTaskParamSdma_(Hccl::TaskParam& taskParam, const uint8_t* sqePtr, u64 beginTime) const;
+    inline HcclResult
+    FillSlotNotify_(Hccl::DfxTaskInfo* slot, const uint8_t* sqePtr, StreamLite* streamLite, u32 taskId) const;
+    inline HcclResult
+    FillSlotSdma_(Hccl::DfxTaskInfo* slot, const uint8_t* sqePtr, StreamLite* streamLite, u32 taskId) const;
+    inline void FillSlotCommonFields_(
+        Hccl::DfxTaskInfo* slot, StreamLite* streamLite, u32 taskId, u8 linkType, u8 transportType,
+        u64 channelHandle) const;
+    inline u8 ConvertSdmaOpCodeToReduceOp_(uint8_t opcode) const;
 
     // 统计当前cache entry的bytes开销
     uint64_t entryBytes_ = 0;
