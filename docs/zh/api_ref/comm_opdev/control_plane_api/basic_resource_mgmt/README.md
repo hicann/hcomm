@@ -20,3 +20,4 @@
 - [HcommChannelDestroy](HcommChannelDestroy.md)
 - [HcommThreadAlloc](HcommThreadAlloc.md)
 - [HcommThreadFree](HcommThreadFree.md)
+- [HcommThreadResGetInfo](HcommThreadResGetInfo.md)
