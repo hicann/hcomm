@@ -459,7 +459,6 @@ RaSocketTryListenStart(struct SocketListenInfoT conn[], u32 num, const IpAddress
         return true;
     } else if (ret == SOCK_EADDRINUSE) {
         u32 port = (num > 0) ? conn[0].port : HCCL_INVALID_PORT;
-        ReportAddrInUseError(localIp, port, netMode);
         HCCL_INFO(
             "[%s]ra socket listen could not start, due to the port[%u] has already been bound. please try"
             " another port or check the port status",
