@@ -69,6 +69,10 @@ extern CcuResult CcuVariableOrVarToVar(CcuVariableHandle resVar, CcuVariableHand
 extern CcuResult CcuVariableXorVarToVar(CcuVariableHandle resVar, CcuVariableHandle varA, CcuVariableHandle varB);
 /** @brief 变量按位取反：resVar = ~varA。@return CCU_SUCCESS 成功，否则为错误码。 */
 extern CcuResult CcuVariableNotVar(CcuVariableHandle resVar, CcuVariableHandle varA);
+/** @brief 变量左移：resVar = varA << varB。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuVariableShlVarToVar(CcuVariableHandle resVar, CcuVariableHandle varA, CcuVariableHandle varB);
+/** @brief 变量右移：resVar = varA >> varB。@return CCU_SUCCESS 成功，否则为错误码。 */
+extern CcuResult CcuVariableShrVarToVar(CcuVariableHandle resVar, CcuVariableHandle varA, CcuVariableHandle varB);
 
 // Address操作类 相关接口
 extern CcuResult CcuAddressAssignImm(CcuAddressHandle addr, uint64_t immediate);

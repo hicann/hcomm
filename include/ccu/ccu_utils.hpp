@@ -45,6 +45,7 @@ namespace ccu {
         };
         enum class CcuArithmeticOperatorType { ADDITION, SUBTRACTION, MULTIPLICATION, INVALID };
         enum class CcuLogicOperatorType { AND, OR, XOR, NOT, INVALID };
+        enum class CcuShiftOperatorType { LEFT, RIGHT, INVALID };
 
         template <typename lhsT, typename rhsT>
         class CcuOperator {
@@ -104,6 +105,25 @@ namespace ccu {
 
             lhsT lhs;
             CcuLogicOperatorType type{CcuLogicOperatorType::INVALID};
+        };
+
+        // 二元移位运算(shl/shr)算子，仅支持变量-变量，不支持立即数
+        template <typename lhsT, typename rhsT>
+        class CcuShiftOperator : public CcuOperator<lhsT, rhsT> {
+        public:
+            CcuShiftOperator(lhsT lhs, rhsT rhs, CcuShiftOperatorType type)
+                : CcuOperator<lhsT, rhsT>(lhs, rhs),
+                  type(type)
+            {
+                Check();
+            }
+            void Check() const
+            {
+                throw ::AscendC::ccu::detail::CcuException(
+                    CcuResult::CCU_E_PARA, "CcuShiftOperator: invalid operand types");
+            }
+
+            CcuShiftOperatorType type{CcuShiftOperatorType::INVALID};
         };
 
     } // namespace detail

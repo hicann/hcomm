@@ -269,6 +269,26 @@ CcuResult CcuVariableNotVar(CcuVariableHandle resVar, CcuVariableHandle varA)
     return CcuResult::CCU_SUCCESS;
 }
 
+CcuResult CcuVariableShlVarToVar(CcuVariableHandle resVar, CcuVariableHandle varA, CcuVariableHandle varB)
+{
+    const uint32_t devLogicId = HcclGetThreadDeviceId();
+    auto kernel = hcomm::CcuKernelMgr::GetInstance(devLogicId).GetCurrentKernel();
+    CCU_CHK_PTR_NULL(kernel);
+    CCU_CHK_RET(kernel->VariableShlVarToVar(resVar, varA, varB));
+
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult CcuVariableShrVarToVar(CcuVariableHandle resVar, CcuVariableHandle varA, CcuVariableHandle varB)
+{
+    const uint32_t devLogicId = HcclGetThreadDeviceId();
+    auto kernel = hcomm::CcuKernelMgr::GetInstance(devLogicId).GetCurrentKernel();
+    CCU_CHK_PTR_NULL(kernel);
+    CCU_CHK_RET(kernel->VariableShrVarToVar(resVar, varA, varB));
+
+    return CcuResult::CCU_SUCCESS;
+}
+
 /*
 Address 相关接口
 */

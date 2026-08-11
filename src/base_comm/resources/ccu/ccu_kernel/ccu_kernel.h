@@ -199,6 +199,10 @@ public:
     CcuResult
     VariableXorVarToVar(CcuVariableHandle varHandle, CcuVariableHandle varAHandle, CcuVariableHandle varBHandle);
     CcuResult VariableNotVar(CcuVariableHandle varHandle, CcuVariableHandle varAHandle);
+    CcuResult
+    VariableShlVarToVar(CcuVariableHandle varHandle, CcuVariableHandle varAHandle, CcuVariableHandle varBHandle);
+    CcuResult
+    VariableShrVarToVar(CcuVariableHandle varHandle, CcuVariableHandle varAHandle, CcuVariableHandle varBHandle);
     CcuResult AddressAssignImm(CcuAddressHandle addr, uint64_t immediate);
     CcuResult AddressAssignVar(CcuAddressHandle addrHandle, CcuVariableHandle varHandle);
     CcuResult AddressAssignAddr(CcuAddressHandle dstAddrHandle, CcuAddressHandle srcAddrHandle);

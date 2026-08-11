@@ -694,6 +694,30 @@ CcuResult CcuKernel::VariableNotVar(CcuVariableHandle varHandle, CcuVariableHand
     return CcuResult::CCU_SUCCESS;
 }
 
+CcuResult
+CcuKernel::VariableShlVarToVar(CcuVariableHandle varHandle, CcuVariableHandle varAHandle, CcuVariableHandle varBHandle)
+{
+    CcuRep::Variable *resVar{nullptr}, *leftVar{nullptr}, *rightVar{nullptr};
+    CCU_CHK_RET(GetVariableByHandle(varHandle, &resVar));
+    CCU_CHK_RET(GetVariableByHandle(varAHandle, &leftVar));
+    CCU_CHK_RET(GetVariableByHandle(varBHandle, &rightVar));
+
+    *resVar = *leftVar << *rightVar;
+    return CcuResult::CCU_SUCCESS;
+}
+
+CcuResult
+CcuKernel::VariableShrVarToVar(CcuVariableHandle varHandle, CcuVariableHandle varAHandle, CcuVariableHandle varBHandle)
+{
+    CcuRep::Variable *resVar{nullptr}, *leftVar{nullptr}, *rightVar{nullptr};
+    CCU_CHK_RET(GetVariableByHandle(varHandle, &resVar));
+    CCU_CHK_RET(GetVariableByHandle(varAHandle, &leftVar));
+    CCU_CHK_RET(GetVariableByHandle(varBHandle, &rightVar));
+
+    *resVar = *leftVar >> *rightVar;
+    return CcuResult::CCU_SUCCESS;
+}
+
 /*========== Event信号同步类 相关接口 ==========*/
 CcuResult CcuKernel::EventRecord(CcuEventHandle eventHandle, uint32_t mask)
 {

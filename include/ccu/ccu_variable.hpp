@@ -232,6 +232,25 @@ namespace ccu {
             }
         }
 
+        void operator=(detail::CcuShiftOperator<Variable, Variable> op) const
+        {
+            switch (op.type) {
+                case detail::CcuShiftOperatorType::LEFT:
+                    CCU_THROW_IF_FAILED(
+                        CcuVariableShlVarToVar(this->handle, op.lhs.handle, op.rhs.handle),
+                        "Variable::operator=(Var<<Var): CcuVariableShlVarToVar failed");
+                    break;
+                case detail::CcuShiftOperatorType::RIGHT:
+                    CCU_THROW_IF_FAILED(
+                        CcuVariableShrVarToVar(this->handle, op.lhs.handle, op.rhs.handle),
+                        "Variable::operator=(Var>>Var): CcuVariableShrVarToVar failed");
+                    break;
+                default:
+                    throw detail::CcuException(
+                        CcuResult::CCU_E_PARA, "Variable::operator=: invalid shift operator type");
+            }
+        }
+
         detail::CcuLogicOperator<Variable, Variable> operator&(const Variable& that) const
         {
             return detail::CcuLogicOperator<Variable, Variable>(*this, that, detail::CcuLogicOperatorType::AND);
@@ -271,6 +290,30 @@ namespace ccu {
             CCU_THROW_IF_FAILED(
                 CcuVariableXorVarToVar(this->handle, this->handle, other.handle),
                 "Variable::operator^=(Variable): CcuVariableXorVarToVar failed");
+        }
+
+        detail::CcuShiftOperator<Variable, Variable> operator<<(const Variable& that) const
+        {
+            return detail::CcuShiftOperator<Variable, Variable>(*this, that, detail::CcuShiftOperatorType::LEFT);
+        }
+
+        detail::CcuShiftOperator<Variable, Variable> operator>>(const Variable& that) const
+        {
+            return detail::CcuShiftOperator<Variable, Variable>(*this, that, detail::CcuShiftOperatorType::RIGHT);
+        }
+
+        void operator<<=(const Variable& other) const
+        {
+            CCU_THROW_IF_FAILED(
+                CcuVariableShlVarToVar(this->handle, this->handle, other.handle),
+                "Variable::operator<<=(Variable): CcuVariableShlVarToVar failed");
+        }
+
+        void operator>>=(const Variable& other) const
+        {
+            CCU_THROW_IF_FAILED(
+                CcuVariableShrVarToVar(this->handle, this->handle, other.handle),
+                "Variable::operator>>=(Variable): CcuVariableShrVarToVar failed");
         }
 
         CondExpr operator==(uint64_t immediate) { return CondExpr{this, nullptr, immediate, CCU_CONDITION_EQ, false}; }
@@ -325,6 +368,10 @@ inline void AscendC::ccu::detail::CcuLogicOperator<AscendC::ccu::Variable, Ascen
 
 template <>
 inline void AscendC::ccu::detail::CcuLogicUnaryOperator<AscendC::ccu::Variable>::Check() const
+{}
+
+template <>
+inline void AscendC::ccu::detail::CcuShiftOperator<AscendC::ccu::Variable, AscendC::ccu::Variable>::Check() const
 {}
 
 #endif // CCU_VARIABLE_HPP

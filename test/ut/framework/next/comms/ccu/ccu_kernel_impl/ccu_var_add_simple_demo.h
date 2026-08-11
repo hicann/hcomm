@@ -274,5 +274,9 @@ CcuResult CcuVariableComputingKernel(CcuKernelArg arg)
     result &= varB;
     result |= varB;
     result ^= varB;
+    result = varA << varB;
+    result = varA >> varB;
+    result <<= varB;
+    result >>= varB;
     return CcuResult::CCU_SUCCESS;
 }
