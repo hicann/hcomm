@@ -379,7 +379,7 @@ HcclResult AllReduceOperator::SelectAlgfor910B(const OpParam& param, std::string
         return HCCL_E_NOT_SUPPORT;
     }
 
-    if (topoMatcher_->GetDeterministicConfig() == DETERMINISTIC_STRICT
+    if (topoMatcher_->GetDeterministicConfig() == DETERMINISTIC_STRICT && userRankSize_ > 2
         && (param.DataDes.dataType == HCCL_DATA_TYPE_FP16 || param.DataDes.dataType == HCCL_DATA_TYPE_FP32
             || param.DataDes.dataType == HCCL_DATA_TYPE_BFP16)) {
         if (param.aicpuUnfoldMode || (topoMatcher_->GetAivModeConfig() && !isBarrierOp)) {

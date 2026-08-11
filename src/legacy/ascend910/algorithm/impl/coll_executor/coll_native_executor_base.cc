@@ -379,6 +379,9 @@ SubCommInfo CollNativeExecutorBase::GetSubCommInfo(const CommPlane levelIndex, c
     info.localRankSize = transportInfo.transportRequests.size();
     info.links = transportInfo.links;
     info.virtualLinks = transportInfo.virtualLinks;
+    HCCL_INFO(
+        "[CollNativeExecutorBase][GetSubCommInfo] localRank[%u], localRankSize[%u]", info.localRank,
+        info.localRankSize);
     return info;
 }
 

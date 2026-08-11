@@ -188,7 +188,7 @@ HcclResult ReduceScatterOperator::SelectAlgfor910B(const OpParam& param, std::st
         cclBufferManager_.GetInCCLbuffer().ptr(), cclBufferManager_.GetOutCCLbuffer().ptr(), param.DataDes.dataType,
         param.reduceType);
 
-    if (topoMatcher_->GetDeterministicConfig() == DETERMINISTIC_STRICT) {
+    if (topoMatcher_->GetDeterministicConfig() == DETERMINISTIC_STRICT && userRankSize_ > 2) {
         if (multiModuleDiffDeviceNumMode_) {
             // 保序规约场景（多batch一致），当前不支持A2非对称场景
             HCCL_ERROR(
