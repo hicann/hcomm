@@ -219,7 +219,7 @@ void RankTableInfo::Dump() const
     for (const auto& rank : ranks) {
         HCCL_DEBUG("%s", rank.Describe().c_str());
         for (const auto& levelInfo : rank.rankLevelInfos) {
-            HCCL_DEBUG("    %s", levelInfo.Describe().c_str());
+            HCCL_DEBUG("- %s", levelInfo.Describe().c_str());
         }
     }
 }
