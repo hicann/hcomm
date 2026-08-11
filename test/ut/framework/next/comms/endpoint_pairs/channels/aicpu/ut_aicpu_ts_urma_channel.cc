@@ -1,3 +1,13 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
 #include "gtest/gtest.h"
 #include "mockcpp/mokc.h"
 #include <mockcpp/mockcpp.hpp>
@@ -51,6 +61,14 @@ HcommResult StubUrmaGetAllMemHandlesOne(EndpointHandle, void** memHandles, uint3
         = std::make_shared<Hccl::Buffer>(0x620000U, 0x1000U, HCCL_MEM_TYPE_DEVICE, "urma_all");
     static std::shared_ptr<Hccl::LocalUbRmaBuffer> localBuffer = std::make_shared<Hccl::LocalUbRmaBuffer>(buffer);
     static std::shared_ptr<Hccl::LocalUbRmaBuffer> localBuffers[1] = {localBuffer};
+    *memHandles = localBuffers;
+    *memHandleNum = 1;
+    return HCCL_SUCCESS;
+}
+
+HcommResult StubUrmaGetAllMemHandlesWithNullSlot(EndpointHandle, void** memHandles, uint32_t* memHandleNum)
+{
+    static std::shared_ptr<Hccl::LocalUbRmaBuffer> localBuffers[1] = {nullptr};
     *memHandles = localBuffers;
     *memHandleNum = 1;
     return HCCL_SUCCESS;
@@ -156,6 +174,18 @@ TEST_F(AicpuTsUrmaChannelTest, UT_ParseInputParam_When_ExchangeAllMemsTrue_Expec
     ASSERT_EQ(ch.ParseInputParam(), HCCL_SUCCESS);
     ASSERT_EQ(ch.commonRes_.bufferVec.size(), 1U);
     EXPECT_EQ(ch.commonRes_.bufferVec[0]->GetAddr(), 0x620000U);
+}
+
+TEST_F(AicpuTsUrmaChannelTest, UT_ParseInputParam_When_ExchangeAllMemsTrueAndNullSlot_Expect_ReturnHCCL_E_PTR)
+{
+    StubEndpointForUrmaChannel endpoint;
+    HcommChannelDesc desc{};
+    desc.exchangeAllMems = true;
+    AicpuTsUrmaChannel ch(reinterpret_cast<EndpointHandle>(&endpoint), desc);
+
+    MOCKER(HcommMemGetAllMemHandles).stubs().will(invoke(StubUrmaGetAllMemHandlesWithNullSlot));
+
+    EXPECT_EQ(ch.ParseInputParam(), HCCL_E_PTR);
 }
 
 TEST_F(AicpuTsUrmaChannelTest, UT_UpdateMemInfo_When_ValidMemHandles_Expect_UpdateTransportAndCommonRes)

@@ -327,10 +327,12 @@ HcclResult AivUrmaChannel::ParseInputParam()
         HCCL_INFO("[AivUrmaChannel][%s] Got memHandleNum[%u].", __func__, memHandleNum);
         for (uint32_t i = 0; i < memHandleNum; ++i) {
             std::shared_ptr<Hccl::LocalUbRmaBuffer>& localUbRmaBuffer = memHandles[i];
+            CHK_SMART_PTR_NULL(localUbRmaBuffer);
+            Hccl::Buffer* buf = localUbRmaBuffer->GetBuf();
+            CHK_PTR_NULL(buf);
             HCCL_INFO(
                 "[AivUrmaChannel][%s] Got memHandle No.%u: addr[0x%llx], size[0x%llx], memInfo[%s].", __func__, i,
-                localUbRmaBuffer->GetAddr(), localUbRmaBuffer->GetSize(),
-                localUbRmaBuffer->GetBuf()->GetMemInfo().c_str());
+                localUbRmaBuffer->GetAddr(), localUbRmaBuffer->GetSize(), buf->GetMemInfo().c_str());
             commonRes_.bufferVec.push_back(localUbRmaBuffer.get());
         }
     } else {

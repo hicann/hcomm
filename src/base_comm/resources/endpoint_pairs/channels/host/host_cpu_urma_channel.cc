@@ -59,12 +59,14 @@ HcclResult HostCpuUrmaChannel::ParseInputParam()
         HCCL_INFO("[HostCpuUrmaChannel][%s] Got memHandleNum[%u].", __func__, memHandleNum);
         for (uint32_t i = 0; i < memHandleNum; ++i) {
             std::shared_ptr<Hccl::LocalUbRmaBuffer>& localUbRmaBuffer = memHandles[i];
+            CHK_SMART_PTR_NULL(localUbRmaBuffer);
+            Hccl::Buffer* buf = localUbRmaBuffer->GetBuf();
+            CHK_PTR_NULL(buf);
             HCCL_INFO(
                 "[HostCpuUrmaChannel][%s] Got memHandle No.%u: addr[0x%llx], size[0x%llx], memType[%d], memInfo[%s].",
                 __func__, i, static_cast<unsigned long long>(localUbRmaBuffer->GetAddr()),
-                static_cast<unsigned long long>(localUbRmaBuffer->GetSize()),
-                static_cast<int>(localUbRmaBuffer->GetBuf()->GetMemType()),
-                localUbRmaBuffer->GetBuf()->GetMemInfo().c_str());
+                static_cast<unsigned long long>(localUbRmaBuffer->GetSize()), static_cast<int>(buf->GetMemType()),
+                buf->GetMemInfo().c_str());
             commonRes_.bufferVec.push_back(localUbRmaBuffer.get());
         }
     } else {

@@ -115,12 +115,14 @@ HcclResult HostCpuRoceChannel::ParseInputParam()
         HCCL_INFO("[HostCpuRoceChannel][%s] Got memHandleNum[%u].", __func__, memHandleNum);
         for (uint32_t i = 0; i < memHandleNum; ++i) {
             std::shared_ptr<Hccl::LocalRdmaRmaBuffer>& localRdmaBuffer = memHandles[i];
+            CHK_SMART_PTR_NULL(localRdmaBuffer);
+            Hccl::Buffer* buf = localRdmaBuffer->GetBuf();
+            CHK_PTR_NULL(buf);
             HCCL_INFO(
                 "[HostCpuRoceChannel][%s] Got memHandle No.%u: addr[0x%llx], size[0x%llx], memType[%d], memInfo[%s].",
                 __func__, i, static_cast<unsigned long long>(localRdmaBuffer->GetAddr()),
-                static_cast<unsigned long long>(localRdmaBuffer->GetSize()),
-                static_cast<int>(localRdmaBuffer->GetBuf()->GetMemType()),
-                localRdmaBuffer->GetBuf()->GetMemInfo().c_str());
+                static_cast<unsigned long long>(localRdmaBuffer->GetSize()), static_cast<int>(buf->GetMemType()),
+                buf->GetMemInfo().c_str());
             localRmaBuffers_.emplace_back(localRdmaBuffer.get());
         }
     } else {

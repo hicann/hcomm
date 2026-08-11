@@ -67,7 +67,7 @@ HcclResult AicpuTsUboeUbgChannelHelper::ParseInputParam()
         for (uint32_t i = 0; i < memHandleNum; ++i) {
             std::shared_ptr<Hccl::LocalUbRmaBuffer>& localUbRmaBuffer = memHandles[i];
             CHK_SMART_PTR_NULL(localUbRmaBuffer);
-            auto buf = localUbRmaBuffer->GetBuf();
+            Hccl::Buffer* buf = localUbRmaBuffer->GetBuf();
             CHK_PTR_NULL(buf);
             HCCL_INFO(
                 "[AicpuTsUboeUbgChannelHelper][%s] Got memHandle No.%u: addr[0x%llx], size[0x%llx], "
