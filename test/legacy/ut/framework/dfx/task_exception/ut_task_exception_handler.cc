@@ -21,6 +21,14 @@
 #include "mc2_global_mirror_tasks.h"
 #include "ccu_device_manager.h"
 #include "ccu_component.h"
+#include <adapter_error_manager_pub.h>
+
+void RptInputErr(std::string error_code, std::vector<std::string> key, std::vector<std::string> value)
+{
+    (void)error_code;
+    (void)key;
+    (void)value;
+}
 
 #define private public
 #define protected public
@@ -732,7 +740,7 @@ TEST_F(TaskExceptionHandlerTest, test_process_when_task_less_than_50)
 
 HcclResult MockGetCcuErrorMsg(
     s32 deviceId, uint16_t missionStatus, uint16_t currIns, const ParaCcu& ccuTaskParam,
-    std::vector<CcuErrorInfo>& errorInfo)
+    const std::string& groupRankContent, std::vector<CcuErrorInfo>& errorInfo)
 {
     CcuErrorInfo loopGroupErrorInfo{};
     loopGroupErrorInfo.type = CcuErrorType::LOOP_GROUP;
@@ -938,6 +946,78 @@ TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_Normal_Expect_Print
     if (mockFlagBuff) {
         free(mockFlagBuff);
     }
+}
+
+namespace Hccl {
+void ReportErrorMsg(
+    const TaskInfo& exceptionTaskInfo, const string& groupRankContent, const ErrorMessageReport& errorMessage,
+    const rtExceptionInfo_t* exceptionInfo);
+}
+
+namespace {
+std::string g_capturedErrorCode;
+std::vector<std::string> g_capturedValues;
+
+void stub_RptInputErr_capture(std::string error_code, std::vector<std::string> key, std::vector<std::string> value)
+{
+    g_capturedErrorCode = error_code;
+    g_capturedValues = value;
+}
+} // namespace
+
+TEST_F(TaskExceptionHandlerTest, Ut_ReportErrorMsg_When_TaskNotifyWait_Expect_EI0002WithGroupRankContent)
+{
+    auto taskInfo = InitTaskInfo();
+    taskInfo->taskParam_.taskType = TaskParamType::TASK_NOTIFY_WAIT;
+
+    ErrorMessageReport errorMessage{};
+    strncpy(errorMessage.group, "test_group", sizeof(errorMessage.group) - 1);
+    errorMessage.rankSize = 8;
+    errorMessage.rankId = 3;
+
+    rtExceptionInfo_t exceptionInfo{};
+    const std::string testGroupRank = "group:[test_group], rankSize[8], localRank[3], remoteRank[0]";
+    g_capturedErrorCode.clear();
+    g_capturedValues.clear();
+    MOCKER(RptInputErr).stubs().will(invoke(stub_RptInputErr_capture));
+    EXPECT_NO_THROW(ReportErrorMsg(*taskInfo, testGroupRank, errorMessage, &exceptionInfo));
+    EXPECT_EQ(g_capturedErrorCode, "EI0002");
+    ASSERT_EQ(g_capturedValues.size(), 4);
+    EXPECT_EQ(g_capturedValues[3], testGroupRank);
+}
+
+TEST_F(TaskExceptionHandlerTest, Ut_ReportErrorMsg_When_TaskWriteWithNotify_Expect_EI0018Path)
+{
+    auto taskInfo = InitTaskInfo();
+    taskInfo->taskParam_.taskType = TaskParamType::TASK_WRITE_WITH_NOTIFY;
+
+    ErrorMessageReport errorMessage{};
+    strncpy(errorMessage.group, "test_group", sizeof(errorMessage.group) - 1);
+    errorMessage.rankSize = 8;
+    errorMessage.rankId = 3;
+
+    rtExceptionInfo_t exceptionInfo{};
+    g_capturedErrorCode.clear();
+    MOCKER(RptInputErr).stubs().will(invoke(stub_RptInputErr_capture));
+    EXPECT_NO_THROW(ReportErrorMsg(*taskInfo, "", errorMessage, &exceptionInfo));
+    EXPECT_EQ(g_capturedErrorCode, "EI0018");
+}
+
+TEST_F(TaskExceptionHandlerTest, Ut_ReportErrorMsg_When_TaskUbReduceInline_Expect_EI0018Path)
+{
+    auto taskInfo = InitTaskInfo();
+    taskInfo->taskParam_.taskType = TaskParamType::TASK_UB_REDUCE_INLINE;
+
+    ErrorMessageReport errorMessage{};
+    strncpy(errorMessage.group, "test_group", sizeof(errorMessage.group) - 1);
+    errorMessage.rankSize = 8;
+    errorMessage.rankId = 3;
+
+    rtExceptionInfo_t exceptionInfo{};
+    g_capturedErrorCode.clear();
+    MOCKER(RptInputErr).stubs().will(invoke(stub_RptInputErr_capture));
+    EXPECT_NO_THROW(ReportErrorMsg(*taskInfo, "", errorMessage, &exceptionInfo));
+    EXPECT_EQ(g_capturedErrorCode, "EI0018");
 }
 
 TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_MallocFailure_Expect_ReturnEarly)

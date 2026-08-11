@@ -348,7 +348,8 @@ void TaskExceptionHandler::ProcessException(rtExceptionInfo_t* exceptionInfo, co
             true, "EI0002",
             std::vector<std::string>({"remote_rankid", "base_information", "task_information", "group_rank_content"}),
             std::vector<std::string>(
-                {std::to_string(taskInfo.remoteRank_), taskInfo.GetBaseInfo(), taskInfo.GetParaInfo(), "none"}));
+                {std::to_string(taskInfo.remoteRank_), taskInfo.GetBaseInfo(), taskInfo.GetParaInfo(),
+                 GetGroupRankInfo(taskInfo)}));
     }
     HCCL_ERROR(
         "[TaskExceptionHandler][%s]Task run failed, base information is deviceID:[%u], %s.", __func__,
@@ -476,7 +477,8 @@ void TaskExceptionHandler::ProcessCcuMC2Exception(rtExceptionInfo_t* exceptionIn
         ParaCcu serverParam = serverTaskInfo->taskParam_.taskPara.Ccu;
         serverParam.execMissionId = missionInfo.missionId;
         vector<CcuErrorInfo> serverErrorInfos{};
-        if (GetCcuErrorMsg(exceptionInfo->deviceid, status, serverParam, serverErrorInfos)
+        if (GetCcuErrorMsg(
+                exceptionInfo->deviceid, status, serverParam, GetGroupRankInfo(*serverTaskInfo), serverErrorInfos)
             != HcclResult::HCCL_SUCCESS) {
             HCCL_ERROR("Get CCU error info failed.");
             continue;
@@ -505,7 +507,8 @@ void TaskExceptionHandler::ProcessCcuMC2Exception(rtExceptionInfo_t* exceptionIn
             ParaCcu algoParam = algoTaskInfo->taskParam_.taskPara.Ccu;
             algoParam.execMissionId = missionInfo.missionId;
             vector<CcuErrorInfo> algoErrorInfos{};
-            if (GetCcuErrorMsg(exceptionInfo->deviceid, status, algoParam, algoErrorInfos)
+            if (GetCcuErrorMsg(
+                    exceptionInfo->deviceid, status, algoParam, GetGroupRankInfo(*algoTaskInfo), algoErrorInfos)
                 != HcclResult::HCCL_SUCCESS) {
                 HCCL_ERROR("Get CCU error info failed.");
                 continue;
@@ -728,7 +731,6 @@ void ReportErrorMsg(
     const TaskInfo& exceptionTaskInfo, const string& groupRankContent, const ErrorMessageReport& errorMessage,
     const rtExceptionInfo_t* exceptionInfo)
 {
-    (void)groupRankContent;
     HCCL_INFO("[ReportErrorMsg] start");
     if (exceptionTaskInfo.taskParam_.taskType == TaskParamType::TASK_NOTIFY_WAIT) {
         HCCL_ERROR("[ReportErrorMsg] EI0002");
@@ -737,7 +739,7 @@ void ReportErrorMsg(
             std::vector<std::string>({"remote_rankid", "base_information", "task_information", "group_rank_content"}),
             std::vector<std::string>(
                 {std::to_string(exceptionTaskInfo.remoteRank_), exceptionTaskInfo.GetBaseInfo().c_str(),
-                 (exceptionTaskInfo.GetParaInfo()).c_str(), "none"}));
+                 (exceptionTaskInfo.GetParaInfo()).c_str(), groupRankContent}));
     } else if (
         exceptionTaskInfo.taskParam_.taskType == TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY
         || exceptionTaskInfo.taskParam_.taskType == TaskParamType::TASK_WRITE_WITH_NOTIFY
@@ -858,7 +860,7 @@ void TaskExceptionHandler::PrintCcuErrorInfo(uint32_t deviceId, uint16_t status,
 {
     const ParaCcu& ccuTaskParam = taskInfo.taskParam_.taskPara.Ccu;
     vector<CcuErrorInfo> errorInfos{};
-    HcclResult ret = GetCcuErrorMsg(deviceId, status, ccuTaskParam, errorInfos);
+    HcclResult ret = GetCcuErrorMsg(deviceId, status, ccuTaskParam, GetGroupRankInfo(taskInfo), errorInfos);
     const uint8_t missionStatus = (status >> 8) & 0xFF;
     if (ret != HcclResult::HCCL_SUCCESS || errorInfos.empty()) {
         HCCL_ERROR(

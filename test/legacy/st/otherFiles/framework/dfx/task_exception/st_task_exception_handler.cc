@@ -647,7 +647,7 @@ TEST_F(TaskExceptionHandlerTest, test_process_when_task_less_than_50)
 
 HcclResult MockGetCcuErrorMsg(
     s32 deviceId, uint16_t missionStatus, uint16_t currIns, const ParaCcu& ccuTaskParam,
-    std::vector<CcuErrorInfo>& errorInfo)
+    const std::string& groupRankContent, std::vector<CcuErrorInfo>& errorInfo)
 {
     CcuErrorInfo loopGroupErrorInfo{};
     loopGroupErrorInfo.type = CcuErrorType::LOOP_GROUP;

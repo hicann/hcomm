@@ -1325,7 +1325,7 @@ void CommunicatorImpl::CheckRankGraphAddrs() const
         if (interface->GetPos() == AddrPosition::DEVICE && protocols.count(LinkProtocol::PCIE) == 0
             && protocols.count(LinkProtocol::UBOE) == 0 && localEidSet.count(interface->GetAddr().GetEid()) == 0) {
             RPT_INPUT_ERR(
-                true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+                true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
                 std::vector<std::string>({interface->GetAddr().GetIpStr(), "addr", "A right ip address"}));
             THROW<InvalidParamsException>(StringFormat(
                 "[CommunicatorImpl][%s]"

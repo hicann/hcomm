@@ -117,7 +117,7 @@ TEST_F(CcuErrorHandlerTest, test_gen_status_info)
     vector<CcuErrorInfo> errorInfo{};
 
     baseInfo.status = 0x0100;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
     EXPECT_EQ(errorInfo.size(), 1);
     EXPECT_EQ(errorInfo[0].type, CcuErrorType::MISSION);
     EXPECT_EQ(errorInfo[0].dieId, 1);
@@ -127,47 +127,47 @@ TEST_F(CcuErrorHandlerTest, test_gen_status_info)
 
     errorInfo.clear();
     baseInfo.status = 0x0400;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
     EXPECT_EQ(string(errorInfo[0].msg.mission.missionError), "Transaction Retry Counter Exceeded(0x04)");
 
     errorInfo.clear();
     baseInfo.status = 0x0203;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
     EXPECT_EQ(
         string(errorInfo[0].msg.mission.missionError),
         "Local Operation Error(0x02), Remote Response Length Error(0x03)");
 
     errorInfo.clear();
     baseInfo.status = 0x0301;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
     EXPECT_EQ(
         string(errorInfo[0].msg.mission.missionError),
         "Remote Operation Error(0x03), Remote Unsupported Request(0x01)");
 
     errorInfo.clear();
     baseInfo.status = 0x0901;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
     EXPECT_EQ(
         string(errorInfo[0].msg.mission.missionError), "CCUM Execute Error(0x09), SQE instr and key not match(0x01)");
 
     errorInfo.clear();
     baseInfo.status = 0x0902;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
     EXPECT_EQ(string(errorInfo[0].msg.mission.missionError), "CCUM Execute Error(0x09), CCU Mission Task Killed(0x02)");
 
     errorInfo.clear();
     baseInfo.status = 0x0A07;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
     EXPECT_EQ(string(errorInfo[0].msg.mission.missionError), "CCUA Execute Error(0x0A), Atomic Permission Err(0x07)");
 
     errorInfo.clear();
     baseInfo.status = 0x0000;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
     EXPECT_EQ(string(errorInfo[0].msg.mission.missionError), "Unknown Status");
 
     errorInfo.clear();
     baseInfo.status = 0x02ff;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
     EXPECT_EQ(string(errorInfo[0].msg.mission.missionError), "Local Operation Error(0x02), Unknown Status");
 }
 

@@ -131,8 +131,10 @@ void ProfilingHandlerLite::ReportHcclOpInfo(const DfxOpInfo& opInfo) const
     HCCL_INFO(
         "[ProfilingHandlerLite][ReportHcclOpInfo] relay:%d, retry:%d, dataType:%s, algType:%llu, count:%llu, "
         "groupName:%llu, ranksize:%u, taskId:%u, streamId:%u",
-        hcclOpInfo->relay, hcclOpInfo->retry, DataTypeToSerialString(hcclOpInfo->dataType).c_str(), hcclOpInfo->algType,
-        hcclOpInfo->count, hcclOpInfo->groupName, hcclOpInfo->ranksize, hcclOpInfo->taskId, hcclOpInfo->streamId);
+        hcclOpInfo->relay, hcclOpInfo->retry, DataTypeToSerialString(hcclOpInfo->dataType).c_str(),
+        static_cast<unsigned long long>(hcclOpInfo->algType), static_cast<unsigned long long>(hcclOpInfo->count),
+        static_cast<unsigned long long>(hcclOpInfo->groupName), hcclOpInfo->ranksize, hcclOpInfo->taskId,
+        static_cast<unsigned int>(hcclOpInfo->streamId));
     ReportAdditionInfo(reporterData);
 }
 

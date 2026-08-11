@@ -67,7 +67,8 @@ const map<uint8_t, map<uint8_t, string>> MISSION_SUB_STATUS_MAP{
 };
 
 void CcuErrorHandler::GetCcuErrorMsg(
-    int32_t deviceId, uint16_t missionStatus, const ParaCcu& ccuTaskParam, std::vector<CcuErrorInfo>& errorInfo)
+    int32_t deviceId, uint16_t missionStatus, const ParaCcu& ccuTaskParam, const std::string& groupRankContent,
+    std::vector<CcuErrorInfo>& errorInfo)
 {
     const auto missionContext = GetCcuMissionContext(deviceId, ccuTaskParam.dieId, ccuTaskParam.execMissionId);
     if (missionStatus == 0) {
@@ -96,7 +97,7 @@ void CcuErrorHandler::GetCcuErrorMsg(
 
     // 分类处理Rep, 返回异常信息
     ErrorInfoBase baseInfo{deviceId, ccuTaskParam.dieId, ccuTaskParam.missionId, currIns, missionStatus};
-    GenStatusInfo(baseInfo, errorInfo);
+    GenStatusInfo(baseInfo, groupRankContent, errorInfo);
 
     // 处理Rep为FUNC_BLOCK的场景
     while (rep->Type() == CcuRepType::FUNC_BLOCK) {
@@ -204,7 +205,8 @@ static string StatusCode2Str(uint8_t highPart, uint8_t lowPart)
     return result.str();
 }
 
-void CcuErrorHandler::GenStatusInfo(const ErrorInfoBase& baseInfo, vector<CcuErrorInfo>& errorInfo)
+void CcuErrorHandler::GenStatusInfo(
+    const ErrorInfoBase& baseInfo, const std::string& groupRankContent, vector<CcuErrorInfo>& errorInfo)
 {
     CcuErrorInfo errorMsg{};
     errorMsg.type = CcuErrorType::MISSION;
@@ -219,7 +221,8 @@ void CcuErrorHandler::GenStatusInfo(const ErrorInfoBase& baseInfo, vector<CcuErr
             true, "EI0002",
             std::vector<std::string>({"remote_rankid", "base_information", "task_information", "group_rank_content"}),
             std::vector<std::string>(
-                {std::to_string(baseInfo.deviceId), baseInformation.c_str(), taskInformation.c_str(), "none"}));
+                {std::to_string(baseInfo.deviceId), baseInformation.c_str(), taskInformation.c_str(),
+                 groupRankContent.c_str()}));
     }
     const string statusMsg = StatusCode2Str(highPart, lowPart);
     const auto sRet

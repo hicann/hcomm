@@ -303,12 +303,14 @@ public:
     void operator=(const CcuErrorHandler&) = delete;
 
     static void GetCcuErrorMsg(
-        int32_t deviceId, uint16_t missionStatus, const ParaCcu& ccuTaskParam, std::vector<CcuErrorInfo>& errorInfo);
+        int32_t deviceId, uint16_t missionStatus, const ParaCcu& ccuTaskParam, const std::string& groupRankContent,
+        std::vector<CcuErrorInfo>& errorInfo);
     static void GetCcuJettys(int32_t deviceId, const ParaCcu& ccuTaskParam, std::vector<CcuJetty*> ccuJettys);
     static CcuMissionContext GetCcuMissionContext(int32_t deviceId, uint32_t dieId, uint32_t missionId);
 
 private:
-    static void GenStatusInfo(const ErrorInfoBase& baseInfo, std::vector<CcuErrorInfo>& errorInfo);
+    static void GenStatusInfo(
+        const ErrorInfoBase& baseInfo, const std::string& groupRankContent, std::vector<CcuErrorInfo>& errorInfo);
 
     // LoopGroup
     static void GenErrorInfoLoopGroup(

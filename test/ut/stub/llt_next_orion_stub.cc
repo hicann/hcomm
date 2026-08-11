@@ -1659,8 +1659,9 @@ HcclResult CcuCleanTaskKillState(const int32_t deviceLogicId) { return HCCL_SUCC
 
 uint16_t CcuRep::ParseRepeatNumFromParallelParam(uint64_t parallelParam) { return 3; }
 
-HcclResult
-GetCcuErrorMsg(s32 deviceId, uint16_t status, const ParaCcu& ccuTaskParam, std::vector<CcuErrorInfo>& errorInfo)
+HcclResult GetCcuErrorMsg(
+    s32 deviceId, uint16_t status, const ParaCcu& ccuTaskParam, const std::string& groupRankContent,
+    std::vector<CcuErrorInfo>& errorInfo)
 {
     return HCCL_SUCCESS;
 }

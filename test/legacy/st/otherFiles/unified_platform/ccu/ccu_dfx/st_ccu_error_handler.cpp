@@ -114,7 +114,7 @@ TEST_F(CcuErrorHandlerTest, test_gen_status_info)
     vector<CcuErrorInfo> errorInfo{};
 
     baseInfo.status = 0x0100;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
     EXPECT_EQ(errorInfo.size(), 1);
     EXPECT_EQ(errorInfo[0].type, CcuErrorType::MISSION);
     EXPECT_EQ(errorInfo[0].dieId, 1);
@@ -122,35 +122,35 @@ TEST_F(CcuErrorHandlerTest, test_gen_status_info)
 
     errorInfo.clear();
     baseInfo.status = 0x0400;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
 
     errorInfo.clear();
     baseInfo.status = 0x0203;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
 
     errorInfo.clear();
     baseInfo.status = 0x0301;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
 
     errorInfo.clear();
     baseInfo.status = 0x0901;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
 
     errorInfo.clear();
     baseInfo.status = 0x0902;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
 
     errorInfo.clear();
     baseInfo.status = 0x0A07;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
 
     errorInfo.clear();
     baseInfo.status = 0x0000;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
 
     errorInfo.clear();
     baseInfo.status = 0x02ff;
-    CcuErrorHandler::GenStatusInfo(baseInfo, errorInfo);
+    CcuErrorHandler::GenStatusInfo(baseInfo, "", errorInfo);
 }
 
 TEST_F(CcuErrorHandlerTest, test_error_info_when_rep_type_is_loc_post_sem)

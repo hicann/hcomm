@@ -270,7 +270,7 @@ void CheckRootInfoJson(const nlohmann::json& parseJson)
     TRY_CATCH_THROW(InvalidParamsException, msgVersion, version = GetJsonProperty(parseJson, "version"););
     if (version != "2.0") {
         RPT_INPUT_ERR(
-            true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+            true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
             std::vector<std::string>({version, "version", "2.0"}));
         HCCL_ERROR("[%s] failed with version [%s] is not \"2.0\".", __func__, version.c_str());
         THROW<InvalidParamsException>("version error");
@@ -287,7 +287,7 @@ void CheckRootInfoJson(const nlohmann::json& parseJson)
     bool isInvalidPath = (realpath(topoFilePath.c_str(), resolvedPath) == nullptr);
     if (isInvalidPath) {
         RPT_INPUT_ERR(
-            true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+            true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
             std::vector<std::string>({topoFilePath, "topo_file_path", "valid path"}));
         HCCL_ERROR("[%s] topo_file_path[%s] is not a valid real path", __func__, topoFilePath.c_str());
         THROW<InvalidParamsException>("topo_file_path error");
@@ -307,7 +307,7 @@ void CheckRootInfoJson(const nlohmann::json& parseJson)
     bool isRankCountMismatch = (rankCount != rankJsons.size());
     if (isRankCountMismatch) {
         RPT_INPUT_ERR(
-            true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+            true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
             std::vector<std::string>({std::to_string(rankCount), "rankCount", std::to_string(rankJsons.size())}));
         HCCL_ERROR(
             "[%s] failed with rankCount is not equal to rank_list size."

@@ -1779,9 +1779,6 @@ CommInitRootInfo(u32 nRanks, u32 rank, const HcclRootHandleV2& rootHandle, const
     RankTableInfo rankTable{};
     HcclResult ret = RootInfoDetect(nRanks, rank, rootHandle, rankTable, rootInfoDetectContext);
     if (ret != HCCL_SUCCESS) {
-        RPT_INPUT_ERR(
-            true, "EI0015", std::vector<std::string>({"error_reason"}),
-            std::vector<std::string>({"RootInfoDetect failed"}));
         HCCL_ERROR(
             "[%s] errNo[0x%016llx] RootInfoDetect failed, rootHandle[%s].", __func__, HCCL_ERROR_CODE(ret),
             identifier.c_str());
@@ -1941,9 +1938,6 @@ HcclResult HcclCommInitRootInfoConfigV2(
     RootInfoDetectBridge::DetectContext rootInfoDetectContext;
     HcclResult ret = RootInfoDetect(nRanks, rank, rootHandle, rankTable, rootInfoDetectContext);
     if (ret != HCCL_SUCCESS) {
-        RPT_INPUT_ERR(
-            true, "EI0015", std::vector<std::string>({"error_reason"}),
-            std::vector<std::string>({"RootInfoDetect failed"}));
         HCCL_ERROR(
             "[%s] errNo[0x%016llx] RootInfoDetect failed, identifier[%s].", __func__, HCCL_ERROR_CODE(ret),
             identifier.c_str());
