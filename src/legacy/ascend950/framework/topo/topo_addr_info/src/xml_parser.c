@@ -188,7 +188,7 @@ TopoAddrResult ParseXmlTags(const char* xmlPath, TagEntry* tags, unsigned int* t
 
     FILE* fp = fopen(xmlPath, "rb");
     if (fp == NULL) {
-        TOPO_ERR("ParseXmlTags: cannot open %s", xmlPath);
+        TOPO_INFO("ParseXmlTags: cannot open %s", xmlPath);
         return TOPO_ERR_OPEN_FILE;
     }
 

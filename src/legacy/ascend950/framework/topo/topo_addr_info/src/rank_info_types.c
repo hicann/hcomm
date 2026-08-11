@@ -293,7 +293,7 @@ TopoAddrResult ProcessLayerRoce(int npu_id, NetLayer* layer)
     char ip[MAX_ADDR_LEN] = {0};
     TopoAddrResult ret = GetRoceIpFromXml(npu_id, ip, sizeof(ip));
     if (ret != TOPO_SUCCESS || ip[0] == '\0') {
-        TOPO_ERR("ProcessLayerRoce: GetRoceIpFromXml failed for npu_id=%d, ret=%d", npu_id, ret);
+        TOPO_INFO("ProcessLayerRoce: GetRoceIpFromXml failed for npu_id=%d, ret=%d", npu_id, ret);
         TOPO_PERF_END(ProcessLayerRoce);
         return (ret != TOPO_SUCCESS) ? ret : TOPO_ERR_NOT_FOUND;
     }
