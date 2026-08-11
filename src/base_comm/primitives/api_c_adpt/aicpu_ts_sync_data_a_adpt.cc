@@ -74,7 +74,8 @@ int32_t HcommSendRequest(MsgHandle handle, const char *msgTag, const void *src, 
 
     HCCL_INFO("[%s] START. msgHandle[0x%llx], msgTag[%s], src[0x%llx], sizeByte[%zu].", __func__, handle, msgTag, src, sizeByte);
 
-    static uint32_t s_msgId{0};
+    static std::atomic<uint32_t> s_msgId{0};
+    *msgId = s_msgId.fetch_add(1, std::memory_order_relaxed);
     const uint8_t flagWriteValue{1};
     uint8_t *const dstFlagPtr = dstOnDevShmem;
     uint8_t *const dstMsgTagPtr = dstFlagPtr + sizeof(flagWriteValue);
@@ -89,10 +90,10 @@ int32_t HcommSendRequest(MsgHandle handle, const char *msgTag, const void *src, 
     CHK_PRT_RET(ret != EOK, HCCL_ERROR("[%s][memcpy_s] Writing data ERROR[%d].", __func__, ret), HCCL_E_INTERNAL);
     HCCL_INFO("[%s] Writing %zu bytes data from src to shared mem SUCCESS.", __func__, sizeByte);
 
-    HCCL_INFO("[%s] Writing %zu bytes msgId to shared mem START. msgId = %u.", __func__, sizeof(s_msgId), s_msgId);
-    ret = memcpy_s(dstMsgIdPtr, sizeof(s_msgId), &s_msgId, sizeof(s_msgId));
+    HCCL_INFO("[%s] Writing %zu bytes msgId to shared mem START. msgId = %u.", __func__, sizeof(*msgId), *msgId);
+    ret = memcpy_s(dstMsgIdPtr, sizeof(*msgId), msgId, sizeof(*msgId));
     CHK_PRT_RET(ret != EOK, HCCL_ERROR("[%s][memcpy_s] Writing msgId ERROR[%d].", __func__, ret), HCCL_E_INTERNAL);
-    HCCL_INFO("[%s] Writing %zu bytes msgId to shared mem SUCCESS. msgId = %u.", __func__, sizeof(s_msgId), s_msgId);
+    HCCL_INFO("[%s] Writing %zu bytes msgId to shared mem SUCCESS. msgId = %u.", __func__, sizeof(*msgId), *msgId);
 
     HCCL_INFO("[%s] Writing %zu bytes msgTag to shared mem START.", __func__, MSG_TAG_SIZE_BYTE);
     ret = memcpy_s(dstMsgTagPtr, MSG_TAG_SIZE_BYTE, msgTag, MSG_TAG_SIZE_BYTE);
@@ -105,9 +106,6 @@ int32_t HcommSendRequest(MsgHandle handle, const char *msgTag, const void *src, 
     ret = memcpy_s(dstFlagPtr, sizeof(flagWriteValue), &flagWriteValue, sizeof(flagWriteValue));
     CHK_PRT_RET(ret != EOK, HCCL_ERROR("[%s][memcpy_s] Setting flag ERROR[%d].", __func__, ret), HCCL_E_INTERNAL);
     HCCL_INFO("[%s] Setting flag = 1 on shared mem SUCCESS.", __func__);
-
-    *msgId = s_msgId;
-    ++s_msgId;  // Auto goes back to 0 once it reaches UINT32_MAX
 
     HCCL_INFO("[%s] SUCCESS. msgId[%u].", __func__, *msgId);
     return HCCL_SUCCESS;
