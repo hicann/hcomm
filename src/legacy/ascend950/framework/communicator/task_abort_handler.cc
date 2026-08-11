@@ -15,7 +15,6 @@
 
 namespace Hccl {
 using HcclUs = std::chrono::steady_clock::time_point;
-static std::mutex vecMutex;
 static int32_t TaskAbortPre(const std::vector<HcclCommunicator*>& commVector, const std::chrono::seconds& localtimeout)
 {
     HcclResult ret = HCCL_SUCCESS;
@@ -125,7 +124,9 @@ TaskAbortHandler::~TaskAbortHandler()
 
 TaskAbortHandler& TaskAbortHandler::GetInstance()
 {
-    static TaskAbortHandler handler;
+    // Leaky Singleton: 故意不释放，规避 Static Destruction Order Fiasco，
+    // 确保析构回调访问 commVector 时单例仍有效
+    static TaskAbortHandler& handler = *new TaskAbortHandler();
     return handler;
 }
 
