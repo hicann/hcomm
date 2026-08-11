@@ -22,6 +22,8 @@
 
 使用当前Device上所有已使能IO Die的全部CCU资源创建CCU实例，并返回实例句柄。
 
+本接口不申请Instruction资源。Instruction资源在注册CCU Kernel期间，根据Kernel实际指令数量申请。
+
 当前版本不读取`dieIds`和`dieNum`，调用方应分别传入`NULL`和`0`。需要按需申请资源时，请使用[HcommCcuInsCreate](HcommCcuInsCreate.md)。
 
 ## 函数原型
@@ -53,7 +55,7 @@ CcuResult HcommCcuInsCreateDefault(const uint32_t *dieIds, uint32_t dieNum, CcuI
 
 ## 约束说明
 
-- 当前仅支持集合通信场景。调用本接口前须完成HCCL通信域初始化和CCU建链。
+- 当前仅支持集合通信场景，依赖通信域做资源管理。
 - 调用本接口的线程须通过AscendCL接口`aclrtSetDevice(int32_t deviceId)`绑定到目标NPU Device。
 - 本接口申请当前Device上所有已使能IO Die的全部CCU资源。若需与其他CCU实例共享资源，应改用[HcommCcuInsCreate](HcommCcuInsCreate.md)按需申请。
 - 创建成功后，实例所有权归调用方。调用方应通过[HcommCcuInsDestroy](HcommCcuInsDestroy.md)销毁实例；若通过[HcclCommAssignCcuIns](../comms_domain_resource_mgmt/HcclCommAssignCcuIns.md)成功绑定到通信域，则所有权和销毁责任转移给通信域。

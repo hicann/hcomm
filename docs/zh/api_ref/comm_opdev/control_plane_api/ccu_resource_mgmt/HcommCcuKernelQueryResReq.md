@@ -38,7 +38,7 @@ CcuResult HcommCcuKernelQueryResReq(const void *kernelFunc,
 | kernelFunc | 输入 | CCU Kernel函数指针，不能为空指针。`argNum`为`0`时，函数签名须与无入参Kernel一致；`argNum`为`1`时，函数签名须与单入参Kernel一致。 |
 | kernelArgs | 输入 | Kernel函数入参指针数组。`argNum`为`0`时该参数被忽略，可传入空指针；`argNum`为`1`时不能为空指针，且`kernelArgs[0]`也不能为空指针。 |
 | argNum | 输入 | Kernel函数入参个数。当前仅支持`0`或`1`。 |
-| resDesc | 输入/输出 | CCU资源描述符句柄。须由`HcommCcuInsResDescCreate`预先创建，不能为`0`。查询成功后，接口将本次统计的资源数量写入该描述符，并保留创建描述符时设置的die ID。 |
+| resDesc | 输入/输出 | CCU资源描述符句柄。须通过`HcommCcuInsResDescCreate`接口根据kernel运行的dieId预先创建，不能为`0`。查询成功后，接口将本次统计的资源数量写入该描述符，并保留创建描述符时设置的die ID。 |
 
 ## 返回值
 

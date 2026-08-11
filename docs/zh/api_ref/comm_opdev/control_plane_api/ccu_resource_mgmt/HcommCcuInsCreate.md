@@ -58,7 +58,7 @@ CcuResult HcommCcuInsCreate(const HcommCcuResDescHandle *resDescs, uint32_t resD
 
 ## 约束说明
 
-- 当前仅支持集合通信场景。调用本接口前须完成HCCL通信域初始化和CCU建链。
+- 当前仅支持集合通信场景，依赖通信域做资源管理。
 - 调用本接口的线程须通过AscendCL接口`aclrtSetDevice(int32_t deviceId)`绑定到目标NPU Device。`resDescs`中的所有描述符须在同一Device上创建。
 - `resDescs`中的IO Die编号不能重复。
 - 创建过程中，调用方不得并发修改或销毁`resDescs`中的资源描述符。创建成功后，CCU实例独立持有已申请的资源，原资源描述符可继续使用或销毁。
