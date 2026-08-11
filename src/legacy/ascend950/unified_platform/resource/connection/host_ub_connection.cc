@@ -382,15 +382,31 @@ void HostUbConnection::ReleaseTp()
 
 void HostUbConnection::ReleaseResource()
 {
+    const bool ctxValid = (rdmaHandle != nullptr) && RdmaHandleManager::GetInstance().IsHandleValid(rdmaHandle);
+
     if (rdmaHandle && remoteJettyHandle_ != 0) {
-        HrtRaUbUnimportJetty(rdmaHandle, remoteJettyHandle_);
+        if (!ctxValid) {
+            HCCL_WARNING(
+                "[HostUbConnection][%s] skip HrtRaUbUnimportJetty, "
+                "rdmaHandle=%p invalid (DeInit/DestroyAll done), remoteJettyHandle=0x%llx",
+                __func__, rdmaHandle, static_cast<unsigned long long>(remoteJettyHandle_));
+        } else {
+            HrtRaUbUnimportJetty(rdmaHandle, remoteJettyHandle_);
+        }
         remoteJettyHandle_ = 0;
     }
 
     ReleaseTp();
 
     if (jettyHandle_ != 0) {
-        HrtRaUbDestroyJetty(jettyHandle_);
+        if (!ctxValid) {
+            HCCL_WARNING(
+                "[HostUbConnection][%s] skip HrtRaUbDestroyJetty, "
+                "rdmaHandle=%p invalid, jettyHandle=0x%llx",
+                __func__, rdmaHandle, static_cast<unsigned long long>(jettyHandle_));
+        } else {
+            HrtRaUbDestroyJetty(jettyHandle_);
+        }
         jettyHandle_ = 0;
     }
 }

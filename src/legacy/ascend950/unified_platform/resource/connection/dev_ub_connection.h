@@ -237,6 +237,9 @@ private:
     void UnImportJetty();
     void DestroyJetty();
     void ReleaseResource();
+    void ReleaseRemoteJettyIfImported(bool ctxValid);
+    void ReleaseSharedJettyModeResources(bool ctxValid);
+    void ReleaseOwnedJettyAndJfc(bool ctxValid);
 
     void ProcessSlices(
         const MemoryBuffer& loc, const MemoryBuffer& rmt,

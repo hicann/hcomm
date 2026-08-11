@@ -75,14 +75,27 @@ std::unique_ptr<Serializable> UbLocalNotify::GetExchangeDto()
     return std::unique_ptr<Serializable>(dto.release());
 }
 
-void UbLocalNotify::ReleaseResource() const
+void UbLocalNotify::ReleaseResource()
 {
+    const bool ctxValid = rdmaHandle != nullptr && RdmaHandleManager::GetInstance().IsHandleValid(rdmaHandle);
+
     if (rdmaHandle && memHandle != 0) {
-        HrtRaUbLocalMemUnreg(rdmaHandle, memHandle);
+        if (!ctxValid) {
+            HCCL_WARNING(
+                "[UbLocalNotify][%s] skip HrtRaUbLocalMemUnreg, "
+                "rdmaHandle=%p invalid (DeInit/DestroyAll done), memHandle=0x%llx",
+                __func__, rdmaHandle, static_cast<unsigned long long>(memHandle));
+            memHandle = 0;
+        } else {
+            HrtRaUbLocalMemUnreg(rdmaHandle, memHandle);
+            memHandle = 0;
+        }
     }
 
-    if (rdmaHandle) {
+    if (ctxValid) {
         RdmaHandleManager::GetInstance().PutTokenIdInfo(rdmaHandle, bufKey_, tokenIdHandle_);
+    } else if (rdmaHandle != nullptr) {
+        HCCL_WARNING("[UbLocalNotify][%s] skip PutTokenIdInfo, rdmaHandle=%p invalid", __func__, rdmaHandle);
     }
 
     HrtDevResInfo devResInfo;

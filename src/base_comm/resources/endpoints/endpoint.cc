@@ -21,6 +21,7 @@
 #include "aicputs_hccs_endpoint.h"
 #include "hccp_nda.h"
 #include "adapter_rts_common.h"
+#include "rdma_handle_manager.h"
 
 namespace hcomm {
 static bool IsSupported(const EndpointDesc& endpointDesc)
@@ -55,6 +56,47 @@ static bool IsSupported(const EndpointDesc& endpointDesc)
 
 Endpoint::Endpoint(const EndpointDesc& endpointDesc) { endpointDesc_ = endpointDesc; }
 
+void Endpoint::DestroySharedJettyRaResources(SharedJettyCtx& ctx, Hccl::RdmaHandle rdmaHandle, bool ctxValid) const
+{
+    if (ctx.handle != 0) {
+        if (!ctxValid) {
+            HCCL_WARNING("[Endpoint][%s] skip DestroyJetty, rdmaHandle=%p invalid.", __func__, ctx.rdmaHandle);
+        } else {
+            Hccl::HrtRaUbDestroyJetty(ctx.handle);
+            HCCL_INFO(
+                "[Endpoint][%s] destroyed shared jetty, handle[%llu]", __func__,
+                static_cast<unsigned long long>(ctx.handle));
+        }
+    }
+    // 销毁临时 connection 转移过来的 JFC（共享 jetty 模式下临时 connection 不自销毁 JFC）
+    if (ctx.jfcHandle != 0 && ctx.rdmaHandle != nullptr) {
+        if (!ctxValid) {
+            HCCL_WARNING("[Endpoint][%s] skip DestroyJfc, rdmaHandle=%p invalid.", __func__, ctx.rdmaHandle);
+        } else {
+            Hccl::HrtRaUbDestroyJfc(rdmaHandle, ctx.jfcHandle);
+            HCCL_INFO(
+                "[Endpoint][%s] destroyed shared jfc, jfcHandle[%llu]", __func__,
+                static_cast<unsigned long long>(ctx.jfcHandle));
+        }
+    }
+}
+
+void Endpoint::FreeSharedJettyPtrs(SharedJettyCtx& ctx) const
+{
+    if (ctx.sqPiPtr != nullptr) {
+        (void)hrtFree(ctx.sqPiPtr);
+    }
+    if (ctx.sqCiPtr != nullptr) {
+        (void)hrtFree(ctx.sqCiPtr);
+    }
+    if (ctx.cqPiPtr != nullptr) {
+        (void)hrtFree(ctx.cqPiPtr);
+    }
+    if (ctx.cqCiPtr != nullptr) {
+        (void)hrtFree(ctx.cqCiPtr);
+    }
+}
+
 Endpoint::~Endpoint()
 {
     // 防御性清理：若仍有共享 jetty 未释放（理论上 CheckEndpointDestroy 应已拦截）。
@@ -65,22 +107,15 @@ Endpoint::~Endpoint()
             HCCL_WARNING(
                 "[Endpoint][~Endpoint] shared jetty still valid on destroy, handle[%llu], force destroy.",
                 static_cast<unsigned long long>(sharedJettyCtx_.handle));
-            Hccl::HrtRaUbDestroyJetty(sharedJettyCtx_.handle);
-            if (sharedJettyCtx_.jfcHandle != 0 && sharedJettyCtx_.rdmaHandle != nullptr) {
-                Hccl::HrtRaUbDestroyJfc(sharedJettyCtx_.rdmaHandle, sharedJettyCtx_.jfcHandle);
+            RdmaHandle rdmaHandle = static_cast<Hccl::RdmaHandle>(sharedJettyCtx_.rdmaHandle);
+            const bool ctxValid
+                = rdmaHandle != nullptr && Hccl::RdmaHandleManager::GetInstance().IsHandleValid(rdmaHandle);
+            if (!ctxValid) {
+                HCCL_WARNING("[Endpoint][~Endpoint] skip shared jetty/jfc destroy, rdmaHandle=%p invalid.", rdmaHandle);
+            } else {
+                DestroySharedJettyRaResources(sharedJettyCtx_, rdmaHandle, ctxValid);
             }
-            if (sharedJettyCtx_.sqPiPtr != nullptr) {
-                (void)hrtFree(sharedJettyCtx_.sqPiPtr);
-            }
-            if (sharedJettyCtx_.sqCiPtr != nullptr) {
-                (void)hrtFree(sharedJettyCtx_.sqCiPtr);
-            }
-            if (sharedJettyCtx_.cqPiPtr != nullptr) {
-                (void)hrtFree(sharedJettyCtx_.cqPiPtr);
-            }
-            if (sharedJettyCtx_.cqCiPtr != nullptr) {
-                (void)hrtFree(sharedJettyCtx_.cqCiPtr);
-            }
+            FreeSharedJettyPtrs(sharedJettyCtx_);
         } else {
             HCCL_WARNING(
                 "[Endpoint][~Endpoint] shared jetty still in use, refCount[%u], handle[%llu], skip destroy "
@@ -157,31 +192,10 @@ HcclResult Endpoint::ReleaseSharedJetty()
         "[Endpoint][ReleaseSharedJetty] release shared jetty, handle[%llu], refCount[%u]",
         static_cast<unsigned long long>(sharedJettyCtx_.handle), sharedJettyCtx_.refCount);
     if (sharedJettyCtx_.refCount == 0) {
-        if (sharedJettyCtx_.handle != 0) {
-            Hccl::HrtRaUbDestroyJetty(sharedJettyCtx_.handle);
-            HCCL_INFO(
-                "[Endpoint][ReleaseSharedJetty] destroyed shared jetty, handle[%llu]",
-                static_cast<unsigned long long>(sharedJettyCtx_.handle));
-        }
-        // 销毁临时 connection 转移过来的 JFC（共享 jetty 模式下临时 connection 不自销毁 JFC）
-        if (sharedJettyCtx_.jfcHandle != 0 && sharedJettyCtx_.rdmaHandle != nullptr) {
-            Hccl::HrtRaUbDestroyJfc(sharedJettyCtx_.rdmaHandle, sharedJettyCtx_.jfcHandle);
-            HCCL_INFO(
-                "[Endpoint][ReleaseSharedJetty] destroyed shared jfc, jfcHandle[%llu]",
-                static_cast<unsigned long long>(sharedJettyCtx_.jfcHandle));
-        }
-        if (sharedJettyCtx_.sqPiPtr != nullptr) {
-            (void)hrtFree(sharedJettyCtx_.sqPiPtr);
-        }
-        if (sharedJettyCtx_.sqCiPtr != nullptr) {
-            (void)hrtFree(sharedJettyCtx_.sqCiPtr);
-        }
-        if (sharedJettyCtx_.cqPiPtr != nullptr) {
-            (void)hrtFree(sharedJettyCtx_.cqPiPtr);
-        }
-        if (sharedJettyCtx_.cqCiPtr != nullptr) {
-            (void)hrtFree(sharedJettyCtx_.cqCiPtr);
-        }
+        const auto rdmaHandle = static_cast<Hccl::RdmaHandle>(sharedJettyCtx_.rdmaHandle);
+        const bool ctxValid = rdmaHandle != nullptr && Hccl::RdmaHandleManager::GetInstance().IsHandleValid(rdmaHandle);
+        DestroySharedJettyRaResources(sharedJettyCtx_, rdmaHandle, ctxValid);
+        FreeSharedJettyPtrs(sharedJettyCtx_);
         sharedJettyCtx_ = SharedJettyCtx{};
     }
     return HCCL_SUCCESS;

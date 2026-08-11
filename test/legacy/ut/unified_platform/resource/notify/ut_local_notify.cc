@@ -193,6 +193,23 @@ protected:
     u64 fakeVa = 100;
     u64 fakeSize = 1024;
     char fakeName[RTS_IPC_MEM_NAME_LEN] = "testRtsNotify";
+
+    void SetupConstructMocks(RdmaHandle rdmaHandle)
+    {
+        RdmaHandleManager::GetInstance().tokenInfoMap[rdmaHandle] = make_unique<TokenInfoManager>(0, rdmaHandle);
+        pair<u64, u32> notifyInfoPair(1, 1);
+        MOCKER_CPP(&RdmaHandleManager::GetTokenIdInfo).stubs().will(returnValue(notifyInfoPair));
+        HrtRaUbLocalMemRegOutParam hrtRaUbLocalMemRegOutParam;
+        hrtRaUbLocalMemRegOutParam.handle = fakeMemHandle;
+        MOCKER(HrtRaUbLocalMemReg).stubs().will(returnValue(hrtRaUbLocalMemRegOutParam));
+    }
+
+    void ResetRdmaHandleManagerState()
+    {
+        auto& mgr = RdmaHandleManager::GetInstance();
+        mgr.destroyed.store(false);
+        mgr.activeHandles_.clear();
+    }
 };
 
 TEST_F(UbLocalNotifyTest, ub_local_notify_initialize)
@@ -239,3 +256,67 @@ TEST_F(UbLocalNotifyTest, getExchangeDto_test)
 
     ubLocalNotify.GetExchangeDto();
 };
+
+TEST_F(UbLocalNotifyTest, Ut_When_RdmaHandleInvalid_ThenReleaseResource_Expect_SkipUnregAndPutTokenIdInfo)
+{
+    // given: RdmaHandleManager 已 DestroyAll，handle 视为无效
+    RdmaHandle rdmaHandle = (void*)0x201;
+    auto& mgr = RdmaHandleManager::GetInstance();
+    mgr.destroyed.store(true);
+    SetupConstructMocks(rdmaHandle);
+    MOCKER(HrtRaUbLocalMemUnreg).expects(atMost(0));
+    MOCKER_CPP(&RdmaHandleManager::PutTokenIdInfo).expects(atMost(0));
+    MOCKER(HrtReleaseDevResAddress).stubs().with(mockcpp::any());
+
+    // when
+    UbLocalNotify ubLocalNotify(rdmaHandle);
+    EXPECT_NE(ubLocalNotify.memHandle, 0u);
+    ubLocalNotify.ReleaseResource();
+
+    // then: skip Unreg/PutTokenIdInfo，memHandle 清零，HrtReleaseDevResAddress 仍执行
+    EXPECT_EQ(ubLocalNotify.memHandle, 0u);
+    ResetRdmaHandleManagerState();
+}
+
+TEST_F(UbLocalNotifyTest, Ut_When_RdmaHandleValid_ThenReleaseResource_Expect_UnregAndPutTokenIdInfo)
+{
+    // given: handle 仍在 activeHandles_ 中
+    RdmaHandle rdmaHandle = (void*)0x202;
+    auto& mgr = RdmaHandleManager::GetInstance();
+    mgr.activeHandles_.insert(rdmaHandle);
+    SetupConstructMocks(rdmaHandle);
+    MOCKER(HrtRaUbLocalMemUnreg).expects(atMost(1)).with(mockcpp::any(), mockcpp::any());
+    MOCKER_CPP(&RdmaHandleManager::PutTokenIdInfo).stubs();
+    MOCKER(HrtReleaseDevResAddress).stubs().with(mockcpp::any());
+
+    // when
+    UbLocalNotify ubLocalNotify(rdmaHandle);
+    EXPECT_NE(ubLocalNotify.memHandle, 0u);
+    ubLocalNotify.ReleaseResource();
+
+    // then
+    EXPECT_EQ(ubLocalNotify.memHandle, 0u);
+    mgr.activeHandles_.erase(rdmaHandle);
+}
+
+TEST_F(UbLocalNotifyTest, Ut_When_DestroyAllDone_ThenDestructUbLocalNotify_Expect_SkipUnregNoCrash)
+{
+    // given: 模拟 DestroyAll 后业务对象析构
+    RdmaHandle rdmaHandle = (void*)0x203;
+    auto& mgr = RdmaHandleManager::GetInstance();
+    mgr.activeHandles_.insert(rdmaHandle);
+    SetupConstructMocks(rdmaHandle);
+    MOCKER(HrtRaUbLocalMemUnreg).expects(atMost(0));
+    MOCKER_CPP(&RdmaHandleManager::PutTokenIdInfo).expects(atMost(0));
+    MOCKER(HrtReleaseDevResAddress).stubs().with(mockcpp::any());
+
+    // when: DestroyAll 置 destroyed 并清空 activeHandles_，再触发析构
+    {
+        UbLocalNotify ubLocalNotify(rdmaHandle);
+        mgr.destroyed.store(true);
+        mgr.activeHandles_.clear();
+    }
+
+    // then: 析构不 crash，mock 校验在 TearDown verify
+    ResetRdmaHandleManagerState();
+}

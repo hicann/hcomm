@@ -229,6 +229,13 @@ void RmaConnManager::BatchDeleteJettys()
     BatchDeleteJettyInfo batchDeleteJettyInfo;
     GetDeleteJettys(batchDeleteJettyInfo);
     for (auto& unimportJettys : batchDeleteJettyInfo.unimportJettyList) {
+        if (!RdmaHandleManager::GetInstance().IsHandleValid(unimportJettys.first)) {
+            HCCL_WARNING(
+                "[RmaConnManager][%s] skip HrtRaUbUnimportJetty batch, "
+                "rdmaHandle=%p invalid (DeInit/DestroyAll done)",
+                __func__, unimportJettys.first);
+            continue;
+        }
         for (auto& unimportJetty : unimportJettys.second) {
             HrtRaUbUnimportJetty(unimportJettys.first, unimportJetty);
         }
@@ -236,6 +243,13 @@ void RmaConnManager::BatchDeleteJettys()
 
     std::vector<JettyHandle> failJettyHandles;
     for (const auto& deleteJettys : batchDeleteJettyInfo.deleteJettyList) {
+        if (!RdmaHandleManager::GetInstance().IsHandleValid(deleteJettys.first)) {
+            HCCL_WARNING(
+                "[RmaConnManager][%s] skip HrtRaCtxQpDestroyBatch, "
+                "rdmaHandle=%p invalid (DeInit/DestroyAll done)",
+                __func__, deleteJettys.first);
+            continue;
+        }
         auto ret = HrtRaCtxQpDestoryBatch(deleteJettys.first, deleteJettys.second, failJettyHandles);
         for (u64 failJetty : failJettyHandles) {
             HCCL_ERROR("[%s]delete jetty[%llu] fail", __func__, failJetty);

@@ -129,6 +129,8 @@ public:
 
 protected:
     static HcclResult CreateEndpointBase(const EndpointDesc& endpointDesc, std::unique_ptr<Endpoint>& endpointPtr);
+    void DestroySharedJettyRaResources(SharedJettyCtx& ctx, Hccl::RdmaHandle rdmaHandle, bool ctxValid) const;
+    void FreeSharedJettyPtrs(SharedJettyCtx& ctx) const;
     void* ctxHandle_{nullptr};
     std::shared_ptr<RegedMemMgr> regedMemMgr_{};
     EndpointDesc endpointDesc_;

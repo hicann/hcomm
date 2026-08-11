@@ -51,3 +51,66 @@ TEST_F(LocalCntNotifyTest, getExchangeDto_test)
 
     localCntNotify.GetExchangeDto();
 };
+
+TEST_F(LocalCntNotifyTest, Ut_When_DestroyAllDone_ThenDestructLocalCntNotify_Expect_SkipUnregNoCrash)
+{
+    // given
+    MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType::DEV_TYPE_910A2));
+    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
+    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
+    MOCKER(HrtCntNotifyCreate).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
+    MOCKER(HrtGetCntNotifyId).stubs().will(returnValue(fakeNotifyId));
+    pair<u64, u32> notifyInfoPair(1, 1);
+    MOCKER_CPP(&RdmaHandleManager::GetTokenIdInfo).stubs().will(returnValue(notifyInfoPair));
+    HrtRaUbLocalMemRegOutParam regOut;
+    regOut.handle = 0x300;
+    MOCKER(HrtRaUbLocalMemReg).stubs().will(returnValue(regOut));
+    MOCKER(HrtRaUbLocalMemUnreg).expects(atMost(0));
+    MOCKER_CPP(&RdmaHandleManager::PutTokenIdInfo).expects(atMost(0));
+
+    int a = 0;
+    RtsCntNotify rtsCntNotify;
+    RdmaHandle rdmaHandle = (void*)&a;
+    auto& mgr = RdmaHandleManager::GetInstance();
+    mgr.tokenInfoMap[rdmaHandle] = make_unique<TokenInfoManager>(0, rdmaHandle);
+    mgr.activeHandles_.insert(rdmaHandle);
+
+    // when: 模拟 DestroyAll 后析构
+    {
+        LocalCntNotify localCntNotify(rdmaHandle, &rtsCntNotify);
+        mgr.destroyed.store(true);
+        mgr.activeHandles_.clear();
+    }
+
+    // then
+    mgr.destroyed.store(false);
+}
+
+TEST_F(LocalCntNotifyTest, Ut_When_RdmaHandleValid_ThenDestructLocalCntNotify_Expect_UnregAndPutTokenIdInfo)
+{
+    MOCKER(HrtGetDeviceType).stubs().will(returnValue(DevType::DEV_TYPE_910A2));
+    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
+    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(1)));
+    MOCKER(HrtCntNotifyCreate).stubs().will(returnValue((void*)(fakeNotifyHandleAddr)));
+    MOCKER(HrtGetCntNotifyId).stubs().will(returnValue(fakeNotifyId));
+    pair<u64, u32> notifyInfoPair(1, 1);
+    MOCKER_CPP(&RdmaHandleManager::GetTokenIdInfo).stubs().will(returnValue(notifyInfoPair));
+    HrtRaUbLocalMemRegOutParam regOut;
+    regOut.handle = 0x300;
+    MOCKER(HrtRaUbLocalMemReg).stubs().will(returnValue(regOut));
+    MOCKER(HrtRaUbLocalMemUnreg).expects(atMost(1)).with(mockcpp::any(), mockcpp::any());
+    MOCKER_CPP(&RdmaHandleManager::PutTokenIdInfo).stubs();
+
+    RtsCntNotify rtsCntNotify;
+    RdmaHandle rdmaHandle = (void*)0x301;
+    auto& mgr = RdmaHandleManager::GetInstance();
+    mgr.tokenInfoMap[rdmaHandle] = make_unique<TokenInfoManager>(0, rdmaHandle);
+    mgr.activeHandles_.insert(rdmaHandle);
+
+    {
+        LocalCntNotify localCntNotify(rdmaHandle, &rtsCntNotify);
+        EXPECT_NE(localCntNotify.memHandle, 0u);
+    }
+
+    mgr.activeHandles_.erase(rdmaHandle);
+}

@@ -53,12 +53,25 @@ std::string LocalCntNotify::Describe() const
 
 LocalCntNotify::~LocalCntNotify()
 {
+    const bool ctxValid = rdmaHandle != nullptr && RdmaHandleManager::GetInstance().IsHandleValid(rdmaHandle);
+
     if (rdmaHandle && memHandle != 0) {
-        DECTOR_TRY_CATCH("LocalCntNotify", HrtRaUbLocalMemUnreg(rdmaHandle, memHandle));
+        if (!ctxValid) {
+            HCCL_WARNING(
+                "[LocalCntNotify][%s] skip HrtRaUbLocalMemUnreg, "
+                "rdmaHandle=%p invalid (DeInit/DestroyAll done), memHandle=0x%llx",
+                __func__, rdmaHandle, static_cast<unsigned long long>(memHandle));
+        } else {
+            DECTOR_TRY_CATCH("LocalCntNotify", HrtRaUbLocalMemUnreg(rdmaHandle, memHandle));
+        }
+        memHandle = 0;
     }
 
-    if (rdmaHandle) {
+    if (ctxValid) {
         RdmaHandleManager::GetInstance().PutTokenIdInfo(rdmaHandle, bufKey_, tokenIdHandle_);
+    } else if (rdmaHandle != nullptr) {
+        HCCL_WARNING("[LocalCntNotify][%s] skip PutTokenIdInfo, rdmaHandle=%p invalid", __func__, rdmaHandle);
     }
+    tokenIdHandle_ = 0; // 防御性置零
 }
 } // namespace Hccl

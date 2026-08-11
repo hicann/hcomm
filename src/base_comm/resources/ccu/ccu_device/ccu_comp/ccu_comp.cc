@@ -1305,6 +1305,14 @@ HcclResult CcuComponent::UnimportAllJettys()
             if (!ctxHandle || !remoteJettyHandle) {
                 continue;
             }
+            if (!Hccl::RdmaHandleManager::GetInstance().IsHandleValid(ctxHandle)) {
+                HCCL_WARNING(
+                    "[CcuComponent][%s] skip RaCtxQpUnimport, ctxHandle=%p invalid, "
+                    "remoteJettyHandle=%p, devLogicId[%d].",
+                    __func__, ctxHandle, remoteJettyHandle, devLogicId_);
+                paramPair.second.handle = 0;
+                continue;
+            }
             int32_t ret = RaCtxQpUnimport(ctxHandle, remoteJettyHandle);
             if (ret != 0) {
                 HCCL_ERROR(

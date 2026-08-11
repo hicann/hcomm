@@ -663,44 +663,89 @@ void DevUbConnection::ReleaseTp()
     ReleaseUbConnectionTp(devLogicId, locAddr, rmtAddr, tpProtocol, tpInfo, static_cast<uint32_t>(qos_));
 }
 
-void DevUbConnection::ReleaseResource()
+void DevUbConnection::ReleaseRemoteJettyIfImported(bool ctxValid)
 {
-    if (rdmaHandle && remoteJettyHandle != 0) {
-        HrtRaUbUnimportJetty(rdmaHandle, remoteJettyHandle);
-        remoteJettyHandle = 0;
-    }
-
-    ReleaseTp();
-
-    if (isSharedJetty_) {
-        // 共享 jetty 模式：jetty 由 Endpoint::sharedJettyCtx_ 统一管理，connection 不销毁 jetty，
-        // 但需通过 releaseCb_ 通知 Endpoint 减引用计数（引用归 0 时由 Endpoint 销毁 jetty）
-        // 主 connection（InjectSharedJetty 路径，releaseCb_ 非空）：构造函数创建的 JFC 从未被
-        // CreateJetty 使用，安全销毁避免泄漏。
-        // 临时 connection（TransferJettyOwnership 路径，releaseCb_ 为空）：JFC 被 jetty 绑定使用，
-        // 需等 Endpoint 销毁共享 jetty 后统一释放，不在此时销毁。
-        if (releaseCb_ != nullptr && engine_ == COMM_ENGINE_AIV && jfcHandle != 0) {
-            HrtRaUbDestroyJfc(rdmaHandle, jfcHandle);
-            jfcHandle = 0;
-        }
-        jettyHandle = 0;
-        if (releaseCb_) {
-            releaseCb_(endpointTag_);
-            releaseCb_ = nullptr;
-        }
-        HCCL_INFO("[DevUbConnection][%s] shared jetty mode, skip DestroyJetty, releaseCb invoked.", __func__);
+    if (!rdmaHandle || remoteJettyHandle == 0) {
         return;
     }
+    if (!ctxValid) {
+        HCCL_WARNING(
+            "[DevUbConnection][%s] skip HrtRaUbUnimportJetty, "
+            "rdmaHandle=%p invalid (DeInit/DestroyAll done), remoteJettyHandle=0x%llx",
+            __func__, rdmaHandle, static_cast<unsigned long long>(remoteJettyHandle));
+    } else {
+        HrtRaUbUnimportJetty(rdmaHandle, remoteJettyHandle);
+    }
+    remoteJettyHandle = 0;
+}
 
+void DevUbConnection::ReleaseSharedJettyModeResources(bool ctxValid)
+{
+    // 共享 jetty 模式：jetty 由 Endpoint::sharedJettyCtx_ 统一管理，connection 不销毁 jetty，
+    // 但需通过 releaseCb_ 通知 Endpoint 减引用计数（引用归 0 时由 Endpoint 销毁 jetty）
+    // 主 connection（InjectSharedJetty 路径，releaseCb_ 非空）：构造函数创建的 JFC 从未被
+    // CreateJetty 使用，安全销毁避免泄漏。
+    // 临时 connection（TransferJettyOwnership 路径，releaseCb_ 为空）：JFC 被 jetty 绑定使用，
+    // 需等 Endpoint 销毁共享 jetty 后统一释放，不在此时销毁。
+    if (releaseCb_ != nullptr && engine_ == COMM_ENGINE_AIV && jfcHandle != 0) {
+        if (!ctxValid) {
+            HCCL_WARNING(
+                "[DevUbConnection][%s] skip HrtRaUbDestroyJfc (shared), "
+                "rdmaHandle=%p invalid, jfcHandle=0x%llx",
+                __func__, rdmaHandle, static_cast<unsigned long long>(jfcHandle));
+        } else {
+            HrtRaUbDestroyJfc(rdmaHandle, jfcHandle);
+        }
+        jfcHandle = 0;
+    }
+    jettyHandle = 0;
+    if (releaseCb_) {
+        releaseCb_(endpointTag_);
+        releaseCb_ = nullptr;
+    }
+    HCCL_INFO("[DevUbConnection][%s] shared jetty mode, skip DestroyJetty, releaseCb invoked.", __func__);
+}
+
+void DevUbConnection::ReleaseOwnedJettyAndJfc(bool ctxValid)
+{
     if (jettyHandle != 0) {
-        HrtRaUbDestroyJetty(jettyHandle);
+        if (!ctxValid) {
+            HCCL_WARNING(
+                "[DevUbConnection][%s] skip HrtRaUbDestroyJetty, "
+                "rdmaHandle=%p invalid, jettyHandle=0x%llx",
+                __func__, rdmaHandle, static_cast<unsigned long long>(jettyHandle));
+        } else {
+            HrtRaUbDestroyJetty(jettyHandle);
+        }
         jettyHandle = 0;
     }
 
     if (engine_ == COMM_ENGINE_AIV && jfcHandle != 0) {
-        HrtRaUbDestroyJfc(rdmaHandle, jfcHandle);
+        if (!ctxValid) {
+            HCCL_WARNING(
+                "[DevUbConnection][%s] skip HrtRaUbDestroyJfc, "
+                "rdmaHandle=%p invalid, jfcHandle=0x%llx",
+                __func__, rdmaHandle, static_cast<unsigned long long>(jfcHandle));
+        } else {
+            HrtRaUbDestroyJfc(rdmaHandle, jfcHandle);
+        }
         jfcHandle = 0;
     }
+}
+
+void DevUbConnection::ReleaseResource()
+{
+    const bool ctxValid = (rdmaHandle != nullptr) && RdmaHandleManager::GetInstance().IsHandleValid(rdmaHandle);
+
+    ReleaseRemoteJettyIfImported(ctxValid);
+    ReleaseTp();
+
+    if (isSharedJetty_) {
+        ReleaseSharedJettyModeResources(ctxValid);
+        return;
+    }
+
+    ReleaseOwnedJettyAndJfc(ctxValid);
 }
 
 void DevUbConnection::CreateAivUrmaJfc()

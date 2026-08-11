@@ -325,13 +325,13 @@ void RdmaHandleManager::DestroyAll()
     if (destroyed.load()) {
         return;
     }
-    destroyed.store(true);
-
     std::lock_guard<std::mutex> lock(managerMutex);
+    if (destroyed.load()) {
+        return;
+    }
+    destroyed.store(true);
     HCCL_INFO("[RdmaHandleManager::%s] destroy all", __func__);
-
     activeHandles_.clear();
-
     for (auto& handleIter : jfcHandleMap) {
         for (auto& modeIter : handleIter.second) {
             DECTOR_TRY_CATCH("jfc handle destroy", HrtRaUbDestroyJfc(handleIter.first, modeIter.second));
@@ -504,12 +504,12 @@ void RdmaHandleManager::CleanupSingleHandle(const HandleInfo& info)
 
 void RdmaHandleManager::DeInit(u32 devPhyId)
 {
-    if (destroyed.load()) {
-        return;
-    }
     HCCL_INFO("[RdmaHandleManager][%s] DeInit[%u]", __func__, devPhyId);
 
     std::lock_guard<std::mutex> lock(managerMutex);
+    if (destroyed.load()) {
+        return;
+    }
     if (devPhyId >= rdmaHandleMap.size()) {
         HCCL_INFO("[RdmaHandleManager][%s] devPhyId[%u] is out of range", __func__, devPhyId);
         return;

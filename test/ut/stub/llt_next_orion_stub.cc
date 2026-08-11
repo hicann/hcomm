@@ -848,7 +848,7 @@ void UbLocalNotify::Post(const Stream& stream) const {}
 
 std::unique_ptr<Serializable> UbLocalNotify::GetExchangeDto() { return nullptr; }
 
-void UbLocalNotify::ReleaseResource() const {}
+void UbLocalNotify::ReleaseResource() {}
 
 UbLocalNotify::~UbLocalNotify() {}
 

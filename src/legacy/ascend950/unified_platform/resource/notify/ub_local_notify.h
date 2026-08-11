@@ -55,7 +55,7 @@ private:
     void* lmemHandle{nullptr};
     BufferKey<uintptr_t, u64> bufKey_{0, 0};
 
-    void ReleaseResource() const;
+    void ReleaseResource();
 };
 
 } // namespace Hccl

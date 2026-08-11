@@ -124,12 +124,33 @@ LocalUbRmaBuffer::~LocalUbRmaBuffer()
         return;
     }
     if (netDev != nullptr && reqReg.handle != 0) {
-        DECTOR_TRY_CATCH("LocalUbRmaBuffer", HrtRaUbLocalMemUnreg(netDev->GetRdmaHandle(), reqReg.handle));
-        netDev->PutTokenIdInfo(bufKey_, tokenIdHandle);
+        RdmaHandle h = netDev->GetRdmaHandle();
+        const bool ctxValid = h != nullptr && RdmaHandleManager::GetInstance().IsHandleValid(h);
+        if (!ctxValid) {
+            HCCL_WARNING(
+                "[LocalUbRmaBuffer][%s] skip HrtRaUbLocalMemUnreg (netDev), "
+                "rdmaHandle=%p invalid, lmemHandle=0x%llx",
+                __func__, h, static_cast<unsigned long long>(reqReg.handle));
+        } else {
+            DECTOR_TRY_CATCH("LocalUbRmaBuffer", HrtRaUbLocalMemUnreg(h, reqReg.handle));
+            netDev->PutTokenIdInfo(bufKey_, tokenIdHandle);
+        }
+        reqReg.handle = 0;
     } else if (rdmaHandle != nullptr && reqReg.handle != 0) {
-        HCCL_INFO("[LocalUbRmaBuffer::%s] rdmaHandle[%p], lmemHandle[0x%llx]", __func__, rdmaHandle, reqReg.handle);
-        DECTOR_TRY_CATCH("LocalUbRmaBuffer", HrtRaUbLocalMemUnreg(rdmaHandle, reqReg.handle));
-        RdmaHandleManager::GetInstance().PutTokenIdInfo(rdmaHandle, bufKey_, tokenIdHandle);
+        const bool ctxValid = RdmaHandleManager::GetInstance().IsHandleValid(rdmaHandle);
+        if (!ctxValid) {
+            HCCL_WARNING(
+                "[LocalUbRmaBuffer][%s] skip HrtRaUbLocalMemUnreg, "
+                "rdmaHandle=%p invalid, lmemHandle=0x%llx",
+                __func__, rdmaHandle, static_cast<unsigned long long>(reqReg.handle));
+        } else {
+            HCCL_INFO(
+                "[LocalUbRmaBuffer::%s] rdmaHandle[%p], lmemHandle[0x%llx]", __func__, rdmaHandle,
+                static_cast<unsigned long long>(reqReg.handle));
+            DECTOR_TRY_CATCH("LocalUbRmaBuffer", HrtRaUbLocalMemUnreg(rdmaHandle, reqReg.handle));
+            RdmaHandleManager::GetInstance().PutTokenIdInfo(rdmaHandle, bufKey_, tokenIdHandle);
+        }
+        reqReg.handle = 0;
     } else if (reqReg.handle != 0) {
         HCCL_WARNING(
             "[LocalUbRmaBuffer::%s] reqReg.handle[0x%llx] is non-zero but no valid cleanup path "

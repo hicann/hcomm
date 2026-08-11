@@ -515,8 +515,18 @@ CcuConnection::~CcuConnection() { (void)ReleaseConnRes(); }
 
 HcclResult CcuConnection::ReleaseConnRes()
 {
+    const bool ctxValid = ctxHandle_ != nullptr && Hccl::RdmaHandleManager::GetInstance().IsHandleValid(ctxHandle_);
+
     for (auto& item : importJettyCtxs_) {
         if (item.outParam.handle != 0) {
+            if (!ctxValid) {
+                HCCL_WARNING(
+                    "[CcuConnection][%s] skip RaCtxQpUnimport, ctxHandle=%p invalid, "
+                    "remoteJettyHandle=%p",
+                    __func__, ctxHandle_, item.outParam.handle);
+                item.outParam.handle = 0;
+                continue;
+            }
             int32_t ret = RaCtxQpUnimport(ctxHandle_, item.outParam.handle);
             item.outParam.handle = 0;
             if (ret != 0) {

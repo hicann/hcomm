@@ -13,6 +13,7 @@
 #include "exchange_ub_buffer_dto.h"
 #include "exchange_ipc_buffer_dto.h"
 #include "exchange_rdma_buffer_dto.h"
+#include "rdma_handle_manager.h"
 namespace Hccl {
 RemoteIpcRmaBuffer::RemoteIpcRmaBuffer() : RemoteRmaBuffer(RmaType::IPC), isOpened(false) {}
 
@@ -121,7 +122,15 @@ RemoteUbRmaBuffer::RemoteUbRmaBuffer(RdmaHandle rdmaHandle) : RemoteRmaBuffer(Rm
 RemoteUbRmaBuffer::~RemoteUbRmaBuffer()
 {
     if (memHandle != 0) {
-        DECTOR_TRY_CATCH("RemoteUbRmaBuffer", HrtRaUbRemoteMemUnimport(rdmaHandle, memHandle));
+        if (rdmaHandle == nullptr || !RdmaHandleManager::GetInstance().IsHandleValid(rdmaHandle)) {
+            HCCL_WARNING(
+                "[RemoteUbRmaBuffer][%s] skip HrtRaUbRemoteMemUnimport, "
+                "rdmaHandle=%p invalid (DeInit/DestroyAll done), memHandle=0x%llx",
+                __func__, rdmaHandle, static_cast<unsigned long long>(memHandle));
+        } else {
+            DECTOR_TRY_CATCH("RemoteUbRmaBuffer", HrtRaUbRemoteMemUnimport(rdmaHandle, memHandle));
+        }
+        memHandle = 0;
     }
 }
 
