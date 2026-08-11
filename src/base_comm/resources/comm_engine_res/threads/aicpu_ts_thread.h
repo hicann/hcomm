@@ -41,7 +41,7 @@ public:
 
     Stream* GetStream() const override;
 
-    inline void* GetStreamLitePtr() const override { return pImpl_->GetStreamLitePtr(); }
+    inline void* GetStreamLitePtr() const override { return pImpl_ ? pImpl_->GetStreamLitePtr() : nullptr; }
 
     void LaunchTask() const override;
     void TryLaunchTask() const override;
