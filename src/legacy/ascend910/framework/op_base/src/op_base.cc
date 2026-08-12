@@ -1318,13 +1318,13 @@ HcclResult HcclCreateSubCommConfig(
     CHK_SMART_PTR_NULL(config);
     CHK_SMART_PTR_NULL(comm);
     CHK_RET(SubCommIsOneSidedComm(comm));
+    hccl::hcclComm* globalComm = static_cast<hccl::hcclComm*>(*comm);
+    CHK_PTR_NULL(globalComm);
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     HCCLV2_FUNC_RUN([&]() -> HcclResult {
-        hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(*comm);
-        CHK_PTR_NULL(hcclComm);
-        void* commV2 = hcclComm->GetCommunicatorV2();
+        HcclComm commV2 = globalComm->GetCommunicatorV2();
         CHK_PTR_NULL(commV2);
-        void* subCommV2 = nullptr;
+        HcclComm subCommV2 = nullptr;
         CHK_RET(HcclCreateSubCommConfigV2(&commV2, rankNum, rankIds, subCommId, subCommRankId, config, &subCommV2));
         HcclResult ret = HcclCommInitCollComm(subCommRankId, &subCommV2, config, subComm);
         if (ret != HCCL_SUCCESS) {
@@ -1345,9 +1345,6 @@ HcclResult HcclCreateSubCommConfig(
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR("[%s]errNo[0x%016llx] init environment config error.", __func__, HCCL_ERROR_CODE(ret)), HCCL_E_PARA);
-
-    hccl::hcclComm* globalComm = static_cast<hccl::hcclComm*>(*comm);
-    CHK_PTR_NULL(globalComm);
 
     std::string identifier = globalComm->GetIdentifier() + "_sub_" + to_string(subCommId);
     CommConfig commConfig(identifier);

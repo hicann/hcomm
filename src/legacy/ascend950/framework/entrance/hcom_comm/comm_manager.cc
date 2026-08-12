@@ -206,16 +206,10 @@ HcclCommInfoV2& GetCommInfoV2(void)
     return backupCommInfoV2;
 }
 
-HcclResult GetHcomRankListV2(u32 rankNum, const u32* rankIds, HcclGroupParamsV2& params)
+static HcclResult ParseRankIdsV2(u32 rankNum, const u32* rankIds, std::vector<u32>& groupRanks)
 {
-    HcclCommInfoV2& hcomCommInfoV2 = GetCommInfoV2();
-    std::ostringstream printRankIds;
-
-    params.totalRanks = rankNum;
-    params.worldRank = hcomCommInfoV2.commParams.myRank;
-    params.groupRank = INVALID_VALUE_RANKID;
-
     unordered_set<uint32_t> rankIdSet;
+    std::ostringstream printRankIds;
     printRankIds << "input rankIds: ";
     for (u32 i = 0; i < rankNum; i++) {
         CHK_PTR_NULL(rankIds + i);
@@ -229,19 +223,41 @@ HcclResult GetHcomRankListV2(u32 rankNum, const u32* rankIds, HcclGroupParamsV2&
         CHK_PRT_RET(
             rankIdSet.find(rankIds[i]) != rankIdSet.end(),
             HCCL_ERROR(
-                "[GetHcomRankListV2]errNo[0x%016llx], "
+                "[ParseRankIdsV2]errNo[0x%016llx], "
                 "duplicated rankId[%u] in rankIds.",
                 HCCL_ERROR_CODE(HCCL_E_PARA), rankIds[i]),
             HCCL_E_PARA);
         rankIdSet.insert(rankIds[i]);
-        params.groupRanks.push_back(rankIds[i]);
+        groupRanks.push_back(rankIds[i]);
     }
     HCCL_RUN_INFO("Entry-%s: %s", __func__, printRankIds.str().c_str());
+    return HCCL_SUCCESS;
+}
 
-    if (params.groupRanks[rankNum - 1] >= hcomCommInfoV2.commParams.rankSize) {
+HcclResult GetHcomRankListV2(u32 rankNum, const u32* rankIds, HcclGroupParamsV2& params, HcclComm globalComm)
+{
+    HcclCommInfoV2& hcomCommInfoV2 = GetCommInfoV2();
+
+    u32 worldRank = hcomCommInfoV2.commParams.myRank;
+    u32 worldRankSize = hcomCommInfoV2.commParams.rankSize;
+    if (globalComm != nullptr) {
+        Hccl::HcclCommunicator* globalCommunicator = static_cast<Hccl::HcclCommunicator*>(globalComm);
+        CHK_RET(globalCommunicator->GetRankId(worldRank));
+        CHK_RET(globalCommunicator->GetRankSize(&worldRankSize));
+    }
+
+    params.totalRanks = rankNum;
+    params.worldRank = worldRank;
+    params.groupRank = INVALID_VALUE_RANKID;
+
+    CHK_RET(ParseRankIdsV2(rankNum, rankIds, params.groupRanks));
+
+    std::vector<u32> rankListCopy = params.groupRanks;
+    auto maxIt = std::max_element(rankListCopy.begin(), rankListCopy.end());
+    if (*maxIt >= worldRankSize) {
         HCCL_ERROR(
-            "[get][RankList]errNo[0x%016llx] groupRanks[%u]:%u is invalid", HCOM_ERROR_CODE(HCCL_E_PARA), rankNum - 1,
-            params.groupRanks[rankNum - 1]);
+            "[get][RankList]errNo[0x%016llx] maxRank[%u] is invalid, worldRankSize[%u]", HCOM_ERROR_CODE(HCCL_E_PARA),
+            *maxIt, worldRankSize);
         return HCCL_E_PARA;
     }
 
@@ -290,7 +306,7 @@ HcclResult HcomCreateGroupImplV2(const std::string& group, u32 rankNum, const st
 
     /* 创建groupParamsV2Tem */
     HcclGroupParamsV2 groupParamsV2Tem;
-    CHK_RET(GetHcomRankListV2(rankNum, rankIds.data(), groupParamsV2Tem));
+    CHK_RET(GetHcomRankListV2(rankNum, rankIds.data(), groupParamsV2Tem, nullptr));
 
     /* 如果是groupRank = INVALID_VALUE_RANKID，即本rank不参与create group */
     if (groupParamsV2Tem.groupRank == INVALID_VALUE_RANKID) {

@@ -103,7 +103,7 @@ extern "C" {
 #endif // __cplusplus
 HcclCommInfoV2& GetCommInfoV2(void);
 HcclResult HcomDestroyV2(void);
-HcclResult GetHcomRankListV2(u32 rankNum, const u32* rankIds, HcclGroupParamsV2& params);
+HcclResult GetHcomRankListV2(u32 rankNum, const u32* rankIds, HcclGroupParamsV2& params, HcclComm globalComm);
 HcclResult HcomCreateGroupImplV2(const std::string& group, u32 rankNum, const std::vector<u32>& rankIds);
 HcclResult HcomDestroyGroupImplV2(const std::string& group);
 HcclResult HcomGetWorldRankFromGroupRankV2(const char* group, u32 groupRank, u32* worldRank);

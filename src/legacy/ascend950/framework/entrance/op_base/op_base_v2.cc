@@ -977,7 +977,7 @@ HcclResult HcclCreateSubCommConfigV2(
 
     /* 创建groupParamsV2Tem */
     HcclGroupParamsV2 groupParamsV2Tem;
-    CHK_RET(GetHcomRankListV2(rankNum, rankIds, groupParamsV2Tem));
+    CHK_RET(GetHcomRankListV2(rankNum, rankIds, groupParamsV2Tem, *comm));
 
     /* 如果是groupRank = INVALID_VALUE_RANKID，即本rank不参与create group */
     if (groupParamsV2Tem.groupRank == INVALID_VALUE_RANKID) {
