@@ -60,6 +60,7 @@
 #include "v80_rank_table.h"
 #include "externalinput.h"
 #include "op_base.h"
+#include "coll_comm_mgr.h"
 #include "param_check_pub.h"
 #include "hcom_pub.h"
 #include "comm_config_pub.h"
@@ -3765,11 +3766,10 @@ TEST_F(OpbaseTest, ut_HcclAiCpuResourceByTiling_A3)
 }
 
 extern thread_local s32 g_hcclDeviceId;
-extern HcclOpInfoCtx g_opHcomInfos[MAX_MODULE_DEVICE_NUM + 1];
-TEST_F(OpbaseTest, ut_GetHcclOpInfoCtx_cover_bottom_false)
+TEST_F(OpbaseTest, ut_LegacyGetHcclOpInfoCtx_cover_bottom_false)
 {
     for (int i = 0; i < MAX_MODULE_DEVICE_NUM + 1; i++) {
-        g_opHcomInfos[i].isUsed = false;
+        CollCommMgr::GetInstance().LegacyGetOpHcomInfo(i).isUsed = false;
     }
     g_hcclDeviceId = INVALID_INT;
     HcclResult ret = HCCL_SUCCESS;
@@ -3785,12 +3785,12 @@ TEST_F(OpbaseTest, ut_GetHcclOpInfoCtx_cover_bottom_false)
     GlobalMockObject::verify();
 }
 
-TEST_F(OpbaseTest, ut_GetHcclOpInfoCtx_cover_bottom_true)
+TEST_F(OpbaseTest, ut_LegacyGetHcclOpInfoCtx_cover_bottom_true)
 {
     for (int i = 0; i < MAX_MODULE_DEVICE_NUM; i++) {
-        g_opHcomInfos[i].isUsed = false;
+        CollCommMgr::GetInstance().LegacyGetOpHcomInfo(i).isUsed = false;
     }
-    g_opHcomInfos[MAX_MODULE_DEVICE_NUM].isUsed = true;
+    CollCommMgr::GetInstance().LegacyGetOpHcomInfo(MAX_MODULE_DEVICE_NUM).isUsed = true;
     g_hcclDeviceId = INVALID_INT;
     HcclResult ret = HCCL_SUCCESS;
     MOCKER(hrtGetDevice)

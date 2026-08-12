@@ -9,6 +9,8 @@
  */
 
 #include "hccl_api_base_test.h"
+#include "coll_comm_mgr.h"
+extern thread_local s32 g_hcclDeviceId;
 
 class HcclCommInitRootInfoConfigTest : public BaseInit {
 public:
@@ -21,7 +23,7 @@ public:
     void TearDown() override
     {
         // 删除所有拓扑建链的线程
-        HcclOpInfoCtx& opBaseInfo = GetHcclOpInfoCtx();
+        HcclOpInfoCtx& opBaseInfo = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
         opBaseInfo.hcclCommTopoInfoDetectServer.clear();
         opBaseInfo.hcclCommTopoInfoDetectAgent.clear();
 

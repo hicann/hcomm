@@ -17,6 +17,9 @@
 #include <hccl/hccl_types.h>
 #include "hccl_communicator.h"
 #include "hccl_comm_pub.h"
+#if !defined(CCL_KERNEL_AICPU) && !defined(HCCD)
+#include "coll_comm_mgr.h"
+#endif
 #include "coll_alg_utils.h"
 #include "env_config.h"
 #include "comm_configer.h"
@@ -49,6 +52,13 @@ hcclComm::hcclComm(u64 inCCLbufferSize, u64 outCCLbufferSize, std::string identi
 
 hcclComm::~hcclComm()
 {
+#if !defined(CCL_KERNEL_AICPU) && !defined(HCCD)
+    // collComm_ 为 fullMode 时由 owner(hcclComm) 负责注销，避免在 ~CollComm 中反向依赖 CollCommMgr；
+    // 此时 collComm_ 尚未析构（成员析构发生在函数体之后），指针有效
+    if (collComm_ != nullptr && collComm_->IsFullMode()) {
+        CollCommMgr::GetInstance().UnRegisteCollComm(collComm_.get());
+    }
+#endif
     RealeaseBarrierMemory();
     (void)UnRegistTaskAbortHandler();
     BinaryUnLoad();

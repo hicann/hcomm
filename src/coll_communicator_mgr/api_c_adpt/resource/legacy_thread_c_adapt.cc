@@ -43,7 +43,7 @@ HcclResult HcomSetAttachedStream(const char* group, u32 graphId, const rtStream_
         }
         void* attachedStream = const_cast<void*>(static_cast<const void*>(stream[0]));
         s32 deviceLogicId = Hccl::HrtGetDevice();
-        auto& mgr = hccl::CollCommMgr::GetInstance()->GetOrderLaunchThreadMgr(deviceLogicId);
+        auto& mgr = hccl::CollCommMgr::GetInstance().GetOrderLaunchThreadMgr(deviceLogicId);
         return mgr.SetAttachedStream(std::string(group), graphId, attachedStream);
     }());
 

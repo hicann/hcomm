@@ -46,6 +46,7 @@ set(src_to_test_list
     ut_hccl_comm_host.cc
     ut_ind_op_transport_alloc.cc
     ut_aclgraph_communicator.cc
+    ut_coll_comm_mgr.cc
 )
 
 add_executable(hccl_utest_framework_communicator ${src_to_test_list})

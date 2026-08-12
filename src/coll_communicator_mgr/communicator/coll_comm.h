@@ -77,6 +77,9 @@ public:
     // 获取devicelogicId
     s32 GetDeviceLogicId() const { return deviceLogicId_; }
 
+    // 是否为全功能模式（fullMode），供外部 owner 在注册/注销前判断是否需要管理
+    bool IsFullMode() const { return initMode_ == CollCommInitMode::fullMode; }
+
     // 获取Rank数量
     uint32_t GetRankSize() const
     {
@@ -142,10 +145,6 @@ private:
     HcclResult InitFullMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, uint32_t opExpansionMode);
     HcclResult InitSimpleMode(void* rankGraph, aclrtBinHandle binHandle, HcclMem cclBuffer, uint32_t opExpansionMode);
 
-    /* A2/A3：使用simpleMode兼容模式没有CommV2，使用简化版的CollComm代理rankgraph、myrank对象，其他功能暂不实现
-     * A5&&下一代：使用fullMode全功能collComm模式
-     */
-    bool IsFullMode() const { return initMode_ == CollCommInitMode::fullMode; }
     HcclResult HcclBinaryUnLoad();
 
     void* comm_{nullptr};

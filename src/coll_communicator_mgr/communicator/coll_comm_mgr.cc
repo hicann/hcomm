@@ -8,20 +8,25 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "coll_comm_mgr.h"
-#include "ns_recovery/task_abort_handler.h"
 #include "cluster_monitor.h"
+#include "hcomm_c_adpt.h"
+#include "hcom_common.h"
 
 namespace hccl {
 
-CollCommMgr* CollCommMgr::instance_ = nullptr;
-static std::once_flag instanceFlag;
-
-CollCommMgr* CollCommMgr::GetInstance()
+CollCommMgr& CollCommMgr::GetInstance()
 {
-    std::call_once(instanceFlag, [&] {
-        instance_ = new CollCommMgr();
-    });
-    return instance_;
+    static CollCommMgr instance;
+    return instance;
+}
+
+CollCommMgr::~CollCommMgr()
+{
+    HCCL_INFO("[CollCommMgr][~CollCommMgr] destruct begin.");
+    for (auto& monitor : clusterMonitor_) {
+        (void)monitor.DeInit();
+    }
+    HCCL_INFO("[CollCommMgr][~CollCommMgr] destruct end.");
 }
 
 hcomm::ClusterMonitor& CollCommMgr::GetClusterMonitor(s32 deviceLogicId)
@@ -83,7 +88,7 @@ void CollCommMgr::RegisteCollComm(CollComm* collComm)
     std::lock_guard<std::mutex> lock(mutex_);
     allCollComms_[collComm->GetCommId()] = collComm;
     // 注册到需要的地方
-    HcclTaskAbortHandler::GetInstance().Register(collComm);
+    taskAbortHandler_.Register(collComm);
     (void)GetOrderLaunchThreadMgr(collComm->GetDeviceLogicId()).RegisterOrderLaunch(collComm->GetCommId());
 }
 
@@ -92,11 +97,69 @@ void CollCommMgr::UnRegisteCollComm(CollComm* collComm)
     std::lock_guard<std::mutex> lock(mutex_);
     allCollComms_.erase(collComm->GetCommId());
     // 从通信域里面注销
-    HcclTaskAbortHandler::GetInstance().UnRegister(collComm);
+    taskAbortHandler_.UnRegister(collComm);
     (void)GetClusterMonitor(collComm->GetDeviceLogicId()).UnRegisterToClusterMonitor(collComm);
     (void)GetOrderLaunchThreadMgr(collComm->GetDeviceLogicId()).UnRegisterOrderLaunch(collComm->GetCommId());
 }
 
-std::unordered_map<std::string, CollComm*> CollCommMgr::GetAllCollComms() { return allCollComms_; }
+const std::unordered_map<std::string, CollComm*>& CollCommMgr::GetAllCollComms() const { return allCollComms_; }
+
+void CollCommMgr::InitBaseCommRes(uint32_t devId) { (void)HcommResMgrInit(devId); }
+
+HcclOpInfoCtx& CollCommMgr::LegacyGetOpHcomInfo(uint32_t devId)
+{
+    if (devId >= MAX_MODULE_DEVICE_NUM + 1) {
+        devId = MAX_MODULE_DEVICE_NUM;
+    }
+    // baseCommInited_ 无需加锁：本函数在生产路径中始终由 LegacyGetHcclExistDeviceOpInfoCtx /
+    // LegacyGetHcclOpInfoCtx 在 opHcomInfosMutex_ 锁内调用
+    if (!baseCommInited_[devId]) {
+        InitBaseCommRes(devId);
+        baseCommInited_[devId] = true;
+    }
+    return opHcomInfos_[devId];
+}
+
+HcclOpInfoCtx& CollCommMgr::LegacyGetHcclExistDeviceOpInfoCtx(s32& devId)
+{
+    std::lock_guard<std::mutex> lock(opHcomInfosMutex_);
+    auto& opHcomInfo = LegacyGetOpHcomInfo(devId);
+    if (!opHcomInfo.isUsed) {
+        HCCL_INFO("[LegacyGetHcclOpInfoCtx] Set device, use devId[%d] ", devId);
+        auto& backUpOpHcomInfo = LegacyGetOpHcomInfo(MAX_MODULE_DEVICE_NUM);
+        if (backUpOpHcomInfo.isUsed) {
+            devId = MAX_MODULE_DEVICE_NUM;
+            HCCL_INFO("[LegacyGetHcclOpInfoCtx] Used cover bottom devId[%d]", devId);
+            return backUpOpHcomInfo;
+        }
+    }
+
+    HCCL_INFO("[LegacyGetHcclExistDeviceOpInfoCtx] use devId[%d] opHcomInfos", devId);
+    opHcomInfo.isUsed = true;
+    return opHcomInfo;
+}
+
+HcclOpInfoCtx& CollCommMgr::LegacyGetHcclOpInfoCtx(s32& devId)
+{
+    if (HcclGetDeviceId() == HCCL_SUCCESS) {
+        return LegacyGetHcclExistDeviceOpInfoCtx(devId);
+    }
+
+    std::lock_guard<std::mutex> lock(opHcomInfosMutex_);
+    for (u32 i = 0; i < MAX_MODULE_DEVICE_NUM; i++) {
+        auto& opHcomInfo = LegacyGetOpHcomInfo(i);
+        if (opHcomInfo.isUsed) {
+            devId = i;
+            HCCL_INFO("[LegacyGetHcclOpInfoCtx] Not set device, Used devId[%u] ", i);
+            return opHcomInfo;
+        }
+    }
+
+    devId = MAX_MODULE_DEVICE_NUM;
+    auto& backUpOpHcomInfo = LegacyGetOpHcomInfo(devId);
+    backUpOpHcomInfo.isUsed = true;
+    HCCL_INFO("[LegacyGetHcclOpInfoCtx] Used cover bottom devId[%d]", devId);
+    return backUpOpHcomInfo;
+}
 
 } // namespace hccl

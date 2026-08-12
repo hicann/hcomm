@@ -10,7 +10,6 @@
 #include "coll_comm.h"
 #include "exception_handler.h"
 #include "rank_graph_v2.h"
-#include "coll_comm_mgr.h"
 #include "kfc.h"
 #include "dlhal_function.h"
 #include "hcclCommTaskException.h"
@@ -54,7 +53,6 @@ CollComm::~CollComm()
 
     // 兜底释放所有team的syncMem本地内存
     HcclTeamMgr::GetInstance().ClearByCollComm(this);
-    CollCommMgr::GetInstance()->UnRegisteCollComm(this);
     HCCL_INFO("[CollComm][~CollComm] collComm deinit");
     // dpu的兜底上报 - 异常退出时捕获异常避免二次崩溃
     if (hcclCommDfx_ != nullptr) {
@@ -331,7 +329,6 @@ HcclResult CollComm::UpdateSymmetricRemoteMem(
 HcclResult CollComm::InitKfcAndRegisterCollComm()
 {
     myRank_->SetKfcControlTransfer(kfcControlTransferH2D_, kfcStatusTransferD2H_);
-    CollCommMgr::GetInstance()->RegisteCollComm(this);
     commStatus_ = HcclCommStatus::HCCL_COMM_STATUS_READY;
     return HCCL_SUCCESS;
 }

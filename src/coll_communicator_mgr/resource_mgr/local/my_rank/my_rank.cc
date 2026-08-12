@@ -246,7 +246,7 @@ HcclResult MyRank::ReserveCcuMsCommOrFallback()
     }
 
     bool reserved = false;
-    CHK_RET(CollCommMgr::GetInstance()->TryReserveCcuMsComm(devLogicId_, config_.GetConfigCommName(), reserved));
+    CHK_RET(CollCommMgr::GetInstance().TryReserveCcuMsComm(devLogicId_, config_.GetConfigCommName(), reserved));
     if (reserved) {
         ccuMsCommReserved_ = true;
         return HCCL_SUCCESS;
@@ -264,7 +264,7 @@ void MyRank::ReleaseCcuMsCommReservation()
     if (!ccuMsCommReserved_) {
         return;
     }
-    CollCommMgr::GetInstance()->ReleaseCcuMsComm(devLogicId_, config_.GetConfigCommName());
+    CollCommMgr::GetInstance().ReleaseCcuMsComm(devLogicId_, config_.GetConfigCommName());
     ccuMsCommReserved_ = false;
 }
 

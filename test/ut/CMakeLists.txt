@@ -309,6 +309,8 @@ set(UT_COMMON_INCLUDE_LIST
 
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/interface/
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/dfx
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/dfx/cluster_monitor
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/dfx/ns_recovery
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/dfx/profiling
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/dfx/profiling/aicpu
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/dfx/profiling/host

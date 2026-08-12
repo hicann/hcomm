@@ -9,6 +9,7 @@
  */
 #ifndef CLUSTER_MONITOR_H
 #define CLUSTER_MONITOR_H
+#include <atomic>
 #include <thread>
 #include <map>
 #include <deque>
@@ -186,7 +187,6 @@ public:
     HcclResult RecvFrame(ClusterUIDType rem);
     HcclResult ParseFrame(ClusterMonitorFrame& cmFrame, ClusterUIDType& src);
     HcclResult DeInit();
-    static ClusterMonitor& GetInstance(u32 deviceId);
     void GetCqeErrInfoFromTaskException(
         u32 remoteLocalId, uint16_t status, std::string localEid, std::string remoteEid, std::string remoteInsId);
     std::vector<std::string> GetErrStatusVecFromCluserMonitor();
@@ -237,7 +237,7 @@ private:
     // 防止重复初始化
     bool initialized_ = false;
     uint32_t lostThreshold_ = 0;
-    bool isDeInit_ = false;
+    std::atomic<bool> isDeInit_{false};
     std::atomic<bool> linkThreadRunning_{false};
 
     // 防止多线程同时初始化的线程锁

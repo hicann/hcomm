@@ -29,7 +29,6 @@ class HcclTaskAbortHandler {
 public:
     HcclTaskAbortHandler();
     ~HcclTaskAbortHandler();
-    static HcclTaskAbortHandler& GetInstance();
     HcclResult Register(CollComm* communicator);
     HcclResult UnRegister(CollComm* communicator);
 

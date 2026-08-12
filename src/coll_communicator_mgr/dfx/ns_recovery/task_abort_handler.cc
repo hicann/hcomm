@@ -120,14 +120,6 @@ HcclTaskAbortHandler::~HcclTaskAbortHandler()
     Hccl::HrtDeviceAbortRegCallBack(nullptr, nullptr, name);
 }
 
-HcclTaskAbortHandler& HcclTaskAbortHandler::GetInstance()
-{
-    // Leaky Singleton: 故意不释放，规避 Static Destruction Order Fiasco，
-    // 确保析构回调访问 commVector_ 时单例仍有效
-    static HcclTaskAbortHandler& handler = *new HcclTaskAbortHandler();
-    return handler;
-}
-
 HcclResult HcclTaskAbortHandler::Register(CollComm* communicator)
 {
     std::lock_guard<std::mutex> lock(vecMutex_);

@@ -22,33 +22,9 @@
 #include "common/src/config.h"
 #include "../common/src/topo/topoinfo_detect.h"
 #include "op_base_v2.h"
-
-using HcclOpInfoCtx = struct HcclInfoTag {
-    HcclCommPtr pComm;
-    hccl::HcclCommParams params;
-    hccl::RankTable_t rankTable;
-    bool cloudFlag = false; // cloudFlag为0即实验室场景,cloudFlag为1则为云场景
-    bool isUsed;
-    std::mutex opGroupMapMutex;
-    std::unordered_map<std::string, std::shared_ptr<hccl::hcclComm>> opGroup2CommMap;
-    std::map<std::string, std::shared_ptr<hccl::TopoInfoDetect>> hcclCommTopoInfoDetectServer;
-    std::map<std::string, std::shared_ptr<hccl::TopoInfoDetect>> hcclCommTopoInfoDetectAgent;
-    HcclInfoTag() : isUsed(false) {}
-
-    ~HcclInfoTag()
-    {
-        pComm = nullptr;
-        opGroup2CommMap.clear();
-        hcclCommTopoInfoDetectServer.clear();
-        hcclCommTopoInfoDetectAgent.clear();
-    }
-};
+#include "legacy_op_hcom_info.h"
 
 constexpr uint32_t MAX_HCOM_NUM = 3U;
-
-HcclOpInfoCtx& GetHcclExistDeviceOpInfoCtx(void);
-
-HcclOpInfoCtx& GetHcclOpInfoCtx(void);
 
 HcclResult InitOtherInfo(hccl::HcclCommParams& params, const char* rankTable);
 

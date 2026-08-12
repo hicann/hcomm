@@ -31,7 +31,7 @@ cluster_monitor/
 **目录特征**：
 
 - 位于 `coll_communicator_mgr/dfx/`，隶属DFX监控类功能；
-- 模块自治：单例（`GetInstance(u32 deviceId)`），不依赖目录内其它文件；
+- 模块实例由 `CollCommMgr` 经 `clusterMonitor_` 数组持有，按 `GetClusterMonitor(deviceId)` 访问；不依赖目录内其它文件；
 - 依赖外部：`ring_buffer`、`reference_map`、`hcclCommSocket`、`hccl_communicator`、`hcclCommDfx`、`coll_comm`、`log`、`comm_addr_logger` 等。
 
 ---
@@ -55,7 +55,7 @@ sequenceDiagram
     rect rgb(230, 245, 255)
     Note over Caller, CM: 注册阶段
     Caller->>Mgr: RegisterToClusterMonitor(comm)
-    Mgr->>CM: GetInstance(deviceId)
+    Mgr->>CM: GetClusterMonitor(deviceId)
     CM->>CM: GetRemEndpointDescs<br/>(遍历 netLayer,收集 UID 上下文)
     CM->>CM: GetConnectRank<br/>(排序 + 双Ring)
     CM->>CM: clusterLinkContext_[commId].push(...)
@@ -253,7 +253,6 @@ classDiagram
         +DelErrorSocket()
         +ProcessExceptionEvent()
         +DeInit()
-        +GetInstance(deviceId)$ static
         +GetCqeErrInfoFromTaskException(remoteLocalId, status, localEid, remoteEid, remoteInsId)
         +GetErrStatusVecFromCluserMonitor()
         +PrintEvents(keyEvents)
@@ -299,7 +298,6 @@ classDiagram
 
 | 接口 | 说明 |
 |------|------|
-| `static ClusterMonitor& GetInstance(u32 deviceId)` | 按device取模块单例（通过 `CollCommMgr` 间接持有）。 |
 | `HcclResult RegisterToClusterMonitor(HcclComm comm)` | 注册一个通信域：建立UID上下文、计算Ring待连接集合、推入 `clusterLinkContext_` 等待后台建链；首次注册会启动 `MonitorThread`。 |
 | `HcclResult UnRegisterToClusterMonitor(hccl::CollComm* collComm)` | 注销一个通信域：清空该commId在 `clusterLinkContext_`、`commIdMap_`、`monitorLinkStatusMap_`、`uid2SocketRefMap_` 中的引用计数；最后一个commId注销时触发 `DeInit`。 |
 | `void GetCqeErrInfoFromTaskException(u32 remoteLocalId, uint16_t status, std::string localEid, std::string remoteEid, std::string remoteInsId)` | 由AICPU/CCU CQE错误回调调用，记录CQE错误并以广播形式扩散。 |

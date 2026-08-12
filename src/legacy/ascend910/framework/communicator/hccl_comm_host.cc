@@ -24,6 +24,7 @@
 #include "sal_pub.h"
 #include "env_config/env_config.h"
 #include "coll_comm_config.h"
+#include "coll_comm_mgr.h"
 
 namespace hccl {
 HcclResult hcclComm::AllReduce(
@@ -365,6 +366,9 @@ HcclResult hcclComm::InitCollComm(
     if (initMode == CollCommInitMode::simpleMode) { /* hccl::CommunicatorV1支持CollComm简易流程 */
         return HCCL_SUCCESS;
     }
+
+    // 注册通信域到 CollCommMgr，由 owner(hcclComm) 负责注册/注销，避免 CollComm 反向依赖 CollCommMgr
+    CollCommMgr::GetInstance().RegisteCollComm(collComm_.get());
 
     CHK_RET(collComm_->GetHDCommunicate(
         commAicpuParam_.kfcControlTransferH2DParams, commAicpuParam_.kfcStatusTransferD2HParams));

@@ -17,6 +17,8 @@
 
 #include "topoinfo_struct.h"
 
+HcclResult HcclGetDeviceId(void);
+
 // Ge适配的类
 constexpr u32 SEND_RECEIVE_TASK_NUM = 20;
 constexpr u32 OP_DEFAULT_TASK_NUM = 245;

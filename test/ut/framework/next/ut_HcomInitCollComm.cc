@@ -25,6 +25,7 @@
 #include "my_rank.h"
 #include "op_base.h"
 #include "op_base_v2.h"
+#include "coll_comm_mgr.h"
 
 extern thread_local s32 g_hcclDeviceId;
 
@@ -165,7 +166,7 @@ protected:
 
     static void ResetOpBaseState()
     {
-        HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+        HcclOpInfoCtx& opBaseHcom = hccl::CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
         std::lock_guard<std::mutex> lock(opBaseHcom.opGroupMapMutex);
         opBaseHcom.opGroup2CommMap.clear();
     }
@@ -199,7 +200,7 @@ TEST_F(HcclCommInitCollCommGuardTest, Ut_HcclCommInitCollComm_When_SetGroupTopoI
 
     EXPECT_EQ(InitComm(failedConfig, failedComm), HCCL_E_INTERNAL);
     EXPECT_EQ(failedComm, nullptr);
-    HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+    HcclOpInfoCtx& opBaseHcom = hccl::CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
     {
         std::lock_guard<std::mutex> lock(opBaseHcom.opGroupMapMutex);
         EXPECT_TRUE(opBaseHcom.opGroup2CommMap.empty());

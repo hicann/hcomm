@@ -760,11 +760,11 @@ HcclResult ClusterMonitor::RegisterToClusterMonitor(HcclComm comm)
 
 HcclResult ClusterMonitor::DeInit()
 {
-    if (isDeInit_) {
+    bool expected = false;
+    if (!isDeInit_.compare_exchange_strong(expected, true)) {
         HCCL_INFO("[%s] already deinit, skip.", __func__);
         return HCCL_SUCCESS;
     }
-    isDeInit_ = true;
     HCCL_INFO("[%s] heartbeat deinit begin.", __func__);
     clusterMonitorThreadFlag_ = false;
     linkThreadRunning_ = false;
@@ -903,7 +903,7 @@ void GetCqeErrInfoFromTaskException(
         return;
     }
     return hccl::CollCommMgr::GetInstance()
-        ->GetClusterMonitor(locDeviceId)
+        .GetClusterMonitor(locDeviceId)
         .GetCqeErrInfoFromTaskException(remoteLocalId, status, localEid, remoteEid, remoteInsId);
 }
 
@@ -1018,7 +1018,7 @@ std::vector<std::string> ClusterMonitor::GetErrStatusVecFromCluserMonitor()
 
 std::vector<std::string> GetErrStatusVecFromCluserMonitor(s32 deviceLogicID)
 {
-    return hccl::CollCommMgr::GetInstance()->GetClusterMonitor(deviceLogicID).GetErrStatusVecFromCluserMonitor();
+    return hccl::CollCommMgr::GetInstance().GetClusterMonitor(deviceLogicID).GetErrStatusVecFromCluserMonitor();
 }
 
 __attribute__((constructor)) void ClusterMonitorCallBackInit()

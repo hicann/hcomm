@@ -370,7 +370,7 @@ HcclResult HcclDedicatedThreadAcquire(
     /* 保序场景：委托给 OrderLaunchThreadMgr（进程粒度） */
     if (ORDER_LAUNCH_TYPES.find(useType) != ORDER_LAUNCH_TYPES.end()) {
         s32 deviceLogicId = Hccl::HrtGetDevice();
-        auto& resMgr = hccl::CollCommMgr::GetInstance()->GetOrderLaunchThreadMgr(deviceLogicId);
+        auto& resMgr = hccl::CollCommMgr::GetInstance().GetOrderLaunchThreadMgr(deviceLogicId);
         ThreadHandle th = 0;
         HcclResult ret = resMgr.OrderLaunchThreadAcquire(useType, collComm, commId, notifyNumPerThread, th);
         CHK_PRT_RET(

@@ -28,6 +28,9 @@
 #include "hcom_common.h"
 #include "comm_configer.h"
 #include "hcom_private_v2.h"
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+#include "coll_comm_mgr.h"
+#endif
 
 #include "hcom_pub.h"
 
@@ -214,6 +217,7 @@ void HcomUnSetGroupTopoInfo(const char* group)
 
 HcclResult HcomGetCommHandleByGroup(const char* group, HcclComm* commHandle)
 {
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     CHK_PTR_NULL(commHandle);
     CHK_PTR_NULL(group);
 
@@ -228,7 +232,8 @@ HcclResult HcomGetCommHandleByGroup(const char* group, HcclComm* commHandle)
         ret);
 
     // MC2单算子和动态图下发性能优化，优先查询返回
-    HcclOpInfoCtx& opBaseHcom = GetHcclExistDeviceOpInfoCtx();
+    s32 devId = HcclGetThreadDeviceId();
+    HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclExistDeviceOpInfoCtx(devId);
     std::unique_lock<std::mutex> lock(opBaseHcom.opGroupMapMutex);
     auto iter = opBaseHcom.opGroup2CommMap.find(std::string(group));
     if (iter != opBaseHcom.opGroup2CommMap.end()) {
@@ -252,6 +257,7 @@ HcclResult HcomGetCommHandleByGroup(const char* group, HcclComm* commHandle)
             group, deviceLogicId, HCOM_ERROR_CODE(ret)),
         ret);
     *commHandle = static_cast<HcclComm>(hcclComm.get());
+#endif
     return HCCL_SUCCESS;
 }
 

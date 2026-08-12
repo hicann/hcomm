@@ -31,7 +31,7 @@ cluster_monitor/
 **Directory features**:
 
 - Located in `coll_communicator_mgr/dfx/`, belongs to DFX monitoring functionality;
-- Module autonomous: singleton (`GetInstance(u32 deviceId)`), does not depend on other files in the directory;
+- Module instances held by `CollCommMgr` via `clusterMonitor_` array, accessed via `GetClusterMonitor(deviceId)`; does not depend on other files in the directory;
 - External dependencies: `ring_buffer`, `reference_map`, `hcclCommSocket`, `hccl_communicator`, `hcclCommDfx`, `coll_comm`, `log`, `comm_addr_logger`, etc.
 
 ---
@@ -55,7 +55,7 @@ sequenceDiagram
     rect rgb(230, 245, 255)
     Note over Caller, CM: Registration Phase
     Caller->>Mgr: RegisterToClusterMonitor(comm)
-    Mgr->>CM: GetInstance(deviceId)
+    Mgr->>CM: GetClusterMonitor(deviceId)
     CM->>CM: GetRemEndpointDescs<br/>(traverse netLayer, collect UID contexts)
     CM->>CM: GetConnectRank<br/>(sort + dual Ring)
     CM->>CM: clusterLinkContext_[commId].push(...)
@@ -253,7 +253,6 @@ classDiagram
         +DelErrorSocket()
         +ProcessExceptionEvent()
         +DeInit()
-        +GetInstance(deviceId)$ static
         +GetCqeErrInfoFromTaskException(remoteLocalId, status, localEid, remoteEid, remoteInsId)
         +GetErrStatusVecFromCluserMonitor()
         +PrintEvents(keyEvents)
@@ -299,7 +298,6 @@ classDiagram
 
 | Interface | Description |
 |------|------|
-| `static ClusterMonitor& GetInstance(u32 deviceId)` | Get module singleton by device (held indirectly via `CollCommMgr`). |
 | `HcclResult RegisterToClusterMonitor(HcclComm comm)` | Register a communicator: build UID context, calculate Ring connection set, push into `clusterLinkContext_` waiting for background link establishment; first registration starts `MonitorThread`. |
 | `HcclResult UnRegisterToClusterMonitor(hccl::CollComm* collComm)` | Deregister a communicator: clear reference counts for that commId in `clusterLinkContext_`, `commIdMap_`, `monitorLinkStatusMap_`, `uid2SocketRefMap_`; triggers `DeInit` when the last commId is deregistered. |
 | `void GetCqeErrInfoFromTaskException(u32 remoteLocalId, uint16_t status, std::string localEid, std::string remoteEid, std::string remoteInsId)` | Called by the AICPU/CCU CQE error callback, records CQE errors and propagates them via broadcast. |

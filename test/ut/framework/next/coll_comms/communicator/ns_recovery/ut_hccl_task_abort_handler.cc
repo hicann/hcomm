@@ -23,20 +23,22 @@ using namespace hcomm;
 
 class HcclTaskAbortHandlerTest : public testing::Test {
 public:
+    HcclTaskAbortHandler handler;
+
     static void SetUpTestCase() { std::cout << "HcclTaskAbortHandlerTest SetUP" << std::endl; }
 
     static void TearDownTestCase() { std::cout << "HcclTaskAbortHandlerTest TearDown" << std::endl; }
 
     virtual void SetUp()
     {
-        HcclTaskAbortHandler::GetInstance().commVector_.clear();
+        handler.commVector_.clear();
         std::cout << "A Test case in HcclTaskAbortHandlerTest SetUp" << std::endl;
     }
 
     virtual void TearDown()
     {
         std::cout << "A Test case in HcclTaskAbortHandlerTest TearDown" << std::endl;
-        HcclTaskAbortHandler::GetInstance().commVector_.clear();
+        handler.commVector_.clear();
         GlobalMockObject::verify();
     }
 };
@@ -50,8 +52,8 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_pre_succ
 
     // 使用 nullptr 作为测试 communicator 的占位符并注册
     CollComm* comm = nullptr;
-    HcclTaskAbortHandler::GetInstance().Register(comm);
-    void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
+    handler.Register(comm);
+    void* args = reinterpret_cast<void*>(&handler.commVector_);
 
     // 模拟 Suspend 方法返回成功
     MOCKER_CPP(&CollComm::Suspend, HcclResult(CollComm::*)())
@@ -69,7 +71,7 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_pre_succ
     EXPECT_EQ(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS));
 
     // 清理
-    HcclTaskAbortHandler::GetInstance().UnRegister(comm);
+    handler.UnRegister(comm);
 }
 
 TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_with_null_args)
@@ -87,11 +89,11 @@ TEST_F(HcclTaskAbortHandlerTest, test_unregister_not_found_comm)
     CollComm* comm1 = reinterpret_cast<CollComm*>(0x1000);
     CollComm* comm2 = reinterpret_cast<CollComm*>(0x2000);
 
-    HcclTaskAbortHandler::GetInstance().Register(comm1);
-    HcclResult ret = HcclTaskAbortHandler::GetInstance().UnRegister(comm2);
+    handler.Register(comm1);
+    HcclResult ret = handler.UnRegister(comm2);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
-    HcclTaskAbortHandler::GetInstance().UnRegister(comm1);
+    handler.UnRegister(comm1);
 }
 
 TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_pre_suspending)
@@ -101,15 +103,15 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_pre_susp
     uint32_t timeout = 0U;
 
     CollComm* comm = nullptr;
-    HcclTaskAbortHandler::GetInstance().Register(comm);
-    void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
+    handler.Register(comm);
+    void* args = reinterpret_cast<void*>(&handler.commVector_);
 
     MOCKER_CPP(&CollComm::Suspend, HcclResult(CollComm::*)()).stubs().will(returnValue(HCCL_E_SUSPENDING));
 
     auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
     EXPECT_EQ(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS));
 
-    HcclTaskAbortHandler::GetInstance().UnRegister(comm);
+    handler.UnRegister(comm);
 }
 
 TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_suspending)
@@ -119,8 +121,8 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_sus
     uint32_t timeout = 0U;
 
     CollComm* comm = nullptr;
-    HcclTaskAbortHandler::GetInstance().Register(comm);
-    void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
+    handler.Register(comm);
+    void* args = reinterpret_cast<void*>(&handler.commVector_);
 
     MOCKER(CcuIsInited).stubs().will(returnValue(true));
     MOCKER(CcuSetTaskKill).stubs().will(returnValue(HCCL_SUCCESS));
@@ -131,7 +133,7 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_sus
     auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
     EXPECT_EQ(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS));
 
-    HcclTaskAbortHandler::GetInstance().UnRegister(comm);
+    handler.UnRegister(comm);
 }
 
 TEST_F(HcclTaskAbortHandlerTest, test_task_abort_post_ccu_set_task_kill_fail)
@@ -141,8 +143,8 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_post_ccu_set_task_kill_fail)
     uint32_t timeout = 0U;
 
     CollComm* comm = nullptr;
-    HcclTaskAbortHandler::GetInstance().Register(comm);
-    void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
+    handler.Register(comm);
+    void* args = reinterpret_cast<void*>(&handler.commVector_);
 
     MOCKER(CcuIsInited).stubs().will(returnValue(true));
     MOCKER(CcuSetTaskKill).stubs().will(returnValue(HCCL_E_INTERNAL));
@@ -150,7 +152,7 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_post_ccu_set_task_kill_fail)
     auto ret = ProcessTaskAbortHandleCallback(deviceLogicId, stage, timeout, args);
     EXPECT_NE(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS));
 
-    HcclTaskAbortHandler::GetInstance().UnRegister(comm);
+    handler.UnRegister(comm);
 }
 
 TEST_F(HcclTaskAbortHandlerTest, test_register_and_unregister_multiple)
@@ -158,20 +160,20 @@ TEST_F(HcclTaskAbortHandlerTest, test_register_and_unregister_multiple)
     CollComm* comm1 = reinterpret_cast<CollComm*>(0x1000);
     CollComm* comm2 = reinterpret_cast<CollComm*>(0x2000);
 
-    HcclResult ret = HcclTaskAbortHandler::GetInstance().Register(comm1);
+    HcclResult ret = handler.Register(comm1);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    ret = HcclTaskAbortHandler::GetInstance().Register(comm2);
+    ret = handler.Register(comm2);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
-    EXPECT_EQ(HcclTaskAbortHandler::GetInstance().commVector_.size(), 2u);
+    EXPECT_EQ(handler.commVector_.size(), 2u);
 
-    ret = HcclTaskAbortHandler::GetInstance().UnRegister(comm1);
+    ret = handler.UnRegister(comm1);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_EQ(HcclTaskAbortHandler::GetInstance().commVector_.size(), 1u);
+    EXPECT_EQ(handler.commVector_.size(), 1u);
 
-    ret = HcclTaskAbortHandler::GetInstance().UnRegister(comm2);
+    ret = handler.UnRegister(comm2);
     EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_EQ(HcclTaskAbortHandler::GetInstance().commVector_.size(), 0u);
+    EXPECT_EQ(handler.commVector_.size(), 0u);
 }
 
 TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_pre_fail)
@@ -183,8 +185,8 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_pre_fail
 
     // 使用 nullptr 作为测试 communicator 的占位符并注册
     CollComm* comm = nullptr;
-    HcclTaskAbortHandler::GetInstance().Register(comm);
-    void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
+    handler.Register(comm);
+    void* args = reinterpret_cast<void*>(&handler.commVector_);
 
     // 模拟 Suspend 方法返回失败
     MOCKER_CPP(&CollComm::Suspend, HcclResult(CollComm::*)())
@@ -202,7 +204,7 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_pre_fail
     EXPECT_EQ(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_FAIL));
 
     // 清理
-    HcclTaskAbortHandler::GetInstance().UnRegister(comm);
+    handler.UnRegister(comm);
 }
 
 TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_success)
@@ -214,8 +216,8 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_suc
 
     // 使用 nullptr 作为测试 communicator 的占位符并注册
     CollComm* comm = nullptr;
-    HcclTaskAbortHandler::GetInstance().Register(comm);
-    void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
+    handler.Register(comm);
+    void* args = reinterpret_cast<void*>(&handler.commVector_);
 
     // 模拟 CCU 已初始化及相关函数返回成功
     MOCKER(CcuIsInited).stubs().will(returnValue(true));
@@ -238,7 +240,7 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_suc
     EXPECT_EQ(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS));
 
     // 清理
-    HcclTaskAbortHandler::GetInstance().UnRegister(comm);
+    handler.UnRegister(comm);
 }
 
 TEST_F(HcclTaskAbortHandlerTest, test_task_abort_post_skip_taskkill_when_ccu_not_inited)
@@ -250,8 +252,8 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_post_skip_taskkill_when_ccu_not
 
     // 使用 nullptr 作为测试 communicator 的占位符并注册
     CollComm* comm = nullptr;
-    HcclTaskAbortHandler::GetInstance().Register(comm);
-    void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
+    handler.Register(comm);
+    void* args = reinterpret_cast<void*>(&handler.commVector_);
 
     // 模拟 CCU 未初始化，应跳过 TaskKill
     MOCKER(CcuIsInited).stubs().will(returnValue(false));
@@ -272,7 +274,7 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_post_skip_taskkill_when_ccu_not
     EXPECT_EQ(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_SUCCESS));
 
     // 清理
-    HcclTaskAbortHandler::GetInstance().UnRegister(comm);
+    handler.UnRegister(comm);
 }
 
 TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_fail)
@@ -284,8 +286,8 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_fai
 
     // 使用 nullptr 作为测试 communicator 的占位符并注册
     CollComm* comm = nullptr;
-    HcclTaskAbortHandler::GetInstance().Register(comm);
-    void* args = reinterpret_cast<void*>(&HcclTaskAbortHandler::GetInstance().commVector_);
+    handler.Register(comm);
+    void* args = reinterpret_cast<void*>(&handler.commVector_);
 
     // 模拟 CCU 已初始化及相关函数返回成功
     MOCKER(CcuIsInited).stubs().will(returnValue(true));
@@ -308,5 +310,5 @@ TEST_F(HcclTaskAbortHandlerTest, test_task_abort_handle_call_back_stage_post_fai
     EXPECT_EQ(ret, static_cast<int>(TaskAbortResult::TASK_ABORT_FAIL));
 
     // 清理
-    HcclTaskAbortHandler::GetInstance().UnRegister(comm);
+    handler.UnRegister(comm);
 }

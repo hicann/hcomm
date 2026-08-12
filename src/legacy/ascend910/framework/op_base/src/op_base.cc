@@ -38,7 +38,7 @@
 #include "hccl_group.h"
 #include "hostdpu/dpu_kernel_entrance.h"
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
-#include "hcomm_c_adpt.h"
+#include "coll_comm_mgr.h"
 #endif
 
 #define DOUBLE_SIZE 2
@@ -82,24 +82,7 @@ HcclResult CallMsprofReportHostApi(
 }
 
 thread_local s32 g_hcclDeviceId = INVALID_INT;
-std::mutex g_opHcomInfosMutex{};
 std::mutex g_opHcomOneSideMutex{};
-
-HcclOpInfoCtx& GetOpHcomInfo(uint32_t devId)
-{
-    if (devId >= MAX_MODULE_DEVICE_NUM + 1) {
-        devId = MAX_MODULE_DEVICE_NUM;
-    }
-
-#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
-    // 临时方案：声明comm各类基础单例
-    // 仅触发空对象声明，不执行业务动作，故不会失败
-    (void)HcommResMgrInit(devId);
-#endif
-
-    static HcclOpInfoCtx g_opHcomInfos[MAX_MODULE_DEVICE_NUM + 1];
-    return g_opHcomInfos[devId];
-}
 
 HcclResult HcclGetDeviceId(void)
 {
@@ -125,49 +108,6 @@ s32 HcclGetThreadDeviceId()
         HcclGetDeviceId() != HCCL_SUCCESS,
         HCCL_WARNING("[HcclGetThreadDeviceId] get fail deviceLogicId[%d]", g_hcclDeviceId), INVALID_INT);
     return g_hcclDeviceId;
-}
-
-// 由调用者保证device id已经被set
-HcclOpInfoCtx& GetHcclExistDeviceOpInfoCtx(void)
-{
-    std::lock_guard<std::mutex> lock(g_opHcomInfosMutex);
-    auto& opHcomInfo = GetOpHcomInfo(g_hcclDeviceId);
-    if (!opHcomInfo.isUsed) {
-        HCCL_INFO("[GetHcclOpInfoCtx] Set device, use g_hcclDeviceId[%d] ", g_hcclDeviceId);
-        auto& backUpOpHcomInfo = GetOpHcomInfo(MAX_MODULE_DEVICE_NUM);
-        if (backUpOpHcomInfo.isUsed) {
-            g_hcclDeviceId = MAX_MODULE_DEVICE_NUM;
-            HCCL_INFO("[GetHcclOpInfoCtx] Used cover bottom g_hcclDeviceId[%d]", g_hcclDeviceId);
-            return backUpOpHcomInfo;
-        }
-    }
-
-    HCCL_INFO("[GetHcclExistDeviceOpInfoCtx] use g_hcclDeviceId[%d] opHcomInfos", g_hcclDeviceId);
-    opHcomInfo.isUsed = true;
-    return opHcomInfo;
-}
-
-HcclOpInfoCtx& GetHcclOpInfoCtx(void)
-{
-    if (HcclGetDeviceId() == HCCL_SUCCESS) {
-        return GetHcclExistDeviceOpInfoCtx();
-    }
-
-    std::lock_guard<std::mutex> lock(g_opHcomInfosMutex);
-    for (u32 i = 0; i < MAX_MODULE_DEVICE_NUM; i++) {
-        auto& opHcomInfo = GetOpHcomInfo(i);
-        if (opHcomInfo.isUsed) {
-            g_hcclDeviceId = i;
-            HCCL_INFO("[GetHcclOpInfoCtx] Not set device, Used g_hcclDeviceId[%u] ", i);
-            return opHcomInfo;
-        }
-    }
-
-    g_hcclDeviceId = MAX_MODULE_DEVICE_NUM;
-    auto& backUpOpHcomInfo = GetOpHcomInfo(g_hcclDeviceId);
-    backUpOpHcomInfo.isUsed = true;
-    HCCL_INFO("[GetHcclOpInfoCtx] Used cover bottom g_hcclDeviceId[%d]", g_hcclDeviceId);
-    return backUpOpHcomInfo;
 }
 
 HcclResult
@@ -532,7 +472,7 @@ HcclResult HcclCommInitCollComm(uint32_t rank, void** commV2, const HcclCommConf
     EXCEPTION_CATCH(
         hcclCommPtr = make_shared<hccl::hcclComm>(cclBufferSize, cclBufferSize, commName), return HCCL_E_PTR);
     CommConfig commConfig(commName);
-    HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+    HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
     CHK_RET(CheckOpBasedHcom(opBaseHcom, rank, commConfig));
 
     void* rankGraph = nullptr;
@@ -732,6 +672,7 @@ HcclResult InitCommClusterInfo(
 
 HcclResult HcclCommInitClusterInfoWrapper(struct hcclAsyncJob* job_)
 {
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     struct hcclCommInitRankTableAsyncJob* job = static_cast<hcclCommInitRankTableAsyncJob*>(job_);
     uint32_t rank = job->rank;
     HcclComm* comm = job->initComm;
@@ -791,7 +732,7 @@ HcclResult HcclCommInitClusterInfoWrapper(struct hcclAsyncJob* job_)
 
     HCCL_INFO("%s success, clusterInfoRealPath[%s].", __func__, realFilePath.c_str());
 
-    HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+    HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
     CHK_RET(CheckOpBasedHcom(opBaseHcom, rank, commConfig));
 
     CHK_RET(InitCommClusterInfo(rankTableM, rank, commConfig, opBaseHcom, comm));
@@ -800,11 +741,13 @@ HcclResult HcclCommInitClusterInfoWrapper(struct hcclAsyncJob* job_)
     HCCL_RUN_INFO(
         "[HCCL_TRACE]%s success, take time [%lld]us, clusterInfo[%s], rank[%u], deviceLogicId[%d].", __func__,
         DURATION_US(TIME_NOW() - startut), clusterInfo, rank, deviceLogicId);
+#endif
     return HCCL_SUCCESS;
 }
 
 HcclResult HcclCommInitClusterInfo(const char* clusterInfo, uint32_t rank, HcclComm* comm)
 {
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     if (hcclGroupDepth > 0) {
         HcclResult ret = HCCL_SUCCESS;
         std::shared_ptr<struct hcclCommInitRankTableAsyncJob> job;
@@ -866,7 +809,7 @@ HcclResult HcclCommInitClusterInfo(const char* clusterInfo, uint32_t rank, HcclC
 
     HCCL_INFO("%s success, clusterInfoRealPath[%s].", __func__, realFilePath.c_str());
 
-    HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+    HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
     CHK_RET(CheckOpBasedHcom(opBaseHcom, rank, commConfig));
 
     CHK_RET(InitCommClusterInfo(rankTableM, rank, commConfig, opBaseHcom, comm));
@@ -875,6 +818,7 @@ HcclResult HcclCommInitClusterInfo(const char* clusterInfo, uint32_t rank, HcclC
     HCCL_RUN_INFO(
         "[HCCL_TRACE]%s success, take time [%lld]us, clusterInfo[%s], rank[%u], deviceLogicId[%d].", __func__,
         DURATION_US(TIME_NOW() - startut), clusterInfo, rank, deviceLogicId);
+#endif
     return HCCL_SUCCESS;
 }
 
@@ -967,6 +911,7 @@ HcclCommInitClusterInfoMemConfig(const char* rankTableString, uint32_t rank, Hcc
 
 HcclResult HcclCommInitClusterInfoConfigWrapper(struct hcclAsyncJob* job_)
 {
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     struct hcclCommInitRankTableConfigAsyncJob* job = static_cast<hcclCommInitRankTableConfigAsyncJob*>(job_);
     uint32_t rank = job->rank;
     HcclComm* comm = job->initComm;
@@ -1041,7 +986,7 @@ HcclResult HcclCommInitClusterInfoConfigWrapper(struct hcclAsyncJob* job_)
 
     HCCL_INFO("%s success, clusterInfoRealPath[%s].", __func__, realFilePath.c_str());
 
-    HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+    HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
     CHK_RET(CheckOpBasedHcom(opBaseHcom, rank, commConfig));
 
     CHK_RET(InitCommClusterInfo(rankTableM, rank, commConfig, opBaseHcom, comm));
@@ -1053,11 +998,13 @@ HcclResult HcclCommInitClusterInfoConfigWrapper(struct hcclAsyncJob* job_)
     HCCL_RUN_INFO(
         "[HCCL_TRACE]%s success, take time [%lld]us, clusterInfo[%s], rank[%u], deviceLogicId[%d].", __func__,
         DURATION_US(TIME_NOW() - startut), clusterInfo, rank, deviceLogicId);
+#endif
     return HCCL_SUCCESS;
 }
 
 HcclResult HcclCommInitClusterInfoConfig(const char* clusterInfo, uint32_t rank, HcclCommConfig* config, HcclComm* comm)
 {
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     if (hcclGroupDepth > 0) {
         HcclResult ret = HCCL_SUCCESS;
         std::shared_ptr<struct hcclCommInitRankTableConfigAsyncJob> job;
@@ -1130,7 +1077,7 @@ HcclResult HcclCommInitClusterInfoConfig(const char* clusterInfo, uint32_t rank,
 
     HCCL_INFO("%s success, clusterInfoRealPath[%s].", __func__, realFilePath.c_str());
 
-    HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+    HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
     CHK_RET(CheckOpBasedHcom(opBaseHcom, rank, commConfig));
 
     CHK_RET(InitCommClusterInfo(rankTableM, rank, commConfig, opBaseHcom, comm));
@@ -1142,6 +1089,7 @@ HcclResult HcclCommInitClusterInfoConfig(const char* clusterInfo, uint32_t rank,
     HCCL_RUN_INFO(
         "[HCCL_TRACE]%s success, take time [%lld]us, clusterInfo[%s], rank[%u], deviceLogicId[%d].", __func__,
         DURATION_US(TIME_NOW() - startut), clusterInfo, rank, deviceLogicId);
+#endif
     return HCCL_SUCCESS;
 }
 
@@ -1149,13 +1097,14 @@ HcclResult HcclCreateSubCommConfigInner(
     hccl::hcclComm* globalComm, uint32_t rankNum, uint32_t* rankIds, uint32_t subCommRankId, CommConfig& commConfig,
     HcclComm* subComm)
 {
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     HcclResult ret = HCCL_SUCCESS;
     HcclCommParams globalParams{};
     RankTable_t globalRankTable{};
     CHK_RET(globalComm->GetCommParams(globalParams));
     CHK_RET(globalComm->GetCommRankTable(globalRankTable));
 
-    HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+    HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
 
     const std::string commIdentifier = commConfig.GetConfigCommName();
     auto iter = opBaseHcom.opGroup2CommMap.find(commIdentifier);
@@ -1302,6 +1251,7 @@ HcclResult HcclCreateSubCommConfigInner(
     HCCL_RUN_INFO(
         "%s success, sub commm identifier[%s], rankNum[%u], rank[%u], server[%s], device[%d].", __func__,
         commIdentifier.c_str(), subRankTable.rankNum, subCommRankId, subParams.serverId.c_str(), subParams.logicDevId);
+#endif
     return HCCL_SUCCESS;
 }
 
@@ -1422,6 +1372,7 @@ HcclResult HcclCreateSubCommConfig(
 
 HcclResult HcclGetRootInfo(HcclRootInfo* rootInfo)
 {
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     HcclUs startut = TIME_NOW();
     s32 deviceLogicId = 0;
     CHK_RET(HcclDeviceRefresh(deviceLogicId));
@@ -1463,7 +1414,7 @@ HcclResult HcclGetRootInfo(HcclRootInfo* rootInfo)
             HCCL_E_MEMORY);
     }
 
-    HcclOpInfoCtx& opBaseInfo = GetHcclOpInfoCtx();
+    HcclOpInfoCtx& opBaseInfo = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
     EXCEPTION_CATCH(
         opBaseInfo.hcclCommTopoInfoDetectServer.insert({rootHandle.identifier, topoDetectServer}),
         return HCCL_E_MEMORY);
@@ -1471,6 +1422,7 @@ HcclResult HcclGetRootInfo(HcclRootInfo* rootInfo)
     HCCL_RUN_INFO(
         "[HCCL_TRACE]HcclGetRootInfo success, take time [%lld]us, identifier[%s]", DURATION_US(TIME_NOW() - startut),
         rootHandle.identifier);
+#endif
     return HCCL_SUCCESS;
 }
 
@@ -1509,6 +1461,7 @@ HcclResult HcclGetCommName(HcclComm commHandle, char* commName)
 
 HcclResult HcclGetCommHandle(const char* commName, std::shared_ptr<hccl::hcclComm>& comm)
 {
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     CHK_PTR_NULL(commName);
     std::string group(commName);
 
@@ -1521,7 +1474,7 @@ HcclResult HcclGetCommHandle(const char* commName, std::shared_ptr<hccl::hcclCom
         return HCCL_SUCCESS;
     }
 
-    HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+    HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
     std::unique_lock<std::mutex> lock(opBaseHcom.opGroupMapMutex);
     auto iter = opBaseHcom.opGroup2CommMap.find(group);
     if (iter == opBaseHcom.opGroup2CommMap.end()) {
@@ -1530,11 +1483,13 @@ HcclResult HcclGetCommHandle(const char* commName, std::shared_ptr<hccl::hcclCom
     } else {
         comm = iter->second;
     }
+#endif
     return HCCL_SUCCESS;
 }
 
 HcclResult HcclCommGetHandleWithName(const char* commName, HcclComm* comm)
 {
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     CHK_PTR_NULL(commName);
     CHK_PTR_NULL(comm);
     std::string group(commName);
@@ -1548,7 +1503,7 @@ HcclResult HcclCommGetHandleWithName(const char* commName, HcclComm* comm)
         return HCCL_SUCCESS;
     }
 
-    HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+    HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
     std::unique_lock<std::mutex> lock(opBaseHcom.opGroupMapMutex);
     auto iter = opBaseHcom.opGroup2CommMap.find(group);
     if (iter == opBaseHcom.opGroup2CommMap.end()) {
@@ -1557,13 +1512,15 @@ HcclResult HcclCommGetHandleWithName(const char* commName, HcclComm* comm)
     } else {
         *comm = static_cast<HcclComm>(iter->second.get());
     }
+#endif
     return HCCL_SUCCESS;
 }
 
 HcclResult HcclGetCommConnections(
     const HcclRootHandle& rootHandle, const std::string& identifier, HcclCommConnections& commConnections)
 {
-    HcclOpInfoCtx& opBaseInfo = GetHcclOpInfoCtx();
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+    HcclOpInfoCtx& opBaseInfo = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
     auto iterServer = opBaseInfo.hcclCommTopoInfoDetectServer.find(rootHandle.identifier);
     if (iterServer == opBaseInfo.hcclCommTopoInfoDetectServer.end()) {
         commConnections.isRoot = false;
@@ -1579,15 +1536,17 @@ HcclResult HcclGetCommConnections(
     } else {
         CHK_RET(iterAgent->second->GetAgentConnection(commConnections.agentConnection));
     }
+#endif
     return HCCL_SUCCESS;
 }
 
 void HcclCloseCommConnections(const std::string& identifier)
 {
-    HcclOpInfoCtx& opBaseInfo = GetHcclOpInfoCtx();
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+    HcclOpInfoCtx& opBaseInfo = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
     EXCEPTION_CATCH(opBaseInfo.hcclCommTopoInfoDetectServer.erase(identifier), return);
     EXCEPTION_CATCH(opBaseInfo.hcclCommTopoInfoDetectAgent.erase(identifier), return);
-    return;
+#endif
 }
 
 HcclResult SetupHierarchical(
@@ -1770,10 +1729,11 @@ HcclResult GetTopoDetectInfo(
 HcclResult InitCommRootInfo(
     const u32 nRanks, const u32 rank, const HcclRootHandle& rootHandle, const CommConfig& commConfig, HcclComm* comm)
 {
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     HcclResult ret = HCCL_SUCCESS;
     bool errorFlag = false;
     std::shared_ptr<hccl::hcclComm> pComm;
-    HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+    HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
     const std::string commIdentifier = commConfig.GetConfigCommName();
     auto iter = opBaseHcom.opGroup2CommMap.find(commIdentifier);
     CHK_PRT_RET(
@@ -2030,6 +1990,7 @@ HcclResult InitCommRootInfo(
         "logicDevId[%d]",
         nRanks, rank, commIdentifier.c_str(), params.serverId.c_str(), params.logicDevId);
 
+#endif
     return HCCL_SUCCESS;
 }
 
@@ -2329,6 +2290,7 @@ HcclResult HcclCommInitRootInfoConfig(
 
 HcclResult HcclSetConfig(HcclConfig config, HcclConfigValue configValue)
 {
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     if (config == HCCL_DETERMINISTIC) {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
         HCCLV2_FUNC_RUN(HcclSetConfigV2(config, configValue));
@@ -2358,12 +2320,13 @@ HcclResult HcclSetConfig(HcclConfig config, HcclConfigValue configValue)
             HCCL_WARNING("[HcclSetConfig] HCCL_DETERMINISTIC has been set by Env, so will not be reset again");
             return HCCL_SUCCESS;
         }
-        HcclOpInfoCtx& opBaseInfo = GetHcclOpInfoCtx();
+        HcclOpInfoCtx& opBaseInfo = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
         // 遍历所有的通信域设置其确定性计算配置参数
         for (auto it = opBaseInfo.opGroup2CommMap.begin(); it != opBaseInfo.opGroup2CommMap.end(); it++) {
             CHK_RET(it->second->SetDeterministicConfig(configValue.value));
         }
     }
+#endif
     return HCCL_SUCCESS;
 }
 
@@ -3541,7 +3504,7 @@ HcclResult HcclOneSidedCommDestroy(HcclComm comm, s32 deviceLogicId, HcclUs star
 
     return HCCL_SUCCESS;
 }
-
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
 static HcclResult ResetDevice(hccl::hcclComm* hcclComm)
 {
     s32 logicDeviceId = 0;
@@ -3556,9 +3519,11 @@ static HcclResult ResetDevice(hccl::hcclComm* hcclComm)
     }
     return HCCL_SUCCESS;
 }
+#endif
 
 HcclResult HcclCommDestroyWrapper(struct hcclAsyncJob* job_)
 {
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     struct hcclCommDestroyAsyncJob* job = static_cast<hcclCommDestroyAsyncJob*>(job_);
     HcclComm comm = job->initComm;
     s32 devId = job->devId;
@@ -3581,7 +3546,7 @@ HcclResult HcclCommDestroyWrapper(struct hcclAsyncJob* job_)
         CHK_RET(HcclCommDestroyV2(
             commV2)); // 临时处理，dpustream的销毁要在其他资源销毁前完成。待新方案CpuThread上库后，原dpuStream删除可以恢复顺序
         string group = hcclComm->GetIdentifier();
-        HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+        HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
         std::unique_lock<std::mutex> lock(opBaseHcom.opGroupMapMutex);
         auto iter = opBaseHcom.opGroup2CommMap.find(group);
         if (iter != opBaseHcom.opGroup2CommMap.end()) {
@@ -3612,7 +3577,7 @@ HcclResult HcclCommDestroyWrapper(struct hcclAsyncJob* job_)
         return HcclOneSidedCommDestroy(comm, deviceLogicId, startut);
     }
 
-    HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+    HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
     string group;
     if (comm == opBaseHcom.pComm.get()) {
         group = opBaseHcom.pComm->GetIdentifier();
@@ -3655,11 +3620,13 @@ HcclResult HcclCommDestroyWrapper(struct hcclAsyncJob* job_)
     HCCL_RUN_INFO(
         "op_base comm destroy complete, take time [%lld]us, group[%s], deviceLogicId[%d].",
         DURATION_US(endut - startut), group.c_str(), deviceLogicId);
+#endif
     return HCCL_SUCCESS;
 }
 
 HcclResult HcclCommDestroy(HcclComm comm)
 {
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     if (hcclGroupDepth > 0) {
         std::shared_ptr<struct hcclCommDestroyAsyncJob> job;
         EXCEPTION_CATCH((job = std::make_shared<struct hcclCommDestroyAsyncJob>()), return HCCL_E_PARA);
@@ -3687,7 +3654,7 @@ HcclResult HcclCommDestroy(HcclComm comm)
         CHK_RET(HcclCommDestroyV2(
             commV2)); // 临时处理，dpustream的销毁要在其他资源销毁前完成。待新方案CpuThread上库后，原dpuStream删除可以恢复顺序
         string group = hcclComm->GetIdentifier();
-        HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+        HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
         std::unique_lock<std::mutex> lock(opBaseHcom.opGroupMapMutex);
         auto iter = opBaseHcom.opGroup2CommMap.find(group);
         if (iter != opBaseHcom.opGroup2CommMap.end()) {
@@ -3724,7 +3691,7 @@ HcclResult HcclCommDestroy(HcclComm comm)
     }
     oneSideLock.unlock();
 
-    HcclOpInfoCtx& opBaseHcom = GetHcclOpInfoCtx();
+    HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
     string group;
     if (comm == opBaseHcom.pComm.get()) {
         group = opBaseHcom.pComm->GetIdentifier();
@@ -3767,7 +3734,7 @@ HcclResult HcclCommDestroy(HcclComm comm)
     HCCL_RUN_INFO(
         "Entry-HcclCommDestroy op_base comm destroy complete, take time [%lld]us, group[%s], deviceLogicId[%d].",
         DURATION_US(endut - startut), group.c_str(), deviceLogicId);
-
+#endif
     return HCCL_SUCCESS;
 }
 

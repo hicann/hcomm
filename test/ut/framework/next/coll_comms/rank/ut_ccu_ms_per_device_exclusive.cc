@@ -49,7 +49,7 @@ CcuResult StubDestroyCcuInstance(CcuInsHandle ccuInsHandle)
     EXPECT_EQ(ccuInsHandle, VALID_CCU_INS_HANDLE);
     bool reserved = false;
     EXPECT_EQ(
-        hccl::CollCommMgr::GetInstance()->TryReserveCcuMsComm(DEVICE_0, "instance_destroy_probe", reserved),
+        hccl::CollCommMgr::GetInstance().TryReserveCcuMsComm(DEVICE_0, "instance_destroy_probe", reserved),
         HCCL_SUCCESS);
     g_reservationHeldDuringInstanceDestroy.store(!reserved);
     return CcuResult::CCU_SUCCESS;
@@ -60,7 +60,7 @@ CcuResult StubDeinitCcuFeature(int32_t deviceLogicId)
     EXPECT_EQ(deviceLogicId, DEVICE_0);
     bool reserved = false;
     EXPECT_EQ(
-        hccl::CollCommMgr::GetInstance()->TryReserveCcuMsComm(DEVICE_0, "driver_deinit_probe", reserved), HCCL_SUCCESS);
+        hccl::CollCommMgr::GetInstance().TryReserveCcuMsComm(DEVICE_0, "driver_deinit_probe", reserved), HCCL_SUCCESS);
     g_reservationHeldDuringDriverDeinit.store(!reserved);
     return CcuResult::CCU_SUCCESS;
 }
@@ -71,7 +71,7 @@ CcuResult StubCreateCcuInstanceFailure(CcuInstanceType ccuInsType, CcuInsHandle*
     (void)ccuInsHandle;
     bool reserved = false;
     EXPECT_EQ(
-        hccl::CollCommMgr::GetInstance()->TryReserveCcuMsComm(DEVICE_0, "init_failure_probe", reserved), HCCL_SUCCESS);
+        hccl::CollCommMgr::GetInstance().TryReserveCcuMsComm(DEVICE_0, "init_failure_probe", reserved), HCCL_SUCCESS);
     g_reservationHeldDuringInitFailure = !reserved;
     return CcuResult::CCU_E_PARA;
 }
@@ -100,7 +100,7 @@ protected:
 
     static void ResetReservations()
     {
-        auto* manager = hccl::CollCommMgr::GetInstance();
+        auto* manager = &hccl::CollCommMgr::GetInstance();
         std::lock_guard<std::mutex> lock(manager->ccuMsCommMutex_);
         manager->ccuMsCommIds_.fill("");
     }
@@ -119,7 +119,7 @@ protected:
 
 TEST_F(CcuMsPerDeviceExclusiveTest, Ut_TryReserveCcuMsComm_When_SameDeviceConcurrent_Expect_OnlyOneReserved)
 {
-    auto* manager = hccl::CollCommMgr::GetInstance();
+    auto* manager = &hccl::CollCommMgr::GetInstance();
     std::atomic<uint32_t> readyCount{0};
     std::atomic<bool> start{false};
     HcclResult firstRet = HCCL_E_INTERNAL;
@@ -152,7 +152,7 @@ TEST_F(CcuMsPerDeviceExclusiveTest, Ut_TryReserveCcuMsComm_When_DifferentDevices
 {
     bool firstReserved = false;
     bool secondReserved = false;
-    auto* manager = hccl::CollCommMgr::GetInstance();
+    auto* manager = &hccl::CollCommMgr::GetInstance();
 
     EXPECT_EQ(manager->TryReserveCcuMsComm(DEVICE_0, "device_0_owner", firstReserved), HCCL_SUCCESS);
     EXPECT_EQ(manager->TryReserveCcuMsComm(DEVICE_1, "device_1_owner", secondReserved), HCCL_SUCCESS);
@@ -162,7 +162,7 @@ TEST_F(CcuMsPerDeviceExclusiveTest, Ut_TryReserveCcuMsComm_When_DifferentDevices
 
 TEST_F(CcuMsPerDeviceExclusiveTest, Ut_ReleaseCcuMsComm_When_NonOwnerReleases_Expect_OwnerPreserved)
 {
-    auto* manager = hccl::CollCommMgr::GetInstance();
+    auto* manager = &hccl::CollCommMgr::GetInstance();
     bool ownerReserved = false;
     ASSERT_EQ(manager->TryReserveCcuMsComm(DEVICE_0, "owner", ownerReserved), HCCL_SUCCESS);
     ASSERT_TRUE(ownerReserved);
@@ -176,7 +176,7 @@ TEST_F(CcuMsPerDeviceExclusiveTest, Ut_ReleaseCcuMsComm_When_NonOwnerReleases_Ex
 
 TEST_F(CcuMsPerDeviceExclusiveTest, Ut_ReleaseCcuMsComm_When_OwnerReleases_Expect_NextCanReserve)
 {
-    auto* manager = hccl::CollCommMgr::GetInstance();
+    auto* manager = &hccl::CollCommMgr::GetInstance();
     bool ownerReserved = false;
     ASSERT_EQ(manager->TryReserveCcuMsComm(DEVICE_0, "owner", ownerReserved), HCCL_SUCCESS);
     ASSERT_TRUE(ownerReserved);
@@ -195,14 +195,13 @@ TEST_F(CcuMsPerDeviceExclusiveTest, Ut_MyRankInit_When_RankNumIsOneAndModeIsMs_E
     EXPECT_EQ(myRank_->Init(CreateCclBuffer(), CCU_MS_MODE, 1), HCCL_SUCCESS);
 
     bool nextReserved = false;
-    EXPECT_EQ(
-        hccl::CollCommMgr::GetInstance()->TryReserveCcuMsComm(DEVICE_0, "next_owner", nextReserved), HCCL_SUCCESS);
+    EXPECT_EQ(hccl::CollCommMgr::GetInstance().TryReserveCcuMsComm(DEVICE_0, "next_owner", nextReserved), HCCL_SUCCESS);
     EXPECT_TRUE(nextReserved);
 }
 
 TEST_F(CcuMsPerDeviceExclusiveTest, Ut_TryInitCcuInstance_When_SameDeviceAlreadyOwned_Expect_FallbackToSched)
 {
-    auto* manager = hccl::CollCommMgr::GetInstance();
+    auto* manager = &hccl::CollCommMgr::GetInstance();
     bool ownerReserved = false;
     ASSERT_EQ(manager->TryReserveCcuMsComm(DEVICE_0, "existing_owner", ownerReserved), HCCL_SUCCESS);
     ASSERT_TRUE(ownerReserved);
@@ -234,8 +233,7 @@ TEST_F(CcuMsPerDeviceExclusiveTest, Ut_TryInitCcuInstance_When_CcuInitFails_Expe
     EXPECT_FALSE(myRank_->ccuMsCommReserved_);
 
     bool nextReserved = false;
-    EXPECT_EQ(
-        hccl::CollCommMgr::GetInstance()->TryReserveCcuMsComm(DEVICE_0, "next_owner", nextReserved), HCCL_SUCCESS);
+    EXPECT_EQ(hccl::CollCommMgr::GetInstance().TryReserveCcuMsComm(DEVICE_0, "next_owner", nextReserved), HCCL_SUCCESS);
     EXPECT_TRUE(nextReserved);
 }
 
@@ -254,8 +252,7 @@ TEST_F(CcuMsPerDeviceExclusiveTest, Ut_TryInitCcuInstance_When_MsFallsBack_Expec
     EXPECT_FALSE(myRank_->ccuMsCommReserved_);
 
     bool nextReserved = false;
-    EXPECT_EQ(
-        hccl::CollCommMgr::GetInstance()->TryReserveCcuMsComm(DEVICE_0, "next_owner", nextReserved), HCCL_SUCCESS);
+    EXPECT_EQ(hccl::CollCommMgr::GetInstance().TryReserveCcuMsComm(DEVICE_0, "next_owner", nextReserved), HCCL_SUCCESS);
     EXPECT_TRUE(nextReserved);
 }
 
@@ -271,14 +268,13 @@ TEST_F(CcuMsPerDeviceExclusiveTest, Ut_TryInitCcuInstance_When_DriverBusyFallsBa
     EXPECT_FALSE(myRank_->ccuMsCommReserved_);
 
     bool nextReserved = false;
-    EXPECT_EQ(
-        hccl::CollCommMgr::GetInstance()->TryReserveCcuMsComm(DEVICE_0, "next_owner", nextReserved), HCCL_SUCCESS);
+    EXPECT_EQ(hccl::CollCommMgr::GetInstance().TryReserveCcuMsComm(DEVICE_0, "next_owner", nextReserved), HCCL_SUCCESS);
     EXPECT_TRUE(nextReserved);
 }
 
 TEST_F(CcuMsPerDeviceExclusiveTest, Ut_MyRankDestructor_When_HoldsMsReservation_Expect_ReleaseAfterCcuCleanup)
 {
-    auto* manager = hccl::CollCommMgr::GetInstance();
+    auto* manager = &hccl::CollCommMgr::GetInstance();
     bool ownerReserved = false;
     ASSERT_EQ(manager->TryReserveCcuMsComm(DEVICE_0, "destructor_owner", ownerReserved), HCCL_SUCCESS);
     ASSERT_TRUE(ownerReserved);
@@ -306,7 +302,7 @@ TEST_F(CcuMsPerDeviceExclusiveTest, Ut_MyRankDestructor_When_HoldsMsReservation_
 
 TEST_F(CcuMsPerDeviceExclusiveTest, Ut_TryReserveCcuMsComm_When_DeviceIdInvalid_Expect_ReturnError)
 {
-    auto* manager = hccl::CollCommMgr::GetInstance();
+    auto* manager = &hccl::CollCommMgr::GetInstance();
     bool ownerReserved = false;
     ASSERT_EQ(manager->TryReserveCcuMsComm(DEVICE_0, "device_0_owner", ownerReserved), HCCL_SUCCESS);
     ASSERT_TRUE(ownerReserved);
