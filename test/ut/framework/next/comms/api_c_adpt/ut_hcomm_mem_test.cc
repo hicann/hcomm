@@ -16,6 +16,50 @@
 
 namespace {
 
+// ENABLE_EXPERIMENTAL 路径下 HcommMemReg / HcommMemUnreg / ... 通过 GetNicOps()->xxx()
+// 调用，不走虚函数。这里把 ctx（即 this）转回 Endpoint 指针再调虚函数，
+// 从而正确委托到 FakeEndpoint 对应的 override 方法。
+static int32_t FakeNicRegisterMemory(void* ctx, const CommMem* mem, const char* tag, void** handle)
+{
+    auto* endpoint = static_cast<hcomm::Endpoint*>(ctx);
+    return static_cast<int32_t>(endpoint->RegisterMemory(*mem, tag, handle));
+}
+
+static int32_t FakeNicUnregisterMemory(void* ctx, void* handle)
+{
+    auto* endpoint = static_cast<hcomm::Endpoint*>(ctx);
+    return static_cast<int32_t>(endpoint->UnregisterMemory(handle));
+}
+static int32_t FakeNicMemoryExport(void* ctx, void* handle, void** desc, uint32_t* descLen)
+{
+    auto* endpoint = static_cast<hcomm::Endpoint*>(ctx);
+    return static_cast<int32_t>(endpoint->MemoryExport(handle, desc, descLen));
+}
+
+static int32_t FakeNicMemoryImport(void* ctx, const void* desc, uint32_t descLen, CommMem* outMem)
+{
+    auto* endpoint = static_cast<hcomm::Endpoint*>(ctx);
+    return static_cast<int32_t>(endpoint->MemoryImport(desc, descLen, outMem));
+}
+
+static int32_t FakeNicMemoryUnimport(void* ctx, const void* desc, uint32_t descLen)
+{
+    auto* endpoint = static_cast<hcomm::Endpoint*>(ctx);
+    return static_cast<int32_t>(endpoint->MemoryUnimport(desc, descLen));
+}
+
+static HcommNicEndpointOps g_fakeNicEndpointOps = {
+    {HCOMM_NIC_ENDPOINT_OPS_VERSION, HCOMM_NIC_ENDPOINT_OPS_MAGIC_WORD, sizeof(HcommNicEndpointOps), 0},
+    nullptr,                 // init
+    nullptr,                 // destroy
+    FakeNicRegisterMemory,   // registerMemory
+    FakeNicUnregisterMemory, // unregisterMemory
+    FakeNicMemoryExport,     // memoryExport
+    FakeNicMemoryImport,     // memoryImport
+    FakeNicMemoryUnimport,   // memoryUnimport
+    nullptr,                 // getListenPort
+};
+
 // FakeEndpoint: 持有外部传入的 RegedMemMgr, Register/Unregister 委托给它。
 // 用于跨 EP 共享 / 不共享 RegedMemMgr 的 C API 层测试。
 class FakeEndpoint : public hcomm::Endpoint {
@@ -23,7 +67,11 @@ public:
     FakeEndpoint(const EndpointDesc& desc, std::shared_ptr<hcomm::RegedMemMgr> mgr)
         : hcomm::Endpoint(desc),
           mgr_(std::move(mgr))
-    {}
+    {
+        // ENABLE_EXPERIMENTAL 路径通过 GetNicOps()->registerMemory(nicCtx_, ...) 调用，
+        // 此处将 nicCtx_ 设为 this，nicOps_ 指向委托回虚函数的 ops，保证 mock 生效。
+        SetNicEndpointCtx(&g_fakeNicEndpointOps, this);
+    }
 
     HcclResult Init() override { return HCCL_SUCCESS; }
     HcclResult ServerSocketListen(const uint32_t port) override { return HCCL_SUCCESS; }
@@ -74,12 +122,17 @@ std::shared_ptr<hcomm::RoceRegedMemMgr> MakeSharedMgr(RdmaHandle fakeRdmaHandle)
 }
 
 } // namespace
+#include "hcomm_c_adpt.h"
 
 class TestHcommMem : public TestHcommCAdptBase {
 public:
     void SetUp() override { TestHcommCAdptBase::SetUp(); }
     void TearDown() override
     {
+        if (validEpHandle_ != nullptr) {
+            (void)HcommEndpointDestroy(validEpHandle_);
+            validEpHandle_ = nullptr;
+        }
         for (auto h : injectedHandles_) {
             hcomm::HcommEndpointMap map;
             map.RemoveEndpoint(h);
@@ -100,6 +153,19 @@ public:
 
 private:
     std::vector<EndpointHandle> injectedHandles_;
+
+    // 为非 endpoint 校验类用例构造一个真实 endpoint，使其能进入新的 ops 分发路径
+    void CreateValidEndpoint()
+    {
+        if (validEpHandle_ != nullptr)
+            return;
+        EndpointDesc desc{};
+        desc.loc.locType = ENDPOINT_LOC_TYPE_HOST;
+        desc.protocol = COMM_PROTOCOL_ROCE;
+        (void)HcommEndpointCreate(&desc, &validEpHandle_);
+    }
+
+    EndpointHandle validEpHandle_{nullptr};
 };
 
 TEST_F(TestHcommMem, Ut_TestHcommMemReg_When_InvalidHandle_Return_HCCL_E_NOT_FOUND)
@@ -119,12 +185,13 @@ TEST_F(TestHcommMem, Ut_TestHcommMemReg_When_InvalidHandle_Return_HCCL_E_NOT_FOU
 
 TEST_F(TestHcommMem, Ut_TestHcommMemReg_When_MemHandleNullptr_Return_HCCL_E_PTR)
 {
+    CreateValidEndpoint();
     CommMem mem;
     mem.addr = malloc(1024);
     mem.size = 1024;
     mem.type = COMM_MEM_TYPE_HOST;
 
-    HcommResult ret = HcommMemReg(nullptr, "test_mem", &mem, nullptr);
+    HcommResult ret = HcommMemReg(validEpHandle_, "test_mem", &mem, nullptr);
     EXPECT_EQ(ret, HCCL_E_PTR);
 
     free(mem.addr);
@@ -134,41 +201,48 @@ TEST_F(TestHcommMem, Ut_TestHcommMemUnreg_When_InvalidHandle_Return_HCCL_E_PTR)
 {
     EndpointHandle invalidHandle = reinterpret_cast<EndpointHandle>(0xFFFFFFFFFFFFFFFF);
     HcommResult ret = HcommMemUnreg(invalidHandle, nullptr);
-    EXPECT_EQ(ret, HCCL_E_PTR);
+    // ENABLE_EXPERIMENTAL 路径先校验 endpoint，无效句柄返回 HCCL_E_NOT_FOUND
+    EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
 }
 
 TEST_F(TestHcommMem, Ut_TestHcommMemExport_When_InvalidMemHandle_Return_HCCL_E_PTR)
 {
+    CreateValidEndpoint();
     void* memDesc = nullptr;
     uint32_t memDescLen = 0;
-    HcommResult ret = HcommMemExport(nullptr, nullptr, &memDesc, &memDescLen);
+    HcommResult ret = HcommMemExport(validEpHandle_, nullptr, &memDesc, &memDescLen);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
 TEST_F(TestHcommMem, Ut_TestHcommMemExport_When_OutputNullptr_Return_HCCL_E_PTR)
 {
-    HcommResult ret = HcommMemExport(nullptr, this, nullptr, nullptr);
+    CreateValidEndpoint();
+    void* dummyHandle = this;
+    HcommResult ret = HcommMemExport(validEpHandle_, dummyHandle, nullptr, nullptr);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
 TEST_F(TestHcommMem, Ut_TestHcommMemImport_When_InvalidDesc_Return_HCCL_E_PTR)
 {
+    CreateValidEndpoint();
     HcommMem outMem;
-    HcommResult ret = HcommMemImport(nullptr, nullptr, 0, &outMem);
+    HcommResult ret = HcommMemImport(validEpHandle_, nullptr, 0, &outMem);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
 TEST_F(TestHcommMem, Ut_TestHcommMemUnimport_When_InvalidParams_Return_HCCL_E_PTR)
 {
-    HcommResult ret = HcommMemUnimport(nullptr, nullptr, 0);
+    CreateValidEndpoint();
+    HcommResult ret = HcommMemUnimport(validEpHandle_, nullptr, 0);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
 TEST_F(TestHcommMem, Ut_TestHcommMemImport_When_DescLenZero_Return_HCCL_E_PARA)
 {
+    CreateValidEndpoint();
     HcommMem outMem;
     char desc[8] = {0};
-    HcommResult ret = HcommMemImport(nullptr, desc, 0, &outMem);
+    HcommResult ret = HcommMemImport(validEpHandle_, desc, 0, &outMem);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
 

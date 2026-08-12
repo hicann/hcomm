@@ -20,14 +20,94 @@
 #include "comm_engine_utils.h"
 #include "channel_process.h"
 #include "aicpu_ts_channel_helper.h"
-#ifdef ENABLE_EXPERIMENTAL
-#include "nic_plugin_dispatcher.h"
-#endif
 #include "channel_config.h"
 #include "shared_jetty_mgr.h"
 #include "endpoint.h"
+#include "builtin_endpoint_ops.h"
+#include "nic_plugin_holder.h"
+#include "nic_plugin_manager.h"
 
 using namespace hcomm;
+
+namespace {
+void DestroyPluginCtx(HcommNicChannelOps* ops, void* pluginCtx)
+{
+    if (ops != nullptr && ops->destroy != nullptr) {
+        int32_t ret = ops->destroy(pluginCtx);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_WARNING("[%s] plugin channel destroy failed, ret[%d].", __func__, ret);
+        }
+    }
+}
+
+void RollbackPluginChannels(ChannelHandle* channels, uint32_t count)
+{
+    for (uint32_t i = 0; i < count; ++i) {
+        if (channels[i] == 0)
+            continue;
+        auto* ch = CHANNEL_FROM_HANDLE(channels[i]);
+        if (ch != nullptr) {
+            HcclResult ret = ChannelProcess::RemovePluginChannelFromMap(reinterpret_cast<ChannelHandle>(ch));
+            if (ret != HCCL_SUCCESS) {
+                HCCL_WARNING(
+                    "[%s] plugin channel not found in map during rollback, handle[0x%llx], ret[%d].", __func__,
+                    channels[i], ret);
+            }
+        }
+        channels[i] = 0;
+    }
+}
+
+HcommResult CreateOnePluginChannel(
+    const NicPluginEntry* entry, void* epCtx, HcommChannelDesc* channelDesc, ChannelHandle* outChannel)
+{
+    *outChannel = 0;
+
+    void* pluginCtx = nullptr;
+    HcommNicChannelOps* pluginOps = nullptr;
+    HcommResult ret = static_cast<HcommResult>(entry->createChannel(epCtx, channelDesc, &pluginCtx, &pluginOps));
+    CHK_PRT_RET(
+        (ret != HCCL_SUCCESS), HCCL_ERROR("[NicPlugin][%s] createChannel failed, ret[%d].", __func__, ret), ret);
+
+    if (!ValidateChannelOps(pluginOps)) {
+        HCCL_ERROR("[NicPlugin][%s] invalid channel ops.", __func__);
+        DestroyPluginCtx(pluginOps, pluginCtx);
+        return HCCL_E_INTERNAL;
+    }
+
+    HcommNicChannelOps* filledOps = nullptr;
+    ret = FillDefaultChannelOps(pluginOps, &filledOps);
+    if (ret != HCCL_SUCCESS) {
+        HCCL_ERROR("[NicPlugin][%s] FillDefaultChannelOps failed, ret[%d].", __func__, ret);
+        DestroyPluginCtx(pluginOps, pluginCtx);
+        return ret;
+    }
+
+    ret = static_cast<HcommResult>(filledOps->init(pluginCtx));
+    if (ret != HCCL_SUCCESS) {
+        int32_t destroyRet = filledOps->destroy(pluginCtx);
+        if (destroyRet != HCCL_SUCCESS) {
+            HCCL_WARNING("[%s] plugin channel destroy failed after init failure, ret[%d].", __func__, destroyRet);
+        }
+        delete filledOps;
+        HCCL_ERROR("[NicPlugin][%s] plugin channel init failed, ret[%d].", __func__, ret);
+        return ret;
+    }
+
+    auto holder = std::make_shared<hcomm::PluginChannelHolder>(entry);
+    holder->SetNicChannelCtx(filledOps, pluginCtx);
+    ChannelHandle handle = reinterpret_cast<ChannelHandle>(holder.get());
+
+    ret = static_cast<HcommResult>(ChannelProcess::InsertPluginChannelToMap(handle, std::move(holder)));
+    CHK_PRT_RET(
+        (ret != HCCL_SUCCESS), HCCL_ERROR("[NicPlugin][%s] InsertChannelToMap failed, ret[%d].", __func__, ret), ret);
+
+    *outChannel = MAKE_PLUGIN_CH_HANDLE(handle);
+    HCCL_INFO("[%s] plugin channel created, handle[0x%llx].", __func__, handle);
+    return HCCL_SUCCESS;
+}
+
+} // namespace
 
 HcommResult CheckUbAttr(HcommChannelDesc& channelDesc, CommEngine engine)
 {
@@ -243,15 +323,27 @@ HcommResult HcommChannelUpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHa
 {
     CHK_PTR_NULL(memHandles);
     CHK_PRT_RET((memHandleNum == 0), HCCL_ERROR("[%s]Invalid memHandleNum, memHandleNum is 0.", __func__), HCCL_E_PARA);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(PluginChannelUpdateMemInfo(channelHandle, memHandles, memHandleNum, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-
     return ChannelProcess::ChannelUpdateMemInfo(memHandles, memHandleNum, channelHandle);
+}
+
+HcommResult CreatePluginChannels(
+    hcomm::Endpoint* endpoint, HcommChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle* channels)
+{
+    auto* epHolder = dynamic_cast<hcomm::PluginEndpointHolder*>(endpoint);
+    CHK_PTR_NULL(epHolder);
+    const NicPluginEntry* entry = epHolder->GetPluginEntry();
+    CHK_PTR_NULL(entry);
+    void* epCtx = endpoint->GetNicCtx();
+
+    for (uint32_t idx = 0; idx < channelNum; ++idx) {
+        HcommResult ret = CreateOnePluginChannel(entry, epCtx, &channelDescs[idx], &channels[idx]);
+        if (ret != HCCL_SUCCESS) {
+            (void)RollbackPluginChannels(channels, idx);
+            return ret;
+        }
+    }
+
+    return HCCL_SUCCESS;
 }
 
 HcommResult HcommChannelCreate(
@@ -266,23 +358,19 @@ HcommResult HcommChannelCreate(
     HCCL_INFO(
         "[%s] START. endpointHandle[0x%llx], engine[%s], channelNum[%u].", __func__, endpointHandle,
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum);
+
+    std::vector<HcommChannelDesc> channelDescFinals;
+    CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals, engine)));
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    if (endpoint != nullptr && endpoint->GetNicOps() != nullptr && endpoint->GetNicOps() != &g_BuiltinEndpointOps) {
+        CHK_RET(
+            static_cast<HcclResult>(CreatePluginChannels(endpoint, channelDescFinals.data(), channelNum, channels)));
+        return HCCL_SUCCESS;
+    }
+    (void)HcommResMgrInit();
     if (endpoint != nullptr) {
         CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
     }
-    (void)HcommResMgrInit();
-    std::vector<HcommChannelDesc> channelDescFinals;
-    CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals, engine)));
-
-#ifdef ENABLE_EXPERIMENTAL
-    bool pluginHandled = false;
-    CHK_RET(static_cast<HcclResult>(
-        PluginChannelCreate(endpointHandle, engine, channelDescFinals.data(), channelNum, channels, pluginHandled)));
-    if (pluginHandled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-
     std::vector<ChannelHandle> hostChannelHandles(channelNum);
     ChannelHandle* targetChannels = hostChannelHandles.data();
 
@@ -297,13 +385,6 @@ HcommResult HcommChannelCreate(
 HcommResult HcommChannelGet(ChannelHandle channelHandle, void** channel)
 {
     CHK_PTR_NULL(channel);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(PluginChannelGet(channelHandle, channel, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
     return ChannelProcess::ChannelGet(channelHandle, channel);
 }
 
@@ -312,62 +393,46 @@ HcommResult HcommChannelGetStatus(const ChannelHandle* channelList, uint32_t lis
     CHK_PTR_NULL(channelList);
     CHK_PTR_NULL(statusList);
     CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s]Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
-    (void)HcommResMgrInit();
-#ifdef ENABLE_EXPERIMENTAL
-    bool allHandled = true;
-    for (uint32_t i = 0; i < listNum; i++) {
-        bool handled = false;
-        CHK_RET(static_cast<HcclResult>(PluginChannelGetStatus(channelList[i], &statusList[i], handled)));
-        if (!handled) {
-            allHandled = false;
+
+    if (IS_PLUGIN_HANDLE(channelList[0])) {
+        for (uint32_t i = 0; i < listNum; i++) {
+            auto* ch = CHANNEL_FROM_HANDLE(channelList[i]);
+            CHK_PTR_NULL(ch);
+            int32_t status = 0;
+            HcommResult ret = static_cast<HcommResult>(ch->GetNicOps()->getStatus(ch->GetNicCtx(), &status));
+            if (ret != HCCL_SUCCESS) {
+                HCCL_ERROR("[%s] plugin getStatus failed, idx[%u], ret[%d].", __func__, i, ret);
+                return ret;
+            }
+            statusList[i] = status;
         }
-    }
-    if (allHandled) {
+        return HCCL_SUCCESS;
+    } else {
+        (void)HcommResMgrInit();
+        std::vector<CommEngine> engines;
+        std::vector<HcommChannelDesc> channelDescFinals;
+        std::vector<ChannelStatus> internalStatus(listNum);
+        HcclResult ret
+            = ChannelProcess::GetChannelsInfo(channelList, listNum, engines, channelDescFinals, internalStatus);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_ERROR("[%s] GetChannelsInfo failed, ret[%d]", __func__, ret);
+            return HCCL_E_INTERNAL;
+        }
+        ret = ChannelProcess::HandleStatusByEngine(
+            channelList, listNum, engines, channelDescFinals, internalStatus, statusList);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_ERROR("[%s] HandleStatusByEngine failed, ret[%d]", __func__, ret);
+            return HCCL_E_INTERNAL;
+        }
         return HCCL_SUCCESS;
     }
-#endif
-
-    std::vector<CommEngine> engines;
-    std::vector<HcommChannelDesc> channelDescFinals;
-    std::vector<ChannelStatus> internalStatus(listNum);
-    HcclResult ret = ChannelProcess::GetChannelsInfo(channelList, listNum, engines, channelDescFinals, internalStatus);
-    if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[%s] GetChannelsInfo failed, ret[%d]", __func__, ret);
-        return HCCL_E_INTERNAL;
-    }
-    ret = ChannelProcess::HandleStatusByEngine(
-        channelList, listNum, engines, channelDescFinals, internalStatus, statusList);
-    if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[%s] HandleStatusByEngine failed, ret[%d]", __func__, ret);
-        return HCCL_E_INTERNAL;
-    }
-    return HCCL_SUCCESS;
 }
 
 HcommResult HcommChannelGetNotifyNum(ChannelHandle channelHandle, uint32_t* notifyNum)
 {
     CHK_PTR_NULL(notifyNum);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(PluginChannelGetNotifyNum(channelHandle, notifyNum, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
     return ChannelProcess::ChannelGetNotifyNum(channelHandle, notifyNum);
 }
-
-#ifdef ENABLE_EXPERIMENTAL
-static void UnregisterPluginChannels(std::vector<ChannelHandle>& pluginChannels)
-{
-    // plugin channel 虽由 PluginChannelDestroy 销毁，但创建时同样经 RegisterChannels 注册，
-    // 需在此统一注销，否则 CheckEndpointDestroy 会因残留记录阻止 Endpoint 销毁。
-    // 无论 PluginChannelDestroy 是否失败，已收集的 pluginChannels 都需注销。
-    if (!pluginChannels.empty()) {
-        (void)hcomm::SharedJettyMgr::GetInstance().UnregisterChannels(pluginChannels.data(), pluginChannels.size());
-    }
-}
-#endif
 
 static HcclResult DestroyBuiltinChannels(std::vector<ChannelHandle>& builtinChannels)
 {
@@ -392,55 +457,27 @@ static HcclResult DestroyBuiltinChannels(std::vector<ChannelHandle>& builtinChan
 HcommResult HcommChannelDestroy(const ChannelHandle* channels, uint32_t channelNum)
 {
     CHK_PTR_NULL(channels);
-    (void)HcommResMgrInit();
     CHK_PRT_RET(
         (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
+    if (IS_PLUGIN_HANDLE(channels[0])) {
+        for (uint32_t idx = 0; idx < channelNum; ++idx) {
+            auto* ch = CHANNEL_FROM_HANDLE(channels[idx]);
+            HcclResult ret = ChannelProcess::RemovePluginChannelFromMap(reinterpret_cast<ChannelHandle>(ch));
+            if (ret != HCCL_SUCCESS) {
+                HCCL_WARNING(
+                    "[%s] plugin channel not found in map during destroy, handle[0x%llx], ret[%d].", __func__,
+                    channels[idx], ret);
+            }
+        }
+        return HCCL_SUCCESS;
+    }
+    (void)HcommResMgrInit();
     std::vector<ChannelHandle> builtinChannels;
     builtinChannels.reserve(channelNum);
-#ifdef ENABLE_EXPERIMENTAL
-    std::vector<ChannelHandle> pluginChannels;
-    pluginChannels.reserve(channelNum);
-    HcclResult pluginRet = HCCL_SUCCESS;
-    for (uint32_t idx = 0; idx < channelNum; ++idx) {
-        bool handled = false;
-        HcclResult curRet = static_cast<HcclResult>(PluginChannelDestroy(channels[idx], handled));
-        if (curRet != HCCL_SUCCESS) {
-            HCCL_ERROR(
-                "[%s] PluginChannelDestroy failed, idx[%u], ret[%d], handled[%d].", __func__, idx, curRet,
-                static_cast<int>(handled));
-            pluginRet = curRet;
-            // 不 break，继续处理剩余 channel，确保全部得到销毁/注销
-            if (handled) {
-                // plugin 已认领 channel 所有权，即使返回错误也由 plugin 负责清理，
-                // 不再走 builtin 路径以免 double-free，但仍需注销 SharedJettyMgr 记录
-                pluginChannels.push_back(channels[idx]);
-                continue;
-            }
-            // handled=false 契约保证 plugin 未修改 channel 状态且应返回 HCCL_SUCCESS；
-            // 此分支为防御性兜底（当前实现不可达），仍按 builtin 路径销毁避免资源泄漏。
-            HCCL_WARNING(
-                "[%s] PluginChannelDestroy returned error with handled=false, idx[%u], ret[%d]. "
-                "Falling back to builtin destroy per contract.",
-                __func__, idx, curRet);
-        } else if (handled) {
-            pluginChannels.push_back(channels[idx]);
-            continue;
-        }
-        // 非 plugin channel 或 plugin 未认领，按 builtin 路径处理
-        builtinChannels.push_back(channels[idx]);
-    }
-    UnregisterPluginChannels(pluginChannels);
-    HcclResult builtinRet = DestroyBuiltinChannels(builtinChannels);
-    if (pluginRet != HCCL_SUCCESS) {
-        return pluginRet;
-    }
-    return builtinRet;
-#else
     for (uint32_t idx = 0; idx < channelNum; ++idx) {
         builtinChannels.push_back(channels[idx]);
     }
     return static_cast<HcommResult>(DestroyBuiltinChannels(builtinChannels));
-#endif
 }
 
 HcommResult HcommChannelConfigCreate(HcommChannelConfig* config)
@@ -477,27 +514,6 @@ static HcclResult ValidateSharedQueueConfig(const std::vector<HcommChannelDesc>&
     }
     return HCCL_SUCCESS;
 }
-
-#ifdef ENABLE_EXPERIMENTAL
-static HcclResult
-RegisterSharedQueuePluginChannels(EndpointHandle endpointHandle, uint32_t channelNum, ChannelHandle* channels)
-{
-    // plugin channel 不经过 Channel::BuildConnection，无法走共享 jetty 复用路径。
-    // 但仍需注册到 SharedJettyMgr 以便 CheckEndpointDestroy 校验，确保 plugin channel
-    // 销毁后 endpoint 才能销毁（plugin channel 与 endpoint 也有资源依赖关系）。
-    HcclResult regRet = hcomm::SharedJettyMgr::GetInstance().RegisterChannels(endpointHandle, channels, channelNum);
-    if (regRet != HCCL_SUCCESS) {
-        HCCL_ERROR("[%s] failed to register shared jetty channels (plugin), ret[%d].", __func__, regRet);
-        // 注册失败需销毁已创建的 plugin channel，避免泄漏
-        for (uint32_t i = 0; i < channelNum; ++i) {
-            bool handled = false;
-            (void)static_cast<HcclResult>(PluginChannelDestroy(channels[i], handled));
-        }
-        return regRet;
-    }
-    return HCCL_SUCCESS;
-}
-#endif
 
 static HcclResult CreateAndRegisterSharedQueueBuiltinChannels(
     EndpointHandle endpointHandle, CommEngine engine, HcommChannelDesc* channelDescFinals, uint32_t channelNum,
@@ -571,15 +587,6 @@ HcommResult HcommChannelCreateWithConfig(
     // NormalizeHcommChannelDescs 内部已调 CheckUbAttr，此处仅补共享模式专有校验
     CHK_RET(ValidateSharedQueueConfig(channelDescFinals));
 
-#ifdef ENABLE_EXPERIMENTAL
-    bool pluginHandled = false;
-    CHK_RET(static_cast<HcclResult>(
-        PluginChannelCreate(endpointHandle, engine, channelDescFinals.data(), channelNum, channels, pluginHandled)));
-    if (pluginHandled) {
-        return static_cast<HcommResult>(RegisterSharedQueuePluginChannels(endpointHandle, channelNum, channels));
-    }
-#endif
-
     HcclResult ret = CreateAndRegisterSharedQueueBuiltinChannels(
         endpointHandle, engine, channelDescFinals.data(), channelNum, channels);
     if (ret != HCCL_SUCCESS) {
@@ -596,13 +603,6 @@ HcommChannelGetRemoteMems(ChannelHandle channelHandle, uint32_t* memNum, CommMem
     CHK_PTR_NULL(remoteMem);
     CHK_PTR_NULL(memNum);
     CHK_PTR_NULL(memInfos);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(PluginChannelGetRemoteMems(channelHandle, memNum, remoteMem, memInfos, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
 
     return ChannelProcess::ChannelGetRemoteMems(channelHandle, memNum, remoteMem, memInfos);
 }

@@ -17,16 +17,12 @@
 #include "host/host_cpu_roce_channel.h"
 #include "hccl_comm_pub.h"
 #include "op_base.h"
-#include "dlprof_function.h"
 #include "hcclCommOp.h"
 #include "adapter_prof.h"
 #include "hccl_diag.h"
 #include "exception_handler.h"
-#include "task_info.h"
 #include "task_param.h"
-#ifdef ENABLE_EXPERIMENTAL
-#include "nic_plugin_dispatcher.h"
-#endif
+#include "nic_plugin_manager.h"
 
 using namespace hccl;
 thread_local LaunchContext g_threadLaunchCtx;
@@ -288,19 +284,17 @@ HcclResult DispatchAllStreams(ThreadHandle* threads, uint32_t threadNum)
 
 int32_t HcommWriteOnThread(ThreadHandle thread, ChannelHandle channel, void* dst, const void* src, uint64_t len)
 {
+    if (IS_PLUGIN_HANDLE(channel)) {
+        auto* ch = CHANNEL_FROM_HANDLE(channel);
+        CHK_PTR_NULL(ch);
+        return ch->GetNicOps()->writeOnThread(ch->GetNicCtx(), thread, dst, src, len);
+    }
     HCCL_INFO(
         "[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu].", __func__, thread, channel,
         dst, src, len);
 
     CHK_PTR_NULL(dst);
     CHK_PTR_NULL(src);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelWrite(channel, thread, dst, src, len, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
 
     AddThreadWithTag(thread);
 
@@ -327,15 +321,11 @@ int32_t HcommWriteOnThread(ThreadHandle thread, ChannelHandle channel, void* dst
 int32_t HcommBatchTransferOnThread(
     ThreadHandle thread, ChannelHandle channel, const HcommBatchTransferDesc* transferDescs, uint32_t transferDescNum)
 {
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(
-        hcomm::PluginChannelBatchTransfer(channel, thread, transferDescs, transferDescNum, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
+    if (IS_PLUGIN_HANDLE(channel)) {
+        auto* ch = CHANNEL_FROM_HANDLE(channel);
+        CHK_PTR_NULL(ch);
+        return ch->GetNicOps()->batchTransferOnThread(ch->GetNicCtx(), thread, transferDescs, transferDescNum);
     }
-#endif
-
     HCCL_ERROR(" [HcommBatchTransferOnThread] not support in cpu");
     return HCCL_E_NOT_SUPPORT;
 }
@@ -344,6 +334,12 @@ int32_t HcommWriteReduceOnThread(
     ThreadHandle thread, ChannelHandle channel, void* dst, const void* src, uint64_t count, HcommDataType dataType,
     HcommReduceOp reduceOp)
 {
+    if (IS_PLUGIN_HANDLE(channel)) {
+        auto* ch = CHANNEL_FROM_HANDLE(channel);
+        CHK_PTR_NULL(ch);
+        return ch->GetNicOps()->writeReduceOnThread(ch->GetNicCtx(), thread, dst, src, count, dataType, reduceOp);
+    }
+
     HCCL_INFO(
         "[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], count[%llu], dataType[%d], "
         "reduceOp[%d].",
@@ -351,14 +347,6 @@ int32_t HcommWriteReduceOnThread(
 
     CHK_PTR_NULL(dst);
     CHK_PTR_NULL(src);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(
-        hcomm::PluginChannelWriteReduce(channel, thread, dst, src, count, dataType, reduceOp, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
 
     CHK_PRT_RET(
         (IsSupportReduce(dataType, reduceOp) == false),
@@ -399,14 +387,6 @@ HcclResult CommWriteReduceWithNotify(
 {
     CHK_PTR_NULL(src);
     CHK_PTR_NULL(dst);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelWriteReduceWithNotify(
-        channel, thread, dst, src, count, dataType, reduceOp, remoteNotifyIdx, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
 
     CHK_PRT_RET(
         (IsSupportReduce(dataType, reduceOp) == false),
@@ -430,20 +410,18 @@ HcclResult CommWriteReduceWithNotify(
 int32_t HcommWriteWithNotifyOnThread(
     ThreadHandle thread, ChannelHandle channel, void* dst, const void* src, uint64_t len, uint32_t remoteNotifyIdx)
 {
+    if (IS_PLUGIN_HANDLE(channel)) {
+        auto* ch = CHANNEL_FROM_HANDLE(channel);
+        CHK_PTR_NULL(ch);
+        return ch->GetNicOps()->writeWithNotifyOnThread(ch->GetNicCtx(), thread, dst, src, len, remoteNotifyIdx);
+    }
+
     HCCL_INFO(
         "[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu], remoteNotifyIdx[%u].",
         __func__, thread, channel, dst, src, len, remoteNotifyIdx);
 
     CHK_PTR_NULL(src);
     CHK_PTR_NULL(dst);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(
-        hcomm::PluginChannelWriteWithNotify(channel, thread, dst, src, len, remoteNotifyIdx, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
 
     AddThreadWithTag(thread);
 
@@ -472,6 +450,13 @@ int32_t HcommWriteReduceWithNotifyOnThread(
     ThreadHandle thread, ChannelHandle channel, void* dst, const void* src, uint64_t count, HcommDataType dataType,
     HcommReduceOp reduceOp, uint32_t remoteNotifyIdx)
 {
+    if (IS_PLUGIN_HANDLE(channel)) {
+        auto* ch = CHANNEL_FROM_HANDLE(channel);
+        CHK_PTR_NULL(ch);
+        return ch->GetNicOps()->writeReduceWithNotifyOnThread(
+            ch->GetNicCtx(), thread, dst, src, count, dataType, reduceOp, remoteNotifyIdx);
+    }
+
     HCCL_INFO(
         "[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], count[%llu], dataType[%d], "
         "reduceOp[%d], remoteNotifyIdx[%u].",
@@ -479,14 +464,6 @@ int32_t HcommWriteReduceWithNotifyOnThread(
 
     CHK_PTR_NULL(dst);
     CHK_PTR_NULL(src);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelWriteReduceWithNotify(
-        channel, thread, dst, src, count, dataType, reduceOp, remoteNotifyIdx, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
 
     AddThreadWithTag(thread);
 
@@ -513,19 +490,18 @@ int32_t HcommWriteReduceWithNotifyOnThread(
 
 int32_t HcommReadOnThread(ThreadHandle thread, ChannelHandle channel, void* dst, const void* src, uint64_t len)
 {
+    if (IS_PLUGIN_HANDLE(channel)) {
+        auto* ch = CHANNEL_FROM_HANDLE(channel);
+        CHK_PTR_NULL(ch);
+        return ch->GetNicOps()->readOnThread(ch->GetNicCtx(), thread, dst, src, len);
+    }
+
     HCCL_INFO(
         "[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu].", __func__, thread, channel,
         dst, src, len);
 
     CHK_PTR_NULL(dst);
     CHK_PTR_NULL(src);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelRead(channel, thread, dst, src, len, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
 
     AddThreadWithTag(thread);
 
@@ -553,6 +529,12 @@ int32_t HcommReadReduceOnThread(
     ThreadHandle thread, ChannelHandle channel, void* dst, const void* src, uint64_t count, HcommDataType dataType,
     HcommReduceOp reduceOp)
 {
+    if (IS_PLUGIN_HANDLE(channel)) {
+        auto* ch = CHANNEL_FROM_HANDLE(channel);
+        CHK_PTR_NULL(ch);
+        return ch->GetNicOps()->readReduceOnThread(ch->GetNicCtx(), thread, dst, src, count, dataType, reduceOp);
+    }
+
     HCCL_INFO(
         "[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], count[%llu], dataType[%d], "
         "reduceOp[%d].",
@@ -560,14 +542,6 @@ int32_t HcommReadReduceOnThread(
 
     CHK_PTR_NULL(dst);
     CHK_PTR_NULL(src);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(
-        hcomm::PluginChannelReadReduce(channel, thread, dst, src, count, dataType, reduceOp, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
 
     CHK_PRT_RET(
         (IsSupportReduce(dataType, reduceOp) == false),
@@ -604,166 +578,58 @@ int32_t HcommReadReduceOnThread(
 
 int32_t HcommWriteNbiOnThread(ThreadHandle thread, ChannelHandle channel, void* dst, const void* src, uint64_t len)
 {
-    HCCL_INFO(
-        "[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu].", __func__, thread, channel,
-        dst, src, len);
-
-    (void)thread;
-    CHK_PTR_NULL(src);
-    CHK_PTR_NULL(dst);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelWriteNbi(channel, thread, dst, src, len, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-
-    HcclResult ret = HCCL_SUCCESS;
-    DevType devType;
-    CHK_RET(hrtGetDeviceType(devType));
-    if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960) {
-        auto* const channelPtr = reinterpret_cast<hcomm::Channel*>(channel);
-        CHK_PTR_NULL(channelPtr);
-        ret = channelPtr->Write(dst, src, len);
-    } else {
-        ret = HCCL_E_NOT_SUPPORT;
-    }
-    CHK_PRT_RET(
-        ret != HCCL_SUCCESS,
-        HCCL_ERROR(
-            "[%s] FAIL. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu].", __func__, thread,
-            channel, dst, src, len),
-        ret);
-    HCCL_INFO("[%s] SUCCESS.", __func__);
-    return HCCL_SUCCESS;
+    auto* ch = CHANNEL_FROM_HANDLE(channel);
+    CHK_PTR_NULL(ch);
+    return ch->GetNicOps()->writeNbiOnThread(ch->GetNicCtx(), thread, dst, src, len);
 }
 
 int32_t HcommWriteNbi(ChannelHandle channel, void* dst, const void* src, uint64_t len)
 {
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelWriteNbi(channel, 0, dst, src, len, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-    return HcommWriteNbiOnThread(0, channel, dst, src, len);
+    auto* ch = CHANNEL_FROM_HANDLE(channel);
+    CHK_PTR_NULL(ch);
+    return ch->GetNicOps()->writeNbi(ch->GetNicCtx(), dst, src, len);
 }
 
 int32_t HcommWriteWithNotifyNbiOnThread(
     ThreadHandle thread, ChannelHandle channel, void* dst, const void* src, uint64_t len, uint32_t remoteNotifyIdx)
 {
-    HCCL_INFO(
-        "[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu], remoteNotifyIdx[%u].",
-        __func__, thread, channel, dst, src, len, remoteNotifyIdx);
-
-    (void)thread;
-    CHK_PTR_NULL(src);
-    CHK_PTR_NULL(dst);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(
-        hcomm::PluginChannelWriteWithNotifyNbi(channel, thread, dst, src, len, remoteNotifyIdx, handled)));
-    CHK_PRT_RET(handled, HCCL_INFO("[%s] SUCCESS.", __func__), HCCL_SUCCESS);
-#endif
-
-    HcclResult ret = HCCL_SUCCESS;
-    DevType devType;
-    CHK_RET(hrtGetDeviceType(devType));
-    if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960 || thread == 0) {
-        auto* const channelPtr = reinterpret_cast<hcomm::Channel*>(channel);
-        CHK_PTR_NULL(channelPtr);
-        ret = channelPtr->WriteWithNotify(dst, src, len, remoteNotifyIdx);
-    } else {
-        ret = HCCL_E_NOT_SUPPORT;
-    }
-    CHK_PRT_RET(
-        ret != HCCL_SUCCESS,
-        HCCL_ERROR(
-            "[%s] FAIL. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu], remoteNotifyIdx[%u].",
-            __func__, thread, channel, dst, src, len, remoteNotifyIdx),
-        ret);
-    HCCL_INFO("[%s] SUCCESS.", __func__);
-    return HCCL_SUCCESS;
+    auto* ch = CHANNEL_FROM_HANDLE(channel);
+    CHK_PTR_NULL(ch);
+    return ch->GetNicOps()->writeWithNotifyNbiOnThread(ch->GetNicCtx(), thread, dst, src, len, remoteNotifyIdx);
 }
 
 int32_t
 HcommWriteWithNotifyNbi(ChannelHandle channel, void* dst, const void* src, uint64_t len, uint32_t remoteNotifyIdx)
 {
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(
-        hcomm::PluginChannelWriteWithNotifyNbi(channel, 0, dst, src, len, remoteNotifyIdx, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-    return HcommWriteWithNotifyNbiOnThread(0, channel, dst, src, len, remoteNotifyIdx);
+    auto* ch = CHANNEL_FROM_HANDLE(channel);
+    CHK_PTR_NULL(ch);
+    return ch->GetNicOps()->writeWithNotifyNbi(ch->GetNicCtx(), dst, src, len, remoteNotifyIdx);
 }
 
 int32_t HcommReadNbiOnThread(ThreadHandle thread, ChannelHandle channel, void* dst, const void* src, uint64_t len)
 {
-    HCCL_INFO(
-        "[%s] START. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu].", __func__, thread, channel,
-        dst, src, len);
-
-    (void)thread;
-    CHK_PTR_NULL(src);
-    CHK_PTR_NULL(dst);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelReadNbi(channel, thread, dst, src, len, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-
-    HcclResult ret = HCCL_SUCCESS;
-    DevType devType;
-    CHK_RET(hrtGetDeviceType(devType));
-    if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960) {
-        auto* const channelPtr = reinterpret_cast<hcomm::Channel*>(channel);
-        CHK_PTR_NULL(channelPtr);
-        ret = channelPtr->Read(dst, src, len);
-    } else {
-        ret = HCCL_E_NOT_SUPPORT;
-    }
-    CHK_PRT_RET(
-        ret != HCCL_SUCCESS,
-        HCCL_ERROR(
-            "[%s] FAIL. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], len[%llu].", __func__, thread,
-            channel, dst, src, len),
-        ret);
-    HCCL_INFO("[%s] SUCCESS.", __func__);
-    return HCCL_SUCCESS;
+    auto* ch = CHANNEL_FROM_HANDLE(channel);
+    CHK_PTR_NULL(ch);
+    return ch->GetNicOps()->readNbiOnThread(ch->GetNicCtx(), thread, dst, src, len);
 }
 
 int32_t HcommReadNbi(ChannelHandle channel, void* dst, const void* src, uint64_t len)
 {
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelReadNbi(channel, 0, dst, src, len, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-    return HcommReadNbiOnThread(0, channel, dst, src, len);
+    auto* ch = CHANNEL_FROM_HANDLE(channel);
+    CHK_PTR_NULL(ch);
+    return ch->GetNicOps()->readNbi(ch->GetNicCtx(), dst, src, len);
 }
 
 int32_t HcommChannelNotifyRecordOnThread(ThreadHandle thread, ChannelHandle channel, uint32_t remoteNotifyIdx)
 {
+    if (IS_PLUGIN_HANDLE(channel)) {
+        auto* ch = CHANNEL_FROM_HANDLE(channel);
+        CHK_PTR_NULL(ch);
+        return ch->GetNicOps()->notifyRecordOnThread(ch->GetNicCtx(), thread, remoteNotifyIdx);
+    }
     HCCL_INFO(
         "[%s] START. thread[0x%llx], channel[0x%llx], remoteNotifyIdx[%u].", __func__, thread, channel,
         remoteNotifyIdx);
-
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelNotifyRecord(channel, thread, remoteNotifyIdx, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
 
     HcclResult ret = HCCL_SUCCESS;
     DevType devType;
@@ -796,36 +662,22 @@ int32_t HcommChannelNotifyRecordOnThread(ThreadHandle thread, ChannelHandle chan
 
 int32_t HcommChannelNotifyRecord(ChannelHandle channel, uint32_t remoteNotifyIdx)
 {
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelNotifyRecord(channel, 0, remoteNotifyIdx, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-
-    DevType devType;
-    CHK_RET(hrtGetDeviceType(devType));
-    if (devType != DevType::DEV_TYPE_950 && devType != DevType::DEV_TYPE_960) {
-        return HCCL_E_NOT_SUPPORT;
-    }
-    return HcommChannelNotifyRecordOnThread(0, channel, remoteNotifyIdx);
+    auto* ch = CHANNEL_FROM_HANDLE(channel);
+    CHK_PTR_NULL(ch);
+    return ch->GetNicOps()->notifyRecord(ch->GetNicCtx(), remoteNotifyIdx);
 }
 
 int32_t
 HcommChannelNotifyWaitOnThread(ThreadHandle thread, ChannelHandle channel, uint32_t localNotifyIdx, uint32_t timeOut)
 {
-    HCCL_INFO(
-        "[%s] START. thread[0x%llx], channel[0x%llx], localNotifyIdx[%u], timeOut[%u s].", __func__, thread, channel,
-        localNotifyIdx, timeOut);
-
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelNotifyWait(channel, thread, localNotifyIdx, timeOut, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
+    if (IS_PLUGIN_HANDLE(channel)) {
+        auto* ch = CHANNEL_FROM_HANDLE(channel);
+        CHK_PTR_NULL(ch);
+        return ch->GetNicOps()->notifyWaitOnThread(ch->GetNicCtx(), thread, localNotifyIdx, timeOut);
     }
-#endif
+    HCCL_INFO(
+        "[%s] START. thread[0x%llx], channel[0x%llx], localNotifyIdx[%u], timeOut[%u].", __func__, thread, channel,
+        localNotifyIdx, timeOut);
 
     HcclResult ret = HCCL_SUCCESS;
     DevType devType;
@@ -858,32 +710,14 @@ HcommChannelNotifyWaitOnThread(ThreadHandle thread, ChannelHandle channel, uint3
 
 int32_t HcommChannelNotifyWait(ChannelHandle channel, uint32_t localNotifyIdx, uint32_t timeOut)
 {
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelNotifyWait(channel, 0, localNotifyIdx, timeOut, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-
-    DevType devType;
-    CHK_RET(hrtGetDeviceType(devType));
-    if (devType != DevType::DEV_TYPE_950 && devType != DevType::DEV_TYPE_960) {
-        return HCCL_E_NOT_SUPPORT;
-    }
-    return HcommChannelNotifyWaitOnThread(0, channel, localNotifyIdx, timeOut);
+    auto* ch = CHANNEL_FROM_HANDLE(channel);
+    CHK_PTR_NULL(ch);
+    return ch->GetNicOps()->notifyWait(ch->GetNicCtx(), localNotifyIdx, timeOut);
 }
 
 HcclResult CommFence(ThreadHandle thread, ChannelHandle channel) // 控制前后的任务保序
 {
     HCCL_DEBUG("[CommFence] thread[0x%llx], channel[0x%llx].", thread, channel);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelFence(channel, thread, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
 
     Stream* stream = GetStream(thread);
     CHK_PTR_NULL(stream);
@@ -956,6 +790,12 @@ int32_t HcommFenceOnThread(ThreadHandle thread)
 
 int32_t HcommChannelDrainOnThread(ThreadHandle thread, ChannelHandle channel)
 {
+    if (IS_PLUGIN_HANDLE(channel)) {
+        auto* ch = CHANNEL_FROM_HANDLE(channel);
+        CHK_PTR_NULL(ch);
+        return ch->GetNicOps()->drainOnThread(ch->GetNicCtx(), thread);
+    }
+
     Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
     Stream* stream = GetStream(thread);
@@ -978,42 +818,16 @@ int32_t HcommFlush() { return HcommFenceOnThread(0); }
 
 int32_t HcommChannelFenceOnThread(ThreadHandle thread, ChannelHandle channel)
 {
-    HCCL_INFO("[%s] START. thread[0x%llx], channel[0x%llx].", __func__, thread, channel);
-
-    (void)thread;
-
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelFence(channel, thread, handled)));
-    CHK_PRT_RET(handled, HCCL_INFO("[%s] SUCCESS.", __func__), HCCL_SUCCESS);
-#endif
-
-    HcclResult ret = HCCL_SUCCESS;
-    DevType devType;
-    CHK_RET(hrtGetDeviceType(devType));
-    if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960 || thread == 0) {
-        auto* const channelPtr = reinterpret_cast<hcomm::Channel*>(channel);
-        CHK_PTR_NULL(channelPtr);
-        ret = channelPtr->ChannelFence();
-    } else {
-        ret = HCCL_E_NOT_SUPPORT;
-    }
-    CHK_PRT_RET(
-        ret != HCCL_SUCCESS, HCCL_ERROR("[%s] FAIL. thread[0x%llx], channel[0x%llx].", __func__, thread, channel), ret);
-    HCCL_INFO("[%s] SUCCESS.", __func__);
-    return HCCL_SUCCESS;
+    auto* ch = CHANNEL_FROM_HANDLE(channel);
+    CHK_PTR_NULL(ch);
+    return ch->GetNicOps()->fenceOnThread(ch->GetNicCtx(), thread);
 }
 
 int32_t HcommChannelFence(ChannelHandle channel)
 {
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(hcomm::PluginChannelFence(channel, 0, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-    return HcommChannelFenceOnThread(0, channel);
+    auto* ch = CHANNEL_FROM_HANDLE(channel);
+    CHK_PTR_NULL(ch);
+    return ch->GetNicOps()->fence(ch->GetNicCtx());
 }
 
 HcclResult HcclDfxRegOpInfo(HcclComm comm, void* hcclDfxOpInfo) // 兼容性接口，后续删除
@@ -1187,6 +1001,11 @@ extern HcclResult HcclReportAivKernel(HcclComm comm, uint64_t beginTime)
 int32_t
 HcommChannelNotifyWaitOnThreadWithDefaultTimeout(ThreadHandle thread, ChannelHandle channel, uint32_t localNotifyIdx)
 {
+    if (IS_PLUGIN_HANDLE(channel)) {
+        auto* ch = CHANNEL_FROM_HANDLE(channel);
+        CHK_PTR_NULL(ch);
+        return ch->GetNicOps()->notifyWaitOnThreadWithDefaultTimeout(ch->GetNicCtx(), thread, localNotifyIdx);
+    }
     HCCL_ERROR(
         "[%s] thread[0x%llx], channel[0x%llx], localNotifyIdx[%u] not support in cpu.", __func__, thread, channel,
         localNotifyIdx);

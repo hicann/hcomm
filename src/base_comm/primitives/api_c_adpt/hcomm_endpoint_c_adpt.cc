@@ -23,9 +23,9 @@
 #include "channel_config.h"
 #include "shared_jetty_mgr.h"
 #include "endpoint.h"
-#ifdef ENABLE_EXPERIMENTAL
-#include "nic_plugin_dispatcher.h"
-#endif
+#include "builtin_endpoint_ops.h"
+#include "nic_plugin_holder.h"
+#include "nic_plugin_manager.h"
 
 using namespace hcomm;
 
@@ -59,6 +59,58 @@ HcclResult RegisterDeviceEndpointMonitorIfNeeded(const EndpointDesc* endpoint, E
     return HCCL_SUCCESS;
 }
 
+HcommResult CreatePluginEndpointHolder(
+    const EndpointDesc* endpoint, const NicPluginEntry* pluginEntry, EndpointHandle* endpointHandle)
+{
+    CHK_PTR_NULL(endpoint);
+    CHK_PTR_NULL(pluginEntry);
+    CHK_PTR_NULL(endpointHandle);
+    void* pluginCtx = nullptr;
+    HcommNicEndpointOps* pluginOps = nullptr;
+    HcommResult ret = HCCL_SUCCESS;
+    ret = static_cast<HcommResult>(pluginEntry->createEndpoint(endpoint, &pluginCtx, &pluginOps));
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[NicPlugin][%s] plugin createEndpoint failed, ret[%d], protocol[%d].", __func__, ret, endpoint->protocol),
+        ret);
+
+    CHK_PRT_RET(
+        !ValidateEndpointOps(pluginOps),
+        HCCL_ERROR(
+            "[NicPlugin][%s] plugin endpoint ops validation failed, protocol[%d].", __func__, endpoint->protocol),
+        HCCL_E_PARA);
+
+    // 确保HcommNicEndpointOps各接口非空实现，后续调用处无需校验
+    HcommNicEndpointOps* pluginHolderOps = nullptr;
+    ret = FillDefaultEndpointOps(pluginOps, &pluginHolderOps);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[NicPlugin][%s] FillDefaultEndpointOps failed, ret[%d], protocol[%d].", __func__, ret, endpoint->protocol),
+        ret);
+
+    ret = static_cast<HcommResult>(pluginHolderOps->init(pluginCtx));
+    if (ret != HCCL_SUCCESS) {
+        int32_t destroyRet = pluginHolderOps->destroy(pluginCtx);
+        if (destroyRet != HCCL_SUCCESS) {
+            HCCL_WARNING("[%s] plugin endpoint destroy failed after init failure, ret[%d].", __func__, destroyRet);
+        }
+        delete pluginHolderOps;
+        HCCL_ERROR("[NicPlugin][%s] plugin endpoint init failed, ret[%d].", __func__, ret);
+        return ret;
+    }
+
+    auto holder = std::make_unique<PluginEndpointHolder>(*endpoint, pluginEntry);
+    holder->SetNicEndpointCtx(pluginHolderOps, pluginCtx);
+    const EndpointHandle handle = reinterpret_cast<EndpointHandle>(holder.get());
+    EXCEPTION_CATCH(GetEndpointMap().AddEndpoint(handle, std::move(holder)), return HCCL_E_INTERNAL);
+    *endpointHandle = handle;
+    HCCL_INFO(
+        "[NicPlugin][%s] plugin endpoint created, protocol[%d], handle[%p].", __func__, endpoint->protocol, handle);
+    return HCCL_SUCCESS;
+}
+
 HcclResult CreateBuiltinEndpoint(const EndpointDesc* endpoint, EndpointHandle* endpointHandle)
 {
     CHK_RET(RefreshEndpointContext(*endpoint));
@@ -75,6 +127,8 @@ HcclResult CreateBuiltinEndpoint(const EndpointDesc* endpoint, EndpointHandle* e
         return ret;
     }
 
+    endpointPtr->SetNicEndpointCtx(&g_BuiltinEndpointOps, endpointPtr.get());
+
     const EndpointHandle handle = reinterpret_cast<EndpointHandle>(endpointPtr.get());
     CHK_PTR_NULL(handle);
     EXCEPTION_CATCH(GetEndpointMap().AddEndpoint(handle, std::move(endpointPtr)), return HCCL_E_INTERNAL);
@@ -90,13 +144,6 @@ HcclResult CreateBuiltinEndpoint(const EndpointDesc* endpoint, EndpointHandle* e
 HcommResult HcommEndpointGet(EndpointHandle endpointHandle, void** endpoint) // 根据endpointHandle返回Endpoint对象指针
 {
     CHK_PTR_NULL(endpoint);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(PluginEndpointGet(endpointHandle, endpoint, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
 
     auto it = GetEndpointMap().GetEndpoint(endpointHandle);
     CHK_PRT_RET(
@@ -112,18 +159,15 @@ HcommResult HcommEndpointGet(EndpointHandle endpointHandle, void** endpoint) // 
 
 HcommResult HcommEndpointCreate(const EndpointDesc* endpoint, EndpointHandle* endpointHandle)
 {
-    EXCEPTION_HANDLE_BEGIN(void) HcommResMgrInit();
+    EXCEPTION_HANDLE_BEGIN
     CHK_RET(ValidateEndpointDesc(endpoint, endpointHandle));
-#ifdef ENABLE_EXPERIMENTAL
-    bool pluginHandled = false;
-    CHK_RET(static_cast<HcclResult>(PluginEndpointCreate(endpoint, endpointHandle, pluginHandled)));
-    if (pluginHandled) {
-        HCCL_INFO(
-            "[NicPluginDebug][%s] plugin endpoint created, protocol[%d], handle[%p].", __func__, endpoint->protocol,
-            *endpointHandle);
-        return HCCL_SUCCESS;
+    if (endpoint->loc.locType == ENDPOINT_LOC_TYPE_HOST) {
+        const NicPluginEntry* pluginEntry = FindHostNicPlugin(endpoint->protocol);
+        if (pluginEntry != nullptr) {
+            return CreatePluginEndpointHolder(endpoint, pluginEntry, endpointHandle);
+        }
     }
-#endif
+    (void)HcommResMgrInit();
     CHK_RET(CreateBuiltinEndpoint(endpoint, endpointHandle));
     HcommResMgr::RegisterDeviceResetCallback();
     EXCEPTION_HANDLE_END
@@ -132,26 +176,24 @@ HcommResult HcommEndpointCreate(const EndpointDesc* endpoint, EndpointHandle* en
 
 HcommResult HcommEndpointDestroy(EndpointHandle endpointHandle)
 {
-    (void)HcommResMgrInit();
     HCCL_INFO("[%s] START. endpointHandle[0x%llx].", __func__, endpointHandle);
-
-    // 无论 plugin 还是 builtin 路径, 均需校验共享 jetty channel 是否已全部销毁，
-    // 否则残留 channel 持有的 jetty 引用会在 endpoint 销毁后成为悬空引用。
+    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    if (endpoint != nullptr && endpoint->GetNicOps() != nullptr && endpoint->GetNicOps() != &g_BuiltinEndpointOps) {
+        HCCL_INFO("[NicPlugin][%s] destroy plugin endpoint.", __func__);
+        auto ret = GetEndpointMap().RemoveEndpoint(endpointHandle);
+        CHK_PRT_RET(
+            ret == false, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
+            HCCL_E_NOT_FOUND);
+        return HCCL_SUCCESS;
+    }
+    (void)HcommResMgrInit();
+    // 需校验共享 jetty channel 是否已全部销毁，否则残留 channel 持有的 jetty 引用会在 endpoint 销毁后成为悬空引用。
     HcclResult jettyRet = hcomm::SharedJettyMgr::GetInstance().CheckEndpointDestroy(endpointHandle);
     CHK_PRT_RET(
         jettyRet != HCCL_SUCCESS,
         HCCL_ERROR(
             "[%s] cannot destroy endpointHandle[0x%llx], shared jetty channels still exist.", __func__, endpointHandle),
         jettyRet);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(PluginEndpointDestroy(endpointHandle, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-
-    auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
     if (endpoint != nullptr) {
         CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
     }
@@ -190,20 +232,11 @@ HcommResult HcommEndpointStopListen(EndpointHandle endpointHandle, uint32_t port
 
 HcommResult HcommEndpointGetListenPort(EndpointHandle endpointHandle, uint32_t* port)
 {
-    CHK_PTR_NULL(port);
-    (void)HcommResMgrInit();
-#ifdef ENABLE_EXPERIMENTAL
-    if (IsPluginEndpoint(endpointHandle)) {
-        return HCCL_E_NOT_SUPPORT;
-    }
-#endif
-
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
-    return endpoint->ServerSocketGetListenPort(port);
+    return static_cast<HcclResult>(endpoint->GetNicOps()->getListenPort(endpoint->GetNicCtx(), port));
 }
 
 HcommResult

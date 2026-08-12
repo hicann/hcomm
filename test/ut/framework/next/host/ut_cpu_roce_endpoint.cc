@@ -29,11 +29,26 @@ protected:
 
     virtual void TearDown()
     {
+        if (validEpHandle_ != nullptr) {
+            (void)HcommEndpointDestroy(validEpHandle_);
+        }
         GlobalMockObject::verify();
         delete fakeSocket;
         std::cout << "A Test case in HostRdmaConnection TearDown" << std::endl;
     }
+
+    void CreateValidEndpoint()
+    {
+        if (validEpHandle_ != nullptr)
+            return;
+        EndpointDesc desc{};
+        desc.loc.locType = ENDPOINT_LOC_TYPE_HOST;
+        desc.protocol = COMM_PROTOCOL_ROCE;
+        (void)HcommEndpointCreate(&desc, &validEpHandle_);
+    }
+
     Hccl::Socket* fakeSocket;
+    EndpointHandle validEpHandle_{nullptr};
 
     u32 listenPort = 100;
     std::string tag = "test";
@@ -236,18 +251,20 @@ TEST_F(CpuRoceEndpointTest, ut_HcommEndpointStopListen_When_EndpointIsNull_Expec
 
 TEST_F(CpuRoceEndpointTest, ut_HcommMemReg_When_MemIsNull_Expect_ReturnHCCL_E_PTR)
 {
+    CreateValidEndpoint();
     HcommMemHandle memHandle;
-    HcommResult ret = HcommMemReg(reinterpret_cast<EndpointHandle>(0x12345678), "tag", nullptr, &memHandle);
+    HcommResult ret = HcommMemReg(validEpHandle_, "tag", nullptr, &memHandle);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
 TEST_F(CpuRoceEndpointTest, ut_HcommMemReg_When_MemHandleIsNull_Expect_ReturnHCCL_E_PTR)
 {
+    CreateValidEndpoint();
     HcommMem mem;
     mem.type = COMM_MEM_TYPE_DEVICE;
     mem.addr = malloc(10);
     mem.size = 10;
-    HcommResult ret = HcommMemReg(nullptr, "tag", &mem, nullptr);
+    HcommResult ret = HcommMemReg(validEpHandle_, "tag", &mem, nullptr);
     EXPECT_EQ(ret, HCCL_E_PTR);
     free(mem.addr);
 }
@@ -301,7 +318,8 @@ TEST_F(CpuRoceEndpointTest, ut_GetCapabilities_When_CalledTwice_Expect_SameResul
 }
 TEST_F(CpuRoceEndpointTest, ut_HcommEndpointGetListenPort_When_PortIsNull_Expect_ReturnHCCL_E_PTR)
 {
-    HcommResult ret = HcommEndpointGetListenPort(reinterpret_cast<EndpointHandle>(0x12345678), nullptr);
+    CreateValidEndpoint();
+    HcommResult ret = HcommEndpointGetListenPort(validEpHandle_, nullptr);
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 

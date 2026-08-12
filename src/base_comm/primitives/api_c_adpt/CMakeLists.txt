@@ -21,9 +21,7 @@ set(src_list
     hccl_comm_socket_c_adpt.cc
 )
 
-if(ENABLE_EXPERIMENTAL)
-    add_subdirectory(nic_plugin)
-endif()
+add_subdirectory(nic_plugin)
  
 if(TARGET hcomm)
     target_sources(hcomm PRIVATE
@@ -35,12 +33,10 @@ if(TARGET hcomm)
         ${PROJECT_SOURCE_DIR}/src/base_comm/resources/endpoint_pairs/channels/aiv
         ${PROJECT_SOURCE_DIR}/src/base_comm/resources/endpoints/dfx
     )
-    if(ENABLE_EXPERIMENTAL)
-        target_compile_definitions(hcomm PRIVATE ENABLE_EXPERIMENTAL)
-        target_include_directories(hcomm PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/nic_plugin
-        )
-    endif()
+    target_compile_definitions(hcomm PRIVATE ENABLE_EXPERIMENTAL)
+    target_include_directories(hcomm PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/nic_plugin
+    )
 endif()
 
 if(TARGET ccl_kernel)
@@ -53,5 +49,6 @@ if(TARGET ccl_kernel)
     )
     target_include_directories(ccl_kernel PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/nic_plugin
     )
 endif()

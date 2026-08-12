@@ -95,6 +95,8 @@ public:
     static HcclResult LaunchChannelKernel(
         ChannelHandle* channelHandles, ChannelHandle* hostChannelHandles, HcommChannelDesc* hcommDesc, uint32_t listNum,
         aclrtBinHandle binHandle);
+    static HcclResult InsertPluginChannelToMap(ChannelHandle handle, std::shared_ptr<Channel> channelPtr);
+    static HcclResult RemovePluginChannelFromMap(ChannelHandle handle);
 
 private:
     template <typename Func>

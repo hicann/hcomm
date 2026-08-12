@@ -9,7 +9,6 @@
 # -----------------------------------------------------------------------------------------------------------
 set(src_list
     nic_plugin_manager.cc
-    nic_plugin_dispatcher.cc
 )
 
 if(TARGET hcomm)

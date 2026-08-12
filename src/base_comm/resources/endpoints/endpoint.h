@@ -21,6 +21,7 @@
 #include "rdma_handle_manager.h"
 #include "../../common/orion_adpt_utils.h"
 #include "hccp_hdc_manager.h"
+#include "hcomm_nic_plugin.h"
 
 namespace hcomm {
 /**
@@ -126,6 +127,14 @@ public:
     HcclResult AcquireSharedJetty(const std::function<HcclResult(SharedJettyCtx&)>& provideCtx, SharedJettyCtx& outCtx);
     /** 释放共享 jetty 引用，refCount-- 归 0 时销毁 jetty 并清空 ctx */
     HcclResult ReleaseSharedJetty();
+    // ------------------ NIC插件相关 ------------------
+    void SetNicEndpointCtx(HcommNicEndpointOps* nicOps, void* nicCtx)
+    {
+        nicOps_ = nicOps;
+        nicCtx_ = nicCtx;
+    }
+    HcommNicEndpointOps* GetNicOps() const { return nicOps_; }
+    void* GetNicCtx() const { return nicCtx_; }
 
 protected:
     static HcclResult CreateEndpointBase(const EndpointDesc& endpointDesc, std::unique_ptr<Endpoint>& endpointPtr);
@@ -138,6 +147,8 @@ protected:
     // 共享 jetty 上下文及保护锁，仅 IS_SHARED_QUEUE=true 时使用
     mutable std::mutex sharedJettyMtx_;
     SharedJettyCtx sharedJettyCtx_{};
+    HcommNicEndpointOps* nicOps_{nullptr};
+    void* nicCtx_{nullptr};
 };
 
 } // namespace hcomm

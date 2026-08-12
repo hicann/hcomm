@@ -13,13 +13,17 @@
 #include <mockcpp/mockcpp.hpp>
 #include "hcomm_primitives.h"
 
+#include "builtin_channel_ops.h"
 #include "host_cpu_roce_channel.h"
 
 using namespace hccl;
 
 class UtCpuHcommChannelFenceOnThread : public testing::Test {
 protected:
-    virtual void SetUp() override {}
+    virtual void SetUp() override
+    {
+        channelOnHost.SetNicChannelCtx(const_cast<HcommNicChannelOps*>(&g_BuiltinChannelOps), &channelOnHost);
+    }
 
     virtual void TearDown() override { GlobalMockObject::verify(); }
 

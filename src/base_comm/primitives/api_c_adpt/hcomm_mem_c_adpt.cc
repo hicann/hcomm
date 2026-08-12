@@ -17,134 +17,61 @@
 #include "hcomm_res_defs.h"
 #include "hcomm_res.h"
 #include "hcomm_mem_alloc.h"
-#ifdef ENABLE_EXPERIMENTAL
-#include "nic_plugin_dispatcher.h"
-#endif
 
 using namespace hcomm;
 
 HcommResult
 HcommMemReg(EndpointHandle endpointHandle, const char* memTag, const CommMem* mem, HcommMemHandle* memHandle)
 {
-    CHK_PTR_NULL(memHandle);
-    EXCEPTION_HANDLE_BEGIN
-    CHK_PTR_NULL(mem);
-    CHK_PTR_NULL(memHandle);
-    (void)HcommResMgrInit();
-    HCCL_INFO("[%s] START. endpointHandle[0x%llx].", __func__, endpointHandle);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(PluginMemReg(endpointHandle, memTag, mem, memHandle, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
     CHK_PRT_RET(
-        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
-    CHK_RET(endpoint->RegisterMemory(*mem, memTag, reinterpret_cast<void**>(memHandle)));
-    EXCEPTION_HANDLE_END
+    CHK_RET(static_cast<HcclResult>(endpoint->GetNicOps()->registerMemory(
+        endpoint->GetNicCtx(), mem, memTag, reinterpret_cast<void**>(memHandle))));
     return HCCL_SUCCESS;
 }
 
 HcommResult HcommMemUnreg(EndpointHandle endpointHandle, HcommMemHandle memHandle)
 {
-    CHK_PTR_NULL(memHandle);
-    (void)HcommResMgrInit();
-    EXCEPTION_HANDLE_BEGIN
-    HCCL_INFO("[%s] START. endpointHandle[0x%llx].", __func__, endpointHandle);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(PluginMemUnreg(endpointHandle, memHandle, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
     CHK_PRT_RET(
-        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
-    CHK_RET(endpoint->UnregisterMemory(memHandle));
-    EXCEPTION_HANDLE_END
+    CHK_RET(static_cast<HcclResult>(endpoint->GetNicOps()->unregisterMemory(endpoint->GetNicCtx(), memHandle)));
     return HCCL_SUCCESS;
 }
 
 HcommResult
 HcommMemExport(EndpointHandle endpointHandle, HcommMemHandle memHandle, void** memDesc, uint32_t* memDescLen)
 {
-    CHK_PTR_NULL(memHandle);
-    CHK_PTR_NULL(memDesc);
-    CHK_PTR_NULL(memDescLen);
-    (void)HcommResMgrInit();
-    HCCL_INFO("[%s] START. endpointHandle[0x%llx].", __func__, endpointHandle);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(PluginMemExport(endpointHandle, memHandle, memDesc, memDescLen, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
     CHK_PRT_RET(
-        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
-    CHK_RET(endpoint->MemoryExport(memHandle, memDesc, memDescLen));
+    CHK_RET(static_cast<HcclResult>(
+        endpoint->GetNicOps()->memoryExport(endpoint->GetNicCtx(), memHandle, memDesc, memDescLen)));
     return HCCL_SUCCESS;
 }
 
 HcommResult HcommMemImport(EndpointHandle endpointHandle, const void* memDesc, uint32_t descLen, CommMem* outMem)
 {
-    CHK_PTR_NULL(memDesc);
-    CHK_PTR_NULL(outMem);
-    CHK_PRT_RET(descLen == 0, HCCL_ERROR("[%s] descLen[0] is invalid", __func__), HCCL_E_PARA);
-    (void)HcommResMgrInit();
-    HCCL_INFO("[%s] START. endpointHandle[0x%llx].", __func__, endpointHandle);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(PluginMemImport(endpointHandle, memDesc, descLen, outMem, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
     CHK_PRT_RET(
-        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
-    CHK_PTR_NULL(outMem);
-    CommMem importedMem{};
-    CHK_RET(endpoint->MemoryImport(memDesc, descLen, &importedMem));
-    *outMem = importedMem;
+    CHK_RET(
+        static_cast<HcclResult>(endpoint->GetNicOps()->memoryImport(endpoint->GetNicCtx(), memDesc, descLen, outMem)));
     return HCCL_SUCCESS;
 }
 
 HcommResult HcommMemUnimport(EndpointHandle endpointHandle, const void* memDesc, uint32_t descLen)
 {
-    CHK_PTR_NULL(memDesc);
-    (void)HcommResMgrInit();
-    HCCL_INFO("[%s] START. endpointHandle[0x%llx].", __func__, endpointHandle);
-#ifdef ENABLE_EXPERIMENTAL
-    bool handled = false;
-    CHK_RET(static_cast<HcclResult>(PluginMemUnimport(endpointHandle, memDesc, descLen, handled)));
-    if (handled) {
-        return HCCL_SUCCESS;
-    }
-#endif
-
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
     CHK_PRT_RET(
-        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
+        endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
-    CHK_RET(endpoint->MemoryUnimport(memDesc, descLen));
+    CHK_RET(static_cast<HcclResult>(endpoint->GetNicOps()->memoryUnimport(endpoint->GetNicCtx(), memDesc, descLen)));
     return HCCL_SUCCESS;
 }
 

@@ -23,6 +23,8 @@
 #include <vector>
 #include "enum_factory.h"
 
+#include "hcomm_nic_plugin.h"
+
 // Orion
 #include "transport_status.h"
 #include "ip_address.h"
@@ -119,6 +121,15 @@ public:
     virtual HcclResult Read(void* dst, const void* src, uint64_t len) = 0;
     virtual HcclResult ChannelFence() = 0;
 
+    // ------------------ NIC插件相关 ------------------
+    void SetNicChannelCtx(HcommNicChannelOps* nicOps, void* nicCtx)
+    {
+        nicOps_ = nicOps;
+        nicCtx_ = nicCtx;
+    }
+    HcommNicChannelOps* GetNicOps() const { return nicOps_; }
+    void* GetNicCtx() const { return nicCtx_; }
+
     // ------------------ 工具方法 ------------------
     static ChannelStatus TransportStatusToChannelStatus(Hccl::TransportStatus ts);
 
@@ -146,6 +157,9 @@ protected:
     std::vector<std::shared_ptr<hccl::DeviceMem>> ptrArrayDevMems_{};
     bool deviceEntityReady_{false};
     bool isSharedJetty_{false};
+
+    HcommNicChannelOps* nicOps_{nullptr};
+    void* nicCtx_{nullptr};
 };
 
 } // namespace hcomm

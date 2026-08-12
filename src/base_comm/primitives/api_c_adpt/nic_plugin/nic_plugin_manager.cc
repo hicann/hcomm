@@ -77,26 +77,6 @@ namespace {
         return true;
     }
 
-    bool ValidateEndpointOps(const HcommNicEndpointOps* ops)
-    {
-        return ops != nullptr
-               && IsOpsHeaderValid(
-                   ops->header, HCOMM_NIC_ENDPOINT_OPS_MAGIC_WORD, HCOMM_NIC_ENDPOINT_OPS_VERSION, "endpoint ops");
-    }
-
-    bool ValidateChannelOps(const HcommNicChannelOps* ops)
-    {
-        return ops != nullptr
-               && IsOpsHeaderValid(
-                   ops->header, HCOMM_NIC_CHANNEL_OPS_MAGIC_WORD, HCOMM_NIC_CHANNEL_OPS_VERSION, "channel ops");
-    }
-
-    template <typename PluginOps>
-    bool IsPluginOpAvailable(const PluginOps* ops, size_t opOffset, size_t opSize)
-    {
-        return ops != nullptr && ops->header.size >= opOffset + opSize;
-    }
-
     void RegisterPluginProtocols(const NicPluginEntry* plugin)
     {
         auto& protocolPlugins = ProtocolPlugins();
@@ -210,14 +190,6 @@ namespace {
 
     void LoadPluginsOnce()
     {
-        uint32_t deviceCount = 0;
-        const aclError ret = aclrtGetDeviceCount(&deviceCount);
-        if (ret == ACL_SUCCESS && deviceCount != 0) {
-            HCCL_RUN_INFO(
-                "[NicPlugin] plugin loading skipped, aclrtGetDeviceCount ret[%d], count[%u].", ret, deviceCount);
-            return;
-        }
-
         const char* ascendHomePath = getenv("ASCEND_HOME_PATH");
         if (ascendHomePath != nullptr && ascendHomePath[0] != '\0') {
             LoadDefaultDirectory(std::string(ascendHomePath) + "/" + HCOMM_NIC_PLUGIN_DIR);
@@ -227,30 +199,37 @@ namespace {
         }
     }
 
-    template <typename PluginOps>
-    void DestroyPluginCtx(PluginOps* ops, void* pluginCtx)
-    {
-        if (ops != nullptr && IsPluginOpAvailable(ops, offsetof(PluginOps, destroy), sizeof(ops->destroy))
-            && ops->destroy != nullptr) {
-            ops->destroy(pluginCtx);
-        }
-    }
-
-    template <typename PluginOps>
-    HcommResult InitPluginCtxOrDestroy(PluginOps* ops, void* pluginCtx)
-    {
-        CHK_PTR_NULL(pluginCtx);
-        CHK_PTR_NULL(ops);
-        if (!IsPluginOpAvailable(ops, offsetof(PluginOps, init), sizeof(ops->init)) || ops->init == nullptr) {
-            return HCCL_SUCCESS;
-        }
-        HcommResult ret = ops->init(pluginCtx);
-        if (ret != HCCL_SUCCESS) {
-            DestroyPluginCtx(ops, pluginCtx);
-        }
-        return ret;
-    }
 } // namespace
+
+bool ValidateEndpointOps(const HcommNicEndpointOps* ops)
+{
+    if (ops == nullptr
+        || !IsOpsHeaderValid(
+            ops->header, HCOMM_NIC_ENDPOINT_OPS_MAGIC_WORD, HCOMM_NIC_ENDPOINT_OPS_VERSION, "endpoint ops")) {
+        return false;
+    }
+    if (!IsPluginOpAvailable(ops, offsetof(HcommNicEndpointOps, destroy), sizeof(ops->destroy))
+        || ops->destroy == nullptr) {
+        HCCL_ERROR("[NicPlugin] plugin endpoint destroy is not implemented.");
+        return false;
+    }
+    return true;
+}
+
+bool ValidateChannelOps(const HcommNicChannelOps* ops)
+{
+    if (ops == nullptr
+        || !IsOpsHeaderValid(
+            ops->header, HCOMM_NIC_CHANNEL_OPS_MAGIC_WORD, HCOMM_NIC_CHANNEL_OPS_VERSION, "channel ops")) {
+        return false;
+    }
+    if (!IsPluginOpAvailable(ops, offsetof(HcommNicChannelOps, destroy), sizeof(ops->destroy))
+        || ops->destroy == nullptr) {
+        HCCL_ERROR("[NicPlugin] channel destroy is not implemented.");
+        return false;
+    }
+    return true;
+}
 
 bool ValidatePluginInfo(
     const char* soPath, const HcommNicPluginInfo* info, HcommNicPluginCreateEndpointFunc createEndpoint,
@@ -282,7 +261,8 @@ bool ValidatePluginInfo(
     }
     for (uint32_t idx = 0; idx < info->protocolCount; ++idx) {
         const CommProtocol protocol = info->protocols[idx];
-        if (protocol < COMM_PROTOCOL_HCCS || protocol > COMM_PROTOCOL_HCCS_ONLY) {
+        if ((protocol < COMM_PROTOCOL_HCCS || protocol > COMM_PROTOCOL_HCCS_ONLY)
+            && protocol < COMM_PROTOCOL_CUSTOM_BASE) {
             HCCL_RUN_WARNING("[NicPlugin] %s invalid protocol[%d].", soPath, info->protocols[idx]);
             return false;
         }
@@ -301,89 +281,345 @@ const NicPluginEntry* FindHostNicPlugin(CommProtocol protocol)
     return entry;
 }
 
-HcommResult CreatePluginEndpoint(const EndpointDesc* endpoint, EndpointHandle* endpointHandle)
+int32_t DefaultEndpointInit(void* ctx)
 {
-    CHK_PTR_NULL(endpoint);
-    CHK_PTR_NULL(endpointHandle);
-    const NicPluginEntry* entry = FindHostNicPlugin(endpoint->protocol);
-    if (entry == nullptr) {
-        return HCCL_E_NOT_FOUND;
-    }
-    void* pluginCtx = nullptr;
-    HcommNicEndpointOps* ops = nullptr;
-    CHK_RET(static_cast<HcclResult>(entry->createEndpoint(endpoint, &pluginCtx, &ops)));
-    CHK_PRT_RET(!ValidateEndpointOps(ops), HCCL_ERROR("[%s] invalid endpoint ops.", __func__), HCCL_E_PARA);
-    HcommResult ret = InitPluginCtxOrDestroy(ops, pluginCtx);
-    if (ret != HCCL_SUCCESS) {
-        return ret;
-    }
-    PluginEndpointCtx* ctx = new (std::nothrow) PluginEndpointCtx{ops, pluginCtx, entry};
-    if (ctx == nullptr) {
-        DestroyPluginCtx(ops, pluginCtx);
-        return HCCL_E_MEMORY;
-    }
-    *endpointHandle = MAKE_PLUGIN_EP_HANDLE(ctx);
+    (void)ctx;
+    HCCL_RUN_WARNING("[NicPlugin] plugin endpoint init is not supported.");
     return HCCL_SUCCESS;
 }
 
-HcommResult DestroyPluginEndpoint(EndpointHandle endpointHandle)
+int32_t DefaultEndpointRegisterMemory(void* ctx, const CommMem* mem, const char* tag, void** handle)
 {
-    PluginEndpointCtx* ctx = PLUGIN_EP_CTX(endpointHandle);
-    CHK_PTR_NULL(ctx);
-    DestroyPluginCtx(ctx->ops, ctx->ctx);
-    delete ctx;
-    return HCCL_SUCCESS;
-}
-
-HcommResult
-CreatePluginChannel(EndpointHandle endpointHandle, const HcommChannelDesc* channelDesc, ChannelHandle* channelHandle)
-{
-    PluginEndpointCtx* endpointCtx = PLUGIN_EP_CTX(endpointHandle);
-    CHK_PTR_NULL(endpointCtx);
-    CHK_PTR_NULL(endpointCtx->entry);
-    CHK_PTR_NULL(channelDesc);
-    CHK_PTR_NULL(channelHandle);
-    void* pluginCtx = nullptr;
-    HcommNicChannelOps* ops = nullptr;
-    CHK_RET(
-        static_cast<HcclResult>(endpointCtx->entry->createChannel(endpointCtx->ctx, channelDesc, &pluginCtx, &ops)));
-    CHK_PRT_RET(!ValidateChannelOps(ops), HCCL_ERROR("[%s] invalid channel ops.", __func__), HCCL_E_PARA);
-    HcommResult ret = InitPluginCtxOrDestroy(ops, pluginCtx);
-    if (ret != HCCL_SUCCESS) {
-        return ret;
-    }
-    PluginChannelCtx* ctx = new (std::nothrow) PluginChannelCtx{ops, pluginCtx, endpointCtx->entry};
-    if (ctx == nullptr) {
-        DestroyPluginCtx(ops, pluginCtx);
-        return HCCL_E_MEMORY;
-    }
-    *channelHandle = MAKE_PLUGIN_CH_HANDLE(ctx);
-    return HCCL_SUCCESS;
-}
-
-HcommResult DestroyPluginChannel(ChannelHandle channelHandle)
-{
-    PluginChannelCtx* ctx = PLUGIN_CH_CTX(channelHandle);
-    CHK_PTR_NULL(ctx);
-    DestroyPluginCtx(ctx->ops, ctx->ctx);
-    delete ctx;
-    return HCCL_SUCCESS;
-}
-
-HcommResult UnsupportedPluginOp(const char* opName)
-{
-    HCCL_RUN_WARNING("[NicPlugin] plugin operation[%s] is not supported.", opName == nullptr ? "unknown" : opName);
+    (void)ctx;
+    (void)mem;
+    (void)tag;
+    (void)handle;
+    HCCL_RUN_WARNING("[NicPlugin] plugin endpoint registerMemory is not supported.");
     return HCCL_E_NOT_SUPPORT;
 }
 
-bool IsEndpointOpAvailable(const HcommNicEndpointOps* ops, size_t opOffset, size_t opSize)
+int32_t DefaultEndpointUnregisterMemory(void* ctx, void* handle)
 {
-    return ValidateEndpointOps(ops) && IsPluginOpAvailable(ops, opOffset, opSize);
+    (void)ctx;
+    (void)handle;
+    HCCL_RUN_WARNING("[NicPlugin] plugin endpoint unregisterMemory is not supported.");
+    return HCCL_E_NOT_SUPPORT;
 }
 
-bool IsChannelOpAvailable(const HcommNicChannelOps* ops, size_t opOffset, size_t opSize)
+int32_t DefaultEndpointMemoryExport(void* ctx, void* handle, void** desc, uint32_t* descLen)
 {
-    return ValidateChannelOps(ops) && IsPluginOpAvailable(ops, opOffset, opSize);
+    (void)ctx;
+    (void)handle;
+    (void)desc;
+    (void)descLen;
+    HCCL_RUN_WARNING("[NicPlugin] plugin endpoint memoryExport is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultEndpointMemoryImport(void* ctx, const void* desc, uint32_t descLen, CommMem* outMem)
+{
+    (void)ctx;
+    (void)desc;
+    (void)descLen;
+    (void)outMem;
+    HCCL_RUN_WARNING("[NicPlugin] plugin endpoint memoryImport is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultEndpointMemoryUnimport(void* ctx, const void* desc, uint32_t descLen)
+{
+    (void)ctx;
+    (void)desc;
+    (void)descLen;
+    HCCL_RUN_WARNING("[NicPlugin] plugin endpoint memoryUnimport is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultEndpointGetListenPort(void* ctx, uint32_t* port)
+{
+    (void)ctx;
+    (void)port;
+    HCCL_RUN_WARNING("[NicPlugin] plugin endpoint getListenPort is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+HcommResult FillDefaultEndpointOps(const HcommNicEndpointOps* src, HcommNicEndpointOps** outOps)
+{
+    if (src == nullptr || outOps == nullptr) {
+        return HCCL_E_PARA;
+    }
+    HcommNicEndpointOps* dst = new (std::nothrow) HcommNicEndpointOps();
+    if (dst == nullptr) {
+        return HCCL_E_MEMORY;
+    }
+
+    size_t copySize = (src->header.size < sizeof(HcommNicEndpointOps)) ? src->header.size : sizeof(HcommNicEndpointOps);
+    (void)memcpy_s(dst, sizeof(HcommNicEndpointOps), src, copySize);
+
+    FOR_EACH_ENDPOINT_OP_DEFAULT(FILL_ENDPOINT_OP_DEFAULT)
+    *outOps = dst;
+    return HCCL_SUCCESS;
+}
+
+// ---- Channel ops 默认实现 ----
+
+int32_t DefaultChannelInit(void* ctx)
+{
+    (void)ctx;
+    HCCL_RUN_WARNING("[NicPlugin] channel init is not supported.");
+    return HCCL_SUCCESS;
+}
+
+int32_t DefaultChannelGetStatus(void* ctx, int32_t* status)
+{
+    (void)ctx;
+    (void)status;
+    HCCL_RUN_WARNING("[NicPlugin] channel getStatus is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelWriteNbi(void* ctx, void* dst, const void* src, uint64_t len)
+{
+    (void)ctx;
+    (void)dst;
+    (void)src;
+    (void)len;
+    HCCL_RUN_WARNING("[NicPlugin] channel writeNbi is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelWriteNbiOnThread(void* ctx, ThreadHandle thread, void* dst, const void* src, uint64_t len)
+{
+    (void)ctx;
+    (void)thread;
+    (void)dst;
+    (void)src;
+    (void)len;
+    HCCL_RUN_WARNING("[NicPlugin] channel writeNbiOnThread is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelWriteOnThread(void* ctx, ThreadHandle thread, void* dst, const void* src, uint64_t len)
+{
+    (void)ctx;
+    (void)thread;
+    (void)dst;
+    (void)src;
+    (void)len;
+    HCCL_RUN_WARNING("[NicPlugin] channel writeOnThread is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelWriteWithNotifyNbi(void* ctx, void* dst, const void* src, uint64_t len, uint32_t remoteNotifyIdx)
+{
+    (void)ctx;
+    (void)dst;
+    (void)src;
+    (void)len;
+    (void)remoteNotifyIdx;
+    HCCL_RUN_WARNING("[NicPlugin] channel writeWithNotifyNbi is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelWriteWithNotifyNbiOnThread(
+    void* ctx, ThreadHandle thread, void* dst, const void* src, uint64_t len, uint32_t remoteNotifyIdx)
+{
+    (void)ctx;
+    (void)thread;
+    (void)dst;
+    (void)src;
+    (void)len;
+    (void)remoteNotifyIdx;
+    HCCL_RUN_WARNING("[NicPlugin] channel writeWithNotifyNbiOnThread is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelWriteWithNotifyOnThread(
+    void* ctx, ThreadHandle thread, void* dst, const void* src, uint64_t len, uint32_t remoteNotifyIdx)
+{
+    (void)ctx;
+    (void)thread;
+    (void)dst;
+    (void)src;
+    (void)len;
+    (void)remoteNotifyIdx;
+    HCCL_RUN_WARNING("[NicPlugin] channel writeWithNotifyOnThread is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelWriteReduceOnThread(
+    void* ctx, ThreadHandle thread, void* dst, const void* src, uint64_t count, HcommDataType dataType,
+    HcommReduceOp reduceOp)
+{
+    (void)ctx;
+    (void)thread;
+    (void)dst;
+    (void)src;
+    (void)count;
+    (void)dataType;
+    (void)reduceOp;
+    HCCL_RUN_WARNING("[NicPlugin] channel writeReduceOnThread is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelReadReduceOnThread(
+    void* ctx, ThreadHandle thread, void* dst, const void* src, uint64_t count, HcommDataType dataType,
+    HcommReduceOp reduceOp)
+{
+    (void)reduceOp;
+    (void)dataType;
+    (void)count;
+    (void)src;
+    (void)dst;
+    (void)thread;
+    (void)ctx;
+    HCCL_RUN_WARNING("[NicPlugin] channel readReduceOnThread is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelWriteReduceWithNotifyOnThread(
+    void* ctx, ThreadHandle thread, void* dst, const void* src, uint64_t count, HcommDataType dataType,
+    HcommReduceOp reduceOp, uint32_t remoteNotifyIdx)
+{
+    (void)ctx;
+    (void)thread;
+    (void)dst;
+    (void)src;
+    (void)count;
+    (void)dataType;
+    (void)reduceOp;
+    (void)remoteNotifyIdx;
+    HCCL_RUN_WARNING("[NicPlugin] channel writeReduceWithNotifyOnThread is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelReadNbi(void* ctx, void* dst, const void* src, uint64_t len)
+{
+    (void)ctx;
+    (void)dst;
+    (void)src;
+    (void)len;
+    HCCL_RUN_WARNING("[NicPlugin] channel readNbi is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelReadNbiOnThread(void* ctx, ThreadHandle thread, void* dst, const void* src, uint64_t len)
+{
+    (void)ctx;
+    (void)thread;
+    (void)dst;
+    (void)src;
+    (void)len;
+    HCCL_RUN_WARNING("[NicPlugin] channel readNbiOnThread is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelReadOnThread(void* ctx, ThreadHandle thread, void* dst, const void* src, uint64_t len)
+{
+    (void)ctx;
+    (void)thread;
+    (void)dst;
+    (void)src;
+    (void)len;
+    HCCL_RUN_WARNING("[NicPlugin] channel readOnThread is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelNotifyRecord(void* ctx, uint32_t remoteNotifyIdx)
+{
+    (void)ctx;
+    (void)remoteNotifyIdx;
+    HCCL_RUN_WARNING("[NicPlugin] channel notifyRecord is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelNotifyRecordOnThread(void* ctx, ThreadHandle thread, uint32_t remoteNotifyIdx)
+{
+    (void)ctx;
+    (void)thread;
+    (void)remoteNotifyIdx;
+    HCCL_RUN_WARNING("[NicPlugin] channel notifyRecordOnThread is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelNotifyWait(void* ctx, uint32_t localNotifyIdx, uint32_t timeOut)
+{
+    (void)ctx;
+    (void)localNotifyIdx;
+    (void)timeOut;
+    HCCL_RUN_WARNING("[NicPlugin] channel notifyWait is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelNotifyWaitOnThread(void* ctx, ThreadHandle thread, uint32_t localNotifyIdx, uint32_t timeOut)
+{
+    (void)ctx;
+    (void)thread;
+    (void)localNotifyIdx;
+    (void)timeOut;
+    HCCL_RUN_WARNING("[NicPlugin] channel notifyWaitOnThread is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelNotifyWaitOnThreadWithDefaultTimeout(void* ctx, ThreadHandle thread, uint32_t localNotifyIdx)
+{
+    (void)ctx;
+    (void)thread;
+    (void)localNotifyIdx;
+    HCCL_RUN_WARNING("[NicPlugin] channel notifyWaitOnThreadWithDefaultTimeout is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelBatchTransferOnThread(
+    void* ctx, ThreadHandle thread, const HcommBatchTransferDesc* transferDescs, uint32_t transferDescNum)
+{
+    (void)ctx;
+    (void)thread;
+    (void)transferDescs;
+    (void)transferDescNum;
+    HCCL_RUN_WARNING("[NicPlugin] channel batchTransferOnThread is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelFence(void* ctx)
+{
+    (void)ctx;
+    HCCL_RUN_WARNING("[NicPlugin] channel fence is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelFenceOnThread(void* ctx, ThreadHandle thread)
+{
+    (void)ctx;
+    (void)thread;
+    HCCL_RUN_WARNING("[NicPlugin] channel fenceOnThread is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+int32_t DefaultChannelDrainOnThread(void* ctx, ThreadHandle thread)
+{
+    (void)ctx;
+    (void)thread;
+    HCCL_RUN_WARNING("[NicPlugin] channel drainOnThread is not supported.");
+    return HCCL_E_NOT_SUPPORT;
+}
+
+HcommResult FillDefaultChannelOps(const HcommNicChannelOps* src, HcommNicChannelOps** outOps)
+{
+    if (src == nullptr || outOps == nullptr) {
+        return HCCL_E_PARA;
+    }
+    HcommNicChannelOps* dst = new (std::nothrow) HcommNicChannelOps();
+    if (dst == nullptr) {
+        return HCCL_E_MEMORY;
+    }
+
+    size_t copySize = (src->header.size < sizeof(HcommNicChannelOps)) ? src->header.size : sizeof(HcommNicChannelOps);
+    (void)memcpy_s(dst, sizeof(HcommNicChannelOps), src, copySize);
+
+    FOR_EACH_CHANNEL_OP_DEFAULT(FILL_CHANNEL_OP_DEFAULT)
+    *outOps = dst;
+    return HCCL_SUCCESS;
 }
 
 } // namespace hcomm

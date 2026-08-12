@@ -31,6 +31,7 @@
 #include "mem_device_pub.h"
 #include "comm_engine_utils.h"
 #include "comm_configer.h"
+#include "builtin_channel_ops.h"
 
 namespace hcomm {
 
@@ -96,6 +97,8 @@ HcclResult ChannelProcess::CreateChannelsLoop(
         CHK_RET_UNAVAIL(Channel::CreateChannel(endpointHandle, engine, channelDescs[i], tmpPtr, isSharedQueue));
         CHK_SMART_PTR_NULL(tmpPtr);
 
+        tmpPtr->SetNicChannelCtx(&g_BuiltinChannelOps, tmpPtr.get());
+
         ChannelHandle handle = reinterpret_cast<ChannelHandle>(tmpPtr.get());
         outHandles[i] = handle;
         HCCL_INFO("%s deviceId[%d], handle[0x%llx], ptr[%p]", __func__, deviceId, handle, tmpPtr.get());
@@ -120,6 +123,35 @@ HcclResult ChannelProcess::CreateChannelsLoop(
             g_ChannelD2HMap.emplace(key, handle);
         }
     }
+    return HCCL_SUCCESS;
+}
+
+HcclResult ChannelProcess::InsertPluginChannelToMap(ChannelHandle handle, std::shared_ptr<Channel> channelPtr)
+{
+    std::lock_guard<std::mutex> lock(g_ChannelMapMtx);
+    if (g_ChannelMap.find(handle) != g_ChannelMap.end()) {
+        HCCL_ERROR("[NicPlugin][%s] channel handle already exists [0x%llx] in ChannelMap", __func__, handle);
+        return HCCL_E_INTERNAL;
+    }
+
+    g_ChannelMap.emplace(handle, std::move(channelPtr));
+    HCCL_INFO("[NicPlugin][%s] plugin channel inserted, handle[0x%llx].", __func__, handle);
+
+    return HCCL_SUCCESS;
+}
+
+HcclResult ChannelProcess::RemovePluginChannelFromMap(ChannelHandle handle)
+{
+    std::lock_guard<std::mutex> lock(g_ChannelMapMtx);
+
+    auto iter = g_ChannelMap.find(handle);
+    if (iter == g_ChannelMap.end()) {
+        HCCL_ERROR("[%s] channel not found in g_ChannelMap, handle[0x%llx].", __func__, handle);
+        return HCCL_E_NOT_FOUND;
+    }
+    g_ChannelMap.erase(iter);
+
+    HCCL_INFO("[%s] unregister plugin channel, handle[0x%llx].", __func__, handle);
     return HCCL_SUCCESS;
 }
 

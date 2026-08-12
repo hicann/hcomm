@@ -49,6 +49,14 @@ enum class HcommChannelKind : uint32_t {
     AIV_URMA = 8U,
 };
 
+// HcommChannelGetStatus 出参状态码
+enum HcommChannelLinkStatus : int32_t {
+    HCOMM_CHANNEL_STATUS_READY = 0,
+    HCOMM_CHANNEL_STATUS_CONNECTING = 1,
+    HCOMM_CHANNEL_STATUS_FAILED = 2,
+    HCOMM_CHANNEL_STATUS_TIMEOUT = 3,
+};
+
 /**
  * @note 职责：一个EndPointPair上的建立的通信通道的C++抽象接口类声明。
  * 管理该通信通道Channel对上的同步信号Notify、通信队列（如qp、jetty等）等资源管理，负责建立连接，以及注册内存、同步信号等的交换。
