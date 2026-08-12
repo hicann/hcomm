@@ -376,9 +376,7 @@ void UbTransportLiteImpl::Post(u32 index, const StreamLite& stream)
     }
     u32 inlineData = 1;
 
-    // 下发DbSqe前, 备份相关信息
     auto taskId = stream.GetRtsq()->GetTaskId();
-    const uint32_t pendingSqeCnt = dynamic_cast<RtsqA5*>(stream.GetRtsq())->GetPendingSqeCnt();
 
     // 当前使用1个connection，下标为0 构建sqe
     RmaConnLite* conn = connVec[0];
@@ -387,6 +385,8 @@ void UbTransportLiteImpl::Post(u32 index, const StreamLite& stream)
     UbConnLite* ubConnLitePtr = nullptr;
     bool needCacheTask = false;
     PreLaunchWqe(ubConnLitePtr, needCacheTask, conn);
+    // 下发DbSqe前, 备份相关信息
+    const uint32_t pendingSqeCnt = needCacheTask ? stream.GetRtsq()->GetPendingSqeCnt() : 0;
 
     // 展开下发WQE
     auto rmtBuffSliceLite = GetRmtNotifySliceLite(index);
@@ -619,9 +619,7 @@ void UbTransportLiteImpl::Read(const RmaBufferLite& loc, const Buffer& rmt, cons
     SqeConfigLite cfg;
     SetFenceConfig(cfg);
 
-    // 下发DbSqe前, 备份相关信息
     auto taskId = stream.GetRtsq()->GetTaskId();
-    const uint32_t pendingSqeCnt = dynamic_cast<RtsqA5*>(stream.GetRtsq())->GetPendingSqeCnt();
 
     // 当前使用1个connection,下标为0
     RmaConnLite* conn = connVec[0];
@@ -630,6 +628,8 @@ void UbTransportLiteImpl::Read(const RmaBufferLite& loc, const Buffer& rmt, cons
     UbConnLite* ubConnLitePtr = nullptr;
     bool needCacheTask = false;
     PreLaunchWqe(ubConnLitePtr, needCacheTask, conn);
+    // 下发DbSqe前, 备份相关信息
+    const uint32_t pendingSqeCnt = needCacheTask ? stream.GetRtsq()->GetPendingSqeCnt() : 0;
 
     // 展开下发WQE
     auto locRmaBufSlicelite = GetRmaBufSlicelite(loc);
@@ -663,9 +663,7 @@ void UbTransportLiteImpl::Write(const RmaBufferLite& loc, const Buffer& rmt, con
     SqeConfigLite cfg;
     SetFenceConfig(cfg);
 
-    // 下发DbSqe前, 备份相关信息
     auto taskId = stream.GetRtsq()->GetTaskId();
-    const uint32_t pendingSqeCnt = dynamic_cast<RtsqA5*>(stream.GetRtsq())->GetPendingSqeCnt();
 
     // 当前使用1个connection，下标为0
     RmaConnLite* conn = connVec[0];
@@ -674,6 +672,8 @@ void UbTransportLiteImpl::Write(const RmaBufferLite& loc, const Buffer& rmt, con
     UbConnLite* ubConnLitePtr = nullptr;
     bool needCacheTask = false;
     PreLaunchWqe(ubConnLitePtr, needCacheTask, conn);
+    // 下发DbSqe前, 备份相关信息
+    const uint32_t pendingSqeCnt = needCacheTask ? stream.GetRtsq()->GetPendingSqeCnt() : 0;
 
     // 展开下发WQE
     auto locRmaBufSlicelite = GetRmaBufSlicelite(loc);
@@ -708,9 +708,7 @@ void UbTransportLiteImpl::ReadReduce(
     SqeConfigLite cfg;
     SetFenceConfig(cfg);
 
-    // 下发DbSqe前, 备份相关信息
     auto taskId = stream.GetRtsq()->GetTaskId();
-    const uint32_t pendingSqeCnt = dynamic_cast<RtsqA5*>(stream.GetRtsq())->GetPendingSqeCnt();
 
     // 当前使用1个connection，下标为0
     RmaConnLite* conn = connVec[0];
@@ -719,6 +717,8 @@ void UbTransportLiteImpl::ReadReduce(
     UbConnLite* ubConnLitePtr = nullptr;
     bool needCacheTask = false;
     PreLaunchWqe(ubConnLitePtr, needCacheTask, conn);
+    // 下发DbSqe前, 备份相关信息
+    const uint32_t pendingSqeCnt = needCacheTask ? stream.GetRtsq()->GetPendingSqeCnt() : 0;
 
     // 展开下发WQE
     auto locRmaBufSlicelite = GetRmaBufSlicelite(loc);
@@ -753,9 +753,7 @@ void UbTransportLiteImpl::WriteReduce(
     SqeConfigLite cfg;
     SetFenceConfig(cfg);
 
-    // 下发DbSqe前, 备份相关信息
     auto taskId = stream.GetRtsq()->GetTaskId();
-    const uint32_t pendingSqeCnt = dynamic_cast<RtsqA5*>(stream.GetRtsq())->GetPendingSqeCnt();
 
     // 当前使用1个connection，下标为0
     RmaConnLite* conn = connVec[0];
@@ -764,6 +762,8 @@ void UbTransportLiteImpl::WriteReduce(
     UbConnLite* ubConnLitePtr = nullptr;
     bool needCacheTask = false;
     PreLaunchWqe(ubConnLitePtr, needCacheTask, conn);
+    // 下发DbSqe前, 备份相关信息
+    const uint32_t pendingSqeCnt = needCacheTask ? stream.GetRtsq()->GetPendingSqeCnt() : 0;
 
     // 展开下发WQE
     auto locRmaBufSlicelite = GetRmaBufSlicelite(loc);
@@ -864,9 +864,7 @@ void UbTransportLiteImpl::BatchTransfer(
     SqeConfigLite cfg;
     SetFenceConfig(cfg);
 
-    // 下发DbSqe前, 备份相关信息
     auto taskId = stream.GetRtsq()->GetTaskId();
-    const uint32_t pendingSqeCnt = dynamic_cast<RtsqA5*>(stream.GetRtsq())->GetPendingSqeCnt();
 
     // 当前使用1个connection，下标为0 (当前只有一个connection，对应一个jetty)
     RmaConnLite* conn = connVec[0];
@@ -875,6 +873,8 @@ void UbTransportLiteImpl::BatchTransfer(
     UbConnLite* ubConnLitePtr = nullptr;
     bool needCacheTask = false;
     PreLaunchWqe(ubConnLitePtr, needCacheTask, conn);
+    // 下发DbSqe前, 备份相关信息
+    const uint32_t pendingSqeCnt = needCacheTask ? stream.GetRtsq()->GetPendingSqeCnt() : 0;
 
     u32 insNum = loc.size();
     for (u32 i = 0; i < insNum; i++) {
@@ -1129,9 +1129,7 @@ void UbTransportLiteImpl::BatchTransferAll(
         return;
     }
 
-    // 下发DbSqe前, 备份相关信息
     auto taskId = stream.GetRtsq()->GetTaskId();
-    const uint32_t pendingSqeCnt = dynamic_cast<RtsqA5*>(stream.GetRtsq())->GetPendingSqeCnt();
 
     // 当前使用1个connection，下标为0 (当前只有一个connection，对应一个jetty)
     RmaConnLite* conn = connVec[0];
@@ -1140,6 +1138,8 @@ void UbTransportLiteImpl::BatchTransferAll(
     UbConnLite* ubConnLitePtr = nullptr;
     bool needCacheTask = false;
     PreLaunchWqe(ubConnLitePtr, needCacheTask, conn);
+    // 下发DbSqe前, 备份相关信息
+    const uint32_t pendingSqeCnt = needCacheTask ? stream.GetRtsq()->GetPendingSqeCnt() : 0;
 
     // 批量展开下发WQE
     u32 insNum = loc.size();
@@ -1236,9 +1236,6 @@ void UbTransportLiteImpl::Drain(const StreamLite& stream)
     Fence();
     SetFenceConfig(cfg);
 
-    // 下发DbSqe前, 备份相关信息
-    const uint32_t pendingSqeCnt = dynamic_cast<RtsqA5*>(stream.GetRtsq())->GetPendingSqeCnt();
-
     // 当前使用1个connection，下标为0 (当前只有一个connection，对应一个jetty)
     RmaConnLite* conn = connVec[0];
 
@@ -1246,6 +1243,8 @@ void UbTransportLiteImpl::Drain(const StreamLite& stream)
     UbConnLite* ubConnLitePtr = nullptr;
     bool needCacheTask = false;
     PreLaunchWqe(ubConnLitePtr, needCacheTask, conn);
+    // 下发DbSqe前, 备份相关信息
+    const uint32_t pendingSqeCnt = needCacheTask ? stream.GetRtsq()->GetPendingSqeCnt() : 0;
 
     // 展开下发WQE
     auto drainNotifyBufSlice = RmaBufSliceLite(drainNotify_.addr, drainNotify_.size, 0, drainNotify_.tokenId);
@@ -1322,9 +1321,7 @@ void UbTransportLiteImpl::WriteWithNotify(
     SetFenceConfig(cfg);
     u64 notifyData = 1; // 普通notify，固定1
 
-    // 下发DbSqe前, 备份相关信息
     auto taskId = stream.GetRtsq()->GetTaskId();
-    const uint32_t pendingSqeCnt = dynamic_cast<RtsqA5*>(stream.GetRtsq())->GetPendingSqeCnt();
 
     // 当前使用1个connection，下标为0
     RmaConnLite* conn = connVec[0];
@@ -1333,6 +1330,8 @@ void UbTransportLiteImpl::WriteWithNotify(
     UbConnLite* ubConnLitePtr = nullptr;
     bool needCacheTask = false;
     PreLaunchWqe(ubConnLitePtr, needCacheTask, conn);
+    // 下发DbSqe前, 备份相关信息
+    const uint32_t pendingSqeCnt = needCacheTask ? stream.GetRtsq()->GetPendingSqeCnt() : 0;
 
     // 展开下发WQE
     auto locRmaBufSlicelite = GetRmaBufSlicelite(loc);
@@ -1368,9 +1367,7 @@ void UbTransportLiteImpl::WriteReduceWithNotify(
     SetFenceConfig(cfg);
     u64 notifyData = 1; // 普通notify，固定1
 
-    // 下发DbSqe前, 备份相关信息
     auto taskId = stream.GetRtsq()->GetTaskId();
-    const uint32_t pendingSqeCnt = dynamic_cast<RtsqA5*>(stream.GetRtsq())->GetPendingSqeCnt();
 
     // 当前使用1个connection，下标为0
     RmaConnLite* conn = connVec[0];
@@ -1379,6 +1376,8 @@ void UbTransportLiteImpl::WriteReduceWithNotify(
     UbConnLite* ubConnLitePtr = nullptr;
     bool needCacheTask = false;
     PreLaunchWqe(ubConnLitePtr, needCacheTask, conn);
+    // 下发DbSqe前, 备份相关信息
+    const uint32_t pendingSqeCnt = needCacheTask ? stream.GetRtsq()->GetPendingSqeCnt() : 0;
 
     // 展开下发WQE
     auto locRmaBufSlicelite = GetRmaBufSlicelite(loc);
@@ -1415,9 +1414,6 @@ void UbTransportLiteImpl::BatchOneSidedRead(
     SqeConfigLite cfg;
     SetFenceConfig(cfg);
 
-    // 下发DbSqe前, 备份相关信息
-    const uint32_t pendingSqeCnt = dynamic_cast<RtsqA5*>(stream.GetRtsq())->GetPendingSqeCnt();
-
     // 当前使用1个connection，下标为0
     RmaConnLite* conn = connVec[0];
 
@@ -1425,6 +1421,8 @@ void UbTransportLiteImpl::BatchOneSidedRead(
     UbConnLite* ubConnLitePtr = nullptr;
     bool needCacheTask = false;
     PreLaunchWqe(ubConnLitePtr, needCacheTask, conn);
+    // 下发DbSqe前, 备份相关信息
+    const uint32_t pendingSqeCnt = needCacheTask ? stream.GetRtsq()->GetPendingSqeCnt() : 0;
 
     // 展开下发WQE
     conn->BatchOneSidedRead(loc, rmt, cfg, stream, connOut);
@@ -1445,9 +1443,6 @@ void UbTransportLiteImpl::BatchOneSidedWrite(
     SqeConfigLite cfg;
     SetFenceConfig(cfg);
 
-    // 下发DbSqe前, 备份相关信息
-    const uint32_t pendingSqeCnt = dynamic_cast<RtsqA5*>(stream.GetRtsq())->GetPendingSqeCnt();
-
     // 当前使用1个connection，下标为0
     RmaConnLite* conn = connVec[0];
 
@@ -1455,6 +1450,8 @@ void UbTransportLiteImpl::BatchOneSidedWrite(
     UbConnLite* ubConnLitePtr = nullptr;
     bool needCacheTask = false;
     PreLaunchWqe(ubConnLitePtr, needCacheTask, conn);
+    // 下发DbSqe前, 备份相关信息
+    const uint32_t pendingSqeCnt = needCacheTask ? stream.GetRtsq()->GetPendingSqeCnt() : 0;
 
     // 展开下发WQE
     conn->BatchOneSidedWrite(loc, rmt, cfg, stream, connOut);

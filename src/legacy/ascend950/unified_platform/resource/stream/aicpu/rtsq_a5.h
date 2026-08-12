@@ -83,7 +83,7 @@ public:
     bool GetPreStreamSyncStatus() override;
 
     // 用于aicpu task cache
-    uint32_t GetPendingSqeCnt() const { return pendingSqeCnt; }
+    uint32_t GetPendingSqeCnt() const override { return pendingSqeCnt; }
 
     inline HcclResult SetAicpuTsThreadPtr(hccl::AicpuTsThread* threadPtr)
     {

@@ -188,6 +188,8 @@ public:
 
     virtual u64 GetSqeAddr() const { return 0; }
 
+    virtual uint32_t GetPendingSqeCnt() const { return 0; }
+
     u32 QuerySqHead() const;
     u32 QuerySqTail() const;
 
