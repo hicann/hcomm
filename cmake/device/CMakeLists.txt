@@ -44,6 +44,7 @@ find_cann_package(unified_dlog MODULE REQUIRED)
 # third_party
 include(${HCOMM_DIR}/cmake/hcomm_utils.cmake)
 include(${HCOMM_DIR}/cmake/third_party/ubengine.cmake)
+include(${HCOMM_DIR}/cmake/third_party/ibv_extend.cmake)
 add_cann_third_party(json)
 add_cann_third_party(openssl)
 add_cann_third_party(rdma-core)

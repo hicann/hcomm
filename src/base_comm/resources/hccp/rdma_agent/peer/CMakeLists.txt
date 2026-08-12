@@ -34,7 +34,7 @@ target_include_directories(ra_peer PRIVATE
 
     # rdma头文件
     ${CMAKE_CURRENT_SOURCE_DIR}/../../external_depends/host_lite
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../external_depends/nda
+    ${IBV_EXTEND_INCLUDE_DIR}
 
     # HCCP Legacy
     ${CMAKE_CURRENT_SOURCE_DIR}/../../rdma_agent/comm/ctx
@@ -45,6 +45,7 @@ if(NOT BUILD_OPEN_PROJECT)
     target_include_directories(ra_peer PRIVATE
         ${TOP_DIR}/runtime/pkg_inc/base
         ${TOP_DIR}/driver/driver/pkg_inc/
+        ${TOP_DIR}/driver/driver/src/custom/nda/ibv_extend/
     )
 endif()
 

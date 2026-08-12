@@ -81,3 +81,22 @@ void TcRaPeerNdaQpCreate()
     EXPECT_INT_EQ(-1, ret);
     mocker_clean();
 }
+
+void TcRaPeerGetQpHyperFeature()
+{
+    struct RaQpHandle qpHandle = {0};
+    struct HyperFeature hyperFeature = {0};
+    int ret = 0;
+
+    qpHandle.phyId = 0;
+    qpHandle.rdevIndex = 0;
+    qpHandle.qpn = 0;
+
+    ret = RaPeerGetQpHyperFeature(&qpHandle, &hyperFeature);
+    EXPECT_INT_EQ(0, ret);
+
+    mocker((stub_fn_t)RsGetQpHyperFeature, 10, -1);
+    ret = RaPeerGetQpHyperFeature(&qpHandle, &hyperFeature);
+    EXPECT_INT_EQ(-1, ret);
+    mocker_clean();
+}

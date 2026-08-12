@@ -131,3 +131,15 @@ int RaPeerNdaQpDestroy(struct RaQpHandle *qpPeer)
     qpPeer = NULL;
     return ret;
 }
+
+int RaPeerGetQpHyperFeature(struct RaQpHandle *qpPeer, struct HyperFeature *hyperFeature)
+{
+    int ret = 0;
+
+    RaPeerMutexLock(qpPeer->phyId);
+    RsSetCtx(qpPeer->phyId);
+    ret = RsGetQpHyperFeature(qpPeer->phyId, qpPeer->rdevIndex, qpPeer->qpn, hyperFeature);
+    RaPeerMutexUnlock(qpPeer->phyId);
+    CHK_PRT_RETURN(ret, hccp_warn("RsGetQpHyperFeature unsuccessful ret(%d) phyId(%u)", ret, qpPeer->phyId), ret);
+    return ret;
+}

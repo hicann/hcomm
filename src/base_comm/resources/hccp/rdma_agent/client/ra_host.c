@@ -25,6 +25,7 @@
 #include "ra_hdc_rdma_verbs.h"
 #include "ra_hdc_socket.h"
 #include "ra_peer.h"
+#include "ra_peer_nda.h"
 #include "ra_peer_socket.h"
 #include "ra_rs_comm.h"
 #include "ra_rs_err.h"
@@ -124,6 +125,7 @@ struct RaRdmaOps gRaHdcRdmaOps = {
     .raSetQpAttrQos = RaHdcSetQpAttrQos,
     .raSetQpAttrTimeout = RaHdcSetQpAttrTimeout,
     .raSetQpAttrRetryCnt = RaHdcSetQpAttrRetryCnt,
+    .raGetQpHyperFeature = NULL,
     .raCreateCompChannel = NULL,
     .raDestroyCompChannel = NULL,
     .raCreateSrq = NULL,
@@ -181,6 +183,7 @@ struct RaRdmaOps gRaPeerRdmaOps = {
     .raSetQpAttrQos = RaPeerSetQpAttrQos,
     .raSetQpAttrTimeout = RaPeerSetQpAttrTimeout,
     .raSetQpAttrRetryCnt = RaPeerSetQpAttrRetryCnt,
+    .raGetQpHyperFeature = RaPeerGetQpHyperFeature,
     .raCreateCompChannel = RaPeerCreateCompChannel,
     .raDestroyCompChannel = RaPeerDestroyCompChannel,
     .raCreateSrq = RaPeerCreateSrq,
@@ -2148,9 +2151,10 @@ HCCP_ATTRI_VISI_DEF int RaRdevGetCqeErrInfoList(void *rdmaHandle, struct CqeErrI
 HCCP_ATTRI_VISI_DEF int RaGetQpAttr(void *qpHandle, struct QpAttr *attr)
 {
     struct RaQpHandle *raQpHandle = (struct RaQpHandle *)qpHandle;
+    int ret = 0;
 
     if (qpHandle == NULL || attr == NULL) {
-        hccp_err("[get][get_qp_attr]qp_handle or attr is NULL, para error!");
+        hccp_err("[get][GetQpAttr]qpHandle or attr is NULL, para error!");
         return ConverReturnCode(RDMA_OP, -EINVAL);
     }
 
@@ -2160,6 +2164,15 @@ HCCP_ATTRI_VISI_DEF int RaGetQpAttr(void *qpHandle, struct QpAttr *attr)
     attr->psn = raQpHandle->psn;
     attr->gidIdx = raQpHandle->gidIdx;
     (void)memcpy_s(attr->gid, HCCP_GID_RAW_LEN, raQpHandle->rdmaHandle->gid, HCCP_GID_RAW_LEN);
+
+    if (raQpHandle->rdmaOps != NULL && raQpHandle->rdmaOps->raGetQpHyperFeature != NULL) {
+        ret = raQpHandle->rdmaOps->raGetQpHyperFeature(raQpHandle, &attr->feature);
+        if (ret != 0) {
+            hccp_warn("[get][GetQpAttr]raGetQpHyperFeature unsuccessful, ret:%d phyId:%u qpn:%u", ret,
+                raQpHandle->phyId, raQpHandle->qpn);
+        }
+    }
+
     return 0;
 }
 

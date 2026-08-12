@@ -11,7 +11,7 @@
 #include <pthread.h>
 #include "errno.h"
 #include "ra_rs_err.h"
-#include "dl_nda_function.h"
+#include "dl_ibv_extend_function.h"
 #include "dl_ibverbs_function.h"
 
 static pthread_mutex_t gRoceUserApiLock = PTHREAD_MUTEX_INITIALIZER;
@@ -490,6 +490,10 @@ STATIC int RsOpenHrnSo(void)
         if (gHrnApiHandle != NULL) {
             return 0;
         }
+        gHrnApiHandle = HccpDlopen("libhrn5.so.1", RTLD_NOW);
+        if (gHrnApiHandle != NULL) {
+            return 0;
+        }
         return -EINVAL;
     } else {
         hccp_run_info("HrnApi dlopen again!");
@@ -516,7 +520,7 @@ int RsHrnApiInit(void)
 
     ret = RsOpenHrnSo();
     if (ret != 0) {
-        hccp_warn("HccpDlopen[libhrn3-rdmav34.so] doesn't exist!");
+        hccp_warn("HccpDlopen[libhrn5-rdmav34.so or libhrn5.so.1] doesn't exist!");
         return 0;
     }
 
@@ -542,9 +546,9 @@ DL_ATTRI_VISI_DEF int RsApiInit(void)
         RsCloseIbverbsSo();
         return ret;
     }
-    ret = RsNdaApiInit();
+    ret = RsIbvExtendApiInit();
     if (ret != 0) {
-        hccp_err("RsHrnApiInit failed! ret=[%d]", ret);
+        hccp_err("RsIbvExtendApiInit failed! ret=[%d]", ret);
         RsCloseHrnSo();
         RsCloseIbverbsSo();
         return ret;
@@ -555,7 +559,7 @@ DL_ATTRI_VISI_DEF int RsApiInit(void)
         hccp_err("rs_roce_user_api_init failed! ret=[%d]", ret);
         RsCloseHrnSo();
         RsCloseIbverbsSo();
-        RsNdaApiDeinit();
+        RsIbvExtendApiDeinit();
         return ret;
     }
 #endif
@@ -567,7 +571,7 @@ DL_ATTRI_VISI_DEF void RsApiDeinit(void)
 {
     RsCloseIbverbsSo();
     RsCloseHrnSo();
-    RsNdaApiDeinit();
+    RsIbvExtendApiDeinit();
     RsCloseRoceUserSo();
     return;
 }

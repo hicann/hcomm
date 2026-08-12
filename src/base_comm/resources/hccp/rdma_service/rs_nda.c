@@ -14,7 +14,7 @@
 #include "securec.h"
 #include "dl_hal_function.h"
 #include "dl_ibverbs_function.h"
-#include "dl_nda_function.h"
+#include "dl_ibv_extend_function.h"
 #include "hccp_nda.h"
 #include "ra_rs_err.h"
 #include "rs.h"
@@ -37,8 +37,8 @@ RS_ATTRI_VISI_DEF int RsNdaGetDirectFlag(unsigned int phyId, unsigned int rdevIn
         return ret;
     }
 
-    ret = RsNdaIbvQueryDeviceExtend(rdevCb->ibCtxEx, &extDevAttr);
-    CHK_PRT_RETURN(ret != 0, hccp_err("RsNdaIbvQueryDeviceExtend failed, phyId:%u rdevIndex:%u ret:%d",
+    ret = RsIbvQueryDeviceExtend(rdevCb->ibCtxEx, &extDevAttr);
+    CHK_PRT_RETURN(ret != 0, hccp_err("RsIbvQueryDeviceExtend failed, phyId:%u rdevIndex:%u ret:%d",
         phyId, rdevIndex, ret), ret);
 
     if ((extDevAttr.ext_cap & IBV_EXTEND_DEV_NDA) == 0) {
@@ -437,7 +437,7 @@ int RsInitNdaCb(struct RsRdevCb *rdevCb)
 
     rdevCb->directFlag = RsNdaGetDirectFlagByDevAttr(&rdevCb->deviceAttr);
 
-    rdevCb->ibCtxEx = RsNdaIbvOpenExtend(rdevCb->ibCtx);
+    rdevCb->ibCtxEx = RsIbvOpenExtend(rdevCb->ibCtx);
     if (rdevCb->ibCtxEx == NULL) {
         return 0;
     }
@@ -461,7 +461,7 @@ int RsInitNdaCb(struct RsRdevCb *rdevCb)
 
 calloc_err:
     (void)__sync_fetch_and_sub(&rdevCb->rsCb->ndaCbRefCnt, 1);
-    (void)RsNdaIbvCloseExtend(rdevCb->ibCtxEx);
+    (void)RsIbvCloseExtend(rdevCb->ibCtxEx);
     rdevCb->ibCtxEx = NULL;
     return ret;
 }
@@ -472,7 +472,7 @@ void RsDeinitNdaCb(struct RsRdevCb *rdevCb)
         return;
     }
 
-    (void)RsNdaIbvCloseExtend(rdevCb->ibCtxEx);
+    (void)RsIbvCloseExtend(rdevCb->ibCtxEx);
     rdevCb->ibCtxEx = NULL;
 
     if (__sync_fetch_and_sub(&rdevCb->rsCb->ndaCbRefCnt, 1) > 1) {
@@ -514,7 +514,7 @@ STATIC int RsNdaCqCreateEx(struct RsRdevCb *rdevCb, struct ibv_cq_init_attr_exte
     struct ibv_cq_extend *cqExt = NULL;
     int ret = 0;
 
-    cqExt = RsNdaIbvCreateCqExtend(rdevCb->ibCtxEx, cqInitAttrEx);
+    cqExt = RsIbvCreateCqExtend(rdevCb->ibCtxEx, cqInitAttrEx);
     CHK_PRT_RETURN(cqExt == NULL, hccp_err("RsNdaCreateCqExtend failed, errno:%d", errno), -ENOMEM);
 
     ret = memcpy_s(&info->cqInfo, sizeof(struct queueInfo), &cqExt->cq_info, sizeof(struct queue_info));
@@ -563,8 +563,8 @@ RS_ATTRI_VISI_DEF int RsNdaCqDestroy(unsigned int phyId, unsigned int rdevIndex,
     CHK_PRT_RETURN(ret != 0, hccp_err("RsQueryRdevCb failed, phyId:%u rdevIndex:%u ret:%d", phyId, rdevIndex, ret),
         ret);
 
-    ret = RsNdaIbvDestroyCqExtend(rdevCb->ibCtxEx, ibvCqExt);
-    CHK_PRT_RETURN(ret != 0, hccp_err("RsNdaIbvDestroyCqExtend failed, phyId:%u rdevIndex:%u ret:%d",
+    ret = RsIbvDestroyCqExtend(rdevCb->ibCtxEx, ibvCqExt);
+    CHK_PRT_RETURN(ret != 0, hccp_err("RsIbvDestroyCqExtend failed, phyId:%u rdevIndex:%u ret:%d",
         phyId, rdevIndex, ret), ret);
 
     return ret;
@@ -641,7 +641,7 @@ STATIC int RsNdaQpCreateEx(struct RsQpCb *qpCb, struct ibv_qp_init_attr_extend *
     int ret = 0;
 
     rdevCb = qpCb->rdevCb;
-    qpCb->ibQpEx = RsNdaIbvCreateQpExtend(rdevCb->ibCtxEx, qpInitAttrEx);
+    qpCb->ibQpEx = RsIbvCreateQpExtend(rdevCb->ibCtxEx, qpInitAttrEx);
     CHK_PRT_RETURN(qpCb->ibQpEx == NULL, hccp_err("RsNdaCreateQpExtend failed, errno:%d", errno), -ENOMEM);
 
     qpCb->ibQp = qpCb->ibQpEx->qp;
@@ -669,7 +669,7 @@ STATIC int RsNdaQpCreateEx(struct RsQpCb *qpCb, struct ibv_qp_init_attr_extend *
     return ret;
 
 nda_init_qp_err:
-    (void)RsNdaIbvDestroyQpExtend(rdevCb->ibCtxEx, qpCb->ibQpEx);
+    (void)RsIbvDestroyQpExtend(rdevCb->ibCtxEx, qpCb->ibQpEx);
     qpCb->ibQpEx = NULL;
     return ret;
 }
@@ -738,7 +738,7 @@ RS_ATTRI_VISI_DEF int RsNdaQpDestroy(unsigned int phyId, unsigned int rdevIndex,
 
     RsMrRelease(qpCb);
 
-    ret = RsNdaIbvDestroyQpExtend(qpCb->rdevCb->ibCtxEx, qpCb->ibQpEx);
+    ret = RsIbvDestroyQpExtend(qpCb->rdevCb->ibCtxEx, qpCb->ibQpEx);
     if (ret != 0) {
         hccp_err("qp:%u destroy extend failed, ret:%d", qpn, ret);
     }
@@ -748,5 +748,37 @@ RS_ATTRI_VISI_DEF int RsNdaQpDestroy(unsigned int phyId, unsigned int rdevIndex,
 
     free(qpCb);
     qpCb = NULL;
+    return ret;
+}
+
+RS_ATTRI_VISI_DEF int RsGetQpHyperFeature(unsigned int phyId, unsigned int rdevIndex, unsigned int qpn,
+    struct HyperFeature *hyperFeature)
+{
+    struct ibv_hyroce_feature feature = {0};
+    struct RsQpCb *qpCb = NULL;
+    int ret = 0;
+
+    CHK_PRT_RETURN(hyperFeature == NULL, hccp_warn("hyperFeature is NULL, phyId:%u", phyId), ret);
+
+    ret = RsQpn2qpcb(phyId, rdevIndex, qpn, &qpCb);
+    CHK_PRT_RETURN(ret != 0 || qpCb == NULL, hccp_warn("get qp cb unsuccessful qpn %u, ret %d", qpn, ret), ret);
+
+    if (qpCb->rdevCb->ibCtxEx == NULL) {
+        return 0;
+    }
+
+    ret = RsIbvQueryQpSupportedHyroceFeature(qpCb->rdevCb->ibCtxEx, qpCb->ibQp, qpCb->qosAttr.sl, qpCb->qosAttr.tc,
+        &feature);
+    CHK_PRT_RETURN(ret != 0,
+        hccp_warn("RsIbvQueryQpSupportedHyroceFeature unsuccessful, qpn %u ret %d errno:%d", qpn, ret, errno), ret);
+
+    ret = memcpy_s(hyperFeature, sizeof(struct HyperFeature), &feature, sizeof(struct ibv_hyroce_feature));
+    CHK_PRT_RETURN(ret != 0,
+        hccp_warn("memcpy_s feature unsuccessful, qpn:%u ret:%d HyperFeature len:%zu "
+                  "ibv_hyroce_feature len:%zu",
+            qpn, ret, sizeof(struct HyperFeature), sizeof(struct ibv_hyroce_feature)),
+        ret);
+
+    hccp_dbg("get QpHyperFeature successful qpn %u", qpn);
     return ret;
 }

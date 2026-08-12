@@ -108,6 +108,7 @@ struct RaRdmaOps {
     int (*raSetQpAttrQos)(struct RaQpHandle *handle, struct QosAttr *info);
     int (*raSetQpAttrTimeout)(struct RaQpHandle *handle, unsigned int *timeout);
     int (*raSetQpAttrRetryCnt)(struct RaQpHandle *handle, unsigned int *retryCnt);
+    int (*raGetQpHyperFeature)(struct RaQpHandle *qpPeer, struct HyperFeature *hyperFeature);
     int (*raCreateCompChannel)(struct RaRdmaHandle *handle, void **compChannel);
     int (*raDestroyCompChannel)(void *compChannel);
     int (*raCreateSrq)(struct RaRdmaHandle *handle, struct SrqAttr *attr);

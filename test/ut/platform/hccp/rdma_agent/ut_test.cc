@@ -245,6 +245,8 @@ TEST_M(RdmaAgent, TcRaRegisterMr);
 TEST_M(RdmaAgent, TcRaGetLbMax);
 TEST_M(RdmaAgent, TcRaSetQpLbValue);
 TEST_M(RdmaAgent, TcRaGetQpLbValue);
+TEST_M(RdmaAgent, TcRaGetQpHyperFeature);
+TEST_M(RdmaAgent, TcRaPeerGetQpHyperFeature);
 TEST_M(RdmaAgent, TcRaHdcRecvHandleSendPktUnsuccess);
 TEST_M(RdmaAgent, TcRaHdcGetEidByIp);
 TEST_M(RdmaAgent, TcRaRsGetEidByIp);

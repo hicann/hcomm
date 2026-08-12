@@ -660,19 +660,25 @@ struct AiQpInfo {
     struct AiDataPlaneInfo dataPlaneInfo;
 };
 
+struct HyperFeature {
+    char rawData[64U];
+};
+
 struct TypicalQp {
     uint32_t qpn;
     uint32_t psn;
     uint32_t gidIdx;
     uint8_t resv1[4U]; // for compatibility issue
     uint8_t gid[HCCP_GID_RAW_LEN];
-    uint32_t tc;
-    uint32_t sl;
+    uint32_t tc; // tc must be consistent with RaSetQpAttr in hyper roce
+    uint32_t sl; // sl must be consistent with RaSetQpAttr in hyper roce
     uint32_t retryCnt;
     uint32_t retryTime;
     // version control and reserved
     int version;
-    uint32_t reserved[32U];
+    struct HyperFeature feature;
+    uint32_t udpSport;
+    uint32_t reserved[15U];
     uint8_t resv2[4U]; // for compatibility issue
 };
 
@@ -683,6 +689,7 @@ struct QpAttr {
     unsigned int gidIdx;
     unsigned char gid[HCCP_GID_RAW_LEN];
     int pathMtu;
+    struct HyperFeature feature; // depend on RaSetQpAttrQos
 };
 
 struct LoopbackQpPair {

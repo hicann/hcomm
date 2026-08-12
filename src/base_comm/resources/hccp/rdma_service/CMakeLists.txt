@@ -24,7 +24,7 @@ set(RS_SOURCE_LIST
     rs_drv_rdma.c
     rs_drv_socket.c
     dl_ibverbs_function.c
-    dl_nda_function.c
+    dl_ibv_extend_function.c
     hccp_dl.c
     ctx/dl_net_function.c
     ctx/dl_ccu_function.c
@@ -104,13 +104,13 @@ target_include_directories(rs PRIVATE
     # rdma头文件
     ${CMAKE_CURRENT_SOURCE_DIR}/../external_depends/host_lite
     ${CMAKE_CURRENT_SOURCE_DIR}/../external_depends/rdma-core/providers/hns
-    ${CMAKE_CURRENT_SOURCE_DIR}/../external_depends/nda
     # HCCP Legacy
     ${CMAKE_CURRENT_SOURCE_DIR}/ctx
     ${CMAKE_CURRENT_SOURCE_DIR}/ctx/product
     ${CMAKE_CURRENT_SOURCE_DIR}/../external_depends/ccu
     ${CMAKE_CURRENT_SOURCE_DIR}/../external_depends/net_adapt
     ${URMA_INCLUDE_DIR}
+    ${IBV_EXTEND_INCLUDE_DIR}
 )
 
 if(NOT BUILD_OPEN_PROJECT)
@@ -121,6 +121,7 @@ if(NOT BUILD_OPEN_PROJECT)
         ${TOP_DIR}/drivers/network/tls_adp
         ${TOP_DIR}/runtime/pkg_inc/base
         ${TOP_DIR}/driver/driver/pkg_inc/
+        ${TOP_DIR}/driver/driver/src/custom/nda/ibv_extend/
     )
 endif()
 

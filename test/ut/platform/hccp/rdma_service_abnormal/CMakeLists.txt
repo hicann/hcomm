@@ -41,7 +41,7 @@ set(rs_ut_abnormal_list
     ${SRC_DIR}/src/base_comm/resources/hccp/rdma_service/rs_epoll.c
     ${SRC_DIR}/src/base_comm/resources/hccp/rdma_service/rs_drv_socket.c
     ${SRC_DIR}/src/base_comm/resources/hccp/rdma_service/dl_ibverbs_function.c
-    ${SRC_DIR}/src/base_comm/resources/hccp/rdma_service/dl_nda_function.c
+    ${SRC_DIR}/src/base_comm/resources/hccp/rdma_service/dl_ibv_extend_function.c
     ${SRC_DIR}/src/base_comm/resources/hccp/rdma_service/hccp_dl.c
     ${SRC_DIR}/src/base_comm/resources/hccp/rdma_service/rs_socket.c
     ${SRC_DIR}/test/ut/platform/hccp/stub/roce_user/stub_hns_roce_u_cmd.c
@@ -85,7 +85,7 @@ target_include_directories(rs_ut_abnormal PRIVATE
     ${ASCEND_CANN_PACKAGE_PATH}/include/driver/
     ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/ubengine
     ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/ccu
-    ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/nda
+    ${SRC_DIR}/src/base_comm/resources/hccp/external_depends/ibv_extend
 )
 
 target_compile_options(rs_ut_abnormal PRIVATE

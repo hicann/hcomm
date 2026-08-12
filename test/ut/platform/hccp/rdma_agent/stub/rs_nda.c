@@ -35,7 +35,9 @@ int RsNdaQpCreate(unsigned int phyId, unsigned int rdevIndex, struct NdaQpInitAt
     return 0;
 }
 
-int RsNdaQpDestroy(unsigned int phyId, unsigned int rdevIndex, unsigned int qpn)
+int RsNdaQpDestroy(unsigned int phyId, unsigned int rdevIndex, unsigned int qpn) { return 0; }
+
+int RsGetQpHyperFeature(unsigned int phyId, unsigned int rdevIndex, unsigned int qpn, struct HyperFeature* hyperFeature)
 {
     return 0;
 }

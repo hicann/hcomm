@@ -105,6 +105,7 @@ elseif(BUILD_OPEN_PROJECT)
     # 三方件
     include(cmake/hcomm_utils.cmake)
     include(cmake/third_party/ubengine.cmake)
+    include(cmake/third_party/ibv_extend.cmake)
     add_cann_third_party(json)
     add_cann_third_party(openssl)
     add_cann_third_party(rdma-core)

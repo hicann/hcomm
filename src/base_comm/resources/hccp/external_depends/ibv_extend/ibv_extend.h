@@ -6,6 +6,12 @@
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
+ *
+ * File Name     : ibv_extend.h
+ * Version       : v4.2.0
+ * Created       : 2026/2/14
+ * Updated       : 2026/7/7
+ * Description   : The declaration invoked by the Application interface of ibverbs extended Function
  */
 
 #ifndef IBV_EXTEND_H
@@ -26,9 +32,9 @@
  * 3. 次版本号：驱动 <= 库
  */
 #define IBV_EXTEND_VERSION_MAJOR 4
-#define IBV_EXTEND_VERSION_MINOR 1
+#define IBV_EXTEND_VERSION_MINOR 2
 #define IBV_EXTEND_VERSION_PATCH 0
-#define IBV_EXTEND_VERSION_STRING "4.1.0"
+#define IBV_EXTEND_VERSION_STRING "4.2.0"
 
 /*
  * 驱动操作接口版本号定义
@@ -44,11 +50,12 @@
  *
  */
 enum IBV_EXTEND_DRIVER_VERSION {
-    IBV_EXTEND_DRIVER_VERSION_UNUSED    = 0,
-    IBV_EXTEND_DRIVER_VERSION_V1        = 1,       /* 版本1: 支持NPU Direct Async基础接口 */
-    IBV_EXTEND_DRIVER_VERSION_V2        = 2,       /* 版本2: 新增Hyper RoCE接口 */
+    IBV_EXTEND_DRIVER_VERSION_UNUSED = 0,
+    IBV_EXTEND_DRIVER_VERSION_V1 = 1, /* 版本1: 支持NPU Direct Async基础接口 */
+    IBV_EXTEND_DRIVER_VERSION_V2 = 2, /* 版本2: 新增Hyper RoCE接口 */
+    IBV_EXTEND_DRIVER_VERSION_V3 = 3, /* 版本3: 新增LAG Port与Hyper RoCE协商接口 */
     /* 当前最新版本，驱动实现全部接口时使用 */
-    IBV_EXTEND_DRIVER_VERSION_MAX = IBV_EXTEND_DRIVER_VERSION_V2
+    IBV_EXTEND_DRIVER_VERSION_MAX = IBV_EXTEND_DRIVER_VERSION_V3
 };
 
 /* 扩展上下文结构 */
@@ -189,16 +196,21 @@ struct ibv_qp_extend {
     struct ibv_qp *qp;
     struct queue_info sq_info; /* 发送队列的buffer */
     struct queue_info rq_info; /* 接收队列的buffer */
-
-    uint64_t resv[32];           /* 扩展专用 */
+    uint64_t resv[31];         /* 扩展专用 */
+    union {
+        struct {
+            uint8_t db_cos; /* modify_qp时由驱动刷新db_cos */
+            uint8_t resv[7];
+        } vendor1;
+        uint64_t value;
+    } vendor_priv_info; /* 厂商私有信息 */
 };
 
 /* CQ输出参数 */
 struct ibv_cq_extend {
     struct ibv_cq *cq;
     struct queue_info cq_info;
-
-    uint64_t resv[32];           /* 扩展专用 */
+    uint64_t resv[32]; /* 扩展专用 */
 };
 
 /* SRQ输出参数 */
@@ -326,34 +338,36 @@ int ibv_destroy_srq_extend(struct ibv_context_extend *context, struct ibv_srq_ex
  */
 /* 高阶RoCE特性类型枚举 */
 enum ibv_hyroce_feature_type {
-    IBV_HYPER_TYPE_RoCEv2 = 0,   /* 标准RoCEv2协议 */
-    IBV_HYPER_TYPE_VEROCE,       /* RoCE for VelcEngine */
-    IBV_HYPER_TYPE_HCROCE        /* RoCE for HuaweiComputing */
+    IBV_HYPER_FEAT_RoCEv2 = 0, /* 标准RoCEv2协议 */
+    IBV_HYPER_FEAT_VEROCE,     /* VelcEngine RoCE */
+    IBV_HYPER_FEAT_HYPER_ROCE, /* Hyper RoCE */
 };
 
 /* 高阶RoCE特性版本枚举 */
 enum ibv_hyroce_feature_version {
-    IBV_HYPER_VERSION_UNUSE = 0, /* 未使用 */
-    IBV_HYPER_VERSION_P1,        /* 版本P1 */
-    IBV_HYPER_VERSION_P2,        /* 版本P2 */
-    IBV_HYPER_VERSION_P3         /* 版本P3 */
+    IBV_HYPER_FEAT_V0 = 0, /* V0版本，特定表示标准RoCEv2 */
+    IBV_HYPER_FEAT_V1,     /* V1版本 */
+    IBV_HYPER_FEAT_V2,     /* V2版本 */
+    IBV_HYPER_FEAT_V3      /* V3版本 */
 };
 
 /* 负载均衡模式 */
 enum ibv_lb_mode {
-    IBV_LB_MODE_DEFAULT = 0,         /* 网卡默认负载均衡模式 */
-    IBV_LB_MODE_MP,                  /* Multi-Path多路径 */
-    IBV_LB_MODE_AR,                  /* Adaptive-Routing自适应 */
+    IBV_LB_MODE_DEFAULT = 0, /* 网卡默认负载均衡模式 */
+    IBV_LB_MODE_MPATH,       /* Multi-Path多路径 */
+    IBV_LB_MODE_AR           /* Adaptive-Routing自适应 */
 };
 
 /* QP属性扩展掩码，用于指定ibv_modify_qp_extend和ibv_query_qp_extend需要配置/查询的属性 */
 enum ibv_qp_attr_extend_mask {
-    IBV_QP_ATTR_EXTEND_UDP_SRC_PORT     = 1 << 0,   /* 源UDP端口号 */
-    IBV_QP_ATTR_EXTEND_HYROCE_FEATURE   = 1 << 1,   /* 高阶RoCE的特性 */
-    IBV_QP_ATTR_EXTEND_LB_MODE          = 1 << 2,   /* 负载均衡模式 */
-    IBV_QP_ATTR_EXTEND_MP_CONFIG        = 1 << 3,   /* Multi-Path多路径模式配置 */
-    IBV_QP_ATTR_EXTEND_AR_CONFIG        = 1 << 4,   /* Adaptive-Routing多路径模式配置 */
-    IBV_QP_ATTR_EXTEND_SACK_CONFIG      = 1 << 5,   /* Selective Ack选择性重传参数配置 */
+    IBV_QP_ATTR_EXTEND_UDP_SRC_PORT = 1 << 0,   /* 源UDP端口号 */
+    IBV_QP_ATTR_EXTEND_HYROCE_FEATURE = 1 << 1, /* 高阶RoCE的特性 */
+    IBV_QP_ATTR_EXTEND_LB_MODE = 1 << 2,        /* 负载均衡模式 */
+    IBV_QP_ATTR_EXTEND_MPATH_CONFIG = 1 << 3,   /* Multi-Path多路径模式配置 */
+    IBV_QP_ATTR_EXTEND_AR_CONFIG = 1 << 4,      /* Adaptive-Routing多路径模式配置 */
+    IBV_QP_ATTR_EXTEND_SACK_CONFIG = 1 << 5,    /* Selective Ack选择性重传参数配置 */
+    IBV_QP_ATTR_EXTEND_LAG_PORT = 1 << 6,       /* 用于bond模式下QP绑定的网络端口 */
+    IBV_QP_ATTR_EXTEND_MAX = 1 << 7
 };
 
 /* 高阶RoCE特性配置结构体 */
@@ -366,11 +380,11 @@ struct ibv_hyroce_feature {
 };
 
 /* 多路径(Multi-Path)配置参数结构体 */
-struct ibv_mp_config {
-    uint32_t flowlet_pkg_num;       /* 每个子流(flowlet)的包个数，用于流切分 */
-    uint32_t path_num;              /* 多路径的路径个数 */
-    uint32_t interval;              /* UDP端口号递增间隔，用于区分不同路径 */
-    uint32_t path_rr_enable;        /* 路径是否支持轮询(RR)选择网络端口，0-不支持，1-支持 */
+struct ibv_mpath_config {
+    uint32_t flowlet_pkg_num; /* 每个子流(flowlet)的包个数，用于流切分 */
+    uint32_t path_num;        /* 多路径的路径个数 */
+    uint32_t interval;        /* UDP端口号递增间隔，用于区分不同路径 */
+    uint32_t path_rr_enable;  /* 路径是否支持轮询(RR)选择网络端口，0-不支持，1-支持 */
 
     uint32_t resv[32];              /* 预留字段，用于未来扩展 */
 };
@@ -392,15 +406,15 @@ struct ibv_sack_config {
 
 /* QP扩展属性结构体，用于ibv_modify_qp_extend和ibv_query_qp_extend操作 */
 struct ibv_qp_attr_extend {
-    struct ibv_qp *qp;                  /* QP句柄，指向需要修改或查询的QP对象 */
-    uint32_t udp_src_port;              /* 源UDP端口号 */
-    struct ibv_hyroce_feature feature;  /* 高阶RoCE特性 */
-    uint32_t lb_mode;                   /* 负载均衡模式，取值范围：enum ibv_lb_mode 类型 */
-    struct ibv_mp_config mp;            /* 多路径(Multi-Path)配置 */
-    struct ibv_ar_config ar;            /* 自适应路由(Adaptive Routing)配置 */
-    struct ibv_sack_config sack;        /* 选择性重传(SACK)配置 */
-
-    uint32_t resv[48];                  /* 预留字段，用于未来扩展 */
+    struct ibv_qp *qp;                 /* QP句柄，指向需要修改或查询的QP对象 */
+    uint32_t udp_src_port;             /* 源UDP端口号 */
+    struct ibv_hyroce_feature feature; /* 高阶RoCE特性 */
+    uint32_t lb_mode;                  /* 负载均衡模式，取值范围：enum ibv_lb_mode 类型 */
+    struct ibv_mpath_config mpath;     /* 多路径(Multi-Path)配置 */
+    struct ibv_ar_config ar;           /* 自适应路由(Adaptive Routing)配置 */
+    struct ibv_sack_config sack;       /* 选择性重传(SACK)配置 */
+    uint32_t resv[47];                 /* 预留字段，用于未来扩展 */
+    uint32_t lag_port;                 /* Bond下QP绑定网口端口 */
 };
 
 /**
@@ -422,6 +436,30 @@ int ibv_modify_qp_extend(struct ibv_context_extend *context,
  */
 int ibv_query_qp_extend(struct ibv_context_extend *context,
                         struct ibv_qp_attr_extend *attr, int attr_mask);
+
+/**
+ * @brief 查询网卡支持的高阶RoCE特性
+ * @param context 扩展上下文指针
+ * @param qp QP指针
+ * @param sl 服务等级
+ * @param tc 流量控制
+ * @param feature 返回支持的高阶RoCE特性
+ * @return 0-成功，其他值-失败
+ */
+int ibv_query_qp_supported_hyroce_feature(struct ibv_context_extend *context, struct ibv_qp *qp, uint32_t sl,
+    uint32_t tc, struct ibv_hyroce_feature *feature);
+
+/**
+ * @brief 网卡协商高阶RoCE特性
+ * @param context 扩展上下文指针
+ * @param qp QP指针
+ * @param input 输入的高阶RoCE特性
+ * @param output 协商完成后高阶RoCE特性
+ * @param need_more_nego 是否需要再次协商
+ * @return 0-成功，其他值-失败
+ */
+int ibv_nego_qp_hyroce_feature(struct ibv_context_extend *context, struct ibv_qp *qp,
+    const struct ibv_hyroce_feature *input, struct ibv_hyroce_feature *output, uint32_t *need_more_nego);
 
 /* 南向接口：驱动侧需要实现的操作接口集合 */
 struct ibv_context_extend_ops {
@@ -460,10 +498,18 @@ struct ibv_context_extend_ops {
      * Hyper RoCE
      * IBV_EXTEND_VERSION_V2 新增支持
      */
-    int (*modify_qp)(struct ibv_context *context,
-                     struct ibv_qp_attr_extend *attr, int attr_mask);
-    int (*query_qp)(struct ibv_context *context,
-                    struct ibv_qp_attr_extend *attr, int attr_mask);
+    int (*modify_qp)(struct ibv_context *context, struct ibv_qp_attr_extend *attr, int attr_mask);
+    int (*query_qp)(struct ibv_context *context, struct ibv_qp_attr_extend *attr, int attr_mask);
+
+    /*
+     * Hyper RoCE 协商接口
+     * IBV_EXTEND_VERSION_V3 新增支持
+     */
+    int (*query_qp_supported_hyroce_feature)(struct ibv_context *context, struct ibv_qp *qp, uint32_t sl, uint32_t tc,
+        struct ibv_hyroce_feature *feature);
+
+    int (*nego_qp_hyroce_feature)(struct ibv_context *context, struct ibv_qp *qp,
+        const struct ibv_hyroce_feature *input, struct ibv_hyroce_feature *output, uint32_t *need_more_nego);
 };
 
 /* 扩展驱动操作接口，用于驱动注册 */
