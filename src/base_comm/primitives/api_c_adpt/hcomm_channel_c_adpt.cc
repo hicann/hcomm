@@ -15,6 +15,7 @@
 #include "hcomm_res.h"
 #include "hcomm_result_defs.h"
 #include "hcomm_res_defs.h"
+#include "hcomm_channel.h"
 #include "log.h"
 #include "param_check_pub.h"
 #include "comm_engine_utils.h"

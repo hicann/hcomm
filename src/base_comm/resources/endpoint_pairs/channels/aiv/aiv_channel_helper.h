@@ -13,6 +13,7 @@
 #include <vector>
 #include "hccl/hccl_types.h"
 #include "hcomm_res_defs.h"
+#include "hcomm_channel.h"
 
 /**
  * @brief AIV 专用辅助类，提供 AIV 批量建链状态机接口。

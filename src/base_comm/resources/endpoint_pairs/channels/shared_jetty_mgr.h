@@ -17,6 +17,7 @@
 #include <unordered_map>
 #include "hccl/hccl_types.h"
 #include "hcomm_res_defs.h"
+#include "hcomm_channel.h"
 
 namespace hcomm {
 

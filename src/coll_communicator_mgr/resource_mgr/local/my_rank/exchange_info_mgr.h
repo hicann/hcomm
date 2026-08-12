@@ -16,6 +16,7 @@
 #include "hccl/base.h"
 #include "hccl/hccl_res.h"
 #include "hcomm_res_defs.h"
+#include "hcomm_channel.h"
 #include "common.h"
 #include "coll_comm_config_consistency.h"
 #include "socket/socket.h"

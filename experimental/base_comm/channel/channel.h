@@ -16,6 +16,7 @@
 #include "hccl/hccl_res.h"
 #include "hccl/hccl_types.h"
 #include "hcomm_res_defs.h"
+#include "hcomm_channel.h"
 #include "hccl_mem_defs.h"
 #include <cstdint>
 #include "mem_device_pub.h"

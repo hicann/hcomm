@@ -38,12 +38,14 @@ HCOMM对外头文件在`${INSTALL_DIR}/include/`目录下的hccl/、hcomm/、hco
 | hccl/hccn_rping.h | 用于定义HCCN RPing（Remote Ping）网络连通性探测C接口，包括HccnRpingCtx、HccnResult、HccnRpingMode等类型与探测接口。 | libhcomm.so |
 | hccl/hccl_rank_graph.h | 用于定义通信拓扑、Endpoint属性与异构组网枚举。 | libhcomm.so |
 | hccl/hccl_ccu_res.h | 用于定义查询通信域内CCU实例句柄的C接口。 | libhcomm.so |
-| hccl/hccl_res.h | 用于定义HCCL通道描述、内存句柄等资源结构与常量。 | libhcomm.so |
+| hccl/hccl_res.h | 用于定义HCCL通信域资源管理（Thread/EngineCtx/内存注册）接口与常量。 | libhcomm.so |
+| hccl/hccl_channel.h | 用于定义HCCL通道描述、通道创建/销毁、Channel配置等通道管理接口与常量。 | libhcomm.so |
 | hccl/hccl_sym_win.h | 用于定义对称内存窗口（Symmetric Window）访问接口。 | libhcomm.so |
 | hccl/hccl_launch.h | 用于定义P2P算子描述与Launch相关结构。 | libhcomm.so |
 | hcomm/hcomm_primitives.h | 用于定义通道/线程句柄、归约算子等基础原语类型，提供数据搬运与同步原语。 | libhcomm.so |
-| hcomm/hcomm_res.h | 用于定义Endpoint/Channel/内存注册等资源管理C接口。 | libhcomm.so |
+| hcomm/hcomm_res.h | 用于定义Endpoint/内存注册/线程等基础资源管理C接口。 | libhcomm.so |
 | hcomm/hcomm_res_defs.h | 用于定义HCOMM ABI版本、句柄与资源描述结构。 | libhcomm.so |
+| hcomm/hcomm_channel.h | 用于定义HCOMM通道描述、通道创建/销毁、Channel配置等通道管理C接口与类型。 | libhcomm.so |
 | hcomm/ccu/ccu_primitives.hpp | CCU原语聚合头，含类型别名与资源创建入口。 | libhcomm.so |
 | hcomm/ccu/ccu_launch.h | 用于定义CCU Kernel注册与Launch的C接口（弱符号）。 | libhcomm.so |
 | hcomm/ccu/ccu_res.h | 用于定义查询内存CCU访问token的C接口（HcommCcuGetMemToken）。 | libhcomm.so |

@@ -11,6 +11,7 @@
 #include "gtest/gtest.h"
 #include "hcomm_c_adpt.h"
 #include "hcomm_res_defs.h"
+#include "hcomm_channel.h"
 
 class CheckUbMemAttrTest : public testing::Test {
 protected:

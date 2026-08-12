@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include "hcomm_res_defs.h"
+#include "hcomm_channel.h"
 
 namespace hcomm {
 

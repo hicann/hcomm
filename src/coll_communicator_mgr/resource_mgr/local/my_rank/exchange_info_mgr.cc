@@ -11,6 +11,7 @@
 #include "env_config/env_config.h"
 #include "rank_consistency_checker_v2.h"
 #include "hcomm_res_defs.h"
+#include "hcomm_channel.h"
 #include "comm_engine_utils.h"
 
 namespace hccl {

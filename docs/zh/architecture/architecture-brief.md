@@ -264,9 +264,9 @@ hcomm
 |------|------|------|---------|
 | L1 | HCCL 算子（hccl.h） | AI框架适配层 | 提供 AllReduce 等标准集合通信算子入口 |
 | L2-comm | HCOMM 集合通信域管理中的通信域（hccl_comm.h） | 框架适配层 | 通信域创建 |
-| L2-res-rank_graph | HCOMM 集合通信域管理（hccl_res.h / hccl_rank_graph.h） | 算子开发者 | 拓扑查询、资源（Thread/Channel）获取 |
+| L2-res-rank_graph | HCOMM 集合通信域管理（hccl_res.h / hccl_channel.h / hccl_rank_graph.h） | 算子开发者 | 拓扑查询、资源（Thread/Channel）获取 |
 | L3-prim | HCOMM 基础通信原语（hcomm_primitives.h） | 算子开发者、通信库开发者 | 数据搬运（Write/Read/Reduce）+ 同步（Notify） |
-| L3-res | HCOMM 基础通信资源（hcomm_res.h） | 通信库开发者 | 通信设备/通道/内存等基础资源的获取与管理 |
+| L3-res | HCOMM 基础通信资源（hcomm_res.h / hcomm_channel.h） | 通信库开发者 | 通信设备/通道/内存等基础资源的获取与管理 |
 | CCU | HCOMM CCU 算子开发接口（include/ccu/，含 ccu_primitives.hpp、ccu_res.h、ccu_launch.h 等） | CCU 算子开发者 | CCU 资源对象封装与 Kernel Launch 接口 |
 
 - L2-res-rank_graph + L3-prim 是**新开放的算子编程接口**，专门面向自定义通信算子开发

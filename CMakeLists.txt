@@ -155,6 +155,7 @@ elseif(BUILD_OPEN_PROJECT)
         include/hccl/hccl_rank_graph.h
         include/hccl/hccl_ccu_res.h
         include/hccl/hccl_res.h
+        include/hccl/hccl_channel.h
         include/hccl/hccl_sym_win.h
         include/hccl/hccl_launch.h
         include/hccl/hccl_team.h
@@ -184,6 +185,7 @@ elseif(BUILD_OPEN_PROJECT)
     install(FILES
         include/hcomm_res.h
         include/hcomm_res_defs.h
+        include/hcomm_channel.h
         include/hcomm_team_defs.h
         DESTINATION ${INSTALL_INCLUDE_DIR}/hcomm/ ${INSTALL_OPTIONAL}
         COMPONENT hcomm

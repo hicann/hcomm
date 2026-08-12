@@ -19,6 +19,7 @@
 #include <unordered_map>
 #include <vector>
 #include "hcomm_res_defs.h"
+#include "hcomm_channel.h"
 #include "hcomm_res.h"
 #include "hccl/hccl_types.h"
 
@@ -136,6 +137,12 @@ private:
 
     using EpPairMap = std::unordered_map<EndpointDescPair, EpPairChannels, EndpointDescPairHash, EndpointDescPairEqual>;
     using TagMap = std::unordered_map<std::string, EpPairMap>;
+    using RankPoolIter = std::unordered_map<MyRank*, TagMap>::iterator;
+
+    // 调用者须持有 mtx_。收集 myRank 下全部共享 Jetty channel 句柄。
+    // 返回值：rankPools_ 中 myRank 对应的迭代器；未找到返回 rankPools_.end()。
+    // allChannels 输出收集到的句柄（已 reserve 预分配）。
+    RankPoolIter CollectMyRankChannelsLocked(MyRank* myRank, std::vector<ChannelHandle>& allChannels);
 
     std::mutex mtx_;
     std::unordered_map<MyRank*, TagMap> rankPools_;

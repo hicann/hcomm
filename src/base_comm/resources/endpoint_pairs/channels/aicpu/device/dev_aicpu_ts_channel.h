@@ -12,7 +12,6 @@
 #define DEV_AICPU_TS_CHANNEL_H
 
 #include "channel_param.h"
-#include "hcomm_res_defs.h"
 
 class DevAicpuTsChannel {
 public:

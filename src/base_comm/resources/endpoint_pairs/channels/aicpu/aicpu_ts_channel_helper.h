@@ -15,6 +15,7 @@
 #include <vector>
 #include "hccl/hccl_types.h"
 #include "hcomm_res_defs.h"
+#include "hcomm_channel.h"
 #include "mem_device_pub.h"
 
 static const uint32_t HCOMM_AICPU_CHANNEL_CTX_MAGIC_WORD = 0x0fcf0f4fU;

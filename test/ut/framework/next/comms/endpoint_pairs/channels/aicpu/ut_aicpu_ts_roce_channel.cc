@@ -11,6 +11,7 @@
 #include "adapter_rts_common.h"
 #include "channel_param.h"
 #include "hcomm_res_defs.h"
+#include "hcomm_channel.h"
 #include "workflow_pub.h"
 #include "transport_pub.h"
 #include "mem_device_pub.h"

@@ -24,6 +24,7 @@
 #include "acl/acl_rt.h"
 #include "socket_manager.h"
 #include "hcomm_res_defs.h"
+#include "hcomm_channel.h"
 #include "mem_host_pub.h"
 #include "rank_pair_mgr.h"
 #include "endpoint_mgr.h"

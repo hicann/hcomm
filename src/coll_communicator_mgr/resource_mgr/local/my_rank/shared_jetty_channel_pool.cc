@@ -100,34 +100,44 @@ HcclResult SharedJettyChannelPool::AcquireChannels(
     return HCCL_SUCCESS;
 }
 
-HcclResult SharedJettyChannelPool::DestroyAllByMyRank(MyRank* myRank)
+SharedJettyChannelPool::RankPoolIter
+SharedJettyChannelPool::CollectMyRankChannelsLocked(MyRank* myRank, std::vector<ChannelHandle>& allChannels)
 {
-    if (myRank == nullptr) {
-        return HCCL_SUCCESS;
-    }
-    std::lock_guard<std::mutex> lock(mtx_);
     auto it = rankPools_.find(myRank);
     if (it == rankPools_.end()) {
-        return HCCL_SUCCESS;
+        return it;
     }
-
+    // 先统计总数并 reserve，避免 push_back 触发多次 realloc
     uint32_t totalChannels = 0;
     for (auto& tagEntry : it->second) {
         for (auto& epEntry : tagEntry.second) {
             totalChannels += static_cast<uint32_t>(epEntry.second.channels.size());
         }
     }
-
-    if (totalChannels > 0) {
-        std::vector<ChannelHandle> allChannels;
-        allChannels.reserve(totalChannels);
-        for (auto& tagEntry : it->second) {
-            for (auto& epEntry : tagEntry.second) {
-                for (ChannelHandle ch : epEntry.second.channels) {
-                    allChannels.push_back(ch);
-                }
+    allChannels.reserve(totalChannels);
+    for (auto& tagEntry : it->second) {
+        for (auto& epEntry : tagEntry.second) {
+            for (ChannelHandle ch : epEntry.second.channels) {
+                allChannels.push_back(ch);
             }
         }
+    }
+    return it;
+}
+
+HcclResult SharedJettyChannelPool::DestroyAllByMyRank(MyRank* myRank)
+{
+    if (myRank == nullptr) {
+        return HCCL_SUCCESS;
+    }
+    std::lock_guard<std::mutex> lock(mtx_);
+    std::vector<ChannelHandle> allChannels;
+    auto it = CollectMyRankChannelsLocked(myRank, allChannels);
+    if (it == rankPools_.end()) {
+        return HCCL_SUCCESS;
+    }
+
+    if (!allChannels.empty()) {
         HcclResult ret = static_cast<HcclResult>(HcommChannelDestroy(allChannels.data(), allChannels.size()));
         if (ret != HCCL_SUCCESS) {
             HCCL_ERROR("[%s] HcommChannelDestroy failed, channelNum[%zu], ret[%d].", __func__, allChannels.size(), ret);
@@ -135,27 +145,22 @@ HcclResult SharedJettyChannelPool::DestroyAllByMyRank(MyRank* myRank)
     }
 
     rankPools_.erase(it);
-    HCCL_INFO("[%s] destroyed myRank[%p] shared jetty channels, total[%u].", __func__, myRank, totalChannels);
+    HCCL_INFO("[%s] destroyed myRank[%p] shared jetty channels, total[%zu].", __func__, myRank, allChannels.size());
     return HCCL_SUCCESS;
 }
 
 HcclResult SharedJettyChannelPool::CheckMyRankDestroy(MyRank* myRank)
 {
     std::lock_guard<std::mutex> lock(mtx_);
-    auto it = rankPools_.find(myRank);
+    std::vector<ChannelHandle> allChannels;
+    auto it = CollectMyRankChannelsLocked(myRank, allChannels);
     if (it == rankPools_.end()) {
         return HCCL_SUCCESS;
     }
-    uint32_t totalChannels = 0;
-
-    for (auto& tagEntry : it->second) {
-        for (auto& epEntry : tagEntry.second) {
-            totalChannels += static_cast<uint32_t>(epEntry.second.channels.size());
-        }
-    }
-    if (totalChannels > 0) {
+    if (!allChannels.empty()) {
         HCCL_ERROR(
-            "[%s] cannot destroy myRank[%p], still has [%u] shared jetty channels.", __func__, myRank, totalChannels);
+            "[%s] cannot destroy myRank[%p], still has [%zu] shared jetty channels.", __func__, myRank,
+            allChannels.size());
         return HCCL_E_UNAVAIL;
     }
     return HCCL_SUCCESS;

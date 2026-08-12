@@ -36,6 +36,7 @@
         <file value="hccl_rank_graph.h"/>
         <file value="hccl_ccu_res.h"/>
         <file value="hccl_res.h"/>
+        <file value="hccl_channel.h"/>
         <file value="hccl_sym_win.h"/>
         <file value="hccl_launch.h"/>
         <file value="hccl_team.h"/>
@@ -45,6 +46,7 @@
         <file value="hcomm_res_defs.h" install_softlink="$(TARGET_ENV)/include/hccl/hcomm_res_defs.h"/>
         <file value="hcomm_res.h"/>
         <file value="hcomm_team_defs.h" install_softlink="$(TARGET_ENV)/include/hccl/hcomm_team_defs.h"/>
+        <file value="hcomm_channel.h" install_softlink="$(TARGET_ENV)/include/hccl/hcomm_channel.h"/>
     </file_info>
     <file_info value="include" copy_type="source" src_path="hcomm/src/legacy/ascend910/pub_inc" dst_path="$(TARGET_ENV)/include/hccl" install_path="$(TARGET_ENV)/include/hccl" install_type="devel" install_mod="440">
         <file value="hccn_rping.h"/>

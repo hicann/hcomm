@@ -16,6 +16,7 @@
 #include <string>
 #include "hcomm_c_adpt.h"
 #include "hcomm_res_defs.h"
+#include "hcomm_channel.h"
 #include "channel_process.h"
 #include "endpoint_map.h"
 #include "env_config/env_config.h"

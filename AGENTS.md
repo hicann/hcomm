@@ -52,9 +52,9 @@ build.sh      # 一键编译脚本
 | 层次 | 头文件 | 面向 |
 |------|------|------|
 | L2-comm | `include/hccl/hccl_comm.h` | AI 框架层（通信域创建） |
-| L2-res-rank_graph | `include/hccl/hccl_res.h`、`include/hccl/hccl_rank_graph.h` | 算子开发者（拓扑查询、资源获取） |
+| L2-res-rank_graph | `include/hccl/hccl_res.h`、`include/hccl/hccl_channel.h`、`include/hccl/hccl_rank_graph.h` | 算子开发者（拓扑查询、资源获取） |
 | L3-prim | `include/hcomm_primitives.h` | 算子/通信库开发者（数据搬运 + 同步） |
-| L3-res | `include/hcomm_res.h`、`include/hcomm_res_defs.h` | 通信库开发者（设备/通道/内存资源） |
+| L3-res | `include/hcomm_res.h`、`include/hcomm_res_defs.h`、`include/hcomm_channel.h` | 通信库开发者（设备/通道/内存资源） |
 | CCU | `include/ccu/`（`ccu_primitives.hpp`、`ccu_res.h`、`ccu_launch.h`） | CCU 算子开发者 |
 
 `include/` 变更需向后兼容；`pkg_inc/` 仅供 HCOMM↔HCCL、GE 等包间使用，不对外稳定。完整 API 分层关系见 [架构简介 3.3 节](./docs/zh/architecture/architecture-brief.md)。

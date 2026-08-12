@@ -22,6 +22,7 @@
 #include "host/host_cpu_roce_channel.h"
 #include "hcomm_c_adpt.h"
 #include "hcomm_res_defs.h"
+#include "hcomm_channel.h"
 #include "endpoint.h"
 #include "tp_manager.h"
 
