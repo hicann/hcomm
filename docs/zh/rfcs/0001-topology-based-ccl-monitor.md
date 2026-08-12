@@ -1,10 +1,10 @@
 # RFC：基于拓扑的集群通信快速亚健康监测
 
 - 起始日期：2026-06-01
-- 修订日期：2026-07-13
+- 修订日期：2026-07-13，2026-08-10
 - RFC PR 编号：2491
 - 相关 Issue：249、261
-- 状态：修订后待评审
+- 状态：accept
 
 ## 概要
 
@@ -60,7 +60,7 @@
 | 亚健康 | 网络尚可连通，但时延、通过率或拥塞计数器持续偏离同层基线，已影响或可能影响业务性能的状态 |
 | 慢故障 | 不表现为完全中断，而表现为持续或间歇性高时延、低吞吐、重传或拥塞的故障 |
 | 长尾 | P99 等高分位时延显著高于均值或中位数，导致同步式集合通信被最慢路径拖慢 |
-| 3σ | 以同层基线均值 `μ` 和标准差 `σ` 构造的异常阈值 `μ + 3σ` |
+| 3σ | 以时域或空域基线均值 `μ` 和标准差 `σ` 构造的异常阈值 `μ + 3σ` |
 | 轮次（turn） | 一次完整的 PingPong 采样、指标归约、链路求解和异常判定 |
 
 ## 3. 总体架构与数据流
@@ -92,7 +92,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    Config[probe_scope] --> Controller[控制层]
+    Config[probe.scope / probe_scope] --> Controller[控制层]
     Controller -->|Device 列表| Host[rpc_host]
     Host -->|hccn_tool -ip/-lldp/-traceroute| Device[Device/RNIC]
     Device -->|IP、ToR 管理 IP、多跳路径| Host
@@ -123,7 +123,7 @@ flowchart LR
     Counter[PFC/CNP 计数器] --> Analyse[联合分析]
     L1 --> Analyse
     L2 --> Analyse
-    Analyse --> Artifacts[link_*.txt / l2_status / metrics / bad_link.txt]
+    Analyse --> Artifacts[link_*.txt / l2_status / metrics / bad_link*.txt]
 ```
 
 数据方向统一为 `Device → Host → 控制层 → 产物`；控制命令和任务下发方向相反。
@@ -148,32 +148,39 @@ cmake --build build -j"$(nproc)"
 
 ### 4.2 配置文件
 
-用户使用 JSON 文件同时描述部署拓扑、探测范围和运行参数。推荐模板如下：
+用户使用 JSON 文件同时描述部署拓扑、探测范围和运行参数。`schema_version=2` 为当前推荐格式；缺省
+`schema_version` 或 `schema_version=1` 继续兼容旧格式。
 
 ```json
 {
+  "schema_version": 2,
+  "controller": "node-01",
   "deploy": {
     "default_ssh_port": 22,
     "default_timeout": 5,
-    "host_to_user_pair": {
-      "10.90.15.67": {"root": "<password>"},
-      "10.90.15.69": {"root": "<password>"}
-    },
-    "control_topo": ["10.90.15.67", "10.90.15.69"],
-    "controller": {"10.90.15.67": "root"},
-    "host_to_su_pswd": {},
-    "host_to_key_filename": {
-      "10.90.15.67": {"root": "/root/.ssh/id_ed25519"}
-    },
     "to_path": "~/disp_probe",
     "from_path": "."
   },
-  "probe_scope": {
-    "10.90.15.67": ["0", "1", "2", "3"],
-    "10.90.15.69": ["4", "5", "6", "7"]
-  },
-  "probe_topo": {
-    "tracert": {
+  "hosts": [
+    {
+      "id": "node-01",
+      "ip": "10.90.15.67",
+      "user": "root",
+      "ssh_key": "/root/.ssh/id_ed25519"
+    },
+    {
+      "id": "node-02",
+      "ip": "10.90.15.69",
+      "user": "root",
+      "password_env": "NODE_02_PASS"
+    }
+  ],
+  "probe": {
+    "scope": {
+      "node-01": {"device_range": [0, 3]},
+      "node-02": {"devices": [4, 5, 6, 7]}
+    },
+    "topology": {
       "sport_begin": 49152,
       "sport_count": 32,
       "tree_probe_sport_count": 1,
@@ -182,14 +189,12 @@ cmake --build build -j"$(nproc)"
       "output_subdir": "",
       "allpath_output": "allpath.json",
       "l2_path_output": "l2_fullmesh_path.json"
-    }
-  },
-  "probe_controller": {
+    },
     "pingpong": {
       "times": 50,
       "turns": 1000,
       "payload_len": 12,
-       "interval_ms": 1
+      "interval_ms": 1
     }
   }
 }
@@ -197,30 +202,45 @@ cmake --build build -j"$(nproc)"
 
 | 字段 | 类型/默认值 | 语义与约束 |
 | --- | --- | --- |
+| `schema_version` | int / `1` | 配置格式版本；缺省视为 v1，`2` 启用当前推荐格式 |
+| `controller` | string / 必填(v2) | 控制节点 host id，必须引用 `hosts[].id` |
+| `hosts` | array / 必填(v2) | 主机清单；`id` 为稳定身份，`ip` 为连接地址，二者都必须唯一 |
+| `hosts[].user` | string / `root` | SSH 登录用户 |
+| `hosts[].ssh_key` | string / 可空 | SSH 私钥路径；兼容旧名 `key_filename`。与 `password_env` 同时配置时，SSH 连接会传入私钥路径并优先尝试密钥/Agent/本地 Key 认证 |
+| `hosts[].password_env` | string / 可空 | 从环境变量读取 SSH 密码，避免明文写入配置。与 `ssh_key` 同时配置时，该密码作为密码认证或加密私钥口令传给 SSH；`su_password` 未配置时也作为 `su` 备用密码 |
 | `deploy.default_ssh_port` | int / `22` | SSH 端口 |
 | `deploy.default_timeout` | int / `5` | Dispatcher SSH 连接超时，单位秒 |
-| `deploy.host_to_user_pair` | object / 必填 | Host 到用户名、密码映射；一个 Host 可配置多个用户 |
-| `deploy.control_topo` | array/object / 必填 | 分发和远程执行的主机树。空数组或空对象时回退为 `host_to_user_pair` 的平铺主机列表 |
-| `deploy.controller` | object / 可空 | 控制节点 IP 到用户名映射。为空时取 `host_to_user_pair` 第一台 Host；用户名为空时取该 Host 配置中的第一个用户名 |
-| `deploy.host_to_su_pswd` | object / `{}` | 可选的 `su` 密码；缺失时取对应 Host 第一个用户的密码 |
-| `deploy.host_to_key_filename` | object / `{}` | 可选的 SSH 私钥映射 |
+| `deploy.control_topo` | array/object / 可空 | 分发和远程执行的主机树；v2 中可写 host id，解析时会转换为 IP |
 | `deploy.to_path` | string / 必填 | 远端部署根目录；`~` 按控制用户展开 |
-| `deploy.from_path` | string / 必填 | 本地源路径。当前 Dispatcher 的 `abs_from_path` 处理存在待修正实现问题，见开放问题 O4 |
-| `probe_scope` | object / 必填 | 唯一探测范围，Key 为 Host 管理 IP，Value 为非空 Device ID 数组；元素可为字符串或整数，不支持 `"0-7"` 范围写法，不允许重复 |
-| `sport_begin` | positive int / `49152` | Tracert 源端口起始值 |
-| `sport_count` | positive int / `1` | 跨域多路径覆盖时每个有向 Pair 的源端口数 |
-| `tree_probe_sport_count` | positive int / `1` | 环形拓扑骨架发现时每个 Pair 的源端口数 |
-| `topology_optimized` | bool / `true` | `true` 使用相邻域同槽位环形覆盖；`false` 使用跨域全互联 Tracert |
-| `l2_path_aware` | bool / `true` | 是否额外生成相邻 L1 域之间的 L2 路径发现产物 |
-| `output_subdir` | string / `""` | `output/` 下的相对目录；不得为绝对路径，且不得包含 `.`、`..` 或空路径段 |
-| `allpath_output` | filename / `allpath.json` | 跨域路径 JSON 文件名，不得包含父目录 |
-| `l2_path_output` | filename / `l2_fullmesh_path.json` | L2 路径 JSON 文件名，不得包含父目录 |
-| `times` | positive int / `50` | 每轮每个 PingPong 任务的采样次数 |
-| `turns` | positive int / `1000` | PingPong 轮次数；实际周期还包含执行、RPC 和求解耗时 |
-| `payload_len` | int / `12` | HCCN Rping Payload 字节数，范围 `1～1500`。每个目标在 AddTarget 时独立生成指定长度的随机字节，不按字符串处理 |
-| `interval_ms` | int / `12` | HCCN Rping 的探测周期。 |
+| `deploy.from_path` | string / `"."` | 本地源路径，用于 Dispatcher 默认本地同步源目录 |
+| `probe.scope` | object / 必填(v2) | 唯一探测范围，Key 为 host id，Value 可为 `{"device_range":[begin,end]}` 或 `{"devices":[...]}` |
+| `probe.topology.sport_begin` | positive int / `49152` | 可选；Tracert 源端口起始值 |
+| `probe.topology.sport_count` | positive int / `1` | 可选；跨域多路径覆盖时每个有向 Pair 的源端口数 |
+| `probe.topology.tree_probe_sport_count` | positive int / `1` | 可选；环形拓扑骨架发现时每个 Pair 的源端口数 |
+| `probe.topology.topology_optimized` | bool / `true` | 可选；`true` 使用相邻域同槽位环形覆盖；`false` 使用跨域全互联 Tracert |
+| `probe.topology.l2_path_aware` | bool / `true` | 可选；是否额外生成相邻 L1 域之间的 L2 路径发现产物 |
+| `probe.topology.output_subdir` | string / `""` | 可选；`output/` 下的相对目录；不得为绝对路径，且不得包含 `.`、`..` 或空路径段 |
+| `probe.topology.allpath_output` | filename / `allpath.json` | 可选；跨域路径 JSON 文件名，不得包含父目录 |
+| `probe.topology.l2_path_output` | filename / `l2_fullmesh_path.json` | 可选；L2 路径 JSON 文件名，不得包含父目录 |
+| `probe.pingpong.times` | positive int / `50` | 可选；每轮每个 PingPong 任务的采样次数 |
+| `probe.pingpong.turns` | positive int / `1000` | 可选；PingPong 轮次数；实际周期还包含执行、RPC 和求解耗时 |
+| `probe.pingpong.payload_len` | int / `12` | 可选；HCCN Rping Payload 字节数，范围 `1～1500`。每个目标在 AddTarget 时独立生成指定长度的随机字节，不按字符串处理 |
+| `probe.pingpong.interval_ms` | positive int / `1` | 可选；HCCN Rping 的探测周期，单位毫秒 |
 
-`probe_topo.tracert` 与 `probe_controller.pingpong` 必须同时出现；只配置其中之一会被拒绝。
+v1 兼容格式继续支持旧的 `deploy.host_to_user_pair`、`deploy.controller`、`probe_scope`、`probe_topo.tracert`、
+`probe_controller.pingpong` 字段。兼容关系如下：
+
+| v1 字段 | v2 字段 | 说明 |
+| --- | --- | --- |
+| `deploy.host_to_user_pair` | `hosts[]` | Host IP、用户、密码/密钥配置迁移到主机清单；v2 使用 `hosts[].id` 作为稳定引用 |
+| `deploy.controller` | `controller` | v1 使用控制节点 IP 到用户映射；v2 使用控制节点 host id |
+| `deploy.host_to_key_filename` | `hosts[].ssh_key` | v2 将私钥路径收敛到对应 Host 条目 |
+| `probe_scope` | `probe.scope` | v1 Key 为 Host 管理 IP；v2 Key 为 host id，并支持 `device_range` 或显式 `devices` |
+| `probe_topo.tracert` | `probe.topology` | Tracert 拓扑发现参数保持兼容，字段名前缀调整 |
+| `probe_controller.pingpong` | `probe.pingpong` | PingPong 探测参数保持兼容，字段名前缀调整 |
+
+v2 中 `probe.scope` 为必填；`probe.topology` 与 `probe.pingpong` 可缺省，缺省时使用上表默认参数。可用
+`./run.sh migrate-config old.json new.json` 生成 v2 配置模板。
 
 ### 4.3 CLI 与执行顺序
 
@@ -253,22 +273,26 @@ cmake --build build -j"$(nproc)"
 推荐执行顺序：
 
 ```bash
-# 1. 清理程序占用（Terminal 0）
+# Terminal 0：清理残留、分发程序和配置、启动 rpc_host
+./run.sh deploy
+
+# 可选：启动 rpc_host 时开启 NPU 侧 PingPong 本地日志
+./run.sh deploy --pingpong-log /root/output
+
+# 等价展开如下：
 python3 ./dispatcher/exec_realtime_cmd.py "ps aux | grep 'rpc_host' | grep -v grep | tr ' ' '\n' | grep -E '^[0-9]+$' | tr '\n' ' ' | xargs -r kill"
 
-# 2. 分发同一个构建产物和配置文件。（Terminal 0）
 python3 ./dispatcher/disp_file_scp.py './build/rpc_host' './bin/rpc_host'
 python3 ./dispatcher/disp_file_scp.py \
   './control_json/910b2_info.json' './control_json/910b2_info.json'
 
-# 3. 在所有目标 Host 启动 rpc_host。（Terminal 0）
 python3 ./dispatcher/exec_realtime_cmd.py -l \
   './bin/rpc_host -f ./control_json/910b2_info.json'
 
-# 4. 发现拓扑。（Terminal 1）
+# Terminal 1：发现拓扑
 ./build/probe_topo -f ./control_json/910b2_info.json
 
-# 5. 持续探测和分析。（Terminal 1）
+# Terminal 1：持续探测和分析
 ./build/probe_controller -f ./control_json/910b2_info.json
 ```
 
@@ -285,7 +309,7 @@ python3 ./dispatcher/exec_realtime_cmd.py -l \
 | `output/<subdir>/allpath.json` | JSON | 跨域 Pair、端口样本、多跳 IP、空路径和唯一路径统计 |
 | `output/<subdir>/l2_fullmesh_path.json` | JSON | 相邻 L1 域之间的 L2 路径发现结果；仅 `l2_path_aware=true` 时生成 |
 
-拓扑 JSON 使用 `status` 表示 Device 数完整性：已发现 Device 数与 `probe_scope` 配置数一致时为 `complete`，不一致时为 `incomplete`，并同时记录 `configured_device_count`、`discovered_device_count`、配置 Device 列表和已发现 Device IP 列表。完整性只比较 Device 数，不依据 LLDP 域数量、空路径率或路径覆盖率改变 `status`。
+拓扑 JSON 使用 `status` 表示 Device 数完整性：已发现 Device 数与探测范围（v2 `probe.scope` 或 v1 `probe_scope`）配置数一致时为 `complete`，不一致时为 `incomplete`，并同时记录 `configured_device_count`、`discovered_device_count`、配置 Device 列表和已发现 Device IP 列表。完整性只比较 Device 数，不依据 LLDP 域数量、空路径率或路径覆盖率改变 `status`。
 
 #### 4.4.2 网络状态产物
 
@@ -294,6 +318,7 @@ output/<time>/
 ├── link_lat.txt
 ├── link_pass_rate.txt
 ├── bad_link.txt
+├── bad_link_candidate.txt
 ├── l2_status/
 │   ├── l2_path_lat.txt
 │   └── l2_path_passrate.txt
@@ -309,6 +334,7 @@ output/<time>/
 | `link_lat.txt` | 第一行为定宽 L1 链路列名 `[device_ip-tor_ip]`，后续每行对应一个轮次的浮点时延 |
 | `link_pass_rate.txt` | 与 `link_lat.txt` 列顺序一致，值域目标为 `[0,1]` |
 | `bad_link.txt` | 文本告警，每行包含告警类型、链路端点、时延和通过率；多条链路可以在同一轮分别出现 |
+| `bad_link_candidate.txt` | 时延候选事件；时域或空域任一 3σ 条件连续 3 个有效轮次超阈值时写入，不等同于持续性告警 |
 | `l2_path_lat.txt` | Tab 分隔：`turn, task_index, tag, from_label, from_ip, to_label, to_ip, src_sport, l2_path_lat` |
 | `l2_path_passrate.txt` | Tab 分隔，最后一列为 `pass_rate`；其余字段同上 |
 | `metrics/*.txt` | CSV：`time,port,value,valid`；`port` 形如 `<host>_dev<id>`。四个计数器字段全部成功解析时 `valid=true`；缺 Key、非数字或命令失败时值按 `0` 占位且 `valid=false`；采样周期约 1 秒 |
@@ -408,7 +434,7 @@ A × x = b
 - 通过率的 `b` 为路径通过率的 `log2` 值，求解后用 `exp2` 还原链路通过率。
 - 使用 Eigen `BDCSVD` 求最小二乘解。
 
-探测计划必须使目标链路对应列可辨识。若矩阵秩不足、条件数过大、输入含无效样本或解明显越界，该轮链路结果应标记为 `NaN/invalid`，不得产生确定性故障结论。矩阵秩和条件数检查是发布门槛，当前实现尚未完整提供。
+探测计划必须使目标链路对应列可辨识。若矩阵秩不足、条件数过大、输入含无效样本或解明显越界，该轮链路结果应标记为 `NaN/invalid`，不得产生确定性故障结论。当前实现已进行 SVD rank 与条件数检查，不满足时返回 `NaN`。
 
 ### 6.5 L2 路径指标
 
@@ -422,17 +448,17 @@ l2_path_lat = end_to_end_p99 - src_l1_lat - dst_l1_lat
 
 ### 6.6 异常判定
 
-目标异常判定按同层链路分别维护滚动基线：
+目标异常判定对时延与通过率分别处理。时延异常采用两道基线，时域基线按单条 L1 链路维护历史统计，空域基线按同一拓扑层级的本轮 L1 链路集合维护统计：
 
 1. 排除 `NaN`、全丢包哨兵和已知维护窗口样本。
-2. 使用最近 `W` 个有效轮次计算稳健基线；初始方案为均值 `μ` 和标准差 `σ`，后续可切换中位数/MAD。
-   当前实现使用全部时延有效的 L1 链路建立基线，不再根据 IP 字符串或特定网段筛选链路。
-3. 时延异常条件：`latency > μ + 2σ`。
-4. 通过率异常条件：`pass_rate < 0.99`，阈值后续配置化。
-5. 连续 3 个有效轮次满足任一条件才写入持续性告警；单轮异常记录为候选事件。
-6. PFC/CNP 增量同时抬升时，提高拥塞类异常置信度，但计数器不作为唯一告警条件。
+2. 时域基线：对每条 L1 链路分别使用历史有效轮次计算均值 `μ_t` 和标准差 `σ_t`，当前实现为累计历史统计，后续可切换为滚动窗口或中位数/MAD。
+3. 空域基线：对同一拓扑层级内本轮所有有效 L1 链路时延计算均值 `μ_s` 和标准差 `σ_s`，不再根据 IP 字符串或特定网段筛选链路。
+4. 时延告警条件：同时满足 `latency > μ_t + 3σ_t` 与 `latency > μ_s + 3σ_s`；连续 3 个有效轮次满足该条件后写入 `bad_link.txt`。
+5. 通过率异常条件：`pass_rate < 0.99`，满足条件即写入告警，阈值后续配置化。
+6. 时延候选事件：满足时域或空域任一 3σ 条件连续 3 个有效轮次超阈值时，写入 `bad_link_candidate.txt`，不产生持续性告警。
+7. PFC/CNP 计数器当前仅采集落盘，暂不参与告警置信度判定；后续可在增量同时抬升时提高拥塞类异常置信度，但计数器不作为唯一告警条件。
 
-当前代码使用指数平滑基线（EWMA）进一步过滤噪声。
+当前代码使用均值与标准差维护 L1 链路时域与空域基线。
 
 ## 7. 内部模块实现
 
@@ -520,7 +546,7 @@ std::vector<std::vector<uint64_t>> get_metrics_counter_value();
 ### 7.3 `metrics_collector` 与分析模块职责
 
 - `metrics_collector`：每秒调用 `hccn_tool -stat -g`，解析四类 PFC/CNP 累积计数器；内存队列最多保存 100 行，Controller 拉取后清空。读取异常当前被吞掉并写零值，目标实现应返回有效性状态和错误原因。
-- 分析逻辑（位于 `probe_controller.cpp`）：维护同层基线、判定时延/通过率异常、关联计数器增量、输出 `bad_link.txt`。
+- 分析逻辑（位于 `probe_controller.cpp`）：维护时域与空域基线、判定时延/通过率异常、输出 `bad_link.txt` 与 `bad_link_candidate.txt`；PFC/CNP 当前仅采集落盘，暂不参与告警置信度判定。
 
 ## 8. 影响分析
 
@@ -545,7 +571,7 @@ std::vector<std::vector<uint64_t>> get_metrics_counter_value();
 | Tracert 失败/空路径 | 返回空 Hop 列表、超时或非零状态 | 对 Pair/端口有限重试；仍失败则标记缺测，不用猜测路径；空路径率超阈值时终止拓扑发布 | `allpath.json` 记录空样本和统计 |
 | RPC 超时 | 客户端异常/无返回 | 单 Host 隔离，其他 Host 继续；指数退避重试；不得把超时当丢包 | 对应样本为 `invalid` |
 | 部分 Host 不可达 | SSH/RPC 健康检查失败 | 从本轮范围剔除并报告覆盖率；若破坏矩阵可辨识性，停止链路求解 | 输出缺失 Host 列表 |
-| 拓扑发现不全 | 已发现 Device 数与 `probe_scope` 配置数不一致 | `probe_topo` 写入诊断产物后停止后续 LLDP/路径探测；`probe_controller` 拒绝执行 PingPong 和告警 | 拓扑标记 `status=incomplete`，记录配置数与发现数；不再检查 LLDP 域或路径覆盖完整性 |
+| 拓扑发现不全 | 已发现 Device 数与探测范围配置数不一致 | `probe_topo` 写入诊断产物后停止后续 LLDP/路径探测；`probe_controller` 拒绝执行 PingPong 和告警 | 拓扑标记 `status=incomplete`，记录配置数与发现数；不再检查 LLDP 域或路径覆盖完整性 |
 | 计数器读取异常 | 缺 Key、非数字、命令失败 | 样本标记 `valid=false`，不参与联合判断；探测主流程继续 | `metrics/*.txt` 写入 `value=0,valid=false`，与真实的 `value=0,valid=true` 区分 |
 | PingPong 全丢包 | `pass=0` | 直接生成连通性候选告警；对数域使用哨兵但不做普通数值比较 | 最终通过率为 0，附 `all_lost` |
 | 方程秩不足/病态 | 秩、条件数检查 | 不输出确定性链路定位；增加探测路径或退化为路径级告警 | 链路值为 `NaN/invalid` |
@@ -586,7 +612,8 @@ Util_d = P_d × times × (B_req + B_rsp) × 8 / (T_cycle × C_link)
 ### 9.1 兼容性
 
 - 工具以独立进程运行，不修改训练进程或 HCCL/HCOMM 接口。
-- 新式配置以 `probe_scope + probe_topo.tracert + probe_controller.pingpong` 为契约；缺少整组探测配置时保留旧 ranktable 路径，但不新增能力。
+- 当前推荐配置以 `schema_version=2`、`hosts[]`、`probe.scope` 为必需契约，`probe.topology`、`probe.pingpong` 为可选参数组；缺省
+  `schema_version` 或 `schema_version=1` 继续兼容 `probe_scope + probe_topo.tracert + probe_controller.pingpong` 格式，缺少整组探测配置时保留旧 ranktable 路径，但不新增能力。
 - JSON/TXT 产物一旦被外部系统消费，新增字段应保持向后兼容；破坏性修改必须升级 Schema 或文件名。
 
 ### 9.2 特性开关
@@ -642,7 +669,7 @@ T1、T2、T3、T4、T5、T6 已在 `tests/` 下实现，并由 `tests/CMakeLists
 | --- | --- | --- | --- |
 | `traffic_tc/dscp` 仅源端生效，返回方向 TC/DSCP 和源端口不可控 | 探测路径与业务路径不一致，可能误测丢包或时延 | 通过 Issue 261 推动接口能力；在解决前标记置信度并使用多源端口/业务 A/B 校准 | 已知，跟踪中 |
 | L2 目前是路径级而非物理链路级 | 无法唯一定位 Spine/Leaf 间具体边 | 产物命名为 path，输出 Top-10 Pair和路径，结合交换机 Telemetry 二次定位 | 已缓解但能力有限 |
-| 简单的基于Z-Score异常分析对非平稳、重尾分布敏感 | 误报或漏报 | 连续三轮、分层基线；评估 MAD/分位数方案 | 目前采用EWMA+2sigma的滤噪算法，已16卡验证通过；更大的拓扑规模需进一步验证。 |
+| 简单的基于Z-Score异常分析对非平稳、重尾分布敏感 | 误报或漏报 | 时延连续三轮、分层基线；通过率低于阈值立即告警；评估 MAD/分位数方案 | 目前采用均值/标准差 + 3sigma 的时延判定，已16卡验证通过；更大的拓扑规模需进一步验证。 |
 
 ## 12. 替代方案
 
