@@ -63,12 +63,6 @@ HcclResult ProfilingHandler::Init()
             HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret);
         return HCCL_E_RUNTIME;
     }
-    for (auto i = 0; i < TaskParamType::__COUNT__; ++i) {
-        TaskParamType type(static_cast<TaskParamType::Value>(i));
-        std::string nameInfo = type.Describe();
-        uint64_t hashId = GetProfHashId(nameInfo.c_str(), nameInfo.length());
-        str2HashId_[nameInfo] = hashId;
-    }
     SetCachedCclTag();
     cachedAlgTypeHashId_ = GetProfHashId("AlgType::NHR", strlen("AlgType::NHR"));
     initializedFlag_ = true;
@@ -137,13 +131,10 @@ void ProfilingHandler::ReportHcclTaskApi(
 
 void ProfilingHandler::SetCachedCclTag()
 {
+    cachedNewCclTag_.clear();
     for (const auto& item : CMD_OP_TYPE_INFO_MAP) {
-        uint32_t tag = static_cast<uint32_t>(item.first);
-        if (cachedNewCclTag_.find(tag) == cachedNewCclTag_.end()) {
-            const std::string& cclTag = item.second.second;
-            auto hashId = GetProfHashId(cclTag.c_str(), cclTag.length());
-            cachedNewCclTag_[item.second.first] = hashId;
-        }
+        const std::string& cclTag = item.second.second;
+        cachedNewCclTag_[item.second.first] = GetProfHashId(cclTag.c_str(), cclTag.length());
     }
 }
 
@@ -1004,6 +995,8 @@ int32_t ProfilingHandler::CommandHandle(uint32_t rtType, void* data, uint32_t le
 void ProfilingHandler::StartSubscribe(uint64_t profconfig)
 {
     HCCL_RUN_INFO("[Profiling][CommandHandle] profSwitch is[%llu]", profconfig);
+    SetCachedCclTag();
+    cachedAlgTypeHashId_ = GetProfHashId("AlgType::NHR", strlen("AlgType::NHR"));
     if ((profconfig & PROF_ACL_API_MASK) != 0) {
         StartHostApiSubscribe();
     }

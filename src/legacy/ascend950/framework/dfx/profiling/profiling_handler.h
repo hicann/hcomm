@@ -262,7 +262,6 @@ private:
     std::queue<MsprofApi> cachedAclApiInfo_{};
     std::queue<MsprofCompactInfo> cacheHcclOpInfo_{};
     std::queue<MsprofAdditionalInfo> cacheHcclAdditionInfo_{};
-    std::unordered_map<std::string, uint64_t> str2HashId_{};
     uint64_t cachedAlgTypeHashId_{0};
     std::map<uint32_t, uint64_t> cachedNewCclTag_{};
     mutable std::mutex cacheTaskInfosMutex_;
