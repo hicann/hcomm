@@ -110,6 +110,7 @@ HcclResult RaGetDevEidInfos(const RaInfo& raInfo, std::vector<DevEidInfo>& devEi
         devEidInfos[i].dieId = infoList[i].dieId;
         devEidInfos[i].chipId = infoList[i].chipId;
         devEidInfos[i].funcId = infoList[i].funcId;
+        devEidInfos[i].devFeature = infoList[i].devFeature;
     }
 
     return HcclResult::HCCL_SUCCESS;
@@ -562,6 +563,44 @@ HcclResult HccpGetUboeFlagEnable(const u32 devPhyId)
     return HCCL_SUCCESS;
 }
 
+HcclResult HccpGetIpByEid(void* ctxHandle, const CommAddr& eidAddr, CommAddr& ipAddr)
+{
+    ipAddr = {};
+    ipAddr.type = COMM_ADDR_TYPE_RESERVED;
+    CHK_PTR_NULL(ctxHandle);
+    CHK_PRT_RET(
+        eidAddr.type != COMM_ADDR_TYPE_EID,
+        HCCL_ERROR("[%s] invalid address type[%d], expected COMM_ADDR_TYPE_EID.", __func__, eidAddr.type), HCCL_E_PARA);
+
+    union HccpEid hccpEid {};
+    CHK_SAFETY_FUNC_RET(memcpy_s(hccpEid.raw, sizeof(hccpEid.raw), eidAddr.eid, sizeof(eidAddr.eid)));
+
+    struct IpInfo ipInfo {};
+    uint32_t num = 1U;
+    const int32_t ret = RaGetIpByEid(ctxHandle, &hccpEid, &ipInfo, &num);
+    CHK_PRT_RET(
+        ret != 0, HCCL_ERROR("[%s] RaGetIpByEid failed, ctxHandle[%p], ret[%d].", __func__, ctxHandle, ret),
+        HCCL_E_NETWORK);
+    CHK_PRT_RET(
+        num == 0, HCCL_ERROR("[%s] RaGetIpByEid returned no IPv4 address, ctxHandle[%p].", __func__, ctxHandle),
+        HCCL_E_NOT_FOUND);
+    CHK_PRT_RET(
+        num != 1U,
+        HCCL_ERROR("[%s] RaGetIpByEid returned unexpected address count[%u], ctxHandle[%p].", __func__, num, ctxHandle),
+        HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        ipInfo.family != AF_INET,
+        HCCL_ERROR(
+            "[%s] RaGetIpByEid returned unsupported address family[%d], expected AF_INET.", __func__, ipInfo.family),
+        HCCL_E_NOT_SUPPORT);
+
+    ipAddr.type = COMM_ADDR_TYPE_IP_V4;
+    ipAddr.addr = ipInfo.ip.addr;
+    HCCL_INFO(
+        "[%s] query UBoE IPv4 success, ctxHandle[%p], IPv4[0x%08x].", __func__, ctxHandle, ntohl(ipAddr.addr.s_addr));
+    return HCCL_SUCCESS;
+}
+
 HcclResult HccpRaGetDevBaseAttr(void* ctxHandle, struct DevBaseAttr* attr)
 {
     int ret = RaGetDevBaseAttr(ctxHandle, attr);
@@ -573,6 +612,23 @@ HcclResult HccpRaGetDevBaseAttr(void* ctxHandle, struct DevBaseAttr* attr)
         "HccpRaGetDevBaseAttr success, sqMaxDepth[%u], rqMaxDepth[%u], sqMaxSge[%u], rqMaxSge[%u], maxReadSize[%u], "
         "maxWriteSize[%u]",
         attr->sqMaxDepth, attr->rqMaxDepth, attr->sqMaxSge, attr->rqMaxSge, attr->maxReadSize, attr->maxWriteSize);
+    return HCCL_SUCCESS;
+}
+
+HcclResult HccpGetCtpEnable(void* ctxHandle, bool& ctpEnable)
+{
+    ctpEnable = false;
+    CHK_PTR_NULL(ctxHandle);
+    DevBaseAttr attr{};
+    CHK_RET(HccpRaGetDevBaseAttr(ctxHandle, &attr));
+
+    for (uint32_t i = 0; i < MAX_PRIORITY_CNT; ++i) {
+        if (attr.ub.priorityInfo[i].tpType.bs.ctp == 1) {
+            ctpEnable = true;
+            break;
+        }
+    }
+    HCCL_INFO("[%s] ctxHandle[%p], ctpEnable[%d].", __func__, ctxHandle, ctpEnable);
     return HCCL_SUCCESS;
 }
 

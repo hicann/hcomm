@@ -4,6 +4,8 @@
 - [HcommEndpointDestroy](HcommEndpointDestroy.md)
 - [HcommEndpointCheckFeature](HcommEndpointCheckFeature.md)
 - [HcommEndpointGetListenPort](HcommEndpointGetListenPort.md)
+- [HcommEndpointGetDescNum](HcommEndpointGetDescNum.md)
+- [HcommEndpointGetDescs](HcommEndpointGetDescs.md)
 - [HcommMemReg](HcommMemReg.md)
 - [HcommMemUnreg](HcommMemUnreg.md)
 - [HcommMemExport](HcommMemExport.md)

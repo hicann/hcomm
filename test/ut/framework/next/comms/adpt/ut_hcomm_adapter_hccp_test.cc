@@ -18,6 +18,27 @@
 using namespace hcomm;
 using namespace Hccl;
 
+namespace {
+constexpr uintptr_t FAKE_HCCP_CONTEXT = 0x12345678U;
+constexpr uint32_t FAKE_UBOE_IPV4 = 0xC0A80367U;
+constexpr uint8_t FAKE_UBOE_EID_LAST_BYTE = 0x67U;
+
+int RaGetIpByEidSuccessStub(void* ctxHandle, union HccpEid eid[], struct IpInfo ip[], unsigned int* num)
+{
+    EXPECT_EQ(ctxHandle, reinterpret_cast<void*>(FAKE_HCCP_CONTEXT));
+    EXPECT_NE(eid, nullptr);
+    EXPECT_NE(ip, nullptr);
+    EXPECT_NE(num, nullptr);
+    EXPECT_EQ(*num, 1U);
+    EXPECT_EQ(eid[0].raw[15], FAKE_UBOE_EID_LAST_BYTE);
+
+    ip[0].family = AF_INET;
+    ip[0].ip.addr.s_addr = htonl(FAKE_UBOE_IPV4);
+    *num = 1U;
+    return 0;
+}
+} // namespace
+
 class HcommAdapterHccpTest : public testing::Test {
 protected:
     static void SetUpTestCase() { std::cout << "HcommAdapterHccpTest tests set up." << std::endl; }
@@ -91,6 +112,77 @@ TEST_F(HcommAdapterHccpTest, ut_HccpCheckUboeSupported_When_DevFeatureBitNotSet_
     devFeature = 0xFFFFFFFF & ~(1 << UBOE_DEV_FLAG_RIGHT_SHIFT);
     result = HccpCheckUboeSupported(devFeature);
     EXPECT_FALSE(result);
+}
+
+TEST_F(HcommAdapterHccpTest, ut_HccpGetIpByEid_When_ValidEid_Expect_Ipv4)
+{
+    MOCKER(RaGetIpByEid).stubs().will(invoke(RaGetIpByEidSuccessStub));
+
+    CommAddr eidAddr{};
+    eidAddr.type = COMM_ADDR_TYPE_EID;
+    eidAddr.eid[15] = FAKE_UBOE_EID_LAST_BYTE;
+    CommAddr ipAddr{};
+
+    HcclResult ret = HccpGetIpByEid(reinterpret_cast<void*>(FAKE_HCCP_CONTEXT), eidAddr, ipAddr);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(ipAddr.type, COMM_ADDR_TYPE_IP_V4);
+    EXPECT_EQ(ipAddr.addr.s_addr, htonl(FAKE_UBOE_IPV4));
+}
+
+TEST_F(HcommAdapterHccpTest, ut_HccpGetIpByEid_When_RaQueryFails_Expect_E_NETWORK)
+{
+    MOCKER(RaGetIpByEid).stubs().will(returnValue(-1));
+
+    CommAddr eidAddr{};
+    eidAddr.type = COMM_ADDR_TYPE_EID;
+    CommAddr ipAddr{};
+
+    HcclResult ret = HccpGetIpByEid(reinterpret_cast<void*>(FAKE_HCCP_CONTEXT), eidAddr, ipAddr);
+
+    EXPECT_EQ(ret, HCCL_E_NETWORK);
+    EXPECT_EQ(ipAddr.type, COMM_ADDR_TYPE_RESERVED);
+}
+
+TEST_F(HcommAdapterHccpTest, ut_HccpGetCtpEnable_When_CtpExists_Expect_True)
+{
+    DevBaseAttr attr{};
+    attr.ub.priorityInfo[0].tpType.bs.rtp = 1;
+    attr.ub.priorityInfo[1].tpType.bs.ctp = 1;
+    MOCKER(RaGetDevBaseAttr).stubs().with(mockcpp::any(), outBoundP(&attr, sizeof(attr))).will(returnValue(0));
+
+    bool ctpEnable = false;
+    EXPECT_EQ(HccpGetCtpEnable(reinterpret_cast<void*>(FAKE_HCCP_CONTEXT), ctpEnable), HCCL_SUCCESS);
+    EXPECT_TRUE(ctpEnable);
+}
+
+TEST_F(HcommAdapterHccpTest, ut_HccpGetCtpEnable_When_AllRtp_Expect_False)
+{
+    DevBaseAttr attr{};
+    for (uint32_t i = 0; i < MAX_PRIORITY_CNT; ++i) {
+        attr.ub.priorityInfo[i].tpType.bs.rtp = 1;
+    }
+    MOCKER(RaGetDevBaseAttr).stubs().with(mockcpp::any(), outBoundP(&attr, sizeof(attr))).will(returnValue(0));
+
+    bool ctpEnable = true;
+    EXPECT_EQ(HccpGetCtpEnable(reinterpret_cast<void*>(FAKE_HCCP_CONTEXT), ctpEnable), HCCL_SUCCESS);
+    EXPECT_FALSE(ctpEnable);
+}
+
+TEST_F(HcommAdapterHccpTest, ut_HccpGetCtpEnable_When_QueryFails_Expect_ENetworkAndFalse)
+{
+    MOCKER(RaGetDevBaseAttr).stubs().will(returnValue(-1));
+
+    bool ctpEnable = true;
+    EXPECT_EQ(HccpGetCtpEnable(reinterpret_cast<void*>(FAKE_HCCP_CONTEXT), ctpEnable), HCCL_E_NETWORK);
+    EXPECT_FALSE(ctpEnable);
+}
+
+TEST_F(HcommAdapterHccpTest, ut_HccpGetCtpEnable_When_CtxHandleNull_Expect_EPtrAndFalse)
+{
+    bool ctpEnable = true;
+    EXPECT_EQ(HccpGetCtpEnable(nullptr, ctpEnable), HCCL_E_PTR);
+    EXPECT_FALSE(ctpEnable);
 }
 
 // ========== HccpRaTlvRequestForCustomChannel 测试 ==========

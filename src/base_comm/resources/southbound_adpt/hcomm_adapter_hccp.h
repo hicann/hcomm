@@ -184,11 +184,21 @@ HcclResult HccpRaTlvRequestForCustomChannel(void* tlvHandle, unsigned int msgTyp
 
 HcclResult HccpRaGetDevBaseAttr(void* ctxHandle, struct DevBaseAttr* attr);
 
+/**
+ * @brief 查询已初始化HCCP Context对应URMA Device是否支持CTP
+ */
+HcclResult HccpGetCtpEnable(void* ctxHandle, bool& ctpEnable);
+
 constexpr u32 GET_UBOE_FLAG_ENABLE_OPCODE = 57;
 constexpr u32 GET_UBOE_FLAG_ENABLE_VERSION = 2;
 constexpr u32 UBOE_DEV_FLAG_RIGHT_SHIFT = 19;
 
 HcclResult HccpGetUboeFlagEnable(const u32 devPhyId);
+
+/**
+ * @brief 使用已初始化的HCCP Context将Device上的UBoE EID查询为IPv4地址
+ */
+HcclResult HccpGetIpByEid(void* ctxHandle, const CommAddr& eidAddr, CommAddr& ipAddr);
 
 inline bool HccpCheckUboeSupported(const u32 devFeature)
 {

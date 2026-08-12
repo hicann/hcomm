@@ -171,6 +171,15 @@ int RaGetDevEidInfoList(struct RaInfo info, struct HccpDevEidInfo info_list[], u
     return 0;
 }
 
+int RaGetIpByEid(void* ctxHandle, union HccpEid eid[], struct IpInfo ip[], unsigned int* num)
+{
+    (void)ctxHandle;
+    (void)eid;
+    (void)ip;
+    (void)num;
+    return -1;
+}
+
 int RaGetSecRandom(struct RaInfo* info, uint32_t* value) { return 0; }
 
 int RaCtxGetAuxInfo(void* ctx_handle, struct HccpAuxInfoIn* in, struct HccpAuxInfoOut* out) { return 0; }

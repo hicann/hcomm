@@ -44,6 +44,8 @@ static HcommNicEndpointOps g_stubEndpointOps = {
 #include "hccp_peer_manager.h"
 #include "rdma_handle_manager.h"
 #include "hccp_nda.h"
+#include "hcomm_adapter_hccp.h"
+#include "hccp_hdc_manager.h"
 #include "adapter_rts_common.h"
 
 using namespace hcomm;
@@ -455,6 +457,153 @@ TEST_F(HcommCAdptTest, ut_HcommEndpointGet_When_EndpointPtrNull_Expect_E_PTR)
     EndpointHandle handle = reinterpret_cast<EndpointHandle>(0x12345678);
     HcommResult ret = HcommEndpointGet(handle, nullptr);
     EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(HcommCAdptTest, ut_HcommEndpointGetDescNum_When_UnsupportedDeviceType_Expect_E_NOT_SUPPORT)
+{
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_910)).will(returnValue(HCCL_SUCCESS));
+
+    uint32_t descNum = 0;
+    EXPECT_EQ(HcommEndpointGetDescNum(0, &descNum), HCCL_E_NOT_SUPPORT);
+    EXPECT_EQ(descNum, 0U);
+}
+
+TEST_F(HcommCAdptTest, ut_HcommEndpointGetDescNum_When_DevType960_Expect_E_NOT_SUPPORT)
+{
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_960)).will(returnValue(HCCL_SUCCESS));
+
+    uint32_t descNum = 0;
+    EXPECT_EQ(HcommEndpointGetDescNum(0, &descNum), HCCL_E_NOT_SUPPORT);
+    EXPECT_EQ(descNum, 0U);
+}
+
+TEST_F(HcommCAdptTest, ut_HcommEndpointGetDescNum_When_NoEidConfiguredTwice_Expect_E_NOT_FOUND)
+{
+    constexpr uint32_t devicePhyId = 12U;
+    unsigned int eidNum = 0U;
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDevicePhyIdByIndex)
+        .stubs()
+        .with(mockcpp::any(), outBound(devicePhyId))
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::HccpHdcManager::Init).stubs().will(ignoreReturnValue());
+    MOCKER(RaGetDevEidInfoNum).stubs().with(mockcpp::any(), outBoundP(&eidNum)).will(returnValue(0));
+    MOCKER(RaGetDevEidInfoList).stubs().will(returnValue(0));
+
+    uint32_t descNum = 1U;
+    EXPECT_EQ(HcommEndpointGetDescNum(0, &descNum), HCCL_E_NOT_FOUND);
+    EXPECT_EQ(descNum, 0U);
+
+    descNum = 1U;
+    EXPECT_EQ(HcommEndpointGetDescNum(0, &descNum), HCCL_E_NOT_FOUND);
+    EXPECT_EQ(descNum, 0U);
+}
+
+namespace {
+int EndpointQueryGetEidInfoListStub(struct RaInfo, struct HccpDevEidInfo infoList[], unsigned int* num)
+{
+    constexpr uint32_t fakeEidNum = 2U;
+    if (*num < fakeEidNum) {
+        return -1;
+    }
+    infoList[0].eid.raw[15] = 1U;
+    infoList[0].eidIndex = 3U;
+    infoList[1].eid.raw[15] = 2U;
+    infoList[1].eidIndex = 4U;
+    *num = fakeEidNum;
+    return 0;
+}
+
+int EndpointQueryGetUboeEidInfoListStub(struct RaInfo, struct HccpDevEidInfo infoList[], unsigned int* num)
+{
+    if (*num < 1U) {
+        return -1;
+    }
+    infoList[0].eid.raw[15] = 3U;
+    infoList[0].eidIndex = 5U;
+    infoList[0].devFeature = 1U << UBOE_DEV_FLAG_RIGHT_SHIFT;
+    *num = 1U;
+    return 0;
+}
+
+HcclResult EndpointQueryGetIpByEidStub(void* ctxHandle, const CommAddr& eidAddr, CommAddr& ipAddr)
+{
+    EXPECT_EQ(ctxHandle, reinterpret_cast<void*>(0x12345678));
+    EXPECT_EQ(eidAddr.type, COMM_ADDR_TYPE_EID);
+    ipAddr.type = COMM_ADDR_TYPE_IP_V4;
+    ipAddr.addr.s_addr = htonl(0xC0A80367U);
+    return HCCL_SUCCESS;
+}
+
+uint32_t gEndpointQueryCtpEnableCallCount = 0;
+HcclResult EndpointQueryGetCtpEnableStub(void* ctxHandle, bool& ctpEnable)
+{
+    EXPECT_EQ(ctxHandle, reinterpret_cast<void*>(0x12345678));
+    ctpEnable = (gEndpointQueryCtpEnableCallCount++ == 0);
+    return HCCL_SUCCESS;
+}
+} // namespace
+
+TEST_F(HcommCAdptTest, ut_HcommEndpointGetDescs_When_CtpAndUbg_Expect_Success)
+{
+    constexpr uint32_t devicePhyId = 14U;
+    constexpr unsigned int fakeEidNum = 2U;
+    unsigned int eidNum = fakeEidNum;
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDevicePhyIdByIndex)
+        .stubs()
+        .with(mockcpp::any(), outBound(devicePhyId))
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::HccpHdcManager::Init).stubs().will(ignoreReturnValue());
+    MOCKER(RaGetDevEidInfoNum).stubs().with(mockcpp::any(), outBoundP(&eidNum)).will(returnValue(0));
+    MOCKER(RaGetDevEidInfoList).stubs().will(invoke(EndpointQueryGetEidInfoListStub));
+
+    void* fakeRdmaHandle = reinterpret_cast<void*>(0x12345678);
+    MOCKER_CPP(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(fakeRdmaHandle));
+    gEndpointQueryCtpEnableCallCount = 0;
+    MOCKER(hcomm::HccpGetCtpEnable).stubs().will(invoke(EndpointQueryGetCtpEnableStub));
+
+    uint32_t descNum = 0;
+    ASSERT_EQ(HcommEndpointGetDescNum(0, &descNum), HCCL_SUCCESS);
+    ASSERT_EQ(descNum, fakeEidNum);
+
+    EndpointDesc endpointDescs[fakeEidNum]{};
+    ASSERT_EQ(HcommEndpointGetDescs(0, &descNum, endpointDescs), HCCL_SUCCESS);
+    ASSERT_EQ(descNum, fakeEidNum);
+    EXPECT_EQ(endpointDescs[0].protocol, COMM_PROTOCOL_UBC_CTP);
+    EXPECT_EQ(endpointDescs[1].protocol, COMM_PROTOCOL_UBG);
+    for (const auto& endpointDesc : endpointDescs) {
+        EXPECT_EQ(endpointDesc.commAddr.type, COMM_ADDR_TYPE_EID);
+        EXPECT_EQ(endpointDesc.loc.locType, ENDPOINT_LOC_TYPE_DEVICE);
+        EXPECT_EQ(endpointDesc.loc.device.devPhyId, devicePhyId);
+    }
+}
+
+TEST_F(HcommCAdptTest, ut_HcommEndpointGetDescs_When_Uboe_Expect_Ipv4Desc)
+{
+    constexpr uint32_t devicePhyId = 13U;
+    unsigned int eidNum = 1U;
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDevicePhyIdByIndex)
+        .stubs()
+        .with(mockcpp::any(), outBound(devicePhyId))
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::HccpHdcManager::Init).stubs().will(ignoreReturnValue());
+    MOCKER(RaGetDevEidInfoNum).stubs().with(mockcpp::any(), outBoundP(&eidNum)).will(returnValue(0));
+    MOCKER(RaGetDevEidInfoList).stubs().will(invoke(EndpointQueryGetUboeEidInfoListStub));
+    void* fakeRdmaHandle = reinterpret_cast<void*>(0x12345678);
+    MOCKER_CPP(&Hccl::RdmaHandleManager::GetByAddr).stubs().will(returnValue(fakeRdmaHandle));
+    MOCKER(hcomm::HccpGetIpByEid).stubs().will(invoke(EndpointQueryGetIpByEidStub));
+
+    uint32_t descNum = 1U;
+    EndpointDesc endpointDesc{};
+    ASSERT_EQ(HcommEndpointGetDescs(0, &descNum, &endpointDesc), HCCL_SUCCESS);
+    EXPECT_EQ(descNum, 1U);
+    EXPECT_EQ(endpointDesc.protocol, COMM_PROTOCOL_UBOE);
+    EXPECT_EQ(endpointDesc.commAddr.type, COMM_ADDR_TYPE_IP_V4);
+    EXPECT_EQ(endpointDesc.commAddr.addr.s_addr, htonl(0xC0A80367U));
+    EXPECT_EQ(endpointDesc.loc.locType, ENDPOINT_LOC_TYPE_DEVICE);
+    EXPECT_EQ(endpointDesc.loc.device.devPhyId, devicePhyId);
 }
 
 TEST_F(HcommCAdptTest, ut_HcommChannelCreate_When_NotAiCpu_Expect_Success)
