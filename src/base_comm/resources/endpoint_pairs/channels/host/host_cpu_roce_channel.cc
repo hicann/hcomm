@@ -26,6 +26,8 @@
 #include "sal.h"
 #include "adapter_hccp.h"
 #include "binary_stream.h"
+#include "env_config/env_config.h"
+#include "env_config/env_func.h"
 #include "../../../../../legacy/ascend910/platform/resource/notify/notify_pool_impl.h"
 #include "../../../../../base_comm/resources/hccp/inc/network/hccp_common.h"
 #include "dlprof_function.h"
@@ -182,16 +184,21 @@ HcclResult HostCpuRoceChannel::BuildSocket()
 HcclResult HostCpuRoceChannel::BuildConnection()
 {
     u32 loopTimes = 0;
-    if (lbMax_ > 0) {
-        if (channelDesc_.roceAttr.queueNum == 1) {
-            loopTimes = lbMax_;
-        } else {
-            loopTimes = channelDesc_.roceAttr.queueNum;
-        }
+    if (lbMax_ > 0 && channelDesc_.roceAttr.queueNum == 1) { // 1825场景且默认qp数量
+        loopTimes = lbMax_;
     } else {
         loopTimes = channelDesc_.roceAttr.queueNum;
     }
-
+    std::vector<u16> srcPorts;
+    if (!channelDesc_.exchangeAllMems) { // hixl场景填0
+        const auto& qpSrcPortConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetMultiQpSrcPortConfig();
+        if (qpSrcPortConfig.IsAvailable()) {
+            Hccl::IpAddress localIp, remoteIp;
+            (void)CommAddrToIpAddress(localEp_.commAddr, localIp);
+            (void)CommAddrToIpAddress(remoteEp_.commAddr, remoteIp);
+            srcPorts = Hccl::GetMultiQpSrcPortsByIpPair(qpSrcPortConfig, localIp, remoteIp);
+        }
+    }
     for (u32 i = 0; i < loopTimes; i++) {
         std::unique_ptr<HostRdmaConnection> conn;
         EXCEPTION_CATCH(
@@ -207,8 +214,14 @@ HcclResult HostCpuRoceChannel::BuildConnection()
         qpInfo.trafficClass = channelDesc_.roceAttr.tc;
         qpInfo.retryCnt = channelDesc_.roceAttr.retryCnt;
         qpInfo.retryInterval = channelDesc_.roceAttr.retryInterval;
-        HCCL_INFO("[HostCpuRoceChannel::BuildConnection] QpInfo[%u]: lbValue[%u], serviceLevel[%u], trafficClass[%u], retryCnt[%u], retryInterval[%u].", 
-            i, qpInfo.lbValue, qpInfo.serviceLevel, qpInfo.trafficClass, qpInfo.retryCnt, qpInfo.retryInterval);
+        qpInfo.udpSport = (!channelDesc_.exchangeAllMems && !srcPorts.empty()) ?
+                              static_cast<u32>(srcPorts[i % srcPorts.size()]) :
+                              0;
+        HCCL_INFO(
+            "[HostCpuRoceChannel::BuildConnection] QpInfo[%u]: lbValue[%u], serviceLevel[%u], trafficClass[%u], "
+            "retryCnt[%u], retryInterval[%u], udpSport[%u].",
+            i, qpInfo.lbValue, qpInfo.serviceLevel, qpInfo.trafficClass, qpInfo.retryCnt, qpInfo.retryInterval,
+            qpInfo.udpSport);
         connections_.emplace_back(std::move(conn));
     }
     connNum_ = connections_.size();
@@ -273,7 +286,32 @@ HcclResult HostCpuRoceChannel::ProcessStatus()
     }
 }
 
-HcclResult HostCpuRoceChannel::GetStatus(ChannelStatus &status) {
+HcclResult HostCpuRoceChannel::SyncAfterModifyQp()
+{
+    EXCEPTION_HANDLE_BEGIN
+    // 告知对端ModifyQp完成
+    uint8_t sendFlag = 1;
+    CHK_PRT_RET(
+        !socket_->Send(reinterpret_cast<void*>(&sendFlag), sizeof(sendFlag)),
+        HCCL_ERROR("[HostCpuRoceChannel::%s] Send sendFlag failed", __func__), HCCL_E_NETWORK);
+    HCCL_INFO(
+        "[HostCpuRoceChannel::%s] Send sendFlag[%u] of data success. [%llu] bytes sent.", __func__, sendFlag,
+        sizeof(sendFlag));
+
+    // 等待对端ModifyQp完成
+    uint8_t recvFlag = 0;
+    CHK_PRT_RET(
+        !socket_->Recv(reinterpret_cast<void*>(&recvFlag), sizeof(recvFlag)),
+        HCCL_ERROR("[HostCpuRoceChannel::%s] Recv recvFlag failed", __func__), HCCL_E_NETWORK);
+    HCCL_INFO(
+        "[HostCpuRoceChannel::%s] Receive recvFlag[%u] of data success. [%llu] bytes received.", __func__, recvFlag,
+        sizeof(recvFlag));
+    EXCEPTION_HANDLE_END
+    return HCCL_SUCCESS;
+}
+
+HcclResult HostCpuRoceChannel::GetStatus(ChannelStatus& status)
+{
     switch (rdmaStatus_) {
         case RdmaStatus::INIT:
             // 检查socket状态
@@ -305,13 +343,16 @@ HcclResult HostCpuRoceChannel::GetStatus(ChannelStatus &status) {
             }
             rdmaStatus_ = RdmaStatus::QP_MODIFIED;
             // modify完就不需要再轮询状态了，直接向下走准备Rqe的流程。
+            [[fallthrough]];
         case RdmaStatus::QP_MODIFIED:
+            CHK_RET(SyncAfterModifyQp());
             // Prepare Rqes
             if (!isHybridMode_) {
                 for (uint32_t i = 0; i < SEND_RQE_COUNT; ++i) {
                     CHK_RET(IbvPostRecv());
                 }
             }
+            [[fallthrough]];
         default:
             rdmaStatus_ = RdmaStatus::CONN_OK;
             channelStatus_ = ChannelStatus::READY;
@@ -408,7 +449,7 @@ HcclResult HostCpuRoceChannel::ExchangeData()
     HCCL_INFO("[HostCpuRoceChannel::%s] Unpack exchange Data success.", __func__);
     return HCCL_SUCCESS;
 }
- 
+
 void HostCpuRoceChannel::NotifyVecPack(Hccl::BinaryStream &binaryStream)
 {
     binaryStream << notifyNum_;
@@ -420,7 +461,7 @@ void HostCpuRoceChannel::NotifyVecPack(Hccl::BinaryStream &binaryStream)
         pos++;
     }
 }
- 
+
 HcclResult HostCpuRoceChannel::BufferVecPack(Hccl::BinaryStream &binaryStream)
 {
     binaryStream << bufferNum_;
@@ -445,7 +486,7 @@ HcclResult HostCpuRoceChannel::BufferVecPack(Hccl::BinaryStream &binaryStream)
     HCCL_INFO("[HostCpuRoceChannel::%s] pack RmaBuffers finish", __func__);
     return HCCL_SUCCESS;
 }
- 
+
 HcclResult HostCpuRoceChannel::ConnVecPack(Hccl::BinaryStream &binaryStream)
 {
     binaryStream << connNum_;
@@ -474,9 +515,9 @@ HcclResult HostCpuRoceChannel::RmtBufferVecUnpackProc(Hccl::BinaryStream &binary
 {
     u32 rmtNum;
     binaryStream >> rmtNum;
- 
+
     HCCL_INFO("[HostCpuRoceChannel::%s] bufferNum_=%u, rmtNum=%u", __func__, bufferNum_, rmtNum);
- 
+
     rmtRmaBuffers_.resize(rmtNum);
     for (u32 i = 0; i < rmtNum; i++) {
         u32 pos;
@@ -494,10 +535,10 @@ HcclResult HostCpuRoceChannel::RmtBufferVecUnpackProc(Hccl::BinaryStream &binary
             return HCCL_E_INTERNAL);
         HCCL_INFO("[HostCpuRoceChannel::%s] pos=%u, rmtRmaBuffer=%s", __func__, pos, rmtRmaBuffers_[pos]->Describe().c_str());
     }
- 
+
     return HCCL_SUCCESS;
 }
- 
+
 HcclResult HostCpuRoceChannel::NotifyVecUnpack(Hccl::BinaryStream &binaryStream)
 {
     uint32_t notifySize = 0;
@@ -610,7 +651,7 @@ std::string HostCpuRoceChannel::Describe() const
     if (socket_ != nullptr) {
         msg += socket_->Describe();
     }
-    
+
     msg += ", ";
     // msg += attr_.Describe();
     return msg;
@@ -626,9 +667,9 @@ HcclResult HostCpuRoceChannel::IbvPostRecv() const {
     std::vector<Hccl::QpInfo> qpInfo = GetQpInfos();
     CHK_PRT_RET(qpInfo.empty(), HCCL_ERROR("[HostCpuRoceChannel::%s] qpInfos is Empty", __func__), HCCL_E_ROCE_CONNECT);
     CHK_PRT_RET(localRmaBuffers_.empty(), HCCL_ERROR("[HostCpuRoceChannel::%s] localRmaBuffer is Empty", __func__),
-                HCCL_E_ROCE_CONNECT);
+        HCCL_E_ROCE_CONNECT);
     CHK_PRT_RET(rmtRmaBuffers_.empty(), HCCL_ERROR("[HostCpuRoceChannel::%s] rmtRmaBuffers is Empty", __func__),
-                HCCL_E_ROCE_CONNECT);
+        HCCL_E_ROCE_CONNECT);
 
     // 准备wr
     HCCL_INFO("[HostCpuRoceChannel::%s] call ibv_post_recv", __func__);
@@ -648,15 +689,15 @@ HcclResult HostCpuRoceChannel::IbvPostRecv() const {
         int32_t ret = ibv_post_recv(qpInfo[i].qp, &recvWr, &recvbadWr);
         CHK_PRT_RET(ret == ENOMEM,
                     HCCL_WARNING("[HostCpuRoceChannel][%s] post recv wqe overflow. ret:%d, "
-                                "badWr->wr_id[%llu], badWr->sg_list->addr[%llu]",
-                                __func__, ret, recvbadWr->wr_id, recvbadWr->sg_list->addr),
-                    HCCL_E_AGAIN);
+                "badWr->wr_id[%llu], badWr->sg_list->addr[%llu]",
+                __func__, ret, recvbadWr->wr_id, recvbadWr->sg_list->addr),
+            HCCL_E_AGAIN);
 
         CHK_PRT_RET(ret != 0,
                     HCCL_ERROR("[HostCpuRoceChannel][%s] ibv_post_recv failed. ret:%d, "
-                            "badWr->wr_id[%llu], badWr->sg_list->addr[%llu]",
-                            __func__, ret, recvbadWr->wr_id, recvbadWr->sg_list->addr),
-                    HCCL_E_NETWORK);
+                "badWr->wr_id[%llu], badWr->sg_list->addr[%llu]",
+                __func__, ret, recvbadWr->wr_id, recvbadWr->sg_list->addr),
+            HCCL_E_NETWORK);
     }
 
     return HCCL_SUCCESS;
@@ -674,9 +715,9 @@ HcclResult HostCpuRoceChannel::PrepareNotifyWrResource(
     uint32_t dpuNotifyId = remoteDpuNotifyIds_[remoteNotifyIdx];
 
     CHK_PRT_RET(localRmaBuffers_.empty(), HCCL_ERROR("[HostCpuRoceChannel::%s] localRmaBuffer is Empty", __func__),
-                HCCL_E_ROCE_CONNECT);
+        HCCL_E_ROCE_CONNECT);
     CHK_PRT_RET(rmtRmaBuffers_.empty(), HCCL_ERROR("[HostCpuRoceChannel::%s] rmtRmaBuffers is Empty", __func__),
-                HCCL_E_ROCE_CONNECT);
+        HCCL_E_ROCE_CONNECT);
 
     // 构造send_WR
     notifyRecordWr.sg_list->addr                 = localRmaBuffers_[0]->GetBufferInfo().first; // 本端起始地址
@@ -954,8 +995,8 @@ HcclResult HostCpuRoceChannel::WriteWithNotify(
         tileLen = tailLen / useQpNum;
         tileLenTail = tailLen - (useQpNum - 1) * tileLen;
         HCCL_INFO("[HostCpuRoceChannel::%s] The data allocated to each Qp (%u) is below the Qp Threshold (%u). "
-                  "the count of Qp for data sending is adaptively adjusted to %u.",
-                  __func__, tileLen, channelDesc_.roceAttr.qpThreshold, useQpNum);
+            "the count of Qp for data sending is adaptively adjusted to %u.",
+            __func__, tileLen, channelDesc_.roceAttr.qpThreshold, useQpNum);
     }
 
     // 构造 WR
@@ -1018,12 +1059,12 @@ HcclResult HostCpuRoceChannel::PostAndCheckSend(struct ibv_qp *qp, uint32_t qpId
     CHK_PRT_RET(ret == ENOMEM,
         HCCL_WARNING("[HostCpuRoceChannel::%s] post send wqe overflow. ret:%d, "
         "badWr->wr_id[%llu], badWr->sg_list->addr[%llu], badWr->wr.rdma.remote_addr[%llu], badWr->wr.ud.remote_qpn[%u]",
-        caller, ret, badWr->wr_id, badWr->sg_list->addr, badWr->wr.rdma.remote_addr, badWr->wr.ud.remote_qpn),
+            caller, ret, badWr->wr_id, badWr->sg_list->addr, badWr->wr.rdma.remote_addr, badWr->wr.ud.remote_qpn),
         HCCL_E_AGAIN);
     CHK_PRT_RET(ret != 0,
         HCCL_ERROR("[HostCpuRoceChannel::%s] ibv_post_send failed. ret:%d, "
         "badWr->wr_id[%llu], badWr->sg_list->addr[%llu], badWr->wr.rdma.remote_addr[%llu], badWr->wr.ud.remote_qpn[%u]",
-        caller, ret, badWr->wr_id, badWr->sg_list->addr, badWr->wr.rdma.remote_addr, badWr->wr.ud.remote_qpn),
+            caller, ret, badWr->wr_id, badWr->sg_list->addr, badWr->wr.rdma.remote_addr, badWr->wr.ud.remote_qpn),
         HCCL_E_NETWORK);
     CHK_PRT_RET(wqeNums_[qpIdx] == INT32_MAX,
         HCCL_ERROR("[HostCpuRoceChannel::%s] wqeNums_[%u] has reached the maximum value of uint32_t.", caller, qpIdx),
@@ -1036,13 +1077,13 @@ HcclResult HostCpuRoceChannel::PostRdmaOp(const char *caller, ibv_wr_opcode opco
                                            const void *remoteAddr, const uint64_t len)
 {
     HCCL_INFO("[HostCpuRoceChannel::%s] Slice START. localAddr[%p], remoteAddr[%p], len[0x%llx].", caller, localAddr,
-              remoteAddr, len);
+        remoteAddr, len);
 
     CHK_PRT_RET(GetQpInfos().empty(), HCCL_ERROR("[HostCpuRoceChannel::%s] qpInfos is Empty", caller), HCCL_E_ROCE_CONNECT);
     CHK_PRT_RET(localRmaBuffers_.empty(), HCCL_ERROR("[HostCpuRoceChannel::%s] localRmaBuffer is Empty", caller),
-                HCCL_E_ROCE_CONNECT);
+        HCCL_E_ROCE_CONNECT);
     CHK_PRT_RET(rmtRmaBuffers_.empty(), HCCL_ERROR("[HostCpuRoceChannel::%s] rmtRmaBuffers is Empty", caller),
-                HCCL_E_ROCE_CONNECT);
+        HCCL_E_ROCE_CONNECT);
     if (len > maxMsgSize_) {
         HCCL_WARNING(
             "[HostCpuRoceChannel::%s] len[0x%llx] exceeds maxMsgSize_[0x%llx], caller should slice before posting.",
@@ -1072,8 +1113,8 @@ HcclResult HostCpuRoceChannel::PostRdmaOp(const char *caller, ibv_wr_opcode opco
         tileLen = len / useQpNum;
         tileLenTail = len - (useQpNum - 1) * tileLen;
         HCCL_INFO("[HostCpuRoceChannel::%s] The data allocated to each Qp (%u) is below the Qp Threshold (%u). "
-                  "the count of Qp for data sending is adaptively adjusted to %u.",
-                  __func__, tileLen, channelDesc_.roceAttr.qpThreshold, useQpNum);
+            "the count of Qp for data sending is adaptively adjusted to %u.",
+            __func__, tileLen, channelDesc_.roceAttr.qpThreshold, useQpNum);
     }
 
     uint32_t wrLen;
@@ -1198,7 +1239,7 @@ HcclResult HostCpuRoceChannel::WaitForFenceCompletion()
         HCCL_INFO("[HostCpuRoceChannel::%s] SUCCESS. elements in wqeNums_ are 0.", __func__);
         return HCCL_SUCCESS;
     }
-    
+
     auto timeout = std::chrono::milliseconds(
         static_cast<uint64_t>(Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut()) * 1000ULL); // 乘1000转为毫秒
     for (uint32_t i = 0; i < qpInfo.size(); i++) {
@@ -1277,7 +1318,7 @@ HcclResult HostCpuRoceChannel::GetHcclBuffer(void*& addr, uint64_t& size)
 {
     if (rmtRmaBuffers_.empty()) {
         HCCL_ERROR("[HostCpuRoceChannel::%s] remote buffer is empty, please check if channel complete exchange data",
-                   __func__);
+            __func__);
         return HCCL_E_INTERNAL;
     }
     addr = reinterpret_cast<void*>(rmtRmaBuffers_[0]->GetAddr());
@@ -1413,8 +1454,8 @@ HcclResult HostCpuRoceChannel::ExchangeCapability()
     isHybridMode_ = (remoteCap_.commStack == CommStackType::COMM_STACK_TRANSPORT_IBVERBS) ? true : false;
 
     HCCL_INFO("[Hybrid][HostCpuRoceChannel] Capability exchange success, "
-              "remote commStack=%u, version=%u, mode=%s",
-              static_cast<uint8_t>(remoteCap_.commStack), remoteCap_.version, isHybridMode_ ? "hybrid" : "normal");
+        "remote commStack=%u, version=%u, mode=%s",
+        static_cast<uint8_t>(remoteCap_.commStack), remoteCap_.version, isHybridMode_ ? "hybrid" : "normal");
     return HCCL_SUCCESS;
 }
 
@@ -1592,37 +1633,37 @@ HcclResult HostCpuRoceChannel::WriteWithNotifyHybrid(
     CHK_PTR_NULL(src);
     CHK_PTR_NULL(dst);
     HCCL_INFO("[Hybrid] WriteWithNotifyHybrid start, len=%lu", len);
-    
+
     // 参数校验
     CHK_PRT_RET(localRmaBuffers_.empty(),
         HCCL_ERROR("[Hybrid] localRmaBuffer is Empty"),
         HCCL_E_ROCE_CONNECT);
-    
+
     std::vector<Hccl::QpInfo> qpInfo = GetQpInfos();
     CHK_PRT_RET(qpInfo.empty(),
         HCCL_ERROR("[Hybrid] qpInfos is Empty"),
         HCCL_E_ROCE_CONNECT);
-    
+
     // 获取本地 buffer 信息
     hccl::MemType type = NotifyIdToMemtypeHybird(remoteNotifyIdx);
-    
+
     // 校验数据长度
     CHK_PRT_RET(len > localRmaBuffers_[0]->GetSize(),
         HCCL_ERROR("[Hybrid] Data length %lu exceeds buffer size %lu", len, localRmaBuffers_[0]->GetSize()),
         HCCL_E_PARA);
-    
+
     // 构造发送 WR 链：数据 WR + Notify WR
     struct ibv_send_wr dataWr{};
     struct ibv_send_wr notifyWr{};
     struct ibv_send_wr *badWr = nullptr;
     struct ibv_sge dataSge{};
     struct ibv_sge notifySge{};
-    
+
     // 1. 数据 WR（RDMA Write）
     dataSge.addr = reinterpret_cast<uint64_t>(src);
     dataSge.length = len;
     dataSge.lkey = localRmaBuffers_[0]->GetLkey();
-    
+
     dataWr.wr_id = 0;
     dataWr.opcode = IBV_WR_RDMA_WRITE;
     dataWr.send_flags = IBV_SEND_SIGNALED;  // 需要 CQE 确认完成
@@ -1630,12 +1671,12 @@ HcclResult HostCpuRoceChannel::WriteWithNotifyHybrid(
     dataWr.num_sge = 1;
     dataWr.wr.rdma.remote_addr = reinterpret_cast<uint64_t>(dst);
     dataWr.wr.rdma.rkey = rmtRmaBuffers_[0]->GetRkey();
-    
+
     // 2. Notify WR（写入对端 TransportIbverbs 的 Notify 内存）
     notifySge.addr = reinterpret_cast<uint64_t>(localMemMsg_[hccl::NOTIFY_SRC_MEM].addr);
     notifySge.length = localMemMsg_[hccl::NOTIFY_SRC_MEM].len;
     notifySge.lkey = localMemMsg_[hccl::NOTIFY_SRC_MEM].lkey;  // 使用本地 buffer 的 lkey
-    
+
     notifyWr.wr_id = 1;
     notifyWr.opcode = IBV_WR_RDMA_WRITE;
     notifyWr.send_flags = IBV_SEND_SIGNALED;
@@ -1644,7 +1685,7 @@ HcclResult HostCpuRoceChannel::WriteWithNotifyHybrid(
     // Notify 写入对端 hostNotifyAddr 的偏移位置
     notifyWr.wr.rdma.remote_addr = reinterpret_cast<uint64_t>(remoteMemMsg_[type].addr);
     notifyWr.wr.rdma.rkey = remoteMemMsg_[type].lkey;
-    
+
     // 链接 WR 链：dataWr -> notifyWr
     dataWr.next = &notifyWr;
     notifyWr.next = nullptr;
@@ -1664,21 +1705,21 @@ HcclResult HostCpuRoceChannel::WriteWithNotifyHybrid(
 HcclResult HostCpuRoceChannel::NotifyWaitHybrid(uint32_t localNotifyIdx, uint32_t timeout)
 {
     HCCL_INFO("[Hybrid] NotifyWaitHybrid start, idx=%u", localNotifyIdx);
-    
+
     hccl::MemType type = NotifyIdToMemtypeHybird(localNotifyIdx);
 
     // 使用配置的超时时间和轮询间隔
     uint32_t pollTimeout = (timeout == 0) ? 30000 : timeout;
     uint32_t pollInterval = 1;
-    
+
     // 使用原子操作读取 Notify 内存
     std::atomic<uint32_t>* notifyAddr =
         reinterpret_cast<std::atomic<uint32_t>*>(localMemMsg_[type].addr);
     const uint64_t expectedValue = 1;
-    
+
     auto startTime = std::chrono::steady_clock::now();
     auto waitTime = std::chrono::milliseconds(pollTimeout);
-    
+
     while (true) {
         // 使用原子操作读取，确保内存可见性
         if (notifyAddr->load(std::memory_order_acquire) == expectedValue) {
@@ -1687,7 +1728,7 @@ HcclResult HostCpuRoceChannel::NotifyWaitHybrid(uint32_t localNotifyIdx, uint32_
             HCCL_INFO("[Hybrid] NotifyWaitHybrid success");
             return HCCL_SUCCESS;
         }
-        
+
         // 检查超时
         if ((std::chrono::steady_clock::now() - startTime) >= waitTime) {
             HCCL_ERROR("[Hybrid] NotifyWaitHybrid timeout, notify idx:%d", localNotifyIdx);

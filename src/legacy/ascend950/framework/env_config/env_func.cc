@@ -12,7 +12,7 @@
 #include <climits>
 #include <fstream>
 #include <linux/limits.h>
-#include <cctype> 
+#include <cctype>
 #include <algorithm>
 #include <sstream>
 #include <array>
@@ -242,7 +242,7 @@ std::vector<SocketPortRange> CastSocketPortRange(const std::string &s, const std
     CHK_PRT_THROW(hcclSocketPortRange.size() == 0, 
         HCCL_ERROR("Load empty port range from HCCL_HOST_SOCKET_PORT_RANGE, should not empty, please check."),
         InvalidParamsException, "parser portRange fail.");
-    
+
     PrintSocketPortRange(envName, hcclSocketPortRange);
     return hcclSocketPortRange;
 }
@@ -280,9 +280,9 @@ static void ParseAlgoLevel(const std::string &algoLevel, u32 &level, HcclAlgoTyp
     std::string orginalAlgo  = algoLevel.substr(found + 1);
 
     const std::map<std::string, u32> hcclAlgoLevelMap = {{"level0", HCCL_ALGO_LEVEL_0},
-                                                         {"level1", HCCL_ALGO_LEVEL_1},
-                                                         {"level2", HCCL_ALGO_LEVEL_2},
-                                                         {"level3", HCCL_ALGO_LEVEL_3}};
+           {"level1", HCCL_ALGO_LEVEL_1},
+           {"level2", HCCL_ALGO_LEVEL_2},
+           {"level3", HCCL_ALGO_LEVEL_3}};
 
     const std::map<std::string, HcclAlgoType> hcclAlgoTypeMap = {
         {"null", HcclAlgoType::HCCL_ALGO_TYPE_NULL},
@@ -415,8 +415,8 @@ HcclResult ParserHcclAlgoLevel(const std::string &algoLevel, u32 &level, HcclAlg
 
     const std::map<std::string, u32> hcclAlgoLevelMap = {
         {"level0", HCCL_ALGO_LEVEL_0},
-        {"level1", HCCL_ALGO_LEVEL_1},
-        {"level2", HCCL_ALGO_LEVEL_2},
+           {"level1", HCCL_ALGO_LEVEL_1},
+           {"level2", HCCL_ALGO_LEVEL_2},
         {"level3", HCCL_ALGO_LEVEL_3}
     };
 
@@ -498,14 +498,14 @@ HcclResult ParseAlgoString(std::string opName, std::string &algoString, std::vec
     std::vector<std::string> algoLevels;
     HcclResult ret = SplitHcclAlgoLevel(algoString, algoLevels);
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Set][HcclAlgoConfig]hccl algo config[%s] is invalid. "\
-        "expect: level0:NA;level1:<algo> or <op0>=level0:NA;level1:<algo0>/<op1>=level0:NA;level1:<algo1>",
+            "expect: level0:NA;level1:<algo> or <op0>=level0:NA;level1:<algo0>/<op1>=level0:NA;level1:<algo1>",
         algoString.c_str()), ret);
     for (auto algoLevel : algoLevels) {
         u32 level = 0;
         HcclAlgoType algo = HcclAlgoType::HCCL_ALGO_TYPE_DEFAULT;
         ret = ParserHcclAlgoLevel(algoLevel, level, algo);
         CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Set][HcclAlgoConfig]hccl algo config[%s] is invalid. "\
-            "expect: level0:NA;level1:<algo> or <op0>=level0:NA;level1:<algo0>/<op1>=level0:NA;level1:<algo1>",
+                "expect: level0:NA;level1:<algo> or <op0>=level0:NA;level1:<algo0>/<op1>=level0:NA;level1:<algo1>",
             algoString.c_str()), ret);
         // 检查是否存在重复配置level
         if (algType[level] != HcclAlgoType::HCCL_ALGO_TYPE_DEFAULT) {
@@ -638,7 +638,7 @@ HcclAccelerator CastHcclAccelerator(const std::string &s)
     }
     return mode;
 }
- 
+
 s32 CastSocketFamily(const std::string &s)
 {
     s32 hcclSocketFamily;
@@ -650,8 +650,8 @@ s32 CastSocketFamily(const std::string &s)
         hcclSocketFamily = -1;
         THROW<InvalidParamsException>(
             StringFormat("environmental variable HCCL_SOCKET_FAMILY[%s] is invalid. it should "
-                         "be \"AF_INET\" or \"AF_INET6\".",
-                         s.c_str()));
+            "be \"AF_INET\" or \"AF_INET6\".",
+            s.c_str()));
     }
     return hcclSocketFamily;
 }
@@ -813,10 +813,10 @@ void CastDfsConfigParseRankConsistentState(int32_t &rankConsistentState, const s
         rankConsistentState = -1;
     }else if (configValue == "first")
     {
-        rankConsistentState = 0;   
+        rankConsistentState = 0;
     }else if (configValue == "on")
     {
-        rankConsistentState = 1;  
+        rankConsistentState = 1;
     }else {
         THROW<InvalidParamsException>(StringFormat(
             "env[HCCL_DFS_CONFIG] please set inconsistent_check to '-1' or '0' or '1'.", configValue.c_str()));
@@ -870,8 +870,9 @@ void CheckExecTimeOut(const u32 &timeOut)
 void CheckFilePath(const string &filePath)
 {
     if (filePath.length() >= (PATH_MAX) || filePath.length() == 0) {
-        THROW<InvalidParamsException>(
-            StringFormat("env[HCCL_WHITELIST_FILE] is invalid, len is %u, should be (0,4096)", filePath.length()));
+        THROW<InvalidParamsException>(StringFormat(
+            "env[HCCL_WHITELIST_FILE] or env[HCCL_RDMA_QP_PORT_CONFIG_PATH] is invalid, len is %u, should be (0,4096)",
+            filePath.length()));
     }
 }
 
@@ -928,6 +929,51 @@ HcclDetourType CastDetourType(const std::string &s)
                                                 " detour:1 and detour:0 or not set."));
     }
     return HcclDetourType::HCCL_DETOUR_DISABLE;
+}
+
+/*----------------------- multi qp src port config --------------------------*/
+std::vector<std::uint16_t>
+GetMultiQpSrcPortsByIpPair(const MultiQpSrcPortConfig& config, const IpAddress& srcIp, const IpAddress& dstIp)
+{
+    if (!config.IsAvailable()) {
+        return {};
+    }
+
+    std::string srcIpStr = srcIp.GetIpStr();
+    std::string dstIpStr = dstIp.GetIpStr();
+    bool isIpv4 = (srcIp.GetFamily() == AF_INET);
+
+    std::string key = srcIpStr + "," + dstIpStr;
+    auto it = config.ipPairToPorts.find(key);
+    if (it != config.ipPairToPorts.end()) {
+        return it->second;
+    }
+
+    key = (isIpv4 ? "0.0.0.0," : "::,") + dstIpStr;
+    it = config.ipPairToPorts.find(key);
+    if (it != config.ipPairToPorts.end()) {
+        return it->second;
+    }
+
+    key = srcIpStr + (isIpv4 ? ",0.0.0.0" : ",::");
+    it = config.ipPairToPorts.find(key);
+    if (it != config.ipPairToPorts.end()) {
+        return it->second;
+    }
+
+    key = isIpv4 ? "0.0.0.0,0.0.0.0" : "::,::";
+    it = config.ipPairToPorts.find(key);
+    if (it != config.ipPairToPorts.end()) {
+        return it->second;
+    }
+
+    return {};
+}
+
+u32 GetMultiQpPortsNumByIpPair(const MultiQpSrcPortConfig& config, const IpAddress& srcIp, const IpAddress& dstIp)
+{
+    auto ports = GetMultiQpSrcPortsByIpPair(config, srcIp, dstIp);
+    return static_cast<u32>(ports.size());
 }
 
 } // namespace Hccl

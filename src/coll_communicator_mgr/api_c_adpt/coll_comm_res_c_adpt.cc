@@ -99,7 +99,7 @@ static void FillRoceQos(const hccl::CommConfig &commConfig, const Hccl::EnvRdmaC
         HCCL_WARNING("[FillRoceQos] invalid devPhyId, fallback to default dscp[%u].",
             static_cast<unsigned>(dscp));
     } else {
-        (void)Hccl::TpQosGetDscpByQosFromHccnCfg(devPhyId, slOut, dscp);
+    (void)Hccl::TpQosGetDscpByQosFromHccnCfg(devPhyId, slOut, dscp);
     }
     tcOut = static_cast<uint8_t>((static_cast<uint32_t>(dscp) << kDscpToRoceTcShift) & 0xFFU);
     HCCL_INFO("[FillRoceQos] hcclQos compat: hcclQos[%u] devPhyId[%u] dscp[%u] sl[%u] tc[%u].",
@@ -107,14 +107,45 @@ static void FillRoceQos(const hccl::CommConfig &commConfig, const Hccl::EnvRdmaC
         static_cast<unsigned>(tcOut));
 }
 
-static void FillChannelDescFinal(hccl::CommConfig commConfig, const HcclChannelDesc &channelDesc, HcclChannelDesc &channelDescFinal, bool isCommunicatorV2)
+static u32 ResolveQueueNum(const Hccl::EnvRdmaConfig& rdmaConfig, const HcclChannelDesc& channelDesc)
+{
+    if (channelDesc.roceAttr.queueNum != INVALID_UINT) { // 用户有配置qp数量，使用用户配置的
+        return channelDesc.roceAttr.queueNum;
+    }
+    // 查询channelDesc，localEndpoint与remoteEndpoint的CommAddr字段，得到ip对
+    const auto& qpSrcPortConfig = rdmaConfig.GetMultiQpSrcPortConfig();
+    const CommAddr& localCommAddr = channelDesc.localEndpoint.commAddr;
+    const CommAddr& remoteCommAddr = channelDesc.remoteEndpoint.commAddr;
+    char localIpStr[INET6_ADDRSTRLEN] = {0};
+    char remoteIpStr[INET6_ADDRSTRLEN] = {0};
+    s32 localFamily = (localCommAddr.type == COMM_ADDR_TYPE_IP_V6) ? AF_INET6 : AF_INET;
+    s32 remoteFamily = (remoteCommAddr.type == COMM_ADDR_TYPE_IP_V6) ? AF_INET6 : AF_INET;
+    const void* localSrc = (localFamily == AF_INET6) ? static_cast<const void*>(&localCommAddr.addr6) :
+                                                       static_cast<const void*>(&localCommAddr.addr);
+    const void* remoteSrc = (remoteFamily == AF_INET6) ? static_cast<const void*>(&remoteCommAddr.addr6) :
+                                                         static_cast<const void*>(&remoteCommAddr.addr);
+    (void)inet_ntop(localFamily, localSrc, localIpStr, sizeof(localIpStr));
+    (void)inet_ntop(remoteFamily, remoteSrc, remoteIpStr, sizeof(remoteIpStr));
+    Hccl::IpAddress localIp(localIpStr, localFamily);
+    Hccl::IpAddress remoteIp(remoteIpStr, remoteFamily);
+    // 根据ip对，查HCCL_RDMA_QP_PORT_CONFIG_PATH环境变量对应的源端口号
+    u32 srcPortNum = Hccl::GetMultiQpPortsNumByIpPair(qpSrcPortConfig, localIp, remoteIp);
+    if (srcPortNum > 0) { // 查看源端口号是否有配置，有则使用
+        return srcPortNum;
+    }
+    return rdmaConfig.GetRdmaQueueNum();
+}
+
+static void FillChannelDescFinal(
+    hccl::CommConfig commConfig, const HcclChannelDesc& channelDesc, HcclChannelDesc& channelDescFinal,
+    bool isCommunicatorV2)
 {
     if (isCommunicatorV2) { // A5
         auto& rdmaConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig();
         channelDescFinal.roceAttr.retryCnt = (channelDesc.roceAttr.retryCnt == INVALID_UINT) ? rdmaConfig.GetRdmaRetryCnt() : channelDesc.roceAttr.retryCnt;
         channelDescFinal.roceAttr.retryInterval = (channelDesc.roceAttr.retryInterval == INVALID_UINT) ? rdmaConfig.GetRdmaTimeOut() : channelDesc.roceAttr.retryInterval;
         FillRoceQos(commConfig, rdmaConfig, channelDesc, channelDescFinal.roceAttr.sl, channelDescFinal.roceAttr.tc);
-        channelDescFinal.roceAttr.queueNum = (channelDesc.roceAttr.queueNum == INVALID_UINT) ? rdmaConfig.GetRdmaQueueNum() : channelDesc.roceAttr.queueNum;
+        channelDescFinal.roceAttr.queueNum = ResolveQueueNum(rdmaConfig, channelDesc);
     } else {
         channelDescFinal.roceAttr.retryCnt = (channelDesc.roceAttr.retryCnt == INVALID_UINT) ? EnvConfig::GetExternalInputRdmaRetryCnt() : channelDesc.roceAttr.retryCnt;
         channelDescFinal.roceAttr.retryInterval = (channelDesc.roceAttr.retryInterval == INVALID_UINT) ? EnvConfig::GetExternalInputRdmaTimeOut() : channelDesc.roceAttr.retryInterval;
@@ -197,7 +228,7 @@ HcclResult ProcessHcclChannelDesc(const HcclChannelDesc &channelDesc, HcclChanne
     channelDescFinal.memHandles  = channelDesc.memHandles;
     channelDescFinal.memHandleNum  = channelDesc.memHandleNum;
 
-     // 根据协议类型拷贝union中的相应成员
+    // 根据协议类型拷贝union中的相应成员
     switch (channelDesc.channelProtocol) {
         case COMM_PROTOCOL_HCCS:
         case COMM_PROTOCOL_HCCS_ONLY:
@@ -241,22 +272,22 @@ HcclResult ProcessHcclResPackReq(const HcclChannelDesc &channelDesc, HcclChannel
     } else if (channelDesc.header.size > channelDescFinal.header.size) {
         // 需要后向向兼容HcclChannelDesc，末尾部分字段会被忽略
     }
- 
+
     if (channelDesc.header.magicWord != channelDescFinal.header.magicWord) {
         HCCL_ERROR("[%s]channelDescFinal.header.magicWord[%u] not equal to channelDesc.header.magicWord[%u]",
             __func__, channelDescFinal.header.magicWord, channelDesc.header.magicWord);
         return HCCL_E_PARA;
     }
- 
+
     uint32_t copySize = (channelDescFinal.header.size < channelDesc.header.size ?
         channelDescFinal.header.size : channelDesc.header.size) - sizeof(CommAbiHeader);
     CHK_SAFETY_FUNC_RET(memcpy_s(reinterpret_cast<uint8_t *>(&channelDescFinal) + sizeof(CommAbiHeader), copySize,
         reinterpret_cast<const uint8_t *>(&channelDesc) + sizeof(CommAbiHeader), copySize));
- 
+
     if (channelDesc.header.version >= HCCL_CHANNEL_VERSION_ONE) {
         CHK_RET(ProcessHcclChannelDesc(channelDesc, channelDescFinal, hcclComm));
     }
- 
+
     if (channelDesc.header.version > HCCL_CHANNEL_VERSION) {
         // 传入的版本高于当前版本，警告不支持的配置项将被忽略
         HCCL_WARNING("The version of provided [%u] is higher than the current version[%u], "
@@ -268,13 +299,13 @@ HcclResult ProcessHcclResPackReq(const HcclChannelDesc &channelDesc, HcclChannel
             "configurations supported by later versions will be ignored.",
             channelDesc.header.version, HCCL_CHANNEL_VERSION);
     }
- 
+
     // 如果扩展到version=2后
     // 1) 在底层为新的结构体和版本（version为2）上，会正常执行下面的判断处理逻辑；
     // 2) 在底层为旧的结构体和版本（version为1）上，下面的逻辑没有，version的2 > 1的部分会被忽略掉；
     if (channelDesc.header.version >= 2) {
     }
- 
+
     return HCCL_SUCCESS;
 }
 
@@ -500,11 +531,11 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
     CHK_PTR_NULL(channelDescs);
     CHK_PTR_NULL(channels);
     CHK_PRT_RET(
-        (channelNum == 0 || channelNum > CHANNEL_NUM_MAX), 
+        (channelNum == 0 || channelNum > CHANNEL_NUM_MAX),
         HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u], max channel num[%u]",
         __func__, channelNum, CHANNEL_NUM_MAX), HCCL_E_PARA
     );
- 
+
     HcclResult ret = HCCL_SUCCESS;
     hccl::hcclComm *hcclComm = static_cast<hccl::hcclComm *>(comm);
     HCCL_RUN_INFO("Entry-%s channelNum[%u], engine[%s] group[%s]", __func__, channelNum, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), hcclComm->GetIdentifier().c_str());
@@ -518,7 +549,7 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
             HCCL_ERROR("ProcessHcclResPackReq failed. channelDesc idx[%u], group[%s], engine[%s] channelNum[%llu], ret[%d]", idx, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, ret), ret);
         channelDescFinals.push_back(channelDescFinal);
     }
- 
+
     if (hcclComm->IsCommunicatorV2()) {  // A5
         hccl::CollComm* collComm = hcclComm->GetCollComm();
         CHK_PTR_NULL(collComm);
@@ -598,12 +629,12 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine,
                 channelDescFinals.data(), channelNum, channels);
         }
     }
- 
+
     CHK_PRT_RET(ret != HCCL_SUCCESS,
         HCCL_ERROR("[%s] Failed to acquire channel, group[%s], engine[%s], channelNum[%llu], ret[%d]", __func__, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, ret), ret);
 
     CHK_RET(ConvertAivChannelHandlesToDevicePtrs(engine, channelDescFinals.data(), channelNum, channels));
- 
+
     HCCL_RUN_INFO("[%s] acquire channel success, group[%s], engine[%s], channelNum[%llu], take time [%lld]us.", __func__, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, DURATION_US(TIME_NOW() - startut));
     EXCEPTION_HANDLE_END
     return HCCL_SUCCESS;

@@ -61,7 +61,7 @@ HcclResult FlushHandle::GetLbMax(int *lbMax) const
         HCCL_ERROR("[GetLbMax]Failed to get load balance max value. error_code=%d.", ret);
         return HCCL_E_ROCE_CONNECT;
     }
-    HCCL_INFO("[GetLbMax]Get load balance max value successfully, ibMax = %d", *lbMax);
+    HCCL_INFO("[GetLbMax]Get load balance max value successfully, lbMax = %d", *lbMax);
     return HCCL_SUCCESS;
 }
 

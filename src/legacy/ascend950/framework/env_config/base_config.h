@@ -14,6 +14,7 @@
 #include <vector>
 #include <functional>
 #include <climits>
+#include <regex>
 #include "ip_address.h"
 #include "dma_mode.h"
 #include "env_func.h"
@@ -45,7 +46,7 @@ private:
 
     CfgField<IpAddress>    hcclIfIp{"HCCL_IF_IP", {}, Str2T<IpAddress>};
     CfgField<u32>          hcclIfBasePort{"HCCL_IF_BASE_PORT", u32(HCCL_INVALIED_IF_BASE_PORT), Str2T<u32>,
-                                 CHK_RANGE_CLOSED<u32>(HCCL_INVALIED_IF_BASE_PORT_MIN, HCCL_INVALIED_IF_BASE_PORT_MAX)};
+        CHK_RANGE_CLOSED<u32>(HCCL_INVALIED_IF_BASE_PORT_MIN, HCCL_INVALIED_IF_BASE_PORT_MAX)};
     CfgField<SocketIfName> hcclSocketIfName{"HCCL_SOCKET_IFNAME", SocketIfName({}, false, false), CastSocketIfName};
     CfgField<bool>         whitelistDisable{"HCCL_WHITELIST_DISABLE", true, CastBin2Bool};
     CfgField<std::string>  hcclWhiteListFile{"HCCL_WHITELIST_FILE", "", Str2T<std::string>, CheckFilePath, SetRealPath};
@@ -69,7 +70,7 @@ private:
 
     CfgField<s32> hcclSocketFamily{"HCCL_SOCKET_FAMILY", -1, CastSocketFamily};
     CfgField<s32> linkTimeOut{"HCCL_CONNECT_TIMEOUT", s32(HCCL_LINK_TIME_OUT_S), Str2T<s32>,
-                              CHK_RANGE_CLOSED<s32>(HCCL_MIN_LINK_TIME_OUT_S, HCCL_MAX_LINK_TIME_OUT_S)};
+        CHK_RANGE_CLOSED<s32>(HCCL_MIN_LINK_TIME_OUT_S, HCCL_MAX_LINK_TIME_OUT_S)};
 };
 
 // RTS配置
@@ -120,14 +121,15 @@ private:
 class EnvRdmaConfig : public BaseConfig {
 public:
     void Parse() override;
-    u32  GetRdmaTrafficClass() const;
-    u32  GetRdmaServerLevel() const;
-    u32  GetRdmaTimeOut() const;
-    u32  GetRdmaRetryCnt() const;
-    u32  GetUboeTimeOut() const;
-    u32  GetUbTimeOut() const;
-    u32  GetRdmaQueueNum() const;
-    u32  GetRdmaMultiQpThreshold() const;
+    u32 GetRdmaTrafficClass() const;
+    u32 GetRdmaServerLevel() const;
+    u32 GetRdmaTimeOut() const;
+    u32 GetRdmaRetryCnt() const;
+    u32 GetUboeTimeOut() const;
+    u32 GetUbTimeOut() const;
+    u32 GetRdmaQueueNum() const;
+    u32 GetRdmaMultiQpThreshold() const;
+    const MultiQpSrcPortConfig& GetMultiQpSrcPortConfig() const;
 
     static constexpr u32 HCCL_RDMA_TC_DEFAULT        = 132; // 默认的traffic class为132(33*4)
     static constexpr u32 HCCL_RDMA_SL_DEFAULT        = 4;   // 默认的server level为4
@@ -151,21 +153,32 @@ public:
 
 private:
     CfgField<u32> rdmaTrafficClass{"HCCL_RDMA_TC", u32(HCCL_RDMA_TC_DEFAULT), Str2T<u32>,
-                                   CHK_RANGE_CLOSED<u32>(HCCL_RDMA_TC_MIN, HCCL_RDMA_TC_MAX), CheckRDMATrafficClass};
+        CHK_RANGE_CLOSED<u32>(HCCL_RDMA_TC_MIN, HCCL_RDMA_TC_MAX), CheckRDMATrafficClass};
     CfgField<u32> rdmaServerLevel{"HCCL_RDMA_SL", u32(HCCL_RDMA_SL_DEFAULT), Str2T<u32>,
-                                  CHK_RANGE_CLOSED<u32>(HCCL_RDMA_SL_MIN, HCCL_RDMA_SL_MAX)};
+        CHK_RANGE_CLOSED<u32>(HCCL_RDMA_SL_MIN, HCCL_RDMA_SL_MAX)};
     CfgField<u32> rdmaTimeOut{"HCCL_RDMA_TIMEOUT", u32(HCCL_RDMA_TIMEOUT_DEFAULT), Str2T<u32>,
                               CheckRdmaTimeout, ProcRdmaTimeout};
     CfgField<u32> rdmaRetryCnt{"HCCL_RDMA_RETRY_CNT", u32(HCCL_RDMA_RETRY_CNT_DEFAULT), Str2T<u32>,
-                               CHK_RANGE_CLOSED<u32>(HCCL_RDMA_RETRY_CNT_MIN, HCCL_RDMA_RETRY_CNT_MAX)};
+        CHK_RANGE_CLOSED<u32>(HCCL_RDMA_RETRY_CNT_MIN, HCCL_RDMA_RETRY_CNT_MAX)};
     CfgField<u32> uboeTimeOut{"HCCL_UBOE_TIMEOUT", u32(HCCL_UBOE_TIMEOUT_DEFAULT), Str2T<u32>,
-                              CHK_RANGE_CLOSED<u32>(HCCL_UBOE_TIMEOUT_MIN, HCCL_UBOE_TIMEOUT_MAX)};
+        CHK_RANGE_CLOSED<u32>(HCCL_UBOE_TIMEOUT_MIN, HCCL_UBOE_TIMEOUT_MAX)};
     CfgField<u32> ubTimeOut{"HCCL_UB_TIMEOUT", u32(HCCL_UB_TIMEOUT_DEFAULT), Str2T<u32>,
-                            CHK_RANGE_CLOSED<u32>(HCCL_UB_TIMEOUT_MIN, HCCL_UB_TIMEOUT_MAX)};
-    CfgField<u32> queueNum{"HCCL_RDMA_QPS_PER_CONNECTION", u32(1), Str2T<u32>,
-                               CHK_RANGE_CLOSED<u32>(1, 32)};
-    CfgField<u32> multiQpThreshold{"HCCL_MULTI_QP_THRESHOLD", u32(512), Str2T<u32>,
-                               CHK_RANGE_CLOSED<u32>(1, 8192), ConvertUnitQpThreshold};
+        CHK_RANGE_CLOSED<u32>(HCCL_UB_TIMEOUT_MIN, HCCL_UB_TIMEOUT_MAX)};
+    CfgField<u32> queueNum{"HCCL_RDMA_QPS_PER_CONNECTION", u32(1), Str2T<u32>, CHK_RANGE_CLOSED<u32>(1, 32)};
+    CfgField<u32> multiQpThreshold{
+        "HCCL_MULTI_QP_THRESHOLD", u32(512), Str2T<u32>, CHK_RANGE_CLOSED<u32>(1, 8192), ConvertUnitQpThreshold};
+    void ParseMultiQpSrcPortConfig();
+    HcclResult OpenMultiQpConfigFile(std::ifstream& inFile);
+    HcclResult ParseConfigContent(std::ifstream& inFile, MultiQpSrcPortConfig& config);
+    HcclResult ParseLineToIpPairAndPortPart(
+        const std::string& lineInfo, u32 lineCnt, const std::string& lineAvator, std::string& ipPairKey,
+        std::string& portPart);
+    HcclResult ParseSrcPortsFromPortPart(
+        const std::string& portPart, u32 lineCnt, const std::string& lineAvator, std::vector<std::uint16_t>& ports);
+    void LogMultiQpSrcPortConfig() const;
+    CfgField<std::string> qpPortConfigPath{
+        "HCCL_RDMA_QP_PORT_CONFIG_PATH", "", Str2T<std::string>, CheckFilePath, SetRealPath};
+    MultiQpSrcPortConfig multiQpSrcPortConfig_;
 };
 
 // 算法配置
@@ -184,14 +197,14 @@ private:
     static constexpr u64 HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE = (1 * 1024 * 1024);
 
     CfgField<std::string>               primQueueGenName{"PRIM_QUEUE_GEN_NAME", "", Str2T<std::string>};
-    
+
     CfgField<std::map<OpType, std::vector<HcclAlgoType>>> hcclAlgoConfig{
         "HCCL_ALGO", std::map<OpType, std::vector<HcclAlgoType>> (), SetHcclAlgoConfig};
 
     CfgField<u64> bufferSize{"HCCL_BUFFSIZE", HCCL_CCL_COMM_DEFAULT_BUFFER_SIZE *HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE,
                              Str2T<u64>, CHK_RANGE_CLOSED<u64>(HCCL_CCL_COMM_BUFFER_MIN, ULLONG_MAX), [](u64 &i) {
-                                 i *= HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE;
-                             }};
+            i *= HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE;
+        }};
     CfgField<HcclAccelerator> hcclAccelerator_{"HCCL_OP_EXPANSION_MODE", HcclAccelerator::AICPU_TS,
                                               CastHcclAccelerator};
 };

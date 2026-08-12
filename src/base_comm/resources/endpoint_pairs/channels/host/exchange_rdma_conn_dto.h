@@ -15,6 +15,8 @@
 #include "binary_stream.h"
 #include "serializable.h"
 
+constexpr uint32_t HYPER_FEATURE_LEN = 64U;
+
 namespace hcomm {
 class ExchangeRdmaConnDto : public Hccl::Serializable {
 public:
@@ -22,15 +24,9 @@ public:
 
     ExchangeRdmaConnDto(uint32_t qpn, uint32_t psn, uint32_t gid_idx) : qpn_(qpn), psn_(psn), gid_idx_(gid_idx){};
 
-    void Serialize(Hccl::BinaryStream &stream) override
-    {
-        stream << qpn_ << psn_ << gid_idx_ << gid_;
-    }
+    void Serialize(Hccl::BinaryStream &stream) override { stream << qpn_ << psn_ << gid_idx_ << gid_ << feature_; }
 
-    void Deserialize(Hccl::BinaryStream &stream) override
-    {
-        stream >> qpn_ >> psn_ >> gid_idx_ >> gid_;
-    }
+    void Deserialize(Hccl::BinaryStream &stream) override { stream >> qpn_ >> psn_ >> gid_idx_ >> gid_ >> feature_; }
 
     std::string Describe() const override
     {
@@ -43,6 +39,7 @@ public:
     uint32_t psn_;
     uint32_t gid_idx_;
     uint8_t gid_[HCCP_GID_RAW_LEN];
+    char feature_[HYPER_FEATURE_LEN];
 };
 
 } // namespace Hccl

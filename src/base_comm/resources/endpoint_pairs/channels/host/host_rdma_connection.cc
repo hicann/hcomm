@@ -174,6 +174,8 @@ HcclResult HostRdmaConnection::GetExchangeDto(std::unique_ptr<Hccl::Serializable
         return HCCL_E_PTR
     );
     CHK_SAFETY_FUNC_RET(memcpy_s(dto->gid_, HCCP_GID_RAW_LEN, localQpAttr.gid, HCCP_GID_RAW_LEN));
+    CHK_SAFETY_FUNC_RET(
+        memcpy_s(dto->feature_, HYPER_FEATURE_LEN, &localQpAttr.feature, HYPER_FEATURE_LEN)); // feature扩展
     locQpAttrserial = std::unique_ptr<Hccl::Serializable>(std::move(dto));
     return HCCL_SUCCESS;
 }
@@ -186,6 +188,8 @@ HcclResult HostRdmaConnection::ParseRmtExchangeDto(const Hccl::Serializable &rmt
     rmtQpAttr_.qpn = dto.qpn_;
     rmtQpAttr_.gid_idx = dto.gid_idx_;
     CHK_SAFETY_FUNC_RET(memcpy_s(rmtQpAttr_.gid, HCCP_GID_RAW_LEN, dto.gid_, HCCP_GID_RAW_LEN));
+    CHK_SAFETY_FUNC_RET(
+        memcpy_s(rmtQpAttr_.feature, HYPER_FEATURE_LEN, dto.feature_, HYPER_FEATURE_LEN)); // feature扩展
     return HCCL_SUCCESS;
 }
 
@@ -230,7 +234,8 @@ HcclResult HostRdmaConnection::ModifyQp()
     localQp.qpn = localQpAttr.qpn;
     localQp.psn = localQpAttr.psn;
     localQp.gidIdx = localQpAttr.gidIdx;
-    (void)memcpy_s(localQp.gid, HCCP_GID_RAW_LEN, localQpAttr.gid, HCCP_GID_RAW_LEN);
+    localQp.udpSport = qpInfo_.udpSport;
+    CHK_SAFETY_FUNC_RET(memcpy_s(localQp.gid, HCCP_GID_RAW_LEN, localQpAttr.gid, HCCP_GID_RAW_LEN));
     rmtQp.sl = qpInfo_.serviceLevel;
     rmtQp.tc = qpInfo_.trafficClass;
     rmtQp.retryCnt = qpInfo_.retryCnt;
@@ -238,7 +243,8 @@ HcclResult HostRdmaConnection::ModifyQp()
     rmtQp.qpn = rmtQpAttr_.qpn;
     rmtQp.psn = rmtQpAttr_.psn;
     rmtQp.gidIdx = rmtQpAttr_.gid_idx;
-    (void)memcpy_s(rmtQp.gid, HCCP_GID_RAW_LEN, rmtQpAttr_.gid, HCCP_GID_RAW_LEN);
+    CHK_SAFETY_FUNC_RET(memcpy_s(rmtQp.gid, HCCP_GID_RAW_LEN, rmtQpAttr_.gid, HCCP_GID_RAW_LEN));
+    CHK_SAFETY_FUNC_RET(memcpy_s(&rmtQp.feature, HYPER_FEATURE_LEN, rmtQpAttr_.feature, HYPER_FEATURE_LEN));
     ret = RaTypicalQpModify(qpInfo_.qpHandle, &localQp, &rmtQp);
     if (ret != 0) {
         HCCL_ERROR("[modify][ra_qp]modify qp failed, ret(%d)", ret);

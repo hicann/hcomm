@@ -15,6 +15,7 @@
 #include <functional>
 #include <sstream>
 #include <set>
+#include <unordered_map>
 #include "exception_util.h"
 #include "dma_mode.h"
 #include "ip_address.h"
@@ -229,6 +230,25 @@ extern void ProcRdmaTimeout(u32 &timeout);
 extern void CheckRDMATrafficClass(const u32 &rdmaTrafficClass);
 
 extern void ConvertUnitQpThreshold(u32 &multiQpThreshold);
+
+/*----------------------- multi qp src port config --------------------------*/
+struct MultiQpSrcPortConfig {
+    std::string configDirPath;
+    std::unordered_map<std::string, std::vector<std::uint16_t>> ipPairToPorts;
+
+    bool IsAvailable() const { return !ipPairToPorts.empty(); }
+
+    static constexpr u32 CONFIG_FILE_LINE_MAX = 128 * 1024;
+    static constexpr u32 CONFIG_SRC_PORT_NUM_MAX = 32;
+    static constexpr u32 CONFIG_SRC_PORT_ID_MAX = 65535;
+    static constexpr u32 CONFIG_IP_NUM = 2;
+};
+
+extern u32
+GetMultiQpPortsNumByIpPair(const MultiQpSrcPortConfig& config, const IpAddress& srcIp, const IpAddress& dstIp);
+
+extern std::vector<std::uint16_t>
+GetMultiQpSrcPortsByIpPair(const MultiQpSrcPortConfig& config, const IpAddress& srcIp, const IpAddress& dstIp);
 
 } // namespace Hccl
 

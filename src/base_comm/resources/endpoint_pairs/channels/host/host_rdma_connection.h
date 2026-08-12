@@ -28,6 +28,7 @@ public:
         uint32_t psn{UINT32_MAX};
         uint32_t gid_idx{0};
         unsigned char gid[HCCP_GID_RAW_LEN];
+        char feature[HYPER_FEATURE_LEN];
 
         bool IsValid() {
             if (qpn == UINT32_MAX || psn == UINT32_MAX) {
