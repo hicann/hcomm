@@ -3208,6 +3208,37 @@ HcclResult WaitRequestResult(void* raReqHandle, RequestHandle& reqHandle)
     return HCCL_SUCCESS;
 }
 
+HcclResult HrtRaGetTpAttr(RdmaHandle handle, uint64_t tpHandle, uint32_t& attrBitmap, TpAttr& attr)
+{
+    const s32 ret = RaCtxGetTpAttr(handle, tpHandle, &attrBitmap, &attr);
+    if (ret != 0) {
+        HCCL_ERROR(
+            "[HrtRaGetTpAttr] RaCtxGetTpAttr failed ret[%d] tpHandle[%llu] attrBitmap[0x%x].", ret, tpHandle,
+            attrBitmap);
+        return HCCL_E_NETWORK;
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult HrtRaSetTpAttr(RdmaHandle handle, uint64_t tpHandle, uint32_t attrBitmap, TpAttr& attr)
+{
+    const s32 ret = RaCtxSetTpAttr(handle, tpHandle, attrBitmap, &attr);
+    if (ret != 0) {
+        HCCL_ERROR(
+            "[HrtRaSetTpAttr] RaCtxSetTpAttr failed ret[%d] tpHandle[%llu] attrBitmap[0x%x].", ret, tpHandle,
+            attrBitmap);
+        return HCCL_E_NETWORK;
+    }
+    return HCCL_SUCCESS;
+}
+
+bool HrtRaSupportsGetTpAttr(u32 phyId)
+{
+    u32 tpAttrVersion = 0;
+    const s32 ret = RaGetInterfaceVersion(phyId, GET_TP_ATTR_OPCODE, &tpAttrVersion);
+    return (ret == 0 && tpAttrVersion >= GET_TP_ATTR_VERSION);
+}
+
 HcclResult
 HrtRaSetTpAttrAsync(RdmaHandle handle, uint64_t tpHandle, uint32_t attrBitmap, TpAttr& attr, RequestHandle& reqHandle)
 {
@@ -3228,17 +3259,13 @@ HcclResult HrtRaGetTpAttrAsync(
     u32 phyId, RdmaHandle handle, uint64_t tpHandle, uint32_t& attrBitmap, TpAttr& attr, RequestHandle& reqHandle)
 {
     HCCL_INFO("[HrtRaGetTpAttrAsync] begain, reqHandle[%llu]", reqHandle);
-    u32 tpAttrVersion = 0;
-    s32 ret = RaGetInterfaceVersion(phyId, GET_TP_ATTR_OPCODE, &tpAttrVersion);
-    if (ret != 0 || tpAttrVersion < GET_TP_ATTR_VERSION) {
+    if (!HrtRaSupportsGetTpAttr(phyId)) {
         HCCL_ERROR(
-            "this package does not support RaGetTpAttrAsync for device, please change new package, ret=%d, "
-            "tpAttrVersion=%u.",
-            ret, tpAttrVersion);
+            "this package does not support RaGetTpAttrAsync for device, please change new package, phyId=%u.", phyId);
         return HCCL_E_NOT_SUPPORT;
     }
     void* raReqHandle = nullptr;
-    ret = RaGetTpAttrAsync(handle, tpHandle, &attrBitmap, &attr, &raReqHandle);
+    s32 ret = RaGetTpAttrAsync(handle, tpHandle, &attrBitmap, &attr, &raReqHandle);
     if (ret != 0) {
         string msg = StringFormat("call RaGetTpAttrAsync failed, error code =%d.", ret);
         THROW<NetworkApiException>(msg);
@@ -3246,6 +3273,21 @@ HcclResult HrtRaGetTpAttrAsync(
 
     CHK_RET(WaitRequestResult(raReqHandle, reqHandle));
     HCCL_INFO("[HrtRaGetTpAttrAsync] success, reqHandle[%llu]", reqHandle);
+    return HCCL_SUCCESS;
+}
+
+HcclResult HrtRaStartGetTpAttrAsync(
+    RdmaHandle handle, uint64_t tpHandle, uint32_t& attrBitmap, TpAttr& attr, RequestHandle& reqHandle)
+{
+    void* raReqHandle = nullptr;
+    const s32 ret = RaGetTpAttrAsync(handle, tpHandle, &attrBitmap, &attr, &raReqHandle);
+    if (ret != 0 || raReqHandle == nullptr) {
+        HCCL_ERROR(
+            "[HrtRaStartGetTpAttrAsync] RaGetTpAttrAsync failed ret[%d] raReqHandle[%p] tpHandle[%llu].", ret,
+            raReqHandle, tpHandle);
+        return HCCL_E_NETWORK;
+    }
+    reqHandle = reinterpret_cast<RequestHandle>(raReqHandle);
     return HCCL_SUCCESS;
 }
 

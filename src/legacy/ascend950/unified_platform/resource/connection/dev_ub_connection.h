@@ -205,8 +205,6 @@ private:
 
     CqCreateInfo cqInfo_{0};
 
-    bool isdevUsed{false};
-
     // 最大传输size，切片使用
     u32 maxReadSize{0};
     u32 maxWriteSize{0};
@@ -218,13 +216,9 @@ private:
 
     bool CheckRequestResult();
     void ThrowAbnormalStatus(std::string funcName);
-    void AdvanceUbConnFromInit();
-    void AdvanceUbConnFromTpInfoGetting();
-    void AdvanceUbConnAfterTpInfoReady();
-    void AdvanceUbConnFromJettyCreating();
-    void AdvanceUbConnFromJettyCreated();
-    void AdvanceUbConnFromJettyImporting();
 
+    void ProcessInit();
+    void ProcessCreateJetty();
     void GenerateLocalPsn();
     void CreateJetty(const bool devUsed);
     void CreateAivUrmaJfc();

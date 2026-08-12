@@ -801,11 +801,22 @@ HcclResult HrtGetCcuMemInfo(
 
 HcclResult HrtRaGetEidByIp(RdmaHandle handle, const vector<IpAddress>& ipV4AddrList, vector<IpAddress>& eidAddrList);
 
+/// 同步 Get/Set TpAttr（HOST_NET ctx 路径，包装 RaCtxGetTpAttr / RaCtxSetTpAttr）。
+HcclResult HrtRaGetTpAttr(RdmaHandle handle, uint64_t tpHandle, uint32_t& attrBitmap, TpAttr& attr);
+HcclResult HrtRaSetTpAttr(RdmaHandle handle, uint64_t tpHandle, uint32_t attrBitmap, TpAttr& attr);
+/// 设备侧是否支持 GetTpAttr（接口版本探测）。
+bool HrtRaSupportsGetTpAttr(u32 phyId);
+
 /// 发起 RaSetTpAttrAsync 后 WaitRequestResult 阻塞至完成；对调用方为同步语义。
 HcclResult
 HrtRaSetTpAttrAsync(RdmaHandle handle, uint64_t tpHandle, uint32_t attrBitmap, TpAttr& attr, RequestHandle& reqHandle);
+/// 发起 RaGetTpAttrAsync 后 WaitRequestResult 阻塞至完成；对调用方为同步语义。
 HcclResult HrtRaGetTpAttrAsync(
     u32 phyId, RdmaHandle handle, uint64_t tpHandle, uint32_t& attrBitmap, TpAttr& attr, RequestHandle& reqHandle);
+/// 仅发起 RaGetTpAttrAsync，不 Wait；供轮询路径使用。
+/// 调用方须先确认 HrtRaSupportsGetTpAttr(phyId) 为 true（本接口无 phyId，不做设备支持校验）。
+HcclResult HrtRaStartGetTpAttrAsync(
+    RdmaHandle handle, uint64_t tpHandle, uint32_t& attrBitmap, TpAttr& attr, RequestHandle& reqHandle);
 
 constexpr u32 GET_UBOE_FLAG_ENABLE_OPCODE = 57;
 constexpr u32 GET_UBOE_FLAG_ENABLE_VERSION = 2;

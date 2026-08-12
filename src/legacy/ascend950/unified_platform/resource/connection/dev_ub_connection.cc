@@ -61,8 +61,6 @@ DevUbConnection::DevUbConnection(
     } else {
         jfcHandle = RdmaHandleManager::GetInstance().GetJfcHandle(rdmaHandle, cqInfo_, jfcMode);
     }
-    isdevUsed = devUsed;
-
     if (sqDepth == UB_SQ_DEPTH_NOT_SET) {
         sqDepth = OPBASED_UB_SQ_DEPTH_MAX;
         if (opMode == OpMode::OFFLOAD && !devUsed) {
@@ -120,8 +118,8 @@ DevUbUboeConnection::DevUbUboeConnection(
 
 DevUbUbgConnection::DevUbUbgConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
-    const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locAddrEid, const IpAddress& rmtAddrEid,
-    const u8 qos, CommEngine engine, u32 sqDepth)
+    const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locAddrEid, const IpAddress& rmtAddrEid, u8 qos,
+    CommEngine engine, u32 sqDepth)
     : DevUbConnection(
           rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, engine, sqDepth)
 {
@@ -266,109 +264,84 @@ void DevUbConnection::GetTimeOut() // 直接基于环境变量控制
     HCCL_INFO("%s final TA Timeout [%u] (%ums).", __func__, jettyTimeOut, envTimeOut);
 }
 
-void DevUbConnection::AdvanceUbConnAfterTpInfoReady()
-{
-    if (isSharedJetty_) {
-        // 共享 jetty 模式：jetty 句柄已由 InjectSharedJetty 注入，跳过 CreateJetty，直接进入 JETTY_CREATED
-        GetTimeOut();
-        status = RmaConnStatus::EXCHANGEABLE;
-        ubConnStatus = UbConnStatus::JETTY_CREATED;
-        HCCL_INFO("[DevUbConnection][%s] shared jetty mode, skip CreateJetty, direct to JETTY_CREATED.", __func__);
-        return;
-    }
-
-    if (devUsed_) {
-        GetTimeOut();
-        CreateJetty(devUsed_);
-        ubConnStatus = UbConnStatus::JETTY_CREATING;
-        return;
-    }
-    GetTimeOut();
-    CreateJetty(isdevUsed);
-    if (!CheckRequestResult()) {
-        ubConnStatus = UbConnStatus::JETTY_CREATING;
-        return;
-    }
-    SetJettyInfo();
-    status = RmaConnStatus::EXCHANGEABLE;
-    ubConnStatus = UbConnStatus::JETTY_CREATED;
-}
-
-void DevUbConnection::AdvanceUbConnFromInit()
-{
-    HCCL_INFO(
-        "[DevUbConnection][%s] start, status[%s], ubConnStatus[%s].", __func__, status.Describe().c_str(),
-        ubConnStatus.Describe().c_str());
-
-    if (!GetTpInfo()) {
-        ubConnStatus = UbConnStatus::TP_INFO_GETTING;
-        return;
-    }
-    AdvanceUbConnAfterTpInfoReady();
-}
-
-void DevUbConnection::AdvanceUbConnFromTpInfoGetting()
-{
-    if (!GetTpInfo()) {
-        return;
-    }
-    AdvanceUbConnAfterTpInfoReady();
-}
-
-void DevUbConnection::AdvanceUbConnFromJettyCreating()
-{
-    if (CheckRequestResult()) {
-        SetJettyInfo();
-        status = RmaConnStatus::EXCHANGEABLE;
-        ubConnStatus = UbConnStatus::JETTY_CREATED;
-    }
-}
-
-void DevUbConnection::AdvanceUbConnFromJettyCreated()
-{
-    HCCL_INFO(
-        "[DevUbConnection][%s] status[%s] will not change, "
-        "should call ImportRmtDto to change status.",
-        __func__, status.Describe().c_str());
-}
-
-void DevUbConnection::AdvanceUbConnFromJettyImporting()
-{
-    SetImportInfo();
-
-    status = RmaConnStatus::READY;
-    ubConnStatus = UbConnStatus::READY;
-}
-
+/*
+ * UB 建链状态机（GetTpInfo/CreateJetty 异步未完成则停；同步成功时可同次推进）:
+ *   INIT                  --GetTpInfo fail--> TP_INFO_GETTING
+ *   INIT / TP_INFO_GETTING --GetTpInfo ok--> CreateJetty --> JETTY_CREATING | JETTY_CREATED
+ *                         （isSharedJetty_ 时跳过 CreateJetty，直接 JETTY_CREATED）
+ *   JETTY_CREATING         --create done--> JETTY_CREATED (EXCHANGEABLE)
+ *   JETTY_CREATED          --ImportRmtDto--> JETTY_IMPORTING（此处不推进）
+ *   JETTY_IMPORTING        --import done--> READY
+ */
 RmaConnStatus DevUbConnection::GetStatus()
 {
+    // 稳定态 / 等待外部 ImportRmtDto：无需推进
+    if (ubConnStatus == UbConnStatus::READY || ubConnStatus == UbConnStatus::JETTY_CREATED) {
+        return status;
+    }
+
     if (!CheckRequestResult()) {
         return status;
     }
 
     switch (ubConnStatus) {
         case UbConnStatus::INIT:
-            AdvanceUbConnFromInit();
+            ProcessInit();
             break;
         case UbConnStatus::TP_INFO_GETTING:
-            AdvanceUbConnFromTpInfoGetting();
+            if (!GetTpInfo()) {
+                break;
+            }
+            ProcessCreateJetty();
             break;
         case UbConnStatus::JETTY_CREATING:
-            AdvanceUbConnFromJettyCreating();
-            break;
-        case UbConnStatus::JETTY_CREATED:
-            AdvanceUbConnFromJettyCreated();
+            SetJettyInfo();
+            status = RmaConnStatus::EXCHANGEABLE;
+            ubConnStatus = UbConnStatus::JETTY_CREATED;
             break;
         case UbConnStatus::JETTY_IMPORTING:
-            AdvanceUbConnFromJettyImporting();
-            break;
-        case UbConnStatus::READY:
+            SetImportInfo();
+            status = RmaConnStatus::READY;
+            ubConnStatus = UbConnStatus::READY;
             break;
         default:
             ThrowAbnormalStatus(std::string(__func__));
+            break;
     }
 
     return status;
+}
+
+void DevUbConnection::ProcessInit()
+{
+    HCCL_INFO(
+        "[DevUbConnection][%s] start, status[%s], ubConnStatus[%s].", __func__, status.Describe().c_str(),
+        ubConnStatus.Describe().c_str());
+    if (!GetTpInfo()) {
+        ubConnStatus = UbConnStatus::TP_INFO_GETTING;
+        return;
+    }
+    ProcessCreateJetty();
+}
+
+void DevUbConnection::ProcessCreateJetty()
+{
+    GetTimeOut();
+    if (isSharedJetty_) {
+        // 共享 jetty：句柄已由 InjectSharedJetty 注入，跳过 CreateJetty
+        status = RmaConnStatus::EXCHANGEABLE;
+        ubConnStatus = UbConnStatus::JETTY_CREATED;
+        HCCL_INFO("[DevUbConnection][%s] shared jetty mode, skip CreateJetty, direct to JETTY_CREATED.", __func__);
+        return;
+    }
+    CreateJetty(devUsed_);
+    if (devUsed_ || !CheckRequestResult()) {
+        ubConnStatus = UbConnStatus::JETTY_CREATING;
+        return;
+    }
+    SetJettyInfo();
+    status = RmaConnStatus::EXCHANGEABLE;
+    ubConnStatus = UbConnStatus::JETTY_CREATED;
 }
 
 std::unique_ptr<Serializable> DevUbConnection::GetExchangeDto()
@@ -526,8 +499,8 @@ HcclResult DevUbConnection::InjectSharedJetty(
     // 一致的 tpHandle，避免临时 connection 析构释放 HCCL TP 缓存后主 connection 重新申请
     // 得到不同 tpHandle，导致对端 import jetty 时 peerTpHandle 路由不匹配。
     tpInfo.tpHandle = tpHdl;
-    // 注入后不直接跳状态机：仍需走 GetTpInfo 获取 TP 信息，由 AdvanceUbConnAfterTpInfoReady
-    // 共享分支跳过 CreateJetty 直接进入 JETTY_CREATED
+    // 注入后不直接跳状态机：仍需走 GetTpInfo 获取 TP 信息，由 ProcessCreateJetty
+    // 中 isSharedJetty_ 分支跳过 CreateJetty 直接进入 JETTY_CREATED
     HCCL_INFO(
         "[DevUbConnection][%s] shared jetty injected, handle[0x%llx], jettyId[%u], sqDepth[%u], tpHandle[0x%llx].",
         __func__, static_cast<unsigned long long>(jettyHandle), jettyId, sqDepth,

@@ -634,12 +634,6 @@ namespace {
 
 uint8_t gLegacyLoopJettyQos = 0U;
 
-HcclResult StubHrtRaGetTpAttrAsyncLoopSl7(u32, RdmaHandle, uint64_t, uint32_t&, TpAttr& tpAttr, RequestHandle&)
-{
-    tpAttr.slBitmap = (1U << 7U);
-    return HcclResult::HCCL_SUCCESS;
-}
-
 HrtRaUbJettyCreatedOutParam StubHrtRaUbCreateJettyCaptureQos(RdmaHandle, const HrtRaUbCreateJettyParam& req)
 {
     gLegacyLoopJettyQos = req.qos;
@@ -662,7 +656,7 @@ void MockLoopJettyBufferDeps()
 
 } // namespace
 
-TEST_F(CcuComponentTest, Ut_CreateAndImportLoopJettys_When_TpSlAvailable_Expect_QosMapped)
+TEST_F(CcuComponentTest, Ut_CreateAndImportLoopJettys_When_MappedPrioritySet_Expect_QosApplied)
 {
     gLegacyLoopJettyQos = 0U;
     const int32_t devLogicId = MAX_MODULE_DEVICE_NUM - 1;
@@ -679,6 +673,8 @@ TEST_F(CcuComponentTest, Ut_CreateAndImportLoopJettys_When_TpSlAvailable_Expect_
 
     TpInfo tpInfo{};
     tpInfo.tpHandle = 0x555ULL;
+    tpInfo.hasMappedJettyPriority = true;
+    tpInfo.mappedJettyPriority = 7U;
     ccuComponent.tpInfoMap[ipAddr] = tpInfo;
 
     TpAttrInfo tpAttrInfo{};
@@ -687,7 +683,6 @@ TEST_F(CcuComponentTest, Ut_CreateAndImportLoopJettys_When_TpSlAvailable_Expect_
 
     MOCKER_CPP(&RdmaHandleManager::GetByIp).stubs().will(returnValue(reinterpret_cast<RdmaHandle>(0x222)));
     MOCKER_CPP(&RdmaHandleManager::GetJfcHandle).stubs().will(returnValue(static_cast<JfcHandle>(0x333ULL)));
-    MOCKER(HrtRaGetTpAttrAsync).stubs().will(invoke(StubHrtRaGetTpAttrAsyncLoopSl7));
     MOCKER(HrtRaUbCreateJetty).stubs().will(invoke(StubHrtRaUbCreateJettyCaptureQos));
     MOCKER(RaUbTpImportJetty).stubs().will(invoke(StubRaUbTpImportJetty));
 
@@ -703,7 +698,7 @@ TEST_F(CcuComponentTest, Ut_CreateAndImportLoopJettys_When_TpSlAvailable_Expect_
     GlobalMockObject::verify();
 }
 
-TEST_F(CcuComponentTest, Ut_CreateAndImportLoopJettys_When_TpHandleZero_Expect_DefaultQos)
+TEST_F(CcuComponentTest, Ut_CreateAndImportLoopJettys_When_NoMappedPriority_Expect_DefaultQos)
 {
     gLegacyLoopJettyQos = 0U;
     const int32_t devLogicId = MAX_MODULE_DEVICE_NUM - 1;
@@ -719,7 +714,8 @@ TEST_F(CcuComponentTest, Ut_CreateAndImportLoopJettys_When_TpHandleZero_Expect_D
         = std::make_unique<LocalUbRmaBuffer>(buffer, reinterpret_cast<RdmaHandle>(0x444));
 
     TpInfo tpInfo{};
-    tpInfo.tpHandle = 0ULL;
+    tpInfo.tpHandle = 0x555ULL;
+    tpInfo.hasMappedJettyPriority = false;
     ccuComponent.tpInfoMap[ipAddr] = tpInfo;
 
     TpAttrInfo tpAttrInfo{};

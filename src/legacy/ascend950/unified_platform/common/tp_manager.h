@@ -83,7 +83,7 @@ class TpManager {
 public:
     static TpManager& GetInstance(const int32_t deviceLogicId);
     void Init();
-    /// `isSync==true`：同步路径（HOST_NET ctx + RaCtx* 接口），一次返回 SUCCESS。
+    /// `isSync==true`：同步路径（HOST_NET ctx + HrtRa* 同步接口），一次返回 SUCCESS。
     /// `isSync==false`：异步三阶段，轮询返回 HCCL_E_AGAIN。
     HcclResult GetTpInfo(const RaUbGetTpInfoParam& param, TpInfo& tpInfo, bool isSync = false);
     // unimport jetty 会 URMA 销毁 tp 资源，hccl 配套删除记录
@@ -136,6 +136,7 @@ private:
     struct TpAttrRequestCtx {
         RequestHandle handle{0};
         struct TpAttr tpAttr {};
+        uint32_t attrBitmap{0};
     };
 
     /// 三级索引：先按本端 IP，再按对端 IP，最后按 QoS 键（`QosKey`：`param.qos & 0xFF`，与 next `TpMgr` 一致）。

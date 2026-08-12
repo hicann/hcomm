@@ -21,9 +21,6 @@
 #include "network_api_exception.h"
 #include "tp_qos.h"
 
-#include "hccp.h"
-#include "hccp_async_ctx.h"
-#include "hccp_ctx.h"
 #include "dev_type.h"
 #include "orion_adapter_rts.h"
 #include "rdma_handle_manager.h"
@@ -31,7 +28,7 @@
 
 namespace Hccl {
 
-// RaGetTpAttrAsync 属性位图常量；匿名命名空间内工具与 TpManager 成员函数共用
+// GetTpAttr 属性位图常量；匿名命名空间内工具与 TpManager 成员函数共用
 constexpr uint32_t kTpAttrSlAvailableBit = 17U;
 constexpr uint32_t kTpAttrBitmapSl = (1U << 10U);
 constexpr uint32_t kTpAttrBitmapDscp = (1U << 8U);
@@ -41,9 +38,6 @@ constexpr uint32_t kTpAttrDscpConfigModeBit = 18U;
 constexpr uint32_t kTpAttrBitmapUboeNetWithDscp = 0x1FCU;
 
 namespace {
-
-    constexpr uint32_t kGetTpAttrOpcode = 106U;
-    constexpr uint32_t kGetTpAttrVersion = 2U;
 
     static constexpr QosKey QosMapKey(uint32_t qos) noexcept { return static_cast<QosKey>(qos & 0xFFU); }
 
@@ -144,35 +138,18 @@ namespace {
         return true;
     }
 
-    static uint8_t ResolveUboeDscpLookupQos(const RaUbGetTpInfoParam& param, uint32_t nTp, uint16_t slMask)
-    {
-        (void)nTp;
-        (void)slMask;
-        if (param.loopFirstTpLowestSl) {
-            return 0U;
-        }
-        return static_cast<uint8_t>(param.qos & 0xFFU);
-    }
-
-    static bool DeviceSupportsRaGetTpAttr(uint32_t phyId)
-    {
-        u32 tpAttrVersion = 0;
-        const s32 ret = RaGetInterfaceVersion(phyId, kGetTpAttrOpcode, &tpAttrVersion);
-        return (ret == 0 && tpAttrVersion >= kGetTpAttrVersion);
-    }
-
     static uint32_t BuildGetTpAttrBitmapForSlPolicy(TpProtocol tpProtocol)
     {
         uint32_t bitmap = (1U << kTpAttrSlAvailableBit) | kTpAttrBitmapSl;
-        if (tpProtocol == TpProtocol::UBOE) {
+        if (tpProtocol == TpProtocol::UBOE || tpProtocol == TpProtocol::UBG) {
             bitmap |= kTpAttrBitmapDscp | (1U << kTpAttrDscpConfigModeBit);
         }
         return bitmap;
     }
 
     /// isSync=false（异步 GetTpInfo 写回 SL/DSCP）：HrtRaSetTpAttrAsync。
-    /// 阻塞等待在 adapter 内（RaSetTpAttrAsync + WaitRequestResult），本函数返回时 Set 已生效。
-    /// 不用 RaCtxSetTpAttr，避免 Rs 路径 phyId 无效。
+    /// 阻塞等待在 adapter 内，本函数返回时 Set 已生效。
+    /// 不用同步 HrtRaSetTpAttr，避免 Rs 路径 phyId 无效。
     static HcclResult SetTpAttrAsync(
         RdmaHandle ctxHandle, uint64_t tpHandle, uint32_t attrBitmap, struct TpAttr& attr, const char* logTag)
     {
@@ -187,18 +164,17 @@ namespace {
         return hret;
     }
 
-    /// isSync=true（同步 GetTpInfo 写回 SL/DSCP）：RaCtxSetTpAttr，与 RaCtxGetTpAttr / RaUbGetTpInfo 成对。
+    /// isSync=true（同步 GetTpInfo 写回 SL/DSCP）：HrtRaSetTpAttr，与 HrtRaGetTpAttr / RaUbGetTpInfo 成对。
     static HcclResult
     SetTpAttrSync(RdmaHandle ctxHandle, uint64_t tpHandle, uint32_t attrBitmap, struct TpAttr& attr, const char* logTag)
     {
-        const s32 ret = RaCtxSetTpAttr(ctxHandle, tpHandle, attrBitmap, &attr);
-        if (ret != 0) {
+        const HcclResult hret = HrtRaSetTpAttr(ctxHandle, tpHandle, attrBitmap, attr);
+        if (hret != HcclResult::HCCL_SUCCESS) {
             HCCL_ERROR(
-                "[TpManager][%s] RaCtxSetTpAttr failed ret[%d] tpHandle[%llu] attrBitmap[0x%x].", logTag, ret, tpHandle,
-                attrBitmap);
-            return HcclResult::HCCL_E_NETWORK;
+                "[TpManager][%s] HrtRaSetTpAttr failed hcclRet[%d] tpHandle[%llu] attrBitmap[0x%x].", logTag,
+                static_cast<int>(hret), tpHandle, attrBitmap);
         }
-        return HcclResult::HCCL_SUCCESS;
+        return hret;
     }
 
     /// 按 GetTpInfo 的 isSync 选择 SetTpAttr：true → SetTpAttrSync；false → SetTpAttrAsync。
@@ -284,6 +260,20 @@ namespace {
             isSync, ctxHandle, tpHandle, kTpAttrBitmapUboeNetWithDscp, netAttr, "CommitUboeNetAttrsToTpAttr");
     }
 
+    static HcclResult CommitUbgDscpToTpAttr(const bool isSync, RdmaHandle ctxHandle, uint64_t tpHandle, uint8_t dscp)
+    {
+        if (tpHandle == 0U || !ctxHandle) {
+            return HcclResult::HCCL_E_INTERNAL;
+        }
+
+        struct TpAttr dscpAttr {};
+        dscpAttr.dscp = dscp;
+        HCCL_INFO(
+            "[TpManager][%s] tpHandle[%llu] dscp[%u] attrBitmap[0x%x].", __func__, tpHandle,
+            static_cast<unsigned>(dscpAttr.dscp), kTpAttrBitmapDscp);
+        return SetTpAttrByPath(isSync, ctxHandle, tpHandle, kTpAttrBitmapDscp, dscpAttr, "CommitUbgDscpToTpAttr");
+    }
+
     static HcclResult CommitTpAttrsAfterSlMapping(
         const uint32_t devLogicId, const uint32_t devPhyId, const bool isSync, const RaUbGetTpInfoParam& param,
         const TpAttr& tpAttr, uint64_t tpHandle, uint32_t mappedSl, uint32_t nTp, uint16_t slMask)
@@ -309,7 +299,21 @@ namespace {
             || param.tpProtocol == TpProtocol::UBG) {
             CHK_RET(CommitMappedSlToTpAttr(isSync, ctxHandle, tpHandle, mappedSl));
         }
-        if (param.tpProtocol != TpProtocol::UBOE) {
+        if (param.tpProtocol != TpProtocol::UBOE && param.tpProtocol != TpProtocol::UBG) {
+            return HcclResult::HCCL_SUCCESS;
+        }
+        if (param.tpProtocol == TpProtocol::UBG) {
+            // UBG：仅当 dscp mode == 0 时下发 DSCP。
+            if (tpAttr.dscpConfigMode != 0) {
+                return HcclResult::HCCL_SUCCESS;
+            }
+
+            uint8_t dscp = kUboeDefaultDscp;
+            (void)TpQosGetDscpByQosFromHccnCfg(devPhyId, param.qos, dscp);
+            CHK_RET(CommitUbgDscpToTpAttr(isSync, ctxHandle, tpHandle, dscp));
+            HCCL_INFO(
+                "[TpManager][%s] UBG dscp committed: tpHandle[%llu] dscpAfter[%u].", __func__, tpHandle,
+                static_cast<unsigned>(dscp));
             return HcclResult::HCCL_SUCCESS;
         }
         if (tpAttr.dscpConfigMode == 1) {
@@ -318,18 +322,13 @@ namespace {
             return HcclResult::HCCL_SUCCESS;
         }
 
-        const uint8_t dscpBefore = static_cast<uint8_t>(tpAttr.dscp & 0x3FU);
-        const uint8_t requestQos = static_cast<uint8_t>(param.qos & 0xFFU);
-        const uint8_t dscpLookupQos = ResolveUboeDscpLookupQos(param, nTp, slMask);
         uint8_t dscp = kUboeDefaultDscp;
-        (void)TpQosGetDscpByQosFromHccnCfg(devPhyId, dscpLookupQos, dscp);
+        (void)TpQosGetDscpByQosFromHccnCfg(devPhyId, param.qos, dscp);
         CHK_RET(CommitUboeNetAttrsToTpAttr(
             isSync, ctxHandle, tpHandle, tpAttr, param.locIpv4Addr, param.rmtIpv4Addr, true, dscp));
         HCCL_INFO(
-            "[TpManager][%s] UBOE net attrs updated: tpHandle[%llu] requestQos[%u] dscpLookupQos[%u] "
-            "dscpBefore[%u] dscpAfter[%u].",
-            __func__, tpHandle, static_cast<unsigned>(requestQos), static_cast<unsigned>(dscpLookupQos),
-            static_cast<unsigned>(dscpBefore), static_cast<unsigned>(dscp));
+            "[TpManager][%s] UBOE net attrs updated: tpHandle[%llu] dscpAfter[%u].", __func__, tpHandle,
+            static_cast<unsigned>(dscp));
         return HcclResult::HCCL_SUCCESS;
     }
 
@@ -417,18 +416,15 @@ HcclResult TpManager::AdvanceDeviceWaitListPhase(
         CHK_RET(HandleCompletedRequest(std::move(completedReqCtx), param, tpInfo, false));
         return HcclResult::HCCL_SUCCESS;
     }
-    if (DeviceSupportsRaGetTpAttr(devPhyId)) {
+    if (HrtRaSupportsGetTpAttr(devPhyId)) {
         const struct HccpTpInfo* list
             = static_cast<const struct HccpTpInfo*>(static_cast<const void*>(reqCtx.dataBuffer.data()));
         HCCL_INFO(
             "[TpManager][GetTpInfo] list stage ok, devPhyId[%u] tpInfoNum[%u] firstTpHandle[%llu] param[%s].", devPhyId,
             reqCtx.tpInfoNum, static_cast<unsigned long long>(list[0].tpHandle), param.Describe().c_str());
-        try {
-            StartGetTpAttrForFirstTpDevice(param, reqCtx);
-        } catch (...) {
-            qosReqMap.erase(it);
-            throw;
-        }
+        TRY_CATCH_PROCESS_THROW(
+            NetworkApiException, StartGetTpAttrForFirstTpDevice(param, reqCtx),
+            "[TpManager][AdvanceDeviceWaitListPhase] StartGetTpAttrForFirstTpDevice failed", qosReqMap.erase(it));
         return HcclResult::HCCL_E_AGAIN;
     }
     RequestCtx completedReqCtx = std::move(it->second);
@@ -473,13 +469,9 @@ HcclResult TpManager::SyncGetFirstTpAttrForSlPolicy(
             param.locAddr.Describe().c_str());
         return HcclResult::HCCL_E_INTERNAL;
     }
-    const s32 ret = RaCtxGetTpAttr(rdmaHandle, firstTpHandle, &attrBitmap, &tpAttr);
-    if (ret != 0) {
-        HCCL_ERROR("[TpManager][%s] RaCtxGetTpAttr failed ret[%d] tpHandle[%llu].", __func__, ret, firstTpHandle);
-        return HcclResult::HCCL_E_NETWORK;
-    }
+    CHK_RET(HrtRaGetTpAttr(rdmaHandle, firstTpHandle, attrBitmap, tpAttr));
     HCCL_INFO(
-        "[TpManager][%s] RaCtxGetTpAttr ok, tpHandle[%llu] attrBitmap[0x%x] param[%s].", __func__, firstTpHandle,
+        "[TpManager][%s] HrtRaGetTpAttr ok, tpHandle[%llu] attrBitmap[0x%x] param[%s].", __func__, firstTpHandle,
         attrBitmap, param.Describe().c_str());
     return HcclResult::HCCL_SUCCESS;
 }
@@ -630,18 +622,8 @@ HcclResult TpManager::GetTpAttr(const GetTpAttrParam& param, TpAttrInfo& tpAttrI
 HcclResult TpManager::StartGetTpAttrRequest(
     const GetTpAttrParam& param, TpManager::TpAttrRequestCtx& reqCtx, RdmaHandle rdmaHandle) const
 {
-    void* raReqHandle = nullptr;
-    s32 ret = RaGetTpAttrAsync(
-        rdmaHandle, param.tpHandle, const_cast<uint32_t*>(&param.attrBitmap), &reqCtx.tpAttr, &raReqHandle);
-    if (ret != 0 || !raReqHandle) {
-        HCCL_ERROR(
-            "[TpManager][%s] failed, call RaGetTpAttrAsync error[%d] raReqHandle[%p], "
-            "tpHandle[0x%llx] attrBitmap[0x%x].",
-            __func__, ret, raReqHandle, param.tpHandle, param.attrBitmap);
-        return HcclResult::HCCL_E_NETWORK;
-    }
-
-    reqCtx.handle = reinterpret_cast<RequestHandle>(raReqHandle);
+    reqCtx.attrBitmap = param.attrBitmap;
+    CHK_RET(HrtRaStartGetTpAttrAsync(rdmaHandle, param.tpHandle, reqCtx.attrBitmap, reqCtx.tpAttr, reqCtx.handle));
     HCCL_INFO("[TpManager][%s] success, tpHandle[0x%llx] reqHandle[%llu].", __func__, param.tpHandle, reqCtx.handle);
     return HcclResult::HCCL_SUCCESS;
 }
@@ -882,17 +864,16 @@ void TpManager::StartGetTpAttrForFirstTpDevice(const RaUbGetTpInfoParam& param, 
     const RdmaHandle rdmaHandle = ResolveUbRdmaHandle(false, devPhyId, param.locAddr);
     if (!rdmaHandle) {
         THROW<InternalException>(
-            "[TpManager][%s] can not find rdmaHandle for RaGetTpAttrAsync, devPhyId[%u].", __func__, devPhyId);
+            "[TpManager][%s] can not find rdmaHandle for GetTpAttrAsync, devPhyId[%u].", __func__, devPhyId);
     }
-    void* raReqHandle = nullptr;
-    const s32 ret = RaGetTpAttrAsync(rdmaHandle, firstTpHandle, &reqCtx.tpAttrBitmap, &reqCtx.tpAttr, &raReqHandle);
-    if (ret != 0 || !raReqHandle) {
+    const HcclResult hret
+        = HrtRaStartGetTpAttrAsync(rdmaHandle, firstTpHandle, reqCtx.tpAttrBitmap, reqCtx.tpAttr, reqCtx.handle);
+    if (hret != HcclResult::HCCL_SUCCESS) {
         THROW<NetworkApiException>(StringFormat(
-            "[TpManager][StartGetTpAttrForFirstTpDevice] RaGetTpAttrAsync failed "
-            "ret[%d] raReqHandle[%p] tpHandle[%llu].",
-            ret, raReqHandle, firstTpHandle));
+            "[TpManager][StartGetTpAttrForFirstTpDevice] HrtRaStartGetTpAttrAsync "
+            "failed hcclRet[%d] tpHandle[%llu].",
+            static_cast<int>(hret), firstTpHandle));
     }
-    reqCtx.handle = reinterpret_cast<RequestHandle>(raReqHandle);
     reqCtx.phase = RequestCtx::ReqPhase::WAIT_TP_ATTR;
 }
 

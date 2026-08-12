@@ -14,7 +14,6 @@
 
 // Orion
 #include "topo_common_types.h"
-#include "tp_manager.h"
 
 namespace hcomm {
 
@@ -47,26 +46,21 @@ HcclResult AicpuTsUbgChannel::Init()
 
 HcclResult AicpuTsUbgChannel::BuildConnection()
 {
+    UbConnBuildContext ctx;
+    CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_, ctx));
+
     Hccl::OpMode opMode = Hccl::OpMode::OPBASE;
     bool devUsed = true; // aicpu 为 true
-    Hccl::LinkProtocol protocol;
-    CHK_RET(CommProtocolToLinkProtocol(localEp_.protocol, protocol));
-
     // UBG 的 locAddr_/rmtAddr_ 已经是 EID-based IpAddress，无需额外转换
     HCCL_INFO(
-        "[AicpuTsUbgChannel][%s] LinkProtocol[%s], locAddr_[%s], rmtAddr_[%s]", __func__, protocol.Describe().c_str(),
-        locAddr_.Describe().c_str(), rmtAddr_.Describe().c_str());
+        "[AicpuTsUbgChannel][%s] LinkProtocol[%s], locAddr_[%s], rmtAddr_[%s], qos[%u]", __func__,
+        ctx.protocol.Describe().c_str(), locAddr_.Describe().c_str(), rmtAddr_.Describe().c_str(),
+        static_cast<unsigned int>(ctx.qosPre));
 
-    s32 deviceLogicId;
-    CHK_RET(hrtGetDevice(&deviceLogicId));
-    Hccl::TpManager::GetInstance(deviceLogicId).Init();
-
-    const u8 qosPre
-        = static_cast<u8>((channelDesc_.qos > 7U) ? Hccl::kRaUbGetTpInfoParamDefaultQos : (channelDesc_.qos & 7U));
-
-    // UBG 使用 DevUbUbgConnection，locAddr_/rmtAddr_ 作为 EID 地址
+    // UBG 使用 DevUbUbgConnection，locAddr_/rmtAddr_ 作为 EID 地址；qos 与 UBOE 一致来自 channelDesc_
     std::unique_ptr<Hccl::DevUbConnection> ubConn = std::make_unique<Hccl::DevUbUbgConnection>(
-        rdmaHandle_, locAddr_, rmtAddr_, opMode, devUsed, Hccl::HrtUbJfcMode::STARS_POLL, locAddr_, rmtAddr_, qosPre);
+        rdmaHandle_, locAddr_, rmtAddr_, opMode, devUsed, Hccl::HrtUbJfcMode::STARS_POLL, locAddr_, rmtAddr_,
+        ctx.qosPre);
     CHK_SMART_PTR_NULL(ubConn);
 
     if (devBaseAttr_.maxReadSize == 0 || devBaseAttr_.maxWriteSize == 0) {
