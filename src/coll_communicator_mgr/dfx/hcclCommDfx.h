@@ -30,42 +30,47 @@ public:
 
     ~HcclCommDfx();
 
-    HcclResult Init(u32 deviceId, const std::string& comTag, u32 myRankId);
+    HcclResult Init(u32 deviceId, const std::string &comTag, u32 myRankId);
 
     HcclResult AddTaskInfoCallback(u32 streamId, u32 taskId, const Hccl::TaskParam &taskParam, u64 handle);
     HcclResult AddDpuTaskInfoCallback(const Hccl::TaskParam &taskParam, u64 handle);
 
-    Hccl::MirrorTaskManager* GetMirrorTaskManager() const;
+    Hccl::MirrorTaskManager *GetMirrorTaskManager() const;
 
     HcclResult SetCurrDfxOpInfo(std::shared_ptr<Hccl::DfxOpInfo> dfxOpInfo);
 
     HcclResult ReportAllTasks(bool cachedReq);
-    HcclResult ReportOp(u64 beginTime, bool cachedReq, bool opbased);
-    HcclResult ReporCcuTaskInfo(u64 beginTime, u64 endTime, bool cachedReq, bool opbased);
-    void ReportMc2CommInfo(const Mc2CommInfo& mc2CommInfo);
+    HcclResult ReportOp(uint64_t beginTime, bool cachedReq, bool isOpBase);
+    HcclResult ReporCcuTaskInfo(u64 beginTime, u64 endTime, bool cachedReq, bool isOpBase);
+    void ReportMc2CommInfo(const Mc2CommInfo &mc2CommInfo);
     HcclResult UpdateProfStat();
 
-    static void AddChannelRemoteRankId(const std::string& commTag, u64 handle, u32 remoteRankId);
-    static HcclResult GetChannelRemoteRankId(const std::string& commTag, u64 handle, u32& remoteRankId);
+    static void AddChannelRemoteRankId(const std::string &commTag, u64 handle, u32 remoteRankId);
+    static HcclResult GetChannelRemoteRankId(const std::string &commTag, u64 handle, u32 &remoteRankId);
     static u32 GetTaskId(u32 streamId);
-    std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> GetCallback() const {
+    std::function<HcclResult(u32, u32, const Hccl::TaskParam &, u64)> GetCallback() const
+    {
         return setAddTaskCallback_;
     }
-    std::function<HcclResult(const Hccl::TaskParam&, u64)> GetDpuCallback() const {
+    std::function<HcclResult(const Hccl::TaskParam &, u64)> GetDpuCallback() const
+    {
         return setAddDpuTaskCallback_;
     }
-    HcclResult ReportKernel(uint64_t beginTime, const std::string& commTag, const std::string& kernelName, uint32_t threadId, bool cachedReq);
-    HcclResult IsOpBase(bool &isOpBase);
+    HcclResult ReportKernel(uint64_t beginTime, const std::string &commTag, const std::string &kernelName,
+        uint32_t threadId, bool cachedReq);
+    HcclResult GetOpModeFlags(bool &isOpBase, bool &isCached);
 
     void SetDpuStreamId(u32 dpuStreamId);
-    void SetAicpuTaskIdAndStreamId(u32 taskId, u32 streamId) {
+    void SetAicpuTaskIdAndStreamId(u32 taskId, u32 streamId)
+    {
         aicpuTaskId_ = taskId;
         aicpuStreamId_ = streamId;
     }
+
 private:
     std::unique_ptr<Hccl::MirrorTaskManager> mirrorTaskManager_{nullptr};
     std::unique_ptr<HcclCommProfiling> profiling_{nullptr};
-    static std::unordered_map<std::string,std::unordered_map<u64, u32> > channelRemoteRankId_;
+    static std::unordered_map<std::string, std::unordered_map<u64, u32>> channelRemoteRankId_;
     static std::unordered_map<u32, u32> streamIdToTaskId_;
     static ReadWriteLockBase baseLock_;
     static ReadWriteLock rwLock_;
@@ -76,8 +81,8 @@ private:
     u32 dpuStreamId_{0};
     u32 aicpuTaskId_{INVALID_UINT};
     u32 aicpuStreamId_{INVALID_UINT};
-    std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> setAddTaskCallback_{};
-    std::function<HcclResult(const Hccl::TaskParam&, u64)> setAddDpuTaskCallback_{};
+    std::function<HcclResult(u32, u32, const Hccl::TaskParam &, u64)> setAddTaskCallback_{};
+    std::function<HcclResult(const Hccl::TaskParam &, u64)> setAddDpuTaskCallback_{};
     bool initializedFlag_{false};
     void AddTaskInfoCallbackLog(const Hccl::TaskParam &taskParam, const std::unordered_map<u64, u32> &handleMap) const;
 };

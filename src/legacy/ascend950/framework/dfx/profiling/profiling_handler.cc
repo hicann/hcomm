@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include <cstring> 
+#include <cstring>
 #include <algorithm>
 #include "profiling_handler.h"
 #include "dlprof_function.h"
@@ -22,8 +22,8 @@
 namespace Hccl {
 #define UNUSED(x) (void)(x)
 
-constexpr uint16_t  CCU_TYPE   = 2;
-constexpr uint32_t  DPU_DEV_ID_MASK = (1U << 12);
+constexpr uint16_t CCU_TYPE = 2;
+constexpr uint32_t DPU_DEV_ID_MASK = (1U << 12);
 
 ProfilingHandler ProfilingHandler::instance_;
 
@@ -64,16 +64,16 @@ HcclResult ProfilingHandler::Init()
         return HCCL_E_INTERNAL;
     }
     ProfCommandHandle callback = CommandHandleWrapper;
-    auto ret                        = DlProfFunction::GetInstance().dlMsprofRegisterCallback(HCCL, callback);
+    auto ret = DlProfFunction::GetInstance().dlMsprofRegisterCallback(HCCL, callback);
     if (ret != 0) {
         HCCL_ERROR("[ProfilingHandler][Init]errNo[0x%016llx] Prof Register CtrlCallback fail, return[%d]",
-                                 HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret);
+            HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret);
         return HCCL_E_RUNTIME;
     }
     for (auto i = 0; i < TaskParamType::__COUNT__; ++i) {
         TaskParamType type(static_cast<TaskParamType::Value>(i));
         std::string nameInfo = type.Describe();
-        uint64_t    hashId   = GetProfHashId(nameInfo.c_str(), nameInfo.length());
+        uint64_t hashId = GetProfHashId(nameInfo.c_str(), nameInfo.length());
         str2HashId_[nameInfo] = hashId;
     }
     SetCachedCclTag();
@@ -94,9 +94,9 @@ void ProfilingHandler::ReportHostApi(OpType opType, uint64_t beginTime, uint64_t
     if (isAiCpu) {
         profName += "AicpuKernel";
     }
-    uint64_t          cmdItemId  = DlProfFunction::GetInstance().dlMsprofStr2Id(profName.c_str(), profName.length());
+    uint64_t cmdItemId = DlProfFunction::GetInstance().dlMsprofStr2Id(profName.c_str(), profName.length());
     if (enableHostApi_) {
-        ReportAclApi(opType, beginTime, endTime, cmdItemId, threadId);
+        ReportAclApi(opType, beginTime, endTime, cmdItemId, threadId, cachedReq);
     }
     ReportNodeApi(beginTime, endTime, cmdItemId, threadId, cachedReq);
     ReportNodeBasicInfo(endTime, cmdItemId, threadId, cachedReq);
@@ -108,7 +108,8 @@ void ProfilingHandler::ReportHcclOp(const DfxOpInfo &opInfo, bool cachedReq)
     ReportHcclOpInfo(opInfo.endTime_, opInfo, threadId, cachedReq);
 }
 
-void ProfilingHandler::ReportHcclTaskApi(TaskParamType taskType, uint64_t beginTime, uint64_t endTime, bool isMasterStream, bool cachedReq, bool ignoreLevel)
+void ProfilingHandler::ReportHcclTaskApi(
+    TaskParamType taskType, uint64_t beginTime, uint64_t endTime, bool isMasterStream, bool cachedReq, bool ignoreLevel)
 {
     MsprofApi reporterData{};
     reporterData.level = MSPROF_REPORT_HCCL_NODE_LEVEL;
@@ -128,9 +129,10 @@ void ProfilingHandler::ReportHcclTaskApi(TaskParamType taskType, uint64_t beginT
     if ((!enableHcclNode_) || (!ignoreLevel && !enableHcclL1_)) {
         return;
     }
-    HCCL_INFO("ReportHcclTaskApi, enableHcclNode_[%d],ignoreLevel[%d],enableHcclL1_[%d],taskType[%s], beginTime[%llu], endTime[%llu], isMasterStream[%d], cachedReq[%d]",
-              enableHcclNode_, ignoreLevel, enableHcclL1_, proName.c_str(), beginTime, endTime, isMasterStream, cachedReq);
-    s32 ret = DlProfFunction::GetInstance().dlMsprofReportApi(1, &reporterData); 
+    HCCL_INFO("ReportHcclTaskApi, enableHcclNode_[%d],ignoreLevel[%d],enableHcclL1_[%d],taskType[%s], beginTime[%llu], "
+              "endTime[%llu], isMasterStream[%d], cachedReq[%d]",
+        enableHcclNode_, ignoreLevel, enableHcclL1_, proName.c_str(), beginTime, endTime, isMasterStream, cachedReq);
+    s32 ret = DlProfFunction::GetInstance().dlMsprofReportApi(1, &reporterData);
     if (ret != 0) {
         THROW<InternalException>("Call MsprofReportApi fail, return[%d]", ret);
     }
@@ -163,7 +165,7 @@ uint32_t ProfilingHandler::GetTaskTypeValue(TaskParamType taskType) const
 
 void ProfilingHandler::FillTaskAdditionInfo(const TaskInfo &taskInfo, MsprofAdditionalInfo &reporterData) const
 {
-    reporterData.level    = MSPROF_REPORT_HCCL_NODE_LEVEL;
+    reporterData.level = MSPROF_REPORT_HCCL_NODE_LEVEL;
     reporterData.threadId = SalGetTid();
     FillProfCommonInfo(taskInfo, reporterData);
 
@@ -200,7 +202,7 @@ void ProfilingHandler::ReportHcclTaskDetails(const TaskInfo &taskInfo, bool cach
         cacheTaskInfos_.push_back(taskInfo);
     }
     if (enableHcclL1_ == false) {
-            return;
+        return;
     }
     MsprofAdditionalInfo reporterData{};
     FillTaskAdditionInfo(taskInfo, reporterData);
@@ -208,7 +210,7 @@ void ProfilingHandler::ReportHcclTaskDetails(const TaskInfo &taskInfo, bool cach
     CallAdditionInfo(reporterData);
 }
 
-void ProfilingHandler::ReportHcclTaskDetailsBatchLog(const std::vector<TaskInfo*> &taskInfos) const
+void ProfilingHandler::ReportHcclTaskDetailsBatchLog(const std::vector<TaskInfo *> &taskInfos) const
 {
     if (LIKELY(HcclCheckLogLevel(HCCL_LOG_INFO) == 0)) {
         return;
@@ -218,7 +220,7 @@ void ProfilingHandler::ReportHcclTaskDetailsBatchLog(const std::vector<TaskInfo*
     }
 }
 
-void ProfilingHandler::ReportHcclTaskDetailsBatch(const std::vector<TaskInfo*> &taskInfos, bool cachedReq)
+void ProfilingHandler::ReportHcclTaskDetailsBatch(const std::vector<TaskInfo *> &taskInfos, bool cachedReq)
 {
     if (taskInfos.empty()) {
         HCCL_WARNING("[ProfilingHandler::ReportHcclTaskDetailsBatch] taskInfos is empty!");
@@ -238,11 +240,11 @@ void ProfilingHandler::ReportHcclTaskDetailsBatch(const std::vector<TaskInfo*> &
     if (cachedReq) {
         std::lock_guard<std::mutex> lock(cacheTaskInfosMutex_);
         for (const auto &taskInfo : taskInfos) {
-             cacheTaskInfos_.push_back(*taskInfo);
+            cacheTaskInfos_.push_back(*taskInfo);
         }
     }
     if (enableHcclL1_ == false) {
-            return;
+        return;
     }
     ReportHcclTaskDetailsBatchLog(taskInfos);
     for (const auto &taskInfo : taskInfos) {
@@ -254,8 +256,8 @@ void ProfilingHandler::ReportHcclTaskDetailsBatch(const std::vector<TaskInfo*> &
 
 void ProfilingHandler::CallAdditionInfo(MsprofAdditionalInfo &reporterData) const
 {
-    s32 ret = DlProfFunction::GetInstance().dlMsprofReportAdditionalInfo(
-        1, &reporterData, sizeof(MsprofAdditionalInfo));
+    s32 ret
+        = DlProfFunction::GetInstance().dlMsprofReportAdditionalInfo(1, &reporterData, sizeof(MsprofAdditionalInfo));
     if (ret != 0) {
         THROW<InternalException>("Call MsprofReportAdditionalInfo failed, return[%d]", ret);
     }
@@ -268,7 +270,7 @@ void ProfilingHandler::FillProfCommonInfo(const TaskInfo &taskInfo, MsprofAdditi
         return;
     }
     reporterData.timeStamp = taskInfo.taskParam_.endTime;
-    reporterData.dataLen   = sizeof(MsprofHcclInfo);
+    reporterData.dataLen = sizeof(MsprofHcclInfo);
     auto *profInfo = reinterpret_cast<MsprofHcclInfo *>(reporterData.data);
     *profInfo = MsprofHcclInfo();
 
@@ -284,7 +286,7 @@ void ProfilingHandler::FillProfCommonInfo(const TaskInfo &taskInfo, MsprofAdditi
     }
     if (taskInfo.dfxOpInfo_->isIndop_ == true) {
         profInfo->groupName = groupName;
-        profInfo->rankSize  = taskInfo.dfxOpInfo_->rankSize_;
+        profInfo->rankSize = taskInfo.dfxOpInfo_->rankSize_;
     } else {
         CommunicatorImpl *commImp = static_cast<CommunicatorImpl *>(taskInfo.dfxOpInfo_->comm_);
         if (commImp == nullptr) {
@@ -292,18 +294,18 @@ void ProfilingHandler::FillProfCommonInfo(const TaskInfo &taskInfo, MsprofAdditi
             return;
         }
         profInfo->groupName = groupName;
-        profInfo->rankSize  = commImp->GetRankSize();
+        profInfo->rankSize = commImp->GetRankSize();
     }
-    profInfo->workFlowMode      = static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE);
-    profInfo->planeID           = 0;
-    profInfo->stage             = 0;
-    profInfo->role              = static_cast<uint32_t>(TaskRole::DST);
+    profInfo->workFlowMode = static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE);
+    profInfo->planeID = 0;
+    profInfo->stage = 0;
+    profInfo->role = static_cast<uint32_t>(TaskRole::DST);
     profInfo->durationEstimated = 0;
-    profInfo->localRank         = taskInfo.dfxOpInfo_->op_.myRank;
-    profInfo->remoteRank        = taskInfo.remoteRank_;
-    profInfo->dataType          = taskInfo.dfxOpInfo_->op_.dataType;
-    profInfo->opType            = taskInfo.dfxOpInfo_->op_.opType;
-    profInfo->transportType     = static_cast<int32_t>(SimpleTaskType::UB);
+    profInfo->localRank = taskInfo.dfxOpInfo_->op_.myRank;
+    profInfo->remoteRank = taskInfo.remoteRank_;
+    profInfo->dataType = taskInfo.dfxOpInfo_->op_.dataType;
+    profInfo->opType = taskInfo.dfxOpInfo_->op_.opType;
+    profInfo->transportType = static_cast<int32_t>(SimpleTaskType::UB);
     if (profInfo->remoteRank == INVALID_VALUE_RANKID) {
         profInfo->transportType = static_cast<int32_t>(SimpleTaskType::LOCAL);
         profInfo->remoteRank = profInfo->localRank;
@@ -348,32 +350,32 @@ void ProfilingHandler::FillProfTaskSpecificInfo(const TaskInfo &taskInfo, Msprof
 void ProfilingHandler::ConvertHcclInfoToDpuTrack(MsprofAdditionalInfo &reporterData) const
 {
     auto *profInfo = reinterpret_cast<MsprofHcclInfo *>(reporterData.data);
-    uint64_t itemId            = profInfo->itemId;
-    uint64_t cclTag            = profInfo->cclTag;
-    uint64_t groupName         = profInfo->groupName;
-    uint32_t localRank         = profInfo->localRank;
-    uint32_t remoteRank        = profInfo->remoteRank;
-    uint32_t rankSize          = profInfo->rankSize;
-    uint32_t workFlowMode      = profInfo->workFlowMode;
-    uint16_t planeID           = static_cast<uint16_t>(profInfo->planeID);
-    uint32_t stage             = profInfo->stage;
-    uint32_t role              = profInfo->role;
-    double  durationEstimated  = profInfo->durationEstimated;
+    uint64_t itemId = profInfo->itemId;
+    uint64_t cclTag = profInfo->cclTag;
+    uint64_t groupName = profInfo->groupName;
+    uint32_t localRank = profInfo->localRank;
+    uint32_t remoteRank = profInfo->remoteRank;
+    uint32_t rankSize = profInfo->rankSize;
+    uint32_t workFlowMode = profInfo->workFlowMode;
+    uint16_t planeID = static_cast<uint16_t>(profInfo->planeID);
+    uint32_t stage = profInfo->stage;
+    uint32_t role = profInfo->role;
+    double durationEstimated = profInfo->durationEstimated;
 
     reporterData.dataLen = sizeof(MsprofDpuHcclTrack);
     auto *dpuProfInfo = reinterpret_cast<MsprofDpuHcclTrack *>(reporterData.data);
     *dpuProfInfo = MsprofDpuHcclTrack();
 
-    dpuProfInfo->itemId            = itemId;
-    dpuProfInfo->cclTag            = cclTag;
-    dpuProfInfo->groupName         = groupName;
-    dpuProfInfo->localRank         = localRank;
-    dpuProfInfo->remoteRank        = remoteRank;
-    dpuProfInfo->rankSize          = rankSize;
-    dpuProfInfo->workFlowMode      = static_cast<uint8_t>(workFlowMode);
-    dpuProfInfo->planeID           = planeID;
-    dpuProfInfo->stage             = stage;
-    dpuProfInfo->role              = static_cast<uint8_t>(role);
+    dpuProfInfo->itemId = itemId;
+    dpuProfInfo->cclTag = cclTag;
+    dpuProfInfo->groupName = groupName;
+    dpuProfInfo->localRank = localRank;
+    dpuProfInfo->remoteRank = remoteRank;
+    dpuProfInfo->rankSize = rankSize;
+    dpuProfInfo->workFlowMode = static_cast<uint8_t>(workFlowMode);
+    dpuProfInfo->planeID = planeID;
+    dpuProfInfo->stage = stage;
+    dpuProfInfo->role = static_cast<uint8_t>(role);
     dpuProfInfo->durationEstimated = durationEstimated;
 }
 
@@ -405,26 +407,25 @@ void ProfilingHandler::FillDpuProfInfo(const TaskInfo &taskInfo, MsprofAdditiona
     }
     ConvertHcclInfoToDpuTrack(reporterData);
     auto *dpuProfInfo = reinterpret_cast<MsprofDpuHcclTrack *>(reporterData.data);
-    dpuProfInfo->dataType          = static_cast<uint32_t>(taskInfo.dfxOpInfo_->op_.dataType);
-    dpuProfInfo->opType            = static_cast<uint32_t>(taskInfo.dfxOpInfo_->op_.opType);
-    dpuProfInfo->transportType     = static_cast<uint32_t>(SimpleTaskType::ROCE);
-    dpuProfInfo->aicpu_task_id     = taskInfo.taskParam_.aicpuTaskId;
-    dpuProfInfo->npuDevId          = taskInfo.taskParam_.npuDevId;
-    dpuProfInfo->dpuDevId          = DPU_DEV_ID_MASK;
+    dpuProfInfo->dataType = static_cast<uint32_t>(taskInfo.dfxOpInfo_->op_.dataType);
+    dpuProfInfo->opType = static_cast<uint32_t>(taskInfo.dfxOpInfo_->op_.opType);
+    dpuProfInfo->transportType = static_cast<uint32_t>(SimpleTaskType::ROCE);
+    dpuProfInfo->aicpu_task_id = taskInfo.taskParam_.aicpuTaskId;
+    dpuProfInfo->npuDevId = taskInfo.taskParam_.npuDevId;
+    dpuProfInfo->dpuDevId = DPU_DEV_ID_MASK;
     const auto &taskPara = taskInfo.taskParam_.taskPara;
-    dpuProfInfo->linkType          = static_cast<uint16_t>(taskPara.DMA.linkType);
+    dpuProfInfo->linkType = static_cast<uint16_t>(taskPara.DMA.linkType);
     if (dpuProfInfo->remoteRank == INVALID_VALUE_RANKID) {
         dpuProfInfo->transportType = static_cast<uint32_t>(SimpleTaskType::LOCAL);
         dpuProfInfo->remoteRank = dpuProfInfo->localRank;
         dpuProfInfo->linkType = 0;
     }
-    dpuProfInfo->taskId     = taskInfo.taskId_;
-    dpuProfInfo->streamId   = taskInfo.streamId_;
-    dpuProfInfo->timeStamp  = taskInfo.taskParam_.beginTime;
+    dpuProfInfo->taskId = taskInfo.taskId_;
+    dpuProfInfo->streamId = taskInfo.streamId_;
+    dpuProfInfo->timeStamp = taskInfo.taskParam_.beginTime;
     HCCL_INFO("[FillDpuProfInfo]taskId[%llu], streamId[%lu], npuDevId[%lu], dpuDevId[%lu], "
               "starttime[%llu], endtime[%llu], aicputaskId[%llu].",
-        dpuProfInfo->taskId, dpuProfInfo->streamId,
-        dpuProfInfo->npuDevId, dpuProfInfo->dpuDevId,
+        dpuProfInfo->taskId, dpuProfInfo->streamId, dpuProfInfo->npuDevId, dpuProfInfo->dpuDevId,
         dpuProfInfo->timeStamp, reporterData.timeStamp, dpuProfInfo->aicpu_task_id);
     FillDpuTaskParaDetails(taskInfo, dpuProfInfo);
 }
@@ -448,7 +449,7 @@ void ProfilingHandler::GetHCCLReportData(const TaskInfo &taskInfo, HCCLReportDat
     }
     if (taskInfo.dfxOpInfo_->isIndop_ == true) {
         hcclReportData.profInfo.groupName = groupName;
-        hcclReportData.profInfo.rankSize  = taskInfo.dfxOpInfo_->rankSize_;
+        hcclReportData.profInfo.rankSize = taskInfo.dfxOpInfo_->rankSize_;
     } else {
         CommunicatorImpl *commImp = static_cast<CommunicatorImpl *>(taskInfo.dfxOpInfo_->comm_);
         if (commImp == nullptr) {
@@ -456,18 +457,18 @@ void ProfilingHandler::GetHCCLReportData(const TaskInfo &taskInfo, HCCLReportDat
             return;
         }
         hcclReportData.profInfo.groupName = groupName;
-        hcclReportData.profInfo.rankSize  = commImp->GetRankSize();
+        hcclReportData.profInfo.rankSize = commImp->GetRankSize();
     }
-    hcclReportData.profInfo.workFlowMode      = static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE);
-    hcclReportData.profInfo.planeID           = 0;
-    hcclReportData.profInfo.stage             = 0;
-    hcclReportData.profInfo.role              = static_cast<uint32_t>(TaskRole::DST);
+    hcclReportData.profInfo.workFlowMode = static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE);
+    hcclReportData.profInfo.planeID = 0;
+    hcclReportData.profInfo.stage = 0;
+    hcclReportData.profInfo.role = static_cast<uint32_t>(TaskRole::DST);
     hcclReportData.profInfo.durationEstimated = 0;
-    hcclReportData.profInfo.localRank         = taskInfo.dfxOpInfo_->op_.myRank;
-    hcclReportData.profInfo.remoteRank        = taskInfo.remoteRank_;
-    hcclReportData.profInfo.dataType          = taskInfo.dfxOpInfo_->op_.dataType;
-    hcclReportData.profInfo.opType            = taskInfo.dfxOpInfo_->op_.opType;
-    hcclReportData.profInfo.transportType     = static_cast<int32_t>(SimpleTaskType::UB);
+    hcclReportData.profInfo.localRank = taskInfo.dfxOpInfo_->op_.myRank;
+    hcclReportData.profInfo.remoteRank = taskInfo.remoteRank_;
+    hcclReportData.profInfo.dataType = taskInfo.dfxOpInfo_->op_.dataType;
+    hcclReportData.profInfo.opType = taskInfo.dfxOpInfo_->op_.opType;
+    hcclReportData.profInfo.transportType = static_cast<int32_t>(SimpleTaskType::UB);
     if (hcclReportData.profInfo.remoteRank == INVALID_VALUE_RANKID) {
         hcclReportData.profInfo.transportType = static_cast<int32_t>(SimpleTaskType::LOCAL);
         hcclReportData.profInfo.remoteRank = hcclReportData.profInfo.localRank;
@@ -480,19 +481,19 @@ void ProfilingHandler::GetHCCLReportData(const TaskInfo &taskInfo, HCCLReportDat
         case TaskParamType::TASK_DPU_NOTIFY_WAIT:
         case TaskParamType::TASK_DPU_WRITE_WITH_NOTIFY:
         case TaskParamType::TASK_DPU_CHANNEL_FENCE:
-            hcclReportData.dpuProfInfo.itemId     = hcclReportData.profInfo.itemId;
-            hcclReportData.dpuProfInfo.cclTag     = hcclReportData.profInfo.cclTag;
-            hcclReportData.dpuProfInfo.groupName  = hcclReportData.profInfo.groupName;
-            hcclReportData.dpuProfInfo.localRank  = hcclReportData.profInfo.localRank;
+            hcclReportData.dpuProfInfo.itemId = hcclReportData.profInfo.itemId;
+            hcclReportData.dpuProfInfo.cclTag = hcclReportData.profInfo.cclTag;
+            hcclReportData.dpuProfInfo.groupName = hcclReportData.profInfo.groupName;
+            hcclReportData.dpuProfInfo.localRank = hcclReportData.profInfo.localRank;
             hcclReportData.dpuProfInfo.remoteRank = hcclReportData.profInfo.remoteRank;
-            hcclReportData.dpuProfInfo.rankSize   = hcclReportData.profInfo.rankSize;
+            hcclReportData.dpuProfInfo.rankSize = hcclReportData.profInfo.rankSize;
             hcclReportData.dpuProfInfo.workFlowMode = hcclReportData.profInfo.workFlowMode;
-            hcclReportData.dpuProfInfo.planeID    = hcclReportData.profInfo.planeID;
-            hcclReportData.dpuProfInfo.stage      = hcclReportData.profInfo.stage;
-            hcclReportData.dpuProfInfo.role       = hcclReportData.profInfo.role;
+            hcclReportData.dpuProfInfo.planeID = hcclReportData.profInfo.planeID;
+            hcclReportData.dpuProfInfo.stage = hcclReportData.profInfo.stage;
+            hcclReportData.dpuProfInfo.role = hcclReportData.profInfo.role;
             hcclReportData.dpuProfInfo.durationEstimated = hcclReportData.profInfo.durationEstimated;
-            hcclReportData.dpuProfInfo.dataType   = static_cast<uint32_t>(taskInfo.dfxOpInfo_->op_.dataType);
-            hcclReportData.dpuProfInfo.opType     = static_cast<uint32_t>(taskInfo.dfxOpInfo_->op_.opType);
+            hcclReportData.dpuProfInfo.dataType = static_cast<uint32_t>(taskInfo.dfxOpInfo_->op_.dataType);
+            hcclReportData.dpuProfInfo.opType = static_cast<uint32_t>(taskInfo.dfxOpInfo_->op_.opType);
             hcclReportData.dpuProfInfo.transportType = static_cast<uint32_t>(SimpleTaskType::ROCE);
             hcclReportData.dpuProfInfo.aicpu_task_id = taskInfo.taskParam_.aicpuTaskId;
             hcclReportData.dpuProfInfo.npuDevId = taskInfo.taskParam_.npuDevId;
@@ -509,8 +510,10 @@ void ProfilingHandler::GetHCCLReportData(const TaskInfo &taskInfo, HCCLReportDat
             switch (taskType) {
                 case TaskParamType::TASK_DPU_INLINE_WRITE:
                 case TaskParamType::TASK_DPU_WRITE_WITH_NOTIFY:
-                    hcclReportData.dpuProfInfo.srcAddr = static_cast<u64>(reinterpret_cast<uintptr_t>(taskPara.DMA.src));
-                    hcclReportData.dpuProfInfo.dstAddr = static_cast<u64>(reinterpret_cast<uintptr_t>(taskPara.DMA.dst));
+                    hcclReportData.dpuProfInfo.srcAddr
+                        = static_cast<u64>(reinterpret_cast<uintptr_t>(taskPara.DMA.src));
+                    hcclReportData.dpuProfInfo.dstAddr
+                        = static_cast<u64>(reinterpret_cast<uintptr_t>(taskPara.DMA.dst));
                     hcclReportData.dpuProfInfo.dataSize = static_cast<u32>(taskPara.DMA.size);
                     hcclReportData.dpuProfInfo.notifyID = taskPara.DMA.notifyID;
                     break;
@@ -534,8 +537,10 @@ void ProfilingHandler::GetHCCLReportData(const TaskInfo &taskInfo, HCCLReportDat
                     break;
                 case TaskParamType::TASK_REDUCE_INLINE:
                 case TaskParamType::TASK_REDUCE_TBE:
-                    hcclReportData.profInfo.srcAddr = static_cast<u64>(reinterpret_cast<uintptr_t>(taskPara.Reduce.src));
-                    hcclReportData.profInfo.dstAddr = static_cast<u64>(reinterpret_cast<uintptr_t>(taskPara.Reduce.dst));
+                    hcclReportData.profInfo.srcAddr
+                        = static_cast<u64>(reinterpret_cast<uintptr_t>(taskPara.Reduce.src));
+                    hcclReportData.profInfo.dstAddr
+                        = static_cast<u64>(reinterpret_cast<uintptr_t>(taskPara.Reduce.dst));
                     hcclReportData.profInfo.dataSize = static_cast<u32>(taskPara.Reduce.size);
                     hcclReportData.profInfo.notifyID = taskPara.Reduce.notifyID;
                     hcclReportData.profInfo.linkType = static_cast<uint16_t>(taskPara.Reduce.linkType);
@@ -555,79 +560,67 @@ void ProfilingHandler::DumpHCCLReportData(const TaskInfo &taskInfo, const Msprof
 {
     if (reporterData.type == static_cast<uint32_t>(ProfTaskType::TASK_HCCL_INFO)) {
         auto *profInfo = reinterpret_cast<const MsprofHcclInfo *>(reporterData.data);
-        HCCL_INFO(
-            "MsprofAdditionalInfo profInfo: timeStamp[%llu], itemId[%llu], cclTag[%llu], groupName[%llu], "
-            "localRank[%u], remoteRank[%u], rankSize[%u], workFlowMode[%u], planeID[%u], ctxId[%u], "
-            "stage[%u], role[%u], durationEstimated[%f], taskType[%d]",
-            reporterData.timeStamp, profInfo->itemId, profInfo->cclTag,
-            profInfo->groupName, profInfo->localRank, profInfo->remoteRank,
-            profInfo->rankSize, profInfo->workFlowMode, profInfo->planeID,
-            profInfo->ctxId, profInfo->stage, profInfo->role,
-            profInfo->durationEstimated, taskInfo.taskParam_.taskType);
-        HCCL_INFO(
-            "MsprofAdditionalInfo profInfo detail: srcAddr[%llu], dstAddr[%llu], dataSize[%llu], notifyID[%llu], "
-            "linkType[%u], opType[%s], transportType[%u], dataType[%s], rdmaType[%u]",
-            profInfo->srcAddr, profInfo->dstAddr, profInfo->dataSize,
-            profInfo->notifyID, profInfo->linkType,
+        HCCL_INFO("MsprofAdditionalInfo profInfo: timeStamp[%llu], itemId[%llu], cclTag[%llu], groupName[%llu], "
+                  "localRank[%u], remoteRank[%u], rankSize[%u], workFlowMode[%u], planeID[%u], ctxId[%u], "
+                  "stage[%u], role[%u], durationEstimated[%f], taskType[%d]",
+            reporterData.timeStamp, profInfo->itemId, profInfo->cclTag, profInfo->groupName, profInfo->localRank,
+            profInfo->remoteRank, profInfo->rankSize, profInfo->workFlowMode, profInfo->planeID, profInfo->ctxId,
+            profInfo->stage, profInfo->role, profInfo->durationEstimated, taskInfo.taskParam_.taskType);
+        HCCL_INFO("MsprofAdditionalInfo profInfo detail: srcAddr[%llu], dstAddr[%llu], dataSize[%llu], notifyID[%llu], "
+                  "linkType[%u], opType[%s], transportType[%u], dataType[%s], rdmaType[%u]",
+            profInfo->srcAddr, profInfo->dstAddr, profInfo->dataSize, profInfo->notifyID, profInfo->linkType,
             OpTypeToSerialString(profInfo->opType).c_str(), profInfo->transportType,
             DataTypeToSerialString(profInfo->dataType).c_str(), profInfo->rdmaType);
     } else {
         auto *dpuProfInfo = reinterpret_cast<const MsprofDpuHcclTrack *>(reporterData.data);
-        HCCL_INFO(
-            "MsprofAdditionalInfo dpuProfInfo: timeStamp[%llu], itemId[%llu], cclTag[%llu], groupName[%llu], "
-            "localRank[%u], remoteRank[%u], rankSize[%u], workFlowMode[%u], planeID[%u], "
-            "stage[%u], role[%u], durationEstimated[%f], taskType[%d]",
-            reporterData.timeStamp, dpuProfInfo->itemId, dpuProfInfo->cclTag,
-            dpuProfInfo->groupName, dpuProfInfo->localRank, dpuProfInfo->remoteRank,
-            dpuProfInfo->rankSize, dpuProfInfo->workFlowMode, dpuProfInfo->planeID,
-            dpuProfInfo->stage, dpuProfInfo->role, dpuProfInfo->durationEstimated,
+        HCCL_INFO("MsprofAdditionalInfo dpuProfInfo: timeStamp[%llu], itemId[%llu], cclTag[%llu], groupName[%llu], "
+                  "localRank[%u], remoteRank[%u], rankSize[%u], workFlowMode[%u], planeID[%u], "
+                  "stage[%u], role[%u], durationEstimated[%f], taskType[%d]",
+            reporterData.timeStamp, dpuProfInfo->itemId, dpuProfInfo->cclTag, dpuProfInfo->groupName,
+            dpuProfInfo->localRank, dpuProfInfo->remoteRank, dpuProfInfo->rankSize, dpuProfInfo->workFlowMode,
+            dpuProfInfo->planeID, dpuProfInfo->stage, dpuProfInfo->role, dpuProfInfo->durationEstimated,
             taskInfo.taskParam_.taskType);
         HCCL_INFO(
             "MsprofAdditionalInfo dpuProfInfo detail: srcAddr[%llu], dstAddr[%llu], dataSize[%llu], notifyID[%llu], "
             "linkType[%u], opType[%s], transportType[%u], dataType[%s], rdmaType[%u], "
             "taskId[%u], aicpu_task_id[%u], streamId[%u], npuDevId[%u], dpuDevId[%u], timeStamp[%llu]",
-            dpuProfInfo->srcAddr, dpuProfInfo->dstAddr, dpuProfInfo->dataSize,
-            dpuProfInfo->notifyID, dpuProfInfo->linkType,
-            OpTypeToSerialString(dpuProfInfo->opType).c_str(), dpuProfInfo->transportType,
-            DataTypeToSerialString(dpuProfInfo->dataType).c_str(), dpuProfInfo->rdmaType,
-            dpuProfInfo->taskId, dpuProfInfo->aicpu_task_id, dpuProfInfo->streamId,
-            dpuProfInfo->npuDevId, dpuProfInfo->dpuDevId, dpuProfInfo->timeStamp);
+            dpuProfInfo->srcAddr, dpuProfInfo->dstAddr, dpuProfInfo->dataSize, dpuProfInfo->notifyID,
+            dpuProfInfo->linkType, OpTypeToSerialString(dpuProfInfo->opType).c_str(), dpuProfInfo->transportType,
+            DataTypeToSerialString(dpuProfInfo->dataType).c_str(), dpuProfInfo->rdmaType, dpuProfInfo->taskId,
+            dpuProfInfo->aicpu_task_id, dpuProfInfo->streamId, dpuProfInfo->npuDevId, dpuProfInfo->dpuDevId,
+            dpuProfInfo->timeStamp);
     }
 }
 
-void ProfilingHandler::LogCcuTaskInfo(const CcuProfilingInfo &info, const TaskInfo &taskInfo,
-    uint64_t itemId, uint64_t groupName, u32 rankId, u32 ranksize) const
+void ProfilingHandler::LogCcuTaskInfo(const CcuProfilingInfo &info, const TaskInfo &taskInfo, uint64_t itemId,
+    uint64_t groupName, u32 rankId, u32 ranksize) const
 {
     HCCL_INFO("[ProfilingHandler]GetCcuTaskInfo, ccuTaskInfo data is: version[%u], workFlowMode[%u], itemId[%llu], "
               "groupName[%llu], rankId[%u], ranksize[%u], streamId[%u], taskId[%u], dieId[%u], "
               "missionId[%u],instrId[%u]",
-              0, static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE), itemId, groupName,
-              rankId, ranksize, taskInfo.streamId_, taskInfo.taskId_, info.dieId,
-              info.missionId, info.instrId);
+        0, static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE), itemId, groupName, rankId, ranksize,
+        taskInfo.streamId_, taskInfo.taskId_, info.dieId, info.missionId, info.instrId);
 }
 
-void ProfilingHandler::LogCcuWaitSignalInfo(const CcuProfilingInfo &info, const TaskInfo &taskInfo,
-    uint64_t itemId, uint64_t groupName, u32 rankId, u32 ranksize) const
+void ProfilingHandler::LogCcuWaitSignalInfo(const CcuProfilingInfo &info, const TaskInfo &taskInfo, uint64_t itemId,
+    uint64_t groupName, u32 rankId, u32 ranksize) const
 {
     HCCL_INFO(
         "[ProfilingHandler]GetCcuWaitSignalInfo, waitSignalInfo data is: version[%u], itemId[%llu], groupName[%llu], "
         "rankId[%u], ranksize[%u], workFlowMode[%u], streamId[%llu], taskId[%u], dieId[%u],instrId[%u],missionId[%u], "
         "ckeId[%u],mask[%u]",
-        0, itemId, groupName, rankId, ranksize,
-        static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE), taskInfo.streamId_, taskInfo.taskId_, info.dieId, info.instrId,
-        info.missionId, info.ckeId, info.mask);
+        0, itemId, groupName, rankId, ranksize, static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE),
+        taskInfo.streamId_, taskInfo.taskId_, info.dieId, info.instrId, info.missionId, info.ckeId, info.mask);
 }
 
-void ProfilingHandler::LogCcuGroupInfo(const CcuProfilingInfo &info, const TaskInfo &taskInfo,
-    uint64_t itemId, uint64_t groupName, u32 rankId, u32 ranksize) const
+void ProfilingHandler::LogCcuGroupInfo(const CcuProfilingInfo &info, const TaskInfo &taskInfo, uint64_t itemId,
+    uint64_t groupName, u32 rankId, u32 ranksize) const
 {
     HCCL_INFO("[ProfilingHandler]GetCcuGroupInfo, ccuGroupInfo data is: version[%u], itemId[%llu], "
               "groupName[%llu], rankId[%u], ranksize[%u], workFlowMode[%u], streamId[%llu], taskId[%u], "
               "dieId[%u],instrId[%u],missionId[%u], dataSize[%llu]",
-              0, itemId, groupName,
-              rankId, ranksize, static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE),
-              taskInfo.streamId_, taskInfo.taskId_, info.dieId, info.instrId,
-              info.missionId, info.dataSize);
+        0, itemId, groupName, rankId, ranksize, static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE),
+        taskInfo.streamId_, taskInfo.taskId_, info.dieId, info.instrId, info.missionId, info.dataSize);
     if (info.reduceOpType != INVALID_TYPE_VALUE) {
         HCCL_INFO("ccuGroupInfo reduceOpType is [%d]", static_cast<int>(info.reduceOpType));
     }
@@ -638,11 +631,10 @@ void ProfilingHandler::LogCcuGroupInfo(const CcuProfilingInfo &info, const TaskI
         HCCL_INFO("ccuGroupInfo outputDataType is [%d]", static_cast<int>(info.outputDataType));
     }
     for (auto i = 0; i < CCU_MAX_CHANNEL_NUM; i++) {
-        if (info.channelId[i] != INVALID_VALUE_CHANNELID
-            && info.remoteRankId[i] != INVALID_VALUE_RANKID) {
+        if (info.channelId[i] != INVALID_VALUE_CHANNELID && info.remoteRankId[i] != INVALID_VALUE_RANKID) {
             HCCL_INFO("[ProfilingHandler]GetCcuGroupInfo, ccuGroupInfo data is: channelId[%d] =  %u, "
                       "remoteRankId[%d] = %u",
-                      i, info.channelId[i], i, info.remoteRankId[i]);
+                i, info.channelId[i], i, info.remoteRankId[i]);
         }
     }
 }
@@ -661,8 +653,8 @@ void ProfilingHandler::ReportCcuInfoLog(const TaskInfo &taskInfo) const
     auto ccuDetailInfo = taskInfo.taskParam_.ccuDetailInfo;
     for (const auto &info : *ccuDetailInfo) {
         uint64_t itemId = GetProfHashId(info.name.c_str(), info.name.length());
-        uint64_t groupName = GetProfHashId(taskInfo.dfxOpInfo_->op_.opTag.c_str(),
-                                           taskInfo.dfxOpInfo_->op_.opTag.length());
+        uint64_t groupName
+            = GetProfHashId(taskInfo.dfxOpInfo_->op_.opTag.c_str(), taskInfo.dfxOpInfo_->op_.opTag.length());
         u32 rankId = 0;
         u32 ranksize = 0;
         if (taskInfo.dfxOpInfo_->isIndop_ == true) {
@@ -698,7 +690,7 @@ void ProfilingHandler::ReportCcuInfo(const TaskInfo &taskInfo) const
     for (const auto &info : *ccuDetailInfo) {
         if (info.type == 0 && enableHcclL1_) {
             GetCcuTaskInfo(taskInfo, info);
-        } else if (info.type == 1 &&  enableHcclL1_) {
+        } else if (info.type == 1 && enableHcclL1_) {
             GetCcuWaitSignalInfo(taskInfo, info);
         } else if (info.type == CCU_TYPE && enableHcclL1_) {
             GetCcuGroupInfo(taskInfo, info);
@@ -710,66 +702,65 @@ void ProfilingHandler::GetCcuTaskInfo(const TaskInfo &taskInfo, const CcuProfili
 {
     uint64_t timestamp = DlProfFunction::GetInstance().dlMsprofSysCycleTime();
     MsprofAdditionalInfo reporterData{};
-    reporterData.level     = MSPROF_REPORT_HCCL_NODE_LEVEL;
-    reporterData.type      = MSPROF_REPORT_CCU_TASK_INFO;
-    reporterData.threadId  = SalGetTid();
-    reporterData.dataLen   = sizeof(MsprofCcuTaskInfo);
+    reporterData.level = MSPROF_REPORT_HCCL_NODE_LEVEL;
+    reporterData.type = MSPROF_REPORT_CCU_TASK_INFO;
+    reporterData.threadId = SalGetTid();
+    reporterData.dataLen = sizeof(MsprofCcuTaskInfo);
     reporterData.timeStamp = timestamp;
-    auto *ccuTaskInfo      = reinterpret_cast<MsprofCcuTaskInfo *>(reporterData.data);
-    ccuTaskInfo->version       = 0;
-    ccuTaskInfo->workFlowMode  = static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE);
-    ccuTaskInfo->itemId        = GetProfHashId(info.name.c_str(), info.name.length());
-    uint64_t groupName        = GetProfHashId(taskInfo.dfxOpInfo_->op_.opTag.c_str(),
-                                              taskInfo.dfxOpInfo_->op_.opTag.length());
-    ccuTaskInfo->groupName     = groupName;
+    auto *ccuTaskInfo = reinterpret_cast<MsprofCcuTaskInfo *>(reporterData.data);
+    ccuTaskInfo->version = 0;
+    ccuTaskInfo->workFlowMode = static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE);
+    ccuTaskInfo->itemId = GetProfHashId(info.name.c_str(), info.name.length());
+    uint64_t groupName = GetProfHashId(taskInfo.dfxOpInfo_->op_.opTag.c_str(), taskInfo.dfxOpInfo_->op_.opTag.length());
+    ccuTaskInfo->groupName = groupName;
     if (taskInfo.dfxOpInfo_->isIndop_ == true) {
-        ccuTaskInfo->rankId   = taskInfo.dfxOpInfo_->op_.myRank;
+        ccuTaskInfo->rankId = taskInfo.dfxOpInfo_->op_.myRank;
         ccuTaskInfo->ranksize = taskInfo.dfxOpInfo_->rankSize_;
     } else {
         CommunicatorImpl *commImp = static_cast<CommunicatorImpl *>(taskInfo.dfxOpInfo_->comm_);
-        ccuTaskInfo->rankId        = commImp->GetIdIndex(); 
-        ccuTaskInfo->ranksize      = commImp->GetRankSize();
+        ccuTaskInfo->rankId = commImp->GetIdIndex();
+        ccuTaskInfo->ranksize = commImp->GetRankSize();
     }
 
-    ccuTaskInfo->streamId      = taskInfo.streamId_;
-    ccuTaskInfo->taskId        = taskInfo.taskId_;
-    ccuTaskInfo->dieId         = info.dieId;
-    ccuTaskInfo->missionId     = info.missionId;
-    ccuTaskInfo->instrId       = info.instrId;
+    ccuTaskInfo->streamId = taskInfo.streamId_;
+    ccuTaskInfo->taskId = taskInfo.taskId_;
+    ccuTaskInfo->dieId = info.dieId;
+    ccuTaskInfo->missionId = info.missionId;
+    ccuTaskInfo->instrId = info.instrId;
     ReportAdditionInfo(reporterData);
 }
 
 void ProfilingHandler::GetCcuGroupInfo(const TaskInfo &taskInfo, const CcuProfilingInfo &info) const
 {
     MsprofAdditionalInfo reporterData{};
-    reporterData.level     = MSPROF_REPORT_HCCL_NODE_LEVEL;
-    reporterData.type      = MSPROF_REPORT_CCU_GROUP_INFO;
-    reporterData.threadId  = SalGetTid();
-    reporterData.dataLen   = sizeof(MsprofCcuGroupInfo);
+    reporterData.level = MSPROF_REPORT_HCCL_NODE_LEVEL;
+    reporterData.type = MSPROF_REPORT_CCU_GROUP_INFO;
+    reporterData.threadId = SalGetTid();
+    reporterData.dataLen = sizeof(MsprofCcuGroupInfo);
     reporterData.timeStamp = DlProfFunction::GetInstance().dlMsprofSysCycleTime();
-    auto *ccuGroupInfo     = reinterpret_cast<MsprofCcuGroupInfo *>(reporterData.data);
+    auto *ccuGroupInfo = reinterpret_cast<MsprofCcuGroupInfo *>(reporterData.data);
     ccuGroupInfo->version = 0;
-    ccuGroupInfo->itemId  = GetProfHashId(info.name.c_str(), info.name.length());
+    ccuGroupInfo->itemId = GetProfHashId(info.name.c_str(), info.name.length());
     uint64_t groupName = GetProfHashId(taskInfo.dfxOpInfo_->op_.opTag.c_str(), taskInfo.dfxOpInfo_->op_.opTag.length());
-    ccuGroupInfo->groupName      = groupName;
+    ccuGroupInfo->groupName = groupName;
     if (taskInfo.dfxOpInfo_->isIndop_ == true) {
-        ccuGroupInfo->rankId   = taskInfo.dfxOpInfo_->op_.myRank;
+        ccuGroupInfo->rankId = taskInfo.dfxOpInfo_->op_.myRank;
         ccuGroupInfo->ranksize = taskInfo.dfxOpInfo_->rankSize_;
     } else {
         CommunicatorImpl *commImp = static_cast<CommunicatorImpl *>(taskInfo.dfxOpInfo_->comm_);
-        ccuGroupInfo->rankId        = commImp->GetIdIndex(); 
-        ccuGroupInfo->ranksize      = commImp->GetRankSize();
+        ccuGroupInfo->rankId = commImp->GetIdIndex();
+        ccuGroupInfo->ranksize = commImp->GetRankSize();
     }
-    ccuGroupInfo->workFlowMode   = static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE);
-    ccuGroupInfo->streamId       = taskInfo.streamId_;
-    ccuGroupInfo->taskId         = taskInfo.taskId_;
-    ccuGroupInfo->dieId          = info.dieId;
-    ccuGroupInfo->instrId        = info.instrId;
-    ccuGroupInfo->missionId      = info.missionId;
-    ccuGroupInfo->reduceOpType   = info.reduceOpType;
-    ccuGroupInfo->inputDataType  = info.inputDataType;
+    ccuGroupInfo->workFlowMode = static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE);
+    ccuGroupInfo->streamId = taskInfo.streamId_;
+    ccuGroupInfo->taskId = taskInfo.taskId_;
+    ccuGroupInfo->dieId = info.dieId;
+    ccuGroupInfo->instrId = info.instrId;
+    ccuGroupInfo->missionId = info.missionId;
+    ccuGroupInfo->reduceOpType = info.reduceOpType;
+    ccuGroupInfo->inputDataType = info.inputDataType;
     ccuGroupInfo->outputDataType = info.outputDataType;
-    ccuGroupInfo->dataSize       = info.dataSize;
+    ccuGroupInfo->dataSize = info.dataSize;
     std::copy(info.channelId, info.channelId + CCU_MAX_CHANNEL_NUM, ccuGroupInfo->channelId);
     std::copy(info.remoteRankId, info.remoteRankId + CCU_MAX_CHANNEL_NUM, ccuGroupInfo->remoteRankId);
     ReportAdditionInfo(reporterData);
@@ -779,38 +770,39 @@ void ProfilingHandler::GetCcuWaitSignalInfo(const TaskInfo &taskInfo, const CcuP
 {
     uint64_t timestamp = DlProfFunction::GetInstance().dlMsprofSysCycleTime();
     MsprofAdditionalInfo reporterData{};
-    reporterData.level     = MSPROF_REPORT_HCCL_NODE_LEVEL;
-    reporterData.type      = MSPROF_REPORT_CCU_WAIT_SIGNAL_INFO;
-    reporterData.threadId  = SalGetTid();
-    reporterData.dataLen   = sizeof(MsprofCcuWaitSignalInfo);
+    reporterData.level = MSPROF_REPORT_HCCL_NODE_LEVEL;
+    reporterData.type = MSPROF_REPORT_CCU_WAIT_SIGNAL_INFO;
+    reporterData.threadId = SalGetTid();
+    reporterData.dataLen = sizeof(MsprofCcuWaitSignalInfo);
     reporterData.timeStamp = timestamp;
-    auto *waitSignalInfo   = reinterpret_cast<MsprofCcuWaitSignalInfo *>(reporterData.data);
-    waitSignalInfo->version      = 0;
-    waitSignalInfo->itemId       = GetProfHashId(info.name.c_str(), info.name.length());
+    auto *waitSignalInfo = reinterpret_cast<MsprofCcuWaitSignalInfo *>(reporterData.data);
+    waitSignalInfo->version = 0;
+    waitSignalInfo->itemId = GetProfHashId(info.name.c_str(), info.name.length());
     uint64_t groupName = GetProfHashId(taskInfo.dfxOpInfo_->op_.opTag.c_str(), taskInfo.dfxOpInfo_->op_.opTag.length());
-    waitSignalInfo->groupName    = groupName;
+    waitSignalInfo->groupName = groupName;
     if (taskInfo.dfxOpInfo_->isIndop_ == true) {
-        waitSignalInfo->rankId   = taskInfo.dfxOpInfo_->op_.myRank;
+        waitSignalInfo->rankId = taskInfo.dfxOpInfo_->op_.myRank;
         waitSignalInfo->ranksize = taskInfo.dfxOpInfo_->rankSize_;
     } else {
         CommunicatorImpl *commImp = static_cast<CommunicatorImpl *>(taskInfo.dfxOpInfo_->comm_);
-        waitSignalInfo->rankId        = commImp->GetIdIndex(); 
-        waitSignalInfo->ranksize      = commImp->GetRankSize();
+        waitSignalInfo->rankId = commImp->GetIdIndex();
+        waitSignalInfo->ranksize = commImp->GetRankSize();
     }
     waitSignalInfo->workFlowMode = static_cast<u32>(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE);
-    waitSignalInfo->streamId  = taskInfo.streamId_;
-    waitSignalInfo->taskId    = taskInfo.taskId_;
-    waitSignalInfo->dieId     = info.dieId;
-    waitSignalInfo->instrId   = info.instrId;
+    waitSignalInfo->streamId = taskInfo.streamId_;
+    waitSignalInfo->taskId = taskInfo.taskId_;
+    waitSignalInfo->dieId = info.dieId;
+    waitSignalInfo->instrId = info.instrId;
     waitSignalInfo->missionId = info.missionId;
-    waitSignalInfo->ckeId     = info.ckeId;
-    waitSignalInfo->mask      = info.mask;
+    waitSignalInfo->ckeId = info.ckeId;
+    waitSignalInfo->mask = info.mask;
     std::copy(info.channelId, info.channelId + CCU_MAX_CHANNEL_NUM, waitSignalInfo->channelId);
     std::copy(info.remoteRankId, info.remoteRankId + CCU_MAX_CHANNEL_NUM, waitSignalInfo->remoteRankId);
     ReportAdditionInfo(reporterData);
 }
 
-void ProfilingHandler::ReportAclApi(uint32_t cmdType, uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId) const
+void ProfilingHandler::ReportAclApi(
+    uint32_t cmdType, uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId, bool cachedReq)
 {
     MsprofApi reporterData{};
     reporterData.level = MSPROF_REPORT_ACL_LEVEL;
@@ -820,18 +812,25 @@ void ProfilingHandler::ReportAclApi(uint32_t cmdType, uint64_t beginTime, uint64
     reporterData.endTime = endTime;
     reporterData.itemId = cmdItemId;
 
+    if (cachedReq) {
+        std::lock_guard<std::mutex> lock(cachedAclApiInfoMutex_);
+        HCCL_INFO(
+            "ReportAclApi MSPROF_REPORT_ACL_LEVEL type[%d] beginTime[%llu]", reporterData.type, reporterData.beginTime);
+        cachedAclApiInfo_.push(reporterData);
+    }
+
     s32 ret = DlProfFunction::GetInstance().dlMsprofReportApi(1, &reporterData);
     HCCL_INFO("[ProfilingHandler][ReportAclApi], reporterData data is: level[%u], type[%u], threadId[%u], "
               "beginTime[%llu], endTime[%llu], itemId[%llu], return value[%d]",
-              reporterData.level, reporterData.type, reporterData.threadId, reporterData.beginTime,
-              reporterData.endTime, reporterData.itemId, ret);
+        reporterData.level, reporterData.type, reporterData.threadId, reporterData.beginTime, reporterData.endTime,
+        reporterData.itemId, ret);
     if (ret != 0) {
         THROW<InternalException>("Call dlMsprofReportApi failed, return[%d]", ret);
     }
 }
 
-void ProfilingHandler::ReportNodeApi(uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId,
-                                     bool cachedReq)
+void ProfilingHandler::ReportNodeApi(
+    uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId, bool cachedReq)
 {
     MsprofApi reporterData{};
     reporterData.level = MSPROF_REPORT_NODE_LEVEL;
@@ -844,7 +843,7 @@ void ProfilingHandler::ReportNodeApi(uint64_t beginTime, uint64_t endTime, uint6
     if (cachedReq) {
         std::lock_guard<std::mutex> lock(cachedTaskApiInfoMutex_);
         cachedTaskApiInfo_.push(reporterData);
-    } 
+    }
     if (!enableHostApi_) {
         return;
     }
@@ -852,8 +851,8 @@ void ProfilingHandler::ReportNodeApi(uint64_t beginTime, uint64_t endTime, uint6
     s32 ret = DlProfFunction::GetInstance().dlMsprofReportApi(1, &reporterData);
     HCCL_INFO("[ProfilingHandler][ReportNodeApi], reporterData data is: level[%u], type[%u], threadId[%u], "
               "beginTime[%llu], endTime[%llu], itemId[%llu], return value[%d]",
-              reporterData.level, reporterData.type, reporterData.threadId, reporterData.beginTime,
-              reporterData.endTime, reporterData.itemId, ret);
+        reporterData.level, reporterData.type, reporterData.threadId, reporterData.beginTime, reporterData.endTime,
+        reporterData.itemId, ret);
     if (ret != 0) {
         THROW<InternalException>("Call MsprofReportApi failed, return[%d]", ret);
     }
@@ -862,18 +861,19 @@ void ProfilingHandler::ReportNodeApi(uint64_t beginTime, uint64_t endTime, uint6
 void ProfilingHandler::ReportNodeBasicInfo(uint64_t timeStamp, uint64_t cmdItemId, uint32_t threadId, bool cachedReq)
 {
     MsprofCompactInfo reporterData{};
-    reporterData.level     = MSPROF_REPORT_NODE_LEVEL;
-    reporterData.type      = MSPROF_REPORT_NODE_BASIC_INFO_TYPE;
-    reporterData.threadId  = threadId;
-    reporterData.dataLen   = sizeof(MsprofNodeBasicInfo);
+    reporterData.level = MSPROF_REPORT_NODE_LEVEL;
+    reporterData.type = MSPROF_REPORT_NODE_BASIC_INFO_TYPE;
+    reporterData.threadId = threadId;
+    reporterData.dataLen = sizeof(MsprofNodeBasicInfo);
     reporterData.timeStamp = timeStamp;
-    reporterData.data.nodeBasicInfo.opName   = cmdItemId;
+    reporterData.data.nodeBasicInfo.opName = cmdItemId;
     reporterData.data.nodeBasicInfo.taskType = MSPROF_GE_TASK_TYPE_HCCL;
-    reporterData.data.nodeBasicInfo.opType   = cmdItemId;
-    reporterData.data.nodeBasicInfo.opFlag   = 0;
+    reporterData.data.nodeBasicInfo.opType = cmdItemId;
+    reporterData.data.nodeBasicInfo.opFlag = 0;
     HCCL_INFO("[ProfilingHandler][ReportNodeBasicInfo], reporterData data is: level[%u], type[%u], threadId[%u], "
-              "dataLen[%u], taskType[%u], opFlag[%u]", reporterData.level, reporterData.type, reporterData.threadId,
-              reporterData.dataLen, reporterData.data.nodeBasicInfo.taskType, reporterData.data.nodeBasicInfo.opFlag);
+              "dataLen[%u], taskType[%u], opFlag[%u]",
+        reporterData.level, reporterData.type, reporterData.threadId, reporterData.dataLen,
+        reporterData.data.nodeBasicInfo.taskType, reporterData.data.nodeBasicInfo.opFlag);
     if (cachedReq) {
         std::lock_guard<std::mutex> lock(cacheHcclOpInfoMutex_);
         cacheHcclOpInfo_.push(reporterData);
@@ -891,16 +891,16 @@ void ProfilingHandler::ReportNodeBasicInfo(uint64_t timeStamp, uint64_t cmdItemI
 void ProfilingHandler::ReportHcclOpInfo(uint64_t timeStamp, const DfxOpInfo &opInfo, uint32_t threadId, bool cachedReq)
 {
     MsprofCompactInfo reporterData{};
-    reporterData.level     = MSPROF_REPORT_NODE_LEVEL;
-    reporterData.type      = MSPROF_REPORT_NODE_HCCL_OP_INFO_TYPE;
-    reporterData.threadId  = threadId;
-    reporterData.dataLen   = sizeof(MsprofHCCLOPInfo);
+    reporterData.level = MSPROF_REPORT_NODE_LEVEL;
+    reporterData.type = MSPROF_REPORT_NODE_HCCL_OP_INFO_TYPE;
+    reporterData.threadId = threadId;
+    reporterData.dataLen = sizeof(MsprofHCCLOPInfo);
     reporterData.timeStamp = timeStamp;
-    reporterData.data.hcclopInfo.relay    = 0;
-    reporterData.data.hcclopInfo.retry    = 0;
+    reporterData.data.hcclopInfo.relay = 0;
+    reporterData.data.hcclopInfo.retry = 0;
     reporterData.data.hcclopInfo.dataType = opInfo.op_.dataType;
-    reporterData.data.hcclopInfo.algType  = cachedAlgTypeHashId_;
-    uint64_t groupName                     = GetProfHashId(opInfo.op_.opTag.c_str(), opInfo.op_.opTag.length());
+    reporterData.data.hcclopInfo.algType = cachedAlgTypeHashId_;
+    uint64_t groupName = GetProfHashId(opInfo.op_.opTag.c_str(), opInfo.op_.opTag.length());
     reporterData.data.hcclopInfo.groupName = groupName;
     u32 ranksize{0};
     if (opInfo.isIndop_ == true) {
@@ -930,24 +930,24 @@ void ProfilingHandler::ReportHcclOpInfo(uint64_t timeStamp, const DfxOpInfo &opI
     }
     HCCL_INFO("[ProfilingHandler][ReportHcclOpInfo], data is: level[%u], type[%u], threadId[%u], dataLen[%u], "
               "timeStamp[%llu], relay [%u], retry[%u], dataType[%s], algType[%u], groupName[%llu], count[%llu]",
-              reporterData.level, reporterData.type, reporterData.threadId, reporterData.dataLen,
-              reporterData.timeStamp, reporterData.data.hcclopInfo.relay, reporterData.data.hcclopInfo.retry,
-              DataTypeToSerialString(reporterData.data.hcclopInfo.dataType).c_str(), reporterData.data.hcclopInfo.algType,
-              reporterData.data.hcclopInfo.groupName, reporterData.data.hcclopInfo.count);
+        reporterData.level, reporterData.type, reporterData.threadId, reporterData.dataLen, reporterData.timeStamp,
+        reporterData.data.hcclopInfo.relay, reporterData.data.hcclopInfo.retry,
+        DataTypeToSerialString(reporterData.data.hcclopInfo.dataType).c_str(), reporterData.data.hcclopInfo.algType,
+        reporterData.data.hcclopInfo.groupName, reporterData.data.hcclopInfo.count);
     s32 ret = DlProfFunction::GetInstance().dlMsprofReportCompactInfo(1, &reporterData, sizeof(MsprofCompactInfo));
     if (ret != 0) {
-         THROW<InternalException>("[ProfilingHandler] Call dlMsprofReportCompactInfo failed, return[%d]", ret);
+        THROW<InternalException>("[ProfilingHandler] Call dlMsprofReportCompactInfo failed, return[%d]", ret);
     }
 }
 
-void ProfilingHandler::ReportAdditionInfo(MsprofAdditionalInfo& reporterData) const
+void ProfilingHandler::ReportAdditionInfo(MsprofAdditionalInfo &reporterData) const
 {
     s32 ret
         = DlProfFunction::GetInstance().dlMsprofReportAdditionalInfo(0, &reporterData, sizeof(MsprofAdditionalInfo));
     HCCL_INFO("[ProfilingHandler][ReportAdditionInfo], level[%u], type[%u], threadId[%u], dataLen[%u], "
               "timeStamp[%llu], return value[%d]",
-              reporterData.level, reporterData.type, reporterData.threadId, reporterData.dataLen,
-              reporterData.timeStamp, ret);
+        reporterData.level, reporterData.type, reporterData.threadId, reporterData.dataLen, reporterData.timeStamp,
+        ret);
     if (ret != 0) {
         THROW<InternalException>("Call MsprofReportAdditionalInfo failed, return[%d]", ret);
     }
@@ -963,14 +963,15 @@ int32_t ProfilingHandler::CommandHandle(uint32_t rtType, void *data, uint32_t le
     rtProfCommandHandle_t *profConfigParam = static_cast<rtProfCommandHandle_t *>(data);
     auto type = profConfigParam->type;
     auto profconfig = profConfigParam->profSwitch;
-    HCCL_RUN_INFO("[Profiling][CommandHandle] CommandHandle's rtType is %u. CommandHandle_switch type[%u], " \
-            "profconfig[%u], deviceLogicId[%u]", rtType, type, profconfig, profConfigParam->devIdList[0]);
+    HCCL_RUN_INFO("[Profiling][CommandHandle] CommandHandle's rtType is %u. CommandHandle_switch type[%u], "
+                  "profconfig[%u], deviceLogicId[%u]",
+        rtType, type, profconfig, profConfigParam->devIdList[0]);
     switch (type) {
         case PROF_COMMANDHANDLE_TYPE_START:
             instance_.StartSubscribe(profconfig);
             break;
         case PROF_COMMANDHANDLE_TYPE_STOP:
-            instance_.StopSubscribe(); 
+            instance_.StopSubscribe();
             break;
         default:
             HCCL_RUN_INFO("[Profiling][CommandHandle] Unexpected behaviour.");
@@ -991,7 +992,7 @@ void ProfilingHandler::StartSubscribe(uint64_t profconfig)
         StartTaskApiSubscribe();
         StartAdditionInfoSubscribe();
         StartCcuSubscribe();
-    } 
+    }
     HCCL_RUN_INFO("[Profiling][CommandHandle] profSwitch is[%llu]", profconfig);
 }
 
@@ -1001,6 +1002,7 @@ void ProfilingHandler::StartHostApiSubscribe()
     CallProfRegHostApi();
     ReportStoragedCompactInfo();
     ReportMc2AdditionInfo();
+    ReportStoragedAclApi();
     HCCL_RUN_INFO("SetHostApiSubscribe:[%d]", enableHostApi_);
 }
 
@@ -1012,25 +1014,23 @@ void ProfilingHandler::CallProfRegHostApi() const
     auto &profFunction = DlProfFunction::GetInstance();
     for (auto i = 0; i < OpType::__COUNT__; ++i) {
         OpType type(static_cast<OpType::Value>(i));
-        s32           ret = profFunction.dlMsprofRegTypeInfo(MSPROF_REPORT_ACL_LEVEL,
-                                                             static_cast<uint32_t>(type) + MSPROF_REPORT_ACL_HOST_HCCL_BASE_TYPE,
-                                                             type.Describe().c_str());
+        s32 ret = profFunction.dlMsprofRegTypeInfo(MSPROF_REPORT_ACL_LEVEL,
+            static_cast<uint32_t>(type) + MSPROF_REPORT_ACL_HOST_HCCL_BASE_TYPE, type.Describe().c_str());
         if (ret != 0) {
             THROW<InternalException>("Call MsprofRegTypeInfo fail, return[%d]", ret);
         }
     }
     for (auto i = 0; i < OpType::__COUNT__; ++i) {
         OpType type(static_cast<OpType::Value>(i));
-        s32           ret = profFunction.dlMsprofRegTypeInfo(MSPROF_REPORT_NODE_LEVEL,
-                                                             static_cast<uint32_t>(type) + MSPROF_REPORT_NODE_HCCL_BASE_TYPE,
-                                                             type.Describe().c_str());
+        s32 ret = profFunction.dlMsprofRegTypeInfo(MSPROF_REPORT_NODE_LEVEL,
+            static_cast<uint32_t>(type) + MSPROF_REPORT_NODE_HCCL_BASE_TYPE, type.Describe().c_str());
         if (ret != 0) {
             THROW<InternalException>("Call MsprofRegTypeInfo fail, return[%d]", ret);
         }
     }
     const std::string hcclType("hccl_op_info");
-    s32 ret = profFunction.dlMsprofRegTypeInfo(MSPROF_REPORT_NODE_LEVEL, MSPROF_REPORT_NODE_HCCL_OP_INFO_TYPE,
-                                               hcclType.c_str());
+    s32 ret = profFunction.dlMsprofRegTypeInfo(
+        MSPROF_REPORT_NODE_LEVEL, MSPROF_REPORT_NODE_HCCL_OP_INFO_TYPE, hcclType.c_str());
     if (ret != 0) {
         THROW<InternalException>("Call MsprofRegTypeInfo fail, return[%d]", ret);
     }
@@ -1059,8 +1059,8 @@ void ProfilingHandler::ReportMc2AdditionInfo()
     while (!tempCompactInfo.empty()) {
         MsprofAdditionalInfo reportData = tempCompactInfo.front();
         tempCompactInfo.pop();
-        s32 ret = DlProfFunction::GetInstance().dlMsprofReportAdditionalInfo(1, &reportData,
-                                                                             sizeof(MsprofAdditionalInfo));
+        s32 ret
+            = DlProfFunction::GetInstance().dlMsprofReportAdditionalInfo(1, &reportData, sizeof(MsprofAdditionalInfo));
         if (ret != 0) {
             THROW<InternalException>("Call MsprofRegTypeInfo failed, return[%d]", ret);
         }
@@ -1082,7 +1082,7 @@ void ProfilingHandler::CallProfRegTaskTypeApi() const
         return;
     }
     const std::string hcclType("hccl_info");
-    s32               sret = DlProfFunction::GetInstance().dlMsprofRegTypeInfo(
+    s32 sret = DlProfFunction::GetInstance().dlMsprofRegTypeInfo(
         MSPROF_REPORT_HCCL_NODE_LEVEL, static_cast<uint32_t>(ProfTaskType::TASK_HCCL_INFO), hcclType.c_str());
     if (sret != 0) {
         THROW<InternalException>("Call MsprofRegTypeInfo fail, return[%d]", sret);
@@ -1098,11 +1098,11 @@ void ProfilingHandler::CallProfRegTaskTypeApi() const
         = {{MSPROF_REPORT_NODE_CONTEXT_ID_INFO_TYPE, "context_id_info"}};
     const std::vector<std::pair<uint32_t, std::string>> taskOtherTypes
         = {{MSPROF_REPORT_NODE_BASIC_INFO_TYPE, "node_basic_info"},
-           {MSPROF_REPORT_NODE_MC2_COMMINFO_TYPE, "mc2_comm_info"}};
+            {MSPROF_REPORT_NODE_MC2_COMMINFO_TYPE, "mc2_comm_info"}};
 
     for (auto &it : taskTypes) {
-        s32 ret = DlProfFunction::GetInstance().dlMsprofRegTypeInfo(MSPROF_REPORT_HCCL_NODE_LEVEL, it.first,
-                                                                    it.second.c_str());
+        s32 ret = DlProfFunction::GetInstance().dlMsprofRegTypeInfo(
+            MSPROF_REPORT_HCCL_NODE_LEVEL, it.first, it.second.c_str());
         if (ret != 0) {
             THROW<InternalException>("Call dlMsprofRegTypeInfo failed, return[%d]", ret);
         }
@@ -1133,7 +1133,8 @@ void ProfilingHandler::ReportStoragedTaskApi()
     }
 }
 
-void ProfilingHandler::StartHostHcclOpSubscribe() {
+void ProfilingHandler::StartHostHcclOpSubscribe()
+{
     enableHcclNode_ = true;
     enableHcclL0_ = true;
     CallProfRegHcclOpApi();
@@ -1149,15 +1150,14 @@ void ProfilingHandler::CallProfRegHcclOpApi() const
     }
     for (auto i = 0; i < OpType::__COUNT__; ++i) {
         OpType type(static_cast<OpType::Value>(i));
-        s32 ret = DlProfFunction::GetInstance().dlMsprofRegTypeInfo(
-            MSPROF_REPORT_HCCL_NODE_LEVEL, static_cast<uint32_t>(type) + MSPROF_REPORT_ACL_HOST_HCCL_BASE_TYPE,
-            type.Describe().c_str());
+        s32 ret = DlProfFunction::GetInstance().dlMsprofRegTypeInfo(MSPROF_REPORT_HCCL_NODE_LEVEL,
+            static_cast<uint32_t>(type) + MSPROF_REPORT_ACL_HOST_HCCL_BASE_TYPE, type.Describe().c_str());
         if (ret != 0) {
             THROW<InternalException>("[ProfilingHandler]Call MsprofReportApi fail, return[%d]", ret);
         }
     }
-    s32 ret = DlProfFunction::GetInstance().dlMsprofRegTypeInfo(MSPROF_REPORT_NODE_LEVEL,
-                                                                MSPROF_REPORT_NODE_MC2_COMMINFO_TYPE, "mc2_comm_info");
+    s32 ret = DlProfFunction::GetInstance().dlMsprofRegTypeInfo(
+        MSPROF_REPORT_NODE_LEVEL, MSPROF_REPORT_NODE_MC2_COMMINFO_TYPE, "mc2_comm_info");
     if (ret != 0) {
         THROW<InternalException>("[ProfilingHandler]Call MsprofRegTypeInfo fail, return[%d]", ret);
     }
@@ -1203,13 +1203,11 @@ void ProfilingHandler::StartCcuSubscribe()
     enableHcclNode_ = true;
     enableHcclL1_ = true;
     HCCL_INFO("ProfilingHandler StartCcuSubscribe");
-    const std::vector<std::pair<uint32_t, std::string>> ccuInfoTypes
-        = {{MSPROF_REPORT_CCU_TASK_INFO, "ccu_task_info"},
-           {MSPROF_REPORT_CCU_WAIT_SIGNAL_INFO, "ccu_wait_signal_info"},
-           {MSPROF_REPORT_CCU_GROUP_INFO, "ccu_group_info"}};
+    const std::vector<std::pair<uint32_t, std::string>> ccuInfoTypes = {{MSPROF_REPORT_CCU_TASK_INFO, "ccu_task_info"},
+        {MSPROF_REPORT_CCU_WAIT_SIGNAL_INFO, "ccu_wait_signal_info"}, {MSPROF_REPORT_CCU_GROUP_INFO, "ccu_group_info"}};
     for (auto &it : ccuInfoTypes) {
-        s32 ret = DlProfFunction::GetInstance().dlMsprofRegTypeInfo(MSPROF_REPORT_HCCL_NODE_LEVEL, it.first,
-                                                                    it.second.c_str());
+        s32 ret = DlProfFunction::GetInstance().dlMsprofRegTypeInfo(
+            MSPROF_REPORT_HCCL_NODE_LEVEL, it.first, it.second.c_str());
         if (ret != 0) {
             THROW<InternalException>("Call dlMsprofRegTypeInfo failed, return[%d]", ret);
         }
@@ -1226,10 +1224,10 @@ void ProfilingHandler::StartCcuSubscribe()
 
 void ProfilingHandler::ProfilingHandler::StopSubscribe()
 {
-    enableHostApi_  = false;
+    enableHostApi_ = false;
     enableHcclNode_ = false;
-    enableHcclL0_   = false;
-    enableHcclL1_   = false;
+    enableHcclL0_ = false;
+    enableHcclL1_ = false;
     HCCL_RUN_INFO("[ProfilingHandler]StopSubscribe.");
 }
 
@@ -1264,8 +1262,7 @@ uint64_t ProfilingHandler::GetProfHashId(const char *name, uint32_t len) const
     return DlProfFunction::GetInstance().dlMsprofStr2Id(name, len);
 }
 
-void ProfilingHandler::ReportHcclMC2CommInfoLog(const Stream &stream,
-                                             const std::vector<Stream *> &aicpuStreams) const
+void ProfilingHandler::ReportHcclMC2CommInfoLog(const Stream &stream, const std::vector<Stream *> &aicpuStreams) const
 {
     if (LIKELY(HcclCheckLogLevel(HCCL_LOG_INFO) == 0)) {
         return;
@@ -1276,42 +1273,44 @@ void ProfilingHandler::ReportHcclMC2CommInfoLog(const Stream &stream,
     }
     uint32_t reportId = 0;
     for (uint32_t streamIndex = 0; streamIndex < aicpuStreams.size(); streamIndex++) {
-        HCCL_INFO("streamIndex:%u, reportId:%u, streamId(sqId):%u", streamIndex, reportId, aicpuStreams[streamIndex]->GetSqId());
+        HCCL_INFO("streamIndex:%u, reportId:%u, streamId(sqId):%u", streamIndex, reportId,
+            aicpuStreams[streamIndex]->GetSqId());
         reportId++;
     }
 }
 
-void ProfilingHandler::ReportHcclMC2CommInfo(const Stream &kfcStream, const Stream &stream, 
-                                             const std::vector<Stream *> &aicpuStreams, const std::string &id, 
-                                             RankId myRank, u32 rankSize, RankId rankInParentComm)
+void ProfilingHandler::ReportHcclMC2CommInfo(const Stream &kfcStream, const Stream &stream,
+    const std::vector<Stream *> &aicpuStreams, const std::string &id, RankId myRank, u32 rankSize,
+    RankId rankInParentComm)
 {
     ReportHcclMC2CommInfoLog(stream, aicpuStreams);
     ProfilingDeviceCommResInfo hcclMc2Info;
-    hcclMc2Info.groupName                    = GetProfHashId(id.c_str(), id.length());
-    hcclMc2Info.rankSize                     = rankSize;
-    hcclMc2Info.rankId                       = myRank;
-    hcclMc2Info.usrRankId                    = rankInParentComm;
-    hcclMc2Info.aicpuKfcStreamId             = static_cast<uint32_t>(kfcStream.GetSqId());
-    hcclMc2Info.reserve                      = 0;
+    hcclMc2Info.groupName = GetProfHashId(id.c_str(), id.length());
+    hcclMc2Info.rankSize = rankSize;
+    hcclMc2Info.rankId = myRank;
+    hcclMc2Info.usrRankId = rankInParentComm;
+    hcclMc2Info.aicpuKfcStreamId = static_cast<uint32_t>(kfcStream.GetSqId());
+    hcclMc2Info.reserve = 0;
     const uint32_t ONCE_REPORT_STREAM_NUM_MAX = 8;
     for (uint32_t streamIndex = 0, reportId = 0; streamIndex < aicpuStreams.size(); streamIndex++) {
         hcclMc2Info.commStreamIds[reportId++] = aicpuStreams[streamIndex]->GetSqId();
         if (reportId == ONCE_REPORT_STREAM_NUM_MAX) {
             hcclMc2Info.commStreamSize = reportId;
-            ReportMc2AdditionInfo(DlProfFunction::GetInstance().dlMsprofSysCycleTime(), &hcclMc2Info, sizeof(hcclMc2Info));
+            ReportMc2AdditionInfo(
+                DlProfFunction::GetInstance().dlMsprofSysCycleTime(), &hcclMc2Info, sizeof(hcclMc2Info));
             reportId = 0;
         }
         if (streamIndex == (aicpuStreams.size() - 1)) {
             hcclMc2Info.commStreamIds[reportId++] = stream.GetSqId();
-            hcclMc2Info.commStreamSize            = reportId;
-            ReportMc2AdditionInfo(DlProfFunction::GetInstance().dlMsprofSysCycleTime(), &hcclMc2Info,
-                                 sizeof(hcclMc2Info));
+            hcclMc2Info.commStreamSize = reportId;
+            ReportMc2AdditionInfo(
+                DlProfFunction::GetInstance().dlMsprofSysCycleTime(), &hcclMc2Info, sizeof(hcclMc2Info));
             reportId = 0;
         }
     }
     if (aicpuStreams.empty()) {
         hcclMc2Info.commStreamIds[0] = stream.GetSqId();
-        hcclMc2Info.commStreamSize   = 1;
+        hcclMc2Info.commStreamSize = 1;
         ReportMc2AdditionInfo(DlProfFunction::GetInstance().dlMsprofSysCycleTime(), &hcclMc2Info, sizeof(hcclMc2Info));
     }
 }
@@ -1330,51 +1329,49 @@ void ProfilingHandler::ReportHcclMC2CommInfoLog(const std::vector<u32> &aicpuStr
     }
 }
 
-void ProfilingHandler::ReportHcclMC2CommInfo(const u32 kfcStreamId,
-                            const std::vector<u32> &aicpuStreamsId, const std::string &id,
-                            RankId myRank, u32 rankSize, RankId rankInParentComm)
+void ProfilingHandler::ReportHcclMC2CommInfo(const u32 kfcStreamId, const std::vector<u32> &aicpuStreamsId,
+    const std::string &id, RankId myRank, u32 rankSize, RankId rankInParentComm)
 {
     ReportHcclMC2CommInfoLog(aicpuStreamsId, id);
     ProfilingDeviceCommResInfo hcclMc2Info;
-    hcclMc2Info.groupName = GetProfHashId(id.c_str(),id.length());
+    hcclMc2Info.groupName = GetProfHashId(id.c_str(), id.length());
     hcclMc2Info.rankSize = rankSize;
     hcclMc2Info.rankId = myRank;
     hcclMc2Info.usrRankId = rankInParentComm;
     hcclMc2Info.aicpuKfcStreamId = static_cast<uint32_t>(kfcStreamId);
     hcclMc2Info.reserve = 0;
-    
+
     const uint32_t ONCE_REPORT_STREAM_NUM_MAX = 8;
     uint32_t reportId = 0;
     for (uint32_t streamIndex = 0; streamIndex < aicpuStreamsId.size(); streamIndex++) {
         hcclMc2Info.commStreamIds[reportId++] = aicpuStreamsId[streamIndex];
         if (reportId == ONCE_REPORT_STREAM_NUM_MAX) {
             hcclMc2Info.commStreamSize = reportId;
-            ReportMc2AdditionInfo(DlProfFunction::GetInstance().dlMsprofSysCycleTime(), &hcclMc2Info, sizeof(hcclMc2Info));
+            ReportMc2AdditionInfo(
+                DlProfFunction::GetInstance().dlMsprofSysCycleTime(), &hcclMc2Info, sizeof(hcclMc2Info));
             reportId = 0;
         }
     }
     if (reportId > 0) {
         hcclMc2Info.commStreamSize = reportId;
-        ReportMc2AdditionInfo(DlProfFunction::GetInstance().dlMsprofSysCycleTime(), &hcclMc2Info,
-        sizeof(hcclMc2Info));
+        ReportMc2AdditionInfo(DlProfFunction::GetInstance().dlMsprofSysCycleTime(), &hcclMc2Info, sizeof(hcclMc2Info));
         reportId = 0;
     }
 }
 void ProfilingHandler::ReportMc2AdditionInfo(uint64_t timeStamp, const void *data, int len)
 {
     MsprofAdditionalInfo reporterData{};
-    reporterData.level     = MSPROF_REPORT_NODE_LEVEL;
-    reporterData.type      = MSPROF_REPORT_NODE_MC2_COMMINFO_TYPE;
-    reporterData.threadId  = SalGetTid();
-    reporterData.dataLen   = len;
+    reporterData.level = MSPROF_REPORT_NODE_LEVEL;
+    reporterData.type = MSPROF_REPORT_NODE_MC2_COMMINFO_TYPE;
+    reporterData.threadId = SalGetTid();
+    reporterData.dataLen = len;
     reporterData.timeStamp = timeStamp;
-    s32 sret               = memcpy_s(reporterData.data, sizeof(reporterData.data), data, len);
+    s32 sret = memcpy_s(reporterData.data, sizeof(reporterData.data), data, len);
     if (sret != EOK) {
         THROW<InternalException>("Call memcpy_s failed, errorno[%d]", sret);
     }
     HCCL_INFO("[ProfilingHandler][ReportMc2CommInfo], level [%u], type[%u], threadId[%u], dataLen[%u], timeStamp[%llu]",
-              reporterData.level, reporterData.type, reporterData.threadId, reporterData.dataLen,
-              reporterData.timeStamp);
+        reporterData.level, reporterData.type, reporterData.threadId, reporterData.dataLen, reporterData.timeStamp);
     if (!enableHostApi_) {
         std::lock_guard<std::mutex> lock(cacheHcclAdditionInfoMutex_);
         cacheHcclAdditionInfo_.push(reporterData);
@@ -1387,5 +1384,22 @@ void ProfilingHandler::ReportMc2AdditionInfo(uint64_t timeStamp, const void *dat
         THROW<InternalException>("Call MsprofReportAdditionalInfo failed, return[%d]", ret);
     }
 }
- 
+
+void ProfilingHandler::ReportStoragedAclApi()
+{
+    std::lock_guard<std::mutex> lock(cachedAclApiInfoMutex_);
+    HCCL_INFO("[ReportStoragedAclApi] aclApiQueueSize is [%u]", cachedAclApiInfo_.size());
+    if (!cachedAclApiInfo_.empty()) {
+        std::queue<MsprofApi> tempAclApi = cachedAclApiInfo_;
+        while (!tempAclApi.empty()) {
+            MsprofApi reportData = tempAclApi.front();
+            tempAclApi.pop();
+            s32 ret = DlProfFunction::GetInstance().dlMsprofReportApi(0, &reportData);
+            if (ret != 0) {
+                THROW<InternalException>("Call dlMsprofReportApi failed, return[%d]", ret);
+            }
+        }
+    }
+}
+
 } // namespace Hccl

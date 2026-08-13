@@ -167,24 +167,24 @@ void Socket::ConnectAsync()
     return;
 }
 
-bool Socket::ISend(void *data, u64 size, u64& compSize) const
+bool Socket::ISend(void *data, u64 size, u64 &compSize) const
 {
     compSize = size;
     return true;
 }
 
-HcclResult Socket::ISendWithHeart(void *data, u64 size, u64& compSize) const
-{ 
+HcclResult Socket::ISendWithHeart(void *data, u64 size, u64 &compSize) const
+{
     compSize = size;
     return HCCL_SUCCESS;
 }
 
-HcclResult Socket::IRecvWithHeart(void *data, u64 size, u64& compSize) const
-{ 
+HcclResult Socket::IRecvWithHeart(void *data, u64 size, u64 &compSize) const
+{
     compSize = size;
     return HCCL_SUCCESS;
 }
- 
+
 void Socket::SendAsync(const void *sendBuf, u32 size)
 {
     return;
@@ -275,8 +275,7 @@ LocalUbRmaBuffer::LocalUbRmaBuffer(std::shared_ptr<Buffer> buf, RdmaHandle rdmaH
 {
 }
 
-LocalUbRmaBuffer::LocalUbRmaBuffer(std::shared_ptr<Buffer> buf, RdmaHandle rdmaHandle,
-    const LocalUbRmaBuffer &parent)
+LocalUbRmaBuffer::LocalUbRmaBuffer(std::shared_ptr<Buffer> buf, RdmaHandle rdmaHandle, const LocalUbRmaBuffer &parent)
     : LocalRmaBuffer(buf, RmaType::UB, true),
       rdmaHandle(rdmaHandle),
       tokenValue(parent.tokenValue),
@@ -430,7 +429,7 @@ void RtsqBase::Reset()
 {
 }
 
-HcclResult RtsqBase::GetStreamIdAndTaskIdBySqIdx(u32 sqIdx, uint16_t& streamId, uint16_t& taskId) const
+HcclResult RtsqBase::GetStreamIdAndTaskIdBySqIdx(u32 sqIdx, uint16_t &streamId, uint16_t &taskId) const
 {
     return HCCL_SUCCESS;
 }
@@ -508,9 +507,9 @@ DevUbCtpConnection::DevUbCtpConnection(const RdmaHandle rdmaHandle, const IpAddr
     tpProtocol = TpProtocol::CTP;
 }
 
-DevUbUboeConnection::DevUbUboeConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr, const IpAddress &rmtAddr,
-    const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress &locIpv4Addr,
-    const IpAddress &rmtIpv4Addr, const u8 qos)
+DevUbUboeConnection::DevUbUboeConnection(const RdmaHandle rdmaHandle, const IpAddress &locAddr,
+    const IpAddress &rmtAddr, const OpMode opMode, const bool devUsed, const HrtUbJfcMode jfcMode,
+    const IpAddress &locIpv4Addr, const IpAddress &rmtIpv4Addr, const u8 qos)
     : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos)
 {
     tpProtocol = TpProtocol::UBOE;
@@ -534,8 +533,8 @@ void DevUbConnection::SetSqContextInfo(SqContext &sq) const
     sq.contextInfo.ubJfs.sqVa = sqBuffVa;
     sq.contextInfo.ubJfs.sqDepth = sqDepth * LLT_UB_WQE_NUM_PER_SQE;
     sq.contextInfo.ubJfs.tpID = tpn;
-    (void)memcpy_s(sq.contextInfo.ubJfs.remoteEID, sizeof(sq.contextInfo.ubJfs.remoteEID),
-        rmtEid.raw, sizeof(sq.contextInfo.ubJfs.remoteEID));
+    (void)memcpy_s(sq.contextInfo.ubJfs.remoteEID, sizeof(sq.contextInfo.ubJfs.remoteEID), rmtEid.raw,
+        sizeof(sq.contextInfo.ubJfs.remoteEID));
 }
 
 void DevUbConnection::SetCqContextInfo(CqContext &cq) const
@@ -850,8 +849,9 @@ RemoteUbRmaBuffer::RemoteUbRmaBuffer(RdmaHandle rdmaHandle) : RemoteRmaBuffer(Rm
 {
 }
 
-RemoteUbRmaBuffer::RemoteUbRmaBuffer(uintptr_t addr, u64 size, u32 tokenId, u32 tokenValue, HcclMemType memType,
- 	    const std::string &memInfo) : RemoteRmaBuffer(RmaType::UB)
+RemoteUbRmaBuffer::RemoteUbRmaBuffer(
+    uintptr_t addr, u64 size, u32 tokenId, u32 tokenValue, HcclMemType memType, const std::string &memInfo)
+    : RemoteRmaBuffer(RmaType::UB)
 {
     this->addr = addr;
     this->size = size;
@@ -1182,7 +1182,8 @@ std::vector<char> UbMemTransport::GetUniqueIdV2()
     return result;
 }
 
-std::vector<char> UbMemTransport::GetSingleRmtBufferUniqueId(u64 addr, u64 size, u32 tokenId, u32 tokenValue, u32 notifyId) const
+std::vector<char> UbMemTransport::GetSingleRmtBufferUniqueId(
+    u64 addr, u64 size, u32 tokenId, u32 tokenValue, u32 notifyId) const
 {
     std::vector<char> result;
 
@@ -1251,7 +1252,7 @@ HcclResult UbMemTransport::Describe(std::string &dfxMsg)
     dfxMsg = "UbMemTransportTest";
 }
 
-HcclResult UbMemTransport::GetRemoteSeg(const void* addr, u64 len, u64 *seg)
+HcclResult UbMemTransport::GetRemoteSeg(const void *addr, u64 len, u64 *seg)
 {
     return HCCL_SUCCESS;
 }
@@ -1274,7 +1275,8 @@ LocalRdmaRmaBuffer::LocalRdmaRmaBuffer(std::shared_ptr<Buffer> buf, RdmaHandle r
 {
 }
 
-LocalRdmaRmaBuffer::LocalRdmaRmaBuffer(std::shared_ptr<Buffer> buf, RdmaHandle rdmaHandle, u32 lkey, u32 rkey, MrHandle mrHandle)
+LocalRdmaRmaBuffer::LocalRdmaRmaBuffer(
+    std::shared_ptr<Buffer> buf, RdmaHandle rdmaHandle, u32 lkey, u32 rkey, MrHandle mrHandle)
     : LocalRmaBuffer(buf, RmaType::RDMA, true)
 {
     (void)rdmaHandle;
@@ -1397,13 +1399,13 @@ LocalIpcRmaBuffer::LocalIpcRmaBuffer(std::shared_ptr<Buffer> buf) : LocalRmaBuff
 {
 }
 
-LocalIpcRmaBuffer::LocalIpcRmaBuffer(std::shared_ptr<Buffer> buf, const LocalIpcRmaBuffer& parent)
+LocalIpcRmaBuffer::LocalIpcRmaBuffer(std::shared_ptr<Buffer> buf, const LocalIpcRmaBuffer &parent)
     : LocalRmaBuffer(buf, RmaType::IPC, true)
 {
     (void)memcpy_s(name, RTS_IPC_MEM_NAME_LEN, parent.name, RTS_IPC_MEM_NAME_LEN);
-    ipcPtr   = parent.ipcPtr;
+    ipcPtr = parent.ipcPtr;
     ipcOffset = parent.ipcOffset;
-    ipcSize   = parent.ipcSize;
+    ipcSize = parent.ipcSize;
 }
 
 LocalIpcRmaBuffer::~LocalIpcRmaBuffer()
@@ -1417,12 +1419,8 @@ string LocalIpcRmaBuffer::Describe() const
 
 std::unique_ptr<Serializable> LocalIpcRmaBuffer::GetExchangeDto()
 {
-    auto dto = std::make_unique<ExchangeIpcBufferDto>(
-        static_cast<u64>(buf->GetAddr()),
-        static_cast<u64>(buf->GetSize()),
-        ipcOffset,
-        static_cast<u32>(0),
-        buf->GetMemInfo().c_str());
+    auto dto = std::make_unique<ExchangeIpcBufferDto>(static_cast<u64>(buf->GetAddr()),
+        static_cast<u64>(buf->GetSize()), ipcOffset, static_cast<u32>(0), buf->GetMemInfo().c_str());
     (void)memcpy_s(dto->name, RTS_IPC_MEM_NAME_LEN, name, RTS_IPC_MEM_NAME_LEN);
     return std::unique_ptr<Serializable>(dto.release());
 }
@@ -1447,7 +1445,6 @@ void SocketManager::ConnectSockets(const SocketConfig &socketConfig)
 {
 }
 
-
 void SocketManager::BatchCreateSockets(const SocketConfig &socketConfig)
 {
 }
@@ -1471,7 +1468,8 @@ bool SocketManager::ServerDeInit(PortData &portData) const
     return true;
 }
 
-void SocketManager::SetDeviceServerListenPortMap(const std::unordered_map<u32, std::unordered_map<IpAddress, u32>> &rankListenPortMap)
+void SocketManager::SetDeviceServerListenPortMap(
+    const std::unordered_map<u32, std::unordered_map<IpAddress, u32>> &rankListenPortMap)
 {
     return;
 }
@@ -1524,8 +1522,8 @@ void TpManager::Init()
 {
 }
 
-TaskInfo::TaskInfo(
-    u32 streamId, u32 taskId, u32 remoteRank, const TaskParam& taskParam, const std::shared_ptr<DfxOpInfo>& dfxOpInfo, bool isMaster)
+TaskInfo::TaskInfo(u32 streamId, u32 taskId, u32 remoteRank, const TaskParam &taskParam,
+    const std::shared_ptr<DfxOpInfo> &dfxOpInfo, bool isMaster)
     : streamId_(streamId),
       taskId_(taskId),
       remoteRank_(remoteRank),
@@ -1604,13 +1602,12 @@ TaskInfoQueueMap::iterator GlobalMirrorTasks::End(u32 devId)
     return map.end();
 }
 
-TaskInfo* GlobalMirrorTasks::GetTaskInfo(u32 devId, u32 streamId, u32 taskId) const
+TaskInfo *GlobalMirrorTasks::GetTaskInfo(u32 devId, u32 streamId, u32 taskId) const
 {
     return nullptr;
 }
 
-HcclResult GlobalMirrorTasks::FindTaskInfo(
-    u32 devId, u32 streamId, u32 taskId, TaskInfo*& curTask) const
+HcclResult GlobalMirrorTasks::FindTaskInfo(u32 devId, u32 streamId, u32 taskId, TaskInfo *&curTask) const
 {
     return HCCL_E_NOT_FOUND;
 }
@@ -1630,8 +1627,8 @@ void MirrorTaskManager::AddTaskInfo(std::unique_ptr<TaskInfo> &&taskInfo)
 {
 }
 
-HcclResult MirrorTaskManager::AddTaskInfo(u32 streamId, u32 taskId, u32 remoteRankId,
-    const TaskParam &taskParam, std::shared_ptr<DfxOpInfo> dfxOpInfo, bool isMaster)
+HcclResult MirrorTaskManager::AddTaskInfo(u32 streamId, u32 taskId, u32 remoteRankId, const TaskParam &taskParam,
+    std::shared_ptr<DfxOpInfo> dfxOpInfo, bool isMaster)
 {
     return HCCL_SUCCESS;
 }
@@ -1696,7 +1693,7 @@ HcclResult MirrorTaskManagerLite::SetCurrDfxOpInfo(std::shared_ptr<DfxOpInfo> df
     return HCCL_SUCCESS;
 }
 
-TaskInfo* MirrorTaskManagerLite::GetTaskInfo(u32 streamId, u32 taskId) const
+TaskInfo *MirrorTaskManagerLite::GetTaskInfo(u32 streamId, u32 taskId) const
 {
     return nullptr;
 }
@@ -1804,11 +1801,12 @@ void ProfilingHandler::GetCcuWaitSignalInfo(const TaskInfo &taskInfo, const CcuP
 }
 
 void ProfilingHandler::ReportAclApi(
-    uint32_t cmdType, uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId) const
+    uint32_t cmdType, uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId, bool cachedReq)
 {
 }
 
-void ProfilingHandler::ReportNodeApi(uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId, bool cachedReq)
+void ProfilingHandler::ReportNodeApi(
+    uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId, bool cachedReq)
 {
     (void)cachedReq;
 }
@@ -1823,7 +1821,7 @@ void ProfilingHandler::ReportHcclOpInfo(uint64_t timeStamp, const DfxOpInfo &opI
     (void)cachedReq;
 }
 
-void ProfilingHandler::ReportAdditionInfo(MsprofAdditionalInfo& reporterData) const
+void ProfilingHandler::ReportAdditionInfo(MsprofAdditionalInfo &reporterData) const
 {
 }
 
@@ -1957,8 +1955,7 @@ void ProfilingHandlerLite::GetTaskDetailInfos(const TaskInfo *it, MsprofAicpuHcc
 {
 }
 
-void ProfilingHandlerLite::DumpTaskDetails(
-    const TaskInfo *taskInfo) const
+void ProfilingHandlerLite::DumpTaskDetails(const TaskInfo *taskInfo) const
 {
 }
 
@@ -1966,7 +1963,7 @@ void ProfilingHandlerLite::ReportMainStreamTask(const FlagTaskInfo &flagTaskInfo
 {
 }
 
-void ProfilingHandlerLite::ReportAdditionInfo(const MsprofAdditionalInfo& reporterData) const
+void ProfilingHandlerLite::ReportAdditionInfo(const MsprofAdditionalInfo &reporterData) const
 {
 }
 
@@ -2262,18 +2259,24 @@ void DevCapability::Reset()
 {
 }
 
-RmtRmaBufferLite::RmtRmaBufferLite(u64 addr, u64 size)
-    : type_(RmaType::RDMA), addr_(addr), size_(size)
+RmtRmaBufferLite::RmtRmaBufferLite(u64 addr, u64 size) : type_(RmaType::RDMA), addr_(addr), size_(size)
 {
 }
 
 RmtRmaBufferLite::RmtRmaBufferLite(u64 addr, u64 size, u32 rkey)
-    : type_(RmaType::RDMA), addr_(addr), size_(size), rkey_(rkey)
+    : type_(RmaType::RDMA),
+      addr_(addr),
+      size_(size),
+      rkey_(rkey)
 {
 }
 
 RmtRmaBufferLite::RmtRmaBufferLite(u64 addr, u64 size, u32 tokenId, u32 tokenValue)
-    : type_(RmaType::UB), addr_(addr), size_(size), tokenId_(tokenId), tokenValue_(tokenValue)
+    : type_(RmaType::UB),
+      addr_(addr),
+      size_(size),
+      tokenId_(tokenId),
+      tokenValue_(tokenValue)
 {
 }
 
@@ -2283,7 +2286,8 @@ std::string RmtRmaBufferLite::Describe() const
 }
 
 RdmaLocalNotify::RdmaLocalNotify(RdmaHandle rdmaHandle, bool devUsed)
-    : BaseLocalNotify(RmaType::RDMA, devUsed), rdmaHandle(rdmaHandle)
+    : BaseLocalNotify(RmaType::RDMA, devUsed),
+      rdmaHandle(rdmaHandle)
 {
 }
 
@@ -2336,7 +2340,7 @@ HcclResult HcclCommunicator::GetRankGraphV2(void *&rankGraph)
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicator::GetRankIpPortMap(RankIpPortMapPtr& rankIpPortMap)
+HcclResult HcclCommunicator::GetRankIpPortMap(RankIpPortMapPtr &rankIpPortMap)
 {
     static auto emptyMap = std::make_shared<std::unordered_map<u32, std::unordered_map<IpAddress, u32>>>();
     rankIpPortMap = emptyMap;
@@ -2351,12 +2355,14 @@ void HrtMemsetV2(void *dst, size_t destMax, int32_t value, size_t count)
 {
 }
 
-HcclResult HrtRaNdaQpCreate(RdmaHandle rdmaHandle, NdaOps *ndaOps, uint32_t dmaMode, NdaCqInfo *cqInfo, NdaQpInfo *qpInfo, QpHandle *qpHandle)
+HcclResult HrtRaNdaQpCreate(
+    RdmaHandle rdmaHandle, NdaOps *ndaOps, uint32_t dmaMode, NdaCqInfo *cqInfo, NdaQpInfo *qpInfo, QpHandle *qpHandle)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult HrtRaNdaCqCreate(RdmaHandle rdmaHandle, NdaOps *ndaOps, uint32_t dmaMode, NdaCqInfo *cqInfo, CqHandle *cqHandle)
+HcclResult HrtRaNdaCqCreate(
+    RdmaHandle rdmaHandle, NdaOps *ndaOps, uint32_t dmaMode, NdaCqInfo *cqInfo, CqHandle *cqHandle)
 {
     return HCCL_SUCCESS;
 }
@@ -2754,8 +2760,8 @@ void HrtRaUbUnimportJetty(RdmaHandle handle, TargetJettyHandle targetJettyHandle
 {
 }
 
-HrtRaUbJettyImportedOutParam RaUbTpImportJetty(RdmaHandle handle, u8 *key, u32 keyLen,
-    u32 tokenValue, const JettyImportCfg &jettyImportCfg)
+HrtRaUbJettyImportedOutParam RaUbTpImportJetty(
+    RdmaHandle handle, u8 *key, u32 keyLen, u32 tokenValue, const JettyImportCfg &jettyImportCfg)
 {
     return HrtRaUbJettyImportedOutParam{};
 }
@@ -2769,74 +2775,74 @@ HrtRaUbSendWrRespParam HrtRaUbPostSend(JettyHandle jettyHandle, HrtRaUbSendWrReq
 {
     return HrtRaUbSendWrRespParam{};
 }
-}
+} // namespace Hccl
 
-int32_t HcommChannelRegisterDfx(ChannelHandle channel, std::function<HcclResult(unsigned int, unsigned int, const Hccl::TaskParam&, unsigned long long)> callback)
+int32_t HcommChannelRegisterDfx(ChannelHandle channel,
+    std::function<HcclResult(unsigned int, unsigned int, const Hccl::TaskParam &, unsigned long long)> callback)
 {
     return 0;
 }
 
 namespace Hccl {
-    using namespace std;
+using namespace std;
 
-    RdmaHandle HrtRaUbCtxInit(const HrtRaUbCtxInitParamDef &in) 
-    {
-        return reinterpret_cast<RdmaHandle>(0x1);
-    }
+RdmaHandle HrtRaUbCtxInit(const HrtRaUbCtxInitParamDef &in)
+{
+    return reinterpret_cast<RdmaHandle>(0x1);
+}
 
-    u64 HrtRaUbCreateJfc(RdmaHandle handle, CqCreateInfo &cqInfo, HrtUbJfcMode jfcMode)
-    {
-        return 0x2;
-    }
+u64 HrtRaUbCreateJfc(RdmaHandle handle, CqCreateInfo &cqInfo, HrtUbJfcMode jfcMode)
+{
+    return 0x2;
+}
 
-    u64 HrtRaUbCreateJfcUserCtl(RdmaHandle handle, CqCreateInfo &cqInfo)
-    {
-        return 0x3;
-    }
+u64 HrtRaUbCreateJfcUserCtl(RdmaHandle handle, CqCreateInfo &cqInfo)
+{
+    return 0x3;
+}
 
-    SocketHandle HrtRaSocketInit(HrtNetworkMode netMode, RaInterface &in)
-    {
-        return reinterpret_cast<SocketHandle>(0x04);
-    }
+SocketHandle HrtRaSocketInit(HrtNetworkMode netMode, RaInterface &in)
+{
+    return reinterpret_cast<SocketHandle>(0x04);
+}
 
-    vector<HrtDevEidInfo> HrtRaGetDevEidInfoList(const HRaInfo &raInfo)
-    {
-        return {};
-    }
+vector<HrtDevEidInfo> HrtRaGetDevEidInfoList(const HRaInfo &raInfo)
+{
+    return {};
+}
 
-    HcclResult HrtRaGetEidByIp(RdmaHandle handle, const vector<IpAddress> &ipV4Address, vector<IpAddress> &eidAddrList)
-    {
-        return HCCL_SUCCESS;
-    }
+HcclResult HrtRaGetEidByIp(RdmaHandle handle, const vector<IpAddress> &ipV4Address, vector<IpAddress> &eidAddrList)
+{
+    return HCCL_SUCCESS;
+}
 
-    HcclResult HrtGetUboeFlagEnable(u32 devPhyId)
-    {
-        return HCCL_E_NOT_FOUND;
-    }
+HcclResult HrtGetUboeFlagEnable(u32 devPhyId)
+{
+    return HCCL_E_NOT_FOUND;
+}
 
-    bool HraGetRtpEnable(RdmaHandle handle)
-    {
-        return false;
-    }
+bool HraGetRtpEnable(RdmaHandle handle)
+{
+    return false;
+}
 
-    pair<uint32_t, uint32_t> HraGetDieAndFuncId(RdmaHandle handle)
-    {
-        return make_pair(static_cast<uint32_t>(0), static_cast<uint32_t>(0));
-    }
+pair<uint32_t, uint32_t> HraGetDieAndFuncId(RdmaHandle handle)
+{
+    return make_pair(static_cast<uint32_t>(0), static_cast<uint32_t>(0));
+}
 
-    pair<u64, uint32_t> RaUbAllocTokenIdHandle(RdmaHandle handle)
-    {
-        return make_pair(static_cast<u64>(0), static_cast<uint32_t>(0));
-    }
+pair<u64, uint32_t> RaUbAllocTokenIdHandle(RdmaHandle handle)
+{
+    return make_pair(static_cast<u64>(0), static_cast<uint32_t>(0));
+}
 
-    void HrtRaInit(HRaInitConfig &cfg)
-    {
-  
-    }
+void HrtRaInit(HRaInitConfig &cfg)
+{
+}
 
-    HcclResult HrtOpenTsdProcess(u32 deviceLogicId)
-    {
-        return HCCL_SUCCESS;
-    }
+HcclResult HrtOpenTsdProcess(u32 deviceLogicId)
+{
+    return HCCL_SUCCESS;
+}
 
 } // namespace Hccl

@@ -16,44 +16,45 @@
 #include "types.h"
 
 namespace hccl {
-    struct Mc2CommInfo {
-        u32 FreeStreamId;
-        std::vector<u32> streamsId;
-        std::string groupname;
-        u32 myRankId;
-        u32 rankSize;
-        u32 parentRankId;
-    };
-    
+struct Mc2CommInfo {
+    u32 FreeStreamId;
+    std::vector<u32> streamsId;
+    std::string groupname;
+    u32 myRankId;
+    u32 rankSize;
+    u32 parentRankId;
+};
+
 class HcclCommProfiling {
 public:
     // 构造函数
-    HcclCommProfiling(u32  deviceId, Hccl::MirrorTaskManager* mirrorTaskManager);
+    HcclCommProfiling(u32 deviceId, Hccl::MirrorTaskManager *mirrorTaskManager);
     HcclResult Init();
-    
+
     // 上报所有任务
     void ReportAllTasks(bool cachedReq = false);
-    
+
     // 上报算子信息
-    void ReportOp(uint64_t beginTime, bool cachedReq, bool opbased);
-    
+    void ReportOp(uint64_t beginTime, bool cachedReq, bool isOpBase);
+
     // 上报MC2通信信息
-    void ReportMc2CommInfo(const Mc2CommInfo& mc2CommInfo);
-    
+    void ReportMc2CommInfo(const Mc2CommInfo &mc2CommInfo);
+
     // 设置当前DFX算子信息
     void SetCurrDfxOpInfo(std::shared_ptr<Hccl::DfxOpInfo> dfxOpInfo);
 
     // 更新Profiling统计
     void UpdateProfStat();
-    
+
     // 获取MirrorTaskManager
-    Hccl::MirrorTaskManager* GetMirrorTaskManager() const;
-    HcclResult ReportKernel(uint64_t beginTime, const std::string& commTag, const std::string& kernelName, uint32_t threadId, bool cachedReq);
-    
+    Hccl::MirrorTaskManager *GetMirrorTaskManager() const;
+    HcclResult ReportKernel(uint64_t beginTime, const std::string &commTag, const std::string &kernelName,
+        uint32_t threadId, bool cachedReq);
+
 private:
-    Hccl::MirrorTaskManager* mirrorTaskManager_;
+    Hccl::MirrorTaskManager *mirrorTaskManager_;
     std::unique_ptr<Hccl::ProfilingReporter> profilingReporter_{nullptr};
     bool initializedFlag_{false};
 };
-}// namespace hccl
+} // namespace hccl
 #endif // HCCL_COMM_PROFILING_H

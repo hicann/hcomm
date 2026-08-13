@@ -66,7 +66,7 @@ TEST_F(ProfilingReporterTest, Call_profilingReporter_api_test)
     for (int i = 0; i < 3; ++i) {
         CcuProfilingInfo info;
         info.name = "StubTask" + std::to_string(i);
-        info.type = i % 2;  // 循环使用不同的类型
+        info.type = i % 2; // 循环使用不同的类型
         info.dieId = i;
         info.missionId = i + 1;
         info.instrId = i + 2;
@@ -83,7 +83,7 @@ TEST_F(ProfilingReporterTest, Call_profilingReporter_api_test)
         ccuDetailInfo->push_back(info);
     }
     taskParam.ccuDetailInfo = std::move(ccuDetailInfo);
-    // 初始化dfxOpInfo 
+    // 初始化dfxOpInfo
     std::shared_ptr<DfxOpInfo> dfxOpInfo = std::make_shared<DfxOpInfo>();
     CollOperator op;
     CommunicatorImpl comm;
@@ -141,4 +141,52 @@ TEST_F(ProfilingReporterTest, Ut_ReportOp_When_CommImpNullptr_Expect_ReturnNorma
     ProfilingReporter profilingReporter(&mirrorTaskManager, &ProfilingHandler::GetInstance());
     profilingReporter.Init();
     EXPECT_NO_THROW(profilingReporter.ReportOp(0, true, true));
+}
+
+TEST_F(ProfilingReporterTest, Ut_SetCurrDfxOpInfo_When_OpTypeFoundInMap_Expect_OpTypeAndTagSet)
+{
+    GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
+    MirrorTaskManager mirrorTaskManager(0, &globalMirrorTasks, 0);
+    for (auto &taskMap : globalMirrorTasks.taskMaps_) {
+        taskMap.clear();
+    }
+
+    std::shared_ptr<DfxOpInfo> dfxOpInfo = std::make_shared<DfxOpInfo>();
+    dfxOpInfo->op_.oldOpType = HcclCMDType::HCCL_CMD_ALLREDUCE;
+    dfxOpInfo->op_.oldReduceOp = HCCL_REDUCE_SUM;
+    dfxOpInfo->op_.oldDataType = HCCL_DATA_TYPE_FP32;
+
+    ProfilingReporter profilingReporter(&mirrorTaskManager, &ProfilingHandler::GetInstance());
+    profilingReporter.SetCurrDfxOpInfo(dfxOpInfo);
+
+    EXPECT_EQ(dfxOpInfo->op_.opType, OpType::ALLREDUCE);
+    EXPECT_EQ(dfxOpInfo->tag_, "OpType::ALLREDUCE");
+    EXPECT_EQ(dfxOpInfo->op_.reduceOp, ReduceOp::SUM);
+    EXPECT_EQ(dfxOpInfo->op_.dataType, DataType::FP32);
+    EXPECT_EQ(mirrorTaskManager.GetCurrDfxOpInfo(), dfxOpInfo);
+}
+
+TEST_F(ProfilingReporterTest, Ut_SetCurrDfxOpInfo_When_OpTypeNotFoundInMap_Expect_OpTypeAndTagUnchanged)
+{
+    GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
+    MirrorTaskManager mirrorTaskManager(0, &globalMirrorTasks, 0);
+    for (auto &taskMap : globalMirrorTasks.taskMaps_) {
+        taskMap.clear();
+    }
+
+    std::shared_ptr<DfxOpInfo> dfxOpInfo = std::make_shared<DfxOpInfo>();
+    dfxOpInfo->op_.oldOpType = HcclCMDType::HCCL_CMD_INVALID;
+    dfxOpInfo->op_.opType = OpType::ALLGATHER;
+    dfxOpInfo->tag_ = "preset_tag";
+    dfxOpInfo->op_.oldReduceOp = HCCL_REDUCE_SUM;
+    dfxOpInfo->op_.oldDataType = HCCL_DATA_TYPE_FP32;
+
+    ProfilingReporter profilingReporter(&mirrorTaskManager, &ProfilingHandler::GetInstance());
+    profilingReporter.SetCurrDfxOpInfo(dfxOpInfo);
+
+    EXPECT_EQ(dfxOpInfo->op_.opType, OpType::ALLGATHER);
+    EXPECT_EQ(dfxOpInfo->tag_, "preset_tag");
+    EXPECT_EQ(dfxOpInfo->op_.reduceOp, ReduceOp::SUM);
+    EXPECT_EQ(dfxOpInfo->op_.dataType, DataType::FP32);
+    EXPECT_EQ(mirrorTaskManager.GetCurrDfxOpInfo(), dfxOpInfo);
 }

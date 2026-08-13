@@ -69,7 +69,7 @@ TEST_F(ProfilingHandlerTest, ReportHcclOp_test)
     CollOperator op;
     op.opType = OpType::ALLREDUCE;
     op.staticAddr = false;
-    CommunicatorImpl* comm  =new CommunicatorImpl;
+    CommunicatorImpl *comm = new CommunicatorImpl;
     comm->rankSize = 2;
     dfxOpInfo->comm_ = comm;
     dfxOpInfo->op_ = op;
@@ -148,23 +148,25 @@ TEST_F(ProfilingHandlerTest, ReportHcclTaskDetails_test)
     op.opType = OpType::ALLREDUCE;
     op.staticAddr = false;
     dfxOpInfo->op_ = op;
-    CommunicatorImpl* comm  =new CommunicatorImpl;
+    CommunicatorImpl *comm = new CommunicatorImpl;
     dfxOpInfo->comm_ = comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
     std::auto taskInfo = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
-    handler.ReportHcclTaskDetails(*taskInfo,cachedReq);
+    handler.ReportHcclTaskDetails(*taskInfo, cachedReq);
     delete comm;
 }
 
-TEST_F(ProfilingHandlerTest, CommandHandle_test){
+TEST_F(ProfilingHandlerTest, CommandHandle_test)
+{
     ProfilingHandler &handler = Hccl::ProfilingHandler::GetInstance();
     uint32_t rtType = 0;
-    void* data = nullptr; 
+    void *data = nullptr;
     uint32_t len = 0;
     auto ret = handler.CommandHandle(rtType, data, len);
 }
 
-TEST_F(ProfilingHandlerTest, GetHCCLReportData_test){
+TEST_F(ProfilingHandlerTest, GetHCCLReportData_test)
+{
     ProfilingHandler &handler = Hccl::ProfilingHandler::GetInstance();
     bool cachedReq = true;
     GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
@@ -180,16 +182,17 @@ TEST_F(ProfilingHandlerTest, GetHCCLReportData_test){
     op.opType = OpType::ALLREDUCE;
     op.staticAddr = false;
     dfxOpInfo->op_ = op;
-    CommunicatorImpl* comm  =new CommunicatorImpl;
+    CommunicatorImpl *comm = new CommunicatorImpl;
     dfxOpInfo->comm_ = comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
     std::auto taskInfo = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
     HCCLReportData hcclReportData;
-    handler.GetHCCLReportData(*taskInfo,hcclReportData);
+    handler.GetHCCLReportData(*taskInfo, hcclReportData);
     delete comm;
 }
 
-TEST_F(ProfilingHandlerTest, GetHCCLReportData1_test){
+TEST_F(ProfilingHandlerTest, GetHCCLReportData1_test)
+{
     ProfilingHandler &handler = Hccl::ProfilingHandler::GetInstance();
     bool cachedReq = true;
     GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
@@ -205,16 +208,17 @@ TEST_F(ProfilingHandlerTest, GetHCCLReportData1_test){
     op.opType = OpType::ALLREDUCE;
     op.staticAddr = false;
     dfxOpInfo->op_ = op;
-    CommunicatorImpl* comm  =new CommunicatorImpl;
+    CommunicatorImpl *comm = new CommunicatorImpl;
     dfxOpInfo->comm_ = comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
     std::auto taskInfo = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
     HCCLReportData hcclReportData;
-    handler.GetHCCLReportData(*taskInfo,hcclReportData);
+    handler.GetHCCLReportData(*taskInfo, hcclReportData);
     delete comm;
 }
 
-TEST_F(ProfilingHandlerTest, GetHCCLReportData2_test){
+TEST_F(ProfilingHandlerTest, GetHCCLReportData2_test)
+{
     ProfilingHandler &handler = Hccl::ProfilingHandler::GetInstance();
     bool cachedReq = true;
     GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
@@ -230,16 +234,17 @@ TEST_F(ProfilingHandlerTest, GetHCCLReportData2_test){
     op.opType = OpType::ALLREDUCE;
     op.staticAddr = false;
     dfxOpInfo->op_ = op;
-    CommunicatorImpl* comm  =new CommunicatorImpl;
+    CommunicatorImpl *comm = new CommunicatorImpl;
     dfxOpInfo->comm_ = comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
     std::auto taskInfo = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
     HCCLReportData hcclReportData;
-    handler.GetHCCLReportData(*taskInfo,hcclReportData);
+    handler.GetHCCLReportData(*taskInfo, hcclReportData);
     delete comm;
 }
 
-TEST_F(ProfilingHandlerTest, GetHCCLReportData3_test){
+TEST_F(ProfilingHandlerTest, GetHCCLReportData3_test)
+{
     ProfilingHandler &handler = Hccl::ProfilingHandler::GetInstance();
     bool cachedReq = true;
     GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
@@ -253,7 +258,7 @@ TEST_F(ProfilingHandlerTest, GetHCCLReportData3_test){
     for (int i = 0; i < 3; ++i) {
         CcuProfilingInfo info;
         info.name = "StubTask" + std::to_string(i);
-        info.type = i % 2;  // 循环使用不同的类型
+        info.type = i % 2; // 循环使用不同的类型
         info.dieId = i;
         info.missionId = i + 1;
         info.instrId = i + 2;
@@ -269,23 +274,24 @@ TEST_F(ProfilingHandlerTest, GetHCCLReportData3_test){
         }
         ccuDetailInfo->push_back(info);
     }
-    taskParam.ccuDetailInfo = std::move(ccuDetailInfo);    
+    taskParam.ccuDetailInfo = std::move(ccuDetailInfo);
     // 初始化dfxOpInfo
     std::shared_ptr<DfxOpInfo> dfxOpInfo = std::make_shared<DfxOpInfo>();
     CollOperator op;
     op.opType = OpType::ALLREDUCE;
     op.staticAddr = false;
     dfxOpInfo->op_ = op;
-    CommunicatorImpl* comm  =new CommunicatorImpl;
+    CommunicatorImpl *comm = new CommunicatorImpl;
     dfxOpInfo->comm_ = comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
     std::auto taskInfo = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
     HCCLReportData hcclReportData;
-    handler.GetHCCLReportData(*taskInfo,hcclReportData);
+    handler.GetHCCLReportData(*taskInfo, hcclReportData);
     delete comm;
 }
 
-TEST_F(ProfilingHandlerTest, GetHCCLReportData4_test){
+TEST_F(ProfilingHandlerTest, GetHCCLReportData4_test)
+{
     ProfilingHandler &handler = Hccl::ProfilingHandler::GetInstance();
     bool cachedReq = true;
     GlobalMirrorTasks &globalMirrorTasks = GlobalMirrorTasks::Instance();
@@ -300,7 +306,7 @@ TEST_F(ProfilingHandlerTest, GetHCCLReportData4_test){
     for (int i = 0; i < 3; ++i) {
         CcuProfilingInfo info;
         info.name = "StubTask" + std::to_string(i);
-        info.type = i % 2;  // 循环使用不同的类型
+        info.type = i % 2; // 循环使用不同的类型
         info.dieId = i;
         info.missionId = i + 1;
         info.instrId = i + 2;
@@ -324,7 +330,7 @@ TEST_F(ProfilingHandlerTest, GetHCCLReportData4_test){
     op.opType = OpType::ALLREDUCE;
     op.staticAddr = false;
     dfxOpInfo->op_ = op;
-    CommunicatorImpl* comm  =new CommunicatorImpl;
+    CommunicatorImpl *comm = new CommunicatorImpl;
     dfxOpInfo->comm_ = comm;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
     std::auto taskInfo = std::make_unique<TaskInfo>(3, 0, 0, taskParam, dfxOpInfo);
@@ -333,17 +339,19 @@ TEST_F(ProfilingHandlerTest, GetHCCLReportData4_test){
     delete comm;
 }
 
-TEST_F(ProfilingHandlerTest, ReportAclApi_test){
+TEST_F(ProfilingHandlerTest, ReportAclApi_test)
+{
     ProfilingHandler &handler = Hccl::ProfilingHandler::GetInstance();
     uint32_t cmdType = 0;
     uint64_t beginTime = 0;
     uint64_t endTime = 1;
     uint64_t cmdItemId = 0;
     uint32_t threadId = 0;
-    handler.ReportAclApi(cmdType, beginTime, endTime, cmdItemId, threadId);
+    handler.ReportAclApi(cmdType, beginTime, endTime, cmdItemId, threadId, false);
 }
 
-TEST_F(ProfilingHandlerTest, ReportNodeApi_test){
+TEST_F(ProfilingHandlerTest, ReportNodeApi_test)
+{
     ProfilingHandler &handler = Hccl::ProfilingHandler::GetInstance();
     uint64_t beginTime = 0;
     uint64_t endTime = 1;
@@ -353,7 +361,8 @@ TEST_F(ProfilingHandlerTest, ReportNodeApi_test){
     handler.ReportNodeApi(beginTime, endTime, cmdItemId, threadId, false);
 }
 
-TEST_F(ProfilingHandlerTest, ReportNodeBasicInfo_test){
+TEST_F(ProfilingHandlerTest, ReportNodeBasicInfo_test)
+{
     ProfilingHandler &handler = Hccl::ProfilingHandler::GetInstance();
     uint64_t timeStamp = 0;
     uint64_t cmdItemId = 0;
@@ -362,17 +371,18 @@ TEST_F(ProfilingHandlerTest, ReportNodeBasicInfo_test){
     handler.ReportNodeBasicInfo(timeStamp, cmdItemId, threadId, false);
 }
 
-TEST_F(ProfilingHandlerTest, ReportHcclOpInfo_test){
+TEST_F(ProfilingHandlerTest, ReportHcclOpInfo_test)
+{
     ProfilingHandler &handler = Hccl::ProfilingHandler::GetInstance();
     uint64_t timeStamp = 0;
     uint32_t threadId = 0;
-     // 初始化dfxOpInfo
+    // 初始化dfxOpInfo
     std::shared_ptr<DfxOpInfo> dfxOpInfo = std::make_shared<DfxOpInfo>();
     CollOperator op;
     op.opTag = "StubTag";
     op.opType = OpType::ALLREDUCE;
     op.staticAddr = false;
-    CommunicatorImpl* comm  =new CommunicatorImpl;
+    CommunicatorImpl *comm = new CommunicatorImpl;
     comm->rankSize = 2;
     dfxOpInfo->comm_ = comm;
     dfxOpInfo->op_ = op;
@@ -382,14 +392,16 @@ TEST_F(ProfilingHandlerTest, ReportHcclOpInfo_test){
     delete comm;
 }
 
-TEST_F(ProfilingHandlerTest, StartSubscribe_test){
+TEST_F(ProfilingHandlerTest, StartSubscribe_test)
+{
     ProfilingHandler &handler = Hccl::ProfilingHandler::GetInstance();
     uint64_t profconfig = 0;
     handler.StartSubscribe(profconfig);
 }
 
 // 跑完后看是否还可以继续添加接口调用
-TEST_F(ProfilingHandlerTest, GetInitCacheData_test){
+TEST_F(ProfilingHandlerTest, GetInitCacheData_test)
+{
     ProfilingHandler &handler = Hccl::ProfilingHandler::GetInstance();
     uint64_t profconfig = 0;
     handler.StartSubscribe(profconfig);
@@ -409,4 +421,3 @@ TEST_F(ProfilingHandlerTest, GetProfState_test)
     EXPECT_EQ(false, handler.GetHcclL0State());
     EXPECT_EQ(false, handler.GetHcclL1State());
 }
-
