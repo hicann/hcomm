@@ -237,8 +237,6 @@ HcclResult TaskService::TaskRun()
     timeout = timeout > 1 ? timeout - 1 : timeout; // 执行超时时间减1秒，避免aicpu侧超时
     CHK_SAFETY_FUNC_RET(memcpy_s(dstTimeoutPtr, sizeof(timeout),  &timeout, sizeof(timeout)));
 
-    CHK_RET(WriteFlag(srcFlagPtr, TASK_UNSET)); // 初始化重置flag 为 0
-
     while (true) {
         CHK_RET(ReadFlag((uint8_t *)ctrlHdr, hdrLen, flag));
         switch (flag) {

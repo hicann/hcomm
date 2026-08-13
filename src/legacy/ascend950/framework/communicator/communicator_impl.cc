@@ -3423,6 +3423,12 @@ HcclResult CommunicatorImpl::AllocAndRegKFCWorkSpace(uint64_t size)
         accessVA_ = nullptr;
         return ret;
     }
+    auto ptr = connectType_ == HOST_DEVICE_CONNECT_TYPE_UB ? va_ : accessVA_;
+    errno_t cpyRet = memset_s(ptr, sizeof(uint8_t), 0, sizeof(uint8_t)); // 首字节作为信号标志位
+    if (cpyRet != EOK) {
+        HCCL_ERROR("[CommunicatorImpl::AllocAndRegKFCWorkSpace] set 0 failed: %d", cpyRet);
+        return HCCL_E_MEMORY; // 如果失败，会在~CommunicatorImpl中进行解注册与内存释放
+    }
     return HCCL_SUCCESS;
 }
 

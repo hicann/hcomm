@@ -164,12 +164,12 @@ TEST_F(TaskServiceTest, Ut_TaskUnRegister_When_TypeNotExists_Expect_NotFound)
 }
 
 // ==================== TaskRun exit flags (no callback needed) ====================
-
+// deviceMem 初始化为0，模拟 AllocAndRegKFCWorkSpace 在申请注册时已置零
 TEST_F(TaskServiceTest, Ut_TaskRun_When_TerminateFlag_Expect_Success)
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize);
@@ -194,7 +194,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TerminateResponseFlag_Expect_Success)
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize);
@@ -218,7 +218,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_InvalidFlag_Expect_Success)
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize);
@@ -244,7 +244,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkCallbackNotFound_Expect_NotFound)
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize);
@@ -270,7 +270,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkDataTooLarge_Expect_Error)
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
     // deviceMemSize=1024 => shmemSize_=512 => leftSize_=512-273=239
 
@@ -297,7 +297,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkCallbackFails_Expect_Error)
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     TaskService taskService(deviceMem.data(), deviceMemSize, hostMem.data(), hostMemSize);
@@ -323,7 +323,7 @@ TEST_F(TaskServiceTest, Ut_TaskRun_When_TaskOkFlow_Expect_Success)
 {
     constexpr int32_t deviceMemSize = 1024;
     constexpr int32_t hostMemSize = 512;
-    std::vector<uint8_t> deviceMem(deviceMemSize, 0xFF);
+    std::vector<uint8_t> deviceMem(deviceMemSize, 0);
     std::vector<uint8_t> hostMem(hostMemSize, 0);
 
     uint8_t *dpu2npuMem = deviceMem.data() + deviceMemSize / 2; // second half

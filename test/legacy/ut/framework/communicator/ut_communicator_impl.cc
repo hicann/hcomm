@@ -3560,7 +3560,8 @@ TEST_F(CommunicatorImplTest, Ut_GetKFCWorkSpaceVA_When_PciePath_Expect_Success)
     std::string tag = "DPUTAG";
 
     int64_t connType = 0;// HOST_DEVICE_CONNECT_TYPE_PCIE
-    void* stubRegAddr = reinterpret_cast<void *>(0xBEEF0000);
+    static uint8_t pcieAccessMem = 0;
+    void* stubRegAddr = &pcieAccessMem;
     MOCKER(HrtHalGetDeviceInfo).stubs().with(mockcpp::any(), mockcpp::any(), mockcpp::any(), outBound(connType))
         .will(returnValue(HCCL_SUCCESS));
     MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any())
