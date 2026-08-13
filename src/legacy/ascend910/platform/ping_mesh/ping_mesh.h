@@ -148,6 +148,7 @@ private:
     u8* payload_ = nullptr;                        // client侧记录的payload信息
     RpingState rpingState_ = RpingState::UNINIT;   // 记录client状态
     int rpingTargetNum_ = 0;                       // 记录client目标数量
+    u32 pktNum_ = 0;                               // 记录最近一次BatchPingStart的发包数量
     std::mutex socketMapsMtx_;
     std::map<std::string, std::shared_ptr<HcclSocket>> socketMaps_; // 记录client端的socket信息
     UniversalConcurrentMap<std::string, PingQpInfo> rdmaInfoMaps_;  // 记录target的rdma或者ub信息

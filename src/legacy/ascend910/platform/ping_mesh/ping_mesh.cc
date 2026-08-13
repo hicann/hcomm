@@ -1241,6 +1241,7 @@ HcclResult PingMesh::HccnRpingBatchPingStart(u32 deviceId, u32 pktNum, u32 inter
     attr.packetInterval = interval;
     attr.timeoutInterval = timeout;
     CHK_RET(hrtRaPingTaskStart(pingHandle_, &attr));
+    pktNum_ = pktNum;
     HCCL_INFO("[HCCN][HccnRpingBatchPingStart]pingmesh task is started on device[%u].", deviceId);
     rpingState_ = RpingState::RUN;
     return HCCL_SUCCESS;
@@ -1407,26 +1408,23 @@ HcclResult PingMesh::HccnRpingRefillUbPayloadHead(u8* originalHead, u32 payloadN
         srcEid = *dstEid6;
         dstEid = *srcEid6;
 
-        HcclIpAddress srcEidAddress = HcclIpAddress(srcEid);
-        u32 srcEidAddrStrLen = std::string(srcEidAddress.Describe()).size();
-        memRet = memcpy_s(head->srcEid, URMA_EID_LEN, srcEidAddress.Describe().c_str(), srcEidAddrStrLen);
+        memRet = memcpy_s(head->srcEid, URMA_EID_LEN, srcEid.raw, URMA_EID_LEN);
         CHK_PRT_RET(
             memRet != EOK,
             HCCL_ERROR(
                 "[HCCN][HccnRpingRefillUbPayloadHead]Exchange eid fail. ret %d, dst:%p, dstMax:%u, src:%p, length:%u",
-                memRet, head->srcEid, URMA_EID_LEN, srcEidAddress.Describe().c_str(), srcEidAddrStrLen),
+                memRet, head->srcEid, URMA_EID_LEN, srcEid.raw, URMA_EID_LEN),
             HCCL_E_MEMORY);
 
-        HcclIpAddress dstEidAddress = HcclIpAddress(dstEid);
-        u32 dstEidAddrStrLen = std::string(dstEidAddress.Describe()).size();
-        memRet = memcpy_s(head->dstEid, URMA_EID_LEN, dstEidAddress.Describe().c_str(), dstEidAddrStrLen);
+        memRet = memcpy_s(head->dstEid, URMA_EID_LEN, dstEid.raw, URMA_EID_LEN);
         CHK_PRT_RET(
             memRet != EOK,
             HCCL_ERROR(
                 "[HCCN][HccnRpingRefillUbPayloadHead]Exchange eid fail. ret %d, dst:%p, dstMax:%u, src:%p, length:%u",
-                memRet, head->dstEid, URMA_EID_LEN, dstEidAddress.Describe().c_str(), dstEidAddrStrLen),
+                memRet, head->dstEid, URMA_EID_LEN, dstEid.raw, URMA_EID_LEN),
             HCCL_E_MEMORY);
         // 填充payloadLen
+        HcclIpAddress dstEidAddress = HcclIpAddress(dstEid);
         if (payloadLenMap_.Find(dstEidAddress.Describe()).second) {
             head->payloadLen = payloadLenMap_[dstEidAddress.Describe()];
         }
@@ -1484,6 +1482,17 @@ HcclResult PingMesh::HccnRpingGetPayload(u32 deviceId, void** payload, u32* payl
             (errorFlag = true));
         // 重填payload头
         u32 payloadNum = bufferInfo->bufferSize / BYTE_PER_TARGET_DEFAULT;
+        // 实际有效记录数为发包数×目标数，不应遍历整个buffer中未填充的槽位
+        u32 actualNum = pktNum_ * static_cast<u32>(rpingTargetNum_);
+        HCCL_INFO(
+            "[HCCN][HccnRpingGetPayload]payloadNum[%u], actualNum[%u], pktNum[%u], targetNum[%d], bufferSize[%u].",
+            payloadNum, actualNum, pktNum_, rpingTargetNum_, bufferInfo->bufferSize);
+        if (actualNum > 0 && actualNum < payloadNum) {
+            HCCL_INFO(
+                "[HCCN][HccnRpingGetPayload]Adjust payloadNum from [%u] to [%u] to skip unfilled slots.", payloadNum,
+                actualNum);
+            payloadNum = actualNum;
+        }
         u8* payloadTmp = payload_;
         if (mode == HCCN_RPING_MODE_ROCE) {
             ret = HccnRpingRefillPayloadHead(payloadTmp, payloadNum);
