@@ -46,8 +46,8 @@ TEST_F(OpUnfoldKeyTest, ut_CopyConstructor_Expect_CopiedValues)
 {
     OpUnfoldKey key1;
     key1.Init(
-        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
+        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
 
     OpUnfoldKey key2(key1);
     EXPECT_EQ(key2.opType, HcclCMDType::HCCL_CMD_ALLREDUCE);
@@ -66,8 +66,8 @@ TEST_F(OpUnfoldKeyTest, ut_Init_WithValidParams_Expect_Success)
 {
     OpUnfoldKey key;
     HcclResult ret = key.Init(
-        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
+        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(key.opType, HcclCMDType::HCCL_CMD_ALLREDUCE);
     EXPECT_EQ(key.dataType, HcclDataType::HCCL_DATA_TYPE_FP32);
@@ -85,8 +85,8 @@ TEST_F(OpUnfoldKeyTest, ut_GetKeyString_Expect_ValidStringFormat)
 {
     OpUnfoldKey key;
     key.Init(
-        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
+        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
     std::string keyStr = key.GetKeyString();
     // 验证字符串格式："opType{N}-dataType{N}-...-isCapture{N}-root{N}"
     // 先验证所有字段名存在
@@ -109,13 +109,13 @@ TEST_F(OpUnfoldKeyTest, ut_OperatorEqual_WithSameKey_Expect_True)
 {
     OpUnfoldKey key1;
     key1.Init(
-        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
+        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
 
     OpUnfoldKey key2;
     key2.Init(
-        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
+        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
 
     EXPECT_TRUE(key1 == key2);
 }
@@ -125,8 +125,8 @@ TEST_F(OpUnfoldKeyTest, OperatorAssign_Expect_CopiedValues)
 {
     OpUnfoldKey key1;
     key1.Init(
-        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
+        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
 
     OpUnfoldKey key2;
     key2 = key1;
@@ -147,13 +147,13 @@ TEST_F(OpUnfoldKeyTest, OperatorEqual_DifferentCapture_Expect_False)
 {
     OpUnfoldKey key1;
     key1.Init(
-        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
+        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
 
     OpUnfoldKey key2;
     key2.Init(
-        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 0);
+        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 0);
 
     EXPECT_FALSE(key1 == key2);
 }
@@ -163,13 +163,13 @@ TEST_F(OpUnfoldKeyTest, Hash_DifferentCapture_Expect_DifferentHash)
 {
     OpUnfoldKey key1;
     key1.Init(
-        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
+        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
 
     OpUnfoldKey key2;
     key2.Init(
-        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 0);
+        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 0);
 
     std::hash<OpUnfoldKey> hasher;
     EXPECT_NE(hasher(key1), hasher(key2));
@@ -182,8 +182,8 @@ TEST_F(OpUnfoldKeyTest, ut_Init_WithRoot_Expect_Success)
 {
     OpUnfoldKey key;
     HcclResult ret = key.Init(
-        HcclCMDType::HCCL_CMD_SCATTER, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, false, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 3);
+        HcclCMDType::HCCL_CMD_SCATTER, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, false, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 3);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(key.opType, HcclCMDType::HCCL_CMD_SCATTER);
     EXPECT_EQ(key.root, 3u);
@@ -194,13 +194,13 @@ TEST_F(OpUnfoldKeyTest, OperatorEqual_DifferentRoot_Expect_False)
 {
     OpUnfoldKey key1;
     key1.Init(
-        HcclCMDType::HCCL_CMD_SCATTER, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, false, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 0);
+        HcclCMDType::HCCL_CMD_SCATTER, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, false, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 0);
 
     OpUnfoldKey key2;
     key2.Init(
-        HcclCMDType::HCCL_CMD_SCATTER, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, false, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 1);
+        HcclCMDType::HCCL_CMD_SCATTER, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, false, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 1);
 
     EXPECT_FALSE(key1 == key2);
 }
@@ -210,13 +210,13 @@ TEST_F(OpUnfoldKeyTest, Hash_DifferentRoot_Expect_DifferentHash)
 {
     OpUnfoldKey key1;
     key1.Init(
-        HcclCMDType::HCCL_CMD_SCATTER, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, false, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 0);
+        HcclCMDType::HCCL_CMD_SCATTER, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, false, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 0);
 
     OpUnfoldKey key2;
     key2.Init(
-        HcclCMDType::HCCL_CMD_SCATTER, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, false, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 1);
+        HcclCMDType::HCCL_CMD_SCATTER, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, false, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 1);
 
     std::hash<OpUnfoldKey> hasher;
     EXPECT_NE(hasher(key1), hasher(key2));
@@ -227,13 +227,13 @@ TEST_F(OpUnfoldKeyTest, GetKeyString_DifferentRoot_Expect_DifferentString)
 {
     OpUnfoldKey key1;
     key1.Init(
-        HcclCMDType::HCCL_CMD_SCATTER, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, false, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 0);
+        HcclCMDType::HCCL_CMD_SCATTER, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, false, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 0);
 
     OpUnfoldKey key2;
     key2.Init(
-        HcclCMDType::HCCL_CMD_SCATTER, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, false, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 1);
+        HcclCMDType::HCCL_CMD_SCATTER, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, false, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, false, /*root*/ 1);
 
     EXPECT_NE(key1.GetKeyString(), key2.GetKeyString());
 }
@@ -243,13 +243,13 @@ TEST_F(OpUnfoldKeyTest, BackwardCompatible_DefaultRootVsExplicitZero_Expect_Equa
 {
     OpUnfoldKey key1;
     key1.Init(
-        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true); // 不传 root
+        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true); // 不传 root
 
     OpUnfoldKey key2;
     key2.Init(
-        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, 1024,
-        false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
+        HcclCMDType::HCCL_CMD_ALLREDUCE, HcclDataType::HCCL_DATA_TYPE_FP32, HcclReduceOp::HCCL_REDUCE_SUM, true, false,
+        1024, false, HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE, true, /*root*/ 0);
 
     EXPECT_TRUE(key1 == key2);
     EXPECT_EQ(key1.GetKeyString(), key2.GetKeyString());

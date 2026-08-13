@@ -20,6 +20,7 @@ OpUnfoldKey::OpUnfoldKey()
       dataType(HcclDataType::HCCL_DATA_TYPE_RESERVED),
       reduceType(HcclReduceOp::HCCL_REDUCE_RESERVED),
       isZeroCopy(false),
+      isSymmetricMemory(false),
       inputSize(0),
       isInplacePreSync(false),
       workflowMode(HcclWorkflowMode::HCCL_WORKFLOW_MODE_RESERVED),
@@ -32,6 +33,7 @@ OpUnfoldKey::OpUnfoldKey(const OpUnfoldKey& other)
       dataType(other.dataType),
       reduceType(other.reduceType),
       isZeroCopy(other.isZeroCopy),
+      isSymmetricMemory(other.isSymmetricMemory),
       inputSize(other.inputSize),
       isInplacePreSync(other.isInplacePreSync),
       workflowMode(other.workflowMode),
@@ -55,8 +57,9 @@ OpUnfoldKey::OpUnfoldKey(const OpUnfoldKey& other)
 
 HcclResult OpUnfoldKey::Init(
     const HcclCMDType curOpType, const HcclDataType curDataType, const HcclReduceOp curReduceType,
-    const bool curIsZeroCopy, const uint64_t curInputSize, const bool curIsInplacePreSync,
-    const HcclWorkflowMode curWorkflowMode, const bool curIsCapture, const uint32_t curRoot)
+    const bool curIsZeroCopy, const bool curIsSymmetricMemory, const uint64_t curInputSize,
+    const bool curIsInplacePreSync, const HcclWorkflowMode curWorkflowMode, const bool curIsCapture,
+    const uint32_t curRoot)
 {
     CHK_PRT_RET(
         curOpType == HcclCMDType::HCCL_CMD_INVALID, HCCL_ERROR("[OpUnfoldKey][OpUnfoldKey] opType is invalid"),
@@ -79,6 +82,7 @@ HcclResult OpUnfoldKey::Init(
     dataType = curDataType;
     reduceType = curReduceType;
     isZeroCopy = curIsZeroCopy;
+    isSymmetricMemory = curIsSymmetricMemory;
     inputSize = curInputSize;
     isInplacePreSync = curIsInplacePreSync;
     workflowMode = curWorkflowMode;
@@ -93,18 +97,18 @@ std::string OpUnfoldKey::GetKeyString() const
 {
     std::ostringstream oss;
     oss << "opType" << static_cast<uint32_t>(opType) << "-dataType" << static_cast<uint32_t>(dataType) << "-reduceType"
-        << static_cast<uint32_t>(reduceType) << "-isZeroCopy" << isZeroCopy << "-inputSize" << inputSize
-        << "-isInplacePreSync" << isInplacePreSync << "-workflowMode" << static_cast<uint32_t>(workflowMode)
-        << "-isCapture" << isCapture << "-root" << root;
+        << static_cast<uint32_t>(reduceType) << "-isZeroCopy" << isZeroCopy << "-isSymmetricMemory" << isSymmetricMemory
+        << "-inputSize" << inputSize << "-isInplacePreSync" << isInplacePreSync << "-workflowMode"
+        << static_cast<uint32_t>(workflowMode) << "-isCapture" << isCapture << "-root" << root;
     return oss.str();
 }
 
 bool OpUnfoldKey::operator==(const OpUnfoldKey& other) const
 {
     return opType == other.opType && dataType == other.dataType && reduceType == other.reduceType
-           && isZeroCopy == other.isZeroCopy && inputSize == other.inputSize
-           && isInplacePreSync == other.isInplacePreSync && workflowMode == other.workflowMode
-           && isCapture == other.isCapture && root == other.root;
+           && isZeroCopy == other.isZeroCopy && isSymmetricMemory == other.isSymmetricMemory
+           && inputSize == other.inputSize && isInplacePreSync == other.isInplacePreSync
+           && workflowMode == other.workflowMode && isCapture == other.isCapture && root == other.root;
 }
 
 const OpUnfoldKey& OpUnfoldKey::operator=(const OpUnfoldKey& other)
@@ -114,6 +118,7 @@ const OpUnfoldKey& OpUnfoldKey::operator=(const OpUnfoldKey& other)
         this->dataType = other.dataType;
         this->reduceType = other.reduceType;
         this->isZeroCopy = other.isZeroCopy;
+        this->isSymmetricMemory = other.isSymmetricMemory;
         this->inputSize = other.inputSize;
         this->isInplacePreSync = other.isInplacePreSync;
         this->workflowMode = other.workflowMode;

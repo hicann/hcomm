@@ -29,8 +29,9 @@ struct OpUnfoldKey {
 
     HcclResult Init(
         const HcclCMDType curOpType, const HcclDataType curDataType, const HcclReduceOp curReduceType,
-        const bool curIsZeroCopy, const uint64_t curInputSize, const bool curIsInplacePreSync,
-        const HcclWorkflowMode curWorkflowMode, const bool curIsCapture, const uint32_t curRoot = 0);
+        const bool curIsZeroCopy, const bool curIsSymmetricMemory, const uint64_t curInputSize,
+        const bool curIsInplacePreSync, const HcclWorkflowMode curWorkflowMode, const bool curIsCapture,
+        const uint32_t curRoot = 0);
 
     // 用于debug
     std::string GetKeyString() const;
@@ -42,6 +43,9 @@ struct OpUnfoldKey {
     HcclDataType dataType;
     HcclReduceOp reduceType;
     bool isZeroCopy;
+
+    // 是否开启对称内存优化
+    bool isSymmetricMemory;
 
     // inputSize和outputSize是由totalCount(由rankSize+count决定)+dataType决定的, 给定通信域rankSize是固定的
     // 因为已经维护dataType, 所以inputSize/outputSize/totalCount中只需要维护任意一个即可
@@ -85,6 +89,7 @@ struct hash<hccl::OpUnfoldKey> {
         const size_t reduceTypeHashValue = hashUint8(static_cast<uint8_t>(key.reduceType));
 
         const size_t isZeroCopyHashValue = hashBool(key.isZeroCopy);
+        const size_t isSymmetricMemoryHashValue = hashBool(key.isSymmetricMemory);
         const size_t inputSizeHashValue = hashUint64(key.inputSize);
         const size_t isInplacePreSyncHashValue = hashBool(key.isInplacePreSync);
 
@@ -101,6 +106,7 @@ struct hash<hccl::OpUnfoldKey> {
         hashValue ^= dataTypeHashValue;
         hashValue ^= reduceTypeHashValue;
         hashValue ^= isZeroCopyHashValue;
+        hashValue ^= isSymmetricMemoryHashValue;
         hashValue ^= inputSizeHashValue;
         hashValue ^= isInplacePreSyncHashValue;
         hashValue ^= workflowModeHashValue;

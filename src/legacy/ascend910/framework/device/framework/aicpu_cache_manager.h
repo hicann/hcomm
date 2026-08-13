@@ -65,6 +65,9 @@ public:
         const bool isDeviceMode, const HcclTopoInfo& topoinfo, std::unique_ptr<TopoMatcher>& topoMatcherPtr,
         const AlgOpContext& algContext, const HcclWorkflowMode workflowMode);
 
+    // 设置对称内存模式
+    void SetSymmetricMemoryEnable(bool enable);
+
 private:
     // 故障快恢/重执行时清理alltoallv metadata, 避免复用不完整的metadata
     HcclResult ClearMetadataForFirstAlltoallv();
@@ -109,6 +112,9 @@ private:
 
     // aicpu cache
     OpUnfoldCache* opUnfoldCachePtr_ = nullptr;
+
+    // 是否开启对称内存模式
+    bool isSymmetricMemory_ = false;
 
     // 对于第一次可能被cache的alltoallv算子 (不一定是第一个alltoallv, 因为MC2/RDMA/inplace场景下一定不会被cache,
     // 无需计算下列metadata) 记录 是否已计算过alltoallvMetadata_ (sdmaDataBlockSize, hcclInputMemRanges,

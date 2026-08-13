@@ -315,6 +315,7 @@ void HcclCommAicpu::SetSymmetricMemoryEnable(bool enable)
 {
     HCCL_INFO("[HcclCommAicpu::SetSymmetricMemoryEnable] enable[%d]", enable);
     isSymmetricMemory_ = enable;
+    aicpuCacheManager_.SetSymmetricMemoryEnable(enable);
 }
 
 HcclResult HcclCommAicpu::PrepareZeroCopyExchanger(

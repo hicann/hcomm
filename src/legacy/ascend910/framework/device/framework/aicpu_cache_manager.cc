@@ -33,6 +33,12 @@ AicpuCacheManager::~AicpuCacheManager()
     HCCL_RUN_INFO("Destruct AicpuCacheManager success!");
 }
 
+void AicpuCacheManager::SetSymmetricMemoryEnable(bool enable)
+{
+    isSymmetricMemory_ = enable;
+    HCCL_INFO("[AicpuCacheManager][SetSymmetricMemoryEnable] enable[%u]", enable);
+}
+
 HcclResult AicpuCacheManager::InitOpUnfoldCache()
 {
     // 创建算子展开的动态缓存 (不区分单算子/图模式)
@@ -816,7 +822,7 @@ HcclResult AicpuCacheManager::GetOpUnfoldKey(
 
     // 设置key for op-unfold cache
     CHK_RET(key.Init(
-        param.opType, sendType, param.reduceType, param.isZeroCopy, inputSize,
+        param.opType, sendType, param.reduceType, param.isZeroCopy, isSymmetricMemory_, inputSize,
         algContext.opRetryHandler.isInplacePreSync, workflowMode, param.isCapture, root));
 
     return HCCL_SUCCESS;
@@ -959,6 +965,9 @@ HcclResult AicpuCacheManager::PrepareUserMemRanges(
         CHK_RET(zeroCopyExchangerPtr->PrepareRemoteUserMemRanges(
             inputSize, outputSize, userInputMemRanges, userOutputMemRanges));
     } else if (
+        isSymmetricMemory_
+        || // 对称内存场景：remote ranks 的 user mem 需从 opTransportResponse 的 links 中获取
+           // PrepareSymmetricMemory 已在 ExecOp 中通过 HcclSymWinGetPeerPointer 刷新各 link 的 remote addr
         workflowMode == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB || // 图模式
         param.aicpuCacheEnable > FORCE_OP_BASE_DELTA) { // 存在强制单算子模式转换 (即图模式建链+单算子模式展开)
         HCCL_INFO("[AicpuCacheManager][PrepareUserMemRanges] check transport resource for potential user memory of "
