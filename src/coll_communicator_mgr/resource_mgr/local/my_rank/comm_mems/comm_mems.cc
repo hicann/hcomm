@@ -79,21 +79,7 @@ HcclResult CommMems::Init(HcclMem cclBuffer)
     errno_t sRet = strncpy_s(cclMemInfo_.memTag, HCOMM_RES_TAG_MAX_LEN, memTag.c_str(), memTag.size());
     CHK_PRT_RET(sRet != EOK, HCCL_ERROR("[CommMems][Init] strncpy_s failed, return [%d].", sRet), HCCL_E_MEMORY);
     HCCL_INFO("[CommMems][Init] addr[%p] size[%llu] memType[%u]", cclBuffer.addr, cclBuffer.size, cclBuffer.type);
-    return HCCL_SUCCESS;
-}
-
-HcclResult CommMems::GetMemoryHandles(std::vector<HcclMem>& mem)
-{
-    HcclMem memTemp;
-    memTemp.size = cclMemInfo_.mem.size;
-    memTemp.type = ConvertCommToHcclMemType(cclMemInfo_.mem.type);
-    memTemp.addr = cclMemInfo_.mem.addr;
-    mem.push_back(memTemp);
-
-    HCCL_INFO(
-        "[CommMems][%s] HcclMem: size[%llu], addr[%p], type[%d]", __func__, memTemp.size, memTemp.addr,
-        (int)memTemp.type);
-
+    memVersion_++;
     return HCCL_SUCCESS;
 }
 
@@ -140,6 +126,7 @@ HcclResult CommMems::CommRegMem(const std::string& memTag, const CommMem& mem, v
     // 加入绑定map
     opBindings_.emplace(memTag, h);
 
+    memVersion_++;
     *memHandle = h.get();
     HCCL_INFO(
         "[CommRegMem] ok. tag[%s] memHandle[%p] size[%llu]", memTag.c_str(), *memHandle,
@@ -175,6 +162,7 @@ HcclResult CommMems::CommUnregMem(const std::string& memTag, const void* memHand
         }
         ++unboundCount; // 从绑定列表移除，无论 Del 是否真正擦除
         opBindings_.erase(itTag);
+        memVersion_++;
         if (reg.table.size() == 0) {
             tagRegs_.erase(std::string(memTag));
         }
@@ -190,17 +178,16 @@ HcclResult CommMems::CommUnregMem(const std::string& memTag, const void* memHand
     return HCCL_SUCCESS;
 }
 
-HcclResult CommMems::GetTagMemoryHandles(
-    void** memHandles, uint32_t memHandleNum, std::vector<HcclMem>& memVec, std::vector<std::string>& memTag)
+HcclResult CommMems::GetTagsFromHandles(void** memHandles, uint32_t memHandleNum, std::vector<std::string>& memTags)
 {
-    HcclMem memTemp;
-    memTemp.size = cclMemInfo_.mem.size;
-    memTemp.type = ConvertCommToHcclMemType(cclMemInfo_.mem.type);
-    memTemp.addr = cclMemInfo_.mem.addr;
-    memVec.push_back(memTemp);
-    memTag.push_back("HcclBuffer");
+    memTags.push_back("HcclBuffer");
 
-    // 增加入参检查
+    if (memHandles == nullptr) {
+        // cclBuffer 已入 memTags，不因用户内存异常阻断注册流程，上游仍可获得 cclBuffer handle
+        HCCL_INFO("[CommMems] memHandles is null, skip user memory");
+        return HCCL_SUCCESS;
+    }
+
     std::lock_guard<std::mutex> lock(memMutex_);
     CommMemInfo** handles = reinterpret_cast<CommMemInfo**>(memHandles);
     for (uint32_t i = 0; i < memHandleNum; i++) {
@@ -208,13 +195,35 @@ HcclResult CommMems::GetTagMemoryHandles(
             HCCL_ERROR("[CommMems] memHandle[%p] not found", handles[i]);
             return HCCL_E_NOT_FOUND;
         }
-        HcclMem mem;
-        mem.addr = handles[i]->mem.addr;
-        mem.size = handles[i]->mem.size;
-        mem.type = ConvertCommToHcclMemType(handles[i]->mem.type);
-        memTag.push_back(handles[i]->memTag);
-        memVec.push_back(mem);
+        memTags.push_back(handles[i]->memTag);
     }
+    return HCCL_SUCCESS;
+}
+
+HcclResult CommMems::GetAllMemory(std::vector<HcclMem>& memVec, std::vector<std::string>& memTags, uint64_t& version)
+{
+    // cclBuffer
+    HcclMem cclMem;
+    cclMem.size = cclMemInfo_.mem.size;
+    cclMem.type = ConvertCommToHcclMemType(cclMemInfo_.mem.type);
+    cclMem.addr = cclMemInfo_.mem.addr;
+    memVec.push_back(cclMem);
+    memTags.push_back("HcclBuffer");
+
+    // 遍历 opBindings_ 全量
+    std::lock_guard<std::mutex> lock(memMutex_);
+    for (auto& tagHandle : opBindings_) {
+        auto& memInfo = tagHandle.second;
+        HcclMem mem;
+        mem.addr = memInfo->mem.addr;
+        mem.size = memInfo->mem.size;
+        mem.type = ConvertCommToHcclMemType(memInfo->mem.type);
+        memVec.push_back(mem);
+        memTags.push_back(tagHandle.first);
+    }
+
+    version = memVersion_;
+    HCCL_INFO("[CommMems][%s] total memory count[%zu] version[%llu]", __func__, memVec.size(), version);
     return HCCL_SUCCESS;
 }
 

@@ -62,6 +62,7 @@ public:
 
     EngineCtxs* GetEngineCtxs() const { return engineCtxs_.get(); }
 
+    HcclResult UnregMemByTag(const std::string& tag);
     uint32_t GetOpExpansionMode() { return opExpansionMode_; }
     CcuInsHandle GetCcuInstance() const { return ccuInsHandle_; }
     void SetCcuInstance(CcuInsHandle ccuInsHandle) { ccuInsHandle_ = ccuInsHandle; }
@@ -116,6 +117,8 @@ public:
     HcclResult BatchExchangeAndCheckConsistency(
         const HcclChannelDesc* channelDescs, const std::vector<HcommChannelDesc>& hcommDescs, uint32_t channelNum,
         const std::vector<std::pair<u32, u32>>& newChannels, CommEngine engine);
+    HcclResult PrepareMemHandles(
+        EndpointHandle epHandle, void** memHandles, uint32_t memHandleNum, std::vector<MemHandle>& memHandleVec);
 
 private:
     using ReuseSocketIdxMap = std::unordered_map<RankPair*, std::unordered_map<hcomm::EndpointPair*, u32>>;
@@ -130,15 +133,22 @@ private:
         std::vector<HcommChannelDesc>& hcommDescs, ReuseSocketIdxMap& reuseSocketIdxMap);
     HcclResult BatchCreateChannels(
         CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum,
-        std::vector<HcommChannelDesc>& hcommDescs, ChannelHandle* channelHandles);
+        std::vector<HcommChannelDesc>& hcommDescs, ChannelHandle* channelHandles,
+        std::vector<std::vector<MemHandle>>& allHandles);
     HcclResult
     BatchConnectChannels(const HcclChannelDesc* channelDescs, ChannelHandle* channelHandles, uint32_t channelNum);
+    void LogChannelCreationInfo(
+        CommEngine engine, const std::string& commTag, const HcclChannelDesc* channelDescs, uint32_t channelNum,
+        ChannelHandle* hostChannelHandleList);
+    HcclResult FinalizeChannelsByEngine(
+        CommEngine engine, const std::string& commTag, const HcclChannelDesc* channelDescs, uint32_t channelNum,
+        std::vector<HcommChannelDesc>& hcommDescs, ChannelHandle* hostChannelHandleList, ChannelHandle* channelHandles);
     HcclResult CheckChannelParam(CommEngine engine, const HcclChannelDesc* channelDesc, uint32_t channelNum) const;
     HcclResult QueryListenPort(
         uint32_t localRank, uint32_t remoteRank, const EndpointDesc& localEndpointDesc,
         const EndpointDesc& remoteEndpointDesc, uint32_t& listenPort, HcommChannelDesc& hcommDesc);
     HcclResult GetLocalTlsStatus(Hccl::TlsStatus& tlsStatus) const;
-
+    HcclResult RegisterCommMemsToEndpoint(EndpointHandle epHandle);
     HcclResult TryInitCcuInstanceLegacy();
     HcclResult TryInitCcuInstance();
     HcclResult ReserveCcuMsCommOrFallback();

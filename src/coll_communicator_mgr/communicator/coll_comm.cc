@@ -226,6 +226,12 @@ void CollComm::UnregisterSymmetricMemoryResource(const SymmetricMemoryResource& 
             "[CollComm][UnregisterSymmetricMemoryResource] CommUnregMem failed, tag[%s], "
             "memHandle[%p], ret[%d].",
             resource.memTag.c_str(), resource.memHandle, ret);
+    }
+    ret = myRank_->UnregMemByTag(resource.memTag);
+    if (ret != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "[CollComm][UnregisterSymmetricMemoryResource] UnregMemByTag failed, tag[%s], ret[%d].",
+            resource.memTag.c_str(), ret);
         return;
     }
     HCCL_INFO(

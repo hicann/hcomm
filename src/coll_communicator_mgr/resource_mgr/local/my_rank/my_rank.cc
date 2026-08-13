@@ -175,6 +175,39 @@ HcclResult MyRank::GetLocalTlsStatus(Hccl::TlsStatus& tlsStatus) const
     return Hccl::HrtRaGetTlsStatus(&info, tlsStatus);
 }
 
+HcclResult MyRank::RegisterCommMemsToEndpoint(EndpointHandle epHandle)
+{
+    std::vector<HcclMem> memVec;
+    std::vector<std::string> memTag;
+    uint64_t version = 0;
+    CHK_RET(commMems_->GetAllMemory(memVec, memTag, version));
+    HCCL_INFO("[%s] got %zu memory regions to register, version[%llu]", __func__, memVec.size(), version);
+    CHK_RET(endpointMgr_->RegisterMemory(epHandle, memTag, memVec, version));
+    return HCCL_SUCCESS;
+}
+
+HcclResult MyRank::PrepareMemHandles(
+    EndpointHandle epHandle, void** memHandles, uint32_t memHandleNum, std::vector<MemHandle>& memHandleVec)
+{
+    // 从 CommMems 提取该 channel 需要的 tag 列表
+    // GetTagsFromHandles 始终 push cclBuffer；用户 handles 异常时内部跳过，不阻断注册
+    std::vector<std::string> memTags;
+    CHK_RET(commMems_->GetTagsFromHandles(memHandles, memHandleNum, memTags));
+
+    // 确保 CommMems 全量内存已注册到该 endpoint（版本一致则跳过）
+    CHK_RET(RegisterCommMemsToEndpoint(epHandle));
+
+    // 从 endpoint 查询指定 tag 的 MemHandle
+    CHK_RET(endpointMgr_->GetMemHandlesByTags(epHandle, memTags, memHandleVec));
+    return HCCL_SUCCESS;
+}
+
+HcclResult MyRank::UnregMemByTag(const std::string& tag)
+{
+    CHK_PTR_NULL(endpointMgr_);
+    return endpointMgr_->UnregMemByTag(tag);
+}
+
 constexpr uint32_t DEFAULT_MODE = 0;
 constexpr uint32_t AICPU_TS_MODE = 2;
 constexpr uint32_t CCU_MS_MODE = 5;
@@ -646,16 +679,16 @@ HcclResult MyRank::CheckChannelParam(CommEngine engine, const HcclChannelDesc* c
 // 批量创建channels，如果CCU资源不足（如Xn, Cke, channel ctx, jetty ctx, wqebb）会失败，返回HCCL_E_UNAVAIL
 HcclResult MyRank::BatchCreateChannels(
     CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum,
-    std::vector<HcommChannelDesc>& hcommDescs, ChannelHandle* channelHandles)
+    std::vector<HcommChannelDesc>& hcommDescs, ChannelHandle* channelHandles,
+    std::vector<std::vector<MemHandle>>& allHandles)
 {
     CHK_PTR_NULL(channelDescs);
     CHK_PTR_NULL(channelHandles);
     CHK_PRT_RET(channelNum == 0, HCCL_ERROR("[%s] invalid param: channelNum is zero", __func__), HCCL_E_PARA);
 
     uint32_t localRank = rankId_;
-    std::vector<HcclMem> memVec;
     CHK_SMART_PTR_NULL(commMems_);
-    CHK_RET(commMems_->GetMemoryHandles(memVec));
+    CHK_PTR_NULL(endpointMgr_);
     std::unordered_map<RankPair*, std::unordered_map<CommEngine, std::unordered_map<hcomm::EndpointPair*, u32>>>
         reuseChannelIdxMap{};
 
@@ -674,7 +707,6 @@ HcclResult MyRank::BatchCreateChannels(
             GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
 
         EndpointHandle epHandle = nullptr;
-        CHK_PTR_NULL(endpointMgr_);
         auto ret = endpointMgr_->Get(localEndpointDesc, epHandle);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
@@ -694,25 +726,14 @@ HcclResult MyRank::BatchCreateChannels(
             localEndpointDesc.protocol);
 
         // 注册内存
-        std::vector<MemHandle> memHandleVec;
-        std::vector<std::string> memTag;
-        memVec.clear();
-        CHK_RET(
-            commMems_->GetTagMemoryHandles(channelDescs[i].memHandles, channelDescs[i].memHandleNum, memVec, memTag));
+        CHK_RET(PrepareMemHandles(epHandle, channelDescs[i].memHandles, channelDescs[i].memHandleNum, allHandles[i]));
         HCCL_INFO(
             "[%s][%u/%u] remoteRank[%u] got %zu user memory handles", __func__, i + 1, channelNum, remoteRank,
-            memVec.size());
-        ret = endpointMgr_->RegisterMemory(epHandle, memTag, memVec, memHandleVec);
-        CHK_PRT_RET(
-            ret != HCCL_SUCCESS,
-            HCCL_ERROR(
-                "[%s] failed to register memory, channelIndex[%u], remoteRank[%u], memTagNum[%zu]", __func__, i,
-                remoteRank, memTag.size()),
-            ret);
+            allHandles[i].size());
 
         hcommDescs[i].exchangeAllMems = false;
-        hcommDescs[i].memHandles = memHandleVec.data();
-        hcommDescs[i].memHandleNum = memHandleVec.size();
+        hcommDescs[i].memHandles = allHandles[i].data();
+        hcommDescs[i].memHandleNum = allHandles[i].size();
 
         hcomm::EndpointPair* endpointPair = nullptr;
         RankIdPair rankIdPair = std::make_pair(localRank, remoteRank);
@@ -925,49 +946,10 @@ HcclResult MyRank::ConfigSqDepthByExpansionMode(CommEngine engine, HcommChannelD
     return HCCL_SUCCESS;
 }
 
-HcclResult MyRank::CreateChannels(
+void MyRank::LogChannelCreationInfo(
     CommEngine engine, const std::string& commTag, const HcclChannelDesc* channelDescs, uint32_t channelNum,
-    ChannelHandle* channelHandles)
+    ChannelHandle* hostChannelHandleList)
 {
-    CHK_PTR_NULL(channelDescs);
-    CHK_PTR_NULL(channelHandles);
-    CHK_PRT_RET(channelNum == 0, HCCL_ERROR("[%s] invalid param: channelNum is zero", __func__), HCCL_E_PARA);
-
-    HCCL_INFO(
-        "[CreateChannels][Enter] engine[%s] commTag[%s] channelNum[%u] rankId[%u]",
-        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), commTag.c_str(), channelNum, rankId_);
-
-    // 参数检查
-    CHK_RET(CheckChannelParam(engine, channelDescs, channelNum));
-
-    std::vector<ChannelHandle> hostChannelHandles(channelNum);
-    ChannelHandle* hostChannelHandleList = hostChannelHandles.data();
-
-    auto& rdmaConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig();
-    std::vector<HcommChannelDesc> hcommDescs(channelNum);
-    for (u32 i = 0; i < channelNum; ++i) {
-        hcommDescs[i] = MyRankUtils::ChannelDescHccl2Hcomm(channelDescs[i], config_);
-        hcommDescs[i].roceAttr.qpThreshold = rdmaConfig.GetRdmaMultiQpThreshold();
-        CHK_RET(ConfigSqDepthByExpansionMode(engine, hcommDescs[i]));
-    }
-
-    auto start = std::chrono::steady_clock::now();
-    std::string socketTag = commTag + "_engine_" + std::to_string(engine);
-    CHK_RET(BatchCreateSockets(channelDescs, channelNum, socketTag, hcommDescs));
-    CHK_RET_UNAVAIL(BatchCreateChannels(engine, channelDescs, channelNum, hcommDescs, hostChannelHandleList));
-
-    if (!newChannels_.empty()) {
-        CHK_RET(BatchConnectChannels(channelDescs, hostChannelHandleList, channelNum));
-        auto end = std::chrono::steady_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-        HCCL_RUN_INFO(
-            "[MyRank][CreateChannels] CreateChannels Time Elapsed [%lld]us, channelNum [%u]", duration, channelNum);
-    }
-
-    // 借用hcommDescs.socket，完成一致性校验必要的数据交换
-    CHK_RET(BatchExchangeAndCheckConsistency(channelDescs, hcommDescs, channelNum, newChannels_, engine));
-
-    // 添加初始化时进行填表
     for (u32 i = 0; i < channelNum; ++i) {
         u32 remoteRank = channelDescs[i].remoteRank;
         HcclCommDfx::AddChannelRemoteRankId(commTag, hostChannelHandleList[i], remoteRank);
@@ -993,7 +975,12 @@ HcclResult MyRank::CreateChannels(
                 remoteRank, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
         }
     }
+}
 
+HcclResult MyRank::FinalizeChannelsByEngine(
+    CommEngine engine, const std::string& commTag, const HcclChannelDesc* channelDescs, uint32_t channelNum,
+    std::vector<HcommChannelDesc>& hcommDescs, ChannelHandle* hostChannelHandleList, ChannelHandle* channelHandles)
+{
     if (engine == COMM_ENGINE_AICPU || engine == COMM_ENGINE_AICPU_TS) {
         // 新增：添加 kernelLaunchAicpuCommInit 调用
         if (!callbacks_.getAicpuCommState()) {
@@ -1026,6 +1013,57 @@ HcclResult MyRank::CreateChannels(
         "[MyRank][%s] unsupported comm engine[%s].", __func__,
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
     return HCCL_E_NOT_SUPPORT;
+}
+
+HcclResult MyRank::CreateChannels(
+    CommEngine engine, const std::string& commTag, const HcclChannelDesc* channelDescs, uint32_t channelNum,
+    ChannelHandle* channelHandles)
+{
+    CHK_PTR_NULL(channelDescs);
+    CHK_PTR_NULL(channelHandles);
+    CHK_PRT_RET(channelNum == 0, HCCL_ERROR("[%s] invalid param: channelNum is zero", __func__), HCCL_E_PARA);
+
+    HCCL_INFO(
+        "[CreateChannels][Enter] engine[%s] commTag[%s] channelNum[%u] rankId[%u]",
+        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), commTag.c_str(), channelNum, rankId_);
+
+    // 参数检查
+    CHK_RET(CheckChannelParam(engine, channelDescs, channelNum));
+
+    std::vector<ChannelHandle> hostChannelHandles(channelNum);
+    ChannelHandle* hostChannelHandleList = hostChannelHandles.data();
+
+    auto& rdmaConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig();
+    std::vector<HcommChannelDesc> hcommDescs(channelNum);
+    std::vector<std::vector<MemHandle>> allHandles(channelNum);
+    for (u32 i = 0; i < channelNum; ++i) {
+        hcommDescs[i] = MyRankUtils::ChannelDescHccl2Hcomm(channelDescs[i], config_);
+        hcommDescs[i].roceAttr.qpThreshold = rdmaConfig.GetRdmaMultiQpThreshold();
+        CHK_RET(ConfigSqDepthByExpansionMode(engine, hcommDescs[i]));
+    }
+
+    auto start = std::chrono::steady_clock::now();
+    std::string socketTag = commTag + "_engine_" + std::to_string(engine);
+    CHK_RET(BatchCreateSockets(channelDescs, channelNum, socketTag, hcommDescs));
+    CHK_RET_UNAVAIL(
+        BatchCreateChannels(engine, channelDescs, channelNum, hcommDescs, hostChannelHandleList, allHandles));
+
+    if (!newChannels_.empty()) {
+        CHK_RET(BatchConnectChannels(channelDescs, hostChannelHandleList, channelNum));
+        auto end = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        HCCL_RUN_INFO(
+            "[MyRank][CreateChannels] CreateChannels Time Elapsed [%lld]us, channelNum [%u]", duration, channelNum);
+    }
+
+    // 借用hcommDescs.socket，完成一致性校验必要的数据交换
+    CHK_RET(BatchExchangeAndCheckConsistency(channelDescs, hcommDescs, channelNum, newChannels_, engine));
+
+    // 添加初始化时进行填表
+    LogChannelCreationInfo(engine, commTag, channelDescs, channelNum, hostChannelHandleList);
+
+    return FinalizeChannelsByEngine(
+        engine, commTag, channelDescs, channelNum, hcommDescs, hostChannelHandleList, channelHandles);
 }
 
 HcclResult MyRank::ChannelGetHcclBuffer(ChannelHandle channel, void** buffer, uint64_t* size)

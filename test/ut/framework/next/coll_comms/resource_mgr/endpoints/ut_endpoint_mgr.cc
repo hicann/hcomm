@@ -17,75 +17,68 @@
 
 using namespace hcomm;
 
+// ============ HcommMemReg / HcommMemUnreg stub ============
+
+static int s_regCallCount = 0;
+static int s_unregCallCount = 0;
+static std::vector<std::string> s_regTags;
+
+static std::set<EndpointHandle> s_liveEndpoints;
+
+static HcommResult MemRegStub(EndpointHandle ep, const char* memTag, const CommMem*, HcommMemHandle* memHandle)
+{
+    EXPECT_TRUE(s_liveEndpoints.count(ep));
+    s_regCallCount++;
+    s_regTags.push_back(memTag != nullptr ? memTag : "");
+    *memHandle = (HcommMemHandle)(uintptr_t)(0xCC110000 + s_regCallCount);
+    return HCCL_SUCCESS;
+}
+
+static HcommResult MemUnregStub(EndpointHandle ep, HcommMemHandle)
+{
+    EXPECT_TRUE(s_liveEndpoints.count(ep));
+    s_unregCallCount++;
+    return HCCL_SUCCESS;
+}
+
+static HcommResult EndpointCreateStub(const EndpointDesc*, EndpointHandle* handle)
+{
+    static uintptr_t nextHandle = 0xEE000000;
+    *handle = (EndpointHandle)(nextHandle++);
+    s_liveEndpoints.insert(*handle);
+    return HCCL_SUCCESS;
+}
+
+static HcommResult EndpointDestroyStub(EndpointHandle handle)
+{
+    EXPECT_TRUE(s_liveEndpoints.erase(handle));
+    return HCCL_SUCCESS;
+}
+
+// ============ EndpointMgrTest ============
+
 class EndpointMgrTest : public testing::Test {
 protected:
     EndpointMgr mgr;
 
-    void SetUp() override {}
+    void SetUp() override
+    {
+        s_regCallCount = 0;
+        s_unregCallCount = 0;
+        s_regTags.clear();
+        s_liveEndpoints.clear();
+        s_liveEndpoints.insert((EndpointHandle)0x1);
+        s_liveEndpoints.insert((EndpointHandle)0x2);
+    }
+
     void TearDown() override { GlobalMockObject::verify(); }
 };
-
-TEST_F(EndpointMgrTest, IsMemExist_Empty) { EXPECT_FALSE(mgr.IsMemExist((EndpointHandle)0x1)); }
 
 TEST_F(EndpointMgrTest, IsDescExist_Empty)
 {
     EndpointDesc desc{};
     memset(&desc, 0, sizeof(desc));
     EXPECT_FALSE(mgr.IsDescExist(desc));
-}
-
-TEST_F(EndpointMgrTest, GetAllRegisteredMemory_NotExist)
-{
-    std::vector<MemHandle> memHandles;
-    HcclResult ret = mgr.GetAllRegisteredMemory((EndpointHandle)0x1, memHandles);
-    EXPECT_NE(ret, HCCL_SUCCESS);
-}
-
-TEST_F(EndpointMgrTest, AddMemHandle_EmptyVec)
-{
-    std::vector<MemHandle> emptyVec;
-    HcclResult ret = mgr.AddMemHandle((EndpointHandle)0x1, emptyVec);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-}
-
-TEST_F(EndpointMgrTest, AddMemHandle_NewEndpoint)
-{
-    std::vector<MemHandle> handles = {(MemHandle)0x10, (MemHandle)0x20};
-    HcclResult ret = mgr.AddMemHandle((EndpointHandle)0x1, handles);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_TRUE(mgr.IsMemExist((EndpointHandle)0x1));
-}
-
-TEST_F(EndpointMgrTest, AddMemHandle_ExistingEndpoint)
-{
-    std::vector<MemHandle> handles1 = {(MemHandle)0x10};
-    std::vector<MemHandle> handles2 = {(MemHandle)0x20, (MemHandle)0x30};
-
-    HcclResult ret = mgr.AddMemHandle((EndpointHandle)0x1, handles1);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-
-    ret = mgr.AddMemHandle((EndpointHandle)0x1, handles2);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_TRUE(mgr.IsMemExist((EndpointHandle)0x1));
-
-    std::vector<MemHandle> allMems;
-    ret = mgr.GetAllRegisteredMemory((EndpointHandle)0x1, allMems);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_EQ(allMems.size(), 3u);
-}
-
-TEST_F(EndpointMgrTest, GetAllRegisteredMemory_Success)
-{
-    std::vector<MemHandle> handles = {(MemHandle)0x10, (MemHandle)0x20, (MemHandle)0x30};
-    mgr.AddMemHandle((EndpointHandle)0x1, handles);
-
-    std::vector<MemHandle> result;
-    HcclResult ret = mgr.GetAllRegisteredMemory((EndpointHandle)0x1, result);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    EXPECT_EQ(result.size(), 3u);
-    EXPECT_EQ(result[0], (MemHandle)0x10);
-    EXPECT_EQ(result[1], (MemHandle)0x20);
-    EXPECT_EQ(result[2], (MemHandle)0x30);
 }
 
 TEST_F(EndpointMgrTest, Get_CreateNewEndpoint)
@@ -100,4 +93,210 @@ TEST_F(EndpointMgrTest, Get_CreateNewEndpoint)
     EndpointHandle handle = nullptr;
     HcclResult ret = mgr.Get(desc, handle);
     EXPECT_NE(ret, HCCL_SUCCESS);
+}
+
+// ============ RegisterMemory tests ============
+
+TEST_F(EndpointMgrTest, RegisterMemory_SameTagSkipsReReg)
+{
+    MOCKER(HcommMemReg)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(invoke(MemRegStub));
+
+    std::vector<std::string> tags = {"HcclBuffer", "HcclBuffer"};
+    std::vector<HcclMem> mems
+        = {{HCCL_MEM_TYPE_DEVICE, (void*)0x1000, 1024}, {HCCL_MEM_TYPE_DEVICE, (void*)0x1000, 1024}};
+
+    HcclResult ret = mgr.RegisterMemory((EndpointHandle)0x1, tags, mems, 1);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    // HcommMemReg should be called only once (second "HcclBuffer" is duplicate tag)
+    EXPECT_EQ(s_regCallCount, 1);
+    EXPECT_EQ(s_regTags.size(), 1u);
+    EXPECT_EQ(s_regTags[0], "HcclBuffer");
+}
+
+TEST_F(EndpointMgrTest, RegisterMemory_DifferentTags)
+{
+    MOCKER(HcommMemReg)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(invoke(MemRegStub));
+
+    std::vector<std::string> tags = {"HcclBuffer", "HcclWorkBuffer"};
+    std::vector<HcclMem> mems
+        = {{HCCL_MEM_TYPE_DEVICE, (void*)0x1000, 1024}, {HCCL_MEM_TYPE_DEVICE, (void*)0x2000, 2048}};
+
+    HcclResult ret = mgr.RegisterMemory((EndpointHandle)0x1, tags, mems, 1);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(s_regCallCount, 2);
+    EXPECT_EQ(s_regTags.size(), 2u);
+    EXPECT_EQ(s_regTags[0], "HcclBuffer");
+    EXPECT_EQ(s_regTags[1], "HcclWorkBuffer");
+}
+
+TEST_F(EndpointMgrTest, RegisterMemory_MixedDuplicateAndNewTags)
+{
+    MOCKER(HcommMemReg)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(invoke(MemRegStub));
+
+    // First call: register "A"
+    std::vector<std::string> tags1 = {"A"};
+    std::vector<HcclMem> mems1 = {{HCCL_MEM_TYPE_DEVICE, (void*)0x1000, 1024}};
+    mgr.RegisterMemory((EndpointHandle)0x1, tags1, mems1, 1);
+    EXPECT_EQ(s_regCallCount, 1);
+
+    // Second call: register "A" (dup) + "B" (new)
+    std::vector<std::string> tags2 = {"A", "B"};
+    std::vector<HcclMem> mems2
+        = {{HCCL_MEM_TYPE_DEVICE, (void*)0x1000, 1024}, {HCCL_MEM_TYPE_DEVICE, (void*)0x2000, 2048}};
+    mgr.RegisterMemory((EndpointHandle)0x1, tags2, mems2, 2);
+
+    // Only one more HcommMemReg call (for "B"), "A" was reused
+    EXPECT_EQ(s_regCallCount, 2);
+    EXPECT_EQ(s_regTags.size(), 2u);
+    EXPECT_EQ(s_regTags[0], "A");
+    EXPECT_EQ(s_regTags[1], "B");
+}
+
+TEST_F(EndpointMgrTest, RegisterMemory_DifferentEndpointsSeparateReg)
+{
+    MOCKER(HcommMemReg)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(invoke(MemRegStub));
+
+    std::vector<std::string> tags = {"HcclBuffer"};
+    std::vector<HcclMem> mems = {{HCCL_MEM_TYPE_DEVICE, (void*)0x1000, 1024}};
+
+    mgr.RegisterMemory((EndpointHandle)0x1, tags, mems, 1);
+    mgr.RegisterMemory((EndpointHandle)0x2, tags, mems, 1);
+
+    // Two different endpoints, two separate registrations
+    EXPECT_EQ(s_regCallCount, 2);
+}
+
+// ============ GetMemHandlesByTags test ============
+
+TEST_F(EndpointMgrTest, GetMemHandlesByTags_ReturnsRegisteredHandles)
+{
+    MOCKER(HcommMemReg)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(invoke(MemRegStub));
+
+    std::vector<std::string> tags = {"A", "B"};
+    std::vector<HcclMem> mems
+        = {{HCCL_MEM_TYPE_DEVICE, (void*)0x1000, 1024}, {HCCL_MEM_TYPE_DEVICE, (void*)0x2000, 2048}};
+    mgr.RegisterMemory((EndpointHandle)0x1, tags, mems, 1);
+
+    // Query handles for individual tags
+    std::vector<MemHandle> handles;
+    HcclResult ret = mgr.GetMemHandlesByTags((EndpointHandle)0x1, {"A", "B"}, handles);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    ASSERT_EQ(handles.size(), 2u);
+    EXPECT_NE(handles[0], handles[1]); // Different tags, different handles
+}
+
+// ============ UnregMemByTag tests ============
+
+TEST_F(EndpointMgrTest, UnregMemByTag_AcrossAllEndpoints)
+{
+    MOCKER(HcommMemReg)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(invoke(MemRegStub));
+    MOCKER(HcommMemUnreg).stubs().with(mockcpp::any(), mockcpp::any()).will(invoke(MemUnregStub));
+
+    std::vector<std::string> tags = {"A", "B"};
+    std::vector<HcclMem> mems
+        = {{HCCL_MEM_TYPE_DEVICE, (void*)0x1000, 1024}, {HCCL_MEM_TYPE_DEVICE, (void*)0x2000, 2048}};
+
+    // Register "A"+"B" to two endpoints
+    mgr.RegisterMemory((EndpointHandle)0x1, tags, mems, 1);
+    mgr.RegisterMemory((EndpointHandle)0x2, tags, mems, 1);
+    EXPECT_EQ(s_regCallCount, 4); // 2 tags × 2 endpoints
+
+    // Unregister "A" from all endpoints
+    HcclResult ret = mgr.UnregMemByTag("A");
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(s_unregCallCount, 2); // ep1 + ep2
+
+    // "A" should be gone — GetMemHandlesByTags returns NOT_FOUND for missing tags
+    std::vector<MemHandle> handles;
+    ret = mgr.GetMemHandlesByTags((EndpointHandle)0x1, {"A"}, handles);
+    EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
+
+    // "B" still present
+    ret = mgr.GetMemHandlesByTags((EndpointHandle)0x1, {"B"}, handles);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(handles.size(), 1u);
+}
+
+TEST_F(EndpointMgrTest, UnregMemByTag_NonexistentTag)
+{
+    MOCKER(HcommMemReg)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(invoke(MemRegStub));
+    MOCKER(HcommMemUnreg).stubs().with(mockcpp::any(), mockcpp::any()).will(invoke(MemUnregStub));
+
+    std::vector<std::string> tags = {"A"};
+    std::vector<HcclMem> mems = {{HCCL_MEM_TYPE_DEVICE, (void*)0x1000, 1024}};
+    mgr.RegisterMemory((EndpointHandle)0x1, tags, mems, 1);
+    EXPECT_EQ(s_regCallCount, 1);
+
+    // Unregister a tag that doesn't exist
+    HcclResult ret = mgr.UnregMemByTag("NonExistent");
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(s_unregCallCount, 0); // No unregister happened
+
+    // "A" should be unaffected
+    std::vector<MemHandle> handles;
+    ret = mgr.GetMemHandlesByTags((EndpointHandle)0x1, {"A"}, handles);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(handles.size(), 1u);
+}
+
+// ============ Destructor test ============
+
+TEST_F(EndpointMgrTest, Destructor_UnregistersAllRegisteredHandles)
+{
+    MOCKER(HcommMemReg)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(invoke(MemRegStub));
+    MOCKER(HcommMemUnreg).stubs().with(mockcpp::any(), mockcpp::any()).will(invoke(MemUnregStub));
+    MOCKER(HcommEndpointCreate).stubs().with(mockcpp::any(), mockcpp::any()).will(invoke(EndpointCreateStub));
+    MOCKER(HcommEndpointDestroy).stubs().with(mockcpp::any()).will(invoke(EndpointDestroyStub));
+
+    EndpointDesc desc{};
+    desc.protocol = COMM_PROTOCOL_HCCS;
+    desc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+    desc.commAddr.addr.s_addr = inet_addr("10.0.0.1");
+    desc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+
+    {
+        EndpointMgr localMgr;
+        EndpointHandle epHandle = nullptr;
+        ASSERT_EQ(localMgr.Get(desc, epHandle), HCCL_SUCCESS);
+        ASSERT_NE(epHandle, nullptr);
+
+        std::vector<std::string> tags = {"A", "B", "C"};
+        std::vector<HcclMem> mems
+            = {{HCCL_MEM_TYPE_DEVICE, (void*)0x1000, 1024},
+               {HCCL_MEM_TYPE_DEVICE, (void*)0x2000, 2048},
+               {HCCL_MEM_TYPE_DEVICE, (void*)0x3000, 4096}};
+        localMgr.RegisterMemory(epHandle, tags, mems, 1);
+
+        EXPECT_EQ(s_regCallCount, 3);
+        EXPECT_EQ(s_unregCallCount, 0);
+    }
+
+    EXPECT_EQ(s_unregCallCount, 3);
 }

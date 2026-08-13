@@ -857,22 +857,13 @@ struct SharedJettyRemoteGroup {
 };
 
 static HcclResult RegisterMemForSharedJettyChannels(
-    hccl::MyRank* myRank, hcomm::EndpointMgr* endpointMgr, EndpointHandle epHandle,
-    std::vector<HcclChannelDesc>& channelDescs, std::vector<std::vector<MemHandle>>& memHandleStorage)
+    hccl::MyRank* myRank, EndpointHandle epHandle, std::vector<HcclChannelDesc>& channelDescs,
+    std::vector<std::vector<MemHandle>>& memHandleStorage)
 {
     uint32_t channelNum = static_cast<uint32_t>(channelDescs.size());
-    std::vector<HcclMem> memVec;
-    CommMems* commMems = myRank->GetCommMems();
-    CHK_PTR_NULL(commMems);
     for (uint32_t i = 0; i < channelNum; ++i) {
-        std::vector<std::string> memTag;
-        memVec.clear();
-        CHK_RET(
-            commMems->GetTagMemoryHandles(channelDescs[i].memHandles, channelDescs[i].memHandleNum, memVec, memTag));
-        HcclResult regRet = endpointMgr->RegisterMemory(epHandle, memTag, memVec, memHandleStorage[i]);
-        CHK_PRT_RET(
-            regRet != HCCL_SUCCESS,
-            HCCL_ERROR("[%s] RegisterMemory failed, channelIndex[%u], ret[%d].", __func__, i, regRet), regRet);
+        CHK_RET(myRank->PrepareMemHandles(
+            epHandle, channelDescs[i].memHandles, channelDescs[i].memHandleNum, memHandleStorage[i]));
         channelDescs[i].memHandles = memHandleStorage[i].data();
         channelDescs[i].memHandleNum = static_cast<uint32_t>(memHandleStorage[i].size());
     }
@@ -1034,7 +1025,7 @@ static HcclResult AcquireSharedJettyChannels(
     // 无论 memVec 是否为空都执行 RegisterMemory 并覆盖 memHandles：
     // 空时 memHandleStorage[i] 为空 → memHandles=nullptr/memHandleNum=0，避免残留用户传入的无效句柄。
     std::vector<std::vector<MemHandle>> memHandleStorage(channelNum);
-    CHK_RET(RegisterMemForSharedJettyChannels(myRank, endpointMgr, epHandle, channelDescs, memHandleStorage));
+    CHK_RET(RegisterMemForSharedJettyChannels(myRank, epHandle, channelDescs, memHandleStorage));
 
     std::vector<SharedJettyRemoteGroup> groups;
     GroupChannelDescsByRemoteEp(channelDescs, groups);

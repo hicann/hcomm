@@ -55,17 +55,23 @@ public:
 
     HcclResult Init(HcclMem cclBuffer);
 
-    HcclResult GetMemoryHandles(std::vector<HcclMem>& mem);
-
     // 用户注册/反注册内存
     HcclResult CommRegMem(const std::string& tag, const CommMem& mem, void** rawHandle);
     HcclResult CommUnregMem(const std::string& tag, const void* rawHandle);
-    HcclResult GetTagMemoryHandles(
-        void** memHandles, uint32_t memHandleNum, std::vector<HcclMem>& mem, std::vector<std::string>& memTag);
+    // 从 CommMemInfo* 数组提取 tag 列表
+    HcclResult GetTagsFromHandles(void** memHandles, uint32_t memHandleNum, std::vector<std::string>& memTags);
+    /**
+     * 获取域内全部待注册内存（cclBuffer + 所有用户绑定内存），用于 endpoint 粒度批量注册。
+     * 约定：返回的 memVec/memTags 0号位固定为 cclBuffer（tag="HcclBuffer"），
+     *       后续为 opBindings_ 全量，同下标一一对应。
+     *       version 为当前 CommMems 内存集合变更版本号。
+     */
+    HcclResult GetAllMemory(std::vector<HcclMem>& memVec, std::vector<std::string>& memTags, uint64_t& version);
 
 private:
     uint64_t bufferSize_{};
     CommMemInfo cclMemInfo_{};
+    uint64_t memVersion_{0}; // opBindings_ 变更版本号，每次注册/反注册递增
 
     static inline MemKey MakeKey(void* addr, uint64_t size)
     {

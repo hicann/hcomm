@@ -90,21 +90,15 @@ TEST_F(CommRegMemTest, GetTagMemoryHandlesTagMapping)
     EXPECT_EQ(commMems_->CommRegMem("userTagB", mem2, &handle2), HCCL_SUCCESS);
     ASSERT_NE(handle2, nullptr);
 
-    std::vector<HcclMem> memVec;
     std::vector<std::string> memTags;
     void* handles[] = {handle1, handle2};
-    EXPECT_EQ(commMems_->GetTagMemoryHandles(handles, 2, memVec, memTags), HCCL_SUCCESS);
+    EXPECT_EQ(commMems_->GetTagsFromHandles(handles, 2, memTags), HCCL_SUCCESS);
 
-    // 预期: 1 个 HcclBuffer + 2 个用户注册内存 → 共 3 条
-    ASSERT_EQ(memVec.size(), 3u);
+    // 预期: 1 个 HcclBuffer tag + 2 个用户注册 tag → 共 3 条
     ASSERT_EQ(memTags.size(), 3u);
     EXPECT_EQ(memTags[0], "HcclBuffer");
     EXPECT_EQ(memTags[1], "userTagA");
     EXPECT_EQ(memTags[2], "userTagB");
-    EXPECT_EQ(memVec[1].addr, mem1.addr);
-    EXPECT_EQ(memVec[1].size, mem1.size);
-    EXPECT_EQ(memVec[2].addr, mem2.addr);
-    EXPECT_EQ(memVec[2].size, mem2.size);
 }
 
 // 自验证: 非法入参返回错误
@@ -135,22 +129,6 @@ TEST_F(CommRegMemTest, InitWithCclBufferAndGetSizeSuccess)
     EXPECT_EQ(len, 8192u);
 }
 
-TEST_F(CommRegMemTest, GetMemoryHandlesReturnsCorrectInfo)
-{
-    HcclMem cclBuffer;
-    cclBuffer.addr = (void*)0x6000;
-    cclBuffer.size = 4096;
-    cclBuffer.type = HCCL_MEM_TYPE_DEVICE;
-    EXPECT_EQ(commMems_->Init(cclBuffer), HCCL_SUCCESS);
-
-    std::vector<HcclMem> memVec;
-    EXPECT_EQ(commMems_->GetMemoryHandles(memVec), HCCL_SUCCESS);
-    ASSERT_EQ(memVec.size(), 1u);
-    EXPECT_EQ(memVec[0].addr, (void*)0x6000);
-    EXPECT_EQ(memVec[0].size, 4096u);
-    EXPECT_EQ(memVec[0].type, HCCL_MEM_TYPE_DEVICE);
-}
-
 TEST_F(CommRegMemTest, InitWithHostMemTypeSuccess)
 {
     HcclMem cclBuffer;
@@ -160,7 +138,9 @@ TEST_F(CommRegMemTest, InitWithHostMemTypeSuccess)
     EXPECT_EQ(commMems_->Init(cclBuffer), HCCL_SUCCESS);
 
     std::vector<HcclMem> memVec;
-    EXPECT_EQ(commMems_->GetMemoryHandles(memVec), HCCL_SUCCESS);
+    std::vector<std::string> memTags;
+    uint64_t ver = 0;
+    EXPECT_EQ(commMems_->GetAllMemory(memVec, memTags, ver), HCCL_SUCCESS);
     ASSERT_EQ(memVec.size(), 1u);
     EXPECT_EQ(memVec[0].type, HCCL_MEM_TYPE_HOST);
 }
@@ -220,7 +200,6 @@ TEST_F(CommRegMemTest, GetTagMemoryHandlesNullHandleReturnsError)
     commMems_->Init(cclBuffer);
 
     void* handles[1] = {nullptr};
-    std::vector<HcclMem> memVec;
     std::vector<std::string> memTags;
-    EXPECT_EQ(commMems_->GetTagMemoryHandles(handles, 1, memVec, memTags), HCCL_E_NOT_FOUND);
+    EXPECT_EQ(commMems_->GetTagsFromHandles(handles, 1, memTags), HCCL_E_NOT_FOUND);
 }

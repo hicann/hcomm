@@ -30,6 +30,7 @@ set(src_to_test_list
     comms/api_c_adpt/ut_hcomm_c_adpt_ubmemattr.cc
     coll_comms/rank/ut_my_rank.cc
     coll_comms/rank/ut_ccu_ms_per_device_exclusive.cc
+    coll_comms/resource_mgr/endpoints/ut_endpoint_mgr.cc
     coll_comms/rank/comm_mems/test_getHcclBuffer_api.cc
     coll_comms/rank/ut_my_rank_tls.cc
     coll_comms/rank/comm_mems/test_comm_reg_mem_api.cc
