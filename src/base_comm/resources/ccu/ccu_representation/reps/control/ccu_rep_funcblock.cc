@@ -1,8 +1,11 @@
-/*
- * Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
- * Description: ccu representation implementation file
- * Author: sunzhepeng
- * Create: 2024-06-17
+/**
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
  */
 
 #include "ccu_rep_v1.h"
@@ -121,11 +124,11 @@ namespace CcuRep {
         this->instrId = instrId;
         translated = true;
 
-        CHK_RET_THROW(
-            Hccl::CcuApiException,
-            Hccl::StringFormat(
-                "[CcuRepFuncBlock][%s] failed to translate inArgs processing for instrId[%u] ", __func__, instrId),
-            insGeneratorPtr_->CcuRepFuncBlockTranslate(ccuKernel, instr, instrId, this, dep, 0));
+        CHK_PRT_THROW(
+            insGeneratorPtr_->CcuRepFuncBlockTranslate(ccuKernel, instr, instrId, this, dep, 0)
+                != HcclResult::HCCL_SUCCESS,
+            HCCL_ERROR("[CcuRepFuncBlock][Translate] failed to translate inArgs processing for instrId[%u]", instrId),
+            Hccl::CcuApiException, "CcuRepFuncBlock translate failed");
         // 使用空实现的自定义删除器，避免智能指针析构时释放对象
         auto translator = CcuRepTranslator(
             std::shared_ptr<CcuRepReferenceManager>(funcManager, [](CcuRepReferenceManager* ptr) {}), dep);
@@ -133,11 +136,11 @@ namespace CcuRep {
             return true;
         });
 
-        CHK_RET_THROW(
-            Hccl::CcuApiException,
-            Hccl::StringFormat(
-                "[CcuRepFuncBlock][%s] failed to translate outArgs processing for instrId[%u] ", __func__, instrId),
-            insGeneratorPtr_->CcuRepFuncBlockTranslate(ccuKernel, instr, instrId, this, dep, 1));
+        CHK_PRT_THROW(
+            insGeneratorPtr_->CcuRepFuncBlockTranslate(ccuKernel, instr, instrId, this, dep, 1)
+                != HcclResult::HCCL_SUCCESS,
+            HCCL_ERROR("[CcuRepFuncBlock][Translate] failed to translate outArgs processing for instrId[%u]", instrId),
+            Hccl::CcuApiException, "CcuRepFuncBlock translate failed");
 
         return translated;
     }

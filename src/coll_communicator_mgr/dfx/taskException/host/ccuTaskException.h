@@ -23,6 +23,7 @@
 #include "coll_comm.h"
 
 namespace hcomm {
+class CcuUrmaChannel;
 using RdmaHandle = void*;
 
 using GetCcuCqeErrInfoCallBackHcomm = void (*)(
@@ -59,6 +60,7 @@ private:
     static HcclResult
     GetSignalIdByHandle(const ChannelHandle& channel, uint16_t semIdx, bool isRmtSig, uint32_t& signalId);
     static HcclResult GetVariableIdByHandle(const ChannelHandle& channel, uint16_t varIdx, uint32_t& varId);
+    static HcclResult GetCcuUrmaChannel(const ChannelHandle& channel, CcuUrmaChannel*& channelImpl);
 
     // 获取ErrorMsg
     static std::string

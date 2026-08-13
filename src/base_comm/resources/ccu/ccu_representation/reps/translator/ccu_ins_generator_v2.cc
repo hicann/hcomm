@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+
 #include "ccu_ins_generator_v2.h"
 #include "hcomm_c_adpt.h"
 #include "ccu_rep_base_v1.h"
@@ -289,11 +290,13 @@ namespace CcuRep {
         UNUSED(ccuKernel);
         CHK_PTR_NULL(ccuRepBufReduce);
         if (ccuRepBufReduce->GetCount() > CCU_REDUCE_MAX_MS || ccuRepBufReduce->GetMem().size() > CCU_REDUCE_MAX_MS) {
-            HCCL_ERROR("count and mem size must less than %u", CCU_REDUCE_MAX_MS);
+            HCCL_ERROR(
+                "count[%u] and mem size[%zu] must less than %u", ccuRepBufReduce->GetCount(),
+                ccuRepBufReduce->GetMem().size(), CCU_REDUCE_MAX_MS);
             return HCCL_E_PARA;
         }
         if (ccuRepBufReduce->GetCount() < CCU_REDUCE_MIN_MS) {
-            HCCL_ERROR("count must be at least %u", CCU_REDUCE_MIN_MS);
+            HCCL_ERROR("count[%u] must be at least %u", ccuRepBufReduce->GetCount(), CCU_REDUCE_MIN_MS);
             return HCCL_E_PARA;
         }
 
@@ -381,7 +384,10 @@ namespace CcuRep {
         uint32_t locCkeId{0};
         CHK_PRT_RET(
             channelImpl->GetLocCkeByIndex(ccuRepRemWaitSem->GetSemIndex(), locCkeId) != HcclResult::HCCL_SUCCESS,
-            HCCL_ERROR("[CcuRepRemWaitSem][%s] failed to get to loc cke id.", __func__), HCCL_E_INTERNAL);
+            HCCL_ERROR(
+                "[CcuRepRemWaitSem][%s] failed to get loc cke id, channelHandle[0x%llx], semIndex[%u].", __func__,
+                ccuRepRemWaitSem->GetChannel(), ccuRepRemWaitSem->GetSemIndex()),
+            HCCL_E_INTERNAL);
 
         // 需要profiling的使用SetCKEInstr, 否则使用ClearCKEInstr
         if (ccuRepRemWaitSem->GetIsProfiling()) {
@@ -574,7 +580,7 @@ namespace CcuRep {
                 break;
             }
             default: {
-                HCCL_ERROR("Invalid Assign");
+                HCCL_ERROR("Invalid Assign, subType[%d]", static_cast<int>(ccuRepAssign->GetSubType()));
                 return HCCL_E_PARA;
             }
         }
@@ -610,7 +616,7 @@ namespace CcuRep {
 
         auto idx = static_cast<size_t>(ccuRepMul->GetSubType());
         if (idx == 0 || idx >= sizeof(table) / sizeof(table[0])) {
-            HCCL_ERROR("Invalid Mul");
+            HCCL_ERROR("Invalid Mul, subType[%d]", static_cast<int>(ccuRepMul->GetSubType()));
             return HCCL_E_PARA;
         }
         const auto& info = table[idx];
@@ -655,7 +661,7 @@ namespace CcuRep {
 
         auto idx = static_cast<size_t>(ccuRepSub->GetSubType());
         if (idx == 0 || idx >= sizeof(table) / sizeof(table[0])) {
-            HCCL_ERROR("Invalid Sub");
+            HCCL_ERROR("Invalid Sub, subType[%d]", static_cast<int>(ccuRepSub->GetSubType()));
             return HCCL_E_PARA;
         }
         const auto& info = table[idx];
@@ -689,7 +695,7 @@ namespace CcuRep {
                 break;
             }
             default: {
-                HCCL_ERROR("Invalid And");
+                HCCL_ERROR("Invalid And, subType[%d]", static_cast<int>(ccuRepAnd->GetSubType()));
                 return HCCL_E_PARA;
             }
         }
@@ -706,7 +712,7 @@ namespace CcuRep {
                 break;
             }
             default: {
-                HCCL_ERROR("Invalid Not");
+                HCCL_ERROR("Invalid Not, subType[%d]", static_cast<int>(ccuRepNot->GetSubType()));
                 return HCCL_E_PARA;
             }
         }
@@ -727,7 +733,7 @@ namespace CcuRep {
                 break;
             }
             default: {
-                HCCL_ERROR("Invalid Or");
+                HCCL_ERROR("Invalid Or, subType[%d]", static_cast<int>(ccuRepOr->GetSubType()));
                 return HCCL_E_PARA;
             }
         }
@@ -750,7 +756,7 @@ namespace CcuRep {
                 break;
             }
             default: {
-                HCCL_ERROR("Invalid Xor");
+                HCCL_ERROR("Invalid Xor, subType[%d]", static_cast<int>(ccuRepXor->GetSubType()));
                 return HCCL_E_PARA;
             }
         }
@@ -786,12 +792,12 @@ namespace CcuRep {
                     break;
                 }
                 default: {
-                    HCCL_ERROR("Invalid Shift left");
+                    HCCL_ERROR("Invalid Shift left, shiftSubType[%d]", static_cast<int>(ccuRepShL->GetShiftSubType()));
                     return HCCL_E_PARA;
                 }
             }
         } else {
-            HCCL_ERROR("Invalid Shift");
+            HCCL_ERROR("Invalid Shift left, shiftType[%d]", static_cast<int>(ccuRepShL->GetShiftType()));
             return HCCL_E_PARA;
         }
         return HcclResult::HCCL_SUCCESS;
@@ -826,12 +832,12 @@ namespace CcuRep {
                     break;
                 }
                 default: {
-                    HCCL_ERROR("Invalid Shift right");
+                    HCCL_ERROR("Invalid Shift right, shiftSubType[%d]", static_cast<int>(ccuRepShR->GetShiftSubType()));
                     return HCCL_E_PARA;
                 }
             }
         } else {
-            HCCL_ERROR("Invalid Shift");
+            HCCL_ERROR("Invalid Shift right, shiftType[%d]", static_cast<int>(ccuRepShR->GetShiftType()));
             return HCCL_E_PARA;
         }
         return HcclResult::HCCL_SUCCESS;
@@ -1115,7 +1121,9 @@ namespace CcuRep {
                 break;
             case CcuArgType::VARIABLE_LIST:
                 if (inArg.varList.size() != blkArg.varList.size()) {
-                    HCCL_ERROR("Mismatched Arg Size");
+                    HCCL_ERROR(
+                        "Mismatched Arg Size, inArg.varList.size[%zu], blkArg.varList.size[%zu]", inArg.varList.size(),
+                        blkArg.varList.size());
                     return HCCL_E_PARA;
                 }
                 for (uint32_t j = 0; j < inArg.varList.size(); j++) {
@@ -1141,7 +1149,7 @@ namespace CcuRep {
                 CHK_RET(LoadAddrListArg(instr, blkArg.remoteAddrList, inArg.remoteAddrList));
                 break;
             default:
-                HCCL_ERROR("Mismatched Arg Type");
+                HCCL_ERROR("Mismatched Arg Type, inArg.type[%d]", static_cast<int>(inArg.type));
                 return HCCL_E_PARA;
         }
         return HcclResult::HCCL_SUCCESS;
@@ -1161,7 +1169,9 @@ namespace CcuRep {
             const CcuRepArg& inArg = inArgs[i];
             const CcuRepArg& blkArg = loopBlock->GetArg(i);
             if (inArg.type != blkArg.type) {
-                HCCL_ERROR("Mismatched Arg Type");
+                HCCL_ERROR(
+                    "Mismatched Arg Type, inArg.type[%d], blkArg.type[%d]", static_cast<int>(inArg.type),
+                    static_cast<int>(blkArg.type));
                 return HCCL_E_PARA;
             }
             CHK_RET(LoadLoopCallArg(instr, inArg, blkArg));

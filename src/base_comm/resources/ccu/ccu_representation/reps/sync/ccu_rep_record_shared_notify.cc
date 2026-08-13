@@ -1,16 +1,17 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
- * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
- * CANN Open Software License Agreement Version 2.0 (the "License").
- * Please refer to the License for details. You may not use this file except in compliance with the License.
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
- * See LICENSE in the root of the software repository for the full text of the License.
- */
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 
 #include "ccu_rep_v1.h"
 #include "string_util.h"
 #include "ccu_ins_generator_v1.h"
+#include "ccu_api_exception.h"
 #include "ccu_kernel.h"
 namespace hcomm {
 namespace CcuRep {
@@ -31,7 +32,10 @@ namespace CcuRep {
         this->instrId = instrId;
         translated = true;
 
-        insGenPtr->CcuRepRecordSharedNotifyTranslate(ccuKernel, instr, this, dep);
+        CHK_PRT_THROW(
+            insGenPtr->CcuRepRecordSharedNotifyTranslate(ccuKernel, instr, this, dep) != HcclResult::HCCL_SUCCESS,
+            HCCL_ERROR("[CcuRepRecordSharedNotify][Translate] failed to translate for instrId[%u]", instrId),
+            Hccl::CcuApiException, "CcuRepRecordSharedNotify translate failed");
         CHK_PRT_THROW(
             (instrId > UINT16_MAX - instrCount),
             HCCL_ERROR(

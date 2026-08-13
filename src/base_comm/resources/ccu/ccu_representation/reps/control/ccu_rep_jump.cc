@@ -1,8 +1,11 @@
-/*
- * Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
- * Description: ccu representation implementation file
- * Author: sunzhepeng
- * Create: 2024-06-17
+/**
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
  */
 
 #include "ccu_rep_v1.h"
@@ -73,10 +76,10 @@ namespace CcuRep {
         }
 
         if (jumpLabel->Translated()) {
-            CHK_RET_THROW(
-                Hccl::CcuApiException,
-                Hccl::StringFormat("[CcuRepJump][%s] failed to translate repJump for instrId[%u] ", __func__, instrId),
-                insGeneratorPtr_->CcuRepJumpTranslate(ccuKernel, instr, instrId, this, dep));
+            CHK_PRT_THROW(
+                insGeneratorPtr_->CcuRepJumpTranslate(ccuKernel, instr, instrId, this, dep) != HcclResult::HCCL_SUCCESS,
+                HCCL_ERROR("[CcuRepJump][Translate] failed to translate for instrId[%u]", instrId),
+                Hccl::CcuApiException, "CcuRepJump translate failed");
             translated = true;
         }
 
@@ -119,11 +122,11 @@ namespace CcuRep {
         }
 
         if (jumpLabel->Translated()) {
-            CHK_RET_THROW(
-                Hccl::CcuApiException,
-                Hccl::StringFormat(
-                    "[CcuRepJumpNE][%s] failed to translate repJumpNE for instrId[%u] ", __func__, instrId),
-                insGeneratorPtr_->CcuRepJumpNETranslate(ccuKernel, instr, instrId, this, dep));
+            CHK_PRT_THROW(
+                insGeneratorPtr_->CcuRepJumpNETranslate(ccuKernel, instr, instrId, this, dep)
+                    != HcclResult::HCCL_SUCCESS,
+                HCCL_ERROR("[CcuRepJumpNE][Translate] failed to translate for instrId[%u]", instrId),
+                Hccl::CcuApiException, "CcuRepJumpNE translate failed");
             translated = true;
         }
 
@@ -169,11 +172,11 @@ namespace CcuRep {
         }
 
         if (jumpLabel->Translated()) {
-            CHK_RET_THROW(
-                Hccl::CcuApiException,
-                Hccl::StringFormat(
-                    "[CcuRepJumpEQ][%s] failed to translate repJumpEQ for instrId[%u] ", __func__, instrId),
-                insGeneratorPtr_->CcuRepJumpEQTranslate(ccuKernel, instr, instrId, this, dep));
+            CHK_PRT_THROW(
+                insGeneratorPtr_->CcuRepJumpEQTranslate(ccuKernel, instr, instrId, this, dep)
+                    != HcclResult::HCCL_SUCCESS,
+                HCCL_ERROR("[CcuRepJumpEQ][Translate] failed to translate for instrId[%u]", instrId),
+                Hccl::CcuApiException, "CcuRepJumpEQ translate failed");
             translated = true;
         }
 
@@ -219,11 +222,11 @@ namespace CcuRep {
         }
 
         if (jumpLabel->Translated()) {
-            CHK_RET_THROW(
-                Hccl::CcuApiException,
-                Hccl::StringFormat(
-                    "[CcuRepJumpLE][%s] failed to translate repJumpLE for instrId[%u] ", __func__, instrId),
-                insGeneratorPtr_->CcuRepJumpLETranslate(ccuKernel, instr, instrId, this, dep));
+            CHK_PRT_THROW(
+                insGeneratorPtr_->CcuRepJumpLETranslate(ccuKernel, instr, instrId, this, dep)
+                    != HcclResult::HCCL_SUCCESS,
+                HCCL_ERROR("[CcuRepJumpLE][Translate] failed to translate for instrId[%u]", instrId),
+                Hccl::CcuApiException, "CcuRepJumpLE translate failed");
             translated = true;
         }
 
@@ -269,11 +272,11 @@ namespace CcuRep {
         }
 
         if (jumpLabel->Translated()) {
-            CHK_RET_THROW(
-                Hccl::CcuApiException,
-                Hccl::StringFormat(
-                    "[CcuRepJumpGE][%s] failed to translate repJumpGE for instrId[%u] ", __func__, instrId),
-                insGeneratorPtr_->CcuRepJumpGETranslate(ccuKernel, instr, instrId, this, dep));
+            CHK_PRT_THROW(
+                insGeneratorPtr_->CcuRepJumpGETranslate(ccuKernel, instr, instrId, this, dep)
+                    != HcclResult::HCCL_SUCCESS,
+                HCCL_ERROR("[CcuRepJumpGE][Translate] failed to translate for instrId[%u]", instrId),
+                Hccl::CcuApiException, "CcuRepJumpGE translate failed");
 
             translated = true;
         }
@@ -318,11 +321,11 @@ namespace CcuRep {
             Hccl::THROW<Hccl::CcuApiException>("instr is empty!");
         }
         if (jumpLabel->Translated()) {
-            CHK_RET_THROW(
-                Hccl::CcuApiException,
-                Hccl::StringFormat(
-                    "[CcuRepJumpGT][%s] failed to translate repJumpGT for instrId[%u] ", __func__, instrId),
-                insGeneratorPtr_->CcuRepJumpGTTranslate(ccuKernel, instr, instrId, this, dep));
+            CHK_PRT_THROW(
+                insGeneratorPtr_->CcuRepJumpGTTranslate(ccuKernel, instr, instrId, this, dep)
+                    != HcclResult::HCCL_SUCCESS,
+                HCCL_ERROR("[CcuRepJumpGT][Translate] failed to translate for instrId[%u]", instrId),
+                Hccl::CcuApiException, "CcuRepJumpGT translate failed");
 
             translated = true;
         }
@@ -368,11 +371,11 @@ namespace CcuRep {
         }
 
         if (jumpLabel->Translated()) {
-            CHK_RET_THROW(
-                Hccl::CcuApiException,
-                Hccl::StringFormat(
-                    "[CcuRepJumpLT][%s] failed to translate repJumpLT for instrId[%u] ", __func__, instrId),
-                insGeneratorPtr_->CcuRepJumpLTTranslate(ccuKernel, instr, instrId, this, dep));
+            CHK_PRT_THROW(
+                insGeneratorPtr_->CcuRepJumpLTTranslate(ccuKernel, instr, instrId, this, dep)
+                    != HcclResult::HCCL_SUCCESS,
+                HCCL_ERROR("[CcuRepJumpLT][Translate] failed to translate for instrId[%u]", instrId),
+                Hccl::CcuApiException, "CcuRepJumpLT translate failed");
 
             translated = true;
         }

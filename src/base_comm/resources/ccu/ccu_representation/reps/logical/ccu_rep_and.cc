@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+
 #include "ccu_rep_v1.h"
 #include "string_util.h"
 #include "exception_util.h"
@@ -44,7 +45,10 @@ namespace CcuRep {
         this->instrId = curInstrId;
         translated = true;
         instrCount = insGenPtr->GetInstrCount(type);
-        insGenPtr->CcuRepAndTranslate(ccuKernel, instr, this, dep);
+        CHK_PRT_THROW(
+            insGenPtr->CcuRepAndTranslate(ccuKernel, instr, this, dep) != HcclResult::HCCL_SUCCESS,
+            HCCL_ERROR("[CcuRepAnd][Translate] failed to translate for instrId[%u]", instrId), Hccl::CcuApiException,
+            "CcuRepAnd translate failed");
         CHK_PRT_THROW(
             (curInstrId > UINT16_MAX - instrCount),
             HCCL_ERROR(

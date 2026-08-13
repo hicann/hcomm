@@ -6,7 +6,6 @@
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
- * Description: ccu representation store var implementation file
  */
 
 #include "ccu_rep_store_var_v1.h"
@@ -41,11 +40,10 @@ namespace CcuRep {
         this->instrId = instrId;
         translated = true;
 
-        CHK_RET_THROW(
-            Hccl::CcuApiException,
-            Hccl::StringFormat(
-                "[CcuRepStoreVar][%s] failed to translate repStoreVar for instrId[%u] ", __func__, instrId),
-            insGeneratorPtr_->CcuRepStoreVarTranslate(ccuKernel, instr, instrId, this, dep));
+        CHK_PRT_THROW(
+            insGeneratorPtr_->CcuRepStoreVarTranslate(ccuKernel, instr, instrId, this, dep) != HcclResult::HCCL_SUCCESS,
+            HCCL_ERROR("[CcuRepStoreVar][Translate] failed to translate for instrId[%u]", instrId),
+            Hccl::CcuApiException, "CcuRepStoreVar translate failed");
 
         instrId += instrCount;
         return translated;

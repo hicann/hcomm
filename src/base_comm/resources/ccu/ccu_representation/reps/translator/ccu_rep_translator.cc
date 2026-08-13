@@ -40,7 +40,7 @@ namespace CcuRep {
     bool CheckType(const std::shared_ptr<CcuRepBlock>& refer)
     {
         if (refer == nullptr) {
-            HCCL_ERROR("input refer is nullptr");
+            HCCL_ERROR("[%s] input refer is nullptr", __func__);
             return false;
         }
         HCCL_INFO("[CheckType] refer->Type() = %d", refer->Type());
@@ -51,7 +51,7 @@ namespace CcuRep {
     bool CheckType<CcuRepFuncBlock>(const std::shared_ptr<CcuRepBlock>& refer)
     {
         if (refer == nullptr) {
-            HCCL_ERROR("input refer is nullptr");
+            HCCL_ERROR("[%s] input refer is nullptr", __func__);
             return false;
         }
         return refer->Type() == CcuRepType::FUNC_BLOCK ? true : false;
@@ -61,7 +61,7 @@ namespace CcuRep {
     bool CheckType<CcuRepLoopBlock>(const std::shared_ptr<CcuRepBlock>& refer)
     {
         if (refer == nullptr) {
-            HCCL_ERROR("input refer is nullptr");
+            HCCL_ERROR("[%s] input refer is nullptr", __func__);
             return false;
         }
         return refer->Type() == CcuRepType::LOOP_BLOCK ? true : false;

@@ -74,10 +74,11 @@ namespace CcuRep {
         this->instrId = instrId;
         translated = true;
 
-        CHK_RET_THROW(
-            Hccl::CcuApiException,
-            Hccl::StringFormat("[CcuRepLoopGroupBundle][%s] failed to translate for instrId[%u]", __func__, instrId),
-            insGenPtr_->CcuRepLoopGroupBundleTranslate(ccuKernel, instr, instrId, this, dep));
+        CHK_PRT_THROW(
+            insGenPtr_->CcuRepLoopGroupBundleTranslate(ccuKernel, instr, instrId, this, dep)
+                != HcclResult::HCCL_SUCCESS,
+            HCCL_ERROR("[CcuRepLoopGroupBundle][Translate] failed to translate for instrId[%u]", instrId),
+            Hccl::CcuApiException, "CcuRepLoopGroupBundle translate failed");
 
         return translated;
     }

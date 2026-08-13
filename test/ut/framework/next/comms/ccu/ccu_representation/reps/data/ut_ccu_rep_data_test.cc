@@ -577,8 +577,7 @@ namespace CcuRep {
             uint16_t instrId = 0;
             TransDep dep = {};
 
-            bool result = rep.Translate(nullptr, instrPtr, instrId, dep);
-            EXPECT_TRUE(result);
+            EXPECT_THROW({ rep.Translate(nullptr, instrPtr, instrId, dep); }, Hccl::CcuApiException);
         }
 
         TEST_F(CcuRepLocCpyTest, Constructor_Basic)

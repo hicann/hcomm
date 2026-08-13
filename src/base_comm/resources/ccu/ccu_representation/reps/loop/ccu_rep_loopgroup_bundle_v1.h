@@ -6,8 +6,6 @@
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
- * Description: ccu representation loopgroup bundle header file
- * Create: 2026-03-22
  */
 
 #ifndef HCOMM_CCU_REPRESENTATION_LOOPGROUP_BUNDLE_H
@@ -44,7 +42,8 @@ namespace CcuRep {
         CcuRepLoopGroupBundle(
             CcuInsGeneratorBase* insGenPtr, const CcuLoopGroupCfg& config, const Variable& parallelVar,
             const Variable& offsetVar);
-        CcuRepLoopGroupBundle(CcuInsGeneratorBase* insGenPtr, const Variable& parallelVar, const Variable& offsetVar);
+        explicit CcuRepLoopGroupBundle(
+            CcuInsGeneratorBase* insGenPtr, const Variable& parallelVar, const Variable& offsetVar);
 
         void AddLoop(const LoopEntry& entry);
         void SetRepeatLoopIdx(uint64_t idx) { repeatLoopIdx_ = idx; }

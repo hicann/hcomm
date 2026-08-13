@@ -579,13 +579,20 @@ uint16_t CcuTaskException::GetCcuCKEValue(int32_t deviceId, uint32_t dieId, uint
     return static_cast<uint16_t>(ckeVal);
 }
 
-HcclResult CcuTaskException::GetChannelIdByHandle(const ChannelHandle& channel, uint32_t& channelId)
+HcclResult CcuTaskException::GetCcuUrmaChannel(const ChannelHandle& channel, CcuUrmaChannel*& channelImpl)
 {
     void* channelPtr = nullptr;
     CHK_RET(static_cast<HcclResult>(HcommChannelGet(channel, &channelPtr)));
     CHK_PTR_NULL(channelPtr);
-    auto* channelImpl = dynamic_cast<CcuUrmaChannel*>(static_cast<Channel*>(channelPtr));
+    channelImpl = dynamic_cast<CcuUrmaChannel*>(static_cast<Channel*>(channelPtr));
     CHK_PTR_NULL(channelImpl);
+    return HCCL_SUCCESS;
+}
+
+HcclResult CcuTaskException::GetChannelIdByHandle(const ChannelHandle& channel, uint32_t& channelId)
+{
+    CcuUrmaChannel* channelImpl = nullptr;
+    CHK_RET(GetCcuUrmaChannel(channel, channelImpl));
     channelId = channelImpl->GetChannelId();
     return HCCL_SUCCESS;
 }
@@ -593,11 +600,8 @@ HcclResult CcuTaskException::GetChannelIdByHandle(const ChannelHandle& channel, 
 HcclResult
 CcuTaskException::GetSignalIdByHandle(const ChannelHandle& channel, uint16_t semIdx, bool isRmtSig, uint32_t& signalId)
 {
-    void* channelPtr = nullptr;
-    CHK_RET(static_cast<HcclResult>(HcommChannelGet(channel, &channelPtr)));
-    CHK_PTR_NULL(channelPtr);
-    auto* channelImpl = dynamic_cast<CcuUrmaChannel*>(static_cast<Channel*>(channelPtr));
-    CHK_PTR_NULL(channelImpl);
+    CcuUrmaChannel* channelImpl = nullptr;
+    CHK_RET(GetCcuUrmaChannel(channel, channelImpl));
     if (isRmtSig) {
         CHK_PRT_RET(
             channelImpl->GetRmtCkeByIndex(semIdx, signalId) != HcclResult::HCCL_SUCCESS,
@@ -613,11 +617,8 @@ CcuTaskException::GetSignalIdByHandle(const ChannelHandle& channel, uint16_t sem
 
 HcclResult CcuTaskException::GetVariableIdByHandle(const ChannelHandle& channel, uint16_t varIdx, uint32_t& varId)
 {
-    void* channelPtr = nullptr;
-    CHK_RET(static_cast<HcclResult>(HcommChannelGet(channel, &channelPtr)));
-    CHK_PTR_NULL(channelPtr);
-    auto* channelImpl = dynamic_cast<CcuUrmaChannel*>(static_cast<Channel*>(channelPtr));
-    CHK_PTR_NULL(channelImpl);
+    CcuUrmaChannel* channelImpl = nullptr;
+    CHK_RET(GetCcuUrmaChannel(channel, channelImpl));
     CHK_PRT_RET(
         channelImpl->GetRmtXnByIndex(varIdx, varId) != HcclResult::HCCL_SUCCESS,
         HCCL_ERROR("[%s] failed to get remote xn id, channelHandle[0x%llx]--var[%u].", __func__, channel, varIdx),

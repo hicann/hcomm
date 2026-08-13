@@ -45,7 +45,10 @@ namespace CcuRep {
         this->instrId = curInstrId;
         translated = true;
         instrCount = insGenPtr->GetInstrCount(type);
-        insGenPtr->CcuRepXorTranslate(ccuKernel, instr, this, dep);
+        CHK_PRT_THROW(
+            insGenPtr->CcuRepXorTranslate(ccuKernel, instr, this, dep) != HcclResult::HCCL_SUCCESS,
+            HCCL_ERROR("[CcuRepXor][Translate] failed to translate for instrId[%u]", instrId), Hccl::CcuApiException,
+            "CcuRepXor translate failed");
         CHK_PRT_THROW(
             (curInstrId > UINT16_MAX - instrCount),
             HCCL_ERROR(
