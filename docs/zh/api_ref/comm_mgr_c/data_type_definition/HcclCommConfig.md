@@ -254,24 +254,7 @@ typedef struct HcclCommConfigDef {
 
 - **hcclAlgo**：用于配置集合通信Server间通信算法以及超节点间通信算法，支持全局配置算法类型与按算子配置算法类型两种配置方式。需注意，HCCL提供自适应算法选择功能，默认会根据产品形态、数据量和Server个数选择合适的算法，一般情况下用户无需手工指定。若通过此参数指定了Server间通信算法，则自适应算法选择功能不再生效。
 
-  配置方式的参数信息及针对不同产品类型支持的算法类型请参见环境变量[HCCL_ALGO](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_ALGO.md)，配置方式如下：
-
-  - 通信域配置算法类型：`hcclAlgo = "level0:NA;level1:<algo>;level2:<algo>"`，  示例：
-
-    ```text
-    hcclAlgo = "level0:NA;level1:H-D_R"
-    ```
-
-  - 按算子配置算法类型：`hcclAlgo = "<op0>=level0:NA;level1:<algo0>;level2:<algo1>/<op1>=level0:NA;level1:<algo3>;level2:<algo4>"`，示例：
-
-    ```text
-    # AllReduce算子使用Ring算法，AllGather算子使用RHD算法，其他算子根据产品形态、节点数以及数据量自动选择通信算法。
-    hcclAlgo = "allreduce=level0:NA;level1:ring/allgather=level0:NA;level1:H-D_R"
-    ```
-
-  **注意事项：**
-
-  - Ascend 950PR/Ascend 950DT不支持此配置，可通过HCCL_ALGO环境变量配置全局通信算法。
+  配置方式的参数信息及不同产品类型支持的算法类型请参见环境变量[HCCL_ALGO](https://gitcode.com/cann/hccl/blob/master/docs/zh/user_guide/hccl_env/HCCL_ALGO.md)。
 
 - **hcclRetryEnable**：用于配置是否开启HCCL算子的重执行特性。重执行是指当通信算子执行报SDMA或者RDMA CQE类型的错误时，HCCL会尝试重新执行此通信算子。**仅支持在Atlas A3 训练系列产品/Atlas A3 推理系列产品上使用。**
 

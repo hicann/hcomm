@@ -692,6 +692,14 @@ HcclResult CommConfig::SetConfigHcclQos(u32 hcclQos)
     return HCCL_SUCCESS;
 }
 
+HcclResult CommConfig::SetConfigHcclAlgoStr(const std::string& hcclAlgo)
+{
+    hcclAlgoStr_ = hcclAlgo;
+    return HCCL_SUCCESS;
+}
+
+const std::string& CommConfig::GetConfigHcclAlgoStr() const { return hcclAlgoStr_; }
+
 HcclResult CommConfig::SetConfigSqDepth(u32 sqDepth)
 {
     sqDepth_ = sqDepth;

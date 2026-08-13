@@ -8,6 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "coll_comm_config.h"
+#include <cstring> // 包含strnlen函数
 
 namespace hccl {
 constexpr uint32_t MULTIPLE = 4;             // 用于A5判断TC是否为4的倍数
@@ -117,6 +118,11 @@ HcclResult ApplyHcclCommConfig(const HcclCommConfig* hcclCommConfig, CommConfig&
     opExpansionMode = hcclCommConfig->hcclOpExpansionMode;
     CHK_RET(ApplyTrafficClassAndServiceLevel(hcclCommConfig, commConfig));
     CHK_RET(ApplyHcclQos(hcclCommConfig, commConfig));
+
+    if (hcclCommConfig->hcclAlgo[0] != '\0') {
+        size_t algoLen = strnlen(hcclCommConfig->hcclAlgo, static_cast<size_t>(HCCL_COMM_ALGO_MAX_LENGTH));
+        CHK_RET(commConfig.SetConfigHcclAlgoStr(std::string(hcclCommConfig->hcclAlgo, algoLen)));
+    }
     CHK_RET(ApplyHcclSqDepth(hcclCommConfig, commConfig));
     return HCCL_SUCCESS;
 }

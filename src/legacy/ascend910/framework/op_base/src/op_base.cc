@@ -3776,36 +3776,48 @@ HcclResult HcclConfigGetInfo(HcclComm comm, HcclConfigType cfgType, uint32_t inf
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     CHK_PTR_NULL(comm);
     CHK_PTR_NULL(info);
-
-    if (cfgType != HcclConfigType::HCCL_CONFIG_TYPE_OP_EXPANSION_MODE) {
-        HCCL_ERROR("[%s] cfgType[%d] is invalid.", __func__, cfgType);
-        return HcclResult::HCCL_E_PARA;
-    }
-
-    constexpr size_t infoExpectedLen = sizeof(HcclConfigTypeOpExpansionMode);
-    if (static_cast<size_t>(infoLen) != infoExpectedLen) {
-        HCCL_ERROR(
-            "[%s] cfgType[%d] infoLen[%u] is not equal to expected[%zu].", __func__, cfgType, infoLen, infoExpectedLen);
-        return HcclResult::HCCL_E_PARA;
-    }
-
     auto* hcclComm = static_cast<hccl::hcclComm*>(comm);
     auto* collComm = hcclComm->GetCollComm();
     CHK_PTR_NULL(collComm);
-    auto* myRank = collComm->GetMyRank();
-    CHK_PTR_NULL(myRank);
-    const uint32_t opExpansionModeValue = myRank->GetOpExpansionMode();
-    const auto opExpansionMode = OpExpansionModeValueToModeEnum(opExpansionModeValue);
-    if (opExpansionMode == HcclOpExpansionMode::HCCL_OP_EXPANSION_MODE_INVALID) {
-        HCCL_ERROR("[%s] unknown expansion mode[%d].", __func__, opExpansionMode);
-        return HcclResult::HCCL_E_INTERNAL;
+    if (cfgType == HcclConfigType::HCCL_CONFIG_TYPE_OP_EXPANSION_MODE) {
+        constexpr size_t infoExpectedLen = sizeof(HcclConfigTypeOpExpansionMode);
+        if (static_cast<size_t>(infoLen) != infoExpectedLen) {
+            HCCL_ERROR("cfgType[%d] infoLen[%u] less than expected[%zu].", cfgType, infoLen, infoExpectedLen);
+            return HcclResult::HCCL_E_PARA;
+        }
+        auto* myRank = collComm->GetMyRank();
+        CHK_PTR_NULL(myRank);
+        const uint32_t opExpansionModeValue = myRank->GetOpExpansionMode();
+        const auto opExpansionMode = OpExpansionModeValueToModeEnum(opExpansionModeValue);
+        if (opExpansionMode == HcclOpExpansionMode::HCCL_OP_EXPANSION_MODE_INVALID) {
+            HCCL_ERROR("[%s] unknown expansion mode[%d].", __func__, opExpansionMode);
+            return HcclResult::HCCL_E_INTERNAL;
+        }
+        auto* modeInfo = static_cast<HcclConfigTypeOpExpansionMode*>(info);
+        *modeInfo = opExpansionMode;
+        return HcclResult::HCCL_SUCCESS;
+    } else if (cfgType == HcclConfigType::HCCL_CONFIG_TYPE_HCCL_ALGO) {
+        constexpr size_t infoExpectedLen = static_cast<size_t>(HCCL_COMM_ALGO_MAX_LENGTH);
+        if (static_cast<size_t>(infoLen) < infoExpectedLen) {
+            HCCL_ERROR("cfgType[%d] infoLen[%u] less than expected[%zu].", cfgType, infoLen, infoExpectedLen);
+            return HcclResult::HCCL_E_PARA;
+        }
+        const std::string& hcclAlgo = collComm->GetCommConfig().GetConfigHcclAlgoStr();
+        auto* algoInfo = static_cast<char*>(info);
+        int32_t ret = memset_s(algoInfo, infoLen, 0, infoLen);
+        CHK_PRT_RET(ret != EOK, HCCL_ERROR("[%s] memset error, ret[%d].", __func__, ret), HCCL_E_INTERNAL);
+        if (!hcclAlgo.empty() && hcclAlgo.size() < infoLen) {
+            ret = memcpy_s(algoInfo, infoLen, hcclAlgo.c_str(), hcclAlgo.size() + 1);
+        } else if (!hcclAlgo.empty()) {
+            ret = memcpy_s(algoInfo, infoLen, hcclAlgo.c_str(), infoLen);
+        }
+        CHK_PRT_RET(ret != EOK, HCCL_ERROR("[%s] memcpy error, ret[%d].", __func__, ret), HCCL_E_INTERNAL);
+        return HcclResult::HCCL_SUCCESS;
+    } else {
+        HCCL_ERROR("[%s] cfgType[%d] is invalid.", __func__, cfgType);
+        return HcclResult::HCCL_E_PARA;
     }
-
-    auto* modeInfo = static_cast<HcclConfigTypeOpExpansionMode*>(info);
-    *modeInfo = opExpansionMode;
-    return HcclResult::HCCL_SUCCESS;
 #endif
-
     HCCL_ERROR("[%s] is not support for hccd or kernel.", __func__);
     return HcclResult::HCCL_E_NOT_SUPPORT;
 }

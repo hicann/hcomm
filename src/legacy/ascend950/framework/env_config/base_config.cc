@@ -377,24 +377,11 @@ const MultiQpSrcPortConfig& EnvRdmaConfig::GetMultiQpSrcPortConfig() const { ret
 
 void EnvAlgoConfig::Parse()
 {
+    // Hcomm中不再解析HCCL_ALGO配置，因为没有实际使用
     primQueueGenName.Parse();
     HCCL_RUN_INFO(
         "[HCCL_ENV] PRIM_QUEUE_GEN_NAME set by %s to [%s]", primQueueGenName.GetSource(),
         GetPrimQueueGenName().c_str());
-
-    hcclAlgoConfig.Parse();
-    std::ostringstream hcclAlgoConfigOss;
-    for (auto algoConfig : GetAlgoConfig()) {
-        OpType opType = algoConfig.first;
-        hcclAlgoConfigOss << "[" << opType.Describe().c_str() << ", ";
-        std::vector<HcclAlgoType> algoTypes = algoConfig.second;
-        for (auto algoType : algoTypes) {
-            hcclAlgoConfigOss << algoType.Describe().c_str() << " ";
-        }
-        hcclAlgoConfigOss << "]";
-    }
-    HCCL_RUN_INFO(
-        "[HCCL_ENV] HCCL_ALGO set by %s to [%s]", hcclAlgoConfig.GetSource(), hcclAlgoConfigOss.str().c_str());
 
     bufferSize.Parse();
     HCCL_RUN_INFO("[HCCL_ENV] HCCL_BUFFSIZE set by %s to [%llu]B", bufferSize.GetSource(), GetBuffSize());
@@ -407,7 +394,11 @@ void EnvAlgoConfig::Parse()
 
 const std::string& EnvAlgoConfig::GetPrimQueueGenName() const { return primQueueGenName.Get(); }
 
-const std::map<OpType, std::vector<HcclAlgoType>>& EnvAlgoConfig::GetAlgoConfig() const { return hcclAlgoConfig.Get(); }
+const std::map<OpType, std::vector<HcclAlgoType>> EnvAlgoConfig::GetAlgoConfig() const
+{
+    // hcomm不支持HCCL_ALGO解析, 返回空
+    return {};
+}
 
 u64 EnvAlgoConfig::GetBuffSize() const { return bufferSize.Get(); }
 

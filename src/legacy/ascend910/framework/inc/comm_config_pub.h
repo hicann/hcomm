@@ -111,6 +111,8 @@ public:
     HcclResult SetConfigTrafficClass(u32 trafficClass);
     HcclResult SetConfigServiceLevel(u32 serviceLevel);
     HcclResult SetConfigHcclQos(u32 hcclQos);
+    HcclResult SetConfigHcclAlgoStr(const std::string& hcclAlgo);
+    const std::string& GetConfigHcclAlgoStr() const;
     HcclResult SetConfigSqDepth(u32 sqDepth);
 
 private:
@@ -155,6 +157,7 @@ private:
     std::string bufferName_; // CCL buffer名称
     u32 hcclQos_;
     u64 symmetricMemoryStride_; // 对称内存预留VA大小，单位GB
+    std::string hcclAlgoStr_;   // hcclAlgo原始字符串
     u32 sqDepth_;
 };
 } // namespace hccl

@@ -39,6 +39,18 @@ TEST_F(OpBaseMiscTest, Ut_HcclConfigGetInfo_When_CollCommIsNotInit_Expect_Return
     Ut_Comm_Destroy(comm);
 }
 
+TEST_F(OpBaseMiscTest, Ut_HcclConfigGetInfo_When_CollCommIsNotInit_And_CfgTypeIsHCCL_ALGO_Expect_ReturnIsHCCL_SUCCESS)
+{
+    UT_COMM_CREATE_DEFAULT(comm);
+    CollComm collComm(nullptr, 0, "ut_comm", ManagerCallbacks{}, CollCommInitMode::simpleMode);
+    MOCKER_CPP(&hcclComm::GetCollComm).stubs().will(returnValue(&collComm));
+    char algoInfo[HCCL_COMM_ALGO_MAX_LENGTH] = {0};
+    HcclResult ret
+        = HcclConfigGetInfo(comm, HcclConfigType::HCCL_CONFIG_TYPE_HCCL_ALGO, HCCL_COMM_ALGO_MAX_LENGTH, algoInfo);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    Ut_Comm_Destroy(comm);
+}
+
 TEST_F(OpBaseMiscTest, Ut_HcclCommSymWinGet_When_GetCommSymWinSucceeds_Expect_ReturnIsHCCL_SUCCESS)
 {
     UT_COMM_CREATE_DEFAULT(comm);

@@ -148,10 +148,7 @@ TEST_F(EnvConfigTest, parse_env_config_should_success)
         EXPECT_EQ(envCfg.GetRdmaConfig().GetRdmaQueueNum(), 1);
         EXPECT_EQ(envCfg.GetRdmaConfig().GetRdmaMultiQpThreshold(), 524288); // 512 KB 转 524288 B
         EXPECT_EQ(envCfg.GetAlgoConfig().GetPrimQueueGenName(), "AllReduceRing");
-        std::map<OpType, std::vector<HcclAlgoType>> algoMap
-            = {{OpType::ALLREDUCE,
-                {HcclAlgoType::HCCL_ALGO_TYPE_NA, HcclAlgoType::HCCL_ALGO_TYPE_RING,
-                 HcclAlgoType::HCCL_ALGO_TYPE_DEFAULT, HcclAlgoType::HCCL_ALGO_TYPE_DEFAULT}}};
+        std::map<OpType, std::vector<HcclAlgoType>> algoMap = {};
         EXPECT_EQ(envCfg.GetAlgoConfig().GetAlgoConfig(), algoMap);
         EXPECT_EQ(envCfg.GetAlgoConfig().GetBuffSize(), 200 * 1024 * 1024);
         EXPECT_EQ(envCfg.GetLogConfig().GetEntryLogEnable(), true);
@@ -358,19 +355,6 @@ TEST_F(EnvConfigTest, parse_env_config_HCCL_WHITELIST_FILE_should_fail)
     EXPECT_THROW(EnvConfigStub envCfg, InvalidParamsException);
 }
 */
-
-TEST_F(EnvConfigTest, parse_env_config_hccl_algo_invalid_test)
-{
-    setenv("HCCL_ALGO", "level0:yyy;level1:xxxx", 1);
-    EnvAlgoConfig algConfig;
-    EXPECT_THROW(algConfig.Parse(), InvalidParamsException);
-    unsetenv("HCCL_ALGO");
-
-    setenv("HCCL_ALGO", "abcdefg", 1);
-    EnvAlgoConfig algConfig2;
-    EXPECT_THROW(algConfig.Parse(), InvalidParamsException);
-    unsetenv("HCCL_ALGO");
-}
 
 TEST_F(EnvConfigTest, parse_env_config_hccl_algo_invalid_test_1)
 {

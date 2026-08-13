@@ -189,7 +189,7 @@ class EnvAlgoConfig : public BaseConfig {
 public:
     void Parse() override;
     const std::string& GetPrimQueueGenName() const;
-    const std::map<OpType, std::vector<HcclAlgoType>>& GetAlgoConfig() const;
+    const std::map<OpType, std::vector<HcclAlgoType>> GetAlgoConfig() const;
     u64 GetBuffSize() const;
     HcclAccelerator GetHcclAccelerator() const;
     bool GetDeterministic() const;

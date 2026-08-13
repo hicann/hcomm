@@ -390,7 +390,11 @@ typedef enum {
     HCCL_OP_EXPANSION_AIV_ONLY = 6
 } HcclOpExpansionMode;
 
-typedef enum { HCCL_CONFIG_TYPE_INVALID = -1, HCCL_CONFIG_TYPE_OP_EXPANSION_MODE = 0 } HcclConfigType;
+typedef enum {
+    HCCL_CONFIG_TYPE_INVALID = -1,
+    HCCL_CONFIG_TYPE_OP_EXPANSION_MODE = 0,
+    HCCL_CONFIG_TYPE_HCCL_ALGO = 1
+} HcclConfigType;
 
 typedef HcclOpExpansionMode HcclConfigTypeOpExpansionMode;
 
