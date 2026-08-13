@@ -29,6 +29,7 @@
 #include "aiv_urma_channel.h"
 #include "mem_device_pub.h"
 #include "comm_engine_utils.h"
+#include "comm_configer.h"
 
 namespace hcomm {
 
@@ -415,16 +416,25 @@ static HcclResult LaunchKernelDeviceParam(const T &channelParam, aclrtBinHandle 
 
     uint64_t context = reinterpret_cast<uint64_t>(addr.ptr());
 
+    uint32_t envTimeout = 0;
+    DevType devType;
+    CHK_RET(hrtGetDeviceType(devType));
+    if (devType == DevType::DEV_TYPE_950) {
+        envTimeout = Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut();
+    } else {
+        envTimeout = hccl::CommConfiger::GetInstance().GetCommConfigExecTimeOut("");
+    }
+    s32 timeOut = envTimeout + 25 > std::numeric_limits<u16>::max() ? std::numeric_limits<u16>::max() : envTimeout + 25; // 多25s，避免超时
+
     CHK_RET(hccl::AicpuAclKernelLaunch(localStream.ptr(),
-        reinterpret_cast<void *>(&context),
+        reinterpret_cast<void*>(&context),
         sizeof(context),
         binHandle,
         kernelName,
         true,
-        NOTIFY_DEFAULT_WAIT_TIME));
+        static_cast<u16>(timeOut)));
 
-    constexpr u32 STREAM_SYNC_TIMEOUT_MS = 60;
-    CHK_RET(hcclStreamSynchronize(localStream.ptr(), STREAM_SYNC_TIMEOUT_MS));
+    CHK_RET(hcclStreamSynchronize(localStream.ptr(), timeOut));
 
     HCCL_INFO("[%s] kernel[%s] launch success.", __func__, kernelName.c_str());
     return HCCL_SUCCESS;

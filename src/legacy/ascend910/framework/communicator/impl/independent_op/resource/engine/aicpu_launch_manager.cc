@@ -17,6 +17,7 @@
 #include <iomanip>
 #include "hcom_host_profiling.h"
 #include "adapter_prof.h"
+#include "env_config/env_config.h"
 
 namespace hccl {
 template <typename OpParam, typename ApiParam>
@@ -28,8 +29,15 @@ HcclResult AicpuLaunchMgr::KernelLaunch(OpParam &opParam, ApiParam &apiParam, rt
 HcclResult AicpuLaunchMgr::KernelLaunchAicpuCustom(uint64_t context, std::string kernelName, rtStream_t aicpuInitStream,
     aclrtBinHandle binCustomHandle)
 {
-    u16 timeOut = NOTIFY_DEFAULT_WAIT_TIME > std::numeric_limits<uint16_t>::max() ? 
-                    std::numeric_limits<uint16_t>::max() : NOTIFY_DEFAULT_WAIT_TIME;
+    uint32_t envTimeout = 0;
+    DevType devType;
+    CHK_RET(hrtGetDeviceType(devType));
+    if (devType == DevType::DEV_TYPE_950) {
+        envTimeout = Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut();
+    } else {
+        envTimeout = CommConfiger::GetInstance().GetCommConfigExecTimeOut("");
+    }
+    u16 timeOut = envTimeout + 25 > std::numeric_limits<u16>::max() ? std::numeric_limits<u16>::max() : envTimeout + 25; // 多25s，避免超时
     CHK_RET(AicpuAclKernelLaunch(aicpuInitStream, &context,
         sizeof(context), binCustomHandle, kernelName, true, timeOut));
     return HCCL_SUCCESS;
@@ -174,12 +182,21 @@ HcclResult AicpuLaunchMgr::ThreadKernelLaunchImpl(
 HcclResult AicpuLaunchMgr::ThreadKernelLaunchForComm(std::vector<std::shared_ptr<Thread>> &newThreads,
     const std::string &commId, std::unique_ptr<ThreadHandle[]> &aicpuHandle, aclrtBinHandle binHandle)
 {
+    uint32_t envTimeout = 0;
+    DevType devType;
+    CHK_RET(hrtGetDeviceType(devType));
+    if (devType == DevType::DEV_TYPE_950) {
+        envTimeout = Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut();
+    } else {
+        envTimeout = CommConfiger::GetInstance().GetCommConfigExecTimeOut(commId);
+    }
+    uint32_t timeOut = envTimeout + 25 > std::numeric_limits<uint32_t>::max() ? std::numeric_limits<uint32_t>::max() : envTimeout + 25; // 多25s，避免超时
     ThreadKernelLaunchConfig config(
         commId,
         binHandle,
         "RunAicpuIndOpThreadInit",
         false,
-        CommConfiger::GetInstance().GetCommConfigExecTimeOut(commId),
+        timeOut,
         true,
         false
     );
