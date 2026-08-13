@@ -38,7 +38,7 @@ void AddressInfo::Deserialize(const nlohmann::json& addressInfoJson)
 
     std::string address;
     std::string msgAddr = "error occurs when parser object of propName \"addr\"";
-    TRY_CATCH_THROW(InvalidParamsException, msgAddr, address = GetJsonProperty(addressInfoJson, "addr", false););
+    TRY_CATCH_THROW(InvalidParamsException, msgAddr, address = GetJsonProperty(addressInfoJson, "addr"););
 
     if (address.length() < MIN_VALUE_ADDR_LENGRH || address.length() > MAX_VALUE_ADDR_LENGRH) {
         RPT_INPUT_ERR(
