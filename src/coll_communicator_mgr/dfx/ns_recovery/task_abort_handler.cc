@@ -10,6 +10,7 @@
 #include "task_abort_handler.h"
 #include <algorithm>
 #include "pthread.h"
+#include <mutex>
 #include "log.h"
 #include "coll_comm.h"
 #include "ccu_comp.h"
@@ -17,7 +18,6 @@
 
 namespace hccl {
 using HcclUs = std::chrono::steady_clock::time_point;
-static std::mutex vecMutex;
 
 int32_t ProcessTaskAbortPre(const std::vector<CollComm *> &commVector, const std::chrono::seconds &localtimeout)
 {
@@ -122,13 +122,15 @@ HcclTaskAbortHandler::~HcclTaskAbortHandler()
 
 HcclTaskAbortHandler &HcclTaskAbortHandler::GetInstance()
 {
-    static HcclTaskAbortHandler handler;
+    // Leaky Singleton: 故意不释放，规避 Static Destruction Order Fiasco，
+    // 确保析构回调访问 commVector_ 时单例仍有效
+    static HcclTaskAbortHandler& handler = *new HcclTaskAbortHandler();
     return handler;
 }
 
 HcclResult HcclTaskAbortHandler::Register(CollComm *communicator)
 {
-    std::lock_guard<std::mutex> lock(vecMutex);
+    std::lock_guard<std::mutex> lock(vecMutex_);
     commVector_.push_back(communicator);
     HCCL_INFO("HcclTaskAbortHandler::Register success, commVector_ size is [%lu]", commVector_.size());
 
@@ -137,7 +139,7 @@ HcclResult HcclTaskAbortHandler::Register(CollComm *communicator)
 
 HcclResult HcclTaskAbortHandler::UnRegister(CollComm *communicator)
 {
-    std::lock_guard<std::mutex> lock(vecMutex);
+    std::lock_guard<std::mutex> lock(vecMutex_);
     HCCL_INFO("HcclTaskAbortHandler::UnRegister Begin, commVector_ size is [%lu]", commVector_.size());
     auto it = std::find(commVector_.begin(), commVector_.end(), communicator);
     if (it != commVector_.end()) {

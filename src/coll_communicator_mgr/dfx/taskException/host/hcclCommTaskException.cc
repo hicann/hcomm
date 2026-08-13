@@ -27,7 +27,9 @@ constexpr u32 MAX_MODULE_DEVICE_NUM_V2 = 65;
 constexpr uint32_t TASK_CONTEXT_SIZE = 50;
 constexpr uint32_t TASK_CONTEXT_INFO_SIZE = LOG_TMPBUF_SIZE - 50; // task 执行失败时打印前序task信息的长度限制
 
-static TaskExceptionHost handlers_[MAX_MODULE_DEVICE_NUM_V2];
+// Leaky Singleton: 故意不释放，规避 Static Destruction Order Fiasco，
+// 确保 RTS 回调访问 handlers_ 时内存仍有效
+static TaskExceptionHost* handlers_ = new TaskExceptionHost[MAX_MODULE_DEVICE_NUM_V2];
 GetAicpuCqeErrInfoCallBackHcomm g_getAicpuCqeErrInfoCallBack = nullptr;
 AicpuGetErrStatusVecCallBack g_AicpuGetErrStatusVecCallBack = nullptr;
 

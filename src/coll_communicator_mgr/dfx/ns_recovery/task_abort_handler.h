@@ -9,6 +9,7 @@
  */
 #ifndef HCCL_TASK_ABORT_HANDLER__H
 #define HCCL_TASK_ABORT_HANDLER__H
+#include <mutex>
 #include "coll_comm.h"
 #include "orion_adapter_rts.h"
 
@@ -31,6 +32,7 @@ public:
     HcclResult UnRegister(CollComm *communicator);
 private:
     std::vector<CollComm *> commVector_;
+    std::mutex vecMutex_;
 
     HcclTaskAbortHandler(const HcclTaskAbortHandler&) = delete;
     HcclTaskAbortHandler& operator=(const HcclTaskAbortHandler&) = delete;
