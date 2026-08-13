@@ -43,15 +43,17 @@ HcclResult HcclTeamChannelsCreate(HcclComm comm, HcommTeamHandle team,
 
 ## 约束说明
 
-1. desc需先通过[HcclTeamCreateChannelsDescInit](HcclTeamCreateChannelsDescInit.md)初始化。
+1. 本接口仅支持AIV引擎和URMA通信协议，暂不支持其他场景。
 
-2. channelCnt在[HcclTeamCreateChannelsDesc](../../datatype_definition/HcclTeamCreateChannelsDesc.md)中指定，不可为0。
+2. desc需先通过[HcclTeamCreateChannelsDescInit](HcclTeamCreateChannelsDescInit.md)初始化。
 
-3. 若需使用window（put接口），必须先调用[HcclTeamWindowRegister](HcclTeamWindowRegister.md)注册window，再调用本接口，window才会生效。各rank注册window的顺序必须一致，否则接口内部交换远端内存时将因顺序不匹配导致window与远端内存错配。
+3. channelCnt在[HcclTeamCreateChannelsDesc](../../datatype_definition/HcclTeamCreateChannelsDesc.md)中指定，不可为0。
 
-4. 接口内部会对每个对端成员创建channelCnt个channel，并通过[HcclRankGraphGetLinks](../topo_info_query/HcclRankGraphGetLinks.md)获取链路信息。若rank graph中本rank到对端rank找不到link，返回HCCL_E_NOT_FOUND。
+4. 若需使用window（put接口），必须先调用[HcclTeamWindowRegister](HcclTeamWindowRegister.md)注册window，再调用本接口，window才会生效。各rank注册window的顺序必须一致，否则接口内部交换远端内存时将因顺序不匹配导致window与远端内存错配。
 
-5. syncMem内存注册为team粒度，仅首次调用时注册一次。
+5. 接口内部会对每个对端成员创建channelCnt个channel，并通过[HcclRankGraphGetLinks](../topo_info_query/HcclRankGraphGetLinks.md)获取链路信息。若rank graph中本rank到对端rank找不到link，返回HCCL_E_NOT_FOUND。
+
+6. syncMem内存注册为team粒度，仅首次调用时注册一次。
 
 ## 调用示例
 
