@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <queue>
 #include <mutex>
+#include <atomic>
 #include "hccl/hccl_types.h"
 #include "task_info.h"
 #include "rt_external.h"
@@ -177,7 +178,7 @@ public:
     void ReportNodeApi(uint64_t beginTime, uint64_t endTime, uint64_t cmdItemId, uint32_t threadId, bool cachedReq);
     void ReportNodeBasicInfo(uint64_t timeStamp, uint64_t cmdItemId, uint32_t threadId, bool cachedReq);
     uint64_t GetProfHashId(const char* name, uint32_t len) const;
-    uint64_t GetCachedAlgTypeHashId() const { return cachedAlgTypeHashId_; }
+    uint64_t GetCachedAlgTypeHashId() const { return cachedAlgTypeHashId_.load(); }
 
 private:
     explicit ProfilingHandler();
@@ -262,7 +263,8 @@ private:
     std::queue<MsprofApi> cachedAclApiInfo_{};
     std::queue<MsprofCompactInfo> cacheHcclOpInfo_{};
     std::queue<MsprofAdditionalInfo> cacheHcclAdditionInfo_{};
-    uint64_t cachedAlgTypeHashId_{0};
+    std::atomic<uint64_t> cachedAlgTypeHashId_{0};
+
     std::map<uint32_t, uint64_t> cachedNewCclTag_{};
     mutable std::mutex cacheTaskInfosMutex_;
     std::mutex cachedTaskApiInfoMutex_;

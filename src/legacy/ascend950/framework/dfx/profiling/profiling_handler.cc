@@ -63,8 +63,7 @@ HcclResult ProfilingHandler::Init()
             HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret);
         return HCCL_E_RUNTIME;
     }
-    SetCachedCclTag();
-    cachedAlgTypeHashId_ = GetProfHashId("AlgType::NHR", strlen("AlgType::NHR"));
+    cachedAlgTypeHashId_.store(GetProfHashId("AlgType::NHR", strlen("AlgType::NHR")));
     initializedFlag_ = true;
     InitLog();
     return HCCL_SUCCESS;
@@ -909,7 +908,7 @@ void ProfilingHandler::ReportHcclOpInfo(uint64_t timeStamp, const DfxOpInfo& opI
     reporterData.data.hcclopInfo.relay = 0;
     reporterData.data.hcclopInfo.retry = 0;
     reporterData.data.hcclopInfo.dataType = opInfo.op_.dataType;
-    reporterData.data.hcclopInfo.algType = cachedAlgTypeHashId_;
+    reporterData.data.hcclopInfo.algType = cachedAlgTypeHashId_.load();
     uint64_t groupName = GetProfHashId(opInfo.op_.opTag.c_str(), opInfo.op_.opTag.length());
     reporterData.data.hcclopInfo.groupName = groupName;
     u32 ranksize{0};
