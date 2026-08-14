@@ -123,7 +123,7 @@ if (regRet != CCU_SUCCESS) {
 }
 CcuResult regEndRet = HcommCcuKernelRegisterEnd(insHandle);
 if (regEndRet != CCU_SUCCESS) {
-    HCCL_ERROR("ccu kernel register start failed: ccuRet -> %d", regEndRet);
+    HCCL_ERROR("ccu kernel register end failed: ccuRet -> %d", regEndRet);
     return ConvertCcuToHccl(regEndRet);
 }
 ```
