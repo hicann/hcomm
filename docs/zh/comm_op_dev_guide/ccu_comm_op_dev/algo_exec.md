@@ -140,7 +140,7 @@ CcuResult CcuAllGatherMesh1DMem2MemKernel(CcuKernelArg arg)
                 CCU_CHK_RET(ccu::Write(ctx.arg->channels[channelId], dst[rankIdx], src, ctx.sliceSize, ctx.event, mask)); // 本卡数据写入远端地址
                 channelId++;
             } else {
-                CCU_CHK_RET(ccu::LocalCopy(localDst, src, ctx.event, mask)); // 本rank数据拷贝到本地
+                CCU_CHK_RET(ccu::LocalCopy(localDst, src, ctx.sliceSize, ctx.event, mask)); // 本rank数据拷贝到本地
             }
         }
     }
