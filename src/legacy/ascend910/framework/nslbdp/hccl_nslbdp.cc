@@ -253,27 +253,19 @@ void hcclNslbDp::SetGlobalCommRankTable_RootInfo(
         HCCL_ERROR("memset_s commDesc fail sRet[%u]", sRet);
         return;
     }
-    int countUnderScores = std::count(identifier.begin(), identifier.end(), '_');
-    if (countUnderScores == NSLBDP_UNDERDCORES_COUNT) {
-        /* 此时认为通信域描述信息中包含时间戳 */
-        size_t lastUnderScoreIndex = identifier.rfind('_');
-        std::string nslbIdentifier = identifier.substr(0, lastUnderScoreIndex);
-        sRet = strncpy_s(globalCommInfo.commDesc, COMM_DESC_MAX_LENGTH, nslbIdentifier.c_str(), nslbIdentifier.size());
-        if (sRet != EOK) {
-            return;
-        }
-        for (size_t operSize = 0; operSize < hcclNslbDpCommConfig_.size(); operSize++) {
-            if (strcmp(globalCommInfo.commDesc, hcclNslbDpCommConfig_[operSize].commDesc) == 0) {
-                return;
-            }
-        }
-    } else {
-        /* 获取通信域唯一标识 */
-        sRet = strncpy_s(globalCommInfo.commDesc, COMM_DESC_MAX_LENGTH, identifier.c_str(), identifier.size());
-        if (sRet != EOK) {
+    /* 获取通信域唯一标识 */
+    sRet = strncpy_s(globalCommInfo.commDesc, COMM_DESC_MAX_LENGTH, identifier.c_str(), identifier.size());
+    if (sRet != EOK) {
+        HCCL_ERROR("strncpy_s commDesc fail sRet[%u]", sRet);
+        return;
+    }
+    for (size_t operSize = 0; operSize < hcclNslbDpCommConfig_.size(); operSize++) {
+        if (strcmp(globalCommInfo.commDesc, hcclNslbDpCommConfig_[operSize].commDesc) == 0) {
+            /* 此时认为是已存在的相同通信域，无需处理直接返回 */
             return;
         }
     }
+
     globalCommInfo.commDesc[COMM_DESC_MAX_LENGTH - 1] = '\0';
 
     u64 utime
@@ -845,14 +837,8 @@ bool hcclNslbDp::CheckSupportOptype(HcclCMDType opType)
 HcclResult hcclNslbDp::GetAlgAdjacencyTable(
     HcclCMDType opType, u32 srcLocalRankId, u32 rootRank, u8 algType, std::string identifier, AdjInfo nslbAdjInfo)
 {
-    std::string nslbIdentifier = identifier;
-    int countUnderScores = std::count(identifier.begin(), identifier.end(), '_');
-    if (countUnderScores == NSLBDP_UNDERDCORES_COUNT) {
-        size_t lastUnderScoreIndex = identifier.rfind('_');
-        nslbIdentifier = identifier.substr(0, lastUnderScoreIndex);
-    }
     HCCL_DEBUG("[NSLB-DP] check table NSLBDP_TYPE_TBL_ADJ size:[%zu].", hcclNslbDpAlgorithmInfo_.size());
-    if (CheckAhcSupport(algType, nslbIdentifier) == false) {
+    if (CheckAhcSupport(algType, identifier) == false) {
         HCCL_RUN_INFO("[NSLB-DP-ADJ] Check AHC commoninfo is not support.");
         return HCCL_SUCCESS;
     }
@@ -862,7 +848,7 @@ HcclResult hcclNslbDp::GetAlgAdjacencyTable(
     }
     HCCL_INFO(
         "[NSLB-DP-ADJ] opType:[%u],srcLocalRankId[%u],rootRank[%u]-commDesc[%s],dstRankNum:[%u].", opType,
-        srcLocalRankId, rootRank, nslbIdentifier.c_str(), nslbAdjInfo.dstRankNum);
+        srcLocalRankId, rootRank, identifier.c_str(), nslbAdjInfo.dstRankNum);
 
     if (CheckSupportOptype(opType) == false) {
         HCCL_INFO("[NSLB-DP-OPER] CheckSupportOptype false .");
@@ -871,10 +857,45 @@ HcclResult hcclNslbDp::GetAlgAdjacencyTable(
 
     NslbDpAlgorithmInfo algorithmInfo;
     algorithmInfo.taskId = taskId;
+    if (InitAlgInfoCommDesc(algorithmInfo, identifier) == false) {
+        return HCCL_SUCCESS;
+    }
+    if (FillAlgInfoCommMd5(algorithmInfo) == false) {
+        return HCCL_SUCCESS;
+    }
+    FillAlgInfoBaseFields(algorithmInfo, opType, srcLocalRankId, rootRank, algType);
+
+    HCCL_RUN_INFO(
+        "[NSLB-DP] add adjINfo:***[%llu]***[%u]***[%u]***[%u]***[%u]-[%zu] success.", taskId, srcLocalRankId, rootRank,
+        GetNslbOpType(opType), algType, nslbAdjInfo.nsAdjInfo.size());
+
+    if (IsAlgAdjacencyDuplicated(algorithmInfo) == true) {
+        HCCL_INFO("[NSLB-DP] Deduplication hcclNslbDpAlgorithmInfo_");
+        return HCCL_SUCCESS;
+    }
+
+    HCCL_INFO(
+        "[NSLB-DP-ADJ] add adjINfo:***[%llu]***[%u]***[%u]***[%u]***[%u] success.", taskId, srcLocalRankId, rootRank,
+        GetNslbOpType(opType), algType);
+
+    if (FillAlgInfoAdjInfo(algorithmInfo, nslbAdjInfo, srcLocalRankId) == false) {
+        return HCCL_SUCCESS;
+    }
+
+    algorithmInfo.sedFlag = 0;
+    hcclNslbDpAlgorithmInfo_.push_back(algorithmInfo);
+    HCCL_DEBUG("[NSLB-DP] entry GetAlgAdjacencyTable end");
+    return HCCL_SUCCESS;
+}
+
+/* 初始化commDesc并校验通信域是否存在；存在返回true，不存在返回false */
+bool hcclNslbDp::InitAlgInfoCommDesc(NslbDpAlgorithmInfo& algorithmInfo, const std::string& identifier)
+{
     (void)memset_s(algorithmInfo.commDesc, COMM_DESC_MAX_LENGTH, 0, sizeof(algorithmInfo.commDesc));
-    s32 ret = strncpy_s(algorithmInfo.commDesc, COMM_DESC_MAX_LENGTH, nslbIdentifier.c_str(), nslbIdentifier.size());
+    s32 ret = strncpy_s(algorithmInfo.commDesc, COMM_DESC_MAX_LENGTH, identifier.c_str(), identifier.size());
     if (ret != EOK) {
         HCCL_INFO("[NSLB-DP] strncpy_s algorithmInfo.commDesc fail");
+        return false;
     }
     algorithmInfo.commDesc[COMM_DESC_MAX_LENGTH - 1] = '\0';
 
@@ -888,10 +909,12 @@ HcclResult hcclNslbDp::GetAlgAdjacencyTable(
             break;
         }
     }
-    if (commDescExit == false) {
-        return HCCL_SUCCESS;
-    }
+    return commDescExit;
+}
 
+/* 根据表一信息填充commMd5Sum；memcpy失败返回false */
+bool hcclNslbDp::FillAlgInfoCommMd5(NslbDpAlgorithmInfo& algorithmInfo)
+{
     // 根据表一信息填充MD5
     for (size_t comsize = 0; comsize < hcclNslbDpCommConfig_.size(); comsize++) {
         if (strcmp(algorithmInfo.commDesc, hcclNslbDpCommConfig_[comsize].commDesc) == 0) {
@@ -900,60 +923,63 @@ HcclResult hcclNslbDp::GetAlgAdjacencyTable(
                 sizeof(hcclNslbDpCommConfig_[comsize].commMd5Sum));
             if (sRet != EOK) {
                 HCCL_ERROR("memcpy_s commMd5Sum fail");
-                return HCCL_SUCCESS;
+                return false;
             }
             break;
         }
     }
-    HCCL_RUN_INFO(
-        "[NSLB-DP] add adjINfo:***[%llu]***[%u]***[%u]***[%u]***[%u]-[%zu] success.", taskId, srcLocalRankId, rootRank,
-        GetNslbOpType(opType), algType, nslbAdjInfo.nsAdjInfo.size());
+    return true;
+}
 
-    for (const auto& info : hcclNslbDpAlgorithmInfo_) {
-        HCCL_INFO(
-            "[NSLB-DP-ADJ] info: *[%llu]-[%u]-[%u]-[%u]-[%u]* success.", taskId, info.srcLocalRankId, info.rootRank,
-            info.oper, info.algorithm);
-        if (info.taskId == taskId && info.srcLocalRankId == srcLocalRankId
-            && info.rootRank == static_cast<u16>(rootRank) && info.oper == GetNslbOpType(opType)
-            && info.algorithm == algType && strcmp(algorithmInfo.commDesc, info.commDesc) == 0) {
-            HCCL_INFO("[NSLB-DP] Deduplication hcclNslbDpAlgorithmInfo_");
-            return HCCL_SUCCESS;
-        }
-    }
-
-    HCCL_INFO(
-        "[NSLB-DP-ADJ] add adjINfo:***[%llu]***[%u]***[%u]***[%u]***[%u] success.", taskId, srcLocalRankId, rootRank,
-        GetNslbOpType(opType), algType);
-
+/* 填充srcLocalRankId/rootRank/oper/algorithm基础字段 */
+void hcclNslbDp::FillAlgInfoBaseFields(
+    NslbDpAlgorithmInfo& algorithmInfo, HcclCMDType opType, u32 srcLocalRankId, u32 rootRank, u8 algType)
+{
     algorithmInfo.srcLocalRankId = srcLocalRankId;
     algorithmInfo.rootRank = static_cast<u16>(rootRank);
     algorithmInfo.oper = GetNslbOpType(opType);
     algorithmInfo.algorithm = algType;
+}
 
+/* 判断是否与已有邻接表项重复（去重） */
+bool hcclNslbDp::IsAlgAdjacencyDuplicated(const NslbDpAlgorithmInfo& algorithmInfo)
+{
+    for (const auto& info : hcclNslbDpAlgorithmInfo_) {
+        HCCL_INFO(
+            "[NSLB-DP-ADJ] info: *[%llu]-[%u]-[%u]-[%u]-[%u]* success.", algorithmInfo.taskId, info.srcLocalRankId,
+            info.rootRank, info.oper, info.algorithm);
+        if (info.taskId == algorithmInfo.taskId && info.srcLocalRankId == algorithmInfo.srcLocalRankId
+            && info.rootRank == algorithmInfo.rootRank && info.oper == algorithmInfo.oper
+            && info.algorithm == algorithmInfo.algorithm && strcmp(algorithmInfo.commDesc, info.commDesc) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/* 填充dstRankNum与AdjInfo邻接信息；nsAdjInfo为空返回false */
+bool hcclNslbDp::FillAlgInfoAdjInfo(NslbDpAlgorithmInfo& algorithmInfo, const AdjInfo& nslbAdjInfo, u32 srcLocalRankId)
+{
     algorithmInfo.dstRankNum = nslbAdjInfo.dstRankNum;
     HCCL_INFO("[NSLB-DP-ADJ] nslbAdjInfo.dstRankNum:[%u].", nslbAdjInfo.dstRankNum);
 
     if (nslbAdjInfo.nsAdjInfo.size() == 0) {
         algorithmInfo.dstRankNum = 0;
         HCCL_INFO("[NSLB-DP] get nsAdjInfo fail dstRankNum:[%u]", algorithmInfo.dstRankNum);
-        return HCCL_SUCCESS;
-    } else {
-        for (size_t rankIndex = 0; rankIndex < nslbAdjInfo.nsAdjInfo.size(); rankIndex++) {
-            NslbDpAdjInfo adjInfo;
-            adjInfo.dstLocalRankId = nslbAdjInfo.nsAdjInfo[rankIndex].dstLocalRankId;
-            adjInfo.phaseId = nslbAdjInfo.nsAdjInfo[rankIndex].phaseId;
-            adjInfo.rev = nslbAdjInfo.nsAdjInfo[rankIndex].rev;
-            HCCL_INFO(
-                "[NSLB-DP-ADJ] adjINfo:[%u]-[%u]-[%u] success.", srcLocalRankId,
-                nslbAdjInfo.nsAdjInfo[rankIndex].dstLocalRankId, nslbAdjInfo.nsAdjInfo[rankIndex].phaseId);
-            algorithmInfo.AdjInfo.push_back(adjInfo);
-        }
+        return false;
     }
 
-    algorithmInfo.sedFlag = 0;
-    hcclNslbDpAlgorithmInfo_.push_back(algorithmInfo);
-    HCCL_DEBUG("[NSLB-DP] entry GetAlgAdjacencyTable end");
-    return HCCL_SUCCESS;
+    for (size_t rankIndex = 0; rankIndex < nslbAdjInfo.nsAdjInfo.size(); rankIndex++) {
+        NslbDpAdjInfo adjInfo;
+        adjInfo.dstLocalRankId = nslbAdjInfo.nsAdjInfo[rankIndex].dstLocalRankId;
+        adjInfo.phaseId = nslbAdjInfo.nsAdjInfo[rankIndex].phaseId;
+        adjInfo.rev = nslbAdjInfo.nsAdjInfo[rankIndex].rev;
+        HCCL_INFO(
+            "[NSLB-DP-ADJ] adjINfo:[%u]-[%u]-[%u] success.", srcLocalRankId,
+            nslbAdjInfo.nsAdjInfo[rankIndex].dstLocalRankId, nslbAdjInfo.nsAdjInfo[rankIndex].phaseId);
+        algorithmInfo.AdjInfo.push_back(adjInfo);
+    }
+    return true;
 }
 
 bool hcclNslbDp::CheckCommDescExit(NslbDpOperatorInfo& OperatorInfo)
@@ -970,15 +996,11 @@ bool hcclNslbDp::CheckCommDescExit(NslbDpOperatorInfo& OperatorInfo)
 
 void hcclNslbDp::fullcommDescInitTime(std::string identifier, NslbDpOperatorInfo& OperatorInfo)
 {
-    int countUnderScores = std::count(identifier.begin(), identifier.end(), '_');
-    if (countUnderScores == NSLBDP_UNDERDCORES_COUNT) {
-        /* 此时认为通信域描述信息中包含时间戳 */
-        size_t lastUnderScoreIndex = identifier.rfind('_');
-        std::string nslbIdentifier = identifier.substr(0, lastUnderScoreIndex);
-        (void)strncpy_s(OperatorInfo.commDesc, COMM_DESC_MAX_LENGTH, nslbIdentifier.c_str(), nslbIdentifier.size());
-    } else {
-        /* 获取通信域唯一标识 */
-        (void)strncpy_s(OperatorInfo.commDesc, COMM_DESC_MAX_LENGTH, identifier.c_str(), identifier.size());
+    /* 获取通信域唯一标识 */
+    s32 ret = strncpy_s(OperatorInfo.commDesc, COMM_DESC_MAX_LENGTH, identifier.c_str(), identifier.size());
+    if (ret != EOK) {
+        HCCL_INFO("[NSLB-DP] strncpy_s OperatorInfo.commDesc fail");
+        return;
     }
     HCCL_DEBUG("[NSLB-DP-OPER] fullcommDescInitTime commDesc[%s] .", identifier.c_str());
 

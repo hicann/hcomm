@@ -244,6 +244,12 @@ private:
     ~hcclNslbDp();
     bool CheckAhcCommInfo(NslbDpCommConfigVal comInfo);
     bool CheckAhcSupport(u8 algType, std::string identifier);
+    bool InitAlgInfoCommDesc(NslbDpAlgorithmInfo& algorithmInfo, const std::string& identifier);
+    bool FillAlgInfoCommMd5(NslbDpAlgorithmInfo& algorithmInfo);
+    void FillAlgInfoBaseFields(
+        NslbDpAlgorithmInfo& algorithmInfo, HcclCMDType opType, u32 srcLocalRankId, u32 rootRank, u8 algType);
+    bool IsAlgAdjacencyDuplicated(const NslbDpAlgorithmInfo& algorithmInfo);
+    bool FillAlgInfoAdjInfo(NslbDpAlgorithmInfo& algorithmInfo, const AdjInfo& nslbAdjInfo, u32 srcLocalRankId);
 };
 
 } // namespace hccl
