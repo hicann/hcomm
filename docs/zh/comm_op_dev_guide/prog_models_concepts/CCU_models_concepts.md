@@ -185,7 +185,7 @@ ccu::Array<ccu::Event> events(5);
   ccu::Func func([](){
       Write(chann, remoteMem, localCcuBuf, 4096);
   }); 
-  ccu::Loop loop({10, 4096}, func);  // 循环执行10次，每次地址增量偏移为4096B 
+  ccu::Loop loop({4096, 10}, func);  // 循环执行10次，每次地址增量偏移为4096B 
   
   // 对LoopGroup中的Loop，从第0个Loop开始到最后一个，都复制5次
   ccu::LoopGroup loopGroup({5, 0, 4096*10, 10, 10}, {loop});
