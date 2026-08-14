@@ -293,39 +293,6 @@ bool CollServiceDeviceMode::IsAllTransportRecoveredReady(const std::string& opTa
     return false;
 }
 
-void CollServiceDeviceMode::RecoverAicpuTransport(vector<LinkData>& links) const
-{
-    HCCL_INFO("[CollServiceDeviceMode::%s] start.", __func__);
-
-    // 创建TransPort所需的Socket
-    comm->GetSocketManager().BatchCreateSockets(links);
-
-    // 创建TransPort所需的RmaConnection
-    ConnectionsBuilder connectionsBuilder(*comm);
-    connectionsBuilder.BatchBuild(comm->GetId(), links);
-
-    // 创建TransPort所需的Notify资源
-    RecoverInterRankNotifies(links);
-
-    // 重新构造TransPort
-    auto op = comm->GetCurrentCollOperator();
-    if (op->opMode == OpMode::OPBASE) {
-        comm->GetMemTransportManager()->BatchRecoverOpbasedTransports(links);
-    } else if (op->opMode == OpMode::OFFLOAD) {
-        comm->GetMemTransportManager()->BatchRecoverOffloadTransports(op->opTag, links);
-    }
-
-    HCCL_INFO("[CollServiceDeviceMode::%s] end.", __func__);
-}
-
-void CollServiceDeviceMode::RecoverInterRankNotifies(const vector<LinkData>& links) const
-{
-    for (auto& link : links) {
-        // 待修改: 申请数量
-        comm->GetConnLocalNotifyManager().ApplyFor(link.GetRemoteRankId(), link);
-    }
-}
-
 constexpr u32 TEMP_UES_CNTCKE_NUM = 16;
 
 HcclResult CollServiceDeviceMode::GetSnapShotDynamicBuf(CollOperator& op, BinaryStream& buf)

@@ -32,12 +32,6 @@ void RegisterGetAicpuCqeErrInfoCallBackHcomm(GetAicpuCqeErrInfoCallBackHcomm p1)
 using AicpuGetErrStatusVecCallBack = std::vector<std::string> (*)(s32 deviceLogicID);
 void RegisterAicpuGetErrStatusVecCallBack(AicpuGetErrStatusVecCallBack p1);
 
-struct DpuTaskexceptionParams {
-    HcclResult ret;
-    uint32_t devId;                    // todo 好像无用
-    char commId[COMM_NAME_MAX_LENGTH]; // todo好像无用
-};
-
 class TaskExceptionHost {
 public:
     static TaskExceptionHost* GetInstance(s32 deviceLogicID);

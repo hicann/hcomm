@@ -58,7 +58,6 @@ public:
 
     // 快照保存和恢复场景使用
     void RecoverTransport(vector<LinkData>& links, vector<std::pair<LinkGroup, u32>> linkGroupPair) override;
-    void RecoverAicpuTransport(vector<LinkData>& links) const;
     void RecoverCcuTransport(vector<LinkData>& links, vector<std::pair<LinkGroup, u32>> linkGroupPair);
     HcclResult GetSnapShotDynamicBuf(CollOperator& op, BinaryStream& buf) override;
     bool IsAllTransportRecoveredReady(const std::string& opTag) override;
@@ -81,9 +80,6 @@ private:
     std::unordered_set<u32> captureModelIds;
 
     std::shared_ptr<InsQueue> Orchestrate(const CollAlgOperator& op) const;
-
-    // aicpu展开模式单算子快照恢复使用
-    void RecoverInterRankNotifies(const vector<LinkData>& links) const;
 
     // AIV场景Acl Graph专用
     HcclResult HandleAclGraphFirstOpAivBuff(rtStream_t mainStream);

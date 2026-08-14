@@ -157,8 +157,6 @@ private:
     void ReleaseCcuMsCommReservation();
     HcclResult ConfigSqDepthByExpansionMode(CommEngine engine, HcommChannelDesc& hcommDesc) const;
     HcclResult DestroyNewChannels(CommEngine engine, const HcclChannelDesc* channelDescs);
-    // 获取port
-    HcclResult GetListenPortInternal(uint32_t rank, uint32_t* devPort, EndpointLocType locType);
 
     aclrtBinHandle binHandle_{nullptr};
     uint32_t rankId_{};

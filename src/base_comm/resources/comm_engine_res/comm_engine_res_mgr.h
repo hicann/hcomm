@@ -15,7 +15,6 @@
 #include <vector>
 #include <mutex>
 #include "comm_engine_res.h"
-#include "notifys/notify.h"
 
 namespace hcomm {
 /**

@@ -8,7 +8,6 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 set(src_list
-    aicpu_primitives_c_adpt.cc
     aicpu_task_cache_c_adpt.cc
 )
 

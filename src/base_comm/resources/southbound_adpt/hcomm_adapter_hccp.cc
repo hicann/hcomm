@@ -42,20 +42,6 @@ HcclResult IpAddressToHccpEid(const Hccl::IpAddress& ipAddr, Eid& eid)
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult IpAddressToReverseHccpEid(const Hccl::IpAddress& ipAddr, Eid& eid)
-{
-    HCCL_INFO("EID ipAddr[%s]", ipAddr.Describe().c_str());
-    int32_t sRet = memcpy_s(eid.raw, sizeof(eid.raw), ipAddr.GetReverseEid().raw, sizeof(ipAddr.GetReverseEid().raw));
-    if (sRet != EOK) {
-        HCCL_ERROR("[%s] memcpy failed[%d].", __func__, sRet);
-        return HcclResult::HCCL_E_MEMORY;
-    }
-    HCCL_INFO(
-        "[IpAddressToHccpEid] hccpEid.in6.subnetPrefix[%016llx], hccpEid.in6.interfaceId[%016llx]",
-        eid.in6.subnetPrefix, eid.in6.interfaceId);
-    return HcclResult::HCCL_SUCCESS;
-}
-
 HcclResult IpAddressToReverseHcclEid(const Hccl::IpAddress& ipAddr, Hccl::Eid& eid)
 {
     HCCL_INFO("EID ipAddr[%s]", ipAddr.Describe().c_str());

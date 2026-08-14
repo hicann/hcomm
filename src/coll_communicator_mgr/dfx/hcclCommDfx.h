@@ -41,7 +41,6 @@ public:
 
     HcclResult ReportAllTasks(bool cachedReq);
     HcclResult ReportOp(uint64_t beginTime, bool cachedReq, bool isOpBase);
-    HcclResult ReporCcuTaskInfo(u64 beginTime, u64 endTime, bool cachedReq, bool isOpBase);
     void ReportMc2CommInfo(const Mc2CommInfo& mc2CommInfo);
     HcclResult UpdateProfStat();
 

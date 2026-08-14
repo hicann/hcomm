@@ -43,7 +43,6 @@ struct DevEidInfo {
 };
 
 HcclResult IpAddressToHccpEid(const Hccl::IpAddress& ipAddr, Eid& eid);
-HcclResult IpAddressToReverseHccpEid(const Hccl::IpAddress& ipAddr, Eid& eid);
 HcclResult IpAddressToReverseHcclEid(const Hccl::IpAddress& ipAddr, Hccl::Eid& eid);
 
 HcclResult RaGetDevEidInfos(const RaInfo& raInfo, std::vector<DevEidInfo>& devEidInfos);

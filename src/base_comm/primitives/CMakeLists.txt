@@ -31,6 +31,5 @@ if(TARGET ccl_kernel)
 endif()
 
 add_subdirectory(aicpu)
-add_subdirectory(aiv)
 add_subdirectory(api_c_adpt)
 add_subdirectory(dfx)
