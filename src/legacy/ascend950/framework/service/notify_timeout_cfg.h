@@ -12,7 +12,7 @@
 #define HCCLV2_NOTIFY_TIMEOUT_CFG_H
 
 #include "types.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 namespace Hccl {
 class NotifyTimeoutCfg {

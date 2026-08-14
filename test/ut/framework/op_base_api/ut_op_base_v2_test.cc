@@ -9,7 +9,7 @@
  */
 
 #include "hccl_api_base_test.h"
-#include "op_base_v2.h"
+#include "op_base.h"
 #include "task_service.h"
 
 class OpBaseV2Test : public BaseInit {

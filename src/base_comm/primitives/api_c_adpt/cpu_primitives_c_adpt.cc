@@ -13,7 +13,6 @@
 #include "new/hccl_primitive_remote.h"
 #include "thread.h"
 #include "launch_context.h"
-#include "op_base_v2.h"
 #include "host/host_cpu_roce_channel.h"
 #include "hccl_comm_pub.h"
 #include "op_base.h"

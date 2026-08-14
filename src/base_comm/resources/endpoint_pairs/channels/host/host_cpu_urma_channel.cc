@@ -16,7 +16,7 @@
 // Orion
 #include "topo_common_types.h"
 #include "virtual_topo.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 namespace hcomm {
 constexpr uint16_t DEFAULT_LISTENING_PORT = 60001;

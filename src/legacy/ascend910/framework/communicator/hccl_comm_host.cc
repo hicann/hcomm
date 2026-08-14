@@ -22,9 +22,9 @@
 #include "launch_aicpu.h"
 #include "launch_device.h"
 #include "sal_pub.h"
-#include "env_config/env_config.h"
 #include "coll_comm_config.h"
 #include "coll_comm_mgr.h"
+#include "env_config/env_config_v2.h"
 
 namespace hccl {
 HcclResult hcclComm::AllReduce(

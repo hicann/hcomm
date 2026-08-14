@@ -11,7 +11,7 @@
 
 namespace Hccl {
 TransportUrmaMem::TransportUrmaMem(
-    BaseMemTransport* transport, RmaBufferMgr<BufferKey<uintptr_t, u64>, shared_ptr<HcclBuf>>& remoteHcclBufMgr)
+    BaseMemTransport* transport, hcomm::RmaBufferMgr<BufferKey<uintptr_t, u64>, shared_ptr<HcclBuf>>& remoteHcclBufMgr)
     : transport_(transport),
       remoteHcclBufMgr_(remoteHcclBufMgr)
 {}

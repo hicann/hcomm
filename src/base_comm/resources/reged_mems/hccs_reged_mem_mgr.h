@@ -27,9 +27,9 @@ namespace hcomm {
 class HccsRegedMemMgr : public RegedMemMgr {
 public:
     using LocalIpcRmaBufferMgr
-        = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::LocalIpcRmaBuffer>>;
+        = hcomm::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::LocalIpcRmaBuffer>>;
     using RemoteIpcRmaBufferMgr
-        = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::RemoteIpcRmaBuffer>>;
+        = hcomm::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::RemoteIpcRmaBuffer>>;
 
     HccsRegedMemMgr(HcclNetDevCtx netDevCtx);
     ~HccsRegedMemMgr() override;

@@ -14,7 +14,7 @@
 #include "rma_connection.h"
 #include "op_mode.h"
 #include "orion_adapter_hccp.h"
-#include "../../../framework/env_config/env_config.h"
+#include "../../../framework/env_config/env_config_v2.h"
 #include "tp_manager.h"
 #include "local_ub_rma_buffer.h"
 #include "stream.h"

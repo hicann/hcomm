@@ -10,8 +10,8 @@
 #include "local_rma_buf_manager.h"
 #include "internal_exception.h"
 #include "rdma_handle_manager.h"
-#include "local_ipc_rma_buffer.h"
-#include "local_rdma_rma_buffer.h"
+#include "local_ipc_rma_buffer_v2.h"
+#include "local_rdma_rma_buffer_v2.h"
 #include "local_ub_rma_buffer.h"
 
 #include "log.h"

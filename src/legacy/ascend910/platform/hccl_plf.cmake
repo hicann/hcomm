@@ -64,6 +64,7 @@ target_include_directories(hccl_plf PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/aiv_communication
     ${HCOMM_DIR}/src/base_comm/resources/hccp/inc/
     ${HCOMM_DIR}/src/base_comm/resources/hccp/inc/network
+    ${HCOMM_DIR}/src/base_comm/common
 
     ${HCOMM_DIR}/include
     ${HCOMM_DIR}/include/hccl/

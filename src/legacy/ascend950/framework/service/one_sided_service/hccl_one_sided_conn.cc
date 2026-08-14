@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "hccl_one_sided_conn.h"
+#include "hccl_one_sided_conn_v2.h"
 #include "connections_builder.h"
 #include "hccl_net_dev.h"
 #include "hccl_mem.h"

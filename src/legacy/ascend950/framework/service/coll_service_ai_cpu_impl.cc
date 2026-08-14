@@ -11,13 +11,13 @@
 #include <memory>
 #include "communicator_impl.h"
 #include "internal_exception.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "stl_util.h"
 #include "stream_utils.h"
 
 #include "aicpu_res_package_helper.h"
 #include "alg_topo_package_helper.h"
-#include "dlprof_function.h"
+#include "dlprof_function_v2.h"
 #include "task_exception_handler.h"
 #include "exception_util.h"
 #include "runtime_api_exception.h"

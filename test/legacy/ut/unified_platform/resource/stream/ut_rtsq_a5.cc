@@ -17,7 +17,7 @@
 #include "rtsq_a5.h"
 #include "binary_stream.h"
 #include "unified_platform/pub_inc/config_plf_log.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "sqe.h"
 #include "ascend_hal.h"
 #include "drv_api_exception.h"

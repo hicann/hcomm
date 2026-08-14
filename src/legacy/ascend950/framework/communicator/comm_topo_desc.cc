@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "comm_topo_desc.h"
+#include "comm_topo_desc_v2.h"
 #include "log.h"
 
 namespace Hccl {

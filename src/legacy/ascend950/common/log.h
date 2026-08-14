@@ -74,56 +74,57 @@ int HcclCheckLogLevel(int logLevel);
         LOG_FUNC(moduleId, logType, "[%s:%d] [%u]" format, __FILE__, __LINE__, syscall(SYS_gettid), ##__VA_ARGS__); \
     } while (0)
 
-#define LOG_PRINT(logType, szFormat, ...)                                                                             \
-    do {                                                                                                              \
-        if (UNLIKELY(HcclCheckLogLevel(logType) == 1)) {                                                              \
-            char stackLogBuffer[LOG_TMPBUF_SIZE]; /* 使用栈中的buffer, 小而快 */                              \
-            if (szFormat == nullptr) {                                                                                \
-                CallDlogNoSzFormat(HCCL_LOG_ERROR, HCCL_ERROR_CODE(HcclResult::HCCL_E_INTERNAL), __FILE__, __LINE__); \
-            } else {                                                                                                  \
-                if (memset_s(stackLogBuffer, LOG_TMPBUF_SIZE, 0, sizeof(stackLogBuffer)) != EOK) {                    \
-                    CallDlogMemError(HCCL_LOG_ERROR, __FILE__, __LINE__);                                             \
-                } else if (                                                                                           \
-                    (snprintf_s(                                                                                      \
-                         stackLogBuffer, sizeof(stackLogBuffer), (sizeof(stackLogBuffer) - 1), szFormat,              \
-                         ##__VA_ARGS__)                                                                               \
-                     == -1)                                                                                           \
-                    && (stackLogBuffer[0] == 0)) {                                                                    \
-                    CallDlogPrintError(HCCL_LOG_ERROR, __FILE__, __LINE__);                                           \
-                } else {                                                                                              \
-                    /* 如果collectiveID和rankID都为空，则默认输出为PID和TID */                          \
-                    CallDlog(logType, syscall(SYS_gettid), stackLogBuffer, __FILE__, __LINE__);                       \
-                }                                                                                                     \
-            }                                                                                                         \
-        }                                                                                                             \
+#define LOG_PRINT(logType, szFormat, ...)                                                                      \
+    do {                                                                                                       \
+        if (UNLIKELY(::Hccl::HcclCheckLogLevel(logType) == 1)) {                                               \
+            char stackLogBuffer[::Hccl::LOG_TMPBUF_SIZE]; /* 使用栈中的buffer, 小而快 */               \
+            if (szFormat == nullptr) {                                                                         \
+                ::Hccl::CallDlogNoSzFormat(                                                                    \
+                    ::Hccl::HCCL_LOG_ERROR, HCCL_ERROR_CODE(HcclResult::HCCL_E_INTERNAL), __FILE__, __LINE__); \
+            } else {                                                                                           \
+                if (memset_s(stackLogBuffer, ::Hccl::LOG_TMPBUF_SIZE, 0, sizeof(stackLogBuffer)) != EOK) {     \
+                    ::Hccl::CallDlogMemError(::Hccl::HCCL_LOG_ERROR, __FILE__, __LINE__);                      \
+                } else if (                                                                                    \
+                    (snprintf_s(                                                                               \
+                         stackLogBuffer, sizeof(stackLogBuffer), (sizeof(stackLogBuffer) - 1), szFormat,       \
+                         ##__VA_ARGS__)                                                                        \
+                     == -1)                                                                                    \
+                    && (stackLogBuffer[0] == 0)) {                                                             \
+                    ::Hccl::CallDlogPrintError(::Hccl::HCCL_LOG_ERROR, __FILE__, __LINE__);                    \
+                } else {                                                                                       \
+                    /* 如果collectiveID和rankID都为空，则默认输出为PID和TID */                   \
+                    ::Hccl::CallDlog(logType, syscall(SYS_gettid), stackLogBuffer, __FILE__, __LINE__);        \
+                }                                                                                              \
+            }                                                                                                  \
+        }                                                                                                      \
     } while (0)
 
 /* 当前日志级别，为了优化性能，日志EVENT  判断在宏入口检查 */
 /* 使用宏记录日志, 以便获取日志在代码中的位置 */
-#define MODULE_DEBUG(format, ...)                         \
-    do {                                                  \
-        LOG_PRINT(HCCL_LOG_DEBUG, format, ##__VA_ARGS__); \
+#define MODULE_DEBUG(format, ...)                                 \
+    do {                                                          \
+        LOG_PRINT(::Hccl::HCCL_LOG_DEBUG, format, ##__VA_ARGS__); \
     } while (0)
 
-#define MODULE_INFO(format, ...)                         \
-    do {                                                 \
-        LOG_PRINT(HCCL_LOG_INFO, format, ##__VA_ARGS__); \
+#define MODULE_INFO(format, ...)                                 \
+    do {                                                         \
+        LOG_PRINT(::Hccl::HCCL_LOG_INFO, format, ##__VA_ARGS__); \
     } while (0)
 
-#define MODULE_WARNING(format, ...)                      \
-    do {                                                 \
-        LOG_PRINT(HCCL_LOG_WARN, format, ##__VA_ARGS__); \
+#define MODULE_WARNING(format, ...)                              \
+    do {                                                         \
+        LOG_PRINT(::Hccl::HCCL_LOG_WARN, format, ##__VA_ARGS__); \
     } while (0)
 
-#define MODULE_ERROR(format, ...)                         \
-    do {                                                  \
-        LOG_PRINT(HCCL_LOG_ERROR, format, ##__VA_ARGS__); \
+#define MODULE_ERROR(format, ...)                                 \
+    do {                                                          \
+        LOG_PRINT(::Hccl::HCCL_LOG_ERROR, format, ##__VA_ARGS__); \
     } while (0)
 
 /* 运行日志，记录在run目录下 */
-#define MODULE_RUN_INFO(format, ...)                         \
-    do {                                                     \
-        LOG_PRINT(HCCL_LOG_RUN_INFO, format, ##__VA_ARGS__); \
+#define MODULE_RUN_INFO(format, ...)                                 \
+    do {                                                             \
+        LOG_PRINT(::Hccl::HCCL_LOG_RUN_INFO, format, ##__VA_ARGS__); \
     } while (0)
 
 // 错误码
@@ -138,12 +139,12 @@ const u64 HCCL_MODULE_ID = 5;
 /* 运行日志 */
 #define HCCL_RUN_INFO(...) MODULE_RUN_INFO(__VA_ARGS__)
 
-#define HCCL_ERROR_CODE(error)                             \
-    ((SYSTEM_RESERVE_ERROR << 32) + (HCCL_MODULE_ID << 24) \
-     + ((static_cast<u64>(HcclSubModuleID::LOG_SUB_MODULE_ID_HCCL)) << 16) + static_cast<u64>(error))
-#define HCOM_ERROR_CODE(error)                             \
-    ((SYSTEM_RESERVE_ERROR << 32) + (HCCL_MODULE_ID << 24) \
-     + ((static_cast<u64>(HcclSubModuleID::LOG_SUB_MODULE_ID_HCOM)) << 16) + static_cast<u64>(error))
+#define HCCL_ERROR_CODE(error)                                             \
+    ((::Hccl::SYSTEM_RESERVE_ERROR << 32) + (::Hccl::HCCL_MODULE_ID << 24) \
+     + ((static_cast<u64>(::Hccl::HcclSubModuleID::LOG_SUB_MODULE_ID_HCCL)) << 16) + static_cast<u64>(error))
+#define HCOM_ERROR_CODE(error)                                             \
+    ((::Hccl::SYSTEM_RESERVE_ERROR << 32) + (::Hccl::HCCL_MODULE_ID << 24) \
+     + ((static_cast<u64>(::Hccl::HcclSubModuleID::LOG_SUB_MODULE_ID_HCOM)) << 16) + static_cast<u64>(error))
 #endif
 
 #if T_DESC("公共代码宏", true)

@@ -16,7 +16,6 @@
 #include "socket_manager.h"
 #include "hccl_one_sided_data.h"
 #include "rma_buffer_mgr.h"
-#include "../../../unified_platform/pub_inc/rma_buffer_mgr.h"
 #include "exchange_ub_buffer_dto.h"
 #include "local_ub_rma_buffer.h"
 #include "remote_rma_buffer.h"
@@ -51,7 +50,7 @@ private:
     Socket* socket_{nullptr};
     std::shared_ptr<TransportUrmaMem> transportMemPtr_{};
 
-    RmaBufferMgr<BufferKey<uintptr_t, u64>, shared_ptr<HcclBuf>> remoteHcclBufMgr_{};
+    hcomm::RmaBufferMgr<BufferKey<uintptr_t, u64>, shared_ptr<HcclBuf>> remoteHcclBufMgr_{};
     std::unordered_map<std::string, shared_ptr<HcclBuf>> desc2HcclBufMapRemoteUb_{};
     std::unordered_map<std::string, HcclNetDev> desc2netDevMap_{};
 

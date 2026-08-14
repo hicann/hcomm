@@ -12,7 +12,7 @@
 #define HCCLV2_CCU_TEMP_ALL_GATHER_MESH_1D_MEM2MEM_H_
 
 #include "string_util.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "ccu_alg_template_base.h"
 #include "ccu_instruction_all_gather_mesh1d_mem2mem.h"
 

@@ -12,7 +12,7 @@
 
 #include "orion_adapter_hccp.h"
 
-#include "local_notify.h"
+#include "local_notify_v2.h"
 
 namespace Hccl {
 

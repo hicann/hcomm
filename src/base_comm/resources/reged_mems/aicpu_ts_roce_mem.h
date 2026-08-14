@@ -41,7 +41,7 @@ public:
 
 private:
     using RemoteRdmaRmaBufferMgr
-        = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::RemoteRdmaRmaBuffer>>;
+        = hcomm::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<hccl::RemoteRdmaRmaBuffer>>;
 
     struct EndpointDescLess {
         bool operator()(const EndpointDesc& a, const EndpointDesc& b) const noexcept

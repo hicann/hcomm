@@ -14,7 +14,7 @@
 #include <map>
 #include <string>
 #include "../types/hccl_result.h"
-#include "../utils/enum_factory.h"
+#include "../utils/enum_factory_legacy.h"
 
 namespace Hccl {
 MAKE_ENUM(

@@ -13,7 +13,7 @@
 #include "../../../../../../legacy/ascend950/unified_platform/resource/socket/socket.h"
 #include "../../../../../../legacy/ascend950/unified_platform/resource/buffer/exchange_ipc_buffer_dto.h"
 #include "../../../../../../legacy/ascend950/unified_platform/resource/mem/user_remote_mem_getter.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 namespace hcomm {
 

@@ -38,7 +38,7 @@
 #include "ccu_transport.h"
 #include "ccu_device_manager.h"
 #include "ccu_component.h"
-#include "ccu_res_specs.h"
+#include "ccu_res_specs_legacy.h"
 #include "ccu_rep.h"
 #include "ccu_ctx.h"
 #include "ccu_rep_translator.h"

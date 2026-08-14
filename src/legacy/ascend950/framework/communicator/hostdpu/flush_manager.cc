@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "flush_manager.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 namespace Hccl {
 FlushManager::FlushManager() {}

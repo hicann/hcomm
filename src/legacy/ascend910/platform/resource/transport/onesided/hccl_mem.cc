@@ -12,7 +12,19 @@
 #include "hccl_network.h"
 #include "remote_ipc_rma_buffer.h"
 #include "remote_rdma_rma_buffer.h"
-#include "hccl_mem_v2.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+HcclResult __attribute__((weak)) HcclMemRegV2(HcclNetDev netDev, const HcclMem* mem, HcclBuf* buf);
+HcclResult __attribute__((weak)) HcclMemDeregV2(const HcclBuf* buf);
+HcclResult __attribute__((weak)) HcclMemExportV2(HcclBuf* buf, char** outDesc, uint64_t* outDescLen);
+HcclResult __attribute__((weak))
+HcclMemImportV2(const char* description, uint64_t descLen, bool isRemote, HcclBuf* outBuf, HcclNetDev netDev);
+HcclResult __attribute__((weak)) HcclMemCloseV2(HcclBuf* buf);
+#ifdef __cplusplus
+}
+#endif
 
 using namespace hccl;
 

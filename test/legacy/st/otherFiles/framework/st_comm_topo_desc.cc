@@ -12,7 +12,7 @@
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
 #define private public
-#include "comm_topo_desc.h"
+#include "comm_topo_desc_v2.h"
 #undef private
 
 using namespace Hccl;

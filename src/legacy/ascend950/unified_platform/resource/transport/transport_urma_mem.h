@@ -32,7 +32,8 @@ constexpr u64 MAX_DESC_NUM = 64; // 批量操作描述符个数上限
 class TransportUrmaMem {
 public:
     TransportUrmaMem(
-        BaseMemTransport* transport, RmaBufferMgr<BufferKey<uintptr_t, u64>, shared_ptr<HcclBuf>>& remoteHcclBufMgr);
+        BaseMemTransport* transport,
+        hcomm::RmaBufferMgr<BufferKey<uintptr_t, u64>, shared_ptr<HcclBuf>>& remoteHcclBufMgr);
 
     ~TransportUrmaMem();
 
@@ -43,7 +44,7 @@ public:
 private:
     BaseMemTransport* transport_;
 
-    RmaBufferMgr<BufferKey<uintptr_t, u64>, shared_ptr<HcclBuf>>& remoteHcclBufMgr_;
+    hcomm::RmaBufferMgr<BufferKey<uintptr_t, u64>, shared_ptr<HcclBuf>>& remoteHcclBufMgr_;
     HcclNetDev netDev_;
 
 private:

@@ -21,7 +21,7 @@
 
 #include "rdma_handle_manager.h"
 #include "orion_adapter_hccp.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 namespace hcomm {
 

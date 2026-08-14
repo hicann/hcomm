@@ -19,7 +19,7 @@
 namespace hccl {
 class TransportIpcMem : public TransportMem {
 public:
-    using RemoteIpcRmaBufferMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<RemoteIpcRmaBuffer>>;
+    using RemoteIpcRmaBufferMgr = hcomm::RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<RemoteIpcRmaBuffer>>;
 
     struct ProcessInfo {
         u32 pid;

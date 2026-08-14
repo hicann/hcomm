@@ -12,12 +12,12 @@
 
 #include <stdio.h>
 #include "rank_info_dispatcher.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "host_buffer.h"
 #include "root_handle_v2.h"
 #include "hccp_peer_manager.h"
 #include "orion_adapter_rts.h"
-#include "../../legacy/ascend950/framework/topo/rank_info_detect/preempt_port_manager.h"
+#include "preempt_port_manager_v2.h"
 #include "host_socket_handle_manager.h"
 #include "adapter_error_manager_pub.h"
 

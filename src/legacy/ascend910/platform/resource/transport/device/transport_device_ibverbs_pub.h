@@ -140,7 +140,7 @@ public:
 
 private:
     bool IsModifyToAtomicWrite();
-    using DeviceMemDetailsRmaMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<RoceMemDetails>>;
+    using DeviceMemDetailsRmaMgr = hcomm::RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<RoceMemDetails>>;
     HcclResult InitMemDetails();
     HcclResult BuildMemDetailsRmaMgrs();
     HcclResult BatchTransferImpl(const HcommBatchTransferDesc* transferDescs, uint32_t descNum, Stream& stream);

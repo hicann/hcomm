@@ -14,7 +14,7 @@
 #include "tp_manager.h"
 #include "hccp.h"
 #include "orion_adapter_rts.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 using namespace Hccl;
 

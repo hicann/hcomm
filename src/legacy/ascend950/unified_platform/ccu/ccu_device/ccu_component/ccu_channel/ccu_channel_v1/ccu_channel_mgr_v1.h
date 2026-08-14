@@ -12,7 +12,7 @@
 #define HCCL_CCU_CHANNEL_MGR_V1_H
 
 #include "ccu_channel_mgr.h"
-#include "ccu_jetty_ctx_mgr_v1.h"
+#include "ccu_jetty_ctx_mgr_v1_legacy.h"
 
 namespace Hccl {
 

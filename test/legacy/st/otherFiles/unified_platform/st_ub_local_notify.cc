@@ -13,7 +13,7 @@
 #include <mockcpp/mockcpp.hpp>
 #define private public
 #include "rdma_handle_manager.h"
-#include "local_notify.h"
+#include "local_notify_v2.h"
 #include "ub_local_notify.h"
 #include "rdma_local_notify.h"
 #include "ipc_local_notify.h"

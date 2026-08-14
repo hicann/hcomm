@@ -32,7 +32,7 @@
 #include "orion_adapter_rts.h"
 #include "one_sided_service_adapt_v2.h"
 
-#include "hccl_one_sided_service.h"
+#include "hccl_one_sided_service_v2.h"
 using namespace std;
 using namespace Hccl;
 

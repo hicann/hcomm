@@ -27,7 +27,7 @@ constexpr u64 NORMAL_PAGE_SIZE = 4 * 1024;                   // 普通内存大�
 
 class TransportRoceMem : public TransportMem {
 public:
-    using RemoteRdmaRmaBufferMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<RemoteRdmaRmaBuffer>>;
+    using RemoteRdmaRmaBufferMgr = hcomm::RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<RemoteRdmaRmaBuffer>>;
 
     TransportRoceMem(
         const std::unique_ptr<NotifyPool>& notifyPool, const HcclNetDevCtx& netDevCtx, const HcclDispatcher& dispatcher,

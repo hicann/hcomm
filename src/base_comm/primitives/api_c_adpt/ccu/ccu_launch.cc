@@ -29,7 +29,7 @@
 
 #include "thread.h"
 
-#include "env_config/env_config.h" // 暂时引用orion的环境变量处理模块
+#include "env_config/env_config_v2.h" // 暂时引用orion的环境变量处理模块
 
 #include "hcomm_adapter_rts.h"
 

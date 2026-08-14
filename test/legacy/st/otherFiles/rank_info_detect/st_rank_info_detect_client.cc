@@ -35,7 +35,7 @@
 #include "rank_info_dispatcher.h"
 #include "rank_info_detect_client.h"
 #include "orion_adapter_rts.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "base_config.h"
 #include "json_parser.h"
 #undef private

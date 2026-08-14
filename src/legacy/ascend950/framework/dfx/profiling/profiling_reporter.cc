@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "profiling_reporter.h"
-#include "dlprof_function.h"
+#include "dlprof_function_v2.h"
 #include "communicator_impl.h"
 #include "comm_engine_utils.h"
 

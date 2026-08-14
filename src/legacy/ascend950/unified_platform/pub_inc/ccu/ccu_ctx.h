@@ -15,7 +15,7 @@
 #include "ccu_ctx_signature.h"
 #include "ccu_ctx_arg.h"
 #include "ccu_task_arg.h"
-#include "ccu_res_pack.h"
+#include "ccu_res_pack_legacy.h"
 #include "ccu_task_param.h"
 
 #include "ccu_transport.h"

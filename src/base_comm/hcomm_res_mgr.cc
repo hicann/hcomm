@@ -26,7 +26,7 @@
 #include "endpoint_monitor.h"
 // legacy ccu单例
 #include "ccu_component.h"
-#include "../../../legacy/ascend950/unified_platform/ccu/ccu_device/ccu_res_batch_allocator.h"
+#include "ccu_res_batch_allocator_legacy.h"
 #include "../../../legacy/ascend950/unified_platform/ccu/ccu_context/ccu_context_mgr_imp.h"
 // 开源开放 ccu单例
 #include "hccp_tlv_hdc_mgr.h"

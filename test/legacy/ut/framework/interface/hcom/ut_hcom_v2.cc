@@ -27,7 +27,7 @@
 #include "param_check_v2.h"
 #include "log.h"
 #include "hccl_common_v2.h"
-#include "task_abort_handler.h"
+#include "task_abort_handler_v2.h"
 #include "coll_service_device_mode.h"
 #include "op_params_checker.h"
 #undef private

@@ -13,8 +13,8 @@
 
 #include <vector>
 #include <memory>
-#include "local_notify.h"
-#include "rts_notify.h"
+#include "local_notify_v2.h"
+#include "rts_notify_v2.h"
 
 namespace Hccl {
 

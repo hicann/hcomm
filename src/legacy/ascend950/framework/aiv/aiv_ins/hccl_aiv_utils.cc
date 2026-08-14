@@ -14,9 +14,9 @@
 #include <fstream>
 #include "mmpa_api.h"
 #include "acl/acl_rt.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "hccl_aiv_utils.h"
-#include "aicpu/launch_device.h"
+#include "aicpu/launch_device_v2.h"
 
 using namespace std;
 

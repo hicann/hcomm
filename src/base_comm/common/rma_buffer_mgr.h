@@ -16,7 +16,7 @@
 #include "buffer_key.h"
 #include "log.h"
 
-namespace hccl {
+namespace hcomm {
 template <typename KeyType, typename BufferType, template <typename...> class M = std::map, typename... MapArgs>
 class RmaBufferMgr {
 public:
@@ -48,7 +48,7 @@ public:
                 HCCL_ERROR("Error: ref = 0, ref++ flipped");
                 throw std::logic_error("ref++ = 0, ref++ flipped");
             } else if (result.first->second.ref > 1) {
-                HCCL_RUN_INFO(
+                HCCL_INFO(
                     "Memory is already registered, just increase the reference count, "
                     "current memory reference count[%llu], %s.",
                     result.first->second.ref, key.ToString().c_str());
@@ -203,6 +203,6 @@ private:
         return std::make_pair(it, false);
     }
 };
-} // namespace hccl
+} // namespace hcomm
 
 #endif

@@ -20,7 +20,23 @@
 #include "adapter_rts_common.h"
 #include "global_mem_manager.h"
 
-#include "one_sided_service_adapt_v2.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+HcclResult __attribute__((weak))
+HcclRegisterMemV2(HcclComm comm, u32 remoteRank, int type, void* addr, u64 size, HcclMemDesc* desc);
+HcclResult __attribute__((weak)) HcclDeregisterMemV2(HcclComm comm, HcclMemDesc* desc);
+HcclResult __attribute__((weak)) HcclExchangeMemDescV2(
+    HcclComm comm, u32 remoteRank, HcclMemDescs* local, int timeout, HcclMemDescs* remote, u32* actualNum);
+HcclResult __attribute__((weak)) HcclEnableMemAccessV2(HcclComm comm, HcclMemDesc* remoteMemDesc, HcclMem* remoteMem);
+HcclResult __attribute__((weak)) HcclDisableMemAccessV2(HcclComm comm, HcclMemDesc* remoteMemDesc);
+HcclResult __attribute__((weak))
+HcclBatchPutV2(HcclComm comm, u32 remoteRank, HcclOneSideOpDesc* desc, u32 descNum, rtStream_t stream);
+HcclResult __attribute__((weak))
+HcclBatchGetV2(HcclComm comm, u32 remoteRank, HcclOneSideOpDesc* desc, u32 descNum, rtStream_t stream);
+#ifdef __cplusplus
+}
+#endif
 
 using namespace hccl;
 using namespace std;

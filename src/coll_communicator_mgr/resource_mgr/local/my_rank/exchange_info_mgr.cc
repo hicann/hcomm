@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "exchange_info_mgr.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "rank_consistency_checker_v2.h"
 #include "hcomm_res_defs.h"
 #include "hcomm_channel.h"

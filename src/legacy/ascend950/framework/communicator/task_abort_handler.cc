@@ -9,7 +9,7 @@
  */
 #include <algorithm>
 #include <mutex>
-#include "task_abort_handler.h"
+#include "task_abort_handler_v2.h"
 #include "ccu_dev_mgr.h"
 #include "log.h"
 

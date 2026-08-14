@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "ccu_res_specs.h"
+#include "ccu_res_specs_legacy.h"
 
 #include "hccl_common_v2.h"
 #include "orion_adapter_rts.h"

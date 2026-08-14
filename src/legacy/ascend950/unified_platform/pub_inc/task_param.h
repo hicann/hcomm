@@ -16,7 +16,7 @@
 #include "securec.h"
 #include "hccl/base.h"
 #include "const_val.h"
-#include "enum_factory.h"
+#include "enum_factory_legacy.h"
 #include "ip_address.h"
 #include "op_type.h"
 

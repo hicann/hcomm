@@ -9,7 +9,7 @@
  */
 
 #include "task.h"
-#include "local_notify.h"
+#include "local_notify_v2.h"
 namespace Hccl {
 
 std::string TaskLocalCopy::Describe() const

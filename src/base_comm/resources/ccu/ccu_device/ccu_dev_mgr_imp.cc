@@ -19,8 +19,8 @@
 
 // 支持ccu新老通信域混跑临时添加
 #include "unified_platform/ccu/ccu_device/ccu_component/ccu_component.h"
-#include "unified_platform/ccu/ccu_device/ccu_res_specs.h"
-#include "unified_platform/ccu/ccu_device/ccu_res_batch_allocator.h"
+#include "unified_platform/ccu/ccu_device/ccu_res_specs_legacy.h"
+#include "unified_platform/ccu/ccu_device/ccu_res_batch_allocator_legacy.h"
 #include "orion_adpt_utils.h"
 #include "exception_handler.h"
 

@@ -26,12 +26,12 @@
 #include "host_ip_not_found_exception.h"
 #include "null_ptr_exception.h"
 #include "internal_exception.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "env_func.h"
 #include "bootstrap_ip.h"
 #undef private
 #include "env_config_stub.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 using namespace std;
 using namespace Hccl;

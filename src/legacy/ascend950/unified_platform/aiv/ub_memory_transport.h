@@ -12,7 +12,7 @@
 #include "virtual_topo.h"
 #include "dev_buffer.h"
 #include "socket.h"
-#include "local_ipc_rma_buffer.h"
+#include "local_ipc_rma_buffer_v2.h"
 #include "remote_rma_buffer.h"
 #include "base_mem_transport.h"
 

@@ -26,7 +26,7 @@
 #include "adapter_rts.h"
 #include "adapter_rts_common.h"
 #include "base.h"
-#include "task_abort_handler.h"
+#include "task_abort_handler_v1.h"
 
 using namespace std;
 using namespace hccl;

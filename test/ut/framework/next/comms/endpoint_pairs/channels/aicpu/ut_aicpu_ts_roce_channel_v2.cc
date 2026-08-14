@@ -21,7 +21,7 @@
 #include "hccp.h"
 #include "hccp_common.h"
 #include "hcomm_c_adpt.h"
-#include "buffer/local_rdma_rma_buffer.h"
+#include "buffer/local_rdma_rma_buffer_v2.h"
 #include "rdma_handle_manager.h"
 #include "cpu_roce_endpoint.h"
 #include "binary_stream.h"

@@ -10,7 +10,7 @@
 
 #ifndef HCCLV2_DEV_TYPE_H
 #define HCCLV2_DEV_TYPE_H
-#include "../utils/enum_factory.h"
+#include "../utils/enum_factory_legacy.h"
 namespace Hccl {
 
 // 对内芯片类型

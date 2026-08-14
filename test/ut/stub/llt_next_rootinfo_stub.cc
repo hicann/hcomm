@@ -18,7 +18,7 @@
 #include "orion_adapter_hccp.h"
 #include "orion_adapter_rts.h"
 #include "../../../src/legacy/ascend950/framework/env_config/env_func.h"
-#include "../../../src/legacy/ascend950/framework/topo/rank_info_detect/preempt_port_manager.h"
+#include "../../../src/legacy/ascend950/framework/topo/rank_info_detect/preempt_port_manager_v2.h"
 #include "socket.h"
 #include "socket_manager.h"
 #include "topo_addr_info.h"

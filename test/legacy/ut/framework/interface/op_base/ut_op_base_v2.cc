@@ -33,7 +33,7 @@
 #include "hccl_communicator.h"
 #include "communicator_impl.h"
 #include "communicator_callback.h"
-#include "task_abort_handler.h"
+#include "task_abort_handler_v2.h"
 #include "internal_exception.h"
 #include "task_service.h"
 #include "hostdpu/dpu_kernel_entrance.h"

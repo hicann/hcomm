@@ -17,6 +17,7 @@ set(src_to_test_list
     comms/aiv/ut_AivUbMemTransport_API_test.cc
     comms/common/ut_orion_adpt_utils.cc
     comms/common/ut_tp_mgr.cc
+    comms/common/ut_rma_buffer_mgr.cc
     comms/comm_engine_res/threads/test_aicpu_ts_thread_class.cc
     comms/comm_engine_res/threads/test_cpu_ts_thread_class.cc
     comms/comm_engine_res/threads/test_iaicpu_ts_thread_interface.cc

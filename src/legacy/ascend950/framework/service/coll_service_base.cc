@@ -10,8 +10,8 @@
 
 #include "coll_service_base.h"
 #include "communicator_impl.h"
-#include "env_config.h"
-#include "dlprof_function.h"
+#include "env_config_v2.h"
+#include "dlprof_function_v2.h"
 namespace Hccl {
 
 constexpr u32 ADDR_SIZE = 2;

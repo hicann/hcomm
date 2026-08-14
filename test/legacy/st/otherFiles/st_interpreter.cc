@@ -16,7 +16,7 @@
 #include "interpreter.h"
 #include "communicator_impl.h"
 #include "stream_manager.h"
-#include "local_notify.h"
+#include "local_notify_v2.h"
 #include "coll_service_device_mode.h"
 #include "ccu_instruction_all_gather_mesh1d.h"
 #include "aicpu_res_package_helper.h"

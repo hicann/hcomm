@@ -16,7 +16,7 @@
 #include "local_ub_rma_buffer.h"
 #include "socket_handle_manager.h"
 #include "base_config.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include <initializer_list>
 #include "topo_info.h"
 #include "rank_graph_builder.h"
@@ -37,7 +37,7 @@
 #include "dev_ub_connection.h"
 // #include "hccl_one_sided_service.h"
 #include "ub_local_notify.h"
-#include "op_base_v2.h"
+#include "op_base.h"
 #include "local_rdma_rma_buffer_manager.h"
 #include "local_ub_rma_buffer_manager.h"
 #include "local_rdma_rma_buffer.h"
@@ -55,7 +55,7 @@
 #include "local_ub_rma_buffer.h"
 #include "socket_handle_manager.h"
 #include "base_config.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include <initializer_list>
 #include "topo_info.h"
 #include "rank_graph_builder.h"
@@ -64,7 +64,7 @@
 #include "host_socket_handle_manager.h"
 #include "base_config.h"
 
-#include "../../../legacy/ascend950/unified_platform/resource/buffer/local_ipc_rma_buffer.h"
+#include "../../../legacy/ascend950/unified_platform/resource/buffer/local_ipc_rma_buffer_v2.h"
 #include "../../../base_comm/resources/endpoint_pairs/channels/aicpu/device/aicpu_channel_process.h"
 #include "../../../legacy/ascend950/unified_platform/resource/buffer/exchange_ipc_buffer_dto.h"
 
@@ -81,9 +81,9 @@
 #include "host_socket_handle_manager.h"
 
 #include "ccu_context_mgr_imp.h"
-#include "../../../legacy/ascend950/unified_platform/ccu/ccu_device/ccu_res_batch_allocator.h"
+#include "../../../legacy/ascend950/unified_platform/ccu/ccu_device/ccu_res_batch_allocator_legacy.h"
 #include "ccu_component.h"
-#include "../../../legacy/ascend950/unified_platform/ccu/ccu_device/ccu_res_specs.h"
+#include "../../../legacy/ascend950/unified_platform/ccu/ccu_device/ccu_res_specs_legacy.h"
 #include "task_info.h"
 
 #include <sstream>
@@ -109,7 +109,7 @@
 #include "../../../legacy/ascend950/framework/dfx/aicpu/profiling/profiling_reporter_lite.h"
 #include "dfx_profiling_reporter_lite.h"
 #include "../../../legacy/ascend950/unified_platform/common/dlhal_function_v2.h"
-#include "../../../legacy/ascend950/framework/dfx/profiling/dlprof_function.h"
+#include "../../../legacy/ascend950/framework/dfx/profiling/dlprof_function_v2.h"
 #include "../../../legacy/ascend950/framework/communicator/aicpu/daemon/aicpu_daemon_service.h"
 #include "../../../legacy/ascend950/framework/dfx/task_exception/task_exception_handler.h"
 #include "../../../legacy/ascend950/unified_platform/external_system/orion_adapter_hccp.h"

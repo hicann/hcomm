@@ -16,7 +16,7 @@
 #include <mockcpp/mockcpp.hpp>
 #include <chrono>
 
-#include "ccu_res_specs.h"
+#include "ccu_res_specs_legacy.h"
 #include "hccl_common_v2.h"
 
 #undef private

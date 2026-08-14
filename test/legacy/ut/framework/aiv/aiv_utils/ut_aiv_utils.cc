@@ -11,7 +11,7 @@
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
-#include "aicpu/launch_device.h"
+#include "aicpu/launch_device_v2.h"
 #define private public
 #define protected public
 #include "hccl_aiv_utils.h"

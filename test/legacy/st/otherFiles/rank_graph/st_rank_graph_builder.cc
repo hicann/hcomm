@@ -19,7 +19,7 @@
 #include "phy_topo_builder.h"
 #include "detour_service.h"
 #include "base_config.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include <iostream>
 #include <unistd.h>
 #include "hccl_types_in.h"

@@ -18,14 +18,14 @@
 #include "buffer_key.h"
 #include "local_ub_rma_buffer.h"
 #include "remote_rma_buffer.h"
-#include "../../../../../../legacy/ascend950/unified_platform/resource/buffer/local_ipc_rma_buffer.h"
+#include "../../../../../../legacy/ascend950/unified_platform/resource/buffer/local_ipc_rma_buffer_v2.h"
 
 namespace hcomm {
 
 class UbMemRegedMemMgr : public RegedMemMgr {
 public:
     using LocalIpcRmaBufferMgr
-        = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalIpcRmaBuffer>>;
+        = hcomm::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalIpcRmaBuffer>>;
 
     UbMemRegedMemMgr();
     ~UbMemRegedMemMgr() = default;

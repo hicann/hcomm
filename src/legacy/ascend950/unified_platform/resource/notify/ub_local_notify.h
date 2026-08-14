@@ -12,11 +12,11 @@
 
 #include <vector>
 
-#include "enum_factory.h"
+#include "enum_factory_legacy.h"
 #include "orion_adapter_hccp.h"
 #include "buffer_key.h"
 
-#include "local_notify.h"
+#include "local_notify_v2.h"
 
 namespace Hccl {
 

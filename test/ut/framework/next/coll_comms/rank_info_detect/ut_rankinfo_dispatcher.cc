@@ -19,7 +19,7 @@
 
 #define private public
 #include "base_config.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "rank_info_dispatcher.h"
 #include "socket.h"
 #include "rank_info_detect_service.h"

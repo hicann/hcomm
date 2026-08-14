@@ -31,7 +31,7 @@
 #include "root_handle_v2.h"
 #include "root_info_detect_bridge.h"
 #include "stream.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "stream_utils.h"
 
 #include "hostdpu/dpu_kernel_entrance.h"

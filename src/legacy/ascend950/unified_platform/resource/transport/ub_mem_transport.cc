@@ -14,10 +14,10 @@
 #include "local_ub_rma_buffer.h"
 #include "dev_capability.h"
 #include "dev_buffer.h"
-#include "../../common/dlprof_func.h"
+#include "../../common/dlprof_func_v2.h"
 #include "user_remote_mem_getter.h"
 #include "exception_util.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 namespace Hccl {
 constexpr u32 FINISH_MSG_SIZE = 128;

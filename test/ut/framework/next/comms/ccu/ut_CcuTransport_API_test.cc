@@ -20,7 +20,7 @@
 #include "ccu_transport_.h"
 #include "ccu_conn.h"
 #include "local_ub_rma_buffer.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "base_config.h"
 
 #undef protected

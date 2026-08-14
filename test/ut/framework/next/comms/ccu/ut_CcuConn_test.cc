@@ -28,7 +28,7 @@
 #include "hccl_types.h"
 #include "adapter_rts.h"
 #include "hcom_common.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 #undef private
 #undef protected

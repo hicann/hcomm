@@ -12,7 +12,7 @@
 
 #include <map>
 #include <vector>
-#include "local_notify.h"
+#include "local_notify_v2.h"
 #include "types.h"
 
 namespace Hccl {

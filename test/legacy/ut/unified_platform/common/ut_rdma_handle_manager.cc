@@ -29,7 +29,7 @@
 #include "rank_table.h"
 #include "timeout_exception.h"
 #include "ccu_context_mgr_imp.h"
-#include "ccu_res_batch_allocator.h"
+#include "ccu_res_batch_allocator_legacy.h"
 #include "ccu_component.h"
 #undef protected
 #undef private

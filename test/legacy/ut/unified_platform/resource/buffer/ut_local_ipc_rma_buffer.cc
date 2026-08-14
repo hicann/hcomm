@@ -12,7 +12,7 @@
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
 
-#include "local_ipc_rma_buffer.h"
+#include "local_ipc_rma_buffer_v2.h"
 #include "remote_rma_buffer.h"
 #include "remote_ipc_rma_buffer.h"
 #include "dev_buffer.h"

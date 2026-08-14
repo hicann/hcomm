@@ -24,7 +24,7 @@
 #include "hccp_common.h"
 #include "base_config.h"
 #include "cfg_field.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "env_func.h"
 #include "virtual_topo.h"
 #include "dev_ub_connection.h"
@@ -46,7 +46,7 @@
 #include "sal.h"
 #include "rank_gph.h"
 #include "base_config.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "coll_service_device_mode.h"
 #include "communicator_callback.h"
 #include "hccp_tlv_hdc_manager.h"
@@ -75,10 +75,10 @@
 #include "hccl.h"
 #include "ccu_component.h"
 #include "ccu_context_mgr_imp.h"
-#include "ccu_res_batch_allocator.h"
+#include "ccu_res_batch_allocator_legacy.h"
 #include "tp_manager.h"
 #include "ranktable_stub_clos.h"
-#include "task_abort_handler.h"
+#include "task_abort_handler_v2.h"
 #undef private
 #undef protected
 

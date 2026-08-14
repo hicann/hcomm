@@ -14,7 +14,7 @@
 #include "channel_manager.h"
 #include "pfe_manager.h"
 #include "local_jetty_context_manager.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 using namespace Hccl;
 using namespace Ccu;
 

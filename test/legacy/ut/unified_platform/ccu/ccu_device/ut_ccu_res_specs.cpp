@@ -14,7 +14,7 @@
 #include <chrono>
 #define private public
 #define protected public
-#include "ccu_res_specs.h"
+#include "ccu_res_specs_legacy.h"
 #include "hccl_common_v2.h"
 
 #undef private

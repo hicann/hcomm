@@ -16,7 +16,7 @@
 #include "rma_conn_exception.h"
 #include "rdma_handle_manager.h"
 #include "exchange_ub_conn_dto.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 namespace Hccl {
 

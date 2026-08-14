@@ -10,7 +10,7 @@
 
 #include "../pub_inc/trace.h"
 #include <set>
-#include "env_config.h"
+#include "env_config_v2.h"
 
 namespace Hccl {
 

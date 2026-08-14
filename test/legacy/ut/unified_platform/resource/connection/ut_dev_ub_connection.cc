@@ -22,7 +22,7 @@
 #include "rdma_handle_manager.h"
 #include "tp_manager.h"
 #include "hccp_async.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #undef protected
 #undef private
 #include "hccp_async_ctx.h"

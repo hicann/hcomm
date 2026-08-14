@@ -26,7 +26,7 @@
 namespace hccl {
 constexpr u32 MAX_REMOTE_MEM_NUM = 256;
 
-using RemoteRmaBufferMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, void*>; // (addr, size) handle
+using RemoteRmaBufferMgr = hcomm::RmaBufferMgr<BufferKey<uintptr_t, u64>, void*>; // (addr, size) handle
 class HcclOneSidedConn {
 public:
     struct ProcessInfo {

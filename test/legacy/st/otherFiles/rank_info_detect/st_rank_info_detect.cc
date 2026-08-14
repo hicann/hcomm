@@ -26,12 +26,12 @@
 #include "invalid_params_exception.h"
 #include "host_ip_not_found_exception.h"
 #include "null_ptr_exception.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "env_func.h"
 #include "bootstrap_ip.h"
-#include "preempt_port_manager.h"
+#include "preempt_port_manager_v2.h"
 #include "rank_info_detect.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #undef private
 
 using namespace std;

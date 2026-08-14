@@ -8,5 +8,5 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "../../../src/legacy/ascend950/framework/env_config/env_config.h"
+#include "../../../src/legacy/ascend950/framework/env_config/env_config_v2.h"
 #include "../../../src/coll_communicator_mgr/rank_graph/rank_graph_builder/detour_service.cc"

@@ -22,7 +22,7 @@
 #include "conn_local_cnt_notify_manager.h"
 #include "data_buf_manager.h"
 #include "local_rma_buf_manager.h"
-#include "queue_notify_manager.h"
+#include "queue_notify_manager_v2.h"
 #include "remote_rma_buf_manager.h"
 #include "rma_conn_manager.h"
 #include "stream_manager.h"
@@ -39,7 +39,7 @@
 #include "aicpu_stream_manager.h"
 #include "profiling_reporter.h"
 #include "hdc.h"
-#include "hccl_one_sided_service.h"
+#include "hccl_one_sided_service_v2.h"
 #include "coll_alg_component.h"
 #include "ub_memory_transport_mgr.h"
 #include "ccu_super_fast_load.h"
@@ -50,7 +50,7 @@
 #include "hccl_aiv_utils.h"
 #include "error_message_v2.h"
 #include "hccp.h"
-#include "aicpu/launch_device.h"
+#include "aicpu/launch_device_v2.h"
 #include "communicator_dpu_types.h"
 
 namespace Hccl {

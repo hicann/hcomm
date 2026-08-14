@@ -19,7 +19,7 @@
 #include "ccu_component.h"
 
 #include "hccl_common_v2.h"
-#include "ccu_res_specs.h"
+#include "ccu_res_specs_legacy.h"
 #include "rdma_handle_manager.h"
 #include "ccu_api_exception.h"
 

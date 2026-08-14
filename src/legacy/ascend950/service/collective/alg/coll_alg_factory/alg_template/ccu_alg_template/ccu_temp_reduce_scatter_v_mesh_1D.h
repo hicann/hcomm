@@ -12,7 +12,7 @@
 #define HCCLV2_CCU_TEMP_REDUCE_SCATTER_V_MESH_1D_H_
 
 #include "string_util.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "executor_utils.h"
 #include "ccu_alg_template_base.h"
 

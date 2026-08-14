@@ -9,14 +9,14 @@
  */
 
 #include <climits>
-#include "hccl_one_sided_service.h"
+#include "hccl_one_sided_service_v2.h"
 #include "communicator_impl.h"
 #include "virtual_topo.h"
 #include "alg_topo_package_helper.h"
 #include "aicpu_res_package_helper.h"
 #include "hccl_mem.h"
 #include "exception_util.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 
 namespace Hccl {
 using namespace std;

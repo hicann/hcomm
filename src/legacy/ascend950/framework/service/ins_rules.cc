@@ -18,7 +18,7 @@
 #include "reduce_op.h"
 #include "aicpu_kernel_launcher.h"
 #include "coll_service_device_mode.h"
-#include "dlprof_function.h"
+#include "dlprof_function_v2.h"
 #include "hccl_aiv_utils.h"
 #include "ccu_ins_group.h"
 

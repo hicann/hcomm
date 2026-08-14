@@ -13,7 +13,7 @@
 #include <unordered_set>
 
 #include "ccu_ctx_mgr.h"
-#include "ccu_res_pack.h"
+#include "ccu_res_pack_legacy.h"
 
 #include "hccl_common_v2.h"
 #include "orion_adapter_rts.h"

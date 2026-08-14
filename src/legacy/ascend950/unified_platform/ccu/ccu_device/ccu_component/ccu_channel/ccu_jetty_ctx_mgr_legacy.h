@@ -15,8 +15,8 @@
 
 #include "hccl/hccl_types.h"
 
-#include "ccu_pfe_mgr.h"
-#include "ccu_wqebb_mgr.h"
+#include "ccu_pfe_mgr_legacy.h"
+#include "ccu_wqebb_mgr_legacy.h"
 #include "ccu_device_manager.h"
 
 namespace Hccl {

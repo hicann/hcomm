@@ -11,7 +11,7 @@
 #ifndef CCU_RESPACK_MGR_H
 #define CCU_RESPACK_MGR_H
 
-#include "ccu/ccu_res_pack.h"
+#include "ccu/ccu_res_pack_legacy.h"
 
 namespace Hccl {
 

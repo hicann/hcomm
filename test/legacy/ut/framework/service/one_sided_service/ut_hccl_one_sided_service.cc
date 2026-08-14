@@ -20,7 +20,7 @@
 #include "ub_local_notify.h"
 #include "local_ub_rma_buffer.h"
 #include "socket_exception.h"
-#include "hccl_one_sided_service.h"
+#include "hccl_one_sided_service_v2.h"
 
 #include "stub_communicator_impl_trans_mgr.h"
 #include "detour_service.h"

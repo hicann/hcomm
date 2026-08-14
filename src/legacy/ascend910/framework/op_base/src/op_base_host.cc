@@ -25,7 +25,6 @@
 #include "error_codes/rt_error_codes.h"
 #include "op_base.h"
 #include "hccl_group.h"
-#include "op_base_v2.h"
 
 using namespace std;
 using namespace hccl;

@@ -29,14 +29,14 @@
 #include "internal_exception.h"
 #include "network_api_exception.h"
 #include "null_ptr_exception.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "env_func.h"
 #include "bootstrap_ip.h"
-#include "../../../../../../src/legacy/ascend950/framework/topo/rank_info_detect/preempt_port_manager.h"
+#include "preempt_port_manager_v2.h"
 #include "rank_info_detect.h"
 #undef private
 #include "env_config_stub.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 using namespace std;
 using namespace Hccl;

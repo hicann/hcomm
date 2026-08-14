@@ -17,10 +17,10 @@
 
 #include "hccp_ctx.h"
 #include "orion_adapter_hccp.h"
-#include "ccu_res_specs.h"
+#include "ccu_res_specs_legacy.h"
 #include "ccu_eid_info.h"
 #include "ccu_pfe_cfg_generator.h"
-#include "ccu_pfe_mgr.h"
+#include "ccu_pfe_mgr_legacy.h"
 #include "network_api_exception.h"
 #include "internal_exception.h"
 #include "ccu_device_manager.h"

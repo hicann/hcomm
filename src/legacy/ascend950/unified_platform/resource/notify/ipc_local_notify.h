@@ -10,7 +10,7 @@
 #ifndef HCCLV2_IPC_LOCAL_NOTIFY_H
 #define HCCLV2_IPC_LOCAL_NOTIFY_H
 
-#include "local_notify.h"
+#include "local_notify_v2.h"
 
 namespace Hccl {
 

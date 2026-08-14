@@ -17,7 +17,7 @@
 #include "check_op_semantics.h"
 
 #include "buffer_type.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "ccu_alg_mesh_1D.h"
 #include "ccu_alg_mesh_2D.h"
 #include "rdma_handle_manager.h"

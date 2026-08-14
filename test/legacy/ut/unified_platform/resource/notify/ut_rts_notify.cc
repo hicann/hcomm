@@ -11,7 +11,7 @@
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
-#include "local_notify.h"
+#include "local_notify_v2.h"
 #include "dev_capability.h"
 #include "not_support_exception.h"
 using namespace Hccl;

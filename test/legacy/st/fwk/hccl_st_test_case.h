@@ -16,7 +16,7 @@
 #include "data_type.h"
 #include "reduce_op.h"
 #include "dev_type.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "hccl_st_situation.h"
 #include <utility>
 #include <vector>

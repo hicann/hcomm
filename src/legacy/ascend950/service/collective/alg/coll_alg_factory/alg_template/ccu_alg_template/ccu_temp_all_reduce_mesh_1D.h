@@ -14,7 +14,7 @@
 #include <map>
 #include <string>
 #include <hccl/hccl_types.h>
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "reduce_op.h"
 #include "hccl/base.h"
 #include "types/types.h"

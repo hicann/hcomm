@@ -10,7 +10,7 @@
 
 #include "aicpu_ts_uboe_channel.h"
 #include "orion_adpt_utils.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "makebufs_helper.h"
 #include "endpoint.h"
 

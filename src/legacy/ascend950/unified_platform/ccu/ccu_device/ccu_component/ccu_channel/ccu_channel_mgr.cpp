@@ -10,7 +10,7 @@
 
 #include "ccu_channel_mgr.h"
 
-#include "ccu_res_specs.h"
+#include "ccu_res_specs_legacy.h"
 
 namespace Hccl {
 

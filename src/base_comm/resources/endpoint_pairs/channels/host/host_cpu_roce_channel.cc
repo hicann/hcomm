@@ -26,13 +26,13 @@
 #include "sal.h"
 #include "adapter_hccp.h"
 #include "binary_stream.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "env_config/env_func.h"
 #include "../../../../../legacy/ascend910/platform/resource/notify/notify_pool_impl.h"
 #include "../../../../../base_comm/resources/hccp/inc/network/hccp_common.h"
 #include "dlprof_function.h"
 #include "user_remote_mem_getter.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 namespace hcomm {
 constexpr u32 MEM_BLOCK_SIZE = 128;

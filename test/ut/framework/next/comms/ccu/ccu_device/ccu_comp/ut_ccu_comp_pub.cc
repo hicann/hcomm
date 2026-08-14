@@ -22,7 +22,7 @@
 #include "local_ub_rma_buffer.h"
 #include "orion_adapter_hccp.h"
 #include "rdma_handle_manager.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 #include "unified_platform/ccu/ccu_device/ccu_component/ccu_component.h"
 

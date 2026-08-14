@@ -19,7 +19,7 @@
 #include "stream.h"
 #include "task.h"
 #include "mc2_type.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 namespace Hccl {
 

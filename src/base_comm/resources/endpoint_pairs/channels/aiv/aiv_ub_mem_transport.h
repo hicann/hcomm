@@ -13,7 +13,7 @@
 #include <mutex>
 #include "hccl/hccl_res.h"
 #include "../../../../../../legacy/ascend950/unified_platform/resource/socket/socket.h"
-#include "../../../../../../legacy/ascend950/unified_platform/resource/buffer/local_ipc_rma_buffer.h"
+#include "../../../../../../legacy/ascend950/unified_platform/resource/buffer/local_ipc_rma_buffer_v2.h"
 #include "../../../../../../legacy/ascend950/unified_platform/resource/buffer/remote_rma_buffer.h"
 #include "binary_stream.h"
 #include "buffer.h"

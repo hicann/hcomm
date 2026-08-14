@@ -14,7 +14,7 @@
 #include "null_ptr_exception.h"
 #define private public
 #include "queue_notify_lite_mgr.h"
-#include "queue_notify_manager.h"
+#include "queue_notify_manager_v2.h"
 #include "communicator_impl.h"
 #undef private
 using namespace Hccl;

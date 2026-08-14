@@ -20,7 +20,7 @@
 #include "hccl_communicator.h"
 #include "hccl_comm_pub.h"
 #include "param_check_pub.h"
-#include "op_base_v2.h"
+#include "op_base.h"
 #include "hccl_res.h"
 #include "symmetric_memory/symmetric_memory.h"
 #include "hccl_team_c_adpt.h"

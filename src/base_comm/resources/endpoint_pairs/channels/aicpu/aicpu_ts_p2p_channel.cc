@@ -12,6 +12,7 @@
 #include "endpoint.h"
 #include "orion_adpt_utils.h"
 #include "hcomm_c_adpt.h"
+#include "adapter_rts_common.h"
 
 #include "virtual_topo.h"
 #include "p2p_connection.h"

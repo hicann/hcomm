@@ -179,7 +179,7 @@ HcclResult st_rma_buffer_mgr_test()
     using SType = u64;
     using BufferType = string;
 
-    RmaBufferMgr<BufferKey<AType, SType>, BufferType> bufferMgr;
+    hcomm::RmaBufferMgr<BufferKey<AType, SType>, BufferType> bufferMgr;
 
     // 1. Add接口
     // 1.1 添加

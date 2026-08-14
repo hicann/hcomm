@@ -16,8 +16,8 @@
 #define private public
 #define protected public
 
-#include "hccl_one_sided_conn.h"
-#include "hccl_one_sided_service.h"
+#include "hccl_one_sided_conn_v2.h"
+#include "hccl_one_sided_service_v2.h"
 #include "rdma_handle_manager.h"
 #include "hccl_mem_v2.h"
 
@@ -27,7 +27,7 @@
 #include <memory>
 
 using namespace Hccl;
-using LocalRdmaRmaBufferMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<LocalUbRmaBuffer>>;
+using LocalRdmaRmaBufferMgr = hcomm::RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<LocalUbRmaBuffer>>;
 class HcclOneSidedConnTest : public testing::Test {
 protected:
     static void SetUpTestCase() { std::cout << "HcclOneSidedConnTest SetUP" << std::endl; }

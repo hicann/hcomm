@@ -13,7 +13,7 @@
 
 #include <shared_mutex>
 
-#include "hccl_one_sided_conn.h"
+#include "hccl_one_sided_conn_v2.h"
 #include "kernel_param_lite.h"
 #include "stream.h"
 #include "dev_buffer.h"
@@ -24,7 +24,7 @@ namespace Hccl {
 
 class HcclOneSidedService {
 public:
-    using LocalUbRmaBufferMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<LocalUbRmaBuffer>>;
+    using LocalUbRmaBufferMgr = hcomm::RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<LocalUbRmaBuffer>>;
     using RankId = u32;
 
     HcclOneSidedService(CommunicatorImpl& comm);

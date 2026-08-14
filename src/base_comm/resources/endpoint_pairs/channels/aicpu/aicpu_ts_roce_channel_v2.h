@@ -21,7 +21,7 @@
 
 // Orion
 #include "../../../../../../legacy/ascend950/unified_platform/resource/socket/socket.h"
-#include "../../../../../../legacy/ascend950/unified_platform/resource/buffer/local_rdma_rma_buffer.h"
+#include "../../../../../../legacy/ascend950/unified_platform/resource/buffer/local_rdma_rma_buffer_v2.h"
 #include "remote_rma_buffer.h"
 #include "./dev_rdma_connection_v2.h"
 #include "rdma_local_notify.h"

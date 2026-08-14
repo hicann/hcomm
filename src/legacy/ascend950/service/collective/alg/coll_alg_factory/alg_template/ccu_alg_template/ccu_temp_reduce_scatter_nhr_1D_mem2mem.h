@@ -11,7 +11,7 @@
 #ifndef HCCLV2_CCU_TEMP_REDUCE_SCATTER_NHR_1D_H_
 #define HCCLV2_CCU_TEMP_REDUCE_SCATTER_NHR_1D_H_
 #include "string_util.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "ccu_alg_template_base.h"
 #include "ccu_instruction_reduce_scatter_nhr1d_mem2mem.h"
 #include "executor_utils.h"

@@ -16,7 +16,7 @@
 #include <string>
 #include <cstdint>
 #include "types.h"
-#include "../utils/enum_factory.h"
+#include "../utils/enum_factory_legacy.h"
 #include "hccl_res.h"
 #include "log.h"
 #include "string_util.h"

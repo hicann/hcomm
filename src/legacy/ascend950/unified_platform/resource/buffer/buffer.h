@@ -14,7 +14,7 @@
 #include <cstddef>
 #include <string>
 #include "hccl_mem_defs.h"
-#include "enum_factory.h"
+#include "enum_factory_legacy.h"
 namespace Hccl {
 
 class Buffer {

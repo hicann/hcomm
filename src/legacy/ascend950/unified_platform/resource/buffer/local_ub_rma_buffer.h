@@ -15,7 +15,7 @@
 
 #include "local_rma_buffer.h"
 
-#include "enum_factory.h"
+#include "enum_factory_legacy.h"
 #include "orion_adapter_hccp.h"
 #include "orion_adapter_rts.h"
 #include "net_device.h"

@@ -20,11 +20,11 @@
 #include "rdma_handle_manager.h"
 
 #include "ccu_eid_info.h"
-#include "ccu_res_specs.h"
+#include "ccu_res_specs_legacy.h"
 
 #include "ccu_channel_mgr_v1.h"
-#include "env_config.h"
 #include "hccp_ctx_tp.h"
+#include "env_config_v2.h"
 #include "hccp_tlv_hdc_manager.h"
 
 namespace Hccl {

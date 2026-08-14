@@ -55,7 +55,7 @@
 #include "ccu_interface_assist.h"
 #include "ccu_rep_load.h"
 #include "ccu_rep_store.h"
-#include "ccu_res_specs.h"
+#include "ccu_res_specs_legacy.h"
 #include "ccu_rep_load_var.h"
 #include "ccu_rep_store_var.h"
 

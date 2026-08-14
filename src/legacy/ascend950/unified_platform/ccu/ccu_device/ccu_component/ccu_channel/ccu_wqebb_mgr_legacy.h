@@ -13,7 +13,7 @@
 
 #include <memory>
 
-#include "ccu_res_allocator.h"
+#include "ccu_res_allocator_legacy.h"
 #include "ccu_device_manager.h"
 
 namespace Hccl {

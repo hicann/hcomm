@@ -13,7 +13,7 @@
 #include "data_type.h"
 #include "reduce_op.h"
 #include "dev_type.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include <vector>
 #include "context/st_ctx.h"
 #include "hccl_st_test_case.h"

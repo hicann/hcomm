@@ -19,7 +19,7 @@
 #include "hccp_tlv.h"
 #include "hccp_ctx.h"
 #include "hccp_async.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "hccp_common.h"
 #include "exception_util.h"
 #include "adapter_error_manager_pub.h"

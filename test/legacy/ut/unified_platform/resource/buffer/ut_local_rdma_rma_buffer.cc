@@ -13,7 +13,7 @@
 #include <mockcpp/mockcpp.hpp>
 #include "hccp.h"
 #include "dev_buffer.h"
-#include "local_rdma_rma_buffer.h"
+#include "local_rdma_rma_buffer_v2.h"
 #include "remote_rma_buffer.h"
 
 using namespace Hccl;

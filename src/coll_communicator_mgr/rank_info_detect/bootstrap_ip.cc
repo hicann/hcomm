@@ -12,7 +12,7 @@
 #include <mutex>
 #include <algorithm>
 #include "whitelist.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "exception_util.h"
 #include "adapter_error_manager_pub.h"
 

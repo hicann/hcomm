@@ -117,7 +117,6 @@ set(legacy_platform_include_list
     ${HCOMM_LEGACY_PLATFORM}/pub_inc
     ${HCOMM_LEGACY_PLATFORM}/pub_inc/ccu
     ${HCOMM_LEGACY_PLATFORM}/pub_inc/resource
-    ${HCOMM_LEGACY_PLATFORM}/pub_inc/resource/net_dev
     ${HCOMM_LEGACY_PLATFORM}/pub_inc/resource/transport
 
     # 平台层CCU实现头文件路径
@@ -201,6 +200,7 @@ set(legacy_service_include_list
 )
 
 set(legacy_common_include_list
+    ${HCOMM_ROOT_PATH}/src/base_comm/common
     ${HCOMM_CODE_LEGACY}/common
     ${HCOMM_CODE_LEGACY}/common/types
     ${HCOMM_CODE_LEGACY}/common/utils

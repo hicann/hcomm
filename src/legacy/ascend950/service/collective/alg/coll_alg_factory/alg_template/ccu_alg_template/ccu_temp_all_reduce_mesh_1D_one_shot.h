@@ -19,7 +19,7 @@
 #include "hccl/base.h"
 #include "types/types.h"
 #include "string_util.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "data_type.h"
 #include "ccu_alg_template_base.h"
 #include "ccu_instruction_all_reduce_mesh1d.h"

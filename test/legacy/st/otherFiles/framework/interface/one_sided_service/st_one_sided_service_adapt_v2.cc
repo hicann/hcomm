@@ -30,7 +30,7 @@
 #include "hccl_communicator.h"
 #include "communicator_impl.h"
 #include "one_sided_service_adapt_v2.h"
-#include "hccl_one_sided_service.h"
+#include "hccl_one_sided_service_v2.h"
 #undef private
 using namespace std;
 using namespace Hccl;

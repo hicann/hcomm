@@ -10,7 +10,7 @@
 #ifndef HCCLV2_KFC_H
 #define HCCLV2_KFC_H
 
-#include "enum_factory.h"
+#include "enum_factory_legacy.h"
 #include "error_message_v2.h"
 
 namespace Hccl {

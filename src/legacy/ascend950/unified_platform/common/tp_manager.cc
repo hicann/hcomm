@@ -17,7 +17,7 @@
 #include "exception_util.h"
 #include "hccl_common_v2.h"
 #include "invalid_params_exception.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "network_api_exception.h"
 #include "tp_qos.h"
 

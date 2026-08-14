@@ -10,7 +10,7 @@
 #ifndef HCCLV2_CCU_TEMP_ALL_MESH_1D_2DIE_H_
 #define HCCLV2_CCU_TEMP_ALL_MESH_1D_2DIE_H_
 #include "string_util.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "ccu_alg_template_base.h"
 #include "ccu_instruction_all_gather_mesh1d_2die.h"
 #include "executor_utils.h"

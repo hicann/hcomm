@@ -8,9 +8,9 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "ccu_pfe_mgr.h"
+#include "ccu_pfe_mgr_legacy.h"
 
-#include "ccu_res_specs.h"
+#include "ccu_res_specs_legacy.h"
 #include "orion_adapter_hccp.h"
 #include "ccu_pfe_cfg_generator.h"
 #include "hccp_tlv_hdc_manager.h"

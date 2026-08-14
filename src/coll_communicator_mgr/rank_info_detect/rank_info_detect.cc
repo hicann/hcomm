@@ -24,10 +24,10 @@
 #include "whitelist.h"
 #include "socket.h"
 #include "host_socket_handle_manager.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "root_handle_v2.h"
 #include "bootstrap_ip.h"
-#include "../../legacy/ascend950/framework/topo/rank_info_detect/preempt_port_manager.h"
+#include "preempt_port_manager_v2.h"
 #include "adapter_error_manager_pub.h"
 
 namespace Hccl {

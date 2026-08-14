@@ -10,7 +10,7 @@
 #include "cluster_monitor.h"
 #include "hccl_types.h"
 #include "hccl_comm_pub.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "log.h"
 
 #include "hcclCommTaskException.h"

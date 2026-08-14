@@ -21,7 +21,7 @@
 #include "base_config.h"
 #include "ccu_device_res.h"
 #include "config/env_config.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #define private public
 #include "my_rank.h"
 #undef private

@@ -10,7 +10,7 @@
 #ifndef HCCLV2_LOCAL_NOTIFY_H
 #define HCCLV2_LOCAL_NOTIFY_H
 
-#include "rts_notify.h"
+#include "rts_notify_v2.h"
 #include "rma_type.h"
 #include "serializable.h"
 

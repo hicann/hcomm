@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2026 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 
 #include "communicator_impl_stub.h"
 
@@ -5,7 +14,7 @@
 
 #include "log.h"
 #include "coll_service_stub.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "env_func.h"
 #include "dev_capability.h"
 #include "rank_graph_builder.h"
@@ -13,7 +22,7 @@
 #include "mem_layout.h"
 #include "llt_common.h"
 #include "ccu_context_mgr_imp.h"
-#include "ccu_res_batch_allocator.h"
+#include "ccu_res_batch_allocator_legacy.h"
 #include "ccu_component.h"
 #include "rdma_handle_manager.h"
 

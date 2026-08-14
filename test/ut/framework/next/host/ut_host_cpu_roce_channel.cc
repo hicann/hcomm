@@ -17,7 +17,7 @@
 #include "adapter_error_manager_pub.h"
 #include "host_socket_handle_manager.h"
 #include "cpu_roce_endpoint.h"
-#include "buffer/local_rdma_rma_buffer.h"
+#include "buffer/local_rdma_rma_buffer_v2.h"
 #include "host/host_cpu_roce_channel.h"
 #include "host/host_rdma_connection.h"
 #include "topo_common_types.h"
@@ -32,7 +32,7 @@
 #include "hcomm_c_adpt.h"
 #include "exchange_rdma_buffer_dto.h"
 
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "env_config/env_func.h"
 #include "orion_adpt_utils.h"
 

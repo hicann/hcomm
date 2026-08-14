@@ -13,7 +13,7 @@
 #include <string>
 #include "string_util.h"
 #include "hccl/base.h"
-#include "enum_factory.h"
+#include "enum_factory_legacy.h"
 #include "task_param.h"
 #include "ip_address.h"
 

@@ -10,7 +10,7 @@
 #include <cstring>
 #include <algorithm>
 #include "profiling_handler.h"
-#include "dlprof_function.h"
+#include "dlprof_function_v2.h"
 #include "exception_util.h"
 #include "internal_exception.h"
 #include "sal.h"

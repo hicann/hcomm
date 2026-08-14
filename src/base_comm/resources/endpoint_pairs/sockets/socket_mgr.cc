@@ -18,7 +18,7 @@
 #include "host_socket_handle_manager.h"
 #include "exception_handler.h"
 #include "adapter_rts.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 namespace hcomm {
 

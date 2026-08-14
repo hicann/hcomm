@@ -14,7 +14,7 @@
 #define private public
 #include "ipc_remote_notify.h"
 #undef private
-#include "local_notify.h"
+#include "local_notify_v2.h"
 #include "exchange_ipc_notify_dto.h"
 using namespace Hccl;
 

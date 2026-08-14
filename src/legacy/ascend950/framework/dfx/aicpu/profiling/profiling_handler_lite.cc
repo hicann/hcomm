@@ -14,7 +14,7 @@
 #include "task_info.h"
 #include "task_param.h"
 #include "communicator_impl_lite.h"
-#include "dlprof_function.h"
+#include "dlprof_function_v2.h"
 #include <mutex>
 namespace Hccl {
 

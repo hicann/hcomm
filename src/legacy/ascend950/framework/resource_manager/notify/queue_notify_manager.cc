@@ -7,7 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-#include "queue_notify_manager.h"
+#include "queue_notify_manager_v2.h"
 #include "communicator_impl.h"
 namespace Hccl {
 

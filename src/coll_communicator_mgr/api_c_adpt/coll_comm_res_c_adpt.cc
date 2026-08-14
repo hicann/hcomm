@@ -16,7 +16,7 @@
 #include "exception_handler.h"
 #include "config_log.h"
 #include "config/env_config.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 #include "coll_comm_mgr.h"
 #include "hcclCommOp.h"

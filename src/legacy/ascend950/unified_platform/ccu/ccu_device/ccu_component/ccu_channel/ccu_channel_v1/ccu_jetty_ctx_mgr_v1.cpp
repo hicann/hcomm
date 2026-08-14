@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "ccu_jetty_ctx_mgr_v1.h"
+#include "ccu_jetty_ctx_mgr_v1_legacy.h"
 
 namespace Hccl {
 

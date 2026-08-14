@@ -20,7 +20,7 @@
 
 #include "aiv_ub_mem_transport.h"
 #include "exchange_ipc_buffer_dto.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "base_config.h"
 #include "local_ipc_rma_buffer.h"
 

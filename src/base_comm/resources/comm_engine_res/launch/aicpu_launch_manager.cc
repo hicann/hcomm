@@ -17,7 +17,7 @@
 #include <iomanip>
 #include "hcom_host_profiling.h"
 #include "adapter_prof.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 namespace hccl {
 template <typename OpParam, typename ApiParam>

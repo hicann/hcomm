@@ -10,7 +10,7 @@
 
 #include "aiv_ins_preprocessor.h"
 #include "aiv_ins.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 
 namespace Hccl {
 

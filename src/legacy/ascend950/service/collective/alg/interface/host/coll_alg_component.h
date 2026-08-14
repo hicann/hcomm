@@ -21,7 +21,7 @@
 #include "coll_alg_registry.h"
 #include "ins_coll_alg_registry.h"
 #include "env_func.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 
 namespace Hccl {
 

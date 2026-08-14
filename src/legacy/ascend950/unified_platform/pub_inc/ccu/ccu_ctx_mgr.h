@@ -14,7 +14,7 @@
 #include <vector>
 #include "ccu_ctx_arg.h"
 #include "ccu_ctx.h"
-#include "ccu_res_pack.h"
+#include "ccu_res_pack_legacy.h"
 #include "ccu_task_arg.h"
 
 namespace Hccl {

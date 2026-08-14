@@ -15,7 +15,7 @@
 #define private public
 #define protected public
 #include "hccl_common_v2.h"
-#include "preempt_port_manager.h"
+#include "preempt_port_manager_v2.h"
 #undef private
 #undef protected
 

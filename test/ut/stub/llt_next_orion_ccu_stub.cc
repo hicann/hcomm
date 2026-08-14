@@ -9,9 +9,9 @@
  */
 
 #include "hccp_tlv_hdc_manager.h"
-#include "unified_platform/ccu/ccu_device/ccu_res_specs.h"
+#include "unified_platform/ccu/ccu_device/ccu_res_specs_legacy.h"
 #include "unified_platform/ccu/ccu_device/ccu_component/ccu_component.h"
-#include "unified_platform/ccu/ccu_device/ccu_res_batch_allocator.h"
+#include "unified_platform/ccu/ccu_device/ccu_res_batch_allocator_legacy.h"
 #include "unified_platform/ccu/ccu_context/ccu_context_mgr_imp.h"
 
 #include "ccu_comp.h"

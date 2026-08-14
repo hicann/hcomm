@@ -18,7 +18,7 @@
 #include "hccl/base.h"
 #include "types/types.h"
 #include "string_util.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "data_type.h"
 #include "template_utils.h"
 #include "buffer_type.h"

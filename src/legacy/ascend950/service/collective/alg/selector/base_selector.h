@@ -16,7 +16,7 @@
 #include "coll_operator.h"
 #include "virtual_topo.h"
 #include "log.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 
 namespace Hccl {
 constexpr u32 CCU_MS_MODE = 2;

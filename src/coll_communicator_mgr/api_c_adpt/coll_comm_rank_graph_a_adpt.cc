@@ -18,7 +18,7 @@
 #include "hccl_inner.h"
 #include "rank_graph.h"
 #include "rank_graph_v2.h"
-#include "op_base_v2.h"
+#include "op_base.h"
 #include "hccl_independent_common.h"
 
 using namespace hccl;

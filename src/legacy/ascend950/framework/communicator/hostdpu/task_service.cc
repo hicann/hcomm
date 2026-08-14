@@ -10,14 +10,14 @@
 
 #include "task_service.h"
 #include <algorithm>
-#include "profiling/dlprof_function.h"
+#include "profiling/dlprof_function_v2.h"
 #include <thread>
 #include <chrono>
 #include <atomic>
 #include "acl/acl_rt.h"
 #include "log.h"
 #include "dpu_kernel_entrance.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 namespace Hccl {
 constexpr uint32_t CTRL_HDR_FLAG_LENGTH = 1;

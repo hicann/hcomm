@@ -26,7 +26,7 @@
 #undef private
 #undef protected
 #include "../framework/stub_communicator_impl_trans_mgr.h"
-#include "dlprof_func.h"
+#include "dlprof_func_v2.h"
 #include "rdma_handle_manager.h"
 using namespace Hccl;
 

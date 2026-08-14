@@ -34,7 +34,7 @@ class CommMemMgr {
 public:
     using Handle = std::shared_ptr<HcclMemoryHandle>;
     using MemKey = hccl::BufferKey<uintptr_t, uint64_t>;
-    using Table = hccl::RmaBufferMgr<MemKey, Handle>;
+    using Table = hcomm::RmaBufferMgr<MemKey, Handle>;
     CommMemMgr() = default;
     ~CommMemMgr() = default;
 

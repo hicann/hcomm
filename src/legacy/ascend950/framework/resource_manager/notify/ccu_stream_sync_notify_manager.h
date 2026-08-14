@@ -12,7 +12,7 @@
 #define HCCLV2_CCU_STREAM_SYNC_NOTIFY_MANAGER_H
 
 #include "types.h"
-#include "rts_notify.h"
+#include "rts_notify_v2.h"
 #include "queue_bcast_post_cnt_notify_manager.h"
 #include "queue_wait_group_cnt_notify_manager.h"
 

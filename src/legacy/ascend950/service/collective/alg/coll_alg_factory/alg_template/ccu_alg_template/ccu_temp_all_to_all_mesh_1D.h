@@ -12,7 +12,7 @@
 #define HCCLV2_CCU_TEMP_ALL_TO_ALL_MESH_1D_H_
 
 #include "string_util.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "ccu_alg_template_base.h"
 #include "ccu_instruction_all_to_all_mesh1d.h"
 #include "instruction.h"

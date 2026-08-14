@@ -12,7 +12,7 @@
 #define HCCLV2_CCU_TEMP_ALL_REDUCE_MESH_2D_TWO_SHOT_H_
 
 #include "string_util.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "ccu_alg_template_base.h"
 #include "ccu_rank_group.h"
 #include "template_utils.h"

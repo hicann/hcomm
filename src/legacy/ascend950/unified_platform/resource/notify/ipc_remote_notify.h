@@ -10,7 +10,7 @@
 #ifndef HCCLV2_IPC_REMOTE_NOTIFY_H
 #define HCCLV2_IPC_REMOTE_NOTIFY_H
 
-#include "rts_notify.h"
+#include "rts_notify_v2.h"
 #include "stream.h"
 #include "rma_type.h"
 #include "serializable.h"

@@ -42,7 +42,7 @@ class CommMems {
 public:
     using Handle = std::shared_ptr<CommMemInfo>;
     using MemKey = hccl::BufferKey<uintptr_t, uint64_t>;
-    using Table = hccl::RmaBufferMgr<MemKey, Handle>;
+    using Table = hcomm::RmaBufferMgr<MemKey, Handle>;
 
     explicit CommMems(uint64_t bufferSize);
     ~CommMems() = default;

@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "task_abort_handler.h"
+#include "task_abort_handler_v1.h"
 #include "sal_pub.h"
 #include "hccl_communicator.h"
 #include "adapter_rts_common.h"

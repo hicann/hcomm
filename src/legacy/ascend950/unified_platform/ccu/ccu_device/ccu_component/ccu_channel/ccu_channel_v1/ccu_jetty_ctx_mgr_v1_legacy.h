@@ -15,8 +15,8 @@
 #include <vector>
 #include <unordered_map>
 
-#include "ccu_jetty_ctx_mgr.h"
-#include "ccu_res_allocator.h"
+#include "ccu_jetty_ctx_mgr_legacy.h"
+#include "ccu_res_allocator_legacy.h"
 
 namespace Hccl {
 

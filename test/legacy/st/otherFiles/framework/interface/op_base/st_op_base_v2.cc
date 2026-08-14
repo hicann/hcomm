@@ -30,7 +30,7 @@
 #include "op_base_v2.h"
 #include "orion_adapter_rts.h"
 #include "communicator_callback.h"
-#include "task_abort_handler.h"
+#include "task_abort_handler_v2.h"
 #include "hccl_communicator.h"
 #include "communicator_impl.h"
 #include "hccl.h"

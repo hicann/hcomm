@@ -19,7 +19,7 @@
 #include "ccu_driver_handle.h"
 #include "ccu_component.h"
 #include "ccu_context_mgr_imp.h"
-#include "ccu_res_batch_allocator.h"
+#include "ccu_res_batch_allocator_legacy.h"
 #include "tp_manager.h"
 #undef private
 

@@ -16,7 +16,7 @@
 #define private public
 #include "communicator_impl.h"
 #include "base_config.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "cfg_field.h"
 #undef private
 

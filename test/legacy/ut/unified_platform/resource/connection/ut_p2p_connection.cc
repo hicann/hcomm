@@ -13,7 +13,7 @@
 #include <mockcpp/mockcpp.hpp>
 #include "rma_connection.h"
 #include "p2p_connection.h"
-#include "local_ipc_rma_buffer.h"
+#include "local_ipc_rma_buffer_v2.h"
 #include "remote_rma_buffer.h"
 #include "types.h"
 #include "data_type.h"

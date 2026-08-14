@@ -22,8 +22,8 @@
 namespace hccl {
 class NetDevContext {
 public:
-    using LocalIpcRmaBufferMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<LocalIpcRmaBuffer>>;
-    using LocalRdmaRmaBufferMgr = RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<LocalRdmaRmaBuffer>>;
+    using LocalIpcRmaBufferMgr = hcomm::RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<LocalIpcRmaBuffer>>;
+    using LocalRdmaRmaBufferMgr = hcomm::RmaBufferMgr<BufferKey<uintptr_t, u64>, std::shared_ptr<LocalRdmaRmaBuffer>>;
 
     NetDevContext() {}
     ~NetDevContext() {}

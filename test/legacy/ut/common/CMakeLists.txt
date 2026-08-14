@@ -15,6 +15,7 @@ target_sources(hccl_v2_utest
     slog_stub_ut.cc
     driver_stub.cc
     ut_log.cc
+    ut_rma_buffer_mgr_log.cc
     driver_stub.cc
     ut_binary_stream.cc
     ut_checkcrc.cc

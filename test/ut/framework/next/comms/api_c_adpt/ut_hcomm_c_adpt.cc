@@ -19,8 +19,7 @@
 #include "hcomm_channel.h"
 #include "channel_process.h"
 #include "endpoint_map.h"
-#include "env_config/env_config.h"
-
+#include "env_config/env_config_v2.h"
 #include "nic_plugin_manager.h"
 #include "orion_adpt_utils.h"
 

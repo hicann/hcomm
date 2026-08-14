@@ -22,7 +22,7 @@
 #include "aicpu_res_package_helper.h"
 #include "host_device_sync_notify_manager.h"
 #include "queue_bcast_post_cnt_notify_manager.h"
-#include "queue_notify_manager.h"
+#include "queue_notify_manager_v2.h"
 #include "queue_wait_group_cnt_notify_manager.h"
 #include "stream_manager.h"
 #include "mem_transport_manager.h"

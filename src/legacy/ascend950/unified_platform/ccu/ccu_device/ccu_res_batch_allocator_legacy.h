@@ -15,7 +15,7 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
-#include "ccu_res_specs.h"
+#include "ccu_res_specs_legacy.h"
 #include "ccu_device_manager.h"
 
 namespace Hccl {

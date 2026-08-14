@@ -20,7 +20,7 @@
 #include <ctime>
 #include "sal.h"
 #include "hccp.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "hccp_common.h"
 #include "network_api_exception.h"
 #include "adapter_error_manager_pub.h"

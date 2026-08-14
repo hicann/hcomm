@@ -13,7 +13,7 @@
 #include "hcclCommOp.h"
 #include "hcclCommDfxLite.h"
 #include <shared_mutex>
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "dfx_profiling_handler_lite.h"
 #include "res_pub.h"
 

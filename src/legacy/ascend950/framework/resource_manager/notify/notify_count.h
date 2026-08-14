@@ -11,7 +11,7 @@
 #define HCCLV2_NOTIFY_COUNT_H
 #include <map>
 #include <string>
-#include "enum_factory.h"
+#include "enum_factory_legacy.h"
 namespace Hccl {
 
 constexpr size_t NOTIFY_COUNT_PER_CONN = 3;

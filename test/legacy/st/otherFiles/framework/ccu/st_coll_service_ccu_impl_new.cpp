@@ -29,7 +29,7 @@
 #include "stream_manager.h"
 #include "coll_alg_component.h"
 #include "base_config.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "not_support_exception.h"
 #undef private
 #undef protected

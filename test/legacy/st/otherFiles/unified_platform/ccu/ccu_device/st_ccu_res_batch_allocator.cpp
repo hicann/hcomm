@@ -16,7 +16,7 @@
 #include <mockcpp/mockcpp.hpp>
 #include <chrono>
 
-#include "ccu_res_batch_allocator.h"
+#include "ccu_res_batch_allocator_legacy.h"
 
 #include "hccl_common_v2.h"
 #include "ccu_component.h"

@@ -9,7 +9,7 @@
  */
 #include "env_config_stub.h"
 
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "orion_adapter_rts.h"
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>

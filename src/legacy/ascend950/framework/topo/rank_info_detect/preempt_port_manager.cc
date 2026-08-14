@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "preempt_port_manager.h"
+#include "preempt_port_manager_v2.h"
 #include <sstream>
 #include "orion_adapter_hccp.h"
 #include "hccl_common_v2.h"

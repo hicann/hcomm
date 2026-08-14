@@ -16,7 +16,7 @@
 #include <netinet/in.h>
 
 #include "hccl_res.h"
-#include "enum_factory.h"
+#include "enum_factory_legacy.h"
 #include "hccl/base.h"
 #include "hccl_rank_graph.h"
 namespace Hccl {

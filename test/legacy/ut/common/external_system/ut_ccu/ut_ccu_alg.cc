@@ -19,7 +19,7 @@
 #include "rma_buffer.h"
 #include "ccu_alg_mesh_1D.h"
 #include "ccu_alg_mesh_2D.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "rdma_handle_manager.h"
 #include "ccu_mc2.h"
 #include "ccu_mission.h"

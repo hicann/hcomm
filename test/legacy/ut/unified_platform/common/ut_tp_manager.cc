@@ -16,7 +16,7 @@
 #include "orion_adapter_hccp.h"
 #include "orion_adapter_rts.h"
 #include "internal_exception.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include <cstdlib>
 #include <string>
 

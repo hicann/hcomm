@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "ccu_res_batch_allocator.h"
+#include "ccu_res_batch_allocator_legacy.h"
 
 #include <array>
 #include <memory>
@@ -21,7 +21,7 @@
 #include "internal_exception.h"
 
 #include "ccu_component.h"
-#include "ccu_res_specs.h"
+#include "ccu_res_specs_legacy.h"
 #include "ccu_rep_reference_manager.h"
 
 namespace Hccl {

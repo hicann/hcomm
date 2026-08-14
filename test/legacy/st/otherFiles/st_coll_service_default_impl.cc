@@ -15,7 +15,7 @@
 #define protected public
 #include "base_config.h"
 #include "cfg_field.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "env_func.h"
 #include "coll_service_default_impl.h"
 #include "communicator_impl.h"
@@ -27,7 +27,7 @@
 #include "coll_alg_component_builder.h"
 #include "local_rma_buffer.h"
 #include "local_ub_rma_buffer.h"
-#include "local_ipc_rma_buffer.h"
+#include "local_ipc_rma_buffer_v2.h"
 #include "not_support_exception.h"
 #include "rdma_handle_manager.h"
 #undef private

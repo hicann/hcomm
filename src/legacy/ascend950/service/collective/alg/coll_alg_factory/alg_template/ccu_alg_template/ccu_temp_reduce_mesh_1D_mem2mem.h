@@ -12,7 +12,7 @@
 #define HCCLV2_CCU_TEMP_REDUCE_MESH_1D_MEM2MEM_H_
 
 #include "string_util.h"
-#include "env_config.h"
+#include "env_config_v2.h"
 #include "ccu_alg_template_base.h"
 #include "ccu_instruction_reduce_mesh1d_mem2mem.h"
 #include "executor_utils.h"

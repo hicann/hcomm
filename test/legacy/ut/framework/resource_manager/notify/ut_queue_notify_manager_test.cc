@@ -11,8 +11,8 @@
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
-#include "queue_notify_manager.h"
-#include "local_notify.h"
+#include "queue_notify_manager_v2.h"
+#include "local_notify_v2.h"
 #include "communicator_impl.h"
 
 using namespace Hccl;

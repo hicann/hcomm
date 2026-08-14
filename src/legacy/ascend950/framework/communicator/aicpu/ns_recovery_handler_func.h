@@ -14,7 +14,7 @@
 #include "daemon_func.h"
 #include "communicator_impl_lite.h"
 #include "communicator_impl_lite_manager.h"
-#include "enum_factory.h"
+#include "enum_factory_legacy.h"
 
 namespace Hccl {
 

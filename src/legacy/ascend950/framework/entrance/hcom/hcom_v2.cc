@@ -23,7 +23,7 @@
 #include "hccl_common_v2.h"
 #include "task_param.h"
 #include "types.h"
-#include "comm_topo_desc.h"
+#include "comm_topo_desc_v2.h"
 
 using namespace std;
 using namespace Hccl;

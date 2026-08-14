@@ -20,7 +20,7 @@
 #include "orion_adpt_utils.h"
 #include "rdma_handle_manager.h"
 #include "hccp.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 
 using namespace hcomm;
 

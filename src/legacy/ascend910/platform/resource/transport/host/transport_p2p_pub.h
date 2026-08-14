@@ -17,7 +17,7 @@
 #include "rma_buffer_mgr.h"
 
 namespace hccl {
-using HcclMemExMgr = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<HcclMemEx>>;
+using HcclMemExMgr = hcomm::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<HcclMemEx>>;
 
 typedef enum {
     EX_IPCMEN_SIZE = 0, /**< ipcMenSize */

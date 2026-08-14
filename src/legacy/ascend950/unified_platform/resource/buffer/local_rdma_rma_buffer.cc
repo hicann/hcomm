@@ -9,7 +9,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "local_rdma_rma_buffer.h"
+#include "local_rdma_rma_buffer_v2.h"
 #include "hccp.h"
 #include "exchange_rdma_buffer_dto.h"
 

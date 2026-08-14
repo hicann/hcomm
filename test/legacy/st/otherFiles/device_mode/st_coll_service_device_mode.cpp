@@ -19,7 +19,7 @@
 #include "aicpu_res_package_helper.h"
 #include "alg_topo_package_helper.h"
 #include "ccu_device_manager.h"
-#include "ccu_res_specs.h"
+#include "ccu_res_specs_legacy.h"
 #include "communicator_callback.h"
 #include "stream_utils.h"
 #include "rdma_handle_manager.h"

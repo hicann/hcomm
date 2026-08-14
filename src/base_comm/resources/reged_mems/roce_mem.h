@@ -16,7 +16,7 @@
 #include "reged_mem_mgr.h"
 #include "rma_buffer_mgr.h"
 #include "buffer_key.h"
-#include "../../../../../legacy/ascend950/unified_platform/resource/buffer/local_rdma_rma_buffer.h"
+#include "../../../../../legacy/ascend950/unified_platform/resource/buffer/local_rdma_rma_buffer_v2.h"
 #include "remote_rma_buffer.h"
 #include "exchange_rdma_buffer_dto.h"
 #include "local_rdma_rma_buffer.h"
@@ -28,9 +28,9 @@ namespace hcomm {
 class RoceRegedMemMgr : public RegedMemMgr {
 public:
     using LocalRdmaRmaBufferMgr
-        = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalRdmaRmaBuffer>>;
+        = hcomm::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalRdmaRmaBuffer>>;
     using RemoteRdmaRmaBufferMgr
-        = hccl::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::RemoteRdmaRmaBuffer>>;
+        = hcomm::RmaBufferMgr<hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::RemoteRdmaRmaBuffer>>;
 
     RoceRegedMemMgr();
     ~RoceRegedMemMgr() = default;

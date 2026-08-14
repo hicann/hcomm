@@ -17,7 +17,7 @@
 #include "socket_handle_manager.h"
 #include "communicator_impl.h"
 #include "ranktable_stub_clos.h"
-#include "preempt_port_manager.h"
+#include "preempt_port_manager_v2.h"
 #include "host_socket_handle_manager.h"
 #include "phy_topo.h"
 #include "rank_graph_builder.h"

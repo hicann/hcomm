@@ -10,7 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "launch_device.h"
+#include "launch_device_v2.h"
 #include "log.h"
 #include "mmpa_api.h"
 #include "sal.h"

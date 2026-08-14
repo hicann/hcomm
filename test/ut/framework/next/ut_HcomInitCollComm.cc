@@ -24,7 +24,6 @@
 #include "hcomm_result_defs.h"
 #include "my_rank.h"
 #include "op_base.h"
-#include "op_base_v2.h"
 #include "coll_comm_mgr.h"
 
 extern thread_local s32 g_hcclDeviceId;

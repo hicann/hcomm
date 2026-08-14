@@ -25,7 +25,7 @@
 #include "acl/acl_rt.h"
 #include "launch_aicpu.h"
 #include "hcclCommDfx.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "aicpu_ts_p2p_channel.h"
 #include "aiv_urma_channel.h"
 #include "mem_device_pub.h"

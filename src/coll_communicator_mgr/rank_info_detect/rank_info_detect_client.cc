@@ -14,7 +14,7 @@
 #include <limits.h>
 #include "rank_info_detect_client.h"
 #include "root_handle_v2.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "host_buffer.h"
 #include "binary_stream.h"
 #include "hccp_peer_manager.h"
@@ -27,7 +27,7 @@
 #include "adapter_error_manager_pub.h"
 #include "network_api_exception.h"
 #include "phy_topo_builder.h"
-#include "../../legacy/ascend950/framework/topo/rank_info_detect/preempt_port_manager.h"
+#include "preempt_port_manager_v2.h"
 
 namespace Hccl {
 namespace {

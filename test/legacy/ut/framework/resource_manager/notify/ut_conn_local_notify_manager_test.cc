@@ -15,7 +15,7 @@
 #define protected public
 #include "communicator_impl.h"
 #include "conn_local_notify_manager.h"
-#include "local_notify.h"
+#include "local_notify_v2.h"
 #include "rdma_handle_manager.h"
 #undef protected
 #undef private

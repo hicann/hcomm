@@ -24,5 +24,6 @@ if(TARGET hcomm)
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/resources
         ${CMAKE_CURRENT_SOURCE_DIR}/resources/ccu/ccu_device
+        ${HCOMM_DIR}/src/legacy/ascend950/unified_platform/ccu/ccu_device
     )
 endif()

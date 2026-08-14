@@ -15,7 +15,7 @@
 #include <list>
 #include "types.h"
 #include "orion_adapter_rts.h"
-#include "local_notify.h"
+#include "local_notify_v2.h"
 #include "virtual_topo.h"
 
 namespace Hccl {

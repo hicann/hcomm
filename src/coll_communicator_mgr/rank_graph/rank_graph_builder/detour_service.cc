@@ -9,7 +9,7 @@
  */
 
 #include "detour_service.h"
-#include "env_config/env_config.h"
+#include "env_config/env_config_v2.h"
 #include "detour_rules.h"
 #include "not_support_exception.h"
 
