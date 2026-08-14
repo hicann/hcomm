@@ -1,41 +1,28 @@
 /**
- * Copyright (c) 2025 Huawei Technologies Co., Ltd.
- * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
- * CANN Open Software License Agreement Version 2.0 (the "License").
- * Please refer to the License for details. You may not use this file except in compliance with the License.
- * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
- * See LICENSE in the root of the software repository for the full text of the License.
- */
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
 
 #include "coll_comm_aicpu.h"
+#include "coll_comm_aicpu_mgr.h"
+#include "aicpu_communicator.h"
 #include "adapter_hal_pub.h"
-#include "aicpu_ts_thread.h"
-#include "hcclCommOp.h"
-#include "aicpu_res_package_helper.h"
-#include "ub_transport_lite_impl.h"
-#include "notify_manager.h"
 #include "ns_recovery/aicpu/ns_recovery_func_lite.h"
 #include "dlhal_function_v2.h"
 #include "dfx_profiling_command_handle_lite.h"
-#include "aicpu_daemon_service.h"
 #include "hcclCommTaskExceptionLite.h"
-#include "coll_comm_aicpu_destroy_func.h"
-#include "aicpu_indop_env.h"
-#include "aicpu_task_cache_manager.h"
-#include "stream_lite.h"
-#include "rtsq_a5.h"
-#include "unified_platform/pub_inc/config_plf_log.h"
-
-constexpr u32 NOTIFY_SIZE_EIGHT = 8;
+#include "hcclCommOp.h"
+#include "hcclCommDfxLite.h"
+#include "env_config/env_config_v2.h"
+#include "log.h"
 
 CollCommAicpu::~CollCommAicpu()
 {
-    std::unique_lock<std::shared_mutex> rwLock(threadMutex_);
-    for (auto& thread : threads_) {
-        HcommThreadRegisterCheckExecStatus(reinterpret_cast<ThreadHandle>(thread.get()), nullptr);
-    }
-    threads_.clear();
     HCCL_RUN_INFO("[CollCommAicpu][%s]Group[%s] destroy success", __func__, identifier_.c_str());
 }
 
@@ -52,7 +39,6 @@ HcclResult CollCommAicpu::InitAicpuIndOp(CommAicpuParam* commAicpuParam)
     identifier_ = std::string(commAicpuParam->hcomId);
     topoInfo_.userRankSize = commAicpuParam->userRankSize;
     topoInfo_.userRank = commAicpuParam->userRank;
-    notifys_.reserve(hccl::HCCL_THREAD_NOTIFY_MAX_NUM);
 
     CHK_RET(hrtSetWorkModeAicpu(true));
     CHK_RET(hrtSetlocalDevice(topoInfo_.deviceLogicId));
@@ -67,17 +53,22 @@ HcclResult CollCommAicpu::InitAicpuIndOp(CommAicpuParam* commAicpuParam)
 
     CHK_RET(Hccl::DlHalFunctionV2::GetInstance().DlHalFunctionInit());
 
+    // commEngineResMgr_/channelMgr_ 为 CollCommAicpu 成员（unique_ptr），生命周期被 this 严格包含，
+    // 因此 lambda 捕获 this 安全，不会产生悬垂指针（析构顺序见 coll_comm_aicpu.h 成员声明）
+    EXCEPTION_CATCH(
+        commEngineResMgr_ = std::make_unique<CommEngineResAicpuMgr>(
+            dfx_,
+            [this](bool isTimeout) {
+                return this->CheckIndOpExecStatus(isTimeout);
+            }),
+        return HCCL_E_PTR);
+    CHK_SMART_PTR_NULL(commEngineResMgr_);
+
+    EXCEPTION_CATCH(channelMgr_ = std::make_unique<ChannelAicpuMgr>(dfx_, topoInfo_), return HCCL_E_PTR);
+    CHK_SMART_PTR_NULL(channelMgr_);
+
     commStatus_ = HcclCommStatus::HCCL_COMM_STATUS_READY;
 
-    static std::once_flag initBackGround;
-    std::call_once(initBackGround, [this]() {
-        this->InitBackGroundThread();
-    });
-
-    static std::once_flag initEnv;
-    std::call_once(initEnv, [this, commAicpuParam]() {
-        this->InitIndopEnv(commAicpuParam);
-    });
     HCCL_RUN_INFO(
         "[%s]success, group[%s], deviceLogicId[%u], devicePhyId[%u], deviceType[%u], rankSize[%u] "
         "userRank[%u], devId[%u]",
@@ -101,350 +92,23 @@ HcclResult CollCommAicpu::InitHDCommunicate(CommAicpuParam* commAicpuParam)
     return HCCL_SUCCESS;
 }
 
-void CollCommAicpu::InitIndopEnv(CommAicpuParam* commAicpuParam)
-{
-    hcomm::SetTaskExceptionEnable(commAicpuParam->commConfig.taskExceptionEnable);
-    Hccl::SetPlfDebugConfigValue(commAicpuParam->commConfig.plfDebugConfig);
-    HCCL_RUN_INFO(
-        "[%s]Env: taskExceptionEnable[%d], notifyWaitTimeout[%u s], plfDebugConfig[0x%llx]", __func__,
-        commAicpuParam->commConfig.taskExceptionEnable, commAicpuParam->commConfig.notifyWaitTimeout,
-        commAicpuParam->commConfig.plfDebugConfig);
-}
-
 void CollCommAicpu::SetCommmStatus(HcclCommStatus status)
 {
     HCCL_INFO("[%s]group[%s], commStatus[%d]", __func__, identifier_.c_str(), static_cast<int>(status));
     commStatus_ = status;
 }
 
-HcclResult CollCommAicpu::InitThreads(ThreadMgrAicpuParam* param)
-{
-    u32 threadNum = param->threadNum;
-    std::vector<std::shared_ptr<Thread>> outThreads;
-    outThreads.reserve(threadNum);
-    std::string hcomId(param->hcomId);
-    for (u32 i = 0; i < threadNum; ++i) {
-        std::string thdUniqueId(param->threadParam[i], THREAD_UNIQUE_ID_MAX_SIZE);
-        if (UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
-            std::ostringstream oss;
-            oss << "threadParam[" << i << "] raw bytes: ";
-            for (u32 j = 0; j < THREAD_UNIQUE_ID_MAX_SIZE; ++j) {
-                oss << std::hex << std::setw(2) << std::setfill('0')
-                    << static_cast<unsigned int>(static_cast<unsigned char>(param->threadParam[i][j])) << " ";
-            }
-            HCCL_INFO("[CollCommAicpu][%s] %s", __func__, oss.str().c_str());
-        }
-        std::shared_ptr<AicpuTsThread> thread;
-        EXCEPTION_CATCH((thread = std::make_shared<AicpuTsThread>(thdUniqueId)), return HCCL_E_PTR);
-        HcclResult ret = thread->Init();
-        if (ret != HCCL_SUCCESS) {
-            HCCL_ERROR(
-                "[CollCommAicpu][%s] comm identifier[%s], init threads num[%u] failed at index %u", __func__,
-                hcomId.c_str(), param->threadNum, i);
-            return ret;
-        }
-        outThreads.emplace_back(thread);
-    }
-
-    ThreadHandle* threadArray = static_cast<ThreadHandle*>(param->deviceHandle);
-    // 空指针校验
-    CHK_PTR_NULL(threadArray);
-    for (size_t i = 0; i < outThreads.size(); ++i) {
-        threadArray[i] = reinterpret_cast<ThreadHandle>(outThreads[i].get()); // 拷贝裸指针
-        HCCL_INFO(
-            "[CollCommAicpu][%s] threadArray[%zu] = [%llu]", __func__, i,
-            static_cast<unsigned long long>(threadArray[i]));
-        CHK_RET(RegisterThreadAddDfxTaskInfo(threadArray[i]));
-        CHK_RET(RegisterThreadCacheCallback(threadArray[i]));
-    }
-    std::unique_lock<std::shared_mutex> rwLock(threadMutex_);
-    threads_.insert(
-        threads_.end(), std::make_move_iterator(outThreads.begin()), std::make_move_iterator(outThreads.end()));
-    HCCL_INFO(
-        "[CollCommAicpu][%s] comm identifier[%s], init threads num[%u] success", __func__, hcomId.c_str(), threadNum);
-    return HCCL_SUCCESS;
-}
-
-HcclResult CollCommAicpu::RegisterThreadAddDfxTaskInfo(ThreadHandle thread)
-{
-    std::function<HcclResult(bool)> checkExecStatusCallback = [this](bool isTimeout) {
-        return this->CheckIndOpExecStatus(isTimeout);
-    };
-    int32_t ret = HcommThreadRegisterCheckExecStatus(thread, checkExecStatusCallback);
-    if (ret != 0) {
-        HCCL_ERROR(
-            "[%s]HcommThreadRegisterCheckExecStatus failed, ret[%d], thread[0x%llx], checkExecStatusCallback[%p]",
-            __func__, ret, static_cast<unsigned long long>(thread), static_cast<const void*>(&checkExecStatusCallback));
-        return HCCL_E_PTR;
-    }
-
-    std::function<void(Hccl::TaskInfoCircularQueue*)> reportCallback = [this](Hccl::TaskInfoCircularQueue* taskQueue) {
-        dfx_.ReportStreamTask(taskQueue);
-    };
-    ret = HcommNewThreadRegisterDfx(thread, reportCallback);
-    if (ret != 0) {
-        HCCL_ERROR("[%s] HcommNewThreadRegisterDfx failed, ret[%d], thread[0x%llx]", __func__, ret, thread);
-        return HCCL_E_PTR;
-    }
-
-    std::function<const void*()> getLatestOpInfoCallback = [this]() -> const void* {
-        return dfx_.GetLatestDfxOpInfo();
-    };
-    ret = HcommNewThreadRegisterGetLatestDfxOpInfo(thread, getLatestOpInfoCallback);
-    if (ret != 0) {
-        HCCL_ERROR(
-            "[%s] HcommNewThreadRegisterGetLatestDfxOpInfo failed, ret[%d], thread[0x%llx]", __func__, ret, thread);
-        return HCCL_E_PTR;
-    }
-
-    return HCCL_SUCCESS;
-}
-
-HcclResult CollCommAicpu::RegisterThreadCacheCallback(ThreadHandle thread)
-{
-    HCCL_INFO("[CollCommAicpu][RegisterThreadCacheCallback] register cache callback for thread[0x%016llx]", thread);
-    AicpuTsThread* threadPtr = reinterpret_cast<AicpuTsThread*>(thread);
-    CHK_PTR_NULL(threadPtr);
-    auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
-    CHK_PTR_NULL(streamLitePtr);
-    Hccl::RtsqA5* rtsqA5 = static_cast<Hccl::RtsqA5*>(streamLitePtr->GetRtsq());
-    CHK_PTR_NULL(rtsqA5);
-    CHK_RET(rtsqA5->SetAicpuTsThreadPtr(threadPtr));
-    CHK_RET(rtsqA5->SetNeedCacheTaskCallback(hcomm::AicpuTaskCacheManager::NeedCacheTask));
-    CHK_RET(rtsqA5->SetAddSqeArrayCallback(hcomm::AicpuTaskCacheManager::AddSqeArray));
-    HCCL_INFO(
-        "[CollCommAicpu][RegisterThreadCacheCallback] register cache callback for thread[0x%016llx] success", thread);
-    return HCCL_SUCCESS;
-}
-
-HcclResult CollCommAicpu::AllocChannelResource(HcclChannelUrmaRes* commParam)
-{
-    HCCL_INFO(
-        "[CollCommAicpu][%s] deviceLogicId[%d], devicePhyId[%u], deviceType[%d], commParam->channelList[%p], "
-        "commParam->listNum[%u], commParam->uniqueIdAddr[%p], commParam->uniqueIdSize[%u]",
-        __func__, topoInfo_.deviceLogicId, topoInfo_.devicePhyId, topoInfo_.deviceType, commParam->channelList,
-        commParam->listNum, commParam->uniqueIdAddr, commParam->uniqueIdSize);
-    CHK_RET(InitUrmaChannel(commParam));
-    return HCCL_SUCCESS;
-}
-
-HcclResult CollCommAicpu::ProcessUrmaRes(HcclChannelUrmaRes* commParam, bool isInit)
-{
-    HCCL_INFO(
-        "[CollCommAicpu][%s] commParam->uniqueIdAddr[%p], commParam->uniqueIdSize[%u]", __func__,
-        commParam->uniqueIdAddr, commParam->uniqueIdSize);
-    ChannelHandle* channelList = reinterpret_cast<ChannelHandle*>(commParam->channelList);
-    u8* currentSrcAddr = reinterpret_cast<u8*>(commParam->uniqueIdAddr);
-    u32* addSize = reinterpret_cast<u32*>(commParam->channelSizeAddr);
-    CHK_PTR_NULL(channelList);
-    CHK_PTR_NULL(currentSrcAddr);
-    CHK_PTR_NULL(addSize);
-
-    for (u32 index = 0; index < commParam->listNum; index++) {
-        std::vector<char> data(*addSize);
-
-        // 计算地址块的偏移
-        CHK_SAFETY_FUNC_RET(memcpy_s(data.data(), data.size(), currentSrcAddr, *addSize));
-        currentSrcAddr += *addSize;
-        addSize++;
-        // 反序列化得到device侧transport对象
-        Hccl::AicpuResPackageHelper helper;
-        auto dataVec = helper.ParsePackedData(data);
-
-        Hccl::AicpuResMgrType resType = Hccl::AicpuResMgrType::STREAM; // 待修改
-        if (static_cast<u32>(resType) >= dataVec.size()) {
-            HCCL_ERROR("[CollCommAicpu][%s] fail, resType[%d], dataVec size[%zu]", __func__, resType, dataVec.size());
-            return HCCL_E_PARA;
-        }
-
-        ChannelHandle channelHandle{0};
-        if (isInit) {
-            CHK_RET(ParsePackData(dataVec[resType].data, channelHandle));
-            channelList[index] = channelHandle;
-            CHK_RET(RegisterChannelCacheCallback(channelHandle)); // 注册回调函数用于aicpu task cache
-            dfx_.AddChannelRemoteRankId(channelHandle, commParam->remoteRankList[index]);
-        } else {
-            channelHandle = channelList[index];
-            if (!ubTransportMap_.count(channelHandle)) {
-                HCCL_ERROR("[CollCommAicpu][%s] fail, resType[%d], current ChannelHandle nullptr", __func__, resType);
-                return HCCL_E_PARA;
-            }
-            CHK_RET(ResumePackData(dataVec[resType].data, channelHandle));
-        }
-
-        // 打印
-        HCCL_INFO(
-            "[CollCommAicpu][%s] index[%u], currentSrcAddr[%p], channelSizeAddr[%p], channelHandle[0x%llx]", __func__,
-            index, currentSrcAddr, commParam->channelSizeAddr, static_cast<unsigned long long>(channelHandle));
-    }
-
-    return HCCL_SUCCESS;
-}
-
-HcclResult CollCommAicpu::InitUrmaChannel(HcclChannelUrmaRes* commParam) { return ProcessUrmaRes(commParam, true); }
-
-HcclResult CollCommAicpu::ParsePackData(std::vector<char>& data, ChannelHandle& handle)
-{
-    HCCL_DEBUG("[CollCommAicpu][%s] data: ptr[%p], size[%zu]", __func__, data.data(), data.size());
-    Hccl::BinaryStream binaryStream(data);
-
-    std::vector<char> transpUniqueId;
-    binaryStream >> transpUniqueId;
-
-    Hccl::BinaryStream binaryStreamForType(transpUniqueId);
-    u32 transType;
-    binaryStreamForType >> transType;
-    HCCL_INFO("[CollCommAicpu][ParsePackData] transType[%u]", transType);
-    if (transType == Hccl::TransportType::UB) {
-        std::unique_ptr<Hccl::UbTransportLiteImpl> ubTransportLiteImpl;
-        EXCEPTION_CATCH(
-            (ubTransportLiteImpl = std::make_unique<Hccl::UbTransportLiteImpl>(transpUniqueId)), return HCCL_E_PTR);
-        CHK_SMART_PTR_NULL(ubTransportLiteImpl);
-        ubTransportLiteImpl->SetTaskExceptionEnable(hcomm::GetTaskExceptionEnable());
-        handle = reinterpret_cast<uint64_t>(ubTransportLiteImpl.get());
-        ubTransportMap_.insert({handle, std::move(ubTransportLiteImpl)});
-    } else if (transType == Hccl::TransportType::P2P) {
-        std::unique_ptr<Hccl::P2PTransportLiteImpl> p2pTransportLiteImpl;
-        EXCEPTION_CATCH(
-            (p2pTransportLiteImpl = std::make_unique<Hccl::P2PTransportLiteImpl>(transpUniqueId)), return HCCL_E_PTR);
-        CHK_SMART_PTR_NULL(p2pTransportLiteImpl);
-        handle = reinterpret_cast<uint64_t>(p2pTransportLiteImpl.get());
-        p2pTransportMap_.insert({handle, std::move(p2pTransportLiteImpl)});
-    } else if (transType == Hccl::TransportType::ROCE) {
-        std::unique_ptr<Hccl::RoceTransportLiteImpl> roceTransportLiteImpl;
-        EXCEPTION_CATCH(
-            (roceTransportLiteImpl = std::make_unique<Hccl::RoceTransportLiteImpl>(transpUniqueId)), return HCCL_E_PTR);
-        CHK_SMART_PTR_NULL(roceTransportLiteImpl);
-
-        handle = reinterpret_cast<uint64_t>(roceTransportLiteImpl.get());
-        roceTransportMap_.insert({handle, std::move(roceTransportLiteImpl)});
-    } else {
-        HCCL_ERROR("[CollCommAicpu][ParsePackData] unsupported transportType[%u]", transType);
-        return HCCL_E_INTERNAL;
-    }
-
-    return HCCL_SUCCESS;
-}
-
-HcclResult CollCommAicpu::RegisterChannelCacheCallback(ChannelHandle channel)
-{
-    // 注意: 目前aicpu task cache只支持UB.URMA协议
-    std::unordered_map<ChannelHandle, std::unique_ptr<Hccl::UbTransportLiteImpl>>::iterator iter
-        = ubTransportMap_.find(channel);
-    if (iter != ubTransportMap_.end()) {
-        // 注册回调函数用于判断是否需要cache task, 以及添加wqe数组到aicpu task cache
-        HCCL_INFO(
-            "[CollCommAicpu][RegisterChannelCacheCallback] register cache callback for channel[0x%016llx]", channel);
-        CHK_PTR_NULL(iter->second);
-        iter->second->SetNeedCacheTaskCallback(hcomm::AicpuTaskCacheManager::NeedCacheTask);
-        iter->second->SetAddWqeArrayCallback(hcomm::AicpuTaskCacheManager::AddWqeArray);
-        HCCL_INFO(
-            "[CollCommAicpu][RegisterChannelCacheCallback] register cache callback for channel[0x%016llx] success",
-            channel);
-    }
-    return HCCL_SUCCESS;
-}
-
-HcclResult CollCommAicpu::NotifyFree(NotifyMgrAicpuParam* param)
-{
-    u32 notifyNum = param->notifyNum;
-    NotifyHandle* notifyArray = static_cast<NotifyHandle*>(param->deviceHandle);
-    std::string hcomId(param->hcomId);
-    // 空指针校验
-    CHK_PTR_NULL(notifyArray);
-    for (size_t i = 0; i < notifyNum; ++i) {
-        LocalNotify* notify = reinterpret_cast<LocalNotify*>(notifyArray[i]);
-        HCCL_INFO(
-            "[CollCommAicpu][%s] notifyArray[%zu]=[%llu]", __func__, i,
-            static_cast<unsigned long long>(notifyArray[i]));
-        auto it = std::find_if(notifys_.begin(), notifys_.end(), [notify](const std::unique_ptr<LocalNotify>& ptr) {
-            return ptr.get() == notify;
-        });
-        if (it != notifys_.end()) {
-            HCCL_INFO(
-                "[CollCommAicpu][%s] comm identifier[%s], free notifys[%llu] success", __func__, hcomId.c_str(),
-                static_cast<unsigned long long>(notifyArray[i]));
-            notifys_.erase(it);
-        } else {
-            HCCL_RUN_WARNING("[CollCommAicpu][%s] localNotify[%zu] not found in notifys_", __func__, i);
-        }
-    }
-
-    HCCL_INFO(
-        "[CollCommAicpu][%s] comm identifier[%s], free notifys num[%u] success", __func__, hcomId.c_str(), notifyNum);
-    return HCCL_SUCCESS;
-}
-
-HcclResult CollCommAicpu::NotifyAlloc(NotifyMgrAicpuParam* param)
-{
-    u32 notifyNum = param->notifyNum;
-    std::string notifysStr = std::string(param->notifyParam, NOTIFY_UNIQUE_ID_MAX_SIZE);
-    std::string hcomId(param->hcomId);
-    size_t notifySize = notifys_.size();
-    HCCL_INFO(
-        "[CollCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] begin, before notifySize[%zu]", __func__,
-        hcomId.c_str(), notifyNum, notifySize);
-    if (UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
-        std::ostringstream oss;
-        oss << "notifyParam" << " raw bytes: ";
-        for (u32 i = 0; i < NOTIFY_UNIQUE_ID_MAX_SIZE; ++i) {
-            oss << std::hex << std::setw(2) << std::setfill('0')
-                << static_cast<unsigned int>(static_cast<unsigned char>(param->notifyParam[i])) << " ";
-        }
-        HCCL_INFO("[CollCommAicpu][%s] %s", __func__, oss.str().c_str());
-    }
-    HcclResult ret = NotifyManager::ParseBinNotifys(notifysStr, notifys_);
-    if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR(
-            "[CollCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] failed %d", __func__, hcomId.c_str(),
-            notifyNum, static_cast<int>(ret));
-        return ret;
-    }
-    HCCL_INFO(
-        "[CollCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] end, after notifySize[%zu]", __func__,
-        hcomId.c_str(), notifyNum, notifys_.size());
-    NotifyHandle* notifyArray = static_cast<NotifyHandle*>(param->deviceHandle);
-    CHK_PTR_NULL(notifyArray);
-    // 空指针校验
-    for (size_t i = 0; i < notifyNum; ++i) {
-        notifyArray[i] = reinterpret_cast<NotifyHandle>(notifys_[i + notifySize].get()); // 拷贝裸指针
-        HCCL_INFO(
-            "[CollCommAicpu][%s] notifyArray[%zu] = [%llu]", __func__, i + notifySize,
-            static_cast<unsigned long long>(notifyArray[i]));
-    }
-
-    HCCL_INFO(
-        "[CollCommAicpu][%s] comm identifier[%s], alloc notifys num[%u] success", __func__, hcomId.c_str(), notifyNum);
-    return HCCL_SUCCESS;
-}
-
-hccl::NsRecoveryLitePtr CollCommAicpu::GetNsRecoveryLitePtr() { return nsRecoveryLitePtr_; }
-
 HcclResult CollCommAicpu::Clean()
 {
-    for (auto& transPort : ubTransportMap_) {
-        CHK_RET(transPort.second->Clean());
-    }
-    HCCL_INFO("[%s][CollCommAicpu]Clean() finished", __func__);
-
-    return HCCL_SUCCESS;
-}
-
-HcclResult CollCommAicpu::ResumePackData(std::vector<char>& data, ChannelHandle& handle)
-{
-    Hccl::BinaryStream binaryStream(data);
-    std::vector<char> transpUniqueId;
-    binaryStream >> transpUniqueId;
-
-    auto& transPortPtr = ubTransportMap_[handle];
-    CHK_RET(transPortPtr->Resume(transpUniqueId));
-    return HCCL_SUCCESS;
+    CHK_SMART_PTR_NULL(channelMgr_);
+    return channelMgr_->Clean();
 }
 
 HcclResult CollCommAicpu::Resume(HcclChannelUrmaRes* commParam)
 {
     CHK_PTR_NULL(commParam);
-    CHK_RET(ProcessUrmaRes(commParam, false));
+    CHK_SMART_PTR_NULL(channelMgr_);
+    CHK_RET(channelMgr_->Resume(commParam));
     nsRecoveryLitePtr_->SetNeedClean(false);
 
     SetErrorReported(false);
@@ -453,11 +117,12 @@ HcclResult CollCommAicpu::Resume(HcclChannelUrmaRes* commParam)
     return HCCL_SUCCESS;
 }
 
+hccl::NsRecoveryLitePtr CollCommAicpu::GetNsRecoveryLitePtr() { return nsRecoveryLitePtr_; }
+
 HcclResult CollCommAicpu::CheckIndOpExecStatus(bool timeout)
 {
     if (timeout) {
         HCCL_ERROR("[%s]comm[%s] op launch timeout, print taskException", __func__, identifier_.c_str());
-        // 先打印本通信域的taskException，再打印其他通信域的taskException
         hcomm::HcclCommTaskExceptionLite::GetInstance().PrintCommTaskException(this);
         hcomm::HcclCommTaskExceptionLite::GetInstance().PrintAllCommTaskException();
         return HCCL_E_INTERNAL;
@@ -469,31 +134,6 @@ HcclResult CollCommAicpu::CheckIndOpExecStatus(bool timeout)
         return HCCL_E_INTERNAL;
     }
     return HCCL_SUCCESS;
-}
-
-void CollCommAicpu::InitBackGroundThread()
-{
-    static auto commandToBackGroud = Hccl::CommandToBackGroud::Default;
-    static auto daemonServiceRun = [](void* info) {
-        Hccl::AicpuDaemonService::GetInstance().ServiceRun(info);
-    };
-    static auto daemonServiceStop = [](void* info) {
-        Hccl::AicpuDaemonService::GetInstance().ServiceStop(info);
-    };
-
-    // 注册守护进程函数
-    hcomm::HcclCommTaskExceptionLite::GetInstance().Init(devId_);
-    Hccl::AicpuDaemonService::GetInstance().Register(&hcomm::HcclCommTaskExceptionLite::GetInstance());
-    Hccl::AicpuDaemonService::GetInstance().Register(&hccl::CollCommAicpuDestroyFunc::GetInstance());
-    Hccl::AicpuDaemonService::GetInstance().Register(&NsRecoveryFuncLite::GetInstance());
-
-    // 启动背景线程
-    if (Hccl::StartMC2MaintenanceThread != nullptr) {
-        Hccl::StartMC2MaintenanceThread(daemonServiceRun, &commandToBackGroud, daemonServiceStop, &commandToBackGroud);
-        HCCL_RUN_INFO("[%s]start BackGround thread success.", __func__);
-    } else {
-        HCCL_WARNING("[%s]StartMC2MaintenanceThread func is nullptr", __func__);
-    }
 }
 
 HcclResult CollCommAicpu::BackGroundGetCmd(Hccl::KfcCommand& cmd)
@@ -526,3 +166,70 @@ HcclResult CollCommAicpu::SendErrorMessageReportToHost(Hccl::ErrorMessageReport&
 HcclResult CollCommAicpu::RegisterProfCallBack() { return Hccl::DfxRegisterProfCallBack(); }
 
 u32 CollCommAicpu::UpdateIndex() { return index_ += 1; }
+
+HcclResult CollCommAicpu::InitDfxOpInfo(HcclDfxOpInfo* aicpuDfxInfo)
+{
+    HCCL_INFO(
+        "[%s]group[%s], algTag[%s], profiling L0[%d], L1[%d]", __func__, identifier_.c_str(), aicpuDfxInfo->algTag,
+        Hccl::DfxProfilingHandlerLite::GetInstance().GetProfL0State(),
+        Hccl::DfxProfilingHandlerLite::GetInstance().GetProfL1State());
+
+    Hccl::DfxDfxOpInfo newDfxOpInfo{};
+    newDfxOpInfo.opType = static_cast<u8>(aicpuDfxInfo->opType);
+    newDfxOpInfo.dataType = static_cast<u8>(aicpuDfxInfo->dataType);
+
+    newDfxOpInfo.commHandle = reinterpret_cast<void*>(this);
+    newDfxOpInfo.count = aicpuDfxInfo->dataCount;
+    newDfxOpInfo.srcAddr = aicpuDfxInfo->inputMemAddr;
+    newDfxOpInfo.dstAddr = aicpuDfxInfo->outputMemAddr;
+    newDfxOpInfo.srcSize = aicpuDfxInfo->inputMemSize;
+    newDfxOpInfo.dstSize = aicpuDfxInfo->outputMemSize;
+    newDfxOpInfo.opIndex = UpdateIndex();
+    newDfxOpInfo.cpuWaitAicpuNotifyId = aicpuDfxInfo->cpuWaitAicpuNotifyId;
+    newDfxOpInfo.algType = static_cast<u8>(Hccl::AlgTypeVal::ALG_TYPE_NOT_SPECIFIED);
+    auto algTagLen = strnlen(aicpuDfxInfo->algTag, sizeof(newDfxOpInfo.algTag) - 1);
+    CHK_SAFETY_FUNC_RET(
+        memcpy_s(newDfxOpInfo.algTag, sizeof(newDfxOpInfo.algTag) - 1, aicpuDfxInfo->algTag, algTagLen));
+
+    CHK_RET(dfx_.SetCurrDfxOpInfo(&newDfxOpInfo));
+    return HCCL_SUCCESS;
+}
+
+HcclResult CollCommAicpu::ProfilingReportDeviceOp()
+{
+    HcclCommDfxLite* hcclCommDfxLite = GetHcclCommDfxLite();
+    CHK_PTR_NULL(hcclCommDfxLite);
+    auto* currDfxOpInfo = static_cast<const Hccl::DfxDfxOpInfo*>(hcclCommDfxLite->GetLatestDfxOpInfo());
+    if (currDfxOpInfo == nullptr) {
+        HCCL_WARNING("[%s] no op info registered, skip ProfilingReportDeviceOp.", __func__);
+        return HCCL_SUCCESS;
+    }
+
+    const auto& sharedThreads = commEngineResMgr_->GetAllThread();
+    std::vector<hccl::Thread*> threads;
+    threads.reserve(sharedThreads.size());
+    for (const auto& t : sharedThreads) {
+        threads.push_back(t.get());
+    }
+    hcclCommDfxLite->ReportAllTasks(threads);
+    EXCEPTION_CATCH(
+        Hccl::DfxProfilingHandlerLite::GetInstance().ReportHcclOpInfo(*currDfxOpInfo), return HCCL_E_INTERNAL);
+    return HCCL_SUCCESS;
+}
+
+HcclResult CollCommAicpu::UpdateTask()
+{
+    CHK_RET(dfx_.UpdateProfStat());
+    return HCCL_SUCCESS;
+}
+
+hccl::HcclCommAicpu* CollCommAicpu::GetLegacy910CollComm() { return legacy910CollComm_.first.get(); }
+
+void CollCommAicpu::SetLegacy910CollComm(std::shared_ptr<hccl::HcclCommAicpu> comm)
+{
+    legacy910CollComm_.first = std::move(comm);
+}
+
+bool CollCommAicpu::IsLegacy910CollCommBusy() { return legacy910CollComm_.second.load(); }
+
+void CollCommAicpu::SetLegacy910CollCommBusy(bool busy) { legacy910CollComm_.second.store(busy); }

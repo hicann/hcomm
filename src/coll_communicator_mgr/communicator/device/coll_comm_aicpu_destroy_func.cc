@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 #include "coll_comm_aicpu_destroy_func.h"
-#include "aicpu_indop_process.h"
+#include "coll_comm_aicpu_mgr.h"
 #include <shared_mutex>
 #include "kernel_entrance.h"
 
@@ -36,13 +36,13 @@ HcclResult CollCommAicpuDestroyFunc::Process()
 {
     std::vector<std::string> destroyComm;
     {
-        std::shared_lock<std::shared_mutex> rwlock(AicpuIndopProcess::AicpuGetCommMutex());
+        std::shared_lock<std::shared_mutex> rwlock(CollCommAicpuMgr::GetInstance().GetMutex());
 
-        std::vector<std::pair<std::string, CollCommAicpuMgr*>> aicpuCommInfo;
-        CHK_RET(AicpuIndopProcess::AicpuGetCommAll(aicpuCommInfo));
+        std::vector<std::pair<std::string, CollCommAicpu*>> aicpuCommInfo;
+        CHK_RET(CollCommAicpuMgr::GetInstance().GetAllComms(aicpuCommInfo));
 
         for (auto& commInfo : aicpuCommInfo) {
-            CollCommAicpu* aicpuComm = commInfo.second->GetCollCommAicpu();
+            CollCommAicpu* aicpuComm = commInfo.second;
             CHK_PTR_NULL(aicpuComm);
 
             if (aicpuComm->GetCommmStatus() == HcclCommStatus::HCCL_COMM_STATUS_INVALID) {
@@ -72,7 +72,7 @@ HcclResult CollCommAicpuDestroyFunc::Process()
     }
 
     for (std::string& groupName : destroyComm) {
-        (void)(AicpuIndopProcess::AicpuDestroyCommbyGroup(groupName));
+        (void)(CollCommAicpuMgr::GetInstance().DestroyComm(groupName));
     }
     return HCCL_SUCCESS;
 }

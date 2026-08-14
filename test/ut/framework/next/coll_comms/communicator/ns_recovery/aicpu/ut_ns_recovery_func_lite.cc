@@ -1,9 +1,18 @@
+/**
+ * Copyright (c) 2025 Huawei Technologies Co., Ltd.
+ * This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+ * CANN Open Software License Agreement Version 2.0 (the "License").
+ * Please refer to the License for details. You may not use this file except in compliance with the License.
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * See LICENSE in the root of the software repository for the full text of the License.
+ */
+
 #include "gtest/gtest.h"
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
 
 #include "ns_recovery/aicpu/ns_recovery_func_lite.h"
-#include "aicpu_indop_process.h"
 #include "coll_comm_aicpu_mgr.h"
 
 using namespace hccl;
@@ -130,16 +139,16 @@ TEST_F(NsRecoveryFuncLiteTest, Ut_Call_When_NoComm_Expect_NoException)
 // 测试 Call() - 有通信域但状态为 INVALID，覆盖 shared_lock + continue 分支
 TEST_F(NsRecoveryFuncLiteTest, Ut_Call_When_CommStatusInvalid_Expect_SkipComm)
 {
-    MOCKER_CPP(&CollCommAicpuMgr::InitAicpuIndOp).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollCommAicpu::InitAicpuIndOp).stubs().will(returnValue(HCCL_SUCCESS));
 
     CommAicpuParam commAicpuParam;
     std::string commName = "ns_recovery_test_group";
     strncpy(commAicpuParam.hcomId, commName.c_str(), HCOMID_MAX_SIZE - 1);
-    EXPECT_EQ(AicpuIndopProcess::AicpuIndOpCommInit(&commAicpuParam), HCCL_SUCCESS);
+    EXPECT_EQ(CollCommAicpuMgr::GetInstance().InitComm(&commAicpuParam), HCCL_SUCCESS);
 
     // Call() 获取 shared_lock 后遍历通信域，状态为 INVALID 则 continue
     NsRecoveryFuncLite::GetInstance().Call();
 
-    EXPECT_EQ(AicpuIndopProcess::AicpuDestroyCommbyGroup(commAicpuParam.hcomId), HCCL_SUCCESS);
+    EXPECT_EQ(CollCommAicpuMgr::GetInstance().DestroyComm(commAicpuParam.hcomId), HCCL_SUCCESS);
     GlobalMockObject::verify();
 }

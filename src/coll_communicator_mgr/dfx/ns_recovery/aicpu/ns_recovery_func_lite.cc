@@ -11,7 +11,7 @@
 #include "kfc.h"
 #include "sal_pub.h"
 #include "ns_recovery_lite.h"
-#include "aicpu_indop_process.h"
+#include "coll_comm_aicpu_mgr.h"
 
 namespace hccl {
 NsRecoveryFuncLite& NsRecoveryFuncLite::GetInstance()
@@ -22,16 +22,16 @@ NsRecoveryFuncLite& NsRecoveryFuncLite::GetInstance()
 
 void NsRecoveryFuncLite::Call()
 {
-    std::shared_lock<std::shared_mutex> rwlock(AicpuIndopProcess::AicpuGetCommMutex());
+    std::shared_lock<std::shared_mutex> rwlock(CollCommAicpuMgr::GetInstance().GetMutex());
 
-    std::vector<std::pair<std::string, CollCommAicpuMgr*>> aicpuCommInfo;
-    auto ret = AicpuIndopProcess::AicpuGetCommAll(aicpuCommInfo);
+    std::vector<std::pair<std::string, CollCommAicpu*>> aicpuCommInfo;
+    auto ret = CollCommAicpuMgr::GetInstance().GetAllComms(aicpuCommInfo);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("[NsRecovery][BackGround] AicpuGetCommAll failed, errNo[0x%016llx]", ret);
         return;
     }
     for (auto& commInfo : aicpuCommInfo) {
-        CollCommAicpu* deviceComm = commInfo.second->GetCollCommAicpu();
+        CollCommAicpu* deviceComm = commInfo.second;
         if (deviceComm->GetCommmStatus() == HcclCommStatus::HCCL_COMM_STATUS_INVALID) {
             continue;
         }
@@ -93,7 +93,7 @@ void NsRecoveryFuncLite::StreamClean(CollCommAicpu* deviceComm)
     }
 
     // 通过thread获得streamlite信息，清理资源
-    std::vector<std::shared_ptr<hccl::Thread>> threads = deviceComm->GetAllThread();
+    std::vector<std::shared_ptr<hccl::Thread>> threads = deviceComm->GetCommEngineResMgr()->GetAllThread();
     for (auto& thread : threads) {
         Hccl::StreamLite* streamLitePtr = reinterpret_cast<Hccl::StreamLite*>(thread->GetStreamLitePtr());
         streamLitePtr->GetRtsq()->Reset();

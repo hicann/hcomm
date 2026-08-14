@@ -90,7 +90,7 @@ void ExecutorTracer::HandleDestroyComm(AicpuComContext* const ctx)
     }
 
     for (auto& groupName : destroyGroupName) {
-        std::unique_lock<std::shared_mutex> rwlock(AicpuHcclProcess::AicpuGetCommMutex());
+        // DestroyComm 内部已加锁，此处无需再加锁（避免 std::shared_mutex 非递归重复加锁死锁）
         AicpuHcclProcess::AicpuDestoryCommbyGroup(groupName);
     }
 }

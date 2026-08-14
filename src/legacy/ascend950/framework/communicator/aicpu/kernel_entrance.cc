@@ -20,30 +20,13 @@
 #include "inc/aicpu_utils.h"
 #ifdef CCL_KERNEL_AICPU
 #include "profiling_command_handle_lite.h"
-#include "aicpu_indop_process.h"
+#include "coll_comm_aicpu_mgr.h"
 #endif
 
 std::unordered_map<std::string, void*> g_taskExpDevMemMap;
 std::mutex g_taskExpDevMemMapMutex;
 extern "C" {
 using namespace Hccl;
-
-uint32_t SetOldA5CommToCommMgr(std::string group, Hccl::CommunicatorImplLite* communicatorImplLite)
-{
-#ifdef CCL_KERNEL_AICPU
-    CollCommAicpuMgr* collCommAicpuMgr = nullptr;
-    HcclResult ret = AicpuIndopProcess::AcquireAicpuCommMgr(group, &collCommAicpuMgr);
-    if (ret != HcclResult::HCCL_SUCCESS) {
-        HCCL_ERROR("%s Acquire aicpu commMgr failed, group[%s].", __func__, group.c_str());
-        return 1;
-    }
-    CHK_PRT_RET(
-        collCommAicpuMgr == nullptr, HCCL_ERROR("%s collCommAicpuMgr is null, group[%s]", __func__, group.c_str()), 1);
-    collCommAicpuMgr->SetOldA5Comm(communicatorImplLite);
-    HCCL_INFO("Acquire AicpuCommMgr success");
-#endif
-    return 0;
-}
 
 uint32_t HcclKernelEntrance(void* args)
 {
@@ -73,11 +56,6 @@ uint32_t HcclKernelEntrance(void* args)
     Hccl::CommunicatorImplLite* communicatorImplLite = CommunicatorImplLiteMgr::GetInstance().Get(commIdIndex);
     if (communicatorImplLite == nullptr) {
         HCCL_ERROR("HcclKernelEntrance communicatorImplLite is null.");
-        return 1;
-    }
-
-    if (SetOldA5CommToCommMgr(kernelParam->comm.commId, communicatorImplLite) != 0) {
-        HCCL_ERROR("SetOldA5CommToCommMgr failed.");
         return 1;
     }
 
@@ -111,10 +89,6 @@ uint32_t HcclUpdateCommKernelEntrance(void* args)
         return 1;
     }
 
-    if (SetOldA5CommToCommMgr(kernelParam->comm.commId, communicatorImplLite) != 0) {
-        HCCL_ERROR("SetOldA5CommToCommMgr failed.");
-        return 1;
-    }
     CHK_RET(AicpuUtils::GetInstance().WaitCommFree(communicatorImplLite, __func__));
     communicatorImplLite->UpdateComm(kernelParam);
     unique_lock<std::mutex> aicpuLock(communicatorImplLite->GetAicpuMc2Mutex());

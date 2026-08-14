@@ -23,19 +23,13 @@
 #include "framework/aicpu_hccl_process.h"
 #include "dtype_common.h"
 #include "aicpu_one_side_service.h"
+#include "coll_comm_aicpu_mgr.h"
 
 using namespace hccl;
 using namespace HcclApi;
 namespace {
-struct hcclCommAicpuInfo {
-    std::shared_mutex commAicpuMapMutex; // 维护全局的读写信息
-    std::unordered_map<std::string, std::pair<std::shared_ptr<hccl::HcclCommAicpu>, std::atomic_bool>> commMap;
-};
-hcclCommAicpuInfo g_commAicpuInfo;
 AicpuComContext g_comContext[CLUSTER_CNT];
 DevType g_devType = DevType::DEV_TYPE_COUNT;
-thread_local HcclCommAicpu* g_hcclComm
-    = nullptr; // 记录当前线程通信域; AicpuGetCommbyGroup赋值，AicpuReleaseCommbyGroup置空
 } // namespace
 
 DevType AicpuHcclProcess::AicpuGetInnerDevType() { return g_devType; }
@@ -196,36 +190,35 @@ u32 AicpuHcclProcess::AicpuRpcResInitV2(HcclOpResParam* commParam, bool isCustom
 
 HcclResult AicpuHcclProcess::AcquireAicpuComm(const std::string& group, HcclCommAicpu** aicpuCommPtr)
 {
-    std::unique_lock<std::shared_mutex> rwlock(g_commAicpuInfo.commAicpuMapMutex);
-
-    // 查找是否已存在该group的通信实例
-    auto iter = g_commAicpuInfo.commMap.find(group);
-    if (iter != g_commAicpuInfo.commMap.end()) {
-        *aicpuCommPtr = iter->second.first.get();
-        HCCL_INFO("[%s]Reuse existing comm group [%s]", __func__, group.c_str());
-        return HCCL_SUCCESS;
-    }
-
-    // 未找到则创建新实例
-    std::shared_ptr<HcclCommAicpu> aicpuComm;
-    try {
-        aicpuComm = std::make_shared<HcclCommAicpu>();
-    } catch (std::exception& e) {
-        HCCL_ERROR("[%s]Failed, exception caught:%s", __func__, e.what());
+    // 通过 CollCommAicpuMgr 单例管理通信域，init 路径不标记使用中
+    CollCommAicpu* collComm = nullptr;
+    CHK_RET(CollCommAicpuMgr::GetInstance().AcquireAndCreateComm(group, &collComm));
+    if (collComm == nullptr) {
+        HCCL_ERROR("[%s]Failed to acquire comm group[%s]", __func__, group.c_str());
         return HCCL_E_PTR;
     }
 
-    if (UNLIKELY(!aicpuComm)) {
-        HCCL_ERROR("[%s]errNo[0x%016llx] aicpuComm is nullptr", __func__, HCCL_ERROR_CODE(HCCL_E_PTR));
-        return HCCL_E_PTR;
+    HcclCommAicpu* legacyComm = collComm->GetLegacy910CollComm();
+    if (legacyComm == nullptr) {
+        std::shared_ptr<HcclCommAicpu> newComm;
+        try {
+            newComm = std::make_shared<HcclCommAicpu>();
+        } catch (std::exception& e) {
+            HCCL_ERROR("[%s]Failed, exception caught:%s", __func__, e.what());
+            return HCCL_E_PTR;
+        }
+        if (UNLIKELY(!newComm)) {
+            HCCL_ERROR("[%s]errNo[0x%016llx] aicpuComm is nullptr", __func__, HCCL_ERROR_CODE(HCCL_E_PTR));
+            return HCCL_E_PTR;
+        }
+        collComm->SetLegacy910CollComm(newComm);
+        legacyComm = newComm.get();
+        HCCL_INFO("[%s]Created new legacy comm group [%s]", __func__, group.c_str());
+    } else {
+        HCCL_INFO("[%s]Reuse existing legacy comm group [%s]", __func__, group.c_str());
     }
 
-    // 将新实例加入映射表
-    auto& entry = g_commAicpuInfo.commMap[group];
-    entry.first = aicpuComm;
-    entry.second.store(false);
-    *aicpuCommPtr = aicpuComm.get();
-    HCCL_INFO("[%s]Created new comm group [%s]", __func__, group.c_str());
+    *aicpuCommPtr = legacyComm;
     return HCCL_SUCCESS;
 }
 
@@ -251,80 +244,53 @@ HcclResult AicpuHcclProcess::AicpuIndOpCommInit(CommAicpuParam* commAicpuParam)
 
 HcclResult AicpuHcclProcess::AicpuRegOpInfo(void* opInfo, u32 size)
 {
-    CHK_PTR_NULL(g_hcclComm);
-    CHK_RET(g_hcclComm->RegisterOpInfo(opInfo, size));
+    CollCommAicpu* collComm = CollCommAicpuMgr::GetInstance().GetCurrentComm();
+    CHK_PTR_NULL(collComm);
+    HcclCommAicpu* legacyComm = collComm->GetLegacy910CollComm();
+    CHK_PTR_NULL(legacyComm);
+    CHK_RET(legacyComm->RegisterOpInfo(opInfo, size));
     return HCCL_SUCCESS;
 }
 
 HcclResult AicpuHcclProcess::AicpuRegOpTaskException(HcommGetOpInfoCallback callback)
 {
-    CHK_PTR_NULL(g_hcclComm);
-    CHK_RET(g_hcclComm->RegOpTaskException(callback));
+    CollCommAicpu* collComm = CollCommAicpuMgr::GetInstance().GetCurrentComm();
+    CHK_PTR_NULL(collComm);
+    HcclCommAicpu* legacyComm = collComm->GetLegacy910CollComm();
+    CHK_PTR_NULL(legacyComm);
+    CHK_RET(legacyComm->RegOpTaskException(callback));
     return HCCL_SUCCESS;
 }
 
-std::shared_mutex& AicpuHcclProcess::AicpuGetCommMutex() { return g_commAicpuInfo.commAicpuMapMutex; }
+std::shared_mutex& AicpuHcclProcess::AicpuGetCommMutex() { return CollCommAicpuMgr::GetInstance().GetMutex(); }
 
 hccl::HcclCommAicpu* AicpuHcclProcess::AicpuGetCommbyGroup(const std::string& group)
 {
-    auto startTime = std::chrono::steady_clock::now();
-    constexpr u32 pollIntervalUs = 10; // 轮询间隔10us
-    constexpr u32 pollTimeoutMs = 10;  // 轮询超时时间10ms
-    auto waitPollTimeOutMs = std::chrono::milliseconds(pollTimeoutMs);
-
-    while (true) {
-        std::shared_lock<std::shared_mutex> rwlock(g_commAicpuInfo.commAicpuMapMutex);
-        bool expectedStatus = false;
-        auto iter = g_commAicpuInfo.commMap.find(group);
-        if (iter == g_commAicpuInfo.commMap.end()) {
-            HCCL_ERROR("[AicpuHcclProcess] exist group size is [%u]", g_commAicpuInfo.commMap.size());
-            auto curIter = g_commAicpuInfo.commMap.begin();
-            int i = 0;
-            while (curIter != g_commAicpuInfo.commMap.end()) {
-                HCCL_ERROR("[AicpuHcclProcess] exist group idx is [%d] key[%s] value", i, curIter->first.c_str());
-                curIter++;
-            }
-            return nullptr;
-        }
-        if (!iter->second.second.compare_exchange_strong(expectedStatus, true)) {
-            if ((std::chrono::steady_clock::now() - startTime) >= waitPollTimeOutMs) {
-                HCCL_ERROR(
-                    "[AicpuGetCommbyGroup]poll timeout, comm group [%s] has been used, last executed op: %s",
-                    group.c_str(), iter->second.first->GetExcuteOp().c_str());
-                return nullptr;
-            }
-
-            HCCL_WARNING(
-                "[AicpuGetCommbyGroup]comm group [%s] has been used, last executed op: %s", group.c_str(),
-                iter->second.first->GetExcuteOp().c_str());
-            rwlock.unlock();
-            usleep(pollIntervalUs);
-            continue;
-        }
-        g_hcclComm = iter->second.first.get();
-        return iter->second.first.get();
+    CollCommAicpu* collComm = CollCommAicpuMgr::GetInstance().AcquireCommForUse(group);
+    if (collComm == nullptr) {
+        HCCL_ERROR("[AicpuHcclProcess][%s] group[%s] not found", __func__, group.c_str());
+        return nullptr;
     }
-    return nullptr;
+    collComm->SetLegacy910CollCommBusy(true);
+    return collComm->GetLegacy910CollComm();
 }
 
 bool AicpuHcclProcess::GetCommExecStatus(const std::string& group)
 {
-    auto iter = g_commAicpuInfo.commMap.find(group);
-    if (iter != g_commAicpuInfo.commMap.end()) {
-        return iter->second.second.load();
+    CollCommAicpu* collComm = CollCommAicpuMgr::GetInstance().FindCommByGroup(group);
+    if (collComm != nullptr) {
+        return collComm->IsLegacy910CollCommBusy();
     }
     return false;
 }
 
 void AicpuHcclProcess::AicpuReleaseCommbyGroup(const std::string& group)
 {
-    std::shared_lock<std::shared_mutex> rwlock(g_commAicpuInfo.commAicpuMapMutex);
-    auto iter = g_commAicpuInfo.commMap.find(group);
-    if (iter == g_commAicpuInfo.commMap.end()) {
-        return;
+    CollCommAicpu* collComm = CollCommAicpuMgr::GetInstance().FindCommByGroup(group);
+    if (collComm != nullptr) {
+        collComm->SetLegacy910CollCommBusy(false);
     }
-    g_hcclComm = nullptr;
-    iter->second.second.store(false);
+    CollCommAicpuMgr::GetInstance().ReleaseComm(group);
 }
 
 u32 AicpuHcclProcess::AicpuRpcClearOpRes(const struct HcclKfcClearOpResTilingData* tilingData)
@@ -390,25 +356,20 @@ u32 AicpuHcclProcess::AicpuRpcClearOpRes(const struct HcclKfcClearOpResTilingDat
 
 HcclResult AicpuHcclProcess::AicpuGetCommAll(std::vector<std::pair<std::string, HcclCommAicpu*>>& aicpuCommInfo)
 {
-    for (auto& kv : g_commAicpuInfo.commMap) {
-        aicpuCommInfo.push_back({kv.first, kv.second.first.get()});
+    std::vector<std::pair<std::string, CollCommAicpu*>> commInfo;
+    CollCommAicpuMgr::GetInstance().GetAllComms(commInfo);
+    for (auto& kv : commInfo) {
+        HcclCommAicpu* legacy = kv.second->GetLegacy910CollComm();
+        if (legacy != nullptr) {
+            aicpuCommInfo.push_back({kv.first, legacy});
+        }
     }
     return HCCL_SUCCESS;
 }
 
 void AicpuHcclProcess::AicpuDestoryCommbyGroup(const std::string& group)
 {
-    auto iter = g_commAicpuInfo.commMap.find(group);
-    if (iter == g_commAicpuInfo.commMap.end()) {
-        HCCL_ERROR("[AicpuHcclProcess][%s]Group[%s] is not exist", __func__, group.c_str());
-        return;
-    }
-    if (iter->second.second.load()) {
-        HCCL_WARNING("[AicpuHcclProcess][%s]comm group [%s] has been used.", __func__, group.c_str());
-        return;
-    }
-    g_commAicpuInfo.commMap.erase(group);
-    HCCL_INFO("[AicpuHcclProcess][%s]Destroy comm group [%s] success.", __func__, group.c_str());
+    CollCommAicpuMgr::GetInstance().DestroyComm(group);
 }
 
 HcclResult AicpuHcclProcess::HandleOneSideService(const OpTilingData* tilingData)

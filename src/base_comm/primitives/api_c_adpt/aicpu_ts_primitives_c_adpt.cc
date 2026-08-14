@@ -18,7 +18,6 @@
 #include "ub_transport_lite_impl.h"
 #include "device/framework/aicpu_hccl_process.h"
 #include "coll_comm_aicpu_mgr.h"
-#include "aicpu_indop_process.h"
 #include "aicpu_indop_env.h"
 #include "hcclCommDfxLite.h"
 #include "hcclCommProfilingLite.h"
@@ -89,7 +88,9 @@ HcclResult HcclDfxRegOpInfoByCommId(char* commId, void* hcclDfxOpInfo)
     HcclDfxOpInfo* aicpuDfxInfo = reinterpret_cast<HcclDfxOpInfo*>(hcclDfxOpInfo);
     CHK_RET(HcommThreadGetNotifyId(
         aicpuDfxInfo->cpuTsThread, aicpuDfxInfo->cpuWaitAicpuNotifyIdx, &aicpuDfxInfo->cpuWaitAicpuNotifyId));
-    CHK_RET(AicpuIndopProcess::AicpuDfxOpInfoInit(aicpuDfxInfo, commId));
+    CollCommAicpu* currentComm = CollCommAicpuMgr::GetInstance().GetCurrentComm();
+    CHK_PTR_NULL(currentComm);
+    CHK_RET(currentComm->InitDfxOpInfo(aicpuDfxInfo));
 
     return HCCL_SUCCESS;
 }
@@ -1093,9 +1094,8 @@ int32_t HcommAcquireComm(const char* commId)
         CHK_PRT_RET(!hcclComm, HCCL_ERROR("%s AicpuGetCommbyGroup is null, commId[%s]", __func__, commId), HCCL_E_PTR);
         CHK_RET(hcclComm->SetDispatcherCtxOnThread());
     } else {
-        CollCommAicpuMgr* hcclComm = AicpuIndopProcess::AicpuGetCommMgrbyGroup(commId);
-        CHK_PRT_RET(
-            !hcclComm, HCCL_ERROR("%s AicpuGetCommMgrbyGroup is null, commId[%s]", __func__, commId), HCCL_E_PTR);
+        CollCommAicpu* hcclComm = CollCommAicpuMgr::GetInstance().AcquireCommForUse(commId);
+        CHK_PRT_RET(!hcclComm, HCCL_ERROR("%s AcquireCommForUse is null, commId[%s]", __func__, commId), HCCL_E_PTR);
     }
     return HCCL_SUCCESS;
 }
@@ -1153,7 +1153,7 @@ int32_t HcommReleaseComm(const char* commId)
     if (deviceType != DevType::DEV_TYPE_950 && deviceType != DevType::DEV_TYPE_960) {
         AicpuHcclProcess::AicpuReleaseCommbyGroup(commId);
     } else {
-        AicpuIndopProcess::AicpuReleaseCommMgrbyGroup(commId);
+        CollCommAicpuMgr::GetInstance().ReleaseComm(commId);
     }
     return HCCL_SUCCESS;
 }
@@ -1283,7 +1283,9 @@ HcclResult HcommProfilingReportDeviceOp(const char* groupname)
         return HCCL_SUCCESS;
     }
 
-    CHK_RET(AicpuIndopProcess::ProfilingReportDeviceOp());
+    CollCommAicpu* currentComm = CollCommAicpuMgr::GetInstance().GetCurrentComm();
+    CHK_PTR_NULL(currentComm);
+    CHK_RET(currentComm->ProfilingReportDeviceOp());
     return HCCL_SUCCESS;
 }
 
@@ -1299,7 +1301,9 @@ HcclResult HcommProfilingReportKernelStartTask(uint64_t thread, const char* grou
         return HCCL_SUCCESS;
     }
     CHK_PTR_NULL(groupname);
-    CHK_RET(AicpuIndopProcess::UpdateTask(groupname));
+    CollCommAicpu* currentComm = CollCommAicpuMgr::GetInstance().GetCurrentComm();
+    CHK_PTR_NULL(currentComm);
+    CHK_RET(currentComm->UpdateTask());
     Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
     auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());

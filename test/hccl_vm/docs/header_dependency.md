@@ -285,7 +285,7 @@ struct AivOpArgs {
 
 | 数据结构 | 用途 | 对应 kernel 函数 |
 |---------|------|-----------------|
-| `CommAicpuParam` | 通信域初始化参数（hcomId、设备 ID、H2D/D2H 传输参数） | `RunAicpuIndOpCommInit` |
+| `CommAicpuParam` | 通信域初始化参数（hcomId、设备 ID、H2D/D2H 传输参数） | `RunAicpuCommInit` |
 | `HDCommunicateParams` | H2D/D2H 控制传输参数（deviceAddr、readCacheAddr） | 被 `CommAicpuParam` 引用 |
 | `ThreadMgrAicpuParam` | 线程管理参数（threadNum、序列化 threadParam 数组、deviceHandle） | `RunAicpuIndOpThreadInit`、`RunAicpuThreadSupplementNotify` |
 | `AicpuTsThread` | AICPU 线程信息（streamType、notifyLoadType、devId） | 被 `ThreadMgrAicpuParam` 引用 |
@@ -308,10 +308,10 @@ struct AivOpArgs {
 
 | dlsym 符号名 | 所在库 | 功能 |
 |-------------|-------|------|
-| `RunAicpuIndOpCommInit` | `libccl_kernel.so` | AICPU 通信域初始化 |
+| `RunAicpuCommInit` | `libccl_kernel.so` | AICPU 通信域初始化 |
 | `RunAicpuIndOpThreadInit` | `libccl_kernel.so` | AICPU 线程初始化 |
 | `RunAicpuIndOpChannelInitV2` | `libccl_kernel.so` | AICPU 通道初始化 V2 |
-| `RunAicpuDfxOpInfoInitV2` | `libccl_kernel.so` | AICPU DFX 算子信息初始化 V2 |
+| `RunAicpuDfxInitV2` | `libccl_kernel.so` | AICPU DFX 算子信息初始化 V2 |
 | `RunAicpuThreadSupplementNotify` | `libccl_kernel.so` | AICPU 资源补充通知 |
 | `HcclLaunchAicpuKernel` | `libscatter_aicpu_kernel.so` | AICPU 集合通信 kernel 启动 |
 
@@ -326,7 +326,7 @@ struct AivOpArgs {
 
 | 硬编码 SO 名称 | 加载的 dlsym 符号 | 说明 |
 |--------------|-----------------|------|
-| `libccl_kernel.so` | `RunAicpuIndOpCommInit`、`RunAicpuIndOpThreadInit`、`RunAicpuIndOpChannelInitV2`、`RunAicpuDfxOpInfoInitV2`、`RunAicpuThreadSupplementNotify` | HCOMM 通信框架核心库 |
+| `libccl_kernel.so` | `RunAicpuCommInit`、`RunAicpuIndOpThreadInit`、`RunAicpuIndOpChannelInitV2`、`RunAicpuDfxInitV2`、`RunAicpuThreadSupplementNotify` | HCOMM 通信框架核心库 |
 | `libscatter_aicpu_kernel.so` | `HcclLaunchAicpuKernel` | AICPU 集合通信算子 kernel 库 |
 | `libslog.so` | （日志库依赖） | CANN 安全日志库 |
 | `libc_sec.so` | （安全库依赖） | CANN 安全函数库 |

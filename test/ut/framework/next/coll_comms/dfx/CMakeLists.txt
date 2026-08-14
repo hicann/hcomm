@@ -33,6 +33,10 @@ target_include_directories(hccl_utest_test_dfx_resource PRIVATE
     ${UT_COMMON_INCLUDE_LIST}
     ${HCCL_CODE_ROOT}/externel_depends/tsch
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/dfx/profiling/aicpu/common
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/device
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/device/resource_mgr/local/my_rank/comm_engine_reses
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/device/resource_mgr/remote
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/device/c_adpt
 )
  
 target_compile_definitions(hccl_utest_test_dfx_resource PRIVATE

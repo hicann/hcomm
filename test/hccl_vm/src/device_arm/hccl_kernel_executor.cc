@@ -50,7 +50,7 @@ void ExecuteAicpuKernel(uint32_t rankId, const std::string& kernelName, uint64_t
     }
 
     void* realPtr = GetRealPtrByDevPtr(reinterpret_cast<void*>(args));
-    if (kernelName == "RunAicpuIndOpCommInit") {
+    if (kernelName == "RunAicpuCommInit") {
         CommAicpuParam* param = reinterpret_cast<CommAicpuParam*>(realPtr);
         param->kfcControlTransferH2DParams.deviceAddr = reinterpret_cast<uint64_t>(
             GetRealPtrByDevPtr(reinterpret_cast<void*>(param->kfcControlTransferH2DParams.deviceAddr)));
@@ -117,7 +117,7 @@ void ExecuteAicpuKernel(uint32_t rankId, const std::string& kernelName, uint64_t
             }
         }
         runAicpuIndOpChannelInitV2Ptr(realPtr);
-    } else if (kernelName == "RunAicpuDfxOpInfoInitV2") {
+    } else if (kernelName == "RunAicpuDfxInitV2") {
     } else if (kernelName == "HcclLaunchAicpuKernel") {
         OpParam* opParam = reinterpret_cast<OpParam*>(realPtr);
         opParam->resCtx = GetRealPtrByDevPtr(opParam->resCtx);
@@ -167,11 +167,11 @@ bool InitKernelFuncHandle()
         HCCL_VM_ERROR("Failed to load kernel libs.");
         return false;
     }
-    runAicpuIndOpCommInitPtr = reinterpret_cast<uint32_t (*)(void*)>(dlsym(gHcommHandle, "RunAicpuIndOpCommInit"));
+    runAicpuIndOpCommInitPtr = reinterpret_cast<uint32_t (*)(void*)>(dlsym(gHcommHandle, "RunAicpuCommInit"));
     runAicpuIndOpThreadInitPtr = reinterpret_cast<uint32_t (*)(void*)>(dlsym(gHcommHandle, "RunAicpuIndOpThreadInit"));
     runAicpuIndOpChannelInitV2Ptr
         = reinterpret_cast<uint32_t (*)(void*)>(dlsym(gHcommHandle, "RunAicpuIndOpChannelInitV2"));
-    runAicpuDfxOpInfoInitV2Ptr = reinterpret_cast<uint32_t (*)(void*)>(dlsym(gHcommHandle, "RunAicpuDfxOpInfoInitV2"));
+    runAicpuDfxOpInfoInitV2Ptr = reinterpret_cast<uint32_t (*)(void*)>(dlsym(gHcommHandle, "RunAicpuDfxInitV2"));
     runAicpuThreadSupplementNotifyPtr
         = reinterpret_cast<uint32_t (*)(void*)>(dlsym(gHcommHandle, "RunAicpuThreadSupplementNotify"));
     runAicpuNotifyWaitPtr = reinterpret_cast<uint32_t (*)(void*)>(dlsym(gHcommHandle, "RunAicpuNotifyWait"));

@@ -76,7 +76,7 @@ static void ExecuteAicpuKernel(uint32_t rankId, ExecKernelPayload* kernelReq)
     }
 
     // CCU退化AICPU场景此处使用的内存先于device进程启动前分配，使用前需转换
-    if (kernelName == "RunAicpuIndOpCommInit") {
+    if (kernelName == "RunAicpuCommInit") {
         CommAicpuParam* param = reinterpret_cast<CommAicpuParam*>(ptr);
         param->kfcControlTransferH2DParams.deviceAddr
             = GetDevMapperAddrByDevAddr(param->kfcControlTransferH2DParams.deviceAddr);

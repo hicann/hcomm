@@ -9,7 +9,7 @@
  */
 
 #include "framework/aicpu_hccl_process.h"
-#include "aicpu_indop_process.h"
+#include "coll_comm_aicpu_kernel_adpt.h"
 #include "aicpu_thread_process.h"
 
 extern "C" {
@@ -24,7 +24,7 @@ __attribute__((visibility("default"))) uint32_t RunAicpuIndOpThreadInit(void* ar
         HCCL_INFO(
             "[RunAicpuIndOpThreadInit] group[%s], threadNum[%u], deviceType[%u]", param->hcomId, param->threadNum,
             devType);
-        return AicpuIndopProcess::AicpuIndOpThreadInit(param);
+        return CollCommAicpuKernelAdptInitThreads(param);
     }
     return AicpuHcclProcess::AicpuIndOpThreadInit(param);
 }
@@ -39,7 +39,7 @@ __attribute__((visibility("default"))) uint32_t RunAicpuIndOpNotify(void* args)
     if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960) {
         HCCL_INFO(
             "[RunAicpuIndOpNotify] group[%s], notifyNum[%u], deviceType[%u]", param->hcomId, param->notifyNum, devType);
-        return AicpuIndopProcess::AicpuIndOpNotifyInit(param);
+        return CollCommAicpuKernelAdptInitNotify(param);
     }
     return AicpuHcclProcess::AicpuIndOpNotifyInit(param);
 }

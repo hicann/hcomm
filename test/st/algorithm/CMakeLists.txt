@@ -158,6 +158,9 @@ set(HCOMM_FRAMEWORK_INCLUDE_LIST
     ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/communicator
     ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/communicator/device
     ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/communicator/group_schedule_mgr
+    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/communicator/device/resource_mgr/local/my_rank/comm_engine_reses
+    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/communicator/device/resource_mgr/remote
+    ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/communicator/device/c_adpt
     ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank
     ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/remote/rank_pairs
     ${HCOMM_CODE_ROOT}/src/coll_communicator_mgr/dfx

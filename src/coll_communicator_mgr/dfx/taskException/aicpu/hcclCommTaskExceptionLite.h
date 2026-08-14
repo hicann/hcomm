@@ -15,7 +15,7 @@
 #include "coll_comm_aicpu.h"
 #include "aicpu_hccl_sqcq.h"
 #include "error_message_v2.h"
-#include "aicpu_indop_process.h"
+#include "coll_comm_aicpu_mgr.h"
 
 namespace Hccl {
 template <typename T, uint32_t CAPACITY>
@@ -41,7 +41,7 @@ private:
     HcclResult GetThreadCqe(hccl::Thread* thread, rtLogicCqReport_t& cqeException, CqeStatus& cqeStatus);
     HcclResult ProcessCqe(
         CollCommAicpu* aicpuComm, const rtLogicCqReport_t& exceptionInfo, const CqeStatus& cqeStatus,
-        const std::vector<std::pair<std::string, CollCommAicpuMgr*>>& aicpuCommInfo);
+        const std::vector<std::pair<std::string, CollCommAicpu*>>& aicpuCommInfo);
 
     // errMsg上报到host
     HcclResult ReportErrMsg(CollCommAicpu* aicpuComm, const rtLogicCqReport_t& exceptionInfo);

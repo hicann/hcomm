@@ -91,6 +91,10 @@ set(src_to_test_list
     coll_comms/communicator/ns_recovery/ut_hccl_task_abort_handler.cc
     coll_comms/communicator/aicpu/ut_coll_comm_aicpu.cc
     coll_comms/communicator/aicpu/ut_coll_comm_aicpu_destroy_func.cc
+    coll_comms/communicator/aicpu/ut_thread_aicpu_mgr.cc
+    coll_comms/communicator/aicpu/ut_notify_aicpu_mgr.cc
+    coll_comms/communicator/aicpu/ut_comm_engine_res_aicpu_mgr.cc
+    coll_comms/communicator/aicpu/ut_channel_aicpu_mgr.cc
     coll_comms/communicator/ns_recovery/ut_ns_recovery.cc
     comms/adpt/ut_hcomm_adapter_hccp_test.cc
     comms/endpoints/dfx/ut_endpoint_monitor.cc
@@ -155,6 +159,10 @@ target_include_directories(hccl_utest_test_next_resource PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/coll_comms/rank_graphs/rank_graph_builder
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/comm_engine/notify
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/dfx/cluster_monitor
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/device
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/device/resource_mgr/local/my_rank/comm_engine_reses
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/device/resource_mgr/remote
+    ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/communicator/device/c_adpt
 )
 
 target_compile_definitions(hccl_utest_test_next_resource PRIVATE

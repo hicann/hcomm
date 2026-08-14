@@ -11,7 +11,7 @@
 #include <vector>
 #include "aicpu_ts_urma_channel_kernel.h"
 #include "channel_param.h"
-#include "aicpu_indop_process.h"
+#include "coll_comm_aicpu_kernel_adpt.h"
 #include "aicpu_channel_process.h"
 
 extern "C" {
@@ -22,7 +22,7 @@ __attribute__((visibility("default"))) uint32_t RunAicpuIndOpChannelInitV2(void*
     uint64_t devAddr = *reinterpret_cast<uint64_t*>(args);
     HcclChannelUrmaRes* commParam = reinterpret_cast<HcclChannelUrmaRes*>(devAddr);
     CHK_PTR_NULL(commParam);
-    return AicpuIndopProcess::AicpuIndOpChannelInit(commParam);
+    return CollCommAicpuKernelAdptInitChannel(commParam);
 }
 
 __attribute__((visibility("default"))) uint32_t RunAicpuChannelInitV2(void* args)
@@ -61,6 +61,6 @@ __attribute__((visibility("default"))) uint32_t RunAicpuIndOpChannelUpdateV2(voi
     uint64_t devAddr = *reinterpret_cast<uint64_t*>(args);
     HcclChannelUrmaRes* commParam = reinterpret_cast<HcclChannelUrmaRes*>(devAddr);
     CHK_PTR_NULL(commParam);
-    return AicpuIndopProcess::AicpuIndOpChannelUpdate(commParam);
+    return CollCommAicpuKernelAdptUpdateChannel(commParam);
 }
 }

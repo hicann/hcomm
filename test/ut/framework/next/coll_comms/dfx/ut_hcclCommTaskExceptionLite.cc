@@ -18,6 +18,7 @@
 #undef private
 #include "hcomm_task_scheduler_error.h"
 #include "aicpu_indop_env.h"
+#include "comm_engine_res_aicpu_mgr.h"
 #include "adapter_hal_pub.h"
 #include "dlhal_function_v2.h"
 #include "hcclCommTaskException.h"
@@ -32,6 +33,14 @@ constexpr u32 RT_UB_LOCAL_OPERATIOINERR = 0x2;
 constexpr u32 RT_UB_REMOTE_OPERATIOINERR = 0x3;
 constexpr u32 RT_UB_LINK_FAILEDERR = 0x5;
 
+inline void InitCommEngineResMgr(CollCommAicpu& c)
+{
+    if (c.commEngineResMgr_ == nullptr) {
+        c.commEngineResMgr_ = std::make_unique<CommEngineResAicpuMgr>(c.dfx_, [](bool) {
+            return HCCL_SUCCESS;
+        });
+    }
+}
 class hcclCommTaskExceptionLiteTest : public testing::Test {
 protected:
     virtual void SetUp() override
@@ -98,7 +107,7 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_SwitchSdmaCqeErrCodeToTsErrCode_taskexc
     hcomm::SetTaskExceptionEnable(false);
     rtLogicCqReport_t exceptionInfo;
     dfx::CqeStatus cqeStatus = dfx::CqeStatus::kDefault;
-    std::vector<std::pair<std::string, CollCommAicpuMgr*>> aicpuCommInfo;
+    std::vector<std::pair<std::string, CollCommAicpu*>> aicpuCommInfo;
     HcclResult ret
         = HcclCommTaskExceptionLite::GetInstance().ProcessCqe(nullptr, exceptionInfo, cqeStatus, aicpuCommInfo);
     EXPECT_EQ(ret, HCCL_SUCCESS);
@@ -137,14 +146,26 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_SendTaskExceptionByMBox_When_OtherSqeTy
 
 TEST_F(hcclCommTaskExceptionLiteTest, Ut_PrintAllCommTaskException)
 {
-    MOCKER_CPP(&CollCommAicpuMgr::InitAicpuIndOp).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollCommAicpu::InitAicpuIndOp).stubs().will(returnValue(HCCL_SUCCESS));
 
     CommAicpuParam commAicpuParam;
     std::string commName = "taskException_test_group";
     strncpy(commAicpuParam.hcomId, commName.c_str(), HCOMID_MAX_SIZE - 1);
-    EXPECT_EQ(AicpuIndopProcess::AicpuIndOpCommInit(&commAicpuParam), HCCL_SUCCESS);
+    EXPECT_EQ(CollCommAicpuMgr::GetInstance().InitComm(&commAicpuParam), HCCL_SUCCESS);
+
+    // InitAicpuIndOp 被 mock，手动初始化 commEngineResMgr_ 以防 PrintAllCommTaskException 空指针
+    std::vector<std::pair<std::string, CollCommAicpu*>> commInfo;
+    CollCommAicpuMgr::GetInstance().GetAllComms(commInfo);
+    for (auto& kv : commInfo) {
+        if (kv.second->commEngineResMgr_ == nullptr) {
+            kv.second->commEngineResMgr_ = std::make_unique<CommEngineResAicpuMgr>(kv.second->dfx_, [](bool) {
+                return HCCL_SUCCESS;
+            });
+        }
+    }
+
     EXPECT_EQ(hcomm::HcclCommTaskExceptionLite::GetInstance().PrintAllCommTaskException(), HCCL_SUCCESS);
-    EXPECT_EQ(AicpuIndopProcess::AicpuDestroyCommbyGroup(commAicpuParam.hcomId), HCCL_SUCCESS);
+    EXPECT_EQ(CollCommAicpuMgr::GetInstance().DestroyComm(commAicpuParam.hcomId), HCCL_SUCCESS);
 }
 
 TEST_F(hcclCommTaskExceptionLiteTest, Ut_PrintCommTaskException)
@@ -164,6 +185,8 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_PrintCommTaskException)
         .will(returnValue(HCCL_SUCCESS));
 
     CollCommAicpu aicpuComm;
+    // 初始化 commEngineResMgr_（原 threads_ 已迁入 ThreadAicpuMgr）
+    InitCommEngineResMgr(aicpuComm);
     std::shared_ptr<AicpuTsThread> thread = std::make_shared<AicpuTsThread>("test");
     hccl::AicpuTsThread::HcclStreamInfo streamParam;
     streamParam.streamIds = streamId;
@@ -172,7 +195,8 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_PrintCommTaskException)
     streamParam.logicCqids = 4;
     EXPECT_EQ(thread->InitStreamLite(streamParam, 0), HCCL_SUCCESS);
 
-    aicpuComm.threads_.push_back(thread);
+    // threads_ 已迁入 ThreadAicpuMgr，通过 GetCommEngineResMgr 访问
+    aicpuComm.GetCommEngineResMgr()->threadMgr_->threads_.push_back(thread);
     EXPECT_EQ(aicpuComm.dfx_.Init(aicpuComm.devId_, aicpuComm.identifier_, 0, 0), HCCL_SUCCESS);
     auto dfxOpInfoOnce = std::make_shared<Hccl::DfxDfxOpInfo>();
     aicpuComm.dfx_.SetCurrDfxOpInfo(dfxOpInfoOnce.get());
@@ -198,6 +222,7 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_GetGroupInfo_When_AicpuCommValid_Expect
 {
     CollCommAicpu aicpuComm;
     aicpuComm.identifier_ = "test_group_name";
+    InitCommEngineResMgr(aicpuComm);
     std::string result = HcclCommTaskExceptionLite::GetInstance().GetGroupInfo(&aicpuComm);
     EXPECT_EQ(result, "group:[test_group_name], rankSize:[0], localRank:[0]");
 }
@@ -334,12 +359,12 @@ TEST_F(
 
 TEST_F(hcclCommTaskExceptionLiteTest, Ut_Call_ReturnHCCL_SUCCESS_When_CommStatusSuSpending)
 {
-    MOCKER_CPP(&CollCommAicpuMgr::InitAicpuIndOp).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollCommAicpu::InitAicpuIndOp).stubs().will(returnValue(HCCL_SUCCESS));
 
     CommAicpuParam commAicpuParam;
     std::string commName = "taskException_test_group";
     strncpy(commAicpuParam.hcomId, commName.c_str(), HCOMID_MAX_SIZE - 1);
-    EXPECT_EQ(AicpuIndopProcess::AicpuIndOpCommInit(&commAicpuParam), HCCL_SUCCESS);
+    EXPECT_EQ(CollCommAicpuMgr::GetInstance().InitComm(&commAicpuParam), HCCL_SUCCESS);
     MOCKER_CPP(&CollCommAicpu::GetCommmStatus).stubs().will(returnValue(HcclCommStatus::HCCL_COMM_STATUS_SUSPENDING));
     hcomm::HcclCommTaskExceptionLite::GetInstance().Call();
 }
@@ -425,6 +450,7 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_PrintTaskContextInfo_When_QueueNull_Exp
 {
     CollCommAicpu aicpuComm;
     aicpuComm.identifier_ = "test_context";
+    InitCommEngineResMgr(aicpuComm);
     HcclResult ret = HcclCommTaskExceptionLite::GetInstance().PrintTaskContextInfo(&aicpuComm, 0, 0);
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
@@ -433,6 +459,7 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_CollectTaskContext_When_QueueNull_Expec
 {
     CollCommAicpu aicpuComm;
     aicpuComm.identifier_ = "test_collect";
+    InitCommEngineResMgr(aicpuComm);
     std::vector<Hccl::DfxTaskInfo*> taskContext;
     HcclResult ret = HcclCommTaskExceptionLite::GetInstance().CollectTaskContext(&aicpuComm, 0, 0, taskContext);
     EXPECT_EQ(ret, HCCL_E_PARA);
@@ -442,6 +469,7 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_GenerateErrorMessageReport_When_DfxOpIn
 {
     CollCommAicpu aicpuComm;
     aicpuComm.identifier_ = "test_gen_err";
+    InitCommEngineResMgr(aicpuComm);
     Hccl::DfxTaskInfo taskInfo{};
     taskInfo.dfxOpInfo = DFX_INVALID_U64;
     rtLogicCqReport_t exceptionInfo{};
@@ -494,8 +522,8 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_ReportErrMsg_When_FindDfxTaskInfoNull_E
 {
     CollCommAicpu aicpuComm;
     aicpuComm.identifier_ = "test_report_err";
+    InitCommEngineResMgr(aicpuComm);
     rtLogicCqReport_t exceptionInfo{};
-    exceptionInfo.taskId = 1;
     exceptionInfo.streamId = 0;
     exceptionInfo.sqId = 99;
     HcclResult ret = HcclCommTaskExceptionLite::GetInstance().ReportErrMsg(&aicpuComm, exceptionInfo);
@@ -506,13 +534,15 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_ReportErrMsg_When_DfxOpInfoInvalid_Expe
 {
     CollCommAicpu aicpuComm;
     aicpuComm.identifier_ = "test_report_err";
+    InitCommEngineResMgr(aicpuComm);
     auto streamLite = std::make_shared<Hccl::StreamLite>(0, 0, 0, 0);
     Hccl::DfxTaskInfo* slot = static_cast<Hccl::DfxTaskInfo*>(streamLite->taskInfos_.NextSlot());
     ASSERT_NE(slot, nullptr);
     slot->taskId = (1U << 16) | 0U;
     slot->dfxOpInfo = DFX_INVALID_U64;
     auto thread = std::make_shared<MockThreadForReportErr>(streamLite.get());
-    aicpuComm.threads_.push_back(thread);
+
+    aicpuComm.GetCommEngineResMgr()->threadMgr_->threads_.push_back(thread);
     rtLogicCqReport_t exceptionInfo{};
     exceptionInfo.taskId = 1;
     exceptionInfo.streamId = 0;
@@ -525,6 +555,7 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_ReportErrMsg_When_ErrorAlreadyReported_
 {
     CollCommAicpu aicpuComm;
     aicpuComm.identifier_ = "test_report_err";
+    InitCommEngineResMgr(aicpuComm);
     aicpuComm.isErrorReported_ = true;
     auto streamLite = std::make_shared<Hccl::StreamLite>(0, 0, 0, 0);
     Hccl::DfxTaskInfo* slot = static_cast<Hccl::DfxTaskInfo*>(streamLite->taskInfos_.NextSlot());
@@ -533,7 +564,8 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_ReportErrMsg_When_ErrorAlreadyReported_
     Hccl::DfxDfxOpInfo opInfo{};
     slot->dfxOpInfo = reinterpret_cast<u64>(&opInfo);
     auto thread = std::make_shared<MockThreadForReportErr>(streamLite.get());
-    aicpuComm.threads_.push_back(thread);
+
+    aicpuComm.GetCommEngineResMgr()->threadMgr_->threads_.push_back(thread);
     rtLogicCqReport_t exceptionInfo{};
     exceptionInfo.taskId = 1;
     exceptionInfo.streamId = 0;

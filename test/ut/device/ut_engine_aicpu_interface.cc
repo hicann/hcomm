@@ -23,8 +23,10 @@
 #include "aicpu_communicator.h"
 #include "coll_comm_aicpu_mgr.h"
 #include "coll_comm_aicpu.h"
-#include "independent_op_aicpu_interface.h"
-#include "aicpu_indop_process.h"
+#include "coll_comm_aicpu_kernel.h"
+#include "coll_comm_aicpu_mgr.h"
+#include "coll_comm_aicpu_kernel_adpt.h"
+#include "threads/thread_aicpu_mgr.h"
 #include "aicpu_thread_process.h"
 #undef private
 #undef protected
@@ -73,11 +75,23 @@ TEST_F(Test_Engine_Aicpu_Interface, test_RunAicpuThreadSupplementNotify)
     aicpuPara.deviceLogicId = 0;
     aicpuPara.devicePhyId = 0;
     aicpuPara.deviceType = (u32)DevType::DEV_TYPE_950;
-    MOCKER_CPP(&CollCommAicpuMgr::InitAicpuIndOp).stubs().will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&CollCommAicpu::RegisterThreadAddDfxTaskInfo).stubs().will(returnValue(HCCL_SUCCESS));
-    MOCKER_CPP(&CollCommAicpu::RegisterThreadCacheCallback).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollCommAicpu::InitAicpuIndOp).stubs().will(returnValue(HCCL_SUCCESS));
+    // RegisterThreadAddDfxTaskInfo 已迁入 ThreadAicpuMgr
+    MOCKER_CPP(&ThreadAicpuMgr::RegisterThreadAddDfxTaskInfo).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&ThreadAicpuMgr::RegisterThreadCacheCallback).stubs().will(returnValue(HCCL_SUCCESS));
     void* args = (void*)(&aicpuPara);
-    EXPECT_EQ(RunAicpuIndOpCommInit(args), 0);
+    EXPECT_EQ(RunAicpuCommInit(args), 0);
+
+    // InitAicpuIndOp 被 mock，手动初始化 commEngineResMgr_
+    std::vector<std::pair<std::string, CollCommAicpu*>> commInfo;
+    CollCommAicpuMgr::GetInstance().GetAllComms(commInfo);
+    for (auto& kv : commInfo) {
+        if (kv.second->commEngineResMgr_ == nullptr) {
+            kv.second->commEngineResMgr_ = std::make_unique<CommEngineResAicpuMgr>(kv.second->dfx_, [](bool) {
+                return HCCL_SUCCESS;
+            });
+        }
+    }
 
     ThreadMgrAicpuParam para{};
     para.threadNum = 1;
@@ -93,7 +107,7 @@ TEST_F(Test_Engine_Aicpu_Interface, test_RunAicpuThreadSupplementNotify)
     EXPECT_EQ(memcpy_s(para.threadParam[0], THREAD_UNIQUE_ID_MAX_SIZE, supplementStr.c_str(), copyLen), 0);
     EXPECT_EQ(RunAicpuThreadSupplementNotify(args), 0);
 
-    MOCKER_CPP(&AicpuIndopProcess::AicpuIndOpNotifyInit).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(CollCommAicpuKernelAdptInitNotify).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&AicpuThreadProcess::AicpuThreadInit).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&AicpuThreadProcess::AicpuThreadDestroy).stubs().will(returnValue(HCCL_SUCCESS));
     EXPECT_EQ(RunAicpuIndOpNotify(args), 0);

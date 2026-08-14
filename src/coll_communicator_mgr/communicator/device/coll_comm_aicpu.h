@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef __COLL_COMM_AICPU_H__
-#define __COLL_COMM_AICPU_H__
+#ifndef COLL_COMM_AICPU_H
+#define COLL_COMM_AICPU_H
 
 #include "common.h"
 #include "aicpu_init_param.h"
@@ -32,18 +32,30 @@
 #include "aicpu_hdc.h"
 #include "roce_transport_lite_impl.h"
 #include "hccl/hccl_types.h"
+#include "comm_engine_res_aicpu_mgr.h"
+#include "channel_aicpu_mgr.h"
 
 using namespace hccl;
+
+namespace hccl {
+class HcclCommAicpu;
+}
 
 class CollCommAicpu {
 public:
     ~CollCommAicpu();
     HcclResult InitAicpuIndOp(CommAicpuParam* commAicpuParam);
-    HcclResult InitThreads(ThreadMgrAicpuParam* param);
-    HcclResult AllocChannelResource(HcclChannelUrmaRes* commParam);
-    HcclResult NotifyFree(NotifyMgrAicpuParam* param);
-    HcclResult NotifyAlloc(NotifyMgrAicpuParam* param);
-    const std::vector<std::shared_ptr<Thread>>& GetAllThread() { return threads_; };
+
+    // 资源管理 — 通过mgr指针暴露，调用者通过mgr操作资源
+    CommEngineResAicpuMgr* GetCommEngineResMgr() { return commEngineResMgr_.get(); }
+    ChannelAicpuMgr* GetChannelMgr() { return channelMgr_.get(); }
+
+    // 910B legacy 通信域管理
+    hccl::HcclCommAicpu* GetLegacy910CollComm();
+    void SetLegacy910CollComm(std::shared_ptr<hccl::HcclCommAicpu> comm);
+    bool IsLegacy910CollCommBusy();
+    void SetLegacy910CollCommBusy(bool busy);
+
     const HcclTopoInfo& GetTopoInfo() { return topoInfo_; }
     const std::string& GetIdentifier() { return identifier_; }
 
@@ -53,7 +65,6 @@ public:
     HcclResult SendErrorMessageReportToHost(Hccl::ErrorMessageReport& errMsgInfo);
     HcclResult RegisterProfCallBack();
     HcclCommDfxLite* GetHcclCommDfxLite() { return &dfx_; };
-    std::shared_mutex& GetThreadMutex() { return threadMutex_; }
     u32 GetDevId() { return devId_; }
 
     // h2d - d2h通道信息交互
@@ -71,19 +82,13 @@ public:
 
     HcclResult CheckIndOpExecStatus(bool timeout);
 
-private:
-    // 初始化
-    void InitIndopEnv(CommAicpuParam* commAicpuParam);
-    HcclResult InitHDCommunicate(CommAicpuParam* commAicpuParam);
+    // DFX — 单通信域粒度操作
+    HcclResult InitDfxOpInfo(HcclDfxOpInfo* aicpuDfxInfo);
+    HcclResult ProfilingReportDeviceOp();
+    HcclResult UpdateTask();
 
-    HcclResult InitUrmaChannel(HcclChannelUrmaRes* commParam);
-    HcclResult ParsePackData(std::vector<char>& data, ChannelHandle& handle);
-    HcclResult RegisterChannelCacheCallback(ChannelHandle channel);
-    HcclResult RegisterThreadAddDfxTaskInfo(ThreadHandle thread);
-    HcclResult RegisterThreadCacheCallback(ThreadHandle thread);
-    void InitBackGroundThread();
-    HcclResult ResumePackData(std::vector<char>& data, ChannelHandle& handle);
-    HcclResult ProcessUrmaRes(HcclChannelUrmaRes* commParam, bool isInit);
+private:
+    HcclResult InitHDCommunicate(CommAicpuParam* commAicpuParam);
 
     u32 devId_{0};
     // 通用的通道
@@ -93,21 +98,23 @@ private:
     std::string identifier_;
     HcclCommStatus commStatus_{HcclCommStatus::HCCL_COMM_STATUS_INVALID};
     HcclTopoInfo topoInfo_;
-    std::shared_mutex threadMutex_;
-    std::vector<std::shared_ptr<Thread>> threads_;
-    std::vector<std::unique_ptr<LocalNotify>> notifys_;
-    // A5 独立算子
-    std::unordered_map<ChannelHandle, std::unique_ptr<Hccl::UbTransportLiteImpl>> ubTransportMap_;
-    std::unordered_map<ChannelHandle, std::unique_ptr<Hccl::P2PTransportLiteImpl>> p2pTransportMap_;
-    std::unordered_map<ChannelHandle, std::unique_ptr<Hccl::RoceTransportLiteImpl>> roceTransportMap_;
+
+    // dfx — 必须在 commEngineResMgr_/channelMgr_ 之前声明，确保后析构
+    bool isErrorReported_{false};
+    HcclCommDfxLite dfx_;
+
+    // 资源管理 — 通过mgr持有（持有 dfx_ 引用）
+    std::unique_ptr<CommEngineResAicpuMgr> commEngineResMgr_;
+    std::unique_ptr<ChannelAicpuMgr> channelMgr_;
+
+    // 910B legacy 通信域 — CollCommAicpu 作为 wrapper，通过 shared_ptr 共享所有权
+    // std::atomic_bool 用于标记使用中
+    std::pair<std::shared_ptr<hccl::HcclCommAicpu>, std::atomic_bool> legacy910CollComm_;
 
     // N秒快恢相关
     hccl::NsRecoveryLitePtr nsRecoveryLitePtr_{nullptr};
 
-    // dfx
-    bool isErrorReported_{false}; // 是否上报了taskException信息
-    HcclCommDfxLite dfx_;
     u32 index_{0};
 };
 
-#endif // __COLL_COMM_AICPU_H__
+#endif // COLL_COMM_AICPU_H

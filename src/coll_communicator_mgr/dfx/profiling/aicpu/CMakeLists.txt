@@ -9,7 +9,6 @@
 # -----------------------------------------------------------------------------------------------------------
 set(device_src_list
     ${CMAKE_CURRENT_SOURCE_DIR}/hcclCommProfilingLite.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/aicpu_ts_urma_dfx_kernel.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/dfx_profiling_handler_lite.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/dfx_profiling_reporter_lite.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/dfx_profiling_command_handle_lite.cc

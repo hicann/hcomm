@@ -490,7 +490,7 @@ HcclResult hcclComm::KernelLaunchAicpuCommInit()
     CHK_RET(hrtStreamSetMode(localStream.ptr(), aicpuStreamMode));
 
     // 下kernel进行自定义算子aicpu侧通信域的公共初始化
-    std::string kernelName = "RunAicpuIndOpCommInit";
+    std::string kernelName = "RunAicpuCommInit";
     HCCL_INFO("AicpuAclKernelLaunch start");
     s32 timeout = 1836;
     if (IsCommunicatorV2()) {

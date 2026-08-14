@@ -108,7 +108,7 @@ HcommResult HcommDfxKernelLaunch(const std::string& commTag, aclrtBinHandle binH
     CHK_RET(hrtStreamSetMode(localStream.ptr(), aicpuStreamMode));
 
     // 下kernel
-    std::string kernelName = "RunAicpuDfxOpInfoInitV2";
+    std::string kernelName = "RunAicpuDfxInitV2";
 
     struct InitTask {
         u64 context;

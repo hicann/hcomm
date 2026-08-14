@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef __COLL_COMM_AICPU_DESTROY_FUNC_H__
-#define __COLL_COMM_AICPU_DESTROY_FUNC_H__
+#ifndef COLL_COMM_AICPU_DESTROY_FUNC_H
+#define COLL_COMM_AICPU_DESTROY_FUNC_H
 
 #include "daemon_func.h"
 #include "hccl_types.h"
