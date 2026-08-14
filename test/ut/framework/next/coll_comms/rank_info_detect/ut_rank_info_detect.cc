@@ -12,6 +12,7 @@
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
 #include <cstdlib>
+#include <stdexcept>
 #include <string>
 #include <thread>
 
@@ -26,6 +27,7 @@
 #include "invalid_params_exception.h"
 #include "host_ip_not_found_exception.h"
 #include "internal_exception.h"
+#include "network_api_exception.h"
 #include "null_ptr_exception.h"
 #include "env_config/env_config.h"
 #include "env_func.h"
@@ -70,10 +72,6 @@ protected:
             .stubs()
             .with(mockcpp::any(), mockcpp::any())
             .will(returnValue(hostSocketHandle));
-        MOCKER(HrtRaSocketWhiteListAdd)
-            .stubs()
-            .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
-            .will(ignoreReturnValue());
         MOCKER(HrtGetDevice).stubs().with().will(returnValue(0));
         MOCKER(HrtGetDevicePhyIdByIndex).stubs().with(mockcpp::any()).will(returnValue(static_cast<DevId>(0)));
         MOCKER(HrtRaInit).stubs().with(mockcpp::any()).will(ignoreReturnValue());
@@ -94,6 +92,16 @@ protected:
         GlobalMockObject::verify();
         std::cout << "A Test case in RankInfoDetectTest TearDown" << std::endl;
     }
+
+    void MockSetupServerWhitelistResult(HcclResult ret)
+    {
+        MOCKER(GetBootstrapIp).stubs().with(mockcpp::any()).will(returnValue(IpAddress("127.0.0.1")));
+        MOCKER_CPP(&RankInfoDetect::GetHostListenPort).stubs().with().will(returnValue(60000));
+        MOCKER_CPP(&RankInfoDetect::ServerInit).stubs().with().will(returnValue(std::shared_ptr<Socket>{}));
+        MOCKER_CPP(&RankInfoDetect::GetRootHandle).stubs().with(mockcpp::any()).will(ignoreReturnValue());
+        MOCKER_CPP(&RankInfoDetect::GetHandleAndAddHostSocketWhitelist).stubs().with().will(returnValue(ret));
+    }
+
     IpAddress remoteIp;
     IpAddress localIp;
     SocketHandle socketHandle;
@@ -116,7 +124,34 @@ TEST_F(RankInfoDetectTest, Ut_SetupServer_When_Invalid_Ip_Expect_THROW)
     EXPECT_THROW(rankInfoDetect->SetupServer(outRootHandle), InternalException);
 }
 
-TEST_F(RankInfoDetectTest, Ut_GetHostSocketHandle_When_Whitelist_Expect_AddHost_NO_THROW)
+TEST_F(RankInfoDetectTest, Ut_SetupServer_When_WhitelistReturnsEPtr_Expect_NullPtrException)
+{
+    MockSetupServerWhitelistResult(HCCL_E_PTR);
+
+    RankInfoDetect rankInfoDetect;
+    HcclRootHandleV2 rootHandle{};
+    EXPECT_THROW(rankInfoDetect.SetupServer(rootHandle), NullPtrException);
+}
+
+TEST_F(RankInfoDetectTest, Ut_SetupServer_When_WhitelistReturnsENetwork_Expect_NetworkApiException)
+{
+    MockSetupServerWhitelistResult(HCCL_E_NETWORK);
+
+    RankInfoDetect rankInfoDetect;
+    HcclRootHandleV2 rootHandle{};
+    EXPECT_THROW(rankInfoDetect.SetupServer(rootHandle), NetworkApiException);
+}
+
+TEST_F(RankInfoDetectTest, Ut_SetupServer_When_WhitelistReturnsEInternal_Expect_InternalException)
+{
+    MockSetupServerWhitelistResult(HCCL_E_INTERNAL);
+
+    RankInfoDetect rankInfoDetect;
+    HcclRootHandleV2 rootHandle{};
+    EXPECT_THROW(rankInfoDetect.SetupServer(rootHandle), InternalException);
+}
+
+TEST_F(RankInfoDetectTest, Ut_GetHostSocketHandle_When_WhitelistEnabled_Expect_DeferTagConfiguration)
 {
     // when
     MOCKER(HrtGetDeviceCount).stubs().with().will(returnValue(8));
@@ -139,6 +174,68 @@ TEST_F(RankInfoDetectTest, Ut_GetHostSocketHandle_When_Whitelist_Expect_AddHost_
     shared_ptr<RankInfoDetect> rankInfoDetect = make_shared<RankInfoDetect>();
     HcclRootHandleV2 outRootHandle;
     EXPECT_NO_THROW(rankInfoDetect->GetHostSocketHandle());
+    EXPECT_EQ(rankInfoDetect->hostSocketWlist_.size(), 1U);
+    EXPECT_TRUE(rankInfoDetect->wlistInfo_.empty());
+}
+
+TEST_F(RankInfoDetectTest, Ut_AddHostSocketWhitelist_When_TagInputsReady_Expect_CorrectTag)
+{
+    RankInfoDetect rankInfoDetect;
+    rankInfoDetect.identifier_ = "test_identifier";
+    rankInfoDetect.hostPort_ = 60001;
+    std::vector<IpAddress> whitelist{IpAddress("127.0.0.1")};
+
+    MOCKER(HrtRaSocketWhiteListAdd).stubs().with(mockcpp::any(), mockcpp::any()).will(ignoreReturnValue());
+    EXPECT_EQ(rankInfoDetect.AddHostSocketWhitelist(socketHandle, whitelist), HCCL_SUCCESS);
+    ASSERT_EQ(rankInfoDetect.wlistInfo_.size(), 1U);
+    EXPECT_EQ(rankInfoDetect.wlistInfo_[0].tag, "rank_info_detect_default_tag_test_identifier_60001");
+}
+
+TEST_F(RankInfoDetectTest, Ut_AddHostSocketWhitelist_When_HrtThrowsStdException_Expect_E_INTERNAL)
+{
+    RankInfoDetect rankInfoDetect;
+    rankInfoDetect.identifier_ = "test_identifier";
+    rankInfoDetect.hostPort_ = 60001;
+    std::vector<IpAddress> whitelist{IpAddress("127.0.0.1")};
+
+    MOCKER(HrtRaSocketWhiteListAdd)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any())
+        .will(throws(std::runtime_error("add whitelist failed")));
+    EXPECT_EQ(rankInfoDetect.AddHostSocketWhitelist(socketHandle, whitelist), HCCL_E_INTERNAL);
+}
+
+TEST_F(RankInfoDetectTest, Ut_GetHandleAndAddHostSocketWhitelist_When_WhitelistEmpty_Expect_ReturnDirectly)
+{
+    RankInfoDetect rankInfoDetect;
+    rankInfoDetect.wlistInfo_.push_back(RaSocketWhitelist{});
+
+    MOCKER_CPP(&HostSocketHandleManager::Get).expects(never());
+    MOCKER(HrtRaSocketWhiteListAdd).expects(never());
+
+    EXPECT_EQ(rankInfoDetect.GetHandleAndAddHostSocketWhitelist(), HCCL_SUCCESS);
+    EXPECT_TRUE(rankInfoDetect.wlistInfo_.empty());
+}
+
+TEST_F(RankInfoDetectTest, Ut_GetHandleAndAddHostSocketWhitelist_When_SocketHandleNull_Expect_E_PTR)
+{
+    RankInfoDetect rankInfoDetect;
+    rankInfoDetect.devPhyId_ = 0;
+    rankInfoDetect.hostIp_ = IpAddress("127.0.0.1");
+    rankInfoDetect.identifier_ = "test_identifier";
+    rankInfoDetect.hostPort_ = 60001;
+    rankInfoDetect.hostSocketWlist_ = {IpAddress("127.0.0.1")};
+    rankInfoDetect.wlistInfo_.push_back(RaSocketWhitelist{});
+
+    SocketHandle nullHandle = nullptr;
+    MOCKER_CPP(&HostSocketHandleManager::Get)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(nullHandle));
+    MOCKER(HrtRaSocketWhiteListAdd).expects(never());
+
+    EXPECT_EQ(rankInfoDetect.GetHandleAndAddHostSocketWhitelist(), HCCL_E_PTR);
+    EXPECT_TRUE(rankInfoDetect.wlistInfo_.empty());
 }
 
 TEST_F(RankInfoDetectTest, Ut_ClientInit_When_Input_Expect_NO_THROW)

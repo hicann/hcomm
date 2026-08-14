@@ -17,6 +17,8 @@
 #include "hccp_peer_manager.h"
 #include "hccp_hdc_manager.h"
 #include "internal_exception.h"
+#include "network_api_exception.h"
+#include "null_ptr_exception.h"
 #include "orion_adapter_hccp.h"
 #include "orion_adapter_rts.h"
 #include "whitelist.h"
@@ -87,13 +89,26 @@ void RankInfoDetect::SetupServer(HcclRootHandleV2& rootHandle)
     // 获取端口号port
     hostPort_ = GetHostListenPort();
 
-    // 1. 创建serverSocket，为serverSocket添加白名单，启动监听
+    // 1. 创建serverSocket，启动监听并获取实际端口
     shared_ptr<Socket> serverSocket = ServerInit();
 
     // 2. 构建rootHandle
     GetRootHandle(rootHandle);
 
-    // 3. 拉起线程，调用RankInfoDetectService.Run()，注意新线程中需要HrtSetDevice
+    // 3. 实际端口和identifier就绪后，使用最终tag下发白名单
+    HcclResult ret = GetHandleAndAddHostSocketWhitelist();
+    if (ret == HCCL_E_PTR) {
+        THROW<NullPtrException>("[RankInfoDetect::%s] get host socket handle failed, ret[%d].", __func__, ret);
+    }
+    if (ret == HCCL_E_NETWORK) {
+        THROW<NetworkApiException>("[RankInfoDetect::%s] add host socket whitelist failed, ret[%d].", __func__, ret);
+    }
+    if (ret != HCCL_SUCCESS) {
+        THROW<InternalException>(
+            "[RankInfoDetect::%s] configure host socket whitelist failed, ret[%d].", __func__, ret);
+    }
+
+    // 4. 拉起线程，调用RankInfoDetectService.Run()，注意新线程中需要HrtSetDevice
     std::thread threadHandle(
         &RankInfoDetect::SetupRankInfoDetectService, this, serverSocket, devLogicId_, devPhyId_, identifier_,
         wlistInfo_);
@@ -109,16 +124,15 @@ SocketHandle RankInfoDetect::GetHostSocketHandle()
     // 获取socket句柄
     SocketHandle hostSocketHandle = HostSocketHandleManager::GetInstance().Create(devPhyId_, hostIp_);
 
-    // 如果白名单使能则将ip添加到hostSocketHandle
+    // 白名单tag依赖实际监听端口和identifier，在GetRootHandle后再构造并下发
+    hostSocketWlist_.clear();
     if (!EnvConfig::GetInstance().GetHostNicConfig().GetWhitelistDisable()) {
-        std::vector<IpAddress> hostSocketWhitelist{};
-        Whitelist::GetInstance().GetHostWhiteList(hostSocketWhitelist);
+        Whitelist::GetInstance().GetHostWhiteList(hostSocketWlist_);
         CHK_PRT_THROW(
-            hostSocketWhitelist.empty(), HCCL_ERROR("[%s] whitelist file have no valid host ip.", __func__),
+            hostSocketWlist_.empty(), HCCL_ERROR("[%s] whitelist file have no valid host ip.", __func__),
             InternalException, "get host ip error");
         u32 whiteListEnable = 1;
         HrtRaSocketSetWhiteListStatus(whiteListEnable);
-        AddHostSocketWhitelist(hostSocketHandle, hostSocketWhitelist);
     }
 
     HCCL_DEBUG("[RankInfoDetect::%s] get host socket handle success, socketHandle[%p].", __func__, hostSocketHandle);
@@ -147,7 +161,27 @@ shared_ptr<Socket> RankInfoDetect::ServerInit()
     return serverSocket;
 }
 
-void RankInfoDetect::AddHostSocketWhitelist(SocketHandle& socketHandle, const std::vector<IpAddress>& hostSocketWlist)
+HcclResult RankInfoDetect::GetHandleAndAddHostSocketWhitelist()
+{
+    // 同一对象重试SetupServer时，先清理上一次生成的条目，避免旧tag被重复下发
+    wlistInfo_.clear();
+    if (hostSocketWlist_.empty()) {
+        return HCCL_SUCCESS;
+    }
+
+    SocketHandle hostSocketHandle = HostSocketHandleManager::GetInstance().Get(devPhyId_, hostIp_);
+    CHK_PRT_RET(
+        hostSocketHandle == nullptr,
+        HCCL_ERROR(
+            "[RankInfoDetect::%s] get host socket handle failed before adding whitelist, "
+            "devPhyId[%u], hostIp[%s], identifier[%s], listenPort[%u].",
+            __func__, devPhyId_, hostIp_.GetIpStr().c_str(), identifier_.c_str(), hostPort_),
+        HCCL_E_PTR);
+    CHK_RET(AddHostSocketWhitelist(hostSocketHandle, hostSocketWlist_));
+    return HCCL_SUCCESS;
+}
+
+HcclResult RankInfoDetect::AddHostSocketWhitelist(SocketHandle& socketHandle, const vector<IpAddress>& hostSocketWlist)
 {
     HCCL_DEBUG("[RankInfoDetect::%s] start, hostSocketWlist size[%zu].", __func__, hostSocketWlist.size());
 
@@ -159,9 +193,10 @@ void RankInfoDetect::AddHostSocketWhitelist(SocketHandle& socketHandle, const st
         wlistInfo_.push_back(info);
     }
 
-    HrtRaSocketWhiteListAdd(socketHandle, wlistInfo_);
+    TRY_CATCH_RETURN(HrtRaSocketWhiteListAdd(socketHandle, wlistInfo_));
 
     HCCL_DEBUG("[RankInfoDetect::%s] end, add wlistInfo size[%zu] success.", __func__, wlistInfo_.size());
+    return HCCL_SUCCESS;
 }
 
 std::shared_ptr<Socket> RankInfoDetect::ClientInit(const HcclRootHandleV2& rootHandle)

@@ -45,6 +45,7 @@ private:
     RankTableInfo rankTable_{};
     IpAddress hostIp_{};
     u32 hostPort_{HCCL_INVALID_PORT};
+    vector<IpAddress> hostSocketWlist_{};
     vector<RaSocketWhitelist> wlistInfo_{};
     std::string identifier_{};
     std::shared_ptr<RankInfoDetectClient> rankInfoDetectClient;
@@ -53,7 +54,8 @@ private:
         vector<RaSocketWhitelist> wlistInfo);
     std::shared_ptr<Socket> ServerInit();
     std::shared_ptr<Socket> ClientInit(const HcclRootHandleV2& rootHandle);
-    void AddHostSocketWhitelist(SocketHandle& socketHandle, const std::vector<IpAddress>& hostSocketWlist);
+    HcclResult GetHandleAndAddHostSocketWhitelist();
+    HcclResult AddHostSocketWhitelist(SocketHandle& socketHandle, const vector<IpAddress>& hostSocketWlist);
     u32 GetHostListenPort();
     void GetRootHandle(HcclRootHandleV2& rootHandle);
     SocketHandle GetHostSocketHandle();
