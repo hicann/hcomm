@@ -31,10 +31,9 @@ RdmaLocalNotify::RdmaLocalNotify(RdmaHandle rdmaHandle, bool devUsed)
     addr = resAddrInfo.address;
     DevCapability::GetInstance().Init(devType); // 单例初始化
     size = DevCapability::GetInstance().GetNotifySize();
+    HCCL_DEBUG("[RdmaLocalNotify] addr=0x%llx, size=%u", addr, size);
     // 注册内存
     struct MrInfoT mrInfo;
-    addr = addr & ~(4096 - 1ULL); // 临时规避，待ubdevmem适配后修改
-    size = 4096;
     mrInfo.addr = reinterpret_cast<void*>(addr);
     mrInfo.size = size;
     mrInfo.access = RA_ACCESS_REMOTE_WRITE | RA_ACCESS_LOCAL_WRITE | RA_ACCESS_REMOTE_READ;

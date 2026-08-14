@@ -26,7 +26,7 @@ void RdmaConnLiteV2::ParseSqContext(std::vector<char>& data)
     binaryStream >> sqContext.dbHwVa;
     binaryStream >> sqContext.dbSwVa;
     binaryStream >> sqContext.sl;
-    binaryStream >> sqContext.mtuShift;
+    binaryStream >> sqContext.dbVendorSpecified;
 }
 
 void RdmaConnLiteV2::ParseCqContext(std::vector<char>& data)
@@ -39,6 +39,7 @@ void RdmaConnLiteV2::ParseCqContext(std::vector<char>& data)
     binaryStream >> cqContext.headAddr;
     binaryStream >> cqContext.tailAddr;
     binaryStream >> cqContext.dbSwVa;
+    binaryStream >> cqContext.dbVendorSpecified;
 }
 
 RdmaConnLiteV2::RdmaConnLiteV2(std::vector<char>& uniqueId) : RmaConnLite()
@@ -66,14 +67,21 @@ RdmaConnLiteV2::~RdmaConnLiteV2() {}
 
 std::string RdmaConnLiteV2::Describe()
 {
+    uint8_t mtuShift
+        = static_cast<uint8_t>((sqContext.dbVendorSpecified >> UB_DB_VENDOR_MTUSHIFT_SHIFT) & UB_DB_VENDOR_FIELD_MASK);
+    uint8_t cos
+        = static_cast<uint8_t>((sqContext.dbVendorSpecified >> UB_DB_VENDOR_COS_SHIFT) & UB_DB_VENDOR_FIELD_MASK);
+
     return StringFormat(
         "RdmaConnLiteV2[QPN=%u, SQ_VA=0x%llx, WQE_SIZE=%u, SQ_DEPTH=%u, SQ_HEAD_ADDR=0x%llx, SQ_TAIL_ADDR=0x%llx, "
-        "SL=%u, DB_HW_VA=0x%llx, DB_SW_VA=0x%llx, MTU_SHIFT=%u, CQN=%u, CQ_VA=0x%llx, CQE_SIZE=%u, CQ_DEPTH=%u, "
-        "CQ_HEAD_ADDR=0x%llx, CQ_TAIL_ADDR=0x%llx, DB_HW_VA=0x%llx, DB_SW_VA=0x%llx]",
+        "SL=%u, DB_HW_VA=0x%llx, DB_SW_VA=0x%llx, MTU_SHIFT=%u, COS=%u, "
+        "DB_VENDOR_SPECIFIED=0x%llx, CQN=%u, CQ_VA=0x%llx, CQE_SIZE=%u, CQ_DEPTH=%u, "
+        "CQ_HEAD_ADDR=0x%llx, CQ_TAIL_ADDR=0x%llx, DB_HW_VA=0x%llx, DB_SW_VA=0x%llx, "
+        "CQ_DB_VENDOR_SPECIFIED=0x%llx]",
         sqContext.qpn, sqContext.sqVa, sqContext.wqeSize, sqContext.depth, sqContext.headAddr, sqContext.tailAddr,
-        sqContext.sl, sqContext.dbHwVa, sqContext.dbSwVa, sqContext.mtuShift, cqContext.cqn, cqContext.cqVa,
-        cqContext.cqeSize, cqContext.cqDepth, cqContext.headAddr, cqContext.tailAddr, cqContext.dbHwVa,
-        cqContext.dbSwVa);
+        sqContext.sl, sqContext.dbHwVa, sqContext.dbSwVa, mtuShift, cos, sqContext.dbVendorSpecified, cqContext.cqn,
+        cqContext.cqVa, cqContext.cqeSize, cqContext.cqDepth, cqContext.headAddr, cqContext.tailAddr, cqContext.dbHwVa,
+        cqContext.dbSwVa, cqContext.dbVendorSpecified);
 }
 
 void RdmaConnLiteV2::GetVendorOps()

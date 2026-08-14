@@ -9,11 +9,17 @@
  */
 #include "./dev_rdma_connection_v2.h"
 #include "log.h"
-#include "orion_adapter_rts.h"
+#include "acl/acl_rt.h"
 #include "hccp.h"
 
 namespace hcomm {
-constexpr uint32_t DEFAULT_CQN = 0;
+static constexpr uint32_t DEFAULT_CQN = 0;
+// DbVendorSpecified bitfield layout, matching Roce3DbEntry.dw0.bs:
+//   cos      at bits 24-26 (3 bits)
+//   mtuShift at bits 50-52 (3 bits)
+static constexpr uint32_t UB_DB_VENDOR_COS_SHIFT = 24;
+static constexpr uint32_t UB_DB_VENDOR_MTUSHIFT_SHIFT = 50;
+static constexpr uint32_t UB_DB_VENDOR_FIELD_MASK = 0x7;
 
 DevRdmaConnectionV2::DevRdmaConnectionV2(Hccl::Socket* socket, RdmaHandle rdmaHandle, uint32_t cqAttrFlags)
     : socket_(socket),
@@ -53,36 +59,54 @@ std::string DevRdmaConnectionV2::Describe() const
     return Hccl::StringFormat("DevRdmaConnectionV2[status=%s]", rdmaConnStatus_.Describe().c_str());
 }
 
-static void* NdaAlloc(size_t size) { return Hccl::HrtMalloc(size, static_cast<int>(ACL_MEM_MALLOC_HUGE_ONLY)); }
+static void* NdaAlloc(size_t size)
+{
+    void* ptr = nullptr;
+    aclError ret = aclrtMalloc(&ptr, size, static_cast<aclrtMemMallocPolicy>(ACL_MEM_TYPE_HIGH_BAND_WIDTH));
+    if (ret != ACL_SUCCESS) {
+        HCCL_ERROR("[NdaAlloc] aclrtMalloc failed, ret[%d], size[%zu]", ret, size);
+        return nullptr;
+    }
+    return ptr;
+}
 
 static void NdaFree(void* ptr)
 {
     if (ptr == nullptr) {
         return;
     }
-    Hccl::HrtFree(ptr);
+    aclError ret = aclrtFree(ptr);
+    if (ret != ACL_SUCCESS) {
+        HCCL_ERROR("[NdaFree] aclrtFree failed, ret[%d], ptr[%p]", ret, ptr);
+    }
 }
 
-static void NdaMemset(void* dst, int value, size_t count) { Hccl::HrtMemsetV2(dst, count, value, count); }
+static void NdaMemset(void* dst, int value, size_t count)
+{
+    aclError ret = aclrtMemset(dst, count, value, count);
+    if (ret != ACL_SUCCESS) {
+        HCCL_ERROR("[NdaMemset] aclrtMemset failed, ret[%d], dst[%p], value[%d], count[%zu]", ret, dst, value, count);
+    }
+}
 
 static int NdaMemcpy(void* dst, size_t dstSize, void* src, size_t srcSize, uint32_t direct)
 {
-    Hccl::rtMemcpyKind_t kind = Hccl::rtMemcpyKind_t::RT_MEMCPY_DEFAULT;
+    aclrtMemcpyKind kind = ACL_MEMCPY_DEFAULT;
     switch (direct) {
         case MEMCPY_DIRECT_HOST_TO_HOST: {
-            kind = Hccl::rtMemcpyKind_t::RT_MEMCPY_HOST_TO_HOST;
+            kind = ACL_MEMCPY_HOST_TO_HOST;
             break;
         }
         case MEMCPY_DIRECT_HOST_TO_DEVICE: {
-            kind = Hccl::rtMemcpyKind_t::RT_MEMCPY_HOST_TO_DEVICE;
+            kind = ACL_MEMCPY_HOST_TO_DEVICE;
             break;
         }
         case MEMCPY_DIRECT_DEVICE_TO_HOST: {
-            kind = Hccl::rtMemcpyKind_t::RT_MEMCPY_DEVICE_TO_HOST;
+            kind = ACL_MEMCPY_DEVICE_TO_HOST;
             break;
         }
         case MEMCPY_DIRECT_DEVICE_TO_DEVICE: {
-            kind = Hccl::rtMemcpyKind_t::RT_MEMCPY_DEVICE_TO_DEVICE;
+            kind = ACL_MEMCPY_DEVICE_TO_DEVICE;
             break;
         }
         default: {
@@ -90,7 +114,13 @@ static int NdaMemcpy(void* dst, size_t dstSize, void* src, size_t srcSize, uint3
             return -1;
         }
     }
-    Hccl::HrtMemcpy(dst, dstSize, src, srcSize, kind);
+    aclError ret = aclrtMemcpy(dst, dstSize, src, srcSize, kind);
+    if (ret != ACL_SUCCESS) {
+        HCCL_ERROR(
+            "[NdaMemcpy] aclrtMemcpy failed, ret[%d], dst[%p], src[%p], dstSize[%zu], srcSize[%zu]", ret, dst, src,
+            dstSize, srcSize);
+        return -1;
+    }
     return 0;
 }
 
@@ -303,7 +333,6 @@ HcclResult DevRdmaConnectionV2::BuildSqContext(SqContext* context)
         HCCL_ERROR("[DevRdmaConnectionV2::%s]RaGetQpAttr failed, ret[%d]", __func__, ret);
         return HCCL_E_ROCE_CONNECT;
     }
-    s32 mtuShift = localQpAttr.pathMtu - 1;
 
     context->type = SQ_CONTEXT_TYPE_ROCE;
     context->contextInfo.roceSq.qpn = localQpAttr.qpn;
@@ -317,17 +346,25 @@ HcclResult DevRdmaConnectionV2::BuildSqContext(SqContext* context)
 
     if (dmaMode_ == QBUF_DMA_MODE_INDEP_UB) {
         context->contextInfo.roceSq.dbSwVa = reinterpret_cast<uint64_t>(ndaQpInfo_.sqInfo.dbrPiVa.iovBase);
-        context->contextInfo.roceSq.mtuShift = static_cast<uint8_t>(mtuShift);
+        uint8_t mtuShift = static_cast<uint8_t>(localQpAttr.pathMtu - 1);
+        uint8_t dbCos = static_cast<uint8_t>(localQpAttr.vendorPrivInfo & 0xFF);
+        context->contextInfo.roceSq.dbVendorSpecified
+            |= (static_cast<uint64_t>(mtuShift & UB_DB_VENDOR_FIELD_MASK) << UB_DB_VENDOR_MTUSHIFT_SHIFT);
+        context->contextInfo.roceSq.dbVendorSpecified
+            |= (static_cast<uint64_t>(dbCos & UB_DB_VENDOR_FIELD_MASK) << UB_DB_VENDOR_COS_SHIFT);
+
+        HCCL_INFO("[DevRdmaConnectionV2][%s] mtuShift=%u, dbCos=%u", __func__, mtuShift, dbCos);
     }
 
     HCCL_INFO(
         "[DevRdmaConnectionV2][%s] type=%u, QPN=%u, SQ_VA=0x%llx, WQE_SIZE=%u, "
         "SQ_DEPTH=%u, SQ_HEAD_ADDR=0x%llx, SQ_TAIL_ADDR=0x%llx, "
-        "SL=%u, DB_HW_VA=0x%llx, DB_SW_VA=0x%llx, MTU_SHIFT=%u",
+        "SL=%u, DB_HW_VA=0x%llx, DB_SW_VA=0x%llx,"
+        "DbVendorSpecified=0x%llx",
         __func__, context->type, context->contextInfo.roceSq.qpn, context->contextInfo.roceSq.sqVa,
         context->contextInfo.roceSq.wqeSize, context->contextInfo.roceSq.depth, context->contextInfo.roceSq.headAddr,
         context->contextInfo.roceSq.tailAddr, context->contextInfo.roceSq.sl, context->contextInfo.roceSq.dbHwVa,
-        context->contextInfo.roceSq.dbSwVa, context->contextInfo.roceSq.mtuShift);
+        context->contextInfo.roceSq.dbSwVa, context->contextInfo.roceSq.dbVendorSpecified);
     return HCCL_SUCCESS;
 }
 
@@ -376,7 +413,11 @@ std::vector<char> DevRdmaConnectionV2::GetSqUniqueId() const
         HCCL_ERROR("[DevRdmaConnectionV2::%s]RaGetQpAttr failed, ret[%d]", __func__, ret);
         return {};
     }
-    s32 mtuShift = localQpAttr.pathMtu - 1;
+    uint8_t mtuShift = static_cast<uint8_t>(localQpAttr.pathMtu - 1);
+    uint8_t dbCos = static_cast<uint8_t>(localQpAttr.vendorPrivInfo & 0xFF);
+    uint64_t dbVendorSpecified = 0;
+    dbVendorSpecified |= (static_cast<uint64_t>(mtuShift & UB_DB_VENDOR_FIELD_MASK) << UB_DB_VENDOR_MTUSHIFT_SHIFT);
+    dbVendorSpecified |= (static_cast<uint64_t>(dbCos & UB_DB_VENDOR_FIELD_MASK) << UB_DB_VENDOR_COS_SHIFT);
 
     Hccl::BinaryStream binaryStream;
     // 打包1825网卡NDA直驱资源
@@ -389,7 +430,11 @@ std::vector<char> DevRdmaConnectionV2::GetSqUniqueId() const
     binaryStream << reinterpret_cast<uint64_t>(ndaQpInfo_.sqInfo.dbHwVa.iovBase);
     binaryStream << reinterpret_cast<uint64_t>(ndaQpInfo_.sqInfo.dbrPiVa.iovBase);
     binaryStream << static_cast<uint8_t>(qpInfo_.serviceLevel);
-    binaryStream << static_cast<uint8_t>(mtuShift);
+    binaryStream << dbVendorSpecified;
+
+    HCCL_DEBUG(
+        "[DevRdmaConnectionV2][%s] mtuShift[%d], dbCos[%u], dbVendorSpecified[0x%llx]", __func__, mtuShift, dbCos,
+        dbVendorSpecified);
 
     std::vector<char> result;
     binaryStream.Dump(result);
@@ -408,6 +453,7 @@ std::vector<char> DevRdmaConnectionV2::GetCqUniqueId() const
     binaryStream << reinterpret_cast<uint64_t>(CqPiMem_.ptr());
     binaryStream << reinterpret_cast<uint64_t>(CqCiMem_.ptr());
     binaryStream << reinterpret_cast<uint64_t>(ndaCqInfo_.cqInfo.dbrCiVa.iovBase);
+    binaryStream << static_cast<uint64_t>(0); // CQ DbVendorSpecified placeholder
 
     std::vector<char> result;
     binaryStream.Dump(result);

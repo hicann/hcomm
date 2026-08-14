@@ -245,7 +245,6 @@ void* HrtMalloc(u64 size, aclrtMemType_t memType);
 void HrtFree(void* devPtr);
 void HrtMemcpy(void* dst, uint64_t destMax, const void* src, uint64_t count, rtMemcpyKind_t kind);
 void HrtMemset(void* dst, uint64_t destMax, uint64_t count);
-void HrtMemsetV2(void* dst, size_t destMax, int32_t value, size_t count);
 void HrtIpcSetMemoryName(void* ptr, char_t* name, u64 ptrMaxLen, u32 nameMaxLen);
 void HrtIpcDestroyMemoryName(const char_t* name);
 void* HrtIpcOpenMemory(const char_t* name);

@@ -207,15 +207,19 @@ public:
         dbEntry.dw0.bs.pi = ((sqHead_ >> 8) & 0xff);
         dbEntry.dw0.bs.sgidIndex = ROCE_INIT_SQ_DB_SGIT_IDX;
         dbEntry.dw0.bs.type = ROCE_SQ_DOORBELL_TYPE;
-        dbEntry.dw0.bs.mtuShift = sqContext_->mtuShift;
-        dbEntry.dw0.bs.cos = 0x7;
+
+        dbEntry.dw0.bs.mtuShift = static_cast<uint32_t>(
+            (sqContext_->dbVendorSpecified >> UB_DB_VENDOR_MTUSHIFT_SHIFT) & UB_DB_VENDOR_FIELD_MASK);
+        dbEntry.dw0.bs.cos = static_cast<uint32_t>(
+            (sqContext_->dbVendorSpecified >> UB_DB_VENDOR_COS_SHIFT) & UB_DB_VENDOR_FIELD_MASK);
 
         dbAddr = sqContext_->dbHwVa;
         dbValue = dbEntry.dw0.db_value;
 
         HCCL_INFO(
-            "[Rdma1825Ops::%s] SQ DB ready, qpn[%u], sqHead[%u], dbAddr[0x%llx], dbValue[0x%llx]", __func__,
-            sqContext_->qpn, sqHead_, dbAddr, dbValue);
+            "[Rdma1825Ops::%s] SQ DB ready, qpn[%u], sqHead[%u], mtuShift[%u], cos[%u], "
+            "dbAddr[0x%llx], dbValue[0x%llx]",
+            __func__, sqContext_->qpn, sqHead_, dbEntry.dw0.bs.mtuShift, dbEntry.dw0.bs.cos, dbAddr, dbValue);
         return HCCL_SUCCESS;
     }
 

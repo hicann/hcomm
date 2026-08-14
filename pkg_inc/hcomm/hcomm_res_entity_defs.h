@@ -135,7 +135,7 @@ typedef struct {
             uint32_t wqeSize;
             uint32_t depth;
             uint8_t sl;
-            uint8_t mtuShift;
+            uint64_t dbVendorSpecified;
         } roceSq;
         uint8_t raws[120];
     } contextInfo;
@@ -162,6 +162,7 @@ typedef struct {
             uint32_t cqn;
             uint32_t cqeSize;
             uint32_t cqDepth;
+            uint64_t dbVendorSpecified;
         } roceCq;
         uint8_t raws[120];
     } contextInfo;

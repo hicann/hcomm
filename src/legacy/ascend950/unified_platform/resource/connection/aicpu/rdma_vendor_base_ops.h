@@ -39,7 +39,7 @@ struct RdmaSqContextLite {
     uint64_t dbHwVa;
     uint64_t dbSwVa;
     uint8_t sl;
-    uint8_t mtuShift;
+    uint64_t dbVendorSpecified;
 };
 
 struct RdmaCqContextLite {
@@ -51,7 +51,15 @@ struct RdmaCqContextLite {
     uint64_t tailAddr;
     uint64_t dbHwVa;
     uint64_t dbSwVa;
+    uint64_t dbVendorSpecified;
 };
+
+// DbVendorSpecified bitfield layout, matching Roce3DbEntry.dw0.bs:
+//   cos      at bits 24-26 (3 bits)
+//   mtuShift at bits 50-52 (3 bits)
+static constexpr uint32_t UB_DB_VENDOR_COS_SHIFT = 24;
+static constexpr uint32_t UB_DB_VENDOR_MTUSHIFT_SHIFT = 50;
+static constexpr uint32_t UB_DB_VENDOR_FIELD_MASK = 0x7;
 
 // Necessary helper funcs
 constexpr uint32_t BITS_1BYTE = 8;

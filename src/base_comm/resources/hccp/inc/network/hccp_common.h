@@ -640,6 +640,7 @@ struct QpAttr {
     unsigned int gidIdx;
     unsigned char gid[HCCP_GID_RAW_LEN];
     int pathMtu;
+    uint64_t vendorPrivInfo;
     struct HyperFeature feature; // depend on RaSetQpAttrQos
 };
 

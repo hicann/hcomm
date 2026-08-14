@@ -262,8 +262,10 @@ HcclResult AicpuTsRoceChannelV2::BuildSocket()
     }
     std::string socketTag
         = (channelDesc_.channelName != nullptr) ? std::string(channelDesc_.channelName) : "AUTOMATIC_SOCKET_TAG";
-    bool isServer = (channelDesc_.role == HCOMM_SOCKET_ROLE_SERVER);
-    Hccl::SocketConfig socketConfig = Hccl::SocketConfig(linkData, port, socketTag, isServer);
+    Hccl::SocketConfig socketConfig
+        = (channelDesc_.role != HCOMM_SOCKET_ROLE_RESERVED) ?
+              Hccl::SocketConfig(linkData, port, socketTag, channelDesc_.role == HCOMM_SOCKET_ROLE_SERVER) :
+              Hccl::SocketConfig(linkData, port, socketTag);
     CHK_RET(SocketMgr::GetInstance(devicePhyId_).GetSocket(socketConfig, socket_));
     HCCL_INFO("[AicpuTsRoceChannelV2::%s] SUCCESS. port[%u].", __func__, port);
     return HCCL_SUCCESS;
@@ -278,11 +280,11 @@ HcclResult AicpuTsRoceChannelV2::BuildConnection()
     CHK_PTR_NULL(conn);
     CHK_RET(conn->Init());
     Hccl::QpInfo& qpInfo = conn->GetQpInfo();
-    qpInfo.serviceLevel = channelDesc_.roceAttr.sl == 0 ? SL_TEMP : channelDesc_.roceAttr.sl;
-    qpInfo.trafficClass = channelDesc_.roceAttr.tc == 0 ? TC_TEMP : channelDesc_.roceAttr.tc;
-    qpInfo.retryCnt = channelDesc_.roceAttr.retryCnt == 0 ? RETRY_CNT_TEMP : channelDesc_.roceAttr.retryCnt;
+    qpInfo.serviceLevel = channelDesc_.roceAttr.sl == 0xFF ? SL_TEMP : channelDesc_.roceAttr.sl;
+    qpInfo.trafficClass = channelDesc_.roceAttr.tc == 0xFF ? TC_TEMP : channelDesc_.roceAttr.tc;
+    qpInfo.retryCnt = channelDesc_.roceAttr.retryCnt == 0xFFFFFFFF ? RETRY_CNT_TEMP : channelDesc_.roceAttr.retryCnt;
     qpInfo.retryInterval
-        = channelDesc_.roceAttr.retryInterval == 0 ? RETRY_TIME_TEMP : channelDesc_.roceAttr.retryInterval;
+        = channelDesc_.roceAttr.retryInterval == 0xFFFFFFFF ? RETRY_TIME_TEMP : channelDesc_.roceAttr.retryInterval;
     HCCL_INFO(
         "[AicpuTsRoceChannelV2::BuildConnection] QpInfo: serviceLevel[%u], trafficClass[%u], retryCnt[%u], "
         "retryInterval[%u].",
@@ -368,9 +370,10 @@ HcclResult AicpuTsRoceChannelV2::BuildNotifyValueBuffer()
 
     Hccl::DevCapability::GetInstance().Init(Hccl::HrtGetDeviceType());
     u32 notifysize = Hccl::DevCapability::GetInstance().GetNotifySize();
-    notifysize = 4096; // 临时规避，待ubdevmem适配后修改
     EXCEPTION_CATCH((notifyValueMem_ = std::make_shared<Hccl::DevBuffer>(notifysize)), return HCCL_E_PTR);
-    HCCL_DEBUG("create notify value buffer[%p], size[%u]", notifyValueMem_.get(), notifysize);
+    HCCL_DEBUG(
+        "[AicpuTsRoceChannelV2::%s] create notify value buffer[%p], size[%u]", __func__, notifyValueMem_.get(),
+        notifyValueMem_->GetSize());
     u64 notifyValue = 1; // notify值写1表示record
     Hccl::HrtMemcpy(
         reinterpret_cast<void*>(notifyValueMem_->GetAddr()), notifyValueMem_->GetSize(), &notifyValue, notifysize,
@@ -388,7 +391,7 @@ HcclResult AicpuTsRoceChannelV2::Init()
     devicePhyId_ = Hccl::HrtGetDevicePhyIdByIndex(static_cast<u32>(devLogicId));
 
     CHK_RET(ParseInputParam());
-    if (channelDesc_.exchangeAllMems && channelDesc_.role == HCOMM_SOCKET_ROLE_SERVER) {
+    if (channelDesc_.exchangeAllMems && channelDesc_.role != HCOMM_SOCKET_ROLE_CLIENT) {
         CHK_RET(StartListen());
     }
     CHK_RET(BuildSocket());

@@ -214,3 +214,119 @@ TEST_F(DevRdmaConnectionV2Test, Ut_When_GetUniqueId_Expect_NotEmpty)
 
     std::cout << "End Ut_When_GetUniqueId_Expect_NotEmpty" << std::endl;
 }
+
+TEST_F(DevRdmaConnectionV2Test, Ut_When_NdaAlloc_Expect_Correct)
+{
+    std::cout << "Start Ut_When_NdaAlloc_Expect_Correct" << std::endl;
+
+    RdmaHandle rdmaHandle = (void*)0x1000000;
+    DevRdmaConnectionV2 connection(fakeSocket, rdmaHandle, 0);
+    connection.Init();
+
+    // success
+    static void* fakePtr = reinterpret_cast<void*>(0xDEADBEEF);
+    MOCKER(aclrtMalloc)
+        .stubs()
+        .with(outBoundP(&fakePtr, sizeof(fakePtr)), mockcpp::any(), mockcpp::any())
+        .will(returnValue(ACL_SUCCESS));
+    void* result = connection.ndaOps_.alloc(1024);
+    EXPECT_EQ(result, fakePtr);
+
+    // failure
+    GlobalMockObject::verify();
+    MOCKER(aclrtMalloc)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(ACL_ERROR_RT_MEMORY_ALLOCATION));
+    result = connection.ndaOps_.alloc(1024);
+    EXPECT_EQ(result, nullptr);
+
+    std::cout << "End Ut_When_NdaAlloc_Expect_Correct" << std::endl;
+}
+
+TEST_F(DevRdmaConnectionV2Test, Ut_When_NdaFree_Expect_Correct)
+{
+    std::cout << "Start Ut_When_NdaFree_Expect_Correct" << std::endl;
+
+    RdmaHandle rdmaHandle = (void*)0x1000000;
+    DevRdmaConnectionV2 connection(fakeSocket, rdmaHandle, 0);
+    connection.Init();
+
+    // null pointer: should return without calling aclrtFree
+    connection.ndaOps_.free(nullptr);
+
+    // success
+    MOCKER(aclrtFree).stubs().with(mockcpp::any()).will(returnValue(ACL_SUCCESS));
+    void* ptr = reinterpret_cast<void*>(0xDEADBEEF);
+    connection.ndaOps_.free(ptr);
+
+    // failure
+    GlobalMockObject::verify();
+    MOCKER(aclrtFree).stubs().with(mockcpp::any()).will(returnValue(ACL_ERROR_RT_PARAM_INVALID));
+    connection.ndaOps_.free(ptr);
+
+    std::cout << "End Ut_When_NdaFree_Expect_Correct" << std::endl;
+}
+
+TEST_F(DevRdmaConnectionV2Test, Ut_When_NdaMemset_Expect_Correct)
+{
+    std::cout << "Start Ut_When_NdaMemset_Expect_Correct" << std::endl;
+
+    RdmaHandle rdmaHandle = (void*)0x1000000;
+    DevRdmaConnectionV2 connection(fakeSocket, rdmaHandle, 0);
+    connection.Init();
+
+    char buffer[64] = {};
+
+    // success
+    MOCKER(aclrtMemset)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(ACL_SUCCESS));
+    connection.ndaOps_.memset_s(buffer, 0, sizeof(buffer));
+
+    // failure
+    GlobalMockObject::verify();
+    MOCKER(aclrtMemset)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(ACL_ERROR_RT_PARAM_INVALID));
+    connection.ndaOps_.memset_s(buffer, 0, sizeof(buffer));
+
+    std::cout << "End Ut_When_NdaMemset_Expect_Correct" << std::endl;
+}
+
+TEST_F(DevRdmaConnectionV2Test, Ut_When_NdaMemcpy_Expect_Correct)
+{
+    std::cout << "Start Ut_When_NdaMemcpy_Expect_Correct" << std::endl;
+
+    RdmaHandle rdmaHandle = (void*)0x1000000;
+    DevRdmaConnectionV2 connection(fakeSocket, rdmaHandle, 0);
+    connection.Init();
+
+    char src[64] = {};
+    char dst[64] = {};
+
+    // success: H2H, H2D, D2H, D2D
+    MOCKER(aclrtMemcpy)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(ACL_SUCCESS));
+    EXPECT_EQ(connection.ndaOps_.memcpy_s(dst, sizeof(dst), src, sizeof(src), MEMCPY_DIRECT_HOST_TO_HOST), 0);
+    EXPECT_EQ(connection.ndaOps_.memcpy_s(dst, sizeof(dst), src, sizeof(src), MEMCPY_DIRECT_HOST_TO_DEVICE), 0);
+    EXPECT_EQ(connection.ndaOps_.memcpy_s(dst, sizeof(dst), src, sizeof(src), MEMCPY_DIRECT_DEVICE_TO_HOST), 0);
+    EXPECT_EQ(connection.ndaOps_.memcpy_s(dst, sizeof(dst), src, sizeof(src), MEMCPY_DIRECT_DEVICE_TO_DEVICE), 0);
+
+    // unknown direction
+    EXPECT_EQ(connection.ndaOps_.memcpy_s(dst, sizeof(dst), src, sizeof(src), 99), -1);
+
+    // aclrtMemcpy failure
+    GlobalMockObject::verify();
+    MOCKER(aclrtMemcpy)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(ACL_ERROR_RT_PARAM_INVALID));
+    EXPECT_EQ(connection.ndaOps_.memcpy_s(dst, sizeof(dst), src, sizeof(src), MEMCPY_DIRECT_HOST_TO_DEVICE), -1);
+
+    std::cout << "End Ut_When_NdaMemcpy_Expect_Correct" << std::endl;
+}

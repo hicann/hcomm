@@ -2461,6 +2461,10 @@ STATIC int RsTypicalQueryQpAttr(struct RsQpCb *qpCb, struct TypicalQpAttr *qpAtt
     ret = RsIbvQueryQp(qpCb->ibQp, &ibvQpAttr, IBV_QP_PATH_MTU, &initAttr);
     CHK_PRT_RETURN(ret, hccp_err("RsIbvQueryQp failed, ret:%d errno:%d", ret, errno), -EOPENSRC);
 
+    if (qpCb->ibQpEx != NULL) {
+        qpAttr->vendorPrivInfo = qpCb->ibQpEx->vendor_priv_info.value;
+    }
+
     qpAttr->udpSport = qpCb->udpSport;
     qpAttr->pathMtu = (int)ibvQpAttr.path_mtu;
     return 0;

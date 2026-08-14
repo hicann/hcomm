@@ -88,7 +88,8 @@ struct NdaQpInfo {
     struct ibv_qp *qp;
     struct queueInfo sqInfo;
     struct queueInfo rqInfo;
-    uint64_t resv[32U];
+    uint64_t resv[31U];
+    uint64_t vendorPrivInfo;
 };
 
 enum {

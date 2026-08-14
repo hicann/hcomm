@@ -566,30 +566,6 @@ void HrtMemset(void* dst, uint64_t destMax, uint64_t count)
         HCCL_WARNING("[hrtMemSet] HrtThreadExchangeCaptureMode return [%d].", hcclRet));
 }
 
-void HrtMemsetV2(void* dst, size_t destMax, int32_t value, size_t count)
-{
-    aclmdlRICaptureMode mode = aclmdlRICaptureMode::ACL_MODEL_RI_CAPTURE_MODE_RELAXED;
-    HcclResult hcclRet = HrtThreadExchangeCaptureMode(&mode);
-    CHK_PRT_CONT(
-        hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
-        HCCL_WARNING("[HrtMemsetV2] HrtThreadExchangeCaptureMode return [%d]", hcclRet));
-    aclError ret = aclrtMemset(dst, destMax, value, count);
-
-    HCCL_INFO("Call aclrtMemset, return value[%d]", ret);
-    if (ret != ACL_SUCCESS) {
-        HCCL_ERROR(
-            "[HrtMemsetV2]errNo[0x%016llx] aclrtMemset failed, "
-            "return[%d], para: dstAddr[%p], value[%d], count[%zu].",
-            HCCL_ERROR_CODE(HcclResult::HCCL_E_RUNTIME), ret, dst, value, count);
-        throw RuntimeApiException(
-            StringFormat("call aclrtMemset failed, dst=%p, value=0x%x, count=0x%zx", dst, value, count));
-    }
-    hcclRet = HrtThreadExchangeCaptureMode(&mode);
-    CHK_PRT_CONT(
-        hcclRet != HCCL_SUCCESS && hcclRet != HCCL_E_NOT_SUPPORT,
-        HCCL_WARNING("[hrtMemSet] HrtThreadExchangeCaptureMode return [%d]", hcclRet));
-}
-
 void HrtIpcSetMemoryName(void* ptr, char_t* name, u64 ptrMaxLen, u32 nameMaxLen)
 {
     aclError ret = aclrtIpcMemGetExportKey(ptr, ptrMaxLen, name, nameMaxLen, 1UL);

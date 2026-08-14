@@ -167,6 +167,7 @@ struct RaRsDevInfo {
 struct TypicalQpAttr {
     unsigned int udpSport;
     int pathMtu;
+    uint64_t vendorPrivInfo;
 };
 
 enum {

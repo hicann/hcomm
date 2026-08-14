@@ -1756,8 +1756,6 @@ HcclResult HcclCommunicator::GetRankIpPortMap(RankIpPortMapPtr& rankIpPortMap)
 
 void HrtFree(void* devPtr) {}
 
-void HrtMemsetV2(void* dst, size_t destMax, int32_t value, size_t count) {}
-
 HcclResult HrtRaNdaQpCreate(
     RdmaHandle rdmaHandle, NdaOps* ndaOps, uint32_t dmaMode, NdaCqInfo* cqInfo, NdaQpInfo* qpInfo, QpHandle* qpHandle)
 {

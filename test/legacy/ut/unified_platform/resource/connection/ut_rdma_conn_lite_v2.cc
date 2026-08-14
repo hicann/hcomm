@@ -32,7 +32,7 @@ static std::vector<char> BuildSqUniqueId(const RdmaSqContextLite& sqCtx)
     bs << sqCtx.dbHwVa;
     bs << sqCtx.dbSwVa;
     bs << sqCtx.sl;
-    bs << sqCtx.mtuShift;
+    bs << sqCtx.dbVendorSpecified;
     std::vector<char> result;
     bs.Dump(result);
     return result;
@@ -48,6 +48,7 @@ static std::vector<char> BuildCqUniqueId(const RdmaCqContextLite& cqCtx)
     bs << cqCtx.headAddr;
     bs << cqCtx.tailAddr;
     bs << cqCtx.dbSwVa;
+    bs << cqCtx.dbVendorSpecified;
     std::vector<char> result;
     bs.Dump(result);
     return result;
@@ -82,7 +83,11 @@ static RdmaSqContextLite MakeDefaultSqContext()
     sq.sl = 0;
     sq.dbHwVa = 0x30000;
     sq.dbSwVa = 0x70000;
-    sq.mtuShift = 3;
+    sq.dbVendorSpecified = 0;
+    sq.dbVendorSpecified
+        |= (static_cast<uint64_t>(static_cast<uint8_t>(3) & UB_DB_VENDOR_FIELD_MASK) << UB_DB_VENDOR_MTUSHIFT_SHIFT);
+    sq.dbVendorSpecified
+        |= (static_cast<uint64_t>(static_cast<uint8_t>(0x7) & UB_DB_VENDOR_FIELD_MASK) << UB_DB_VENDOR_COS_SHIFT);
     return sq;
 }
 
@@ -96,6 +101,7 @@ static RdmaCqContextLite MakeDefaultCqContext()
     cq.headAddr = 0x50000;
     cq.tailAddr = 0x50008;
     cq.dbSwVa = 0x60000;
+    cq.dbVendorSpecified = 0;
     return cq;
 }
 
@@ -171,7 +177,7 @@ TEST_F(RdmaConnLiteV2Test, Ut_When_SqContext_Expect_Valid)
     EXPECT_EQ(connLite.sqContext.sl, sqCtx_.sl);
     EXPECT_EQ(connLite.sqContext.dbHwVa, sqCtx_.dbHwVa);
     EXPECT_EQ(connLite.sqContext.dbSwVa, sqCtx_.dbSwVa);
-    EXPECT_EQ(connLite.sqContext.mtuShift, sqCtx_.mtuShift);
+    EXPECT_EQ(connLite.sqContext.dbVendorSpecified, sqCtx_.dbVendorSpecified);
 
     std::cout << "End Ut_When_SqContext_Expect_Valid" << std::endl;
 }
@@ -219,7 +225,7 @@ TEST_F(RdmaConnLiteV2Test, Ut_When_LargeValues_Expect_Correct)
     sqMax.sl = UINT8_MAX;
     sqMax.dbHwVa = UINT64_MAX;
     sqMax.dbSwVa = UINT64_MAX;
-    sqMax.mtuShift = UINT8_MAX;
+    sqMax.dbVendorSpecified = UINT64_MAX;
 
     RdmaCqContextLite cqMax{};
     cqMax.cqn = UINT32_MAX;
@@ -229,6 +235,7 @@ TEST_F(RdmaConnLiteV2Test, Ut_When_LargeValues_Expect_Correct)
     cqMax.headAddr = UINT64_MAX;
     cqMax.tailAddr = UINT64_MAX;
     cqMax.dbSwVa = UINT64_MAX;
+    cqMax.dbVendorSpecified = UINT64_MAX;
 
     std::vector<char> testId = BuildRdmaConnLiteV2UniqueId(2, sqMax, cqMax);
     RdmaConnLiteV2 connLite(testId);
