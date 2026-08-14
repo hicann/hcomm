@@ -127,8 +127,7 @@ inline int32_t BuiltinGetListenPort(void* ctx, uint32_t* port)
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, epHandle),
         HCCL_E_NOT_FOUND);
     CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
-    CHK_RET(endpoint->ServerSocketGetListenPort(port));
-    return HCCL_SUCCESS;
+    return endpoint->ServerSocketGetListenPort(port);
 }
 
 inline HcommNicEndpointOps g_BuiltinEndpointOps = {

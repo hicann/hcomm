@@ -27,9 +27,8 @@ HcommMemReg(EndpointHandle endpointHandle, const char* memTag, const CommMem* me
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(static_cast<HcclResult>(endpoint->GetNicOps()->registerMemory(
-        endpoint->GetNicCtx(), mem, memTag, reinterpret_cast<void**>(memHandle))));
-    return HCCL_SUCCESS;
+    return static_cast<HcclResult>(
+        endpoint->GetNicOps()->registerMemory(endpoint->GetNicCtx(), mem, memTag, reinterpret_cast<void**>(memHandle)));
 }
 
 HcommResult HcommMemUnreg(EndpointHandle endpointHandle, HcommMemHandle memHandle)
@@ -38,8 +37,7 @@ HcommResult HcommMemUnreg(EndpointHandle endpointHandle, HcommMemHandle memHandl
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(static_cast<HcclResult>(endpoint->GetNicOps()->unregisterMemory(endpoint->GetNicCtx(), memHandle)));
-    return HCCL_SUCCESS;
+    return static_cast<HcclResult>(endpoint->GetNicOps()->unregisterMemory(endpoint->GetNicCtx(), memHandle));
 }
 
 HcommResult
@@ -49,9 +47,8 @@ HcommMemExport(EndpointHandle endpointHandle, HcommMemHandle memHandle, void** m
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(static_cast<HcclResult>(
-        endpoint->GetNicOps()->memoryExport(endpoint->GetNicCtx(), memHandle, memDesc, memDescLen)));
-    return HCCL_SUCCESS;
+    return static_cast<HcclResult>(
+        endpoint->GetNicOps()->memoryExport(endpoint->GetNicCtx(), memHandle, memDesc, memDescLen));
 }
 
 HcommResult HcommMemImport(EndpointHandle endpointHandle, const void* memDesc, uint32_t descLen, CommMem* outMem)
@@ -60,9 +57,8 @@ HcommResult HcommMemImport(EndpointHandle endpointHandle, const void* memDesc, u
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(
-        static_cast<HcclResult>(endpoint->GetNicOps()->memoryImport(endpoint->GetNicCtx(), memDesc, descLen, outMem)));
-    return HCCL_SUCCESS;
+    return static_cast<HcclResult>(
+        endpoint->GetNicOps()->memoryImport(endpoint->GetNicCtx(), memDesc, descLen, outMem));
 }
 
 HcommResult HcommMemUnimport(EndpointHandle endpointHandle, const void* memDesc, uint32_t descLen)
@@ -71,8 +67,7 @@ HcommResult HcommMemUnimport(EndpointHandle endpointHandle, const void* memDesc,
     CHK_PRT_RET(
         endpoint == nullptr, HCCL_ERROR("[%s] endpoint not found, endpointHandle[%p]", __func__, endpointHandle),
         HCCL_E_NOT_FOUND);
-    CHK_RET(static_cast<HcclResult>(endpoint->GetNicOps()->memoryUnimport(endpoint->GetNicCtx(), memDesc, descLen)));
-    return HCCL_SUCCESS;
+    return static_cast<HcclResult>(endpoint->GetNicOps()->memoryUnimport(endpoint->GetNicCtx(), memDesc, descLen));
 }
 
 /* 暂未实现 */
