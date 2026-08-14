@@ -94,13 +94,7 @@ HcclResult FillSimpleTopoInfo(HcclComm comm, TopoInfo &topoInfo){
     for (size_t index = 0; index < rankNum; index++) {
         topoInfo.rankList.push_back(ranks[index]);
     }
-    uint32_t topoInstNum = 0;
-    uint32_t *topoInsts;
-    ret = HcclRankGraphGetTopoInstsByLayer(comm, 0, &topoInsts, &topoInstNum);
-    // 校验结果
-    // 因为是单机4卡，所以只会有1个topoInst,因此topoInsts = [0], topoInstNum = 1
-    // 通过topoInst即可获取设备的物理链接类型
-    ret = HcclRankGraphGetTopoTypeByLayer(comm, 0, topoInsts[0], &topoInfo.topoType);
+    ret = HcclRankGraphGetTopoTypeByLayer(comm, 0, &topoInfo.topoType);
     // 校验结果
     // 计算需要的channels
     for (auto remoteRankId : topoInfo.rankList) {
