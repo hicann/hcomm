@@ -21,6 +21,7 @@
 #include "ccu_temp_reduce_scatter_mesh_2D_mem2mem.h"
 
 namespace Hccl {
+constexpr u32 MESH_2D_DIMENSION_NUM = 2;
 
 static CcuInstRegister<CcuContextReduceScatterMeshMem2Mem2D>
     g_registrarReduceScatterMeshMem2Mem2D(CcuInstType::CCU_REDUCE_SCATTER_MESH_2D_MEM2MEM);
@@ -30,7 +31,7 @@ CcuTempReduceScatterMeshMem2Mem2D::CcuTempReduceScatterMeshMem2Mem2D(
     const std::map<RankId, u32>& tempVirtRankMap)
     : CcuAlgTemplateBase(virtualRank, tempRankSize, tempVTopo, tempVirtRankMap)
 {
-    if (tempVTopo_.size() != 2 || tempVTopo_[0].size() <= 1
+    if (tempVTopo_.size() != MESH_2D_DIMENSION_NUM || tempVTopo_[0].size() <= 1
         || tempVTopo_[1].size() <= 1) { // concurrmesh的topoMatch返回的vTopo大小应当为2，对应X轴和Y轴的大小
         THROW<InvalidParamsException>(StringFormat(
             "[CcuTempReducescatterMeshMem2Mem2D] Rank[%d], Invalid tempVTopo "

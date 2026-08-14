@@ -33,6 +33,10 @@ constexpr u64 HCCLV2_DEFAULT_TASK_NUM = 30;
 constexpr u32 ALLTOALLV_DIRECT_FULLMESH_CONCURRENT_SIZE = 8;
 constexpr u64 SMALL_COUNT_512KB = 512 * 1024;
 constexpr u64 TASK_NUM_CONST_TWO = 2;
+constexpr u64 TASK_NUM_CONST_THREE = 3;
+constexpr u64 TASK_NUM_CONST_FOUR = 4;
+constexpr u64 TASK_NUM_CONST_FIVE = 5;
+constexpr u64 TASK_NUM_CONST_SIX = 6;
 
 void CollAlgComponent::EnableDetour(bool enableDetour)
 {
@@ -423,19 +427,19 @@ void CollAlgComponent::GetRoundByBufferSize(
 HcclResult CollAlgComponent::CalcTaskNumMesh(OpType opType, u64 dataSize, u64 scratchBufSize, u32& taskNum)
 {
     if (opType == OpType::ALLGATHER) {
-        taskNum += 5 * (rankSize_ - 1) + 4 * (rankSize_ - TASK_NUM_CONST_TWO)
+        taskNum += TASK_NUM_CONST_FIVE * (rankSize_ - 1) + TASK_NUM_CONST_FOUR * (rankSize_ - TASK_NUM_CONST_TWO)
                    + rankSize_; // 每个对端5次同步+拷贝，每个queue 4次同步，ranksize个localCopy
     } else if (opType == OpType::ALLREDUCE) {
         if (dataSize < SMALL_COUNT_512KB) {
-            taskNum += 5 * (rankSize_ - 1) + 4 * (rankSize_ - TASK_NUM_CONST_TWO)
+            taskNum += TASK_NUM_CONST_FIVE * (rankSize_ - 1) + TASK_NUM_CONST_FOUR * (rankSize_ - TASK_NUM_CONST_TWO)
                        + rankSize_; // 每个对端5次同步+拷贝，每个queue 4次同步
         } else {
-            taskNum += TASK_NUM_CONST_TWO * 5 * (rankSize_ - 1)
-                       + TASK_NUM_CONST_TWO * 4 * (rankSize_ - TASK_NUM_CONST_TWO)
+            taskNum += TASK_NUM_CONST_TWO * TASK_NUM_CONST_FIVE * (rankSize_ - 1)
+                       + TASK_NUM_CONST_TWO * TASK_NUM_CONST_FOUR * (rankSize_ - TASK_NUM_CONST_TWO)
                        + rankSize_; // 每个对端5次同步+拷贝，每个queue 4次同步
         }
     } else if (opType == OpType::REDUCESCATTER) {
-        taskNum += 5 * (rankSize_ - 1) + 4 * (rankSize_ - TASK_NUM_CONST_TWO)
+        taskNum += TASK_NUM_CONST_FIVE * (rankSize_ - 1) + TASK_NUM_CONST_FOUR * (rankSize_ - TASK_NUM_CONST_TWO)
                    + rankSize_; // 每个对端5次同步+拷贝，每个queue 4次同步，ranksize个localCopy、localReduce
     } else if (opType == OpType::ALLTOALL || opType == OpType::ALLTOALLV) {
         u32 numSubStep = (dataSize + scratchBufSize - 1) / scratchBufSize;
@@ -446,14 +450,17 @@ HcclResult CollAlgComponent::CalcTaskNumMesh(OpType opType, u64 dataSize, u64 sc
         taskNum += numSubStep * commLoops * (6 * concurrentSendRecvNum); // 每步6次同步拷贝task
     } else if (opType == OpType::BROADCAST) {
         if (dataSize < SMALL_COUNT_512KB) {
-            taskNum += 3 * (rankSize_ - 1)
-                       + 4 * (rankSize_ - TASK_NUM_CONST_TWO); // 每个对端3次同步+拷贝，每个queue 4次同步
+            taskNum
+                += TASK_NUM_CONST_THREE * (rankSize_ - 1)
+                   + TASK_NUM_CONST_FOUR * (rankSize_ - TASK_NUM_CONST_TWO); // 每个对端3次同步+拷贝，每个queue 4次同步
         } else {
-            taskNum += 6 * (rankSize_ - TASK_NUM_CONST_TWO)
-                       + 4 * (rankSize_ - TASK_NUM_CONST_TWO); // 每个对端6次同步+拷贝，每个queue 4次同步
+            taskNum
+                += TASK_NUM_CONST_SIX * (rankSize_ - TASK_NUM_CONST_TWO)
+                   + TASK_NUM_CONST_FOUR * (rankSize_ - TASK_NUM_CONST_TWO); // 每个对端6次同步+拷贝，每个queue 4次同步
         }
     } else if (opType == OpType::SCATTER) {
-        taskNum += 3 * (rankSize_ - 1) + 4 * (rankSize_ - TASK_NUM_CONST_TWO); // 每片数据3个Task，每个que同步4个Task
+        taskNum += TASK_NUM_CONST_THREE * (rankSize_ - 1)
+                   + TASK_NUM_CONST_FOUR * (rankSize_ - TASK_NUM_CONST_TWO); // 每片数据3个Task，每个que同步4个Task
     } else {
         taskNum += HCCLV2_DEFAULT_TASK_NUM;
     }

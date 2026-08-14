@@ -28,6 +28,7 @@ constexpr uint64_t LOCAL_FLAG_BUF_LEN = 1024;
 constexpr uint64_t AIV_TAG_MOVE_RIGHT_BITS = 16;
 constexpr uint64_t LOW_16_BITS = 0xFFFF;
 constexpr uint32_t AIV_FLAG_CLEAR_OFFSET = 1040 * 1024;
+constexpr int64_t AIV_SPIN_WAIT_CYCLES = 3000;
 constexpr uint32_t BATCH_SEND_RECV_ITEM_SIZE = 16; // 注意要和host侧的BATCH_SEND_RECV_ITEM_SIZE保持一致
 constexpr uint64_t DATA_LIMIT = 512 * 1024;
 
@@ -388,7 +389,7 @@ __aicore__ inline void AivCommBase::WaitFlag(uint32_t targetRank, uint64_t flag_
     d2hGlobal.SetGlobalBuffer(reinterpret_cast<__gm__ int32_t*>(GM_OUT[targetRank] + flag_offset * UB_ALIGN_SIZE));
     while (true) {
         int64_t st = AscendC::GetSystemCycle();
-        while (AscendC::GetSystemCycle() - st < 3000) {
+        while (AscendC::GetSystemCycle() - st < AIV_SPIN_WAIT_CYCLES) {
         }
         DataCopyGM2UB(localTagTensor, d2hGlobal, UB_ALIGN_SIZE / sizeof(int32_t));
         pipe_barrier(PIPE_ALL);

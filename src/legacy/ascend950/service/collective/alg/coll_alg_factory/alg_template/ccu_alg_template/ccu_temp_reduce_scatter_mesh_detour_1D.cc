@@ -23,6 +23,8 @@
 namespace Hccl {
 
 constexpr uint64_t MS_SIZE = 4096;
+constexpr u32 DETOUR_RANK_SIZE_2P = 2;
+constexpr u32 DETOUR_SPLIT_LINK_NUM = 2;
 
 static CcuInstRegister<CcuContextReduceScatterMeshDetour1D>
     g_registrarReduceScatter(CcuInstType::CCU_REDUCE_SCATTER_MESH_1D_DETOUR);
@@ -53,7 +55,7 @@ HcclResult CcuTempReduceScatterMeshDetour1D::CalcResDetour(const RankGraph* rank
 {
     // 当前仅支持2P或4P
     CHK_PRT_RET(
-        tempRankSize_ != 2 && tempRankSize_ != 4,
+        tempRankSize_ != DETOUR_RANK_SIZE_2P && tempRankSize_ != 4,
         HCCL_INFO("[CcuTempReduceScatterMeshDetour1D] Invalid RankSize[%u].", tempRankSize_),
         HcclResult::HCCL_E_INTERNAL);
 
@@ -74,16 +76,17 @@ HcclResult CcuTempReduceScatterMeshDetour1D::CalcResDetour(const RankGraph* rank
 
         // 2P支持2,3,4条link，4P支持2条link，注意绕路link分两条
         CHK_PRT_RET(
-            (tempRankSize_ == 2 && (linkNum <= 1 || linkNum > 1 + 3 * 2))
+            (tempRankSize_ == DETOUR_RANK_SIZE_2P && (linkNum <= 1 || linkNum > 1 + 3 * DETOUR_SPLIT_LINK_NUM))
                 || (tempRankSize_ == 4 && linkNum != 1 + 1 * 2), // 4P场景下，1条直连，绕路拆成2条
             HCCL_ERROR(
                 "[CcuTempReduceScatterMeshDetour1D][CalcResDetour] Invalid linkNum[%u] for RankSize[%u].", linkNum,
                 tempRankSize_),
             HcclResult::HCCL_E_INTERNAL);
         if (queIdx == 0) {
-            detourPathNum_
-                = (tempRankSize_ == 2) ? (linkNum - 1) / 2 : 1; // 2P时去掉直连有2N条绕路link，对应N个绕路路径
-            pathNumPerPeer_ = (tempRankSize_ == 2) ? (detourPathNum_ + 1) : detourPathNum_ + 2; // 4P直连有2条，固定3条
+            detourPathNum_ = (tempRankSize_ == DETOUR_RANK_SIZE_2P) ? (linkNum - 1) / 2 :
+                                                                      1; // 2P时去掉直连有2N条绕路link，对应N个绕路路径
+            pathNumPerPeer_ = (tempRankSize_ == DETOUR_RANK_SIZE_2P) ? (detourPathNum_ + 1) :
+                                                                       detourPathNum_ + 2; // 4P直连有2条，固定3条
             HCCL_INFO(
                 "[CcuTempReduceScatterMeshDetour1D][CalcResDetour] detourPathNum[%u], pathNum[%u]", detourPathNum_,
                 pathNumPerPeer_);

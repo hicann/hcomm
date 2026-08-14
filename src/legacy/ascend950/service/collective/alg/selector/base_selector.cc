@@ -102,7 +102,7 @@ u32 BaseSelector::GcdOfArray(const std::vector<u32>& numbers) const
     return result;
 }
 
-u32 BaseSelector::GetLevel0Gcd()
+u32 BaseSelector::GetLevel0Gcd() const
 {
     std::vector<u32> instSizeList = {};
     u32 listSize = 0;

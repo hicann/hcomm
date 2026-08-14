@@ -90,7 +90,7 @@ protected:
     };
     u32 Gcd(u32 a, u32 b) const;                           // 自定义实现的 gcd 函数（兼容旧版本 C++）
     u32 GcdOfArray(const std::vector<u32>& numbers) const; // 计算数组中所有元素的最大公约数
-    u32 GetLevel0Gcd();
+    u32 GetLevel0Gcd() const;
     void CalcTopoShape(TopoInfo& topoInfo) const;
     bool
     IsAsymmetricTopoShapeLevel1Nhr(const std::vector<std::vector<u32>>& localIdPerBoard, u32 gcdRankSizeLevel0) const;

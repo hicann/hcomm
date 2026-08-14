@@ -21,6 +21,7 @@
 #include "ccu_temp_broadcast_mesh_2D.h"
 
 namespace Hccl {
+constexpr u32 MESH_2D_DIMENSION_NUM = 2;
 
 static CcuInstRegister<CcuContextBroadcastMesh2D> g_registrarBroadcastMesh2D(CcuInstType::CCU_BROADCAST_MESH_2D_DIRECT);
 
@@ -29,7 +30,7 @@ CcuTempBroadcastMesh2D::CcuTempBroadcastMesh2D(
     const std::map<RankId, u32>& tempVirtRankMap)
     : CcuAlgTemplateBase(virtualRank, tempRankSize, tempVTopo, tempVirtRankMap)
 {
-    if (tempVTopo_.size() != 2 || tempVTopo_[0].size() <= 1
+    if (tempVTopo_.size() != MESH_2D_DIMENSION_NUM || tempVTopo_[0].size() <= 1
         || tempVTopo_[1].size() <= 1) { // concurrmesh的topoMatch返回的vTopo大小应当为2，对应X轴和Y轴的大小
         THROW<InvalidParamsException>(StringFormat(
             "[CcuTempBroadcastMesh2D] Rank[%d], Invalid tempVTopo "

@@ -21,6 +21,7 @@
 #include "ccu_ins_group.h"
 
 namespace Hccl {
+constexpr u32 MESH_2D_DIMENSION_NUM = 2;
 
 static CcuInstRegister<CcuContextReduceMesh2D> registrarReduce2D(CcuInstType::CCU_REDUCE_MESH_2D_DIRECT);
 
@@ -29,7 +30,7 @@ CcuTempReduceMesh2D::CcuTempReduceMesh2D(
     const std::map<RankId, u32>& tempVirtRankMap)
     : CcuAlgTemplateBase(virtualRank, tempRankSize, tempVTopo, tempVirtRankMap)
 {
-    if (tempVTopo_.size() != 2 || tempVTopo_[0].size() <= 1
+    if (tempVTopo_.size() != MESH_2D_DIMENSION_NUM || tempVTopo_[0].size() <= 1
         || tempVTopo_[1].size() <= 1) { // concurrmesh的topoMatch返回的vTopo大小应当为2，对应X轴和Y轴的大小
         THROW<InvalidParamsException>(StringFormat(
             "[CcuTempReduceMesh2D] Rank[%d], Invalid tempVTopo "

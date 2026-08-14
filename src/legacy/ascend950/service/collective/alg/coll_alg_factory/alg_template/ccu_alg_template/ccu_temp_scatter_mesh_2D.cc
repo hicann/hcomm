@@ -26,6 +26,7 @@
 namespace Hccl {
 
 constexpr int DIE_NUM = 2;
+constexpr u32 MESH_2D_DIMENSION_NUM = 2;
 
 static CcuInstRegister<CcuContextScatterMesh2D> registrarScatter(CcuInstType::CCU_SCATTER_MESH_2D_DIRECT);
 
@@ -34,7 +35,7 @@ CcuTempScatterMesh2D::CcuTempScatterMesh2D(
     const std::map<RankId, u32>& tempVirtRankMap)
     : CcuAlgTemplateBase(virtualRank, tempRankSize, tempVTopo, tempVirtRankMap)
 {
-    if (tempVTopo_.size() != 2 || tempVTopo_[0].size() <= 1
+    if (tempVTopo_.size() != MESH_2D_DIMENSION_NUM || tempVTopo_[0].size() <= 1
         || tempVTopo_[1].size() <= 1) { // concurrmesh的topoMatch返回的vTopo大小应当为2，对应X轴和Y轴的大小
         THROW<InvalidParamsException>(StringFormat(
             "[CcuTempScatterMesh2D] Rank[%d], Invalid tempVTopo "

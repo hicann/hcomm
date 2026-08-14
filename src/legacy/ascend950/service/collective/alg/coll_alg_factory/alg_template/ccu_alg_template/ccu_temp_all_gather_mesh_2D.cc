@@ -21,6 +21,7 @@
 #include "ccu_ins_group.h"
 
 namespace Hccl {
+constexpr u32 MESH_2D_DIMENSION_NUM = 2;
 
 static CcuInstRegister<CcuContextAllGatherMesh2D> registrarAllGather(CcuInstType::CCU_ALLGATHER_MESH_2D_DIRECT);
 
@@ -30,7 +31,7 @@ CcuTempAllGatherMesh2D::CcuTempAllGatherMesh2D(
     : CcuAlgTemplateBase(virtualRank, tempRankSize, tempVTopo, tempVirtRankMap)
 {
     // 填充框内的维度大小
-    if (tempVTopo_.size() != 2 || tempVTopo_[0].size() <= 1
+    if (tempVTopo_.size() != MESH_2D_DIMENSION_NUM || tempVTopo_[0].size() <= 1
         || tempVTopo_[1].size() <= 1) { // concurrmesh的topoMatch返回的vTopo大小应当为2，对应X轴和Y轴的大小
         THROW<InvalidParamsException>(StringFormat(
             "[CcuTempAllGatherMesh2D] Rank[%d], Invalid tempVTopo "

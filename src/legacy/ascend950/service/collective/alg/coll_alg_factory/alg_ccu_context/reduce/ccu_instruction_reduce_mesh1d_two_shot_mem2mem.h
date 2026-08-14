@@ -126,11 +126,11 @@ public:
 
     std::vector<LinkData> GetLinks() const override { return links_; }
 
-    void SetLinks(std::vector<LinkData>& links) { links_ = links; }
+    void SetLinks(std::vector<LinkData>& links) override { links_ = links; }
 
     RankGroup GetRankGroup() const override { return rankGroup_; }
 
-    void SetRankGroup(RankGroup& rankGroup) { rankGroup_ = rankGroup; }
+    void SetRankGroup(RankGroup& rankGroup) override { rankGroup_ = rankGroup; }
 
 private:
     CcuInstType instType_ = CcuInstType::CCU_REDUCE_MESH_1D_TWO_SHOT_MEM2MEM;
