@@ -49,6 +49,7 @@ private:
     HcclResult Makebufs(
         HcommMemHandle *memHandles, uint32_t memHandleNum, std::vector<std::shared_ptr<Hccl::Buffer>> &bufs);
     HcclResult ParseInputParam();
+    HcclResult StartListen();
     HcclResult BuildAttr();
     HcclResult BuildConnection();
     HcclResult BuildBuffer(std::vector<std::shared_ptr<Hccl::Buffer>> &bufs);
@@ -80,7 +81,6 @@ private:
     size_t devChannelEntitySlabSize_{0};
     std::vector<hccl::DeviceMem> deviceMemories_{};
     std::vector<std::unique_ptr<Hccl::LocalUbRmaBuffer>> localRmaBuffers_{};
-    std::unique_ptr<Hccl::Socket> serverSocket_;
     std::unique_ptr<Hccl::SocketConfig> socketConfigHolder_{nullptr};
     const Hccl::SocketConfig* socketConfig_{nullptr};
     uint32_t devicePhyId_{};
