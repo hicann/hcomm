@@ -106,8 +106,8 @@ TaskExceptionHost::~TaskExceptionHost()
     std::unique_lock<std::mutex> lock(taskExceptionMutex_);
     if (!CommRegisterMap_.empty()) {
         CommRegisterMap_.clear();
-        aclError ret = aclrtSetExceptionInfoCallback(nullptr); // 把注册给rts的TaskException回调函数指针置空
-        HCCL_RUN_INFO("[%s]aclrtSetExceptionInfoCallback set nullptr, ret[%d]", __func__, ret);
+        aclError ret = aclrtExceptionInfoCallbackUnregister(ProcessCallback); // 注销注册给rts的TaskException回调
+        HCCL_RUN_INFO("[%s]aclrtExceptionInfoCallbackUnregister, ret[%d]", __func__, ret);
     }
 }
 
@@ -124,11 +124,11 @@ HcclResult TaskExceptionHost::Register(u64 commHandle)
 {
     std::unique_lock<std::mutex> lock(taskExceptionMutex_);
     if (CommRegisterMap_.empty()) {
-        aclError ret = aclrtSetExceptionInfoCallback(ProcessCallback);
+        aclError ret = aclrtExceptionInfoCallbackRegister(ProcessCallback);
         CHK_PRT_RET(
-            ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtSetExceptionInfoCallback failed, ret[%d]", __func__, ret),
+            ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtExceptionInfoCallbackRegister failed, ret[%d]", __func__, ret),
             HCCL_E_RUNTIME);
-        HCCL_RUN_INFO("[%s]aclrtSetExceptionInfoCallback set ProcessCallback success", __func__);
+        HCCL_RUN_INFO("[%s]aclrtExceptionInfoCallbackRegister set ProcessCallback success", __func__);
     }
 
     CommRegisterMap_.insert(commHandle);
@@ -146,11 +146,11 @@ HcclResult TaskExceptionHost::UnRegister(u64 commHandle)
 
     CommRegisterMap_.erase(commHandle);
     if (CommRegisterMap_.empty()) {
-        aclError ret = aclrtSetExceptionInfoCallback(nullptr); // 把注册给rts的TaskException回调函数指针置空
+        aclError ret = aclrtExceptionInfoCallbackUnregister(ProcessCallback); // 注销注册给rts的TaskException回调
         CHK_PRT_RET(
-            ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtSetExceptionInfoCallback failed, ret[%d]", __func__, ret),
+            ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtExceptionInfoCallbackUnregister failed, ret[%d]", __func__, ret),
             HCCL_E_RUNTIME);
-        HCCL_RUN_INFO("[%s]aclrtSetExceptionInfoCallback set nullptr success", __func__);
+        HCCL_RUN_INFO("[%s]aclrtExceptionInfoCallbackUnregister success", __func__);
     }
 
     HCCL_INFO("[%s]success, commHandle[0x%llx]", __func__, commHandle);

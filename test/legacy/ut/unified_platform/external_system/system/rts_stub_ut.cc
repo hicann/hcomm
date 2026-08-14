@@ -304,7 +304,8 @@ rtError_t rtStreamGetSqid(const rtStream_t stm, uint32_t* sqId) { return RT_ERRO
 
 rtError_t rtStreamGetCqid(const rtStream_t stm, uint32_t* cqId, uint32_t* logicCqId) { return RT_ERROR_NONE; }
 
-aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCallback callback) { return ACL_SUCCESS; }
+aclError aclrtExceptionInfoCallbackRegister(aclrtExceptionInfoCallback callback) { return ACL_SUCCESS; }
+aclError aclrtExceptionInfoCallbackUnregister(aclrtExceptionInfoCallback callback) { return ACL_SUCCESS; }
 
 rtError_t rtNotifyCreateWithFlag(int32_t deviceId, rtNotify_t* notify, uint32_t flag) { return RT_ERROR_NONE; }
 

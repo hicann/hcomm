@@ -28,7 +28,14 @@
 extern "C" {
 #endif // __cplusplus
 
-aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCallback callback)
+aclError aclrtExceptionInfoCallbackRegister(aclrtExceptionInfoCallback callback)
+{
+    (void)callback;
+    HCCL_VM_TRACE("not supported");
+    return ACL_SUCCESS;
+}
+
+aclError aclrtExceptionInfoCallbackUnregister(aclrtExceptionInfoCallback callback)
 {
     (void)callback;
     HCCL_VM_TRACE("not supported");

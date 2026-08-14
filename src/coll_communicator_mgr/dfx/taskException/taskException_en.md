@@ -146,7 +146,7 @@ sequenceDiagram
     Note right of CollComm: Register AICPU exception callback
 
     CollComm->>TaskExceptionHost: Register
-    Note right of TaskExceptionHost: Write to CommRegisterMap_. The first comm registration calls aclrtSetExceptionInfoCallback.
+    Note right of TaskExceptionHost: Write to CommRegisterMap_. The first comm registration calls aclrtExceptionInfoCallbackRegister.
 
     hcomm_c_adpt->>HcclCommDfx: GetMirrorTaskManager
     HcclCommDfx-->>hcomm_c_adpt: mirrorTaskManager
@@ -580,8 +580,8 @@ classDiagram
 | Interface | Type | Parameters | Return Value | Description |
 |------|------|------|--------|----------|
 | `GetInstance(s32)` | Public static | [in] deviceLogicID | `TaskExceptionHost*` | Gets the exception handler for the specified device. Supports up to 65 devices. |
-| `Register(u64)` | Public | [in] commHandle | `HcclResult` | Writes commHandle to CommRegisterMap_. The first comm registration calls `aclrtSetExceptionInfoCallback(ProcessCallback)` to register the exception callback with RTS. |
-| `UnRegister(u64)` | Public | [in] commHandle | `HcclResult` | Removes commHandle from CommRegisterMap_. When the last comm is unregistered, sets the callback to nullptr. |
+| `Register(u64)` | Public | [in] commHandle | `HcclResult` | Writes commHandle to CommRegisterMap_. The first comm registration calls `aclrtExceptionInfoCallbackRegister(ProcessCallback)` to register the exception callback with RTS. |
+| `UnRegister(u64)` | Public | [in] commHandle | `HcclResult` | Removes commHandle from CommRegisterMap_. When the last comm is unregistered, calls `aclrtExceptionInfoCallbackUnregister(ProcessCallback)` to unregister the callback with RTS. |
 | `ProcessCallback(rtExceptionInfo_t*)` | Public static | [in] exceptionInfo | void | Runtime exception callback entry point. Obtains the handler through GetInstance and forwards to Process. |
 | `HandleAicpuErrorReport(rtExceptionInfo_t*, const ErrorMessageReport&, const TaskInfo&)` | Private | [in] exceptionInfo, [in] errorMessage, [in] taskInfo | void | Handles errors already reported by the AICPU side: prints BaseInfo/ParaInfo/GroupInfo/OpDataInfo, calls PrintUbDfxInfo, ReportErrorMsg. When ubCqeStatus is non-zero, calls GetAicpuCqeErrInfo. |
 | `HandleHostErrorReport(rtExceptionInfo_t*, const TaskInfo&)` | Private | [in] exceptionInfo, [in] taskInfo | void | Host-side independent exception handling: prints preceding task context for TASK_NOTIFY_WAIT and reports EI0002, prints cluster monitoring error info. |

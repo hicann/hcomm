@@ -766,6 +766,28 @@ ACL_FUNC_VISIBILITY aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCal
 
 /**
  * @ingroup AscendCL
+ * @brief Register a callback function to handle exception information
+ *
+ * @param callback [IN] callback function to handle exception information
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtExceptionInfoCallbackRegister(aclrtExceptionInfoCallback callback);
+
+/**
+ * @ingroup AscendCL
+ * @brief Unregister the exception information callback function
+ *
+ * @param callback [IN] callback function to unregister
+ *
+ * @retval ACL_SUCCESS The function is successfully executed.
+ * @retval OtherValues Failure
+ */
+ACL_FUNC_VISIBILITY aclError aclrtExceptionInfoCallbackUnregister(aclrtExceptionInfoCallback callback);
+
+/**
+ * @ingroup AscendCL
  * @brief Get task id from exception information
  *
  * @param info [IN]   pointer of exception information

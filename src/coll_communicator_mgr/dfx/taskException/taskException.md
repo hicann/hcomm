@@ -146,7 +146,7 @@ sequenceDiagram
     Note right of CollComm: 注册AICPU异常回调
 
     CollComm->>TaskExceptionHost: Register
-    Note right of TaskExceptionHost: 写入CommRegisterMap_<br/>首个comm注册时调用<br/>aclrtSetExceptionInfoCallback
+    Note right of TaskExceptionHost: 写入CommRegisterMap_<br/>首个comm注册时调用<br/>aclrtExceptionInfoCallbackRegister
 
     hcomm_c_adpt->>HcclCommDfx: GetMirrorTaskManager
     HcclCommDfx-->>hcomm_c_adpt: mirrorTaskManager
@@ -580,8 +580,8 @@ classDiagram
 | 接口 | 类型 | 参数 | 返回值 | 功能说明 |
 |------|------|------|--------|----------|
 | `GetInstance(s32)` | 公有静态 | [in] deviceLogicID | `TaskExceptionHost*` | 获取指定设备的异常处理器，最大支持 65 个设备 |
-| `Register(u64)` | 公有 | [in] commHandle | `HcclResult` | 将 commHandle 写入 CommRegisterMap_；首个 comm 注册时调用 `aclrtSetExceptionInfoCallback(ProcessCallback)` 向 RTS 注册异常回调 |
-| `UnRegister(u64)` | 公有 | [in] commHandle | `HcclResult` | 从 CommRegisterMap_ 移除 commHandle；最后一个 comm 注销时将回调设为 nullptr |
+| `Register(u64)` | 公有 | [in] commHandle | `HcclResult` | 将 commHandle 写入 CommRegisterMap_；首个 comm 注册时调用 `aclrtExceptionInfoCallbackRegister(ProcessCallback)` 向 RTS 注册异常回调 |
+| `UnRegister(u64)` | 公有 | [in] commHandle | `HcclResult` | 从 CommRegisterMap_ 移除 commHandle；最后一个 comm 注销时调用 `aclrtExceptionInfoCallbackUnregister(ProcessCallback)` 向 RTS 注销回调 |
 | `ProcessCallback(rtExceptionInfo_t*)` | 公有静态 | [in] exceptionInfo | void | Runtime 异常回调入口，通过 GetInstance 获取处理器后转发到 Process |
 | `HandleAicpuErrorReport(rtExceptionInfo_t*, const ErrorMessageReport&, const TaskInfo&)` | 私有 | [in] exceptionInfo, [in] errorMessage, [in] taskInfo | void | 处理 AICPU 侧已上报的错误：打印 BaseInfo/ParaInfo/GroupInfo/OpDataInfo，调用 PrintUbDfxInfo、ReportErrorMsg，ubCqeStatus 非零时调用 GetAicpuCqeErrInfo |
 | `HandleHostErrorReport(rtExceptionInfo_t*, const TaskInfo&)` | 私有 | [in] exceptionInfo, [in] taskInfo | void | Host 侧自行处理异常：TASK_NOTIFY_WAIT 时打印前序 task 上下文并上报 EI0002，打印集群监控错误信息 |

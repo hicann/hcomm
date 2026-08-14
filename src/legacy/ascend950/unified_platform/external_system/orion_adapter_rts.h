@@ -294,6 +294,7 @@ void HrtAicpuLaunchKernelWithHostArgs(
 
 // rts task exception api
 void HrtRegTaskFailCallbackByModule(aclrtExceptionInfoCallback callback);
+void HrtUnregTaskFailCallbackByModule(aclrtExceptionInfoCallback callback);
 
 // 添加任一task后可获取得到 taskId, streamId
 void HrtGetTaskIdAndStreamID(u32& taskId, u32& streamId);

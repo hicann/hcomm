@@ -1068,10 +1068,21 @@ void HrtAicpuLaunchKernelWithHostArgs(
 void HrtRegTaskFailCallbackByModule(aclrtExceptionInfoCallback callback)
 {
     HCCL_INFO("[HrtRegTaskFailCallbackByModule] callback[%p].", callback);
-    aclError ret = aclrtSetExceptionInfoCallback(callback);
+    aclError ret = aclrtExceptionInfoCallbackRegister(callback);
     if (ret != ACL_SUCCESS) {
         string msg
-            = StringFormat("Call aclrtSetExceptionInfoCallback failed. return[%d], callback[%p].", ret, callback);
+            = StringFormat("Call aclrtExceptionInfoCallbackRegister failed. return[%d], callback[%p].", ret, callback);
+        THROW<RuntimeApiException>(msg);
+    }
+}
+
+void HrtUnregTaskFailCallbackByModule(aclrtExceptionInfoCallback callback)
+{
+    HCCL_INFO("[HrtUnregTaskFailCallbackByModule] callback[%p].", callback);
+    aclError ret = aclrtExceptionInfoCallbackUnregister(callback);
+    if (ret != ACL_SUCCESS) {
+        string msg = StringFormat(
+            "Call aclrtExceptionInfoCallbackUnregister failed. return[%d], callback[%p].", ret, callback);
         THROW<RuntimeApiException>(msg);
     }
 }

@@ -1637,7 +1637,8 @@ HcclResult RaGetAuxInfo(const RdmaHandle rdmaHandle, AuxInfoIn auxInfoIn, AuxInf
 void HrtRaSocketGetVnicIpInfos(u32 phyId, DeviceIdType deviceIdType, u32 deviceId, IpAddress& vnicIP) {}
 
 extern "C" {
-aclError aclrtSetExceptionInfoCallback(aclrtExceptionInfoCallback callback) { return ACL_ERROR_NONE; }
+aclError aclrtExceptionInfoCallbackRegister(aclrtExceptionInfoCallback callback) { return ACL_ERROR_NONE; }
+aclError aclrtExceptionInfoCallbackUnregister(aclrtExceptionInfoCallback callback) { return ACL_ERROR_NONE; }
 }
 
 u32 Hccl::HcclCommunicator::GetRankInParentComm() { return 0; }
