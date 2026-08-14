@@ -39,7 +39,7 @@ HcclResult HcclThreadAcquireWithConfig(HcclComm comm, CommEngine engine, uint32_
 | engine | 输入 | 通信引擎类型。<br>CommEngine类型的定义可参见[CommEngine](../../datatype_definition/CommEngine.md)。 |
 | threadNum | 输入 | 通信线程数量。 |
 | type | 输入 | 线程类型。<br>ThreadType类型的定义可参见[ThreadType](../../datatype_definition/ThreadType.md)。 |
-| config | 输入 | 线程配置信息数组，数组长度须与threadNum一致。调用前须使用[ThreadConfigInit](./ThreadConfigInit.md)接口进行参数初始化。 <br>ThreadConfig类型的定义可参见[ThreadHandle](../../datatype_definition/ThreadConfig.md)。|
+| config | 输入 | 线程配置信息数组，数组长度须与threadNum一致。调用前须使用[ThreadConfigInit](./ThreadConfigInit.md)接口进行参数初始化。 <br>ThreadConfig类型的定义可参见[ThreadConfig](../../datatype_definition/ThreadConfig.md)。|
 | threads | 输出 | 返回的通信线程句柄。需传入threadNum大小的ThreadHandle类型数组。<br>ThreadHandle类型的定义可参见[ThreadHandle](../../datatype_definition/ThreadHandle.md)。 |
 
 ## 返回值
