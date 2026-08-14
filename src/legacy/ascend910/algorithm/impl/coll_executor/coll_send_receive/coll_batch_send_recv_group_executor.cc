@@ -17,6 +17,23 @@ CollBatchSendRecvGroupExecutor::CollBatchSendRecvGroupExecutor(
     : CollBatchSendRecvExecutor(dispatcher, topoMatcher)
 {}
 
+void CollBatchSendRecvGroupExecutor::CalcIsSuPodAsym(bool isA2MultiModule)
+{
+    // isSuPodAsym 表示A2A3卡数不一致场景或者A3多超节点server数不同场景
+    // 参考alltoallv_direct_fullmesh executor中的判断逻辑
+    if (topoAttr_.superPodNum > 1) {
+        isSuPodAsym_
+            = (static_cast<bool>(topoAttr_.multiModuleDiffDeviceNumMode)
+               || static_cast<bool>(topoAttr_.multiSuperPodDiffServerNumMode));
+    } else {
+        isSuPodAsym_ = (static_cast<bool>(topoMatcher_->GetExternalInputInterHccsDisable()) || isA2MultiModule)
+                       && static_cast<bool>(topoAttr_.multiModuleDiffDeviceNumMode);
+    }
+    HCCL_INFO(
+        "[CalcIsSuPodAsym] superPodNum[%u] isA2MultiModule[%d] isSuPodAsym[%d]", topoAttr_.superPodNum, isA2MultiModule,
+        isSuPodAsym_);
+}
+
 HcclResult CollBatchSendRecvGroupExecutor::CalcPingPongHalfSize()
 {
     u32 pingPongSliceNum = GROUP_MAX_CONCURRENT * 2;
@@ -72,9 +89,10 @@ HcclResult CollBatchSendRecvGroupExecutor::CalcPodRange()
     podStartRank_ = topoAttr_.userRank - rankIdxInPod;
     podEndRank_ = podStartRank_ + devNumInlocalPod - 1;
     devNumInlocalPod_ = devNumInlocalPod;
+    CalcIsSuPodAsym(isA2MultiModule);
     HCCL_INFO(
-        "[CalcPodRange] userRank[%u] pod[%u-%u] devNumInlocalPod[%u] rankIdxInPod[%u]", topoAttr_.userRank,
-        podStartRank_, podEndRank_, devNumInlocalPod, rankIdxInPod);
+        "[CalcPodRange] userRank[%u] pod[%u-%u] devNumInlocalPod[%u] rankIdxInPod[%u] isSuPodAsym[%d]",
+        topoAttr_.userRank, podStartRank_, podEndRank_, devNumInlocalPod, rankIdxInPod, isSuPodAsym_);
     return HCCL_SUCCESS;
 }
 
@@ -688,26 +706,57 @@ u32 CollBatchSendRecvGroupExecutor::GetPreSrcRank(u32& curSrcRank)
 void CollBatchSendRecvGroupExecutor::OrderRdmaSlices(
     bool isSend, const std::map<u32, std::deque<SendRecvSlice>>& byRank, std::deque<SendRecvSlice>& out)
 {
-    // 跨pod对端总数 = userRankSize - devNumInlocalPod。对称规则遍历每个候选rank一次。
+    // 跨pod对端总数 = userRankSize - devNumInlocalPod。遍历每个候选rank一次。
     u32 totalRdmaRankNum = topoAttr_.userRankSize - devNumInlocalPod_;
-    // 起点：send取"下一个pod中相同pod内位置的rank"；recv取"上一个pod中相同pod内位置的rank"。
-    u32 curRank = isSend ? (topoAttr_.userRank + devNumInlocalPod_) % topoAttr_.userRankSize :
-                           (topoAttr_.userRank + topoAttr_.userRankSize - devNumInlocalPod_) % topoAttr_.userRankSize;
-    HCCL_INFO(
-        "[OrderRdmaSlices] %s startRank[%u] totalRdmaRankNum[%u]", isSend ? "send" : "recv", curRank, totalRdmaRankNum);
-    for (u32 i = 0; i < totalRdmaRankNum; i++) {
-        // 起点初始化与每次更新都需判断候选rank是否存在任务：不存在则跳过(仅推进游标)。
-        u32 rank = isSend ? GetNextDstRank(curRank) : GetPreSrcRank(curRank);
-        auto it = byRank.find(rank);
-        if (it == byRank.end()) {
-            HCCL_INFO("[OrderRdmaSlices] %s skip rank[%u] (no task)", isSend ? "send" : "recv", rank);
-            continue;
-        }
-        for (const auto& s : it->second) {
-            out.push_back(s);
+    u32 curRank = INVALID_VALUE_RANKID;
+    if (isSuPodAsym_) {
+        // 非对称场景：send/recv使用相同遍历顺序(均前向递增GetNextDstRank)。
+        // 起点为本pod之外的第一个rank(从0开始扫描，取首个不在[podStartRank_, podEndRank_]内的rank)。
+        for (u32 i = 0; i < topoAttr_.userRankSize; i++) {
+            if (i < podStartRank_ || i > podEndRank_) {
+                curRank = i;
+                break;
+            }
         }
         HCCL_INFO(
-            "[OrderRdmaSlices] %s append rank[%u] sliceNum[%zu]", isSend ? "send" : "recv", rank, it->second.size());
+            "[OrderRdmaSlices] %s asym startRank[%u] totalRdmaRankNum[%u]", isSend ? "send" : "recv", curRank,
+            totalRdmaRankNum);
+        for (u32 i = 0; i < totalRdmaRankNum; i++) {
+            u32 rank = GetNextDstRank(curRank);
+            auto it = byRank.find(rank);
+            if (it == byRank.end()) {
+                HCCL_INFO("[OrderRdmaSlices] %s asym skip rank[%u] (no task)", isSend ? "send" : "recv", rank);
+                continue;
+            }
+            for (const auto& s : it->second) {
+                out.push_back(s);
+            }
+            HCCL_INFO(
+                "[OrderRdmaSlices] %s asym append rank[%u] sliceNum[%zu]", isSend ? "send" : "recv", rank,
+                it->second.size());
+        }
+    } else {
+        // 对称场景：send前向递增(GetNextDstRank)，recv后向递减(GetPreSrcRank)。
+        // send起点取"下一个pod中相同pod内位置的rank"；recv起点取"上一个pod中相同pod内位置的rank"。
+        curRank = isSend ? (topoAttr_.userRank + devNumInlocalPod_) % topoAttr_.userRankSize :
+                           (topoAttr_.userRank + topoAttr_.userRankSize - devNumInlocalPod_) % topoAttr_.userRankSize;
+        HCCL_INFO(
+            "[OrderRdmaSlices] %s sym startRank[%u] totalRdmaRankNum[%u]", isSend ? "send" : "recv", curRank,
+            totalRdmaRankNum);
+        for (u32 i = 0; i < totalRdmaRankNum; i++) {
+            u32 rank = isSend ? GetNextDstRank(curRank) : GetPreSrcRank(curRank);
+            auto it = byRank.find(rank);
+            if (it == byRank.end()) {
+                HCCL_INFO("[OrderRdmaSlices] %s sym skip rank[%u] (no task)", isSend ? "send" : "recv", rank);
+                continue;
+            }
+            for (const auto& s : it->second) {
+                out.push_back(s);
+            }
+            HCCL_INFO(
+                "[OrderRdmaSlices] %s sym append rank[%u] sliceNum[%zu]", isSend ? "send" : "recv", rank,
+                it->second.size());
+        }
     }
 }
 
