@@ -37,6 +37,7 @@ HcclResult HcomSetAttachedStream(const char* group, u32 graphId, const rtStream_
     }
 
     HCCLV2_FUNC_RUN([&]() -> HcclResult {
+        return HCCL_SUCCESS;
         if (len == 0) {
             HCCL_WARNING("[HcomSetAttachedStream] len is 0, no stream");
             return HCCL_SUCCESS;
