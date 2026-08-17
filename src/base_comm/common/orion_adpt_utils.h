@@ -22,6 +22,8 @@
 
 namespace hcomm {
 
+constexpr u32 UB_SQ_DEPTH_MIN = 16U;
+
 HcclResult CommAddrToIpAddress(const CommAddr& commAddr, Hccl::IpAddress& ipAddr);
 HcclResult IpAddressToCommAddr(const Hccl::IpAddress& ipAddr, CommAddr& commAddr);
 HcclResult CommProtocolToLinkProtocol(CommProtocol commProtocol, Hccl::LinkProtocol& linkProtocol);

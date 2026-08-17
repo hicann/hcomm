@@ -159,3 +159,16 @@ TEST(UtOrionAdptUtils, EndpointDescPairToLinkDataWithRankIds_Ipv6_Success)
     ASSERT_EQ(EndpointDescPairToLinkDataWithRankIds(7U, 8U, loc, rmt, ld, 3U, 4U), HCCL_SUCCESS);
     EXPECT_TRUE(ld.GetLinkProtocol() == Hccl::LinkProtocol::ROCE);
 }
+
+TEST(UtOrionAdptUtils, CheckUbSqDepth_LowerBound)
+{
+    DevBaseAttr devBaseAttr{};
+    devBaseAttr.sqMaxDepth = 1024U;
+    UbConnBuildContext ctx{};
+
+    ctx.sqDepth = 15U;
+    EXPECT_EQ(CheckUbSqDepth(ctx, devBaseAttr), HCCL_E_PARA);
+
+    ctx.sqDepth = 16U;
+    EXPECT_EQ(CheckUbSqDepth(ctx, devBaseAttr), HCCL_SUCCESS);
+}

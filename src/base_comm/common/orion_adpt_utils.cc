@@ -244,10 +244,10 @@ HcclResult CheckUbSqDepth(const UbConnBuildContext& ctx, const DevBaseAttr& devB
     if (ctx.sqDepth == UB_SQ_DEPTH_NOT_SET) {
         return HCCL_SUCCESS;
     }
-    if (ctx.sqDepth < 1 || ctx.sqDepth > devBaseAttr.sqMaxDepth) {
+    if (ctx.sqDepth < UB_SQ_DEPTH_MIN || ctx.sqDepth > devBaseAttr.sqMaxDepth) {
         HCCL_ERROR(
             "[%s] invalid ubAttr.sqDepth[%u], aligned range is [%u, %u] (aligned to power-of-two before compared).",
-            __func__, ctx.sqDepth, 1, devBaseAttr.sqMaxDepth);
+            __func__, ctx.sqDepth, UB_SQ_DEPTH_MIN, devBaseAttr.sqMaxDepth);
         return HCCL_E_PARA;
     }
     return HCCL_SUCCESS;
