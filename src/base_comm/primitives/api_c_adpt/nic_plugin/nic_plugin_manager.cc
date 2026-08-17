@@ -261,8 +261,7 @@ bool ValidatePluginInfo(
     }
     for (uint32_t idx = 0; idx < info->protocolCount; ++idx) {
         const CommProtocol protocol = info->protocols[idx];
-        if ((protocol < COMM_PROTOCOL_HCCS || protocol > COMM_PROTOCOL_HCCS_ONLY)
-            && protocol < COMM_PROTOCOL_CUSTOM_BASE) {
+        if ((protocol < COMM_PROTOCOL_HCCS || protocol > COMM_PROTOCOL_UBG) && protocol < COMM_PROTOCOL_CUSTOM_BASE) {
             HCCL_RUN_WARNING("[NicPlugin] %s invalid protocol[%d].", soPath, info->protocols[idx]);
             return false;
         }
