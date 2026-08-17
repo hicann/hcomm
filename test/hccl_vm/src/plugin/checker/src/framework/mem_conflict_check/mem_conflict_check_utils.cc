@@ -6,9 +6,6 @@
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
- * Description: 2.0适配器对外提供的编排接口
- * Author: yinding
- * Create: 2025-06-14
  */
 
 #include "mem_conflict_check_utils.h"

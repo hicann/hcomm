@@ -24,6 +24,8 @@ PenaltyBreakString: 1000  #字符串字面量换行惩罚
 PenaltyBreakAssignment: 500 #赋值符换行惩罚
 PenaltyBreakOpenParenthesis: 100 #(后换行的惩罚值
 PenaltyBreakBeforeFirstCallParameter: 100 #函数调用的左括号后换行的惩罚值
+DeriveLineEnding: false
+UseCRLF: false
 
 # 大括号换行风格
 BreakBeforeBraces: Custom #启用自定义风格

@@ -1,2 +1,16 @@
 *.png filter=lfs diff=lfs merge=lfs -text
 *.gif filter=lfs diff=lfs merge=lfs -text
+# 强制源码文件使用 LF，防止 Windows autocrlf 转换为 CRLF
+*.c      text eol=lf
+*.h      text eol=lf
+*.cc     text eol=lf
+*.hh     text eol=lf
+*.cpp    text eol=lf
+*.hpp    text eol=lf
+*.cxx    text eol=lf
+*.hxx    text eol=lf
+*.asc    text eol=lf
+*.sh     text eol=lf
+*.py     text eol=lf
+*.cmake  text eol=lf
+CMakeLists.txt  text eol=lf

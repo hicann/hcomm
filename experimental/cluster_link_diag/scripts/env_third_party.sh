@@ -9,7 +9,6 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
-
 export THIRDLIB_ROOT="${THIRDLIB_ROOT:-/usr/local/third_lib}"
 export ASCEND_HOME_PATH="${ASCEND_HOME_PATH:-/usr/local/Ascend}"
 export ASCEND_CANN_PATH="${ASCEND_CANN_PATH:-${ASCEND_HOME_PATH}/ascend-toolkit/latest/aarch64-linux}"

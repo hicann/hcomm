@@ -4,14 +4,8 @@
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
- * Description: CCU V1 微码解释器(精简实现),用于在单测中执行 CCU 翻译生成的指令序列,
- *              验证跳转寄存器复用后控制流执行结果与预期一致。
- *              仅实现控制流验证所需的指令子集(LoadImdToXn / LoadSqeArgsToXn / LoadXX / Jmp),
- *              其余指令按 nop 处理。指令语义与 ccu_microcode.cc 一致;
- *              opcode 常量与 ccu_microcode.cc 匿名命名空间、SimCcuV1 (ccu_microcode_common_v1.h) 一致。
- * Author: wuyuantao
  */
 
 #ifndef UT_CCU_MICRO_SIM_H

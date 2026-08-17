@@ -7,6 +7,7 @@
 # INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
+
 target_sources(hccl_v2_utest 
     PUBLIC
     #TODO 暂时关闭此用例：主要功能为比对错误信息，等错误信息稳定后再打开。

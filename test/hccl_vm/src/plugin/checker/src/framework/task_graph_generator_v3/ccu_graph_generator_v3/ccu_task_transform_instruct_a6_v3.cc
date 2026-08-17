@@ -6,9 +6,6 @@
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
- * Description: A6 ccu instruction transform to checker task
- * Author: caiyifan、zhanhaifeng
- * Create: 2025-06-19
  */
 
 #include "ccu_task_transform_v3.h"

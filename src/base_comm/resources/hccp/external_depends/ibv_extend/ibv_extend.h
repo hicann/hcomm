@@ -6,12 +6,6 @@
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
- *
- * File Name     : ibv_extend.h
- * Version       : v4.2.0
- * Created       : 2026/2/14
- * Updated       : 2026/7/7
- * Description   : The declaration invoked by the Application interface of ibverbs extended Function
  */
 
 #ifndef IBV_EXTEND_H
