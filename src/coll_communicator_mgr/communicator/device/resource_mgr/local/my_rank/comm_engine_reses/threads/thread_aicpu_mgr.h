@@ -22,6 +22,10 @@
 
 using namespace hccl;
 
+namespace hccl {
+class AicpuTsThread;
+}
+
 class ThreadAicpuMgr {
 public:
     ThreadAicpuMgr(HcclCommDfxLite& dfx, std::function<HcclResult(bool)> checkExecStatusCallback);
@@ -32,7 +36,7 @@ public:
 
 private:
     HcclResult RegisterThreadAddDfxTaskInfo(ThreadHandle thread);
-    HcclResult RegisterThreadCacheCallback(ThreadHandle thread);
+    HcclResult RegisterThreadCacheCallback(AicpuTsThread* thread);
 
     std::shared_mutex threadMutex_;
     std::vector<std::shared_ptr<Thread>> threads_;

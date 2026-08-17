@@ -70,7 +70,7 @@ HcclResult ThreadAicpuMgr::InitThreads(ThreadMgrAicpuParam* param)
             "[ThreadAicpuMgr][%s] threadArray[%zu] = [%llu]", __func__, i,
             static_cast<unsigned long long>(threadArray[i]));
         CHK_RET(RegisterThreadAddDfxTaskInfo(threadArray[i]));
-        CHK_RET(RegisterThreadCacheCallback(threadArray[i]));
+        CHK_RET(RegisterThreadCacheCallback(static_cast<AicpuTsThread*>(outThreads[i].get())));
     }
     std::unique_lock<std::shared_mutex> rwLock(threadMutex_);
     threads_.insert(
@@ -113,19 +113,17 @@ HcclResult ThreadAicpuMgr::RegisterThreadAddDfxTaskInfo(ThreadHandle thread)
     return HCCL_SUCCESS;
 }
 
-HcclResult ThreadAicpuMgr::RegisterThreadCacheCallback(ThreadHandle thread)
+HcclResult ThreadAicpuMgr::RegisterThreadCacheCallback(AicpuTsThread* thread)
 {
-    HCCL_INFO("[ThreadAicpuMgr][RegisterThreadCacheCallback] register cache callback for thread[0x%016llx]", thread);
-    AicpuTsThread* threadPtr = reinterpret_cast<AicpuTsThread*>(thread);
-    CHK_PTR_NULL(threadPtr);
-    auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(threadPtr->GetStreamLitePtr());
+    HCCL_INFO("[ThreadAicpuMgr][%s] register cache callback for thread[%p]", __func__, thread);
+    CHK_PTR_NULL(thread);
+    auto* const streamLitePtr = static_cast<Hccl::StreamLite*>(thread->GetStreamLitePtr());
     CHK_PTR_NULL(streamLitePtr);
     Hccl::RtsqA5* rtsqA5 = static_cast<Hccl::RtsqA5*>(streamLitePtr->GetRtsq());
     CHK_PTR_NULL(rtsqA5);
-    CHK_RET(rtsqA5->SetAicpuTsThreadPtr(threadPtr));
+    CHK_RET(rtsqA5->SetAicpuTsThreadPtr(thread));
     CHK_RET(rtsqA5->SetNeedCacheTaskCallback(hcomm::AicpuTaskCacheManager::NeedCacheTask));
     CHK_RET(rtsqA5->SetAddSqeArrayCallback(hcomm::AicpuTaskCacheManager::AddSqeArray));
-    HCCL_INFO(
-        "[ThreadAicpuMgr][RegisterThreadCacheCallback] register cache callback for thread[0x%016llx] success", thread);
+    HCCL_INFO("[ThreadAicpuMgr][%s] register cache callback for thread[%p] success", __func__, thread);
     return HCCL_SUCCESS;
 }
