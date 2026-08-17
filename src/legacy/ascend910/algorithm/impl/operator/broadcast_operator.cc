@@ -78,7 +78,7 @@ BroadCastOperator::SelectAlg(const std::string& tag, const OpParam& param, std::
             appendTag += (appendTag.empty() ? "L2_" : "_L2_")
                          + std::to_string((rootId >= part1Size) || ((rootId % FACTOR_TWO) == 0));
         }
-        HCCL_DEBUG("[BroadCastOperator][SelectAlg]tag is [%s]", tag);
+        HCCL_DEBUG("[BroadCastOperator][SelectAlg]tag is [%s]", tag.c_str());
         newTag = newTag + '_' + appendTag;
         if (GetExternalInputHcclEnableEntryLog() && param.opBaseAtraceInfo != nullptr) {
             CHK_RET(param.opBaseAtraceInfo->SavealgtypeTraceInfo(appendTag, param.tag));
