@@ -104,7 +104,7 @@ TEST(ExperimentalNicPluginContract, PluginInfoUsesCpuNamesAndExpectedProtocols)
     ExpectContains(ubPlugin, "\"hcomm_cpu_ub\"");
     ExpectContains(ubPlugin, "2U");
     ExpectContains(
-        ubPlugin, "{COMM_PROTOCOL_UBC_TP, COMM_PROTOCOL_UBC_CTP, COMM_PROTOCOL_RESERVED, COMM_PROTOCOL_RESERVED}");
+        ubPlugin, "{COMM_PROTOCOL_UBC_TP, COMM_PROTOCOL_UB_CTP, COMM_PROTOCOL_RESERVED, COMM_PROTOCOL_RESERVED}");
     ExpectNotContains(ubPlugin, std::string("\"") + RetiredHostName("ub") + "\"");
 }
 

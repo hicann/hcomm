@@ -457,7 +457,7 @@ JfcHandle HrtRaUbCreateJfcUserCtl(RdmaHandle handle, CqCreateInfo& cqInfo);
 void HrtRaUbDestroyJfc(RdmaHandle handle, JfcHandle jfcHandle);
 
 MAKE_ENUM(HrtTransportMode, RM);
-MAKE_ENUM(TpProtocol, CTP, TP, UBOE, UBG);
+MAKE_ENUM(TpProtocol, CTP, TP, UBOE, UB_RTP);
 
 // STANDARD: URMA标准CreateJetty
 // HOST_OFFLOAD: HOST侧展开下沉算子，需要指定sqeBbNum

@@ -58,7 +58,7 @@ public:
         }
     };
 
-    MAKE_ENUM(CcuConnectionType, UBC_TP, UBC_CTP);
+    MAKE_ENUM(CcuConnectionType, UBC_TP, UB_CTP, UBC_CTP = UB_CTP);
     struct CcuConnectionInfo {
         CcuConnectionType type{CcuConnectionType::UBC_TP};
         IpAddress locAddr{};

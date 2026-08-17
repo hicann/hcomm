@@ -41,7 +41,7 @@ EndpointDesc MockEndpointDesc(const CommAddr& commAddr, uint32_t devPhyId)
 
     (void)EndpointDescInit(&epDesc, 1);
 
-    epDesc.protocol = CommProtocol::COMM_PROTOCOL_UBC_CTP;
+    epDesc.protocol = CommProtocol::COMM_PROTOCOL_UB_CTP;
     epDesc.commAddr = commAddr;
     epDesc.loc.locType = EndpointLocType::ENDPOINT_LOC_TYPE_DEVICE;
     epDesc.loc.device.devPhyId = devPhyId;

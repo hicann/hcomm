@@ -20,7 +20,7 @@
 #include "aiv_channel_helper.h"
 #include "aicpu_ts_urma_channel.h"
 #include "aicpu_ts_uboe_channel.h"
-#include "aicpu_ts_ubg_channel.h"
+#include "aicpu_ts_ub_rtp_channel.h"
 #include "aicpu_ts_roce_channel_v2.h"
 #include "acl/acl_rt.h"
 #include "launch_aicpu.h"
@@ -482,8 +482,8 @@ static HcclResult PackAicpuTsChannelH2DRes(ChannelHandle hostChannelHandle, std:
             return reinterpret_cast<AicpuTsUrmaChannel*>(hostChannelHandle)->H2DResPack(hostPackBuffer);
         case HcommChannelKind::AICPU_TS_UBOE:
             return reinterpret_cast<AicpuTsUboeChannel*>(hostChannelHandle)->H2DResPack(hostPackBuffer);
-        case HcommChannelKind::AICPU_TS_UBG:
-            return reinterpret_cast<AicpuTsUbgChannel*>(hostChannelHandle)->H2DResPack(hostPackBuffer);
+        case HcommChannelKind::AICPU_TS_UB_RTP:
+            return reinterpret_cast<AicpuTsUbRtpChannel*>(hostChannelHandle)->H2DResPack(hostPackBuffer);
         case HcommChannelKind::AICPU_TS_ROCE_V2:
             return reinterpret_cast<AicpuTsRoceChannelV2*>(hostChannelHandle)->H2DResPack(hostPackBuffer);
         default:
@@ -568,9 +568,9 @@ HcclResult ChannelProcess::LaunchChannelKernelCommon(
         } else if (hcommDesc[index].remoteEndpoint.protocol == CommProtocol::COMM_PROTOCOL_UBOE) {
             auto aicpuTsUboeChannel = reinterpret_cast<AicpuTsUboeChannel*>(hostChannelHandles[index]);
             CHK_PRT(aicpuTsUboeChannel->H2DResPack(hostPackBuffers[index]));
-        } else if (hcommDesc[index].remoteEndpoint.protocol == CommProtocol::COMM_PROTOCOL_UBG) {
-            auto aicpuTsUbgChannel = reinterpret_cast<AicpuTsUbgChannel*>(hostChannelHandles[index]);
-            CHK_PRT(aicpuTsUbgChannel->H2DResPack(hostPackBuffers[index]));
+        } else if (hcommDesc[index].remoteEndpoint.protocol == CommProtocol::COMM_PROTOCOL_UB_RTP) {
+            auto aicpuTsUbRtpChannel = reinterpret_cast<AicpuTsUbRtpChannel*>(hostChannelHandles[index]);
+            CHK_PRT(aicpuTsUbRtpChannel->H2DResPack(hostPackBuffers[index]));
         } else if (hcommDesc[index].remoteEndpoint.protocol == CommProtocol::COMM_PROTOCOL_ROCE) {
             auto aicpuTsRoceChannelV2 = reinterpret_cast<AicpuTsRoceChannelV2*>(hostChannelHandles[index]);
             CHK_PRT(aicpuTsRoceChannelV2->H2DResPack(hostPackBuffers[index]));
@@ -775,7 +775,7 @@ HcclResult ChannelProcess::LaunchChannelKernel(
     CHK_PTR_NULL(ch);
     if (ch->GetChannelKind() == HcommChannelKind::AICPU_TS_URMA
         || ch->GetChannelKind() == HcommChannelKind::AICPU_TS_UBOE
-        || ch->GetChannelKind() == HcommChannelKind::AICPU_TS_UBG) {
+        || ch->GetChannelKind() == HcommChannelKind::AICPU_TS_UB_RTP) {
         return ChannelKernelLaunchForBase(channelHandles, hostChannelHandles, hcommDesc, listNum, binHandle);
     }
     return LaunchCommonChannelKernel(channelHandles, hostChannelHandles, listNum, ch->GetChannelKind(), binHandle);

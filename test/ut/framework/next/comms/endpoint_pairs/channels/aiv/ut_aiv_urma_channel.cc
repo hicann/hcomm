@@ -280,7 +280,7 @@ TEST_F(AivUrmaChannelTest, Ut_BuildConnection_When_UbProtocol_Expect_RetainsConf
                 EXPECT_NE(dynamic_cast<DevUbCtpConnection*>(ch.connections_[0].get()), nullptr);
                 break;
             case ConnectionType::UBG:
-                EXPECT_NE(dynamic_cast<DevUbUbgConnection*>(ch.connections_[0].get()), nullptr);
+                EXPECT_NE(dynamic_cast<DevUbRtpConnection*>(ch.connections_[0].get()), nullptr);
                 break;
         }
     }

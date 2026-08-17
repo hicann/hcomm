@@ -11,11 +11,11 @@
 #ifndef AICPU_TS_UBOE_CHANNEL_H
 #define AICPU_TS_UBOE_CHANNEL_H
 
-#include "aicpu_ts_uboe_ubg_channel_helper.h"
+#include "aicpu_ts_uboe_ub_rtp_channel_helper.h"
 
 namespace hcomm {
 
-class AicpuTsUboeChannel : public AicpuTsUboeUbgChannelHelper {
+class AicpuTsUboeChannel : public AicpuTsUboeUbRtpChannelHelper {
 public:
     AicpuTsUboeChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc);
     ~AicpuTsUboeChannel() override;

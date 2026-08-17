@@ -33,9 +33,9 @@ static Hccl::LinkProtoType ConvertHcclProtoToLinkProto(HcclProtoType hcclProto)
         case HCCL_PROTO_TYPE_ROCE:
             // RoCE（基于RDMA的以太网协议）-> RDMA
             return Hccl::LinkProtoType::RDMA;
-        case HCCL_PROTO_TYPE_UBC_CTP:
+        case HCCL_PROTO_TYPE_UB_CTP:
         case HCCL_PROTO_TYPE_UBC_TP:
-        case HCCL_PROTO_TYPE_UBG_TP:
+        case HCCL_PROTO_TYPE_UB_RTP:
             // 华为统一总线系列协议 -> UB
             return Hccl::LinkProtoType::UB;
         case HCCL_PROTO_TYPE_RESERVED:

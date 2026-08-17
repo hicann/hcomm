@@ -17,7 +17,7 @@
 #include "urma_endpoint.h"
 #include "ub_mem_endpoint.h"
 #include "uboe_endpoint.h"
-#include "ubg_endpoint.h"
+#include "ub_rtp_endpoint.h"
 #include "cpu_urma_endpoint.h"
 #include "aicputs_hccs_endpoint.h"
 #include "hccp_nda.h"
@@ -32,11 +32,11 @@ static bool IsSupported(const EndpointDesc& endpointDesc)
     switch (endpointDesc.protocol) {
         case COMM_PROTOCOL_ROCE:
         case COMM_PROTOCOL_UBC_TP:
-        case COMM_PROTOCOL_UBC_CTP:
+        case COMM_PROTOCOL_UB_CTP:
         case COMM_PROTOCOL_UB_MEM:
         case COMM_PROTOCOL_PCIE:
         case COMM_PROTOCOL_UBOE:
-        case COMM_PROTOCOL_UBG:
+        case COMM_PROTOCOL_UB_RTP:
         case COMM_PROTOCOL_HCCS:
             protocolSupported = true;
             break;
@@ -235,7 +235,7 @@ HcclResult Endpoint::CreateEndpointBase(const EndpointDesc& endpointDesc, std::u
          [](const EndpointDesc& d) {
              return std::make_unique<CpuUrmaEndpoint>(d);
          }},
-        {COMM_PROTOCOL_UBC_CTP, ENDPOINT_LOC_TYPE_HOST,
+        {COMM_PROTOCOL_UB_CTP, ENDPOINT_LOC_TYPE_HOST,
          [](const EndpointDesc& d) {
              return std::make_unique<CpuUrmaEndpoint>(d);
          }},
@@ -243,7 +243,7 @@ HcclResult Endpoint::CreateEndpointBase(const EndpointDesc& endpointDesc, std::u
          [](const EndpointDesc& d) {
              return std::make_unique<UrmaEndpoint>(d);
          }},
-        {COMM_PROTOCOL_UBC_CTP, ENDPOINT_LOC_TYPE_DEVICE,
+        {COMM_PROTOCOL_UB_CTP, ENDPOINT_LOC_TYPE_DEVICE,
          [](const EndpointDesc& d) {
              return std::make_unique<UrmaEndpoint>(d);
          }},
@@ -259,9 +259,9 @@ HcclResult Endpoint::CreateEndpointBase(const EndpointDesc& endpointDesc, std::u
          [](const EndpointDesc& d) {
              return std::make_unique<UboeEndpoint>(d);
          }},
-        {COMM_PROTOCOL_UBG, ENDPOINT_LOC_TYPE_DEVICE,
+        {COMM_PROTOCOL_UB_RTP, ENDPOINT_LOC_TYPE_DEVICE,
          [](const EndpointDesc& d) {
-             return std::make_unique<UbgEndpoint>(d);
+             return std::make_unique<UbRtpEndpoint>(d);
          }},
         {COMM_PROTOCOL_ROCE, ENDPOINT_LOC_TYPE_DEVICE,
          [](const EndpointDesc& d) {

@@ -57,7 +57,7 @@ inline void CheckLinkIsValid(const LinkData& link, const string& desc)
         HCCL_INFO("[CheckLinkIsValid] linkProtocol is[%s]", linkProtocol.Describe().c_str());
         if (linkProtocol == LinkProtocol::ROCE || linkProtocol == LinkProtocol::UB_CTP
             || linkProtocol == LinkProtocol::UB_TP || linkProtocol == LinkProtocol::UBOE
-            || linkProtocol == LinkProtocol::UBG) {
+            || linkProtocol == LinkProtocol::UB_RTP) {
             return;
         }
     }

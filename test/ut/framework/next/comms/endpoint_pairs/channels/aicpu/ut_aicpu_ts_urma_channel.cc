@@ -40,7 +40,7 @@ private:
     {
         EndpointDesc desc{};
         Hccl::IpAddress localIp("127.0.0.1");
-        desc.protocol = COMM_PROTOCOL_UBC_CTP;
+        desc.protocol = COMM_PROTOCOL_UB_CTP;
         desc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
         desc.commAddr.addr = localIp.GetBinaryAddress().addr;
         desc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;

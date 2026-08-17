@@ -62,7 +62,7 @@ for(uint32_t remoteRank = 0; remoteRank < rankSize; remoteRank++) {
     CommLink *linkList = nullptr;
     CHK_RET(HcclRankGraphGetLinks(comm, netLayer, myRank, remoteRank, &linkList, &listSize));  // 获取srcRank和dstRank间link信息
     HcclChannelDesc desc;
-    CommProtocol protocol = CommProtocol::COMM_PROTOCOL_UBC_CTP;
+    CommProtocol protocol = CommProtocol::COMM_PROTOCOL_UB_CTP;
     bool protocolExists = false;
     for (uint32_t idx = 0; idx < listSize; idx++) {
         CommLink link = linkList[idx];

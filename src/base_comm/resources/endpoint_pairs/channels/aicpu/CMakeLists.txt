@@ -11,9 +11,9 @@
 set(src_list
     aicpu_ts_urma_channel.cc
     aicpu_ts_p2p_channel.cc
-    aicpu_ts_uboe_ubg_channel_helper.cc
+    aicpu_ts_uboe_ub_rtp_channel_helper.cc
     aicpu_ts_uboe_channel.cc
-    aicpu_ts_ubg_channel.cc
+    aicpu_ts_ub_rtp_channel.cc
     aicpu_ts_roce_channel.cc
     aicpu_ts_hccs_channel.cc
     aicpu_ts_roce_channel_v2.cc

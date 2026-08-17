@@ -58,7 +58,7 @@ HcclResult HcclChannelAcquireWithConfig(HcclComm comm, CommEngine engine,
 
 3. 当IS_SHARED_QUEUE=true时，有以下额外约束：
    - 仅支持AIV引擎。
-   - 仅支持UB网络语义协议（COMM_PROTOCOL_UBC_CTP、COMM_PROTOCOL_UBC_TP），不支持UBMem/RoCE/UBOE/UBG。
+   - 仅支持UB网络语义协议（COMM_PROTOCOL_UB_CTP），不支持UBMem/RoCE/UBOE/UB_RTP。
    - 必须设置SHARED_QUEUE_TAG（非空字符串）。
    - channelDescs中所有元素的localEndpoint必须相同（复用的Jetty只能关联一个endpoint）。
    - 仅支持V2通信器（需通过HcclCommInitClusterInfoConfig等V2接口创建通信域）。
@@ -87,7 +87,7 @@ ChannelHandle channels[CHANNEL_NUM] = {0};
 for (uint32_t i = 0; i < CHANNEL_NUM; i++) {
     HcclChannelDescInit(&channelDescs[i], 1);
     channelDescs[i].remoteRank = remoteRanks[i];
-    channelDescs[i].channelProtocol = COMM_PROTOCOL_UBC_TP;
+    channelDescs[i].channelProtocol = COMM_PROTOCOL_UB_CTP;
     // 填充localEndpoint / remoteEndpoint ...
 }
 

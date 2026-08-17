@@ -38,7 +38,7 @@ set(src_to_test_list
     comms/api_c_adpt/ut_hcomm_res_mgr_test.cc
     comms/api_c_adpt/ut_hcomm_endpoint_test.cc
     comms/api_c_adpt/ut_hcomm_endpoint_uboe_test.cc
-    comms/api_c_adpt/ut_hcomm_endpoint_ubg_test.cc
+    comms/api_c_adpt/ut_hcomm_endpoint_ub_rtp_test.cc
     comms/api_c_adpt/ut_hcomm_mem_test.cc
     comms/api_c_adpt/ut_hcomm_channel_test.cc
     comms/api_c_adpt/ut_hcomm_engine_ctx_test.cc
@@ -72,7 +72,7 @@ set(src_to_test_list
     comms/endpoint_pairs/channels/aicpu/ut_aicpu_ts_urma_channel.cc
     comms/endpoint_pairs/channels/aicpu/ut_aicpu_ts_p2p_channel.cc
     comms/endpoint_pairs/channels/aicpu/ut_aicpu_ts_uboe_channel.cc
-    comms/endpoint_pairs/channels/aicpu/ut_aicpu_ts_ubg_channel.cc
+    comms/endpoint_pairs/channels/aicpu/ut_aicpu_ts_ub_rtp_channel.cc
     comms/endpoint_pairs/channels/aicpu/ut_aicpu_ts_roce_channel.cc
     comms/endpoint_pairs/channels/aicpu/device/ut_aicpu_channel_process.cc
     comms/endpoints/ut_urma_endpoint.cc

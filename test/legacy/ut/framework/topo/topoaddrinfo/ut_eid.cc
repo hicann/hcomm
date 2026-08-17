@@ -56,7 +56,7 @@ TEST(EID, test_eid_decode)
     EXPECT_EQ(die2, 3);
 }
 
-TEST(EID, test_uboe_ubg)
+TEST(EID, test_uboe_ub_rtp)
 {
     dcmi_urma_eid_t eid1;
     dcmi_urma_eid_t eid2;
@@ -66,11 +66,11 @@ TEST(EID, test_uboe_ubg)
     hex32_to_bin16("0000000000ff0ac0001000000a140200", eid2.raw);
     hex32_to_bin16("0000000000ff0a80001000000a140200", eid3.raw);
     EXPECT_EQ(UrmaEidIsUBOE(&eid1), 0);
-    EXPECT_EQ(UrmaEidIsUBG(&eid1), 0);
+    EXPECT_EQ(UrmaEidIsUbRtp(&eid1), 0);
     EXPECT_EQ(UrmaEidIsUBOE(&eid2), 1);
-    EXPECT_EQ(UrmaEidIsUBG(&eid2), 0);
+    EXPECT_EQ(UrmaEidIsUbRtp(&eid2), 0);
     EXPECT_EQ(UrmaEidIsUBOE(&eid3), 0);
-    EXPECT_EQ(UrmaEidIsUBG(&eid3), 1);
+    EXPECT_EQ(UrmaEidIsUbRtp(&eid3), 1);
 
     UrmaEid2CNA(&eid2, ipaddr, sizeof(ipaddr));
     EXPECT_STREQ(ipaddr, "10.10.20.2");

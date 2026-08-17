@@ -45,7 +45,7 @@ int32_t：接口成功返回0，其他失败。
 <!-- npu="950" id6 -->
 ## 约束说明
 
-针对Ascend 950PR/Ascend 950DT，仅支持通信协议UBC_TP、UBC_CTP、UBoE。
+针对Ascend 950PR/Ascend 950DT，仅支持通信协议UB_CTP、UBoE。
 <!-- end id6 -->
 
 ## 调用示例

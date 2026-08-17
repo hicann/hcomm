@@ -194,10 +194,10 @@ TEST_F(UtChannelRoceFactory, CreateChannel_AivUbMem_MockInit_Returns_SUCCESS)
     ASSERT_NE(ch.get(), nullptr);
 }
 
-TEST_F(UtChannelRoceFactory, CreateChannel_AivUbg_On950_ReturnsAivUrmaChannel)
+TEST_F(UtChannelRoceFactory, CreateChannel_AivUbRtp_On950_ReturnsAivUrmaChannel)
 {
     EndpointDesc ep{};
-    ep.protocol = COMM_PROTOCOL_UBG;
+    ep.protocol = COMM_PROTOCOL_UB_RTP;
     ep.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
     ep.commAddr.type = COMM_ADDR_TYPE_IP_V4;
     ASSERT_EQ(inet_pton(AF_INET, "10.20.30.43", &ep.commAddr.addr), 1);

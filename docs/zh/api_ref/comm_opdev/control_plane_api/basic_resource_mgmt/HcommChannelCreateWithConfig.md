@@ -59,7 +59,7 @@ HcommResult：接口成功返回0，其他失败。
 2. 当config为nullptr时，行为与[HcommChannelCreate](HcommChannelCreate.md)完全等价。
 
 3. 当IS_SHARED_QUEUE=true时，有以下额外约束：
-   - 仅支持UB网络语义协议（COMM_PROTOCOL_UBC_CTP、COMM_PROTOCOL_UBC_TP），不支持UBMem/RoCE/UBOE/UBG。
+   - 仅支持UB网络语义协议（COMM_PROTOCOL_UB_CTP），不支持UBMem/RoCE/UBOE/UB_RTP。
    - 使用相同endpointHandle多次调用本接口创建的Channel共享同一个Jetty。
    - 使用不同endpointHandle调用创建的Channel不共享Jetty。
    - 共享Jetty的不同Channel不支持并发使用，需由调用者按业务顺序串行调用。
@@ -74,16 +74,13 @@ HcommResult：接口成功返回0，其他失败。
 
    - COMM_ENGINE_CPU
      - COMM_PROTOCOL_ROCE
-     - COMM_PROTOCOL_UBC_CTP
-     - COMM_PROTOCOL_UBC_TP
+     - COMM_PROTOCOL_UB_CTP
    - COMM_ENGINE_AICPU_TS
      - COMM_PROTOCOL_UBOE
-     - COMM_PROTOCOL_UBC_CTP
-     - COMM_PROTOCOL_UBC_TP
+     - COMM_PROTOCOL_UB_CTP
      - COMM_PROTOCOL_ROCE
    - COMM_ENGINE_AIV
-     - COMM_PROTOCOL_UBC_CTP
-     - COMM_PROTOCOL_UBC_TP
+     - COMM_PROTOCOL_UB_CTP
      - COMM_PROTOCOL_ROCE
    <!-- end id6 -->
 
@@ -106,7 +103,7 @@ HcommChannelDesc channelDescs[CHANNEL_NUM] = {0};
 ChannelHandle channels[CHANNEL_NUM] = {0};
 for (uint32_t i = 0; i < CHANNEL_NUM; i++) {
     HcommChannelDescInit(&channelDescs[i]);
-    channelDescs[i].remoteEndpoint.protocol = COMM_PROTOCOL_UBC_TP;
+    channelDescs[i].remoteEndpoint.protocol = COMM_PROTOCOL_UB_CTP;
     // 填充localEndpoint / remoteEndpoint ...
 }
 

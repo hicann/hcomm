@@ -390,7 +390,7 @@ TEST_F(HcclRankGraphTest, Ut_HcclRankGraphGetEndpointInfo_When_ValidParam_Expect
     ret = HcclRankGraphGetEndpointDesc(comm, netLayer, topoInstId, &num, endpointDesc.get());
     EXPECT_EQ(ret, HCCL_SUCCESS);
     for (uint32_t i = 0; i < num; i++) {
-        EXPECT_EQ(endpointDesc[i].protocol, COMM_PROTOCOL_UBC_CTP);
+        EXPECT_EQ(endpointDesc[i].protocol, COMM_PROTOCOL_UB_CTP);
         uint32_t infoLen = sizeof(EndpointAttrBwCoeff);
         EndpointAttrBwCoeff bwCoeff{};
         ret = HcclRankGraphGetEndpointInfo(comm, 0, &endpointDesc[i], ENDPOINT_ATTR_BW_COEFF, infoLen, &bwCoeff);

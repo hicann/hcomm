@@ -160,8 +160,8 @@ private:
     InfoCtxMap uboeInfoMap;
     ReqCtxMap uboeReqMap;
 
-    InfoCtxMap ubgInfoMap;
-    ReqCtxMap ubgReqMap;
+    InfoCtxMap ubRtpInfoMap;
+    ReqCtxMap ubRtpReqMap;
 
     TpAttrCtxMap tpAttrCtxMap;
     TpAttrReqCtxMap tpAttrReqCtxMap;
@@ -175,8 +175,8 @@ private:
     std::mutex uboeInfoMutex;
     std::mutex uboeReqMutex;
 
-    std::mutex ubgInfoMutex;
-    std::mutex ubgReqMutex;
+    std::mutex ubRtpInfoMutex;
+    std::mutex ubRtpReqMutex;
 
     std::mutex tpAttrCtxMutex;
     std::mutex tpAttrReqMutex;

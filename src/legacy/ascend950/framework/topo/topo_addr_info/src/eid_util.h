@@ -52,7 +52,7 @@ int UrmaEidIsPortGroup(const dcmi_urma_eid_t* eid);
 
 int UrmaEidIsUBOE(const dcmi_urma_eid_t* eid);
 
-int UrmaEidIsUBG(const dcmi_urma_eid_t* eid);
+int UrmaEidIsUbRtp(const dcmi_urma_eid_t* eid);
 /**
  * 从EID中解析出CNA地址,
  * @param eid URMA eid结构体指针

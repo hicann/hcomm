@@ -280,9 +280,9 @@ public:
         u8 qos = static_cast<u8>(UB_QOS_DEFAULT), CommEngine engine = COMM_ENGINE_RESERVED);
 };
 
-class DevUbUbgConnection : public DevUbConnection {
+class DevUbRtpConnection : public DevUbConnection {
 public:
-    DevUbUbgConnection(
+    DevUbRtpConnection(
         const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
         const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
         const IpAddress& locAddrEid = IpAddress(), const IpAddress& rmtAddrEid = IpAddress(),

@@ -59,7 +59,7 @@ TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs256_Expect_ReturnHCCL_SUCCE
 TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs15_Expect_ReturnHCCL_SUCCESS_And_AdjustTo16)
 {
     HcommChannelDesc channelDesc{};
-    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UBC_CTP; // 设置为UB协议以触发sqDepth检查
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UB_CTP; // 设置为UB协议以触发sqDepth检查
     channelDesc.ubAttr.sqDepth = 15;
 
     HcommResult ret = CheckUbAttr(channelDesc, COMM_ENGINE_AICPU);
@@ -70,7 +70,7 @@ TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs15_Expect_ReturnHCCL_SUCCES
 TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs300_Expect_ReturnHCCL_SUCCESS_And_AdjustTo512)
 {
     HcommChannelDesc channelDesc{};
-    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UBC_CTP; // 设置为UB协议以触发sqDepth检查
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UB_CTP; // 设置为UB协议以触发sqDepth检查
     channelDesc.ubAttr.sqDepth = 300;
 
     HcommResult ret = CheckUbAttr(channelDesc, COMM_ENGINE_AICPU);
@@ -81,7 +81,7 @@ TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs300_Expect_ReturnHCCL_SUCCE
 TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs17_Expect_ReturnHCCL_SUCCESS_And_AdjustTo32)
 {
     HcommChannelDesc channelDesc{};
-    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UBC_CTP; // 设置为UB协议以触发sqDepth检查
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UB_CTP; // 设置为UB协议以触发sqDepth检查
     channelDesc.ubAttr.sqDepth = 17;
 
     HcommResult ret = CheckUbAttr(channelDesc, COMM_ENGINE_AICPU);
@@ -92,7 +92,7 @@ TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs17_Expect_ReturnHCCL_SUCCES
 TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIs100_Expect_ReturnHCCL_SUCCESS_And_AdjustTo128)
 {
     HcommChannelDesc channelDesc{};
-    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UBC_CTP; // 设置为UB协议以触发sqDepth检查
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_UB_CTP; // 设置为UB协议以触发sqDepth检查
 
     channelDesc.ubAttr.sqDepth = 100;
 

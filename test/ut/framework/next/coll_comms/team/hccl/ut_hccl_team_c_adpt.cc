@@ -226,7 +226,7 @@ HcclResult StubRankGraphGetLinks(
     g_fakeLink.header.magicWord = 0x0f0e0f0f;
     g_fakeLink.header.size = sizeof(CommLink);
     g_fakeLink.header.reserved = 0;
-    g_fakeLink.linkAttr.linkProtocol = COMM_PROTOCOL_UBC_CTP;
+    g_fakeLink.linkAttr.linkProtocol = COMM_PROTOCOL_UB_CTP;
     g_fakeLink.linkAttr.hop = 1;
     *links = &g_fakeLink;
     *linkNum = 1;
@@ -329,7 +329,7 @@ void BuildTeamCreateDesc(
     desc.rankNum = rankNum;
     desc.selfRankId = selfRankId;
     desc.netLayer = netLayer;
-    desc.protocol = COMM_PROTOCOL_UBC_CTP;
+    desc.protocol = COMM_PROTOCOL_UB_CTP;
     // 源码 HcclWorldTeamCreate/HcclSubTeamCreate 校验：signalCount/counterCount 必须为 0，barrierCount 必须 >= 1。
     desc.requirement.signalCount = 0;
     desc.requirement.counterCount = 0;
@@ -341,7 +341,7 @@ void BuildChannelDesc(HcclTeamCreateChannelsDesc& desc, CommEngine engine, uint3
     (void)HcclTeamCreateChannelsDescInit(&desc);
     desc.engine = engine;
     desc.notifyNum = notifyNum;
-    desc.protocol = COMM_PROTOCOL_UBC_CTP;
+    desc.protocol = COMM_PROTOCOL_UB_CTP;
     desc.channelCnt = channelCnt;
 }
 } // namespace

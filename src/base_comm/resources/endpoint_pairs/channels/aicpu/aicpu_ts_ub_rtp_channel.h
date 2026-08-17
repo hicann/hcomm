@@ -7,25 +7,24 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+#ifndef AICPU_TS_UB_RTP_CHANNEL_H
+#define AICPU_TS_UB_RTP_CHANNEL_H
 
-#ifndef AICPU_TS_UBG_CHANNEL_H
-#define AICPU_TS_UBG_CHANNEL_H
-
-#include "aicpu_ts_uboe_ubg_channel_helper.h"
+#include "aicpu_ts_uboe_ub_rtp_channel_helper.h"
 
 namespace hcomm {
 
-constexpr char_t UBG_FINISH_MSG[FINISH_MSG_SIZE] = "Ubg Comm Pipe ready!";
+constexpr char_t UB_RTP_FINISH_MSG[FINISH_MSG_SIZE] = "UbRtp Comm Pipe ready!";
 
-class AicpuTsUbgChannel : public AicpuTsUboeUbgChannelHelper {
+class AicpuTsUbRtpChannel : public AicpuTsUboeUbRtpChannelHelper {
 public:
-    AicpuTsUbgChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc)
-        : AicpuTsUboeUbgChannelHelper(endpointHandle, channelDesc)
+    AicpuTsUbRtpChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc)
+        : AicpuTsUboeUbRtpChannelHelper(endpointHandle, channelDesc)
     {}
 
-    ~AicpuTsUbgChannel() = default;
+    ~AicpuTsUbRtpChannel() = default;
 
-    HcommChannelKind GetChannelKind() const override { return HcommChannelKind::AICPU_TS_UBG; }
+    HcommChannelKind GetChannelKind() const override { return HcommChannelKind::AICPU_TS_UB_RTP; }
 
     HcclResult Init() override;
     ChannelStatus GetStatus() override;
@@ -38,14 +37,15 @@ protected:
     void RecvFinish() override;
 
 private:
-    void ProcessUbgState();
+    void ProcessUbRtpState();
+    void ProcessUbRtpDataState();
 
     MAKE_ENUM(
-        UbgStatus, INIT, BUILD_CONN, SEND_SIZE, RECV_SIZE, SEND_DATA, RECV_DATA, SEND_FIN, RECV_FIN, PROCESS_DATA,
+        UbRtpStatus, INIT, BUILD_CONN, SEND_SIZE, RECV_SIZE, SEND_DATA, RECV_DATA, SEND_FIN, RECV_FIN, PROCESS_DATA,
         SET_READY, READY)
-    UbgStatus ubgStatus{UbgStatus::INIT};
+    UbRtpStatus ubRtpStatus{UbRtpStatus::INIT};
 };
 
 } // namespace hcomm
 
-#endif // AICPU_TS_UBG_CHANNEL_H
+#endif // AICPU_TS_UB_RTP_CHANNEL_H

@@ -84,13 +84,13 @@ TEST_F(TestEndpointPair, Ut_DestroyChannel_When_Channel_Not_Exist_Expect_SUCCESS
     MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
 
     EndpointDesc localEndpointDesc{};
-    localEndpointDesc.protocol = COMM_PROTOCOL_UBC_CTP;
+    localEndpointDesc.protocol = COMM_PROTOCOL_UB_CTP;
     localEndpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
     Hccl::IpAddress localIp("192.168.100.100");
     localEndpointDesc.commAddr.addr = localIp.GetBinaryAddress().addr;
     localEndpointDesc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
     EndpointDesc remoteEndpointDesc{};
-    remoteEndpointDesc.protocol = COMM_PROTOCOL_UBC_CTP;
+    remoteEndpointDesc.protocol = COMM_PROTOCOL_UB_CTP;
     remoteEndpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
     Hccl::IpAddress remoteIp("192.168.100.101");
     remoteEndpointDesc.commAddr.addr = remoteIp.GetBinaryAddress().addr;
@@ -381,13 +381,13 @@ TEST_F(TestEndpointPair, Ut_DestroyChannel_When_Channel_Exist_Expect_SUCCESS)
     MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
 
     EndpointDesc localEndpointDesc{};
-    localEndpointDesc.protocol = COMM_PROTOCOL_UBC_CTP;
+    localEndpointDesc.protocol = COMM_PROTOCOL_UB_CTP;
     localEndpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
     Hccl::IpAddress localIp("192.168.100.100");
     localEndpointDesc.commAddr.addr = localIp.GetBinaryAddress().addr;
     localEndpointDesc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
     EndpointDesc remoteEndpointDesc{};
-    remoteEndpointDesc.protocol = COMM_PROTOCOL_UBC_CTP;
+    remoteEndpointDesc.protocol = COMM_PROTOCOL_UB_CTP;
     remoteEndpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
     Hccl::IpAddress remoteIp("192.168.100.101");
     remoteEndpointDesc.commAddr.addr = remoteIp.GetBinaryAddress().addr;

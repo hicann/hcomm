@@ -85,7 +85,7 @@ TEST_F(CpuRoceEndpointTest, Ut_When_wrongIp_EXPECT_Return_128003)
 {
     Hccl::IpAddress localIp("223.0.0.1");
     EndpointDesc endpointDesc;
-    endpointDesc.protocol = COMM_PROTOCOL_UBC_CTP;
+    endpointDesc.protocol = COMM_PROTOCOL_UB_CTP;
     endpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
     endpointDesc.commAddr.addr = localIp.GetBinaryAddress().addr;
     endpointDesc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;

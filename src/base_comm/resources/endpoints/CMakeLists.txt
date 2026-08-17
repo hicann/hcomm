@@ -16,9 +16,9 @@ set(src_list
     aicpu_ts_roce_endpoint.cc
     aicputs_hccs_endpoint.cc
     endpoint.cc
-    uboe_ubg_endpoint_helper.cc
+    uboe_ub_rtp_endpoint_helper.cc
     uboe_endpoint.cc
-    ubg_endpoint.cc
+    ub_rtp_endpoint.cc
 )
 
 if(TARGET hcomm)

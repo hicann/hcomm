@@ -71,6 +71,14 @@ TEST_F(EdgeParserTest, Ut_Deserialize_When_Normal_Expect_Success)
     EXPECT_EQ(edgeInfo.Describe(), edge0.Describe());
 }
 
+// UB_RTP新名称与UBG旧名称兼容
+TEST_F(EdgeParserTest, Ut_GetLinkProtocol_When_NewAndLegacyProtocol_Expect_UbRtp)
+{
+    EdgeInfo edgeInfo;
+    EXPECT_EQ(edgeInfo.GetLinkProtocol("UBG"), LinkProtocol::UB_RTP);
+    EXPECT_EQ(edgeInfo.GetLinkProtocol("UB_RTP"), LinkProtocol::UB_RTP);
+}
+
 // 功能用例，缺省
 TEST_F(EdgeParserTest, Ut_Deserialize_When_OptionalFieldsMissing_Expect_Success)
 {

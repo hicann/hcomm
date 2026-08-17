@@ -423,9 +423,9 @@ HcclResult AivUrmaChannel::CreateUbConnectionByProtocol(
                     Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AIV, ctx.sqDepth),
                 return HCCL_E_PTR);
             break;
-        case Hccl::LinkProtocol::UBG:
+        case Hccl::LinkProtocol::UB_RTP:
             EXCEPTION_CATCH(
-                ubConn = std::make_unique<Hccl::DevUbUbgConnection>(
+                ubConn = std::make_unique<Hccl::DevUbRtpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, ctx.locAddr, ctx.rmtAddr,
                     ctx.qosPre, COMM_ENGINE_AIV, ctx.sqDepth),
                 return HCCL_E_PTR);
@@ -444,7 +444,7 @@ AivUrmaChannel::AcquireSharedJettyInBuildConnection(const UbConnBuildContext& ct
     Endpoint* endpoint = reinterpret_cast<Endpoint*>(endpointHandle_);
     auto tempFactory = [rdmaHandle = rdmaHandle_, &ctxLoc = ctx.locAddr, &ctxRmt = ctx.rmtAddr, qosPre = ctx.qosPre,
                         protocol = ctx.protocol, sqDepth = ctx.sqDepth]() -> std::unique_ptr<Hccl::DevUbConnection> {
-        // 与主 switch 保持对称的协议判断，避免 UBG/未知协议误降级为 CTP
+        // 与主 switch 保持对称的协议判断，避免 UB_RTP/未知协议误降级为 CTP
         switch (protocol) {
             case Hccl::LinkProtocol::UB_TP:
                 return std::make_unique<Hccl::DevUbTpConnection>(

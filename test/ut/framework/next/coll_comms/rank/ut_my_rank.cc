@@ -401,22 +401,22 @@ TEST_F(MyRankTest, St_BatchCreateChannels_When_Resource_fallback_Expect_Return_H
     EXPECT_EQ(myRank->Init(cclBuffer, 5, 2), HCCL_SUCCESS);
 
     EndpointDesc localEp;
-    CreateEndpointDesc(localEp, COMM_PROTOCOL_UBC_CTP, "1.0.0.0");
+    CreateEndpointDesc(localEp, COMM_PROTOCOL_UB_CTP, "1.0.0.0");
     EndpointDesc rmtEp1;
-    CreateEndpointDesc(rmtEp1, COMM_PROTOCOL_UBC_CTP, "2.0.0.0");
+    CreateEndpointDesc(rmtEp1, COMM_PROTOCOL_UB_CTP, "2.0.0.0");
     EndpointDesc rmtEp2;
-    CreateEndpointDesc(rmtEp2, COMM_PROTOCOL_UBC_CTP, "3.0.0.0");
+    CreateEndpointDesc(rmtEp2, COMM_PROTOCOL_UB_CTP, "3.0.0.0");
 
     HcclChannelDesc channelDesc[5]{};
     for (int i = 0; i < 2; i++) {
-        channelDesc[i].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+        channelDesc[i].channelProtocol = COMM_PROTOCOL_UB_CTP;
         channelDesc[i].remoteRank = 1;
         channelDesc[i].notifyNum = 2;
         channelDesc[i].localEndpoint = localEp;
         channelDesc[i].remoteEndpoint = rmtEp1;
     }
     for (int i = 2; i < 5; i++) {
-        channelDesc[i].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+        channelDesc[i].channelProtocol = COMM_PROTOCOL_UB_CTP;
         channelDesc[i].remoteRank = 2;
         channelDesc[i].notifyNum = 2;
         channelDesc[i].localEndpoint = localEp;
@@ -486,22 +486,22 @@ TEST_F(MyRankTest, St_BatchCreateChannels_Multi_Times_When_fallback_Expect_Retur
     EXPECT_EQ(myRank->Init(cclBuffer, 5, 2), HCCL_SUCCESS);
 
     EndpointDesc localEp;
-    CreateEndpointDesc(localEp, COMM_PROTOCOL_UBC_CTP, "1.0.0.0");
+    CreateEndpointDesc(localEp, COMM_PROTOCOL_UB_CTP, "1.0.0.0");
     EndpointDesc rmtEp1;
-    CreateEndpointDesc(rmtEp1, COMM_PROTOCOL_UBC_CTP, "2.0.0.0");
+    CreateEndpointDesc(rmtEp1, COMM_PROTOCOL_UB_CTP, "2.0.0.0");
     EndpointDesc rmtEp2;
-    CreateEndpointDesc(rmtEp2, COMM_PROTOCOL_UBC_CTP, "3.0.0.0");
+    CreateEndpointDesc(rmtEp2, COMM_PROTOCOL_UB_CTP, "3.0.0.0");
 
     HcclChannelDesc channelDesc[5]{};
     for (int i = 0; i < 2; i++) {
-        channelDesc[i].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+        channelDesc[i].channelProtocol = COMM_PROTOCOL_UB_CTP;
         channelDesc[i].remoteRank = 1;
         channelDesc[i].notifyNum = 2;
         channelDesc[i].localEndpoint = localEp;
         channelDesc[i].remoteEndpoint = rmtEp1;
     }
     for (int i = 2; i < 5; i++) {
-        channelDesc[i].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+        channelDesc[i].channelProtocol = COMM_PROTOCOL_UB_CTP;
         channelDesc[i].remoteRank = 2;
         channelDesc[i].notifyNum = 2;
         channelDesc[i].localEndpoint = localEp;
@@ -695,7 +695,7 @@ TEST_F(MyRankTest, Ut_ChannelDescHccl2Hcomm_When_UbcCtp_Sets_CommDomainQos_FromC
     ASSERT_EQ(commConfig.SetConfigHcclQos(5u), HCCL_SUCCESS);
     HcclChannelDesc in{};
     ASSERT_EQ(HcclChannelDescInit(&in, 1), HCCL_SUCCESS);
-    in.channelProtocol = COMM_PROTOCOL_UBC_CTP;
+    in.channelProtocol = COMM_PROTOCOL_UB_CTP;
     HcommChannelDesc out = MyRankUtils::ChannelDescHccl2Hcomm(in, commConfig);
     EXPECT_EQ(out.qos, 5u);
 }
@@ -780,7 +780,7 @@ TEST_F(MyRankTest, Ut_ChannelDescHccl2Hcomm_When_UbcCtp_DoesNotSetPathMode)
     ASSERT_EQ(commConfig.SetConfigHcclQos(5u), HCCL_SUCCESS);
     HcclChannelDesc in{};
     ASSERT_EQ(HcclChannelDescInit(&in, 1), HCCL_SUCCESS);
-    in.channelProtocol = COMM_PROTOCOL_UBC_CTP;
+    in.channelProtocol = COMM_PROTOCOL_UB_CTP;
     in.ubMemAttr.pathMode = 2u;
     HcommChannelDesc out = MyRankUtils::ChannelDescHccl2Hcomm(in, commConfig);
     EXPECT_EQ(out.qos, 5u);
@@ -819,8 +819,8 @@ TEST_F(MyRankTest, Ut_ConfigSqDepthByExpansionMode_When_EngineAndProtocolVary_Ex
 
     const TestCase testCases[] = {
         {COMM_ENGINE_AIV, COMM_PROTOCOL_UBC_TP, 128U, 64U, 128U},
-        {COMM_ENGINE_AIV, COMM_PROTOCOL_UBC_CTP, 128U, 64U, 128U},
-        {COMM_ENGINE_AIV, COMM_PROTOCOL_UBG, 128U, 64U, 128U},
+        {COMM_ENGINE_AIV, COMM_PROTOCOL_UB_CTP, 128U, 64U, 128U},
+        {COMM_ENGINE_AIV, COMM_PROTOCOL_UB_RTP, 128U, 64U, 128U},
         {COMM_ENGINE_AIV, COMM_PROTOCOL_UBC_TP, HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET, HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET,
          HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET},
         {COMM_ENGINE_AIV, COMM_PROTOCOL_UBOE, 128U, 64U, 64U},
@@ -1031,14 +1031,14 @@ TEST_F(MyRankTest, Ut_BatchCreateChannels_HcommDescsEquivalence)
 
     HcclChannelDesc channelDesc[4]{};
     for (int i = 0; i < 2; i++) {
-        channelDesc[i].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+        channelDesc[i].channelProtocol = COMM_PROTOCOL_UB_CTP;
         channelDesc[i].remoteRank = 1;
         channelDesc[i].notifyNum = 2;
         channelDesc[i].localEndpoint = epA;
         channelDesc[i].remoteEndpoint = rmtEp;
     }
     for (int i = 2; i < 4; i++) {
-        channelDesc[i].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+        channelDesc[i].channelProtocol = COMM_PROTOCOL_UB_CTP;
         channelDesc[i].remoteRank = 2;
         channelDesc[i].notifyNum = 2;
         channelDesc[i].localEndpoint = epB;

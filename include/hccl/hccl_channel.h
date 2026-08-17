@@ -138,7 +138,7 @@ typedef void* HcclChannelConfig;
 typedef enum {
     HCCL_CHANNEL_CONFIG_TYPE_INVALID = -1,
     /** 0: IS_SHARED_QUEUE (bool/int, 默认 0=false)。
-     *    仅支持 AIV 引擎的 UB 网络语义协议（UBC_CTP/UBC_TP，不支持 UBMem/RoCE/UBOE/UBG）。
+     *    仅支持 AIV 引擎的 UB 网络语义协议（UB_CTP/UBC_TP，不支持 UBMem/RoCE/UBOE/UB_RTP）。
      *    设为 true 时，创建的多个 Channel 共享一个 Jetty。 */
     HCCL_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE = 0,
     /** 1: SHARED_QUEUE_TAG (string)。
@@ -189,7 +189,7 @@ extern HcclResult HcclChannelConfigSetStr(HcclChannelConfig config, HcclChannelC
  * @param[out] channels 创建的通道句柄列表
  * @return HcclResult 执行结果状态码
  * @note 当 config 中 IS_SHARED_QUEUE=true 时：
- *       - 仅支持 AIV 引擎的 UB 网络语义协议（UBC_CTP/UBC_TP），不支持 UBMem/RoCE/UBOE/UBG。
+ *       - 仅支持 AIV 引擎的 UB 网络语义协议（UB_CTP/UBC_TP），不支持 UBMem/RoCE/UBOE/UB_RTP。
  *       - channelDescs 中的源 localEndpoint 必须相同（复用的 jetty 只能关联一个 endpoint）。
  *       - 通信域基于 SHARED_QUEUE_TAG 指定的 tag 管理 channel 复用。
  *       - tag 之下，使用源目的 endpointPair 索引一组 channel。

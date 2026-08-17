@@ -149,7 +149,7 @@ int UrmaEidIsPortGroup(const dcmi_urma_eid_t* eid)
 int UrmaEidIsUBOE(const dcmi_urma_eid_t* eid)
 {
     const int uboeMask = 0xc0;
-    const int flagPos = 7; // UBOE和UBG标志位的位置
+    const int flagPos = 7; // UBOE和UB_RTP标志位的位置
     unsigned char flag = eid->raw[flagPos];
     if ((uboeMask & flag) == uboeMask) {
         return 1;
@@ -158,18 +158,18 @@ int UrmaEidIsUBOE(const dcmi_urma_eid_t* eid)
 }
 
 /**
- * 判断是否是UBG,  判断原理见UrmaEidIsUBOE
+ * 判断是否是UB_RTP,  判断原理见UrmaEidIsUBOE
  * @param eid URMA eid结构体指针
- * @return int 1为UBG，0为不是UBG
+ * @return int 1为UB_RTP，0为不是UB_RTP
  */
-int UrmaEidIsUBG(const dcmi_urma_eid_t* eid)
+int UrmaEidIsUbRtp(const dcmi_urma_eid_t* eid)
 {
     const unsigned char bitMask = 0xc0;
-    const unsigned char ubgFlag = 0x80; // UBG的flag
-    const int flagPos = 7;              // UBOE和UBG标志位的位置
+    const unsigned char ubRtpFlag = 0x80; // UB_RTP的flag
+    const int flagPos = 7;                // UBOE和UB_RTP标志位的位置
     unsigned char flag = eid->raw[flagPos];
     int bit = (flag & bitMask); //
-    if (bit == ubgFlag) {
+    if (bit == ubRtpFlag) {
         return 1;
     }
     return 0;

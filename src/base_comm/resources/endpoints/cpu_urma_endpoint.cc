@@ -59,7 +59,7 @@ HcclResult CpuUrmaEndpoint::Init()
         "CpuUrmaEndpoint::%s success, devPhyId[%u], ipAddr[%s], ctxHandle[%p]", __func__, devPhyId,
         ipAddr.Describe().c_str(), ctxHandle_);
 
-    cacheKey_ = MemMgrCacheKey{devPhyId, COMM_PROTOCOL_UBC_CTP, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
+    cacheKey_ = MemMgrCacheKey{devPhyId, COMM_PROTOCOL_UB_CTP, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
     auto& cache = ProcRegedMemMgrCache::GetInstance();
     EXCEPTION_CATCH(
         regedMemMgr_ = cache.GetOrCreate(

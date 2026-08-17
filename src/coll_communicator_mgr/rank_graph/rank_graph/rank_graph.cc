@@ -928,10 +928,10 @@ void RankGraph::Dump() const
 CommProtocol LinkProtocolToCommProtocol(const LinkProtocol& linkProtocol)
 {
     constexpr std::pair<LinkProtocol, CommProtocol> protocolPairs[]
-        = {{LinkProtocol::UB_CTP, COMM_PROTOCOL_UBC_CTP}, {LinkProtocol::UB_TP, COMM_PROTOCOL_UBC_TP},
-           {LinkProtocol::ROCE, COMM_PROTOCOL_ROCE},      {LinkProtocol::HCCS, COMM_PROTOCOL_HCCS},
-           {LinkProtocol::PCIE, COMM_PROTOCOL_PCIE},      {LinkProtocol::UB_MEM, COMM_PROTOCOL_UB_MEM},
-           {LinkProtocol::UBOE, COMM_PROTOCOL_UBOE},      {LinkProtocol::UBG, COMM_PROTOCOL_UBG}};
+        = {{LinkProtocol::UB_CTP, COMM_PROTOCOL_UB_CTP}, {LinkProtocol::UB_TP, COMM_PROTOCOL_UBC_TP},
+           {LinkProtocol::ROCE, COMM_PROTOCOL_ROCE},     {LinkProtocol::HCCS, COMM_PROTOCOL_HCCS},
+           {LinkProtocol::PCIE, COMM_PROTOCOL_PCIE},     {LinkProtocol::UB_MEM, COMM_PROTOCOL_UB_MEM},
+           {LinkProtocol::UBOE, COMM_PROTOCOL_UBOE},     {LinkProtocol::UB_RTP, COMM_PROTOCOL_UB_RTP}};
 
     for (const auto& p : protocolPairs) {
         if (p.first == linkProtocol) {

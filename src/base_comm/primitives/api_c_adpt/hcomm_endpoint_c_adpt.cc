@@ -113,7 +113,7 @@ HcclResult ValidateEndpointDesc(const EndpointDesc* endpoint, EndpointHandle* en
 HcclResult RegisterDeviceEndpointMonitorIfNeeded(const EndpointDesc* endpoint, EndpointHandle handle)
 {
     if ((endpoint->loc.locType != ENDPOINT_LOC_TYPE_DEVICE)
-        || ((endpoint->protocol != COMM_PROTOCOL_UBC_CTP) && (endpoint->protocol != COMM_PROTOCOL_UBC_TP))) {
+        || ((endpoint->protocol != COMM_PROTOCOL_UB_CTP) && (endpoint->protocol != COMM_PROTOCOL_UBC_TP))) {
         return HCCL_SUCCESS;
     }
 

@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "ubg_endpoint.h"
+#include "ub_rtp_endpoint.h"
 #include "endpoint_mgr.h"
 #include "log.h"
 #include "hccl/hccl_res.h"
@@ -17,9 +17,9 @@
 
 namespace hcomm {
 
-UbgEndpoint::UbgEndpoint(const EndpointDesc& endpointDesc) : UboeUbgEndpointHelper(endpointDesc) {}
+UbRtpEndpoint::UbRtpEndpoint(const EndpointDesc& endpointDesc) : UboeUbRtpEndpointHelper(endpointDesc) {}
 
-HcclResult UbgEndpoint::Init()
+HcclResult UbRtpEndpoint::Init()
 {
     HCCL_INFO("[%s] localEndpoint protocol[%d]", __func__, endpointDesc_.protocol);
 
@@ -27,12 +27,12 @@ HcclResult UbgEndpoint::Init()
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType != DevType::DEV_TYPE_950 && deviceType != DevType::DEV_TYPE_960) {
         HCCL_ERROR(
-            "[%s] UBG protocol only support DEV_TYPE_950/960, current deviceType=%d", __func__,
+            "[%s] UB_RTP protocol only support DEV_TYPE_950/960, current deviceType=%d", __func__,
             static_cast<int>(deviceType));
         return HCCL_E_NOT_SUPPORT;
     }
 
-    // UBG 直接从 EID type CommAddr 获取地址，不做 IP→EID 转换
+    // UB_RTP 直接从 EID type CommAddr 获取地址，不做 IP→EID 转换
     Hccl::IpAddress eidAddr{};
     CHK_RET(CommAddrToIpAddress(endpointDesc_.commAddr, eidAddr));
 
@@ -43,7 +43,7 @@ HcclResult UbgEndpoint::Init()
     endpointDesc_.loc.device.devPhyId = devPhyId;
 
     Hccl::HccpHdcManager::GetInstance().Init(deviceLogicId);
-    // UBG 直接用 EID 地址获取 rdmaHandle，不做 IP→EID 查询
+    // UB_RTP 直接用 EID 地址获取 rdmaHandle，不做 IP→EID 查询
     auto& rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
     EXCEPTION_CATCH(
         ctxHandle_ = static_cast<void*>(rdmaHandleMgr.GetByIp(endpointDesc_.loc.device.devPhyId, eidAddr)),

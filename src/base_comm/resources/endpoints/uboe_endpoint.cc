@@ -18,7 +18,7 @@
 
 namespace hcomm {
 
-UboeEndpoint::UboeEndpoint(const EndpointDesc& endpointDesc) : UboeUbgEndpointHelper(endpointDesc) {}
+UboeEndpoint::UboeEndpoint(const EndpointDesc& endpointDesc) : UboeUbRtpEndpointHelper(endpointDesc) {}
 
 UboeEndpoint::~UboeEndpoint() noexcept { ProcRegedMemMgrCache::GetInstance().Release(cacheKey_); }
 
@@ -47,7 +47,7 @@ HcclResult UboeEndpoint::Init()
         "%s success, devPhyId[%u], eidAddress[%s], ctxHandle[%p]", __func__, devPhyId, eidAddress.Describe().c_str(),
         ctxHandle_);
 
-    cacheKey_ = MemMgrCacheKey{devPhyId, COMM_PROTOCOL_UBC_CTP, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
+    cacheKey_ = MemMgrCacheKey{devPhyId, COMM_PROTOCOL_UB_CTP, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
     auto& cache = ProcRegedMemMgrCache::GetInstance();
     EXCEPTION_CATCH(
         regedMemMgr_ = cache.GetOrCreate(

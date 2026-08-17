@@ -7,9 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-
-#ifndef UBOE_UBG_ENDPOINT_HELPER_H
-#define UBOE_UBG_ENDPOINT_HELPER_H
+#ifndef UBOE_UB_RTP_ENDPOINT_HELPER_H
+#define UBOE_UB_RTP_ENDPOINT_HELPER_H
 
 #include <cstdint>
 #include <memory>
@@ -18,13 +17,13 @@
 
 namespace hcomm {
 /**
- * @note 职责：UBOE/UBG协议Endpoint的公共基类，提供内存管理和Socket监听等公共实现。
- *       子类只需实现 Init() 完成各自的地址获取（UBOE做IP→EID转换，UBG直接使用EID）。
+ * @note 职责：UBOE/UB_RTP协议Endpoint的公共基类，提供内存管理和Socket监听等公共实现。
+ *       子类只需实现 Init() 完成各自的地址获取（UBOE做IP→EID转换，UB_RTP直接使用EID）。
  */
-class UboeUbgEndpointHelper : public Endpoint {
+class UboeUbRtpEndpointHelper : public Endpoint {
 public:
-    explicit UboeUbgEndpointHelper(const EndpointDesc& endpointDesc);
-    ~UboeUbgEndpointHelper() = default;
+    explicit UboeUbRtpEndpointHelper(const EndpointDesc& endpointDesc);
+    ~UboeUbRtpEndpointHelper() = default;
 
     HcclResult ServerSocketListen(const uint32_t port) override;
     HcclResult ServerSocketStopListen(const uint32_t port) override;
@@ -41,4 +40,4 @@ public:
 
 } // namespace hcomm
 
-#endif // UBOE_UBG_ENDPOINT_HELPER_H
+#endif // UBOE_UB_RTP_ENDPOINT_HELPER_H

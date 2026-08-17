@@ -32,7 +32,7 @@ int PodGetRootinfoLen(size_t* len)
 
 typedef struct rule {
     unsigned int mainboardId;
-    int level; // 网络层级  0 mesh, 1 scaleup, 2 UBOE/UBG, 3 ROCE
+    int level; // 网络层级  0 mesh, 1 scaleup, 2 UBOE/UB_RTP, 3 ROCE
     int dieId; // io die id NPU有两个iodie, 0和1
     int ueId;  // UBEntity ID， 用于定义UB实体的功能
     int ports[MAX_PORT_NUM];

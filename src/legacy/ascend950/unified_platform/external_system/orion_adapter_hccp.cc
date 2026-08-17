@@ -1834,7 +1834,7 @@ static HrtRaUbJettyImportedOutParam ImportJetty(
     info.in.ub.expImportCfg = cfg;
 
     if (protocol != TpProtocol::TP && protocol != TpProtocol::CTP && protocol != TpProtocol::UBOE
-        && protocol != TpProtocol::UBG) {
+        && protocol != TpProtocol::UB_RTP) {
         MACRO_THROW(
             NetworkApiException,
             StringFormat("[%s] failed, tp protocol[%s] is not expected.", __func__, protocol.Describe().c_str()));
@@ -2505,8 +2505,8 @@ RaUbGetTpInfoAsync(const RdmaHandle rdmaHandle, const RaUbGetTpInfoParam& param,
     const auto& tpProtocol = param.tpProtocol;
 
     struct GetTpCfg cfg {};
-    // UBG与TP同属RTP传输，需使能rtp位；UBOE走独立uboe位
-    cfg.flag.bs.rtp = (tpProtocol == TpProtocol::TP || tpProtocol == TpProtocol::UBG) ? 1 : 0;
+    // UB_RTP与TP同属RTP传输，需使能rtp位；UBOE走独立uboe位
+    cfg.flag.bs.rtp = (tpProtocol == TpProtocol::TP || tpProtocol == TpProtocol::UB_RTP) ? 1 : 0;
     cfg.flag.bs.ctp = tpProtocol == TpProtocol::CTP ? 1 : 0;
     cfg.flag.bs.uboe = (tpProtocol == TpProtocol::UBOE) ? 1 : 0;
     cfg.transMode = TransportModeT::CONN_RM; // 当前只使用RM Jetty
@@ -2546,8 +2546,8 @@ void RaUbGetTpInfo(const RdmaHandle rdmaHandle, const RaUbGetTpInfoParam& param,
     const auto& tpProtocol = param.tpProtocol;
 
     struct GetTpCfg cfg {};
-    // UBG与TP同属RTP传输，需使能rtp位；UBOE走独立uboe位
-    cfg.flag.bs.rtp = (tpProtocol == TpProtocol::TP || tpProtocol == TpProtocol::UBG) ? 1 : 0;
+    // UB_RTP与TP同属RTP传输，需使能rtp位；UBOE走独立uboe位
+    cfg.flag.bs.rtp = (tpProtocol == TpProtocol::TP || tpProtocol == TpProtocol::UB_RTP) ? 1 : 0;
     cfg.flag.bs.ctp = tpProtocol == TpProtocol::CTP ? 1 : 0;
     cfg.transMode = TransportModeT::CONN_RM; // 当前只使用RM Jetty
     cfg.localEid = IpAddressToHccpEid(locAddr);
@@ -2605,7 +2605,7 @@ static RequestHandle ImportJettyAsync(
     info->in.ub.expImportCfg = cfg;
 
     if (protocol != TpProtocol::TP && protocol != TpProtocol::CTP && protocol != TpProtocol::UBOE
-        && protocol != TpProtocol::UBG) {
+        && protocol != TpProtocol::UB_RTP) {
         MACRO_THROW(
             NetworkApiException,
             StringFormat("[%s] failed, tp protocol[%s] is not expected, %s.", __func__, protocol.Describe().c_str()));

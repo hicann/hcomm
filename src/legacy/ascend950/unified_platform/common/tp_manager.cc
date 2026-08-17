@@ -141,7 +141,7 @@ namespace {
     static uint32_t BuildGetTpAttrBitmapForSlPolicy(TpProtocol tpProtocol)
     {
         uint32_t bitmap = (1U << kTpAttrSlAvailableBit) | kTpAttrBitmapSl;
-        if (tpProtocol == TpProtocol::UBOE || tpProtocol == TpProtocol::UBG) {
+        if (tpProtocol == TpProtocol::UBOE || tpProtocol == TpProtocol::UB_RTP) {
             bitmap |= kTpAttrBitmapDscp | (1U << kTpAttrDscpConfigModeBit);
         }
         return bitmap;
@@ -260,7 +260,7 @@ namespace {
             isSync, ctxHandle, tpHandle, kTpAttrBitmapUboeNetWithDscp, netAttr, "CommitUboeNetAttrsToTpAttr");
     }
 
-    static HcclResult CommitUbgDscpToTpAttr(const bool isSync, RdmaHandle ctxHandle, uint64_t tpHandle, uint8_t dscp)
+    static HcclResult CommitUbRtpDscpToTpAttr(const bool isSync, RdmaHandle ctxHandle, uint64_t tpHandle, uint8_t dscp)
     {
         if (tpHandle == 0U || !ctxHandle) {
             return HcclResult::HCCL_E_INTERNAL;
@@ -271,7 +271,7 @@ namespace {
         HCCL_INFO(
             "[TpManager][%s] tpHandle[%llu] dscp[%u] attrBitmap[0x%x].", __func__, tpHandle,
             static_cast<unsigned>(dscpAttr.dscp), kTpAttrBitmapDscp);
-        return SetTpAttrByPath(isSync, ctxHandle, tpHandle, kTpAttrBitmapDscp, dscpAttr, "CommitUbgDscpToTpAttr");
+        return SetTpAttrByPath(isSync, ctxHandle, tpHandle, kTpAttrBitmapDscp, dscpAttr, "CommitUbRtpDscpToTpAttr");
     }
 
     static HcclResult CommitTpAttrsAfterSlMapping(
@@ -294,25 +294,25 @@ namespace {
                 static_cast<int>(isSync), param.locAddr.Describe().c_str());
             return HcclResult::HCCL_E_INTERNAL;
         }
-        // TP / UBOE / UBG：将 TP QoS/SL 策略得到的 mapped SL 写回 TP；CTP 不向 TP 写 SL（与 Next TpMgr 一致）
+        // TP / UBOE / UB_RTP：将 TP QoS/SL 策略得到的 mapped SL 写回 TP；CTP 不向 TP 写 SL（与 Next TpMgr 一致）
         if (param.tpProtocol == TpProtocol::TP || param.tpProtocol == TpProtocol::UBOE
-            || param.tpProtocol == TpProtocol::UBG) {
+            || param.tpProtocol == TpProtocol::UB_RTP) {
             CHK_RET(CommitMappedSlToTpAttr(isSync, ctxHandle, tpHandle, mappedSl));
         }
-        if (param.tpProtocol != TpProtocol::UBOE && param.tpProtocol != TpProtocol::UBG) {
+        if (param.tpProtocol != TpProtocol::UBOE && param.tpProtocol != TpProtocol::UB_RTP) {
             return HcclResult::HCCL_SUCCESS;
         }
-        if (param.tpProtocol == TpProtocol::UBG) {
-            // UBG：仅当 dscp mode == 0 时下发 DSCP。
+        if (param.tpProtocol == TpProtocol::UB_RTP) {
+            // UB_RTP：仅当 dscp mode == 0 时下发 DSCP。
             if (tpAttr.dscpConfigMode != 0) {
                 return HcclResult::HCCL_SUCCESS;
             }
 
             uint8_t dscp = kUboeDefaultDscp;
             (void)TpQosGetDscpByQosFromHccnCfg(devPhyId, param.qos, dscp);
-            CHK_RET(CommitUbgDscpToTpAttr(isSync, ctxHandle, tpHandle, dscp));
+            CHK_RET(CommitUbRtpDscpToTpAttr(isSync, ctxHandle, tpHandle, dscp));
             HCCL_INFO(
-                "[TpManager][%s] UBG dscp committed: tpHandle[%llu] dscpAfter[%u].", __func__, tpHandle,
+                "[TpManager][%s] UB_RTP dscp committed: tpHandle[%llu] dscpAfter[%u].", __func__, tpHandle,
                 static_cast<unsigned>(dscp));
             return HcclResult::HCCL_SUCCESS;
         }
@@ -382,7 +382,7 @@ bool TpManager::CheckRequestResult(RequestHandle& reqHandle) const
 HcclResult CheckTpProtocol(const TpProtocol tpProtocol)
 {
     if (tpProtocol != TpProtocol::CTP && tpProtocol != TpProtocol::TP && tpProtocol != TpProtocol::UBOE
-        && tpProtocol != TpProtocol::UBG) {
+        && tpProtocol != TpProtocol::UB_RTP) {
         HCCL_WARNING("[TpManager][%s] failed, tpProtocol[%d] is not supported.", __func__, tpProtocol);
         return HcclResult::HCCL_E_NOT_SUPPORT;
     }
@@ -978,8 +978,8 @@ TpManager::InfoCtxMap& TpManager::GetInfoCtxMap(const TpProtocol tpProtocol)
             return tpInfoMap;
         case TpProtocol::UBOE:
             return uboeInfoMap;
-        case TpProtocol::UBG:
-            return ubgInfoMap;
+        case TpProtocol::UB_RTP:
+            return ubRtpInfoMap;
         default:
             return tpInfoMap;
     }
@@ -994,8 +994,8 @@ TpManager::ReqCtxMap& TpManager::GetReqCtxMap(const TpProtocol tpProtocol)
             return tpReqMap;
         case TpProtocol::UBOE:
             return uboeReqMap;
-        case TpProtocol::UBG:
-            return ubgReqMap;
+        case TpProtocol::UB_RTP:
+            return ubRtpReqMap;
         default:
             return tpReqMap;
     }
@@ -1010,8 +1010,8 @@ std::mutex& TpManager::GetInfoCtxMutex(const TpProtocol tpProtocol)
             return tpInfoMutex;
         case TpProtocol::UBOE:
             return uboeInfoMutex;
-        case TpProtocol::UBG:
-            return ubgInfoMutex;
+        case TpProtocol::UB_RTP:
+            return ubRtpInfoMutex;
         default:
             return tpInfoMutex;
     }
@@ -1026,8 +1026,8 @@ std::mutex& TpManager::GetReqCtxMutex(const TpProtocol tpProtocol)
             return tpReqMutex;
         case TpProtocol::UBOE:
             return uboeReqMutex;
-        case TpProtocol::UBG:
-            return ubgReqMutex;
+        case TpProtocol::UB_RTP:
+            return ubRtpReqMutex;
         default:
             return tpReqMutex;
     }

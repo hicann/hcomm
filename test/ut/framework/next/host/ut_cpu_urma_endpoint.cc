@@ -53,7 +53,7 @@ protected:
     {
         std::cout << "A Test case in CpuUrmaEndpointTest SetUP" << std::endl;
         Hccl::IpAddress localIp("1.0.0.0");
-        endpointDesc.protocol = COMM_PROTOCOL_UBC_CTP;
+        endpointDesc.protocol = COMM_PROTOCOL_UB_CTP;
         endpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
         endpointDesc.commAddr.addr = localIp.GetBinaryAddress().addr;
         endpointDesc.loc.locType = ENDPOINT_LOC_TYPE_HOST;

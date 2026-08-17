@@ -57,7 +57,7 @@ void ConnLocalNotifyManager::ApplyFor(RankId remoteRankId, const LinkData& linkD
                 continue;
             } else if (
                 linkProtocol == LinkProtocol::UB_CTP || linkProtocol == LinkProtocol::UB_TP
-                || linkProtocol == LinkProtocol::UBOE || linkProtocol == LinkProtocol::UBG) {
+                || linkProtocol == LinkProtocol::UBOE || linkProtocol == LinkProtocol::UB_RTP) {
                 RdmaHandle rdmaHandle = RdmaHandleManager::GetInstance().Get(
                     comm->GetDevicePhyId(), linkData.GetLocalPort(), linkProtocol);
                 notifyPool[remoteRankId][linkData][i]

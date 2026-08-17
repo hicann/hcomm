@@ -32,13 +32,15 @@ typedef enum {
  * @brief 网络传输协议类型枚举
  */
 typedef enum {
-    HCCL_PROTO_TYPE_RESERVED = -1, ///< 保留协议类型
-    HCCL_PROTO_TYPE_BUS = 0,       ///< 设备间总线直连协议
-    HCCL_PROTO_TYPE_TCP = 1,       ///< 标准TCP协议
-    HCCL_PROTO_TYPE_ROCE = 2,      ///< RDMA over Converged Ethernet
-    HCCL_PROTO_TYPE_UBC_CTP = 3,   ///< 华为统一总线UBC_CTP
-    HCCL_PROTO_TYPE_UBC_TP = 4,    ///< 华为统一总线UBC_TP
-    HCCL_PROTO_TYPE_UBG_TP = 5     ///< 华为统一总线UBG_TP
+    HCCL_PROTO_TYPE_RESERVED = -1,                    ///< 保留协议类型
+    HCCL_PROTO_TYPE_BUS = 0,                          ///< 设备间总线直连协议
+    HCCL_PROTO_TYPE_TCP = 1,                          ///< 标准TCP协议
+    HCCL_PROTO_TYPE_ROCE = 2,                         ///< RDMA over Converged Ethernet
+    HCCL_PROTO_TYPE_UB_CTP = 3,                       ///< 华为统一总线UB_CTP
+    HCCL_PROTO_TYPE_UBC_CTP = HCCL_PROTO_TYPE_UB_CTP, ///< 兼容旧协议名UBC_CTP
+    HCCL_PROTO_TYPE_UBC_TP = 4,                       ///< 华为统一总线UBC_TP
+    HCCL_PROTO_TYPE_UB_RTP = 5,                       ///< 华为统一总线UB_RTP
+    HCCL_PROTO_TYPE_UBG_TP = HCCL_PROTO_TYPE_UB_RTP   ///< 兼容旧协议名UBG_TP
 } HcclProtoType;
 
 /**

@@ -30,7 +30,7 @@ HcclResult CcuCreateTransport(
         ccuConnectionInfo.channelInfo.dieId, cclBufferInfo.addr, cclBufferInfo.size);
     TRY_CATCH_RETURN(
         std::unique_ptr<CcuConnection> ccuConnection;
-        if (ccuConnectionInfo.type == CcuTransport::CcuConnectionType::UBC_CTP) {
+        if (ccuConnectionInfo.type == CcuTransport::CcuConnectionType::UB_CTP) {
             ccuConnection = std::make_unique<CcuCtpConnection>(
                 ccuConnectionInfo.locAddr, ccuConnectionInfo.rmtAddr, ccuConnectionInfo.channelInfo,
                 ccuConnectionInfo.ccuJettys);

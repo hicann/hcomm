@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "aicpu_ts_uboe_ubg_channel_helper.h"
+#include "aicpu_ts_uboe_ub_rtp_channel_helper.h"
 #include "endpoint.h"
 #include "orion_adpt_utils.h"
 
@@ -26,13 +26,13 @@ namespace hcomm {
 
 constexpr u32 SERVER_LISTEN_PORT = 60001;
 
-AicpuTsUboeUbgChannelHelper::AicpuTsUboeUbgChannelHelper(
+AicpuTsUboeUbRtpChannelHelper::AicpuTsUboeUbRtpChannelHelper(
     EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc)
     : endpointHandle_(endpointHandle),
       channelDesc_(channelDesc)
 {}
 
-AicpuTsUboeUbgChannelHelper::~AicpuTsUboeUbgChannelHelper()
+AicpuTsUboeUbRtpChannelHelper::~AicpuTsUboeUbRtpChannelHelper()
 {
     if (channelDesc_.socket == nullptr && socket_ != nullptr) {
         SocketMgr::GetInstance(devicePhyId_).PutSocket(socketConfig_, socket_);
@@ -40,7 +40,7 @@ AicpuTsUboeUbgChannelHelper::~AicpuTsUboeUbgChannelHelper()
     }
 }
 
-HcclResult AicpuTsUboeUbgChannelHelper::ParseInputParam()
+HcclResult AicpuTsUboeUbRtpChannelHelper::ParseInputParam()
 {
     // 1. 从 endpointHandle_，获得 localEp_ 和 rdmaHandle_
     Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle_);
@@ -48,7 +48,7 @@ HcclResult AicpuTsUboeUbgChannelHelper::ParseInputParam()
     localEp_ = localEpPtr->GetEndpointDesc();
     rdmaHandle_ = localEpPtr->GetRdmaHandle();
 
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper][%s] localProtocol[%d]", __func__, localEp_.protocol);
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper][%s] localProtocol[%d]", __func__, localEp_.protocol);
 
     // 2. 从 channelDesc_，获得 remoteEp_, socket_ 和 notifyNum
     remoteEp_ = channelDesc_.remoteEndpoint;
@@ -58,19 +58,20 @@ HcclResult AicpuTsUboeUbgChannelHelper::ParseInputParam()
 
     if (channelDesc_.exchangeAllMems) {
         // 3. Get memHandles from endpoint
-        HCCL_INFO("[AicpuTsUboeUbgChannelHelper][%s] exchangeAllMems == True. Get memHandles from endpoint.", __func__);
+        HCCL_INFO(
+            "[AicpuTsUboeUbRtpChannelHelper][%s] exchangeAllMems == True. Get memHandles from endpoint.", __func__);
         std::shared_ptr<Hccl::LocalUbRmaBuffer>* memHandles = nullptr;
         uint32_t memHandleNum = 0;
         CHK_RET(static_cast<HcclResult>(
             HcommMemGetAllMemHandles(endpointHandle_, reinterpret_cast<void**>(&memHandles), &memHandleNum)));
-        HCCL_INFO("[AicpuTsUboeUbgChannelHelper][%s] Got memHandleNum[%u].", __func__, memHandleNum);
+        HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper][%s] Got memHandleNum[%u].", __func__, memHandleNum);
         for (uint32_t i = 0; i < memHandleNum; ++i) {
             std::shared_ptr<Hccl::LocalUbRmaBuffer>& localUbRmaBuffer = memHandles[i];
             CHK_SMART_PTR_NULL(localUbRmaBuffer);
             Hccl::Buffer* buf = localUbRmaBuffer->GetBuf();
             CHK_PTR_NULL(buf);
             HCCL_INFO(
-                "[AicpuTsUboeUbgChannelHelper][%s] Got memHandle No.%u: addr[0x%llx], size[0x%llx], "
+                "[AicpuTsUboeUbRtpChannelHelper][%s] Got memHandle No.%u: addr[0x%llx], size[0x%llx], "
                 "memType[%d], memInfo[%s].",
                 __func__, i, static_cast<unsigned long long>(localUbRmaBuffer->GetAddr()),
                 static_cast<unsigned long long>(localUbRmaBuffer->GetSize()), static_cast<int>(buf->GetMemType()),
@@ -80,22 +81,22 @@ HcclResult AicpuTsUboeUbgChannelHelper::ParseInputParam()
     } else {
         // 3. 从 channelDesc 的 memHandle 填充 commonRes_.bufferVec
         HCCL_INFO(
-            "[AicpuTsUboeUbgChannelHelper][%s] exchangeAllMems == false. Get memHandles from channelDesc.", __func__);
+            "[AicpuTsUboeUbRtpChannelHelper][%s] exchangeAllMems == false. Get memHandles from channelDesc.", __func__);
         CHK_RET(MakeRmaBufferVecFromMemHandles(
-            channelDesc_.memHandles, channelDesc_.memHandleNum, commonRes_.bufferVec, "AicpuTsUboeUbgChannelHelper"));
+            channelDesc_.memHandles, channelDesc_.memHandleNum, commonRes_.bufferVec, "AicpuTsUboeUbRtpChannelHelper"));
     }
 
     return HCCL_SUCCESS;
 }
 
-void AicpuTsUboeUbgChannelHelper::BuildConn()
+void AicpuTsUboeUbRtpChannelHelper::BuildConn()
 {
     if (BuildConnection() != HCCL_SUCCESS) {
-        HCCL_ERROR("[AicpuTsUboeUbgChannelHelper::%s] BuildConnection failed", __func__);
+        HCCL_ERROR("[AicpuTsUboeUbRtpChannelHelper::%s] BuildConnection failed", __func__);
     }
 }
 
-HcclResult AicpuTsUboeUbgChannelHelper::BuildNotify()
+HcclResult AicpuTsUboeUbRtpChannelHelper::BuildNotify()
 {
     localNotifies_.clear();
     commonRes_.notifyVec.clear();
@@ -109,13 +110,14 @@ HcclResult AicpuTsUboeUbgChannelHelper::BuildNotify()
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsUboeUbgChannelHelper::BuildDrainResource()
+HcclResult AicpuTsUboeUbRtpChannelHelper::BuildDrainResource()
 {
     // 申请创建channel drain阻塞等待的相关资源
     // 申请notify作为read的落点
     bool devUsed = true;
     EXCEPTION_CATCH(drainNotify_ = std::make_unique<Hccl::UbLocalNotify>(rdmaHandle_, devUsed), return HCCL_E_PTR);
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper][%s] drainNotify created: %s", __func__, drainNotify_->Describe().c_str());
+    HCCL_INFO(
+        "[AicpuTsUboeUbRtpChannelHelper][%s] drainNotify created: %s", __func__, drainNotify_->Describe().c_str());
 
     // 常量1内存供远端读取
     u32 notifySize = Hccl::DevCapability::GetInstance().GetNotifySize();
@@ -129,18 +131,18 @@ HcclResult AicpuTsUboeUbgChannelHelper::BuildDrainResource()
 
     EXCEPTION_CATCH(drainBuffer_ = std::make_unique<Hccl::LocalUbRmaBuffer>(constMem, rdmaHandle_), return HCCL_E_PTR);
     HCCL_INFO(
-        "[AicpuTsUboeUbgChannelHelper][%s] drain buffer created: addr[0x%llx], size[%zu]", __func__,
+        "[AicpuTsUboeUbRtpChannelHelper][%s] drain buffer created: addr[0x%llx], size[%zu]", __func__,
         static_cast<unsigned long long>(drainBuffer_->GetAddr()), drainBuffer_->GetSize());
 
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsUboeUbgChannelHelper::BuildSocket()
+HcclResult AicpuTsUboeUbRtpChannelHelper::BuildSocket()
 {
     if (socket_ != nullptr) {
         return HCCL_SUCCESS;
     }
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper][%s] socket ptr is NULL, rebuildSocket", __func__);
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper][%s] socket ptr is NULL, rebuildSocket", __func__);
 
     Hccl::IpAddress ipaddr{};
     CHK_RET(CommAddrToIpAddress(localEp_.commAddr, ipaddr));
@@ -153,12 +155,13 @@ HcclResult AicpuTsUboeUbgChannelHelper::BuildSocket()
             socketHandle, ipaddr, SERVER_LISTEN_PORT, ipaddr, "server", Hccl::SocketRole::SERVER,
             Hccl::NicType::DEVICE_NIC_TYPE),
         return HCCL_E_PARA);
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper][%s] listen_socket_info[%s]", __func__, serverSocket_->Describe().c_str());
+    HCCL_INFO(
+        "[AicpuTsUboeUbRtpChannelHelper][%s] listen_socket_info[%s]", __func__, serverSocket_->Describe().c_str());
     EXCEPTION_CATCH(serverSocket_->Listen(), return HCCL_E_INTERNAL);
 
     Hccl::LinkData linkData = BuildDefaultLinkData();
     CHK_RET(EndpointDescPairToLinkData(localEp_, remoteEp_, linkData));
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper][%s] built linkData: %s", __func__, linkData.Describe().c_str());
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper][%s] built linkData: %s", __func__, linkData.Describe().c_str());
     std::string socketTag
         = (channelDesc_.channelName != nullptr) ? std::string(channelDesc_.channelName) : "AUTOMATIC_SOCKET_TAG";
     bool noRankId = true;
@@ -169,13 +172,13 @@ HcclResult AicpuTsUboeUbgChannelHelper::BuildSocket()
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsUboeUbgChannelHelper::GetNotifyNum(uint32_t* notifyNum) const
+HcclResult AicpuTsUboeUbRtpChannelHelper::GetNotifyNum(uint32_t* notifyNum) const
 {
     *notifyNum = this->notifyNum_;
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsUboeUbgChannelHelper::GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos)
+HcclResult AicpuTsUboeUbRtpChannelHelper::GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos)
 {
     std::lock_guard<std::mutex> lock(remoteMemsMutex_);
     Hccl::RemoteMemCtx<std::unique_ptr<Hccl::RemoteUbRmaBuffer>> remoteMemCtx{
@@ -184,7 +187,7 @@ HcclResult AicpuTsUboeUbgChannelHelper::GetRemoteMems(uint32_t* memNum, CommMem*
     return HCCL_SUCCESS;
 }
 
-bool AicpuTsUboeUbgChannelHelper::IsSocketReady()
+bool AicpuTsUboeUbRtpChannelHelper::IsSocketReady()
 {
     if (socket_ == nullptr) {
         HCCL_ERROR("[%s] socket is nullptr, please check", __func__);
@@ -204,17 +207,17 @@ bool AicpuTsUboeUbgChannelHelper::IsSocketReady()
     return false;
 }
 
-bool AicpuTsUboeUbgChannelHelper::IsResReady()
+bool AicpuTsUboeUbRtpChannelHelper::IsResReady()
 {
     for (auto& it : commonRes_.connVec) {
         if (it == nullptr) {
             Hccl::THROW<Hccl::InternalException>(
-                "[AicpuTsUboeUbgChannelHelper::%s] failed, connection pointer is nullptr", __func__);
+                "[AicpuTsUboeUbRtpChannelHelper::%s] failed, connection pointer is nullptr", __func__);
         }
         Hccl::RmaConnType connType = it->GetRmaConnType();
         if (connType != Hccl::RmaConnType::UB) {
             Hccl::THROW<Hccl::InternalException>(
-                "[AicpuTsUboeUbgChannelHelper::%s] connection type[%s] is not ub", __func__,
+                "[AicpuTsUboeUbRtpChannelHelper::%s] connection type[%s] is not ub", __func__,
                 connType.Describe().c_str());
         }
 
@@ -223,93 +226,95 @@ bool AicpuTsUboeUbgChannelHelper::IsResReady()
             return false;
         }
     }
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] all resources ready.", __func__);
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] all resources ready.", __func__);
     return true;
 }
 
-bool AicpuTsUboeUbgChannelHelper::IsConnsReady()
+bool AicpuTsUboeUbRtpChannelHelper::IsConnsReady()
 {
     for (u32 i = 0; i < connNum_; i++) {
         if (commonRes_.connVec[i]->GetStatus() != Hccl::RmaConnStatus::READY) {
             return false;
         }
     }
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] conns are ready.", __func__);
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] conns are ready.", __func__);
     return true;
 }
 
-void AicpuTsUboeUbgChannelHelper::NotifyVecPack(Hccl::BinaryStream& binaryStream)
+void AicpuTsUboeUbRtpChannelHelper::NotifyVecPack(Hccl::BinaryStream& binaryStream)
 {
     binaryStream << notifyNum_;
     u32 pos = 0;
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] pack notify size[%d]", __func__, commonRes_.notifyVec.size());
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] pack notify size[%d]", __func__, commonRes_.notifyVec.size());
     for (auto& it : commonRes_.notifyVec) {
         binaryStream << pos;
         std::unique_ptr<Hccl::Serializable> dto = it->GetExchangeDto();
         dto->Serialize(binaryStream);
         HCCL_INFO(
-            "[AicpuTsUboeUbgChannelHelper::%s] pack notify pos=%u, dto %s", __func__, pos, dto->Describe().c_str());
+            "[AicpuTsUboeUbRtpChannelHelper::%s] pack notify pos=%u, dto %s", __func__, pos, dto->Describe().c_str());
         pos++;
     }
 }
 
-void AicpuTsUboeUbgChannelHelper::BufferVecPack(
+void AicpuTsUboeUbRtpChannelHelper::BufferVecPack(
     Hccl::BinaryStream& binaryStream, std::vector<Hccl::LocalRmaBuffer*>& bufferVec)
 {
     binaryStream << static_cast<u32>(bufferVec.size());
     u32 pos = 0;
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] pack buffer size[%d]", __func__, bufferVec.size());
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] pack buffer size[%d]", __func__, bufferVec.size());
     for (auto& it : bufferVec) {
         binaryStream << pos;
         if (it != nullptr) {
             std::unique_ptr<Hccl::Serializable> dto = it->GetExchangeDto();
             dto->Serialize(binaryStream);
             HCCL_INFO(
-                "[AicpuTsUboeUbgChannelHelper::%s] pack buffer pos=%u dto %s", __func__, pos, dto->Describe().c_str());
+                "[AicpuTsUboeUbRtpChannelHelper::%s] pack buffer pos=%u dto %s", __func__, pos,
+                dto->Describe().c_str());
         } else {
             Hccl::ExchangeUbBufferDto exchangeDto;
             exchangeDto.Serialize(binaryStream);
             HCCL_INFO(
-                "[AicpuTsUboeUbgChannelHelper::%s] pack buffer pos=%u, dto is null %s", __func__, pos,
+                "[AicpuTsUboeUbRtpChannelHelper::%s] pack buffer pos=%u, dto is null %s", __func__, pos,
                 exchangeDto.Describe().c_str());
         }
         pos++;
     }
 }
 
-void AicpuTsUboeUbgChannelHelper::DrainBufferPack(Hccl::BinaryStream& binaryStream)
+void AicpuTsUboeUbRtpChannelHelper::DrainBufferPack(Hccl::BinaryStream& binaryStream)
 {
     // 只需交换常量buffer信息供对端读
     HCCL_INFO("start pack drain buffer");
     if (drainBuffer_ != nullptr) { // 非空的buffer，从buffer中获取 dto
         std::unique_ptr<Hccl::Serializable> dto = drainBuffer_->GetExchangeDto();
         dto->Serialize(binaryStream);
-        HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] pack drain buffer dto %s", __func__, dto->Describe().c_str());
+        HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] pack drain buffer dto %s", __func__, dto->Describe().c_str());
     } else { // 空的buffer，dto所有字段为0(size=0)
         Hccl::ExchangeUbBufferDto exchangeDto;
         exchangeDto.Serialize(binaryStream);
         HCCL_INFO(
-            "[AicpuTsUboeUbgChannelHelper::%s] pack drain buffer dto is null %s", __func__,
+            "[AicpuTsUboeUbRtpChannelHelper::%s] pack drain buffer dto is null %s", __func__,
             exchangeDto.Describe().c_str());
     }
 }
 
-void AicpuTsUboeUbgChannelHelper::ConnVecPack(Hccl::BinaryStream& binaryStream)
+void AicpuTsUboeUbRtpChannelHelper::ConnVecPack(Hccl::BinaryStream& binaryStream)
 {
     binaryStream << connNum_;
     u32 pos = 0;
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] pack conn size[%d]", __func__, commonRes_.connVec.size());
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] pack conn size[%d]", __func__, commonRes_.connVec.size());
     for (auto& it : commonRes_.connVec) {
         binaryStream << pos;
         std::unique_ptr<Hccl::Serializable> dto = it->GetExchangeDto();
         dto->Serialize(binaryStream);
         HCCL_INFO(
-            "[AicpuTsUboeUbgChannelHelper::%s] pack connection pos=%u, dto %s", __func__, pos, dto->Describe().c_str());
+            "[AicpuTsUboeUbRtpChannelHelper::%s] pack connection pos=%u, dto %s", __func__, pos,
+            dto->Describe().c_str());
         pos++;
     }
 }
 
-void AicpuTsUboeUbgChannelHelper::SendDataSize()
+void AicpuTsUboeUbRtpChannelHelper::SendDataSize()
 {
     sendData_.clear();
     bufferNum_ = commonRes_.bufferVec.size();
@@ -329,31 +334,31 @@ void AicpuTsUboeUbgChannelHelper::SendDataSize()
     // 发送数据包尺寸
     socket_->SendAsync(&sendSize, sizeof(sendSize));
     HCCL_INFO(
-        "[AicpuTsUboeUbgChannelHelper::%s] Send size[%u] of data success. [%zu] bytes sent.", __func__, sendSize,
+        "[AicpuTsUboeUbRtpChannelHelper::%s] Send size[%u] of data success. [%zu] bytes sent.", __func__, sendSize,
         sizeof(sendSize));
 }
 
-void AicpuTsUboeUbgChannelHelper::RecvDataSize()
+void AicpuTsUboeUbRtpChannelHelper::RecvDataSize()
 {
     // 接收数据包尺寸
     socket_->RecvAsync(reinterpret_cast<u8*>(&recvDataSize_), sizeof(recvDataSize_));
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] Receive Data Size", __func__);
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] Receive Data Size", __func__);
 }
 
-void AicpuTsUboeUbgChannelHelper::SendExchangeData()
+void AicpuTsUboeUbRtpChannelHelper::SendExchangeData()
 {
     socket_->SendAsync(sendData_.data(), sendData_.size());
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] send data, size=%llu", __func__, sendData_.size());
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] send data, size=%llu", __func__, sendData_.size());
 }
 
-void AicpuTsUboeUbgChannelHelper::RecvExchangeData()
+void AicpuTsUboeUbRtpChannelHelper::RecvExchangeData()
 {
     recvData_.resize(recvDataSize_);
     socket_->RecvAsync(reinterpret_cast<u8*>(recvData_.data()), recvData_.size());
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] recv data", __func__);
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] recv data", __func__);
 }
 
-bool AicpuTsUboeUbgChannelHelper::RecvDataProcess()
+bool AicpuTsUboeUbRtpChannelHelper::RecvDataProcess()
 {
     HCCL_INFO("RecvDataProcess: size=%llu, recvDataSize=%u", recvData_.size(), recvDataSize_);
     Hccl::BinaryStream binaryStream(recvData_);
@@ -363,7 +368,7 @@ bool AicpuTsUboeUbgChannelHelper::RecvDataProcess()
     return ConnVecUnpackProc(binaryStream);
 }
 
-void AicpuTsUboeUbgChannelHelper::RmtBufferVecUnpackProc(
+void AicpuTsUboeUbRtpChannelHelper::RmtBufferVecUnpackProc(
     u32 locNum, Hccl::BinaryStream& binaryStream, RemoteBufferVec& bufferVec, UboeRmtBufType type)
 {
     u32 rmtNum;
@@ -372,7 +377,7 @@ void AicpuTsUboeUbgChannelHelper::RmtBufferVecUnpackProc(
         MACRO_THROW(
             Hccl::InvalidParamsException,
             Hccl::StringFormat(
-                "[AicpuTsUboeUbgChannelHelper][RmtBufferVecUnpackProc] rmtNum[%u] exceeds limit[%u]", rmtNum,
+                "[AicpuTsUboeUbRtpChannelHelper][RmtBufferVecUnpackProc] rmtNum[%u] exceeds limit[%u]", rmtNum,
                 MAX_BUFFER_NUM));
     }
 
@@ -397,24 +402,24 @@ void AicpuTsUboeUbgChannelHelper::RmtBufferVecUnpackProc(
     }
 }
 
-void AicpuTsUboeUbgChannelHelper::RmtDrainBufferUnpackProc(Hccl::BinaryStream& binaryStream)
+void AicpuTsUboeUbRtpChannelHelper::RmtDrainBufferUnpackProc(Hccl::BinaryStream& binaryStream)
 {
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] start unpack drain buffer", __func__);
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] start unpack drain buffer", __func__);
     Hccl::ExchangeUbBufferDto dto;
     dto.Deserialize(binaryStream);
 
     if (dto.size == 0) {
         rmtDrainBuffer_ = nullptr;
-        HCCL_WARNING("[AicpuTsUboeUbgChannelHelper::%s] unpack drain buffer dto is null", __func__);
+        HCCL_WARNING("[AicpuTsUboeUbRtpChannelHelper::%s] unpack drain buffer dto is null", __func__);
     } else {
         rmtDrainBuffer_ = std::make_unique<Hccl::RemoteUbRmaBuffer>(rdmaHandle_, dto);
         HCCL_INFO(
-            "[AicpuTsUboeUbgChannelHelper::%s] unpack drain buffer rmtDrainBuffer=%s", __func__,
+            "[AicpuTsUboeUbRtpChannelHelper::%s] unpack drain buffer rmtDrainBuffer=%s", __func__,
             rmtDrainBuffer_->Describe().c_str());
     }
 }
 
-bool AicpuTsUboeUbgChannelHelper::ConnVecUnpackProc(Hccl::BinaryStream& binaryStream)
+bool AicpuTsUboeUbRtpChannelHelper::ConnVecUnpackProc(Hccl::BinaryStream& binaryStream)
 {
     u32 rmtConnNum;
     binaryStream >> rmtConnNum;
@@ -453,19 +458,19 @@ static HcclResult SetUboeModuleDataName(Hccl::ModuleData& module, const std::str
     return HCCL_SUCCESS;
 }
 
-std::vector<char> AicpuTsUboeUbgChannelHelper::GetNotifyUniqueIds()
+std::vector<char> AicpuTsUboeUbRtpChannelHelper::GetNotifyUniqueIds()
 {
     HCCL_INFO("start packing all notify uniqueIds");
     std::vector<char> result(0);
     for (auto& it : commonRes_.notifyVec) {
-        HCCL_INFO("AicpuTsUboeUbgChannelHelper Notify %s", it->Describe().c_str());
+        HCCL_INFO("AicpuTsUboeUbRtpChannelHelper Notify %s", it->Describe().c_str());
         auto uniqueId = it->GetUniqueId();
         result.insert(result.end(), uniqueId.begin(), uniqueId.end());
     }
     return result;
 }
 
-std::vector<char> AicpuTsUboeUbgChannelHelper::GetSingleRmtBufferUniqueId(
+std::vector<char> AicpuTsUboeUbRtpChannelHelper::GetSingleRmtBufferUniqueId(
     u64 addr, u64 size, u32 tokenId, u32 tokenValue, u32 notifyId) const
 {
     Hccl::BinaryStream binaryStream;
@@ -474,14 +479,14 @@ std::vector<char> AicpuTsUboeUbgChannelHelper::GetSingleRmtBufferUniqueId(
     binaryStream << tokenId;
     binaryStream << tokenValue;
     binaryStream << notifyId;
-    HCCL_INFO("AicpuTsUboeUbgChannelHelper RmtBuffer[addr=0x%llx, size=0x%llx, notifyId=%u]", addr, size, notifyId);
+    HCCL_INFO("AicpuTsUboeUbRtpChannelHelper RmtBuffer[addr=0x%llx, size=0x%llx, notifyId=%u]", addr, size, notifyId);
     std::vector<char> result;
     binaryStream.Dump(result);
     return result;
 }
 
 std::vector<char>
-AicpuTsUboeUbgChannelHelper::GetRmtBufferUniqueIds(RemoteBufferVec& bufferVec, UboeRmtBufType type) const
+AicpuTsUboeUbRtpChannelHelper::GetRmtBufferUniqueIds(RemoteBufferVec& bufferVec, UboeRmtBufType type) const
 {
     HCCL_INFO("start packing all remote buffer %s uniqueIds", type.Describe().c_str());
     std::vector<char> result(0);
@@ -490,10 +495,10 @@ AicpuTsUboeUbgChannelHelper::GetRmtBufferUniqueIds(RemoteBufferVec& bufferVec, U
         if (it != nullptr) {
             uniqueId = GetSingleRmtBufferUniqueId(
                 it->GetAddr(), it->GetSize(), it->GetTokenId(), it->GetTokenValue(), it->GetNotifyId());
-            HCCL_INFO("AicpuTsUboeUbgChannelHelper::GetRmtBufferUniqueIds, %s", it->Describe().c_str());
+            HCCL_INFO("AicpuTsUboeUbRtpChannelHelper::GetRmtBufferUniqueIds, %s", it->Describe().c_str());
         } else {
             uniqueId = GetSingleRmtBufferUniqueId(0, 0, 0, 0, UINT32_MAX);
-            HCCL_INFO("AicpuTsUboeUbgChannelHelper::GetRmtBufferUniqueIds, null buffer");
+            HCCL_INFO("AicpuTsUboeUbRtpChannelHelper::GetRmtBufferUniqueIds, null buffer");
         }
         result.insert(result.end(), uniqueId.begin(), uniqueId.end());
     }
@@ -501,7 +506,7 @@ AicpuTsUboeUbgChannelHelper::GetRmtBufferUniqueIds(RemoteBufferVec& bufferVec, U
 }
 
 std::vector<char>
-AicpuTsUboeUbgChannelHelper::GetLocBufferUniqueIds(LocalBufferVec& bufferVec, UboeRmtBufType type) const
+AicpuTsUboeUbRtpChannelHelper::GetLocBufferUniqueIds(LocalBufferVec& bufferVec, UboeRmtBufType type) const
 {
     HCCL_INFO("start packing all local buffer %s uniqueIds", type.Describe().c_str());
     std::vector<char> result(0);
@@ -520,9 +525,9 @@ AicpuTsUboeUbgChannelHelper::GetLocBufferUniqueIds(LocalBufferVec& bufferVec, Ub
     return result;
 }
 
-std::vector<char> AicpuTsUboeUbgChannelHelper::GetDrainUniqueIds() const
+std::vector<char> AicpuTsUboeUbRtpChannelHelper::GetDrainUniqueIds() const
 {
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] start get drain resource uniqueIds", __func__);
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] start get drain resource uniqueIds", __func__);
     std::vector<char> result(0);
     std::vector<char> uniqueId;
 
@@ -532,10 +537,10 @@ std::vector<char> AicpuTsUboeUbgChannelHelper::GetDrainUniqueIds() const
         Hccl::ExchangeUbBufferDto* rawDto = static_cast<Hccl::ExchangeUbBufferDto*>(dto.get());
         uniqueId = GetSingleRmtBufferUniqueId(
             rawDto->addr, rawDto->size, rawDto->tokenId, rawDto->tokenValue, rawDto->notifyId);
-        HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] %s", __func__, drainNotify_->Describe().c_str());
+        HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] %s", __func__, drainNotify_->Describe().c_str());
     } else {
         uniqueId = GetSingleRmtBufferUniqueId(0, 0, 0, 0, UINT32_MAX); // 填充一个空的buffer
-        HCCL_WARNING("[AicpuTsUboeUbgChannelHelper::%s] drainNotify_ null buffer", __func__);
+        HCCL_WARNING("[AicpuTsUboeUbRtpChannelHelper::%s] drainNotify_ null buffer", __func__);
     }
     result.insert(result.end(), uniqueId.begin(), uniqueId.end());
 
@@ -544,29 +549,29 @@ std::vector<char> AicpuTsUboeUbgChannelHelper::GetDrainUniqueIds() const
         uniqueId = GetSingleRmtBufferUniqueId(
             rmtDrainBuffer_->GetAddr(), rmtDrainBuffer_->GetSize(), rmtDrainBuffer_->GetTokenId(),
             rmtDrainBuffer_->GetTokenValue(), rmtDrainBuffer_->GetNotifyId());
-        HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] %s", __func__, rmtDrainBuffer_->Describe().c_str());
+        HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] %s", __func__, rmtDrainBuffer_->Describe().c_str());
     } else {
         uniqueId = GetSingleRmtBufferUniqueId(0, 0, 0, 0, UINT32_MAX); // 填充一个空的buffer
-        HCCL_WARNING("[AicpuTsUboeUbgChannelHelper::%s] rmtDrainBuffer_ null buffer", __func__);
+        HCCL_WARNING("[AicpuTsUboeUbRtpChannelHelper::%s] rmtDrainBuffer_ null buffer", __func__);
     }
     result.insert(result.end(), uniqueId.begin(), uniqueId.end());
 
     return result;
 }
 
-std::vector<char> AicpuTsUboeUbgChannelHelper::GetConnUniqueIds()
+std::vector<char> AicpuTsUboeUbRtpChannelHelper::GetConnUniqueIds()
 {
     HCCL_INFO("start packing all conn uniqueIds");
     std::vector<char> result(0);
     for (auto& it : commonRes_.connVec) {
-        HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] conn[%s]", __func__, it->Describe().c_str());
+        HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] conn[%s]", __func__, it->Describe().c_str());
         auto uniqueId = it->GetUniqueId();
         result.insert(result.end(), uniqueId.begin(), uniqueId.end());
     }
     return result;
 }
 
-std::vector<char> AicpuTsUboeUbgChannelHelper::GetUniqueIdV2()
+std::vector<char> AicpuTsUboeUbRtpChannelHelper::GetUniqueIdV2()
 {
     if (channelStatus != ChannelStatus::READY) {
         MACRO_THROW(
@@ -609,13 +614,13 @@ std::vector<char> AicpuTsUboeUbgChannelHelper::GetUniqueIdV2()
     return result;
 }
 
-HcclResult AicpuTsUboeUbgChannelHelper::H2DResPack(std::vector<char>& buffer)
+HcclResult AicpuTsUboeUbRtpChannelHelper::H2DResPack(std::vector<char>& buffer)
 {
     std::vector<Hccl::ModuleData> dataVec;
     dataVec.resize(Hccl::AicpuResMgrType::__COUNT__);
 
     Hccl::AicpuResMgrType resType = Hccl::AicpuResMgrType::STREAM;
-    CHK_RET(SetUboeModuleDataName(dataVec[resType], "AicpuTsUboeUbgChannelHelper"));
+    CHK_RET(SetUboeModuleDataName(dataVec[resType], "AicpuTsUboeUbRtpChannelHelper"));
 
     std::vector<char> result;
     Hccl::BinaryStream binaryStream;
@@ -628,57 +633,57 @@ HcclResult AicpuTsUboeUbgChannelHelper::H2DResPack(std::vector<char>& buffer)
     Hccl::AicpuResPackageHelper helper;
     buffer = helper.GetPackedData(dataVec);
     HCCL_INFO(
-        "[AicpuTsUboeUbgChannelHelper][%s] Pack Buffer data[%p], Pack Buffer size[%zu].", __func__, buffer.data(),
+        "[AicpuTsUboeUbRtpChannelHelper][%s] Pack Buffer data[%p], Pack Buffer size[%zu].", __func__, buffer.data(),
         buffer.size());
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsUboeUbgChannelHelper::Clean()
+HcclResult AicpuTsUboeUbRtpChannelHelper::Clean()
 {
     // 该模式当前不支持N秒快恢
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsUboeUbgChannelHelper::Resume()
+HcclResult AicpuTsUboeUbRtpChannelHelper::Resume()
 {
     // 该模式当前不支持N秒快恢
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsUboeUbgChannelHelper::NotifyRecord(const uint32_t remoteNotifyIdx)
+HcclResult AicpuTsUboeUbRtpChannelHelper::NotifyRecord(const uint32_t remoteNotifyIdx)
 {
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] not supported yet.", __func__);
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsUboeUbgChannelHelper::NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout)
+HcclResult AicpuTsUboeUbRtpChannelHelper::NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout)
 {
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] not supported yet.", __func__);
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult
-AicpuTsUboeUbgChannelHelper::WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx)
+AicpuTsUboeUbRtpChannelHelper::WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx)
 {
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] not supported yet.", __func__);
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsUboeUbgChannelHelper::Write(void* dst, const void* src, uint64_t len)
+HcclResult AicpuTsUboeUbRtpChannelHelper::Write(void* dst, const void* src, uint64_t len)
 {
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] not supported yet.", __func__);
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsUboeUbgChannelHelper::Read(void* dst, const void* src, uint64_t len)
+HcclResult AicpuTsUboeUbRtpChannelHelper::Read(void* dst, const void* src, uint64_t len)
 {
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] not supported yet.", __func__);
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsUboeUbgChannelHelper::ChannelFence()
+HcclResult AicpuTsUboeUbRtpChannelHelper::ChannelFence()
 {
-    HCCL_INFO("[AicpuTsUboeUbgChannelHelper::%s] not supported yet.", __func__);
+    HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 

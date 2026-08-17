@@ -96,7 +96,7 @@ HcclResult IpAddressToCommAddr(const Hccl::IpAddress& ipAddr, CommAddr& commAddr
 HcclResult CommProtocolToLinkProtocol(CommProtocol commProtocol, Hccl::LinkProtocol& linkProtocol)
 {
     switch (commProtocol) {
-        case COMM_PROTOCOL_UBC_CTP:
+        case COMM_PROTOCOL_UB_CTP:
             linkProtocol = Hccl::LinkProtocol::UB_CTP;
             break;
         case COMM_PROTOCOL_UBC_TP:
@@ -117,8 +117,8 @@ HcclResult CommProtocolToLinkProtocol(CommProtocol commProtocol, Hccl::LinkProto
         case COMM_PROTOCOL_UBOE:
             linkProtocol = Hccl::LinkProtocol::UBOE;
             break;
-        case COMM_PROTOCOL_UBG:
-            linkProtocol = Hccl::LinkProtocol::UBG;
+        case COMM_PROTOCOL_UB_RTP:
+            linkProtocol = Hccl::LinkProtocol::UB_RTP;
             break;
         default:
             HCCL_ERROR("[%s] Invalid CommProtocol[%u]", __func__, commProtocol);

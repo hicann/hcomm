@@ -8,57 +8,57 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "uboe_ubg_endpoint_helper.h"
+#include "uboe_ub_rtp_endpoint_helper.h"
 #include <algorithm>
 #include "log.h"
 
 namespace hcomm {
 
-UboeUbgEndpointHelper::UboeUbgEndpointHelper(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
+UboeUbRtpEndpointHelper::UboeUbRtpEndpointHelper(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
 
-HcclResult UboeUbgEndpointHelper::ServerSocketListen(const uint32_t port)
+HcclResult UboeUbRtpEndpointHelper::ServerSocketListen(const uint32_t port)
 {
     HCCL_INFO("%s is not supported", __func__);
     return HCCL_SUCCESS;
 }
 
-HcclResult UboeUbgEndpointHelper::ServerSocketStopListen(const uint32_t port)
+HcclResult UboeUbRtpEndpointHelper::ServerSocketStopListen(const uint32_t port)
 {
     HCCL_INFO("%s is not supported", __func__);
     return HCCL_SUCCESS;
 }
 
-HcclResult UboeUbgEndpointHelper::RegisterMemory(HcommMem mem, const char* memTag, void** memHandle)
+HcclResult UboeUbRtpEndpointHelper::RegisterMemory(HcommMem mem, const char* memTag, void** memHandle)
 {
     CHK_RET(regedMemMgr_->RegisterMemory(mem, memTag, memHandle));
     return HCCL_SUCCESS;
 }
 
-HcclResult UboeUbgEndpointHelper::UnregisterMemory(void* memHandle)
+HcclResult UboeUbRtpEndpointHelper::UnregisterMemory(void* memHandle)
 {
     CHK_RET(regedMemMgr_->UnregisterMemory(memHandle));
     return HCCL_SUCCESS;
 }
 
-HcclResult UboeUbgEndpointHelper::MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen)
+HcclResult UboeUbRtpEndpointHelper::MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen)
 {
     CHK_RET(regedMemMgr_->MemoryExport(endpointDesc_, memHandle, memDesc, memDescLen));
     return HCCL_SUCCESS;
 }
 
-HcclResult UboeUbgEndpointHelper::MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem)
+HcclResult UboeUbRtpEndpointHelper::MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem)
 {
     CHK_RET(regedMemMgr_->MemoryImport(memDesc, descLen, outMem));
     return HCCL_SUCCESS;
 }
 
-HcclResult UboeUbgEndpointHelper::MemoryUnimport(const void* memDesc, uint32_t descLen)
+HcclResult UboeUbRtpEndpointHelper::MemoryUnimport(const void* memDesc, uint32_t descLen)
 {
     CHK_RET(regedMemMgr_->MemoryUnimport(memDesc, descLen));
     return HCCL_SUCCESS;
 }
 
-HcclResult UboeUbgEndpointHelper::GetAllMemHandles(void** memHandles, uint32_t* memHandleNum)
+HcclResult UboeUbRtpEndpointHelper::GetAllMemHandles(void** memHandles, uint32_t* memHandleNum)
 {
     CHK_RET(regedMemMgr_->GetAllMemHandles(memHandles, memHandleNum));
     return HCCL_SUCCESS;

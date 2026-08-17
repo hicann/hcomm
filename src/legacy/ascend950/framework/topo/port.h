@@ -28,7 +28,7 @@ using namespace std;
 
 MAKE_ENUM(PortDeploymentType, P2P, DEV_NET, HOST_NET)
 
-MAKE_ENUM(ConnectProtoType, HCCS, PCIE, TCP, RDMA, UB, UBOE, UBG)
+MAKE_ENUM(ConnectProtoType, HCCS, PCIE, TCP, RDMA, UB, UBOE, UB_RTP)
 
 MAKE_ENUM(LinkProtoType, HCCS_PCIE, TCP, RDMA, UB)
 
@@ -55,7 +55,7 @@ inline LinkProtoType LinkProtocol2LinkProtoType(LinkProtocol linkProtocol)
     LinkProtoType linkType{};
     if (linkProtocol == LinkProtocol::UB_CTP || linkProtocol == LinkProtocol::UB_TP
         || linkProtocol == LinkProtocol::UB_MEM || linkProtocol == LinkProtocol::UBOE
-        || linkProtocol == LinkProtocol::UBG) {
+        || linkProtocol == LinkProtocol::UB_RTP) {
         linkType = LinkProtoType::UB;
     } else if (linkProtocol == LinkProtocol::ROCE) {
         linkType = LinkProtoType::RDMA;
@@ -78,7 +78,8 @@ inline LinkProtoType ConnProto2LinkProto(ConnectProtoType connType)
     } else if (connType == ConnectProtoType::RDMA) {
         linkType = LinkProtoType::RDMA;
     } else if (
-        connType == ConnectProtoType::UB || connType == ConnectProtoType::UBOE || connType == ConnectProtoType::UBG) {
+        connType == ConnectProtoType::UB || connType == ConnectProtoType::UBOE
+        || connType == ConnectProtoType::UB_RTP) {
         linkType = LinkProtoType::UB;
     }
     HCCL_INFO("[ConnProto2LinkProto] linkType is[%s]", linkType.Describe().c_str());
@@ -99,8 +100,8 @@ inline LinkProtocol ConnProto2LinkProtocol(ConnectProtoType connType)
         linkProto = LinkProtocol::UB_CTP;
     } else if (connType == ConnectProtoType::UBOE) {
         linkProto = LinkProtocol::UBOE;
-    } else if (connType == ConnectProtoType::UBG) {
-        linkProto = LinkProtocol::UBG;
+    } else if (connType == ConnectProtoType::UB_RTP) {
+        linkProto = LinkProtocol::UB_RTP;
     }
     HCCL_INFO("[ConnProto2LinkProtocol] linkProto is[%s]", linkProto.Describe().c_str());
     return linkProto;

@@ -48,7 +48,7 @@ HcommResult：接口成功返回0，其他失败。
 struct in_addr ipAddr;
 inet_pton(AF_INET, "192.168.1.100", &ipAddr);
 const EndpointDesc endpointDesc = {
-    .protocol = COMM_PROTOCOL_UBC_TP,
+    .protocol = COMM_PROTOCOL_UB_RTP,
     .commAddr = {
         .type = COMM_ADDR_TYPE_IP_V4,
         .addr = ipAddr

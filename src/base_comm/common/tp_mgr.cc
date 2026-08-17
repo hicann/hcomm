@@ -689,7 +689,7 @@ static uint8_t FindMinTaHwValue(uint32_t tpTotalTimeoutMs)
 
 uint8_t TpMgr::CalcTaTimeout(const TpAttrInfo& tpAttrInfo)
 {
-    constexpr uint8_t UB_TIMEOUT_DEFAULT = 8; // 默认 UBC_CTP 和 UBC_TP 超时配置为8
+    constexpr uint8_t UB_TIMEOUT_DEFAULT = 8; // 默认 UB_CTP 和 UBC_TP 超时配置为8
     uint8_t envValue = static_cast<uint8_t>(Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetUbTimeOut());
     uint32_t envTimeoutMs = TaHwValueToMs(envValue);
 

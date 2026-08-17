@@ -233,10 +233,10 @@ HcclResult ProcessUbChannelDesc(
     (void)channelDescFinal;
     (void)hcclComm;
 
-    if (channelDesc.channelProtocol != COMM_PROTOCOL_UBC_CTP && channelDesc.channelProtocol != COMM_PROTOCOL_UBC_TP
-        && channelDesc.channelProtocol != COMM_PROTOCOL_UBOE && channelDesc.channelProtocol != COMM_PROTOCOL_UBG) {
+    if (channelDesc.channelProtocol != COMM_PROTOCOL_UB_CTP && channelDesc.channelProtocol != COMM_PROTOCOL_UBC_TP
+        && channelDesc.channelProtocol != COMM_PROTOCOL_UBOE && channelDesc.channelProtocol != COMM_PROTOCOL_UB_RTP) {
         HCCL_ERROR(
-            "[%s] unexpected channelProtocol[%d], expect UBC_CTP/UBC_TP/UBOE/UBG", __func__,
+            "[%s] unexpected channelProtocol[%d], expect UB_CTP/UBC_TP/UBOE/UB_RTP", __func__,
             static_cast<int>(channelDesc.channelProtocol));
         return HCCL_E_PARA;
     }
@@ -269,10 +269,10 @@ ProcessHcclChannelDesc(const HcclChannelDesc& channelDesc, HcclChannelDesc& chan
             channelDescFinal.ubMemAttr.pathMode = channelDesc.ubMemAttr.pathMode;
             HCCL_INFO("[%s] ubMemAttr.pathMode[%u]", __func__, channelDescFinal.ubMemAttr.pathMode);
             break;
-        case COMM_PROTOCOL_UBC_CTP:
+        case COMM_PROTOCOL_UB_CTP:
         case COMM_PROTOCOL_UBC_TP:
         case COMM_PROTOCOL_UBOE:
-        case COMM_PROTOCOL_UBG:
+        case COMM_PROTOCOL_UB_RTP:
             return ProcessUbChannelDesc(channelDesc, channelDescFinal, hcclComm);
         case COMM_PROTOCOL_ROCE:
             return ProcessRoceChannelDesc(channelDesc, channelDescFinal, hcclComm);
@@ -285,8 +285,8 @@ ProcessHcclChannelDesc(const HcclChannelDesc& channelDesc, HcclChannelDesc& chan
                         return "COMM_PROTOCOL_PCIE";
                     case COMM_PROTOCOL_SIO:
                         return "COMM_PROTOCOL_SIO";
-                    case COMM_PROTOCOL_UBC_CTP:
-                        return "COMM_PROTOCOL_UBC_CTP";
+                    case COMM_PROTOCOL_UB_CTP:
+                        return "COMM_PROTOCOL_UB_CTP";
                     case COMM_PROTOCOL_UB_MEM:
                         return "COMM_PROTOCOL_UB_MEM";
                     case COMM_PROTOCOL_ROCE:
@@ -295,8 +295,8 @@ ProcessHcclChannelDesc(const HcclChannelDesc& channelDesc, HcclChannelDesc& chan
                         return "COMM_PROTOCOL_UBC_TP";
                     case COMM_PROTOCOL_UBOE:
                         return "COMM_PROTOCOL_UBOE";
-                    case COMM_PROTOCOL_UBG:
-                        return "COMM_PROTOCOL_UBG";
+                    case COMM_PROTOCOL_UB_RTP:
+                        return "COMM_PROTOCOL_UB_RTP";
                     case COMM_PROTOCOL_HCCS_ONLY:
                         return "COMM_PROTOCOL_HCCS_ONLY";
                     default:
@@ -381,8 +381,8 @@ BuildAivDeviceChannelEntity(const HcclChannelDesc& channelDesc, ChannelHandle ho
         return HCCL_SUCCESS;
     }
 
-    if (channelDesc.channelProtocol == COMM_PROTOCOL_UBC_CTP || channelDesc.channelProtocol == COMM_PROTOCOL_UBC_TP
-        || channelDesc.channelProtocol == COMM_PROTOCOL_UBG) {
+    if (channelDesc.channelProtocol == COMM_PROTOCOL_UB_CTP || channelDesc.channelProtocol == COMM_PROTOCOL_UBC_TP
+        || channelDesc.channelProtocol == COMM_PROTOCOL_UB_RTP) {
         auto* aivUrmaChannel = dynamic_cast<hcomm::AivUrmaChannel*>(baseChannel);
         CHK_PTR_NULL(aivUrmaChannel);
         HCCL_INFO(
@@ -413,9 +413,9 @@ static HcclResult ConvertAivChannelHandlesToDevicePtrs(
     std::vector<ChannelHandle> mappedHostChannels;
     for (uint32_t idx = 0; idx < channelNum; ++idx) {
         if (channelDescs[idx].channelProtocol != COMM_PROTOCOL_ROCE
-            && channelDescs[idx].channelProtocol != COMM_PROTOCOL_UBC_CTP
+            && channelDescs[idx].channelProtocol != COMM_PROTOCOL_UB_CTP
             && channelDescs[idx].channelProtocol != COMM_PROTOCOL_UBC_TP
-            && channelDescs[idx].channelProtocol != COMM_PROTOCOL_UBG) {
+            && channelDescs[idx].channelProtocol != COMM_PROTOCOL_UB_RTP) {
             continue;
         }
         CHK_RET(BuildAivDeviceChannelEntity(channelDescs[idx], hostChannels[idx], deviceChannels[idx]));
@@ -440,8 +440,8 @@ static HcclResult ConvertAivChannelHandlesToDevicePtrs(
 }
 static bool IsUbUrmaChannelProtocol(CommProtocol protocol)
 {
-    return protocol == COMM_PROTOCOL_UBC_CTP || protocol == COMM_PROTOCOL_UBC_TP || protocol == COMM_PROTOCOL_UBOE
-           || protocol == COMM_PROTOCOL_UBG;
+    return protocol == COMM_PROTOCOL_UB_CTP || protocol == COMM_PROTOCOL_UBC_TP || protocol == COMM_PROTOCOL_UBOE
+           || protocol == COMM_PROTOCOL_UB_RTP;
 }
 
 static bool HasUbUrmaChannel(const std::vector<HcclChannelDesc>& channelDescFinals)
@@ -513,7 +513,7 @@ static HcclResult AppendSymmetricMemHandles(
     }
     HCCL_INFO(
         "[AppendSymmetricMemHandles] append symmetric memHandles success, channelNum[%zu], symMemHandleNum[%zu], "
-        "protocols[UBC_CTP/UBC_TP/UBOE].",
+        "protocols[UB_CTP/UBC_TP/UBOE].",
         channelDescFinals.size(), symmetricMemHandles.size());
     return HCCL_SUCCESS;
 }
@@ -814,7 +814,7 @@ HcclResult HcclGroupStatusGet(bool* isGroupEnabled)
 
 static bool IsSharedQueueUbProtocol(CommProtocol protocol)
 {
-    return protocol == COMM_PROTOCOL_UBC_CTP || protocol == COMM_PROTOCOL_UBC_TP;
+    return protocol == COMM_PROTOCOL_UB_CTP || protocol == COMM_PROTOCOL_UBC_TP;
 }
 
 static bool IsSameLocalEndpoint(const EndpointDesc& a, const EndpointDesc& b)
@@ -829,7 +829,7 @@ static HcclResult ValidateSharedQueueDescs(const std::vector<HcclChannelDesc>& c
     for (uint32_t i = 0; i < channelDescs.size(); ++i) {
         if (!IsSharedQueueUbProtocol(channelDescs[i].channelProtocol)) {
             HCCL_ERROR(
-                "[%s] IS_SHARED_QUEUE only supports UB protocols (UBC_CTP/UBC_TP), "
+                "[%s] IS_SHARED_QUEUE only supports UB protocols (UB_CTP/UBC_TP), "
                 "channelDesc[%u] protocol[%d].",
                 __func__, i, channelDescs[i].channelProtocol);
             return HCCL_E_NOT_SUPPORT;

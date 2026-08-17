@@ -124,7 +124,7 @@ typedef void* HcommChannelConfig;
 typedef enum {
     HCOMM_CHANNEL_CONFIG_TYPE_INVALID = -1,
     /** 0: IS_SHARED_QUEUE (bool/int, 默认 0=false)。
-     *    仅支持 AIV 引擎的 UB 网络语义协议（UBC_CTP/UBC_TP，不支持 UBMem/RoCE/UBOE/UBG）。
+     *    仅支持 AIV 引擎的 UB 网络语义协议（UB_CTP/UBC_TP，不支持 UBMem/RoCE/UBOE/UB_RTP）。
      *    设为 true 时，使用 HcommChannelCreateWithConfig 创建的多个 Channel 共享一个 Jetty。 */
     HCOMM_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE = 0,
 } HcommChannelConfigType;
@@ -168,7 +168,7 @@ extern HcommResult HcommChannelConfigSetInt(HcommChannelConfig config, HcommChan
  * @param[out] channels 输出的通道句柄数组
  * @return HcommResult 执行结果状态码
  * @note 当 config 中 IS_SHARED_QUEUE=true 时：
- *       - 仅支持 UB 网络语义协议（UBC_CTP/UBC_TP），不支持 UBMem/RoCE/UBOE/UBG。
+ *       - 仅支持 UB 网络语义协议（UB_CTP/UBC_TP），不支持 UBMem/RoCE/UBOE/UB_RTP。
  *       - 使用相同 endpointHandle 多次调用本接口创建的 Channel 共享同一个 Jetty。
  *       - 使用不同 endpointHandle 调用创建的 Channel 不共享 Jetty。
  *       - 共享 Jetty 的不同 Channel 不支持并发使用，需由调用者按业务顺序串行调用。

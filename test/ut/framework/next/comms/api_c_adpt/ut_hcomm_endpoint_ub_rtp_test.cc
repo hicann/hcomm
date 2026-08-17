@@ -21,24 +21,24 @@
 #include "endpoint.h"
 #include "adapter_rts.h"
 
-class AicpuUbgEndpointTest : public testing::Test {
+class AicpuUbRtpEndpointTest : public testing::Test {
 protected:
-    static void SetUpTestCase() { std::cout << "AicpuUbgEndpointTest tests set up." << std::endl; }
+    static void SetUpTestCase() { std::cout << "AicpuUbRtpEndpointTest tests set up." << std::endl; }
 
-    static void TearDownTestCase() { std::cout << "AicpuUbgEndpointTest tests tear down." << std::endl; }
+    static void TearDownTestCase() { std::cout << "AicpuUbRtpEndpointTest tests tear down." << std::endl; }
 
-    virtual void SetUp() { std::cout << "A Test case in AicpuUbgEndpointTest SetUP" << std::endl; }
+    virtual void SetUp() { std::cout << "A Test case in AicpuUbRtpEndpointTest SetUP" << std::endl; }
 
     virtual void TearDown()
     {
         GlobalMockObject::verify();
-        std::cout << "A Test case in AicpuUbgEndpointTest TearDown" << std::endl;
+        std::cout << "A Test case in AicpuUbRtpEndpointTest TearDown" << std::endl;
     }
 
     void CreateEndpointDesc(EndpointDesc& endpointDesc, const std::string& ip = "1.0.0.0")
     {
         Hccl::IpAddress localIp(ip);
-        endpointDesc.protocol = COMM_PROTOCOL_UBG;
+        endpointDesc.protocol = COMM_PROTOCOL_UB_RTP;
         endpointDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
         endpointDesc.commAddr.addr = localIp.GetBinaryAddress().addr;
         endpointDesc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
@@ -67,7 +67,7 @@ static HcclResult stub_hrtGetDeviceType_950(DevType& devType)
     return HCCL_SUCCESS;
 }
 
-TEST_F(AicpuUbgEndpointTest, Ut_HcommEndpointCreate_When_Ubg_Device_Expect_Return_SUCCESS)
+TEST_F(AicpuUbRtpEndpointTest, Ut_HcommEndpointCreate_When_UbRtp_Device_Expect_Return_SUCCESS)
 {
     MOCKER(hrtGetDeviceType).stubs().will(invoke(stub_hrtGetDeviceType_950));
 
@@ -79,7 +79,7 @@ TEST_F(AicpuUbgEndpointTest, Ut_HcommEndpointCreate_When_Ubg_Device_Expect_Retur
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
-TEST_F(AicpuUbgEndpointTest, Ut_HcommEndpointCreate_When_Ubg_Host_Expect_Return_ERROR)
+TEST_F(AicpuUbRtpEndpointTest, Ut_HcommEndpointCreate_When_UbRtp_Host_Expect_Return_ERROR)
 {
     EndpointDesc endpointDesc;
     CreateEndpointDesc(endpointDesc);
@@ -90,7 +90,7 @@ TEST_F(AicpuUbgEndpointTest, Ut_HcommEndpointCreate_When_Ubg_Host_Expect_Return_
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
 
-TEST_F(AicpuUbgEndpointTest, Ut_When_Register_Memory_NORMAL_Expect_Return_SUCCESS)
+TEST_F(AicpuUbRtpEndpointTest, Ut_When_Register_Memory_NORMAL_Expect_Return_SUCCESS)
 {
     MOCKER(hrtGetDeviceType).stubs().will(invoke(stub_hrtGetDeviceType_950));
 

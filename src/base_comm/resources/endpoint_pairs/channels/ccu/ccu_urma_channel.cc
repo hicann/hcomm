@@ -90,7 +90,7 @@ static HcclResult CreateCcuTransport(
     CHK_RET(IpAddressToCommAddr(rmtAddr_, rmtAddr));
 
     CcuTransport::CcuConnectionType type_ = linkData.GetLinkProtocol() == Hccl::LinkProtocol::UB_CTP ?
-                                                CcuTransport::CcuConnectionType::UBC_CTP :
+                                                CcuTransport::CcuConnectionType::UB_CTP :
                                                 CcuTransport::CcuConnectionType::UBC_TP;
 
     CcuTransport::CcuConnectionInfo connectionInfo{type_, locAddr, rmtAddr, channelInfo, ccuJettys, qos};
@@ -121,7 +121,7 @@ static HcclResult CheckEndpointDesc(const EndpointDesc& locDesc, const EndpointD
         return HcclResult::HCCL_E_PARA;
     }
 
-    if (locDesc.protocol != COMM_PROTOCOL_UBC_CTP && locDesc.protocol != COMM_PROTOCOL_UBC_TP) {
+    if (locDesc.protocol != COMM_PROTOCOL_UB_CTP && locDesc.protocol != COMM_PROTOCOL_UBC_TP) {
         HCCL_ERROR("[CcuUrmaChannel][%s] failed, protocol[%d] are not supported in ccu.", __func__, locDesc.protocol);
         return HcclResult::HCCL_E_PARA;
     }

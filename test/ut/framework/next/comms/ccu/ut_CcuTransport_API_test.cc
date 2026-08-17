@@ -229,7 +229,7 @@ TEST_F(CcuTransportTest, ut_CcuTransport_BufferInfoUnpack_When_Normal_Expect_Ret
 TEST_F(CcuTransportTest, ut_BuildCcuConnection_When_CtpAndRtp_Expect_QosPropagated)
 {
     hcomm::CcuTransport::CcuConnectionInfo ctpInfo{};
-    ctpInfo.type = hcomm::CcuTransport::CcuConnectionType::UBC_CTP;
+    ctpInfo.type = hcomm::CcuTransport::CcuConnectionType::UB_CTP;
     ctpInfo.qos = 6U;
     ctpInfo.locAddr.type = COMM_ADDR_TYPE_IP_V4;
     ctpInfo.rmtAddr.type = COMM_ADDR_TYPE_IP_V4;

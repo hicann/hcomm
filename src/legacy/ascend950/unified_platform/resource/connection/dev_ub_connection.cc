@@ -117,15 +117,15 @@ DevUbUboeConnection::DevUbUboeConnection(
     jettyTimeOut = 16; // UBOE Jetty异步创建超时16秒
 }
 
-DevUbUbgConnection::DevUbUbgConnection(
+DevUbRtpConnection::DevUbRtpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locAddrEid, const IpAddress& rmtAddrEid, u8 qos,
     CommEngine engine, u32 sqDepth)
     : DevUbConnection(
           rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, engine, sqDepth)
 {
-    tpProtocol = TpProtocol::UBG;
-    // UBG与UBOE同属UB传输，Jetty异步创建超时一致，均为16秒
+    tpProtocol = TpProtocol::UB_RTP;
+    // UB_RTP与UBOE同属UB传输，Jetty异步创建超时一致，均为16秒
     jettyTimeOut = 16;
 }
 
@@ -238,10 +238,10 @@ void DevUbConnection::GetTimeOut() // 直接基于环境变量控制
         return;
     }
 
-    if (tpProtocol == TpProtocol::UBOE || tpProtocol == TpProtocol::UBG) {
+    if (tpProtocol == TpProtocol::UBOE || tpProtocol == TpProtocol::UB_RTP) {
         envValue = static_cast<uint8_t>(EnvConfig::GetInstance().GetRdmaConfig().GetUboeTimeOut());
         envTimeOut = TpManager::TaHwValueToMs(envValue);
-        const char* tag = (tpProtocol == TpProtocol::UBG) ? "[UBG]" : "[UBoE]";
+        const char* tag = (tpProtocol == TpProtocol::UB_RTP) ? "[UB_RTP]" : "[UBoE]";
         HCCL_INFO("%s %s Env Value [%u] (%ums).", __func__, tag, envValue, envTimeOut);
     }
 
@@ -615,7 +615,7 @@ void DevUbConnection::ImportJetty()
     in.jettyImportCfg.protocol = tpProtocol;
 
     if (tpProtocol != TpProtocol::CTP && tpProtocol != TpProtocol::TP && tpProtocol != TpProtocol::UBOE
-        && tpProtocol != TpProtocol::UBG) {
+        && tpProtocol != TpProtocol::UB_RTP) {
         HCCL_ERROR(
             "[DevUbConnection][%s] failed, tp protocol[%s] is not expected, %s.", __func__,
             tpProtocol.Describe().c_str(), Describe().c_str());

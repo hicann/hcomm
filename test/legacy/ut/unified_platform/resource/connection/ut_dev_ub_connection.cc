@@ -993,7 +993,7 @@ TEST_F(DevUbConnectionTest, Ut_ImportRmtDto)
     GlobalMockObject::verify();
 }
 
-TEST_F(DevUbConnectionTest, Ut_UbgConnection_Constructor_SetsTpProtocolAndQos)
+TEST_F(DevUbConnectionTest, Ut_UbRtpConnection_Constructor_SetsTpProtocolAndQos)
 {
     constexpr u32 expectedSqDepth = 512U;
     RdmaHandle rdmaHandle = (void*)0x1000000;
@@ -1003,14 +1003,14 @@ TEST_F(DevUbConnectionTest, Ut_UbgConnection_Constructor_SetsTpProtocolAndQos)
     Hccl::IpAddress rmtIpv4Addr("10.0.0.2");
     constexpr u8 qos = 6U;
 
-    DevUbUbgConnection ubgConn(
+    DevUbRtpConnection ubRtpConn(
         rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE, true, HrtUbJfcMode::STARS_POLL,
         locIpv4Addr, rmtIpv4Addr, qos, COMM_ENGINE_RESERVED, expectedSqDepth);
 
-    EXPECT_EQ(ubgConn.tpProtocol, TpProtocol::UBG);
-    EXPECT_EQ(ubgConn.jettyTimeOut, 16);
-    EXPECT_EQ(ubgConn.qos_, qos);
-    EXPECT_EQ(ubgConn.GetSqDepth(), expectedSqDepth);
+    EXPECT_EQ(ubRtpConn.tpProtocol, TpProtocol::UB_RTP);
+    EXPECT_EQ(ubRtpConn.jettyTimeOut, 16);
+    EXPECT_EQ(ubRtpConn.qos_, qos);
+    EXPECT_EQ(ubRtpConn.GetSqDepth(), expectedSqDepth);
 }
 
 static HcclResult StubGetTpInfoWithMappedQos(TpManager*, const RaUbGetTpInfoParam&, TpInfo& tpInfo, bool)

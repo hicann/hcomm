@@ -23,7 +23,7 @@ namespace {
 EndpointDesc MakeEpDesc(uint32_t ipInt, uint32_t devPhyId)
 {
     EndpointDesc desc{};
-    desc.protocol = COMM_PROTOCOL_UBC_CTP;
+    desc.protocol = COMM_PROTOCOL_UB_CTP;
     desc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
     desc.commAddr.addr.s_addr = ipInt;
     desc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;

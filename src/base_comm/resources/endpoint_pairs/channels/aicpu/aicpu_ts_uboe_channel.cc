@@ -22,7 +22,7 @@
 namespace hcomm {
 
 AicpuTsUboeChannel::AicpuTsUboeChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc)
-    : AicpuTsUboeUbgChannelHelper(endpointHandle, channelDesc)
+    : AicpuTsUboeUbRtpChannelHelper(endpointHandle, channelDesc)
 {}
 
 AicpuTsUboeChannel::~AicpuTsUboeChannel() = default;

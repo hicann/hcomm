@@ -19,7 +19,7 @@
 
 #include "./aicpu/aicpu_ts_p2p_channel.h"
 #include "./aicpu/aicpu_ts_uboe_channel.h"
-#include "./aicpu/aicpu_ts_ubg_channel.h"
+#include "./aicpu/aicpu_ts_ub_rtp_channel.h"
 #include "./aicpu/aicpu_ts_roce_channel.h"
 #include "./host/host_cpu_roce_channel.h"
 #include "./host/host_cpu_urma_channel.h"
@@ -47,7 +47,7 @@ HcclResult Channel::CreateChannel(
                     return HCCL_E_PARA);
                 break;
             }
-            if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_CTP
+            if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UB_CTP
                 || channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_TP) {
                 EXCEPTION_CATCH(
                     uniqueChannelPtr = std::make_unique<HostCpuUrmaChannel>(endpointHandle, channelDesc),
@@ -65,14 +65,14 @@ HcclResult Channel::CreateChannel(
         case COMM_ENGINE_AICPU_TS:
             if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBOE) {
                 uniqueChannelPtr.reset(new (std::nothrow) AicpuTsUboeChannel(endpointHandle, channelDesc));
-            } else if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBG) {
+            } else if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UB_RTP) {
                 if (deviceType != DevType::DEV_TYPE_950 && deviceType != DevType::DEV_TYPE_960) {
                     HCCL_ERROR(
-                        "[Channel][%s] UBG protocol only support DEV_TYPE_950/960, current deviceType=%d", __func__,
+                        "[Channel][%s] UB_RTP protocol only support DEV_TYPE_950/960, current deviceType=%d", __func__,
                         static_cast<int>(deviceType));
                     return HCCL_E_NOT_SUPPORT;
                 }
-                uniqueChannelPtr.reset(new (std::nothrow) AicpuTsUbgChannel(endpointHandle, channelDesc));
+                uniqueChannelPtr.reset(new (std::nothrow) AicpuTsUbRtpChannel(endpointHandle, channelDesc));
             } else if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_PCIE) {
                 uniqueChannelPtr.reset(new (std::nothrow) AicpuTsP2pChannel(endpointHandle, channelDesc));
             } else if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_ROCE) {
@@ -82,7 +82,7 @@ HcclResult Channel::CreateChannel(
                     uniqueChannelPtr = std::make_unique<AicpuTsRoceChannel>(endpointHandle, channelDesc);
                 }
             } else if (
-                channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_CTP
+                channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UB_CTP
                 || channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_TP) {
                 uniqueChannelPtr.reset(new (std::nothrow) AicpuTsUrmaChannel(endpointHandle, channelDesc));
             } else if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_HCCS) {
@@ -100,13 +100,13 @@ HcclResult Channel::CreateChannel(
                 && (deviceType == DevType::DEV_TYPE_950 || deviceType == DevType::DEV_TYPE_960)) {
                 uniqueChannelPtr = std::make_unique<AicpuTsRoceChannelV2>(endpointHandle, channelDesc, engine);
             } else if (
-                channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_CTP
+                channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UB_CTP
                 || channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBC_TP
-                || channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBG) {
-                if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UBG && deviceType != DevType::DEV_TYPE_950
+                || channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UB_RTP) {
+                if (channelDesc.remoteEndpoint.protocol == COMM_PROTOCOL_UB_RTP && deviceType != DevType::DEV_TYPE_950
                     && deviceType != DevType::DEV_TYPE_960) {
                     HCCL_ERROR(
-                        "[Channel][%s] UBG protocol only support DEV_TYPE_950/960, current deviceType=%d", __func__,
+                        "[Channel][%s] UB_RTP protocol only support DEV_TYPE_950/960, current deviceType=%d", __func__,
                         static_cast<int>(deviceType));
                     return HCCL_E_NOT_SUPPORT;
                 }

@@ -54,7 +54,7 @@ HcclResult CcuTransportMgr::PrepareCreate(const LinkData& link, CcuTransport*& t
     const auto& locAddr = link.GetLocalAddr();
     const auto& rmtAddr = link.GetRemoteAddr();
     CcuTransport::CcuConnectionType type = link.GetLinkProtocol() == LinkProtocol::UB_CTP ?
-                                               CcuTransport::CcuConnectionType::UBC_CTP :
+                                               CcuTransport::CcuConnectionType::UB_CTP :
                                                CcuTransport::CcuConnectionType::UBC_TP;
     CcuTransport::CcuConnectionInfo connectionInfo{type, locAddr, rmtAddr, channelInfo, ccuJettys};
 

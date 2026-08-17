@@ -41,8 +41,8 @@ HcommResult：接口返回0表示成功，其他失败。
 
 ## 约束说明
 
- - 当Endpoint位于HOST侧时，支持的protocol为RoCE、UBC_TP、UBC_CTP。
- - 当Endpoint位于DEVICE侧时，支持的protocol为RoCE、UBC_TP、UBC_CTP、UB_MEM、PCIe、UBoE、HCCS、UBG。其中UBG仅Ascend 950PR/Ascend 950DT支持。
+ - 当Endpoint位于HOST侧时，支持的protocol为RoCE、UB_CTP。
+ - 当Endpoint位于DEVICE侧时，支持的protocol为RoCE、UB_CTP、UB_MEM、PCIe、UBoE、HCCS、UB_RTP。其中UB_RTP仅Ascend 950PR/Ascend 950DT支持。
 
 ## 调用示例
 
@@ -50,7 +50,7 @@ HcommResult：接口返回0表示成功，其他失败。
 struct in_addr ipAddr;
 inet_pton(AF_INET, "192.168.1.100", &ipAddr);
 const EndpointDesc endpointDesc = {
-    .protocol = COMM_PROTOCOL_UBC_TP,
+    .protocol = COMM_PROTOCOL_UB_RTP,
     .commAddr = {
         .type = COMM_ADDR_TYPE_IP_V4,
         .addr = ipAddr

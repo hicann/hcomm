@@ -464,14 +464,14 @@ DevUbUboeConnection::DevUbUboeConnection(
     tpProtocol = TpProtocol::UBOE;
 }
 
-DevUbUbgConnection::DevUbUbgConnection(
+DevUbRtpConnection::DevUbRtpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locAddrEid, const IpAddress& rmtAddrEid,
     const u8 qos, CommEngine engine, u32 sqDepth)
     : DevUbConnection(
           rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, engine, sqDepth)
 {
-    tpProtocol = TpProtocol::UBG;
+    tpProtocol = TpProtocol::UB_RTP;
 }
 
 std::vector<char> DevUbConnection::GetUniqueId() const

@@ -122,7 +122,7 @@ HcclResult CcuTransportMgr::CreateTransportByLink(const LinkData& link, CcuTrans
     const auto& locAddr = link.GetLocalAddr();
     const auto& rmtAddr = link.GetRemoteAddr();
     CcuTransport::CcuConnectionType type = link.GetLinkProtocol() == LinkProtocol::UB_CTP ?
-                                               CcuTransport::CcuConnectionType::UBC_CTP :
+                                               CcuTransport::CcuConnectionType::UB_CTP :
                                                CcuTransport::CcuConnectionType::UBC_TP;
     CcuTransport::CcuConnectionInfo connectionInfo{type, locAddr, rmtAddr, channelInfo, ccuJettys};
 

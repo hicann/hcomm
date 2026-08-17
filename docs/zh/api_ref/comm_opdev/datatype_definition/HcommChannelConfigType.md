@@ -18,4 +18,4 @@ typedef enum {
 | 枚举值 | 值 | 描述 | 适用接口 |
 | --- | --- | --- | --- |
 | HCOMM_CHANNEL_CONFIG_TYPE_INVALID | -1 | 无效值，用于初始化校验。 | - |
-| HCOMM_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE | 0 | 是否启用共享队列模式（bool/int，默认0=false）。<br>设为true时，使用[HcommChannelCreateWithConfig](../control_plane_api/basic_resource_mgmt/HcommChannelCreateWithConfig.md)创建的多个Channel共享一个Jetty。<br>仅支持UB网络语义协议（UBC_CTP/UBC_TP）。 | [HcommChannelConfigSetInt](../control_plane_api/basic_resource_mgmt/HcommChannelConfigSetInt.md) |
+| HCOMM_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE | 0 | 是否启用共享队列模式（bool/int，默认0=false）。<br>设为true时，使用[HcommChannelCreateWithConfig](../control_plane_api/basic_resource_mgmt/HcommChannelCreateWithConfig.md)创建的多个Channel共享一个Jetty。<br>仅支持UB网络语义协议（UB_CTP）。 | [HcommChannelConfigSetInt](../control_plane_api/basic_resource_mgmt/HcommChannelConfigSetInt.md) |

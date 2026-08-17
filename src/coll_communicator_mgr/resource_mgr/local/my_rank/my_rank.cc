@@ -62,8 +62,8 @@ HcommChannelDesc ChannelDescHccl2Hcomm(const HcclChannelDesc& hcclDesc, const hc
         hcommDesc.roceAttr.tc = hcclDesc.roceAttr.tc;
         return hcommDesc;
     }
-    if (hcclDesc.channelProtocol == COMM_PROTOCOL_UBC_CTP || hcclDesc.channelProtocol == COMM_PROTOCOL_UBC_TP
-        || hcclDesc.channelProtocol == COMM_PROTOCOL_UBOE || hcclDesc.channelProtocol == COMM_PROTOCOL_UBG) {
+    if (hcclDesc.channelProtocol == COMM_PROTOCOL_UB_CTP || hcclDesc.channelProtocol == COMM_PROTOCOL_UBC_TP
+        || hcclDesc.channelProtocol == COMM_PROTOCOL_UBOE || hcclDesc.channelProtocol == COMM_PROTOCOL_UB_RTP) {
         hcommDesc.qos = ResolveUbCommDomainQos(commConfig);
         return hcommDesc;
     }
@@ -75,11 +75,10 @@ HcommChannelDesc ChannelDescHccl2Hcomm(const HcclChannelDesc& hcclDesc, const hc
 
 /* 公共模块函数返回值定义，跟业务层同步 */
 const std::unordered_map<CommProtocol, std::string> HCOM_COMM_PROTOCOL_STR_MAP
-    = {{COMM_PROTOCOL_RESERVED, "RESERVED"}, {COMM_PROTOCOL_HCCS, "HCCS"},
-       {COMM_PROTOCOL_ROCE, "ROCE"},         {COMM_PROTOCOL_PCIE, "PCIE"},
-       {COMM_PROTOCOL_SIO, "SIO"},           {COMM_PROTOCOL_UBC_CTP, "UBC_CTP"},
-       {COMM_PROTOCOL_UBC_TP, "UBC_TP"},     {COMM_PROTOCOL_UB_MEM, "UB_MEM"},
-       {COMM_PROTOCOL_UBOE, "UBOE"},         {COMM_PROTOCOL_UBG, "UBG"}};
+    = {{COMM_PROTOCOL_RESERVED, "RESERVED"}, {COMM_PROTOCOL_HCCS, "HCCS"},     {COMM_PROTOCOL_ROCE, "ROCE"},
+       {COMM_PROTOCOL_PCIE, "PCIE"},         {COMM_PROTOCOL_SIO, "SIO"},       {COMM_PROTOCOL_UB_CTP, "UB_CTP"},
+       {COMM_PROTOCOL_UBC_TP, "UBC_TP"},     {COMM_PROTOCOL_UB_MEM, "UB_MEM"}, {COMM_PROTOCOL_UBOE, "UBOE"},
+       {COMM_PROTOCOL_UB_RTP, "UB_RTP"}};
 
 inline std::string GetCommProtocolEnumStr(CommProtocol protocol)
 {

@@ -33,7 +33,7 @@ enum UbEntityType {
     UE_TYPE_MESH = 0,
     UE_TYPE_CLOS = 1,
     UE_TYPE_UBOE = 2,
-    UE_TYPE_UBG = 3,
+    UE_TYPE_UB_RTP = 3,
     UE_TYPE_CLOS_PORTS = 4,
 };
 
@@ -385,9 +385,9 @@ static const UBEntity* GetUBEntityByFilter(const UEList* ueList, int dieId, int 
         }
         return NULL;
     }
-    if (type == UE_TYPE_UBG) {
+    if (type == UE_TYPE_UB_RTP) {
         for (unsigned int i = 0; i < ueList->ueNum; i++) {
-            if (UrmaEidIsUBG(&ueList->ueList[i].eidList[0].eid)) {
+            if (UrmaEidIsUbRtp(&ueList->ueList[i].eidList[0].eid)) {
                 return &ueList->ueList[i];
             }
         }

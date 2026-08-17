@@ -365,7 +365,7 @@ TEST_F(HcclChannelDescTest, Ut_ProcessUbChannelDesc_When_UbcCtp_QosUnset_UsesCom
     HcclChannelDesc out{};
     ASSERT_EQ(HcclChannelDescInit(&in, 1), HCCL_SUCCESS);
     ASSERT_EQ(HcclChannelDescInit(&out, 1), HCCL_SUCCESS);
-    in.channelProtocol = COMM_PROTOCOL_UBC_CTP;
+    in.channelProtocol = COMM_PROTOCOL_UB_CTP;
     ret = ProcessUbChannelDesc(in, out, hcclCommPtr.get());
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -393,7 +393,7 @@ TEST_F(HcclChannelDescTest, Ut_ProcessUbChannelDesc_When_UbcCtp_Valid_Expect_Suc
     HcclChannelDesc out{};
     ASSERT_EQ(HcclChannelDescInit(&in, 1), HCCL_SUCCESS);
     ASSERT_EQ(HcclChannelDescInit(&out, 1), HCCL_SUCCESS);
-    in.channelProtocol = COMM_PROTOCOL_UBC_CTP;
+    in.channelProtocol = COMM_PROTOCOL_UB_CTP;
     ret = ProcessUbChannelDesc(in, out, hcclCommPtr.get());
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
@@ -501,12 +501,12 @@ TEST_F(HcclChannelDescTest, Ut_HcclChannelAcquire_When_CpuUrma_NotAppendSymmetri
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
-TEST_F(HcclChannelDescTest, Ut_HcclChannelAcquire_When_AivUbg_ConvertsHostHandleToDeviceEntity)
+TEST_F(HcclChannelDescTest, Ut_HcclChannelAcquire_When_AivUbRtp_ConvertsHostHandleToDeviceEntity)
 {
     HcclChannelDesc channelDesc{};
     ASSERT_EQ(HcclChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
     channelDesc.remoteRank = 2;
-    channelDesc.channelProtocol = COMM_PROTOCOL_UBG;
+    channelDesc.channelProtocol = COMM_PROTOCOL_UB_RTP;
 
     hcomm::AivUrmaChannel channel(reinterpret_cast<EndpointHandle>(0x1), HcommChannelDesc{});
     g_testChannel = reinterpret_cast<ChannelHandle>(&channel);

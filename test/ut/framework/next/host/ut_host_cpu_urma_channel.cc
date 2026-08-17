@@ -78,7 +78,7 @@ protected:
         MOCKER(RaSocketSetWhiteListStatus).stubs().will(returnValue(0));
 
         EndpointDesc epDesc{};
-        epDesc.protocol = COMM_PROTOCOL_UBC_CTP;
+        epDesc.protocol = COMM_PROTOCOL_UB_CTP;
         epDesc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
         epDesc.commAddr.addr = localIp.GetBinaryAddress().addr;
         epDesc.loc.locType = ENDPOINT_LOC_TYPE_HOST;

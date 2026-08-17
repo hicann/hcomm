@@ -11,7 +11,7 @@
 #ifndef UBOE_ENDPOINT_H
 #define UBOE_ENDPOINT_H
 
-#include "uboe_ubg_endpoint_helper.h"
+#include "uboe_ub_rtp_endpoint_helper.h"
 #include "proc_reged_mem_mgr_cache.h"
 
 namespace hcomm {
@@ -19,7 +19,7 @@ namespace hcomm {
  * @note 职责：AICPU通信引擎+UBOE协议的通信设备Endpoint，管理通信设备上下文，以及设备上的注册内存。
  *       UBOE的Init需要做IP→EID转换。
  */
-class UboeEndpoint : public UboeUbgEndpointHelper {
+class UboeEndpoint : public UboeUbRtpEndpointHelper {
 public:
     explicit UboeEndpoint(const EndpointDesc& endpointDesc);
     ~UboeEndpoint() noexcept override;

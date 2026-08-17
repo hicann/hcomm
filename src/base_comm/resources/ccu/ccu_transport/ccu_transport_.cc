@@ -24,7 +24,7 @@ constexpr char FINISH_MSG[FINISH_MSG_SIZE] = "Transport exchange data ready!";
 HcclResult BuildCcuConnection(
     const CcuTransport::CcuConnectionInfo& ccuConnectionInfo, std::unique_ptr<CcuConnection>& ccuConnection)
 {
-    if (ccuConnectionInfo.type == CcuTransport::CcuConnectionType::UBC_CTP) {
+    if (ccuConnectionInfo.type == CcuTransport::CcuConnectionType::UB_CTP) {
         ccuConnection.reset(new (std::nothrow) CcuCtpConnection(
             ccuConnectionInfo.locAddr, ccuConnectionInfo.rmtAddr, ccuConnectionInfo.channelInfo,
             ccuConnectionInfo.ccuJettys, ccuConnectionInfo.qos));

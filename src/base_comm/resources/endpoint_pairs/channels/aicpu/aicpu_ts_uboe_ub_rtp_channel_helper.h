@@ -7,9 +7,8 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-
-#ifndef AICPU_TS_UBOE_UBG_CHANNEL_HELPER_H
-#define AICPU_TS_UBOE_UBG_CHANNEL_HELPER_H
+#ifndef AICPU_TS_UBOE_UB_RTP_CHANNEL_HELPER_H
+#define AICPU_TS_UBOE_UB_RTP_CHANNEL_HELPER_H
 
 #include <cstdint>
 #include <memory>
@@ -34,10 +33,10 @@ namespace hcomm {
 constexpr u32 FINISH_MSG_SIZE = 128;
 constexpr char_t FINISH_MSG[FINISH_MSG_SIZE] = "Uboe Comm Pipe ready!";
 
-class AicpuTsUboeUbgChannelHelper : public Channel {
+class AicpuTsUboeUbRtpChannelHelper : public Channel {
 public:
-    AicpuTsUboeUbgChannelHelper(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc);
-    virtual ~AicpuTsUboeUbgChannelHelper();
+    AicpuTsUboeUbRtpChannelHelper(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc);
+    virtual ~AicpuTsUboeUbRtpChannelHelper();
 
     HcclResult GetNotifyNum(uint32_t* notifyNum) const override;
     HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos) override;
@@ -155,4 +154,4 @@ private:
 
 } // namespace hcomm
 
-#endif // AICPU_TS_UBOE_UBG_CHANNEL_HELPER_H
+#endif // AICPU_TS_UBOE_UB_RTP_CHANNEL_HELPER_H
