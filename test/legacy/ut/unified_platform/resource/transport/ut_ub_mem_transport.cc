@@ -1245,3 +1245,45 @@ TEST_F(UbMemTransportTest, HandleRecvFinStatus_WhenRecvFinishFail_ReturnError)
     HcclResult ret = transport.HandleRecvFinStatus();
     EXPECT_EQ(ret, HCCL_E_INTERNAL);
 }
+
+TEST_F(UbMemTransportTest, UbMemTransport_GetSingleLocBufferUniqueId)
+{
+    BaseMemTransport::CommonLocRes locRes;
+    BaseMemTransport::Attribution attr;
+    BaseMemTransport::LocCntNotifyRes locCntRes;
+    LinkData link(BasePortType(PortDeploymentType::P2P), 0, 1, 0, 1);
+    void* rdmaHandle = (void*)0x100;
+    IpAddress ipAddress("1.0.0.0");
+    Socket fakeSocket(nullptr, ipAddress, 100, ipAddress, "tag", SocketRole::SERVER, NicType::DEVICE_NIC_TYPE);
+
+    UbMemTransport transport(locRes, attr, link, fakeSocket, rdmaHandle, locCntRes, isRecvFirst);
+
+    u64 addr = 0x1000;
+    u64 size = 0x2000;
+    u32 tokenId = 100;
+    u32 tokenValue = 200;
+
+    std::vector<char> result = transport.GetSingleLocBufferUniqueId(addr, size, tokenId, tokenValue);
+
+    EXPECT_EQ(result.size(), sizeof(addr) + sizeof(size) + sizeof(tokenId) + sizeof(tokenValue));
+
+    u64 outAddr = 0;
+    u64 outSize = 0;
+    u32 outTokenId = 0;
+    u32 outTokenValue = 0;
+    std::copy_n(result.data(), sizeof(outAddr), reinterpret_cast<char*>(&outAddr));
+    std::copy_n(result.data() + sizeof(outAddr), sizeof(outSize), reinterpret_cast<char*>(&outSize));
+    std::copy_n(
+        result.data() + sizeof(outAddr) + sizeof(outSize), sizeof(outTokenId), reinterpret_cast<char*>(&outTokenId));
+    std::copy_n(
+        result.data() + sizeof(outAddr) + sizeof(outSize) + sizeof(outTokenId), sizeof(outTokenValue),
+        reinterpret_cast<char*>(&outTokenValue));
+
+    EXPECT_EQ(outAddr, addr);
+    EXPECT_EQ(outSize, size);
+    EXPECT_EQ(outTokenId, tokenId);
+    EXPECT_EQ(outTokenValue, tokenValue);
+
+    std::vector<char> rmtResult = transport.GetSingleRmtBufferUniqueId(addr, size, tokenId, tokenValue, 300);
+    EXPECT_EQ(rmtResult.size(), result.size() + sizeof(u32));
+}

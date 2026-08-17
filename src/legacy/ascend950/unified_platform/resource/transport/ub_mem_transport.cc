@@ -1055,6 +1055,19 @@ UbMemTransport::GetSingleRmtBufferUniqueId(u64 addr, u64 size, u32 tokenId, u32 
     return result;
 }
 
+std::vector<char> UbMemTransport::GetSingleLocBufferUniqueId(u64 addr, u64 size, u32 tokenId, u32 tokenValue) const
+{
+    BinaryStream binaryStream;
+    binaryStream << addr;
+    binaryStream << size;
+    binaryStream << tokenId;
+    binaryStream << tokenValue;
+    HCCL_INFO("UbMemTransport LocBuffer[addr=0x%llx, size=0x%llx]", addr, size);
+    std::vector<char> result;
+    binaryStream.Dump(result);
+    return result;
+}
+
 std::vector<char> UbMemTransport::GetNotifyUniqueIds()
 {
     HCCL_INFO("start packing all notify uniqueIds");
@@ -1127,11 +1140,10 @@ std::vector<char> UbMemTransport::GetLocBufferUniqueIds(LocalBufferVec& bufferVe
     for (auto& it : bufferVec) {
         std::vector<char> uniqueId;
         if (it != nullptr) {
-            uniqueId = GetSingleRmtBufferUniqueId(
-                it->GetAddr(), it->GetSize(), it->GetTokenId(), it->GetTokenValue(), UINT32_MAX);
+            uniqueId = GetSingleLocBufferUniqueId(it->GetAddr(), it->GetSize(), it->GetTokenId(), it->GetTokenValue());
             HCCL_INFO("UbMemTransport::GetLocBufferUniqueIds, %s", it->Describe().c_str());
         } else {
-            uniqueId = GetSingleRmtBufferUniqueId(0, 0, 0, 0, UINT32_MAX); // 填充一个空的buffer
+            uniqueId = GetSingleLocBufferUniqueId(0, 0, 0, 0); // 填充一个空的buffer
             HCCL_INFO("UbMemTransport::GetLocBufferUniqueIds, null buffer");
         }
         result.insert(result.end(), uniqueId.begin(), uniqueId.end());

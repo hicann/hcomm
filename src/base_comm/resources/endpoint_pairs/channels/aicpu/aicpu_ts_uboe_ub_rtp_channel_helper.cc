@@ -486,6 +486,20 @@ std::vector<char> AicpuTsUboeUbRtpChannelHelper::GetSingleRmtBufferUniqueId(
 }
 
 std::vector<char>
+AicpuTsUboeUbRtpChannelHelper::GetSingleLocBufferUniqueId(u64 addr, u64 size, u32 tokenId, u32 tokenValue) const
+{
+    Hccl::BinaryStream binaryStream;
+    binaryStream << addr;
+    binaryStream << size;
+    binaryStream << tokenId;
+    binaryStream << tokenValue;
+    HCCL_INFO("AicpuTsUboeUbRtpChannelHelper LocBuffer[addr=0x%llx, size=0x%llx]", addr, size);
+    std::vector<char> result;
+    binaryStream.Dump(result);
+    return result;
+}
+
+std::vector<char>
 AicpuTsUboeUbRtpChannelHelper::GetRmtBufferUniqueIds(RemoteBufferVec& bufferVec, UboeRmtBufType type) const
 {
     HCCL_INFO("start packing all remote buffer %s uniqueIds", type.Describe().c_str());
@@ -513,11 +527,10 @@ AicpuTsUboeUbRtpChannelHelper::GetLocBufferUniqueIds(LocalBufferVec& bufferVec, 
     for (auto& it : bufferVec) {
         std::vector<char> uniqueId;
         if (it != nullptr) {
-            uniqueId = GetSingleRmtBufferUniqueId(
-                it->GetAddr(), it->GetSize(), it->GetTokenId(), it->GetTokenValue(), UINT32_MAX);
+            uniqueId = GetSingleLocBufferUniqueId(it->GetAddr(), it->GetSize(), it->GetTokenId(), it->GetTokenValue());
             HCCL_INFO("UbMemTransport::GetLocBufferUniqueIds, %s", it->Describe().c_str());
         } else {
-            uniqueId = GetSingleRmtBufferUniqueId(0, 0, 0, 0, UINT32_MAX);
+            uniqueId = GetSingleLocBufferUniqueId(0, 0, 0, 0);
             HCCL_INFO("UbMemTransport::GetLocBufferUniqueIds, null buffer");
         }
         result.insert(result.end(), uniqueId.begin(), uniqueId.end());

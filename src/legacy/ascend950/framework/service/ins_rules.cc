@@ -22,6 +22,8 @@
 #include "hccl_aiv_utils.h"
 #include "ccu_ins_group.h"
 
+#include <limits>
+
 namespace Hccl {
 
 constexpr u32 BASE_BIT = 1; // 用于左移设置二进制数的特定位
@@ -579,7 +581,9 @@ LaunchCcuTasks(vector<CcuTaskParam> params, const Stream* stream, TaskParam& tas
         taskInfo.instCnt = it->instCnt;
         taskInfo.key = it->key;
         taskInfo.argSize = it->argSize;
-        taskInfo.timeout = taskConfig.GetNotifyWaitTime();
+        taskInfo.timeout = taskConfig.GetNotifyWaitTime() >= std::numeric_limits<u16>::max() ?
+                               std::numeric_limits<u16>::max() :
+                               static_cast<u16>(taskConfig.GetNotifyWaitTime());
         std::copy(std::begin(it->args), std::end(it->args), std::begin(taskInfo.args));
 
         HCCL_INFO(
