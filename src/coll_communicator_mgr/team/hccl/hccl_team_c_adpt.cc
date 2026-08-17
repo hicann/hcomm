@@ -22,7 +22,6 @@
 #include "hccl_team_mgr.h"
 #include "hccl/hccl_rank_graph.h"
 #include "hccl/hccl_res.h"
-#include "hcomm_result_defs.h"
 #include "hcomm_team.h"
 #include "hcomm_team_c_adpt.h"
 #include "hcomm_team_mgr.h"
@@ -546,8 +545,7 @@ static HcclResult AcquireChannels(
 }
 
 /* 构造 HcommTeamBindChannelsDesc，绑定 team 与 channel。 */
-static HcclResult BindTeamChannels(
-    HcommTeamHandle team, const HcclTeamCreateChannelsDesc* desc, const std::string& commId, ChannelsCreateCtx& ctx)
+static HcclResult BindTeamChannels(HcommTeamHandle team, const std::string& commId, ChannelsCreateCtx& ctx)
 {
     std::vector<uint32_t> channelNumPerMember(ctx.memberNum, 0);
     std::vector<uint64_t*> channelsByMemberIdPtrs(ctx.memberNum, nullptr);
@@ -695,7 +693,7 @@ HcclResult HcclTeamChannelsCreate(HcclComm comm, HcommTeamHandle team, const Hcc
 
     CHK_RET(GetWorldTeamContext(team, selfRank, ctx));
     CHK_RET(AcquireChannels(comm, team, desc, selfRank, ctx));
-    CHK_RET(BindTeamChannels(team, desc, commId, ctx));
+    CHK_RET(BindTeamChannels(team, commId, ctx));
     CHK_RET(CollectRemoteMems(comm, team, ctx));
     CHK_RET(BindWindowsAndSyncMem(team, commId, ctx));
 

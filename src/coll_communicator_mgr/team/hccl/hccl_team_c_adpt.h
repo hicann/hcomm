@@ -27,7 +27,7 @@ constexpr const char* HCCL_TEAM_SYNCMEM_TAG_PREFIX = "__hccl_team_syncmem__";
 constexpr const char* HCCL_TEAM_USERMEM_TAG_PREFIX = "__hccl_team_usermem__";
 
 /* HcclTeamChannelsCreate 跨段共享的中间状态。全程引用传递，禁用拷贝，避免 vector 深拷贝。 */
-typedef struct {
+struct ChannelsCreateCtx {
     std::vector<uint32_t> rankIds; // 当前 team 的 memberId→rankId 映射，下标=memberId
     uint32_t memberNum{0};         // = rankIds.size()
     uint32_t selfMemberId{0};
@@ -42,7 +42,7 @@ typedef struct {
     std::vector<std::vector<ChannelHandle>> channelsByMember;
     std::vector<CommMem> syncMemRemoteMems;               // 长度=memberNum，下标=memberId
     std::vector<std::vector<CommMem>> remoteMemsByWindow; // [windowIndex][worldMemberId]
-} ChannelsCreateCtx;
+};
 } // namespace hccl
 
 #ifdef __cplusplus

@@ -18,11 +18,11 @@
 using namespace hcomm;
 
 HcommResult HcommTeamCreate(
-    HcommTeamHandle worldTeam, const HcommTeamCreateDesc* desc, HcommTeamHandle* team, uint64_t* outSyncMemSize)
+    HcommTeamHandle worldTeam, const HcommTeamCreateDesc* desc, HcommTeamHandle* team, uint64_t* syncMemSize)
 {
     CHK_PRT_RET(
-        (desc == nullptr || team == nullptr || outSyncMemSize == nullptr),
-        HCCL_ERROR("[%s] nullptr parameter", __func__), HCOMM_E_PTR);
+        (desc == nullptr || team == nullptr || syncMemSize == nullptr), HCCL_ERROR("[%s] nullptr parameter", __func__),
+        HCOMM_E_PTR);
     CHK_PRT_RET(
         (desc->memberNum == 0 || desc->memberNum == 1), HCCL_ERROR("[%s] memberNum cannot be 0 or 1", __func__),
         HCOMM_E_PARA);
@@ -41,7 +41,7 @@ HcommResult HcommTeamCreate(
     CHK_PRT_RET(
         worldTeam != nullptr && desc->worldMemberIds == nullptr,
         HCCL_ERROR("[%s] sub team worldMemberIds is null", __func__), HCOMM_E_PTR);
-    return HcommTeamMgr::GetInstance().TeamCreate(worldTeam, desc, team, outSyncMemSize);
+    return HcommTeamMgr::GetInstance().TeamCreate(worldTeam, desc, team, syncMemSize);
 }
 
 HcommResult HcommTeamDestroy(HcommTeamHandle team)
@@ -60,12 +60,13 @@ HcommResult HcommTeamBindChannels(HcommTeamHandle team, const HcommTeamBindChann
     return HcommTeamMgr::GetInstance().BindChannels(team, desc);
 }
 
-HcommResult HcommTeamBindRemoteSyncMem(HcommTeamHandle team, const HcommTeamBindSyncMemDesc* desc)
+HcommResult HcommTeamBindRemoteSyncMem(HcommTeamHandle team, const HcommTeamBindSyncMemDesc* remoteDesc)
 {
-    CHK_PRT_RET((team == nullptr || desc == nullptr), HCCL_ERROR("[%s] nullptr parameter", __func__), HCOMM_E_PTR);
-    CHK_PRT_RET(desc->remoteMems == nullptr, HCCL_ERROR("[%s] remoteMems is nullptr", __func__), HCOMM_E_PTR);
-    CHK_PRT_RET(desc->remoteMemNum == 0, HCCL_ERROR("[%s] remoteMemNum is zero", __func__), HCOMM_E_PARA);
-    return HcommTeamMgr::GetInstance().BindSyncMem(team, desc);
+    CHK_PRT_RET(
+        (team == nullptr || remoteDesc == nullptr), HCCL_ERROR("[%s] nullptr parameter", __func__), HCOMM_E_PTR);
+    CHK_PRT_RET(remoteDesc->remoteMems == nullptr, HCCL_ERROR("[%s] remoteMems is nullptr", __func__), HCOMM_E_PTR);
+    CHK_PRT_RET(remoteDesc->remoteMemNum == 0, HCCL_ERROR("[%s] remoteMemNum is zero", __func__), HCOMM_E_PARA);
+    return HcommTeamMgr::GetInstance().BindSyncMem(team, remoteDesc);
 }
 
 HcommResult HcommTeamWindowRegister(
@@ -82,13 +83,13 @@ HcommResult HcommTeamWindowRegister(
 }
 
 HcommResult
-HcommTeamWindowBindRemoteMems(HcommTeamHandle team, HcommWindowHandle handle, const HcommTeamWindowDesc* desc)
+HcommTeamWindowBindRemoteMems(HcommTeamHandle team, HcommWindowHandle handle, const HcommTeamWindowDesc* remoteDesc)
 {
-    if (team == nullptr || handle == nullptr || desc == nullptr || desc->mems == nullptr) {
+    if (team == nullptr || handle == nullptr || remoteDesc == nullptr || remoteDesc->mems == nullptr) {
         HCCL_ERROR("[%s] nullptr parameter", __func__);
         return HCOMM_E_PTR;
     }
-    return HcommTeamMgr::GetInstance().BindWindow(team, handle, desc);
+    return HcommTeamMgr::GetInstance().BindWindow(team, handle, remoteDesc);
 }
 
 HcommResult HcommTeamWindowDeregister(HcommTeamHandle worldTeam, HcommWindowHandle handle)

@@ -12,7 +12,6 @@
 #define HCOMM_TEAM_MGR_H
 
 #include <cstdint>
-#include <cstdlib>
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
@@ -21,7 +20,6 @@
 
 #include "hcomm_res.h"
 #include "hcomm_res_defs.h"
-#include "hcomm_result_defs.h"
 #include "hcomm_team.h"
 #include "hcomm_team_defs.h"
 #include "hcomm_team_entity_defs.h"
@@ -33,15 +31,15 @@ constexpr uint32_t HCOMM_TEAM_VERSION = 1U;
 constexpr uint32_t HCOMM_WINDOW_MAGIC_WORD = 0x0f0f0f21U;
 constexpr uint32_t HCOMM_WINDOW_VERSION = 1U;
 
-typedef struct {
+struct WindowEntry {
     HcommWindow hostWindow{};
     HcommWindowHandle devWindow{nullptr};
     void* devMems{nullptr};
     CommMem* hostMems{nullptr};
     HcommTeamHandle teamHandle{nullptr};
-} WindowEntry;
+};
 
-typedef struct {
+struct TeamEntry {
     HcommTeam hostTeam{};
     HcommTeamHandle devTeam{nullptr};
     void* devWorldTeamIds{nullptr};
@@ -60,7 +58,7 @@ typedef struct {
 
     HcommTeamSyncMemRequirement syncMemReq{};
     uint64_t syncMemSize{0};
-} TeamEntry;
+};
 
 class HcommTeamMgr {
 public:

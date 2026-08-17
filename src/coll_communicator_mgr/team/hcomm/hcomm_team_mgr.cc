@@ -14,6 +14,7 @@
 
 #include "adapter_rts_common.h"
 #include "hcomm_res_entity_defs.h"
+#include "hcomm_result_defs.h"
 #include "hcomm_team_entity_defs.h"
 #include "log.h"
 #include "securec.h"

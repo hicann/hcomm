@@ -30,15 +30,15 @@ namespace hccl {
  *          （ChannelsCreate 通过 FindWorldTeam 解析 worldTeam 的所有 window）。
  */
 // 单个 window 的信息（归 worldTeam 所有，1:N）
-typedef struct {
+struct WindowInfo {
     HcommWindowHandle handle{nullptr};     // 业务 window 句柄
     CommMem registeredLocalMem{};          // 注册时的 localMem，判重基准（子集复用）
     HcclMemHandle localMemHandle{nullptr}; // localMem 注册得到的句柄
     std::string localMemTag;               // localMem 的 memTag（ChannelsCreate 远端 tag 匹配用）
     bool exchanged{false};                 // 是否已参与建链交换，避免重复交换
-} WindowInfo;
+};
 
-typedef struct {
+struct TeamEntry {
     CollComm* collComm{nullptr};        // 反查通信域
     HcommTeamHandle worldTeam{nullptr}; // 父 world team；world team 自身为 nullptr
     void* syncMemPtr{nullptr};          // 本地 syncMem 内存指针（hrtMalloc 申请）
@@ -51,7 +51,7 @@ typedef struct {
     std::vector<WindowInfo> windows;
     // memberId→rankId 映射，下标=memberId，值=rankId。L2 维护，rankId 不下沉 L3。
     std::vector<uint32_t> rankIds;
-} TeamEntry;
+};
 
 class HcclTeamMgr {
 public:
