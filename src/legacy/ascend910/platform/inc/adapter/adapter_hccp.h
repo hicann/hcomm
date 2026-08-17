@@ -379,8 +379,8 @@ HcclResult hrtRaSetQpAttrRetryCnt(QpHandle qpHandle, u32& retryCnt);
 HcclResult SetQpAttrQos(
     QpHandle qpHandle, u32 tc = HCCL_COMM_TRAFFIC_CLASS_CONFIG_NOT_SET,
     u32 sl = HCCL_COMM_SERVICE_LEVEL_CONFIG_NOT_SET);
-HcclResult SetQpAttrTimeOut(QpHandle qpHandle);
-HcclResult SetQpAttrRetryCnt(QpHandle qpHandle);
+HcclResult SetQpAttrTimeOut(QpHandle qpHandle, u32 timeout = INVALID_UINT);
+HcclResult SetQpAttrRetryCnt(QpHandle qpHandle, u32 retryCnt = INVALID_UINT);
 HcclResult hrtRaCreateCompChannel(RdmaHandle rdmaHandle, void** compChannel);
 HcclResult hrtRaDestroyCompChannel(RdmaHandle rdmaHandle, void* compChannel);
 HcclResult hrtRaGetCqeErrInfo(unsigned int phyId, struct CqeErrInfo* info);

@@ -2809,18 +2809,18 @@ HcclResult SetQpAttrQos(QpHandle qpHandle, u32 tc, u32 sl)
     return HCCL_SUCCESS;
 }
 
-HcclResult SetQpAttrTimeOut(QpHandle qpHandle)
+HcclResult SetQpAttrTimeOut(QpHandle qpHandle, u32 timeout)
 {
-    u32 rdmaTimeOut = GetExternalInputRdmaTimeOut();
+    u32 rdmaTimeOut = (timeout == INVALID_UINT) ? GetExternalInputRdmaTimeOut() : timeout;
     CHK_RET(hrtRaSetQpAttrTimeOut(qpHandle, rdmaTimeOut));
     HCCL_INFO("[SetQpAttrTimeOut]rdmaTimeOut[%u].", rdmaTimeOut);
 
     return HCCL_SUCCESS;
 }
 
-HcclResult SetQpAttrRetryCnt(QpHandle qpHandle)
+HcclResult SetQpAttrRetryCnt(QpHandle qpHandle, u32 retryCnt)
 {
-    u32 rdmaRetryCnt = GetExternalInputRdmaRetryCnt();
+    u32 rdmaRetryCnt = (retryCnt == INVALID_UINT) ? GetExternalInputRdmaRetryCnt() : retryCnt;
     CHK_RET(hrtRaSetQpAttrRetryCnt(qpHandle, rdmaRetryCnt));
     HCCL_INFO("[SetQpAttrRetryCnt]rdmaRetryCnt[%u].", rdmaRetryCnt);
 
