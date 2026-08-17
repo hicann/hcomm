@@ -48,7 +48,7 @@ HCOMM对外头文件在`${INSTALL_DIR}/include/`目录下的hccl/、hcomm/、hco
 | hcomm/hcomm_channel.h | 用于定义HCOMM通道描述、通道创建/销毁、Channel配置等通道管理C接口与类型。 | libhcomm.so |
 | hcomm/ccu/ccu_primitives.hpp | CCU原语聚合头，含类型别名与资源创建入口。 | libhcomm.so |
 | hcomm/ccu/ccu_launch.h | 用于定义CCU Kernel注册与Launch的C接口（弱符号）。 | libhcomm.so |
-| hcomm/ccu/ccu_res.h | 用于定义查询内存CCU访问token的C接口（HcommCcuGetMemToken）。 | libhcomm.so |
+| hcomm/ccu/ccu_res.h | 用于定义CCU资源管理及内存CCU访问token（HcommCcuGetMemToken）等C接口。 | libhcomm.so |
 | hcomm/ccu/ccu_types.h | 用于定义CCU返回码、条件类型等基础类型。 | libhcomm.so |
 | hcomm/ccu/ccu_control_flow_macro.h | 用于定义CCU while循环等控制流宏。 | libhcomm.so |
 | hcomm/ccu/ccu_address.hpp | CCU地址对象封装（Address类）。 | libhcomm.so |

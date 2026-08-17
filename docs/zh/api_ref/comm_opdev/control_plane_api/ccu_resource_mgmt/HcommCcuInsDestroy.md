@@ -20,7 +20,7 @@
 
 ## 功能说明
 
-销毁调用方持有的CCU实例，注销该实例关联的Kernel并释放实例占用的CCU资源。销毁成功后，实例句柄失效。
+销毁调用方持有的CCU实例，注销该实例关联的Kernel并释放实例占用的CCU资源。若实例上存在通过[HcommCcuVariableAlloc](HcommCcuVariableAlloc.md)/[HcommCcuEventAlloc](HcommCcuEventAlloc.md)预约的资源，销毁时预约句柄一并失效。销毁成功后，实例句柄失效。
 
 ## 函数原型
 

@@ -14,3 +14,8 @@
   - [HcommCcuInsCreateDefault](HcommCcuInsCreateDefault.md)
   - [HcommCcuInsQueryResDesc](HcommCcuInsQueryResDesc.md)
   - [HcommCcuInsDestroy](HcommCcuInsDestroy.md)
+- [Variable/Event资源预约]()
+  - [HcommCcuVariableAlloc](HcommCcuVariableAlloc.md)
+  - [HcommCcuEventAlloc](HcommCcuEventAlloc.md)
+  - [HcommCcuVariableGetAddr](HcommCcuVariableGetAddr.md)
+  - [HcommCcuEventGetAddr](HcommCcuEventGetAddr.md)
