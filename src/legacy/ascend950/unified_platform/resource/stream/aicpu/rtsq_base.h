@@ -212,6 +212,13 @@ public:
 
     HcclResult GetStreamIdAndTaskIdBySqIdx(u32 sqIdx, uint16_t& streamId, uint16_t& taskId) const;
 
+    virtual HcclResult GetLastStreamIdAndTaskId(uint16_t& streamId, uint16_t& taskId) const
+    {
+        (void)streamId;
+        (void)taskId;
+        return HCCL_E_NOT_SUPPORT;
+    }
+
 protected:
     u32 devPhyId_{0};
     u32 localDevId_{0};

@@ -83,6 +83,8 @@ public:
 
     bool GetPreStreamSyncStatus() override;
 
+    HcclResult GetLastStreamIdAndTaskId(uint16_t& streamId, uint16_t& taskId) const override;
+
     // 用于aicpu task cache
     uint32_t GetPendingSqeCnt() const override { return pendingSqeCnt; }
 

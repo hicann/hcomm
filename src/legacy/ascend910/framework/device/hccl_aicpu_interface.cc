@@ -22,6 +22,7 @@
 #include "utils/aicpu_hdc_utils.h"
 #include "hccl_group_utils.h"
 #include "hccl_dl.h"
+#include "hccl_diag.h"
 
 extern "C" {
 __attribute__((visibility("default"))) uint32_t RunAicpuKfcResInitV2(void* args)
@@ -129,15 +130,52 @@ __attribute__((visibility("default"))) uint32_t RunAicpuNotifyRecord(void* args)
         return HCCL_E_PARA;
     }
     ThreadNotifyRecordParam* param = reinterpret_cast<ThreadNotifyRecordParam*>(args);
-    HCCL_INFO(
-        "[RunAicpuNotifyRecord] thread[0x%llx], dstThread[0x%llx], dstNotifyIdx[%u]", param->thread, param->dstThread,
-        param->dstNotifyIdx);
+    HCCL_INFO("%s src[0x%llx], dst[0x%llx], Idx[%u]", __func__, param->thread, param->dstThread, param->dstNotifyIdx);
+    // 保留通信域管理 - 保证生命周期安全
+    if (HcommAcquireComm(param->commName) != HCCL_SUCCESS) {
+        HCCL_ERROR("%s HcommAcquireComm fail, commName[%s]", __func__, param->commName);
+        return HCCL_E_INTERNAL;
+    }
+    HcclDfxOpInfo dfxOpInfoRecord{};
+    dfxOpInfoRecord.cpuWaitAicpuNotifyIdx = 0;
+    dfxOpInfoRecord.cpuTsThread = param->thread;
+    dfxOpInfoRecord.dataType = param->dataType;
+    if (HcclDfxRegOpInfoByCommId(param->commName, reinterpret_cast<void*>(&dfxOpInfoRecord)) != HCCL_SUCCESS) {
+        HCCL_ERROR("%s HcclDfxRegOpInfoByCommId fail, commName[%s].", __func__, param->commName);
+        HcommReleaseComm(param->commName);
+        return HCCL_E_INTERNAL;
+    }
+
+    if (HcommProfilingReportKernelStartTask(param->thread, param->commName) != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "%s failed to report record, thread %lu, param->commName %s.", __func__, param->thread, param->commName);
+        HcommReleaseComm(param->commName);
+        return HCCL_E_INTERNAL;
+    }
     int32_t ret = HcommThreadNotifyRecordOnThread(param->thread, param->dstThread, param->dstNotifyIdx);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("RunAicpuNotifyRecord failed. ret[%d]", ret);
+        HcommReleaseComm(param->commName);
         return ret;
     }
+    if (HcommProfilingReportKernelEndTask(param->thread, param->commName) != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "%s failed to report record, thread %lu, param->commName %s.", __func__, param->thread, param->commName);
+        HcommReleaseComm(param->commName);
+        return HCCL_E_INTERNAL;
+    }
+    if (HcommProfilingReportDeviceOp(param->commName) != HCCL_SUCCESS) {
+        HCCL_ERROR("%s HcommProfilingReportDeviceOp[record] fail, commName[%s].", __func__, param->commName);
+        HcommReleaseComm(param->commName);
+        return HCCL_E_INTERNAL;
+    }
+
     HCCL_INFO("RunAicpuNotifyRecord success.");
+    if (HcommReleaseComm(param->commName) != HCCL_SUCCESS) {
+        HCCL_ERROR("%s HcommReleaseComm fail, commName[%s]", __func__, param->commName);
+        return HCCL_E_INTERNAL;
+    }
+
     return HCCL_SUCCESS;
 }
 
@@ -149,12 +187,50 @@ __attribute__((visibility("default"))) uint32_t RunAicpuNotifyWait(void* args)
     }
     ThreadNotifyWaitParam* param = reinterpret_cast<ThreadNotifyWaitParam*>(args);
     HCCL_INFO("[RunAicpuNotifyWait] thread[0x%llx], notifyIdx[%u]", param->thread, param->notifyIdx);
+    // 保留通信域管理 - 保证生命周期安全
+    if (HcommAcquireComm(param->commName) != HCCL_SUCCESS) {
+        HCCL_ERROR("%s HcommAcquireComm fail, commName[%s]", __func__, param->commName);
+        return HCCL_E_INTERNAL;
+    }
+    HcclDfxOpInfo dfxOpInfoWait{};
+    dfxOpInfoWait.cpuWaitAicpuNotifyIdx = 0;
+    dfxOpInfoWait.cpuTsThread = param->thread;
+    dfxOpInfoWait.dataType = param->dataType;
+    if (HcclDfxRegOpInfoByCommId(param->commName, reinterpret_cast<void*>(&dfxOpInfoWait)) != HCCL_SUCCESS) {
+        HCCL_ERROR("%s HcclDfxRegOpInfoByCommId fail, commName[%s].", __func__, param->commName);
+        HcommReleaseComm(param->commName);
+        return HCCL_E_INTERNAL;
+    }
+
+    if (HcommProfilingReportKernelStartTask(param->thread, param->commName) != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "%s failed to report wait, thread %lu, param->commName %s.", __func__, param->thread, param->commName);
+        HcommReleaseComm(param->commName);
+        return HCCL_E_INTERNAL;
+    }
     int32_t ret = HcommThreadNotifyWaitOnThreadWithDefaultTimeout(param->thread, param->notifyIdx);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("RunAicpuNotifyWait failed. ret[%d]", ret);
+        HcommReleaseComm(param->commName);
         return ret;
     }
+    if (HcommProfilingReportKernelEndTask(param->thread, param->commName) != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "%s failed to report wait, thread %lu, param->commName %s.", __func__, param->thread, param->commName);
+        HcommReleaseComm(param->commName);
+        return HCCL_E_INTERNAL;
+    }
+    if (HcommProfilingReportDeviceOp(param->commName) != HCCL_SUCCESS) {
+        HCCL_ERROR("%s HcommProfilingReportDeviceOp[wait] fail, commName[%s].", __func__, param->commName);
+        HcommReleaseComm(param->commName);
+        return HCCL_E_INTERNAL;
+    }
+
     HCCL_INFO("RunAicpuNotifyWait success.");
+    if (HcommReleaseComm(param->commName) != HCCL_SUCCESS) {
+        HCCL_ERROR("%s HcommReleaseComm fail, commName[%s]", __func__, param->commName);
+        return HCCL_E_INTERNAL;
+    }
     return HCCL_SUCCESS;
 }
 

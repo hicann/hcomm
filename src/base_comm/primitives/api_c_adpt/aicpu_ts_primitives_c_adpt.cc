@@ -1336,8 +1336,18 @@ HcclResult HcommProfilingReportKernelEndTask(uint64_t thread, const char* groupn
     CHK_PRT_RET(streamLitePtr == nullptr, HCCL_ERROR("[%s] streamLitePtr is null", __func__), HCCL_E_PTR);
     // FlagTaskInfo Report
     Hccl::DfxFlagTaskInfo flagTaskInfo;
-    flagTaskInfo.taskId = streamLitePtr->GetRtsq()->GetTaskId();
     flagTaskInfo.type = Hccl::DfxMainStreamTaskType::TAIL;
+    auto* rtsq = streamLitePtr->GetRtsq();
+    CHK_PRT_RET(rtsq == nullptr, HCCL_ERROR("[%s] rtsq is null", __func__), HCCL_E_PTR);
+    uint16_t streamId = 0;
+    uint16_t taskId = 0;
+    HcclResult ret = rtsq->GetLastStreamIdAndTaskId(streamId, taskId);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR("[%s] GetLastStreamIdAndTaskId fail, ret[%d], sqId[%u].", __func__, ret, streamLitePtr->GetSqId()),
+        ret);
+    constexpr uint32_t UINT16_BIT_WIDTH = 16U;
+    flagTaskInfo.taskId = (static_cast<uint32_t>(taskId) << UINT16_BIT_WIDTH) | static_cast<uint32_t>(streamId);
 
     Hccl::DfxProfilingHandlerLite::GetInstance().ReportMainStreamTask(flagTaskInfo);
     return HCCL_SUCCESS;

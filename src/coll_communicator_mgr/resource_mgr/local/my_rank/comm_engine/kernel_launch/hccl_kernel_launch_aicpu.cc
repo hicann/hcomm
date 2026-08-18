@@ -30,15 +30,12 @@ constexpr uint32_t NUM_TWO = 2;
 constexpr uint32_t NUM_THREE = 3;
 static uint32_t g_KernelLaunchTimeout = UINT16_MAX;
 
-static HcclResult
-LaunchNotifyWaitToThread(HcclComm comm, aclrtStream unfoldStream, ThreadHandle srcThread, uint32_t dstNotifyIdx)
+static HcclResult LaunchAicpuKernelPipeline(
+    aclrtStream unfoldStream, aclrtBinHandle binKernelHandle, const std::string& kernelName, void* paramData,
+    uint64_t paramSize)
 {
-    aclrtFuncHandle funcHandle;
-    aclrtArgsHandle argsHandle;
-    std::string kernelName = "RunAicpuNotifyWait";
     // 1. 获取 function handle
-    hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
-    auto binKernelHandle = hcclComm->GetBinHandle();
+    aclrtFuncHandle funcHandle;
     aclError ret = aclrtBinaryGetFunction(binKernelHandle, kernelName.c_str(), &funcHandle);
     CHK_PRT_RET(
         ret != ACL_SUCCESS,
@@ -49,18 +46,16 @@ LaunchNotifyWaitToThread(HcclComm comm, aclrtStream unfoldStream, ThreadHandle s
         HCCL_E_RUNTIME);
 
     // 2. 初始化 args handle
+    aclrtArgsHandle argsHandle;
     ret = aclrtKernelArgsInit(funcHandle, &argsHandle);
     CHK_PRT_RET(
         ret != ACL_SUCCESS,
         HCCL_ERROR("[aclrtKernelArgsInit]errNo[0x%016llx] args init failed, kernelName:%s", ret, kernelName.c_str()),
         HCCL_E_RUNTIME);
 
-    // 3. 准备参数并 append
-    ThreadNotifyWaitParam param;
-    param.thread = srcThread;
-    param.notifyIdx = dstNotifyIdx;
+    // 3. append 参数
     aclrtParamHandle paraHandle;
-    ret = aclrtKernelArgsAppend(argsHandle, &param, sizeof(ThreadNotifyWaitParam), &paraHandle);
+    ret = aclrtKernelArgsAppend(argsHandle, paramData, paramSize, &paraHandle);
     CHK_PRT_RET(
         ret != ACL_SUCCESS,
         HCCL_ERROR(
@@ -88,10 +83,36 @@ LaunchNotifyWaitToThread(HcclComm comm, aclrtStream unfoldStream, ThreadHandle s
     CHK_PRT_RET(
         ret != ACL_SUCCESS,
         HCCL_ERROR(
-            "[aclrtLaunchKernelWithConfig]errNo[0x%016llx] launch kernel failed, "
-            "kernelName:%s",
-            ret, kernelName.c_str()),
+            "[aclrtLaunchKernelWithConfig]errNo[0x%016llx] launch kernel failed, kernelName:%s", ret,
+            kernelName.c_str()),
         HCCL_E_RUNTIME);
+
+    return HCCL_SUCCESS;
+}
+
+static HcclResult LaunchNotifyWaitToThread(
+    HcclComm comm, aclrtStream unfoldStream, ThreadHandle srcThread, uint32_t dstNotifyIdx, uint32_t dataType)
+{
+    uint64_t beginTime = HcommGetProfilingSysCycleTime();
+    std::string kernelName = "RunAicpuNotifyWait";
+    hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
+    auto binKernelHandle = hcclComm->GetBinHandle();
+
+    ThreadNotifyWaitParam param;
+    CHK_RET(HcclGetCommName(comm, param.commName));
+    param.thread = srcThread;
+    param.notifyIdx = dstNotifyIdx;
+    param.dataType = dataType;
+
+    CHK_RET(LaunchAicpuKernelPipeline(unfoldStream, binKernelHandle, kernelName, &param, sizeof(param)));
+
+    HcclResult retOp = HcclReportAicpuKernel(comm, beginTime, kernelName.data()); // AicpuKernel report end
+    if (retOp != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "[%s] HcclReportAicpuKernel failed, beginTime %lu, kernelName %s, ret %d ", __func__, beginTime,
+            kernelName.c_str(), retOp);
+        return retOp;
+    }
 
     return HCCL_SUCCESS;
 }
@@ -100,6 +121,7 @@ static HcclResult LaunchP2pExec(
     HcclComm comm, aclrtStream unfoldStream, const HcclKernelFuncInfo* funcInfo, const void* funcArgs, uint32_t argSize,
     ThreadHandle sendRecvThread)
 {
+    uint64_t beginTime = HcommGetProfilingSysCycleTime();
     aclrtFuncHandle funcHandle;
     aclrtArgsHandle argsHandle;
     // 1. 获取 function handle
@@ -165,13 +187,24 @@ static HcclResult LaunchP2pExec(
             ret, funcInfo->kernelFuncName),
         HCCL_E_RUNTIME);
 
+    std::string kernelNameCStr(funcInfo->kernelFuncName);
+    HcclResult retKernel = HcclReportAicpuKernel(comm, beginTime, kernelNameCStr.data()); // AicpuKernel report end
+    if (retKernel != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "[LaunchGroupP2pExec] HcclReportAicpuKernel failed, beginTime %lu, kernelName %s, ret %d ", beginTime,
+            kernelNameCStr.c_str(), retKernel);
+        return retKernel;
+    }
+
     return HCCL_SUCCESS;
 }
 
 // 放到kernel launch的地方
 static HcclResult LaunchNotifyRecordToThread(
-    HcclComm comm, aclrtStream unfoldStream, ThreadHandle srcThread, ThreadHandle dstThread, uint32_t dstNotifyIdx)
+    HcclComm comm, aclrtStream unfoldStream, ThreadHandle srcThread, ThreadHandle dstThread, uint32_t dstNotifyIdx,
+    uint32_t dataType)
 {
+    uint64_t beginTime = HcommGetProfilingSysCycleTime();
     aclrtFuncHandle funcHandle;
     aclrtArgsHandle argsHandle;
     std::string kernelName = "RunAicpuNotifyRecord";
@@ -195,9 +228,11 @@ static HcclResult LaunchNotifyRecordToThread(
 
     // 3. 准备参数并 append
     ThreadNotifyRecordParam param;
+    CHK_RET(HcclGetCommName(comm, param.commName));
     param.thread = srcThread;
     param.dstThread = dstThread;
     param.dstNotifyIdx = dstNotifyIdx;
+    param.dataType = dataType;
     aclrtParamHandle paraHandle;
     ret = aclrtKernelArgsAppend(argsHandle, &param, sizeof(ThreadNotifyRecordParam), &paraHandle);
     CHK_PRT_RET(
@@ -232,12 +267,20 @@ static HcclResult LaunchNotifyRecordToThread(
             ret, kernelName.c_str()),
         HCCL_E_RUNTIME);
 
+    HcclResult retOp = HcclReportAicpuKernel(comm, beginTime, kernelName.data()); // AicpuKernel report end
+    if (retOp != HCCL_SUCCESS) {
+        HCCL_ERROR(
+            "[LaunchNotifyRecordToThread] HcclReportAicpuKernel failed, beginTime %lu, kernelName %s, ret %d ",
+            beginTime, kernelName.c_str(), retOp);
+        return retOp;
+    }
+
     return HCCL_SUCCESS;
 }
 
 static HcclResult AicpuKernelLaunchDirect(
     HcclComm comm, const HcclKernelFuncInfo* funcInfo, ThreadHandle aicpuThreadHandle, aclrtStream unfoldStream,
-    aclrtStream userStream)
+    aclrtStream userStream, uint32_t dataType)
 {
     CHK_PTR_NULL(comm);
     CHK_PTR_NULL(unfoldStream);
@@ -262,19 +305,11 @@ static HcclResult AicpuKernelLaunchDirect(
 
     CHK_RET(static_cast<HcclResult>(
         HcommThreadNotifyRecordOnThread(cpuTsThread, exportedCpuTsThread, notifyNumOnMainThread - 1))); // h2d record
-    uint64_t beginTime = HcommGetProfilingSysCycleTime(); // AicpuKernel report start
-    CHK_RET(LaunchNotifyWaitToThread(comm, unfoldStream, aicpuThreadHandle, notifyNumOnMainThread - 1)); // device wait
+    CHK_RET(LaunchNotifyWaitToThread(
+        comm, unfoldStream, aicpuThreadHandle, notifyNumOnMainThread - 1, dataType));       // device wait
     CHK_RET(LaunchP2pExec(comm, unfoldStream, funcInfo, args, argSize, aicpuThreadHandle)); // device run task
     CHK_RET(LaunchNotifyRecordToThread(
-        comm, unfoldStream, aicpuThreadHandle, exportedAicpuTsThread, NUM_ZERO)); // d2h record
-    std::string kernelNameCStr(funcInfo->kernelFuncName);
-    HcclResult ret = HcclReportAicpuKernel(comm, beginTime, kernelNameCStr.data()); // AicpuKernel report end
-    if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR(
-            "[AicpuKernelLaunchDirect] HcclReportAicpuKernel failed, beginTime %llu, kernelName %s, ret %d ", beginTime,
-            kernelNameCStr.c_str(), ret);
-        return ret;
-    }
+        comm, unfoldStream, aicpuThreadHandle, exportedAicpuTsThread, NUM_ZERO, dataType)); // d2h record
     CHK_RET(
         static_cast<HcclResult>(HcommThreadNotifyWaitOnThreadWithDefaultTimeout(cpuTsThread, NUM_ZERO))); // host wait
 
@@ -331,7 +366,9 @@ HcclResult HcclAicpuKernelLaunch(
         return HCCL_SUCCESS;
     }
 
-    return AicpuKernelLaunchDirect(comm, funcInfo, aicpuThreadHandle, opInfo->p2p.unfoldStream, userStream);
+    return AicpuKernelLaunchDirect(
+        comm, funcInfo, aicpuThreadHandle, opInfo->p2p.unfoldStream, userStream,
+        static_cast<uint32_t>(opInfo->p2p.dataType));
 }
 
 static HcclResult GetStreams(
@@ -350,6 +387,35 @@ static HcclResult GetStreams(
     return HCCL_SUCCESS;
 }
 
+static HcclResult GetGroupDataType(
+    const std::vector<HcclP2pTask>& sortedSendQue, const std::vector<HcclP2pTask>& sortedRecvQue,
+    uint32_t& groupDataType)
+{
+    if (!sortedSendQue.empty()) {
+        groupDataType = static_cast<uint32_t>(sortedSendQue[0].desc.dataType);
+    } else if (!sortedRecvQue.empty()) {
+        groupDataType = static_cast<uint32_t>(sortedRecvQue[0].desc.dataType);
+    } else {
+        HCCL_ERROR("[GetGroupDataType] both sortedSendQue and sortedRecvQue are empty");
+        return HCCL_E_INTERNAL;
+    }
+    return HCCL_SUCCESS;
+}
+
+static void SetGroupDfxInfos(HcclCommDfx* hcclCommDfx)
+{
+    if (hcclCommDfx != nullptr) {
+        Hccl::MirrorTaskManager* mirrorTaskMgr = hcclCommDfx->GetMirrorTaskManager();
+        if (mirrorTaskMgr != nullptr) {
+            std::shared_ptr<Hccl::DfxOpInfo> opInfo = mirrorTaskMgr->GetCurrDfxOpInfo();
+            if (opInfo != nullptr) {
+                opInfo->op_.opType = Hccl::OpType::HCCLGROUPOP;
+            }
+        }
+    }
+    return;
+}
+
 HcclResult groupLaunchA5()
 {
     std::vector<HcclComm> hcclGroupCommListV2 = GetHcclGroupCommList();
@@ -359,6 +425,7 @@ HcclResult groupLaunchA5()
         hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
         CollComm* collComm = hcclComm->GetCollComm();
         CHK_PTR_NULL(collComm);
+        SetGroupDfxInfos(collComm->GetHcclCommDfx());
 
         /*新建send/recv流*/
         ThreadHandle sendRecv[2];
@@ -379,14 +446,18 @@ HcclResult groupLaunchA5()
             comm, NUM_ONE, &aicpuSendThread, COMM_ENGINE_CPU_TS, &exportedCpuTsSendThread));
         CHK_RET(HcclThreadExportToCommEngine(
             comm, NUM_ONE, &aicpuRecvThread, COMM_ENGINE_CPU_TS, &exportedCpuTsRecvThread));
+
+        uint64_t beginTime = HcommGetProfilingSysCycleTime();
+        uint32_t groupDataType = 0;
+        CHK_RET(GetGroupDataType(sortedSendQue, sortedRecvQue, groupDataType));
         CHK_RET(
             static_cast<HcclResult>(HcommThreadNotifyRecordOnThread(cpuTsThread, exportedCpuTsSendThread, NUM_ZERO)));
         CHK_RET(
             static_cast<HcclResult>(HcommThreadNotifyRecordOnThread(cpuTsThread, exportedCpuTsRecvThread, NUM_ZERO)));
 
         // 下发wait kernel
-        CHK_RET(LaunchNotifyWaitToThread(comm, unfoldStream, aicpuSendThread, NUM_ZERO));
-        CHK_RET(LaunchNotifyWaitToThread(comm, unfoldStream, aicpuRecvThread, NUM_ZERO));
+        CHK_RET(LaunchNotifyWaitToThread(comm, unfoldStream, aicpuSendThread, NUM_ZERO, groupDataType));
+        CHK_RET(LaunchNotifyWaitToThread(comm, unfoldStream, aicpuRecvThread, NUM_ZERO, groupDataType));
 
         // Send/Recv交替执行以避免死锁
         for (size_t sendIdx = 0, recvIdx = 0; sendIdx < sortedSendQue.size() || recvIdx < sortedRecvQue.size();) {
@@ -405,11 +476,14 @@ HcclResult groupLaunchA5()
         }
 
         // 下发record kernel
-        CHK_RET(LaunchNotifyRecordToThread(comm, unfoldStream, aicpuSendThread, exportedAicpuTsThread, NUM_ONE));
-        CHK_RET(LaunchNotifyRecordToThread(comm, unfoldStream, aicpuRecvThread, exportedAicpuTsThread, NUM_TWO));
+        CHK_RET(LaunchNotifyRecordToThread(
+            comm, unfoldStream, aicpuSendThread, exportedAicpuTsThread, NUM_ONE, groupDataType));
+        CHK_RET(LaunchNotifyRecordToThread(
+            comm, unfoldStream, aicpuRecvThread, exportedAicpuTsThread, NUM_TWO, groupDataType));
 
         CHK_RET(static_cast<HcclResult>(HcommThreadNotifyWaitOnThreadWithDefaultTimeout(cpuTsThread, NUM_ONE)));
         CHK_RET(static_cast<HcclResult>(HcommThreadNotifyWaitOnThreadWithDefaultTimeout(cpuTsThread, NUM_TWO)));
+        CHK_RET(HcclProfilingReportOp(comm, beginTime));
     }
 
     SetHcclP2pTaskNums(0);

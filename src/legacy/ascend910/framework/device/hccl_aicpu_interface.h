@@ -16,13 +16,17 @@
 #include "hccl_group_utils.h"
 
 struct ThreadNotifyRecordParam {
+    char commName[COMM_NAME_MAX_LENGTH];
     ThreadHandle thread;
     ThreadHandle dstThread;
     uint32_t dstNotifyIdx;
+    uint32_t dataType;
 };
 struct ThreadNotifyWaitParam {
+    char commName[COMM_NAME_MAX_LENGTH];
     ThreadHandle thread;
     uint32_t notifyIdx;
+    uint32_t dataType;
 };
 
 extern "C" {

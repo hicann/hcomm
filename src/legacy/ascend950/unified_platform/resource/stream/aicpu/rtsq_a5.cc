@@ -516,4 +516,22 @@ void RtsqA5::P2PWriteValue(u64 remoteAddr, u32 writeValue)
         writeValue);
     RefreshInfo();
 }
+
+HcclResult RtsqA5::GetLastStreamIdAndTaskId(uint16_t& streamId, uint16_t& taskId) const
+{
+    if (pendingSqeCnt > 0) {
+        const u8* lastSqe = locBuf + (pendingSqeCnt - 1U) * RTSQ_SQE_SIZE;
+        auto* sqe = reinterpret_cast<const Rt91095StarsNotifySqe*>(lastSqe);
+        streamId = sqe->header.rtStreamId;
+        taskId = sqe->header.taskId;
+        HCCL_INFO(
+            "[%s] from pending, pendingSqeCnt[%u], sqId[%u], streamId[%u], taskId[%u].", __func__, pendingSqeCnt, sqId_,
+            streamId, taskId);
+        return HCCL_SUCCESS;
+    }
+    const u32 lastIdx = (sqTail_ + sqDepth_ - 1U) % sqDepth_;
+    HCCL_INFO(
+        "[%s] from rtsq, sqId[%u], sqTail[%u], sqDepth[%u], lastIdx[%u].", __func__, sqId_, sqTail_, sqDepth_, lastIdx);
+    return GetStreamIdAndTaskIdBySqIdx(lastIdx, streamId, taskId);
+}
 } // namespace Hccl

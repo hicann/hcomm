@@ -151,10 +151,14 @@ TEST_F(TestKernelLaunchAicpu, Ut_HcclAicpuKernelLaunch_Expect_AicpuKernelLaunchD
     HcclKernelLaunchCfg kernelLaunchCfg;
     kernelLaunchCfg.timeOut = 120U;
 
+    static CollComm g_mockCollComm(nullptr, 0, "test", ManagerCallbacks{}, CollCommInitMode::simpleMode);
+    MOCKER_CPP(&hcclComm::GetCollComm).stubs().will(returnValue(&g_mockCollComm));
+    MOCKER_CPP(&hcclComm::GetBinHandle).stubs().will(returnValue((aclrtBinHandle)0x1000));
     MOCKER(HcclThreadAcquire).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER(HcclThreadAcquireWithStream).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER(HcclThreadExportToCommEngine).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER(HcclGetNotifyNumInThread).stubs().will(invoke(MockHcclGetNotifyNumInThread));
+    MOCKER(HcclGetCommName).stubs().will(returnValue(HCCL_SUCCESS));
     MOCKER(HcommThreadNotifyRecordOnThread).stubs().will(returnValue(0));
     MOCKER(HcommThreadNotifyWaitOnThreadWithDefaultTimeout).stubs().will(returnValue(0));
     MOCKER(aclrtBinaryGetFunction).stubs().will(invoke(MockAclrtBinaryGetFunction));
@@ -166,6 +170,7 @@ TEST_F(TestKernelLaunchAicpu, Ut_HcclAicpuKernelLaunch_Expect_AicpuKernelLaunchD
     MOCKER(HcommGetProfilingSysCycleTime).stubs().will(returnValue(0x1000U));
 
     HcclResult ret = HcclAicpuKernelLaunch(comm, &opInfo, &funcInfo, aicpuThreadHandle, userStream, &kernelLaunchCfg);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
     GlobalMockObject::verify();
 }
 
@@ -215,6 +220,10 @@ TEST_F(TestKernelLaunchAicpu, Ut_groupLaunchA5_When_OneSendAndOneRecvTask_Expect
     MOCKER(aclrtKernelArgsAppend).stubs().will(invoke(MockAclrtKernelArgsAppend));
     MOCKER(aclrtKernelArgsFinalize).stubs().will(returnValue(ACL_SUCCESS));
     MOCKER(aclrtLaunchKernelWithConfig).stubs().will(returnValue(ACL_SUCCESS));
+    MOCKER(HcclGetCommName).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(HcclReportAicpuKernel).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(HcommGetProfilingSysCycleTime).stubs().will(returnValue(0x1000U));
+    MOCKER(HcclProfilingReportOp).stubs().will(returnValue(HCCL_SUCCESS));
 
     HcclResult ret = groupLaunchA5();
     EXPECT_EQ(ret, HCCL_SUCCESS);

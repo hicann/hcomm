@@ -120,7 +120,8 @@ const std::map<OpType, std::string> PROF_OP_NAME_V2
        {OpType::BATCHGET, "hccl_batchGet_"},
        {OpType::DEBUGCASE, "hccl_debugCase_"},
        {OpType::BARRIER, "hccl_barrier_"},
-       {OpType::HALFALLTOALLV, "hccl_halfAlltoallv_"}};
+       {OpType::HALFALLTOALLV, "hccl_halfAlltoallv_"},
+       {OpType::HCCLGROUPOP, "hccl_groupOp_"}};
 
 inline std::string GetProfOpName(OpType opType)
 {

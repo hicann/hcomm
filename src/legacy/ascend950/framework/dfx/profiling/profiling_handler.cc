@@ -136,6 +136,10 @@ void ProfilingHandler::SetCachedCclTag()
         const std::string& cclTag = item.second.second;
         cachedNewCclTag_[item.second.first] = GetProfHashId(cclTag.c_str(), cclTag.length());
     }
+    if (cachedNewCclTag_.find(static_cast<uint32_t>(OpType::HCCLGROUPOP)) == cachedNewCclTag_.end()) {
+        const std::string cclTag = "OpType::HCCLGROUPOP";
+        cachedNewCclTag_[OpType::HCCLGROUPOP] = GetProfHashId(cclTag.c_str(), cclTag.length());
+    }
 }
 
 uint32_t ProfilingHandler::GetTaskTypeValue(TaskParamType taskType) const

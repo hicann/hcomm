@@ -21,6 +21,9 @@
 #include "aicpu_hccl_process.h"
 #include "aicpu_sqe_context.h"
 #include "aicpu_hdc_utils.h"
+#include "hcomm_primitives.h"
+#include "hcomm_diag.h"
+#include <securec.h>
 
 #undef private
 #undef protected
@@ -119,4 +122,59 @@ TEST_F(Test_Hccl_Aicpu_Interface, Ut_RunAicpuRpcSrvLaunchV2_When_SuspendingFlagI
     delete commParam;
     delete tilingData;
     delete hcclCommAicpu;
+}
+
+ThreadNotifyWaitParam*
+CreateNotifyWaitParam(const char* commName, uint64_t thread, uint32_t notifyIdx, uint32_t dataType)
+{
+    ThreadNotifyWaitParam* param = new ThreadNotifyWaitParam();
+    memset(param, 0, sizeof(ThreadNotifyWaitParam));
+    strncpy_s(param->commName, COMM_NAME_MAX_LENGTH, commName, strlen(commName));
+    param->thread = thread;
+    param->notifyIdx = notifyIdx;
+    param->dataType = dataType;
+    return param;
+}
+
+ThreadNotifyRecordParam* CreateNotifyRecordParam(
+    const char* commName, uint64_t thread, uint64_t dstThread, uint32_t dstNotifyIdx, uint32_t dataType)
+{
+    ThreadNotifyRecordParam* param = new ThreadNotifyRecordParam();
+    memset(param, 0, sizeof(ThreadNotifyRecordParam));
+    strncpy_s(param->commName, COMM_NAME_MAX_LENGTH, commName, strlen(commName));
+    param->thread = thread;
+    param->dstThread = dstThread;
+    param->dstNotifyIdx = dstNotifyIdx;
+    param->dataType = dataType;
+    return param;
+}
+
+TEST_F(Test_Hccl_Aicpu_Interface, Ut_RunAicpuNotifyWait_When_AllSuccess_Expect_ReturnHCCL_SUCCESS)
+{
+    ThreadNotifyWaitParam* param = CreateNotifyWaitParam("test_comm", 0x1234, 2, 1);
+
+    MOCKER(HcommAcquireComm).stubs().will(returnValue(0));
+    MOCKER(HcclDfxRegOpInfoByCommId).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(HcommThreadNotifyWaitOnThreadWithDefaultTimeout).stubs().will(returnValue(0));
+    MOCKER(HcommReleaseComm).stubs().will(returnValue(0));
+
+    uint32_t ret = RunAicpuNotifyWait(param);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    delete param;
+}
+
+TEST_F(Test_Hccl_Aicpu_Interface, Ut_RunAicpuNotifyRecord_When_AllSuccess_Expect_ReturnHCCL_SUCCESS)
+{
+    ThreadNotifyRecordParam* param = CreateNotifyRecordParam("test_comm", 0x1234, 0x5678, 0, 1);
+
+    MOCKER(HcommAcquireComm).stubs().will(returnValue(0));
+    MOCKER(HcclDfxRegOpInfoByCommId).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(HcommThreadNotifyRecordOnThread).stubs().will(returnValue(0));
+    MOCKER(HcommReleaseComm).stubs().will(returnValue(0));
+
+    uint32_t ret = RunAicpuNotifyRecord(param);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    delete param;
 }

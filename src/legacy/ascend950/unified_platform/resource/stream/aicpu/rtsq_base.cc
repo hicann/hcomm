@@ -131,8 +131,7 @@ void RtsqBase::ConfigDisableToEnable(u32 value)
 
 HcclResult RtsqBase::GetStreamIdAndTaskIdBySqIdx(u32 sqIdx, uint16_t& streamId, uint16_t& taskId) const
 {
-    const u32 rtsqLength = 2048;
-    if (sqBaseAddr_ == 0 || sqIdx >= rtsqLength) {
+    if (sqBaseAddr_ == 0 || sqIdx >= sqDepth_) {
         HCCL_ERROR("[%s]fail, sqBaseAddr_[0x%llu], sqIdx[%u]", __func__, sqBaseAddr_, sqIdx);
         return HCCL_E_PARA;
     }

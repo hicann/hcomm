@@ -38,6 +38,7 @@
 #include "adapter_rts.h"
 #include "adapter_hal.h"
 #include "hcomm_res_defs.h"
+#include "hcomm_diag.h"
 
 #include "runtime/rt_error_codes.h"
 #include "mmpa_api.h"
@@ -5288,3 +5289,23 @@ void CallDlog(int level, int sysCallBack, const char* buffer, std::string file, 
     (void)line;
 }
 } // namespace Hccl
+
+HcclResult HcommProfilingReportDeviceOp(const char* groupname)
+{
+    (void)groupname;
+    return HCCL_SUCCESS;
+}
+
+HcclResult HcommProfilingReportKernelStartTask(uint64_t thread, const char* groupname)
+{
+    (void)thread;
+    (void)groupname;
+    return HCCL_SUCCESS;
+}
+
+HcclResult HcommProfilingReportKernelEndTask(uint64_t thread, const char* groupname)
+{
+    (void)thread;
+    (void)groupname;
+    return HCCL_SUCCESS;
+}
