@@ -38,6 +38,7 @@ namespace hcomm {
 constexpr u32 MEM_BLOCK_SIZE = 128;
 constexpr uint16_t DEFAULT_LISTENING_PORT = 60001;
 constexpr u32 SEND_RQE_COUNT = 16;
+constexpr u32 DEFAULT_NOTIFY_WAIT_TIMEOUT_S = 30; // NotifyWait超时默认值（单位：秒）
 
 HostCpuRoceChannel::HostCpuRoceChannel(EndpointHandle endpointHandle, HcommChannelDesc channelDesc)
     : endpointHandle_(endpointHandle),
@@ -898,7 +899,7 @@ HcclResult HostCpuRoceChannel::NotifyWait(const uint32_t localNotifyIdx, const u
 
     // 2.轮询rq_cq
     auto startTime = std::chrono::steady_clock::now();
-    auto waitTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(timeout));
+    auto waitTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(timeout));
     for (uint32_t i = 0; i < qpInfo.size(); i++) {
         CHK_PRT_RET(
             qpInfo[i].recvCq == nullptr, HCCL_ERROR("[HostCpuRoceChannel::%s] recvCq[%u] is null", __func__, i),
@@ -1848,8 +1849,8 @@ HcclResult HostCpuRoceChannel::NotifyWaitHybrid(uint32_t localNotifyIdx, uint32_
 
     hccl::MemType type = NotifyIdToMemtypeHybird(localNotifyIdx);
 
-    // 使用配置的超时时间和轮询间隔
-    uint32_t pollTimeout = (timeout == 0) ? 30000 : timeout;
+    // 使用配置的超时时间和轮询间隔（timeOut单位为秒，默认30s）
+    uint32_t pollTimeout = (timeout == 0) ? DEFAULT_NOTIFY_WAIT_TIMEOUT_S : timeout;
     uint32_t pollInterval = 1;
 
     // 使用原子操作读取 Notify 内存
@@ -1857,7 +1858,7 @@ HcclResult HostCpuRoceChannel::NotifyWaitHybrid(uint32_t localNotifyIdx, uint32_
     const uint64_t expectedValue = 1;
 
     auto startTime = std::chrono::steady_clock::now();
-    auto waitTime = std::chrono::milliseconds(pollTimeout);
+    auto waitTime = std::chrono::seconds(pollTimeout);
 
     while (true) {
         // 使用原子操作读取，确保内存可见性

@@ -1289,8 +1289,8 @@ TEST_F(HostCpuRoceChannelTest, Ut_NotifyWaitHybrid_Timeout_Expect_HCCL_E_TIMEOUT
     impl_->localMemMsg_[hccl::DATA_NOTIFY_MEM].len = sizeof(std::atomic<uint32_t>);
     impl_->localMemMsg_[hccl::DATA_NOTIFY_MEM].lkey = 0;
 
-    // 使用很短的超时时间（1ms）触发超时
-    HcclResult ret = impl_->NotifyWaitHybrid(1, 1); // 1ms 超时
+    // 使用很短的超时时间（1s）触发超时
+    HcclResult ret = impl_->NotifyWaitHybrid(1, 1); // 1s 超时
     EXPECT_EQ(ret, HCCL_E_TIMEOUT);
 
     impl_->isHybridMode_ = false; // 析构前设置为false避免调用HrtRaMrDereg
@@ -1314,7 +1314,7 @@ TEST_F(HostCpuRoceChannelTest, Ut_NotifyWaitHybrid_NullMemAddr_Expect_HCCL_E_TIM
     impl_->localMemMsg_[hccl::ACK_NOTIFY_MEM].len = sizeof(std::atomic<uint32_t>);
     impl_->localMemMsg_[hccl::ACK_NOTIFY_MEM].lkey = 0;
 
-    // 使用1ms超时
+    // 使用1s超时
     HcclResult ret = impl_->NotifyWaitHybrid(0, 1);
     EXPECT_EQ(ret, HCCL_E_TIMEOUT);
 
