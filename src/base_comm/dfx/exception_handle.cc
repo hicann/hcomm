@@ -36,8 +36,8 @@ uint32_t ExceptionHandle::GetSqeId(uint16_t taskId, uint16_t streamId)
     return (static_cast<uint32_t>(taskId) << TASK_ID_SHIFT_BITS) | static_cast<uint32_t>(streamId);
 }
 
-HcclResult
-ExceptionHandle::CheckRepeatBySqeId(Hccl::StreamLite* streamLite, uint32_t devId, uint16_t taskId, uint16_t streamId)
+HcclResult ExceptionHandle::CheckRepeatBySqeId(
+    Hccl::StreamLite* streamLite, [[maybe_unused]] uint32_t devId, uint16_t taskId, uint16_t streamId)
 {
     CHK_PTR_NULL(streamLite);
 

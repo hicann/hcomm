@@ -90,9 +90,14 @@ HcclResult CollReduceScatterMeshOpbasePipelineExecutor::RunLoop(OpParam& param, 
             TemplateType::TEMPLATE_REDUCESCATTER_PIPELINE, dispatcher_);
         CHK_SMART_PTR_NULL(tempAlg);
 
-        HcomCollOpInfo opInfo
-            = {"",         execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType,
-               param.root, param.reduceType};
+        HcomCollOpInfo opInfo = {"",
+                                 execMem.inputPtr,
+                                 execMem.outputPtr,
+                                 param.DataDes.count,
+                                 param.DataDes.dataType,
+                                 param.root,
+                                 param.reduceType,
+                                 0};
 
         CHK_RET(tempAlg->Prepare(
             &opInfo, execMem.inputMem, curCount, bufferSize, curOffset, level0CommInfo, level1CommInfo,
@@ -173,7 +178,7 @@ u64 CollReduceScatterMeshOpbasePipelineExecutor::CalcLoopMaxCount(const u32 unit
     return maxCountPerLoop;
 }
 
-bool CollReduceScatterMeshOpbasePipelineExecutor::IsHugeData(const u64 curSize, OpParam* param)
+bool CollReduceScatterMeshOpbasePipelineExecutor::IsHugeData(const u64 curSize, [[maybe_unused]] OpParam* param)
 {
     bool hugeData = curSize > RDMA_SEND_MAX_SIZE || curSize > SDMA_SEND_MAX_SIZE;
     return hugeData;

@@ -169,8 +169,8 @@ HcclResult DispatcherAiCpu::WriteValue(hccl::Stream& stream, u64 writeAddr, u64 
 }
 
 HcclResult DispatcherAiCpu::SignalRecord(
-    HcclRtNotify signal, hccl::Stream& stream, u32 userRank, u64 offset, s32 stage, bool inchip, u64 signalAddr,
-    u32 notifyId)
+    [[maybe_unused]] HcclRtNotify signal, hccl::Stream& stream, u32 userRank, [[maybe_unused]] u64 offset,
+    [[maybe_unused]] s32 stage, bool inchip, u64 signalAddr, u32 notifyId)
 {
     const HcclComStreamInfo& streamInfo = stream.GetHcclStreamInfo();
     uint8_t* sqeBuffer = nullptr;
@@ -285,8 +285,8 @@ HcclResult DispatcherAiCpu::SignalRecord(
 }
 
 HcclResult DispatcherAiCpu::SignalWait(
-    HcclRtNotify signal, Stream& stream, u32 userRank, u32 remoteUserRank, s32 stage, bool inchip, u32 notifyId,
-    u32 timeOut)
+    [[maybe_unused]] HcclRtNotify signal, Stream& stream, u32 userRank, u32 remoteUserRank, [[maybe_unused]] s32 stage,
+    bool inchip, u32 notifyId, u32 timeOut)
 {
     const HcclComStreamInfo& streamInfo = stream.GetHcclStreamInfo();
     uint8_t* sqeBuffer = nullptr;
@@ -1044,8 +1044,9 @@ HcclResult DispatcherAiCpu::InlineReduceAsync(
 }
 
 HcclResult DispatcherAiCpu::TbeReduceAsync(
-    const void* src1, const void* src2, u64 count, const HcclDataType datatype, HcclReduceOp redOp, Stream& stream,
-    const void* dst)
+    [[maybe_unused]] const void* src1, [[maybe_unused]] const void* src2, [[maybe_unused]] u64 count,
+    [[maybe_unused]] const HcclDataType datatype, [[maybe_unused]] HcclReduceOp redOp, [[maybe_unused]] Stream& stream,
+    [[maybe_unused]] const void* dst)
 {
     HCCL_ERROR("[DispatcherAiCpu][TbeReduceAsync] aicpu do not support the tbe reduce");
     return HCCL_E_NOT_SUPPORT;
@@ -1085,8 +1086,9 @@ HcclResult DispatcherAiCpu::RdmaSend(u32 dbindex, u64 dbinfo, hccl::Stream& stre
 }
 
 HcclResult DispatcherAiCpu::RdmaRecord(
-    u32 dbindex, u64 dbinfo, const struct SendWr& wr, hccl::Stream& stream, RdmaType rdmaType, u32 userRank, u64 offset,
-    u32 notifyId)
+    [[maybe_unused]] u32 dbindex, [[maybe_unused]] u64 dbinfo, [[maybe_unused]] const struct SendWr& wr,
+    [[maybe_unused]] hccl::Stream& stream, [[maybe_unused]] RdmaType rdmaType, [[maybe_unused]] u32 userRank,
+    [[maybe_unused]] u64 offset, [[maybe_unused]] u32 notifyId)
 {
     return HCCL_SUCCESS;
 }

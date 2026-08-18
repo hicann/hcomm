@@ -79,7 +79,7 @@ bool CollAllReduceMeshExecutor::IsHugeData(const u64 curSize)
     return hugeData;
 }
 
-bool CollAllReduceMeshExecutor::IsSmallData(const u64 totalSize, const u64 curSize)
+bool CollAllReduceMeshExecutor::IsSmallData([[maybe_unused]] const u64 totalSize, const u64 curSize)
 {
     bool smallData = IsAllReduceSmallData(curSize);
     return smallData;

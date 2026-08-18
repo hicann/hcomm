@@ -79,6 +79,7 @@ free_jfc:
 
 STATIC void RsDeinitJfcAttr(struct RsCtxJfcCb *jfcCb, urma_jfc_cfg_t *jfcCfg, struct ExtJfcAttr *jfcAttr)
 {
+    (void)jfcCfg;
     (void)RsUrmaFreeJfc(jfcAttr->jfc);
     if (jfcCb->jfcType == JFC_MODE_USER_CTL_NORMAL) {
         return;

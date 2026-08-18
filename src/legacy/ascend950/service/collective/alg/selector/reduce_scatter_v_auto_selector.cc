@@ -77,8 +77,9 @@ SelectorStatus ReduceScatterVAutoSelector::SelectCcuMsAlgo(
 }
 
 SelectorStatus ReduceScatterVAutoSelector::SelectCcuScheduleAlgo(
-    const TopoInfo& topoInfo, const CollAlgOperator& op,
-    const std::map<OpType, std::vector<HcclAlgoType>>& configAlgMap, std::string& primQueueGenName) const
+    const TopoInfo& topoInfo, [[maybe_unused]] const CollAlgOperator& op,
+    [[maybe_unused]] const std::map<OpType, std::vector<HcclAlgoType>>& configAlgMap,
+    std::string& primQueueGenName) const
 {
     HCCL_DEBUG("[ReduceScatterVAutoSelector][%s] start, topoInfo levelNum[%u]", __func__, topoInfo.levelNum);
 

@@ -190,7 +190,9 @@ HcclResult HcclGetCommAll(uint32_t ndev, int32_t* devices, HcclComm* comms)
     return HCCL_SUCCESS;
 }
 
-HcclResult GetDeviceCollComm(const s32 rank, HcclCommConfig* config, const s32 logicDeviceId, HcclComm& comm)
+HcclResult GetDeviceCollComm(
+    [[maybe_unused]] const s32 rank, [[maybe_unused]] HcclCommConfig* config, [[maybe_unused]] const s32 logicDeviceId,
+    [[maybe_unused]] HcclComm& comm)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     // 给当前线程添加名字
@@ -268,7 +270,8 @@ HcclResult HcclGetCollCommAll(uint32_t ndev, int32_t* devices, HcclComm* comms)
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCollCommInitAll(uint32_t ndev, int32_t* devices, HcclComm* comms)
+HcclResult
+HcclCollCommInitAll([[maybe_unused]] uint32_t ndev, [[maybe_unused]] int32_t* devices, [[maybe_unused]] HcclComm* comms)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     HcclUs startut = TIME_NOW();
@@ -445,7 +448,8 @@ HcclResult CheckOpBasedHcom(HcclOpInfoCtx& opBaseHcom, const uint32_t rank, cons
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommInitCollComm(uint32_t rank, void** commV2, const HcclCommConfig* config, HcclComm* comm)
+HcclResult HcclCommInitCollComm(
+    [[maybe_unused]] uint32_t rank, void** commV2, [[maybe_unused]] const HcclCommConfig* config, HcclComm* comm)
 {
     CHK_PTR_NULL(comm);
     CHK_PTR_NULL(*commV2);
@@ -670,7 +674,7 @@ HcclResult InitCommClusterInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommInitClusterInfoWrapper(struct hcclAsyncJob* job_)
+HcclResult HcclCommInitClusterInfoWrapper([[maybe_unused]] struct hcclAsyncJob* job_)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     struct hcclCommInitRankTableAsyncJob* job = static_cast<hcclCommInitRankTableAsyncJob*>(job_);
@@ -745,7 +749,8 @@ HcclResult HcclCommInitClusterInfoWrapper(struct hcclAsyncJob* job_)
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommInitClusterInfo(const char* clusterInfo, uint32_t rank, HcclComm* comm)
+HcclResult HcclCommInitClusterInfo(
+    [[maybe_unused]] const char* clusterInfo, [[maybe_unused]] uint32_t rank, [[maybe_unused]] HcclComm* comm)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     if (hcclGroupDepth > 0) {
@@ -909,7 +914,7 @@ HcclCommInitClusterInfoMemConfig(const char* rankTableString, uint32_t rank, Hcc
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommInitClusterInfoConfigWrapper(struct hcclAsyncJob* job_)
+HcclResult HcclCommInitClusterInfoConfigWrapper([[maybe_unused]] struct hcclAsyncJob* job_)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     struct hcclCommInitRankTableConfigAsyncJob* job = static_cast<hcclCommInitRankTableConfigAsyncJob*>(job_);
@@ -1002,7 +1007,9 @@ HcclResult HcclCommInitClusterInfoConfigWrapper(struct hcclAsyncJob* job_)
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommInitClusterInfoConfig(const char* clusterInfo, uint32_t rank, HcclCommConfig* config, HcclComm* comm)
+HcclResult HcclCommInitClusterInfoConfig(
+    [[maybe_unused]] const char* clusterInfo, [[maybe_unused]] uint32_t rank, [[maybe_unused]] HcclCommConfig* config,
+    [[maybe_unused]] HcclComm* comm)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     if (hcclGroupDepth > 0) {
@@ -1094,8 +1101,9 @@ HcclResult HcclCommInitClusterInfoConfig(const char* clusterInfo, uint32_t rank,
 }
 
 HcclResult HcclCreateSubCommConfigInner(
-    hccl::hcclComm* globalComm, uint32_t rankNum, uint32_t* rankIds, uint32_t subCommRankId, CommConfig& commConfig,
-    HcclComm* subComm)
+    [[maybe_unused]] hccl::hcclComm* globalComm, [[maybe_unused]] uint32_t rankNum, [[maybe_unused]] uint32_t* rankIds,
+    [[maybe_unused]] uint32_t subCommRankId, [[maybe_unused]] CommConfig& commConfig,
+    [[maybe_unused]] HcclComm* subComm)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     HcclResult ret = HCCL_SUCCESS;
@@ -1367,7 +1375,7 @@ HcclResult HcclCreateSubCommConfig(
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclGetRootInfo(HcclRootInfo* rootInfo)
+HcclResult HcclGetRootInfo([[maybe_unused]] HcclRootInfo* rootInfo)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     HcclUs startut = TIME_NOW();
@@ -1456,7 +1464,8 @@ HcclResult HcclGetCommName(HcclComm commHandle, char* commName)
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclGetCommHandle(const char* commName, std::shared_ptr<hccl::hcclComm>& comm)
+HcclResult
+HcclGetCommHandle([[maybe_unused]] const char* commName, [[maybe_unused]] std::shared_ptr<hccl::hcclComm>& comm)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     CHK_PTR_NULL(commName);
@@ -1484,7 +1493,7 @@ HcclResult HcclGetCommHandle(const char* commName, std::shared_ptr<hccl::hcclCom
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommGetHandleWithName(const char* commName, HcclComm* comm)
+HcclResult HcclCommGetHandleWithName([[maybe_unused]] const char* commName, [[maybe_unused]] HcclComm* comm)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     CHK_PTR_NULL(commName);
@@ -1514,7 +1523,8 @@ HcclResult HcclCommGetHandleWithName(const char* commName, HcclComm* comm)
 }
 
 HcclResult HcclGetCommConnections(
-    const HcclRootHandle& rootHandle, const std::string& identifier, HcclCommConnections& commConnections)
+    [[maybe_unused]] const HcclRootHandle& rootHandle, [[maybe_unused]] const std::string& identifier,
+    [[maybe_unused]] HcclCommConnections& commConnections)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     HcclOpInfoCtx& opBaseInfo = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
@@ -1537,7 +1547,7 @@ HcclResult HcclGetCommConnections(
     return HCCL_SUCCESS;
 }
 
-void HcclCloseCommConnections(const std::string& identifier)
+void HcclCloseCommConnections([[maybe_unused]] const std::string& identifier)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     HcclOpInfoCtx& opBaseInfo = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
@@ -1724,7 +1734,9 @@ HcclResult GetTopoDetectInfo(
 }
 
 HcclResult InitCommRootInfo(
-    const u32 nRanks, const u32 rank, const HcclRootHandle& rootHandle, const CommConfig& commConfig, HcclComm* comm)
+    [[maybe_unused]] const u32 nRanks, [[maybe_unused]] const u32 rank,
+    [[maybe_unused]] const HcclRootHandle& rootHandle, [[maybe_unused]] const CommConfig& commConfig,
+    [[maybe_unused]] HcclComm* comm)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     HcclResult ret = HCCL_SUCCESS;
@@ -2285,7 +2297,7 @@ HcclResult HcclCommInitRootInfoConfig(
     return ret;
 }
 
-HcclResult HcclSetConfig(HcclConfig config, HcclConfigValue configValue)
+HcclResult HcclSetConfig([[maybe_unused]] HcclConfig config, [[maybe_unused]] HcclConfigValue configValue)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     if (config == HCCL_DETERMINISTIC) {
@@ -2416,7 +2428,7 @@ HcclBroadcastInner(void* buf, uint64_t count, HcclDataType dataType, uint32_t ro
 
     CHK_RET(HcomCheckOpParam(tag.c_str(), count, dataType, stream));
 
-    HcomCollOpInfo opInfo = {"", buf, buf, count, dataType, root, HCCL_REDUCE_RESERVED};
+    HcomCollOpInfo opInfo = {"", buf, buf, count, dataType, root, HCCL_REDUCE_RESERVED, 0};
 
     u32 rankSize = INVALID_VALUE_RANKSIZE;
     CHK_RET_AND_PRINT_IDE(hcclComm->GetRankSize(rankSize), tag.c_str());
@@ -2882,7 +2894,7 @@ HcclResult HcclScatterInner(
 
     CHK_RET_AND_PRINT_IDE(HcomCheckOpParam(tag.c_str(), recvCount, dataType, stream), tag.c_str());
 
-    HcomCollOpInfo opInfo = {"", sendBuf, recvBuf, recvCount, dataType, root};
+    HcomCollOpInfo opInfo = {"", sendBuf, recvBuf, recvCount, dataType, root, HCCL_REDUCE_RESERVED, 0};
 
     u32 rankSize = INVALID_VALUE_RANKSIZE;
     CHK_RET_AND_PRINT_IDE(hcclComm->GetRankSize(rankSize), tag.c_str());
@@ -3308,7 +3320,7 @@ HcclResult HcclSendInner(
     const string tag = "worldCommSendRecv_" + std::to_string(localRank) + "_" + std::to_string(destRank) + "_"
                        + hcclComm->GetIdentifier();
 
-    HcomCollOpInfo opInfo = {"", sendBuf, sendBuf, count, dataType, 0, HCCL_REDUCE_RESERVED};
+    HcomCollOpInfo opInfo = {"", sendBuf, sendBuf, count, dataType, 0, HCCL_REDUCE_RESERVED, 0};
     /* 接口交互信息日志 */
     char stackLogBuffer[LOG_TMPBUF_SIZE];
     if (GetExternalInputHcclEnableEntryLog()) {
@@ -3412,7 +3424,7 @@ HcclRecvInner(void* recvBuf, uint64_t count, HcclDataType dataType, uint32_t src
     const string tag = "worldCommSendRecv_" + std::to_string(srcRank) + "_" + std::to_string(localRank) + "_"
                        + hcclComm->GetIdentifier();
 
-    HcomCollOpInfo opInfo = {"", recvBuf, recvBuf, count, dataType, 0, HCCL_REDUCE_RESERVED};
+    HcomCollOpInfo opInfo = {"", recvBuf, recvBuf, count, dataType, 0, HCCL_REDUCE_RESERVED, 0};
     /* 接口交互信息日志 */
     char stackLogBuffer[LOG_TMPBUF_SIZE];
     if (GetExternalInputHcclEnableEntryLog()) {
@@ -3518,7 +3530,7 @@ static HcclResult ResetDevice(hccl::hcclComm* hcclComm)
 }
 #endif
 
-HcclResult HcclCommDestroyWrapper(struct hcclAsyncJob* job_)
+HcclResult HcclCommDestroyWrapper([[maybe_unused]] struct hcclAsyncJob* job_)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     struct hcclCommDestroyAsyncJob* job = static_cast<hcclCommDestroyAsyncJob*>(job_);
@@ -3621,7 +3633,7 @@ HcclResult HcclCommDestroyWrapper(struct hcclAsyncJob* job_)
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommDestroy(HcclComm comm)
+HcclResult HcclCommDestroy([[maybe_unused]] HcclComm comm)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     if (hcclGroupDepth > 0) {
@@ -3771,7 +3783,9 @@ static HcclConfigTypeOpExpansionMode OpExpansionModeValueToModeEnum(const uint32
 }
 #endif
 
-HcclResult HcclConfigGetInfo(HcclComm comm, HcclConfigType cfgType, uint32_t infoLen, void* info)
+HcclResult HcclConfigGetInfo(
+    [[maybe_unused]] HcclComm comm, [[maybe_unused]] HcclConfigType cfgType, [[maybe_unused]] uint32_t infoLen,
+    [[maybe_unused]] void* info)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     CHK_PTR_NULL(comm);
@@ -5324,7 +5338,8 @@ static HcclResult RegisterTaskReportCallback(hccl::CollComm* collComm, HcclComm 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
-int32_t HcclTaskRegister(HcclComm comm, const char* msgTag, Callback cb)
+int32_t
+HcclTaskRegister([[maybe_unused]] HcclComm comm, [[maybe_unused]] const char* msgTag, [[maybe_unused]] Callback cb)
 {
     HCCL_INFO("[HcclTaskRegister] start to register task");
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
@@ -5368,7 +5383,7 @@ int32_t HcclTaskRegister(HcclComm comm, const char* msgTag, Callback cb)
     return HCCL_E_NOT_SUPPORT;
 }
 
-int32_t HcclTaskUnRegister(HcclComm comm, const char* msgTag)
+int32_t HcclTaskUnRegister([[maybe_unused]] HcclComm comm, [[maybe_unused]] const char* msgTag)
 {
     HCCL_INFO("[HcclTaskUnRegister] start to register task");
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
@@ -5655,7 +5670,7 @@ HcclResult HcclCommWorkingDevNicSet(HcclComm comm, uint32_t* ranks, bool* useBac
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommRegister(HcclComm comm, void* addr, uint64_t size, void** handle, uint32_t flag)
+HcclResult HcclCommRegister(HcclComm comm, void* addr, uint64_t size, void** handle, [[maybe_unused]] uint32_t flag)
 {
     // 入参校验
     CHK_PTR_NULL(comm);

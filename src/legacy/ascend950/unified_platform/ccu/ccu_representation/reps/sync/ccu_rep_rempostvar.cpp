@@ -27,7 +27,7 @@ namespace CcuRep {
         instrCount = 1;
     }
 
-    bool CcuRepRemPostVar::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepRemPostVar::Translate(CcuInstr*& instr, uint16_t& instrId, [[maybe_unused]] const TransDep& dep)
     {
         this->instrId = instrId;
         translated = true;

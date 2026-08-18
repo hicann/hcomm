@@ -147,7 +147,7 @@ ChannelStatus Channel::TransportStatusToChannelStatus(Hccl::TransportStatus ts)
     }
 }
 
-HcclResult Channel::UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum)
+HcclResult Channel::UpdateMemInfo([[maybe_unused]] HcommMemHandle* memHandles, [[maybe_unused]] uint32_t memHandleNum)
 {
     HCCL_WARNING("[UpdateMemInfo] not support.");
     return HCCL_SUCCESS;

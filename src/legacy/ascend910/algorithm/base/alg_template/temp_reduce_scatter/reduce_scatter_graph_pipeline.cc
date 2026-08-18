@@ -145,10 +145,11 @@ HcclResult ReduceScatterGraphPipeline::RunAsync()
 
 // 适配新CollExecutor接口
 HcclResult ReduceScatterGraphPipeline::Prepare(
-    HcomCollOpInfo* opInfo, DeviceMem& cclBuffer, const u64 count, const u64 bufferSize, const u64 offset,
-    const SubCommInfo& level0CommInfo, const SubCommInfo& level1CommInfo, Stream& mainStream,
-    std::vector<Stream>& subStream, std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
-    std::vector<std::shared_ptr<LocalNotify>>& notifySub, u64 reduceAttrBitMap)
+    HcomCollOpInfo* opInfo, [[maybe_unused]] DeviceMem& cclBuffer, [[maybe_unused]] const u64 count,
+    [[maybe_unused]] const u64 bufferSize, const u64 offset, const SubCommInfo& level0CommInfo,
+    const SubCommInfo& level1CommInfo, Stream& mainStream, std::vector<Stream>& subStream,
+    std::vector<std::shared_ptr<LocalNotify>>& notifyMain, std::vector<std::shared_ptr<LocalNotify>>& notifySub,
+    u64 reduceAttrBitMap)
 {
     reduceAttr_ = reduceAttrBitMap;
     opInfo_ = opInfo;

@@ -111,7 +111,7 @@ HcommResult CreateOnePluginChannel(
 
 } // namespace
 
-HcommResult CheckUbAttr(HcommChannelDesc& channelDesc, CommEngine engine)
+HcommResult CheckUbAttr(HcommChannelDesc& channelDesc, [[maybe_unused]] CommEngine engine)
 {
     if (channelDesc.remoteEndpoint.protocol != COMM_PROTOCOL_UBC_TP
         && channelDesc.remoteEndpoint.protocol != COMM_PROTOCOL_UBOE

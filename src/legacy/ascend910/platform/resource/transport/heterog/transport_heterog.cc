@@ -45,27 +45,36 @@ TransportHeterog::TransportHeterog(const TransportResourceInfo& transportResourc
 
 TransportHeterog::~TransportHeterog() {}
 
-HcclResult TransportHeterog::Init(u32 localUserRank, u32 remoteUserRank) { return HCCL_SUCCESS; }
+HcclResult TransportHeterog::Init([[maybe_unused]] u32 localUserRank, [[maybe_unused]] u32 remoteUserRank)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult TransportHeterog::Init(SocketInfoT& socketInfo, RdmaHandle rdmaHandle, MrHandle mrHandle)
+HcclResult TransportHeterog::Init(
+    [[maybe_unused]] SocketInfoT& socketInfo, [[maybe_unused]] RdmaHandle rdmaHandle,
+    [[maybe_unused]] MrHandle mrHandle)
 {
     return HCCL_SUCCESS;
 }
 
 HcclResult TransportHeterog::Improbe(
-    const TransportEndPointParam& epParam, s32& matched, HcclMessageInfo*& msg, HcclStatus& status, bool& flag)
+    [[maybe_unused]] const TransportEndPointParam& epParam, [[maybe_unused]] s32& matched,
+    [[maybe_unused]] HcclMessageInfo*& msg, [[maybe_unused]] HcclStatus& status, [[maybe_unused]] bool& flag)
 {
     return HCCL_SUCCESS;
 }
 
 HcclResult TransportHeterog::Imrecv(
-    const TransData& recvData, HcclMessageInfo& msg, HcclRequestInfo*& request, bool flag, bool needRecordFlag)
+    [[maybe_unused]] const TransData& recvData, [[maybe_unused]] HcclMessageInfo& msg,
+    [[maybe_unused]] HcclRequestInfo*& request, [[maybe_unused]] bool flag, [[maybe_unused]] bool needRecordFlag)
 {
     return HCCL_SUCCESS;
 }
 
 HcclResult TransportHeterog::ImrecvScatter(
-    void* buf[], int count[], int bufCount, HcclDataType datatype, HcclMessageInfo& msg, HcclRequestInfo*& request)
+    [[maybe_unused]] void* buf[], [[maybe_unused]] int count[], [[maybe_unused]] int bufCount,
+    [[maybe_unused]] HcclDataType datatype, [[maybe_unused]] HcclMessageInfo& msg,
+    [[maybe_unused]] HcclRequestInfo*& request)
 {
     return HCCL_SUCCESS;
 }
@@ -575,13 +584,16 @@ void TransportHeterog::SubRecvEnvelopNum()
 u32 TransportHeterog::GetRecvEnvelopNum() { return recvEnvelopNum_; }
 
 HcclResult TransportHeterog::BlockSend(
-    const TransData& sendData, const TransportEndPointParam& epParam, HcclRequestInfo*& request, s32 waitTimeOut)
+    [[maybe_unused]] const TransData& sendData, [[maybe_unused]] const TransportEndPointParam& epParam,
+    [[maybe_unused]] HcclRequestInfo*& request, [[maybe_unused]] s32 waitTimeOut)
 {
     return HCCL_SUCCESS;
 }
 
 HcclResult TransportHeterog::BlockRecv(
-    const TransData& recvData, bool matched, TransportHeterog*& transport, s32 waitTimeOut, s32 waitPayloadTimeOut)
+    [[maybe_unused]] const TransData& recvData, [[maybe_unused]] bool matched,
+    [[maybe_unused]] TransportHeterog*& transport, [[maybe_unused]] s32 waitTimeOut,
+    [[maybe_unused]] s32 waitPayloadTimeOut)
 {
     return HCCL_SUCCESS;
 }
@@ -631,25 +643,27 @@ HcclResult TransportHeterog::WaitBuildLinkComplete()
     return HCCL_E_TIMEOUT;
 }
 
-HcclResult TransportHeterog::Iwrite(const TransData& sendData, const HcclEnvelope& envelope, HcclRequestInfo*& request)
+HcclResult TransportHeterog::Iwrite(
+    [[maybe_unused]] const TransData& sendData, [[maybe_unused]] const HcclEnvelope& envelope,
+    [[maybe_unused]] HcclRequestInfo*& request)
 {
     HCCL_WARNING("Empty TransportHeterog::Iwrite is called.");
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportHeterog::GetRemoteIsendDoneSignal(std::shared_ptr<LocalIpcNotify>& signal)
+HcclResult TransportHeterog::GetRemoteIsendDoneSignal([[maybe_unused]] std::shared_ptr<LocalIpcNotify>& signal)
 {
     HCCL_WARNING("Empty TransportHeterog::GetRemoteIsendDoneSignal is called.");
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportHeterog::GetRemoteImrecvDoneSignal(std::shared_ptr<LocalIpcNotify>& signal)
+HcclResult TransportHeterog::GetRemoteImrecvDoneSignal([[maybe_unused]] std::shared_ptr<LocalIpcNotify>& signal)
 {
     HCCL_WARNING("Empty TransportHeterog::GetRemoteImrecvDoneSignal is called.");
     return HCCL_SUCCESS;
 }
 
-void TransportHeterog::GetLinkTag(std::string& tag)
+void TransportHeterog::GetLinkTag([[maybe_unused]] std::string& tag)
 {
     HCCL_WARNING("Empty TransportHeterog::GetLinkTag is called.");
     return;

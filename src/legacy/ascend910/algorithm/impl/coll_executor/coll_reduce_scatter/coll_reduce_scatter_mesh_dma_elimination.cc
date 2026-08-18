@@ -77,14 +77,14 @@ u64 CollReduceScatterMeshDmaEliminationExecutor::CalcLoopMaxCount(const u32 unit
     return maxCountPerLoop;
 }
 
-bool CollReduceScatterMeshDmaEliminationExecutor::IsHugeData(const u64 curSize, OpParam* param)
+bool CollReduceScatterMeshDmaEliminationExecutor::IsHugeData(const u64 curSize, [[maybe_unused]] OpParam* param)
 {
     // 只有server内通信，多QP哈希散列下不刷新子图
     bool hugeData = curSize > SDMA_SEND_MAX_SIZE;
     return hugeData;
 }
 
-bool CollReduceScatterMeshDmaEliminationExecutor::IsSmallData(const u64 totalSize, const u64 curSize)
+bool CollReduceScatterMeshDmaEliminationExecutor::IsSmallData(const u64 totalSize, [[maybe_unused]] const u64 curSize)
 {
     bool smallData = totalSize <= HCCL_SMALL_COUNT_32_KB;
     return smallData;
@@ -111,9 +111,14 @@ HcclResult CollReduceScatterMeshDmaEliminationExecutor::KernelRun(const OpParam&
         level0CommInfo.localRankSize, commIndex);
 
     HcomCollOpInfo* opInfoPtr = nullptr;
-    HcomCollOpInfo opInfo
-        = {"",         execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType,
-           param.root, param.reduceType};
+    HcomCollOpInfo opInfo = {"",
+                             execMem.inputPtr,
+                             execMem.outputPtr,
+                             param.DataDes.count,
+                             param.DataDes.dataType,
+                             param.root,
+                             param.reduceType,
+                             0};
     if (DMAReduceFlag_) {
         opInfoPtr = &opInfo;
     }

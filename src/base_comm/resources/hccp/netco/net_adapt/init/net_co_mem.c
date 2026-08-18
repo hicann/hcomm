@@ -18,6 +18,9 @@ extern "C" {
 #endif
 STATIC void *NetCoMemAdpOnMalloc(NetCo *co, uint32_t len, const char *str, const uint16_t num)
 {
+    (void)co;
+    (void)str;
+    (void)num;
     if (len == 0) {
         return VOS_NULL;
     }
@@ -25,6 +28,9 @@ STATIC void *NetCoMemAdpOnMalloc(NetCo *co, uint32_t len, const char *str, const
 }
 STATIC void NetCoMemAdpOnFree(NetCo *co, void *ptr, const char *str, const uint16_t num)
 {
+    (void)co;
+    (void)str;
+    (void)num;
     free(ptr);
 }
 uint32_t NetCoMemInit(NetCo *co)

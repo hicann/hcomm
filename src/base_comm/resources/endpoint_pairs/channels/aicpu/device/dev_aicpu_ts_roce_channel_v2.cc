@@ -30,7 +30,7 @@ std::string DevAicpuTsRoceChannelV2::Describe() const
 }
 
 HcclResult DevAicpuTsRoceChannelV2::Create(
-    const void* blob, u64 blobBytes, const HcommDeviceInfo& deviceInfo, ChannelHandle& outHandle)
+    const void* blob, u64 blobBytes, [[maybe_unused]] const HcommDeviceInfo& deviceInfo, ChannelHandle& outHandle)
 {
     CHK_PTR_NULL(blob);
     CHK_PRT_RET(blobBytes == 0, HCCL_ERROR("[DevAicpuTsRoceChannelV2][Create] blobBytes is 0"), HCCL_E_PARA);

@@ -107,7 +107,7 @@ HcclResult CollBroadcastMidCountFor91093Executor::RunLevel2ByNHR(
 }
 
 HcclResult CollBroadcastMidCountFor91093Executor::RunLevel1ByNHR(
-    const OpParam& param, ExecMem& execMem, SubCommInfo& level1CommInfo, SubCommInfo& level2CommInfo)
+    const OpParam& param, ExecMem& execMem, SubCommInfo& level1CommInfo, [[maybe_unused]] SubCommInfo& level2CommInfo)
 {
     HCCL_CONFIG_INFO(HCCL_ALG, "[MidCountBroadcast][RunLevel1ByNHR] userRank[%u] starts.", topoAttr_.userRank);
     u32 unitSize = 0;

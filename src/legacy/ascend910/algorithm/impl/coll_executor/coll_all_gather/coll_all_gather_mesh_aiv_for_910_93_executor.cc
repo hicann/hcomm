@@ -66,8 +66,8 @@ HcclResult CollAllGatherMeshAivFor91093Executor::CalcLevel0CommInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAllGatherMeshAivFor91093Executor::CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize, HcclCMDType cmdType)
+HcclResult CollAllGatherMeshAivFor91093Executor::CalNumBlocks(
+    u32& numBlocks, u32 rankSize, u64 dataSize, [[maybe_unused]] HcclCMDType cmdType)
 {
     u32 minNumBlocks = (rankSize + MAX_TARGET_NUM - 1) / MAX_TARGET_NUM;
     numBlocks = rankSize; // 默认情况使用rankSize个AIV

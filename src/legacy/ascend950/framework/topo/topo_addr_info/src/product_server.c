@@ -238,23 +238,29 @@ int ServerGetRootinfoLen(size_t* len)
 
 int GetNetInstanceIdForOS(int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen)
 {
+    (void)npu_id;
+    (void)spodInfo;
     return get_server_id(netInstanceId, netInstanceIdLen);
 }
 
 int GetNetInstanceIdForPod(int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen)
 {
+    (void)npu_id;
     return sprintf_s(netInstanceId, netInstanceIdLen, "sp_%ld_srv_%ld", spodInfo->super_pod_id, spodInfo->server_index);
 }
 
 int GetNetInstanceIdForSuperPod(
     int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen)
 {
+    (void)npu_id;
     return sprintf_s(netInstanceId, netInstanceIdLen, "sp_%ld", spodInfo->super_pod_id);
 }
 
 int GetNetInstanceIdForCluster(
     int npu_id, const struct dcmi_spod_info* spodInfo, char* netInstanceId, int netInstanceIdLen)
 {
+    (void)npu_id;
+    (void)spodInfo;
     return sprintf_s(netInstanceId, netInstanceIdLen, "cluster");
 }
 

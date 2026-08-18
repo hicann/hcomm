@@ -140,7 +140,7 @@ HcclResult CollAllGatherVFor310PExecutor::KernelRun(const OpParam& param, ExecMe
     }
 
     HcomCollOpInfo opInfo
-        = {"", execMem.inputPtr, execMem.outputPtr, 0, param.VDataDes.dataType, param.root, param.reduceType};
+        = {"", execMem.inputPtr, execMem.outputPtr, 0, param.VDataDes.dataType, param.root, param.reduceType, 0};
 
     std::unique_ptr<AlgTemplateBase> tempAlg;
     if (!IsHugeData(cclOffset)) {

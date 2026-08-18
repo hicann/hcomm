@@ -61,7 +61,8 @@ HcclResult CollAllReduceMeshAivExecutor::CalcLevel0CommInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAllReduceMeshAivExecutor::CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize, HcclCMDType cmdType)
+HcclResult CollAllReduceMeshAivExecutor::CalNumBlocks(
+    u32& numBlocks, u32 rankSize, [[maybe_unused]] u64 dataSize, [[maybe_unused]] HcclCMDType cmdType)
 {
     numBlocks = rankSize; // 默认情况使用rankSize个AIV
 
@@ -129,7 +130,8 @@ HcclResult CollAllReduceMeshAivExecutor::Orchestrate(OpParam& param, AlgResource
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAllReduceMeshAivExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& adjInfo)
+HcclResult CollAllReduceMeshAivExecutor::GetAdjInfo(
+    [[maybe_unused]] AlgResourceResponse& algRes, [[maybe_unused]] AdjInfo& adjInfo)
 {
     return HCCL_SUCCESS;
 }

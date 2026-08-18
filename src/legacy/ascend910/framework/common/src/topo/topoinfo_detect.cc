@@ -75,9 +75,9 @@ HcclResult TopoInfoDetect::SendGroupLeaderPort(std::shared_ptr<HcclSocket>& conn
 }
 
 void TopoInfoDetect::SetupTopoGroupLeader(
-    s32 devicePhysicID, s32 deviceLogicID, HcclIpAddress hostIP, u32 hostPort, vector<HcclIpAddress> whitelist,
-    HcclNetDevCtx netDevCtx, std::shared_ptr<HcclSocket> listenSocket, std::shared_ptr<HcclSocket> grpLeaderToRoot,
-    bool isMasterInfo)
+    [[maybe_unused]] s32 devicePhysicID, s32 deviceLogicID, HcclIpAddress hostIP, u32 hostPort,
+    vector<HcclIpAddress> whitelist, HcclNetDevCtx netDevCtx, std::shared_ptr<HcclSocket> listenSocket,
+    std::shared_ptr<HcclSocket> grpLeaderToRoot, bool isMasterInfo)
 {
     // 给当前线程添加名字
     SetThreadName("Hccl_TopoDetect_GroupLeader");
@@ -122,8 +122,9 @@ void TopoInfoDetect::SetupTopoGroupLeader(
 }
 
 void TopoInfoDetect::SetupTopoExchangeServer(
-    s32 devicePhysicID, s32 deviceLogicID, HcclIpAddress hostIP, u32 hostPort, vector<HcclIpAddress> whitelist,
-    HcclNetDevCtx netDevCtx, std::shared_ptr<HcclSocket> listenSocket, bool isMasterInfo)
+    [[maybe_unused]] s32 devicePhysicID, s32 deviceLogicID, HcclIpAddress hostIP, u32 hostPort,
+    vector<HcclIpAddress> whitelist, HcclNetDevCtx netDevCtx, std::shared_ptr<HcclSocket> listenSocket,
+    bool isMasterInfo)
 {
     // 给当前线程添加名字
     SetThreadName("Hccl_TopoDetect");

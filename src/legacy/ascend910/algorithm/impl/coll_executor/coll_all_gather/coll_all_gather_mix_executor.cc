@@ -116,8 +116,9 @@ HcclResult CollAllGatherMixExecutor::KernelRun(const OpParam& param, ExecMem& ex
     DeviceMem dstMem = execMem.outputMem.range(baseOffset + level0Offset, inputMemSize);
     CHK_SMART_PTR_NULL(dstMem);
 
-    HcomCollOpInfo opInfo = {"", execMem.inputPtr,    execMem.outputPtr, param.DataDes.count, param.DataDes.dataType,
-                             0,  HCCL_REDUCE_RESERVED};
+    HcomCollOpInfo opInfo = {
+        "", execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType, 0, HCCL_REDUCE_RESERVED,
+        0};
     HcomCollOpInfo* opInfoPtr = nullptr;
     // 图模式opinfo不为空，但需要将数据从ccl input拷贝到ccl output上
     HcclResult ret = HCCL_SUCCESS;

@@ -110,6 +110,7 @@ STATIC uint32_t BkfSuberSessDispSaveCtx(BkfSuberSessDispSessCtx *curCtx, BkfSube
 
 uint32_t BkfSuberSessDispBatchTimeoutTest(BkfSuberSessMng *sessMng, BkfDisp *disp)
 {
+    (void)disp;
     BkfSuberSess *sess = VOS_NULL;
     void *itor = VOS_NULL;
     uint32_t testCnt = 0;
@@ -123,6 +124,7 @@ uint32_t BkfSuberSessDispBatchTimeoutTest(BkfSuberSessMng *sessMng, BkfDisp *dis
 
 uint32_t BkfSuberSessDispCloseBatchTimeout(BkfSuberSessMng *sessMng, BkfDisp *disp)
 {
+    (void)disp;
     BkfSuberSess *sess = VOS_NULL;
     void *itor = VOS_NULL;
     sessMng->batchTimeoutChkFlag = VOS_TRUE;

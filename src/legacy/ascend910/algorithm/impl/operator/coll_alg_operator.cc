@@ -53,14 +53,16 @@ CollAlgOperator::CollAlgOperator(
     algConfigurator->GetTopoType(topoType_);
 }
 
-HcclResult
-CollAlgOperator::SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag)
+HcclResult CollAlgOperator::SelectAlg(
+    [[maybe_unused]] const std::string& tag, [[maybe_unused]] const OpParam& param,
+    [[maybe_unused]] std::string& algName, [[maybe_unused]] std::string& newTag)
 {
     return HCCL_SUCCESS;
 }
 
 HcclResult CollAlgOperator::SelectAlg(
-    const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag, const ResourceLimit& limit)
+    const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag,
+    [[maybe_unused]] const ResourceLimit& limit)
 {
     return SelectAlg(tag, param, algName, newTag);
 }

@@ -135,7 +135,7 @@ BroadcastNHR::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vect
         LINK linkRight = links[sendTo];
         CHK_SMART_PTR_NULL(linkRight);
 
-        NslbDpAdjInfo adjInfoStep = {0};
+        NslbDpAdjInfo adjInfoStep = {};
         adjInfoStep.dstLocalRankId = linkRight->GetRemoteRank();
         adjInfoStep.phaseId = step + 1;
         adjInfoStep.rev = 0;
@@ -149,7 +149,7 @@ BroadcastNHR::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vect
         LINK linkRight = links[sendTo];
         CHK_SMART_PTR_NULL(linkRight);
 
-        NslbDpAdjInfo allGatherInfoStep = {0};
+        NslbDpAdjInfo allGatherInfoStep = {};
         allGatherInfoStep.dstLocalRankId = linkRight->GetRemoteRank();
         allGatherInfoStep.phaseId = step + begin + 1;
         allGatherInfoStep.rev = 0;

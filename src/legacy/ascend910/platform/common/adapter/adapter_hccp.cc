@@ -1923,7 +1923,7 @@ s32 hrtRaSocketGetAsyncReqResult(void* reqHandle, s32* reqResult)
 
 HcclResult hrtGetHostIf(vector<pair<string, HcclIpAddress>>& hostIfs, u32 devPhyId)
 {
-    struct RaGetIfattr config = {0};
+    struct RaGetIfattr config = {};
     config.phyId = devPhyId;
     config.nicPosition = static_cast<u32>(NICDeployment::NIC_DEPLOYMENT_HOST);
     config.isAll = false;
@@ -2063,7 +2063,7 @@ HcclResult hrtRaSocketWhiteListDel(SocketHandle socketHandle, struct SocketWlist
 
 #endif
 
-HcclResult hrtGetIfNum(struct RaGetIfattr& config, u32& num)
+HcclResult hrtGetIfNum([[maybe_unused]] struct RaGetIfattr& config, [[maybe_unused]] u32& num)
 {
 #ifndef HCCD
     if (DlRaFunction::GetInstance().dlRaGetIfNum == nullptr) {
@@ -2087,7 +2087,9 @@ HcclResult hrtGetIfNum(struct RaGetIfattr& config, u32& num)
 #endif
 }
 
-HcclResult hrtGetIfAddress(struct RaGetIfattr& config, struct InterfaceInfo ifaddrInfos[], u32& num)
+HcclResult hrtGetIfAddress(
+    [[maybe_unused]] struct RaGetIfattr& config, [[maybe_unused]] struct InterfaceInfo ifaddrInfos[],
+    [[maybe_unused]] u32& num)
 {
 #ifndef HCCD
     CHK_PRT_RET(
@@ -2113,7 +2115,7 @@ HcclResult hrtGetIfAddress(struct RaGetIfattr& config, struct InterfaceInfo ifad
 
 HcclResult hrtRaGetDeviceIP(u32 devicePhyId, vector<HcclIpAddress>& ipAddr)
 {
-    struct RaGetIfattr config = {0};
+    struct RaGetIfattr config = {};
     config.phyId = devicePhyId;
     config.nicPosition = static_cast<u32>(NICDeployment::NIC_DEPLOYMENT_DEVICE);
     config.isAll = false;
@@ -2185,7 +2187,7 @@ HcclResult hrtRaGetDeviceAllNicIP(vector<vector<HcclIpAddress>>& ipAddr)
         HCCL_ERROR("[Get][DeviceAllNicIP] is not supported on device type[%d]. Please check device type.", deviceType),
         HCCL_E_NOT_SUPPORT);
 
-    struct RaGetIfattr config = {0};
+    struct RaGetIfattr config = {};
     config.phyId = devicePhyId;
     config.nicPosition = static_cast<u32>(NICDeployment::NIC_DEPLOYMENT_DEVICE);
     config.isAll = true;
@@ -2203,7 +2205,7 @@ HcclResult hrtRaGetDeviceAllNicIP(vector<vector<HcclIpAddress>>& ipAddr)
         return HCCL_SUCCESS;
     }
 
-    struct InterfaceInfo ifAddrInfos[HCCL_DEVICE_NIC_NUM * MAX_ALL_NIC_NUM] = {0};
+    struct InterfaceInfo ifAddrInfos[HCCL_DEVICE_NIC_NUM * MAX_ALL_NIC_NUM] = {};
     CHK_RET(hrtGetIfAddress(config, ifAddrInfos, ifAddrNum));
     CHK_PRT_RET(
         ifAddrNum > maxNicIpNum,
@@ -2790,7 +2792,7 @@ HcclResult hrtRaSetQpAttrRetryCnt(QpHandle qpHandle, u32& retryCnt)
 
 HcclResult SetQpAttrQos(QpHandle qpHandle, u32 tc, u32 sl)
 {
-    struct QosAttr qosAttr = {0};
+    struct QosAttr qosAttr = {};
     if (tc == HCCL_COMM_TRAFFIC_CLASS_CONFIG_NOT_SET && sl == HCCL_COMM_SERVICE_LEVEL_CONFIG_NOT_SET) {
         qosAttr.tc = GetExternalInputRdmaTrafficClass();
         qosAttr.sl = GetExternalInputRdmaServerLevel();
@@ -2936,7 +2938,7 @@ HcclResult hrtRaGetQpAttr(QpHandle qpHandle, struct QpAttr* attr)
 
 HcclResult hrtRaCreateSrq(RdmaHandle rdmaHandle, SrqInfo& srqInfo)
 {
-    struct SrqAttr attr = {nullptr};
+    struct SrqAttr attr = {};
     attr.ibSrq = &srqInfo.srq;
     attr.ibRecvCq = &srqInfo.srqCq;
     attr.maxSge = MAX_RECV_SGE_NUM;
@@ -2958,7 +2960,7 @@ HcclResult hrtRaCreateSrq(RdmaHandle rdmaHandle, SrqInfo& srqInfo)
 
 HcclResult hrtRaDestroySrq(RdmaHandle rdmaHandle, SrqInfo& srqInfo)
 {
-    struct SrqAttr attr = {nullptr};
+    struct SrqAttr attr = {};
     attr.context = &srqInfo.context;
     attr.ibSrq = &srqInfo.srq;
     s32 ret = DlRaFunction::GetInstance().dlRaDestroyeSrq(rdmaHandle, &attr);

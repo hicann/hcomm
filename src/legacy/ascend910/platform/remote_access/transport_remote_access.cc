@@ -38,7 +38,7 @@ TransportRemoteAccess::~TransportRemoteAccess()
 {
     HCCL_DEBUG("~TransportRemoteAccess Enter!");
     HcclResult ret;
-    struct MrInfoT mrInfo = {nullptr};
+    struct MrInfoT mrInfo = {};
     /* 销毁本端mr */
     for (u32 idx = 0; idx < localRegMem_.size(); idx++) {
         mrInfo.addr = localRegMem_[idx];
@@ -113,7 +113,7 @@ HcclResult TransportRemoteAccess::MrRegister()
         HCCL_ERROR("[Register][Mr]local mem info to register is empty!");
         return HCCL_E_PARA;
     }
-    struct MrInfoT mrInfo = {nullptr};
+    struct MrInfoT mrInfo = {};
     mrInfo.access = access_;
     for (size_t idx = 0; idx < MemRegistInfos_.size(); idx++) {
         memPtr = reinterpret_cast<void*>(static_cast<uintptr_t>(MemRegistInfos_[idx].addr));
@@ -210,7 +210,7 @@ HcclResult TransportRemoteAccess::CreateNotifyValueBuffer()
             HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
     }
     lock.unlock();
-    struct MrInfoT mrInfo = {nullptr};
+    struct MrInfoT mrInfo = {};
     mrInfo.addr = notifyValueMem_[deviceLogicId_].ptr();
     mrInfo.size = notifySize_;
     mrInfo.access = access_;
@@ -277,7 +277,7 @@ HcclResult TransportRemoteAccess::RdmaDataTransport(const std::vector<HcomRemote
     std::vector<struct SendWrRsp> opRspVec(addressNum);
     struct SendWrlistDataExt* wr = wrVec.data();
     struct SendWrRsp* opRsp = opRspVec.data();
-    struct SgList list = {0};
+    struct SgList list = {};
     u64 length = addrInfos[0].length;
 
     HCCL_RUN_INFO("RdmaDataTransport begin, addressNum[%u], length[%u]", addressNum, length);
@@ -326,8 +326,8 @@ HcclResult TransportRemoteAccess::RdmaDataTransport(const std::vector<HcomRemote
 HcclResult TransportRemoteAccess::ReadRemoteNotifyBuffer()
 {
     HCCL_INFO("In TransportRemoteAccess ReadRemoteNotifyBuffer begin");
-    struct SgList list = {0};
-    struct SendWr wr = {nullptr};
+    struct SgList list = {};
+    struct SendWr wr = {};
 
     // 构造wr信息
     list.addr = static_cast<u64>(reinterpret_cast<uintptr_t>(ackNotifyMsg_.addr));
@@ -339,7 +339,7 @@ HcclResult TransportRemoteAccess::ReadRemoteNotifyBuffer()
     wr.op = RDMA_OP_READ; /* RDMA_WRITE: 0 */
     wr.sendFlag = RA_SEND_SIGNALED;
 
-    struct SendWrRsp opRsp = {0};
+    struct SendWrRsp opRsp = {};
     CHK_RET(HrtRaSendWr(handle_, &wr, &opRsp));
     HCCL_INFO("In TransportRemoteAccess ReadRemoteNotifyBuffer end");
     return HCCL_SUCCESS;

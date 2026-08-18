@@ -145,7 +145,7 @@ void PreemptPortManager::PreemptPortInRange(
 }
 
 void PreemptPortManager::ReleasePreempt(
-    IpPortRef& portRef, const std::shared_ptr<Socket>& listenSocket, HrtNetworkMode netMode)
+    IpPortRef& portRef, const std::shared_ptr<Socket>& listenSocket, [[maybe_unused]] HrtNetworkMode netMode)
 {
     std::string ipAddr(listenSocket->GetLocalIp().GetIpStr());
     u32 port = listenSocket->GetListenPort();

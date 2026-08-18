@@ -422,7 +422,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV1::CcuRepAddTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepAdd* ccuRepAdd, const TransDep& dep)
+        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepAdd* ccuRepAdd, [[maybe_unused]] const TransDep& dep)
     {
         UNUSED(ccuKernel);
         CHK_PTR_NULL(ccuRepAdd);
@@ -708,7 +708,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV1::CcuRepJumpNETranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpNE* jumpNEPtr, const TransDep& dep)
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpNE* jumpNEPtr,
+        [[maybe_unused]] const TransDep& dep)
     {
         UNUSED(ccuKernel);
         UNUSED(instr);
@@ -751,7 +752,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV1::CcuRepJumpLETranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpLE* jumpLEPtr, const TransDep& dep)
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpLE* jumpLEPtr,
+        [[maybe_unused]] const TransDep& dep)
     {
         UNUSED(ccuKernel);
         (void)instr;
@@ -762,7 +764,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV1::CcuRepJumpGETranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpGE* jumpGEPtr, const TransDep& dep)
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpGE* jumpGEPtr,
+        [[maybe_unused]] const TransDep& dep)
     {
         UNUSED(ccuKernel);
         (void)instr;
@@ -773,7 +776,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV1::CcuRepJumpGTTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpGT* jumpGTPtr, const TransDep& dep)
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpGT* jumpGTPtr,
+        [[maybe_unused]] const TransDep& dep)
     {
         UNUSED(ccuKernel);
         (void)instr;
@@ -784,7 +788,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV1::CcuRepJumpLTTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpLT* jumpLTPtr, const TransDep& dep)
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpLT* jumpLTPtr,
+        [[maybe_unused]] const TransDep& dep)
     {
         UNUSED(ccuKernel);
         (void)instr;

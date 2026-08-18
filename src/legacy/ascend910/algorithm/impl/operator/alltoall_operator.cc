@@ -490,7 +490,7 @@ HcclResult AlltoAllOperator::SetExcutorExtraInfo(const std::string& algName, con
     return ret;
 }
 
-HcclResult AlltoAllOperator::SetExecutorAttr(const OpParam& param)
+HcclResult AlltoAllOperator::SetExecutorAttr([[maybe_unused]] const OpParam& param)
 {
     CollAlltoAllExecutor* alltoAllExecutor = dynamic_cast<CollAlltoAllExecutor*>(executor_.get());
     CHK_RET(alltoAllExecutor->SetAlgType(algType_));

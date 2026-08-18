@@ -26,7 +26,7 @@ namespace CcuRep {
         instrCount = 2; // set loop 指令数量为2
     }
 
-    bool CcuRepSetLoop::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepSetLoop::Translate(CcuInstr*& instr, uint16_t& instrId, [[maybe_unused]] const TransDep& dep)
     {
         this->instrId = instrId;
         translated = true;

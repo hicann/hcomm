@@ -59,7 +59,7 @@ namespace CcuRep {
         Variable var[XN_NUM];
         Address addr[GSA_NUM];
         MaskSignal signal[CKE_NUM];
-        TransDep transDep{0};
+        TransDep transDep{};
     };
 }; // namespace CcuRep
 }; // namespace Hccl

@@ -108,6 +108,7 @@ uint32_t BkfChCliLetcpStartConnTmrWriteErr(BkfChCliConnId *connId)
 /* func */
 uint32_t BkfChCliLetcpBuildVTbl(char *name, BkfChCliTypeVTbl *cliVTbl, uint32_t nameLen)
 {
+    (void)nameLen;
     if ((name == VOS_NULL) || (cliVTbl == VOS_NULL)) {
         return BKF_ERR;
     }
@@ -365,6 +366,7 @@ void BkfChCliLetcpProcConnFdEpollout(BkfChCliConnId *connId)
 /* on msg */
 STATIC void BkfChCliLetcpOnConnFdEvents(int32_t fd, uint32_t curEvents, BkfChCliConnId *connId)
 {
+    (void)fd;
     uint8_t buf[BKF_1K / 8];
     uint8_t buf2[BKF_1K / 8];
     if ((connId == VOS_NULL) || (!BKF_SIGN_IS_VALID(connId->sign, BKF_CH_CLI_LETCP_CONN_ID_SIGN))) {
@@ -391,6 +393,7 @@ STATIC void BkfChCliLetcpOnConnFdEvents(int32_t fd, uint32_t curEvents, BkfChCli
 
 STATIC uint32_t BkfChCliLetcpOnConnTmrWriteErrTO(BkfChCliConnId *connId, void *paramTmrLibUnknown)
 {
+    (void)paramTmrLibUnknown;
     connId->tmrIdWriteErr = VOS_NULL;
     BkfChCliLetcpTry2WriteMore(connId);
     return BKF_OK;

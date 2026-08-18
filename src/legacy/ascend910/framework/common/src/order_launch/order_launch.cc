@@ -264,8 +264,8 @@ HcclResult OrderLaunch::HcomLaunchInOrder(
  * 3. wait notify1 on hostOrderStream - 等待其他算子在order stream上完成
  */
 HcclResult OrderLaunch::LaunchInOrder(
-    std::string& group, const Stream& kernelStream, const Stream& hostOrderStream, std::shared_ptr<LocalNotify> notify0,
-    std::shared_ptr<LocalNotify> notify1, u32 timeOut)
+    [[maybe_unused]] std::string& group, const Stream& kernelStream, const Stream& hostOrderStream,
+    std::shared_ptr<LocalNotify> notify0, std::shared_ptr<LocalNotify> notify1, u32 timeOut)
 {
     CHK_SMART_PTR_NULL(notify0);
     CHK_SMART_PTR_NULL(notify1);

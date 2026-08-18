@@ -473,7 +473,7 @@ void HcclOneSidedService::EnableMemAccess(const HcclMemDesc& remoteMemDesc, Hccl
 
         // 收发进程信息
         ProcessInfo localProcess = {pid, sid, serverId};
-        ProcessInfo remoteProcess = {0};
+        ProcessInfo remoteProcess = {};
 
         ret = it->second->ExchangeIpcProcessInfo(localProcess, remoteProcess);
         if (ret != HCCL_SUCCESS) {
@@ -1121,7 +1121,7 @@ HcclResult HcclOneSidedService::AicpuInitKernelLaunch()
             u64 context; // A矩阵地址，通信在前时为sendbuffer
             bool isCustom;
         };
-        InitTask initTask = {0};
+        InitTask initTask = {};
         initTask.context = 0ULL;
         initTask.isCustom = false;
         u16 timeOut = 0;

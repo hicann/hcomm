@@ -18,7 +18,7 @@ AllReduceNHROneshot::AllReduceNHROneshot(const HcclDispatcher dispatcher) : NHRB
 
 AllReduceNHROneshot::~AllReduceNHROneshot() {}
 
-HcclResult AllReduceNHROneshot::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo)
+HcclResult AllReduceNHROneshot::Prepare(u64 reduceAttrBitMap, [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     reduceAttr_ = reduceAttrBitMap;
     return HCCL_SUCCESS;

@@ -384,6 +384,6 @@ void Mc2SlaveContext::GenCircularQueue()
     }
 }
 
-vector<uint64_t> Mc2SlaveContext::GeneArgs(const CcuTaskArg& arg) { return {}; }
+vector<uint64_t> Mc2SlaveContext::GeneArgs([[maybe_unused]] const CcuTaskArg& arg) { return {}; }
 
 } // namespace Hccl

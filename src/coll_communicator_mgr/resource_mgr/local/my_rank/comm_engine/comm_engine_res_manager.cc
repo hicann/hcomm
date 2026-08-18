@@ -69,7 +69,8 @@ HcclResult CommEngineResMgr::HcclThreadAcquireWithStream(
     return threadMgr_->HcclThreadAcquireWithStream(engine, stream, notifyNum, thread);
 }
 
-HcclResult CommEngineResMgr::HcclGetNotifyNumInThread(ThreadHandle thread, CommEngine engine, uint32_t* notifyNum)
+HcclResult
+CommEngineResMgr::HcclGetNotifyNumInThread(ThreadHandle thread, [[maybe_unused]] CommEngine engine, uint32_t* notifyNum)
 {
     CHK_SMART_PTR_NULL(threadMgr_);
     return threadMgr_->HcclGetNotifyNumInThread(thread, notifyNum);

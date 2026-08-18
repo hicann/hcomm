@@ -45,7 +45,7 @@ namespace CcuRep {
         instrCount = 1;
     }
 
-    bool CcuRepRead::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepRead::Translate(CcuInstr*& instr, uint16_t& instrId, [[maybe_unused]] const TransDep& dep)
     {
         this->instrId = instrId;
         translated = true;

@@ -245,6 +245,7 @@ void BkfSuberSessResetUnBlockFlag(BkfSuberSessMng *sessMng)
 #if BKF_BLOCK("私有函数定义")
 STATIC void BkfSuberSessTrigSub(BkfSuberSessMng *sessMng, BkfSuberSess *sess)
 {
+    (void)sessMng;
     if (sess->isVerify) {
         BkfSuberSessFsmInputEvt(sess, BACKFIN_SUB_SESS_INPUT_VERIFYSUB, VOS_NULL, VOS_NULL);
     } else {
@@ -254,11 +255,13 @@ STATIC void BkfSuberSessTrigSub(BkfSuberSessMng *sessMng, BkfSuberSess *sess)
 
 STATIC void BkfSuberSessTrigUnSub(BkfSuberSessMng *sessMng, BkfSuberSess *sess)
 {
+    (void)sessMng;
     BkfSuberSessFsmInputEvt(sess, BACKFIN_SUB_SESS_INPUT_UNSUB, VOS_NULL, VOS_NULL);
 }
 
 STATIC BkfSuberSess *BkfSuberSessGetSessByRcvData(BkfSuberSessMng *sessMng, BkfMsgDecoder *decoder, BkfMsgHead *msgHead)
 {
+    (void)msgHead;
     BkfTL *tl = VOS_NULL;
     uint32_t errCode;
     BOOL tlvIsOk = VOS_FALSE;

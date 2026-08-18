@@ -18,7 +18,8 @@
 namespace hcomm {
 namespace CcuRep {
 
-    Condition::Condition(CcuRepContext* context, CcuRelationalOperator<Variable, uint64_t> rel) : context(context)
+    Condition::Condition(CcuRepContext* context, [[maybe_unused]] CcuRelationalOperator<Variable, uint64_t> rel)
+        : context(context)
     {
         std::string label = "Condition";
     }

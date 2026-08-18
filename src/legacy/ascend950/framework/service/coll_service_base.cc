@@ -181,18 +181,21 @@ void CollServiceBase::RegisterOffloadMasterStream(const std::string& opTag, uniq
 
 CollServiceBase::CollServiceBase(CommunicatorImpl* comm) : comm(comm) {}
 
-void CollServiceBase::AllocCommResource(void* mc2Tiling, void** commContext, const AcceleratorState& tilingAccelerator)
+void CollServiceBase::AllocCommResource(
+    [[maybe_unused]] void* mc2Tiling, [[maybe_unused]] void** commContext,
+    [[maybe_unused]] const AcceleratorState& tilingAccelerator)
 {
     THROW<NotSupportException>("AllocCommResource was not support in this mode.");
 }
 
-HcclResult CollServiceBase::AllocCollOpResource(CollOperator& op, const std::string& opAlgTag, void** addr)
+HcclResult CollServiceBase::AllocCollOpResource(
+    [[maybe_unused]] CollOperator& op, [[maybe_unused]] const std::string& opAlgTag, [[maybe_unused]] void** addr)
 {
     HCCL_ERROR("[%s] was not support in this mode.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-void CollServiceBase::GetCcuTaskInfo(void* tilingData, void* ccuTaskGroup)
+void CollServiceBase::GetCcuTaskInfo([[maybe_unused]] void* tilingData, [[maybe_unused]] void* ccuTaskGroup)
 {
     THROW<NotSupportException>("GetCcuTaskInfo was not support in this mode.");
 }
@@ -345,7 +348,7 @@ CollServiceBase::~CollServiceBase()
 
 // 功能说明：等待transport建链完成
 // 输入说明：string &opTag：通信域ID，唯一标记一个通信域
-bool CollServiceBase::IsAllTransportRecoveredReady(const std::string& opTag)
+bool CollServiceBase::IsAllTransportRecoveredReady([[maybe_unused]] const std::string& opTag)
 {
     CHECK_NULLPTR(comm, "[CollServiceBase::IsAllTransportRecoveredReady] comm is nullptr!");
     auto op = comm->GetCurrentCollOperator();
@@ -358,7 +361,7 @@ bool CollServiceBase::IsAllTransportRecoveredReady(const std::string& opTag)
     return false;
 }
 
-HcclResult CollServiceBase::GetSnapShotDynamicBuf(CollOperator& op, BinaryStream& buf)
+HcclResult CollServiceBase::GetSnapShotDynamicBuf([[maybe_unused]] CollOperator& op, [[maybe_unused]] BinaryStream& buf)
 {
     HCCL_ERROR("[%s] not support.", __func__);
     return HCCL_E_NOT_SUPPORT;
@@ -407,12 +410,12 @@ void CollServiceBase::AddCountTask(bool isHead)
     HCCL_INFO("[CollServiceBase::AddCountTask] isHead[%d] dst addr[%p] src addr[%p]", isHead, dst, src);
 }
 
-void CollServiceBase::ReLoadWithOpBasedMode(CollOperator& op)
+void CollServiceBase::ReLoadWithOpBasedMode([[maybe_unused]] CollOperator& op)
 {
     THROW<NotSupportException>("ReLoadWithOpBasedMode was not support in this mode.");
 }
 
-void CollServiceBase::ReLoadWithOffloadMode(CollOperator& op)
+void CollServiceBase::ReLoadWithOffloadMode([[maybe_unused]] CollOperator& op)
 {
     THROW<NotSupportException>("ReLoadWithOffloadMode was not support in this mode.");
 }
@@ -452,7 +455,9 @@ void CollServiceBase::AllocQNotifyForSingleQ(const InsQueue& insQueue) const
     }
 }
 
-HcclResult CollServiceBase::GetAlgExecParam(bool clearEnable, u32 numBlocks, void*& commContext, u64& len)
+HcclResult CollServiceBase::GetAlgExecParam(
+    [[maybe_unused]] bool clearEnable, [[maybe_unused]] u32 numBlocks, [[maybe_unused]] void*& commContext,
+    [[maybe_unused]] u64& len)
 {
     HCCL_ERROR("GetAlgExecParam was not support in this mode.");
     return HCCL_E_NOT_SUPPORT;

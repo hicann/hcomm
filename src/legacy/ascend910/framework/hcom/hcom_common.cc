@@ -174,7 +174,7 @@ HcclResult HcomSetGroupTopoInfo(const char* group, uint32_t rankSize)
     return g_hcomSetGroupTopoInfo(group, rankSize);
 }
 
-HcclResult HcomInitCollComm(uint32_t rank, void** commV2, HcclCommPtr& comm)
+HcclResult HcomInitCollComm([[maybe_unused]] uint32_t rank, void** commV2, [[maybe_unused]] HcclCommPtr& comm)
 {
     CHK_PTR_NULL(commV2);
     HCCL_INFO("[HcomInitCollComm] CollComm init start.");
@@ -215,7 +215,7 @@ void HcomUnSetGroupTopoInfo(const char* group)
     return;
 }
 
-HcclResult HcomGetCommHandleByGroup(const char* group, HcclComm* commHandle)
+HcclResult HcomGetCommHandleByGroup([[maybe_unused]] const char* group, [[maybe_unused]] HcclComm* commHandle)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     CHK_PTR_NULL(commHandle);

@@ -17,7 +17,7 @@ ReduceNHROneshot::ReduceNHROneshot(const HcclDispatcher dispatcher) : NHRBase(di
 
 ReduceNHROneshot::~ReduceNHROneshot() {}
 
-HcclResult ReduceNHROneshot::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo)
+HcclResult ReduceNHROneshot::Prepare(u64 reduceAttrBitMap, [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     reduceAttr_ = reduceAttrBitMap;
     return HCCL_SUCCESS;
@@ -81,8 +81,9 @@ HcclResult ReduceNHROneshot::SimpleCheck(const u32 rank, const u32 rankSize, con
     return HCCL_SUCCESS;
 }
 
-HcclResult
-ReduceNHROneshot::SdmaRx(LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInfo, const std::vector<LINK>& links)
+HcclResult ReduceNHROneshot::SdmaRx(
+    LINK& linkLeft, LINK& linkRight, [[maybe_unused]] InterServerAlgoStep& stepInfo,
+    [[maybe_unused]] const std::vector<LINK>& links)
 {
     HcclResult ret = HCCL_SUCCESS;
     u64 totalSize = count_ * SIZE_TABLE[dataType_];
@@ -122,7 +123,8 @@ ReduceNHROneshot::SdmaRx(LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& s
 }
 
 HcclResult ReduceNHROneshot::RdmaTxRx(
-    LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInfo, const std::vector<LINK>& links)
+    LINK& linkLeft, LINK& linkRight, [[maybe_unused]] InterServerAlgoStep& stepInfo,
+    [[maybe_unused]] const std::vector<LINK>& links)
 {
     HcclResult ret = HCCL_SUCCESS;
     u64 totalSize = count_ * SIZE_TABLE[dataType_];

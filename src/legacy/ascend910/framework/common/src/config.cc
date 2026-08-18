@@ -288,7 +288,7 @@ HcclResult GetSuperPodNum(const std::vector<RankInfo>& rankList, u32& superPodNu
     return HCCL_SUCCESS;
 }
 
-HcclResult CheckGroupRankList(const std::vector<RankInfo_t>& rankList, u32 deviceNum, u32 serverNum)
+HcclResult CheckGroupRankList(const std::vector<RankInfo_t>& rankList, [[maybe_unused]] u32 deviceNum, u32 serverNum)
 {
     u32 realDevNum = 0;
     CHK_RET(GetDevNum(rankList, realDevNum));

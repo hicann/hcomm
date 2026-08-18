@@ -60,7 +60,7 @@ namespace CcuRep {
         instrCount = 2; // jumpNE翻译需要2条指令
     }
 
-    bool CcuRepJumpNE::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepJumpNE::Translate(CcuInstr*& instr, uint16_t& instrId, [[maybe_unused]] const TransDep& dep)
     {
         if (this->instr == nullptr) {
             this->instrId = instrId;

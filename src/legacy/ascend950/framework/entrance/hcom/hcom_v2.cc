@@ -634,8 +634,8 @@ HcclResult HcomAlltoAllV2(
 }
 
 HcclResult HcomGetAlltoAllStagedWorkSpaceMemSizeV2(
-    const char* group, u64* sendCounts, u64* sdispls, HcclDataType sendType, u64* recvCounts, u64* rdispls,
-    HcclDataType recvType, u64& memSize)
+    const char* group, [[maybe_unused]] u64* sendCounts, [[maybe_unused]] u64* sdispls, HcclDataType sendType,
+    [[maybe_unused]] u64* recvCounts, [[maybe_unused]] u64* rdispls, HcclDataType recvType, u64& memSize)
 {
     HCCL_INFO("[%s] start.", __func__);
 

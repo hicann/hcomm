@@ -102,8 +102,8 @@ HcclResult FillIbverbsDataFromRes(const HcommRoceChannelRes* res, TransportDevic
 }
 
 HcclResult OpenDispatcherForTsRoce(
-    const HcommDeviceInfo& deviceInfo, char* commId, size_t commIdLen, u32& outDevId, DispatcherCtxPtr& outDctx,
-    HcclDispatcher& outDispatcher)
+    const HcommDeviceInfo& deviceInfo, char* commId, [[maybe_unused]] size_t commIdLen, u32& outDevId,
+    DispatcherCtxPtr& outDctx, HcclDispatcher& outDispatcher)
 {
     outDevId = INVALID_UINT;
     CHK_RET(hrtDrvGetLocalDevIDByHostDevID(deviceInfo.devicePhyId, &outDevId));

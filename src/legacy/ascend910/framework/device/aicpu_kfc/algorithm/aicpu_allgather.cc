@@ -190,8 +190,8 @@ HcclResult AicpuAllgather::RunAllGathervMC(
 }
 
 HcclResult AicpuAllgather::GenRingTask(
-    HcclReduceOp opType, u64 sndAddr, u64 rcvAddr, u64 gatherSize, HcclDataType dataType, uint32_t streamId,
-    bool isClockwise, uint32_t step, bool isWindowLast) const
+    [[maybe_unused]] HcclReduceOp opType, u64 sndAddr, u64 rcvAddr, u64 gatherSize, HcclDataType dataType,
+    uint32_t streamId, bool isClockwise, uint32_t step, bool isWindowLast) const
 {
     const u64 winIn = ctx_->rankInfo[rankId_].window + (isClockwise ? 0U : ctx_->windowSize / RING_NUM);
     const u64 winOut = ctx_->rankInfo[rankId_].windowOut + (isClockwise ? 0U : ctx_->windowSize / RING_NUM);

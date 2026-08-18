@@ -39,7 +39,8 @@ HcclResult DispatcherVirtural::Init()
 }
 
 HcclResult DispatcherVirtural::SignalRecord(
-    HcclRtNotify signal, Stream& stream, u32 userRank, u64 offset, s32 stage, bool inchip, u64 signalAddr, u32 notifyId)
+    HcclRtNotify signal, Stream& stream, u32 userRank, u64 offset, s32 stage, [[maybe_unused]] bool inchip,
+    [[maybe_unused]] u64 signalAddr, [[maybe_unused]] u32 notifyId)
 {
     TaskLogicInfo info(
         0, TaskLogicType::DISPATCHER_TYPE, TaskLogicFuncType::DISPATCHER_SIGNALRECORD_TYPE, signal, userRank, offset,
@@ -50,8 +51,8 @@ HcclResult DispatcherVirtural::SignalRecord(
 }
 
 HcclResult DispatcherVirtural::SignalWait(
-    HcclRtNotify signal, Stream& stream, u32 userRank, u32 remoteUserRank, s32 stage, bool inchip, u32 notifyId,
-    u32 timeOut)
+    HcclRtNotify signal, Stream& stream, u32 userRank, u32 remoteUserRank, s32 stage, [[maybe_unused]] bool inchip,
+    [[maybe_unused]] u32 notifyId, [[maybe_unused]] u32 timeOut)
 {
     TaskLogicInfo info(
         0, TaskLogicType::DISPATCHER_TYPE, TaskLogicFuncType::DISPATCHER_SIGNALWAIT_TYPE, signal, userRank,
@@ -61,8 +62,8 @@ HcclResult DispatcherVirtural::SignalWait(
 }
 
 HcclResult DispatcherVirtural::MemcpyAsync(
-    hccl::DeviceMem& dst, const hccl::DeviceMem& src, hccl::Stream& stream, u32 remoteUserRank,
-    hccl::LinkType inLinkType)
+    hccl::DeviceMem& dst, const hccl::DeviceMem& src, hccl::Stream& stream, [[maybe_unused]] u32 remoteUserRank,
+    [[maybe_unused]] hccl::LinkType inLinkType)
 {
     if (dst.size() < src.size()) {
         HCCL_ERROR(

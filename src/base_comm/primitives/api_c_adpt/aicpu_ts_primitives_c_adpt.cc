@@ -1101,7 +1101,7 @@ int32_t HcommAcquireComm(const char* commId)
 }
 
 int32_t HcommChannelRegisterDfx(
-    ChannelHandle channel, std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> callback)
+    ChannelHandle channel, [[maybe_unused]] std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> callback)
 {
     CHK_RET(UnwrapChannelHandle(channel));
     HCCL_INFO("[HcommChannelRegisterDfx] ChannelHandle[0x%llx] Init success", channel);

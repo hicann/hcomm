@@ -211,7 +211,7 @@ void TaskProfiling::GetNotifyTaskData(
     taskInfo.ctxId = taskData.Notify.ctxId;
 }
 
-HcclResult TaskProfiling::Run(const StepData& stepData) { return HCCL_SUCCESS; }
+HcclResult TaskProfiling::Run([[maybe_unused]] const StepData& stepData) { return HCCL_SUCCESS; }
 
 HcclResult TaskProfiling::Run(const TaskData& taskData, bool isCapture)
 {
@@ -262,10 +262,14 @@ HcclResult TaskProfiling::Run(const TaskData& taskData, bool isCapture)
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskProfiling::Run(const std::string& opName, const std::string& tag) const { return HCCL_SUCCESS; }
+HcclResult TaskProfiling::Run([[maybe_unused]] const std::string& opName, [[maybe_unused]] const std::string& tag) const
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult
-TaskProfiling::Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType& taskType, const TaskParaReduce& paraReduce)
+HcclResult TaskProfiling::Save(
+    u32 captureStreamID, [[maybe_unused]] u32 streamID, u32 taskID, TaskType& taskType,
+    const TaskParaReduce& paraReduce)
 {
     TaskData taskData(captureStreamID, taskID, taskType, paraReduce);
     Run(taskData, true);
@@ -279,8 +283,8 @@ HcclResult TaskProfiling::Save(u32& streamID, u32& taskID, TaskType& taskType, c
     return HCCL_SUCCESS;
 }
 
-HcclResult
-TaskProfiling::Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType& taskType, const TaskParaDMA& paraDMA)
+HcclResult TaskProfiling::Save(
+    u32 captureStreamID, [[maybe_unused]] u32 streamID, u32 taskID, TaskType& taskType, const TaskParaDMA& paraDMA)
 {
     TaskData taskData(captureStreamID, taskID, taskType, paraDMA);
     Run(taskData, true);
@@ -294,8 +298,9 @@ HcclResult TaskProfiling::Save(u32& streamID, u32& taskID, TaskType& taskType, c
     return HCCL_SUCCESS;
 }
 
-HcclResult
-TaskProfiling::Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType& taskType, const TaskParaNotify& paraNotify)
+HcclResult TaskProfiling::Save(
+    u32 captureStreamID, [[maybe_unused]] u32 streamID, u32 taskID, TaskType& taskType,
+    const TaskParaNotify& paraNotify)
 {
     TaskData taskData(captureStreamID, taskID, taskType, paraNotify);
     Run(taskData, true);
@@ -309,12 +314,15 @@ HcclResult TaskProfiling::Save(u32& streamID, u32& taskID, TaskType& taskType, c
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskProfiling::Save(u32 captureStreamID, u32 streamID, u32 taskID, const void* descBuf, size_t descBufLen)
+HcclResult TaskProfiling::Save(
+    [[maybe_unused]] u32 captureStreamID, [[maybe_unused]] u32 streamID, [[maybe_unused]] u32 taskID,
+    [[maybe_unused]] const void* descBuf, [[maybe_unused]] size_t descBufLen)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskProfiling::Save(u32 captureStreamID, u32 streamID, u32 taskID, const TaskParaAiv& paraAiv)
+HcclResult
+TaskProfiling::Save(u32 captureStreamID, u32 streamID, [[maybe_unused]] u32 taskID, const TaskParaAiv& paraAiv)
 {
     HCCLReportData hcclReportData{};
     auto& profilingManager = hccl::ProfilingManager::Instance();
@@ -370,7 +378,9 @@ HcclResult TaskProfiling::Save(u32 streamID, u32 taskID, const TaskParaAiv& para
     return Save(streamID, streamID, taskID, paraAiv);
 }
 
-HcclResult TaskProfiling::Save(u32& streamID, u32& taskID, const void* descBuf, size_t descBufLen)
+HcclResult TaskProfiling::Save(
+    [[maybe_unused]] u32& streamID, [[maybe_unused]] u32& taskID, [[maybe_unused]] const void* descBuf,
+    [[maybe_unused]] size_t descBufLen)
 {
     return HCCL_SUCCESS;
 }

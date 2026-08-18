@@ -47,9 +47,7 @@ struct OpDataInfo {
     u32 deviceId{0};
     HcclDataType dataType{HcclDataType::HCCL_DATA_TYPE_RESERVED};
     HcclReduceOp reduceType{HcclReduceOp::HCCL_REDUCE_RESERVED};
-    struct timeval tv {
-        0
-    };
+    struct timeval tv {};
 };
 
 struct StreamRecordInfo {

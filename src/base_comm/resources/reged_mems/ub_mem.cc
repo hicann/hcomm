@@ -48,26 +48,29 @@ HcclResult UbMemRegedMemMgr::UnregisterMemory(void* memHandle)
         });
 }
 
-HcclResult
-UbMemRegedMemMgr::MemoryExport(const EndpointDesc endpointDesc, void* memHandle, void** memDesc, uint32_t* memDescLen)
+HcclResult UbMemRegedMemMgr::MemoryExport(
+    [[maybe_unused]] const EndpointDesc endpointDesc, [[maybe_unused]] void* memHandle, [[maybe_unused]] void** memDesc,
+    [[maybe_unused]] uint32_t* memDescLen)
 {
     HCCL_INFO("UbMemRegedMemMgr MemoryExport is not supported.");
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemRegedMemMgr::MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem)
+HcclResult UbMemRegedMemMgr::MemoryImport(
+    [[maybe_unused]] const void* memDesc, [[maybe_unused]] uint32_t descLen, [[maybe_unused]] HcommMem* outMem)
 {
     HCCL_INFO("UbMemRegedMemMgr MemoryImport is not supported.");
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemRegedMemMgr::MemoryUnimport(const void* memDesc, uint32_t descLen)
+HcclResult UbMemRegedMemMgr::MemoryUnimport([[maybe_unused]] const void* memDesc, [[maybe_unused]] uint32_t descLen)
 {
     HCCL_INFO("UbMemRegedMemMgr MemoryUnimport is not supported.");
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemRegedMemMgr::GetAllMemHandles(void** memHandles, uint32_t* memHandleNum)
+HcclResult
+UbMemRegedMemMgr::GetAllMemHandles([[maybe_unused]] void** memHandles, [[maybe_unused]] uint32_t* memHandleNum)
 {
     HCCL_INFO("UbMemRegedMemMgr GetAllMemHandles is not supported.");
     return HCCL_SUCCESS;

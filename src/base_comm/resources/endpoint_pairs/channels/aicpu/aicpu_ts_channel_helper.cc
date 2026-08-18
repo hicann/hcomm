@@ -75,8 +75,8 @@ HcclResult AicpuTsChannelHelper::EnsureKernelBinLoaded(CommEngine engine)
 }
 
 HcclResult AicpuTsChannelHelper::LaunchKernel(
-    const ChannelHandle* channelList, uint32_t listNum, CommEngine engine, const HcommChannelDesc* channelDescs,
-    aclrtBinHandle binHandle)
+    const ChannelHandle* channelList, uint32_t listNum, [[maybe_unused]] CommEngine engine,
+    const HcommChannelDesc* channelDescs, aclrtBinHandle binHandle)
 {
     CHK_PTR_NULL(channelList);
     CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s]Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
@@ -151,7 +151,8 @@ HcclResult AicpuTsChannelHelper::HandleStatus(
 }
 
 HcclResult AicpuTsChannelHelper::PreAllocChannels(
-    ChannelHandle* targetChannels, ChannelHandle* userChannels, HcommChannelDesc* channelDescs, uint32_t channelNum)
+    ChannelHandle* targetChannels, ChannelHandle* userChannels, [[maybe_unused]] HcommChannelDesc* channelDescs,
+    uint32_t channelNum)
 {
     CHK_PTR_NULL(targetChannels);
     CHK_PTR_NULL(userChannels);

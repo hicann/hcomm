@@ -31,7 +31,10 @@
 using namespace std;
 using namespace hccl;
 
-HcclResult CheckAverageDev(u32 uDeviceNum, u32 uServerNum) { return HCCL_E_NOT_SUPPORT; }
+HcclResult CheckAverageDev([[maybe_unused]] u32 uDeviceNum, [[maybe_unused]] u32 uServerNum)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
 TopoInfoRanktableParser::TopoInfoRanktableParser(const std::string& rankTableM, const std::string& identify)
     : rankTableFile_(rankTableM),
@@ -43,83 +46,123 @@ TopoInfoRanktableParser::TopoInfoRanktableParser(const std::string& rankTableM, 
 
 TopoInfoRanktableParser::~TopoInfoRanktableParser() {}
 
-HcclResult TopoInfoRanktableParser::ReadFile(const std::string& readFile) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoRanktableParser::ReadFile([[maybe_unused]] const std::string& readFile)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
-HcclResult TopoInfoRanktableParser::LoadFile(const std::string& file) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoRanktableParser::LoadFile([[maybe_unused]] const std::string& file) { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult TopoInfoRanktableParser::LoadRankTableString(const std::string& string) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoRanktableParser::LoadRankTableString([[maybe_unused]] const std::string& string)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
-HcclResult TopoInfoRanktableParser::LoadConfigString(const std::string& string) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoRanktableParser::LoadConfigString([[maybe_unused]] const std::string& string)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
-HcclResult TopoInfoRanktableParser::LoadString(const std::string& string) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoRanktableParser::LoadString([[maybe_unused]] const std::string& string)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
-HcclResult TopoInfoRanktableParser::GetClusterInfo(RankTable_t& clusterInfo) { return HCCL_E_NOT_SUPPORT; }
-HcclResult TopoInfoRanktableParser::GetClusterInfo(hccl::HcclCommParams& params, hccl::RankTable_t& rankTable)
+HcclResult TopoInfoRanktableParser::GetClusterInfo([[maybe_unused]] RankTable_t& clusterInfo)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
+HcclResult TopoInfoRanktableParser::GetClusterInfo(
+    [[maybe_unused]] hccl::HcclCommParams& params, [[maybe_unused]] hccl::RankTable_t& rankTable)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoInfoRanktableParser::Init() { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult TopoInfoRanktableParser::LoadFileInit(std::string& rankTableM) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoRanktableParser::LoadFileInit([[maybe_unused]] std::string& rankTableM)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
-HcclResult TopoInfoRanktableParser::SetIsInterSuperPodRetryEnable(bool isRetryEnable) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoRanktableParser::SetIsInterSuperPodRetryEnable([[maybe_unused]] bool isRetryEnable)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
-HcclResult TopoInfoRanktableParser::GetRanktableVersion(std::string& version) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoRanktableParser::GetRanktableVersion([[maybe_unused]] std::string& version)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
 HcclResult TopoInfoRanktableParser::RefreshStatus() { return HCCL_E_NOT_SUPPORT; }
 
 bool TopoInfoRanktableParser::IsReady() const { return this->statusCompleted_; }
 
 HcclResult TopoInfoRanktableParser::GetJsonProperty(
-    const nlohmann::json& obj, const char* propName, std::string& propValue, bool optionalProp) const
+    [[maybe_unused]] const nlohmann::json& obj, [[maybe_unused]] const char* propName,
+    [[maybe_unused]] std::string& propValue, [[maybe_unused]] bool optionalProp) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoInfoRanktableParser::GetJsonProperty(
-    const nlohmann::json& obj, const char* propName, nlohmann::json& propValue, bool optionalProp) const
+    [[maybe_unused]] const nlohmann::json& obj, [[maybe_unused]] const char* propName,
+    [[maybe_unused]] nlohmann::json& propValue, [[maybe_unused]] bool optionalProp) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoInfoRanktableParser::GetJsonArrayMemberProperty(
-    const nlohmann::json& obj, const u32 index, const char* propName, std::string& propValue, bool optionalProp) const
+    [[maybe_unused]] const nlohmann::json& obj, [[maybe_unused]] const u32 index, [[maybe_unused]] const char* propName,
+    [[maybe_unused]] std::string& propValue, [[maybe_unused]] bool optionalProp) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoInfoRanktableParser::GetJsonArrayMemberProperty(
-    const nlohmann::json& obj, const u32 index, const char* propName, u32& propValue, bool optionalProp)
+    [[maybe_unused]] const nlohmann::json& obj, [[maybe_unused]] const u32 index, [[maybe_unused]] const char* propName,
+    [[maybe_unused]] u32& propValue, [[maybe_unused]] bool optionalProp)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoInfoRanktableParser::GetJsonArrayMemberProperty(
-    const nlohmann::json& obj, const u32 index, const char* propName, nlohmann::json& propValue,
-    bool optionalProp) const
+    [[maybe_unused]] const nlohmann::json& obj, [[maybe_unused]] const u32 index, [[maybe_unused]] const char* propName,
+    [[maybe_unused]] nlohmann::json& propValue, [[maybe_unused]] bool optionalProp) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 /* 依据检查类型进行入参内容检查，并将检查选项转为strType带出以便后续信息打印 */
 HcclResult TopoInfoRanktableParser::CheckUniquePara(
-    const JsonUniqueInfoType& type, const std::string& value, string& strType) const
+    [[maybe_unused]] const JsonUniqueInfoType& type, [[maybe_unused]] const std::string& value,
+    [[maybe_unused]] string& strType) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoInfoRanktableParser::CheckUniqueAndInsertPool(
-    const JsonUniqueInfoType& type, const std::string& value, const JsonCheckOpType& opType)
+    [[maybe_unused]] const JsonUniqueInfoType& type, [[maybe_unused]] const std::string& value,
+    [[maybe_unused]] const JsonCheckOpType& opType)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-void TopoInfoRanktableParser::GenerateServerIdx(const std::string& serverId, u32& serverIdx) { return; }
+void TopoInfoRanktableParser::GenerateServerIdx(
+    [[maybe_unused]] const std::string& serverId, [[maybe_unused]] u32& serverIdx)
+{
+    return;
+}
 
-void TopoInfoRanktableParser::GenerateSuperPodIdx(const std::string& superPodId, u32& superPodIdx) { return; }
+void TopoInfoRanktableParser::GenerateSuperPodIdx(
+    [[maybe_unused]] const std::string& superPodId, [[maybe_unused]] u32& superPodIdx)
+{
+    return;
+}
 
-HcclResult TopoInfoRanktableParser::ConvertIpAddress(const std::string& ipStr, HcclIpAddress& ipAddr)
+HcclResult TopoInfoRanktableParser::ConvertIpAddress(
+    [[maybe_unused]] const std::string& ipStr, [[maybe_unused]] HcclIpAddress& ipAddr)
 {
     return HCCL_E_NOT_SUPPORT;
 }

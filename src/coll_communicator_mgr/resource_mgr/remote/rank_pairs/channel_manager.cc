@@ -686,7 +686,7 @@ HcclResult ChannelManager::AicpuChannelInit(
         u64 context;
         bool isCustom;
     };
-    InitTask customInitTask = {0};
+    InitTask customInitTask = {};
     customInitTask.context = reinterpret_cast<u64>(addr.ptr());
     customInitTask.isCustom = false;
 

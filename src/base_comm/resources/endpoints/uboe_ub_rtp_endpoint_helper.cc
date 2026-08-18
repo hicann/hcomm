@@ -16,13 +16,13 @@ namespace hcomm {
 
 UboeUbRtpEndpointHelper::UboeUbRtpEndpointHelper(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
 
-HcclResult UboeUbRtpEndpointHelper::ServerSocketListen(const uint32_t port)
+HcclResult UboeUbRtpEndpointHelper::ServerSocketListen([[maybe_unused]] const uint32_t port)
 {
     HCCL_INFO("%s is not supported", __func__);
     return HCCL_SUCCESS;
 }
 
-HcclResult UboeUbRtpEndpointHelper::ServerSocketStopListen(const uint32_t port)
+HcclResult UboeUbRtpEndpointHelper::ServerSocketStopListen([[maybe_unused]] const uint32_t port)
 {
     HCCL_INFO("%s is not supported", __func__);
     return HCCL_SUCCESS;

@@ -220,7 +220,7 @@ HcclResult LocalRdmaRmaBufferImpl::Remap(void* addr, u64 length)
     CHK_PTR_NULL(addr);
     CHK_PRT_RET(length == 0, HCCL_ERROR("[Remap]memorySize[%llu] must be greater than 0.", length), HCCL_E_PARA);
 
-    struct MemRemapInfo info = {0};
+    struct MemRemapInfo info = {};
     info.addr = addr;
     info.size = length;
     unsigned int num = 1;

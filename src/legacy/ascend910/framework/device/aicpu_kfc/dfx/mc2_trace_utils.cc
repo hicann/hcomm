@@ -81,8 +81,8 @@ HcclResult MC2TraceUtils::InitTraceStrHandle()
 {
     // trace api存在限制: msgNum * msgSize <= 128k
     uint16_t strMsgNum = GetMsgNum(sizeof(TraceStr));
-    TraceAttr attr = {0};
-    attr = {false, strMsgNum, sizeof(TraceStr), nullptr};
+    TraceAttr attr = {};
+    attr = {false, strMsgNum, sizeof(TraceStr), {nullptr}, 0, {0}};
     g_traceStrSt = g_traceStructEntryCreate("TraceStr");
     g_traceStructItemArraySet(
         g_traceStrSt, "transmit", TRACE_STRUCT_ARRAY_TYPE_CHAR, TRACE_STRUCT_SHOW_MODE_CHAR,
@@ -224,8 +224,8 @@ void MC2TraceUtils::SetHcclKFCTilingDataTwo()
 HcclResult MC2TraceUtils::InitTaskAndTilingDataHandle()
 {
     uint16_t taskAndTilingDataMsgNum = GetMsgNum(sizeof(KFCtaskAndTilingTraceData));
-    TraceAttr attr = {0};
-    attr = {false, taskAndTilingDataMsgNum, sizeof(KFCtaskAndTilingTraceData), nullptr};
+    TraceAttr attr = {};
+    attr = {false, taskAndTilingDataMsgNum, sizeof(KFCtaskAndTilingTraceData), {nullptr}, 0, {0}};
     g_traceKFCtaskAndTilingTraceDataSt = g_traceStructEntryCreate("KFCtaskAndTilingTraceData");
     g_traceStructItemFieldSet(
         g_traceKFCtaskAndTilingTraceDataSt, "inputA", TRACE_STRUCT_FIELD_TYPE_UINT64, TRACE_STRUCT_SHOW_MODE_HEX,
@@ -265,8 +265,8 @@ HcclResult MC2TraceUtils::InitTaskAndTilingDataHandle()
 HcclResult MC2TraceUtils::InitAicpuComDataHandle()
 {
     uint16_t aicpuComMsgNum = GetMsgNum(sizeof(AicpuComTraceData));
-    TraceAttr attr = {0};
-    attr = {false, aicpuComMsgNum, sizeof(AicpuComTraceData), nullptr};
+    TraceAttr attr = {};
+    attr = {false, aicpuComMsgNum, sizeof(AicpuComTraceData), {nullptr}, 0, {0}};
     g_traceAicpuComTraceSt = g_traceStructEntryCreate("AicpuComTraceData");
     g_traceStructItemFieldSet(
         g_traceAicpuComTraceSt, "devId", TRACE_STRUCT_FIELD_TYPE_UINT32, TRACE_STRUCT_SHOW_MODE_DEC, 4); // 4 uint32
@@ -366,8 +366,8 @@ void MC2TraceUtils::SetTraceMsgInfo()
 HcclResult MC2TraceUtils::InitMsgInfoHandle()
 {
     uint16_t msgInfoNum = GetMsgNum(sizeof(AivAicpuOpParam));
-    TraceAttr attr = {0};
-    attr = {false, msgInfoNum, sizeof(AivAicpuOpParam), nullptr};
+    TraceAttr attr = {};
+    attr = {false, msgInfoNum, sizeof(AivAicpuOpParam), {nullptr}, 0, {0}};
     g_traceMsgInfoSt = g_traceStructEntryCreate("AivAicpuOpParam");
     MC2TraceUtils::SetTraceMsgInfo();
     g_traceStructSetAttr(g_traceMsgInfoSt, 0, &attr);
@@ -435,8 +435,8 @@ void MC2TraceUtils::SetTraceSqeBatchInfo()
 HcclResult MC2TraceUtils::InitSqeBatchInfoHandle()
 {
     uint16_t sqeBatchInfoMsgNum = GetMsgNum(sizeof(SqeBatchInfo));
-    TraceAttr attr = {0};
-    attr = {false, sqeBatchInfoMsgNum, sizeof(SqeBatchInfo), nullptr};
+    TraceAttr attr = {};
+    attr = {false, sqeBatchInfoMsgNum, sizeof(SqeBatchInfo), {nullptr}, 0, {0}};
     g_traceSqeBatchInfoSt = g_traceStructEntryCreate("SqeBatchInfo");
     for (uint32_t i = 0; i < MAX_SQE_BATCH_SIZE; i++) {
         SetTraceSqeBatchInfo();
@@ -567,7 +567,7 @@ HcclResult MC2TraceUtils::Init()
     unsigned int cpType = DEVDRV_PROCESS_CPTYPE_MAX;
     CHK_RET(HrtHalDrvQueryProcessHostPid(getpid(), nullptr, nullptr, &hostpid, &cpType));
 
-    TraceGlobalAttr traceGlobalAttr = {0};
+    TraceGlobalAttr traceGlobalAttr = {};
     traceGlobalAttr.saveMode = 1;
     traceGlobalAttr.deviceId = AicpuGetComContext()->devId;
     traceGlobalAttr.pid = hostpid;

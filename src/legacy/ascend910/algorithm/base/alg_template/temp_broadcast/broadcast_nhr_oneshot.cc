@@ -85,7 +85,8 @@ HcclResult BroadcastNHROneshot::SimpleCheck(const u32 rank, const u32 rankSize, 
 }
 
 HcclResult BroadcastNHROneshot::SdmaRx(
-    LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInfo, const std::vector<LINK>& links)
+    LINK& linkLeft, LINK& linkRight, [[maybe_unused]] InterServerAlgoStep& stepInfo,
+    [[maybe_unused]] const std::vector<LINK>& links)
 {
     u64 totalSize = count_ * SIZE_TABLE[dataType_];
     DeviceMem srcMem = outputMem_.range(localBaseOffset_, totalSize);
@@ -110,7 +111,8 @@ HcclResult BroadcastNHROneshot::SdmaRx(
 }
 
 HcclResult BroadcastNHROneshot::RdmaTxRx(
-    LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInfo, const std::vector<LINK>& links)
+    LINK& linkLeft, LINK& linkRight, [[maybe_unused]] InterServerAlgoStep& stepInfo,
+    [[maybe_unused]] const std::vector<LINK>& links)
 {
     u64 totalSize = count_ * SIZE_TABLE[dataType_];
     DeviceMem srcMem = outputMem_.range(localBaseOffset_, totalSize);

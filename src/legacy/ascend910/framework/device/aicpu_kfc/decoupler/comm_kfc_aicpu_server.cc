@@ -127,7 +127,7 @@ HcclResult CommKfcAicpuServer::Orchestrate(const HcclMsg& msg, HcclMsgExt& extMs
     return HCCL_SUCCESS;
 }
 
-HcclResult CommKfcAicpuServer::Finalize(u32 msgPos)
+HcclResult CommKfcAicpuServer::Finalize([[maybe_unused]] u32 msgPos)
 {
     KeepAlive();
     return HCCL_SUCCESS;

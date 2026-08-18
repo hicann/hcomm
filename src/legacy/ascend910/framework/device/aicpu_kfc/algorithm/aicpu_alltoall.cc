@@ -11,8 +11,8 @@
 #include "aicpu_alltoall.h"
 
 HcclResult AicpuAllToAll::RunAlgorithm(
-    HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType, u64 strideLen,
-    AivAicpuOpParam* nextTask)
+    [[maybe_unused]] HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType,
+    u64 strideLen, [[maybe_unused]] AivAicpuOpParam* nextTask)
 {
     CHK_PTR_NULL(ctx_);
     if (ctx_->useBufferType == MC2_BUFFER_TYPE_WINDOW_IN) {

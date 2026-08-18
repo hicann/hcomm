@@ -702,9 +702,12 @@ HcclResult AicpuTsRoceChannelV2::ModifyQp()
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsRoceChannelV2::BuildAndGetLocNotifyInfo(RegedNotifyEntity** notify) { return HCCL_SUCCESS; }
+HcclResult AicpuTsRoceChannelV2::BuildAndGetLocNotifyInfo([[maybe_unused]] RegedNotifyEntity** notify)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult AicpuTsRoceChannelV2::BuildAndGetRmtNotifyInfo(RegedNotifyEntity** notify)
+HcclResult AicpuTsRoceChannelV2::BuildAndGetRmtNotifyInfo([[maybe_unused]] RegedNotifyEntity** notify)
 {
     // 目前仅用于aiv模式，无notify
     return HCCL_SUCCESS;

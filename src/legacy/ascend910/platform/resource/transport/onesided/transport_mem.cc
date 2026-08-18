@@ -46,8 +46,9 @@ std::shared_ptr<TransportMem> TransportMem::Create(
 }
 
 std::shared_ptr<TransportMem> TransportMem::Create(
-    TpType tpType, const std::unique_ptr<NotifyPool>& notifyPool, const HcclNetDevCtx& netDevCtx,
-    const HcclDispatcher& dispatcher, AttrInfo& attrInfo, bool aicpuUnfoldMode)
+    TpType tpType, [[maybe_unused]] const std::unique_ptr<NotifyPool>& notifyPool,
+    [[maybe_unused]] const HcclNetDevCtx& netDevCtx, [[maybe_unused]] const HcclDispatcher& dispatcher,
+    [[maybe_unused]] AttrInfo& attrInfo, [[maybe_unused]] bool aicpuUnfoldMode)
 {
     std::shared_ptr<TransportMem> transportMemPtr;
 #if !defined(CCL_KERNEL) || defined(CCL_LLT)
@@ -75,8 +76,8 @@ std::shared_ptr<TransportMem> TransportMem::Create(
     return transportMemPtr;
 }
 
-std::shared_ptr<TransportMem>
-TransportMem::Create(TpType tpType, const HcclQpInfoV2& qpInfo, const HcclDispatcher& dispatcher, AttrInfo& attrInfo)
+std::shared_ptr<TransportMem> TransportMem::Create(
+    TpType tpType, [[maybe_unused]] const HcclQpInfoV2& qpInfo, const HcclDispatcher& dispatcher, AttrInfo& attrInfo)
 {
     const std::unique_ptr<NotifyPool> notifyPool = nullptr; // dummy for device ibv transport
     const HcclNetDevCtx netDevCtx = nullptr;                // dummy

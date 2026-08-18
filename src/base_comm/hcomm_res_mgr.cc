@@ -137,7 +137,7 @@ HcommResMgr::~HcommResMgr()
     // 未来需在析构函数中主动调用各种单例销毁流程，保证销毁时序
 }
 
-static void OnDeviceResetPre(int32_t deviceId, aclrtDeviceState state, void* args)
+static void OnDeviceResetPre(int32_t deviceId, aclrtDeviceState state, [[maybe_unused]] void* args)
 {
     try {
         if (state != ACL_RT_DEVICE_STATE_RESET_PRE) {

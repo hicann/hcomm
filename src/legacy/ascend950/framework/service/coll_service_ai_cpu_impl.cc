@@ -623,7 +623,7 @@ u64 CollServiceAiCpuImpl::CalcOpDynamicDataSize(const CollOperator& op, const Op
 // 功能说明：根据输入的LinkData信息，恢复Tansport对象
 // 输入说明：vector<LinkData> &links：linkData数据
 void CollServiceAiCpuImpl::RecoverTransport(
-    vector<LinkData>& links, vector<std::pair<LinkGroup, u32>> linkGroupPair) // communicatorLinkData
+    vector<LinkData>& links, [[maybe_unused]] vector<std::pair<LinkGroup, u32>> linkGroupPair) // communicatorLinkData
 {
     HCCL_INFO("[CollServiceAiCpuImpl][RecoverTransport] start");
     RegisterCclBuffer(links);
@@ -849,7 +849,7 @@ void CollServiceAiCpuImpl::ReLoadWithOffloadMode(CollOperator& op)
     HCCL_INFO("[CollServiceAiCpuImpl::%s] end.", __func__);
 }
 
-void CollServiceAiCpuImpl::AllocQueueNotify(const InsQueue& insQueue)
+void CollServiceAiCpuImpl::AllocQueueNotify([[maybe_unused]] const InsQueue& insQueue)
 {
     // 重写基类接口，AICPU下不支持InsQueue传参
     THROW<InternalException>(
@@ -857,7 +857,7 @@ void CollServiceAiCpuImpl::AllocQueueNotify(const InsQueue& insQueue)
         "u32>> &queueNotifyReq) Instead.");
 }
 
-void CollServiceAiCpuImpl::AllocQNotifyForSingleQ(const InsQueue& insQueue) const
+void CollServiceAiCpuImpl::AllocQNotifyForSingleQ([[maybe_unused]] const InsQueue& insQueue) const
 {
     THROW<InternalException>("AllocQNotifyForSingleQ is not support in AiCpu mode");
 }

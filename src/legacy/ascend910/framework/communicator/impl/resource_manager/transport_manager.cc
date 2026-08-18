@@ -1759,7 +1759,7 @@ HcclResult TransportManager::SetGroupMode(bool groupMode)
 
 std::map<u32, TransportType> TransportManager::GetRemoteTransportMap() { return remoteTransportMap_; }
 
-HcclResult TransportManager::IsInterServer(const u32 dstRank, bool& isInterServer)
+HcclResult TransportManager::IsInterServer([[maybe_unused]] const u32 dstRank, [[maybe_unused]] bool& isInterServer)
 {
 #if !defined(CCL_KERNEL_AICPU) && !defined(HCCD)
     if (rankInfoList_[userRank_].deviceType == DevType::DEV_TYPE_910_93) {

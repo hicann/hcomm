@@ -1092,6 +1092,7 @@ STATIC int RsSocketStateConnected(struct RsConnInfo *conn, uint32_t sslEnable, s
 
 STATIC int RsSocketStateInit(unsigned int chipId, struct RsConnInfo *conn, uint32_t sslEnable, struct rs_cb *rscb)
 {
+    (void)chipId;
     int ret;
 
     conn->tag[SOCK_CONN_TAG_SIZE + SOCK_CONN_DEV_ID_SIZE - 1] = '\0';

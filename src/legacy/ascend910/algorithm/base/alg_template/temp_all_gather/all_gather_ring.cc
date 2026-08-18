@@ -421,7 +421,7 @@ HcclResult AllGatherRing::AllGatherSlicesPrep(u32 rankSize, u32 nicSize)
 HcclResult
 AllGatherRing::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo)
 {
-    NslbDpAdjInfo adjInfoStep = {0};
+    NslbDpAdjInfo adjInfoStep = {};
     u32 ringNextRank = (rank + 1) % rankSize;
     LINK nslbNext = links[ringNextRank];
 

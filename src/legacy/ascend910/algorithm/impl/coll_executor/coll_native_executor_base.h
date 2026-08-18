@@ -72,9 +72,19 @@ protected:
     // 非零拷贝场景走KernelRun
     virtual HcclResult KernelRun(const OpParam& param, ExecMem& execMem);
     // 零拷贝场景走KernelRunIntraServerPre、KernelRunInterServer、KernelRunIntraServerPost
-    virtual HcclResult KernelRunInterServer(const OpParam& param, ExecMem& execMem) { return HCCL_SUCCESS; }
-    virtual HcclResult KernelRunIntraServerPre(const OpParam& param, ExecMem& execMem) { return HCCL_SUCCESS; }
-    virtual HcclResult KernelRunIntraServerPost(const OpParam& param, ExecMem& execMem) { return HCCL_SUCCESS; }
+    virtual HcclResult KernelRunInterServer([[maybe_unused]] const OpParam& param, [[maybe_unused]] ExecMem& execMem)
+    {
+        return HCCL_SUCCESS;
+    }
+    virtual HcclResult KernelRunIntraServerPre([[maybe_unused]] const OpParam& param, [[maybe_unused]] ExecMem& execMem)
+    {
+        return HCCL_SUCCESS;
+    }
+    virtual HcclResult
+    KernelRunIntraServerPost([[maybe_unused]] const OpParam& param, [[maybe_unused]] ExecMem& execMem)
+    {
+        return HCCL_SUCCESS;
+    }
     virtual HcclResult Getlevel1CommRank(SubCommInfo& level1CommInfo);
     virtual HcclResult SelectTempAlg(std::unique_ptr<AlgTemplateBase>& level1TempAlg, u32 level1RankSize);
     virtual HcclResult GetDevNumInlocalPod(u32& devNumInlocalPod);

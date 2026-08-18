@@ -201,6 +201,7 @@ STATIC int OpMsgErr(char **outBuf, struct MsgHead *recvMsgHead, int *outBufLen, 
 
 STATIC int RaRsRdevInit(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     unsigned int rdevIndex = 0;
     union OpRdevInitData *rdevInitData = (union OpRdevInitData *)(inBuf + sizeof(struct MsgHead));
 
@@ -220,6 +221,7 @@ STATIC int RaRsRdevInit(char *inBuf, char *outBuf, int *outLen, int *opResult, i
 
 STATIC int RaRsRdevInitWithBackup(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpRdevInitWithBackupData *rdevInitData = (union OpRdevInitWithBackupData *)(inBuf + sizeof(struct MsgHead));
     unsigned int rdevIndex = 0;
 
@@ -240,6 +242,7 @@ STATIC int RaRsRdevInitWithBackup(char *inBuf, char *outBuf, int *outLen, int *o
 
 STATIC int RaRsRdevGetPortStatus(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpRdevGetPortStatusData *statusData = NULL;
     enum PortStatus status = PORT_STATUS_DOWN;
 
@@ -260,6 +263,8 @@ STATIC int RaRsRdevGetPortStatus(char *inBuf, char *outBuf, int *outLen, int *op
 
 STATIC int RaRsRdevDeinit(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpRdevDeinitData *rdevDeinitData = (union OpRdevDeinitData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpRdevDeinitData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -274,6 +279,7 @@ STATIC int RaRsRdevDeinit(char *inBuf, char *outBuf, int *outLen, int *opResult,
 
 STATIC int RaRsGetTsqpDepth(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     unsigned int tempDepth = 0;
     unsigned int qpNum = 0;
     union OpGetTsqpDepthData *getTsqpDepthData = (union OpGetTsqpDepthData *)(inBuf + sizeof(struct MsgHead));
@@ -296,6 +302,7 @@ STATIC int RaRsGetTsqpDepth(char *inBuf, char *outBuf, int *outLen, int *opResul
 
 STATIC int RaRsSetTsqpDepth(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     unsigned int qpNum = 0;
     union OpSetTsqpDepthData *setTsqpDepthData = (union OpSetTsqpDepthData *)(inBuf + sizeof(struct MsgHead));
 
@@ -316,6 +323,7 @@ STATIC int RaRsSetTsqpDepth(char *inBuf, char *outBuf, int *outLen, int *opResul
 
 STATIC int RaRsQpCreate(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     struct RsQpNorm qpNorm;
     struct RsQpResp qpResp = {0};
     union OpQpCreateData *createData = (union OpQpCreateData *)(inBuf + sizeof(struct MsgHead));
@@ -349,6 +357,7 @@ STATIC int RaRsQpCreate(char *inBuf, char *outBuf, int *outLen, int *opResult, i
 
 STATIC int RaRsQpCreateWithAttrs(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpQpCreateWithAttrsData *createData = NULL;
     struct RsQpNormWithAttrs qpNorm = {0};
     struct RsQpRespWithAttrs qpResp = {0};
@@ -377,6 +386,7 @@ STATIC int RaRsQpCreateWithAttrs(char *inBuf, char *outBuf, int *outLen, int *op
 
 STATIC int RaRsAiQpCreate(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpAiQpCreateData *createData = NULL;
     struct RsQpNormWithAttrs qpNorm = {0};
     struct RsQpRespWithAttrs qpResp = {0};
@@ -408,6 +418,7 @@ STATIC int RaRsAiQpCreate(char *inBuf, char *outBuf, int *outLen, int *opResult,
 
 STATIC int RaRsAiQpCreateWithData(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpAiQpCreateWithAttrsData *createData = NULL;
     struct RsQpNormWithAttrs qpNorm = {0};
     struct RsQpRespWithAttrs qpResp = {0};
@@ -444,6 +455,7 @@ STATIC int RaRsAiQpCreateWithData(char *inBuf, char *outBuf, int *outLen, int *o
 
 STATIC int RaRsTypicalQpCreate(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpTypicalQpCreateData *createData = (union OpTypicalQpCreateData *)(inBuf + sizeof(struct MsgHead));
     struct RsQpResp qpResp = {0};
     struct RsQpNorm qpNorm;
@@ -479,6 +491,8 @@ STATIC int RaRsTypicalQpCreate(char *inBuf, char *outBuf, int *outLen, int *opRe
 
 STATIC int RaRsQpDestroy(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpQpDestroyData *qpDestroyData = (union OpQpDestroyData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpQpDestroyData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -494,6 +508,7 @@ STATIC int RaRsQpDestroy(char *inBuf, char *outBuf, int *outLen, int *opResult, 
 
 STATIC int RaRsTypicalQpModify(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpTypicalQpModifyData *qpModifyData = (union OpTypicalQpModifyData *)(inBuf + sizeof(struct MsgHead));
     struct TypicalQpAttr qpAttr = {0};
 
@@ -515,6 +530,8 @@ STATIC int RaRsTypicalQpModify(char *inBuf, char *outBuf, int *outLen, int *opRe
 
 STATIC int RaRsQpBatchModify(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpQpBatchModifyData *qpBatchModifyData = (union OpQpBatchModifyData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpQpBatchModifyData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -531,6 +548,8 @@ STATIC int RaRsQpBatchModify(char *inBuf, char *outBuf, int *outLen, int *opResu
 
 STATIC int RaRsQpConnectAsync(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpQpConnectData *qpConnectData = (union OpQpConnectData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpQpConnectData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -546,6 +565,7 @@ STATIC int RaRsQpConnectAsync(char *inBuf, char *outBuf, int *outLen, int *opRes
 
 STATIC int RaRsGetQpStatus(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpQpStatusData *qpStatusData = (union OpQpStatusData *)(inBuf + sizeof(struct MsgHead));
     struct RsQpStatusInfo qpInfo = {0};
 
@@ -566,6 +586,7 @@ STATIC int RaRsGetQpStatus(char *inBuf, char *outBuf, int *outLen, int *opResult
 
 STATIC int RaRsGetQpInfo(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpQpInfoData *qpInfoData = (union OpQpInfoData *)(inBuf + sizeof(struct MsgHead));
     struct RsQpStatusInfo qpInfo = {0};
 
@@ -587,6 +608,7 @@ STATIC int RaRsGetQpInfo(char *inBuf, char *outBuf, int *outLen, int *opResult, 
 
 STATIC int RaRsMrReg(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpMrRegData *regMrData = (union OpMrRegData *)(inBuf + sizeof(struct MsgHead));
     struct RdmaMrRegInfo mrRegInfo = {0};
 
@@ -610,6 +632,8 @@ STATIC int RaRsMrReg(char *inBuf, char *outBuf, int *outLen, int *opResult, int 
 
 STATIC int RaRsMrDereg(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpMrDeregData *mrDeregData = (union OpMrDeregData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpMrDeregData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -625,6 +649,7 @@ STATIC int RaRsMrDereg(char *inBuf, char *outBuf, int *outLen, int *opResult, in
 
 STATIC int RaRsTypicalMrRegV1(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpTypicalMrRegData *regMrData = (union OpTypicalMrRegData *)(inBuf + sizeof(struct MsgHead));
     struct RdmaMrRegInfo mrRegInfo = {0};
     struct ibv_mr *raRsMrHandle = NULL;
@@ -650,6 +675,7 @@ STATIC int RaRsTypicalMrRegV1(char *inBuf, char *outBuf, int *outLen, int *opRes
 
 STATIC int RaRsTypicalMrReg(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpTypicalMrRegData *regMrData = (union OpTypicalMrRegData *)(inBuf + sizeof(struct MsgHead));
     struct RdmaMrRegInfo mrRegInfo = {0};
     struct ibv_mr *raRsMrHandle = NULL;
@@ -676,6 +702,8 @@ STATIC int RaRsTypicalMrReg(char *inBuf, char *outBuf, int *outLen, int *opResul
 
 STATIC int RaRsRemapMr(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpRemapMrData *opData = (union OpRemapMrData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpRemapMrData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -691,6 +719,8 @@ STATIC int RaRsRemapMr(char *inBuf, char *outBuf, int *outLen, int *opResult, in
 
 STATIC int RaRsTypicalMrDereg(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpTypicalMrDeregData *mrDeregData = (union OpTypicalMrDeregData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpTypicalMrDeregData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -706,6 +736,7 @@ STATIC int RaRsTypicalMrDereg(char *inBuf, char *outBuf, int *outLen, int *opRes
 
 STATIC int RaRsSendWr(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     int ret;
 
     struct SendWrRsp wrRsp = {0};
@@ -738,6 +769,7 @@ STATIC int RaRsSendWr(char *inBuf, char *outBuf, int *outLen, int *opResult, int
 
 STATIC int RaRsSendWrList(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     int ret;
     uint32_t i;
     unsigned int completeNum = 0;
@@ -817,6 +849,7 @@ STATIC void GetWrListV2(struct WrInfo *wrList, union OpSendWrlistDataV2 *sendWrl
 
 STATIC int RaRsSendWrListV2(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     int ret;
     unsigned int completeNum = 0;
     struct WrInfo *wrList = NULL;
@@ -892,6 +925,7 @@ STATIC void GetWrList(struct WrInfo *wrList, union OpSendWrlistDataExt *sendWrli
 
 STATIC int RaRsSendWrListExt(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     int ret;
     unsigned int completeNum = 0;
     struct SendWrRsp *wrRsp = NULL;
@@ -966,6 +1000,7 @@ STATIC void GetWrListExtV2(struct WrInfo *wrList, union OpSendWrlistDataExtV2 *s
 
 STATIC int RaRsSendWrListExtV2(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     int ret;
     unsigned int completeNum = 0;
     struct WrInfo *wrList = NULL;
@@ -1022,6 +1057,7 @@ alloc_wr_list_fail:
 
 STATIC int RaRsSendNormalWrlist(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpSendNormalWrlistData *sendWrlistOut = (union OpSendNormalWrlistData *)(outBuf + sizeof(struct MsgHead));
     union OpSendNormalWrlistData *sendWrlist = (union OpSendNormalWrlistData *)(inBuf + sizeof(struct MsgHead));
     struct RsWrlistBaseInfo baseInfo = {0};
@@ -1044,6 +1080,7 @@ STATIC int RaRsSendNormalWrlist(char *inBuf, char *outBuf, int *outLen, int *opR
 
 STATIC int RaRsGetNotifyBa(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpGetNotifyBaData *getNotifyBaData = (union OpGetNotifyBaData *)(inBuf + sizeof(struct MsgHead));
     struct MrInfoT info = {0};
 
@@ -1066,6 +1103,8 @@ STATIC int RaRsGetNotifyBa(char *inBuf, char *outBuf, int *outLen, int *opResult
 
 STATIC int RaRsNotifyCfgSet(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpNotifyCfgSetData *setNotifyBaData = (union OpNotifyCfgSetData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpNotifyCfgSetData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -1081,6 +1120,7 @@ STATIC int RaRsNotifyCfgSet(char *inBuf, char *outBuf, int *outLen, int *opResul
 
 STATIC int RaRsNotifyCfgGet(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     unsigned long long va = 0;
     unsigned long long size = 0;
     union OpNotifyCfgGetData *getNotifyBaData = (union OpNotifyCfgGetData *)(inBuf + sizeof(struct MsgHead));
@@ -1101,6 +1141,8 @@ STATIC int RaRsNotifyCfgGet(char *inBuf, char *outBuf, int *outLen, int *opResul
 
 STATIC int RaSetPid(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpSetPidData *setPidData = (union OpSetPidData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSetPidData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -1115,6 +1157,10 @@ STATIC int RaSetPid(char *inBuf, char *outBuf, int *outLen, int *opResult, int r
 
 STATIC int RaRsCloseHdcSession(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)inBuf;
+    (void)outBuf;
+    (void)outLen;
+    (void)rcvBufLen;
     *opResult = 0;
     hccp_info("ra_rs_close_hdc_session finish");
     return 0;
@@ -1122,6 +1168,7 @@ STATIC int RaRsCloseHdcSession(char *inBuf, char *outBuf, int *outLen, int *opRe
 
 STATIC int RaRsGetInterfaceVersion(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     unsigned int version = 0;
     union OpGetVersionData *versionInfoRet = NULL;
     union OpGetVersionData *versionInfo = (union OpGetVersionData *)(inBuf + sizeof(struct MsgHead));
@@ -1141,6 +1188,8 @@ STATIC int RaRsGetInterfaceVersion(char *inBuf, char *outBuf, int *outLen, int *
 
 STATIC int RaRsSetQpAttrQos(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpSetQpAttrQosData *attrQosData = (union OpSetQpAttrQosData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSetQpAttrQosData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -1156,6 +1205,8 @@ STATIC int RaRsSetQpAttrQos(char *inBuf, char *outBuf, int *outLen, int *opResul
 
 STATIC int RaRsSetQpAttrTimeout(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpSetQpAttrTimeoutData *attrTimeData = (union OpSetQpAttrTimeoutData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSetQpAttrTimeoutData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -1171,6 +1222,8 @@ STATIC int RaRsSetQpAttrTimeout(char *inBuf, char *outBuf, int *outLen, int *opR
 
 STATIC int RaRsSetQpAttrRetryCnt(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpSetQpAttrRetryCntData *attrRetryCntData = (union OpSetQpAttrRetryCntData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSetQpAttrRetryCntData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -1186,6 +1239,8 @@ STATIC int RaRsSetQpAttrRetryCnt(char *inBuf, char *outBuf, int *outLen, int *op
 
 STATIC int RaRsGetCqeErrInfo(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)inBuf;
+    (void)outLen;
     int ret;
     struct CqeErrInfo info = {0};
     union OpGetCqeErrInfoData *cqeErrInfoRet = NULL;
@@ -1206,6 +1261,7 @@ STATIC int RaRsGetCqeErrInfo(char *inBuf, char *outBuf, int *outLen, int *opResu
 
 STATIC int RaRsGetLiteSupport(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpLiteSupportData *liteSupportData = (union OpLiteSupportData *)(inBuf + sizeof(struct MsgHead));
     union OpLiteSupportData *liteSupportOut = (union OpLiteSupportData *)(outBuf + sizeof(struct MsgHead));
 
@@ -1222,6 +1278,7 @@ STATIC int RaRsGetLiteSupport(char *inBuf, char *outBuf, int *outLen, int *opRes
 
 STATIC int RaRsGetLiteRdevCap(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpLiteRdevCapData *liteRdevCapData = (union OpLiteRdevCapData *)(inBuf + sizeof(struct MsgHead));
     union OpLiteRdevCapData *liteRdevCapOut = (union OpLiteRdevCapData *)(outBuf + sizeof(struct MsgHead));
 
@@ -1238,6 +1295,7 @@ STATIC int RaRsGetLiteRdevCap(char *inBuf, char *outBuf, int *outLen, int *opRes
 
 STATIC int RaRsGetLiteQpCqAttr(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpLiteQpCqAttrData *liteQpCqAttrData = (union OpLiteQpCqAttrData *)(inBuf + sizeof(struct MsgHead));
     union OpLiteQpCqAttrData *liteQpCqAttrOut = (union OpLiteQpCqAttrData *)(outBuf + sizeof(struct MsgHead));
 
@@ -1254,6 +1312,7 @@ STATIC int RaRsGetLiteQpCqAttr(char *inBuf, char *outBuf, int *outLen, int *opRe
 
 STATIC int RaRsGetLiteConnectedInfo(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpLiteConnectedInfoData *liteConnectedInfoData = (union OpLiteConnectedInfoData *)(inBuf +
                                                                                              sizeof(struct MsgHead));
     union OpLiteConnectedInfoData *liteConnectedInfoOut = (union OpLiteConnectedInfoData *)(outBuf +
@@ -1273,6 +1332,7 @@ STATIC int RaRsGetLiteConnectedInfo(char *inBuf, char *outBuf, int *outLen, int 
 
 STATIC int RaRsGetLiteMemAttr(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpLiteMemAttrData *liteMemAttrData = (union OpLiteMemAttrData *)(inBuf + sizeof(struct MsgHead));
     union OpLiteMemAttrData *liteMemAttrOut = (union OpLiteMemAttrData *)(outBuf + sizeof(struct MsgHead));
 
@@ -1289,6 +1349,7 @@ STATIC int RaRsGetLiteMemAttr(char *inBuf, char *outBuf, int *outLen, int *opRes
 
 STATIC int RaRsGetCqeErrInfoNum(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpGetCqeErrInfoNumData *cqeErrInfoNum = (union OpGetCqeErrInfoNumData *)(inBuf + sizeof(struct MsgHead));
     unsigned int num;
 
@@ -1308,6 +1369,7 @@ STATIC int RaRsGetCqeErrInfoNum(char *inBuf, char *outBuf, int *outLen, int *opR
 
 STATIC int RaRsGetCqeErrInfoList(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpGetCqeErrInfoListData *cqeErrInfoList = (union OpGetCqeErrInfoListData *)(inBuf + sizeof(struct MsgHead));
     union OpGetCqeErrInfoListData *cqeErrInfoListRet = (union OpGetCqeErrInfoListData *)(outBuf +
                                                                                          sizeof(struct MsgHead));
@@ -1331,6 +1393,7 @@ STATIC int RaRsGetCqeErrInfoList(char *inBuf, char *outBuf, int *outLen, int *op
 
 STATIC int RaRsGetTlsEnable(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpGetTlsEnableData *opDataRet = (union OpGetTlsEnableData *)(outBuf + sizeof(struct MsgHead));
     union OpGetTlsEnableData *opData = (union OpGetTlsEnableData *)(inBuf + sizeof(struct MsgHead));
 
@@ -1345,6 +1408,8 @@ STATIC int RaRsGetTlsEnable(char *inBuf, char *outBuf, int *outLen, int *opResul
 
 STATIC int RaRsGetSecRandom(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)inBuf;
+    (void)outLen;
     union OpGetSecRandomData *opDataRet = (union OpGetSecRandomData *)(outBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetSecRandomData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -1358,6 +1423,7 @@ STATIC int RaRsGetSecRandom(char *inBuf, char *outBuf, int *outLen, int *opResul
 
 STATIC int RaRsGetHccnCfg(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpGetHccnCfgData *opDataRet = (union OpGetHccnCfgData *)(outBuf + sizeof(struct MsgHead));
     union OpGetHccnCfgData *opData = (union OpGetHccnCfgData *)(inBuf + sizeof(struct MsgHead));
 
@@ -1765,6 +1831,7 @@ out:
 
 STATIC void *RaPthread(void *arg)
 {
+    (void)arg;
     unsigned int chipId = gHdcInitPara.chipId;
     int ret;
 
@@ -1868,6 +1935,7 @@ out:
 
 int RaHdcAsyncRecvPkt(struct RaHdcAsyncInfo *asyncInfo, unsigned int chipId, void **recvBuf, unsigned int *recvLen)
 {
+    (void)chipId;
     struct drvHdcMsg *msgRcv = NULL;
     void *rcvBuf = NULL;
     int rcvLen = 0;
@@ -1949,6 +2017,7 @@ void RaHdcCloseSession(HDC_SESSION *session)
 
 STATIC void RaHwHdcInit(void *arg)
 {
+    (void)arg;
     unsigned int chipId = gHdcInitPara.chipId;
     pthread_t tidp;
     int ret;

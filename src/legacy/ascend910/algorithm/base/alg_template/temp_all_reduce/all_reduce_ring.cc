@@ -16,7 +16,7 @@ AllReduceRing::AllReduceRing(const HcclDispatcher dispatcher) : AlgTemplateBase(
 
 AllReduceRing::~AllReduceRing() {}
 
-HcclResult AllReduceRing::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo)
+HcclResult AllReduceRing::Prepare(u64 reduceAttrBitMap, [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     reduceAttr_ = reduceAttrBitMap;
     return HCCL_SUCCESS;
@@ -227,7 +227,7 @@ AllReduceRing::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vec
     LINK nslbNext = links[ringNextRank];
     CHK_SMART_PTR_NULL(nslbNext);
     // reduce_scatter 的ring
-    NslbDpAdjInfo adjInfoStep = {0};
+    NslbDpAdjInfo adjInfoStep = {};
     nslbAdjInfo.dstRankNum = 1;
     adjInfoStep.dstLocalRankId = nslbNext->GetRemoteRank();
     adjInfoStep.phaseId = 1;
@@ -237,7 +237,7 @@ AllReduceRing::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vec
     LINK right = links[ringNextRank];
     CHK_SMART_PTR_NULL(right);
     // all_gather 的ring
-    NslbDpAdjInfo nextAdjInfo = {0};
+    NslbDpAdjInfo nextAdjInfo = {};
     nslbAdjInfo.dstRankNum = nslbAdjInfo.dstRankNum + 1;
     nextAdjInfo.dstLocalRankId = right->GetRemoteRank();
     nextAdjInfo.phaseId = nslbAdjInfo.nsAdjInfo[0].phaseId + 1;

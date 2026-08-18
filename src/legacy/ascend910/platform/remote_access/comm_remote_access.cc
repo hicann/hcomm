@@ -49,7 +49,7 @@ CommRemoteAccess::~CommRemoteAccess()
             }
         }
     }
-    struct SocketCloseInfoT socketCloseInfo = {0};
+    struct SocketCloseInfoT socketCloseInfo = {};
     for (u32 i = 0; i < raSockets_.size(); i++) {
         socketCloseInfo.socketHandle = raSockets_[i].socketHandle; // 带入设备ID为物理ID
         socketCloseInfo.fdHandle = raSockets_[i].fdHandle;
@@ -307,7 +307,7 @@ HcclResult CommRemoteAccess::PrepareSocket()
 HcclResult CommRemoteAccess::AddSocketWhiteList()
 {
     // 当前rank作为server端socket白名单下发动作
-    struct SocketWlistInfoT wlistInfo = {0};
+    struct SocketWlistInfoT wlistInfo = {};
     for (auto iter = dstInterClientMap_.begin(); iter != dstInterClientMap_.end(); iter++) {
         wlistInfo.connLimit = NIC_SOCKET_CONN_LIMIT;
         s32 sRet = memcpy_s(&wlistInfo.tag[0], sizeof(wlistInfo.tag) - 1, tag_.c_str(), tag_.size());

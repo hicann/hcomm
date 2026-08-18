@@ -32,6 +32,7 @@
 
 int RsUbGetDevEidInfoNum(unsigned int phyId, unsigned int *num)
 {
+    (void)phyId;
     urma_eid_info_t *eidList = NULL;
     urma_device_t **devList = NULL;
     unsigned int totalNum = 0;
@@ -81,6 +82,8 @@ STATIC int RsUbCreateCtx(urma_device_t *urmaDev, unsigned int eidIndex, urma_con
 
 int RsUbGetUeInfo(urma_context_t *urmaCtx, struct DevBaseAttr *devAttr)
 {
+    (void)urmaCtx;
+    (void)devAttr;
 #ifdef CUSTOM_INTERFACE
     struct udma_u_ue_info ueInfo = {0};
     urma_user_ctl_out_t out = {0};
@@ -767,6 +770,7 @@ STATIC void RsUbFreeJettyBatchInfo(struct JettyDestroyBatchInfo *batchInfo)
 STATIC void RsUbFreeJettyCbBatch(struct JettyDestroyBatchInfo *batchInfo, unsigned int *num, urma_jetty_t *badJetty,
     urma_jfr_t *badJfr)
 {
+    (void)badJfr;
     unsigned int jettyDestroyNum = *num;
     unsigned int i;
 

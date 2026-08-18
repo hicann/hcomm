@@ -663,32 +663,36 @@ HcclResult AicpuTsUboeUbRtpChannelHelper::Resume()
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsUboeUbRtpChannelHelper::NotifyRecord(const uint32_t remoteNotifyIdx)
+HcclResult AicpuTsUboeUbRtpChannelHelper::NotifyRecord([[maybe_unused]] const uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsUboeUbRtpChannelHelper::NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout)
+HcclResult AicpuTsUboeUbRtpChannelHelper::NotifyWait(
+    [[maybe_unused]] const uint32_t localNotifyIdx, [[maybe_unused]] const uint32_t timeout)
 {
     HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult
-AicpuTsUboeUbRtpChannelHelper::WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx)
+HcclResult AicpuTsUboeUbRtpChannelHelper::WriteWithNotify(
+    [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] const uint64_t len,
+    [[maybe_unused]] uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsUboeUbRtpChannelHelper::Write(void* dst, const void* src, uint64_t len)
+HcclResult AicpuTsUboeUbRtpChannelHelper::Write(
+    [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t len)
 {
     HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsUboeUbRtpChannelHelper::Read(void* dst, const void* src, uint64_t len)
+HcclResult AicpuTsUboeUbRtpChannelHelper::Read(
+    [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t len)
 {
     HCCL_INFO("[AicpuTsUboeUbRtpChannelHelper::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;

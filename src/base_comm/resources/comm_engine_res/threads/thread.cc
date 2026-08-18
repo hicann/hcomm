@@ -472,7 +472,8 @@ HcclResult Thread::ReportAicpuNotifyWaitTask(u64 notifyId, u64 beginTime, u32 ta
     return HCCL_SUCCESS;
 }
 
-HcclResult Thread::ReportHostNotifyWaitTask(u64 notifyId, u64 beginTime, bool isMaster) const
+HcclResult Thread::ReportHostNotifyWaitTask(
+    [[maybe_unused]] u64 notifyId, [[maybe_unused]] u64 beginTime, [[maybe_unused]] bool isMaster) const
 {
 #ifndef CCL_KERNEL_AICPU
     Hccl::TaskParam taskParam{};
@@ -514,7 +515,8 @@ HcclResult Thread::ReportAicpuNotifyRecordTask(u64 notifyId, u64 beginTime, u32 
     return HCCL_SUCCESS;
 }
 
-HcclResult Thread::ReportHostNotifyRecordTask(u64 notifyId, u64 beginTime, bool isMaster) const
+HcclResult Thread::ReportHostNotifyRecordTask(
+    [[maybe_unused]] u64 notifyId, [[maybe_unused]] u64 beginTime, [[maybe_unused]] bool isMaster) const
 {
 #ifndef CCL_KERNEL_AICPU
     Hccl::TaskParam taskParam{};
@@ -537,8 +539,9 @@ HcclResult Thread::ReportHostNotifyRecordTask(u64 notifyId, u64 beginTime, bool 
     return HCCL_SUCCESS;
 }
 
-HcclResult
-Thread::ReportHostLocalCopyTask(void* dst, const void* src, uint64_t sizeByte, u64 beginTime, bool isMaster) const
+HcclResult Thread::ReportHostLocalCopyTask(
+    [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t sizeByte,
+    [[maybe_unused]] u64 beginTime, [[maybe_unused]] bool isMaster) const
 {
 #ifndef CCL_KERNEL_AICPU
     Hccl::TaskParam taskParam{};
@@ -615,8 +618,9 @@ HcclResult Thread::ReportAicpuLocalReduceTask(
 }
 
 HcclResult Thread::ReportHostLocalReduceTask(
-    void* dst, const void* src, uint64_t sizeByte, HcommDataType dataType, HcommReduceOp reduceOp, u64 beginTime,
-    bool isMaster) const
+    [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t sizeByte,
+    [[maybe_unused]] HcommDataType dataType, [[maybe_unused]] HcommReduceOp reduceOp, [[maybe_unused]] u64 beginTime,
+    [[maybe_unused]] bool isMaster) const
 {
 #ifndef CCL_KERNEL_AICPU
     Hccl::TaskParam taskParam{};

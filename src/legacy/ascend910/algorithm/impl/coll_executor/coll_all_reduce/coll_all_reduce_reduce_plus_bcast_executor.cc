@@ -68,7 +68,7 @@ bool CollAllReduceReducePlusBcastExecutor::IsHugeData(const u64 curSize)
     return hugeData;
 }
 
-bool CollAllReduceReducePlusBcastExecutor::IsSmallData(const u64 totalSize, const u64 curSize)
+bool CollAllReduceReducePlusBcastExecutor::IsSmallData([[maybe_unused]] const u64 totalSize, const u64 curSize)
 {
     bool smallData = IsAllReduceSmallData(curSize);
     return smallData;

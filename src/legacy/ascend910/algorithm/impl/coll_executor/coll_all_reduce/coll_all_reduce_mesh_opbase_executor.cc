@@ -81,7 +81,7 @@ bool CollAllReduceMeshOpbaseExecutor::IsHugeData(const u64 curSize)
     return hugeData;
 }
 
-bool CollAllReduceMeshOpbaseExecutor::IsSmallData(const u64 totalSize, const u64 curSize)
+bool CollAllReduceMeshOpbaseExecutor::IsSmallData(const u64 totalSize, [[maybe_unused]] const u64 curSize)
 {
     bool smallData = totalSize <= HCCL_SMALL_COUNT_256_KB;
     return smallData;
@@ -99,8 +99,9 @@ HcclResult CollAllReduceMeshOpbaseExecutor::KernelRun(const OpParam& param, Exec
     CHK_RET(ActiveSlaveStreams(param.stream));
     u64 reduceAttr = GetReduceAttr(execMem.inputMem, execMem.outputMem, param.DataDes.dataType, param.reduceType);
 
-    HcomCollOpInfo opInfo = {"",         execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType,
-                             param.root, param.reduceType};
+    HcomCollOpInfo opInfo
+        = {"", execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, param.reduceType,
+           0};
 
     level0TempAlg
         = AlgTemplateRegistry::Instance().GetAlgTemplate(TemplateType::TEMPLATE_ALL_REDUCE_MESH_DIRECT, dispatcher_);

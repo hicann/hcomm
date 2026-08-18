@@ -78,7 +78,8 @@ HcclResult CollBroadcastSmallCountExecutor::KernelRun(const OpParam& param, Exec
     CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
     SubCommInfo level0CommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
     CHK_RET(ActiveSlaveStreams(param.stream));
-    HcomCollOpInfo opInfoPtr = {"", execMem.inputPtr, nullptr, param.DataDes.count, param.DataDes.dataType, param.root};
+    HcomCollOpInfo opInfoPtr
+        = {"", execMem.inputPtr, nullptr, param.DataDes.count, param.DataDes.dataType, param.root, param.reduceType, 0};
 
     std::unique_ptr<AlgTemplateBase> level0TempAlg
         = AlgTemplateRegistry::Instance().GetAlgTemplate(TemplateType::TEMPLATE_BROADCAST_HD, dispatcher_);

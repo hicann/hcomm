@@ -257,7 +257,8 @@ HcclResult ReduceScatterHalvingDoubling::RunReduceScatter(
 }
 
 HcclResult ReduceScatterHalvingDoubling::GetNslbAdjInfo(
-    const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo)
+    [[maybe_unused]] const u32 rank, [[maybe_unused]] const u32 rankSize,
+    [[maybe_unused]] const std::vector<LINK>& links, [[maybe_unused]] AdjInfo& nslbAdjInfo)
 {
     return HCCL_SUCCESS;
 }

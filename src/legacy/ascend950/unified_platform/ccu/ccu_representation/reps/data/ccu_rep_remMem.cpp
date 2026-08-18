@@ -22,7 +22,7 @@ namespace CcuRep {
         instrCount = 2; // 指令数为2个
     }
 
-    bool CcuRepRemMem::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepRemMem::Translate(CcuInstr*& instr, uint16_t& instrId, [[maybe_unused]] const TransDep& dep)
     {
         this->instrId = instrId;
         translated = true;

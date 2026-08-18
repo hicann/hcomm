@@ -80,8 +80,8 @@ HcclResult HDCommunicate::VerifyDeviceMemoryRegisterSupport()
 {
     supportDevMemReg = false;
     size_t outputLen = 0;
-    struct supportFeaturePara input = {0};
-    struct supportFeaturePara output = {0};
+    struct supportFeaturePara input = {};
+    struct supportFeaturePara output = {};
     s32 deviceId = HrtGetDevice();
     s32 logicDevId = 0;
     // 调用驱动接口前需将userDevId转换为logicDevId

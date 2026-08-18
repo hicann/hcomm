@@ -63,7 +63,7 @@ public:
 
     NotifyBase(NotifyType notifyType, HcclNotifyInfo notifyInfo) : notifyType(notifyType), notifyInfo_(notifyInfo) {}
 
-    NotifyBase(NotifyType notifyType, HcclSignalInfo notifyInfo) : notifyType(notifyType)
+    NotifyBase(NotifyType notifyType, [[maybe_unused]] HcclSignalInfo notifyInfo) : notifyType(notifyType)
     {
         HCCL_ERROR("[NotifyConstructor]Does not support this interface.");
     }
@@ -122,19 +122,19 @@ public:
         return;
     }
 
-    virtual HcclResult GetNotifyData(HcclSignalInfo& notifyInfo)
+    virtual HcclResult GetNotifyData([[maybe_unused]] HcclSignalInfo& notifyInfo)
     {
         HCCL_ERROR("[GetNotifyData]Does not support this interface.");
         return HCCL_E_NOT_SUPPORT;
     }
 
-    virtual HcclResult SetNotifyData(const HcclSignalInfo& notifyInfo)
+    virtual HcclResult SetNotifyData([[maybe_unused]] const HcclSignalInfo& notifyInfo)
     {
         HCCL_ERROR("[SetNotifyData]Does not support this interface.");
         return HCCL_E_NOT_SUPPORT;
     }
 
-    virtual HcclResult GetNotifyOffset(u64& offset)
+    virtual HcclResult GetNotifyOffset([[maybe_unused]] u64& offset)
     {
         HCCL_ERROR("[GetNotifyOffset]Does not support this interface.");
         return HCCL_E_NOT_SUPPORT;

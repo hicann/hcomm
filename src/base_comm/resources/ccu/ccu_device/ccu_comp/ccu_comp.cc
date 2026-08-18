@@ -434,7 +434,7 @@ HcclResult CcuComponent::CreateAndImportLoopJettys(
     Hccl::IpAddress ipAddr{};
     CHK_RET(CommAddrToIpAddress(commAddr, ipAddr));
 
-    Hccl::CqCreateInfo cqInfo{0};
+    Hccl::CqCreateInfo cqInfo{};
     auto& rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
     const auto ctxHandle = static_cast<CtxHandle>(rdmaHandleMgr.GetByIp(devPhyId_, ipAddr));
     const auto _jfcHandle = rdmaHandleMgr.GetJfcHandle(ctxHandle, cqInfo, Hccl::HrtUbJfcMode::CCU_POLL);

@@ -39,131 +39,166 @@ TopoinfoRanktableConcise::~TopoinfoRanktableConcise() {}
 
 HcclResult TopoinfoRanktableConcise::Init() { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult TopoinfoRanktableConcise::GetClusterInfo(RankTable_t& clusterInfo) { return HCCL_E_NOT_SUPPORT; }
-
-HcclResult TopoinfoRanktableConcise::GetSelfClusterInfo(HcclCommParams& params) { return HCCL_E_NOT_SUPPORT; }
-
-HcclResult TopoinfoRanktableConcise::GetClusterInfo(hccl::HcclCommParams& params, hccl::RankTable_t& rankTable)
+HcclResult TopoinfoRanktableConcise::GetClusterInfo([[maybe_unused]] RankTable_t& clusterInfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableConcise::SetIsInterSuperPodRetryEnable(bool isRetryEnable) { return HCCL_E_NOT_SUPPORT; }
-
-void TopoinfoRanktableConcise::DetectNicDepoly(RankTable_t& rankTable) { return; }
-
-HcclResult TopoinfoRanktableConcise::ParserClusterInfo(hccl::HcclCommParams& params, hccl::RankTable_t& rankTable)
+HcclResult TopoinfoRanktableConcise::GetSelfClusterInfo([[maybe_unused]] HcclCommParams& params)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableConcise::CheckNicDeployConsistence(RankTable_t& clusterInfo, NICDeployment deploy) const
+HcclResult TopoinfoRanktableConcise::GetClusterInfo(
+    [[maybe_unused]] hccl::HcclCommParams& params, [[maybe_unused]] hccl::RankTable_t& rankTable)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableConcise::GetRanktableInfo(RankTable_t& clusterInfo) { return HCCL_E_NOT_SUPPORT; }
-
-HcclResult TopoinfoRanktableConcise::GetServerList(const nlohmann::json& obj, RankTable_t& clusterInfo)
+HcclResult TopoinfoRanktableConcise::SetIsInterSuperPodRetryEnable([[maybe_unused]] bool isRetryEnable)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult
-TopoinfoRanktableConcise::GetSingleServer(const nlohmann::json& serverListObj, u32 objIndex, RankTable_t& clusterInfo)
+void TopoinfoRanktableConcise::DetectNicDepoly([[maybe_unused]] RankTable_t& rankTable) { return; }
+
+HcclResult TopoinfoRanktableConcise::ParserClusterInfo(
+    [[maybe_unused]] hccl::HcclCommParams& params, [[maybe_unused]] hccl::RankTable_t& rankTable)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
+
+HcclResult TopoinfoRanktableConcise::CheckNicDeployConsistence(
+    [[maybe_unused]] RankTable_t& clusterInfo, [[maybe_unused]] NICDeployment deploy) const
+{
+    return HCCL_E_NOT_SUPPORT;
+}
+
+HcclResult TopoinfoRanktableConcise::GetRanktableInfo([[maybe_unused]] RankTable_t& clusterInfo)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
+
+HcclResult TopoinfoRanktableConcise::GetServerList(
+    [[maybe_unused]] const nlohmann::json& obj, [[maybe_unused]] RankTable_t& clusterInfo)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
+
+HcclResult TopoinfoRanktableConcise::GetSingleServer(
+    [[maybe_unused]] const nlohmann::json& serverListObj, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] RankTable_t& clusterInfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoinfoRanktableConcise::GetDeviceList(
-    const nlohmann::json& serverListObj, u32 objIndex, RankTable_t& clusterInfo, std::string& serverId, u32& serverIdx,
-    HcclIpAddress& hostIp)
+    [[maybe_unused]] const nlohmann::json& serverListObj, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] RankTable_t& clusterInfo, [[maybe_unused]] std::string& serverId, [[maybe_unused]] u32& serverIdx,
+    [[maybe_unused]] HcclIpAddress& hostIp)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoinfoRanktableConcise::GetSingleDevice(
-    const nlohmann::json& deviceListObj, u32 objIndex, RankTable_t& clusterInfo, std::string& serverId, u32& serverIdx,
-    HcclIpAddress& hostIp)
+    [[maybe_unused]] const nlohmann::json& deviceListObj, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] RankTable_t& clusterInfo, [[maybe_unused]] std::string& serverId, [[maybe_unused]] u32& serverIdx,
+    [[maybe_unused]] HcclIpAddress& hostIp)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoinfoRanktableConcise::SplitString(
-    const std::string& str, const std::string& strC, std::vector<std::string>& strVector) const
+    [[maybe_unused]] const std::string& str, [[maybe_unused]] const std::string& strC,
+    [[maybe_unused]] std::vector<std::string>& strVector) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoinfoRanktableConcise::GetSingleDeviceIp(
-    const nlohmann::json& deviceListObj, u32 objIndex, RankTable_t& clusterInfo, RankInfo_t& rankinfo,
-    DevType deviceType, bool invalidHostIp)
+    [[maybe_unused]] const nlohmann::json& deviceListObj, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] RankTable_t& clusterInfo, [[maybe_unused]] RankInfo_t& rankinfo,
+    [[maybe_unused]] DevType deviceType, [[maybe_unused]] bool invalidHostIp)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoinfoRanktableConcise::GetSingleBackupDeviceIp(
-    const nlohmann::json& deviceListObj, u32 objIndex, RankInfo_t& rankinfo)
+    [[maybe_unused]] const nlohmann::json& deviceListObj, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] RankInfo_t& rankinfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoinfoRanktableConcise::GetSingleDeviceHostPort(
-    const nlohmann::json& deviceListObj, u32 objIndex, RankInfo_t& rankinfo)
+    [[maybe_unused]] const nlohmann::json& deviceListObj, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] RankInfo_t& rankinfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult
-TopoinfoRanktableConcise::GetSingleDevicePort(const nlohmann::json& deviceListObj, u32 objIndex, RankInfo_t& rankinfo)
+HcclResult TopoinfoRanktableConcise::GetSingleDevicePort(
+    [[maybe_unused]] const nlohmann::json& deviceListObj, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] RankInfo_t& rankinfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoinfoRanktableConcise::GetSingleBackupDevicePort(
-    const nlohmann::json& deviceListObj, u32 objIndex, RankInfo_t& rankinfo)
+    [[maybe_unused]] const nlohmann::json& deviceListObj, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] RankInfo_t& rankinfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableConcise::VerifyBackupDeviceIpAndPort(std::vector<RankInfo_t>& rankList, u32 devIndex)
+HcclResult TopoinfoRanktableConcise::VerifyBackupDeviceIpAndPort(
+    [[maybe_unused]] std::vector<RankInfo_t>& rankList, [[maybe_unused]] u32 devIndex)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoinfoRanktableConcise::GetSingleSuperDeviceId(
-    const nlohmann::json& deviceListObj, u32 objIndex, RankTable_t& clusterInfo, RankInfo_t& rankinfo)
+    [[maybe_unused]] const nlohmann::json& deviceListObj, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] RankTable_t& clusterInfo, [[maybe_unused]] RankInfo_t& rankinfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableConcise::GetSuperPodList(const nlohmann::json& obj, RankTable_t& clusterInfo)
+HcclResult TopoinfoRanktableConcise::GetSuperPodList(
+    [[maybe_unused]] const nlohmann::json& obj, [[maybe_unused]] RankTable_t& clusterInfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult
-TopoinfoRanktableConcise::GetSingleSuperPod(const nlohmann::json& superPodList, u32 objIndex, RankTable_t& clusterInfo)
+HcclResult TopoinfoRanktableConcise::GetSingleSuperPod(
+    [[maybe_unused]] const nlohmann::json& superPodList, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] RankTable_t& clusterInfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoinfoRanktableConcise::GetSuperPodServerList(
-    const nlohmann::json& superPodList, u32 objIndex, RankTable_t& clusterInfo, std::string superPodId)
+    [[maybe_unused]] const nlohmann::json& superPodList, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] RankTable_t& clusterInfo, [[maybe_unused]] std::string superPodId)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoinfoRanktableConcise::GetSingleSuperPodSever(
-    const nlohmann::json& superPodServerList, u32 objIndex, RankTable_t& clusterInfo, std::string superPodId)
+    [[maybe_unused]] const nlohmann::json& superPodServerList, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] RankTable_t& clusterInfo, [[maybe_unused]] std::string superPodId)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktableConcise::CheckSuperPodInfo(RankTable_t& clusterInfo) const { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoinfoRanktableConcise::CheckSuperPodInfo([[maybe_unused]] RankTable_t& clusterInfo) const
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
-HcclResult
-TopoinfoRanktableConcise::GetSingleNicInfo(const nlohmann::json& serverListObj, u32 objIndex, RankInfo_t& rankinfo)
+HcclResult TopoinfoRanktableConcise::GetSingleNicInfo(
+    [[maybe_unused]] const nlohmann::json& serverListObj, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] RankInfo_t& rankinfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }

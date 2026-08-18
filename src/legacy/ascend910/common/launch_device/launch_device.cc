@@ -30,7 +30,7 @@ HcclResult LoadBinaryFromFile(
         HCCL_ERROR("LoadBinaryFromFile: %s is not a valid real path, err[%d]", binPath, errno), HCCL_E_INTERNAL);
     HCCL_INFO("[LoadBinaryFromFile]realPath: %s", realPath);
 
-    aclrtBinaryLoadOptions loadOptions = {0};
+    aclrtBinaryLoadOptions loadOptions = {};
     aclrtBinaryLoadOption option;
     loadOptions.numOpt = 1;
     loadOptions.options = &option;

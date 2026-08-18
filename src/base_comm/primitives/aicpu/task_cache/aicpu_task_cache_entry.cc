@@ -521,8 +521,8 @@ inline HcclResult AicpuTaskCacheEntry::LaunchTasksByOrder_(
     return HCCL_SUCCESS;
 }
 
-inline HcclResult
-AicpuTaskCacheEntry::PrintRefreshResult_(const uint64_t* baseAddrs, const uint64_t* memSizes, const uint32_t count)
+inline HcclResult AicpuTaskCacheEntry::PrintRefreshResult_(
+    [[maybe_unused]] const uint64_t* baseAddrs, [[maybe_unused]] const uint64_t* memSizes, const uint32_t count)
 {
     // 打印更新后的token信息
     for (std::unordered_map<UbTransportLiteImplHandle, vector<TokenInfo>>::iterator iter = tokenInfosMap_.begin();
@@ -899,7 +899,8 @@ AicpuTaskCacheEntry::DumpWqeTasksPerWqe_(size_t wqeIdx, const WqeTask& wqeTask, 
 }
 
 inline HcclResult AicpuTaskCacheEntry::RefreshWqeTasks_(
-    WqeTaskArrayInfo& wqeTaskArrayInfo, const uint64_t* baseAddrs, const uint64_t* memSizes, const uint32_t count)
+    WqeTaskArrayInfo& wqeTaskArrayInfo, const uint64_t* baseAddrs, [[maybe_unused]] const uint64_t* memSizes,
+    [[maybe_unused]] const uint32_t count)
 {
     // 逐个刷新地址
     vector<WqeTask>& wqeTasks = wqeTaskArrayInfo.wqeTaskArray;
@@ -1218,8 +1219,8 @@ HcclResult AicpuTaskCacheEntry::ReportDbSqeProfiling_(
 }
 
 inline HcclResult AicpuTaskCacheEntry::RefreshDbSqeProfAddrs_(
-    DbSqeProfAndRefreshInfo& profAndRefreshInfo, const uint64_t* baseAddrs, const uint64_t* memSizes,
-    const uint32_t count)
+    DbSqeProfAndRefreshInfo& profAndRefreshInfo, const uint64_t* baseAddrs, [[maybe_unused]] const uint64_t* memSizes,
+    [[maybe_unused]] const uint32_t count)
 {
     // 注意: dbSqeProfInfo中的src/dstAddr, 需要根据DbSqeProfAndRefreshInfo中的src/dstAddrRefreshInfo进行刷新,
     // 才能填充DfxTaskInfo

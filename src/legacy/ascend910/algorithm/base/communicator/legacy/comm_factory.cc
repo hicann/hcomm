@@ -530,7 +530,7 @@ HcclResult CommFactory::CreateCommP2P(
 
 HcclResult CommFactory::CreateCommP2PSync(
     const std::string& tag, const DeviceMem& inputMem, const DeviceMem& outputMem, const CommParaInfo& commParaInfo,
-    const std::vector<std::vector<RankInfo>>& commPlaneVec, bool isUsedRdma,
+    [[maybe_unused]] const std::vector<std::vector<RankInfo>>& commPlaneVec, [[maybe_unused]] bool isUsedRdma,
     std::vector<std::unique_ptr<CommBase>>& commVec)
 {
     u32 status = 0;
@@ -752,7 +752,7 @@ u32 CommFactory::GetLevel1CommRank(const u32 ringIdx)
     return GetSubCollectiveRank(CommPlaneVector_[COMM_LEVEL1][ringIdx]);
 }
 
-bool CommFactory::JudgmentSetHeterogP2p(u32 rank) const { return isHaveCpuRank_; }
+bool CommFactory::JudgmentSetHeterogP2p([[maybe_unused]] u32 rank) const { return isHaveCpuRank_; }
 
 HcclResult CommFactory::SetHDCModeInfo(
     std::unordered_map<std::string, std::map<u32, HcclIpAddress>>& rankDevicePhyIdNicInfoMap,

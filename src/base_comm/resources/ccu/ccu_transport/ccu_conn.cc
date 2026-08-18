@@ -580,9 +580,7 @@ HcclResult CcuConnection::Describe(std::string& dfxMsg)
 {
     uint16_t udpSport = 0xFFFF; // 无法获取实际的udpSport，使用0xFFFF表示未知
     if (tpProtocol_ == TpProtocol::RTP) {
-        struct TpAttr tpAttr {
-            0
-        };
+        struct TpAttr tpAttr {};
         uint32_t attrBitmap = 1 << 13; // 13对应dataUdpSrcport
         EXCEPTION_HANDLE_BEGIN
         // HrtRaGetTpAttrAsync：封装内已同步等待，返回时 tpAttr 已就绪

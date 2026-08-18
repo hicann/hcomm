@@ -34,6 +34,8 @@ int WfwSetFdNonBlock(int fd)
 
 char *WfwGetBackTraceStr(uint8_t *buf, int32_t bufLen)
 {
+    (void)buf;
+    (void)bufLen;
 #ifdef BKF_DEBUG
     BOOL paramIsInvalid = (buf == VOS_NULL) || (bufLen <= 0);
     if (paramIsInvalid) {

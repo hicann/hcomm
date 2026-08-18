@@ -18,7 +18,7 @@ AllReduceOpbasePipeline::AllReduceOpbasePipeline(const HcclDispatcher dispatcher
 
 AllReduceOpbasePipeline::~AllReduceOpbasePipeline() {}
 
-HcclResult AllReduceOpbasePipeline::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo)
+HcclResult AllReduceOpbasePipeline::Prepare(u64 reduceAttrBitMap, [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     reduceAttr_ = reduceAttrBitMap;
     return HCCL_SUCCESS;
@@ -368,14 +368,14 @@ HcclResult AllReduceOpbasePipeline::GetNslbAdjInfo(
     CHK_SMART_PTR_NULL(nslbNext);
 
     // Pipeline 步长合并 等同于 ring
-    NslbDpAdjInfo adjInfoStep = {0};
+    NslbDpAdjInfo adjInfoStep = {};
     adjInfoStep.dstLocalRankId = nslbNext->GetRemoteRank();
     adjInfoStep.phaseId = 1;
     adjInfoStep.rev = 0;
     nslbAdjInfo.nsAdjInfo.push_back(adjInfoStep);
 
     // Pipeline 步长合并 等同于 ring
-    NslbDpAdjInfo nextInfoStep = {0};
+    NslbDpAdjInfo nextInfoStep = {};
     nextInfoStep.dstLocalRankId = nslbNext->GetRemoteRank();
     nextInfoStep.phaseId = nslbAdjInfo.nsAdjInfo[0].phaseId + 1;
     nextInfoStep.rev = 0;

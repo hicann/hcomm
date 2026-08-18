@@ -152,7 +152,8 @@ HcclResult CollAlltoAllMeshAivExecutor::Orchestrate(OpParam& param, AlgResourceR
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAlltoAllMeshAivExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& adjInfo)
+HcclResult
+CollAlltoAllMeshAivExecutor::GetAdjInfo([[maybe_unused]] AlgResourceResponse& algRes, [[maybe_unused]] AdjInfo& adjInfo)
 {
     return HCCL_SUCCESS;
 }

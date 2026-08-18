@@ -19,15 +19,18 @@
 using namespace std;
 using namespace hccl;
 
-HcclResult GetCaptureInfo(aclrtStream stream, aclmdlRICaptureStatus& captureStatus, uint64_t& modelId, bool& isCapture)
+HcclResult GetCaptureInfo(
+    [[maybe_unused]] aclrtStream stream, [[maybe_unused]] aclmdlRICaptureStatus& captureStatus,
+    [[maybe_unused]] uint64_t& modelId, [[maybe_unused]] bool& isCapture)
 {
     HCCL_WARNING("[%s]Stream capture does not support!", __func__);
     return HCCL_SUCCESS;
 }
 
 HcclResult HcclAllReduceInner(
-    void* sendBuf, void* recvBuf, uint64_t count, HcclDataType dataType, HcclReduceOp op, HcclComm comm,
-    aclrtStream stream)
+    [[maybe_unused]] void* sendBuf, [[maybe_unused]] void* recvBuf, [[maybe_unused]] uint64_t count,
+    [[maybe_unused]] HcclDataType dataType, [[maybe_unused]] HcclReduceOp op, [[maybe_unused]] HcclComm comm,
+    [[maybe_unused]] aclrtStream stream)
 {
     HCCL_WARNING("[%s]HcclAllReduceInner does not support!", __func__);
     return HCCL_SUCCESS;

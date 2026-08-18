@@ -326,8 +326,8 @@ HcclResult IsSupportHccsAndSio(bool& flag)
 {
     flag = false;
     size_t outputLen = 0;
-    supportFeaturePara inputPara = {0};
-    supportFeaturePara outputPara = {0};
+    supportFeaturePara inputPara = {};
+    supportFeaturePara outputPara = {};
     s32 deviceId = 0;
     CHK_RET(hrtGetDevice(&deviceId));
     s32 logicDevId = 0;
@@ -346,7 +346,7 @@ HcclResult IsSupportHccsAndSio(bool& flag)
 #endif
 
 #ifndef OPEN_HCCL_TEST
-HcclResult GetMemBlockNum(const u32 devicePhyId, u32& memBlockNum)
+HcclResult GetMemBlockNum([[maybe_unused]] const u32 devicePhyId, [[maybe_unused]] u32& memBlockNum)
 {
 #ifndef CCL_KERNEL_AICPU
     u32 info = 0;

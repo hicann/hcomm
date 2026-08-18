@@ -18,20 +18,25 @@ HcclResult MultiDeterPipeline::RunAsync() { return HCCL_SUCCESS; }
 
 // ReduceScatterDeterPipeline
 HcclResult MultiDeterPipeline::Prepare(
-    HcomCollOpInfo* opInfo, DeviceMem& buffer, const u64 count, const u64 offset, const std::vector<Slice>& slices,
-    const SubCommInfo& level0CommInfo, const SubCommInfo& level1CommInfo, Stream& mainStream,
-    std::vector<Stream>& subStream, std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
-    std::vector<std::shared_ptr<LocalNotify>>& notifySub)
+    [[maybe_unused]] HcomCollOpInfo* opInfo, [[maybe_unused]] DeviceMem& buffer, [[maybe_unused]] const u64 count,
+    [[maybe_unused]] const u64 offset, [[maybe_unused]] const std::vector<Slice>& slices,
+    [[maybe_unused]] const SubCommInfo& level0CommInfo, [[maybe_unused]] const SubCommInfo& level1CommInfo,
+    [[maybe_unused]] Stream& mainStream, [[maybe_unused]] std::vector<Stream>& subStream,
+    [[maybe_unused]] std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
+    [[maybe_unused]] std::vector<std::shared_ptr<LocalNotify>>& notifySub)
 {
     return HCCL_SUCCESS;
 }
 
 // AllReduceDeterPipeline
 HcclResult MultiDeterPipeline::Prepare(
-    HcomCollOpInfo* opInfo, DeviceMem& inBuffer, DeviceMem& outBuffer, const u64 count,
-    const std::vector<Slice>& slices, const SubCommInfo& level0CommInfo, const SubCommInfo& level1CommInfo,
-    Stream& mainStream, std::vector<Stream>& subStream, std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
-    std::vector<std::shared_ptr<LocalNotify>>& notifySub)
+    [[maybe_unused]] HcomCollOpInfo* opInfo, [[maybe_unused]] DeviceMem& inBuffer,
+    [[maybe_unused]] DeviceMem& outBuffer, [[maybe_unused]] const u64 count,
+    [[maybe_unused]] const std::vector<Slice>& slices, [[maybe_unused]] const SubCommInfo& level0CommInfo,
+    [[maybe_unused]] const SubCommInfo& level1CommInfo, [[maybe_unused]] Stream& mainStream,
+    [[maybe_unused]] std::vector<Stream>& subStream,
+    [[maybe_unused]] std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
+    [[maybe_unused]] std::vector<std::shared_ptr<LocalNotify>>& notifySub)
 {
     return HCCL_SUCCESS;
 }
@@ -71,36 +76,39 @@ HcclResult MultiDeterPipeline::SubWaitMain(u32 begin, u32 end)
 }
 
 HcclResult MultiDeterPipeline::GetRemoteCclbufferDeviceMem(
-    u32 inputSliceIndex, LINK link, u32 outputSliceIndex, DeviceMem& remoteMem)
-{
-    return HCCL_SUCCESS;
-}
-
-HcclResult MultiDeterPipeline::GetLocalUserInDeviceMem(u32 rankIdInAllRanks, DeviceMem& locaMem)
-{
-    return HCCL_SUCCESS;
-}
-
-HcclResult MultiDeterPipeline::GetLocalUserOutDeviceMem(u32 rankIdInAllRanks, DeviceMem& localMem)
+    [[maybe_unused]] u32 inputSliceIndex, [[maybe_unused]] LINK link, [[maybe_unused]] u32 outputSliceIndex,
+    [[maybe_unused]] DeviceMem& remoteMem)
 {
     return HCCL_SUCCESS;
 }
 
 HcclResult
-MultiDeterPipeline::GetLocalInCclbufferDeviceMem(u32 rankIdInAllRanks, DeviceMem& localMem, bool ifUseLastSize)
+MultiDeterPipeline::GetLocalUserInDeviceMem([[maybe_unused]] u32 rankIdInAllRanks, [[maybe_unused]] DeviceMem& locaMem)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult
-MultiDeterPipeline::GetLocalOutCclbufferDeviceMem(u32 rankIdInAllRanks, DeviceMem& localMem, bool ifUseLastSize)
+HcclResult MultiDeterPipeline::GetLocalUserOutDeviceMem(
+    [[maybe_unused]] u32 rankIdInAllRanks, [[maybe_unused]] DeviceMem& localMem)
+{
+    return HCCL_SUCCESS;
+}
+
+HcclResult MultiDeterPipeline::GetLocalInCclbufferDeviceMem(
+    [[maybe_unused]] u32 rankIdInAllRanks, [[maybe_unused]] DeviceMem& localMem, [[maybe_unused]] bool ifUseLastSize)
+{
+    return HCCL_SUCCESS;
+}
+
+HcclResult MultiDeterPipeline::GetLocalOutCclbufferDeviceMem(
+    [[maybe_unused]] u32 rankIdInAllRanks, [[maybe_unused]] DeviceMem& localMem, [[maybe_unused]] bool ifUseLastSize)
 {
     return HCCL_SUCCESS;
 }
 
 HcclResult MultiDeterPipeline::RunLocalCopy() { return HCCL_SUCCESS; }
 
-HcclResult MultiDeterPipeline::RunIntraAlltoallPreSync(u32 step) { return HCCL_SUCCESS; }
+HcclResult MultiDeterPipeline::RunIntraAlltoallPreSync([[maybe_unused]] u32 step) { return HCCL_SUCCESS; }
 
 HcclResult MultiDeterPipeline::RunIntraAlltoall(u32 step)
 {
@@ -212,7 +220,8 @@ HcclResult MultiDeterPipeline::GroupTasksByStream(
 }
 
 HcclResult MultiDeterPipeline::BatchPostNotifyForStreams(
-    const std::vector<std::vector<std::pair<u32, u32>>>& streamTasks, bool isStartPhase, bool useMainStream)
+    [[maybe_unused]] const std::vector<std::vector<std::pair<u32, u32>>>& streamTasks,
+    [[maybe_unused]] bool isStartPhase, [[maybe_unused]] bool useMainStream)
 {
     return HCCL_SUCCESS;
 }
@@ -347,15 +356,21 @@ HcclResult MultiDeterPipeline::LocalReduce(
     return HCCL_SUCCESS;
 }
 
-HcclResult MultiDeterPipeline::RunIntraLocalReduce(u32 step) { return HCCL_SUCCESS; }
+HcclResult MultiDeterPipeline::RunIntraLocalReduce([[maybe_unused]] u32 step) { return HCCL_SUCCESS; }
 
-HcclResult MultiDeterPipeline::RunInterSend(u32 step) { return HCCL_SUCCESS; }
+HcclResult MultiDeterPipeline::RunInterSend([[maybe_unused]] u32 step) { return HCCL_SUCCESS; }
 
 HcclResult MultiDeterPipeline::RunFinalReduce() { return HCCL_SUCCESS; }
 
-HcclResult MultiDeterPipeline::AlltoallSync(u32 step, bool isStartPhase) { return HCCL_SUCCESS; }
+HcclResult MultiDeterPipeline::AlltoallSync([[maybe_unused]] u32 step, [[maybe_unused]] bool isStartPhase)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult MultiDeterPipeline::LocalReduceSync(u32 step, bool isStartPhase) { return HCCL_SUCCESS; }
+HcclResult MultiDeterPipeline::LocalReduceSync([[maybe_unused]] u32 step, [[maybe_unused]] bool isStartPhase)
+{
+    return HCCL_SUCCESS;
+}
 
 HcclResult MultiDeterPipeline::AlltoallLocalReduceSync(u32 step, bool isStartPhase)
 {

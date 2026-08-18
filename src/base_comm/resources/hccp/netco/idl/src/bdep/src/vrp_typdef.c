@@ -39,6 +39,7 @@ void vrp_typedef_func_foo123_(void)
 
 void vrp_typedef_func_bar456_(uint32_t i)
 {
+    (void)i;
 }
 
 #ifdef __cplusplus

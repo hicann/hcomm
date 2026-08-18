@@ -281,7 +281,7 @@ HcclNetInit(NICDeployment nicDeploy, s32 devicePhyId, s32 deviceLogicId, bool en
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclNetDeInit(NICDeployment nicDeploy, s32 devicePhyId, s32 deviceLogicId, bool hasBackup)
+HcclResult HcclNetDeInit(NICDeployment nicDeploy, [[maybe_unused]] s32 devicePhyId, s32 deviceLogicId, bool hasBackup)
 {
     CHK_RET(hccl::NetworkManager::GetInstance(deviceLogicId).DeInit(nicDeploy, false, hasBackup));
     return HCCL_SUCCESS;

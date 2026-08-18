@@ -79,8 +79,9 @@ HcclResult CollAllGatherMeshGraphPipelineExecutor::KernelRun(const OpParam& para
     // 激活从流
     CHK_RET(ActiveSlaveStreams(param.stream));
 
-    HcomCollOpInfo opInfo = {"", execMem.inputPtr,    execMem.outputPtr, param.DataDes.count, param.DataDes.dataType,
-                             0,  HCCL_REDUCE_RESERVED};
+    HcomCollOpInfo opInfo = {
+        "", execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType, 0, HCCL_REDUCE_RESERVED,
+        0};
 
     std::unique_ptr<AlgTemplateBase> tempAlg
         = AlgTemplateRegistry::Instance().GetAlgTemplate(TemplateType::TEMPLATE_ALL_GATHER_GRAPH_PIPELINE, dispatcher_);

@@ -42,8 +42,9 @@ uint32_t TaskOverflow::GetTaskName(TaskType taskType) const
     return taskNameId;
 }
 
-HcclResult
-TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType& taskType, const TaskParaReduce& paraReduce)
+HcclResult TaskOverflow::Save(
+    [[maybe_unused]] u32 captureStreamID, u32 streamID, u32 taskID, TaskType& taskType,
+    const TaskParaReduce& paraReduce)
 {
     if (GetExternalInputHcclDumpDebug()) {
         HCCL_DEBUG("HcclDumpInfo save start");
@@ -71,41 +72,57 @@ HcclResult TaskOverflow::Save(u32& streamID, u32& taskID, TaskType& taskType, co
     return Save(streamID, streamID, taskID, taskType, paraReduce);
 }
 
-HcclResult
-TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType& taskType, const TaskParaDMA& paraDMA)
+HcclResult TaskOverflow::Save(
+    [[maybe_unused]] u32 captureStreamID, [[maybe_unused]] u32 streamID, [[maybe_unused]] u32 taskID,
+    [[maybe_unused]] TaskType& taskType, [[maybe_unused]] const TaskParaDMA& paraDMA)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskOverflow::Save(u32& streamID, u32& taskID, TaskType& taskType, const TaskParaDMA& paraDMA)
+HcclResult TaskOverflow::Save(
+    [[maybe_unused]] u32& streamID, [[maybe_unused]] u32& taskID, [[maybe_unused]] TaskType& taskType,
+    [[maybe_unused]] const TaskParaDMA& paraDMA)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult
-TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, TaskType& taskType, const TaskParaNotify& paraNotify)
+HcclResult TaskOverflow::Save(
+    [[maybe_unused]] u32 captureStreamID, [[maybe_unused]] u32 streamID, [[maybe_unused]] u32 taskID,
+    [[maybe_unused]] TaskType& taskType, [[maybe_unused]] const TaskParaNotify& paraNotify)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskOverflow::Save(u32& streamID, u32& taskID, TaskType& taskType, const TaskParaNotify& paraNotify)
+HcclResult TaskOverflow::Save(
+    [[maybe_unused]] u32& streamID, [[maybe_unused]] u32& taskID, [[maybe_unused]] TaskType& taskType,
+    [[maybe_unused]] const TaskParaNotify& paraNotify)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, const void* descBuf, size_t descBufLen)
+HcclResult TaskOverflow::Save(
+    [[maybe_unused]] u32 captureStreamID, [[maybe_unused]] u32 streamID, [[maybe_unused]] u32 taskID,
+    [[maybe_unused]] const void* descBuf, [[maybe_unused]] size_t descBufLen)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskOverflow::Save(u32 captureStreamID, u32 streamID, u32 taskID, const TaskParaAiv& paraAiv)
+HcclResult TaskOverflow::Save(
+    [[maybe_unused]] u32 captureStreamID, [[maybe_unused]] u32 streamID, [[maybe_unused]] u32 taskID,
+    [[maybe_unused]] const TaskParaAiv& paraAiv)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TaskOverflow::Save(u32 streamID, u32 taskID, const TaskParaAiv& paraAiv) { return HCCL_SUCCESS; }
+HcclResult TaskOverflow::Save(
+    [[maybe_unused]] u32 streamID, [[maybe_unused]] u32 taskID, [[maybe_unused]] const TaskParaAiv& paraAiv)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult TaskOverflow::Save(u32& streamID, u32& taskID, const void* descBuf, size_t descBufLen)
+HcclResult TaskOverflow::Save(
+    [[maybe_unused]] u32& streamID, [[maybe_unused]] u32& taskID, [[maybe_unused]] const void* descBuf,
+    [[maybe_unused]] size_t descBufLen)
 {
     return HCCL_SUCCESS;
 }
@@ -120,7 +137,7 @@ HcclResult TaskOverflow::GetandClearOverFlowTasks(std::vector<HcclDumpInfo>& hcc
 
 HcclResult TaskOverflow::Flush() { return HCCL_SUCCESS; }
 
-HcclResult TaskOverflow::Run(const StepData& stepData) { return HCCL_SUCCESS; }
+HcclResult TaskOverflow::Run([[maybe_unused]] const StepData& stepData) { return HCCL_SUCCESS; }
 
-HcclResult TaskOverflow::SaveToLog(const TaskParaHost& paraHost) { return HCCL_SUCCESS; }
+HcclResult TaskOverflow::SaveToLog([[maybe_unused]] const TaskParaHost& paraHost) { return HCCL_SUCCESS; }
 } // namespace hccl

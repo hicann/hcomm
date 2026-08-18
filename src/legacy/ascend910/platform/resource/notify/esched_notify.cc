@@ -25,37 +25,44 @@ HcclResult EschedNotify::Open() { return HCCL_SUCCESS; }
 
 HcclResult EschedNotify::Close() { return HCCL_SUCCESS; }
 
-HcclResult EschedNotify::Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut)
+HcclResult EschedNotify::Wait(
+    [[maybe_unused]] Stream& stream, [[maybe_unused]] HcclDispatcher dispatcher, [[maybe_unused]] s32 stage,
+    [[maybe_unused]] u32 timeOut)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult EschedNotify::Post(Stream& stream, HcclDispatcher dispatcher, s32 stage) { return HCCL_SUCCESS; }
+HcclResult EschedNotify::Post(
+    [[maybe_unused]] Stream& stream, [[maybe_unused]] HcclDispatcher dispatcher, [[maybe_unused]] s32 stage)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult
-EschedNotify::Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut, u32 userRank, u32 remoteUserRank)
+HcclResult EschedNotify::Wait(
+    Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut, [[maybe_unused]] u32 userRank,
+    [[maybe_unused]] u32 remoteUserRank)
 {
     return Wait(stream, dispatcher, stage, timeOut);
 }
 
-HcclResult EschedNotify::Wait(Stream& stream, u32 timeOut) { return HCCL_SUCCESS; }
+HcclResult EschedNotify::Wait([[maybe_unused]] Stream& stream, [[maybe_unused]] u32 timeOut) { return HCCL_SUCCESS; }
 
-HcclResult EschedNotify::Post(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 remoteUserRank)
+HcclResult EschedNotify::Post(Stream& stream, HcclDispatcher dispatcher, s32 stage, [[maybe_unused]] u32 remoteUserRank)
 {
     return Post(stream, dispatcher, stage);
 }
 
-HcclResult EschedNotify::Post(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult EschedNotify::Post([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
 HcclResult EschedNotify::SetIpc() { return HCCL_SUCCESS; }
 
-HcclResult EschedNotify::Grant(s64 recvId) { return HCCL_SUCCESS; }
+HcclResult EschedNotify::Grant([[maybe_unused]] s64 recvId) { return HCCL_SUCCESS; }
 
 HcclResult EschedNotify::Alloc() { return HCCL_SUCCESS; }
 
 HcclResult EschedNotify::Destroy() { return HCCL_SUCCESS; }
 
-HcclResult EschedNotify::ThreadIdCreate(uint32_t& threadId) { return HCCL_SUCCESS; }
+HcclResult EschedNotify::ThreadIdCreate([[maybe_unused]] uint32_t& threadId) { return HCCL_SUCCESS; }
 
 HcclResult EschedNotify::InitGroupId() { return HCCL_SUCCESS; }
 

@@ -356,6 +356,8 @@ uint32_t BkfSuberSetSelfUrl(BkfSuber *suber, BkfUrl *selfUrl)
 
 void BkfSuberUnSetSelfUrl(BkfSuber *suber, BkfUrl *selfUrl)
 {
+    (void)suber;
+    (void)selfUrl;
     BKF_ASSERT(0);
 }
 

@@ -63,8 +63,6 @@ endif()
 #编译选项
 target_compile_options(ra_adp PRIVATE
     -Werror
-    -Wno-unused-parameter
-    -Wno-missing-field-initializers
     -fvisibility=hidden
     -fsigned-char
     -fno-common

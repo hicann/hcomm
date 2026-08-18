@@ -14,8 +14,8 @@
 #include "common/aicpu_hccl_common.h"
 
 HcclResult AicpuAllreduce::RunAlgorithm(
-    HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType, u64 strideLen,
-    AivAicpuOpParam* /* nextTask */)
+    HcclReduceOp opType, void* sendBuffer, void* recvBuffer, u64 dataCount, HcclDataType dataType,
+    [[maybe_unused]] u64 strideLen, AivAicpuOpParam* /* nextTask */)
 {
     CHK_PTR_NULL(ctx_);
     if (CC_EXE_ONE_SHOT_8_STREAM == ctx_->commOpType) {

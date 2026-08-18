@@ -20,7 +20,8 @@ CalcHccsPlusSioTransportReq::~CalcHccsPlusSioTransportReq() {}
 
 HcclResult CalcHccsPlusSioTransportReq::CalcTransportRequest(
     const std::string& tag, TransportMemType inputMemType, TransportMemType outputMemType,
-    const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport, u32 subUserRankRoot)
+    const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport,
+    [[maybe_unused]] u32 subUserRankRoot)
 {
     u32 ringSize = 2;
     commTransport.resize(ringSize);

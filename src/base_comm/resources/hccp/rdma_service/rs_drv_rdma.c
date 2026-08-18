@@ -136,6 +136,7 @@ STATIC void RsRdmaRetryTimeoutExceptionCheck(struct SensorNode *sensorNode, stru
 
 STATIC void RsCqeCallbackProcess(struct RsQpCb *qpCb, struct ibv_wc *wc, struct ibv_cq *evCq)
 {
+    (void)evCq;
     if (wc->status != IBV_WC_SUCCESS && wc->status != IBV_WC_WR_FLUSH_ERR) {
         hccp_err("Failed status [%s] [%u], wr[%llu]", RsIbvWcStatusStr(wc->status), wc->status, wc->wr_id);
         RsDrvSaveCqeErrInfo(wc->status, qpCb);

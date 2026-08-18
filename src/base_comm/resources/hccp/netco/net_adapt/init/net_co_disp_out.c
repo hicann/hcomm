@@ -158,6 +158,7 @@ void NetCoDispOutRegedCmd(NetCo *co)
 #if BKF_BLOCK("私有函数定义")
 STATIC uint32_t NetCoDispOutOnTmrTO(NetCo *co, void *notUse)
 {
+    (void)notUse;
     NetCoDispOutRegedCmd(co);
     return BKF_OK;
 }

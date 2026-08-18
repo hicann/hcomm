@@ -33,7 +33,8 @@ HcclResult AicpuThreadProcess::InitThreads(ThreadMgrAicpuParam* param)
 
     // 由调用方 AicpuThreadInit 持有 mutex_ 写锁保护，此处 check-then-set 无并发风险
     if (!defaultDfxCallback_) { // HcommThreadAlloc接口暂未适配profiling和上报task的能力
-        defaultDfxCallback_ = [](u32 streamId, u32 taskId, const Hccl::TaskParam& taskParam, u64 handle) {
+        defaultDfxCallback_ = [](u32 streamId, u32 taskId, [[maybe_unused]] const Hccl::TaskParam& taskParam,
+                                 [[maybe_unused]] u64 handle) {
             HCCL_DEBUG("[AicpuThreadProcess] order launch dfx callback, streamId[%u], taskId[%u]", streamId, taskId);
             return HCCL_SUCCESS;
         };

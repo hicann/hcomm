@@ -45,7 +45,7 @@ HcclResult MemNameRepository::SetIpcMem(void* ptr, u64 size, u8* name, u32 nameL
 
     HcclResult ret;
     std::unique_lock<std::mutex> lock(memMutex_);
-    IpcMemInfo ipcMemInfo = {nullptr};
+    IpcMemInfo ipcMemInfo = {};
 
     ipcMemInfo.ptr = ptr;
     ipcMemInfo.size = size;
@@ -83,7 +83,7 @@ HcclResult MemNameRepository::SetIpcMem(void* ptr, u64 size, u8* name, u32 nameL
 
     HcclResult ret;
     std::unique_lock<std::mutex> lock(memMutex_);
-    IpcMemInfo ipcMemInfo = {nullptr};
+    IpcMemInfo ipcMemInfo = {};
 
     ipcMemInfo.ptr = ptr;
     ipcMemInfo.size = size;
@@ -169,7 +169,7 @@ HcclResult MemNameRepository::OpenIpcMem(
     CHK_PTR_NULL(ptr);
 
     HcclResult ret;
-    IpcMemInfo ipcMemInfo = {nullptr};
+    IpcMemInfo ipcMemInfo = {};
 
     std::unique_lock<std::mutex> lock(memMutex_);
     auto iter = openedNameMap_.begin();
@@ -282,7 +282,7 @@ void MemNameRepository::DestroyIpcMem(void* ptr, u64 size, bool isSioToHccs)
         return;
     }
 
-    IpcMemInfo ipcMemInfo = {nullptr};
+    IpcMemInfo ipcMemInfo = {};
     ipcMemInfo.ptr = ptr;
     ipcMemInfo.size = size;
     ipcMemInfo.isSioToHccs = isSioToHccs;

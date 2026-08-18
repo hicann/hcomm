@@ -137,13 +137,13 @@ u64 CollAllReduceExecutor::CalcLoopMaxCount(const u64 cclBuffSize, const u32 uni
     return maxCountPerLoop;
 }
 
-bool CollAllReduceExecutor::IsHugeData(const u64 curSize)
+bool CollAllReduceExecutor::IsHugeData([[maybe_unused]] const u64 curSize)
 {
     HCCL_WARNING("[CollAllReduceExecutor][IsHugeData]opMeta is using the default option: not huge data.");
     return false;
 }
 
-bool CollAllReduceExecutor::IsSmallData(const u64 totalSize, const u64 curSize)
+bool CollAllReduceExecutor::IsSmallData([[maybe_unused]] const u64 totalSize, [[maybe_unused]] const u64 curSize)
 {
     HCCL_WARNING("[CollAllReduceExecutor][IsSmallData]opMeta is using the default option: not small data.");
     return false;

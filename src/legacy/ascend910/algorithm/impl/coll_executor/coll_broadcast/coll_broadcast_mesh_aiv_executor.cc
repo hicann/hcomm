@@ -44,7 +44,8 @@ HcclResult CollBroadcastMeshAivExecutor::CalcCommInfo(std::vector<LevelNSubCommT
     return HCCL_SUCCESS;
 }
 
-HcclResult CollBroadcastMeshAivExecutor::CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize, HcclCMDType cmdType)
+HcclResult CollBroadcastMeshAivExecutor::CalNumBlocks(
+    u32& numBlocks, u32 rankSize, [[maybe_unused]] u64 dataSize, [[maybe_unused]] HcclCMDType cmdType)
 {
     numBlocks = rankSize; // 默认情况使用rankSize个AIV
     CHK_PRT_RET(

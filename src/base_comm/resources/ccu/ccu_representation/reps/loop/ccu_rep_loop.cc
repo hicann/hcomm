@@ -71,7 +71,8 @@ namespace CcuRep {
         return std::make_shared<CcuRepSetLoop>(insGeneratorPtr_, loopParam, executor, var);
     }
 
-    bool CcuRepLoop::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepLoop::Translate(
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
     {
         (void)dep;
         ValidateInsGeneratorForLoop();

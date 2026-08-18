@@ -20,14 +20,24 @@ TopoinfoRoletable::TopoinfoRoletable(const std::string& rankTableM) : TopoInfoRa
 
 TopoinfoRoletable::~TopoinfoRoletable() {}
 
-HcclResult
-TopoinfoRoletable::GetSingleNode(const nlohmann::json& NodeListObj, u32 objIndex, std::vector<RoleTableNodeInfo>& nodes)
+HcclResult TopoinfoRoletable::GetSingleNode(
+    [[maybe_unused]] const nlohmann::json& NodeListObj, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] std::vector<RoleTableNodeInfo>& nodes)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRoletable::GetServersInfo(std::vector<RoleTableNodeInfo>& servers) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoinfoRoletable::GetServersInfo([[maybe_unused]] std::vector<RoleTableNodeInfo>& servers)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
-HcclResult TopoinfoRoletable::GetClientsInfo(std::vector<RoleTableNodeInfo>& clients) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoinfoRoletable::GetClientsInfo([[maybe_unused]] std::vector<RoleTableNodeInfo>& clients)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
-HcclResult TopoinfoRoletable::ParserRoleTable(RoleTableInfo& roleTableInfo) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoinfoRoletable::ParserRoleTable([[maybe_unused]] RoleTableInfo& roleTableInfo)
+{
+    return HCCL_E_NOT_SUPPORT;
+}

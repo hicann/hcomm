@@ -16,7 +16,7 @@ AllReduceNHRV1::AllReduceNHRV1(const HcclDispatcher dispatcher) : NHRV1Base(disp
 
 AllReduceNHRV1::~AllReduceNHRV1() {}
 
-HcclResult AllReduceNHRV1::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo)
+HcclResult AllReduceNHRV1::Prepare(u64 reduceAttrBitMap, [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     reduceAttr_ = reduceAttrBitMap;
     return HCCL_SUCCESS;

@@ -705,7 +705,7 @@ void TaskExceptionHandler::TimeStruct2Str(struct timeval& tv, std::string& opDat
     char timeStr[length] = {0};
     std::string timeStamp;
     const time_t sec = tv.tv_sec;
-    struct tm nowTime = {0};
+    struct tm nowTime = {};
     const struct tm* tmp = localtime_r(&sec, &nowTime);
     if (tmp == nullptr) {
         return;
@@ -727,7 +727,8 @@ void TaskExceptionHandler::TimeStruct2Str(struct timeval& tv, std::string& opDat
 
     return;
 }
-void TaskExceptionHandler::PrintOpDataInfo(OpDataInfo& opDataInfo, bool isFftsPlus, std::string& stageErrInfo)
+void TaskExceptionHandler::PrintOpDataInfo(
+    OpDataInfo& opDataInfo, [[maybe_unused]] bool isFftsPlus, std::string& stageErrInfo)
 {
     stringstream opDataStr;
     opDataStr << "src" << "[0x" << std::hex << static_cast<u64>(reinterpret_cast<uintptr_t>(opDataInfo.src))
@@ -790,8 +791,8 @@ bool TaskExceptionHandler::DealExceptionOpData(
 }
 
 bool TaskExceptionHandler::DealExceptionGroupRank(
-    rtExceptionInfo* exceptionInfo, std::string& tag, bool isFftsPlus, std::string& groupRankContentInfo,
-    std::string& stageErrInfo)
+    rtExceptionInfo* exceptionInfo, std::string& tag, [[maybe_unused]] bool isFftsPlus,
+    std::string& groupRankContentInfo, std::string& stageErrInfo)
 {
     std::unique_lock<std::mutex> lock(groupRankMapMutex[exceptionInfo->deviceid]);
     auto groupRankIt = groupRankMap[exceptionInfo->deviceid].find(tag);

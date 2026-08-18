@@ -20,7 +20,8 @@ CalcPartialMeshTransportReq::~CalcPartialMeshTransportReq() {}
 
 HcclResult CalcPartialMeshTransportReq::CalcTransportRequest(
     const std::string& tag, TransportMemType inputMemType, TransportMemType outputMemType,
-    const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport, u32 subUserRankRoot)
+    const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport,
+    [[maybe_unused]] u32 subUserRankRoot)
 {
     // send/recv分别使用一个comm
     u32 ringSize = 2;

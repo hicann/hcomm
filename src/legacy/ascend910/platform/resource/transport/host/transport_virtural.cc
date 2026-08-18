@@ -66,18 +66,22 @@ HcclResult TransportVirtural::RxDataSignal(Stream& stream)
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportVirtural::TxPrepare(Stream& stream) { return HCCL_SUCCESS; }
-HcclResult TransportVirtural::RxPrepare(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportVirtural::TxPrepare([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportVirtural::RxPrepare([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
-HcclResult TransportVirtural::TxData(UserMemType dstMemType, u64 dstOffset, const void* src, u64 len, Stream& stream)
+HcclResult TransportVirtural::TxData(
+    [[maybe_unused]] UserMemType dstMemType, [[maybe_unused]] u64 dstOffset, [[maybe_unused]] const void* src,
+    [[maybe_unused]] u64 len, [[maybe_unused]] Stream& stream)
 {
     return HCCL_SUCCESS;
 }
-HcclResult TransportVirtural::RxData(UserMemType srcMemType, u64 srcOffset, void* dst, u64 len, Stream& stream)
+HcclResult TransportVirtural::RxData(
+    [[maybe_unused]] UserMemType srcMemType, [[maybe_unused]] u64 srcOffset, [[maybe_unused]] void* dst,
+    [[maybe_unused]] u64 len, [[maybe_unused]] Stream& stream)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportVirtural::TxDone(Stream& stream) { return HCCL_SUCCESS; }
-HcclResult TransportVirtural::RxDone(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportVirtural::TxDone([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportVirtural::RxDone([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 } // namespace hccl

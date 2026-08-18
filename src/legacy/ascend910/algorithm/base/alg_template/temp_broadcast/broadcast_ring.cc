@@ -167,8 +167,9 @@ BroadcastRing::RunAsync(const u32 rank, const u32 rankSize, const std::vector<st
     HCCL_INFO("BroadcastRing finished: rank[%u] end count[%llu]", rank, count_);
     return HCCL_SUCCESS;
 }
-HcclResult
-BroadcastRing::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo)
+HcclResult BroadcastRing::GetNslbAdjInfo(
+    [[maybe_unused]] const u32 rank, [[maybe_unused]] const u32 rankSize,
+    [[maybe_unused]] const std::vector<LINK>& links, [[maybe_unused]] AdjInfo& nslbAdjInfo)
 {
     return HCCL_SUCCESS;
 }

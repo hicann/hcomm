@@ -362,7 +362,7 @@ HcclResult ReduceScatterNB::GetNslbAdjInfo(
         LINK linkRight = links[sendTo];
         CHK_SMART_PTR_NULL(linkRight);
 
-        NslbDpAdjInfo adjInfoStep = {0};
+        NslbDpAdjInfo adjInfoStep = {};
         adjInfoStep.dstLocalRankId = linkRight->GetRemoteRank();
         adjInfoStep.phaseId = step + 1;
         adjInfoStep.rev = 0;

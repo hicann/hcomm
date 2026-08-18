@@ -118,7 +118,8 @@ HcclResult CollBroadCastMix::KernelRun(const OpParam& param, ExecMem& execMem)
 
         HcomCollOpInfo* scatterOpInfoPtr = nullptr;
         HcomCollOpInfo scatterOpInfo
-            = {"", execMem.inputPtr, nullptr, param.DataDes.count, param.DataDes.dataType, param.root};
+            = {"",         execMem.inputPtr, nullptr, param.DataDes.count, param.DataDes.dataType,
+               param.root, param.reduceType, 0};
 
         if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
             scatterOpInfoPtr = &scatterOpInfo;
@@ -225,8 +226,9 @@ HcclResult CollBroadCastMix::KernelRun(const OpParam& param, ExecMem& execMem)
 
     /* step 3: 节点内 allgather */
     if (topoAttr_.deviceType == DevType::DEV_TYPE_910_93) {
-        HcomCollOpInfo allgatherOpInfo
-            = {"", nullptr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType, param.root};
+        HcomCollOpInfo allgatherOpInfo = {
+            "", nullptr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType, param.root, param.reduceType,
+            0};
         HcomCollOpInfo* allgatherOpInfoPtr = DMAReduceFlag_ ? (&allgatherOpInfo) : (nullptr);
 
         CHK_RET(MultiRingAllGather(

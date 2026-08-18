@@ -31,7 +31,7 @@ namespace CcuRep {
         instrCount = 1;
     }
 
-    bool CcuRepBufReduce::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepBufReduce::Translate(CcuInstr*& instr, uint16_t& instrId, [[maybe_unused]] const TransDep& dep)
     {
         this->instrId = instrId;
         translated = true;

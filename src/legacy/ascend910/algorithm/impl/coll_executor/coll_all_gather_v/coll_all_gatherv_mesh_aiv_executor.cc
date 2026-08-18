@@ -47,7 +47,8 @@ HcclResult AllGatherVMeshAivExecutor::CalcLevel0CommInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult AllGatherVMeshAivExecutor::CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize, HcclCMDType cmdType)
+HcclResult AllGatherVMeshAivExecutor::CalNumBlocks(
+    u32& numBlocks, u32 rankSize, [[maybe_unused]] u64 dataSize, [[maybe_unused]] HcclCMDType cmdType)
 {
     numBlocks = rankSize + 1; // 单机场景，单算子AllGather大数据使用(rankSize + 1)个aiv
     u32 bestNumBlocks = numBlocks;

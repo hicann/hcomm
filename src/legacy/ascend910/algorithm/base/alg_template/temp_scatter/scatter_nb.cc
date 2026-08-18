@@ -240,7 +240,7 @@ ScatterNB::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<
             LINK linkRight = links[sendTo];
             CHK_SMART_PTR_NULL(linkRight);
 
-            NslbDpAdjInfo adjInfoStep = {0};
+            NslbDpAdjInfo adjInfoStep = {};
             adjInfoStep.dstLocalRankId = linkRight->GetRemoteRank();
             adjInfoStep.phaseId = step + 1;
             adjInfoStep.rev = 0;

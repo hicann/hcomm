@@ -197,6 +197,7 @@ uint32_t BkfXMapRegEx(BkfXMap *xMap, uintptr_t key, const char *keyStr, F_BKF_XM
 
 void BkfXMapUnRegEx(BkfXMap *xMap, uintptr_t key, F_BKF_XMAP_PROC proc, void *cookie, uint8_t prio)
 {
+    (void)prio;
     if (xMap == VOS_NULL) {
         BKF_ASSERT(0);
         return;
@@ -467,6 +468,7 @@ STATIC void BkfXMapDelAllCb(BkfXMap *xMap, BkfXMapX *x)
 
 STATIC BkfXMapCb *BkfXMapFindCb(BkfXMap *xMap, BkfXMapX *x, BkfXMapCbKey *key)
 {
+    (void)xMap;
     BkfXMapCb *cb = VOS_NULL;
 
     cb = VOS_AVLL_FIND(x->cbSet, key);
@@ -475,6 +477,7 @@ STATIC BkfXMapCb *BkfXMapFindCb(BkfXMap *xMap, BkfXMapX *x, BkfXMapCbKey *key)
 
 STATIC BkfXMapCb *BkfXMapGetFirstCbByPrio(BkfXMap *xMap, BkfXMapX *x, void **outItorOrNull)
 {
+    (void)xMap;
     BkfDlNode *tempNode = VOS_NULL;
     BkfXMapCb *cb = VOS_NULL;
 
@@ -495,6 +498,7 @@ STATIC BkfXMapCb *BkfXMapGetFirstCbByPrio(BkfXMap *xMap, BkfXMapX *x, void **out
 
 STATIC BkfXMapCb *BkfXMapGetNextCbByPrio(BkfXMap *xMap, BkfXMapX *x, void **inOutItor)
 {
+    (void)xMap;
     BkfDlNode *tempNode = VOS_NULL;
     BkfXMapCb *cb = VOS_NULL;
 

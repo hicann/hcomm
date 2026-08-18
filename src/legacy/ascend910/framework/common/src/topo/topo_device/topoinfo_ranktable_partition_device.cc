@@ -26,40 +26,46 @@ TopoinfoRanktablePartition::TopoinfoRanktablePartition(
 TopoinfoRanktablePartition::~TopoinfoRanktablePartition() {}
 
 HcclResult TopoinfoRanktablePartition::GenerateSubRankTable(
-    const uint32_t rankNum, const uint32_t* rankIds, hccl::RankTable_t& subRankTable)
+    [[maybe_unused]] const uint32_t rankNum, [[maybe_unused]] const uint32_t* rankIds,
+    [[maybe_unused]] hccl::RankTable_t& subRankTable)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktablePartition::GenerateSubSuperPodId(hccl::RankTable_t& subRankTable)
+HcclResult TopoinfoRanktablePartition::GenerateSubSuperPodId([[maybe_unused]] hccl::RankTable_t& subRankTable)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoinfoRanktablePartition::GenerateSubParams(
-    const hccl::RankTable_t& subRankTable, const uint32_t subCommRankId, hccl::HcclCommParams& subParams)
+    [[maybe_unused]] const hccl::RankTable_t& subRankTable, [[maybe_unused]] const uint32_t subCommRankId,
+    [[maybe_unused]] hccl::HcclCommParams& subParams)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktablePartition::GetRankTableStr(const hccl::RankTable_t& subRankTable, std::string& rankTableStr)
+HcclResult TopoinfoRanktablePartition::GetRankTableStr(
+    [[maybe_unused]] const hccl::RankTable_t& subRankTable, [[maybe_unused]] std::string& rankTableStr)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoinfoRanktablePartition::TransformRankInfo(
-    const RankTable_t& clusterInfo, nlohmann::json& perRankJson, u32 rankIndex)
+    [[maybe_unused]] const RankTable_t& clusterInfo, [[maybe_unused]] nlohmann::json& perRankJson,
+    [[maybe_unused]] u32 rankIndex)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoinfoRanktablePartition::TransformServerList(const RankTable_t& clusterInfo, nlohmann::json& rankListJson)
+HcclResult TopoinfoRanktablePartition::TransformServerList(
+    [[maybe_unused]] const RankTable_t& clusterInfo, [[maybe_unused]] nlohmann::json& rankListJson)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoinfoRanktablePartition::Struct2JsonRankTable(
-    const RankTable_t& clusterInfo, const DevType deviceType, nlohmann::json& ClusterJson)
+    [[maybe_unused]] const RankTable_t& clusterInfo, [[maybe_unused]] const DevType deviceType,
+    [[maybe_unused]] nlohmann::json& ClusterJson)
 {
     return HCCL_E_NOT_SUPPORT;
 }

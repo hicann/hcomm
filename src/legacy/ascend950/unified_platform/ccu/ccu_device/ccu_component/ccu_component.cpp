@@ -464,7 +464,7 @@ JettyImportCfg GetJettyImportCfg(const TpInfo& tpInfo, const uint32_t& psn)
 HcclResult CcuComponent::CreateAndImportLoopJettys(
     const uint8_t dieId, const IpAddress& ipAddr, const vector<JettyInfo>& jettyInfos)
 {
-    Hccl::CqCreateInfo cqInfo{0};
+    Hccl::CqCreateInfo cqInfo{};
     auto& rdmaHandleMgr = RdmaHandleManager::GetInstance();
     const auto rdmaHandle = rdmaHandleMgr.GetByIp(devPhyId, ipAddr);
     const auto jfcHandle = rdmaHandleMgr.GetJfcHandle(rdmaHandle, cqInfo, HrtUbJfcMode::CCU_POLL);

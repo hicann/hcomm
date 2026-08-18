@@ -74,7 +74,7 @@ bool CollAllReduceCommExecutor::IsHugeData(const u64 curSize)
     return hugeData;
 }
 
-bool CollAllReduceCommExecutor::IsSmallData(const u64 totalSize, const u64 curSize)
+bool CollAllReduceCommExecutor::IsSmallData([[maybe_unused]] const u64 totalSize, const u64 curSize)
 {
     bool smallData = IsAllReduceSmallData(curSize);
     return smallData;

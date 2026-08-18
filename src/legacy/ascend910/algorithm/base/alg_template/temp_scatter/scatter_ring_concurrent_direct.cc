@@ -21,7 +21,7 @@ HcclResult ScatterRingConcurrentDirect::Prepare(
     HcomCollOpInfo* opInfo, const u32 userRank, std::vector<Stream>& subStreams,
     const std::vector<std::shared_ptr<LocalNotify>>& mainSignals,
     const std::vector<std::shared_ptr<LocalNotify>>& subSignals, const std::vector<u32>& ringsOrder,
-    const std::vector<Slice>& userMemSlices, bool isSdma)
+    const std::vector<Slice>& userMemSlices, [[maybe_unused]] bool isSdma)
 {
     opInfo_ = opInfo;
     userRank_ = userRank;

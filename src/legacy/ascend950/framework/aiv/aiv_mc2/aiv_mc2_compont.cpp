@@ -67,7 +67,7 @@ void AivMc2Compont::GenerateCommContext(void** commContext)
 
     workspaceBuffer = std::make_shared<DevBuffer>(MC2_WORKSPACE_SIZE);
 
-    HcclCombinOpParam combinOpParam{0};
+    HcclCombinOpParam combinOpParam{};
     combinOpParam.workSpace = static_cast<uint64_t>(workspaceBuffer->GetAddr());
     combinOpParam.workSpaceSize = MC2_WORKSPACE_SIZE;
     combinOpParam.rankId = comm->GetMyRank();

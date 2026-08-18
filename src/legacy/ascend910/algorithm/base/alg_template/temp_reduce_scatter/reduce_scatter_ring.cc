@@ -558,7 +558,7 @@ HcclResult ReduceScatterRing::GetNslbAdjInfo(
     if (nslbAdjInfo.nsAdjInfo.size() > 0) {
         nslbAdjInfo.nsAdjInfo[0].dstLocalRankId = (rank + 1) % rankSize;
     } else {
-        NslbDpAdjInfo adjInfoStep = {0};
+        NslbDpAdjInfo adjInfoStep = {};
         nslbAdjInfo.dstRankNum = 1;
         adjInfoStep.dstLocalRankId = nslbNext->GetRemoteRank();
         adjInfoStep.phaseId = 1;

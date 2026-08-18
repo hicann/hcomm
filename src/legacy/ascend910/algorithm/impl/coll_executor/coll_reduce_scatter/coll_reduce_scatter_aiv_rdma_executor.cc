@@ -80,8 +80,8 @@ HcclResult CollReduceScatterAivRdmaExecutor::CalcLevel0CommInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollReduceScatterAivRdmaExecutor::CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize, HcclCMDType cmdType)
+HcclResult CollReduceScatterAivRdmaExecutor::CalNumBlocks(
+    u32& numBlocks, u32 rankSize, [[maybe_unused]] u64 dataSize, [[maybe_unused]] HcclCMDType cmdType)
 {
     numBlocks = rankSize; // 多机场景，单算子ReduceScatter使用rankSize个aiv
     u32 bestNumBlocks = numBlocks;

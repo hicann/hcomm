@@ -14,8 +14,6 @@ add_library(hccl_alg SHARED)
 # 编译选项
 target_compile_options(hccl_alg PRIVATE
     -Werror
-    -Wno-unused-parameter
-    -Wno-missing-field-initializers
     -fno-common
     -fno-strict-aliasing
     $<$<CONFIG:Debug>:-Og -g>

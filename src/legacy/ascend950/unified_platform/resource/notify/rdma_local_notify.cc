@@ -69,7 +69,7 @@ RdmaLocalNotify::~RdmaLocalNotify()
 
 void RdmaLocalNotify::Wait(const Stream& stream, u32 timeout) const { GetNotify()->Wait(stream, timeout); }
 
-void RdmaLocalNotify::Post(const Stream& stream) const
+void RdmaLocalNotify::Post([[maybe_unused]] const Stream& stream) const
 {
     HCCL_ERROR("RdmaLocalNotify does not support submit record task");
     throw NotSupportException("RdmaLocalNotify does not support submit record task");

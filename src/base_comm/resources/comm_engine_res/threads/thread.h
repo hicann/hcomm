@@ -103,7 +103,10 @@ public:
         return HCCL_SUCCESS;
     }
     std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> GetCallback() { return callback_; }
-    virtual HcclResult SetCheckExecStatusCallback(std::function<HcclResult(bool)> callback) { return HCCL_SUCCESS; }
+    virtual HcclResult SetCheckExecStatusCallback([[maybe_unused]] std::function<HcclResult(bool)> callback)
+    {
+        return HCCL_SUCCESS;
+    }
 
     void SetCommEngine(CommEngine engine) { engine_ = engine; }
     CommEngine GetCommEngine() const { return engine_; }

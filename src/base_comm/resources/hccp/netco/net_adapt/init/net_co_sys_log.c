@@ -91,6 +91,8 @@ void NetCoSysLogUninit(NetCo *co)
 
 void NetCoSysLogOutStrSpy(char *outStr, uint32_t bufLen)
 {
+    (void)outStr;
+    (void)bufLen;
 }
 
 #ifdef __cplusplus

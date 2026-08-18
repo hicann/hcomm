@@ -102,7 +102,7 @@ HcclResult HostRdmaConnection::CreateQp()
     CHK_RET(
         Hccl::HrtRaCreateQpWithCq(qpInfo_.rdmaHandle, -1, -1, sendCompChannel_, recvCompChannel_, qpInfo_, isHdcMode_));
 
-    struct QosAttr qosAttr = {0};
+    struct QosAttr qosAttr = {};
     qosAttr.tc = qpInfo_.trafficClass;
     qosAttr.sl = qpInfo_.serviceLevel;
     HCCL_INFO("[%s]Set qp qos success by config, TC[%u] SL[%u]", __func__, qosAttr.tc, qosAttr.sl);

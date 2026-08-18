@@ -185,7 +185,7 @@ void ExecutorTracer::KfcCommandHandle(AicpuComContext* const ctx)
 }
 
 // handle switch nic command
-void ExecutorTracer::HandleSwitchNic(AicpuComContext* const ctx)
+void ExecutorTracer::HandleSwitchNic([[maybe_unused]] AicpuComContext* const ctx)
 {
     std::shared_lock<std::shared_mutex> rwlock(AicpuHcclProcess::AicpuGetCommMutex());
     std::vector<std::pair<std::string, hccl::HcclCommAicpu*>> aicpuCommInfo;
@@ -217,7 +217,7 @@ void ExecutorTracer::HandleSwitchNic(AicpuComContext* const ctx)
     }
 }
 
-void ExecutorTracer::HandleResumeChangeLink(AicpuComContext* const ctx)
+void ExecutorTracer::HandleResumeChangeLink([[maybe_unused]] AicpuComContext* const ctx)
 {
     std::shared_lock<std::shared_mutex> rwlock(AicpuHcclProcess::AicpuGetCommMutex());
     std::vector<std::pair<std::string, hccl::HcclCommAicpu*>> aicpuCommInfo;

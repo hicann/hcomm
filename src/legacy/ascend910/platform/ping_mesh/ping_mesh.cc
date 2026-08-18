@@ -301,7 +301,8 @@ inline void TsdProcessOpenInit(rtNetServiceOpenArgs& openArgs, rtProcExtParam* e
 }
 
 inline void RpingRoceAttrInit(
-    u32 deviceId, HcclIpAddress ipAddr, u32 port, u32 nodeNum, u32 bufferSize, u32 sl, u32 tc, PingInitAttr& initAttr)
+    u32 deviceId, HcclIpAddress ipAddr, [[maybe_unused]] u32 port, u32 nodeNum, u32 bufferSize, u32 sl, u32 tc,
+    PingInitAttr& initAttr)
 {
     u32 maxWrDepth = nodeNum * WR_DEPTH_MULTIPLE;
     maxWrDepth = (maxWrDepth > DEFAULT_OPBASE_MAX_SEND_WR) ? DEFAULT_OPBASE_MAX_SEND_WR : maxWrDepth;
@@ -348,8 +349,8 @@ inline void RpingRoceAttrInit(
 }
 
 inline HcclResult RpingUbAttrInit(
-    u32 deviceId, HcclIpAddress ipAddr, u32 port, u32 nodeNum, u32 bufferSize, u32 sl, u32 tc, PingInitAttr& initAttr,
-    std::map<Eid, uint32_t> eidmap)
+    u32 deviceId, HcclIpAddress ipAddr, [[maybe_unused]] u32 port, u32 nodeNum, u32 bufferSize, u32 sl, u32 tc,
+    PingInitAttr& initAttr, std::map<Eid, uint32_t> eidmap)
 {
     u32 maxWrDepth = nodeNum * WR_DEPTH_MULTIPLE;
     maxWrDepth = (maxWrDepth > DEFAULT_OPBASE_MAX_SEND_WR) ? DEFAULT_OPBASE_MAX_SEND_WR : maxWrDepth;
@@ -628,7 +629,8 @@ inline void RemoveMapInfo(
 }
 
 HcclResult PingMesh::RpingSendInitInfo(
-    u32 deviceId, u32 port, HcclIpAddress ipAddr, PingInitInfo initInfo, std::shared_ptr<HcclSocket> socket)
+    u32 deviceId, [[maybe_unused]] u32 port, HcclIpAddress ipAddr, PingInitInfo initInfo,
+    [[maybe_unused]] std::shared_ptr<HcclSocket> socket)
 {
     // 给当前线程添加名字
     SetThreadName("Hccl_PingMesh");
@@ -770,7 +772,7 @@ inline RpingLinkState ConvertHcclSocketStatus(HcclSocketStatus socketStatus)
 HcclResult PingMesh::HccnRaInit(u32 deviceId)
 {
     RaInitConfig config
-        = {devicePhyId_, static_cast<u32>(NICDeployment::NIC_DEPLOYMENT_DEVICE), HDC_SERVICE_TYPE_RDMA_V2};
+        = {devicePhyId_, static_cast<u32>(NICDeployment::NIC_DEPLOYMENT_DEVICE), HDC_SERVICE_TYPE_RDMA_V2, false};
     u32 rpingInterfaceVersion = 0;
     CHK_RET(NetworkManager::GetInstance(deviceLogicId_).PingMeshRaPingInit(deviceLogicId_, devicePhyId_, &config));
     CHK_RET(hrtRaGetInterfaceVersion(devicePhyId_, RPING_INTERFACE_OPCODE, &rpingInterfaceVersion));
@@ -1087,7 +1089,7 @@ PingMesh::HccnRpingAddTarget(u32 deviceId, u32 targetNum, RpingInput* input, Hcc
     }
     HCCL_INFO("[HccnRpingAddTarget]deviceId %u, targetNum %u", deviceId, targetNum);
     HcclResult ret = HCCL_SUCCESS;
-    PingTargetInfo target[1] = {{0}}; // hccp侧只能一个一个处理，因此数组大小固定为1
+    PingTargetInfo target[1] = {{}}; // hccp侧只能一个一个处理，因此数组大小固定为1
 
     ret = HccnTargetAttrInter(targetNum, input, config, target);
     if ((ret == HCCL_SUCCESS) && (rpingState_ == RpingState::INITED)) { // 从初始化完成的状态切换到ready to start的状态
@@ -1136,7 +1138,7 @@ HcclResult PingMesh::HccnTarRemoveAttrInter(
             break;
         }
         PingQpInfo* rdmainfo = &rdmaInfoMaps_[std::string(inputInter[i].dip.GetReadableIP())];
-        PingTargetInfo targetInfo{0};
+        PingTargetInfo targetInfo{};
         if (addressType == HCCN_RPING_ADDR_TYPE_IP) {
             retInter = RpingTargetAttrInit(targetInfo, inputInter[i], rdmainfo, false);
         }
@@ -1193,7 +1195,8 @@ HcclResult PingMesh::HccnRpingRemoveTarget(u32 deviceId, u32 targetNum, RpingInp
     return HCCL_SUCCESS;
 }
 
-HcclResult PingMesh::HccnRpingGetTarget(u32 deviceId, u32 targetNum, RpingInput* input, int* targetStat)
+HcclResult
+PingMesh::HccnRpingGetTarget([[maybe_unused]] u32 deviceId, u32 targetNum, RpingInput* input, int* targetStat)
 {
     CHK_PTR_NULL(input);
     CHK_PTR_NULL(targetStat);

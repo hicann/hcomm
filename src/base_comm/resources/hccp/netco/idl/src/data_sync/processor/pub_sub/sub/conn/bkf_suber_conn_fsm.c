@@ -26,6 +26,7 @@ extern "C" {
 #if BKF_BLOCK("私有函数定义")
 uint32_t BkfSubConnReConnTmrProc(void *paramTmrStart, void *noUse)
 {
+    (void)noUse;
     BkfSuberConn *conn = (BkfSuberConn *)paramTmrStart;
     BkfSuberSessSetDisconnectReason(conn->sessMng, BKF_SUBER_DISCONNECT_REASON_CONNECTFAIL);
     if (conn->urlTypeMng->connMng->env->onDisConn) {
@@ -39,6 +40,7 @@ uint32_t BkfSubConnReConnTmrProc(void *paramTmrStart, void *noUse)
 
 uint32_t BkfSubConnReConnTmrProcOnce(void *paramTmrStart, void *noUse)
 {
+    (void)noUse;
     BkfSuberConn *conn = (BkfSuberConn *)paramTmrStart;
     conn->reConnTmrId = VOS_NULL;
     BkfSuberSessResetDisconnectReason(conn->sessMng);
@@ -241,6 +243,8 @@ void BkfSuberConnDelChConn(BkfSuberConn *conn)
 
 uint32_t BkfSubConnActCreateConn(BkfSuberConn *conn, void *noUse1, void *noUse2)
 {
+    (void)noUse1;
+    (void)noUse2;
     BkfSuberConnStartReConnTmr(conn);
 
     uint32_t ret = BkfSuberConnCreateChConn(conn);
@@ -286,7 +290,7 @@ uint32_t BkfSuberConnSndHello(BkfSuberConn *conn)
             BkfUrlGetStr(&conn->puberUrl, urlStr, sizeof(urlStr)));
         return BKF_ERR;
     }
-    BkfMsgCoder coder = {{0}, 0};
+    BkfMsgCoder coder = {};
     BkfSuberEnv *env = connMng->env;
     ret = BkfMsgCodeInit(&coder, env->name, sendBuf, env->msgLenMax, env->sliceVTbl.keyLen, env->sliceVTbl.keyCodec,
         env->sliceVTbl.keyGetStrOrNull, connMng->log);
@@ -329,6 +333,8 @@ uint32_t BkfSuberConnSndHello(BkfSuberConn *conn)
 
 uint32_t BkfSubConnActSndHello(BkfSuberConn *conn, BkfMsgDecoder *decoder, void *param)
 {
+    (void)decoder;
+    (void)param;
     uint32_t ret = BkfSuberConnSndHello(conn);
     if (ret == BKF_OK) {
         (void)BKF_FSM_CHG_STATE(&conn->fsm, BACKFIN_SUB_CONN_STATE_WAIT_HELLO_ACK);
@@ -338,6 +344,7 @@ uint32_t BkfSubConnActSndHello(BkfSuberConn *conn, BkfMsgDecoder *decoder, void 
 
 uint32_t BkfSubConnChkHelloAck(BkfSuberConn *conn, BkfWrapMsgHelloAck *helloAck)
 {
+    (void)conn;
     BOOL isValid = (helloAck->reasonCode != VOS_NULL) && (helloAck->reasonCode->reasonCode == BKF_RC_OK);
     if (!isValid) {
         return BKF_ERR;
@@ -348,6 +355,7 @@ uint32_t BkfSubConnChkHelloAck(BkfSuberConn *conn, BkfWrapMsgHelloAck *helloAck)
 
 uint32_t BkfSubConnActRcvHelloAck(BkfSuberConn *conn, BkfMsgDecoder *decoder, void *param)
 {
+    (void)param;
     BkfWrapMsgHelloAck helloAck = {0};
     uint32_t ret = BkfSubConnParseHelloAck(conn, decoder, &helloAck);
     ret |= BkfSubConnChkHelloAck(conn, &helloAck);
@@ -395,6 +403,8 @@ uint32_t BkfSuberConnProcAfterSchedSess(BkfSuberConn *conn, BkfMsgCoder *coder, 
 
 uint32_t BkfSubConnActSchedSess(BkfSuberConn *conn, BkfMsgDecoder *decoder, void *param)
 {
+    (void)decoder;
+    (void)param;
     BkfSuberConnMng *connMng = conn->urlTypeMng->connMng;
     uint8_t *sendBuf = VOS_NULL;
     uint32_t ret = BkfSuberConnMallocSendBuf(conn, &sendBuf, BKF_CH_CLI_MALLOC_DATA_BUF_LEN_MAX);
@@ -404,7 +414,7 @@ uint32_t BkfSubConnActSchedSess(BkfSuberConn *conn, BkfMsgDecoder *decoder, void
     }
 
     BkfSuberEnv *env = connMng->env;
-    BkfMsgCoder coder = {{0}, 0};
+    BkfMsgCoder coder = {};
     (void)BkfMsgCodeInit(&coder, env->name, sendBuf, env->msgLenMax, env->sliceVTbl.keyLen, env->sliceVTbl.keyCodec,
         env->sliceVTbl.keyGetStrOrNull, connMng->log);
     /* 驱动处于SUB/UNSUB状态的session进行sub、verify/unsub操作,unsub操作只发送一次 */
@@ -414,6 +424,8 @@ uint32_t BkfSubConnActSchedSess(BkfSuberConn *conn, BkfMsgDecoder *decoder, void
 
 uint32_t BkfSubConnActTcpDisconn(BkfSuberConn *conn, BkfMsgDecoder *decoder, void *param)
 {
+    (void)decoder;
+    (void)param;
     /* 通知所有会话回退状态，并更新序列号 */
     BKF_LOG_DEBUG(conn->urlTypeMng->connMng->log, "Act disconnect\n");
     uint32_t ret = BkfSuberSessProcDisconn(conn->sessMng);
@@ -437,6 +449,8 @@ uint32_t BkfSubConnActTcpDisconn(BkfSuberConn *conn, BkfMsgDecoder *decoder, voi
 
 uint32_t BkfSubConnActReleaseFd(BkfSuberConn *conn, BkfMsgDecoder *decoder, void *param)
 {
+    (void)decoder;
+    (void)param;
     BKF_LOG_ERROR(conn->urlTypeMng->connMng->log, "Rcv Release FD Msg.\n"); // 记录里程碑
     BkfSuberConnDelChConn(conn);
     (void)BKF_FSM_CHG_STATE(&conn->fsm, BACKFIN_SUB_CONN_STATE_CRTINGFD); // 回退到初始状态

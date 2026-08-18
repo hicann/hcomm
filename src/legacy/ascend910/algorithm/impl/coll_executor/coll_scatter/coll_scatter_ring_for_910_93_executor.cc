@@ -261,7 +261,7 @@ HcclResult CollScatterRingFor91093Executor::KernelRunLevel0(const OpParam& param
     HCCL_INFO("scatter ring/scatter ring direct: using multiring algo inner-server.");
     HcomCollOpInfo* scatterOpInfoPtr = nullptr;
     HcomCollOpInfo scatterOpInfo
-        = {"", nullptr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType, subRoot_};
+        = {"", nullptr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType, subRoot_, param.reduceType, 0};
     if (DMAReduceFlag_) {
         scatterOpInfoPtr = &scatterOpInfo;
     }

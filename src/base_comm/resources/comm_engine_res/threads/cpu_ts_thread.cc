@@ -186,19 +186,20 @@ void CpuTsThread::TryLaunchTask() const
 }
 
 // Local Data Plane Functions
-HcclResult CpuTsThread::LocalNotifyRecord(uint32_t notifyId) const
+HcclResult CpuTsThread::LocalNotifyRecord([[maybe_unused]] uint32_t notifyId) const
 {
     HCCL_ERROR("[CpuTsThread][%s]not support", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CpuTsThread::LocalNotifyWait(uint32_t notifyId) const
+HcclResult CpuTsThread::LocalNotifyWait([[maybe_unused]] uint32_t notifyId) const
 {
     HCCL_ERROR("[CpuTsThread][%s]not support", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CpuTsThread::LocalNotifyRecord(ThreadHandle dstThread, uint32_t dstNotifyIdx) const
+HcclResult
+CpuTsThread::LocalNotifyRecord([[maybe_unused]] ThreadHandle dstThread, [[maybe_unused]] uint32_t dstNotifyIdx) const
 {
 #ifndef CCL_KERNEL_AICPU
     u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
@@ -226,7 +227,7 @@ HcclResult CpuTsThread::LocalNotifyRecord(ThreadHandle dstThread, uint32_t dstNo
     return HCCL_SUCCESS;
 }
 
-HcclResult CpuTsThread::LocalNotifyWait(uint32_t notifyIdx, uint32_t timeOut) const
+HcclResult CpuTsThread::LocalNotifyWait([[maybe_unused]] uint32_t notifyIdx, [[maybe_unused]] uint32_t timeOut) const
 {
 #ifndef CCL_KERNEL_AICPU
     u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
@@ -251,7 +252,8 @@ HcclResult CpuTsThread::LocalNotifyWait(uint32_t notifyIdx, uint32_t timeOut) co
     return HCCL_SUCCESS;
 }
 
-HcclResult CpuTsThread::LocalCopy(void* dst, const void* src, uint64_t sizeByte) const
+HcclResult CpuTsThread::LocalCopy(
+    [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t sizeByte) const
 {
 #ifndef CCL_KERNEL_AICPU
     u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
@@ -276,7 +278,8 @@ HcclResult CpuTsThread::LocalCopy(void* dst, const void* src, uint64_t sizeByte)
 }
 
 HcclResult CpuTsThread::LocalReduce(
-    void* dst, const void* src, uint64_t sizeByte, HcommDataType dataType, HcommReduceOp reduceOp) const
+    [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t sizeByte,
+    [[maybe_unused]] HcommDataType dataType, [[maybe_unused]] HcommReduceOp reduceOp) const
 {
 #ifndef CCL_KERNEL_AICPU
     u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();

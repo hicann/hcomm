@@ -24,7 +24,7 @@ HcclResult AicpuProfilingManager::ReportTaskInfo()
     SqeContext* context = GetSqeContext();
     auto ctx = AicpuGetComContext();
     CHK_PTR_NULL(context->buffPtr);
-    MsprofAicpuHcclTaskInfo taskInfos[HCCLINFO_REPORT_BATCH_NUM] = {0};
+    MsprofAicpuHcclTaskInfo taskInfos[HCCLINFO_REPORT_BATCH_NUM] = {};
     for (uint32_t streamId = 0; streamId < AC_MAX_RANK_NUM; streamId++) {
         auto& buff = context->buffPtr[streamId];
         uint16_t& lastSqeIdx = ctx->profilingExtendInfo.lastSqeIdxs[streamId];

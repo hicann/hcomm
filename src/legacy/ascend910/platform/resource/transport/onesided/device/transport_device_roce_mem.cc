@@ -27,74 +27,85 @@ TransportDeviceRoceMem::TransportDeviceRoceMem(
 TransportDeviceRoceMem::~TransportDeviceRoceMem() {}
 
 HcclResult TransportDeviceRoceMem::ExchangeMemDesc(
-    const RmaMemDescs& localMemDescs, RmaMemDescs& remoteMemDescs, u32& actualNumOfRemote)
+    [[maybe_unused]] const RmaMemDescs& localMemDescs, [[maybe_unused]] RmaMemDescs& remoteMemDescs,
+    [[maybe_unused]] u32& actualNumOfRemote)
 {
     HCCL_ERROR("TransportDeviceRoceMem doesn't support ExchangeMemDesc");
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TransportDeviceRoceMem::EnableMemAccess(const RmaMemDesc& remoteMemDesc, RmaMem& remoteMem)
+HcclResult TransportDeviceRoceMem::EnableMemAccess(
+    [[maybe_unused]] const RmaMemDesc& remoteMemDesc, [[maybe_unused]] RmaMem& remoteMem)
 {
     HCCL_ERROR("TransportDeviceRoceMem doesn't support EnableMemAccess");
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TransportDeviceRoceMem::DisableMemAccess(const RmaMemDesc& remoteMemDesc)
+HcclResult TransportDeviceRoceMem::DisableMemAccess([[maybe_unused]] const RmaMemDesc& remoteMemDesc)
 {
     HCCL_ERROR("TransportDeviceRoceMem doesn't support DisableMemAccess");
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TransportDeviceRoceMem::SetSocket(const std::shared_ptr<HcclSocket>& socket)
+HcclResult TransportDeviceRoceMem::SetSocket([[maybe_unused]] const std::shared_ptr<HcclSocket>& socket)
 {
     HCCL_ERROR("TransportDeviceRoceMem doesn't support SetSocket");
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TransportDeviceRoceMem::Connect(s32 timeoutSec)
+HcclResult TransportDeviceRoceMem::Connect([[maybe_unused]] s32 timeoutSec)
 {
     HCCL_ERROR("TransportDeviceRoceMem doesn't support Connect");
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TransportDeviceRoceMem::Write(const HcclBuf& remoteMem, const HcclBuf& localMem, const rtStream_t& stream)
+HcclResult TransportDeviceRoceMem::Write(
+    [[maybe_unused]] const HcclBuf& remoteMem, [[maybe_unused]] const HcclBuf& localMem,
+    [[maybe_unused]] const rtStream_t& stream)
 {
     HCCL_ERROR("TransportDeviceRoceMem doesn't support HcclBuf Write");
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TransportDeviceRoceMem::Read(const HcclBuf& localMem, const HcclBuf& remoteMem, const rtStream_t& stream)
+HcclResult TransportDeviceRoceMem::Read(
+    [[maybe_unused]] const HcclBuf& localMem, [[maybe_unused]] const HcclBuf& remoteMem,
+    [[maybe_unused]] const rtStream_t& stream)
 {
     HCCL_ERROR("TransportDeviceRoceMem doesn't support HcclBuf Read");
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TransportDeviceRoceMem::Write(const RmaOpMem& remoteMem, const RmaOpMem& localMem, const rtStream_t& stream)
+HcclResult TransportDeviceRoceMem::Write(
+    [[maybe_unused]] const RmaOpMem& remoteMem, [[maybe_unused]] const RmaOpMem& localMem,
+    [[maybe_unused]] const rtStream_t& stream)
 {
     HCCL_ERROR("TransportDeviceRoceMem doesn't support RmaOpMem Write");
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TransportDeviceRoceMem::Read(const RmaOpMem& localMem, const RmaOpMem& remoteMem, const rtStream_t& stream)
+HcclResult TransportDeviceRoceMem::Read(
+    [[maybe_unused]] const RmaOpMem& localMem, [[maybe_unused]] const RmaOpMem& remoteMem,
+    [[maybe_unused]] const rtStream_t& stream)
 {
     HCCL_ERROR("TransportDeviceRoceMem doesn't support RmaOpMem Read");
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TransportDeviceRoceMem::AddOpFence(const rtStream_t& stream)
+HcclResult TransportDeviceRoceMem::AddOpFence([[maybe_unused]] const rtStream_t& stream)
 {
     HCCL_ERROR("TransportDeviceRoceMem doesn't support HOST AddOpFence");
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TransportDeviceRoceMem::GetTransInfo(
-    HcclQpInfoV2& qpInfo, u32* lkey, u32* rkey, HcclBuf* localMem, HcclBuf* remoteMem, u32 num)
+    [[maybe_unused]] HcclQpInfoV2& qpInfo, [[maybe_unused]] u32* lkey, [[maybe_unused]] u32* rkey,
+    [[maybe_unused]] HcclBuf* localMem, [[maybe_unused]] HcclBuf* remoteMem, [[maybe_unused]] u32 num)
 {
     HCCL_ERROR("TransportDeviceRoceMem doesn't support GetTransInfo");
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TransportDeviceRoceMem::WaitOpFence(const rtStream_t& stream)
+HcclResult TransportDeviceRoceMem::WaitOpFence([[maybe_unused]] const rtStream_t& stream)
 {
     HCCL_ERROR("TransportDeviceRoceMem doesn't support WaitOpFence");
     return HCCL_E_NOT_SUPPORT;
@@ -295,8 +306,8 @@ HcclResult TransportDeviceRoceMem::RdmaPostSend(
             "[TransportDeviceRoceMem][RdmaPostSend] buffer size is:%u over SEND_WR_LEN: %u", memNum, SEND_WR_LEN),
         HCCL_E_PARA);
     const u32 last = memNum - 1;
-    struct ibv_send_wr sendWr[SEND_WR_LEN] = {0};
-    struct ibv_sge sge[SEND_WR_LEN] = {0};
+    struct ibv_send_wr sendWr[SEND_WR_LEN] = {};
+    struct ibv_sge sge[SEND_WR_LEN] = {};
     for (u32 index = 0; index < memNum; index++) {
         // 设置WR的SGE
         sge[index].addr = localMems[index].addr;
@@ -322,7 +333,7 @@ HcclResult TransportDeviceRoceMem::RdmaPostSend(
     }
 
     struct ibv_send_wr* badWr = nullptr;
-    struct WrExpRsp exp_rsp = {0};
+    struct WrExpRsp exp_rsp = {};
     struct ibv_qp* qp = reinterpret_cast<struct ibv_qp*>(qpInfo_.qpPtr);
     CHK_PTR_NULL(qp);
     HCCL_DEBUG(

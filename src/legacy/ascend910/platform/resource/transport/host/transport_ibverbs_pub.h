@@ -82,7 +82,7 @@ using WqeInfo = struct TagWqeInfo {
     u32 notifyId;
     TagWqeInfo() : wqeType(static_cast<u64>(WqeType::WQE_TYPE_DATA)), wqeDataOffset(0), notifyId(INVALID_UINT)
     {
-        wqeData = {0};
+        wqeData = {};
     }
 };
 

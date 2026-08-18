@@ -28,37 +28,40 @@ DlProfFunction::~DlProfFunction()
     }
 }
 
-int32_t MsprofRegisterCallbackStub(uint32_t moduleId, ProfCommandHandle handle)
+int32_t MsprofRegisterCallbackStub([[maybe_unused]] uint32_t moduleId, [[maybe_unused]] ProfCommandHandle handle)
 {
     HCCL_WARNING("Entry MsprofRegisterCallbackStub");
     return 0;
 }
 
-int32_t MsprofRegTypeInfoStub(uint16_t level, uint32_t typeId, const char* typeName)
+int32_t MsprofRegTypeInfoStub(
+    [[maybe_unused]] uint16_t level, [[maybe_unused]] uint32_t typeId, [[maybe_unused]] const char* typeName)
 {
     HCCL_WARNING("Entry MsprofRegTypeInfoStub");
     return 0;
 }
 
-int32_t MsprofReportApiStub(uint32_t agingFlag, const MsprofApi* api)
+int32_t MsprofReportApiStub([[maybe_unused]] uint32_t agingFlag, [[maybe_unused]] const MsprofApi* api)
 {
     HCCL_WARNING("Entry MsprofReportApiStub");
     return 0;
 }
 
-int32_t MsprofReportCompactInfoStub(uint32_t agingFlag, const VOID_PTR data, uint32_t length)
+int32_t MsprofReportCompactInfoStub(
+    [[maybe_unused]] uint32_t agingFlag, [[maybe_unused]] const VOID_PTR data, [[maybe_unused]] uint32_t length)
 {
     HCCL_WARNING("Entry MsprofReportCompactInfoStub");
     return 0;
 }
 
-int32_t MsprofReportAdditionalInfoStub(uint32_t agingFlag, const VOID_PTR data, uint32_t length)
+int32_t MsprofReportAdditionalInfoStub(
+    [[maybe_unused]] uint32_t agingFlag, [[maybe_unused]] const VOID_PTR data, [[maybe_unused]] uint32_t length)
 {
     HCCL_WARNING("Entry MsprofReportAdditionalInfoStub");
     return 0;
 }
 
-uint64_t MsprofStr2IdStub(const char* hashInfo, uint32_t length)
+uint64_t MsprofStr2IdStub([[maybe_unused]] const char* hashInfo, [[maybe_unused]] uint32_t length)
 {
     HCCL_WARNING("Entry MsprofStr2IdStub");
     return 0;

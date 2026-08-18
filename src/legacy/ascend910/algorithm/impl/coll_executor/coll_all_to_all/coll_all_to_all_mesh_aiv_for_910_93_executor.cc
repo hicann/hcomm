@@ -64,8 +64,8 @@ HcclResult CollAlltoAllMeshAivFor91093Executor::CalcLevel0CommInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAlltoAllMeshAivFor91093Executor::CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize, HcclCMDType cmdType)
+HcclResult CollAlltoAllMeshAivFor91093Executor::CalNumBlocks(
+    u32& numBlocks, u32 rankSize, [[maybe_unused]] u64 dataSize, [[maybe_unused]] HcclCMDType cmdType)
 {
     // A3超节点内多机场景，numBlocks_需要为偶数
     numBlocks = (rankSize < MAX_NUM_BLOCKS ? rankSize + rankSize % NUM_BLOCKS_FACTOR_TWO : MAX_NUM_BLOCKS);

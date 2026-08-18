@@ -37,7 +37,7 @@ HcclResult hrtOpenTsd()
 #endif
 }
 
-HcclResult __hrtOpenNetService(rtNetServiceOpenArgs* openArgs)
+HcclResult __hrtOpenNetService([[maybe_unused]] rtNetServiceOpenArgs* openArgs)
 {
 #if !defined(CCL_KERNEL) && !defined(HCCD)
     aclError aclret = rtOpenNetService(openArgs);
@@ -71,7 +71,8 @@ HcclResult __hrtCloseNetService()
 }
 weak_alias(__hrtCloseNetService, hrtCloseNetService);
 
-HcclResult hrtTsdCapabilityGet(uint32_t deviceLogicId, int32_t type, uint64_t ptr)
+HcclResult hrtTsdCapabilityGet(
+    [[maybe_unused]] uint32_t deviceLogicId, [[maybe_unused]] int32_t type, [[maybe_unused]] uint64_t ptr)
 {
 #ifndef HCCD
     uint32_t tdtStatus = DlTdtFunction::GetInstance().dlTsdCapabilityGet(deviceLogicId, type, ptr);

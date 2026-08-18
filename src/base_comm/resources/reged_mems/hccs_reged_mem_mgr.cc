@@ -21,7 +21,7 @@ HccsRegedMemMgr::HccsRegedMemMgr(HcclNetDevCtx netDevCtx) { netDevCtx_ = netDevC
 
 HccsRegedMemMgr::~HccsRegedMemMgr() { allRegisteredBuffers_.clear(); }
 
-HcclResult HccsRegedMemMgr::RegisterMemory(HcommMem mem, const char* memTag, void** memHandle)
+HcclResult HccsRegedMemMgr::RegisterMemory(HcommMem mem, [[maybe_unused]] const char* memTag, void** memHandle)
 {
     HCCL_INFO("[%s] Begin", __FUNCTION__);
     CHK_RET(ValidateMemParams(mem, memHandle));

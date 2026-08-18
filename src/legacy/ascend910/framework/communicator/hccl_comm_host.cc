@@ -191,7 +191,8 @@ HcclResult hcclComm::InitIndependentOp()
 
 IndependentOp& hcclComm::GetIndependentOp() { return independentOp_; }
 HcclResult hcclComm::PrepareChannelMem(
-    const std::string& tag, TransportIOMem& transMem, const HcclMemHandle* memHandles, uint32_t memHandleNum)
+    [[maybe_unused]] const std::string& tag, TransportIOMem& transMem, const HcclMemHandle* memHandles,
+    uint32_t memHandleNum)
 {
     // 获取本地cclbuffer
     CommBuffer commBuffer;

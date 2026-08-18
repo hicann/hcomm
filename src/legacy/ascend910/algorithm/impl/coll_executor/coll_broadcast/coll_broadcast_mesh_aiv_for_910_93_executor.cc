@@ -76,8 +76,8 @@ HcclResult CollBroadcastMeshAivFor91093Executor::CalcScratchMemSize(u64& scratch
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollBroadcastMeshAivFor91093Executor::CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize, HcclCMDType cmdType)
+HcclResult CollBroadcastMeshAivFor91093Executor::CalNumBlocks(
+    u32& numBlocks, u32 rankSize, [[maybe_unused]] u64 dataSize, [[maybe_unused]] HcclCMDType cmdType)
 {
     // Step1. 计算最佳块维度
     const u32 bestNumBlock = std::min(rankSize - 1, MAX_NUM_BLOCKS);

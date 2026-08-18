@@ -615,7 +615,7 @@ HcclResult TopoInfoExchangeAgent::SetTransportInfo(RankTable_t& clusterInfo)
             clusterInfo.rankList.size(), localRankInfo_.rank),
         HCCL_E_INTERNAL);
     RankInfo_t& myRankInfo = clusterInfo.rankList[localRankInfo_.rank];
-    TransportInfo_t transportInfo = {0};
+    TransportInfo_t transportInfo = {};
 
     for (u32 index = 0; index < clusterInfo.rankList.size(); index++) {
         transportInfo.dstRankId = clusterInfo.rankList[index].rankId;

@@ -266,7 +266,7 @@ HcclResult AicpuTsHccsChannel::EnableMemAccess()
     CHK_RET(SalGetBareTgid(&pid));
     // switch first
     HcommMemGrantInfo localGrantInfo = {localEp_.loc.device.superDevId, pid};
-    HcommMemGrantInfo remoteGrantInfo = {0};
+    HcommMemGrantInfo remoteGrantInfo = {};
     if (isSocketServer_) {
         CHK_RET(socket_->Recv(&remoteGrantInfo, sizeof(HcommMemGrantInfo)));
         CHK_RET(socket_->Send(&localGrantInfo, sizeof(HcommMemGrantInfo)));
@@ -330,7 +330,7 @@ HcclResult AicpuTsHccsChannel::Init()
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsHccsChannel::GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos)
+HcclResult AicpuTsHccsChannel::GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, [[maybe_unused]] char*** memInfos)
 {
     remoteIpcRmaBufferVec_.clear();
     CHK_RET(localEpPtr_->GetRemoteIpcRmaBuffer(remoteIpcRmaBufferVec_));
@@ -465,31 +465,36 @@ HcclResult AicpuTsHccsChannel::Resume()
 
 HcommChannelKind AicpuTsHccsChannel::GetChannelKind() const { return HcommChannelKind::AICPU_TS_HCCS; }
 
-HcclResult AicpuTsHccsChannel::NotifyRecord(const uint32_t remoteNotifyIdx)
+HcclResult AicpuTsHccsChannel::NotifyRecord([[maybe_unused]] const uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[AicpuTsHccsChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsHccsChannel::NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout)
+HcclResult
+AicpuTsHccsChannel::NotifyWait([[maybe_unused]] const uint32_t localNotifyIdx, [[maybe_unused]] const uint32_t timeout)
 {
     HCCL_INFO("[AicpuTsHccsChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsHccsChannel::WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx)
+HcclResult AicpuTsHccsChannel::WriteWithNotify(
+    [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] const uint64_t len,
+    [[maybe_unused]] uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[AicpuTsHccsChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsHccsChannel::Write(void* dst, const void* src, uint64_t len)
+HcclResult
+AicpuTsHccsChannel::Write([[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t len)
 {
     HCCL_INFO("[AicpuTsHccsChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsHccsChannel::Read(void* dst, const void* src, uint64_t len)
+HcclResult
+AicpuTsHccsChannel::Read([[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t len)
 {
     HCCL_INFO("[AicpuTsHccsChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;

@@ -203,7 +203,8 @@ SaveDfxTaskInfo(const CommunicatorImpl& comm, const TaskParam& taskParam, const 
 }
 
 void Interpret(
-    const InsPostReady& insPostReady, CommunicatorImpl& comm, const Stream& stream, const OpTaskConfig& taskConfig)
+    const InsPostReady& insPostReady, CommunicatorImpl& comm, const Stream& stream,
+    [[maybe_unused]] const OpTaskConfig& taskConfig)
 {
     GetTransport(insPostReady, comm)->Post(NOTIFY_INDEX_READY, stream);
 }
@@ -215,7 +216,8 @@ void Interpret(
 }
 
 void Interpret(
-    const InsPostFin& insPostFin, CommunicatorImpl& comm, const Stream& stream, const OpTaskConfig& taskConfig)
+    const InsPostFin& insPostFin, CommunicatorImpl& comm, const Stream& stream,
+    [[maybe_unused]] const OpTaskConfig& taskConfig)
 {
     GetTransport(insPostFin, comm)->Post(NOTIFY_INDEX_FIN, stream);
 }
@@ -227,7 +229,8 @@ void Interpret(
 }
 
 void Interpret(
-    const InsPostFinAck& insPostFinAck, CommunicatorImpl& comm, const Stream& stream, const OpTaskConfig& taskConfig)
+    const InsPostFinAck& insPostFinAck, CommunicatorImpl& comm, const Stream& stream,
+    [[maybe_unused]] const OpTaskConfig& taskConfig)
 {
     GetTransport(insPostFinAck, comm)->Post(NOTIFY_INDEX_FIN_ACK, stream);
 }
@@ -288,7 +291,8 @@ void Interpret(const InsWrite& insWrite, CommunicatorImpl& comm, const Stream& s
 }
 
 void Interpret(
-    const InsReadReduce& insReadReduce, CommunicatorImpl& comm, const Stream& stream, const OpTaskConfig& taskConfig)
+    const InsReadReduce& insReadReduce, CommunicatorImpl& comm, const Stream& stream,
+    [[maybe_unused]] const OpTaskConfig& taskConfig)
 {
     VerifyDataSliceIsEqual(insReadReduce);
     RmaBufferSlice locSlice;
@@ -303,7 +307,8 @@ void Interpret(
 }
 
 void Interpret(
-    const InsWriteReduce& insWriteReduce, CommunicatorImpl& comm, const Stream& stream, const OpTaskConfig& taskConfig)
+    const InsWriteReduce& insWriteReduce, CommunicatorImpl& comm, const Stream& stream,
+    [[maybe_unused]] const OpTaskConfig& taskConfig)
 {
     VerifyDataSliceIsEqual(insWriteReduce);
     RmaBufferSlice locSlice;
@@ -319,7 +324,7 @@ void Interpret(
 
 void Interpret(
     const InsWriteWithFin& insWriteWithFin, CommunicatorImpl& comm, const Stream& stream,
-    const OpTaskConfig& taskConfig)
+    [[maybe_unused]] const OpTaskConfig& taskConfig)
 {
     VerifyDataSliceIsEqual(insWriteWithFin);
     RmaBufferSlice locSlice = PrepareRmaBufferSlice(insWriteWithFin, comm); // InsWriteWithFin当前不支持P2P
@@ -330,7 +335,7 @@ void Interpret(
 
 void Interpret(
     const InsWriteReduceWithFin& insWriteReduceWithFin, CommunicatorImpl& comm, const Stream& stream,
-    const OpTaskConfig& taskConfig)
+    [[maybe_unused]] const OpTaskConfig& taskConfig)
 {
     VerifyDataSliceIsEqual(insWriteReduceWithFin);
     RmaBufferSlice locSlice = PrepareRmaBufferSlice(insWriteReduceWithFin, comm); // InsWriteReduceWithFin当前不支持P2P
@@ -342,7 +347,8 @@ void Interpret(
 }
 
 void Interpret(
-    const InsLocalPostTo& insLocalPostTo, CommunicatorImpl& comm, const Stream& stream, const OpTaskConfig& taskConfig)
+    const InsLocalPostTo& insLocalPostTo, CommunicatorImpl& comm, const Stream& stream,
+    [[maybe_unused]] const OpTaskConfig& taskConfig)
 {
     TaskParam taskParam{};
     taskParam.beginTime = DlProfFunction::GetInstance().dlMsprofSysCycleTime();
@@ -441,7 +447,7 @@ void Interpret(
 
 void Interpret(
     const InsLocalBcastPost& insLocalBcastPost, CommunicatorImpl& comm, const Stream& stream,
-    const OpTaskConfig& taskConfig)
+    [[maybe_unused]] const OpTaskConfig& taskConfig)
 {
     TaskParam taskParam{};
     taskParam.beginTime = DlProfFunction::GetInstance().dlMsprofSysCycleTime();
@@ -465,7 +471,8 @@ void Interpret(
 }
 
 void Interpret(
-    const InsLocalCopy& insLocalCopy, CommunicatorImpl& comm, const Stream& stream, const OpTaskConfig& taskConfig)
+    const InsLocalCopy& insLocalCopy, CommunicatorImpl& comm, const Stream& stream,
+    [[maybe_unused]] const OpTaskConfig& taskConfig)
 {
     if (insLocalCopy.GetSrcSlice().GetSize() == 0) {
         return;
@@ -513,7 +520,8 @@ inline void CheckLocalReduceIns(const InsLocalReduce& ins)
 }
 
 void Interpret(
-    const InsLocalReduce& insLocalReduce, CommunicatorImpl& comm, const Stream& stream, const OpTaskConfig& taskConfig)
+    const InsLocalReduce& insLocalReduce, CommunicatorImpl& comm, const Stream& stream,
+    [[maybe_unused]] const OpTaskConfig& taskConfig)
 {
     HCCL_INFO("%s Instruction %s", __func__, insLocalReduce.Describe().c_str());
     // SDMA支持的Reduce，则使用 sdmaReduce
@@ -652,8 +660,9 @@ static void GetCcuProfilingInfo(
 }
 
 static void FastLoadSaveParams(
-    const CcuInstruction& ccuInstruction, CommunicatorImpl& comm, const OpTaskConfig& taskConfig, const Stream& stream,
-    std::vector<std::vector<CcuTaskParam>>& ccuParams, std::vector<std::vector<CcuProfilingInfo>>& ccuProfilingInfo)
+    const CcuInstruction& ccuInstruction, CommunicatorImpl& comm, [[maybe_unused]] const OpTaskConfig& taskConfig,
+    const Stream& stream, std::vector<std::vector<CcuTaskParam>>& ccuParams,
+    std::vector<std::vector<CcuProfilingInfo>>& ccuProfilingInfo)
 {
     std::size_t totalSize = 0;
     for (const auto& ccuParam : ccuParams) {

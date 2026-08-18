@@ -90,9 +90,14 @@ HcclResult CollAllGatherHccsSioExecutor::CalcTransportMemType(TransportMemType& 
 HcclResult CollAllGatherHccsSioExecutor::KernelRun(const OpParam& param, ExecMem& execMem)
 {
     HCCL_CONFIG_INFO(HCCL_ALG, "[%s] The AllGatherHccsSioExecutor starts.", __func__);
-    HcomCollOpInfo opInfo
-        = {"",         execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType,
-           param.root, param.reduceType};
+    HcomCollOpInfo opInfo = {"",
+                             execMem.inputPtr,
+                             execMem.outputPtr,
+                             param.DataDes.count,
+                             param.DataDes.dataType,
+                             param.root,
+                             param.reduceType,
+                             0};
 
     // step 1 先获取 comm inner \ comm outer 的value
     CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));

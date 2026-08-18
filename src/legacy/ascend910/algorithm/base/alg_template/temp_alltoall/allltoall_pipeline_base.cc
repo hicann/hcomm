@@ -178,7 +178,7 @@ HcclResult AlltoallPipelineBase::GetNslbAdjInfo(
         u32 nextRank = (rank + 1 + step) % rankSize;
         LINK nslbNext = links[nextRank];
         CHK_SMART_PTR_NULL(nslbNext);
-        NslbDpAdjInfo nextInfoStep = {0};
+        NslbDpAdjInfo nextInfoStep = {};
         nextInfoStep.dstLocalRankId = nslbNext->GetRemoteRank();
         nextInfoStep.phaseId = step + 1;
         nextInfoStep.rev = 0;

@@ -208,9 +208,13 @@ HcclResult TransportBase::Wait(u32 notifyIdx, Stream& stream, const u32 timeOut)
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TransportBase::TxEnv(const void* ptr, const u64 len, Stream& stream) { return HCCL_SUCCESS; }
+HcclResult
+TransportBase::TxEnv([[maybe_unused]] const void* ptr, [[maybe_unused]] const u64 len, [[maybe_unused]] Stream& stream)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult TransportBase::RxEnv(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportBase::RxEnv([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
 HcclResult TransportBase::TxWithReduce(
     UserMemType dstMemType, u64 dstOffset, const void* src, u64 len, const HcclDataType datatype, HcclReduceOp redOp,
@@ -268,7 +272,8 @@ HcclResult TransportBase::RxWithReduce(
 
 bool TransportBase::IsSupportTransportWithReduce() { return false; }
 
-HcclResult TransportBase::GetIndOpRemoteMemDetails(MemDetails** remoteMem, uint32_t* memNum, HcclMemType memType)
+HcclResult
+TransportBase::GetIndOpRemoteMemDetails(MemDetails** remoteMem, uint32_t* memNum, [[maybe_unused]] HcclMemType memType)
 {
     static_cast<void>(remoteMem);
     static_cast<void>(memNum);

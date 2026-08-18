@@ -222,6 +222,7 @@ BkfIJob *WfwJobxBuildIJob(WfwJobxMng *jobxMng, BkfIJob *temp)
 /* proc & on msg */
 STATIC void WfwJobxOnTrigTmrFd(int fd, uint32_t curEvents, WfwJobxMng *jobxMng)
 {
+    (void)curEvents;
     ssize_t rlen;
     uint64_t temp;
     int ret;
@@ -277,6 +278,7 @@ STATIC uint32_t WfwJobxInitTrigTmr(WfwJobxMng *jobxMng)
 #if (WFW_JOBX_SCHED_MODE == WFW_JOBX_SCHED_BY_EVT)
 STATIC void WfwJobxOnTrigEvtFd(int fd, uint32_t curEvents, WfwJobxMng *jobxMng)
 {
+    (void)curEvents;
     int ret;
     eventfd_t value;
 
@@ -811,6 +813,7 @@ STATIC void WfwJobxDelTypeAllId(WfwJobxMng *jobxMng, BkfJobxType *jobxType)
 
 STATIC void WfwJobxMoveId2Tail(WfwJobxMng *jobxMng, BkfJobId *jobId)
 {
+    (void)jobxMng;
     if (BKF_DL_NODE_IS_IN(&jobId->dlNode)) {
         BKF_DL_REMOVE(&jobId->dlNode);
     }
@@ -820,6 +823,7 @@ STATIC void WfwJobxMoveId2Tail(WfwJobxMng *jobxMng, BkfJobId *jobId)
 
 STATIC BkfJobId *WfwJobxGetFirstId(WfwJobxMng *jobxMng, BkfJobxType *jobxType, void **itorOutOrNull)
 {
+    (void)jobxMng;
     BkfDlNode *tempNode = VOS_NULL;
     BkfJobId *jobId = VOS_NULL;
 
@@ -841,6 +845,7 @@ STATIC BkfJobId *WfwJobxGetFirstId(WfwJobxMng *jobxMng, BkfJobxType *jobxType, v
 
 STATIC BkfJobId *WfwJobxGetNextId(WfwJobxMng *jobxMng, BkfJobxType *jobxType, void **itorInOut)
 {
+    (void)jobxMng;
     BkfDlNode *tempNode = VOS_NULL;
     BkfJobId *jobId = VOS_NULL;
 

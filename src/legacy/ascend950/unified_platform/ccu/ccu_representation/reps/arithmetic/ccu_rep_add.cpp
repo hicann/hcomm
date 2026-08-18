@@ -66,7 +66,7 @@ namespace CcuRep {
         SetCommonInfo();
     }
 
-    bool CcuRepAdd::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepAdd::Translate(CcuInstr*& instr, uint16_t& instrId, [[maybe_unused]] const TransDep& dep)
     {
         CHECK_NULLPTR(instr, "[CcuRepAdd::Translate] instr is nullptr!");
         this->instrId = instrId;

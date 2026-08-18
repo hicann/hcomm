@@ -124,6 +124,7 @@ uint32_t BkfPuberConnFsmProc(BkfPuberConn *conn, uint8_t evtId, void *param)
 
 BOOL BkfPuberMaySchedSess(void *puberConn)
 {
+    (void)puberConn;
     return VOS_TRUE; /* 可测试性考虑 */
 }
 
@@ -132,6 +133,7 @@ BOOL BkfPuberMaySchedSess(void *puberConn)
 #if BKF_BLOCK("私有函数定义")
 STATIC uint32_t BkfPuberConnProcHello(BkfPuberConn *conn, BkfMsgDecoder *decoder, void *unused2)
 {
+    (void)unused2;
     BkfPuberConnMng *connMng = conn->connMng;
     BkfWrapMsgHello hello = {0};
     uint8_t urlStr[BKF_URL_STR_LEN_MAX];
@@ -176,8 +178,10 @@ STATIC uint32_t BkfPuberConnProcHello(BkfPuberConn *conn, BkfMsgDecoder *decoder
 
 STATIC uint32_t BkfPuberConnTry2SendHelloAck(BkfPuberConn *conn, void *unused1, void *unused2)
 {
+    (void)unused1;
+    (void)unused2;
     uint8_t *sendBuf = VOS_NULL;
-    BkfMsgCoder coder = {{0}, 0};
+    BkfMsgCoder coder = {};
     BkfPuberConnInitSendBufAndCoder(conn, &sendBuf, &coder);
     if (sendBuf == VOS_NULL) {
         return BKF_ERR; /* 等待解阻塞 */
@@ -207,12 +211,16 @@ STATIC uint32_t BkfPuberConnTry2SendHelloAck(BkfPuberConn *conn, void *unused1, 
 
 STATIC uint32_t BkfPuberConnJobSchedSess(BkfPuberConn *conn, void *unused1, void *unused2)
 {
+    (void)unused1;
+    (void)unused2;
     /* 尽力发送，直到阻塞、发完或者错误。对于第一种情况，底层会上报解阻塞以继续发送 */
     return BkfPuberConnDoSchedSess(conn, VOS_FALSE, VOS_NULL);
 }
 
 STATIC uint32_t BkfPuberConnTmrSchedSess(BkfPuberConn *conn, void *unused1, void *unused2)
 {
+    (void)unused1;
+    (void)unused2;
     BkfPuberConnMng *connMng = conn->connMng;
     BkfPuberSessSlowSchedCtx ctx = {0};
 
@@ -409,7 +417,7 @@ STATIC uint32_t BkfPuberConnDoSchedSess(BkfPuberConn *conn, BOOL isSlowSched, vo
 
     BkfPuberConnMng *connMng = conn->connMng;
     uint8_t *sendBuf = VOS_NULL;
-    BkfMsgCoder coder = {{0}, 0};
+    BkfMsgCoder coder = {};
     do {
         BOOL isFastSchedInTest = !isSlowSched && !BkfPuberMaySchedSess(conn);
         if (isFastSchedInTest) {

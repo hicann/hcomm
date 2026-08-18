@@ -54,8 +54,8 @@ HcclResult CollRunAlltoAllDirectFullmesh::GetAdjInfo(AlgResourceResponse& algRes
 {
     HCCL_INFO("[GetAdjInfo-nslbdp] GetAdjInfo.");
     algResResp_ = &algRes;
-    SubCommInfo levelCommInfo = {0};
-    AdjInfo nslbAdjInfo = {0};
+    SubCommInfo levelCommInfo = {};
+    AdjInfo nslbAdjInfo = {};
     u32 devNumInlocalPod = INVALID_VALUE_RANKSIZE;
 
     u32 localRank = topoAttr_.userRank;
@@ -82,7 +82,7 @@ HcclResult CollRunAlltoAllDirectFullmesh::GetAdjInfo(AlgResourceResponse& algRes
     HCCL_INFO("[GetAdjInfo-nslbdp] adjInfo.dstRankNum[%u].", adjInfo.dstRankNum);
 
     for (size_t i = 0; i < nslbAdjInfo.nsAdjInfo.size(); i++) {
-        NslbDpAdjInfo dpAdjInfo = {0};
+        NslbDpAdjInfo dpAdjInfo = {};
         dpAdjInfo.dstLocalRankId = nslbAdjInfo.nsAdjInfo[i].dstLocalRankId;
         dpAdjInfo.phaseId = nslbAdjInfo.nsAdjInfo[i].phaseId;
         dpAdjInfo.rev = 0;

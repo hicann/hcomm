@@ -261,7 +261,8 @@ void CollServiceDefaultImpl::AddNop(const std::string& opTag, const vector<LinkD
     }
 }
 
-void CollServiceDefaultImpl::RecoverTransport(vector<LinkData>& links, vector<std::pair<LinkGroup, u32>> linkGroupPair)
+void CollServiceDefaultImpl::RecoverTransport(
+    [[maybe_unused]] vector<LinkData>& links, [[maybe_unused]] vector<std::pair<LinkGroup, u32>> linkGroupPair)
 {
     THROW<NotSupportException>(StringFormat("CollServiceDefaultImpl::RecoverTransport not support yet."));
 }

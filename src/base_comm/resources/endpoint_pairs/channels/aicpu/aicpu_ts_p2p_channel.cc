@@ -243,37 +243,43 @@ HcclResult AicpuTsP2pChannel::Resume()
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsP2pChannel::UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum)
+HcclResult
+AicpuTsP2pChannel::UpdateMemInfo([[maybe_unused]] HcommMemHandle* memHandles, [[maybe_unused]] uint32_t memHandleNum)
 {
     HCCL_WARNING("[AicpuTsP2pChannel][%s] P2PTransport does not support UpdateMemInfo.", __func__);
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsP2pChannel::NotifyRecord(const uint32_t remoteNotifyIdx)
+HcclResult AicpuTsP2pChannel::NotifyRecord([[maybe_unused]] const uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[AicpuTsP2pChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsP2pChannel::NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout)
+HcclResult
+AicpuTsP2pChannel::NotifyWait([[maybe_unused]] const uint32_t localNotifyIdx, [[maybe_unused]] const uint32_t timeout)
 {
     HCCL_INFO("[AicpuTsP2pChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsP2pChannel::WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx)
+HcclResult AicpuTsP2pChannel::WriteWithNotify(
+    [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] const uint64_t len,
+    [[maybe_unused]] uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[AicpuTsP2pChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsP2pChannel::Write(void* dst, const void* src, uint64_t len)
+HcclResult
+AicpuTsP2pChannel::Write([[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t len)
 {
     HCCL_INFO("[AicpuTsP2pChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsP2pChannel::Read(void* dst, const void* src, uint64_t len)
+HcclResult
+AicpuTsP2pChannel::Read([[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t len)
 {
     HCCL_INFO("[AicpuTsP2pChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;

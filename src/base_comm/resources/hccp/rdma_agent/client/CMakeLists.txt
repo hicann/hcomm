@@ -55,8 +55,6 @@ endif()
 
 target_compile_options(ra PRIVATE
     -Werror
-    -Wno-unused-parameter
-    -Wno-missing-field-initializers
     -fvisibility=hidden
     -fsigned-char
     -fno-common

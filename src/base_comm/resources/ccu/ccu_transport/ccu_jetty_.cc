@@ -45,7 +45,7 @@ HcclResult CcuJetty::Init()
     EXCEPTION_HANDLE_BEGIN
     devLogicId_ = HcclGetThreadDeviceId();
     uint32_t devPhyId{0};
-    Hccl::CqCreateInfo cqInfo{0};
+    Hccl::CqCreateInfo cqInfo{};
     CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(devLogicId_), devPhyId));
     auto& rdmaHandleMgr = Hccl::RdmaHandleManager::GetInstance();
     ctxHandle_ = rdmaHandleMgr.GetByIp(devPhyId, ipAddr_);

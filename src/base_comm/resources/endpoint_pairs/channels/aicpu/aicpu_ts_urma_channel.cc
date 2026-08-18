@@ -349,31 +349,36 @@ HcclResult AicpuTsUrmaChannel::UpdateMemInfo(HcommMemHandle* memHandles, uint32_
 // 返回当前 channel 类型，供上层区分不同 channel 的能力和行为
 HcommChannelKind AicpuTsUrmaChannel::GetChannelKind() const { return HcommChannelKind::AICPU_TS_URMA; }
 
-HcclResult AicpuTsUrmaChannel::NotifyRecord(const uint32_t remoteNotifyIdx)
+HcclResult AicpuTsUrmaChannel::NotifyRecord([[maybe_unused]] const uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[AicpuTsUrmaChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsUrmaChannel::NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout)
+HcclResult
+AicpuTsUrmaChannel::NotifyWait([[maybe_unused]] const uint32_t localNotifyIdx, [[maybe_unused]] const uint32_t timeout)
 {
     HCCL_INFO("[AicpuTsUrmaChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsUrmaChannel::WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx)
+HcclResult AicpuTsUrmaChannel::WriteWithNotify(
+    [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] const uint64_t len,
+    [[maybe_unused]] uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[AicpuTsUrmaChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsUrmaChannel::Write(void* dst, const void* src, uint64_t len)
+HcclResult
+AicpuTsUrmaChannel::Write([[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t len)
 {
     HCCL_INFO("[AicpuTsUrmaChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsUrmaChannel::Read(void* dst, const void* src, uint64_t len)
+HcclResult
+AicpuTsUrmaChannel::Read([[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t len)
 {
     HCCL_INFO("[AicpuTsUrmaChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;

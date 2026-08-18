@@ -64,25 +64,27 @@ HcclResult UbMemEndpoint::UnregisterMemory(void* memHandle)
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemEndpoint::MemoryExport(void* memHandle, void** memDesc, uint32_t* memDescLen)
+HcclResult UbMemEndpoint::MemoryExport(
+    [[maybe_unused]] void* memHandle, [[maybe_unused]] void** memDesc, [[maybe_unused]] uint32_t* memDescLen)
 {
     HCCL_INFO("UbMemEndpoint MemoryExport is not supported");
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemEndpoint::MemoryImport(const void* memDesc, uint32_t descLen, HcommMem* outMem)
+HcclResult UbMemEndpoint::MemoryImport(
+    [[maybe_unused]] const void* memDesc, [[maybe_unused]] uint32_t descLen, [[maybe_unused]] HcommMem* outMem)
 {
     HCCL_INFO("UbMemEndpoint MemoryImport is not supported");
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemEndpoint::MemoryUnimport(const void* memDesc, uint32_t descLen)
+HcclResult UbMemEndpoint::MemoryUnimport([[maybe_unused]] const void* memDesc, [[maybe_unused]] uint32_t descLen)
 {
     HCCL_INFO("UbMemEndpoint MemoryUnimport is not supported");
     return HCCL_SUCCESS;
 }
 
-HcclResult UbMemEndpoint::GetAllMemHandles(void** memHandles, uint32_t* memHandleNum)
+HcclResult UbMemEndpoint::GetAllMemHandles([[maybe_unused]] void** memHandles, [[maybe_unused]] uint32_t* memHandleNum)
 {
     HCCL_INFO("UbMemEndpoint GetAllMemHandles is not supported");
     return HCCL_SUCCESS;

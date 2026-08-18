@@ -260,7 +260,7 @@ HcclResult CollAllGatherVMeshExecutor::RunSingleMesh(const OpParam& param, ExecM
 
     // DMA消减场景，打包opInfo
     HcomCollOpInfo opInfo
-        = {"", execMem.inputPtr, execMem.outputPtr, execMem.count, dataType, param.root, param.reduceType};
+        = {"", execMem.inputPtr, execMem.outputPtr, execMem.count, dataType, param.root, param.reduceType, 0};
 
     std::unique_ptr<AlgTemplateBase> tempAlg
         = AlgTemplateRegistry::Instance().GetAlgTemplate(TemplateType::TEMPLATE_ALL_GATHER_MESH_DIRECT, dispatcher_);

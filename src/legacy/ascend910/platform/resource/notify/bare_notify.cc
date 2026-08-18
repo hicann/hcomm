@@ -26,28 +26,38 @@ HcclResult BareNotify::Open() { return HCCL_SUCCESS; }
 
 HcclResult BareNotify::Close() { return HCCL_SUCCESS; }
 
-HcclResult BareNotify::Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut) { return HCCL_SUCCESS; }
+HcclResult BareNotify::Wait(
+    [[maybe_unused]] Stream& stream, [[maybe_unused]] HcclDispatcher dispatcher, [[maybe_unused]] s32 stage,
+    [[maybe_unused]] u32 timeOut)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult BareNotify::Post(Stream& stream, HcclDispatcher dispatcher, s32 stage) { return HCCL_SUCCESS; }
+HcclResult BareNotify::Post(
+    [[maybe_unused]] Stream& stream, [[maybe_unused]] HcclDispatcher dispatcher, [[maybe_unused]] s32 stage)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult
-BareNotify::Wait(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut, u32 userRank, u32 remoteUserRank)
+HcclResult BareNotify::Wait(
+    Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 timeOut, [[maybe_unused]] u32 userRank,
+    [[maybe_unused]] u32 remoteUserRank)
 {
     return Wait(stream, dispatcher, stage, timeOut);
 }
 
-HcclResult BareNotify::Wait(Stream& stream, u32 timeOut) { return HCCL_SUCCESS; }
+HcclResult BareNotify::Wait([[maybe_unused]] Stream& stream, [[maybe_unused]] u32 timeOut) { return HCCL_SUCCESS; }
 
-HcclResult BareNotify::Post(Stream& stream, HcclDispatcher dispatcher, s32 stage, u32 remoteUserRank)
+HcclResult BareNotify::Post(Stream& stream, HcclDispatcher dispatcher, s32 stage, [[maybe_unused]] u32 remoteUserRank)
 {
     return Post(stream, dispatcher, stage);
 }
 
-HcclResult BareNotify::Post(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult BareNotify::Post([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
 HcclResult BareNotify::SetIpc() { return HCCL_SUCCESS; }
 
-HcclResult BareNotify::Grant(s64 recvId) { return HCCL_SUCCESS; }
+HcclResult BareNotify::Grant([[maybe_unused]] s64 recvId) { return HCCL_SUCCESS; }
 
 HcclResult BareNotify::Alloc() { return HCCL_SUCCESS; }
 

@@ -89,9 +89,14 @@ HcclResult CollReduceScatterMeshGraphPipelineExecutor::KernelRun(const OpParam& 
         TemplateType::TEMPLATE_REDUCESCATTER_GRAPH_PIPELINE, dispatcher_);
     CHK_SMART_PTR_NULL(tempAlg);
 
-    HcomCollOpInfo opInfo
-        = {"",         execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType,
-           param.root, param.reduceType};
+    HcomCollOpInfo opInfo = {"",
+                             execMem.inputPtr,
+                             execMem.outputPtr,
+                             param.DataDes.count,
+                             param.DataDes.dataType,
+                             param.root,
+                             param.reduceType,
+                             0};
 
     CHK_RET(tempAlg->Prepare(
         &opInfo, execMem.inputMem, param.DataDes.count, 0, 0, level0CommInfo, level1CommInfo,

@@ -543,7 +543,7 @@ void HcclSocketManager::AbortAndDeleteSocket(
 
 // public
 HcclResult HcclSocketManager::GetListenPortByIp(
-    const NICDeployment nicDeployment, const HcclIpAddress& ipAddr, std::set<u32>& listenedPort)
+    [[maybe_unused]] const NICDeployment nicDeployment, const HcclIpAddress& ipAddr, std::set<u32>& listenedPort)
 {
     for (auto& res : serverSocketMap_) {
         if (res.first.ip == ipAddr) {
@@ -703,9 +703,10 @@ void HcclSocketManager::SaveWhiteListInfo(
 // private
 // 根据相关参数构造 HcclSocket 对象
 HcclResult HcclSocketManager::ConstructSockets(
-    const std::string& commTag, bool isInterLink, const HcclNetDevCtx netDevCtx, u32 socketsPerLink, NicType socketType,
-    u32 remoteUserRank, const HcclIpAddress& remoteIp, u32 remotePort, const HcclIpAddress& localIp,
-    HcclSocketRole localRole, std::vector<std::shared_ptr<HcclSocket>>& socketList, uint32_t connectMode)
+    const std::string& commTag, bool isInterLink, const HcclNetDevCtx netDevCtx, u32 socketsPerLink,
+    [[maybe_unused]] NicType socketType, u32 remoteUserRank, const HcclIpAddress& remoteIp, u32 remotePort,
+    [[maybe_unused]] const HcclIpAddress& localIp, HcclSocketRole localRole,
+    std::vector<std::shared_ptr<HcclSocket>>& socketList, uint32_t connectMode)
 {
     // 使用Client Rank作为确定标识,保证Client和Server的Tag一致
     u32 clientRank = localRole == HcclSocketRole::SOCKET_ROLE_CLIENT ? userRank_ : remoteUserRank;
@@ -880,7 +881,8 @@ void HcclSocketManager::AddIpQueue(
 // private
 // 同步接口，等待连接建立完成
 HcclResult HcclSocketManager::WaitLinksEstablishCompleted(
-    HcclSocketRole localRole, std::map<u32, std::vector<std::shared_ptr<HcclSocket>>>& rankSocketsMap, s32 timeout)
+    [[maybe_unused]] HcclSocketRole localRole, std::map<u32, std::vector<std::shared_ptr<HcclSocket>>>& rankSocketsMap,
+    s32 timeout)
 {
     for (auto iter = rankSocketsMap.begin(); iter != rankSocketsMap.end(); iter++) {
         auto rankSockets = iter->second;

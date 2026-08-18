@@ -70,6 +70,7 @@ error:
 
 uint32_t BkfDcUpdTuple(BkfDc *dc, BkfDcTable *table, BkfDcTuple *tuple, void *tupleValOrNull)
 {
+    (void)dc;
     uint32_t hashIdx = BKF_DC_GET_TUPLE_HASH_IDX(tuple->keyVal);
     BkfDcTableType *tableType = table->tableType;
     void *valDest = VOS_NULL;
@@ -96,6 +97,7 @@ uint32_t BkfDcUpdTuple(BkfDc *dc, BkfDcTable *table, BkfDcTuple *tuple, void *tu
 
 void BkfDcSetTupleDelState(BkfDc *dc, BkfDcTable *table, BkfDcTuple *tuple)
 {
+    (void)dc;
     BkfDcTableType *tableType = table->tableType;
     void *valDest = VOS_NULL;
 
@@ -176,6 +178,7 @@ BOOL BkfDcTry2FreeAllTuple(BkfDc *dc, BkfDcTable *table)
 
 BkfDcTuple *BkfDcFindTuple(BkfDc *dc, BkfDcTable *table, void *tupleKey)
 {
+    (void)dc;
     uint32_t hashIdx = BKF_DC_GET_TUPLE_HASH_IDX(tupleKey);
     F_BKF_CMP cmp = table->tableType->vTbl.tupleKeyCmp;
     BOOL hit = VOS_FALSE;
@@ -195,6 +198,7 @@ BkfDcTuple *BkfDcFindTuple(BkfDc *dc, BkfDcTable *table, void *tupleKey)
 
 BkfDcTuple *BkfDcFindNextTuple(BkfDc *dc, BkfDcTable *table, void *tupleKey)
 {
+    (void)dc;
     BkfDcTuple *tuple = VOS_NULL;
 
     tuple = VOS_AVLL_FIND_NEXT(table->tupleSet, tupleKey);
@@ -203,6 +207,7 @@ BkfDcTuple *BkfDcFindNextTuple(BkfDc *dc, BkfDcTable *table, void *tupleKey)
 
 BkfDcTuple *BkfDcGetFirstTuple(BkfDc *dc, BkfDcTable *table, void **itorOutOrNull)
 {
+    (void)dc;
     BkfDcTuple *tuple = VOS_NULL;
 
     tuple = VOS_AVLL_FIRST(table->tupleSet);
@@ -214,6 +219,7 @@ BkfDcTuple *BkfDcGetFirstTuple(BkfDc *dc, BkfDcTable *table, void **itorOutOrNul
 
 BkfDcTuple *BkfDcGetNextTuple(BkfDc *dc, BkfDcTable *table, void **itorInOut)
 {
+    (void)dc;
     BkfDcTuple *tuple = VOS_NULL;
 
     tuple = (*itorInOut);

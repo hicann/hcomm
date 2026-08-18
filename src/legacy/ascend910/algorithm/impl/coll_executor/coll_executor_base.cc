@@ -71,8 +71,9 @@ HcclResult CollExecutorBase::RunTemplate(const std::unique_ptr<AlgTemplateBase>&
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollExecutorBase::GetAivExecParam(const OpParam& param, AlgResourceResponse& algRes, AivSuperKernelArgs& args)
+HcclResult CollExecutorBase::GetAivExecParam(
+    [[maybe_unused]] const OpParam& param, [[maybe_unused]] AlgResourceResponse& algRes,
+    [[maybe_unused]] AivSuperKernelArgs& args)
 {
     return HCCL_SUCCESS;
 }
@@ -91,16 +92,22 @@ HcclResult CollExecutorBase::SetRmaInfo(void* rmaInfo)
 }
 
 HcclResult CollExecutorBase::CalcIncreLinkRequest(
-    const OpParam& param, std::set<u32>& ranksLinked, AlgResourceRequest& resourceRequest, bool& needIncreLink)
+    [[maybe_unused]] const OpParam& param, std::set<u32>& ranksLinked,
+    [[maybe_unused]] AlgResourceRequest& resourceRequest, bool& needIncreLink)
 {
     (void)ranksLinked;
     (void)needIncreLink;
     return HCCL_SUCCESS;
 }
 
-HcclResult CollExecutorBase::CreatePairWiseList(HcclSendRecvItem* sendRecvInfo, u32 itemNum) { return HCCL_SUCCESS; }
+HcclResult
+CollExecutorBase::CreatePairWiseList([[maybe_unused]] HcclSendRecvItem* sendRecvInfo, [[maybe_unused]] u32 itemNum)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult CollExecutorBase::GetPairWiseList(std::vector<std::vector<HcclSendRecvItem*>>& sendRecvPairList)
+HcclResult
+CollExecutorBase::GetPairWiseList([[maybe_unused]] std::vector<std::vector<HcclSendRecvItem*>>& sendRecvPairList)
 {
     return HCCL_SUCCESS;
 }
@@ -117,7 +124,8 @@ HcclResult CollExecutorBase::SetAivClearEnable(bool aivClearEnable)
     return HCCL_SUCCESS;
 }
 
-HcclResult CollExecutorBase::CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize, HcclCMDType cmdType)
+HcclResult CollExecutorBase::CalNumBlocks(
+    u32& numBlocks, u32 rankSize, [[maybe_unused]] u64 dataSize, [[maybe_unused]] HcclCMDType cmdType)
 {
     numBlocks = rankSize;
     return HCCL_SUCCESS;
@@ -146,7 +154,7 @@ HcclResult CollExecutorBase::SetOpCounter(const OpCounterInfo& opCounter)
     opCounter_ = opCounter;
     return HCCL_SUCCESS;
 }
-HcclResult CollExecutorBase::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& adjInfo)
+HcclResult CollExecutorBase::GetAdjInfo([[maybe_unused]] AlgResourceResponse& algRes, AdjInfo& adjInfo)
 {
     (void)adjInfo;
     return HCCL_SUCCESS;

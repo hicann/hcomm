@@ -498,8 +498,8 @@ HcclResult SendRecvExecutor::ReceiveRun(DeviceMem& receiveBuffer)
 HcclResult SendRecvExecutor::RecordNotify(
     void* dstMemPtr, u32 rkey, const void* srcMemPtr, u32 lkey, u64 srcMemSize, uint32_t rdmaOp, int sendFlag)
 {
-    struct SgList list = {0};
-    struct SendWrV2 wr = {0};
+    struct SgList list = {};
+    struct SendWrV2 wr = {};
     // 构造wr信息
     list.addr = static_cast<u64>(reinterpret_cast<uintptr_t>(srcMemPtr));
     list.len = srcMemSize;
@@ -561,7 +561,7 @@ HcclResult SendRecvExecutor::PayLoad(const void* src, u64 dstOffset, u64 len)
         } else {
             wr.op = RA_WR_RDMA_WRITE;
         }
-        struct SgList list = {0};
+        struct SgList list = {};
         list.addr = static_cast<u64>(reinterpret_cast<uintptr_t>(txsrcMemPtr));
         list.len = txSendDataSize;
         list.lkey = localWindowMem_.lkey;
@@ -582,7 +582,7 @@ HcclResult SendRecvExecutor::PayLoad(const void* src, u64 dstOffset, u64 len)
 HcclResult SendRecvExecutor::RdmaSendAsync(struct SendWrV2& wr)
 {
     HcclResult ret = HCCL_SUCCESS;
-    struct SendWrRsp opRsp = {0};
+    struct SendWrRsp opRsp = {};
     HCCL_DEBUG(
         "[SendRecvExecutor][RdmaSendAsync] dst_addr[%p], src_addr[%p], len[%u]", wr.dstAddr, wr.bufList->addr,
         wr.bufList->len);

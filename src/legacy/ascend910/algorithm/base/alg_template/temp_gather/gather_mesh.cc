@@ -18,8 +18,8 @@ GatherMesh::~GatherMesh() {}
 
 HcclResult GatherMesh::Prepare(
     std::vector<Stream>& meshStreams, std::vector<std::shared_ptr<LocalNotify>>& meshSignal,
-    std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux, u32 userRank, HcomCollOpInfo* opInfo, u32 interRank,
-    u32 interRankSize)
+    std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux, u32 userRank, [[maybe_unused]] HcomCollOpInfo* opInfo,
+    [[maybe_unused]] u32 interRank, [[maybe_unused]] u32 interRankSize)
 {
     meshStreams_ = meshStreams;
     meshSignal_ = &meshSignal;

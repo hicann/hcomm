@@ -126,7 +126,7 @@ HcclResult HcclCommConn::Bind(HcclAddr& bindAddr)
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommConn::Listen(int backLog)
+HcclResult HcclCommConn::Listen([[maybe_unused]] int backLog)
 {
     if (isListen_) {
         HCCL_ERROR(

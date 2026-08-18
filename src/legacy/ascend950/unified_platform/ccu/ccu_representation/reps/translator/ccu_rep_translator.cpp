@@ -217,7 +217,7 @@ namespace CcuRep {
         CommonProcess(instr, curInstrId);
 
         // 翻译主体
-        Translate(repVec, instr, curInstrId, [](std::shared_ptr<CcuRepBase> rep) -> bool {
+        Translate(repVec, instr, curInstrId, []([[maybe_unused]] std::shared_ptr<CcuRepBase> rep) -> bool {
             return true;
         });
 

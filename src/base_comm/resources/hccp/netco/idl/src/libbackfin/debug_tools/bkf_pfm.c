@@ -271,6 +271,7 @@ char *BkfPfmGetSummaryStr(BkfPfm *pfm, uint8_t *buf, int32_t bufLen)
 
 STATIC char *BkfPfmGetMeaStr(BkfPfm *pfm, BkfPfmMea *mea, uint8_t *buf, int32_t bufLen)
 {
+    (void)pfm;
     uint64_t meaOkUseMsTotal = BkfPfmTick2Ms(mea->okkUseTickTotal);
     uint64_t meaOkUseMsPeak = BkfPfmTick2Ms(mea->okUseTickPeak);
     uint64_t meaOkUseMsAvg = 0;
@@ -332,6 +333,7 @@ char *BkfPfmGetNextMeaStr(BkfPfm *pfm, char **meaStrInOut, uint8_t *buf, int32_t
 
 static inline void BkfPfmTestUseTime(BkfPfm *pfm, uint32_t loopMs)
 {
+    (void)pfm;
     (void)usleep(loopMs * BKF_US_PER_MS);
 }
 void BkfPfmTestAddMea(BkfPfm *pfm)

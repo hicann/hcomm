@@ -169,20 +169,22 @@ TransportHeterogRoce::Isend(const TransData& sendData, const TransportEndPointPa
     return SendEnvelope(envelope);
 }
 
-HcclResult TransportHeterogRoce::Send(const TransData& sendData, const TransportEndPointParam& epParam)
+HcclResult TransportHeterogRoce::Send(
+    [[maybe_unused]] const TransData& sendData, [[maybe_unused]] const TransportEndPointParam& epParam)
 {
     HCCL_ERROR("TransportHeterogRoce::Send is not supported.");
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TransportHeterogRoce::Improbe(
-    const TransportEndPointParam& epParam, s32& matched, HcclMessageInfo*& msg, HcclStatus& status, bool& flag)
+    const TransportEndPointParam& epParam, s32& matched, HcclMessageInfo*& msg, HcclStatus& status,
+    [[maybe_unused]] bool& flag)
 {
     return Improbe(epParam, matched, msg, status);
 }
 
 HcclResult TransportHeterogRoce::Improbe(
-    const TransportEndPointParam& epParam, s32& matched, HcclMessageInfo*& msg, HcclStatus& status)
+    [[maybe_unused]] const TransportEndPointParam& epParam, s32& matched, HcclMessageInfo*& msg, HcclStatus& status)
 {
     // 建链未完成时，返回未匹配到
     if (GetState() != ConnState::CONN_STATE_COMPLETE) {
@@ -272,7 +274,7 @@ TransportHeterogRoce::Iwrite(const TransData& sendData, const HcclEnvelope& enve
         wr.rkey = envelope.key;
         wr.op = static_cast<u32>(RdmaOp::OP_WRITE);
         wr.sendFlag = RA_SEND_FENCE;
-        struct SendWrRsp opRsp = {0};
+        struct SendWrRsp opRsp = {};
         CHK_RET(HrtRaSendWrV2(dataQpInfo_.qpHandle, &wr, &opRsp, GetWorkflowMode()));
         CHK_RET(DoorBellSend(dataQpInfo_.qpMode, opRsp));
 
@@ -290,7 +292,8 @@ TransportHeterogRoce::Iwrite(const TransData& sendData, const HcclEnvelope& enve
 }
 
 HcclResult TransportHeterogRoce::Imrecv(
-    const TransData& recvData, HcclMessageInfo& msg, HcclRequestInfo*& request, bool flag, bool needRecordFlag)
+    const TransData& recvData, HcclMessageInfo& msg, HcclRequestInfo*& request, [[maybe_unused]] bool flag,
+    [[maybe_unused]] bool needRecordFlag)
 {
     HcclResult ret = Imrecv(recvData, msg, request);
     return ret;
@@ -1512,7 +1515,7 @@ HcclResult TransportHeterogRoce::RecordNotifyWithReq(Stream& stream, RdmaNotifyO
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportHeterogRoce::RecordNotify(Stream& stream, RdmaNotifyOp type, u64 wrId)
+HcclResult TransportHeterogRoce::RecordNotify([[maybe_unused]] Stream& stream, RdmaNotifyOp type, u64 wrId)
 {
     HCCL_INFO(
         "RecordNotify notifyType[%u], wrId[%llu] isHdcMode_[%d] qpMode[%d]", type, wrId, isHdcMode_,
@@ -1661,7 +1664,7 @@ HcclResult TransportHeterogRoce::PreHdcResource()
                 return HCCL_E_MEMORY;
             }
 
-            struct MrInfoT mrInfo = {nullptr};
+            struct MrInfoT mrInfo = {};
             mrInfo.addr = deviceEvePtr_;
             mrInfo.size = memSize;
             mrInfo.access = RA_ACCESS_LOCAL_WRITE | RA_ACCESS_REMOTE_WRITE | RA_ACCESS_REMOTE_READ;

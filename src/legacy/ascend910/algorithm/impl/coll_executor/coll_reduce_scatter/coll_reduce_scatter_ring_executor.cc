@@ -120,7 +120,7 @@ u64 CollReduceScatterRingExecutor::CalcLoopMaxCount(const u32 unitSize)
     return maxCountPerLoop;
 }
 
-bool CollReduceScatterRingExecutor::IsHugeData(const u64 curSize, OpParam* param)
+bool CollReduceScatterRingExecutor::IsHugeData(const u64 curSize, [[maybe_unused]] OpParam* param)
 {
     bool hugeData;
     if (DMAReduceFlag_) {
@@ -335,9 +335,14 @@ HcclResult CollReduceScatterRingExecutor::KernelRun(const OpParam& param, ExecMe
         CHK_SMART_PTR_NULL(reduceScatterRingOutput.ptr());
         u64 countLocal = serverSliceSize / perDataSize;
 
-        HcomCollOpInfo opInfo
-            = {"",         execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType,
-               param.root, param.reduceType};
+        HcomCollOpInfo opInfo = {"",
+                                 execMem.inputPtr,
+                                 execMem.outputPtr,
+                                 param.DataDes.count,
+                                 param.DataDes.dataType,
+                                 param.root,
+                                 param.reduceType,
+                                 0};
         HcomCollOpInfo* opInfoPtr = nullptr;
         if (DMAReduceFlag_) {
             opInfoPtr = &opInfo;

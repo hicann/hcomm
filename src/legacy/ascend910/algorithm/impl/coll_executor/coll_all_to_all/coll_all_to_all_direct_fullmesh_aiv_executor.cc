@@ -99,8 +99,8 @@ HcclResult CollAlltoAllDirectFullmeshAIVExecutor::CopyAivCommInfoToDevice(
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAlltoAllDirectFullmeshAIVExecutor::CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize, HcclCMDType cmdType)
+HcclResult CollAlltoAllDirectFullmeshAIVExecutor::CalNumBlocks(
+    u32& numBlocks, [[maybe_unused]] u32 rankSize, [[maybe_unused]] u64 dataSize, [[maybe_unused]] HcclCMDType cmdType)
 {
     numBlocks = topoAttr_.moduleNum; // 默认情况使用serverNum个AIV
     CHK_PRT_RET(

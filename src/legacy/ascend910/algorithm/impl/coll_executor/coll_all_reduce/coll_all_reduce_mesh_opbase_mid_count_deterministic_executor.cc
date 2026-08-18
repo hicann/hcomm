@@ -72,7 +72,8 @@ bool CollAllReduceMeshOpbaseMidCountDeterministicExecutor::IsHugeData(const u64 
     return hugeData;
 }
 
-bool CollAllReduceMeshOpbaseMidCountDeterministicExecutor::IsSmallData(const u64 totalSize, const u64 curSize)
+bool CollAllReduceMeshOpbaseMidCountDeterministicExecutor::IsSmallData(
+    [[maybe_unused]] const u64 totalSize, const u64 curSize)
 {
     bool smallData = IsAllReduceSmallData(curSize);
     return smallData;

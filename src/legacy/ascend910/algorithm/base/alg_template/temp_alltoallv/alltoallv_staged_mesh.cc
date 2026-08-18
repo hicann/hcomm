@@ -37,9 +37,10 @@ HcclResult AlltoAllVStagedMesh::Prepare(
 
 HcclResult AlltoAllVStagedMesh::Prepare(
     DeviceMem& sendMem, DeviceMem& recvMem, DeviceMem& scratchInputMem, DeviceMem& scratchOutputMem,
-    StageAlltoAllVAddrInfo& sendAddrInfo, StageAlltoAllVAddrInfo& recvAddrInfo, bool isAlltoAllZCopyMode, u32 userRank,
-    Stream& mainStream, std::vector<Stream>& subStreams, std::vector<std::shared_ptr<LocalNotify>>& meshSignalMainToSub,
-    std::vector<std::shared_ptr<LocalNotify>>& meshSignalSubToMain)
+    StageAlltoAllVAddrInfo& sendAddrInfo, StageAlltoAllVAddrInfo& recvAddrInfo, bool isAlltoAllZCopyMode,
+    [[maybe_unused]] u32 userRank, Stream& mainStream, [[maybe_unused]] std::vector<Stream>& subStreams,
+    [[maybe_unused]] std::vector<std::shared_ptr<LocalNotify>>& meshSignalMainToSub,
+    [[maybe_unused]] std::vector<std::shared_ptr<LocalNotify>>& meshSignalSubToMain)
 {
     (void)userRank_;
     (void)subStreamsPtr_;

@@ -114,7 +114,8 @@ HcclResult CollAllGatherRingFor91093Executor::RunIntraSeverAllGather(
     return HCCL_SUCCESS;
 }
 
-u64 CollAllGatherRingFor91093Executor::CalcDstMemOffset(const OpParam& param, u32 perDataSize, u64 inputMemSize) const
+u64 CollAllGatherRingFor91093Executor::CalcDstMemOffset(
+    [[maybe_unused]] const OpParam& param, [[maybe_unused]] u32 perDataSize, u64 inputMemSize) const
 {
     return topoAttr_.userRank * inputMemSize;
 }
@@ -133,7 +134,8 @@ HcomCollOpInfo CollAllGatherRingFor91093Executor::GetHcomCollOpInfo(const OpPara
 
 HcclResult CollAllGatherRingFor91093Executor::PrepareSlicesL0(
     std::vector<std::vector<Slice>>& multRingsSlice, const OpParam& param, const SubCommInfo& level2CommInfo,
-    const SubCommInfo& level1CommInfo, const SubCommInfo& level0CommInfo, u32 perDataSize, u64 inputMemSize)
+    const SubCommInfo& level1CommInfo, const SubCommInfo& level0CommInfo, [[maybe_unused]] u32 perDataSize,
+    u64 inputMemSize)
 {
     const u32 level0RankSize = level0CommInfo.localRankSize;
     const u32 level1RankSize = level1CommInfo.localRankSize;
@@ -173,8 +175,8 @@ HcclResult CollAllGatherRingFor91093Executor::PrepareSlicesL0(
 }
 
 std::vector<Slice> CollAllGatherRingFor91093Executor::PrepareSlicesL1(
-    const OpParam& param, const SubCommInfo& level2CommInfo, const SubCommInfo& level1CommInfo,
-    const SubCommInfo& level0CommInfo, u32 perDataSize, u64 inputMemSize) const
+    [[maybe_unused]] const OpParam& param, const SubCommInfo& level2CommInfo, const SubCommInfo& level1CommInfo,
+    const SubCommInfo& level0CommInfo, [[maybe_unused]] u32 perDataSize, u64 inputMemSize) const
 {
     const u32 level0RankSize = level0CommInfo.localRankSize;
     const u32 level0ServerIndex = level0CommInfo.localRank;
@@ -200,8 +202,8 @@ std::vector<Slice> CollAllGatherRingFor91093Executor::PrepareSlicesL1(
 }
 
 std::vector<Slice> CollAllGatherRingFor91093Executor::PrepareSlicesL2(
-    const OpParam& param, const SubCommInfo& level2CommInfo, const SubCommInfo& level1CommInfo,
-    const SubCommInfo& level0CommInfo, u32 perDataSize, u64 inputMemSize) const
+    [[maybe_unused]] const OpParam& param, const SubCommInfo& level2CommInfo, const SubCommInfo& level1CommInfo,
+    const SubCommInfo& level0CommInfo, [[maybe_unused]] u32 perDataSize, u64 inputMemSize) const
 {
     const u32 level0RankSize = level0CommInfo.localRankSize;
     const u32 level0ServerIndex = level0CommInfo.localRank;
@@ -222,8 +224,9 @@ std::vector<Slice> CollAllGatherRingFor91093Executor::PrepareSlicesL2(
 
 HcclResult CollAllGatherRingFor91093Executor::PrepareUserMemSlices(
     std::vector<std::vector<Slice>>& userMemSlices, const std::vector<std::vector<Slice>>& multRingsSlice,
-    const OpParam& param, const SubCommInfo& level2CommInfo, const SubCommInfo& level1CommInfo,
-    const SubCommInfo& level0CommInfo, u32 perDataSize, u64 inputMemSize)
+    const OpParam& param, [[maybe_unused]] const SubCommInfo& level2CommInfo,
+    [[maybe_unused]] const SubCommInfo& level1CommInfo, [[maybe_unused]] const SubCommInfo& level0CommInfo,
+    u32 perDataSize, u64 inputMemSize)
 {
     CHK_PRT_RET(
         0 < param.DataDes.strideCount && param.DataDes.strideCount < param.DataDes.count,

@@ -54,7 +54,8 @@ HcclResult CollReduceScatterCommExecutor::CalcScratchMemSize(u64& scratchMemSize
     return HCCL_SUCCESS;
 }
 
-bool CollReduceScatterCommExecutor::IsSmallData(const u64 totalSize, const u64 curSize)
+bool CollReduceScatterCommExecutor::IsSmallData(
+    [[maybe_unused]] const u64 totalSize, [[maybe_unused]] const u64 curSize)
 {
     return topoAttr_.deviceType == DevType::DEV_TYPE_910_93;
 }
@@ -123,7 +124,7 @@ u64 CollReduceScatterCommExecutor::CalcLoopMaxCount(const u32 unitSize)
     return maxCountPerLoop;
 }
 
-bool CollReduceScatterCommExecutor::IsHugeData(const u64 curSize, OpParam* param)
+bool CollReduceScatterCommExecutor::IsHugeData(const u64 curSize, [[maybe_unused]] OpParam* param)
 {
     bool hugeData = (curSize * topoAttr_.userRankSize / HCCL_INTERNODE_MAX_DATA_RATE > RDMA_SEND_MAX_SIZE)
                     || (curSize > SDMA_SEND_MAX_SIZE);

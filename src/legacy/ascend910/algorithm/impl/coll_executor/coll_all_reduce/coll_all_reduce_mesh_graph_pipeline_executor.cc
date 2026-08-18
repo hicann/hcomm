@@ -80,8 +80,9 @@ HcclResult CollAllReduceMeshGraphPipelineExecutor::KernelRun(const OpParam& para
 
     u64 reduceAttr = GetReduceAttr(execMem.inputMem, execMem.inputMem, param.DataDes.dataType, param.reduceType);
 
-    HcomCollOpInfo opInfo = {"",         execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType,
-                             param.root, param.reduceType};
+    HcomCollOpInfo opInfo
+        = {"", execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, param.reduceType,
+           0};
 
     std::unique_ptr<AlgTemplateBase> tempAlg
         = AlgTemplateRegistry::Instance().GetAlgTemplate(TemplateType::TEMPLATE_ALLREDUCE_GRAPH_PIPELINE, dispatcher_);

@@ -227,6 +227,7 @@ STATIC BkfLogModLvl *BkfLogFindModLvl(BkfLog *log, char *modName)
 
 uint32_t BkfLogFirstHalf(BkfLog *log, char *modName, uint16_t line, uint8_t lvl)
 {
+    (void)line;
     BkfLogModLvl *modLvl = VOS_NULL;
     BOOL ret = (log == VOS_NULL) || (modName == VOS_NULL) || !BKF_LOG_LVL_IS_VALID(lvl);
     if (ret) {

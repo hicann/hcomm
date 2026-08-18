@@ -312,6 +312,7 @@ uint32_t UdfTwlTimerCorrectWheel(UdfTwlTimerWheelCtrl *wheelCtrl, uint32_t remai
 void UdfTimerInstGetExectueWheel(UdfTwlTimerWheelCtrl *wheelCtrl, UdfTwlTimerInst *timerInst, uint32_t *instIndex,
     uint32_t *typeEnd)
 {
+    (void)wheelCtrl;
     /* 因为只有获取remainTime的时候，不在业务指定线程上运行。为了节约内存空间，这里使用时间轮wheelCtrl->listLock的锁加强防护
      */
     *instIndex = timerInst->index;
@@ -431,6 +432,7 @@ uint32_t UdfTwlTimerInitWheelLost(UdfTwlTimerWheelCtrl *wheelCtrl, uint32_t type
 
 uint32_t UdfTwlTimerCheckWheelValid(UdfTwlTimerWheelCtrl *wheelCtrl, UdfTwlTimerWheelType type)
 {
+    (void)type;
     uint32_t i;
     uint32_t ret;
     uint32_t lowLevelWheel = (uint32_t)-1;
@@ -460,6 +462,7 @@ uint32_t UdfTwlTimerCheckWheelValid(UdfTwlTimerWheelCtrl *wheelCtrl, UdfTwlTimer
 UdfTwlTimerWheel *UdfTwlTimerInitWheelInst(UdfTwlTimerWheelCtrl *wheelCtrl, uint32_t interval, uint32_t num,
     UdfTwlTimerWheelType level)
 {
+    (void)interval;
     uint32_t ret;
     uint32_t i = 0;
     UdfTwlTimerWheel *timerWheel = NULL;
@@ -767,6 +770,7 @@ uint32_t UdfTwlTimerCalcAdjustInterval(UdfTwlTimerInst *timerInst, UdfTwlTimerWh
 void UdfTwlTimerExecuteProc(UdfTwlTimerWheelCtrl *wheelCtrl, UdfTwlTimerWheel *timerWheel, UdfTwlTimerWheelType level,
     uint64_t val)
 {
+    (void)val;
     uint32_t adjustNum = 0;
     UdfTwlTimerInst *dfsTimer = NULL;
     VOS_LIST_HEAD_S *dllNode = NULL;
@@ -908,6 +912,7 @@ void UdfTwlTimerProcess(UdfTwlTimerWheelCtrl *wheelCtrl, UdfTwlTimerWheelType le
 
 uint32_t UdfTwlTimerEvtProcess(BaseTimerHandle handle, uint64_t val, void *param)
 {
+    (void)handle;
     UdfTwlTimerWheelCtrl *wheelCtrl = (UdfTwlTimerWheelCtrl *)param;
     if ((wheelCtrl == NULL) || (val == 0)) {
         LOG_INNER_ERR("Twl timer proc: count:%" PRIu64 " not correct", val);

@@ -50,13 +50,13 @@ HcclResult hrtTraceCreateWithAttr(const char* objName, TraHandle& handle)
     CHK_PTR_NULL(objName);
     TraHandle ret = TRACE_INVALID_HANDLE;
     if (DlTraceFunction::GetInstance().dlAtraceCreateWithAttr != nullptr) {
-        TraceAttr hcclAtraceAttr = {0};
+        TraceAttr hcclAtraceAttr = {};
         hcclAtraceAttr.exitSave = true;
         hcclAtraceAttr.msgNum = DEFAULT_ATRACE_MSG_NUM;
         hcclAtraceAttr.msgSize = DEFAULT_ATRACE_MSG_SIZE;
         ret = DlTraceFunction::GetInstance().dlAtraceCreateWithAttr(TRACER_TYPE_SCHEDULE, objName, &hcclAtraceAttr);
     } else {
-        TraceAttr hcclUtraceAttr = {0};
+        TraceAttr hcclUtraceAttr = {};
         hcclUtraceAttr.exitSave = false;
         hcclUtraceAttr.msgNum = DEFAULT_ATRACE_MSG_NUM;
         hcclUtraceAttr.msgSize = DEFAULT_ATRACE_MSG_SIZE;

@@ -118,7 +118,7 @@ HcclResult AicpuTsThread::BuildComStreamInfo(const HcclStreamInfo& streamInfo, H
 }
 #endif
 
-HcclResult AicpuTsThread::InitStream(HcclStreamParam& streamParam)
+HcclResult AicpuTsThread::InitStream([[maybe_unused]] HcclStreamParam& streamParam)
 {
 #ifdef CCL_KERNEL_AICPU
     HcclStreamInfo& streamInfo = streamParam.streamInfo;
@@ -146,7 +146,7 @@ HcclResult AicpuTsThread::InitStream(HcclStreamParam& streamParam)
         return HCCL_E_DRV;
     }
 
-    HcclComStreamInfo comStreamInfo{0};
+    HcclComStreamInfo comStreamInfo{};
     CHK_RET(BuildComStreamInfo(streamInfo, comStreamInfo));
 
     stream_.reset(new (std::nothrow) Stream(comStreamInfo));
@@ -214,7 +214,7 @@ void AicpuTsThread::TryLaunchTask() const
 }
 
 // Local Data Plane Functions
-HcclResult AicpuTsThread::LocalNotifyWait(uint32_t notifyId) const
+HcclResult AicpuTsThread::LocalNotifyWait([[maybe_unused]] uint32_t notifyId) const
 {
     HCCL_ERROR("[AicpuTsThread][%s] without timeout not support", __func__);
     return HCCL_E_NOT_SUPPORT;
@@ -243,7 +243,8 @@ HcclResult AicpuTsThread::LocalNotifyRecord(uint32_t notifyId) const
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsThread::LocalNotifyRecord(ThreadHandle dstThread, uint32_t dstNotifyIdx) const
+HcclResult
+AicpuTsThread::LocalNotifyRecord([[maybe_unused]] ThreadHandle dstThread, [[maybe_unused]] uint32_t dstNotifyIdx) const
 {
     HCCL_ERROR("[AicpuTsThread][%s]not support", __func__);
     return HCCL_E_NOT_SUPPORT;
@@ -311,8 +312,8 @@ HcclResult AicpuTsThread::LocalCopy(void* dst, const void* src, uint64_t size) c
             return pImpl_->SdmaCopy(dst, src, size);
         },
         [this](
-            void* dst, const void* src, uint64_t size, uint64_t beginTime, uint32_t taskId, uint32_t sqId,
-            Hccl::RtsqBase* rtsq) {
+            [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t size,
+            [[maybe_unused]] uint64_t beginTime, uint32_t taskId, uint32_t sqId, Hccl::RtsqBase* rtsq) {
             Hccl::StreamLite* sl = static_cast<Hccl::StreamLite*>(GetStreamLitePtr());
             auto* slot = sl->NextTaskSlot();
             slot->taskType = Hccl::TaskParamTypeVal::TASK_SDMA;
@@ -339,8 +340,8 @@ HcclResult AicpuTsThread::LocalReduce(
             return pImpl_->SdmaReduce(d, s, size, dataTypeRaw, reduceOpRaw);
         },
         [this, &dataType, &reduceOp](
-            void* dst, const void* src, uint64_t size, uint64_t beginTime, uint32_t taskId, uint32_t sqId,
-            Hccl::RtsqBase* rtsq) {
+            void* dst, const void* src, uint64_t size, [[maybe_unused]] uint64_t beginTime, uint32_t taskId,
+            uint32_t sqId, Hccl::RtsqBase* rtsq) {
             Hccl::StreamLite* sl = static_cast<Hccl::StreamLite*>(GetStreamLitePtr());
             auto* slot = sl->NextTaskSlot();
             slot->taskType = Hccl::TaskParamTypeVal::TASK_REDUCE_INLINE;
@@ -452,7 +453,7 @@ HcclResult AicpuTsThread::DeviceInit()
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsThread::GetSqHeadAndTail(uint32_t& sqHead, uint32_t& sqTail)
+HcclResult AicpuTsThread::GetSqHeadAndTail([[maybe_unused]] uint32_t& sqHead, [[maybe_unused]] uint32_t& sqTail)
 {
 #ifdef CCL_KERNEL_AICPU
 

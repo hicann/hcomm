@@ -1514,17 +1514,17 @@ HcclResult PrepareHcommInstance(HcclOpResParam* commParam, const Mc2InitTilingIn
     hcclCommAicpu->RegisterKfcHandler(AicpuKfcHandlerType::kClearMsgArea, KfcClearMsgArea);
     hcclCommAicpu->RegisterKfcHandler(AicpuKfcHandlerType::kClearCommitTurn, KfcClearCommitTurn);
     hcclCommAicpu->RegisterKfcHandler(
-        AicpuKfcHandlerType::kSetProfTimeStart, [](const std::vector<u64>& args) -> HcclResult {
+        AicpuKfcHandlerType::kSetProfTimeStart, []([[maybe_unused]] const std::vector<u64>& args) -> HcclResult {
             AicpuKfcProf::SetKfcTimeLine(KfcTimeLine::HCC_EXEC_START_TIME);
             return HCCL_SUCCESS;
         });
     hcclCommAicpu->RegisterKfcHandler(
-        AicpuKfcHandlerType::kSetProfTimeOrch, [](const std::vector<u64>& args) -> HcclResult {
+        AicpuKfcHandlerType::kSetProfTimeOrch, []([[maybe_unused]] const std::vector<u64>& args) -> HcclResult {
             AicpuKfcProf::SetKfcTimeLine(KfcTimeLine::SEND_TASK_START_TIME);
             return HCCL_SUCCESS;
         });
     hcclCommAicpu->RegisterKfcHandler(
-        AicpuKfcHandlerType::kSetProfTimeEnd, [](const std::vector<u64>& args) -> HcclResult {
+        AicpuKfcHandlerType::kSetProfTimeEnd, []([[maybe_unused]] const std::vector<u64>& args) -> HcclResult {
             AicpuKfcProf::SetKfcTimeLine(KfcTimeLine::SEND_SQE_FINISH_TIME);
             return HCCL_SUCCESS;
         });

@@ -52,8 +52,8 @@ HcclResult CollReduceScatterVAIVBigCountExecutor::CalcLevel0CommInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollReduceScatterVAIVBigCountExecutor::CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize, HcclCMDType cmdType)
+HcclResult CollReduceScatterVAIVBigCountExecutor::CalNumBlocks(
+    u32& numBlocks, u32 rankSize, [[maybe_unused]] u64 dataSize, [[maybe_unused]] HcclCMDType cmdType)
 {
     numBlocks = NUM_BLOCKS_FACTOR_TWO * rankSize; // 单机场景，单算子ReduceScatter大数据使用2倍 rankSize个aiv
     u32 bestNumBlocks = numBlocks;

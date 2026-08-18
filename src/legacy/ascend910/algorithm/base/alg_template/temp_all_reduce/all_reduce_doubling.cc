@@ -19,7 +19,7 @@ AllReduceDoubling::AllReduceDoubling(const HcclDispatcher dispatcher) : AlgTempl
 
 AllReduceDoubling::~AllReduceDoubling() {}
 
-HcclResult AllReduceDoubling::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo)
+HcclResult AllReduceDoubling::Prepare(u64 reduceAttrBitMap, [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     reduceAttr_ = reduceAttrBitMap;
     return HCCL_SUCCESS;

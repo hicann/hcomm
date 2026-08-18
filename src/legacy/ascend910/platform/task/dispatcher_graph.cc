@@ -75,7 +75,7 @@ HcclResult DispatcherGraph::ResetGraphCtx(bool enableCache, const std::string& k
     return HCCL_SUCCESS;
 }
 
-HcclResult DispatcherGraph::LaunchTasksEx(Stream& stream, std::vector<Stream>& subStreams)
+HcclResult DispatcherGraph::LaunchTasksEx(Stream& stream, [[maybe_unused]] std::vector<Stream>& subStreams)
 {
     if (UNLIKELY(disableFfts_)) {
         return HCCL_SUCCESS;
@@ -560,7 +560,8 @@ HcclResult DispatcherGraph::VectorReduceLoop(
 }
 
 HcclResult DispatcherGraph::SetGraphTailVectorReduceDescSdma(
-    void* devMem, const void* tailSrc, u64 count, const HcclDataType dataType, HcclReduceOp redOp, Stream& stream)
+    void* devMem, const void* tailSrc, u64 count, [[maybe_unused]] const HcclDataType dataType,
+    [[maybe_unused]] HcclReduceOp redOp, Stream& stream)
 {
     uint64_t beginTime = GetMsprofSysCycleTime();
     u32 ctxIdx = 0;

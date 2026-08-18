@@ -133,7 +133,8 @@ namespace CcuRep {
             Hccl::CcuApiException, "tmpPtrV1 does not match supportCcuV1");
     }
 
-    bool CcuRepSub::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepSub::Translate(
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, [[maybe_unused]] const TransDep& dep)
     {
         ValidateInsGenPtrForSub();
         Hccl::CHECK_NULLPTR(instr, "[CcuRepSub::Translate] instr is nullptr!");

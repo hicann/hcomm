@@ -21,7 +21,7 @@ AllReduceDoublingLocalReduce::AllReduceDoublingLocalReduce(const HcclDispatcher 
 
 AllReduceDoublingLocalReduce::~AllReduceDoublingLocalReduce() {}
 
-HcclResult AllReduceDoublingLocalReduce::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo)
+HcclResult AllReduceDoublingLocalReduce::Prepare(u64 reduceAttrBitMap, [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     reduceAttr_ = reduceAttrBitMap;
     return HCCL_SUCCESS;

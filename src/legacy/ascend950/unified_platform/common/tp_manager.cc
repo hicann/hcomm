@@ -276,7 +276,8 @@ namespace {
 
     static HcclResult CommitTpAttrsAfterSlMapping(
         const uint32_t devLogicId, const uint32_t devPhyId, const bool isSync, const RaUbGetTpInfoParam& param,
-        const TpAttr& tpAttr, uint64_t tpHandle, uint32_t mappedSl, uint32_t nTp, uint16_t slMask)
+        const TpAttr& tpAttr, uint64_t tpHandle, uint32_t mappedSl, [[maybe_unused]] uint32_t nTp,
+        [[maybe_unused]] uint16_t slMask)
     {
         bool isPcieStd = false;
         CHK_RET(IsPcieStdMainboard(devLogicId, isPcieStd));

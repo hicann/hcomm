@@ -66,8 +66,8 @@ HcclResult CollAlltoAllExecutor::Orchestrate(OpParam& param, AlgResourceResponse
 HcclResult CollAlltoAllExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& adjInfo)
 {
     algResResp_ = &algRes;
-    SubCommInfo levelCommInfo = {0};
-    AdjInfo nslbAdjInfo = {0};
+    SubCommInfo levelCommInfo = {};
+    AdjInfo nslbAdjInfo = {};
     u32 devNumInlocalPod = INVALID_VALUE_RANKSIZE;
 
     if (Getlevel1CommRank(levelCommInfo) != HCCL_SUCCESS) {
@@ -93,7 +93,7 @@ HcclResult CollAlltoAllExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo
     HCCL_INFO("[GetAdjInfo-nslbdp] adjInfo.dstRankNum[%u].", adjInfo.dstRankNum);
 
     for (size_t i = 0; i < nslbAdjInfo.nsAdjInfo.size(); i++) {
-        NslbDpAdjInfo dpAdjInfo = {0};
+        NslbDpAdjInfo dpAdjInfo = {};
         dpAdjInfo.dstLocalRankId = nslbAdjInfo.nsAdjInfo[i].dstLocalRankId;
         dpAdjInfo.phaseId = nslbAdjInfo.nsAdjInfo[i].phaseId;
         dpAdjInfo.rev = 0;
@@ -180,7 +180,7 @@ HcclResult CollAlltoAllExecutor::CalcResRequest(const OpParam& param, AlgResourc
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAlltoAllExecutor::CheckNeedCreateVirtualLinks(AlgResourceRequest& resourceRequest)
+HcclResult CollAlltoAllExecutor::CheckNeedCreateVirtualLinks([[maybe_unused]] AlgResourceRequest& resourceRequest)
 {
     return HCCL_SUCCESS;
 }
@@ -466,7 +466,8 @@ HcclResult CollAlltoAllExecutor::SetVirtualDispatcher(const HcclDispatcher virtu
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAlltoAllExecutor::CheckNeedRecreateComm(u64 lastScratchMemSize, bool& needRecreateAlltoallComm)
+HcclResult
+CollAlltoAllExecutor::CheckNeedRecreateComm([[maybe_unused]] u64 lastScratchMemSize, bool& needRecreateAlltoallComm)
 {
     needRecreateAlltoallComm = false;
     return HCCL_SUCCESS;

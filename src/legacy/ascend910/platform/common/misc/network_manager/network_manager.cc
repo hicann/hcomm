@@ -604,7 +604,7 @@ HcclResult NetworkManager::GetConfigAndRaDeinit(
     return HCCL_SUCCESS;
 }
 
-HcclResult NetworkManager::DeInit(NICDeployment nicDeploy, bool resetDeviceFlag, bool hasBackup)
+HcclResult NetworkManager::DeInit(NICDeployment nicDeploy, [[maybe_unused]] bool resetDeviceFlag, bool hasBackup)
 {
     s32 ref = 0;
     if (nicDeploy == NICDeployment::NIC_DEPLOYMENT_HOST) {
@@ -666,7 +666,7 @@ HcclResult NetworkManager::DeInit(NICDeployment nicDeploy, bool resetDeviceFlag,
     return HCCL_SUCCESS;
 }
 
-HcclResult NetworkManager::DeInitV2(NICDeployment nicDeploy, bool isBackup, bool resetDeviceFlag)
+HcclResult NetworkManager::DeInitV2(NICDeployment nicDeploy, bool isBackup, [[maybe_unused]] bool resetDeviceFlag)
 {
     s32 ref = 0;
     CHK_RET(PrepareDeInit(ref, nicDeploy));
@@ -1312,7 +1312,7 @@ HcclResult NetworkManager::InitRDMA(
     nicRdevInfo.localIp.addr = ipAddr.GetBinaryAddress().addr;
     nicRdevInfo.localIp.addr6 = ipAddr.GetBinaryAddress().addr6;
 
-    struct RdevInitInfo init_info = {DEFAULT_INIT_RDMA_CONFIG};
+    struct RdevInitInfo init_info = {};
     init_info.mode = netMode;
     init_info.notifyType = notifyType;
     init_info.disabledLiteThread = disabledLiteThread;

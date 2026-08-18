@@ -24,7 +24,8 @@ std::unordered_map<TransportBase*, Transport*> Transport::transportMap_;
 Transport::Transport(
     TransportType type, TransportPara& para, const HcclDispatcher dispatcherPtr,
     const std::unique_ptr<NotifyPool>& notifyPool, MachinePara& machinePara,
-    const TransportDeviceP2pData& transDevP2pData, const TransportDeviceIbverbsData& transDevIbverbsData)
+    [[maybe_unused]] const TransportDeviceP2pData& transDevP2pData,
+    [[maybe_unused]] const TransportDeviceIbverbsData& transDevIbverbsData)
     : type_(type)
 {
     DispatcherPub* dispatcher = reinterpret_cast<DispatcherPub*>(const_cast<HcclDispatcher>(dispatcherPtr));
@@ -660,8 +661,8 @@ HcclResult Transport::GetSpecificNotify(HcclSignalInfo& notifyInfo, bool& isVali
 }
 
 HcclResult Transport::HcclBatchRead(
-    const TransportDeviceNormalData& ibvData, struct MemDetails* localMems, struct MemDetails* remoteMems, u32 memNum,
-    u64& dbInfo)
+    [[maybe_unused]] const TransportDeviceNormalData& ibvData, [[maybe_unused]] struct MemDetails* localMems,
+    [[maybe_unused]] struct MemDetails* remoteMems, [[maybe_unused]] u32 memNum, [[maybe_unused]] u64& dbInfo)
 {
 #ifdef CCL_KERNEL
     return TransportDeviceIbverbs::HnsPostSend(
@@ -678,8 +679,8 @@ HcclResult Transport::SetDeviceUnavailable(u32 deviceId)
 }
 
 HcclResult Transport::HcclBatchWrite(
-    const TransportDeviceNormalData& ibvData, struct MemDetails* localMems, struct MemDetails* remoteMems, u32 memNum,
-    u64& dbInfo)
+    [[maybe_unused]] const TransportDeviceNormalData& ibvData, [[maybe_unused]] struct MemDetails* localMems,
+    [[maybe_unused]] struct MemDetails* remoteMems, [[maybe_unused]] u32 memNum, [[maybe_unused]] u64& dbInfo)
 {
 #ifdef CCL_KERNEL
     return TransportDeviceIbverbs::HnsPostSend(

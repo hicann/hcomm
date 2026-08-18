@@ -56,8 +56,8 @@ HcclResult CollReduceScatterAivDeterSmallExecutor::CalcLevel0CommInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollReduceScatterAivDeterSmallExecutor::CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize, HcclCMDType cmdType)
+HcclResult CollReduceScatterAivDeterSmallExecutor::CalNumBlocks(
+    u32& numBlocks, u32 rankSize, u64 dataSize, [[maybe_unused]] HcclCMDType cmdType)
 {
     numBlocks = rankSize; // 默认情况使用rankSize个AIV
 

@@ -2741,8 +2741,8 @@ HcclResult CollCommExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& ad
 {
     HCCL_INFO("[nslbdp] Entry GetAdjInfo.");
     algResResp_ = &algRes;
-    SubCommInfo level1CommInfo = {0};
-    AdjInfo nslbAdjInfo = {0};
+    SubCommInfo level1CommInfo = {};
+    AdjInfo nslbAdjInfo = {};
     if (Getlevel1CommRank(level1CommInfo) != HCCL_SUCCESS) {
         HCCL_INFO("[nslbdp-GetAdjInfo] Getlevel1CommRank is NULL.");
         return HCCL_SUCCESS;
@@ -2773,7 +2773,7 @@ HcclResult CollCommExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& ad
     HCCL_INFO("[nslbdp-GetAdjInfo] adjInfo.dstRankNum[%u].", adjInfo.dstRankNum);
 
     for (size_t i = 0; i < nslbAdjInfo.nsAdjInfo.size(); i++) {
-        NslbDpAdjInfo dpAdjInfo = {0};
+        NslbDpAdjInfo dpAdjInfo = {};
         dpAdjInfo.dstLocalRankId = nslbAdjInfo.nsAdjInfo[i].dstLocalRankId;
         dpAdjInfo.phaseId = nslbAdjInfo.nsAdjInfo[i].phaseId;
         dpAdjInfo.rev = 0;

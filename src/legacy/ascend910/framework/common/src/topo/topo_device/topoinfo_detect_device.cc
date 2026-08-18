@@ -30,206 +30,255 @@ TopoInfoDetect::TopoInfoDetect()
 
 TopoInfoDetect::~TopoInfoDetect() {}
 
-HcclResult TopoInfoDetect::GetServerConnections(std::map<u32, std::shared_ptr<HcclSocket>>& connectSockets)
+HcclResult
+TopoInfoDetect::GetServerConnections([[maybe_unused]] std::map<u32, std::shared_ptr<HcclSocket>>& connectSockets)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::GetAgentListenSocket(HcclSocketPortConfig& commPortConfig) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoDetect::GetAgentListenSocket([[maybe_unused]] HcclSocketPortConfig& commPortConfig)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
-HcclResult TopoInfoDetect::GetAgentConnection(std::shared_ptr<HcclSocket>& connectSocket) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoDetect::GetAgentConnection([[maybe_unused]] std::shared_ptr<HcclSocket>& connectSocket)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
-HcclResult TopoInfoDetect::SendGroupLeaderPort(std::shared_ptr<HcclSocket>& connectSocket, HcclRankHandle& rankHandle)
+HcclResult TopoInfoDetect::SendGroupLeaderPort(
+    [[maybe_unused]] std::shared_ptr<HcclSocket>& connectSocket, [[maybe_unused]] HcclRankHandle& rankHandle)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 void TopoInfoDetect::SetupTopoGroupLeader(
-    s32 devicePhysicID, s32 deviceLogicID, HcclIpAddress hostIP, u32 hostPort, vector<HcclIpAddress> whitelist,
-    HcclNetDevCtx netDevCtx, std::shared_ptr<HcclSocket> listenSocket, std::shared_ptr<HcclSocket> grpLeaderToRoot,
-    bool isMasterInfo)
+    [[maybe_unused]] s32 devicePhysicID, [[maybe_unused]] s32 deviceLogicID, [[maybe_unused]] HcclIpAddress hostIP,
+    [[maybe_unused]] u32 hostPort, [[maybe_unused]] vector<HcclIpAddress> whitelist,
+    [[maybe_unused]] HcclNetDevCtx netDevCtx, [[maybe_unused]] std::shared_ptr<HcclSocket> listenSocket,
+    [[maybe_unused]] std::shared_ptr<HcclSocket> grpLeaderToRoot, [[maybe_unused]] bool isMasterInfo)
 {
     return;
 }
 
 void TopoInfoDetect::SetupTopoExchangeServer(
-    s32 devicePhysicID, s32 deviceLogicID, HcclIpAddress hostIP, u32 hostPort, vector<HcclIpAddress> whitelist,
-    HcclNetDevCtx netDevCtx, std::shared_ptr<HcclSocket> listenSocket, bool isMasterInfo)
+    [[maybe_unused]] s32 devicePhysicID, [[maybe_unused]] s32 deviceLogicID, [[maybe_unused]] HcclIpAddress hostIP,
+    [[maybe_unused]] u32 hostPort, [[maybe_unused]] vector<HcclIpAddress> whitelist,
+    [[maybe_unused]] HcclNetDevCtx netDevCtx, [[maybe_unused]] std::shared_ptr<HcclSocket> listenSocket,
+    [[maybe_unused]] bool isMasterInfo)
 {
     return;
 }
-HcclResult
-TopoInfoDetect::SetupServerByMasterInfo(const HcclIpAddress& masterIP, u32 masterPort, const HcclRootHandle& rootInfo)
+HcclResult TopoInfoDetect::SetupServerByMasterInfo(
+    [[maybe_unused]] const HcclIpAddress& masterIP, [[maybe_unused]] u32 masterPort,
+    [[maybe_unused]] const HcclRootHandle& rootInfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::SetupServer(HcclRootHandle& rootInfo) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoDetect::SetupServer([[maybe_unused]] HcclRootHandle& rootInfo) { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult TopoInfoDetect::GroupLeaderListen(HcclRankHandle& rankHandle, vector<HcclIpAddress>& whitelist)
+HcclResult TopoInfoDetect::GroupLeaderListen(
+    [[maybe_unused]] HcclRankHandle& rankHandle, [[maybe_unused]] vector<HcclIpAddress>& whitelist)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoInfoDetect::GroupLeaderAccept(
-    HcclRankHandle& grpLeaderInfo, vector<HcclIpAddress> whitelist, std::shared_ptr<HcclSocket> grpLeaderToRoot)
+    [[maybe_unused]] HcclRankHandle& grpLeaderInfo, [[maybe_unused]] vector<HcclIpAddress> whitelist,
+    [[maybe_unused]] std::shared_ptr<HcclSocket> grpLeaderToRoot)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoInfoDetect::GenerateRootInfo(
-    const HcclIpAddress& hostIP, u32 hostPort, u32 devicePhysicID, HcclRootHandle& rootInfo)
+    [[maybe_unused]] const HcclIpAddress& hostIP, [[maybe_unused]] u32 hostPort, [[maybe_unused]] u32 devicePhysicID,
+    [[maybe_unused]] HcclRootHandle& rootInfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::CalcGroupSizeAndRank(const u32 nRanks, const u32 rank, u32& groupSize, u32& groupRank)
+HcclResult TopoInfoDetect::CalcGroupSizeAndRank(
+    [[maybe_unused]] const u32 nRanks, [[maybe_unused]] const u32 rank, [[maybe_unused]] u32& groupSize,
+    [[maybe_unused]] u32& groupRank)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::SetupGroupMember(u32 rankSize, u32 myrank, const HcclRootHandle& rootInfo)
+HcclResult TopoInfoDetect::SetupGroupMember(
+    [[maybe_unused]] u32 rankSize, [[maybe_unused]] u32 myrank, [[maybe_unused]] const HcclRootHandle& rootInfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoInfoDetect::TeardownServer() { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult TopoInfoDetect::WaitTopoExchangeServerCompelte(u32 idx) const { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoDetect::WaitTopoExchangeServerCompelte([[maybe_unused]] u32 idx) const { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult TopoInfoDetect::PrepareHandle(HcclRankHandle& rankHandle, std::vector<HcclIpAddress>& whitelist)
+HcclResult TopoInfoDetect::PrepareHandle(
+    [[maybe_unused]] HcclRankHandle& rankHandle, [[maybe_unused]] std::vector<HcclIpAddress>& whitelist)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoInfoDetect::SetupAgent(
-    u32 rankSize, u32 myrank, const HcclRootHandle& rootInfo, const HcclRankHandle& rankHandle,
-    const CommConfig& commConfig)
+    [[maybe_unused]] u32 rankSize, [[maybe_unused]] u32 myrank, [[maybe_unused]] const HcclRootHandle& rootInfo,
+    [[maybe_unused]] const HcclRankHandle& rankHandle, [[maybe_unused]] const CommConfig& commConfig)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::SetupRank(std::shared_ptr<HcclSocket>& agentConnRoot) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoDetect::SetupRank([[maybe_unused]] std::shared_ptr<HcclSocket>& agentConnRoot)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
 HcclResult TopoInfoDetect::TeardownAgent() { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult TopoInfoDetect::SetupAgentByMasterInfo(HcclIpAddress& localHostIp, const HcclRootHandle& rootInfo)
+HcclResult TopoInfoDetect::SetupAgentByMasterInfo(
+    [[maybe_unused]] HcclIpAddress& localHostIp, [[maybe_unused]] const HcclRootHandle& rootInfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::WaitComplete(const HcclRootHandle& rootInfo) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoDetect::WaitComplete([[maybe_unused]] const HcclRootHandle& rootInfo) { return HCCL_E_NOT_SUPPORT; }
 
 HcclResult TopoInfoDetect::Teardown() { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult TopoInfoDetect::ReadHostSocketWhitelist(vector<HcclIpAddress>& whitelist) const
+HcclResult TopoInfoDetect::ReadHostSocketWhitelist([[maybe_unused]] vector<HcclIpAddress>& whitelist) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::GetAllHostIfInfos(vector<pair<string, HcclIpAddress>>& ifInfos, u32 devPhyId) const
+HcclResult TopoInfoDetect::GetAllHostIfInfos(
+    [[maybe_unused]] vector<pair<string, HcclIpAddress>>& ifInfos, [[maybe_unused]] u32 devPhyId) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoInfoDetect::GetAllValidHostIfInfos(
-    const vector<HcclIpAddress>& whitelist, vector<pair<string, HcclIpAddress>>& ifInfos, u32 devPhyId)
+    [[maybe_unused]] const vector<HcclIpAddress>& whitelist,
+    [[maybe_unused]] vector<pair<string, HcclIpAddress>>& ifInfos, [[maybe_unused]] u32 devPhyId)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::GetRootHostIP(const vector<HcclIpAddress>& whitelist, HcclIpAddress& ip, u32 devPhyId)
+HcclResult TopoInfoDetect::GetRootHostIP(
+    [[maybe_unused]] const vector<HcclIpAddress>& whitelist, [[maybe_unused]] HcclIpAddress& ip,
+    [[maybe_unused]] u32 devPhyId)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::GetGroupLeader(HcclRankHandle& rankHandle) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoDetect::GetGroupLeader([[maybe_unused]] HcclRankHandle& rankHandle) { return HCCL_E_NOT_SUPPORT; }
 
-HcclResult TopoInfoDetect::SetIsInterSuperPodRetryEnable(bool isRetry) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoDetect::SetIsInterSuperPodRetryEnable([[maybe_unused]] bool isRetry) { return HCCL_E_NOT_SUPPORT; }
 
 HcclResult TopoInfoDetect::StartRootNetwork(
-    const HcclIpAddress& hostIP, u32& usePort, const std::vector<HcclSocketPortRange>& portRanges)
+    [[maybe_unused]] const HcclIpAddress& hostIP, [[maybe_unused]] u32& usePort,
+    [[maybe_unused]] const std::vector<HcclSocketPortRange>& portRanges)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoInfoDetect::StartGroupLeaderNetwork(
-    const vector<HcclIpAddress>& whitelist, const HcclIpAddress& hostIP, u32& bindPort,
-    const std::vector<HcclSocketPortRange>& portRanges)
+    [[maybe_unused]] const vector<HcclIpAddress>& whitelist, [[maybe_unused]] const HcclIpAddress& hostIP,
+    [[maybe_unused]] u32& bindPort, [[maybe_unused]] const std::vector<HcclSocketPortRange>& portRanges)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::AddSocketWhiteList(u32 port, const vector<HcclIpAddress>& whitelist) const
+HcclResult TopoInfoDetect::AddSocketWhiteList(
+    [[maybe_unused]] u32 port, [[maybe_unused]] const vector<HcclIpAddress>& whitelist) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::StartNetwork(HcclIpAddress& hostIP, bool bInitDevNic) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoDetect::StartNetwork([[maybe_unused]] HcclIpAddress& hostIP, [[maybe_unused]] bool bInitDevNic)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
-HcclResult TopoInfoDetect::StopNetwork(HcclIpAddress& hostIP, bool bInitDevNic) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoDetect::StopNetwork([[maybe_unused]] HcclIpAddress& hostIP, [[maybe_unused]] bool bInitDevNic)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
 HcclResult TopoInfoDetect::FilterDevIPs(
-    std::vector<HcclIpAddress>& sourceDeviceIPs, std::vector<HcclIpAddress>& targetDeviceIPs) const
+    [[maybe_unused]] std::vector<HcclIpAddress>& sourceDeviceIPs,
+    [[maybe_unused]] std::vector<HcclIpAddress>& targetDeviceIPs) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoInfoDetect::PreemptDeviceNicPort(
-    const u32 devPhyId, const s32 devLogicId, const HcclIpAddress& deviceIp, u32& usePort)
+    [[maybe_unused]] const u32 devPhyId, [[maybe_unused]] const s32 devLogicId,
+    [[maybe_unused]] const HcclIpAddress& deviceIp, [[maybe_unused]] u32& usePort)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::PreemptDeviceVnicPort(HcclBasicRankInfo& localRankInfo) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoDetect::PreemptDeviceVnicPort([[maybe_unused]] HcclBasicRankInfo& localRankInfo)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
 
 HcclResult TopoInfoDetect::PreemptBackupDeviceNicPort(
-    const u32 devPhyId, const s32 devLogicId, const HcclIpAddress& deviceIp, const HcclIpAddress& backupDeviceIp,
-    u32& usePort)
+    [[maybe_unused]] const u32 devPhyId, [[maybe_unused]] const s32 devLogicId,
+    [[maybe_unused]] const HcclIpAddress& deviceIp, [[maybe_unused]] const HcclIpAddress& backupDeviceIp,
+    [[maybe_unused]] u32& usePort)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::GetDeviceBackupNicInfo(HcclBasicRankInfo& localRankInfo) { return HCCL_E_NOT_SUPPORT; }
-
-HcclResult TopoInfoDetect::GenerateLocalRankInfo(u32 rankSize, u32 rankID, HcclBasicRankInfo& localRankInfo)
+HcclResult TopoInfoDetect::GetDeviceBackupNicInfo([[maybe_unused]] HcclBasicRankInfo& localRankInfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::GetSuperPodInfo(s32 deviceLogicId, std::string& superPodId, u32& superDeviceId)
+HcclResult TopoInfoDetect::GenerateLocalRankInfo(
+    [[maybe_unused]] u32 rankSize, [[maybe_unused]] u32 rankID, [[maybe_unused]] HcclBasicRankInfo& localRankInfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult TopoInfoDetect::GetCluterInfo(RankTable_t& clusterInfo) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoDetect::GetSuperPodInfo(
+    [[maybe_unused]] s32 deviceLogicId, [[maybe_unused]] std::string& superPodId, [[maybe_unused]] u32& superDeviceId)
+{
+    return HCCL_E_NOT_SUPPORT;
+}
+
+HcclResult TopoInfoDetect::GetCluterInfo([[maybe_unused]] RankTable_t& clusterInfo) { return HCCL_E_NOT_SUPPORT; }
 HcclResult TopoInfoDetect::GetRankId(u32& rankId)
 {
     rankId = identifierNum_;
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoInfoDetect::GetLocalRankInfo(HcclBasicRankInfo& rankInfo) { return HCCL_E_NOT_SUPPORT; }
+HcclResult TopoInfoDetect::GetLocalRankInfo([[maybe_unused]] HcclBasicRankInfo& rankInfo) { return HCCL_E_NOT_SUPPORT; }
 
 void TopoInfoDetect::SetBootstrapHostIP(HcclIpAddress& ip) { bootstrapHostIP_ = ip; }
 
 HcclIpAddress TopoInfoDetect::GetBootstrapHostIP() const { return bootstrapHostIP_; }
-HcclResult TopoInfoDetect::TransformRankTableStr(const RankTable_t& clusterInfo, string& ranktableStr)
+HcclResult TopoInfoDetect::TransformRankTableStr(
+    [[maybe_unused]] const RankTable_t& clusterInfo, [[maybe_unused]] string& ranktableStr)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 HcclResult TopoInfoDetect::TransformDeviceList(
-    const RankTable_t& clusterInfo, vector<RankInfo_t>& tmpRankList, nlohmann::json& perServerJson, u32 serverIndex)
+    [[maybe_unused]] const RankTable_t& clusterInfo, [[maybe_unused]] vector<RankInfo_t>& tmpRankList,
+    [[maybe_unused]] nlohmann::json& perServerJson, [[maybe_unused]] u32 serverIndex)
 {
     return HCCL_E_NOT_SUPPORT;
 }
-HcclResult TopoInfoDetect::Struct2JsonRankTable(const RankTable_t& clusterInfo, nlohmann::json& ClusterJson)
+HcclResult TopoInfoDetect::Struct2JsonRankTable(
+    [[maybe_unused]] const RankTable_t& clusterInfo, [[maybe_unused]] nlohmann::json& ClusterJson)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult
-TopoInfoDetect::TransformSuperPodList(const std::vector<RankInfo_t>& rankInfo, nlohmann::json& superPodListJson) const
+HcclResult TopoInfoDetect::TransformSuperPodList(
+    [[maybe_unused]] const std::vector<RankInfo_t>& rankInfo, [[maybe_unused]] nlohmann::json& superPodListJson) const
 {
     return HCCL_E_NOT_SUPPORT;
 }

@@ -95,7 +95,9 @@ namespace CcuRep {
         return instrCount;
     }
 
-    bool CcuRepLoopCall::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepLoopCall::Translate(
+        [[maybe_unused]] CcuKernel* ccuKernel, [[maybe_unused]] CcuInstr*& instr, uint16_t& instrId,
+        [[maybe_unused]] const TransDep& dep)
     {
         this->instrId = instrId;
         translated = true;

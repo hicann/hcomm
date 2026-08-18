@@ -257,6 +257,7 @@ void BkfChSerLetcpDelAllConnId(BkfChSer *ch, BkfChSerLetcpLsn *lsn)
 
 BkfChSerConnId *BkfChSerLetcpFindConnId(BkfChSer *ch, BkfChSerLetcpLsn *lsn, int32_t connFd)
 {
+    (void)ch;
     BkfChSerConnId *connId = VOS_NULL;
     BOOL hit = VOS_FALSE;
 
@@ -275,6 +276,7 @@ BkfChSerConnId *BkfChSerLetcpFindConnId(BkfChSer *ch, BkfChSerLetcpLsn *lsn, int
 
 BkfChSerConnId *BkfChSerLetcpFindNextConnId(BkfChSer *ch, BkfChSerLetcpLsn *lsn, int32_t connFd)
 {
+    (void)ch;
     BkfChSerConnId *connId = VOS_NULL;
 
     connId = VOS_AVLL_FIND_NEXT(lsn->connIdSet, &connFd);
@@ -283,6 +285,7 @@ BkfChSerConnId *BkfChSerLetcpFindNextConnId(BkfChSer *ch, BkfChSerLetcpLsn *lsn,
 
 BkfChSerConnId *BkfChSerLetcpGetFirstConnId(BkfChSer *ch, BkfChSerLetcpLsn *lsn, void **itorOutOrNull)
 {
+    (void)ch;
     BkfChSerConnId *connId = VOS_NULL;
 
     connId = VOS_AVLL_FIRST(lsn->connIdSet);
@@ -294,6 +297,7 @@ BkfChSerConnId *BkfChSerLetcpGetFirstConnId(BkfChSer *ch, BkfChSerLetcpLsn *lsn,
 
 BkfChSerConnId *BkfChSerLetcpGetNextConnId(BkfChSer *ch, BkfChSerLetcpLsn *lsn, void **itorInOut)
 {
+    (void)ch;
     BkfChSerConnId *connId = VOS_NULL;
 
     connId = (*itorInOut);

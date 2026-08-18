@@ -128,11 +128,15 @@ char *BkfCeraGetStr(BkfCera *cera, uint8_t *buf, int32_t bufLen)
 
 uint32_t BkfCeraH2N(BkfCera *ceraH, BkfCera *ceraN)
 {
+    (void)ceraH;
+    (void)ceraN;
     return 0;
 }
 
 uint32_t BkfCeraN2H(BkfCera *ceraN, BkfCera *ceraH)
 {
+    (void)ceraN;
+    (void)ceraH;
     return 0;
 }
 

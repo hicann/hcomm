@@ -203,6 +203,7 @@ void BkfSuberSessDeleteReSubTmr(BkfSuberSessMng *sessMng)
 
 uint32_t BkfSubSessReSubTmrSvcProc(void *paramTmrStart, void *noUse)
 {
+    (void)noUse;
     BkfSuberSessMng *sessMng = (BkfSuberSessMng *)paramTmrStart;
     BkfSuberSessResetUnBlockFlag(sessMng);
     if (BKF_DL_IS_EMPTY(&sessMng->subSess)) {

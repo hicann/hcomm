@@ -62,7 +62,7 @@ HcclResult CollSendExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& ad
     u32 ringNextRank = (localRank + 1) % localRankSize;
 
     adjInfo.dstRankNum = 1;
-    NslbDpAdjInfo adjInfoStep = {0};
+    NslbDpAdjInfo adjInfoStep = {};
     adjInfoStep.dstLocalRankId = ringNextRank;
     adjInfoStep.phaseId = 1;
     adjInfoStep.rev = 0;

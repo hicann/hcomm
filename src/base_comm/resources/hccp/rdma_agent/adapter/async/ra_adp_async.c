@@ -93,6 +93,7 @@ STATIC void RaAsyncHandlePkt(unsigned int chipId, void *recvBuf, unsigned int re
 
 STATIC void *RaAsyncPthread(void *arg)
 {
+    (void)arg;
     unsigned int chipId = gHdcAsyncInitPara.chipId;
     unsigned int recvLen = 0;
     void *recvBuf = NULL;
@@ -145,6 +146,7 @@ STATIC void *RaAsyncPthread(void *arg)
 
 STATIC void RaHwAsyncHdcInit(void *arg)
 {
+    (void)arg;
     unsigned int chipId = gHdcAsyncInitPara.chipId;
     pthread_t tidp;
     int ret;
@@ -196,6 +198,8 @@ void RaHwAsyncDeinit(void)
 
 int RaRsAsyncHdcSessionConnect(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpAsyncHdcConnectData *asyncData = NULL;
     int timeout = RA_THREAD_TRY_TIME;
     unsigned int phyId = 0;
@@ -245,6 +249,9 @@ int RaRsAsyncHdcSessionConnect(char *inBuf, char *outBuf, int *outLen, int *opRe
 
 int RaRsAsyncHdcSessionClose(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)inBuf;
+    (void)outBuf;
+    (void)outLen;
     int tryAgain = HDC_TRY_TIME;
     unsigned int phyId = 0;
 

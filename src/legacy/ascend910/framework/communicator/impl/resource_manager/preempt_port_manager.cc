@@ -88,7 +88,7 @@ HcclResult PreemptPortManager::Release(const std::shared_ptr<HcclSocket>& listen
 }
 
 HcclResult PreemptPortManager::PreemptPortInRange(
-    IpPortRef& portRef, const std::shared_ptr<HcclSocket>& listenSocket, NICDeployment nicDeploy,
+    IpPortRef& portRef, const std::shared_ptr<HcclSocket>& listenSocket, [[maybe_unused]] NICDeployment nicDeploy,
     const std::vector<HcclSocketPortRange>& portRange, u32& usePort)
 {
     std::string ipAddr(listenSocket->GetLocalIp().GetReadableAddress());
@@ -162,7 +162,7 @@ HcclResult PreemptPortManager::PreemptPortInRange(
 }
 
 HcclResult PreemptPortManager::ReleasePreempt(
-    IpPortRef& portRef, const std::shared_ptr<HcclSocket>& listenSocket, NICDeployment nicDeploy)
+    IpPortRef& portRef, const std::shared_ptr<HcclSocket>& listenSocket, [[maybe_unused]] NICDeployment nicDeploy)
 {
     std::string ipAddr(listenSocket->GetLocalIp().GetReadableAddress());
     u32 port = listenSocket->GetLocalPort();

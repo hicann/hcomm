@@ -125,26 +125,37 @@ BKF_STATIC_ASSERT(BKF_GET_ARY_COUNT(g_BkfUrlVTbl) == BKF_URL_TYPE_CNT);
 #define BKF_URL_STR_INVALID "-"
 uint32_t BkfUrlInvalidStr2Val(char *urlStr, BkfUrl *url)
 {
+    (void)urlStr;
+    (void)url;
     BKF_ASSERT(0);
     return BKF_ERR;
 }
 char *BkfUrlInvalidVal2Str(BkfUrl *url, uint8_t *buf, int32_t bufLen)
 {
+    (void)url;
+    (void)buf;
+    (void)bufLen;
     BKF_ASSERT(0);
     return BKF_URL_STR_INVALID;
 }
 int32_t BkfUrlInvalidCmp(BkfUrl *url1Input, BkfUrl *url2InDs)
 {
+    (void)url1Input;
+    (void)url2InDs;
     BKF_ASSERT(0);
     return 0;
 }
 uint32_t BkfUrlInvalidH2N(BkfUrl *urlH, BkfUrl *urlN)
 {
+    (void)urlH;
+    (void)urlN;
     BKF_ASSERT(0);
     return BKF_ERR;
 }
 uint32_t BkfUrlInvalidN2H(BkfUrl *urlN, BkfUrl *urlH)
 {
+    (void)urlN;
+    (void)urlH;
     BKF_ASSERT(0);
     return BKF_ERR;
 }

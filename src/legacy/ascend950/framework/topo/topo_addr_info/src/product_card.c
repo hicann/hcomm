@@ -34,6 +34,7 @@ int GetCardRankInfoLen(size_t* len)
  */
 static int ProcessLayerMesh(int npu_id, NetLayer* layer, dcmi_urma_eid_info_t* eid_list, size_t eid_cnt)
 {
+    (void)npu_id;
     if (eid_cnt == 0) {
         return -1;
     }

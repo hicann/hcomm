@@ -83,10 +83,10 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepBufLocReadTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepBufLocRead* repBufLocRead, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepBufLocRead* repBufLocRead, const TransDep& dep)
     {
         CHK_PTR_NULL(repBufLocRead);
-        CcuV2::CacheConfig config = {0};
+        CcuV2::CacheConfig config = {};
 
         TransLocMemToLocMS(
             instr++, repBufLocRead->GetDst().Id(), repBufLocRead->GetSrc().addr.Id(),
@@ -97,10 +97,10 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepBufLocWriteTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepBufLocWrite* repBufLocWrite, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepBufLocWrite* repBufLocWrite, const TransDep& dep)
     {
         CHK_PTR_NULL(repBufLocWrite);
-        CcuV2::CacheConfig config = {0};
+        CcuV2::CacheConfig config = {};
 
         TransLocMSToLocMem(
             instr++, repBufLocWrite->GetDst().addr.Id(), repBufLocWrite->GetDst().token.Id(),
@@ -197,7 +197,8 @@ namespace CcuRep {
         return HcclResult::HCCL_SUCCESS;
     }
 
-    HcclResult CcuInsGeneratorV2::CcuRepRemMemTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemMem* repRemMem)
+    HcclResult CcuInsGeneratorV2::CcuRepRemMemTranslate(
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemMem* repRemMem)
     {
         CHK_PTR_NULL(repRemMem);
         CcuUrmaChannel* channelImpl{nullptr};
@@ -339,7 +340,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepLocRecordEventTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepLocRecordEvent* ccuRepLocRecordEvent)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepLocRecordEvent* ccuRepLocRecordEvent)
     {
         CHK_PTR_NULL(ccuRepLocRecordEvent);
         CcuV2::SetCKE(instr++, ccuRepLocRecordEvent->GetEvent().Id(), ccuRepLocRecordEvent->GetMask(), 0, 0, 1);
@@ -348,7 +349,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepLocWaitEventTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepLocWaitEvent* ccuRepLocWaitEvent)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepLocWaitEvent* ccuRepLocWaitEvent)
     {
         CHK_PTR_NULL(ccuRepLocWaitEvent);
         // 需要profiling的使用SetCKEInstr, 否则使用ClearCKEInstr
@@ -362,7 +363,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepLocWaitNotifyTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepLocWaitNotify* ccuRepLocWaitNotify)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepLocWaitNotify* ccuRepLocWaitNotify)
     {
         CHK_PTR_NULL(ccuRepLocWaitNotify);
         if (ccuRepLocWaitNotify->GetIsProfiling()) {
@@ -375,7 +376,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepRemWaitSemTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemWaitSem* ccuRepRemWaitSem)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemWaitSem* ccuRepRemWaitSem)
     {
         CHK_PTR_NULL(ccuRepRemWaitSem);
         CcuUrmaChannel* channelImpl{nullptr};
@@ -428,7 +429,7 @@ namespace CcuRep {
         CHK_RET(GetRmtToken(channelImpl, rmtToken));
 
         const auto& constValue2VarMap = ccuKernel->GetConstValue2VarMap();
-        CcuV2::TransMemNotifyInfo notify = {0};
+        CcuV2::TransMemNotifyInfo notify = {};
         notify.xnId = constValue2VarMap.at(rmtSignalAddr).Id();
         notify.xntId = constValue2VarMap.at(rmtToken).Id();
         notify.value = ccuRepRemPostVar->GetMask();
@@ -441,7 +442,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepRemPostSemTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemPostSem* ccuRepRemPostSem, const TransDep& dep)
+        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemPostSem* ccuRepRemPostSem,
+        [[maybe_unused]] const TransDep& dep)
     {
         CHK_PTR_NULL(ccuRepRemPostSem);
         CHK_PTR_NULL(ccuKernel);
@@ -461,7 +463,7 @@ namespace CcuRep {
         CHK_RET(GetRmtToken(channelImpl, rmtToken));
 
         const auto& constValue2VarMap = ccuKernel->GetConstValue2VarMap();
-        CcuV2::TransMemNotifyInfo notify = {0};
+        CcuV2::TransMemNotifyInfo notify = {};
         notify.xnId = constValue2VarMap.at(rmtSignalAddr).Id();
         notify.xntId = constValue2VarMap.at(rmtToken).Id();
         notify.value = ccuRepRemPostSem->GetMask();
@@ -503,7 +505,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepAddTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepAdd* ccuRepAdd, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepAdd* ccuRepAdd, const TransDep& dep)
     {
         HCCL_INFO("Use table-driven translate for add");
         UNUSED(dep);
@@ -554,7 +556,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepAssignTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepAssign* ccuRepAssign, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepAssign* ccuRepAssign, const TransDep& dep)
     {
         UNUSED(dep);
         CHK_PTR_NULL(ccuRepAssign);
@@ -588,7 +590,8 @@ namespace CcuRep {
         return HcclResult::HCCL_SUCCESS;
     }
 
-    HcclResult CcuInsGeneratorV2::CcuRepMulTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepMul* ccuRepMul)
+    HcclResult
+    CcuInsGeneratorV2::CcuRepMulTranslate([[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepMul* ccuRepMul)
     {
         CHK_PTR_NULL(ccuRepMul);
 
@@ -634,7 +637,8 @@ namespace CcuRep {
         return HcclResult::HCCL_SUCCESS;
     }
 
-    HcclResult CcuInsGeneratorV2::CcuRepSubTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepSub* ccuRepSub)
+    HcclResult
+    CcuInsGeneratorV2::CcuRepSubTranslate([[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepSub* ccuRepSub)
     {
         CHK_PTR_NULL(ccuRepSub);
 
@@ -680,7 +684,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepAndTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepAnd* ccuRepAnd, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepAnd* ccuRepAnd,
+        [[maybe_unused]] const TransDep& dep)
     {
         CHK_PTR_NULL(ccuRepAnd);
         switch (ccuRepAnd->GetSubType()) {
@@ -703,7 +708,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepNotTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepNot* ccuRepNot, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepNot* ccuRepNot,
+        [[maybe_unused]] const TransDep& dep)
     {
         CHK_PTR_NULL(ccuRepNot);
         switch (ccuRepNot->GetSubType()) {
@@ -720,7 +726,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepOrTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepOr* ccuRepOr, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepOr* ccuRepOr,
+        [[maybe_unused]] const TransDep& dep)
     {
         CHK_PTR_NULL(ccuRepOr);
         switch (ccuRepOr->GetSubType()) {
@@ -741,7 +748,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepXorTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepXor* ccuRepXor, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepXor* ccuRepXor,
+        [[maybe_unused]] const TransDep& dep)
     {
         CHK_PTR_NULL(ccuRepXor);
         switch (ccuRepXor->GetSubType()) {
@@ -764,7 +772,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepShLTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepShL* ccuRepShL, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepShL* ccuRepShL,
+        [[maybe_unused]] const TransDep& dep)
     {
         CHK_PTR_NULL(ccuRepShL);
         if (ccuRepShL->GetShiftType() == ShiftType::LOGICAL_SHIFT) {
@@ -804,7 +813,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepShRTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepShR* ccuRepShR, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepShR* ccuRepShR,
+        [[maybe_unused]] const TransDep& dep)
     {
         CHK_PTR_NULL(ccuRepShR);
         if (ccuRepShR->GetShiftType() == ShiftType::LOGICAL_SHIFT) {
@@ -844,7 +854,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepFuncBlockTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepFuncBlock* funcBlockPtr,
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepFuncBlock* funcBlockPtr,
         const TransDep& dep, uint32_t step)
     {
         CHK_PTR_NULL(funcBlockPtr);
@@ -932,7 +942,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepFuncCallTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& curInstr, uint16_t& curInstrId, CcuRepFuncCall* funcCallPtr,
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& curInstr, uint16_t& curInstrId, CcuRepFuncCall* funcCallPtr,
         const TransDep& dep)
     {
         (void)curInstr;
@@ -993,7 +1003,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepJumpTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJump* jumpPtr, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJump* jumpPtr,
+        const TransDep& dep)
     {
         (void)instr;
         (void)curInstrId;
@@ -1041,7 +1052,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepJumpNETranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpNE* jumpNEPtr, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpNE* jumpNEPtr,
+        const TransDep& dep)
     {
         (void)dep;
         CHK_PTR_NULL(jumpNEPtr);
@@ -1051,7 +1063,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepJumpEQTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpEQ* jumpEQPtr, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpEQ* jumpEQPtr,
+        const TransDep& dep)
     {
         (void)dep;
         CHK_PTR_NULL(jumpEQPtr);
@@ -1061,7 +1074,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepJumpLETranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpLE* jumpLEPtr, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpLE* jumpLEPtr,
+        const TransDep& dep)
     {
         (void)dep;
         CHK_PTR_NULL(jumpLEPtr);
@@ -1071,7 +1085,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepJumpGETranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpGE* jumpGEPtr, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpGE* jumpGEPtr,
+        const TransDep& dep)
     {
         (void)dep;
         CHK_PTR_NULL(jumpGEPtr);
@@ -1081,7 +1096,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepJumpGTTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpGT* jumpGTPtr, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpGT* jumpGTPtr,
+        const TransDep& dep)
     {
         (void)dep;
         CHK_PTR_NULL(jumpGTPtr);
@@ -1091,7 +1107,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepJumpLTTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpLT* jumpLTPtr, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepJumpLT* jumpLTPtr,
+        const TransDep& dep)
     {
         (void)dep;
         CHK_PTR_NULL(jumpLTPtr);
@@ -1101,7 +1118,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepLoopTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoop* loopPtr)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoop* loopPtr)
     {
         (void)curInstrId;
         CHK_PTR_NULL(loopPtr);
@@ -1156,7 +1173,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepLoopCallTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoopCall* loopCallPtr, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoopCall* loopCallPtr,
+        const TransDep& dep)
     {
         (void)curInstrId;
         (void)dep;
@@ -1181,7 +1199,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepSetLoopTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepSetLoop* setLoopPtr)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepSetLoop* setLoopPtr)
     {
         (void)curInstrId;
         CHK_PTR_NULL(setLoopPtr);
@@ -1231,7 +1249,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepLoadArgTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoadArg* loadArgPtr, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoadArg* loadArgPtr,
+        const TransDep& dep)
     {
         (void)curInstrId;
         CHK_PTR_NULL(loadArgPtr);
@@ -1246,7 +1265,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepNopTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepNop* nopPtr, const TransDep& dep)
+        [[maybe_unused]] CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepNop* nopPtr,
+        const TransDep& dep)
     {
         (void)curInstrId;
         (void)nopPtr;
@@ -1378,8 +1398,8 @@ namespace CcuRep {
         return ccuKernel->Add2ConstValue2VarMap(values);
     }
 
-    HcclResult
-    CcuInsGeneratorV2::PrepareRemPostSemConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel)
+    HcclResult CcuInsGeneratorV2::PrepareRemPostSemConstValue(
+        CcuRepBase* repPtr, [[maybe_unused]] const TransDep& dep, CcuKernel* ccuKernel)
     {
         CcuRepRemPostSem* repRemPostSemPtr = dynamic_cast<CcuRepRemPostSem*>(repPtr);
         CHK_PTR_NULL(repRemPostSemPtr);
@@ -1399,8 +1419,8 @@ namespace CcuRep {
         return ccuKernel->Add2ConstValue2VarMap(values);
     }
 
-    HcclResult
-    CcuInsGeneratorV2::PrepareRemPostVarConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel)
+    HcclResult CcuInsGeneratorV2::PrepareRemPostVarConstValue(
+        CcuRepBase* repPtr, [[maybe_unused]] const TransDep& dep, CcuKernel* ccuKernel)
     {
         CcuRepRemPostVar* repRemPostVarPtr = dynamic_cast<CcuRepRemPostVar*>(repPtr);
         CHK_PTR_NULL(repRemPostVarPtr);
@@ -1428,7 +1448,8 @@ namespace CcuRep {
         return ccuKernel->Add2ConstValue2VarMap(values);
     }
 
-    HcclResult CcuInsGeneratorV2::PrepareWriteConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel)
+    HcclResult CcuInsGeneratorV2::PrepareWriteConstValue(
+        CcuRepBase* repPtr, [[maybe_unused]] const TransDep& dep, CcuKernel* ccuKernel)
     {
         CcuRepWrite* repWritePtr = dynamic_cast<CcuRepWrite*>(repPtr);
         CHK_PTR_NULL(repWritePtr);
@@ -1440,7 +1461,8 @@ namespace CcuRep {
         return ccuKernel->Add2ConstValue2VarMap(values);
     }
 
-    HcclResult CcuInsGeneratorV2::PrepareReadConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel)
+    HcclResult CcuInsGeneratorV2::PrepareReadConstValue(
+        CcuRepBase* repPtr, [[maybe_unused]] const TransDep& dep, CcuKernel* ccuKernel)
     {
         CcuRepRead* repReadPtr = dynamic_cast<CcuRepRead*>(repPtr);
         CHK_PTR_NULL(repReadPtr);

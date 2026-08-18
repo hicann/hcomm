@@ -31,7 +31,7 @@ HcclOneSidedConn::~HcclOneSidedConn()
         }
     }
 }
-HcclResult HcclOneSidedConn::Connect(const std::string& commId)
+HcclResult HcclOneSidedConn::Connect([[maybe_unused]] const std::string& commId)
 {
     HCCL_INFO("[HcclOneSidedConn]Connect start");
 

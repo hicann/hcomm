@@ -88,7 +88,7 @@ extern HcclResult HcommProfilingReportMainStreamAndLastTask(ThreadHandle thread)
 extern HcclResult HcommProfilingReportDeviceHcclOpInfo(HcomProInfo profInfo)
 {
 #ifdef CCL_KERNEL_AICPU
-    MsprofAicpuHCCLOPInfo hcclOpInfo{0};
+    MsprofAicpuHCCLOPInfo hcclOpInfo{};
     hcclOpInfo.relay = 0; // 目前全是false
     hcclOpInfo.retry = 0; // 目前全是false
     hcclOpInfo.dataType = static_cast<HcclDataType>(profInfo.dataType);

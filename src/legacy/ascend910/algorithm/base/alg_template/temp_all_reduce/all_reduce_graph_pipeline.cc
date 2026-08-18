@@ -18,7 +18,7 @@ AllReduceGraphPipeline::AllReduceGraphPipeline(const HcclDispatcher dispatcher) 
 
 AllReduceGraphPipeline::~AllReduceGraphPipeline() {}
 
-HcclResult AllReduceGraphPipeline::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo)
+HcclResult AllReduceGraphPipeline::Prepare(u64 reduceAttrBitMap, [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     reduceAttr_ = reduceAttrBitMap;
     return HCCL_SUCCESS;
@@ -237,8 +237,8 @@ HcclResult AllReduceGraphPipeline::RunAsync()
 }
 
 HcclResult AllReduceGraphPipeline::Prepare(
-    const HcomCollOpInfo* opInfo, DeviceMem& cclBufferA, DeviceMem& cclBufferB, const u64 count,
-    const SubCommInfo& level1CommInfo, const SubCommInfo& level0CommInfo, Stream& mainStream,
+    const HcomCollOpInfo* opInfo, [[maybe_unused]] DeviceMem& cclBufferA, [[maybe_unused]] DeviceMem& cclBufferB,
+    const u64 count, const SubCommInfo& level1CommInfo, const SubCommInfo& level0CommInfo, Stream& mainStream,
     std::vector<Stream>& subStream, std::vector<std::shared_ptr<LocalNotify>>& notifyMain,
     std::vector<std::shared_ptr<LocalNotify>>& notifySub)
 {

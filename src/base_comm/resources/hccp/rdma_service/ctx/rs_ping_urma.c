@@ -122,6 +122,7 @@ STATIC int RsPingCommonInitJfce(struct RsPingCtxCb *pingCb, struct RsPingLocalJe
 STATIC int RsPingCommonInitSendJfcWithAttr(struct rs_cb *rscb, struct RsPingCtxCb *pingCb, union PingQpAttr *attr,
     struct RsPingLocalJettyCb *jettyCb)
 {
+    (void)rscb;
     urma_jfc_cfg_t sendJfcCfg = {
         .depth = attr->ub.cqAttr.sendCqDepth,
         .flag = {.value = 0},
@@ -268,6 +269,7 @@ init_jfce_fail:
 STATIC void RsPingCommonDeinitLocalJetty(struct rs_cb *rscb, struct RsPingCtxCb *pingCb,
     struct RsPingLocalJettyCb *jettyCb)
 {
+    (void)pingCb;
     (void)RsUrmaDeleteJetty(jettyCb->jetty);
     jettyCb->jetty = NULL;
 
@@ -726,6 +728,7 @@ STATIC void RsPingFillSendHeader(struct RsPingPayloadHeader *header, urma_jetty_
 STATIC void RsPingJettyBuildUpWr(struct RsPingCtxCb *pingCb, struct RsPingTargetInfo *target, urma_sge_t *list,
     urma_jfs_wr_t *wr)
 {
+    (void)pingCb;
     wr->opcode = URMA_OPC_SEND;
     wr->flag.bs.complete_enable = 1;
     wr->tjetty = target->importTjetty;

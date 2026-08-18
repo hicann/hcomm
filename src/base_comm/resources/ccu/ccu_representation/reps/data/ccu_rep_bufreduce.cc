@@ -36,7 +36,8 @@ namespace CcuRep {
         instrCount = insGenPtr->GetInstrCount(type);
     }
 
-    bool CcuRepBufReduce::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepBufReduce::Translate(
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, [[maybe_unused]] const TransDep& dep)
     {
         this->instrId = instrId;
         translated = true;

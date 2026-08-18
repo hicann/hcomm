@@ -206,7 +206,7 @@ uint32_t BkfSuberConnProcRcvDataEventDo(BkfSuberConn *conn)
     int32_t bufFreeLen = 0;
     int32_t readLen = 0;
     int32_t enqLen = 0;
-    BkfMsgDecoder decoder = {{0}, 0};
+    BkfMsgDecoder decoder = {};
     uint32_t ret = 0;
     int32_t leftLen = 0;
 

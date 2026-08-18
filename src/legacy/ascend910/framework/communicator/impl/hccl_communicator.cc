@@ -956,7 +956,7 @@ HcclResult HcclCommunicator::NslbDp_CollectSendAdjTable(
         if (nslbAdjInfo.dstRankNum == 0) {
             u32 ringNextRank = (srcLocalRankId + userRankSize_ / 2) % userRankSize_;
             nslbAdjInfo.dstRankNum = 1;
-            NslbDpAdjInfo adjInfoStep = {0};
+            NslbDpAdjInfo adjInfoStep = {};
             adjInfoStep.dstLocalRankId = ringNextRank;
             adjInfoStep.phaseId = 1;
             adjInfoStep.rev = 0;
@@ -1271,7 +1271,7 @@ HcclResult HcclCommunicator::AicpuResourceRefresh(
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicator::AddGroupTagInfo(const std::string& tag, bool isAiv)
+HcclResult HcclCommunicator::AddGroupTagInfo([[maybe_unused]] const std::string& tag, bool isAiv)
 {
     HCCL_PROFILER_ADD_GROUPRANK(identifier_, userRankSize_, userRank_);
     if (isAiv) {
@@ -2125,7 +2125,8 @@ HcclResult HcclCommunicator::ReAllocTransports(const std::string& tag, const std
         algResResponse.aivInputMem,
         algResResponse.aivOutputMem,
         expMem,
-        DeviceMem()};
+        DeviceMem(),
+        {}};
 
     {
         // Transport资源 重建链, 一定是AICPU展开，所以 isAicpuModeEn=true

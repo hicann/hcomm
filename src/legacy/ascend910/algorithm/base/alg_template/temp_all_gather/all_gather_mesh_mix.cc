@@ -18,8 +18,8 @@ AllgatherMeshMix::~AllgatherMeshMix() {}
 
 HcclResult AllgatherMeshMix::Prepare(
     std::vector<Stream>& meshStreams, std::vector<std::shared_ptr<LocalNotify>>& meshSignal,
-    std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux, u32 userRank, HcomCollOpInfo* opInfo, u32 interRank,
-    u32 interRankSize)
+    std::vector<std::shared_ptr<LocalNotify>>& meshSignalAux, [[maybe_unused]] u32 userRank, HcomCollOpInfo* opInfo,
+    u32 interRank, u32 interRankSize)
 {
     meshStreams_ = meshStreams;
     meshSignal_ = &meshSignal;

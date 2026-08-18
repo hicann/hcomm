@@ -1442,8 +1442,9 @@ HcclResult OpUnfoldCacheEntry::GetTransferCountForAlltoallv(
 HcclResult OpUnfoldCacheEntry::UpdateMemcpySqeForAlltoallv(
     uint8_t* sqePtr, uint8_t* sqeTypePtr, const uint16_t curTaskId, const RefreshAddrInfo& srcRefreshAddrInfo,
     const RefreshAddrInfo& dstRefreshAddrInfo, const std::vector<OpUnfoldMemRange>& curUserInputMemRanges,
-    const std::vector<OpUnfoldMemRange>& curUserOutputMemRanges, const AlltoallvMetadata& alltoallvMetadata,
-    const AlltoallvSendRecvInfo& alltoallvSendRecvInfo, const uint64_t count, const uint64_t size)
+    const std::vector<OpUnfoldMemRange>& curUserOutputMemRanges,
+    [[maybe_unused]] const AlltoallvMetadata& alltoallvMetadata, const AlltoallvSendRecvInfo& alltoallvSendRecvInfo,
+    const uint64_t count, const uint64_t size)
 {
     // 获取src/dst memType
     const uint8_t srcMemType = srcRefreshAddrInfo.memType;
@@ -1585,8 +1586,9 @@ HcclResult OpUnfoldCacheEntry::UpdateMemcpySqeForAlltoallv(
 HcclResult OpUnfoldCacheEntry::UpdateMemcpyPlaceholderSqeForAlltoallv(
     uint8_t* sqePtr, uint8_t* sqeTypePtr, const uint16_t curTaskId, const RefreshAddrInfo& srcRefreshAddrInfo,
     const RefreshAddrInfo& dstRefreshAddrInfo, const std::vector<OpUnfoldMemRange>& curUserInputMemRanges,
-    const std::vector<OpUnfoldMemRange>& curUserOutputMemRanges, const AlltoallvMetadata& alltoallvMetadata,
-    const AlltoallvSendRecvInfo& alltoallvSendRecvInfo, const uint64_t count, const uint64_t size)
+    const std::vector<OpUnfoldMemRange>& curUserOutputMemRanges,
+    [[maybe_unused]] const AlltoallvMetadata& alltoallvMetadata, const AlltoallvSendRecvInfo& alltoallvSendRecvInfo,
+    const uint64_t count, const uint64_t size)
 {
     // 更新SQE (count = 0)或者生成SQE (count > 0)
     const uint32_t rankSize = alltoallvSendRecvInfo.sendOffsets.size();
@@ -1999,8 +2001,9 @@ HcclResult OpUnfoldCacheEntry::GetTransferCountForAlltoallv(
 }
 
 HcclResult OpUnfoldCacheEntry::UpdateNotifyPlaceholderSqeForAlltoallv(
-    uint8_t* sqePtr, uint8_t* sqeTypePtr, const uint16_t curTaskId, const AlltoallvMetadata& alltoallvMetadata,
-    const AlltoallvSendRecvInfo& alltoallvSendRecvInfo, const uint64_t count, const uint64_t size)
+    uint8_t* sqePtr, uint8_t* sqeTypePtr, const uint16_t curTaskId,
+    [[maybe_unused]] const AlltoallvMetadata& alltoallvMetadata,
+    [[maybe_unused]] const AlltoallvSendRecvInfo& alltoallvSendRecvInfo, const uint64_t count, const uint64_t size)
 {
     UNUSED_PARAM(size);
 
@@ -2033,8 +2036,9 @@ HcclResult OpUnfoldCacheEntry::UpdateNotifyPlaceholderSqeForAlltoallv(
 }
 
 HcclResult OpUnfoldCacheEntry::UpdateWritePlaceholderSqeForAlltoallv(
-    uint8_t* sqePtr, uint8_t* sqeTypePtr, const uint16_t curTaskId, const AlltoallvMetadata& alltoallvMetadata,
-    const AlltoallvSendRecvInfo& alltoallvSendRecvInfo, const uint64_t count, const uint64_t size)
+    uint8_t* sqePtr, uint8_t* sqeTypePtr, const uint16_t curTaskId,
+    [[maybe_unused]] const AlltoallvMetadata& alltoallvMetadata,
+    [[maybe_unused]] const AlltoallvSendRecvInfo& alltoallvSendRecvInfo, const uint64_t count, const uint64_t size)
 {
     UNUSED_PARAM(size);
 
@@ -2069,8 +2073,9 @@ HcclResult OpUnfoldCacheEntry::UpdateWritePlaceholderSqeForAlltoallv(
 }
 
 HcclResult OpUnfoldCacheEntry::UpdateNotifySqeForAlltoallv(
-    uint8_t* sqePtr, uint8_t* sqeTypePtr, const uint16_t curTaskId, const AlltoallvMetadata& alltoallvMetadata,
-    const AlltoallvSendRecvInfo& alltoallvSendRecvInfo, const uint64_t count, const uint64_t size)
+    uint8_t* sqePtr, uint8_t* sqeTypePtr, const uint16_t curTaskId,
+    [[maybe_unused]] const AlltoallvMetadata& alltoallvMetadata,
+    [[maybe_unused]] const AlltoallvSendRecvInfo& alltoallvSendRecvInfo, const uint64_t count, const uint64_t size)
 {
     UNUSED_PARAM(size);
 
@@ -2102,8 +2107,9 @@ HcclResult OpUnfoldCacheEntry::UpdateNotifySqeForAlltoallv(
 }
 
 HcclResult OpUnfoldCacheEntry::UpdateWriteValueSqeForAlltoallv(
-    uint8_t* sqePtr, uint8_t* sqeTypePtr, const uint16_t curTaskId, const AlltoallvMetadata& alltoallvMetadata,
-    const AlltoallvSendRecvInfo& alltoallvSendRecvInfo, const uint64_t count, const uint64_t size)
+    uint8_t* sqePtr, uint8_t* sqeTypePtr, const uint16_t curTaskId,
+    [[maybe_unused]] const AlltoallvMetadata& alltoallvMetadata,
+    [[maybe_unused]] const AlltoallvSendRecvInfo& alltoallvSendRecvInfo, const uint64_t count, const uint64_t size)
 {
     UNUSED_PARAM(size);
 
@@ -2132,8 +2138,9 @@ HcclResult OpUnfoldCacheEntry::UpdateWriteValueSqeForAlltoallv(
 }
 
 HcclResult OpUnfoldCacheEntry::UpdateMemcpyRecordSqeForAlltoallv(
-    uint8_t* sqePtr, uint8_t* sqeTypePtr, const uint16_t curTaskId, const AlltoallvMetadata& alltoallvMetadata,
-    const AlltoallvSendRecvInfo& alltoallvSendRecvInfo, const uint64_t count, const uint64_t size)
+    uint8_t* sqePtr, uint8_t* sqeTypePtr, const uint16_t curTaskId,
+    [[maybe_unused]] const AlltoallvMetadata& alltoallvMetadata,
+    [[maybe_unused]] const AlltoallvSendRecvInfo& alltoallvSendRecvInfo, const uint64_t count, const uint64_t size)
 {
     UNUSED_PARAM(size);
 
@@ -2178,8 +2185,9 @@ HcclResult OpUnfoldCacheEntry::UpdateMemcpyRecordSqeForAlltoallv(
 }
 
 HcclResult OpUnfoldCacheEntry::UpdateMemcpyRecordPlaceholderSqeForAlltoallv(
-    uint8_t* sqePtr, uint8_t* sqeTypePtr, const uint16_t curTaskId, const AlltoallvMetadata& alltoallvMetadata,
-    const AlltoallvSendRecvInfo& alltoallvSendRecvInfo, const uint64_t count, const uint64_t size)
+    uint8_t* sqePtr, uint8_t* sqeTypePtr, const uint16_t curTaskId,
+    [[maybe_unused]] const AlltoallvMetadata& alltoallvMetadata,
+    [[maybe_unused]] const AlltoallvSendRecvInfo& alltoallvSendRecvInfo, const uint64_t count, const uint64_t size)
 {
     UNUSED_PARAM(size);
 

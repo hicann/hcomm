@@ -12,8 +12,15 @@
 #include <functional>
 #include "stream_utils.h"
 
-HcclResult GetStreamCaptureInfo(rtStream_t stream, rtModel_t& rtModel, bool& isCapture) { return HCCL_SUCCESS; }
+HcclResult GetStreamCaptureInfo(
+    [[maybe_unused]] rtStream_t stream, [[maybe_unused]] rtModel_t& rtModel, [[maybe_unused]] bool& isCapture)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult AddStreamToModel(rtStream_t stream, rtModel_t& rtModel) { return HCCL_SUCCESS; }
+HcclResult AddStreamToModel([[maybe_unused]] rtStream_t stream, [[maybe_unused]] rtModel_t& rtModel)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult GetModelId(aclmdlRI& rtModel, u64& modelId) { return HCCL_SUCCESS; }
+HcclResult GetModelId([[maybe_unused]] aclmdlRI& rtModel, [[maybe_unused]] u64& modelId) { return HCCL_SUCCESS; }

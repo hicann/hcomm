@@ -54,7 +54,7 @@ struct RaSendWrParams {
           callback(callback),
           callBackUserPtr(callBackUserPtr)
     {
-        opRsp = {0};
+        opRsp = {};
         taskInfo.streamId = streamId;
         taskInfo.taskId = taskId;
         taskInfo.notifyID = notifyID;
@@ -128,7 +128,7 @@ using WrInformation = struct TagWrInfo {
     u64 type; // 默认 WqeType::WQE_TYPE_DATA
     u64 wrDataAddr;
     u32 notifyId;
-    TagWrInfo() : type(0), wrDataAddr(0), notifyId(INVALID_UINT) { wrData = {0}; }
+    TagWrInfo() : type(0), wrDataAddr(0), notifyId(INVALID_UINT) { wrData = {}; }
 };
 
 struct RdmaTaskInfo {
@@ -255,9 +255,14 @@ public:
             reinterpret_cast<HcclRtNotify>(notifyId), stream, INVALID_VALUE_RANKID, INVALID_VALUE_RANKID,
             INVALID_VALUE_STAGE, true, INVALID_UINT, timeOut);
     }
-    virtual HcclResult LaunchTasksEx(Stream& stream, std::vector<Stream>& subStreams) { return HCCL_SUCCESS; }
+    virtual HcclResult LaunchTasksEx([[maybe_unused]] Stream& stream, [[maybe_unused]] std::vector<Stream>& subStreams)
+    {
+        return HCCL_SUCCESS;
+    }
     virtual HcclResult LaunchAllTasks() { return HCCL_SUCCESS; }
-    virtual HcclResult ResetGraphCtx(bool enableCache, const std::string& key, bool useGraphConstructorV2)
+    virtual HcclResult ResetGraphCtx(
+        [[maybe_unused]] bool enableCache, [[maybe_unused]] const std::string& key,
+        [[maybe_unused]] bool useGraphConstructorV2)
     {
         return HCCL_SUCCESS;
     }
@@ -282,7 +287,7 @@ public:
 
     static bool IsProfSubscribeAdditionInfo();
 
-    virtual HcclResult SetMultiQpMode(bool multiQpMode) { return HCCL_SUCCESS; }
+    virtual HcclResult SetMultiQpMode([[maybe_unused]] bool multiQpMode) { return HCCL_SUCCESS; }
 
     void SetHcclQos(u32 hcclQos);
     void SetMpamid(u32 mPamid);

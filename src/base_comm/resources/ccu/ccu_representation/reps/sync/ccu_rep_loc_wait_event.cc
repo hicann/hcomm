@@ -48,7 +48,8 @@ namespace CcuRep {
         return std::vector<std::shared_ptr<CcuRepBase>>();
     }
 
-    bool CcuRepLocWaitEvent::Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepLocWaitEvent::Translate(
+        CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, [[maybe_unused]] const TransDep& dep)
     {
         this->instrId = instrId;
         translated = true;

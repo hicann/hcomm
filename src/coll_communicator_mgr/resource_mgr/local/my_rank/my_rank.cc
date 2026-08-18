@@ -978,8 +978,9 @@ void MyRank::LogChannelCreationInfo(
 }
 
 HcclResult MyRank::FinalizeChannelsByEngine(
-    CommEngine engine, const std::string& commTag, const HcclChannelDesc* channelDescs, uint32_t channelNum,
-    std::vector<HcommChannelDesc>& hcommDescs, ChannelHandle* hostChannelHandleList, ChannelHandle* channelHandles)
+    CommEngine engine, const std::string& commTag, [[maybe_unused]] const HcclChannelDesc* channelDescs,
+    uint32_t channelNum, std::vector<HcommChannelDesc>& hcommDescs, ChannelHandle* hostChannelHandleList,
+    ChannelHandle* channelHandles)
 {
     if (engine == COMM_ENGINE_AICPU || engine == COMM_ENGINE_AICPU_TS) {
         // 新增：添加 kernelLaunchAicpuCommInit 调用

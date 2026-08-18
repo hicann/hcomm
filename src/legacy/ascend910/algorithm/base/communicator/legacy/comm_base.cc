@@ -702,7 +702,7 @@ HcclResult CommBase::CreateDestLink(
     return HCCL_SUCCESS;
 }
 
-void CommBase::SetTransportParam(TransportPara& para, MachinePara& machinePara)
+void CommBase::SetTransportParam(TransportPara& para, [[maybe_unused]] MachinePara& machinePara)
 {
     std::chrono::milliseconds kdefaultTimeout = std::chrono::seconds(GetExternalInputHcclLinkTimeOut());
     para.isRootRank = subUserRankRoot_ == rank_ ? true : false;

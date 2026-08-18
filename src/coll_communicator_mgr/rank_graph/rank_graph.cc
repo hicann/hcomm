@@ -916,7 +916,10 @@ HcclResult RankGraphV1::GetRankGraphInfo(GraphType type, void** graph, uint32_t*
     return HCCL_SUCCESS;
 }
 
-HcclResult RankGraphV1::GetDeviceId(uint32_t rankId, uint32_t* deviceId) { return HCCL_SUCCESS; }
+HcclResult RankGraphV1::GetDeviceId([[maybe_unused]] uint32_t rankId, [[maybe_unused]] uint32_t* deviceId)
+{
+    return HCCL_SUCCESS;
+}
 
 HcclResult RankGraphV1::InitRankInfo()
 {

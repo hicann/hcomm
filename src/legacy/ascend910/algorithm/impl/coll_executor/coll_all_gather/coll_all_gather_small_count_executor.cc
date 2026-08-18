@@ -35,7 +35,7 @@ HcclResult CollAllGatherSmallCountExecutor::CalcStreamNum(u32& streamNum)
     return HCCL_SUCCESS;
 }
 
-bool CollAllGatherSmallCountExecutor::IsSmallData(const u64 size) { return true; }
+bool CollAllGatherSmallCountExecutor::IsSmallData([[maybe_unused]] const u64 size) { return true; }
 
 u64 CollAllGatherSmallCountExecutor::CalcLoopMaxCount(const u64 cclBuffSize, const u32 unitSize)
 {
@@ -96,9 +96,14 @@ HcclResult CollAllGatherSmallCountExecutor::KernelRun(const OpParam& param, Exec
         = AlgTemplateRegistry::Instance().GetAlgTemplate(TemplateType::TEMPLATE_ALL_GATHER_HD_STAGE, dispatcher_);
     HCCL_CONFIG_INFO(HCCL_ALG, "[%s] Run TEMPLATE_ALL_GATHER_HD_STAGE in COMM_COMBINE_ORDER", __func__);
     CHK_RET(ActiveSlaveStreams(param.stream));
-    HcomCollOpInfo opInfo
-        = {"",         execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType,
-           param.root, param.reduceType};
+    HcomCollOpInfo opInfo = {"",
+                             execMem.inputPtr,
+                             execMem.outputPtr,
+                             param.DataDes.count,
+                             param.DataDes.dataType,
+                             param.root,
+                             param.reduceType,
+                             0};
     CHK_SMART_PTR_NULL(algTemplate);
 
     PrepareData prepareData;

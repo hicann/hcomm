@@ -129,8 +129,9 @@ namespace CcuRep {
 
         // 使用空实现的自定义删除器，避免智能指针析构时释放对象
         auto translator = CcuRepTranslator(
-            std::shared_ptr<CcuRepReferenceManager>(funcManager, [](CcuRepReferenceManager* ptr) {}), dep);
-        translator.Translate(GetReps(), instr, instrId, [](std::shared_ptr<CcuRepBase> rep) -> bool {
+            std::shared_ptr<CcuRepReferenceManager>(funcManager, []([[maybe_unused]] CcuRepReferenceManager* ptr) {}),
+            dep);
+        translator.Translate(GetReps(), instr, instrId, []([[maybe_unused]] std::shared_ptr<CcuRepBase> rep) -> bool {
             return true;
         });
 

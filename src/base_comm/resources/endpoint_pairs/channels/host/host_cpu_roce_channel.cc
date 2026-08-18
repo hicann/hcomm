@@ -51,7 +51,7 @@ HostCpuRoceChannel::~HostCpuRoceChannel()
 
     if (isHybridMode_ && connections_.size() != 0) {
         auto qpInfo = connections_[0]->GetQpInfo();
-        struct MrInfoT mrInfo = {nullptr};
+        struct MrInfoT mrInfo = {};
 
         for (uint32_t i = 0; i < hccl::MEM_TYPE_RESERVED; i++) {
             if (localMemMsg_[i].addr == nullptr) {
@@ -958,7 +958,7 @@ HcclResult HostCpuRoceChannel::NotifyWait(const uint32_t localNotifyIdx, const u
     return HCCL_SUCCESS;
 }
 
-HcclResult HostCpuRoceChannel::ReportWcStatusError(enum ibv_wc_status status)
+HcclResult HostCpuRoceChannel::ReportWcStatusError([[maybe_unused]] enum ibv_wc_status status)
 {
     Hccl::IpAddress localIp, remoteIp;
     (void)CommAddrToIpAddress(localEp_.commAddr, localIp);
@@ -1115,8 +1115,8 @@ HostCpuRoceChannel::WriteWithNotify(void* dst, const void* src, const uint64_t l
 }
 
 void HostCpuRoceChannel::BuildRdmaWr(
-    const char* caller, ibv_wr_opcode opcode, void* localAddr, const void* remoteAddr, uint64_t len, size_t localIdx,
-    size_t rmtIdx, struct ibv_send_wr& wr, struct ibv_sge& sg) const
+    [[maybe_unused]] const char* caller, ibv_wr_opcode opcode, void* localAddr, const void* remoteAddr, uint64_t len,
+    size_t localIdx, size_t rmtIdx, struct ibv_send_wr& wr, struct ibv_sge& sg) const
 {
     wr.sg_list = &sg;
     wr.sg_list->addr = reinterpret_cast<uint64_t>(localAddr);
@@ -1476,7 +1476,7 @@ HcclResult HostCpuRoceChannel::CreateNotifyHybird(hccl::MemType notifyType, uint
         return HCCL_E_MEMORY;
     }
 
-    struct MrInfoT mrInfo = {nullptr};
+    struct MrInfoT mrInfo = {};
     mrInfo.addr = ptr;
     mrInfo.size = localNotifySize_;
     mrInfo.access = localNotifyAccess_;
@@ -1595,7 +1595,7 @@ HcclResult HostCpuRoceChannel::ExchangeCapability()
 constexpr u32 DEFAULT_MRINFO_ACCESS = 7;
 HcclResult HostCpuRoceChannel::RegisterUserMemHybird()
 {
-    struct MrInfoT mrInfo = {nullptr};
+    struct MrInfoT mrInfo = {};
     mrInfo.addr = reinterpret_cast<void*>(localRmaBuffers_[0]->GetAddr());
     mrInfo.size = localRmaBuffers_[0]->GetSize();
     mrInfo.access = DEFAULT_MRINFO_ACCESS;

@@ -65,7 +65,7 @@ QpHandle DevRdmaConnection::GetHandle() { return qpHandle; }
 DevRdmaConnection::~DevRdmaConnection() { HrtRaQpDestroy(qpHandle); }
 
 unique_ptr<BaseTask> DevRdmaConnection::PrepareWrite(
-    const MemoryBuffer& remoteMemBuf, const MemoryBuffer& localMemBuf, const SqeConfig& config)
+    const MemoryBuffer& remoteMemBuf, const MemoryBuffer& localMemBuf, [[maybe_unused]] const SqeConfig& config)
 {
     VerifySizeIsEqual(remoteMemBuf, localMemBuf, "DevRdmaConnection::PrepareWrite");
 

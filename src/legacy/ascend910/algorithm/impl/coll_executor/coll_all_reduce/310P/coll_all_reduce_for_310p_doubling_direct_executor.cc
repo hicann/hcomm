@@ -54,8 +54,9 @@ HcclResult CollAllReduceFor310PDoublingDirectExecutor::KernelRun(const OpParam& 
     CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
     SubCommInfo level0CommInfo = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);
 
-    HcomCollOpInfo opInfo = {"",         execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType,
-                             param.root, param.reduceType};
+    HcomCollOpInfo opInfo
+        = {"", execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, param.reduceType,
+           0};
 
     std::unique_ptr<AlgTemplateBase> tempAlg;
     tempAlg = AlgTemplateRegistry::Instance().GetAlgTemplate(

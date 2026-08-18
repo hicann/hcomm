@@ -52,7 +52,8 @@ HcclResult RankConsistentcyChecker::RecordOpPara(
 // reduce
 HcclResult RankConsistentcyChecker::RecordOpPara(
     HcclCMDType opCMD, const std::string& tag, u64 count, HcclDataType dataType, HcclReduceOp op, u32 root,
-    u64 inCclBufferSize, u64 outCclBufferSize, const char* group, u32 crc, u8 deterministic, u32 aivCoreLimit)
+    u64 inCclBufferSize, u64 outCclBufferSize, const char* group, u32 crc, [[maybe_unused]] u8 deterministic,
+    u32 aivCoreLimit)
 {
     return RecordOpPara(
         opCMD, tag, count, dataType, op, root, 0, 0, 0, inCclBufferSize, outCclBufferSize, group, crc, aivCoreLimit);
@@ -81,7 +82,7 @@ HcclResult RankConsistentcyChecker::RecordOpPara(
 HcclResult RankConsistentcyChecker::RecordOpPara(
     HcclCMDType opCMD, const std::string& tag, const void* counts, const void* displs, const u32 rankSize,
     HcclDataType dataType, HcclReduceOp op, u64 inCclBufferSize, u64 outCclBufferSize, const char* group, u32 crc,
-    u8 deterministic, u32 aivCoreLimit)
+    [[maybe_unused]] u8 deterministic, u32 aivCoreLimit)
 {
     CHK_RET(RecordOpPara(
         opCMD, tag, 0, dataType, op, 0, 0, 0, 0, inCclBufferSize, outCclBufferSize, group, crc, aivCoreLimit));

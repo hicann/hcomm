@@ -1361,7 +1361,7 @@ void CcuTaskException::PrintCcuErrorLog(
 }
 
 HcclResult CcuTaskException::PrintCcuUbRegisters(
-    const std::vector<CcuErrorInfo>& errorInfos, s32 devLogicId, const Hccl::TaskInfo& taskInfo)
+    const std::vector<CcuErrorInfo>& errorInfos, s32 devLogicId, [[maybe_unused]] const Hccl::TaskInfo& taskInfo)
 {
     std::vector<CcuJetty*> ccuJettys;
     for (const CcuErrorInfo& errorInfo : errorInfos) {

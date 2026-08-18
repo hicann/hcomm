@@ -25,7 +25,7 @@ HcclResult CcuCreateJetty(const IpAddress& ipAddr, const CcuJettyInfo& jettyInfo
 CcuJetty::CcuJetty(const IpAddress& ipAddr, const CcuJettyInfo& jettyInfo) : ipAddr_(ipAddr), jettyInfo_(jettyInfo)
 {
     devLogicId_ = HrtGetDevice();
-    Hccl::CqCreateInfo cqInfo{0};
+    Hccl::CqCreateInfo cqInfo{};
     uint32_t devPhyId = HrtGetDevicePhyIdByIndex(devLogicId_);
     auto& rdmaHandleMgr = RdmaHandleManager::GetInstance();
     rdmaHandle_ = rdmaHandleMgr.GetByIp(devPhyId, ipAddr);

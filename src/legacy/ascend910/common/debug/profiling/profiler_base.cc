@@ -214,8 +214,8 @@ HcclResult ProfilerBase::DelOpData(const std::string& tag)
     return HCCL_SUCCESS;
 }
 
-HcclResult
-ProfilerBase::AddGroupRankInfo(const std::string& group, u32 rankSize, u32 rankId, bool isSendRecv, u32 remoteRankId)
+HcclResult ProfilerBase::AddGroupRankInfo(
+    const std::string& group, u32 rankSize, u32 rankId, [[maybe_unused]] bool isSendRecv, u32 remoteRankId)
 {
     s32 deviceLogicId = -1;
     HcclResult ret = hrtGetDevice(&deviceLogicId);

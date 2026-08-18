@@ -203,7 +203,7 @@ private:
     u32 piVal{0};
     u32 ciVal{0};
 
-    CqCreateInfo cqInfo_{0};
+    CqCreateInfo cqInfo_{};
 
     // 最大传输size，切片使用
     u32 maxReadSize{0};

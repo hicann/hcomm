@@ -47,18 +47,10 @@ private:
     struct QpAttr localDataQpAttr_ {};
     struct QpAttr remoteTagQpAttr_ {};
     struct QpAttr remoteDataQpAttr_ {};
-    struct TypicalQp localTagModifyInfo_ {
-        0
-    };
-    struct TypicalQp localDataModifyInfo_ {
-        0
-    };
-    struct TypicalQp remoteTagModifyInfo_ {
-        0
-    };
-    struct TypicalQp remoteDataModifyInfo_ {
-        0
-    };
+    struct TypicalQp localTagModifyInfo_ {};
+    struct TypicalQp localDataModifyInfo_ {};
+    struct TypicalQp remoteTagModifyInfo_ {};
+    struct TypicalQp remoteDataModifyInfo_ {};
 };
 } // namespace hccl
 #endif

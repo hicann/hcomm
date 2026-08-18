@@ -128,7 +128,8 @@ HcclResult Heartbeat::InitHostNic(const RankInfo& locRank, bool isNeedNic, u32 p
 }
 
 HcclResult Heartbeat::Init(
-    const RankInfo& locRank, const bool useSuperPodMode, const bool isNeedNic, const u32 port, const std::string& group)
+    const RankInfo& locRank, [[maybe_unused]] const bool useSuperPodMode, const bool isNeedNic, const u32 port,
+    const std::string& group)
 {
     HCCL_INFO("[%s] heartbeat Init begin.", __func__);
     devicePhyId_ = locRank.devicePhyId;
@@ -231,8 +232,8 @@ HcclResult Heartbeat::PrepareConnect(ConnInfo& info)
 }
 
 HcclResult Heartbeat::RegisterRanks(
-    DevType devType, const RankInfo& locRank, std::vector<RankInfo>& rankInfos, const u32 port, const bool isNeedNic,
-    const std::string& group, bool useSuperPodMode, bool isUsedRdma)
+    [[maybe_unused]] DevType devType, const RankInfo& locRank, std::vector<RankInfo>& rankInfos, const u32 port,
+    const bool isNeedNic, const std::string& group, bool useSuperPodMode, bool isUsedRdma)
 {
     HCCL_INFO(
         "[%s] group[%s] isUsedRdma[%d], isNeedNic[%d], RegisterRanks Start.", __func__, group.c_str(), isUsedRdma,
@@ -2122,7 +2123,7 @@ void Heartbeat::SetOpretryErr()
     SetStatus(uid_, uid_, HeartBeatStatus::HEARTBEAT_OPRETRY_NOT_SUPPORT);
 }
 
-u32 Heartbeat::GetPort(HcclSocketType type, u32 remoteUserRank, u32 remoteDeviceId)
+u32 Heartbeat::GetPort(HcclSocketType type, u32 remoteUserRank, [[maybe_unused]] u32 remoteDeviceId)
 {
     u32 port = HCCL_INVALID_PORT;
     if (isUseRankPort_) {

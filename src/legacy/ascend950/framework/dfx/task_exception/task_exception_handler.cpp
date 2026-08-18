@@ -629,7 +629,8 @@ inline void PrintGroupErrorLog(const std::string& stageErrInfo, const std::strin
 }
 
 void TaskExceptionHandler::PrintGroupErrorMessage(
-    ErrorMessageReport& errorMessage, const TaskInfo& exceptionTaskInfo, string& groupRankContent, string& stageErrInfo)
+    ErrorMessageReport& errorMessage, [[maybe_unused]] const TaskInfo& exceptionTaskInfo, string& groupRankContent,
+    string& stageErrInfo)
 {
     groupRankContent += "group:[";
     groupRankContent += std::string(errorMessage.group);

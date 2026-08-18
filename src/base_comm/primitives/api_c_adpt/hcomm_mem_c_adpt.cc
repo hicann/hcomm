@@ -86,7 +86,9 @@ HcommResult HcommMemGrant(EndpointHandle endpointHandle, const HcommMemGrantInfo
 }
 
 /* 暂未实现 */
-HcommResult HcommMemRemap(const EndpointHandle endpointHandle, const CommMem* memArray, uint64_t arraySize)
+HcommResult HcommMemRemap(
+    [[maybe_unused]] const EndpointHandle endpointHandle, [[maybe_unused]] const CommMem* memArray,
+    [[maybe_unused]] uint64_t arraySize)
 {
     return HCCL_E_NOT_SUPPORT;
 }

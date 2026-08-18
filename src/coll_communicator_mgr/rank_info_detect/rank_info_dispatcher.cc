@@ -156,7 +156,7 @@ void RankInfoDispather::CleanResource()
     workerThreads_.clear();
 }
 
-void RankInfoDispather::ProcessOneSendEvent(s32 epollFd, FdHandle& fdHanlde)
+void RankInfoDispather::ProcessOneSendEvent([[maybe_unused]] s32 epollFd, FdHandle& fdHanlde)
 {
     std::unique_lock<std::mutex> lckForMap(fdHandleMapMutex_);
     bool noFdHandle = (fdHandleToFdContextMap_.find(fdHanlde) == fdHandleToFdContextMap_.end());

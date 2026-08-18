@@ -56,7 +56,8 @@ GetLinks(NodeId srcId, NodeId dstId, const shared_ptr<Graph<PhyTopo::Node, PhyTo
 
 void AddDetourLink(
     NetInstance* innerNetInst, const DetourData& data,
-    const shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>>& phyTopoGraph, const RankTableInfo* rankTable)
+    const shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>>& phyTopoGraph,
+    [[maybe_unused]] const RankTableInfo* rankTable)
 {
     vector<shared_ptr<PhyTopo::Link>> src2detVec = GetLinks(data.srcPhyPeerId, data.detourPhyPeerId, phyTopoGraph);
     vector<shared_ptr<PhyTopo::Link>> det2dstVec = GetLinks(data.detourPhyPeerId, data.dstPhyPeerId, phyTopoGraph);

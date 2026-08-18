@@ -191,6 +191,7 @@ STATIC void BkfPuberConnOnTrigSlowSchedSess(BkfPuberConn *conn)
 
 STATIC uint32_t BkfPuberConnOnTmrTO(BkfPuberConn *conn, void *paramTmrLibUnknown)
 {
+    (void)paramTmrLibUnknown;
     BkfPuberConnLockDel(conn);
     uint32_t ret = BkfPuberConnFsmProc(conn, BKF_PUBER_CONN_EVT_TMR, VOS_NULL);
     BkfPuberConnUnlockDel(conn);

@@ -518,7 +518,7 @@ struct HcclRankRelationResV2 {
     u64 windowsIn = 0;
     u64 windowsOut = 0;
     u64 windowsExp = 0;
-    ListCommon nextTagRes = {0}; // HccltagRemoteResV2(根据tag区分)
+    ListCommon nextTagRes = {}; // HccltagRemoteResV2(根据tag区分)
 };
 
 struct HccltagLocalResV2 {    // TAG专用,scratchmem，

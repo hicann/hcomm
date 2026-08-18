@@ -24,6 +24,7 @@ static struct RaRsVerbsOps gRaRsVerbsOps = {
 
 int RaRsQpCreateWithCQWithAttrs(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpQpCreateWithCQWithAttrsData *createData = NULL;
     struct RsQpNormWithAttrs qpNorm = {0};
     struct RsQpRespWithAttrs qpResp = {0};
@@ -54,6 +55,7 @@ int RaRsQpCreateWithCQWithAttrs(char *inBuf, char *outBuf, int *outLen, int *opR
 
 int RaRsTypicalCqCreate(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpTypicalCqCreateData *createData = (union OpTypicalCqCreateData *)(inBuf + sizeof(struct MsgHead));
     unsigned int cqn = 0;
 
@@ -74,6 +76,8 @@ int RaRsTypicalCqCreate(char *inBuf, char *outBuf, int *outLen, int *opResult, i
 
 int RaRsTypicalCqDestroy(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpTypicalCqDestroyData *destroyData = (union OpTypicalCqDestroyData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpTypicalCqDestroyData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -90,6 +94,7 @@ int RaRsTypicalCqDestroy(char *inBuf, char *outBuf, int *outLen, int *opResult, 
 
 int RaRsGetLiteCqAttr(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpGetLiteCqAttrData *getLiteCqAttrData = (union OpGetLiteCqAttrData *)(inBuf + sizeof(struct MsgHead));
     unsigned int cqn = getLiteCqAttrData->txData.cqn;
     struct rdma_lite_device_cq_attr deviceCqAttr = {0};
@@ -111,6 +116,8 @@ int RaRsGetLiteCqAttr(char *inBuf, char *outBuf, int *outLen, int *opResult, int
 
 int RaRsQpDestroyWithoutCQ(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpQpDestroyData *qpDestroyData = (union OpQpDestroyData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpQpDestroyData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -126,6 +133,7 @@ int RaRsQpDestroyWithoutCQ(char *inBuf, char *outBuf, int *outLen, int *opResult
 
 int RaRsGetLiteQpAttr(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpLiteQpAttrData *liteQpAttrData = (union OpLiteQpAttrData *)(inBuf + sizeof(struct MsgHead));
     union OpLiteQpAttrData *liteQpAttrOut = (union OpLiteQpAttrData *)(outBuf + sizeof(struct MsgHead));
 

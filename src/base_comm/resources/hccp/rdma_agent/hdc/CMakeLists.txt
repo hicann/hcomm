@@ -61,8 +61,6 @@ endif()
 
 target_compile_options(ra_hdc PRIVATE
     -Werror
-    -Wno-unused-parameter
-    -Wno-missing-field-initializers
     -fsigned-char
     -fno-common
     -fno-strict-aliasing

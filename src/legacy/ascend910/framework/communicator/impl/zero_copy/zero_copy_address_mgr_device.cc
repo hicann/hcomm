@@ -13,7 +13,7 @@
 namespace hccl {
 HcclResult ZeroCopyAddressMgr::InitRingBuffer() { return HCCL_SUCCESS; }
 
-HcclResult ZeroCopyAddressMgr::PushOne(ZeroCopyRingBufferItem& item)
+HcclResult ZeroCopyAddressMgr::PushOne([[maybe_unused]] ZeroCopyRingBufferItem& item)
 {
     HCCL_DEBUG("[ZeroCopyAddressMgr][PushOne] device");
     return HCCL_SUCCESS;

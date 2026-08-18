@@ -247,6 +247,7 @@ uint32_t BkfPuberSessFsmProc(BkfPuberSess *sess, uint8_t evtId, void *param1, vo
 #if BKF_BLOCK("私有函数定义")
 STATIC uint32_t BkfPuberSessBatchProcSub(BkfPuberSess *sess, BkfMsgDecoder *decoder, void *unused2)
 {
+    (void)unused2;
     BkfPuberSessBatchChkTmrStop(sess);
     BkfTlvTransNum *tlvTransNum = BkfPuberSessParseTransNum(decoder);
     if (tlvTransNum == VOS_NULL) {
@@ -263,6 +264,7 @@ STATIC uint32_t BkfPuberSessBatchProcSub(BkfPuberSess *sess, BkfMsgDecoder *deco
 
 STATIC uint32_t BkfPuberSessProcSub(BkfPuberSess *sess, BkfMsgDecoder *decoder, void *unused2)
 {
+    (void)unused2;
     BkfTlvTransNum *tlvTransNum = BkfPuberSessParseTransNum(decoder);
     if (tlvTransNum == VOS_NULL) {
         return BKF_PUBER_SESS_FATAL_ERR;
@@ -278,6 +280,7 @@ STATIC uint32_t BkfPuberSessProcSub(BkfPuberSess *sess, BkfMsgDecoder *decoder, 
 
 STATIC uint32_t BkfPuberSessBatchProcUnsub(BkfPuberSess *sess, BkfMsgDecoder *decoder, void *unused2)
 {
+    (void)unused2;
     BkfPuberSessBatchChkTmrStop(sess);
     BkfTlvTransNum *tlvTransNum = BkfPuberSessParseTransNum(decoder);
     if (tlvTransNum == VOS_NULL) {
@@ -294,6 +297,7 @@ STATIC uint32_t BkfPuberSessBatchProcUnsub(BkfPuberSess *sess, BkfMsgDecoder *de
 
 STATIC uint32_t BkfPuberSessProcUnsub(BkfPuberSess *sess, BkfMsgDecoder *decoder, void *unused2)
 {
+    (void)unused2;
     BkfTlvTransNum *tlvTransNum = BkfPuberSessParseTransNum(decoder);
     if (tlvTransNum == VOS_NULL) {
         return BKF_PUBER_SESS_FATAL_ERR;
@@ -309,6 +313,7 @@ STATIC uint32_t BkfPuberSessProcUnsub(BkfPuberSess *sess, BkfMsgDecoder *decoder
 
 STATIC uint32_t BkfPuberSessTry2SendSubAck(BkfPuberSess *sess, BkfMsgCoder *coder, void *unused2)
 {
+    (void)unused2;
     uint32_t ret = BkfPuberSessPackSubAck(sess, coder);
     if (ret != BKF_OK) {
         return BKF_PUBER_SESS_SEND_BUF_NOT_ENOUGH;
@@ -326,12 +331,15 @@ STATIC uint32_t BkfPuberSessTry2SendSubAck(BkfPuberSess *sess, BkfMsgCoder *code
 
 STATIC uint32_t BkfPuberSessChgState2WaitSendBatchBegin(BkfPuberSess *sess, void *unused1, void *unused2)
 {
+    (void)unused1;
+    (void)unused2;
     BkfPuberSessChgStateAndTrigSched(sess, BKF_PUBER_SESS_STATE_WAIT_SEND_BATCH_BEGIN);
     return BKF_OK;
 }
 
 STATIC uint32_t BkfPuberSessTry2SendBatchBegin(BkfPuberSess *sess, BkfMsgCoder *coder, void *unused2)
 {
+    (void)unused2;
     uint32_t ret = BkfPuberSessPackBatchBegin(sess, coder);
     if (ret != BKF_OK) {
         return BKF_PUBER_SESS_SEND_BUF_NOT_ENOUGH;
@@ -358,6 +366,7 @@ STATIC uint32_t BkfPuberSessTry2SendBatchBegin(BkfPuberSess *sess, BkfMsgCoder *
 
 STATIC uint32_t BkfPuberSessTry2SendBatchEnd(BkfPuberSess *sess, BkfMsgCoder *coder, void *unused2)
 {
+    (void)unused2;
     uint32_t ret = BkfPuberSessPackBatchEnd(sess, coder);
     if (ret != BKF_OK) {
         return BKF_PUBER_SESS_SEND_BUF_NOT_ENOUGH;
@@ -371,24 +380,31 @@ STATIC uint32_t BkfPuberSessTry2SendBatchEnd(BkfPuberSess *sess, BkfMsgCoder *co
 
 STATIC uint32_t BkfPuberSessTry2SendSubDelNtf(BkfPuberSess *sess, BkfMsgCoder *coder, void *unused2)
 {
+    (void)unused2;
     uint32_t ret = BkfPuberSessPackSubDelNtf(sess, coder);
     return (ret == BKF_OK) ? BKF_PUBER_SESS_NEED_DELETE : BKF_PUBER_SESS_SEND_BUF_NOT_ENOUGH;
 }
 
 STATIC uint32_t BkfPuberSessIdleProcTupleChg(BkfPuberSess *sess, void *unused1, void *unused2)
 {
+    (void)unused1;
+    (void)unused2;
     BkfPuberSessChgStateAndTrigSched(sess, BKF_PUBER_SESS_STATE_REAL_DATA);
     return BKF_OK;
 }
 
 STATIC uint32_t BkfPuberSessSlowBatchProcTupleChg(BkfPuberSess *sess, void *unused1, void *unused2)
 {
+    (void)unused1;
+    (void)unused2;
     BkfPuberSessChgStateAndTrigSched(sess, BKF_PUBER_SESS_STATE_REAL_SLOW_BATCH_DATA);
     return BKF_OK;
 }
 
 STATIC uint32_t BkfPuberSessProcTableRel(BkfPuberSess *sess, void *unused1, void *unused2)
 {
+    (void)unused1;
+    (void)unused2;
     BkfPuberSessMng *sessMng = sess->sessMng;
     if (sess->itorBatchData != VOS_NULL) {
         BkfDcDeleteTupleKeyItor(sessMng->argInit->dc, sess->itorBatchData);
@@ -407,6 +423,7 @@ STATIC uint32_t BkfPuberSessProcTableRel(BkfPuberSess *sess, void *unused1, void
 
 STATIC uint32_t BkfPuberSessBatchProcSched(BkfPuberSess *sess, BkfMsgCoder *coder, void *unused2)
 {
+    (void)unused2;
     uint32_t ret = BkfPuberSessTry2SendBatchData(sess, coder, VOS_NULL);
     if (ret == BKF_PUBER_SESS_SCHED_YIELD) {
         BKF_ASSERT(0);
@@ -423,6 +440,7 @@ STATIC uint32_t BkfPuberSessBatchProcSched(BkfPuberSess *sess, BkfMsgCoder *code
 
 STATIC uint32_t BkfPuberSessRealProcSched(BkfPuberSess *sess, BkfMsgCoder *coder, void *unused2)
 {
+    (void)unused2;
     uint32_t ret = BkfPuberSessTry2SendRealData(sess, coder);
     if (ret != BKF_OK) {
         return ret;
@@ -434,6 +452,7 @@ STATIC uint32_t BkfPuberSessRealProcSched(BkfPuberSess *sess, BkfMsgCoder *coder
 
 STATIC uint32_t BkfPuberSessRealSlowBatchProcSched(BkfPuberSess *sess, BkfMsgCoder *coder, void *unused2)
 {
+    (void)unused2;
     uint32_t ret = BkfPuberSessTry2SendRealData(sess, coder);
     if (ret != BKF_OK) {
         return ret;
@@ -533,6 +552,7 @@ STATIC BOOL BkfPuberSessProcUnsubMayProc(BkfPuberSess *sess, BkfMsgHead *msgHead
 
 STATIC uint32_t BkfPuberSessProcUnsubDo(BkfPuberSess *sess, BkfMsgHead *msgHead, BkfTlvTransNum *tlvTransNum)
 {
+    (void)tlvTransNum;
     sess->subWithVerify = BKF_COND_2BIT_FIELD(BKF_BIT_TEST(msgHead->flag, BKF_FLAG_VERIFY));
     if (sess->subWithVerify) {
         BkfPuberSessChgStateAndTrigSched(sess, BKF_PUBER_SESS_STATE_REAL_DATA);
@@ -651,6 +671,7 @@ STATIC uint32_t BkfPuberSessTry2SendRealData(BkfPuberSess *sess, BkfMsgCoder *co
 /* 平滑超时检查 */
 STATIC uint32_t BkfPuberSessBatchChkTimeout(BkfPuberSess *sess, void *noUse)
 {
+    (void)noUse;
     if (sess->batchChkTmr == VOS_NULL) {
         BKF_ASSERT(0);
         return BKF_OK;

@@ -323,31 +323,36 @@ HcclResult CcuUrmaChannel::UpdateMemInfo(HcommMemHandle* memHandles, uint32_t me
     return impl_->UpdateMemInfo(bufferVecTemp);
 }
 
-HcclResult CcuUrmaChannel::NotifyRecord(const uint32_t remoteNotifyIdx)
+HcclResult CcuUrmaChannel::NotifyRecord([[maybe_unused]] const uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[CcuUrmaChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CcuUrmaChannel::NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout)
+HcclResult
+CcuUrmaChannel::NotifyWait([[maybe_unused]] const uint32_t localNotifyIdx, [[maybe_unused]] const uint32_t timeout)
 {
     HCCL_INFO("[CcuUrmaChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CcuUrmaChannel::WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx)
+HcclResult CcuUrmaChannel::WriteWithNotify(
+    [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] const uint64_t len,
+    [[maybe_unused]] uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[CcuUrmaChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CcuUrmaChannel::Write(void* dst, const void* src, uint64_t len)
+HcclResult
+CcuUrmaChannel::Write([[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t len)
 {
     HCCL_INFO("[CcuUrmaChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult CcuUrmaChannel::Read(void* dst, const void* src, uint64_t len)
+HcclResult
+CcuUrmaChannel::Read([[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t len)
 {
     HCCL_INFO("[CcuUrmaChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;

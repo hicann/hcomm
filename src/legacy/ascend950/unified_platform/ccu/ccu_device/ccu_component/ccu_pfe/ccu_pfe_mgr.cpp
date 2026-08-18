@@ -19,7 +19,7 @@ namespace Hccl {
 
 inline PfeCtx BuildPfeCtx(const PfeJettyCtxCfg& cfg)
 {
-    struct PfeCtx ctx = {0};
+    struct PfeCtx ctx = {};
     ctx.startJettyId = cfg.startTaJettyId;
     ctx.jettyNum = cfg.size - 1; // PFE给CCU分配的Jetty个数，配置硬件时需减1
     ctx.startLocalJettyCtxId = cfg.startJettyCtxId;
@@ -33,7 +33,7 @@ inline PfeCtx BuildPfeCtx(const PfeJettyCtxCfg& cfg)
 
 inline PfeJettyStrategy BuildStrategy(const PfeJettyCtxCfg& cfg)
 {
-    struct PfeJettyStrategy pfeJettyStrategy = {0};
+    struct PfeJettyStrategy pfeJettyStrategy = {};
     pfeJettyStrategy.feId = cfg.feId;
     pfeJettyStrategy.pfeId = cfg.feId;
     pfeJettyStrategy.size = cfg.size;

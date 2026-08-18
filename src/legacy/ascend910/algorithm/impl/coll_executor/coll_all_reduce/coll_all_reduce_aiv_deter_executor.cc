@@ -56,7 +56,8 @@ HcclResult CollAllReduceAivDeterExecutor::CalcLevel0CommInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAllReduceAivDeterExecutor::CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize, HcclCMDType cmdType)
+HcclResult CollAllReduceAivDeterExecutor::CalNumBlocks(
+    u32& numBlocks, u32 rankSize, u64 dataSize, [[maybe_unused]] HcclCMDType cmdType)
 {
     numBlocks = rankSize; // 默认情况使用rankSize个AIV
 
@@ -101,7 +102,8 @@ HcclResult CollAllReduceAivDeterExecutor::Orchestrate(OpParam& param, AlgResourc
 }
 
 HcclResult CollAllReduceAivDeterExecutor::GetAivExecParam(
-    const OpParam& param, AlgResourceResponse& algRes, AivSuperKernelArgs& args)
+    [[maybe_unused]] const OpParam& param, [[maybe_unused]] AlgResourceResponse& algRes,
+    [[maybe_unused]] AivSuperKernelArgs& args)
 {
     return HCCL_SUCCESS;
 }

@@ -1755,7 +1755,8 @@ HcclResult ParseOpExpansion()
     return HCCL_SUCCESS;
 }
 
-HcclResult SplitHcclRetryEnable(const std::string& retryConfig, std::vector<std::string>& retryEnables)
+HcclResult SplitHcclRetryEnable(
+    [[maybe_unused]] const std::string& retryConfig, [[maybe_unused]] std::vector<std::string>& retryEnables)
 {
 #ifndef CCL_KERNEL_AICPU
     std::string remainRetryConfig;
@@ -1783,7 +1784,7 @@ HcclResult SplitHcclRetryEnable(const std::string& retryConfig, std::vector<std:
     return HCCL_SUCCESS;
 }
 
-HcclResult CollectRetryEnableFromConfig(const std::vector<std::string>& retryEnables)
+HcclResult CollectRetryEnableFromConfig([[maybe_unused]] const std::vector<std::string>& retryEnables)
 {
 #ifndef CCL_KERNEL_AICPU
     const std::map<std::string, u32> hcclRetryLevelMap

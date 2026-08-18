@@ -373,7 +373,8 @@ HcclResult HcclAicpuKernelLaunch(
 
 static HcclResult GetStreams(
     const CollComm* collComm, const std::vector<HcclP2pTask>& sortedSendQue,
-    const std::vector<HcclP2pTask>& sortedRecvQue, aclrtStream& unfoldStream, const aclrtStream& usrStream)
+    const std::vector<HcclP2pTask>& sortedRecvQue, aclrtStream& unfoldStream,
+    [[maybe_unused]] const aclrtStream& usrStream)
 {
     if (!sortedSendQue.empty()) {
         unfoldStream = sortedSendQue[0].stream;

@@ -74,7 +74,7 @@ bool CollAllReduceMeshOneshotExecutor::IsHugeData(const u64 curSize)
     return hugeData;
 }
 
-bool CollAllReduceMeshOneshotExecutor::IsSmallData(const u64 totalSize, const u64 curSize)
+bool CollAllReduceMeshOneshotExecutor::IsSmallData(const u64 totalSize, [[maybe_unused]] const u64 curSize)
 {
     bool smallData = totalSize <= HCCL_SMALL_COUNT_128_KB;
     return smallData;
@@ -92,8 +92,9 @@ HcclResult CollAllReduceMeshOneshotExecutor::KernelRun(const OpParam& param, Exe
     CHK_RET(ActiveSlaveStreams(param.stream));
 
     u64 reduceAttr = GetReduceAttr(execMem.inputMem, execMem.outputMem, param.DataDes.dataType, param.reduceType);
-    HcomCollOpInfo opInfo = {"",         execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType,
-                             param.root, param.reduceType};
+    HcomCollOpInfo opInfo
+        = {"", execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, param.reduceType,
+           0};
 
     std::unique_ptr<AlgTemplateBase> level0TempAlg;
     if (level0CommInfo.localRankSize == DEVICE_TWO) {

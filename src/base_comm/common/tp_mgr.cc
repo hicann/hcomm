@@ -609,7 +609,7 @@ HcclResult TpMgr::HandleCompletedTpAttrRequest(
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult TpMgr::ReleaseTpAttr(const TpHandle tpHandle, const TpAttrInfo& tpAttrInfo)
+HcclResult TpMgr::ReleaseTpAttr(const TpHandle tpHandle, [[maybe_unused]] const TpAttrInfo& tpAttrInfo)
 {
     std::lock_guard<std::mutex> lock(tpAttrCtxMutex_);
     auto attrIter = tpAttrCtxMap_.find(tpHandle);

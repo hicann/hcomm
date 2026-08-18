@@ -565,7 +565,7 @@ HcclResult TopoInfoExchangeServer::DeleteSocketWhiteList(u32 port, const std::ve
 {
     std::vector<SocketWlistInfo> wlistInfosVec;
     for (auto ip : whitelist) {
-        SocketWlistInfo wlistInfo = {0};
+        SocketWlistInfo wlistInfo = {};
         wlistInfo.connLimit = HOST_SOCKET_CONN_LIMIT;
         wlistInfo.remoteIp.addr = ip.GetBinaryAddress().addr;
         wlistInfo.remoteIp.addr6 = ip.GetBinaryAddress().addr6;

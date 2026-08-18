@@ -246,7 +246,7 @@ HcclResult AllGatherPipeline::GetNslbAdjInfo(
     CHK_SMART_PTR_NULL(nslbNext);
 
     // Pipeline 步长合并 等同于 ring
-    NslbDpAdjInfo adjInfoStep = {0};
+    NslbDpAdjInfo adjInfoStep = {};
     nslbAdjInfo.dstRankNum = 1;
     adjInfoStep.dstLocalRankId = nslbNext->GetRemoteRank();
     adjInfoStep.phaseId = 1;

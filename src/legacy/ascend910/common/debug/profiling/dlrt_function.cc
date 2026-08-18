@@ -28,7 +28,7 @@ DlRtFunction::~DlRtFunction()
     }
 }
 
-rtError_t rtProfRegisterCtrlCallbackStub(uint32_t modelid, rtProfCtrlHandle callback)
+rtError_t rtProfRegisterCtrlCallbackStub([[maybe_unused]] uint32_t modelid, [[maybe_unused]] rtProfCtrlHandle callback)
 {
     HCCL_WARNING("Entry rtProfRegisterCtrlCallbackStub");
     return RT_ERROR_NONE;

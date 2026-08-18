@@ -68,7 +68,7 @@ s32 hrtGetgrpId(int& groupId, int& devId)
 
 HcclResult hrtHalSubmitEvent(u32 devId, u32 eventId, u32 groupId)
 {
-    struct event_summary event = {0};
+    struct event_summary event = {};
     event.pid = SalGetPid();
     event.grp_id = groupId;
     event.event_id = static_cast<EVENT_ID>(eventId);
@@ -149,19 +149,23 @@ HcclResult hrtHalEschedCreateGrp(unsigned int devId, unsigned int grpId, GROUP_T
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtHalEschedCreateGrpEx(unsigned int devId, unsigned int* grpId, unsigned int threadNum, GROUP_TYPE type)
+HcclResult hrtHalEschedCreateGrpEx(
+    [[maybe_unused]] unsigned int devId, [[maybe_unused]] unsigned int* grpId, [[maybe_unused]] unsigned int threadNum,
+    [[maybe_unused]] GROUP_TYPE type)
 {
     return HCCL_SUCCESS;
 }
 
 HcclResult hrtHalEschedSubscribeEvent(
-    unsigned int devId, unsigned int grpId, unsigned int threadId, unsigned long long eventBitmap)
+    [[maybe_unused]] unsigned int devId, [[maybe_unused]] unsigned int grpId, [[maybe_unused]] unsigned int threadId,
+    [[maybe_unused]] unsigned long long eventBitmap)
 {
     return HCCL_SUCCESS;
 }
 
 HcclResult hrtHalEschedWaitEvent(
-    unsigned int devId, unsigned int grpId, unsigned int threadId, int timeout, struct event_info* event)
+    [[maybe_unused]] unsigned int devId, [[maybe_unused]] unsigned int grpId, [[maybe_unused]] unsigned int threadId,
+    [[maybe_unused]] int timeout, [[maybe_unused]] struct event_info* event)
 {
     return HCCL_SUCCESS;
 }
@@ -197,11 +201,17 @@ HcclResult hrtHalEschedRegisterAckFuncWithGrpid(
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtHalDrvOpenIpcNotify(const char* name, struct drvIpcNotifyInfo* notify) { return HCCL_SUCCESS; }
+HcclResult hrtHalDrvOpenIpcNotify([[maybe_unused]] const char* name, [[maybe_unused]] struct drvIpcNotifyInfo* notify)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult hrtHalDrvCloseIpcNotify(const char* name, struct drvIpcNotifyInfo* notify) { return HCCL_SUCCESS; }
+HcclResult hrtHalDrvCloseIpcNotify([[maybe_unused]] const char* name, [[maybe_unused]] struct drvIpcNotifyInfo* notify)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult hrtHalDrvIpcNotifyRecord(const char* name) { return HCCL_SUCCESS; }
+HcclResult hrtHalDrvIpcNotifyRecord([[maybe_unused]] const char* name) { return HCCL_SUCCESS; }
 
 HcclResult HrtHalDrvQueryProcessHostPid(
     int pid, unsigned int* chipId, unsigned int* vfid, unsigned int* hostPid, unsigned int* cpType)
@@ -310,7 +320,8 @@ HcclResult hrtHalGrpQuery(GroupQueryCmdType cmd, void* inBuff, unsigned int inLe
 }
 
 HcclResult hrtEschedQueryInfo(
-    unsigned int devId, ESCHED_QUERY_TYPE type, struct esched_input_info* inPut, struct esched_output_info* outPut)
+    [[maybe_unused]] unsigned int devId, [[maybe_unused]] ESCHED_QUERY_TYPE type,
+    [[maybe_unused]] struct esched_input_info* inPut, [[maybe_unused]] struct esched_output_info* outPut)
 {
     return HCCL_SUCCESS;
 }
@@ -336,7 +347,7 @@ HcclResult hrtHalGetChipInfo(uint32_t devId, std::string& chipName)
 {
     // 参数有效性检查
     CHK_SMART_PTR_NULL(DlHalFunction::GetInstance().dlHalGetChipInfo);
-    halChipInfo chipInfo = {0};
+    halChipInfo chipInfo = {};
     drvError_t ret = DlHalFunction::GetInstance().dlHalGetChipInfo(devId, &chipInfo);
     CHK_PRT_RET(
         ret != DRV_ERROR_NONE,
@@ -368,7 +379,10 @@ HcclResult hrtHalBindCgroup(BIND_CGROUP_TYPE bindType)
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtDrvDeviceGetPhyIdByIndex(u32 deviceLogicId, u32& devicePhyId) { return HCCL_SUCCESS; }
+HcclResult hrtDrvDeviceGetPhyIdByIndex([[maybe_unused]] u32 deviceLogicId, [[maybe_unused]] u32& devicePhyId)
+{
+    return HCCL_SUCCESS;
+}
 
 void MemoryPreFetchImpl(u64 start, u64 end, u32 pageSize)
 {
@@ -486,7 +500,7 @@ HcclResult hrtHalMemCtl(int type, void* input, size_t inputSize, void* output, s
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtHalSensorNodeRegister(uint32_t devId, uint64_t* handle)
+HcclResult hrtHalSensorNodeRegister([[maybe_unused]] uint32_t devId, [[maybe_unused]] uint64_t* handle)
 {
 #ifdef CCL_KERNEL
     CHK_PTR_NULL(handle);
@@ -529,7 +543,7 @@ HcclResult hrtHalSensorNodeRegister(uint32_t devId, uint64_t* handle)
 #endif
 }
 
-HcclResult hrtHalSensorNodeUnregister(uint32_t devId, uint64_t handle)
+HcclResult hrtHalSensorNodeUnregister([[maybe_unused]] uint32_t devId, [[maybe_unused]] uint64_t handle)
 {
 #ifdef CCL_KERNEL
     if (DlHalFunction::GetInstance().dlHalSensorNodeUnregister == nullptr) {
@@ -574,7 +588,9 @@ halGeneralEventType_t TranslateEventType(HcclGeneralEventType assertion)
     }
 }
 
-HcclResult hrtHalSensorNodeUpdateState(uint32_t devId, uint64_t handle, int val, HcclGeneralEventType assertion)
+HcclResult hrtHalSensorNodeUpdateState(
+    [[maybe_unused]] uint32_t devId, [[maybe_unused]] uint64_t handle, [[maybe_unused]] int val,
+    [[maybe_unused]] HcclGeneralEventType assertion)
 {
 #ifdef CCL_KERNEL
     if (DlHalFunction::GetInstance().dlHalSensorNodeUpdateState == nullptr) {

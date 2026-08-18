@@ -289,6 +289,8 @@ void BkfSubSessChangeStateAndTirg(BkfSuberSess *sess, uint8_t state)
 
 STATIC uint32_t BkfSubSessProcUnSub(BkfSuberSess *sess, void *nouse1, void *nouse2)
 {
+    (void)nouse1;
+    (void)nouse2;
     if (BKF_DL_NODE_IS_IN(&sess->dlStateNode)) {
         BKF_DL_REMOVE(&sess->dlStateNode);
     }
@@ -303,6 +305,8 @@ STATIC uint32_t BkfSubSessProcUnSub(BkfSuberSess *sess, void *nouse1, void *nous
 
 STATIC uint32_t BkfSubSessProcSub(BkfSuberSess *sess, void *nouse1, void *nouse2)
 {
+    (void)nouse1;
+    (void)nouse2;
     BkfSuberEnv *env = sess->sessMng->env;
 
     sess->seq = BKF_GET_NEXT_VAL(env->seeds);
@@ -319,6 +323,8 @@ STATIC uint32_t BkfSubSessProcSub(BkfSuberSess *sess, void *nouse1, void *nouse2
 
 STATIC uint32_t BkfSubSessProcVerifySub(BkfSuberSess *sess, void *nouse1, void *nouse2)
 {
+    (void)nouse1;
+    (void)nouse2;
     BkfSuberEnv *env = sess->sessMng->env;
 
     sess->seq = BKF_GET_NEXT_VAL(env->seeds);
@@ -332,6 +338,7 @@ STATIC uint32_t BkfSubSessProcVerifySub(BkfSuberSess *sess, void *nouse1, void *
 
 uint32_t BkfSubSessSndSub(BkfSuberSess *sess, BkfMsgCoder *coder, void *param)
 {
+    (void)param;
     BkfSuberTableTypeVTbl *vtbl = BkfSuberDataTableTypeGetVtbl(sess->sessMng->dataMng, sess->key.tableTypeId);
     if (vtbl == VOS_NULL) {
         BKF_ASSERT(0);
@@ -388,6 +395,8 @@ STATIC uint32_t BkfSubSessActStartSub(BkfSuberSess *sess, BkfMsgCoder *coder, vo
 
 uint32_t BkfSubSessActDownAndUpdSeq(BkfSuberSess *sess, BkfMsgDecoder *decoder, void *param)
 {
+    (void)decoder;
+    (void)param;
     if (sess->fsm.state == BACKFIN_SUB_SESS_STATE_SNDUNSUB) {
         return BKF_OK;
     }
@@ -450,6 +459,7 @@ uint32_t BkfSubSessCheckTransValid(BkfSuberSess *sess, BkfMsgDecoder *decoder)
 
 STATIC uint32_t BkfSubSessActRcvSubAck(BkfSuberSess *sess, BkfMsgDecoder *decoder, void *param)
 {
+    (void)param;
     uint32_t errCode;
 
     uint8_t buf[BKF_SUBER_DISP_SLICELEN] = {0};
@@ -475,6 +485,7 @@ STATIC uint32_t BkfSubSessActRcvSubAck(BkfSuberSess *sess, BkfMsgDecoder *decode
 
 STATIC uint32_t BkfSubSessSndUnSub(BkfSuberSess *sess, BkfMsgCoder *coder, void *param)
 {
+    (void)param;
     BkfSuberTableTypeVTbl *vtbl = BkfSuberDataTableTypeGetVtbl(sess->sessMng->dataMng, sess->key.tableTypeId);
     if (vtbl == VOS_NULL) {
         BKF_ASSERT(0);
@@ -518,6 +529,7 @@ STATIC uint32_t BkfSubSessSndUnSub(BkfSuberSess *sess, BkfMsgCoder *coder, void 
 
 STATIC uint32_t BkfSubSessActRcvBatchBegin(BkfSuberSess *sess, BkfMsgDecoder *decoder, void *param)
 {
+    (void)param;
     uint8_t urlStr[BKF_URL_STR_LEN_MAX];
     uint8_t urlStr2[BKF_URL_STR_LEN_MAX];
     BKF_LOG_WARN(sess->sessMng->log, "Session (%#x) Receive Batch Begin, p %s l %s\n", BKF_MASK_ADDR(sess),
@@ -556,6 +568,7 @@ STATIC uint32_t BkfSubSessActRcvBatchBegin(BkfSuberSess *sess, BkfMsgDecoder *de
 
 STATIC uint32_t BkfSubSessActRcvBatchEnd(BkfSuberSess *sess, BkfMsgDecoder *decoder, void *param)
 {
+    (void)param;
     uint8_t urlStr[BKF_URL_STR_LEN_MAX];
     uint8_t urlStr2[BKF_URL_STR_LEN_MAX];
     BKF_LOG_WARN(sess->sessMng->log, "Session (%#x) Receive Batch End. p %s l %s\n", BKF_MASK_ADDR(sess),
@@ -667,6 +680,7 @@ uint32_t BkfSubSessDecodeIdlData(BkfSuberTableTypeVTbl *vtbl, BkfSuberSess *sess
 
 STATIC uint32_t BkfSubSessActRcvData(BkfSuberSess *sess, BkfMsgDecoder *decoder, void *param)
 {
+    (void)param;
     BkfSuberSessKey *sessKey = &sess->key;
     uint8_t urlStr[BKF_URL_STR_LEN_MAX];
     uint8_t urlStr2[BKF_URL_STR_LEN_MAX];
@@ -716,6 +730,8 @@ STATIC void BkfSubSessProcDisconn(BkfSuberSess *sess)
 
 STATIC uint32_t BkfSubSessActDisconnNotReSub(BkfSuberSess *sess, BkfMsgDecoder *noUse, void *param)
 {
+    (void)noUse;
+    (void)param;
     BkfSubSessProcDisconn(sess);
     BkfSuberSessBatchChkTmrStop(sess);
     return BKF_SUBER_SESS_NEED_DELETE;
@@ -723,6 +739,7 @@ STATIC uint32_t BkfSubSessActDisconnNotReSub(BkfSuberSess *sess, BkfMsgDecoder *
 
 STATIC uint32_t BkfSubSessActDisconn(BkfSuberSess *sess, BkfMsgDecoder *noUse, void *param)
 {
+    (void)noUse;
     BkfSubSessProcDisconn(sess);
     /* 序列号增加，重新进行状态机 */
     uint32_t ret = BkfSubSessActDownAndUpdSeq(sess, VOS_NULL, param);
@@ -731,6 +748,7 @@ STATIC uint32_t BkfSubSessActDisconn(BkfSuberSess *sess, BkfMsgDecoder *noUse, v
 
 STATIC uint32_t BkfSubSessActStartVerifySub(BkfSuberSess *sess, BkfMsgCoder *coder, void *param)
 {
+    (void)param;
     BkfSuberTableTypeVTbl *vtbl = BkfSuberDataTableTypeGetVtbl(sess->sessMng->dataMng, sess->key.tableTypeId);
     if (vtbl == VOS_NULL) {
         BKF_ASSERT(0);
@@ -769,6 +787,7 @@ STATIC uint32_t BkfSubSessActStartVerifySub(BkfSuberSess *sess, BkfMsgCoder *cod
 
 STATIC uint32_t BkfSubSessActRcvVerifyAck(BkfSuberSess *sess, BkfMsgDecoder *decoder, void *param)
 {
+    (void)param;
     uint32_t errCode;
 
     BKF_RETURNVAL_IF(sess == VOS_NULL, BKF_ERR);
@@ -798,6 +817,7 @@ STATIC uint32_t BkfSubSessActRcvVerifyAck(BkfSuberSess *sess, BkfMsgDecoder *dec
 
 STATIC uint32_t BkfSubSessActRcvVerifyBegin(BkfSuberSess *sess, BkfMsgDecoder *decoder, void *param)
 {
+    (void)param;
     uint32_t errCode;
     BkfSuberSessKey *sessKey = VOS_NULL;
     BkfSuberTableTypeVTbl *vtbl = VOS_NULL;
@@ -844,6 +864,7 @@ STATIC uint32_t BkfSubSessActRcvVerifyBegin(BkfSuberSess *sess, BkfMsgDecoder *d
 
 STATIC uint32_t BkfSubSessActRcvVerifyEnd(BkfSuberSess *sess, BkfMsgDecoder *decoder, void *param)
 {
+    (void)param;
     uint32_t errCode;
     BkfSuberSessKey *sessKey = VOS_NULL;
     BkfSuberTableTypeVTbl *vtbl = VOS_NULL;
@@ -943,6 +964,7 @@ STATIC uint32_t BkfSubSessActRcvNtf(BkfSuberSess *sess, BkfMsgDecoder *decoder, 
 
 STATIC uint32_t BkfSubSessActRcvNtfNotReSub(BkfSuberSess *sess, BkfMsgDecoder *decoder, void *parm)
 {
+    (void)parm;
     uint32_t ret = BkfSubSessProcNtf(sess, decoder);
     if (ret != BKF_OK) {
         return ret;
@@ -1017,6 +1039,7 @@ void BkfSuberSessNtfyAppBatchTimeout(BkfSuberSess *sess)
 
 STATIC uint32_t BkfSuberSessBatchChkTimeout(BkfSuberSess *sess, void *noUse)
 {
+    (void)noUse;
     if (sess->batchChkTmr == VOS_NULL) {
         BKF_ASSERT(0);
         return BKF_OK;

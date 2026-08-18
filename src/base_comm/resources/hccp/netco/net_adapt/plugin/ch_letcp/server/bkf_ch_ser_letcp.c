@@ -304,6 +304,7 @@ STATIC void BkfChSerLetcpClose(BkfChSerConnId *connId)
 /* on msg */
 STATIC void BkfChSerLetcpOnLsnFdEvents(int fd, uint32_t curEvents, BkfChSerLetcpLsn *lsn)
 {
+    (void)fd;
     BkfChSer *ch = VOS_NULL;
     uint8_t buf[BKF_1K / 8];
 
@@ -347,6 +348,7 @@ void BkfChSerLetcpOnConnFdEpollout(BkfChSerConnId *connId)
 
 STATIC void BkfChSerLetcpOnConnFdEvents(int fd, uint32_t curEvents, BkfChSerConnId *connId)
 {
+    (void)fd;
     BkfChSer *ch = VOS_NULL;
     uint8_t buf[BKF_1K / 8];
 
@@ -371,6 +373,7 @@ STATIC void BkfChSerLetcpOnConnFdEvents(int fd, uint32_t curEvents, BkfChSerConn
 
 STATIC uint32_t BkfChSerLetcpOnConnTmrWriteErrTO(BkfChSerConnId *connId, void *paramTmrLibUnknown)
 {
+    (void)paramTmrLibUnknown;
     BkfChSer *ch = connId->lsn->ch;
 
     connId->tmrIdWriteErr = VOS_NULL;
@@ -461,6 +464,7 @@ uint32_t BkfChSerLetcpSetFdOptKa(BkfChSer *ch, int32_t fd)
 
 uint32_t BkfChSerLetcpProcReListenCallback(void *cookie, void *paramTmrLibUnknown)
 {
+    (void)paramTmrLibUnknown;
     BkfChSerLetcpLsn *lsn = (BkfChSerLetcpLsn *)cookie;
     if (lsn == VOS_NULL) {
         BKF_ASSERT(0);
@@ -704,6 +708,7 @@ STATIC void BkfChSerLetcpProcConnFdCliData(BkfChSer *ch, BkfChSerConnId *connId)
 /* func */
 uint32_t BkfChSerLetcpBuildVTbl(char *name, BkfChSerTypeVTbl *temp, uint32_t nameLen)
 {
+    (void)nameLen;
     if ((name == VOS_NULL) || (temp == VOS_NULL)) {
         return BKF_ERR;
     }

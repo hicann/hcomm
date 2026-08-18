@@ -67,7 +67,7 @@ HcclAiRMAWQ UrmaDirectTransport::GetAiRMAWQ()
             StringFormat("[UrmaDirectTransport::%s]transport status is not ready, please check", __func__));
     }
 
-    HcclAiRMAWQ wq = {0};
+    HcclAiRMAWQ wq = {};
     wq.wqeSize = WQE_SIZE;
 
     size_t connNum = commonLocRes.connVec.size();
@@ -114,7 +114,7 @@ HcclAiRMACQ UrmaDirectTransport::GetAiRMACQ()
     auto conn = reinterpret_cast<DevUbCtpConnection*>(commonLocRes.connVec[0]);
     CHECK_NULLPTR(conn, StringFormat("[UrmaDirectTransport::%s] failed, connection pointer is nullptr", __func__));
 
-    HcclAiRMACQ cq = {0};
+    HcclAiRMACQ cq = {};
     conn->SetCqInfo(cq);
     return cq;
 }

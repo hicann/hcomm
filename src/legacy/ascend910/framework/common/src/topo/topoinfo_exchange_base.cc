@@ -35,7 +35,8 @@ HcclResult TopoInfoExchangeBase::DisconnectSocket(std::shared_ptr<HcclSocket> so
 }
 
 HcclResult TopoInfoExchangeBase::SendClusterInfoMsg(
-    std::shared_ptr<HcclSocket> socket, const RankTable_t& clusterInfo, const std::string buffer, const u32 msgLen)
+    std::shared_ptr<HcclSocket> socket, [[maybe_unused]] const RankTable_t& clusterInfo, const std::string buffer,
+    const u32 msgLen)
 {
     HcclResult ret = socket->Send(&msgLen, sizeof(msgLen));
     CHK_PRT_RET(

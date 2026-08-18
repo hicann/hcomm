@@ -44,6 +44,8 @@ struct RsSocketOps gSocketOps = {
 
 int RaRsSocketBatchConnect(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpSocketConnectData *socketConnectData = (union OpSocketConnectData *)(inBuf + sizeof(struct MsgHead));
     unsigned int usePort = 0;
     unsigned int i;
@@ -75,6 +77,8 @@ int RaRsSocketBatchConnect(char *inBuf, char *outBuf, int *outLen, int *opResult
 
 int RaRsSocketBatchClose(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpSocketCloseData *socketCloseData = (union OpSocketCloseData *)(inBuf + sizeof(struct MsgHead));
     int disuseLinger = 0;
     unsigned int i;
@@ -100,6 +104,8 @@ int RaRsSocketBatchClose(char *inBuf, char *outBuf, int *outLen, int *opResult, 
 
 int RaRsSocketBatchAbort(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpSocketConnectData *socketConnectData = (union OpSocketConnectData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSocketConnectData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -115,6 +121,7 @@ int RaRsSocketBatchAbort(char *inBuf, char *outBuf, int *outLen, int *opResult, 
 
 int RaRsSocketListenStart(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpSocketListenData *socketListenData = (union OpSocketListenData *)(inBuf + sizeof(struct MsgHead));
     union OpSocketListenData *socketListenDataOut = NULL;
     unsigned int usePort = 0;
@@ -155,6 +162,8 @@ int RaRsSocketListenStart(char *inBuf, char *outBuf, int *outLen, int *opResult,
 
 int RaRsSocketListenStop(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpSocketListenData *socketListenData = (union OpSocketListenData *)(inBuf + sizeof(struct MsgHead));
     unsigned int usePort = 0;
     unsigned int i;
@@ -186,6 +195,7 @@ int RaRsSocketListenStop(char *inBuf, char *outBuf, int *outLen, int *opResult, 
 
 int RaRsGetSockets(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     int ret;
     union OpSocketInfoData *socketInfoDataOut = NULL;
     union OpSocketInfoData *socketInfoData = (union OpSocketInfoData *)(inBuf + sizeof(struct MsgHead));
@@ -212,6 +222,7 @@ int RaRsGetSockets(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
 
 int RaRsSocketSend(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     int sendLen;
     union OpSocketSendData *sendData = (union OpSocketSendData *)(inBuf + sizeof(struct MsgHead));
 
@@ -236,6 +247,7 @@ int RaRsSocketSend(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
 
 int RaRsSocketRecv(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     int recvLen;
     union OpSocketRecvData *recvData = (union OpSocketRecvData *)(inBuf + sizeof(struct MsgHead));
 
@@ -254,6 +266,8 @@ int RaRsSocketRecv(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
 
 int RaRsSocketInit(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpSocketInitData *socketInitData = (union OpSocketInitData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSocketInitData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -268,6 +282,8 @@ int RaRsSocketInit(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
 
 int RaRsSocketDeinit(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpSocketDeinitData *socketDeinitData = (union OpSocketDeinitData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpSocketDeinitData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -282,6 +298,8 @@ int RaRsSocketDeinit(char *inBuf, char *outBuf, int *outLen, int *opResult, int 
 
 int RaRsSocketWhiteListAdd(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpWlistData *wlistData = (union OpWlistData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpWlistData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -296,6 +314,8 @@ int RaRsSocketWhiteListAdd(char *inBuf, char *outBuf, int *outLen, int *opResult
 
 int RaRsSocketWhiteListAddV2(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpWlistDataV2 *wlistData = (union OpWlistDataV2 *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpWlistDataV2), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -310,6 +330,8 @@ int RaRsSocketWhiteListAddV2(char *inBuf, char *outBuf, int *outLen, int *opResu
 
 int RaRsSocketWhiteListDel(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpWlistData *wlistData = (union OpWlistData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpWlistData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -324,6 +346,8 @@ int RaRsSocketWhiteListDel(char *inBuf, char *outBuf, int *outLen, int *opResult
 
 int RaRsSocketWhiteListDelV2(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpWlistDataV2 *wlistData = (union OpWlistDataV2 *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpWlistDataV2), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -338,6 +362,8 @@ int RaRsSocketWhiteListDelV2(char *inBuf, char *outBuf, int *outLen, int *opResu
 
 int RaRsSocketCreditAdd(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outBuf;
+    (void)outLen;
     union OpAcceptCreditData *opData = (union OpAcceptCreditData *)(inBuf + sizeof(struct MsgHead));
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpAcceptCreditData), sizeof(struct MsgHead), rcvBufLen, opResult);
@@ -352,6 +378,7 @@ int RaRsSocketCreditAdd(char *inBuf, char *outBuf, int *outLen, int *opResult, i
 
 int RaRsGetIfnum(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpIfnumData *ifnumData = (union OpIfnumData *)(inBuf + sizeof(struct MsgHead));
     union OpIfnumData *ifnumDataOut = NULL;
     unsigned int num = 0;
@@ -376,6 +403,7 @@ int RaRsGetIfnum(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvB
 
 int RaRsGetIfaddrs(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     int ret;
     union OpIfaddrData *ifaddrDataOut = NULL;
     union OpIfaddrData *ifaddrData = (union OpIfaddrData *)(inBuf + sizeof(struct MsgHead));
@@ -403,6 +431,7 @@ int RaRsGetIfaddrs(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
 
 int RaRsGetIfaddrsV2(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpIfaddrDataV2 *ifaddrData = (union OpIfaddrDataV2 *)(inBuf + sizeof(struct MsgHead));
     union OpIfaddrDataV2 *ifaddrDataOut = NULL;
     bool isAll = false;
@@ -437,6 +466,7 @@ int RaRsGetIfaddrsV2(char *inBuf, char *outBuf, int *outLen, int *opResult, int 
 
 int RaRsGetVnicIp(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     unsigned int vnicIp = 0;
     union OpGetVnicIpData *vnicIpDataRet = NULL;
     union OpGetVnicIpData *vnicIpData = (union OpGetVnicIpData *)(inBuf + sizeof(struct MsgHead));
@@ -457,6 +487,7 @@ int RaRsGetVnicIp(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcv
 
 int RaRsGetVnicIpInfosV1(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpGetVnicIpInfosDataV1 *vnicIpData = (union OpGetVnicIpInfosDataV1 *)(inBuf + sizeof(struct MsgHead));
     union OpGetVnicIpInfosDataV1 *vnicIpOut = (union OpGetVnicIpInfosDataV1 *)(outBuf + sizeof(struct MsgHead));
 
@@ -475,6 +506,7 @@ int RaRsGetVnicIpInfosV1(char *inBuf, char *outBuf, int *outLen, int *opResult, 
 
 int RaRsGetVnicIpInfos(char *inBuf, char *outBuf, int *outLen, int *opResult, int rcvBufLen)
 {
+    (void)outLen;
     union OpGetVnicIpInfosData *vnicIpData = (union OpGetVnicIpInfosData *)(inBuf + sizeof(struct MsgHead));
     union OpGetVnicIpInfosData *vnicIpOut = (union OpGetVnicIpInfosData *)(outBuf + sizeof(struct MsgHead));
 

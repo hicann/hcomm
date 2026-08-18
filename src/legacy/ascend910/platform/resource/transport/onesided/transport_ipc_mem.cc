@@ -152,7 +152,7 @@ HcclResult TransportIpcMem::FillRmaBufferSlice(
     remoteRmaBufferSlice.addr = static_cast<void*>(static_cast<u8*>(remoteBuffer->GetDevAddr()) + remoteDataOffSet);
     remoteRmaBufferSlice.len = byteSize;
     std::shared_ptr<RmaBuffer> temp(
-        remoteBuffer, [](RmaBuffer* p) {}); // 在外部进行删除操作，内部不能用智能指针进行生命周期管理
+        remoteBuffer, []([[maybe_unused]] RmaBuffer* p) {}); // 在外部进行删除操作，内部不能用智能指针进行生命周期管理
     remoteRmaBufferSlice.rmaBuffer = temp;
     remoteRmaBufferSlice.memType = remoteBuffer->GetMemType();
     HCCL_INFO(
@@ -229,13 +229,13 @@ HcclResult TransportIpcMem::FillRmaBufferSlice(
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportIpcMem::SetSocket(const std::shared_ptr<HcclSocket>& socket)
+HcclResult TransportIpcMem::SetSocket([[maybe_unused]] const std::shared_ptr<HcclSocket>& socket)
 {
     HCCL_INFO("TransportIpcMem doesn't need to set socket");
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportIpcMem::Connect(s32 timeoutSec)
+HcclResult TransportIpcMem::Connect([[maybe_unused]] s32 timeoutSec)
 {
     HCCL_INFO("TransportIpcMem doesn't need to connect socket");
     return HCCL_SUCCESS;
@@ -313,7 +313,7 @@ HcclResult TransportIpcMem::Read(const RmaOpMem& localMem, const RmaOpMem& remot
     return TransportIpc(localRmaBufferSlice, remoteRmaBufferSlice, stream);
 }
 
-HcclResult TransportIpcMem::AddOpFence(const rtStream_t& stream)
+HcclResult TransportIpcMem::AddOpFence([[maybe_unused]] const rtStream_t& stream)
 {
     HCCL_INFO("TransportIpcMem doesn't need to add op fence");
     return HCCL_SUCCESS;
@@ -347,7 +347,7 @@ HcclResult TransportIpcMem::GetMemInfo(u32& lkey, u32& rkey, HcclBuf& localMem, 
 }
 
 HcclResult TransportIpcMem::GetTransInfo(
-    HcclQpInfoV2& qpInfo, u32* lkey, u32* rkey, HcclBuf* localMem, HcclBuf* remoteMem, u32 num)
+    [[maybe_unused]] HcclQpInfoV2& qpInfo, u32* lkey, u32* rkey, HcclBuf* localMem, HcclBuf* remoteMem, u32 num)
 {
     CHK_PTR_NULL(lkey);
     CHK_PTR_NULL(rkey);
@@ -370,28 +370,31 @@ HcclResult TransportIpcMem::GetTransInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportIpcMem::WaitOpFence(const rtStream_t& stream)
+HcclResult TransportIpcMem::WaitOpFence([[maybe_unused]] const rtStream_t& stream)
 {
     HCCL_DEBUG("TransportIpcMem doesn't need to wait fence");
     return HCCL_SUCCESS;
 }
 
 HcclResult TransportIpcMem::BatchWrite(
-    const std::vector<MemDetails>& remoteMems, const std::vector<MemDetails>& localMems, Stream& stream)
+    [[maybe_unused]] const std::vector<MemDetails>& remoteMems,
+    [[maybe_unused]] const std::vector<MemDetails>& localMems, [[maybe_unused]] Stream& stream)
 {
     HCCL_ERROR("TransportIpcMem doesn't support BatchWrite");
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TransportIpcMem::BatchRead(
-    const std::vector<MemDetails>& localMems, const std::vector<MemDetails>& remoteMems, Stream& stream)
+    [[maybe_unused]] const std::vector<MemDetails>& localMems,
+    [[maybe_unused]] const std::vector<MemDetails>& remoteMems, [[maybe_unused]] Stream& stream)
 {
     HCCL_ERROR("TransportIpcMem doesn't support BatchRead");
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult
-TransportIpcMem::AddOpFence(const MemDetails& localFenceMem, const MemDetails& remoteFenceMem, Stream& stream)
+HcclResult TransportIpcMem::AddOpFence(
+    [[maybe_unused]] const MemDetails& localFenceMem, [[maybe_unused]] const MemDetails& remoteFenceMem,
+    [[maybe_unused]] Stream& stream)
 {
     HCCL_ERROR("TransportIpcMem doesn't support AICPU AddOpFence");
     return HCCL_E_NOT_SUPPORT;

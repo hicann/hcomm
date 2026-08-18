@@ -16,22 +16,35 @@ HcclResult hcclComm::RegistTaskAbortHandler() const { return HCCL_SUCCESS; }
 
 HcclResult hcclComm::UnRegistTaskAbortHandler() const { return HCCL_SUCCESS; }
 
-HcclResult hcclComm::GetOneSidedService(IHcclOneSidedService** service) { return HCCL_SUCCESS; }
-HcclResult hcclComm::InitOneSidedServiceNetDevCtx(u32 remoteRankId) { return HCCL_SUCCESS; }
-HcclResult hcclComm::OneSidedServiceStartListen(NicType nicType, HcclNetDevCtx netDevCtx) { return HCCL_SUCCESS; }
-HcclResult hcclComm::GetOneSidedServiceDevIpAndPort(NicType nicType, HcclIpAddress& ipAddress, u32& port)
+HcclResult hcclComm::GetOneSidedService([[maybe_unused]] IHcclOneSidedService** service) { return HCCL_SUCCESS; }
+HcclResult hcclComm::InitOneSidedServiceNetDevCtx([[maybe_unused]] u32 remoteRankId) { return HCCL_SUCCESS; }
+HcclResult
+hcclComm::OneSidedServiceStartListen([[maybe_unused]] NicType nicType, [[maybe_unused]] HcclNetDevCtx netDevCtx)
+{
+    return HCCL_SUCCESS;
+}
+HcclResult hcclComm::GetOneSidedServiceDevIpAndPort(
+    [[maybe_unused]] NicType nicType, [[maybe_unused]] HcclIpAddress& ipAddress, [[maybe_unused]] u32& port)
 {
     return HCCL_SUCCESS;
 }
 HcclResult hcclComm::DeinitOneSidedService() { return HCCL_SUCCESS; }
 
-HcclResult hcclComm::RegisterCommUserMem(void* addr, u64 size, void** handle) { return HCCL_SUCCESS; }
+HcclResult
+hcclComm::RegisterCommUserMem([[maybe_unused]] void* addr, [[maybe_unused]] u64 size, [[maybe_unused]] void** handle)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult hcclComm::DeregisterCommUserMem(void* handle) { return HCCL_SUCCESS; }
+HcclResult hcclComm::DeregisterCommUserMem([[maybe_unused]] void* handle) { return HCCL_SUCCESS; }
 
-HcclResult hcclComm::ExchangeCommUserMem(void* handle, std::vector<u32>& peerRanks) { return HCCL_SUCCESS; }
+HcclResult hcclComm::ExchangeCommUserMem([[maybe_unused]] void* handle, [[maybe_unused]] std::vector<u32>& peerRanks)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult hcclComm::SetIndependentOpConfig(const CommConfig& commConfig, const RankTable_t& rankTable)
+HcclResult hcclComm::SetIndependentOpConfig(
+    [[maybe_unused]] const CommConfig& commConfig, [[maybe_unused]] const RankTable_t& rankTable)
 {
     return HCCL_SUCCESS;
 }
@@ -39,46 +52,73 @@ HcclResult hcclComm::SetIndependentOpConfig(const CommConfig& commConfig, const 
 HcclResult hcclComm::InitIndependentOp() { return HCCL_SUCCESS; }
 
 HcclResult hcclComm::PrepareChannelMem(
-    const std::string& tag, TransportIOMem& transMem, const HcclMemHandle* memHandles, uint32_t memHandleNum)
+    [[maybe_unused]] const std::string& tag, [[maybe_unused]] TransportIOMem& transMem,
+    [[maybe_unused]] const HcclMemHandle* memHandles, [[maybe_unused]] uint32_t memHandleNum)
 {
     return HCCL_SUCCESS;
 }
 HcclResult hcclComm::IndOpTransportAlloc(
-    const std::string& tag, OpCommTransport& opCommTransport, bool isAicpuModeEn, const HcclMemHandle* memHandles,
-    uint32_t memHandleNum)
+    [[maybe_unused]] const std::string& tag, [[maybe_unused]] OpCommTransport& opCommTransport,
+    [[maybe_unused]] bool isAicpuModeEn, [[maybe_unused]] const HcclMemHandle* memHandles,
+    [[maybe_unused]] uint32_t memHandleNum)
 {
     return HCCL_SUCCESS;
 }
-HcclResult hcclComm::CommGetNetLayers(uint32_t** netLayers, uint32_t* netLayerNum) { return HCCL_SUCCESS; }
-
-HcclResult hcclComm::CommGetInstSizeByNetLayer(uint32_t netLayer, uint32_t* rankNum) { return HCCL_SUCCESS; }
-
-HcclResult hcclComm::CommGetInstTopoTypeByNetLayer(uint32_t netLayer, u32* topoType) { return HCCL_SUCCESS; }
-HcclResult hcclComm::GetNetLayers(uint32_t** netLayers, uint32_t* netLayerNum) { return HCCL_SUCCESS; }
-
-HcclResult hcclComm::GetInstSizeByNetLayer(uint32_t netLayer, uint32_t* rankNum) { return HCCL_SUCCESS; }
-
-HcclResult hcclComm::GetInstTopoTypeByNetLayer(uint32_t netLayer, CommTopo* topoType) { return HCCL_SUCCESS; }
-
-HcclResult hcclComm::GetInstRanksByNetLayer(uint32_t netLayer, uint32_t** rankList, uint32_t* rankNum)
+HcclResult hcclComm::CommGetNetLayers([[maybe_unused]] uint32_t** netLayers, [[maybe_unused]] uint32_t* netLayerNum)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult hcclComm::GetInstSizeListByNetLayer(uint32_t netLayer, uint32_t** instSizeList, uint32_t* listSize)
+HcclResult hcclComm::CommGetInstSizeByNetLayer([[maybe_unused]] uint32_t netLayer, [[maybe_unused]] uint32_t* rankNum)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult hcclComm::GetRankGraph(GraphType type, void** graph, uint32_t* len) { return HCCL_SUCCESS; }
+HcclResult hcclComm::CommGetInstTopoTypeByNetLayer([[maybe_unused]] uint32_t netLayer, [[maybe_unused]] u32* topoType)
+{
+    return HCCL_SUCCESS;
+}
+HcclResult hcclComm::GetNetLayers([[maybe_unused]] uint32_t** netLayers, [[maybe_unused]] uint32_t* netLayerNum)
+{
+    return HCCL_SUCCESS;
+}
+
+HcclResult hcclComm::GetInstSizeByNetLayer([[maybe_unused]] uint32_t netLayer, [[maybe_unused]] uint32_t* rankNum)
+{
+    return HCCL_SUCCESS;
+}
+
+HcclResult hcclComm::GetInstTopoTypeByNetLayer([[maybe_unused]] uint32_t netLayer, [[maybe_unused]] CommTopo* topoType)
+{
+    return HCCL_SUCCESS;
+}
+
+HcclResult hcclComm::GetInstRanksByNetLayer(
+    [[maybe_unused]] uint32_t netLayer, [[maybe_unused]] uint32_t** rankList, [[maybe_unused]] uint32_t* rankNum)
+{
+    return HCCL_SUCCESS;
+}
+
+HcclResult hcclComm::GetInstSizeListByNetLayer(
+    [[maybe_unused]] uint32_t netLayer, [[maybe_unused]] uint32_t** instSizeList, [[maybe_unused]] uint32_t* listSize)
+{
+    return HCCL_SUCCESS;
+}
 
 HcclResult
-hcclComm::GetLinks(uint32_t netLayer, uint32_t srcRank, uint32_t dstRank, CommLink** linkList, uint32_t* listSize)
+hcclComm::GetRankGraph([[maybe_unused]] GraphType type, [[maybe_unused]] void** graph, [[maybe_unused]] uint32_t* len)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult hcclComm::GetHeterogMode(HcclHeterogMode* mode) { return HCCL_SUCCESS; }
+HcclResult hcclComm::GetLinks(
+    [[maybe_unused]] uint32_t netLayer, [[maybe_unused]] uint32_t srcRank, [[maybe_unused]] uint32_t dstRank,
+    [[maybe_unused]] CommLink** linkList, [[maybe_unused]] uint32_t* listSize)
+{
+    return HCCL_SUCCESS;
+}
+
+HcclResult hcclComm::GetHeterogMode([[maybe_unused]] HcclHeterogMode* mode) { return HCCL_SUCCESS; }
 
 HcclComm hcclComm::GetCommunicatorV2()
 {

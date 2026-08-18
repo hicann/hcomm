@@ -124,7 +124,8 @@ bool CollAllReduceMeshOpbaseSmallCountDeterministicExecutor::IsHugeData(const u6
     return hugeData;
 }
 
-bool CollAllReduceMeshOpbaseSmallCountDeterministicExecutor::IsSmallData(const u64 totalSize, const u64 curSize)
+bool CollAllReduceMeshOpbaseSmallCountDeterministicExecutor::IsSmallData(
+    [[maybe_unused]] const u64 totalSize, [[maybe_unused]] const u64 curSize)
 {
     // 选到本执行器必为小数据量
     return true;
@@ -154,9 +155,14 @@ HcclResult CollAllReduceMeshOpbaseSmallCountDeterministicExecutor::KernelRun(con
         CHK_RET(RunDoublingSingleLevel(param, reduceAttr, execMem, level0CommInfo));
         HCCL_INFO("allreduce small count deterministic: using doubling algo intra-server.");
     } else {
-        HcomCollOpInfo opInfo
-            = {"",         execMem.inputPtr, execMem.inputMem.ptr(), execMem.count, param.DataDes.dataType,
-               param.root, param.reduceType};
+        HcomCollOpInfo opInfo = {"",
+                                 execMem.inputPtr,
+                                 execMem.inputMem.ptr(),
+                                 execMem.count,
+                                 param.DataDes.dataType,
+                                 param.root,
+                                 param.reduceType,
+                                 0};
         CHK_RET(RunReduceBcastSingleLevel(param, opInfo, reduceAttr, execMem, level0CommInfo));
         HCCL_INFO("allreduce small count deterministic: using reduce bcast algo intra-server.");
     }

@@ -18,7 +18,8 @@
 namespace hcomm {
 namespace CcuRep {
 
-    Repeat::Repeat(CcuRepContext* context, CcuRelationalOperator<Variable, uint64_t> rel) : context(context)
+    Repeat::Repeat(CcuRepContext* context, [[maybe_unused]] CcuRelationalOperator<Variable, uint64_t> rel)
+        : context(context)
     {
         std::string label = "Repeat";
     }

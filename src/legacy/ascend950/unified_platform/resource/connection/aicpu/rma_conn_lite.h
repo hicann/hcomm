@@ -65,8 +65,8 @@ public:
     virtual std::string Describe();
 
     virtual void Read(
-        const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg, const StreamLite& stream,
-        ConnLiteOperationOut& out)
+        const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg,
+        [[maybe_unused]] const StreamLite& stream, ConnLiteOperationOut& out)
     {
         HCCL_INFO(
             "RmaConnLite read start. loc.addr = %llx, rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u", loc.GetAddr(),
@@ -74,8 +74,8 @@ public:
     }
 
     virtual void ReadReduce(
-        ReduceIn reduceIn, const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const StreamLite& stream,
-        const SqeConfigLite& cfg, ConnLiteOperationOut& out)
+        ReduceIn reduceIn, const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt,
+        [[maybe_unused]] const StreamLite& stream, const SqeConfigLite& cfg, ConnLiteOperationOut& out)
     {
         HCCL_INFO(
             "RmaConnLite ReadReduce start. dataType = %u, reduceOp %u, loc.addr = %llx, "
@@ -84,8 +84,8 @@ public:
     }
 
     virtual void Write(
-        const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg, const StreamLite& stream,
-        ConnLiteOperationOut& out)
+        const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg,
+        [[maybe_unused]] const StreamLite& stream, ConnLiteOperationOut& out)
     {
         HCCL_INFO(
             "RmaConnLite write start. loc.addr = %llx, rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u", loc.GetAddr(),
@@ -93,8 +93,8 @@ public:
     }
 
     virtual void InlineWrite(
-        const u8* data, u16 size, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg, const StreamLite& stream,
-        ConnLiteOperationOut& out)
+        const u8* data, u16 size, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg,
+        [[maybe_unused]] const StreamLite& stream, ConnLiteOperationOut& out)
     {
         HCCL_INFO(
             "RmaConnLite InlineWrite start. data = %p, size = %hu, rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u", data,
@@ -102,7 +102,7 @@ public:
     }
 
     virtual void WriteReduce(
-        DataType dataType, ReduceOp reduceOp, const RmaBufSliceLite& loc, const StreamLite& stream,
+        DataType dataType, ReduceOp reduceOp, const RmaBufSliceLite& loc, [[maybe_unused]] const StreamLite& stream,
         const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg, ConnLiteOperationOut& out)
     {
         HCCL_INFO(
@@ -113,7 +113,7 @@ public:
 
     virtual void WriteWithNotify(
         const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt, const SqeConfigLite& cfg, ConnLiteOperationOut& out,
-        const RmtRmaBufSliceLite& notify, const StreamLite& stream, u64 notifyData)
+        const RmtRmaBufSliceLite& notify, [[maybe_unused]] const StreamLite& stream, u64 notifyData)
     {
         HCCL_INFO(
             "RmaConnLite WriteWithNotify start. loc.addr = %llx, rmt.addr = %llx, cfg.cqeEn = %u, "
@@ -123,8 +123,8 @@ public:
 
     virtual void WriteReduceWithNotify(
         DataType dataType, ReduceOp reduceOp, const RmaBufSliceLite& loc, const RmtRmaBufSliceLite& rmt,
-        const SqeConfigLite& cfg, const StreamLite& stream, ConnLiteOperationOut& out, const RmtRmaBufSliceLite& notify,
-        u64 notifyData)
+        const SqeConfigLite& cfg, [[maybe_unused]] const StreamLite& stream, ConnLiteOperationOut& out,
+        const RmtRmaBufSliceLite& notify, u64 notifyData)
     {
         HCCL_INFO(
             "RmaConnLite WriteReduceWithNotify start. dataType = %d, , reduceOp %d, loc.addr = %llx, "
@@ -134,7 +134,7 @@ public:
 
     virtual void BatchOneSidedRead(
         const vector<RmaBufSliceLite>& loc, const vector<RmtRmaBufSliceLite>& rmt, const SqeConfigLite& cfg,
-        const StreamLite& stream, ConnLiteOperationOut& out)
+        [[maybe_unused]] const StreamLite& stream, ConnLiteOperationOut& out)
     {
         HCCL_INFO(
             "RmaConnLite BatchOneSidedRead start. loc.size = %llu, rmt.size = %llu, cfg.cqeEn = %u, out.pi = %u",
@@ -143,7 +143,7 @@ public:
 
     virtual void BatchOneSidedWrite(
         const vector<RmaBufSliceLite>& loc, const vector<RmtRmaBufSliceLite>& rmt, const SqeConfigLite& cfg,
-        const StreamLite& stream, ConnLiteOperationOut& out)
+        [[maybe_unused]] const StreamLite& stream, ConnLiteOperationOut& out)
     {
         HCCL_INFO(
             "RmaConnLite BatchOneSidedWrite start. loc.size = %llu, rmt.size = %llu, cfg.cqeEn = %u, out.pi = %u",

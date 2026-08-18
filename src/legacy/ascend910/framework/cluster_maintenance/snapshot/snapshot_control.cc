@@ -19,7 +19,7 @@ namespace hccl {
 
 bool SnapshotControl::registered = false;
 
-uint32_t PreProcessCallback(int32_t devId, void* args)
+uint32_t PreProcessCallback(int32_t devId, [[maybe_unused]] void* args)
 {
     HCCL_RUN_INFO("[Snapshot] PreProcess callback, devId[%d]", devId);
     HcclResult ret = SnapshotControl::GetInstance(devId).PreProcess();
@@ -28,7 +28,7 @@ uint32_t PreProcessCallback(int32_t devId, void* args)
     return 0;
 }
 
-uint32_t PostProcessCallback(int32_t devId, void* args)
+uint32_t PostProcessCallback(int32_t devId, [[maybe_unused]] void* args)
 {
     HCCL_RUN_INFO("[Snapshot] PostProcess callback, devId[%d]", devId);
     HcclResult ret = SnapshotControl::GetInstance(devId).PostProcess();
@@ -37,7 +37,7 @@ uint32_t PostProcessCallback(int32_t devId, void* args)
     return 0;
 }
 
-uint32_t RecoveryCallback(int32_t devId, void* args)
+uint32_t RecoveryCallback(int32_t devId, [[maybe_unused]] void* args)
 {
     HCCL_RUN_INFO("[Snapshot] Recovery callback, devId[%d]", devId);
     HcclResult ret = SnapshotControl::GetInstance(devId).Recovery();

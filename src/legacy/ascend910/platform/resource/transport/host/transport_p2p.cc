@@ -1129,7 +1129,7 @@ HcclResult TransportP2p::SendMemMesgWithoutIpc(void* ptr, u64 size) const
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportP2p::RecvMemMesgWithoutIpc(u64& addr, u8* memName, u64& offset)
+HcclResult TransportP2p::RecvMemMesgWithoutIpc(u64& addr, [[maybe_unused]] u8* memName, u64& offset)
 {
     HcclResult ret;
     std::string memAddr;

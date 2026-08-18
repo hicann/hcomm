@@ -488,7 +488,7 @@ ScatterRing::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vecto
     u32 ringNextRank = (rank + 1) % rankSize;
     LINK nslbNext = links[ringNextRank];
 
-    NslbDpAdjInfo adjInfoStep = {0};
+    NslbDpAdjInfo adjInfoStep = {};
     nslbAdjInfo.dstRankNum = 1;
     adjInfoStep.dstLocalRankId = nslbNext->GetRemoteRank();
     adjInfoStep.phaseId = 1;

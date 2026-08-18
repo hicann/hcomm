@@ -300,6 +300,7 @@ error:
 
 STATIC char *BkfMemGetStatStr(BkfMemMng *memMng, BkfMemStat *stat, uint8_t *buf, int32_t bufLen)
 {
+    (void)memMng;
     int32_t ret;
 
     ret = snprintf_truncated_s((char *)buf, (uint32_t)bufLen,
@@ -386,12 +387,14 @@ char *BkfMemGetNextStatStr(BkfMemMng *memMng, BkfMemStatKey *keyInOut, uint8_t *
 
 void *BkfMemBaseStubInit(char *name)
 {
+    (void)name;
     VOS_NOP();
     return VOS_NULL;
 }
 
 void BkfMemBaseStubUninit(void *cookie)
 {
+    (void)cookie;
     VOS_NOP();
 }
 
@@ -509,6 +512,8 @@ error:
 
 STATIC BOOL BkfMemUpdStatBeforeFree(BkfMemMng *memMng, BkfMemHead *head, const char *str, const uint16_t num)
 {
+    (void)str;
+    (void)num;
     BkfMemStat *stat = VOS_NULL;
     uint32_t len;
 
@@ -600,7 +605,7 @@ STATIC void BkfMemDelAllStat(BkfMemMng *memMng)
 STATIC BkfMemStat *BkfMemFindStat(BkfMemMng *memMng, const char *str, const uint16_t num)
 {
     BkfMemStat *stat = VOS_NULL;
-    BkfMemStatKey key = {(char *)str, num};
+    BkfMemStatKey key = {(char *)str, num, {}};
 
     stat = VOS_AVLL_FIND(memMng->statSet, &key);
     return stat;
@@ -609,7 +614,7 @@ STATIC BkfMemStat *BkfMemFindStat(BkfMemMng *memMng, const char *str, const uint
 STATIC BkfMemStat *BkfMemFindNextStat(BkfMemMng *memMng, const char *str, const uint16_t num)
 {
     BkfMemStat *stat = VOS_NULL;
-    BkfMemStatKey key = {(char *)str, num};
+    BkfMemStatKey key = {(char *)str, num, {}};
 
     stat = VOS_AVLL_FIND_NEXT(memMng->statSet, &key);
     return stat;

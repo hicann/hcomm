@@ -540,7 +540,7 @@ void RoceTransportLiteImpl::SetFenceConfig(SqeConfigLite& cfg)
 
 void RoceTransportLiteImpl::ReportDmaTask(
     const void* src, const void* dst, u64 size, const StreamLite& stream, u32 taskId, TaskParamType taskType,
-    DmaOp dmaOp, u64 notifyId, u32 notifyValue, const char* funcName)
+    [[maybe_unused]] DmaOp dmaOp, u64 notifyId, u32 notifyValue, const char* funcName)
 {
     // 未开启任务上报时直接返回
     if (!IsReportTask()) {

@@ -59,6 +59,7 @@ error:
 STATIC int32_t BifrostCncoiPuberOperatorOnDeleteCode(BifrostCncoiPuber *bifrostCncoiPuber,
     BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiOperatorKeyT *tupleKey, void *codeBuf, int32_t bufLen)
 {
+    (void)sliceKey;
     SimpoBuilderT *builder;
     int32_t ret = -1;
 
@@ -91,6 +92,8 @@ error:
 STATIC void BifrostCncoiPuberOperatorOnSub(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
     void *data, int32_t len)
 {
+    (void)data;
+    (void)len;
     BifrostCncoiPuberOperatorVTbl *appVTbl = VOS_NULL;
 
     appVTbl = BkfPuberGetTableTypeUserData(bifrostCncoiPuber->puber, BIFROST_CNCOI_TABLE_TYPE_OPERATOR);

@@ -28,11 +28,20 @@ public:
 
     RankGraph() = default;
     virtual ~RankGraph() = default;
-    virtual HcclResult Init(const RankTable_t& rankTable, const HcclTopoAttr& topoAttr) { return HCCL_SUCCESS; };
-    virtual HcclResult GetRankId(uint32_t* rank) { return HCCL_E_NOT_SUPPORT; };
-    virtual HcclResult GetRankSize(uint32_t* rankSize) { return HCCL_E_NOT_SUPPORT; };
-    virtual HcclResult GetDevicePort(const uint32_t rank, uint32_t* devPort) { return HCCL_E_NOT_SUPPORT; };
-    virtual HcclResult GetListenPort(const uint32_t rank, uint32_t* listenPort, EndpointLocType locType)
+    virtual HcclResult
+    Init([[maybe_unused]] const RankTable_t& rankTable, [[maybe_unused]] const HcclTopoAttr& topoAttr)
+    {
+        return HCCL_SUCCESS;
+    };
+    virtual HcclResult GetRankId([[maybe_unused]] uint32_t* rank) { return HCCL_E_NOT_SUPPORT; };
+    virtual HcclResult GetRankSize([[maybe_unused]] uint32_t* rankSize) { return HCCL_E_NOT_SUPPORT; };
+    virtual HcclResult GetDevicePort([[maybe_unused]] const uint32_t rank, [[maybe_unused]] uint32_t* devPort)
+    {
+        return HCCL_E_NOT_SUPPORT;
+    };
+    virtual HcclResult GetListenPort(
+        [[maybe_unused]] const uint32_t rank, [[maybe_unused]] uint32_t* listenPort,
+        [[maybe_unused]] EndpointLocType locType)
     {
         return HCCL_E_NOT_SUPPORT;
     };
@@ -41,7 +50,7 @@ public:
     GetLinks(uint32_t netLayer, uint32_t srcRank, uint32_t dstRank, CommLink** linkList, uint32_t* listSize)
         = 0;
     virtual HcclResult GetNetLayers(uint32_t** netLayers, uint32_t* netLayerNum) = 0;
-    virtual HcclResult GetHeterogMode(HcclHeterogMode* mode) const { return HCCL_SUCCESS; }
+    virtual HcclResult GetHeterogMode([[maybe_unused]] HcclHeterogMode* mode) const { return HCCL_SUCCESS; }
     virtual HcclResult GetInstTopoTypeByNetLayer(uint32_t netLayer, CommTopo* topoType) = 0;
     virtual HcclResult GetInstSizeByNetLayer(uint32_t netLayer, uint32_t* rankNum) = 0;
     virtual HcclResult GetInstRanksByNetLayer(uint32_t netLayer, uint32_t** rankList, uint32_t* rankNum) = 0;

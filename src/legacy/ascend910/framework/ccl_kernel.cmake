@@ -21,8 +21,6 @@ if(BUILD_OPEN_PROJECT)
     # 编译选项
     target_compile_options(ccl_kernel PRIVATE
         -Werror
-        -Wno-unused-parameter
-        -Wno-missing-field-initializers
         -fno-common
         -fno-strict-aliasing
         $<$<CONFIG:Debug>:-Og -g>

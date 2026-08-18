@@ -171,9 +171,14 @@ HcclResult CollAllReduceDeterPipelineExecutor::KernelRun(const OpParam& param, E
         TemplateType::TEMPLATE_ALL_REDUCE_MULTI_DETERMINISTIC_PIPELINE, dispatcher_);
     CHK_SMART_PTR_NULL(tempAlg);
 
-    HcomCollOpInfo opInfo
-        = {"",         execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType,
-           param.root, param.reduceType};
+    HcomCollOpInfo opInfo = {"",
+                             execMem.inputPtr,
+                             execMem.outputPtr,
+                             param.DataDes.count,
+                             param.DataDes.dataType,
+                             param.root,
+                             param.reduceType,
+                             0};
 
     CHK_RET(tempAlg->Prepare(
         &opInfo, execMem.inputMem, execMem.outputMem, execMem.count, bufferSlices, level0CommInfo, level1CommInfo,

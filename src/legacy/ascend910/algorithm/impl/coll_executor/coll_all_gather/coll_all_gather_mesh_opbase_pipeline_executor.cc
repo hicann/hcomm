@@ -91,8 +91,9 @@ HcclResult CollAllGatherMeshOpbasePipelineExecutor::KernelRun(const OpParam& par
     SubCommInfo level1CommInfo = GetSubCommInfo(COMM_LEVEL1, commIndex);
 
     // DMA消减场景，打包opInfo
-    HcomCollOpInfo opInfo = {"", execMem.inputPtr,    execMem.outputPtr, param.DataDes.count, param.DataDes.dataType,
-                             0,  HCCL_REDUCE_RESERVED};
+    HcomCollOpInfo opInfo = {
+        "", execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType, 0, HCCL_REDUCE_RESERVED,
+        0};
 
     std::unique_ptr<AlgTemplateBase> tempAlg
         = AlgTemplateRegistry::Instance().GetAlgTemplate(TemplateType::TEMPLATE_ALL_GATHER_PIPELINE, dispatcher_);

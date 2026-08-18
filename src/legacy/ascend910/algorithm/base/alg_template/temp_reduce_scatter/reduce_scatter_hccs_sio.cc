@@ -140,7 +140,8 @@ ReduceScatterHccsSio::RunInterDieOffload(const u32 rank, const LINK& link, const
     return HCCL_SUCCESS;
 }
 
-HcclResult ReduceScatterHccsSio::RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links)
+HcclResult
+ReduceScatterHccsSio::RunAsync(const u32 rank, const u32 rankSize, [[maybe_unused]] const std::vector<LINK>& links)
 {
     HCCL_INFO(
         "ReduceScatterHccsSio run: rank[%u] totalrank[%u] inputMem[%p] outputMem[%p] count[%llu]", rank, rankSize,

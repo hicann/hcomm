@@ -30,8 +30,6 @@ if(BUILD_OPEN_PROJECT)
     # 编译选项
     set(CCL_KERNEL_PLF_COMPILE_OPTIONS
         -Werror
-        -Wno-unused-parameter
-        -Wno-missing-field-initializers
         -Wno-deprecated-declarations
         -fno-common
         -fno-strict-aliasing

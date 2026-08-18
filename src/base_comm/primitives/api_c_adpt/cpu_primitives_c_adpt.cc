@@ -829,7 +829,8 @@ int32_t HcommChannelFence(ChannelHandle channel)
     return ch->GetNicOps()->fence(ch->GetNicCtx());
 }
 
-HcclResult HcclDfxRegOpInfo(HcclComm comm, void* hcclDfxOpInfo) // 兼容性接口，后续删除
+HcclResult
+HcclDfxRegOpInfo([[maybe_unused]] HcclComm comm, [[maybe_unused]] void* hcclDfxOpInfo) // 兼容性接口，后续删除
 {
     HCCL_WARNING("%s not support", __func__);
     return HCCL_SUCCESS;

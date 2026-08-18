@@ -90,7 +90,7 @@ HcclResult CollReduceScatterMeshGraphExecutor::CalcLevel0CommInfo(
     return HCCL_SUCCESS;
 }
 
-bool CollReduceScatterMeshGraphExecutor::IsHugeData(const u64 curSize, OpParam* param)
+bool CollReduceScatterMeshGraphExecutor::IsHugeData(const u64 curSize, [[maybe_unused]] OpParam* param)
 {
     bool hugeData = (curSize * topoAttr_.userRankSize / HCCL_INTERNODE_MAX_DATA_RATE > RDMA_SEND_MAX_SIZE)
                     || (curSize > SDMA_SEND_MAX_SIZE);

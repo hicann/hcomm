@@ -16,7 +16,7 @@ AllReduceNB::AllReduceNB(const HcclDispatcher dispatcher) : NBBase(dispatcher) {
 
 AllReduceNB::~AllReduceNB() {}
 
-HcclResult AllReduceNB::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo)
+HcclResult AllReduceNB::Prepare(u64 reduceAttrBitMap, [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     reduceAttr_ = reduceAttrBitMap;
     return HCCL_SUCCESS;
@@ -237,7 +237,7 @@ AllReduceNB::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vecto
         u32 sendTo = (rank + deltaRank) % rankSize;
         LINK linkRight = links[sendTo];
         CHK_SMART_PTR_NULL(linkRight);
-        NslbDpAdjInfo adjInfoStep = {0};
+        NslbDpAdjInfo adjInfoStep = {};
         adjInfoStep.dstLocalRankId = linkRight->GetRemoteRank();
         adjInfoStep.phaseId = step + 1;
         adjInfoStep.rev = 0;
@@ -250,7 +250,7 @@ AllReduceNB::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vecto
         u32 sendTo = (rank + deltaRank) % rankSize;
         LINK linkRight = links[sendTo];
         CHK_SMART_PTR_NULL(linkRight);
-        NslbDpAdjInfo allGatherInfoStep = {0};
+        NslbDpAdjInfo allGatherInfoStep = {};
         allGatherInfoStep.dstLocalRankId = linkRight->GetRemoteRank();
         allGatherInfoStep.phaseId = step + begin + 1;
         allGatherInfoStep.rev = 0;

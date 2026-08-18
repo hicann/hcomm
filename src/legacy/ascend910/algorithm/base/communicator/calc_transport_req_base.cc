@@ -21,8 +21,9 @@ CalcTransportReqBase::CalcTransportReqBase(
 CalcTransportReqBase::~CalcTransportReqBase() {}
 
 HcclResult CalcTransportReqBase::CalcTransportRequest(
-    const std::string& tag, TransportMemType inputMemType, TransportMemType outputMemType,
-    const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport, u32 subUserRankRoot)
+    [[maybe_unused]] const std::string& tag, [[maybe_unused]] TransportMemType inputMemType,
+    [[maybe_unused]] TransportMemType outputMemType, [[maybe_unused]] const CommParaInfo& commParaInfo,
+    [[maybe_unused]] std::vector<SingleSubCommTransport>& commTransport, [[maybe_unused]] u32 subUserRankRoot)
 {
     return HCCL_SUCCESS;
 }

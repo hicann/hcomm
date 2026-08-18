@@ -97,12 +97,12 @@ HcclResult CollNativeExecutorBase::CalcAivBufferRequest(u64& aivBufferRequest)
     return HCCL_SUCCESS;
 }
 
-HcclResult CollNativeExecutorBase::CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport)
+HcclResult CollNativeExecutorBase::CalcCommInfo([[maybe_unused]] std::vector<LevelNSubCommTransport>& opTransport)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult CollNativeExecutorBase::CalcOptimalIntraRing(const OpParam& param) { return HCCL_SUCCESS; }
+HcclResult CollNativeExecutorBase::CalcOptimalIntraRing([[maybe_unused]] const OpParam& param) { return HCCL_SUCCESS; }
 
 HcclResult CollNativeExecutorBase::SetCommInfoForARS(u32 ringSize)
 {
@@ -260,7 +260,8 @@ HcclResult CollNativeExecutorBase::CalcLevel1CommInfo(
 }
 
 HcclResult CollNativeExecutorBase::CalcLevel0CommInfo(
-    TransportMemType inputType, TransportMemType outputType, std::vector<LevelNSubCommTransport>& opTransport)
+    [[maybe_unused]] TransportMemType inputType, [[maybe_unused]] TransportMemType outputType,
+    [[maybe_unused]] std::vector<LevelNSubCommTransport>& opTransport)
 {
     return HCCL_SUCCESS;
 }
@@ -316,7 +317,7 @@ HcclResult CollNativeExecutorBase::PrintTransportRequest(AlgResourceRequest& res
     return HCCL_SUCCESS;
 }
 // ----------------------算法编排接口----------------------
-HcclResult CollNativeExecutorBase::KernelRun(const OpParam& param, ExecMem& execMem)
+HcclResult CollNativeExecutorBase::KernelRun([[maybe_unused]] const OpParam& param, [[maybe_unused]] ExecMem& execMem)
 {
     HCCL_WARNING("[CollNativeExecutorBase][KernelRun]Using the default kernel run, nothing is done.");
     return HCCL_SUCCESS;

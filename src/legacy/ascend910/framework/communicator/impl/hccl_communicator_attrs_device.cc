@@ -13,24 +13,30 @@
 using namespace std;
 
 namespace hccl {
-HcclResult HcclCommunicatorAttrs::Init(HcclCommParams& params, const RankTable_t& rankTable) { return HCCL_SUCCESS; }
-
-HcclResult HcclCommunicatorAttrs::Init(
-    HcclCommParams& params, const RankTable_t& rankTable,
-    const std::map<HcclCMDType, std::vector<HcclAlgoType>>& algoConfigMap)
+HcclResult
+HcclCommunicatorAttrs::Init([[maybe_unused]] HcclCommParams& params, [[maybe_unused]] const RankTable_t& rankTable)
 {
     return HCCL_SUCCESS;
 }
 
 HcclResult HcclCommunicatorAttrs::Init(
-    HcclCommParams& params, const std::vector<RankInfo>& rankList, WorldGroupInfo& groupCommonData)
+    [[maybe_unused]] HcclCommParams& params, [[maybe_unused]] const RankTable_t& rankTable,
+    [[maybe_unused]] const std::map<HcclCMDType, std::vector<HcclAlgoType>>& algoConfigMap)
 {
     return HCCL_SUCCESS;
 }
 
 HcclResult HcclCommunicatorAttrs::Init(
-    HcclCommParams& params, const std::vector<RankInfo>& rankList, WorldGroupInfo& groupCommonData,
-    const std::map<HcclCMDType, std::vector<HcclAlgoType>>& algoConfigMap)
+    [[maybe_unused]] HcclCommParams& params, [[maybe_unused]] const std::vector<RankInfo>& rankList,
+    [[maybe_unused]] WorldGroupInfo& groupCommonData)
+{
+    return HCCL_SUCCESS;
+}
+
+HcclResult HcclCommunicatorAttrs::Init(
+    [[maybe_unused]] HcclCommParams& params, [[maybe_unused]] const std::vector<RankInfo>& rankList,
+    [[maybe_unused]] WorldGroupInfo& groupCommonData,
+    [[maybe_unused]] const std::map<HcclCMDType, std::vector<HcclAlgoType>>& algoConfigMap)
 {
     return HCCL_SUCCESS;
 }
@@ -39,99 +45,135 @@ bool HcclCommunicatorAttrs::IsStandardCard() { return false; }
 
 bool HcclCommunicatorAttrs::Is310PDuoCard() { return false; }
 
-bool HcclCommunicatorAttrs::IsCommon310P3DUO(const std::vector<RankInfo_t>& rankList) { return false; }
+bool HcclCommunicatorAttrs::IsCommon310P3DUO([[maybe_unused]] const std::vector<RankInfo_t>& rankList) { return false; }
 
-bool HcclCommunicatorAttrs::CompareWithUserRank(const RankInfo& left, const RankInfo& right) { return false; }
+bool HcclCommunicatorAttrs::CompareWithUserRank(
+    [[maybe_unused]] const RankInfo& left, [[maybe_unused]] const RankInfo& right)
+{
+    return false;
+}
 
-HcclResult HcclCommunicatorAttrs::CheckDeviceType(const DevType deviceType) const { return HCCL_SUCCESS; }
+HcclResult HcclCommunicatorAttrs::CheckDeviceType([[maybe_unused]] const DevType deviceType) const
+{
+    return HCCL_SUCCESS;
+}
 
 HcclResult HcclCommunicatorAttrs::GetNicInfo(
-    const NICDeployment& nicDeploy, const u32 curRankIndex, const std::vector<RankInfo_t>& servRankList,
-    RankInfo& rankInfo) const
+    [[maybe_unused]] const NICDeployment& nicDeploy, [[maybe_unused]] const u32 curRankIndex,
+    [[maybe_unused]] const std::vector<RankInfo_t>& servRankList, [[maybe_unused]] RankInfo& rankInfo) const
 {
     return HCCL_SUCCESS;
 }
 
 // private
-HcclResult HcclCommunicatorAttrs::InitCommParams(HcclCommParams& params) { return HCCL_SUCCESS; }
+HcclResult HcclCommunicatorAttrs::InitCommParams([[maybe_unused]] HcclCommParams& params) { return HCCL_SUCCESS; }
 
-HcclResult HcclCommunicatorAttrs::SetServerId(const RankTable_t& rankTable) { return HCCL_SUCCESS; }
+HcclResult HcclCommunicatorAttrs::SetServerId([[maybe_unused]] const RankTable_t& rankTable) { return HCCL_SUCCESS; }
 
-HcclResult HcclCommunicatorAttrs::SetServerNum(const std::vector<RankInfo_t>& ranks) { return HCCL_SUCCESS; }
+HcclResult HcclCommunicatorAttrs::SetServerNum([[maybe_unused]] const std::vector<RankInfo_t>& ranks)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult HcclCommunicatorAttrs::SetInnerServerAverageDevice(const RankTable_t& rankTable) { return HCCL_SUCCESS; }
+HcclResult HcclCommunicatorAttrs::SetInnerServerAverageDevice([[maybe_unused]] const RankTable_t& rankTable)
+{
+    return HCCL_SUCCESS;
+}
 
 // sub group适配获取server内设配数
-HcclResult HcclCommunicatorAttrs::SetInnerServerAverageDevice(const std::vector<RankInfo>& rankList)
+HcclResult HcclCommunicatorAttrs::SetInnerServerAverageDevice([[maybe_unused]] const std::vector<RankInfo>& rankList)
 {
     return HCCL_SUCCESS;
 }
 
 HcclResult HcclCommunicatorAttrs::TransformRankInfoByServerId(
-    const std::vector<RankInfo_t>& rankList, ServRankInfo& servRankInfo) const
+    [[maybe_unused]] const std::vector<RankInfo_t>& rankList, [[maybe_unused]] ServRankInfo& servRankInfo) const
 {
     return HCCL_SUCCESS;
 }
 
-bool HcclCommunicatorAttrs::CompareWithDevicePhyId(const RankInfo_t& left, const RankInfo_t& right) { return false; }
+bool HcclCommunicatorAttrs::CompareWithDevicePhyId(
+    [[maybe_unused]] const RankInfo_t& left, [[maybe_unused]] const RankInfo_t& right)
+{
+    return false;
+}
 
-HcclResult HcclCommunicatorAttrs::SetModuleInfo(const std::vector<RankInfo_t>& rankList) { return HCCL_SUCCESS; }
+HcclResult HcclCommunicatorAttrs::SetModuleInfo([[maybe_unused]] const std::vector<RankInfo_t>& rankList)
+{
+    return HCCL_SUCCESS;
+}
 
-HcclResult HcclCommunicatorAttrs::SetSuperPodInfo(const std::vector<RankInfo_t>& rankList) { return HCCL_SUCCESS; }
+HcclResult HcclCommunicatorAttrs::SetSuperPodInfo([[maybe_unused]] const std::vector<RankInfo_t>& rankList)
+{
+    return HCCL_SUCCESS;
+}
 
 // 集群中存在910B A+X时，0-7卡: moduleIdx = 2 * serverIdx; 8-15卡: moduleIdx = 2 * serverIdx + 1
 // 集群中不存在910B A+X时，moduleIdx = serverIdx
-HcclResult HcclCommunicatorAttrs::GetModuleIdx(const RankInfo_t& rankInfo, u32& moduleIdx) { return HCCL_SUCCESS; }
+HcclResult
+HcclCommunicatorAttrs::GetModuleIdx([[maybe_unused]] const RankInfo_t& rankInfo, [[maybe_unused]] u32& moduleIdx)
+{
+    return HCCL_SUCCESS;
+}
 
 // 用于标识集群中是否存在 910B A+X形态
-bool HcclCommunicatorAttrs::IsDiffDeviceModule(const std::vector<RankInfo_t>& rankList) const { return false; }
+bool HcclCommunicatorAttrs::IsDiffDeviceModule([[maybe_unused]] const std::vector<RankInfo_t>& rankList) const
+{
+    return false;
+}
 
 HcclResult HcclCommunicatorAttrs::InitHccsPortNum() { return HCCL_SUCCESS; }
 
-HcclResult HcclCommunicatorAttrs::SetRankInfoList(const RankTable_t& rankTable) { return HCCL_SUCCESS; }
-
-HcclResult HcclCommunicatorAttrs::CheckRankTable(const RankTable_t& rankTable, const ServRankInfo& servRankInfo)
+HcclResult HcclCommunicatorAttrs::SetRankInfoList([[maybe_unused]] const RankTable_t& rankTable)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicatorAttrs::CheckDevPhyId(const s32& devicePhyId) const { return HCCL_SUCCESS; }
+HcclResult HcclCommunicatorAttrs::CheckRankTable(
+    [[maybe_unused]] const RankTable_t& rankTable, [[maybe_unused]] const ServRankInfo& servRankInfo)
+{
+    return HCCL_SUCCESS;
+}
+
+HcclResult HcclCommunicatorAttrs::CheckDevPhyId([[maybe_unused]] const s32& devicePhyId) const { return HCCL_SUCCESS; }
 
 HcclResult HcclCommunicatorAttrs::SortRankInfoList() { return HCCL_SUCCESS; }
 
-HcclResult HcclCommunicatorAttrs::CheckNicDeploy(NICDeployment nicDeploy, DevType deviceType) const
+HcclResult HcclCommunicatorAttrs::CheckNicDeploy(
+    [[maybe_unused]] NICDeployment nicDeploy, [[maybe_unused]] DevType deviceType) const
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicatorAttrs::CheckDevCount(const u32 devNum) { return HCCL_SUCCESS; }
+HcclResult HcclCommunicatorAttrs::CheckDevCount([[maybe_unused]] const u32 devNum) { return HCCL_SUCCESS; }
 
-bool HcclCommunicatorAttrs::Check2N(u32 num) const { return false; }
+bool HcclCommunicatorAttrs::Check2N([[maybe_unused]] u32 num) const { return false; }
 
 HcclResult HcclCommunicatorAttrs::SetLocalRankInfo() { return HCCL_SUCCESS; }
 
-HcclResult HcclCommunicatorAttrs::SetLocalRankInfoSubGroup(const std::vector<RankInfo>& rankList)
+HcclResult HcclCommunicatorAttrs::SetLocalRankInfoSubGroup([[maybe_unused]] const std::vector<RankInfo>& rankList)
 {
     return HCCL_SUCCESS;
 }
 
 HcclResult HcclCommunicatorAttrs::CheckLocalRankInfo() { return HCCL_SUCCESS; }
 
-u32 HcclCommunicatorAttrs::CalMeshAggRankSize(int halfDevNum) const { return 0; }
+u32 HcclCommunicatorAttrs::CalMeshAggRankSize([[maybe_unused]] int halfDevNum) const { return 0; }
 
-HcclResult HcclCommunicatorAttrs::SetMeshAggregationRankSize(u32 size) { return HCCL_SUCCESS; }
+HcclResult HcclCommunicatorAttrs::SetMeshAggregationRankSize([[maybe_unused]] u32 size) { return HCCL_SUCCESS; }
 
 HcclResult HcclCommunicatorAttrs::CalAndSetMeshAggRankSize() { return HCCL_SUCCESS; }
 
 HcclResult HcclCommunicatorAttrs::SetWorldGroupInfo(
-    std::unordered_map<std::string, std::map<u32, HcclIpAddress>>& phyIdNicInfoMap,
-    std::vector<RankInfo>& worldRankInfoList, std::vector<u32>& nicRanksPort, std::vector<u32>& vnicRanksPort)
+    [[maybe_unused]] std::unordered_map<std::string, std::map<u32, HcclIpAddress>>& phyIdNicInfoMap,
+    [[maybe_unused]] std::vector<RankInfo>& worldRankInfoList, [[maybe_unused]] std::vector<u32>& nicRanksPort,
+    [[maybe_unused]] std::vector<u32>& vnicRanksPort)
 {
     return HCCL_SUCCESS;
 }
 
-HcclResult
-HcclCommunicatorAttrs::TransformRankList(const std::vector<RankInfo>& rankListIn, std::vector<RankInfo_t>& rankListOut)
+HcclResult HcclCommunicatorAttrs::TransformRankList(
+    [[maybe_unused]] const std::vector<RankInfo>& rankListIn, [[maybe_unused]] std::vector<RankInfo_t>& rankListOut)
 {
     return HCCL_SUCCESS;
 }
@@ -143,9 +185,9 @@ bool HcclCommunicatorAttrs::IsUsedRdmaLevel0AndIpInvalid() { return false; }
 
 bool HcclCommunicatorAttrs::IsSupportEnableRoce() { return false; }
 
-void HcclCommunicatorAttrs::GetTopoAttr(HcclTopoAttr& topoAttr) {}
+void HcclCommunicatorAttrs::GetTopoAttr([[maybe_unused]] HcclTopoAttr& topoAttr) {}
 
-void HcclCommunicatorAttrs::GetAlgoAttr(HcclAlgoAttr& algoAttr) {}
+void HcclCommunicatorAttrs::GetAlgoAttr([[maybe_unused]] HcclAlgoAttr& algoAttr) {}
 
-u32 HcclCommunicatorAttrs::GetLocalNicPort(NicType nicType) { return 0; }
+u32 HcclCommunicatorAttrs::GetLocalNicPort([[maybe_unused]] NicType nicType) { return 0; }
 } // namespace hccl

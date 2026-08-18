@@ -227,7 +227,7 @@ HcclResult TopoInfoExchangeDispather::CloseEpollFd()
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoInfoExchangeDispather::ProcessOneSendEvent(s32 epollFd, FdHandle& fdHandle)
+HcclResult TopoInfoExchangeDispather::ProcessOneSendEvent([[maybe_unused]] s32 epollFd, FdHandle& fdHandle)
 {
     std::unique_lock<std::mutex> lckForMap(fdHandleMapMutex_);
     if (fdHandleToFdContextMap_.find(fdHandle) == fdHandleToFdContextMap_.end()) {

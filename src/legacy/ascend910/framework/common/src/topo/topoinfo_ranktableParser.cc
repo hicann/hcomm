@@ -250,8 +250,9 @@ HcclResult TopoInfoRanktableParser::LoadString(const std::string& string)
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoInfoRanktableParser::GetClusterInfo(RankTable_t& clusterInfo) { return HCCL_SUCCESS; }
-HcclResult TopoInfoRanktableParser::GetClusterInfo(hccl::HcclCommParams& params, hccl::RankTable_t& rankTable)
+HcclResult TopoInfoRanktableParser::GetClusterInfo([[maybe_unused]] RankTable_t& clusterInfo) { return HCCL_SUCCESS; }
+HcclResult TopoInfoRanktableParser::GetClusterInfo(
+    [[maybe_unused]] hccl::HcclCommParams& params, [[maybe_unused]] hccl::RankTable_t& rankTable)
 {
     return HCCL_SUCCESS;
 }
@@ -284,7 +285,10 @@ HcclResult TopoInfoRanktableParser::LoadFileInit(std::string& rankTableM)
     return HCCL_SUCCESS;
 }
 
-HcclResult TopoInfoRanktableParser::SetIsInterSuperPodRetryEnable(bool isRetryEnable) { return HCCL_SUCCESS; }
+HcclResult TopoInfoRanktableParser::SetIsInterSuperPodRetryEnable([[maybe_unused]] bool isRetryEnable)
+{
+    return HCCL_SUCCESS;
+}
 
 HcclResult TopoInfoRanktableParser::GetRanktableVersion(std::string& version)
 {

@@ -98,7 +98,7 @@ HcclResult CollAllReduceMixExecutor::CalcLevel0CommInfo(
     return HCCL_SUCCESS;
 }
 
-bool CollAllReduceMixExecutor::IsSmallData(const u64 totalSize, const u64 curSize)
+bool CollAllReduceMixExecutor::IsSmallData([[maybe_unused]] const u64 totalSize, const u64 curSize)
 {
     bool smallData = IsAllReduceSmallData(curSize);
     return smallData;
@@ -139,9 +139,10 @@ HcclResult CollAllReduceMixExecutor::KernelRun(const OpParam& param, ExecMem& ex
 
         // 第一步的reducescatter输出放在CCL buffer上，通过设置nullptr指示不做最后一步的DMA削减动作
         HcomCollOpInfo reduceScatterOpInfo
-            = {"", execMem.inputPtr, nullptr, execMem.count, param.DataDes.dataType, param.root, param.reduceType};
-        HcomCollOpInfo reduceScatterGraphModeOpInfo = {
-            "", execMem.inputMem.ptr(), nullptr, execMem.count, param.DataDes.dataType, param.root, param.reduceType};
+            = {"", execMem.inputPtr, nullptr, execMem.count, param.DataDes.dataType, param.root, param.reduceType, 0};
+        HcomCollOpInfo reduceScatterGraphModeOpInfo
+            = {"",         execMem.inputMem.ptr(), nullptr, execMem.count, param.DataDes.dataType,
+               param.root, param.reduceType,       0};
         HcomCollOpInfo* reduceScatterOpInfoPtr = nullptr;
         if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
             reduceScatterOpInfoPtr = &reduceScatterGraphModeOpInfo;
@@ -235,9 +236,10 @@ HcclResult CollAllReduceMixExecutor::KernelRun(const OpParam& param, ExecMem& ex
     // 第三步的allgather输入放在CCL buffer上，通过设置nullptr指示要从CCL buffer获取输入
     if (topoAttr_.deviceType == DevType::DEV_TYPE_910_93) {
         HcomCollOpInfo allgatherOpInfo
-            = {"", nullptr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, param.reduceType};
+            = {"", nullptr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, param.reduceType, 0};
         HcomCollOpInfo allgatherOpInfoGraphModeOpInfo = {
-            "", nullptr, execMem.outputMem.ptr(), execMem.count, param.DataDes.dataType, param.root, param.reduceType};
+            "", nullptr, execMem.outputMem.ptr(), execMem.count, param.DataDes.dataType, param.root, param.reduceType,
+            0};
         HcomCollOpInfo* allgatherOpInfoPtr = nullptr;
         if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
             allgatherOpInfoPtr = &allgatherOpInfoGraphModeOpInfo;

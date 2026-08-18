@@ -46,7 +46,7 @@ CommMems::CommMems(uint64_t bufferSize) : bufferSize_(bufferSize)
     cclMemInfo_.mem.type = CommMemType::COMM_MEM_TYPE_DEVICE;
 }
 
-HcclResult CommMems::Add(void* addr, uint64_t len) { return HCCL_SUCCESS; }
+HcclResult CommMems::Add([[maybe_unused]] void* addr, [[maybe_unused]] uint64_t len) { return HCCL_SUCCESS; }
 
 HcclResult CommMems::GetHcclBuffer(void*& addr, uint64_t& len)
 {

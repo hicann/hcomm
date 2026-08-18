@@ -263,7 +263,7 @@ STATIC void BkfLogCntDelAllMod(BkfLogCnt *logCnt)
 STATIC BkfLogCntMod *BkfLogCntFindMod(BkfLogCnt *logCnt, char *modName, uint16_t line)
 {
     BkfLogCntMod *mod = VOS_NULL;
-    BkfLogCntModKey key = {modName, line};
+    BkfLogCntModKey key = {modName, line, {}};
 #ifndef BKF_CUT_AVL_CACHE
     uint32_t hashIdx = BKF_LOG_CNT_GET_MOD_HASH_IDX(line);
     mod = logCnt->modCache[hashIdx];
@@ -285,7 +285,7 @@ STATIC BkfLogCntMod *BkfLogCntFindMod(BkfLogCnt *logCnt, char *modName, uint16_t
 STATIC BkfLogCntMod *BkfLogCntFindNextModByNameOrder(BkfLogCnt *logCnt, char *modName, uint16_t line)
 {
     BkfLogCntMod *mod = VOS_NULL;
-    BkfLogCntModKey key = {modName, line};
+    BkfLogCntModKey key = {modName, line, {}};
 
     mod = VOS_AVLL_FIND_NEXT(logCnt->modSetByNameOrder, &key);
     return mod;

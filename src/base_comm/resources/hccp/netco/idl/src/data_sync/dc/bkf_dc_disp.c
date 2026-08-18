@@ -97,6 +97,7 @@ STATIC void BkfDcDispGetAllTupleCnt(BkfDc *dc, int32_t *tupleAddUpdCnt, int32_t 
 }
 STATIC int32_t BkfDcDispGetTableTupleMem(BkfDc *dc, BkfDcTable *table, int64_t *addUpdTupleMem, int64_t *delTupleMem)
 {
+    (void)delTupleMem;
     int32_t tupleAddUpdCnt = 0;
     int32_t tupleDelCnt = 0;
     BkfDcTableType *tableType = table->tableType;
@@ -244,6 +245,7 @@ void BkfDcDispTableType(BkfDc *dc)
 
 STATIC void BkfDcDispTableSummary(BkfDc *dc, BkfDcSlice *slice, uintptr_t dispTable)
 {
+    (void)dispTable;
     BkfDisp *disp = dc->argInit.disp;
     BkfDcTable *table = VOS_NULL;
     void *itor1 = VOS_NULL;
@@ -359,6 +361,7 @@ typedef struct tagBkfDcDispTupleTemp {
 } BkfDcDispTupleTemp;
 STATIC void BkfDcDispTupleGetFirstTuple(BkfDc *dc, BkfDcDispTupleCtx2 *ctx2, BkfDcDispTupleTemp *temp)
 {
+    (void)ctx2;
     temp->isNewSlice = VOS_TRUE;
     temp->slice = BkfDcGetFirstSlice(dc, VOS_NULL);
     if (temp->slice != VOS_NULL) {
@@ -372,6 +375,7 @@ STATIC void BkfDcDispTupleGetFirstTuple(BkfDc *dc, BkfDcDispTupleCtx2 *ctx2, Bkf
 STATIC void BkfDcDispTupleGetIfLastSliceNoMoreTable(BkfDc *dc, void *sliceKey, BkfDcDispTupleCtx2 *ctx2,
     BkfDcDispTupleTemp *temp)
 {
+    (void)ctx2;
     temp->isNewSlice = VOS_TRUE;
     temp->slice = BkfDcFindNextSlice(dc, sliceKey);
     temp->isNewTable = VOS_TRUE;

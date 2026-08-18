@@ -74,8 +74,8 @@ HcclResult HDCommunicate::VerifyDeviceMemoryRegisterSupport()
 {
     supportDevMemReg_ = false;
     size_t outputLen = 0;
-    struct supportFeaturePara input = {0};
-    struct supportFeaturePara output = {0};
+    struct supportFeaturePara input = {};
+    struct supportFeaturePara output = {};
     s32 deviceId = 0;
     CHK_RET(hrtGetDevice(&deviceId));
     s32 logicDevId = 0;

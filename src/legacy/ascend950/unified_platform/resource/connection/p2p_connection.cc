@@ -55,8 +55,8 @@ void P2PConnection::EnableP2p() const
     // SDMA P2pEnable
 }
 
-unique_ptr<BaseTask>
-P2PConnection::PrepareRead(const MemoryBuffer& remoteMemBuf, const MemoryBuffer& localMemBuf, const SqeConfig& config)
+unique_ptr<BaseTask> P2PConnection::PrepareRead(
+    const MemoryBuffer& remoteMemBuf, const MemoryBuffer& localMemBuf, [[maybe_unused]] const SqeConfig& config)
 {
     VerifySizeIsEqual(remoteMemBuf, localMemBuf, "P2PConnection PrepareRead");
     if (localMemBuf.size == 0) {
@@ -67,7 +67,7 @@ P2PConnection::PrepareRead(const MemoryBuffer& remoteMemBuf, const MemoryBuffer&
 
 unique_ptr<BaseTask> P2PConnection::PrepareReadReduce(
     const MemoryBuffer& remoteMemBuf, const MemoryBuffer& localMemBuf, DataType datatype, ReduceOp reduceOp,
-    const SqeConfig& config)
+    [[maybe_unused]] const SqeConfig& config)
 {
     VerifySizeIsEqual(remoteMemBuf, localMemBuf, "P2PConnection PrepareReadReduce");
     if (localMemBuf.size == 0) {
@@ -76,8 +76,8 @@ unique_ptr<BaseTask> P2PConnection::PrepareReadReduce(
     return make_unique<TaskSdmaReduce>(localMemBuf.addr, remoteMemBuf.addr, localMemBuf.size, datatype, reduceOp);
 }
 
-unique_ptr<BaseTask>
-P2PConnection::PrepareWrite(const MemoryBuffer& remoteMemBuf, const MemoryBuffer& localMemBuf, const SqeConfig& config)
+unique_ptr<BaseTask> P2PConnection::PrepareWrite(
+    const MemoryBuffer& remoteMemBuf, const MemoryBuffer& localMemBuf, [[maybe_unused]] const SqeConfig& config)
 {
     VerifySizeIsEqual(remoteMemBuf, localMemBuf, "P2PConnection PrepareWrite");
     if (localMemBuf.size == 0) {
@@ -88,7 +88,7 @@ P2PConnection::PrepareWrite(const MemoryBuffer& remoteMemBuf, const MemoryBuffer
 
 unique_ptr<BaseTask> P2PConnection::PrepareWriteReduce(
     const MemoryBuffer& remoteMemBuf, const MemoryBuffer& localMemBuf, DataType datatype, ReduceOp reduceOp,
-    const SqeConfig& config)
+    [[maybe_unused]] const SqeConfig& config)
 {
     VerifySizeIsEqual(remoteMemBuf, localMemBuf, "P2PConnection PrepareWriteReduce");
     if (localMemBuf.size == 0) {

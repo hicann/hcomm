@@ -44,7 +44,7 @@ template <
     typename InsAlgTemplate3>
 HcclResult
 InsAllReduceParallelExecutorV2<AlgTopoMatch, InsAlgTemplate0, InsAlgTemplate1, InsAlgTemplate2, InsAlgTemplate3>::
-    CalcResOffload(const RankGraph* rankGraph, const u64& dataSize, CollOffloadOpResReq& resReq)
+    CalcResOffload(const RankGraph* rankGraph, [[maybe_unused]] const u64& dataSize, CollOffloadOpResReq& resReq)
 {
     HCCL_INFO("[InsAllReduceParallelExecutorV2] CalcResOffload begins.");
     resReq.requiredScratchMemSize = MAX_OFFLOAD_SCRATCH_SIZE; // 200MB

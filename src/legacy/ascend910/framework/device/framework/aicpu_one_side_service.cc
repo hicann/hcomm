@@ -357,7 +357,7 @@ HcclResult HcclOneSideServiceAicpu::DoRdmaProcess(
 }
 
 HcclResult HcclOneSideServiceAicpu::DoSdmaProcess(
-    HcclCMDType cmdType, u32 remoteRankId, const OpTilingOneSideCommDataDes* vDataPtr,
+    HcclCMDType cmdType, u32 remoteRankId, [[maybe_unused]] const OpTilingOneSideCommDataDes* vDataPtr,
     const HcclOneSideOpDescParam* desc, u32 descNum)
 {
     CHK_PTR_NULL(desc);

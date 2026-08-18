@@ -109,7 +109,7 @@ bool CollReduceScatterMixExecutor::IsHugeData(const u64 curSize, OpParam* param)
     return hugeData;
 }
 
-bool CollReduceScatterMixExecutor::IsSmallData(const u64 totalSize, const u64 curSize)
+bool CollReduceScatterMixExecutor::IsSmallData(const u64 totalSize, [[maybe_unused]] const u64 curSize)
 {
     bool smallData = totalSize <= HCCL_SMALL_COUNT_32_KB;
     return smallData;
@@ -244,9 +244,14 @@ HcclResult CollReduceScatterMixExecutor::KernelRun(const OpParam& param, ExecMem
         "ReduceScatterMixExecutor inputSize=%llu, level0RankSize=%u,commIndex=%u, level1RankSize=%u, serverIndex=%u",
         execMem.inputMem.size(), level0RankSize, commIndex, level1RankSize, serverIndex);
 
-    HcomCollOpInfo opInfo
-        = {"",         execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType,
-           param.root, param.reduceType};
+    HcomCollOpInfo opInfo = {"",
+                             execMem.inputPtr,
+                             execMem.outputPtr,
+                             param.DataDes.count,
+                             param.DataDes.dataType,
+                             param.root,
+                             param.reduceType,
+                             0};
     HCCL_DEBUG(
         "[CollReduceScatterMixExecutor][KernelRun] execMem.inputPtr[%p], execMem.outputPtr[%p], "
         "execMem.inputMem[%p], execMem.outputMem[%p]",
@@ -314,7 +319,7 @@ HcclResult CollReduceScatterMixExecutor::KernelRun(const OpParam& param, ExecMem
             // 图模式opinfo不为空
             HcomCollOpInfo graphModeOpInfo
                 = {"",         execMem.inputMem.ptr(), nullptr, param.DataDes.count, param.DataDes.dataType,
-                   param.root, param.reduceType};
+                   param.root, param.reduceType,       0};
             CHK_RET(MultiRingReduceScatter(
                 param.tag, execMem.inputMem, execMem.scratchMem, execMem.count, param.DataDes.dataType,
                 param.reduceType, level0DataSegsSlice, param.stream, PROF_STAGE_0, 0, &graphModeOpInfo,

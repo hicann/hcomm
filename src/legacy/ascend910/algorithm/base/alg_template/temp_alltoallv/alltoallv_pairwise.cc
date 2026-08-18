@@ -296,7 +296,7 @@ HcclResult AlltoAllVPairWise::GetNslbAdjInfo(
     for (u32 i = 1; i < rankSize; i++) {
         u32 nextRank = (rank + i) % rankSize;
         if (i < NSLBDP_PAIRWISE_MAXPHASE) {
-            NslbDpAdjInfo adjInfoStep = {0};
+            NslbDpAdjInfo adjInfoStep = {};
             adjInfoStep.dstLocalRankId = nextRank;
             adjInfoStep.phaseId = i;
             adjInfoStep.rev = 0;

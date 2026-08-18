@@ -95,7 +95,7 @@ std::string AlltoAllFullMeshSymmetricMemory::GetStreamIndexString()
 }
 
 void AlltoAllFullMeshSymmetricMemory::UpdateCurrRankRecvInfo(
-    u32 roundIdx, u32 side, u32 destRank, ReadDataBlock& readInfo)
+    [[maybe_unused]] u32 roundIdx, [[maybe_unused]] u32 side, u32 destRank, ReadDataBlock& readInfo)
 {
     const ZCopySendRecvInfo& sendRecvInfo = *sendRecvInfoPtr_;
     u64 recvLen = sendRecvInfo.localRecvLength[destRank];
@@ -397,7 +397,8 @@ HcclResult AlltoAllFullMeshSymmetricMemory::RunGroupFullMeshAlltoall(u32 roundId
     return HCCL_SUCCESS;
 }
 
-HcclResult AlltoAllFullMeshSymmetricMemory::RunSDMATasks(u32 roundIdx, u32 groupRankSize, u32 leftRankSize)
+HcclResult
+AlltoAllFullMeshSymmetricMemory::RunSDMATasks(u32 roundIdx, u32 groupRankSize, [[maybe_unused]] u32 leftRankSize)
 {
     UpdatePartialCommunicationRankSet(roundIdx, groupRankSize, partialCommRankSet_);
     CHK_RET(RunGroupFullMeshAlltoall(roundIdx));

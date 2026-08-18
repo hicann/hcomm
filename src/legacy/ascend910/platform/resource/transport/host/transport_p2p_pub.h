@@ -184,7 +184,7 @@ private:
     static std::array<std::mutex, MAX_MODULE_DEVICE_NUM> notifyValueMutex_;
     const u64 notifyValueSize_{LARGE_PAGE_MEMORY_MIN_SIZE};            // 避免申请小页内存。最小2*1024*1024
     static std::array<Referenced, MAX_MODULE_DEVICE_NUM> instanceRef_; // 实例计数，用于释放静态资源
-    ExchangeInfoSize exchangeInfoSize_{0};
+    ExchangeInfoSize exchangeInfoSize_{};
     bool isSioToHccs_{false};  // 是否是sio->hccs的链路
     bool isMemInclude_{false}; // input output是否在machinePara_.mem[0]范围内
 };

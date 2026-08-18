@@ -468,7 +468,8 @@ HcclResult AllGatherHDStage::RunAllGatherLastOne(u32 rank, u32 rankSize, const s
     return HCCL_SUCCESS;
 }
 
-HcclResult AllGatherHDStage::RunAllGatherLast(u32 rank, u32 rankSize, const std::vector<LINK>& links)
+HcclResult AllGatherHDStage::RunAllGatherLast(
+    [[maybe_unused]] u32 rank, u32 rankSize, [[maybe_unused]] const std::vector<LINK>& links)
 {
     if (outputMem_.ptr() != opInfo_->outputAddr) {
         DeviceMem userMemOut = DeviceMem::create(opInfo_->outputAddr, totalSize_ * rankSize);

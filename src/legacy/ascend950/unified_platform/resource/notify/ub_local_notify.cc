@@ -61,7 +61,7 @@ string UbLocalNotify::Describe() const
 
 void UbLocalNotify::Wait(const Stream& stream, u32 timeout) const { GetNotify()->Wait(stream, timeout); }
 
-void UbLocalNotify::Post(const Stream& stream) const
+void UbLocalNotify::Post([[maybe_unused]] const Stream& stream) const
 {
     std::string msg = "UbLocalNotify does not support submitting record task";
     MACRO_THROW(NotSupportException, msg);

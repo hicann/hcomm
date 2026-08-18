@@ -42,7 +42,7 @@ HcclResult HcclTraceInfo::Init(std::string& logInfo)
         handle = -1;
     }
     if (hcclTraceType_ == HcclTraceType::DeviceTraceType) {
-        TraceGlobalAttr traceGlobalAttr = {0};
+        TraceGlobalAttr traceGlobalAttr = {};
         traceGlobalAttr.saveMode = 1; // 1代表 发送到远程并保存
         traceGlobalAttr.deviceId = utraceAttr_.deviceid;
         traceGlobalAttr.pid = utraceAttr_.pid;

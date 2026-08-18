@@ -18,7 +18,7 @@ AllReduceRecursiveHalvingDoubling::AllReduceRecursiveHalvingDoubling(const HcclD
 
 AllReduceRecursiveHalvingDoubling::~AllReduceRecursiveHalvingDoubling() {}
 
-HcclResult AllReduceRecursiveHalvingDoubling::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo)
+HcclResult AllReduceRecursiveHalvingDoubling::Prepare(u64 reduceAttrBitMap, [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     reduceAttr = reduceAttrBitMap;
     return HCCL_SUCCESS;
@@ -353,7 +353,7 @@ HcclResult AllReduceRecursiveHalvingDoubling::GetCommonNslbAdjInfo(
     for (u32 step = 0; step < stepNum; step++) {
         u32 peerRankBitmask = 1 << (stepNum - step - 1);
         u32 peerRank = rank ^ peerRankBitmask;
-        NslbDpAdjInfo adjInfoStep = {0};
+        NslbDpAdjInfo adjInfoStep = {};
         u32 remoteuserRank = links[peerRank]->GetRemoteRank();
         adjInfoStep.dstLocalRankId = remoteuserRank;
         adjInfoStep.phaseId = step + 1;
@@ -365,7 +365,7 @@ HcclResult AllReduceRecursiveHalvingDoubling::GetCommonNslbAdjInfo(
     for (u32 step = 0; step < stepNum; step++) {
         u32 peerRankBitmask = (1 << step);
         u32 peerRank = rank ^ peerRankBitmask;
-        NslbDpAdjInfo adjInfoStep = {0};
+        NslbDpAdjInfo adjInfoStep = {};
         u32 remoteuserRank = links[peerRank]->GetRemoteRank();
         adjInfoStep.dstLocalRankId = remoteuserRank;
         adjInfoStep.phaseId = step + begin + 1;
@@ -381,7 +381,7 @@ HcclResult AllReduceRecursiveHalvingDoubling::GetOddNslbAdjInfo(
     (void)rankSize;
     u32 peerRank = rank - 1;
     if (peerRank < links.size()) {
-        NslbDpAdjInfo adjInfoStep = {0};
+        NslbDpAdjInfo adjInfoStep = {};
         adjInfoStep.dstLocalRankId = links[peerRank]->GetRemoteRank();
         adjInfoStep.phaseId = 1;
         adjInfoStep.rev = 0;
@@ -456,7 +456,7 @@ HcclResult AllReduceRecursiveHalvingDoubling::GetNslbAdjInfo(
         if (subLinks[peerRank] == nullptr) {
             continue;
         }
-        NslbDpAdjInfo adjInfoStep = {0};
+        NslbDpAdjInfo adjInfoStep = {};
         u32 remoteuserRank = subLinks[peerRank]->GetRemoteRank();
         adjInfoStep.dstLocalRankId = remoteuserRank;
         adjInfoStep.phaseId = step + 1 + begin;
@@ -473,7 +473,7 @@ HcclResult AllReduceRecursiveHalvingDoubling::GetNslbAdjInfo(
         u32 peerRank = rank + 1;
         uint16_t phaseSize = nslbAdjInfo.nsAdjInfo.size();
         if (peerRank < links.size()) {
-            NslbDpAdjInfo adjInfoStep = {0};
+            NslbDpAdjInfo adjInfoStep = {};
             adjInfoStep.dstLocalRankId = links[peerRank]->GetRemoteRank();
             adjInfoStep.phaseId = nslbAdjInfo.nsAdjInfo[phaseSize - 1].phaseId + 1;
             adjInfoStep.rev = 0;

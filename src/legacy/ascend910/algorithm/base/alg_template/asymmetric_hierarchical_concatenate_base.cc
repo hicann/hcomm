@@ -99,7 +99,7 @@ CommAHCBaseInfo::CommAHCBaseInfo(const std::vector<std::vector<u32>>& subGroups)
 
 CommAHCBaseInfo::~CommAHCBaseInfo() {}
 
-HcclResult CommAHCBaseInfo::Init(AHCOpType opType, std::map<AHCConcOpType, TemplateType>& ahcAlgOption)
+HcclResult CommAHCBaseInfo::Init(AHCOpType opType, [[maybe_unused]] std::map<AHCConcOpType, TemplateType>& ahcAlgOption)
 {
     (void)opType;
     return HCCL_SUCCESS;
@@ -662,8 +662,9 @@ bool CommBrokeAlignInfo::IsNeedInterProc(const u32 rank)
 
 // Reduce-Scatter 及 All-Gather 组内切片逻辑
 HcclResult CommBrokeAlignInfo::CalcIntraSlicesAndLinks(
-    const u32 rank, const u32 dataUnitSize, const u64 count, const std::vector<LINK>& links,
-    std::vector<std::vector<LINK>>& intraLinksVector, std::vector<std::vector<Slice>>& intraSlicesVector)
+    const u32 rank, [[maybe_unused]] const u32 dataUnitSize, [[maybe_unused]] const u64 count,
+    const std::vector<LINK>& links, std::vector<std::vector<LINK>>& intraLinksVector,
+    std::vector<std::vector<Slice>>& intraSlicesVector)
 {
     HCCL_DEBUG("[CommBrokeAlignInfo][CalcIntraSlicesAndLinks] begin calc intra slices and links rank[%u]", rank);
 

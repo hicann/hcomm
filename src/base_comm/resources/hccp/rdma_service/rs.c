@@ -238,6 +238,7 @@ STATIC int RsPthreadMutexInit(struct rs_cb *rscb, struct RsInitConfig *cfg)
 
 STATIC int RsGetChipLogicId(unsigned int chipId, enum NetworkMode hccpMode, unsigned int *logicId)
 {
+    (void)hccpMode;
     int ret = 0;
 
     ret = DlDrvDeviceGetIndexByPhyId(chipId, logicId);
@@ -706,6 +707,9 @@ int RsQueryGid(struct rdev rdevInfo, struct ibv_context *ibCtxTmp, uint8_t ibPor
 
 STATIC int RsGetDevRdevIndex(struct RsRdevCb *rdevCb, unsigned int *rdevIndex, int index)
 {
+    (void)rdevCb;
+    (void)rdevIndex;
+    (void)index;
 #ifdef CUSTOM_INTERFACE
     struct roce_dev_data rdevData = {0}; // lint !e565
     int retVal;
@@ -833,6 +837,8 @@ int RsGetRsCb(unsigned int phyId, struct rs_cb **rsCb)
 
 STATIC int RsGetSqDepthAndQpMaxNum(struct RsRdevCb *rdevCb, unsigned int rdevIndex)
 {
+    (void)rdevCb;
+    (void)rdevIndex;
 #ifdef CUSTOM_INTERFACE
     unsigned int tempDepth = 0;
     unsigned int qpMaxNum = 0;
@@ -1134,6 +1140,7 @@ STATIC void RsFreeTypicalMrCb(struct RsRdevCb *devCb)
 
 RS_ATTRI_VISI_DEF int RsRdevDeinit(unsigned int phyId, unsigned int notifyType, unsigned int rdevIndex)
 {
+    (void)notifyType;
     struct RsRdevCb *rdevCb = NULL;
     struct RsQpCb *qpCb2 = NULL;
     struct RsQpCb *qpCb = NULL;

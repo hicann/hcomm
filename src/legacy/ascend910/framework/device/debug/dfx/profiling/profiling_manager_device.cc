@@ -418,7 +418,7 @@ HcclResult ProfilingManager::AddProfInfoByStreamId(s32 streamId, const std::stri
     return HCCL_SUCCESS;
 }
 
-void TaskProfilingCallBack(void* userPtr, void* param, u32 length)
+void TaskProfilingCallBack([[maybe_unused]] void* userPtr, void* param, u32 length)
 {
     if (UNLIKELY(param == nullptr)) {
         HCCL_ERROR("[ProfilingManager][%s]param is nullptr.", __func__);

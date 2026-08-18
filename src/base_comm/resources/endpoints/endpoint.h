@@ -72,8 +72,8 @@ public:
 
     virtual HcclResult ServerSocketListen(const uint32_t port) = 0;
 
-    virtual HcclResult ServerSocketStopListen(const uint32_t port) { return HCCL_E_NOT_SUPPORT; };
-    virtual HcclResult ServerSocketGetListenPort(uint32_t* port) { return HCCL_E_NOT_SUPPORT; };
+    virtual HcclResult ServerSocketStopListen([[maybe_unused]] const uint32_t port) { return HCCL_E_NOT_SUPPORT; };
+    virtual HcclResult ServerSocketGetListenPort([[maybe_unused]] uint32_t* port) { return HCCL_E_NOT_SUPPORT; };
 
     virtual std::shared_ptr<RegedMemMgr> GetRegedMemMgr() { return regedMemMgr_; }
 
@@ -106,7 +106,7 @@ public:
 
     virtual HcclResult GetAllMemHandles(void** memHandles, uint32_t* memHandleNum) = 0;
 
-    virtual HcclResult MemoryGrant(const HcommMemGrantInfo* remoteGrantInfo) { return HCCL_SUCCESS; }
+    virtual HcclResult MemoryGrant([[maybe_unused]] const HcommMemGrantInfo* remoteGrantInfo) { return HCCL_SUCCESS; }
 
     static HcclResult CheckFeature(const EndpointDesc& endpointDesc, HcommEndpointFeatureType featureType, bool& value);
 

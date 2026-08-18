@@ -77,8 +77,9 @@ bool CollReduceScatterVExecutor::IsHugeData(const u64 curSize, const OpParam& pa
 }
 
 HcclResult CollReduceScatterVExecutor::CalcCurCountsAndCurDispls(
-    const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
-    std::vector<u64>& curDispls, bool& finished)
+    [[maybe_unused]] const u64 maxTotalCount, [[maybe_unused]] std::vector<u64>& countsLeft,
+    [[maybe_unused]] std::vector<u64>& displs, [[maybe_unused]] std::vector<u64>& curCounts,
+    [[maybe_unused]] std::vector<u64>& curDispls, [[maybe_unused]] bool& finished)
 {
     HCCL_DEBUG("[CollReduceScatterVExecutor][CalcCurCountsAndCurDispls]default func called.");
     return HCCL_SUCCESS;

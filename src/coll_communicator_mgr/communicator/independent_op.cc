@@ -20,7 +20,7 @@ namespace hccl {
 IndependentOp::IndependentOp() {};
 
 HcclResult IndependentOp::SetIndependentOpConfig(
-    const CommConfig& commConfig, const RankTable_t& rankTable, const HcclTopoAttr& topoAttr,
+    const CommConfig& commConfig, [[maybe_unused]] const RankTable_t& rankTable, const HcclTopoAttr& topoAttr,
     const aclrtBinHandle binHandle, HDCommunicateParams& kfcControlTransferH2DParams,
     HDCommunicateParams& kfcStatusTransferD2HParams, CCLBufferManager& bufferManager)
 {

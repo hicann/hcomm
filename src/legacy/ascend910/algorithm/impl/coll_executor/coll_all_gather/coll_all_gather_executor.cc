@@ -126,7 +126,7 @@ bool CollAllGatherExecutor::IsHugeData(const u64 curSize)
     return hugeData;
 }
 
-bool CollAllGatherExecutor::IsSmallData(const u64 size)
+bool CollAllGatherExecutor::IsSmallData([[maybe_unused]] const u64 size)
 {
     HCCL_INFO("[CollAllGatherExecutor][IsSmallData]opMeta is using the default option: not small data");
     return false;
@@ -202,12 +202,14 @@ std::vector<u64> CollAllGatherExecutor::GetDispls(const OpParam& param) const
     return std::vector<u64>(displsPtr, displsPtr + topoAttr_.userRankSize);
 }
 
-u64 CollAllGatherExecutor::GetCurrentCount(const OpParam& param, const std::vector<u64>& curCounts) const
+u64 CollAllGatherExecutor::GetCurrentCount(
+    [[maybe_unused]] const OpParam& param, const std::vector<u64>& curCounts) const
 {
     return curCounts[topoAttr_.userRank];
 }
 
-u64 CollAllGatherExecutor::CalcCurrentTotalCount(const OpParam& param, const std::vector<u64>& curCounts) const
+u64 CollAllGatherExecutor::CalcCurrentTotalCount(
+    [[maybe_unused]] const OpParam& param, const std::vector<u64>& curCounts) const
 {
     return std::accumulate(curCounts.cbegin(), curCounts.cend(), 0ULL);
 }

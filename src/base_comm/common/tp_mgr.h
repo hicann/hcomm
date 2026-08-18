@@ -102,9 +102,7 @@ struct TpInfo {
 };
 
 struct TpAttrInfo {
-    struct TpAttr tpAttr {
-        0
-    };
+    struct TpAttr tpAttr {};
 
     TpAttrInfo() = default;
     TpAttrInfo(const struct TpAttr& attr) : tpAttr(attr) {}
@@ -173,9 +171,7 @@ private:
 
     struct TpAttrRequestCtx {
         RequestHandle handle{0};
-        struct TpAttr tpAttr {
-            0
-        };
+        struct TpAttr tpAttr {};
     };
 
     using TpAttrCtxMap = std::unordered_map<TpHandle, TpAttrCtx>;

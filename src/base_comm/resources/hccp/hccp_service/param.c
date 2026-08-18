@@ -55,6 +55,8 @@ STATIC int HccpParsePid(const char *input, struct HccpInitParam *param)
 
 STATIC int HccpParsePidSign(const char *input, struct HccpInitParam *param)
 {
+    (void)input;
+    (void)param;
     // no need to parse pid sign, skip
     return 0;
 }

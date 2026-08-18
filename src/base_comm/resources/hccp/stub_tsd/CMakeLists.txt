@@ -16,8 +16,6 @@ add_library(tsd_eventclient SHARED ${stub_tsd_list})
 
 target_compile_options(tsd_eventclient PRIVATE
     -Werror
-    -Wno-unused-parameter
-    -Wno-missing-field-initializers
     -fno-common
     -fno-strict-aliasing
     $<$<CONFIG:Debug>:-Og -g>

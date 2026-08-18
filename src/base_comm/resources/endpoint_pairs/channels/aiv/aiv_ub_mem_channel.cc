@@ -41,7 +41,7 @@ HcclResult AivUbMemChannel::Init()
 
 ChannelStatus AivUbMemChannel::GetStatus() { return Channel::TransportStatusToChannelStatus(transport_->GetStatus()); }
 
-HcclResult AivUbMemChannel::GetNotifyNum(uint32_t* notifyNum) const
+HcclResult AivUbMemChannel::GetNotifyNum([[maybe_unused]] uint32_t* notifyNum) const
 {
     HCCL_INFO("AivUbMemChannel GetNotifyNum is not supported.");
     return HCCL_SUCCESS;
@@ -69,31 +69,36 @@ HcclResult AivUbMemChannel::Resume()
     return HCCL_SUCCESS;
 }
 
-HcclResult AivUbMemChannel::NotifyRecord(const uint32_t remoteNotifyIdx)
+HcclResult AivUbMemChannel::NotifyRecord([[maybe_unused]] const uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[AivUbMemChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AivUbMemChannel::NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout)
+HcclResult
+AivUbMemChannel::NotifyWait([[maybe_unused]] const uint32_t localNotifyIdx, [[maybe_unused]] const uint32_t timeout)
 {
     HCCL_INFO("[AivUbMemChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AivUbMemChannel::WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx)
+HcclResult AivUbMemChannel::WriteWithNotify(
+    [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] const uint64_t len,
+    [[maybe_unused]] uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[AivUbMemChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AivUbMemChannel::Write(void* dst, const void* src, uint64_t len)
+HcclResult
+AivUbMemChannel::Write([[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t len)
 {
     HCCL_INFO("[AivUbMemChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AivUbMemChannel::Read(void* dst, const void* src, uint64_t len)
+HcclResult
+AivUbMemChannel::Read([[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t len)
 {
     HCCL_INFO("[AivUbMemChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;

@@ -1609,7 +1609,7 @@ HcclResult AlltoAllVDirectFullMesh::GetNslbAdjInfo(
             // 此时认为时同一个超节点内通讯
             sendTo = (sendTo + devNumInlocalPod) % rankSize;
         }
-        NslbDpAdjInfo adjInfoStep = {0};
+        NslbDpAdjInfo adjInfoStep = {};
         adjInfoStep.dstLocalRankId = sendTo;
         adjInfoStep.phaseId = step + 1;
         adjInfoStep.rev = 0;

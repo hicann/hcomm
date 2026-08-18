@@ -134,7 +134,8 @@ AllGatherHccsSio::RunInterDieOpBase(const u32 dieRankId, const std::vector<LINK>
 }
 
 // allgather的入口函数
-HcclResult AllGatherHccsSio::RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links)
+HcclResult
+AllGatherHccsSio::RunAsync(const u32 rank, const u32 rankSize, [[maybe_unused]] const std::vector<LINK>& links)
 {
     /*rank0:
     从userin拷贝到userout上半部分

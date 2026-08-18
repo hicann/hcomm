@@ -67,7 +67,7 @@ HcclResult AicpuTsHccsEndpoint::Init()
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsHccsEndpoint::ServerSocketListen(const uint32_t port)
+HcclResult AicpuTsHccsEndpoint::ServerSocketListen([[maybe_unused]] const uint32_t port)
 {
     CHK_RET(hccl::GlobalNetDevMgr::GetInstance(endpointDesc_.loc.device.devPhyId).ServerInit(serverPort_));
     serverListened_ = true;

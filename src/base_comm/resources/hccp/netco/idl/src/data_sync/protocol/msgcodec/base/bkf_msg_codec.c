@@ -79,6 +79,7 @@ STATIC uint32_t BkfCodecTlvIdlVersion(BkfMsgCodecer *codecer, void *val, int32_t
 
 STATIC uint32_t BkfCodecTlvSuberLsnUrl(BkfMsgCodecer *codecer, void *val, int32_t inValLen)
 {
+    (void)inValLen;
     BkfTlvSuberLsnUrl *temp = BKF_CODEC_VAL_2TLV(val);
 
     if (temp->lsnUrl.type == BKF_URL_TYPE_DMS) {
@@ -143,11 +144,17 @@ STATIC uint32_t BkfCodecTlvTupleIdlData(BkfMsgCodecer *codecer, void *val, int32
 
 STATIC uint32_t BkfCodecTlvCondIdlData(BkfMsgCodecer *codecer, void *val, int32_t inValLen)
 {
+    (void)codecer;
+    (void)val;
+    (void)inValLen;
     return BKF_OK;
 }
 
 STATIC uint32_t BkfCodecTlvResultIdlData(BkfMsgCodecer *codecer, void *val, int32_t inValLen)
 {
+    (void)codecer;
+    (void)val;
+    (void)inValLen;
     return BKF_OK;
 }
 

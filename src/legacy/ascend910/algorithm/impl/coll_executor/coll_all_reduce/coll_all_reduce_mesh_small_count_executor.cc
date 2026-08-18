@@ -182,8 +182,9 @@ HcclResult CollAllReduceMeshSmallCountExecutor::KernelRun(const OpParam& param, 
     CHK_RET(ActiveSlaveStreams(param.stream));
 
     u64 reduceAttr = GetReduceAttr(execMem.inputMem, execMem.outputMem, param.DataDes.dataType, param.reduceType);
-    HcomCollOpInfo opInfo = {"",         execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType,
-                             param.root, param.reduceType};
+    HcomCollOpInfo opInfo
+        = {"", execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, param.reduceType,
+           0};
 
     bool isUsedRegister = false;
     std::unique_ptr<AlgTemplateBase> level0TempAlg;

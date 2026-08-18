@@ -2418,7 +2418,7 @@ HcclResult HcclCommunicator::OneSidedBackupServerInit(HcclNetDevCtx& nicPortBack
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicator::InitDevicePrimaryNic(bool isMC2ReInit, bool isOneSidedTaskAndBackupInitA3)
+HcclResult HcclCommunicator::InitDevicePrimaryNic([[maybe_unused]] bool isMC2ReInit, bool isOneSidedTaskAndBackupInitA3)
 {
     std::shared_ptr<HcclSocket>& devNicSocket = commPortConfig_.devNicListen.first;
     if (devNicSocket && !isOneSidedTaskAndBackupInitA3) {
@@ -2767,7 +2767,7 @@ HcclResult HcclCommunicator::GetHccsLinkNum(u32& numHccsLink)
 
 HcclResult HcclCommunicator::AllGather(
     const std::string& tag, void* inputPtr, void* outputPtr, u64 inputCount, HcclDataType dataType, HcclRtStream stream,
-    HcomCollOpInfo* opInfo)
+    [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     bool isCapture = StreamIsCapture(stream);
 
@@ -3084,7 +3084,7 @@ void HcclCommunicator::RestorePreSyncMode(SyncMode preSyncMode, SyncMode newSync
 
 HcclResult HcclCommunicator::AllReduce(
     const std::string& tag, void* inputPtr, void* outputPtr, u64 count, HcclDataType dataType, HcclReduceOp op,
-    HcclRtStream stream, SyncMode syncMode, const HcomCollOpInfo* opInfo)
+    HcclRtStream stream, SyncMode syncMode, [[maybe_unused]] const HcomCollOpInfo* opInfo)
 {
     CHK_RET(CheckSuspendingStatus());
     bool aicpuUnfoldMode = false;
@@ -3879,7 +3879,7 @@ HcclResult HcclCommunicator::ReduceOutPlace(
 
 HcclResult HcclCommunicator::ReduceScatter(
     const std::string& tag, void* inputPtr, void* outputPtr, u64 count, HcclDataType dataType, HcclReduceOp op,
-    HcclRtStream stream, HcomCollOpInfo* opInfo)
+    HcclRtStream stream, [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     CHK_RET(CheckSuspendingStatus());
     bool aicpuUnfoldMode = false;
@@ -3995,7 +3995,8 @@ HcclResult HcclCommunicator::ReduceScatterOutPlace(
 
 HcclResult HcclCommunicator::ReduceScatterV(
     const std::string& tag, void* inputPtr, const void* inputCounts, const void* inputDispls, void* outputPtr,
-    u64 outputCount, HcclDataType dataType, HcclReduceOp op, HcclRtStream stream, HcomCollOpInfo* opInfo)
+    u64 outputCount, HcclDataType dataType, HcclReduceOp op, HcclRtStream stream,
+    [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     CHK_RET(CheckSuspendingStatus());
     if (userRankSize_ == 1) {
@@ -4385,8 +4386,8 @@ HcclResult HcclCommunicator::RegressCalPreOp(
 }
 
 HcclResult HcclCommunicator::RegressCalPreOp(
-    AlltoAllOperator*& alltoAllOperator, const OpParam& opParam, std::unique_ptr<PreProcessMetaInfo>& preMetaInfo,
-    Stream& preProcessStream)
+    AlltoAllOperator*& alltoAllOperator, [[maybe_unused]] const OpParam& opParam,
+    std::unique_ptr<PreProcessMetaInfo>& preMetaInfo, Stream& preProcessStream)
 {
     OpParam preProcessOpParam;
     HcclWorkflowMode mode = GetWorkflowMode();
@@ -5543,8 +5544,8 @@ HcclResult HcclCommunicator::BuildAicpuOrderLaunchNotify()
     return HCCL_SUCCESS;
 }
 
-HcclResult
-HcclCommunicator::BuildAiRmaInfoParam(const std::string& newTag, const std::string& algName, const HcclCMDType opType)
+HcclResult HcclCommunicator::BuildAiRmaInfoParam(
+    const std::string& newTag, [[maybe_unused]] const std::string& algName, [[maybe_unused]] const HcclCMDType opType)
 {
     HCCL_DEBUG("[HcclCommunicator][%s] Start prepare.", __func__);
     CHK_PTR_NULL(aiRMAInfoMem_);
@@ -5677,7 +5678,7 @@ HcclResult HcclCommunicator::CopyVectorToDeviceMem(const u64 len, DeviceMem& dst
 }
 
 HcclResult HcclCommunicator::BuildOpTopoResTlvParam(
-    const std::string& algName, const std::vector<std::vector<std::vector<u32>>>& inputVectorInfo,
+    [[maybe_unused]] const std::string& algName, const std::vector<std::vector<std::vector<u32>>>& inputVectorInfo,
     DeviceMem& dstTlvDeviceMem, u64& tlvLen)
 {
     vector<u32> tlv;
@@ -5705,8 +5706,9 @@ HcclResult HcclCommunicator::BuildOpTopoResTlvParam(
 }
 
 HcclResult HcclCommunicator::BuildOpTopoResVectorTlvParam(
-    const std::string& algName, const std::vector<std::vector<std::vector<std::vector<u32>>>>& inputVectorInfo,
-    DeviceMem& dstTlvDeviceMem, u64& tlvLen)
+    [[maybe_unused]] const std::string& algName,
+    const std::vector<std::vector<std::vector<std::vector<u32>>>>& inputVectorInfo, DeviceMem& dstTlvDeviceMem,
+    u64& tlvLen)
 {
     vector<u32> tlv;
     CommonTlv commonTlv;
@@ -5737,7 +5739,7 @@ HcclResult HcclCommunicator::BuildOpTopoResVectorTlvParam(
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicator::BuildPairLinkCounter(const std::string& algName)
+HcclResult HcclCommunicator::BuildPairLinkCounter([[maybe_unused]] const std::string& algName)
 {
     constexpr u32 KEY_VALUE_TO_VECTOR_MODULUS = 2;
     if (pairLinkCounterDevice_.ptr() == nullptr) {
@@ -5760,7 +5762,7 @@ HcclResult HcclCommunicator::BuildPairLinkCounter(const std::string& algName)
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicator::BuildIsUsedRdmaRank(const std::string& algName)
+HcclResult HcclCommunicator::BuildIsUsedRdmaRank([[maybe_unused]] const std::string& algName)
 {
     constexpr u32 KEY_VALUE_TO_VECTOR_MODULUS = 2;
     if (isUsedRdmaRankPairDevice_.ptr() == nullptr) {
@@ -5785,7 +5787,7 @@ HcclResult HcclCommunicator::BuildIsUsedRdmaRank(const std::string& algName)
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicator::BuildNicList(const std::string& algName)
+HcclResult HcclCommunicator::BuildNicList([[maybe_unused]] const std::string& algName)
 {
     if (nicListDevice_.ptr() == nullptr) {
         u64 len = nicList_.size() * sizeof(u32);
@@ -5798,7 +5800,7 @@ HcclResult HcclCommunicator::BuildNicList(const std::string& algName)
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicator::BuildBridgeRank(const std::string& algName)
+HcclResult HcclCommunicator::BuildBridgeRank([[maybe_unused]] const std::string& algName)
 {
     if (bridgeRankDevice_.ptr() == nullptr) {
         std::vector<bool> isBridgeVector;
@@ -5930,7 +5932,8 @@ HcclResult HcclCommunicator::BuildHierarchicalAlgOption(u32* ahcConfInfo)
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicator::BuildOpTopoResParam(const std::string& algName, const AlgResourceResponse& algResource)
+HcclResult HcclCommunicator::BuildOpTopoResParam(
+    const std::string& algName, [[maybe_unused]] const AlgResourceResponse& algResource)
 {
     opResPara_.topoInfo.userRank = userRank_;
     opResPara_.topoInfo.userRankSize = userRankSize_;
@@ -6131,7 +6134,7 @@ HcclResult HcclCommunicator::CreateListNode(T** resHostPtr, T** resDevicePtr)
 
 HcclResult HcclCommunicator::BuildRemoteResByTag(
     const std::string& newTag, const u32& usrRankId, HcclRankRelationResV2*& rankRelationResHostPtr,
-    HcclRankRelationResV2*& rankRelationResDevicePtr, bool isBackup, bool isRetry)
+    HcclRankRelationResV2*& rankRelationResDevicePtr, [[maybe_unused]] bool isBackup, [[maybe_unused]] bool isRetry)
 {
     HCCL_DEBUG(
         "[%s]start to add RemoteRes with newtag[%s] and remoteRankId[%u] to list", __func__, newTag.c_str(), usrRankId);
@@ -6387,7 +6390,7 @@ HcclResult HcclCommunicator::CopyHostOpResToDeviceParam(const std::string& newTa
 }
 
 HcclResult HcclCommunicator::CopyHostAirmaInfoToDeviceParam(
-    const std::string& newTag, const HcclCMDType opType, const rtStream_t aiCpuStream)
+    const std::string& newTag, [[maybe_unused]] const HcclCMDType opType, const rtStream_t aiCpuStream)
 {
     HCCL_INFO("[HcclCommunicator][%s] Start prepare.", __func__);
     CHK_PTR_NULL(aiRMAInfoMem_);
@@ -6940,7 +6943,8 @@ HcclResult HcclCommunicator::AllocAlgResource(
         algResResponse.aivInputMem,
         algResResponse.aivOutputMem,
         expMem,
-        DeviceMem()};
+        DeviceMem(),
+        {}};
     HCCL_DEBUG(
         "algResResponse.cclInputMem[%p], size[%llu]; algResResponse.cclOutputMem[%p], "
         "size[%llu]; algResResponse.paramInputMem[%p], size[%llu]; algResResponse.paramOutputMem[%p], size[%llu].",
@@ -7088,7 +7092,8 @@ HcclResult HcclCommunicator::IncreAllocLink(
         algResResponse.aivInputMem,
         algResResponse.aivOutputMem,
         expMem,
-        DeviceMem()};
+        DeviceMem(),
+        {}};
     {
         StateGuard<HcclCommunicator, HcclCommState> guard(this, HcclCommState::BUILDING);
         CHK_RET(transportManager_->IncreAlloc(
@@ -7551,7 +7556,7 @@ HcclResult HcclCommunicator::Mc2AiCpuInitStreamAllocAndGet(u32 streamMode, rtStr
 
 HcclResult HcclCommunicator::AicpuResourceInit(
     const std::string& algName, const AlgResourceResponse& algResource, const std::string& newTag,
-    const rtStream_t& aicpuStream, const HcclCMDType opType, bool isCustom)
+    const rtStream_t& aicpuStream, const HcclCMDType opType, [[maybe_unused]] bool isCustom)
 {
     HCCL_RUN_INFO(
         "[%s] start to init group[%s] aicpu resources newTag[%s] local rankId[%u]", __func__, identifier_.c_str(),
@@ -7572,7 +7577,7 @@ HcclResult HcclCommunicator::AicpuResourceInit(
             u64 context; // A矩阵地址，通信在前时为sendbuffer
             bool isCustom;
         };
-        InitTask customInitTask = {0};
+        InitTask customInitTask = {};
         customInitTask.context = reinterpret_cast<u64>(opResDevicePara_.ptr());
         customInitTask.isCustom = true;
         CHK_RET(BuildCustomOpResParam());
@@ -7609,7 +7614,7 @@ HcclResult HcclCommunicator::AiCpuKernelLaunch(const rtStream_t stm, u64 addr, c
         u64 context; // A矩阵地址，通信在前时为sendbuffer
         bool isCustom;
     };
-    InitTask initTask = {0};
+    InitTask initTask = {};
     initTask.context = addr;
     initTask.isCustom = false;
 
@@ -7636,7 +7641,7 @@ HcclResult HcclCommunicator::AicpuKfcTilingDataLaunch(
     HCCL_DEBUG(
         "AicpuKfcTilingDataLaunch count %llu dataType %s op %s opType %u", opParam.GetDataCount(userRank_),
         GetDataTypeEnumStr(opParam.GetDataType()).c_str(), GetReduceOpEnumStr(opParam.reduceType).c_str(), opType);
-    struct HcclKFCTilingData tilingDate = {0};
+    struct HcclKFCTilingData tilingDate = {};
     tilingDate.sendCnt = opParam.DataDes.count;
     tilingDate.dataType = opParam.DataDes.dataType;
     tilingDate.commType = static_cast<uint8_t>(opType);
@@ -7780,8 +7785,8 @@ HcclResult HcclCommunicator::AicpuInitOpTilingDataAicpuCache(
 }
 
 HcclResult HcclCommunicator::AicpuInitOpTilingDataBuf(
-    const OpParam& opParam, const HcclCMDType& opType, const std::string& kernelName, const AicpuOpTiling opTilingInfo,
-    u64 dynamicDataSize)
+    const OpParam& opParam, const HcclCMDType& opType, [[maybe_unused]] const std::string& kernelName,
+    const AicpuOpTiling opTilingInfo, u64 dynamicDataSize)
 {
     u32 opTilingDataSize = sizeof(struct OpTilingData) + dynamicDataSize;
 
@@ -7947,7 +7952,7 @@ HcclResult HcclCommunicator::InitAndCheckAicpuOrderNotify(u8& orderLaunchMode)
 
 HcclResult HcclCommunicator::AicpuKfcTilingDataLaunchIn(
     const OpParam& opParam, const DeviceMem& deviceContext, const std::string& kernelName,
-    const AicpuOpTiling opTilingInfo, u64 opTilingDataSize, bool isCustom)
+    [[maybe_unused]] const AicpuOpTiling opTilingInfo, u64 opTilingDataSize, bool isCustom)
 {
     HostMem opTilingDataMem = opTilingDataBuf_.range(0, opTilingDataSize);
     CHK_RET(SetNormalMode(dispatcher_));
@@ -8175,7 +8180,7 @@ HcclResult HcclCommunicator::AicpuKfcTilingDataLaunchExt(
 
 HcclResult HcclCommunicator::AicpuUnfoldKernelLaunch(
     void* inputPtr, void* outputPtr, const rtStream_t stm, u64 addr, void* tilingDataPtr, u32 tilingDataSize,
-    const std::string& kernelName, HcclWorkflowMode mode, const std::string& tag)
+    const std::string& kernelName, [[maybe_unused]] HcclWorkflowMode mode, [[maybe_unused]] const std::string& tag)
 {
     struct ApiParamDef {
         uint64_t x1; // 算子sendbuffer地址
@@ -8206,8 +8211,9 @@ HcclResult HcclCommunicator::AicpuUnfoldKernelLaunch(
 }
 
 HcclResult HcclCommunicator::AicpuUnfoldKernelLaunchV2(
-    void* inputPtr, void* outputPtr, const rtStream_t stm, u64 addr, void* tilingDataPtr, u32 tilingDataSize,
-    const std::string& kernelName, HcclWorkflowMode mode, const std::string& tag, bool isCustom)
+    [[maybe_unused]] void* inputPtr, [[maybe_unused]] void* outputPtr, const rtStream_t stm, u64 addr,
+    void* tilingDataPtr, u32 tilingDataSize, const std::string& kernelName, [[maybe_unused]] HcclWorkflowMode mode,
+    [[maybe_unused]] const std::string& tag, bool isCustom)
 {
     u64 context = addr;
     HCCL_INFO("[HcclCommunicator]context[%p] tilingDataPtr[%p] tilingData[%p]", context, tilingDataPtr, tilingDataSize);
@@ -9554,7 +9560,7 @@ HcclResult HcclCommunicator::GetTopoInstsByLayer(uint32_t netLayer, uint32_t** t
     return rankGraph_.GetTopoInstsByLayer(netLayer, topoInsts, topoInstNum);
 }
 
-HcclResult HcclCommunicator::GetTopoType(uint32_t netLayer, uint32_t topoInstId, CommTopo* topoType)
+HcclResult HcclCommunicator::GetTopoType(uint32_t netLayer, [[maybe_unused]] uint32_t topoInstId, CommTopo* topoType)
 {
     return rankGraph_.GetTopoType(netLayer, topoType);
 }

@@ -69,7 +69,7 @@ namespace {
         }
     }
 
-    void ParseCommonSqeInfo(const SqeInfo& sqeInfo, MsprofAicpuHcclTaskInfo& msprofAicpuMC2HcclInfo)
+    void ParseCommonSqeInfo([[maybe_unused]] const SqeInfo& sqeInfo, MsprofAicpuHcclTaskInfo& msprofAicpuMC2HcclInfo)
     {
         HCCL_WARNING("Unsupported SQE type");
         msprofAicpuMC2HcclInfo.itemId = g_taskHashIds[static_cast<uint64_t>(hccl::ProfTaskType::TASK_HCCL_INFO)];
@@ -91,7 +91,7 @@ namespace {
         }
     };
 
-    void ParseCondSqeInfo(const SqeInfo& sqeInfo, MsprofAicpuHcclTaskInfo& msprofAicpuMC2HcclInfo)
+    void ParseCondSqeInfo([[maybe_unused]] const SqeInfo& sqeInfo, MsprofAicpuHcclTaskInfo& msprofAicpuMC2HcclInfo)
     {
         msprofAicpuMC2HcclInfo.itemId
             = g_taskHashIds[static_cast<uint64_t>(hccl::ProfTaskType::TASK_INTER_PROCESSOR_SYNC)];

@@ -144,7 +144,7 @@ HcclResult CollReduceScatterVFor310PRingExecutor::KernelRun(const OpParam& param
     }
 
     // opInfo这里主要填对inputPtr和outputPtr就好
-    HcomCollOpInfo opInfo = {"", execMem.inputPtr, execMem.outputPtr, 0, dataType, 0, param.reduceType};
+    HcomCollOpInfo opInfo = {"", execMem.inputPtr, execMem.outputPtr, 0, dataType, 0, param.reduceType, 0};
     HcomCollOpInfo* opInfoPtr = nullptr;
     if (DMAReduceFlag_) {
         opInfoPtr = &opInfo;

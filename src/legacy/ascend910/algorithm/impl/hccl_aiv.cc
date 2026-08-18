@@ -585,7 +585,7 @@ HcclResult GetKernelFunc(aclrtFuncHandle& funcHandle, s8* stubFunc)
 }
 
 // Kernel注册入口，全局只需要初始化一次
-HcclResult RegisterKernel(DevType deviceType)
+HcclResult RegisterKernel([[maybe_unused]] DevType deviceType)
 {
     lock_guard<mutex> guard(g_mut);
     if (g_init) {

@@ -86,8 +86,8 @@ HcclResult CollAllReduceMeshAivFor91093Executor::CalcScratchMemSize(u64& scratch
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAllReduceMeshAivFor91093Executor::CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize, HcclCMDType cmdType)
+HcclResult CollAllReduceMeshAivFor91093Executor::CalNumBlocks(
+    u32& numBlocks, u32 rankSize, [[maybe_unused]] u64 dataSize, [[maybe_unused]] HcclCMDType cmdType)
 {
     // Step1. Calculate the best block dimension
     u32 bestNumBlocks = (rankSize < MAX_NUM_BLOCKS ? rankSize : MAX_NUM_BLOCKS);

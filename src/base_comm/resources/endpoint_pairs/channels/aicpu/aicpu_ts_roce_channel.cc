@@ -546,31 +546,36 @@ HcclResult AicpuTsRoceChannel::Serialize(std::shared_ptr<hccl::DeviceMem>& out)
     return HCCL_SUCCESS;
 }
 
-HcclResult AicpuTsRoceChannel::NotifyRecord(const uint32_t remoteNotifyIdx)
+HcclResult AicpuTsRoceChannel::NotifyRecord([[maybe_unused]] const uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[AicpuTsRoceChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsRoceChannel::NotifyWait(const uint32_t localNotifyIdx, const uint32_t timeout)
+HcclResult
+AicpuTsRoceChannel::NotifyWait([[maybe_unused]] const uint32_t localNotifyIdx, [[maybe_unused]] const uint32_t timeout)
 {
     HCCL_INFO("[AicpuTsRoceChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsRoceChannel::WriteWithNotify(void* dst, const void* src, const uint64_t len, uint32_t remoteNotifyIdx)
+HcclResult AicpuTsRoceChannel::WriteWithNotify(
+    [[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] const uint64_t len,
+    [[maybe_unused]] uint32_t remoteNotifyIdx)
 {
     HCCL_INFO("[AicpuTsRoceChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsRoceChannel::Write(void* dst, const void* src, uint64_t len)
+HcclResult
+AicpuTsRoceChannel::Write([[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t len)
 {
     HCCL_INFO("[AicpuTsRoceChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult AicpuTsRoceChannel::Read(void* dst, const void* src, uint64_t len)
+HcclResult
+AicpuTsRoceChannel::Read([[maybe_unused]] void* dst, [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t len)
 {
     HCCL_INFO("[AicpuTsRoceChannel::%s] not supported yet.", __func__);
     return HCCL_E_NOT_SUPPORT;

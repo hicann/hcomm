@@ -294,6 +294,7 @@ uint32_t BkfSysLogReg(BkfSysLogMng *sysLogMng, BkfSysLogTypeVTbl *vTbl)
 
 STATIC void BkfSysLogTmrCallback(BkfSysLog *sysLog, void *paramTmrLibUnknown)
 {
+    (void)paramTmrLibUnknown;
     BkfSysLogMng *sysLogMng = sysLog->sysLogMng;
     BkfSysLogTableType *tableType = sysLog->tableType;
 

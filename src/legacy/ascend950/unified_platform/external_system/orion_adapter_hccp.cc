@@ -447,8 +447,9 @@ HRaSocketListenStart(struct SocketListenInfoT conn[], u32 num, const IpAddress& 
     }
 }
 
-static bool
-RaSocketTryListenStart(struct SocketListenInfoT conn[], u32 num, const IpAddress& localIp, HrtNetworkMode netMode)
+static bool RaSocketTryListenStart(
+    struct SocketListenInfoT conn[], u32 num, [[maybe_unused]] const IpAddress& localIp,
+    [[maybe_unused]] HrtNetworkMode netMode)
 {
     CHECK_NULLPTR(conn, "[RaSocketTryListenStart] conn is nullptr!");
     HCCL_INFO("[TryListenStart][RaSocket] Input params: num=%u", num);

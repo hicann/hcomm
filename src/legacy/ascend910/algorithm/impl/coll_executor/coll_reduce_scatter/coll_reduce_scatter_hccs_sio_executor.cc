@@ -91,9 +91,14 @@ HcclResult CollReduceScatterHccsSioExecutor::KernelRun(const OpParam& param, Exe
 {
     HCCL_CONFIG_INFO(HCCL_ALG, "[%s] userRank[%u] starts.", __func__, topoAttr_.userRank);
     HcclDataType dataType = param.DataDes.dataType;
-    HcomCollOpInfo opInfo
-        = {"",         execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType,
-           param.root, param.reduceType};
+    HcomCollOpInfo opInfo = {"",
+                             execMem.inputPtr,
+                             execMem.outputPtr,
+                             param.DataDes.count,
+                             param.DataDes.dataType,
+                             param.root,
+                             param.reduceType,
+                             0};
 
     CHK_RET(CheckCommSize(COMM_LEVEL0, COMM_INDEX_0 + 1));
     SubCommInfo subCommInfoHccs = GetSubCommInfo(COMM_LEVEL0, COMM_INDEX_0);

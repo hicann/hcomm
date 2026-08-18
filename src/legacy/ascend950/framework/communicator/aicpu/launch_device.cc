@@ -50,7 +50,7 @@ void LoadBinaryFromFile(
     }
     HCCL_INFO("[LoadBinaryFromFile]realPath: %s", realPath);
 
-    aclrtBinaryLoadOptions loadOptions = {0};
+    aclrtBinaryLoadOptions loadOptions = {};
     aclrtBinaryLoadOption option;
     loadOptions.numOpt = 1;
     loadOptions.options = &option;

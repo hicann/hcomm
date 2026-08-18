@@ -937,12 +937,12 @@ void HrtGetTaskIdAndStreamID(u32& taskId, u32& streamId)
     }
 }
 
-void HrtUbDbSend(const HrtUbDbInfo& info, aclrtStream streamPtr)
+void HrtUbDbSend([[maybe_unused]] const HrtUbDbInfo& info, [[maybe_unused]] aclrtStream streamPtr)
 {
     THROW<NotSupportException>(StringFormat("Unsupported rtUbDbSend"));
 }
 
-void HrtUbDirectSend(const HrtUbWqeInfo& info, aclrtStream streamPtr)
+void HrtUbDirectSend([[maybe_unused]] const HrtUbWqeInfo& info, [[maybe_unused]] aclrtStream streamPtr)
 {
     THROW<NotSupportException>(StringFormat("Unsupported rtUbDirectSend"));
 }
@@ -1282,7 +1282,7 @@ HrtEventStatus HrtEventQueryStatus(RtEvent_t eventPtr)
     return HRT_EVENT_STATUS_MAP.at(status);
 }
 
-void HrtWriteValue(u64 addr, u32 piVal, const aclrtStream streamPtr)
+void HrtWriteValue([[maybe_unused]] u64 addr, [[maybe_unused]] u32 piVal, [[maybe_unused]] const aclrtStream streamPtr)
 {
     THROW<NotSupportException>(StringFormat("Unsupported rtWriteValue"));
 }

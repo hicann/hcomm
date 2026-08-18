@@ -113,7 +113,7 @@ enum class HcclV2SupportStatus {
 static thread_local HcclV2SupportStatus g_socV2SupportStatus = HcclV2SupportStatus::UNKNOWN;
 #endif
 
-HcclResult hrtGetHcclV2Support(bool* isSupport)
+HcclResult hrtGetHcclV2Support([[maybe_unused]] bool* isSupport)
 {
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     CHK_PTR_NULL(isSupport);
@@ -152,7 +152,7 @@ HcclResult hrtGetHcclV2Support(bool* isSupport)
 #if T_DESC("Device管理", true)
 HcclResult hrtThreadExchangeCaptureMode(aclmdlRICaptureMode* mode);
 
-HcclResult hrtGetDeviceCount(u32* count)
+HcclResult hrtGetDeviceCount([[maybe_unused]] u32* count)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -261,7 +261,7 @@ HcclResult stubSetDevice(u32 deviceLogicId)
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtGetDeviceRefresh(s32* deviceLogicId)
+HcclResult hrtGetDeviceRefresh([[maybe_unused]] s32* deviceLogicId)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -285,7 +285,7 @@ HcclResult hrtGetDeviceRefresh(s32* deviceLogicId)
 #endif
 }
 
-HcclResult hrtSetlocalDevice(s32 deviceLogicId)
+HcclResult hrtSetlocalDevice([[maybe_unused]] s32 deviceLogicId)
 {
 #ifdef HCCD
     g_localDeviceLogicId = deviceLogicId;
@@ -424,7 +424,8 @@ HcclResult hrtCtxSetCurrent(HcclRtContext ctx)
 #ifdef __cplusplus
 extern "C" {
 #endif
-HcclResult __hrtGetDevicePhyIdByIndex(u32 deviceLogicId, u32& devicePhyId, bool isRefresh)
+HcclResult __hrtGetDevicePhyIdByIndex(
+    [[maybe_unused]] u32 deviceLogicId, [[maybe_unused]] u32& devicePhyId, [[maybe_unused]] bool isRefresh)
 {
 #ifndef HCCD
     if (LIKELY(g_devicePhyId != INVALID_UINT) && (!isRefresh)) {
@@ -517,7 +518,9 @@ HcclResult hrtGetLogicDevIdByUserDevId(s32 userDevId, s32& logicDevId)
     return HCCL_SUCCESS;
 };
 
-HcclResult hrtGetPhyDeviceInfo(u32 devicePhysicId, s32 moduleType, s32 infoType, s64& value)
+HcclResult hrtGetPhyDeviceInfo(
+    [[maybe_unused]] u32 devicePhysicId, [[maybe_unused]] s32 moduleType, [[maybe_unused]] s32 infoType,
+    [[maybe_unused]] s64& value)
 {
 #ifndef HCCD
     rtError_t rtRet = rtGetPhyDeviceInfo(devicePhysicId, moduleType, infoType, reinterpret_cast<int64_t*>(&value));
@@ -539,7 +542,7 @@ HcclResult hrtGetPhyDeviceInfo(u32 devicePhysicId, s32 moduleType, s32 infoType,
 #endif
 }
 
-HcclResult hrtGetSocVer(std::string& socName)
+HcclResult hrtGetSocVer([[maybe_unused]] std::string& socName)
 {
 #ifndef HCCD
     const char* socNamePtr = aclrtGetSocName();
@@ -588,7 +591,7 @@ HcclResult hrtGetDeviceTypeBySocVersion(std::string& socVersion, DevType& devTyp
     devType = iter->second;
     return HCCL_SUCCESS;
 }
-HcclResult hrtSetWorkModeAicpu(bool workModeAicpu)
+HcclResult hrtSetWorkModeAicpu([[maybe_unused]] bool workModeAicpu)
 {
 #ifdef HCCD
     g_workModeAicpu = workModeAicpu;
@@ -597,7 +600,7 @@ HcclResult hrtSetWorkModeAicpu(bool workModeAicpu)
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtSetlocalDeviceType(DevType devType)
+HcclResult hrtSetlocalDeviceType([[maybe_unused]] DevType devType)
 {
 #ifdef HCCD
     g_localDeviceType = devType;
@@ -716,7 +719,7 @@ HcclResult HrtDevMalloc(void** devPtr, u64 size)
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtMalloc(void** devPtr, u64 size, bool level2Address)
+HcclResult hrtMalloc(void** devPtr, u64 size, [[maybe_unused]] bool level2Address)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -806,7 +809,9 @@ HcclResult hrtMalloc(void** devPtr, u64 size, bool level2Address)
 #endif
 }
 
-HcclResult hrtMemSyncCopy(void* dst, uint64_t destMax, const void* src, uint64_t count, HcclRtMemcpyKind kind)
+HcclResult hrtMemSyncCopy(
+    [[maybe_unused]] void* dst, [[maybe_unused]] uint64_t destMax, [[maybe_unused]] const void* src,
+    [[maybe_unused]] uint64_t count, [[maybe_unused]] HcclRtMemcpyKind kind)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -845,7 +850,9 @@ HcclResult hrtMemSyncCopy(void* dst, uint64_t destMax, const void* src, uint64_t
 #endif
 }
 
-HcclResult hrtMemSyncCopyEx(void* dst, uint64_t destMax, const void* src, uint64_t count, HcclRtMemcpyKind kind)
+HcclResult hrtMemSyncCopyEx(
+    [[maybe_unused]] void* dst, [[maybe_unused]] uint64_t destMax, [[maybe_unused]] const void* src,
+    [[maybe_unused]] uint64_t count, [[maybe_unused]] HcclRtMemcpyKind kind)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -905,8 +912,9 @@ HcclResult hrtFree(void* devPtr)
 }
 
 HcclResult hrtMemcpyAddrAsync(
-    void* dst, uint64_t destMax, uint64_t destOffset, const void* src, uint64_t count, uint64_t srcOffset,
-    rtStream_t stream)
+    [[maybe_unused]] void* dst, [[maybe_unused]] uint64_t destMax, [[maybe_unused]] uint64_t destOffset,
+    [[maybe_unused]] const void* src, [[maybe_unused]] uint64_t count, [[maybe_unused]] uint64_t srcOffset,
+    [[maybe_unused]] rtStream_t stream)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -980,8 +988,9 @@ HcclResult MemcpyKindTranslate(HcclRtMemcpyKind kind, aclrtMemcpyKind* rtKind)
     }
 }
 
-HcclResult
-hrtMemAsyncCopy(void* dst, uint64_t destMax, const void* src, uint64_t count, HcclRtMemcpyKind kind, rtStream_t stream)
+HcclResult hrtMemAsyncCopy(
+    [[maybe_unused]] void* dst, [[maybe_unused]] uint64_t destMax, [[maybe_unused]] const void* src,
+    [[maybe_unused]] uint64_t count, [[maybe_unused]] HcclRtMemcpyKind kind, [[maybe_unused]] rtStream_t stream)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -1015,7 +1024,8 @@ hrtMemAsyncCopy(void* dst, uint64_t destMax, const void* src, uint64_t count, Hc
 }
 
 HcclResult hrtMemAsyncCopyWithoutCheckKind(
-    void* dst, uint64_t destMax, const void* src, uint64_t count, HcclRtMemcpyKind kind, rtStream_t stream)
+    [[maybe_unused]] void* dst, [[maybe_unused]] uint64_t destMax, [[maybe_unused]] const void* src,
+    [[maybe_unused]] uint64_t count, [[maybe_unused]] HcclRtMemcpyKind kind, [[maybe_unused]] rtStream_t stream)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -1057,7 +1067,9 @@ HcclResult hrtGetPairDeviceLinkTypeRaw(u32 phyDevId, u32 otherPhyDevId, s32 info
     }
 }
 
-HcclResult hrtGetPairDevicesInfo(u32 phyDevId, u32 otherPhyDevId, s32 infoType, s64* pValue)
+HcclResult hrtGetPairDevicesInfo(
+    [[maybe_unused]] u32 phyDevId, [[maybe_unused]] u32 otherPhyDevId, [[maybe_unused]] s32 infoType,
+    [[maybe_unused]] s64* pValue)
 {
 #ifndef HCCD
     CHK_PTR_NULL(pValue);
@@ -1111,8 +1123,9 @@ HcclResult hrtGetPairDevicesInfo(u32 phyDevId, u32 otherPhyDevId, s32 infoType, 
 #endif
 }
 
-HcclResult
-hrtGetPairPhyDevicesInfo(u32 phyDevId, u32 otherPhyDevId, s32 infoType, s64* pValue, rtGetPairPhyDevicesInfoPtr funcPtr)
+HcclResult hrtGetPairPhyDevicesInfo(
+    [[maybe_unused]] u32 phyDevId, [[maybe_unused]] u32 otherPhyDevId, [[maybe_unused]] s32 infoType,
+    [[maybe_unused]] s64* pValue, [[maybe_unused]] rtGetPairPhyDevicesInfoPtr funcPtr)
 {
 #ifndef HCCD
     CHK_PTR_NULL(pValue);
@@ -1176,7 +1189,7 @@ HcclResult hrtGetPairDeviceLinkType(u32 phyDevId, u32 otherPhyDevId, LinkTypeInS
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtGetPairDevicePhyId(u32 localDevPhyId, u32& pairDevPhyId)
+HcclResult hrtGetPairDevicePhyId([[maybe_unused]] u32 localDevPhyId, [[maybe_unused]] u32& pairDevPhyId)
 {
 #ifndef HCCD
     DevType deviceType = DevType::DEV_TYPE_COUNT;
@@ -1294,7 +1307,8 @@ HcclResult hrtIpcDestroyMemoryName(const u8* name)
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtIpcSetMemoryAttr(const u8* name, aclrtIpcMemAttrType type, u64 attr)
+HcclResult hrtIpcSetMemoryAttr(
+    [[maybe_unused]] const u8* name, [[maybe_unused]] aclrtIpcMemAttrType type, [[maybe_unused]] u64 attr)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -1371,7 +1385,9 @@ HcclResult hrtIpcSetMemoryPid(const u8* name, int pid[], int num)
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtSetIpcMemorySuperPodPid(const u8* name, s32 peerSdid, s32 peerPid[], s32 pidNum)
+HcclResult hrtSetIpcMemorySuperPodPid(
+    [[maybe_unused]] const u8* name, [[maybe_unused]] s32 peerSdid, [[maybe_unused]] s32 peerPid[],
+    [[maybe_unused]] s32 pidNum)
 {
 #ifndef HCCD
     CHK_PTR_NULL(name);
@@ -1523,7 +1539,7 @@ HcclResult hrtFreeHost(void* hostPtr)
 
 #if T_DESC("stream管理", true)
 
-HcclResult hrtStreamActive(HcclRtStream activeStream, HcclRtStream stream)
+HcclResult hrtStreamActive([[maybe_unused]] HcclRtStream activeStream, [[maybe_unused]] HcclRtStream stream)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -1549,7 +1565,7 @@ HcclResult hrtStreamActive(HcclRtStream activeStream, HcclRtStream stream)
 #endif
 }
 
-HcclResult hrtGetStreamId(HcclRtStream stream, s32& streamId)
+HcclResult hrtGetStreamId([[maybe_unused]] HcclRtStream stream, [[maybe_unused]] s32& streamId)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -1574,7 +1590,7 @@ HcclResult hrtGetStreamId(HcclRtStream stream, s32& streamId)
 #endif
 }
 
-HcclResult hrtGetTaskIdAndStreamID(u32& taskId, u32& streamId)
+HcclResult hrtGetTaskIdAndStreamID([[maybe_unused]] u32& taskId, [[maybe_unused]] u32& streamId)
 {
 #ifndef HCCD
     rtError_t ret = rtGetTaskIdAndStreamID(&taskId, &streamId);
@@ -1597,7 +1613,7 @@ HcclResult hrtGetTaskIdAndStreamID(u32& taskId, u32& streamId)
 #endif
 
 #if T_DESC("event 同步机制", true)
-HcclResult hrtEventCreate(aclrtEvent* event)
+HcclResult hrtEventCreate([[maybe_unused]] aclrtEvent* event)
 {
 #ifndef HCCD
     CHK_PTR_NULL(event);
@@ -1622,7 +1638,7 @@ HcclResult hrtEventCreate(aclrtEvent* event)
 #endif
 }
 
-HcclResult hrtEventDestroy(HcclRtEvent event)
+HcclResult hrtEventDestroy([[maybe_unused]] HcclRtEvent event)
 {
 #ifndef HCCD
     CHK_PTR_NULL(event);
@@ -1642,7 +1658,7 @@ HcclResult hrtEventDestroy(HcclRtEvent event)
 #endif
 }
 
-HcclResult hrtEventRecord(aclrtEvent event, aclrtStream stream)
+HcclResult hrtEventRecord([[maybe_unused]] aclrtEvent event, [[maybe_unused]] aclrtStream stream)
 {
 #ifndef HCCD
     CHK_PTR_NULL(event);
@@ -1663,7 +1679,7 @@ HcclResult hrtEventRecord(aclrtEvent event, aclrtStream stream)
 #endif
 }
 
-HcclResult hrtStreamWaitEvent(aclrtStream stream, aclrtEvent event)
+HcclResult hrtStreamWaitEvent([[maybe_unused]] aclrtStream stream, [[maybe_unused]] aclrtEvent event)
 {
 #ifndef HCCD
     CHK_PTR_NULL(event);
@@ -1683,7 +1699,7 @@ HcclResult hrtStreamWaitEvent(aclrtStream stream, aclrtEvent event)
 #endif
 }
 
-HcclResult hrtEventQuery(aclrtEvent event)
+HcclResult hrtEventQuery([[maybe_unused]] aclrtEvent event)
 {
 #ifndef HCCD
     CHK_PTR_NULL(event);
@@ -1708,7 +1724,7 @@ HcclResult hrtEventQuery(aclrtEvent event)
 // 进行单元测试时对改函数打桩可完成条件测试
 bool CompareDevType(DevType left, DevType right) { return left == right; }
 
-HcclResult hrtGetNotifySize(u32& notifySize)
+HcclResult hrtGetNotifySize([[maybe_unused]] u32& notifySize)
 {
 #ifndef HCCD
     DevType deviceType;
@@ -1727,7 +1743,7 @@ HcclResult hrtGetNotifySize(u32& notifySize)
 #endif
 }
 
-HcclResult hrtNotifyGetOffset(HcclRtNotify notify, u64& offset)
+HcclResult hrtNotifyGetOffset([[maybe_unused]] HcclRtNotify notify, [[maybe_unused]] u64& offset)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
@@ -1753,7 +1769,7 @@ HcclResult hrtNotifyGetOffset(HcclRtNotify notify, u64& offset)
 }
 
 // hrtNotifyCreate 要求当前线程设置过 setDevice
-HcclResult hrtNotifyCreate(s32 deviceId, aclrtNotify* notify)
+HcclResult hrtNotifyCreate([[maybe_unused]] s32 deviceId, [[maybe_unused]] aclrtNotify* notify)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
@@ -1811,7 +1827,7 @@ HcclResult hrtNotifyCreate(s32 deviceId, aclrtNotify* notify)
 #endif
 }
 
-HcclResult hrtNotifyDestroy(rtNotify_t notify)
+HcclResult hrtNotifyDestroy([[maybe_unused]] rtNotify_t notify)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
@@ -1830,7 +1846,7 @@ HcclResult hrtNotifyDestroy(rtNotify_t notify)
 #endif
 }
 
-HcclResult hrtNotifyRecord(rtNotify_t notify, rtStream_t stream)
+HcclResult hrtNotifyRecord([[maybe_unused]] rtNotify_t notify, [[maybe_unused]] rtStream_t stream)
 {
 #ifndef HCCD
     u32 streamId = 0;
@@ -1847,7 +1863,8 @@ HcclResult hrtNotifyRecord(rtNotify_t notify, rtStream_t stream)
 #endif
 }
 
-HcclResult hrtNotifyWaitWithTimeOut(rtNotify_t notify, rtStream_t stream, uint32_t timeOut)
+HcclResult hrtNotifyWaitWithTimeOut(
+    [[maybe_unused]] rtNotify_t notify, [[maybe_unused]] rtStream_t stream, [[maybe_unused]] uint32_t timeOut)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
@@ -1870,7 +1887,7 @@ HcclResult hrtNotifyWaitWithTimeOut(rtNotify_t notify, rtStream_t stream, uint32
 #endif
 }
 
-HcclResult hrtNotifyReset(aclrtNotify notify)
+HcclResult hrtNotifyReset([[maybe_unused]] aclrtNotify notify)
 {
 #ifndef HCCD
     HCCL_INFO("hrtNotifyReset notify[%p]", notify);
@@ -1886,7 +1903,7 @@ HcclResult hrtNotifyReset(aclrtNotify notify)
 
 #if T_DESC("EnableP2P", true)
 
-HcclResult hrtEnableP2P(u32 deviceLogicId, u32 devicePhyId)
+HcclResult hrtEnableP2P([[maybe_unused]] u32 deviceLogicId, [[maybe_unused]] u32 devicePhyId)
 {
 #ifndef HCCD
     rtError_t ret = rtEnableP2P(deviceLogicId, devicePhyId, 0);
@@ -1908,7 +1925,7 @@ HcclResult hrtEnableP2P(u32 deviceLogicId, u32 devicePhyId)
 #endif
 }
 
-HcclResult hrtDisableP2P(u32 deviceLogicId, u32 devicePhyId)
+HcclResult hrtDisableP2P([[maybe_unused]] u32 deviceLogicId, [[maybe_unused]] u32 devicePhyId)
 {
 #ifndef HCCD
     rtError_t ret = rtDisableP2P(deviceLogicId, devicePhyId);
@@ -1929,7 +1946,8 @@ HcclResult hrtDisableP2P(u32 deviceLogicId, u32 devicePhyId)
 #endif
 }
 
-HcclResult hrtGetP2PStatus(u32 deviceLogicId, u32 devicePhyId, uint32_t* status)
+HcclResult
+hrtGetP2PStatus([[maybe_unused]] u32 deviceLogicId, [[maybe_unused]] u32 devicePhyId, [[maybe_unused]] uint32_t* status)
 {
 #ifndef HCCD
     rtError_t ret = rtGetP2PStatus(deviceLogicId, devicePhyId, status);
@@ -1960,7 +1978,7 @@ s32 GetMsTimeFromExecTimeout(s32 execTimeOut)
     return static_cast<s32>(timeOutMs & (0x7FFFFFFF));
 }
 
-HcclResult hcclStreamSynchronize(HcclRtStream stream, s32 execTimeOut)
+HcclResult hcclStreamSynchronize([[maybe_unused]] HcclRtStream stream, [[maybe_unused]] s32 execTimeOut)
 {
 #ifndef HCCD
     CHK_PTR_NULL(stream);
@@ -1979,7 +1997,8 @@ HcclResult hcclStreamSynchronize(HcclRtStream stream, s32 execTimeOut)
 #endif
 }
 
-HcclResult hrtTaskAbortHandleCallback(aclrtDeviceTaskAbortCallback callback, void* args)
+HcclResult
+hrtTaskAbortHandleCallback([[maybe_unused]] aclrtDeviceTaskAbortCallback callback, [[maybe_unused]] void* args)
 {
 #ifndef HCCD
     aclError ret = aclrtSetDeviceTaskAbortCallback("HCCL", callback, args);
@@ -1997,7 +2016,7 @@ HcclResult hrtTaskAbortHandleCallback(aclrtDeviceTaskAbortCallback callback, voi
 #endif
 }
 
-HcclResult PrintMemoryAttr(const void* memAddr)
+HcclResult PrintMemoryAttr([[maybe_unused]] const void* memAddr)
 {
 #ifndef HCCD
     if (LIKELY(!HcclCheckLogLevel(HCCL_LOG_INFO))) {
@@ -2026,7 +2045,7 @@ HcclResult PrintMemoryAttr(const void* memAddr)
     return HCCL_E_NOT_SUPPORT;
 #endif
 }
-HcclResult hrtRegTaskFailCallbackByModule(rtTaskFailCallback callback)
+HcclResult hrtRegTaskFailCallbackByModule([[maybe_unused]] rtTaskFailCallback callback)
 {
 #ifndef HCCD
     rtError_t ret = rtRegTaskFailCallbackByModule("HCCL", callback);
@@ -2044,7 +2063,7 @@ HcclResult hrtRegTaskFailCallbackByModule(rtTaskFailCallback callback)
 #endif
 }
 
-HcclResult hrtGetStreamAvailableNum(u32& maxStrCount)
+HcclResult hrtGetStreamAvailableNum([[maybe_unused]] u32& maxStrCount)
 {
 #ifndef HCCD
     aclError ret = aclrtGetStreamAvailableNum(&maxStrCount);
@@ -2062,7 +2081,7 @@ HcclResult hrtGetStreamAvailableNum(u32& maxStrCount)
 #endif
 }
 
-HcclResult hrtSubscribeReport(u64 threadId, rtStream_t& stream)
+HcclResult hrtSubscribeReport([[maybe_unused]] u64 threadId, [[maybe_unused]] rtStream_t& stream)
 {
 #ifndef HCCD
     aclError ret = aclrtSubscribeReport(threadId, stream);
@@ -2079,7 +2098,7 @@ HcclResult hrtSubscribeReport(u64 threadId, rtStream_t& stream)
     return HCCL_E_NOT_SUPPORT;
 #endif
 }
-HcclResult hrtUnSubscribeReport(uint64_t threadId, aclrtStream& stream)
+HcclResult hrtUnSubscribeReport([[maybe_unused]] uint64_t threadId, [[maybe_unused]] aclrtStream& stream)
 {
 #ifndef HCCD
     aclError ret = aclrtUnSubscribeReport(threadId, stream);
@@ -2096,7 +2115,7 @@ HcclResult hrtUnSubscribeReport(uint64_t threadId, aclrtStream& stream)
     return HCCL_E_NOT_SUPPORT;
 #endif
 }
-HcclResult hrtProcessReport(s32 timeout)
+HcclResult hrtProcessReport([[maybe_unused]] s32 timeout)
 {
 #ifndef HCCD
     aclError ret = aclrtProcessReport(timeout);
@@ -2136,7 +2155,7 @@ HcclResult hrtDeviceGetBareTgid(s32* pid)
 #endif
 }
 
-HcclResult hrtIpcOpenNotify(aclrtNotify* notify, const u8* name)
+HcclResult hrtIpcOpenNotify([[maybe_unused]] aclrtNotify* notify, [[maybe_unused]] const u8* name)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
@@ -2158,7 +2177,8 @@ HcclResult hrtIpcOpenNotify(aclrtNotify* notify, const u8* name)
 #endif
 }
 
-HcclResult hrtSetIpcNotifyPid(aclrtNotify notify, int32_t pid[], int num)
+HcclResult
+hrtSetIpcNotifyPid([[maybe_unused]] aclrtNotify notify, [[maybe_unused]] int32_t pid[], [[maybe_unused]] int num)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
@@ -2180,7 +2200,9 @@ HcclResult hrtSetIpcNotifyPid(aclrtNotify notify, int32_t pid[], int num)
 #endif
 }
 
-HcclResult hrtSetIpcNotifySuperPodPid(rtNotify_t notify, s32 peerSdid, s32 peerPid[], s32 pidNum)
+HcclResult hrtSetIpcNotifySuperPodPid(
+    [[maybe_unused]] rtNotify_t notify, [[maybe_unused]] s32 peerSdid, [[maybe_unused]] s32 peerPid[],
+    [[maybe_unused]] s32 pidNum)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
@@ -2214,7 +2236,7 @@ HcclResult hrtSetIpcNotifySuperPodPid(rtNotify_t notify, s32 peerSdid, s32 peerP
 #endif
 }
 
-HcclResult hrtCtxGetOverflowAddr(void** overflowAddr)
+HcclResult hrtCtxGetOverflowAddr([[maybe_unused]] void** overflowAddr)
 {
 #ifndef HCCD
     CHK_PTR_NULL(overflowAddr);
@@ -2236,8 +2258,9 @@ HcclResult hrtCtxGetOverflowAddr(void** overflowAddr)
 }
 
 HcclResult hrtReduceAsync(
-    void* dst, uint64_t destMax, const void* src, uint64_t count, aclrtReduceKind kind, aclDataType type,
-    aclrtStream stream)
+    [[maybe_unused]] void* dst, [[maybe_unused]] uint64_t destMax, [[maybe_unused]] const void* src,
+    [[maybe_unused]] uint64_t count, [[maybe_unused]] aclrtReduceKind kind, [[maybe_unused]] aclDataType type,
+    [[maybe_unused]] aclrtStream stream)
 {
 #ifndef HCCD
     CHK_PTR_NULL(dst);
@@ -2263,7 +2286,9 @@ HcclResult hrtReduceAsync(
 #endif
 }
 
-HcclResult hrtCallbackLaunch(aclrtCallback callBackFunc, void* fnData, aclrtStream stream, bool isBlock)
+HcclResult hrtCallbackLaunch(
+    [[maybe_unused]] aclrtCallback callBackFunc, [[maybe_unused]] void* fnData, [[maybe_unused]] aclrtStream stream,
+    [[maybe_unused]] bool isBlock)
 {
 #ifndef HCCD
     CHK_PTR_NULL(fnData);
@@ -2280,7 +2305,7 @@ HcclResult hrtCallbackLaunch(aclrtCallback callBackFunc, void* fnData, aclrtStre
 #endif
 }
 
-HcclResult hrtRDMASend(u32 qpn, u32 wqe_index, rtStream_t stream)
+HcclResult hrtRDMASend([[maybe_unused]] u32 qpn, [[maybe_unused]] u32 wqe_index, [[maybe_unused]] rtStream_t stream)
 {
 #ifndef HCCD
     rtError_t ret = rtRDMASend(qpn, wqe_index, stream);
@@ -2299,7 +2324,8 @@ HcclResult hrtRDMASend(u32 qpn, u32 wqe_index, rtStream_t stream)
 #endif
 }
 
-HcclResult hrtIpcSetNotifyName(aclrtNotify notify, u8* name, uint32_t len)
+HcclResult
+hrtIpcSetNotifyName([[maybe_unused]] aclrtNotify notify, [[maybe_unused]] u8* name, [[maybe_unused]] uint32_t len)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
@@ -2321,7 +2347,7 @@ HcclResult hrtIpcSetNotifyName(aclrtNotify notify, u8* name, uint32_t len)
 #endif
 }
 
-HcclResult hrtStreamDestroy(rtStream_t stream)
+HcclResult hrtStreamDestroy([[maybe_unused]] rtStream_t stream)
 {
 #ifndef HCCD
     CHK_PTR_NULL(stream);
@@ -2346,7 +2372,7 @@ HcclResult hrtStreamDestroy(rtStream_t stream)
 #endif
 }
 
-HcclResult hrtStreamCreate(aclrtStream* stream)
+HcclResult hrtStreamCreate([[maybe_unused]] aclrtStream* stream)
 {
 #ifndef HCCD
     CHK_PTR_NULL(stream);
@@ -2377,7 +2403,8 @@ HcclResult hrtStreamCreate(aclrtStream* stream)
 #endif
 }
 
-HcclResult hrtStreamCreateWithFlags(aclrtStream* stream, int32_t priority, uint32_t flags)
+HcclResult hrtStreamCreateWithFlags(
+    [[maybe_unused]] aclrtStream* stream, [[maybe_unused]] int32_t priority, [[maybe_unused]] uint32_t flags)
 {
 #ifndef HCCD
     CHK_PTR_NULL(stream);
@@ -2409,7 +2436,7 @@ HcclResult hrtStreamCreateWithFlags(aclrtStream* stream, int32_t priority, uint3
 #endif
 }
 
-HcclResult hrtStreamSetMode(HcclRtStream stream, const uint64_t stmMode)
+HcclResult hrtStreamSetMode([[maybe_unused]] HcclRtStream stream, [[maybe_unused]] const uint64_t stmMode)
 {
 #ifndef HCCD
     CHK_PTR_NULL(stream);
@@ -2435,7 +2462,7 @@ HcclResult hrtStreamSetMode(HcclRtStream stream, const uint64_t stmMode)
 #endif
 }
 
-HcclResult hrtStreamGetMode(HcclRtStream const stream, uint64_t* const stmMode)
+HcclResult hrtStreamGetMode([[maybe_unused]] HcclRtStream const stream, [[maybe_unused]] uint64_t* const stmMode)
 {
 #ifndef HCCD
     CHK_PTR_NULL(stream);
@@ -2529,7 +2556,7 @@ HcclResult hrtRDMADBSend(uint32_t dbindex, uint64_t dbinfo, rtStream_t stream)
 #endif
 }
 
-HcclResult hrtSetLocalDeviceSatMode(aclrtFloatOverflowMode floatOverflowMode)
+HcclResult hrtSetLocalDeviceSatMode([[maybe_unused]] aclrtFloatOverflowMode floatOverflowMode)
 {
 #ifdef HCCD
     g_deviceSatMode = floatOverflowMode;
@@ -2554,7 +2581,7 @@ HcclResult hrtGetDeviceSatMode(aclrtFloatOverflowMode* floatOverflowMode)
 #endif
 }
 
-HcclResult hrtNotifyGetAddr(HcclRtNotify signal, u64* notifyAddr)
+HcclResult hrtNotifyGetAddr([[maybe_unused]] HcclRtNotify signal, [[maybe_unused]] u64* notifyAddr)
 {
 #ifndef HCCD
     uint64_t* const addr = reinterpret_cast<uint64_t*>(notifyAddr);
@@ -2568,7 +2595,7 @@ HcclResult hrtNotifyGetAddr(HcclRtNotify signal, u64* notifyAddr)
 #endif
 }
 
-HcclResult hrtGetNotifyID(HcclRtNotify signal, u32* notifyID)
+HcclResult hrtGetNotifyID([[maybe_unused]] HcclRtNotify signal, [[maybe_unused]] u32* notifyID)
 {
 #ifndef HCCD
     CHK_PTR_NULL(signal);
@@ -2583,8 +2610,9 @@ HcclResult hrtGetNotifyID(HcclRtNotify signal, u32* notifyID)
 #endif
 }
 
-HcclResult
-hrtGetDeviceInfo(u32 deviceId, HcclRtDeviceModuleType hcclModuleType, HcclRtDeviceInfoType hcclInfoType, s64& val)
+HcclResult hrtGetDeviceInfo(
+    [[maybe_unused]] u32 deviceId, [[maybe_unused]] HcclRtDeviceModuleType hcclModuleType,
+    [[maybe_unused]] HcclRtDeviceInfoType hcclInfoType, [[maybe_unused]] s64& val)
 {
 #ifndef HCCD
     static const std::map<HcclRtDeviceInfoType, aclrtDevAttr> systemInfoTypeMap = {
@@ -2618,7 +2646,7 @@ hrtGetDeviceInfo(u32 deviceId, HcclRtDeviceModuleType hcclModuleType, HcclRtDevi
 #endif
 }
 
-HcclResult hrtGetRdmaDoorbellAddr(u32 dbIndex, u64& dbAddr)
+HcclResult hrtGetRdmaDoorbellAddr([[maybe_unused]] u32 dbIndex, [[maybe_unused]] u64& dbAddr)
 {
 #ifndef HCCD
     s32 devLogID = 0;
@@ -2679,7 +2707,9 @@ HcclResult hrtGetRdmaDoorbellAddr(u32 dbIndex, u64& dbAddr)
 #endif
 }
 
-HcclResult hrtGetDevArgsAddr(rtStream_t stm, rtArgsEx_t* argsInfo, void** devArgsAddr, void** argsHandle)
+HcclResult hrtGetDevArgsAddr(
+    [[maybe_unused]] rtStream_t stm, [[maybe_unused]] rtArgsEx_t* argsInfo, [[maybe_unused]] void** devArgsAddr,
+    [[maybe_unused]] void** argsHandle)
 {
 #ifndef HCCD
     rtError_t ret = rtGetDevArgsAddr(stm, argsInfo, devArgsAddr, argsHandle);
@@ -2691,7 +2721,7 @@ HcclResult hrtGetDevArgsAddr(rtStream_t stm, rtArgsEx_t* argsInfo, void** devArg
 #endif
 }
 
-HcclResult hrtMemSet(void* dst, uint64_t destMax, uint64_t count)
+HcclResult hrtMemSet([[maybe_unused]] void* dst, [[maybe_unused]] uint64_t destMax, [[maybe_unused]] uint64_t count)
 {
 #ifndef HCCD
     // 参数有效性检查
@@ -2722,7 +2752,7 @@ HcclResult hrtMemSet(void* dst, uint64_t destMax, uint64_t count)
 #endif
 }
 
-HcclResult hrtEventCreateWithFlag(aclrtEvent* evt)
+HcclResult hrtEventCreateWithFlag([[maybe_unused]] aclrtEvent* evt)
 {
 #ifndef HCCD
     CHK_PTR_NULL(evt);
@@ -2743,7 +2773,7 @@ HcclResult hrtEventCreateWithFlag(aclrtEvent* evt)
 #endif
 }
 
-HcclResult hrtNotifyCreateWithFlag(int32_t deviceId, aclrtNotify* notify)
+HcclResult hrtNotifyCreateWithFlag([[maybe_unused]] int32_t deviceId, [[maybe_unused]] aclrtNotify* notify)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
@@ -2768,7 +2798,8 @@ HcclResult hrtNotifyCreateWithFlag(int32_t deviceId, aclrtNotify* notify)
 #endif
 }
 
-HcclResult hrtIpcOpenNotifyWithFlag(rtNotify_t* notify, const u8* name, uint32_t flags)
+HcclResult hrtIpcOpenNotifyWithFlag(
+    [[maybe_unused]] rtNotify_t* notify, [[maybe_unused]] const u8* name, [[maybe_unused]] uint32_t flags)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
@@ -2791,7 +2822,7 @@ HcclResult hrtIpcOpenNotifyWithFlag(rtNotify_t* notify, const u8* name, uint32_t
 #endif
 }
 
-HcclResult hrtNotifyImportByKey(rtNotify_t* notify, const u8* name)
+HcclResult hrtNotifyImportByKey([[maybe_unused]] rtNotify_t* notify, [[maybe_unused]] const u8* name)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
@@ -2816,7 +2847,8 @@ HcclResult hrtNotifyImportByKey(rtNotify_t* notify, const u8* name)
 #endif
 }
 
-HcclResult hrtNotifyGetPhyInfo(rtNotify_t notify, uint32_t* phyDevId, uint32_t* tsId)
+HcclResult hrtNotifyGetPhyInfo(
+    [[maybe_unused]] rtNotify_t notify, [[maybe_unused]] uint32_t* phyDevId, [[maybe_unused]] uint32_t* tsId)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
@@ -2840,7 +2872,7 @@ HcclResult hrtNotifyGetPhyInfo(rtNotify_t notify, uint32_t* phyDevId, uint32_t* 
 #endif
 }
 
-HcclResult hrtNotifyGetPhyInfoExt(rtNotify_t notify, rtNotifyPhyInfo* notifyInfo)
+HcclResult hrtNotifyGetPhyInfoExt([[maybe_unused]] rtNotify_t notify, [[maybe_unused]] rtNotifyPhyInfo* notifyInfo)
 {
 #ifndef HCCD
     CHK_PTR_NULL(notify);
@@ -2865,7 +2897,7 @@ HcclResult hrtNotifyGetPhyInfoExt(rtNotify_t notify, rtNotifyPhyInfo* notifyInfo
 #endif
 }
 
-HcclResult hrtGetEventID(rtEvent_t event, uint32_t* eventId)
+HcclResult hrtGetEventID([[maybe_unused]] rtEvent_t event, [[maybe_unused]] uint32_t* eventId)
 {
 #ifndef HCCD
     CHK_PTR_NULL(event);
@@ -2887,7 +2919,7 @@ HcclResult hrtGetEventID(rtEvent_t event, uint32_t* eventId)
 #endif
 }
 
-HcclResult hrtStreamGetSqid(const rtStream_t stm, uint32_t* sqId)
+HcclResult hrtStreamGetSqid([[maybe_unused]] const rtStream_t stm, [[maybe_unused]] uint32_t* sqId)
 {
 #ifndef HCCD
     CHK_PTR_NULL(stm);
@@ -2909,7 +2941,8 @@ HcclResult hrtStreamGetSqid(const rtStream_t stm, uint32_t* sqId)
 #endif
 }
 
-HcclResult hrtStreamGetCqid(const rtStream_t stm, uint32_t* cqId, uint32_t* logicCqId)
+HcclResult hrtStreamGetCqid(
+    [[maybe_unused]] const rtStream_t stm, [[maybe_unused]] uint32_t* cqId, [[maybe_unused]] uint32_t* logicCqId)
 {
 #ifndef HCCD
     CHK_PTR_NULL(stm);
@@ -2949,7 +2982,7 @@ HcclResult hrtResourceClean()
 #endif
 }
 
-HcclResult hrtGetHccsPortNum(u32 deviceLogicId, s32& num)
+HcclResult hrtGetHccsPortNum([[maybe_unused]] u32 deviceLogicId, [[maybe_unused]] s32& num)
 {
 #ifndef HCCD
     constexpr s32 HCCS_PORT_NUM_UNKNOWN = -1;
@@ -3008,7 +3041,7 @@ HcclResult hrtGetHccsPortNum(u32 deviceLogicId, s32& num)
 #endif
 }
 
-HcclResult hrtThreadExchangeCaptureMode(aclmdlRICaptureMode* mode)
+HcclResult hrtThreadExchangeCaptureMode([[maybe_unused]] aclmdlRICaptureMode* mode)
 {
 #ifndef HCCD
     HCCL_DEBUG("Call aclmdlRICaptureThreadExchangeMode mode after: %d", *mode);
@@ -3033,7 +3066,7 @@ HcclResult hrtThreadExchangeCaptureMode(aclmdlRICaptureMode* mode)
 #endif
 }
 
-HcclResult hrtCacheLastTaskExtendInfo(const char* tag, size_t tagLen)
+HcclResult hrtCacheLastTaskExtendInfo([[maybe_unused]] const char* tag, [[maybe_unused]] size_t tagLen)
 {
 #ifndef HCCD
     auto funcPtr = (aclError(*)(const char*, size_t))g_dlAcl.Handle<ACL_RT_CACHE_LAST_TASK_EXTEND_INFO>();
@@ -3063,7 +3096,9 @@ __attribute__((constructor)) void CallBackInitRts()
         g_deviceLogicId, g_devicePhyId);
 }
 
-HcclResult hrtMemcpyEx(void* dst, uint64_t destMax, void* src, uint64_t count, rtMemcpyKind_t kind)
+HcclResult hrtMemcpyEx(
+    [[maybe_unused]] void* dst, [[maybe_unused]] uint64_t destMax, [[maybe_unused]] void* src,
+    [[maybe_unused]] uint64_t count, [[maybe_unused]] rtMemcpyKind_t kind)
 {
 #ifndef HCCD
     CHK_PTR_NULL(dst);

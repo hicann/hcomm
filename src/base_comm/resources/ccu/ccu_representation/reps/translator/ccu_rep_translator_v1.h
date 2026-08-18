@@ -66,7 +66,7 @@ namespace CcuRep {
         Variable var[XN_NUM];
         Address addr[GSA_NUM];
         CompletedEvent signal[CKE_NUM]; // 声明为CompletedEvent，使用离散cke
-        TransDep transDep{0};
+        TransDep transDep{};
         CcuVersion ccuVersion{CcuVersion::CCU_INVALID};
     };
 }; // namespace CcuRep

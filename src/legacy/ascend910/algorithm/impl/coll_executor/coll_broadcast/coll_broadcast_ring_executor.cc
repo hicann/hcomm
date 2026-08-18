@@ -102,7 +102,8 @@ HcclResult CollBroadcastRingExecutor::KernelRun(const OpParam& param, ExecMem& e
     }
 
     HcomCollOpInfo* scatterOpInfoPtr = nullptr;
-    HcomCollOpInfo scatterOpInfo = {"", execMem.inputPtr, nullptr, execMem.count, param.DataDes.dataType, param.root};
+    HcomCollOpInfo scatterOpInfo
+        = {"", execMem.inputPtr, nullptr, execMem.count, param.DataDes.dataType, param.root, param.reduceType, 0};
     if (DMAReduceFlag_) {
         scatterOpInfoPtr = &scatterOpInfo;
     }
@@ -207,7 +208,7 @@ HcclResult CollBroadcastRingExecutor::KernelRun(const OpParam& param, ExecMem& e
     // step3: 节点内的allgatherring
     HcomCollOpInfo* allgatherOpInfoPtr = nullptr;
     HcomCollOpInfo allgatherOpInfo
-        = {"", nullptr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, HCCL_REDUCE_RESERVED};
+        = {"", nullptr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, HCCL_REDUCE_RESERVED, 0};
     if (DMAReduceFlag_) {
         allgatherOpInfoPtr = &allgatherOpInfo;
     }

@@ -540,7 +540,8 @@ HcclResult DispatcherPub::MemcpyAsyncWithoutCheckKind(
     return HCCL_SUCCESS;
 }
 
-HcclResult DispatcherPub::DevMemMalloc(void* stream, void*& devMem1, void*& devMem2)
+HcclResult DispatcherPub::DevMemMalloc(
+    [[maybe_unused]] void* stream, [[maybe_unused]] void*& devMem1, [[maybe_unused]] void*& devMem2)
 {
 #ifndef HCCD
     int32_t streamId;
@@ -565,8 +566,10 @@ HcclResult DispatcherPub::DevMemMalloc(void* stream, void*& devMem1, void*& devM
 }
 
 HcclResult DispatcherPub::JudgeIsTail(
-    const void* src1, const void* src2, const void* dst, u64 count, const HcclDataType dataType, u64& headCount,
-    u64& tailCount, void*& tailSrc1, void*& tailSrc2, void*& tailDst)
+    [[maybe_unused]] const void* src1, [[maybe_unused]] const void* src2, [[maybe_unused]] const void* dst,
+    [[maybe_unused]] u64 count, [[maybe_unused]] const HcclDataType dataType, [[maybe_unused]] u64& headCount,
+    [[maybe_unused]] u64& tailCount, [[maybe_unused]] void*& tailSrc1, [[maybe_unused]] void*& tailSrc2,
+    [[maybe_unused]] void*& tailDst)
 {
 #ifndef HCCD
     CHK_PRT_RET(dataType >= HCCL_DATA_TYPE_RESERVED, HCCL_ERROR("dataType is failed."), HCCL_E_PARA);
@@ -587,8 +590,9 @@ HcclResult DispatcherPub::JudgeIsTail(
 }
 
 HcclResult DispatcherPub::DealTbeReduce(
-    const void* src1, const void* src2, u64 count, const HcclDataType datatype, HcclReduceOp redOp, Stream& stream,
-    const void* dst)
+    [[maybe_unused]] const void* src1, [[maybe_unused]] const void* src2, [[maybe_unused]] u64 count,
+    [[maybe_unused]] const HcclDataType datatype, [[maybe_unused]] HcclReduceOp redOp, [[maybe_unused]] Stream& stream,
+    [[maybe_unused]] const void* dst)
 {
 #ifndef HCCD
     HcclResult ret = HCCL_SUCCESS;
@@ -685,7 +689,7 @@ HcclResult DispatcherPub::TbeReduceAsync(
     return HCCL_SUCCESS;
 }
 
-HcclResult DispatcherPub::SetGlobalWorkSpace(std::vector<void*>& globalWorkSpaceAddr)
+HcclResult DispatcherPub::SetGlobalWorkSpace([[maybe_unused]] std::vector<void*>& globalWorkSpaceAddr)
 {
 #ifndef HCCD
     DevType devType;
@@ -788,16 +792,17 @@ HcclResult DispatcherPub::ReduceAsync(
 }
 
 HcclResult DispatcherPub::SignalRecord(
-    hccl::DeviceMem& dst, hccl::DeviceMem& src, hccl::Stream& stream, u32 remoteUserRank, hccl::LinkType inLinkType,
-    u32 notifyId)
+    [[maybe_unused]] hccl::DeviceMem& dst, [[maybe_unused]] hccl::DeviceMem& src, [[maybe_unused]] hccl::Stream& stream,
+    [[maybe_unused]] u32 remoteUserRank, [[maybe_unused]] hccl::LinkType inLinkType, [[maybe_unused]] u32 notifyId)
 {
     HCCL_ERROR("does not support this interface.");
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult DispatcherPub::RdmaRecord(
-    u32 dbindex, u64 dbinfo, const struct SendWr& wr, hccl::Stream& stream, RdmaType rdmaType, u32 userRank, u64 offset,
-    u32 notifyId)
+    [[maybe_unused]] u32 dbindex, [[maybe_unused]] u64 dbinfo, [[maybe_unused]] const struct SendWr& wr,
+    [[maybe_unused]] hccl::Stream& stream, [[maybe_unused]] RdmaType rdmaType, [[maybe_unused]] u32 userRank,
+    [[maybe_unused]] u64 offset, [[maybe_unused]] u32 notifyId)
 {
     HCCL_ERROR("does not support this interface.");
     return HCCL_E_NOT_SUPPORT;
@@ -1293,7 +1298,8 @@ HcclResult DispatcherPub::RdmaSend(
 
 // opbase 模式下对外接口，用于发送notify 信息
 HcclResult DispatcherPub::RdmaSend(
-    u32 dbindex, u64 dbinfo, const struct SendWr& wr, hccl::Stream& stream, u32 userRank, u64 offset, bool isCapture)
+    u32 dbindex, u64 dbinfo, const struct SendWr& wr, hccl::Stream& stream, u32 userRank, u64 offset,
+    [[maybe_unused]] bool isCapture)
 {
     CHK_RET(RdmaSend(
         dbindex, dbinfo, wr, stream.ptr(), RdmaType::RDMA_SEND_NOTIFY, userRank, offset, stream.IsMainStream()));
@@ -1303,7 +1309,8 @@ HcclResult DispatcherPub::RdmaSend(
 
 // opbase 模式下对外接口，用于发送payload 信息
 HcclResult DispatcherPub::RdmaSend(
-    u32 dbindex, u64 dbinfo, const struct SendWr& wr, hccl::Stream& stream, u32 remoteUserRank, bool isCapture)
+    u32 dbindex, u64 dbinfo, const struct SendWr& wr, hccl::Stream& stream, u32 remoteUserRank,
+    [[maybe_unused]] bool isCapture)
 {
     u64 offset = 0;
     CHK_RET(RdmaSend(
@@ -1312,14 +1319,17 @@ HcclResult DispatcherPub::RdmaSend(
     return HCCL_SUCCESS;
 }
 
-HcclResult DispatcherPub::RdmaSend(u32 dbindex, u64 dbinfo, hccl::Stream& stream, RdmaTaskInfo& taskInfo)
+HcclResult DispatcherPub::RdmaSend(
+    [[maybe_unused]] u32 dbindex, [[maybe_unused]] u64 dbinfo, [[maybe_unused]] hccl::Stream& stream,
+    [[maybe_unused]] RdmaTaskInfo& taskInfo)
 {
     HCCL_ERROR("does not support this interface."); // host暂不使用此接口，待后续归一
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult DispatcherPub::SignalRecord(
-    HcclRtNotify signal, Stream& stream, u32 userRank, u64 offset, s32 stage, bool inchip, u64 signalAddr, u32 notifyId)
+    HcclRtNotify signal, Stream& stream, u32 userRank, u64 offset, s32 stage, [[maybe_unused]] bool inchip,
+    [[maybe_unused]] u64 signalAddr, [[maybe_unused]] u32 notifyId)
 {
     CHK_RET(SignalRecord(signal, stream.ptr(), userRank, offset, stage, stream.IsMainStream()));
 
@@ -1327,8 +1337,8 @@ HcclResult DispatcherPub::SignalRecord(
 }
 
 HcclResult DispatcherPub::SignalWait(
-    HcclRtNotify signal, Stream& stream, u32 userRank, u32 remoteUserRank, s32 stage, bool inchip, u32 notifyId,
-    u32 timeOut)
+    HcclRtNotify signal, Stream& stream, u32 userRank, u32 remoteUserRank, s32 stage, [[maybe_unused]] bool inchip,
+    u32 notifyId, u32 timeOut)
 {
     (void)notifyId;
     CHK_RET(SignalWait(signal, stream.ptr(), userRank, remoteUserRank, stage, timeOut, stream.IsMainStream()));
@@ -1336,13 +1346,19 @@ HcclResult DispatcherPub::SignalWait(
     return HCCL_SUCCESS;
 }
 
-HcclResult DispatcherPub::AddRetryPreamble(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult DispatcherPub::AddRetryPreamble([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
-HcclResult DispatcherPub::WaitValue(hccl::Stream& stream, u64 waitAddr, u64 valueAddr, bool reset)
+HcclResult DispatcherPub::WaitValue(
+    [[maybe_unused]] hccl::Stream& stream, [[maybe_unused]] u64 waitAddr, [[maybe_unused]] u64 valueAddr,
+    [[maybe_unused]] bool reset)
 {
     return HCCL_SUCCESS;
 }
-HcclResult DispatcherPub::WriteValue(hccl::Stream& stream, u64 writeAddr, u64 valueAddr) { return HCCL_SUCCESS; }
+HcclResult DispatcherPub::WriteValue(
+    [[maybe_unused]] hccl::Stream& stream, [[maybe_unused]] u64 writeAddr, [[maybe_unused]] u64 valueAddr)
+{
+    return HCCL_SUCCESS;
+}
 
 bool DispatcherPub::IsProfSubscribeAdditionInfo()
 {
@@ -1353,7 +1369,7 @@ bool DispatcherPub::IsProfSubscribeAdditionInfo()
     return false;
 }
 
-HcclResult DispatcherPub::StreamSync(Stream& stream)
+HcclResult DispatcherPub::StreamSync([[maybe_unused]] Stream& stream)
 {
     HCCL_INFO("StreamSync is not supported");
     return HCCL_SUCCESS;

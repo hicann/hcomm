@@ -27,7 +27,7 @@ HcclResult DfxRegisterProfCallBack()
     return HCCL_SUCCESS;
 }
 
-int32_t DfxDeviceCommandHandle(uint32_t profType, void* data, uint32_t len)
+int32_t DfxDeviceCommandHandle([[maybe_unused]] uint32_t profType, void* data, uint32_t len)
 {
     HCCL_INFO("[%s] start", __func__);
     (void)len;

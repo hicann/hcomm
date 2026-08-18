@@ -90,8 +90,6 @@ target_include_directories(net_co PRIVATE
 
 target_compile_options(net_co PRIVATE
 	-Werror
-    -Wno-unused-parameter
-    -Wno-missing-field-initializers
     -fno-common
 	-fno-strict-aliasing
     $<$<CONFIG:Debug>:-Og -g>

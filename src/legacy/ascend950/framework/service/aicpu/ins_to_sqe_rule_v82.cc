@@ -706,7 +706,9 @@ void Interpret(const InsStreamSync& insStreamSync, const StreamLite& stream, Res
     } while (head != tail);
 }
 
-void Interpret(const InsPreStreamSync& insPreStreamSync, const StreamLite& stream, ResMgrFetcher* resMgrFetcher)
+void Interpret(
+    [[maybe_unused]] const InsPreStreamSync& insPreStreamSync, const StreamLite& stream,
+    [[maybe_unused]] ResMgrFetcher* resMgrFetcher)
 {
     HcclResult ret = stream.GetRtsq()->SetPreStreamSyncReady();
     stream.GetRtsq()->LaunchTask();

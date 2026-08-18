@@ -58,7 +58,7 @@ DevAicpuTsHccsChannel::SetTransportMachinePara(hccl::MachinePara& machinePara, c
 }
 
 HcclResult DevAicpuTsHccsChannel::Create(
-    const void* blob, u64 blobBytes, const HcommDeviceInfo& deviceInfo, ChannelHandle& outHandle)
+    const void* blob, u64 blobBytes, [[maybe_unused]] const HcommDeviceInfo& deviceInfo, ChannelHandle& outHandle)
 {
     CHK_PTR_NULL(blob);
     if (blobBytes < sizeof(HcclChannelHccsRes)) {

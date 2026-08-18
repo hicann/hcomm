@@ -75,7 +75,7 @@ HcclResult CollReduceScatterVMeshOpbasePipelineExecutor::CalcTransportMemType(
     return HCCL_SUCCESS;
 }
 
-bool CollReduceScatterVMeshOpbasePipelineExecutor::IsHugeData(const u64 curSize, const OpParam& param)
+bool CollReduceScatterVMeshOpbasePipelineExecutor::IsHugeData(const u64 curSize, [[maybe_unused]] const OpParam& param)
 {
     bool hugeData = curSize > RDMA_SEND_MAX_SIZE || curSize > SDMA_SEND_MAX_SIZE;
     return hugeData;
@@ -170,7 +170,7 @@ HcclResult CollReduceScatterVMeshOpbasePipelineExecutor::KernelRun(const OpParam
         = AlgTemplateRegistry::Instance().GetAlgTemplate(TemplateType::TEMPLATE_REDUCESCATTER_V_PIPELINE, dispatcher_);
     CHK_SMART_PTR_NULL(tempAlg);
 
-    HcomCollOpInfo opInfo = {"", execMem.inputPtr, execMem.outputPtr, 0, dataType, param.root, param.reduceType};
+    HcomCollOpInfo opInfo = {"", execMem.inputPtr, execMem.outputPtr, 0, dataType, param.root, param.reduceType, 0};
 
     Stream stream = param.stream;
     CHK_RET(tempAlg->Prepare(

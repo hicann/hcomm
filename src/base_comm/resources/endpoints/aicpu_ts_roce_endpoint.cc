@@ -315,8 +315,8 @@ HcclResult AicpuTsRoceEndpoint::AddListenSocketWhiteList(uint32_t port, const st
     return it->second.socket->AddWhiteList(mutableCopy);
 }
 
-HcclResult
-AicpuTsRoceEndpoint::GetSocket(uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected)
+HcclResult AicpuTsRoceEndpoint::GetSocket(
+    [[maybe_unused]] uint32_t port, const std::string& tag, std::shared_ptr<hccl::HcclSocket>& outConnected)
 {
     EXCEPTION_CATCH(
         (outConnected = std::make_shared<hccl::HcclSocket>(

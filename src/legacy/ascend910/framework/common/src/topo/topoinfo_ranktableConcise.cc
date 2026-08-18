@@ -833,7 +833,7 @@ HcclResult TopoinfoRanktableConcise::VerifyBackupDeviceIpAndPort(std::vector<Ran
 }
 
 HcclResult TopoinfoRanktableConcise::GetSingleSuperDeviceId(
-    const nlohmann::json& deviceListObj, u32 objIndex, RankTable_t& clusterInfo, RankInfo_t& rankinfo)
+    const nlohmann::json& deviceListObj, u32 objIndex, [[maybe_unused]] RankTable_t& clusterInfo, RankInfo_t& rankinfo)
 {
     // 获取super_device_id
     HcclResult ret;

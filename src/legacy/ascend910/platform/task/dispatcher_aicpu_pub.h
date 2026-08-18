@@ -160,7 +160,7 @@ public:
     }
 
 public:
-    dfx::DfxTimeOutConfig dfxTimeOutConfig_ = {0};
+    dfx::DfxTimeOutConfig dfxTimeOutConfig_ = {};
     uint32_t opRingBufferIdx_ = 0;
 
 private:

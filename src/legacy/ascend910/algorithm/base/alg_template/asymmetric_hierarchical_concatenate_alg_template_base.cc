@@ -24,7 +24,7 @@ AHCAlgTemplateBase::AHCAlgTemplateBase(const HcclDispatcher dispatcher)
 
 AHCAlgTemplateBase::~AHCAlgTemplateBase() {}
 
-HcclResult AHCAlgTemplateBase::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo)
+HcclResult AHCAlgTemplateBase::Prepare(u64 reduceAttrBitMap, [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     reduceAttr_ = reduceAttrBitMap;
     return HCCL_SUCCESS;
@@ -42,7 +42,7 @@ HcclResult AHCAlgTemplateBase::Prepare(
     return HCCL_SUCCESS;
 }
 
-HcclResult AHCAlgTemplateBase::DisposeSubGroups(const u32 rank) { return HCCL_SUCCESS; }
+HcclResult AHCAlgTemplateBase::DisposeSubGroups([[maybe_unused]] const u32 rank) { return HCCL_SUCCESS; }
 
 HcclResult AHCAlgTemplateBase::CommAHCInfoInit() { return HCCL_SUCCESS; }
 

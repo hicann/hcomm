@@ -184,7 +184,7 @@ HcclResult CollReduceScatterVMeshOpbaseExecutor::RunReduceScattervLevel0SingleMo
     }
 
     HcomCollOpInfo* opInfoPtr = nullptr;
-    HcomCollOpInfo opInfo = {"", execMem.inputPtr, execMem.outputPtr, 0, dataType, param.root, param.reduceType};
+    HcomCollOpInfo opInfo = {"", execMem.inputPtr, execMem.outputPtr, 0, dataType, param.root, param.reduceType, 0};
     if (DMAReduceFlag_) {
         opInfoPtr = &opInfo;
     }
@@ -234,7 +234,7 @@ HcclResult CollReduceScatterVMeshOpbaseExecutor::RunReduceScattervLevel0(
     }
 
     HcomCollOpInfo* opInfoPtr = nullptr;
-    HcomCollOpInfo opInfo = {"", execMem.inputPtr, execMem.outputPtr, 0, dataType, param.root, param.reduceType};
+    HcomCollOpInfo opInfo = {"", execMem.inputPtr, execMem.outputPtr, 0, dataType, param.root, param.reduceType, 0};
     if (DMAReduceFlag_) {
         opInfoPtr = &opInfo;
     }

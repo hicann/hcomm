@@ -606,7 +606,7 @@ HcclResult HcclCommAicpu::InitStreamObj(const HcclStreamParam& streamParam, Stre
             "%s StreamId[%d] Restore error group[%s]", __func__, streamParam.streamInfo.streamIds, identifier_.c_str()),
         ret);
 
-    HcclComStreamInfo comStreamInfo = {0};
+    HcclComStreamInfo comStreamInfo = {};
     ret = GetStreamData(streamParam.streamInfo, comStreamInfo, sqHead, sqTail);
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("%s error group[%s]", __func__, identifier_.c_str()), ret);
     stream = Stream(comStreamInfo);
@@ -1186,7 +1186,8 @@ HcclResult HcclCommAicpu::SetTransportRoceQP(
 }
 
 HcclResult HcclCommAicpu::SetTransportRoceNotify(
-    TransportDeviceIbverbsData& transDevIbverbsData, u64& roceNotifyNum, HcclLinkRoceV2* linkRoce, u32 notifyNum)
+    TransportDeviceIbverbsData& transDevIbverbsData, u64& roceNotifyNum, HcclLinkRoceV2* linkRoce,
+    [[maybe_unused]] u32 notifyNum)
 {
     u64 actualNotifyNum = 0;
     if (linkRoce->localNotifyList == 0 || linkRoce->remoteNotifyList == 0) {
@@ -1580,8 +1581,8 @@ HcclResult HcclCommAicpu::GetSdmaLinksByRankAndTag(
 }
 
 HcclResult HcclCommAicpu::CleanRoceResource(
-    const std::string& newTag, AlgResourceResponse& algResResponse, const std::map<u32, bool>& remoteRankPortMap,
-    const OpParam& param)
+    const std::string& newTag, AlgResourceResponse& algResResponse,
+    [[maybe_unused]] const std::map<u32, bool>& remoteRankPortMap, [[maybe_unused]] const OpParam& param)
 {
     HCCL_INFO("[%s] Entry alloc transport group[%s], tag[%s]", __func__, identifier_.c_str(), newTag.c_str());
 
@@ -2340,7 +2341,7 @@ HcclResult HcclCommAicpu::SetAlltoAllInputAndOutPutMem(OpParam& param, AlgResour
 
 HcclResult HcclCommAicpu::CombineReportOpInfo(OpParam& param, bool isRetry, bool isRelay)
 {
-    MsprofAicpuHCCLOPInfo hcclOpInfo{0};
+    MsprofAicpuHCCLOPInfo hcclOpInfo{};
     hcclOpInfo.relay = (isRelay) ? 1 : 0;
     hcclOpInfo.retry = (isRetry) ? 1 : 0;
     hcclOpInfo.dataType = param.DataDes.dataType;

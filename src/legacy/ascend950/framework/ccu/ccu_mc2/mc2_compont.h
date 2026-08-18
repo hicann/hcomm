@@ -80,7 +80,7 @@ private:
     std::vector<u64> dataCounts;
     std::vector<u64> displs;
 
-    HcclCombinOpParam combinOpParam{0};
+    HcclCombinOpParam combinOpParam{};
     bool ccuResourceAlloced{false}; // 标记通信域粒度资源已经申请过了
 };
 } // namespace Hccl

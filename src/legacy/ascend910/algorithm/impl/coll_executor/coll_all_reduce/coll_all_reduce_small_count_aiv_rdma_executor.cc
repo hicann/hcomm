@@ -89,8 +89,8 @@ HcclResult CollAllReduceSmallCountAivRdmaExecutor::CalcLevel1CommInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAllReduceSmallCountAivRdmaExecutor::CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize, HcclCMDType cmdType)
+HcclResult CollAllReduceSmallCountAivRdmaExecutor::CalNumBlocks(
+    u32& numBlocks, u32 rankSize, [[maybe_unused]] u64 dataSize, [[maybe_unused]] HcclCMDType cmdType)
 {
     numBlocks = rankSize; // 默认情况使用rankSize个AIV
     u32 bestNumBlocks = numBlocks;
@@ -140,7 +140,8 @@ HcclResult CollAllReduceSmallCountAivRdmaExecutor::Orchestrate(OpParam& param, A
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAllReduceSmallCountAivRdmaExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& adjInfo)
+HcclResult CollAllReduceSmallCountAivRdmaExecutor::GetAdjInfo(
+    [[maybe_unused]] AlgResourceResponse& algRes, [[maybe_unused]] AdjInfo& adjInfo)
 {
     return HCCL_SUCCESS;
 }

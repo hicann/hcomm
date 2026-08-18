@@ -909,10 +909,19 @@ void BkfDcEnableSpy(BkfDc *dc, void *cookie)
 
 void BkfDcSpyUpdateTuple(void *cookieOfSpy, void *sliceKey, uint16_t tableTypeId, void *tupleKey, void *tupleValOrNull)
 {
+    (void)cookieOfSpy;
+    (void)sliceKey;
+    (void)tableTypeId;
+    (void)tupleKey;
+    (void)tupleValOrNull;
 }
 
 void BkfDcSpyDeleteTuple(void *cookieOfSpy, void *sliceKey, uint16_t tableTypeId, void *tupleKey)
 {
+    (void)cookieOfSpy;
+    (void)sliceKey;
+    (void)tableTypeId;
+    (void)tupleKey;
 }
 
 #ifdef __cplusplus

@@ -84,7 +84,11 @@ bool CollAllReduceMeshOpbasePipelineExecutor::IsHugeData(const u64 curSize)
     return hugeData;
 }
 
-bool CollAllReduceMeshOpbasePipelineExecutor::IsSmallData(const u64 totalSize, const u64 curSize) { return false; }
+bool CollAllReduceMeshOpbasePipelineExecutor::IsSmallData(
+    [[maybe_unused]] const u64 totalSize, [[maybe_unused]] const u64 curSize)
+{
+    return false;
+}
 
 HcclResult CollAllReduceMeshOpbasePipelineExecutor::KernelRun(const OpParam& param, ExecMem& execMem)
 {
@@ -99,8 +103,9 @@ HcclResult CollAllReduceMeshOpbasePipelineExecutor::KernelRun(const OpParam& par
 
     u64 reduceAttr = GetReduceAttr(execMem.inputMem, execMem.outputMem, param.DataDes.dataType, param.reduceType);
 
-    HcomCollOpInfo opInfo = {"",         execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType,
-                             param.root, param.reduceType};
+    HcomCollOpInfo opInfo
+        = {"", execMem.inputPtr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, param.reduceType,
+           0};
 
     std::unique_ptr<AlgTemplateBase> tempAlg;
     tempAlg = AlgTemplateRegistry::Instance().GetAlgTemplate(

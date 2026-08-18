@@ -90,8 +90,8 @@ ScatterNHR::RunAsync(const u32 rank, const u32 rankSize, const std::vector<std::
     return HCCL_SUCCESS;
 }
 
-HcclResult
-ScatterNHR::SdmaRx(LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInfo, const std::vector<LINK>& links)
+HcclResult ScatterNHR::SdmaRx(
+    LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInfo, [[maybe_unused]] const std::vector<LINK>& links)
 {
     if (linkRight != nullptr) {
         CHK_RET(linkRight->TxAck(stream_));
@@ -122,8 +122,8 @@ ScatterNHR::SdmaRx(LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInf
     return HCCL_SUCCESS;
 }
 
-HcclResult
-ScatterNHR::RdmaTxRx(LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInfo, const std::vector<LINK>& links)
+HcclResult ScatterNHR::RdmaTxRx(
+    LINK& linkLeft, LINK& linkRight, InterServerAlgoStep& stepInfo, [[maybe_unused]] const std::vector<LINK>& links)
 {
     HcclResult ret = HCCL_SUCCESS;
 
@@ -334,7 +334,7 @@ ScatterNHR::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector
         LINK linkRight = links[sendTo];
         CHK_SMART_PTR_NULL(linkRight);
 
-        NslbDpAdjInfo adjInfoStep = {0};
+        NslbDpAdjInfo adjInfoStep = {};
         adjInfoStep.dstLocalRankId = linkRight->GetRemoteRank();
         adjInfoStep.phaseId = step + 1;
         adjInfoStep.rev = 0;

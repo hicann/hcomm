@@ -16,7 +16,7 @@ ReduceRing::ReduceRing(const HcclDispatcher dispatcher) : AlgTemplateBase(dispat
 
 ReduceRing::~ReduceRing() {}
 
-HcclResult ReduceRing::Prepare(u64 reduceAttrBitMap, HcomCollOpInfo* opInfo)
+HcclResult ReduceRing::Prepare(u64 reduceAttrBitMap, [[maybe_unused]] HcomCollOpInfo* opInfo)
 {
     reduceAttr_ = reduceAttrBitMap;
     return HCCL_SUCCESS;
@@ -166,7 +166,7 @@ ReduceRing::GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector
     u32 ringNextRank = (rank + 1) % rankSize;
     LINK nslbNext = links[ringNextRank];
 
-    NslbDpAdjInfo adjInfoStep = {0};
+    NslbDpAdjInfo adjInfoStep = {};
     nslbAdjInfo.dstRankNum = 1;
     adjInfoStep.dstLocalRankId = nslbNext->GetRemoteRank();
     adjInfoStep.phaseId = 1;

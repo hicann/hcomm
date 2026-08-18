@@ -23,10 +23,10 @@ static const std::unordered_map<int, std::function<void(bool&)>> captureStatusHa
          isCapture = true;
      }},
     {aclmdlRICaptureStatus::ACL_MODEL_RI_CAPTURE_STATUS_NONE,
-     [](bool& isCapture) {
+     []([[maybe_unused]] bool& isCapture) {
          HCCL_DEBUG("[GetStreamCaptureInfo]Stream capture status NONE.");
      }},
-    {aclmdlRICaptureStatus::ACL_MODEL_RI_CAPTURE_STATUS_INVALIDATED, [](bool& isCapture) {
+    {aclmdlRICaptureStatus::ACL_MODEL_RI_CAPTURE_STATUS_INVALIDATED, []([[maybe_unused]] bool& isCapture) {
          HCCL_ERROR("[GetStreamCaptureInfo]Stream capture status invalidated.");
      }}};
 

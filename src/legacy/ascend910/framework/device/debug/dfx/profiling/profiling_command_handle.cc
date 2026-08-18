@@ -11,7 +11,7 @@
 #include "profiling_manager_device.h"
 #include "profiling_command_handle.h"
 namespace hccl {
-int32_t DeviceCommandHandle(uint32_t profType, void* data, uint32_t len)
+int32_t DeviceCommandHandle([[maybe_unused]] uint32_t profType, void* data, uint32_t len)
 {
     HCCL_INFO("[%s] start", __func__);
     (void)len;

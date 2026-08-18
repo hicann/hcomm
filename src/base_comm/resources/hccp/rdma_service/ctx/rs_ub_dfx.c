@@ -122,6 +122,7 @@ STATIC void RsUdmaSaveCqeErrInfo(uint32_t status, struct RsCtxJettyCb *jettyCb)
 
 STATIC void RsJfcCallbackProcess(struct RsCtxJettyCb *jettyCb, urma_cr_t *cr, urma_jfc_t *jfc)
 {
+    (void)jfc;
     if (cr->status != URMA_CR_SUCCESS) {
         RsUdmaSaveCqeErrInfo(cr->status, jettyCb);
         RsUdmaRetryTimeoutExceptionCheck(&jettyCb->devCb->rscb->sensorNode, cr);

@@ -74,6 +74,8 @@ void BkfAdptTimerFdEventProc(int fd, uint32_t curEvents, void *cookieAttachFd)
 /* 适配Twl_timer -> BKF 注册timer fd回调 */
 uint32_t BkfAdptTwlTimerEpollCtl(void *appHandle, uint32_t cid, int fd, UdfTimerFdParams *timerFdParam)
 {
+    (void)cid;
+    (void)fd;
     if ((appHandle == NULL) || (timerFdParam == NULL)) {
         return 0;
     }

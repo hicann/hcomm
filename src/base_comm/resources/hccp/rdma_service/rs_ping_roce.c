@@ -51,6 +51,8 @@ STATIC bool RsPongRoceCheckFd(struct RsPingCtxCb *pingCb, int fd)
 
 STATIC int RsPingCbGetDevRdevIndex(struct RsPingCtxCb *pingCb, int index)
 {
+    (void)pingCb;
+    (void)index;
 #ifdef CUSTOM_INTERFACE
     struct roce_dev_data rdevData = {0};
     int ret;
@@ -424,6 +426,7 @@ STATIC void RsPingCommonDeinitLocalBuffer(struct RsPingCtxCb *pingCb)
 
 STATIC void RsPingCommonDeinitLocalQp(struct rs_cb *rscb, struct RsPingCtxCb *pingCb, struct RsPingLocalQpCb *qpCb)
 {
+    (void)pingCb;
     if (qpCb == NULL || qpCb->channel == NULL) {
         hccp_err("qp_cb is NULL or qp_cb->channel is NULL");
         return;

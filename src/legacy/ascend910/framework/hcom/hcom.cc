@@ -423,7 +423,7 @@ HcclResult HcomSetProfilingMode(HcomProfilingMode profilingMode, const char* pro
     return HCCL_SUCCESS;
 }
 
-HcclResult HcomDestroyOneDeviceHeterog(HcomInfo& hcomInfo) { return HCCL_SUCCESS; }
+HcclResult HcomDestroyOneDeviceHeterog([[maybe_unused]] HcomInfo& hcomInfo) { return HCCL_SUCCESS; }
 
 HcclResult HcomAllGather(
     const char* tag, void* inputPtr, void* outputPtr, u64 inputCount, HcclDataType dataType, const char* group,
@@ -1956,7 +1956,7 @@ HcclResult HcomDestroyGroupImplHeterog(const std::string& group)
     return HCCL_SUCCESS;
 }
 
-bool HcomCallBackGroupIsInitHeterog(HcomInfo& hcomInfo) { return false; }
+bool HcomCallBackGroupIsInitHeterog([[maybe_unused]] HcomInfo& hcomInfo) { return false; }
 
 HcclResult GetRankListHeterog(u32 rankNum, const u32* rankIds, HcclGroupParams& params)
 {
@@ -3088,7 +3088,8 @@ HcclResult HcomAllToAll(
 }
 
 HcclResult HcclIgetLookupRequest(
-    HcclComm comm, s32* tag, ServiceHandle* handle, uint64_t* keys, uint64_t keyMaxNum, HcclRequest* request)
+    [[maybe_unused]] HcclComm comm, [[maybe_unused]] s32* tag, [[maybe_unused]] ServiceHandle* handle,
+    [[maybe_unused]] uint64_t* keys, [[maybe_unused]] uint64_t keyMaxNum, [[maybe_unused]] HcclRequest* request)
 {
     HCCL_ERROR("[Iget][LookupRequest] is not support HcclIgetLookupRequest interface");
     return HCCL_E_PARA;
@@ -3200,7 +3201,7 @@ HcclResult HcomGetCommCCLBufferSize(const char* group, uint64_t& size)
     return HCCL_SUCCESS;
 }
 
-bool HcomIsNormalComm(const char* group)
+bool HcomIsNormalComm([[maybe_unused]] const char* group)
 {
     HcomInfo& hcomInfo = HcomGetCtxHomInfo();
     return (hcomInfo.pComm != nullptr);
@@ -4248,8 +4249,8 @@ HcclResult GetCombineComTaskNum(
 }
 
 HcclResult GetIntraComTaskNum(
-    const std::string& sCollectiveType, s32 deviceNumPerServer, u64 streamNum, const AlgType& algType, u32& taskNum,
-    u64 totalSize)
+    const std::string& sCollectiveType, s32 deviceNumPerServer, [[maybe_unused]] u64 streamNum, const AlgType& algType,
+    u32& taskNum, u64 totalSize)
 {
     taskNum = 0;
     u32 commStep = 0;

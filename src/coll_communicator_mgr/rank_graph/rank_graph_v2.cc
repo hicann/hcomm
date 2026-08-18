@@ -47,7 +47,7 @@ RankGraphV2::GetLinks(uint32_t netLayer, uint32_t srcRank, uint32_t dstRank, Com
     return pImpl->GetLinks(netLayer, srcRank, dstRank, linkList, listSize);
 }
 
-HcclResult RankGraphV2::GetRankGraphInfo(GraphType type, void** graph, uint32_t* len)
+HcclResult RankGraphV2::GetRankGraphInfo([[maybe_unused]] GraphType type, void** graph, uint32_t* len)
 {
     return pImpl->GetRankGraphInfo(graph, len);
 }

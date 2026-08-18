@@ -205,7 +205,7 @@ HcclResult HcclRemoteBatchRead(
 
 HcclResult HcclRemoteBatchTransfer(
     StreamHandle streamHandle, HcclMemTransport memTransport, const HcclBatchTransferInfo* transferInfo,
-    uint32_t bufPairNum)
+    [[maybe_unused]] uint32_t bufPairNum)
 {
     CHK_PTR_NULL(streamHandle);
     CHK_PTR_NULL(memTransport);

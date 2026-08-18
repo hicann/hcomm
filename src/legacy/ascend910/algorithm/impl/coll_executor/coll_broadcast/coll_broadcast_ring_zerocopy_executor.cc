@@ -124,7 +124,8 @@ HcclResult CollBroadCastRingZerocopyExecutor::KernelRunIntraServerPre(const OpPa
     CHK_RET(AlgTemplateBase::PrepareSliceData(param.DataDes.count, perDataSize, level0RankSize_, 0, level0Datalices));
 
     HcomCollOpInfo scatterOpInfo
-        = {"", execMem.inputPtr, nullptr, level0Datalices[0].size / perDataSize, param.DataDes.dataType, param.root};
+        = {"",         execMem.inputPtr, nullptr, level0Datalices[0].size / perDataSize, param.DataDes.dataType,
+           param.root, param.reduceType, 0};
 
     if (topoType_ == TopoType::TOPO_TYPE_NP_SINGLE_RING) {
         // 构造slice数据
@@ -455,8 +456,8 @@ HcclResult CollBroadCastRingZerocopyExecutor::DoubleRingAllGather(
 
 HcclResult CollBroadCastRingZerocopyExecutor::KernelRunIntraServerPost(const OpParam& param, ExecMem& execMem)
 {
-    HcomCollOpInfo allgatherOpInfo
-        = {"", nullptr, execMem.outputMem.ptr(), execMem.count, param.DataDes.dataType, param.root, param.reduceType};
+    HcomCollOpInfo allgatherOpInfo = {
+        "", nullptr, execMem.outputMem.ptr(), execMem.count, param.DataDes.dataType, param.root, param.reduceType, 0};
 
     if (topoType_ == TopoType::TOPO_TYPE_NP_SINGLE_RING) {
         CHK_RET(MultiRingAllGather(

@@ -29,7 +29,7 @@ void RegisterProfCallBack()
     }
 }
 
-int32_t DeviceCommandHandle(uint32_t profType, void* data, uint32_t len)
+int32_t DeviceCommandHandle([[maybe_unused]] uint32_t profType, void* data, uint32_t len)
 {
     HCCL_INFO("[%s] start", __func__);
     (void)len;

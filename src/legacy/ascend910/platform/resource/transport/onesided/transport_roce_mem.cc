@@ -206,7 +206,7 @@ HcclResult TransportRoceMem::FillRmaBufferSlice(
     remoteRmaBufferSlice.addr = static_cast<void*>(static_cast<u8*>(remoteBuffer->GetDevAddr()) + remoteDataOffSet);
     remoteRmaBufferSlice.len = byteSize;
     std::shared_ptr<RmaBuffer> temp(
-        remoteBuffer, [](RmaBuffer* p) {}); // 在外部进行删除操作，内部不能用智能指针进行生命周期管理
+        remoteBuffer, []([[maybe_unused]] RmaBuffer* p) {}); // 在外部进行删除操作，内部不能用智能指针进行生命周期管理
     remoteRmaBufferSlice.rmaBuffer = temp;
     remoteRmaBufferSlice.memType = remoteBuffer->GetMemType();
     HCCL_INFO(
@@ -622,21 +622,24 @@ HcclResult TransportRoceMem::WaitOpFence(const rtStream_t& stream)
 }
 
 HcclResult TransportRoceMem::BatchWrite(
-    const std::vector<MemDetails>& remoteMems, const std::vector<MemDetails>& localMems, Stream& stream)
+    [[maybe_unused]] const std::vector<MemDetails>& remoteMems,
+    [[maybe_unused]] const std::vector<MemDetails>& localMems, [[maybe_unused]] Stream& stream)
 {
     HCCL_ERROR("TransportRoceMem doesn't support BatchWrite");
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TransportRoceMem::BatchRead(
-    const std::vector<MemDetails>& localMems, const std::vector<MemDetails>& remoteMems, Stream& stream)
+    [[maybe_unused]] const std::vector<MemDetails>& localMems,
+    [[maybe_unused]] const std::vector<MemDetails>& remoteMems, [[maybe_unused]] Stream& stream)
 {
     HCCL_ERROR("TransportRoceMem doesn't support BatchRead");
     return HCCL_E_NOT_SUPPORT;
 }
 
-HcclResult
-TransportRoceMem::AddOpFence(const MemDetails& localFenceMem, const MemDetails& remoteFenceMem, Stream& stream)
+HcclResult TransportRoceMem::AddOpFence(
+    [[maybe_unused]] const MemDetails& localFenceMem, [[maybe_unused]] const MemDetails& remoteFenceMem,
+    [[maybe_unused]] Stream& stream)
 {
     HCCL_ERROR("TransportRoceMem doesn't support AICPU AddOpFence");
     return HCCL_E_NOT_SUPPORT;
@@ -760,7 +763,8 @@ HcclResult TransportRoceMem::CreateRdmaSignal(
     CHK_RET(HrtRaGetNotifyMrInfo(devicePhyId_, nicRdmaHandle_, &mrInfo));
     rdmaSignalInfo.lkey = mrInfo.lkey;
 
-    HcclSignalInfo notifyInfo{INVALID_U64};
+    HcclSignalInfo notifyInfo{};
+    notifyInfo.resId = INVALID_U64;
     CHK_RET(localNotify->GetNotifyData(notifyInfo));
     HCCL_INFO("CreateRdmaSignal localNotify id[%llu]", notifyInfo.resId);
     return HCCL_SUCCESS;
@@ -777,7 +781,7 @@ HcclResult TransportRoceMem::CreateNotifyValueBuffer()
             HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
     }
 
-    struct MrInfoT mrInfo = {nullptr};
+    struct MrInfoT mrInfo = {};
     mrInfo.addr = notifyMem_.ptr();
     mrInfo.size = notifySize_;
     mrInfo.access = access_;
@@ -791,8 +795,8 @@ HcclResult TransportRoceMem::CreateNotifyValueBuffer()
     return HCCL_SUCCESS;
 }
 
-HcclResult
-TransportRoceMem::DoorBellSend(const s32 qpMode, WrInfo& sendWrInfo, const SendWrRsp& opRsp, rtStream_t stream)
+HcclResult TransportRoceMem::DoorBellSend(
+    [[maybe_unused]] const s32 qpMode, WrInfo& sendWrInfo, const SendWrRsp& opRsp, rtStream_t stream)
 {
     struct SendWr sendwr = {};
     sendwr.bufList = &sendWrInfo.memList;

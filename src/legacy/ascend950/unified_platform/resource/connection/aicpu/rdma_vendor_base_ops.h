@@ -248,7 +248,7 @@ protected:
         return HCCL_SUCCESS;
     }
 
-    virtual int32_t PollCqImpl(int32_t numEntries, std::vector<int32_t>& errList)
+    virtual int32_t PollCqImpl(int32_t numEntries, [[maybe_unused]] std::vector<int32_t>& errList)
     {
         (void)numEntries;
         HCCL_ERROR("[RdmaBaseOps::%s] This Backend Not support PollCq Now.", __func__);

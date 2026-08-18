@@ -30,7 +30,7 @@ bool CheckLogTime(std::chrono::steady_clock::time_point& lastTime)
 
 intptr_t TraceCreate(const char* objName)
 {
-    TraceAttr hcclAtraceAttr = {0};
+    TraceAttr hcclAtraceAttr = {};
     hcclAtraceAttr.exitSave = true;
     hcclAtraceAttr.msgNum = DEFAULT_ATRACE_MSG_NUM;
     hcclAtraceAttr.msgSize = DEFAULT_ATRACE_MSG_SIZE;

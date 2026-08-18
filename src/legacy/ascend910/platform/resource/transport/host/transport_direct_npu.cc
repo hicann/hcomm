@@ -127,7 +127,8 @@ HcclResult TransportDirectNpu::GetRemoteMemSize(UserMemType memType, u64& size)
 }
 
 HcclResult TransportDirectNpu::LoadBinaryFromFile(
-    const char* binPath, aclrtBinaryLoadOptionType optionType, uint32_t cpuKernelMode, aclrtBinHandle& binHandle)
+    [[maybe_unused]] const char* binPath, [[maybe_unused]] aclrtBinaryLoadOptionType optionType,
+    [[maybe_unused]] uint32_t cpuKernelMode, [[maybe_unused]] aclrtBinHandle& binHandle)
 {
 #ifndef CCL_KERNEL
     CHK_PRT_RET(binPath == nullptr, HCCL_ERROR("[LoadBinaryFromFile] binary path is nullptr"), HCCL_E_PTR);
@@ -138,7 +139,7 @@ HcclResult TransportDirectNpu::LoadBinaryFromFile(
         HCCL_ERROR("LoadBinaryFromFile: %s is not a valid real path, err[%d]", binPath, errno), HCCL_E_INTERNAL);
     HCCL_INFO("[LoadBinaryFromFile]realPath: %s", realPath);
 
-    aclrtBinaryLoadOptions loadOptions = {0};
+    aclrtBinaryLoadOptions loadOptions = {};
     aclrtBinaryLoadOption option;
     loadOptions.numOpt = 1;
     loadOptions.options = &option;
@@ -191,7 +192,7 @@ void TransportDirectNpu::UnloadAICPUKernel(void)
 
 HcclResult TransportDirectNpu::DeRegOneMR(QpHandle& qpHandle, MemMsg& memMsg)
 {
-    struct MrInfoT mrInfo = {nullptr};
+    struct MrInfoT mrInfo = {};
     mrInfo.addr = memMsg.addr;
     HcclResult ret = HrtRaMrDereg(qpHandle, &mrInfo);
     CHK_PRT_RET(
@@ -745,17 +746,17 @@ HcclResult TransportDirectNpu::DataReceivedAck(Stream& stream)
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportDirectNpu::TxWaitDone(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportDirectNpu::TxWaitDone([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
 /* 发送ack消息(同步模式) */
-HcclResult TransportDirectNpu::TxAck(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportDirectNpu::TxAck([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
 /* 接收ack消息(同步模式) */
-HcclResult TransportDirectNpu::RxAck(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportDirectNpu::RxAck([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
-HcclResult TransportDirectNpu::TxDataSignal(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportDirectNpu::TxDataSignal([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
-HcclResult TransportDirectNpu::RxDataSignal(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportDirectNpu::RxDataSignal([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
 HcclResult TransportDirectNpu::RegUserMem(MemType memType, u8*& exchangeDataPtr, u64& exchangeDataBlankSize)
 {
@@ -785,7 +786,7 @@ HcclResult TransportDirectNpu::RegUserMem(MemType memType, u8*& exchangeDataPtr,
             return HCCL_E_NOT_SUPPORT;
         }
     }
-    struct MrInfoT mrInfo = {nullptr};
+    struct MrInfoT mrInfo = {};
     mrInfo.addr = memPtr;
     mrInfo.size = memSize;
     mrInfo.access = access_;
@@ -856,12 +857,13 @@ HcclResult TransportDirectNpu::GetRemoteAddr(MemType memType, u8*& exchangeDataP
 }
 
 /* 发送ack消息(同步模式) */
-HcclResult TransportDirectNpu::TxPrepare(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportDirectNpu::TxPrepare([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
 /* 接收ack消息(同步模式) */
-HcclResult TransportDirectNpu::RxPrepare(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportDirectNpu::RxPrepare([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
-HcclResult TransportDirectNpu::TxData(UserMemType dstMemType, u64 dstOffset, const void* src, u64 len, Stream& stream)
+HcclResult TransportDirectNpu::TxData(
+    UserMemType dstMemType, u64 dstOffset, const void* src, u64 len, [[maybe_unused]] Stream& stream)
 {
     CHK_PTR_NULL(src);
     struct ApiParamDef {
@@ -939,7 +941,8 @@ HcclResult TransportDirectNpu::TxData(UserMemType dstMemType, u64 dstOffset, con
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportDirectNpu::RxData(UserMemType srcMemType, u64 srcOffset, void* dst, u64 len, Stream& stream)
+HcclResult
+TransportDirectNpu::RxData(UserMemType srcMemType, u64 srcOffset, void* dst, u64 len, [[maybe_unused]] Stream& stream)
 {
     CHK_PTR_NULL(dst);
     struct ApiParamDef {
@@ -1016,17 +1019,17 @@ HcclResult TransportDirectNpu::RxData(UserMemType srcMemType, u64 srcOffset, voi
     return HCCL_SUCCESS;
 }
 
-HcclResult TransportDirectNpu::TxDone(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportDirectNpu::TxDone([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
-HcclResult TransportDirectNpu::RxDone(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportDirectNpu::RxDone([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
-HcclResult TransportDirectNpu::PostFin(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportDirectNpu::PostFin([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
-HcclResult TransportDirectNpu::WaitFin(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportDirectNpu::WaitFin([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
-HcclResult TransportDirectNpu::PostFinAck(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportDirectNpu::PostFinAck([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
-HcclResult TransportDirectNpu::WaitFinAck(Stream& stream) { return HCCL_SUCCESS; }
+HcclResult TransportDirectNpu::WaitFinAck([[maybe_unused]] Stream& stream) { return HCCL_SUCCESS; }
 
 HcclResult TransportDirectNpu::GetRemoteMemKey(UserMemType memType, uint32_t* remoteMemKey)
 {

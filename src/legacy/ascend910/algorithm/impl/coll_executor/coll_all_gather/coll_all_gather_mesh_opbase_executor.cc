@@ -73,7 +73,7 @@ bool CollAllGatherMeshOpbaseExecutor::IsHugeData(const u64 curSize)
     return hugeData;
 }
 
-bool CollAllGatherMeshOpbaseExecutor::IsSmallData(const u64 size)
+bool CollAllGatherMeshOpbaseExecutor::IsSmallData([[maybe_unused]] const u64 size)
 {
     return topoAttr_.deviceType == DevType::DEV_TYPE_910_93;
 }
@@ -101,8 +101,9 @@ HcclResult CollAllGatherMeshOpbaseExecutor::KernelRun(const OpParam& param, Exec
     CHK_SMART_PTR_NULL(currentOutputMem);
 
     // DMA消减场景，打包opInfo
-    HcomCollOpInfo opInfo = {"", execMem.inputPtr,    execMem.outputPtr, param.DataDes.count, param.DataDes.dataType,
-                             0,  HCCL_REDUCE_RESERVED};
+    HcomCollOpInfo opInfo = {
+        "", execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType, 0, HCCL_REDUCE_RESERVED,
+        0};
 
     std::unique_ptr<AlgTemplateBase> level0TempAlg
         = AlgTemplateRegistry::Instance().GetAlgTemplate(TemplateType::TEMPLATE_ALL_GATHER_MESH_DIRECT, dispatcher_);

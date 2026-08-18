@@ -135,14 +135,14 @@ u64 CollReduceScatterDeterExecutor::CalcLoopMaxCount(const u32 unitSize)
     return maxCountPerLoop;
 }
 
-bool CollReduceScatterDeterExecutor::IsHugeData(const u64 curSize, OpParam* param)
+bool CollReduceScatterDeterExecutor::IsHugeData(const u64 curSize, [[maybe_unused]] OpParam* param)
 {
     // 只有server内通信，多QP哈希散列下不刷新子图
     bool hugeData = curSize > SDMA_SEND_MAX_SIZE;
     return hugeData;
 }
 
-bool CollReduceScatterDeterExecutor::IsSmallData(const u64 totalSize, const u64 curSize)
+bool CollReduceScatterDeterExecutor::IsSmallData(const u64 totalSize, [[maybe_unused]] const u64 curSize)
 {
     bool smallData = false;
     if (topoAttr_.deviceType == DevType::DEV_TYPE_910_93) {
@@ -170,9 +170,14 @@ HcclResult CollReduceScatterDeterExecutor::KernelRun(const OpParam& param, ExecM
     CHK_RET(ActiveSlaveStreams(param.stream));
 
     u64 reduceAttr = GetReduceAttr(execMem.inputMem, execMem.outputMem, param.DataDes.dataType, param.reduceType);
-    HcomCollOpInfo opInfo
-        = {"",         execMem.inputPtr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType,
-           param.root, param.reduceType};
+    HcomCollOpInfo opInfo = {"",
+                             execMem.inputPtr,
+                             execMem.outputPtr,
+                             param.DataDes.count,
+                             param.DataDes.dataType,
+                             param.root,
+                             param.reduceType,
+                             0};
 
     bool isLocalReduce91073 = ((((topoAttr_.userRankSize & (topoAttr_.userRankSize - 1)) != 0) || aicpuUnfoldMode_
                                 || (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB))

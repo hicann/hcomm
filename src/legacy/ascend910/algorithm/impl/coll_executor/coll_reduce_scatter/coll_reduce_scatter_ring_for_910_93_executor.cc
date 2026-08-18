@@ -202,7 +202,7 @@ HcclResult CollReduceScatterRingFor91093Executor::RunIntraSeverReduceScatter(
     const std::string& tag, DeviceMem& inputMem, DeviceMem& outputMem, const u64 count, const HcclDataType& dataType,
     const HcclReduceOp& reductionOp, const std::vector<std::vector<Slice>>& multRingsSliceZero, const Stream& stream,
     s32 profStage, const u64 baseOffset, const HcomCollOpInfo* opInfo,
-    const std::vector<std::vector<Slice>>& multRingsUserMemSlice, const bool disableDMAReduce)
+    const std::vector<std::vector<Slice>>& multRingsUserMemSlice, [[maybe_unused]] const bool disableDMAReduce)
 {
     CHK_RET(MultiRingReduceScatter(
         tag, inputMem, outputMem, count, dataType, reductionOp, multRingsSliceZero, stream, profStage, baseOffset,

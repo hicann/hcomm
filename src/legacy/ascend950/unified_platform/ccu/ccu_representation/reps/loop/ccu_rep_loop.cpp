@@ -33,7 +33,7 @@ namespace CcuRep {
         return std::make_shared<CcuRepSetLoop>(loopParam, executor, var);
     }
 
-    bool CcuRepLoop::Translate(CcuInstr*& instr, uint16_t& instrId, const TransDep& dep)
+    bool CcuRepLoop::Translate(CcuInstr*& instr, uint16_t& instrId, [[maybe_unused]] const TransDep& dep)
     {
         this->instrId = instrId;
         translated = true;

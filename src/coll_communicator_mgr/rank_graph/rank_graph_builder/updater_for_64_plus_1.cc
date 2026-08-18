@@ -106,7 +106,7 @@ void UpdaterFor64Plus1::UpdateNetInstance(
 
 void UpdaterFor64Plus1::AddPeer2BackupLinks(
     shared_ptr<NetInstance::Peer> peer, shared_ptr<NetInstance::Peer> backupPeer, LocalId replacedLocalId,
-    NetInstance* netInstance, const RankTableInfo* rankTable) const
+    NetInstance* netInstance, [[maybe_unused]] const RankTableInfo* rankTable) const
 {
     auto phyTopoGraph = PhyTopo::GetInstance()->GetTopoGraph(0);
 

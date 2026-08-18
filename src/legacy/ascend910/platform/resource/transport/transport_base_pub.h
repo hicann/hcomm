@@ -149,8 +149,8 @@ public:
     }
 
     inline u32 GetRemoteRank() const { return machinePara_.remoteWorldRank; }
-    virtual HcclResult ConnectAsync(u32& status) { return HCCL_SUCCESS; };
-    virtual HcclResult ConnectQuerry(u32& status) { return HCCL_SUCCESS; };
+    virtual HcclResult ConnectAsync([[maybe_unused]] u32& status) { return HCCL_SUCCESS; };
+    virtual HcclResult ConnectQuerry([[maybe_unused]] u32& status) { return HCCL_SUCCESS; };
 
     virtual void Break() { return; }
 

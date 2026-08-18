@@ -60,6 +60,7 @@ error:
 STATIC int32_t BifrostCncoiPuberRankDistributeOnDeleteCode(BifrostCncoiPuber *bifrostCncoiPuber,
     BifrostCncoiSliceKeyT *sliceKey, BifrostCncoiRankDistributeKeyT *tupleKey, void *codeBuf, int32_t bufLen)
 {
+    (void)sliceKey;
     SimpoBuilderT *builder;
     int32_t ret = -1;
 
@@ -92,6 +93,8 @@ error:
 STATIC void BifrostCncoiPuberRankDistributeOnSub(BifrostCncoiPuber *bifrostCncoiPuber, BifrostCncoiSliceKeyT *sliceKey,
     void *data, int32_t len)
 {
+    (void)data;
+    (void)len;
     BifrostCncoiPuberRankDistributeVTbl *appVTbl = VOS_NULL;
 
     appVTbl = BkfPuberGetTableTypeUserData(bifrostCncoiPuber->puber, BIFROST_CNCOI_TABLE_TYPE_RANK_DISTRIBUTE);

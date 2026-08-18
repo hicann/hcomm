@@ -124,7 +124,7 @@ HcclResult CollBroadCastRingFor91093::KernelRun(const OpParam& param, ExecMem& e
 
     HcomCollOpInfo* scatterOpInfoPtr = nullptr;
     HcomCollOpInfo scatterOpInfo
-        = {"", execMem.inputPtr, nullptr, param.DataDes.count, param.DataDes.dataType, param.root};
+        = {"", execMem.inputPtr, nullptr, param.DataDes.count, param.DataDes.dataType, param.root, param.reduceType, 0};
 
     if (topoType_ == TopoType::TOPO_TYPE_NP_DOUBLE_RING) {
         scatterOpInfoPtr = &scatterOpInfo;
@@ -369,8 +369,8 @@ HcclResult CollBroadCastRingFor91093::KernelRun(const OpParam& param, ExecMem& e
     }
 
     /* step 3 or 5: 节点内 allgatherring */
-    HcomCollOpInfo allgatherOpInfo
-        = {"", nullptr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType, param.root};
+    HcomCollOpInfo allgatherOpInfo = {
+        "", nullptr, execMem.outputPtr, param.DataDes.count, param.DataDes.dataType, param.root, param.reduceType, 0};
     HcomCollOpInfo* allgatherOpInfoPtr = (DMAReduceFlag_) ? (&allgatherOpInfo) : (nullptr);
 
     CHK_RET(MultiRingAllGather(

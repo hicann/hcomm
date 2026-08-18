@@ -46,6 +46,7 @@ uint32_t BkfPuberConnSysLogInit(BkfPuberConnMng *connMng)
 
 void BkfPuberConnSysLogUninit(BkfPuberConnMng *connMng)
 {
+    (void)connMng;
     return; /* 默认空实现 */
 }
 

@@ -85,7 +85,7 @@ bool CollAllReduceRingExecutor::IsHugeData(const u64 curSize)
     return hugeData;
 }
 
-bool CollAllReduceRingExecutor::IsSmallData(const u64 totalSize, const u64 curSize)
+bool CollAllReduceRingExecutor::IsSmallData([[maybe_unused]] const u64 totalSize, const u64 curSize)
 {
     bool smallData = DMAReduceFlag_ ? false : IsAllReduceSmallData(curSize);
     return smallData;
@@ -127,7 +127,7 @@ HcclResult CollAllReduceRingExecutor::KernelRun(const OpParam& param, ExecMem& e
     HcomCollOpInfo* reduceScatterOpInfoPtr = nullptr;
     // 第一步的reducescatter输出放在CCL buffer上，通过设置nullptr指示不做最后一步的DMA削减动作
     HcomCollOpInfo reduceScatterOpInfo
-        = {"", execMem.inputPtr, nullptr, execMem.count, param.DataDes.dataType, param.root, param.reduceType};
+        = {"", execMem.inputPtr, nullptr, execMem.count, param.DataDes.dataType, param.root, param.reduceType, 0};
     if (DMAReduceFlag_) {
         reduceScatterOpInfoPtr = &reduceScatterOpInfo;
     }
@@ -222,7 +222,7 @@ HcclResult CollAllReduceRingExecutor::KernelRun(const OpParam& param, ExecMem& e
     HcomCollOpInfo* allgatherOpInfoPtr = nullptr;
     // 第三步的allgather输入放在CCL buffer上，通过设置nullptr指示要从CCL buffer获取输入
     HcomCollOpInfo allgatherOpInfo
-        = {"", nullptr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, param.reduceType};
+        = {"", nullptr, execMem.outputPtr, execMem.count, param.DataDes.dataType, param.root, param.reduceType, 0};
     if (DMAReduceFlag_) {
         allgatherOpInfoPtr = &allgatherOpInfo;
     }
