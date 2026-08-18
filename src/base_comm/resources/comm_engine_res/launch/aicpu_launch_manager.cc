@@ -76,6 +76,7 @@ static HcclResult PrepareThreadMgrParam(
     ThreadMgrAicpuParam& opParam, DeviceMem& deviceHandle)
 {
     HCCL_INFO("[%s] fill opParam", __func__);
+    CHK_PRT_RET(newThreads.empty(), HCCL_ERROR("[%s] newThreads is empty", __func__), HCCL_E_PARA);
     (void)memset_s(&opParam, sizeof(opParam), 0, sizeof(opParam));
     opParam.threadNum = newThreads.size();
 
@@ -83,6 +84,9 @@ static HcclResult PrepareThreadMgrParam(
     errno_t sRet = strncpy_s(opParam.hcomId, HCOMID_MAX_SIZE, config.commId.c_str(), config.commId.length());
     CHK_PRT_RET(sRet != EOK, HCCL_ERROR("[%s] strncpy_s failed, return [%d].", __func__, sRet), HCCL_E_MEMORY);
     opParam.hcomId[HCOMID_MAX_SIZE - 1] = '\0';
+
+    // 从 Thread 对象获取 engine（同一批 threads 属于同一 engine）
+    opParam.engine = newThreads[0]->GetCommEngine();
 
     // 拷贝每个线程的 unique id
     for (u32 i = 0; i < opParam.threadNum; ++i) {

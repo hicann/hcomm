@@ -387,6 +387,48 @@ HcclResult SupplementThreadNotify(ThreadHandle handle, uint32_t notifyNum)
         it->second->GetNotifyNum(), notifyNum);
     return it->second->SupplementNotify(supplementNum);
 }
+
+HcclResult LookupThreadByHandle(ThreadHandle handle, std::shared_ptr<Thread>& outThread)
+{
+    lock_guard<mutex> lock(g_ThreadMapMtx);
+    auto it = g_ThreadMap.find(handle);
+
+    if (it == g_ThreadMap.end()) {
+        // try find device handle
+        int32_t deviceId = 0;
+        CHK_RET(hrtGetDevice(&deviceId));
+        DeviceThreadKey key{deviceId, handle};
+        auto device_it = g_ThreadD2HMap.find(key);
+        CHK_PRT_RET(
+            device_it == g_ThreadD2HMap.end(),
+            HCCL_ERROR(
+                "[%s] device handle[0x%llx] not found in g_ThreadD2HMap, deviceId[%d].", __func__, handle, deviceId),
+            HCCL_E_NOT_FOUND);
+        it = g_ThreadMap.find(device_it->second);
+        CHK_PRT_RET(
+            it == g_ThreadMap.end(),
+            HCCL_ERROR("[%s] thread handle[0x%llx] not found in g_ThreadMap.", __func__, handle), HCCL_E_NOT_FOUND);
+    }
+
+    outThread = it->second;
+    return HCCL_SUCCESS;
+}
+
+HcclResult LookupD2HHandle(ThreadHandle deviceHandle, ThreadHandle& outHostHandle)
+{
+    int32_t deviceId = 0;
+    CHK_RET(hrtGetDevice(&deviceId));
+    lock_guard<mutex> lock(g_ThreadMapMtx);
+    DeviceThreadKey key{deviceId, deviceHandle};
+    auto it = g_ThreadD2HMap.find(key);
+    CHK_PRT_RET(
+        it == g_ThreadD2HMap.end(),
+        HCCL_ERROR(
+            "[%s] device handle[0x%llx] not found in g_ThreadD2HMap, deviceId[%d].", __func__, deviceHandle, deviceId),
+        HCCL_E_NOT_FOUND);
+    outHostHandle = it->second;
+    return HCCL_SUCCESS;
+}
 #endif
 
 HcclResult Thread::AddThreadHandleToMap(CommEngine commEngine, ThreadHandle threadHandle)

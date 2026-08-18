@@ -12,6 +12,10 @@
 #define HCOMM_RES_MGR_H
 
 #include <cstdint>
+#include <mutex>
+#include "acl/acl_rt.h"
+#include "hcomm_res_defs.h"
+#include "hccl_common.h"
 
 namespace hcomm {
 
@@ -20,6 +24,10 @@ public:
     static HcommResMgr& GetInstance(const uint32_t devicePhyId);
     static void RegisterDeviceResetCallback();
 
+    // 进程级 kernel bin 句柄管理（不分 device，与 per-device 实例隔离）
+    static HcclResult EnsureKernelBinLoaded(CommEngine engine);
+    static aclrtBinHandle GetBinHandle();
+
 private:
     HcommResMgr();
     ~HcommResMgr();
@@ -27,6 +35,9 @@ private:
     HcommResMgr& operator=(const HcommResMgr& that) = delete;
 
     uint32_t devPhyId_{0};
+
+    static aclrtBinHandle binHandle_;
+    static std::mutex binHandleMtx_;
 };
 
 } // namespace hcomm

@@ -67,6 +67,9 @@
 #include "heartbeat.h"
 #include <dirent.h>
 #include "hccl/hccl_res.h"
+#include "aicpu_ts_thread.h"
+#include "cpu_ts_thread.h"
+#include "adapter_hal_pub.h"
 using namespace std;
 
 using namespace hccl;

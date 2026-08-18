@@ -34,9 +34,10 @@ struct ThreadMgrAicpuParam {
     char hcomId[HCOMID_MAX_SIZE];
     char threadParam[SIGNAL_DEV_STREAM_MAX_NUM][THREAD_UNIQUE_ID_MAX_SIZE]; // 含序列化后thread信息，约40KB
     void* deviceHandle;
-    s32 deviceLogicId{-1};             // 基础通信使用
-    u32 deviceType{0};                 // 基础通信使用
-    DevAicpuThreadConfig threadConfig; // 收编thread配置类变量
+    s32 deviceLogicId{-1};                   // 基础通信使用
+    u32 deviceType{0};                       // 基础通信使用
+    DevAicpuThreadConfig threadConfig;       // 收编thread配置类变量
+    CommEngine engine{COMM_ENGINE_RESERVED}; // 通信引擎类型，由Host侧Thread对象携带
 };
 
 struct DevAicpuNotifyConfig {

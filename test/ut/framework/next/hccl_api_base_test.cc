@@ -72,6 +72,13 @@ rtError_t rtCloseNetService()
     return ACL_RT_SUCCESS;
 }
 
+static HcclResult StubLoadBinaryFromFile(
+    const char* binPath, aclrtBinaryLoadOptionType loadType, uint32_t cpuKernelMode, aclrtBinHandle& binHandle)
+{
+    binHandle = reinterpret_cast<aclrtBinHandle>(0x1);
+    return HCCL_SUCCESS;
+}
+
 void Ut_Clusterinfo_File_Create(const char* filename, nlohmann::json rankTable)
 {
     const char* file_name_t = filename;
@@ -210,7 +217,7 @@ void BaseInit::SetUp()
 
     MOCKER(hrtProfRegisterCtrlCallback).stubs().will(returnValue(HCCL_SUCCESS));
 
-    MOCKER(LoadBinaryFromFile).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(LoadBinaryFromFile).stubs().will(invoke(StubLoadBinaryFromFile));
 
     MOCKER(RptInputErr).stubs().will(returnValue(HCCL_SUCCESS));
 

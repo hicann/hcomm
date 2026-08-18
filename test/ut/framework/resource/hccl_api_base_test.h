@@ -67,6 +67,7 @@
 #include "heartbeat.h"
 #include <dirent.h>
 #include "hccl/hccl_res.h"
+#include "adapter_hal_pub.h"
 using namespace std;
 
 using namespace hccl;

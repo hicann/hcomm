@@ -188,6 +188,7 @@ HcclResult AicpuThreadProcess::ResumeThread(
         }
         std::shared_ptr<AicpuTsThread> thread;
         EXCEPTION_CATCH((thread = std::make_shared<AicpuTsThread>(thdUniqueId)), return HCCL_E_PTR);
+        thread->SetCommEngine(param->engine);
         u32 notifyNum = 0;
         std::string notifyDesc;
         CHK_RET(thread->GetNotifyByUniqueId(notifyNum, notifyDesc));

@@ -18,6 +18,7 @@
 #ifdef CCL_KERNEL_AICPU
 #include "device/inc/profiling_manager_device.h"
 #endif
+#include "thread.h"
 using namespace hccl;
 
 extern HcclResult HcommProfilingInit(ThreadHandle* threads, u32 threadNum)

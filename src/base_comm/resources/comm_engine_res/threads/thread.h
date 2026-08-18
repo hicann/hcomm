@@ -105,6 +105,9 @@ public:
     std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> GetCallback() { return callback_; }
     virtual HcclResult SetCheckExecStatusCallback(std::function<HcclResult(bool)> callback) { return HCCL_SUCCESS; }
 
+    void SetCommEngine(CommEngine engine) { engine_ = engine; }
+    CommEngine GetCommEngine() const { return engine_; }
+
 protected:
     HcclResult ReportAicpuNotifyWaitTask(u64 notifyId, u64 beginTime, u32 taskId, u32 sqId) const;
     HcclResult ReportHostNotifyWaitTask(u64 notifyId, u64 beginTime, bool isMaster) const;
@@ -126,6 +129,7 @@ private:
     std::unordered_map<CommEngine, ThreadHandle>
         threadHandleMap_; // CPU_TS上的ThreadHandle与其他引擎上的ThreadHandle的映射
     std::function<HcclResult(u32, u32, const Hccl::TaskParam&, u64)> callback_; // 上报task信息的回调函数
+    CommEngine engine_ = COMM_ENGINE_RESERVED;                                  // 创建时设置的引擎类型
 };
 
 inline Stream* GetStream(uint64_t thread)
@@ -165,5 +169,21 @@ HcclResult StoreThreadHandles(
     aclrtBinHandle binHandle);
 HcclResult FreeThreads(const ThreadHandle* threads, uint32_t threadNum, aclrtBinHandle binHandle);
 HcclResult SupplementThreadNotify(ThreadHandle handle, uint32_t notifyNum);
+HcclResult FillThreadD2HMap(ThreadHandle* deviceThreadHandles, ThreadHandle* hostThreadHandles, uint32_t listNum);
+/**
+ * @brief 按句柄查全局线程表，获取对应的 shared_ptr<Thread>
+ * @param[in] handle 线程句柄
+ * @param[out] outThread 输出的线程共享指针
+ * @return HcclResult 成功返回 HCCL_SUCCESS，未找到返回 HCCL_E_NOT_FOUND
+ */
+HcclResult LookupThreadByHandle(ThreadHandle handle, std::shared_ptr<hccl::Thread>& outThread);
+
+/**
+ * @brief 按 device 句柄查 device→host 映射表，返回对应的 host 句柄
+ * @param[in] deviceHandle device 侧线程句柄
+ * @param[out] outHostHandle 输出的 host 侧线程句柄
+ * @return HcclResult 成功返回 HCCL_SUCCESS，未找到返回 HCCL_E_NOT_FOUND
+ */
+HcclResult LookupD2HHandle(ThreadHandle deviceHandle, ThreadHandle& outHostHandle);
 } // namespace hccl
 #endif // THREAD_H

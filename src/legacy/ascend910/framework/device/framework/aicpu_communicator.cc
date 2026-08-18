@@ -5611,6 +5611,7 @@ HcclResult HcclCommAicpu::InitThreads(ThreadMgrAicpuParam* param)
         }
         std::shared_ptr<AicpuTsThread> thread;
         EXCEPTION_CATCH((thread = std::make_shared<AicpuTsThread>(thdUniqueId)), return HCCL_E_PTR);
+        thread->SetCommEngine(param->engine);
         HcclResult ret = thread->Init();
         if (ret != HCCL_SUCCESS) {
             HCCL_ERROR(

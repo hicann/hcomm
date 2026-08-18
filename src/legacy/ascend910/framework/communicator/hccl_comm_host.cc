@@ -25,6 +25,7 @@
 #include "coll_comm_config.h"
 #include "coll_comm_mgr.h"
 #include "env_config/env_config_v2.h"
+#include "dlprof_function.h"
 
 namespace hccl {
 HcclResult hcclComm::AllReduce(
@@ -484,7 +485,7 @@ void hcclComm::SetAicpuCommState(bool aicpuCommState)
 HcclResult hcclComm::KernelLaunchAicpuCommInit()
 {
     // 创建局部流
-    u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    u64 beginTime = hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
     Stream localStream(StreamType::STREAM_TYPE_ONLINE);
     constexpr u32 aicpuStreamMode = 1;
     CHK_RET(hrtStreamSetMode(localStream.ptr(), aicpuStreamMode));

@@ -13,6 +13,15 @@ set(src_list
     exception_callback_mgr.cc
 )
 
+if(TARGET hcomm)
+    target_sources(hcomm PRIVATE
+        prof_cycle_time.cc
+    )
+    target_include_directories(hcomm PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+endif()
+
 if(TARGET ccl_kernel)
     target_sources(ccl_kernel PRIVATE
         ${src_list}

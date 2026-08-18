@@ -10,10 +10,22 @@
 
 #include "../../../hccl_api_base_test.h"
 #include "hcomm_c_adpt.h"
+#include "hcomm_thread_c_adpt.h"
 #include "local_notify_impl.h"
 #include "aicpu_launch_manager.h"
 #include "llt_hccl_stub_rank_graph.h"
 #include "launch_aicpu.h"
+
+// stub for AicpuLaunchMgr::ThreadKernelLaunchForComm，设置 aicpuHandle out 参数为非零值
+static HcclResult StubThreadKernelLaunchForComm(
+    std::vector<std::shared_ptr<hccl::Thread>>& newThreads, const std::string& commId,
+    std::unique_ptr<ThreadHandle[]>& aicpuHandle, aclrtBinHandle binHandle)
+{
+    for (size_t i = 0; i < newThreads.size(); ++i) {
+        aicpuHandle[i] = static_cast<ThreadHandle>(0x1 + i);
+    }
+    return HCCL_SUCCESS;
+}
 
 class TestHcclThread : public BaseInit {
 public:
@@ -1525,4 +1537,95 @@ TEST_F(
     EXPECT_EQ(thread2, thread1);
     Thread* threadPtr2 = reinterpret_cast<Thread*>(thread2);
     EXPECT_EQ(threadPtr2->GetNotifyNum(), 5U);
+}
+
+// HcommThreadAllocWithStream + HcommThreadFreeWithStream
+TEST_F(TestHcclThread, Ut_HcommThreadAllocWithStream_When_AllocThenFree_Expect_Success)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+    Stream* stream = new (std::nothrow) Stream(hccl::StreamType::STREAM_TYPE_ONLINE);
+    void* rtStream = stream->ptr();
+    ThreadHandle thread;
+    HcommResult ret = HcommThreadAllocWithStream(COMM_ENGINE_CPU_TS, rtStream, 3, &thread);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    // 进程级 g_ThreadMap 已记，FreeWithStream 后应可 erase
+    ret = HcommThreadFreeWithStream(&thread, 1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    delete stream;
+}
+
+// HcommThreadSupplementNotify：单线程补充 notify
+TEST_F(TestHcclThread, Ut_HcommThreadSupplementNotify_When_Single_Expect_Success)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    ThreadHandle thread;
+    uint32_t notifyNum = 2;
+    HcommResult ret = HcommThreadAlloc(COMM_ENGINE_CPU_TS, 1, &notifyNum, &thread);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    ThreadHandle handle = thread;
+    uint32_t addNotifyNum = 3; // 补 3（增量）
+    ret = HcommThreadSupplementNotify(CommEngine::COMM_ENGINE_AICPU_TS, &handle, 1, &addNotifyNum);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    Thread* t = reinterpret_cast<Thread*>(handle);
+    EXPECT_EQ(t->GetNotifyNum(), 5U);
+    ret = HcommThreadFree(&thread, 1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+// HcommThreadSupplementNotify：空指针
+TEST_F(TestHcclThread, Ut_HcommThreadSupplementNotify_When_NullHandle_Expect_E_PTR)
+{
+    uint32_t addNotifyNum = 3;
+    HcommResult ret = HcommThreadSupplementNotify(CommEngine::COMM_ENGINE_AICPU_TS, nullptr, 1, &addNotifyNum);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+// HcommThreadGetNotifyNum：查询
+TEST_F(TestHcclThread, Ut_HcommThreadGetNotifyNum_When_Normal_Expect_Success)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    ThreadHandle thread;
+    uint32_t notifyNum = 3;
+    HcommResult ret = HcommThreadAlloc(COMM_ENGINE_CPU_TS, 1, &notifyNum, &thread);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    uint32_t out = 0;
+    ret = HcommThreadGetNotifyNum(thread, &out);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(out, 3U);
+    ret = HcommThreadFree(&thread, 1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+// HcommThreadExportToCommEngine：CPU->AICPU 导出
+TEST_F(TestHcclThread, Ut_HcommThreadExportToCommEngine_When_CpuToAicpu_Expect_Success)
+{
+    bool isDeviceSide{false};
+    MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&AicpuLaunchMgr::ThreadKernelLaunchForComm).stubs().will(invoke(StubThreadKernelLaunchForComm));
+    ThreadHandle hostThread;
+    uint32_t notifyNum = 2;
+    HcommResult ret = HcommThreadAlloc(COMM_ENGINE_CPU_TS, 1, &notifyNum, &hostThread);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    ThreadHandle devThread = 0;
+    std::string commId = "";
+    ret = HcommThreadExportToCommEngine(&hostThread, commId.c_str(), 1, COMM_ENGINE_AICPU_TS, &devThread);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_NE(devThread, 0ULL);
+    ret = HcommThreadFree(&hostThread, 1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+// HcommThreadExportToCommEngine：空指针
+TEST_F(TestHcclThread, Ut_HcommThreadExportToCommEngine_When_NullHandle_Expect_E_PTR)
+{
+    ThreadHandle devThread = 0;
+    std::string commId = "";
+    HcommResult ret = HcommThreadExportToCommEngine(nullptr, commId.c_str(), 1, COMM_ENGINE_AICPU_TS, &devThread);
+    EXPECT_EQ(ret, HCCL_E_PTR);
 }

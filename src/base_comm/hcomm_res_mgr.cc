@@ -13,6 +13,9 @@
 #include <mutex>
 
 #include "hccl_common.h"
+#include "comm_engine_utils.h"
+#include "launch_device.h"
+#include "launch_aicpu.h"
 
 // orion 通用平台层单例
 #include "hccp_hdc_manager.h"
@@ -45,6 +48,33 @@ namespace hcomm {
 
 static std::mutex g_deviceResetRegMutex;
 static bool g_deviceResetCallbackRegistered = false;
+
+aclrtBinHandle HcommResMgr::binHandle_ = nullptr;
+std::mutex HcommResMgr::binHandleMtx_;
+
+HcclResult HcommResMgr::EnsureKernelBinLoaded(CommEngine engine)
+{
+    if (engine != COMM_ENGINE_AICPU && engine != COMM_ENGINE_AICPU_TS) {
+        HCCL_INFO(
+            "[%s] engine[%s] kernel loading not required", __func__,
+            GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
+        return HCCL_SUCCESS;
+    }
+    std::lock_guard<std::mutex> lock(binHandleMtx_);
+    if (binHandle_ != nullptr) {
+        return HCCL_SUCCESS;
+    }
+    std::string jsonPath;
+    CHK_RET(hccl::GetKernelFilePath(jsonPath));
+    jsonPath += "ccl_kernel.json";
+
+    HcclResult ret = hccl::LoadBinaryFromFile(jsonPath.c_str(), ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE, 0, binHandle_);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[%s] load aicpu file fail, path[%s]", __func__, jsonPath.c_str()), ret);
+    return HCCL_SUCCESS;
+}
+
+aclrtBinHandle HcommResMgr::GetBinHandle() { return binHandle_; }
 
 HcommResMgr& HcommResMgr::GetInstance(const uint32_t devicePhyId)
 {

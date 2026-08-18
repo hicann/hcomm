@@ -64,6 +64,7 @@ HcclResult ProfilingHandler::Init()
             HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret);
         return HCCL_E_RUNTIME;
     }
+    SetCachedCclTag();
     cachedAlgTypeHashId_.store(GetProfHashId("AlgType::NHR", strlen("AlgType::NHR")));
     initializedFlag_ = true;
     InitLog();

@@ -19,6 +19,7 @@
 #include "log.h"
 #include "adapter_rts.h"
 #include "hcomm_c_adpt.h"
+#include "hcomm_thread_c_adpt.h"
 #include "op_base.h"
 
 #include "ccu_device_pub.h"
