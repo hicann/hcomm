@@ -27,10 +27,12 @@ public:
     void CleanCaptureRes(HcclCommunicator* communicator);
     HcclResult
     InsertNewTagToCaptureResMap(HcclCommunicator* communicator, const std::string& newTag, const OpParam& opParam);
+    HcclResult RegisterModelId(HcclCommunicator* communicator, aclmdlRI rtModel, u64 modelId);
 
 private:
     AclgraphCallback() = default;
     ~AclgraphCallback();
+    HcclResult RegisterDestroyCallbackLocked(aclmdlRI rtModel, u64 modelId);
     std::mutex resMutex_;
     std::unordered_map<u64, std::unordered_map<HcclCommunicator*, std::unordered_set<std::string>>> captureResMap_;
     std::unordered_map<u64, AclgraphDestroyCallbackParam> captureCallbackParamMap_;

@@ -523,6 +523,7 @@ public:
     HcclResult DeregisterWindow(HcclCommSymWindow winHandle);
     HcclResult InitSymmetricMemory();
     HcclResult GetCommSymWin(void* ptr, size_t size, HcclCommSymWindow* winHandle, size_t* offset);
+    void EraseCaptureModelId(u64 modelId);
 
 private:
     bool IsEnableRoce();

@@ -5283,13 +5283,24 @@ HcclResult HcclCommunicator::HandleAclGraphFirstOpAivBuff(rtStream_t mainStream)
         // 获取不到modelId会报错
         CHK_RET(GetModelId(rtModel, modelId));
         if (captureModelIds_.find(modelId) == captureModelIds_.end()) {
+            CHK_RET(AclgraphCallback::GetInstance().RegisterModelId(this, rtModel, modelId));
             // aclgraph场景，首算子清理AIV buff
             aivClearEnable_ = true;
             captureModelIds_.insert(modelId);
-            HCCL_INFO("[HcclCommunicator][%s] modelId[%u] is inserted to captureModelIds_", __func__, modelId);
+            HCCL_INFO("[HcclCommunicator][%s] modelId[%llu] is inserted to captureModelIds_", __func__, modelId);
         }
     }
     return HCCL_SUCCESS;
+}
+
+void HcclCommunicator::EraseCaptureModelId(u64 modelId)
+{
+    auto it = captureModelIds_.find(modelId);
+    if (it != captureModelIds_.end()) {
+        captureModelIds_.erase(it);
+        HCCL_INFO("[HcclCommunicator][%s] modelId[%llu] is erased from captureModelIds_", __func__, modelId);
+    }
+    return;
 }
 
 bool HcclCommunicator::StreamIsCapture(rtStream_t mainStream)

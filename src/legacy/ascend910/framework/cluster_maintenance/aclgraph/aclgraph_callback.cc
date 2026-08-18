@@ -83,6 +83,11 @@ HcclResult AclgraphCallback::CleanCaptureRes(u64 modelId)
         }
     }
 
+    // 清理通信域上的AIV modelId, aclgraph上modelId是可以复用的
+    for (auto& commIt : modelIt->second) {
+        commIt.first->EraseCaptureModelId(modelId);
+    }
+
     captureResMap_.erase(modelId);
     captureCallbackParamMap_.erase(modelId);
     if (isResourceReleaseFailed) {
@@ -124,17 +129,38 @@ HcclResult AclgraphCallback::InsertNewTagToCaptureResMap(
     CHK_RET(GetModelId(rtModel, modelId));
 
     std::lock_guard<std::mutex> lock(resMutex_);
-    if (captureResMap_.find(modelId) == captureResMap_.end()) {
-        captureCallbackParamMap_[modelId].modelId = modelId;
-        aclError aclRet = aclmdlRIDestroyRegisterCallback(
-            rtModel, AclgraphDestroyCallback, static_cast<void*>(&captureCallbackParamMap_[modelId]));
-        CHK_PRT_RET(
-            aclRet != ACL_SUCCESS,
-            HCCL_ERROR("[%s] aclmdlRIDestroyRegisterCallback fail, modelId[%llu]", __func__, modelId), HCCL_E_RUNTIME);
-        HCCL_INFO("[%s] aclmdlRIDestroyRegisterCallback success modelID[%llu]", __func__, modelId);
-    }
+    CHK_RET(RegisterDestroyCallbackLocked(rtModel, modelId));
     captureResMap_[modelId][communicator].insert(newTag);
     HCCL_DEBUG("[%s] captureResMap insert tag[%s] to modelID[%llu]", __func__, newTag.c_str(), modelId);
+
+    return HCCL_SUCCESS;
+}
+
+HcclResult AclgraphCallback::RegisterModelId(HcclCommunicator* communicator, aclmdlRI rtModel, u64 modelId)
+{
+    CHK_PTR_NULL(communicator);
+    CHK_PTR_NULL(rtModel);
+
+    std::lock_guard<std::mutex> lock(resMutex_);
+    CHK_RET(RegisterDestroyCallbackLocked(rtModel, modelId));
+    captureResMap_[modelId][communicator];
+    HCCL_DEBUG("[%s] register communicator[%p] to modelID[%llu]", __func__, communicator, modelId);
+
+    return HCCL_SUCCESS;
+}
+
+HcclResult AclgraphCallback::RegisterDestroyCallbackLocked(aclmdlRI rtModel, u64 modelId)
+{
+    if (captureResMap_.find(modelId) != captureResMap_.end()) {
+        return HCCL_SUCCESS;
+    }
+    captureCallbackParamMap_[modelId].modelId = modelId;
+    aclError aclRet = aclmdlRIDestroyRegisterCallback(
+        rtModel, AclgraphDestroyCallback, static_cast<void*>(&captureCallbackParamMap_[modelId]));
+    CHK_PRT_RET(
+        aclRet != ACL_SUCCESS,
+        HCCL_ERROR("[%s] aclmdlRIDestroyRegisterCallback fail, modelId[%llu]", __func__, modelId), HCCL_E_RUNTIME);
+    HCCL_INFO("[%s] aclmdlRIDestroyRegisterCallback success modelID[%llu]", __func__, modelId);
 
     return HCCL_SUCCESS;
 }

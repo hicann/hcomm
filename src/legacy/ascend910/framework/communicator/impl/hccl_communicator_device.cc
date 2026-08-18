@@ -613,6 +613,8 @@ HcclResult HcclCommunicator::ExecOpAlltoAll(HcclCMDType opType, OpParam& opParam
 
 HcclResult HcclCommunicator::HandleAclGraphFirstOpAivBuff(rtStream_t mainStream) { return HCCL_SUCCESS; }
 
+void HcclCommunicator::EraseCaptureModelId(u64 modelId) {}
+
 bool HcclCommunicator::StreamIsCapture(rtStream_t mainStream)
 {
     bool isCapture = false;
