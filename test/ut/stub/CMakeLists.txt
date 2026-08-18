@@ -192,7 +192,7 @@ target_include_directories(hccl_llt  PRIVATE
     ${HCCL_CODE_ROOT}/pkg_inc/legacy
     ${HCCL_CODE_ROOT}/pkg_inc/legacy/hccl
     ${HCCL_CODE_ROOT}/include/ccu
-    ${HCCL_CODE_ROOT}/externel_depends/tsch
+    ${HCCL_CODE_ROOT}/external_depends/tsch
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/common/
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/pub_inc/
     ${HCOMM_DIR}/src/legacy/ascend910/common/error_manager

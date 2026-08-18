@@ -158,7 +158,7 @@ target_include_directories(hccd PRIVATE
     ${HCOMM_DIR}/src/legacy/ascend910/algorithm/base/alg_template/temp_scatter
     ${HCOMM_DIR}/src/legacy/ascend910/algorithm/base/alg_template
 
-    ${HCOMM_DIR}/externel_depends/tsch/
+    ${HCOMM_DIR}/external_depends/tsch/
 
     # src/legacy 头文件
     ${LEGACY_ASCEND950_INCLUDE_LIST}

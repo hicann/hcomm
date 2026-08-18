@@ -227,7 +227,7 @@ set(CCL_KERNEL_PLF_INCLUDE_LIST
 target_include_directories(ccl_kernel_plf PRIVATE
     ${CCL_KERNEL_PLF_INCLUDE_LIST}
     ${HCOMM_DIR}/src/legacy/ascend910/common
-    ${HCOMM_DIR}/externel_depends/tsch
+    ${HCOMM_DIR}/external_depends/tsch
 )
 target_include_directories(ccl_kernel_plf_a PRIVATE
     ${CCL_KERNEL_PLF_INCLUDE_LIST}
@@ -244,7 +244,7 @@ if(BUILD_OPEN_PROJECT)
 
     set(CCL_KERNEL_PLF_OPEN_INCLUDE_LIST
         # 临时依赖头文件，待删除
-        ${HCOMM_DIR}/externel_depends/tsch/
+        ${HCOMM_DIR}/external_depends/tsch/
     )
     target_include_directories(ccl_kernel_plf PRIVATE
         ${CCL_KERNEL_PLF_OPEN_INCLUDE_LIST}

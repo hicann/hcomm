@@ -93,7 +93,7 @@ target_include_directories(hccl_v2_utest PRIVATE
 
         ${HCCL_LLT_ROOT}/common/virtual_topo_stub/
         ${HCCL_LLT_ROOT}/ut/framework/topo/ranktable/
-        ${HCCL_CODE_ROOT}/externel_depends/tsch
+        ${HCCL_CODE_ROOT}/external_depends/tsch
 
         ${HCOMM_DIR}/src/legacy/ascend910/pub_inc/new
         ${HCOMM_DIR}/src/legacy/ascend910/common/error_manager

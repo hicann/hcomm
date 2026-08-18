@@ -86,7 +86,7 @@ target_include_directories(hccl_v2 PRIVATE
     ${HCOMM_DIR}/src/base_comm/common
     ${HCOMM_DIR}/src/base_comm/resources/comm_engine_res/threads
     # 外部依赖
-    ${HCOMM_DIR}/externel_depends/tsch
+    ${HCOMM_DIR}/external_depends/tsch
 )
 
 # 将hccl编译出的动态库加入CANN的安装包

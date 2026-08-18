@@ -54,7 +54,7 @@ target_include_directories(ccl_kernel PRIVATE
     ${HCOMM_DIR}/src/legacy/ascend910/pub_inc
     ${HCOMM_DIR}/src/legacy/ascend910/pub_inc/aicpu
     ${HCOMM_DIR}/src/legacy/ascend910/pub_inc/new
-    ${HCOMM_DIR}/externel_depends/tsch
+    ${HCOMM_DIR}/external_depends/tsch
 
     # src/common 头文件 (legacy/ascend910)
     ${HCOMM_DIR}/src/legacy/ascend910/common/stream

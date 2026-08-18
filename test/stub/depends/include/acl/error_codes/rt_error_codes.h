@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef __INC_EXTERNEL_RT_ERROR_CODES_H__
-#define __INC_EXTERNEL_RT_ERROR_CODES_H__
+#ifndef __INC_EXTERNAL_RT_ERROR_CODES_H__
+#define __INC_EXTERNAL_RT_ERROR_CODES_H__
 
 #include <stddef.h>
 
@@ -145,4 +145,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif // __INC_EXTERNEL_RT_ERROR_CODES_H__
+#endif // __INC_EXTERNAL_RT_ERROR_CODES_H__
