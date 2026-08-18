@@ -198,3 +198,61 @@ TEST_F(SocketManagerTest, test_CheckServerPortListening_When_Port_Inconsistent_E
     bool isListen = socketMgr.CheckServerPortListening(link.GetLocalPort(), 60002);
     EXPECT_FALSE(isListen);
 }
+
+TEST_F(SocketManagerTest, Ut_GetDeviceListenPort_When_EnvConfigured_Expect_UsePortRangeMin)
+{
+    EnvHostNicConfig envConfig;
+    EnvHostNicConfig& fakeEnvConfig = envConfig;
+    fakeEnvConfig.hcclDeviceSocketPortRange = CfgField<std::vector<SocketPortRange>>{
+        "HCCL_NPU_SOCKET_PORT_RANGE", {{60001, 60010}}, [](const std::string& s) -> std::vector<SocketPortRange> {
+            return CastSocketPortRange(s, "HCCL_NPU_SOCKET_PORT_RANGE");
+        }};
+    fakeEnvConfig.hcclDeviceSocketPortRange.isParsed = true;
+    MOCKER_CPP(&EnvConfig::GetHostNicConfig).stubs().will(returnValue(fakeEnvConfig));
+
+    SocketManager socketMgr(localRank, devicePhyId, devicePhyId, "tmp");
+    IpAddress addr("1.0.0.0");
+    u32 port = socketMgr.GetDeviceListenPort(localRank, addr);
+    EXPECT_EQ(port, 60001u);
+    GlobalMockObject::verify();
+}
+
+TEST_F(SocketManagerTest, Ut_GetDeviceListenPort_When_EnvNotConfigured_Expect_UseDefaultPort)
+{
+    EnvHostNicConfig envConfig;
+    EnvHostNicConfig& fakeEnvConfig = envConfig;
+    fakeEnvConfig.hcclDeviceSocketPortRange = CfgField<std::vector<SocketPortRange>>{
+        "HCCL_NPU_SOCKET_PORT_RANGE", {}, [](const std::string& s) -> std::vector<SocketPortRange> {
+            return CastSocketPortRange(s, "HCCL_NPU_SOCKET_PORT_RANGE");
+        }};
+    fakeEnvConfig.hcclDeviceSocketPortRange.isParsed = true;
+    MOCKER_CPP(&EnvConfig::GetHostNicConfig).stubs().will(returnValue(fakeEnvConfig));
+
+    SocketManager socketMgr(localRank, devicePhyId, devicePhyId, "tmp");
+    IpAddress addr("1.0.0.0");
+    u32 port = socketMgr.GetDeviceListenPort(localRank, addr);
+    EXPECT_EQ(port, DEFAULT_VALUE_TCPPORT);
+    GlobalMockObject::verify();
+}
+
+TEST_F(SocketManagerTest, Ut_GetDeviceListenPort_When_PortInMap_Expect_UseMapPort)
+{
+    EnvHostNicConfig envConfig;
+    EnvHostNicConfig& fakeEnvConfig = envConfig;
+    fakeEnvConfig.hcclDeviceSocketPortRange = CfgField<std::vector<SocketPortRange>>{
+        "HCCL_NPU_SOCKET_PORT_RANGE", {{60001, 60010}}, [](const std::string& s) -> std::vector<SocketPortRange> {
+            return CastSocketPortRange(s, "HCCL_NPU_SOCKET_PORT_RANGE");
+        }};
+    fakeEnvConfig.hcclDeviceSocketPortRange.isParsed = true;
+    MOCKER_CPP(&EnvConfig::GetHostNicConfig).stubs().will(returnValue(fakeEnvConfig));
+
+    SocketManager socketMgr(localRank, devicePhyId, devicePhyId, "tmp");
+    IpAddress addr("1.0.0.0");
+    std::unordered_map<u32, std::unordered_map<IpAddress, u32>> portMap;
+    portMap[localRank][addr] = 20000;
+    socketMgr.SetDeviceServerListenPortMap(portMap);
+
+    u32 port = socketMgr.GetDeviceListenPort(localRank, addr);
+    EXPECT_EQ(port, 20000u);
+    GlobalMockObject::verify();
+}

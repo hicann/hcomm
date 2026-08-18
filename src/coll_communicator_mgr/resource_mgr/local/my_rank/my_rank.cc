@@ -30,6 +30,7 @@
 #include "op_base.h"
 #include "ccu_res.h"
 #include "coll_comm_mgr.h"
+#include "new_rank_info.h"
 
 #include <acl/acl.h>
 #include "shared_jetty_channel_pool.h"
@@ -719,6 +720,15 @@ HcclResult MyRank::BatchCreateChannels(
         // 启动监听
         uint32_t listenPort = 0;
         CHK_RET(GetDevicePortInternal(localRank, &listenPort, localEndpointDesc.loc.locType));
+        if (listenPort == Hccl::DEFAULT_VALUE_TCPPORT) {
+            auto portRanges = Hccl::EnvConfig::GetInstance().GetHostNicConfig().GetDeviceSocketPortRange();
+            if (!portRanges.empty()) {
+                listenPort = portRanges[0].min;
+                HCCL_INFO(
+                    "[%s] listenPort is default[%u], use port[%u] from HCCL_NPU_SOCKET_PORT_RANGE", __func__,
+                    Hccl::DEFAULT_VALUE_TCPPORT, listenPort);
+            }
+        }
         CHK_RET(static_cast<HcclResult>(HcommEndpointStartListen(epHandle, listenPort, nullptr)));
 
         HCCL_INFO(

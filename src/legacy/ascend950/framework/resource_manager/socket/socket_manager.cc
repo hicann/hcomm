@@ -485,11 +485,20 @@ u32 SocketManager::GetDeviceListenPort(const u32& rankId, const IpAddress& ipAdd
 {
     u32 listenPort = rankListenPortMap_[rankId][ipAddress];
     if (listenPort == 0) {
-        listenPort = DEFAULT_VALUE_TCPPORT;
+        auto portRanges = EnvConfig::GetInstance().GetHostNicConfig().GetDeviceSocketPortRange();
+        if (!portRanges.empty()) {
+            listenPort = portRanges[0].min;
+            HCCL_INFO(
+                "[SocketManager::%s] Can't find rankId[%u], addr[%s] listen port, use port[%u] from "
+                "HCCL_NPU_SOCKET_PORT_RANGE",
+                __func__, rankId, ipAddress.Describe().c_str(), listenPort);
+        } else {
+            listenPort = DEFAULT_VALUE_TCPPORT;
+            HCCL_WARNING(
+                "[SocketManager::%s] Can't find rankId[%u], addr[%s] listen port, use default port[%u]", __func__,
+                rankId, ipAddress.Describe().c_str(), listenPort);
+        }
         rankListenPortMap_[rankId][ipAddress] = listenPort;
-        HCCL_WARNING(
-            "[SocketManager::%s] Can't find rankId[%u], addr[%s] listen port, use default", __func__, rankId,
-            ipAddress.Describe().c_str());
     }
     return listenPort;
 }

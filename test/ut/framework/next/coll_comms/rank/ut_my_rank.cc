@@ -1339,3 +1339,119 @@ TEST_F(MyRankTest, Ut_MemRegAndAcquireLifecycle)
     // HcommMemUnreg / HcommEndpointDestroy 仍是 mock，不会调真函数操作假 handle
     myRank->endpointMgr_.reset();
 }
+
+TEST_F(MyRankTest, Ut_BatchCreateChannels_When_DefaultPort_EnvConfigured_Expect_UsePortRangeMin)
+{
+    uint32_t defaultPort = 16666;
+    MOCKER_CPP(&Hccl::IRankGraph::GetDevicePort)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&defaultPort))
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::IRankGraph::GetDeviceId)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+    MockerFuncs();
+
+    const Hccl::EnvHostNicConfig& fakeEnvConfig = Hccl::EnvConfig::GetInstance().GetHostNicConfig();
+    const_cast<Hccl::EnvHostNicConfig&>(fakeEnvConfig).hcclDeviceSocketPortRange
+        = Hccl::CfgField<std::vector<Hccl::SocketPortRange>>{
+            "HCCL_NPU_SOCKET_PORT_RANGE",
+            {{60001, 60010}},
+            [](const std::string& s) -> std::vector<Hccl::SocketPortRange> {
+                return Hccl::CastSocketPortRange(s, "HCCL_NPU_SOCKET_PORT_RANGE");
+            }};
+    const_cast<Hccl::EnvHostNicConfig&>(fakeEnvConfig).hcclDeviceSocketPortRange.isParsed = true;
+
+    MOCKER(HcommEndpointStartListen)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    HcclMem cclBuffer;
+    CreateCclBuffer(cclBuffer);
+    EXPECT_EQ(myRank->Init(cclBuffer, 5, 2), HCCL_SUCCESS);
+
+    EndpointDesc localEp;
+    CreateEndpointDesc(localEp, COMM_PROTOCOL_UBC_CTP, "1.0.0.0");
+    EndpointDesc rmtEp;
+    CreateEndpointDesc(rmtEp, COMM_PROTOCOL_UBC_CTP, "2.0.0.0");
+
+    HcclChannelDesc channelDesc[1];
+    channelDesc[0].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+    channelDesc[0].remoteRank = 1;
+    channelDesc[0].notifyNum = 2;
+    channelDesc[0].localEndpoint = localEp;
+    channelDesc[0].remoteEndpoint = rmtEp;
+    channelDesc[0].memHandles = nullptr;
+    channelDesc[0].memHandleNum = 0;
+
+    MOCKER(HcommCollectiveChannelCreate).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    std::vector<HcommChannelDesc> hcommDesc(1);
+    std::vector<ChannelHandle> hostChannelHandles(1);
+    std::vector<std::vector<MemHandle>> allHandles(1);
+    ChannelHandle* hostChannelHandleList = hostChannelHandles.data();
+    EXPECT_EQ(
+        myRank->BatchCreateChannels(COMM_ENGINE_CCU, channelDesc, 1, hcommDesc, hostChannelHandleList, allHandles),
+        HCCL_SUCCESS);
+
+    GlobalMockObject::verify();
+}
+
+TEST_F(MyRankTest, Ut_BatchCreateChannels_When_DefaultPort_EnvNotConfigured_Expect_UseDefaultPort)
+{
+    uint32_t defaultPort = 16666;
+    MOCKER_CPP(&Hccl::IRankGraph::GetDevicePort)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&defaultPort))
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&Hccl::IRankGraph::GetDeviceId)
+        .stubs()
+        .with(mockcpp::any())
+        .will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+    MockerFuncs();
+
+    const Hccl::EnvHostNicConfig& fakeEnvConfig = Hccl::EnvConfig::GetInstance().GetHostNicConfig();
+    const_cast<Hccl::EnvHostNicConfig&>(fakeEnvConfig).hcclDeviceSocketPortRange
+        = Hccl::CfgField<std::vector<Hccl::SocketPortRange>>{
+            "HCCL_NPU_SOCKET_PORT_RANGE", {}, [](const std::string& s) -> std::vector<Hccl::SocketPortRange> {
+                return Hccl::CastSocketPortRange(s, "HCCL_NPU_SOCKET_PORT_RANGE");
+            }};
+    const_cast<Hccl::EnvHostNicConfig&>(fakeEnvConfig).hcclDeviceSocketPortRange.isParsed = true;
+
+    MOCKER(HcommEndpointStartListen)
+        .stubs()
+        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
+        .will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    HcclMem cclBuffer;
+    CreateCclBuffer(cclBuffer);
+    EXPECT_EQ(myRank->Init(cclBuffer, 5, 2), HCCL_SUCCESS);
+
+    EndpointDesc localEp;
+    CreateEndpointDesc(localEp, COMM_PROTOCOL_UBC_CTP, "1.0.0.0");
+    EndpointDesc rmtEp;
+    CreateEndpointDesc(rmtEp, COMM_PROTOCOL_UBC_CTP, "2.0.0.0");
+
+    HcclChannelDesc channelDesc[1];
+    channelDesc[0].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+    channelDesc[0].remoteRank = 1;
+    channelDesc[0].notifyNum = 2;
+    channelDesc[0].localEndpoint = localEp;
+    channelDesc[0].remoteEndpoint = rmtEp;
+    channelDesc[0].memHandles = nullptr;
+    channelDesc[0].memHandleNum = 0;
+
+    MOCKER(HcommCollectiveChannelCreate).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    std::vector<HcommChannelDesc> hcommDesc(1);
+    std::vector<ChannelHandle> hostChannelHandles(1);
+    std::vector<std::vector<MemHandle>> allHandles(1);
+    ChannelHandle* hostChannelHandleList = hostChannelHandles.data();
+    EXPECT_EQ(
+        myRank->BatchCreateChannels(COMM_ENGINE_CCU, channelDesc, 1, hcommDesc, hostChannelHandleList, allHandles),
+        HCCL_SUCCESS);
+
+    GlobalMockObject::verify();
+}
