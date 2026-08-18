@@ -24,7 +24,7 @@ typedef struct {
 | --- | --- |
 | header | ABI头部，由[HcclTeamCreateChannelsDescInit](../control_plane_api/comms_domain_resource_mgmt/HcclTeamCreateChannelsDescInit.md)初始化。CommAbiHeader类型的定义可参见[CommAbiHeader](CommAbiHeader.md)。 |
 | engine | 通信引擎类型，例如COMM_ENGINE_AICPU_TS、COMM_ENGINE_CCU。CommEngine类型的定义可参见[CommEngine](CommEngine.md)。 |
-| notifyNum | 每个channel所需的notify数量。 |
+| notifyNum | 每个channel所需的notify数量，取值范围为\[0,64\]。 |
 | protocol | 通信协议，例如COMM_PROTOCOL_HCCS、COMM_PROTOCOL_UB_RTP、COMM_PROTOCOL_UBOE。CommProtocol类型的定义可参见[CommProtocol](CommProtocol.md)。 |
 | channelCnt | 每个对端成员的channel个数，不可为0。 |
 | reserved[4] | 预留字段。 |

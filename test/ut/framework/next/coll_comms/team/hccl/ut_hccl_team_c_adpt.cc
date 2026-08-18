@@ -650,7 +650,7 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclSubTeamCreate_When_NullptrParams_Expect_Ret
     EXPECT_EQ(HcclSubTeamCreate(g_fakeWorldTeam, &desc, nullptr), HCCL_E_PTR);
 }
 
-// 异常：desc 非法（rankNum=0 → E_PARA；rankIds=nullptr → E_PTR；selfRankId 不在 rankIds → E_PARA）。
+// 异常：desc 非法。
 TEST_F(TestCollCommTeamCAdpt, Ut_HcclSubTeamCreate_When_DescInvalid_Expect_ReturnParaOrPtr)
 {
     HcommTeamHandle team = nullptr;
@@ -670,11 +670,11 @@ TEST_F(TestCollCommTeamCAdpt, Ut_HcclSubTeamCreate_When_DescInvalid_Expect_Retur
     desc2.selfRankId = 1;
     EXPECT_EQ(HcclSubTeamCreate(g_fakeWorldTeam, &desc2, &team), HCCL_E_PTR);
 
-    // selfRankId 不在 rankIds
+    // worldTeam非法
     uint32_t rankIds[2] = {0, 1};
     HcclTeamCreateDesc desc3;
-    BuildTeamCreateDesc(desc3, rankIds, 2, 5, 1); // selfRankId=5 不在 [0,1]
-    EXPECT_EQ(HcclSubTeamCreate(g_fakeWorldTeam, &desc3, &team), HCCL_E_NOT_FOUND);
+    BuildTeamCreateDesc(desc3, rankIds, 2, 1, 1);
+    EXPECT_EQ(HcclSubTeamCreate(g_fakeWorldTeam, &desc3, &team), HCCL_E_PARA);
 }
 
 // 异常：Hcomm 层 / 内存 / 注册失败回滚。

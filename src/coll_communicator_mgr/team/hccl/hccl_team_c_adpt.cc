@@ -193,6 +193,9 @@ HcclResult HcclSubTeamCreate(HcommTeamHandle worldTeam, const HcclTeamCreateDesc
         HCCL_E_PARA);
     CHK_PRT_RET(
         desc->requirement.barrierCount == 0, HCCL_ERROR("[%s] barrierCount must be >= 1", __func__), HCCL_E_PARA);
+    CHK_PRT_RET(
+        HcclTeamMgr::GetInstance().FindWorldTeam(worldTeam) != worldTeam,
+        HCCL_ERROR("[%s] team[%p] is not world team", __func__, worldTeam), HCCL_E_PARA);
 
     /* selfRankId 是本 rank 的实际 rankId，需在 rankIds 中查找其下标作为 memberId。 */
     uint32_t selfMemberId = 0;
