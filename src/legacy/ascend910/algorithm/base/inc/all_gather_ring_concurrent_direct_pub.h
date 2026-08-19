@@ -37,6 +37,8 @@ private:
     HcclResult GetInitializedNeighborLinks(const u32 rank, const u32 rankSize, const std::vector<LINK> &links);
     HcclResult SetSlices(const u32 rank, const u32 rankSize);
     HcclResult RunInitStep(const u32 rank, const u32 rankSize);
+    HcclResult RunSubStreamSlice(const u32 step, const u32 sliceIdx, const std::vector<Slice> &txSliceVector,
+                                 const std::vector<Slice> &subSliceVector);
     HcclResult RunAllGather(u32 rank, u32 rankSize);
     HcclResult MainRecordSub();
     HcclResult SubWaitMain();

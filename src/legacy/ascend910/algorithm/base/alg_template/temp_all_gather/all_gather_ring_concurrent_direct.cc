@@ -199,6 +199,21 @@ HcclResult AllGatherRingConcurrentDirect::RunInitStep(const u32 rank, const u32 
     return HCCL_SUCCESS;
 }
 
+// 从流单个slice的拷贝任务：本端cclout -> 本端userout
+HcclResult AllGatherRingConcurrentDirect::RunSubStreamSlice(const u32 step, const u32 sliceIdx,
+    const std::vector<Slice> &txSliceVector, const std::vector<Slice> &subSliceVector)
+{
+    DeviceMem src = outputMem_.range(txSliceVector[sliceIdx].offset, txSliceVector[sliceIdx].size);
+    DeviceMem dst = DeviceMem::create(static_cast<u8 *>(opInfo_->outputAddr) +
+        subSliceVector[sliceIdx].offset, subSliceVector[sliceIdx].size);
+    HCCL_DEBUG("Memcpy operation: step[%u] stream[sub], src rank[%u] starts to send offset[%llu] size[%llu], "
+        "dst rank starts to rcv offset[%llu] size[%llu] at userMemOutput_",
+        step, userRank_, subSliceVector[sliceIdx].offset, subSliceVector[sliceIdx].size,
+        txSliceVector[sliceIdx].offset, txSliceVector[sliceIdx].size);
+    CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dst, src, subStreams_[0]));
+    return HCCL_SUCCESS;
+}
+
 HcclResult AllGatherRingConcurrentDirect::RunAllGather(const u32 rank, const u32 rankSize)
 {
     HCCL_INFO("AllGatherRingConcurrentDirect starts, the input param rank[%u]", rank);
@@ -229,26 +244,6 @@ HcclResult AllGatherRingConcurrentDirect::RunAllGather(const u32 rank, const u32
             txSliceVector.push_back(slices_[txSliceIdx * sliceSize + sliceIdx]);
             subSliceVector.push_back(userMemOutputSlices_[txSliceIdx * sliceSize + sliceIdx]);
         }
-        // 从流
-        if (!isSdma_) {
-            CHK_RET(LocalNotify::Post(subStreams_[0], dispatcher_, mainSignals_[0], profilerInput_.stage));
-            CHK_RET(LocalNotify::Wait(subStreams_[0], dispatcher_, subSignals_[0], profilerInput_.stage));
-        }
-        for (u32 sliceIdx = 0; sliceIdx < sliceSize; sliceIdx++) {
-            if (isSdma_) {
-                CHK_RET(LocalNotify::Post(subStreams_[0], dispatcher_, mainSignals_[0], profilerInput_.stage));
-                CHK_RET(LocalNotify::Wait(subStreams_[0], dispatcher_, subSignals_[0], profilerInput_.stage));
-            }
-            DeviceMem src = outputMem_.range(txSliceVector[sliceIdx].offset, txSliceVector[sliceIdx].size);
-            DeviceMem dst = DeviceMem::create(static_cast<u8 *>(opInfo_->outputAddr) + subSliceVector[sliceIdx].offset,
-                subSliceVector[sliceIdx].size);
-            HCCL_DEBUG("Memcpy operation: step[%u] stream[sub], src rank[%u] starts to send offset[%llu] size[%llu], "
-                "dst rank starts to rcv offset[%llu] size[%llu] at userMemOutput_",
-                step, userRank_, subSliceVector[sliceIdx].offset, subSliceVector[sliceIdx].size,
-                txSliceVector[sliceIdx].offset, txSliceVector[sliceIdx].size);
-            CHK_RET(HcclD2DMemcpyAsync(dispatcher_, dst, src, subStreams_[0]));
-        }
-
         // 主流
         // Ack
         CHK_RET(leftLink_->TxAck(stream_));
@@ -287,17 +282,37 @@ HcclResult AllGatherRingConcurrentDirect::RunAllGather(const u32 rank, const u32
                 dst.ptr(), rxSliceVector[sliceIdx].size});
         }
         CHK_RET(rightLink_->TxAsync(txMems, stream_));
+
+        // dispatcher_aicpu 单条流的任务队列存在上限，队列满后host会阻塞下发，因此主流与从流的任务必须
+        // 交替下发：从流Wait(subSignals)依赖主流Post(subSignals)，主流Wait(mainSignals)依赖从流
+        // Post(mainSignals)。若先集中下发某一条流的全部任务，队列被占满后host阻塞，而队列中等待的信号
+        // 又需要另一条流尚未下发的任务来产生，两条流互相死等。以下保证每个Wait与其配对的Post在小窗口
+        // 内先后完成下发，且每条流上的任务序列保持不变。
         if (!isSdma_) {
+            // 从流先Post(mainSignals)，主流Wait/Empty/Post与RxAsync下发完成后，从流再Wait并下发本步拷贝任务
+            CHK_RET(LocalNotify::Post(subStreams_[0], dispatcher_, mainSignals_[0], profilerInput_.stage));
             CHK_RET(LocalNotify::Wait(stream_, dispatcher_, mainSignals_[0], profilerInput_.stage));
             CHK_RET(AlgTemplateBase::ExecEmptyTask(inputMem_, outputMem_, stream_, dispatcher_));
             CHK_RET(LocalNotify::Post(stream_, dispatcher_, subSignals_[0], profilerInput_.stage));
             CHK_RET(leftLink_->RxAsync(rxMems, stream_));
+            CHK_RET(LocalNotify::Wait(subStreams_[0], dispatcher_, subSignals_[0], profilerInput_.stage));
+            // 从流：本端cclout -> 本端userout
+            for (u32 sliceIdx = 0; sliceIdx < sliceSize; sliceIdx++) {
+                CHK_RET(RunSubStreamSlice(step, sliceIdx, txSliceVector, subSliceVector));
+            }
         } else {
             CHK_RET(leftLink_->RxDataSignal(stream_));
-            for (auto& mem : rxMems) {
+            // 每个slice按 从流Post -> 主流Wait/Empty/Post -> 从流Wait -> 从流拷贝 -> 主流远端读 的顺序交替下发
+            for (u32 sliceIdx = 0; sliceIdx < sliceSize; sliceIdx++) {
+                CHK_RET(LocalNotify::Post(subStreams_[0], dispatcher_, mainSignals_[0], profilerInput_.stage));
                 CHK_RET(LocalNotify::Wait(stream_, dispatcher_, mainSignals_[0], profilerInput_.stage));
                 CHK_RET(AlgTemplateBase::ExecEmptyTask(inputMem_, outputMem_, stream_, dispatcher_));
                 CHK_RET(LocalNotify::Post(stream_, dispatcher_, subSignals_[0], profilerInput_.stage));
+                CHK_RET(LocalNotify::Wait(subStreams_[0], dispatcher_, subSignals_[0], profilerInput_.stage));
+                // 从流：本端cclout -> 本端userout
+                CHK_RET(RunSubStreamSlice(step, sliceIdx, txSliceVector, subSliceVector));
+                // 主流：对端cclout -> 本端（远端读）
+                auto &mem = rxMems[sliceIdx];
                 CHK_PTR_NULL(mem.dst);
                 void *srcMemPtr = nullptr;
                 CHK_RET(leftLink_->GetRemoteMem(mem.srcMemType, &srcMemPtr));
