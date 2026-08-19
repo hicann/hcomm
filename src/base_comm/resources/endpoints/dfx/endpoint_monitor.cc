@@ -11,25 +11,39 @@
 #include "dfx/endpoint_monitor.h"
 #include "hcom_common.h"
 
+#include <array>
+#include <memory>
+
 namespace hcomm {
 
 constexpr u32 EndpointMonitor::MONITOR_INTERVAL;
 
+namespace {
+    uint32_t MonitorSlot(s32 deviceLogicId)
+    {
+        if ((deviceLogicId < 0) || (static_cast<u32>(deviceLogicId) > MAX_MODULE_DEVICE_NUM)) {
+            HCCL_ERROR("[EndpointMonitor] deviceLogicId[%d] not in range [0,%u]", deviceLogicId, MAX_MODULE_DEVICE_NUM);
+            return MAX_MODULE_DEVICE_NUM;
+        }
+        return static_cast<u32>(deviceLogicId);
+    }
+
+    std::array<std::shared_ptr<EndpointMonitor>, MAX_MODULE_DEVICE_NUM + 1> MakeMonitorHolders()
+    {
+        std::array<std::shared_ptr<EndpointMonitor>, MAX_MODULE_DEVICE_NUM + 1> holders;
+        for (u32 i = 0; i <= MAX_MODULE_DEVICE_NUM; ++i) {
+            holders[i] = std::make_shared<EndpointMonitor>();
+        }
+        return holders;
+    }
+} // namespace
+
 EndpointMonitor::~EndpointMonitor() { DeInit(deviceLogicId_); }
 
-EndpointMonitor& EndpointMonitor::GetInstance(s32 deviceLogicId)
+std::shared_ptr<EndpointMonitor> EndpointMonitor::GetHolder(s32 deviceId)
 {
-    static std::array<EndpointMonitor, MAX_MODULE_DEVICE_NUM + 1> instances;
-    uint32_t deviceId;
-    if ((deviceLogicId < 0) || (static_cast<u32>(deviceLogicId) > MAX_MODULE_DEVICE_NUM)) {
-        HCCL_ERROR(
-            "[EndpointMonitor][%s] deviceLogicId[%d] not in range [0,%u]", __func__, deviceLogicId,
-            MAX_MODULE_DEVICE_NUM);
-        deviceId = MAX_MODULE_DEVICE_NUM;
-    } else {
-        deviceId = static_cast<u32>(deviceLogicId);
-    }
-    return instances[deviceId];
+    static auto holders = MakeMonitorHolders();
+    return holders[MonitorSlot(deviceId)];
 }
 
 HcclResult EndpointMonitor::RegisterToEndpointMonitor(s32 deviceLogicId, EndpointHandle epHandle)

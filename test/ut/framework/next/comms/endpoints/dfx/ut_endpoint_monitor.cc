@@ -18,6 +18,7 @@
 #include "hccl_types.h"
 #include "adapter_rts_common.h"
 #include "endpoint.h"
+#include "proc_reged_mem_mgr_cache.h"
 #define private public
 #include "endpoint_monitor.h"
 #undef private
@@ -33,11 +34,16 @@ public:
         GlobalMockObject::verify();
     }
 
-    EndpointMonitor& g_monitor = EndpointMonitor::GetInstance(0);
+    EndpointMonitor& g_monitor = *EndpointMonitor::GetHolder(0);
 };
 
 class UtStubEndpoint : public Endpoint {
-    UtStubEndpoint(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
+public:
+    explicit UtStubEndpoint(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
+
+    using Endpoint::ReleaseCache;
+
+    void HoldCacheForTest() { cacheKeepAlive_ = ProcRegedMemMgrCache::GetHolder(); }
 
     HcclResult Init() { return HCCL_SUCCESS; }
 
@@ -154,4 +160,92 @@ TEST_F(EndpointMonitorTest, Ut_ProcessUbAsyncEvents_RemoveEpHandleToEndpointMoni
     g_monitor.RemoveEpHandleFromEndpointMonitor(reinterpret_cast<EndpointHandle>(&myUtEndpoint));
     EXPECT_EQ(g_monitor.epHandleSet_.size(), 0);
     g_monitor.epHandleSet_.clear();
+}
+
+// Destroy / 析构只用成员 shared_ptr，拦截再调 GetHolder。
+TEST_F(EndpointMonitorTest, Ut_ReleaseEndpointMonitor_When_NotAttached_Expect_SkipAndNotCallGetHolder)
+{
+    EndpointDesc desc;
+    UtStubEndpoint ep(desc);
+    MOCKER_CPP(&EndpointMonitor::GetHolder).expects(never());
+    ep.ReleaseEndpointMonitor(reinterpret_cast<EndpointHandle>(&ep));
+}
+
+TEST_F(EndpointMonitorTest, Ut_ReleaseEndpointMonitor_When_Attached_Expect_RemoveWithoutGetHolder)
+{
+    EndpointDesc desc;
+    UtStubEndpoint ep(desc);
+    auto handle = reinterpret_cast<EndpointHandle>(&ep);
+    ep.AttachMonitor(0);
+    g_monitor.epHandleSet_.emplace(reinterpret_cast<u64>(handle));
+
+    MOCKER_CPP(&EndpointMonitor::GetHolder).expects(never());
+    ep.ReleaseEndpointMonitor(handle);
+    EXPECT_EQ(g_monitor.epHandleSet_.size(), 0);
+}
+
+TEST_F(EndpointMonitorTest, Ut_ReleaseEndpointMonitor_When_ReleasedTwice_Expect_SecondSkipGetHolder)
+{
+    EndpointDesc desc;
+    UtStubEndpoint ep(desc);
+    auto handle = reinterpret_cast<EndpointHandle>(&ep);
+    ep.AttachMonitor(0);
+    ep.ReleaseEndpointMonitor(handle);
+
+    MOCKER_CPP(&EndpointMonitor::GetHolder).expects(never());
+    ep.ReleaseEndpointMonitor(handle);
+}
+
+TEST_F(EndpointMonitorTest, Ut_RegisterToEndpointMonitor_When_NotAttached_Expect_InternalAndNotCallGetHolder)
+{
+    EndpointDesc desc;
+    UtStubEndpoint ep(desc);
+    MOCKER_CPP(&EndpointMonitor::GetHolder).expects(never());
+    EXPECT_EQ(ep.RegisterToEndpointMonitor(0, reinterpret_cast<EndpointHandle>(&ep)), HCCL_E_INTERNAL);
+}
+
+TEST_F(EndpointMonitorTest, Ut_Dtor_When_MonitorAttached_Expect_NotCallGetHolder)
+{
+    EndpointDesc desc;
+    auto ep = std::make_unique<UtStubEndpoint>(desc);
+    ep->AttachMonitor(0);
+    MOCKER_CPP(&EndpointMonitor::GetHolder).expects(never());
+    ep.reset();
+}
+
+TEST_F(EndpointMonitorTest, Ut_ReleaseCache_When_NotAttached_Expect_SkipAndNotCallGetHolder)
+{
+    EndpointDesc desc;
+    UtStubEndpoint ep(desc);
+    MOCKER_CPP(&ProcRegedMemMgrCache::GetHolder).expects(never());
+    ep.ReleaseCache();
+}
+
+TEST_F(EndpointMonitorTest, Ut_ReleaseCache_When_Attached_Expect_ReleaseWithoutGetHolder)
+{
+    EndpointDesc desc;
+    UtStubEndpoint ep(desc);
+    ep.HoldCacheForTest();
+    MOCKER_CPP(&ProcRegedMemMgrCache::GetHolder).expects(never());
+    ep.ReleaseCache();
+}
+
+TEST_F(EndpointMonitorTest, Ut_Dtor_When_CacheAttached_Expect_NotCallGetHolder)
+{
+    EndpointDesc desc;
+    auto ep = std::make_unique<UtStubEndpoint>(desc);
+    ep->HoldCacheForTest();
+    MOCKER_CPP(&ProcRegedMemMgrCache::GetHolder).expects(never());
+    ep.reset();
+}
+
+TEST_F(EndpointMonitorTest, Ut_Dtor_When_CacheAndMonitorAttached_Expect_NotCallGetHolder)
+{
+    EndpointDesc desc;
+    auto ep = std::make_unique<UtStubEndpoint>(desc);
+    ep->AttachMonitor(0);
+    ep->HoldCacheForTest();
+    MOCKER_CPP(&EndpointMonitor::GetHolder).expects(never());
+    MOCKER_CPP(&ProcRegedMemMgrCache::GetHolder).expects(never());
+    ep.reset();
 }

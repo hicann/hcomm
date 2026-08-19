@@ -102,7 +102,7 @@ HcommResMgr& HcommResMgr::GetInstance(const uint32_t devicePhyId)
         Hccl::HostSocketHandleManager::GetInstance();
         SocketMgr::GetInstance(devicePhyId);
         Hccl::TpManager::GetInstance(devicePhyId);
-        EndpointMonitor::GetInstance(devicePhyId);
+        (void)EndpointMonitor::GetHolder(devicePhyId);
 
         Hccl::CcuComponent::GetInstance(devicePhyId);
         Hccl::CcuResBatchAllocator::GetInstance(devicePhyId);

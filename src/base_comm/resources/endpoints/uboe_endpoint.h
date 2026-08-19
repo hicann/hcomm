@@ -12,7 +12,6 @@
 #define UBOE_ENDPOINT_H
 
 #include "uboe_ub_rtp_endpoint_helper.h"
-#include "proc_reged_mem_mgr_cache.h"
 
 namespace hcomm {
 /**
@@ -22,12 +21,8 @@ namespace hcomm {
 class UboeEndpoint : public UboeUbRtpEndpointHelper {
 public:
     explicit UboeEndpoint(const EndpointDesc& endpointDesc);
-    ~UboeEndpoint() noexcept override;
 
     HcclResult Init() override;
-
-private:
-    MemMgrCacheKey cacheKey_{};
 };
 } // namespace hcomm
 

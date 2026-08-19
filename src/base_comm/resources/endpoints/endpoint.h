@@ -23,8 +23,10 @@
 #include "../../common/orion_adpt_utils.h"
 #include "hccp_hdc_manager.h"
 #include "hcomm_nic_plugin.h"
+#include "proc_reged_mem_mgr_cache.h"
 
 namespace hcomm {
+class EndpointMonitor;
 /**
  * @note 职责：通信设备Endpoint的C++抽象接口类，管理通信设备上下文，以及设备上的注册内存。
  *       共享 Jetty 上下文也归属本类管理（"同一 EndpointHandle 共享一个 Jetty"），
@@ -137,10 +139,19 @@ public:
     HcommNicEndpointOps* GetNicOps() const { return nicOps_; }
     void* GetNicCtx() const { return nicCtx_; }
 
+    // Register：AttachMonitor 拷贝 GetHolder，再用持有的指针 RegisterToEndpointMonitor。
+    // Destroy / 析构走 ReleaseEndpointMonitor。未 Register 的空指针直接返回。不要再调 GetHolder()。
+    void AttachMonitor(s32 logicId);
+    HcclResult RegisterToEndpointMonitor(s32 logicId, EndpointHandle handle);
+    void ReleaseEndpointMonitor(EndpointHandle handle);
+
 protected:
     static HcclResult CreateEndpointBase(const EndpointDesc& endpointDesc, std::unique_ptr<Endpoint>& endpointPtr);
     void DestroySharedJettyRaResources(SharedJettyCtx& ctx, Hccl::RdmaHandle rdmaHandle, bool ctxValid) const;
     void FreeSharedJettyPtrs(SharedJettyCtx& ctx) const;
+    // Init 成功后持有 Cache GetHolder 拷贝；析构走 ReleaseCache，不要再调 GetHolder()。
+    HcclResult AttachCache(const MemMgrCacheKey& key, std::function<std::shared_ptr<RegedMemMgr>()> creator);
+    void ReleaseCache();
     void* ctxHandle_{nullptr};
     std::shared_ptr<RegedMemMgr> regedMemMgr_{};
     EndpointDesc endpointDesc_;
@@ -150,6 +161,9 @@ protected:
     SharedJettyCtx sharedJettyCtx_{};
     HcommNicEndpointOps* nicOps_{nullptr};
     void* nicCtx_{nullptr};
+    MemMgrCacheKey cacheKey_{};
+    std::shared_ptr<ProcRegedMemMgrCache> cacheKeepAlive_{};
+    std::shared_ptr<EndpointMonitor> monitorKeepAlive_{};
 };
 
 } // namespace hcomm

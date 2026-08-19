@@ -28,7 +28,6 @@ CpuUrmaEndpoint::~CpuUrmaEndpoint() noexcept
         ServerSocketStopListenImpl(dynamicPort_);
     }
     dynamicPort_ = HCCL_INVALID_PORT;
-    ProcRegedMemMgrCache::GetInstance().Release(cacheKey_);
 }
 
 HcclResult CpuUrmaEndpoint::Init()
@@ -59,17 +58,13 @@ HcclResult CpuUrmaEndpoint::Init()
         "CpuUrmaEndpoint::%s success, devPhyId[%u], ipAddr[%s], ctxHandle[%p]", __func__, devPhyId,
         ipAddr.Describe().c_str(), ctxHandle_);
 
-    cacheKey_ = MemMgrCacheKey{devPhyId, COMM_PROTOCOL_UB_CTP, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
-    auto& cache = ProcRegedMemMgrCache::GetInstance();
-    EXCEPTION_CATCH(
-        regedMemMgr_ = cache.GetOrCreate(
-            cacheKey_,
-            [this]() {
-                auto m = std::make_shared<UbRegedMemMgr>();
-                m->rdmaHandle_ = this->ctxHandle_;
-                return m;
-            }),
-        return HCCL_E_PARA);
+    MemMgrCacheKey key{devPhyId, COMM_PROTOCOL_UB_CTP, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
+    auto createMgr = [this]() {
+        auto mgr = std::make_shared<UbRegedMemMgr>();
+        mgr->rdmaHandle_ = ctxHandle_;
+        return mgr;
+    };
+    CHK_RET(AttachCache(key, createMgr));
     return HCCL_SUCCESS;
 }
 

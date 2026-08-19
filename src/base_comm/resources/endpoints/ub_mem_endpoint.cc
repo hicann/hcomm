@@ -20,8 +20,6 @@
 namespace hcomm {
 UbMemEndpoint::UbMemEndpoint(const EndpointDesc& endpointDesc) : Endpoint(endpointDesc) {}
 
-UbMemEndpoint::~UbMemEndpoint() noexcept { ProcRegedMemMgrCache::GetInstance().Release(cacheKey_); }
-
 HcclResult UbMemEndpoint::Init()
 {
     Hccl::IpAddress ipAddr{};
@@ -32,15 +30,11 @@ HcclResult UbMemEndpoint::Init()
     u32 devPhyId = 0;
     CHK_RET(hrtGetDevicePhyIdByIndex(devId, devPhyId));
 
-    cacheKey_ = MemMgrCacheKey{devPhyId, COMM_PROTOCOL_UB_MEM, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
-    auto& cache = ProcRegedMemMgrCache::GetInstance();
-    EXCEPTION_CATCH(
-        regedMemMgr_ = cache.GetOrCreate(
-            cacheKey_,
-            []() {
-                return std::make_shared<UbMemRegedMemMgr>();
-            }),
-        return HCCL_E_INTERNAL);
+    MemMgrCacheKey key{devPhyId, COMM_PROTOCOL_UB_MEM, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
+    auto createMgr = []() {
+        return std::make_shared<UbMemRegedMemMgr>();
+    };
+    CHK_RET(AttachCache(key, createMgr));
 
     return HcclResult::HCCL_SUCCESS;
 }

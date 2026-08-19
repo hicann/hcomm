@@ -20,8 +20,6 @@ namespace hcomm {
 
 UboeEndpoint::UboeEndpoint(const EndpointDesc& endpointDesc) : UboeUbRtpEndpointHelper(endpointDesc) {}
 
-UboeEndpoint::~UboeEndpoint() noexcept { ProcRegedMemMgrCache::GetInstance().Release(cacheKey_); }
-
 HcclResult UboeEndpoint::Init()
 {
     HCCL_INFO("[%s] localEndpoint protocol[%d]", __func__, endpointDesc_.protocol);
@@ -47,17 +45,13 @@ HcclResult UboeEndpoint::Init()
         "%s success, devPhyId[%u], eidAddress[%s], ctxHandle[%p]", __func__, devPhyId, eidAddress.Describe().c_str(),
         ctxHandle_);
 
-    cacheKey_ = MemMgrCacheKey{devPhyId, COMM_PROTOCOL_UB_CTP, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
-    auto& cache = ProcRegedMemMgrCache::GetInstance();
-    EXCEPTION_CATCH(
-        regedMemMgr_ = cache.GetOrCreate(
-            cacheKey_,
-            [this]() {
-                auto m = std::make_shared<UbRegedMemMgr>();
-                m->rdmaHandle_ = this->ctxHandle_;
-                return m;
-            }),
-        return HCCL_E_INTERNAL);
+    MemMgrCacheKey key{devPhyId, COMM_PROTOCOL_UB_CTP, ipAddr, LocTypeToPortType(endpointDesc_.loc.locType)};
+    auto createMgr = [this]() {
+        auto mgr = std::make_shared<UbRegedMemMgr>();
+        mgr->rdmaHandle_ = ctxHandle_;
+        return mgr;
+    };
+    CHK_RET(AttachCache(key, createMgr));
 
     return HcclResult::HCCL_SUCCESS;
 }

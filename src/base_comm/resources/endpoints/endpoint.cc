@@ -23,6 +23,9 @@
 #include "hccp_nda.h"
 #include "adapter_rts_common.h"
 #include "rdma_handle_manager.h"
+#include "proc_reged_mem_mgr_cache.h"
+#include "dfx/endpoint_monitor.h"
+#include "log.h"
 
 namespace hcomm {
 static bool IsSupported(const EndpointDesc& endpointDesc)
@@ -100,6 +103,8 @@ void Endpoint::FreeSharedJettyPtrs(SharedJettyCtx& ctx) const
 
 Endpoint::~Endpoint()
 {
+    ReleaseEndpointMonitor(reinterpret_cast<EndpointHandle>(this));
+    ReleaseCache();
     // 防御性清理：若仍有共享 jetty 未释放（理论上 CheckEndpointDestroy 应已拦截）。
     // refCount == 0 时可安全强制销毁；refCount > 0 表示仍有 connection 持有 jetty 句柄，
     // 强制销毁会导致 use-after-free，此时仅告警不销毁（接受泄漏以避免更严重后果）。
@@ -323,5 +328,44 @@ HcclResult Endpoint::CheckFeature(const EndpointDesc& endpointDesc, HcommEndpoin
     }
 
     return HCCL_SUCCESS;
+}
+
+HcclResult Endpoint::AttachCache(const MemMgrCacheKey& key, std::function<std::shared_ptr<RegedMemMgr>()> creator)
+{
+    cacheKey_ = key;
+    cacheKeepAlive_ = ProcRegedMemMgrCache::GetHolder();
+    regedMemMgr_ = cacheKeepAlive_->GetOrCreate(cacheKey_, std::move(creator));
+    if (regedMemMgr_ == nullptr) {
+        ReleaseCache();
+        return HCCL_E_INTERNAL;
+    }
+    return HCCL_SUCCESS;
+}
+
+void Endpoint::ReleaseCache()
+{
+    if (cacheKeepAlive_ == nullptr) {
+        return;
+    }
+    cacheKeepAlive_->Release(cacheKey_);
+    cacheKeepAlive_.reset();
+}
+
+void Endpoint::AttachMonitor(s32 logicId) { monitorKeepAlive_ = EndpointMonitor::GetHolder(logicId); }
+
+HcclResult Endpoint::RegisterToEndpointMonitor(s32 logicId, EndpointHandle handle)
+{
+    CHK_PRT_RET(
+        monitorKeepAlive_ == nullptr, HCCL_ERROR("[Endpoint][%s] monitor not attached", __func__), HCCL_E_INTERNAL);
+    return monitorKeepAlive_->RegisterToEndpointMonitor(logicId, handle);
+}
+
+void Endpoint::ReleaseEndpointMonitor(EndpointHandle handle)
+{
+    if (monitorKeepAlive_ == nullptr) {
+        return;
+    }
+    monitorKeepAlive_->RemoveEpHandleFromEndpointMonitor(handle);
+    monitorKeepAlive_.reset();
 }
 } // namespace hcomm

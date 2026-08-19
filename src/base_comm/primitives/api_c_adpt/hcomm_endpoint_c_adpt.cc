@@ -121,7 +121,10 @@ HcclResult RegisterDeviceEndpointMonitorIfNeeded(const EndpointDesc* endpoint, E
     CHK_PRT_RET(
         devLogicIdSigned < 0, HCCL_ERROR("[%s] HcclGetThreadDeviceId failed, ret[%d]", __func__, devLogicIdSigned),
         HCCL_E_INTERNAL);
-    EndpointMonitor::GetInstance(devLogicIdSigned).RegisterToEndpointMonitor(devLogicIdSigned, handle);
+    auto* ep = GetEndpointMap().GetEndpoint(handle);
+    CHK_PRT_RET(ep == nullptr, HCCL_ERROR("[%s] endpoint not found, handle[%p]", __func__, handle), HCCL_E_NOT_FOUND);
+    ep->AttachMonitor(devLogicIdSigned);
+    CHK_RET(ep->RegisterToEndpointMonitor(devLogicIdSigned, handle));
     return HCCL_SUCCESS;
 }
 
@@ -321,6 +324,7 @@ HcommResult HcommEndpointDestroy(EndpointHandle endpointHandle)
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
     if (endpoint != nullptr && endpoint->GetNicOps() != nullptr && endpoint->GetNicOps() != &g_BuiltinEndpointOps) {
         HCCL_INFO("[NicPlugin][%s] destroy plugin endpoint.", __func__);
+        endpoint->ReleaseEndpointMonitor(endpointHandle);
         auto ret = GetEndpointMap().RemoveEndpoint(endpointHandle);
         CHK_PRT_RET(
             ret == false, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),
@@ -337,12 +341,8 @@ HcommResult HcommEndpointDestroy(EndpointHandle endpointHandle)
         jettyRet);
     if (endpoint != nullptr) {
         CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
+        endpoint->ReleaseEndpointMonitor(endpointHandle);
     }
-    s32 devLogicIdSigned = HcclGetThreadDeviceId();
-    CHK_PRT_RET(
-        devLogicIdSigned < 0, HCCL_ERROR("[%s] HcclGetThreadDeviceId failed, ret[%d]", __func__, devLogicIdSigned),
-        HCCL_E_INTERNAL);
-    EndpointMonitor::GetInstance(devLogicIdSigned).RemoveEpHandleFromEndpointMonitor(endpointHandle);
     auto ret = GetEndpointMap().RemoveEndpoint(endpointHandle);
     CHK_PRT_RET(
         ret == false, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),

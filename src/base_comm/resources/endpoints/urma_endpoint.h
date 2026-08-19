@@ -18,7 +18,6 @@
 #include "ccu_channel_ctx_pool.h"
 #include "socket/socket.h"
 #include "externalinput_pub.h"
-#include "proc_reged_mem_mgr_cache.h"
 #include <mutex>
 
 namespace hcomm {
@@ -53,7 +52,6 @@ private:
     std::mutex portMutex_;
     u32 dynamicPort_{HCCL_INVALID_PORT};
     std::unique_ptr<CcuChannelCtxPool> ccuChannelCtxPool_{nullptr};
-    MemMgrCacheKey cacheKey_{};
 };
 } // namespace hcomm
 

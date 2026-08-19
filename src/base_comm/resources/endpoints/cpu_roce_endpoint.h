@@ -16,7 +16,6 @@
 #include <vector>
 #include <string>
 #include "endpoint.h"
-#include "proc_reged_mem_mgr_cache.h"
 #include "externalinput_pub.h"
 
 namespace hcomm {
@@ -55,7 +54,6 @@ private:
     u32 dynamicPort_{HCCL_INVALID_PORT};
     Capabilities capabilities_{};
     bool isCapabilitiesAvailable_{false};
-    MemMgrCacheKey cacheKey_{};
 };
 } // namespace hcomm
 #endif // ROCE_ENDPOINT_H

@@ -13,6 +13,13 @@
 
 namespace hcomm {
 
+std::shared_ptr<ProcRegedMemMgrCache> ProcRegedMemMgrCache::GetHolder()
+{
+    // 构造 private，make_shared 无法调用，只能 new。static 保证只 new 一次。
+    static std::shared_ptr<ProcRegedMemMgrCache> holder(new ProcRegedMemMgrCache());
+    return holder;
+}
+
 std::shared_ptr<RegedMemMgr>
 ProcRegedMemMgrCache::GetOrCreate(const MemMgrCacheKey& key, std::function<std::shared_ptr<RegedMemMgr>()> creator)
 {
