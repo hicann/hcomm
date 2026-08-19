@@ -50,42 +50,44 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine, const HcclChanne
 
 2. 当前CommEngine配置为CCU时，不支持交换额外自定义内存，仅支持交换通信域的HcclBuffer。
 
-3. 当前各CommEngine支持的通信协议与芯片型号有关，具体如下：
+3. AIV直驱URMA场景下，本端与远端参与交换的内存数量必须一致，否则Channel创建失败。
 
-  <!-- npu="950" id6 -->
-  针对Ascend 950PR/Ascend 950DT，各通信引擎支持的通信协议如下：
+4. 当前各CommEngine支持的通信协议与芯片型号有关，具体如下：
 
-  - COMM_ENGINE_CPU
-    - COMM_PROTOCOL_ROCE
-  - COMM_ENGINE_AICPU_TS
-    - COMM_PROTOCOL_UBOE
-    - COMM_PROTOCOL_UB_CTP
-    - COMM_PROTOCOL_ROCE
-  - COMM_ENGINE_AIV
-    - COMM_PROTOCOL_UB_CTP
-    - COMM_PROTOCOL_UB_MEM
-    - COMM_PROTOCOL_ROCE
-  - COMM_ENGINE_CCU
-    - COMM_PROTOCOL_UB_CTP
-  <!-- end id6 -->
+   <!-- npu="950" id6 -->
+   针对Ascend 950PR/Ascend 950DT，各通信引擎支持的通信协议如下：
 
-  <!-- npu="A3" id7 -->
-  针对Atlas A3 训练系列产品/Atlas A3 推理系列产品，各通信引擎支持的通信协议如下：
+   - COMM_ENGINE_CPU
+     - COMM_PROTOCOL_ROCE
+   - COMM_ENGINE_AICPU_TS
+     - COMM_PROTOCOL_UBOE
+     - COMM_PROTOCOL_UB_CTP
+     - COMM_PROTOCOL_ROCE
+   - COMM_ENGINE_AIV
+     - COMM_PROTOCOL_UB_CTP
+     - COMM_PROTOCOL_UB_MEM
+     - COMM_PROTOCOL_ROCE
+   - COMM_ENGINE_CCU
+     - COMM_PROTOCOL_UB_CTP
+   <!-- end id6 -->
 
-  - COMM_ENGINE_AICPU_TS
-    - COMM_PROTOCOL_ROCE
-    - COMM_PROTOCOL_HCCS
-    - COMM_PROTOCOL_HCCS_ONLY
-  <!-- end id7 -->
+   <!-- npu="A3" id7 -->
+   针对Atlas A3 训练系列产品/Atlas A3 推理系列产品，各通信引擎支持的通信协议如下：
 
-  <!-- npu="910b" id8 -->
-  针对Atlas A2 训练系列产品/Atlas A2 推理系列产品，各通信引擎支持的通信协议如下：
+   - COMM_ENGINE_AICPU_TS
+     - COMM_PROTOCOL_ROCE
+     - COMM_PROTOCOL_HCCS
+     - COMM_PROTOCOL_HCCS_ONLY
+   <!-- end id7 -->
 
-  - COMM_ENGINE_CPU_TS
-    - COMM_PROTOCOL_ROCE
-    - COMM_PROTOCOL_HCCS
-    - COMM_PROTOCOL_HCCS_ONLY
-  <!-- end id8 -->
+   <!-- npu="910b" id8 -->
+   针对Atlas A2 训练系列产品/Atlas A2 推理系列产品，各通信引擎支持的通信协议如下：
+
+   - COMM_ENGINE_CPU_TS
+     - COMM_PROTOCOL_ROCE
+     - COMM_PROTOCOL_HCCS
+     - COMM_PROTOCOL_HCCS_ONLY
+   <!-- end id8 -->
 
 ## 调用示例
 
