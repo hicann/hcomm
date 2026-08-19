@@ -17,6 +17,7 @@
 #define private public
 #include "ccu_urma_channel.h"
 #include "local_ub_rma_buffer.h"
+#include "orion_adpt_utils.h"
 #undef private
 
 using namespace hcomm;
@@ -114,11 +115,14 @@ TEST_F(CcuUrmaChannelTest, Ut_BuildBufferInfos_When_LocalUbHandle_Expect_BufferI
     EXPECT_EQ(std::string(bufferInfos[0].memInfo.data()), rawBuffer->GetMemInfo());
 }
 
-TEST_F(CcuUrmaChannelTest, Ut_GetStatus_DfxInfo_TEST)
+TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_DfxDescribe_Expect_ReadyOrFailed)
 {
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(1);
     CcuUrmaChannel ch(ep, desc);
+
+    ch.linkData_ = BuildDefaultLinkData();
+    ch.memHandles_.push_back(reinterpret_cast<HcommMemHandle>(0x1));
 
     // 1. 构造依赖
     CommAddr locAddr{}, rmtAddr{};
@@ -164,4 +168,137 @@ TEST_F(CcuUrmaChannelTest, Ut_GetStatus_DfxInfo_TEST)
     EXPECT_EQ(ret, ChannelStatus::FAILED);
     GlobalMockObject::verify();
     GlobalMockObject::reset();
+}
+
+// ==================== CcuUrmaChannel::GetStatus 资源不足终态映射 UT ====================
+
+struct ChannelWithTransport {
+    std::unique_ptr<CcuUrmaChannel> ch;
+    CcuTransport* impl;
+};
+
+ChannelWithTransport MakeChannelWithTransport()
+{
+    HcommChannelDesc desc{};
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(1);
+    auto ch = std::make_unique<CcuUrmaChannel>(ep, desc);
+    ch->linkData_ = BuildDefaultLinkData();
+    ch->memHandles_.push_back(reinterpret_cast<HcommMemHandle>(0x1));
+    CommAddr locAddr{}, rmtAddr{};
+    CcuChannelInfo channelInfo{};
+    std::vector<CcuJetty*> jettys{};
+    auto conn = std::make_unique<CcuConnection>(locAddr, rmtAddr, channelInfo, jettys, Hccl::UB_QOS_DEFAULT);
+    auto fakeSocket = reinterpret_cast<Hccl::Socket*>(1);
+    CcuTransport::CclBufferInfo bufInfo(0x1000, 0x100, 1, 1);
+    auto transport = std::make_unique<CcuTransport>(fakeSocket, std::move(conn), bufInfo);
+    // STC V2.0: locResStatus_ 改用公共 setter, 不直塞私有成员
+    transport->SetLocResStatus(CcuTransport::CcuResStatus::RES_OK);
+    CcuTransport* impl = transport.get();
+    ch->impl_ = std::move(transport);
+    ch->isFirstPrintChannelInfo_ = false;
+    return {std::move(ch), impl};
+}
+
+TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_LocUnavail_Expect_ResLocUnavailable)
+{
+    auto ctx = MakeChannelWithTransport();
+    // 白盒保留: transStatus_/rmtResStatus_ 无公共 setter, 只能直塞私有成员
+    ctx.impl->transStatus_ = CcuTransport::TransStatus::CONNECT_FAILED;
+    // STC V2.0: locResStatus_ 改用公共 setter
+    ctx.impl->SetLocResStatus(CcuTransport::CcuResStatus::RES_UNAVAIL);
+    ctx.impl->rmtResStatus_ = CcuTransport::CcuResStatus::RES_OK;
+    EXPECT_EQ(ctx.ch->GetStatus(), ChannelStatus::RES_LOC_UNAVAIL);
+}
+
+TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_RmtUnavail_Expect_ResRmtUnavailable)
+{
+    auto ctx = MakeChannelWithTransport();
+    // 白盒保留: transStatus_/rmtResStatus_ 无公共 setter, 只能直塞私有成员
+    ctx.impl->transStatus_ = CcuTransport::TransStatus::CONNECT_FAILED;
+    // STC V2.0: locResStatus_ 改用公共 setter
+    ctx.impl->SetLocResStatus(CcuTransport::CcuResStatus::RES_OK);
+    ctx.impl->rmtResStatus_ = CcuTransport::CcuResStatus::RES_UNAVAIL;
+    EXPECT_EQ(ctx.ch->GetStatus(), ChannelStatus::RES_RMT_UNAVAIL);
+}
+
+TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_BothUnavail_Expect_LocPriority)
+{
+    auto ctx = MakeChannelWithTransport();
+    // 白盒保留: transStatus_/rmtResStatus_ 无公共 setter, 只能直塞私有成员
+    ctx.impl->transStatus_ = CcuTransport::TransStatus::CONNECT_FAILED;
+    // STC V2.0: locResStatus_ 改用公共 setter
+    ctx.impl->SetLocResStatus(CcuTransport::CcuResStatus::RES_UNAVAIL);
+    ctx.impl->rmtResStatus_ = CcuTransport::CcuResStatus::RES_UNAVAIL;
+    EXPECT_EQ(ctx.ch->GetStatus(), ChannelStatus::RES_LOC_UNAVAIL);
+}
+
+TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_NoUnavail_Expect_Failed)
+{
+    auto ctx = MakeChannelWithTransport();
+    // 白盒保留: transStatus_/rmtResStatus_ 无公共 setter, 只能直塞私有成员
+    ctx.impl->transStatus_ = CcuTransport::TransStatus::CONNECT_FAILED;
+    // STC V2.0: locResStatus_ 改用公共 setter
+    ctx.impl->SetLocResStatus(CcuTransport::CcuResStatus::RES_OK);
+    ctx.impl->rmtResStatus_ = CcuTransport::CcuResStatus::RES_OK;
+    EXPECT_EQ(ctx.ch->GetStatus(), ChannelStatus::FAILED);
+}
+
+// TC-CH-016: 本端硬失败(RES_FAILED)终态映射为 FAILED (非资源不足, 不触发回退)
+TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_LocFailed_Expect_Failed)
+{
+    auto ctx = MakeChannelWithTransport();
+    ctx.impl->transStatus_ = CcuTransport::TransStatus::CONNECT_FAILED;
+    ctx.impl->SetLocResStatus(CcuTransport::CcuResStatus::RES_FAILED);
+    ctx.impl->rmtResStatus_ = CcuTransport::CcuResStatus::RES_OK;
+    EXPECT_EQ(ctx.ch->GetStatus(), ChannelStatus::FAILED);
+}
+
+// TC-CH-017: 对端硬失败(RES_FAILED)终态映射为 FAILED
+TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_RmtFailed_Expect_Failed)
+{
+    auto ctx = MakeChannelWithTransport();
+    ctx.impl->transStatus_ = CcuTransport::TransStatus::CONNECT_FAILED;
+    ctx.impl->SetLocResStatus(CcuTransport::CcuResStatus::RES_OK);
+    ctx.impl->rmtResStatus_ = CcuTransport::CcuResStatus::RES_FAILED;
+    EXPECT_EQ(ctx.ch->GetStatus(), ChannelStatus::FAILED);
+}
+
+TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_Ready_Expect_Ready)
+{
+    auto ctx = MakeChannelWithTransport();
+    ctx.impl->transStatus_ = CcuTransport::TransStatus::READY;
+    EXPECT_EQ(ctx.ch->GetStatus(), ChannelStatus::READY);
+}
+
+TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_SocketTimeout_Expect_SocketTimeout)
+{
+    auto ctx = MakeChannelWithTransport();
+    ctx.impl->transStatus_ = CcuTransport::TransStatus::SOCKET_TIMEOUT;
+    EXPECT_EQ(ctx.ch->GetStatus(), ChannelStatus::SOCKET_TIMEOUT);
+}
+
+// 懒建链失败路径: CreateCcuTransport 硬失败(如端点无效)时构造 msg-only transport 通知对端, 且仅构造一次
+TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_ConstructFails_Expect_MsgOnlyTransport)
+{
+    HcommChannelDesc desc{};
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    CcuUrmaChannel ch(ep, desc);
+
+    // 绕过 Init, 直接构造 GetStatus 前置成员; ccuEndpoint_ 置空使 CreateCcuTransport 硬失败
+    ch.socket_ = reinterpret_cast<Hccl::Socket*>(0x1);
+    ch.ccuEndpoint_ = nullptr;
+    ch.linkData_ = BuildDefaultLinkData();
+    ch.memHandles_ = {reinterpret_cast<HcommMemHandle>(0x2)};
+    ch.channelStatus_ = ChannelStatus::INIT;
+
+    // 第一次 GetStatus: 触发 TryPrepareAndConstruct, 硬失败 -> msg-only transport(RES_FAILED)
+    EXPECT_EQ(ch.GetStatus(), ChannelStatus::INIT);
+    ASSERT_NE(ch.impl_, nullptr);
+    EXPECT_EQ(ch.impl_->GetLocResStatus(), CcuTransport::CcuResStatus::RES_FAILED);
+    EXPECT_EQ(ch.impl_->transStatus_, CcuTransport::TransStatus::INIT);
+
+    // 第二次 GetStatus: locResStatus_ != RES_UNKNOWN, 不会重复构造 transport
+    CcuTransport* implPtr = ch.impl_.get();
+    EXPECT_EQ(ch.GetStatus(), ChannelStatus::INIT);
+    EXPECT_EQ(ch.impl_.get(), implPtr);
 }

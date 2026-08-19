@@ -13,6 +13,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -75,6 +76,10 @@ public:
     HcclResult CreateChannels(
         CommEngine engine, const std::string& commTag, const HcclChannelDesc* channelDescs, uint32_t channelNum,
         ChannelHandle* channels);
+
+    HcclResult
+    QueryChannels(CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle* channels);
+    HcclResult DestroyChannels(const ChannelHandle* channels, uint32_t channelNum);
 
     HcclResult ChannelGetHcclBuffer(ChannelHandle channel, void** buffer, uint64_t* size);
     HcclResult
@@ -157,8 +162,12 @@ private:
     void ReconcileCcuMsCommReservation(HcclResult initRet);
     void ReleaseCcuMsCommReservation();
     HcclResult ConfigSqDepthByExpansionMode(CommEngine engine, HcommChannelDesc& hcommDesc) const;
-    HcclResult DestroyNewChannels(CommEngine engine, const HcclChannelDesc* channelDescs);
-
+    HcclResult DestroyNewChannels(
+        CommEngine engine, const HcclChannelDesc* channelDescs, const std::vector<std::pair<u32, u32>>& newChannels);
+    HcclResult
+    QueryOneChannel(CommEngine engine, const HcclChannelDesc& channelDesc, u32 reuseIdx, ChannelHandle& handle);
+    HcclResult
+    DestroyOneChannel(ChannelHandle userHandle, u32 index, HcclResult& firstErr, u32& invalidHandleCnt, u32& failedCnt);
     aclrtBinHandle binHandle_{nullptr};
     uint32_t rankId_{};
     int32_t devLogicId_{};
@@ -181,6 +190,13 @@ private:
 
     // 记录每次调用BatchCreateChannels时新增的channelIndex, reuseIdx
     std::vector<std::pair<u32, u32>> newChannels_{};
+
+    // channelHandle(host) -> EndpointPair 裸指针反查索引：EndpointPair 由 EndpointPairMgr 以 unique_ptr 持有，
+    // 其生命周期与 RankPairMgr 一致（MyRank 析构时先 clear 反查表再释放 rankPairMgr_）
+    std::unordered_map<ChannelHandle, hcomm::EndpointPair*> handleToEpPair_{};
+
+    // 保护 newChannels_ / handleToEpPair_ 的并发访问
+    std::mutex channelIndexMtx_{};
 
     // Ns recovery
     std::unique_ptr<NsRecoveryProcessor> nsRecoveryProcessor_{nullptr};

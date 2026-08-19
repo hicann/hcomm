@@ -10,8 +10,6 @@
 
 #include "ccu_channel_ctx_pool.h"
 
-#include <unordered_set>
-
 #include "ccu_device_pub.h"
 #include "orion_adpt_utils.h"
 
@@ -59,6 +57,8 @@ HcclResult CcuChannelCtxPool::ResourceBatch::Init(const std::vector<CcuChannelIn
 
 HcclResult CcuChannelCtxPool::PrepareCreate(const std::vector<Hccl::LinkData>& links, uint32_t sqSize)
 {
+    std::lock_guard<std::mutex> lock(mtx_);
+
     CHK_PRT_RET(
         links.empty(),
         HCCL_INFO("[CcuChannelCtxPool][%s] passed, links is empty, devLogicId[%d].", __func__, devLogicId_),
@@ -88,9 +88,9 @@ HcclResult CcuChannelCtxPool::PrepareCreate(const std::vector<Hccl::LinkData>& l
 
         ChannelIdKey channelIdKey = batchPtr->availableChannelIdKeys.back();
         batchPtr->availableChannelIdKeys.pop_back();
-        unconfirmedRecord_.allocations.emplace_back(Allocation{link, channelIdKey, batchPtr});
         allocatedChannelIdMap_[link] = channelIdKey;
         channelRemoteRankIdMap_[channelIdKey] = link.GetRemoteRankId();
+        usedChannelCntMap_[channelIdKey.first] += 1;
 
         HCCL_INFO(
             "[CcuChannelCtxPool][%s] allocated new channelId[%u] of die[%u] to link[%s], "
@@ -163,13 +163,13 @@ HcclResult CcuChannelCtxPool::CreateAndSaveNewBatch(
         }
 
         channelJettyInfoMap_.emplace(channelIdKey, std::make_pair(channelInfo, jettys));
-        usedChannelCntMap_[dieId] += 1;
     }
 
     batches.push_back(std::move(newBatch));
     ResourceBatch* rawBatch = batches.back().get();
-
-    unconfirmedRecord_.newBatchSet.insert(rawBatch);
+    for (const auto& channelInfo : channelInfos) {
+        channelToBatch_[std::make_pair(channelInfo.dieId, channelInfo.channelId)] = rawBatch;
+    }
     batchPtr = rawBatch;
     return HcclResult::HCCL_SUCCESS;
 }
@@ -182,22 +182,22 @@ bool CcuChannelCtxPool::FindAvailableBatch(const BatchKey& batchKey, ResourceBat
     }
 
     auto& batches = it->second;
-    if (batches.empty()) {
-        return false;
+    // 从后往前遍历：越晚创建的 batch 越可能留有可复用槽位（新申请通常分配自尾部），
+    // 优先命中可减少扫描；中间 batch 释放出的槽位同样可被后续创建复用
+    for (auto batchIter = batches.rbegin(); batchIter != batches.rend(); ++batchIter) {
+        if (*batchIter != nullptr && !(*batchIter)->availableChannelIdKeys.empty()) {
+            batchPtr = batchIter->get();
+            return true;
+        }
     }
-    // 当前分配逻辑只有最后一个batch可能还有空闲资源
-    auto& lastBatch = batches.back();
-    if (lastBatch->availableChannelIdKeys.empty()) {
-        return false;
-    }
-
-    batchPtr = lastBatch.get();
-    return true;
+    return false;
 }
 
 HcclResult
 CcuChannelCtxPool::GetChannelCtx(const Hccl::LinkData& link, CcuChannelCtxPool::CcuChannelCtx& channelCtx) const
 {
+    std::lock_guard<std::mutex> lock(mtx_);
+
     const auto& it = allocatedChannelIdMap_.find(link);
     CHK_PRT_RET(
         it == allocatedChannelIdMap_.end(),
@@ -212,18 +212,25 @@ CcuChannelCtxPool::GetChannelCtx(const Hccl::LinkData& link, CcuChannelCtxPool::
 
 HcclResult CcuChannelCtxPool::ReleaseConfirmedChannelRes()
 {
+    // 析构路径唯一入口，内部持锁保护 map 遍历与设备层归还
+    std::lock_guard<std::mutex> lock(mtx_);
+
     for (const auto& infoEntry : channelJettyInfoMap_) {
         const auto& channelIdKey = infoEntry.first;
         const auto dieId = channelIdKey.first;
         const auto channelId = channelIdKey.second;
         CHK_RET(CcuReleaseChannel(devLogicId_, dieId, channelId));
     }
+    channelJettyInfoMap_.clear();
+    channelToBatch_.clear();
     isReleased_ = true;
     return HcclResult::HCCL_SUCCESS;
 }
 
 HcclResult CcuChannelCtxPool::GetCcuChannelCtxById(const std::pair<uint8_t, uint32_t>& key, CcuChannelCtx& ctx)
 {
+    std::lock_guard<std::mutex> lock(mtx_);
+
     auto it = channelJettyInfoMap_.find(key);
     if (it == channelJettyInfoMap_.end()) {
         HCCL_ERROR("[%s]fail, key[%u, %u] not found", __func__, key.first, key.second);
@@ -231,5 +238,103 @@ HcclResult CcuChannelCtxPool::GetCcuChannelCtxById(const std::pair<uint8_t, uint
     }
     ctx = it->second;
     return HCCL_SUCCESS;
+}
+
+HcclResult CcuChannelCtxPool::ReleaseChannel(const Hccl::LinkData& link)
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+
+    auto it = allocatedChannelIdMap_.find(link);
+    if (it == allocatedChannelIdMap_.end()) {
+        // 未分配或已释放的 link 直接返回成功：msg-only(资源不足)等未实际分配资源的
+        // channel 销毁路径属正常场景，静默返回即可
+        HCCL_DEBUG("[CcuChannelCtxPool][%s] link not allocated, devLogicId[%d], skip release.", __func__, devLogicId_);
+        return HcclResult::HCCL_SUCCESS;
+    }
+    const auto channelIdKey = it->second;
+    allocatedChannelIdMap_.erase(link);
+    channelRemoteRankIdMap_.erase(channelIdKey);
+    auto cntIt = usedChannelCntMap_.find(channelIdKey.first);
+    if (cntIt != usedChannelCntMap_.end() && cntIt->second > 0) {
+        cntIt->second -= 1;
+        if (cntIt->second == 0) {
+            usedChannelCntMap_.erase(cntIt);
+        }
+    }
+
+    ResourceBatch* batch = FindBatchByChannelId(channelIdKey);
+    if (batch == nullptr) {
+        HCCL_ERROR(
+            "[CcuChannelCtxPool][%s] failed to find batch of channelId[%u] die[%u], "
+            "devLogicId[%d].",
+            __func__, channelIdKey.second, channelIdKey.first, devLogicId_);
+        return HcclResult::HCCL_E_INTERNAL;
+    }
+    // 槽位压回可复用列表：V2 组内其他 channel 仍活跃时，设备层占用保持不变，
+    // 后续创建可直接复用该槽位（连接流程会重新配置 channel 表）。
+    batch->availableChannelIdKeys.push_back(channelIdKey);
+    // 整组无活跃 channel 时，锁内整组归还设备层并销毁 batch
+    HcclResult releaseRet = ReleaseBatchIfIdle(batch);
+    if (releaseRet != HcclResult::HCCL_SUCCESS) {
+        // 设备层归还失败：该槽位不能被后续创建复用（设备层资源并未真正归还），
+        // 从可复用列表回退，资源留待通信域销毁时 ReleaseConfirmedChannelRes 兜底重试
+        if (!batch->availableChannelIdKeys.empty() && batch->availableChannelIdKeys.back() == channelIdKey) {
+            batch->availableChannelIdKeys.pop_back();
+        }
+    }
+    return releaseRet;
+}
+
+CcuChannelCtxPool::ResourceBatch* CcuChannelCtxPool::FindBatchByChannelId(const ChannelIdKey& key) const
+{
+    auto it = channelToBatch_.find(key);
+    return (it == channelToBatch_.end()) ? nullptr : it->second;
+}
+
+HcclResult CcuChannelCtxPool::ReleaseBatchIfIdle(CcuChannelCtxPool::ResourceBatch* batch)
+{
+    if (batch->availableChannelIdKeys.size() != batch->channelIdKeys.size()) {
+        // 组内仍有活跃 channel，保留 batch 供槽位复用
+        return HcclResult::HCCL_SUCCESS;
+    }
+    // 整组无活跃 channel：逐 channel 归还设备层（V2 useCnt 递减至 0），全部成功才销毁 batch；
+    // 任一失败则保留 batch（channelJettyInfoMap_/channelToBatch_ 条目仍在，host 对象不被销毁），
+    // 返回错误供上层感知；通信域销毁时的 ReleaseConfirmedChannelRes 会再次尝试整体归还。
+    for (const auto& channelIdKey : batch->channelIdKeys) {
+        auto ret = CcuReleaseChannel(devLogicId_, channelIdKey.first, channelIdKey.second);
+        if (ret != HcclResult::HCCL_SUCCESS) {
+            HCCL_ERROR(
+                "[CcuChannelCtxPool][%s] failed to release channel[die%u, id%u] to device, "
+                "ret[%d], devLogicId[%d], keep batch for retry.",
+                __func__, channelIdKey.first, channelIdKey.second, ret, devLogicId_);
+            return ret;
+        }
+    }
+    RemoveBatch(batch);
+    return HcclResult::HCCL_SUCCESS;
+}
+
+void CcuChannelCtxPool::RemoveBatch(CcuChannelCtxPool::ResourceBatch* batch)
+{
+    auto it = batchMap_.find(batch->key);
+    if (it == batchMap_.end()) {
+        return;
+    }
+    auto& batches = it->second;
+    for (auto bIt = batches.begin(); bIt != batches.end(); ++bIt) {
+        if (bIt->get() != batch) {
+            continue;
+        }
+        for (const auto& channelIdKey : batch->channelIdKeys) {
+            channelJettyInfoMap_.erase(channelIdKey);
+            channelToBatch_.erase(channelIdKey);
+        }
+        // 锁内销毁 batch：~ResourceBatch → ~CcuJetty → Clean → RaCtxQpDestroy
+        batches.erase(bIt);
+        break;
+    }
+    if (batches.empty()) {
+        batchMap_.erase(it);
+    }
 }
 } // namespace hcomm

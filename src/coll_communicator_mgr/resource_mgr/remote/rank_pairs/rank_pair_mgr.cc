@@ -40,4 +40,14 @@ ChannelTable RankPairMgr::GetChannelTable()
     return channelTable;
 }
 
+HcclResult RankPairMgr::Find(RankIdPair rankIdPair, RankPair*& out)
+{
+    auto iterPtr = rankPairMap_.find(rankIdPair);
+    if (iterPtr != rankPairMap_.end()) {
+        out = iterPtr->second.get();
+        return HCCL_SUCCESS;
+    }
+    return HCCL_E_NOT_FOUND;
+}
+
 } // namespace hccl

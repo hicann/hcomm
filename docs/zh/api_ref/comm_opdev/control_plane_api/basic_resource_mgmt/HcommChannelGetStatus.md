@@ -35,7 +35,7 @@ HcommResult HcommChannelGetStatus(const ChannelHandle *channelList, uint32_t lis
 | --- | --- | --- |
 | channelList | 输入 | 待查询状态的通道句柄数组，每个元素标识一个已创建的通信通道。<br>ChannelHandle类型的定义请参见[ChannelHandle](../../datatype_definition/ChannelHandle.md)。<br>该参数不能为空指针，数组中每个通道句柄必须是通过[HcommChannelCreate](HcommChannelCreate.md)创建的有效句柄。 |
 | listNum | 输入 | 待查询的通道数量。<br>单位为“个”，取值范围：[1, 1048576]。<br>该参数必须大于0。 |
-| statusList | 输出 | 通道状态数组，用于返回每个通道的当前状态，与channelList一一对应。<br>该参数不能为空指针。<br>调用者分配的数组，至少包含listNum个元素的空间。<br>状态值定义如下：<br>0：建链完成，通道就绪。<br>1：建链进行中，需继续调用本接口推动建链。<br>2：建链失败。<br>3：建链超时。 |
+| statusList | 输出 | 通道状态数组，用于返回每个通道的当前状态，与channelList一一对应。<br>该参数不能为空指针。<br>调用者分配的数组，至少包含listNum个元素的空间。<br>状态值定义如下：<br>0：建链完成，通道就绪。<br>1：建链进行中，需继续调用本接口推动建链。<br>2：建链失败。<br>3：建链超时。<br>4：本端资源不足，建链失败。<br>5：对端资源不足，建链失败。 |
 
 ## 返回值
 

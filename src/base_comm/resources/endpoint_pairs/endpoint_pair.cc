@@ -32,6 +32,7 @@ EndpointPair::~EndpointPair()
 
 HcclResult EndpointPair::Init()
 {
+    std::lock_guard<std::mutex> lock(channelMtx_);
     EXCEPTION_CATCH(socketMgr_ = std::make_unique<SocketMgr>(), return HCCL_E_PTR);
     channelHandles_.clear();
     s32 devLogicId;
@@ -183,10 +184,13 @@ HcclResult EndpointPair::CreateChannel(
     EndpointHandle endpointHandle, CommEngine engine, u32 reuseIdx, HcommChannelDesc* channelDescs,
     ChannelHandle* channels)
 {
+    std::lock_guard<std::mutex> lock(channelMtx_);
     if (channelHandles_.find(engine) == channelHandles_.end() || channelHandles_[engine].size() <= reuseIdx) {
         CHK_RET_UNAVAIL(
             static_cast<HcclResult>(HcommCollectiveChannelCreate(endpointHandle, engine, channelDescs, 1, channels)));
         channelHandles_[engine].push_back(channels[0]);
+        // 记录真实槽位下标：UNREUSE 通道的入参 reuseIdx 为 0xFFFFFFFF，实际槽位是 push_back 后的下标
+        handleToLoc_[channels[0]] = {engine, static_cast<u32>(channelHandles_[engine].size() - 1)};
         return HCCL_SUCCESS;
     }
 
@@ -201,7 +205,8 @@ HcclResult EndpointPair::CreateChannel(
 // 找到对应的channelhandle，调用HcommChannelDestroy销毁平台层对象，并删除channelHandles_中的channelHandle元素
 HcclResult EndpointPair::DestroyChannel(CommEngine engine, u32 reuseIdx)
 {
-    if (IsChannelNotExist(engine, reuseIdx)) {
+    std::lock_guard<std::mutex> lock(channelMtx_);
+    if (channelHandles_.find(engine) == channelHandles_.end() || channelHandles_[engine].size() <= reuseIdx) {
         HCCL_WARNING(
             "EndpointPair::DestroyChannel: engine[%s] reuseIdx[%u], channelHandle size[%u],"
             "channel not found, skip destroy channel",
@@ -213,25 +218,66 @@ HcclResult EndpointPair::DestroyChannel(CommEngine engine, u32 reuseIdx)
         "start destroy channel",
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx, channelHandles_[engine].size());
     ChannelHandle channelHandle = channelHandles_[engine][reuseIdx];
-    CHK_RET(static_cast<HcclResult>(HcommChannelDestroy(&channelHandle, 1)));
+    // 无论 HcommChannelDestroy 成功与否，底层 channel 对象已被从全局 map 移除（channel 不可用），
+    // host 侧索引必须同步清理，避免后续复用到失效 handle
+    HcclResult destroyRet = static_cast<HcclResult>(HcommChannelDestroy(&channelHandle, 1));
+    if (destroyRet != HCCL_SUCCESS) {
+        HCCL_WARNING(
+            "EndpointPair::DestroyChannel: HcommChannelDestroy failed, ret[%d], still clean host index.", destroyRet);
+    }
+    // 先删反查索引再 erase 向量: erase 会使后续元素下标前移
+    handleToLoc_.erase(channelHandle);
     // 去掉channelHandles_中reuseIdx位置的channelHandle
     channelHandles_[engine].erase(channelHandles_[engine].begin() + reuseIdx);
+    // 同 engine 后续 handle 因 erase 下标前移, 需同步修正反查索引
+    auto& handlesVec = channelHandles_[engine];
+    for (u32 idx = reuseIdx; idx < handlesVec.size(); ++idx) {
+        auto locIt = handleToLoc_.find(handlesVec[idx]);
+        if (locIt != handleToLoc_.end()) {
+            locIt->second.second = idx;
+        }
+    }
     HCCL_INFO(
         "EndpointPair::DestroyChannel: engine[%s] reuseIdx[%u] destroy channel success,"
         "channelHandle size[%u]",
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx, channelHandles_[engine].size());
-    return HCCL_SUCCESS;
+    return destroyRet;
 }
 
 // 检查channel是否存在，channel不存在则返回true
 bool EndpointPair::IsChannelNotExist(CommEngine engine, u32 reuseIdx)
 {
+    std::lock_guard<std::mutex> lock(channelMtx_);
     return channelHandles_.find(engine) == channelHandles_.end() || channelHandles_[engine].size() <= reuseIdx;
 }
 
-const std::unordered_map<CommEngine, std::vector<ChannelHandle>>& EndpointPair::GetChannelHandles()
+std::unordered_map<CommEngine, std::vector<ChannelHandle>> EndpointPair::GetChannelHandles() const
 {
+    std::lock_guard<std::mutex> lock(channelMtx_);
     return channelHandles_;
+}
+
+bool EndpointPair::GetChannelHandle(CommEngine engine, u32 reuseIdx, ChannelHandle& handle) const
+{
+    std::lock_guard<std::mutex> lock(channelMtx_);
+    auto it = channelHandles_.find(engine);
+    if (it == channelHandles_.end() || reuseIdx >= it->second.size()) {
+        return false;
+    }
+    handle = it->second[reuseIdx];
+    return true;
+}
+
+bool EndpointPair::FindChannelLoc(ChannelHandle handle, CommEngine& engine, u32& reuseIdx) const
+{
+    std::lock_guard<std::mutex> lock(channelMtx_);
+    auto it = handleToLoc_.find(handle);
+    if (it == handleToLoc_.end()) {
+        return false;
+    }
+    engine = it->second.first;
+    reuseIdx = it->second.second;
+    return true;
 }
 
 } // namespace hcomm

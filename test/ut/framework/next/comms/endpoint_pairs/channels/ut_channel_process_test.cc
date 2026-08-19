@@ -16,6 +16,12 @@
 #include "aiv_channel_helper.h"
 #include "mem_device_pub.h"
 
+// ConvertToLinkStatus 是 channel_process.cc 内 hcomm 命名空间下的自由函数(外部链接),
+// 头文件未声明, 这里前向声明以便 UT 直接验证终态映射契约。
+namespace hcomm {
+void ConvertToLinkStatus(const std::vector<ChannelStatus>& internalStatus, std::vector<int32_t>& linkStatusList);
+}
+
 class TestChannelProcess : public TestHcommCAdptBase {
 public:
     void SetUp() override { TestHcommCAdptBase::SetUp(); }
@@ -595,4 +601,123 @@ TEST_F(TestChannelProcess, Ut_ChannelGetStatus_When_HandleNotFound_Return_HCCL_E
 
     HcclResult ret = hcomm::ChannelProcess::ChannelGetStatus(channelList, 1, statusList);
     EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
+}
+
+TEST_F(TestChannelProcess, Ut_ChannelGetStatus_When_RmtUnavail_Return_HCCL_E_UNAVAIL)
+{
+    auto channel = std::make_shared<FakeStatusChannel>(hcomm::ChannelStatus::RES_RMT_UNAVAIL);
+    ChannelHandle handle = RegisterFakeChannel(channel);
+    ChannelHandle channelList[1] = {handle};
+    int32_t statusList[1] = {0};
+    MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_SUCCESS));
+
+    HcclResult ret = hcomm::ChannelProcess::ChannelGetStatus(channelList, 1, statusList);
+    EXPECT_EQ(ret, HCCL_E_UNAVAIL);
+    EXPECT_EQ(statusList[0], static_cast<int32_t>(hcomm::ChannelStatus::RES_RMT_UNAVAIL));
+}
+
+TEST_F(TestChannelProcess, Ut_ChannelGetStatus_When_LocUnavail_Return_HCCL_E_UNAVAIL)
+{
+    auto channel = std::make_shared<FakeStatusChannel>(hcomm::ChannelStatus::RES_LOC_UNAVAIL);
+    ChannelHandle handle = RegisterFakeChannel(channel);
+    ChannelHandle channelList[1] = {handle};
+    int32_t statusList[1] = {0};
+    MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_SUCCESS));
+
+    HcclResult ret = hcomm::ChannelProcess::ChannelGetStatus(channelList, 1, statusList);
+    EXPECT_EQ(ret, HCCL_E_UNAVAIL);
+    EXPECT_EQ(statusList[0], static_cast<int32_t>(hcomm::ChannelStatus::RES_LOC_UNAVAIL));
+}
+
+// TC-CP-013: 混合终态(READY + FAILED + RES_LOC_UNAVAIL), 存在网络类失败时优先返回 NETWORK
+TEST_F(TestChannelProcess, Ut_ChannelGetStatus_When_MixUnavailAndFailed_Expect_NETWORK)
+{
+    auto chReady = std::make_shared<FakeStatusChannel>(hcomm::ChannelStatus::READY);
+    auto chFailed = std::make_shared<FakeStatusChannel>(hcomm::ChannelStatus::FAILED);
+    auto chLocUnavail = std::make_shared<FakeStatusChannel>(hcomm::ChannelStatus::RES_LOC_UNAVAIL);
+    ChannelHandle hReady = RegisterFakeChannel(chReady);
+    ChannelHandle hFailed = RegisterFakeChannel(chFailed);
+    ChannelHandle hLocUnavail = RegisterFakeChannel(chLocUnavail);
+    ChannelHandle channelList[3] = {hReady, hFailed, hLocUnavail};
+    int32_t statusList[3] = {0, 0, 0};
+    MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_SUCCESS));
+
+    HcclResult ret = hcomm::ChannelProcess::ChannelGetStatus(channelList, 3, statusList);
+    // 设计约定: 资源不足仅在整批无其他失败时返回 UNAVAIL, 混有网络类失败时优先返回 NETWORK
+    EXPECT_EQ(ret, HCCL_E_NETWORK);
+    EXPECT_EQ(statusList[0], static_cast<int32_t>(hcomm::ChannelStatus::READY));
+    EXPECT_EQ(statusList[1], static_cast<int32_t>(hcomm::ChannelStatus::FAILED));
+    EXPECT_EQ(statusList[2], static_cast<int32_t>(hcomm::ChannelStatus::RES_LOC_UNAVAIL));
+}
+
+// TC-CP-013b: 混合终态(READY + SOCKET_TIMEOUT + RES_LOC_UNAVAIL), 存在超时类失败时优先返回 NETWORK
+TEST_F(TestChannelProcess, Ut_ChannelGetStatus_When_MixTimeoutAndUnavail_Expect_NETWORK)
+{
+    auto chReady = std::make_shared<FakeStatusChannel>(hcomm::ChannelStatus::READY);
+    auto chTimeout = std::make_shared<FakeStatusChannel>(hcomm::ChannelStatus::SOCKET_TIMEOUT);
+    auto chLocUnavail = std::make_shared<FakeStatusChannel>(hcomm::ChannelStatus::RES_LOC_UNAVAIL);
+    ChannelHandle hReady = RegisterFakeChannel(chReady);
+    ChannelHandle hTimeout = RegisterFakeChannel(chTimeout);
+    ChannelHandle hLocUnavail = RegisterFakeChannel(chLocUnavail);
+    ChannelHandle channelList[3] = {hReady, hTimeout, hLocUnavail};
+    int32_t statusList[3] = {0, 0, 0};
+    MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_SUCCESS));
+
+    HcclResult ret = hcomm::ChannelProcess::ChannelGetStatus(channelList, 3, statusList);
+    EXPECT_EQ(ret, HCCL_E_NETWORK);
+}
+
+// statusList 已预标记 RES_* 的通道被 continue 跳过, 计入 failCount 且整批无网络类失败时返回 UNAVAIL
+TEST_F(TestChannelProcess, Ut_ChannelGetStatus_When_StatusPreMarkedResUnavail_SkipGetStatus)
+{
+    auto chReady = std::make_shared<FakeStatusChannel>(hcomm::ChannelStatus::READY);
+    auto chUnavail = std::make_shared<FakeStatusChannel>(hcomm::ChannelStatus::RES_RMT_UNAVAIL);
+    ChannelHandle hReady = RegisterFakeChannel(chReady);
+    ChannelHandle hUnavail = RegisterFakeChannel(chUnavail);
+    ChannelHandle channelList[2] = {hReady, hUnavail};
+    int32_t statusList[2] = {0, static_cast<int32_t>(hcomm::ChannelStatus::RES_RMT_UNAVAIL)};
+    MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_SUCCESS));
+
+    HcclResult ret = hcomm::ChannelProcess::ChannelGetStatus(channelList, 2, statusList);
+    EXPECT_EQ(ret, HCCL_E_UNAVAIL);
+    // 被跳过通道的状态保持预标记值不变
+    EXPECT_EQ(statusList[1], static_cast<int32_t>(hcomm::ChannelStatus::RES_RMT_UNAVAIL));
+}
+
+// 资源不足终态与仍在连接的通道并存时, 先返回 E_AGAIN, 不提前报 UNAVAIL
+TEST_F(TestChannelProcess, Ut_ChannelGetStatus_When_ResUnavailAndConnecting_Expect_AGAIN)
+{
+    auto chReady = std::make_shared<FakeStatusChannel>(hcomm::ChannelStatus::READY);
+    auto chUnavail = std::make_shared<FakeStatusChannel>(hcomm::ChannelStatus::RES_LOC_UNAVAIL);
+    auto chInit = std::make_shared<FakeStatusChannel>(hcomm::ChannelStatus::INIT);
+    ChannelHandle hReady = RegisterFakeChannel(chReady);
+    ChannelHandle hUnavail = RegisterFakeChannel(chUnavail);
+    ChannelHandle hInit = RegisterFakeChannel(chInit);
+    ChannelHandle channelList[3] = {hReady, hUnavail, hInit};
+    int32_t statusList[3] = {0, 0, 0};
+    MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_SUCCESS));
+
+    HcclResult ret = hcomm::ChannelProcess::ChannelGetStatus(channelList, 3, statusList);
+    EXPECT_EQ(ret, HCCL_E_AGAIN);
+}
+
+// TC-CP-014: ConvertToLinkStatus 终态映射契约, 资源不足状态映射到对应 link status 码
+TEST_F(TestChannelProcess, Ut_ConvertToLinkStatus_When_ResUnavail_Expect_CorrectMapping)
+{
+    std::vector<hcomm::ChannelStatus> internalStatus = {
+        hcomm::ChannelStatus::RES_LOC_UNAVAIL, hcomm::ChannelStatus::RES_RMT_UNAVAIL, hcomm::ChannelStatus::READY,
+        hcomm::ChannelStatus::FAILED,          hcomm::ChannelStatus::SOCKET_TIMEOUT,
+    };
+    std::vector<int32_t> linkStatusList(internalStatus.size(), -1);
+    hcomm::ConvertToLinkStatus(internalStatus, linkStatusList);
+
+    EXPECT_EQ(linkStatusList[0], hcomm::HCOMM_CHANNEL_STATUS_RES_LOC_UNAVAIL);
+    EXPECT_EQ(linkStatusList[1], hcomm::HCOMM_CHANNEL_STATUS_RES_RMT_UNAVAIL);
+    // 回归既有映射, 确保新增资源不足分支不破坏默认行为
+    EXPECT_EQ(linkStatusList[2], hcomm::HCOMM_CHANNEL_STATUS_READY);
+    EXPECT_EQ(linkStatusList[3], hcomm::HCOMM_CHANNEL_STATUS_FAILED);
+    EXPECT_EQ(linkStatusList[4], hcomm::HCOMM_CHANNEL_STATUS_TIMEOUT);
+    // 显式校验资源不足码值, 锁定 STC V2.0 契约
+    EXPECT_EQ(hcomm::HCOMM_CHANNEL_STATUS_RES_LOC_UNAVAIL, 4);
+    EXPECT_EQ(hcomm::HCOMM_CHANNEL_STATUS_RES_RMT_UNAVAIL, 5);
 }

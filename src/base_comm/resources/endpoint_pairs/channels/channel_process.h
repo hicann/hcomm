@@ -34,6 +34,8 @@ enum HcommChannelLinkStatus : int32_t {
     HCOMM_CHANNEL_STATUS_CONNECTING = 1,
     HCOMM_CHANNEL_STATUS_FAILED = 2,
     HCOMM_CHANNEL_STATUS_TIMEOUT = 3,
+    HCOMM_CHANNEL_STATUS_RES_LOC_UNAVAIL = 4, // 本端资源不足
+    HCOMM_CHANNEL_STATUS_RES_RMT_UNAVAIL = 5, // 对端资源不足
 };
 
 struct DeviceChannelKey {
@@ -60,6 +62,8 @@ public:
     static HcclResult CreateChannelsLoop(
         EndpointHandle endpointHandle, CommEngine engine, HcommChannelDesc* channelDescs, uint32_t channelNum,
         ChannelHandle* outHandles, bool isSharedQueue = false);
+    static HcclResult ResolveUserHandleToHost(ChannelHandle userHandle, ChannelHandle& hostHandle);
+    static HcclResult ResolveHostHandleToDevice(ChannelHandle hostHandle, ChannelHandle& deviceHandle);
     static HcclResult
     ChannelUpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum, ChannelHandle channelHandle);
     static HcclResult GetChannelsInfo(
@@ -83,7 +87,6 @@ public:
     static HcclResult
     ChannelDestroy(const ChannelHandle* channels, uint32_t channelNum, aclrtBinHandle binHandle = nullptr);
     static HcclResult ChannelGet(const ChannelHandle channelHandle, void** channel);
-
     static HcclResult ChannelClean(const ChannelHandle* channelList, uint32_t channelNum);
     static HcclResult ChannelResume(const ChannelHandle* channelList, uint32_t channelNum);
     static HcclResult ChannelUpdateKernelLaunch(
@@ -123,6 +126,7 @@ private:
 
     static std::unordered_map<ChannelHandle, std::shared_ptr<Channel>> g_ChannelMap;
     static std::unordered_map<DeviceChannelKey, ChannelHandle, DeviceChannelKeyHash> g_ChannelD2HMap;
+    static std::unordered_map<DeviceChannelKey, ChannelHandle, DeviceChannelKeyHash> g_ChannelH2DMap;
     static std::mutex g_ChannelMapMtx;
 };
 } // namespace hcomm

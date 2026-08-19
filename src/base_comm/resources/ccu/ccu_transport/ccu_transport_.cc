@@ -110,6 +110,9 @@ HcclResult CcuTransport::Init()
     CHK_RET(ret);
 
     transStatus_ = TransStatus::INIT;
+    // 正常建链路径在 Init 成功时确认本端资源充足；msg-only(资源不足)路径由
+    // ConstructMsgOnlyTransport 单独覆盖为 UNAVAIL/FAILED，避免依赖调用方设置
+    locResStatus_ = CcuResStatus::RES_OK;
     return HCCL_SUCCESS;
 }
 
@@ -202,6 +205,12 @@ HcclResult CcuTransport::StatusMachine()
 
     switch (transStatus_) {
         case CcuTransport::TransStatus::INIT: {
+            if (locResStatus_ != CcuResStatus::RES_OK) {
+                // 本端资源不足或资源申请失败, 无ccuConnection_, 直接发状态标记
+                CHK_RET(SendDataSize());
+                transStatus_ = TransStatus::SEND_DATA_SIZE;
+                break;
+            }
             auto connStatus = ccuConnection_->GetStatus();
             if (connStatus == CcuConnStatus::CONN_INVALID) {
                 HCCL_ERROR(
@@ -234,10 +243,17 @@ HcclResult CcuTransport::StatusMachine()
             break;
         case CcuTransport::TransStatus::RECV_ALL_INFO:
             CHK_RET(RecvDataProcess());
-            CHK_RET(ccuConnection_->ImportJetty());
+            if (locResStatus_ == CcuResStatus::RES_OK && rmtResStatus_ == CcuResStatus::RES_OK) {
+                CHK_RET(ccuConnection_->ImportJetty());
+            }
             transStatus_ = TransStatus::SEND_FIN;
             break;
         case CcuTransport::TransStatus::SEND_FIN: {
+            if (locResStatus_ != CcuResStatus::RES_OK || rmtResStatus_ != CcuResStatus::RES_OK) {
+                CHK_RET(SendFinish());
+                transStatus_ = CcuTransport::TransStatus::RECVING_FIN;
+                break;
+            }
             auto connStatus = ccuConnection_->GetStatus();
             if (connStatus == CcuConnStatus::CONN_INVALID) {
                 HCCL_ERROR(
@@ -259,6 +275,13 @@ HcclResult CcuTransport::StatusMachine()
             break;
         case CcuTransport::TransStatus::RECV_FIN:
             CHK_RET(CheckFinish());
+            if (locResStatus_ != CcuResStatus::RES_OK || rmtResStatus_ != CcuResStatus::RES_OK) {
+                HCCL_WARNING(
+                    "[CcuTransport][%s] resource status not OK after FIN (loc[%u], rmt[%u]) set CONNECT_FAILED",
+                    __func__, static_cast<uint8_t>(locResStatus_), static_cast<uint8_t>(rmtResStatus_));
+                transStatus_ = TransStatus::CONNECT_FAILED;
+                break;
+            }
             transStatus_ = CcuTransport::TransStatus::READY;
             break;
         case CcuTransport::TransStatus::SEND_TRANS_RES:
@@ -284,10 +307,15 @@ HcclResult CcuTransport::StatusMachine()
 HcclResult CcuTransport::SendDataSize()
 {
     Hccl::BinaryStream binaryStream;
-    CHK_RET(HandshakeMsgPack(binaryStream));
-    CHK_RET(ConnInfoPack(binaryStream));
-    CHK_RET(TransResPack(binaryStream));
-    CHK_RET(BufferInfoPack(binaryStream, locBufferInfos_));
+    // 所有路径先写 locResStatus (int), 接收端据此分流
+    int locResStatus = static_cast<int>(locResStatus_);
+    binaryStream << locResStatus;
+    if (locResStatus_ == CcuResStatus::RES_OK) {
+        CHK_RET(HandshakeMsgPack(binaryStream));
+        CHK_RET(ConnInfoPack(binaryStream));
+        CHK_RET(TransResPack(binaryStream));
+        CHK_RET(BufferInfoPack(binaryStream, locBufferInfos_));
+    }
     binaryStream.Dump(sendData_);
     u32 sendSize = sendData_.size();
 
@@ -296,7 +324,8 @@ HcclResult CcuTransport::SendDataSize()
     socket_->SendAsync(&sendSize, sizeof(sendSize));
     EXCEPTION_HANDLE_END
     HCCL_INFO(
-        "[CcuTransport::%s] Send size[%u] of data success. [%zu] bytes sent.", __func__, sendSize, sizeof(sendSize));
+        "[CcuTransport::%s] Send size[%u] of data success. [%zu] bytes sent. locResStatus[%u]", __func__, sendSize,
+        sizeof(sendSize), static_cast<uint8_t>(locResStatus_));
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -332,7 +361,37 @@ HcclResult CcuTransport::RecvConnAndTransInfo()
 
 HcclResult CcuTransport::RecvDataProcess()
 {
+    if (exchangeDataSize_ < sizeof(int)) {
+        HCCL_ERROR(
+            "[CcuTransport][%s] exchangeDataSize[%u] < sizeof(int)[%zu], protocol mismatch.", __func__,
+            exchangeDataSize_, sizeof(int));
+        return HcclResult::HCCL_E_INTERNAL;
+    }
     Hccl::BinaryStream binaryStream(recvData_);
+    int rmtResStatusInt = static_cast<int>(CcuResStatus::RES_UNKNOWN);
+    binaryStream >> rmtResStatusInt;
+    // 校验对端传值范围：越界值强转后比较行为未定义，按协议错误处理
+    if (rmtResStatusInt < static_cast<int>(CcuResStatus::RES_UNKNOWN)
+        || rmtResStatusInt > static_cast<int>(CcuResStatus::RES_FAILED)) {
+        HCCL_ERROR(
+            "[CcuTransport][%s] invalid rmtResStatus[%d], out of range[%d,%d].", __func__, rmtResStatusInt,
+            static_cast<int>(CcuResStatus::RES_UNKNOWN), static_cast<int>(CcuResStatus::RES_FAILED));
+        return HcclResult::HCCL_E_INTERNAL;
+    }
+    rmtResStatus_ = static_cast<CcuResStatus>(rmtResStatusInt);
+
+    if (rmtResStatus_ != CcuResStatus::RES_OK) {
+        HCCL_WARNING(
+            "[CcuTransport][%s] remote resource status[%u], skip rest unpack.", __func__,
+            static_cast<uint8_t>(rmtResStatus_));
+        return HcclResult::HCCL_SUCCESS;
+    }
+    if (locResStatus_ != CcuResStatus::RES_OK) {
+        HCCL_WARNING(
+            "[CcuTransport][%s] loc resource status[%u], skip remote full unpack.", __func__,
+            static_cast<uint8_t>(locResStatus_));
+        return HcclResult::HCCL_SUCCESS;
+    }
     CHK_RET(HandshakeMsgUnpack(binaryStream));
     CHK_RET(ConnInfoUnpackProc(binaryStream));
     CHK_RET(TransResUnpackProc(binaryStream));
@@ -435,7 +494,7 @@ HcclResult CcuTransport::HandshakeMsgUnpack(Hccl::BinaryStream& binaryStream)
         HCCL_ERROR("handshakeMsg size=%zu is not equal to rmt=%zu", attr_.handshakeMsg.size(), rmtHandshakeMsg_.size());
         return HcclResult::HCCL_E_INTERNAL;
     }
-    HCCL_INFO("[CcuTransport][%s] start unpack handshakeMsg", __func__);
+    HCCL_INFO("[CcuTransport][%s] unpack handshakeMsg, rmtHandshakeMsg.size[%zu]", __func__, rmtHandshakeMsg_.size());
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -593,7 +652,14 @@ HcclResult CcuTransport::ReleaseTransRes()
 
 uint32_t CcuTransport::GetDieId() const { return dieId_; }
 
-uint32_t CcuTransport::GetChannelId() const { return ccuConnection_->GetChannelId(); }
+uint32_t CcuTransport::GetChannelId() const
+{
+    // msg-only(资源不足)transport 无 ccuConnection_，返回无效 id，避免空指针解引用
+    if (ccuConnection_ == nullptr) {
+        return UINT32_MAX;
+    }
+    return ccuConnection_->GetChannelId();
+}
 
 HcclResult CcuTransport::GetLocCkeByIndex(const uint32_t index, uint32_t& locCkeId) const
 {
@@ -786,7 +852,10 @@ void CcuTransport::Clean()
 {
     transStatus_ = TransStatus::INIT;
     sendData_.clear();
-    ccuConnection_->Clean();
+    // msg-only(资源不足)transport 无 ccuConnection_，直接跳过 connection 清理
+    if (ccuConnection_ != nullptr) {
+        ccuConnection_->Clean();
+    }
 }
 
 HcclResult CcuTransport::GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos)
@@ -894,5 +963,18 @@ HcclResult CcuTransport::ResUpdate(std::vector<std::string>& resGroupTags)
     }
 
     return HcclResult::HCCL_SUCCESS;
+}
+
+HcclResult
+CcuTransport::ConstructMsgOnlyTransport(Hccl::Socket* socket, std::unique_ptr<CcuTransport>& impl, CcuResStatus status)
+{
+    HCCL_INFO("[CcuTransport][%s] construct msg-only transport, status[%u].", __func__, static_cast<uint8_t>(status));
+    CHK_PTR_NULL(socket);
+    std::vector<CclBufferInfo> emptyBufferInfos{};
+    EXCEPTION_CATCH((impl = std::make_unique<CcuTransport>(socket, nullptr, emptyBufferInfos)), return HCCL_E_PTR);
+    CHK_SMART_PTR_NULL(impl);
+    impl->locResStatus_ = status;
+    impl->transStatus_ = CcuTransport::TransStatus::INIT;
+    return HCCL_SUCCESS;
 }
 } // namespace hcomm

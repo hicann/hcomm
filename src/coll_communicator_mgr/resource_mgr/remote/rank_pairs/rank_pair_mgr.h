@@ -28,6 +28,7 @@ public:
     ~RankPairMgr() = default;
 
     HcclResult Get(RankIdPair rankIdPair, RankPair*& out);
+    HcclResult Find(RankIdPair rankIdPair, RankPair*& out);
     ChannelTable GetChannelTable();
 
 private:

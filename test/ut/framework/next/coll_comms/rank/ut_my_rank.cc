@@ -148,6 +148,39 @@ protected:
         MOCKER_CPP(&hccl::MyRank::TryInitCcuInstance).stubs().will(returnValue(HCCL_SUCCESS));
     }
 
+    void SetupForQuery(HcclMem& cclBuffer, EndpointDesc& localEp, EndpointDesc& rmtEp)
+    {
+        MockerFuncs();
+        MOCKER_CPP(&Hccl::IRankGraph::GetDevicePort).stubs().will(returnValue(HCCL_SUCCESS));
+        MOCKER_CPP(&Hccl::IRankGraph::GetDeviceId).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+        CreateCclBuffer(cclBuffer);
+        EXPECT_EQ(myRank->Init(cclBuffer, 2, 2), HCCL_SUCCESS);
+        CreateEndpointDesc(localEp, COMM_PROTOCOL_UB_MEM, "1.0.0.0");
+        CreateEndpointDesc(rmtEp, COMM_PROTOCOL_UB_MEM, "2.0.0.0");
+    }
+
+    hcomm::EndpointPair*
+    GetEpPair(uint32_t localRank, uint32_t remoteRank, const EndpointDesc& localEp, const EndpointDesc& rmtEp)
+    {
+        RankIdPair rankIdPair = std::make_pair(localRank, remoteRank);
+        EndpointDescPair epDescPair = std::make_pair(localEp, rmtEp);
+        RankPair* rankPair = nullptr;
+        myRank->rankPairMgr_->Get(rankIdPair, rankPair);
+        hcomm::EndpointPair* epPair = nullptr;
+        rankPair->GetEndpointPair(epDescPair, epPair);
+        return epPair;
+    }
+
+    // 填 channelHandles_ + handleToLoc_ + handleToEpPair_, reuseIdx 即 vector 下标
+    void RegisterChannels(hcomm::EndpointPair* epPair, CommEngine engine, const std::vector<ChannelHandle>& handles)
+    {
+        epPair->channelHandles_[engine] = handles;
+        for (uint32_t i = 0; i < handles.size(); ++i) {
+            epPair->handleToLoc_[handles[i]] = {engine, i};
+            myRank->handleToEpPair_[handles[i]] = epPair;
+        }
+    }
+
     uint32_t DEFAULT_MODE = 0;
     uint32_t AICPU_TS_MODE = 2;
     uint32_t CCU_MS_MODE = 5;
@@ -1454,4 +1487,548 @@ TEST_F(MyRankTest, Ut_BatchCreateChannels_When_DefaultPort_EnvNotConfigured_Expe
         HCCL_SUCCESS);
 
     GlobalMockObject::verify();
+}
+
+// ==================== QueryChannels UT ====================
+
+TEST_F(MyRankTest, Ut_When_QueryAllNotExist_Expect_AllZero)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+
+    HcclChannelDesc desc[2];
+    for (int i = 0; i < 2; ++i) {
+        desc[i].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+        desc[i].remoteRank = 1;
+        desc[i].notifyNum = 2;
+        desc[i].localEndpoint = localEp;
+        desc[i].remoteEndpoint = rmtEp;
+    }
+    ChannelHandle handles[2] = {0};
+    EXPECT_EQ(myRank->QueryChannels(COMM_ENGINE_CCU, desc, 2, handles), HCCL_SUCCESS);
+    EXPECT_EQ(handles[0], 0u);
+    EXPECT_EQ(handles[1], 0u);
+}
+
+TEST_F(MyRankTest, Ut_When_QueryAllExist_Expect_HandleReturned)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0x100, 0x101});
+
+    HcclChannelDesc desc[2];
+    for (int i = 0; i < 2; ++i) {
+        desc[i].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+        desc[i].remoteRank = 1;
+        desc[i].notifyNum = 2;
+        desc[i].localEndpoint = localEp;
+        desc[i].remoteEndpoint = rmtEp;
+    }
+    ChannelHandle handles[2] = {0};
+    EXPECT_EQ(myRank->QueryChannels(COMM_ENGINE_CCU, desc, 2, handles), HCCL_SUCCESS);
+    EXPECT_EQ(handles[0], 0x100u);
+    EXPECT_EQ(handles[1], 0x101u);
+}
+
+TEST_F(MyRankTest, Ut_When_QueryPartialExist_Expect_Mixed)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0x100});
+
+    HcclChannelDesc desc[2];
+    for (int i = 0; i < 2; ++i) {
+        desc[i].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+        desc[i].remoteRank = 1;
+        desc[i].notifyNum = 2;
+        desc[i].localEndpoint = localEp;
+        desc[i].remoteEndpoint = rmtEp;
+    }
+    ChannelHandle handles[2] = {0};
+    EXPECT_EQ(myRank->QueryChannels(COMM_ENGINE_CCU, desc, 2, handles), HCCL_SUCCESS);
+    EXPECT_EQ(handles[0], 0x100u);
+    EXPECT_EQ(handles[1], 0u);
+}
+
+TEST_F(MyRankTest, Ut_When_QueryMultiReuseIdx_Expect_Sequential)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0xA0, 0xA1, 0xA2});
+
+    HcclChannelDesc desc[3];
+    for (int i = 0; i < 3; ++i) {
+        desc[i].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+        desc[i].remoteRank = 1;
+        desc[i].notifyNum = 2;
+        desc[i].localEndpoint = localEp;
+        desc[i].remoteEndpoint = rmtEp;
+    }
+    ChannelHandle handles[3] = {0};
+    EXPECT_EQ(myRank->QueryChannels(COMM_ENGINE_CCU, desc, 3, handles), HCCL_SUCCESS);
+    EXPECT_EQ(handles[0], 0xA0u);
+    EXPECT_EQ(handles[1], 0xA1u);
+    EXPECT_EQ(handles[2], 0xA2u);
+}
+
+TEST_F(MyRankTest, Ut_When_QueryHostNicToDeviceNic_Expect_Zero)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    rmtEp.loc.locType = ENDPOINT_LOC_TYPE_HOST;
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0x100});
+
+    HcclChannelDesc desc[1];
+    desc[0].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+    desc[0].remoteRank = 1;
+    desc[0].notifyNum = 2;
+    desc[0].localEndpoint = localEp;
+    desc[0].remoteEndpoint = rmtEp;
+    ChannelHandle handles[1] = {0};
+    EXPECT_EQ(myRank->QueryChannels(COMM_ENGINE_CCU, desc, 1, handles), HCCL_SUCCESS);
+    EXPECT_EQ(handles[0], 0u);
+}
+
+TEST_F(MyRankTest, Ut_When_QueryNoSideEffect_Expect_NoNewRankPair)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+
+    HcclChannelDesc desc[1];
+    desc[0].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+    desc[0].remoteRank = 9;
+    desc[0].notifyNum = 2;
+    desc[0].localEndpoint = localEp;
+    desc[0].remoteEndpoint = rmtEp;
+
+    size_t sizeBefore = myRank->rankPairMgr_->rankPairMap_.size();
+
+    ChannelHandle handles[1] = {0};
+    EXPECT_EQ(myRank->QueryChannels(COMM_ENGINE_CCU, desc, 1, handles), HCCL_SUCCESS);
+    EXPECT_EQ(handles[0], 0u);
+
+    EXPECT_EQ(myRank->rankPairMgr_->rankPairMap_.size(), sizeBefore);
+    RankPair* rankPair = nullptr;
+    EXPECT_EQ(myRank->rankPairMgr_->Find(std::make_pair(0u, 9u), rankPair), HCCL_E_NOT_FOUND);
+}
+
+TEST_F(MyRankTest, Ut_When_QueryInvalidParam_Expect_Error)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+
+    HcclChannelDesc desc[1];
+    desc[0].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+    desc[0].remoteRank = 1;
+    desc[0].notifyNum = 2;
+    desc[0].localEndpoint = localEp;
+    desc[0].remoteEndpoint = rmtEp;
+    ChannelHandle handles[1] = {0};
+
+    EXPECT_EQ(myRank->QueryChannels(COMM_ENGINE_CCU, nullptr, 1, handles), HCCL_E_PTR);
+    EXPECT_EQ(myRank->QueryChannels(COMM_ENGINE_CCU, desc, 1, nullptr), HCCL_E_PTR);
+    EXPECT_EQ(myRank->QueryChannels(COMM_ENGINE_CCU, desc, 0, handles), HCCL_E_PARA);
+}
+
+// ==================== DestroyChannels UT ====================
+
+TEST_F(MyRankTest, Ut_When_DestroySingleHandle_Expect_Erased)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0x100, 0x101});
+
+    ChannelHandle toDestroy[1] = {0x100};
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 1), HCCL_SUCCESS);
+
+    // 行为契约 oracle: 已销毁 handle 再次 Destroy 返回 NOT_FOUND, 存活 handle 返回 SUCCESS
+    ChannelHandle destroyed[1] = {0x100};
+    EXPECT_EQ(myRank->DestroyChannels(destroyed, 1), HCCL_E_NOT_FOUND);
+    ChannelHandle alive[1] = {0x101};
+    EXPECT_EQ(myRank->DestroyChannels(alive, 1), HCCL_SUCCESS);
+}
+
+// 暂只支持 CCU 引擎：AICPU/AIV 等 device 场景的 channel 销毁返回 NOT_SUPPORT，且不修改反查表
+TEST_F(MyRankTest, Ut_When_DestroyNonCcuEngine_Expect_NotSupport)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_AICPU, {0x100});
+
+    ChannelHandle toDestroy[1] = {0x100};
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 1), HCCL_E_NOT_SUPPORT);
+
+    // 行为契约 oracle: channel 未被销毁, 再次 Destroy 仍返回 NOT_SUPPORT 而非 NOT_FOUND
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 1), HCCL_E_NOT_SUPPORT);
+}
+
+// 混合引擎批量销毁：CCU 句柄正常销毁，非 CCU 句柄返回 NOT_SUPPORT 且不中断其余句柄处理
+TEST_F(MyRankTest, Ut_When_DestroyMixedEngine_Expect_CcuDestroyedAndNonCcuNotSupport)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0x100});
+    RegisterChannels(epPair, COMM_ENGINE_AICPU, {0x200});
+
+    ChannelHandle toDestroy[2] = {0x100, 0x200};
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 2), HCCL_E_NOT_SUPPORT);
+
+    // 行为契约 oracle: CCU 0x100 已销毁返回 NOT_FOUND, 非 CCU 0x200 仍存活返回 NOT_SUPPORT
+    ChannelHandle destroyedCcu[1] = {0x100};
+    EXPECT_EQ(myRank->DestroyChannels(destroyedCcu, 1), HCCL_E_NOT_FOUND);
+    ChannelHandle aliveNonCcu[1] = {0x200};
+    EXPECT_EQ(myRank->DestroyChannels(aliveNonCcu, 1), HCCL_E_NOT_SUPPORT);
+}
+
+// hostNIC<->DeviceNIC(UNREUSE)通道不可复用(Query 恒返回 0), 但已创建的通道必须能被 Destroy 正常销毁
+TEST_F(MyRankTest, Ut_When_DestroyHostNicToDeviceNic_Expect_Success)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    rmtEp.loc.locType = ENDPOINT_LOC_TYPE_HOST;
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0x100});
+
+    ChannelHandle toDestroy[1] = {0x100};
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 1), HCCL_SUCCESS);
+
+    // 行为契约 oracle: 已销毁 handle 再次 Destroy 返回 NOT_FOUND
+    ChannelHandle destroyed[1] = {0x100};
+    EXPECT_EQ(myRank->DestroyChannels(destroyed, 1), HCCL_E_NOT_FOUND);
+}
+
+TEST_F(MyRankTest, Ut_When_DestroySameEpMiddleIdx_Expect_Continuous)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0xA0, 0xA1, 0xA2});
+
+    ChannelHandle toDestroy[1] = {0xA1};
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 1), HCCL_SUCCESS);
+
+    // 行为契约 oracle: 已销毁的 0xA1 再次 Destroy 返回 NOT_FOUND
+    ChannelHandle destroyed[1] = {0xA1};
+    EXPECT_EQ(myRank->DestroyChannels(destroyed, 1), HCCL_E_NOT_FOUND);
+    // 存活的 0xA0/0xA2 再次 Destroy 返回 SUCCESS
+    ChannelHandle aliveA0[1] = {0xA0};
+    EXPECT_EQ(myRank->DestroyChannels(aliveA0, 1), HCCL_SUCCESS);
+    ChannelHandle aliveA2[1] = {0xA2};
+    EXPECT_EQ(myRank->DestroyChannels(aliveA2, 1), HCCL_SUCCESS);
+}
+
+TEST_F(MyRankTest, Ut_When_DestroySameEpMultiIdx_Expect_RemainingPreserved)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0xA0, 0xA1, 0xA2});
+
+    ChannelHandle toDestroy[2] = {0xA0, 0xA2};
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 2), HCCL_SUCCESS);
+
+    // 行为契约 oracle: 已销毁的 0xA0/0xA2 再次 Destroy 返回 NOT_FOUND
+    ChannelHandle destroyed[2] = {0xA0, 0xA2};
+    EXPECT_EQ(myRank->DestroyChannels(destroyed, 2), HCCL_E_NOT_FOUND);
+    // 存活的 0xA1 再次 Destroy 返回 SUCCESS
+    ChannelHandle alive[1] = {0xA1};
+    EXPECT_EQ(myRank->DestroyChannels(alive, 1), HCCL_SUCCESS);
+}
+
+TEST_F(MyRankTest, Ut_When_DestroyCrossEngine_Expect_Independent)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0xC0});
+    RegisterChannels(epPair, COMM_ENGINE_AICPU_TS, {0xA0, 0xA1});
+
+    // CCU 0xC0 销毁成功；AICPU_TS 0xA0 暂不支持销毁返回 NOT_SUPPORT，不中断其余句柄处理
+    ChannelHandle toDestroy[2] = {0xC0, 0xA0};
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 2), HCCL_E_NOT_SUPPORT);
+
+    // 行为契约 oracle: CCU 0xC0 已销毁返回 NOT_FOUND; AICPU_TS 0xA0/0xA1 未销毁返回 NOT_SUPPORT
+    ChannelHandle destroyedCcu[1] = {0xC0};
+    EXPECT_EQ(myRank->DestroyChannels(destroyedCcu, 1), HCCL_E_NOT_FOUND);
+    ChannelHandle aliveAicpu0[1] = {0xA0};
+    EXPECT_EQ(myRank->DestroyChannels(aliveAicpu0, 1), HCCL_E_NOT_SUPPORT);
+    ChannelHandle aliveAicpu1[1] = {0xA1};
+    EXPECT_EQ(myRank->DestroyChannels(aliveAicpu1, 1), HCCL_E_NOT_SUPPORT);
+}
+
+TEST_F(MyRankTest, Ut_When_DestroyCrossEp_Expect_Independent)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp, rmtEp2;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    CreateEndpointDesc(rmtEp2, COMM_PROTOCOL_UB_MEM, "0.0.0.0");
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    auto epPair1 = GetEpPair(0, 1, localEp, rmtEp);
+    auto epPair2 = GetEpPair(0, 2, localEp, rmtEp2);
+    ASSERT_NE(epPair1, nullptr);
+    ASSERT_NE(epPair2, nullptr);
+    RegisterChannels(epPair1, COMM_ENGINE_CCU, {0x10});
+    RegisterChannels(epPair2, COMM_ENGINE_CCU, {0x20});
+
+    ChannelHandle toDestroy[2] = {0x10, 0x20};
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 2), HCCL_SUCCESS);
+
+    // Query oracle: 两个 ep 各自销毁后返回 0
+    HcclChannelDesc desc1[1];
+    desc1[0].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+    desc1[0].remoteRank = 1;
+    desc1[0].notifyNum = 2;
+    desc1[0].localEndpoint = localEp;
+    desc1[0].remoteEndpoint = rmtEp;
+    ChannelHandle query1[1] = {0};
+    EXPECT_EQ(myRank->QueryChannels(COMM_ENGINE_CCU, desc1, 1, query1), HCCL_SUCCESS);
+    EXPECT_EQ(query1[0], 0u); // 0x10 已销毁
+
+    HcclChannelDesc desc2[1];
+    desc2[0].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+    desc2[0].remoteRank = 2;
+    desc2[0].notifyNum = 2;
+    desc2[0].localEndpoint = localEp;
+    desc2[0].remoteEndpoint = rmtEp2;
+    ChannelHandle query2[1] = {0};
+    EXPECT_EQ(myRank->QueryChannels(COMM_ENGINE_CCU, desc2, 1, query2), HCCL_SUCCESS);
+    EXPECT_EQ(query2[0], 0u); // 0x20 已销毁
+}
+
+TEST_F(MyRankTest, Ut_When_DestroyInvalidHandle_Expect_NotFound)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0x100});
+
+    ChannelHandle toDestroy[1] = {0xDEAD};
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 1), HCCL_E_NOT_FOUND);
+
+    // 行为契约 oracle: 无效 handle 未影响存活 handle, 0x100 仍可销毁
+    ChannelHandle alive[1] = {0x100};
+    EXPECT_EQ(myRank->DestroyChannels(alive, 1), HCCL_SUCCESS);
+}
+
+// 反查索引中存在但 EndpointPair 指针为空(悬垂防护分支), 按 NOT_FOUND 处理且不影响其它句柄
+TEST_F(MyRankTest, Ut_When_DestroyHandleWithNullEpPair_Expect_NotFound)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    myRank->handleToEpPair_[0xBAD] = nullptr;
+    ChannelHandle toDestroy[1] = {0xBAD};
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 1), HCCL_E_NOT_FOUND);
+
+    // 行为契约 oracle: 空指针条目不影响其它存活句柄
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0x100});
+    ChannelHandle alive[1] = {0x100};
+    EXPECT_EQ(myRank->DestroyChannels(alive, 1), HCCL_SUCCESS);
+}
+
+TEST_F(MyRankTest, Ut_When_DestroyDuplicateHandle_Expect_SecondNotFound)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0x100, 0x101});
+
+    // 第一次 0x100 销毁成功, 第二次 0x100 已不存在返回 NOT_FOUND
+    ChannelHandle toDestroy[2] = {0x100, 0x100};
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 2), HCCL_E_NOT_FOUND);
+
+    // 行为契约 oracle: 0x100 已销毁, 再次 Destroy 返回 NOT_FOUND; 0x101 仍存活, 返回 SUCCESS
+    ChannelHandle destroyed[1] = {0x100};
+    EXPECT_EQ(myRank->DestroyChannels(destroyed, 1), HCCL_E_NOT_FOUND);
+    ChannelHandle alive[1] = {0x101};
+    EXPECT_EQ(myRank->DestroyChannels(alive, 1), HCCL_SUCCESS);
+}
+
+TEST_F(MyRankTest, Ut_When_DestroyThenQuery_Expect_Zero)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0x100});
+
+    ChannelHandle toDestroy[1] = {0x100};
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 1), HCCL_SUCCESS);
+
+    HcclChannelDesc desc[1];
+    desc[0].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+    desc[0].remoteRank = 1;
+    desc[0].notifyNum = 2;
+    desc[0].localEndpoint = localEp;
+    desc[0].remoteEndpoint = rmtEp;
+    ChannelHandle queryHandles[1] = {0};
+    EXPECT_EQ(myRank->QueryChannels(COMM_ENGINE_CCU, desc, 1, queryHandles), HCCL_SUCCESS);
+    EXPECT_EQ(queryHandles[0], 0u);
+}
+
+TEST_F(MyRankTest, Ut_When_DestroyInvalidParam_Expect_Error)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+
+    ChannelHandle handles[1] = {0x100};
+    EXPECT_EQ(myRank->DestroyChannels(nullptr, 1), HCCL_E_PTR);
+    EXPECT_EQ(myRank->DestroyChannels(handles, 0), HCCL_E_PARA);
+}
+
+TEST_F(MyRankTest, Ut_When_DestroyFails_Expect_ErrorPropagated)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_E_INTERNAL)));
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0x100, 0x101});
+
+    ChannelHandle toDestroy[1] = {0x100};
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 1), HCCL_E_INTERNAL);
+}
+
+// ==================== 容错销毁 UT====================
+
+// TC-DS-027: 3个handle(A有效、B mock HcommChannelDestroy失败、C有效), 验证返回firstErr且A/C仍被销毁
+TEST_F(MyRankTest, Ut_When_DestroyPartialFail_Expect_ContinueAndReturnFirstErr)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    // mock: A和C的HcommChannelDestroy成功, B失败 (按调用顺序依次返回)
+    MOCKER(HcommChannelDestroy)
+        .stubs()
+        .will(returnValue(static_cast<int>(HCCL_SUCCESS)))
+        .then(returnValue(static_cast<int>(HCCL_E_INTERNAL)))
+        .then(returnValue(static_cast<int>(HCCL_SUCCESS)));
+
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {0xA0, 0xA1, 0xA2});
+
+    ChannelHandle toDestroy[3] = {0xA0, 0xA1, 0xA2};
+    EXPECT_EQ(myRank->DestroyChannels(toDestroy, 3), HCCL_E_INTERNAL);
+
+    // 行为契约 oracle: 实现约定"无论 HcommChannelDestroy 成败, host 侧索引均同步清理",
+    // 因此 A/B/C 的索引都已清理, 再次 Destroy 均返回 NOT_FOUND
+    ChannelHandle destroyedAC[2] = {0xA0, 0xA2};
+    EXPECT_EQ(myRank->DestroyChannels(destroyedAC, 2), HCCL_E_NOT_FOUND);
+    ChannelHandle aliveB[1] = {0xA1};
+    EXPECT_EQ(myRank->DestroyChannels(aliveB, 1), HCCL_E_NOT_FOUND);
+}
+
+// ==================== CCU回退链路 UT====================
+
+// CCU 回滚链路: BatchConnectChannels 返回资源不足时, CreateChannels 销毁本轮新建通道并返回 E_UNAVAIL
+TEST_F(MyRankTest, Ut_When_RollbackFullChain_ResourceUnavailable_Expect_StateRestored)
+{
+    HcclMem cclBuffer;
+    EndpointDesc localEp, rmtEp;
+    SetupForQuery(cclBuffer, localEp, rmtEp);
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(static_cast<int>(HCCL_SUCCESS)));
+    // 建链阶段 mock 成功, 连接阶段返回资源不足, 触发 CCU 回滚(真实 DestroyNewChannels 路径)
+    MOCKER_CPP(&MyRank::BatchCreateSockets).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&MyRank::BatchCreateChannels).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&MyRank::BatchConnectChannels).stubs().will(returnValue(HCCL_E_UNAVAIL));
+    // CCU 引擎需要 CCU 展开模式
+    myRank->opExpansionMode_ = CCU_SCHED_MODE;
+
+    HcclChannelDesc desc[2];
+    for (int i = 0; i < 2; ++i) {
+        desc[i].channelProtocol = COMM_PROTOCOL_UBC_CTP;
+        desc[i].remoteRank = 1;
+        desc[i].notifyNum = 8;
+        desc[i].localEndpoint = localEp;
+        desc[i].remoteEndpoint = rmtEp;
+    }
+
+    // 模拟 BatchCreateChannels 已创建两个新通道(进入 newChannels_ 与反查表)
+    auto epPair = GetEpPair(0, 1, localEp, rmtEp);
+    ASSERT_NE(epPair, nullptr);
+    ChannelHandle acquireHandles[2] = {0x200, 0x201};
+    RegisterChannels(epPair, COMM_ENGINE_CCU, {acquireHandles[0], acquireHandles[1]});
+    myRank->newChannels_.emplace_back(std::make_pair(0, 0));
+    myRank->newChannels_.emplace_back(std::make_pair(1, 1));
+
+    std::vector<ChannelHandle> outHandles(2, 0);
+    EXPECT_EQ(myRank->CreateChannels(COMM_ENGINE_CCU, "test", desc, 2, outHandles.data()), HCCL_E_UNAVAIL);
+
+    // 回滚后状态恢复: newChannels_ 清空、反查表清空、Query 全部为 0
+    EXPECT_TRUE(myRank->newChannels_.empty());
+    EXPECT_TRUE(myRank->handleToEpPair_.empty());
+    ChannelHandle queryHandles[2] = {0, 0};
+    EXPECT_EQ(myRank->QueryChannels(COMM_ENGINE_CCU, desc, 2, queryHandles), HCCL_SUCCESS);
+    EXPECT_EQ(queryHandles[0], 0u);
+    EXPECT_EQ(queryHandles[1], 0u);
 }

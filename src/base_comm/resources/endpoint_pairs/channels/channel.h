@@ -37,7 +37,7 @@ class AicpuTsChannelHelper;
 
 namespace hcomm {
 
-MAKE_ENUM(ChannelStatus, INIT, SOCKET_OK, SOCKET_TIMEOUT, READY, FAILED)
+MAKE_ENUM(ChannelStatus, INIT, SOCKET_OK, SOCKET_TIMEOUT, READY, FAILED, RES_LOC_UNAVAIL, RES_RMT_UNAVAIL)
 
 /**
  * @brief 通道种类（与 HcommChannelRes.channelTypeList 中 u32 数值一致；由 CommEngine + CommProtocol 推导）。

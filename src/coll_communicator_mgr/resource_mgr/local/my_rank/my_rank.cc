@@ -113,6 +113,12 @@ MyRank::~MyRank()
     HCCL_INFO("[MyRank][~MyRank] MyRank deinit, rankId_[%u], devLogicId_[%d]", rankId_, devLogicId_);
     // 共享 Jetty Channel 不归 rankPairMgr_ 管理，需在 rankPairMgr_ 析构前独立清理
     (void)SharedJettyChannelPool::GetInstance().DestroyAllByMyRank(this);
+    // 先清空反查索引，避免 rankPairMgr_ 析构 EndpointPair 时仍持有指向其的裸指针；
+    // 持锁保证与并发 DestroyChannels 的索引读写一致
+    {
+        std::lock_guard<std::mutex> lock(channelIndexMtx_);
+        handleToEpPair_.clear();
+    }
     // 析构有时序要求
     rankPairMgr_ = nullptr; // 内部会销毁channel，可能需要返还endpoint与ccu资源
     endpointMgr_ = nullptr; // 内部会销毁endpoint，可能需要返回ccu资源
@@ -687,6 +693,9 @@ HcclResult MyRank::BatchCreateChannels(
     CHK_PTR_NULL(channelHandles);
     CHK_PRT_RET(channelNum == 0, HCCL_ERROR("[%s] invalid param: channelNum is zero", __func__), HCCL_E_PARA);
 
+    // 持锁保护 newChannels_/handleToEpPair_；失败路径调用的 DestroyNewChannels 由本函数持锁，内部不再加锁
+    std::lock_guard<std::mutex> lock(channelIndexMtx_);
+
     uint32_t localRank = rankId_;
     CHK_SMART_PTR_NULL(commMems_);
     CHK_PTR_NULL(endpointMgr_);
@@ -809,6 +818,9 @@ HcclResult MyRank::BatchCreateChannels(
             reuseIdx++;
         }
 
+        // 登记 handle -> EndpointPair 反查索引；真实槽位由 EndpointPair::handleToLoc_ 维护
+        handleToEpPair_[channelHandles[i]] = endpointPair;
+
         HCCL_INFO(
             "[%s][%u/%u] channel created successfully, remoteRank[%u], channelHandle[%p]", __func__, i + 1, channelNum,
             remoteRank, channelHandles[i]);
@@ -819,17 +831,19 @@ HcclResult MyRank::BatchCreateChannels(
         HCCL_RUN_WARNING(
             "[%s] create channel failed, destroy new channels num[%zu], engine[%s]", __func__, newChannels_.size(),
             GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
-        CHK_RET(DestroyNewChannels(engine, channelDescs));
+        CHK_RET(DestroyNewChannels(engine, channelDescs, newChannels_));
         return HCCL_E_UNAVAIL;
     }
 
     return HCCL_SUCCESS;
 }
 
-HcclResult MyRank::DestroyNewChannels(CommEngine engine, const HcclChannelDesc* channelDescs)
+HcclResult MyRank::DestroyNewChannels(
+    CommEngine engine, const HcclChannelDesc* channelDescs, const std::vector<std::pair<u32, u32>>& newChannels)
 {
+    HcclResult firstErr = HCCL_SUCCESS;
     uint32_t localRank = rankId_;
-    for (auto idxPairIter = std::rbegin(newChannels_); idxPairIter != std::rend(newChannels_);
+    for (auto idxPairIter = std::rbegin(newChannels); idxPairIter != std::rend(newChannels);
          ++idxPairIter) { // 由于新申请的在申请过的后面，所以要从后往前找reuseIdx销毁
         auto idxPair = *idxPairIter;
         const EndpointDesc& localEndpointDesc = channelDescs[idxPair.first].localEndpoint;
@@ -843,9 +857,189 @@ HcclResult MyRank::DestroyNewChannels(CommEngine engine, const HcclChannelDesc* 
         CHK_PTR_NULL(rankPair);
         CHK_RET(rankPair->GetEndpointPair(endpointDescPair, endpointPair));
         CHK_PTR_NULL(endpointPair);
-        CHK_RET(endpointPair->DestroyChannel(engine, idxPair.second));
+        // DestroyChannel 会 erase 向量导致下标变化, 需先取出 handle
+        ChannelHandle handleToErase = 0;
+        endpointPair->GetChannelHandle(engine, idxPair.second, handleToErase);
+        // 单个 channel 销毁失败不中断其余清理；记录首个错误，最终统一清空本次新建列表
+        HcclResult destroyRet = endpointPair->DestroyChannel(engine, idxPair.second);
+        if (destroyRet != HCCL_SUCCESS) {
+            HCCL_ERROR(
+                "[%s] DestroyChannel failed, engine[%s] reuseIdx[%u] ret[%d], continue.", __func__,
+                GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), idxPair.second, destroyRet);
+            if (firstErr == HCCL_SUCCESS) {
+                firstErr = destroyRet;
+            }
+        }
+        if (handleToErase != 0) {
+            handleToEpPair_.erase(handleToErase);
+        }
     }
     newChannels_.clear();
+    return firstErr;
+}
+
+HcclResult
+MyRank::QueryOneChannel(CommEngine engine, const HcclChannelDesc& channelDesc, u32 reuseIdx, ChannelHandle& handle)
+{
+    handle = 0;
+    const RankIdPair rankIdPair = std::make_pair(rankId_, channelDesc.remoteRank);
+    const EndpointDescPair endpointDescPair = std::make_pair(channelDesc.localEndpoint, channelDesc.remoteEndpoint);
+
+    RankPair* rankPair = nullptr;
+    if (rankPairMgr_->Find(rankIdPair, rankPair) != HCCL_SUCCESS || rankPair == nullptr) {
+        return HCCL_SUCCESS;
+    }
+    hcomm::EndpointPair* epPair = nullptr;
+    if (rankPair->GetEndpointPair(endpointDescPair, epPair) != HCCL_SUCCESS || epPair == nullptr) {
+        return HCCL_SUCCESS;
+    }
+    ChannelHandle slotHandle = 0;
+    if (epPair->GetChannelHandle(engine, reuseIdx, slotHandle)) {
+        handle = slotHandle;
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult MyRank::QueryChannels(
+    CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle* channels)
+{
+    CHK_PTR_NULL(channelDescs);
+    CHK_PTR_NULL(channels);
+    CHK_PRT_RET(channelNum == 0, HCCL_ERROR("[%s] invalid param: channelNum is zero", __func__), HCCL_E_PARA);
+
+    HCCL_INFO(
+        "[MyRank][%s] Enter engine[%s] channelNum[%u] rankId[%u]", __func__,
+        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, rankId_);
+
+    // 与 BatchCreateChannels 保持一致的 reuseIdx 累计逻辑
+    std::unordered_map<RankIdPair, std::unordered_map<EndpointDescPair, std::unordered_map<CommEngine, u32>>>
+        reuseIdxMap{};
+
+    for (uint32_t i = 0; i < channelNum; ++i) {
+        channels[i] = 0;
+        const auto& channelDesc = channelDescs[i];
+        uint32_t remoteRank = channelDesc.remoteRank;
+        const RankIdPair rankIdPair = std::make_pair(rankId_, remoteRank);
+        const EndpointDescPair endpointDescPair = std::make_pair(channelDesc.localEndpoint, channelDesc.remoteEndpoint);
+
+        u32& reuseIdx = reuseIdxMap[rankIdPair][endpointDescPair][engine];
+        u32 idx = reuseIdx;
+        if (channelDesc.localEndpoint.loc.locType != channelDesc.remoteEndpoint.loc.locType) {
+            idx = UNREUSE_CHANNEL_IDX;
+        }
+
+        // 仅当非 UNREUSE 且槽位存在时返回 handle
+        if (idx != UNREUSE_CHANNEL_IDX) {
+            (void)QueryOneChannel(engine, channelDesc, reuseIdx, channels[i]);
+        }
+
+        HCCL_INFO(
+            "[MyRank][%s] [%u/%u] remoteRank[%u] exist[%s] handle[0x%llx] reuseIdx[%u] unreuse[%d]", __func__, i + 1,
+            channelNum, remoteRank, channels[i] != 0 ? "yes" : "no", channels[i], reuseIdx, idx == UNREUSE_CHANNEL_IDX);
+
+        // 与 BatchCreateChannels 一致: 非 UNREUSE 才递增 reuseIdx(引用, 直接改 map 内值)
+        if (idx != UNREUSE_CHANNEL_IDX) {
+            reuseIdx++;
+        }
+    }
+
+    // 对发生句柄转换的引擎，经平台 H2D 反向映射把 host 句柄转换为用户实际使用的句柄
+    // （device 句柄），保证 Query 返回值与 HcclChannelAcquire 出参一致
+    if (engine == COMM_ENGINE_AICPU || engine == COMM_ENGINE_AICPU_TS || engine == COMM_ENGINE_AIV) {
+        for (uint32_t i = 0; i < channelNum; ++i) {
+            if (channels[i] != 0) {
+                ChannelHandle deviceHandle = 0;
+                if (hcomm::ChannelProcess::ResolveHostHandleToDevice(channels[i], deviceHandle) == HCCL_SUCCESS
+                    && deviceHandle != 0) {
+                    channels[i] = deviceHandle;
+                }
+            }
+        }
+    }
+    return HCCL_SUCCESS;
+}
+
+// 记录批量销毁过程中的首个错误与对应计数，供 DestroyOneChannel 复用
+static void RecordDestroyError(HcclResult& firstErr, u32& errCnt, HcclResult err)
+{
+    errCnt++;
+    if (firstErr == HCCL_SUCCESS) {
+        firstErr = err;
+    }
+}
+
+HcclResult MyRank::DestroyOneChannel(
+    ChannelHandle userHandle, u32 index, HcclResult& firstErr, u32& invalidHandleCnt, u32& failedCnt)
+{
+    // 反查索引以 host 句柄为键：AIV/AICPU_TS 入参为 device 句柄，先经 D2H 映射解析为 host 句柄
+    ChannelHandle hostHandle = userHandle;
+    ChannelHandle resolved = 0;
+    if (hcomm::ChannelProcess::ResolveUserHandleToHost(userHandle, resolved) == HCCL_SUCCESS && resolved != 0) {
+        hostHandle = resolved;
+    }
+    auto it = handleToEpPair_.find(hostHandle);
+    if (it == handleToEpPair_.end()) {
+        HCCL_ERROR("[%s] channel handle[0x%llx] not found, channelIndex[%u].", __func__, userHandle, index);
+        RecordDestroyError(firstErr, invalidHandleCnt, HCCL_E_NOT_FOUND);
+        return HCCL_SUCCESS;
+    }
+    hcomm::EndpointPair* epPair = it->second;
+    if (epPair == nullptr) {
+        // 反查索引条目为空指针（异常数据），清理并按无效句柄容错
+        HCCL_ERROR("[%s] channel handle[0x%llx] endpoint pair is null, channelIndex[%u].", __func__, userHandle, index);
+        handleToEpPair_.erase(it);
+        RecordDestroyError(firstErr, invalidHandleCnt, HCCL_E_NOT_FOUND);
+        return HCCL_SUCCESS;
+    }
+    CommEngine engine = COMM_ENGINE_RESERVED;
+    u32 reuseIdx = 0;
+    if (!epPair->FindChannelLoc(hostHandle, engine, reuseIdx)) {
+        HCCL_ERROR("[%s] channel handle[0x%llx] FindChannelLoc failed, channelIndex[%u].", __func__, userHandle, index);
+        RecordDestroyError(firstErr, invalidHandleCnt, HCCL_E_NOT_FOUND);
+        return HCCL_SUCCESS;
+    }
+    // 暂只支持 CCU 引擎： 其他场景的 channel 销毁无法保证资源完整释放
+    if (engine != COMM_ENGINE_CCU) {
+        HCCL_WARNING(
+            "[%s] channel handle[0x%llx] engine[%s] not supported, only CCU engine supported, channelIndex[%u].",
+            __func__, userHandle, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), index);
+        RecordDestroyError(firstErr, failedCnt, HCCL_E_NOT_SUPPORT);
+        return HCCL_SUCCESS;
+    }
+    HcclResult destroyRet = epPair->DestroyChannel(engine, reuseIdx);
+    if (destroyRet != HCCL_SUCCESS) {
+        HCCL_ERROR("[%s] DestroyChannel failed, handle[0x%llx] ret[%d], continue.", __func__, hostHandle, destroyRet);
+        RecordDestroyError(firstErr, failedCnt, destroyRet);
+        return HCCL_SUCCESS;
+    }
+    handleToEpPair_.erase(it);
+    return HCCL_SUCCESS;
+}
+
+HcclResult MyRank::DestroyChannels(const ChannelHandle* channels, uint32_t channelNum)
+{
+    CHK_PTR_NULL(channels);
+    CHK_PRT_RET(channelNum == 0, HCCL_ERROR("[%s] invalid param: channelNum is zero", __func__), HCCL_E_PARA);
+
+    std::lock_guard<std::mutex> lock(channelIndexMtx_);
+
+    HCCL_INFO("[MyRank][%s] Enter channelNum[%u] rankId[%u]", __func__, channelNum, rankId_);
+
+    HcclResult firstErr = HCCL_SUCCESS;
+    u32 invalidHandleCnt = 0;
+    u32 failedCnt = 0;
+
+    for (uint32_t i = 0; i < channelNum; ++i) {
+        (void)DestroyOneChannel(channels[i], i, firstErr, invalidHandleCnt, failedCnt);
+    }
+
+    if (firstErr != HCCL_SUCCESS) {
+        u32 destroyedCnt = channelNum - invalidHandleCnt - failedCnt;
+        HCCL_ERROR(
+            "[%s] finished with errors, total[%u] destroyed[%u] failed[%u] invalidHandle[%u] firstErr[%d].", __func__,
+            channelNum, destroyedCnt, failedCnt, invalidHandleCnt, static_cast<s32>(firstErr));
+        return firstErr;
+    }
     return HCCL_SUCCESS;
 }
 
@@ -1059,8 +1253,31 @@ HcclResult MyRank::CreateChannels(
     CHK_RET_UNAVAIL(
         BatchCreateChannels(engine, channelDescs, channelNum, hcommDescs, hostChannelHandleList, allHandles));
 
-    if (!newChannels_.empty()) {
-        CHK_RET(BatchConnectChannels(channelDescs, hostChannelHandleList, channelNum));
+    // 锁内快照本次新建列表：connect 阶段不再持 channelIndexMtx_，避免长耗时 IO 阻塞
+    // Query/Destroy；回滚时基于快照重新取锁清理，保证 newChannels_ 读写均在锁内
+    std::vector<std::pair<u32, u32>> newChannelsSnapshot;
+    {
+        std::lock_guard<std::mutex> lock(channelIndexMtx_);
+        newChannelsSnapshot = newChannels_;
+    }
+
+    if (!newChannelsSnapshot.empty()) {
+        HcclResult connRet = BatchConnectChannels(channelDescs, hostChannelHandleList, channelNum);
+        if (connRet != HCCL_SUCCESS && engine == COMM_ENGINE_CCU) {
+            // CCU 场景额外回滚本次新建的 channel，避免资源残留
+            HCCL_RUN_WARNING(
+                "[%s] BatchConnectChannels failed[%d], engine[%s], new channels num[%u]", __func__, connRet,
+                GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), newChannelsSnapshot.size());
+            std::lock_guard<std::mutex> lock(channelIndexMtx_);
+            HcclResult destroyRet = DestroyNewChannels(engine, channelDescs, newChannelsSnapshot);
+            if (destroyRet != HCCL_SUCCESS) {
+                HCCL_ERROR(
+                    "[%s] DestroyNewChannels failed[%d] during rollback, connRet[%d], "
+                    "residual newChannels[%zu] may leak.",
+                    __func__, destroyRet, connRet, newChannels_.size());
+            }
+        }
+        CHK_RET(connRet);
         auto end = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
         HCCL_RUN_INFO(

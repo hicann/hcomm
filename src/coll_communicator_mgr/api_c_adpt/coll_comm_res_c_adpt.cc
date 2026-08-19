@@ -668,14 +668,10 @@ static HcclResult FinalizeV2ChannelAcquire(
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclChannelAcquire(
-    HcclComm comm, CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle* channels)
+// 入参校验：HcclChannelAcquire / HcclChannelQuery / HcclChannelAcquireWithConfig 共用，消除重复参数检查
+static HcclResult
+CheckChannelResParams(HcclComm comm, const HcclChannelDesc* channelDescs, ChannelHandle* channels, uint32_t channelNum)
 {
-    HcclUs startut = TIME_NOW();
-    u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
-    EXCEPTION_HANDLE_BEGIN
-
-    // 入参校验
     CHK_PTR_NULL(comm);
     CHK_PTR_NULL(channelDescs);
     CHK_PTR_NULL(channels);
@@ -684,6 +680,17 @@ HcclResult HcclChannelAcquire(
         HCCL_ERROR(
             "[%s]Invalid channelNum, channelNum[%u], max channel num[%u]", __func__, channelNum, CHANNEL_NUM_MAX),
         HCCL_E_PARA);
+    return HCCL_SUCCESS;
+}
+
+HcclResult HcclChannelAcquire(
+    HcclComm comm, CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle* channels)
+{
+    HcclUs startut = TIME_NOW();
+    u64 beginTime = Hccl::DlProfFunction::GetInstance().dlMsprofSysCycleTime();
+    EXCEPTION_HANDLE_BEGIN
+
+    CHK_RET(CheckChannelResParams(comm, channelDescs, channels, channelNum));
 
     HcclResult ret = HCCL_SUCCESS;
     hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
@@ -773,6 +780,121 @@ HcclResult HcclChannelAcquire(
         "[%s] acquire channel success, group[%s], engine[%s], channelNum[%u], take time [%lld]us.", __func__,
         hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum,
         DURATION_US(TIME_NOW() - startut).count());
+    EXCEPTION_HANDLE_END
+    return HCCL_SUCCESS;
+}
+
+static HcclResult PackChannelDescs(
+    const HcclChannelDesc* channelDescs, uint32_t channelNum, hccl::hcclComm* hcclComm, CommEngine engine,
+    std::vector<HcclChannelDesc>& channelDescFinals)
+{
+    for (uint32_t idx = 0; idx < channelNum; idx++) {
+        HcclChannelDesc channelDescFinal;
+        HcclChannelDescInit(&channelDescFinal, 1);
+        HcclResult ret = ProcessHcclResPackReq(channelDescs[idx], channelDescFinal, hcclComm);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "ProcessHcclResPackReq failed. channelDesc idx[%u], group[%s], engine[%s] channelNum[%u], ret[%d]", idx,
+                hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(),
+                channelNum, ret),
+            ret);
+        channelDescFinals.push_back(channelDescFinal);
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult HcclChannelQuery(
+    HcclComm comm, CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle* channels)
+{
+    HcclUs startut = TIME_NOW();
+    EXCEPTION_HANDLE_BEGIN
+
+    CHK_RET(CheckChannelResParams(comm, channelDescs, channels, channelNum));
+
+    hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
+    HCCL_RUN_INFO(
+        "Entry-%s channelNum[%u], engine[%s] group[%s]", __func__, channelNum,
+        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), hcclComm->GetIdentifier().c_str());
+
+    // 仅 V2（A5）路径支持；legacy 通信域不支持查询，返回 NOT_SUPPORT（符合 legacy 不承接新特性）
+    if (!hcclComm->IsCommunicatorV2()) {
+        HCCL_WARNING("[%s] legacy communicator not supported, return NOT_SUPPORT.", __func__);
+        return HCCL_E_NOT_SUPPORT;
+    }
+
+    hccl::CollComm* collComm = hcclComm->GetCollComm();
+    CHK_PTR_NULL(collComm);
+    hccl::MyRank* myRank = collComm->GetMyRank();
+    CHK_PTR_NULL(myRank);
+
+    const uint32_t opExpansionMode = myRank->GetOpExpansionMode();
+    if (!CheckCommEngine(engine, opExpansionMode)) {
+        HCCL_ERROR(
+            "[%s] opExpansionMode[%d] not supported by engine[%s].", __func__, opExpansionMode,
+            GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
+        return HCCL_E_PARA;
+    }
+
+    // 打包 channelDesc（与 HcclChannelAcquire 一致的兼容处理流程）
+    std::vector<HcclChannelDesc> channelDescFinals;
+    CHK_RET(PackChannelDescs(channelDescs, channelNum, hcclComm, engine, channelDescFinals));
+
+    HcclResult ret = myRank->QueryChannels(engine, channelDescFinals.data(), channelNum, channels);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[%s] Failed to query channel, group[%s], engine[%s], channelNum[%u], ret[%d]", __func__,
+            hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum,
+            ret),
+        ret);
+
+    HCCL_RUN_INFO(
+        "[%s] query channel success, group[%s], engine[%s], channelNum[%u], take time [%lld]us.", __func__,
+        hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum,
+        DURATION_US(TIME_NOW() - startut).count());
+    EXCEPTION_HANDLE_END
+    return HCCL_SUCCESS;
+}
+
+HcclResult HcclChannelDestroy(HcclComm comm, const ChannelHandle* channels, uint32_t channelNum)
+{
+    HcclUs startut = TIME_NOW();
+    EXCEPTION_HANDLE_BEGIN
+
+    // 入参校验
+    CHK_PTR_NULL(comm);
+    CHK_PTR_NULL(channels);
+    CHK_PRT_RET(
+        (channelNum == 0 || channelNum > CHANNEL_NUM_MAX),
+        HCCL_ERROR("[%s]Invalid channelNum[%u], max channel num[%u]", __func__, channelNum, CHANNEL_NUM_MAX),
+        HCCL_E_PARA);
+
+    hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
+    HCCL_RUN_INFO("Entry-%s channelNum[%u] group[%s]", __func__, channelNum, hcclComm->GetIdentifier().c_str());
+
+    // 仅 V2（A5）路径支持；legacy 通信域不支持销毁，返回 NOT_SUPPORT
+    if (!hcclComm->IsCommunicatorV2()) {
+        HCCL_WARNING("[%s] legacy communicator not supported, return NOT_SUPPORT.", __func__);
+        return HCCL_E_NOT_SUPPORT;
+    }
+
+    hccl::CollComm* collComm = hcclComm->GetCollComm();
+    CHK_PTR_NULL(collComm);
+    hccl::MyRank* myRank = collComm->GetMyRank();
+    CHK_PTR_NULL(myRank);
+
+    HcclResult ret = myRank->DestroyChannels(channels, channelNum);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR(
+            "[%s] Failed to destroy channel, group[%s], channelNum[%u], ret[%d]", __func__,
+            hcclComm->GetIdentifier().c_str(), channelNum, ret),
+        ret);
+
+    HCCL_RUN_INFO(
+        "[%s] destroy channel success, group[%s], channelNum[%u], take time [%lld]us.", __func__,
+        hcclComm->GetIdentifier().c_str(), channelNum, DURATION_US(TIME_NOW() - startut).count());
     EXCEPTION_HANDLE_END
     return HCCL_SUCCESS;
 }
@@ -1092,27 +1214,6 @@ static HcclResult ParseSharedQueueConfig(
     return HCCL_SUCCESS;
 }
 
-static HcclResult ProcessSharedQueueDescFinals(
-    const HcclChannelDesc* channelDescs, uint32_t channelNum, hccl::hcclComm* hcclComm, CommEngine engine,
-    std::vector<HcclChannelDesc>& channelDescFinals)
-{
-    for (uint32_t idx = 0; idx < channelNum; idx++) {
-        HcclChannelDesc channelDescFinal;
-        HcclChannelDescInit(&channelDescFinal, 1);
-        HcclResult ret = ProcessHcclResPackReq(channelDescs[idx], channelDescFinal, hcclComm);
-        CHK_PRT_RET(
-            ret != HCCL_SUCCESS,
-            HCCL_ERROR(
-                "ProcessHcclResPackReq failed. channelDesc idx[%u], group[%s], engine[%s] "
-                "channelNum[%u], ret[%d]",
-                idx, hcclComm->GetIdentifier().c_str(), GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(),
-                channelNum, ret),
-            ret);
-        channelDescFinals.push_back(channelDescFinal);
-    }
-    return HCCL_SUCCESS;
-}
-
 static void DestroyAndClearSharedJettyChannels(
     hccl::hcclComm* hcclComm, const std::string& sharedQueueTag, uint32_t channelNum, ChannelHandle* channels,
     const std::vector<bool>& isNewChannel, const std::vector<ChannelHandle>& channelsCopy,
@@ -1252,15 +1353,7 @@ HcclResult HcclChannelAcquireWithConfig(
     HcclUs startut = TIME_NOW();
     EXCEPTION_HANDLE_BEGIN
 
-    // 入参校验
-    CHK_PTR_NULL(comm);
-    CHK_PTR_NULL(channelDescs);
-    CHK_PTR_NULL(channels);
-    CHK_PRT_RET(
-        (channelNum == 0 || channelNum > CHANNEL_NUM_MAX),
-        HCCL_ERROR(
-            "[%s]Invalid channelNum, channelNum[%u], max channel num[%u]", __func__, channelNum, CHANNEL_NUM_MAX),
-        HCCL_E_PARA);
+    CHK_RET(CheckChannelResParams(comm, channelDescs, channels, channelNum));
 
     bool isSharedQueue = false;
     std::string sharedQueueTag;
@@ -1275,7 +1368,7 @@ HcclResult HcclChannelAcquireWithConfig(
 
     // 复用 HcclChannelAcquire 的前置校验（ProcessHcclResPackReq），保证共享/非共享路径校验一致
     std::vector<HcclChannelDesc> channelDescFinals;
-    CHK_RET(ProcessSharedQueueDescFinals(channelDescs, channelNum, hcclComm, engine, channelDescFinals));
+    CHK_RET(PackChannelDescs(channelDescs, channelNum, hcclComm, engine, channelDescFinals));
     CHK_RET(ValidateSharedQueueDescs(channelDescFinals));
 
     std::vector<std::vector<HcclMemHandle>> mergedMemHandles;

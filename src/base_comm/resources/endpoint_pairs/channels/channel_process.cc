@@ -37,6 +37,7 @@ namespace hcomm {
 
 std::unordered_map<ChannelHandle, std::shared_ptr<Channel>> ChannelProcess::g_ChannelMap;
 std::unordered_map<DeviceChannelKey, ChannelHandle, DeviceChannelKeyHash> ChannelProcess::g_ChannelD2HMap;
+std::unordered_map<DeviceChannelKey, ChannelHandle, DeviceChannelKeyHash> ChannelProcess::g_ChannelH2DMap;
 std::mutex ChannelProcess::g_ChannelMapMtx;
 
 template <typename Func>
@@ -121,6 +122,9 @@ HcclResult ChannelProcess::CreateChannelsLoop(
 
             g_ChannelMap.emplace(handle, std::move(tmpPtr));
             g_ChannelD2HMap.emplace(key, handle);
+            // 同步维护 H2D 反向映射（host 句柄恒等映射，后续 kernel 回写真实 device 句柄时覆盖）
+            DeviceChannelKey h2dKey{deviceId, handle};
+            g_ChannelH2DMap.emplace(h2dKey, handle);
         }
     }
     return HCCL_SUCCESS;
@@ -152,6 +156,47 @@ HcclResult ChannelProcess::RemovePluginChannelFromMap(ChannelHandle handle)
     g_ChannelMap.erase(iter);
 
     HCCL_INFO("[%s] unregister plugin channel, handle[0x%llx].", __func__, handle);
+    return HCCL_SUCCESS;
+}
+
+HcclResult ChannelProcess::ResolveUserHandleToHost(ChannelHandle userHandle, ChannelHandle& hostHandle)
+{
+    // 0 句柄不是合法的 device 句柄：直接按未映射处理（由调用方按 host 句柄兜底），
+    // 避免 {deviceId, 0} 这类异常映射被误当成有效句柄
+    if (userHandle == 0) {
+        return HCCL_E_NOT_FOUND;
+    }
+
+    int32_t deviceId = 0;
+    CHK_RET(hrtGetDevice(&deviceId));
+
+    std::lock_guard<std::mutex> lock(g_ChannelMapMtx);
+    DeviceChannelKey key{deviceId, userHandle};
+    auto it = g_ChannelD2HMap.find(key);
+    if (it == g_ChannelD2HMap.end()) {
+        return HCCL_E_NOT_FOUND;
+    }
+    hostHandle = it->second;
+    return HCCL_SUCCESS;
+}
+
+HcclResult ChannelProcess::ResolveHostHandleToDevice(ChannelHandle hostHandle, ChannelHandle& deviceHandle)
+{
+    // 0 句柄不是合法的 host 句柄：直接按未映射处理（由调用方按原值兜底）
+    if (hostHandle == 0) {
+        return HCCL_E_NOT_FOUND;
+    }
+
+    int32_t deviceId = 0;
+    CHK_RET(hrtGetDevice(&deviceId));
+
+    std::lock_guard<std::mutex> lock(g_ChannelMapMtx);
+    DeviceChannelKey key{deviceId, hostHandle};
+    auto it = g_ChannelH2DMap.find(key);
+    if (it == g_ChannelH2DMap.end()) {
+        return HCCL_E_NOT_FOUND;
+    }
+    deviceHandle = it->second;
     return HCCL_SUCCESS;
 }
 
@@ -192,8 +237,51 @@ ChannelProcess::ChannelUpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHan
     return HCCL_SUCCESS;
 }
 
+// 是否为通道失败终态（含资源不足），供 ChannelGetStatus 轮询跳过与结果归类使用
+static bool IsChannelFailTerminal(int32_t status)
+{
+    return status == ChannelStatus::FAILED || status == ChannelStatus::SOCKET_TIMEOUT
+           || status == ChannelStatus::RES_LOC_UNAVAIL || status == ChannelStatus::RES_RMT_UNAVAIL;
+}
+
+// 批量状态归类：仍有通道未就绪返回 AGAIN；整批就绪返回 SUCCESS；
+// 设计约定：资源不足错误仅在整批没有其他失败时才返回，混有网络/超时类失败时优先返回 NETWORK
+static HcclResult ClassifyBatchStatus(const int32_t* statusList, uint32_t listNum, u32 readyCount, u32 failCount)
+{
+    if (readyCount + failCount < listNum) {
+        return HCCL_E_AGAIN;
+    }
+    if (readyCount == listNum) {
+        return HCCL_SUCCESS;
+    }
+    bool hasNetworkFail = false;
+    bool hasResUnavailable = false;
+    for (uint32_t i = 0; i < listNum; ++i) {
+        if (statusList[i] == ChannelStatus::FAILED || statusList[i] == ChannelStatus::SOCKET_TIMEOUT) {
+            hasNetworkFail = true;
+        }
+        if (statusList[i] == ChannelStatus::RES_LOC_UNAVAIL || statusList[i] == ChannelStatus::RES_RMT_UNAVAIL) {
+            hasResUnavailable = true;
+        }
+    }
+    if (hasNetworkFail) {
+        HCCL_ERROR(
+            "[%s] NETWORK, readyCount[%u], failCount[%u], listNum[%u]", __func__, readyCount, failCount, listNum);
+        return HCCL_E_NETWORK;
+    }
+    if (hasResUnavailable) {
+        HCCL_WARNING(
+            "[%s] RESOURCE UNAVAILABLE, readyCount[%u], failCount[%u], listNum[%u]", __func__, readyCount, failCount,
+            listNum);
+        return HCCL_E_UNAVAIL;
+    }
+    HCCL_ERROR("[%s] NETWORK, readyCount[%u], failCount[%u], listNum[%u]", __func__, readyCount, failCount, listNum);
+    return HCCL_E_NETWORK;
+}
+
 HcclResult ChannelProcess::ChannelGetStatus(const ChannelHandle* channelList, uint32_t listNum, int32_t* statusList)
 {
+    HcclResult result = HCCL_SUCCESS;
     EXCEPTION_HANDLE_BEGIN
 
     // 不得随意添加无效日志，可能造成刷屏
@@ -206,8 +294,9 @@ HcclResult ChannelProcess::ChannelGetStatus(const ChannelHandle* channelList, ui
     for (uint32_t i = 0; i < listNum; ++i) {
         const ChannelHandle inHandle = channelList[i];
         int32_t status = 0;
-        // 当前通道状态如果已为FAILED/SOCKET_TIMEOUT，说明前面已经失败过，无需再重新获取状态，继续轮询下一个通道，避免日志刷屏
-        if (statusList[i] == ChannelStatus::FAILED || statusList[i] == ChannelStatus::SOCKET_TIMEOUT) {
+        // 当前通道状态如果已为失败终态(FAILED/SOCKET_TIMEOUT/资源不足)，说明前面已经失败过，
+        // 无需再重新获取状态，继续轮询下一个通道，避免日志刷屏
+        if (IsChannelFailTerminal(statusList[i])) {
             failCount++;
             continue;
         }
@@ -220,7 +309,7 @@ HcclResult ChannelProcess::ChannelGetStatus(const ChannelHandle* channelList, ui
             HCCL_ERROR("[%s] Get ChannelHandle failed.", __func__);
             return ret;
         }
-        // 某一个channel状态为FAILED/SOCKET_TIMEOUT时不直接返回，否则后面的channel无法轮询完，状态无法到达终态；
+        // 某一个channel状态为失败终态时不直接返回，否则后面的channel无法轮询完，状态无法到达终态；
         if (status == ChannelStatus::FAILED) {
             HCCL_ERROR("[%s] FAILED, channel idx[%u], status[%d]", __func__, i, status);
             failCount++;
@@ -229,20 +318,21 @@ HcclResult ChannelProcess::ChannelGetStatus(const ChannelHandle* channelList, ui
             HCCL_ERROR("[%s] TIMEOUT, channel idx[%u], status[%d]", __func__, i, status);
             failCount++;
         }
+        if (status == ChannelStatus::RES_LOC_UNAVAIL) {
+            HCCL_WARNING("[%s] LOC RESOURCE UNAVAILABLE, channel idx[%u], status[%d]", __func__, i, status);
+            failCount++;
+        }
+        if (status == ChannelStatus::RES_RMT_UNAVAIL) {
+            HCCL_WARNING("[%s] RMT RESOURCE UNAVAILABLE, channel idx[%u], status[%d]", __func__, i, status);
+            failCount++;
+        }
 
         readyCount += (status == ChannelStatus::READY) ? 1 : 0;
         statusList[i] = status;
     }
-    if (readyCount + failCount < listNum) {
-        return HCCL_E_AGAIN;
-    }
-    if (readyCount != listNum) {
-        HCCL_ERROR(
-            "[%s] NETWORK, readyCount[%u], failCount[%u], listNum[%u]", __func__, readyCount, failCount, listNum);
-        return HCCL_E_NETWORK;
-    }
+    result = ClassifyBatchStatus(statusList, listNum, readyCount, failCount);
     EXCEPTION_HANDLE_END
-    return HCCL_SUCCESS;
+    return result;
 }
 
 HcclResult ChannelProcess::GetChannelsInfo(
@@ -287,6 +377,12 @@ void ConvertToLinkStatus(const std::vector<ChannelStatus>& internalStatus, std::
                 break;
             case ChannelStatus::READY:
                 linkStatusList[i] = HCOMM_CHANNEL_STATUS_READY;
+                break;
+            case ChannelStatus::RES_LOC_UNAVAIL:
+                linkStatusList[i] = HCOMM_CHANNEL_STATUS_RES_LOC_UNAVAIL;
+                break;
+            case ChannelStatus::RES_RMT_UNAVAIL:
+                linkStatusList[i] = HCOMM_CHANNEL_STATUS_RES_RMT_UNAVAIL;
                 break;
             default:
                 linkStatusList[i] = HCOMM_CHANNEL_STATUS_CONNECTING;
@@ -392,11 +488,17 @@ HcclResult ChannelProcess::FillChannelD2HMap(
     for (uint32_t idx = 0; idx < listNum; idx++) {
         auto deviceChannelHandle = deviceChannelHandles[idx];
         auto hostChannelHandle = hostChannelHandles[idx];
+        if (deviceChannelHandle == 0 || hostChannelHandle == 0) {
+            continue;
+        }
         HCCL_INFO(
             "%s deviceId[%d], deviceChannelHandle[0x%llx], hostChannelHandle[0x%llx]", __func__, deviceId,
             deviceChannelHandle, hostChannelHandle);
         DeviceChannelKey key{deviceId, deviceChannelHandle};
         g_ChannelD2HMap[key] = hostChannelHandle;
+        // 同步维护 H2D 反向映射：host 句柄 -> 用户实际使用的句柄（AIV/AICPU_TS 为 device 句柄）
+        DeviceChannelKey h2dKey{deviceId, hostChannelHandle};
+        g_ChannelH2DMap[h2dKey] = deviceChannelHandle;
     }
 
     return HCCL_SUCCESS;
@@ -917,6 +1019,8 @@ ChannelProcess::RemoveSingleChannel(int32_t deviceId, ChannelHandle inHandle, st
             ++it;
         }
     }
+    // 同步删除 H2D 反向映射（键为 {deviceId, host 句柄}）
+    g_ChannelH2DMap.erase(DeviceChannelKey{deviceId, mappedHandle});
     return HCCL_SUCCESS;
 }
 

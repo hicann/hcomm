@@ -548,3 +548,141 @@ TEST_F(HcclChannelDescTest, Ut_ProcessRoceChannelDesc_When_HcclQos6_MapsSlAndTcF
     MOCKER(RaGetHccnCfg).stubs().will(invoke(StubRaGetHccnCfgRoceQosDscp));
     ExpectRoceSlTcInHcommChannelDesc(6U, 6U, static_cast<uint8_t>(70U << 2U));
 }
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelQuery_When_CommNull_Expect_E_PTR)
+{
+    std::vector<HcclChannelDesc> channelDesc(1);
+    std::vector<ChannelHandle> channels(1);
+    GetChannelDesc(channelDesc);
+    EXPECT_EQ(
+        HcclChannelQuery(nullptr, CommEngine::COMM_ENGINE_CCU, channelDesc.data(), 1, channels.data()), HCCL_E_PTR);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelQuery_When_DescsNull_Expect_E_PTR)
+{
+    std::vector<ChannelHandle> channels(1);
+    EXPECT_EQ(HcclChannelQuery(comm, CommEngine::COMM_ENGINE_CCU, nullptr, 1, channels.data()), HCCL_E_PTR);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelQuery_When_ChannelsNull_Expect_E_PTR)
+{
+    std::vector<HcclChannelDesc> channelDesc(1);
+    GetChannelDesc(channelDesc);
+    EXPECT_EQ(HcclChannelQuery(comm, CommEngine::COMM_ENGINE_CCU, channelDesc.data(), 1, nullptr), HCCL_E_PTR);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelQuery_When_NumZero_Expect_E_PARA)
+{
+    std::vector<HcclChannelDesc> channelDesc(1);
+    std::vector<ChannelHandle> channels(1);
+    GetChannelDesc(channelDesc);
+    EXPECT_EQ(HcclChannelQuery(comm, CommEngine::COMM_ENGINE_CCU, channelDesc.data(), 0, channels.data()), HCCL_E_PARA);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelQuery_When_LegacyComm_Expect_NOT_SUPPORT)
+{
+    MOCKER_CPP(&hccl::hcclComm::IsCommunicatorV2).stubs().will(returnValue(false));
+    std::vector<HcclChannelDesc> channelDesc(1);
+    std::vector<ChannelHandle> channels(1);
+    GetChannelDesc(channelDesc);
+    EXPECT_EQ(
+        HcclChannelQuery(comm, CommEngine::COMM_ENGINE_CCU, channelDesc.data(), 1, channels.data()),
+        HCCL_E_NOT_SUPPORT);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelQuery_When_Normal_Expect_SUCCESS)
+{
+    MOCKER_CPP(&MyRank::GetOpExpansionMode).stubs().will(returnValue(0u));
+    MOCKER_CPP(&MyRank::QueryChannels).stubs().will(returnValue(HCCL_SUCCESS));
+    std::vector<HcclChannelDesc> channelDesc(1);
+    std::vector<ChannelHandle> channels(1);
+    GetChannelDesc(channelDesc);
+    EXPECT_EQ(
+        HcclChannelQuery(comm, CommEngine::COMM_ENGINE_CCU, channelDesc.data(), 1, channels.data()), HCCL_SUCCESS);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelQuery_When_MyRankFailed_Expect_ErrorPropagated)
+{
+    MOCKER_CPP(&MyRank::GetOpExpansionMode).stubs().will(returnValue(0u));
+    MOCKER_CPP(&MyRank::QueryChannels).stubs().will(returnValue(HCCL_E_INTERNAL));
+    std::vector<HcclChannelDesc> channelDesc(1);
+    std::vector<ChannelHandle> channels(1);
+    GetChannelDesc(channelDesc);
+    EXPECT_EQ(
+        HcclChannelQuery(comm, CommEngine::COMM_ENGINE_CCU, channelDesc.data(), 1, channels.data()), HCCL_E_INTERNAL);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelDestroy_When_CommNull_Expect_E_PTR)
+{
+    ChannelHandle channels[1] = {g_testChannel};
+    EXPECT_EQ(HcclChannelDestroy(nullptr, channels, 1), HCCL_E_PTR);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelDestroy_When_ChannelsNull_Expect_E_PTR)
+{
+    EXPECT_EQ(HcclChannelDestroy(comm, nullptr, 1), HCCL_E_PTR);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelDestroy_When_NumZero_Expect_E_PARA)
+{
+    ChannelHandle channels[1] = {g_testChannel};
+    EXPECT_EQ(HcclChannelDestroy(comm, channels, 0), HCCL_E_PARA);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelDestroy_When_LegacyComm_Expect_NOT_SUPPORT)
+{
+    MOCKER_CPP(&hccl::hcclComm::IsCommunicatorV2).stubs().will(returnValue(false));
+    ChannelHandle channels[1] = {g_testChannel};
+    EXPECT_EQ(HcclChannelDestroy(comm, channels, 1), HCCL_E_NOT_SUPPORT);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelDestroy_When_Normal_Expect_SUCCESS)
+{
+    MOCKER_CPP(&MyRank::DestroyChannels).stubs().will(returnValue(HCCL_SUCCESS));
+    ChannelHandle channels[1] = {g_testChannel};
+    EXPECT_EQ(HcclChannelDestroy(comm, channels, 1), HCCL_SUCCESS);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelDestroy_When_MyRankFailed_Expect_ErrorPropagated)
+{
+    MOCKER_CPP(&MyRank::DestroyChannels).stubs().will(returnValue(HCCL_E_INTERNAL));
+    ChannelHandle channels[1] = {g_testChannel};
+    EXPECT_EQ(HcclChannelDestroy(comm, channels, 1), HCCL_E_INTERNAL);
+}
+
+// 适配层: GetCollComm 返回 nullptr 时 Query 返回 E_PTR
+TEST_F(HcclChannelDescTest, Ut_HcclChannelQuery_When_CollCommNull_Expect_E_PTR)
+{
+    MOCKER_CPP(&hccl::hcclComm::GetCollComm).stubs().will(returnValue(static_cast<hccl::CollComm*>(nullptr)));
+    std::vector<HcclChannelDesc> channelDesc(1);
+    std::vector<ChannelHandle> channels(1);
+    GetChannelDesc(channelDesc);
+    EXPECT_EQ(HcclChannelQuery(comm, CommEngine::COMM_ENGINE_CCU, channelDesc.data(), 1, channels.data()), HCCL_E_PTR);
+}
+
+// 适配层: channelNum 超过上限(1024*1024)时返回 E_PARA
+TEST_F(HcclChannelDescTest, Ut_HcclChannelQuery_When_NumExceedsMax_Expect_E_PARA)
+{
+    std::vector<HcclChannelDesc> channelDesc(1);
+    std::vector<ChannelHandle> channels(1);
+    GetChannelDesc(channelDesc);
+    EXPECT_EQ(
+        HcclChannelQuery(comm, CommEngine::COMM_ENGINE_CCU, channelDesc.data(), 1024 * 1024 + 1, channels.data()),
+        HCCL_E_PARA);
+}
+
+TEST_F(HcclChannelDescTest, Ut_HcclChannelDestroy_When_NumExceedsMax_Expect_E_PARA)
+{
+    ChannelHandle channels[1] = {g_testChannel};
+    EXPECT_EQ(HcclChannelDestroy(comm, channels, 1024 * 1024 + 1), HCCL_E_PARA);
+}
+
+// 适配层: channelDesc 的 magicWord 非法时, ProcessHcclResPackReq 失败并透传 E_PARA
+TEST_F(HcclChannelDescTest, Ut_HcclChannelQuery_When_DescMagicWordInvalid_Expect_E_PARA)
+{
+    std::vector<HcclChannelDesc> channelDesc(1);
+    std::vector<ChannelHandle> channels(1);
+    GetChannelDesc(channelDesc);
+    channelDesc[0].header.magicWord = 0xDEADBEEF;
+    EXPECT_EQ(HcclChannelQuery(comm, CommEngine::COMM_ENGINE_CCU, channelDesc.data(), 1, channels.data()), HCCL_E_PARA);
+}

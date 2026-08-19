@@ -14,6 +14,8 @@
 #include <memory>
 #include <vector>
 #include <atomic>
+#include <mutex>
+#include <optional>
 
 #include "../channel.h"
 
@@ -26,7 +28,7 @@ class CcuUrmaChannel : public Channel {
 public:
     // 当前仅支持交换hccl buffer
     CcuUrmaChannel(const EndpointHandle locEndpointHandle, const HcommChannelDesc& channelDesc);
-    ~CcuUrmaChannel() override = default;
+    ~CcuUrmaChannel() override;
 
     HcclResult Init() override;
     ChannelStatus GetStatus() override;
@@ -65,10 +67,19 @@ public:
     const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
 
 private:
+    ChannelStatus TryPrepareAndConstruct();
+
     std::atomic<bool> isFirstPrintChannelInfo_{true}; // 是否第一次打印通道建链信息，避免重复打印日志刷屏
     std::unique_ptr<CcuTransport> impl_{nullptr};
+    ChannelStatus channelStatus_{ChannelStatus::INIT};
+    // 保护 GetStatus 懒建链与状态读写：并发轮询同一 channel 时避免 impl_/channelStatus_ 竞态
+    std::mutex statusMtx_{};
     EndpointHandle locEndpointHandle_{nullptr};
     HcommChannelDesc channelDesc_{};
+    UrmaEndpoint* ccuEndpoint_{nullptr};
+    std::optional<Hccl::LinkData> linkData_;
+    Hccl::Socket* socket_{nullptr};
+    std::vector<HcommMemHandle> memHandles_{};
 };
 
 } // namespace hcomm

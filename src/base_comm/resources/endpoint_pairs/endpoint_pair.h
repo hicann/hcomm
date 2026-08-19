@@ -12,6 +12,9 @@
 #define ENDPOINT_PAIR_H
 
 #include <memory>
+#include <mutex>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 #include "channels/channel.h"
 #include "endpoint.h"
@@ -103,7 +106,14 @@ public:
 
     bool IsChannelNotExist(CommEngine engine, u32 reuseIdx);
 
-    const std::unordered_map<CommEngine, std::vector<ChannelHandle>>& GetChannelHandles();
+    // 持锁返回 channelHandles_ 副本，避免外部持有引用时与 CreateChannel/DestroyChannel 并发修改产生数据竞争
+    std::unordered_map<CommEngine, std::vector<ChannelHandle>> GetChannelHandles() const;
+
+    // 持锁读取指定引擎指定槽位的句柄，避免外部引用内部向量造成并发读写
+    bool GetChannelHandle(CommEngine engine, u32 reuseIdx, ChannelHandle& handle) const;
+
+    // 反查 handle -> (engine, 真实槽位)
+    bool FindChannelLoc(ChannelHandle handle, CommEngine& engine, u32& reuseIdx) const;
 
 private:
     HcclResult EnsureSocketMgrCompat(const uint32_t myRank, const std::string& socketTag);
@@ -121,6 +131,10 @@ private:
     EndpointDesc remoteEndpointDesc_{};
     std::unique_ptr<Hccl::SocketManager> socketMgrCompat_;
     std::unordered_map<CommEngine, std::vector<ChannelHandle>> channelHandles_{};
+    // handle -> (engine, 真实槽位) 反查索引
+    std::unordered_map<ChannelHandle, std::pair<CommEngine, u32>> handleToLoc_{};
+    // 保护 channelHandles_ 与 handleToLoc_ 的并发访问
+    mutable std::mutex channelMtx_{};
     Hccl::RankIpPortMapPtr rankIpPortMap_;
     uint32_t devicePhyId_{};
     std::unique_ptr<SocketMgr> socketMgr_;

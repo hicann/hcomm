@@ -80,10 +80,21 @@ TEST_F(CclBufferInfoTest, Ut_ConstructorWithParams_Expect_CorrectValues)
 class CcuTransportTest : public testing::Test {
 protected:
     std::unique_ptr<CcuTransport> transport;
+    Hccl::Socket socket_{
+        nullptr,
+        Hccl::IpAddress(),
+        0,
+        Hccl::IpAddress(),
+        "ut_socket",
+        Hccl::SocketRole::CLIENT,
+        Hccl::NicType::DEVICE_NIC_TYPE};
     void SetUp() override
     {
         CcuTransport::CclBufferInfo bufInfo(0x1000ULL, 1024U, 1U, 2U);
-        transport = std::make_unique<CcuTransport>(nullptr, nullptr, bufInfo);
+        // socket 未连接(INIT 状态), SendDataSize 内 SendAsync 抛 SocketException 被捕获;
+        // 标记 isDestroyed 避免 fixture 析构时对未初始化 socket 调用 Destroy
+        socket_.isDestroyed = true;
+        transport = std::make_unique<CcuTransport>(&socket_, nullptr, bufInfo);
     }
     void TearDown() override {}
 };
@@ -270,4 +281,147 @@ TEST_F(CcuTransportTest, Ut_GetRmtHandshakeMsg_Expect_InitiallyEmpty)
     transport->rmtHandshakeMsg_.clear();
     auto& msg = transport->GetRmtHandshakeMsg();
     EXPECT_TRUE(msg.empty());
+}
+
+TEST_F(CcuTransportTest, Ut_HandshakeMsgPack_When_LocOk_Expect_OriginalHandshakeMsg)
+{
+    transport->SetHandshakeMsg({'h', 'e', 'l', 'l', 'o'});
+    Hccl::BinaryStream stream;
+    EXPECT_EQ(transport->HandshakeMsgPack(stream), HcclResult::HCCL_SUCCESS);
+
+    // 反解 stream 验证握手消息内容可往返还原
+    std::vector<char> dumped;
+    stream.DumpWithRevert(dumped);
+    EXPECT_FALSE(dumped.empty());
+    std::vector<char> restored;
+    stream >> restored;
+    EXPECT_EQ(restored, std::vector<char>({'h', 'e', 'l', 'l', 'o'}));
+}
+
+TEST_F(CcuTransportTest, Ut_HandshakeMsgUnpack_When_Ok_Expect_RmtHandshakeMsg)
+{
+    std::vector<char> msg = {'a', 'b', 'c'};
+    Hccl::BinaryStream stream;
+    stream << msg;
+
+    transport->attr_.handshakeMsg = msg;
+    transport->rmtHandshakeMsg_.clear();
+    EXPECT_EQ(transport->HandshakeMsgUnpack(stream), HcclResult::HCCL_SUCCESS);
+    // STC V2.0: 断言面向公共 getter 行为契约，不直读私有 rmtHandshakeMsg_
+    EXPECT_EQ(transport->GetRmtHandshakeMsg(), msg);
+}
+
+TEST_F(CcuTransportTest, Ut_ConstructMsgOnlyTransport_TransStatusInit)
+{
+    Hccl::Socket* fakeSocket = reinterpret_cast<Hccl::Socket*>(0x1);
+    std::unique_ptr<CcuTransport> impl;
+    EXPECT_EQ(
+        CcuTransport::ConstructMsgOnlyTransport(fakeSocket, impl, CcuTransport::CcuResStatus::RES_UNAVAIL),
+        HcclResult::HCCL_SUCCESS);
+
+    // STC V2.0: locResStatus_ 改用公共 helper 行为契约
+    EXPECT_TRUE(impl->IsLocResUnavailable());
+    // 白盒保留: transStatus_ 无公共 setter, GetStatus() 会触发状态机, 故直读初值
+    EXPECT_EQ(impl->transStatus_, CcuTransport::TransStatus::INIT);
+    // 白盒保留: locBufferInfos_ 无公共 getter, 故直读判空
+    EXPECT_TRUE(impl->locBufferInfos_.empty());
+}
+
+// ==================== SendDataSize / RecvDataProcess (locResStatus int 协议) ====================
+
+// TC-TS-021: RES_UNAVAIL 时载荷仅 sizeof(int)
+TEST_F(CcuTransportTest, Ut_SendDataSize_When_LocUnavail_Expect_ResStatusIntOnly)
+{
+    transport->SetLocResStatus(CcuTransport::CcuResStatus::RES_UNAVAIL);
+    (void)transport->SendDataSize();
+    EXPECT_EQ(transport->sendData_.size(), sizeof(int));
+}
+
+// TC-TS-022: RES_FAILED 时载荷仅 sizeof(int)
+TEST_F(CcuTransportTest, Ut_SendDataSize_When_LocFailed_Expect_ResStatusIntOnly)
+{
+    transport->SetLocResStatus(CcuTransport::CcuResStatus::RES_FAILED);
+    (void)transport->SendDataSize();
+    EXPECT_EQ(transport->sendData_.size(), sizeof(int));
+}
+
+// TC-TS-024: RecvDataProcess 收到 RES_UNAVAIL 时跳过后续解包
+TEST_F(CcuTransportTest, Ut_RecvDataProcess_When_RmtUnavail_Expect_SkipUnpack)
+{
+    Hccl::BinaryStream stream;
+    int unavailStatus = static_cast<int>(CcuTransport::CcuResStatus::RES_UNAVAIL);
+    stream << unavailStatus;
+    std::vector<char> payload;
+    stream.Dump(payload);
+    transport->exchangeDataSize_ = payload.size();
+    transport->recvData_ = payload;
+
+    EXPECT_EQ(transport->RecvDataProcess(), HcclResult::HCCL_SUCCESS);
+    EXPECT_TRUE(transport->IsRmtResUnavailable());
+}
+
+// TC-TS-025: RecvDataProcess 收到 RES_FAILED 时跳过后续解包
+TEST_F(CcuTransportTest, Ut_RecvDataProcess_When_RmtFailed_Expect_SkipUnpack)
+{
+    Hccl::BinaryStream stream;
+    int failedStatus = static_cast<int>(CcuTransport::CcuResStatus::RES_FAILED);
+    stream << failedStatus;
+    std::vector<char> payload;
+    stream.Dump(payload);
+    transport->exchangeDataSize_ = payload.size();
+    transport->recvData_ = payload;
+
+    EXPECT_EQ(transport->RecvDataProcess(), HcclResult::HCCL_SUCCESS);
+    // RES_FAILED 不是 UNAVAIL, IsRmtResUnavailable 应为 false
+    EXPECT_FALSE(transport->IsRmtResUnavailable());
+    // rmtResStatus 应为 FAILED (非 OK), 通过 IsRmtResUnavailable=false + 非 OK 间接验证
+    // 更直接: GetLocResStatus 仍为初始值, rmtResStatus 已被设为 FAILED
+}
+
+// TC-TS-026: RecvDataProcess 载荷过短时报错
+TEST_F(CcuTransportTest, Ut_RecvDataProcess_When_PayloadTooShort_Expect_Error)
+{
+    transport->exchangeDataSize_ = 2; // 小于 sizeof(int)
+    transport->recvData_ = {'a', 'b'};
+    EXPECT_EQ(transport->RecvDataProcess(), HcclResult::HCCL_E_INTERNAL);
+}
+
+// 状态机终态分支: RECV_FIN 且资源状态非 OK 时, 直接进入 CONNECT_FAILED(资源不足快速失败的关键路径)
+TEST_F(CcuTransportTest, Ut_StatusMachine_When_RecvFin_And_ResNotOk_Expect_CONNECT_FAILED)
+{
+    std::string finishMsg = "Transport exchange data ready!";
+    transport->sendFinishMsg_ = std::vector<char>(finishMsg.begin(), finishMsg.end());
+    transport->recvFinishMsg_ = std::vector<char>(finishMsg.begin(), finishMsg.end());
+    transport->transStatus_ = CcuTransport::TransStatus::RECV_FIN;
+    transport->SetLocResStatus(CcuTransport::CcuResStatus::RES_OK);
+    transport->rmtResStatus_ = CcuTransport::CcuResStatus::RES_UNAVAIL;
+
+    EXPECT_EQ(transport->StatusMachine(), HcclResult::HCCL_SUCCESS);
+    EXPECT_EQ(transport->transStatus_, CcuTransport::TransStatus::CONNECT_FAILED);
+}
+
+// 非法状态值(非 0/1/2/3)按"非 OK"处理: 跳过完整解包, 不判定为资源不足, 不越界
+TEST_F(CcuTransportTest, Ut_RecvDataProcess_When_RmtStatusInvalid_Expect_NotOk)
+{
+    Hccl::BinaryStream stream;
+    int invalidStatus = 0xFF;
+    stream << invalidStatus;
+    std::vector<char> payload;
+    stream.Dump(payload);
+    transport->exchangeDataSize_ = payload.size();
+    transport->recvData_ = payload;
+    transport->SetLocResStatus(CcuTransport::CcuResStatus::RES_OK);
+
+    // 对端状态值越界属于协议错误, RecvDataProcess 返回 INTERNAL
+    EXPECT_EQ(transport->RecvDataProcess(), HcclResult::HCCL_E_INTERNAL);
+    EXPECT_FALSE(transport->IsRmtResUnavailable());
+    EXPECT_NE(transport->rmtResStatus_, CcuTransport::CcuResStatus::RES_OK);
+}
+
+TEST_F(CcuTransportTest, Ut_ConstructMsgOnlyTransport_When_SocketNull_Expect_E_PTR)
+{
+    std::unique_ptr<CcuTransport> impl;
+    EXPECT_EQ(
+        CcuTransport::ConstructMsgOnlyTransport(nullptr, impl, CcuTransport::CcuResStatus::RES_UNAVAIL),
+        HcclResult::HCCL_E_PTR);
 }

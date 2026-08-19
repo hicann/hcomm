@@ -33,6 +33,13 @@ public:
         TransStatus, INIT, SEND_DATA_SIZE, RECV_DATA_SIZE, SEND_ALL_INFO, RECV_ALL_INFO, SEND_TRANS_RES, RECV_TRANS_RES,
         SEND_FIN, RECV_FIN, RECVING_FIN, RECVING_TRANS_RES, READY, CONNECT_FAILED, SOCKET_TIMEOUT)
 
+    enum class CcuResStatus : uint8_t {
+        RES_UNKNOWN = 0, // 待确认（初始值）
+        RES_OK = 1,      // 资源充足
+        RES_UNAVAIL = 2, // 资源不足
+        RES_FAILED = 3,  // 资源创建硬失败
+    };
+
     struct CclBufferInfo {
         uint64_t addr{0};
         uint32_t size{0};
@@ -119,6 +126,13 @@ public:
     HcclResult CheckSocketStatus();
     HcclResult UpdateMemInfo(std::vector<CcuTransport::CclBufferInfo>& bufferVecTemp);
     HcclResult ResUpdate(std::vector<std::string>& resGroupTags);
+
+    CcuResStatus GetLocResStatus() const { return locResStatus_; }
+    void SetLocResStatus(CcuResStatus status) { locResStatus_ = status; }
+    bool IsLocResUnavailable() const { return locResStatus_ == CcuResStatus::RES_UNAVAIL; }
+    bool IsRmtResUnavailable() const { return rmtResStatus_ == CcuResStatus::RES_UNAVAIL; }
+    static HcclResult
+    ConstructMsgOnlyTransport(Hccl::Socket* socket, std::unique_ptr<CcuTransport>& impl, CcuResStatus status);
 
     // 下面接口为平台层接口，不能在框架层使用
     uint32_t GetDieId() const;
@@ -210,6 +224,8 @@ private:
     TransRes locRes_{};
     TransRes rmtRes_{};
     TransStatus transStatus_{TransStatus::INVALID};
+    CcuResStatus locResStatus_{CcuResStatus::RES_UNKNOWN};
+    CcuResStatus rmtResStatus_{CcuResStatus::RES_UNKNOWN};
     std::vector<std::vector<ResInfo>> ckesRes_{};
     std::vector<std::vector<ResInfo>> xnsRes_{};
     std::vector<CclBufferInfo> locBufferInfos_{};
