@@ -168,7 +168,6 @@ struct RaLoopbackInfo {
 
 struct RaCqHandleExt {
     unsigned long long addr;
-    struct RaRdmaHandle *rdmaHandle;
 };
 
 struct RaTypicalCqHandle {
