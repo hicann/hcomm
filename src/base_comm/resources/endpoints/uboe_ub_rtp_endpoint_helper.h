@@ -7,6 +7,7 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
+
 #ifndef UBOE_UB_RTP_ENDPOINT_HELPER_H
 #define UBOE_UB_RTP_ENDPOINT_HELPER_H
 
