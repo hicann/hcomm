@@ -39,7 +39,7 @@ void TaskExceptionFunc::RegisterCallback(const Callback& callback) { callback_ =
 
 void TaskExceptionFunc::Register(StreamLite* streamLite) { streamLiteMap_[streamLite->GetSqId()] = streamLite; }
 
-void TaskExceptionFunc::UnRegister(StreamLite* streamLite) { streamLiteMap_.erase(streamLite->GetSqId()); }
+void TaskExceptionFunc::UnRegister(const StreamLite* streamLite) { streamLiteMap_.erase(streamLite->GetSqId()); }
 
 std::string TaskExceptionFunc::ErrorType2Str(uint8_t errorType) const
 {

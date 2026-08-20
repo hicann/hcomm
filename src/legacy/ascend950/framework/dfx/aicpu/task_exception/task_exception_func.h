@@ -61,7 +61,7 @@ public:
     void SetDevId(uint32_t devId);
     uint32_t GetDevId() const { return devId_; }
     void Register(StreamLite* streamLite);
-    void UnRegister(StreamLite* streamLite);
+    void UnRegister(const StreamLite* streamLite);
     void Call() override;
     void RegisterCallback(const Callback& callback);
     bool IsExceptionCqe(const rtLogicCqReport_t& reportOfOne) const;
