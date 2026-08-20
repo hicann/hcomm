@@ -2,7 +2,7 @@
 
 ## Documents
 
-- [Collective Communication Library User Guide](https://www.hiascend.com/document/detail/en/canncommercial/850/commlib/hcclug/hcclug_000001.html): Describes HCCL basic concepts, how to use HCCL APIs for collective communication development, how to develop communication operators, and fault handling with common configurations.
+- [Collective Communication Library User Guide](https://www.hiascend.com/en/document/redirect/CannCommunityHcclUg): Describes HCCL basic concepts, how to use HCCL APIs for collective communication development, how to develop communication operators, and fault handling with common configurations.
 - [Communication Operator Development Guide (Chinese)](./zh/comm_op_dev_guide/README.md): Describes how to develop communication operators using the interfaces provided by the HCOMM communication base library.
 
 ## Technical Articles
