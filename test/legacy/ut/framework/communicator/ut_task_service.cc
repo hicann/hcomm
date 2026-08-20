@@ -163,6 +163,46 @@ TEST_F(TaskServiceTest, Ut_TaskUnRegister_When_TypeNotExists_Expect_NotFound)
     EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
 }
 
+// ==================== TaskReportRegister ====================
+
+TEST_F(TaskServiceTest, Ut_TaskReportRegister_When_NotRegistered_Expect_SuccessAndCallbackStored)
+{
+    std::vector<uint8_t> deviceMem(1024);
+    std::vector<uint8_t> hostMem(512);
+    TaskService taskService(deviceMem.data(), 1024, hostMem.data(), 512);
+
+    ReportCallbackTemplate callback = []() -> HcclResult {
+        return HCCL_SUCCESS;
+    };
+    HcclResult ret = taskService.TaskReportRegister(callback);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_NE(taskService.reportCallback_, nullptr);
+}
+
+TEST_F(TaskServiceTest, Ut_TaskReportRegister_When_AlreadyRegistered_Expect_SuccessAndCallbackUnchanged)
+{
+    std::vector<uint8_t> deviceMem(1024);
+    std::vector<uint8_t> hostMem(512);
+    TaskService taskService(deviceMem.data(), 1024, hostMem.data(), 512);
+
+    int32_t calledBy = 0;
+    ReportCallbackTemplate firstCallback = [&calledBy]() -> HcclResult {
+        calledBy = 1;
+        return HCCL_SUCCESS;
+    };
+    taskService.TaskReportRegister(firstCallback);
+
+    ReportCallbackTemplate secondCallback = [&calledBy]() -> HcclResult {
+        calledBy = 2;
+        return HCCL_E_INTERNAL;
+    };
+    HcclResult ret = taskService.TaskReportRegister(secondCallback);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    taskService.reportCallback_();
+    EXPECT_EQ(calledBy, 1);
+}
+
 // ==================== TaskRun exit flags (no callback needed) ====================
 // deviceMem 初始化为0，模拟 AllocAndRegKFCWorkSpace 在申请注册时已置零
 TEST_F(TaskServiceTest, Ut_TaskRun_When_TerminateFlag_Expect_Success)

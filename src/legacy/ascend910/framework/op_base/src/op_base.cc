@@ -4810,6 +4810,25 @@ HcclResult HcclDeviceRefresh(s32 &deviceLogicId)
     return HCCL_SUCCESS;
 }
 
+#if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
+static HcclResult RegisterTaskReportCallback(hccl::CollComm* collComm, HcclComm commV2)
+{
+    auto hcclCommDfx = collComm->GetHcclCommDfx();
+    CHK_PTR_NULL(hcclCommDfx);
+    auto reportCallback = [hcclCommDfx]() -> HcclResult {
+        bool isOpBase = false;
+        bool isCached = false;
+        CHK_RET(hcclCommDfx->GetOpModeFlags(isOpBase, isCached));
+        return hcclCommDfx->ReportAllTasks(isCached);
+    };
+    HcclResult ret = HcclTaskReportRegisterV2(commV2, reportCallback);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS,
+        HCCL_ERROR("[HcclTaskRegister] TaskReportRegister failed, ret[0x%016llx]", HCCL_ERROR_CODE(ret)), ret);
+    return ret;
+}
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -4846,7 +4865,8 @@ int32_t HcclTaskRegister(HcclComm comm, const char *msgTag, Callback cb)
     ret = HcclTaskRegisterProfV2(commV2, profCallback);
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[HcclTaskRegister] TaskProfRegister failed, ret[0x%016llx]",
         HCCL_ERROR_CODE(ret)), ret);
-    return ret;
+
+    return RegisterTaskReportCallback(collComm, commV2);
 
 #endif
     return HCCL_E_NOT_SUPPORT;

@@ -70,6 +70,15 @@ HcclResult TaskService::TaskProfRegister(ProfCallbackTemplate profCallback)
     return HCCL_SUCCESS;
 }
 
+HcclResult TaskService::TaskReportRegister(ReportCallbackTemplate reportCallback)
+{
+    if (reportCallback_ != nullptr) {
+        return HCCL_SUCCESS;
+    }
+    reportCallback_ = reportCallback;
+    return HCCL_SUCCESS;
+}
+
 HcclResult TaskService::WriteFlag(uint8_t *flagPtr, uint8_t newFlag) const
 {
     errno_t ret = memcpy_s(flagPtr, sizeof(newFlag), &newFlag, sizeof(newFlag));
@@ -207,6 +216,9 @@ HcclResult TaskService::ProcessTaskOk(uint8_t *ctrlHdr, uint64_t hdrLen, uint8_t
     CHK_RET(WriteFlag(srcFlagPtr, TASK_UNSET));
     CHK_RET(ReadTaskType((uint8_t *)ctrlHdr, hdrLen, srcTaskTypePtr, taskTypeStr));
     CHK_RET(ExecuteTask((uint8_t *)ctrlHdr, hdrLen, srcFlagPtr, taskTypeStr));
+    if (reportCallback_ != nullptr) {
+        CHK_RET(reportCallback_());
+    }
     CHK_RET(SynchronizeControlInfo((uint8_t *)ctrlHdr, hdrLen));
     return HCCL_SUCCESS;
 }

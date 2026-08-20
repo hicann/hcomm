@@ -489,6 +489,17 @@ HcclResult HcclTaskRegisterProfV2(HcclComm comm, ProfCallbackTemplate profCallba
     return g_taskServiceMap[commId][deviceId]->TaskProfRegister(profCallback);
 }
 
+HcclResult HcclTaskReportRegisterV2(HcclComm comm, ReportCallbackTemplate reportCallback)
+{
+    CHK_PTR_NULL(comm);
+    Hccl::HcclCommunicator* communicator = static_cast<Hccl::HcclCommunicator*>(comm);
+    std::string commId = communicator->GetId();
+    HCCL_INFO("[HcclTaskReportRegisterV2] commId[%s]", commId.c_str());
+    s32 deviceId = communicator->GetDeviceLogicId();
+    CHK_RET(HcclCheckTaskServiceExist(commId, deviceId));
+    return g_taskServiceMap[commId][deviceId]->TaskReportRegister(reportCallback);
+}
+
 HcclResult HcclGetDpuSteamIdV2(HcclComm comm, u32 &dpuStreamId) {
     HCCL_RUN_INFO("[HcclTaskRegisterV2] start to Get DpuSteamId");
     CHK_PTR_NULL(comm);

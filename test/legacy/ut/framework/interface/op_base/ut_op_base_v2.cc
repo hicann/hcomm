@@ -2799,6 +2799,70 @@ TEST_F(OpbaseTestV2, Ut_HcclTaskRegisterProfV2_When_DeviceIdNotFound_Expect_Retu
     g_taskServiceMap.clear();
 }
 
+// HcclTaskReportRegisterV2 Tests
+
+TEST_F(OpbaseTestV2, Ut_HcclTaskReportRegisterV2_When_CommIsNull_Expect_ReturnHCCL_E_PTR)
+{
+    Hccl::ReportCallbackTemplate callback = []() -> HcclResult {
+        return HCCL_SUCCESS;
+    };
+    HcclResult ret = HcclTaskReportRegisterV2(nullptr, callback);
+    EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(OpbaseTestV2, Ut_HcclTaskReportRegisterV2_When_CommIdNotFound_Expect_ReturnHCCL_E_NOT_FOUND)
+{
+    Hccl::CommParams commParams;
+    std::shared_ptr<Hccl::HcclCommunicator> hcclComm = std::make_shared<Hccl::HcclCommunicator>(commParams);
+    HcclComm comm = static_cast<HcclComm>(hcclComm.get());
+    g_taskServiceMap.clear();
+
+    Hccl::ReportCallbackTemplate callback = []() -> HcclResult {
+        return HCCL_SUCCESS;
+    };
+    HcclResult ret = HcclTaskReportRegisterV2(comm, callback);
+    EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
+}
+
+TEST_F(OpbaseTestV2, Ut_HcclTaskReportRegisterV2_When_DeviceIdNotFound_Expect_ReturnHCCL_E_NOT_FOUND)
+{
+    Hccl::CommParams commParams;
+    std::shared_ptr<Hccl::HcclCommunicator> hcclComm = std::make_shared<Hccl::HcclCommunicator>(commParams);
+    HcclComm comm = static_cast<HcclComm>(hcclComm.get());
+    g_taskServiceMap.clear();
+
+    std::string commId = hcclComm->GetId();
+    auto taskService = std::make_unique<Hccl::TaskService>();
+    g_taskServiceMap[commId][9999] = std::move(taskService);
+
+    Hccl::ReportCallbackTemplate callback = []() -> HcclResult {
+        return HCCL_SUCCESS;
+    };
+    HcclResult ret = HcclTaskReportRegisterV2(comm, callback);
+    EXPECT_EQ(ret, HCCL_E_NOT_FOUND);
+    g_taskServiceMap.clear();
+}
+
+TEST_F(OpbaseTestV2, Ut_HcclTaskReportRegisterV2_When_Normal_Expect_ReturnHCCL_SUCCESS)
+{
+    Hccl::CommParams commParams;
+    std::shared_ptr<Hccl::HcclCommunicator> hcclComm = std::make_shared<Hccl::HcclCommunicator>(commParams);
+    HcclComm comm = static_cast<HcclComm>(hcclComm.get());
+    g_taskServiceMap.clear();
+
+    std::string commId = hcclComm->GetId();
+    s32 deviceId = hcclComm->GetDeviceLogicId();
+    auto taskService = std::make_unique<Hccl::TaskService>();
+    g_taskServiceMap[commId][deviceId] = std::move(taskService);
+
+    Hccl::ReportCallbackTemplate callback = []() -> HcclResult {
+        return HCCL_SUCCESS;
+    };
+    HcclResult ret = HcclTaskReportRegisterV2(comm, callback);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    g_taskServiceMap.clear();
+}
+
 // HcclTaskUnRegisterV2 Tests
 
 TEST_F(OpbaseTestV2, Ut_HcclTaskUnRegisterV2_When_CommIdNotFound_Expect_ReturnHCCL_E_NOT_FOUND)

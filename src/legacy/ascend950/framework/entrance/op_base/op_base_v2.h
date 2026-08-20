@@ -180,6 +180,7 @@ HcclResult HcclRankGraphGetEndpointInfoV2(HcclComm comm, uint32_t rankId, const 
 typedef int32_t(Callback)(uint64_t, int32_t);
 HcclResult HcclTaskRegisterV2(HcclComm comm, const char *msgTag, Callback cb);
 HcclResult HcclTaskRegisterProfV2(HcclComm comm, std::function<HcclResult(const Hccl::TaskParam&, uint64_t)> profCallback);
+HcclResult HcclTaskReportRegisterV2(HcclComm comm, std::function<HcclResult()> reportCallback);
 HcclResult HcclGetDpuSteamIdV2(HcclComm comm, u32 &dpuStreamId);
 HcclResult HcclTaskUnRegisterV2(HcclComm comm, const char *msgTag);
 HcclResult HcclCheckTaskServiceExist(const std::string &commId, s32 deviceId);
