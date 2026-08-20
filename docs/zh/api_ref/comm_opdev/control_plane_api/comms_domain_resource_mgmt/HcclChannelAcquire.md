@@ -52,7 +52,9 @@ HcclResult HcclChannelAcquire(HcclComm comm, CommEngine engine, const HcclChanne
 
 3. AIV直驱URMA场景下，本端与远端参与交换的内存数量必须一致，否则Channel创建失败。
 
-4. 当前各CommEngine支持的通信协议与芯片型号有关，具体如下：
+4. 同一个通信域内，本接口不支持并发调用，调用方须保证调用串行执行。
+
+5. 当前各CommEngine支持的通信协议与芯片型号有关，具体如下：
 
    <!-- npu="950" id6 -->
    针对Ascend 950PR/Ascend 950DT，各通信引擎支持的通信协议如下：
