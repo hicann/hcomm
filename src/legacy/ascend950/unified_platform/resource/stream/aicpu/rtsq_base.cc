@@ -36,10 +36,17 @@ RtsqBase::RtsqBase(u32 devPhyId, u32 streamId, u32 sqId) : devPhyId_(devPhyId), 
     HCCL_INFO("%s, %s", __func__, GetHwSqDescribe().c_str());
 }
 
-void RtsqBase::Reset()
+void RtsqBase::Reset(bool reset)
 {
     sqHead_ = QuerySqHead();
     sqTail_ = QuerySqTail();
+
+    if (reset) {
+        CHK_PRT_CONT(
+            sqHead_ != 0 || sqTail_ != 0,
+            HCCL_ERROR("RtsqBase::%s, sqHead_=%u, sqTail_=%u", __func__, sqHead_, sqTail_));
+    }
+
     sqDepth_ = QuerySqDepth();
     sqBaseAddr_ = QuerySqBaseAddr();
     SetTaskIdBySqeId();

@@ -34,9 +34,9 @@ RtsqA5::RtsqA5(u32 devPhyId, u32 streamId, u32 sqId, bool launchFlag) : RtsqBase
     launchFlag_ = launchFlag;
 }
 
-void RtsqA5::Reset()
+void RtsqA5::Reset(bool reset)
 {
-    RtsqBase::Reset();
+    RtsqBase::Reset(reset);
     pendingSqeCnt = 0;
     s32 sRet = memset_s(locBuf, RTSQ_SQE_SIZE * PER_LAUNCH_SQE_CNT, 0, RTSQ_SQE_SIZE * PER_LAUNCH_SQE_CNT);
     if (UNLIKELY(sRet != EOK)) {

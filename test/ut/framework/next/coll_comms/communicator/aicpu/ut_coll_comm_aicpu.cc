@@ -63,6 +63,10 @@ TEST_F(CollCommAicpuTest, Ut_Resume_DelegatesToChannelMgr_And_ResetsNsRecoveryFl
     HcclTopoInfo topoInfo{};
     coll.channelMgr_ = std::make_unique<ChannelAicpuMgr>(coll.dfx_, topoInfo);
     coll.nsRecoveryLitePtr_ = std::make_shared<NsRecoveryLite>();
+    // 初始化 commEngineResMgr_，避免 GetCommEngineResMgr()->GetAllThread() 解引用 nullptr
+    coll.commEngineResMgr_ = std::make_unique<CommEngineResAicpuMgr>(coll.dfx_, [](bool) {
+        return HCCL_SUCCESS;
+    });
     coll.SetCommmStatus(HcclCommStatus::HCCL_COMM_STATUS_SUSPENDING);
 
     // Mock ChannelAicpuMgr::Resume（原 CollCommAicpu::ProcessUrmaRes 已迁入 ChannelAicpuMgr）

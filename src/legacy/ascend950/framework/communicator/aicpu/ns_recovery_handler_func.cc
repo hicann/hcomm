@@ -86,9 +86,9 @@ void NsRecoveryHandlerFunc::StreamClean(CommunicatorImplLite* comm)
     // 清理资源
     auto streamLiteMgr = comm->GetStreamLiteMgr();
     CHECK_NULLPTR(streamLiteMgr->GetMaster(), "[StreamClean]master stream is nullptr!");
-    streamLiteMgr->GetMaster()->GetRtsq()->Reset();
+    streamLiteMgr->GetMaster()->GetRtsq()->Reset(false);
     for (u32 i = 0; i < streamLiteMgr->SizeOfSlaves(); ++i) {
-        streamLiteMgr->GetSlave(i)->GetRtsq()->Reset();
+        streamLiteMgr->GetSlave(i)->GetRtsq()->Reset(false);
     }
     HCCL_INFO("[NsRecovery][BackGround] StreamClean success.");
 }

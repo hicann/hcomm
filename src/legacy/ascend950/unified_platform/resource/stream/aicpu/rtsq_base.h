@@ -39,7 +39,7 @@ public:
 
     virtual ~RtsqBase() = default;
 
-    virtual void Reset();
+    virtual void Reset(bool reset);
 
     inline u32 GetStreamId() const { return streamId_; }
 

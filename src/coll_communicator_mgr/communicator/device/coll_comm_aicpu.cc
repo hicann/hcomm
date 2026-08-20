@@ -20,6 +20,7 @@
 #include "hcclCommDfxLite.h"
 #include "env_config/env_config_v2.h"
 #include "log.h"
+#include <shared_mutex>
 
 CollCommAicpu::~CollCommAicpu()
 {
@@ -111,8 +112,17 @@ HcclResult CollCommAicpu::Resume(HcclChannelUrmaRes* commParam)
     CHK_RET(channelMgr_->Resume(commParam));
     nsRecoveryLitePtr_->SetNeedClean(false);
 
+    // 重置Rtsq维护的 sq tail/head
+    std::shared_lock<std::shared_mutex> lock(GetCommEngineResMgr()->GetThreadMutex());
+    const std::vector<std::shared_ptr<hccl::Thread>>& threads = GetCommEngineResMgr()->GetAllThread();
+    for (auto& thread : threads) {
+        Hccl::StreamLite* streamLitePtr = reinterpret_cast<Hccl::StreamLite*>(thread->GetStreamLitePtr());
+        streamLitePtr->GetRtsq()->Reset(true);
+    }
+
     SetErrorReported(false);
     commStatus_ = HcclCommStatus::HCCL_COMM_STATUS_READY;
+    HCCL_RUN_INFO("[CollCommAicpu][Resume] commId[%s] resume success.", identifier_.c_str());
 
     return HCCL_SUCCESS;
 }

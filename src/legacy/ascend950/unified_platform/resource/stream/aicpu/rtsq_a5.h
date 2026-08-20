@@ -27,7 +27,7 @@ public:
 
     RtsqA5(u32 devPhyId, u32 streamId, u32 sqId, bool launchFlag);
 
-    void Reset() override;
+    void Reset(bool reset) override;
 
     void LaunchTask() override;
 
