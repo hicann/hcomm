@@ -12,6 +12,7 @@
 #include "adapter_rts_common.h"
 #include "ccu_res.h"
 
+#include <limits>
 #include <vector>
 
 #include "ccu_device_res.h"
@@ -307,7 +308,8 @@ static HcclResult LaunchCcuTasks(const hcomm::CcuTaskParam &param, const aclrtSt
     taskInfo.instCnt = param.instCnt;
     taskInfo.key = param.key;
     taskInfo.argSize = param.argSize;
-    taskInfo.timeout = execTimeOutSec;
+    taskInfo.timeout = execTimeOutSec >= std::numeric_limits<u16>::max() ? std::numeric_limits<u16>::max()
+                                                                         : static_cast<u16>(execTimeOutSec);
     std::copy(std::begin(param.args), std::end(param.args), std::begin(taskInfo.args));
 
     auto ret = rtCCULaunch(&taskInfo, stream);

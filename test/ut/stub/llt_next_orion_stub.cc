@@ -1190,6 +1190,13 @@ std::vector<char> UbMemTransport::GetSingleRmtBufferUniqueId(
     return result;
 }
 
+std::vector<char> UbMemTransport::GetSingleLocBufferUniqueId(u64 addr, u64 size, u32 tokenId, u32 tokenValue) const
+{
+    std::vector<char> result;
+
+    return result;
+}
+
 std::vector<char> UbMemTransport::GetNotifyUniqueIds()
 {
     std::vector<char> result(0);
