@@ -532,9 +532,27 @@ int32_t HcommWriteReduceOnThread(
     Thread* const threadPtr = reinterpret_cast<Thread*>(thread);
     CHK_PTR_NULL(threadPtr);
 
+    HcclResult ret = HCCL_SUCCESS;
+    if (threadPtr->IsDeviceA5()) {
+        ret = CheckDataTypeAndReduceOp(dataType, reduceOp);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS,
+            HCCL_ERROR(
+                "[%s] FAIL at CheckDataTypeAndReduceOp. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], "
+                "count[%llu], dataType[%d], reduceOp[%d].",
+                __func__, thread, channel, dst, src, count, dataType, reduceOp),
+            ret);
+    } else {
+        CHK_PRT_RET(
+            (IsSupportReduce(dataType, reduceOp) == false),
+            HCCL_ERROR(
+                "[%s] Not support reduce, "
+                "dst[0x%llx], src[0x%llx], count[%llu], dataType[%d], reduceOp[%d]",
+                __func__, dst, src, count, dataType, reduceOp),
+            HCCL_E_PARA);
+    }
     uint64_t len = count * SIZE_TABLE[dataType];
 
-    HcclResult ret = HCCL_SUCCESS;
     if (threadPtr->IsDeviceA5()) {
         auto* const transportLitePtr = reinterpret_cast<Hccl::BaseTransportLiteImpl*>(channel);
         CHK_PTR_NULL(transportLitePtr);
@@ -552,26 +570,11 @@ int32_t HcommWriteReduceOnThread(
             ret);
         const Hccl::Buffer rmtBuf{reinterpret_cast<uintptr_t>(dst), len};
 
-        ret = CheckDataTypeAndReduceOp(dataType, reduceOp);
-        CHK_PRT_RET(
-            ret != HCCL_SUCCESS,
-            HCCL_ERROR(
-                "[%s] FAIL at CheckDataTypeAndReduceOp. thread[0x%llx], channel[0x%llx], dst[0x%llx], src[0x%llx], "
-                "count[%llu], dataType[%d], reduceOp[%d].",
-                __func__, thread, channel, dst, src, count, dataType, reduceOp),
-            ret);
         Hccl::ReduceIn reduceIn{mapHcommDataTypeToA5.at(dataType), mapHcommReduceOpToA5.at(reduceOp)};
 
         EXCEPTION_CATCH(
             transportLitePtr->WriteReduce(locRmaBuf, rmtBuf, reduceIn, *streamLitePtr), ret = HCCL_E_INTERNAL);
     } else {
-        CHK_PRT_RET(
-            (IsSupportReduce(dataType, reduceOp) == false),
-            HCCL_ERROR(
-                "[%s] Not support reduce, "
-                "dst[0x%llx], src[0x%llx], count[%llu], dataType[%d], reduceOp[%d]",
-                __func__, dst, src, count, dataType, reduceOp),
-            HCCL_E_PARA);
         HcclBuf locBuf{const_cast<void*>(src), len, nullptr};
         HcclBuf rmtBuf{dst, len, nullptr};
         HcclReduceInfo reduceInfo{static_cast<HcclDataType>(dataType), static_cast<HcclReduceOp>(reduceOp)};
