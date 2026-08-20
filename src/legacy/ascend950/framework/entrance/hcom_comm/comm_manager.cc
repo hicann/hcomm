@@ -455,11 +455,6 @@ HcclResult HcomGetGroupRankFromWorldRankV2(u32 worldRank, const char *group, u32
 HcclResult HcomGetRankSizeV2(const char *group, u32 *rankSize)
 {
     HcclCommInfoV2 &hcomCommInfoV2 = GetCommInfoV2();
-    // 校验通信域非空
-    CHK_PRT_RET(hcomCommInfoV2.pComm == nullptr,
-        HCCL_ERROR("[Get][RankSize]hcomCommInfoV2.pComm is null, "
-                   "please check if the initialize process is called."),
-        HCCL_E_PTR);
     // 获取group
     std::string strGroup = (group == nullptr) ? HCCL_WORLD_GROUP : group;
     if (strGroup == HCCL_WORLD_GROUP) {
