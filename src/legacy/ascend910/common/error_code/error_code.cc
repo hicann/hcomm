@@ -31,10 +31,10 @@ const std::string hcomm_g_msg = R"(
       "errClass": "HCCL Errors",
       "errTitle": "Communication_Error_Timeout",
       "ErrCode": "EI0002",
-      "ErrMessage": "An timeout occurs when the Notify register waits for execution. Waiting peer rank: %s; task information: %s; communication operator information: %s; communicator: %s.",
+      "ErrMessage": "A timeout occurs when the Notify register waits for execution. Waiting peer rank: %s; task information: %s; communication operator information: %s; communicator: %s.",
       "Arglist": "remote_rankid, base_information, task_information, group_rank_content",
       "suggestion": {
-        "Possible Cause": "1. An exception occurs during the execution on some NPUs in the cluster. As a result, collective communication operation failed.\r\n2. The execution speed on some NPU in the cluster is too slow to complete a communication operation within the timeout interval. (The default timeout interval is 1800s, You can set the interval by using HCCL_EXEC_TIMEOUT.)\r\n3. The number of training samples of each NPU is inconsistent.\r\n4. Packet loss or other connectivity problems occur on the communication link.",
+        "Possible Cause": "1. An exception occurs during the execution on some NPUs in the cluster. As a result, collective communication operation failed.\r\n2. The execution speed on some NPU in the cluster is too slow to complete a communication operation within the timeout interval. (The default timeout interval is 1800s. You can set the interval by using HCCL_EXEC_TIMEOUT.)\r\n3. The number of training samples of each NPU is inconsistent.\r\n4. Packet loss or other connectivity problems occur on the communication link.",
         "Solution": "1. If this error is reported on only some ranks, check other ranks for earlier errors and investigate the first reported error.\r\n2. If this error is reported on all ranks, verify that the collective operation type, data count and data type are consistent across all ranks.\r\n3. Check whether the error reporting time difference between ranks exceeds HCCL_EXEC_TIMEOUT (1800s by default). If so, investigate the execution gap between ranks or increase HCCL_EXEC_TIMEOUT if necessary.\r\n4. Check for CQE errors in the plog (grep -rn 'error cqe'). If so, check the network connection status.\r\n5. For detailed troubleshooting guidance, search for the keyword \"EI0002\" on https://www.hiascend.com/document/."
       }
     },
@@ -123,7 +123,7 @@ const std::string hcomm_g_msg = R"(
       "Arglist": "reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "Ensure that the NPU card is normal and entering environment variables 'export HCCL_INTRA_ROCE_ENABLE=1'."
+        "Solution": "Ensure that the NPU card is normal and enter environment variable 'export HCCL_INTRA_ROCE_ENABLE=1'."
       }
     },
     {
@@ -211,7 +211,7 @@ const std::string hcomm_g_msg = R"(
       "Arglist": "localServerId, localDeviceId, localDeviceIp, remoteServerId, remoteDeviceId, remoteDeviceIp",
       "suggestion": {
         "Possible Cause": "1. The network between two devices is abnormal. For example, the network port is intermittently disconnected. 2. The peer process exits unexpectedly in advance. As a result, the local end cannot receive the response from the peer end. 3.The hardware of the HBM or UB chip processing module of either device is abnormal.",
-        "Solution": "1. Check whether the network devices between the two ends are abnormal. Generally, packet loss occurs due to intermittent disconnection of the port. If the ping test fails, check whether the port is linkdown or the network configuration is incorrect.2. Check whether the peer process exits first. If yes, check the reason why the process exit.3.Use the RAS fault check mechanism to check whether the hardware of the HBM or UB chip processing module of either device is abnormal.If the hardware is abnormal, contact Huawei technical support."
+        "Solution": "1. Check whether the network devices between the two ends are abnormal. Generally, packet loss occurs due to intermittent disconnection of the port. If the ping test fails, check whether the port is linkdown or the network configuration is incorrect.2. Check whether the peer process exits first. If yes, check the reason why the process exit.3.Use the RAS fault check mechanism to check whether the hardware of the HBM or UB chip processing module of either device is abnormal. If the hardware is abnormal, contact Huawei technical support."
       }
     },
     {
