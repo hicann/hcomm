@@ -1146,3 +1146,5 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuInsDestroy_CrossDevice_Expect_Success)
     ccuRet = HcommCcuInsDestroy(insHandle, otherDevId);
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 }
+
+CCU_FUNC_KERNEL_TEST(Ut_HcommCcuKernelLocalCopy_When_AllFine_Expect_ReturnCcuSUCCESS, CcuLocalCopyKernel, true)

@@ -356,9 +356,9 @@ CcuResult CcuKernel::GetVariableByHandle(CcuVariableHandle varHandle, CcuRep::Va
 //Alloc 相关接口
 CcuResult CcuKernel::VariableAlloc(CcuVariableHandle *varHandle)
 {
-    const auto &var = CreateResAssist(res_.continuousVariable);
+    const auto& var = CreateBlockResAssist(1, res_.continuousVariable);
     CcuVariableHandle handle = ccuVarMap_.size();
-    ccuVarMap_.emplace(handle, var);
+    ccuVarMap_.emplace(handle, var[0]);
 
     *varHandle = handle;
     return CcuResult::CCU_SUCCESS;
@@ -381,9 +381,9 @@ CcuResult CcuKernel::EventAlloc(CcuEventHandle *eventHandle)
 }
 CcuResult CcuKernel::BufferAlloc(CcuBufferHandle *bufHandle)
 {
-    const auto &buf = CreateResAssist(res_.ccubufs);
+    const auto& buffer = CreateBlockResAssist(1, res_.blockCcubufs);
     CcuBufferHandle handle = ccuBufferMap_.size();
-    ccuBufferMap_.emplace(handle, buf);
+    ccuBufferMap_.emplace(handle, buffer[0]);
     *bufHandle = handle;
     return CcuResult::CCU_SUCCESS;
 }
@@ -2052,7 +2052,8 @@ void CcuKernel::SetCcuInstrInfo(const CcuRep::CcuInstrInfo &instrInfo)
 
 CcuRep::Variable CcuKernel::CreateVariable()
 {
-    return CreateResAssist(res_.continuousVariable);
+    const auto& var = CreateBlockResAssist(1, res_.continuousVariable);
+    return var[0];
 }
 
 CcuRep::Address CcuKernel::CreateAddress()
@@ -2074,7 +2075,8 @@ CcuRep::CompletedEvent CcuKernel::CreateCompletedEvent()
 
 CcuRep::CcuBuf CcuKernel::CreateCcuBuf()
 {
-    return CreateResAssist(res_.ccubufs);
+    const auto& buffer = CreateBlockResAssist(1, res_.blockCcubufs);
+    return buffer[0];
 }
 
 CcuRep::Executor CcuKernel::CreateExecutor()
