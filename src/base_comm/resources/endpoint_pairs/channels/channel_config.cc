@@ -27,6 +27,10 @@ HcommResult ChannelConfigDestroy(HcommChannelConfig config)
         return HCCL_SUCCESS;
     }
     auto* cfg = static_cast<HcommChannelConfigData*>(config);
+    if (cfg->destroyed_.exchange(true)) {
+        HCCL_WARNING("[%s] config[%p] is already destroyed, skip to avoid double-free.", __func__, config);
+        return HCCL_SUCCESS;
+    }
     delete cfg;
     return HCCL_SUCCESS;
 }

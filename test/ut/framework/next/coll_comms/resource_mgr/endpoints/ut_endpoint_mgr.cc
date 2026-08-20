@@ -95,6 +95,83 @@ TEST_F(EndpointMgrTest, Get_CreateNewEndpoint)
     EXPECT_NE(ret, HCCL_SUCCESS);
 }
 
+TEST_F(EndpointMgrTest, GetWithTag_EmptyTag_DegradeToGet)
+{
+    EndpointDesc desc{};
+    memset(&desc, 0, sizeof(desc));
+    desc.protocol = COMM_PROTOCOL_HCCS;
+    desc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+    desc.commAddr.addr.s_addr = inet_addr("10.0.0.1");
+    desc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+
+    EndpointHandle handle = nullptr;
+    // tag 为空时退化为 Get，行为与 Get_CreateNewEndpoint 一致（HcommEndpointCreate 未 mock，返回失败）
+    HcclResult ret = mgr.GetWithTag(desc, "", handle);
+    EXPECT_NE(ret, HCCL_SUCCESS);
+}
+
+TEST_F(EndpointMgrTest, GetWithTag_NonEmptyTag_CreateEndpoint)
+{
+    MOCKER(HcommEndpointCreate).stubs().with(mockcpp::any(), mockcpp::any()).will(invoke(EndpointCreateStub));
+    MOCKER(HcommEndpointDestroy).stubs().with(mockcpp::any()).will(invoke(EndpointDestroyStub));
+
+    EndpointDesc desc{};
+    memset(&desc, 0, sizeof(desc));
+    desc.protocol = COMM_PROTOCOL_HCCS;
+    desc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+    desc.commAddr.addr.s_addr = inet_addr("10.0.0.1");
+    desc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+
+    // 用作用域块包裹 scopedMgr：在 verify() 前、mock 仍有效时析构，
+    // 确保 ~EndpointMgr 调 HcommEndpointDestroy 走 mock 而非真实实现
+    EndpointHandle handle1 = nullptr;
+    EndpointHandle handle2 = nullptr;
+    EndpointHandle handle1Again = nullptr;
+    {
+        EndpointMgr scopedMgr;
+
+        // 不同 tag 创建不同 Endpoint
+        ASSERT_EQ(scopedMgr.GetWithTag(desc, "tag_A", handle1), HCCL_SUCCESS);
+        ASSERT_NE(handle1, nullptr);
+
+        ASSERT_EQ(scopedMgr.GetWithTag(desc, "tag_B", handle2), HCCL_SUCCESS);
+        ASSERT_NE(handle2, nullptr);
+        EXPECT_NE(handle1, handle2); // 不同 tag → 不同 Endpoint
+
+        // 同一 tag 复用同一 Endpoint
+        ASSERT_EQ(scopedMgr.GetWithTag(desc, "tag_A", handle1Again), HCCL_SUCCESS);
+        EXPECT_EQ(handle1, handle1Again); // 同 tag → 同 Endpoint
+        // scopedMgr 离开作用域析构，~EndpointMgr 调 HcommEndpointDestroy 销毁两个 tagged Endpoint
+    }
+
+    GlobalMockObject::verify();
+}
+
+TEST_F(EndpointMgrTest, GetWithTag_DestructorDestroysTaggedEndpoints)
+{
+    MOCKER(HcommEndpointCreate).stubs().with(mockcpp::any(), mockcpp::any()).will(invoke(EndpointCreateStub));
+    MOCKER(HcommEndpointDestroy).stubs().with(mockcpp::any()).will(invoke(EndpointDestroyStub));
+
+    EndpointDesc desc{};
+    memset(&desc, 0, sizeof(desc));
+    desc.protocol = COMM_PROTOCOL_HCCS;
+    desc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+    desc.commAddr.addr.s_addr = inet_addr("10.0.0.2");
+    desc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+
+    EndpointHandle createdHandle = nullptr;
+    {
+        EndpointMgr scopedMgr;
+        EndpointHandle h = nullptr;
+        ASSERT_EQ(scopedMgr.GetWithTag(desc, "tag_destructor", h), HCCL_SUCCESS);
+        ASSERT_TRUE(s_liveEndpoints.count(h));
+        createdHandle = h;
+        // scopedMgr 析构时应销毁 tag 创建的 Endpoint
+    }
+    EXPECT_FALSE(s_liveEndpoints.count(createdHandle));
+    GlobalMockObject::verify();
+}
+
 // ============ RegisterMemory tests ============
 
 TEST_F(EndpointMgrTest, RegisterMemory_SameTagSkipsReReg)

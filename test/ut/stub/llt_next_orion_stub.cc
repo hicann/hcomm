@@ -412,7 +412,7 @@ AicpuResPackageHelper::GetPackedData(std::vector<Hccl::ModuleData, std::allocato
 DevUbConnection::DevUbConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr,
-    const u8 qos, CommEngine engine, u32 inSqDepth)
+    const u8 qos, CommEngine engine, u32 inSqDepth, JettyMode jettyMode)
     : RmaConnection(nullptr, RmaConnType::UB),
       rdmaHandle(rdmaHandle),
       locAddr(locAddr),
@@ -425,7 +425,8 @@ DevUbConnection::DevUbConnection(
       rmtEid(rmtAddr.GetReverseEid()),
       locEid(locAddr.GetReverseEid()),
       qos_(qos),
-      sqDepth(inSqDepth)
+      sqDepth(inSqDepth),
+      jettyMode_(jettyMode)
 {
     if (sqDepth == UB_SQ_DEPTH_NOT_SET) {
         sqDepth = 8192U;
@@ -438,9 +439,10 @@ DevUbConnection::DevUbConnection(
 DevUbTpConnection::DevUbTpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr,
-    const u8 qos, CommEngine engine, u32 sqDepth)
+    const u8 qos, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
     : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth)
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth,
+          jettyMode)
 {
     tpProtocol = TpProtocol::TP;
 }
@@ -448,9 +450,10 @@ DevUbTpConnection::DevUbTpConnection(
 DevUbCtpConnection::DevUbCtpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr,
-    const u8 qos, CommEngine engine, u32 sqDepth)
+    const u8 qos, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
     : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth)
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth,
+          jettyMode)
 {
     tpProtocol = TpProtocol::CTP;
 }
@@ -458,8 +461,10 @@ DevUbCtpConnection::DevUbCtpConnection(
 DevUbUboeConnection::DevUbUboeConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr,
-    const u8 qos, CommEngine engine)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine)
+    const u8 qos, CommEngine engine, JettyMode jettyMode)
+    : DevUbConnection(
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine,
+          UB_SQ_DEPTH_NOT_SET, jettyMode)
 {
     tpProtocol = TpProtocol::UBOE;
 }
@@ -467,9 +472,10 @@ DevUbUboeConnection::DevUbUboeConnection(
 DevUbRtpConnection::DevUbRtpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locAddrEid, const IpAddress& rmtAddrEid,
-    const u8 qos, CommEngine engine, u32 sqDepth)
+    const u8 qos, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
     : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, engine, sqDepth)
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, engine, sqDepth,
+          jettyMode)
 {
     tpProtocol = TpProtocol::UB_RTP;
 }
@@ -536,9 +542,11 @@ void DevUbConnection::CreateAivUrmaJfc() {}
 
 DevUbConnection::~DevUbConnection() {}
 
-HcclResult DevUbConnection::InjectSharedJetty(
+HcclResult DevUbConnection::SetSharedJettyFields(
     JettyHandle jettyHdl, void* jettyHdlPtr, uint32_t jId, uint64_t sqVa, uint64_t db, const uint8_t* qpKey,
-    uint32_t kSize, uint32_t sDepth, uint64_t tpHdl, void* epTag, std::function<void(void*)> releaseCb)
+    uint32_t kSize, uint32_t sDepth, JfcHandle sharedJfc, CqCreateInfo sharedCqInfo, uint32_t sharedLocalPsn,
+    void* epTag, std::function<void(void*)> releaseCb, AcquireSharedRemoteJettyCallback acquireRemoteCb,
+    PublishSharedRemoteJettyCallback publishRemoteCb)
 {
     if (qpKey != nullptr && kSize > 0 && kSize <= HRT_UB_QP_KEY_MAX_LEN) {
         s32 ret = memcpy_s(localQpKey, HRT_UB_QP_KEY_MAX_LEN, qpKey, kSize);
@@ -546,9 +554,11 @@ HcclResult DevUbConnection::InjectSharedJetty(
             return HCCL_E_INTERNAL;
         }
     }
-    isSharedJetty_ = true;
     endpointTag_ = epTag;
     releaseCb_ = std::move(releaseCb);
+    acquireRemoteCb_ = std::move(acquireRemoteCb);
+    publishRemoteCb_ = std::move(publishRemoteCb);
+    releaseTpOnDestroy_ = true; // 与源码同步：主 connection 各自 GetTpInfo 申请新 tpHandle，析构需 ReleaseTp
     jettyHandle = jettyHdl;
     jettyHandlePtr = jettyHdlPtr;
     jettyId = jId;
@@ -556,11 +566,13 @@ HcclResult DevUbConnection::InjectSharedJetty(
     dbAddr = db;
     keySize = kSize;
     sqDepth = sDepth;
-    tpInfo.tpHandle = tpHdl;
+    jfcHandle = sharedJfc;
+    cqInfo_ = sharedCqInfo;
+    jettyImportCfg.localPsn = sharedLocalPsn;
     return HCCL_SUCCESS;
 }
 
-void DevUbConnection::TransferJettyOwnership() { isSharedJetty_ = true; }
+void DevUbConnection::DetachJetty() { jettyDetached_ = true; }
 
 HcclResult DevUbConnection::GetJettyInfo(JettyInfo& info) const
 {
@@ -571,9 +583,10 @@ HcclResult DevUbConnection::GetJettyInfo(JettyInfo& info) const
     info.dbAddr = dbAddr;
     info.keySize = keySize;
     info.sqDepth = sqDepth;
-    info.tpHandle = tpInfo.tpHandle;
     info.rdmaHandle = rdmaHandle;
     info.jfcHandle = jfcHandle;
+    info.cqInfo = cqInfo_;
+    info.localPsn = jettyImportCfg.localPsn;
     auto sRet = memcpy_s(info.localQpKey, HRT_UB_QP_KEY_MAX_LEN, localQpKey, HRT_UB_QP_KEY_MAX_LEN);
     if (sRet != EOK) {
         return HCCL_E_INTERNAL;

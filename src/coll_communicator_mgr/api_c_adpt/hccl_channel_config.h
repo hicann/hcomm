@@ -11,9 +11,8 @@
 #ifndef HCCL_CHANNEL_CONFIG_H
 #define HCCL_CHANNEL_CONFIG_H
 
-#include <cstdint>
+#include <atomic>
 #include <string>
-#include "hccl/hccl_res.h"
 
 namespace hccl {
 
@@ -25,6 +24,7 @@ namespace hccl {
 struct HcclChannelConfigData {
     bool isSharedQueue{false};
     std::string sharedQueueTag;
+    std::atomic<bool> destroyed_{false};
 };
 
 } // namespace hccl

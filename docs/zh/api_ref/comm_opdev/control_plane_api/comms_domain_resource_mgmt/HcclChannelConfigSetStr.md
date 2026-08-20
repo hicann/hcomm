@@ -45,7 +45,7 @@ HcclResult HcclChannelConfigSetStr(HcclChannelConfig config, HcclChannelConfigTy
 - config和value均不可为nullptr，否则返回参数错误。
 - type必须为有效的字符串型属性枚举值，否则返回参数错误。
 - 当前支持的字符串型属性：
-  - HCCL_CHANNEL_CONFIG_TYPE_SHARED_QUEUE_TAG：共享队列的tag标识。仅在IS_SHARED_QUEUE=true时有效。
+  - HCCL_CHANNEL_CONFIG_TYPE_SHARED_QUEUE_TAG：共享队列的tag标识。仅在IS_SHARED_QUEUE=true时有效。tag不可为空，且最大字节长度不得超过255（含'\0'），否则返回参数错误。
 
 ## 调用示例
 

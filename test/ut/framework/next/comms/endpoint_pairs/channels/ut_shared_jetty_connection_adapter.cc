@@ -24,13 +24,51 @@ using namespace hcomm;
 using namespace Hccl;
 
 namespace {
+// 与 dev_ub_connection.cc 中 OPBASED_UB_SQ_DEPTH_MAX 对齐（构造函数把 UB_SQ_DEPTH_NOT_SET 转换为此值）
 constexpr uint32_t DEFAULT_OPBASE_UB_SQ_DEPTH = 8192U;
 
-std::unique_ptr<DevUbConnection> MakeTestConnection()
+class StubEndpointForAdapt : public Endpoint {
+public:
+    StubEndpointForAdapt() : Endpoint(MakeDesc()) { ctxHandle_ = reinterpret_cast<void*>(0x1); }
+
+    ~StubEndpointForAdapt() override
+    {
+        if (jettyContext_ != nullptr) {
+            (void)ReleaseSharedJetty();
+        }
+    }
+
+    HcclResult Init() override { return HCCL_SUCCESS; }
+    HcclResult ServerSocketListen(const uint32_t) override { return HCCL_SUCCESS; }
+    HcclResult RegisterMemory(HcommMem, const char*, void**) override { return HCCL_SUCCESS; }
+    HcclResult UnregisterMemory(void*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryExport(void*, void**, uint32_t*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryImport(const void*, uint32_t, HcommMem*) override { return HCCL_SUCCESS; }
+    HcclResult MemoryUnimport(const void*, uint32_t) override { return HCCL_SUCCESS; }
+    HcclResult GetAllMemHandles(void**, uint32_t*) override { return HCCL_SUCCESS; }
+
+private:
+    static EndpointDesc MakeDesc()
+    {
+        EndpointDesc desc{};
+        Hccl::IpAddress localIp("127.0.0.1");
+        desc.protocol = COMM_PROTOCOL_UBC_CTP;
+        desc.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+        desc.commAddr.addr = localIp.GetBinaryAddress().addr;
+        desc.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+        desc.loc.device.devPhyId = 3;
+        return desc;
+    }
+};
+
+std::unique_ptr<DevUbConnection>
+MakeTestConnection(DevUbConnection::JettyMode jettyMode = DevUbConnection::JettyMode::SELF_CREATE)
 {
     IpAddress locIp("1.0.0.1");
     IpAddress rmtIp("2.0.0.2");
-    return std::make_unique<DevUbConnection>(nullptr, locIp, rmtIp, OpMode::OPBASE);
+    return std::make_unique<DevUbConnection>(
+        nullptr, locIp, rmtIp, OpMode::OPBASE, false, HrtUbJfcMode::STARS_POLL, IpAddress(), IpAddress(),
+        static_cast<u8>(UB_QOS_DEFAULT), COMM_ENGINE_RESERVED, Hccl::UB_SQ_DEPTH_NOT_SET, jettyMode);
 }
 
 Endpoint::SharedJettyCtx MakeTestCtx()
@@ -46,7 +84,11 @@ Endpoint::SharedJettyCtx MakeTestCtx()
         ctx.localQpKey[i] = static_cast<uint8_t>(i);
     }
     ctx.sqDepth = 32;
-    ctx.tpHandle = 0xDEADBEEF;
+    ctx.jfcHandle = 0xFCEULL;
+    ctx.cqInfo.va = 0xC0FFEEULL;
+    ctx.cqInfo.id = 0x1111U;
+    ctx.cqInfo.cqDepth = 64U;
+    ctx.localPsn = 846930886U;
     return ctx;
 }
 } // namespace
@@ -79,32 +121,45 @@ TEST_F(SharedJettyConnAdaptTest, Ut_Inject_When_NullConnection_Expect_HCCL_E_PAR
 {
     Endpoint::SharedJettyCtx ctx = MakeTestCtx();
     auto releaseCb = [](void*) {};
-    EXPECT_EQ(InjectSharedJettyToConn(nullptr, ctx, reinterpret_cast<void*>(0x1), releaseCb), HCCL_E_PARA);
+    EXPECT_EQ(SetSharedJettyFieldsToConn(nullptr, ctx, reinterpret_cast<void*>(0x1), releaseCb), HCCL_E_PARA);
+}
+
+TEST_F(SharedJettyConnAdaptTest, Ut_Inject_When_NullEndpointTag_Expect_HCCL_E_PARA)
+{
+    auto conn = MakeTestConnection();
+    Endpoint::SharedJettyCtx ctx = MakeTestCtx();
+    auto releaseCb = [](void*) {};
+    EXPECT_EQ(SetSharedJettyFieldsToConn(conn.get(), ctx, nullptr, releaseCb), HCCL_E_PARA);
 }
 
 TEST_F(SharedJettyConnAdaptTest, Ut_Inject_When_Normal_Expect_Success)
 {
-    auto conn = MakeTestConnection();
+    auto conn = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    StubEndpointForAdapt endpoint;
     Endpoint::SharedJettyCtx ctx = MakeTestCtx();
     auto releaseCb = [](void*) {};
-    EXPECT_EQ(InjectSharedJettyToConn(conn.get(), ctx, reinterpret_cast<void*>(0x1), releaseCb), HCCL_SUCCESS);
-    EXPECT_TRUE(conn->isSharedJetty_);
+    EXPECT_EQ(SetSharedJettyFieldsToConn(conn.get(), ctx, &endpoint, releaseCb), HCCL_SUCCESS);
+    EXPECT_EQ(conn->jettyMode_, DevUbConnection::JettyMode::EXTERNAL_INJECT);
     EXPECT_EQ(conn->jettyHandle, static_cast<JettyHandle>(0x1234));
     EXPECT_EQ(conn->jettyId, 100U);
     EXPECT_EQ(conn->sqBuffVa, 0xABCDEF00ULL);
     EXPECT_EQ(conn->sqDepth, 32U);
-    EXPECT_EQ(conn->tpInfo.tpHandle, 0xDEADBEEFULL);
-    EXPECT_EQ(conn->endpointTag_, reinterpret_cast<void*>(0x1));
+    EXPECT_EQ(conn->endpointTag_, static_cast<void*>(&endpoint));
+    EXPECT_EQ(conn->jfcHandle, ctx.jfcHandle);
+    EXPECT_EQ(conn->cqInfo_.va, ctx.cqInfo.va);
+    EXPECT_EQ(conn->cqInfo_.id, ctx.cqInfo.id);
+    EXPECT_EQ(conn->cqInfo_.cqDepth, ctx.cqInfo.cqDepth);
+    EXPECT_EQ(conn->jettyImportCfg.localPsn, ctx.localPsn);
 }
 
 TEST_F(SharedJettyConnAdaptTest, Ut_Inject_When_ZeroKeySize_Expect_Success)
 {
-    auto conn = MakeTestConnection();
+    auto conn = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    StubEndpointForAdapt endpoint;
     Endpoint::SharedJettyCtx ctx = MakeTestCtx();
     ctx.keySize = 0;
     auto releaseCb = [](void*) {};
-    EXPECT_EQ(InjectSharedJettyToConn(conn.get(), ctx, reinterpret_cast<void*>(0x1), releaseCb), HCCL_SUCCESS);
-    EXPECT_TRUE(conn->isSharedJetty_);
+    EXPECT_EQ(SetSharedJettyFieldsToConn(conn.get(), ctx, &endpoint, releaseCb), HCCL_SUCCESS);
 }
 
 TEST_F(SharedJettyConnAdaptTest, Ut_ExtractInfo_When_NullConnection_Expect_HCCL_E_PARA)
@@ -115,10 +170,11 @@ TEST_F(SharedJettyConnAdaptTest, Ut_ExtractInfo_When_NullConnection_Expect_HCCL_
 
 TEST_F(SharedJettyConnAdaptTest, Ut_ExtractInfo_When_Normal_Expect_Success)
 {
-    auto conn = MakeTestConnection();
+    auto conn = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    StubEndpointForAdapt endpoint;
     Endpoint::SharedJettyCtx injectCtx = MakeTestCtx();
     auto releaseCb = [](void*) {};
-    ASSERT_EQ(InjectSharedJettyToConn(conn.get(), injectCtx, reinterpret_cast<void*>(0x1), releaseCb), HCCL_SUCCESS);
+    ASSERT_EQ(SetSharedJettyFieldsToConn(conn.get(), injectCtx, &endpoint, releaseCb), HCCL_SUCCESS);
 
     // 设置 JFC 相关字段，验证 ExtractJettyInfoFromConn 能正确提取
     conn->rdmaHandle = reinterpret_cast<void*>(0xABCD);
@@ -132,9 +188,11 @@ TEST_F(SharedJettyConnAdaptTest, Ut_ExtractInfo_When_Normal_Expect_Success)
     EXPECT_EQ(extractCtx.dbAddr, injectCtx.dbAddr);
     EXPECT_EQ(extractCtx.keySize, injectCtx.keySize);
     EXPECT_EQ(extractCtx.sqDepth, injectCtx.sqDepth);
-    EXPECT_EQ(extractCtx.tpHandle, injectCtx.tpHandle);
     EXPECT_EQ(extractCtx.rdmaHandle, reinterpret_cast<void*>(0xABCD));
     EXPECT_EQ(extractCtx.jfcHandle, 12345U);
+    EXPECT_EQ(extractCtx.cqInfo.va, conn->cqInfo_.va);
+    EXPECT_EQ(extractCtx.cqInfo.id, conn->cqInfo_.id);
+    EXPECT_EQ(extractCtx.localPsn, injectCtx.localPsn);
     EXPECT_EQ(memcmp(extractCtx.localQpKey, injectCtx.localQpKey, HRT_UB_QP_KEY_MAX_LEN), 0);
 }
 
@@ -152,28 +210,29 @@ TEST_F(SharedJettyConnAdaptTest, Ut_ExtractInfo_When_EmptyConnection_Expect_Defa
 
 TEST_F(SharedJettyConnAdaptTest, Ut_TransferOwnership_When_NullConnection_Expect_HCCL_E_PARA)
 {
-    EXPECT_EQ(TransferConnJettyOwnership(nullptr), HCCL_E_PARA);
+    EXPECT_EQ(DetachConnJetty(nullptr), HCCL_E_PARA);
 }
 
 TEST_F(SharedJettyConnAdaptTest, Ut_TransferOwnership_When_Normal_Expect_Success)
 {
     auto conn = MakeTestConnection();
-    EXPECT_FALSE(conn->isSharedJetty_);
-    EXPECT_EQ(TransferConnJettyOwnership(conn.get()), HCCL_SUCCESS);
-    EXPECT_TRUE(conn->isSharedJetty_);
+    EXPECT_FALSE(conn->jettyDetached_);
+    EXPECT_EQ(DetachConnJetty(conn.get()), HCCL_SUCCESS);
+    EXPECT_TRUE(conn->jettyDetached_);
 }
 
 TEST_F(SharedJettyConnAdaptTest, Ut_RoundTrip_InjectExtractTransfer_Expect_Consistent)
 {
-    auto conn = MakeTestConnection();
+    auto conn = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    StubEndpointForAdapt endpoint;
     Endpoint::SharedJettyCtx injectCtx = MakeTestCtx();
     auto releaseCb = [](void*) {};
-    ASSERT_EQ(InjectSharedJettyToConn(conn.get(), injectCtx, reinterpret_cast<void*>(0x1), releaseCb), HCCL_SUCCESS);
+    ASSERT_EQ(SetSharedJettyFieldsToConn(conn.get(), injectCtx, &endpoint, releaseCb), HCCL_SUCCESS);
 
     conn->rdmaHandle = reinterpret_cast<void*>(0xBEEF);
     conn->jfcHandle = 67890;
 
-    ASSERT_EQ(TransferConnJettyOwnership(conn.get()), HCCL_SUCCESS);
+    ASSERT_EQ(DetachConnJetty(conn.get()), HCCL_SUCCESS);
 
     Endpoint::SharedJettyCtx extractCtx;
     ASSERT_EQ(ExtractJettyInfoFromConn(conn.get(), extractCtx), HCCL_SUCCESS);
@@ -184,7 +243,7 @@ TEST_F(SharedJettyConnAdaptTest, Ut_RoundTrip_InjectExtractTransfer_Expect_Consi
     EXPECT_EQ(extractCtx.dbAddr, injectCtx.dbAddr);
     EXPECT_EQ(extractCtx.sqDepth, injectCtx.sqDepth);
     EXPECT_EQ(extractCtx.keySize, injectCtx.keySize);
-    EXPECT_EQ(extractCtx.tpHandle, injectCtx.tpHandle);
     EXPECT_EQ(extractCtx.rdmaHandle, reinterpret_cast<void*>(0xBEEF));
     EXPECT_EQ(extractCtx.jfcHandle, 67890U);
+    EXPECT_EQ(extractCtx.localPsn, injectCtx.localPsn);
 }

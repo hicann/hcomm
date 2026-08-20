@@ -10,6 +10,8 @@
 
 #include "my_rank.h"
 #include <algorithm>
+#include <array>
+#include <iterator>
 #include <limits>
 #include <functional>
 #include "hccl_comm_pub.h"
@@ -591,13 +593,16 @@ static HcclResult PrepareV2ChannelAcquire(hccl::hcclComm* hcclComm, HcclComm com
     if (rankTableCrc != 0) {
         CHK_RET(RankConsistencyCheckerV2::GetInstance(deviceLogicId).RecordRankTableCrcV2(rankTableCrc));
     }
-    char hcommPkgName[] = "hcomm";
-    char hcommVersionStr[CANN_VERSION_MAX_LEN + 1] = {0};
-    aclError aclRet = aclsysGetVersionStr(hcommPkgName, hcommVersionStr);
+    // 用 sizeof 自动推导包名长度，避免魔法数 6 与字面量 "hcomm" 长度耦合后忘记同步
+    static constexpr char HCOMM_PKG_NAME[] = "hcomm";
+    std::array<char, sizeof(HCOMM_PKG_NAME)> hcommPkgName = {};
+    std::copy(std::begin(HCOMM_PKG_NAME), std::end(HCOMM_PKG_NAME), hcommPkgName.begin());
+    std::array<char, CANN_VERSION_MAX_LEN + 1> hcommVersionStr = {0};
+    aclError aclRet = aclsysGetVersionStr(hcommPkgName.data(), hcommVersionStr.data());
     CHK_PRT_RET(
         aclRet != ACL_SUCCESS, HCCL_ERROR("[%s] aclsysGetVersionStr failed, aclRet[%d].", __func__, aclRet),
         HCCL_E_INTERNAL);
-    std::string curVersion(hcommVersionStr);
+    std::string curVersion(hcommVersionStr.data());
     CHK_RET(RankConsistencyCheckerV2::GetInstance(deviceLogicId).RecordCannVersionV2(curVersion));
 
     const uint32_t opExpansionMode = myRank->GetOpExpansionMode();
@@ -1063,8 +1068,8 @@ static HcclResult CreateSharedJettyChannelsForGroup(
 }
 
 static HcclResult AcquireSharedJettyGroupChannels(
-    HcclComm comm, CommEngine engine, const std::vector<HcclChannelDesc>& channelDescs,
-    const SharedJettyRemoteGroup& group, EndpointHandle epHandle, const std::string& commTag,
+    const HcclComm comm, CommEngine engine, const std::vector<HcclChannelDesc>& channelDescs,
+    const SharedJettyRemoteGroup& group, const EndpointHandle epHandle, const std::string& commTag,
     const std::string& sharedTag, hccl::MyRank* myRank, const EndpointDesc& localEp, ChannelHandle* channels,
     std::vector<bool>* outIsNewChannel)
 {
@@ -1141,7 +1146,9 @@ static HcclResult AcquireSharedJettyChannels(
     EndpointHandle epHandle = nullptr;
     hcomm::EndpointMgr* endpointMgr = myRank->GetEndpointMgr();
     CHK_PTR_NULL(endpointMgr);
-    CHK_RET(endpointMgr->Get(localEp, epHandle));
+    // 共享 jetty 按 sharedQueueTag 区分 Endpoint：不同 tag 创建独立 Endpoint → 独立底层 jetty 资源。
+    // 同一 tag 复用同一 Endpoint（JettyContext 引用计数复用）。
+    CHK_RET(endpointMgr->GetWithTag(localEp, sharedTag, epHandle));
 
     // memHandleStorage 持有 memHandleVec 的生命周期，确保 channelDescs[].memHandles 在本函数内有效。
     // 无论 memVec 是否为空都执行 RegisterMemory 并覆盖 memHandles：
@@ -1290,14 +1297,14 @@ static HcclResult ExchangeConsistencyForSharedJetty(
     hccl::MyRank* myRank = collComm->GetMyRank();
     CHK_PTR_NULL(myRank);
 
+    const std::string identifier = hcclComm->GetIdentifier();
     std::vector<HcommChannelDesc> consistencyDescs(channelNum);
     for (uint32_t i = 0; i < channelNum; ++i) {
         consistencyDescs[i] = MyRankUtils::ChannelDescHccl2Hcomm(channelDescFinals[i], hccl::CommConfig{});
-        consistencyDescs[i].channelName = hcclComm->GetIdentifier().c_str();
+        consistencyDescs[i].channelName = identifier.c_str();
     }
 
-    std::string consistencySocketTag
-        = hcclComm->GetIdentifier() + "_engine_" + std::to_string(static_cast<uint32_t>(engine));
+    std::string consistencySocketTag = identifier + "_engine_" + std::to_string(static_cast<uint32_t>(engine));
     HcclResult sockRet
         = myRank->BatchCreateSockets(channelDescFinals.data(), channelNum, consistencySocketTag, consistencyDescs);
     CHK_PRT_RET(

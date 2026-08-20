@@ -14,6 +14,10 @@
 #include <cstdint>
 #include "hccl/hccl_res.h"
 
+namespace hccl {
+class hcclComm;
+} // namespace hccl
+
 #ifdef __cplusplus
 extern "C" {
 #endif

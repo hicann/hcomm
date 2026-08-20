@@ -4,7 +4,7 @@
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
@@ -65,7 +65,8 @@ static HcclResult ProvideSharedJettyCtx(
 {
     std::unique_ptr<Hccl::DevUbConnection> tempConn = tempConnFactory();
     CHK_SMART_PTR_NULL(tempConn);
-    CHK_RET(WaitForJettyCreated(*tempConn, 16000)); // 16s 与 jettyTimeOut 对齐
+    // 16s 覆盖 TP 建链(~8s) + jetty 异步创建(~8s) 的串行最坏时长, 与 jettyTimeOut hwValue=16(=8s) 配套
+    CHK_RET(WaitForJettyCreated(*tempConn, 16000));
 
     // 通过适配层提取 jetty 字段（含 sqDepth），不直接调 legacy GetJettyInfo
     CHK_RET(ExtractJettyInfoFromConn(tempConn.get(), ctx));
@@ -108,10 +109,10 @@ static HcclResult ProvideSharedJettyCtx(
         }
     }
     ctx.queueIndexMemSize = sharedQueueIndexMemSize;
-    // 所有可能失败的操作完成后，再转交 jetty 所有权，阻止临时 connection 析构销毁 jetty。
-    // 若提前 TransferOwnership，后续 PI/CI 分配失败时 jetty 会因所有权已转交而泄漏。
-    // TransferOwnership 自身失败时也需调用 cleanup()释放已分配的 PI/CI device内存，避免泄漏。
-    HcclResult transferRet = TransferConnJettyOwnership(tempConn.get());
+    // 所有可能失败的操作完成后，再分离 jetty 所有权，阻止临时 connection 析构销毁 jetty。
+    // 若提前 DetachJetty，后续 PI/CI 分配失败时 jetty 会因所有权已分离而泄漏。
+    // DetachJetty 自身失败时也需调用 cleanup() 释放已分配的 PI/CI device 内存，避免泄漏。
+    HcclResult transferRet = DetachConnJetty(tempConn.get());
     if (transferRet != HCCL_SUCCESS) {
         cleanup();
         return transferRet;
@@ -141,7 +142,7 @@ HcclResult AcquireSharedJettyForChannel(
     CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s] Acquire shared jetty failed, ret[%d].", __func__, ret), ret);
     outCtx = ctx;
 
-    // 命中复用或首次创建完成：通过适配层注入 jetty 到主 connection
+    // 命中复用或首次创建完成：通过适配层填充 jetty 字段到主 connection
     // releaseCb: connection 销毁时通知 Endpoint 减引用计数
     auto releaseCb = [](void* tag) {
         Endpoint* ep = static_cast<Endpoint*>(tag);
@@ -149,14 +150,14 @@ HcclResult AcquireSharedJettyForChannel(
             (void)ep->ReleaseSharedJetty();
         }
     };
-    HcclResult injectRet = InjectSharedJettyToConn(connection, ctx, endpoint, std::move(releaseCb));
+    HcclResult injectRet = SetSharedJettyFieldsToConn(connection, ctx, endpoint, std::move(releaseCb));
     if (injectRet != HCCL_SUCCESS) {
-        HCCL_ERROR("[%s] Inject shared jetty failed, ret[%d], rollback refCount.", __func__, injectRet);
+        HCCL_ERROR("[%s] SetSharedJettyFields failed, ret[%d], rollback refCount.", __func__, injectRet);
         (void)endpoint->ReleaseSharedJetty();
         return injectRet;
     }
     HCCL_INFO(
-        "[%s] shared jetty acquired and injected, handle[0x%llx], sqPi[%p] sqCi[%p] cqPi[%p] cqCi[%p].", __func__,
+        "[%s] shared jetty acquired and fields set, handle[0x%llx], sqPi[%p] sqCi[%p] cqPi[%p] cqCi[%p].", __func__,
         static_cast<unsigned long long>(ctx.handle), ctx.sqPiPtr, ctx.sqCiPtr, ctx.cqPiPtr, ctx.cqCiPtr);
     return HCCL_SUCCESS;
 }

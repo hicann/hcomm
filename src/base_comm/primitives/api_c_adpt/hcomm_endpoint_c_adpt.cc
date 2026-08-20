@@ -324,6 +324,8 @@ HcommResult HcommEndpointDestroy(EndpointHandle endpointHandle)
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
     if (endpoint != nullptr && endpoint->GetNicOps() != nullptr && endpoint->GetNicOps() != &g_BuiltinEndpointOps) {
         HCCL_INFO("[NicPlugin][%s] destroy plugin endpoint.", __func__);
+        // 先摘除 SharedJettyMgr 中该 plugin endpoint 的 channel 注册记录, 避免 plugin 句柄复用误判
+        hcomm::SharedJettyMgr::GetInstance().UnregisterEndpoint(endpointHandle);
         endpoint->ReleaseEndpointMonitor(endpointHandle);
         auto ret = GetEndpointMap().RemoveEndpoint(endpointHandle);
         CHK_PRT_RET(
@@ -343,6 +345,9 @@ HcommResult HcommEndpointDestroy(EndpointHandle endpointHandle)
         CHK_RET(RefreshEndpointContext(endpoint->GetEndpointDesc()));
         endpoint->ReleaseEndpointMonitor(endpointHandle);
     }
+    // 在 RemoveEndpoint 释放 Endpoint 对象前摘除 SharedJettyMgr 反查记录，
+    // 避免 Endpoint* 复用误判；此处单例确定存活（运行期），不依赖 ~Endpoint 调用以规避静态析构顺序风险。
+    hcomm::SharedJettyMgr::GetInstance().UnregisterEndpoint(endpointHandle);
     auto ret = GetEndpointMap().RemoveEndpoint(endpointHandle);
     CHK_PRT_RET(
         ret == false, HCCL_ERROR("[%s] endpoint not found, endpointHandle[0x%llx]", __func__, endpointHandle),

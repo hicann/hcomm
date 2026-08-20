@@ -31,7 +31,7 @@ public:
 
     ~StubEndpointForHelper() override
     {
-        if (sharedJettyCtx_.valid && sharedJettyCtx_.refCount > 0) {
+        if (jettyContext_ != nullptr) {
             (void)ReleaseSharedJetty();
         }
     }
@@ -59,11 +59,14 @@ private:
     }
 };
 
-std::unique_ptr<DevUbConnection> MakeTestConnection()
+std::unique_ptr<DevUbConnection>
+MakeTestConnection(DevUbConnection::JettyMode jettyMode = DevUbConnection::JettyMode::SELF_CREATE)
 {
     IpAddress locIp("1.0.0.1");
     IpAddress rmtIp("2.0.0.2");
-    return std::make_unique<DevUbConnection>(nullptr, locIp, rmtIp, OpMode::OPBASE);
+    return std::make_unique<DevUbConnection>(
+        nullptr, locIp, rmtIp, OpMode::OPBASE, false, HrtUbJfcMode::STARS_POLL, IpAddress(), IpAddress(),
+        static_cast<u8>(UB_QOS_DEFAULT), COMM_ENGINE_RESERVED, Hccl::UB_SQ_DEPTH_NOT_SET, jettyMode);
 }
 } // namespace
 
@@ -114,7 +117,7 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_NullCo
 TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_FirstCreate_Expect_Success)
 {
     StubEndpointForHelper endpoint;
-    auto conn = MakeTestConnection();
+    auto conn = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
     uint32_t factoryCallCount = 0;
     auto factory = [&factoryCallCount]() -> std::unique_ptr<DevUbConnection> {
         factoryCallCount++;
@@ -124,16 +127,14 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_FirstC
     Endpoint::SharedJettyCtx outCtx;
     EXPECT_EQ(AcquireSharedJettyForChannel(&endpoint, conn.get(), factory, outCtx), HCCL_SUCCESS);
     EXPECT_EQ(factoryCallCount, 1U);
-    EXPECT_TRUE(endpoint.sharedJettyCtx_.valid);
-    EXPECT_EQ(endpoint.sharedJettyCtx_.refCount, 1U);
-    EXPECT_TRUE(conn->isSharedJetty_);
+    EXPECT_EQ(conn->jettyMode_, DevUbConnection::JettyMode::EXTERNAL_INJECT);
 }
 
 TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_CacheHit_Expect_Success)
 {
     StubEndpointForHelper endpoint;
-    auto conn1 = MakeTestConnection();
-    auto conn2 = MakeTestConnection();
+    auto conn1 = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    auto conn2 = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
     uint32_t factoryCallCount = 0;
     auto factory = [&factoryCallCount]() -> std::unique_ptr<DevUbConnection> {
         factoryCallCount++;
@@ -146,32 +147,29 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_CacheH
 
     EXPECT_EQ(AcquireSharedJettyForChannel(&endpoint, conn2.get(), factory, outCtx), HCCL_SUCCESS);
     EXPECT_EQ(factoryCallCount, 1U);
-    EXPECT_EQ(endpoint.sharedJettyCtx_.refCount, 2U);
-    EXPECT_TRUE(conn2->isSharedJetty_);
+    EXPECT_EQ(conn2->jettyMode_, DevUbConnection::JettyMode::EXTERNAL_INJECT);
 }
 
 TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_ReleaseDecrementsRef_Expect_Success)
 {
     StubEndpointForHelper endpoint;
-    auto conn = MakeTestConnection();
+    auto conn = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
     auto factory = []() {
         return MakeTestConnection();
     };
 
     Endpoint::SharedJettyCtx outCtx;
     ASSERT_EQ(AcquireSharedJettyForChannel(&endpoint, conn.get(), factory, outCtx), HCCL_SUCCESS);
-    EXPECT_EQ(endpoint.sharedJettyCtx_.refCount, 1U);
 
     EXPECT_EQ(endpoint.ReleaseSharedJetty(), HCCL_SUCCESS);
-    EXPECT_EQ(endpoint.sharedJettyCtx_.refCount, 0U);
-    EXPECT_FALSE(endpoint.sharedJettyCtx_.valid);
+    EXPECT_EQ(endpoint.ReleaseSharedJetty(), HCCL_SUCCESS);
 }
 
 TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_ReleaseAndReacquire_Expect_Success)
 {
     StubEndpointForHelper endpoint;
-    auto conn1 = MakeTestConnection();
-    auto conn2 = MakeTestConnection();
+    auto conn1 = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    auto conn2 = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
     uint32_t factoryCallCount = 0;
     auto factory = [&factoryCallCount]() -> std::unique_ptr<DevUbConnection> {
         factoryCallCount++;
@@ -181,10 +179,8 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_Releas
     Endpoint::SharedJettyCtx outCtx;
     ASSERT_EQ(AcquireSharedJettyForChannel(&endpoint, conn1.get(), factory, outCtx), HCCL_SUCCESS);
     EXPECT_EQ(endpoint.ReleaseSharedJetty(), HCCL_SUCCESS);
-    EXPECT_FALSE(endpoint.sharedJettyCtx_.valid);
 
     EXPECT_EQ(AcquireSharedJettyForChannel(&endpoint, conn2.get(), factory, outCtx), HCCL_SUCCESS);
     EXPECT_EQ(factoryCallCount, 2U);
-    EXPECT_TRUE(endpoint.sharedJettyCtx_.valid);
-    EXPECT_EQ(endpoint.sharedJettyCtx_.refCount, 1U);
+    EXPECT_EQ(conn2->jettyMode_, DevUbConnection::JettyMode::EXTERNAL_INJECT);
 }

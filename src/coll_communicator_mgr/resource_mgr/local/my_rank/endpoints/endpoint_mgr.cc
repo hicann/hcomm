@@ -57,6 +57,11 @@ EndpointMgr::~EndpointMgr()
         const EndpointHandle& endpointHandle = kv.second;
         (void)HcommEndpointDestroy(endpointHandle);
     }
+    // 销毁共享 jetty 场景按 tag 创建的独立 Endpoint
+    for (const auto& kv : taggedEndpointMap_) {
+        (void)HcommEndpointDestroy(kv.second);
+    }
+    taggedEndpointMap_.clear();
 }
 
 HcclResult EndpointMgr::Get(EndpointDesc epDesc, EndpointHandle& handle)
@@ -70,6 +75,42 @@ HcclResult EndpointMgr::Get(EndpointDesc epDesc, EndpointHandle& handle)
     CHK_RET(static_cast<HcclResult>(HcommEndpointCreate(&epDesc, &handle)));
 
     endpointMap_.emplace(epDesc, handle);
+    return HCCL_SUCCESS;
+}
+
+HcclResult EndpointMgr::GetWithTag(EndpointDesc epDesc, const std::string& sharedQueueTag, EndpointHandle& handle)
+{
+    // tag 为空：退化为默认 Get，兼容非共享路径或无 tag 场景
+    if (sharedQueueTag.empty()) {
+        return Get(epDesc, handle);
+    }
+
+    EndpointDescTagKey key{epDesc, sharedQueueTag};
+
+    // 快路径：持锁查缓存，命中直接返回
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto iter = taggedEndpointMap_.find(key);
+        if (iter != taggedEndpointMap_.end()) {
+            handle = iter->second;
+            return HCCL_SUCCESS;
+        }
+    }
+
+    // 慢路径：持锁创建 + 二次检查。
+    // 不采用"无锁创建+失败销毁"乐观模式：HcommEndpointCreate 涉及 device context 分配等重操作，
+    // 高并发同 key 多线程重复创建+销毁的代价高于锁内串行等待；且 create/destroy 非严格幂等时可能残留状态。
+    std::lock_guard<std::mutex> lock(mutex_);
+    // 二次检查：另一线程可能已在快路径后、本线程拿锁前完成创建
+    auto iter = taggedEndpointMap_.find(key);
+    if (iter != taggedEndpointMap_.end()) {
+        handle = iter->second;
+        return HCCL_SUCCESS;
+    }
+    // 锁内创建：同一 key 不会有并发的重复创建
+    CHK_RET(static_cast<HcclResult>(HcommEndpointCreate(&epDesc, &handle)));
+    taggedEndpointMap_.emplace(std::move(key), handle);
+    HCCL_INFO("[EndpointMgr::GetWithTag] create tagged Endpoint, tag[%s], handle[%p].", sharedQueueTag.c_str(), handle);
     return HCCL_SUCCESS;
 }
 

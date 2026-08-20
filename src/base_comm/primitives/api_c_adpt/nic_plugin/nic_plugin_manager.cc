@@ -26,6 +26,7 @@
 #include "hcomm_result_defs.h"
 #include "log.h"
 #include "param_check_pub.h"
+#include "shared_jetty_mgr.h"
 
 namespace hcomm {
 namespace {

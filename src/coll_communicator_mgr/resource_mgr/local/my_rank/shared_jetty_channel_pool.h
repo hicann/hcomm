@@ -30,6 +30,8 @@ class MyRank;
 
 using EndpointDescPair = std::pair<EndpointDesc, EndpointDesc>;
 
+constexpr std::size_t ENDPOINT_DESC_NUM_PER_PAIR = 2;
+
 // 字段级 hash，规避 EndpointDesc padding 字节未初始化导致的误判。
 // 将参与区分的有效字段序列化到 std::string，复用标准库 std::hash<string> 完成组合，
 // 避免手写魔数/位运算 combine（如 0x9e3779b9）带来的可读性与稳健性问题。
@@ -46,7 +48,7 @@ struct EndpointDescPairHash {
     std::size_t operator()(const EndpointDescPair& p) const noexcept
     {
         std::string buf;
-        buf.reserve(sizeof(EndpointDesc) * 2);
+        buf.reserve(sizeof(EndpointDesc) * ENDPOINT_DESC_NUM_PER_PAIR);
         AppendEndpointDesc(buf, p.first);
         AppendEndpointDesc(buf, p.second);
         return std::hash<std::string>{}(buf);

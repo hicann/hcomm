@@ -59,8 +59,9 @@ private:
     void PutSocketIfNeeded();
     void ReleaseDeviceChannelEntity();
 
-    HcclResult
-    CreateUbConnectionByProtocol(const UbConnBuildContext& ctx, std::unique_ptr<Hccl::DevUbConnection>& ubConn);
+    HcclResult CreateUbConnectionByProtocol(
+        const UbConnBuildContext& ctx, std::unique_ptr<Hccl::DevUbConnection>& ubConn,
+        Hccl::DevUbConnection::JettyMode jettyMode = Hccl::DevUbConnection::JettyMode::SELF_CREATE);
     HcclResult AcquireSharedJettyInBuildConnection(const UbConnBuildContext& ctx, Hccl::DevUbConnection* connection);
 
     // --------------------- 转换参数 ---------------------

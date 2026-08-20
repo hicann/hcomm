@@ -4,7 +4,7 @@
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
@@ -62,8 +62,6 @@ HcclResult SharedJettyMgr::UnregisterChannels(const ChannelHandle* channels, uin
                 HCCL_INFO(
                     "[%s] unregistered channel[0x%llx] from endpointHandle[%p], remaining[%u].", __func__, channels[i],
                     it->first, it->second.channelCount);
-                // 注：共享 jetty 引用计数由 connection 析构时的 releaseCb_ 自动减（Endpoint::ReleaseSharedJetty），
-                // 此处不再重复减引用，仅维护 channelHandles 记录供 CheckEndpointDestroy 校验
                 if (it->second.channelCount == 0) {
                     EndpointHandle epHandle = it->first;
                     contexts_.erase(it);
@@ -95,6 +93,22 @@ bool SharedJettyMgr::HasContext(EndpointHandle endpointHandle)
 {
     std::lock_guard<std::mutex> lock(mtx_);
     return contexts_.find(endpointHandle) != contexts_.end();
+}
+
+void SharedJettyMgr::UnregisterEndpoint(EndpointHandle endpointHandle)
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+    auto it = contexts_.find(endpointHandle);
+    if (it == contexts_.end()) {
+        return;
+    }
+    if (it->second.channelCount > 0) {
+        HCCL_WARNING(
+            "[%s] endpointHandle[%p] still has [%u] channels, force remove to avoid handle reuse misjudge.", __func__,
+            endpointHandle, it->second.channelCount);
+    }
+    contexts_.erase(it);
+    HCCL_INFO("[%s] unregistered endpointHandle[%p] from shared jetty mgr.", __func__, endpointHandle);
 }
 
 } // namespace hcomm

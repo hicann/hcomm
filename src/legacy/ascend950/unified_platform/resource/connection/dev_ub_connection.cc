@@ -30,7 +30,7 @@ constexpr u32 UB_MAX_TRANS_SIZE = 256 * 1024 * 1024; // UB单次最大传输量2
 DevUbConnection::DevUbConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr, u8 qos,
-    CommEngine engine, u32 inSqDepth)
+    CommEngine engine, u32 inSqDepth, JettyMode jettyMode)
     : RmaConnection(nullptr, RmaConnType::UB),
       rdmaHandle(rdmaHandle),
       locAddr(locAddr),
@@ -44,16 +44,24 @@ DevUbConnection::DevUbConnection(
       locEid(locAddr.GetReverseEid()),
       qos_(qos),
       devUsed_(devUsed),
-      sqDepth(inSqDepth)
+      sqDepth(inSqDepth),
+      jettyMode_(jettyMode)
 {
     HCCL_INFO(
-        "[DevUbConnection::DevUbConnection] rmtEid=%s, engine=%d", rmtEid.Describe().c_str(),
-        static_cast<s32>(engine_));
+        "[DevUbConnection::DevUbConnection] rmtEid=%s, engine=%d, jettyMode=%d", rmtEid.Describe().c_str(),
+        static_cast<s32>(engine_), static_cast<s32>(jettyMode_));
     devLogicId = HrtGetDevice();
 
     auto dieIdAndFuncId = RdmaHandleManager::GetInstance().GetDieAndFuncId(rdmaHandle); // 获取dieId和FuncId
     dieId = dieIdAndFuncId.first;
     funcId = dieIdAndFuncId.second;
+
+    // EXTERNAL_INJECT 模式：跳过建 JFC/jetty，等外部调 SetSharedJettyFields 填充
+    if (jettyMode_ == JettyMode::EXTERNAL_INJECT) {
+        sqDepth = OPBASED_UB_SQ_DEPTH_MAX;
+        HCCL_INFO("[DevUbConnection][Constructor] EXTERNAL_INJECT mode, skip JFC/Jetty creation.");
+        return;
+    }
 
     if (engine_ == COMM_ENGINE_AIV) {
         CreateAivUrmaJfc();
@@ -77,10 +85,6 @@ DevUbConnection::DevUbConnection(
     }
 
     if (!devUsed_) {
-        // 注意：devUsed_=false 时 CreateJetty 在构造里同步执行，早于 InjectSharedJetty 调用，
-        // 因此 isSharedJetty_ 此时还是 false，会走自建路径。当前共享 jetty 仅支持 AICPU
-        // (devUsed_=true) 场景，构造里不会 CreateJetty，无影响。
-        // TODO: 若将来支持 devUsed_=false 共享，需改为构造接受 sharedJetty 标志或延迟创建。
         CreateJetty(devUsed_);
     } else {
         HCCL_INFO("[DevUbConnection][Constructor] devUsed: defer CreateJetty until GetTpInfo maps qos.");
@@ -90,9 +94,10 @@ DevUbConnection::DevUbConnection(
 DevUbTpConnection::DevUbTpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr, u8 qos,
-    CommEngine engine, u32 sqDepth)
+    CommEngine engine, u32 sqDepth, JettyMode jettyMode)
     : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth)
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth,
+          jettyMode)
 {
     tpProtocol = TpProtocol::TP;
 }
@@ -100,9 +105,10 @@ DevUbTpConnection::DevUbTpConnection(
 DevUbCtpConnection::DevUbCtpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr, u8 qos,
-    CommEngine engine, u32 sqDepth)
+    CommEngine engine, u32 sqDepth, JettyMode jettyMode)
     : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth)
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth,
+          jettyMode)
 {
     tpProtocol = TpProtocol::CTP;
 }
@@ -110,8 +116,10 @@ DevUbCtpConnection::DevUbCtpConnection(
 DevUbUboeConnection::DevUbUboeConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr, u8 qos,
-    CommEngine engine)
-    : DevUbConnection(rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine)
+    CommEngine engine, JettyMode jettyMode)
+    : DevUbConnection(
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine,
+          UB_SQ_DEPTH_NOT_SET, jettyMode)
 {
     tpProtocol = TpProtocol::UBOE;
     jettyTimeOut = 16; // UBOE Jetty异步创建超时16秒
@@ -119,10 +127,11 @@ DevUbUboeConnection::DevUbUboeConnection(
 
 DevUbRtpConnection::DevUbRtpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
-    const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locAddrEid, const IpAddress& rmtAddrEid, u8 qos,
-    CommEngine engine, u32 sqDepth)
+    const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locAddrEid, const IpAddress& rmtAddrEid,
+    const u8 qos, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
     : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, engine, sqDepth)
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, engine, sqDepth,
+          jettyMode)
 {
     tpProtocol = TpProtocol::UB_RTP;
     // UB_RTP与UBOE同属UB传输，Jetty异步创建超时一致，均为16秒
@@ -269,11 +278,54 @@ void DevUbConnection::GetTimeOut() // 直接基于环境变量控制
  * UB 建链状态机（GetTpInfo/CreateJetty 异步未完成则停；同步成功时可同次推进）:
  *   INIT                  --GetTpInfo fail--> TP_INFO_GETTING
  *   INIT / TP_INFO_GETTING --GetTpInfo ok--> CreateJetty --> JETTY_CREATING | JETTY_CREATED
- *                         （isSharedJetty_ 时跳过 CreateJetty，直接 JETTY_CREATED）
+ *                         （EXTERNAL_INJECT 模式时跳过 CreateJetty，直接 JETTY_CREATED）
  *   JETTY_CREATING         --create done--> JETTY_CREATED (EXCHANGEABLE)
  *   JETTY_CREATED          --ImportRmtDto--> JETTY_IMPORTING（此处不推进）
  *   JETTY_IMPORTING        --import done--> READY
  */
+void DevUbConnection::AdvanceUbConnFromJettyImporting()
+{
+    SetImportInfo();
+
+    if (jettyMode_ == JettyMode::EXTERNAL_INJECT) {
+        if (publishRemoteCb_ == nullptr) {
+            THROW<InternalException>("[DevUbConnection][%s] publish callback is null.", __func__);
+        }
+        HcclResult ret = publishRemoteCb_(remoteQpKey, keySize, remoteJettyHandle, remoteJettyHandlePtr, tpn);
+        if (ret != HCCL_SUCCESS) {
+            THROW<InternalException>(
+                "[DevUbConnection][%s] publish shared remote jetty failed, ret[%d].", __func__, ret);
+        }
+    }
+
+    status = RmaConnStatus::READY;
+    ubConnStatus = UbConnStatus::READY;
+}
+
+void DevUbConnection::AdvanceUbConnFromJettyImportWaiting()
+{
+    // 超时检查：超过 jettyTimeOut 秒仍未 publish，则对端异常，抛异常避免永久阻塞。
+    // 每次轮询都检查，保证超时判定不被退避延迟。
+    auto elapsedSec
+        = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - importWaitingStart_);
+    if (elapsedSec.count() >= static_cast<int64_t>(jettyTimeOut)) {
+        HCCL_ERROR(
+            "[DevUbConnection][%s] JETTY_IMPORT_WAITING timeout[%us], remote jetty not published.", __func__,
+            static_cast<uint32_t>(elapsedSec.count()));
+        THROW<InternalException>("[DevUbConnection][%s] wait shared remote jetty publish timeout.");
+    }
+
+    // 退避：每 8 次 GetStatus 轮询才真正调 acquireRemoteCb_ 一次，减少 JettyContext 锁竞争。
+    // 首次进入立即调用（pollCount==0），后续每 8 次轮询触发一次实际查询。
+    if (importWaitingPollCount_ > 0 && (importWaitingPollCount_ % 8U) != 0U) {
+        importWaitingPollCount_++;
+        return;
+    }
+    importWaitingPollCount_++;
+
+    AcquireOrWaitSharedRemoteJetty();
+}
+
 RmaConnStatus DevUbConnection::GetStatus()
 {
     // 稳定态 / 等待外部 ImportRmtDto：无需推进
@@ -301,9 +353,12 @@ RmaConnStatus DevUbConnection::GetStatus()
             ubConnStatus = UbConnStatus::JETTY_CREATED;
             break;
         case UbConnStatus::JETTY_IMPORTING:
-            SetImportInfo();
-            status = RmaConnStatus::READY;
-            ubConnStatus = UbConnStatus::READY;
+            AdvanceUbConnFromJettyImporting();
+            break;
+        case UbConnStatus::JETTY_IMPORT_WAITING:
+            AdvanceUbConnFromJettyImportWaiting();
+            break;
+        case UbConnStatus::READY:
             break;
         default:
             ThrowAbnormalStatus(std::string(__func__));
@@ -328,8 +383,8 @@ void DevUbConnection::ProcessInit()
 void DevUbConnection::ProcessCreateJetty()
 {
     GetTimeOut();
-    if (isSharedJetty_) {
-        // 共享 jetty：句柄已由 InjectSharedJetty 注入，跳过 CreateJetty
+    if (jettyMode_ == JettyMode::EXTERNAL_INJECT) {
+        // 共享 jetty：句柄已由 SetSharedJettyFields 注入，跳过 CreateJetty
         status = RmaConnStatus::EXCHANGEABLE;
         ubConnStatus = UbConnStatus::JETTY_CREATED;
         HCCL_INFO("[DevUbConnection][%s] shared jetty mode, skip CreateJetty, direct to JETTY_CREATED.", __func__);
@@ -394,6 +449,11 @@ void DevUbConnection::ImportRmtDto()
             "[DevUbConnection][%s] failed, ubConnStatus[%s] is not expected.", __func__,
             ubConnStatus.Describe().c_str());
         ThrowAbnormalStatus(std::string(__func__));
+    }
+
+    if (jettyMode_ == JettyMode::EXTERNAL_INJECT) {
+        AcquireOrWaitSharedRemoteJetty();
+        return;
     }
 
     ImportJetty();
@@ -468,17 +528,28 @@ void DevUbConnection::CreateJetty(const bool devUsed)
     reqHandle = RaUbCreateJettyAsync(rdmaHandle, req, reqDataBuffer, jettyHandlePtr);
 }
 
-HcclResult DevUbConnection::InjectSharedJetty(
-    Hccl::JettyHandle jettyHdl, void* jettyHdlPtr, uint32_t jId, uint64_t sqVa, uint64_t db, const uint8_t* qpKey,
-    uint32_t kSize, uint32_t sDepth, uint64_t tpHdl, void* epTag, std::function<void(void*)> releaseCb)
+HcclResult DevUbConnection::SetSharedJettyFields(
+    JettyHandle jettyHdl, void* jettyHdlPtr, uint32_t jId, uint64_t sqVa, uint64_t db, const uint8_t* qpKey,
+    uint32_t kSize, uint32_t sDepth, JfcHandle sharedJfc, CqCreateInfo sharedCqInfo, uint32_t sharedLocalPsn,
+    void* epTag, std::function<void(void*)> releaseCb, AcquireSharedRemoteJettyCallback acquireRemoteCb,
+    PublishSharedRemoteJettyCallback publishRemoteCb)
 {
-    if (jettyHdl == 0 || jettyHdlPtr == nullptr || sDepth == 0) {
+    if (jettyHdl == 0 || jettyHdlPtr == nullptr || sDepth == 0 || acquireRemoteCb == nullptr
+        || publishRemoteCb == nullptr) {
         HCCL_ERROR(
-            "[DevUbConnection][%s] invalid params, jettyHdl[0x%llx], jettyHdlPtr[%p], sDepth[%u].", __func__,
-            static_cast<unsigned long long>(jettyHdl), jettyHdlPtr, sDepth);
+            "[DevUbConnection][%s] invalid params, jettyHdl[0x%llx], jettyHdlPtr[%p], sDepth[%u], "
+            "acquireRemoteCb[%d], publishRemoteCb[%d].",
+            __func__, static_cast<unsigned long long>(jettyHdl), jettyHdlPtr, sDepth,
+            acquireRemoteCb == nullptr ? 0 : 1, publishRemoteCb == nullptr ? 0 : 1);
         return HCCL_E_PARA;
     }
-    // 先做可能失败的 memcpy_s，成功后再设置共享模式相关状态，避免失败后析构重复调 releaseCb
+    if (jettyMode_ != JettyMode::EXTERNAL_INJECT) {
+        HCCL_ERROR(
+            "[DevUbConnection][%s] not EXTERNAL_INJECT mode, jettyMode[%d], reject SetSharedJettyFields.", __func__,
+            static_cast<s32>(jettyMode_));
+        return HCCL_E_INTERNAL;
+    }
+    // EXTERNAL_INJECT 模式构造时跳过了建 JFC/jetty，此处填充共享字段，无需销毁私有 JFC
     if (qpKey != nullptr && kSize > 0 && kSize <= HRT_UB_QP_KEY_MAX_LEN) {
         s32 ret = memcpy_s(&localQpKey[0], HRT_UB_QP_KEY_MAX_LEN, qpKey, kSize);
         if (ret != EOK) {
@@ -486,9 +557,13 @@ HcclResult DevUbConnection::InjectSharedJetty(
             return HCCL_E_INTERNAL;
         }
     }
-    isSharedJetty_ = true;
     endpointTag_ = epTag;
     releaseCb_ = std::move(releaseCb);
+    acquireRemoteCb_ = std::move(acquireRemoteCb);
+    publishRemoteCb_ = std::move(publishRemoteCb);
+    // 共享 jetty 模式下主 connection 仍各自调 GetTpInfo 申请本 pair 的 tpHandle（TpManager useCnt++），
+    // 析构时必须 ReleaseTp 释放引用，否则 useCnt 泄漏导致 tpHandle 永不回收。
+    releaseTpOnDestroy_ = true;
     jettyHandle = jettyHdl;
     jettyHandlePtr = jettyHdlPtr;
     jettyId = jId;
@@ -496,24 +571,35 @@ HcclResult DevUbConnection::InjectSharedJetty(
     dbAddr = db;
     keySize = kSize;
     sqDepth = sDepth;
-    // 注入创建共享 jetty 时的 tpHandle，使主 connection 的 GetExchangeDto 发送与共享 jetty
-    // 一致的 tpHandle，避免临时 connection 析构释放 HCCL TP 缓存后主 connection 重新申请
-    // 得到不同 tpHandle，导致对端 import jetty 时 peerTpHandle 路由不匹配。
-    tpInfo.tpHandle = tpHdl;
-    // 注入后不直接跳状态机：仍需走 GetTpInfo 获取 TP 信息，由 ProcessCreateJetty
-    // 中 isSharedJetty_ 分支跳过 CreateJetty 直接进入 JETTY_CREATED
+    jfcHandle = sharedJfc;
+    cqInfo_ = sharedCqInfo;
+    // 注入临时 connection 生成的 localPsn，使主 connection 的 GetExchangeDto 发送与共享 jetty
+    // 一致的 psn。多个主 connection 共享同一本地 jetty/SQ，必须用同一 localPsn，避免各自
+    // GenerateLocalPsn 生成不同 psn 后 import 同一 TP 对时 psn 互相覆盖导致硬件传输错乱。
+    // 注意：tpHandle 不在此注入——一对多场景下各主 connection 到不同对端需各自向管控面申请
+    // 自己的 tpHandle，否则对端 import 时 peerTpHandle 路由不匹配。
+    jettyImportCfg.localPsn = sharedLocalPsn;
+    // 注入后不直接跳状态机：仍需走 GetTpInfo 申请本 pair 的 TP，由 ProcessCreateJetty
+    // 中 EXTERNAL_INJECT 分支跳过 CreateJetty 直接进入 JETTY_CREATED
     HCCL_INFO(
-        "[DevUbConnection][%s] shared jetty injected, handle[0x%llx], jettyId[%u], sqDepth[%u], tpHandle[0x%llx].",
+        "[DevUbConnection][%s] shared jetty fields set, handle[0x%llx], jettyId[%u], sqDepth[%u], "
+        "jfcHandle[%llu].",
         __func__, static_cast<unsigned long long>(jettyHandle), jettyId, sqDepth,
-        static_cast<unsigned long long>(tpInfo.tpHandle));
+        static_cast<unsigned long long>(jfcHandle));
     return HCCL_SUCCESS;
 }
 
-void DevUbConnection::TransferJettyOwnership()
+void DevUbConnection::DetachJetty()
 {
-    isSharedJetty_ = true;
+    // SELF_CREATE 模式建好 jetty 后调用：分离 jetty 所有权，析构不销毁 jetty，交由 JettyContext 管理。
+    // 注意：不置 releaseTpOnDestroy_=false——临时 connection 自己申请的 TP 引用仍需在析构时
+    // ReleaseTp 释放（TpManager 引用计数 -1），否则 useCnt 泄漏。
+    // 共享 jetty 模式下主 connection 不复用临时 connection 的 tpHandle：一对多场景各主 connection
+    // 到不同对端需各自向 TpManager 申请本 pair 的 tpHandle，否则对端 import 时 peerTpHandle 路由不匹配。
+    // 临时 connection 的 tpHandle 引用随析构释放，不影响主 connection 各自申请的 tpHandle。
+    jettyDetached_ = true;
     HCCL_INFO(
-        "[DevUbConnection][%s] jetty ownership transferred to Endpoint, handle[0x%llx].", __func__,
+        "[DevUbConnection][%s] jetty ownership detached, handle[0x%llx].", __func__,
         static_cast<unsigned long long>(jettyHandle));
 }
 
@@ -526,9 +612,10 @@ HcclResult DevUbConnection::GetJettyInfo(JettyInfo& info) const
     info.dbAddr = dbAddr;
     info.keySize = keySize;
     info.sqDepth = sqDepth;
-    info.tpHandle = tpInfo.tpHandle;
     info.rdmaHandle = rdmaHandle;
     info.jfcHandle = jfcHandle;
+    info.cqInfo = cqInfo_;
+    info.localPsn = jettyImportCfg.localPsn;
     auto sRet = memcpy_s(&info.localQpKey[0], HRT_UB_QP_KEY_MAX_LEN, localQpKey, HRT_UB_QP_KEY_MAX_LEN);
     if (sRet != EOK) {
         HCCL_ERROR("[DevUbConnection][%s] memcpy_s failed, ret[%d].", __func__, sRet);
@@ -564,17 +651,11 @@ bool DevUbConnection::GetTpInfo()
         ThrowAbnormalStatus(std::string(__func__));
     }
 
-    // 共享 jetty 模式：tpHandle 已由 InjectSharedJetty 注入（来自创建共享 jetty 的临时 connection），
-    // 直接复用，不再向管控面重新申请。避免临时 connection 析构释放 HCCL TP 缓存后，主 connection
-    // 重新申请得到不同 tpHandle，导致对端 import jetty 时 peerTpHandle 路由不匹配。
-    // PSN 仍需本 connection 独立生成。
-    if (isSharedJetty_ && tpInfo.tpHandle != 0) {
-        GenerateLocalPsn();
-        HCCL_INFO(
-            "[DevUbConnection][%s] shared jetty mode, reuse injected tpHandle[0x%llx].", __func__,
-            static_cast<unsigned long long>(tpInfo.tpHandle));
-        return true;
-    }
+    // 共享 jetty 模式：tpHandle 不复用临时 connection 的值——一对多场景下各主 connection 到不同对端
+    // 必须各自向管控面申请本 pair 的 tpHandle，否则对端 import 时 peerTpHandle 路由不匹配。
+    // 但 localPsn 已由 SetSharedJettyFields 注入（来自临时 connection），不在此 GenerateLocalPsn，
+    // 避免多主 connection 共享同一本地 jetty/SQ 各自生成不同 psn 后 import 同一 TP 对时互相覆盖。
+    const bool isSharedJettyMode = (jettyMode_ == JettyMode::EXTERNAL_INJECT);
 
     RaUbGetTpInfoParam p{};
     p.locAddr = locAddr;
@@ -590,7 +671,15 @@ bool DevUbConnection::GetTpInfo()
 
     switch (ret) {
         case HcclResult::HCCL_SUCCESS:
-            GenerateLocalPsn();
+            if (isSharedJettyMode) {
+                HCCL_INFO(
+                    "[DevUbConnection][%s] shared jetty mode, apply own tpHandle[0x%llx] for rmtAddr[%s], "
+                    "reuse injected localPsn[%u].",
+                    __func__, static_cast<unsigned long long>(tpInfo.tpHandle), rmtAddr.Describe().c_str(),
+                    jettyImportCfg.localPsn);
+            } else {
+                GenerateLocalPsn();
+            }
             return true;
         case HcclResult::HCCL_E_AGAIN:
             return false;
@@ -632,6 +721,51 @@ void DevUbConnection::SetImportInfo()
     tpn = info->out.ub.tpn;
 }
 
+void DevUbConnection::SetSharedRemoteJettyInfo(TargetJettyHandle handle, void* handlePtr, uint32_t remoteTpn)
+{
+    remoteJettyHandle = handle;
+    remoteJettyHandlePtr = handlePtr;
+    tpn = remoteTpn;
+    status = RmaConnStatus::READY;
+    ubConnStatus = UbConnStatus::READY;
+    HCCL_INFO(
+        "[DevUbConnection][%s] reuse shared remote jetty, handle[0x%llx], tpn[%u].", __func__,
+        static_cast<unsigned long long>(handle), remoteTpn);
+}
+
+void DevUbConnection::AcquireOrWaitSharedRemoteJetty()
+{
+    if (acquireRemoteCb_ == nullptr) {
+        THROW<InternalException>("[DevUbConnection][%s] acquire callback is null.", __func__);
+    }
+
+    bool needImport = false;
+    TargetJettyHandle cachedHandle = 0;
+    void* cachedHandlePtr = nullptr;
+    uint32_t cachedTpn = 0;
+    HcclResult ret = acquireRemoteCb_(remoteQpKey, keySize, needImport, cachedHandle, cachedHandlePtr, cachedTpn);
+    if (ret != HCCL_SUCCESS) {
+        THROW<InternalException>("[DevUbConnection][%s] acquire shared remote jetty failed, ret[%d].", __func__, ret);
+    }
+
+    if (cachedHandle != 0) {
+        SetSharedRemoteJettyInfo(cachedHandle, cachedHandlePtr, cachedTpn);
+        return;
+    }
+    if (needImport) {
+        ImportJetty();
+        ubConnStatus = UbConnStatus::JETTY_IMPORTING;
+        HCCL_INFO("[DevUbConnection][%s] start shared remote jetty import.", __func__);
+        return;
+    }
+    // 进入 WAITING：记录起始时刻，供 AdvanceUbConnFromJettyImportWaiting 做超时判断
+    if (ubConnStatus != UbConnStatus::JETTY_IMPORT_WAITING) {
+        importWaitingStart_ = std::chrono::steady_clock::now();
+        importWaitingPollCount_ = 0;
+    }
+    ubConnStatus = UbConnStatus::JETTY_IMPORT_WAITING;
+}
+
 void DevUbConnection::ReleaseTp()
 {
     ReleaseUbConnectionTp(devLogicId, locAddr, rmtAddr, tpProtocol, tpInfo, static_cast<uint32_t>(qos_));
@@ -639,7 +773,11 @@ void DevUbConnection::ReleaseTp()
 
 void DevUbConnection::ReleaseRemoteJettyIfImported(bool ctxValid)
 {
-    if (!rdmaHandle || remoteJettyHandle == 0) {
+    // EXTERNAL_INJECT 模式（主 connection）：远端 jetty 由 JettyContext 统一 unimport，不在此处理
+    if (jettyMode_ == JettyMode::EXTERNAL_INJECT) {
+        return;
+    }
+    if (remoteJettyHandle == 0) {
         return;
     }
     if (!ctxValid) {
@@ -655,29 +793,17 @@ void DevUbConnection::ReleaseRemoteJettyIfImported(bool ctxValid)
 
 void DevUbConnection::ReleaseSharedJettyModeResources(bool ctxValid)
 {
-    // 共享 jetty 模式：jetty 由 Endpoint::sharedJettyCtx_ 统一管理，connection 不销毁 jetty，
-    // 但需通过 releaseCb_ 通知 Endpoint 减引用计数（引用归 0 时由 Endpoint 销毁 jetty）
-    // 主 connection（InjectSharedJetty 路径，releaseCb_ 非空）：构造函数创建的 JFC 从未被
-    // CreateJetty 使用，安全销毁避免泄漏。
-    // 临时 connection（TransferJettyOwnership 路径，releaseCb_ 为空）：JFC 被 jetty 绑定使用，
-    // 需等 Endpoint 销毁共享 jetty 后统一释放，不在此时销毁。
-    if (releaseCb_ != nullptr && engine_ == COMM_ENGINE_AIV && jfcHandle != 0) {
-        if (!ctxValid) {
-            HCCL_WARNING(
-                "[DevUbConnection][%s] skip HrtRaUbDestroyJfc (shared), "
-                "rdmaHandle=%p invalid, jfcHandle=0x%llx",
-                __func__, rdmaHandle, static_cast<unsigned long long>(jfcHandle));
-        } else {
-            HrtRaUbDestroyJfc(rdmaHandle, jfcHandle);
-        }
-        jfcHandle = 0;
-    }
+    // EXTERNAL_INJECT 模式（主 connection）：构造时跳过 JFC/jetty 创建，jetty + JFC + CQ 全部由
+    // JettyContext 统一管理，connection 不销毁。通过 releaseCb_ 通知 Endpoint 减引用计数
+    // （refCount 归 0 时 JettyContext 销毁共享资源）。
     jettyHandle = 0;
+    jfcHandle = 0;
     if (releaseCb_) {
         releaseCb_(endpointTag_);
         releaseCb_ = nullptr;
     }
-    HCCL_INFO("[DevUbConnection][%s] shared jetty mode, skip DestroyJetty, releaseCb invoked.", __func__);
+    HCCL_INFO("[DevUbConnection][%s] EXTERNAL_INJECT mode, skip DestroyJetty, releaseCb invoked.", __func__);
+    (void)ctxValid; // EXTERNAL_INJECT 模式无私有 JFC 需销毁，ctxValid 不影响
 }
 
 void DevUbConnection::ReleaseOwnedJettyAndJfc(bool ctxValid)
@@ -712,10 +838,22 @@ void DevUbConnection::ReleaseResource()
     const bool ctxValid = (rdmaHandle != nullptr) && RdmaHandleManager::GetInstance().IsHandleValid(rdmaHandle);
 
     ReleaseRemoteJettyIfImported(ctxValid);
-    ReleaseTp();
 
-    if (isSharedJetty_) {
+    if (releaseTpOnDestroy_) {
+        ReleaseTp();
+    }
+
+    // EXTERNAL_INJECT 模式（主 connection）：jetty/JFC 由 JettyContext 统一管理，调 releaseCb_ 减引用
+    if (jettyMode_ == JettyMode::EXTERNAL_INJECT) {
         ReleaseSharedJettyModeResources(ctxValid);
+        return;
+    }
+
+    // SELF_CREATE + DetachJetty（临时 connection）：jetty/JFC 所有权已移交给 JettyContext，不销毁
+    if (jettyDetached_) {
+        HCCL_INFO("[DevUbConnection][%s] SELF_CREATE + DetachJetty, skip DestroyJetty/Jfc.", __func__);
+        jettyHandle = 0;
+        jfcHandle = 0;
         return;
     }
 

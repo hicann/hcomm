@@ -12,7 +12,6 @@
 #define ENDPOINT_H
 
 #include <memory>
-#include <mutex>
 #include <functional>
 #include <vector>
 #include <string>
@@ -24,45 +23,22 @@
 #include "hccp_hdc_manager.h"
 #include "hcomm_nic_plugin.h"
 #include "proc_reged_mem_mgr_cache.h"
+#include "jetty_context.h"
+#include "dfx/endpoint_monitor.h"
 
 namespace hcomm {
 class EndpointMonitor;
 /**
  * @note 职责：通信设备Endpoint的C++抽象接口类，管理通信设备上下文，以及设备上的注册内存。
- *       共享 Jetty 上下文也归属本类管理（"同一 EndpointHandle 共享一个 Jetty"），
- *       IS_SHARED_QUEUE=true 时，本 endpoint 下创建的 channel 复用 sharedJettyCtx_ 中的 jetty 句柄。
+ *       共享 Jetty 数据面资源（jetty 句柄 / QP key / PI·CI / JFC / 远端 jetty 缓存）内聚于
+ *       JettyContext，Endpoint 持 unique_ptr 延迟创建，控制面职责不因共享 jetty 特性膨胀。
+ *       IS_SHARED_QUEUE=true 时，本 endpoint 下创建的 channel 复用 jettyContext_ 中的 jetty 句柄。
  */
 class Endpoint {
 public:
-    /**
-     * @brief 共享 Jetty 上下文：缓存的本地 jetty 句柄及其衍生字段，供同 endpoint 下多 channel 复用。
-     */
-    struct SharedJettyCtx {
-        Hccl::JettyHandle handle{0};
-        void* handlePtr{nullptr};
-        uint32_t jettyId{0};
-        uint64_t sqBuffVa{0};
-        uint64_t dbAddr{0};
-        uint8_t localQpKey[Hccl::HRT_UB_QP_KEY_MAX_LEN]{0};
-        uint32_t keySize{0};
-        uint32_t sqDepth{0};
-        uint64_t tpHandle{0};
-        uint32_t refCount{0};
-        bool valid{false};    // 是否已填充有效 jetty
-        bool creating{false}; // 是否正在首次创建中（用于并发等待）
-        // 共享 SQ/CQ 的 PI/CI 索引内存（device 侧），同 endpoint 下多 channel 共用，
-        // 避免各 channel 各自分配 PI/CI 指向同一 SQ 导致生产者索引无法协调前进。
-        void* sqPiPtr{nullptr};
-        void* sqCiPtr{nullptr};
-        void* cqPiPtr{nullptr};
-        void* cqCiPtr{nullptr};
-        uint64_t queueIndexMemSize{0}; // 单段 PI/CI 内存字节数
-        // 临时 connection 创建的 JFC 及其关联的 RDMA 句柄，由 Endpoint 在销毁共享 jetty 时统一销毁。
-        // 临时 connection 走 TransferJettyOwnership 路径（releaseCb_ 为空），ReleaseResource 不销毁 JFC，
-        // 需由 Endpoint 接管 ownership 防止设备资源泄漏。
-        void* rdmaHandle{nullptr};
-        uint64_t jfcHandle{0};
-    };
+    // 兼容别名：历史代码直接引用 Endpoint::SharedJettyCtx，实际为 JettyContext::Ctx 视图
+    using SharedJettyCtx = JettyContext::Ctx;
+    using SharedRemoteJettyCtx = JettyContext::SharedRemoteJettyCtx;
 
     explicit Endpoint(const EndpointDesc& endpointDesc);
 
@@ -130,6 +106,16 @@ public:
     HcclResult AcquireSharedJetty(const std::function<HcclResult(SharedJettyCtx&)>& provideCtx, SharedJettyCtx& outCtx);
     /** 释放共享 jetty 引用，refCount-- 归 0 时销毁 jetty 并清空 ctx */
     HcclResult ReleaseSharedJetty();
+
+    HcclResult AcquireSharedRemoteJetty(
+        const uint8_t* remoteQpKey, uint32_t keySize, bool& needImport, uint64_t& handle, void*& handlePtr,
+        uint32_t& tpn);
+    HcclResult PublishSharedRemoteJetty(
+        const uint8_t* remoteQpKey, uint32_t keySize, uint64_t handle, void* handlePtr, uint32_t tpn);
+
+    /** 延迟创建并获取 JettyContext（首次调用创建，后续返回已有） */
+    JettyContext* GetJettyContext();
+
     // ------------------ NIC插件相关 ------------------
     void SetNicEndpointCtx(HcommNicEndpointOps* nicOps, void* nicCtx)
     {
@@ -147,18 +133,16 @@ public:
 
 protected:
     static HcclResult CreateEndpointBase(const EndpointDesc& endpointDesc, std::unique_ptr<Endpoint>& endpointPtr);
-    void DestroySharedJettyRaResources(SharedJettyCtx& ctx, Hccl::RdmaHandle rdmaHandle, bool ctxValid) const;
-    void FreeSharedJettyPtrs(SharedJettyCtx& ctx) const;
     // Init 成功后持有 Cache GetHolder 拷贝；析构走 ReleaseCache，不要再调 GetHolder()。
     HcclResult AttachCache(const MemMgrCacheKey& key, std::function<std::shared_ptr<RegedMemMgr>()> creator);
     void ReleaseCache();
     void* ctxHandle_{nullptr};
     std::shared_ptr<RegedMemMgr> regedMemMgr_{};
     EndpointDesc endpointDesc_;
+    std::once_flag jettyContextOnce_;
 
-    // 共享 jetty 上下文及保护锁，仅 IS_SHARED_QUEUE=true 时使用
-    mutable std::mutex sharedJettyMtx_;
-    SharedJettyCtx sharedJettyCtx_{};
+    // 共享 jetty 数据面资源内聚于 JettyContext，延迟创建，控制面职责不膨胀
+    std::unique_ptr<JettyContext> jettyContext_{nullptr};
     HcommNicEndpointOps* nicOps_{nullptr};
     void* nicCtx_{nullptr};
     MemMgrCacheKey cacheKey_{};

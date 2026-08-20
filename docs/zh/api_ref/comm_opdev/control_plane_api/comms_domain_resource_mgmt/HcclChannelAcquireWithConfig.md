@@ -62,6 +62,7 @@ HcclResult HcclChannelAcquireWithConfig(HcclComm comm, CommEngine engine,
    - 必须设置SHARED_QUEUE_TAG（非空字符串）。
    - channelDescs中所有元素的localEndpoint必须相同（复用的Jetty只能关联一个endpoint）。
    - 仅支持V2通信器（需通过HcclCommInitClusterInfoConfig等V2接口创建通信域）。
+   - 共享Jetty的不同Channel不支持并发使用，需由调用者按业务顺序串行调用。
 
 4. 共享Jetty模式下，相同tag+endpointPair的Channel复用规则：
    - 重复调用时，若已有Channel数量不足则创建新的补充，足够则直接按序返回已有Channel。

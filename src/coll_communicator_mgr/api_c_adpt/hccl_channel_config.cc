@@ -9,6 +9,7 @@
  */
 
 #include "hccl_channel_config.h"
+#include "hccl/hccl_channel.h"
 #include "log.h"
 #include "exception_handler.h"
 
@@ -25,6 +26,10 @@ HcclResult HcclChannelConfigDestroy(HcclChannelConfig config)
         return HCCL_SUCCESS;
     }
     auto* cfg = static_cast<hccl::HcclChannelConfigData*>(config);
+    if (cfg->destroyed_.exchange(true)) {
+        HCCL_WARNING("[%s] config[%p] is already destroyed, skip to avoid double-free.", __func__, config);
+        return HCCL_SUCCESS;
+    }
     delete cfg;
     return HCCL_SUCCESS;
 }
@@ -52,6 +57,12 @@ HcclResult HcclChannelConfigSetStr(HcclChannelConfig config, HcclChannelConfigTy
     auto* cfg = static_cast<hccl::HcclChannelConfigData*>(config);
     switch (type) {
         case HCCL_CHANNEL_CONFIG_TYPE_SHARED_QUEUE_TAG:
+            CHK_PRT_RET(
+                strlen(value) == 0 || strlen(value) > HCCL_CHANNEL_CONFIG_SHARED_QUEUE_TAG_MAX_LEN,
+                HCCL_ERROR(
+                    "[%s] SHARED_QUEUE_TAG length[%zu] must be in (0, %u].", __func__, strlen(value),
+                    HCCL_CHANNEL_CONFIG_SHARED_QUEUE_TAG_MAX_LEN),
+                HCCL_E_PARA);
             cfg->sharedQueueTag = std::string(value);
             HCCL_INFO("[%s] set SHARED_QUEUE_TAG=%s.", __func__, cfg->sharedQueueTag.c_str());
             break;

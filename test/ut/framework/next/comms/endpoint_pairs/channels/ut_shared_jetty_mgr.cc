@@ -4,7 +4,7 @@
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
@@ -187,4 +187,36 @@ TEST_F(SharedJettyMgrTest, Ut_HasContext_When_HasContext_Expect_True)
     ChannelHandle channels[] = {0x1000};
     ASSERT_EQ(SharedJettyMgr::GetInstance().RegisterChannels(ep, channels, 1), HCCL_SUCCESS);
     EXPECT_TRUE(SharedJettyMgr::GetInstance().HasContext(ep));
+}
+
+TEST_F(SharedJettyMgrTest, Ut_UnregisterEndpoint_When_NoContext_Expect_Noop)
+{
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    SharedJettyMgr::GetInstance().UnregisterEndpoint(ep);
+    EXPECT_FALSE(SharedJettyMgr::GetInstance().HasContext(ep));
+}
+
+TEST_F(SharedJettyMgrTest, Ut_UnregisterEndpoint_When_HasContext_Expect_Removed)
+{
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    ChannelHandle channels[] = {0x1000};
+    ASSERT_EQ(SharedJettyMgr::GetInstance().RegisterChannels(ep, channels, 1), HCCL_SUCCESS);
+    EXPECT_TRUE(SharedJettyMgr::GetInstance().HasContext(ep));
+
+    SharedJettyMgr::GetInstance().UnregisterEndpoint(ep);
+    EXPECT_FALSE(SharedJettyMgr::GetInstance().HasContext(ep));
+}
+
+TEST_F(SharedJettyMgrTest, Ut_UnregisterEndpoint_When_OnlyRemovesSpecifiedEndpoint_Expect_OthersUntouched)
+{
+    EndpointHandle ep1 = reinterpret_cast<EndpointHandle>(0x1);
+    EndpointHandle ep2 = reinterpret_cast<EndpointHandle>(0x2);
+    ChannelHandle ch1[] = {0x1000};
+    ChannelHandle ch2[] = {0x2000};
+    ASSERT_EQ(SharedJettyMgr::GetInstance().RegisterChannels(ep1, ch1, 1), HCCL_SUCCESS);
+    ASSERT_EQ(SharedJettyMgr::GetInstance().RegisterChannels(ep2, ch2, 1), HCCL_SUCCESS);
+
+    SharedJettyMgr::GetInstance().UnregisterEndpoint(ep1);
+    EXPECT_FALSE(SharedJettyMgr::GetInstance().HasContext(ep1));
+    EXPECT_TRUE(SharedJettyMgr::GetInstance().HasContext(ep2));
 }

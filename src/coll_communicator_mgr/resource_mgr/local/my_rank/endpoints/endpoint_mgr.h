@@ -12,6 +12,7 @@
 #define ENDPOINT_MGR_H
 
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
 #include <mutex>
@@ -60,6 +61,10 @@ public:
     // 获取端点
     HcclResult Get(EndpointDesc epDesc, EndpointHandle& handle);
 
+    // 获取端点（按 sharedQueueTag 区分）：共享 jetty 场景下不同 tag 创建独立 Endpoint，
+    // 实现不同 tag 隔离底层 jetty 资源。tag 为空时退化为 Get（兼容非共享路径）。
+    HcclResult GetWithTag(EndpointDesc epDesc, const std::string& sharedQueueTag, EndpointHandle& handle);
+
     // 注册内存到端点，若 commMemsVersion 与上次注册时一致则跳过
     HcclResult RegisterMemory(
         EndpointHandle epHandle, const std::vector<std::string>& memTag, const std::vector<HcclMem>& memVec,
@@ -75,7 +80,41 @@ public:
 private:
     bool IsDescExist(EndpointDesc epDesc);
 
-private:
+    // 共享 jetty 场景按 sharedQueueTag 区分的 Endpoint 映射 key： (EndpointDesc, tag)。
+    // 字段级 hash/compare，规避 EndpointDesc padding 字段未初始化导致的误判（与 EndpointDescPairHash 同思路）。
+    struct EndpointDescTagKey {
+        EndpointDesc desc;
+        std::string tag;
+    };
+    struct EndpointDescTagHash {
+        std::size_t operator()(const EndpointDescTagKey& k) const noexcept
+        {
+            std::string buf;
+            buf.append(reinterpret_cast<const char*>(&k.desc.protocol), sizeof(k.desc.protocol));
+            buf.append(reinterpret_cast<const char*>(&k.desc.commAddr.type), sizeof(k.desc.commAddr.type));
+            buf.append(reinterpret_cast<const char*>(k.desc.commAddr.raws), sizeof(k.desc.commAddr.raws));
+            buf.append(reinterpret_cast<const char*>(&k.desc.loc.locType), sizeof(k.desc.loc.locType));
+            buf.append(reinterpret_cast<const char*>(k.desc.loc.raws), sizeof(k.desc.loc.raws));
+            buf.append(k.tag);
+            return std::hash<std::string>{}(buf);
+        }
+    };
+    struct EndpointDescTagEqual {
+        bool operator()(const EndpointDescTagKey& a, const EndpointDescTagKey& b) const noexcept
+        {
+            return a.tag == b.tag && a.desc.protocol == b.desc.protocol && a.desc.commAddr.type == b.desc.commAddr.type
+                   && std::memcmp(a.desc.commAddr.raws, b.desc.commAddr.raws, sizeof(a.desc.commAddr.raws)) == 0
+                   && a.desc.loc.locType == b.desc.loc.locType
+                   && std::memcmp(a.desc.loc.raws, b.desc.loc.raws, sizeof(a.desc.loc.raws)) == 0;
+        }
+    };
+
+    // 共享 jetty 场景按 sharedQueueTag 区分的 Endpoint 映射。
+    // 同一 EndpointDesc + 不同 tag → 不同 EndpointHandle → 不同底层 jetty 资源。
+    // tag 为空时不进入此 map，退化为 endpointMap_ 行为（兼容非共享路径）。
+    std::unordered_map<EndpointDescTagKey, EndpointHandle, EndpointDescTagHash, EndpointDescTagEqual>
+        taggedEndpointMap_{};
+
     std::unordered_map<EndpointDesc, EndpointHandle> endpointMap_{};
     std::unordered_map<EndpointHandle, TaggedMemMap> endpointTagMemMap_{};
     std::mutex mutex_{};

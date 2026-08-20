@@ -4,7 +4,7 @@
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
@@ -18,7 +18,6 @@
 #include <unordered_map>
 #include "hccl/hccl_types.h"
 #include "hcomm_res_defs.h"
-#include "hcomm_channel.h"
 
 namespace hcomm {
 
@@ -27,8 +26,13 @@ namespace hcomm {
  *       当 IS_SHARED_QUEUE=true 时，HcommChannelCreateWithConfig 通过本管理器注册 Channel，
  *       HcommChannelDestroy 通过本管理器注销 Channel，
  *       HcommEndpointDestroy 通过本管理器校验所有共享 Jetty 的 Channel 是否已销毁。
- *       底层 jetty 句柄的缓存与引用计数由 Endpoint::sharedJettyCtx_ 管理（见 endpoint.h），
+ *
+ *       endpointHandle 作为不透明 key（builtin 路径为 Endpoint*，plugin 路径为 PluginEndpointCtx*），
+ *       本管理器不做 static_cast 解引用，plugin/builtin 路径均安全。
+ *       底层 jetty 句柄的缓存与引用计数由 Endpoint::JettyContext 管理（见 endpoint.h），
  *       本管理器仅维护 channelHandle 集合用于销毁校验，不持有 jetty 句柄。
+ *
+ *       Endpoint/plugin 析构时调 UnregisterEndpoint 摘除记录，避免 endpointHandle 复用导致误判。
  */
 class SharedJettyMgr {
 public:
@@ -41,7 +45,7 @@ public:
 
     /**
      * @brief 注册 Channel 到共享 Jetty 上下文
-     * @param[in] endpointHandle Endpoint 句柄
+     * @param[in] endpointHandle Endpoint 句柄（不透明 key，builtin 为 Endpoint*，plugin 为 PluginEndpointCtx*）
      * @param[in] channels 要注册的 Channel 句柄数组
      * @param[in] channelNum Channel 数量
      * @return HcclResult 执行结果
@@ -58,7 +62,7 @@ public:
 
     /**
      * @brief 校验 Endpoint 是否可以销毁（所有共享 Jetty 的 Channel 已销毁）
-     * @param[in] endpointHandle Endpoint 句柄
+     * @param[in] endpointHandle Endpoint 句柄（不透明 key）
      * @return HcclResult HCCL_SUCCESS 表示可以销毁，HCCL_E_UNAVAIL 表示仍有 Channel 未销毁
      */
     HcclResult CheckEndpointDestroy(EndpointHandle endpointHandle);
@@ -67,6 +71,12 @@ public:
      * @brief 判断 Endpoint 是否已存在共享 Jetty 上下文
      */
     bool HasContext(EndpointHandle endpointHandle);
+
+    /**
+     * @brief Endpoint/plugin 析构时摘除该 endpointHandle 的注册记录，避免句柄复用误判
+     * @note builtin 路径由 Endpoint::~Endpoint 调用，plugin 路径由 DestroyPluginEndpoint 调用
+     */
+    void UnregisterEndpoint(EndpointHandle endpointHandle);
 
 private:
     SharedJettyMgr() = default;

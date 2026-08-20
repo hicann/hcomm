@@ -403,7 +403,8 @@ HcclResult AivUrmaChannel::BuildAttr()
 }
 
 HcclResult AivUrmaChannel::CreateUbConnectionByProtocol(
-    const UbConnBuildContext& ctx, std::unique_ptr<Hccl::DevUbConnection>& ubConn)
+    const UbConnBuildContext& ctx, std::unique_ptr<Hccl::DevUbConnection>& ubConn,
+    Hccl::DevUbConnection::JettyMode jettyMode)
 {
     Hccl::OpMode opMode = Hccl::OpMode::OPBASE;
     bool devUsed = true;
@@ -413,21 +414,21 @@ HcclResult AivUrmaChannel::CreateUbConnectionByProtocol(
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbTpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, Hccl::IpAddress(),
-                    Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AIV, ctx.sqDepth),
+                    Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AIV, ctx.sqDepth, jettyMode),
                 return HCCL_E_PTR);
             break;
         case Hccl::LinkProtocol::UB_CTP:
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbCtpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, Hccl::IpAddress(),
-                    Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AIV, ctx.sqDepth),
+                    Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AIV, ctx.sqDepth, jettyMode),
                 return HCCL_E_PTR);
             break;
         case Hccl::LinkProtocol::UB_RTP:
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbRtpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, ctx.locAddr, ctx.rmtAddr,
-                    ctx.qosPre, COMM_ENGINE_AIV, ctx.sqDepth),
+                    ctx.qosPre, COMM_ENGINE_AIV, ctx.sqDepth, jettyMode),
                 return HCCL_E_PTR);
             break;
         default:
@@ -447,13 +448,39 @@ AivUrmaChannel::AcquireSharedJettyInBuildConnection(const UbConnBuildContext& ct
         // 与主 switch 保持对称的协议判断，避免 UB_RTP/未知协议误降级为 CTP
         switch (protocol) {
             case Hccl::LinkProtocol::UB_TP:
-                return std::make_unique<Hccl::DevUbTpConnection>(
-                    rdmaHandle, ctxLoc, ctxRmt, Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL,
-                    Hccl::IpAddress(), Hccl::IpAddress(), qosPre, COMM_ENGINE_AIV, sqDepth);
-            case Hccl::LinkProtocol::UB_CTP:
-                return std::make_unique<Hccl::DevUbCtpConnection>(
-                    rdmaHandle, ctxLoc, ctxRmt, Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL,
-                    Hccl::IpAddress(), Hccl::IpAddress(), qosPre, COMM_ENGINE_AIV, sqDepth);
+                // 与主路径 CreateUbConnectionByProtocol 一致：构造可能抛异常，捕获后返回 nullptr，
+                // 使 ProvideSharedJettyCtx 经 CHK_SMART_PTR_NULL 返回错误码，避免异常逃逸出
+                // JettyContext::Acquire 导致 creating 标记残留、其他等待线程超时死锁。
+                {
+                    std::unique_ptr<Hccl::DevUbConnection> conn;
+                    EXCEPTION_CATCH(
+                        conn = std::make_unique<Hccl::DevUbTpConnection>(
+                            rdmaHandle, ctxLoc, ctxRmt, Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL,
+                            Hccl::IpAddress(), Hccl::IpAddress(), qosPre, COMM_ENGINE_AIV, sqDepth),
+                        return nullptr);
+                    return conn;
+                }
+            case Hccl::LinkProtocol::UB_CTP: {
+                std::unique_ptr<Hccl::DevUbConnection> conn;
+                EXCEPTION_CATCH(
+                    conn = std::make_unique<Hccl::DevUbCtpConnection>(
+                        rdmaHandle, ctxLoc, ctxRmt, Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL,
+                        Hccl::IpAddress(), Hccl::IpAddress(), qosPre, COMM_ENGINE_AIV, sqDepth),
+                    return nullptr);
+                return conn;
+            }
+            case Hccl::LinkProtocol::UB_RTP:
+                // 与主路径 CreateUbConnectionByProtocol 保持对称；当前共享 jetty 限制 UB_CTP/UBC_TP
+                // 不会到达此分支，若放开 IsSharedQueueUbProtocol 限制须三者联动
+                {
+                    std::unique_ptr<Hccl::DevUbConnection> conn;
+                    EXCEPTION_CATCH(
+                        conn = std::make_unique<Hccl::DevUbRtpConnection>(
+                            rdmaHandle, ctxLoc, ctxRmt, Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL,
+                            ctxLoc, ctxRmt, qosPre, COMM_ENGINE_AIV, sqDepth),
+                        return nullptr);
+                    return conn;
+                }
             default:
                 HCCL_ERROR(
                     "[AivUrmaChannel][tempFactory] unsupported protocol[%s], return nullptr.",
@@ -477,8 +504,11 @@ HcclResult AivUrmaChannel::BuildConnection()
     CHK_RET(PrepareUbConnBuildContext(localEp_, remoteEp_, channelDesc_, ctx));
     CHK_RET(CheckUbSqDepth(ctx, devBaseAttr_));
 
+    // 共享 jetty 模式：主 connection 构造时传 EXTERNAL_INJECT，跳过建 JFC/jetty，等 SetSharedJettyFields 填充
+    auto jettyMode = IsSharedJetty() ? Hccl::DevUbConnection::JettyMode::EXTERNAL_INJECT :
+                                       Hccl::DevUbConnection::JettyMode::SELF_CREATE;
     std::unique_ptr<Hccl::DevUbConnection> ubConn = nullptr;
-    CHK_RET(CreateUbConnectionByProtocol(ctx, ubConn));
+    CHK_RET(CreateUbConnectionByProtocol(ctx, ubConn, jettyMode));
     CHK_SMART_PTR_NULL(ubConn);
 
     // 共享 jetty 模式：复用同 Endpoint 下已创建的 jetty。

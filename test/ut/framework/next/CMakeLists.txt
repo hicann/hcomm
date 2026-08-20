@@ -104,6 +104,7 @@ set(src_to_test_list
     comms/endpoint_pairs/channels/ut_shared_jetty_mgr.cc
     comms/endpoint_pairs/channels/ut_shared_jetty_connection_adapter.cc
     comms/endpoint_pairs/channels/ut_shared_jetty_channel_helper.cc
+    comms/endpoints/reged_mems/ut_jetty_context.cc
     coll_comms/rank/ut_shared_jetty_channel_pool.cc
     coll_comms/rank_graphs/common/ut_conn_interface.cc
     coll_comms/rank_graphs/common/ut_graph.cc

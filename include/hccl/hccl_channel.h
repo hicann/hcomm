@@ -131,6 +131,9 @@ extern HcclResult HcclChannelAcquire(
  */
 typedef void* HcclChannelConfig;
 
+static const uint32_t HCCL_CHANNEL_CONFIG_SHARED_QUEUE_TAG_MAX_LEN
+    = 255U; ///< SHARED_QUEUE_TAG最大长度（字节），与HCCL_RES_TAG_MAX_LEN一致
+
 /**
  * @brief Channel 配置属性类型枚举
  *        通过 HcclChannelConfigSetInt / HcclChannelConfigSetStr 设置。
@@ -143,7 +146,8 @@ typedef enum {
     HCCL_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE = 0,
     /** 1: SHARED_QUEUE_TAG (string)。
      *    仅 IS_SHARED_QUEUE=true 时有效，指定创建 channel 的 tag。
-     *    重复调用时，使用相同 tag 创建出的 channel 共享一个 jetty。 */
+     *    重复调用时，使用相同 tag 创建出的 channel 共享一个 jetty。
+     *    以'\0'结尾，最大字符长度为HCCL_CHANNEL_CONFIG_SHARED_QUEUE_TAG_MAX_LEN。 */
     HCCL_CHANNEL_CONFIG_TYPE_SHARED_QUEUE_TAG = 1,
 } HcclChannelConfigType;
 

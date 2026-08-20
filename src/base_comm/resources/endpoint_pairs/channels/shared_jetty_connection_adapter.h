@@ -4,7 +4,7 @@
  * CANN Open Software License Agreement Version 2.0 (the "License").
  * Please refer to the License for details. You may not use this file except in compliance with the License.
  * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
- * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+ * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
@@ -28,26 +28,26 @@ namespace hcomm {
  */
 
 /**
- * @brief 注入共享 jetty 到 connection（命中复用路径）
- * @param[in] rawConnection 不透明 connection 指针
+ * @brief 填充共享 jetty 字段到 EXTERNAL_INJECT 模式的 connection（命中复用路径）
+ * @param[in] rawConnection 不透明 connection 指针（构造时传 JettyMode::EXTERNAL_INJECT）
  * @param[in] ctx 已创建/复用的共享 jetty 上下文
  * @param[in] endpointTag Endpoint 不透明标签（透传给 releaseCb）
  * @param[in] releaseCb connection 销毁时回调（由调用方注入 Endpoint::ReleaseSharedJetty）
  */
-HcclResult InjectSharedJettyToConn(
+HcclResult SetSharedJettyFieldsToConn(
     void* rawConnection, const Endpoint::SharedJettyCtx& ctx, void* endpointTag, std::function<void(void*)> releaseCb);
 
 /**
  * @brief 从已完成 jetty 创建的 connection 提取衍生字段（首次创建路径）
  * @param[in] rawConnection 不透明 connection 指针
- * @param[out] ctx 输出的 jetty 上下文（仅 jetty 相关字段，refCount 不填）
+ * @param[out] ctx 输出的 jetty 上下文（仅 jetty 相关字段, refCount 不填）
  */
 HcclResult ExtractJettyInfoFromConn(void* rawConnection, Endpoint::SharedJettyCtx& ctx);
 
 /**
- * @brief 标记 connection 转交 jetty 所有权，析构不再销毁 jetty（首次创建后调用）
+ * @brief 分离 connection 的 jetty 所有权，析构不再销毁 jetty（首次创建后调用）
  */
-HcclResult TransferConnJettyOwnership(void* rawConnection);
+HcclResult DetachConnJetty(void* rawConnection);
 
 } // namespace hcomm
 

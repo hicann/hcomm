@@ -11,6 +11,7 @@
 #ifndef CHANNEL_CONFIG_H
 #define CHANNEL_CONFIG_H
 
+#include <atomic>
 #include <cstdint>
 #include "hcomm_res_defs.h"
 #include "hcomm_channel.h"
@@ -23,6 +24,7 @@ namespace hcomm {
  */
 struct HcommChannelConfigData {
     bool isSharedQueue{false};
+    std::atomic<bool> destroyed_{false};
 };
 
 HcommResult ChannelConfigCreate(HcommChannelConfig* config);
