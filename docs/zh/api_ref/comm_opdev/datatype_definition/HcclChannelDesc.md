@@ -22,8 +22,8 @@ typedef struct {
             uint32_t queueNum;        /* QP数量，当前仅支持一个QP */
             uint32_t retryCnt;        /* 最大重传次数，范围为0~7，默认为7 */
             uint32_t retryInterval;   /* 重传间隔，范围为5~24，默认为20(对应时间4.096*2^20us) */
-            uint8_t tc;               /* 流量类别(QoS)，范围为0~255，默认为132 */
-            uint8_t sl;               /* 服务等级(QoS)，范围为0~7，默认为4 */
+            uint8_t tc;               /* 流量类别(QoS)，范围为0~255，默认为132, 仅Atlas A2 训练系列产品/Atlas A2 推理系列产品、Atlas A3 训练系列产品/Atlas A3 推理系列产品支持 */
+            uint8_t sl;               /* 服务等级(QoS)，范围为0~7，默认为4, 仅Atlas A2 训练系列产品/Atlas A2 推理系列产品、Atlas A3 训练系列产品/Atlas A3 推理系列产品支持 */
         } roceAttr;
         struct {
             uint8_t pathMode;         /* UB_MEM访问路径模式，取值范围：0、1、2和0xFF(默认值为0，配置为0xFF时按照0处理）。0：自动模式(优先单路径，若无则使用多路径），1：强制单路径模式，2：强制多路径模式 */
