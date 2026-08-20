@@ -463,7 +463,10 @@ void TaskExceptionHandler::ProcessCcuMC2Exception(rtExceptionInfo_t* exceptionIn
             missionInfo.subStatus);
         exDieIds.insert(missionInfo.dieId);
         uint16_t status = static_cast<uint16_t>(missionInfo.status) << BYTE | missionInfo.subStatus;
-        // 打印寄存器信息
+        if (status == 0) {
+            HCCL_INFO("CCU exception status is 0, no need to process.");
+            continue;
+        }
         PrintPanicLogInfo(missionInfo.panicLog);
 
         auto serverTaskInfo = MC2GlobalMirrorTasks::GetInstance().GetTaskInfo(
@@ -474,6 +477,8 @@ void TaskExceptionHandler::ProcessCcuMC2Exception(rtExceptionInfo_t* exceptionIn
                 missionInfo.dieId, missionInfo.missionId, missionInfo.instrId);
             continue;
         }
+
+        DisplayRPCMsg(*serverTaskInfo);
         ParaCcu serverParam = serverTaskInfo->taskParam_.taskPara.Ccu;
         serverParam.execMissionId = missionInfo.missionId;
         vector<CcuErrorInfo> serverErrorInfos{};
@@ -1166,6 +1171,26 @@ string TaskExceptionHandler::GetCcuErrorMsgByType(const CcuErrorInfo& ccuErrorIn
     } else {
         return funcIt->second(ccuErrorInfo, taskInfo);
     }
+}
+
+void TaskExceptionHandler::DisplayRPCMsg(const TaskInfo& taskInfo)
+{
+    if (taskInfo.taskParam_.taskType != TaskParamType::TASK_CCU) {
+        HCCL_ERROR("[TaskInfo][%s]Get MC2 Alg TaskParam failed, task type error.", __func__);
+        return;
+    }
+    if (taskInfo.dfxOpInfo_ == nullptr || taskInfo.dfxOpInfo_->comm_ == nullptr) {
+        HCCL_ERROR("[TaskInfo][%s]Get MC2 Alg TaskParam failed, communicator is nullptr.", __func__);
+        return;
+    }
+    const CommunicatorImpl* communicator = static_cast<CommunicatorImpl*>(taskInfo.dfxOpInfo_->comm_);
+    auto* collServiceBase = communicator->GetCcuCollService();
+    if (collServiceBase == nullptr) {
+        HCCL_ERROR("[TaskInfo][%s]Failed to get collService from communicator.", __func__);
+        return;
+    }
+    auto* collServiceCcu = static_cast<CollServiceDeviceMode*>(collServiceBase);
+    collServiceCcu->GetMc2Compont().DisplayRPCMsg();
 }
 
 RankId TaskExceptionHandler::GetRankIdByChannelId(uint16_t channelId, const TaskInfo& taskInfo)

@@ -17,6 +17,7 @@
 #include "coll_service_device_mode.h"
 #include "mc2_global_mirror_tasks.h"
 #include "op_params_checker.h"
+#include "runtime_api_exception.h"
 
 namespace Hccl {
 
@@ -589,6 +590,51 @@ void Mc2Compont::GenerateCcuServer(const std::unordered_set<uint64_t>& algoTempl
     ccuServerMap[execId] = algoTemplateRequire;
     curExecId = execId;
     HCCL_INFO("GenerateCcuServer success, execId[%llu]", execId);
+}
+
+void Mc2Compont::DisplayRPCMsg() const
+{
+    void* xnAddr = nullptr;
+    try {
+        xnAddr = HrtMallocHost(comParamBuffer->GetSize() + comSyncBuffer->GetSize());
+        void* ckeAddr = reinterpret_cast<uint8_t*>(xnAddr) + comParamBuffer->GetSize();
+        HrtMemcpy(
+            xnAddr, comParamBuffer->GetSize(), reinterpret_cast<uint8_t*>(comParamBuffer->GetAddr()),
+            comParamBuffer->GetSize(), RT_MEMCPY_DEVICE_TO_HOST);
+        HrtMemcpy(
+            ckeAddr, comSyncBuffer->GetSize(), reinterpret_cast<uint8_t*>(comSyncBuffer->GetAddr()),
+            comSyncBuffer->GetSize(), RT_MEMCPY_DEVICE_TO_HOST);
+    } catch (const RuntimeApiException& e) {
+        HCCL_ERROR("[Mc2Compont:%s] host memory operation fail: %s", __func__, e.what());
+        if (xnAddr != nullptr) {
+            HrtFreeHost(xnAddr);
+        }
+        return;
+    }
+    void* ckeAddr = reinterpret_cast<uint8_t*>(xnAddr) + comParamBuffer->GetSize();
+    uint64_t* xnBaseAddr = reinterpret_cast<uint64_t*>(xnAddr);
+    uint64_t* waitCkeAddr = reinterpret_cast<uint64_t*>(ckeAddr);
+    uint64_t* setCkeAddr = reinterpret_cast<uint64_t*>(ckeAddr) + CCU_TASK_NUM_MAX;
+    uint32_t xnNumPerMsg = CCU_PARAM_NUM_MAX;
+    for (uint32_t msgId = 0; msgId < CCU_TASK_NUM_MAX; msgId++) {
+        uint64_t* xnMsg = xnBaseAddr + msgId * xnNumPerMsg;
+        uint64_t* waitCkeMsg = waitCkeAddr + msgId;
+        uint64_t* setCkeMsg = setCkeAddr + msgId;
+        // print cke value and xn value
+        HCCL_ERROR(
+            "msgId[%u]: waitCkeAddr=[%p], setCkeAddr=[%p], waitCke=[%llu], setCke=[%llu], xnAddr=[%p]", msgId,
+            waitCkeMsg, setCkeMsg, *waitCkeMsg, *setCkeMsg, xnMsg);
+        std::string tmpXnInfo = "xnMsg=[";
+        for (uint32_t xnId = 0; xnId < xnNumPerMsg; xnId++) {
+            tmpXnInfo += StringFormat("%llx", *(xnMsg + xnId));
+            if (xnId != xnNumPerMsg - 1) {
+                tmpXnInfo += ", ";
+            }
+        }
+        tmpXnInfo += "]";
+        HCCL_ERROR("[Mc2Compont:%s] RPC MsgId[%u], %s", __func__, msgId, tmpXnInfo.c_str());
+    }
+    HrtFreeHost(xnAddr);
 }
 
 bool Mc2Compont::FindCcuServer(

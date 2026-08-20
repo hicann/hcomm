@@ -1081,3 +1081,97 @@ TEST_F(TaskExceptionHandlerTest, Ut_ProcessAivException_When_MemcpyFailure_Expec
     // 清理
     globalMirrorTasks.DestroyQueue(0, 0);
 }
+
+TEST_F(TaskExceptionHandlerTest, Ut_DisplayRPCMsg_When_TaskTypeNotCcu_Expect_ReturnEarly)
+{
+    auto taskInfo = InitTaskInfo();
+    taskInfo->taskParam_.taskType = TaskParamType::TASK_NOTIFY_WAIT;
+
+    MOCKER(HrtMallocHost).expects(never());
+    EXPECT_NO_THROW(TaskExceptionHandler::DisplayRPCMsg(*taskInfo));
+}
+
+TEST_F(TaskExceptionHandlerTest, Ut_DisplayRPCMsg_When_DfxOpInfoNull_Expect_ReturnEarly)
+{
+    auto taskInfo = InitTaskInfo();
+    taskInfo->taskParam_.taskType = TaskParamType::TASK_CCU;
+    taskInfo->dfxOpInfo_ = nullptr;
+
+    MOCKER(HrtMallocHost).expects(never());
+    EXPECT_NO_THROW(TaskExceptionHandler::DisplayRPCMsg(*taskInfo));
+}
+
+TEST_F(TaskExceptionHandlerTest, Ut_DisplayRPCMsg_When_CommNull_Expect_ReturnEarly)
+{
+    auto taskInfo = InitTaskInfo();
+    taskInfo->taskParam_.taskType = TaskParamType::TASK_CCU;
+    // dfxOpInfo_ 默认非空，comm_ 默认 nullptr
+
+    MOCKER(HrtMallocHost).expects(never());
+    EXPECT_NO_THROW(TaskExceptionHandler::DisplayRPCMsg(*taskInfo));
+}
+
+TEST_F(TaskExceptionHandlerTest, Ut_DisplayRPCMsg_When_CollServiceNull_Expect_ReturnEarly)
+{
+    auto taskInfo = InitTaskInfo();
+    taskInfo->taskParam_.taskType = TaskParamType::TASK_CCU;
+    CommunicatorImpl* communicator = new CommunicatorImpl{};
+    communicator->collServices[AcceleratorState::CCU_SCHED] = nullptr;
+    taskInfo->dfxOpInfo_->comm_ = communicator;
+
+    MOCKER(HrtMallocHost).expects(never());
+    EXPECT_NO_THROW(TaskExceptionHandler::DisplayRPCMsg(*taskInfo));
+}
+
+TEST_F(TaskExceptionHandlerTest, Ut_DisplayRPCMsg_When_Normal_Expect_InvokeDisplayRPCMsg)
+{
+    auto taskInfo = InitTaskInfo();
+    taskInfo->taskParam_.taskType = TaskParamType::TASK_CCU;
+    auto communicator = std::make_unique<CommunicatorImpl>();
+    communicator->collServices[AcceleratorState::CCU_SCHED]
+        = std::make_shared<CollServiceDeviceMode>(communicator.get());
+    taskInfo->dfxOpInfo_->comm_ = communicator.get();
+    auto* collServiceCcu = static_cast<CollServiceDeviceMode*>(communicator->GetCcuCollService());
+    collServiceCcu->mc2Compont.comParamBuffer
+        = std::make_shared<DevBuffer>(CCU_TASK_NUM_MAX * CCU_PARAM_NUM_MAX * sizeof(uint64_t));
+    collServiceCcu->mc2Compont.comSyncBuffer = std::make_shared<DevBuffer>(CCU_TASK_NUM_MAX * 2 * sizeof(uint64_t));
+
+    std::vector<uint64_t> hostBuf(CCU_TASK_NUM_MAX * CCU_PARAM_NUM_MAX, 0);
+    MOCKER(HrtMallocHost).stubs().will(returnValue(static_cast<void*>(hostBuf.data())));
+    MOCKER(HrtMemcpy).stubs();
+
+    EXPECT_NO_THROW(TaskExceptionHandler::DisplayRPCMsg(*taskInfo));
+}
+
+TEST_F(TaskExceptionHandlerTest, Ut_ProcessCcuMC2Exception_When_StatusZero_Expect_SkipProcess)
+{
+    auto taskInfo1 = InitTaskInfo();
+    taskInfo1->taskParam_.taskType = TaskParamType::TASK_CCU;
+    taskInfo1->taskParam_.taskPara.Ccu.dieId = 0;
+    taskInfo1->taskParam_.taskPara.Ccu.missionId = 1;
+    taskInfo1->taskParam_.taskPara.Ccu.instrId = 2;
+    MC2GlobalMirrorTasks::GetInstance().AddTaskInfo(20, std::shared_ptr<TaskInfo>(std::move(taskInfo1)));
+
+    rtExceptionInfo_t exceptionInfo{};
+    exceptionInfo.expandInfo.type = RT_EXCEPTION_FUSION;
+    exceptionInfo.expandInfo.u.fusionInfo.type = RT_FUSION_AICORE_CCU;
+    exceptionInfo.deviceid = 20;
+    auto& ccuDetailMsg = exceptionInfo.expandInfo.u.fusionInfo.u.aicoreCcuInfo.ccuDetailMsg;
+    ccuDetailMsg.ccuMissionNum = 1;
+    ccuDetailMsg.missionInfo[0].dieId = 0;
+    ccuDetailMsg.missionInfo[0].missionId = 1;
+    ccuDetailMsg.missionInfo[0].instrId = 2;
+    ccuDetailMsg.missionInfo[0].status = 0;
+    ccuDetailMsg.missionInfo[0].subStatus = 0;
+
+    // status==0 时跳过，不应调用 GetCcuErrorMsg
+    MOCKER(GetCcuErrorMsg).expects(never());
+    // 打桩循环后清理操作
+    MOCKER(CcuCleanDieCkes).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
+    MOCKER_CPP(&CcuComponent::Init).stubs();
+    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(0));
+    MOCKER(HrtRaTlvRequestForCustomChannel).stubs();
+    MOCKER(TaskExceptionHandler::PrintAicpuErrorMessage).stubs();
+
+    EXPECT_NO_THROW(TaskExceptionHandler::Process(&exceptionInfo));
+}

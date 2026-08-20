@@ -37,6 +37,7 @@ public:
     std::vector<CcuTaskParam> GetCcuTaskInfo(void* tilingData);
     std::vector<CcuTaskParam> GetAlgoCcuTaskInfo(InsExeQue::ExtInsExeEntityId execId) const;
     u32 GetCcuMc2ServerNum();
+    void DisplayRPCMsg() const;
 
 private:
     void Alloc();
