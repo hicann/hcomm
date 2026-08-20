@@ -9,6 +9,7 @@
  */
 
 #include "orion_adapter_rts.h"
+#include "hccl_common_v2.h"
 #include "runtime_api_exception.h"
 #include "exception_util.h"
 #include "invalid_params_exception.h"
@@ -389,8 +390,11 @@ aclrtStream HrtStreamCreateWithFlags(uint32_t priority, uint32_t flag)
 
 void HrtStreamDestroy(aclrtStream ptr)
 {
+    HcclUs startut = TIME_NOW();
     aclError ret = aclrtDestroyStreamForce(ptr);
-    HCCL_INFO("[HrtStreamDestroy] ptr[%p], ret[%d].", ptr, ret);
+    HCCL_INFO(
+        "[HrtStreamDestroy] ptr[%p], ret[%d], take time [%lld]us.", ptr, ret,
+        DURATION_US(TIME_NOW() - startut).count());
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat(
             "[Stream][Destroy]errNo[0x%016llx] rt stream Destroy fail. "
@@ -736,8 +740,11 @@ aclrtNotify HrtNotifyCreate(s32 deviceLogicId)
 
 void HrtNotifyDestroy(RtNotify_t ptr)
 {
-    HCCL_INFO("[HrtNotifyDestroy] ptr[%p].", ptr);
+    HcclUs startut = TIME_NOW();
     aclError ret = aclrtDestroyNotify(ptr);
+    HCCL_INFO(
+        "[HrtNotifyDestroy] ptr[%p], ret[%d], take time [%lld]us.", ptr, ret,
+        DURATION_US(TIME_NOW() - startut).count());
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat(
             "[Notify][Destroy]errNo[0x%016llx] aclrtDestroyNotify error. "

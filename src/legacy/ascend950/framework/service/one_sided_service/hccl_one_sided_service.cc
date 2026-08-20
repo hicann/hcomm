@@ -180,6 +180,7 @@ HcclResult HcclOneSidedService::CreateConnection(std::shared_ptr<HcclOneSidedCon
 HcclResult HcclOneSidedService::ExchangeMemDesc(
     RankId remoteRankId, const HcclMemDescs& localMemDescs, HcclMemDescs& remoteMemDescs, u32& actualNumOfRemote)
 {
+    HcclUs startut = TIME_NOW();
     if (comm_->GetCommExecuteConfig().accState != AcceleratorState::AICPU_TS) {
         HCCL_ERROR(
             "[HcclOneSidedService][%s] only support aicpu, current accelerator[%s]", __func__,
@@ -208,7 +209,11 @@ HcclResult HcclOneSidedService::ExchangeMemDesc(
     CHK_PTR_NULL(tempConn);
     HCCL_INFO("[HcclOneSidedService][ExchangeMemDesc] tempConn linkData[%s]", linkData.Describe().c_str());
     HCCL_INFO("[HcclOneSidedService][ExchangeMemDesc] ExchangeMemDesc");
-    return tempConn->ExchangeMemDesc(localMemDescs, remoteMemDescs, actualNumOfRemote);
+    HcclResult ret = tempConn->ExchangeMemDesc(localMemDescs, remoteMemDescs, actualNumOfRemote);
+    HCCL_INFO(
+        "[HcclOneSidedService][ExchangeMemDesc] finished. ret[%d], take time [%lld]us.", ret,
+        DURATION_US(TIME_NOW() - startut).count());
+    return ret;
 }
 
 HcclResult HcclOneSidedService::EnableMemAccess(const HcclMemDesc& remoteMemDesc, HcclMem& remoteMem)

@@ -9,6 +9,7 @@
  */
 
 #include <cstring>
+#include <chrono>
 #include <vector>
 
 #include "hcomm_c_adpt.h"
@@ -312,13 +313,18 @@ HcommResult HcommCollectiveChannelCreate(
     CHK_PTR_NULL(channels);
     CHK_PRT_RET(
         (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
+    std::vector<HcommChannelDesc> channelDescFinals;
+    CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals, engine)));
+    auto startut = std::chrono::steady_clock::now();
     HCCL_INFO(
         "[%s] START. endpointHandle[0x%llx], engine[%s], channelNum[%u].", __func__, endpointHandle,
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum);
-
-    std::vector<HcommChannelDesc> channelDescFinals;
-    CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals, engine)));
-    return ChannelProcess::CreateChannelsLoop(endpointHandle, engine, channelDescFinals.data(), channelNum, channels);
+    HcommResult ret
+        = ChannelProcess::CreateChannelsLoop(endpointHandle, engine, channelDescFinals.data(), channelNum, channels);
+    HCCL_INFO(
+        "[%s] END. channelNum[%u], take time [%lld]us.", __func__, channelNum,
+        std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - startut).count());
+    return ret;
 }
 
 HcommResult HcommChannelUpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum, ChannelHandle channelHandle)
@@ -357,16 +363,19 @@ HcommResult HcommChannelCreate(
     CHK_PTR_NULL(channels);
     CHK_PRT_RET(
         (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
-    HCCL_INFO(
-        "[%s] START. endpointHandle[0x%llx], engine[%s], channelNum[%u].", __func__, endpointHandle,
-        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum);
-
     std::vector<HcommChannelDesc> channelDescFinals;
     CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals, engine)));
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
+    auto startut = std::chrono::steady_clock::now();
+    HCCL_INFO(
+        "[%s] START. endpointHandle[0x%llx], engine[%s], channelNum[%u].", __func__, endpointHandle,
+        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum);
     if (endpoint != nullptr && endpoint->GetNicOps() != nullptr && endpoint->GetNicOps() != &g_BuiltinEndpointOps) {
         CHK_RET(
             static_cast<HcclResult>(CreatePluginChannels(endpoint, channelDescFinals.data(), channelNum, channels)));
+        HCCL_INFO(
+            "[%s] END. channelNum[%u], take time [%lld]us.", __func__, channelNum,
+            std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - startut).count());
         return HCCL_SUCCESS;
     }
     (void)HcommResMgrInit();
@@ -375,12 +384,13 @@ HcommResult HcommChannelCreate(
     }
     std::vector<ChannelHandle> hostChannelHandles(channelNum);
     ChannelHandle* targetChannels = hostChannelHandles.data();
-
     CHK_RET(ChannelProcess::CreateChannelsLoop(
         endpointHandle, engine, channelDescFinals.data(), channelNum, targetChannels));
     CHK_RET(
         ChannelProcess::PrepareUserChannels(targetChannels, channels, channelDescFinals.data(), channelNum, engine));
-
+    HCCL_INFO(
+        "[%s] END. channelNum[%u], take time [%lld]us.", __func__, channelNum,
+        std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - startut).count());
     return HCCL_SUCCESS;
 }
 
@@ -414,6 +424,7 @@ HcommResult HcommChannelGetStatus(const ChannelHandle* channelList, uint32_t lis
         std::vector<CommEngine> engines;
         std::vector<HcommChannelDesc> channelDescFinals;
         std::vector<ChannelStatus> internalStatus(listNum);
+        auto startut = std::chrono::steady_clock::now();
         HcclResult ret
             = ChannelProcess::GetChannelsInfo(channelList, listNum, engines, channelDescFinals, internalStatus);
         if (ret != HCCL_SUCCESS) {
@@ -426,6 +437,9 @@ HcommResult HcommChannelGetStatus(const ChannelHandle* channelList, uint32_t lis
             HCCL_ERROR("[%s] HandleStatusByEngine failed, ret[%d]", __func__, ret);
             return HCCL_E_INTERNAL;
         }
+        HCCL_INFO(
+            "[%s] END. listNum[%u], take time [%lld]us.", __func__, listNum,
+            std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - startut).count());
         return HCCL_SUCCESS;
     }
 }

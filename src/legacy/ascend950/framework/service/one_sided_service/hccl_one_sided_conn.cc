@@ -121,7 +121,7 @@ HcclResult HcclOneSidedConn::ReceiveRemoteMemDesc(HcclMemDescs& remoteMemDescs, 
 HcclResult HcclOneSidedConn::ExchangeMemDesc(
     const HcclMemDescs& localMemDescs, HcclMemDescs& remoteMemDescs, u32& actualNumOfRemote)
 {
-    HCCL_INFO("[HcclOneSidedConn]ExchangeMemDesc start");
+    HCCL_INFO("[HcclOneSidedConn][ExchangeMemDesc]localRank[%u] exchange memDesc begin", comm_->GetMyRank());
     CHK_PRT_RET(
         (localMemDescs.array == nullptr) && (remoteMemDescs.array == nullptr),
         HCCL_ERROR(
