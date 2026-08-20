@@ -33,6 +33,7 @@ RS_ATTRI_VISI_DEF int RsNdaGetDirectFlag(unsigned int phyId, unsigned int rdevIn
     CHK_PRT_RETURN(ret != 0, hccp_err("RsQueryRdevCb phyId:%u rdevIndex:%u ret:%d", phyId, rdevIndex, ret), ret);
 
     if (rdevCb->ibCtxEx == NULL) {
+        hccp_warn("ibCtxEx is null, phyId:%u rdevIndex:%u", phyId, rdevIndex);
         *directFlag = DIRECT_FLAG_NOTSUPP;
         return ret;
     }
@@ -42,6 +43,7 @@ RS_ATTRI_VISI_DEF int RsNdaGetDirectFlag(unsigned int phyId, unsigned int rdevIn
         phyId, rdevIndex, ret), ret);
 
     if ((extDevAttr.ext_cap & IBV_EXTEND_DEV_NDA) == 0) {
+        hccp_warn("dev not support NDA, phyId:%u rdevIndex:%u ext_cap:0x%x", phyId, rdevIndex, extDevAttr.ext_cap);
         *directFlag = DIRECT_FLAG_NOTSUPP;
         return ret;
     }
@@ -439,11 +441,13 @@ int RsInitNdaCb(struct RsRdevCb *rdevCb)
 
     rdevCb->ibCtxEx = RsIbvOpenExtend(rdevCb->ibCtx);
     if (rdevCb->ibCtxEx == NULL) {
+        hccp_warn("ibCtxEx is null");
         return 0;
     }
 
     count = __sync_fetch_and_add(&rdevCb->rsCb->ndaCbRefCnt, 1);
     if (count > 0) {
+        hccp_info("RsNdaCb exist, ndaCbRefCnt:%d", rdevCb->rsCb->ndaCbRefCnt);
         return 0;
     }
 
@@ -534,7 +538,8 @@ RS_ATTRI_VISI_DEF int RsNdaCqCreate(unsigned int phyId, unsigned int rdevIndex, 
     struct RsNdaCb *ndaCb = NULL;
     int ret = 0;
 
-    CHK_PRT_RETURN(attr == NULL || info == NULL, hccp_err("attr or info is NULL, phyId:%u", phyId), -EINVAL);
+    CHK_PRT_RETURN(attr == NULL || info == NULL || ibvCqExt == NULL,
+        hccp_err("attr or info or ibvCqExt is NULL, phyId:%u", phyId), -EINVAL);
     CHK_PRT_RETURN(attr->dmaMode >= QBUF_DMA_MODE_MAX, hccp_err("param err, dmaMode:%u >= %u, phyId:%u",
         attr->dmaMode, QBUF_DMA_MODE_MAX, phyId), -EINVAL);
 

@@ -154,6 +154,7 @@ struct ibv_context_extend *RsIbvOpenExtend(struct ibv_context *context)
 {
     if (gIbvExtendOps.rsIbvOpenExtend == NULL) {
 #ifndef CA_CONFIG_LLT
+        hccp_warn("rsIbvOpenExtend is null");
         return NULL;
 #endif
     }
