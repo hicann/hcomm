@@ -44,6 +44,6 @@ jobs:
           export obs_path=${{ env.obs_path }}
           bash st.sh
     if: "${{ default() }}"
-    runs-on: [dedicate-hosted, x64, 2xlarge]
+    runs-on: ["self-hosted", "arch=x64", "spec=2xlarge"]
     container:
       image: swr.cn-north-4.myhuaweicloud.com/ci_cann/${{ inputs.image_version }}
