@@ -126,7 +126,7 @@ set(orion_list
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/resource/task/task.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/interface/rank_graph_interface.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/topo/virtual_topo.cc
-    ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/env_config/base_config.cc
+    ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/env_config/base_config_legacy.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/env_config/env_config.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/framework/env_config/env_func.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/common/rdma_handle_manager.cc

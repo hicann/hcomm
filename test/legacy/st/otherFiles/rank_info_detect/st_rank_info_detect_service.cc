@@ -31,7 +31,7 @@
 #include "rank_info_detect_service.h"
 #include "orion_adapter_rts.h"
 #include "env_config_v2.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "socket_agent.h"
 #undef private
 

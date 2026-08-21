@@ -17,7 +17,7 @@
 #include "coll_service_default_impl.h"
 #include "communicator_impl.h"
 #include "stream_manager.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "cfg_field.h"
 #include "env_config_v2.h"
 #include "rank_table.h"

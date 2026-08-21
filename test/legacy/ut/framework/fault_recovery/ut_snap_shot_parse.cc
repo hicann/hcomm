@@ -38,7 +38,7 @@
 #include "detour_service.h"
 #include "sal.h"
 #include "rank_gph.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "env_config_v2.h"
 
 #undef private

@@ -12,7 +12,7 @@
 #define HCCLV2_COLL_ALG_COMPONENT_BUILDER
 
 #include "dev_type.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "rank_gph.h"
 #include "coll_alg_component.h"
 

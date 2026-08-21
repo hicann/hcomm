@@ -8,8 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#ifndef HCCLV2_BASE_CONFIG_H
-#define HCCLV2_BASE_CONFIG_H
+#ifndef HCCLV2_BASE_CONFIG_LEGACY_H
+#define HCCLV2_BASE_CONFIG_LEGACY_H
 
 #include <string>
 #include <vector>
@@ -240,4 +240,4 @@ private:
 
 } // namespace Hccl
 
-#endif // HCCLV2_BASE_CONFIG_H
+#endif // HCCLV2_BASE_CONFIG_LEGACY_H

@@ -41,7 +41,7 @@ target_sources(hccl_v2_utest
     ${HCCL_V2_CODE_ROOT}/unified_platform/trace/trace.cc
     
     ${HCCL_V2_CODE_ROOT}/framework/env_config/env_func.cc
-    ${HCCL_V2_CODE_ROOT}/framework/env_config/base_config.cc
+    ${HCCL_V2_CODE_ROOT}/framework/env_config/base_config_legacy.cc
     ${HCCL_V2_CODE_ROOT}/framework/env_config/env_config.cc
 
     ${HCCL_V2_CODE_ROOT}/framework/misc/json_parser/json_parser.cc

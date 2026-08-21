@@ -16,7 +16,7 @@
 #include "dev_buffer.h"
 #include "local_ub_rma_buffer.h"
 #include "socket_handle_manager.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "env_config_v2.h"
 #include <initializer_list>
 #include "topo_info.h"
@@ -55,7 +55,7 @@
 #include "dev_buffer.h"
 #include "local_ub_rma_buffer.h"
 #include "socket_handle_manager.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "env_config_v2.h"
 #include <initializer_list>
 #include "topo_info.h"
@@ -63,7 +63,7 @@
 #include "orion_adapter_rts.h"
 #include "net_instance.h"
 #include "host_socket_handle_manager.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 
 #include "../../../legacy/ascend950/unified_platform/resource/buffer/local_ipc_rma_buffer_v2.h"
 #include "../../../base_comm/resources/endpoint_pairs/channels/aicpu/device/aicpu_channel_process.h"

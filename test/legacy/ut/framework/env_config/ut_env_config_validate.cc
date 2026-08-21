@@ -16,7 +16,7 @@
 #define private public
 #define protected public
 
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "sal.h"
 #include "orion_adapter_rts.h"
 #undef private

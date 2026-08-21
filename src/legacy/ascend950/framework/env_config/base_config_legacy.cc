@@ -8,7 +8,7 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include <fstream>
 #include <algorithm>
 #include <array>

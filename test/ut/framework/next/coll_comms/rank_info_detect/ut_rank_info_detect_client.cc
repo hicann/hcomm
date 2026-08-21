@@ -45,7 +45,7 @@
 #undef private
 #include "orion_adapter_rts.h"
 #include "env_config/env_config_v2.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "phy_topo.h"
 #include "phy_topo_builder.h"
 #include "rank_graph_test_data_builder.h"

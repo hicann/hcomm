@@ -21,7 +21,7 @@
 #include "ccu_conn.h"
 #include "local_ub_rma_buffer.h"
 #include "env_config/env_config_v2.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 
 #undef protected
 #undef private

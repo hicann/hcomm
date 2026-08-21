@@ -18,7 +18,7 @@
 #include "communicator_impl.h"
 #include "phy_topo_builder.h"
 #include "detour_service.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "env_config_v2.h"
 #include <iostream>
 #include <unistd.h>

@@ -18,7 +18,7 @@
 #include <hccl/hccl_comm.h>
 #include "hcomm_c_adpt.h"
 #include "channel_process.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "ccu_device_res.h"
 #include "config/env_config.h"
 #include "env_config/env_config_v2.h"

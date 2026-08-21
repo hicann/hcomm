@@ -14,7 +14,7 @@
 #include <string>
 #include "dev_type.h"
 #include "connected_link_mgr.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "coll_alg_params.h"
 #include "coll_operator.h"
 #include "prim_queue.h"

@@ -17,7 +17,7 @@
 #include "hcomm_c_adpt.h"
 #include <hccl/hccl_comm.h>
 #include "channel_process.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 #define private public
 #include "my_rank.h"
 #undef private

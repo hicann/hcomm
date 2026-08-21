@@ -19,7 +19,7 @@
 
 #include "sal.h"
 #include "string_util.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "orion_adapter_rts.h"
 #include "adapter_error_manager_pub.h"
 

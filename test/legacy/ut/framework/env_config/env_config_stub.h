@@ -11,7 +11,7 @@
 #ifndef HCCLV2_ENV_CONFIG_STUB_H
 #define HCCLV2_ENV_CONFIG_STUB_H
 
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include <map>
 #include <string>
 

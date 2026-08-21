@@ -18,7 +18,7 @@
 #include <functional>
 
 #define private public
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "env_config/env_config_v2.h"
 #include "rank_info_dispatcher.h"
 #include "socket.h"

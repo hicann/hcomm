@@ -86,7 +86,7 @@ target_sources(hccl_v2_utest
         ${HCCL_V2_CODE_ROOT}/framework/resource_manager/notify/host_device_sync_notify_manager.cc
 
         ${HCCL_V2_CODE_ROOT}/framework/env_config/env_func.cc
-        ${HCCL_V2_CODE_ROOT}/framework/env_config/base_config.cc
+        ${HCCL_V2_CODE_ROOT}/framework/env_config/base_config_legacy.cc
         ${HCCL_V2_CODE_ROOT}/framework/env_config/env_config.cc
         ${HCCL_V2_CODE_ROOT}/framework/env_config/plf_debug_config.cc
 

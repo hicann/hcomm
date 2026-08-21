@@ -15,7 +15,7 @@
 
 #define private public
 #define protected public
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "env_func.h"
 #undef private
 #undef protected

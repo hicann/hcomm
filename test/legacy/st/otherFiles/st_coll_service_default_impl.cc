@@ -13,7 +13,7 @@
 #include <mockcpp/mockcpp.hpp>
 #define private public
 #define protected public
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "cfg_field.h"
 #include "env_config_v2.h"
 #include "env_func.h"

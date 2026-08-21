@@ -40,7 +40,7 @@
 #include "rank_table.h"
 #include "sal.h"
 #include "rank_gph.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "env_config_v2.h"
 #include "coll_service_device_mode.h"
 #include "communicator_callback.h"

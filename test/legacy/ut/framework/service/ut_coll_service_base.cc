@@ -18,7 +18,7 @@
 #include "coll_service_ai_cpu_impl.h"
 #include "communicator_impl.h"
 #include "mem_transport_manager.h"
-#include "base_config.h"
+#include "base_config_legacy.h"
 #include "ub_mem_transport.h"
 #include "internal_exception.h"
 

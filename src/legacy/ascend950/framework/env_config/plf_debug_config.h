@@ -11,7 +11,7 @@
 #ifndef HCCLV2_PLF_DEBUG_CONFIG_H
 #define HCCLV2_PLF_DEBUG_CONFIG_H
 
-#include "base_config.h"
+#include "base_config_legacy.h"
 
 namespace Hccl {
 

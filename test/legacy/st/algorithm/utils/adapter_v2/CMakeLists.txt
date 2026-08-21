@@ -118,7 +118,7 @@ add_library(hccl_alg_adaption_v2 SHARED
     ${HCOMM_RANK_GRAPH}/rank_graph_builder/updater_for_64_plus_1.cc
     ${HCOMM_LEGACY_FRAMEWORK}/env_config/env_config.cc
     ${HCOMM_LEGACY_FRAMEWORK}/env_config/env_func.cc
-    ${HCOMM_LEGACY_FRAMEWORK}/env_config/base_config.cc
+    ${HCOMM_LEGACY_FRAMEWORK}/env_config/base_config_legacy.cc
     ${HCOMM_LEGACY_FRAMEWORK}/env_config/plf_debug_config.cc
 
     ${HCOMM_LEGACY_FRAMEWORK}/misc/json_parser/json_parser.cc
