@@ -172,7 +172,7 @@ public:
     bool CheckAlgoConsistency(HcclCMDType opType, std::string& algName);
     void SplitString(const std::string& identifier, std::vector<std::string>& splitInfo, const std::string& frag);
     void SetGlobalDisRankTable(const HcclBasicRankInfo& rankTable);
-    HcclResult SetCommInfo_NoRankTable(const RankTable_t rankTable, std::string identifier);
+    HcclResult SetCommInfo_NoRankTable(const RankTable_t rankTable, std::string identifier, u32 subCommRankId);
     HcclResult SetCommInfo_RankTableExit(RankTable_t rankTable);
     HcclResult SetGlobalRank_RankTableExit(const RankTable_t rankTable);
     HcclResult GenerateOpAndAdjTable(

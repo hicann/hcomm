@@ -284,13 +284,13 @@ void hcclNslbDp::SetGlobalCommRankTable_RootInfo(
         HCCL_ERROR("strncpy_s commDesc fail sRet[%u]", sRet);
         return;
     }
+    globalCommInfo.commDesc[COMM_DESC_MAX_LENGTH - 1] = '\0';
+
     if (IsCommDescDuplicated(globalCommInfo.commDesc, checkTaskId)) {
         HCCL_INFO(
             "[NSLB-DP] commDesc[%s] taskId[%llu] already exists, skip TBL_COMM_INFO.", identifier.c_str(), checkTaskId);
         return;
     }
-
-    globalCommInfo.commDesc[COMM_DESC_MAX_LENGTH - 1] = '\0';
 
     u64 utime
         = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
@@ -307,8 +307,13 @@ void hcclNslbDp::SetGlobalCommRankTable_RootInfo(
         HCCL_INFO("[NSLB-DP] SetGlobalCommRankTable_RootInfo deviceIp:[%u] success.", dpRankInfo.deviceIp);
 
         std::string serverIp = rankTable.rankList[rankIndex].serverId;
+        size_t underscorePos = serverIp.find('_');
+        if (underscorePos != std::string::npos) {
+            serverIp = serverIp.substr(0, underscorePos);
+        }
         dpRankInfo.serverIp = ipToUint32(serverIp);
-        HCCL_INFO("[NSLB-DP] SetGlobalCommRankTable_RootInfo serverIp:[%u] success.", dpRankInfo.serverIp);
+
+        HCCL_INFO("[NSLB-DP] SetGlobalCommRankTable_RootInfo serverIp:[%s] success.", serverIp.c_str());
         if (rankLists.size() < rankIndex) {
             return;
         }
@@ -326,6 +331,7 @@ void hcclNslbDp::SetGlobalCommRankTable_RootInfo(
 
     std::string npuIp = localRankInfo.deviceIP[0].GetReadableIP();
     if (ipToUint32(npuIp) != 0) {
+        HCCL_RUN_INFO("[NSLB-DP] rank[%u]: identifier[%s] nslbdpmd5:[%s].", rank, identifier.c_str(), nslbdpmd5.c_str());
         SendCommRankTable(rank, globalCommInfo);
     }
     hcclNslbDpCommConfig_.push_back(globalCommInfo);
@@ -407,7 +413,7 @@ bool hcclNslbDp::CheckMultiMachine(const RankTable_t rankTable)
 }
 
 /* 无ranktable场景， 子通信域场景表1 赋值 */
-HcclResult hcclNslbDp::SetCommInfo_NoRankTable(const hccl::RankTable_t rankTable, std::string identifier)
+HcclResult hcclNslbDp::SetCommInfo_NoRankTable(const hccl::RankTable_t rankTable, std::string identifier, u32 subCommRankId)
 {
     HCCL_DEBUG("[NSLB-DP] Try to collect NSLBDP_TYPE_TBL_COMM_INFO for no RankTable");
     u64 taskId = GetGlobalCommTaskId();
@@ -453,6 +459,11 @@ HcclResult hcclNslbDp::SetCommInfo_NoRankTable(const hccl::RankTable_t rankTable
     globalCommInfo.rankTotalNum = nRanks;
 
     FillRankInfoFromRankTable(globalCommInfo, rankTable);
+    NSLBMD5::calculateRankInfoMd5(globalCommInfo.rankInfo, globalCommInfo.commMd5Sum);
+    std::string nslbdpmd5 = NSLBMD5::md5ToString(globalCommInfo.commMd5Sum);
+    HCCL_RUN_INFO("[NSLB-DP] Subcomm rankId[%u] identifier[%s] nslbdpmd5:[%s].", subCommRankId, identifier.c_str(), nslbdpmd5.c_str());
+
+    SendCommRankTable(subCommRankId, globalCommInfo);
     hcclNslbDpCommConfig_.push_back(globalCommInfo);
 
     return HCCL_SUCCESS;
@@ -876,10 +887,19 @@ HcclResult hcclNslbDp::GetAlgAdjacencyTable(
     HCCL_INFO(
         "[NSLB-DP-ADJ] opType:[%u],srcLocalRankId[%u],rootRank[%u]-commDesc[%s],dstRankNum:[%u].", opType,
         srcLocalRankId, rootRank, identifier.c_str(), nslbAdjInfo.dstRankNum);
-
-    if (CheckSupportOptype(opType) == false) {
-        HCCL_INFO("[NSLB-DP-OPER] CheckSupportOptype false .");
-        return HCCL_SUCCESS;
+    /* A3场景下SEND/RESV场景下只有两张卡的通信域，由于RECV场景下再次SEND的通信域描述与RECV不一致，此时针对RECEIVE算子特殊处理邻接表信息 */
+    if (opType == NSLBDP_CMD_RECEIVE && nslbAdjInfo.dstRankNum == 0) {
+        nslbAdjInfo.dstRankNum = 1;
+        NslbDpAdjInfo adjInfoStep = {0};
+        adjInfoStep.dstLocalRankId = 0;
+        adjInfoStep.phaseId = 1;
+        adjInfoStep.rev = 0;
+        nslbAdjInfo.nsAdjInfo.push_back(adjInfoStep);
+    } else {
+        if (CheckSupportOptype(opType) == false) {
+            HCCL_INFO("[NSLB-DP-OPER] CheckSupportOptype false .");
+            return HCCL_SUCCESS;
+        }
     }
 
     NslbDpAlgorithmInfo algorithmInfo;
@@ -893,22 +913,21 @@ HcclResult hcclNslbDp::GetAlgAdjacencyTable(
     FillAlgInfoBaseFields(algorithmInfo, opType, srcLocalRankId, rootRank, algType);
 
     HCCL_RUN_INFO(
-        "[NSLB-DP] add adjINfo:***[%llu]***[%u]***[%u]***[%u]***[%u]-[%zu] success.", taskId, srcLocalRankId, rootRank,
-        GetNslbOpType(opType), algType, nslbAdjInfo.nsAdjInfo.size());
+        "[NSLB-DP-ADJ] add adjINfo:identifier[%s],[%llu],[%u],[%u],[%zu] success.", identifier.c_str(),
+        taskId, srcLocalRankId, rootRank, GetNslbOpType(opType), algType, nslbAdjInfo.nsAdjInfo.size());
 
     if (IsAlgAdjacencyDuplicated(algorithmInfo) == true) {
         HCCL_INFO("[NSLB-DP] Deduplication hcclNslbDpAlgorithmInfo_");
         return HCCL_SUCCESS;
     }
 
-    HCCL_INFO(
-        "[NSLB-DP-ADJ] add adjINfo:***[%llu]***[%u]***[%u]***[%u]***[%u] success.", taskId, srcLocalRankId, rootRank,
-        GetNslbOpType(opType), algType);
-
     if (FillAlgInfoAdjInfo(algorithmInfo, nslbAdjInfo, srcLocalRankId) == false) {
         return HCCL_SUCCESS;
     }
-
+    if (opType == NSLBDP_CMD_RECEIVE) {
+        /* 相同通信域名下，RECEIVE算子的oper调整为SEND */
+        algorithmInfo.oper = NSLBDP_CMD_SEND;
+    }
     algorithmInfo.sedFlag = 0;
     hcclNslbDpAlgorithmInfo_.push_back(algorithmInfo);
     HCCL_DEBUG("[NSLB-DP] entry GetAlgAdjacencyTable end");
