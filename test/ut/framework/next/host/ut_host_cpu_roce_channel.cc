@@ -2172,16 +2172,14 @@ TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_ConfigAvailableButNoIpMat
 TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_PortsCountLessThanLoopTimes_Expect_CycleExpand)
 {
     SetupBcMocks();
-    auto& portMap = Hccl::EnvConfig::GetInstance().rdmaCfg.multiQpSrcPortConfig_.ipPairToPorts;
-    portMap.clear();
-    portMap["1.0.0.0,2.0.0.0"] = {10001, 10002};
-
     auto impl = std::make_unique<hcomm::HostCpuRoceChannel>(endpointHandle, channelDesc);
     Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle);
     impl->localEp_ = localEpPtr->GetEndpointDesc();
     impl->remoteEp_ = channelDesc.remoteEndpoint;
     impl->lbMax_ = 0;
     impl->channelDesc_.roceAttr.queueNum = 4;
+    static uint16_t srcPorts[] = {10001, 10002, 10001, 10002};
+    impl->channelDesc_.roceAttr.srcPortList = srcPorts;
     impl->socket_ = fakeSocket;
     impl->rdmaHandle_ = (void*)0x1000000;
 
@@ -2191,36 +2189,9 @@ TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_PortsCountLessThanLoopTim
     EXPECT_EQ(impl->connections_[1]->qpInfo_.udpSport, 10002u);
     EXPECT_EQ(impl->connections_[2]->qpInfo_.udpSport, 10001u);
     EXPECT_EQ(impl->connections_[3]->qpInfo_.udpSport, 10002u);
-
-    portMap.clear();
 }
 
-TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_CommAddrToIpFail_Expect_AllUdpSportZero)
-{
-    SetupBcMocks();
-    auto& portMap = Hccl::EnvConfig::GetInstance().rdmaCfg.multiQpSrcPortConfig_.ipPairToPorts;
-    portMap.clear();
-    portMap["1.0.0.0,2.0.0.0"] = {10001};
-    MOCKER(CommAddrToIpAddress).stubs().will(returnValue(HCCL_E_NOT_SUPPORT));
-
-    auto impl = std::make_unique<hcomm::HostCpuRoceChannel>(endpointHandle, channelDesc);
-    Endpoint* localEpPtr = reinterpret_cast<Endpoint*>(endpointHandle);
-    impl->localEp_ = localEpPtr->GetEndpointDesc();
-    impl->remoteEp_ = channelDesc.remoteEndpoint;
-    impl->lbMax_ = 0;
-    impl->channelDesc_.roceAttr.queueNum = 2;
-    impl->socket_ = fakeSocket;
-    impl->rdmaHandle_ = (void*)0x1000000;
-
-    EXPECT_EQ(impl->BuildConnection(), HCCL_SUCCESS);
-    ASSERT_EQ(impl->connections_.size(), 2u);
-    EXPECT_EQ(impl->connections_[0]->qpInfo_.udpSport, 0u);
-    EXPECT_EQ(impl->connections_[1]->qpInfo_.udpSport, 0u);
-
-    portMap.clear();
-}
-
-// BC5: exchangeAllMems=true（hixl场景）→ 即使 config 可用且 IP 匹配，udpSport 仍为 0
+// BC4: exchangeAllMems=true（hixl场景）→ 即使 srcPortList 可用，udpSport 仍为 0
 TEST_F(HostCpuRoceChannelTest, Ut_BuildConnection_When_ExchangeAllMemsTrue_Expect_AllUdpSportZero)
 {
     SetupBcMocks();

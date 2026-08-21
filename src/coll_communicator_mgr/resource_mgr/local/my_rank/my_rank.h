@@ -219,6 +219,9 @@ namespace MyRankUtils {
 
 HcommChannelDesc ChannelDescHccl2Hcomm(const HcclChannelDesc& hcclDesc, const hccl::CommConfig& commConfig);
 
+HcclResult
+FillRoceSrcPortList(const HcclChannelDesc& hcclDesc, HcommChannelDesc& hcommDesc, std::vector<uint16_t>& srcPortBuf);
+
 } // namespace MyRankUtils
 
 #endif // MY_RANK_H

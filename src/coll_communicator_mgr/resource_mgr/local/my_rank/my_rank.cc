@@ -92,6 +92,49 @@ inline std::string GetCommProtocolEnumStr(CommProtocol protocol)
 
 } // namespace MyRankUtils
 
+HcclResult MyRankUtils::FillRoceSrcPortList(
+    const HcclChannelDesc& hcclDesc, HcommChannelDesc& hcommDesc, std::vector<uint16_t>& srcPortBuf)
+{
+    hcommDesc.roceAttr.srcPortList = nullptr;
+    if (hcommDesc.remoteEndpoint.protocol != COMM_PROTOCOL_ROCE || hcommDesc.exchangeAllMems) {
+        HCCL_INFO(
+            "[%s] skip: protocol[%d] exchangeAllMems[%d]", __func__, hcommDesc.remoteEndpoint.protocol,
+            hcommDesc.exchangeAllMems);
+        return HCCL_SUCCESS;
+    }
+    const auto& qpSrcPortConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetMultiQpSrcPortConfig();
+    if (!qpSrcPortConfig.IsAvailable()) {
+        HCCL_INFO(
+            "[%s] skip: multiQpSrcPortConfig not available (env HCCL_RDMA_QP_PORT_CONFIG_PATH unset or "
+            "MultiQpSrcPort.cfg empty)",
+            __func__);
+        return HCCL_SUCCESS;
+    }
+    Hccl::IpAddress localIp;
+    Hccl::IpAddress remoteIp;
+    HcclResult localRet = CommAddrToIpAddress(hcclDesc.localEndpoint.commAddr, localIp);
+    HcclResult remoteRet = CommAddrToIpAddress(hcclDesc.remoteEndpoint.commAddr, remoteIp);
+    CHK_PRT_RET(
+        localRet != HCCL_SUCCESS || remoteRet != HCCL_SUCCESS,
+        HCCL_ERROR("[%s] CommAddrToIpAddress failed: localRet[%d] remoteRet[%d]", __func__, localRet, remoteRet),
+        HCCL_E_INTERNAL);
+    auto ports = Hccl::GetMultiQpSrcPortsByIpPair(qpSrcPortConfig, localIp, remoteIp);
+    if (ports.empty()) {
+        HCCL_INFO(
+            "[%s] skip: no matching ports for localIp[%s] remoteIp[%s]", __func__, localIp.GetIpStr().c_str(),
+            remoteIp.GetIpStr().c_str());
+        return HCCL_SUCCESS;
+    }
+    u32 queueNum = hcommDesc.roceAttr.queueNum;
+    srcPortBuf.resize(queueNum);
+    for (u32 j = 0; j < queueNum; ++j) {
+        srcPortBuf[j] = ports[j % ports.size()];
+    }
+    hcommDesc.roceAttr.srcPortList = srcPortBuf.data();
+    HCCL_INFO("[%s] success: queueNum[%u] portCount[%zu]", __func__, queueNum, ports.size());
+    return HCCL_SUCCESS;
+}
+
 namespace hccl {
 
 constexpr uint32_t UNREUSE_CHANNEL_IDX = 0xFFFFFFFF;
@@ -1240,10 +1283,15 @@ HcclResult MyRank::CreateChannels(
     auto& rdmaConfig = Hccl::EnvConfig::GetInstance().GetRdmaConfig();
     std::vector<HcommChannelDesc> hcommDescs(channelNum);
     std::vector<std::vector<MemHandle>> allHandles(channelNum);
+    // srcPortBuffers 作为 hcommDescs[i].roceAttr.srcPortList 的底层 buffer，由 FillRoceSrcPortList 填充；
+    // 生命周期需覆盖到通道构造完成（HostCpuRoceChannel 构造时深拷贝到自身 srcPortBuf_）。
+    std::vector<std::vector<uint16_t>> srcPortBuffers(channelNum);
     for (u32 i = 0; i < channelNum; ++i) {
         hcommDescs[i] = MyRankUtils::ChannelDescHccl2Hcomm(channelDescs[i], config_);
         hcommDescs[i].roceAttr.qpThreshold = rdmaConfig.GetRdmaMultiQpThreshold();
         CHK_RET(ConfigSqDepthByExpansionMode(engine, hcommDescs[i]));
+
+        CHK_RET(MyRankUtils::FillRoceSrcPortList(channelDescs[i], hcommDescs[i], srcPortBuffers[i]));
     }
 
     auto start = std::chrono::steady_clock::now();

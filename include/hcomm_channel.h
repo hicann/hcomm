@@ -20,7 +20,8 @@ extern "C" {
 static const uint32_t HCOMM_CHANNEL_MAGIC_WORD = 0x0fcf0f0fU;
 static const uint32_t HCOMM_CHANNEL_VERSION_ONE = 1U;
 /** ABI v3：相比 v1 增加 uint32_t qos 与 const char *channelName（channel 业务匹配标识） */
-static const uint32_t HCOMM_CHANNEL_VERSION = 3U;
+/** ABI v4：相比 v3 增加 roceAttr.srcPortList（QP 源端口号，union 内字段，sizeof 不变） */
+static const uint32_t HCOMM_CHANNEL_VERSION = 4U;
 
 // channelName标识最大长度（字节）
 static const uint32_t HCOMM_CHANNEL_NAME_MAX_LEN = 191U;
@@ -31,6 +32,7 @@ static const uint32_t HCOMM_CHANNEL_DESC_RAW_MAX_LEN = 128U; ///< HcommChannelDe
  * @note 结构体末尾扩展需要自增版本号，并补充兼容处理逻辑。
  *       ABI v1：HCOMM_CHANNEL_VERSION_ONE，无 union 之后的 qos 字段，见 HCOMM_CHANNEL_DESC_ABI_V1_SIZE。
  *       ABI v3：HCOMM_CHANNEL_VERSION，相比 v1 增加 uint32_t qos 与 const char *channelName（channel 业务匹配标识）。
+ *       ABI v4：HCOMM_CHANNEL_VERSION，相比 v3 增加 roceAttr.srcPortList（QP 源端口号，union 内字段，sizeof 不变）。
  */
 typedef struct {
     CommAbiHeader header;        ///< ABI头部，包含版本等信息
@@ -53,6 +55,7 @@ typedef struct {
             uint32_t qpThreshold;   ///< 多QP场景下，每个QP最小数据量(B)
             uint32_t cqAttrFlags; ///< CQ属性标志位，用于配置ibv_cq_init_attr_ex的flags标志位，默认0。
                                   ///< 备注：NPU网卡不支持该配置；第三方网卡场景下是否有效，与各自网卡能力相关
+            uint16_t* srcPortList; ///< QP源端口号，用于哈希分流
         } roceAttr;
         struct {
             uint32_t qos; ///< HCCS QoS
@@ -101,6 +104,7 @@ static inline HcommResult HcommChannelDescInit(HcommChannelDesc* channelDesc, ui
         channelDesc->socket = NULL;
         channelDesc->role = HCOMM_SOCKET_ROLE_RESERVED;
         channelDesc->port = 0;
+        channelDesc->roceAttr.srcPortList = NULL;
         channelDesc->channelName = NULL;
         if (EndpointDescInit(&channelDesc->remoteEndpoint, 1) != 0) {
             return hcommEInternal;

@@ -2044,3 +2044,57 @@ TEST_F(MyRankTest, Ut_When_RollbackFullChain_ResourceUnavailable_Expect_StateRes
     EXPECT_EQ(queryHandles[0], 0u);
     EXPECT_EQ(queryHandles[1], 0u);
 }
+
+TEST_F(MyRankTest, Ut_FillRoceSrcPortList_When_CommAddrToIpFail_Expect_SrcPortListNull)
+{
+    auto& portConfig = const_cast<Hccl::MultiQpSrcPortConfig&>(
+        Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetMultiQpSrcPortConfig());
+    portConfig.ipPairToPorts.clear();
+    portConfig.ipPairToPorts["1.0.0.0,2.0.0.0"] = {10001};
+
+    MOCKER(hcomm::CommAddrToIpAddress).stubs().will(returnValue(HCCL_E_NOT_SUPPORT));
+
+    HcclChannelDesc hcclDesc{};
+    ASSERT_EQ(HcclChannelDescInit(&hcclDesc, 1), HCCL_SUCCESS);
+    hcclDesc.channelProtocol = COMM_PROTOCOL_ROCE;
+    CreateEndpointDesc(hcclDesc.localEndpoint, COMM_PROTOCOL_ROCE, "1.0.0.0");
+    CreateEndpointDesc(hcclDesc.remoteEndpoint, COMM_PROTOCOL_ROCE, "2.0.0.0");
+
+    HcommChannelDesc hcommDesc = MyRankUtils::ChannelDescHccl2Hcomm(hcclDesc, config);
+    hcommDesc.exchangeAllMems = false;
+    hcommDesc.roceAttr.queueNum = 4;
+
+    std::vector<uint16_t> srcPortBuf;
+    EXPECT_EQ(MyRankUtils::FillRoceSrcPortList(hcclDesc, hcommDesc, srcPortBuf), HCCL_E_INTERNAL);
+    EXPECT_EQ(hcommDesc.roceAttr.srcPortList, nullptr);
+
+    portConfig.ipPairToPorts.clear();
+}
+
+TEST_F(MyRankTest, Ut_FillRoceSrcPortList_When_ConfigAvailable_Expect_SrcPortListFilled)
+{
+    auto& portConfig = const_cast<Hccl::MultiQpSrcPortConfig&>(
+        Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetMultiQpSrcPortConfig());
+    portConfig.ipPairToPorts.clear();
+    portConfig.ipPairToPorts["1.0.0.0,2.0.0.0"] = {10001, 10002};
+
+    HcclChannelDesc hcclDesc{};
+    ASSERT_EQ(HcclChannelDescInit(&hcclDesc, 1), HCCL_SUCCESS);
+    hcclDesc.channelProtocol = COMM_PROTOCOL_ROCE;
+    CreateEndpointDesc(hcclDesc.localEndpoint, COMM_PROTOCOL_ROCE, "1.0.0.0");
+    CreateEndpointDesc(hcclDesc.remoteEndpoint, COMM_PROTOCOL_ROCE, "2.0.0.0");
+
+    HcommChannelDesc hcommDesc = MyRankUtils::ChannelDescHccl2Hcomm(hcclDesc, config);
+    hcommDesc.exchangeAllMems = false;
+    hcommDesc.roceAttr.queueNum = 4;
+
+    std::vector<uint16_t> srcPortBuf;
+    EXPECT_EQ(MyRankUtils::FillRoceSrcPortList(hcclDesc, hcommDesc, srcPortBuf), HCCL_SUCCESS);
+    ASSERT_NE(hcommDesc.roceAttr.srcPortList, nullptr);
+    EXPECT_EQ(hcommDesc.roceAttr.srcPortList[0], 10001u);
+    EXPECT_EQ(hcommDesc.roceAttr.srcPortList[1], 10002u);
+    EXPECT_EQ(hcommDesc.roceAttr.srcPortList[2], 10001u);
+    EXPECT_EQ(hcommDesc.roceAttr.srcPortList[3], 10002u);
+
+    portConfig.ipPairToPorts.clear();
+}
