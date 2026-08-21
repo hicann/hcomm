@@ -13,8 +13,6 @@
 #include <stdio.h>
 #include "semantics_utils.h"
 
-using namespace Hccl;
-
 namespace checker {
 
 std::string GenMsg(const char* fileName, s32 lineNum, const char* fmt, ...)

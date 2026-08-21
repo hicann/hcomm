@@ -13,7 +13,7 @@
 
 #include <cstdint>
 
-#include "enum_factory_legacy.h"
+#include "enum_factory.h"
 #include "hccl/base.h"
 
 namespace Hccl {

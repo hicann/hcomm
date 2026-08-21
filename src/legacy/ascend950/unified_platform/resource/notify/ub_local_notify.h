@@ -13,7 +13,7 @@
 
 #include <vector>
 
-#include "enum_factory_legacy.h"
+#include "enum_factory.h"
 #include "orion_adapter_hccp.h"
 #include "buffer_key.h"
 

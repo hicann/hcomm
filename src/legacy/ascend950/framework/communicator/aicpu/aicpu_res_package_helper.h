@@ -13,7 +13,7 @@
 
 #include <vector>
 #include "hccl/base.h"
-#include "enum_factory_legacy.h"
+#include "enum_factory.h"
 #include "binary_stream.h"
 namespace Hccl {
 

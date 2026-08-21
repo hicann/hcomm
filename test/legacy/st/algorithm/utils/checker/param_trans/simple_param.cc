@@ -16,8 +16,6 @@
 using namespace hccl;
 #endif
 
-using namespace Hccl;
-
 namespace checker {
 
 std::string HcclCMDType2Tag(CheckerOpType optype)

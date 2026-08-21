@@ -14,7 +14,7 @@
 #include <map>
 #include <string>
 
-#include "enum_factory_legacy.h"
+#include "enum_factory.h"
 
 namespace checker {
 MAKE_ENUM(

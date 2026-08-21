@@ -15,7 +15,7 @@
 #include <functional>
 #include <unordered_map>
 #include "types.h"
-#include "enum_factory_legacy.h"
+#include "enum_factory.h"
 #include "data_type.h"
 #include "op_type.h"
 #include "reduce_op.h"

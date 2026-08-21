@@ -14,7 +14,7 @@
 #include <cstdint>
 #include <unordered_map>
 #include "hccl/base.h"
-#include "enum_factory_legacy.h"
+#include "enum_factory.h"
 
 namespace Hccl {
 using char_t = char;

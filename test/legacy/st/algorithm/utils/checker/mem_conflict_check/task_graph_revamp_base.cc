@@ -12,8 +12,6 @@
 #include "log.h"
 #include <algorithm>
 
-using namespace Hccl;
-
 namespace checker {
 
 map<RankId, u32> GraphRevampBase::rank2QueSize_;

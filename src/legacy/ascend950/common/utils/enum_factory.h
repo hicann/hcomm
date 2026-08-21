@@ -11,10 +11,10 @@
 #ifndef HCCLV2_ENUM_FACTORY_H
 #define HCCLV2_ENUM_FACTORY_H
 
-#include "string_util.h"
-
-#include <string>
+#include <cstdint>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #define MAKE_ENUM(enumClass, ...)                                                                                    \
     class enumClass {                                                                                                \

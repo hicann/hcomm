@@ -14,7 +14,7 @@
 #include <string>
 
 #include "task_param.h"
-#include "enum_factory_legacy.h"
+#include "enum_factory.h"
 
 namespace Hccl {
 

@@ -16,8 +16,6 @@
 #include "dtype_common.h"
 #include "log.h"
 
-using namespace Hccl;
-
 namespace checker {
 
 MemLayout* MemLayout::Global()

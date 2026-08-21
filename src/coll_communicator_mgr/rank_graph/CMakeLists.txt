@@ -22,6 +22,8 @@ set(v2_rank_graph_include_dirs
     ${CMAKE_CURRENT_SOURCE_DIR}/rank_graph_builder
     ${CMAKE_CURRENT_SOURCE_DIR}/rank_table_info
     ${CMAKE_CURRENT_SOURCE_DIR}/topo_info
+    ${HCOMM_DIR}/src/legacy/ascend950/common/types
+    ${HCOMM_DIR}/src/legacy/ascend950/common/utils
     ${HCOMM_DIR}/src/legacy/ascend950/framework/topo/topo_addr_info/include
 )
 

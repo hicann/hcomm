@@ -15,8 +15,6 @@
 #include "task_stub.h"
 #include "mem_layout.h"
 
-using namespace Hccl;
-
 namespace checker {
 
 const std::string FOUR_INDENT_SPACE = "    ";

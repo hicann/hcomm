@@ -18,8 +18,6 @@
 #include "llt_common.h"
 #include "log.h"
 
-using namespace Hccl;
-
 namespace checker {
 
 void GenSendOffsetForOneRank(CheckerOpParam& opParam, u32 rankSize, RankId targetRank, std::vector<u64>& sendOffsets)

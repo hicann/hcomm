@@ -19,6 +19,7 @@
 #include "enum_factory.h"
 #include "hccl/base.h"
 #include "hccl_rank_graph.h"
+
 namespace Hccl {
 using NetPlaneId = u32;
 using LocalId = u32;

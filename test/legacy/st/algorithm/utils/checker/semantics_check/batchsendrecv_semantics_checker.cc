@@ -17,8 +17,6 @@
 #include "base.h"
 #include "log.h"
 
-using namespace Hccl;
-
 namespace checker {
 
 HcclResult TaskCheckBatchSendRecvSemantics(std::map<RankId, RankMemorySemantics>& allRankMemSemantics, u64 dataSize)

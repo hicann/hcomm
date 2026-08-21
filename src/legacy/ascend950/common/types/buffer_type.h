@@ -11,7 +11,7 @@
 #ifndef HCCLV2_BUFFER_TYPE_H
 #define HCCLV2_BUFFER_TYPE_H
 
-#include "enum_factory_legacy.h"
+#include "enum_factory.h"
 namespace Hccl {
 
 MAKE_ENUM(BufferType, INPUT, OUTPUT, SCRATCH)

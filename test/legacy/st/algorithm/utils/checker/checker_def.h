@@ -22,7 +22,7 @@
 #ifndef HCCL_ALG_ANALYZER_DAVID
 #include "op_context.h"
 #endif
-#include "enum_factory_legacy.h"
+#include "enum_factory.h"
 
 namespace checker {
 // 待补充

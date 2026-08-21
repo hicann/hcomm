@@ -18,10 +18,6 @@
 #include "llt_common.h"
 #include "log.h"
 
-using namespace Hccl;
-
-using namespace Hccl;
-
 namespace checker {
 
 HcclResult

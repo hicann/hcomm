@@ -17,8 +17,6 @@
 #include "llt_common.h"
 #include "log.h"
 
-using namespace Hccl;
-
 namespace checker {
 
 HcclResult TaskCheckAllGatherSemantics(std::map<RankId, RankMemorySemantics>& allRankMemSemantics, u64 dataSize)

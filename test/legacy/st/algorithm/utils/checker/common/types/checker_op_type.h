@@ -17,7 +17,7 @@
 #ifndef HCCLV1_OP_TYPE_H
 #define HCCLV1_OP_TYPE_H
 
-#include "enum_factory_legacy.h"
+#include "enum_factory.h"
 namespace hccl {
 
 MAKE_ENUM(

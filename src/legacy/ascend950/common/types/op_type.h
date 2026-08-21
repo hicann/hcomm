@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <map>
 #include <unordered_map>
-#include "../utils/enum_factory_legacy.h"
+#include "../utils/enum_factory.h"
 #include "log.h"
 
 namespace Hccl {
