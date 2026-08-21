@@ -13,15 +13,22 @@
 #include <chrono>
 #include <thread>
 #include <atomic>
+#include <cmath>
 
 #include "log.h"
 #include "thread.h"
 #include "aicpu_ts_thread.h"
+#include "externalinput_pub.h"
 
-constexpr uint32_t SYNC_WAIT_TIMEOUT_SECONDS = 205;
 constexpr size_t MSG_TAG_SIZE_BYTE = 256;
 constexpr uint32_t TIMEOUT_SIZE_BYTE = 4;      // timeout字段长度为4字节，表示超时时间，单位为秒
 constexpr uint32_t CTRL_HDR_DATA_SIZE_LEN = 8; // size_t 在不同平台上长度不同，取最大值
+
+// 同步等待超时(秒)，复用 HCCL_EXEC_TIMEOUT 环境变量配置的算子级执行超时，向上取整为秒
+static uint32_t GetSyncWaitTimeoutSeconds()
+{
+    return static_cast<uint32_t>(std::ceil(GetExternalInputHcclExecTimeOut()));
+}
 
 // Msg 数据格式如下（单位：字节）：
 // +----------+--------------+-----------+-------------+---------------+-----------------+
@@ -30,22 +37,15 @@ constexpr uint32_t CTRL_HDR_DATA_SIZE_LEN = 8; // size_t 在不同平台上长�
 // ^
 // handle
 
-static HcclResult WaitFlagReady(uint8_t* srcFlagPtr, uint8_t* srcTimeoutPtr)
+static HcclResult WaitFlagReady(uint8_t* srcFlagPtr)
 {
     HCCL_INFO("[%s] Polling flag START.", __func__);
     const auto timeStart = std::chrono::steady_clock::now();
-    auto timeoutSec = std::chrono::seconds(SYNC_WAIT_TIMEOUT_SECONDS);
-    uint32_t timeoutValue{SYNC_WAIT_TIMEOUT_SECONDS};
-    errno_t ret = memcpy_s(&timeoutValue, sizeof(timeoutValue), srcTimeoutPtr, sizeof(timeoutValue));
-    CHK_PRT_RET(ret != EOK, HCCL_ERROR("[%s][memcpy_s] Reading timeout ERROR[%d].", __func__, ret), HCCL_E_INTERNAL);
-    HCCL_INFO("[%s] Reading timeout from shared mem SUCCESS. timeout = %u seconds.", __func__, timeoutValue);
-    if (timeoutValue > 0) {
-        HCCL_INFO("[%s] Using timeout from shared mem. timeout = %u seconds.", __func__, timeoutValue);
-        timeoutSec = std::chrono::seconds(timeoutValue);
-    } else {
-        HCCL_INFO("[%s] Using default timeout. timeout = %u seconds.", __func__, SYNC_WAIT_TIMEOUT_SECONDS);
-    }
+    const uint32_t timeoutVal = GetSyncWaitTimeoutSeconds();
+    HCCL_INFO("[%s] Using timeout = %u seconds.", __func__, timeoutVal);
+    auto timeoutSec = std::chrono::seconds(timeoutVal);
     uint8_t flagReadValue{0};
+    errno_t ret = EOK;
     while (true) {
         ret = memcpy_s(&flagReadValue, sizeof(flagReadValue), srcFlagPtr, sizeof(flagReadValue));
         CHK_PRT_RET(ret != EOK, HCCL_ERROR("[%s][memcpy_s] Polling flag ERROR[%d].", __func__, ret), HCCL_E_INTERNAL);
@@ -54,8 +54,8 @@ static HcclResult WaitFlagReady(uint8_t* srcFlagPtr, uint8_t* srcTimeoutPtr)
         }
         const auto elapsed
             = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - timeStart);
-        if (elapsed > timeoutSec) {
-            HCCL_ERROR("[%s] Polling flag TIMEOUT.", __func__);
+        if (timeoutVal != 0 && elapsed > timeoutSec) {
+            HCCL_ERROR("[%s] Polling flag TIMEOUT, timeout[%u]s.", __func__, timeoutVal);
             return HCCL_E_TIMEOUT;
         }
     }
@@ -66,6 +66,7 @@ static HcclResult WaitFlagReady(uint8_t* srcFlagPtr, uint8_t* srcTimeoutPtr)
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
+
 int32_t HcommSendRequest(MsgHandle handle, const char* msgTag, const void* src, size_t sizeByte, uint32_t* msgId)
 {
     uint8_t* const dstOnDevShmem = reinterpret_cast<uint8_t*>(handle);
@@ -104,7 +105,11 @@ int32_t HcommSendRequest(MsgHandle handle, const char* msgTag, const void* src, 
     CHK_PRT_RET(ret != EOK, HCCL_ERROR("[%s][memcpy_s] Writing msgTag ERROR[%d].", __func__, ret), HCCL_E_INTERNAL);
     HCCL_INFO("[%s] Writing %zu bytes msgTag to shared mem SUCCESS.", __func__, MSG_TAG_SIZE_BYTE);
 
+#if defined(__aarch64__) || defined(__arm__)
     asm volatile("dmb sy" ::: "memory"); // 确保之前的内存写入对其他线程可见
+#else
+    asm volatile("" ::: "memory"); // 非 ARM 架构(x86)仅用编译屏障防止重排
+#endif
 
     HCCL_INFO("[%s] Setting flag = 1 on shared mem START.", __func__);
     ret = memcpy_s(dstFlagPtr, sizeof(flagWriteValue), &flagWriteValue, sizeof(flagWriteValue));
@@ -134,7 +139,7 @@ int32_t HcommWaitResponse(MsgHandle handle, void* dst, size_t sizeByte, uint32_t
     uint8_t* const srcDataPtr = srcTimeoutPtr + TIMEOUT_SIZE_BYTE;
     errno_t ret = EOK;
 
-    CHK_RET(WaitFlagReady(srcFlagPtr, srcTimeoutPtr));
+    CHK_RET(WaitFlagReady(srcFlagPtr));
 
     if (sizeByte > 0) {
         HCCL_INFO("[%s] Reading %zu bytes data from shared mem START.", __func__, sizeByte);
