@@ -76,6 +76,11 @@ protected:
     {
         return HCCL_SUCCESS;
     }
+    virtual HcclResult KernelRunInterServer(
+        [[maybe_unused]] const OpParam& param, [[maybe_unused]] ExecMem& execMem, [[maybe_unused]] u64 baseOffset)
+    {
+        return HCCL_SUCCESS;
+    }
     virtual HcclResult KernelRunIntraServerPre([[maybe_unused]] const OpParam& param, [[maybe_unused]] ExecMem& execMem)
     {
         return HCCL_SUCCESS;

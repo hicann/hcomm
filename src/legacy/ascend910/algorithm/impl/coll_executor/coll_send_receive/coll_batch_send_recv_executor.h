@@ -40,7 +40,7 @@ protected:
     HcclResult ProcessRecvDataSlice(Stream& stream, bool retryEnable);
     HcclResult CalcSendSlices(AlgResourceResponse& algRes);
     HcclResult CalcRecvSlices(AlgResourceResponse& algRes);
-    HcclResult GetPairWiseList(HcclSendRecvItem* sendRecvInfo, u32 itemNum);
+    HcclResult GetPairWiseList(HcclSendRecvItem* sendRecvInfo, u32 itemNum) override;
     HcclResult ProcessSelfSendRecvTasks(Stream& stream);
     HcclResult SendKernelRun(Stream& stream, ExecMem& execMem, u32 remoteUserRank, bool retryEnable);
     HcclResult RecvKernelRun(Stream& stream, ExecMem& execMem, u32 remoteUserRank, bool retryEnable);

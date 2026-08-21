@@ -112,6 +112,12 @@ CollExecutorBase::GetPairWiseList([[maybe_unused]] std::vector<std::vector<HcclS
     return HCCL_SUCCESS;
 }
 
+HcclResult
+CollExecutorBase::GetPairWiseList([[maybe_unused]] HcclSendRecvItem* sendRecvInfo, [[maybe_unused]] u32 itemNum)
+{
+    return HCCL_SUCCESS;
+}
+
 HcclResult CollExecutorBase::SetAlgOpContext(AlgOpContext algOpContext)
 {
     algOpContext_ = algOpContext;

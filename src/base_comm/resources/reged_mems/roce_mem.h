@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include "endpoint_pair.h"
 #include "reged_mem_mgr.h"
 #include "rma_buffer_mgr.h"
 #include "buffer_key.h"

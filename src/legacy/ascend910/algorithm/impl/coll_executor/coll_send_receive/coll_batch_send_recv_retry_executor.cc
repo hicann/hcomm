@@ -85,6 +85,11 @@ CollBatchSendRecvRetryExecutor::GetPairWiseList(std::vector<std::vector<HcclSend
     return HCCL_SUCCESS;
 }
 
+HcclResult CollBatchSendRecvRetryExecutor::GetPairWiseList(HcclSendRecvItem* sendRecvInfo, u32 itemNum)
+{
+    return CollBatchSendRecvExecutor::GetPairWiseList(sendRecvInfo, itemNum);
+}
+
 HcclResult CollBatchSendRecvRetryExecutor::CheckSendRecvPair(const std::vector<HcclSendRecvItem*>& sendRecvPair)
 {
     if (sendRecvPair.empty()) {

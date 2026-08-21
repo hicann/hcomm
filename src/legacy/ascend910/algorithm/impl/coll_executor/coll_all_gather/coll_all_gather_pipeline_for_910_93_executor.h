@@ -42,9 +42,9 @@ private:
     HcclResult RunL1L0Stage(const OpParam& param, ExecMem& lastExecMem, u64 loopIdx, u64 memIdx, u64 bufferSliceNum);
 
     // 层级算法调用方法（从模板移动到执行器）
-    HcclResult KernelRunInterSuperPod(const OpParam& param, ExecMem& execMem, u64 baseOffset); // 跨超
-    HcclResult KernelRunIntraServer(const OpParam& param, ExecMem& execMem, u64 baseOffset);   // server内
-    HcclResult KernelRunInterServer(const OpParam& param, ExecMem& execMem, u64 baseOffset);   // 跨server
+    HcclResult KernelRunInterSuperPod(const OpParam& param, ExecMem& execMem, u64 baseOffset);        // 跨超
+    HcclResult KernelRunIntraServer(const OpParam& param, ExecMem& execMem, u64 baseOffset);          // server内
+    HcclResult KernelRunInterServer(const OpParam& param, ExecMem& execMem, u64 baseOffset) override; // 跨server
 
     virtual std::vector<Slice> PrepareSlicesL2(
         const OpParam& param, const SubCommInfo& level2CommInfo, const SubCommInfo& level1CommInfo,

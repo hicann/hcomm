@@ -23,6 +23,9 @@ public:
     HcclResult CreatePairWiseList(HcclSendRecvItem* sendRecvInfo, u32 itemNum) override;
     HcclResult GetPairWiseList(std::vector<std::vector<HcclSendRecvItem*>>& sendRecvPairList) override;
 
+protected:
+    HcclResult GetPairWiseList(HcclSendRecvItem* sendRecvInfo, u32 itemNum) override;
+
 private:
     HcclResult CalcSendSlices(AlgResourceResponse& algRes, HcclSendRecvItem* sendRecvItem);
     HcclResult CalcRecvSlices(AlgResourceResponse& algRes, HcclSendRecvItem* sendRecvItem);

@@ -54,6 +54,7 @@ public:
     // batchsendrecv retry使用
     virtual HcclResult CreatePairWiseList(HcclSendRecvItem* sendRecvInfo, u32 itemNum);
     virtual HcclResult GetPairWiseList(std::vector<std::vector<HcclSendRecvItem*>>& sendRecvPairList);
+    virtual HcclResult GetPairWiseList(HcclSendRecvItem* sendRecvInfo, u32 itemNum);
     virtual HcclResult
     CalNumBlocks(u32& numBlocks, u32 rankSize, u64 dataSize = 0, HcclCMDType cmdType = HcclCMDType::HCCL_CMD_INVALID);
     HcclResult GetNumBlocks(u32& numBlocks) const;
