@@ -79,7 +79,7 @@ void RankTableInfo::Check()
         if (rankIdSet.count(rank.rankId) > 0) {
             RPT_INPUT_ERR(
                 true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-                std::vector<std::string>({std::to_string(rank.rankId), "rankId", "rank_id is not repeat."}));
+                std::vector<std::string>({std::to_string(rank.rankId), "rankId", "rank_id is not repeat"}));
             THROW<InvalidParamsException>(StringFormat(
                 "[Parse][ClusterInfo][RankTableInfo::%s] failed with rank_id is "
                 "repeat. version[%s], rankCount[%u], rank_id[%d]",
@@ -103,7 +103,7 @@ void RankTableInfo::Check()
             } else {
                 RPT_INPUT_ERR(
                     true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-                    std::vector<std::string>({"NA", "NA", "multiple replaced rank is configured."}));
+                    std::vector<std::string>({"NA", "NA", "multiple replaced rank is configured"}));
                 THROW<InvalidParamsException>(StringFormat("[Parse][ClusterInfo][RankTableInfo::Check] "
                                                            "multiple replaced rank is configured"));
             }
@@ -116,7 +116,7 @@ void RankTableInfo::Check()
         if (rankIdSet.find(rankRange) == rankIdSet.end()) {
             RPT_INPUT_ERR(
                 true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-                std::vector<std::string>({std::to_string(rankRange), "rankId", "rank_id is continuous."}));
+                std::vector<std::string>({std::to_string(rankRange), "rankId", "rank_id is continuous"}));
             THROW<InvalidParamsException>(StringFormat(
                 "[Parse][ClusterInfo][RankTableInfo::%s] failed with rank_id is "
                 "not continuous. version[%s], rankCount[%u], rankRange[%d]",
@@ -136,7 +136,7 @@ void RankTableInfo::Check()
             true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
             std::vector<std::string>(
                 {std::to_string(recordedReplaceLocalId), "recordedReplacedLocalId",
-                 "failed with configuring same local_id with replaced one simutaneously."}));
+                 "failed with configuring same local_id with replaced one simutaneously"}));
         THROW<InvalidParamsException>(StringFormat(
             "[Parse][ClusterInfo][RankTableInfo::%s] failed with configuring "
             "same local_id[%u] with replaced one simutaneously",

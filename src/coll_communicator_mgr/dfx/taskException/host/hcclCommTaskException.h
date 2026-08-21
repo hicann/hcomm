@@ -52,6 +52,8 @@ private:
     void ReportErrorMsg(
         const Hccl::TaskInfo& exceptionTaskInfo, const std::string& groupRankContent,
         const Hccl::ErrorMessageReport& errorMessage, rtExceptionInfo_t* exceptionInfo) const;
+    void ReportEI0018Error(const Hccl::TaskInfo& exceptionTaskInfo, const Hccl::ErrorMessageReport& errorMessage) const;
+    bool ShouldReportError() const;
 
     std::string GetGroupRankInfo(const Hccl::TaskInfo& taskInfo) const;
     void ProcessException(rtExceptionInfo_t* exceptionInfo, const Hccl::TaskInfo& taskInfo);
@@ -77,6 +79,8 @@ private:
     std::mutex taskExceptionMutex_;
     std::unordered_set<u64> CommRegisterMap_;
     bool hasAicpuReport_{false};
+    mutable std::mutex ei0002ReportedMutex_;
+    mutable bool ei0002Reported_{false};
 };
 } // namespace hcomm
 

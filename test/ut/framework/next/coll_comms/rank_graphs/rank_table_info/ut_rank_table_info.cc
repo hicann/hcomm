@@ -16,6 +16,8 @@
 #include "ip_address.h"
 
 #include "rank_table_info.h"
+#include "topo_common_types.h"
+#include "adapter_error_manager_pub.h"
 
 using namespace Hccl;
 
@@ -919,5 +921,71 @@ TEST_F(RankTableInfoParserTest, Ut_RankTableInfo_When_RankNEQ_Expect_InvalidPara
     newRankInfo.replacedLocalId = 1;
     ranks.push_back(newRankInfo);
     rankTableInfo.ranks = ranks;
+    EXPECT_THROW(rankTableInfo.Check(), InvalidParamsException);
+}
+
+TEST_F(RankTableInfoParserTest, Ut_Check_When_MultipleReplacedRank_Expect_Exception)
+{
+    MOCKER(RptInputErr).stubs().will(returnValue(HCCL_SUCCESS));
+
+    RankTableInfo rankTableInfo;
+    rankTableInfo.version = "2.0";
+    rankTableInfo.rankCount = 2;
+
+    NewRankInfo rank0;
+    rank0.rankId = 0;
+    rank0.localId = BACKUP_LOCAL_ID;
+    rank0.replacedLocalId = 0;
+
+    NewRankInfo rank1;
+    rank1.rankId = 1;
+    rank1.localId = BACKUP_LOCAL_ID;
+    rank1.replacedLocalId = 1;
+
+    rankTableInfo.ranks = {rank0, rank1};
+    EXPECT_THROW(rankTableInfo.Check(), InvalidParamsException);
+}
+
+TEST_F(RankTableInfoParserTest, Ut_Check_When_DuplicateRankId_Expect_Exception)
+{
+    MOCKER(RptInputErr).stubs().will(returnValue(HCCL_SUCCESS));
+
+    RankTableInfo rankTableInfo;
+    rankTableInfo.version = "2.0";
+    rankTableInfo.rankCount = 2;
+
+    NewRankInfo rank0;
+    rank0.rankId = 0;
+    rank0.localId = 0;
+    rank0.replacedLocalId = 0;
+
+    NewRankInfo rank1;
+    rank1.rankId = 0;
+    rank1.localId = 1;
+    rank1.replacedLocalId = 1;
+
+    rankTableInfo.ranks = {rank0, rank1};
+    EXPECT_THROW(rankTableInfo.Check(), InvalidParamsException);
+}
+
+TEST_F(RankTableInfoParserTest, Ut_Check_When_SameLocalIdWithReplaced_Expect_Exception)
+{
+    MOCKER(RptInputErr).stubs().will(returnValue(HCCL_SUCCESS));
+
+    RankTableInfo rankTableInfo;
+    rankTableInfo.version = "2.0";
+    rankTableInfo.rankCount = 2;
+
+    NewRankInfo rank0;
+    rank0.rankId = 0;
+    rank0.localId = BACKUP_LOCAL_ID;
+    rank0.replacedLocalId = 1;
+
+    NewRankInfo rank1;
+    rank1.rankId = 1;
+    rank1.localId = 1;
+    rank1.replacedLocalId = 1;
+
+    rankTableInfo.ranks = {rank0, rank1};
     EXPECT_THROW(rankTableInfo.Check(), InvalidParamsException);
 }

@@ -16,6 +16,7 @@
 #include "ip_address.h"
 
 #include "address_info.h"
+#include "adapter_error_manager_pub.h"
 
 using namespace Hccl;
 
@@ -276,6 +277,25 @@ TEST_F(AddressInfoParserTest, Ut_Deserialize_When_IPV6_Expect_Success)
     EXPECT_EQ(addressInfo0.ports, addressInfo.ports);
 }
 
+TEST_F(AddressInfoParserTest, Ut_Deserialize_When_EmptyAddr_Expect_Exception)
+{
+    DevType devType = DevType::DEV_TYPE_910A;
+    MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
+    MOCKER(RptInputErr).stubs().will(returnValue(HCCL_SUCCESS));
+
+    std::string addressInfoString = R"(
+            {
+                "addr_type": "IPV4",
+                "addr": "",
+                "ports": [ "1/1", "1/2" ],
+                "plane_id": "planeB"
+            }
+    )";
+    JsonParser addressInfoParser;
+    AddressInfo addressInfo;
+    EXPECT_THROW(addressInfoParser.ParseString(addressInfoString, addressInfo), InvalidParamsException);
+}
+
 class AddressInfoParserInvalidTest :
     public AddressInfoParserTest,
     public testing::WithParamInterface<InvalidAddressInfoCase> {};
@@ -314,6 +334,8 @@ INSTANTIATE_TEST_SUITE_P(
             R"({"addr_type":"ipv4","addr":"192.168.100.100","ports":["1/1","1/2"],"plane_id":"planeB"})"},
         InvalidAddressInfoCase{
             "InvalidAddr", R"({"addr_type":"IPV4","addr":"192.168.100","ports":["1/1","1/2"],"plane_id":"planeB"})"},
+        InvalidAddressInfoCase{
+            "EmptyAddr", R"({"addr_type":"IPV4","addr":"","ports":["1/1","1/2"],"plane_id":"planeB"})"},
         InvalidAddressInfoCase{
             "InvalidPort",
             R"({"addr_type":"IPV4","addr":"192.168.100.100","ports":["9999999999999999/9999999999999999"],"plane_id":"planeB"})"},

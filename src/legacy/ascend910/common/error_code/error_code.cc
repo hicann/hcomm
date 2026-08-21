@@ -155,8 +155,8 @@ const std::string hcomm_g_msg = R"(
       "ErrMessage": "An error CQE occurred during operator execution. Local information: server %s, device ID %s, device IP %s. Peer information: server %s, device ID %s, device IP %s.",
       "Arglist": "localServerId,localDeviceId,localDeviceIp,remoteServerId,remoteDeviceId,remoteDeviceIp",
       "suggestion": {
-        "Possible Cause": "1. The network between two devices is abnormal. For example, the network port is intermittently disconnected. 2. The peer process exits abnormally in advance. As a result, the local end cannot receive the response from the peer end.",
-        "Solution": "1. Check whether the network devices between the two ends are abnormal. 2. Check whether the peer process exits first. If yes, check the cause of the process exit."
+        "Possible Cause": "1. The network between two devices is abnormal. For example, the network port is intermittently disconnected. \r\n2. The peer process exits abnormally in advance. As a result, the local end cannot receive the response from the peer end.",
+        "Solution": "1. Check whether the network devices between the two ends are abnormal. \r\n2. Check whether the peer process exits first. If yes, check the cause of the process exit."
       }
     },
     {
@@ -178,7 +178,7 @@ const std::string hcomm_g_msg = R"(
       "Arglist": "error_reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution":"1. Check whether all ranks in the communicator have delivered the communicator creation interface. 2. Check the connectivity between the host networks of all nodes and the server node. 3. Check whether the HCCL_SOCKET_IFNAME environment variable of all nodes is correctly configured. 4. Increase the timeout by configuring the HCCL_CONNECT_TIMEOUT environment variable."
+        "Solution":"1. Check whether all ranks in the communicator have delivered the communicator creation interface. \r\n2. Check the connectivity between the host networks of all nodes and the server node. \r\n3. Check whether the HCCL_SOCKET_IFNAME environment variable of all nodes is correctly configured. \r\n4. Increase the timeout by configuring the HCCL_CONNECT_TIMEOUT environment variable."
       }
     },
     {
@@ -210,8 +210,8 @@ const std::string hcomm_g_msg = R"(
       "ErrMessage": "An error CQE occurred during operator execution. Local information: server %s, device ID %s, device IP %s. Peer information: server %s, device ID %s, device IP %s.",
       "Arglist": "localServerId, localDeviceId, localDeviceIp, remoteServerId, remoteDeviceId, remoteDeviceIp",
       "suggestion": {
-        "Possible Cause": "1. The network between two devices is abnormal. For example, the network port is intermittently disconnected. 2. The peer process exits unexpectedly in advance. As a result, the local end cannot receive the response from the peer end. 3.The hardware of the HBM or UB chip processing module of either device is abnormal.",
-        "Solution": "1. Check whether the network devices between the two ends are abnormal. Generally, packet loss occurs due to intermittent disconnection of the port. If the ping test fails, check whether the port is linkdown or the network configuration is incorrect.2. Check whether the peer process exits first. If yes, check the reason why the process exit.3.Use the RAS fault check mechanism to check whether the hardware of the HBM or UB chip processing module of either device is abnormal. If the hardware is abnormal, contact Huawei technical support."
+        "Possible Cause": "1. The network between two devices is abnormal. For example, the network port is intermittently disconnected. \r\n2. The peer process exits unexpectedly in advance. As a result, the local end cannot receive the response from the peer end. \r\n3.The hardware of the HBM or UB chip processing module of either device is abnormal.",
+        "Solution": "1. Check whether the network devices between the two ends are abnormal. Generally, packet loss occurs due to intermittent disconnection of the port. If the ping test fails, check whether the port is linkdown or the network configuration is incorrect.\r\n2. Check whether the peer process exits first. If yes, check the reason why the process exit.\r\n3.Use the RAS fault check mechanism to check whether the hardware of the HBM or UB chip processing module of either device is abnormal.If the hardware is abnormal, contact Huawei technical support."
       }
     },
     {
@@ -222,7 +222,7 @@ const std::string hcomm_g_msg = R"(
       "Arglist": "reason",
       "suggestion": {
         "Possible Cause": "N/A",
-        "Solution": "1. Check whether this port has been occupied by another process. If yes, you can make adjustment using the environment variable HCCL_IF_BASE_PORT and use sysctl -w net.ipv4.ip_local_reserved_ports=****-**** to adjust the scope of reserved ports. 2. Check whether the service process is started multiple times on a device during this service."
+        "Solution": "1. Check whether this port has been occupied by another process. If yes, you can make adjustment using the environment variable HCCL_IF_BASE_PORT and use sysctl -w net.ipv4.ip_local_reserved_ports=****-**** to adjust the scope of reserved ports. \r\n2. Check whether the service process is started multiple times on a device during this service."
       }
     },
     {

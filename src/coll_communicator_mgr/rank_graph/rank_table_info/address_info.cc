@@ -41,9 +41,15 @@ void AddressInfo::Deserialize(const nlohmann::json& addressInfoJson)
     TRY_CATCH_THROW(InvalidParamsException, msgAddr, address = GetJsonProperty(addressInfoJson, "addr"););
 
     if (address.length() < MIN_VALUE_ADDR_LENGRH || address.length() > MAX_VALUE_ADDR_LENGRH) {
-        RPT_INPUT_ERR(
-            true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
-            std::vector<std::string>({address, "addr", "A ip address."}));
+        if (address.empty()) {
+            RPT_INPUT_ERR(
+                true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+                std::vector<std::string>({"N/A", "addr", "addr is required and should not be empty"}));
+        } else {
+            RPT_INPUT_ERR(
+                true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
+                std::vector<std::string>({address, "addr", "A ip address"}));
+        }
         THROW<InvalidParamsException>(StringFormat(
             "addr [%.*s] length is out of range [%u] to [%u]", MAX_DISPLAY_LEN, address.c_str(), MIN_VALUE_ADDR_LENGRH,
             MAX_VALUE_ADDR_LENGRH));

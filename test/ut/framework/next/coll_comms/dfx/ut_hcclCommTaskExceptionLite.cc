@@ -15,16 +15,18 @@
 #define private public
 #include "hcclCommTaskExceptionLite.h"
 #include "aicpu_ts_thread.h"
+#include "hcclCommTaskException.h"
 #undef private
 #include "hcomm_task_scheduler_error.h"
 #include "aicpu_indop_env.h"
 #include "comm_engine_res_aicpu_mgr.h"
 #include "adapter_hal_pub.h"
 #include "dlhal_function_v2.h"
-#include "hcclCommTaskException.h"
 #include "rtsq_base.h"
 #include "kernel_entrance.h"
 #include "dfx_profiling_handler_lite.h"
+#include "adapter_error_manager_pub.h"
+#include "task_info.h"
 
 using namespace hccl;
 using namespace hcomm;
@@ -598,4 +600,52 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_GenerateErrorMessageReport_When_UbTask_
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(errMsgInfo.jettyHandle, jettyHandle);
     EXPECT_EQ(errMsgInfo.jettyId, jettyId);
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_HandleHostErrorReport_When_DuplicateReport_Expect_SkipSecond)
+{
+    const s32 testDeviceId = 62;
+    rtExceptionInfo_t exceptionInfo{};
+    exceptionInfo.deviceid = static_cast<uint32_t>(testDeviceId);
+    exceptionInfo.streamid = 0;
+    exceptionInfo.taskid = 0;
+
+    Hccl::TaskParam taskParam{};
+    taskParam.taskType = Hccl::TaskParamType::TASK_NOTIFY_WAIT;
+    Hccl::TaskInfo taskInfo(0, 0, 1, taskParam, nullptr);
+
+    TaskExceptionHost* handler = TaskExceptionHost::GetInstance(testDeviceId);
+    ASSERT_NE(handler, nullptr);
+
+    MOCKER(RptInputErr).stubs().will(returnValue(HCCL_SUCCESS));
+    handler->HandleHostErrorReport(&exceptionInfo, taskInfo);
+    GlobalMockObject::verify();
+
+    MOCKER(RptInputErr).expects(never());
+    handler->HandleHostErrorReport(&exceptionInfo, taskInfo);
+}
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_ReportErrorMsg_When_DuplicateReport_Expect_SkipSecond)
+{
+    const s32 testDeviceId = 61;
+    rtExceptionInfo_t exceptionInfo{};
+    exceptionInfo.deviceid = static_cast<uint32_t>(testDeviceId);
+    exceptionInfo.streamid = 0;
+    exceptionInfo.taskid = 0;
+
+    Hccl::TaskParam taskParam{};
+    taskParam.taskType = Hccl::TaskParamType::TASK_NOTIFY_WAIT;
+    Hccl::TaskInfo taskInfo(0, 0, 1, taskParam, nullptr);
+
+    Hccl::ErrorMessageReport errorMessage{};
+
+    TaskExceptionHost* handler = TaskExceptionHost::GetInstance(testDeviceId);
+    ASSERT_NE(handler, nullptr);
+
+    MOCKER(RptInputErr).stubs().will(returnValue(HCCL_SUCCESS));
+    handler->ReportErrorMsg(taskInfo, "", errorMessage, &exceptionInfo);
+    GlobalMockObject::verify();
+
+    MOCKER(RptInputErr).expects(never());
+    handler->ReportErrorMsg(taskInfo, "", errorMessage, &exceptionInfo);
 }

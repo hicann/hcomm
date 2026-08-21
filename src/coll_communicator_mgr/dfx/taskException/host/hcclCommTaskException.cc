@@ -406,12 +406,18 @@ void TaskExceptionHost::HandleHostErrorReport(rtExceptionInfo_t* exceptionInfo, 
 {
     HCCL_ERROR("[TaskExceptionHost][%s]Task from HCCL run failed.", __func__);
     if (taskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_NOTIFY_WAIT) {
-        PrintTaskContextInfo(exceptionInfo->deviceid, exceptionInfo->streamid, exceptionInfo->taskid);
-        RPT_INPUT_ERR(
-            true, "EI0002",
-            std::vector<std::string>({"remote_rankid", "base_information", "task_information", "group_rank_content"}),
-            std::vector<std::string>(
-                {std::to_string(taskInfo.remoteRank_), taskInfo.GetBaseInfo(), (taskInfo.GetParaInfo()), ""}));
+        if (ShouldReportError()) {
+            PrintTaskContextInfo(exceptionInfo->deviceid, exceptionInfo->streamid, exceptionInfo->taskid);
+            RPT_INPUT_ERR(
+                true, "EI0002",
+                std::vector<std::string>(
+                    {"remote_rankid", "base_information", "task_information", "group_rank_content"}),
+                std::vector<std::string>(
+                    {std::to_string(taskInfo.remoteRank_), taskInfo.GetBaseInfo(), (taskInfo.GetParaInfo()), ""}));
+        } else {
+            HCCL_WARNING(
+                "[TaskExceptionHost] EI0002 already reported on device[%u], skip duplicate.", exceptionInfo->deviceid);
+        }
     }
     std::string clusterMonitorErrMsg = AicpuGetAndPrintClusterMonitorErr(exceptionInfo);
     HCCL_ERROR(
@@ -607,40 +613,61 @@ void TaskExceptionHost::ReportErrorMsg(
     std::string clusterMonitorErrMsg = AicpuGetAndPrintClusterMonitorErr(exceptionInfo);
 
     if (exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_NOTIFY_WAIT) {
-        HCCL_ERROR("[ReportErrorMsg] EI0002");
-        RPT_INPUT_ERR(
-            true, "EI0002",
-            std::vector<std::string>({"remote_rankid", "base_information", "task_information", "group_rank_content"}),
-            std::vector<std::string>(
-                {std::to_string(exceptionTaskInfo.remoteRank_), exceptionTaskInfo.GetIndopBaseInfo().c_str(),
-                 (exceptionTaskInfo.GetParaInfo() + clusterMonitorErrMsg).c_str(), ""}));
+        if (ShouldReportError()) {
+            HCCL_ERROR("[ReportErrorMsg] EI0002");
+            RPT_INPUT_ERR(
+                true, "EI0002",
+                std::vector<std::string>(
+                    {"remote_rankid", "base_information", "task_information", "group_rank_content"}),
+                std::vector<std::string>(
+                    {std::to_string(exceptionTaskInfo.remoteRank_), exceptionTaskInfo.GetIndopBaseInfo().c_str(),
+                     (exceptionTaskInfo.GetParaInfo() + clusterMonitorErrMsg).c_str(), ""}));
+        } else {
+            HCCL_WARNING(
+                "[ReportErrorMsg] EI0002 already reported on device[%u], skip duplicate.", exceptionInfo->deviceid);
+        }
     } else if (
         exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_WRITE_REDUCE_WITH_NOTIFY
         || exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_WRITE_WITH_NOTIFY
         || exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_UB_INLINE_WRITE
         || exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_UB_REDUCE_INLINE
         || exceptionTaskInfo.taskParam_.taskType == Hccl::TaskParamType::TASK_UB) {
-        hccl::CollComm* collComm = static_cast<hccl::CollComm*>(exceptionTaskInfo.dfxOpInfo_->comm_);
-        std::string localServerId = "";
-        GetAicpuCqeErrNetInstanceByRankId(collComm, errorMessage.rankId, localServerId);
-        u32 localDeviceId = Hccl::DFX_INVALID_RANKID;
-        GetAicpuCqeErrRemoteLocalIdByRankId(collComm, errorMessage.rankId, localDeviceId);
-        std::string remoteServerId = "";
-        GetAicpuCqeErrNetInstanceByRankId(collComm, errorMessage.remoteUserRank, remoteServerId);
-        u32 remoteDeviceId = Hccl::DFX_INVALID_RANKID;
-        GetAicpuCqeErrRemoteLocalIdByRankId(collComm, errorMessage.remoteUserRank, remoteDeviceId);
-        Hccl::IpAddress localAddr(errorMessage.locEid);
-        Hccl::IpAddress remoteAddr(errorMessage.rmtEid);
-        HCCL_ERROR("[ReportErrorMsg] EI0018");
-        RPT_INPUT_ERR(
-            true, "EI0018",
-            std::vector<std::string>(
-                {"localServerId", "localDeviceId", "localDeviceIp", "remoteServerId", "remoteDeviceId",
-                 "remoteDeviceIp"}),
-            std::vector<std::string>(
-                {localServerId, std::to_string(localDeviceId), localAddr.GetEid().Describe().c_str(), remoteServerId,
-                 std::to_string(remoteDeviceId), remoteAddr.GetEid().Describe().c_str()}));
+        ReportEI0018Error(exceptionTaskInfo, errorMessage);
     }
+}
+
+bool TaskExceptionHost::ShouldReportError() const
+{
+    std::lock_guard<std::mutex> lock(ei0002ReportedMutex_);
+    if (!ei0002Reported_) {
+        ei0002Reported_ = true;
+        return true;
+    }
+    return false;
+}
+
+void TaskExceptionHost::ReportEI0018Error(
+    const Hccl::TaskInfo& exceptionTaskInfo, const Hccl::ErrorMessageReport& errorMessage) const
+{
+    hccl::CollComm* collComm = static_cast<hccl::CollComm*>(exceptionTaskInfo.dfxOpInfo_->comm_);
+    std::string localServerId = "";
+    GetAicpuCqeErrNetInstanceByRankId(collComm, errorMessage.rankId, localServerId);
+    u32 localDeviceId = Hccl::DFX_INVALID_RANKID;
+    GetAicpuCqeErrRemoteLocalIdByRankId(collComm, errorMessage.rankId, localDeviceId);
+    std::string remoteServerId = "";
+    GetAicpuCqeErrNetInstanceByRankId(collComm, errorMessage.remoteUserRank, remoteServerId);
+    u32 remoteDeviceId = Hccl::DFX_INVALID_RANKID;
+    GetAicpuCqeErrRemoteLocalIdByRankId(collComm, errorMessage.remoteUserRank, remoteDeviceId);
+    Hccl::IpAddress localAddr(errorMessage.locEid);
+    Hccl::IpAddress remoteAddr(errorMessage.rmtEid);
+    HCCL_ERROR("[ReportErrorMsg] EI0018");
+    RPT_INPUT_ERR(
+        true, "EI0018",
+        std::vector<std::string>(
+            {"localServerId", "localDeviceId", "localDeviceIp", "remoteServerId", "remoteDeviceId", "remoteDeviceIp"}),
+        std::vector<std::string>(
+            {localServerId, std::to_string(localDeviceId), localAddr.GetReverseEid().Describe().c_str(), remoteServerId,
+             std::to_string(remoteDeviceId), remoteAddr.GetReverseEid().Describe().c_str()}));
 }
 
 void GetTaskParam(Hccl::TaskParam& taskParam, const Hccl::ErrorMessageReport& errMsgInfo)
