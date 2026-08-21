@@ -314,8 +314,8 @@ HcclResult GetAivOpBinaryPath(std::string& binaryPath)
 s8* GetStubFunc(HcclCMDType cmdType, DataType dataType, KernelArgsType argsType = KernelArgsType::ARGS_TYPE_SERVER)
 {
     return reinterpret_cast<s8*>(
-        (((static_cast<s64>(cmdType) << SIG_MOVE_LEFT_BITS) + static_cast<s64>(dataType)) << SIG_MOVE_LEFT_BITS)
-        + static_cast<s64>(argsType));
+        (((static_cast<u64>(cmdType) << SIG_MOVE_LEFT_BITS) + static_cast<u64>(dataType)) << SIG_MOVE_LEFT_BITS)
+        + static_cast<u64>(argsType));
 }
 
 HcclResult RegisterBinaryKernel(const char* funcName, const aclrtBinHandle binHandle, const s8* stubFunc)

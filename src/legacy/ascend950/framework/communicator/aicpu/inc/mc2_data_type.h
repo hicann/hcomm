@@ -12,7 +12,7 @@
 #define MC2_DATA_TYPE_H
 #include "hccl_types.h"
 
-enum HcclTaskStatus { HCCL_NORMAL_STATUS, HCCL_CQE_ERROR, HCCL_END_STATUS };
+enum class HcclTaskStatus { HCCL_NORMAL_STATUS, HCCL_CQE_ERROR, HCCL_END_STATUS };
 
 struct HcclOpData {
     HcclOpData() { dataDes = {0, HcclDataType::HCCL_DATA_TYPE_RESERVED, 0}; }

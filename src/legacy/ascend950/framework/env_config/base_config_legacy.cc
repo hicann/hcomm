@@ -149,12 +149,12 @@ HcclResult EnvRdmaConfig::OpenMultiQpConfigFile(std::ifstream& inFile)
         return HCCL_E_PARA;
     }
 
-    inFile.open(fileStr.c_str(), std::ifstream::in);
+    inFile.open(realFile.data(), std::ifstream::in);
     if (!inFile) {
-        HCCL_ERROR("[EnvRdmaConfig][OpenMultiQpConfigFile] open config file[%s] failed.", fileStr.c_str());
+        HCCL_ERROR("[EnvRdmaConfig][OpenMultiQpConfigFile] open config file[%s] failed.", realFile.data());
         return HCCL_E_PARA;
     }
-    HCCL_INFO("[EnvRdmaConfig][OpenMultiQpConfigFile] open config file[%s] success.", fileStr.c_str());
+    HCCL_INFO("[EnvRdmaConfig][OpenMultiQpConfigFile] open config file[%s] success.", realFile.data());
     return HCCL_SUCCESS;
 }
 

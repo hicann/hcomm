@@ -153,8 +153,9 @@ HcclResult FlushHandle::RegisterRemoteMr()
     u64 bufferSize = FLUSH_BUFFER_SIZE;
     loopBackQpMrRemoteInfo.addr = deviceMem;
     loopBackQpMrRemoteInfo.size = bufferSize;
-    loopBackQpMrRemoteInfo.access
-        = RA_ACCESS_REMOTE_WRITE | RA_ACCESS_LOCAL_WRITE | RA_ACCESS_REMOTE_READ | RA_ACCESS_REMOTE_ATOMIC;
+    loopBackQpMrRemoteInfo.access = static_cast<int>(
+        static_cast<unsigned int>(RA_ACCESS_REMOTE_WRITE) | static_cast<unsigned int>(RA_ACCESS_LOCAL_WRITE)
+        | static_cast<unsigned int>(RA_ACCESS_REMOTE_READ) | static_cast<unsigned int>(RA_ACCESS_REMOTE_ATOMIC));
 
     int remoteRet = RaRegisterMr(rdmaHandle, &loopBackQpMrRemoteInfo, &remoteMrHandle);
     if (remoteRet != 0 || remoteMrHandle == nullptr) {
