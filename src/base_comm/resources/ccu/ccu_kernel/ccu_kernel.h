@@ -342,6 +342,11 @@ private:
     HcclResult CollectLoopGroupProfilingInfo(
         const uint64_t* taskArgs, uint32_t argSize, const std::unordered_map<uint16_t, uint32_t>& varId2ArgIndexMap,
         const std::unordered_map<uint16_t, uint16_t>& varId2VarIdMap);
+    // CollectLoopGroupProfilingInfo 的单次循环体：处理下标 i 对应的 loopParam 与 parallelParam 分支。
+    HcclResult CollectSingleLoopGroupProfiling(
+        uint32_t i, size_t repSize, const uint64_t* taskArgs, uint32_t argSize,
+        const std::unordered_map<uint16_t, uint32_t>& varId2ArgIndexMap,
+        const std::unordered_map<uint16_t, uint16_t>& varId2VarIdMap);
 
     CcuRep::Variable CreateJumpTargetVar();
 

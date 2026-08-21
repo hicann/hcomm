@@ -161,6 +161,7 @@ namespace CcuRep {
         void* channelPtr{nullptr};
         CHK_RET(static_cast<HcclResult>(HcommChannelGet(channel, &channelPtr)));
         auto* channelImpl = dynamic_cast<CcuUrmaChannel*>(static_cast<Channel*>(channelPtr));
+        CHK_PTR_NULL(channelImpl);
 
         ccuProfilingInfoCache.type = (uint8_t)CcuProfilinType::CCU_WAITCKE_PROFILING;
         ccuProfilingInfoCache.name = name;

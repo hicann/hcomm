@@ -16,6 +16,7 @@ set(src_to_test_list
     ut_HcommCcuControlApi_ckenop_test.cc
     ut_HcommCcuResDescApi_test.cc
     ut_HcommCcuKernelQueryResReq_test.cc
+    ut_CollectLoopGroupProfiling_test.cc
 
     mocks/ccu_device_mock_utils.cc
     mocks/ccu_drv_handle_mock.cc

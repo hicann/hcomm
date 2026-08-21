@@ -3060,40 +3060,71 @@ HcclResult CcuKernel::CollectLoopGroupProfilingInfo(
         "[GetCcuProfilingInfo] process loop group profiling start: "
         "lgsize(%lu), goSize(%lu)",
         lgProfInfo.lgProfilingReps.size(), groupOpSizeInfo_.size());
-    for (uint32_t i = 0; i < lgProfInfo.lgProfilingReps.size();
-         i += 2) { // 2: 一个goSize对应一个CcuProfilingInfo，对应1个loopGroup Rep
-        if (argSize == 0 || varId2ArgIndexMap.empty()) {
-            continue;
-        }
-        uint64_t loopParam{0};
-        CHK_RET(GetArgIndex(
-            varId2VarIdMap, varId2ArgIndexMap, taskArgs, argSize, groupOpSizeInfo_[i].loopParamId, loopParam));
-        uint64_t parallelParam{0};
-        CHK_RET(GetArgIndex(
-            varId2VarIdMap, varId2ArgIndexMap, taskArgs, argSize, groupOpSizeInfo_[i].parallelParamId, parallelParam));
-        HCCL_INFO(
-            "Collect loopgroup profiling info: repSize[%u], index[%u],"
-            "loopParam[%llu], parallelParam[%llu].",
-            lgProfInfo.lgProfilingReps.size(), i, loopParam, parallelParam);
+    // lgProfilingReps、groupOpSizeInfo_、ccuProfilingInfos 设计上同步 push；
+    // 但 CcuRepContext::AddProfiling 可能只 push ccuProfilingInfos 而不 push lgProfilingReps，
+    // 取三者最小值作为循环安全上界，防止任一容器较短时下标越界。
+    size_t repSize = lgProfInfo.lgProfilingReps.size();
+    size_t goSizeNum = groupOpSizeInfo_.size();
+    size_t profSize = lgProfInfo.ccuProfilingInfos.size();
+    size_t safeSize = (repSize < goSizeNum) ? repSize : goSizeNum;
+    safeSize = (profSize < safeSize) ? profSize : safeSize;
+    if (safeSize != repSize) {
+        HCCL_WARNING(
+            "[CollectLoopGroupProfilingInfo] size mismatch: lgReps[%zu], goSize[%zu], ccuProf[%zu],"
+            " use safeSize[%zu].",
+            repSize, goSizeNum, profSize, safeSize);
+    }
+    for (uint32_t i = 0; i < safeSize; i += 2) { // 2: 一个goSize对应一个CcuProfilingInfo，对应1个loopGroup Rep
+        CHK_RET(CollectSingleLoopGroupProfiling(i, repSize, taskArgs, argSize, varId2ArgIndexMap, varId2VarIdMap));
+    }
+    return HCCL_SUCCESS;
+}
 
-        if (loopParam != 0) {
-            lgProfInfo.ccuProfilingInfos[i].dataSize = loopParam * moConfig_.loopCount * moConfig_.memSlice;
-            lgProfInfo.ccuProfilingInfos[i].instrId
-                = dynamic_cast<CcuRep::CcuRepLoopGroupBundle*>(lgProfInfo.lgProfilingReps[i].get())->StartInstrId();
-            allCcuProfilingInfos_.push_back(lgProfInfo.ccuProfilingInfos[i]);
-        }
+HcclResult CcuKernel::CollectSingleLoopGroupProfiling(
+    uint32_t i, size_t repSize, const uint64_t* taskArgs, uint32_t argSize,
+    const std::unordered_map<uint16_t, uint32_t>& varId2ArgIndexMap,
+    const std::unordered_map<uint16_t, uint16_t>& varId2VarIdMap)
+{
+    if (argSize == 0 || varId2ArgIndexMap.empty()) {
+        return HCCL_SUCCESS;
+    }
+    auto& lgProfInfo = GetLGProfilingInfo();
+    uint64_t loopParam{0};
+    CHK_RET(
+        GetArgIndex(varId2VarIdMap, varId2ArgIndexMap, taskArgs, argSize, groupOpSizeInfo_[i].loopParamId, loopParam));
+    uint64_t parallelParam{0};
+    CHK_RET(GetArgIndex(
+        varId2VarIdMap, varId2ArgIndexMap, taskArgs, argSize, groupOpSizeInfo_[i].parallelParamId, parallelParam));
+    HCCL_INFO(
+        "Collect loopgroup profiling info: repSize[%u], index[%u],"
+        "loopParam[%llu], parallelParam[%llu].",
+        lgProfInfo.lgProfilingReps.size(), i, loopParam, parallelParam);
 
-        if (parallelParam != 0) {
-            HCCL_INFO("[GetCcuProfilingInfo] collect lg, residual start i=%lu", i);
-            uint64_t residual{0};
-            CHK_RET(GetArgIndex(
-                varId2VarIdMap, varId2ArgIndexMap, taskArgs, argSize, groupOpSizeInfo_[i].residualId, residual));
-            uint64_t repeatNum = ParseRepeatNumFromParallelParam(parallelParam);
-            lgProfInfo.ccuProfilingInfos[i].dataSize = repeatNum * moConfig_.memSlice + residual;
-            lgProfInfo.ccuProfilingInfos[i].instrId
-                = dynamic_cast<CcuRep::CcuRepLoopGroupBundle*>(lgProfInfo.lgProfilingReps[i + 1].get())->StartInstrId();
-            allCcuProfilingInfos_.push_back(lgProfInfo.ccuProfilingInfos[i]);
+    if (loopParam != 0) {
+        lgProfInfo.ccuProfilingInfos[i].dataSize = loopParam * moConfig_.loopCount * moConfig_.memSlice;
+        lgProfInfo.ccuProfilingInfos[i].instrId
+            = dynamic_cast<CcuRep::CcuRepLoopGroupBundle*>(lgProfInfo.lgProfilingReps[i].get())->StartInstrId();
+        allCcuProfilingInfos_.push_back(lgProfInfo.ccuProfilingInfos[i]);
+    }
+
+    if (parallelParam != 0) {
+        HCCL_INFO("[GetCcuProfilingInfo] collect lg, residual start i=%lu", i);
+        uint64_t residual{0};
+        CHK_RET(GetArgIndex(
+            varId2VarIdMap, varId2ArgIndexMap, taskArgs, argSize, groupOpSizeInfo_[i].residualId, residual));
+        uint64_t repeatNum = ParseRepeatNumFromParallelParam(parallelParam);
+        lgProfInfo.ccuProfilingInfos[i].dataSize = repeatNum * moConfig_.memSlice + residual;
+        // rep[i] 对应 loopParam 分支，rep[i+1] 对应 parallelParam 分支；尾项无配对 rep 时跳过避免越界
+        if (i + 1 >= repSize) {
+            HCCL_WARNING(
+                "[CollectLoopGroupProfilingInfo] parallelParam != 0 but no paired rep,"
+                " index(%u), repSize(%zu), skip parallelParam profiling.",
+                i, repSize);
+            return HCCL_SUCCESS;
         }
+        lgProfInfo.ccuProfilingInfos[i].instrId
+            = dynamic_cast<CcuRep::CcuRepLoopGroupBundle*>(lgProfInfo.lgProfilingReps[i + 1].get())->StartInstrId();
+        allCcuProfilingInfos_.push_back(lgProfInfo.ccuProfilingInfos[i]);
     }
     return HCCL_SUCCESS;
 }
