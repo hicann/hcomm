@@ -408,6 +408,9 @@ HcclResult HcclCommTaskExceptionLite::GenerateErrorMessageReport(
     errMsgInfo.rtCqErrorType = exceptionInfo.errorType;
     errMsgInfo.rtCqErrorCode = exceptionInfo.errorCode;
 
+    errMsgInfo.jettyHandle = taskInfo.taskPara.ubDma.jettyHandle;
+    errMsgInfo.jettyId = taskInfo.taskPara.ubDma.jettyId;
+
     CHK_SAFETY_FUNC_RET(memcpy_s(
         errMsgInfo.group, sizeof(errMsgInfo.group), aicpuComm->GetIdentifier().c_str(),
         aicpuComm->GetIdentifier().size() + 1));

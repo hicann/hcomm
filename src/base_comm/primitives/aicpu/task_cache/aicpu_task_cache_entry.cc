@@ -1282,6 +1282,8 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotUbDma_(
     } else {
         slot->taskPara.ubDma.notifyId = static_cast<u32>(profInfo.notifyId);
     }
+    slot->taskPara.ubDma.jettyHandle = profInfo.jettyHandle;
+    slot->taskPara.ubDma.jettyId = profInfo.jettyId;
     return HCCL_SUCCESS;
 }
 
@@ -1304,6 +1306,8 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotReduce_(
     } else {
         slot->taskPara.Reduce.notifyId = static_cast<u32>(profInfo.notifyId);
     }
+    slot->taskPara.Reduce.jettyHandle = profInfo.jettyHandle;
+    slot->taskPara.Reduce.jettyId = profInfo.jettyId;
     return HCCL_SUCCESS;
 }
 

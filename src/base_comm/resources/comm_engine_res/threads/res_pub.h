@@ -176,6 +176,8 @@ struct DfxTaskParaUbDma {      // UB DMA 任务参数
     u64 size;                  // 数据大小（字节）
     u32 notifyId{INVALID_U32}; // Notify ID，来源于 ParaDMA::notifyID，taskException 使用
                                //   write with notify SQE 中无此字段；cnt notify 不支持跨片
+    uint64_t jettyHandle{0};   // taskException 用于 dump jetty context
+    uint32_t jettyId{0};       // taskException 用于 dump jetty context
 };
 
 struct DfxTaskParaReduce {     // UB Reduce 任务参数
@@ -185,6 +187,8 @@ struct DfxTaskParaReduce {     // UB Reduce 任务参数
     u64 size;                  // 数据大小（字节）
     u32 notifyId{INVALID_U32}; // Notify ID，来源于 ParaReduce::notifyID，taskException 使用
     u8 reduceOp; // Reduce 操作类型枚举值（HcclReduceOp 底层 uint8_t，仅 Reduce 类 task 有效）
+    uint64_t jettyHandle{0}; // taskException 用于 dump jetty context
+    uint32_t jettyId{0};     // taskException 用于 dump jetty context
 };
 
 struct DfxTaskParaWriteValue { // P2P WriteValue 任务参数

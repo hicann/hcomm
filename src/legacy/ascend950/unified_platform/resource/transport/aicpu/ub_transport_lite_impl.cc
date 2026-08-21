@@ -455,8 +455,6 @@ void UbTransportLiteImpl::WaitWithTimeout(u32 index, const StreamLite& stream, u
     taskParam.beginTime = ProfGetCurCpuTimestamp();
     taskParam.taskPara.Notify.notifyID = notifyId;
     taskParam.taskPara.Notify.value = 1;
-    taskParam.taskPara.DMA.jettyHandle = GetJettyHandle();
-    taskParam.taskPara.DMA.jettyId = GetJettyId();
 
     AddTaskCallback(stream, taskId, taskParam);
     DfxTaskInfo* slot = stream.NextTaskSlot();
@@ -525,8 +523,6 @@ void UbTransportLiteImpl::WriteWithNotifyProfilingProcess(
     taskParam.taskPara.DMA.src = src;
     taskParam.taskPara.DMA.notifyID = notifyId;
     taskParam.taskPara.DMA.notifyValue = 1;
-    taskParam.taskPara.DMA.jettyHandle = GetJettyHandle();
-    taskParam.taskPara.DMA.jettyId = GetJettyId();
 
     AddTaskCallback(stream, taskId, taskParam);
     DfxTaskInfo* slot = stream.NextTaskSlot();
@@ -569,8 +565,6 @@ void UbTransportLiteImpl::NotifyRecordProfilingProcess(
     FillTaskParamDmaPub(taskParam, dst, size, DmaOp::HCCL_DMA_WRITE);
     taskParam.taskPara.DMA.notifyID = notifyId;
     taskParam.taskPara.DMA.notifyValue = 1;
-    taskParam.taskPara.DMA.jettyHandle = GetJettyHandle();
-    taskParam.taskPara.DMA.jettyId = GetJettyId();
 
     AddTaskCallback(stream, taskId, taskParam);
     DfxTaskInfo* slot = stream.NextTaskSlot();
@@ -593,6 +587,8 @@ void UbTransportLiteImpl::FillSlotUbDmaInfo(
     slot->taskPara.ubDma.dstAddr = dstAddr;
     slot->taskPara.ubDma.size = size;
     slot->taskPara.ubDma.notifyId = notifyId;
+    slot->taskPara.ubDma.jettyHandle = GetJettyHandle();
+    slot->taskPara.ubDma.jettyId = GetJettyId();
 }
 
 void UbTransportLiteImpl::FillSlotReduceInfo(
@@ -612,6 +608,8 @@ void UbTransportLiteImpl::FillSlotReduceInfo(
     slot->taskPara.Reduce.size = size;
     slot->taskPara.Reduce.notifyId = notifyId;
     slot->taskPara.Reduce.reduceOp = reduceOp;
+    slot->taskPara.Reduce.jettyHandle = GetJettyHandle();
+    slot->taskPara.Reduce.jettyId = GetJettyId();
 }
 
 void UbTransportLiteImpl::Read(const RmaBufferLite& loc, const Buffer& rmt, const StreamLite& stream)

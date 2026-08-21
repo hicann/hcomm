@@ -285,8 +285,6 @@ private:
         taskParam.taskPara.DMA.dmaOp = dmaOp;
         taskParam.taskPara.DMA.locEid = GetLocEid();
         taskParam.taskPara.DMA.rmtEid = GetRmtEid();
-        taskParam.taskPara.DMA.jettyHandle = GetJettyHandle();
-        taskParam.taskPara.DMA.jettyId = GetJettyId();
     }
 
     inline void FillDbSqeProfInfoDmaPub(void* dst, u64 size, DmaOp dmaOp, DbSqeProfInfo& dbSqeProfInfo) const
@@ -314,8 +312,6 @@ private:
         taskParam.taskPara.Reduce.dataType = DataTypeToHcclDataType(reduceIn.dataType);
         taskParam.taskPara.Reduce.locEid = GetLocEid();
         taskParam.taskPara.Reduce.rmtEid = GetRmtEid();
-        taskParam.taskPara.DMA.jettyHandle = GetJettyHandle();
-        taskParam.taskPara.DMA.jettyId = GetJettyId();
     }
 
     inline void FillDbSqeProfInfoReducePub(

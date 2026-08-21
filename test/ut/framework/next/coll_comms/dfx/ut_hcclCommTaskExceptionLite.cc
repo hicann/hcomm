@@ -573,3 +573,29 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_ReportErrMsg_When_ErrorAlreadyReported_
     HcclResult ret = HcclCommTaskExceptionLite::GetInstance().ReportErrMsg(&aicpuComm, exceptionInfo);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_GenerateErrorMessageReport_When_UbTask_Expect_JettyFilled)
+{
+    CollCommAicpu aicpuComm;
+    aicpuComm.identifier_ = "test_gen_err_jetty";
+    InitCommEngineResMgr(aicpuComm);
+
+    const u64 jettyHandle = 0x1234567890abULL;
+    const u32 jettyId = 7;
+
+    Hccl::DfxDfxOpInfo opInfo{};
+    Hccl::DfxTaskInfo taskInfo{};
+    taskInfo.dfxOpInfo = reinterpret_cast<u64>(&opInfo);
+    taskInfo.taskType = static_cast<u8>(Hccl::TaskParamTypeVal::TASK_UB);
+    taskInfo.taskPara.ubDma.jettyHandle = jettyHandle;
+    taskInfo.taskPara.ubDma.jettyId = jettyId;
+
+    rtLogicCqReport_t exceptionInfo{};
+    Hccl::ErrorMessageReport errMsgInfo{};
+    HcclResult ret = HcclCommTaskExceptionLite::GetInstance().GenerateErrorMessageReport(
+        &aicpuComm, taskInfo, exceptionInfo, errMsgInfo);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(errMsgInfo.jettyHandle, jettyHandle);
+    EXPECT_EQ(errMsgInfo.jettyId, jettyId);
+}

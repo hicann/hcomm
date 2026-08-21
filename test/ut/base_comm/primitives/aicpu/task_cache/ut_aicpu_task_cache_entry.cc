@@ -28,6 +28,7 @@
 #include "ub_jetty_lite.h"
 #include "ip_address.h"
 #include "unified_platform/pub_inc/config_plf_log.h"
+#include "stream_lite.h"
 
 #undef private
 #undef protected
@@ -918,4 +919,40 @@ TEST_F(AicpuTaskCacheEntryTest, GetEntryBytes_AfterInit)
     auto sqeArray = MakeSqeArray(Rt91095StarsSqeType::RT_91095_SQE_TYPE_NOTIFY_WAIT);
     ASSERT_EQ(entry.AddSqeArray(rtsqPtr_, aicpuTsThread_.get(), 1, sqeArray.data(), 0), HCCL_SUCCESS);
     EXPECT_GT(entry.GetEntryBytes(), bytesAfterInit);
+}
+
+TEST_F(AicpuTaskCacheEntryTest, FillSlot_UbDma_JettyPassthrough)
+{
+    hcomm::AicpuTaskCacheEntry entry;
+    const u64 jettyHandle = 0xABCDEF1234ULL;
+    const u32 jettyId = 42;
+
+    Hccl::StreamLite streamLite(0, 0, 0, 0);
+    Hccl::DfxTaskInfo slot{};
+    DbSqeProfAndRefreshInfo profAndRefreshInfo;
+    profAndRefreshInfo.dbSqeProfInfo.jettyHandle = jettyHandle;
+    profAndRefreshInfo.dbSqeProfInfo.jettyId = jettyId;
+
+    HcclResult ret = entry.FillSlotUbDma_(&slot, nullptr, profAndRefreshInfo, ubTransport_.get(), &streamLite, 1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(slot.taskPara.ubDma.jettyHandle, jettyHandle);
+    EXPECT_EQ(slot.taskPara.ubDma.jettyId, jettyId);
+}
+
+TEST_F(AicpuTaskCacheEntryTest, FillSlot_Reduce_JettyPassthrough)
+{
+    hcomm::AicpuTaskCacheEntry entry;
+    const u64 jettyHandle = 0x1122334455ULL;
+    const u32 jettyId = 99;
+
+    Hccl::StreamLite streamLite(0, 0, 0, 0);
+    Hccl::DfxTaskInfo slot{};
+    DbSqeProfAndRefreshInfo profAndRefreshInfo;
+    profAndRefreshInfo.dbSqeProfInfo.jettyHandle = jettyHandle;
+    profAndRefreshInfo.dbSqeProfInfo.jettyId = jettyId;
+
+    HcclResult ret = entry.FillSlotReduce_(&slot, nullptr, profAndRefreshInfo, ubTransport_.get(), &streamLite, 1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(slot.taskPara.Reduce.jettyHandle, jettyHandle);
+    EXPECT_EQ(slot.taskPara.Reduce.jettyId, jettyId);
 }
