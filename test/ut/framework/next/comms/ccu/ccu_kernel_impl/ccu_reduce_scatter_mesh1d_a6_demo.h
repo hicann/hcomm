@@ -206,12 +206,11 @@ struct ReduceScatterContextV2 {
     bool resourceAllocated;
 
     // Loop body 复用：body 只翻译一次；每次进入不同 LoopGroup 前，通过
-    // reduceIterNum / reduceGsaOffset / reduceCtxId 分别注入 V2 三段参数。
+    // reduceIterNum / reduceGsaOffset 分别注入 V2 loop 参数（ctxId 由 ccu::Loop 内部维护）。
     std::unique_ptr<ccu::Func> reduceBody[2];
     std::unique_ptr<ccu::Loop> reduceLoops[2];
     ccu::Variable reduceIterNum[2];
     ccu::Variable reduceGsaOffset[2];
-    ccu::Variable reduceCtxId[2];
     bool loopRegistered;
 
     // Loop body 中的外部 LocalAddr / 长度参数（每个 loop index 各一组）
@@ -354,14 +353,129 @@ static CcuResult CreateReduceLoop(ReduceScatterContextV2& ctx)
             ccu::EventWait(loopEvt, 1);
         }));
 
-        // V2 三 Variable Loop：iterNum / gsaOffset / ctxId 分别独立注入，
-        // 由 ReduceLoopGroup 在加入不同 LoopGroup 之前赋值。
+        // V2 Loop：iterNum / gsaOffset 两个 Variable 独立注入，ctxId 由 ccu::Loop
+        // 内部自动创建维护，由 ReduceLoopGroup 在加入不同 LoopGroup 之前对 iterNum /
+        // gsaOffset 赋值。
         ctx.reduceLoops[index].reset(
             new ccu::Loop(ctx.reduceIterNum[index], ctx.reduceGsaOffset[index], *ctx.reduceBody[index]));
     }
 
     ctx.loopRegistered = true;
     return CCU_SUCCESS;
+}
+
+// m 部分：goSize.loopParam != 0 时发起单 loop 的 LoopGroup。
+// 由 ReduceLoopGroup 在 CCU_IF(goSize.loopParam != 0) 作用域内调用。
+static void EmitReduceLoopGroupM(
+    ReduceScatterContextV2& ctx, const ccu::LocalAddr& dst, const ccu::LocalAddr& src, const ccu::LocalAddr* scratch,
+    uint32_t size, uint32_t expansionNum, GroupOpSizeVarsV2& goSize)
+{
+    ccu::Variable sliceSize;
+    sliceSize = ctx.moConfig.memSlice;
+    ccu::Variable sliceSizeExpansion;
+    sliceSizeExpansion = ctx.moConfig.memSlice * expansionNum;
+
+    ctx.loopDst[0].addr = dst.addr;
+    ctx.loopDst[0].token = dst.token;
+    ctx.loopSrc[0].addr = src.addr;
+    ctx.loopSrc[0].token = src.token;
+    for (uint32_t i = 0; i < size; i++) {
+        ctx.loopScratch[0][i].addr = scratch[i].addr;
+        ctx.loopScratch[0][i].token = scratch[i].token;
+    }
+    ctx.loopLen[0] = sliceSize;
+    ctx.loopLenExp[0] = sliceSizeExpansion;
+
+    ccu::Variable paraCfg;
+    paraCfg = GetParallelParam(ctx.moConfig.loopCount - 1, 0, 1);
+
+    ccu::Variable offsetCfg;
+    offsetCfg = GetOffsetParam(ctx.moConfig.memSlice, ctx.moConfig.msInterleave, 1);
+
+    ccu::Variable xnOffsetCfg;
+    xnOffsetCfg = 0;
+
+    // V2 loop 参数：gsaOffset=memSlice*loopCount, iterNum=m（ctxId 由 Loop 内部维护，默认 0）。
+    // m 对应 host 侧 CalGoSize 返回的裸 loopIterNum（存放于 goSize.loopParam）。
+    ctx.reduceIterNum[0] = goSize.loopParam;
+    ctx.reduceGsaOffset[0] = ctx.moConfig.memSlice * ctx.moConfig.loopCount;
+
+    std::vector<ccu::Loop> grpLoops{*ctx.reduceLoops[0]};
+    ccu::LoopGroup group(paraCfg, offsetCfg, xnOffsetCfg, /*maxLoopNum=*/1, grpLoops);
+}
+
+// 将单个 loop slot 的 dst/src/scratch/len 参数绑定到 ctx。
+// loopIdx 为 ctx.loop* 数组下标；len/lenExp 为对应 slice 长度变量。
+static void BindReduceLoopSlot(
+    ReduceScatterContextV2& ctx, uint32_t loopIdx, const ccu::LocalAddr& dst, const ccu::LocalAddr& src,
+    const ccu::LocalAddr* scratch, uint32_t size, const ccu::Variable& len, const ccu::Variable& lenExp)
+{
+    ctx.loopDst[loopIdx].addr = dst.addr;
+    ctx.loopDst[loopIdx].token = dst.token;
+    ctx.loopSrc[loopIdx].addr = src.addr;
+    ctx.loopSrc[loopIdx].token = src.token;
+    for (uint32_t i = 0; i < size; i++) {
+        ctx.loopScratch[loopIdx][i].addr = scratch[i].addr;
+        ctx.loopScratch[loopIdx][i].token = scratch[i].token;
+    }
+    ctx.loopLen[loopIdx] = len;
+    ctx.loopLenExp[loopIdx] = lenExp;
+
+    // V2 loop 参数：gsaOffset=0, iterNum=1（ctxId 由 Loop 内部维护，默认 0）—— 与 v1 中
+    // GetLoopParam(0, 0, 1) 位打包语义等价。
+    ctx.reduceIterNum[loopIdx] = 1;
+    ctx.reduceGsaOffset[loopIdx] = 0;
+}
+
+// n+p 部分：goSize.parallelParam != 0 时发起双 loop 的 LoopGroup。
+// dst/src 按值传入, 内部偏移不影响调用方。
+// scratch 为指针传入, 内部对 scratch[i].addr 的偏移会写回调用方数组 (与重构前内联行为一致)。
+// 由 ReduceLoopGroup 在 CCU_IF(goSize.parallelParam != 0) 作用域内调用。
+static void EmitReduceLoopGroupNP(
+    ReduceScatterContextV2& ctx, ccu::LocalAddr dst, ccu::LocalAddr src, ccu::LocalAddr* scratch, uint32_t size,
+    uint32_t expansionNum, GroupOpSizeVarsV2& goSize)
+{
+    for (uint32_t i = 0; i < size; i++) {
+        scratch[i].addr += goSize.addrOffset;
+    }
+    src.addr += goSize.addrOffset;
+    for (uint32_t i = 0; i < expansionNum; i++) {
+        dst.addr += goSize.addrOffset;
+    }
+
+    ccu::Variable sliceSizeExpansion;
+    sliceSizeExpansion = 0;
+    for (uint32_t i = 0; i < expansionNum; i++) {
+        sliceSizeExpansion = sliceSizeExpansion + goSize.residual;
+    }
+
+    // 绑定 loop0 参数 (p 部分)
+    BindReduceLoopSlot(ctx, 0, dst, src, scratch, size, goSize.residual, sliceSizeExpansion);
+
+    // n 部分偏移
+    for (uint32_t i = 0; i < size; i++) {
+        scratch[i].addr += goSize.residual;
+    }
+    src.addr += goSize.residual;
+    for (uint32_t i = 0; i < expansionNum; i++) {
+        dst.addr += goSize.residual;
+    }
+
+    ccu::Variable sliceSize;
+    sliceSize = ctx.moConfig.memSlice;
+    sliceSizeExpansion = ctx.moConfig.memSlice * expansionNum;
+
+    // 绑定 loop1 参数 (n 部分)
+    BindReduceLoopSlot(ctx, 1, dst, src, scratch, size, sliceSize, sliceSizeExpansion);
+
+    ccu::Variable offsetCfg;
+    offsetCfg = GetOffsetParam(ctx.moConfig.memSlice, ctx.moConfig.msInterleave, 1);
+
+    ccu::Variable xnOffsetCfg;
+    xnOffsetCfg = 0;
+
+    std::vector<ccu::Loop> grpLoops{*ctx.reduceLoops[0], *ctx.reduceLoops[1]};
+    ccu::LoopGroup group(goSize.parallelParam, offsetCfg, xnOffsetCfg, /*maxLoopNum=*/2, grpLoops);
 }
 
 static CcuResult ReduceLoopGroup(
@@ -388,7 +502,6 @@ static CcuResult ReduceLoopGroup(
     CCU_CHK_RET(CreateReduceLoop(ctx));
 
     uint32_t expansionNum = rs_v2::GetReduceExpansionNum(arg->reduceOp, arg->dataType, arg->outputDataType);
-    ccu::Variable sliceSizeExpansion;
 
     if (expansionNum != 1) {
         ccu::Variable tmp;
@@ -397,114 +510,10 @@ static CcuResult ReduceLoopGroup(
     }
 
     // m 部分
-    CCU_IF(goSize.loopParam != 0)
-    {
-        ccu::Variable sliceSize;
-        sliceSize = ctx.moConfig.memSlice;
-        sliceSizeExpansion = ctx.moConfig.memSlice * expansionNum;
-
-        ctx.loopDst[0].addr = dst.addr;
-        ctx.loopDst[0].token = dst.token;
-        ctx.loopSrc[0].addr = src.addr;
-        ctx.loopSrc[0].token = src.token;
-        for (uint32_t i = 0; i < size; i++) {
-            ctx.loopScratch[0][i].addr = scratch[i].addr;
-            ctx.loopScratch[0][i].token = scratch[i].token;
-        }
-        ctx.loopLen[0] = sliceSize;
-        ctx.loopLenExp[0] = sliceSizeExpansion;
-
-        ccu::Variable paraCfg;
-        paraCfg = GetParallelParam(ctx.moConfig.loopCount - 1, 0, 1);
-
-        ccu::Variable offsetCfg;
-        offsetCfg = GetOffsetParam(ctx.moConfig.memSlice, ctx.moConfig.msInterleave, 1);
-
-        ccu::Variable xnOffsetCfg;
-        xnOffsetCfg = 0;
-
-        // V2 三段 loop 参数：ctxId=0, gsaOffset=memSlice*loopCount, iterNum=m。
-        // m 对应 host 侧 CalGoSize 返回的裸 loopIterNum（存放于 goSize.loopParam）。
-        ctx.reduceIterNum[0] = goSize.loopParam;
-        ctx.reduceGsaOffset[0] = ctx.moConfig.memSlice * ctx.moConfig.loopCount;
-        ctx.reduceCtxId[0] = 0;
-
-        std::vector<ccu::Loop> grpLoops{*ctx.reduceLoops[0]};
-        ccu::LoopGroup group(paraCfg, offsetCfg, xnOffsetCfg, /*maxLoopNum=*/1, grpLoops);
-    }
+    CCU_IF(goSize.loopParam != 0) { EmitReduceLoopGroupM(ctx, dst, src, scratch, size, expansionNum, goSize); }
 
     // n+p 部分
-    CCU_IF(goSize.parallelParam != 0)
-    {
-        for (uint32_t i = 0; i < size; i++) {
-            scratch[i].addr += goSize.addrOffset;
-        }
-        src.addr += goSize.addrOffset;
-        for (uint32_t i = 0; i < expansionNum; i++) {
-            dst.addr += goSize.addrOffset;
-        }
-
-        sliceSizeExpansion = 0;
-        for (uint32_t i = 0; i < expansionNum; i++) {
-            sliceSizeExpansion = sliceSizeExpansion + goSize.residual;
-        }
-
-        // 绑定 loop0 参数 (p 部分)
-        ctx.loopDst[0].addr = dst.addr;
-        ctx.loopDst[0].token = dst.token;
-        ctx.loopSrc[0].addr = src.addr;
-        ctx.loopSrc[0].token = src.token;
-        for (uint32_t i = 0; i < size; i++) {
-            ctx.loopScratch[0][i].addr = scratch[i].addr;
-            ctx.loopScratch[0][i].token = scratch[i].token;
-        }
-        ctx.loopLen[0] = goSize.residual;
-        ctx.loopLenExp[0] = sliceSizeExpansion;
-
-        // n 部分偏移
-        for (uint32_t i = 0; i < size; i++) {
-            scratch[i].addr += goSize.residual;
-        }
-        src.addr += goSize.residual;
-        for (uint32_t i = 0; i < expansionNum; i++) {
-            dst.addr += goSize.residual;
-        }
-
-        ccu::Variable sliceSize;
-        sliceSize = ctx.moConfig.memSlice;
-        sliceSizeExpansion = ctx.moConfig.memSlice * expansionNum;
-
-        // 绑定 loop1 参数 (n 部分)
-        ctx.loopDst[1].addr = dst.addr;
-        ctx.loopDst[1].token = dst.token;
-        ctx.loopSrc[1].addr = src.addr;
-        ctx.loopSrc[1].token = src.token;
-        for (uint32_t i = 0; i < size; i++) {
-            ctx.loopScratch[1][i].addr = scratch[i].addr;
-            ctx.loopScratch[1][i].token = scratch[i].token;
-        }
-        ctx.loopLen[1] = sliceSize;
-        ctx.loopLenExp[1] = sliceSizeExpansion;
-
-        // V2 三段 loop 参数：ctxId=0, gsaOffset=0, iterNum=1 —— 与 v1 中
-        // GetLoopParam(0, 0, 1) 位打包语义等价。
-        ctx.reduceIterNum[0] = 1;
-        ctx.reduceGsaOffset[0] = 0;
-        ctx.reduceCtxId[0] = 0;
-
-        ctx.reduceIterNum[1] = 1;
-        ctx.reduceGsaOffset[1] = 0;
-        ctx.reduceCtxId[1] = 0;
-
-        ccu::Variable offsetCfg;
-        offsetCfg = GetOffsetParam(ctx.moConfig.memSlice, ctx.moConfig.msInterleave, 1);
-
-        ccu::Variable xnOffsetCfg;
-        xnOffsetCfg = 0;
-
-        std::vector<ccu::Loop> grpLoops{*ctx.reduceLoops[0], *ctx.reduceLoops[1]};
-        ccu::LoopGroup group(goSize.parallelParam, offsetCfg, xnOffsetCfg, /*maxLoopNum=*/2, grpLoops);
-    }
+    CCU_IF(goSize.parallelParam != 0) { EmitReduceLoopGroupNP(ctx, dst, src, scratch, size, expansionNum, goSize); }
 
     return CCU_SUCCESS;
 }

@@ -45,6 +45,8 @@ HcclResult GetHcclVersionForCcuKernelMgr(int& hcclVersion)
 
 constexpr int MAX_HCCL_VERSION_USING_CCU_RES_STATIC_ALLOC = 90100000;
 
+static uint32_t ComputeKernelInstrRegionSize(CcuKernel* kernel, const int32_t devLogicId);
+
 CcuKernelMgr::~CcuKernelMgr()
 {
     if (!initializedFlag_) {
@@ -224,11 +226,13 @@ CcuResult CcuKernelMgr::GetKernelResourceRequest(
     const uint32_t kernelInstrCount = currKernel_->GetInstrCount();
     const uint32_t translatorInstrCount = CcuRepTranslator::GetInstrNum(devLogicId_);
     const uint32_t constInstrCount = currKernel_->GetConstValue2VarMap().size();
-    instrCount = kernelInstrCount + translatorInstrCount + constInstrCount;
+    const uint32_t ckeReserveInstrCount = currKernel_->GetRepNeedToAddLatency() * CcuRep::CCU_CKE_RAW_LATENCY;
+    // 总数统一走 ComputeKernelInstrRegionSize, 与申请/释放口径保持结构一致; 分项仅用于日志观测
+    instrCount = ComputeKernelInstrRegionSize(currKernel_.get(), devLogicId_);
     HCCL_INFO(
         "[HcommCcuKernelQueryResReq][%s] resource request instruction count, kernelInstrCount[%u], "
-        "translatorInstrCount[%u], constInstrCount[%u], totalInstrCount[%u].",
-        __func__, kernelInstrCount, translatorInstrCount, constInstrCount, instrCount);
+        "translatorInstrCount[%u], constInstrCount[%u], ckeReserveInstrCount[%u], totalInstrCount[%u].",
+        __func__, kernelInstrCount, translatorInstrCount, constInstrCount, ckeReserveInstrCount, instrCount);
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -381,10 +385,22 @@ static void LoadRes(std::unique_ptr<CcuKernel>& kernel, CcuResPack& resPack)
     kernel->SetResRepository(kernelResRepo);
 }
 
+// 指令空间区域大小的唯一计算入口:
+//   裸指令数 (rep InstrCount 累加) + 翻译器结构指令 (GetInstrNum) + 常量赋值指令
+//   + 每个会翻译出 waitcke/clearcke 的 wait 类 rep 预留 CCU_CKE_RAW_LATENCY 条 NOP 空间.
+// 后端优化 cke-only 档只会为 CKE 写后读补 NOP, 每个 wait 类 rep 最多补 (latency-1) 条,
+// 故此预留可从构造上保证优化后指令数不超过申请区. 申请 / 查询 / 释放三处必须走本函数,
+// 保证口径一致 (尤其申请与释放必须完全相等).
+static uint32_t ComputeKernelInstrRegionSize(CcuKernel* kernel, const int32_t devLogicId)
+{
+    return kernel->GetInstrCount() + CcuRep::CcuRepTranslator::GetInstrNum(devLogicId)
+           + static_cast<uint32_t>(kernel->GetConstValue2VarMap().size())
+           + kernel->GetRepNeedToAddLatency() * CcuRep::CCU_CKE_RAW_LATENCY;
+}
+
 static CcuResult AllocInstrRes(std::unique_ptr<CcuKernel>& kernel, const int32_t devLogicId)
 {
-    const uint32_t instrCount = kernel->GetInstrCount() + CcuRep::CcuRepTranslator::GetInstrNum(devLogicId)
-                                + kernel->GetConstValue2VarMap().size();
+    const uint32_t instrCount = ComputeKernelInstrRegionSize(kernel.get(), devLogicId);
     const uint32_t dieId = kernel->GetDieId();
     ResInfo insInfo(0, 0);
     CCU_CHK_RET(CcuDevMgrImp::AllocIns(devLogicId, dieId, instrCount, insInfo));
@@ -668,8 +684,7 @@ CcuResult CcuKernelMgr::Translate(const std::vector<CcuKernelHandle>& kernelHand
 
 static HcclResult ReleaseInstrRes(CcuKernel* kernel, const int32_t devLogicId)
 {
-    const uint32_t instrCount = kernel->GetInstrCount() + CcuRep::CcuRepTranslator::GetInstrNum(devLogicId)
-                                + kernel->GetConstValue2VarMap().size();
+    const uint32_t instrCount = ComputeKernelInstrRegionSize(kernel, devLogicId);
     const ResInfo insInfo{kernel->GetInstrId(), instrCount};
     const uint8_t dieId = static_cast<uint8_t>(kernel->GetDieId());
     HCCL_INFO(
@@ -846,6 +861,16 @@ HcclResult CcuKernelMgr::TransRepSequenceToMicrocode(const std::vector<CcuKernel
         EXCEPTION_HANDLE_BEGIN
         const auto& instrInfo = translators[dieId][missionId]->Translate(
             kernel, kernel->GetRepSequence(), kernel->GetInstrId(), isFuncBlock);
+
+        // 后端优化会插 NOP 改变指令数; 按与申请同一口径校验不越界, 把静默越界变成快速失败.
+        const uint32_t regionSize = ComputeKernelInstrRegionSize(kernel, devLogicId_);
+        CHK_PRT_RET(
+            instrInfo.instrVec.size() > regionSize,
+            HCCL_ERROR(
+                "[CcuKernelMgr][%s] optimized instr count[%zu] exceeds reserved region size[%u], "
+                "dieId[%u] startId[%u]. Check cke reservation / backend optimizer NOP insertion.",
+                __func__, instrInfo.instrVec.size(), regionSize, dieId, kernel->GetInstrId()),
+            HcclResult::HCCL_E_INTERNAL);
 
         CHK_RET(LoadInstruction(instrInfo, dieId));
 

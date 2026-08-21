@@ -90,6 +90,10 @@ public:
     void SetInstrId(uint32_t instrId);
     uint32_t GetInstrId() const;
     uint32_t GetInstrCount();
+    // 统计会翻译出 CKE 写者微码 (profiling -> setcke / 非 profiling -> clearcke) 的三种 wait 类 rep
+    // 个数 (含 block 子 rep), 用于按 CCU_CKE_RAW_LATENCY 为每个此类 rep 预留指令空间.
+    // 每个此类 rep 只发射 1 条 setcke / clearcke.
+    uint32_t GetRepNeedToAddLatency() const;
     void SetCcuInstrInfo(const CcuRep::CcuInstrInfo& instrInfo);
 
     CcuResult GeneTaskParams(const uint64_t* taskArgs, uint32_t argsNum, std::vector<CcuTaskParam>& taskParams);
@@ -119,6 +123,15 @@ public:
     HcclResult Add2ConstValue2VarMap(std::vector<uint64_t>& values);
 
     const std::unordered_set<ChannelHandle>& GetChannels() { return channels_; }
+
+    const std::unordered_set<uint32_t>& GetDeclaredLocXns() const { return declaredLocXns_; }
+
+    struct PinnedGroupEntry {
+        CcuRep::Variable baseVar;
+        uint16_t count;
+    };
+    const std::vector<PinnedGroupEntry>& GetPinnedRegGroups() const { return pinnedRegGroups_; }
+    void AddPinnedRegGroup(const CcuRep::Variable& baseVar, uint16_t count);
 
 public:
     // Alloc 相关接口
@@ -480,6 +493,10 @@ private:
     CcuResRepository resRepo_{};
 
     std::unordered_set<ChannelHandle> channels_{};
+
+    std::unordered_set<uint32_t> declaredLocXns_{};
+
+    std::vector<PinnedGroupEntry> pinnedRegGroups_{};
 
     CcuRep::CcuInstrInfo instrInfo_{};
 

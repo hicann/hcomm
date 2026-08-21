@@ -12,6 +12,7 @@
 #define CCU_REPRESENTATION_BASE
 
 #include <string>
+#include <vector>
 
 #include "ccu_common.h"
 #include "ccu_microcode_v1.h"

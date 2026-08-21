@@ -8,41 +8,10 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include <iostream>
-#include <acl/acl.h>
-#include <set>
-#include "hccl_api_base_test.h"
+#include "ut_HcommCcuControlApi_common.h"
 
 #define private public
 #define protected public
-
-#include "log.h"
-#include "adapter_rts.h"
-#include "hcomm_c_adpt.h"
-#include "hcomm_thread_c_adpt.h"
-#include "op_base.h"
-
-#include "ccu_device_pub.h"
-#include "ccu_kernel_mgr.h"
-#include "ccu_ins_generator_v1.h"
-#include "ccu_instance_mgr.h"
-#include "ccu_device_res.h"
-#include "ccu_res_batch_allocator.h"
-#include "ccu_res_specs.h"
-#include "ccu_comp.h"
-#include "ccu_pfe_cfg_mgr.h"
-#include "ccu_launch.h"
-#include "ccu_res.h"
-#include "ccu_var_event_res_mgr.h"
-
-#include "mocks/ccu_device_mock_utils.h"
-#include "mocks/ccu_channel_mock_utils.h"
-
-#include "adapter_rts.h"
-#include "adapter_hal_pub.h"
-
-#include "hcomm_primitives.h"
-
 #include "ccu_kernel_impl/ccu_var_add_simple_demo.h"
 #include "ccu_kernel_impl/ccu_loop_add_demo.h"
 #include "ccu_kernel_impl/ccu_func_call_demo.h"
@@ -52,261 +21,8 @@
 #include "ccu_kernel_impl/ccu_reduce_scatter_mesh1d_a6_demo.h"
 #include "ccu_kernel_impl/ccu_groupcopy_demo.h"
 #include "ccu_kernel_impl/ccu_var_acquire_demo.h"
-
 #undef protected
 #undef private
-
-namespace hcomm {
-HcclResult GetHcclVersionForCcuKernelMgr(int& hcclVersion);
-}
-
-namespace {
-constexpr int32_t TEST_DEVICE_LOGIC_ID = 0;
-constexpr int32_t OTHER_TEST_DEVICE_LOGIC_ID = 1;
-constexpr int32_t HCCL_VERSION_USING_VALIDATE_AND_APPLY_DIE = 90100001;
-int32_t g_runtimeDeviceLogicId = TEST_DEVICE_LOGIC_ID;
-uint32_t g_deviceRefreshCalls = 0;
-HcclResult g_deviceRefreshResult = HcclResult::HCCL_SUCCESS;
-
-HcclResult MockHrtGetDeviceRefresh(int32_t* deviceLogicId)
-{
-    ++g_deviceRefreshCalls;
-    if (g_deviceRefreshResult != HcclResult::HCCL_SUCCESS) {
-        return g_deviceRefreshResult;
-    }
-    if (deviceLogicId == nullptr) {
-        return HcclResult::HCCL_E_PTR;
-    }
-    *deviceLogicId = g_runtimeDeviceLogicId;
-    return HcclResult::HCCL_SUCCESS;
-}
-
-HcclResult MockHrtGetDevice(int32_t* deviceLogicId)
-{
-    if (deviceLogicId == nullptr) {
-        return HcclResult::HCCL_E_PTR;
-    }
-    *deviceLogicId = g_runtimeDeviceLogicId;
-    return HcclResult::HCCL_SUCCESS;
-}
-
-HcclResult MockHrtGetDevicePhyIdByIndex(uint32_t deviceLogicId, uint32_t& devicePhyId, bool)
-{
-    devicePhyId = deviceLogicId;
-    return HcclResult::HCCL_SUCCESS;
-}
-
-void MockControlDeviceRefresh(int32_t deviceLogicId)
-{
-    g_runtimeDeviceLogicId = deviceLogicId;
-    g_deviceRefreshCalls = 0;
-    g_deviceRefreshResult = HcclResult::HCCL_SUCCESS;
-    MOCKER(hrtGetDeviceRefresh).stubs().with(mockcpp::any()).will(invoke(MockHrtGetDeviceRefresh));
-}
-} // namespace
-
-class HcommCcuControlApiTest : public BaseInit {
-public:
-    void SetUp() override
-    {
-        GlobalMockObject::verify();
-        BaseInit::SetUp();
-        // 将enableEntryLog默认返回为true
-        MOCKER(GetExternalInputHcclEnableEntryLog).stubs().with(mockcpp::any()).will(returnValue(true));
-        MOCKER(hcomm::GetHcclVersionForCcuKernelMgr)
-            .stubs()
-            .with(outBound(HCCL_VERSION_USING_VALIDATE_AND_APPLY_DIE))
-            .will(returnValue(HCCL_SUCCESS));
-    }
-    void TearDown() override
-    {
-        BaseInit::TearDown();
-        GlobalMockObject::verify();
-    }
-
-protected:
-};
-
-static std::pair<EndpointHandle, ChannelHandle>
-MockCcuChannelConnect(uint32_t srcDevPhyId, uint32_t dstDevPhyId, uint32_t srcIp, uint32_t dstIp, CommEngine commEngine)
-{
-    HcommResult hcommRet = 0;
-    CcuResult ccuRest = CcuResult::CCU_E_RESERVED;
-
-    CommAddr srcAddr{}, dstAddr{};
-    srcAddr.type = CommAddrType::COMM_ADDR_TYPE_IP_V4;
-    srcAddr.addr.s_addr = srcIp;
-    dstAddr.type = CommAddrType::COMM_ADDR_TYPE_IP_V4;
-    dstAddr.addr.s_addr = dstIp;
-
-    const auto& srcEpDesc = MockEndpointDesc(srcAddr, srcDevPhyId);
-    EndpointHandle srcEpHandle{};
-    hcommRet = HcommEndpointCreate(&srcEpDesc, &srcEpHandle);
-    EXPECT_EQ(hcommRet, static_cast<HcommResult>(HcclResult::HCCL_SUCCESS));
-
-    const auto& dstEpDesc = MockEndpointDesc(dstAddr, dstDevPhyId);
-
-    const auto& socket = MockHcclSocket(srcAddr, dstAddr);
-    HcommSocket socketPtr = static_cast<HcommSocket>(socket.get());
-    const auto& rmaBuffer = MockUbRmaBuffer();
-    void* memHandle = static_cast<void*>(rmaBuffer.get());
-    auto channelDesc = MockHcommChannelDesc(dstEpDesc, socketPtr, memHandle);
-    constexpr uint32_t channelNum = 1;
-    ChannelHandle channelHandle{0};
-    hcommRet = HcommChannelCreate(srcEpHandle, commEngine, &channelDesc, channelNum, &channelHandle);
-    EXPECT_EQ(hcommRet, static_cast<HcommResult>(HcclResult::HCCL_SUCCESS));
-
-    int32_t statusList[] = {0};
-
-    constexpr uint32_t MAX_LOOP_TIME = 100;
-    uint32_t leftTime = MAX_LOOP_TIME;
-    while (leftTime--) {
-        hcommRet = HcommChannelGetStatus(&channelHandle, channelNum, statusList);
-        if (hcommRet == static_cast<HcommResult>(HcclResult::HCCL_SUCCESS)) {
-            break;
-        }
-
-        if (hcommRet != static_cast<HcommResult>(HcclResult::HCCL_E_AGAIN)) {
-            HCCL_ERROR("[%s] invalid ret[%d].", __func__, hcommRet);
-            break;
-        }
-    }
-
-    EXPECT_EQ(hcommRet, static_cast<HcommResult>(HcclResult::HCCL_SUCCESS));
-    return {srcEpHandle, channelHandle};
-}
-
-static void MockChannelDestory(const std::pair<EndpointHandle, ChannelHandle>& handles)
-{
-    HcommResult hcommRet = 0;
-    constexpr uint32_t channelNum = 1;
-    hcommRet = HcommChannelDestroy(&(handles.second), channelNum);
-    EXPECT_EQ(hcommRet, static_cast<HcommResult>(HcclResult::HCCL_SUCCESS));
-
-    hcommRet = HcommEndpointDestroy(handles.first);
-    EXPECT_EQ(hcommRet, static_cast<HcommResult>(HcclResult::HCCL_SUCCESS));
-}
-
-static ThreadHandle MockThreadAllocWithStream(CommEngine commEngine)
-{
-    // 选择调用Hcomm接口，而不是对具体的Thread实现打桩，减少内部依赖
-    MOCKER(aclrtStreamGetId).stubs().will(returnValue(0));
-    bool devRunning = false;
-    MOCKER(GetRunSideIsDevice).stubs().with(outBound(devRunning)).will(returnValue(HcclResult::HCCL_SUCCESS));
-
-    constexpr uint32_t fakeNotifyNum = 0;
-    aclrtStream fakeStream{(void*)0x12345678};
-    ThreadHandle fakeThreadHandle{};
-    EXPECT_EQ(
-        HcommThreadAllocWithStream(commEngine, fakeStream, fakeNotifyNum, &fakeThreadHandle), HcclResult::HCCL_SUCCESS);
-
-    return fakeThreadHandle;
-}
-
-static void SetCcuResDescCcuMs(HcommCcuResDescHandle handle, hcomm::CcuVersion ccuVersion)
-{
-    CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
-    ccuRet = HcommCcuInsResDescSetNum(handle, HCOMM_CCU_RES_TYPE_LOOP, 8 * 8 * 2);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    ccuRet = HcommCcuInsResDescSetNum(handle, HCOMM_CCU_RES_TYPE_CCU_BUF, 64 * 8 * 2);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    if (ccuVersion == hcomm::CcuVersion::CCU_V2) {
-        ccuRet = HcommCcuInsResDescSetNum(handle, HCOMM_CCU_RES_TYPE_VARIABLE, 800);
-        EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-        ccuRet = HcommCcuInsResDescSetNum(handle, HCOMM_CCU_RES_TYPE_ADDRESS, 0);
-        EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    } else {
-        ccuRet = HcommCcuInsResDescSetNum(handle, HCOMM_CCU_RES_TYPE_VARIABLE, 400);
-        EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-        ccuRet = HcommCcuInsResDescSetNum(handle, HCOMM_CCU_RES_TYPE_ADDRESS, 400);
-        EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    }
-    ccuRet = HcommCcuInsResDescSetNum(handle, HCOMM_CCU_RES_TYPE_EVENT, 32 + 8 * 8 * 2);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    ccuRet = HcommCcuInsResDescSetNum(handle, HCOMM_CCU_RES_TYPE_CCU_THREAD, 2);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-}
-
-// 打桩当前线程 DeviceId 并初始化 ccu 资源环境，返回 fakeDeviceLogicId 供调用方使用
-static int32_t MockCcuDeviceEnv(uint32_t fakeDevId, hcomm::CcuVersion fakeCcuVersion)
-{
-    MockControlDeviceRefresh(static_cast<int32_t>(fakeDevId));
-    MOCKER(HcclGetThreadDeviceId).stubs().will(returnValue(static_cast<int32_t>(fakeDevId)));
-    int32_t fakeDeviceLogicId = static_cast<int32_t>(fakeDevId);
-    MOCKER(hrtGetDevice).stubs().with(outBoundP(&fakeDeviceLogicId)).will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER(hrtGetDevicePhyIdByIndex)
-        .stubs()
-        .with(mockcpp::any(), outBound(static_cast<uint32_t>(fakeDeviceLogicId)), mockcpp::any())
-        .will(returnValue(HcclResult::HCCL_SUCCESS));
-    MockCcuNetworkDeviceDefault(fakeDeviceLogicId);
-    EXPECT_EQ(MockCcuResourcesDefault(fakeDeviceLogicId, fakeCcuVersion), HcclResult::HCCL_SUCCESS);
-    MockCcuChannelGetRes();
-    MOCKER(hrtMemcpy).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
-    return fakeDeviceLogicId;
-}
-
-// 创建两个 die（dieId 0/1）的资源描述符并按 CcuMs 默认值填充
-static void
-CreateCcuResDescsPair(HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM], hcomm::CcuVersion ccuVersion)
-{
-    CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
-    ccuRet = HcommCcuInsResDescCreate(0, &resDescs[0]);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    ccuRet = HcommCcuInsResDescCreate(1, &resDescs[1]);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    SetCcuResDescCcuMs(resDescs[0], ccuVersion);
-    SetCcuResDescCcuMs(resDescs[1], ccuVersion);
-}
-
-// 销毁资源描述符数组
-static void DestroyCcuResDescs(HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM])
-{
-    CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
-    ccuRet = HcommCcuInsResDescDestroy(resDescs[0]);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    ccuRet = HcommCcuInsResDescDestroy(resDescs[1]);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-}
-
-#define CCU_FUNC_KERNEL_TEST(testName, demoFunc, expectRegisterSuccess)                                               \
-    TEST_F(HcommCcuControlApiTest, testName)                                                                          \
-    {                                                                                                                 \
-        CcuResult ccuRet = CcuResult::CCU_E_RESERVED;                                                                 \
-        constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 2;                                                     \
-        constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V1;                                       \
-        (void)MockCcuDeviceEnv(fakeDevId, fakeCcuVersion);                                                            \
-                                                                                                                      \
-        HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM] = {0, 0};                                            \
-        CreateCcuResDescsPair(resDescs, fakeCcuVersion);                                                              \
-        constexpr uint32_t descNum = 2;                                                                               \
-        CcuInsHandle insHandle{0};                                                                                    \
-        ccuRet = HcommCcuInsCreate(resDescs, descNum, &insHandle);                                                    \
-        EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);                                                                    \
-                                                                                                                      \
-        ccuRet = HcommCcuKernelRegisterStart(insHandle);                                                              \
-        EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);                                                                    \
-                                                                                                                      \
-        int32_t dummyArg = 0;                                                                                         \
-        CcuKernelArg kernelArg = static_cast<CcuKernelArg>(&dummyArg);                                                \
-        const void* kernelArgs[] = {kernelArg};                                                                       \
-        CcuKernelHandle kernelHandle{0};                                                                              \
-        auto kernelFunc = reinterpret_cast<void*>(demoFunc);                                                          \
-        constexpr uint32_t fakeDieId = 0;                                                                             \
-        constexpr uint32_t kernelArgNum = 1;                                                                          \
-        ccuRet = HcommCcuKernelRegister(                                                                              \
-            insHandle, fakeDieId, const_cast<char*>(#demoFunc), kernelFunc, kernelArgs, kernelArgNum, &kernelHandle); \
-        if (expectRegisterSuccess) {                                                                                  \
-            EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);                                                                \
-            ccuRet = HcommCcuKernelRegisterEnd(insHandle);                                                            \
-            EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);                                                                \
-        } else {                                                                                                      \
-            EXPECT_NE(ccuRet, CcuResult::CCU_SUCCESS);                                                                \
-        }                                                                                                             \
-                                                                                                                      \
-        ccuRet = HcommCcuInsDestroy(insHandle);                                                                       \
-        EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);                                                                    \
-        DestroyCcuResDescs(resDescs);                                                                                 \
-    }
 
 CCU_FUNC_KERNEL_TEST(Ut_FuncCallBasic_Expect_Success, CcuFuncCallBasicDemoKernel, true)
 CCU_FUNC_KERNEL_TEST(Ut_FuncCallReuse_Expect_Success, CcuFuncCallReuseDemoKernel, true)
@@ -629,24 +345,15 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelRegister_When_AllFine_Expect_Ret
     // 整体打桩，处理ccu资源
     CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
     constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 2;
-    constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V1;
-    (void)MockCcuDeviceEnv(fakeDevId, fakeCcuVersion);
 
     // ccuInstance构建
     HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM] = {0, 0};
-    CreateCcuResDescsPair(resDescs, fakeCcuVersion);
-    constexpr uint32_t descNum = 2;
     CcuInsHandle insHandle{0};
-    ccuRet = HcommCcuInsCreate(resDescs, descNum, &insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+    SetupV1CcuInstance(resDescs, insHandle, fakeDevId);
 
     // 建链流程打桩
     constexpr auto commEngine = CommEngine::COMM_ENGINE_CCU;
-    constexpr uint32_t srcDevPhyId = fakeDevId;
-    constexpr uint32_t dstDevPhyId = 1;
-    constexpr uint32_t srcIp = 167772383; // 需要与RaGetDevEidInfoList接口打桩一致
-    constexpr uint32_t dstIp = 0x87654321;
-    const auto& handlePair = MockCcuChannelConnect(srcDevPhyId, dstDevPhyId, srcIp, dstIp, commEngine);
+    const auto& handlePair = MockCcuChannelConnectDefault(fakeDevId, commEngine);
 
     // 构造CcuKernel实现
     auto demoFunc = CcuLoadStoreDemoKernel;
@@ -663,50 +370,21 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelRegister_When_AllFine_Expect_Ret
     ccuRet = HcommCcuKernelRegisterStart(insHandle);
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 
-    // kernel注册
+    // kernel注册 -> 翻译 -> 申请流 -> 下发(空 taskArgs) -> 清理(析构有时序要求)
     char* kernelFuncName = "ccu_var_add_simple_demo";
-    CcuKernelHandle kernelHandle{0};
-    constexpr uint32_t fakeDieId = 0;
-    constexpr uint32_t kernelArgNum = 1;
-    ccuRet = HcommCcuKernelRegister(
-        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    // kernel翻译
-    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    // 申请流，假定已经获取了threadHandle
-    auto fakeThreadHandle = MockThreadAllocWithStream(commEngine);
-
-    // kernel下发
-    // 需要与样例需要的load args对应
-    std::vector<uint64_t> taskArgs{};
-    void* fakeTaskArgs = static_cast<void*>(taskArgs.data());
-    uint32_t fakeArgNum = taskArgs.size();
-    EXPECT_EQ(HcommCcuKernelLaunch(fakeThreadHandle, kernelHandle, fakeTaskArgs, fakeArgNum), CcuResult::CCU_SUCCESS);
-
-    // 清理各种资源，析构有时序要求
-    MockChannelDestory(handlePair);
-    ccuRet = HcommCcuInsDestroy(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    DestroyCcuResDescs(resDescs);
+    RegisterLaunchAndCleanupSingleArgKernel(
+        insHandle, kernelFuncName, kernelFunc, kernelArgs, handlePair, resDescs, commEngine, 0);
 }
 
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelRegister_When_ChannelDieDiffersFromInputDie_Expect_ReturnIsCCU_E_PARA)
 {
     CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
     constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 2;
-    constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V1;
-    (void)MockCcuDeviceEnv(fakeDevId, fakeCcuVersion);
 
     // ccuInstance构建
     HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM] = {0, 0};
-    CreateCcuResDescsPair(resDescs, fakeCcuVersion);
-    constexpr uint32_t descNum = 2;
     CcuInsHandle insHandle{0};
-    ccuRet = HcommCcuInsCreate(resDescs, descNum, &insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+    SetupV1CcuInstance(resDescs, insHandle, fakeDevId);
 
     constexpr auto commEngine = CommEngine::COMM_ENGINE_CCU;
     constexpr uint32_t srcIp = 167772383; // mock EID 对应 die0
@@ -730,7 +408,7 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelRegister_When_ChannelDieDiffersF
     EXPECT_EQ(kernelHandle, 0U);
     EXPECT_EQ(HcommCcuKernelRegisterEnd(insHandle), CcuResult::CCU_SUCCESS);
 
-    MockChannelDestory(handlePair);
+    MockChannelDestroy(handlePair);
     ccuRet = HcommCcuInsDestroy(insHandle);
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
     DestroyCcuResDescs(resDescs);
@@ -769,26 +447,8 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelAddrArithV2_When_AllFine_Expect_
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 
     char* kernelFuncName = "ccu_addr_arith_v2_demo";
-    CcuKernelHandle kernelHandle{0};
-    constexpr uint32_t fakeDieId = 0;
-    constexpr uint32_t kernelArgNum = 1;
-    ccuRet = HcommCcuKernelRegister(
-        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    auto fakeThreadHandle = MockThreadAllocWithStream(commEngine);
-    std::vector<uint64_t> taskArgs{};
-    void* fakeTaskArgs = static_cast<void*>(taskArgs.data());
-    uint32_t fakeArgNum = taskArgs.size();
-    EXPECT_EQ(HcommCcuKernelLaunch(fakeThreadHandle, kernelHandle, fakeTaskArgs, fakeArgNum), CcuResult::CCU_SUCCESS);
-
-    MockChannelDestory(handlePair);
-    ccuRet = HcommCcuInsDestroy(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    DestroyCcuResDescs(resDescs);
+    RegisterLaunchAndCleanupSingleArgKernel(
+        insHandle, kernelFuncName, kernelFunc, kernelArgs, handlePair, resDescs, commEngine, 0);
 }
 
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelDoWhile_When_AllFine_Expect_ReturnCcuSUCCESS)
@@ -824,20 +484,7 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelDoWhile_When_AllFine_Expect_Retu
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 
     char* kernelFuncName = "ccu_do_while_while_demo";
-    CcuKernelHandle kernelHandle{0};
-    constexpr uint32_t fakeDieId = 0;
-    constexpr uint32_t kernelArgNum = 1;
-    ccuRet = HcommCcuKernelRegister(
-        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    MockChannelDestory(handlePair);
-    ccuRet = HcommCcuInsDestroy(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    DestroyCcuResDescs(resDescs);
+    RegisterAndCleanupSingleArgKernel(insHandle, kernelFuncName, kernelFunc, kernelArgs, handlePair, resDescs);
 }
 
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelNestedIfOuterElse_When_AllFine_Expect_ReturnCcuSUCCESS)
@@ -875,20 +522,7 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelNestedIfOuterElse_When_AllFine_E
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 
     char* kernelFuncName = "ccu_nested_if_outer_else_demo";
-    CcuKernelHandle kernelHandle{0};
-    constexpr uint32_t fakeDieId = 0;
-    constexpr uint32_t kernelArgNum = 1;
-    ccuRet = HcommCcuKernelRegister(
-        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    MockChannelDestory(handlePair);
-    ccuRet = HcommCcuInsDestroy(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    DestroyCcuResDescs(resDescs);
+    RegisterAndCleanupSingleArgKernel(insHandle, kernelFuncName, kernelFunc, kernelArgs, handlePair, resDescs);
 }
 
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelNestedIfInnerElse_When_AllFine_Expect_ReturnCcuSUCCESS)
@@ -926,20 +560,7 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelNestedIfInnerElse_When_AllFine_E
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 
     char* kernelFuncName = "ccu_nested_if_inner_else_demo";
-    CcuKernelHandle kernelHandle{0};
-    constexpr uint32_t fakeDieId = 0;
-    constexpr uint32_t kernelArgNum = 1;
-    ccuRet = HcommCcuKernelRegister(
-        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    MockChannelDestory(handlePair);
-    ccuRet = HcommCcuInsDestroy(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    DestroyCcuResDescs(resDescs);
+    RegisterAndCleanupSingleArgKernel(insHandle, kernelFuncName, kernelFunc, kernelArgs, handlePair, resDescs);
 }
 
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelDoWhileUnified_When_AllFine_Expect_ReturnCcuSUCCESS)
@@ -974,20 +595,7 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelDoWhileUnified_When_AllFine_Expe
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 
     char* kernelFuncName = "ccu_do_while_unified_demo";
-    CcuKernelHandle kernelHandle{0};
-    constexpr uint32_t fakeDieId = 0;
-    constexpr uint32_t kernelArgNum = 1;
-    ccuRet = HcommCcuKernelRegister(
-        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    MockChannelDestory(handlePair);
-    ccuRet = HcommCcuInsDestroy(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    DestroyCcuResDescs(resDescs);
+    RegisterAndCleanupSingleArgKernel(insHandle, kernelFuncName, kernelFunc, kernelArgs, handlePair, resDescs);
 }
 
 // A5(CCU_V1): CCU_IF 的 targetVar 共用一个 Xn，验证所有跳转 rep 的 targetInstrId 指向同一个 Xn
@@ -1390,20 +998,7 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelLoopAdd_When_AllFine_Expect_Retu
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 
     char* kernelFuncName = "ccu_loop_add_demo";
-    CcuKernelHandle kernelHandle{0};
-    constexpr uint32_t fakeDieId = 0;
-    constexpr uint32_t kernelArgNum = 1;
-    ccuRet = HcommCcuKernelRegister(
-        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    MockChannelDestory(handlePair);
-    ccuRet = HcommCcuInsDestroy(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    DestroyCcuResDescs(resDescs);
+    RegisterAndCleanupSingleArgKernel(insHandle, kernelFuncName, kernelFunc, kernelArgs, handlePair, resDescs);
 }
 
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelRemoteRead_When_AllFine_Expect_ReturnCcuSUCCESS)
@@ -1438,20 +1033,7 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelRemoteRead_When_AllFine_Expect_R
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 
     char* kernelFuncName = "ccu_remote_read_demo";
-    CcuKernelHandle kernelHandle{0};
-    constexpr uint32_t fakeDieId = 0;
-    constexpr uint32_t kernelArgNum = 1;
-    ccuRet = HcommCcuKernelRegister(
-        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    MockChannelDestory(handlePair);
-    ccuRet = HcommCcuInsDestroy(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    DestroyCcuResDescs(resDescs);
+    RegisterAndCleanupSingleArgKernel(insHandle, kernelFuncName, kernelFunc, kernelArgs, handlePair, resDescs);
 }
 
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelRemoteWrite_When_AllFine_Expect_ReturnCcuSUCCESS)
@@ -1486,20 +1068,7 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelRemoteWrite_When_AllFine_Expect_
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 
     char* kernelFuncName = "ccu_remote_write_demo";
-    CcuKernelHandle kernelHandle{0};
-    constexpr uint32_t fakeDieId = 0;
-    constexpr uint32_t kernelArgNum = 1;
-    ccuRet = HcommCcuKernelRegister(
-        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    MockChannelDestory(handlePair);
-    ccuRet = HcommCcuInsDestroy(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    DestroyCcuResDescs(resDescs);
+    RegisterAndCleanupSingleArgKernel(insHandle, kernelFuncName, kernelFunc, kernelArgs, handlePair, resDescs);
 }
 
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelAlloc_When_AllFine_Expect_ReturnCcuSUCCESS)
@@ -1549,7 +1118,7 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelAlloc_When_AllFine_Expect_Return
     EXPECT_EQ(HcommCcuGetTaskArgsNum(kernelHandle, &taskArgsNum), CcuResult::CCU_SUCCESS);
     EXPECT_EQ(taskArgsNum, 2U);
 
-    MockChannelDestory(handlePair);
+    MockChannelDestroy(handlePair);
     ccuRet = HcommCcuInsDestroy(insHandle);
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
     DestroyCcuResDescs(resDescs);
@@ -1559,24 +1128,15 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelReduceScatterMesh1d_When_AllFine
 {
     // 整体打桩，处理ccu资源
     CcuResult ccuRet = CcuResult::CCU_E_RESERVED;
-    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 11;
-    constexpr hcomm::CcuVersion fakeCcuVersion = hcomm::CcuVersion::CCU_V1;
-    (void)MockCcuDeviceEnv(fakeDevId, fakeCcuVersion);
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 2;
 
+    // ccuInstance构建（正常在通信域创建中，本用例仅测试hcomm接口）
     HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM] = {0, 0};
-    CreateCcuResDescsPair(resDescs, fakeCcuVersion);
-    constexpr uint32_t descNum = 2;
     CcuInsHandle insHandle{0};
-    ccuRet = HcommCcuInsCreate(resDescs, descNum, &insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+    SetupV1CcuInstance(resDescs, insHandle, fakeDevId);
 
-    // 建链流程打桩
     constexpr auto commEngine = CommEngine::COMM_ENGINE_CCU;
-    constexpr uint32_t srcDevPhyId = fakeDevId;
-    constexpr uint32_t dstDevPhyId = 1;
-    constexpr uint32_t srcIp = 167772383; // 需要与RaGetDevEidInfoList接口打桩一致
-    constexpr uint32_t dstIp = 0x87654321;
-    const auto& handlePair = MockCcuChannelConnect(srcDevPhyId, dstDevPhyId, srcIp, dstIp, commEngine);
+    const auto& handlePair = MockCcuChannelConnectDefault(fakeDevId, commEngine);
 
     // 构造CcuKernel实现
     auto demoFunc = CcuReduceScatterMesh1dKernel;
@@ -1593,37 +1153,13 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelReduceScatterMesh1d_When_AllFine
     auto kernelArg = static_cast<CcuKernelArg>(&demoArg);
     const void* kernelArgs[] = {kernelArg};
 
-    // 重置CCU资源
     ccuRet = HcommCcuKernelRegisterStart(insHandle);
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 
     // kernel注册
     char* kernelFuncName = "ccu_reduce_scatter_mesh1d_demo";
-    CcuKernelHandle kernelHandle{0};
-    constexpr uint32_t fakeDieId = 0;
-    constexpr uint32_t kernelArgNum = 1;
-    ccuRet = HcommCcuKernelRegister(
-        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    // kernel翻译
-    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    // 申请流，假定已经获取了threadHandle
-    auto fakeThreadHandle = MockThreadAllocWithStream(commEngine);
-
-    // kernel下发
-    std::vector<uint64_t> taskArgs(15, 0);
-    void* fakeTaskArgs = static_cast<void*>(taskArgs.data());
-    uint32_t fakeArgSize = taskArgs.size();
-    EXPECT_EQ(HcommCcuKernelLaunch(fakeThreadHandle, kernelHandle, fakeTaskArgs, fakeArgSize), CcuResult::CCU_SUCCESS);
-
-    // 清理各种资源，析构有时序要求
-    MockChannelDestory(handlePair);
-    ccuRet = HcommCcuInsDestroy(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    DestroyCcuResDescs(resDescs);
+    RegisterLaunchAndCleanupSingleArgKernel(
+        insHandle, kernelFuncName, kernelFunc, kernelArgs, handlePair, resDescs, commEngine, 15);
 }
 
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelReduceScatterMesh1d_When_V2_Expect_ReturnCcuSUCCESS)
@@ -1665,27 +1201,8 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelReduceScatterMesh1d_When_V2_Expe
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 
     char* kernelFuncName = "ccu_reduce_scatter_mesh1d_a6_demo";
-    CcuKernelHandle kernelHandle{0};
-    constexpr uint32_t fakeDieId = 0;
-    constexpr uint32_t kernelArgNum = 1;
-    ccuRet = HcommCcuKernelRegister(
-        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    auto fakeThreadHandle = MockThreadAllocWithStream(commEngine);
-
-    std::vector<uint64_t> taskArgs(15, 0);
-    void* fakeTaskArgs = static_cast<void*>(taskArgs.data());
-    uint32_t fakeArgSize = taskArgs.size();
-    EXPECT_EQ(HcommCcuKernelLaunch(fakeThreadHandle, kernelHandle, fakeTaskArgs, fakeArgSize), CcuResult::CCU_SUCCESS);
-
-    MockChannelDestory(handlePair);
-    ccuRet = HcommCcuInsDestroy(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    DestroyCcuResDescs(resDescs);
+    RegisterLaunchAndCleanupSingleArgKernel(
+        insHandle, kernelFuncName, kernelFunc, kernelArgs, handlePair, resDescs, commEngine, 15);
 }
 
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuVariableAllocConsecutive_When_AllFine_Expect_ReturnCcuSUCCESS)
@@ -1824,20 +1341,7 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelNestedInIfIf_When_AllFine_Expect
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 
     char* kernelFuncName = "ccu_nested_in_if_if_demo";
-    CcuKernelHandle kernelHandle{0};
-    constexpr uint32_t fakeDieId = 0;
-    constexpr uint32_t kernelArgNum = 1;
-    ccuRet = HcommCcuKernelRegister(
-        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    MockChannelDestory(handlePair);
-    ccuRet = HcommCcuInsDestroy(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    DestroyCcuResDescs(resDescs);
+    RegisterAndCleanupSingleArgKernel(insHandle, kernelFuncName, kernelFunc, kernelArgs, handlePair, resDescs);
 }
 
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuVariableAndEventAllocAddrGet_When_AllFine_Expect_ReturnCcuSUCCESS)
@@ -2117,27 +1621,8 @@ TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelAllGatherMesh1dMem2Mem_When_AllF
     EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
 
     char* kernelFuncName = "ccu_all_gather_mesh1d_mem2mem_demo";
-    CcuKernelHandle kernelHandle{0};
-    constexpr uint32_t fakeDieId = 0;
-    constexpr uint32_t kernelArgNum = 1;
-    ccuRet = HcommCcuKernelRegister(
-        insHandle, fakeDieId, kernelFuncName, kernelFunc, kernelArgs, kernelArgNum, &kernelHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    ccuRet = HcommCcuKernelRegisterEnd(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-
-    auto fakeThreadHandle = MockThreadAllocWithStream(commEngine);
-
-    std::vector<uint64_t> taskArgs(15, 0);
-    void* fakeTaskArgs = static_cast<void*>(taskArgs.data());
-    uint32_t fakeArgSize = taskArgs.size();
-    EXPECT_EQ(HcommCcuKernelLaunch(fakeThreadHandle, kernelHandle, fakeTaskArgs, fakeArgSize), CcuResult::CCU_SUCCESS);
-
-    MockChannelDestory(handlePair);
-    ccuRet = HcommCcuInsDestroy(insHandle);
-    EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
-    DestroyCcuResDescs(resDescs);
+    RegisterLaunchAndCleanupSingleArgKernel(
+        insHandle, kernelFuncName, kernelFunc, kernelArgs, handlePair, resDescs, commEngine, 15);
 }
 
 // HcommCcuInsDestroy 接口在线程 DeviceId 与要析构的目标 DeviceId 不同时，

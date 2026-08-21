@@ -9,6 +9,9 @@
  */
 
 #include "ccu_kernel.h"
+
+#include <algorithm>
+
 #include "ccu_rep_v1.h"
 #include "ccu_kernel_resource.h"
 #include "ccu_microcode_v1.h"
@@ -347,6 +350,20 @@ HcclResult CcuKernel::CreateVariable(const ChannelHandle channel, uint32_t varIn
     return HcclResult::HCCL_SUCCESS;
 }
 
+void CcuKernel::AddPinnedRegGroup(const CcuRep::Variable& baseVar, uint16_t count)
+{
+    if (count == 0) {
+        return;
+    }
+    const uint16_t baseId = baseVar.Id();
+    for (const auto& g : pinnedRegGroups_) {
+        if (g.baseVar.Id() == baseId && g.count == count) {
+            return;
+        }
+    }
+    pinnedRegGroups_.push_back({baseVar, count});
+}
+
 CcuRepResource& CcuKernel::GetResource() { return res_; }
 
 CcuResReq CcuKernel::GetResourceRequest()
@@ -524,6 +541,7 @@ CcuResult CcuKernel::VariableCreateByChannel(ChannelHandle channel, uint32_t var
     CcuVariableHandle handle = ccuVarMap_.size();
     ccuVarMap_.emplace(handle, var);
     *varHandle = handle;
+    declaredLocXns_.insert(var.Id());
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -890,6 +908,11 @@ CcuResult CcuKernel::LoadVar(uint64_t addr, CcuVariableHandle varHandle, uint32_
     CCU_CHK_RET(GetVariableByHandle(varHandle, &var));
     CCU_CHK_RET(CheckContinuousVariables(varHandle, num, *var, "LoadVariable"));
     Append(std::make_shared<CcuRep::CcuRepLoad>(insGenerator, addr, *var, num));
+    // 数据面 num>=2 走 Array<Variable>: microcode 会用到 [baseVReg, baseVReg+num)
+    // 这段连续 Xn 且组内相对偏移固定, 交给 microcode 后端优化 Pass 2 作为 pinned 组.
+    if (num >= 2) {
+        AddPinnedRegGroup(*var, static_cast<uint16_t>(num));
+    }
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -906,6 +929,9 @@ CcuResult CcuKernel::CcuLoadVarFromVarAddr(CcuVariableHandle addrHandle, CcuVari
     CCU_CHK_RET(GetVariableByHandle(varHandle, &var));
     CCU_CHK_RET(CheckContinuousVariables(varHandle, num, *var, "LoadVar dst"));
     Append(std::make_shared<CcuRep::CcuRepLoadVar>(insGenerator, *addrVar, *var, num));
+    if (num >= 2) {
+        AddPinnedRegGroup(*var, static_cast<uint16_t>(num));
+    }
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -916,6 +942,9 @@ CcuResult CcuKernel::StoreVar(uint64_t addr, CcuVariableHandle varHandle, uint32
     CCU_CHK_RET(GetVariableByHandle(varHandle, &var));
     CCU_CHK_RET(CheckContinuousVariables(varHandle, num, *var, "StoreVariable"));
     Append(std::make_shared<CcuRep::CcuRepStore>(insGenerator, *var, addr, num));
+    if (num >= 2) {
+        AddPinnedRegGroup(*var, static_cast<uint16_t>(num));
+    }
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -932,6 +961,9 @@ CcuResult CcuKernel::CcuStoreVarToVarAddr(CcuVariableHandle addrHandle, CcuVaria
     CCU_CHK_RET(GetVariableByHandle(varHandle, &var));
     CCU_CHK_RET(CheckContinuousVariables(varHandle, num, *var, "StoreVar src"));
     Append(std::make_shared<CcuRep::CcuRepStoreVar>(insGenerator, *var, *addrVar, num));
+    if (num >= 2) {
+        AddPinnedRegGroup(*var, static_cast<uint16_t>(num));
+    }
     return CcuResult::CCU_SUCCESS;
 }
 
@@ -2687,6 +2719,78 @@ uint32_t CcuKernel::GetInstrCount()
     instrInfo_.instrCount = instrCount;
     HCCL_INFO("Kernel inst %u", instrCount);
     return instrCount;
+}
+
+namespace {
+    // 识别三种 wait 类 rep: 无论 profiling 与否都会翻译出一条"既 wait 又 set/clear 同一 CKE 位"的
+    // CTRL 指令 (profiling 分支 -> setcke, 非 profiling 分支 -> clearcke, 二者都是 CKE 写者),
+    // 后端优化可能为其后续读者补 NOP, 因此都要按 CCU_CKE_RAW_LATENCY 预留指令空间.
+    bool IsCkeWaitRep(const std::shared_ptr<CcuRep::CcuRepBase>& rep)
+    {
+        if (rep == nullptr) {
+            return false;
+        }
+        switch (rep->Type()) {
+            case CcuRep::CcuRepType::LOC_WAIT_EVENT:
+            case CcuRep::CcuRepType::LOC_WAIT_NOTIFY:
+            case CcuRep::CcuRepType::REM_WAIT_SEM:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    // 与 CcuKernelMgr::PrepareConstValueResources 一致地下钻 block 子 rep, 统计其中会翻译出
+    // setcke / clearcke (CKE 写者) 的 wait 类 rep 个数.
+    // 只下钻一层是充分的: 表示层禁止 block 嵌套 —— CcuKernel::LoopCreate / FuncBlockBegin /
+    // FuncBlockLookup 在 CurrentBlock() 为 LOOP_BLOCK 或 inFuncBody_ 时直接报错 (见 ccu_kernel.cc),
+    // 故 LOOP_BLOCK / FUNC_BLOCK 内不可能再出现 block 类型子 rep, 无需递归下钻.
+    // 若后续放开 block 嵌套, 此处 (与 PrepareConstValueResources) 需同步改为递归统计, 否则会漏计.
+    uint32_t CountCkeWaitRepInBlock(const std::shared_ptr<CcuRep::CcuRepBase>& rep)
+    {
+        const auto repType = rep->Type();
+        if (repType != CcuRep::CcuRepType::BLOCK && repType != CcuRep::CcuRepType::FUNC_BLOCK
+            && repType != CcuRep::CcuRepType::LOOP_BLOCK) {
+            return 0;
+        }
+        auto* blockPtr = static_cast<CcuRep::CcuRepBlock*>(rep.get());
+        if (blockPtr == nullptr) {
+            return 0;
+        }
+        uint32_t count = 0;
+        for (const auto& child : blockPtr->GetReps()) {
+            if (IsCkeWaitRep(child)) {
+                count++;
+            }
+        }
+        return count;
+    }
+} // namespace
+
+// 统计当前 kernel 中"需要按 cke 写后读 latency 补 NOP"的 rep 个数 (含 block 子 rep).
+// 三种 wait 类 rep 无论 profiling 与否都翻译出一条 CKE 写者微码 (profiling -> setcke, 非 profiling
+// -> clearcke), 后端优化最多为其后续读者补 (CCU_CKE_RAW_LATENCY - 1) 条 NOP, 上层据此为每个此类 rep
+// 预留同等指令空间, 保证优化后指令数不越界.
+uint32_t CcuKernel::GetRepNeedToAddLatency() const
+{
+    // cke 写后读补 NOP 与指令空间预留只属于 A6(CCU_V2) 后端优化; A5(CCU_V1) 不跑后端优化,
+    // 不做任何预留, 直接返回 0, 避免影响 A5 的申请/释放口径.
+    if (ccuVersion_ != CcuVersion::CCU_V2) {
+        return 0;
+    }
+    uint32_t count = 0;
+    // GetRepSequence() 语义纯读但尚未标 const, 此处仅遍历不修改, 去 const 调用以保持本方法 const 契约.
+    for (const auto& rep : const_cast<CcuKernel*>(this)->GetRepSequence()) {
+        if (rep == nullptr) {
+            continue;
+        }
+        if (IsCkeWaitRep(rep)) {
+            count++;
+        }
+        count += CountCkeWaitRepInBlock(rep);
+    }
+    HCCL_INFO("[CcuKernel] cke wait rep count %u (reserve %u instrs)", count, count * CcuRep::CCU_CKE_RAW_LATENCY);
+    return count;
 }
 
 void CcuKernel::SetCcuInstrInfo(const CcuRep::CcuInstrInfo& instrInfo) { this->instrInfo_ = instrInfo; }

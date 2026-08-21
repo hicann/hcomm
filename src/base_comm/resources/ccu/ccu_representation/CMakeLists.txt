@@ -30,6 +30,7 @@ if(TARGET hcomm)
         ${CMAKE_CURRENT_SOURCE_DIR}/reps/sync
         ${CMAKE_CURRENT_SOURCE_DIR}/reps/translator
         ${CMAKE_CURRENT_SOURCE_DIR}/../ccu_microcode
+        ${CMAKE_CURRENT_SOURCE_DIR}/../ccu_microcode_opt
         ${CMAKE_CURRENT_SOURCE_DIR}/../pub_inc
     )
 endif()

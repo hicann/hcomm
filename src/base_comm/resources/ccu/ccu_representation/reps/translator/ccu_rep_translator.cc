@@ -31,6 +31,8 @@
 
 #include "unified_platform/pub_inc/config_plf_log.h"
 
+#include "microcode_optimizer.h"
+
 namespace hcomm {
 namespace CcuRep {
 
@@ -262,6 +264,45 @@ namespace CcuRep {
         }
     }
 
+    namespace {
+
+        // 收集 LOAD_ARG rep 并按全局 argId 升序排序, 确保 LoadSqeArgs 指令在 mission 切分时
+        // 落入与其 slot id 匹配的 mission (避免用户乱序 LoadArg 导致取参错位).
+        std::vector<std::shared_ptr<CcuRepBase>>
+        CollectSortedLoadArgReps(const std::vector<std::shared_ptr<CcuRepBase>>& repVec)
+        {
+            std::vector<std::shared_ptr<CcuRepBase>> sortedLoadArgReps;
+            sortedLoadArgReps.reserve(repVec.size());
+            for (const auto& rep : repVec) {
+                if (rep->Type() == CcuRepType::LOAD_ARG) {
+                    sortedLoadArgReps.push_back(rep);
+                }
+            }
+            std::stable_sort(
+                sortedLoadArgReps.begin(), sortedLoadArgReps.end(),
+                [](const std::shared_ptr<CcuRepBase>& a, const std::shared_ptr<CcuRepBase>& b) {
+                    return std::static_pointer_cast<CcuRepLoadArg>(a)->GetFullArgId()
+                           < std::static_pointer_cast<CcuRepLoadArg>(b)->GetFullArgId();
+                });
+            return sortedLoadArgReps;
+        }
+
+        // 调用 V2 后端优化器 (极简 CkeOnly 档: 只按 CKE 写后读补 NOP, 不重排 / 不重命名寄存器).
+        CcuInstrInfo
+        RunV2BackendOptimizer(const CcuInstrInfo& instrInfo, CcuKernel* ccuKernel, const TransDep& transDep)
+        {
+            (void)ccuKernel; // CkeOnly 不使用 pinned Xn / pinned 组.
+            HCCL_INFO("[CcuMicrocodeOpt] running backend optimizer (V2)");
+            CcuInstrInfo optimized
+                = CcuOpt::MicrocodeOptimizer::Run(instrInfo, transDep.reserveXnId, transDep.reserveCkeId);
+            HCCL_INFO(
+                "[CcuMicrocodeOpt] before instrCount=%u, after instrCount=%u", instrInfo.instrCount,
+                optimized.instrCount);
+            return optimized;
+        }
+
+    } // namespace
+
     CcuInstrInfo CcuRepTranslator::Translate(
         CcuKernel* ccuKernel, const std::vector<std::shared_ptr<CcuRepBase>>& repVec, uint16_t startInstrId,
         bool isFuncBlock)
@@ -286,21 +327,8 @@ namespace CcuRep {
 
         uint16_t missionStartInstrId = curInstrId;
 
-        // 翻译Load:按全局 argId 升序排序后再翻译,确保 LoadSqeArgs 指令在 mission 切分时
-        // 落入与其 slot id 匹配的 mission(避免用户乱序 LoadArg 导致取参错位)
-        std::vector<std::shared_ptr<CcuRepBase>> sortedLoadArgReps;
-        sortedLoadArgReps.reserve(repVec.size());
-        for (const auto& rep : repVec) {
-            if (rep->Type() == CcuRepType::LOAD_ARG) {
-                sortedLoadArgReps.push_back(rep);
-            }
-        }
-        std::stable_sort(
-            sortedLoadArgReps.begin(), sortedLoadArgReps.end(),
-            [](const std::shared_ptr<CcuRepBase>& a, const std::shared_ptr<CcuRepBase>& b) {
-                return std::static_pointer_cast<CcuRepLoadArg>(a)->GetFullArgId()
-                       < std::static_pointer_cast<CcuRepLoadArg>(b)->GetFullArgId();
-            });
+        // 翻译Load (按全局 argId 升序).
+        std::vector<std::shared_ptr<CcuRepBase>> sortedLoadArgReps = CollectSortedLoadArgReps(repVec);
         Translate(ccuKernel, sortedLoadArgReps, instr, curInstrId, [](std::shared_ptr<CcuRepBase> rep) -> bool {
             return rep->Type() == CcuRepType::LOAD_ARG;
         });
@@ -323,6 +351,13 @@ namespace CcuRep {
 
         DumpRep(repVec, instrInfo);
         DumpInstruction(instrInfo);
+
+        if (ccuVersion == CcuVersion::CCU_V2) {
+            CcuInstrInfo optimizedInstrInfo = RunV2BackendOptimizer(instrInfo, ccuKernel, transDep);
+            HCCL_INFO("[CcuMicrocodeOpt] dump instruction after backend optimizer:");
+            DumpInstruction(optimizedInstrInfo);
+            return optimizedInstrInfo;
+        }
 
         return instrInfo;
     }

@@ -71,11 +71,11 @@ HcclResult MockHrtGetDeviceRefresh(int32_t* deviceLogicId)
     if (g_deviceRefreshResult != HcclResult::HCCL_SUCCESS) {
         return g_deviceRefreshResult;
     }
-    if (deviceLogicId == nullptr) {
-        return HcclResult::HCCL_E_PTR;
+    if (deviceLogicId != nullptr) {
+        *deviceLogicId = g_runtimeDeviceLogicId;
+        return HcclResult::HCCL_SUCCESS;
     }
-    *deviceLogicId = g_runtimeDeviceLogicId;
-    return HcclResult::HCCL_SUCCESS;
+    return HcclResult::HCCL_E_PTR;
 }
 
 HcclResult MockHrtGetDevicePhyIdByIndex(uint32_t deviceLogicId, uint32_t& devicePhyId, bool)
@@ -567,6 +567,10 @@ TEST_F(
         HcommCcuKernelQueryResReq(reinterpret_cast<const void*>(ResourceCensusKernel), kernelArgs, 1, resDesc_),
         CcuResult::CCU_SUCCESS);
     EXPECT_GT(g_channelGetCalls, 0U);
+    // ins=40: GetRepNeedToAddLatency 统计三种 wait 类 rep (LOC_WAIT_EVENT / LOC_WAIT_NOTIFY /
+    // REM_WAIT_SEM) 并按 CCU_CKE_RAW_LATENCY 预留. ResourceCensusKernel 顶层的 EventWait /
+    // NotifyWait 走 record/wait 高层 API, 未在 GetRepSequence 里落成上述三种 rep, 故预留数为 0,
+    // 指令总数为无预留时的基准 40.
     ExpectAll(1, 3, 9, 3, 3, 1, 40);
     EXPECT_EQ(hcomm::CcuKernelMgr::GetInstance(TEST_DEVICE_LOGIC_ID).GetCurrentKernel(), nullptr);
 }

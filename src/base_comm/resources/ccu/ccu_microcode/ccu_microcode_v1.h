@@ -30,6 +30,11 @@ namespace CcuRep {
 
     constexpr uint16_t CCU_LOAD_TO_XN_SEC_INFO = 1;
 
+    // CCU V2 CKE 写后读 (setcke -> waitcke/clearcke) 需要的最坏 latency (单位: 指令周期).
+    // 后端优化 cke-only 档按此为每个 CKE 读者补 NOP; 指令空间预留也按此为每个 wait 类 rep
+    // 预留同等条数, 两处必须同源引用, 严禁各自写死, 否则预留与实际插入会漂移导致越界.
+    constexpr uint32_t CCU_CKE_RAW_LATENCY = 14;
+
 #pragma pack(push, 1)
     // instr common header
     union CcuInstrHeader {
