@@ -843,8 +843,7 @@ void TaskExceptionHandler::PrintAicpuErrorMessage(rtExceptionInfo_t* exceptionIn
                     "errorMessage ubCqeStatus[%u], localEid[%s], remoteEid[%s]. ",
                     static_cast<u32>(errorMessage.ubCqeStatus), errorMessage.locEid.Describe().c_str(),
                     errorMessage.rmtEid.Describe().c_str());
-                auto reverseAddr = IpAddress(errorMessage.locEid);
-                auto addr = IpAddress(reverseAddr.GetReverseEid());
+                auto addr = IpAddress(errorMessage.locEid);
                 u32 devPhyId = HrtGetDevicePhyIdByIndex(exceptionInfo->deviceid);
                 auto rdmaHandle = RdmaHandleManager::GetInstance().GetByIp(devPhyId, addr);
                 PrintUbRegisters(static_cast<s32>(exceptionInfo->deviceid), rdmaHandle);

@@ -34,8 +34,9 @@ HostUbConnection::HostUbConnection(
       rmtAddr(rmtAddr),
       opMode(opMode),
       jfcMode(jfcMode),
-      rmtEid(rmtAddr.GetReverseEid()),
-      locEid(locAddr.GetReverseEid()),
+      rmtEid(rmtAddr.GetEid()),
+      locEid(locAddr.GetEid()),
+      rmtReverseEid(rmtAddr.GetReverseEid()),
       qos_(qos)
 {
     HCCL_INFO("[HostUbConnection::HostUbConnection] rmtEid=%s", rmtEid.Describe().c_str());
@@ -121,7 +122,7 @@ void HostUbConnection::SetWqInfo(HcclAiRMAWQ& wq)
     wq.sqVA = sqBuffVa;
     wq.sqDepth = sqDepth * WQE_NUM_PER_SQE;
     wq.tp_id = tpn;
-    errno_t ret = memcpy_s(wq.rmtEid, sizeof(wq.rmtEid), rmtEid.raw, sizeof(wq.rmtEid));
+    errno_t ret = memcpy_s(wq.rmtEid, sizeof(wq.rmtEid), rmtReverseEid.raw, sizeof(wq.rmtEid));
     if (ret != EOK) {
         HCCL_ERROR("[HostUbConnection][%s] memcpy_s failed, ret=%d", __func__, ret);
         ThrowAbnormalStatus(std::string(__func__));

@@ -96,6 +96,7 @@ private:
     u32 tokenValue{GetUbToken()};
     Eid rmtEid{};
     Eid locEid{};
+    Eid rmtReverseEid{}; // 反序Eid，仅用于传递给硬件
 
     u32 dieId{0};
     u32 funcId{0};

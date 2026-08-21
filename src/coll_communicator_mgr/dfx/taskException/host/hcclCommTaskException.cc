@@ -638,8 +638,8 @@ void TaskExceptionHost::ReportErrorMsg(
                 {"localServerId", "localDeviceId", "localDeviceIp", "remoteServerId", "remoteDeviceId",
                  "remoteDeviceIp"}),
             std::vector<std::string>(
-                {localServerId, std::to_string(localDeviceId), localAddr.GetReverseEid().Describe().c_str(),
-                 remoteServerId, std::to_string(remoteDeviceId), remoteAddr.GetReverseEid().Describe().c_str()}));
+                {localServerId, std::to_string(localDeviceId), localAddr.GetEid().Describe().c_str(), remoteServerId,
+                 std::to_string(remoteDeviceId), remoteAddr.GetEid().Describe().c_str()}));
     }
 }
 
@@ -744,8 +744,7 @@ void TaskExceptionHost::PrintUbDfxInfo(
         HCCL_ERROR(
             "errorMessage ubCqeStatus[%u], localEid[%s], remoteEid[%s]. ", static_cast<u32>(errorMessage.ubCqeStatus),
             errorMessage.locEid.Describe().c_str(), errorMessage.rmtEid.Describe().c_str());
-        auto reverseAddr = Hccl::IpAddress(errorMessage.locEid);
-        auto addr = Hccl::IpAddress(reverseAddr.GetReverseEid());
+        auto addr = Hccl::IpAddress(errorMessage.locEid);
         u32 devPhyId = Hccl::HrtGetDevicePhyIdByIndex(exceptionInfo->deviceid);
         auto rdmaHandle = Hccl::RdmaHandleManager::GetInstance().GetByIp(devPhyId, addr);
         HrtRaDumpJettyContext(reinterpret_cast<void*>(errorMessage.jettyHandle), errorMessage.jettyId);

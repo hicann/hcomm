@@ -69,7 +69,7 @@ void UbConnLite::FillCommSqe(
 
     sqe->se = 1;           // 表示是否使能solicited event
     sqe->rmtJettyType = 1; // 00 JFR  01:JETTY  10:jettyGroup 11:reserved
-    s32 ret = memcpy_sp(sqe->rmtEid, RMT_EID_BYTE_SIZE, rmtEid_.raw, RAW_SIZE);
+    s32 ret = memcpy_sp(sqe->rmtEid, RMT_EID_BYTE_SIZE, rmtReverseEid_.raw, RAW_SIZE);
     if (UNLIKELY(ret != 0)) {
         HCCL_ERROR("UbConnLite::FillCommSqe FillCommSqe memcpy failed, ret=%d", ret);
         THROW<InternalException>(StringFormat("UbConnLite::FillCommSqe memcpy_sp failed, ret = %d", ret));
@@ -706,6 +706,7 @@ UbConnLite::UbConnLite(const UbConnLiteParam& liteParam)
 
     (void)memcpy_sp(rmtEid_.raw, URMA_EID_LEN, liteParam.rmtEid.raw, URMA_EID_LEN);
     (void)memcpy_sp(locEid_.raw, URMA_EID_LEN, liteParam.locEid.raw, URMA_EID_LEN);
+    rmtReverseEid_ = rmtEid_.Reversed();
     jettyHandle_ = liteParam.jettyHandle;
     HCCL_INFO("%s", Describe().c_str());
 }
@@ -714,7 +715,9 @@ UbConnLite::UbConnLite(const UbJettyLiteId& id, const UbJettyLiteAttr& attr, con
     : RmaConnLite(id, attr, rmtInfo),
       maxReadSize(UB_DMA_MAX_READ_WEITE_SIZE),
       maxWriteSize(UB_DMA_MAX_READ_WEITE_SIZE)
-{}
+{
+    rmtReverseEid_ = rmtEid_.Reversed();
+}
 
 std::string UbConnLiteParam::Describe() const
 {

@@ -219,8 +219,8 @@ TEST_F(HostUbConnectionTest, rma_ub_connection_get_unique_id)
     conn.sqBuffVa = 0x8000000;
     conn.sqDepth = 8192;
     conn.tpn = 1;
-    conn.rmtEid = remoteIp.GetReverseEid();
-    conn.locEid = localIp.GetReverseEid();
+    conn.rmtEid = remoteIp.GetEid();
+    conn.locEid = localIp.GetEid();
 
     // When
     std::vector<char> uniqueId = conn.GetUniqueId();
@@ -262,8 +262,8 @@ TEST_F(HostUbConnectionTest, rma_ub_connection_set_wq_info)
     conn.sqBuffVa = 0x9000000;
     conn.sqDepth = 8192;
     conn.tpn = 1;
-    conn.rmtEid = remoteIp.GetReverseEid();
-    memcpy_s(conn.rmtEid.raw, sizeof(conn.rmtEid.raw), remoteIp.GetReverseEid().raw, sizeof(conn.rmtEid.raw));
+    conn.rmtEid = remoteIp.GetEid();
+    conn.rmtReverseEid = remoteIp.GetReverseEid();
 
     // When
     HcclAiRMAWQ wq{};

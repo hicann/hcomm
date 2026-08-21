@@ -179,6 +179,7 @@ private:
     u32 tokenValue{GetUbToken()};
     Eid rmtEid{};
     Eid locEid{};
+    Eid rmtReverseEid{};                      // 反序Eid，仅用于传递给硬件
     u8 qos_{static_cast<u8>(UB_QOS_DEFAULT)}; // 业务 QoS，GetTpInfo / ReleaseTpInfo 缓存键
 
     bool devUsed_{false};

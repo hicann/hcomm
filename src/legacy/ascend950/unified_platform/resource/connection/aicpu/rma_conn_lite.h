@@ -165,6 +165,7 @@ protected:
 
     Eid rmtEid_;
     Eid locEid_;
+    Eid rmtReverseEid_{}; // 反序Eid，仅用于传递给硬件
     uint64_t jettyHandle_{0};
 };
 

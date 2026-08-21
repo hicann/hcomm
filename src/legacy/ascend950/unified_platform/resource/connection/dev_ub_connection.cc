@@ -42,8 +42,9 @@ DevUbConnection::DevUbConnection(
       engine_(engine),
       locIpv4Addr(locIpv4Addr),
       rmtIpv4Addr(rmtIpv4Addr),
-      rmtEid(rmtAddr.GetReverseEid()),
-      locEid(locAddr.GetReverseEid()),
+      rmtEid(rmtAddr.GetEid()),
+      locEid(locAddr.GetEid()),
+      rmtReverseEid(rmtAddr.GetReverseEid()),
       qos_(qos),
       devUsed_(devUsed),
       taTimeOut_(taTimeOut),
@@ -189,7 +190,7 @@ void DevUbConnection::SetWqInfo(HcclAiRMAWQ& wq) const
     wq.sqVA = sqBuffVa;
     wq.sqDepth = sqDepth * WQE_NUM_PER_SQE;
     wq.tp_id = tpn;
-    memcpy_s(wq.rmtEid, sizeof(wq.rmtEid), rmtEid.raw, sizeof(wq.rmtEid));
+    memcpy_s(wq.rmtEid, sizeof(wq.rmtEid), rmtReverseEid.raw, sizeof(wq.rmtEid));
 }
 
 void DevUbConnection::SetSqContextInfo(SqContext& sq) const
@@ -200,7 +201,7 @@ void DevUbConnection::SetSqContextInfo(SqContext& sq) const
     sq.contextInfo.ubJfs.sqDepth = sqDepth * WQE_NUM_PER_SQE;
     sq.contextInfo.ubJfs.tpID = tpn;
     memcpy_s(
-        sq.contextInfo.ubJfs.remoteEID, sizeof(sq.contextInfo.ubJfs.remoteEID), rmtEid.raw,
+        sq.contextInfo.ubJfs.remoteEID, sizeof(sq.contextInfo.ubJfs.remoteEID), rmtReverseEid.raw,
         sizeof(sq.contextInfo.ubJfs.remoteEID));
 }
 

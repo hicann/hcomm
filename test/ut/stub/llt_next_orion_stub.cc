@@ -422,8 +422,9 @@ DevUbConnection::DevUbConnection(
       engine_(engine),
       locIpv4Addr(locIpv4Addr),
       rmtIpv4Addr(rmtIpv4Addr),
-      rmtEid(rmtAddr.GetReverseEid()),
-      locEid(locAddr.GetReverseEid()),
+      rmtEid(rmtAddr.GetEid()),
+      locEid(locAddr.GetEid()),
+      rmtReverseEid(rmtAddr.GetReverseEid()),
       qos_(qos),
       taTimeOut_(taTimeOut),
       sqDepth(inSqDepth),
@@ -498,7 +499,7 @@ void DevUbConnection::SetSqContextInfo(SqContext& sq) const
     sq.contextInfo.ubJfs.sqDepth = sqDepth * LLT_UB_WQE_NUM_PER_SQE;
     sq.contextInfo.ubJfs.tpID = tpn;
     (void)memcpy_s(
-        sq.contextInfo.ubJfs.remoteEID, sizeof(sq.contextInfo.ubJfs.remoteEID), rmtEid.raw,
+        sq.contextInfo.ubJfs.remoteEID, sizeof(sq.contextInfo.ubJfs.remoteEID), rmtReverseEid.raw,
         sizeof(sq.contextInfo.ubJfs.remoteEID));
 }
 

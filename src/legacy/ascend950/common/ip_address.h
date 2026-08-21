@@ -71,6 +71,15 @@ union Eid {
     bool operator==(const Eid& that) const { return memcmp(&raw, &that.raw, sizeof(raw)) == 0; }
 
     bool operator<(const Eid& that) const { return memcmp(&raw, &that.raw, sizeof(raw)) < 0; }
+
+    Eid Reversed() const
+    {
+        Eid eidOut;
+        for (uint32_t i = 0; i < URMA_EID_LEN; i++) {
+            eidOut.raw[i] = raw[URMA_EID_LEN - i - 1];
+        }
+        return eidOut;
+    }
 };
 
 union BinaryAddr {
@@ -295,14 +304,7 @@ public:
 
     void SetEid(Eid eid) { eid_ = eid; }
 
-    Eid GetReverseEid() const
-    {
-        Eid eidOut;
-        for (uint32_t i = 0; i < URMA_EID_LEN; i++) {
-            eidOut.raw[i] = eid_.raw[URMA_EID_LEN - i - 1];
-        }
-        return eidOut;
-    }
+    Eid GetReverseEid() const { return eid_.Reversed(); }
 
     string Describe() const
     {
