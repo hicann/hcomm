@@ -267,6 +267,16 @@ TEST_F(HcclRankGraphTest, Ut_HcclRankGraphGetLinks_When_ValidParam_Expect_Return
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(linkNum, 1);
     EXPECT_EQ(links[0].linkAttr.hop, 1);
+    u32 srcNetLayer = UINT32_MAX;
+    u32 srcTopoInstId = UINT32_MAX;
+    u32 dstNetLayer = UINT32_MAX;
+    u32 dstTopoInstId = UINT32_MAX;
+    EXPECT_TRUE(Hccl::GetEndpointTopoInfo(links[0].srcEndpointDesc, srcNetLayer, srcTopoInstId));
+    EXPECT_EQ(srcNetLayer, netLayer);
+    EXPECT_EQ(srcTopoInstId, 0);
+    EXPECT_TRUE(Hccl::GetEndpointTopoInfo(links[0].dstEndpointDesc, dstNetLayer, dstTopoInstId));
+    EXPECT_EQ(dstNetLayer, netLayer);
+    EXPECT_EQ(dstTopoInstId, 0);
 }
 
 TEST_F(HcclRankGraphTest, Ut_HcclRankGraphGetLinks_When_Param_Is_InVaild_Expect_Return_Error)

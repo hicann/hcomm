@@ -49,6 +49,28 @@ std::string BuildLargeTopoString()
 }
 } // namespace
 
+namespace {
+void WriteLegacyEdge(BinaryStream& binaryStream, u32 binaryLayer, const EdgeInfo& edge)
+{
+    binaryStream << binaryLayer << static_cast<u32>(edge.linkType) << static_cast<u32>(edge.topoType)
+                 << edge.topoInstId;
+    binaryStream << edge.protocols.size();
+    for (const auto& protocol : edge.protocols) {
+        binaryStream << static_cast<u32>(protocol);
+    }
+    binaryStream << edge.localA << edge.localB;
+    binaryStream << edge.localAPorts.size();
+    for (const auto& port : edge.localAPorts) {
+        binaryStream << port;
+    }
+    binaryStream << edge.localBPorts.size();
+    for (const auto& port : edge.localBPorts) {
+        binaryStream << port;
+    }
+    binaryStream << static_cast<u32>(edge.position);
+}
+} // namespace
+
 class TopoParserTest : public testing::Test {
 protected:
     static void SetUpTestCase() { std::cout << "TopoParserTest SetUP" << std::endl; }
@@ -157,11 +179,7 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_Normal_Expect_Success)
     expectTopoInfo.peers.emplace_back(peer2);
 
     expectTopoInfo.edgeCount = 5;
-    expectTopoInfo.edges[0] = std::vector<EdgeInfo>();
-    expectTopoInfo.edges[1] = std::vector<EdgeInfo>();
-    expectTopoInfo.edges[2] = std::vector<EdgeInfo>();
     EdgeInfo edge0;
-    edge0.netLayer = 0;
     edge0.linkType = LinkType::PEER2PEER;
     edge0.protocols.emplace(LinkProtocol::UB_CTP);
     edge0.topoType = TopoType::MESH_1D;
@@ -171,10 +189,9 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_Normal_Expect_Success)
     edge0.localB = 1;
     edge0.localBPorts.emplace("0/1");
     edge0.position = AddrPosition::DEVICE;
-    expectTopoInfo.edges[0].emplace_back(edge0);
+    expectTopoInfo.edges.emplace_back(edge0);
 
     EdgeInfo edge1;
-    edge1.netLayer = 0;
     edge1.linkType = LinkType::PEER2PEER;
     edge1.protocols.emplace(LinkProtocol::UB_MEM);
     edge1.topoType = TopoType::MESH_1D;
@@ -184,10 +201,9 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_Normal_Expect_Success)
     edge1.localB = 2;
     edge1.localBPorts.emplace("0/1");
     edge1.position = AddrPosition::DEVICE;
-    expectTopoInfo.edges[0].emplace_back(edge1);
+    expectTopoInfo.edges.emplace_back(edge1);
 
     EdgeInfo edge2;
-    edge2.netLayer = 0;
     edge2.linkType = LinkType::PEER2NET;
     edge2.protocols.emplace(LinkProtocol::UB_CTP);
     edge2.topoType = TopoType::MESH_1D;
@@ -195,10 +211,9 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_Normal_Expect_Success)
     edge2.localA = 0;
     edge2.localAPorts.emplace("0/0");
     edge2.position = AddrPosition::HOST;
-    expectTopoInfo.edges[0].emplace_back(edge2);
+    expectTopoInfo.edges.emplace_back(edge2);
 
     EdgeInfo edge3;
-    edge3.netLayer = 1;
     edge3.linkType = LinkType::PEER2PEER;
     edge3.protocols.emplace(LinkProtocol::UB_TP);
     edge3.topoType = TopoType::MESH_1D;
@@ -208,10 +223,9 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_Normal_Expect_Success)
     edge3.localB = 2;
     edge3.localBPorts.emplace("0/1");
     edge3.position = AddrPosition::DEVICE;
-    expectTopoInfo.edges[1].emplace_back(edge3);
+    expectTopoInfo.edges.emplace_back(edge3);
 
     EdgeInfo edge4;
-    edge4.netLayer = 2;
     edge4.linkType = LinkType::PEER2NET;
     edge4.protocols.emplace(LinkProtocol::ROCE);
     edge4.topoType = TopoType::CLOS;
@@ -219,7 +233,7 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_Normal_Expect_Success)
     edge4.localA = 0;
     edge4.localAPorts.emplace("0/0");
     edge4.position = AddrPosition::DEVICE;
-    expectTopoInfo.edges[2].emplace_back(edge4);
+    expectTopoInfo.edges.emplace_back(edge4);
 
     EXPECT_EQ(topoInfo.version, expectTopoInfo.version);
     EXPECT_EQ(topoInfo.peerCount, expectTopoInfo.peerCount);
@@ -230,24 +244,7 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_Normal_Expect_Success)
     EXPECT_EQ(topoInfo.edgeCount, expectTopoInfo.edgeCount);
     EXPECT_EQ(topoInfo.edges.size(), expectTopoInfo.edges.size());
 
-    auto it_topo_edges = topoInfo.edges.begin();
-    auto it_expect_edges = expectTopoInfo.edges.begin();
-    for (; it_topo_edges != topoInfo.edges.end(); it_topo_edges++, it_expect_edges++) {
-        EXPECT_EQ(it_topo_edges->first, it_expect_edges->first);
-        EXPECT_EQ((it_topo_edges->second).size(), (it_expect_edges->second).size());
-        for (u32 i = 0; i < (it_topo_edges->second).size(); i++) {
-            EXPECT_EQ((it_topo_edges->second)[i].netLayer, (it_expect_edges->second)[i].netLayer);
-            EXPECT_EQ((it_topo_edges->second)[i].protocols, (it_expect_edges->second)[i].protocols);
-            EXPECT_EQ((it_topo_edges->second)[i].linkType, (it_expect_edges->second)[i].linkType);
-            EXPECT_EQ((it_topo_edges->second)[i].topoType, (it_expect_edges->second)[i].topoType);
-            EXPECT_EQ((it_topo_edges->second)[i].topoInstId, (it_expect_edges->second)[i].topoInstId);
-            EXPECT_EQ((it_topo_edges->second)[i].localA, (it_expect_edges->second)[i].localA);
-            EXPECT_EQ((it_topo_edges->second)[i].localAPorts, (it_expect_edges->second)[i].localAPorts);
-            EXPECT_EQ((it_topo_edges->second)[i].localB, (it_expect_edges->second)[i].localB);
-            EXPECT_EQ((it_topo_edges->second)[i].localBPorts, (it_expect_edges->second)[i].localBPorts);
-            EXPECT_EQ((it_topo_edges->second)[i].position, (it_expect_edges->second)[i].position);
-        }
-    }
+    EXPECT_EQ(topoInfo.edges, expectTopoInfo.edges);
 
     EXPECT_EQ(topoInfo.Describe(), expectTopoInfo.Describe());
 }
@@ -473,7 +470,7 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_EdgesSizeUnequalToEdgeCount_Expect_Ex
 }
 
 // 重复的边 PEER2PEER，localA和localB对调
-TEST_F(TopoParserTest, Ut_Deserialize_When_DuplicateEdge_Expect_Exception)
+TEST_F(TopoParserTest, Ut_Deserialize_When_DuplicateEdge_Expect_Merged)
 {
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
@@ -502,7 +499,7 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_DuplicateEdge_Expect_Exception)
 			    "position": "DEVICE"
 		    },
 		    {
-                "net_layer": 0,
+                "net_layer": 7,
                 "link_type": "PEER2PEER",
 			    "protocols": ["UB_CTP"],
                 "topo_type": "1DMESH",
@@ -518,7 +515,11 @@ TEST_F(TopoParserTest, Ut_Deserialize_When_DuplicateEdge_Expect_Exception)
 
     JsonParser topoParser;
     TopoInfo topoInfo;
-    EXPECT_THROW(topoParser.ParseString(topoString, topoInfo), InvalidParamsException);
+    EXPECT_NO_THROW(topoParser.ParseString(topoString, topoInfo));
+    EXPECT_EQ(topoInfo.edgeCount, 1);
+    ASSERT_EQ(topoInfo.edges.size(), 1);
+    EXPECT_EQ(topoInfo.edges[0].localA, 0);
+    EXPECT_EQ(topoInfo.edges[0].localB, 1);
 }
 
 // Endpoint的localId无效
@@ -697,11 +698,7 @@ TEST_F(TopoParserTest, Ut_BinaryStream_When_GetBinStreamToReBuild_Expect_Success
     expectTopoInfo.peers.emplace_back(peer2);
 
     expectTopoInfo.edgeCount = 5;
-    expectTopoInfo.edges[0] = std::vector<EdgeInfo>();
-    expectTopoInfo.edges[1] = std::vector<EdgeInfo>();
-    expectTopoInfo.edges[2] = std::vector<EdgeInfo>();
     EdgeInfo edge0;
-    edge0.netLayer = 0;
     edge0.linkType = LinkType::PEER2PEER;
     edge0.protocols.emplace(LinkProtocol::UB_CTP);
     edge0.topoType = TopoType::MESH_1D;
@@ -711,10 +708,9 @@ TEST_F(TopoParserTest, Ut_BinaryStream_When_GetBinStreamToReBuild_Expect_Success
     edge0.localB = 1;
     edge0.localBPorts.emplace("0/1");
     edge0.position = AddrPosition::DEVICE;
-    expectTopoInfo.edges[0].emplace_back(edge0);
+    expectTopoInfo.edges.emplace_back(edge0);
 
     EdgeInfo edge1;
-    edge1.netLayer = 0;
     edge1.linkType = LinkType::PEER2PEER;
     edge1.protocols.emplace(LinkProtocol::UB_MEM);
     edge1.topoType = TopoType::MESH_1D;
@@ -724,10 +720,9 @@ TEST_F(TopoParserTest, Ut_BinaryStream_When_GetBinStreamToReBuild_Expect_Success
     edge1.localB = 2;
     edge1.localBPorts.emplace("0/1");
     edge1.position = AddrPosition::DEVICE;
-    expectTopoInfo.edges[0].emplace_back(edge1);
+    expectTopoInfo.edges.emplace_back(edge1);
 
     EdgeInfo edge2;
-    edge2.netLayer = 0;
     edge2.linkType = LinkType::PEER2NET;
     edge2.protocols.emplace(LinkProtocol::UB_CTP);
     edge2.topoType = TopoType::MESH_1D;
@@ -735,10 +730,9 @@ TEST_F(TopoParserTest, Ut_BinaryStream_When_GetBinStreamToReBuild_Expect_Success
     edge2.localA = 0;
     edge2.localAPorts.emplace("0/0");
     edge2.position = AddrPosition::HOST;
-    expectTopoInfo.edges[0].emplace_back(edge2);
+    expectTopoInfo.edges.emplace_back(edge2);
 
     EdgeInfo edge3;
-    edge3.netLayer = 1;
     edge3.linkType = LinkType::PEER2PEER;
     edge3.protocols.emplace(LinkProtocol::UB_TP);
     edge3.topoType = TopoType::MESH_1D;
@@ -748,10 +742,9 @@ TEST_F(TopoParserTest, Ut_BinaryStream_When_GetBinStreamToReBuild_Expect_Success
     edge3.localB = 2;
     edge3.localBPorts.emplace("0/1");
     edge3.position = AddrPosition::DEVICE;
-    expectTopoInfo.edges[1].emplace_back(edge3);
+    expectTopoInfo.edges.emplace_back(edge3);
 
     EdgeInfo edge4;
-    edge4.netLayer = 2;
     edge4.linkType = LinkType::PEER2NET;
     edge4.protocols.emplace(LinkProtocol::ROCE);
     edge4.topoType = TopoType::CLOS;
@@ -759,11 +752,34 @@ TEST_F(TopoParserTest, Ut_BinaryStream_When_GetBinStreamToReBuild_Expect_Success
     edge4.localA = 0;
     edge4.localAPorts.emplace("0/0");
     edge4.position = AddrPosition::DEVICE;
-    expectTopoInfo.edges[2].emplace_back(edge4);
+    expectTopoInfo.edges.emplace_back(edge4);
 
     BinaryStream binStream;
     expectTopoInfo.GetBinStream(binStream);
     TopoInfo reBuildTopo(binStream);
+
+    BinaryStream layoutStream;
+    expectTopoInfo.GetBinStream(layoutStream);
+    std::string binaryVersion;
+    u32 binaryPeerCount = 0;
+    u32 binaryEdgeCount = 0;
+    size_t binaryPeerSize = 0;
+    layoutStream >> binaryVersion >> binaryPeerCount >> binaryEdgeCount >> binaryPeerSize;
+    EXPECT_EQ(binaryVersion, expectTopoInfo.version);
+    EXPECT_EQ(binaryPeerCount, expectTopoInfo.peerCount);
+    EXPECT_EQ(binaryEdgeCount, expectTopoInfo.edgeCount);
+    EXPECT_EQ(binaryPeerSize, expectTopoInfo.peers.size());
+    for (size_t i = 0; i < binaryPeerSize; i++) {
+        PeerInfo binaryPeer(layoutStream);
+        EXPECT_EQ(binaryPeer.localId, expectTopoInfo.peers[i].localId);
+    }
+    size_t edgeGroupCount = 0;
+    u32 binaryLayer = 0;
+    size_t groupEdgeCount = 0;
+    layoutStream >> edgeGroupCount >> binaryLayer >> groupEdgeCount;
+    EXPECT_EQ(edgeGroupCount, 1);
+    EXPECT_EQ(binaryLayer, 0);
+    EXPECT_EQ(groupEdgeCount, expectTopoInfo.edges.size());
 
     EXPECT_EQ(expectTopoInfo.version, reBuildTopo.version);
     EXPECT_EQ(expectTopoInfo.peerCount, reBuildTopo.peerCount);
@@ -774,26 +790,108 @@ TEST_F(TopoParserTest, Ut_BinaryStream_When_GetBinStreamToReBuild_Expect_Success
     EXPECT_EQ(expectTopoInfo.edgeCount, reBuildTopo.edgeCount);
     EXPECT_EQ(expectTopoInfo.edges.size(), reBuildTopo.edges.size());
 
-    auto it_topo_edges = expectTopoInfo.edges.begin();
-    auto it_expect_edges = reBuildTopo.edges.begin();
-    for (; it_topo_edges != expectTopoInfo.edges.end(); it_topo_edges++, it_expect_edges++) {
-        EXPECT_EQ(it_topo_edges->first, it_expect_edges->first);
-        EXPECT_EQ((it_topo_edges->second).size(), (it_expect_edges->second).size());
-        for (u32 i = 0; i < (it_topo_edges->second).size(); i++) {
-            EXPECT_EQ((it_topo_edges->second)[i].netLayer, (it_expect_edges->second)[i].netLayer);
-            EXPECT_EQ((it_topo_edges->second)[i].protocols, (it_expect_edges->second)[i].protocols);
-            EXPECT_EQ((it_topo_edges->second)[i].linkType, (it_expect_edges->second)[i].linkType);
-            EXPECT_EQ((it_topo_edges->second)[i].topoType, (it_expect_edges->second)[i].topoType);
-            EXPECT_EQ((it_topo_edges->second)[i].topoInstId, (it_expect_edges->second)[i].topoInstId);
-            EXPECT_EQ((it_topo_edges->second)[i].localA, (it_expect_edges->second)[i].localA);
-            EXPECT_EQ((it_topo_edges->second)[i].localAPorts, (it_expect_edges->second)[i].localAPorts);
-            EXPECT_EQ((it_topo_edges->second)[i].localB, (it_expect_edges->second)[i].localB);
-            EXPECT_EQ((it_topo_edges->second)[i].localBPorts, (it_expect_edges->second)[i].localBPorts);
-            EXPECT_EQ((it_topo_edges->second)[i].position, (it_expect_edges->second)[i].position);
-        }
-    }
+    EXPECT_EQ(expectTopoInfo.edges, reBuildTopo.edges);
 
     EXPECT_EQ(expectTopoInfo.Describe(), reBuildTopo.Describe());
+}
+
+TEST_F(TopoParserTest, Ut_BinaryStream_When_ReadLegacyGroups_Expect_FlattenedEdges)
+{
+    TopoInfo expectTopoInfo;
+    expectTopoInfo.version = "2.0";
+    expectTopoInfo.peerCount = 2;
+    expectTopoInfo.edgeCount = 2;
+
+    PeerInfo peer0;
+    peer0.localId = 0;
+    PeerInfo peer1;
+    peer1.localId = 1;
+    expectTopoInfo.peers = {peer0, peer1};
+
+    EdgeInfo edge0;
+    edge0.linkType = LinkType::PEER2PEER;
+    edge0.protocols.emplace(LinkProtocol::UB_CTP);
+    edge0.topoType = TopoType::MESH_1D;
+    edge0.localA = 0;
+    edge0.localAPorts.emplace("0/0");
+    edge0.localB = 1;
+    edge0.localBPorts.emplace("0/1");
+    edge0.position = AddrPosition::DEVICE;
+
+    EdgeInfo edge1;
+    edge1.linkType = LinkType::PEER2NET;
+    edge1.protocols.emplace(LinkProtocol::ROCE);
+    edge1.topoType = TopoType::CLOS;
+    edge1.topoInstId = 1;
+    edge1.localA = 1;
+    edge1.localAPorts.emplace("1/0");
+    edge1.position = AddrPosition::HOST;
+    expectTopoInfo.edges = {edge0, edge1};
+
+    BinaryStream legacyStream;
+    legacyStream << expectTopoInfo.version << expectTopoInfo.peerCount << expectTopoInfo.edgeCount;
+    legacyStream << expectTopoInfo.peers.size();
+    for (const auto& peer : expectTopoInfo.peers) {
+        peer.GetBinStream(legacyStream);
+    }
+    const size_t edgeGroupCount = 2;
+    const size_t groupEdgeCount = 1;
+    legacyStream << edgeGroupCount;
+    legacyStream << static_cast<u32>(1) << groupEdgeCount;
+    WriteLegacyEdge(legacyStream, 1, edge0);
+    legacyStream << static_cast<u32>(7) << groupEdgeCount;
+    WriteLegacyEdge(legacyStream, 7, edge1);
+
+    TopoInfo reBuildTopo(legacyStream);
+    EXPECT_EQ(reBuildTopo.version, expectTopoInfo.version);
+    EXPECT_EQ(reBuildTopo.peerCount, expectTopoInfo.peerCount);
+    EXPECT_EQ(reBuildTopo.edgeCount, expectTopoInfo.edgeCount);
+    EXPECT_EQ(reBuildTopo.peers.size(), expectTopoInfo.peers.size());
+    EXPECT_EQ(reBuildTopo.edges, expectTopoInfo.edges);
+}
+
+TEST_F(TopoParserTest, Ut_BinaryStream_When_LegacyGroupsContainSameEdge_Expect_Merged)
+{
+    TopoInfo topoInfo;
+    topoInfo.version = "2.0";
+    topoInfo.peerCount = 2;
+    topoInfo.edgeCount = 2;
+
+    PeerInfo peer0;
+    peer0.localId = 0;
+    PeerInfo peer1;
+    peer1.localId = 1;
+    topoInfo.peers = {peer0, peer1};
+
+    EdgeInfo edge;
+    edge.linkType = LinkType::PEER2PEER;
+    edge.protocols.emplace(LinkProtocol::UB_CTP);
+    edge.topoType = TopoType::MESH_1D;
+    edge.localA = 0;
+    edge.localAPorts.emplace("0/0");
+    edge.localB = 1;
+    edge.localBPorts.emplace("0/1");
+    edge.position = AddrPosition::DEVICE;
+
+    BinaryStream legacyStream;
+    legacyStream << topoInfo.version << topoInfo.peerCount << topoInfo.edgeCount;
+    legacyStream << topoInfo.peers.size();
+    for (const auto& peer : topoInfo.peers) {
+        peer.GetBinStream(legacyStream);
+    }
+
+    const size_t edgeGroupCount = 2;
+    const size_t groupEdgeCount = 1;
+    legacyStream << edgeGroupCount;
+    legacyStream << static_cast<u32>(0) << groupEdgeCount;
+    WriteLegacyEdge(legacyStream, 0, edge);
+    legacyStream << static_cast<u32>(7) << groupEdgeCount;
+    WriteLegacyEdge(legacyStream, 7, edge);
+
+    TopoInfo rebuiltTopo(legacyStream);
+    EXPECT_EQ(rebuiltTopo.edgeCount, 1);
+    ASSERT_EQ(rebuiltTopo.edges.size(), 1);
+    EXPECT_EQ(rebuiltTopo.edges[0], edge);
 }
 
 TEST_F(TopoParserTest, Ut_DeserializeBinaryStream_When_Normal_Expect_Success)

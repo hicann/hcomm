@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -42,28 +43,33 @@ private:
     std::unique_ptr<RankGraph> rankGraph_;
     RankId2PeerMap peers_;
     Level2Id2NetInst tempNetInsts_;
+    std::map<LocalId, std::vector<std::shared_ptr<PhyTopo::Link>>> peer2NetPhyLinksCache_;
     RankId myRank_;
     std::shared_ptr<TopoInfo> topoInfo_;
     UpdaterFor64Plus1 updaterFor64Plus1_{};
 
     void CheckMyRankInRankTable() const;
-    void CheckNetLayerFromPhyTopo(const u32 netLayer) const;
     void BuildRankGraph();
     void BuildFromRankTable();
     void BuildPeer2PeerLinks();
     void AddFabricInfo(u32 level);
+    LinkProtocol ResolveUbProtocolByEid(const AddressInfo& addrInfo, bool& supportsRtp) const;
+    std::map<PlaneId, LinkProtocol> ResolvePlaneUbProtocols(u32 netLayer, std::set<PlaneId>& ctpRtpPlanes);
+    const std::vector<std::shared_ptr<PhyTopo::Link>>& GetPeer2NetPhyLinksCached(LocalId localId);
     void AddPeer2NetLink(
         const u32 netLayer, const std::string& netInstId, RankId rankId, const AddressInfo& addrInfo,
-        const std::shared_ptr<NetInstance::Fabric>& fabNode, const std::vector<std::shared_ptr<PhyTopo::Link>>& links);
+        const std::shared_ptr<NetInstance::Fabric>& fabNode,
+        const std::vector<std::shared_ptr<PhyTopo::Link>>& matchedLinks, bool exposeUbTp);
     void AddTopoDescFabricInfo();
     void UpdateTopoInstForMyRankOnly();
+    u32 GetLocalDeviceId() const;
     const RankLevelInfo& GetRankLevelInfoByNetLayer(const NewRankInfo& rankInfo, u32 netLayer) const;
     std::shared_ptr<NetInstance> GetNetInstance(const RankLevelInfo& levelInfo);
     std::shared_ptr<NetInstance> CreateNetInstance(const RankLevelInfo& levelInfo);
 };
 
 std::map<PlaneId, FabricId> GetFabricsFromAddrInfo(const std::vector<AddressInfo>& rankAddrs);
-std::vector<std::shared_ptr<PhyTopo::Link>> GetPeer2NetPhyLinks(u32 netLayer, LocalId localId);
+std::vector<std::shared_ptr<PhyTopo::Link>> GetPeer2NetPhyLinks(LocalId localId);
 std::vector<std::shared_ptr<NetInstance::ConnInterface>> ConstructConnIFromPhyTopoConnIAndPortMap(
     std::shared_ptr<PhyTopo::ConnInterface> phyConnIFace,
     const std::map<std::string, std::vector<IpAddress>>& portAddrMap, const TopoType topoType, const u32 topoInstId,

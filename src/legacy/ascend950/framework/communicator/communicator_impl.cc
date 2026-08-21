@@ -3820,7 +3820,7 @@ HcclResult CommunicatorImpl::GetInstSizeListByNetLayer(uint32_t netLayer, uint32
     }
 }
 
-static HcclResult InsertInnerLink(const NetInstance::Path& path, std::vector<CommLink>& linkListVec)
+static HcclResult InsertInnerLink(u32 netLayer, const NetInstance::Path& path, std::vector<CommLink>& linkListVec)
 {
     for (const auto& link : path.links) {
         const NetInstance::Link* peer2peer = &link;
@@ -3839,6 +3839,7 @@ static HcclResult InsertInnerLink(const NetInstance::Path& path, std::vector<Com
             HcclResult result = GetCommAddr(commLink.srcEndpointDesc.commAddr, srcConnInterface->GetAddr());
             if (result != HCCL_SUCCESS)
                 return result;
+            CHK_RET(SetEndpointTopoInfo(commLink.srcEndpointDesc, netLayer, srcConnInterface->GetTopoInstId()));
 
             // 设置目标端点
             std::shared_ptr<NetInstance::ConnInterface> dstConnInterface = link.GetTargetIface();
@@ -3846,6 +3847,7 @@ static HcclResult InsertInnerLink(const NetInstance::Path& path, std::vector<Com
             result = GetCommAddr(commLink.dstEndpointDesc.commAddr, dstConnInterface->GetAddr());
             if (result != HCCL_SUCCESS)
                 return result;
+            CHK_RET(SetEndpointTopoInfo(commLink.dstEndpointDesc, netLayer, dstConnInterface->GetTopoInstId()));
 
             linkListVec.emplace_back(std::move(commLink));
         }
@@ -3854,7 +3856,7 @@ static HcclResult InsertInnerLink(const NetInstance::Path& path, std::vector<Com
     return HCCL_SUCCESS;
 }
 
-static HcclResult InsertClosLinks(const NetInstance::Path& path, std::vector<CommLink>& linkListVec)
+static HcclResult InsertClosLinks(u32 netLayer, const NetInstance::Path& path, std::vector<CommLink>& linkListVec)
 {
     const NetInstance::Link* peer2net = nullptr;
     const NetInstance::Link* net2peer = nullptr;
@@ -3886,10 +3888,12 @@ static HcclResult InsertClosLinks(const NetInstance::Path& path, std::vector<Com
         HcclResult result = GetCommAddr(commLink.srcEndpointDesc.commAddr, srcInterface->GetAddr());
         if (result != HCCL_SUCCESS)
             return result;
+        CHK_RET(SetEndpointTopoInfo(commLink.srcEndpointDesc, netLayer, srcInterface->GetTopoInstId()));
         // 设置目标端点
         result = GetCommAddr(commLink.dstEndpointDesc.commAddr, dstInterface->GetAddr());
         if (result != HCCL_SUCCESS)
             return result;
+        CHK_RET(SetEndpointTopoInfo(commLink.dstEndpointDesc, netLayer, dstInterface->GetTopoInstId()));
         linkListVec.emplace_back(std::move(commLink));
     }
     return HCCL_SUCCESS;
@@ -3915,12 +3919,12 @@ HcclResult CommunicatorImpl::GetLinks(
             }
             if (!isClos) {
                 // Peer2Peer网络：直接处理每条link
-                HcclResult ret = InsertInnerLink(path, linkListVec);
+                HcclResult ret = InsertInnerLink(netLayer, path, linkListVec);
                 if (ret != HCCL_SUCCESS)
                     return ret;
             } else {
                 // Clos网络：找到peer2net和net2peer，组合成一条链路
-                HcclResult ret = InsertClosLinks(path, linkListVec);
+                HcclResult ret = InsertClosLinks(netLayer, path, linkListVec);
                 if (ret != HCCL_SUCCESS)
                     return ret;
             }

@@ -210,7 +210,7 @@ static HcclResult SetEndpointLoc(EndpointLocType& locType, const AddrPosition& p
     return HCCL_SUCCESS;
 }
 
-static HcclResult InsertInnerLink(const NetInstance::Path& path, std::vector<CommLink>& linkListVec)
+static HcclResult InsertInnerLink(u32 netLayer, const NetInstance::Path& path, std::vector<CommLink>& linkListVec)
 {
     for (const auto& link : path.links) {
         const NetInstance::Link* peer2peer = &link;
@@ -234,6 +234,7 @@ static HcclResult InsertInnerLink(const NetInstance::Path& path, std::vector<Com
                 return result;
             }
             CHK_RET(SetEndpointLoc(commLink.srcEndpointDesc.loc.locType, srcConnInterface->GetPos()));
+            CHK_RET(SetEndpointTopoInfo(commLink.srcEndpointDesc, netLayer, srcConnInterface->GetTopoInstId()));
 
             // 设置目标端点
             std::shared_ptr<NetInstance::ConnInterface> dstConnInterface = link.GetTargetIface();
@@ -247,6 +248,7 @@ static HcclResult InsertInnerLink(const NetInstance::Path& path, std::vector<Com
             }
 
             CHK_RET(SetEndpointLoc(commLink.dstEndpointDesc.loc.locType, dstConnInterface->GetPos()));
+            CHK_RET(SetEndpointTopoInfo(commLink.dstEndpointDesc, netLayer, dstConnInterface->GetTopoInstId()));
 
             if (commLink.srcEndpointDesc.loc.locType == ENDPOINT_LOC_TYPE_DEVICE) {
                 std::shared_ptr<NetInstance::Node> srcNode = peer2peer->GetSourceNode();
@@ -264,7 +266,7 @@ static HcclResult InsertInnerLink(const NetInstance::Path& path, std::vector<Com
     return HCCL_SUCCESS;
 }
 
-static HcclResult InsertClosLinks(const NetInstance::Path& path, std::vector<CommLink>& linkListVec)
+static HcclResult InsertClosLinks(u32 netLayer, const NetInstance::Path& path, std::vector<CommLink>& linkListVec)
 {
     const NetInstance::Link* peer2net = nullptr;
     const NetInstance::Link* net2peer = nullptr;
@@ -297,6 +299,7 @@ static HcclResult InsertClosLinks(const NetInstance::Path& path, std::vector<Com
         // 设置源端点
         CHK_RET(SetCommAddress(commLink.srcEndpointDesc.commAddr, srcInterface->GetAddr()));
         CHK_RET(SetEndpointLoc(commLink.srcEndpointDesc.loc.locType, srcInterface->GetPos()));
+        CHK_RET(SetEndpointTopoInfo(commLink.srcEndpointDesc, netLayer, srcInterface->GetTopoInstId()));
         if (commLink.srcEndpointDesc.loc.locType == ENDPOINT_LOC_TYPE_DEVICE) {
             std::shared_ptr<NetInstance::Node> srcNode = peer2net->GetSourceNode();
             std::shared_ptr<NetInstance::Peer> srcPeer = std::dynamic_pointer_cast<NetInstance::Peer>(srcNode);
@@ -306,6 +309,7 @@ static HcclResult InsertClosLinks(const NetInstance::Path& path, std::vector<Com
         // 设置目标端点
         CHK_RET(SetCommAddress(commLink.dstEndpointDesc.commAddr, dstInterface->GetAddr()));
         CHK_RET(SetEndpointLoc(commLink.dstEndpointDesc.loc.locType, dstInterface->GetPos()));
+        CHK_RET(SetEndpointTopoInfo(commLink.dstEndpointDesc, netLayer, dstInterface->GetTopoInstId()));
         if (commLink.dstEndpointDesc.loc.locType == ENDPOINT_LOC_TYPE_DEVICE) {
             std::shared_ptr<NetInstance::Node> dstNode = net2peer->GetTargetNode();
             std::shared_ptr<NetInstance::Peer> dstPeer = std::dynamic_pointer_cast<NetInstance::Peer>(dstNode);
@@ -343,7 +347,7 @@ IRankGraph::GetLinks(uint32_t netLayer, uint32_t srcRank, uint32_t dstRank, Comm
         }
         if (!isClos) {
             // Peer2Peer网络：直接处理每条link
-            HcclResult ret = InsertInnerLink(path, linkListVec_);
+            HcclResult ret = InsertInnerLink(netLayer, path, linkListVec_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
                 HCCL_ERROR(
@@ -352,7 +356,7 @@ IRankGraph::GetLinks(uint32_t netLayer, uint32_t srcRank, uint32_t dstRank, Comm
                 ret);
         } else {
             // Clos网络：找到peer2net和net2peer，组合成一条链路
-            HcclResult ret = InsertClosLinks(path, linkListVec_);
+            HcclResult ret = InsertClosLinks(netLayer, path, linkListVec_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
                 HCCL_ERROR(

@@ -85,8 +85,8 @@ namespace test {
         std::initializer_list<std::string> localBPorts = {}, LinkProtocol protocol = LinkProtocol::UB_CTP,
         AddrPosition position = AddrPosition::DEVICE, u32 topoInstId = 0, TopoType topoType = TopoType::CLOS)
     {
+        (void)netLayer;
         EdgeInfo edge;
-        edge.netLayer = netLayer;
         edge.linkType = linkType;
         edge.topoType = topoType;
         edge.topoInstId = topoInstId;
@@ -108,9 +108,7 @@ namespace test {
             topo.peers.emplace_back(MakePeer(localId));
         }
         topo.edgeCount = edges.size();
-        for (const auto& edge : edges) {
-            topo.edges[edge.netLayer].push_back(edge);
-        }
+        topo.edges = edges;
         return topo;
     }
 

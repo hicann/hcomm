@@ -40,7 +40,6 @@ TEST_F(EdgeParserTest, St_Deserialize_When_Normal_Expect_Success)
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
     std::string edgeString = R"({
-            "net_layer": 0,
             "link_type": "PEER2PEER",
 			"protocols": ["UB_CTP"],   
             "topo_type": "1DMESH",
@@ -57,7 +56,6 @@ TEST_F(EdgeParserTest, St_Deserialize_When_Normal_Expect_Success)
     topoParser.ParseString(edgeString, edgeInfo);
 
     EdgeInfo edge0;
-    edge0.netLayer = 0;
     edge0.protocols.emplace(LinkProtocol::UB_CTP);
     edge0.linkType = LinkType::PEER2PEER;
     edge0.topoType = TopoType::MESH_1D;
@@ -93,7 +91,6 @@ TEST_F(EdgeParserTest, St_Deserialize_When_OptionalFieldsMissing_Expect_Success)
     topoParser.ParseString(edgeString, edgeInfo);
 
     EdgeInfo edge0;
-    edge0.netLayer = 0;
     edge0.protocols.emplace(LinkProtocol::UB_CTP);
     edge0.linkType = LinkType::PEER2PEER;
     edge0.topoType = TopoType::CLOS;
@@ -131,7 +128,6 @@ TEST_F(EdgeParserTest, St_Deserialize_When_PEER2NET_ExistB_Expect_Warning)
     topoParser.ParseString(edgeString, edgeInfo);
 
     EdgeInfo edge0;
-    edge0.netLayer = 0;
     edge0.protocols.emplace(LinkProtocol::UB_CTP);
     edge0.linkType = LinkType::PEER2NET;
     edge0.topoType = TopoType::MESH_1D;
@@ -165,7 +161,6 @@ TEST_F(EdgeParserTest, St_Deserialize_When_NormalPeer2Net_Expect_Success)
     topoParser.ParseString(edgeString, edgeInfo);
 
     EdgeInfo edge0;
-    edge0.netLayer = 0;
     edge0.protocols.emplace(LinkProtocol::UB_CTP);
     edge0.linkType = LinkType::PEER2NET;
     edge0.topoType = TopoType::MESH_1D;
@@ -194,14 +189,13 @@ TEST_F(EdgeParserTest, St_Deserialize_When_NeededFieldMissing_Expect_Exception)
     EXPECT_THROW(edgeParser.ParseString(edgeString, edgeInfo), InvalidParamsException);
 }
 
-// net_layer = 8
-TEST_F(EdgeParserTest, St_Deserialize_When_InvalidNetLayer_Expect_Exception)
+// 旧 topo.json 中不同或越界的 net_layer 都应被忽略，解析结果与不带该字段时一致
+TEST_F(EdgeParserTest, St_Deserialize_When_LegacyNetLayerDifferentOrOutOfRange_Expect_SameEdge)
 {
     DevType devType = DevType::DEV_TYPE_910A;
     MOCKER(HrtGetDeviceType).stubs().will(returnValue(devType));
 
-    std::string edgeString = R"({
-			"net_layer": 8,
+    std::string edgeStringWithoutNetLayer = R"({
 			"link_type": "PEER2PEER",
 			"protocols": ["UB_CTP"],
             "topo_type": "1DMESH",
@@ -213,9 +207,21 @@ TEST_F(EdgeParserTest, St_Deserialize_When_InvalidNetLayer_Expect_Exception)
 			"position": "DEVICE"
 		})";
 
+    nlohmann::json edgeJsonWithoutNetLayer = nlohmann::json::parse(edgeStringWithoutNetLayer);
+    nlohmann::json edgeJsonWithDifferentNetLayer = edgeJsonWithoutNetLayer;
+    nlohmann::json edgeJsonWithOutOfRangeNetLayer = edgeJsonWithoutNetLayer;
+    edgeJsonWithDifferentNetLayer["net_layer"] = 1;
+    edgeJsonWithOutOfRangeNetLayer["net_layer"] = 8;
+
     JsonParser edgeParser;
-    EdgeInfo edgeInfo;
-    EXPECT_THROW(edgeParser.ParseString(edgeString, edgeInfo), InvalidParamsException);
+    EdgeInfo edgeWithoutNetLayer;
+    EdgeInfo edgeWithDifferentNetLayer;
+    EdgeInfo edgeWithOutOfRangeNetLayer;
+    EXPECT_NO_THROW(edgeParser.ParseString(edgeStringWithoutNetLayer, edgeWithoutNetLayer));
+    EXPECT_NO_THROW(edgeParser.ParseString(edgeJsonWithDifferentNetLayer.dump(), edgeWithDifferentNetLayer));
+    EXPECT_NO_THROW(edgeParser.ParseString(edgeJsonWithOutOfRangeNetLayer.dump(), edgeWithOutOfRangeNetLayer));
+    EXPECT_TRUE(edgeWithoutNetLayer == edgeWithDifferentNetLayer);
+    EXPECT_TRUE(edgeWithoutNetLayer == edgeWithOutOfRangeNetLayer);
 }
 
 // 无效的LinkProtocol
@@ -266,7 +272,6 @@ TEST_F(EdgeParserTest, St_Deserialize_When_ToManyLinkProtocols_Expect_Exception)
     edgeParser.ParseString(edgeString, edgeInfo);
 
     EdgeInfo edge0;
-    edge0.netLayer = 2;
     edge0.protocols.emplace(LinkProtocol::UB_CTP);
     edge0.protocols.emplace(LinkProtocol::ROCE);
     edge0.linkType = LinkType::PEER2PEER;
@@ -426,7 +431,6 @@ TEST_F(EdgeParserTest, St_Deserialize_When_InvalidPosition_Expect_Exception)
 TEST_F(EdgeParserTest, St_BinaryStream_When_GetBinStreamToReBuild_Expect_Success)
 {
     EdgeInfo edge0;
-    edge0.netLayer = 0;
     edge0.protocols.emplace(LinkProtocol::UB_CTP);
     edge0.linkType = LinkType::PEER2PEER;
     edge0.topoType = TopoType::MESH_1D;

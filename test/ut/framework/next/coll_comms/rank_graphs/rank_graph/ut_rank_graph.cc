@@ -526,6 +526,79 @@ TEST_F(RankGraphTest, ut_GetEndpointDesc_When_Normal_Expect_SUCCESS)
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
+TEST_F(RankGraphTest, ut_GetEndpointInfo_When_SameEndpointAcrossLayers_Expect_LayerSpecificBwCoeff)
+{
+    constexpr u32 topoInstId = 0;
+    constexpr u32 layer1 = 1;
+    constexpr u32 layer2 = 2;
+    RankGraph rankGraph(myRank);
+    auto peer = createPeer(myRank);
+    rankGraph.AddPeer(peer);
+
+    IpAddress endpointAddr("192.168.1.1");
+    CommAddr commAddr{};
+    commAddr.type = COMM_ADDR_TYPE_IP_V4;
+    commAddr.addr = endpointAddr.GetBinaryAddress().addr;
+    std::set<LinkProtocol> protocols = {LinkProtocol::UB_CTP};
+    auto layer1Iface = std::make_shared<NetInstance::ConnInterface>(
+        endpointAddr, std::set<std::string>{"1/0"}, AddrPosition::DEVICE, LinkType::PEER2NET, protocols, TopoType::CLOS,
+        topoInstId);
+    auto layer2Iface = std::make_shared<NetInstance::ConnInterface>(
+        endpointAddr, std::set<std::string>{"2/0", "2/1"}, AddrPosition::DEVICE, LinkType::PEER2NET, protocols,
+        TopoType::CLOS, topoInstId);
+    peer->AddConnInterface(layer1, layer1Iface);
+    peer->AddConnInterface(layer2, layer2Iface);
+    peer->SetEndpointToIface(layer1, topoInstId, commAddr, COMM_PROTOCOL_UBC_CTP, layer1Iface);
+    peer->SetEndpointToIface(layer2, topoInstId, commAddr, COMM_PROTOCOL_UBC_CTP, layer2Iface);
+
+    EndpointDesc layer1Desc;
+    EndpointDesc layer2Desc;
+    uint32_t descNum = 1;
+    ASSERT_EQ(rankGraph.GetEndpointDesc(layer1, topoInstId, &descNum, &layer1Desc), HCCL_SUCCESS);
+    ASSERT_EQ(descNum, 1);
+    u32 descNetLayer = UINT32_MAX;
+    u32 descTopoInstId = UINT32_MAX;
+    ASSERT_TRUE(GetEndpointTopoInfo(layer1Desc, descNetLayer, descTopoInstId));
+    EXPECT_EQ(descNetLayer, layer1);
+    EXPECT_EQ(descTopoInstId, topoInstId);
+    descNum = 1;
+    ASSERT_EQ(rankGraph.GetEndpointDesc(layer2, topoInstId, &descNum, &layer2Desc), HCCL_SUCCESS);
+    ASSERT_EQ(descNum, 1);
+    ASSERT_TRUE(GetEndpointTopoInfo(layer2Desc, descNetLayer, descTopoInstId));
+    EXPECT_EQ(descNetLayer, layer2);
+    EXPECT_EQ(descTopoInstId, topoInstId);
+
+    EndpointDesc copiedLayer2Desc;
+    ASSERT_EQ(EndpointDescInit(&copiedLayer2Desc, 1), HCCL_SUCCESS);
+    copiedLayer2Desc.protocol = layer2Desc.protocol;
+    copiedLayer2Desc.commAddr = layer2Desc.commAddr;
+    copiedLayer2Desc.loc = layer2Desc.loc;
+    ASSERT_TRUE(GetEndpointTopoInfo(copiedLayer2Desc, descNetLayer, descTopoInstId));
+    EXPECT_EQ(descNetLayer, layer2);
+    EXPECT_EQ(descTopoInstId, topoInstId);
+
+    EndpointAttrBwCoeff layer1BwCoeff = 0;
+    EndpointAttrBwCoeff layer2BwCoeff = 0;
+    EXPECT_EQ(
+        rankGraph.GetEndpointInfo(myRank, &layer1Desc, ENDPOINT_ATTR_BW_COEFF, sizeof(layer1BwCoeff), &layer1BwCoeff),
+        HCCL_SUCCESS);
+    EXPECT_EQ(
+        rankGraph.GetEndpointInfo(
+            myRank, &copiedLayer2Desc, ENDPOINT_ATTR_BW_COEFF, sizeof(layer2BwCoeff), &layer2BwCoeff),
+        HCCL_SUCCESS);
+    EXPECT_EQ(layer1BwCoeff, 1);
+    EXPECT_EQ(layer2BwCoeff, 2);
+
+    EndpointDesc legacyDesc;
+    ASSERT_EQ(EndpointDescInit(&legacyDesc, 1), HCCL_SUCCESS);
+    legacyDesc.commAddr = layer1Desc.commAddr;
+    legacyDesc.protocol = layer1Desc.protocol;
+    legacyDesc.loc.locType = layer1Desc.loc.locType;
+    EXPECT_EQ(
+        rankGraph.GetEndpointInfo(myRank, &legacyDesc, ENDPOINT_ATTR_BW_COEFF, sizeof(layer1BwCoeff), &layer1BwCoeff),
+        HCCL_E_PARA);
+}
+
 TEST_F(RankGraphTest, ut_AddGroupLinks_When_1pNormal_Expect_SUCCESS)
 {
     auto rankGraph = create4pRankGraph(myRank);

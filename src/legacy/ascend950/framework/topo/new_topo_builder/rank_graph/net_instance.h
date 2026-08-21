@@ -23,10 +23,72 @@
 #include "ip_address.h"
 #include "iterator.h"
 #include "types.h"
+#include "securec.h"
 #include "topo_common_types.h"
 
 namespace Hccl {
 constexpr u32 DEFAULT_LISTENING_PORT = 60001;
+// HCCL构建ChannelDesc时会完整复制EndpointLoc，使用其未占用的尾部字节传递拓扑定位信息。
+struct EndpointTopoInfo {
+    u32 magic;
+    u32 netLayer;
+    u32 topoInstId;
+};
+
+constexpr u32 ENDPOINT_TOPO_INFO_MAGIC = 0x544F504FU;
+constexpr size_t ENDPOINT_LOC_RAW_SIZE = sizeof(((EndpointLoc*)nullptr)->raws);
+static_assert(ENDPOINT_LOC_RAW_SIZE >= sizeof(EndpointTopoInfo), "EndpointLoc reserved space is insufficient");
+static_assert(
+    ENDPOINT_LOC_RAW_SIZE - sizeof(EndpointTopoInfo) >= sizeof(((EndpointLoc*)nullptr)->device),
+    "Endpoint topology info overlaps device location fields");
+constexpr size_t ENDPOINT_TOPO_INFO_OFFSET = ENDPOINT_LOC_RAW_SIZE - sizeof(EndpointTopoInfo);
+
+inline HcclResult SetEndpointTopoInfo(EndpointDesc& endpointDesc, u32 netLayer, u32 topoInstId)
+{
+    const EndpointTopoInfo topoInfo{ENDPOINT_TOPO_INFO_MAGIC, netLayer, topoInstId};
+    const errno_t ret
+        = memcpy_s(endpointDesc.loc.raws + ENDPOINT_TOPO_INFO_OFFSET, sizeof(topoInfo), &topoInfo, sizeof(topoInfo));
+    return ret == EOK ? HCCL_SUCCESS : HCCL_E_MEMORY;
+}
+
+inline bool GetEndpointTopoInfo(const EndpointDesc& endpointDesc, u32& netLayer, u32& topoInstId)
+{
+    EndpointTopoInfo topoInfo{};
+    const errno_t ret
+        = memcpy_s(&topoInfo, sizeof(topoInfo), endpointDesc.loc.raws + ENDPOINT_TOPO_INFO_OFFSET, sizeof(topoInfo));
+    if (ret != EOK) {
+        return false;
+    }
+    if (topoInfo.magic != ENDPOINT_TOPO_INFO_MAGIC) {
+        return false;
+    }
+
+    netLayer = topoInfo.netLayer;
+    topoInstId = topoInfo.topoInstId;
+    return true;
+}
+
+// 同一地址和协议可属于不同网络层或拓扑实例，需共同参与Endpoint定位。
+struct EndpointKey {
+    u32 netLayer;
+    u32 topoInstId;
+    CommAddr commAddr;
+    CommProtocol protocol;
+
+    bool operator==(const EndpointKey& other) const
+    {
+        return netLayer == other.netLayer && topoInstId == other.topoInstId && commAddr == other.commAddr
+               && protocol == other.protocol;
+    }
+};
+
+struct EndpointKeyHash {
+    size_t operator()(const EndpointKey& key) const
+    {
+        return std::hash<u32>()(key.netLayer) ^ (std::hash<u32>()(key.topoInstId) << 1)
+               ^ (std::hash<CommAddr>()(key.commAddr) << 2) ^ (std::hash<CommProtocol>()(key.protocol) << 3);
+    }
+};
 class NetInstance {
 public:
     class ConnInterface {
@@ -70,6 +132,9 @@ public:
 
     class Node {
     public:
+        using EndpointToIfaceMap
+            = std::unordered_map<EndpointKey, std::shared_ptr<NetInstance::ConnInterface>, EndpointKeyHash>;
+
         MAKE_ENUM(NodeType, PEER, FABRIC)
         explicit Node(NodeType nodeType) : type_(nodeType) {}
         virtual ~Node() = default;
@@ -80,9 +145,9 @@ public:
         std::vector<std::shared_ptr<NetInstance::ConnInterface>> GetIfacesByLayer(u32 layer) const;
         std::vector<std::shared_ptr<NetInstance::ConnInterface>> GetIfaces() const;
         void SetEndpointToIface(
-            const CommAddr& commAddr, CommProtocol protocol, const std::shared_ptr<NetInstance::ConnInterface>& iface);
-        const std::unordered_map<std::pair<CommAddr, CommProtocol>, std::shared_ptr<NetInstance::ConnInterface>>
-        GetEndpointToIfaceMap() const;
+            u32 netLayer, u32 topoInstId, const CommAddr& commAddr, CommProtocol protocol,
+            const std::shared_ptr<NetInstance::ConnInterface>& iface);
+        const EndpointToIfaceMap& GetEndpointToIfaceMap() const;
         NodeId GetNodeId() const;
         string GetNodeIdStr() const;
         const std::unordered_map<u32, std::vector<std::shared_ptr<NetInstance::ConnInterface>>>
@@ -94,8 +159,7 @@ public:
 
     private:
         std::unordered_map<u32, std::vector<std::shared_ptr<NetInstance::ConnInterface>>> interfacesMap_;
-        std::unordered_map<std::pair<CommAddr, CommProtocol>, std::shared_ptr<NetInstance::ConnInterface>>
-            endpointToIfaceMap_;
+        EndpointToIfaceMap endpointToIfaceMap_;
         NodeType type_;
     };
 
@@ -126,6 +190,7 @@ public:
         std::set<u32> GetLevels() const;
         NetInstancePtr GetNetInstance(u32 level) const;
         std::map<std::string, std::vector<IpAddress>> GetPortAddrMapLayer0() const;
+        bool TryGetLayer0Address(const std::string& port, IpAddress& addr) const;
         void SetPortPortAddrMapLayer0(std::map<std::string, std::vector<IpAddress>> portAddrMap);
         std::string Describe() const override;
 

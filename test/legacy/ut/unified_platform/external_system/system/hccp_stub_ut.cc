@@ -10,6 +10,8 @@
 
 #include <cstring>
 
+#include <hccl/hccl_types.h>
+
 #include "hccp.h"
 #include "hccp_async.h"
 #include "hccp_ctx.h"
@@ -414,6 +416,22 @@ int RaGetDevEidInfoNum(struct RaInfo info, unsigned int* num) { return 0; }
 int RaGetDevEidInfoList(struct RaInfo info, struct HccpDevEidInfo info_list[], unsigned int* num) { return 0; }
 
 int RaGetDevBaseAttr(void* ctx_handle, struct DevBaseAttr* attr) { return 0; }
+
+// legacy UT ??? base_comm ???????? HCCP ????????
+namespace hcomm {
+
+HcclResult HccpRaGetDevBaseAttr(void* ctxHandle, struct DevBaseAttr* attr)
+{
+    if (RaGetDevBaseAttr(ctxHandle, attr) != 0) {
+        return HCCL_E_NETWORK;
+    }
+    if (attr != nullptr) {
+        attr->ub.priorityInfo[0].tpType.bs.ctp = 1;
+    }
+    return HCCL_SUCCESS;
+}
+
+} // namespace hcomm
 
 int RaCtxUpdateCi(void* qp_handle, uint16_t ci) { return 0; }
 

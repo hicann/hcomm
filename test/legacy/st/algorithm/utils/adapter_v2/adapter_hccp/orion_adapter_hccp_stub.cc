@@ -176,3 +176,17 @@ HcclResult HrtRaGetTpAttrAsync(
 }
 
 } // namespace Hccl
+
+// legacy ST 会调用 base_comm 的协议查询逻辑，此处模拟设备支持 CTP。
+namespace hcomm {
+
+HcclResult HccpRaGetDevBaseAttr(void* ctxHandle, struct DevBaseAttr* attr)
+{
+    (void)ctxHandle;
+    if (attr != nullptr) {
+        attr->ub.priorityInfo[0].tpType.bs.ctp = 1;
+    }
+    return HCCL_SUCCESS;
+}
+
+} // namespace hcomm
