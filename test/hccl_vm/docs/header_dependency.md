@@ -7,6 +7,7 @@
 本文档列出项目中通过 `#include` 实际引用的所有三方头文件，标注其来源（CANN / HCCL / HCOMM）及在磁盘上的实际路径。
 
 **路径约定**：
+
 - CANN 根目录：`/home/teamserver/workspace/Ascend/cann-9.1.0/`（下文以 `CANN/` 缩写）
 - HCOMM 根目录：`/home/teamserver/workspace/hcomm/`（下文以 `HCOMM/` 缩写）
 - HCCL 根目录：`/home/teamserver/workspace/hccl/`（下文以 `HCCL/` 缩写）
@@ -179,6 +180,7 @@
 **说明**：`AivOpArgs` 是 AIV 集合通信算子的参数结构体，用于在 host 端与 device 端之间传递 AIV kernel 的执行参数。工具原本通过 `dlsym` 动态加载 HCOMM 库中的 `ops_hccl::ExecuteKernelLaunch()` 函数（符号名：`_ZN8ops_hccl19ExecuteKernelLaunchERKNS_9AivOpArgsE`），该函数接收此结构体作为参数。为了解除对 HCOMM 运行时库的依赖，工具在项目内部做了结构体的完整备份。
 
 **结构体定义**：
+
 ```cpp
 struct AivOpArgs {
     HcclCMDType cmdType = HcclCMDType::HCCL_CMD_MAX;   // 集合通信命令类型
@@ -269,6 +271,7 @@ struct AivOpArgs {
 | `ascendc_utils_stub.h` | `PipeBarrier` 等工具函数 | ascendc_stub/kernel_operator.h |
 
 **依赖风险**：
+
 1. AscendC 接口 API 变化（如类成员函数签名变更、模板参数调整）可能导致 stub 实现与真实接口不匹配
 2. AscendC 新增数据类型（如 `fp8_e4m3fn_t`、`fp8_e5m2_t`、`hifloat8_t`）需要同步更新 stub 支持
 3. `AivCommBase` 类内部大量使用 AscendC 模板类（`GlobalTensor<T>`、`LocalTensor<T>`、`TQueBind` 等），这些类型的语义变化会影响 AIV 仿真的正确性
@@ -316,6 +319,7 @@ struct AivOpArgs {
 | `HcclLaunchAicpuKernel` | `libscatter_aicpu_kernel.so` | AICPU 集合通信 kernel 启动 |
 
 **依赖风险**：
+
 1. 若 HCOMM 侧上述 kernel 函数的签名或行为发生变化，工具的 `dlsym` 调用可能失败或产生错误结果
 2. 若 `libccl_kernel.so` 或 `libscatter_aicpu_kernel.so` 新增/移除 kernel 函数，工具需同步更新函数指针列表
 3. `CommAicpuParam`、`ThreadMgrAicpuParam`、`HcclChannelUrmaRes` 等本地备份结构体若与 HCOMM 侧实际定义不一致，将导致地址转换错误和内存越界
@@ -332,6 +336,7 @@ struct AivOpArgs {
 | `libc_sec.so` | （安全库依赖） | CANN 安全函数库 |
 
 **依赖风险**：
+
 1. **SO 名称变更**：若 HCOMM 侧重命名或拆分上述 SO（如将 `libccl_kernel.so` 重命名），工具的 `dlopen` 将加载失败，导致所有 AICPU kernel 无法执行
 2. **算子 kernel SO 名称歧义**：当前无论算子类型如何（AllReduce、AllGather、ReduceScatter 等），算子 kernel 的 SO 名称固定为 `libscatter_aicpu_kernel.so`。这一命名可能引起歧义——名称中的 "scatter" 暗示仅适用于 Scatter 算子，但实际上承载了所有集合通信算子的 kernel。若 HCOMM 侧后续按算子类型拆分 SO（如 `liballreduce_aicpu_kernel.so`），工具将无法适配
 3. **用户自定义算子场景**：HCCL 业务层未对用户自定义算子的 SO 名称做严格规定，用户可能自行编译出私有 SO（如 `libcustom_alltoall_kernel.so`）。工具目前仅识别上述固定 SO 名称，对于用户自定义算子的私有 SO 将无法加载和仿真
@@ -350,5 +355,3 @@ struct AivOpArgs {
 | **AIV 算子 Op** | 8 个头文件（6 个 HCOMM + 2 个 HCCL） | 仅 proxy/aiv_kernel 模块（AIV 算子仿真） |
 | **AscendC 接口** | 6 个 stub 头文件 | 仅 proxy/aiv_kernel 模块（AIV 算子仿真） |
 | **AICPU 备份** | 8 个本地结构体 + 6 个 kernel 函数 + 4 个 SO 库名 | 仅 device_arm 模块（AICPU 模式 host-device 交互） |
-
-

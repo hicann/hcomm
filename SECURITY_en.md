@@ -2,11 +2,11 @@
 
 ## Recommended User Account
 
-For security reasons, avoid using administrator accounts such as root to execute commands. Follow the principle of least privilege.
+For security reasons, avoid using administrator accounts such as root to execute any commands. Follow the principle of least privilege.
 
 ## File Permission Control
 
-- It is recommended to set the umask value to 0027 or higher on the host machine (including the host machine and containers) to ensure that the default maximum permissions for new folders are 750 and for new files are 640.
+- It is recommended to set the umask value to 0027 or higher on the host (including the host machine and containers) to ensure that the default maximum permissions for new folders are 750 and for new files are 640.
 - Apply security measures such as permission control to sensitive content, including personal private data, business assets, and source files. For example, control the permissions of the installation directory and input public data files. For recommended permission settings, refer to [A - Recommended Maximum Permissions for Files (Folders) in Various Scenarios](#a---recommended-maximum-permissions-for-files-folders-in-various-scenarios).
 - Control permissions during installation and usage. Refer to [A - Recommended Maximum Permissions for Files (Folders) in Various Scenarios](#a---recommended-maximum-permissions-for-files-folders-in-various-scenarios) for file permission references.
 

@@ -59,6 +59,7 @@ Which interfaces of hcomm / hccl / other CANN components this depends on.
 This section covers only module-internal implementation. Organize by module; for cross-layer features, split into separate module subsections per layer, do not mix them.
 
 Each module subsection includes:
+
 - Module responsibility (one sentence)
 - Core data structures (UML may be used)
 - Key logic and algorithms

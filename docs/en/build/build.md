@@ -52,7 +52,7 @@ The software dependencies required for compiling this project are listed below. 
             ```
 
         - \$\{cann\_version\}: Indicates the CANN software package version number.
-        - \$\{arch\}$: Indicates the CPU architecture, for example, aarch64 or x86_64.
+        - \$\{arch\}: Indicates the CPU architecture, for example, aarch64 or x86_64.
         - \$\{soc\_name\}: Indicates the NPU model name.
         - \$\{install\_path\}: Indicates the specified installation path. The CANN ops operator package must be installed in the same path as the CANN Toolkit development kit package. The default installation path for the root user is `/usr/local/Ascend`.
 
@@ -158,7 +158,7 @@ bash build.sh --ut
 
 ### On-Board Testing
 
-> **Note**
+> [!Note]NOTE
 > Before on-board testing, ensure that the driver, firmware, CANN Toolkit development kit package, and CANN ops operator package are installed.
 
 Developers can use the HCCL Test tool for collective communication function and performance testing on the board. The workflow for using the HCCL Test tool is as follows:

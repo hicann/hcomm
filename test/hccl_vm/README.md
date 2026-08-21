@@ -26,10 +26,9 @@ chmod +x Ascend-cann-950-ops_9.1.0_linux-x86_64.run
 ./Ascend-cann-950-ops_9.1.0_linux-x86_64.run --install --install-path=/home/workspace/Ascend
 ```
 
-
 ### 2.2 hccl_test编译
 
-hccl_test是昇腾官方提供的HCCL性能测试工具，详见[HCCL性能测试工具](https://www.hiascend.com/document/detail/zh/CANNCommunityEdition/910beta1/devaids/hccltool/HCCLpertest_16_0001.html)，HCCL-VM支持在虚拟环境中运行hccl_test用例。请先参照[hccl_test用例构建](#42-hccl-test用例构建)章节进行用例二进制程序的编译。
+hccl_test是昇腾官方提供的HCCL性能测试工具，详见[HCCL性能测试工具](https://www.hiascend.com/document/redirect/CANNCommunityToolHcclTest)，HCCL-VM支持在虚拟环境中运行hccl_test用例。请先参照[hccl_test用例构建](#42-hccl-test用例构建)章节进行用例二进制程序的编译。
 
 备注：可选，未来支持Pytorch用例。
 
@@ -56,6 +55,7 @@ curl -fsSL https://raw.gitcode.com/cann/hcomm/raw/master/test/hccl_vm/hccl_vm_in
 **hccl_test**：默认一并编译 OpenMPI 与 hccl_test 性能测试工具，`--skip-hccl-test` 可关闭。
 
 **常用参数**：
+
 - `--profile <名>`：配套方案（默认 `main`，`--list-profiles` 列全部）
 - `--workspace <路径>`：工作目录，源码／编译／产物所在（默认当前目录）
 - `--ascend-path <路径>`：指定 CANN 目录，有则复用、无则装到此处
@@ -102,44 +102,44 @@ bash build_pkg.sh
 
 #### 3.3.2 CCU模式
 
-1. 环境变量配置。
+1. 配置环境变量。
 
-```bash
-# 进入工具安装目录
-cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install
-source /home/workspace/Ascend/cann/set_env.sh
-export LD_LIBRARY_PATH=$ASCEND_HOME_PATH/lib64:$ASCEND_HOME_PATH/devlib:$LD_LIBRARY_PATH
-export RANK_TABLE_FILE=$(pwd)/data/ranktable.json
-export HCCL_OP_EXPANSION_MODE="CCU_SCHED"
-```
+   ```bash
+   # 进入工具安装目录
+   cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install
+   source /home/workspace/Ascend/cann/set_env.sh
+   export LD_LIBRARY_PATH=$ASCEND_HOME_PATH/lib64:$ASCEND_HOME_PATH/devlib:$LD_LIBRARY_PATH
+   export RANK_TABLE_FILE=$(pwd)/data/ranktable.json
+   export HCCL_OP_EXPANSION_MODE="CCU_SCHED"
+   ```
 
-2. 执行
+2. 执行。
 
+   ```bash
+   # 需要进入到新的bin文件目录下执行hccl-vm
+   cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
+   
+   # 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
+   ./hccl-vm start ascend950_cluster_32_server_normal.yaml
+   
+   # 如需启用runner插件（可选）
+   (hvm)$> hccl-vm plugin install @runner
+   
+   # 选择本次算子执行的通信域配置文件（在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
+   (hvm)$> hccl-vm mock-comm 112
+   (hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1 > log.txt
+   
+   # 执行checker校验
+   (hvm)$> hccl-vm plugin run @checker
+   
+   # 退出工具终端
+   (hvm)$> exit
+   ```
 
-```bash
-# 需要进入到新的bin文件目录下执行hccl-vm
-cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
+3. 验证hccl_test用例运行结果。
 
-# 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
-./hccl-vm start ascend950_cluster_32_server_normal.yaml
-
-# 如需启用runner插件（可选）
-(hvm)$> hccl-vm plugin install @runner
-
-# 选择本次算子执行的通信域配置文件（在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
-(hvm)$> hccl-vm mock-comm 112
-(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1 > log.txt
-
-# 执行checker校验
-(hvm)$> hccl-vm plugin run @checker
-
-# 退出工具终端
-(hvm)$> exit
-```
-
-3. 验证hccl_test用例运行结果
-[Runner结果查看](#491-runner插件结果) 
-[Checker结果查看](#492-checker插件结果)
+   [Runner结果查看](#491-runner插件结果) 
+   [Checker结果查看](#492-checker插件结果)
 
 #### 3.3.3 AICPU模式
 
@@ -147,37 +147,37 @@ AICPU展开模式需要将算法展开步骤放到设备侧执行，因此hccl-v
 
 1. 环境变量配置。
 
-```bash
-# 进入工具安装目录
-cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install
-source /home/workspace/Ascend/cann/set_env.sh
-export LD_LIBRARY_PATH=$ASCEND_HOME_PATH/lib64:$ASCEND_HOME_PATH/devlib:$LD_LIBRARY_PATH
-export RANK_TABLE_FILE=$(pwd)/data/ranktable.json
-export HCCL_OP_EXPANSION_MODE="AI_CPU"
-```
+   ```bash
+   # 进入工具安装目录
+   cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install
+   source /home/workspace/Ascend/cann/set_env.sh
+   export LD_LIBRARY_PATH=$ASCEND_HOME_PATH/lib64:$ASCEND_HOME_PATH/devlib:$LD_LIBRARY_PATH
+   export RANK_TABLE_FILE=$(pwd)/data/ranktable.json
+   export HCCL_OP_EXPANSION_MODE="AI_CPU"
+   ```
 
 2. 执行
 
-```bash
-# 需要进入到新的bin文件目录下执行hccl-vm
-cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
-
-# 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
-./hccl-vm start ascend950_cluster_32_server_normal.yaml
-
-# 如需启用runner插件（可选）
-(hvm)$> hccl-vm plugin install @runner
-
-# 选择本次算子执行的通信域配置文件（在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
-(hvm)$> hccl-vm mock-comm 112
-(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1 > log.txt
-
-# 执行checker校验
-(hvm)$> hccl-vm plugin run @checker
-
-# 退出工具终端
-(hvm)$> exit
-```
+   ```bash
+   # 需要进入到新的bin文件目录下执行hccl-vm
+   cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
+   
+   # 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
+   ./hccl-vm start ascend950_cluster_32_server_normal.yaml
+   
+   # 如需启用runner插件（可选）
+   (hvm)$> hccl-vm plugin install @runner
+   
+   # 选择本次算子执行的通信域配置文件（在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
+   (hvm)$> hccl-vm mock-comm 112
+   (hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1 > log.txt
+   
+   # 执行checker校验
+   (hvm)$> hccl-vm plugin run @checker
+   
+   # 退出工具终端
+   (hvm)$> exit
+   ```
 
 3. 验证hccl_test用例运行结果 [Runner结果查看](#491-runner插件结果) [Checker结果查看](#492-checker插件结果)
 
@@ -185,37 +185,37 @@ cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
 
 1. 环境变量配置。
 
-```bash
-# 进入工具安装目录
-cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install
-source /home/workspace/Ascend/cann/set_env.sh
-export LD_LIBRARY_PATH=$ASCEND_HOME_PATH/lib64:$ASCEND_HOME_PATH/devlib:$LD_LIBRARY_PATH
-export RANK_TABLE_FILE=$(pwd)/data/ranktable.json
-export HCCL_OP_EXPANSION_MODE="AIV"
-```
+   ```bash
+   # 进入工具安装目录
+   cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install
+   source /home/workspace/Ascend/cann/set_env.sh
+   export LD_LIBRARY_PATH=$ASCEND_HOME_PATH/lib64:$ASCEND_HOME_PATH/devlib:$LD_LIBRARY_PATH
+   export RANK_TABLE_FILE=$(pwd)/data/ranktable.json
+   export HCCL_OP_EXPANSION_MODE="AIV"
+   ```
 
 2. 执行
 
-```bash
-# 需要进入到新的bin文件目录下执行hccl-vm
-cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
-
-# 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
-./hccl-vm start ascend950_cluster_32_server_normal.yaml
-
-# 如需启用runner插件（可选）
-(hvm)$> hccl-vm plugin install @runner
-
-# 选择本次算子执行的通信域配置文件（在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
-(hvm)$> hccl-vm mock-comm 112
-(hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1 > log.txt
-
-# 执行checker校验
-(hvm)$> hccl-vm plugin run @checker
-
-# 退出工具终端
-(hvm)$> exit
-```
+   ```bash
+   # 需要进入到新的bin文件目录下执行hccl-vm
+   cd /home/workspace/hcomm/test/hccl_vm/hccl_vm_install/bin
+   
+   # 选择昇腾集群拓扑配置文件，启动工具，初始化集群环境，进入工具命令行
+   ./hccl-vm start ascend950_cluster_32_server_normal.yaml
+   
+   # 如需启用runner插件（可选）
+   (hvm)$> hccl-vm plugin install @runner
+   
+   # 选择本次算子执行的通信域配置文件（在1个超节点1个Server1个NPU的集群环境运行hccl_test用例）
+   (hvm)$> hccl-vm mock-comm 112
+   (hvm)$> mpirun --allow-run-as-root --oversubscribe -np 2 ${ASCEND_HOME_PATH}/tools/hccl_test/bin/reduce_scatter_test -b 64 -e 64 -d int32 -o sum -w 0 -n 1 -c 1 > log.txt
+   
+   # 执行checker校验
+   (hvm)$> hccl-vm plugin run @checker
+   
+   # 退出工具终端
+   (hvm)$> exit
+   ```
 
 3. 验证hccl_test用例运行结果 [Runner结果查看](#491-runner插件结果) [Checker结果查看](#492-checker插件结果)
 
@@ -263,31 +263,31 @@ hccl_test用例源码在CANN包安装目录下，支持OpenMPI和MPICH两种环�
 
 1. 安装OpenMPI
 
-```bash
-sudo apt-get update
-sudo apt install openmpi-bin libopenmpi-dev
-```
+   ```bash
+   sudo apt-get update
+   sudo apt install openmpi-bin libopenmpi-dev
+   ```
 
 2. 编译hccl_test
 
-```bash
-# 修改CANN安装目录权限
-chmod -R 755 /home/workspace/Ascend
-
-# 进入hccl_test用例源码目录
-cd /home/workspace/Ascend/cann/tools/hccl_test
-
-# 设置CANN环境变量
-source /home/workspace/Ascend/cann/set_env.sh
-
-# 临时修改Makefile脚本
-if ! grep -q '\-lmpi_cxx' Makefile; then
-    sed -i 's/-lmpi/-lmpi -lmpi_cxx/g' Makefile
-fi
-
-# 编译hccl_test用例
-MPI_HOME=/usr/lib/x86_64-linux-gnu/openmpi make ASCEND_DIR=${ASCEND_HOME_PATH}
-```
+   ```bash
+   # 修改CANN安装目录权限
+   chmod -R 755 /home/workspace/Ascend
+   
+   # 进入hccl_test用例源码目录
+   cd /home/workspace/Ascend/cann/tools/hccl_test
+   
+   # 设置CANN环境变量
+   source /home/workspace/Ascend/cann/set_env.sh
+   
+   # 临时修改Makefile脚本
+   if ! grep -q '\-lmpi_cxx' Makefile; then
+       sed -i 's/-lmpi/-lmpi -lmpi_cxx/g' Makefile
+   fi
+   
+   # 编译hccl_test用例
+   MPI_HOME=/usr/lib/x86_64-linux-gnu/openmpi make ASCEND_DIR=${ASCEND_HOME_PATH}
+   ```
 
 #### 4.2.2 MPICH环境编译
 
@@ -369,8 +369,8 @@ links:
  - **port_group**: 描述哪些port合并为一个portGroup，相同portGroup的port对应IP地址相同。没有配置的port，则默认每个port为一个portGroup。
  - **links**: 链路配置表，描述Server/Pod内的所有NPU卡之间，以及NPU与交换机之间的连接关系。
    - **NPU直连关系**: 工具提供了两种方式配置NPU直连关系：
-    - **link_mode == "fullmesh"**: 表示所有Device基于一个Die的Port进行全连接。后续有新增典型的连接方式，可以新增link_mode类型，如"ring"。
-    - **link_mode == "enum"**: 枚举法。当Server/Pod内的NPU连接方式比较复杂时，可以通过枚举所有的链路关系来描述。
+     - **link_mode == "fullmesh"**: 表示所有Device基于一个Die的Port进行全连接。后续有新增典型的连接方式，可以新增link_mode类型，如"ring"。
+     - **link_mode == "enum"**: 枚举法。当Server/Pod内的NPU连接方式比较复杂时，可以通过枚举所有的链路关系来描述。
    - **NPU与交换机连接关系**: 用户可以通过枚举法配置NPU与交换机之间的连接关系。
  - **device_to_device_links**: 描述NPU与NPU之间的连接关系。
  - **device_to_switch_links**: 描述NPU与交换机之间的连接关系。
@@ -770,6 +770,7 @@ data_size(Bytes): | aveg_time(us): | alg_bandwidth(GB/s): | check_result:
 ```
 
 ---
+
 ### 4.10 大块内存复用（仅校验模式）
 
 仅校验模式用于大规模集群仅运行 Checker 校验的场景。开启后，单块 200MB 到 4GB 的大内存申请复用同一块 4GB 共享区 `HcclCommPool`，各 rank 共享、允许互相覆盖，以此大幅降低 `/dev/shm` 占用。此时大块内容不保证正确，仅适用于不读取缓冲区数据的 Checker V3 校验链路，需要数值正确的结果时请勿开启。
@@ -782,7 +783,7 @@ data_size(Bytes): | aveg_time(us): | alg_bandwidth(GB/s): | check_result:
 ./hccl-vm start ascend950_cluster_32_server_normal.yaml --check-only
 ```
 
-***
+---
 
 ## 5 附录
 

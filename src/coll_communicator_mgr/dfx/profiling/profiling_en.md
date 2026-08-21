@@ -512,7 +512,7 @@ classDiagram
 5. **Null pointer protection**: All reporting interfaces check for non-null pointers before calling the Reporter to avoid null pointer dereferences.
 6. **EXCEPTION_CATCH macro**: `ReportKernel` uses the `EXCEPTION_CATCH` macro to catch exceptions during `ProfilingHandler` reporting, returning `HCCL_E_PTR` on failure.
 7. **MC2 Stream group reporting**: `ReportMc2CommInfo` groups every 8 streamIds into a group and reports them through `ProfilingDeviceCommResInfo`. The `commStreamIds` array size is fixed at 8.
-8. **Device-side device type restriction**: `HcommProfilingReportDeviceOp`, `HcommProfilingReportKernelStartTask`, and `HcommProfilingReportKernelEndTask` only execute on `DEV_TYPE_950` devices. For other device types, they directly return success.
+8. **Device-side device type restriction**: `HcommProfilingReportDeviceOp`, `HcommProfilingReportKernelStartTask`, and `HcommProfilingReportKernelEndTask` only execute on `DEV_TYPE_950` and `DEV_TYPE_960` devices. For other device types, they directly return success.
 
 ### Known Limitations
 

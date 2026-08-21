@@ -22,4 +22,4 @@ The Toolkit (cann-hcomm) and ops (cann-hccl) versions are inconsistent. The loca
 
 ## Solution
 
-Install the same version. The local Toolkit \(cann-hcomm\) and ops \(cann-hccl\) versions must be consistent with the corresponding remote versions.
+Install the same version. The local Toolkit (cann-hcomm) and ops (cann-hccl) versions must be consistent with the corresponding remote versions.

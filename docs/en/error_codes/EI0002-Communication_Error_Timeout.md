@@ -1,24 +1,24 @@
-# EI0002  Communication_Error_Timeout
+# EI0002 Communication_Error_Timeout
 
 ## Symptom
 
 The following is error format. The meanings of the placeholders %s in sequence are: rank id, task information, communication operator information, communicator information.
 
 ```text
-An timeout occurs when the Notify register waits for execution. Waiting peer rank: %s; task information: %s; communication operator information: %s; communicator: %s.
+A timeout occurs when the Notify register waits for execution. Waiting peer rank: %s; task information: %s; communication operator information: %s; communicator: %s.
 ```
 
 Error example:
 
 ```text
-An timeout occurs when the Notify register waits for execution. Waiting peer rank: 4; task information: streamID:[90], taskID[686], taskType[Notify Wait], tag[AllReduce_80.48.9.154%enp48s3u1u1_60000_0_1779783710697217ringAllReduceMeshSmallCountExecutor_device], AlgType(level 0-1-2):[ring-ring-NHR].; communication operator information: notify id:[0x00000000000018fc], stage:[0], remote rank:[4]; communicator: none.
+A timeout occurs when the Notify register waits for execution. Waiting peer rank: 4; task information: streamID:[90], taskID[686], taskType[Notify Wait], tag[AllReduce_80.48.9.154%enp48s3u1u1_60000_0_1779783710697217ringAllReduceMeshSmallCountExecutor_device], AlgType(level 0-1-2):[ring-ring-NHR].; communication operator information: notify id:[0x00000000000018fc], stage:[0], remote rank:[4]; communicator: none.
 ```
 
 ## Possible Cause
 
 1. An exception occurs during the execution on some NPUs in the cluster. As a result, collective communication operation failed.
 
-2. The execution speed on some NPU in the cluster is too slow to complete a communication operation within the timeout interval. \(The default timeout interval is 1800s, You can set the interval by using HCCL_EXEC_TIMEOUT.\)
+2. The execution speed on some NPUs in the cluster is too slow to complete a communication operation within the timeout interval. \(The default timeout interval is 1800s. You can set the interval by using HCCL_EXEC_TIMEOUT.\)
 
 3. The number of training samples of each NPU is inconsistent.
 

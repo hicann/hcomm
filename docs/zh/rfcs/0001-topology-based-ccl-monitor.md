@@ -148,8 +148,7 @@ cmake --build build -j"$(nproc)"
 
 ### 4.2 配置文件
 
-用户使用 JSON 文件同时描述部署拓扑、探测范围和运行参数。`schema_version=2` 为当前推荐格式；缺省
-`schema_version` 或 `schema_version=1` 继续兼容旧格式。
+用户使用 JSON 文件同时描述部署拓扑、探测范围和运行参数。`schema_version=2` 为当前推荐格式；缺省`schema_version` 或 `schema_version=1` 继续兼容旧格式。
 
 ```json
 {
@@ -227,8 +226,7 @@ cmake --build build -j"$(nproc)"
 | `probe.pingpong.payload_len` | int / `12` | 可选；HCCN Rping Payload 字节数，范围 `1～1500`。每个目标在 AddTarget 时独立生成指定长度的随机字节，不按字符串处理 |
 | `probe.pingpong.interval_ms` | positive int / `1` | 可选；HCCN Rping 的探测周期，单位毫秒 |
 
-v1 兼容格式继续支持旧的 `deploy.host_to_user_pair`、`deploy.controller`、`probe_scope`、`probe_topo.tracert`、
-`probe_controller.pingpong` 字段。兼容关系如下：
+v1 兼容格式继续支持旧的 `deploy.host_to_user_pair`、`deploy.controller`、`probe_scope`、`probe_topo.tracert`、`probe_controller.pingpong` 字段。兼容关系如下：
 
 | v1 字段 | v2 字段 | 说明 |
 | --- | --- | --- |
@@ -239,8 +237,7 @@ v1 兼容格式继续支持旧的 `deploy.host_to_user_pair`、`deploy.controlle
 | `probe_topo.tracert` | `probe.topology` | Tracert 拓扑发现参数保持兼容，字段名前缀调整 |
 | `probe_controller.pingpong` | `probe.pingpong` | PingPong 探测参数保持兼容，字段名前缀调整 |
 
-v2 中 `probe.scope` 为必填；`probe.topology` 与 `probe.pingpong` 可缺省，缺省时使用上表默认参数。可用
-`./run.sh migrate-config old.json new.json` 生成 v2 配置模板。
+v2 中 `probe.scope` 为必填；`probe.topology` 与 `probe.pingpong` 可缺省，缺省时使用上表默认参数。可用`./run.sh migrate-config old.json new.json` 生成 v2 配置模板。
 
 ### 4.3 CLI 与执行顺序
 
@@ -600,7 +597,6 @@ BW_cluster = P × times × (B_req + B_rsp) × 8 / T_cycle
 Util_d = P_d × times × (B_req + B_rsp) × 8 / (T_cycle × C_link)
 ```
 
-
 ### 8.5 安全与运维影响
 
 - Dispatcher 使用 SSH/SCP，配置中可能包含明文密码；生产环境优先使用私钥，并限制配置文件权限。
@@ -612,8 +608,7 @@ Util_d = P_d × times × (B_req + B_rsp) × 8 / (T_cycle × C_link)
 ### 9.1 兼容性
 
 - 工具以独立进程运行，不修改训练进程或 HCCL/HCOMM 接口。
-- 当前推荐配置以 `schema_version=2`、`hosts[]`、`probe.scope` 为必需契约，`probe.topology`、`probe.pingpong` 为可选参数组；缺省
-  `schema_version` 或 `schema_version=1` 继续兼容 `probe_scope + probe_topo.tracert + probe_controller.pingpong` 格式，缺少整组探测配置时保留旧 ranktable 路径，但不新增能力。
+- 当前推荐配置以 `schema_version=2`、`hosts[]`、`probe.scope` 为必需契约，`probe.topology`、`probe.pingpong` 为可选参数组；缺省 `schema_version` 或 `schema_version=1` 继续兼容 `probe_scope + probe_topo.tracert + probe_controller.pingpong` 格式，缺少整组探测配置时保留旧 ranktable 路径，但不新增能力。
 - JSON/TXT 产物一旦被外部系统消费，新增字段应保持向后兼容；破坏性修改必须升级 Schema 或文件名。
 
 ### 9.2 特性开关
@@ -633,7 +628,6 @@ Util_d = P_d × times × (B_req + B_rsp) × 8 / (T_cycle × C_link)
 
 实验室 2 Host/16 Device：验证接口、产物和故障注入。
 
-
 ## 10. 测试方案
 
 ### 10.1 目标—用例映射
@@ -646,7 +640,6 @@ Util_d = P_d × times × (B_req + B_rsp) × 8 / (T_cycle × C_link)
 | T4 指标归约 | Q2 | P90/P99/Mean 映射，`times<=0`、`pass=0`、`pass>times`、字段缺失 | UT |
 | T5 方程求解 | Q3、定位准确率 | 可解、超定、秩不足和 NaN 输入 | UT |
 | T6 计数器异常 | Q2/Q3 | Key 缺失、非法值、Device ID 归一化、计数器增长与重置/回绕 | UT |
-
 
 ### 10.2 UT 接入
 

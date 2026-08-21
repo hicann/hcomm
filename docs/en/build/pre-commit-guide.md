@@ -13,7 +13,7 @@ pre-commit is a Git Hooks framework that automatically runs code checking and fo
 
 - **Git**: 2.0+
 - **Python**: 3.8+
-- **clang-format**: 14.0+ (code formatting tool)
+- **clang-format**: v18.1.8 (code formatting tool, must match the `rev` in [.pre-commit-config.yaml](../../../.pre-commit-config.yaml))
 - **Java**: 17+ (required for OAT tool, can be installed automatically)
 - **Maven**: 3.6+ (required for OAT tool, can be installed automatically)
 
