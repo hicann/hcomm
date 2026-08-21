@@ -315,7 +315,7 @@ CheckerReduceOp CheckerCmd::GetReduceOp(char* str)
         return testReduceOpMap.at(str);
     }
     if (reduceOpFlag = true) {
-        std::cout << "the reduceOp is invalid, set detault sum" << std::endl;
+        std::cout << "the reduceOp is invalid, set default sum" << std::endl;
     }
     return CheckerReduceOp::REDUCE_SUM;
 }

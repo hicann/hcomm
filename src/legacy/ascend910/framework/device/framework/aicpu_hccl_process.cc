@@ -616,7 +616,7 @@ HcclResult AicpuHcclProcess::WaitAsyncFlag(
     CHK_PRT_RET(
         isTimeout,
         HCCL_ERROR(
-            "[AicpuHcclProcess][WaitAsyncFlag]Kernel Run TimeOut %llus, now Opetation is CheckFlag, "
+            "[AicpuHcclProcess][WaitAsyncFlag]Kernel Run TimeOut %llus, now Operation is CheckFlag, "
             "localFlagBufforCheck0.addr is [%p], localFlagBufforCheck0.value is [%u],"
             "localFlagBufforCheck1.addr is [%p], localFlagBufforCheck1.value is [%u],"
             "localFlagBufforCheck2.addr is [%p], localFlagBufforCheck2.value is [%u]",

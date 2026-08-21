@@ -104,3 +104,22 @@ TEST_F(SalTest, ut_DlTraceFunctionInit_ATrace_Failed_Expect_ReturnError)
     EXPECT_EQ(ret, HCCL_E_INTERNAL);
     GlobalMockObject::verify();
 }
+
+TEST_F(SalTest, ut_SalGetDataTypeSize_ValidType_Expect_Success)
+{
+    u32 dataTypeSize = 0;
+    HcclResult ret = SalGetDataTypeSize(HCCL_DATA_TYPE_INT8, dataTypeSize);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(dataTypeSize, 1U);
+
+    ret = SalGetDataTypeSize(HCCL_DATA_TYPE_FP32, dataTypeSize);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(dataTypeSize, 4U);
+}
+
+TEST_F(SalTest, ut_SalGetDataTypeSize_InvalidType_Expect_ReturnParaError)
+{
+    u32 dataTypeSize = 0;
+    HcclResult ret = SalGetDataTypeSize(HCCL_DATA_TYPE_RESERVED, dataTypeSize);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}

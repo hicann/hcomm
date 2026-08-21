@@ -1908,7 +1908,7 @@ int RaCtxQpCreateAsync(
 
     *reqHandle = reinterpret_cast<void*>(static_cast<uintptr_t>(0x12345678ULL));
     HCCL_VM_INFO(
-        "ctx {:d} async create QP {:d}, reqHandle:{:x}, jettyId:{:d}, jettyyMode:{:d}",
+        "ctx {:d} async create QP {:d}, reqHandle:{:x}, jettyId:{:d}, jettyMode:{:d}",
         static_cast<uint64_t>(reinterpret_cast<uintptr_t>(ctxHandle)),
         static_cast<uint64_t>(reinterpret_cast<uintptr_t>(*qpHandle)),
         static_cast<uint64_t>(reinterpret_cast<uintptr_t>(*reqHandle)), attr->ub.jettyId,

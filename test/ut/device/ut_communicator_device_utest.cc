@@ -24,6 +24,9 @@
 #undef private
 #undef protected
 
+#include "transport_pub.h"
+#include "common/aicpu_kfc_def.h"
+
 using namespace std;
 using namespace hccl;
 
@@ -509,4 +512,37 @@ TEST_F(Communicator_Device_UT, Ut_AicpuIndOpNotifyInit_When_ParamIsNullptr_Expec
 {
     HcclResult ret = AicpuHcclProcess::AicpuIndOpNotifyInit(nullptr);
     EXPECT_EQ(ret, HCCL_E_PTR);
+}
+
+TEST_F(Communicator_Device_UT, Ut_WaitAsyncFlag_When_FlagValueLessThanOffset_Expect_ReturnIsHCCL_E_PARA)
+{
+    HcclResult ret = AicpuHcclProcess::WaitAsyncFlag(nullptr, 0, 0);
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+TEST_F(Communicator_Device_UT, Ut_WaitAsyncFlag_When_Timeout_Expect_ReturnIsHCCL_E_INTERNAL)
+{
+    uint32_t flagMem[POST_SEND_FLAG_COUNT] = {0};
+    Transport::Buffer buffers[POST_SEND_FLAG_COUNT];
+    for (uint32_t i = 0; i < POST_SEND_FLAG_COUNT; i++) {
+        buffers[i].addr = &flagMem[i];
+        buffers[i].size = sizeof(uint32_t);
+    }
+    HcclResult ret = AicpuHcclProcess::WaitAsyncFlag(buffers, FLAG_OFFSET, 0);
+    EXPECT_EQ(ret, HCCL_E_INTERNAL);
+}
+
+TEST_F(Communicator_Device_UT, Ut_WaitAsyncFlag_When_FlagMatched_Expect_ReturnSuccess)
+{
+    uint32_t flagMem[POST_SEND_FLAG_COUNT] = {0};
+    Transport::Buffer buffers[POST_SEND_FLAG_COUNT];
+    for (uint32_t i = 0; i < POST_SEND_FLAG_COUNT; i++) {
+        buffers[i].addr = &flagMem[i];
+        buffers[i].size = sizeof(uint32_t);
+    }
+    uint32_t flagValue = FLAG_OFFSET;
+    flagMem[flagValue - FLAG_OFFSET] = flagValue;
+    HcclResult ret = AicpuHcclProcess::WaitAsyncFlag(buffers, flagValue, 1);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(flagMem[flagValue - FLAG_OFFSET], 0U);
 }

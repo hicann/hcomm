@@ -285,7 +285,7 @@ HcclResult SalGetDataTypeSize(HcclDataType dataType, u32& dataTypeSize)
         dataTypeSize = SIZE_TABLE[dataType];
     } else {
         HCCL_ERROR(
-            "[Get][DataTypeSize]errNo[0x%016llx] get date size failed. dataType[%s] is invalid.",
+            "[Get][DataTypeSize]errNo[0x%016llx] get data size failed. dataType[%s] is invalid.",
             HCOM_ERROR_CODE(HCCL_E_PARA), GetDataTypeEnumStr(dataType).c_str());
         return HCCL_E_PARA;
     }
