@@ -398,6 +398,8 @@ target_include_directories(hccl_llt  PRIVATE
     ${HCCL_CODE_ROOT}/src/base_comm/resources/api_c_adpt
     ${HCCL_CODE_ROOT}/src/base_comm/resources/common
     ${HCCL_CODE_ROOT}/src/base_comm/resources/common/device
+    ${HCCL_CODE_ROOT}/src/base_comm/config_mgr
+    ${HCCL_CODE_ROOT}/src/base_comm/resources
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/common
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/unified_platform/resource/stream/aicpu/
     ${HCCL_CODE_ROOT}/src/legacy/ascend950/common/types

@@ -215,6 +215,15 @@ HcclResult HrtRaGetTpAttrAsync(
     return HCCL_SUCCESS;
 }
 
+HcclResult HrtRaGetTpAttr(RdmaHandle handle, uint64_t tpHandle, uint32_t& attrBitmap, TpAttr& attr)
+{
+    (void)handle;
+    (void)tpHandle;
+    (void)attrBitmap;
+    (void)attr;
+    return HCCL_SUCCESS;
+}
+
 HcclResult
 HrtRaSetTpAttrAsync(RdmaHandle handle, uint64_t tpHandle, uint32_t attrBitmap, TpAttr& attr, RequestHandle& reqHandle)
 {

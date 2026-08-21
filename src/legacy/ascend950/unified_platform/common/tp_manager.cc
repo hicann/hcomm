@@ -734,15 +734,15 @@ HcclResult TpManager::GetTpTotalTimeout(const TpAttrInfo& tpAttrInfo, uint32_t& 
     if (rawAtGear > AT_GEAR_MAX) {
         finalAtGear = AT_GEAR_DEFAULT;
         HCCL_WARNING(
-            "%s Invalid at gear[%u], expect [%u, %u], use default gear[%u].", __func__, rawAtGear, AT_GEAR_MIN,
-            AT_GEAR_MAX, finalAtGear);
+            "[TpManager][%s] Invalid at gear[%u], expect [%u, %u], use default gear[%u].", __func__, rawAtGear,
+            AT_GEAR_MIN, AT_GEAR_MAX, finalAtGear);
     }
 
     uint32_t singleAtTimeoutMs = AT_TIMEOUT_MAP[finalAtGear];
     tpTimeOutMs = singleAtTimeoutMs * static_cast<uint32_t>(rawRetryTimes + 1);
 
     HCCL_INFO(
-        "%s TP timeout calc success: raw_at_gear[%u], final_at_gear[%u], "
+        "[TpManager][%s] TP timeout calc success: raw_at_gear[%u], final_at_gear[%u], "
         "single_timeout[%ums], retry_times[%u], total_timeout[%ums].",
         __func__, rawAtGear, finalAtGear, singleAtTimeoutMs, rawRetryTimes, tpTimeOutMs);
 
@@ -780,29 +780,34 @@ uint8_t TpManager::FindMinTaHwValue(uint32_t tpTotalTimeoutMs)
     return TA_HW_GEAR3_BASE;
 }
 
-uint8_t TpManager::CalcTaTimeout(const TpAttrInfo& tpAttrInfo)
+uint8_t TpManager::CalcTaTimeout(TpProtocol tpProtocol, uint8_t taTimeOut, uint32_t tpTimeOutMs)
 {
-    constexpr uint8_t UB_TIMEOUT_DEFAULT = 8;
-    uint8_t envValue = static_cast<uint8_t>(EnvConfig::GetInstance().GetRdmaConfig().GetUbTimeOut());
-    uint32_t envTimeoutMs = TaHwValueToMs(envValue);
+    // 调用方（base_comm 通道）按协议从环境变量获取后传入；未传入时回退到协议默认值（CTP=8，其他=16）
+    uint8_t envValue = (taTimeOut != TA_TIMEOUT_NOT_SET) ? taTimeOut : ((tpProtocol == TpProtocol::CTP) ? 8 : 16);
+    uint32_t envTimeOutMs = TaHwValueToMs(envValue);
 
-    uint32_t tpTimeOutMs = 0;
-    (void)GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs);
-
-    uint8_t errTimeout = UB_TIMEOUT_DEFAULT;
-    if (envTimeoutMs < tpTimeOutMs) {
-        errTimeout = FindMinTaHwValue(tpTimeOutMs);
-        HCCL_WARNING(
-            "[TpManager][%s] Env timeout [%ums] < TP timeout [%ums]. Auto upgrade TA to hw_val[%u] (%ums).", __func__,
-            envTimeoutMs, tpTimeOutMs, errTimeout, TaHwValueToMs(errTimeout));
-    } else {
-        errTimeout = envValue;
-        HCCL_INFO(
-            "[TpManager][%s] Env timeout [%ums] >= TP timeout [%ums]. Use env gear base hw_val[%u] (%ums).", __func__,
-            envTimeoutMs, tpTimeOutMs, envValue, envTimeoutMs);
+    // CTP 协议直接使用 envValue，不与 TP 总超时比较（对齐原有 GetTimeOut 逻辑）
+    if (tpProtocol == TpProtocol::CTP) {
+        HCCL_INFO("[TpManager][%s] [UbCtp] Env Value [%u] (%ums).", __func__, envValue, envTimeOutMs);
+        return envValue;
     }
 
-    return errTimeout;
+    // UBOE / UBG / TP 协议：需要与 TP 总超时比较决定是否自动升挡
+    uint8_t jettyTimeOut = envValue;
+    if (envTimeOutMs <= tpTimeOutMs) {
+        // 规则: 如果环境变量时间 <= TP总超时，选择大于TP总超时的最小TA挡位
+        jettyTimeOut = FindMinTaHwValue(tpTimeOutMs);
+        HCCL_WARNING(
+            "[TpManager][%s] Env timeout [%ums] <= TP timeout [%ums]. Auto upgrade TA to hw_val[%u] (%ums).", __func__,
+            envTimeOutMs, tpTimeOutMs, jettyTimeOut, TaHwValueToMs(jettyTimeOut));
+    } else {
+        // 规则: 否则，直接使用环境变量对应的挡位
+        HCCL_INFO(
+            "[TpManager][%s] Env timeout [%ums] > TP timeout [%ums]. Use env gear base hw_val[%u] (%ums).", __func__,
+            envTimeOutMs, tpTimeOutMs, envValue, envTimeOutMs);
+    }
+
+    return jettyTimeOut;
 }
 
 HcclResult TpManager::FindAndGetTpInfo(const RaUbGetTpInfoParam& param, TpInfo& tpInfo)

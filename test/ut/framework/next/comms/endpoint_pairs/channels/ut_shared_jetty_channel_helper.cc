@@ -9,6 +9,7 @@
  */
 
 #include "gtest/gtest.h"
+#include <functional>
 #include <mockcpp/mokc.h>
 #include <mockcpp/mockcpp.hpp>
 
@@ -18,6 +19,7 @@
 #include "endpoint.h"
 #include "dev_ub_connection.h"
 #include "shared_jetty_connection_adapter.h"
+#include "ut_shared_jetty_test_helper.h"
 #undef private
 #undef protected
 
@@ -59,15 +61,14 @@ private:
     }
 };
 
-std::unique_ptr<DevUbConnection>
-MakeTestConnection(DevUbConnection::JettyMode jettyMode = DevUbConnection::JettyMode::SELF_CREATE)
+inline std::function<std::unique_ptr<DevUbConnection>()> MakeCountingFactory(uint32_t& count)
 {
-    IpAddress locIp("1.0.0.1");
-    IpAddress rmtIp("2.0.0.2");
-    return std::make_unique<DevUbConnection>(
-        nullptr, locIp, rmtIp, OpMode::OPBASE, false, HrtUbJfcMode::STARS_POLL, IpAddress(), IpAddress(),
-        static_cast<u8>(UB_QOS_DEFAULT), COMM_ENGINE_RESERVED, Hccl::UB_SQ_DEPTH_NOT_SET, jettyMode);
+    return [&count]() -> std::unique_ptr<DevUbConnection> {
+        count++;
+        return MakeTestJettyConnection();
+    };
 }
+
 } // namespace
 
 class SharedJettyChannelHelperTest : public testing::Test {
@@ -96,9 +97,9 @@ protected:
 
 TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_NullEndpoint_Expect_HCCL_E_PARA)
 {
-    auto conn = MakeTestConnection();
+    auto conn = MakeTestJettyConnection();
     auto factory = []() {
-        return MakeTestConnection();
+        return MakeTestJettyConnection();
     };
     Endpoint::SharedJettyCtx outCtx;
     EXPECT_EQ(AcquireSharedJettyForChannel(nullptr, conn.get(), factory, outCtx), HCCL_E_PARA);
@@ -108,7 +109,7 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_NullCo
 {
     StubEndpointForHelper endpoint;
     auto factory = []() {
-        return MakeTestConnection();
+        return MakeTestJettyConnection();
     };
     Endpoint::SharedJettyCtx outCtx;
     EXPECT_EQ(AcquireSharedJettyForChannel(&endpoint, nullptr, factory, outCtx), HCCL_E_PARA);
@@ -117,12 +118,9 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_NullCo
 TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_FirstCreate_Expect_Success)
 {
     StubEndpointForHelper endpoint;
-    auto conn = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    auto conn = MakeTestJettyConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
     uint32_t factoryCallCount = 0;
-    auto factory = [&factoryCallCount]() -> std::unique_ptr<DevUbConnection> {
-        factoryCallCount++;
-        return MakeTestConnection();
-    };
+    auto factory = MakeCountingFactory(factoryCallCount);
 
     Endpoint::SharedJettyCtx outCtx;
     EXPECT_EQ(AcquireSharedJettyForChannel(&endpoint, conn.get(), factory, outCtx), HCCL_SUCCESS);
@@ -133,13 +131,10 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_FirstC
 TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_CacheHit_Expect_Success)
 {
     StubEndpointForHelper endpoint;
-    auto conn1 = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
-    auto conn2 = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    auto conn1 = MakeTestJettyConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    auto conn2 = MakeTestJettyConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
     uint32_t factoryCallCount = 0;
-    auto factory = [&factoryCallCount]() -> std::unique_ptr<DevUbConnection> {
-        factoryCallCount++;
-        return MakeTestConnection();
-    };
+    auto factory = MakeCountingFactory(factoryCallCount);
 
     Endpoint::SharedJettyCtx outCtx;
     ASSERT_EQ(AcquireSharedJettyForChannel(&endpoint, conn1.get(), factory, outCtx), HCCL_SUCCESS);
@@ -153,9 +148,9 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_CacheH
 TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_ReleaseDecrementsRef_Expect_Success)
 {
     StubEndpointForHelper endpoint;
-    auto conn = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    auto conn = MakeTestJettyConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
     auto factory = []() {
-        return MakeTestConnection();
+        return MakeTestJettyConnection();
     };
 
     Endpoint::SharedJettyCtx outCtx;
@@ -168,13 +163,10 @@ TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_Releas
 TEST_F(SharedJettyChannelHelperTest, Ut_AcquireSharedJettyForChannel_When_ReleaseAndReacquire_Expect_Success)
 {
     StubEndpointForHelper endpoint;
-    auto conn1 = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
-    auto conn2 = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    auto conn1 = MakeTestJettyConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    auto conn2 = MakeTestJettyConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
     uint32_t factoryCallCount = 0;
-    auto factory = [&factoryCallCount]() -> std::unique_ptr<DevUbConnection> {
-        factoryCallCount++;
-        return MakeTestConnection();
-    };
+    auto factory = MakeCountingFactory(factoryCallCount);
 
     Endpoint::SharedJettyCtx outCtx;
     ASSERT_EQ(AcquireSharedJettyForChannel(&endpoint, conn1.get(), factory, outCtx), HCCL_SUCCESS);

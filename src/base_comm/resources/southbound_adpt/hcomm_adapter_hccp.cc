@@ -174,7 +174,7 @@ HccpUbCreateJetty(const CtxHandle ctxHandle, const HrtRaUbCreateJettyParam& in, 
     attr.ub.flag.value = 0;
     /* errTime配置值：0-31
        0-7代表芯片配置值b00:512ms
-       8-15代表芯片配置值b01:1s
+       8-15代表芯片配置值b01:4s
        16-23代表芯片配置值b10:8s
        24-31代表芯片配置值b11:32s
     */
@@ -270,10 +270,10 @@ HcclResult HccpUbCreateJettyAsync(
     attr.ub.tokenIdHandle = reinterpret_cast<void*>(in.tokenIdHandle);
     attr.ub.flag.value = 0;
     /* errTime配置值：0-31
-       0-7代表芯片配置值b00:128ms
-       8-15代表芯片配置值b01:1s
+       0-7代表芯片配置值b00:512ms
+       8-15代表芯片配置值b01:4s
        16-23代表芯片配置值b10:8s
-       24-31代表芯片配置值b11:64s
+       24-31代表芯片配置值b11:32s
     */
     attr.ub.errTimeout = in.errTimeout;
     attr.ub.priority = static_cast<uint8_t>(in.qos & 0xFU);

@@ -20,6 +20,7 @@
 #include "orion_adpt_utils.h"
 #include "rdma_handle_manager.h"
 #include "hccp.h"
+#include "hcomm_res_mgr.h"
 #include "env_config/env_config_v2.h"
 
 using namespace hcomm;
@@ -30,24 +31,20 @@ class UbTimeoutEnvGuard {
 public:
     explicit UbTimeoutEnvGuard(const char* value)
     {
-        SaveEnv("HCCL_UB_TIMEOUT", savedUbTimeout_, hadUbTimeout_);
-        SaveEnv("HCCL_DFS_CONFIG", savedDfsConfig_, hadDfsConfig_);
+        SaveEnv("HCOMM_TA_RTP_UB_TIMEOUT", savedUbTimeout_, hadUbTimeout_);
 
         if (value != nullptr) {
-            (void)setenv("HCCL_UB_TIMEOUT", value, 1);
+            (void)setenv("HCOMM_TA_RTP_UB_TIMEOUT", value, 1);
         } else {
-            (void)unsetenv("HCCL_UB_TIMEOUT");
+            (void)unsetenv("HCOMM_TA_RTP_UB_TIMEOUT");
         }
-        // Parse() validates all env keys; CI may leave an invalid HCCL_DFS_CONFIG (typo detction).
-        (void)setenv("HCCL_DFS_CONFIG", "task_exception:on", 1);
-        Hccl::EnvConfig::GetInstance().Parse();
+        hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().ResetParsed();
     }
 
     ~UbTimeoutEnvGuard()
     {
-        RestoreEnv("HCCL_UB_TIMEOUT", savedUbTimeout_, hadUbTimeout_);
-        RestoreEnv("HCCL_DFS_CONFIG", savedDfsConfig_, hadDfsConfig_);
-        // Do not Parse() here: restoring invalid HCCL_DFS_CONFIG then Parse() throws and aborts the process.
+        RestoreEnv("HCOMM_TA_RTP_UB_TIMEOUT", savedUbTimeout_, hadUbTimeout_);
+        hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().ResetParsed();
     }
 
 private:
@@ -73,8 +70,6 @@ private:
 
     bool hadUbTimeout_{false};
     std::string savedUbTimeout_;
-    bool hadDfsConfig_{false};
-    std::string savedDfsConfig_;
 };
 
 void FillIpv4CommAddr(CommAddr& ca, const char* dotted)
@@ -672,7 +667,12 @@ TEST_F(TpMgrTest, Ut_TpMgr_CalcTaTimeout_When_EnvLessThanTp_Expect_Upgrade)
     TpAttrInfo tpAttrInfo{};
     tpAttrInfo.tpAttr.at = 3U;
     tpAttrInfo.tpAttr.retryTimesInit = 0U;
-    EXPECT_EQ(TpMgr::CalcTaTimeout(tpAttrInfo), 16U);
+    uint32_t taTimeOutValue = 0;
+    EXPECT_EQ(
+        hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().GetTaRtpUbTimeOut(taTimeOutValue),
+        HCCL_SUCCESS);
+    const uint8_t envTaTimeOut = static_cast<uint8_t>(taTimeOutValue);
+    EXPECT_EQ(TpMgr::CalcTaTimeout(TpProtocol::RTP, envTaTimeOut, 4000U), 16U);
 }
 
 TEST_F(TpMgrTest, Ut_TpMgr_CalcTaTimeout_When_EnvGreaterThanTp_Expect_EnvValue)
@@ -682,7 +682,12 @@ TEST_F(TpMgrTest, Ut_TpMgr_CalcTaTimeout_When_EnvGreaterThanTp_Expect_EnvValue)
     TpAttrInfo tpAttrInfo{};
     tpAttrInfo.tpAttr.at = 0U;
     tpAttrInfo.tpAttr.retryTimesInit = 0U;
-    EXPECT_EQ(TpMgr::CalcTaTimeout(tpAttrInfo), 24U);
+    uint32_t taTimeOutValue = 0;
+    EXPECT_EQ(
+        hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().GetTaRtpUbTimeOut(taTimeOutValue),
+        HCCL_SUCCESS);
+    const uint8_t envTaTimeOut = static_cast<uint8_t>(taTimeOutValue);
+    EXPECT_EQ(TpMgr::CalcTaTimeout(TpProtocol::RTP, envTaTimeOut, 16U), 24U);
 }
 
 TEST_F(TpMgrTest, Ut_TpMgr_ReleaseTpAttr_UseCntDecrement_Expect_Success)

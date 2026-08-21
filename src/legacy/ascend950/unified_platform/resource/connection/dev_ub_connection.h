@@ -44,8 +44,9 @@ public:
         const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
         const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
         const IpAddress& locIpv4Addr = IpAddress(), const IpAddress& rmtIpv4Addr = IpAddress(),
-        u8 qos = static_cast<u8>(UB_QOS_DEFAULT), CommEngine engine = COMM_ENGINE_RESERVED,
-        u32 sqDepth = UB_SQ_DEPTH_NOT_SET, JettyMode jettyMode = JettyMode::SELF_CREATE);
+        u8 qos = static_cast<u8>(UB_QOS_DEFAULT), u8 taTimeOut = TpManager::TA_TIMEOUT_NOT_SET,
+        CommEngine engine = COMM_ENGINE_RESERVED, u32 sqDepth = UB_SQ_DEPTH_NOT_SET,
+        JettyMode jettyMode = JettyMode::SELF_CREATE);
     void Connect() override;
     RmaConnStatus GetStatus() override;
     bool Suspend() override;
@@ -182,6 +183,9 @@ private:
 
     bool devUsed_{false};
 
+    // 由调用方根据协议从环境变量获取并传入；TA_TIMEOUT_NOT_SET 表示未传入
+    u8 taTimeOut_{TpManager::TA_TIMEOUT_NOT_SET};
+
     int32_t devLogicId{0};
     u32 dieId{0};
     u32 funcId{0};
@@ -281,8 +285,9 @@ public:
         const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
         const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
         const IpAddress& locIpv4Addr = IpAddress(), const IpAddress& rmtIpv4Addr = IpAddress(),
-        u8 qos = static_cast<u8>(UB_QOS_DEFAULT), CommEngine engine = COMM_ENGINE_RESERVED,
-        u32 sqDepth = UB_SQ_DEPTH_NOT_SET, JettyMode jettyMode = JettyMode::SELF_CREATE);
+        u8 qos = static_cast<u8>(UB_QOS_DEFAULT), u8 taTimeOut = TpManager::TA_TIMEOUT_NOT_SET,
+        CommEngine engine = COMM_ENGINE_RESERVED, u32 sqDepth = UB_SQ_DEPTH_NOT_SET,
+        JettyMode jettyMode = JettyMode::SELF_CREATE);
 };
 
 class DevUbCtpConnection : public DevUbConnection {
@@ -291,8 +296,9 @@ public:
         const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
         const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
         const IpAddress& locIpv4Addr = IpAddress(), const IpAddress& rmtIpv4Addr = IpAddress(),
-        u8 qos = static_cast<u8>(UB_QOS_DEFAULT), CommEngine engine = COMM_ENGINE_RESERVED,
-        u32 sqDepth = UB_SQ_DEPTH_NOT_SET, JettyMode jettyMode = JettyMode::SELF_CREATE);
+        u8 qos = static_cast<u8>(UB_QOS_DEFAULT), u8 taTimeOut = TpManager::TA_TIMEOUT_NOT_SET,
+        CommEngine engine = COMM_ENGINE_RESERVED, u32 sqDepth = UB_SQ_DEPTH_NOT_SET,
+        JettyMode jettyMode = JettyMode::SELF_CREATE);
 };
 
 class DevUbUboeConnection : public DevUbConnection {
@@ -301,7 +307,8 @@ public:
         const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
         const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
         const IpAddress& locIpv4Addr = IpAddress(), const IpAddress& rmtIpv4Addr = IpAddress(),
-        u8 qos = static_cast<u8>(UB_QOS_DEFAULT), CommEngine engine = COMM_ENGINE_RESERVED,
+        u8 qos = static_cast<u8>(UB_QOS_DEFAULT), u8 taTimeOut = TpManager::TA_TIMEOUT_NOT_SET,
+        CommEngine engine = COMM_ENGINE_RESERVED, u32 sqDepth = UB_SQ_DEPTH_NOT_SET,
         JettyMode jettyMode = JettyMode::SELF_CREATE);
 };
 
@@ -311,8 +318,9 @@ public:
         const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
         const bool devUsed = false, const HrtUbJfcMode jfcMode = HrtUbJfcMode::STARS_POLL,
         const IpAddress& locAddrEid = IpAddress(), const IpAddress& rmtAddrEid = IpAddress(),
-        u8 qos = static_cast<u8>(UB_QOS_DEFAULT), CommEngine engine = COMM_ENGINE_RESERVED,
-        u32 sqDepth = UB_SQ_DEPTH_NOT_SET, JettyMode jettyMode = JettyMode::SELF_CREATE);
+        u8 qos = static_cast<u8>(UB_QOS_DEFAULT), u8 taTimeOut = TpManager::TA_TIMEOUT_NOT_SET,
+        CommEngine engine = COMM_ENGINE_RESERVED, u32 sqDepth = UB_SQ_DEPTH_NOT_SET,
+        JettyMode jettyMode = JettyMode::SELF_CREATE);
 };
 
 std::vector<DevUbConnection*> GetStarsPollUbConns(const std::vector<RmaConnection*>& rmaConns);

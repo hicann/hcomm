@@ -10,6 +10,7 @@
 
 #include "aicpu_ts_uboe_channel.h"
 #include "orion_adpt_utils.h"
+#include "hcomm_res_mgr.h"
 #include "env_config/env_config_v2.h"
 #include "makebufs_helper.h"
 #include "endpoint.h"
@@ -61,9 +62,14 @@ HcclResult AicpuTsUboeChannel::BuildConnection()
         "[AicpuTsUboeChannel::%s] locAddr_[%s], rmtAddr_[%s]", __func__, locAddr_.Describe().c_str(),
         rmtAddr_.Describe().c_str());
 
+    // UBOE 协议对应 HCOMM_TA_RTP_UBOE_TIMEOUT，由 base_comm 从环境变量获取后传入
+    u8 taTimeOut = 0;
+    uint32_t taTimeOutValue = 0;
+    CHK_RET(hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().GetTaRtpUboeTimeOut(taTimeOutValue));
+    taTimeOut = static_cast<u8>(taTimeOutValue);
     std::unique_ptr<Hccl::DevUbConnection> ubConn = std::make_unique<Hccl::DevUbUboeConnection>(
         rdmaHandle_, locAddr_, rmtAddr_, opMode, devUsed, Hccl::HrtUbJfcMode::STARS_POLL, ctx.locAddr, ctx.rmtAddr,
-        ctx.qosPre);
+        ctx.qosPre, taTimeOut);
     CHK_SMART_PTR_NULL(ubConn);
 
     if (devBaseAttr_.maxReadSize == 0 || devBaseAttr_.maxWriteSize == 0) {

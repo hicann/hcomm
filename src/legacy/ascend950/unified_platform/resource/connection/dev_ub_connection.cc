@@ -26,11 +26,13 @@ constexpr u32 UB_SQ_OFFLOAD_DEPTH = 128;
 constexpr u32 UB_SQ_WQEBB_SIZE = 64;
 constexpr u32 WQE_NUM_PER_SQE = 4;                   // URMA约束每个SQE包含4个WQEBB
 constexpr u32 UB_MAX_TRANS_SIZE = 256 * 1024 * 1024; // UB单次最大传输量256*1024*1024 Byte
+constexpr uint32_t kTpAttrRetryTimesInitBit = 0U;
+constexpr uint32_t kTpAttrAtBit = 1U;
 
 DevUbConnection::DevUbConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr, u8 qos,
-    CommEngine engine, u32 inSqDepth, JettyMode jettyMode)
+    u8 taTimeOut, CommEngine engine, u32 inSqDepth, JettyMode jettyMode)
     : RmaConnection(nullptr, RmaConnType::UB),
       rdmaHandle(rdmaHandle),
       locAddr(locAddr),
@@ -44,6 +46,7 @@ DevUbConnection::DevUbConnection(
       locEid(locAddr.GetReverseEid()),
       qos_(qos),
       devUsed_(devUsed),
+      taTimeOut_(taTimeOut),
       sqDepth(inSqDepth),
       jettyMode_(jettyMode)
 {
@@ -94,10 +97,10 @@ DevUbConnection::DevUbConnection(
 DevUbTpConnection::DevUbTpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr, u8 qos,
-    CommEngine engine, u32 sqDepth, JettyMode jettyMode)
+    u8 taTimeOut, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
     : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth,
-          jettyMode)
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, taTimeOut, engine,
+          sqDepth, jettyMode)
 {
     tpProtocol = TpProtocol::TP;
 }
@@ -105,10 +108,10 @@ DevUbTpConnection::DevUbTpConnection(
 DevUbCtpConnection::DevUbCtpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr, u8 qos,
-    CommEngine engine, u32 sqDepth, JettyMode jettyMode)
+    u8 taTimeOut, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
     : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth,
-          jettyMode)
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, taTimeOut, engine,
+          sqDepth, jettyMode)
 {
     tpProtocol = TpProtocol::CTP;
 }
@@ -116,22 +119,22 @@ DevUbCtpConnection::DevUbCtpConnection(
 DevUbUboeConnection::DevUbUboeConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr, u8 qos,
-    CommEngine engine, JettyMode jettyMode)
+    u8 taTimeOut, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
     : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine,
-          UB_SQ_DEPTH_NOT_SET, jettyMode)
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, taTimeOut, engine,
+          sqDepth, jettyMode)
 {
     tpProtocol = TpProtocol::UBOE;
-    jettyTimeOut = 16; // UBOE Jetty异步创建超时16秒
+    jettyTimeOut = 16; // UBOE Jetty异步创建超时 hw_val=16 (对应8s)
 }
 
 DevUbRtpConnection::DevUbRtpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locAddrEid, const IpAddress& rmtAddrEid,
-    const u8 qos, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
+    const u8 qos, u8 taTimeOut, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
     : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, engine, sqDepth,
-          jettyMode)
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, taTimeOut, engine,
+          sqDepth, jettyMode)
 {
     tpProtocol = TpProtocol::UB_RTP;
     // UB_RTP与UBOE同属UB传输，Jetty异步创建超时一致，均为16秒
@@ -221,7 +224,7 @@ inline uint32_t GetRandomNum()
 HcclResult DevUbConnection::CalcTotalTimeout(uint32_t& outTotalTimeoutMs)
 {
     TpHandle tpHandle = tpInfo.tpHandle;
-    uint32_t attrBitmap = 0;
+    uint32_t attrBitmap = (1U << kTpAttrRetryTimesInitBit) | (1U << kTpAttrAtBit);
     struct TpAttr tpAttr = {};
     u32 devicePhyId = HrtGetDevicePhyIdByIndex(devLogicId);
     CHK_RET(HrtRaGetTpAttrAsync(devicePhyId, rdmaHandle, tpHandle, attrBitmap, tpAttr, reqHandle));
@@ -230,48 +233,24 @@ HcclResult DevUbConnection::CalcTotalTimeout(uint32_t& outTotalTimeoutMs)
     return HCCL_SUCCESS;
 }
 
-void DevUbConnection::GetTimeOut() // 直接基于环境变量控制
+void DevUbConnection::GetTimeOut() // 基于调用方按协议从环境变量获取并传入的超时值控制
 {
     if (tpProtocol == TpProtocol::INVALID) { // 不感知tp建链，当前默认不支持
         HCCL_ERROR(
             "[DevUbConnection][%s] failed, tpProtocol[%s] is not expected.", __func__, tpProtocol.Describe().c_str());
         ThrowAbnormalStatus(std::string(__func__));
-    }
-
-    uint8_t envValue = static_cast<uint8_t>(EnvConfig::GetInstance().GetRdmaConfig().GetUbTimeOut());
-    uint32_t envTimeOut = TpManager::TaHwValueToMs(envValue);
-
-    if (tpProtocol == TpProtocol::CTP) {
-        jettyTimeOut = envValue;
-        HCCL_INFO("%s [UbCtp] Env Value [%u] (%ums).", __func__, envValue, envTimeOut);
         return;
     }
 
-    if (tpProtocol == TpProtocol::UBOE || tpProtocol == TpProtocol::UB_RTP) {
-        envValue = static_cast<uint8_t>(EnvConfig::GetInstance().GetRdmaConfig().GetUboeTimeOut());
-        envTimeOut = TpManager::TaHwValueToMs(envValue);
-        const char* tag = (tpProtocol == TpProtocol::UB_RTP) ? "[UB_RTP]" : "[UBoE]";
-        HCCL_INFO("%s %s Env Value [%u] (%ums).", __func__, tag, envValue, envTimeOut);
+    uint32_t tpTimeOutMs = 0;
+    HcclResult ret = CalcTotalTimeout(tpTimeOutMs);
+    if (ret != HCCL_SUCCESS) {
+        HCCL_WARNING("[DevUbConnection][%s] CalcTotalTimeout failed[%d], tpTimeOutMs remains 0.", __func__, ret);
     }
-
-    uint32_t tpTimeOut = 0;
-    CalcTotalTimeout(tpTimeOut);
-    if (envTimeOut < tpTimeOut) {
-        // 规则: 如果环境变量时间 < TP总超时，选择大于TP总超时的最小TA挡位
-        jettyTimeOut = TpManager::FindMinTaHwValue(tpTimeOut);
-        HCCL_WARNING(
-            "%s Env timeout [%ums] < TP timeout [%ums]. Auto upgrade TA to hw_val[%u] (%ums).", __func__, envTimeOut,
-            tpTimeOut, envValue, tpTimeOut);
-    } else {
-        // 规则: 否则，直接使用环境变量对应的挡位 (对齐到 0/8/16/24)
-        // 注意：这里我们取环境变量所在挡位的基准值 (例如 env=10 -> 取 8)
-        jettyTimeOut = envValue;
-        HCCL_INFO(
-            "%s Env timeout [%ums] >= TP timeout [%ums]. Use env gear base hw_val[%u] (%ums).", __func__, envTimeOut,
-            tpTimeOut, envValue, envTimeOut);
-    }
-
-    HCCL_INFO("%s final TA Timeout [%u] (%ums).", __func__, jettyTimeOut, envTimeOut);
+    jettyTimeOut = TpManager::CalcTaTimeout(tpProtocol, taTimeOut_, tpTimeOutMs);
+    HCCL_INFO(
+        "[DevUbConnection][%s] final TA Timeout [%u] (%ums).", __func__, jettyTimeOut,
+        TpManager::TaHwValueToMs(jettyTimeOut));
 }
 
 /*

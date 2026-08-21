@@ -455,12 +455,12 @@ static HcclResult GetTpInfoListAsync(
     cfg.transMode = TransportModeT::CONN_RM;
     CHK_RET(IpAddressToHccpEid(locAddr, cfg.localEid));
     HCCL_INFO(
-        "RaUbGetTpInfoAsync cfg.local_eid[subnetPrefix[%016llx], interfaceId[%016llx]]",
+        "[TpMgr][GetTpInfoListAsync] cfg.local_eid[subnetPrefix[%016llx], interfaceId[%016llx]]",
         static_cast<unsigned long long>(cfg.localEid.in6.subnetPrefix),
         static_cast<unsigned long long>(cfg.localEid.in6.interfaceId));
     CHK_RET(IpAddressToHccpEid(rmtAddr, cfg.peerEid));
     HCCL_INFO(
-        "RaUbGetTpInfoAsync cfg.peer_eid[subnetPrefix[%016llx], interfaceId[%016llx]]",
+        "[TpMgr][GetTpInfoListAsync] cfg.peer_eid[subnetPrefix[%016llx], interfaceId[%016llx]]",
         static_cast<unsigned long long>(cfg.peerEid.in6.subnetPrefix),
         static_cast<unsigned long long>(cfg.peerEid.in6.interfaceId));
 
@@ -473,13 +473,13 @@ static HcclResult GetTpInfoListAsync(
     const s32 ret = RaGetTpInfoListAsync(ctxHandle, &cfg, info, &num, &raReqHandle);
     if (ret != 0 || !raReqHandle) {
         HCCL_ERROR(
-            "[%s] failed, call interface error[%d] raReqHandle[%p], ctxHandle[%p] locAddr[%s] rmtAddr[%s].", __func__,
-            ret, raReqHandle, ctxHandle, locAddr.Describe().c_str(), rmtAddr.Describe().c_str());
+            "[TpMgr][%s] failed, call interface error[%d] raReqHandle[%p], ctxHandle[%p] locAddr[%s] rmtAddr[%s].",
+            __func__, ret, raReqHandle, ctxHandle, locAddr.Describe().c_str(), rmtAddr.Describe().c_str());
         return HcclResult::HCCL_E_NETWORK;
     }
 
     reqHandle = reinterpret_cast<RequestHandle>(raReqHandle);
-    HCCL_INFO("[%s] get request handle[%llu].", __func__, static_cast<unsigned long long>(reqHandle));
+    HCCL_INFO("[TpMgr][%s] get request handle[%llu].", __func__, static_cast<unsigned long long>(reqHandle));
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -639,7 +639,7 @@ HcclResult TpMgr::GetTpTotalTimeout(const TpAttrInfo& tpAttrInfo, uint32_t& tpTi
     if (rawAtGear > AT_GEAR_MAX) {
         finalAtGear = AT_GEAR_DEFAULT;
         HCCL_WARNING(
-            "%s Invalid at gear[%u], expect [%u, %u], use default gear[%u].", __func__,
+            "[TpMgr][%s] Invalid at gear[%u], expect [%u, %u], use default gear[%u].", __func__,
             static_cast<unsigned>(rawAtGear), static_cast<unsigned>(AT_GEAR_MIN), static_cast<unsigned>(AT_GEAR_MAX),
             static_cast<unsigned>(finalAtGear));
     }
@@ -648,7 +648,7 @@ HcclResult TpMgr::GetTpTotalTimeout(const TpAttrInfo& tpAttrInfo, uint32_t& tpTi
     tpTimeOutMs = singleAtTimeoutMs * static_cast<uint32_t>(rawRetryTimes + 1);
 
     HCCL_INFO(
-        "%s TP timeout calc success: raw_at_gear[%u], final_at_gear[%u], "
+        "[TpMgr][%s] TP timeout calc success: raw_at_gear[%u], final_at_gear[%u], "
         "single_timeout[%ums], retry_times[%u], total_timeout[%ums].",
         __func__, static_cast<unsigned>(rawAtGear), static_cast<unsigned>(finalAtGear), singleAtTimeoutMs,
         static_cast<unsigned>(rawRetryTimes), tpTimeOutMs);
@@ -687,29 +687,32 @@ static uint8_t FindMinTaHwValue(uint32_t tpTotalTimeoutMs)
     return TA_HW_GEAR3_BASE;
 }
 
-uint8_t TpMgr::CalcTaTimeout(const TpAttrInfo& tpAttrInfo)
+uint8_t TpMgr::CalcTaTimeout(TpProtocol tpProtocol, uint8_t taTimeOut, uint32_t tpTimeOutMs)
 {
-    constexpr uint8_t UB_TIMEOUT_DEFAULT = 8; // 默认 UB_CTP 和 UBC_TP 超时配置为8
-    uint8_t envValue = static_cast<uint8_t>(Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetUbTimeOut());
-    uint32_t envTimeoutMs = TaHwValueToMs(envValue);
+    // 未传入时回退到协议默认值（CTP=8，其他=16）
+    uint8_t envValue = (taTimeOut != TA_TIMEOUT_NOT_SET) ? taTimeOut : ((tpProtocol == TpProtocol::CTP) ? 8 : 16);
+    uint32_t envTimeOutMs = TaHwValueToMs(envValue);
 
-    uint32_t tpTimeOutMs = 0;
-    (void)GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs);
-
-    uint8_t errTimeout = UB_TIMEOUT_DEFAULT;
-    if (envTimeoutMs < tpTimeOutMs) {
-        errTimeout = FindMinTaHwValue(tpTimeOutMs);
-        HCCL_WARNING(
-            "[TpMgr][%s] Env timeout [%ums] < TP timeout [%ums]. Auto upgrade TA to hw_val[%u] (%ums).", __func__,
-            envTimeoutMs, tpTimeOutMs, static_cast<unsigned>(errTimeout), TaHwValueToMs(errTimeout));
-    } else {
-        errTimeout = envValue;
-        HCCL_INFO(
-            "[TpMgr][%s] Env timeout [%ums] >= TP timeout [%ums]. Use env gear base hw_val[%u] (%ums).", __func__,
-            envTimeoutMs, tpTimeOutMs, static_cast<unsigned>(envValue), envTimeoutMs);
+    // CTP 协议直接使用 envValue，不与 TP 总超时比较
+    if (tpProtocol == TpProtocol::CTP) {
+        HCCL_INFO("[TpMgr][%s] [UbCtp] Env Value [%u] (%ums).", __func__, envValue, envTimeOutMs);
+        return envValue;
     }
 
-    return errTimeout;
+    // 其他协议：需要与 TP 总超时比较决定是否自动升挡
+    uint8_t jettyTimeOut = envValue;
+    if (envTimeOutMs <= tpTimeOutMs) {
+        jettyTimeOut = FindMinTaHwValue(tpTimeOutMs);
+        HCCL_WARNING(
+            "[TpMgr][%s] Env timeout [%ums] <= TP timeout [%ums]. Auto upgrade TA to hw_val[%u] (%ums).", __func__,
+            envTimeOutMs, tpTimeOutMs, jettyTimeOut, TaHwValueToMs(jettyTimeOut));
+    } else {
+        HCCL_INFO(
+            "[TpMgr][%s] Env timeout [%ums] > TP timeout [%ums]. Use env gear base hw_val[%u] (%ums).", __func__,
+            envTimeOutMs, tpTimeOutMs, envValue, envTimeOutMs);
+    }
+
+    return jettyTimeOut;
 }
 
 HcclResult TpMgr::BuildTpInfoAndCommitQosAttr(

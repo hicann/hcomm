@@ -462,7 +462,9 @@ HcclResult CcuComponent::CreateAndImportLoopJettys(
 
     TpAttrInfo tpAttrInfo{};
     CHK_RET(GetLoopTpAttr(dieId, commAddr, tpAttrInfo));
-    const uint8_t errTimeout = TpMgr::CalcTaTimeout(tpAttrInfo);
+    uint32_t tpTimeOutMs = 0;
+    (void)TpMgr::GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs);
+    const uint8_t errTimeout = TpMgr::CalcTaTimeout(LOOP_JETTY_PROTOCOL, TpMgr::TA_TIMEOUT_NOT_SET, tpTimeOutMs);
 
     for (const auto& jettyInfo : jettyInfos) {
         const auto jettyMode = jettyInfo.jettyType == CcuJettyType::CCUM_CACHED_JETTY ? HrtJettyMode::CCU_CCUM_CACHE :
@@ -556,7 +558,9 @@ RequestNewLoopTpAttr(const uint32_t devPhyId, CtxHandle ctxHandle, const TpHandl
     const auto startTime = std::chrono::steady_clock::now();
 
     auto& tpMgr = TpMgr::GetInstance(devPhyId);
-    constexpr uint32_t TP_ATTR_BITMAP = 0;
+    constexpr uint32_t kTpAttrRetryTimesInitBit = 0U;
+    constexpr uint32_t kTpAttrAtBit = 1U;
+    constexpr uint32_t TP_ATTR_BITMAP = (1U << kTpAttrRetryTimesInitBit) | (1U << kTpAttrAtBit);
     const GetTpAttrParam tpAttrParam = {tpHandle, TP_ATTR_BITMAP};
     HcclResult ret = HcclResult::HCCL_SUCCESS;
     do {

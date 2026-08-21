@@ -10,6 +10,7 @@
 
 #include "aicpu_ts_ub_rtp_channel.h"
 #include "orion_adpt_utils.h"
+#include "hcomm_res_mgr.h"
 #include "endpoint.h"
 
 // Orion
@@ -58,9 +59,14 @@ HcclResult AicpuTsUbRtpChannel::BuildConnection()
         static_cast<unsigned int>(ctx.qosPre));
 
     // UB_RTP 使用 DevUbRtpConnection，locAddr_/rmtAddr_ 作为 EID 地址；qos 与 UBOE 一致来自 channelDesc_
+    // UB_RTP 协议对应 HCOMM_TA_RTP_UB_TIMEOUT，由 base_comm 从环境变量获取后传入
+    u8 taTimeOut = 0;
+    uint32_t taTimeOutValue = 0;
+    CHK_RET(hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().GetTaRtpUbTimeOut(taTimeOutValue));
+    taTimeOut = static_cast<u8>(taTimeOutValue);
     std::unique_ptr<Hccl::DevUbConnection> ubConn = std::make_unique<Hccl::DevUbRtpConnection>(
         rdmaHandle_, locAddr_, rmtAddr_, opMode, devUsed, Hccl::HrtUbJfcMode::STARS_POLL, locAddr_, rmtAddr_,
-        ctx.qosPre);
+        ctx.qosPre, taTimeOut);
     CHK_SMART_PTR_NULL(ubConn);
 
     if (devBaseAttr_.maxReadSize == 0 || devBaseAttr_.maxWriteSize == 0) {

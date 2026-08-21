@@ -58,6 +58,20 @@ HcclResult TpManager::ReleaseTpAttr(const TpHandle tpHandle, const TpAttrInfo& t
     return HcclResult::HCCL_SUCCESS;
 }
 
-uint8_t TpManager::CalcTaTimeout(const TpAttrInfo& tpAttrInfo) { return AT_GEAR_DEFAULT * 8; }
+HcclResult TpManager::GetTpTotalTimeout(const TpAttrInfo& tpAttrInfo, uint32_t& tpTimeOutMs)
+{
+    (void)tpAttrInfo;
+    tpTimeOutMs = 0;
+    return HcclResult::HCCL_SUCCESS;
+}
+
+uint8_t TpManager::CalcTaTimeout(TpProtocol tpProtocol, uint8_t taTimeOut, uint32_t tpTimeOutMs)
+{
+    (void)tpTimeOutMs;
+    if (taTimeOut != TA_TIMEOUT_NOT_SET) {
+        return taTimeOut;
+    }
+    return (tpProtocol == TpProtocol::CTP) ? 8U : 16U;
+}
 
 } // namespace Hccl

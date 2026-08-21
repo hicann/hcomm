@@ -80,8 +80,10 @@ target_include_directories(hccl_v2_utest PRIVATE
         ${HCCL_CODE_ROOT}/src/legacy/ascend910/common/
         ${HCCL_CODE_ROOT}/src/legacy/ascend910/common/debug/profiling/inc
         ${HCCL_CODE_ROOT}/src/legacy/ascend910/pub_inc/
+        ${HCCL_CODE_ROOT}/src/base_comm/
         ${HCCL_CODE_ROOT}/src/base_comm/resources/hccp/inc/network/
         ${HCCL_CODE_ROOT}/src/base_comm/resources/hccp/inc/
+        ${HCCL_CODE_ROOT}/src/base_comm/resources/
         ${HCCL_CODE_ROOT}/src/base_comm/common/
         ${HCCL_CODE_ROOT}/src/base_comm/common/debug/
         ${HCCL_CODE_ROOT}/src/base_comm/primitives/aicpu/task_cache

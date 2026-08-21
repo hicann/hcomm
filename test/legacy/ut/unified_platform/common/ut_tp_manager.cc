@@ -16,6 +16,7 @@
 #include "orion_adapter_hccp.h"
 #include "orion_adapter_rts.h"
 #include "internal_exception.h"
+#include "hcomm_res_mgr.h"
 #include "env_config/env_config_v2.h"
 #include <cstdlib>
 #include <string>
@@ -28,27 +29,27 @@ class UbTimeoutEnvGuard {
 public:
     explicit UbTimeoutEnvGuard(const char* value)
     {
-        const char* saved = std::getenv("HCCL_UB_TIMEOUT");
+        const char* saved = std::getenv("HCOMM_TA_RTP_UB_TIMEOUT");
         if (saved != nullptr) {
             savedValue_ = saved;
             hadValue_ = true;
         }
         if (value != nullptr) {
-            (void)setenv("HCCL_UB_TIMEOUT", value, 1);
+            (void)setenv("HCOMM_TA_RTP_UB_TIMEOUT", value, 1);
         } else {
-            (void)unsetenv("HCCL_UB_TIMEOUT");
+            (void)unsetenv("HCOMM_TA_RTP_UB_TIMEOUT");
         }
-        EnvConfig::GetInstance().Parse();
+        hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().ResetParsed();
     }
 
     ~UbTimeoutEnvGuard()
     {
         if (hadValue_) {
-            (void)setenv("HCCL_UB_TIMEOUT", savedValue_.c_str(), 1);
+            (void)setenv("HCOMM_TA_RTP_UB_TIMEOUT", savedValue_.c_str(), 1);
         } else {
-            (void)unsetenv("HCCL_UB_TIMEOUT");
+            (void)unsetenv("HCOMM_TA_RTP_UB_TIMEOUT");
         }
-        EnvConfig::GetInstance().Parse();
+        hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().ResetParsed();
     }
 
 private:
@@ -294,12 +295,12 @@ TEST_F(TpManagerTest, Ut_ReleaseTpInfo_When_InputValue_Expect_Return_HCCL_SUCCES
 TEST_F(TpManagerTest, Ut_TaHwValueToMs_AllGears_ReturnsCorrectTimeout)
 {
     EXPECT_EQ(TpManager::TaHwValueToMs(0), 512);
-    EXPECT_EQ(TpManager::TaHwValueToMs(8), 1000);
+    EXPECT_EQ(TpManager::TaHwValueToMs(8), 4000);
     EXPECT_EQ(TpManager::TaHwValueToMs(16), 8000);
     EXPECT_EQ(TpManager::TaHwValueToMs(24), 32000);
 
     EXPECT_EQ(TpManager::TaHwValueToMs(7), 512);
-    EXPECT_EQ(TpManager::TaHwValueToMs(15), 1000);
+    EXPECT_EQ(TpManager::TaHwValueToMs(15), 4000);
     EXPECT_EQ(TpManager::TaHwValueToMs(23), 8000);
     EXPECT_EQ(TpManager::TaHwValueToMs(31), 32000);
 }
@@ -321,8 +322,16 @@ TEST_F(TpManagerTest, Ut_FindMinTaHwValue_AllTimeouts_ReturnsCorrectHwValue)
 TEST_F(TpManagerTest, Ut_FindMinTaHwValue_BoundaryValues_ReturnsCorrectHwValue)
 {
     EXPECT_EQ(TpManager::FindMinTaHwValue(512), 8);
-    EXPECT_EQ(TpManager::FindMinTaHwValue(1000), 16);
+    EXPECT_EQ(TpManager::FindMinTaHwValue(4000), 16);
     EXPECT_EQ(TpManager::FindMinTaHwValue(8000), 24);
+}
+
+TEST_F(TpManagerTest, Ut_FindMinTaHwValue_ExtremeBoundaries_ReturnsCorrectHwValue)
+{
+    EXPECT_EQ(TpManager::FindMinTaHwValue(0), 0);   // 0ms → GEAR0(0)
+    EXPECT_EQ(TpManager::FindMinTaHwValue(1), 0);   // 1ms < 512 → GEAR0(0)
+    EXPECT_EQ(TpManager::FindMinTaHwValue(511), 0); // 511ms < 512 → GEAR0(0)
+    EXPECT_EQ(TpManager::FindMinTaHwValue(513), 8); // 513ms → GEAR1(8)
 }
 
 TEST_F(TpManagerTest, Ut_GetTpTotalTimeout_ValidAtGear_ReturnsCorrectTimeout)
@@ -638,24 +647,75 @@ TEST_F(TpManagerTest, tp_manager_release_tpinfo_handle_mismatch)
     EXPECT_EQ(result, HCCL_SUCCESS);
 }
 
-TEST_F(TpManagerTest, Ut_CalcTaTimeout_When_EnvLessThanTp_Expect_Upgrade)
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Tp_DefaultGeTpTimeout_Expect_Default16)
 {
-    UbTimeoutEnvGuard envGuard("0");
-
-    TpAttrInfo tpAttrInfo{};
-    tpAttrInfo.tpAttr.at = 3U;
-    tpAttrInfo.tpAttr.retryTimesInit = 0U;
-    EXPECT_EQ(TpManager::CalcTaTimeout(tpAttrInfo), 16U);
-}
-
-TEST_F(TpManagerTest, Ut_CalcTaTimeout_When_EnvGreaterThanTp_Expect_EnvValue)
-{
-    UbTimeoutEnvGuard envGuard("24");
-
     TpAttrInfo tpAttrInfo{};
     tpAttrInfo.tpAttr.at = 0U;
     tpAttrInfo.tpAttr.retryTimesInit = 0U;
-    EXPECT_EQ(TpManager::CalcTaTimeout(tpAttrInfo), 24U);
+    uint32_t tpTimeOutMs = 0;
+    (void)TpManager::GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs);
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::TP, TpManager::TA_TIMEOUT_NOT_SET, tpTimeOutMs), 16U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Tp_Boundary_8000msEqual_Expect_Upgrade24)
+{
+    TpAttrInfo tpAttrInfo{};
+    tpAttrInfo.tpAttr.at = 2U;
+    tpAttrInfo.tpAttr.retryTimesInit = 7U;
+    uint32_t tpTimeOutMs = 0;
+    (void)TpManager::GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs);
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::TP, TpManager::TA_TIMEOUT_NOT_SET, tpTimeOutMs), 24U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Tp_DefaultLessTpTimeout_Expect_Upgrade24)
+{
+    TpAttrInfo tpAttrInfo{};
+    tpAttrInfo.tpAttr.at = 3U;
+    tpAttrInfo.tpAttr.retryTimesInit = 2U;
+    uint32_t tpTimeOutMs = 0;
+    (void)TpManager::GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs);
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::TP, TpManager::TA_TIMEOUT_NOT_SET, tpTimeOutMs), 24U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Tp_InvalidAtGear_Expect_Default16)
+{
+    TpAttrInfo tpAttrInfo{};
+    tpAttrInfo.tpAttr.at = 5U;
+    tpAttrInfo.tpAttr.retryTimesInit = 0U;
+    uint32_t tpTimeOutMs = 0;
+    (void)TpManager::GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs);
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::TP, TpManager::TA_TIMEOUT_NOT_SET, tpTimeOutMs), 16U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Ctp_DefaultGeTpTimeout_Expect_Default8)
+{
+    TpAttrInfo tpAttrInfo{};
+    tpAttrInfo.tpAttr.at = 0U;
+    tpAttrInfo.tpAttr.retryTimesInit = 0U;
+    uint32_t tpTimeOutMs = 0;
+    (void)TpManager::GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs);
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::CTP, TpManager::TA_TIMEOUT_NOT_SET, tpTimeOutMs), 8U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Ctp_Boundary_4000msEqual_Expect_Default8)
+{
+    TpAttrInfo tpAttrInfo{};
+    tpAttrInfo.tpAttr.at = 1U;
+    tpAttrInfo.tpAttr.retryTimesInit = 30U;
+    uint32_t tpTimeOutMs = 0;
+    (void)TpManager::GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs);
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::CTP, TpManager::TA_TIMEOUT_NOT_SET, tpTimeOutMs), 8U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Ctp_DefaultLessTpTimeout_Expect_Default8)
+{
+    TpAttrInfo tpAttrInfo{};
+    tpAttrInfo.tpAttr.at = 3U;
+    tpAttrInfo.tpAttr.retryTimesInit = 1U;
+    uint32_t tpTimeOutMs = 0;
+    (void)TpManager::GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs);
+    // 归一后 CTP 协议跳过与 TP 总超时的比较，直接使用默认值 8
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::CTP, TpManager::TA_TIMEOUT_NOT_SET, tpTimeOutMs), 8U);
 }
 
 TEST_F(TpManagerTest, tp_manager_loop_first_tp_lowest_sl_uboe_success)
@@ -680,4 +740,56 @@ TEST_F(TpManagerTest, tp_manager_loop_first_tp_lowest_sl_uboe_success)
     EXPECT_EQ(result, HCCL_SUCCESS);
     EXPECT_EQ(tpInfo.tpHandle, 0x300ULL);
     EXPECT_EQ(tpInfo.mappedJettyPriority, 7U);
+}
+
+// ==================== CalcTaTimeout (Jetty 重载) 单元测试 ====================
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Jetty_Ctp_TaTimeOutNotSet_Expect_Default8)
+{
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::CTP, TpManager::TA_TIMEOUT_NOT_SET, 0U), 8U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Jetty_Ctp_TaTimeOutSet_Expect_InputValue)
+{
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::CTP, 16U, 0U), 16U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Jetty_Tp_TaTimeOutNotSet_EnvGeTp_Expect_Default16)
+{
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::TP, TpManager::TA_TIMEOUT_NOT_SET, 4000U), 16U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Jetty_Tp_TaTimeOutNotSet_EnvLessTp_Expect_Upgrade24)
+{
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::TP, TpManager::TA_TIMEOUT_NOT_SET, 10000U), 24U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Jetty_Tp_TaTimeOutSet_EnvGeTp_Expect_InputValue)
+{
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::TP, 24U, 4000U), 24U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Jetty_Tp_TaTimeOutSet_EnvLessTp_Expect_Upgrade)
+{
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::TP, 0U, 10000U), 24U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Jetty_Uboe_TaTimeOutNotSet_EnvLessTp_Expect_Upgrade)
+{
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::UBOE, TpManager::TA_TIMEOUT_NOT_SET, 10000U), 24U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Jetty_Ubg_TaTimeOutSet_EnvGeTp_Expect_InputValue)
+{
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::UB_RTP, 24U, 4000U), 24U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Jetty_Ctp_Boundary_4000msEqual_Expect_Default8)
+{
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::CTP, TpManager::TA_TIMEOUT_NOT_SET, 4000U), 8U);
+}
+
+TEST_F(TpManagerTest, Ut_CalcTaTimeout_Jetty_Tp_Boundary_8000msEqual_Expect_Upgrade24)
+{
+    EXPECT_EQ(TpManager::CalcTaTimeout(TpProtocol::TP, TpManager::TA_TIMEOUT_NOT_SET, 8000U), 24U);
 }

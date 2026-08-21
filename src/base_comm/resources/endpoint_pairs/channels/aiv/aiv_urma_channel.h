@@ -63,6 +63,9 @@ private:
         const UbConnBuildContext& ctx, std::unique_ptr<Hccl::DevUbConnection>& ubConn,
         Hccl::DevUbConnection::JettyMode jettyMode = Hccl::DevUbConnection::JettyMode::SELF_CREATE);
     HcclResult AcquireSharedJettyInBuildConnection(const UbConnBuildContext& ctx, Hccl::DevUbConnection* connection);
+    static std::unique_ptr<Hccl::DevUbConnection> CreateSharedJettyConnection(
+        Hccl::RdmaHandle rdmaHandle, const Hccl::IpAddress& locAddr, const Hccl::IpAddress& rmtAddr, u8 qosPre,
+        Hccl::LinkProtocol protocol, u8 taTimeOut, u32 sqDepth);
 
     // --------------------- 转换参数 ---------------------
     EndpointDesc localEp_{};

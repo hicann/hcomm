@@ -17,6 +17,7 @@ set(src_to_test_list
     comms/aiv/ut_AivUbMemTransport_API_test.cc
     comms/common/ut_orion_adpt_utils.cc
     comms/common/ut_tp_mgr.cc
+    comms/common/ut_config_mgr.cc
     comms/common/ut_rma_buffer_mgr.cc
     comms/comm_engine_res/threads/test_aicpu_ts_thread_class.cc
     comms/comm_engine_res/threads/test_cpu_ts_thread_class.cc
@@ -135,6 +136,7 @@ set(src_to_test_list
 add_executable(hccl_utest_test_next_resource ${src_to_test_list})
 target_include_directories(hccl_utest_test_next_resource PRIVATE
     ${HCCL_CODE_ROOT}/src/base_comm/resources/endpoint_pairs/channels
+    ${HCCL_CODE_ROOT}/src/base_comm/config_mgr
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/team/hcomm
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/team/hccl
     ${HCCL_CODE_ROOT}/src/coll_communicator_mgr/resource_mgr/local/my_rank/

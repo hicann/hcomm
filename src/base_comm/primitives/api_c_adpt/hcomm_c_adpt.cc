@@ -79,12 +79,12 @@ HcommResult HcommResMgrInit(uint32_t devPhyId)
     // 内部流程触发各种单例声明，保证时序
     EXCEPTION_HANDLE_BEGIN
     if (noDevice) {
-        (void)HcommResMgr::GetInstance(devPhyId);
+        (void)HcommResMgr::GetInstance().GetDeviceResMgr(devPhyId);
         return HCCL_SUCCESS;
     }
 
     HCCLV2_FUNC_RUN([&]() -> HcclResult {
-        (void)HcommResMgr::GetInstance(devPhyId);
+        (void)HcommResMgr::GetInstance().GetDeviceResMgr(devPhyId);
         return HcclResult::HCCL_SUCCESS;
     }());
     EXCEPTION_HANDLE_END

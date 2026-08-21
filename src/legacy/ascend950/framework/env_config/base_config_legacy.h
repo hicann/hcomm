@@ -124,8 +124,6 @@ public:
     u32 GetRdmaServerLevel() const;
     u32 GetRdmaTimeOut() const;
     u32 GetRdmaRetryCnt() const;
-    u32 GetUboeTimeOut() const;
-    u32 GetUbTimeOut() const;
     u32 GetRdmaQueueNum() const;
     u32 GetRdmaMultiQpThreshold() const;
     const MultiQpSrcPortConfig& GetMultiQpSrcPortConfig() const;
@@ -143,13 +141,6 @@ public:
     static constexpr u32 HCCL_RDMA_RETRY_CNT_MIN = 1;     // rdma Retry Cnt最小值为1
     static constexpr u32 HCCL_RDMA_RETRY_CNT_MAX = 7;     // rdma Retry Cnt最大值为7
 
-    static constexpr u32 HCCL_UBOE_TIMEOUT_DEFAULT = 16; // UBOE默认TIMEOUT为16(对应8s)
-    static constexpr u32 HCCL_UBOE_TIMEOUT_MIN = 0;      // UBOE TIMEOUT最小值为0
-    static constexpr u32 HCCL_UBOE_TIMEOUT_MAX = 31;     // UBOE TIMEOUT最大值为31
-    static constexpr u32 HCCL_UB_TIMEOUT_DEFAULT = 8;    // UB默认TIMEOUT为8(对应1s)
-    static constexpr u32 HCCL_UB_TIMEOUT_MIN = 0;        // UB TIMEOUT最小值为0
-    static constexpr u32 HCCL_UB_TIMEOUT_MAX = 31;       // UB TIMEOUT最大值为31
-
 private:
     CfgField<u32> rdmaTrafficClass{
         "HCCL_RDMA_TC", u32(HCCL_RDMA_TC_DEFAULT), Str2T<u32>,
@@ -162,12 +153,6 @@ private:
     CfgField<u32> rdmaRetryCnt{
         "HCCL_RDMA_RETRY_CNT", u32(HCCL_RDMA_RETRY_CNT_DEFAULT), Str2T<u32>,
         CHK_RANGE_CLOSED<u32>(HCCL_RDMA_RETRY_CNT_MIN, HCCL_RDMA_RETRY_CNT_MAX)};
-    CfgField<u32> uboeTimeOut{
-        "HCCL_UBOE_TIMEOUT", u32(HCCL_UBOE_TIMEOUT_DEFAULT), Str2T<u32>,
-        CHK_RANGE_CLOSED<u32>(HCCL_UBOE_TIMEOUT_MIN, HCCL_UBOE_TIMEOUT_MAX)};
-    CfgField<u32> ubTimeOut{
-        "HCCL_UB_TIMEOUT", u32(HCCL_UB_TIMEOUT_DEFAULT), Str2T<u32>,
-        CHK_RANGE_CLOSED<u32>(HCCL_UB_TIMEOUT_MIN, HCCL_UB_TIMEOUT_MAX)};
     CfgField<u32> queueNum{"HCCL_RDMA_QPS_PER_CONNECTION", u32(1), Str2T<u32>, CHK_RANGE_CLOSED<u32>(1, 32)};
     CfgField<u32> multiQpThreshold{
         "HCCL_MULTI_QP_THRESHOLD", u32(512 * 1024), Str2T<u32>, CHK_RANGE_CLOSED<u32>(1, 8192), ConvertUnitQpThreshold};

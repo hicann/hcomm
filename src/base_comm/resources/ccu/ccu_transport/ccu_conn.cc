@@ -21,6 +21,7 @@
 
 #include "rdma_handle_manager.h"
 #include "orion_adapter_hccp.h"
+#include "hcomm_res_mgr.h"
 #include "env_config/env_config_v2.h"
 
 namespace hcomm {
@@ -134,12 +135,19 @@ HcclResult CcuConnection::StatusMachine()
 HcclResult CcuConnection::GetTaTimeOut()
 {
     if (tpProtocol_ == TpProtocol::CTP) {
-        errTimeout_ = static_cast<uint8_t>(Hccl::EnvConfig::GetInstance().GetRdmaConfig().GetUbTimeOut());
+        uint32_t taTimeOutValue = 0;
+        CHK_RET(hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().GetTaCtpUbTimeOut(taTimeOutValue));
+        errTimeout_ = static_cast<uint8_t>(taTimeOutValue);
         HCCL_INFO("[CcuConnection][%s] CTP, env errTimeout[%u].", __func__, errTimeout_);
         return HcclResult::HCCL_SUCCESS;
     }
 
-    errTimeout_ = TpMgr::CalcTaTimeout(tpAttrInfo_);
+    uint32_t taTimeOutValue = 0;
+    CHK_RET(hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().GetTaRtpUbTimeOut(taTimeOutValue));
+    uint8_t envTaTimeOut = static_cast<uint8_t>(taTimeOutValue);
+    uint32_t tpTimeOutMs = 0;
+    (void)TpMgr::GetTpTotalTimeout(tpAttrInfo_, tpTimeOutMs);
+    errTimeout_ = TpMgr::CalcTaTimeout(tpProtocol_, envTaTimeOut, tpTimeOutMs);
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -172,7 +180,7 @@ HcclResult CcuConnection::UpdateInitStatus()
             }
             CHK_RET(ret);
 
-            GetTaTimeOut();
+            CHK_RET(GetTaTimeOut());
             innerStatus_ = InnerStatus::JETTY_CREATING;
             return HcclResult::HCCL_SUCCESS;
         }
@@ -265,7 +273,9 @@ HcclResult CcuConnection::GetTpAttr()
         return HcclResult::HCCL_SUCCESS;
     }
 
-    constexpr uint32_t TP_ATTR_BITMAP = 0;
+    constexpr uint32_t kTpAttrRetryTimesInitBit = 0U;
+    constexpr uint32_t kTpAttrAtBit = 1U;
+    constexpr uint32_t TP_ATTR_BITMAP = (1U << kTpAttrRetryTimesInitBit) | (1U << kTpAttrAtBit);
     HcclResult ret
         = TpMgr::GetInstance(devPhyId_).GetTpAttr({tpInfo_.tpHandle, TP_ATTR_BITMAP}, tpAttrInfo_, ctxHandle_);
     if (ret == HcclResult::HCCL_E_AGAIN) {

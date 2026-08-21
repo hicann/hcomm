@@ -34,7 +34,7 @@ constexpr uint8_t TA_HW_GEAR2_BASE = 16;
 constexpr uint8_t TA_HW_GEAR3_BASE = 24;
 
 static constexpr uint32_t TA_TIMEOUT_MS_GEAR0 = 512;
-static constexpr uint32_t TA_TIMEOUT_MS_GEAR1 = 1000;
+static constexpr uint32_t TA_TIMEOUT_MS_GEAR1 = 4000;
 static constexpr uint32_t TA_TIMEOUT_MS_GEAR2 = 8000;
 static constexpr uint32_t TA_TIMEOUT_MS_GEAR3 = 32000;
 
@@ -93,9 +93,16 @@ public:
     HcclResult ReleaseTpAttr(const TpHandle tpHandle, const TpAttrInfo& tpAttrInfo);
 
     static HcclResult GetTpTotalTimeout(const TpAttrInfo& tpAttrInfo, uint32_t& tpTimeOutMs);
-    static uint8_t CalcTaTimeout(const TpAttrInfo& tpAttrInfo);
     static uint32_t TaHwValueToMs(uint8_t hwValue);
     static uint8_t FindMinTaHwValue(uint32_t tpTotalTimeoutMs);
+
+    /// 哨兵值：调用方未传入 TA 超时值，CalcTaTimeout 将回退到协议默认值
+    static constexpr uint8_t TA_TIMEOUT_NOT_SET = 0xFFU;
+
+    /// 计算 Jetty 异步创建超时挡位（hw_value, 0-31）
+    /// 入参 taTimeOut 由调用方按协议从环境变量获取后传入；TA_TIMEOUT_NOT_SET 表示未传入，使用协议默认值
+    /// 入参 tpTimeOutMs 由 GetTpTotalTimeout 计算得到，用于环境变量时间 < TP 总超时时的自动升挡
+    static uint8_t CalcTaTimeout(TpProtocol tpProtocol, uint8_t taTimeOut, uint32_t tpTimeOutMs);
 
 private:
     bool initFlag{false};

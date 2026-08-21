@@ -412,7 +412,7 @@ AicpuResPackageHelper::GetPackedData(std::vector<Hccl::ModuleData, std::allocato
 DevUbConnection::DevUbConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr,
-    const u8 qos, CommEngine engine, u32 inSqDepth, JettyMode jettyMode)
+    const u8 qos, const u8 taTimeOut, CommEngine engine, u32 inSqDepth, JettyMode jettyMode)
     : RmaConnection(nullptr, RmaConnType::UB),
       rdmaHandle(rdmaHandle),
       locAddr(locAddr),
@@ -425,6 +425,7 @@ DevUbConnection::DevUbConnection(
       rmtEid(rmtAddr.GetReverseEid()),
       locEid(locAddr.GetReverseEid()),
       qos_(qos),
+      taTimeOut_(taTimeOut),
       sqDepth(inSqDepth),
       jettyMode_(jettyMode)
 {
@@ -439,10 +440,10 @@ DevUbConnection::DevUbConnection(
 DevUbTpConnection::DevUbTpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr,
-    const u8 qos, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
+    const u8 qos, const u8 taTimeOut, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
     : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth,
-          jettyMode)
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, taTimeOut, engine,
+          sqDepth, jettyMode)
 {
     tpProtocol = TpProtocol::TP;
 }
@@ -450,10 +451,10 @@ DevUbTpConnection::DevUbTpConnection(
 DevUbCtpConnection::DevUbCtpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr,
-    const u8 qos, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
+    const u8 qos, const u8 taTimeOut, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
     : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine, sqDepth,
-          jettyMode)
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, taTimeOut, engine,
+          sqDepth, jettyMode)
 {
     tpProtocol = TpProtocol::CTP;
 }
@@ -461,10 +462,10 @@ DevUbCtpConnection::DevUbCtpConnection(
 DevUbUboeConnection::DevUbUboeConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locIpv4Addr, const IpAddress& rmtIpv4Addr,
-    const u8 qos, CommEngine engine, JettyMode jettyMode)
+    const u8 qos, const u8 taTimeOut, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
     : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, engine,
-          UB_SQ_DEPTH_NOT_SET, jettyMode)
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locIpv4Addr, rmtIpv4Addr, qos, taTimeOut, engine,
+          sqDepth, jettyMode)
 {
     tpProtocol = TpProtocol::UBOE;
 }
@@ -472,10 +473,10 @@ DevUbUboeConnection::DevUbUboeConnection(
 DevUbRtpConnection::DevUbRtpConnection(
     const RdmaHandle rdmaHandle, const IpAddress& locAddr, const IpAddress& rmtAddr, const OpMode opMode,
     const bool devUsed, const HrtUbJfcMode jfcMode, const IpAddress& locAddrEid, const IpAddress& rmtAddrEid,
-    const u8 qos, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
+    const u8 qos, const u8 taTimeOut, CommEngine engine, u32 sqDepth, JettyMode jettyMode)
     : DevUbConnection(
-          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, engine, sqDepth,
-          jettyMode)
+          rdmaHandle, locAddr, rmtAddr, opMode, devUsed, jfcMode, locAddrEid, rmtAddrEid, qos, taTimeOut, engine,
+          sqDepth, jettyMode)
 {
     tpProtocol = TpProtocol::UB_RTP;
 }
@@ -2018,6 +2019,54 @@ HcclResult TpManager::ReleaseTpInfo(const RaUbGetTpInfoParam& param, const TpInf
     (void)param;
     (void)tpInfo;
     return HcclResult::HCCL_SUCCESS;
+}
+
+HcclResult TpManager::GetTpTotalTimeout(const TpAttrInfo& tpAttrInfo, uint32_t& tpTimeOutMs)
+{
+    (void)tpAttrInfo;
+    tpTimeOutMs = 0;
+    return HcclResult::HCCL_SUCCESS;
+}
+
+uint32_t TpManager::TaHwValueToMs(uint8_t hwValue)
+{
+    uint8_t gear = hwValue / 8;
+    switch (gear) {
+        case 0:
+            return 512;
+        case 1:
+            return 4000;
+        case 2:
+            return 8000;
+        case 3:
+            return 32000;
+        default:
+            return 8000;
+    }
+}
+
+uint8_t TpManager::FindMinTaHwValue(uint32_t tpTotalTimeoutMs)
+{
+    if (tpTotalTimeoutMs < 512)
+        return 0;
+    if (tpTotalTimeoutMs < 4000)
+        return 8;
+    if (tpTotalTimeoutMs < 8000)
+        return 16;
+    return 24;
+}
+
+uint8_t TpManager::CalcTaTimeout(TpProtocol tpProtocol, uint8_t taTimeOut, uint32_t tpTimeOutMs)
+{
+    uint8_t envValue = (taTimeOut != TA_TIMEOUT_NOT_SET) ? taTimeOut : ((tpProtocol == TpProtocol::CTP) ? 8 : 16);
+    if (tpProtocol == TpProtocol::CTP) {
+        return envValue;
+    }
+    uint32_t envTimeOutMs = TaHwValueToMs(envValue);
+    if (envTimeOutMs <= tpTimeOutMs) {
+        return FindMinTaHwValue(tpTimeOutMs);
+    }
+    return envValue;
 }
 
 void ReleaseUbConnectionTp(

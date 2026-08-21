@@ -181,7 +181,9 @@ TEST_F(CcuConnTest, Ut_GetTaTimeOut_RTP_UsesCalcTaTimeout)
     connection->tpAttrInfo_.tpAttr.at = 2;
     connection->tpAttrInfo_.tpAttr.retryTimesInit = 1;
 
-    MOCKER_CPP(&hcomm::TpMgr::CalcTaTimeout).stubs().will(returnValue(static_cast<uint8_t>(24)));
+    MOCKER_CPP(static_cast<uint8_t (*)(hcomm::TpProtocol, uint8_t, uint32_t)>(&hcomm::TpMgr::CalcTaTimeout))
+        .stubs()
+        .will(returnValue(static_cast<uint8_t>(24)));
 
     HcclResult ret = connection->GetTaTimeOut();
     EXPECT_EQ(ret, HcclResult::HCCL_SUCCESS);
@@ -202,7 +204,9 @@ TEST_F(CcuConnTest, Ut_UpdateInitStatus_TP_ATTR_GETTING_State_Transitions)
     connection->tpAttrInfo_.tpAttr.at = 2;
 
     MOCKER_CPP(&hcomm::TpMgr::GetTpAttr).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER_CPP(&hcomm::TpMgr::CalcTaTimeout).stubs().will(returnValue(static_cast<uint8_t>(16)));
+    MOCKER_CPP(static_cast<uint8_t (*)(hcomm::TpProtocol, uint8_t, uint32_t)>(&hcomm::TpMgr::CalcTaTimeout))
+        .stubs()
+        .will(returnValue(static_cast<uint8_t>(16)));
     MOCKER_CPP(&hcomm::CcuJetty::CreateJetty).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
 
     HcclResult ret = connection->UpdateInitStatus();
@@ -294,7 +298,9 @@ TEST_F(CcuConnTest, Ut_UpdateInitStatus_WithMappedPriority_SetsJettyQos)
 
     MOCKER_CPP(&hcomm::TpMgr::GetTpInfo).stubs().will(invoke(StubTpMgrGetTpInfoWithMappedPriority));
     MOCKER_CPP(&hcomm::TpMgr::GetTpAttr).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER_CPP(&hcomm::TpMgr::CalcTaTimeout).stubs().will(returnValue(static_cast<uint8_t>(16)));
+    MOCKER_CPP(static_cast<uint8_t (*)(hcomm::TpProtocol, uint8_t, uint32_t)>(&hcomm::TpMgr::CalcTaTimeout))
+        .stubs()
+        .will(returnValue(static_cast<uint8_t>(16)));
     MOCKER_CPP(&hcomm::CcuJetty::CreateJetty).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
 
     HcclResult ret = connection->UpdateInitStatus();

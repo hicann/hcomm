@@ -234,6 +234,7 @@ hcomm
 ├── src                                  # 源码目录
 │   ├── base_comm                        # 基础通信层
 │   │   ├── common                       # 基础通信层公共基础功能目录
+│   │   ├── config_mgr                   # 环境变量配置管理
 │   │   ├── primitives                   # 基础通信原语
 │   │   └── resource                     # 基础通信资源
 │   ├── coll_communicator_mgr            # 集合通信域管理

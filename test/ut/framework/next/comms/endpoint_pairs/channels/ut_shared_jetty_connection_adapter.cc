@@ -17,6 +17,7 @@
 #include "shared_jetty_connection_adapter.h"
 #include "endpoint.h"
 #include "dev_ub_connection.h"
+#include "ut_shared_jetty_test_helper.h"
 #undef private
 #undef protected
 
@@ -60,16 +61,6 @@ private:
         return desc;
     }
 };
-
-std::unique_ptr<DevUbConnection>
-MakeTestConnection(DevUbConnection::JettyMode jettyMode = DevUbConnection::JettyMode::SELF_CREATE)
-{
-    IpAddress locIp("1.0.0.1");
-    IpAddress rmtIp("2.0.0.2");
-    return std::make_unique<DevUbConnection>(
-        nullptr, locIp, rmtIp, OpMode::OPBASE, false, HrtUbJfcMode::STARS_POLL, IpAddress(), IpAddress(),
-        static_cast<u8>(UB_QOS_DEFAULT), COMM_ENGINE_RESERVED, Hccl::UB_SQ_DEPTH_NOT_SET, jettyMode);
-}
 
 Endpoint::SharedJettyCtx MakeTestCtx()
 {
@@ -126,7 +117,7 @@ TEST_F(SharedJettyConnAdaptTest, Ut_Inject_When_NullConnection_Expect_HCCL_E_PAR
 
 TEST_F(SharedJettyConnAdaptTest, Ut_Inject_When_NullEndpointTag_Expect_HCCL_E_PARA)
 {
-    auto conn = MakeTestConnection();
+    auto conn = MakeTestJettyConnection();
     Endpoint::SharedJettyCtx ctx = MakeTestCtx();
     auto releaseCb = [](void*) {};
     EXPECT_EQ(SetSharedJettyFieldsToConn(conn.get(), ctx, nullptr, releaseCb), HCCL_E_PARA);
@@ -134,7 +125,7 @@ TEST_F(SharedJettyConnAdaptTest, Ut_Inject_When_NullEndpointTag_Expect_HCCL_E_PA
 
 TEST_F(SharedJettyConnAdaptTest, Ut_Inject_When_Normal_Expect_Success)
 {
-    auto conn = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    auto conn = MakeTestJettyConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
     StubEndpointForAdapt endpoint;
     Endpoint::SharedJettyCtx ctx = MakeTestCtx();
     auto releaseCb = [](void*) {};
@@ -154,7 +145,7 @@ TEST_F(SharedJettyConnAdaptTest, Ut_Inject_When_Normal_Expect_Success)
 
 TEST_F(SharedJettyConnAdaptTest, Ut_Inject_When_ZeroKeySize_Expect_Success)
 {
-    auto conn = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    auto conn = MakeTestJettyConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
     StubEndpointForAdapt endpoint;
     Endpoint::SharedJettyCtx ctx = MakeTestCtx();
     ctx.keySize = 0;
@@ -170,7 +161,7 @@ TEST_F(SharedJettyConnAdaptTest, Ut_ExtractInfo_When_NullConnection_Expect_HCCL_
 
 TEST_F(SharedJettyConnAdaptTest, Ut_ExtractInfo_When_Normal_Expect_Success)
 {
-    auto conn = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    auto conn = MakeTestJettyConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
     StubEndpointForAdapt endpoint;
     Endpoint::SharedJettyCtx injectCtx = MakeTestCtx();
     auto releaseCb = [](void*) {};
@@ -198,7 +189,7 @@ TEST_F(SharedJettyConnAdaptTest, Ut_ExtractInfo_When_Normal_Expect_Success)
 
 TEST_F(SharedJettyConnAdaptTest, Ut_ExtractInfo_When_EmptyConnection_Expect_DefaultSqDepth)
 {
-    auto conn = MakeTestConnection();
+    auto conn = MakeTestJettyConnection();
     Endpoint::SharedJettyCtx ctx;
     EXPECT_EQ(ExtractJettyInfoFromConn(conn.get(), ctx), HCCL_SUCCESS);
     EXPECT_EQ(ctx.handle, static_cast<JettyHandle>(0));
@@ -215,7 +206,7 @@ TEST_F(SharedJettyConnAdaptTest, Ut_TransferOwnership_When_NullConnection_Expect
 
 TEST_F(SharedJettyConnAdaptTest, Ut_TransferOwnership_When_Normal_Expect_Success)
 {
-    auto conn = MakeTestConnection();
+    auto conn = MakeTestJettyConnection();
     EXPECT_FALSE(conn->jettyDetached_);
     EXPECT_EQ(DetachConnJetty(conn.get()), HCCL_SUCCESS);
     EXPECT_TRUE(conn->jettyDetached_);
@@ -223,7 +214,7 @@ TEST_F(SharedJettyConnAdaptTest, Ut_TransferOwnership_When_Normal_Expect_Success
 
 TEST_F(SharedJettyConnAdaptTest, Ut_RoundTrip_InjectExtractTransfer_Expect_Consistent)
 {
-    auto conn = MakeTestConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
+    auto conn = MakeTestJettyConnection(DevUbConnection::JettyMode::EXTERNAL_INJECT);
     StubEndpointForAdapt endpoint;
     Endpoint::SharedJettyCtx injectCtx = MakeTestCtx();
     auto releaseCb = [](void*) {};

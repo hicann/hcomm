@@ -483,7 +483,9 @@ HcclResult CcuComponent::CreateAndImportLoopJettys(
 
     const auto& tpInfo = GetTpInfo(ipAddr);
     const auto tpAttrInfo = GetLoopTpAttr(ipAddr, tpInfo.tpHandle);
-    const uint8_t errTimeout = TpManager::CalcTaTimeout(tpAttrInfo);
+    uint32_t tpTimeOutMs = 0;
+    (void)TpManager::GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs);
+    const auto errTimeout = TpManager::CalcTaTimeout(LOOP_JETTY_PROTOCOL, TpManager::TA_TIMEOUT_NOT_SET, tpTimeOutMs);
 
     auto& createdVec = createdOutParamMap[dieId];
     auto& importedVec = importedOutParamMap[dieId];
@@ -576,7 +578,9 @@ TpAttrInfo CcuComponent::GetLoopTpAttr(const IpAddress& ipAddr, const TpHandle t
     auto& rdmaHandleMgr = RdmaHandleManager::GetInstance();
     const auto rdmaHandle = rdmaHandleMgr.GetByIp(devPhyId, ipAddr);
 
-    constexpr uint32_t TP_ATTR_BITMAP = 0;
+    constexpr uint32_t kTpAttrRetryTimesInitBit = 0U;
+    constexpr uint32_t kTpAttrAtBit = 1U;
+    constexpr uint32_t TP_ATTR_BITMAP = (1U << kTpAttrRetryTimesInitBit) | (1U << kTpAttrAtBit);
     const GetTpAttrParam tpAttrParam = {tpHandle, TP_ATTR_BITMAP};
 
     TpAttrInfo tpAttrInfo{};

@@ -11,18 +11,48 @@
 #ifndef HCOMM_RES_MGR_H
 #define HCOMM_RES_MGR_H
 
+#include <array>
 #include <cstdint>
 #include <mutex>
 #include "acl/acl_rt.h"
 #include "hcomm_res_defs.h"
+#include "config_mgr/config_mgr.h"
 #include "hccl_common.h"
 
 namespace hcomm {
 
+/**
+ * @brief 单设备资源管理基类。
+ *
+ * 每个设备对应一个实例，持有 devPhyId，负责触发该设备下各子模块单例创建。
+ */
+class HcommBaseResMgr {
+public:
+    HcommBaseResMgr() = default;
+    explicit HcommBaseResMgr(uint32_t devPhyId) : devPhyId_(devPhyId) {}
+    ~HcommBaseResMgr() = default;
+
+    void Init();
+    void SetDevPhyId(uint32_t devPhyId) { devPhyId_ = devPhyId; }
+    uint32_t GetDevPhyId() const { return devPhyId_; }
+
+private:
+    uint32_t devPhyId_{0};
+};
+
+/**
+ * @brief 全局资源管理类，聚合各设备实例和环境变量配置。
+ *
+ * 持有 HcommBaseResMgr[MAX_MODULE_DEVICE_NUM + 1] 和 ConfigMgr，
+ * 通过 GetInstance() 获取单例，GetDeviceResMgr() 访问指定设备，GetConfigMgr() 访问环境变量配置。
+ */
 class HcommResMgr {
 public:
-    static HcommResMgr& GetInstance(const uint32_t devicePhyId);
+    static HcommResMgr& GetInstance();
     static void RegisterDeviceResetCallback();
+
+    HcommBaseResMgr& GetDeviceResMgr(uint32_t devicePhyId);
+    ConfigMgr& GetConfigMgr();
 
     // 进程级 kernel bin 句柄管理（不分 device，与 per-device 实例隔离）
     static HcclResult EnsureKernelBinLoaded(CommEngine engine);
@@ -30,11 +60,15 @@ public:
 
 private:
     HcommResMgr();
-    ~HcommResMgr();
+    ~HcommResMgr() = default;
     HcommResMgr(const HcommResMgr& that) = delete;
     HcommResMgr& operator=(const HcommResMgr& that) = delete;
 
-    uint32_t devPhyId_{0};
+    void InitDevice(uint32_t devPhyId);
+
+    std::array<bool, MAX_MODULE_DEVICE_NUM + 1> isInitialized_{false};
+    HcommBaseResMgr deviceResMgrs_[MAX_MODULE_DEVICE_NUM + 1];
+    ConfigMgr configMgr_;
 
     static aclrtBinHandle binHandle_;
     static std::mutex binHandleMtx_;

@@ -13,6 +13,7 @@
 #include "orion_adpt_utils.h"
 #include "hcomm_c_adpt.h"
 #include "config_log.h"
+#include "hcomm_res_mgr.h"
 #include "endpoint.h"
 
 // Orion
@@ -99,20 +100,29 @@ HcclResult AicpuTsUrmaChannel::BuildConnection()
 
     Hccl::OpMode opMode = Hccl::OpMode::OPBASE;
     bool devUsed = true; // aicpu 为 true
+    // UB_CTP → HCOMM_TA_CTP_UB_TIMEOUT，UB_TP → HCOMM_TA_RTP_UB_TIMEOUT
+    u8 taTimeOut = 0;
+    uint32_t taTimeOutValue = 0;
+    if (ctx.protocol == Hccl::LinkProtocol::UB_CTP) {
+        CHK_RET(hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().GetTaCtpUbTimeOut(taTimeOutValue));
+    } else {
+        CHK_RET(hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().GetTaRtpUbTimeOut(taTimeOutValue));
+    }
+    taTimeOut = static_cast<u8>(taTimeOutValue);
     std::unique_ptr<Hccl::DevUbConnection> ubConn = nullptr;
     switch (ctx.protocol) {
         case Hccl::LinkProtocol::UB_TP:
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbTpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, Hccl::HrtUbJfcMode::STARS_POLL,
-                    Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AICPU_TS, ctx.sqDepth),
+                    Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre, taTimeOut, COMM_ENGINE_AICPU_TS, ctx.sqDepth),
                 return HCCL_E_PTR);
             break;
         case Hccl::LinkProtocol::UB_CTP:
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbCtpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, Hccl::HrtUbJfcMode::STARS_POLL,
-                    Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AICPU_TS, ctx.sqDepth),
+                    Hccl::IpAddress(), Hccl::IpAddress(), ctx.qosPre, taTimeOut, COMM_ENGINE_AICPU_TS, ctx.sqDepth),
                 return HCCL_E_PTR);
             break;
         default:

@@ -112,12 +112,8 @@ TEST_F(DevUbConnectionTest, rma_ub_connection_get_rma_conn_lite)
     BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
     LinkData linkData(portType, 0, 1, 0, 1);
 
-    char targetChipVer[CHIP_VERSION_MAX_LEN] = "Ascend910B1";
-
-    MOCKER(HrtGetSocVer)
-        .stubs()
-        .with(outBoundP(&targetChipVer[0], sizeof(targetChipVer)))
-        .will(returnValue(RT_ERROR_NONE));
+    const char* fakeSocName = "Ascend910B1";
+    MOCKER(aclrtGetSocName).stubs().will(returnValue(fakeSocName));
 
     // When
     DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
@@ -941,7 +937,8 @@ TEST_F(DevUbConnectionTest, Ut_CreateJetty_When_CorrectParams_ReturnIsOk)
     MOCKER(RaUbCreateJettyAsync).stubs().will(invoke(RaUbCreateJettyAsync_stub));
     DevUbCtpConnection devUbCtpConn(
         rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE, false, HrtUbJfcMode::STARS_POLL,
-        IpAddress(), IpAddress(), static_cast<u8>(UB_QOS_DEFAULT), COMM_ENGINE_RESERVED, expectJettySqDepth);
+        IpAddress(), IpAddress(), static_cast<u8>(UB_QOS_DEFAULT), TpManager::TA_TIMEOUT_NOT_SET, COMM_ENGINE_RESERVED,
+        expectJettySqDepth);
 
     // Then
     devUbCtpConn.CreateJetty(false);
@@ -1005,7 +1002,7 @@ TEST_F(DevUbConnectionTest, Ut_UbRtpConnection_Constructor_SetsTpProtocolAndQos)
 
     DevUbRtpConnection ubRtpConn(
         rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE, true, HrtUbJfcMode::STARS_POLL,
-        locIpv4Addr, rmtIpv4Addr, qos, COMM_ENGINE_RESERVED, expectedSqDepth);
+        locIpv4Addr, rmtIpv4Addr, qos, TpManager::TA_TIMEOUT_NOT_SET, COMM_ENGINE_RESERVED, expectedSqDepth);
 
     EXPECT_EQ(ubRtpConn.tpProtocol, TpProtocol::UB_RTP);
     EXPECT_EQ(ubRtpConn.jettyTimeOut, 16);
@@ -1095,7 +1092,7 @@ TEST_F(DevUbConnectionTest, Ut_AivEngine_Constructor_CreatesAivUrmaJfc)
 
     DevUbConnection devUbConnection(
         rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE, false, HrtUbJfcMode::STARS_POLL,
-        IpAddress(), IpAddress(), static_cast<u8>(UB_QOS_DEFAULT), COMM_ENGINE_AIV);
+        IpAddress(), IpAddress(), static_cast<u8>(UB_QOS_DEFAULT), TpManager::TA_TIMEOUT_NOT_SET, COMM_ENGINE_AIV);
 
     EXPECT_EQ(devUbConnection.engine_, COMM_ENGINE_AIV);
     EXPECT_EQ(devUbConnection.jfcHandle, static_cast<JfcHandle>(0x0));

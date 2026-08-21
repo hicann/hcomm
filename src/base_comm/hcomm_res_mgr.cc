@@ -76,10 +76,51 @@ HcclResult HcommResMgr::EnsureKernelBinLoaded(CommEngine engine)
 
 aclrtBinHandle HcommResMgr::GetBinHandle() { return binHandle_; }
 
-HcommResMgr& HcommResMgr::GetInstance(const uint32_t devicePhyId)
-{
-    static std::array<bool, MAX_MODULE_DEVICE_NUM + 1> isInitialized{false};
+// HcommBaseResMgr
 
+void HcommBaseResMgr::Init()
+{
+    // 临时方案：只声明单例对象做生命周期控制，不执行业务动作
+    // 未来需要将各种单例转为该数据结构的成员变量
+    // devicePhyId 目前不影响流程，只是触发静态对象声明
+    DpuNotifyManager::GetInstance();
+    Hccl::HccpHdcManager::GetInstance();
+    Hccl::HccpPeerManager::GetInstance();
+    Hccl::HccpTlvHdcManager::GetInstance();
+    Hccl::RdmaHandleManager::GetInstance();
+    Hccl::InnerNetDevManager::GetInstance();
+    Hccl::SocketHandleManager::GetInstance();
+    Hccl::HostSocketHandleManager::GetInstance();
+    SocketMgr::GetInstance(devPhyId_);
+    Hccl::TpManager::GetInstance(devPhyId_);
+    (void)EndpointMonitor::GetHolder(devPhyId_);
+
+    Hccl::CcuComponent::GetInstance(devPhyId_);
+    Hccl::CcuResBatchAllocator::GetInstance(devPhyId_);
+    Hccl::CtxMgrImp::GetInstance(devPhyId_);
+
+    // 开源开放架构下CCU模式新增类型单例，当前混跑时不使用
+    HccpTlvHdcMgr::GetInstance(devPhyId_);
+    TpMgr::GetInstance(devPhyId_);
+    CcuComponent::GetInstance(devPhyId_);
+    CcuResBatchAllocator::GetInstance(devPhyId_);
+    CcuKernelMgr::GetInstance(devPhyId_);
+    CcuInstanceMgr::GetInstance(devPhyId_);
+    SocketProcess::GetInstance(devPhyId_);
+}
+
+// HcommResMgr
+
+HcommResMgr::HcommResMgr() = default;
+
+HcommResMgr& HcommResMgr::GetInstance()
+{
+    static HcommResMgr instance;
+    return instance;
+}
+
+void HcommResMgr::InitDevice(uint32_t devicePhyId)
+{
     uint32_t devPhyId = devicePhyId;
     if (devPhyId >= MAX_MODULE_DEVICE_NUM) {
         HCCL_WARNING(
@@ -88,54 +129,24 @@ HcommResMgr& HcommResMgr::GetInstance(const uint32_t devicePhyId)
             __func__, devPhyId, MAX_MODULE_DEVICE_NUM);
         devPhyId = MAX_MODULE_DEVICE_NUM; // 使用备份设备
     }
-    if (!isInitialized[devPhyId]) {
-        // 临时方案：只声明单例对象做生命周期控制，不执行业务动作
-        // 未来需要将各种单例转为该数据结构的成员变量
-        // devicePhyId 目前不影响流程，只是触发静态对象声明
-        DpuNotifyManager::GetInstance();
-        Hccl::HccpHdcManager::GetInstance();
-        Hccl::HccpPeerManager::GetInstance();
-        Hccl::HccpTlvHdcManager::GetInstance();
-        Hccl::RdmaHandleManager::GetInstance();
-        Hccl::InnerNetDevManager::GetInstance();
-        Hccl::SocketHandleManager::GetInstance();
-        Hccl::HostSocketHandleManager::GetInstance();
-        SocketMgr::GetInstance(devicePhyId);
-        Hccl::TpManager::GetInstance(devicePhyId);
-        (void)EndpointMonitor::GetHolder(devicePhyId);
-
-        Hccl::CcuComponent::GetInstance(devicePhyId);
-        Hccl::CcuResBatchAllocator::GetInstance(devicePhyId);
-        Hccl::CtxMgrImp::GetInstance(devicePhyId);
-
-        // 开源开放架构下CCU模式新增类型单例，当前混跑时不使用
-        HccpTlvHdcMgr::GetInstance(devicePhyId);
-        TpMgr::GetInstance(devicePhyId);
-        CcuComponent::GetInstance(devicePhyId);
-        CcuResBatchAllocator::GetInstance(devicePhyId);
-        CcuKernelMgr::GetInstance(devicePhyId);
-        CcuInstanceMgr::GetInstance(devicePhyId);
-        SocketProcess::GetInstance(devicePhyId);
+    if (!isInitialized_[devPhyId]) {
+        deviceResMgrs_[devPhyId].SetDevPhyId(devPhyId);
+        deviceResMgrs_[devPhyId].Init();
+        isInitialized_[devPhyId] = true;
     }
-
-    static HcommResMgr hcommResMgrs[MAX_MODULE_DEVICE_NUM + 1];
-    hcommResMgrs[devPhyId].devPhyId_ = devPhyId;
-    isInitialized[devPhyId] = true;
-
-    return hcommResMgrs[devPhyId];
 }
 
-HcommResMgr::HcommResMgr()
+HcommBaseResMgr& HcommResMgr::GetDeviceResMgr(uint32_t devicePhyId)
 {
-    // 临时方案：最小化修改不做处理
-    // 未来需在构造函数中触发各类成员变量声明
+    InitDevice(devicePhyId);
+    uint32_t devPhyId = devicePhyId;
+    if (devPhyId >= MAX_MODULE_DEVICE_NUM) {
+        devPhyId = MAX_MODULE_DEVICE_NUM;
+    }
+    return deviceResMgrs_[devPhyId];
 }
 
-HcommResMgr::~HcommResMgr()
-{
-    // 临时方案：最小化修改不做处理
-    // 未来需在析构函数中主动调用各种单例销毁流程，保证销毁时序
-}
+ConfigMgr& HcommResMgr::GetConfigMgr() { return configMgr_; }
 
 static void OnDeviceResetPre(int32_t deviceId, aclrtDeviceState state, [[maybe_unused]] void* args)
 {

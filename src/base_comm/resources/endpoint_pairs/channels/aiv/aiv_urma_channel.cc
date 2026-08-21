@@ -15,6 +15,7 @@
 #include "shared_jetty_channel_helper.h"
 
 #include "hcomm_c_adpt.h"
+#include "hcomm_res_mgr.h"
 
 // Orion
 #include "topo_common_types.h"
@@ -409,26 +410,35 @@ HcclResult AivUrmaChannel::CreateUbConnectionByProtocol(
     Hccl::OpMode opMode = Hccl::OpMode::OPBASE;
     bool devUsed = true;
     Hccl::HrtUbJfcMode jfcMode = Hccl::HrtUbJfcMode::USER_CTL;
+    // UB_CTP → HCOMM_TA_CTP_UB_TIMEOUT，UB_TP → HCOMM_TA_RTP_UB_TIMEOUT
+    u8 taTimeOut = 0;
+    uint32_t taTimeOutValue = 0;
+    if (ctx.protocol == Hccl::LinkProtocol::UB_CTP) {
+        CHK_RET(hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().GetTaCtpUbTimeOut(taTimeOutValue));
+    } else {
+        CHK_RET(hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().GetTaRtpUbTimeOut(taTimeOutValue));
+    }
+    taTimeOut = static_cast<u8>(taTimeOutValue);
     switch (ctx.protocol) {
         case Hccl::LinkProtocol::UB_TP:
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbTpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, Hccl::IpAddress(),
-                    Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AIV, ctx.sqDepth, jettyMode),
+                    Hccl::IpAddress(), ctx.qosPre, taTimeOut, COMM_ENGINE_AIV, ctx.sqDepth, jettyMode),
                 return HCCL_E_PTR);
             break;
         case Hccl::LinkProtocol::UB_CTP:
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbCtpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, Hccl::IpAddress(),
-                    Hccl::IpAddress(), ctx.qosPre, COMM_ENGINE_AIV, ctx.sqDepth, jettyMode),
+                    Hccl::IpAddress(), ctx.qosPre, taTimeOut, COMM_ENGINE_AIV, ctx.sqDepth, jettyMode),
                 return HCCL_E_PTR);
             break;
         case Hccl::LinkProtocol::UB_RTP:
             EXCEPTION_CATCH(
                 ubConn = std::make_unique<Hccl::DevUbRtpConnection>(
                     rdmaHandle_, ctx.locAddr, ctx.rmtAddr, opMode, devUsed, jfcMode, ctx.locAddr, ctx.rmtAddr,
-                    ctx.qosPre, COMM_ENGINE_AIV, ctx.sqDepth, jettyMode),
+                    ctx.qosPre, taTimeOut, COMM_ENGINE_AIV, ctx.sqDepth, jettyMode),
                 return HCCL_E_PTR);
             break;
         default:
@@ -443,50 +453,19 @@ AivUrmaChannel::AcquireSharedJettyInBuildConnection(const UbConnBuildContext& ct
 {
     // 共享 jetty 模式：复用同 Endpoint 下已创建的 jetty
     Endpoint* endpoint = reinterpret_cast<Endpoint*>(endpointHandle_);
+    // UB_CTP → HCOMM_TA_CTP_UB_TIMEOUT，UB_TP → HCOMM_TA_RTP_UB_TIMEOUT
+    u8 taTimeOut = 0;
+    uint32_t taTimeOutValue = 0;
+    if (ctx.protocol == Hccl::LinkProtocol::UB_CTP) {
+        CHK_RET(hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().GetTaCtpUbTimeOut(taTimeOutValue));
+    } else {
+        CHK_RET(hcomm::HcommResMgr::GetInstance().GetConfigMgr().GetRdmaConfig().GetTaRtpUbTimeOut(taTimeOutValue));
+    }
+    taTimeOut = static_cast<u8>(taTimeOutValue);
     auto tempFactory = [rdmaHandle = rdmaHandle_, &ctxLoc = ctx.locAddr, &ctxRmt = ctx.rmtAddr, qosPre = ctx.qosPre,
-                        protocol = ctx.protocol, sqDepth = ctx.sqDepth]() -> std::unique_ptr<Hccl::DevUbConnection> {
-        // 与主 switch 保持对称的协议判断，避免 UB_RTP/未知协议误降级为 CTP
-        switch (protocol) {
-            case Hccl::LinkProtocol::UB_TP:
-                // 与主路径 CreateUbConnectionByProtocol 一致：构造可能抛异常，捕获后返回 nullptr，
-                // 使 ProvideSharedJettyCtx 经 CHK_SMART_PTR_NULL 返回错误码，避免异常逃逸出
-                // JettyContext::Acquire 导致 creating 标记残留、其他等待线程超时死锁。
-                {
-                    std::unique_ptr<Hccl::DevUbConnection> conn;
-                    EXCEPTION_CATCH(
-                        conn = std::make_unique<Hccl::DevUbTpConnection>(
-                            rdmaHandle, ctxLoc, ctxRmt, Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL,
-                            Hccl::IpAddress(), Hccl::IpAddress(), qosPre, COMM_ENGINE_AIV, sqDepth),
-                        return nullptr);
-                    return conn;
-                }
-            case Hccl::LinkProtocol::UB_CTP: {
-                std::unique_ptr<Hccl::DevUbConnection> conn;
-                EXCEPTION_CATCH(
-                    conn = std::make_unique<Hccl::DevUbCtpConnection>(
-                        rdmaHandle, ctxLoc, ctxRmt, Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL,
-                        Hccl::IpAddress(), Hccl::IpAddress(), qosPre, COMM_ENGINE_AIV, sqDepth),
-                    return nullptr);
-                return conn;
-            }
-            case Hccl::LinkProtocol::UB_RTP:
-                // 与主路径 CreateUbConnectionByProtocol 保持对称；当前共享 jetty 限制 UB_CTP/UBC_TP
-                // 不会到达此分支，若放开 IsSharedQueueUbProtocol 限制须三者联动
-                {
-                    std::unique_ptr<Hccl::DevUbConnection> conn;
-                    EXCEPTION_CATCH(
-                        conn = std::make_unique<Hccl::DevUbRtpConnection>(
-                            rdmaHandle, ctxLoc, ctxRmt, Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL,
-                            ctxLoc, ctxRmt, qosPre, COMM_ENGINE_AIV, sqDepth),
-                        return nullptr);
-                    return conn;
-                }
-            default:
-                HCCL_ERROR(
-                    "[AivUrmaChannel][tempFactory] unsupported protocol[%s], return nullptr.",
-                    protocol.Describe().c_str());
-                return nullptr;
-        }
+                        protocol = ctx.protocol, sqDepth = ctx.sqDepth,
+                        taTimeOut = taTimeOut]() -> std::unique_ptr<Hccl::DevUbConnection> {
+        return CreateSharedJettyConnection(rdmaHandle, ctxLoc, ctxRmt, qosPre, protocol, taTimeOut, sqDepth);
     };
     Endpoint::SharedJettyCtx sharedCtx{};
     CHK_RET(hcomm::AcquireSharedJettyForChannel(endpoint, connection, tempFactory, sharedCtx));
@@ -496,6 +475,46 @@ AivUrmaChannel::AcquireSharedJettyInBuildConnection(const UbConnBuildContext& ct
     sharedCqPiPtr_ = sharedCtx.cqPiPtr;
     sharedCqCiPtr_ = sharedCtx.cqCiPtr;
     return HCCL_SUCCESS;
+}
+
+std::unique_ptr<Hccl::DevUbConnection> AivUrmaChannel::CreateSharedJettyConnection(
+    Hccl::RdmaHandle rdmaHandle, const Hccl::IpAddress& locAddr, const Hccl::IpAddress& rmtAddr, u8 qosPre,
+    Hccl::LinkProtocol protocol, u8 taTimeOut, u32 sqDepth)
+{
+    switch (protocol) {
+        case Hccl::LinkProtocol::UB_TP: {
+            std::unique_ptr<Hccl::DevUbConnection> conn;
+            EXCEPTION_CATCH(
+                conn = std::make_unique<Hccl::DevUbTpConnection>(
+                    rdmaHandle, locAddr, rmtAddr, Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL,
+                    Hccl::IpAddress(), Hccl::IpAddress(), qosPre, taTimeOut, COMM_ENGINE_AIV, sqDepth),
+                return nullptr);
+            return conn;
+        }
+        case Hccl::LinkProtocol::UB_CTP: {
+            std::unique_ptr<Hccl::DevUbConnection> conn;
+            EXCEPTION_CATCH(
+                conn = std::make_unique<Hccl::DevUbCtpConnection>(
+                    rdmaHandle, locAddr, rmtAddr, Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL,
+                    Hccl::IpAddress(), Hccl::IpAddress(), qosPre, taTimeOut, COMM_ENGINE_AIV, sqDepth),
+                return nullptr);
+            return conn;
+        }
+        case Hccl::LinkProtocol::UB_RTP: {
+            std::unique_ptr<Hccl::DevUbConnection> conn;
+            EXCEPTION_CATCH(
+                conn = std::make_unique<Hccl::DevUbRtpConnection>(
+                    rdmaHandle, locAddr, rmtAddr, Hccl::OpMode::OPBASE, true, Hccl::HrtUbJfcMode::USER_CTL, locAddr,
+                    rmtAddr, qosPre, taTimeOut, COMM_ENGINE_AIV, sqDepth),
+                return nullptr);
+            return conn;
+        }
+        default:
+            HCCL_ERROR(
+                "[AivUrmaChannel][CreateSharedJettyConnection] unsupported protocol[%s], return nullptr.",
+                protocol.Describe().c_str());
+            return nullptr;
+    }
 }
 
 HcclResult AivUrmaChannel::BuildConnection()

@@ -125,12 +125,6 @@ void EnvRdmaConfig::Parse()
     rdmaRetryCnt.Parse();
     HCCL_RUN_INFO("[HCCL_ENV] HCCL_RDMA_RETRY_CNT set by %s to [%u]", rdmaRetryCnt.GetSource(), GetRdmaRetryCnt());
 
-    uboeTimeOut.Parse();
-    HCCL_RUN_INFO("[HCCL_ENV] HCCL_UBOE_TIMEOUT set by %s to [%u]", uboeTimeOut.GetSource(), GetUboeTimeOut());
-
-    ubTimeOut.Parse();
-    HCCL_RUN_INFO("[HCCL_ENV] HCCL_UB_TIMEOUT set by %s to [%u]", ubTimeOut.GetSource(), GetUbTimeOut());
-
     queueNum.Parse();
     HCCL_RUN_INFO("[HCCL_ENV] HCCL_RDMA_QPS_PER_CONNECTION set by %s to [%u]", queueNum.GetSource(), GetRdmaQueueNum());
 
@@ -365,9 +359,6 @@ u32 EnvRdmaConfig::GetRdmaTimeOut() const { return rdmaTimeOut.Get(); }
 
 u32 EnvRdmaConfig::GetRdmaRetryCnt() const { return rdmaRetryCnt.Get(); }
 
-u32 EnvRdmaConfig::GetUboeTimeOut() const { return uboeTimeOut.Get(); }
-
-u32 EnvRdmaConfig::GetUbTimeOut() const { return ubTimeOut.Get(); }
 u32 EnvRdmaConfig::GetRdmaQueueNum() const { return queueNum.Get(); }
 
 u32 EnvRdmaConfig::GetRdmaMultiQpThreshold() const { return multiQpThreshold.Get(); }
