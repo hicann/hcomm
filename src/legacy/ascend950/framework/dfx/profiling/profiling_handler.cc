@@ -683,7 +683,7 @@ void ProfilingHandler::ReportCcuInfo(const TaskInfo& taskInfo) const
 {
     ReportCcuInfoLog(taskInfo);
     if (taskInfo.taskParam_.ccuDetailInfo == nullptr) {
-        HCCL_ERROR("[ProfilingHandler]ReportCcuInfo ccuDetailInfo is nullptr.");
+        HCCL_WARNING("[ProfilingHandler]ReportCcuInfo ccuDetailInfo is nullptr.");
         return;
     }
     if (taskInfo.dfxOpInfo_ == nullptr) {
