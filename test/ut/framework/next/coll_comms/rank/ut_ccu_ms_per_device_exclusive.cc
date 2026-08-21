@@ -65,10 +65,12 @@ CcuResult StubDeinitCcuFeature(int32_t deviceLogicId)
     return CcuResult::CCU_SUCCESS;
 }
 
-CcuResult StubCreateCcuInstanceFailure(CcuInstanceType ccuInsType, CcuInsHandle* ccuInsHandle)
+// 简化后 TryInitCcuInstance 只走 OnDemand（拉起驱动 CcuInitFeature），不再创建 ccu instance；
+// 驱动拉起失败时的预约对账行为改由 CcuInitFeature 返回值驱动
+CcuResult StubCcuInitFeatureFailure(const int32_t devLogicId, std::shared_ptr<hcomm::CcuDrvHandle>& ccuDrvHandle)
 {
-    (void)ccuInsType;
-    (void)ccuInsHandle;
+    EXPECT_EQ(devLogicId, DEVICE_0);
+    (void)ccuDrvHandle;
     bool reserved = false;
     EXPECT_EQ(
         hccl::CollCommMgr::GetInstance().TryReserveCcuMsComm(DEVICE_0, "init_failure_probe", reserved), HCCL_SUCCESS);
@@ -207,8 +209,9 @@ TEST_F(CcuMsPerDeviceExclusiveTest, Ut_TryInitCcuInstance_When_SameDeviceAlready
     ASSERT_TRUE(ownerReserved);
     myRank_->devLogicId_ = DEVICE_0;
     myRank_->opExpansionMode_ = CCU_MS_MODE;
-    myRank_->useCcuResStaticAlloc_ = true;
-    MOCKER(HcommCcuInsCreateLegacy).expects(once()).will(returnValue(CcuResult::CCU_SUCCESS));
+    // 简化后：MS 回退到 SCHED 由 ReserveCcuMsCommOrFallback 完成（预约失败即回退），
+    // 不再依赖 ccu instance 创建；驱动拉起走 CcuInitFeature
+    MOCKER(hcomm::CcuInitFeature).expects(once()).will(returnValue(CcuResult::CCU_SUCCESS));
 
     EXPECT_EQ(myRank_->TryInitCcuInstance(), HCCL_SUCCESS);
     EXPECT_EQ(myRank_->opExpansionMode_, CCU_SCHED_MODE);
@@ -224,31 +227,12 @@ TEST_F(CcuMsPerDeviceExclusiveTest, Ut_TryInitCcuInstance_When_CcuInitFails_Expe
 {
     myRank_->devLogicId_ = DEVICE_0;
     myRank_->opExpansionMode_ = CCU_MS_MODE;
-    myRank_->useCcuResStaticAlloc_ = true;
     g_reservationHeldDuringInitFailure = false;
-    MOCKER(HcommCcuInsCreateLegacy).expects(once()).will(invoke(StubCreateCcuInstanceFailure));
+    // 简化后 ccu instance 不在 init 时创建，驱动拉起失败由 CcuInitFeature 返回
+    MOCKER(hcomm::CcuInitFeature).expects(once()).will(invoke(StubCcuInitFeatureFailure));
 
     EXPECT_EQ(myRank_->TryInitCcuInstance(), HCCL_E_PARA);
     EXPECT_TRUE(g_reservationHeldDuringInitFailure);
-    EXPECT_FALSE(myRank_->ccuMsCommReserved_);
-
-    bool nextReserved = false;
-    EXPECT_EQ(hccl::CollCommMgr::GetInstance().TryReserveCcuMsComm(DEVICE_0, "next_owner", nextReserved), HCCL_SUCCESS);
-    EXPECT_TRUE(nextReserved);
-}
-
-TEST_F(CcuMsPerDeviceExclusiveTest, Ut_TryInitCcuInstance_When_MsFallsBack_Expect_ReservationReleased)
-{
-    myRank_->devLogicId_ = DEVICE_0;
-    myRank_->opExpansionMode_ = CCU_MS_MODE;
-    myRank_->useCcuResStaticAlloc_ = true;
-    MOCKER(HcommCcuInsCreateLegacy)
-        .expects(exactly(2))
-        .will(returnValue(CcuResult::CCU_E_UNAVAIL))
-        .then(returnValue(CcuResult::CCU_SUCCESS));
-
-    EXPECT_EQ(myRank_->TryInitCcuInstance(), HCCL_SUCCESS);
-    EXPECT_EQ(myRank_->opExpansionMode_, CCU_SCHED_MODE);
     EXPECT_FALSE(myRank_->ccuMsCommReserved_);
 
     bool nextReserved = false;
@@ -260,8 +244,8 @@ TEST_F(CcuMsPerDeviceExclusiveTest, Ut_TryInitCcuInstance_When_DriverBusyFallsBa
 {
     myRank_->devLogicId_ = DEVICE_0;
     myRank_->opExpansionMode_ = CCU_MS_MODE;
-    myRank_->useCcuResStaticAlloc_ = true;
-    MOCKER(HcommCcuInsCreateLegacy).expects(once()).will(returnValue(CcuResult::CCU_E_DRV_BUSY));
+    // 简化后驱动忙回退到 aicpu 由 TryInitCcuInstanceOnDemand 中 CcuInitFeature 返回 CCU_E_DRV_BUSY 触发
+    MOCKER(hcomm::CcuInitFeature).expects(once()).will(returnValue(CcuResult::CCU_E_DRV_BUSY));
 
     EXPECT_EQ(myRank_->TryInitCcuInstance(), HCCL_SUCCESS);
     EXPECT_EQ(myRank_->opExpansionMode_, AICPU_TS_MODE);
@@ -282,7 +266,7 @@ TEST_F(CcuMsPerDeviceExclusiveTest, Ut_MyRankDestructor_When_HoldsMsReservation_
     myRank_->devLogicId_ = DEVICE_0;
     myRank_->ccuMsCommReserved_ = true;
     myRank_->ccuInsHandle_ = VALID_CCU_INS_HANDLE;
-    myRank_->useCcuResStaticAlloc_ = false;
+    // 删除 useCcuResStaticAlloc_ 成员；析构路径按 ccuInsHandle_/assignedCcuInsHandle_ 是否非 0 决定清理
     auto* fakeDrvHandle = reinterpret_cast<hcomm::CcuDrvHandle*>(0x1);
     myRank_->ccuDrvHandle_ = std::shared_ptr<hcomm::CcuDrvHandle>(fakeDrvHandle, [](hcomm::CcuDrvHandle*) {});
     g_reservationHeldDuringInstanceDestroy.store(false);

@@ -27,7 +27,7 @@ typedef enum {
 } CcuInstanceType;
 
 /**
- * @brief 创建ccu实例旧接口，兼容hccl旧版本
+ * @brief 按 CCU 实例类型创建 ccu 实例（兼容 hccl 旧版本）。
  * @param[in] insType CCU实例类型。
  * @param[out] ccuInsHandle 创建成功后返回的 CCU 实例句柄，不可为 nullptr。
  * @return CcuResult。

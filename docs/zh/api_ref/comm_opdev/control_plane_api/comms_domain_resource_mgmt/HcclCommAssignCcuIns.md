@@ -20,7 +20,7 @@
 
 ## 功能说明
 
-将调用方已创建的CCU实例绑定到指定HCCL通信域。绑定成功后，通信域保存该实例句柄，并接管CCU实例的所有权和销毁责任；后续可通过`HcclCommQueryCcuIns`查询该实例。
+将调用方已创建的CCU实例绑定到指定HCCL通信域。绑定成功后，通信域保存该实例句柄，并接管CCU实例的所有权和销毁责任；后续可通过`HcclCommQueryAssignedCcuIns`查询该实例。
 
 每个通信域只能绑定一个CCU实例。通信域已有绑定实例时，本接口不会覆盖原实例。
 
@@ -56,7 +56,7 @@ HcclResult HcclCommAssignCcuIns(HcclComm comm, CcuInsHandle insHandle)
 - 绑定失败时，`insHandle`的所有权仍归调用方，调用方负责继续使用或销毁该实例。
 - 同一个`insHandle`只能绑定到一个通信域，不得重复绑定到其他通信域。
 - 同一个通信域不支持重复绑定。无论新旧句柄是否相同，再次调用本接口均返回`HCCL_E_PARA`，原绑定关系保持不变。
-- 本接口只保证多个`HcclCommAssignCcuIns`调用之间的并发安全。调用方须保证本接口不与`HcclCommQueryCcuIns`或`HcclCommDestroy`并发执行。
+- 本接口只保证多个`HcclCommAssignCcuIns`调用之间的并发安全。调用方须保证本接口不与`HcclCommQueryCcuIns`、`HcclCommQueryAssignedCcuIns`或`HcclCommDestroy`并发执行。
 - `insHandle`须在`comm`所在的当前Device上创建。
 
 ## 调用示例
@@ -79,7 +79,7 @@ if (hcclRet != HCCL_SUCCESS) {
 // 绑定成功，实例所有权已转移给通信域，调用方不再销毁insHandle。
 CcuInsHandle queriedInsHandle = 0;
 uint32_t insNum = 0;
-hcclRet = HcclCommQueryCcuIns(comm, &queriedInsHandle, &insNum);
+hcclRet = HcclCommQueryAssignedCcuIns(comm, &queriedInsHandle, &insNum);
 if (hcclRet != HCCL_SUCCESS || insNum != 1 ||
     queriedInsHandle != insHandle) {
     HcclCommDestroy(comm);

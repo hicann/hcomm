@@ -26,6 +26,7 @@
 - [HcclCommMemReg](HcclCommMemReg.md)
 - [HcclCommAssignCcuIns](HcclCommAssignCcuIns.md)
 - [HcclCommQueryCcuIns](HcclCommQueryCcuIns.md)
+- [HcclCommQueryAssignedCcuIns](HcclCommQueryAssignedCcuIns.md)
 - [HcclTeamCreateDescInit](HcclTeamCreateDescInit.md)
 - [HcclTeamCreateChannelsDescInit](HcclTeamCreateChannelsDescInit.md)
 - [HcclWorldTeamCreate](HcclWorldTeamCreate.md)

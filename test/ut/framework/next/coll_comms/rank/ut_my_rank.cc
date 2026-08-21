@@ -20,6 +20,7 @@
 #include "channel_process.h"
 #include "base_config_legacy.h"
 #include "ccu_device_res.h"
+#include "ccu_device_pub.h"
 #include "config/env_config.h"
 #include "env_config/env_config_v2.h"
 #define private public
@@ -353,10 +354,11 @@ TEST_F(MyRankTest, Ut_Init_When_Default_Mode_Expect_Set_By_Env)
 }
 
 // 测试Init时ccu驱动拉起失败回退到aicpu
+// 简化后 TryInitCcuInstance 只走 OnDemand（拉起驱动 CcuInitFeature），不再调 HcommCcuInsCreateLegacy 创建实例
 TEST_F(MyRankTest, Ut_Init_When_Ccu_Driver_Fail_Expect_Fallback_Aicpu)
 {
     setenv("HCCL_CCU_CUSTOM_OP_MODE", "1", 1);
-    MOCKER(HcommCcuInsCreateLegacy).stubs().will(returnValue(CcuResult::CCU_E_DRV_BUSY));
+    MOCKER(hcomm::CcuInitFeature).stubs().will(returnValue(CcuResult::CCU_E_DRV_BUSY));
 
     HcclMem cclBuffer;
     CreateCclBuffer(cclBuffer);
@@ -367,44 +369,13 @@ TEST_F(MyRankTest, Ut_Init_When_Ccu_Driver_Fail_Expect_Fallback_Aicpu)
     unsetenv("HCCL_CCU_CUSTOM_OP_MODE");
 }
 
-// 测试Init时ccu ms资源不足回退到sched
-TEST_F(MyRankTest, Ut_Init_When_Ccu_Ms_Insufficient_Expect_Fallback_Sched)
+// 测试Init时ccu驱动拉起返回非预期错误时失败
+// 简化后 ccu instance 不在 init 时创建，MS->SCH 回退由 ReserveCcuMsCommOrFallback 在预约失败时完成；
+// 此用例验证驱动返回非预期错误（CCU_E_PARA）时直接失败
+TEST_F(MyRankTest, Ut_Init_When_Ccu_Driver_Unexpected_Fail_Expect_Fail)
 {
     setenv("HCCL_CCU_CUSTOM_OP_MODE", "1", 1);
-    MOCKER(HcommCcuInsCreateLegacy)
-        .stubs()
-        .will(returnValue(CcuResult::CCU_E_UNAVAIL))
-        .then(returnValue(CcuResult::CCU_SUCCESS));
-
-    HcclMem cclBuffer;
-    CreateCclBuffer(cclBuffer);
-
-    uint32_t opExpansionModeMs = CCU_MS_MODE;
-    EXPECT_EQ(myRank->Init(cclBuffer, opExpansionModeMs, 2), HCCL_SUCCESS);
-    EXPECT_EQ(myRank->opExpansionMode_, CCU_SCHED_MODE);
-    unsetenv("HCCL_CCU_CUSTOM_OP_MODE");
-}
-
-// 测试Init时ccu ms和sched资源不足回退到aicpu
-TEST_F(MyRankTest, Ut_Init_When_Ccu_Ms_And_Sched_Insufficient_Expect_Fallback_Aicpu)
-{
-    setenv("HCCL_CCU_CUSTOM_OP_MODE", "1", 1);
-    MOCKER(HcommCcuInsCreateLegacy).stubs().will(returnValue(CcuResult::CCU_E_UNAVAIL));
-
-    HcclMem cclBuffer;
-    CreateCclBuffer(cclBuffer);
-
-    uint32_t opExpansionModeMs = CCU_MS_MODE;
-    EXPECT_EQ(myRank->Init(cclBuffer, opExpansionModeMs, 2), HCCL_SUCCESS);
-    EXPECT_EQ(myRank->opExpansionMode_, AICPU_TS_MODE);
-    unsetenv("HCCL_CCU_CUSTOM_OP_MODE");
-}
-
-// 测试Init在申请资源时出现其他报错时失败
-TEST_F(MyRankTest, Ut_Init_When_Resource_Fail_Expect_Fail)
-{
-    setenv("HCCL_CCU_CUSTOM_OP_MODE", "1", 1);
-    MOCKER(HcommCcuInsCreateLegacy).stubs().will(returnValue(CcuResult::CCU_E_PARA));
+    MOCKER(hcomm::CcuInitFeature).stubs().will(returnValue(CcuResult::CCU_E_PARA));
 
     HcclMem cclBuffer;
     CreateCclBuffer(cclBuffer);

@@ -170,8 +170,9 @@ MyRank::~MyRank()
         ~ResourceCleanupGuard() noexcept
         {
             myRank_.ccuInsHandle_ = 0;
+            myRank_.assignedCcuInsHandle_ = 0;
 
-            if (!myRank_.useCcuResStaticAlloc_ && myRank_.ccuDrvHandle_) {
+            if (myRank_.ccuDrvHandle_) {
                 myRank_.ccuDrvHandle_ = nullptr; // 先减少引用计数，再尝试关闭
                 (void)CcuDeinitFeature(myRank_.devLogicId_);
                 // 尝试关闭CCU功能，最后一个调用时会关闭CCU驱动
@@ -186,7 +187,7 @@ MyRank::~MyRank()
         MyRank& myRank_;
     } cleanupGuard(*this);
 
-    if (ccuInsHandle_ != 0) { // 内部清理CCU资源，关闭CCU通道
+    if (ccuInsHandle_ != 0 || assignedCcuInsHandle_ != 0) { // 内部清理CCU资源，关闭CCU通道
         // 刷新并获取当前线程的 DeviceId
         int32_t threadDevId = INVALID_INT;
         CHK_RET_NULL(HcclDeviceRefresh(threadDevId));
@@ -197,10 +198,13 @@ MyRank::~MyRank()
             CHK_RET_NULL(hrtSetDevice(devLogicId_));
             isDiffDevId = true;
         }
-        // 销毁 CcuInstance
-        CcuResult ret = HcommCcuInsDestroy(ccuInsHandle_);
-        if (ret != CCU_SUCCESS) {
-            HCCL_ERROR("[%s] HcommCcuInsDestroy failed, ret[%d]", __func__, ret);
+        // 销毁通信域自有的 ccuInstance（QueryCcuIns 创建）
+        if (ccuInsHandle_ != 0) {
+            CHK_PRT(static_cast<HcclResult>(HcommCcuInsDestroy(ccuInsHandle_)));
+        }
+        // 销毁通过 Assign 绑定的 ccuInstance（所有权已转移给通信域）
+        if (assignedCcuInsHandle_ != 0 && assignedCcuInsHandle_ != ccuInsHandle_) {
+            CHK_PRT(static_cast<HcclResult>(HcommCcuInsDestroy(assignedCcuInsHandle_)));
         }
         // 切换回原来的 DeviceId
         if (isDiffDevId) {
@@ -257,70 +261,6 @@ HcclResult MyRank::UnregMemByTag(const std::string& tag)
     return endpointMgr_->UnregMemByTag(tag);
 }
 
-constexpr uint32_t DEFAULT_MODE = 0;
-constexpr uint32_t AICPU_TS_MODE = 2;
-constexpr uint32_t CCU_MS_MODE = 5;
-constexpr uint32_t CCU_SCHED_MODE = 6;
-inline CcuInstanceType OpExpansionModeToCcuInstanceType(uint32_t opExpansionMode)
-{
-    // 仅作数据类型转换，不做逻辑处理
-    if (opExpansionMode == CCU_SCHED_MODE) {
-        return CcuInstanceType::CCU_SCHED;
-    }
-
-    if (opExpansionMode == CCU_MS_MODE) {
-        return CcuInstanceType::CCU_MS;
-    }
-
-    return CcuInstanceType::CCU_UNUSED;
-}
-
-HcclResult MyRank::TryInitCcuInstanceLegacy()
-{
-    auto ccuInsType = OpExpansionModeToCcuInstanceType(opExpansionMode_);
-    if (ccuInsType == CcuInstanceType::CCU_UNUSED) {
-        ccuInsHandle_ = 0;
-        return HcclResult::HCCL_SUCCESS;
-    }
-
-    auto ccuInitRet = HcommCcuInsCreateLegacy(ccuInsType, &ccuInsHandle_);
-    // ccu驱动拉起失败，直接回退至aicpu ts
-    if (ccuInitRet == CcuResult::CCU_E_DRV_BUSY) {
-        opExpansionMode_ = AICPU_TS_MODE;
-        ccuInsHandle_ = 0;
-        HCCL_RUN_WARNING("[MyRank][%s] failed to init ccu driver, fallback to aicpu, rankId[%u].", __func__, rankId_);
-        return HcclResult::HCCL_SUCCESS;
-    }
-
-    // ccu通信域数量过多，导致资源不足
-    if (CCU_CHK_RES_UNAVAIL(ccuInitRet)) {
-        // 如果是ccu ms模式，回退至ccu调度模式重试
-        // 复用原有的ccuResContainer，回退到ccu sched时不需要重复拉起ccu驱动
-        if (opExpansionMode_ == CCU_MS_MODE) {
-            opExpansionMode_ = CCU_SCHED_MODE;
-            CHK_RET(TryInitCcuInstanceLegacy()); // 至多递归一次
-            return HcclResult::HCCL_SUCCESS;
-        }
-
-        // 其余模式资源不足回退至aicpu ts
-        opExpansionMode_ = AICPU_TS_MODE;
-        ccuInsHandle_ = 0;
-        HCCL_RUN_WARNING(
-            "[MyRank][%s] ccu resources are unavailable, fallback to aicpu, rankId[%u].", __func__, rankId_);
-        return HcclResult::HCCL_SUCCESS;
-    }
-
-    // 预期外返回值属于错误
-    if (ccuInitRet != CcuResult::CCU_SUCCESS) {
-        HCCL_ERROR("[%s] failed, ret[%d] is not expected.", __func__, ccuInitRet);
-        ccuInsHandle_ = 0;
-        return static_cast<HcclResult>(ccuInitRet);
-    }
-
-    // ccu资源申请成功
-    return HcclResult::HCCL_SUCCESS;
-}
-
 HcclResult MyRank::ReserveCcuMsCommOrFallback()
 {
     if (opExpansionMode_ != CCU_MS_MODE) {
@@ -359,7 +299,6 @@ void MyRank::ReconcileCcuMsCommReservation(HcclResult initRet)
 
 HcclResult MyRank::TryInitCcuInstanceOnDemand()
 {
-    // 以下为ccu新接口流程
     auto ccuInsType = OpExpansionModeToCcuInstanceType(opExpansionMode_);
     if (ccuInsType == CcuInstanceType::CCU_UNUSED) {
         ccuInsHandle_ = 0;
@@ -407,15 +346,9 @@ HcclResult MyRank::TryInitCcuInstance()
 {
     CHK_RET(ReserveCcuMsCommOrFallback());
 
-    HcclResult ret = HCCL_SUCCESS;
-    if (useCcuResStaticAlloc_) {
-        HCCL_RUN_INFO(
-            "[MyRank][%s] HCCL version does not support CCU on-demand resource allocation, use legacy allocation.",
-            __func__);
-        ret = TryInitCcuInstanceLegacy();
-    } else {
-        ret = TryInitCcuInstanceOnDemand();
-    }
+    // ccu instance 不在 init 时创建，由 QueryCcuIns 创建或由 Assign 显式绑定；
+    // 此处仅拉起 ccu 驱动。
+    HcclResult ret = TryInitCcuInstanceOnDemand();
     ReconcileCcuMsCommReservation(ret);
     return ret;
 }
@@ -438,27 +371,10 @@ HcclResult MyRank::GetDevicePortInternal(uint32_t rank, uint32_t* devPort, Endpo
     return HCCL_SUCCESS;
 }
 
-inline HcclResult GetHcclVersion(int& hcclVersion)
-{
-    char hcclPkgName[] = "hccl";
-    aclError aclRet = aclsysGetVersionNum(hcclPkgName, &hcclVersion);
-    CHK_PRT_RET(
-        aclRet != ACL_SUCCESS, HCCL_ERROR("[GetHcclVersion] aclsysGetVersionNum failed, aclRet[%d].", aclRet),
-        HCCL_E_INTERNAL);
-    HCCL_RUN_INFO("[GetHcclVersion] hccl version is %d.", hcclVersion);
-    return HCCL_SUCCESS;
-}
-
-constexpr int MAX_HCCL_VERSION_USING_CCU_RES_STATIC_ALLOC = 90100000;
 HcclResult MyRank::Init(HcclMem cclBuffer, const uint32_t opExpansionMode, uint32_t rankNum)
 {
     // EXCEPTION_HANDLE_BEGIN
     CHK_RET(hrtGetDevice(&devLogicId_));
-
-    // 获取hccl版本
-    int hcclVersion = 0;
-    CHK_RET(GetHcclVersion(hcclVersion));
-    useCcuResStaticAlloc_ = hcclVersion <= MAX_HCCL_VERSION_USING_CCU_RES_STATIC_ALLOC;
 
     // ns recovery processor初始化
     EXCEPTION_CATCH(nsRecoveryProcessor_ = std::make_unique<NsRecoveryProcessor>(), return HCCL_E_PTR);

@@ -132,7 +132,7 @@ HcclResult CcuKernelMgr::Deinit()
 
 CcuResult CcuKernelMgr::Register(
     CcuResPack& resPack, const uint32_t dieId, const char* kernelFuncName, const void* kernelFunc,
-    const void** kernelArgs, const uint32_t argNum, CcuKernelHandle& kernelHandle)
+    const void** kernelArgs, const uint32_t argNum, CcuInstance* ccuIns, CcuKernelHandle& kernelHandle)
 {
     // 允许kernelFuncName为空，此时传递默认名称
     CCU_CHK_PTR_NULL(kernelFunc);
@@ -145,7 +145,7 @@ CcuResult CcuKernelMgr::Register(
 
     // 注意处理时序，需要先重置后处理rep
     std::unique_lock<std::mutex> lock(kernelMapMutex_);
-    CCU_CHK_RET(BuildKernel(dieId, kernelFuncName, kernelFunc, kernelArgs, argNum));
+    CCU_CHK_RET(BuildKernel(dieId, kernelFuncName, kernelFunc, kernelArgs, argNum, ccuIns));
 
     CcuResult ret = AllocRes(resPack);
     if (ret != CcuResult::CCU_SUCCESS) {
@@ -162,7 +162,7 @@ CcuResult CcuKernelMgr::Register(
 
 CcuResult CcuKernelMgr::BuildKernel(
     const uint32_t dieId, const char* kernelFuncName, const void* kernelFunc, const void** kernelArgs,
-    const uint32_t argNum)
+    const uint32_t argNum, CcuInstance* ccuIns)
 {
     currKernel_ = std::make_unique<CcuKernel>(); // 重置待构建kernel
     // 执行算法流程时将资源占用临时记录在 die 0，后续确定实际 die 并迁移资源
@@ -186,13 +186,11 @@ CcuResult CcuKernelMgr::BuildKernel(
     }
 
     currKernel_->FlushClosablePendingIfs(); // 处理未闭合的if
-    int hcclVersion = 0;
-    CCU_CHK_RET(GetHcclVersionForCcuKernelMgr(hcclVersion));
-    if (hcclVersion <= MAX_HCCL_VERSION_USING_CCU_RES_STATIC_ALLOC) {
-        // 9.1.0 及之前版本的外部 dieId 始终为 0，需要从 channel 中获取实际 dieId
+    if (ccuIns != nullptr && ccuIns->IsFixedResNum()) {
+        // 按固定资源数量创建的 ccu instance，外部 dieId 始终为 0，从 channel 获取实际 dieId
         CCU_CHK_RET(currKernel_->ApplyDieFromChannels());
     } else {
-        // 校验所有 channel 使用相同的 die，然后将资源占用从 die 0 迁移到指定 die
+        // 按需创建的 ccu instance，校验所有 channel 使用相同的 die，然后将资源占用从 die 0 迁移到指定 die
         CCU_CHK_RET(currKernel_->ValidateAndApplyDie(dieId));
     }
     CCU_CHK_RET(PrepareConstValueResources()); // 记录翻译过程所需常量并申请对应资源
@@ -221,7 +219,7 @@ CcuResult CcuKernelMgr::GetKernelResourceRequest(
         std::unique_ptr<CcuKernel>& kernel_;
     } guard(currKernel_);
 
-    CCU_CHK_RET(BuildKernel(dieId, kernelFuncName, kernelFunc, kernelArgs, argNum));
+    CCU_CHK_RET(BuildKernel(dieId, kernelFuncName, kernelFunc, kernelArgs, argNum, nullptr));
     resReq = currKernel_->GetResourceRequest();
     const uint32_t kernelInstrCount = currKernel_->GetInstrCount();
     const uint32_t translatorInstrCount = CcuRepTranslator::GetInstrNum(devLogicId_);

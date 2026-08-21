@@ -44,6 +44,9 @@ public:
     const std::vector<CcuKernelHandle>& GetUntranslatedKernels();
     void SetHandle(CcuInsHandle insHandle);
 
+    // 是否使用固定资源数量创建（InitByInsType 路径置 true，其余路径保持 false）
+    bool IsFixedResNum() const { return isFixedResNum_; }
+
     CcuResult BeginRegister();
     CcuResult CheckRegistering() const;
     CcuResult EndRegister();
@@ -62,6 +65,7 @@ private:
     std::vector<CcuKernelHandle> kernelHandles_{};
     std::vector<CcuKernelHandle> untranslatedKernelHandles_{};
     std::array<CcuResDesc, CCU_MAX_IODIE_NUM> totalResDescs_{}; // ccuIns持有的全部资源描述符
+    bool isFixedResNum_{false}; // InitByInsType 路径置 true（使用固定资源数量创建），其余保持 false
 };
 
 } // namespace hcomm

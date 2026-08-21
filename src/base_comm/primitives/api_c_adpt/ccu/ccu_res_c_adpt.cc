@@ -191,7 +191,7 @@ CcuResult HcommCcuKernelQueryResReq(
     return CcuResult::CCU_SUCCESS;
 }
 
-// Deprecated: legacy internal CCU instance creation path.
+// 按 CCU 实例类型创建 ccu 实例（兼容 hccl 旧版本）
 CcuResult HcommCcuInsCreateLegacy(const CcuInstanceType insType, CcuInsHandle* ccuInsHandle)
 {
     CCU_CHK_PTR_NULL(ccuInsHandle);

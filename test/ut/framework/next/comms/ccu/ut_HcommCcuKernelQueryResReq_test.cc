@@ -32,14 +32,9 @@
 #include "ccu_comp.h"
 #include "mocks/ccu_device_mock_utils.h"
 
-namespace hcomm {
-HcclResult GetHcclVersionForCcuKernelMgr(int& hcclVersion);
-}
-
 namespace {
 constexpr int32_t TEST_DEVICE_LOGIC_ID = 0;
 constexpr int32_t OTHER_TEST_DEVICE_LOGIC_ID = 1;
-constexpr int32_t HCCL_VERSION_USING_VALIDATE_AND_APPLY_DIE = 90100001;
 constexpr uint32_t VALID_DIE_ID = 0;
 constexpr uint32_t OTHER_VALID_DIE_ID = 1;
 constexpr uint32_t INVALID_DIE_ID = hcomm::CCU_MAX_IODIE_NUM;
@@ -326,10 +321,6 @@ public:
         g_deviceRefreshCalls = 0;
         g_deviceRefreshResult = HcclResult::HCCL_SUCCESS;
 
-        MOCKER(hcomm::GetHcclVersionForCcuKernelMgr)
-            .stubs()
-            .with(outBound(HCCL_VERSION_USING_VALIDATE_AND_APPLY_DIE))
-            .will(returnValue(HCCL_SUCCESS));
         MOCKER(hrtGetDeviceRefresh).stubs().with(mockcpp::any()).will(invoke(MockHrtGetDeviceRefresh));
         int32_t seededDeviceLogicId = INVALID_INT;
         ASSERT_EQ(HcclDeviceRefresh(seededDeviceLogicId), HcclResult::HCCL_SUCCESS);

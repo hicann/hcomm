@@ -44,9 +44,27 @@
 
 #include "ccu_types.h"
 #include "ccu_drv_handle.h"
+#include "ccu_device_res.h"
 #include "dev_type.h"
 
 namespace hccl {
+
+constexpr uint32_t DEFAULT_MODE = 0;
+constexpr uint32_t AICPU_TS_MODE = 2;
+constexpr uint32_t CCU_MS_MODE = 5;
+constexpr uint32_t CCU_SCHED_MODE = 6;
+// opExpansionMode 到 CcuInstanceType 的映射，仅作数据类型转换，不做逻辑处理。
+// 供 MyRank 内部及外部适配层（如 coll_comm_ccu_c_adpt.cc）共用。
+inline CcuInstanceType OpExpansionModeToCcuInstanceType(uint32_t opExpansionMode)
+{
+    if (opExpansionMode == CCU_SCHED_MODE) {
+        return CcuInstanceType::CCU_SCHED;
+    }
+    if (opExpansionMode == CCU_MS_MODE) {
+        return CcuInstanceType::CCU_MS;
+    }
+    return CcuInstanceType::CCU_UNUSED;
+}
 
 /**
  * @note 职责：管理当前通信域下本Rank的信息和通信资源
@@ -68,6 +86,8 @@ public:
     uint32_t GetOpExpansionMode() { return opExpansionMode_; }
     CcuInsHandle GetCcuInstance() const { return ccuInsHandle_; }
     void SetCcuInstance(CcuInsHandle ccuInsHandle) { ccuInsHandle_ = ccuInsHandle; }
+    CcuInsHandle GetAssignedCcuInstance() const { return assignedCcuInsHandle_; }
+    void SetAssignedCcuInstance(CcuInsHandle ccuInsHandle) { assignedCcuInsHandle_ = ccuInsHandle; }
 
     CollCommConfigConsistency& GetCollCommConfigConsistency();
 
@@ -155,7 +175,6 @@ private:
         const EndpointDesc& remoteEndpointDesc, uint32_t& listenPort, HcommChannelDesc& hcommDesc);
     HcclResult GetLocalTlsStatus(Hccl::TlsStatus& tlsStatus) const;
     HcclResult RegisterCommMemsToEndpoint(EndpointHandle epHandle);
-    HcclResult TryInitCcuInstanceLegacy();
     HcclResult TryInitCcuInstance();
     HcclResult ReserveCcuMsCommOrFallback();
     HcclResult TryInitCcuInstanceOnDemand();
@@ -181,7 +200,8 @@ private:
     std::unique_ptr<CommMems> commMems_{nullptr};
     std::unique_ptr<EngineCtxs> engineCtxs_{nullptr};
 
-    CcuInsHandle ccuInsHandle_{0};
+    CcuInsHandle ccuInsHandle_{0}; // 按固定量CCU资源方式创建的 ccuInsHandle（HcclCommQueryCcuIns）（兼容旧版本）
+    CcuInsHandle assignedCcuInsHandle_{0}; // 按需申请CCU资源方式绑定的 ccuInsHandle（HcommCcuInsCreate + Assign）
 
     ManagerCallbacks callbacks_;
 
@@ -208,7 +228,6 @@ private:
     CollCommConfigConsistency collCommConfigConsistency_;
     ExchangeInfoMgr exchangeInfoMgr_;
     std::shared_ptr<hcomm::CcuDrvHandle> ccuDrvHandle_{};
-    bool useCcuResStaticAlloc_{false}; // HCCL版本不支持CCU资源按需申请
     bool ccuMsCommReserved_{false};
     Hccl::HcclMainboardId mainBoardType_{Hccl::HcclMainboardId::MAINBOARD_OTHERS};
 };

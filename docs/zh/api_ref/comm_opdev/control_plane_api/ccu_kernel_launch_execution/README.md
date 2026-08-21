@@ -20,14 +20,14 @@ Kernel注册和启动接口需要传入`CcuInsHandle`（CCU实例句柄）。当
 3. **绑定CCU实例**：
 
    - 调用[HcclCommAssignCcuIns](../comms_domain_resource_mgmt/HcclCommAssignCcuIns.md)将实例绑定到通信域。绑定成功后，实例所有权和销毁责任转移给通信域。
-   - 创建实例的调用方可继续使用`HcommCcuInsCreate`返回的句柄注册和启动Kernel，但不得再自行销毁实例。仅持有通信域句柄时，可调用[HcclCommQueryCcuIns](../comms_domain_resource_mgmt/HcclCommQueryCcuIns.md)获取已绑定的实例句柄。
+   - 创建实例的调用方可继续使用`HcommCcuInsCreate`返回的句柄注册和启动Kernel，但不得再自行销毁实例。仅持有通信域句柄时，可调用[HcclCommQueryAssignedCcuIns](../comms_domain_resource_mgmt/HcclCommQueryAssignedCcuIns.md)获取已绑定的实例句柄。
 
-   通过通信域查询实例句柄的典型用法：
+   通过通信域查询已绑定实例句柄的典型用法：
 
     ```c
     CcuInsHandle insHandle = 0;
     uint32_t insNum = 0;
-    HcclResult ret = HcclCommQueryCcuIns(comm, &insHandle, &insNum);
+    HcclResult ret = HcclCommQueryAssignedCcuIns(comm, &insHandle, &insNum);
     // 当前一个通信域最多绑定1个CCU实例，查询成功时insNum为1。
     if (ret != HCCL_SUCCESS || insNum != 1) {
         // 错误处理
@@ -36,7 +36,8 @@ Kernel注册和启动接口需要传入`CcuInsHandle`（CCU实例句柄）。当
 
 > 该接口属于HCCL层（不在`Hcomm*`/`Ccu*`系列内），暂未提供独立API参考页面。
 > 完整签名以头文件`include/hccl/hccl_ccu_res.h`为准。
-> 如果通信域未绑定CCU实例，`HcclCommQueryCcuIns`返回`HCCL_E_UNAVAIL`。
+> 如果通信域未绑定CCU实例，`HcclCommQueryAssignedCcuIns`返回`HCCL_E_UNAVAIL`。
+> 此外，[HcclCommQueryCcuIns](../comms_domain_resource_mgmt/HcclCommQueryCcuIns.md)用于查询通信域自有的CCU实例（未创建时创建CCU实例），与本接口查询的绑定实例相互独立。
 
 ## 接口调用顺序
 

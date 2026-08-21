@@ -66,6 +66,7 @@ CcuResult CcuInstance::InitByInsType(const CcuInstanceType insType)
         CCU_CHK_RET(FillTotalResDescs());
     }
 
+    isFixedResNum_ = true;
     return CcuResult::CCU_SUCCESS;
 }
 

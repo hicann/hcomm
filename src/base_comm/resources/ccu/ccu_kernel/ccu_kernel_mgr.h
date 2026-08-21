@@ -16,6 +16,7 @@
 
 #include "ccu_kernel.h"
 #include "../ccu_instance/ccu_res_pack.h"
+#include "../ccu_instance/ccu_instance.h"
 
 #include "ccu_dev_mgr_imp.h"
 #include "../ccu_representation/reps/translator/ccu_rep_translator_v1.h"
@@ -34,12 +35,12 @@ public:
     HcclResult Deinit();
 
     CcuResult Register(
-        CcuResPack& resPack, uint32_t dieId, const char* kernelFuncName, const void* kernelFunc,
-        const void** kernelArgs, const uint32_t argNum, CcuKernelHandle& kernelHandle);
+        CcuResPack& resPack, const uint32_t dieId, const char* kernelFuncName, const void* kernelFunc,
+        const void** kernelArgs, const uint32_t argNum, CcuInstance* ccuIns, CcuKernelHandle& kernelHandle);
 
     CcuResult GetKernelResourceRequest(
-        uint32_t dieId, const char* kernelFuncName, const void* kernelFunc, const void** kernelArgs, uint32_t argNum,
-        CcuResReq& resReq, uint32_t& instrCount);
+        const uint32_t dieId, const char* kernelFuncName, const void* kernelFunc, const void** kernelArgs,
+        const uint32_t argNum, CcuResReq& resReq, uint32_t& instrCount);
 
     CcuResult Translate(const std::vector<CcuKernelHandle>& kernelHandles);
 
@@ -64,7 +65,8 @@ private:
 
 private:
     CcuResult BuildKernel(
-        uint32_t dieId, const char* kernelFuncName, const void* kernelFunc, const void** kernelArgs, uint32_t argNum);
+        uint32_t dieId, const char* kernelFuncName, const void* kernelFunc, const void** kernelArgs, uint32_t argNum,
+        CcuInstance* ccuIns);
     CcuResult PrepareConstValueResources();
     CcuResult AllocRes(CcuResPack& resPack);
 
