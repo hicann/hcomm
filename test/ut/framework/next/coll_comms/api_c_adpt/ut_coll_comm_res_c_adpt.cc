@@ -30,6 +30,7 @@
 #include "aiv_urma_channel.h"
 #include "channel_process.h"
 #include "coll_comm_res_c_adpt.h"
+#include "hcomm_c_adpt.h"
 
 #define private public
 
@@ -204,6 +205,7 @@ protected:
     {
         ASSERT_EQ(HcclChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
         channelDesc.channelProtocol = COMM_PROTOCOL_ROCE;
+        channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE; // CheckRoceAttr 以 remoteEndpoint.protocol 判定
         channelDesc.roceAttr.queueNum = 3;
         channelDesc.roceAttr.retryCnt = 3;
         channelDesc.roceAttr.retryInterval = 20;
@@ -213,6 +215,15 @@ protected:
 
     void ExpectRoceSlTcInHcommChannelDesc(uint32_t hcclQos, uint8_t expectSl, uint8_t expectTc)
     {
+        // ApplyRoceQosCompatToSlTc：hrtGetDevice(userDevId) → aclrtGetPhyDevIdByUserDevId → 查 HCCN
+        s32 userDevId = 0;
+        s32 phyDevId = 0;
+        MOCKER(hrtGetDevice).stubs().with(outBoundP(&userDevId)).will(returnValue(HCCL_SUCCESS));
+        MOCKER(aclrtGetPhyDevIdByUserDevId)
+            .stubs()
+            .with(mockcpp::any(), outBoundP(&phyDevId))
+            .will(returnValue(ACL_SUCCESS));
+
         hcclCommPtr->GetCollComm()->GetCommConfig().SetConfigHcclQos(hcclQos);
 
         HcclChannelDesc in{};
@@ -223,8 +234,9 @@ protected:
         ret = ProcessHcclResPackReq(in, out, hcclCommPtr.get());
         ASSERT_EQ(ret, HCCL_SUCCESS);
 
-        const HcommChannelDesc hcommDesc
+        HcommChannelDesc hcommDesc
             = MyRankUtils::ChannelDescHccl2Hcomm(out, hcclCommPtr->GetCollComm()->GetCommConfig());
+        ASSERT_EQ(CheckRoceAttr(hcommDesc), HCCL_SUCCESS);
         EXPECT_EQ(hcommDesc.roceAttr.sl, expectSl) << "hcclQos=" << hcclQos;
         EXPECT_EQ(hcommDesc.roceAttr.tc, expectTc) << "hcclQos=" << hcclQos;
     }

@@ -777,10 +777,22 @@ TEST_F(MyRankTest, Ut_ChannelDescHccl2Hcomm_When_Roce_DoesNotUseUbAttrBranch)
     in.roceAttr.tc = 8u;
     in.roceAttr.sl = 4u;
     HcommChannelDesc out = MyRankUtils::ChannelDescHccl2Hcomm(in, commConfig);
+    EXPECT_EQ(out.qos, HCCL_COMM_QOS_CONFIG_NOT_SET); // RoCE 不抬默认，透传给 ApplyRoceQosCompatToSlTc
     EXPECT_EQ(out.roceAttr.retryCnt, 3u);
     EXPECT_EQ(out.roceAttr.retryInterval, 20u);
     EXPECT_EQ(out.roceAttr.tc, 8u);
     EXPECT_EQ(out.roceAttr.sl, 4u);
+}
+
+TEST_F(MyRankTest, Ut_ChannelDescHccl2Hcomm_When_Roce_QosSet_PassesThrough)
+{
+    CommConfig commConfig("ut");
+    ASSERT_EQ(commConfig.SetConfigHcclQos(5u), HCCL_SUCCESS);
+    HcclChannelDesc in{};
+    ASSERT_EQ(HcclChannelDescInit(&in, 1), HCCL_SUCCESS);
+    in.channelProtocol = COMM_PROTOCOL_ROCE;
+    HcommChannelDesc out = MyRankUtils::ChannelDescHccl2Hcomm(in, commConfig);
+    EXPECT_EQ(out.qos, 5u);
 }
 
 TEST_F(MyRankTest, Ut_ChannelDescHccl2Hcomm_When_UbMem_Sets_PathMode_FromInput)

@@ -127,3 +127,32 @@ TEST_F(
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(channelDesc.ubAttr.sqDepth, HCCL_COMM_SQ_DEPTH_CONFIG_NOT_SET);
 }
+
+// 直调 HcommChannelCreate 归一化路径：HcommChannelDesc.qos → roceAttr.sl/tc
+TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_QosUnset_KeepOriginalSlTc)
+{
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.roceAttr.sl = 3;
+    channelDesc.roceAttr.tc = 120;
+    channelDesc.qos = 0xFFFFFFFFU;
+
+    ASSERT_EQ(CheckRoceAttr(channelDesc), HCCL_SUCCESS);
+    EXPECT_EQ(channelDesc.roceAttr.sl, 3);
+    EXPECT_EQ(channelDesc.roceAttr.tc, 120);
+}
+
+TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_QosSet_MapsSlAndDefaultDscpTc)
+{
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.roceAttr.sl = 3;
+    channelDesc.roceAttr.tc = 120;
+    channelDesc.qos = 4; // 未 mock HCCN 时回退默认 DSCP=33，TC=33<<2
+
+    ASSERT_EQ(CheckRoceAttr(channelDesc), HCCL_SUCCESS);
+    EXPECT_EQ(channelDesc.roceAttr.sl, 4);
+    EXPECT_EQ(channelDesc.roceAttr.tc, static_cast<uint8_t>(33U << 2U));
+}

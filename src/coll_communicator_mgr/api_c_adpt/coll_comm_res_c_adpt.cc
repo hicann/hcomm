@@ -31,8 +31,6 @@
 #include "comm_engine_utils.h"
 #include "rank_consistency_checker_v2.h"
 #include "rank_table_crc_bridge.h"
-#include "hccl/hccl_types.h"
-#include "tp_qos.h"
 #include "hccl_channel_config.h"
 #include "shared_jetty_channel_pool.h"
 #include "endpoint_mgr.h"
@@ -66,48 +64,6 @@ constexpr uint32_t RETRY_CNT_MAX = 7u;          // retryCnt范围的最大值（
 constexpr uint32_t SL_MAX = 7u;                 // sl范围的最大值，sl即serviceLevel（不区分芯片类型）
 constexpr uint32_t TC_DEFAULT = 0xFFFFFFFFu;    // TC的默认值（不区分芯片类型）
 constexpr uint32_t SL_DEFAULT = 0xFFFFFFFFu;    // SL的默认值（不区分芯片类型）
-constexpr uint32_t kDscpToRoceTcShift = 2U;     // RoCE TC = DSCP << 2（DiffServ 高 6 位为 DSCP）
-
-static uint32_t ResolveRoceDevPhyId(const HcclChannelDesc& channelDesc)
-{
-    if (channelDesc.localEndpoint.loc.locType == ENDPOINT_LOC_TYPE_DEVICE) {
-        return channelDesc.localEndpoint.loc.device.devPhyId;
-    }
-    s32 deviceLogicId = 0;
-    u32 devicePhyId = 0U;
-    if (hrtGetDevice(&deviceLogicId) != HCCL_SUCCESS) {
-        return 0U;
-    }
-    if (hrtGetDevicePhyIdByIndex(static_cast<u32>(deviceLogicId), devicePhyId) != HCCL_SUCCESS) {
-        return 0U;
-    }
-    return devicePhyId;
-}
-
-static void FillRoceQos(
-    const hccl::CommConfig& commConfig, const Hccl::EnvRdmaConfig& rdmaConfig, const HcclChannelDesc& channelDesc,
-    uint8_t& slOut, uint8_t& tcOut)
-{
-    const uint32_t hcclQos = commConfig.GetConfigHcclQos();
-    if (hcclQos == HCCL_COMM_QOS_CONFIG_NOT_SET) {
-        tcOut = static_cast<uint8_t>(
-            (commConfig.GetConfigTrafficClass() == INVALID_UINT) ? rdmaConfig.GetRdmaTrafficClass() :
-                                                                   commConfig.GetConfigTrafficClass());
-        slOut = static_cast<uint8_t>(
-            (commConfig.GetConfigServiceLevel() == INVALID_UINT) ? rdmaConfig.GetRdmaServerLevel() :
-                                                                   commConfig.GetConfigServiceLevel());
-        return;
-    }
-
-    slOut = static_cast<uint8_t>(hcclQos & 0xFFU);
-    const uint32_t devPhyId = ResolveRoceDevPhyId(channelDesc);
-    uint8_t dscp = Hccl::kUboeDefaultDscp;
-    (void)Hccl::TpQosGetDscpByQosFromHccnCfg(devPhyId, slOut, dscp);
-    tcOut = static_cast<uint8_t>((static_cast<uint32_t>(dscp) << kDscpToRoceTcShift) & 0xFFU);
-    HCCL_INFO(
-        "[FillRoceQos] hcclQos compat: hcclQos[%u] devPhyId[%u] dscp[%u] sl[%u] tc[%u].", hcclQos, devPhyId,
-        static_cast<unsigned>(dscp), static_cast<unsigned>(slOut), static_cast<unsigned>(tcOut));
-}
 
 static u32 ResolveQueueNum(const Hccl::EnvRdmaConfig& rdmaConfig, const HcclChannelDesc& channelDesc)
 {
@@ -150,8 +106,18 @@ static void FillChannelDescFinal(
         channelDescFinal.roceAttr.retryInterval = (channelDesc.roceAttr.retryInterval == INVALID_UINT) ?
                                                       rdmaConfig.GetRdmaTimeOut() :
                                                       channelDesc.roceAttr.retryInterval;
-        FillRoceQos(commConfig, rdmaConfig, channelDesc, channelDescFinal.roceAttr.sl, channelDescFinal.roceAttr.tc);
+        channelDescFinal.roceAttr.tc = static_cast<uint8_t>(
+            (commConfig.GetConfigTrafficClass() == INVALID_UINT) ? rdmaConfig.GetRdmaTrafficClass() :
+                                                                   commConfig.GetConfigTrafficClass());
+        channelDescFinal.roceAttr.sl = static_cast<uint8_t>(
+            (commConfig.GetConfigServiceLevel() == INVALID_UINT) ? rdmaConfig.GetRdmaServerLevel() :
+                                                                   commConfig.GetConfigServiceLevel());
         channelDescFinal.roceAttr.queueNum = ResolveQueueNum(rdmaConfig, channelDesc);
+        if (channelDesc.roceAttr.tc != 0xFF || channelDesc.roceAttr.sl != 0xFF) {
+            HCCL_RUN_WARNING(
+                "[FillChannelDescFinal] ignore HcclChannelDesc tc/sl, actually used tc[%u], sl[%u]",
+                channelDescFinal.roceAttr.tc, channelDescFinal.roceAttr.sl);
+        }
     } else {
         channelDescFinal.roceAttr.retryCnt = (channelDesc.roceAttr.retryCnt == INVALID_UINT) ?
                                                  EnvConfig::GetExternalInputRdmaRetryCnt() :

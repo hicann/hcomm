@@ -29,8 +29,40 @@
 #include "builtin_endpoint_ops.h"
 #include "nic_plugin_holder.h"
 #include "nic_plugin_manager.h"
+#include "acl/acl_rt.h"
+#include "adapter_rts_common.h"
+#include "tp_qos.h"
+#include "hccl/hccl_types.h"
 
 using namespace hcomm;
+
+constexpr uint32_t kDscpToRoceTcShift = 2U; // RoCE TC = DSCP << 2（DiffServ 高 6 位为 DSCP）
+
+static void ApplyRoceQosCompatToSlTc(HcommChannelDesc& channelDesc)
+{
+    if (channelDesc.qos == HCCL_COMM_QOS_CONFIG_NOT_SET) {
+        return;
+    }
+
+    const uint8_t sl = static_cast<uint8_t>(channelDesc.qos & 0xFFU);
+    uint8_t dscp = Hccl::kUboeDefaultDscp;
+    s32 userDevId = 0;
+    s32 phyDevId = 0;
+    if (hrtGetDevice(&userDevId) != HCCL_SUCCESS || aclrtGetPhyDevIdByUserDevId(userDevId, &phyDevId) != ACL_SUCCESS) {
+        HCCL_WARNING(
+            "[ApplyRoceQosCompatToSlTc] get phyDevId failed, userDevId[%d], fallback to default dscp[%u].", userDevId,
+            static_cast<unsigned>(dscp));
+    } else {
+        (void)Hccl::TpQosGetDscpByQosFromHccnCfg(static_cast<uint32_t>(phyDevId), sl, dscp);
+    }
+
+    channelDesc.roceAttr.sl = sl;
+    channelDesc.roceAttr.tc = static_cast<uint8_t>((static_cast<uint32_t>(dscp) << kDscpToRoceTcShift) & 0xFFU);
+    HCCL_INFO(
+        "[ApplyRoceQosCompatToSlTc] qos compat: qos[%u] userDevId[%d] phyDevId[%d] dscp[%u] sl[%u] tc[%u].",
+        channelDesc.qos, userDevId, phyDevId, static_cast<unsigned>(dscp),
+        static_cast<unsigned>(channelDesc.roceAttr.sl), static_cast<unsigned>(channelDesc.roceAttr.tc));
+}
 
 namespace {
 void DestroyPluginCtx(HcommNicChannelOps* ops, void* pluginCtx)
@@ -182,6 +214,8 @@ HcommResult CheckRoceAttr(HcommChannelDesc& channelDesc)
         channelDesc.roceAttr.cqAttrFlags = 0;
         HCCL_INFO("[%s] set roceAttr.cqAttrFlags to 0.", __func__);
     }
+
+    ApplyRoceQosCompatToSlTc(channelDesc);
 
     return HCCL_SUCCESS;
 }

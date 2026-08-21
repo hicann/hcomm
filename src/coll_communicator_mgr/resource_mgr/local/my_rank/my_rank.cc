@@ -56,18 +56,17 @@ HcommChannelDesc ChannelDescHccl2Hcomm(const HcclChannelDesc& hcclDesc, const hc
     hcommDesc.memHandles = reinterpret_cast<HcommMemHandle*>(hcclDesc.memHandles);
     hcommDesc.memHandleNum = hcclDesc.memHandleNum;
     (void)memcpy_s(hcommDesc.raws, sizeof(hcommDesc.raws), hcclDesc.raws, sizeof(hcommDesc.raws));
+    // RoCE：透传原始 hcclQos（可为 NOT_SET），由 CheckRoceAttr/ApplyRoceQosCompatToSlTc 决定是否映射 SL/TC
     if (hcclDesc.channelProtocol == COMM_PROTOCOL_ROCE) {
+        hcommDesc.qos = commConfig.GetConfigHcclQos();
         hcommDesc.roceAttr.retryCnt = hcclDesc.roceAttr.retryCnt;
         hcommDesc.roceAttr.retryInterval = hcclDesc.roceAttr.retryInterval;
         hcommDesc.roceAttr.sl = hcclDesc.roceAttr.sl;
         hcommDesc.roceAttr.tc = hcclDesc.roceAttr.tc;
         return hcommDesc;
     }
-    if (hcclDesc.channelProtocol == COMM_PROTOCOL_UB_CTP || hcclDesc.channelProtocol == COMM_PROTOCOL_UBC_TP
-        || hcclDesc.channelProtocol == COMM_PROTOCOL_UBOE || hcclDesc.channelProtocol == COMM_PROTOCOL_UB_RTP) {
-        hcommDesc.qos = ResolveUbCommDomainQos(commConfig);
-        return hcommDesc;
-    }
+    // UB 等：未配置时落默认 4，供下游 Jetty/TP 使用
+    hcommDesc.qos = ResolveUbCommDomainQos(commConfig);
     if (hcclDesc.channelProtocol == COMM_PROTOCOL_UB_MEM) {
         hcommDesc.ubMemAttr.pathMode = hcclDesc.ubMemAttr.pathMode;
     }
