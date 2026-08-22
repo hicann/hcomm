@@ -351,7 +351,7 @@ TEST_F(TestHcclThread, Ut_HcommThreadResGetInfo_When_ThreadZero_Expect_Return_HC
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
-TEST_F(TestHcclThread, Ut_HcommThreadResGetInfo_When_ResTypeNotSupport_Expect_Return_HCCL_E_NOT_SUPPORT)
+TEST_F(TestHcclThread, Ut_HcommThreadResGetInfo_When_ResTypeNotSupport_Expect_Return_HCCL_E_PARA)
 {
     bool isDeviceSide{false};
     MOCKER(GetRunSideIsDevice).stubs().with(outBound(isDeviceSide)).will(returnValue(HCCL_SUCCESS));
@@ -362,7 +362,7 @@ TEST_F(TestHcclThread, Ut_HcommThreadResGetInfo_When_ResTypeNotSupport_Expect_Re
 
     void* info = nullptr;
     ret = HcommThreadResGetInfo(thread, ThreadResType::THREAD_RES_TYPE_INVALID, sizeof(ThreadResTypeStream), &info);
-    EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
+    EXPECT_EQ(ret, HCCL_E_PARA);
 
     HcommThreadFree(&thread, 1);
 }

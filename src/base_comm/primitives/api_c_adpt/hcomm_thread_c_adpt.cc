@@ -334,6 +334,9 @@ HcommResult HcommThreadResGetInfo(ThreadHandle thread, ThreadResType resType, ui
 {
     CHK_PTR_NULL(info);
     CHK_PRT_RET(thread == 0, HCCL_ERROR("[%s] thread is 0", __func__), HCCL_E_PTR);
+    CHK_PRT_RET(
+        resType == ThreadResType::THREAD_RES_TYPE_INVALID,
+        HCCL_ERROR("[%s] resType[%d] is invalid", __func__, static_cast<int32_t>(resType)), HCCL_E_PARA);
 
     HCCL_INFO(
         "[%s] begin, thread[0x%llx], resType[%d], infoLen[%u]", __func__, thread, static_cast<int32_t>(resType),
