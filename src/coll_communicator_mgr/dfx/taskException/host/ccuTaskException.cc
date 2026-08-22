@@ -7,9 +7,9 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
  * See LICENSE in the root of the software repository for the full text of the License.
  */
-
 #include "ccuTaskException.h"
 #include "ccu_dfx_schema.h"
+#include <algorithm>
 #include <memory>
 #include "log.h"
 #include "comm_addr_logger.h"
@@ -1365,17 +1365,14 @@ HcclResult CcuTaskException::PrintCcuUbRegisters(
 {
     std::vector<CcuJetty*> ccuJettys;
     for (const CcuErrorInfo& errorInfo : errorInfos) {
-        if (REP_WITH_CHANNEL.find(errorInfo.repType) == REP_WITH_CHANNEL.end()) {
-            HCCL_INFO("[%s]repType[%d] not found in REP_WITH_CHANNEL, skip", __func__, errorInfo.repType);
-            continue;
-        }
-
         std::pair<CcuChannelInfo, std::vector<CcuJetty*>> ctx;
         (void)GetCcuJettys(errorInfo, ctx);
         ccuJettys.insert(ccuJettys.end(), ctx.second.begin(), ctx.second.end());
     }
+    std::sort(ccuJettys.begin(), ccuJettys.end());
+    ccuJettys.erase(std::unique(ccuJettys.begin(), ccuJettys.end()), ccuJettys.end());
 
-    u32 jettyNum = ccuJettys.size();
+    u32 jettyNum = static_cast<u32>(ccuJettys.size());
     CHK_PRT_RET(jettyNum == 0, HCCL_RUN_INFO("[%s]jettyNum[%u], skip", __func__, jettyNum), HCCL_SUCCESS);
 
     std::vector<JettyHandle> jettyHandles;
@@ -1422,7 +1419,7 @@ uint16_t CcuTaskException::GetChannleIdByCcuErrorInfo(const CcuErrorInfo& errorI
             channelId = errorInfo.msg.bufTransMem.channelId;
             break;
         default:
-            HCCL_ERROR("[%s]repType[%d] does not have jetty", __func__, errorInfo.repType);
+            HCCL_RUN_INFO("[%s]repType[%d] does not have jetty", __func__, errorInfo.repType);
             break;
     }
     HCCL_INFO("[%s]repType[%d], channelId[%u]", __func__, errorInfo.repType, channelId);
@@ -1432,11 +1429,8 @@ uint16_t CcuTaskException::GetChannleIdByCcuErrorInfo(const CcuErrorInfo& errorI
 HcclResult
 CcuTaskException::GetCcuJettys(const CcuErrorInfo& errorInfo, std::pair<CcuChannelInfo, std::vector<CcuJetty*>>& ctx)
 {
-    if (REP_WITH_CHANNEL.find(errorInfo.repType) == REP_WITH_CHANNEL.end()) {
-        HCCL_INFO("[%s]repType[%d] does not need to get jettys, skip", __func__, errorInfo.repType);
-        return HCCL_SUCCESS;
-    }
     uint16_t channelId = GetChannleIdByCcuErrorInfo(errorInfo);
+    CHK_PRT_RET(channelId == INVALID_U16, HCCL_RUN_INFO("[%s]channelId is invalid, skip", __func__), HCCL_SUCCESS);
 
     // channelId -> channelHandle
     u64 channelHandle = DFX_INVALID_U64;

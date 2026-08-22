@@ -1450,3 +1450,48 @@ TEST_F(CcuTaskExceptionTest, Ut_GetChannleIdByCcuErrorInfo)
     bufRead.repType = CcuRep::CcuRepType::LOOP;
     EXPECT_EQ(CcuTaskException::GetChannleIdByCcuErrorInfo(loop), 65535);
 }
+
+// ============ PrintCcuUbRegisters 测试 ============
+
+TEST_F(CcuTaskExceptionTest, PrintCcuUbRegisters_EmptyErrorInfos_ExpectSuccess)
+{
+    std::vector<CcuErrorInfo> errorInfos;
+    Hccl::TaskParam taskParam{.taskType = Hccl::TaskParamType::TASK_CCU};
+    Hccl::TaskInfo taskInfo{0, 0, 0, taskParam, nullptr, false};
+    EXPECT_EQ(CcuTaskException::PrintCcuUbRegisters(errorInfos, 0, taskInfo), HCCL_SUCCESS);
+}
+
+TEST_F(CcuTaskExceptionTest, PrintCcuUbRegisters_RepTypeNotInRepWithChannel_ExpectSuccess)
+{
+    CcuErrorInfo errorInfo;
+    errorInfo.repType = CcuRep::CcuRepType::LOOP;
+    std::vector<CcuErrorInfo> errorInfos{errorInfo};
+    Hccl::TaskParam taskParam{.taskType = Hccl::TaskParamType::TASK_CCU};
+    Hccl::TaskInfo taskInfo{0, 0, 0, taskParam, nullptr, false};
+    EXPECT_EQ(CcuTaskException::PrintCcuUbRegisters(errorInfos, 0, taskInfo), HCCL_SUCCESS);
+}
+
+TEST_F(CcuTaskExceptionTest, PrintCcuUbRegisters_InvalidChannelId_ExpectSuccess)
+{
+    CcuErrorInfo errorInfo;
+    errorInfo.repType = CcuRep::CcuRepType::REM_POST_SEM;
+    errorInfo.msg.waitSignal.channelId[0] = 65535;
+    std::vector<CcuErrorInfo> errorInfos{errorInfo};
+    Hccl::TaskParam taskParam{.taskType = Hccl::TaskParamType::TASK_CCU};
+    Hccl::TaskInfo taskInfo{0, 0, 0, taskParam, nullptr, false};
+    EXPECT_EQ(CcuTaskException::PrintCcuUbRegisters(errorInfos, 0, taskInfo), HCCL_SUCCESS);
+}
+
+TEST_F(CcuTaskExceptionTest, PrintCcuUbRegisters_MultipleInvalidChannelIds_ExpectSuccess)
+{
+    CcuErrorInfo errorInfo1;
+    errorInfo1.repType = CcuRep::CcuRepType::REM_POST_SEM;
+    errorInfo1.msg.waitSignal.channelId[0] = 65535;
+    CcuErrorInfo errorInfo2;
+    errorInfo2.repType = CcuRep::CcuRepType::READ;
+    errorInfo2.msg.transMem.channelId = 65535;
+    std::vector<CcuErrorInfo> errorInfos{errorInfo1, errorInfo2};
+    Hccl::TaskParam taskParam{.taskType = Hccl::TaskParamType::TASK_CCU};
+    Hccl::TaskInfo taskInfo{0, 0, 0, taskParam, nullptr, false};
+    EXPECT_EQ(CcuTaskException::PrintCcuUbRegisters(errorInfos, 0, taskInfo), HCCL_SUCCESS);
+}
