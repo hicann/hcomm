@@ -21,6 +21,11 @@
 #include "stream_pub.h"
 #include "launch_aicpu.h"
 #include "adapter_rts_common.h"
+#include "dispatcher.h"
+#include "local_notify.h"
+#include "order_launch.h"
+#include "profiling_manager_pub.h"
+#include "workflow.h"
 
 using namespace hccl;
 
@@ -430,4 +435,75 @@ TEST_F(AclgraphCommunicatorTest, AicpuInitTilingCache_OpsMode)
     HcclResult ret = communicator_.AicpuInitOpTilingDataAicpuCache(opParam, HCCL_CMD_ALLREDUCE, &tilingData);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(tilingData.aicpuCacheEnable, 1);
+}
+
+/**
+ * @brief AIL-01: AicpuKfcTilingDataLaunchIn capture 成功路径
+ * 验证：isCapture=true 时走完两段 event 按序同步逻辑，返回 SUCCESS，
+ *       覆盖 KERNEL_INDEX_ACLGRAPH_EVENT_0/1 的 record/wait 及按序下发新增代码行。
+ */
+TEST_F(AclgraphCommunicatorTest, AicpuKfcTilingDataLaunchIn_CaptureSuccess)
+{
+    OpParam opParam;
+    opParam.tag = "test_tag";
+    opParam.stream.stream_ = reinterpret_cast<void*>(0x1000);
+    opParam.inputPtr = nullptr;
+    opParam.outputPtr = nullptr;
+    opParam.isCapture = true;
+    opParam.opType = HCCL_CMD_ALLREDUCE;
+
+    DeviceMem deviceContext;
+    std::string kernelName = "test_kernel";
+    AicpuOpTiling opTilingInfo{};
+
+    communicator_.deviceLogicId_ = 0;
+    communicator_.identifier_ = "test_group";
+    communicator_.opStream_.stream_ = reinterpret_cast<void*>(0x2000);
+
+    MOCKER(SetNormalMode).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(LocalNotify::Post).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(LocalNotify::Wait).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(GetWorkflowMode).stubs().will(returnValue(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB));
+    MOCKER(hrtMsprofSysCycleTime).stubs().will(returnValue(static_cast<uint64_t>(0)));
+    MOCKER(aclrtRecordEvent).stubs().will(returnValue(ACL_SUCCESS));
+    MOCKER(aclrtStreamWaitEvent).stubs().will(returnValue(ACL_SUCCESS));
+    MOCKER_CPP(&OrderLaunch::AclgraphLaunchInOrderToOrderStream).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&OrderLaunch::AclgraphLaunchInOrderToKernelStream).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclCommunicator::KernelLaunchChooseAicpuOrCustom).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(ProfilingManagerPub::CallMsprofReportNodeInfo).stubs().will(returnValue(HCCL_SUCCESS));
+
+    HcclResult ret
+        = communicator_.AicpuKfcTilingDataLaunchIn(opParam, deviceContext, kernelName, opTilingInfo, 0, false);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+/**
+ * @brief AIL-02: AicpuKfcTilingDataLaunchIn capture 首次 recordEvent 失败
+ * 验证：第一段 aclrtRecordEvent 返回非 ACL_SUCCESS 时，CHK_PRT_RET 提前返回 HCCL_E_RUNTIME。
+ */
+TEST_F(AclgraphCommunicatorTest, AicpuKfcTilingDataLaunchIn_CaptureRecordEventFail)
+{
+    OpParam opParam;
+    opParam.tag = "test_tag";
+    opParam.stream.stream_ = reinterpret_cast<void*>(0x1000);
+    opParam.isCapture = true;
+    opParam.opType = HCCL_CMD_ALLREDUCE;
+
+    DeviceMem deviceContext;
+    std::string kernelName = "test_kernel";
+    AicpuOpTiling opTilingInfo{};
+
+    communicator_.deviceLogicId_ = 0;
+    communicator_.identifier_ = "test_group";
+    communicator_.opStream_.stream_ = reinterpret_cast<void*>(0x2000);
+
+    MOCKER(SetNormalMode).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(LocalNotify::Post).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(GetWorkflowMode).stubs().will(returnValue(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB));
+    MOCKER(hrtMsprofSysCycleTime).stubs().will(returnValue(static_cast<uint64_t>(0)));
+    MOCKER(aclrtRecordEvent).stubs().will(returnValue(1));
+
+    HcclResult ret
+        = communicator_.AicpuKfcTilingDataLaunchIn(opParam, deviceContext, kernelName, opTilingInfo, 0, false);
+    EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }
