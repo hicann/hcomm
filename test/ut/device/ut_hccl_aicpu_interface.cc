@@ -149,7 +149,7 @@ ThreadNotifyRecordParam* CreateNotifyRecordParam(
     return param;
 }
 
-TEST_F(Test_Hccl_Aicpu_Interface, Ut_RunAicpuNotifyWait_When_AllSuccess_Expect_ReturnHCCL_SUCCESS)
+TEST_F(Test_Hccl_Aicpu_Interface, Ut_RunAicpuNotifyWaitAicpuKernel_When_AllSuccess_Expect_ReturnHCCL_SUCCESS)
 {
     ThreadNotifyWaitParam* param = CreateNotifyWaitParam("test_comm", 0x1234, 2, 1);
 
@@ -158,13 +158,13 @@ TEST_F(Test_Hccl_Aicpu_Interface, Ut_RunAicpuNotifyWait_When_AllSuccess_Expect_R
     MOCKER(HcommThreadNotifyWaitOnThreadWithDefaultTimeout).stubs().will(returnValue(0));
     MOCKER(HcommReleaseComm).stubs().will(returnValue(0));
 
-    uint32_t ret = RunAicpuNotifyWait(param);
+    uint32_t ret = RunAicpuNotifyWaitAicpuKernel(param);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     delete param;
 }
 
-TEST_F(Test_Hccl_Aicpu_Interface, Ut_RunAicpuNotifyRecord_When_AllSuccess_Expect_ReturnHCCL_SUCCESS)
+TEST_F(Test_Hccl_Aicpu_Interface, Ut_RunAicpuNotifyRecordAicpuKernel_When_AllSuccess_Expect_ReturnHCCL_SUCCESS)
 {
     ThreadNotifyRecordParam* param = CreateNotifyRecordParam("test_comm", 0x1234, 0x5678, 0, 1);
 
@@ -173,7 +173,7 @@ TEST_F(Test_Hccl_Aicpu_Interface, Ut_RunAicpuNotifyRecord_When_AllSuccess_Expect
     MOCKER(HcommThreadNotifyRecordOnThread).stubs().will(returnValue(0));
     MOCKER(HcommReleaseComm).stubs().will(returnValue(0));
 
-    uint32_t ret = RunAicpuNotifyRecord(param);
+    uint32_t ret = RunAicpuNotifyRecordAicpuKernel(param);
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     delete param;

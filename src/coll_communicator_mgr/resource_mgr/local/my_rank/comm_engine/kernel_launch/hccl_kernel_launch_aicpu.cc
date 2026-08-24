@@ -94,7 +94,7 @@ static HcclResult LaunchNotifyWaitToThread(
     HcclComm comm, aclrtStream unfoldStream, ThreadHandle srcThread, uint32_t dstNotifyIdx, uint32_t dataType)
 {
     uint64_t beginTime = HcommGetProfilingSysCycleTime();
-    std::string kernelName = "RunAicpuNotifyWait";
+    std::string kernelName = "RunAicpuNotifyWaitAicpuKernel";
     hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
     auto binKernelHandle = hcclComm->GetBinHandle();
 
@@ -207,7 +207,7 @@ static HcclResult LaunchNotifyRecordToThread(
     uint64_t beginTime = HcommGetProfilingSysCycleTime();
     aclrtFuncHandle funcHandle;
     aclrtArgsHandle argsHandle;
-    std::string kernelName = "RunAicpuNotifyRecord";
+    std::string kernelName = "RunAicpuNotifyRecordAicpuKernel";
 
     // 1. 获取 function handle
     hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);

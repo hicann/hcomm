@@ -123,10 +123,10 @@ __attribute__((visibility("default"))) uint32_t RunAicpuRpcSrvLaunchV2(void* arg
     return 0;
 }
 
-__attribute__((visibility("default"))) uint32_t RunAicpuNotifyRecord(void* args)
+__attribute__((visibility("default"))) uint32_t RunAicpuNotifyRecordAicpuKernel(void* args)
 {
     if (args == nullptr) {
-        HCCL_ERROR("RunAicpuNotifyRecord args is null.");
+        HCCL_ERROR("RunAicpuNotifyRecordAicpuKernel args is null.");
         return HCCL_E_PARA;
     }
     ThreadNotifyRecordParam* param = reinterpret_cast<ThreadNotifyRecordParam*>(args);
@@ -154,7 +154,7 @@ __attribute__((visibility("default"))) uint32_t RunAicpuNotifyRecord(void* args)
     }
     int32_t ret = HcommThreadNotifyRecordOnThread(param->thread, param->dstThread, param->dstNotifyIdx);
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("RunAicpuNotifyRecord failed. ret[%d]", ret);
+        HCCL_ERROR("RunAicpuNotifyRecordAicpuKernel failed. ret[%d]", ret);
         HcommReleaseComm(param->commName);
         return ret;
     }
@@ -170,7 +170,7 @@ __attribute__((visibility("default"))) uint32_t RunAicpuNotifyRecord(void* args)
         return HCCL_E_INTERNAL;
     }
 
-    HCCL_INFO("RunAicpuNotifyRecord success.");
+    HCCL_INFO("RunAicpuNotifyRecordAicpuKernel success.");
     if (HcommReleaseComm(param->commName) != HCCL_SUCCESS) {
         HCCL_ERROR("%s HcommReleaseComm fail, commName[%s]", __func__, param->commName);
         return HCCL_E_INTERNAL;
@@ -179,14 +179,14 @@ __attribute__((visibility("default"))) uint32_t RunAicpuNotifyRecord(void* args)
     return HCCL_SUCCESS;
 }
 
-__attribute__((visibility("default"))) uint32_t RunAicpuNotifyWait(void* args)
+__attribute__((visibility("default"))) uint32_t RunAicpuNotifyWaitAicpuKernel(void* args)
 {
     if (args == nullptr) {
-        HCCL_ERROR("RunAicpuNotifyWait args is null.");
+        HCCL_ERROR("RunAicpuNotifyWaitAicpuKernel args is null.");
         return HCCL_E_PARA;
     }
     ThreadNotifyWaitParam* param = reinterpret_cast<ThreadNotifyWaitParam*>(args);
-    HCCL_INFO("[RunAicpuNotifyWait] thread[0x%llx], notifyIdx[%u]", param->thread, param->notifyIdx);
+    HCCL_INFO("[RunAicpuNotifyWaitAicpuKernel] thread[0x%llx], notifyIdx[%u]", param->thread, param->notifyIdx);
     // 保留通信域管理 - 保证生命周期安全
     if (HcommAcquireComm(param->commName) != HCCL_SUCCESS) {
         HCCL_ERROR("%s HcommAcquireComm fail, commName[%s]", __func__, param->commName);
@@ -210,7 +210,7 @@ __attribute__((visibility("default"))) uint32_t RunAicpuNotifyWait(void* args)
     }
     int32_t ret = HcommThreadNotifyWaitOnThreadWithDefaultTimeout(param->thread, param->notifyIdx);
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("RunAicpuNotifyWait failed. ret[%d]", ret);
+        HCCL_ERROR("RunAicpuNotifyWaitAicpuKernel failed. ret[%d]", ret);
         HcommReleaseComm(param->commName);
         return ret;
     }
@@ -226,7 +226,7 @@ __attribute__((visibility("default"))) uint32_t RunAicpuNotifyWait(void* args)
         return HCCL_E_INTERNAL;
     }
 
-    HCCL_INFO("RunAicpuNotifyWait success.");
+    HCCL_INFO("RunAicpuNotifyWaitAicpuKernel success.");
     if (HcommReleaseComm(param->commName) != HCCL_SUCCESS) {
         HCCL_ERROR("%s HcommReleaseComm fail, commName[%s]", __func__, param->commName);
         return HCCL_E_INTERNAL;
