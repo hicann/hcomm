@@ -72,6 +72,12 @@ HcclResult CcuComponent::Init()
 
     CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(devLogicId_), devPhyId_));
     CHK_RET(CheckDiesEnable());
+
+    // 当前ccu驱动拉起时不清理资源，hcomm规避，后续需要清理cke及其他资源
+    for (uint8_t dieId = 0; dieId < MAX_CCU_IODIE_NUM; dieId++) {
+        (void)CleanDieCkes(dieId);
+    }
+
     CHK_RET(CreateCcuRmaBuffer());
     CHK_RET(CreateResourceManagers());
     CHK_RET(CreateLoopChannels());
