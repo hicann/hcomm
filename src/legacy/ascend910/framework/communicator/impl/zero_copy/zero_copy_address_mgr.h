@@ -65,7 +65,7 @@ public:
     // 处理RingBuffer
     HcclResult ProcessRingBuffer(ZeroCopyRingBufferItem* ringBuffer, u32* head, u32* tail);
     // 处理引用计数
-    u32 GetCommRefCnt();
+    u32 GetCommRefCnt() const;
     HcclResult IncreCommRefCnt();
     HcclResult DecreCommRefCnt();
 

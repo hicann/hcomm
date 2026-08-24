@@ -13,7 +13,6 @@
 
 #include "hcom_pub.h"
 #include "hccl_comm_pub.h"
-#include "hcom_private_v2.h"
 
 HcclResult GetGroupRankInfo(const char* group, RankInfoType rankType, u32 inPara, u32* outPara);
 HcclResult GetRankList(u32 rankNum, const u32* rankIds, HcclGroupParams& params);

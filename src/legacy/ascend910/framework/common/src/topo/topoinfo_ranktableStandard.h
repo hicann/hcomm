@@ -50,18 +50,19 @@ private:
     /* cloud场景解析rank_table */
     HcclResult GetGroupList(hccl::HcclCommParams& params, hccl::RankTable_t& rankTable);
     HcclResult GetLabSingleGroup(
-        nlohmann::json& obj, u32 objIndex, hccl::HcclCommParams& params, hccl::RankTable_t& rankTable, u32 instanceNum);
+        const nlohmann::json& obj, u32 objIndex, const hccl::HcclCommParams& params, hccl::RankTable_t& rankTable,
+        u32 instanceNum);
     HcclResult GetCloudDevList(
         nlohmann::json& instanceList, u32 podIndex, nlohmann::json& deviceList, std::string& serverId, u32& serverIdx);
     HcclResult GetDevList(
-        nlohmann::json& instanceList, u32 podIndex, nlohmann::json& deviceList, hccl::HcclCommParams& params,
-        hccl::RankTable_t& rankTable, std::string& serverId, u32& serverIdx);
+        const nlohmann::json& instanceList, u32 podIndex, const nlohmann::json& deviceList,
+        const hccl::HcclCommParams& params, hccl::RankTable_t& rankTable, std::string& serverId, u32& serverIdx);
     HcclResult GetInstanceList(
         nlohmann::json& instanceList, hccl::HcclCommParams& params, hccl::RankTable_t& rankTable, u32 instanceNum,
         u32 deviceNum);
 
     HcclResult
-    GetSingleGroupDeviceCount(nlohmann::json& obj, u32 objIndex, hccl::RankTable_t& rankTable, u32& deviceNum);
+    GetSingleGroupDeviceCount(const nlohmann::json& obj, u32 objIndex, hccl::RankTable_t& rankTable, u32& deviceNum);
 
     bool cloudFlag_ = false; // 默认为false
 };

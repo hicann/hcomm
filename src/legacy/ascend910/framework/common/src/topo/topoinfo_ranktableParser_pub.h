@@ -104,7 +104,8 @@ protected:
         const nlohmann::json& obj, const u32 index, const char* propName, nlohmann::json& propValue,
         bool optionalProp = true) const;
     HcclResult GetJsonArrayMemberProperty(
-        const nlohmann::json& obj, const u32 index, const char* propName, u32& propValue, bool optionalProp = true);
+        const nlohmann::json& obj, const u32 index, const char* propName, u32& propValue,
+        bool optionalProp = true) const;
 
     HcclResult CheckUniquePara(const JsonUniqueInfoType& type, const std::string& value, std::string& strType) const;
     HcclResult

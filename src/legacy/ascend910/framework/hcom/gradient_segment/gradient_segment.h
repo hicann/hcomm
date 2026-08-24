@@ -56,7 +56,8 @@ private:
     HcclResult CheckAndConfigSegment(
         std::vector<float>& segmentSizeProportion, float totalSize, std::vector<float>& segmentSize) const;
     OriginalGraphShapeType shapeType_;
-    HcclResult GetIdxByBinarySearch(const std::vector<float>& accumGradList, const float& curSize, u32& segGradIdx);
+    HcclResult
+    GetIdxByBinarySearch(const std::vector<float>& accumGradList, const float& curSize, u32& segGradIdx) const;
     HcclResult
     GetNearIdxByDataSize(const std::vector<float>& accumGradList, u32& segGradIdx, float gradSize, s32 midIdx) const;
     HcclResult GetFixedSizeSegmentByDefaultRatio(

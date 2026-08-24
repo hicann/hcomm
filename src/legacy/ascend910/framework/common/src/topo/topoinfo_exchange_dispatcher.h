@@ -48,7 +48,7 @@ public:
         HcclResult SendBody(std::shared_ptr<HcclSocket> socket);
         HcclResult SendIdentify(std::shared_ptr<HcclSocket> socket);
         HcclResult SendHelper(std::shared_ptr<HcclSocket> socket, char* buf, size_t dataLen, size_t& sendedLen);
-        bool IsOk() { return bodyLen != 0 && headerSended == headerLen && bodySended == bodyLen; }
+        bool IsOk() const { return bodyLen != 0 && headerSended == headerLen && bodySended == bodyLen; }
     };
 
     struct FdContext {

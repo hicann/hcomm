@@ -94,7 +94,8 @@ public:
 private:
     // 接收到对端重执行失败的信息后，打印当前接收到的Agent节点信息
     void PrintAgentInfoAfterFail(
-        std::map<u32, HcclAgentRetryInfo>& serverSockets, std::set<u32>& recvVaild, HcclAgentRetryInfo& agentRetryInfo);
+        std::map<u32, HcclAgentRetryInfo>& serverSockets, std::set<u32>& recvVaild,
+        HcclAgentRetryInfo& agentRetryInfo) const;
 };
 
 class OpRetryServerCheckOp : public OpRetryServerBase {
@@ -133,8 +134,9 @@ public:
     HcclResult ProcessEvent(RetryContext* retryCtx) override;
 
 private:
-    bool CompareSwitchRankList(const u32* firstSwitchRankList, const u32* switchRankList, const u32 switchRankNum);
-    bool CompareUseBackupLists(const bool* firstArray, const bool* secondArray, const u32 switchRankNum);
+    bool
+    CompareSwitchRankList(const u32* firstSwitchRankList, const u32* switchRankList, const u32 switchRankNum) const;
+    bool CompareUseBackupLists(const bool* firstArray, const bool* secondArray, const u32 switchRankNum) const;
     bool CheckRemotePorts(const u32 rankId, const ActiveSwitchInfo& switchRankInfo);
     HcclResult
     CollectSingleAgentActiveSwitchInfo(RetryContext* retryCtx, const u32 rankId, HcclAgentRetryInfo& agentInfo);

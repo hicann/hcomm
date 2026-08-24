@@ -264,7 +264,7 @@ HcclResult OrderLaunch::HcomLaunchInOrder(
  * 3. wait notify1 on hostOrderStream - 等待其他算子在order stream上完成
  */
 HcclResult OrderLaunch::LaunchInOrder(
-    [[maybe_unused]] std::string& group, const Stream& kernelStream, const Stream& hostOrderStream,
+    [[maybe_unused]] const std::string& group, const Stream& kernelStream, const Stream& hostOrderStream,
     std::shared_ptr<LocalNotify> notify0, std::shared_ptr<LocalNotify> notify1, u32 timeOut)
 {
     CHK_SMART_PTR_NULL(notify0);
@@ -356,7 +356,7 @@ HcclResult OrderLaunch::EnsureOrderStreamForGroup(std::string& group, u64 contex
  * @brief 获取当前线程的context
  * 通过hrtCtxGetCurrent接口获取当前线程关联的runtime context
  */
-HcclResult OrderLaunch::GetCurrentContext(u64& currentContext)
+HcclResult OrderLaunch::GetCurrentContext(u64& currentContext) const
 {
     HcclRtContext rtCtx = nullptr;
     CHK_RET(hrtCtxGetCurrent(&rtCtx));

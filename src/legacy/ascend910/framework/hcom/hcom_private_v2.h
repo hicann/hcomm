@@ -11,6 +11,8 @@
 #ifndef H_COM_PRIVATE_V2_H
 #define H_COM_PRIVATE_V2_H
 
+#include "hccl/base.h"
+
 constexpr u32 ESTIMATE_CCU_TASK_PER_STREAM = 20;
 #ifdef __cplusplus
 extern "C" {

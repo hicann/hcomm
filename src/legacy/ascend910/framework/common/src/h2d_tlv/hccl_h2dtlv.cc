@@ -78,7 +78,7 @@ void hcclH2dTlv::DeinitHccpChannel()
 
 bool hcclH2dTlv::GetH2dTlvInitFlag() { return hcclH2dTlvInitFlag_; }
 
-unsigned int hcclH2dTlv::GetH2dTlvBufferSize() { return hcclH2dTlvBuffsize_; }
+unsigned int hcclH2dTlv::GetH2dTlvBufferSize() const { return hcclH2dTlvBuffsize_; }
 
 void* hcclH2dTlv::GetH2dTlvHandle() { return hcclH2dTlvHandle_; }
 

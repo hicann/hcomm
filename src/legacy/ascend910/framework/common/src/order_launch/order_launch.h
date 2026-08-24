@@ -62,7 +62,7 @@ struct OrderLaunchResMgr {
     }
 
     // 析构资源
-    void DestroyResources()
+    void DestroyResources() const
     {
         // 析构资源位置预留，后续根据需要实现
     }
@@ -95,11 +95,11 @@ private:
 
     void DestroyRes();
     HcclResult LaunchInOrder(
-        std::string& group, const Stream& kernelStream, const Stream& hostOrderStream,
+        const std::string& group, const Stream& kernelStream, const Stream& hostOrderStream,
         std::shared_ptr<LocalNotify> notify0, std::shared_ptr<LocalNotify> notify1, u32 timeOut);
     HcclResult InitGroupCtx(const std::string& group);
     HcclResult EnsureOrderStreamForGroup(std::string& group, u64 context, Stream& orderStream);
-    HcclResult GetCurrentContext(u64& currentContext);
+    HcclResult GetCurrentContext(u64& currentContext) const;
 
     std::mutex streamMutex_;
     std::unordered_map<std::string, u64> groupCtxMap_;                          // group -> context 映射

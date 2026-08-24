@@ -72,14 +72,13 @@ HcclResult AicpuHdcUtils::GetOpExecCtrlCmd(std::shared_ptr<HDCommunicate> h2dTra
     return HCCL_SUCCESS;
 }
 
-HcclResult
-AicpuHdcUtils::GetSuspendingStatus(std::shared_ptr<HDCommunicate> h2dTransfer, HcclComSuspendingFlag& kfcFlag)
+HcclResult AicpuHdcUtils::GetSuspendingStatus(std::shared_ptr<HDCommunicate> h2dTransfer, HcclComSuspendingFlag& flag)
 {
     if (!h2dTransfer) {
         return HCCL_SUCCESS;
     }
     u32 startOffset = sizeof(KfcCommand) + sizeof(BackgroundCommand);
-    CHK_RET(h2dTransfer->Get(startOffset, sizeof(HcclComSuspendingFlag), reinterpret_cast<uint8_t*>(&kfcFlag)));
+    CHK_RET(h2dTransfer->Get(startOffset, sizeof(HcclComSuspendingFlag), reinterpret_cast<uint8_t*>(&flag)));
     return HCCL_SUCCESS;
 }
 

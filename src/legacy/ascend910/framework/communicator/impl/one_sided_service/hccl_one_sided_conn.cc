@@ -412,7 +412,7 @@ HcclResult HcclOneSidedConn::GetTransInfo(
     CHK_RET(transportMemPtr_->GetTransInfo(
         transportData_.qpInfo, lkeys.data(), rkeys.data(), localMems.data(), remoteMems.data(), descNum));
     CHK_RET(hrtMemSyncCopy(
-        transportDataDevice_.ptr(), transportDataDevice_.size(), reinterpret_cast<void*>(&transportData_),
+        transportDataDevice_.ptr(), transportDataDevice_.size(), static_cast<void*>(&transportData_),
         sizeof(transportData_), HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
     transportDataAddr = reinterpret_cast<u64>(transportDataDevice_.ptr());
     transportDataSize = transportDataDevice_.size();

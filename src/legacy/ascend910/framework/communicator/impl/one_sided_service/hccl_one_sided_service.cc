@@ -1128,7 +1128,7 @@ HcclResult HcclOneSidedService::AicpuInitKernelLaunch()
         char kernelName[64] = "RunAicpuKfcResInitV2";
         CHK_RET(CreateLaunchStream());
         CHK_RET(AicpuAclKernelLaunch(
-            g_launchStream->ptr(), reinterpret_cast<void*>(&initTask), sizeof(initTask), binHandle_, kernelName, true,
+            g_launchStream->ptr(), static_cast<void*>(&initTask), sizeof(initTask), binHandle_, kernelName, true,
             timeOut));
         CHK_RET(hcclStreamSynchronize(
             g_launchStream->ptr(), CommConfiger::GetInstance().GetCommConfigExecTimeOut(identifier_)));
@@ -1235,7 +1235,7 @@ HcclResult HcclOneSidedService::InitAicpuTilingDataBuf(
         CHK_RET(conn->GetTransInfo(
             descParam, desc, vDataPtr->descNum, vDataPtr->transportDataAddr, vDataPtr->transportDataSize));
         CHK_RET(hrtMemSyncCopy(
-            commResParaDevice_.ptr(), commResParaDevice_.size(), reinterpret_cast<void*>(&commResPara_),
+            commResParaDevice_.ptr(), commResParaDevice_.size(), static_cast<void*>(&commResPara_),
             sizeof(commResPara_), HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
     } else {
         vDataPtr->finalize = true;
@@ -1320,7 +1320,7 @@ HcclResult HcclOneSidedService::AicpuUnfoldKernelLaunchV2(
     }
 
     CHK_RET(AicpuAclKernelLaunchV2(
-        stream, reinterpret_cast<void*>(&commContext), sizeof(commContext), binHandle_, kernelName, false, timeOut,
+        stream, static_cast<void*>(&commContext), sizeof(commContext), binHandle_, kernelName, false, timeOut,
         tilingDataPtr, tilingDataSize, identifier_));
     HCCL_DEBUG("[HcclOneSidedService][AicpuUnfoldKernelLaunchV2] exec succ.");
     return HCCL_SUCCESS;

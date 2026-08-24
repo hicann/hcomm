@@ -630,14 +630,15 @@ HcclResult hcclComm::ScatterOutPlace(
 }
 
 HcclResult hcclComm::ReduceScatter(
-    const std::string& tag, void* inputPtr, void* outputPtr, u64 count, HcclDataType dataType, HcclReduceOp op,
+    const std::string& tag, void* inputPtr, void* outputPtr, u64 recvCount, HcclDataType dataType, HcclReduceOp op,
     HcclRtStream stream)
 {
     /* 增加输出日志关键字 */
     HCCL_INFO(
-        "HCCL_KEY_INFO: tag[%s], input_ptr[%p], output_ptr[%p], count[%llu], data_type[%s], "
+        "HCCL_KEY_INFO: tag[%s], input_ptr[%p], output_ptr[%p], recvCount[%llu], data_type[%s], "
         "op[%s]",
-        tag.c_str(), inputPtr, outputPtr, count, GetDataTypeEnumStr(dataType).c_str(), GetReduceOpEnumStr(op).c_str());
+        tag.c_str(), inputPtr, outputPtr, recvCount, GetDataTypeEnumStr(dataType).c_str(),
+        GetReduceOpEnumStr(op).c_str());
 
     /* * 入参检查 */
     CHK_PTR_NULL(stream);
@@ -652,11 +653,11 @@ HcclResult hcclComm::ReduceScatter(
         return HCCL_E_PARA;
     }
 
-    CHK_RET(communicator_->CheckCount(count));
+    CHK_RET(communicator_->CheckCount(recvCount));
     CHK_RET(communicator_->CheckDataType(dataType, true));
     CHK_RET(communicator_->CheckReduceDataType(dataType, op));
     CHK_RET(communicator_->CheckReductionOp(op));
-    HcclResult ret = communicator_->ReduceScatter(tag, inputPtr, outputPtr, count, dataType, op, stream);
+    HcclResult ret = communicator_->ReduceScatter(tag, inputPtr, outputPtr, recvCount, dataType, op, stream);
     if (ret != HCCL_SUCCESS) {
         PrintSubmittedOpCnt(tag, ret);
         return ret;
@@ -666,18 +667,18 @@ HcclResult hcclComm::ReduceScatter(
 }
 
 HcclResult hcclComm::ReduceScatterOutPlace(
-    const std::string& tag, void* inputPtr, void* outputPtr, u64 count, HcclDataType dataType, HcclReduceOp op,
+    const std::string& tag, void* inputPtr, void* outputPtr, u64 recvCount, HcclDataType dataType, HcclReduceOp op,
     HcclRtStream stream)
 {
     /* 增加输出日志关键字 */
     HCCL_INFO(
-        "HCCL_KEY_INFO: tag[%s], input_ptr[%p], output_ptr[%p], count[%llu], data_type[%s], op[%s]", tag.c_str(),
-        inputPtr, outputPtr, count, GetDataTypeEnumStr(dataType).c_str(), GetReduceOpEnumStr(op).c_str());
+        "HCCL_KEY_INFO: tag[%s], input_ptr[%p], output_ptr[%p], recvCount[%llu], data_type[%s], op[%s]", tag.c_str(),
+        inputPtr, outputPtr, recvCount, GetDataTypeEnumStr(dataType).c_str(), GetReduceOpEnumStr(op).c_str());
 
     /* * 入参检查 */
     CHK_RET(communicator_->CheckDataType(dataType, true));
     CHK_RET(communicator_->CheckReduceDataType(dataType, op));
-    HcclResult ret = communicator_->ReduceScatterOutPlace(tag, inputPtr, outputPtr, count, dataType, op, stream);
+    HcclResult ret = communicator_->ReduceScatterOutPlace(tag, inputPtr, outputPtr, recvCount, dataType, op, stream);
     if (ret != HCCL_SUCCESS) {
         PrintSubmittedOpCnt(tag, ret);
         return ret;
@@ -1232,7 +1233,7 @@ HcclResult hcclComm::Is310PDuoCard(bool& is310PDuoCard)
     return HCCL_SUCCESS;
 }
 
-bool hcclComm::IsNeedResetDevice() { return isResetDevice_; }
+bool hcclComm::IsNeedResetDevice() const { return isResetDevice_; }
 
 HcclResult hcclComm::ResetDeviceEnable()
 {
@@ -1382,9 +1383,9 @@ HcclResult hcclComm::SetAlgoConfig(const std::map<HcclCMDType, std::vector<HcclA
     return HCCL_SUCCESS;
 }
 
-u64 hcclComm::GetConfigInCCLbufferSize() { return inCCLbufferSize_; }
+u64 hcclComm::GetConfigInCCLbufferSize() const { return inCCLbufferSize_; }
 
-u64 hcclComm::GetConfigOutCCLbufferSize() { return outCCLbufferSize_; }
+u64 hcclComm::GetConfigOutCCLbufferSize() const { return outCCLbufferSize_; }
 
 u32 hcclComm::GetRankTableCrc() { return communicator_->GetRankTableCrc(); }
 
@@ -1502,7 +1503,7 @@ HcclResult hcclComm::SetGroupMode(bool isGroup)
     return HCCL_SUCCESS;
 }
 
-bool hcclComm::GetGroupMode() { return isGroupMode_; }
+bool hcclComm::GetGroupMode() const { return isGroupMode_; }
 
 HcclResult hcclComm::GetKFCWorkSpace(void** addr, uint64_t* size)
 {
@@ -1550,7 +1551,7 @@ HcclResult hcclComm::SetHcclQos(u32 hcclQos)
     return HCCL_SUCCESS;
 }
 
-u32 hcclComm::GetHcclQos() { return hcclQos_; }
+u32 hcclComm::GetHcclQos() const { return hcclQos_; }
 
 HcclResult hcclComm::RegisterWindow(void* ptr, size_t size, HcclCommSymWindow* winHandle)
 {

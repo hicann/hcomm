@@ -81,7 +81,7 @@ HcclResult CheckAverageDev(u32 uDeviceNum, u32 uServerNum)
 
     // 如果device_num/server_num 不能被整除，报错
     // averageDevice不等于1 ，2，4，8... 报错
-    if ((uDeviceNum % uServerNum)
+    if ((uDeviceNum % uServerNum) != 0
         || ((averageDevice != AVERAGE_DEVICE_SIXTEEN) && (averageDevice != AVERAGE_DEVICE_EIGHT)
             && (averageDevice != AVERAGE_DEVICE_FOUR) && (averageDevice != AVERAGE_DEVICE_TWO)
             && (averageDevice != AVERAGE_DEVICE_ONE))) {
@@ -401,7 +401,7 @@ HcclResult TopoInfoRanktableParser::GetJsonArrayMemberProperty(
 }
 
 HcclResult TopoInfoRanktableParser::GetJsonArrayMemberProperty(
-    const nlohmann::json& obj, const u32 index, const char* propName, u32& propValue, bool optionalProp)
+    const nlohmann::json& obj, const u32 index, const char* propName, u32& propValue, bool optionalProp) const
 {
     if (!obj.is_array() || index >= obj.size()) {
         HCCL_ERROR(

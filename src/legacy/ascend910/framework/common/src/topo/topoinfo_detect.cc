@@ -22,6 +22,7 @@ namespace hccl {
 const u32 TOPO_EXCHANGE_SERVER_STATUS_IDLE = 0;
 const u32 TOPO_EXCHANGE_SERVER_STATUS_RUNING = 1;
 const u32 TOPO_EXCHANGE_SERVER_STATUS_ERROR = 2;
+constexpr u32 HOST_CONTROL_PORT_RANGE_SIZE = 31;
 UniversalConcurrentMap<u32, volatile u32> TopoInfoDetect::g_topoExchangeServerStatus_;
 
 TopoInfoDetect::TopoInfoDetect()
@@ -235,8 +236,8 @@ HcclResult TopoInfoDetect::SetupServer(HcclRootHandle& rootInfo)
             // 若没有设置HCCL_HOST_SOCKET_PORT_RANGE和HCCL_IF_BASE_PORT 使用自动调整监听端口range[60000,60031]
             HCCL_RUN_INFO(
                 "[Setup][Server] user not set base port and port range, use default port range[%u, %u]",
-                HOST_CONTROL_BASE_PORT, HOST_CONTROL_BASE_PORT + 31);
-            portRanges.push_back({HOST_CONTROL_BASE_PORT, HOST_CONTROL_BASE_PORT + 31});
+                HOST_CONTROL_BASE_PORT, HOST_CONTROL_BASE_PORT + HOST_CONTROL_PORT_RANGE_SIZE);
+            portRanges.push_back({HOST_CONTROL_BASE_PORT, HOST_CONTROL_BASE_PORT + HOST_CONTROL_PORT_RANGE_SIZE});
         } else {
             hostPort = devicePhysicID_ + GetExternalInputHcclIfBasePort();
         }
@@ -300,8 +301,8 @@ HcclResult TopoInfoDetect::GroupLeaderListen(HcclRankHandle& rankHandle, vector<
             // 若没有设置HCCL_HOST_SOCKET_PORT_RANGE和HCCL_IF_BASE_PORT 使用自动调整监听端口range[60000,60031]
             HCCL_RUN_INFO(
                 "[Setup][GroupLeader] user not set base port and port range, use default port range[%u, %u]",
-                HOST_CONTROL_BASE_PORT, HOST_CONTROL_BASE_PORT + 31);
-            portRanges.push_back({HOST_CONTROL_BASE_PORT, HOST_CONTROL_BASE_PORT + 31});
+                HOST_CONTROL_BASE_PORT, HOST_CONTROL_BASE_PORT + HOST_CONTROL_PORT_RANGE_SIZE);
+            portRanges.push_back({HOST_CONTROL_BASE_PORT, HOST_CONTROL_BASE_PORT + HOST_CONTROL_PORT_RANGE_SIZE});
         } else {
             hostPort = devicePhysicID_ + GetExternalInputHcclIfBasePort() + TOPO_GROUPLEADER_PORT_OFFSET;
         }
@@ -330,7 +331,7 @@ HcclResult TopoInfoDetect::GroupLeaderAccept(
 }
 
 HcclResult TopoInfoDetect::GenerateRootInfo(
-    const HcclIpAddress& hostIP, u32 hostPort, u32 devicePhysicID, HcclRootHandle& rootInfo)
+    const HcclIpAddress& hostIP, u32 hostPort, u32 devicePhysicID, HcclRootHandle& rootInfo) const
 {
     u64 timestamp = 0;
     CHK_RET(SalGetCurrentTimestamp(timestamp));
@@ -719,7 +720,7 @@ HcclResult TopoInfoDetect::GetAllHostIfInfos(vector<pair<string, HcclIpAddress>>
 }
 
 HcclResult TopoInfoDetect::GetAllValidHostIfInfos(
-    const vector<HcclIpAddress>& whitelist, vector<pair<string, HcclIpAddress>>& ifInfos, u32 devPhyId)
+    const vector<HcclIpAddress>& whitelist, vector<pair<string, HcclIpAddress>>& ifInfos, u32 devPhyId) const
 {
     vector<pair<string, HcclIpAddress>> orginIfInfos;
     CHK_RET(GetAllHostIfInfos(orginIfInfos, devPhyId));
@@ -1204,7 +1205,8 @@ HcclResult TopoInfoDetect::TransformRankTableStr(const RankTable_t& clusterInfo,
     return HCCL_SUCCESS;
 }
 HcclResult TopoInfoDetect::TransformDeviceList(
-    const RankTable_t& clusterInfo, vector<RankInfo_t>& tmpRankList, nlohmann::json& perServerJson, u32 serverIndex)
+    const RankTable_t& clusterInfo, vector<RankInfo_t>& tmpRankList, nlohmann::json& perServerJson,
+    u32 serverIndex) const
 {
     for (auto it = tmpRankList.begin(); it != tmpRankList.end();) {
         if (it->serverId == clusterInfo.serverList[serverIndex].serverId) {

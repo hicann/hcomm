@@ -161,7 +161,7 @@ bool HcclCommunicator::IsSupportSymmetricMemory([[maybe_unused]] HcclCMDType opT
     return false;
 }
 
-bool HcclCommunicator::IsSupportZeroCopy([[maybe_unused]] const OpParam& opParam) { return false; }
+bool HcclCommunicator::IsSupportZeroCopy([[maybe_unused]] const OpParam& opParam) const { return false; }
 
 HcclResult HcclCommunicator::PrepareZeroCopy(
     [[maybe_unused]] const std::string& algName, [[maybe_unused]] const AlgDesc& algDesc,
@@ -321,11 +321,11 @@ HcclResult HcclCommunicator::AtomicInitSet() { return HCCL_SUCCESS; }
 
 void HcclCommunicator::AtomicInitClear() {}
 
-u32 HcclCommunicator::GetUserRank() { return 0; }
+u32 HcclCommunicator::GetUserRank() const { return 0; }
 
-u32 HcclCommunicator::GetGroupRank() { return 0; }
+u32 HcclCommunicator::GetGroupRank() const { return 0; }
 
-u32 HcclCommunicator::GetRankSize() { return 0; }
+u32 HcclCommunicator::GetRankSize() const { return 0; }
 
 bool HcclCommunicator::GetNicInitialized() { return false; }
 
@@ -754,7 +754,7 @@ HcclResult HcclCommunicator::HandleAclGraphFirstOpAivBuff([[maybe_unused]] rtStr
 
 void HcclCommunicator::EraseCaptureModelId([[maybe_unused]] u64 modelId) {}
 
-bool HcclCommunicator::StreamIsCapture([[maybe_unused]] rtStream_t mainStream)
+bool HcclCommunicator::StreamIsCapture([[maybe_unused]] rtStream_t mainStream) const
 {
     bool isCapture = false;
     return isCapture;
@@ -775,7 +775,7 @@ HcclResult HcclCommunicator::BuildOpLocalScratchMemResParam(
 
 HcclResult HcclCommunicator::CheckSetRetryStateToWaitResume() { return HCCL_SUCCESS; }
 
-bool HcclCommunicator::HasRoceTransportLinks(OpCommTransport& opTransportReq)
+bool HcclCommunicator::HasRoceTransportLinks(OpCommTransport& opTransportReq) const
 {
     (void)opTransportReq;
     return false;
@@ -981,7 +981,7 @@ HcclResult HcclCommunicator::OrchestrateAicpu(
 
 HcclResult HcclCommunicator::CalcTinySendRecvMem(
     [[maybe_unused]] const OpParam& opParam, [[maybe_unused]] AlgResourceResponse& algResResponse,
-    [[maybe_unused]] DeviceMem& tinySendRecvMem)
+    [[maybe_unused]] DeviceMem& tinySendRecvMem) const
 {
     return HCCL_SUCCESS;
 }
@@ -1044,7 +1044,7 @@ HcclResult HcclCommunicator::InitWorkSpace() { return HCCL_SUCCESS; }
 
 HcclResult HcclCommunicator::FillOpParam(
     [[maybe_unused]] const HcclCMDType commType, [[maybe_unused]] OpParam& opParam,
-    [[maybe_unused]] const uint64_t count, [[maybe_unused]] void* pCount, [[maybe_unused]] void* pDispls)
+    [[maybe_unused]] const uint64_t count, [[maybe_unused]] void* pCount, [[maybe_unused]] void* pDispls) const
 {
     return HCCL_SUCCESS;
 }
@@ -1079,7 +1079,7 @@ HcclResult HcclCommunicator::Mc2CreateAndLaunchContext(
 }
 
 HcclResult HcclCommunicator::GetAiCpuNotifyData(
-    [[maybe_unused]] const std::shared_ptr<LocalNotify>& localNotify, [[maybe_unused]] HcclSignalInfo& notifyInfo)
+    [[maybe_unused]] const std::shared_ptr<LocalNotify>& localNotify, [[maybe_unused]] HcclSignalInfo& notifyInfo) const
 {
     return HCCL_SUCCESS;
 }
@@ -1274,7 +1274,8 @@ HcclResult HcclCommunicator::SetWorldGroupInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicator::GetTopoDesc([[maybe_unused]] HcclTopoDescs* topoDescs, [[maybe_unused]] uint32_t topoSize)
+HcclResult
+HcclCommunicator::GetTopoDesc([[maybe_unused]] HcclTopoDescs* topoDescs, [[maybe_unused]] uint32_t topoSize) const
 {
     return HCCL_SUCCESS;
 }
@@ -1449,13 +1450,13 @@ HcclCommunicator::CommGetNetLayers([[maybe_unused]] uint32_t** netLayers, [[mayb
     return HCCL_SUCCESS;
 }
 
-HcclResult
-HcclCommunicator::CommGetInstSizeByNetLayer([[maybe_unused]] uint32_t netLayer, [[maybe_unused]] uint32_t* rankNum)
+HcclResult HcclCommunicator::CommGetInstSizeByNetLayer(
+    [[maybe_unused]] uint32_t netLayer, [[maybe_unused]] uint32_t* rankNum) const
 {
     return HCCL_SUCCESS;
 }
-HcclResult
-HcclCommunicator::CommGetInstTopoTypeByNetLayer([[maybe_unused]] uint32_t netLayer, [[maybe_unused]] u32* topoType)
+HcclResult HcclCommunicator::CommGetInstTopoTypeByNetLayer(
+    [[maybe_unused]] uint32_t netLayer, [[maybe_unused]] u32* topoType) const
 {
     return HCCL_SUCCESS;
 }
@@ -1546,7 +1547,7 @@ void HcclCommunicator::SetHcclQos(u32 hcclQos)
     hcclQos_ = hcclQos;
 }
 
-u32 HcclCommunicator::GetHcclQos()
+u32 HcclCommunicator::GetHcclQos() const
 {
     HCCL_INFO("[HcclCommunicator][device][GetHcclQos] hcclQos[%u]", hcclQos_);
     return hcclQos_;
@@ -1592,9 +1593,9 @@ HcclResult HcclCommunicator::HandleExistAlgResource(
 }
 
 HcclResult HcclCommunicator::InitMyRankConnectMode(
-    [[maybe_unused]] HcclCommParams& params, [[maybe_unused]] const RankTable_t& rankTable)
+    [[maybe_unused]] const HcclCommParams& params, [[maybe_unused]] const RankTable_t& rankTable)
 {
     return HCCL_SUCCESS;
 }
-uint32_t HcclCommunicator::GetConnectMode() { return HCCL_SUCCESS; }
+uint32_t HcclCommunicator::GetConnectMode() const { return HCCL_SUCCESS; }
 } // namespace hccl

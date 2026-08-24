@@ -36,7 +36,7 @@ HcclResult ConstructData(u8*& exchangeDataPtr, u32& exchangeDataBlankSize, T& va
 }
 
 /* copy 变长数据 */
-HcclResult ConstructData(u8*& exchangeDataPtr, u32& exchangeDataBlankSize, void* ptr, size_t len)
+HcclResult ConstructData(u8*& exchangeDataPtr, u32& exchangeDataBlankSize, const void* ptr, size_t len)
 {
     CHK_SAFETY_FUNC_RET(memcpy_s(exchangeDataPtr, exchangeDataBlankSize, ptr, len));
     exchangeDataPtr += len;
@@ -262,8 +262,7 @@ void ZeroCopyMemoryAgent::RequestBatchSendAsync()
             if (sendMgr.hasReq_[0] && sendMgr.hasReq_[1]) { // 合并发送
                 u8* ptr = const_cast<u8*>(sendMgr.reqDatas_[1]->data()) + IPC_MEMORY_EXCHANGE_LENGTH;
                 u32 leftSize = IPC_MEMORY_EXCHANGE_LENGTH;
-                if (ConstructData(
-                        ptr, leftSize, const_cast<u8*>(sendMgr.reqDatas_[0]->data()), IPC_MEMORY_EXCHANGE_LENGTH)
+                if (ConstructData(ptr, leftSize, sendMgr.reqDatas_[0]->data(), IPC_MEMORY_EXCHANGE_LENGTH)
                     == HCCL_SUCCESS) {
                     sendMgr.hasReq_[0] = false;
                     sendMgr.currIndex_ = 1;

@@ -29,7 +29,7 @@ public:
     HcclResult InitHccpChannel(u32 devicePhyId);
     void DeinitHccpChannel();
     bool GetH2dTlvInitFlag();
-    unsigned int GetH2dTlvBufferSize();
+    unsigned int GetH2dTlvBufferSize() const;
     void* GetH2dTlvHandle();
 
 private:

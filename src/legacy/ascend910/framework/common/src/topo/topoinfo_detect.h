@@ -51,7 +51,7 @@ public:
     HcclResult SendGroupLeaderPort(std::shared_ptr<HcclSocket>& connectSocket, HcclRankHandle& rankHandle);
     HcclResult GetAgentListenSocket(HcclSocketPortConfig& commPortConfig);
     HcclResult
-    GenerateRootInfo(const HcclIpAddress& hostIP, u32 hostPort, u32 devicePhysicID, HcclRootHandle& rootInfo);
+    GenerateRootInfo(const HcclIpAddress& hostIP, u32 hostPort, u32 devicePhysicID, HcclRootHandle& rootInfo) const;
     HcclResult GetGroupLeader(HcclRankHandle& rankHandle);
     HcclResult SetIsInterSuperPodRetryEnable(bool isRetry);
 
@@ -75,10 +75,10 @@ private:
     HcclResult GetAllHostIfInfos(std::vector<std::pair<std::string, HcclIpAddress>>& ifInfos, u32 devPhyId) const;
     HcclResult GetAllValidHostIfInfos(
         const std::vector<HcclIpAddress>& whitelist, std::vector<std::pair<std::string, HcclIpAddress>>& ifInfos,
-        u32 devPhyId);
+        u32 devPhyId) const;
     HcclResult TransformDeviceList(
         const RankTable_t& clusterInfo, std::vector<RankInfo_t>& tmpRankList, nlohmann::json& perServerJson,
-        u32 serverIndex);
+        u32 serverIndex) const;
     HcclResult TransformSuperPodList(const std::vector<RankInfo_t>& rankInfo, nlohmann::json& superPodListJson) const;
     void SetupTopoExchangeServer(
         s32 devicePhysicID, s32 deviceLogicID, HcclIpAddress hostIP, u32 hostPort, std::vector<HcclIpAddress> whitelist,

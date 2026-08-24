@@ -27,7 +27,7 @@ bool HcclCommunicatorAttrs::Is310P3Common()
 }
 
 HcclResult HcclCommunicatorAttrs::GetPairDeviceLinkType(
-    const RankTable_t& rankTable, u32 i, bool& isConnectedWithHCCS, LinkTypeInServer& linkType)
+    const RankTable_t& rankTable, u32 i, bool& isConnectedWithHCCS, LinkTypeInServer& linkType) const
 {
     for (u32 j = i + 1; j < rankTable.rankList.size(); j++) {
         if (rankTable.rankList[i].serverId == rankTable.rankList[j].serverId) {
@@ -467,25 +467,25 @@ HcclResult HcclCommunicatorAttrs::GenSupportHccsAndSio()
 }
 #endif
 
-bool HcclCommunicatorAttrs::GetUsedRdmaLevel0() { return isUsedRdmaLevel0_; }
+bool HcclCommunicatorAttrs::GetUsedRdmaLevel0() const { return isUsedRdmaLevel0_; }
 
-bool HcclCommunicatorAttrs::GetSupportRdmaLite() { return isSupportRdmaLite_; }
-bool HcclCommunicatorAttrs::GetSupportHccsAndSio() { return isSupportHccsAndSio_; }
+bool HcclCommunicatorAttrs::GetSupportRdmaLite() const { return isSupportRdmaLite_; }
+bool HcclCommunicatorAttrs::GetSupportHccsAndSio() const { return isSupportHccsAndSio_; }
 
 std::string HcclCommunicatorAttrs::GetServerId() { return serverId_; }
 
-u32 HcclCommunicatorAttrs::GetServerNum() { return serverNum_; }
+u32 HcclCommunicatorAttrs::GetServerNum() const { return serverNum_; }
 std::string HcclCommunicatorAttrs::GetSuperPodId() { return superPodId_; }
 
-u32 HcclCommunicatorAttrs::GetSuperDeviceId() { return superDeviceId_; }
+u32 HcclCommunicatorAttrs::GetSuperDeviceId() const { return superDeviceId_; }
 
-bool HcclCommunicatorAttrs::GetSuperPodMode() { return useSuperPodMode_; }
+bool HcclCommunicatorAttrs::GetSuperPodMode() const { return useSuperPodMode_; }
 
-u32 HcclCommunicatorAttrs::GetSuperPodNums() { return superPodNum_; }
+u32 HcclCommunicatorAttrs::GetSuperPodNums() const { return superPodNum_; }
 
-u32 HcclCommunicatorAttrs::GetDeviceNumPerAggregation() { return deviceNumPerAggregation_; }
+u32 HcclCommunicatorAttrs::GetDeviceNumPerAggregation() const { return deviceNumPerAggregation_; }
 
-u32 HcclCommunicatorAttrs::GetDeviceNumPerServer() { return deviceNumPerServer_; }
+u32 HcclCommunicatorAttrs::GetDeviceNumPerServer() const { return deviceNumPerServer_; }
 
 DevType HcclCommunicatorAttrs::GetRankInfoDevType(const RankInfo_t& rankInfo) const
 {
@@ -495,36 +495,36 @@ DevType HcclCommunicatorAttrs::GetRankInfoDevType(const RankInfo_t& rankInfo) co
     return rankInfo.deviceInfo.deviceType;
 }
 
-bool HcclCommunicatorAttrs::GetDiffDeviceType() { return isDiffDeviceType_; }
+bool HcclCommunicatorAttrs::GetDiffDeviceType() const { return isDiffDeviceType_; }
 
-u32 HcclCommunicatorAttrs::GetGcdDeviceNumPerAggregation() { return gcdDeviceNumPerAggregation_; }
+u32 HcclCommunicatorAttrs::GetGcdDeviceNumPerAggregation() const { return gcdDeviceNumPerAggregation_; }
 ServRankInfo HcclCommunicatorAttrs::GetServRankInfo() { return servRankInfo_; }
 
-bool HcclCommunicatorAttrs::GetDiffDeviceModule() { return isDiffDeviceModule_; }
+bool HcclCommunicatorAttrs::GetDiffDeviceModule() const { return isDiffDeviceModule_; }
 
-bool HcclCommunicatorAttrs::GetSupportARS() { return isARSDoubleRing_; }
+bool HcclCommunicatorAttrs::GetSupportARS() const { return isARSDoubleRing_; }
 
-u32 HcclCommunicatorAttrs::GetModuleNum() { return moduleNum_; }
+u32 HcclCommunicatorAttrs::GetModuleNum() const { return moduleNum_; }
 
-bool HcclCommunicatorAttrs::GetMultiModuleDiffDeviceNumMode() { return multiModuleDiffDeviceNumMode_; }
+bool HcclCommunicatorAttrs::GetMultiModuleDiffDeviceNumMode() const { return multiModuleDiffDeviceNumMode_; }
 
-bool HcclCommunicatorAttrs::GetMultiSuperPodDiffServerNumMode() { return multiSuperPodDiffServerNumMode_; }
+bool HcclCommunicatorAttrs::GetMultiSuperPodDiffServerNumMode() const { return multiSuperPodDiffServerNumMode_; }
 
-bool HcclCommunicatorAttrs::GetmultiSuperPodDiffDeviceNumMode() { return multiSuperPodDiffDeviceNumMode_; }
+bool HcclCommunicatorAttrs::GetmultiSuperPodDiffDeviceNumMode() const { return multiSuperPodDiffDeviceNumMode_; }
 
 std::vector<u32> HcclCommunicatorAttrs::GetNicList() { return nicList_; }
 
-bool HcclCommunicatorAttrs::GetSingleMeshAggregation() { return isSingleMeshAggregation_; }
+bool HcclCommunicatorAttrs::GetSingleMeshAggregation() const { return isSingleMeshAggregation_; }
 
-bool HcclCommunicatorAttrs::GetAllRankSamePlane() { return isAllRankSamePlane_; }
+bool HcclCommunicatorAttrs::GetAllRankSamePlane() const { return isAllRankSamePlane_; }
 
-bool HcclCommunicatorAttrs::GetStandardCard() { return isStandardCard_; }
+bool HcclCommunicatorAttrs::GetStandardCard() const { return isStandardCard_; }
 
-bool HcclCommunicatorAttrs::Get310PDuoCard() { return is310PDuoCard_; }
+bool HcclCommunicatorAttrs::Get310PDuoCard() const { return is310PDuoCard_; }
 
-bool HcclCommunicatorAttrs::GetIsCommon310P3DUO() { return isCommon310P3DUO_; }
+bool HcclCommunicatorAttrs::GetIsCommon310P3DUO() const { return isCommon310P3DUO_; }
 
-s32 HcclCommunicatorAttrs::GetHccsPortNum() { return hccsPortNum_; }
+s32 HcclCommunicatorAttrs::GetHccsPortNum() const { return hccsPortNum_; }
 
 void HcclCommunicatorAttrs::GetPairLinkCounter(std::unordered_map<u32, u32>& pairLinkCounter)
 {
@@ -537,7 +537,7 @@ void HcclCommunicatorAttrs::GetPairLinkInfo(
     pairLinkInfo = pairLinkInfo_;
 }
 
-bool HcclCommunicatorAttrs::GetUsedInterHccsMode() { return isUsedInterHccsMode_; }
+bool HcclCommunicatorAttrs::GetUsedInterHccsMode() const { return isUsedInterHccsMode_; }
 
 std::vector<RankInfo> HcclCommunicatorAttrs::GetRankInfoList() { return rankInfoList_; }
 
@@ -545,31 +545,31 @@ std::vector<HcclIpAddress> HcclCommunicatorAttrs::GetDevIpAddr() { return devIpA
 
 std::vector<HcclIpAddress> HcclCommunicatorAttrs::GetDevBackupIpAddr() { return devBackupIpAddr_; }
 
-u32 HcclCommunicatorAttrs::GetBackupDevPort() { return devBackupPort_; }
+u32 HcclCommunicatorAttrs::GetBackupDevPort() const { return devBackupPort_; }
 
-u32 HcclCommunicatorAttrs::GetDevicePhyId() { return devicePhyId_; }
+u32 HcclCommunicatorAttrs::GetDevicePhyId() const { return devicePhyId_; }
 
 HcclIpAddress HcclCommunicatorAttrs::GetHostIp() { return hostIp_; }
 
 u32 HcclCommunicatorAttrs::GetHostPort() { return hostPort_; }
 
-u32 HcclCommunicatorAttrs::GetLocalRank() { return localRank_; }
+u32 HcclCommunicatorAttrs::GetLocalRank() const { return localRank_; }
 
 std::string HcclCommunicatorAttrs::GetCollectiveId() { return collectiveId_; }
 
 std::string HcclCommunicatorAttrs::GetRankTableVersion() { return rankTableVersion_; }
 
-s32 HcclCommunicatorAttrs::GetDeviceLogicId() { return deviceLogicId_; }
+s32 HcclCommunicatorAttrs::GetDeviceLogicId() const { return deviceLogicId_; }
 
-bool HcclCommunicatorAttrs::GetInterServe() { return interServer_; }
+bool HcclCommunicatorAttrs::GetInterServe() const { return interServer_; }
 
-NICDeployment HcclCommunicatorAttrs::GetNicDeployment() { return nicDeployment_; }
+NICDeployment HcclCommunicatorAttrs::GetNicDeployment() const { return nicDeployment_; }
 
-bool HcclCommunicatorAttrs::GetHaveCpuRank() { return isHaveCpuRank_; }
+bool HcclCommunicatorAttrs::GetHaveCpuRank() const { return isHaveCpuRank_; }
 
-u32 HcclCommunicatorAttrs::GetMeshAggregationRankSize() { return meshAggregationRankSize_; }
+u32 HcclCommunicatorAttrs::GetMeshAggregationRankSize() const { return meshAggregationRankSize_; }
 
-bool HcclCommunicatorAttrs::GetInlineReduceSwitchOn() { return inlineReduceSwitchOn_; }
+bool HcclCommunicatorAttrs::GetInlineReduceSwitchOn() const { return inlineReduceSwitchOn_; }
 
 u32 HcclCommunicatorAttrs::GetHostPort(s32 devicePhyId)
 {

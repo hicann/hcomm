@@ -93,7 +93,7 @@ HcclResult TopoInfoDetect::GroupLeaderAccept(
 
 HcclResult TopoInfoDetect::GenerateRootInfo(
     [[maybe_unused]] const HcclIpAddress& hostIP, [[maybe_unused]] u32 hostPort, [[maybe_unused]] u32 devicePhysicID,
-    [[maybe_unused]] HcclRootHandle& rootInfo)
+    [[maybe_unused]] HcclRootHandle& rootInfo) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
@@ -158,7 +158,7 @@ HcclResult TopoInfoDetect::GetAllHostIfInfos(
 
 HcclResult TopoInfoDetect::GetAllValidHostIfInfos(
     [[maybe_unused]] const vector<HcclIpAddress>& whitelist,
-    [[maybe_unused]] vector<pair<string, HcclIpAddress>>& ifInfos, [[maybe_unused]] u32 devPhyId)
+    [[maybe_unused]] vector<pair<string, HcclIpAddress>>& ifInfos, [[maybe_unused]] u32 devPhyId) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
@@ -267,7 +267,7 @@ HcclResult TopoInfoDetect::TransformRankTableStr(
 }
 HcclResult TopoInfoDetect::TransformDeviceList(
     [[maybe_unused]] const RankTable_t& clusterInfo, [[maybe_unused]] vector<RankInfo_t>& tmpRankList,
-    [[maybe_unused]] nlohmann::json& perServerJson, [[maybe_unused]] u32 serverIndex)
+    [[maybe_unused]] nlohmann::json& perServerJson, [[maybe_unused]] u32 serverIndex) const
 {
     return HCCL_E_NOT_SUPPORT;
 }

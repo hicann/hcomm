@@ -353,7 +353,7 @@ HcclResult TopoinfoRanktableStandard::GetSortClouldRankList(hccl::RankTable_t& r
 }
 
 HcclResult TopoinfoRanktableStandard::GetSingleGroupDeviceCount(
-    nlohmann::json& obj, u32 objIndex, hccl::RankTable_t& rankTable, u32& deviceNum)
+    const nlohmann::json& obj, u32 objIndex, hccl::RankTable_t& rankTable, u32& deviceNum)
 {
     // device_num
     std::string strDeviceNum;
@@ -375,7 +375,8 @@ HcclResult TopoinfoRanktableStandard::GetSingleGroupDeviceCount(
 }
 
 HcclResult TopoinfoRanktableStandard::GetLabSingleGroup(
-    nlohmann::json& obj, u32 objIndex, hccl::HcclCommParams& params, hccl::RankTable_t& rankTable, u32 instanceNum)
+    const nlohmann::json& obj, u32 objIndex, const hccl::HcclCommParams& params, hccl::RankTable_t& rankTable,
+    u32 instanceNum)
 {
     u32 uDeviceNum = 0;
     u32 uServerNum = 0;
@@ -591,8 +592,8 @@ HcclResult TopoinfoRanktableStandard::GetCloudDevList(
 }
 
 HcclResult TopoinfoRanktableStandard::GetDevList(
-    nlohmann::json& instanceList, u32 podIndex, nlohmann::json& deviceList, hccl::HcclCommParams& params,
-    hccl::RankTable_t& rankTable, std::string& serverId, u32& serverIdx)
+    const nlohmann::json& instanceList, u32 podIndex, const nlohmann::json& deviceList,
+    const hccl::HcclCommParams& params, hccl::RankTable_t& rankTable, std::string& serverId, u32& serverIdx)
 {
     std::string rankId;
     CHK_RET(GetJsonArrayMemberProperty(instanceList, podIndex, "rank_id", rankId, false));

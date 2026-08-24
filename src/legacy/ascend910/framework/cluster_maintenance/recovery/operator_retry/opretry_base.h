@@ -153,8 +153,8 @@ protected:
     HcclResult ResetNotify(RetryContext* retryCtx);
     HcclResult SetTransportStatusForStop(RetryContext* retryCtx);
     HcclResult SetTransportStatusForResume(RetryContext* retryCtx);
-    HcclResult
-    GetLinkPortStatus(RetryContext* retryCtx, LinkPortStatus& linkPortStatus, bool isGetGroupAllRemoteRank = false);
+    HcclResult GetLinkPortStatus(
+        RetryContext* retryCtx, LinkPortStatus& linkPortStatus, bool isGetGroupAllRemoteRank = false) const;
     HcclResult InitChangeLinkInfo(RetryContext* retryCtx, bool incre = false, bool isGetGroupAllRemoteRank = false);
     /*获取batchsendrecv rdma重执行时的故障信息*/
     HcclResult SetBsrOpId(RetryContext* retryCtx, HcclSendRecvType type);
@@ -169,7 +169,7 @@ private:
     HcclResult
     CheckMaxRetryCnt(const RetryInfo& retryInfo, const std::string& identifier = HCCL_WORLD_GROUP); // 校验重执行次数
     HcclResult CheckLinkStates(const RetryInfo& retryInfo);                                         // 校验link状态
-    void CheckSnapshotStatus(RetryContext* retryCtx);
+    void CheckSnapshotStatus(RetryContext* retryCtx) const;
     bool enableSendRecv = true;
 };
 
@@ -228,7 +228,7 @@ public:
         localRetryInfo_.dfxIpInfo[dfxInfo.size()] = '\0';
     }
 
-    RetryState GetRetryState() { return state_; }
+    RetryState GetRetryState() const { return state_; }
     const char* GetReadableCtxState() const { return GetReadableState(state_); }
 
     void SetRetryState(RetryState nextState, std::shared_ptr<OpRetryBase> retryBase)
@@ -250,7 +250,7 @@ public:
         return retryBase_->Handle(this);
     }
 
-    u32 GetRankId() { return rankId_; }
+    u32 GetRankId() const { return rankId_; }
 
     const char* GetOpRetryMachineType() const
     {
@@ -258,7 +258,7 @@ public:
         return ctxType.c_str();
     }
 
-    bool IsRootRetryCtx() { return isRootRetryCtx_; }
+    bool IsRootRetryCtx() const { return isRootRetryCtx_; }
 
     const char* GetDfxIpInfo() const { return localRetryInfo_.dfxIpInfo; }
 

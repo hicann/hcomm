@@ -609,7 +609,7 @@ HcclResult DetectConnectionAnomalies::CreateClients(
 }
 
 std::string DetectConnectionAnomalies::FormatDetectMessage(
-    const std::string& localServerId, s32 localDeviceId, const DetectInfo& detectInfo)
+    const std::string& localServerId, s32 localDeviceId, const DetectInfo& detectInfo) const
 {
     return std::string("This node (server ") + localServerId + ", device ID " + std::to_string(localDeviceId)
            + ") detects that srcRank (server " + detectInfo.localServerId + ", device ID "

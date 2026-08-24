@@ -90,15 +90,16 @@ HcclResult TopoinfoRanktableStandard::GetSortClouldRankList([[maybe_unused]] hcc
 }
 
 HcclResult TopoinfoRanktableStandard::GetSingleGroupDeviceCount(
-    [[maybe_unused]] nlohmann::json& obj, [[maybe_unused]] u32 objIndex, [[maybe_unused]] hccl::RankTable_t& rankTable,
-    [[maybe_unused]] u32& deviceNum)
+    [[maybe_unused]] const nlohmann::json& obj, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] hccl::RankTable_t& rankTable, [[maybe_unused]] u32& deviceNum)
 {
     return HCCL_E_NOT_SUPPORT;
 }
 
 HcclResult TopoinfoRanktableStandard::GetLabSingleGroup(
-    [[maybe_unused]] nlohmann::json& obj, [[maybe_unused]] u32 objIndex, [[maybe_unused]] hccl::HcclCommParams& params,
-    [[maybe_unused]] hccl::RankTable_t& rankTable, [[maybe_unused]] u32 instanceNum)
+    [[maybe_unused]] const nlohmann::json& obj, [[maybe_unused]] u32 objIndex,
+    [[maybe_unused]] const hccl::HcclCommParams& params, [[maybe_unused]] hccl::RankTable_t& rankTable,
+    [[maybe_unused]] u32 instanceNum)
 {
     return HCCL_E_NOT_SUPPORT;
 }
@@ -125,8 +126,8 @@ HcclResult TopoinfoRanktableStandard::GetCloudDevList(
 }
 
 HcclResult TopoinfoRanktableStandard::GetDevList(
-    [[maybe_unused]] nlohmann::json& instanceList, [[maybe_unused]] u32 podIndex,
-    [[maybe_unused]] nlohmann::json& deviceList, [[maybe_unused]] hccl::HcclCommParams& params,
+    [[maybe_unused]] const nlohmann::json& instanceList, [[maybe_unused]] u32 podIndex,
+    [[maybe_unused]] const nlohmann::json& deviceList, [[maybe_unused]] const hccl::HcclCommParams& params,
     [[maybe_unused]] hccl::RankTable_t& rankTable, [[maybe_unused]] std::string& serverId,
     [[maybe_unused]] u32& serverIdx)
 {

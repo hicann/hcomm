@@ -3570,7 +3570,7 @@ HcclResult GetStremNumOfflineByDev(
 }
 
 HcclResult
-GetSubStreamNum(const DevType& devType, s32 deviceNum, u64& streamNum, s32& serverNum, const std::string& group)
+GetSubStreamNum(const DevType& devType, s32 deviceNum, u64& streamNum, const s32& serverNum, const std::string& group)
 {
     if (devType == DevType::DEV_TYPE_910B) {
         constexpr u64 maxStream = 6;
@@ -4299,7 +4299,7 @@ HcclResult GetIntraComTaskNum(
 
 HcclResult GetBetweenServersStep(s32 serverNum, u32& commStep)
 {
-    if ((serverNum & (serverNum - 1)) == 0) {
+    if ((static_cast<u32>(serverNum) & (static_cast<u32>(serverNum) - 1U)) == 0U) {
         // 如果serverNum是2的整数次幂，使用HD算法评估CollectiveOp的taskNum
         commStep += SalLog2(serverNum);
     } else if (serverNum < SERVER_NUM_EIGHT) {
@@ -4309,7 +4309,7 @@ HcclResult GetBetweenServersStep(s32 serverNum, u32& commStep)
         // 计算大于serverNum的最大2的整数次幂的值;以N为rankSize, 使用HD算法评估CollectiveOp的taskNum
         s32 bit = 0;
         while (serverNum > 0) {
-            serverNum >>= 1;
+            serverNum = static_cast<s32>(static_cast<u32>(serverNum) >> 1U);
             bit++;
         }
         commStep += bit;

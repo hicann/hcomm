@@ -57,7 +57,7 @@ HcclResult HcclOneSidedSetIfProfile()
 void HcclOneSidedResetIfProfile() { SetIfProfile(true); }
 
 static HcclResult
-AddDescTraceInfo(hccl::hcclComm* hcclComm, HcclOneSideOpDesc* desc, u32 descNum, const std::string& tag)
+AddDescTraceInfo(hccl::hcclComm* hcclComm, const HcclOneSideOpDesc* desc, u32 descNum, const std::string& tag)
 {
     char stackLogBuffer[LOG_TMPBUF_SIZE];
     // trace日志逐个记录描述符信息
@@ -68,7 +68,7 @@ AddDescTraceInfo(hccl::hcclComm* hcclComm, HcclOneSideOpDesc* desc, u32 descNum,
         CHK_RET(HcomCheckDataType((desc + i)->dataType));
         s32 ret = snprintf_s(
             stackLogBuffer, LOG_TMPBUF_SIZE, LOG_TMPBUF_SIZE - 1U,
-            "[%s] HcclOneSideOpDesc[%d] : localAddr[%p], remoteAddr[%p], count[%llu], dataType[%d].", __func__, i,
+            "[%s] HcclOneSideOpDesc[%u] : localAddr[%p], remoteAddr[%p], count[%llu], dataType[%d].", __func__, i,
             (desc + i)->localAddr, (desc + i)->remoteAddr, (desc + i)->count, (desc + i)->dataType);
         CHK_PRT_CONT(ret == -1, HCCL_WARNING("Failed to build log info, tag[%s].", tag.c_str()));
         std::string logInfo(stackLogBuffer);

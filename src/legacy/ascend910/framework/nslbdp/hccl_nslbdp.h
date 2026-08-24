@@ -170,7 +170,7 @@ public:
     u32 Getl4SPortId();
     u64 GetNslbDpFirstFourBit(u8 opType, u8 algType);
     bool CheckAlgoConsistency(HcclCMDType opType, std::string& algName);
-    void SplitString(const std::string& identifier, std::vector<std::string>& splitInfo, const std::string& frag);
+    void SplitString(const std::string& identifier, std::vector<std::string>& splitInfo, const std::string& frag) const;
     void SetGlobalDisRankTable(const HcclBasicRankInfo& rankTable);
     HcclResult SetCommInfo_NoRankTable(const RankTable_t rankTable, std::string identifier);
     HcclResult SetCommInfo_RankTableExit(RankTable_t rankTable);

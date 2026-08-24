@@ -223,7 +223,7 @@ HcclResult GlobalMemRegMgr::DeInitNic()
 
 HcclResult GlobalMemRegMgr::CheckOneSidedBackupAndSetDevId(
     const HcclIpAddress& ipAddr, u32& backupDevPhyId, u32& backupDevLogicId, std::vector<HcclIpAddress>& localIpList,
-    bool& isOneSidedTaskAndBackupInitA3)
+    bool& isOneSidedTaskAndBackupInitA3) const
 {
     DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));

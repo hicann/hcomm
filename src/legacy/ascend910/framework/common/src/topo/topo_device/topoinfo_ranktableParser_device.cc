@@ -122,7 +122,7 @@ HcclResult TopoInfoRanktableParser::GetJsonArrayMemberProperty(
 
 HcclResult TopoInfoRanktableParser::GetJsonArrayMemberProperty(
     [[maybe_unused]] const nlohmann::json& obj, [[maybe_unused]] const u32 index, [[maybe_unused]] const char* propName,
-    [[maybe_unused]] u32& propValue, [[maybe_unused]] bool optionalProp)
+    [[maybe_unused]] u32& propValue, [[maybe_unused]] bool optionalProp) const
 {
     return HCCL_E_NOT_SUPPORT;
 }

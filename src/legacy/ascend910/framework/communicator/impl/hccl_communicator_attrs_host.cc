@@ -848,8 +848,8 @@ HcclResult HcclCommunicatorAttrs::SetWorldGroupInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult
-HcclCommunicatorAttrs::TransformRankList(const std::vector<RankInfo>& rankListIn, std::vector<RankInfo_t>& rankListOut)
+HcclResult HcclCommunicatorAttrs::TransformRankList(
+    const std::vector<RankInfo>& rankListIn, std::vector<RankInfo_t>& rankListOut) const
 {
     for (size_t index = 0; index < rankListIn.size(); ++index) {
         RankInfo_t rankInfoTmp;

@@ -475,7 +475,7 @@ void hcclComm::BinaryUnLoad()
     }
 }
 
-bool hcclComm::GetAicpuCommState() { return isAicpuCommInit_; }
+bool hcclComm::GetAicpuCommState() const { return isAicpuCommInit_; }
 
 void hcclComm::SetAicpuCommState(bool aicpuCommState)
 {
@@ -501,8 +501,8 @@ HcclResult hcclComm::KernelLaunchAicpuCommInit()
         timeout = CommConfiger::GetInstance().GetCommConfigExecTimeOut("") + 25; // 多25s，避免超时
     }
     CHK_RET(AicpuAclKernelLaunch(
-        localStream.ptr(), reinterpret_cast<void*>(&commAicpuParam_), sizeof(commAicpuParam_), binHandle_, kernelName,
-        true, timeout));
+        localStream.ptr(), static_cast<void*>(&commAicpuParam_), sizeof(commAicpuParam_), binHandle_, kernelName, true,
+        timeout));
     HCCL_INFO("AicpuAclKernelLaunch end, hcclStreamSynchronize start");
     CHK_RET(hcclStreamSynchronize(localStream.ptr(), timeout));
     HCCL_INFO("[KernelLaunchAicpuCommInit] ReportAicpuCommKernel begin");

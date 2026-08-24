@@ -76,7 +76,7 @@ private:
         const std::string& group, std::map<u32, std::shared_ptr<HcclSocket>>& serverConnections,
         const OpRetryAgentInfo& agentInfo);
     void RetryStateMonitor(
-        const std::string& group, std::shared_ptr<RetryContext> retryCtx, const bool& startExec, HcclRtContext rtCtx_);
+        const std::string& group, std::shared_ptr<RetryContext> retryCtx, const bool& startExec, HcclRtContext rtCtx);
 
 private:
     std::map<std::string, RetryCtrl> serverOpRetry;

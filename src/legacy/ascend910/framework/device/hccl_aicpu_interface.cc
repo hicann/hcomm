@@ -129,7 +129,7 @@ __attribute__((visibility("default"))) uint32_t RunAicpuNotifyRecordAicpuKernel(
         HCCL_ERROR("RunAicpuNotifyRecordAicpuKernel args is null.");
         return HCCL_E_PARA;
     }
-    ThreadNotifyRecordParam* param = reinterpret_cast<ThreadNotifyRecordParam*>(args);
+    ThreadNotifyRecordParam* param = static_cast<ThreadNotifyRecordParam*>(args);
     HCCL_INFO("%s src[0x%llx], dst[0x%llx], Idx[%u]", __func__, param->thread, param->dstThread, param->dstNotifyIdx);
     // 保留通信域管理 - 保证生命周期安全
     if (HcommAcquireComm(param->commName) != HCCL_SUCCESS) {
@@ -185,7 +185,7 @@ __attribute__((visibility("default"))) uint32_t RunAicpuNotifyWaitAicpuKernel(vo
         HCCL_ERROR("RunAicpuNotifyWaitAicpuKernel args is null.");
         return HCCL_E_PARA;
     }
-    ThreadNotifyWaitParam* param = reinterpret_cast<ThreadNotifyWaitParam*>(args);
+    ThreadNotifyWaitParam* param = static_cast<ThreadNotifyWaitParam*>(args);
     HCCL_INFO("[RunAicpuNotifyWaitAicpuKernel] thread[0x%llx], notifyIdx[%u]", param->thread, param->notifyIdx);
     // 保留通信域管理 - 保证生命周期安全
     if (HcommAcquireComm(param->commName) != HCCL_SUCCESS) {

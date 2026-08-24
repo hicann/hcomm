@@ -490,7 +490,8 @@ HcclResult OpRetryServerWaitResp::ProcessEvent(RetryContext* retryCtx)
 }
 
 void OpRetryServerWaitResp::PrintAgentInfoAfterFail(
-    std::map<u32, HcclAgentRetryInfo>& serverSockets, std::set<u32>& recvVaild, HcclAgentRetryInfo& agentRetryInfo)
+    std::map<u32, HcclAgentRetryInfo>& serverSockets, std::set<u32>& recvVaild,
+    HcclAgentRetryInfo& agentRetryInfo) const
 {
     for (auto it = serverSockets.begin(); it != serverSockets.end(); ++it) {
         if (recvVaild.find(it->first) == recvVaild.end()) { // 未接收到有效数据
@@ -672,7 +673,7 @@ HcclResult OpRetryServerRetryFail::ProcessEvent(RetryContext* retryCtx)
 }
 
 bool SwitchNicServerCheckAllSwitchRanks::CompareSwitchRankList(
-    const u32* firstSwitchRankList, const u32* switchRankList, const u32 switchRankNum)
+    const u32* firstSwitchRankList, const u32* switchRankList, const u32 switchRankNum) const
 {
     if (switchRankNum == 0 || switchRankNum > AICPU_MAX_RANK_NUM) {
         return false;
@@ -702,7 +703,7 @@ bool SwitchNicServerCheckAllSwitchRanks::CompareSwitchRankList(
 }
 
 bool SwitchNicServerCheckAllSwitchRanks::CompareUseBackupLists(
-    const bool* firstArray, const bool* secondArray, const u32 switchRankNum)
+    const bool* firstArray, const bool* secondArray, const u32 switchRankNum) const
 {
     if (switchRankNum == 0 || switchRankNum > AICPU_MAX_RANK_NUM) {
         return false;

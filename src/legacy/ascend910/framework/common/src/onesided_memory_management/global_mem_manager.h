@@ -47,7 +47,7 @@ private:
     HcclResult CheckOverlapAndInsert(GlobalMemRecord& memRecord, void** memRecordHandle);
     HcclResult CheckOneSidedBackupAndSetDevId(
         const HcclIpAddress& ipAddr, u32& backupDevPhyId, u32& backupDevLogicId,
-        std::vector<HcclIpAddress>& localIpList, bool& isOneSidedTaskAndBackupInitA3);
+        std::vector<HcclIpAddress>& localIpList, bool& isOneSidedTaskAndBackupInitA3) const;
 
     std::set<GlobalMemRecord> memRecordSet_{}; // 内存记录，按照type>addr>size排序
     std::unordered_set<void*> validHandlePtrSet{}; // 记录handle地址，用于校验用户传入的是否是handle的地址

@@ -54,31 +54,31 @@ public:
 
     // InitRankInfo
     std::string GetServerId();
-    u32 GetServerNum();
+    u32 GetServerNum() const;
     std::string GetSuperPodId();
-    u32 GetSuperDeviceId();
-    bool GetSuperPodMode();
-    u32 GetSuperPodNums();
-    u32 GetDeviceNumPerAggregation();
-    u32 GetDeviceNumPerServer();
+    u32 GetSuperDeviceId() const;
+    bool GetSuperPodMode() const;
+    u32 GetSuperPodNums() const;
+    u32 GetDeviceNumPerAggregation() const;
+    u32 GetDeviceNumPerServer() const;
     DevType GetRankInfoDevType(const RankInfo_t& rankInfo) const;
-    bool GetDiffDeviceType();
-    u32 GetGcdDeviceNumPerAggregation();
-    bool GetDiffDeviceModule();
-    bool GetSupportARS();
+    bool GetDiffDeviceType() const;
+    u32 GetGcdDeviceNumPerAggregation() const;
+    bool GetDiffDeviceModule() const;
+    bool GetSupportARS() const;
     ServRankInfo GetServRankInfo();
 
-    u32 GetModuleNum();
-    bool GetMultiModuleDiffDeviceNumMode();
-    bool GetMultiSuperPodDiffServerNumMode();
-    bool GetmultiSuperPodDiffDeviceNumMode();
-    bool GetUsedInterHccsMode();
-    bool GetSingleMeshAggregation();
-    bool GetAllRankSamePlane();
-    bool GetStandardCard();
-    bool Get310PDuoCard();
-    bool GetIsCommon310P3DUO();
-    s32 GetHccsPortNum();
+    u32 GetModuleNum() const;
+    bool GetMultiModuleDiffDeviceNumMode() const;
+    bool GetMultiSuperPodDiffServerNumMode() const;
+    bool GetmultiSuperPodDiffDeviceNumMode() const;
+    bool GetUsedInterHccsMode() const;
+    bool GetSingleMeshAggregation() const;
+    bool GetAllRankSamePlane() const;
+    bool GetStandardCard() const;
+    bool Get310PDuoCard() const;
+    bool GetIsCommon310P3DUO() const;
+    s32 GetHccsPortNum() const;
     void GetPairLinkCounter(std::unordered_map<u32, u32>& pairLinkCounter);
     void GetPairLinkInfo(std::unordered_map<u32, std::unordered_map<int, std::vector<int>>>& pairLinkInfo);
     std::vector<u32> GetNicList();
@@ -86,25 +86,25 @@ public:
     std::vector<RankInfo> GetRankInfoList();
     std::vector<HcclIpAddress> GetDevIpAddr();
     std::vector<HcclIpAddress> GetDevBackupIpAddr();
-    u32 GetBackupDevPort();
-    u32 GetDevicePhyId();
+    u32 GetBackupDevPort() const;
+    u32 GetDevicePhyId() const;
     HcclIpAddress GetHostIp();
     u32 GetHostPort();
-    u32 GetLocalRank();
+    u32 GetLocalRank() const;
     std::string GetCollectiveId();
     std::string GetRankTableVersion();
-    s32 GetDeviceLogicId();
-    bool GetInterServe();
+    s32 GetDeviceLogicId() const;
+    bool GetInterServe() const;
 
-    NICDeployment GetNicDeployment();
-    bool GetSupportRdmaLite();
-    bool GetSupportHccsAndSio();
+    NICDeployment GetNicDeployment() const;
+    bool GetSupportRdmaLite() const;
+    bool GetSupportHccsAndSio() const;
 
     // InitRankInfoSubGroup
-    bool GetHaveCpuRank();
-    u32 GetMeshAggregationRankSize();
-    bool GetUsedRdmaLevel0();
-    bool GetInlineReduceSwitchOn();
+    bool GetHaveCpuRank() const;
+    u32 GetMeshAggregationRankSize() const;
+    bool GetUsedRdmaLevel0() const;
+    bool GetInlineReduceSwitchOn() const;
     u32 GetHostPort(s32 devicePhyId);
     u32 GetLocalNicPort(NicType nicType);
     void SetNeedInitNicFlag(const bool isNeedInitNic);
@@ -114,7 +114,7 @@ private:
     HcclResult GetNicInfo(
         const NICDeployment& nicDeploy, const u32 curRankIndex, const std::vector<RankInfo_t>& servRankList,
         RankInfo& rankInfo) const;
-    HcclResult TransformRankList(const std::vector<RankInfo>& rankListIn, std::vector<RankInfo_t>& rankListOut);
+    HcclResult TransformRankList(const std::vector<RankInfo>& rankListIn, std::vector<RankInfo_t>& rankListOut) const;
     HcclResult InitCommParams(HcclCommParams& params);
 
     virtual bool Is310P3Common();
@@ -152,8 +152,8 @@ private:
     u32 CalMeshAggRankSize(int halfDevNum) const;
     HcclResult SetMeshAggregationRankSize(u32 size);
     HcclResult InitRankInfoSubGroup(const std::vector<RankInfo>& rankList, WorldGroupInfo& groupCommonData);
-    HcclResult
-    GetPairDeviceLinkType(const RankTable_t& rankTable, u32 i, bool& isConnectedWithHCCS, LinkTypeInServer& linkType);
+    HcclResult GetPairDeviceLinkType(
+        const RankTable_t& rankTable, u32 i, bool& isConnectedWithHCCS, LinkTypeInServer& linkType) const;
     HcclResult GetMixInnerLinkInfo(
         std::unordered_map<u32, u32>& pairLinkCounter,
         std::unordered_map<u32, std::unordered_map<int, std::vector<int>>>& pairLinkInfo);

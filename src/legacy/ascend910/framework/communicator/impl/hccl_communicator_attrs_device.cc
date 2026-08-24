@@ -173,7 +173,8 @@ HcclResult HcclCommunicatorAttrs::SetWorldGroupInfo(
 }
 
 HcclResult HcclCommunicatorAttrs::TransformRankList(
-    [[maybe_unused]] const std::vector<RankInfo>& rankListIn, [[maybe_unused]] std::vector<RankInfo_t>& rankListOut)
+    [[maybe_unused]] const std::vector<RankInfo>& rankListIn,
+    [[maybe_unused]] std::vector<RankInfo_t>& rankListOut) const
 {
     return HCCL_SUCCESS;
 }

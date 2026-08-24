@@ -434,7 +434,7 @@ TopoInfoExchangeServer::GroupLeaderConnect(std::map<std::string, std::shared_ptr
 }
 
 HcclResult TopoInfoExchangeServer::DisplayConnectingStatus(
-    u32 totalSockets, u32 waitSockets, const std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets)
+    u32 totalSockets, u32 waitSockets, const std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets) const
 {
     if (totalSockets == 0 && waitSockets == 1) {
         return HCCL_SUCCESS;

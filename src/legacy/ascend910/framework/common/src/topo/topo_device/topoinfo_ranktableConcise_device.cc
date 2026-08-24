@@ -117,7 +117,7 @@ HcclResult TopoinfoRanktableConcise::SplitString(
 
 HcclResult TopoinfoRanktableConcise::GetSingleDeviceIp(
     [[maybe_unused]] const nlohmann::json& deviceListObj, [[maybe_unused]] u32 objIndex,
-    [[maybe_unused]] RankTable_t& clusterInfo, [[maybe_unused]] RankInfo_t& rankinfo,
+    [[maybe_unused]] const RankTable_t& clusterInfo, [[maybe_unused]] RankInfo_t& rankinfo,
     [[maybe_unused]] DevType deviceType, [[maybe_unused]] bool invalidHostIp)
 {
     return HCCL_E_NOT_SUPPORT;
@@ -146,7 +146,7 @@ HcclResult TopoinfoRanktableConcise::GetSingleDevicePort(
 
 HcclResult TopoinfoRanktableConcise::GetSingleBackupDevicePort(
     [[maybe_unused]] const nlohmann::json& deviceListObj, [[maybe_unused]] u32 objIndex,
-    [[maybe_unused]] RankInfo_t& rankinfo)
+    [[maybe_unused]] RankInfo_t& rankinfo) const
 {
     return HCCL_E_NOT_SUPPORT;
 }
@@ -159,7 +159,7 @@ HcclResult TopoinfoRanktableConcise::VerifyBackupDeviceIpAndPort(
 
 HcclResult TopoinfoRanktableConcise::GetSingleSuperDeviceId(
     [[maybe_unused]] const nlohmann::json& deviceListObj, [[maybe_unused]] u32 objIndex,
-    [[maybe_unused]] RankTable_t& clusterInfo, [[maybe_unused]] RankInfo_t& rankinfo)
+    [[maybe_unused]] const RankTable_t& clusterInfo, [[maybe_unused]] RankInfo_t& rankinfo)
 {
     return HCCL_E_NOT_SUPPORT;
 }

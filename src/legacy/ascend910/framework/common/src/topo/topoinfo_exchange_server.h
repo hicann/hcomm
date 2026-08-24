@@ -65,7 +65,8 @@ private:
     HcclResult
     DisplayConnectedRank(const std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets, u32 rankNum = 0);
     HcclResult DisplayConnectingStatus(
-        u32 totalSockets, u32 waitSockets, const std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets);
+        u32 totalSockets, u32 waitSockets,
+        const std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets) const;
     bool DoServerIdExist(const RankTable_t& rankTable, const std::string& serverId) const;
     HcclResult GetRemoteFdAndRankSize(
         std::shared_ptr<HcclSocket>& socket, std::map<std::string, std::shared_ptr<HcclSocket>>& connectSockets,

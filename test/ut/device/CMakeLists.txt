@@ -34,6 +34,9 @@ set(hccl_utest_device_src_list
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/algorithm/impl/hccl_alg_device.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/common/src/topo/topo_device/topoinfo_ranktableConcise_device.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/common/src/topo/topo_device/topoinfo_detect_device.cc
+    ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/common/src/topo/topo_device/topoinfo_ranktableParser_device.cc
+    ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/common/src/topo/topo_device/topoinfo_ranktable_partition_device.cc
+    ${HCCL_CODE_ROOT}/src/legacy/ascend910/framework/common/src/topo/topo_device/topoinfo_ranktableStandard_device.cc
     ${HCCL_CODE_ROOT}/src/legacy/ascend910/algorithm/impl/coll_executor/coll_all_to_all/coll_all_to_all_executor_aicpu.cc
     ${HCCL_CODE_ROOT}/src/base_comm/resources/comm_engine_res/threads/device/aicpu_thread_kernel.cc
     ${HCCL_CODE_ROOT}/src/base_comm/resources/comm_engine_res/threads/device/aicpu_thread_process.cc

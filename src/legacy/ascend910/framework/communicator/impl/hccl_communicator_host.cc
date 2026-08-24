@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <numeric>
 #include <unordered_set>
-#include <sys/time.h>
+
 #include "externalinput_pub.h"
 #include "env_config.h"
 #include "p2p_mgmt_pub.h"
@@ -70,7 +70,7 @@ constexpr u32 TYPE_USER_MEM = 1;
 constexpr u32 NON_BATCH_WRITE_MAX_STREAM_NUM = 19U;
 constexpr u64 GIGABYTE_TO_BYTE = 1024ULL * 1024ULL * 1024ULL;
 constexpr u8 AICPU_ORDERLAUNCH_INVALID_HCOM_MODE = 255; // 图模式下无附属从流，不进行按序下发
-enum TransferMemInfoIdx {
+enum class TransferMemInfoIdx : u32 {
     TRANSFER_MEM_INFO_KEY_IDX = 0,
     TRANSFER_MEM_INFO_VALUE_IDX = 1,
     TRANSFER_MEM_INFO_RDMA_ENVELOPE_IDX = 2,
@@ -445,7 +445,7 @@ HcclResult HcclCommunicator::Init(HcclCommParams& params, const RankTable_t& ran
     CHK_RET(InitSymmetricMemory());
 
     CHK_RET(InitMyRankConnectMode(params, rankTable));
-    if (dpuManager_ != nullptr && myRankConnectMode_) { /* 当前只有host nic--device nic使用 */
+    if (dpuManager_ != nullptr && myRankConnectMode_ != 0) { /* 当前只有host nic--device nic使用 */
         CHK_RET(dpuManager_->Init(identifier_, deviceLogicId_));
     }
 
@@ -753,7 +753,7 @@ bool HcclCommunicator::IsSupportSymmetricMemory(HcclCMDType opType, OpParam& opP
     return true;
 }
 
-bool HcclCommunicator::IsSupportZeroCopy(const OpParam& opParam)
+bool HcclCommunicator::IsSupportZeroCopy(const OpParam& opParam) const
 {
     HCCL_INFO(
         "[%s] aicpuUnfold[%d], workflowMode[%d], deviceType[%d], "
@@ -1493,7 +1493,7 @@ HcclResult HcclCommunicator::InitTcpMode(const RankTable_t& rankTable) const
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicator::InitMyRankConnectMode(HcclCommParams& params, const RankTable_t& rankTable)
+HcclResult HcclCommunicator::InitMyRankConnectMode(const HcclCommParams& params, const RankTable_t& rankTable)
 {
     if (deviceType_ != DevType::DEV_TYPE_910B) { /* 910B才支持host网卡特性 */
         myRankConnectMode_ = 0;
@@ -1517,7 +1517,7 @@ HcclResult HcclCommunicator::InitMyRankConnectMode(HcclCommParams& params, const
     return HCCL_SUCCESS;
 }
 
-uint32_t HcclCommunicator::GetConnectMode() { return myRankConnectMode_; }
+uint32_t HcclCommunicator::GetConnectMode() const { return myRankConnectMode_; }
 
 bool HcclCommunicator::IsEnableBackupLink()
 {
@@ -1903,13 +1903,13 @@ HcclResult HcclCommunicator::AtomicInitSet()
 
 void HcclCommunicator::AtomicInitClear() { initializedFlag_.clear(); }
 
-u32 HcclCommunicator::GetUserRank() { return realUserRank_; }
+u32 HcclCommunicator::GetUserRank() const { return realUserRank_; }
 
-u32 HcclCommunicator::GetGroupRank() { return userRank_; }
+u32 HcclCommunicator::GetGroupRank() const { return userRank_; }
 
-u32 HcclCommunicator::GetRankSize() { return userRankSize_; }
+u32 HcclCommunicator::GetRankSize() const { return userRankSize_; }
 
-u32 HcclCommunicator::GetRankInParentComm() { return rankInParentComm_; }
+u32 HcclCommunicator::GetRankInParentComm() const { return rankInParentComm_; }
 
 bool HcclCommunicator::GetNicInitialized() { return nicInitialized_ > 0; }
 
@@ -2554,7 +2554,7 @@ HcclResult HcclCommunicator::InitNicHostDeploy()
 
 HcclResult HcclCommunicator::InitNic(bool isMC2ReInit)
 {
-    if (!GetExternalInputIntraRoceSwitch() && servRankInfo_.size() == 1 && isDiffDeviceModule_ && !isMC2ReInit) {
+    if (GetExternalInputIntraRoceSwitch() == 0 && servRankInfo_.size() == 1 && isDiffDeviceModule_ && !isMC2ReInit) {
         return HCCL_SUCCESS;
     }
     u32 backupDevPhyId = INVALID_INT;
@@ -5308,7 +5308,7 @@ void HcclCommunicator::EraseCaptureModelId(u64 modelId)
     return;
 }
 
-bool HcclCommunicator::StreamIsCapture(rtStream_t mainStream)
+bool HcclCommunicator::StreamIsCapture(rtStream_t mainStream) const
 {
     bool isCapture = false;
     aclmdlRI rtModel = nullptr;
@@ -5664,7 +5664,7 @@ template <typename T>
 HcclResult HcclCommunicator::CopyVectorToDeviceMem(const u64 len, DeviceMem& dstDeviceMem, const std::vector<T>& srcVec)
 {
     CHK_PRT_RET(
-        !len, HCCL_INFO("[HcclCommunicator][CopyVectorToDeviceMem] space size is zero. not need to malloc memory"),
+        len == 0, HCCL_INFO("[HcclCommunicator][CopyVectorToDeviceMem] space size is zero. not need to malloc memory"),
         HCCL_SUCCESS);
 
     CHK_PRT_RET(
@@ -6075,8 +6075,8 @@ HcclResult HcclCommunicator::BuildOpRemoteLinkRoceResParam(
     if ((signalInfos.size() != notifyAddrKey.size()) || (signalInfos.size() < RDMA_NOTIFY_MIN_NUM)
         || (signalInfos.size() > RDMA_NOTIFY_MAX_NUM) || (notifyAddrKey.size() < RDMA_NOTIFY_MIN_NUM)
         || (notifyAddrKey.size() > RDMA_NOTIFY_MAX_NUM)
-        || ((signalInfos.size() - RDMA_NOTIFY_MIN_NUM) % linkRoce->qpsPerConnection)
-        || ((notifyAddrKey.size() - RDMA_NOTIFY_MIN_NUM) % linkRoce->qpsPerConnection)) {
+        || ((signalInfos.size() - RDMA_NOTIFY_MIN_NUM) % linkRoce->qpsPerConnection != 0)
+        || ((notifyAddrKey.size() - RDMA_NOTIFY_MIN_NUM) % linkRoce->qpsPerConnection != 0)) {
         HCCL_ERROR(
             "[HcclCommunicator][BuildOpRemoteLinkRoceResParam] signalInfos %zu notifyAddrKey %zu "
             "qpsPerConnection %u",
@@ -6349,14 +6349,14 @@ HcclResult HcclCommunicator::CopyHostListResToDeviceParam(
                                      reinterpret_cast<HccltagRemoteResV2*>(nextHostList)->tag;
             if (curTag == newTag) {
                 CHK_RET(hrtMemSyncCopy(
-                    reinterpret_cast<void*>(nextDeviceList), size, reinterpret_cast<void*>(nextHostList), size,
+                    static_cast<void*>(nextDeviceList), size, static_cast<void*>(nextHostList), size,
                     HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
                 break;
             }
         } else {
             // 首分配置：拷贝前UPDATE_NODE_NUM个节点到device，减少H2D次数
             CHK_RET(hrtMemSyncCopy(
-                reinterpret_cast<void*>(nextDeviceList), size, reinterpret_cast<void*>(nextHostList), size,
+                static_cast<void*>(nextDeviceList), size, static_cast<void*>(nextHostList), size,
                 HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
             updateNodeCnt++;
         }
@@ -6370,7 +6370,7 @@ HcclResult HcclCommunicator::CopyHostOpResToDeviceParam(const std::string& newTa
 {
     // 1、将opResPara_，H2D到device
     CHK_RET(hrtMemSyncCopy(
-        opResDevicePara_.ptr(), sizeof(HcclOpResParam), reinterpret_cast<void*>(&opResPara_), sizeof(HcclOpResParam),
+        opResDevicePara_.ptr(), sizeof(HcclOpResParam), static_cast<void*>(&opResPara_), sizeof(HcclOpResParam),
         HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
     HCCL_DEBUG(
         "[HcclCommunicator][CopyHostOpResToDeviceParam] tag[%s] local rankId[%u] workspace[%p] "
@@ -6543,7 +6543,7 @@ HcclResult HcclCommunicator::BuildCustomOpResParam()
     opResPara_.kfcControlTransferH2DParams = customControlTransferH2D_->GetCommunicateParams();
     opResPara_.kfcStatusTransferD2HParams = customStatusTransferD2H_->GetCommunicateParams();
     CHK_RET(hrtMemSyncCopy(
-        opResDevicePara_.ptr(), sizeof(HcclOpResParam), reinterpret_cast<void*>(&opResPara_), sizeof(HcclOpResParam),
+        opResDevicePara_.ptr(), sizeof(HcclOpResParam), static_cast<void*>(&opResPara_), sizeof(HcclOpResParam),
         HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
     return HCCL_SUCCESS;
 }
@@ -6710,7 +6710,7 @@ HcclResult HcclCommunicator::OrchestrateAicpu(
 }
 
 HcclResult HcclCommunicator::CalcTinySendRecvMem(
-    const OpParam& opParam, AlgResourceResponse& algResResponse, DeviceMem& tinySendRecvMem)
+    const OpParam& opParam, AlgResourceResponse& algResResponse, DeviceMem& tinySendRecvMem) const
 {
     u64 sendCount = 0;
     u64 recvCount = 0;
@@ -6750,7 +6750,7 @@ HcclResult HcclCommunicator::CalcTinySendRecvMem(
     return HCCL_SUCCESS;
 }
 
-bool HcclCommunicator::HasRoceTransportLinks(OpCommTransport& opTransportReq)
+bool HcclCommunicator::HasRoceTransportLinks(OpCommTransport& opTransportReq) const
 {
     for (u32 levelIndex = 0; levelIndex < opTransportReq.size(); levelIndex++) {
         for (u32 ringIndex = 0; ringIndex < opTransportReq[levelIndex].size(); ringIndex++) {
@@ -6912,7 +6912,7 @@ HcclResult HcclCommunicator::AllocAlgResource(
     }
 
     bool useOpbaseFlag = (GetWorkflowMode() == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE && !opParam.isCapture);
-    if (AIV_COMM_BUFFER_BITMASK & resRequest.aivBufferRequest) {
+    if ((AIV_COMM_BUFFER_BITMASK & resRequest.aivBufferRequest) != 0) {
         ret = cclBufferManager_.CreateCommAIVbuffer(useOpbaseFlag);
         CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Alloc][AlgResource]Create CommAIVbuffer failed"), ret);
         if (useOpbaseFlag) { // 单算子非Capture模式，对应aivOpbaseTag_
@@ -6924,7 +6924,7 @@ HcclResult HcclCommunicator::AllocAlgResource(
         }
         HCCL_INFO("[AllocAlgResource] tag[%s] alloc aiv buffer", newTag.c_str());
     }
-    if ((AIV_COMM_INFO_BUFFER_BITMASK & resRequest.aivBufferRequest) || opParam.isNpuDirectRoce) {
+    if ((AIV_COMM_INFO_BUFFER_BITMASK & resRequest.aivBufferRequest) != 0 || opParam.isNpuDirectRoce) {
         if (!useOpbaseFlag) {
             DeviceMem aivCommInfoMem; // 图模式每个算子单独一块内存
             CHK_RET(DeviceMem::alloc(aivCommInfoMem, AIV_COMM_INFO_SIZE));
@@ -7221,7 +7221,7 @@ HcclResult HcclCommunicator::InitWorkSpace()
 }
 
 HcclResult HcclCommunicator::FillOpParam(
-    const HcclCMDType commType, OpParam& opParam, const uint64_t count, void* pCount, void* pDispls)
+    const HcclCMDType commType, OpParam& opParam, const uint64_t count, void* pCount, void* pDispls) const
 {
     if (commType == HcclCMDType::HCCL_CMD_REDUCE_SCATTER || commType == HcclCMDType::HCCL_CMD_ALLGATHER
         || commType == HcclCMDType::HCCL_CMD_ALLREDUCE) {
@@ -7326,8 +7326,8 @@ HcclResult HcclCommunicator::AllocComResourceByTiling(const string& algConfig, v
     HCCL_INFO("[%s] userRankSize=[%u], count=[%u]", __func__, userRankSize_, count);
     vector<uint64_t> countList(userRankSize_ * userRankSize_, count);
     vector<uint64_t> displsList(userRankSize_, 0);
-    void* pCount = reinterpret_cast<void*>(&countList[0]);
-    void* pDispls = reinterpret_cast<void*>(&displsList[0]);
+    void* pCount = static_cast<void*>(&countList[0]);
+    void* pDispls = static_cast<void*>(&displsList[0]);
     CHK_RET(FillOpParam(opParam.opType, opParam, count, pCount, pDispls));
     // MC2算子不需要申请host侧的从流
     bool isNeedHostSlaveStream = false;
@@ -7490,7 +7490,7 @@ HcclResult HcclCommunicator::Mc2CreateAndLaunchContext(
 }
 
 HcclResult
-HcclCommunicator::GetAiCpuNotifyData(const std::shared_ptr<LocalNotify>& localNotify, HcclSignalInfo& notifyInfo)
+HcclCommunicator::GetAiCpuNotifyData(const std::shared_ptr<LocalNotify>& localNotify, HcclSignalInfo& notifyInfo) const
 {
     if (localNotify == nullptr) {
         HCCL_INFO("[HcclCommunicator][GetAiCpuNotifyData]notifyHandle is null");
@@ -7598,7 +7598,7 @@ HcclResult HcclCommunicator::AicpuResourceInit(
         }
 
         CHK_RET(AicpuAclKernelLaunch(
-            aicpuStream, reinterpret_cast<void*>(&customInitTask), sizeof(customInitTask), binCustomHandle_, kernelName,
+            aicpuStream, static_cast<void*>(&customInitTask), sizeof(customInitTask), binCustomHandle_, kernelName,
             true, timeOut));
         uint64_t customEndTime = hrtMsprofSysCycleTime();
         s32 customthreadId = SalGetTid();
@@ -7631,7 +7631,7 @@ HcclResult HcclCommunicator::AiCpuKernelLaunch(const rtStream_t stm, u64 addr, c
         timeOut = opResPara_.config.notifyWaitTime + AICPU_KERNEL_TIMEOUT_INC;
     }
     CHK_RET(AicpuAclKernelLaunch(
-        stm, reinterpret_cast<void*>(&initTask), sizeof(initTask), binHandle_, kernelName, true, timeOut));
+        stm, static_cast<void*>(&initTask), sizeof(initTask), binHandle_, kernelName, true, timeOut));
     uint64_t endTime = hrtMsprofSysCycleTime();
     s32 threadId = SalGetTid();
     CHK_RET(ProfilingManagerPub::CallMsprofReportNodeInfo(beginTime, endTime, profName, threadId));
@@ -7729,12 +7729,12 @@ HcclResult HcclCommunicator::AicpuKfcClearOpResLaunch(const std::unordered_set<s
         payload.tagCount = idx;
 
         CHK_RET(hrtMemSyncCopy(
-            aicpuCleanupBuf_.ptr(), sizeof(payload), reinterpret_cast<void*>(&payload), sizeof(payload),
+            aicpuCleanupBuf_.ptr(), sizeof(payload), static_cast<void*>(&payload), sizeof(payload),
             HcclRtMemcpyKind::HCCL_RT_MEMCPY_KIND_HOST_TO_DEVICE));
 
         HcclResult ret = AicpuAclKernelLaunchV2(
-            opStream_.ptr(), reinterpret_cast<void*>(&initTask), sizeof(initTask), binHandle_, "RunAicpuKfcClearOpRes",
-            true, timeOut, nullptr, 0, identifier_);
+            opStream_.ptr(), static_cast<void*>(&initTask), sizeof(initTask), binHandle_, "RunAicpuKfcClearOpRes", true,
+            timeOut, nullptr, 0, identifier_);
         if (ret != HCCL_SUCCESS) {
             HCCL_ERROR(
                 "[AicpuKfcClearOpResLaunch] launch fail, group[%s] batch[%zu] tagCount[%u] ret[%d]",
@@ -8227,8 +8227,8 @@ HcclResult HcclCommunicator::AicpuUnfoldKernelLaunch(
         timeOut = opResPara_.config.notifyWaitTime + AICPU_KERNEL_TIMEOUT_INC;
     }
     CHK_PRT(AicpuAclKernelLaunch(
-        stm, reinterpret_cast<void*>(&apiParam), sizeof(apiParam), binHandle_, kernelName, false, timeOut,
-        tilingDataPtr, tilingDataSize));
+        stm, static_cast<void*>(&apiParam), sizeof(apiParam), binHandle_, kernelName, false, timeOut, tilingDataPtr,
+        tilingDataSize));
     HCCL_INFO("[HcclCommunicator][AicpuUnfoldKernelLaunch] exec succ.");
     return HCCL_SUCCESS;
 }
@@ -8255,7 +8255,7 @@ HcclResult HcclCommunicator::AicpuUnfoldKernelLaunchV2(
         timeOut = opResPara_.config.notifyWaitTime + AICPU_KERNEL_TIMEOUT_INC;
     }
     HcclResult ret = AicpuAclKernelLaunchV2(
-        stm, reinterpret_cast<void*>(&context), sizeof(context), binHandle, kernelName, false, timeOut, tilingDataPtr,
+        stm, static_cast<void*>(&context), sizeof(context), binHandle, kernelName, false, timeOut, tilingDataPtr,
         tilingDataSize, identifier_);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
@@ -8592,8 +8592,7 @@ HcclResult HcclCommunicator::SetCommResource(
             CHK_RET(AllocAndClearHostMem(sizeof(CombinedCapability), combinedCapabilityMem_));
         }
         CHK_PTR_NULL(combinedCapabilityMem_);
-        CombinedCapability* combinedCapabilityPtr
-            = reinterpret_cast<CombinedCapability*>(combinedCapabilityMem_->ptr());
+        CombinedCapability* combinedCapabilityPtr = static_cast<CombinedCapability*>(combinedCapabilityMem_->ptr());
         CHK_PTR_NULL(combinedCapabilityPtr);
         SalSetBitOne(combinedCapabilityPtr->dataplaneModeBitmap, POS_DATA_PLANE_MODE_HOST);
         if (isSupportAIVNormalQP && isA2MC2IntraHie_) {
@@ -8851,7 +8850,7 @@ HcclResult HcclCommunicator::SetWorldGroupInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicator::GetTopoDesc(HcclTopoDescs* topoDescs, uint32_t topoSize)
+HcclResult HcclCommunicator::GetTopoDesc(HcclTopoDescs* topoDescs, uint32_t topoSize) const
 {
     if (topoSize < static_cast<uint32_t>(HcclTopoLevel::HCCL_TOPO_MAX)) {
         HCCL_ERROR("topoDescs size is not enough, please check topoSize[%u]", topoSize);
@@ -8991,7 +8990,7 @@ HcclResult HcclCommunicator::SetSingleLinkInfo(
     if (iterLocal != switchRanks.end() && iterRemote != switchRanks.end()) {
         // 本端卡和对端卡都切，如果两者的目标网卡冲突，则切换失败；否则使用一致的目标网卡的的对应链路
         CHK_PRT_RET(
-            iterLocal->second ^ iterRemote->second,
+            iterLocal->second != iterRemote->second,
             HCCL_ERROR(
                 "[HcclCommunicator][SetSingleLinkInfo] local rank[%u] plan to switch to nic[%u], "
                 "which is conflict with remote rank[%u] planning to switch to nic[%u].",
@@ -9016,8 +9015,8 @@ HcclResult HcclCommunicator::SetSingleLinkInfo(
     changeLinkInfo.isUseDefaultPort[changeLinkInfo.remoteRankNum] = !(useBackupLink);
     changeLinkInfo.remoteRankNum++;
     remoteRankNicStatus_[remoteRankId] = useBackupLink ? CONNECT_REMOTE_BACKUP : CONNECT_REMOTE_DEFAULT;
-    needCheckBackupNic_ |= useBackupLink;
-    needCheckDefaultNic_ |= !useBackupLink;
+    needCheckBackupNic_ = needCheckBackupNic_ || useBackupLink;
+    needCheckDefaultNic_ = needCheckDefaultNic_ || !useBackupLink;
 
     HCCL_RUN_INFO(
         "[HcclCommunicator][SetSingleLinkInfo] comm identifier[%s], local rank[%u], "
@@ -9073,7 +9072,7 @@ HcclResult HcclCommunicator::ActiveStoppedLink(
                 auto& transportRequest = singleSubCommTransport.transportRequests[i];
                 auto remoteRankIter = remoteRankPortMap.find(transportRequest.remoteUserRank);
                 bool needLink = transportRequest.isValid && transportRequest.isUsedRdma
-                                && remoteRankIter != remoteRankPortMap.end() && (remoteRankIter->second ^ isBackup);
+                                && remoteRankIter != remoteRankPortMap.end() && (remoteRankIter->second != isBackup);
                 // STOP状态的Transport需要唤醒，重置位到READY
                 if (needLink && singleSubCommTransport.status[i] == TransportStatus::STOP) {
                     HCCL_INFO(
@@ -9524,7 +9523,7 @@ HcclResult HcclCommunicator::CommGetNetLayers(uint32_t** netLayers, uint32_t* ne
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicator::CommGetInstSizeByNetLayer(uint32_t netLayer, uint32_t* rankNum)
+HcclResult HcclCommunicator::CommGetInstSizeByNetLayer(uint32_t netLayer, uint32_t* rankNum) const
 {
     if ((netLayer == static_cast<uint32_t>(HcclTopoLevel::HCCL_TOPO_L0))
         || (netLayer == static_cast<uint32_t>(HcclTopoLevel::HCCL_TOPO_L1))) {
@@ -9533,7 +9532,7 @@ HcclResult HcclCommunicator::CommGetInstSizeByNetLayer(uint32_t netLayer, uint32
     return HCCL_SUCCESS;
 }
 
-HcclResult HcclCommunicator::CommGetInstTopoTypeByNetLayer(uint32_t netLayer, u32* topoType)
+HcclResult HcclCommunicator::CommGetInstTopoTypeByNetLayer(uint32_t netLayer, u32* topoType) const
 {
     if (deviceType_ == DevType::DEV_TYPE_910_93) {
         if (netLayer == static_cast<uint32_t>(HcclTopoLevel::HCCL_TOPO_L0)) {
@@ -9830,7 +9829,7 @@ void HcclCommunicator::SetHcclQos(u32 hcclQos)
     hcclQos_ = hcclQos;
 }
 
-u32 HcclCommunicator::GetHcclQos()
+u32 HcclCommunicator::GetHcclQos() const
 {
     HCCL_INFO("[HcclCommunicator][host][GetHcclQos] hcclQos[%u]", hcclQos_);
     return hcclQos_;

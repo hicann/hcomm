@@ -1263,7 +1263,7 @@ HcclResult HcclCreateSubCommConfigInner(
     return HCCL_SUCCESS;
 }
 
-HcclResult SubCommIsOneSidedComm(HcclComm* comm)
+HcclResult SubCommIsOneSidedComm(const HcclComm* comm)
 {
     if (IsOneSidedComm(*comm)) {
         HCCL_ERROR(
@@ -2813,7 +2813,7 @@ HcclResult HcclReduceScatterVInner(
     return HCCL_SUCCESS;
 }
 
-HcclResult CheckScatterInputPara(HcclComm comm, void* recvBuf)
+HcclResult CheckScatterInputPara(const HcclComm comm, const void* recvBuf)
 {
     // 入参合法性校验
     RPT_INPUT_ERR(

@@ -284,7 +284,7 @@ HcclResult SetOverFlowAddr(hccl::hcclComm* hcclComm);
 
 HcclResult HcclGetCommHandle(const char* commName, std::shared_ptr<hccl::hcclComm>& comm);
 
-HcclResult CheckScatterInputPara(HcclComm comm, void* recvBuf);
+HcclResult CheckScatterInputPara(const HcclComm comm, const void* recvBuf);
 
 HcclResult HcclMc2ComResourceByTiling(HcclComm comm, uint32_t* pVersion, void* mc2Tiling, rtStream_t& aicpuStream);
 

@@ -45,15 +45,15 @@ private:
         const nlohmann::json& deviceListObj, u32 objIndex, RankTable_t& clusterInfo, std::string& serverId,
         u32& serverIdx, HcclIpAddress& hostIp);
     HcclResult GetSingleDeviceIp(
-        const nlohmann::json& deviceListObj, u32 objIndex, RankTable_t& clusterInfo, RankInfo_t& rankinfo,
+        const nlohmann::json& deviceListObj, u32 objIndex, const RankTable_t& clusterInfo, RankInfo_t& rankinfo,
         DevType deviceType, bool invalidHostIp = true);
     HcclResult GetSingleBackupDeviceIp(const nlohmann::json& deviceListObj, u32 objIndex, RankInfo_t& rankinfo);
     HcclResult GetSingleDeviceHostPort(const nlohmann::json& deviceListObj, u32 objIndex, RankInfo_t& rankinfo);
     HcclResult GetSingleDevicePort(const nlohmann::json& deviceListObj, u32 objIndex, RankInfo_t& rankinfo);
-    HcclResult GetSingleBackupDevicePort(const nlohmann::json& deviceListObj, u32 objIndex, RankInfo_t& rankinfo);
+    HcclResult GetSingleBackupDevicePort(const nlohmann::json& deviceListObj, u32 objIndex, RankInfo_t& rankinfo) const;
     HcclResult VerifyBackupDeviceIpAndPort(std::vector<RankInfo_t>& rankList, u32 devIndex);
     HcclResult GetSingleSuperDeviceId(
-        const nlohmann::json& deviceListObj, u32 objIndex, RankTable_t& clusterInfo, RankInfo_t& rankinfo);
+        const nlohmann::json& deviceListObj, u32 objIndex, const RankTable_t& clusterInfo, RankInfo_t& rankinfo);
     void DetectNicDepoly(RankTable_t& rankTable);
     HcclResult GetSingleNicInfo(const nlohmann::json& serverListObj, u32 objIndex, RankInfo_t& rankinfo);
     HcclResult CheckNicDeployConsistence(RankTable_t& clusterInfo, NICDeployment deploy) const;

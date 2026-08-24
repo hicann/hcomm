@@ -475,7 +475,7 @@ HcclResult HcomCreateGroup(const char* group, u32 rankNum, u32* rankIds)
             LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), HCOM_ERROR_CODE(ret)),
         ret);
     CHK_PRT_RET(
-        (!strncmp(group, HCCL_WORLD_GROUP, sizeof(HCCL_WORLD_GROUP))),
+        (strncmp(group, HCCL_WORLD_GROUP, sizeof(HCCL_WORLD_GROUP)) == 0),
         HCCL_ERROR(
             "[%s][%s]create group isn't support world group", LOG_KEYWORDS_TASK_EXEC.c_str(),
             LOG_KEYWORDS_INVALID_ARGUMENT.c_str()),
@@ -632,7 +632,7 @@ HcclResult HcomDestroyGroup(const char* group)
     CHK_PTR_NULL(group);
     CHK_RET(HcomCheckGroupName(group));
 
-    if (!strncmp(group, HCCL_WORLD_GROUP, sizeof(HCCL_WORLD_GROUP))) {
+    if (strncmp(group, HCCL_WORLD_GROUP, sizeof(HCCL_WORLD_GROUP)) == 0) {
         HCCL_ERROR(
             "[%s][%s]errNo[0x%016llx] destroy group is world group", LOG_KEYWORDS_TASK_EXEC.c_str(),
             LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), HCOM_ERROR_CODE(HCCL_E_PARA));
@@ -679,7 +679,7 @@ HcclResult HcomFlushBackloggedGroups()
     using ITER = map<string, std::vector<u32>>::iterator;
     for (ITER iter = g_backloggedGroup.begin(); iter != g_backloggedGroup.end();) {
         HCCL_INFO("HcomFlushBackloggedGroups[%s], rank[%u]", iter->first.c_str(), hcomInfo.params.rank);
-        if (std::count(iter->second.begin(), iter->second.end(), hcomInfo.params.rank)) {
+        if (std::count(iter->second.begin(), iter->second.end(), hcomInfo.params.rank) > 0) {
             HCCL_INFO("HcomFlushBackloggedGroups[%s], rank[%u] success", iter->first.c_str(), hcomInfo.params.rank);
             hcomInfo.backloggedGroup.insert({iter->first, iter->second});
         }

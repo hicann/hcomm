@@ -503,7 +503,7 @@ HcclResult TopoinfoRanktableConcise::SplitString(
 }
 
 HcclResult TopoinfoRanktableConcise::GetSingleDeviceIp(
-    const nlohmann::json& deviceListObj, u32 objIndex, RankTable_t& clusterInfo, RankInfo_t& rankinfo,
+    const nlohmann::json& deviceListObj, u32 objIndex, const RankTable_t& clusterInfo, RankInfo_t& rankinfo,
     DevType deviceType, bool invalidHostIp)
 {
     // 获取device_ip （可能有多个）
@@ -730,7 +730,7 @@ TopoinfoRanktableConcise::GetSingleDevicePort(const nlohmann::json& deviceListOb
 }
 
 HcclResult TopoinfoRanktableConcise::GetSingleBackupDevicePort(
-    const nlohmann::json& deviceListObj, u32 objIndex, RankInfo_t& rankinfo)
+    const nlohmann::json& deviceListObj, u32 objIndex, RankInfo_t& rankinfo) const
 {
     // 获取device指定的backup port；如果用户未配置，则置为缺省值
     std::string strBackupPort;
@@ -833,7 +833,8 @@ HcclResult TopoinfoRanktableConcise::VerifyBackupDeviceIpAndPort(std::vector<Ran
 }
 
 HcclResult TopoinfoRanktableConcise::GetSingleSuperDeviceId(
-    const nlohmann::json& deviceListObj, u32 objIndex, [[maybe_unused]] RankTable_t& clusterInfo, RankInfo_t& rankinfo)
+    const nlohmann::json& deviceListObj, u32 objIndex, [[maybe_unused]] const RankTable_t& clusterInfo,
+    RankInfo_t& rankinfo)
 {
     // 获取super_device_id
     HcclResult ret;

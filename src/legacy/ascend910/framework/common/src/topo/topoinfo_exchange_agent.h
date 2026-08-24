@@ -88,13 +88,13 @@ private:
     HcclResult VerifyClusterSuperPodInfo(const std::vector<RankInfo_t>& rankInfo) const;
     HcclResult VerifyClusterTlsConsistency(const RankTable_t& clusterInfo);
     void AddRankInfoToTlsStatusMap(
-        const RankInfo_t& rankInfo, std::unordered_map<std::string, std::vector<u32>>& tlsStatusRankMap);
+        const RankInfo_t& rankInfo, std::unordered_map<std::string, std::vector<u32>>& tlsStatusRankMap) const;
     void GenerateTlsStatusStr(
-        std::string& tlsStatusStr, const std::unordered_map<std::string, std::vector<u32>>& tlsStatusRankMap);
+        std::string& tlsStatusStr, const std::unordered_map<std::string, std::vector<u32>>& tlsStatusRankMap) const;
     void ReportTlsConfigurationError(
         const std::string& tlsInconsistentTlsType, const std::string& tlsInconsistentEnableStr,
-        const std::string& tlsInconsistentDisableStr, const std::string& tlsUnknownRankStr);
-    void PrintSocketTimeoutReasons(HcclIpAddress& serverIp, u32 port, std::shared_ptr<HcclSocket>& socket);
+        const std::string& tlsInconsistentDisableStr, const std::string& tlsUnknownRankStr) const;
+    void PrintSocketTimeoutReasons(HcclIpAddress& serverIp, u32 port, std::shared_ptr<HcclSocket>& socket) const;
 
     bool HasRepeatedIP(const std::vector<HcclIpAddress>& deviceAIP, const std::vector<HcclIpAddress>& deviceBIP) const;
     HcclResult DetectTransportType(

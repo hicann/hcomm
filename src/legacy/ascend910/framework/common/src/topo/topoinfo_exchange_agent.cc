@@ -422,7 +422,7 @@ HcclResult TopoInfoExchangeAgent::TryRecvFromServer(std::shared_ptr<HcclSocket>&
 }
 
 void TopoInfoExchangeAgent::PrintSocketTimeoutReasons(
-    HcclIpAddress& serverIp, u32 port, std::shared_ptr<HcclSocket>& socket)
+    HcclIpAddress& serverIp, u32 port, std::shared_ptr<HcclSocket>& socket) const
 {
     HCCL_ERROR("current rank connect to server timeout, maybe due to following reasons:");
     HCCL_ERROR(
@@ -1097,7 +1097,7 @@ HcclResult TopoInfoExchangeAgent::VerifyClusterTlsConsistency(const RankTable_t&
 }
 
 void TopoInfoExchangeAgent::AddRankInfoToTlsStatusMap(
-    const RankInfo_t& rankInfo, std::unordered_map<std::string, std::vector<u32>>& tlsStatusRankMap)
+    const RankInfo_t& rankInfo, std::unordered_map<std::string, std::vector<u32>>& tlsStatusRankMap) const
 {
     auto iter = tlsStatusRankMap.find(rankInfo.serverId);
     if (iter == tlsStatusRankMap.end()) {
@@ -1111,7 +1111,7 @@ void TopoInfoExchangeAgent::AddRankInfoToTlsStatusMap(
 }
 
 void TopoInfoExchangeAgent::GenerateTlsStatusStr(
-    std::string& tlsStatusStr, const std::unordered_map<std::string, std::vector<u32>>& tlsStatusRankMap)
+    std::string& tlsStatusStr, const std::unordered_map<std::string, std::vector<u32>>& tlsStatusRankMap) const
 {
     for (const auto& rankIt : tlsStatusRankMap) {
         tlsStatusStr += ("[" + rankIt.first + "/");
@@ -1128,7 +1128,7 @@ void TopoInfoExchangeAgent::GenerateTlsStatusStr(
 
 void TopoInfoExchangeAgent::ReportTlsConfigurationError(
     const std::string& tlsInconsistentTlsType, const std::string& tlsInconsistentEnableStr,
-    const std::string& tlsInconsistentDisableStr, const std::string& tlsUnknownRankStr)
+    const std::string& tlsInconsistentDisableStr, const std::string& tlsUnknownRankStr) const
 {
     std::string errormessage
         = "Value " + tlsInconsistentTlsType

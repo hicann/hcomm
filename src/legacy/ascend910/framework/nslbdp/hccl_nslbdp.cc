@@ -129,7 +129,7 @@ u32 hcclNslbDp::Getl4SPortId()
 
 /* 切分identifier字段 */
 void hcclNslbDp::SplitString(
-    const std::string& identifier, std::vector<std::string>& splitInfo, const std::string& frag)
+    const std::string& identifier, std::vector<std::string>& splitInfo, const std::string& frag) const
 {
     std::string::size_type pos2 = identifier.find(frag);
     std::string::size_type pos1 = 0;

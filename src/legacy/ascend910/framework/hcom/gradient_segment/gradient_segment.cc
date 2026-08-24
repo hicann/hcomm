@@ -268,8 +268,8 @@ HcclResult GradientSegment::GetSplitResInEachSegment(
     return HCCL_SUCCESS;
 }
 
-HcclResult
-GradientSegment::GetIdxByBinarySearch(const std::vector<float>& accumGradList, const float& curSize, u32& segGradIdx)
+HcclResult GradientSegment::GetIdxByBinarySearch(
+    const std::vector<float>& accumGradList, const float& curSize, u32& segGradIdx) const
 {
     s32 lowIdx = 0;
     s32 midIdx = 0;

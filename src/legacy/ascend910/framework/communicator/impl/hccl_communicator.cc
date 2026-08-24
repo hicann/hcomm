@@ -84,7 +84,7 @@ unordered_map<HcclCMDType, std::string, HcclCMDTypeHash> CMDTYPE_TO_KEYWORD
        {HcclCMDType::HCCL_CMD_ALLTOALLVC, "AlltoAll"},   {HcclCMDType::HCCL_CMD_ALLTOALL, "AlltoAll"},
        {HcclCMDType::HCCL_CMD_BATCH_WRITE, "BatchWrite"}};
 
-bool HcclCommunicator::IsEnableCustom() { return binCustomHandle_ != nullptr; }
+bool HcclCommunicator::IsEnableCustom() const { return binCustomHandle_ != nullptr; }
 
 HcclResult HcclCommunicator::InitOpResPara()
 {
@@ -489,13 +489,13 @@ HcclResult HcclCommunicator::SetClearAivSyncBuf(bool aivClearEnable)
     return HCCL_SUCCESS;
 }
 
-u32 HcclCommunicator::GetRankTableCrc() { return ranktableCrc_; }
+u32 HcclCommunicator::GetRankTableCrc() const { return ranktableCrc_; }
 
-u32 HcclCommunicator::GetServerNum() { return serverNum_; }
+u32 HcclCommunicator::GetServerNum() const { return serverNum_; }
 
-u32 HcclCommunicator::GetRealUserRank() { return realUserRank_; }
+u32 HcclCommunicator::GetRealUserRank() const { return realUserRank_; }
 
-u32 HcclCommunicator::GetModuleNum() { return moduleNum_; }
+u32 HcclCommunicator::GetModuleNum() const { return moduleNum_; }
 
 bool HcclCommunicator::GetSupportHDCommunicate()
 {
@@ -885,9 +885,9 @@ HcclResult HcclCommunicator::GetInfoFromDevice(
     return HCCL_SUCCESS;
 }
 
-DevType HcclCommunicator::NslbGetDeviceType() { return deviceType_; }
+DevType HcclCommunicator::NslbGetDeviceType() const { return deviceType_; }
 
-u32 HcclCommunicator::NslbGetServerNum() { return serverNum_; }
+u32 HcclCommunicator::NslbGetServerNum() const { return serverNum_; }
 
 HcclResult HcclCommunicator::NslbDp_CollectOperTable(
     HcclCMDType opType, OpParam& opParam, AlgType nslbAlgType, std::string& algName)
@@ -931,7 +931,7 @@ HcclResult HcclCommunicator::NslbDp_CollectOperTable(
 }
 
 HcclResult HcclCommunicator::NslbDp_CollectSendAdjTable(
-    HcclCMDType opType, OpParam& opParam, AlgType nslbAlgType, AdjInfo& nslbAdjInfo)
+    HcclCMDType opType, const OpParam& opParam, AlgType nslbAlgType, AdjInfo& nslbAdjInfo)
 {
     HCCL_INFO("NSLBDP-HCCL try to collect Table NSLBDP_TYPE_TBL_ADJ.");
     u32 srcLocalRankId = userRank_;
@@ -978,9 +978,9 @@ HcclResult HcclCommunicator::SetMC2EnvFlag()
     return HCCL_SUCCESS;
 }
 
-bool HcclCommunicator::GetMC2EnvFlag() { return isNsRecovery_; }
+bool HcclCommunicator::GetMC2EnvFlag() const { return isNsRecovery_; }
 
-bool HcclCommunicator::GetAicpuCommEngine() { return isAicpuCommEngine_; }
+bool HcclCommunicator::GetAicpuCommEngine() const { return isAicpuCommEngine_; }
 
 HcclResult HcclCommunicator::SetAicpuCommEngine(bool isAicpuCommEngine)
 {
@@ -995,7 +995,7 @@ HcclResult HcclCommunicator::SetAicpuUnfoldFlag()
     return HCCL_SUCCESS;
 }
 
-bool HcclCommunicator::GetAicpuUnfoldFlag() { return isAicpuUnfold_; }
+bool HcclCommunicator::GetAicpuUnfoldFlag() const { return isAicpuUnfold_; }
 
 HcclResult HcclCommunicator::SetStopFlag(bool value)
 {
@@ -1037,7 +1037,7 @@ HcclResult HcclCommunicator::SetState(HcclCommState state)
 
 HcclCommState HcclCommunicator::GetState() { return state_.load(); }
 
-u32 HcclCommunicator ::HcclGetCmdTimeout() { return HCCL_AICPU_HOST_BASE_TIME_MS; }
+u32 HcclCommunicator ::HcclGetCmdTimeout() const { return HCCL_AICPU_HOST_BASE_TIME_MS; }
 
 HcclResult HcclCommunicator::Suspend()
 {
@@ -2350,7 +2350,7 @@ HcclResult HcclCommunicator::SetDevIbverbsData(
 
     CHK_RET(AllocAndClearHostMem(sizeof(TransportDeviceNormalData) * rankSize, transDevIbverbsDataMem_));
     TransportDeviceNormalData* transDevIbverbsData
-        = reinterpret_cast<TransportDeviceNormalData*>(transDevIbverbsDataMem_->ptr());
+        = static_cast<TransportDeviceNormalData*>(transDevIbverbsDataMem_->ptr());
 
     for (u32 i = 0; i < rankSize; i++) {
         auto& data = transDevIbverbsData[i];
@@ -2397,7 +2397,7 @@ HcclResult HcclCommunicator::SetDevIbverbsData(
 }
 
 HcclResult HcclCommunicator::GetTransportLocalMem(
-    const std::shared_ptr<Transport>& transport, UserMemType memType, MemDetails& detail)
+    const std::shared_ptr<Transport>& transport, UserMemType memType, MemDetails& detail) const
 {
     if (transport->GetTransportType() == TransportType::TRANS_TYPE_IBV_EXP) {
         CHK_RET(transport->GetLocalMemDetails(memType, detail));
@@ -2406,7 +2406,7 @@ HcclResult HcclCommunicator::GetTransportLocalMem(
 }
 
 HcclResult HcclCommunicator::GetTransportRemoteMem(
-    const std::shared_ptr<Transport>& transport, UserMemType memType, MemDetails& detail)
+    const std::shared_ptr<Transport>& transport, UserMemType memType, MemDetails& detail) const
 {
     void* addr = nullptr;
     CHK_RET(transport->GetRemoteMem(memType, &addr));
@@ -2841,7 +2841,7 @@ HcclResult HcclCommunicator::SetGroupMode(bool isGroup)
     return HCCL_SUCCESS;
 }
 
-bool HcclCommunicator::GetGroupMode() { return isGroupMode_; }
+bool HcclCommunicator::GetGroupMode() const { return isGroupMode_; }
 
 HcclResult HcclCommunicator::GetCommUserMemSize(uint64_t& size)
 {

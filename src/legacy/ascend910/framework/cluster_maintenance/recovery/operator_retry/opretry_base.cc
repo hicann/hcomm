@@ -652,8 +652,8 @@ HcclResult OpRetryBase::InitChangeLinkInfo(RetryContext* retryCtx, bool incre, b
     return HCCL_SUCCESS;
 }
 
-HcclResult
-OpRetryBase::GetLinkPortStatus(RetryContext* retryCtx, LinkPortStatus& linkPortStatus, bool isGetGroupAllRemoteRank)
+HcclResult OpRetryBase::GetLinkPortStatus(
+    RetryContext* retryCtx, LinkPortStatus& linkPortStatus, bool isGetGroupAllRemoteRank) const
 {
     std::string newTag = std::string(reinterpret_cast<const char*>(retryCtx->localRetryInfo_.opInfo.opId.newTag));
     HCCL_RUN_INFO(
@@ -821,7 +821,7 @@ HcclResult OpRetryBase::GetSwitchRanks(RetryContext* retryCtx, bool& needCheckDe
 
 void OpRetryBase::SetEnableSendRecv(bool enable) { enableSendRecv = enable; }
 
-void OpRetryBase::CheckSnapshotStatus(RetryContext* retryCtx)
+void OpRetryBase::CheckSnapshotStatus(RetryContext* retryCtx) const
 {
     auto snapshotStatus = SnapshotControl::GetInstance(retryCtx->deviceLogicId_).GetStatus();
     if (retryCtx->isPaused_ && snapshotStatus == SnapshotStatus::POST_SNAPSHOT) {

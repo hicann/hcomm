@@ -323,7 +323,7 @@ public:
     HcclResult RegTransportLinks(s32 linkNum, void* transportPara);
     HcclResult GetDeviceNumPerAggregation(u32& deviceNumPerAggregation);
     HcclResult GetBandWidthPerNPU(u32 level, float& bandWidth);
-    bool IsNeedResetDevice();
+    bool IsNeedResetDevice() const;
     HcclResult ResetDeviceEnable();
     HcclResult CommCheckErrorCqe(HcclResult& result);
     HcclResult CommCheckOpInconsistentError(HcclResult& result);
@@ -350,8 +350,8 @@ public:
     HcclResult SetAicpuUnfoldConfig(const bool aicpuUnfold); // 设置aicpu配置
     HcclResult SetExecTimeOutConfig(const s32 execTimeOut);  // 设置HCCL执行超时时间
     HcclResult SetAlgoConfig(const std::map<HcclCMDType, std::vector<HcclAlgoType>>& algoMap); // 设置HCCL_ALGO
-    u64 GetConfigInCCLbufferSize();  // 获取通信域配置的输入buffer大小
-    u64 GetConfigOutCCLbufferSize(); // 获取通信域配置的输出buffer大小
+    u64 GetConfigInCCLbufferSize() const;  // 获取通信域配置的输入buffer大小
+    u64 GetConfigOutCCLbufferSize() const; // 获取通信域配置的输出buffer大小
     u32 GetRankTableCrc();
     u32 GetServerNum();
     u32 GetModuleNum();
@@ -360,7 +360,7 @@ public:
     HcclResult GetCommRankTable(RankTable_t& rankTable);         // 逆向解析获取RankTable_t参数
     HcclResult SetQpQosAttr(u32 trafficClass, u32 serviceLevel); // 设置TC/SL配置
     HcclResult SetHcclQos(u32 hcclQos);
-    u32 GetHcclQos();
+    u32 GetHcclQos() const;
 
     std::shared_ptr<struct hcclKernelPlanner> planner{nullptr}; // for group
     void* barrierSendBuf;
@@ -390,7 +390,7 @@ public:
     HcclResult SetIndependentOpConfig(const CommConfig& commConfig, const RankTable_t& rankTable);
     HcclResult InitIndependentOp();
     void SetAicpuCommState(bool aicpuCommState);
-    bool GetAicpuCommState();
+    bool GetAicpuCommState() const;
     HcclResult KernelLaunchAicpuCommInit();
     HcclResult ReportProfilingKernel(uint64_t beginTime, std::string kernelName);
     bool IsCommunicatorV2();
@@ -444,7 +444,7 @@ public:
     HcclResult GetHeterogMode(HcclHeterogMode* mode);
     // for group
     HcclResult SetGroupMode(bool isGroup);
-    bool GetGroupMode();
+    bool GetGroupMode() const;
     HcclResult RegisterWindow(void* ptr, size_t size, HcclCommSymWindow* winHandle);
     HcclResult DeregisterWindow(HcclCommSymWindow winHandle);
     HcclResult GetCommSymWin(void* ptr, size_t size, HcclCommSymWindow* winHandle, size_t* offset);

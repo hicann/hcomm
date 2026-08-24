@@ -103,7 +103,8 @@ private:
         const HcclIpAddress& ipAddr, HcclIpAddress& localIpAddr, std::shared_ptr<HcclSocket> socket, NicType nicType);
     HcclResult WaitForDectect();
     HcclResult ProcessDetectionResults();
-    std::string FormatDetectMessage(const std::string& localServerId, s32 localDeviceId, const DetectInfo& detectInfo);
+    std::string
+    FormatDetectMessage(const std::string& localServerId, s32 localDeviceId, const DetectInfo& detectInfo) const;
     std::string BuildGroupedDetectMessage();
     void ThreadDestroy();
     ~DetectConnectionAnomalies() = default;
