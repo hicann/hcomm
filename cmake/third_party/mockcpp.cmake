@@ -21,6 +21,8 @@ set(MOCKCPP_INSTALL_PATH ${CANN_3RD_LIB_PATH}/mockcpp)
 
 set(MOCKCPP_PATCH_FILE "mockcpp-2.7_py3.patch")
 set(MOCKCPP_PATCH_URL "https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h4/${MOCKCPP_PATCH_FILE}")
+# 优先使用仓库内追踪的 patch（含 aarch64 适配修复），其次使用本地已下载的 patch，最后从远程下载
+set(MOCKCPP_PATCH_TRACKED_PATH ${CMAKE_CURRENT_LIST_DIR}/${MOCKCPP_PATCH_FILE})
 set(MOCKCPP_PATCH_PATH ${CANN_3RD_LIB_PATH}/${MOCKCPP_PATCH_FILE})
 
 # mockcpp 需要使用 boost 库
@@ -58,7 +60,11 @@ if(mockcpp_FOUND AND NOT FORCE_REBUILD_CANN_3RD)
     message(STATUS "[ThirdParty] MockCpp found in ${MOCKCPP_INSTALL_PATH}, and not force rebuild cann third_party")
 else()
     # mockcpp 补丁
-    if(EXISTS ${MOCKCPP_PATCH_PATH})
+    if(EXISTS ${MOCKCPP_PATCH_TRACKED_PATH})
+        message(STATUS "[ThirdParty] Found tracked mockcpp patch (with aarch64 fix): ${MOCKCPP_PATCH_TRACKED_PATH}")
+        set(MOCKCPP_PATCH_PROJECT_URL ${MOCKCPP_PATCH_TRACKED_PATH})
+        set(MOCKCPP_PATCH_PATH ${MOCKCPP_PATCH_TRACKED_PATH})
+    elseif(EXISTS ${MOCKCPP_PATCH_PATH})
         message(STATUS "[ThirdParty] Found local mockcpp patch package: ${MOCKCPP_PATCH_PATH}")
         set(MOCKCPP_PATCH_PROJECT_URL ${MOCKCPP_PATCH_PATH})
     else()
@@ -95,7 +101,7 @@ else()
     include(ExternalProject)
     ExternalProject_Add(third_party_mockcpp_patch
         URL ${MOCKCPP_PATCH_PROJECT_URL}
-        URL_HASH SHA256=600c0a263182b1f988e77bb907666d24a72d6ea624a52212d61750384745327d
+        URL_HASH SHA256=98e2b01927ba1f0db515cfcc5600317c3a88fe73dc7b37cf49c6fe8074f1302b
         TLS_VERIFY OFF
         DOWNLOAD_NO_EXTRACT TRUE
         DOWNLOAD_NO_PROGRESS TRUE
