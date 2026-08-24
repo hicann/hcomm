@@ -14,7 +14,65 @@
 #include <cstdint>
 #include <sstream>
 #include <string>
-#include <vector>
+
+namespace Hccl {
+namespace EnumNameDetail {
+    struct NameView {
+        const char* data;
+        unsigned int size;
+    };
+
+    inline const char* SkipSpacesAndCommas(const char* cursor)
+    {
+        while ((*cursor == ' ') || (*cursor == ',')) {
+            ++cursor;
+        }
+        return cursor;
+    }
+
+    // "SDMA = 0" -> name is "SDMA"; stop at space or '='.
+    inline const char* FindEnumeratorNameEnd(const char* cursor)
+    {
+        while ((*cursor != '\0') && (*cursor != ',') && (*cursor != ' ') && (*cursor != '=')) {
+            ++cursor;
+        }
+        return cursor;
+    }
+
+    // Skip the initializer ("= 0") up to the comma between enumerators.
+    inline const char* SkipUntilComma(const char* cursor)
+    {
+        while ((*cursor != '\0') && (*cursor != ',')) {
+            ++cursor;
+        }
+        return cursor;
+    }
+
+    // Split the stringized enumerator list on commas. Pointers stay in that literal.
+    inline unsigned int ParseNames(const char* enumeratorList, NameView* enumNames, unsigned int maxEnumCount)
+    {
+        unsigned int curEnumCount = 0;
+        const char* cursor = enumeratorList;
+        while (*cursor != '\0') {
+            cursor = SkipSpacesAndCommas(cursor);
+            if (*cursor == '\0') {
+                break;
+            }
+
+            const char* nameBegin = cursor;
+            const char* nameEnd = FindEnumeratorNameEnd(cursor);
+            if ((nameBegin != nameEnd) && (curEnumCount < maxEnumCount)) {
+                enumNames[curEnumCount].data = nameBegin;
+                enumNames[curEnumCount].size = static_cast<unsigned int>(nameEnd - nameBegin);
+                ++curEnumCount;
+            }
+
+            cursor = SkipUntilComma(nameEnd);
+        }
+        return curEnumCount;
+    }
+} // namespace EnumNameDetail
+} // namespace Hccl
 
 #define MAKE_ENUM(enumClass, ...)                                                                                    \
     class enumClass {                                                                                                \
@@ -41,36 +99,22 @@
                                                                                                                      \
         std::string Describe() const                                                                                 \
         {                                                                                                            \
-            static std::vector<std::string> m = InitStrs();                                                          \
-            if (value >= m.size())                                                                                   \
+            /* POD table: first call parses #__VA_ARGS__; views point at the literal, no heap. */                    \
+            static ::Hccl::EnumNameDetail::NameView enumNames[__COUNT__];                                            \
+            static const unsigned int enumCount                                                                      \
+                = ::Hccl::EnumNameDetail::ParseNames(#__VA_ARGS__, enumNames, static_cast<unsigned int>(__COUNT__)); \
+            const unsigned int enumValue = static_cast<unsigned int>(value);                                         \
+            if (enumValue >= enumCount) {                                                                            \
                 return std::string(#enumClass) + "::Invalid";                                                        \
-            return m[value];                                                                                         \
+            }                                                                                                        \
+            const ::Hccl::EnumNameDetail::NameView& enumName = enumNames[enumValue];                                 \
+            return std::string(#enumClass) + "::" + std::string(enumName.data, enumName.size);                       \
         }                                                                                                            \
                                                                                                                      \
         friend std::ostream& operator<<(std::ostream& stream, const enumClass& v) { return stream << v.Describe(); } \
                                                                                                                      \
     private:                                                                                                         \
         Value value{INVALID};                                                                                        \
-                                                                                                                     \
-        static std::vector<std::string> InitStrs()                                                                   \
-        {                                                                                                            \
-            std::vector<std::string> strings;                                                                        \
-            std::string s = #__VA_ARGS__;                                                                            \
-            std::string token;                                                                                       \
-            for (char c : s) {                                                                                       \
-                if (c == ' ' || c == ',') {                                                                          \
-                    if (!token.empty()) {                                                                            \
-                        strings.push_back({std::string(#enumClass) + "::" + token});                                 \
-                        token.clear();                                                                               \
-                    }                                                                                                \
-                } else {                                                                                             \
-                    token += c;                                                                                      \
-                }                                                                                                    \
-            }                                                                                                        \
-            if (!token.empty())                                                                                      \
-                strings.push_back({std::string(#enumClass) + "::" + token});                                         \
-            return strings;                                                                                          \
-        }                                                                                                            \
     };
 
 namespace std {

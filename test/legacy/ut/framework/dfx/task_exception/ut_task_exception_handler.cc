@@ -64,6 +64,38 @@ protected:
         shared_ptr<DfxOpInfo> dfxOpInfo = make_shared<DfxOpInfo>();
         return make_unique<TaskInfo>(streamId, taskId, remoteRank, taskParam, dfxOpInfo);
     }
+
+    void AddNullDfxCcuTask(MirrorTaskManager& mgr)
+    {
+        auto curTaskInfo = InitTaskInfo(0, 0);
+        curTaskInfo->dfxOpInfo_ = shared_ptr<DfxOpInfo>(nullptr);
+        curTaskInfo->taskParam_.taskType = TaskParamType::TASK_CCU;
+        mgr.AddTaskInfo(std::move(curTaskInfo));
+    }
+
+    rtExceptionInfo_t MakeCcuExceptionInfo() const
+    {
+        rtExceptionInfo_t exceptionInfo{};
+        exceptionInfo.deviceid = 0;
+        exceptionInfo.streamid = 0;
+        exceptionInfo.taskid = 0;
+        exceptionInfo.expandInfo.u.ccuInfo.ccuMissionNum = 1;
+        exceptionInfo.expandInfo.u.ccuInfo.missionInfo[0].dieId = 1;
+        exceptionInfo.expandInfo.u.ccuInfo.missionInfo[0].missionId = 2;
+        exceptionInfo.expandInfo.u.ccuInfo.missionInfo[0].instrId = 3;
+        exceptionInfo.expandInfo.u.ccuInfo.missionInfo[0].status = 4;
+        exceptionInfo.expandInfo.u.ccuInfo.missionInfo[0].subStatus = 5;
+        return exceptionInfo;
+    }
+
+    void StubCcuExceptionProcess() const;
+
+    rtExceptionInfo_t PrepareNullDfxCcuException(MirrorTaskManager& mgr)
+    {
+        AddNullDfxCcuTask(mgr);
+        StubCcuExceptionProcess();
+        return MakeCcuExceptionInfo();
+    }
 };
 
 TEST_F(TaskExceptionHandlerTest, TestGetInstanceWithInvalidDevId)
@@ -775,6 +807,16 @@ HcclResult MockGetCcuErrorMsg(
     return HcclResult::HCCL_SUCCESS;
 }
 
+void TaskExceptionHandlerTest::StubCcuExceptionProcess() const
+{
+    MOCKER(GetCcuErrorMsg).stubs().will(invoke(MockGetCcuErrorMsg));
+    MOCKER(CcuCleanDieCkes).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
+    MOCKER_CPP(&CcuComponent::Init).stubs();
+    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(0)));
+    MOCKER(HrtRaTlvRequestForCustomChannel).stubs();
+    MOCKER(TaskExceptionHandler::PrintAicpuErrorMessage).stubs();
+}
+
 TEST_F(TaskExceptionHandlerTest, test_process_ccu)
 {
     // 打桩 GlobalMirrorTasks
@@ -794,35 +836,42 @@ TEST_F(TaskExceptionHandlerTest, test_process_ccu)
     communicator.myRank = 1;
     dfxOpInfo->comm_ = &communicator;
     mirrorTaskManager.SetCurrDfxOpInfo(dfxOpInfo);
-    // 加入当前异常 Task
-    auto curTaskInfo = InitTaskInfo(0, 0); // streamId 0, taskId 0
-    curTaskInfo->dfxOpInfo_ = shared_ptr<DfxOpInfo>(nullptr);
-    curTaskInfo->taskParam_.taskType = TaskParamType::TASK_CCU;
-    mirrorTaskManager.AddTaskInfo(std::move(curTaskInfo));
+    auto exceptionInfo = PrepareNullDfxCcuException(mirrorTaskManager);
+    TaskExceptionHandler::Process(&exceptionInfo);
 
-    MOCKER(GetCcuErrorMsg).stubs().will(invoke(MockGetCcuErrorMsg));
+    globalMirrorTasks.DestroyQueue(0, 0); // diveceId 0, streamId 0
+}
 
-    // 打桩清除TaskKill状态, 清除表项, 清除CKE操作
-    MOCKER(CcuCleanDieCkes).stubs().will(returnValue(HcclResult::HCCL_SUCCESS));
-    MOCKER_CPP(&CcuComponent::Init).stubs();
-    MOCKER(HrtGetDevicePhyIdByIndex).stubs().will(returnValue(static_cast<DevId>(0)));
-    MOCKER(HrtRaTlvRequestForCustomChannel).stubs();
+TEST_F(TaskExceptionHandlerTest, Ut_ProcessException_When_DfxOpInfoNull_Expect_NoThrow)
+{
+    GlobalMirrorTasks& globalMirrorTasks = GlobalMirrorTasks::Instance();
+    MirrorTaskManager mirrorTaskManager(0, &globalMirrorTasks, 1);
 
-    // 调用 TaskExceptionHandler::Process() 打印异常DFX信息
+    auto taskInfo = InitTaskInfo(0, 0);
+    taskInfo->dfxOpInfo_ = shared_ptr<DfxOpInfo>(nullptr);
+    taskInfo->taskParam_.taskType = TaskParamType::TASK_NOTIFY_WAIT;
+    taskInfo->taskParam_.taskPara.Notify.notifyID = 0xaaaabbbbcccc;
+    mirrorTaskManager.AddTaskInfo(std::move(taskInfo));
+
     MOCKER(TaskExceptionHandler::PrintAicpuErrorMessage).stubs();
     rtExceptionInfo_t exceptionInfo{};
     exceptionInfo.deviceid = 0;
     exceptionInfo.streamid = 0;
-    exceptionInfo.taskid = 0; // 当前异常TaskId 0
-    exceptionInfo.expandInfo.u.ccuInfo.ccuMissionNum = 1;
-    exceptionInfo.expandInfo.u.ccuInfo.missionInfo[0].dieId = 1;
-    exceptionInfo.expandInfo.u.ccuInfo.missionInfo[0].missionId = 2;
-    exceptionInfo.expandInfo.u.ccuInfo.missionInfo[0].instrId = 3;
-    exceptionInfo.expandInfo.u.ccuInfo.missionInfo[0].status = 4;
-    exceptionInfo.expandInfo.u.ccuInfo.missionInfo[0].subStatus = 5;
-    TaskExceptionHandler::Process(&exceptionInfo);
+    exceptionInfo.taskid = 0;
+    EXPECT_NO_THROW(TaskExceptionHandler::Process(&exceptionInfo));
 
-    globalMirrorTasks.DestroyQueue(0, 0); // diveceId 0, streamId 0
+    globalMirrorTasks.DestroyQueue(0, 0);
+}
+
+TEST_F(TaskExceptionHandlerTest, Ut_ProcessCcuException_When_DfxOpInfoNull_Expect_NoThrow)
+{
+    GlobalMirrorTasks& globalMirrorTasks = GlobalMirrorTasks::Instance();
+    MirrorTaskManager mirrorTaskManager(0, &globalMirrorTasks, 1);
+
+    auto exceptionInfo = PrepareNullDfxCcuException(mirrorTaskManager);
+    EXPECT_NO_THROW(TaskExceptionHandler::Process(&exceptionInfo));
+
+    globalMirrorTasks.DestroyQueue(0, 0);
 }
 
 TEST_F(TaskExceptionHandlerTest, test_GetMC2AlgTaskParam)
