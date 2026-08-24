@@ -156,6 +156,7 @@ TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_RmtbufferNumMember_When_Default_Expec
     binaryStream << emptyVector; // rmtNotifyUniqueIds
     binaryStream << emptyVector; // locBufferUniqueIds
     binaryStream << emptyVector; // rmtBufferUniqueIds
+    binaryStream << emptyVector; // drainBufferUniqueIds
     binaryStream << emptyVector; // connUniqueIds
 
     std::vector<char> data;
@@ -183,6 +184,7 @@ TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_RmtbufferNumMember_When_RmtbufferDiff
     binaryStream << emptyVector; // rmtNotifyUniqueIds
     binaryStream << emptyVector; // locBufferUniqueIds
     binaryStream << emptyVector; // rmtBufferUniqueIds
+    binaryStream << emptyVector; // drainBufferUniqueIds
     binaryStream << emptyVector; // connUniqueIds
 
     std::vector<char> data;

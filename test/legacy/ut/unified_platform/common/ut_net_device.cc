@@ -32,7 +32,7 @@ protected:
         hcclNetDev_ = new Hccl::HcclNetDevice(netDevInfo_);
     }
 
-    void TearDown() override { delete hcclNetDev_; }
+    void TearDown() override { delete hcclNetDev_; GlobalMockObject::verify(); }
 
     Hccl::NetDevInfo netDevInfo_;
     Hccl::HcclNetDevice* hcclNetDev_;

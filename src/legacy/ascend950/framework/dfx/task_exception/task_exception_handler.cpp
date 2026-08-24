@@ -905,7 +905,7 @@ string TaskExceptionHandler::GetCcuErrorMsgLoop(const CcuErrorInfo& ccuErrorInfo
     (void)taskInfo;
     return StringFormat(
         "InstrId[%u]: Loop startInstrId[%u], endInstrId[%u], executorId[%u], "
-        "totalIter[%u], curIter[%u], addressStride[0x%llx]",
+        "totalIter[%u], curIter[%u], addressStride[0x%x]",
         ccuErrorInfo.instrId, ccuErrorInfo.msg.loop.startInstrId, ccuErrorInfo.msg.loop.endInstrId,
         ccuErrorInfo.msg.loop.loopEngineId, ccuErrorInfo.msg.loop.loopCnt, ccuErrorInfo.msg.loop.loopCurrentCnt,
         ccuErrorInfo.msg.loop.addrStride);
