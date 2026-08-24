@@ -215,7 +215,7 @@ public:
 
     HcclResult WriteReduceAsync(
         struct Transport::Buffer& remoteBuf, struct Transport::Buffer& localBuf, const HcclDataType datatype,
-        HcclReduceOp redOp, Stream& stream);
+        HcclReduceOp redOp, Stream& stream) override;
 
     HcclResult ReadAsync(struct Transport::Buffer& localBuf, struct Transport::Buffer& remoteBuf, Stream& stream);
     HcclResult ReadSync(struct Transport::Buffer& localBuf, struct Transport::Buffer& remoteBuf, Stream& stream);
@@ -275,7 +275,7 @@ protected:
     std::vector<u32> RdmaLengthSplit(u32 length, u32 splitNum);
 
     HcclResult TxSendDataAndNotifyWithMultiQP(
-        std::vector<WqeInfo>& wqeInfoVec, u32 acturalMultiQpNum, Stream& stream, bool useOneDoorbell = false);
+        std::vector<WqeInfo>& wqeInfoVec, u32 actualMultiQpNum, Stream& stream, bool useOneDoorbell = false);
 
     HcclResult GetWqeDataOffsetAndNotifyId(WqeType wqeType, u64& wqeDataOffset, u32& notifyId);
 
@@ -372,7 +372,7 @@ protected:
     std::vector<MemMsg> remoteUserDeviceMemMsg_;
     std::vector<MemMsg> remoteUserHostMemMsg_;
     std::unique_ptr<HcclMem[]> remoteMemsPtr_;
-    u32 remoteMemsNum_;
+    u32 remoteMemsNum_{0};
     std::mutex remoteMemsMutex_;
 
     MemMsg remoteDataNotifyMsg_;

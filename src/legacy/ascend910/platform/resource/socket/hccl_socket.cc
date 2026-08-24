@@ -552,7 +552,7 @@ HcclResult HcclSocket::ISend(void* data, u64 size, u64& compSize)
 {
     CHK_PTR_NULL(data);
     CHK_PTR_NULL(fdHandle_);
-    if (sendStatus_)
+    if (sendStatus_ != 0)
         return HCCL_E_NETWORK;
     if (size > SOCKET_SEND_MAX_SIZE) {
         HCCL_ERROR(
@@ -564,7 +564,7 @@ HcclResult HcclSocket::ISend(void* data, u64 size, u64& compSize)
     s32 ret = hrtRaSocketNonBlockSend(fdHandle_, data, size, &compSize);
     HCCL_DEBUG("[ISend]except size [%llu Byte], actual size [%llu Byte], ret[%d]", size, compSize, ret);
 
-    if (ret && ret != SOCK_EAGAIN) {
+    if (ret != 0 && ret != SOCK_EAGAIN) {
         sendStatus_ = ret;
         HCCL_RUN_WARNING("[ISend]except size [%llu Byte], actual size [%llu Byte], ret[%d]", size, compSize, ret);
         return HCCL_E_NETWORK;
@@ -576,12 +576,12 @@ HcclResult HcclSocket::IRecv(void* recvBuf, u32 recvBufLen, u64& compSize)
 {
     CHK_PTR_NULL(fdHandle_);
     CHK_PTR_NULL(recvBuf);
-    if (recvStatus_)
+    if (recvStatus_ != 0)
         return HCCL_E_NETWORK;
     s32 ret = hrtRaSocketNonBlockRecv(fdHandle_, recvBuf, recvBufLen, &compSize);
     HCCL_DEBUG("[IRecv]except size [%u Byte], actual size [%u Byte], ret[%u]", recvBufLen, compSize, ret);
 
-    if (ret && ret != SOCK_EAGAIN) {
+    if (ret != 0 && ret != SOCK_EAGAIN) {
         recvStatus_ = ret;
         HCCL_RUN_INFO("[IRecv]except size [%u Byte], actual size [%u Byte], ret[%u]", recvBufLen, compSize, ret);
         return HCCL_E_NETWORK;

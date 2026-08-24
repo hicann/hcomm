@@ -119,7 +119,7 @@ protected:
 
     void* nicRdmaHandle_;
     MrManager* mrManager_;
-    MrManager* dataQpMrManager_;
+    MrManager* dataQpMrManager_{nullptr};
     u32 blockMemLkey_;
     u32 recvWqeBatchNum_;
     u32 recvWqeBatchThreshold_;
@@ -140,15 +140,15 @@ protected:
     u64 hostAddrBegin_{};
     u64 devAddrBegin_{};
     s32 deviceLogicId_;
-    s32 remoteDeviceId_;
-    s32 recvPid_;
-    FdHandle fdHandle_;
-    u32 notifySize_;
+    s32 remoteDeviceId_{0};
+    s32 recvPid_{0};
+    FdHandle fdHandle_{nullptr};
+    u32 notifySize_{0};
     s32 access_;
-    std::shared_ptr<LocalIpcNotify> remoteIsendDoneSignal_;
-    std::shared_ptr<LocalIpcNotify> remoteImrecvDoneSignal_;
+    std::shared_ptr<LocalIpcNotify> remoteIsendDoneSignal_{nullptr};
+    std::shared_ptr<LocalIpcNotify> remoteImrecvDoneSignal_{nullptr};
     const u64 notifyValueSize_{LARGE_PAGE_MEMORY_MIN_SIZE};
-    HcclRdmaSignalInfo rdmaSignal_[REMOTE_RDMA_SIGNAL_SIZE];
+    HcclRdmaSignalInfo rdmaSignal_[REMOTE_RDMA_SIGNAL_SIZE]{};
 
 private:
     HcclResult Wait(HcclRequestInfo& request, s32& flag);

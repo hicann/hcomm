@@ -71,7 +71,7 @@ struct NotifyMsg {
 class TransportRemoteAccess {
 public:
     explicit TransportRemoteAccess(
-        const std::string tag, const HcclDispatcher dispatcher, const std::unique_ptr<NotifyPool>& notifyPool_,
+        const std::string tag, const HcclDispatcher dispatcher, const std::unique_ptr<NotifyPool>& notifyPool,
         const RemoteAccessPara& remoteAccessPara, const std::vector<MemRegisterAddr>& memRegistInfos,
         s32 deviceLogicId);
     ~TransportRemoteAccess();

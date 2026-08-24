@@ -22,7 +22,7 @@ HcclResult hrtOpenTsd()
 {
 #ifndef HCCD
     std::string extPam("--hdcType=" + std::to_string(HDC_SERVICE_TYPE_RDMA));
-    rtNetServiceOpenArgs openArgs;
+    rtNetServiceOpenArgs openArgs = {};
     rtProcExtParam extParam{};
     extParam.paramInfo = extPam.c_str();
     extParam.paramLen = extPam.size();

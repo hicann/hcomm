@@ -74,18 +74,18 @@ public:
     }
 
 private:
-    NICDeployment nicDeployment_;
-    s32 devicePhyId_;
-    s32 deviceLogicId_;
+    NICDeployment nicDeployment_{NICDeployment::NIC_DEPLOYMENT_DEVICE};
+    s32 devicePhyId_{INVALID_INT};
+    s32 deviceLogicId_{INVALID_INT};
     HcclIpAddress localIp_;
     HcclIpAddress backupIp_;
-    NicType nicType_;
+    NicType nicType_{NicType::DEVICE_NIC_TYPE};
     bool isHostUseDevNic_{false};
     SocketHandle hostSocketHandle_{nullptr};
     HcclProtoType protoType_{HCCL_PROTO_TYPE_RESERVED};
-    HcclNetDevDeployment netDevDeployment_;
+    HcclNetDevDeployment netDevDeployment_{HcclNetDevDeployment::HCCL_NETDEV_DEPLOYMENT_DEVICE};
     void* handle_{nullptr};
-    bool isBackup_;
+    bool isBackup_{false};
     TlsStatus tlsStatus_ = TlsStatus::UNKNOWN;
     bool isNotNeedGetTlsStatus_ = false;
     std::shared_ptr<LocalIpcRmaBufferMgr> localIpcRmaBufferMgr_{nullptr};

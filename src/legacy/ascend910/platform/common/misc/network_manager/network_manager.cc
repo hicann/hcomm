@@ -131,7 +131,7 @@ HcclResult NetworkManager::TsdProcessOpen(bool hasBackup)
     isTsdProcessOpen_ = true;
     if (!hasBackup || halAPIVersion < BACKUP_DEVICE_LOG_DEV_VERSION) {
         std::string extPam("--hdcType=" + std::to_string(HDC_SERVICE_TYPE_RDMA_V2));
-        rtNetServiceOpenArgs openArgs;
+        rtNetServiceOpenArgs openArgs = {};
         rtProcExtParam extParam{};
         extParam.paramInfo = extPam.c_str();
         extParam.paramLen = extPam.size();
@@ -146,7 +146,7 @@ HcclResult NetworkManager::TsdProcessOpen(bool hasBackup)
         // 获取chip上另一个die的logicalID
         u32 deviceBackUpPhyId = 0;
         CHK_RET(hrtGetPairDevicePhyId(devicePhyId_, deviceBackUpPhyId));
-        rtNetServiceOpenArgs openArgs;
+        rtNetServiceOpenArgs openArgs = {};
         std::string extPams[TSD_OPEN_EXT_PARA_NUM]
             = {std::string("--hdcType=" + std::to_string(HDC_SERVICE_TYPE_RDMA_V2)),
                std::string("--backupPhyId=" + std::to_string(deviceBackUpPhyId))};
@@ -326,7 +326,7 @@ HcclResult NetworkManager::Init(
             "devicePhyId[%u], deviceLogicId_[%d]",
             __func__, hasBackup, nicDeploy, devicePhyId_, deviceLogicId_);
     }
-    DevType devType;
+    DevType devType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(devType));
     if (devType == DevType::DEV_TYPE_910_93 && nicDeploy == NICDeployment::NIC_DEPLOYMENT_DEVICE) {
         isEnableHdcAsync_ = true;
@@ -760,7 +760,7 @@ HcclResult NetworkManager::StartVnic(HcclIpAddress localIp, u32& port)
 HcclResult NetworkManager::CreateVnicSocketHandle(HcclIpAddress localIp)
 {
     CHK_PRT_RET(
-        !deviceNicInitRef_.Count(),
+        deviceNicInitRef_.Count() == 0,
         HCCL_ERROR("[NetworkManager][CreateVnicSocketHandle]"
                    "can't start vnic socket before init device nic!"),
         HCCL_E_INTERNAL);
@@ -860,7 +860,7 @@ HcclResult NetworkManager::StopVnicSocketHandle(const HcclIpAddress& localIp)
 
     // 销毁socket
     CHK_PRT_RET(
-        ipSock.nicSocketHandle != nullptr && hrtRaSocketDeInit(ipSock.nicSocketHandle),
+        ipSock.nicSocketHandle != nullptr && hrtRaSocketDeInit(ipSock.nicSocketHandle) != HCCL_SUCCESS,
         HCCL_ERROR("[Stop][NicsSocket]VNIC socket deInit not successfully"), HCCL_E_NETWORK);
     ipSock.nicSocketHandle = nullptr;
     raResourceInfo_.vnicSocketMap.erase(localIp);
@@ -874,7 +874,7 @@ HcclResult NetworkManager::StopVnicSocketHandle(const HcclIpAddress& localIp)
 HcclResult NetworkManager::StartNic(const HcclIpAddress& ipAddr, u32& port, bool rdmaFlag, HcclIpAddress ipAddrBackup)
 {
     CHK_PRT_RET(
-        !deviceNicInitRef_.Count(), HCCL_ERROR("[Start][Nic]can't start nic socket before init device nic!"),
+        deviceNicInitRef_.Count() == 0, HCCL_ERROR("[Start][Nic]can't start nic socket before init device nic!"),
         HCCL_E_INTERNAL);
     auto sockInfo = raResourceInfo_.nicSocketMap.find(ipAddr);
     if (sockInfo == raResourceInfo_.nicSocketMap.end()) {
@@ -964,7 +964,7 @@ void NetworkManager::SetDisableLiteThread(bool disable) { isDisableLiteThread_ =
 HcclResult NetworkManager::CreateNicSocketHandle(const HcclIpAddress& ipAddr)
 {
     CHK_PRT_RET(
-        !deviceNicInitRef_.Count(),
+        deviceNicInitRef_.Count() == 0,
         HCCL_ERROR("[NetworkManager][CreateNicSocketHandle]can't start nic socket before init device nic!"),
         HCCL_E_INTERNAL);
     OccupyIp(ipAddr, raResourceInfo_.nicSocketMap);
@@ -1002,7 +1002,7 @@ HcclResult NetworkManager::CreateRdmaHandle(
         ipAddrBackup.clear();
     }
     CHK_PRT_RET(
-        !(deviceNicInitRef_.Count() || hostNicInitRef_.Count()),
+        (deviceNicInitRef_.Count() == 0 && hostNicInitRef_.Count() == 0),
         HCCL_ERROR("[NetworkManager][CreateRdmaHandle]can't start nic socket before init device nic!"),
         HCCL_E_INTERNAL);
     switch (netDevDeployment) {
@@ -1102,7 +1102,7 @@ HcclResult NetworkManager::StopRdmaHandle(const HcclIpAddress& ipAddr, HcclNetDe
                 return HCCL_SUCCESS;
             }
             IpSocket& ipSock = it->second;
-            if (ipSock.nicRdmaHandle != nullptr && HrtRaRdmaDeInit(ipSock.nicRdmaHandle, notifyType_)) {
+            if (ipSock.nicRdmaHandle != nullptr && HrtRaRdmaDeInit(ipSock.nicRdmaHandle, notifyType_) != HCCL_SUCCESS) {
                 HCCL_ERROR("[Stop][rmda]NIC rdev deInit not successfully, notifyType_[%d]", notifyType_);
                 return HCCL_E_NETWORK;
             }
@@ -1120,7 +1120,7 @@ HcclResult NetworkManager::StopRdmaHandle(const HcclIpAddress& ipAddr, HcclNetDe
                 HCCL_ERROR("[Stop][rdma]ip[%s] is not found in hostNetSocketMap.", ipAddr.GetReadableAddress()),
                 HCCL_E_INTERNAL);
             IpSocket& ipSock = it->second;
-            if (ipSock.nicRdmaHandle != nullptr && HrtRaRdmaDeInit(ipSock.nicRdmaHandle, notifyType_)) {
+            if (ipSock.nicRdmaHandle != nullptr && HrtRaRdmaDeInit(ipSock.nicRdmaHandle, notifyType_) != HCCL_SUCCESS) {
                 HCCL_ERROR("[Stop][rdma]NIC rdev deInit not successfully, notifyType_[%d]", notifyType_);
                 return HCCL_E_NETWORK;
             }
@@ -1156,7 +1156,7 @@ HcclResult NetworkManager::StopNicSocketHandle(const HcclIpAddress& ipAddr)
             "[NetworkManager][StopNicSocketHandle]ip[%s] is not found in nicSocketMap.", ipAddr.GetReadableAddress()),
         HCCL_E_INTERNAL);
     IpSocket& ipSock = it->second;
-    HcclResult ret;
+    HcclResult ret = HCCL_SUCCESS;
     // 关闭该ip下的全部端口的listen
     for (auto& port : ipSock.listenedPort) {
         ret = StopNicsSocketListen(ipAddr, port);
@@ -1175,7 +1175,7 @@ HcclResult NetworkManager::StopNicSocketHandle(const HcclIpAddress& ipAddr)
     }
 
     // 销毁socket
-    if (ipSock.nicSocketHandle != nullptr && hrtRaSocketDeInit(ipSock.nicSocketHandle)) {
+    if (ipSock.nicSocketHandle != nullptr && hrtRaSocketDeInit(ipSock.nicSocketHandle) != HCCL_SUCCESS) {
         HCCL_ERROR("[Stop][NicsSocket]NIC socket deInit not successfully");
         return HCCL_E_NETWORK;
     }
@@ -1197,7 +1197,7 @@ HcclResult NetworkManager::StopNic(const HcclIpAddress& ipAddr, u32 port)
         HCCL_ERROR("[Stop][Nic]ip[%s] is not found in nicSocketMap, port[%u].", ipAddr.GetReadableAddress(), port),
         HCCL_E_INTERNAL);
     IpSocket& ipSock = it->second;
-    HcclResult ret;
+    HcclResult ret = HCCL_SUCCESS;
     // 传入端口号为无效值0xFFFFFFFF，未启动监听，不需要stop listen
     if (port != MAX_VALUE_U32) {
         CHK_PRT_RET(
@@ -1230,7 +1230,7 @@ HcclResult NetworkManager::StopNic(const HcclIpAddress& ipAddr, u32 port)
 }
 HcclResult NetworkManager::StopAllDeviceNicSockets()
 {
-    HcclResult ret;
+    HcclResult ret = HCCL_SUCCESS;
     for (auto& itSocket : raResourceInfo_.nicSocketMap) {
         std::set<u32> listenedPorts = itSocket.second.listenedPort;
         for (auto itPort : listenedPorts) {
@@ -1269,7 +1269,7 @@ HcclResult NetworkManager::StopAllDeviceNicSockets()
 
 HcclResult NetworkManager::StopAllDeviceVnicSockets()
 {
-    HcclResult ret;
+    HcclResult ret = HCCL_SUCCESS;
 
     for (auto itSocket : raResourceInfo_.vnicSocketMap) {
         HCCL_WARNING(
@@ -1306,7 +1306,7 @@ HcclResult NetworkManager::InitRDMA(
     u32 devicePhysicID, const HcclIpAddress& ipAddr, NetworkMode netMode, NotifyTypeT notifyType,
     RdmaHandle& rdmaHandle, bool disabledLiteThread, bool enable910ALite, HcclIpAddress ipAddrBackup)
 {
-    struct rdev nicRdevInfo;
+    struct rdev nicRdevInfo = {};
     nicRdevInfo.phyId = devicePhysicID;
     nicRdevInfo.family = ipAddr.GetFamily();
     nicRdevInfo.localIp.addr = ipAddr.GetBinaryAddress().addr;
@@ -1319,7 +1319,7 @@ HcclResult NetworkManager::InitRDMA(
     init_info.enabled910aLite = enable910ALite;
     init_info.enabled2mbLite = GetExternalInputRdmaFastPost();
 
-    HcclResult ret;
+    HcclResult ret = HCCL_SUCCESS;
     HCCL_DEBUG("isRaInitRepeated_[%d]", isRaInitRepeated_);
     if (isRaInitRepeated_) {
         // 重复RaInit时，调用此接口获取相同的rdmaHandle，防止重新生成
@@ -1357,7 +1357,7 @@ bool NetworkManager::GetRdmaLiteStatus() { return isRdmaLiteEn_; }
 
 HcclResult NetworkManager::GetNotifyType(NotifyTypeT& notifyType) const
 {
-    DevType deviceType;
+    DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType == DevType::DEV_TYPE_910 || deviceType == DevType::DEV_TYPE_910B
         || deviceType == DevType::DEV_TYPE_910_93) {
@@ -1382,7 +1382,7 @@ void NetworkManager::GetNetworkMode(NetworkMode& netMode) const
 
 HcclResult NetworkManager::InitDeviceSocket(u32 devicePhysicID, const HcclIpAddress& ipAddr, SocketHandle& socketHandle)
 {
-    struct rdev nicRdevInfo;
+    struct rdev nicRdevInfo = {};
     nicRdevInfo.phyId = devicePhysicID;
     nicRdevInfo.family = ipAddr.GetFamily();
     nicRdevInfo.localIp.addr = ipAddr.GetBinaryAddress().addr;
@@ -1416,7 +1416,7 @@ NetworkManager::StartHostNetAndListen(const HcclIpAddress& ipAddr, SocketHandle&
         HCCL_INFO("device[%u] Start host nic insert Ip[%s]", devicePhyId_, ipAddr.GetReadableAddress());
     }
 
-    HcclResult ret;
+    HcclResult ret = HCCL_SUCCESS;
     IpSocket& sock = raResourceInfo_.hostNetSocketMap[ipAddr];
     if (sock.nicSocketHandle == nullptr) {
         ret = InitHostSocket(ipAddr, sock.nicSocketHandle);
@@ -1530,7 +1530,7 @@ HcclResult NetworkManager::StopHostNetAndListen(SocketHandle socketHandle, const
 }
 HcclResult NetworkManager::StopAllHostNicSockets()
 {
-    HcclResult ret;
+    HcclResult ret = HCCL_SUCCESS;
     for (auto itSocket : raResourceInfo_.hostNetSocketMap) {
         for (auto itPort : itSocket.second.listenedPort) {
             ret = (StopListenSocket(itSocket.second.nicSocketHandle, itPort));
@@ -1652,12 +1652,12 @@ HcclResult NetworkManager::StopNicsSocket(const HcclIpAddress& ipAddr)
         HCCL_ERROR("[Stop][NicsSocket]ip[%s] is not found in nicSocketMap.", ipAddr.GetReadableAddress()),
         HCCL_E_INTERNAL);
     IpSocket& ipSock = it->second;
-    if (ipSock.nicRdmaHandle != nullptr && HrtRaRdmaDeInit(ipSock.nicRdmaHandle, notifyType_)) {
+    if (ipSock.nicRdmaHandle != nullptr && HrtRaRdmaDeInit(ipSock.nicRdmaHandle, notifyType_) != HCCL_SUCCESS) {
         HCCL_ERROR("[Stop][NicsSocket]NIC rdev deInit not successfully, notifyType_[%d]", notifyType_);
         return HCCL_E_NETWORK;
     }
     ipSock.nicRdmaHandle = nullptr;
-    if (ipSock.nicSocketHandle != nullptr && hrtRaSocketDeInit(ipSock.nicSocketHandle)) {
+    if (ipSock.nicSocketHandle != nullptr && hrtRaSocketDeInit(ipSock.nicSocketHandle) != HCCL_SUCCESS) {
         HCCL_ERROR("[Stop][NicsSocket]NIC socket deInit not successfully");
         return HCCL_E_NETWORK;
     }
@@ -1741,7 +1741,7 @@ HcclResult NetworkManager::PsWorkerRaInit(
         }
 
         // device 网卡初始化前需要拉起 hccp .
-        rtNetServiceOpenArgs openArgs;
+        rtNetServiceOpenArgs openArgs = {};
         rtProcExtParam extParam{};
         std::string extPam("--hdcType=" + std::to_string(PID_HDC_TYPE));
 
@@ -2114,7 +2114,7 @@ HcclResult NetworkManager::StartListenSocket(const SocketHandle socketHandle, u3
 
 HcclResult NetworkManager::StopListenSocket(const SocketHandle socketHandle, u32 port) const
 {
-    struct SocketListenInfoT serverInfo;
+    struct SocketListenInfoT serverInfo = {};
     serverInfo.socketHandle = const_cast<SocketHandle>(socketHandle);
     serverInfo.port = port;
     HcclResult ret = hrtRaSocketListenStop(&serverInfo, 1);

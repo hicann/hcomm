@@ -173,7 +173,7 @@ HcclResult hrtGetDeviceCount([[maybe_unused]] u32* count)
         return HCCL_SUCCESS;
     }
 
-    DevType deviceType;
+    DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType == DevType::DEV_TYPE_NOSOC) {
         *count = 0;
@@ -433,7 +433,7 @@ HcclResult __hrtGetDevicePhyIdByIndex(
         return HCCL_SUCCESS;
     }
 
-    DevType deviceType;
+    DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType == DevType::DEV_TYPE_NOSOC) {
         devicePhyId = 0;
@@ -442,7 +442,7 @@ HcclResult __hrtGetDevicePhyIdByIndex(
     }
 
     s32 logicDevId = static_cast<s32>(deviceLogicId);
-    s32 phyDevId;
+    s32 phyDevId = 0;
     aclError ret = aclrtGetPhyDevIdByLogicDevId(logicDevId, &phyDevId);
     if (ret != ACL_SUCCESS) {
         HCCL_ERROR(
@@ -467,9 +467,9 @@ weak_alias(__hrtGetDevicePhyIdByIndex, hrtGetDevicePhyIdByIndex);
 HcclResult hrtGetDeviceIndexByPhyId(u32 devicePhyId, u32& deviceLogicId)
 {
     s32 phyDevId = static_cast<s32>(devicePhyId);
-    s32 logicDevId;
+    s32 logicDevId = 0;
 #ifndef HCCD
-    DevType deviceType;
+    DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType == DevType::DEV_TYPE_NOSOC) {
         deviceLogicId = 0;
@@ -496,7 +496,7 @@ HcclResult hrtGetDeviceIndexByPhyId(u32 devicePhyId, u32& deviceLogicId)
 HcclResult hrtGetLogicDevIdByUserDevId(s32 userDevId, s32& logicDevId)
 {
 #ifndef HCCD
-    DevType deviceType;
+    DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType == DevType::DEV_TYPE_NOSOC) {
         logicDevId = 0;
@@ -725,7 +725,7 @@ HcclResult hrtMalloc(void** devPtr, u64 size, [[maybe_unused]] bool level2Addres
     // 参数有效性检查
     CHK_PTR_NULL(devPtr);
 
-    DevType devType;
+    DevType devType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(devType));
     s32 deviceId = 0;
     CHK_RET(hrtGetDevice(&deviceId));
@@ -1727,14 +1727,14 @@ bool CompareDevType(DevType left, DevType right) { return left == right; }
 HcclResult hrtGetNotifySize([[maybe_unused]] u32& notifySize)
 {
 #ifndef HCCD
-    DevType deviceType;
+    DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType == DevType::DEV_TYPE_910) {
-        notifySize = 8; // 910A 每个notify占8个字节
+        notifySize = NOTIFY_SIZE_BYTES_910A;
     } else if (deviceType == DevType::DEV_TYPE_910B || deviceType == DevType::DEV_TYPE_910_93) {
-        notifySize = 4; // 910B & 910_93 每个notify占4个字节
+        notifySize = NOTIFY_SIZE_BYTES_910B;
     } else {
-        notifySize = 8; // 其余芯片类型每个notify占8个字节
+        notifySize = NOTIFY_SIZE_BYTES_910A;
     }
     return HCCL_SUCCESS;
 #else
@@ -2023,7 +2023,7 @@ HcclResult PrintMemoryAttr([[maybe_unused]] const void* memAddr)
         return HCCL_SUCCESS;
     }
 
-    HcclResult ret;
+    HcclResult ret = HCCL_SUCCESS;
     aclrtPtrAttributes memAttr;
     CHK_PTR_NULL(memAddr);
     s32 sRet = memset_s(&memAttr, sizeof(aclrtPtrAttributes), 0, sizeof(aclrtPtrAttributes));
@@ -2670,14 +2670,14 @@ HcclResult hrtGetRdmaDoorbellAddr([[maybe_unused]] u32 dbIndex, [[maybe_unused]]
     // 解锁
     lockDevChipIdMap.unlock();
 
-    u64 roceBaseAddr;
-    u64 roceVfDbCfg0Reg;
-    u64 chipAddrOffset;
-    u64 dieAddrOffset;
-    u32 dbDieIdMask;
-    u32 dbDieIdShift;
+    u64 roceBaseAddr = 0;
+    u64 roceVfDbCfg0Reg = 0;
+    u64 chipAddrOffset = 0;
+    u64 dieAddrOffset = 0;
+    u32 dbDieIdMask = 0;
+    u32 dbDieIdShift = 0;
 
-    DevType deviceType;
+    DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType == DevType::DEV_TYPE_910_93) {
         HCCL_DEBUG(
@@ -2995,7 +2995,7 @@ HcclResult hrtGetHccsPortNum([[maybe_unused]] u32 deviceLogicId, [[maybe_unused]
     constexpr int64_t MAINBORDID_910_93_PRODUCT_V2_2_8_7 = 0x19;
     constexpr int64_t MAINBORDID_910_93_PRODUCT_V3_4_8_7 = 0x14;
     constexpr int64_t MAINBORDID_910_93_PRODUCT_V3_2_8_7 = 0x15;
-    DevType deviceType;
+    DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType != DevType::DEV_TYPE_910_93) {
         num = HCCS_PORT_NUM_UNKNOWN;

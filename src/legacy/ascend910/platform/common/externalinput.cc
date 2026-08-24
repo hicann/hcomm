@@ -239,7 +239,7 @@ HcclResult InitEnvVarParam()
         ret);
 
     // 解析RDMATimeOut
-    std::pair<u32, u32> rdmaTimeOutRange;
+    std::pair<u32, u32> rdmaTimeOutRange = {0, 0};
     ret = ParseRDMATimeOut(rdmaTimeOutRange);
     std::string vaildRange
         = "range[" + std::to_string(rdmaTimeOutRange.first) + " ," + std::to_string(rdmaTimeOutRange.second) + "]";
@@ -452,7 +452,7 @@ HcclResult InitEnvVarParam()
     ret = ParseDebugConfig();
     char* env = nullptr; // 环境变量值
     MM_SYS_GET_ENV(MM_ENV_HCCL_DEBUG_CONFIG, env);
-    std::string envValue = env ? std::string(env) : "null";
+    std::string envValue = env != nullptr ? std::string(env) : "null";
     RPT_ENV_ERR(
         ret != HCCL_SUCCESS, "EI0001", std::vector<std::string>({"value", "env", "expect"}),
         std::vector<std::string>({envValue, "HCCL_DEBUG_CONFIG", "ALG,TASK,RESOURCE(optionally prefixed with'^')"}));
@@ -590,7 +590,7 @@ HcclResult ParseDeterministic()
     }
     if (hcclDeterministicEnv == "STRICT") {
         // 规约保序场景（严格的确定性计算，在确定性的基础上强保证规约顺序一致）
-        DevType deviceType;
+        DevType deviceType = DevType::DEV_TYPE_COUNT;
         CHK_RET(hrtGetDeviceType(deviceType));
         if (deviceType != DevType::DEV_TYPE_910B && deviceType != DevType::DEV_TYPE_910_93) {
             // 规约保序仅支持A2 A3场景
@@ -980,7 +980,7 @@ HcclResult SetHccLExecTimeOut(const char* execTimeOutStr, const HcclExecTimeoutS
                 {std::string(execTimeOutStr), "HCCL_EXEC_TIMEOUT", "a valid number in the specified range"}));
         return HCCL_E_PARA;
     }
-    DevType deviceType;
+    DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType)); // 910A和910B要分开
     double hcclExecTimeout = (deviceType == DevType::DEV_TYPE_910_93 || deviceType == DevType::DEV_TYPE_910B) ?
                                  HCCL_EXEC_TIME_OUT_S_910_93 :
@@ -1236,7 +1236,7 @@ HcclResult ParseRDMATimeOut(std::pair<u32, u32>& rdmaTimeOutRange)
     u32 rdmaTimeOutMax;
 #ifndef HCCD
     if (!IsGeneralServer()) {
-        DevType deviceType;
+        DevType deviceType = DevType::DEV_TYPE_COUNT;
         CHK_RET(hrtGetDeviceType(deviceType));
         rdmaTimeOutMax = (deviceType == DevType::DEV_TYPE_910_93 || deviceType == DevType::DEV_TYPE_910B) ?
                              HCCL_RDMA_TIMEOUT_MAX_910_93 :
@@ -1701,7 +1701,7 @@ HcclResult ParseOpExpansion()
     }
 
 #ifndef HCCD
-    DevType deviceType;
+    DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
     // 910_93默认打开AICPU展开
     if (deviceType == DevType::DEV_TYPE_910_93) {
@@ -1900,8 +1900,8 @@ HcclResult ParseRetryParams()
     u32 intervaltime = 0;
     int ret = 0;
     ret = sscanf_s(retryParams.c_str(), "MaxCnt:%u, HoldTime:%u, IntervalTime:%u", &maxcnt, &holdtime, &intervaltime);
-    /* 三个参数全部解析成功，返回值为3，否则不等于3 */
-    if ((ret != 3) || (maxcnt > HCCL_RETRY_MAXCNT_MAX) || (maxcnt < HCCL_RETRY_MAXCNT_MIN)
+    /* 三个参数全部解析成功，返回值为HCCL_RETRY_PARAM_NUM，否则不等于 */
+    if ((ret != HCCL_RETRY_PARAM_NUM) || (maxcnt > HCCL_RETRY_MAXCNT_MAX) || (maxcnt < HCCL_RETRY_MAXCNT_MIN)
         || (holdtime > HCCL_RETRY_HLOD_TIME_MAX) || (intervaltime > HCCL_RETRY_INTERVAL_MAX)) {
         HCCL_ERROR(
             "[Parse][RetryParams]fail, HCCL_OP_RETRY_PARAMS: %s is invalid, format must be: "
@@ -1949,7 +1949,8 @@ HcclResult SetIncreSaveExecTimeOut(const s32 execTimeout)
     if (execTimeout == -1) {
         g_externalInput.increSaveExecTimeOut = execTimeout;
     } else {
-        g_externalInput.increSaveExecTimeOut = g_externalInput.execTimeOut;
+        // execTimeOut 为 double 类型（环境变量解析结果），此处取整保存到 s32
+        g_externalInput.increSaveExecTimeOut = static_cast<s32>(g_externalInput.execTimeOut);
     }
 
     HCCL_RUN_INFO(

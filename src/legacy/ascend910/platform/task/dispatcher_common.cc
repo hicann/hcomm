@@ -19,7 +19,7 @@
 #include "adapter_hal.h"
 
 using namespace hccl;
-typedef HcclResult (*FftsCounterCallBack)(const HcclDispatcher&, Stream&);
+using FftsCounterCallBack = HcclResult (*)(const HcclDispatcher&, Stream&);
 FftsCounterCallBack g_InitTaskCallback = nullptr;
 FftsCounterCallBack g_LaunchTaskCallback = nullptr;
 void RegisterInitTaskCallBack(HcclResult (*p1)(const HcclDispatcher&, hccl::Stream&)) { g_InitTaskCallback = p1; }
@@ -112,19 +112,19 @@ HcclResult HcclGetNotifyWaitMode(HcclDispatcher dispatcherPtr, SyncMode* notifyW
 }
 
 HcclResult HcclD2DMemcpyAsync(
-    HcclDispatcher dispatcherPtr, DeviceMem& dst, const DeviceMem& src, Stream& stream, const u32 remoteUserRank,
-    const LinkType linkType)
+    HcclDispatcher dispatcherPtr, DeviceMem& dst, const DeviceMem& src, Stream& stream, u32 remoteUserRank,
+    LinkType inLinkType)
 {
     CHK_PTR_NULL(dispatcherPtr);
     CHK_PTR_NULL(dst.ptr());
     CHK_PTR_NULL(src.ptr());
 
-    return reinterpret_cast<DispatcherPub*>(dispatcherPtr)->MemcpyAsync(dst, src, stream, remoteUserRank, linkType);
+    return reinterpret_cast<DispatcherPub*>(dispatcherPtr)->MemcpyAsync(dst, src, stream, remoteUserRank, inLinkType);
 }
 
 HcclResult HcclMemcpyAsync(
-    HcclDispatcher dispatcherPtr, void* dst, const uint64_t destMax, const void* src, uint64_t count,
-    const HcclRtMemcpyKind kind, Stream& stream, const u32 remoteUserRank, const LinkType linkType)
+    HcclDispatcher dispatcherPtr, void* dst, const uint64_t destMax, const void* src, const uint64_t count,
+    const HcclRtMemcpyKind kind, Stream& stream, const u32 remoteUserRank, LinkType linkType)
 {
     CHK_PTR_NULL(dispatcherPtr);
     CHK_PTR_NULL(dst);

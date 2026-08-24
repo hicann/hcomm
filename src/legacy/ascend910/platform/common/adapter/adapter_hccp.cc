@@ -193,7 +193,7 @@ HcclResult CreateTypicalCq(RdmaHandle rdmaHandle, u32 cqDepth, u32& cqn, void** 
 
     s32 ret = DlRaFunction::GetInstance().dlRaTypicalCqCreate(rdmaHandle, cqDepth, &cqn, cqHandle);
     CHK_PRT_RET(
-        ret != 0 || (*cqHandle == NULL), HCCL_ERROR("[CreateTypicalCq]create typical cq failed. ret[%d]", ret),
+        ret != 0 || (*cqHandle == nullptr), HCCL_ERROR("[CreateTypicalCq]create typical cq failed. ret[%d]", ret),
         HCCL_E_NETWORK);
     return HCCL_SUCCESS;
 }
@@ -249,7 +249,7 @@ HcclResult hrtRaTypicalSendWr(QpHandle handle, struct SendWr* wr, struct SendWrR
     HCCL_DEBUG("ra send wr");
     while (true) {
         ret = DlRaFunction::GetInstance().dlRaTypicalSendWr(handle, wr, opRsp);
-        if (!ret) {
+        if (ret == 0) {
             break; // 成功跳出
         } else if (
             (ret == SOCK_ENOENT) || (ret == SOCK_EAGAIN)
@@ -289,7 +289,7 @@ HcclResult HrtRaQpDestroy(QpHandle handle)
     auto timeout = chrono::seconds(GetExternalInputHcclLinkTimeOut());
     while (true) {
         ret = DlRaFunction::GetInstance().dlRaQpDestroy(handle);
-        if (!ret) {
+        if (ret == 0) {
             break; // 成功跳出
         } else if (ret == ROCE_EAGAIN) {
             bool bTimeout = ((chrono::steady_clock::now() - startTime) >= timeout);
@@ -364,7 +364,7 @@ HrtRaQpConnectAsync(QpHandle handle, const SocketHandle sockHandle, std::functio
         CHK_PRT_RET(needStop(), HCCL_ERROR("Terminating operation due to external request"), HCCL_E_INTERNAL);
 
         ret = DlRaFunction::GetInstance().dlRaQpConnectAsync(handle, sockHandle);
-        if (!ret) {
+        if (ret == 0) {
             break; // 成功跳出
         } else if (ret == SOCK_EAGAIN) {
             bool bTimeout = ((chrono::steady_clock::now() - startTime) >= timeoutSec);
@@ -471,7 +471,7 @@ HcclResult HrtRaSendWr(QpHandle handle, struct SendWr* wr, struct SendWrRsp* opR
     HCCL_DEBUG("ra send wr.");
     while (true) {
         ret = DlRaFunction::GetInstance().dlRaSendWr(handle, wr, opRsp);
-        if (!ret) {
+        if (ret == 0) {
             break; // 成功跳出
         } else if (
             (ret == SOCK_ENOENT) || (ret == ROCE_EAGAIN)
@@ -506,7 +506,7 @@ HcclResult HrtRaSendWrV2(QpHandle handle, struct SendWrV2* wr, struct SendWrRsp*
     HCCL_DEBUG("ra send wr.");
     while (true) {
         ret = DlRaFunction::GetInstance().dlRaSendWrV2(handle, wr, opRsp);
-        if (!ret) {
+        if (ret == 0) {
             break; // 成功跳出
         } else if (
             (ret == SOCK_ENOENT) || (ret == ROCE_EAGAIN)
@@ -542,7 +542,7 @@ HcclResult HrtRaSendWrVerbs(QpHandle handle, struct SendWrVerbs* wr, struct Send
     HCCL_DEBUG("ra send wr verbs.");
     while (true) {
         ret = DlRaFunction::GetInstance().dlRaSendWrVerbs(handle, wr, opRsp);
-        if (!ret) {
+        if (ret == 0) {
             break;
         } else if (
             (ret == SOCK_ENOENT) || (ret == ROCE_EAGAIN)
@@ -577,7 +577,7 @@ HcclResult HrtRaRecvWrVerbs(QpHandle handle, struct RecvWrVerbs* wr)
     HCCL_DEBUG("ra recv wr verbs.");
     while (true) {
         ret = DlRaFunction::GetInstance().dlRaRecvWrVerbs(handle, wr);
-        if (!ret) {
+        if (ret == 0) {
             break;
         } else if (
             (ret == SOCK_ENOENT) || (ret == ROCE_EAGAIN)
@@ -666,7 +666,7 @@ HcclResult HrtRaSendWrlist(
         ret = DlRaFunction::GetInstance().dlRaSendWrlist(
             handle, wr + (sendNum - remainNum), opRsp + (sendNum - remainNum), remainNum, &completeNumLocal);
         *completeNum += completeNumLocal;
-        if (!ret) {
+        if (ret == 0) {
             break; // 成功跳出
         } else if (
             (ret == SOCK_ENOENT) || (ret == ROCE_EAGAIN)
@@ -697,7 +697,7 @@ HcclResult HrtRaSendWrlistExt(
     QpHandle handle, struct SendWrlistDataExt wr[], struct SendWrRsp opRsp[], unsigned int sendNum,
     unsigned int* completeNum)
 {
-    DevType deviceType;
+    DevType deviceType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType != DevType::DEV_TYPE_910B && deviceType != DevType::DEV_TYPE_910_93) {
         vector<SendWrlistData> wqeList(sendNum);
@@ -740,7 +740,7 @@ HcclResult HrtRaSendWrlistExt(
             ret = DlRaFunction::GetInstance().dlRaSendWrlistExt(
                 handle, wr + (sendNum - remainNum), opRsp + (sendNum - remainNum), remainNum, &completeNumLocal);
             *completeNum += completeNumLocal;
-            if (!ret) {
+            if (ret == 0) {
                 break; // 成功跳出
             } else if (
                 (ret == SOCK_ENOENT) || (ret == ROCE_EAGAIN)
@@ -796,7 +796,7 @@ HcclResult HrtRaSendNormalWrlist(
         ret = DlRaFunction::GetInstance().dlRaSendNormalWrlist(
             handle, wr + (sendNum - remainNum), opRsp + (sendNum - remainNum), remainNum, &completeNumLocal);
         *completeNum += completeNumLocal;
-        if (!ret) {
+        if (ret == 0) {
             break; // 成功跳出
         }
         if ((ret == ROCE_ENOENT) || (ret == ROCE_EAGAIN) || ret == ROCE_ENOMEM) {
@@ -831,7 +831,7 @@ HcclResult HrtRaGetNotifyBaseAddr(RdmaHandle handle, u64* va, u64* size, std::fu
         CHK_PRT_RET(needStop(), HCCL_ERROR("Terminating operation due to external request"), HCCL_E_INTERNAL);
 
         ret = DlRaFunction::GetInstance().dlRaGetNotifyBaseAddr(handle, va, size);
-        if (!ret) {
+        if (ret == 0) {
             break; // 成功跳出
         } else if (ret == ROCE_EAGAIN) {
             bool bTimeout = ((chrono::steady_clock::now() - startTime) >= timeout);
@@ -867,7 +867,7 @@ HcclResult HrtRaGetNotifyMrInfo(u32 phyId, RdmaHandle handle, struct MrInfoT* mr
     auto timeout = chrono::seconds(GetExternalInputHcclLinkTimeOut());
     while (true) {
         ret = DlRaFunction::GetInstance().dlRaGetNotifyMrInfo(handle, mrInfo);
-        if (!ret) {
+        if (ret == 0) {
             break; // 成功跳出
         } else if (ret == ROCE_EAGAIN) {
             bool bTimeout = ((chrono::steady_clock::now() - startTime) >= timeout);
@@ -897,7 +897,7 @@ HcclResult HrtRaInit(struct RaInitConfig* config)
     auto timeout = chrono::seconds(GetExternalInputHcclLinkTimeOut());
     while (true) {
         ret = DlRaFunction::GetInstance().dlRaInit(config);
-        if (!ret) {
+        if (ret == 0) {
             break; // 成功跳出
         } else if (ret == HCCP_EAGAIN) {
             bool bTimeout = ((chrono::steady_clock::now() - startTime) >= timeout);
@@ -1119,7 +1119,7 @@ HcclResult HrtRaDeInit(struct RaInitConfig* config)
     auto timeout = chrono::seconds(GetExternalInputHcclLinkTimeOut());
     while (true) {
         ret = DlRaFunction::GetInstance().dlRaDeInit(config);
-        if (!ret) {
+        if (ret == 0) {
             break; // 成功跳出
         } else if (ret == HCCP_EAGAIN) {
             bool bTimeout = ((chrono::steady_clock::now() - startTime) >= timeout);
@@ -1350,7 +1350,7 @@ HcclResult hrtRaSocketListenStop(struct SocketListenInfoT conn[], u32 num)
     CheckConnPort(conn, num);
     while (true) {
         ret = DlRaFunction::GetInstance().dlRaSocketListenStop(conn, num);
-        if (!ret || ret == SOCK_ENODEV) {
+        if (ret == 0 || ret == SOCK_ENODEV) {
             break; // 成功跳出
         } else if (ret == SOCK_EAGAIN) {
             bool bTimeout = ((chrono::steady_clock::now() - startTime) >= timeout);
@@ -1468,7 +1468,7 @@ HcclResult SocketBatchConnect(SocketConnectInfoT conn[], u32 num, std::function<
         CHK_PRT_RET(needStop(), HCCL_ERROR("Terminating operation due to external request"), HCCL_E_INTERNAL);
 
         ret = DlRaFunction::GetInstance().dlRaSocketBatchConnect(conn, num);
-        if (!ret) {
+        if (ret == 0) {
             break; // 成功跳出
         } else if (ret == SOCK_EAGAIN) {
             bool bTimeout = ((chrono::steady_clock::now() - startTime) >= timeout);
@@ -1536,7 +1536,7 @@ HcclResult hrtRaSocketBatchClose(struct SocketCloseInfoT conn[], u32 num, u32 ma
     auto timeout = chrono::seconds(GetExternalInputHcclLinkTimeOut());
     while (true) {
         ret = DlRaFunction::GetInstance().dlRaSocketBatchClose(conn, num);
-        if (!ret) {
+        if (ret == 0) {
             break; // 成功跳出
         } else if (ret == SOCK_EAGAIN) {
             bool bTimeout = ((chrono::steady_clock::now() - startTime) >= timeout);
@@ -1600,7 +1600,7 @@ HcclResult hrtRaBlockGetSockets(u32 role, struct SocketInfoT conn[], u32 num)
 {
     CHK_PTR_NULL(conn);
     CHK_PRT_RET(num == 0, HCCL_ERROR("[hrtRaBlockGetSockets]ra get rasocket para error"), HCCL_E_PARA);
-    s32 sockRet;
+    s32 sockRet = 0;
     u32 gotSocketsCnt = 0;
     auto startTime = chrono::steady_clock::now();
     auto timeout = chrono::seconds(GetExternalInputHcclLinkTimeOut());
@@ -2397,7 +2397,7 @@ HcclResult hrtRaNormalQpDestroy(QpHandle qpHandle)
 
 HcclResult DestroyCq(RdmaHandle rdmaHandle, CqInfo& cq)
 {
-    struct CqAttr attr;
+    struct CqAttr attr = {};
     attr.qpContext = &cq.context;
     attr.ibSendCq = &cq.sq;
     attr.ibRecvCq = &cq.rq;
@@ -3152,7 +3152,7 @@ HcclResult hrtRaRecvWrlist(QpHandle handle, struct RecvWrlistData* wr, unsigned 
         ret = DlRaFunction::GetInstance().dlRaRecvWrlist(handle, wr + remainNum, recvNum, &completeNumLocal);
         *completeNum += completeNumLocal;
 
-        if (!ret) {
+        if (ret == 0) {
             break; // 成功跳出
         } else if (
             (ret == SOCK_ENOENT) || (ret == SOCK_EAGAIN)
@@ -3205,7 +3205,7 @@ HcclResult IsSuppportRaGetSocketVnicIps(bool& supportGetSocketVnicIp)
     return HCCL_SUCCESS;
 }
 
-HcclResult hrtRaGetSocketVnicIpInfos(u32 phyId, enum IdType type, vector<u32> deviceIds, vector<HcclIpAddress>& vnicIPs)
+HcclResult hrtRaGetSocketVnicIpInfos(u32 phyId, enum IdType type, vector<u32> deviceIds, vector<HcclIpAddress>& vnicIps)
 {
     u32 vnicIpNum = deviceIds.size();
     CHK_PRT_RET(
@@ -3251,7 +3251,7 @@ HcclResult hrtRaGetSocketVnicIpInfos(u32 phyId, enum IdType type, vector<u32> de
                 "[hrtRaGetSocketVnicIpInfos] add vnicInfoMap, deviceIds[%u], Ip[%s]", deviceIds[i],
                 vnicIP.GetReadableAddress());
         }
-        vnicIPs.push_back(vnicIP);
+        vnicIps.push_back(vnicIP);
     }
     return HCCL_SUCCESS;
 }
@@ -3637,7 +3637,7 @@ HcclResult SnapShotSaveAction(s32 networkMode, u32 devicePhyId, HcclSaveSnapShot
 HcclResult SnapShotRestoreAction(s32 networkMode, u32 devicePhyId)
 {
     HCCL_INFO("%s networkMode[%d], devicePhyId[%u]", __func__, networkMode, devicePhyId);
-    struct RaInfo raInfo;
+    struct RaInfo raInfo = {};
     raInfo.mode = networkMode;
     raInfo.phyId = devicePhyId;
     s32 ret = DlRaFunction::GetInstance().dlRaRestoreSnapShot(&raInfo);

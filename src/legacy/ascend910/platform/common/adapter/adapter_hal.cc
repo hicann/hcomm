@@ -387,7 +387,7 @@ HcclResult hrtDrvDeviceGetPhyIdByIndex([[maybe_unused]] u32 deviceLogicId, [[may
 void MemoryPreFetchImpl(u64 start, u64 end, u32 pageSize)
 {
     // 多线程并发对待映射的内存进行逐页表的预访问
-    volatile uint64_t* ptr;
+    volatile uint64_t* ptr = nullptr;
     for (u64 i = start; i < end; i += pageSize) {
         ptr = reinterpret_cast<volatile uint64_t*>(i);
         *ptr;
@@ -728,7 +728,7 @@ HcclResult hrtDrvMemSmmuQuery(uint32_t localDevid, uint32_t* SSID)
 
 bool IsSupportStartMC2MaintenanceThread()
 {
-    return (StartMC2MaintenanceThread == nullptr && AicpuCreateCtrlThread == nullptr) ? false : true;
+    return StartMC2MaintenanceThread != nullptr || AicpuCreateCtrlThread != nullptr;
 }
 
 HcclResult hrtHalStartMC2MaintenanceThread(mc2Funcs f1, void* p1, mc2Funcs f2, void* p2)
@@ -775,7 +775,7 @@ HcclResult hrtHalResourceIdRestore(u32 devId, u32 tsId, drvIdType_t resType, u32
         halResourceIdRestore == nullptr,
         HCCL_WARNING("hrtHalResourceIdRestore not support, halResourceIdRestore is nullptr"), HCCL_E_NOT_SUPPORT);
 
-    drvResIdKey resInfo;
+    drvResIdKey resInfo = {};
     resInfo.ruDevId = devId;
     resInfo.tsId = tsId;
     resInfo.resType = resType;

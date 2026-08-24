@@ -373,8 +373,10 @@ inline HcclResult RpingUbAttrInit(
     initAttr.protocol = PROTOCOL_UDMA; // pingmesh支持兼容UB驱动，新增protocol字段
 
     // 获取安全随机数
-    u32 client_qp_token, client_seg_token;
-    u32 server_qp_token, server_seg_token;
+    u32 client_qp_token = 0;
+    u32 client_seg_token = 0;
+    u32 server_qp_token = 0;
+    u32 server_seg_token = 0;
     HcclResult token_ret
         = GetUbToken(deviceId, &client_qp_token, &client_seg_token, &server_qp_token, &server_seg_token);
     CHK_RET(token_ret);

@@ -297,7 +297,7 @@ HcclResult TransportHeterog::PrepareSocketInfo(s32 type, s32 linkNum, const stri
         string tag = transTag_ + "_" + to_string(i) + "_";
         if (initSM_.locInitInfo.role == CLIENT_ROLE_SOCKET) {
             tag += clientTag;
-            SocketConnectInfoT tmpConnInfo;
+            SocketConnectInfoT tmpConnInfo{};
             tmpConnInfo.socketHandle = nicSocketHandle_;
             tmpConnInfo.remoteIp.addr = peerAddr.addr;
             tmpConnInfo.remoteIp.addr6 = peerAddr.addr6;

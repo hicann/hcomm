@@ -16,6 +16,7 @@
 #include "config_plf_log.h"
 #include "dlhal_function.h"
 #include "adapter_hal_pub.h"
+#include "adapter_rts.h"
 #include "dispatcher_aicpu.h"
 
 namespace hccl {
@@ -111,9 +112,10 @@ HcclResult DispatcherAiCpu::Init()
     CHK_PTR_NULL(addOneEventWaitSqe_);
 
     CHK_RET(GetNotifyMaxWaitTime());
+    // 和hrtGetNotifySize接口保持一致，910B和910_93的notify寄存器大小为4字节，其他芯片为8字节
     notifySize_ = (aicpuInfo_.devType == DevType::DEV_TYPE_910B || aicpuInfo_.devType == DevType::DEV_TYPE_910_93) ?
-                      4 :
-                      8; // 和hrtGetNotifySize接口保持一致，910B和910_93的notify寄存器大小为4，其他芯片为8
+                      NOTIFY_SIZE_BYTES_910B :
+                      NOTIFY_SIZE_BYTES_910A;
     InitTimeOutConfig();
     HCCL_INFO(
         "%s success, devId:%u, devType:%d, chipId:%lld", __func__, aicpuInfo_.devId, aicpuInfo_.devType,

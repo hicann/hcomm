@@ -60,6 +60,7 @@ constexpr u32 HCCL_RETRY_MAXCNT_MIN = 1;        // 最大重执行次数，最�
 constexpr u32 HCCL_RETRY_MAXCNT_MAX = 10;       // 最大重执行次数，最大值10次
 constexpr u32 HCCL_RETRY_HLOD_TIME_MAX = 60000; // 首次重执行等待时间，最大值60s, 单位ms
 constexpr u32 HCCL_RETRY_INTERVAL_MAX = 60000;  // 重执行间隔，最大值60s, 单位ms
+constexpr int HCCL_RETRY_PARAM_NUM = 3; // 重执行参数个数(MaxCnt/HoldTime/IntervalTime)，sscanf_s解析成功的返回值
 
 constexpr u32 MAX_LEN_OF_LOGIC_SUPER_ID = 128; // 逻辑超节点最大长度
 //  外部输入参数

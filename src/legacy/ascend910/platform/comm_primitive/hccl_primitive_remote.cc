@@ -47,7 +47,6 @@ HcclResult HcclRemoteRead(StreamHandle streamHandle, HcclMemTransport memTranspo
     return reinterpret_cast<Transport*>(memTransport)->ReadAsync(localBuf, remoteBuf, *stream);
 }
 
-constexpr uint32_t INVALID_COMPLETE_IDX = INVALID_UINT;
 HcclResult HcclRemoteWriteReduce(
     StreamHandle streamHandle, HcclMemTransport memTransport, HcclBuf* rmtBuf, HcclBuf* locBuf,
     HcclReduceInfo reduceInfo)

@@ -85,14 +85,14 @@ private:
     HcclRtSignal prepareNotify_ = nullptr;
     HcclRtSignal ackNotify_ = nullptr;
     HcclRtSignal doneNotify_ = nullptr;
-    u32 notifySize_;
+    u32 notifySize_{0};
 
     u32 immData_ = 0;
-    u64 chunkSize_;
-    SyncMode notifyWaitMode_;
+    u64 chunkSize_{0};
+    SyncMode notifyWaitMode_{SyncMode::DEFAULT_TIMEWAITSYNCMODE};
     u32 wqePerDoorBell_ = 10;
 
-    struct MrInfoT remoteNotifyValueMem_;
+    struct MrInfoT remoteNotifyValueMem_ {};
 };
 } // namespace hccl
 

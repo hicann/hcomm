@@ -314,10 +314,10 @@ protected:
     std::shared_ptr<RemoteNotify> remoteSendDoneDeviceNotify_ = nullptr;
     std::vector<std::shared_ptr<RemoteNotify>> userRemoteNotify_;
 
-    u64 remoteSendReadyAddress_;
-    u64 remoteSendReadyOffset_;
-    u64 remoteSendDoneOffset_;
-    u64 remoteSendDoneAddress_;
+    u64 remoteSendReadyAddress_{0};
+    u64 remoteSendReadyOffset_{0};
+    u64 remoteSendDoneOffset_{0};
+    u64 remoteSendDoneAddress_{0};
     std::vector<u64> userRemoteNotifyAddr_;
     std::vector<u64> userRemoteNotifyOffset_;
 

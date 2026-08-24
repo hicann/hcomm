@@ -133,18 +133,19 @@ HcclResult AlltoallvMetadata::Check(const bool afterFirstOrch) const
 
     const uint32_t rankSize = hcclInputMemRanges.size();
     CHK_PRT_RET(rankSize == 0, HCCL_ERROR("[AlltoallvMetadata][Check] empty hcclInputMemRanges"), HCCL_E_INTERNAL);
-    // 注意: 每个remote rank各有两个NotifyId/SignalAddr分别用于send/recv count对应的Wait/Record同步
+    // 注意: 每个remote rank各有NOTIFY_NUM_PER_REMOTE_RANK个NotifyId/SignalAddr分别用于send/recv
+    // count对应的Wait/Record同步
     CHK_PRT_RET(
-        notifyIdRankRflagMap.size() != 2 * (rankSize - 1),
+        notifyIdRankRflagMap.size() != NOTIFY_NUM_PER_REMOTE_RANK * (rankSize - 1),
         HCCL_ERROR(
             "[AlltoallvMetadata][Check] notifyIdRankRflagMap.size[%u] != rankSize-1[%u]", notifyIdRankRflagMap.size(),
-            2 * (rankSize - 1)),
+            NOTIFY_NUM_PER_REMOTE_RANK * (rankSize - 1)),
         HCCL_E_INTERNAL);
     CHK_PRT_RET(
-        signalAddrRankRflagMap.size() != 2 * (rankSize - 1),
+        signalAddrRankRflagMap.size() != NOTIFY_NUM_PER_REMOTE_RANK * (rankSize - 1),
         HCCL_ERROR(
             "[AlltoallvMetadata][Check] signalAddrRankRflagMap.size[%u] != rankSize-1[%u]",
-            signalAddrRankRflagMap.size(), 2 * (rankSize - 1)),
+            signalAddrRankRflagMap.size(), NOTIFY_NUM_PER_REMOTE_RANK * (rankSize - 1)),
         HCCL_E_INTERNAL);
 
     // 注意: 只有在第一次cache miss的executor->Orchestrate之后, 相关mapping才会被初始化
@@ -1722,7 +1723,6 @@ HcclResult OpUnfoldCacheEntry::UpdateMemcpyPlaceholderSqeForAlltoallv(
         memcpySqePtr->dssv = 1U;
         memcpySqePtr->sns = 1U;
         memcpySqePtr->dns = 1U;
-        memcpySqePtr->qos = 6;     // 6 is HCCL QoS
         const uint32_t partId = 0; // 参考dispatcher_aicpu.cc中addOneMemcpySqe_的partId传参始终为0
         memcpySqePtr->partid = partId;
         memcpySqePtr->linkType = linkType;
@@ -2229,7 +2229,6 @@ HcclResult OpUnfoldCacheEntry::UpdateMemcpyRecordPlaceholderSqeForAlltoallv(
         memcpySqePtr->dssv = 1U;
         memcpySqePtr->sns = 1U;
         memcpySqePtr->dns = 1U;
-        memcpySqePtr->qos = 6; // 6 is HCCL QoS
         memcpySqePtr->partid = partId;
         memcpySqePtr->linkType = linkType;
         memcpySqePtr->qos = qos;

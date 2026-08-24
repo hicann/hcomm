@@ -182,7 +182,7 @@ DispatcherCtxPtr GetDispatcherCtx(const char* commId)
         HCCL_INFO("[%s], gDispatcherCtx[%p] exist, commId[%s]", __func__, gDispatcherCtx, commId);
         return gDispatcherCtx;
     }
-    DispatcherCtxPtr ctx;
+    DispatcherCtxPtr ctx = nullptr;
     if (FindDispatcherByCommId(&ctx, commId)) {
         HCCL_INFO("[%s], ctx[%p] found in g_ctx, commId[%s]", __func__, ctx, commId);
         gDispatcherCtx = ctx;

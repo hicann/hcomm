@@ -506,12 +506,21 @@ HcclResult MrManager::GetKey(void* addr, u64 size, u32& lkey) // 获取内存的
             lockMrMap.lock();
             MrMapKey key(reinterpret_cast<u64>(mrInfo.addr), mrInfo.size);
             auto iter = regedMrMap_.find(key);
-            iter->second.tmpMemRef++;
-            lkey = mrInfo.lkey;
-            HCCL_INFO(
-                "[MrManager][GetKey]get memory lkey success, size[%llu Byte], regMrMap size[%u], "
-                "temp mr map size[%u].",
-                size, regedMrMap_.size(), regedMrMap_.size());
+            if (iter != regedMrMap_.end()) {
+                iter->second.tmpMemRef++;
+                lkey = mrInfo.lkey;
+                HCCL_INFO(
+                    "[MrManager][GetKey]get memory lkey success, size[%llu Byte], regMrMap size[%u], "
+                    "temp mr map size[%u].",
+                    size, regedMrMap_.size(), regedMrMap_.size());
+            } else {
+                // GetMrInfo释放锁到重新加锁期间，该MR可能已被并发释放，退回临时注册路径
+                lockMrMap.unlock();
+                CHK_PRT_RET(
+                    (RegTmpMr(addr, size, lkey) != HCCL_SUCCESS),
+                    HCCL_ERROR("[MrManager][GetKey]register temp memory error, size[%llu Byte].", size),
+                    HCCL_E_INTERNAL);
+            }
         }
     }
     return HCCL_SUCCESS;
@@ -524,13 +533,13 @@ HcclResult MrManager::ReleaseKey(void* addr, u64 size) // 释放临时MR
         (size == 0), HCCL_ERROR("[MrManager][ReleaseKey]memory size[%llu Byte] should be greater than 0.", size),
         HCCL_E_PARA);
 
-    HcclResult ret;
+    HcclResult ret = HCCL_SUCCESS;
     MrInfo mrInfo;
     mrInfo.addr = addr;
     mrInfo.size = size;
     bool isInfoNotFound = false;
     ret = GetMrInfo(mrInfo, isInfoNotFound);
-    if (ret || isInfoNotFound) {
+    if (ret != HCCL_SUCCESS || isInfoNotFound) {
         HCCL_ERROR("[MrManager][ReleaseKey]get memory info error, size[%llu Byte].", size);
         return HCCL_E_INTERNAL;
     }

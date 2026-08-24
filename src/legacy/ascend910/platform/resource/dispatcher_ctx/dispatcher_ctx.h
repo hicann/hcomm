@@ -43,7 +43,7 @@ public:
     HcclResult SetDispatcherHcclQos(u32 hcclQos);
 
 private:
-    CtxDispatcherType dispatcherType_;
+    CtxDispatcherType dispatcherType_{CtxDispatcherType::DISPATCHER_NORMAL};
     HcclDispatcher dispatcher_{nullptr};
 
     u32 devicePhyId_ = INVALID_UINT;

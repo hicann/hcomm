@@ -309,12 +309,12 @@ HcclResult hcclModifyAscendVerbsQP(AscendVerbsQPInfo* localQPInfo, AscendVerbsQP
 }
 
 HcclResult
-hcclModifyAscendVerbsQPEx(AscendVerbsQPInfo* localQPVerbsInfo, AscendVerbsQPInfo* remoteQPVerbsInfo, AscendQPQos* qpQos)
+hcclModifyAscendVerbsQPEx(AscendVerbsQPInfo* localQPInfo, AscendVerbsQPInfo* remoteQPInfo, AscendQPQos* qpQos)
 {
     s32 deviceLogicId = 0;
     CHK_RET(hrtGetDeviceRefresh(&deviceLogicId));
-    CHK_PTR_NULL(localQPVerbsInfo);
-    CHK_PTR_NULL(remoteQPVerbsInfo);
+    CHK_PTR_NULL(localQPInfo);
+    CHK_PTR_NULL(remoteQPInfo);
     CHK_PTR_NULL(qpQos);
     CHK_PRT_RET(
         (qpQos->sl > HCCL_RDMA_SL_MAX),
@@ -334,22 +334,22 @@ hcclModifyAscendVerbsQPEx(AscendVerbsQPInfo* localQPVerbsInfo, AscendVerbsQPInfo
         HCCL_ERROR("[hcclModifyAscendVerbsQPEx]The value of tc[%u] is not a multiple of 4.", qpQos->tc), HCCL_E_PARA);
 
     struct TypicalQp localQp;
-    localQp.qpn = localQPVerbsInfo->qpn;
-    localQp.gidIdx = localQPVerbsInfo->gidIdx;
+    localQp.qpn = localQPInfo->qpn;
+    localQp.gidIdx = localQPInfo->gidIdx;
     for (uint32_t i = 0; i < GID_LENGTH; i++) {
-        localQp.gid[i] = localQPVerbsInfo->gid[i];
+        localQp.gid[i] = localQPInfo->gid[i];
     }
-    localQp.psn = localQPVerbsInfo->psn;
+    localQp.psn = localQPInfo->psn;
     localQp.sl = qpQos->sl;
     localQp.tc = qpQos->tc;
 
     struct TypicalQp remoteQp = {};
-    remoteQp.qpn = remoteQPVerbsInfo->qpn;
-    remoteQp.gidIdx = remoteQPVerbsInfo->gidIdx;
+    remoteQp.qpn = remoteQPInfo->qpn;
+    remoteQp.gidIdx = remoteQPInfo->gidIdx;
     for (uint32_t i = 0; i < GID_LENGTH; i++) {
-        remoteQp.gid[i] = remoteQPVerbsInfo->gid[i];
+        remoteQp.gid[i] = remoteQPInfo->gid[i];
     }
-    remoteQp.psn = remoteQPVerbsInfo->psn;
+    remoteQp.psn = remoteQPInfo->psn;
     CHK_RET(TypicalQpManager::GetInstance().ModifyVerbsQp(localQp, remoteQp));
     return HCCL_SUCCESS;
 }

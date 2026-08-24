@@ -97,7 +97,7 @@ private:
 
     std::array<NotifyResMgr, NOTIFY_RES_MGR_NUM> notifyResMgr_;
     s32 devicePhyId_;
-    s32 pid_;
+    s32 pid_{0};
 };
 } // namespace hccl
 #endif /* NOTIFY_POOL_IMPL_H */

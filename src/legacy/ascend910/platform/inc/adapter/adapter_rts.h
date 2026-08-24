@@ -47,6 +47,8 @@ HcclResult hrtMemSyncCopyEx(void* dst, uint64_t destMax, const void* src, uint64
 #endif
 constexpr u32 CHIP_VERSION_MAX_LEN = 32;
 constexpr s32 HCCL_EXEC_TIME_OUT_OFFSET_S = 5; // 避免与notifywait timeout时间冲突，增加5s的偏移值
+constexpr u32 NOTIFY_SIZE_BYTES_910A = 8;      // 910A每个notify占用的字节数
+constexpr u32 NOTIFY_SIZE_BYTES_910B = 4;      // 910B/910_93每个notify占用的字节数
 
 HcclResult hrtGetSocVer(std::string& socName);
 

@@ -37,7 +37,7 @@ TransportRemoteAccess::TransportRemoteAccess(
 TransportRemoteAccess::~TransportRemoteAccess()
 {
     HCCL_DEBUG("~TransportRemoteAccess Enter!");
-    HcclResult ret;
+    HcclResult ret = HCCL_SUCCESS;
     struct MrInfoT mrInfo = {};
     /* 销毁本端mr */
     for (u32 idx = 0; idx < localRegMem_.size(); idx++) {
@@ -293,7 +293,7 @@ HcclResult TransportRemoteAccess::RdmaDataTransport(const std::vector<HcomRemote
     u32 nowIdex = 0;
     u32 singleCompleteNum = 0;
     u32 sendNum = 0;
-    HcclResult ret;
+    HcclResult ret = HCCL_SUCCESS;
     u32 tryCount = 0;
     while (nowIdex < addressNum) {
         sendNum = addressNum - nowIdex;

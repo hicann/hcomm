@@ -175,9 +175,10 @@ HcclResult MemNameRepository::OpenIpcMem(
     auto iter = openedNameMap_.begin();
     while (iter != openedNameMap_.end()) {
         SecIpcName_t memName = iter->second;
-        if (!strncmp(
+        if (strncmp(
                 reinterpret_cast<char*>(memName.ipcName), reinterpret_cast<char*>(const_cast<u8*>(name)),
-                HCCL_IPC_MEM_NAME_LEN)) {
+                HCCL_IPC_MEM_NAME_LEN)
+            == 0) {
             // 找到相同ipc 名字,跳出循环
             *ptr = iter->first.ptr;
             ipcMemInfo.ptr = *ptr;
@@ -247,8 +248,9 @@ void MemNameRepository::CloseIpcMem(const u8* name)
     auto iter = openedNameMap_.begin();
     while (iter != openedNameMap_.end()) {
         SecIpcName_t memName = iter->second;
-        if (!strncmp(
-                reinterpret_cast<char*>(memName.ipcName), reinterpret_cast<const char*>(name), HCCL_IPC_MEM_NAME_LEN)) {
+        if (strncmp(
+                reinterpret_cast<char*>(memName.ipcName), reinterpret_cast<const char*>(name), HCCL_IPC_MEM_NAME_LEN)
+            == 0) {
             if (openedNameMapRef_[iter->first].Unref() == 0) {
                 // 找到相同ipc 名字, 并且引用计数减为0再close
                 ret = hrtIpcDestroyMemoryName(memName.ipcName);

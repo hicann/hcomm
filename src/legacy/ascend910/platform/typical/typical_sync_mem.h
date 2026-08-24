@@ -47,7 +47,7 @@ private:
 
     RdmaHandle rdmaHandle_ = nullptr;
     struct MrInfoT notifySrcMrInfo_ {};
-    MrHandle notifySrcMrHandle_;
+    MrHandle notifySrcMrHandle_{nullptr};
     std::mutex syncMemMapMutex_;
     DeviceMem srcDevMem_;
     std::map<u64, HcclRtSignal> syncMemMap_{}; // notifyVa - notify map

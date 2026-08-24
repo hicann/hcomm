@@ -12,37 +12,30 @@
 
 namespace hccl {
 TaskLogicInfo::TaskLogicInfo(u32 index, TaskLogicType taskLogicType, TaskLogicFuncType funcType)
-{
-    taskLogicCmd.taskLogicType = taskLogicType;
-    taskLogicCmd.index = index;
-    taskFuncType = funcType;
-}
+    : taskLogicCmd{taskLogicType, index},
+      taskFuncType(funcType)
+{}
 
 TaskLogicInfo::TaskLogicInfo(
     u32 index, TaskLogicType taskLogicType, TaskLogicFuncType funcType, std::vector<TxMemoryInfo>& txMems)
-{
-    taskLogicCmd.taskLogicType = taskLogicType;
-    taskLogicCmd.index = index;
-    taskFuncType = funcType;
-    txAsync.txMems = txMems;
-}
+    : taskLogicCmd{taskLogicType, index},
+      taskFuncType(funcType),
+      txAsync{txMems}
+{}
 
 TaskLogicInfo::TaskLogicInfo(
     u32 index, TaskLogicType taskLogicType, TaskLogicFuncType funcType, std::vector<RxMemoryInfo>& rxMems)
-{
-    taskLogicCmd.taskLogicType = taskLogicType;
-    taskLogicCmd.index = index;
-    taskFuncType = funcType;
-    rxAsync.rxMems = rxMems;
-}
+    : taskLogicCmd{taskLogicType, index},
+      taskFuncType(funcType),
+      rxAsync{rxMems}
+{}
 
 TaskLogicInfo::TaskLogicInfo(
     u32 index, TaskLogicType taskLogicType, TaskLogicFuncType funcType, void* signal, u32 userRank, u32 remoteUserRank,
     s32 stage)
+    : taskLogicCmd{taskLogicType, index},
+      taskFuncType(funcType)
 {
-    taskLogicCmd.taskLogicType = taskLogicType;
-    taskLogicCmd.index = index;
-    taskFuncType = funcType;
     taskLogicPara.dispatcherTaskLogicPara.signalWait.signal = signal;
     taskLogicPara.dispatcherTaskLogicPara.signalWait.userRank = userRank;
     taskLogicPara.dispatcherTaskLogicPara.signalWait.remoteRank = remoteUserRank;
@@ -52,10 +45,9 @@ TaskLogicInfo::TaskLogicInfo(
 TaskLogicInfo::TaskLogicInfo(
     u32 index, TaskLogicType taskLogicType, TaskLogicFuncType funcType, void* signal, u32 userRank, u64 offset,
     s32 stage)
+    : taskLogicCmd{taskLogicType, index},
+      taskFuncType(funcType)
 {
-    taskLogicCmd.taskLogicType = taskLogicType;
-    taskLogicCmd.index = index;
-    taskFuncType = funcType;
     taskLogicPara.dispatcherTaskLogicPara.signalRecord.signal = signal;
     taskLogicPara.dispatcherTaskLogicPara.signalRecord.userRank = userRank;
     taskLogicPara.dispatcherTaskLogicPara.signalRecord.offset = offset;
@@ -65,10 +57,9 @@ TaskLogicInfo::TaskLogicInfo(
 TaskLogicInfo::TaskLogicInfo(
     u32 index, TaskLogicType taskLogicType, TaskLogicFuncType funcType, void* dst, uint64_t destMax, void* src,
     u64 count, HcclRtMemcpyKind kind)
+    : taskLogicCmd{taskLogicType, index},
+      taskFuncType(funcType)
 {
-    taskLogicCmd.index = index;
-    taskLogicCmd.taskLogicType = taskLogicType;
-    taskFuncType = funcType;
     taskLogicPara.dispatcherTaskLogicPara.memAsync.dst = dst;
     taskLogicPara.dispatcherTaskLogicPara.memAsync.destMax = destMax;
     taskLogicPara.dispatcherTaskLogicPara.memAsync.src = src;

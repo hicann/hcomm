@@ -15,6 +15,9 @@
 #include <regex>
 #include <log.h>
 namespace hccl {
+constexpr int MIN_IPV6_COLON_COUNT = 2;             // IPv6地址中至少包含的冒号个数
+constexpr uint32_t URMA_EID_HEX_CHARS_PER_BYTE = 2; // EID十六进制字符串中每字节占用的字符数
+constexpr uint32_t EID_DESCRIBE_HEX_WIDTH = 16;     // Eid::Describe中64位段对应的十六进制显示宽度
 
 HcclResult HcclIpAddress::SetBianryAddress(s32 family, const union HcclInAddr& address)
 {
@@ -51,7 +54,7 @@ HcclResult HcclIpAddress::SetReadableAddress(const std::string& address)
     }
     std::string ipStr = address.substr(0, found);
     int cnt = std::count(ipStr.begin(), ipStr.end(), ':');
-    if (cnt >= 2) { // ipv6地址中至少有2个":"
+    if (cnt >= MIN_IPV6_COLON_COUNT) { // ipv6地址中至少有2个":"
         if (inet_pton(AF_INET6, ipStr.c_str(), &binaryAddr.addr6) <= 0) {
             HCCL_ERROR("ip addr[%s] is invalid IPv6 address.", ipStr.c_str());
             binaryAddr.addr6.s6_addr32[0] = 0; // 清空ipv6地址中的 word 0
@@ -134,7 +137,7 @@ Eid HcclIpAddress::StrToEID(const std::string& str)
     Eid tmpeEid{};
     const int Base = 16;
     for (size_t i = 0; i < URMA_EID_LEN; ++i) {
-        std::string byteString = str.substr(i * 2, 2);
+        std::string byteString = str.substr(i * URMA_EID_HEX_CHARS_PER_BYTE, URMA_EID_HEX_CHARS_PER_BYTE);
         tmpeEid.raw[i] = static_cast<uint8_t>(std::stoi(byteString, nullptr, Base));
     }
     return tmpeEid;
@@ -220,8 +223,8 @@ bool HcclIpAddress::IsIPv4(const std::string& str)
 std::string Eid::Describe() const
 {
     std::ostringstream oss;
-    oss << "eid[" << std::hex << std::setw(16) << std::setfill('0') << be64toh(in6.subnetPrefix) << ":" << std::hex
-        << std::setw(16) << std::setfill('0') << be64toh(in6.interfaceId) << "]";
+    oss << "eid[" << std::hex << std::setw(EID_DESCRIBE_HEX_WIDTH) << std::setfill('0') << be64toh(in6.subnetPrefix)
+        << ":" << std::hex << std::setw(EID_DESCRIBE_HEX_WIDTH) << std::setfill('0') << be64toh(in6.interfaceId) << "]";
     return oss.str();
 }
 

@@ -40,8 +40,8 @@ private:
     HcclResult
     TypicalQpModify(QpHandle& qpHandle, struct TypicalQp* localQpInfo, struct TypicalQp* remoteQpInfo, bool& completed);
 
-    struct ibv_send_wr dataReadWrScatter_; // scatter数据读取的wr模板
-    struct ibv_send_wr dataAckWrScatter_;  // scatterACK发送的wr模板
+    struct ibv_send_wr dataReadWrScatter_ {}; // scatter数据读取的wr模板
+    struct ibv_send_wr dataAckWrScatter_ {};  // scatterACK发送的wr模板
 
     struct QpAttr localTagQpAttr_ {};
     struct QpAttr localDataQpAttr_ {};

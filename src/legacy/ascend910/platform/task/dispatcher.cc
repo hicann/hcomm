@@ -385,8 +385,8 @@ HcclResult DispatcherPub::MemcpyAsync(
     uint64_t addrOffset = 0;
     uint64_t contSplit = 0;
     if (count > HCCL_SDMA_MAX_COUNT_4GB) {
-        spiltLoop = (count % HCCL_SDMA_MAX_COUNT_4GB) ? (count / HCCL_SDMA_MAX_COUNT_4GB) :
-                                                        ((count / HCCL_SDMA_MAX_COUNT_4GB) - 1);
+        spiltLoop = (count % HCCL_SDMA_MAX_COUNT_4GB != 0) ? (count / HCCL_SDMA_MAX_COUNT_4GB) :
+                                                             ((count / HCCL_SDMA_MAX_COUNT_4GB) - 1);
         HCCL_INFO("MemcpyAsync SDMA task countSize is bigger than 4GB and do segmentation splitloop[%llu]", spiltLoop);
     }
     /* SDMA任务拆分 */
@@ -506,8 +506,8 @@ HcclResult DispatcherPub::MemcpyAsyncWithoutCheckKind(
     uint64_t addrOffset = 0;
     uint64_t contSplit = 0;
     if (count > HCCL_SDMA_MAX_COUNT_4GB) {
-        spiltLoop = (count % HCCL_SDMA_MAX_COUNT_4GB) ? (count / HCCL_SDMA_MAX_COUNT_4GB) :
-                                                        ((count / HCCL_SDMA_MAX_COUNT_4GB) - 1);
+        spiltLoop = (count % HCCL_SDMA_MAX_COUNT_4GB != 0) ? (count / HCCL_SDMA_MAX_COUNT_4GB) :
+                                                             ((count / HCCL_SDMA_MAX_COUNT_4GB) - 1);
         HCCL_INFO("MemcpyAsync SDMA task countSize is bigger than 4GB and do segmentation splitloop[%llu]", spiltLoop);
     }
     /* SDMA任务拆分 */
@@ -745,8 +745,8 @@ HcclResult DispatcherPub::InlineReduceAsync(
     uint64_t contSplit = 0;
     uint64_t countSize = count * SIZE_TABLE[datatype];
     if (countSize > HCCL_SDMA_MAX_COUNT_4GB) {
-        spiltLoop = (countSize % HCCL_SDMA_MAX_COUNT_4GB) ? (countSize / HCCL_SDMA_MAX_COUNT_4GB) :
-                                                            ((countSize / HCCL_SDMA_MAX_COUNT_4GB) - 1);
+        spiltLoop = (countSize % HCCL_SDMA_MAX_COUNT_4GB != 0) ? (countSize / HCCL_SDMA_MAX_COUNT_4GB) :
+                                                                 ((countSize / HCCL_SDMA_MAX_COUNT_4GB) - 1);
         HCCL_INFO(
             "InlineReduceAsync SDMA task countSize is bigger than 4GB and do segmentation splitloop[%llu]", spiltLoop);
     }

@@ -27,7 +27,7 @@ HcclResult DispatcherCtx::Init()
     // 获取host侧还是device侧
     u32 info = 0;
     CHK_RET(hrtDrvGetPlatformInfo(&info));
-    bool isDeviceSide = info == 0 ? true : false;
+    bool isDeviceSide = (info == 0);
     HCCL_INFO("[DispatcherCtx][Init] isDeviceSide[%d]", isDeviceSide);
     CtxDispatcherType type = CtxDispatcherType::DISPATCHER_NORMAL;
     // 如果是host侧

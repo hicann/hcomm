@@ -36,7 +36,7 @@ CommRemoteAccess::CommRemoteAccess(
 
 CommRemoteAccess::~CommRemoteAccess()
 {
-    HcclResult ret;
+    HcclResult ret = HCCL_SUCCESS;
     for (u32 index = 0; index < linkThreads_.size(); index++) {
         if (linkThreads_[index]) {
             if (linkThreads_[index]->joinable()) {
@@ -443,7 +443,7 @@ HcclResult CommRemoteAccess::GetRaSocket(const u32 role, const struct SocketInfo
     HCCL_INFO("get sockets para: socket role[%u], socket num[%u]", role, num);
     auto startTime = std::chrono::steady_clock::now();
     auto timeout = std::chrono::seconds(GetExternalInputHcclLinkTimeOut());
-    s32 sockRet;
+    s32 sockRet = 0;
     u32 gotSocketsCnt = 0;
     HCCL_INFO("In GetRaSocket, waiting for all rasockets link up...");
     u32 left = num;

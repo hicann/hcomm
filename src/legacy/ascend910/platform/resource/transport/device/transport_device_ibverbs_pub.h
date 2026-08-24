@@ -71,7 +71,7 @@ public:
 
     HcclResult WriteReduceAsync(
         struct Transport::Buffer& remoteBuf, struct Transport::Buffer& localBuf, const HcclDataType datatype,
-        HcclReduceOp redOp, Stream& stream);
+        HcclReduceOp redOp, Stream& stream) override;
 
     HcclResult
     ReadAsync(struct Transport::Buffer& localBuf, struct Transport::Buffer& remoteBuf, Stream& stream) override;

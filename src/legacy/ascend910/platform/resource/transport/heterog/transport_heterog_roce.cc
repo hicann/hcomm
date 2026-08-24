@@ -1275,11 +1275,11 @@ HcclResult TransportHeterogRoce::GetNotifySize()
     CHK_RET(hrtHalGetDeviceType(index_, devType));
 
     if (devType == DevType::DEV_TYPE_910) {
-        notifySize_ = 8; // 910A 每个notify占8个字节
+        notifySize_ = NOTIFY_SIZE_BYTES_910A;
     } else if ((devType == DevType::DEV_TYPE_910B) || (devType == DevType::DEV_TYPE_910_93)) {
-        notifySize_ = 4; // 910B/910_93 每个notify占4个字节
+        notifySize_ = NOTIFY_SIZE_BYTES_910B;
     } else {
-        notifySize_ = 8; // 其余芯片类型每个notify占8个字节
+        notifySize_ = NOTIFY_SIZE_BYTES_910A;
     }
     HCCL_INFO("devType[%d] notifySize[%d]", devType, notifySize_);
     return HCCL_SUCCESS;

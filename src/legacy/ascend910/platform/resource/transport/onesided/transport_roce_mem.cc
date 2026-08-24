@@ -168,7 +168,7 @@ HcclResult TransportRoceMem::FillRmaBufferSlice(
 
     NetDevContext* netDevCtx = static_cast<NetDevContext*>(netDevCtx_);
     std::shared_ptr<LocalRdmaRmaBufferMgr> localRmaBufferMgr = netDevCtx->GetlocalRdmaRmaBufferMgr();
-    if (!localRmaBufferMgr) {
+    if (localRmaBufferMgr == nullptr) {
         HCCL_ERROR("[TransportRoceMem] can't get LocalRdmaRmaBufferMgr");
         return HCCL_E_INTERNAL;
     }
@@ -228,7 +228,7 @@ HcclResult TransportRoceMem::FillRmaBufferSlice(
 
     NetDevContext* netDevCtx = static_cast<NetDevContext*>(netDevCtx_);
     std::shared_ptr<LocalRdmaRmaBufferMgr> localRmaBufferMgr = netDevCtx->GetlocalRdmaRmaBufferMgr();
-    if (!localRmaBufferMgr) {
+    if (localRmaBufferMgr == nullptr) {
         HCCL_ERROR("[TransportRoceMem] can't get LocalRdmaRmaBufferMgr");
         return HCCL_E_INTERNAL;
     }
@@ -708,9 +708,9 @@ HcclResult TransportRoceMem::GetNotifySize()
     DevType devType;
     CHK_RET(hrtHalGetDeviceType(deviceLogicId_, devType));
     if ((devType == DevType::DEV_TYPE_910B) || (devType == DevType::DEV_TYPE_910_93)) {
-        notifySize_ = 4; // 910B/910_93 每个notify占4个字节
+        notifySize_ = NOTIFY_SIZE_BYTES_910B;
     } else {
-        notifySize_ = 8; // 其余芯片类型每个notify占8个字节
+        notifySize_ = NOTIFY_SIZE_BYTES_910A;
     }
     HCCL_INFO("devType[%d] notifySize[%d]", devType, notifySize_);
     return HCCL_SUCCESS;

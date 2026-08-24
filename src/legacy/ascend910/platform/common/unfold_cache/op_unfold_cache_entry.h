@@ -74,9 +74,12 @@ struct RefreshAddrInfo {
     uint8_t memType; // 0: invalid; 1: user input; 2: user output; 3: hccl input
 };
 
-typedef std::pair<size_t, uint16_t> FlipInfo;                // first: zero-taskid SQE idx; second: flipnum
-typedef std::pair<std::vector<uint32_t>, uint32_t> RanksIdx; // first: ranks; second: idx
-typedef std::pair<uint32_t, bool> RankRflag; // first: rank; second; recv flag (1: recv相关; 0: send相关)
+using FlipInfo = std::pair<size_t, uint16_t>;                // first: zero-taskid SQE idx; second: flipnum
+using RanksIdx = std::pair<std::vector<uint32_t>, uint32_t>; // first: ranks; second: idx
+using RankRflag = std::pair<uint32_t, bool>; // first: rank; second; recv flag (1: recv相关; 0: send相关)
+
+// 每个remote rank各有两个NotifyId/SignalAddr, 分别用于send/recv count对应的Wait/Record同步
+constexpr uint32_t NOTIFY_NUM_PER_REMOTE_RANK = 2;
 
 // 每个通信域只需要设置一次 (只由HCCL_BUFFSIZE和通信域拓扑决定, 与OpUnfoldCacheKey相关字段无关, e.g., opType and
 // workflowType)

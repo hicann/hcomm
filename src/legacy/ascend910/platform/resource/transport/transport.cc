@@ -22,31 +22,31 @@ namespace hccl {
 std::mutex Transport::mapMutex_;
 std::unordered_map<TransportBase*, Transport*> Transport::transportMap_;
 Transport::Transport(
-    TransportType type, TransportPara& para, const HcclDispatcher dispatcherPtr,
+    TransportType type, TransportPara& para, const HcclDispatcher dispatcher,
     const std::unique_ptr<NotifyPool>& notifyPool, MachinePara& machinePara,
     [[maybe_unused]] const TransportDeviceP2pData& transDevP2pData,
     [[maybe_unused]] const TransportDeviceIbverbsData& transDevIbverbsData)
     : type_(type)
 {
-    DispatcherPub* dispatcher = reinterpret_cast<DispatcherPub*>(const_cast<HcclDispatcher>(dispatcherPtr));
+    DispatcherPub* dispatcherPub = reinterpret_cast<DispatcherPub*>(const_cast<HcclDispatcher>(dispatcher));
     if (type == TransportType::TRANS_TYPE_IBV_EXP) {
-        pimpl_ = new (std::nothrow) TransportIbverbs(dispatcher, notifyPool, machinePara, para.timeout);
+        pimpl_ = new (std::nothrow) TransportIbverbs(dispatcherPub, notifyPool, machinePara, para.timeout);
         if (pimpl_ != nullptr) {
             std::lock_guard<std::mutex> maplock(mapMutex_);
             transportMap_.insert({pimpl_, this});
         }
     } else if (type == TransportType::TRANS_TYPE_DEVICE_DIRECT) {
-        pimpl_ = new (std::nothrow) TransportDirectNpu(dispatcher, notifyPool, machinePara, para.timeout);
+        pimpl_ = new (std::nothrow) TransportDirectNpu(dispatcherPub, notifyPool, machinePara, para.timeout);
         if (pimpl_ != nullptr) {
             std::lock_guard<std::mutex> maplock(mapMutex_);
             transportMap_.insert({pimpl_, this});
         }
     } else if (type == TransportType::TRANS_TYPE_P2P) {
-        pimpl_ = new (std::nothrow) TransportP2p(dispatcher, notifyPool, machinePara, para.timeout);
+        pimpl_ = new (std::nothrow) TransportP2p(dispatcherPub, notifyPool, machinePara, para.timeout);
     } else if (type == TransportType::TRANS_TYPE_DEVICE_P2P) {
 #ifdef CCL_KERNEL
-        pimpl_
-            = new (std::nothrow) TransportDeviceP2p(dispatcher, notifyPool, machinePara, para.timeout, transDevP2pData);
+        pimpl_ = new (std::nothrow)
+            TransportDeviceP2p(dispatcherPub, notifyPool, machinePara, para.timeout, transDevP2pData);
         // 创建设备间P2P传输
 #else
         HCCL_ERROR("TRANS_TYPE_DEVICE_P2P Only running on the AICPU");
@@ -54,14 +54,14 @@ Transport::Transport(
     } else if (type == TransportType::TRANS_TYPE_DEVICE_IBVERBS) {
 #ifdef CCL_KERNEL
         pimpl_ = new (std::nothrow)
-            TransportDeviceIbverbs(dispatcher, notifyPool, machinePara, para.timeout, transDevIbverbsData);
+            TransportDeviceIbverbs(dispatcherPub, notifyPool, machinePara, para.timeout, transDevIbverbsData);
 #else
         HCCL_ERROR("TRANS_TYPE_DEVICE_IBVERBS Only running on the AICPU");
 #endif
     } else if (para.virtualFlag) {
-        pimpl_ = new (std::nothrow) TransportVirtural(dispatcher, notifyPool, machinePara, para.timeout, para.index);
+        pimpl_ = new (std::nothrow) TransportVirtural(dispatcherPub, notifyPool, machinePara, para.timeout, para.index);
     } else {
-        pimpl_ = new (std::nothrow) TransportBase(dispatcher, notifyPool, machinePara, para.timeout);
+        pimpl_ = new (std::nothrow) TransportBase(dispatcherPub, notifyPool, machinePara, para.timeout);
     }
     CHK_PRT_CONT(
         pimpl_ == nullptr,

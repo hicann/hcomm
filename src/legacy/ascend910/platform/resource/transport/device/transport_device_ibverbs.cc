@@ -828,7 +828,7 @@ HcclResult TransportDeviceIbverbs::TxSendWrlistExt(
                 "ibv_exp_post_send, op = [0x%x], remote_addr = [0x%llx], size = [%d]", wrList[i].wrData.op,
                 ib_wr.wr.rdma.remote_addr, ib_wr.sg_list->length);
         }
-        if (ret) {
+        if (ret != 0) {
             HCCL_WARNING("[TxSendWrlistExt]ibv_post_send failed ret %d, i[%u]", ret, i);
             break;
         }
@@ -845,7 +845,7 @@ HcclResult TransportDeviceIbverbs::TxSendWrlistExt(
     if ((ret == SOCK_ENOENT) || (ret == ROCE_EAGAIN)
         || (workFlowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE && ret == ROCE_ENOMEM)) {
         return HCCL_E_AGAIN;
-    } else if (!ret) {
+    } else if (ret == 0) {
         return HCCL_SUCCESS;
     } else if (ret == RDMA_QP_NO_MEM) { // 表示qp已满，内存不足，需要重发
         ib_wr.wr_id = wrList[i].wrData.wrId -= wrIdOffset_;

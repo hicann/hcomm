@@ -525,8 +525,9 @@ HcclResult SendRecvExecutor::RecordNotify(
 HcclResult SendRecvExecutor::WaitSignal(HcclRtSignal signal)
 {
     if (notifyWaitMode_ == SyncMode::CONFIGURABLE_TIMEWAITSYNCMODE) {
-        CHK_RET(
-            hrtNotifyWaitWithTimeOut(static_cast<HcclRtNotify>(signal), stream_, GetExternalInputHcclExecTimeOut()));
+        // GetExternalInputHcclExecTimeOut 返回 double，接口参数为整型秒数
+        CHK_RET(hrtNotifyWaitWithTimeOut(
+            static_cast<HcclRtNotify>(signal), stream_, static_cast<s32>(GetExternalInputHcclExecTimeOut())));
     } else {
         CHK_RET(hrtNotifyWaitWithTimeOut(static_cast<HcclRtNotify>(signal), stream_, NOTIFY_DEFAULT_WAIT_TIME));
     }
@@ -628,8 +629,8 @@ HcclResult SendRecvExecutor::MemcpyAsyncD2D(hccl::DeviceMem& dst, const hccl::De
     uint64_t addrOffset = 0;
     uint64_t contSplit = 0;
     if (src.size() > HCCL_SDMA_MAX_COUNT_4GB) {
-        spiltLoop = (src.size() % HCCL_SDMA_MAX_COUNT_4GB) ? (src.size() / HCCL_SDMA_MAX_COUNT_4GB) :
-                                                             ((src.size() / HCCL_SDMA_MAX_COUNT_4GB) - 1);
+        spiltLoop = (src.size() % HCCL_SDMA_MAX_COUNT_4GB != 0) ? (src.size() / HCCL_SDMA_MAX_COUNT_4GB) :
+                                                                  ((src.size() / HCCL_SDMA_MAX_COUNT_4GB) - 1);
         HCCL_INFO(
             "[SendRecvExecutor][MemcpyAsyncD2D] MemcpyAsync SDMA task countSize is bigger than 4GB "
             "and do segmentation splitloop[%llu]",

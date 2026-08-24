@@ -898,7 +898,7 @@ HcclResult TransportIbverbs::ConnectSingleQp(std::function<bool()> needStop)
                 return HCCL_E_TIMEOUT;
             }
             raRet = hrtGetRaQpStatus(combineQpHandles_[i].qpHandle, &qpStatus);
-            if ((!raRet) && (qpStatus == 1)) { // 为1时，qp 建链成功
+            if ((raRet == 0) && (qpStatus == 1)) { // 为1时，qp 建链成功
                 HCCL_INFO("In link ibv, %u of %u QP get status success.", (i + 1), combineQpHandles_.size());
                 break;
             } else {
@@ -945,7 +945,7 @@ HcclResult TransportIbverbs::ConnectMultiQp(u32 qpsPerConnection, std::function<
                 return HCCL_E_TIMEOUT;
             }
             raRet = hrtGetRaQpStatus(multiCombineQpHandles_[i].qpHandle, &qpStatus);
-            if ((!raRet) && (qpStatus == 1)) { // 为1时，qp 建链成功
+            if ((raRet == 0) && (qpStatus == 1)) { // 为1时，qp 建链成功
                 HCCL_INFO(
                     "In link ibv, %u of %u %s QP get status success.", (i + 1), multiCombineQpHandles_.size(),
                     aicpu.c_str());
@@ -2893,7 +2893,7 @@ HcclResult TransportIbverbs::GetTransportErrorCqe(
     if (g_isSupCqeErrInfoListConfig) {
         u32 loop = 0;
         if (num > CQE_ARRAY_SIZE) {
-            loop = (num % CQE_ARRAY_SIZE) ? (num / CQE_ARRAY_SIZE) : ((num / CQE_ARRAY_SIZE) - 1);
+            loop = (num % CQE_ARRAY_SIZE != 0) ? (num / CQE_ARRAY_SIZE) : ((num / CQE_ARRAY_SIZE) - 1);
         }
 
         struct CqeErrInfo infolist[CQE_ARRAY_SIZE] = {};

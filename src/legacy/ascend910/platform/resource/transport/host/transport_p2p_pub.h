@@ -91,7 +91,7 @@ public:
     HcclResult ReadSync(struct Transport::Buffer& localBuf, struct Transport::Buffer& remoteBuf, Stream& stream);
     HcclResult ReadReduceSync(
         struct Transport::Buffer& localBuf, struct Transport::Buffer& remoteBuf, const HcclDataType datatype,
-        HcclReduceOp redOp, Stream& stream);
+        HcclReduceOp redOp, Stream& stream) override;
 
     HcclResult PostReady(Stream& stream);
     HcclResult WaitReady(Stream& stream);
@@ -149,8 +149,8 @@ protected:
     std::vector<void*> remoteIpcMemPtrVector_;
     std::vector<void*> remoteIndOpHostMemPtrVector_;
     std::vector<void*> remoteIndOpDeviceMemPtrVector_;
-    u64 remoteInputSize_;
-    u64 remoteOutputSize_;
+    u64 remoteInputSize_{0};
+    u64 remoteOutputSize_{0};
     std::vector<u64> remoteIpcMemSizeVector_;
     std::vector<u64> remoteIndOpHostMemSizeVector_;
     std::vector<u64> remoteIndOpDeviceMemSizeVector_;

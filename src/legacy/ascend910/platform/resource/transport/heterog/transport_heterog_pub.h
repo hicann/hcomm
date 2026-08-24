@@ -165,7 +165,7 @@ protected:
     const std::unique_ptr<LocklessRingMemoryAllocate<HcclMessageInfo>>& pMsgInfosMem_;
     const std::unique_ptr<LocklessRingMemoryAllocate<HcclRequestInfo>>& pReqInfosMem_;
     s32 index_ = 0;
-    u32 recvEnvelopNum_;
+    u32 recvEnvelopNum_{0};
     bool isHdcMode_ = false;
     u32 localRank_ = 0;
     u32 remoteRank_ = 0;

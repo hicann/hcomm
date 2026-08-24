@@ -690,7 +690,7 @@ HcclResult TransportDirectNpu::ConnectSingleQp(std::function<bool()> needStop)
                 return HCCL_E_TIMEOUT;
             }
             raRet = hrtGetRaQpStatus(qpHandles_[i], &qpStatus);
-            if ((!raRet) && (qpStatus == 1)) { // 为1时，qp 建链成功
+            if ((raRet == 0) && (qpStatus == 1)) { // 为1时，qp 建链成功
                 HCCL_INFO("In link ibv, %u of %u QP get status success.", (i + 1), qpHandles_.size());
                 break;
             } else {
@@ -1113,7 +1113,7 @@ HcclResult TransportDirectNpu::GetTransportErrorCqe(
     if (g_isSupCqeErrInfoListConfig) {
         u32 loop = 0;
         if (num > CQE_ARRAY_SIZE) {
-            loop = (num % CQE_ARRAY_SIZE) ? (num / CQE_ARRAY_SIZE) : ((num / CQE_ARRAY_SIZE) - 1);
+            loop = (num % CQE_ARRAY_SIZE != 0) ? (num / CQE_ARRAY_SIZE) : ((num / CQE_ARRAY_SIZE) - 1);
         }
 
         struct CqeErrInfo infolist[CQE_ARRAY_SIZE] = {};

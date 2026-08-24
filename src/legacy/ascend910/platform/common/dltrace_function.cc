@@ -65,7 +65,7 @@ HcclResult DlTraceFunction::DlATraceFunctionInterInit()
 
 HcclResult DlTraceFunction::DlTraceFunctionInit()
 {
-    HcclResult ret;
+    HcclResult ret = HCCL_SUCCESS;
     std::lock_guard<std::mutex> lock(handleMutex_);
     if (handle_ == nullptr) {
         handle_ = HcclDlopen("libascend_trace.so", RTLD_NOW);

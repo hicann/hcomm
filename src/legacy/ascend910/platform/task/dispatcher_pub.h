@@ -79,7 +79,9 @@ struct RaSocketParams {
         void* dispatcherPtr, u32& streamId, u32& taskId, HcclWorkflowMode& workMode, s32 deviceLogicId,
         NICDeployment nicDeploy, LoadTaskCallBack callback, void* callBackUserPtr)
         : socketFdHandle(socketFdHandle),
+          socketBufferPtr(const_cast<void*>(constSocketBufferPtr)),
           socketBufferLen(socketBufferLen),
+          ptr(const_cast<void*>(constPtr)),
           len(len),
           dispatcherPtr(dispatcherPtr),
           workMode(workMode),
@@ -88,8 +90,6 @@ struct RaSocketParams {
           callback(callback),
           callBackUserPtr(callBackUserPtr)
     {
-        ptr = const_cast<void*>(constPtr);
-        socketBufferPtr = const_cast<void*>(constSocketBufferPtr);
         taskInfo.streamId = streamId;
         taskInfo.taskId = taskId;
     }
@@ -338,7 +338,7 @@ protected:
     void* overflowAddr_;
     void* fftsPubInfo_{nullptr};
     bool setDeviceFlag_;
-    uint32_t notifyMaxWaitTime_;
+    uint32_t notifyMaxWaitTime_ = NOTIFY_DEFAULT_WAIT_TIME;
     LoadTaskCallBack callback_{nullptr};
     void* callBackUserPtr_{nullptr};
     std::map<int32_t, void*> devMemMap_; // streamId和device内存的map
@@ -346,8 +346,8 @@ protected:
     static bool isForce_; // 强制profiling上报或缓存
     s32 execTimeOut_;
     bool execTimeOutByConfig_;
-    uint32_t hcclQos_;
-    uint32_t mPamid_;
+    uint32_t hcclQos_ = SDMA_QOS_DEFAULT;
+    uint32_t mPamid_ = 0;
     bool isPlaceholder_ = false; // 用于区分是否生成placeholder SQE还是正常SQE
 
 private:

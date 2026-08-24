@@ -123,7 +123,7 @@ bool IsRedOpSupport(HcclReduceOp op, DevType devType)
 
 bool IsSupportSDMAReduce(const void* inputPtr, const void* outputPtr, HcclDataType dataType, HcclReduceOp op)
 {
-    DevType devType;
+    DevType devType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(devType));
     return IsAddressAlign(inputPtr, outputPtr, devType) && IsDataTypeSupport(dataType, devType)
            && IsRedOpSupport(op, devType);
@@ -141,7 +141,7 @@ bool IsSupportRDMAReduce(HcclDataType dataType, HcclReduceOp op)
 
 HcclResult GetBandWidthPerNPU(u32 level, u32 userRankSize, u32 deviceNumPerAggregation, float& bandWidth)
 {
-    DevType devType;
+    DevType devType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(devType));
     // 处理 level=1、910B 的特殊条件
     if (level == 1 && (devType == DevType::DEV_TYPE_910B || devType == DevType::DEV_TYPE_910_93)
@@ -202,7 +202,7 @@ bool Is310PDevice() { return g_is310PDevice; }
 
 bool IsUseSdidForDeviceId(const u32 superDeviceId)
 {
-    DevType devType;
+    DevType devType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(devType));
     if (devType == DevType::DEV_TYPE_910_93 && superDeviceId != INVALID_UINT) {
         return true;
@@ -213,11 +213,11 @@ bool IsUseSdidForDeviceId(const u32 superDeviceId)
 HcclResult IsSuperPodMode(bool& useSuperPodMode)
 {
     useSuperPodMode = false;
-    DevType devType;
+    DevType devType = DevType::DEV_TYPE_COUNT;
     CHK_RET(hrtGetDeviceType(devType));
     s64 serverId = INVALID_SUPERPOD_SERVERID;
     if (devType == DevType::DEV_TYPE_910_93) {
-        s32 deviceLogicId;
+        s32 deviceLogicId = INVALID_INT;
         HcclResult ret = hrtGetDevice(&deviceLogicId);
         CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[IsSuperPodMode]Get device id fail"), ret);
         CHK_RET(hrtGetDeviceInfo(
@@ -247,7 +247,7 @@ HcclResult GetMaxDevNum(u32& MaxDevNum)
 
     // 使用call_once确保初始化逻辑只执行一次
     std::call_once(initFlag, [&]() {
-        DevType devType;
+        DevType devType = DevType::DEV_TYPE_COUNT;
         HcclResult result = hrtGetDeviceType(devType);
         if (result != HCCL_SUCCESS) {
             HCCL_ERROR("[GetMaxDevNum] [hrtGetDeviceType] get device type failed");
@@ -371,7 +371,7 @@ u32 GetNotifyMaxWaitTime()
     static bool init = false;
     static uint32_t notifyMaxWaitTime = NOTIFY_MAX_WAIT_TIME;
     if (UNLIKELY(!init)) {
-        DevType deviceType;
+        DevType deviceType = DevType::DEV_TYPE_COUNT;
         if (hrtGetDeviceType(deviceType) == HCCL_SUCCESS) {
             notifyMaxWaitTime = (deviceType == DevType::DEV_TYPE_910_93 || deviceType == DevType::DEV_TYPE_910B) ?
                                     NOTIFY_MAX_WAIT_TIME_910_93 :
