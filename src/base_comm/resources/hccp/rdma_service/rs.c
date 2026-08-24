@@ -1060,9 +1060,7 @@ STATIC int RsRdevInitWithBackupInfo(struct rdev rdevInfo, struct RsBackupInfo ba
     RS_PTHREAD_MUTEX_LOCK(&rsCb->mutex);
     RsListAddTail(&rdevCb->list, &rsCb->rdevList);
     RS_PTHREAD_MUTEX_ULOCK(&rsCb->mutex);
-
-    hccp_run_info("rdev init success, phyId:%u, localIp:0x%x, rdevIndex:%u", phyId, rdevInfo.localIp.addr.s_addr,
-        *rdevIndex);
+    hccp_run_info("rdev init success, phyId:%u, localIp:%s, rdevIndex:%u", phyId, rdevCb->localIp.readAddr, *rdevIndex);
     return 0;
 
 free_dev_list:

@@ -99,7 +99,7 @@ STATIC int RsServerSendWlistCheckResult(struct RsConnInfo *conn, bool flag)
             ret = RsSocketSend(conn->connfd, valid, sizeof(valid));
         }
         CHK_PRT_RETURN(ret != sizeof(valid),
-            hccp_err("white list server send valid flag failed! fd[%d], ret[%d]", conn->connfd, ret), -1);
+            hccp_warn("white list server send valid flag failed! fd[%d], ret[%d]", conn->connfd, ret), -1);
     } else {
         if ((gRsCb->sslEnable == RS_SSL_ENABLE) && (conn->ssl != NULL)) {
             ret = ssl_adp_write(conn->ssl, invalid, sizeof(invalid));
@@ -107,7 +107,7 @@ STATIC int RsServerSendWlistCheckResult(struct RsConnInfo *conn, bool flag)
             ret = RsSocketSend(conn->connfd, invalid, sizeof(invalid));
         }
         CHK_PRT_RETURN(ret != sizeof(invalid),
-            hccp_err("white list server send invalid flag failed! fd[%d], ret[%d]", conn->connfd, ret), -1);
+            hccp_warn("white list server send invalid flag failed! fd[%d], ret[%d]", conn->connfd, ret), -1);
     }
     return 0;
 }
@@ -215,7 +215,7 @@ STATIC int RsServerValidAsync(unsigned int chipId, struct RsConnCb *connCb, stru
 
     ret = RsServerSendWlistCheckResult(conn, 0);
     CHK_PRT_RETURN(ret,
-        hccp_err("rs server send wlist check valid result failed, connfd[%d], ret[%d]", conn->connfd, ret), -1);
+        hccp_warn("rs server send wlist check valid result failed, connfd[%d], ret[%d]", conn->connfd, ret), -1);
     whiteListNodeTmp->connLimit--;
     return 0;
 }
