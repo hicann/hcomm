@@ -253,6 +253,8 @@ public:
     QPMode qpMode{QPMode::INVALID}; // 是否为普通QP模式
     u32 tc { HCCL_COMM_TRAFFIC_CLASS_CONFIG_NOT_SET };
     u32 sl { HCCL_COMM_SERVICE_LEVEL_CONFIG_NOT_SET };
+    u32 retryCnt{INVALID_UINT};
+    u32 retryInterval{INVALID_UINT};
     LinkTypeInServer specifyLink{LinkTypeInServer::RESERVED_LINK_TYPE}; // 指定链路类型
     bool enableAtomicWrite{false}; // 使能atomicWrite
     QueueDepthAttr queueDepthAttr{}; // QP深度配置
@@ -303,6 +305,8 @@ public:
         qpMode = that.qpMode;
         tc = that.tc;
         sl = that.sl;
+        retryCnt = that.retryCnt;
+        retryInterval = that.retryInterval;
         specifyLink = that.specifyLink;
         enableAtomicWrite = that.enableAtomicWrite;
         queueDepthAttr = that.queueDepthAttr;
@@ -352,6 +356,8 @@ public:
             qpMode = that.qpMode;
             tc = that.tc;
             sl = that.sl;
+            retryCnt = that.retryCnt;
+            retryInterval = that.retryInterval;
             specifyLink = that.specifyLink;
             enableAtomicWrite = that.enableAtomicWrite;
             queueDepthAttr = that.queueDepthAttr;

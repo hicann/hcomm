@@ -677,9 +677,9 @@ HcclResult TransportIbverbs::CreateOneQp(
     // 表示没有通过config配置，则使用环境变量配置
     CHK_RET(SetQpAttrQos(qpHandle, machinePara_.tc, machinePara_.sl));
     // 配置RDMA Timeout时间
-    CHK_RET(SetQpAttrTimeOut(qpHandle));
+    CHK_RET(SetQpAttrTimeOut(qpHandle, machinePara_.retryInterval));
     // 配置RDMA Retry Cnt重传次数
-    CHK_RET(SetQpAttrRetryCnt(qpHandle));
+    CHK_RET(SetQpAttrRetryCnt(qpHandle, machinePara_.retryCnt));
     // qpn map 插入
     struct QpAttr attr{} ;
     CHK_RET(hrtRaGetQpAttr(qpHandle, &attr));

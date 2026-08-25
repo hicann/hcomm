@@ -281,6 +281,12 @@ HcclResult AicpuTsRoceChannel::ConfigureMachineParaForTransport()
     } else {
         machinePara_.sl = EnvConfig::HCCL_RDMA_SL_DEFAULT;
     }
+    if (channelDesc_.roceAttr.retryCnt != INVALID_UINT) {
+        machinePara_.retryCnt = channelDesc_.roceAttr.retryCnt;
+    }
+    if (channelDesc_.roceAttr.retryInterval != INVALID_UINT) {
+        machinePara_.retryInterval = channelDesc_.roceAttr.retryInterval;
+    }
     return HCCL_SUCCESS;
 }
 
