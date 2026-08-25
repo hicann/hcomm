@@ -1945,6 +1945,12 @@ HcclResult HcclCommInitRootInfoConfigV2(
             HCCL_ERROR_CODE(HCCL_E_PARA), identifier.c_str()),
         HCCL_E_PARA);
 
+    HCCL_INFO("HcclCommInitRootInfoConfigV2 config->hcclBufferSize[%u] MB", config->hcclBufferSize);
+    if (UNLIKELY(config->hcclBufferSize == 0)) {
+        HCCL_ERROR("HcclCommInitRootInfoConfigV2 config: hcclBufferSize is 0 MB, invalid para");
+        return HCCL_E_PARA;
+    }
+
     RankTableInfo rankTable{};
     RootInfoDetectBridge::DetectContext rootInfoDetectContext;
     HcclResult ret = RootInfoDetect(nRanks, rank, rootHandle, rankTable, rootInfoDetectContext);

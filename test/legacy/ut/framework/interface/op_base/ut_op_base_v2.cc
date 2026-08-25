@@ -2454,6 +2454,18 @@ TEST_F(OpbaseTestV2, Ut_HcclCommInitRootInfoConfigV2_When_NotSetBufSize_Expect_R
     EXPECT_EQ(HcclCommInitRootInfoConfigV2(nRanks, &rootInfo, rank, &config, &comm), HCCL_SUCCESS);
 }
 
+TEST_F(OpbaseTestV2, Ut_HcclCommInitRootInfoConfigV2_When_SetBufSize_Zero_Expect_Return_HCCL_E_PARA)
+{
+    uint32_t nRanks{2};
+    HcclRootInfo rootInfo{};
+    uint32_t rank{};
+    HcclComm comm{};
+    HcclCommConfig config{};
+    string worldgroup = "hccl_world_group";
+    PrepareCommConfig(config, 0, worldgroup, 1, 0);
+    EXPECT_EQ(HcclCommInitRootInfoConfigV2(nRanks, &rootInfo, rank, &config, &comm), HCCL_E_PARA);
+}
+
 TEST_F(OpbaseTestV2, Ut_HcclCommInitRootInfoConfigV2_When_ProviderFails_Expect_Return_HCCL_E_INTERNAL)
 {
     // when
