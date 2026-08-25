@@ -27,6 +27,8 @@ namespace Hccl {
 
 using namespace std;
 
+constexpr u32 PEER2NET_LINK_HOP = 2;
+
 unique_ptr<RankGraph> RankGraphBuilder::Build(const string& ranktableM, const string& topoPath, RankId myRank)
 {
     PhyTopoBuilder::GetInstance().Build(topoPath);
@@ -355,9 +357,11 @@ void RankGraphBuilder::AddPeer2NetLink(
 
         // 构造 peer2netLink 和 net2peerLink 两条link
         shared_ptr<NetInstance::Link> peer2netLink = make_shared<NetInstance::Link>(
-            peerNode, fabNode, peerIface, nullptr, LinkType::PEER2NET, linkProtocols, LinkDirection::BOTH, 2);
+            peerNode, fabNode, peerIface, nullptr, LinkType::PEER2NET, linkProtocols, LinkDirection::BOTH,
+            PEER2NET_LINK_HOP);
         shared_ptr<NetInstance::Link> net2peerLink = make_shared<NetInstance::Link>(
-            fabNode, peerNode, nullptr, peerIface, LinkType::PEER2NET, linkProtocols, LinkDirection::BOTH, 2);
+            fabNode, peerNode, nullptr, peerIface, LinkType::PEER2NET, linkProtocols, LinkDirection::BOTH,
+            PEER2NET_LINK_HOP);
 
         // 插入 link
         tempNetInsts_[netLayer][netInstId]->AddLink(peer2netLink);
@@ -456,19 +460,13 @@ void RankGraphBuilder::AddTopoDescFabricInfo()
     std::string netInstId = innerNetInstance->GetNetInstId();
     std::set<RankId> rankIds = innerNetInstance->GetRankIds();
 
-    // Fabric 的归属以 RankTable planeId 为准，topoInstId 仅保留为拓扑实例属性。
-    const auto& myLevelInfo = GetRankLevelInfoByNetLayer(rankTable_->ranks[myRank_], 0);
-    const std::map<PlaneId, FabricId> planeId2Node = GetFabricsFromAddrInfo(myLevelInfo.rankAddrs);
-    if (planeId2Node.empty()) {
-        HCCL_WARNING("[RankGraphBuilder][AddTopoDescFabricInfo] rankId[%u] layer0 has no plane", myRank_);
-        return;
-    }
-    vector<shared_ptr<NetInstance::Fabric>> fabNodes(planeId2Node.size(), nullptr);
+    // Group Layer 0 Fabric nodes by topoInstId so PCIe d2h links without RankTable addresses remain in RankGraph.
+    std::map<u32, shared_ptr<NetInstance::Fabric>> fabNodes;
+    const u32 localDeviceId = GetLocalDeviceId();
 
-    // 3. 遍历所有 rank 节点，根据端口匹配到的 planeId 创建 Fabric。
+    // 3. 遍历所有 rank 节点，根据 topoInstId 创建 Fabric。
     for (RankId rankId : rankIds) {
         LocalId localId = rankGraph_->GetLocalId(rankId);
-        const auto& levelInfo = GetRankLevelInfoByNetLayer(rankTable_->ranks[rankId], 0);
         auto peer2netEdges = phyTopoGraph->GetEdges(localId, PhyTopo::Fabric::GetId());
 
         HCCL_RUN_INFO(
@@ -479,27 +477,33 @@ void RankGraphBuilder::AddTopoDescFabricInfo()
             if (link == nullptr || link->GetType() != LinkType::PEER2NET || link->GetSourceIFace() == nullptr) {
                 continue;
             }
-            for (const auto& addrInfo : levelInfo.rankAddrs) {
-                auto planeIter = planeId2Node.find(addrInfo.planeId);
-                if (addrInfo.addr == IpAddress() || planeIter == planeId2Node.end()
-                    || !IsPeer2NetLinkMatched(link, addrInfo)) {
-                    continue;
-                }
+            const u32 topoInstId = link->GetTopoInstId();
+            const TopoType topoType = link->GetTopoType();
+            shared_ptr<NetInstance::Peer> peerNode = peers_.at(rankId);
+            const vector<shared_ptr<NetInstance::ConnInterface>> peerIfaces = ConstructConnIFromPhyTopoConnIAndPortMap(
+                link->GetSourceIFace(), peerNode->GetPortAddrMapLayer0(), topoType, topoInstId, localDeviceId);
+            if (peerIfaces.empty()) {
+                continue;
+            }
 
-                FabricId fabId = planeIter->second;
-                shared_ptr<NetInstance::Fabric> fabNode = fabNodes[fabId];
-                if (fabNode == nullptr) {
-                    fabNode = make_shared<NetInstance::Fabric>(fabId, addrInfo.planeId);
-                    innerNetInstance->AddNode(fabNode);
-                    fabNodes[fabId] = fabNode;
-                    HCCL_INFO(
-                        "[RankGraphBuilder][AddTopoDescFabricInfo] create Fabric for planeId[%s], "
-                        "fabricId[%u]",
-                        addrInfo.planeId.c_str(), fabId);
-                }
+            if (fabNodes.count(topoInstId) == 0) {
+                shared_ptr<NetInstance::Fabric> fabNode = make_shared<NetInstance::Fabric>(topoInstId);
+                innerNetInstance->AddNode(fabNode);
+                fabNodes[topoInstId] = fabNode;
+                HCCL_INFO("[RankGraphBuilder][AddTopoDescFabricInfo] create Fabric for topoInstId[%u]", topoInstId);
+            }
 
-                const vector<shared_ptr<PhyTopo::Link>> matchedLinks = {link};
-                AddPeer2NetLink(0, netInstId, rankId, addrInfo, fabNode, matchedLinks, false);
+            for (const auto& peerIface : peerIfaces) {
+                peerNode->AddConnInterface(0, peerIface);
+                shared_ptr<NetInstance::Link> peer2netLink = make_shared<NetInstance::Link>(
+                    peerNode, fabNodes[topoInstId], peerIface, nullptr, LinkType::PEER2NET, link->GetLinkProtocols(),
+                    LinkDirection::BOTH, PEER2NET_LINK_HOP);
+                shared_ptr<NetInstance::Link> net2peerLink = make_shared<NetInstance::Link>(
+                    fabNodes[topoInstId], peerNode, nullptr, peerIface, LinkType::PEER2NET, link->GetLinkProtocols(),
+                    LinkDirection::BOTH, PEER2NET_LINK_HOP);
+                tempNetInsts_[0][netInstId]->AddLink(peer2netLink);
+                tempNetInsts_[0][netInstId]->AddLink(net2peerLink);
+                tempNetInsts_[0][netInstId]->UpdateTopoInst(topoInstId, topoType, rankId);
             }
         }
     }

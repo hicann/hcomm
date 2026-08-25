@@ -168,6 +168,66 @@ void CheckSingleTopoInst(const RankGraph& rankGraph, u32 netLayer)
     EXPECT_EQ(1U, topoInstNum);
     EXPECT_EQ((std::vector<u32>{0U}), topoInstIds);
 }
+
+constexpr char SAME_TOPO_INST_RANK_TABLE[] = R"({
+    "version": "2.0",
+    "rank_count": 1,
+    "rank_list": [
+        {
+            "rank_id": 0,
+            "device_id": 0,
+            "local_id": 0,
+            "level_list": [
+                {
+                    "net_layer": 0,
+                    "net_instance_id": "rank-group-0",
+                    "net_type": "TOPO_FILE_DESC",
+                    "rank_addr_list": [
+                        {
+                            "addr_type": "IPV4",
+                            "addr": "192.168.0.1",
+                            "ports": ["0/1"],
+                            "plane_id": "planeA"
+                        },
+                        {
+                            "addr_type": "IPV4",
+                            "addr": "192.168.0.2",
+                            "ports": ["0/2"],
+                            "plane_id": "planeB"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+})";
+
+constexpr char SAME_TOPO_INST_TOPO[] = R"({
+    "version": "2.0",
+    "peer_count": 1,
+    "peer_list": [{"local_id": 0}],
+    "edge_count": 2,
+    "edge_list": [
+        {
+            "link_type": "PEER2NET",
+            "protocols": ["UB_CTP"],
+            "topo_type": "CLOS",
+            "topo_instance_id": 7,
+            "local_a": 0,
+            "local_a_ports": ["0/1"],
+            "position": "DEVICE"
+        },
+        {
+            "link_type": "PEER2NET",
+            "protocols": ["UB_CTP"],
+            "topo_type": "CLOS",
+            "topo_instance_id": 7,
+            "local_a": 0,
+            "local_a_ports": ["0/2"],
+            "position": "DEVICE"
+        }
+    ]
+})";
 } // namespace
 
 class RankGraphBuilderTest : public testing::Test {
@@ -409,86 +469,25 @@ TEST_F(RankGraphBuilderTest, Ut_RecoverBuild_When_OnlyRemotePortsOverlapAndEidsU
     CheckOverlappedUbPaths(*rankGraph, 1, {LinkProtocol::UB_CTP, LinkProtocol::UB_MEM}, {2, 6});
 }
 
-TEST_F(RankGraphBuilderTest, Ut_RecoverBuild_When_SameTopoInstHasDifferentPlanes_Expect_CreateFabricByPlaneId)
+TEST_F(RankGraphBuilderTest, Ut_RecoverBuild_When_SameTopoInstHasDifferentPlanes_Expect_ReuseFabricByTopoInstId)
 {
     PhyTopo::GetInstance()->Clear();
-    const std::string rankTableString = R"({
-        "version": "2.0",
-        "rank_count": 1,
-        "rank_list": [
-            {
-                "rank_id": 0,
-                "device_id": 0,
-                "local_id": 0,
-                "level_list": [
-                    {
-                        "net_layer": 0,
-                        "net_instance_id": "rank-group-0",
-                        "net_type": "TOPO_FILE_DESC",
-                        "rank_addr_list": [
-                            {
-                                "addr_type": "IPV4",
-                                "addr": "192.168.0.1",
-                                "ports": ["0/1"],
-                                "plane_id": "planeA"
-                            },
-                            {
-                                "addr_type": "IPV4",
-                                "addr": "192.168.0.2",
-                                "ports": ["0/2"],
-                                "plane_id": "planeB"
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    })";
-    const std::string topoString = R"({
-        "version": "2.0",
-        "peer_count": 1,
-        "peer_list": [{"local_id": 0}],
-        "edge_count": 2,
-        "edge_list": [
-            {
-                "link_type": "PEER2NET",
-                "protocols": ["UB_CTP"],
-                "topo_type": "CLOS",
-                "topo_instance_id": 7,
-                "local_a": 0,
-                "local_a_ports": ["0/1"],
-                "position": "DEVICE"
-            },
-            {
-                "link_type": "PEER2NET",
-                "protocols": ["UB_CTP"],
-                "topo_type": "CLOS",
-                "topo_instance_id": 7,
-                "local_a": 0,
-                "local_a_ports": ["0/2"],
-                "position": "DEVICE"
-            }
-        ]
-    })";
 
     JsonParser parser;
     RankTableInfo rankTableInfo;
     TopoInfo topoInfo;
-    parser.ParseString(rankTableString, rankTableInfo);
-    parser.ParseString(topoString, topoInfo);
+    parser.ParseString(SAME_TOPO_INST_RANK_TABLE, rankTableInfo);
+    parser.ParseString(SAME_TOPO_INST_TOPO, topoInfo);
 
     RankGraphBuilder rankGraphBuilder;
     std::unique_ptr<RankGraph> rankGraph = rankGraphBuilder.RecoverBuild(rankTableInfo, topoInfo, 0);
     ASSERT_NE(nullptr, rankGraph);
     NetInstance* layer0 = rankGraph->GetNetInstanceByNetInstId(0, "rank-group-0");
     ASSERT_NE(nullptr, layer0);
-    ASSERT_EQ(2, layer0->GetFabrics().size());
-    std::set<PlaneId> planeIds;
-    for (const auto& fabric : layer0->GetFabrics()) {
-        ASSERT_NE(nullptr, fabric);
-        planeIds.insert(fabric->GetPlaneId());
-    }
-    EXPECT_EQ((std::set<PlaneId>{"planeA", "planeB"}), planeIds);
+    const auto& fabrics = layer0->GetFabrics();
+    ASSERT_EQ(1, fabrics.size());
+    ASSERT_NE(nullptr, fabrics.front());
+    EXPECT_EQ((1ULL << 32) | 7ULL, fabrics.front()->GetNodeId());
 }
 
 TEST_F(RankGraphBuilderTest, Ut_ConstructConnI_When_PortMapEmpty_Expect_OnlyPcieCreatesD2hIface)
