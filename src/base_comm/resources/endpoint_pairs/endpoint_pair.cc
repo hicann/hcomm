@@ -69,16 +69,30 @@ HcclResult EndpointPair::GetHostSocketWithRank(
 
 HcclResult EndpointPair::EnsureSocketMgrCompat(const uint32_t myRank, const std::string& socketTag)
 {
-    if (!socketMgrCompat_) {
-        int32_t devLogicId = HcclGetThreadDeviceId();
-        uint32_t devPhyId{0};
-        CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(devLogicId), devPhyId));
-        EXCEPTION_CATCH(
-            socketMgrCompat_ = std::make_unique<Hccl::SocketManager>(myRank, devPhyId, devLogicId, socketTag),
-            return HCCL_E_PTR);
-        CHK_PTR_NULL(rankIpPortMap_);
-        socketMgrCompat_->SetDeviceServerListenPortMap(*rankIpPortMap_);
+    {
+        std::lock_guard<std::mutex> lock(socketMgrMtx_);
+        if (socketMgrCompat_) {
+            return HCCL_SUCCESS;
+        }
     }
+
+    int32_t devLogicId = HcclGetThreadDeviceId();
+    uint32_t devPhyId{0};
+    CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<uint32_t>(devLogicId), devPhyId));
+    std::unique_ptr<Hccl::SocketManager> newMgr = nullptr;
+    EXCEPTION_CATCH(
+        newMgr = std::make_unique<Hccl::SocketManager>(myRank, devPhyId, devLogicId, socketTag), return HCCL_E_PTR);
+    CHK_PTR_NULL(rankIpPortMap_);
+    newMgr->SetDeviceServerListenPortMap(*rankIpPortMap_);
+
+    {
+        std::lock_guard<std::mutex> lock(socketMgrMtx_);
+        if (socketMgrCompat_) {
+            return HCCL_SUCCESS;
+        }
+        socketMgrCompat_ = std::move(newMgr);
+    }
+
     return HCCL_SUCCESS;
 }
 

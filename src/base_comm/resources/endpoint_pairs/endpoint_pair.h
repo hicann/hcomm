@@ -130,6 +130,7 @@ private:
     EndpointDesc localEndpointDesc_{};
     EndpointDesc remoteEndpointDesc_{};
     std::unique_ptr<Hccl::SocketManager> socketMgrCompat_;
+    std::mutex socketMgrMtx_;
     std::unordered_map<CommEngine, std::vector<ChannelHandle>> channelHandles_{};
     // handle -> (engine, 真实槽位) 反查索引
     std::unordered_map<ChannelHandle, std::pair<CommEngine, u32>> handleToLoc_{};

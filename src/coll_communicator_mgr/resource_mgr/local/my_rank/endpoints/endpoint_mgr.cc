@@ -66,6 +66,7 @@ EndpointMgr::~EndpointMgr()
 
 HcclResult EndpointMgr::Get(EndpointDesc epDesc, EndpointHandle& handle)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     auto iterPtr = endpointMap_.find(epDesc);
     if (iterPtr != endpointMap_.end()) {
         handle = iterPtr->second;

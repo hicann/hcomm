@@ -15,9 +15,12 @@ namespace hcomm {
 HcclResult EndpointPairMgr::Get(
     const EndpointDescPair& endpointDescPair, EndpointPair*& out, const Hccl::RankIpPortMapPtr& rankIpPortMap)
 {
-    if (endpointPairMap_.find(endpointDescPair) != endpointPairMap_.end()) {
-        out = endpointPairMap_[endpointDescPair].get();
-        return HCCL_SUCCESS;
+    {
+        std::lock_guard<std::mutex> lock(mapMtx_);
+        if (endpointPairMap_.find(endpointDescPair) != endpointPairMap_.end()) {
+            out = endpointPairMap_[endpointDescPair].get();
+            return HCCL_SUCCESS;
+        }
     }
 
     std::unique_ptr<EndpointPair> endpointPair = nullptr;
@@ -27,14 +30,23 @@ HcclResult EndpointPairMgr::Get(
     CHK_SMART_PTR_NULL(endpointPair);
     CHK_RET(endpointPair->Init());
 
-    out = endpointPair.get();
-    endpointPairMap_.emplace(endpointDescPair, std::move(endpointPair));
+    // 二次确认，防止并发修改
+    {
+        std::lock_guard<std::mutex> lock(mapMtx_);
+        if (endpointPairMap_.find(endpointDescPair) != endpointPairMap_.end()) {
+            out = endpointPairMap_[endpointDescPair].get();
+            return HCCL_SUCCESS;
+        }
+        out = endpointPair.get();
+        endpointPairMap_.emplace(endpointDescPair, std::move(endpointPair));
+    }
 
     return HCCL_SUCCESS;
 }
 
 EpChannelMap EndpointPairMgr::GetEpChannelMap()
 {
+    std::lock_guard<std::mutex> lock(mapMtx_);
     EpChannelMap epChannelMap;
     for (const auto& endpointPair : endpointPairMap_) {
         auto channelList = endpointPair.second->GetChannelHandles();

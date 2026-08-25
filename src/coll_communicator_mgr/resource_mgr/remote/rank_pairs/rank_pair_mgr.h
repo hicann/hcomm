@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <unordered_map>
 #include "hccl/hccl_types.h"
 #include "socket_manager.h"
@@ -34,6 +35,7 @@ public:
 private:
     std::unordered_map<RankIdPair, std::unique_ptr<RankPair>> rankPairMap_{};
     Hccl::RankIpPortMapPtr rankIpPortMap_;
+    std::shared_mutex mapMtx_;
 };
 
 } // namespace hccl

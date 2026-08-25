@@ -32,6 +32,7 @@ public:
     EpChannelMap GetEpChannelMap();
 
 private:
+    std::mutex mapMtx_;
     std::unordered_map<EndpointDescPair, std::unique_ptr<EndpointPair>> endpointPairMap_{};
 };
 

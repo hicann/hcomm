@@ -14,6 +14,7 @@ namespace hccl {
 
 HcclResult RankPairMgr::Get(RankIdPair rankIdPair, RankPair*& out)
 {
+    std::unique_lock<std::shared_mutex> lock(mapMtx_);
     auto iterPtr = rankPairMap_.find(rankIdPair);
     if (iterPtr != rankPairMap_.end()) {
         out = iterPtr->second.get();
@@ -33,6 +34,7 @@ HcclResult RankPairMgr::Get(RankIdPair rankIdPair, RankPair*& out)
 
 ChannelTable RankPairMgr::GetChannelTable()
 {
+    std::shared_lock<std::shared_mutex> lock(mapMtx_);
     ChannelTable channelTable;
     for (const auto& rankPair : rankPairMap_) {
         channelTable[rankPair.first] = rankPair.second->GetEpChannelMap();
@@ -42,6 +44,7 @@ ChannelTable RankPairMgr::GetChannelTable()
 
 HcclResult RankPairMgr::Find(RankIdPair rankIdPair, RankPair*& out)
 {
+    std::shared_lock<std::shared_mutex> lock(mapMtx_);
     auto iterPtr = rankPairMap_.find(rankIdPair);
     if (iterPtr != rankPairMap_.end()) {
         out = iterPtr->second.get();
