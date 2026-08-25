@@ -671,7 +671,7 @@ TEST_F(CollServiceDeviceModeTest, Ut_GetCcuMc2ServerNum_Expect_equality)
 {
     // 前置条件
     auto service = dynamic_cast<CollServiceDeviceMode*>(fakeComm.collService);
-    u32 ccuMc2ServerNum;
+    u32 ccuMc2ServerNum = 0;
 
     // 执行步骤
     auto ret = service->GetCcuMc2ServerNum();
