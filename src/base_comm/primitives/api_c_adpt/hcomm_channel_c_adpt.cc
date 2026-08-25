@@ -38,10 +38,21 @@ using namespace hcomm;
 
 constexpr uint32_t kDscpToRoceTcShift = 2U; // RoCE TC = DSCP << 2（DiffServ 高 6 位为 DSCP）
 
-static void ApplyRoceQosCompatToSlTc(HcommChannelDesc& channelDesc)
+static HcommResult ApplyRoceQosCompatToSlTc(HcommChannelDesc& channelDesc)
 {
     if (channelDesc.qos == HCCL_COMM_QOS_CONFIG_NOT_SET) {
-        return;
+        return HCCL_SUCCESS;
+    }
+
+    // qos_dscp 仅 950/960 设备 HCCN 支持（按枚举精确匹配，避免代际数值比较误伤）
+    DevType deviceType = DevType::DEV_TYPE_COUNT;
+    CHK_RET(hrtGetDeviceType(deviceType));
+    if (deviceType >= DevType::DEV_TYPE_COUNT) {
+        HCCL_ERROR("[ApplyRoceQosCompatToSlTc] invalid deviceType[%d].", static_cast<int>(deviceType));
+        return HCCL_E_PARA;
+    }
+    if (deviceType != DevType::DEV_TYPE_950 && deviceType != DevType::DEV_TYPE_960) {
+        return HCCL_SUCCESS;
     }
 
     const uint8_t sl = static_cast<uint8_t>(channelDesc.qos & 0xFFU);
@@ -62,6 +73,7 @@ static void ApplyRoceQosCompatToSlTc(HcommChannelDesc& channelDesc)
         "[ApplyRoceQosCompatToSlTc] qos compat: qos[%u] userDevId[%d] phyDevId[%d] dscp[%u] sl[%u] tc[%u].",
         channelDesc.qos, userDevId, phyDevId, static_cast<unsigned>(dscp),
         static_cast<unsigned>(channelDesc.roceAttr.sl), static_cast<unsigned>(channelDesc.roceAttr.tc));
+    return HCCL_SUCCESS;
 }
 
 namespace {
@@ -215,9 +227,7 @@ HcommResult CheckRoceAttr(HcommChannelDesc& channelDesc)
         HCCL_INFO("[%s] set roceAttr.cqAttrFlags to 0.", __func__);
     }
 
-    ApplyRoceQosCompatToSlTc(channelDesc);
-
-    return HCCL_SUCCESS;
+    return ApplyRoceQosCompatToSlTc(channelDesc);
 }
 
 namespace {

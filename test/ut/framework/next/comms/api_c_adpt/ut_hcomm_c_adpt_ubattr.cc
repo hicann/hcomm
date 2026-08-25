@@ -9,9 +9,12 @@
  */
 
 #include "gtest/gtest.h"
+#include "mockcpp/mokc.h"
+#include <mockcpp/mockcpp.hpp>
 #include "hcomm_c_adpt.h"
 #include "hcomm_res_defs.h"
 #include "hcomm_channel.h"
+#include "adapter_rts.h"
 
 class CheckUbAttrTest : public testing::Test {
 protected:
@@ -21,7 +24,11 @@ protected:
 
     virtual void SetUp() { std::cout << "A Test case in CheckUbAttrTest SetUp" << std::endl; }
 
-    virtual void TearDown() { std::cout << "A Test case in CheckUbAttrTest TearDown" << std::endl; }
+    virtual void TearDown()
+    {
+        GlobalMockObject::verify();
+        std::cout << "A Test case in CheckUbAttrTest TearDown" << std::endl;
+    }
 };
 
 TEST_F(CheckUbAttrTest, Ut_CheckUbAttr_When_SqDepthIsZero_Expect_ReturnHCCL_SUCCESS)
@@ -145,6 +152,9 @@ TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_QosUnset_KeepOriginalSlTc)
 
 TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_QosSet_MapsSlAndDefaultDscpTc)
 {
+    // ApplyRoceQosCompatToSlTc 仅 950/960 生效，需 mock 设备类型
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_950)).will(returnValue(HCCL_SUCCESS));
+
     HcommChannelDesc channelDesc{};
     ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
     channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
@@ -155,4 +165,32 @@ TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_QosSet_MapsSlAndDefaultDscpTc)
     ASSERT_EQ(CheckRoceAttr(channelDesc), HCCL_SUCCESS);
     EXPECT_EQ(channelDesc.roceAttr.sl, 4);
     EXPECT_EQ(channelDesc.roceAttr.tc, static_cast<uint8_t>(33U << 2U));
+}
+
+TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_DeviceTypeNot950Or960_Expect_SkipQosCompat)
+{
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_910B)).will(returnValue(HCCL_SUCCESS));
+
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.roceAttr.sl = 3;
+    channelDesc.roceAttr.tc = 120;
+    channelDesc.qos = 4;
+
+    ASSERT_EQ(CheckRoceAttr(channelDesc), HCCL_SUCCESS);
+    EXPECT_EQ(channelDesc.roceAttr.sl, 3);
+    EXPECT_EQ(channelDesc.roceAttr.tc, 120);
+}
+
+TEST_F(CheckUbAttrTest, Ut_CheckRoceAttr_When_DeviceTypeInvalid_Expect_ReturnHCCL_E_PARA)
+{
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(DevType::DEV_TYPE_COUNT)).will(returnValue(HCCL_SUCCESS));
+
+    HcommChannelDesc channelDesc{};
+    ASSERT_EQ(HcommChannelDescInit(&channelDesc, 1), HCCL_SUCCESS);
+    channelDesc.remoteEndpoint.protocol = COMM_PROTOCOL_ROCE;
+    channelDesc.qos = 4;
+
+    EXPECT_EQ(CheckRoceAttr(channelDesc), HCCL_E_PARA);
 }
