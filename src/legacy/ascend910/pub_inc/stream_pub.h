@@ -136,7 +136,7 @@ public:
     // 判断stream是否已销毁 (streamMap_中的副本通过此接口感知原stream销毁, 避免访问悬空的sqeContext_)
     // 原stream销毁时将invalidFlag_置true, 所有共享同一invalidFlag_的拷贝副本均能感知
     bool IsInvalid() const { return invalidFlag_ != nullptr && invalidFlag_->load(std::memory_order_relaxed); }
-
+    HcclResult SetInvalidFlag();
     // 取地址
     void* ptr() const { return stream_; }
     s32 id() const { return streamId_; }
