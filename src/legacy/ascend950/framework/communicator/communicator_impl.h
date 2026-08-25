@@ -395,6 +395,7 @@ private:
     unique_ptr<RmaConnManager> rmaConnectionManager;
     CollServiceBase* collService{nullptr};
     unique_ptr<CollOperator> currentCollOperator;
+    void* notifyFixedValue{nullptr}; // 2MB内存，用于临时解决性能问题，实际该内存未使用
     unique_ptr<HostDeviceSyncNotifyManager> hostDeviceSyncNotifyManager;
     unique_ptr<Trace> trace;
     unique_ptr<MemTransportManager> memTransportManager{};
@@ -506,6 +507,7 @@ private:
     void DeInitPreResource();
     void InitSocketManager();
     void InitRmaConnManager();
+    void InitNotifyFixedValue();
     void InitMemTransportManager();
     void InitHostDeviceSyncNotifyManager();
     HcclResult InitTraceManager();

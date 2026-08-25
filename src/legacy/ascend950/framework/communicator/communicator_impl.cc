@@ -162,6 +162,7 @@ HcclResult CommunicatorImpl::InitCommResource(const CommParams& commParams)
     InitSocketManager();
     InitRmaConnManager();
     InitDataBufferManager();
+    InitNotifyFixedValue();
     InitMemTransportManager();
     InitHostDeviceSyncNotifyManager();
     InitUbMemoryTransportMgr();
@@ -269,6 +270,7 @@ CommunicatorImpl::Init(const CommParams& commParams, std::unique_ptr<RankGraph>&
             InitSocketManager();
             InitRmaConnManager();
             InitDataBufferManager();
+            InitNotifyFixedValue();
             InitMemTransportManager();
             InitHostDeviceSyncNotifyManager();
             InitUbMemoryTransportMgr();
@@ -309,10 +311,10 @@ HcclResult CommunicatorImpl::Init(
         TRY_CATCH_RETURN(
             HrtSetDevice(inputDevLogicId); InitCommonData(commParams, subConfig); InitHccpHdc(); InitCcuSuperFastLoad();
             InitNotifyManager(); InitStreamManager(); InitSocketManager(); InitRmaConnManager();
-            InitDataBufferManager(); InitMemTransportManager(); InitHostDeviceSyncNotifyManager(); InitTraceManager();
-            InitHDCommunicate(); notifyTimeoutCfg.Init(); InitRankGraph(inputRankGraph);
-            if (IsNeedDpu()) { InitHccpPeer(); } AppendLocalDieIdForLinks(); InitUbMemoryTransportMgr();
-            CollAlgComponentInit(); RegisterAicpuKernel(); InitCollService();
+            InitDataBufferManager(); InitNotifyFixedValue(); InitMemTransportManager();
+            InitHostDeviceSyncNotifyManager(); InitTraceManager(); InitHDCommunicate(); notifyTimeoutCfg.Init();
+            InitRankGraph(inputRankGraph); if (IsNeedDpu()) { InitHccpPeer(); } AppendLocalDieIdForLinks();
+            InitUbMemoryTransportMgr(); CollAlgComponentInit(); RegisterAicpuKernel(); InitCollService();
             DlProfFunction::GetInstance().DlProfFunctionInit(); InitMirrorTaskManager();
             CHK_RET(InitProfilingReporter()); InitTaskExceptionHandler(); RegisterKernel(); InitDpuKernel();
             SetCommStatus(CommStatus::COMM_READY);
@@ -1633,6 +1635,17 @@ void CommunicatorImpl::InitSocketManager()
 
 void CommunicatorImpl::InitRmaConnManager() { rmaConnectionManager = std::make_unique<RmaConnManager>(*this); }
 
+void CommunicatorImpl::InitNotifyFixedValue()
+{
+    // 分配 2MB 内存，临时规避性能问题，实际未使用
+    // https://gitcode.com/cann/hcomm/pull/4098 中删除了 NotifyFixedValue，虽然该类的成员函数没有场景会调用到，
+    // 但是在初始化通信域时会调用其构造函数，malloc 一块 2MB 的内存，用于存放 roce 场景的 notify。
+    // 删除后，导致后续 AllGather 在 1GB 数据量下劣化 10us
+    // 当前 补上 malloc(2MB)，临时解决性能劣化
+    constexpr u64 notifyValueSize = 2 * 1024 * 1024;
+    notifyFixedValue = HrtMalloc(notifyValueSize, static_cast<int>(ACL_MEM_TYPE_HIGH_BAND_WIDTH));
+}
+
 void CommunicatorImpl::InitMemTransportManager() { memTransportManager = std::make_unique<MemTransportManager>(*this); }
 
 void CommunicatorImpl::InitHostDeviceSyncNotifyManager()
@@ -2193,6 +2206,7 @@ HcclResult CommunicatorImpl::RecoverComm(SnapShotComm& snapShotComm, u32 stepPar
             InitSocketManager();
             InitRmaConnManager();
             InitDataBufferManager();
+            InitNotifyFixedValue();
             InitMemTransportManager();
             InitHostDeviceSyncNotifyManager();
             InitUbMemoryTransportMgr();
@@ -2260,6 +2274,7 @@ HcclResult CommunicatorImpl::RecoverComm(
             InitSocketManager();
             InitRmaConnManager();
             InitDataBufferManager();
+            InitNotifyFixedValue();
             InitMemTransportManager();
             InitHostDeviceSyncNotifyManager();
             InitUbMemoryTransportMgr();
@@ -2480,6 +2495,12 @@ void CommunicatorImpl::DestroyImpl()
     g_taskExpMemMap.erase(id);
     (void)NotifyAicpuDestroyComm();
     ccuDrvHandle = nullptr;
+
+    // 释放 device 内存
+    if (notifyFixedValue != nullptr) {
+        HrtFree(notifyFixedValue);
+        notifyFixedValue = nullptr;
+    }
 
     DeInitPreResource();
 }
