@@ -28,9 +28,9 @@ namespace hcomm_experimental {
 class UbRegedMemMgr : public RegedMemMgr {
 public:
     using LocalUbRmaBufferMgr
-        = Hccl::RmaBufferMgr<Hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalUbRmaBuffer>>;
+        = hcomm::RmaBufferMgr<Hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalUbRmaBuffer>>;
     using RemoteUbRmaBufferMgr
-        = Hccl::RmaBufferMgr<Hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::RemoteUbRmaBuffer>>;
+        = hcomm::RmaBufferMgr<Hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::RemoteUbRmaBuffer>>;
 
     UbRegedMemMgr();
     ~UbRegedMemMgr() = default;

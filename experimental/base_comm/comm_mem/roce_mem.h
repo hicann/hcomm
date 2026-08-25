@@ -17,10 +17,9 @@
 #include "reged_mem_mgr.h"
 #include "rma_buffer_mgr.h"
 #include "buffer_key.h"
-#include "local_rdma_rma_buffer.h"
+#include "local_rdma_rma_buffer_v2.h"
 #include "remote_rma_buffer.h"
 #include "exchange_rdma_buffer_dto.h"
-#include "local_rdma_rma_buffer.h"
 
 namespace hcomm_experimental {
 /**
@@ -29,9 +28,9 @@ namespace hcomm_experimental {
 class RoceRegedMemMgr : public RegedMemMgr {
 public:
     using LocalRdmaRmaBufferMgr
-        = Hccl::RmaBufferMgr<Hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalRdmaRmaBuffer>>;
+        = hcomm::RmaBufferMgr<Hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::LocalRdmaRmaBuffer>>;
     using RemoteRdmaRmaBufferMgr
-        = Hccl::RmaBufferMgr<Hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::RemoteRdmaRmaBuffer>>;
+        = hcomm::RmaBufferMgr<Hccl::BufferKey<uintptr_t, u64>, std::shared_ptr<Hccl::RemoteRdmaRmaBuffer>>;
 
     RoceRegedMemMgr();
     ~RoceRegedMemMgr() = default;

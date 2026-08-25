@@ -18,7 +18,7 @@
 #include "hccl_mem.h"
 #include "exchange_rdma_buffer_dto.h"
 #include "local_rdma_rma_buffer_manager.h"
-#include "local_rdma_rma_buffer.h"
+#include "local_rdma_rma_buffer_v2.h"
 #include "hccl_one_sided_data.h"
 
 namespace hcomm_experimental {

@@ -21,7 +21,7 @@
 
 // Orion
 #include "socket.h"
-#include "local_rdma_rma_buffer.h"
+#include "local_rdma_rma_buffer_v2.h"
 #include "remote_rma_buffer.h"
 #include "host_rdma_connection.h"
 #include "task_param.h"
