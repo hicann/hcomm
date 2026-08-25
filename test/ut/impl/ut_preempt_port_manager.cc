@@ -115,8 +115,8 @@ TEST_F(HcclPreemptPortManagerTest, ut_PreemptPortInRange_nouse1)
     IpPortRef hostPortRef;
     hostPortRef.insert({"10.10.10.02", std::make_pair(5000, Referenced())});
 
-    HcclResult ret = ppm.PreemptPortInRange(
-        hostPortRef, listenSocket, NICDeployment::NIC_DEPLOYMENT_HOST, portRange, usePort);
+    HcclResult ret
+        = ppm.PreemptPortInRange(hostPortRef, listenSocket, NICDeployment::NIC_DEPLOYMENT_HOST, portRange, usePort);
     EXPECT_EQ(ret, HCCL_SUCCESS);
     GlobalMockObject::verify();
 }
