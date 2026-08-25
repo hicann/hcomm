@@ -648,7 +648,7 @@ HcclResult TransportDirectNpu::InitQpConnect()
             "custom exchange data size [%llu].",
             exchangeDataTotalSize_, machinePara_.exchangeInfo.size()),
         ret);
-    HCCL_DEBUG("[TransportDirectNpu]Seocket Send finished, exchangeDataTotalSize[%llu]", exchangeDataTotalSize_);
+    HCCL_DEBUG("[TransportDirectNpu]Socket Send finished, exchangeDataTotalSize[%llu]", exchangeDataTotalSize_);
 
     exchangeDataForRecv_.resize(exchangeDataTotalSize_);
     ret = defaultSocket_->Recv(exchangeDataForRecv_.data(), exchangeDataTotalSize_);

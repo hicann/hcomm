@@ -329,7 +329,7 @@ HcclResult SalGetJsonProperty(const nlohmann::json& obj, const std::string& prop
         propValue = obj[propName];
         return HCCL_SUCCESS;
     } else {
-        printf("property value of Name[%s] is not string!", propName.c_str());
+        HCCL_ERROR("[Get][JsonProperty]property value of Name[%s] is not string!", propName.c_str());
         return HCCL_E_INTERNAL;
     }
 }

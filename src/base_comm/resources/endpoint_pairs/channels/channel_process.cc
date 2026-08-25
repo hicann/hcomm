@@ -335,6 +335,33 @@ HcclResult ChannelProcess::ChannelGetStatus(const ChannelHandle* channelList, ui
     return result;
 }
 
+static void PrintChannelStatusDistribution(
+    const ChannelHandle* channelList, uint32_t listNum, const std::vector<ChannelStatus>& statusList)
+{
+    uint32_t ready = 0;
+    uint32_t socketOk = 0;
+    uint32_t failed = 0;
+    for (uint32_t i = 0; i < listNum; i++) {
+        if (statusList[i] == ChannelStatus::READY) {
+            ready++;
+        } else if (statusList[i] == ChannelStatus::SOCKET_OK) {
+            socketOk++;
+        } else if (statusList[i] == ChannelStatus::FAILED || statusList[i] == ChannelStatus::SOCKET_TIMEOUT) {
+            failed++;
+        }
+    }
+    constexpr uint32_t statusLogIntervalSec = 1;
+    static thread_local auto lastLog = std::chrono::steady_clock::time_point{};
+    auto now = std::chrono::steady_clock::now();
+    if (std::chrono::duration_cast<std::chrono::seconds>(now - lastLog).count() >= statusLogIntervalSec) {
+        HCCL_RUN_INFO(
+            "[%s] batch[0x%llx] link_ready[%u] socket_ok[%u] connecting[%u] failed[%u] total[%u]", __func__,
+            static_cast<unsigned long long>(channelList[0]), ready, socketOk, listNum - ready - socketOk - failed,
+            failed, listNum);
+        lastLog = now;
+    }
+}
+
 HcclResult ChannelProcess::GetChannelsInfo(
     const ChannelHandle* channelList, uint32_t listNum, std::vector<CommEngine>& engines,
     std::vector<HcommChannelDesc>& channelDescs, std::vector<ChannelStatus>& statusList)
@@ -361,6 +388,7 @@ HcclResult ChannelProcess::GetChannelsInfo(
             HCCL_RUN_WARNING("[%s] FAILED, channel idx[%u], status[%d]", __func__, i, statusList[i]);
         }
     }
+    PrintChannelStatusDistribution(channelList, listNum, statusList);
     HCCL_DEBUG("[%s] SUCCESS.", __func__);
     return HCCL_SUCCESS;
 }

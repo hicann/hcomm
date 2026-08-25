@@ -432,6 +432,9 @@ HcommResult HcommChannelCreate(
     HCCL_INFO(
         "[%s] END. channelNum[%u], take time [%lld]us.", __func__, channelNum,
         std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - startut).count());
+    HCCL_RUN_INFO(
+        "[%s] channels created, channelNum[%u], engine[%s]", __func__, channelNum,
+        GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
     return HCCL_SUCCESS;
 }
 
