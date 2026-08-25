@@ -41,6 +41,27 @@ protected:
     }
     virtual void SetUp() {}
     virtual void TearDown() { GlobalMockObject::verify(); }
+
+    // 构造 UbTransportLiteImpl 反序列化所需的完整序列化数据
+    static std::vector<char> BuildTransportData(u32 type, u32 notifyNum, u32 bufferNum, u32 rmtbufferNum, u32 connNum)
+    {
+        BinaryStream binaryStream;
+        binaryStream << type;
+        binaryStream << notifyNum;
+        binaryStream << bufferNum;
+        binaryStream << rmtbufferNum;
+        binaryStream << connNum;
+        std::vector<char> emptyVector;
+        binaryStream << emptyVector; // notifyUniqueIds
+        binaryStream << emptyVector; // rmtNotifyUniqueIds
+        binaryStream << emptyVector; // locBufferUniqueIds
+        binaryStream << emptyVector; // rmtBufferUniqueIds
+        binaryStream << emptyVector; // drainBufferUniqueIds
+        binaryStream << emptyVector; // connUniqueIds
+        std::vector<char> data;
+        binaryStream.Dump(data);
+        return data;
+    }
 };
 
 TEST_F(
@@ -140,27 +161,7 @@ TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_HeaderSerialization_When_RmtbufferEqu
 TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_RmtbufferNumMember_When_Default_Expect_Zero)
 {
     u32 type = static_cast<u32>(TransportType::UB);
-    u32 notifyNum = 0;
-    u32 bufferNum = 0;
-    u32 rmtbufferNum = 0;
-    u32 connNum = 0;
-
-    BinaryStream binaryStream;
-    binaryStream << type;
-    binaryStream << notifyNum;
-    binaryStream << bufferNum;
-    binaryStream << rmtbufferNum;
-    binaryStream << connNum;
-    std::vector<char> emptyVector;
-    binaryStream << emptyVector; // notifyUniqueIds
-    binaryStream << emptyVector; // rmtNotifyUniqueIds
-    binaryStream << emptyVector; // locBufferUniqueIds
-    binaryStream << emptyVector; // rmtBufferUniqueIds
-    binaryStream << emptyVector; // drainBufferUniqueIds
-    binaryStream << emptyVector; // connUniqueIds
-
-    std::vector<char> data;
-    binaryStream.Dump(data);
+    std::vector<char> data = BuildTransportData(type, 0, 0, 0, 0);
     UbTransportLiteImpl transportDev(data);
     EXPECT_EQ(transportDev.rmtbufferNum, 0);
 }
@@ -168,27 +169,7 @@ TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_RmtbufferNumMember_When_Default_Expec
 TEST_F(UbTransportLiteImplRmtbuffer_UT, Ut_RmtbufferNumMember_When_RmtbufferDifferentFromBuffer_Expect_IndependentValue)
 {
     u32 type = static_cast<u32>(TransportType::UB);
-    u32 notifyNum = 2;
-    u32 bufferNum = 3;
-    u32 rmtbufferNum = 5;
-    u32 connNum = 1;
-
-    BinaryStream binaryStream;
-    binaryStream << type;
-    binaryStream << notifyNum;
-    binaryStream << bufferNum;
-    binaryStream << rmtbufferNum;
-    binaryStream << connNum;
-    std::vector<char> emptyVector;
-    binaryStream << emptyVector; // notifyUniqueIds
-    binaryStream << emptyVector; // rmtNotifyUniqueIds
-    binaryStream << emptyVector; // locBufferUniqueIds
-    binaryStream << emptyVector; // rmtBufferUniqueIds
-    binaryStream << emptyVector; // drainBufferUniqueIds
-    binaryStream << emptyVector; // connUniqueIds
-
-    std::vector<char> data;
-    binaryStream.Dump(data);
+    std::vector<char> data = BuildTransportData(type, 2, 3, 5, 1);
     UbTransportLiteImpl transportDev(data);
     transportDev.notifyNum = 2;
     transportDev.bufferNum = 3;
