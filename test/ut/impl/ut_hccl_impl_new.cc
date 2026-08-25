@@ -26,7 +26,6 @@
 #include "transport_base_pub.h"
 #include "transport_p2p_pub.h"
 #include "broadcast_operator.h"
-#include "adapter_prof.h"
 
 #define private public
 #define protected public
