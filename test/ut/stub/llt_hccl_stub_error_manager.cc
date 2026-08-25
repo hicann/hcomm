@@ -17,6 +17,7 @@
 #include <cstdarg>
 #include <securec.h>
 #include <vector>
+#include "log.h"
 
 using namespace std;
 
@@ -34,7 +35,7 @@ int FormatErrorMessage(char* str_dst, size_t dst_max, const char* format, ...)
     */
     len = vsnprintf_s(str_dst, dst_max, (dst_max - 1), format, arg);
     va_end(arg);
-    printf("lkk_test1 is %d\n", len);
+    HCCL_INFO("lkk_test1 is %d\n", len);
     return len;
 }
 } // namespace ErrorMessage

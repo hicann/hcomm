@@ -88,7 +88,7 @@ protected:
         if (outfile.is_open()) {
             HCCL_INFO("open %s success", file_name);
         } else {
-            HCCL_INFO("open %s failed", file_name);
+            HCCL_ERROR("open %s failed", file_name);
         }
 
         outfile << std::setw(4) << rank_table << std::endl;
@@ -101,7 +101,7 @@ protected:
         if (outfile.is_open()) {
             HCCL_INFO("open %s success", file_name_v610);
         } else {
-            HCCL_INFO("open %s failed", file_name_v610);
+            HCCL_ERROR("open %s failed", file_name_v610);
         }
 
         outfile_v610 << std::setw(4) << g_rank_table_610_2rank_1server << std::endl;
@@ -3301,18 +3301,11 @@ TEST_F(HcomTest, ut_hcom_allreduce)
 
 #endif
 
-TEST_F(HcomTest, ut_hcom_reducescatterv)
+static void DoReduceScatterVTest(HcclDataType dataType, HcclResult expectedRet)
 {
     nlohmann::json rank_table = rank_table_910_2server_8rank;
     char file_name[] = "./st_hcom.json";
-    std::ofstream outfile(file_name, std::ios::out | std::ios::trunc | std::ios::binary);
-    if (outfile.is_open()) {
-        HCCL_INFO("open %s success", file_name);
-    } else {
-        HCCL_INFO("open %s failed", file_name);
-    }
-    outfile << std::setw(4) << rank_table << std::endl;
-    outfile.close();
+    WriteRankTableFile(file_name, rank_table);
 
     HcclCommunicator impl;
     MOCKER_CPP_VIRTUAL(
@@ -3356,9 +3349,9 @@ TEST_F(HcomTest, ut_hcom_reducescatterv)
     }
 
     ret = HcomReduceScatterV(
-        "tag", sendbuf, sendCounts.data(), sdispls.data(), recvbuf, 10, HCCL_DATA_TYPE_INT8, HCCL_REDUCE_SUM,
-        HCCL_WORLD_GROUP, stream);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
+        "tag", sendbuf, sendCounts.data(), sdispls.data(), recvbuf, 10, dataType, HCCL_REDUCE_SUM, HCCL_WORLD_GROUP,
+        stream);
+    EXPECT_EQ(ret, expectedRet);
     GlobalMockObject::verify();
 
     aclrtSynchronizeStream(stream);
@@ -3373,77 +3366,9 @@ TEST_F(HcomTest, ut_hcom_reducescatterv)
     remove(file_name);
 }
 
-TEST_F(HcomTest, ut_hcom_reducescatterv_check_int64)
-{
-    nlohmann::json rank_table = rank_table_910_2server_8rank;
-    char file_name[] = "./st_hcom.json";
-    std::ofstream outfile(file_name, std::ios::out | std::ios::trunc | std::ios::binary);
-    if (outfile.is_open()) {
-        HCCL_INFO("open %s success", file_name);
-    } else {
-        HCCL_INFO("open %s failed", file_name);
-    }
-    outfile << std::setw(4) << rank_table << std::endl;
-    outfile.close();
+TEST_F(HcomTest, ut_hcom_reducescatterv) { DoReduceScatterVTest(HCCL_DATA_TYPE_INT8, HCCL_SUCCESS); }
 
-    HcclCommunicator impl;
-    MOCKER_CPP_VIRTUAL(
-        impl, &HcclCommunicator::Init,
-        HcclResult(HcclCommunicator::*)(HcclCommParams & params, const RankTable_t& rankTable))
-        .expects(atMost(1))
-        .will(returnValue(0));
-    char* rank_table_file = "./st_hcom.json";
-    char* rank_ID = "0";
-    hrtSetDevice(0);
-    HcclResult ret = HcomInitByFile(rank_table_file, rank_ID);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-    GlobalMockObject::verify();
-
-    s8* sendbuf = (s8*)sal_malloc(16 * 10 * sizeof(s8));
-    sal_memset(sendbuf, 16 * 10 * sizeof(s8), 0, 16 * 10 * sizeof(s8));
-    s8* recvbuf = (s8*)sal_malloc(10 * sizeof(s8));
-    sal_memset(recvbuf, 10 * sizeof(s8), 0, 10 * sizeof(s8));
-
-    rtStream_t stream;
-
-    rtError_t rt_ret = aclrtCreateStream(&stream);
-    EXPECT_EQ(rt_ret, RT_ERROR_NONE);
-
-    MOCKER_CPP_VIRTUAL(impl, &HcclCommunicator::ReduceScatterV).expects(atMost(1)).will(returnValue(0));
-
-    MOCKER_CPP(&hcclComm::GetRankTableCrc).stubs().will(returnValue(0));
-
-    MOCKER_CPP(&hcclComm::GetAlgType).stubs().will(returnValue(HCCL_SUCCESS));
-
-    MOCKER_CPP(&hcclComm::GetRankSize).expects(atMost(1)).will(returnValue(0));
-
-    MOCKER_CPP(&hcclComm::GetGroupRank).expects(atMost(1)).will(returnValue(0));
-
-    // 构造入参
-    int32_t rankSize = 2;
-    vector<u64> sendCounts(rankSize, 10);
-    vector<u64> sdispls(rankSize, 0);
-    for (int i = 0; i < rankSize; i++) {
-        sdispls[i] = 10 * i;
-    }
-
-    ret = HcomReduceScatterV(
-        "tag", sendbuf, sendCounts.data(), sdispls.data(), recvbuf, 10, HCCL_DATA_TYPE_INT64, HCCL_REDUCE_SUM,
-        HCCL_WORLD_GROUP, stream);
-    EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
-    GlobalMockObject::verify();
-
-    aclrtSynchronizeStream(stream);
-    rt_ret = aclrtDestroyStream(stream);
-
-    ret = HcomDestroy();
-    EXPECT_EQ(ret, HCCL_SUCCESS);
-
-    sal_free(sendbuf);
-    sal_free(recvbuf);
-
-    remove(file_name);
-}
+TEST_F(HcomTest, ut_hcom_reducescatterv_check_int64) { DoReduceScatterVTest(HCCL_DATA_TYPE_INT64, HCCL_E_NOT_SUPPORT); }
 
 TEST_F(HcomTest, ut_hcom_send_receive_same_server)
 {

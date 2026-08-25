@@ -83,11 +83,24 @@ typedef struct para_struct {
     volatile s32* sync_addr;
 } para_t;
 
+static void WaitRanksReady(volatile s32* sync_addr, s32 ranks_local)
+{
+    s32 rank_num_tmp = *sync_addr - 1;
+    bool swapped = false;
+    do {
+        rank_num_tmp += 1;
+        swapped = __sync_bool_compare_and_swap(sync_addr, rank_num_tmp, rank_num_tmp + 1);
+    } while (!swapped);
+    while (*sync_addr < ranks_local) {
+        sched_yield(); // linux提供一个系统调用运行进程主动让出执行权
+    }
+    __sync_synchronize(); // 插入内存屏障，对顺序性有要求，但是有没有使用lock指令的时候
+}
+
 void* impl_host_shm_broadcast_task(void* parg)
 {
     HcclResult ret = HCCL_SUCCESS;
     para_t* para_info = (para_t*)parg;
-    s32 rank_num_tmp;
 
     HcomInfo hcom_info;
     std::string ranktable_file = para_info->file_name;
@@ -120,21 +133,7 @@ void* impl_host_shm_broadcast_task(void* parg)
         HCCL_ERROR("dev[%d] task broadcast fails", para_info->device_id);
     }
 
-    bool swapped;
-
-    rank_num_tmp = *(para_info->sync_addr) - 1;
-
-    do {
-        rank_num_tmp += 1;
-
-        swapped = __sync_bool_compare_and_swap(para_info->sync_addr, rank_num_tmp, rank_num_tmp + 1);
-    } while (!swapped);
-
-    while (*(para_info->sync_addr) < para_info->ranks_local) {
-        sched_yield();
-    } // linux提供一个系统调用运行进程主动让出执行权
-
-    __sync_synchronize(); // 插入内存屏障，对顺序性有要求，但是有没有使用lock指令的时候
+    WaitRanksReady(para_info->sync_addr, para_info->ranks_local);
 
     HCCL_DEBUG("all %d  ranks init ok ,then broadcast", hcom_info.params.totalRanks);
     ret = hcom_info.pComm->Broadcast(
@@ -159,7 +158,6 @@ void* impl_host_shm_all_reduce_task(void* parg)
 {
     HcclResult ret = HCCL_SUCCESS;
     para_t* para_info = (para_t*)parg;
-    s32 rank_num_tmp;
 
     HcomInfo hcom_info;
     std::string ranktable_file = para_info->file_name;
@@ -181,33 +179,15 @@ void* impl_host_shm_all_reduce_task(void* parg)
     hcom_info.pComm.reset(new (std::nothrow) hccl::hcclComm());
     rtModel_t model = (void*)1;
 
-    HCCL_ERROR(
-        "jsh hcom_info.params.rank is %u, hcom_info.params.totalRanks is %u", hcom_info.params.rank,
+    HCCL_INFO(
+        "hcom_info.params.rank is %u, hcom_info.params.totalRanks is %u", hcom_info.params.rank,
         hcom_info.params.totalRanks);
     CommConfig commConfig("hccl_world_group");
     ret = hcom_info.pComm->init(hcom_info.params, commConfig, hcom_info.rankTable);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR("dev[%d] task all_reduce fails", para_info->device_id);
     }
-    bool swapped;
-
-    HCCL_ERROR(
-        "jsh hcom_info.params.rank is %u, hcom_info.params.totalRanks is %u", hcom_info.params.rank,
-        hcom_info.params.totalRanks);
-
-    rank_num_tmp = *(para_info->sync_addr) - 1;
-
-    do {
-        rank_num_tmp += 1;
-
-        swapped = __sync_bool_compare_and_swap(para_info->sync_addr, rank_num_tmp, rank_num_tmp + 1);
-    } while (!swapped);
-
-    while (*(para_info->sync_addr) < para_info->ranks_local) {
-        sched_yield();
-    } // linux提供一个系统调用运行进程主动让出执行权
-
-    __sync_synchronize(); // 插入内存屏障，对顺序性有要求，但是有没有使用lock指令的时候
+    WaitRanksReady(para_info->sync_addr, para_info->ranks_local);
     (void)SetWorkflowMode(HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB);
     ret = hcom_info.pComm->AllReduce(
         "tag_impl_host_shm_all_reduce_task_inter", para_info->sendbuff, para_info->recvbuff, para_info->count,

@@ -10,6 +10,9 @@
 
 #pragma once
 
+#include <fstream>
+#include <iomanip>
+
 #include "topoinfo_ranktableParser_pub.h"
 
 static nlohmann::json g_rank_table_610_8rank_1server
@@ -197,3 +200,15 @@ static nlohmann::json g_rank_table_610_2rank_1server
               {{
                   {"eth0", "192.168.200.2"},
               }}}}}}}}}};
+
+inline void WriteRankTableFile(const char* fileName, const nlohmann::json& rankTable)
+{
+    std::ofstream outfile(fileName, std::ios::out | std::ios::trunc | std::ios::binary);
+    if (outfile.is_open()) {
+        HCCL_INFO("open %s success", fileName);
+    } else {
+        HCCL_ERROR("open %s failed", fileName);
+    }
+    outfile << std::setw(4) << rankTable << std::endl;
+    outfile.close();
+}

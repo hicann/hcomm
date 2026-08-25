@@ -48,6 +48,7 @@
 #include "llt_hccl_stub_ge.h"
 #include "offline_build_config_parse.h"
 #include "param_check_pub.h"
+#include "ut_rank_table.h"
 
 using namespace std;
 using namespace hccl;
@@ -116,16 +117,7 @@ protected:
                 }}};
         char file_name[] = "./ut_HcomKernelBuilderTest.json";
 
-        std::ofstream outfile(file_name, std::ios::out | std::ios::trunc | std::ios::binary);
-
-        if (outfile.is_open()) {
-            HCCL_INFO("open %s success", file_name);
-        } else {
-            HCCL_INFO("open %s failed", file_name);
-        }
-
-        outfile << std::setw(4) << rank_table << std::endl;
-        outfile.close();
+        WriteRankTableFile(file_name, rank_table);
 
         std::cout << "\033[36m--HcomKernelInfoTest SetUP--\033[0m" << std::endl;
     }

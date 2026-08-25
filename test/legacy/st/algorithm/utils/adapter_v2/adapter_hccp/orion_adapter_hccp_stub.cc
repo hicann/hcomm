@@ -38,7 +38,7 @@ void HrtRaTlvRequestForCustomChannel(void* tlvHandle, u32 msgType, void* customI
                 output->data.dataInfo.dataArray[0].dieinfo.enableFlag = 1;
                 return;
             }
-            std::cout << "环境变量值: " << value << std::endl;
+            std::cout << "env value: " << value << std::endl;
         }
         output->data.dataInfo.dataArray[0].dieinfo.enableFlag = (dieId == 0) ? 1 : 0; // 单die场景，只让die0可用
     } else if (input->op == CcuOpcodeType::CCU_U_OP_GET_BASIC_INFO) {

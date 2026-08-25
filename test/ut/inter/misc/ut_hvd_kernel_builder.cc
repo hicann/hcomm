@@ -111,7 +111,7 @@ protected:
         if (outfile.is_open()) {
             HCCL_INFO("open %s success", file_name);
         } else {
-            HCCL_INFO("open %s failed", file_name);
+            HCCL_ERROR("open %s failed", file_name);
         }
 
         outfile << std::setw(4) << rank_table << std::endl;
