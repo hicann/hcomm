@@ -70,7 +70,8 @@ HcclResult CollAllGatherHccsSioExecutor::CalcLevel0CommInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAllGatherHccsSioExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult
+CollAllGatherHccsSioExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;

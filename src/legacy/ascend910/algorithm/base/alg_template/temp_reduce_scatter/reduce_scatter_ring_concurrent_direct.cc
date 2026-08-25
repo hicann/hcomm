@@ -292,7 +292,7 @@ HcclResult ReduceScatterRingConcurrentDirect::ReducerRunSpInlineReduce(
 
 // sdma场景主流单个slice的远端读任务
 HcclResult ReduceScatterRingConcurrentDirect::ReducerSdmaRemoteReadSlice(
-    const LINK& link, const ReducerMemoryInfo& reduceMem, Stream& stream)
+    const LINK& link, const ReducerMemoryInfo& reduceMem, Stream& stream) const
 {
     RxMemoryInfo mem{
         UserMemType::INPUT_MEM, reduceMem.remoteMemOffset, reduceMem.remoteRcvTemp.ptr(),

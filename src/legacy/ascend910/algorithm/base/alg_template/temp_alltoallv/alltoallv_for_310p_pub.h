@@ -54,9 +54,11 @@ private:
     HcclResult NotifySubStreamStart();
     HcclResult WaitSubStreamFinish();
     HcclResult CalcSendInfo(
-        const u32 srcDataRank, const u32 dstDataRank, const u32 times, const u64 subStepLen, SendMemBlock& sendInfo);
+        const u32 srcDataRank, const u32 dstDataRank, const u32 times, const u64 subStepLen,
+        SendMemBlock& sendInfo) const;
     HcclResult CalcRecvInfo(
-        const u32 srcDataRank, const u32 dstDataRank, const u32 times, const u64 subStepLen, RecvMemBlock& recvInfo);
+        const u32 srcDataRank, const u32 dstDataRank, const u32 times, const u64 subStepLen,
+        RecvMemBlock& recvInfo) const;
     HcclResult MainFirstLocalCopy(const u32 times, const u32 roundIdx, const u64 subStepLen);
     HcclResult MinorFirstLocalCopy(const u32 times, const u32 roundIdx, const u64 subStepLen);
     HcclResult RunAlltoAllVFor310P();

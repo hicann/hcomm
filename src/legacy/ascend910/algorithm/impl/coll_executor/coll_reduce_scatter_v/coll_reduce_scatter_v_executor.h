@@ -32,7 +32,7 @@ protected:
     virtual HcclResult RunLoop(OpParam& param, AlgResourceResponse& algRes);
 
     // 工具类
-    void PrintCurCountAndCurDispls(const std::vector<u64>& curCounts, const std::vector<u64>& curDispls);
+    void PrintCurCountAndCurDispls(const std::vector<u64>& curCounts, const std::vector<u64>& curDispls) const;
 
     bool CCLMemSlice_{true};     // 每次Loop是否需要对CCLMem进行切片
     bool DMAReduceFlag_{false};  // 是否DMA消减

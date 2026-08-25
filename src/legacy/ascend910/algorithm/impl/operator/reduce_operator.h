@@ -28,9 +28,9 @@ public:
     SelectAlg(const std::string& tag, const OpParam& param, std::string& algName, std::string& newTag) override;
 
 private:
-    HcclResult SelectAlgfor910A(const OpParam& param, std::string& algName);  // 算法选择 - 910A
-    HcclResult SelectAlgfor910B(const OpParam& param, std::string& algName);  // 算法选择 - 910B
-    HcclResult SelectAlgfor91093(const OpParam& param, std::string& algName); // 算法选择 - 910_93
+    HcclResult SelectAlgfor910A(const OpParam& param, std::string& algName) const; // 算法选择 - 910A
+    HcclResult SelectAlgfor910B(const OpParam& param, std::string& algName) const; // 算法选择 - 910B
+    HcclResult SelectAlgfor91093(const OpParam& param, std::string& algName);      // 算法选择 - 910_93
 };
 } // namespace hccl
 

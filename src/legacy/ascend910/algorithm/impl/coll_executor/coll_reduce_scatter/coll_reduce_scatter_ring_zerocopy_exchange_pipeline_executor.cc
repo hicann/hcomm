@@ -110,8 +110,8 @@ HcclResult CollReduceScatterRingZerocopyExchangePipelineExecutor::CalcExchangeCo
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollReduceScatterRingZerocopyExchangePipelineExecutor::CalExchangeRemoteRank(u32& remoteRankSend, u32& remoteRankRecv)
+HcclResult CollReduceScatterRingZerocopyExchangePipelineExecutor::CalExchangeRemoteRank(
+    u32& remoteRankSend, u32& remoteRankRecv) const
 {
     u32 l2Size = topoAttr_.superPodNum;
     CHK_PRT_RET(l2Size == 0, HCCL_ERROR("[CalExchangeRemoteRank] invalid rank size, level2RankSize is 0"), HCCL_E_PARA);
@@ -583,8 +583,8 @@ HcclResult CollReduceScatterRingZerocopyExchangePipelineExecutor::RunSuperPodAnd
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollReduceScatterRingZerocopyExchangePipelineExecutor::RunFinallyProcess(const OpParam& param, const ExecMem& execMem)
+HcclResult CollReduceScatterRingZerocopyExchangePipelineExecutor::RunFinallyProcess(
+    const OpParam& param, const ExecMem& execMem) const
 {
     HCCL_DEBUG("[RunFinallyProcess] rank[%u:%u,%u,%u] ccl out -> user out");
     u32 sliceIndex = level2Rank_ * level1RankSize_;

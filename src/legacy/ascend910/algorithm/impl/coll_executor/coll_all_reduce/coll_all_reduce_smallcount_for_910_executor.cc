@@ -28,8 +28,8 @@ HcclResult CollAllReduceSmallCountFor910Executor::CalcCommInfo(std::vector<Level
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAllReduceSmallCountFor910Executor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollAllReduceSmallCountFor910Executor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;

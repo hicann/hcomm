@@ -42,7 +42,7 @@ CollAllReduceMeshOpbaseMidCountDeterministicExecutor::CalcCommInfo(std::vector<L
 }
 
 HcclResult CollAllReduceMeshOpbaseMidCountDeterministicExecutor::CalcTransportMemType(
-    TransportMemType& inputType, TransportMemType& outputType)
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;
@@ -81,7 +81,7 @@ bool CollAllReduceMeshOpbaseMidCountDeterministicExecutor::IsSmallData(
 
 HcclResult CollAllReduceMeshOpbaseMidCountDeterministicExecutor::PrepareSlicesInfo(
     const OpParam& param, const ExecMem& execMem, std::vector<Slice>& dataSegsSlice, GroupSlicesInfo& groupSlicesInfo,
-    const u32 sliceSize)
+    const u32 sliceSize) const
 {
     const u32 perDataSize = SIZE_TABLE[param.DataDes.dataType];
     MemBlockInfo memInfo;

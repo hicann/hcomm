@@ -50,7 +50,7 @@ private:
         const std::vector<std::vector<Slice>>& multRingsUserMemSlice = std::vector<std::vector<Slice>>(0),
         const bool disableDMAReduce = false) override;
 
-    void SliceExecMem(const OpParam& param, ExecMem& execMem);
+    void SliceExecMem(const OpParam& param, ExecMem& execMem) const;
 
     HcclResult GetLevel2CommInfo(SubCommInfo& level2CommInfo);
 

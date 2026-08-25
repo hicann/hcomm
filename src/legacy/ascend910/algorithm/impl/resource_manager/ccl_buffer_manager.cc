@@ -290,7 +290,7 @@ HcclResult CCLBufferManager::GetInCCLbuffer(void*& buffer, u64& size)
     return HCCL_SUCCESS;
 }
 
-u64 CCLBufferManager::GetInCCLbufferSize() { return inCCLbufferSize_; }
+u64 CCLBufferManager::GetInCCLbufferSize() const { return inCCLbufferSize_; }
 
 DeviceMem& CCLBufferManager::GetOutCCLbuffer() { return outCCLbuffer_; }
 
@@ -301,9 +301,9 @@ HcclResult CCLBufferManager::GetOutCCLbuffer(void*& buffer, u64& size)
     return HCCL_SUCCESS;
 }
 
-u64 CCLBufferManager::GetOutCCLbufferSize() { return outCCLbufferSize_; }
+u64 CCLBufferManager::GetOutCCLbufferSize() const { return outCCLbufferSize_; }
 
-u64 CCLBufferManager::GetExpBufferSize() { return winExpBufferSize_; }
+u64 CCLBufferManager::GetExpBufferSize() const { return winExpBufferSize_; }
 
 DeviceMem CCLBufferManager::GetCommRegMem(const DeviceMem& mem, MemAttr memAttr, bool aivMode)
 {

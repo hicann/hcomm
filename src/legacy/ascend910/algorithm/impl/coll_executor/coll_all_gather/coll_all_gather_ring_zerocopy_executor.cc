@@ -47,7 +47,7 @@ HcclResult CollAllGatherRingZerocopyExecutor::CalcCommInfo(std::vector<LevelNSub
 }
 
 HcclResult
-CollAllGatherRingZerocopyExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollAllGatherRingZerocopyExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;

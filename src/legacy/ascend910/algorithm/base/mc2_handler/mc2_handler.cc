@@ -20,7 +20,7 @@ Mc2HandlerPub::Mc2HandlerPub()
 }
 
 HcclResult
-Mc2HandlerPub::Mc2WaitValue(HcclDispatcher dispatcherPtr, hccl::Stream& stream, Mc2Handler* mc2Handler, u32 step)
+Mc2HandlerPub::Mc2WaitValue(HcclDispatcher dispatcherPtr, hccl::Stream& stream, Mc2Handler* mc2Handler, u32 step) const
 {
     if (mc2Handler == nullptr) {
         HCCL_INFO("[Mc2HandlerPub][Mc2WaitValue] mc2Handler is NULL.");

@@ -40,7 +40,7 @@ private:
     HcclResult ReducerSpInlineSlice(
         const HcclDispatcher dispatcher, const LINK& link, void* remoteMem, ReducerMemoryInfo reduceMem,
         Stream& stream);
-    HcclResult ReducerSdmaRemoteReadSlice(const LINK& link, const ReducerMemoryInfo& reduceMem, Stream& stream);
+    HcclResult ReducerSdmaRemoteReadSlice(const LINK& link, const ReducerMemoryInfo& reduceMem, Stream& stream) const;
     HcclResult ReducerLocalReduceSuffix(
         const HcclDispatcher dispatcher, const LINK& link, const std::vector<ReducerMemoryInfo>& reducerMems,
         Stream& stream);

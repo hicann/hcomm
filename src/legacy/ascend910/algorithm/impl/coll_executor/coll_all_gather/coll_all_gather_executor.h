@@ -37,7 +37,7 @@ protected:
     bool CalcCountsDispls(
         const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
         std::vector<u64>& curDispls);
-    void PrintCountsDispls(bool finished, const std::vector<u64>& curCounts, const std::vector<u64>& curDispls);
+    void PrintCountsDispls(bool finished, const std::vector<u64>& curCounts, const std::vector<u64>& curDispls) const;
     HcclResult RunLoopV(OpParam& param, AlgResourceResponse& algRes); // non-virtual
 
     // 工具类

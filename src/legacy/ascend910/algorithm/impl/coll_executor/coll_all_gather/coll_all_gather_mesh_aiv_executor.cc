@@ -35,7 +35,8 @@ HcclResult CollAllGatherMeshAivExecutor::CalcCommInfo(std::vector<LevelNSubCommT
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAllGatherMeshAivExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult
+CollAllGatherMeshAivExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;

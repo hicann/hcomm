@@ -53,9 +53,9 @@ private:
     HcclResult RunSuperPod(const OpParam& param, const ExecMem& execMem, u32 step);
     HcclResult RunSuperPodPostSync(const OpParam& param);
     HcclResult RunSuperPodAndInterServerPostProcess(const OpParam& param, const ExecMem& execMem, u32 step);
-    HcclResult RunFinallyProcess(const OpParam& param, const ExecMem& execMem);
+    HcclResult RunFinallyProcess(const OpParam& param, const ExecMem& execMem) const;
 
-    HcclResult CalExchangeRemoteRank(u32& remoteRankSend, u32& remoteRankRecv);
+    HcclResult CalExchangeRemoteRank(u32& remoteRankSend, u32& remoteRankRecv) const;
     HcclResult SemiRingReduceScatter(
         const std::string& tag, DeviceMem inputMem, DeviceMem outputMem, const u64 count, const HcclDataType dataType,
         const HcclReduceOp reductionOp, const std::vector<std::vector<Slice>> multRingsSliceZero, Stream stream,

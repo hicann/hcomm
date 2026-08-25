@@ -1423,7 +1423,7 @@ void TopoInfoExtractor::GetDeviceLinkTypeMap(std::map<s32, LinkTypeInServer>& de
 }
 
 HcclResult TopoInfoExtractor::AHCSubGroupInit(
-    CommPlane algLevel, std::vector<std::vector<std::vector<std::vector<u32>>>>& CommPlaneSubGroupVector)
+    CommPlane algLevel, std::vector<std::vector<std::vector<std::vector<u32>>>>& CommPlaneSubGroupVector) const
 {
     std::vector<std::vector<std::vector<u32>>>& globalSubGroups = CommPlaneSubGroupVector[algLevel];
 

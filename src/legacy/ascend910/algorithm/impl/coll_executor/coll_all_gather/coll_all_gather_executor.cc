@@ -171,7 +171,7 @@ bool CollAllGatherExecutor::CalcCountsDispls(
 }
 
 void CollAllGatherExecutor::PrintCountsDispls(
-    bool finished, const std::vector<u64>& curCounts, const std::vector<u64>& curDispls)
+    bool finished, const std::vector<u64>& curCounts, const std::vector<u64>& curDispls) const
 {
     if (HcclCheckLogLevel(DLOG_DEBUG)) {
         std::ostringstream curLoopInfo;

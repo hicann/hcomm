@@ -27,7 +27,7 @@ private:
     HcclResult CalcLevel0CommInfo(
         TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const;
     /* *************** 任务编排 *************** */
     bool IsHugeData(const u64 curSize) override;
     bool IsSmallData(const u64 totalSize, const u64 curSize) override;
@@ -35,7 +35,7 @@ private:
     HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
     HcclResult PrepareSlicesInfo(
         const OpParam& param, const ExecMem& execMem, std::vector<Slice>& dataSegsSlice,
-        GroupSlicesInfo& groupSlicesInfo, const u32 sliceSize);
+        GroupSlicesInfo& groupSlicesInfo, const u32 sliceSize) const;
     HcclResult RunReduceScatterLevel0(const OpParam& param, ExecMem& execMem, GroupSlicesInfo& groupSlicesInfo);
     HcclResult RunAllReduceLevel1(const OpParam& param, ExecMem& execMem, const std::vector<Slice>& dataSegsSlice);
     HcclResult RunAllGatherLevel0(const OpParam& param, ExecMem& execMem, const std::vector<Slice>& dataSegsSlice);

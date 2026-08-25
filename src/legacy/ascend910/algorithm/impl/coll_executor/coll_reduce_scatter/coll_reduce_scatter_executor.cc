@@ -422,7 +422,7 @@ HcclResult CollReduceScatterExecutor::RunLoopInnerV(OpParam& param, const Reduce
 
 bool CollReduceScatterExecutor::CalcCurCountsAndCurDispls(
     const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
-    std::vector<u64>& curDispls, u32 unitSize)
+    std::vector<u64>& curDispls, u32 unitSize) const
 {
     bool finished = false;
 
@@ -470,7 +470,7 @@ bool CollReduceScatterExecutor::CalcCurCountsAndCurDispls(
 }
 
 void CollReduceScatterExecutor::PrintCurCountAndCurDispls(
-    const std::vector<u64>& curCounts, const std::vector<u64>& curDispls)
+    const std::vector<u64>& curCounts, const std::vector<u64>& curDispls) const
 {
     if (HcclCheckLogLevel(DLOG_DEBUG)) {
         std::ostringstream curLoopInfo;
@@ -539,7 +539,7 @@ std::vector<std::vector<Slice>> CollReduceScatterExecutor::ReduceScatterRingSlic
 HcclResult CollReduceScatterExecutor::PrepareAivBuffers(
     u32 rankSize, u32 rankId, u32 rankOffset, DeviceMem& inputMem, DeviceMem& outputMem, std::vector<LINK>& links,
     void** dataBuffers, void** flagBuffers, UserMemType dataMemType, UserMemType flagMemType, u32 dataMemOffset,
-    u32 flagMemOffset)
+    u32 flagMemOffset) const
 {
     void* tmpCCLBufferData = nullptr;
     void* tmpCCLBufferFlag = nullptr;

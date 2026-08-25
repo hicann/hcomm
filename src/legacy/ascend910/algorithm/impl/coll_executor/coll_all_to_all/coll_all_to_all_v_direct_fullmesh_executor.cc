@@ -121,7 +121,7 @@ HcclOpMetaInfo CollRunAlltoAllDirectFullmesh::GetOpMeta(HcclCMDType opType, cons
 }
 
 HcclResult
-CollRunAlltoAllDirectFullmesh::GetLocalSDMAGroupInfo(const u32 userRank, u32& devNumInlocalPod, u32& rankIdxInPod)
+CollRunAlltoAllDirectFullmesh::GetLocalSDMAGroupInfo(const u32 userRank, u32& devNumInlocalPod, u32& rankIdxInPod) const
 {
     (void)userRank;
     bool isA2MultiModule = topoAttr_.deviceType == DevType::DEV_TYPE_910B && !topoAttr_.isSingleMeshAggregation;
@@ -180,7 +180,7 @@ HcclResult CollRunAlltoAllDirectFullmesh::CalcLevel0CommInfo(
 }
 
 HcclResult
-CollRunAlltoAllDirectFullmesh::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollRunAlltoAllDirectFullmesh::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;

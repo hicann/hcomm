@@ -38,8 +38,8 @@ HcclResult CollAllReduceMeshOpbasePipelineExecutor::CalcCommInfo(std::vector<Lev
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAllReduceMeshOpbasePipelineExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollAllReduceMeshOpbasePipelineExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;

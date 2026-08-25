@@ -17,7 +17,7 @@ CollRunAlltoAllVStaged::CollRunAlltoAllVStaged(
 {}
 
 HcclResult CollRunAlltoAllVStaged::ParallelTaskLoaderProcess(
-    const std::string& tag, Stream& stream, SubCommInfo& level0CommInfo, std::vector<Stream>& ringStreams)
+    const std::string& tag, Stream& stream, SubCommInfo& level0CommInfo, std::vector<Stream>& ringStreams) const
 {
     (void)tag;
     u32 streamIndex;
@@ -72,7 +72,7 @@ HcclResult CollRunAlltoAllVStaged::CalcStreamNum(u32& streamNum)
 
 void CollRunAlltoAllVStaged::CalcWorkSpaceMemSize(
     const AlltoAllUserRankInfo& userRankInfo, const std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo,
-    u64& workspaceMemSize, u32 meshAggregationRankSize)
+    u64& workspaceMemSize, u32 meshAggregationRankSize) const
 {
     if (allMeshAggregationSendRecvInfo.size() % meshAggregationRankSize != 0
         || allMeshAggregationSendRecvInfo.size() == 0) {
@@ -293,7 +293,7 @@ HcclResult CollRunAlltoAllVStaged::PrepareAlltoAllVStaged1(
 
 void CollRunAlltoAllVStaged::CalcInterMeshAggregationRecvRemoteOffset(
     const AlltoAllUserRankInfo& userRankInfo, const std::vector<SendRecvInfo>& allSendRecvInfo, u32 index,
-    u64& remoteOffset, u32 meshAggregationRankSize)
+    u64& remoteOffset, u32 meshAggregationRankSize) const
 {
     // 对于stage1 来说，相当于是从rand index 发送给 userRankInfo.userRank, 然后计算这种情况下的stage1 的接收偏移
     remoteOffset = 0;
@@ -375,7 +375,7 @@ void CollRunAlltoAllVStaged::CalcInterMeshAggregationAlltoAllMemInfo(
 HcclResult CollRunAlltoAllVStaged::PrepareAlltoAllVStaged2(
     DeviceMem& recvBuf, DeviceMem& scratchMem, std::map<u32, std::list<OneSendRecvAddrInfo>>& sendAddrInfosInter,
     std::map<u32, std::list<OneSendRecvAddrInfo>>& recvAddrInfosInter, Stream& stream, const std::string& tag,
-    std::unique_ptr<AlgTemplateBase>& alltoallLevel1, ExecMem& execMem)
+    std::unique_ptr<AlgTemplateBase>& alltoallLevel1, ExecMem& execMem) const
 {
     (void)tag;
     alltoallLevel1 = AlgTemplateRegistry::Instance().GetAlgTemplate(

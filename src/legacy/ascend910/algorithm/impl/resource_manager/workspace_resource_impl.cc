@@ -213,7 +213,8 @@ HcclResult WorkspaceResourceImpl::DestroyRemoteOpBasedMem(const std::string& tag
 }
 
 // 获取算子所需workspace memory大小[byte]
-HcclResult WorkspaceResourceImpl::GetOpBasedMemSize(const HcclCMDType& opType, u64& size, const HcomCollOpInfo& opInfo)
+HcclResult
+WorkspaceResourceImpl::GetOpBasedMemSize(const HcclCMDType& opType, u64& size, const HcomCollOpInfo& opInfo) const
 {
     u64 opMemSize = 0;
 

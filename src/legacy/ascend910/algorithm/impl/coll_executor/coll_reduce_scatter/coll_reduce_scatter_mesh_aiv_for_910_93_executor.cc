@@ -41,7 +41,7 @@ HcclResult CollReduceScatterMeshAivFor91093Executor::CalcCommInfo(std::vector<Le
 }
 
 HcclResult CollReduceScatterMeshAivFor91093Executor::CalcTransportMemType(
-    TransportMemType& inputType, TransportMemType& outputType)
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OPS_KERNEL_INFO_LIB) {
         if (topoMatcher_->GetDeterministicConfig() != DETERMINISTIC_DISABLE) {

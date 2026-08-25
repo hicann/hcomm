@@ -27,7 +27,7 @@ private:
         std::vector<LevelNSubCommTransport>& opTransport) override;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
     HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
-    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const;
 };
 
 } // namespace hccl

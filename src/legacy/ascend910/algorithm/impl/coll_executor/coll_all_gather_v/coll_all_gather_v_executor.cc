@@ -211,7 +211,7 @@ HcclResult CollAllGatherVExecutor::RunLoop(OpParam& param, AlgResourceResponse& 
 }
 
 void CollAllGatherVExecutor::PrintCurCountAndCurDispls(
-    const std::vector<u64>& curCounts, const std::vector<u64>& curDispls)
+    const std::vector<u64>& curCounts, const std::vector<u64>& curDispls) const
 {
     if (HcclCheckLogLevel(DLOG_DEBUG)) {
         std::ostringstream curLoopInfo;

@@ -56,12 +56,12 @@ protected:
     HcclResult MainRecordSub(u32 begin, u32 end);
     HcclResult SubWaitMain(u32 begin, u32 end);
     // 根据step获取 机间或机内的rankId
-    constexpr u32 GetPreRankIdByStep(u32 rankId, u32 rankSize, u32 step)
+    constexpr u32 GetPreRankIdByStep(u32 rankId, u32 rankSize, u32 step) const
     {
         return (rankId + rankSize - step) % rankSize;
     }
 
-    constexpr u32 GetNextRankIdByStep(u32 rankId, u32 rankSize, u32 step) { return (rankId + step) % rankSize; }
+    constexpr u32 GetNextRankIdByStep(u32 rankId, u32 rankSize, u32 step) const { return (rankId + step) % rankSize; }
 
     inline u32 GetPreServerIdByStep(u32 step) { return GetPreRankIdByStep(serverId_, serverSize_, step); }
 
@@ -71,7 +71,7 @@ protected:
 
     inline u32 GetNextIntraRankIdByStep(u32 step) { return GetNextRankIdByStep(intraRankId_, intraRankSize_, step); }
 
-    inline u32 GetRankIdx(u32 serverId, u32 intraRankId) { return serverId * intraRankSize_ + intraRankId; }
+    inline u32 GetRankIdx(u32 serverId, u32 intraRankId) const { return serverId * intraRankSize_ + intraRankId; }
     // 获取device内存部分
     virtual HcclResult
     GetRemoteCclbufferDeviceMem(u32 inputSliceIndex, LINK link, u32 outputSliceIndex, DeviceMem& remoteMem);
@@ -87,7 +87,7 @@ protected:
     HcclResult GroupTasksByStream(
         u32 activeCount, const std::vector<bool>& isReduceBlock, u32 retIndex,
         std::vector<std::vector<std::vector<std::pair<u32, u32>>>>& batchStreamTasks, std::vector<bool>& processed,
-        std::vector<u32>& origIdxMap, u32& newActiveCount);
+        std::vector<u32>& origIdxMap, u32& newActiveCount) const;
     HcclResult ExecuteStreamTasks(
         const std::vector<std::vector<std::pair<u32, u32>>>& streamTasks, const std::vector<DeviceMem>& validMem,
         std::vector<u32>& origIdxMap, bool useMainStream);
@@ -95,7 +95,7 @@ protected:
         const std::vector<std::vector<std::pair<u32, u32>>>& streamTasks, bool isStartPhase, bool useMainStream);
     void CompressActiveSet(
         std::vector<DeviceMem>& validMem, std::vector<bool>& isReduceBlock, std::vector<u32>& origIdxMap,
-        const std::vector<bool>& processed, u32& trackedTargetIdx, const u32 origRetIndex);
+        const std::vector<bool>& processed, u32& trackedTargetIdx, const u32 origRetIndex) const;
     HcclResult
     LocalReduce(std::vector<DeviceMem>& reduceMem, std::vector<bool>& isReduceBlock, u32 retIndex, bool useMainStream);
     virtual HcclResult RunIntraLocalReduce(u32 step);

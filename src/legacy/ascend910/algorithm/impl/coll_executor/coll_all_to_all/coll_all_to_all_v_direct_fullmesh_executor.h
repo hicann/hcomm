@@ -39,8 +39,8 @@ private:
     HcclResult GetLocalSendRecvInfoforAlltoall(const OpParam& param);
     HcclResult GetLocalSendRecvInfoforAlltoallV(const OpParam& param);
     HcclResult GetLocalSendRecvInfoforAlltoallVC(const OpParam& param);
-    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
-    HcclResult GetLocalSDMAGroupInfo(const u32 userRank, u32& devNumInlocalPod, u32& rankIdxInPod);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const;
+    HcclResult GetLocalSDMAGroupInfo(const u32 userRank, u32& devNumInlocalPod, u32& rankIdxInPod) const;
 
     // 用于alltoallv算子的aicpu展开cache
     bool needAlltoallvCache_ = false; // 是否需要对当前alltoallv算子做aicpu cache

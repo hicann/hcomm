@@ -228,7 +228,7 @@ void CollAlltoAllExecutor::UpdateAlltoAllZCopyMode(
 void CollAlltoAllExecutor::CalcIntraMeshAggregationSendInfo(
     const AlltoAllUserRankInfo& userRankInfo, const SendRecvInfo& mySendRecvInfo,
     const std::vector<SendRecvInfo>& myMeshAggregationSendRecvInfo, u32 rankInMeshAggregation, u32 infoIndex,
-    OneSendRecvAddrInfo& curSendInfo, u32 meshAggregationRankSize, const bool& isSingleMesh)
+    OneSendRecvAddrInfo& curSendInfo, u32 meshAggregationRankSize, const bool& isSingleMesh) const
 {
     if (infoIndex >= mySendRecvInfo.sendOffset.size() || infoIndex >= mySendRecvInfo.sendLength.size()) {
         HCCL_ERROR("[CalcIntraMeshAggregationSendInfo] Invalid infoIndex[%u]", infoIndex);
@@ -269,7 +269,7 @@ void CollAlltoAllExecutor::CalcIntraMeshAggregationSendInfo(
 
 void CollAlltoAllExecutor::CalcIntraMeshAggregationRecvInfoInMeshAggregation(
     u32 rankIndex, u32 infoIndex, const std::vector<SendRecvInfo>& myMeshAggregationSendRecvInfo, u64& localOffset,
-    u32& offsetCounter, u64& localLength, u64& remoteOffset, u32 meshAggregationRankSize)
+    u32& offsetCounter, u64& localLength, u64& remoteOffset, u32 meshAggregationRankSize) const
 {
     // 这里的判断在外部已经保证了，为了应对coverity sc
     if (myMeshAggregationSendRecvInfo.size() < meshAggregationRankSize) {

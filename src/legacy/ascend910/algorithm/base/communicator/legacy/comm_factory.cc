@@ -77,7 +77,8 @@ HcclResult CommFactory::Init()
 }
 
 HcclResult CommFactory::CheckCommPara(
-    const std::string& tag, const DeviceMem& inputMem, const DeviceMem& outputMem, const CommParaInfo& commParaInfo)
+    const std::string& tag, const DeviceMem& inputMem, const DeviceMem& outputMem,
+    const CommParaInfo& commParaInfo) const
 {
     (void)inputMem;
     (void)outputMem;
@@ -767,7 +768,7 @@ HcclResult CommFactory::SetHDCModeInfo(
 }
 
 HcclResult CommFactory::SetIsUsedRdma(
-    const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport, bool isUsedRdma)
+    const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport, bool isUsedRdma) const
 {
     u32 ringSize = commTransport.size();
 

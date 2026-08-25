@@ -31,7 +31,7 @@ private:
     HcclResult CalcLevel1CommInfo(
         TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const;
 
     /* *************** 算法编排 *************** */
     u64 CalcLoopMaxCount(const u32 unitSize) override;
@@ -41,7 +41,7 @@ private:
     /* **************** 数据准备*************** */
     HcclResult PrepareDataSlice(
         const OpParam& param, const ExecMem& execMem, const SubCommInfo& level0CommInfo,
-        const SubCommInfo& level1CommInfo, std::vector<Slice>& bufferSlices);
+        const SubCommInfo& level1CommInfo, std::vector<Slice>& bufferSlices) const;
 
     u64 curOffset_ = 0;
 };

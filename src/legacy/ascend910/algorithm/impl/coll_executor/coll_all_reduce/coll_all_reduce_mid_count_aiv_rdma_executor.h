@@ -31,7 +31,7 @@ private:
     HcclResult CalcLevel0CommInfo(
         TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const;
     HcclResult CalcCommInfo(std::vector<LevelNSubCommTransport>& opTransport) override;
     HcclResult CalNumBlocks(
         u32& numBlocks, u32 rankSize, u64 dataSize = 0, HcclCMDType cmdType = HcclCMDType::HCCL_CMD_INVALID) override;

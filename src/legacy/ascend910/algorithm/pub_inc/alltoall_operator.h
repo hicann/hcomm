@@ -24,7 +24,7 @@ public:
     HcclResult
     GetAlltoAllStagedWorkSpaceMemSize(std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo, u64& memSize);
 
-    HcclResult CheckSendRecvParams(const std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo);
+    HcclResult CheckSendRecvParams(const std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo) const;
     HcclResult GetAlltoAllvSendRecvInfo(const OpParam& param, const HostMem& alltoallAddrInfoGathered);
     HcclResult GetAlltoAllvcSendRecvInfo(const void* sendCountMatrix, HcclDataType sendType, HcclDataType recvType);
     void UpdateAlltoAllCopyMode(std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo, std::string& copyMode);
@@ -39,7 +39,7 @@ public:
 
     HcclResult GetAlltoAllvAllAddrInfo(
         u64* sendLength, u64* sendOffset, u64* recvLength, u64* recvOffset,
-        std::unique_ptr<PreProcessMetaInfo>& preMetaInfo);
+        std::unique_ptr<PreProcessMetaInfo>& preMetaInfo) const;
     HcclResult PrepareAlltoAllAddrInfo(
         const void* sendCounts, const void* sdispls, HcclDataType sendType, const void* recvCounts, const void* rdispls,
         HcclDataType recvType, std::unique_ptr<PreProcessMetaInfo>& preMetaInfo);

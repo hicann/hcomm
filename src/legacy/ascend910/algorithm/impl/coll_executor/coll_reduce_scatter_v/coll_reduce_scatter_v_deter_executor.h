@@ -32,7 +32,7 @@ private:
     u32 CalReduceStreamNum(const u32& localRankSize);
     HcclResult CalcStreamNum(u32& streamNum) override;
     HcclResult CalcScratchMemSize(u64& scratchMemSize) override;
-    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const;
     u64 CalcLoopMaxCount(const u32 unitSize) override;
     HcclResult CalcCurCountsAndCurDispls(
         const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
@@ -44,7 +44,7 @@ private:
     HcclResult RunReduceScattervLevel0(const OpParam& param, ExecMem& execMem, SubCommInfo& level0CommInfo);
     HcclResult RunReduceScattervLevel1ForMeshTopo(const OpParam& param, ExecMem& execMem, SubCommInfo& level0CommInfo);
     HcclResult CalReduceScatterVSliceData(
-        const OpParam& param, u32 level0RankSize, u32 level1RankSize, std::vector<Slice>& dataSlices);
+        const OpParam& param, u32 level0RankSize, u32 level1RankSize, std::vector<Slice>& dataSlices) const;
     HcclResult RunReduceScattervLevel1(const OpParam& param, ExecMem& execMem, const SubCommInfo& level0CommInfo);
     u32 all2allOffset_ = 0;
     u64 maxCount_ = 0;

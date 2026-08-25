@@ -60,8 +60,8 @@ HcclResult CollAllReduceSmallCountAivRdmaExecutor::CalcCommInfo(std::vector<Leve
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAllReduceSmallCountAivRdmaExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollAllReduceSmallCountAivRdmaExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     // 小数据量：使用AIVIN+AIVOUT，标记区在AIVOUT，RS前从inputPtr到AIVIN做本地拷贝
     inputType = TransportMemType::AIV_INPUT;

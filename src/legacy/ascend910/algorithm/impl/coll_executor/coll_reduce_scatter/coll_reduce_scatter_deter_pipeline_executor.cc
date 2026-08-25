@@ -70,8 +70,8 @@ HcclResult CollReduceScatterDeterPipelineExecutor::CalcLevel1CommInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollReduceScatterDeterPipelineExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollReduceScatterDeterPipelineExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;
@@ -170,7 +170,7 @@ HcclResult CollReduceScatterDeterPipelineExecutor::RunLoop(OpParam& param, AlgRe
 
 HcclResult CollReduceScatterDeterPipelineExecutor::PrepareDataSlice(
     const OpParam& param, const ExecMem& execMem, const SubCommInfo& level0CommInfo, const SubCommInfo& level1CommInfo,
-    std::vector<Slice>& bufferSlices)
+    std::vector<Slice>& bufferSlices) const
 {
     u32 unitSize = SIZE_TABLE[param.DataDes.dataType];
     bufferSlices.resize(topoAttr_.userRankSize);

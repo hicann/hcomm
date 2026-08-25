@@ -15,7 +15,7 @@
 namespace hccl {
 
 HcclResult
-CommAHCBaseInfo::GetNBNslbDstRanks(const u32 rank, const std::vector<u32> commGroups, std::vector<u32>& dstRanks)
+CommAHCBaseInfo::GetNBNslbDstRanks(const u32 rank, const std::vector<u32> commGroups, std::vector<u32>& dstRanks) const
 {
     CHK_PRT_RET(
         rank >= commGroups.size(),
@@ -42,7 +42,7 @@ CommAHCBaseInfo::GetNBNslbDstRanks(const u32 rank, const std::vector<u32> commGr
 }
 
 HcclResult
-CommAHCBaseInfo::GetNHRNslbDstRanks(const u32 rank, const std::vector<u32> commGroups, std::vector<u32>& dstRanks)
+CommAHCBaseInfo::GetNHRNslbDstRanks(const u32 rank, const std::vector<u32> commGroups, std::vector<u32>& dstRanks) const
 {
     CHK_PRT_RET(
         rank >= commGroups.size(),
@@ -68,8 +68,8 @@ CommAHCBaseInfo::GetNHRNslbDstRanks(const u32 rank, const std::vector<u32> commG
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CommAHCBaseInfo::GetRingNslbDstRanks(const u32 rank, const std::vector<u32> commGroups, std::vector<u32>& dstRanks)
+HcclResult CommAHCBaseInfo::GetRingNslbDstRanks(
+    const u32 rank, const std::vector<u32> commGroups, std::vector<u32>& dstRanks) const
 {
     CHK_PRT_RET(
         rank >= commGroups.size(),

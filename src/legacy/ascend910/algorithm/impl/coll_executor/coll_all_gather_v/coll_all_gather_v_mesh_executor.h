@@ -27,7 +27,7 @@ private:
     HcclResult CalcLevel1CommInfo(
         TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const;
 
     /* *************** 算法编排 *************** */
     HcclResult CalcCurCountsAndCurDispls(
@@ -35,16 +35,16 @@ private:
         std::vector<u64>& curDispls, bool& finished) override;
     HcclResult CalcCurCountsAndCurDisplsMultiModule(
         const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
-        std::vector<u64>& curDispls, bool& finished);
+        std::vector<u64>& curDispls, bool& finished) const;
     HcclResult CalcCurCountsAndCurDisplsSingleModule(
         const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
-        std::vector<u64>& curDispls, bool& finished);
+        std::vector<u64>& curDispls, bool& finished) const;
     u64 CalcLoopMaxCount(const u64 cclBuffSize, const u32 unitSize) override;
     bool IsHugeData(const u64 curSize) override;
     HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
     HcclResult RunSingleMesh(const OpParam& param, ExecMem& execMem);
-    HcclResult
-    RunLevel1(const OpParam& param, ExecMem& execMem, const SubCommInfo& level0CommInfo, SubCommInfo& level1CommInfo);
+    HcclResult RunLevel1(
+        const OpParam& param, ExecMem& execMem, const SubCommInfo& level0CommInfo, SubCommInfo& level1CommInfo) const;
     HcclResult
     RunLevel0(const OpParam& param, ExecMem& execMem, SubCommInfo& level0CommInfo, const SubCommInfo& level1CommInfo);
 };

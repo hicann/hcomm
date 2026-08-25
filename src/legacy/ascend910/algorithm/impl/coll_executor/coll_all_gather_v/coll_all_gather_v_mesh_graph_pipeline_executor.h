@@ -27,7 +27,7 @@ private:
     HcclResult CalcLevel1CommInfo(
         TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const;
     HcclResult CalcStreamNum(u32& streamNum) override;
 
     /* *************** 算法编排 *************** */

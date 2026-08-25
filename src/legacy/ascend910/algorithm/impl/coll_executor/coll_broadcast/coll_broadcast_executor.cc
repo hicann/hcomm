@@ -332,7 +332,7 @@ HcclResult CollBroadcastExecutor::CalcTransportMemType(TransportMemType& inputTy
 }
 
 HcclResult CollBroadcastExecutor::GetRankSliceSize(
-    HcclDataType dataType, const u64 count, const u32 rankSize, std::vector<Slice>& sliceList)
+    HcclDataType dataType, const u64 count, const u32 rankSize, std::vector<Slice>& sliceList) const
 {
     if (rankSize <= 0) {
         HCCL_ERROR(

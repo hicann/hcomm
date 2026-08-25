@@ -224,7 +224,7 @@ HcclResult CollReduceScatterVExecutor::RunLoopInner(OpParam& param, const Reduce
 }
 
 void CollReduceScatterVExecutor::PrintCurCountAndCurDispls(
-    const std::vector<u64>& curCounts, const std::vector<u64>& curDispls)
+    const std::vector<u64>& curCounts, const std::vector<u64>& curDispls) const
 {
     if (HcclCheckLogLevel(DLOG_DEBUG)) {
         std::ostringstream curLoopInfo;

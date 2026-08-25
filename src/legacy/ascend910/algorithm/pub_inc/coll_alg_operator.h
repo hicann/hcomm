@@ -98,7 +98,7 @@ protected:
         std::map<AHCConcOpType, TemplateType>& ahcAlgOption, AHCAlgSelectParam& ahcAlgSelectParam);
     HcclResult AHCAlgOptionSelect(
         const AlgTypeLevel1& algType, std::vector<std::vector<std::vector<u32>>>& globalSubGroups,
-        std::map<AHCConcOpType, TemplateType>& ahcAlgOption, const AHCAlgSelectParam& ahcAlgSelectParam);
+        std::map<AHCConcOpType, TemplateType>& ahcAlgOption, const AHCAlgSelectParam& ahcAlgSelectParam) const;
 
     bool IsNeedStrictMode(const OpParam& param);
     bool CheckStrictCondition(const OpParam& param) const;
@@ -157,12 +157,12 @@ protected:
 private:
     virtual HcclResult
     SelectAlgoTypeForReduceScatter(float delay, u64 recvCurSize, float bandWidth, AlgTypeLevel1& algType);
-    HcclResult SelectAlgoTypeForAllGather(float delay, u64 sendCurSize, float bandWidth, AlgTypeLevel1& algType);
-    HcclResult SelectAlgoTypeForAllGatherV(float delay, u64 sendCurSize, float bandWidth, AlgTypeLevel1& algType);
-    HcclResult SelectAlgoTypeForGather(float delay, u64 sendCurSize, float bandWidth, AlgTypeLevel1& algType);
-    HcclResult SelectAlgoTypeForAllReduce(float delay, u64 curSize, float bandWidth, AlgTypeLevel1& algType);
-    HcclResult SelectAlgoTypeForBroadcast(float delay, u64 curSize, float bandWidth, AlgTypeLevel1& algType);
-    HcclResult SelectAlgoTypeForReduce(float delay, u64 curSize, float bandWidth, AlgTypeLevel1& algType);
+    HcclResult SelectAlgoTypeForAllGather(float delay, u64 sendCurSize, float bandWidth, AlgTypeLevel1& algType) const;
+    HcclResult SelectAlgoTypeForAllGatherV(float delay, u64 sendCurSize, float bandWidth, AlgTypeLevel1& algType) const;
+    HcclResult SelectAlgoTypeForGather(float delay, u64 sendCurSize, float bandWidth, AlgTypeLevel1& algType) const;
+    HcclResult SelectAlgoTypeForAllReduce(float delay, u64 curSize, float bandWidth, AlgTypeLevel1& algType) const;
+    HcclResult SelectAlgoTypeForBroadcast(float delay, u64 curSize, float bandWidth, AlgTypeLevel1& algType) const;
+    HcclResult SelectAlgoTypeForReduce(float delay, u64 curSize, float bandWidth, AlgTypeLevel1& algType) const;
     HcclResult SelectAlgFor91093WithCoreLimit(const OpParam& param, const ResourceLimit& limit, std::string& algName);
 
     HcclResult AppendTag(const AlgTypeLevel1& algTypeLevel1, std::string& tag);

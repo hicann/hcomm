@@ -55,7 +55,7 @@ HcclResult CollAllGatherRingZerocopyPipelineExecutor::CalcCommInfo(std::vector<L
 }
 
 HcclResult CollAllGatherRingZerocopyPipelineExecutor::CalcTransportMemType(
-    TransportMemType& inputType, TransportMemType& outputType)
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;
@@ -506,7 +506,7 @@ HcclResult CollAllGatherRingZerocopyPipelineExecutor::CalExchangeRemoteRank(u32&
 }
 
 HcclResult CollAllGatherRingZerocopyPipelineExecutor::CalcDataSlices(
-    u64 sliceSize, u32 rankSize, std::vector<Slice>& dataSegsSlice)
+    u64 sliceSize, u32 rankSize, std::vector<Slice>& dataSegsSlice) const
 {
     dataSegsSlice.resize(rankSize);
     for (u32 i = 0; i < rankSize; i++) {

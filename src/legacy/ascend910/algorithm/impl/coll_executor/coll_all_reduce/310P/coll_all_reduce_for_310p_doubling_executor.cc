@@ -28,8 +28,8 @@ HcclResult CollAllReduceFor310PDoublingExecutor::CalcCommInfo(std::vector<LevelN
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAllReduceFor310PDoublingExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollAllReduceFor310PDoublingExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;

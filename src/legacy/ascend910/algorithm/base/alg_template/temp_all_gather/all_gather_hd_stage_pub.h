@@ -33,7 +33,8 @@ private:
     HcclResult MainWaitSub(u32 streamNum);
     HcclResult SubRecordMain(u32 streamNum);
     HcclResult ReverseId(u32 oriIdx, u32& revIdx);
-    HcclResult PrepareSliceData(u32 subRank, u32 subRankSize, u32 size, u32 batchSize, std::vector<Slice>& slices);
+    HcclResult
+    PrepareSliceData(u32 subRank, u32 subRankSize, u32 size, u32 batchSize, std::vector<Slice>& slices) const;
     HcclResult RunPreCopy(u32 rank, u32 rankSize, const std::vector<LINK>& links);
     HcclResult RunAllGatherStage(u32 rank, u32 rankSize, const std::vector<LINK>& links);
     HcclResult RunAllGatherNoPower(u32 rank, u32 rankSize, const std::vector<LINK>& links);

@@ -75,7 +75,7 @@ private:
     HcclResult GetDevMemSize(const std::string& tag);
     HcclResult InsertDevMem(const std::string& tag, DeviceMem& deviceMem);
     HcclResult InsertRemoteOpStream(const std::string& tag, std::vector<Stream>& stream);
-    HcclResult GetOpBasedMemSize(const HcclCMDType& opType, u64& size, const HcomCollOpInfo& opInfo);
+    HcclResult GetOpBasedMemSize(const HcclCMDType& opType, u64& size, const HcomCollOpInfo& opInfo) const;
 
     OffloadStreamManager offloadStreamManager_;
     std::map<std::string, std::vector<Stream>> remoteOpStreamMap_; // 当前实际没什么用

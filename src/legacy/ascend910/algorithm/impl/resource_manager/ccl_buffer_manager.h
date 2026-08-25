@@ -36,12 +36,12 @@ public:
     DeviceMem& GetInCCLbuffer();
     DeviceMem& GetCommExpBuffer();
     HcclResult GetInCCLbuffer(void*& buffer, u64& size);
-    u64 GetInCCLbufferSize();
+    u64 GetInCCLbufferSize() const;
     DeviceMem& GetOutCCLbuffer();
     HcclResult GetOutCCLbuffer(void*& buffer, u64& size);
     DeviceMem& GetCommCCLBuffer();
-    u64 GetOutCCLbufferSize();
-    u64 GetExpBufferSize();
+    u64 GetOutCCLbufferSize() const;
+    u64 GetExpBufferSize() const;
     DeviceMem& GetInAivOpbaseBuffer();
     DeviceMem& GetOutAivOpbaseBuffer();
     DeviceMem& GetInAivOffloadbuffer();

@@ -73,7 +73,7 @@ HcclResult CollReduceScatterDeterExecutor::CalcCommInfo(std::vector<LevelNSubCom
 }
 
 HcclResult
-CollReduceScatterDeterExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollReduceScatterDeterExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;

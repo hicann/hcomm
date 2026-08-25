@@ -36,8 +36,8 @@ HcclResult CollReduceScatterAivDeterSmallExecutor::CalcCommInfo(std::vector<Leve
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollReduceScatterAivDeterSmallExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollReduceScatterAivDeterSmallExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::AIV_INPUT;
     outputType = TransportMemType::AIV_OUTPUT;

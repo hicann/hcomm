@@ -44,8 +44,8 @@ HcclResult CollReduceScatterVMeshOpbaseExecutor::CalcCommInfo(std::vector<LevelN
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollReduceScatterVMeshOpbaseExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollReduceScatterVMeshOpbaseExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;
@@ -79,7 +79,7 @@ bool CollReduceScatterVMeshOpbaseExecutor::IsHugeData(const u64 curSize, const O
 
 HcclResult CollReduceScatterVMeshOpbaseExecutor::CalcCurCountsAndCurDisplsSingleModule(
     const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
-    std::vector<u64>& curDispls, bool& finished)
+    std::vector<u64>& curDispls, bool& finished) const
 {
     finished = true;
     curCounts.resize(countsLeft.size(), 0);
@@ -104,7 +104,7 @@ HcclResult CollReduceScatterVMeshOpbaseExecutor::CalcCurCountsAndCurDisplsSingle
 
 HcclResult CollReduceScatterVMeshOpbaseExecutor::CalcCurCountsAndCurDisplsMultiModule(
     const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
-    std::vector<u64>& curDispls, bool& finished)
+    std::vector<u64>& curDispls, bool& finished) const
 {
     curCounts = std::vector<u64>(countsLeft.size(), 0);
     curDispls = std::vector<u64>(displs.size(), 0);
@@ -264,7 +264,7 @@ HcclResult CollReduceScatterVMeshOpbaseExecutor::RunReduceScattervLevel0(
 }
 
 HcclResult CollReduceScatterVMeshOpbaseExecutor::CalReduceScatterVSliceData(
-    const OpParam& param, u32 level0RankSize, u32 level1RankSize, std::vector<Slice>& dataSlices)
+    const OpParam& param, u32 level0RankSize, u32 level1RankSize, std::vector<Slice>& dataSlices) const
 {
     HcclDataType dataType = param.VDataDes.dataType;
     u32 unitSize = SIZE_TABLE[dataType];

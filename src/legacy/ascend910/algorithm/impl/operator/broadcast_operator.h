@@ -26,11 +26,11 @@ public:
 private:
     HcclResult SelectAlgforMix(const OpParam& param, std::string& algName);
 
-    HcclResult SelectAlgfor310P3(const OpParam& param, std::string& algName);
+    HcclResult SelectAlgfor310P3(const OpParam& param, std::string& algName) const;
 
-    HcclResult SelectAlgfor310P(const OpParam& param, std::string& algName);
+    HcclResult SelectAlgfor310P(const OpParam& param, std::string& algName) const;
 
-    HcclResult SelectAlgfor910A(const OpParam& param, std::string& algName);
+    HcclResult SelectAlgfor910A(const OpParam& param, std::string& algName) const;
 
     HcclResult SelectAlgfor910B(const OpParam& param, std::string& algName);
 

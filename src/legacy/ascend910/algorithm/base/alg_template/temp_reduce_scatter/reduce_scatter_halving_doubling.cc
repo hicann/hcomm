@@ -44,7 +44,7 @@ u32 ReduceScatterHalvingDoubling::GetBlockStep(u32 blocksize) const
 }
 
 HcclResult
-ReduceScatterHalvingDoubling::CalculateSlices(const u64 size, const u32 sliceNum, std::vector<Slice>& slicesOut)
+ReduceScatterHalvingDoubling::CalculateSlices(const u64 size, const u32 sliceNum, std::vector<Slice>& slicesOut) const
 {
     CHK_PRT_RET((sliceNum == 0), HCCL_ERROR("[Calculate][Slices]calculate_slices failed"), HCCL_E_INTERNAL);
 

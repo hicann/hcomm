@@ -62,7 +62,7 @@ protected:
         TransportMemType inPutMemType, TransportMemType outPutMemType);
     HcclResult BuildResourceRequest(
         u64 scratchMemSize, u32 streamNum, u32 notifyNum, u64 aivBufferRequest,
-        std::vector<LevelNSubCommTransport>& opTransport, AlgResourceRequest& resourceRequest);
+        std::vector<LevelNSubCommTransport>& opTransport, AlgResourceRequest& resourceRequest) const;
     HcclResult PrintTransportRequest(AlgResourceRequest& resourceRequest);
     virtual HcclResult CalcOptimalIntraRing(const OpParam& param);
     HcclResult SetCommInfoForARS(u32 ringSize);

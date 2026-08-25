@@ -81,7 +81,7 @@ public:
 
 private:
     HcclResult AHCSubGroupInit(
-        CommPlane algLevel, std::vector<std::vector<std::vector<std::vector<u32>>>>& CommPlaneSubGroupVector);
+        CommPlane algLevel, std::vector<std::vector<std::vector<std::vector<u32>>>>& CommPlaneSubGroupVector) const;
 
     const std::string identifier_; // 本节点所在的通信域ID
     const u32 userRank_;           //  本节点的用户原始rank号

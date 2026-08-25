@@ -37,7 +37,7 @@ private:
     HcclResult RunAllGatherOnHorizontal(u32 rank, const std::vector<LINK>& links, const RingInfo& info);
     HcclResult CalcHSlicesAndLinks(
         const u32 rank, const std::vector<LINK>& links, const RingInfo& info, std::vector<LINK>& hLinks,
-        std::vector<Slice>& hSlices);
+        std::vector<Slice>& hSlices) const;
     HcclResult CalcVSlicesAndLinks(
         const u32 rank, const std::vector<LINK>& links, const RingInfo& info, std::vector<LINK>& vLinks,
         std::vector<Slice>& vSlices);

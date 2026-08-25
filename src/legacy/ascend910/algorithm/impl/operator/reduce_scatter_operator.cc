@@ -16,6 +16,8 @@
 #include <algorithm>
 
 constexpr u32 MODULE_NUM_FOUR = 4;
+// 保序规约仅支持多于2卡场景(2卡时收发对端唯一, 无规约顺序差异)
+constexpr u32 DETERMINISTIC_MIN_USER_RANK_SIZE = 2;
 constexpr u32 HCCL_310P_DATA_SIZE_MID_COUNT = 320 * 1024;
 constexpr u32 HCCL_310P_DATA_SIZE_SMALL_COUNT = 1024;
 constexpr u32 HCCL_310P_SLIM_RING_MAX_SIZE = 8;
@@ -188,7 +190,8 @@ HcclResult ReduceScatterOperator::SelectAlgfor910B(const OpParam& param, std::st
         cclBufferManager_.GetInCCLbuffer().ptr(), cclBufferManager_.GetOutCCLbuffer().ptr(), param.DataDes.dataType,
         param.reduceType);
 
-    if (topoMatcher_->GetDeterministicConfig() == DETERMINISTIC_STRICT && userRankSize_ > 2) {
+    if (topoMatcher_->GetDeterministicConfig() == DETERMINISTIC_STRICT
+        && userRankSize_ > DETERMINISTIC_MIN_USER_RANK_SIZE) {
         if (multiModuleDiffDeviceNumMode_) {
             // 保序规约场景（多batch一致），当前不支持A2非对称场景
             HCCL_ERROR(

@@ -37,11 +37,11 @@ public:
     HcclResult SetAlgTemplateParam(AHCExtendPreparePara& ahcExtendPreparePara);
     HcclResult SetIsAlignBound(bool isAlignBound);
     HcclResult ParseInputSlice(const std::vector<Slice>& physicalSlices);
-    HcclResult TrasLogicSliceToPhysical(std::vector<Slice>& slices, const std::vector<Slice>& physicalSlices);
+    HcclResult TrasLogicSliceToPhysical(std::vector<Slice>& slices, const std::vector<Slice>& physicalSlices) const;
     HcclResult GetNslbDstRanks(u32 rank, std::vector<u32>& dstRanks);
-    HcclResult GetRingNslbDstRanks(const u32 rank, const std::vector<u32> commGroups, std::vector<u32>& dstRanks);
-    HcclResult GetNHRNslbDstRanks(const u32 rank, const std::vector<u32> commGroups, std::vector<u32>& dstRanks);
-    HcclResult GetNBNslbDstRanks(const u32 rank, const std::vector<u32> commGroups, std::vector<u32>& dstRanks);
+    HcclResult GetRingNslbDstRanks(const u32 rank, const std::vector<u32> commGroups, std::vector<u32>& dstRanks) const;
+    HcclResult GetNHRNslbDstRanks(const u32 rank, const std::vector<u32> commGroups, std::vector<u32>& dstRanks) const;
+    HcclResult GetNBNslbDstRanks(const u32 rank, const std::vector<u32> commGroups, std::vector<u32>& dstRanks) const;
     HcclResult GetDstRanksByType(
         AHCTemplateType type, const u32 rank, const std::vector<u32> commGroups, std::vector<u32>& dstRanks);
 

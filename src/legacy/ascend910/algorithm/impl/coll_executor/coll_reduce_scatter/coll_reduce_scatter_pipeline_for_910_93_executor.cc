@@ -230,7 +230,7 @@ HcclResult CollReduceScatterPipelineFor91093Executor::RunL2Phase(
 }
 
 // 由 RunL0L1Phase、RunL2Phase 调用
-void CollReduceScatterPipelineFor91093Executor::SliceExecMem(const OpParam& param, ExecMem& execMem)
+void CollReduceScatterPipelineFor91093Executor::SliceExecMem(const OpParam& param, ExecMem& execMem) const
 {
     u32 unitSize = SIZE_TABLE[param.DataDes.dataType];
     u64 curSize = execMem.count * unitSize;

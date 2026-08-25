@@ -34,11 +34,11 @@ protected:
     HcclResult GetSliceNum(const u64 totalSize, const bool isSmallData, u64& sliceNum, u32 unitSize = 0);
     bool IsAllReduceSmallData(u64 size);
     HcclResult PrepareSliceDataWithAlignSize(
-        u64 totalSize, u32 sliceNum, u64 piplineOffset, std::vector<Slice>& dataSlice, u64 alignSize);
+        u64 totalSize, u32 sliceNum, u64 piplineOffset, std::vector<Slice>& dataSlice, u64 alignSize) const;
     HcclResult PrepareAivBuffers(
         u32 rankSize, u32 rankId, u32 rankOffset, DeviceMem& inputMem, DeviceMem& outputMem, std::vector<LINK>& links,
         void** dataBuffers, void** flagBuffers, UserMemType dataMemType, UserMemType flagMemType, u32 dataMemOffset,
-        u32 flagMemOffset);
+        u32 flagMemOffset) const;
 
     bool CCLMemSlice_{true};    // 每次Loop是否需要对CCLMem进行切片
     bool DMAReduceFlag_{false}; // 是否DMA消减

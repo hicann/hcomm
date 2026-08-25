@@ -37,7 +37,7 @@ private:
     // 单算子执行相关接口 start
     void CalcSendRecvTimes(u64& sendTimes, u64& recvTimes, const u32 prevRank, const u32 nextRank);
     void LoadPolicies(
-        const u32 rank, StageAlltoAllVAddrInfo& addrInfos, std::vector<std::list<OneSendRecvAddrInfo>>& policies);
+        const u32 rank, StageAlltoAllVAddrInfo& addrInfos, std::vector<std::list<OneSendRecvAddrInfo>>& policies) const;
     HcclResult CheckPolicies(const u64 times, const std::vector<std::list<OneSendRecvAddrInfo>>& policies) const;
     void SplitSendRecvAddrInfo(
         OneSendRecvAddrInfo& curLastInfo, OneSendRecvAddrInfo& addrInfo, const u64& curCCLBufSize) const;
@@ -47,9 +47,9 @@ private:
         std::shared_ptr<Transport> nextTransport);
     // 单算子执行相关接口 end
 
-    HcclResult ExecuteBarrier(std::shared_ptr<Transport> preLink, std::shared_ptr<Transport> aftLink);
-    HcclResult
-    ExecuteBarrier(bool hasSend, bool hasRecv, std::shared_ptr<Transport> preLink, std::shared_ptr<Transport> aftLink);
+    HcclResult ExecuteBarrier(std::shared_ptr<Transport> preLink, std::shared_ptr<Transport> aftLink) const;
+    HcclResult ExecuteBarrier(
+        bool hasSend, bool hasRecv, std::shared_ptr<Transport> preLink, std::shared_ptr<Transport> aftLink) const;
 
     // 单算子CCLbuf
     DeviceMem scratchInputMem_;

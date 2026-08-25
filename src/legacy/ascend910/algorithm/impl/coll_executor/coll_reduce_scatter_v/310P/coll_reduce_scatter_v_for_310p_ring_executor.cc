@@ -36,8 +36,8 @@ HcclResult CollReduceScatterVFor310PRingExecutor::CalcCommInfo(std::vector<Level
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollReduceScatterVFor310PRingExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollReduceScatterVFor310PRingExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;

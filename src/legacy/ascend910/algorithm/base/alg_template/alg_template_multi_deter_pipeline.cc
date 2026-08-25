@@ -152,7 +152,7 @@ HcclResult MultiDeterPipeline::RunIntraAlltoall(u32 step)
 HcclResult MultiDeterPipeline::GroupTasksByStream(
     u32 activeCount, const std::vector<bool>& isReduceBlock, u32 retIndex,
     std::vector<std::vector<std::vector<std::pair<u32, u32>>>>& batchStreamTasks, // 输出：批次→流→任务
-    std::vector<bool>& processed, std::vector<u32>& origIdxMap, u32& newActiveCount)
+    std::vector<bool>& processed, std::vector<u32>& origIdxMap, u32& newActiveCount) const
 {
     batchStreamTasks.clear(); // 清空批次任务
     processed.assign(activeCount, false);
@@ -257,7 +257,7 @@ HcclResult MultiDeterPipeline::ExecuteStreamTasks(
 
 void MultiDeterPipeline::CompressActiveSet(
     std::vector<DeviceMem>& validMem, std::vector<bool>& isReduceBlock, std::vector<u32>& origIdxMap,
-    const std::vector<bool>& processed, u32& trackedTargetIdx, const u32 origRetIndex)
+    const std::vector<bool>& processed, u32& trackedTargetIdx, const u32 origRetIndex) const
 {
     std::vector<DeviceMem> newValidMem;
     std::vector<bool> newIsReduceBlock;

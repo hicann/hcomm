@@ -30,7 +30,7 @@ protected:
     HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
     virtual u64 CalcLoopMaxCount(const u64 cclBuffSize, const u32 unitSize);
     HcclResult
-    GetRankSliceSize(HcclDataType dataType, const u64 count, const u32 rankSize, std::vector<Slice>& sliceList);
+    GetRankSliceSize(HcclDataType dataType, const u64 count, const u32 rankSize, std::vector<Slice>& sliceList) const;
     bool DMAReduceFlag_{false};  // 是否DMA消减
     bool scratchMemFlag_{false}; // 是否需要申请scratch memory，不需要申请则传入outputmem为scratchmem
     std::vector<Slice> l0SliceList_; // 零拷贝时l0通信域各个rank切片，用于正确计算runloop时userIn到cclIn的偏移的大小

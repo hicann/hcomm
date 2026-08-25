@@ -45,7 +45,7 @@ private:
     HcclResult LocalCopyDataRecvFromInter(u32 mainStep, u32 subStep);
 
     void GetNumSubStep(u32 step, u32& interSendSubStep, u32& interRecvSubStep, u32& intraSubStep);
-    virtual HcclResult PipelineSend(u32 step, bool isLastStep);
+    HcclResult PipelineSend(u32 step, bool isLastStep) override;
 
     // 主流搬数据同时准备好下次 mesh 间发送的信息
     std::vector<TxMemoryInfo> nextInterSendData_;

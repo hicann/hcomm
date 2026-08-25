@@ -27,7 +27,8 @@ HcclResult CollAllGatherFor310PExecutor::CalcCommInfo(std::vector<LevelNSubCommT
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAllGatherFor310PExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult
+CollAllGatherFor310PExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;

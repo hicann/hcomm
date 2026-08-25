@@ -31,7 +31,7 @@ private:
     HcclResult CalcLevel1CommInfo(
         TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const;
 
     /* *************** 算法编排 *************** */
     bool IsSmallData(const u64 totalSize, const u64 curSize) override;

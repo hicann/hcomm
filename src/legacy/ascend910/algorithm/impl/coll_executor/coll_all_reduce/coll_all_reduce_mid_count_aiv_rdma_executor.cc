@@ -41,8 +41,8 @@ HcclResult CollAllReduceMidCountAivRdmaExecutor::CalcCommInfo(std::vector<LevelN
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAllReduceMidCountAivRdmaExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollAllReduceMidCountAivRdmaExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     // 中数据量：使用AIVIN，标记区在AIVIN末尾，单算子模式用CCLOUT，图模式用USEROUT
     inputType = TransportMemType::AIV_INPUT;

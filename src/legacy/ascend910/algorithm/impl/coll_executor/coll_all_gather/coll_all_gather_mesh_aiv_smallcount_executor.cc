@@ -35,8 +35,8 @@ HcclResult CollAllGatherMeshAivSmallCountExecutor::CalcCommInfo(std::vector<Leve
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAllGatherMeshAivSmallCountExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollAllGatherMeshAivSmallCountExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::AIV_INPUT;
     outputType = TransportMemType::AIV_OUTPUT;

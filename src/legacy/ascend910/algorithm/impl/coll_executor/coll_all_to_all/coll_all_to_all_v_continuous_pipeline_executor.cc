@@ -58,7 +58,7 @@ HcclResult CollAlltoAllVContinuousPipeline::CalcStreamNum(u32& streamNum)
 }
 
 HcclResult
-CollAlltoAllVContinuousPipeline::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollAlltoAllVContinuousPipeline::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;

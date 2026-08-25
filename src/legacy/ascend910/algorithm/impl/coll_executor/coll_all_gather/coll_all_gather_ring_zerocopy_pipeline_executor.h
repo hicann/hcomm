@@ -33,7 +33,7 @@ private:
         TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
     HcclResult CalcExchangeCommInfo(std::vector<LevelNSubCommTransport>& opTransport);
-    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const;
 
     /* *************** 算法编排 *************** */
     u64 CalcLoopMaxCount(const u64 cclBuffSize, const u32 unitSize) override;
@@ -57,7 +57,7 @@ private:
     HcclResult WaitRdmaStreamFinish();
 
     HcclResult CalExchangeRemoteRank(u32& remoteRankSend, u32& remoteRankRecv);
-    HcclResult CalcDataSlices(u64 sliceSize, u32 rankSize, std::vector<Slice>& dataSegsSlice);
+    HcclResult CalcDataSlices(u64 sliceSize, u32 rankSize, std::vector<Slice>& dataSegsSlice) const;
 
     u32 unitSize_ = 0;
     u64 totalSize_ = 0; // 输入总数据量

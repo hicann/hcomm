@@ -343,7 +343,7 @@ HcclResult AllReduceRecursiveHalvingDoubling::GatherInPartOne(u32 rank, const st
 }
 
 HcclResult AllReduceRecursiveHalvingDoubling::GetCommonNslbAdjInfo(
-    const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo)
+    const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) const
 {
     u32 stepNum = 0;
     while ((rankSize >> (stepNum + 1)) != 0) {
@@ -376,7 +376,7 @@ HcclResult AllReduceRecursiveHalvingDoubling::GetCommonNslbAdjInfo(
     return HCCL_SUCCESS;
 }
 HcclResult AllReduceRecursiveHalvingDoubling::GetOddNslbAdjInfo(
-    const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo)
+    const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) const
 {
     (void)rankSize;
     u32 peerRank = rank - 1;

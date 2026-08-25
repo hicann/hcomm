@@ -43,7 +43,7 @@ HcclResult CollAllReduceMeshOpbaseExecutor::CalcCommInfo(std::vector<LevelNSubCo
 }
 
 HcclResult
-CollAllReduceMeshOpbaseExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollAllReduceMeshOpbaseExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;

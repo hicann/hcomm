@@ -35,8 +35,8 @@ HcclResult CollAlltoAllDirectFullmeshAIVExecutor::CalcCommInfo(std::vector<Level
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAlltoAllDirectFullmeshAIVExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollAlltoAllDirectFullmeshAIVExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;

@@ -55,8 +55,8 @@ HcclResult CollReduceScatterRingZerocopyExecutor::CalcCommInfo(std::vector<Level
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollReduceScatterRingZerocopyExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollReduceScatterRingZerocopyExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     if (scratchMemFlag_) {

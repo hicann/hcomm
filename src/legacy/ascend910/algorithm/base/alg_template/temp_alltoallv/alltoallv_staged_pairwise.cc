@@ -200,7 +200,7 @@ void AlltoAllVStagedPairwise::CalcSendRecvTimes(u64& sendTimes, u64& recvTimes, 
 }
 
 void AlltoAllVStagedPairwise::LoadPolicies(
-    const u32 rank, StageAlltoAllVAddrInfo& addrInfos, std::vector<std::list<OneSendRecvAddrInfo>>& policies)
+    const u32 rank, StageAlltoAllVAddrInfo& addrInfos, std::vector<std::list<OneSendRecvAddrInfo>>& policies) const
 {
     std::list<OneSendRecvAddrInfo> tempPolicies;
     u64 curSendTime = 0;
@@ -337,7 +337,7 @@ void AlltoAllVStagedPairwise::SplitSendRecvAddrInfo(
 }
 
 HcclResult
-AlltoAllVStagedPairwise::ExecuteBarrier(std::shared_ptr<Transport> preLink, std::shared_ptr<Transport> aftLink)
+AlltoAllVStagedPairwise::ExecuteBarrier(std::shared_ptr<Transport> preLink, std::shared_ptr<Transport> aftLink) const
 {
     // 同步与preLink保证数据收发已结束
     CHK_RET(preLink->TxAck(*mainStreamPtr_)); // record
@@ -356,7 +356,7 @@ AlltoAllVStagedPairwise::ExecuteBarrier(std::shared_ptr<Transport> preLink, std:
 }
 
 HcclResult AlltoAllVStagedPairwise::ExecuteBarrier(
-    bool hasSend, bool hasRecv, std::shared_ptr<Transport> preLink, std::shared_ptr<Transport> aftLink)
+    bool hasSend, bool hasRecv, std::shared_ptr<Transport> preLink, std::shared_ptr<Transport> aftLink) const
 {
     // 同步与preLink保证数据收发已结束
     if (hasRecv) {

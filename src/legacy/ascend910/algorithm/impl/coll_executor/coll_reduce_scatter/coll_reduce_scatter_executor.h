@@ -45,7 +45,7 @@ protected:
     HcclResult PrepareAivBuffers(
         u32 rankSize, u32 rankId, u32 rankOffset, DeviceMem& inputMem, DeviceMem& outputMem, std::vector<LINK>& links,
         void** dataBuffers, void** flagBuffers, UserMemType dataMemType, UserMemType flagMemType, u32 dataMemOffset,
-        u32 flagMemOffset);
+        u32 flagMemOffset) const;
     HcclResult RetryPostSync(OpParam& param, ExecMem& execMem);
     bool CCLMemSlice_{true};     // 每次Loop是否需要对CCLMem进行切片
     bool DMAReduceFlag_{false};  // 是否DMA消减
@@ -59,8 +59,8 @@ private:
 
     bool CalcCurCountsAndCurDispls(
         const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
-        std::vector<u64>& curDispls, u32 unitSize);
-    void PrintCurCountAndCurDispls(const std::vector<u64>& curCounts, const std::vector<u64>& curDispls);
+        std::vector<u64>& curDispls, u32 unitSize) const;
+    void PrintCurCountAndCurDispls(const std::vector<u64>& curCounts, const std::vector<u64>& curDispls) const;
 };
 
 } // namespace hccl

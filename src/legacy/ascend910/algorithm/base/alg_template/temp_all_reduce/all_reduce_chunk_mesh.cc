@@ -66,7 +66,8 @@ HcclResult AllReduceChunkMesh::SubRecordMain()
 }
 
 // 将数据均分，最小单位是128
-HcclResult AllReduceChunkMesh::PrepareSlice(u64 dataCount, u32 unitSize, u32 sliceNum, std::vector<Slice>& dataSlice)
+HcclResult
+AllReduceChunkMesh::PrepareSlice(u64 dataCount, u32 unitSize, u32 sliceNum, std::vector<Slice>& dataSlice) const
 {
     u64 totalSize = dataCount * unitSize;
     Slice temp;

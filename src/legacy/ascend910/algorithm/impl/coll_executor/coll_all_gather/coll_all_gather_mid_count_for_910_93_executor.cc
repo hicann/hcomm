@@ -161,7 +161,7 @@ HcclResult CollAllGatherMidCountFor91093Executor::PrepareL1DataSlices(
 }
 
 HcclResult CollAllGatherMidCountFor91093Executor::RunLevel1ByNHR(
-    const OpParam& param, ExecMem& execMem, SubCommInfo& level1CommInfo, SubCommInfo& level2CommInfo)
+    const OpParam& param, ExecMem& execMem, SubCommInfo& level1CommInfo, SubCommInfo& level2CommInfo) const
 {
     const u32 level1RankSize = level1CommInfo.localRankSize;
     const u32 level2RankSize = level2CommInfo.localRankSize;

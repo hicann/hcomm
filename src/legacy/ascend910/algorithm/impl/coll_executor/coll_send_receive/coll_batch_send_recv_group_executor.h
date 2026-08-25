@@ -82,8 +82,8 @@ private:
     HcclResult CalcStreamTaskStatus(u32& nonEmptySendStream, u32& nonEmptyRecvStream);
 
     // 对称场景规则：send前向递增/recv后向递减遍历，跳过本pod。返回当前候选rank并推进游标。
-    u32 GetNextDstRank(u32& curDstRank);
-    u32 GetPreSrcRank(u32& curSrcRank);
+    u32 GetNextDstRank(u32& curDstRank) const;
+    u32 GetPreSrcRank(u32& curSrcRank) const;
     // 计算是否为非对称超节点场景(参考alltoallv_direct_fullmesh executor中的isSuPodAsym判断)
     void CalcIsSuPodAsym(bool isA2MultiModule);
     // 按对称场景规则对RDMA slice排序：isSend=true用前向(GetNextDstRank)，false用后向(GetPreSrcRank)。

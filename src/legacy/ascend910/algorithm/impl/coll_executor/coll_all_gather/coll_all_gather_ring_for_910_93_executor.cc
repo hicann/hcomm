@@ -49,7 +49,7 @@ HcclResult CollAllGatherRingFor91093Executor::CalcCommInfo(std::vector<LevelNSub
 }
 
 HcclResult
-CollAllGatherRingFor91093Executor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollAllGatherRingFor91093Executor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;

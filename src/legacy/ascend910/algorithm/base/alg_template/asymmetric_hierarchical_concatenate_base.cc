@@ -241,7 +241,7 @@ HcclResult CommAHCBaseInfo::ParseInputSlice(const std::vector<Slice>& physicalSl
 }
 
 HcclResult
-CommAHCBaseInfo::TrasLogicSliceToPhysical(std::vector<Slice>& slices, const std::vector<Slice>& physicalSlices)
+CommAHCBaseInfo::TrasLogicSliceToPhysical(std::vector<Slice>& slices, const std::vector<Slice>& physicalSlices) const
 {
     for (u32 i = 0; i < slices.size(); i++) {
         u64 logicOffset = 0;

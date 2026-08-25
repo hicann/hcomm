@@ -30,19 +30,21 @@ private:
     HcclResult CalcLevel1CommInfo(
         TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const;
     /* *************** 任务编排 *************** */
     u64 CalcLoopMaxCount(const u64 cclBuffSize, const u32 unitSize) override;
     bool IsHugeData(const u64 curSize) override;
     bool IsSmallData(const u64 totalSize, const u64 curSize) override;
     HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
-    bool IsPowerOfTwo(u32 num);
+    bool IsPowerOfTwo(u32 num) const;
     HcclResult
-    RunDoublingSingleLevel(const OpParam& param, u64 reduceAttr, ExecMem& execMem, SubCommInfo& levelCommInfo);
+    RunDoublingSingleLevel(const OpParam& param, u64 reduceAttr, ExecMem& execMem, SubCommInfo& levelCommInfo) const;
     HcclResult RunReduceBcastSingleLevel(
-        const OpParam& param, HcomCollOpInfo& opInfo, u64 reduceAttr, ExecMem& execMem, SubCommInfo& levelCommInfo);
+        const OpParam& param, HcomCollOpInfo& opInfo, u64 reduceAttr, ExecMem& execMem,
+        SubCommInfo& levelCommInfo) const;
     HcclResult RunTempLevel1(
-        const TemplateType type, const OpParam& param, u64 reduceAttr, ExecMem& execMem, SubCommInfo& level1CommInfo);
+        const TemplateType type, const OpParam& param, u64 reduceAttr, ExecMem& execMem,
+        SubCommInfo& level1CommInfo) const;
     HcclResult RunRingLevel1(const OpParam& param, u64 reduceAttr, ExecMem& execMem, SubCommInfo& level1CommInfo);
     HcclResult RunNHRLevel1(const OpParam& param, u64 reduceAttr, ExecMem& execMem, SubCommInfo& level1CommInfo);
     HcclResult RunRHDLevel1(const OpParam& param, u64 reduceAttr, ExecMem& execMem, SubCommInfo& level1CommInfo);

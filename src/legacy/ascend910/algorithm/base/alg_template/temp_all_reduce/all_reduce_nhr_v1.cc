@@ -171,7 +171,7 @@ HcclResult AllReduceNHRV1::PrepareRunAsync(const u32 rank, const u32 rankSize, c
 
 HcclResult AllReduceNHRV1::CalcHSlicesAndLinks(
     const u32 rank, const std::vector<LINK>& links, const RingInfo& info, std::vector<LINK>& hLinks,
-    std::vector<Slice>& hSlices)
+    std::vector<Slice>& hSlices) const
 {
     u32 ringSize = info.GetHSizeByRank(rank); // 查找自己所处的行长度，也即Ring的大小
     u32 vIndex = info.GetVIndex(rank);        // 查找自己位于第几行
@@ -251,8 +251,7 @@ HcclResult AllReduceNHRV1::CalcVSlicesAndLinks(
     return HCCL_SUCCESS;
 }
 
-HcclResult
-AllReduceNHRV1::RunReduceScatterOnHorizontal(const u32 rank, const std::vector<LINK>& links, const RingInfo& info)
+HcclResult AllReduceNHRV1::RunReduceScatterOnHorizontal(u32 rank, const std::vector<LINK>& links, const RingInfo& info)
 {
     u32 ringRank = info.GetHIndex(rank); // 查找自己位于第几列，也即处于Ring中的第几个rank
 
@@ -302,8 +301,7 @@ HcclResult AllReduceNHRV1::RunAllReduceOnVertical(const u32 rank, const std::vec
     return tempAlg->RunAsync(ringRank, ringSize, vLinks);
 }
 
-HcclResult
-AllReduceNHRV1::RunAllGatherOnHorizontal(const u32 rank, const std::vector<LINK>& links, const RingInfo& info)
+HcclResult AllReduceNHRV1::RunAllGatherOnHorizontal(u32 rank, const std::vector<LINK>& links, const RingInfo& info)
 {
     u32 ringRank = info.GetHIndex(rank); // 查找自己位于第几列，也即处于Ring中的第几个rank
 

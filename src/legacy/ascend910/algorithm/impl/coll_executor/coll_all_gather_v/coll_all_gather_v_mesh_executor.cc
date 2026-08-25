@@ -47,7 +47,8 @@ HcclResult CollAllGatherVMeshExecutor::CalcCommInfo(std::vector<LevelNSubCommTra
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAllGatherVMeshExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult
+CollAllGatherVMeshExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;
@@ -175,7 +176,7 @@ HcclResult CollAllGatherVMeshExecutor::RunLevel0(
 }
 
 HcclResult CollAllGatherVMeshExecutor::RunLevel1(
-    const OpParam& param, ExecMem& execMem, const SubCommInfo& level0CommInfo, SubCommInfo& level1CommInfo)
+    const OpParam& param, ExecMem& execMem, const SubCommInfo& level0CommInfo, SubCommInfo& level1CommInfo) const
 {
     std::unique_ptr<AlgTemplateBase> level1TempAlg;
     if (algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_RING
@@ -304,7 +305,7 @@ HcclResult CollAllGatherVMeshExecutor::KernelRun(const OpParam& param, ExecMem& 
 
 HcclResult CollAllGatherVMeshExecutor::CalcCurCountsAndCurDisplsMultiModule(
     const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
-    std::vector<u64>& curDispls, bool& finished)
+    std::vector<u64>& curDispls, bool& finished) const
 {
     curCounts = std::vector<u64>(countsLeft.size(), 0);
     curDispls = std::vector<u64>(displs.size(), 0);
@@ -352,7 +353,7 @@ HcclResult CollAllGatherVMeshExecutor::CalcCurCountsAndCurDisplsMultiModule(
 
 HcclResult CollAllGatherVMeshExecutor::CalcCurCountsAndCurDisplsSingleModule(
     const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
-    std::vector<u64>& curDispls, bool& finished)
+    std::vector<u64>& curDispls, bool& finished) const
 {
     finished = true;
 

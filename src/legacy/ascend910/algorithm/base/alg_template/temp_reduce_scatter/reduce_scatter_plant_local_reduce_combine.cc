@@ -77,9 +77,12 @@ HcclResult ReduceScatterPlantLocalReduceCombine::SubRecordMain(u32 firstSubStrea
     return HCCL_SUCCESS;
 }
 
-u32 ReduceScatterPlantLocalReduceCombine::CalcOutputIndex(const u32 round) { return (round + localRank_) % rankSize_; }
+u32 ReduceScatterPlantLocalReduceCombine::CalcOutputIndex(const u32 round) const
+{
+    return (round + localRank_) % rankSize_;
+}
 
-bool ReduceScatterPlantLocalReduceCombine::isLastRank(const u32 rankId) { return rankId == rankSize_ - 1; }
+bool ReduceScatterPlantLocalReduceCombine::isLastRank(const u32 rankId) const { return rankId == rankSize_ - 1; }
 
 bool ReduceScatterPlantLocalReduceCombine::isLastBlockData(const u32 outputIndex)
 {

@@ -291,6 +291,9 @@ protected:
     {
         CommunicatorImplTest::SetUp();
         // 初始化测试环境
+        // rankSize 未在 InitCommonData 中初始化, 显式设置为多卡, 避免走 rankSize==1 的
+        // SingleRankProc 快速路径导致返回 HCCL_SUCCESS 而非预期错误码
+        fakeComm.rankSize = 2;
         fakeComm.SetCommStatus(CommStatus::COMM_READY);
         fakeComm.commExecuteConfig.accState = AcceleratorState::HOSTCPU_TS;
         fakeComm.opExecuteConfig.accState = AcceleratorState::HOSTCPU_TS;

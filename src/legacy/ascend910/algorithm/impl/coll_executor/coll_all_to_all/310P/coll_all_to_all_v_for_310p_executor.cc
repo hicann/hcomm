@@ -73,7 +73,7 @@ HcclResult CollRunAlltoAllVFor310PExecutor::CalcLevel0CommInfo(
 }
 
 HcclResult
-CollRunAlltoAllVFor310PExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollRunAlltoAllVFor310PExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;

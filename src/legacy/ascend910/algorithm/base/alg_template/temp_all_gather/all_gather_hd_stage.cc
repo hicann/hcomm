@@ -182,8 +182,8 @@ HcclResult AllGatherHDStage::ReverseId(u32 oriIdx, u32& revIdx)
     return HCCL_SUCCESS;
 }
 
-HcclResult
-AllGatherHDStage::PrepareSliceData(u32 subRank, u32 subRankSize, u32 size, u32 batchSize, std::vector<Slice>& slices)
+HcclResult AllGatherHDStage::PrepareSliceData(
+    u32 subRank, u32 subRankSize, u32 size, u32 batchSize, std::vector<Slice>& slices) const
 {
     Slice temp;
     u32 power = static_cast<u32>(log2(subRankSize));

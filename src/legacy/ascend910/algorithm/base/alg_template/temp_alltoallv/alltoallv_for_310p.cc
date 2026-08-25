@@ -122,7 +122,7 @@ HcclResult AlltoAllVFor310P::NotifySubStreamStart()
 }
 
 HcclResult AlltoAllVFor310P::CalcSendInfo(
-    const u32 srcDataRank, const u32 dstDataRank, const u32 times, const u64 subStepLen, SendMemBlock& sendInfo)
+    const u32 srcDataRank, const u32 dstDataRank, const u32 times, const u64 subStepLen, SendMemBlock& sendInfo) const
 {
     const std::vector<u64>& sendLength = (*allMeshAggregationSendRecvInfoPtr_)[srcDataRank].sendLength;
     const std::vector<u64>& sendOffset = (*allMeshAggregationSendRecvInfoPtr_)[srcDataRank].sendOffset;
@@ -149,7 +149,7 @@ HcclResult AlltoAllVFor310P::CalcSendInfo(
 }
 
 HcclResult AlltoAllVFor310P::CalcRecvInfo(
-    const u32 srcDataRank, const u32 dstDataRank, const u32 times, const u64 subStepLen, RecvMemBlock& recvInfo)
+    const u32 srcDataRank, const u32 dstDataRank, const u32 times, const u64 subStepLen, RecvMemBlock& recvInfo) const
 {
     const std::vector<u64>& recvLength = (*allMeshAggregationSendRecvInfoPtr_)[dstDataRank].recvLength;
     const std::vector<u64>& recvOffset = (*allMeshAggregationSendRecvInfoPtr_)[dstDataRank].recvOffset;

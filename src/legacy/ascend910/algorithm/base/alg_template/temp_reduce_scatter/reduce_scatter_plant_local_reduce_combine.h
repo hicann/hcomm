@@ -32,8 +32,8 @@ private:
     HcclResult SubWaitMain(u32 firstSubStreamIndex, u32 totalTask);                       // 从流等待主流
     HcclResult MainWaitSub(Stream& mainStream, u32 firstSubStreamIndex, u32 totalTask);   // 主流等待从流
     HcclResult SubRecordMain(u32 firstSubStreamIndex, u32 totalTask);                     // 从流等待主流
-    u32 CalcOutputIndex(const u32 round);
-    bool isLastRank(const u32 rankId);
+    u32 CalcOutputIndex(const u32 round) const;
+    bool isLastRank(const u32 rankId) const;
     bool isLastBlockData(const u32 outputIndex);
     HcclResult LocalCopy();
     HcclResult RunAlltoAllRDMA(u32 round, u64 sliceSize, const std::vector<LINK>& links);

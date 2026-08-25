@@ -615,7 +615,7 @@ CollAlgOperator::SelectAlgoTypeForReduceScatter(float delay, u64 recvCurSize, fl
 }
 
 HcclResult
-CollAlgOperator::SelectAlgoTypeForAllGather(float delay, u64 sendCurSize, float bandWidth, AlgTypeLevel1& algType)
+CollAlgOperator::SelectAlgoTypeForAllGather(float delay, u64 sendCurSize, float bandWidth, AlgTypeLevel1& algType) const
 {
     auto steps = moduleNum_ - 1;
     // theoretical time cost of Ring
@@ -652,8 +652,8 @@ CollAlgOperator::SelectAlgoTypeForAllGather(float delay, u64 sendCurSize, float 
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAlgOperator::SelectAlgoTypeForAllGatherV(float delay, u64 sendCurSize, float bandWidth, AlgTypeLevel1& algType)
+HcclResult CollAlgOperator::SelectAlgoTypeForAllGatherV(
+    float delay, u64 sendCurSize, float bandWidth, AlgTypeLevel1& algType) const
 {
     auto steps = moduleNum_ - 1;
     // theoretical time cost of Ring
@@ -674,7 +674,7 @@ CollAlgOperator::SelectAlgoTypeForAllGatherV(float delay, u64 sendCurSize, float
 }
 
 HcclResult
-CollAlgOperator::SelectAlgoTypeForGather(float delay, u64 sendCurSize, float bandWidth, AlgTypeLevel1& algType)
+CollAlgOperator::SelectAlgoTypeForGather(float delay, u64 sendCurSize, float bandWidth, AlgTypeLevel1& algType) const
 {
     auto steps = moduleNum_ - 1;
     // theoretical time cost of Ring
@@ -699,7 +699,7 @@ CollAlgOperator::SelectAlgoTypeForGather(float delay, u64 sendCurSize, float ban
 }
 
 HcclResult
-CollAlgOperator::SelectAlgoTypeForAllReduce(float delay, u64 curSize, float bandWidth, AlgTypeLevel1& algType)
+CollAlgOperator::SelectAlgoTypeForAllReduce(float delay, u64 curSize, float bandWidth, AlgTypeLevel1& algType) const
 {
     auto steps = moduleNum_ - 1;
     // theoretical time cost of Ring
@@ -737,7 +737,7 @@ CollAlgOperator::SelectAlgoTypeForAllReduce(float delay, u64 curSize, float band
 }
 
 HcclResult
-CollAlgOperator::SelectAlgoTypeForBroadcast(float delay, u64 curSize, float bandWidth, AlgTypeLevel1& algType)
+CollAlgOperator::SelectAlgoTypeForBroadcast(float delay, u64 curSize, float bandWidth, AlgTypeLevel1& algType) const
 {
     auto steps = moduleNum_ - 1;
     // theoretical time cost of Ring
@@ -761,7 +761,8 @@ CollAlgOperator::SelectAlgoTypeForBroadcast(float delay, u64 curSize, float band
     return HCCL_SUCCESS;
 }
 
-HcclResult CollAlgOperator::SelectAlgoTypeForReduce(float delay, u64 curSize, float bandWidth, AlgTypeLevel1& algType)
+HcclResult
+CollAlgOperator::SelectAlgoTypeForReduce(float delay, u64 curSize, float bandWidth, AlgTypeLevel1& algType) const
 {
     HCCL_DEBUG("[CollAlgOperator]SelectAlgoTypeForReduce start");
     auto steps = moduleNum_ - 1;
@@ -1026,7 +1027,7 @@ HcclResult CollAlgOperator::AHCAlgSelect(
 
 HcclResult CollAlgOperator::AHCAlgOptionSelect(
     const AlgTypeLevel1& algType, std::vector<std::vector<std::vector<u32>>>& globalSubGroups,
-    std::map<AHCConcOpType, TemplateType>& ahcAlgOption, const AHCAlgSelectParam& ahcAlgSelectParam)
+    std::map<AHCConcOpType, TemplateType>& ahcAlgOption, const AHCAlgSelectParam& ahcAlgSelectParam) const
 {
     (void)algType;
     (void)ahcAlgSelectParam;

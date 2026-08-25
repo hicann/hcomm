@@ -30,7 +30,7 @@ protected:
         std::vector<u64>& curDispls, bool& finished);
 
     // 工具类
-    void PrintCurCountAndCurDispls(const std::vector<u64>& curCounts, const std::vector<u64>& curDispls);
+    void PrintCurCountAndCurDispls(const std::vector<u64>& curCounts, const std::vector<u64>& curDispls) const;
     HcclResult CalcTotalCount(std::vector<u64> curCounts, u64& totalCount);
 
     bool DMAReduceFlag_{false}; // 是否DMA消减的标志

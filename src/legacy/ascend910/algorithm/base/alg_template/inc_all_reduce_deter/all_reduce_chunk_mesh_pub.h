@@ -35,7 +35,7 @@ private:
     HcclResult SubWaitMain();
     HcclResult MainWaitSub();
     HcclResult SubRecordMain();
-    HcclResult PrepareSlice(u64 dataCount, u32 unitSize, u32 sliceNum, std::vector<Slice>& dataSlice);
+    HcclResult PrepareSlice(u64 dataCount, u32 unitSize, u32 sliceNum, std::vector<Slice>& dataSlice) const;
     HcclResult PrepareAllreduceSliceData();
     HcclResult WaitPrevStep(u32 rank, u32 step, const std::vector<LINK>& links);
     HcclResult RecordNextStep(u32 rank, u32 step, const std::vector<LINK>& links);

@@ -56,8 +56,6 @@ __aicore__ inline void AivAllReduceRdmaSmall910B::ReduceScatter(
 
         // 卡间同步
         pipe_barrier(PIPE_ALL);
-        // SetSignalValue((__gm__ int32_t *)(GM_OUT[rank_] + flagOffsetOut), localSetTensor, tag); //
-        // 本卡该片数据已经可以被跨片读取
         DataCopyUB2GM(outputGT, localOut, curCount);
         inOutQue.FreeTensor(localOut);
 

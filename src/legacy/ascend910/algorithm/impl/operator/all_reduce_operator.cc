@@ -16,6 +16,9 @@
 
 namespace hccl {
 
+// 保序规约仅支持多于2卡场景(2卡时收发对端唯一, 无规约顺序差异)
+constexpr u32 DETERMINISTIC_MIN_USER_RANK_SIZE = 2;
+
 AllReduceOperator::AllReduceOperator(
     AlgConfigurator* algConfigurator, CCLBufferManager& cclBufferManager, HcclDispatcher dispatcher,
     std::unique_ptr<TopoMatcher>& topoMatcher)
@@ -379,7 +382,8 @@ HcclResult AllReduceOperator::SelectAlgfor910B(const OpParam& param, std::string
         return HCCL_E_NOT_SUPPORT;
     }
 
-    if (topoMatcher_->GetDeterministicConfig() == DETERMINISTIC_STRICT && userRankSize_ > 2
+    if (topoMatcher_->GetDeterministicConfig() == DETERMINISTIC_STRICT
+        && userRankSize_ > DETERMINISTIC_MIN_USER_RANK_SIZE
         && (param.DataDes.dataType == HCCL_DATA_TYPE_FP16 || param.DataDes.dataType == HCCL_DATA_TYPE_FP32
             || param.DataDes.dataType == HCCL_DATA_TYPE_BFP16)) {
         if (param.aicpuUnfoldMode || (topoMatcher_->GetAivModeConfig() && !isBarrierOp)) {

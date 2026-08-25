@@ -85,8 +85,8 @@ HcclResult CollReduceScatterOrderPreservedExecutor::CalcCommInfo(std::vector<Lev
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollReduceScatterOrderPreservedExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollReduceScatterOrderPreservedExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     // scratchMemFlag_ 对应图模式场景（图模式没有cclbuffer）, PARAM_INPUT -> userInput
     inputType = scratchMemFlag_ ? TransportMemType::PARAM_INPUT : TransportMemType::CCL_INPUT;

@@ -17,11 +17,10 @@ CollNativeExecutorBase::CollNativeExecutorBase(
     : CollExecutorBase(dispatcher, topoMatcher),
       topoAttr_(topoMatcher_->GetTopoInfo()),
       algoAttr_(topoMatcher_->GetAlgoInfo()),
+      topoType_(topoAttr_.topoType),
+      is310P3Common_(topoAttr_.is310P3Common),
       workflowMode_(GetWorkflowMode())
-{
-    topoType_ = topoAttr_.topoType;
-    is310P3Common_ = topoAttr_.is310P3Common;
-}
+{}
 
 void CollNativeExecutorBase::ParseParam(const OpParam& param)
 {
@@ -388,7 +387,7 @@ SubCommInfo CollNativeExecutorBase::GetSubCommInfo(const CommPlane levelIndex, c
 
 HcclResult CollNativeExecutorBase::BuildResourceRequest(
     u64 scratchMemSize, u32 streamNum, u32 notifyNum, u64 aivBufferRequest,
-    std::vector<LevelNSubCommTransport>& opTransport, AlgResourceRequest& resourceRequest)
+    std::vector<LevelNSubCommTransport>& opTransport, AlgResourceRequest& resourceRequest) const
 {
     resourceRequest.scratchMemSize = scratchMemSize;
     resourceRequest.streamNum = streamNum;

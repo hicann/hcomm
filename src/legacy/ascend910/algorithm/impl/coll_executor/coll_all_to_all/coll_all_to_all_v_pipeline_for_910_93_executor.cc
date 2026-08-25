@@ -18,7 +18,7 @@ CollAlltoAllVPipelineFor91093::CollAlltoAllVPipelineFor91093(
 {}
 
 HcclResult
-CollAlltoAllVPipelineFor91093::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollAlltoAllVPipelineFor91093::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;

@@ -120,12 +120,12 @@ private:
     // 跨module通信，通过SDMA从link left读
     HcclResult InterSdmaRx(
         const LINK& linkLeft, const LINK& linkRight, std::vector<TxMemoryInfo>& sendMems,
-        std::vector<RxMemoryInfo>& recvMems, Stream& stream);
+        std::vector<RxMemoryInfo>& recvMems, Stream& stream) const;
 
     // 跨module通信，通过RDMA从link left读或向link right写
     HcclResult InterRdmaTxRx(
         const LINK& linkLeft, const LINK& linkRight, std::vector<TxMemoryInfo>& sendMems,
-        std::vector<RxMemoryInfo>& recvMems, Stream& stream);
+        std::vector<RxMemoryInfo>& recvMems, Stream& stream) const;
 
     // 获取本rank的counts和displacements信息
     inline u64 GetLocalSendCountOfRank(const u32 targetRank) const;

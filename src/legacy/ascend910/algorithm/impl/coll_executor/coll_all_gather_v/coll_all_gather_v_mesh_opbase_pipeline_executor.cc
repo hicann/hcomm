@@ -65,7 +65,7 @@ HcclResult CollAllGatherVMeshOpbasePipelineExecutor::CalcCommInfo(std::vector<Le
 }
 
 HcclResult CollAllGatherVMeshOpbasePipelineExecutor::CalcTransportMemType(
-    TransportMemType& inputType, TransportMemType& outputType)
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;

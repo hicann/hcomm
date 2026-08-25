@@ -64,7 +64,7 @@ HcclResult CollReduceScatterVMeshOpbasePipelineExecutor::CalcLevel1CommInfo(
 }
 
 HcclResult CollReduceScatterVMeshOpbasePipelineExecutor::CalcTransportMemType(
-    TransportMemType& inputType, TransportMemType& outputType)
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;

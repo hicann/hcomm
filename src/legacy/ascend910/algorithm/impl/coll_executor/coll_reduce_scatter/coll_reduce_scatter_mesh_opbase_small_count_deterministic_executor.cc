@@ -55,7 +55,7 @@ bool CollReduceScatterMeshOpbaseSmallCountDeterministicExecutor::IsPowerOfTwo(u3
 }
 
 HcclResult CollReduceScatterMeshOpbaseSmallCountDeterministicExecutor::CalcTransportMemType(
-    TransportMemType& inputType, TransportMemType& outputType)
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;

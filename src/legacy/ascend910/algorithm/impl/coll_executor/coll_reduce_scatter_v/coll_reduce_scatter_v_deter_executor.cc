@@ -122,7 +122,7 @@ HcclResult CollReduceScatterVDeterExecutor::CalcCommInfo(std::vector<LevelNSubCo
 }
 
 HcclResult
-CollReduceScatterVDeterExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollReduceScatterVDeterExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     // scratchMemFlag_ 对应图模式场景（图模式没有cclbuffer）, PARAM_INPUT -> userInput
     inputType = scratchMemFlag_ ? TransportMemType::PARAM_INPUT : TransportMemType::CCL_INPUT;
@@ -252,7 +252,7 @@ HcclResult CollReduceScatterVDeterExecutor::RunReduceScattervLevel1ForMeshTopo(
 }
 
 HcclResult CollReduceScatterVDeterExecutor::CalReduceScatterVSliceData(
-    const OpParam& param, u32 level0RankSize, u32 level1RankSize, std::vector<Slice>& dataSlices)
+    const OpParam& param, u32 level0RankSize, u32 level1RankSize, std::vector<Slice>& dataSlices) const
 {
     (void)level0RankSize;
     u32 unitSize = SIZE_TABLE[param.VDataDes.dataType];

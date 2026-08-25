@@ -82,10 +82,10 @@ public:
 
     void GetSocketsByRankIP(
         const std::string& commTag, u32 remoteRank, const HcclIpAddress& remoteIp, u32 socketsPerLink,
-        std::vector<std::shared_ptr<HcclSocket>>& ipSockets, u32& gotLinkNum);
+        std::vector<std::shared_ptr<HcclSocket>>& ipSockets, u32& gotLinkNum) const;
     void GetSocketsByRankIP(
-        const HcclIpAddress& remoteIp, u32 socketsPerLink, std::vector<std::shared_ptr<HcclSocket>>& rankSockets,
-        std::vector<std::shared_ptr<HcclSocket>>& ipSockets, u32& gotLinkNum);
+        const HcclIpAddress& remoteIp, u32 socketsPerLink, const std::vector<std::shared_ptr<HcclSocket>>& rankSockets,
+        std::vector<std::shared_ptr<HcclSocket>>& ipSockets, u32& gotLinkNum) const;
 
     HcclResult ServerInit(const HcclNetDevCtx netDevCtx, u32 port);
     HcclResult ServerDeInit(const HcclNetDevCtx netDevCtx, u32 port);
@@ -113,7 +113,7 @@ public:
             []() {
                 return false;
             },
-        s32 timeout = 0);
+        s32 timeout = 0) const;
     HcclResult ServerDeInit(const HcclIpAddress& localIp, u32 port);
 
 private:
@@ -142,7 +142,7 @@ private:
         HcclSocketRole localRole, std::map<u32, std::vector<std::shared_ptr<HcclSocket>>>& rankSocketsMap,
         std::map<u32, u32>& dstRankToUserRank, TlsStatus& tlsStatus) const;
     u32 GetConnLimit(NicType socketType);
-    std::string MakeUniqueConnTag(const std::string& commTag, bool isInterLink, u32 rank, u32 indexForLink);
+    std::string MakeUniqueConnTag(const std::string& commTag, bool isInterLink, u32 userRank, u32 indexForLink) const;
     HcclResult ConstructWhiteList(
         const std::string& commTag, bool isInterLink, NicType socketType, const HcclRankLinkInfo& dstRankLinkInfo,
         std::vector<SocketWlistInfo>& wlistInfosVec, uint32_t connectMode = 0);
@@ -150,8 +150,9 @@ private:
         const std::string& commTag, std::shared_ptr<HcclSocket>& socket, const std::vector<SocketWlistInfo> wlistInfos);
     HcclResult ConstructSockets(
         const std::string& commTag, bool isInterLink, const HcclNetDevCtx netDevCtx, u32 socketsPerLink,
-        NicType socketType, u32 dstRank, const HcclIpAddress& remoteIp, u32 remotePort, const HcclIpAddress& localIp,
-        HcclSocketRole localRole, std::vector<std::shared_ptr<HcclSocket>>& socketList, uint32_t connectMode = 0);
+        NicType socketType, u32 remoteUserRank, const HcclIpAddress& remoteIp, u32 remotePort,
+        const HcclIpAddress& localIp, HcclSocketRole localRole, std::vector<std::shared_ptr<HcclSocket>>& socketList,
+        uint32_t connectMode = 0);
     void SaveSockets(
         const std::string& commTag, u32 remoteRank, const HcclIpAddress& remoteIp,
         std::vector<std::shared_ptr<HcclSocket>>& ipSockets);
@@ -160,7 +161,7 @@ private:
         HcclSocketRole localRole, std::map<u32, std::vector<std::shared_ptr<HcclSocket>>>& rankSocketsMap,
         s32 timeout = 0);
 
-    void AddIpQueue(RankInfo& localRankInfo, RankInfo& remoteRankInfo, NicType nicType, s32 deviceLogicId);
+    void AddIpQueue(RankInfo& localRankInfo, RankInfo& remoteRankInfo, NicType nicType, s32 deviceLogicId) const;
     NICDeployment nicDeployment_;
     s32 deviceLogicId_;
     u32 devicePhyId_;

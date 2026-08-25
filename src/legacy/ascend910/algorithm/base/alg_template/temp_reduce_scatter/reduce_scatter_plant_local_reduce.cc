@@ -98,9 +98,12 @@ u32 ReduceScatterPlantLocalReduce::CalcOutputIndex(const u32 round)
 
 bool ReduceScatterPlantLocalReduce::isLastGroup(const u32 groupId) { return groupId == groupSlicesInfo_.size() - 1; }
 
-bool ReduceScatterPlantLocalReduce::isLastRank(const u32 rankId) { return rankId == rankSize_ - 1; }
+bool ReduceScatterPlantLocalReduce::isLastRank(const u32 rankId) const { return rankId == rankSize_ - 1; }
 
-bool ReduceScatterPlantLocalReduce::isLastBlockData(const u32 outputIndex) { return outputIndex == rankSize_ - 1; }
+bool ReduceScatterPlantLocalReduce::isLastBlockData(const u32 outputIndex) const
+{
+    return outputIndex == rankSize_ - 1;
+}
 
 HcclResult ReduceScatterPlantLocalReduce::RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links)
 {

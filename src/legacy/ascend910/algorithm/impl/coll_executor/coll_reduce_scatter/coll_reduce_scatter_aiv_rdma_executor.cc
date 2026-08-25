@@ -55,7 +55,7 @@ HcclResult CollReduceScatterAivRdmaExecutor::CalcCommInfo(std::vector<LevelNSubC
 }
 
 HcclResult
-CollReduceScatterAivRdmaExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollReduceScatterAivRdmaExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     // 使用AIVIN，标记区在AIVIN末尾，单算子模式用CCLOUT，图模式用USEROUT
     inputType = TransportMemType::AIV_INPUT;

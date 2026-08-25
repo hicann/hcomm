@@ -23,7 +23,7 @@ class Mc2HandlerPub {
 public:
     Mc2HandlerPub();
 
-    HcclResult Mc2WaitValue(HcclDispatcher dispatcherPtr, hccl::Stream& stream, Mc2Handler* mc2Handler, u32 step);
+    HcclResult Mc2WaitValue(HcclDispatcher dispatcherPtr, hccl::Stream& stream, Mc2Handler* mc2Handler, u32 step) const;
     HcclResult Mc2WriteValue(HcclDispatcher dispatcherPtr, hccl::Stream& stream, Mc2Handler* mc2Handler);
 
 private:

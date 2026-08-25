@@ -35,8 +35,8 @@ HcclResult CollAllGatherVMeshGraphPipelineExecutor::CalcCommInfo(std::vector<Lev
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAllGatherVMeshGraphPipelineExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollAllGatherVMeshGraphPipelineExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::PARAM_INPUT;
     outputType = TransportMemType::PARAM_OUTPUT;

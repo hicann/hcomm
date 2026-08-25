@@ -54,7 +54,7 @@ u64 CollAllGatherSmallCountExecutor::CalcLoopMaxCount(const u64 cclBuffSize, con
 }
 
 HcclResult
-CollAllGatherSmallCountExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollAllGatherSmallCountExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;

@@ -43,7 +43,7 @@ void AlltoAllOperator::SetParallelTaskLoader(ParallelTaskLoader* parallelTaskLoa
     return;
 }
 
-HcclResult AlltoAllOperator::CheckSendRecvParams(const std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo)
+HcclResult AlltoAllOperator::CheckSendRecvParams(const std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo) const
 {
     u32 rankSize = allMeshAggregationSendRecvInfo.size();
     for (u32 i = 0; i < rankSize; i++) {
@@ -372,7 +372,7 @@ HcclResult AlltoAllOperator::SelectAlg(
 
 HcclResult AlltoAllOperator::GetAlltoAllvAllAddrInfo(
     u64* sendLength, u64* sendOffset, u64* recvLength, u64* recvOffset,
-    std::unique_ptr<PreProcessMetaInfo>& preMetaInfo)
+    std::unique_ptr<PreProcessMetaInfo>& preMetaInfo) const
 {
     const u32 addrItemNum = 4;
     u64 stepSize = sizeof(u64) * userRankSize_;

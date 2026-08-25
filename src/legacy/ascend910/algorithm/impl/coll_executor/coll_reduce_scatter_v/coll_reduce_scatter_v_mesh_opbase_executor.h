@@ -28,17 +28,17 @@ private:
     HcclResult CalcLevel0CommInfo(
         TransportMemType inputType, TransportMemType outputType,
         std::vector<LevelNSubCommTransport>& opTransport) override;
-    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType);
+    HcclResult CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const;
 
     /* *************** 算法编排 *************** */
     HcclResult CalReduceScatterVSliceData(
-        const OpParam& param, u32 level0RankSize, u32 level1RankSize, std::vector<Slice>& dataSlices);
+        const OpParam& param, u32 level0RankSize, u32 level1RankSize, std::vector<Slice>& dataSlices) const;
     HcclResult CalcCurCountsAndCurDisplsSingleModule(
         const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
-        std::vector<u64>& curDispls, bool& finished);
+        std::vector<u64>& curDispls, bool& finished) const;
     HcclResult CalcCurCountsAndCurDisplsMultiModule(
         const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
-        std::vector<u64>& curDispls, bool& finished);
+        std::vector<u64>& curDispls, bool& finished) const;
     HcclResult CalcCurCountsAndCurDispls(
         const u64 maxTotalCount, std::vector<u64>& countsLeft, std::vector<u64>& displs, std::vector<u64>& curCounts,
         std::vector<u64>& curDispls, bool& finished) override;

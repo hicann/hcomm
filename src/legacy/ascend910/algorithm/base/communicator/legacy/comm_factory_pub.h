@@ -73,7 +73,7 @@ protected:
 private:
     HcclResult CheckCommPara(
         const std::string& tag, const DeviceMem& inputMem, const DeviceMem& outputMem,
-        const CommParaInfo& commParaInfo);
+        const CommParaInfo& commParaInfo) const;
 
     HcclResult GetIsUsedRdma(const CommParaInfo& commParaInfo, bool& isUsedRdma);
 
@@ -108,7 +108,7 @@ private:
         std::vector<std::unique_ptr<CommBase>>& commVec);
 
     HcclResult SetIsUsedRdma(
-        const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport, bool isUsedRdma);
+        const CommParaInfo& commParaInfo, std::vector<SingleSubCommTransport>& commTransport, bool isUsedRdma) const;
 
     // 获取本rank在子通信域(多平面)内当前平面的rank号
     u32 GetSubCollectiveRank(const std::vector<RankInfo>& vecPara) const;

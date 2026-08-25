@@ -400,7 +400,7 @@ bool CollAllReduceExecutor::IsAllReduceSmallData(u64 size)
 }
 
 HcclResult CollAllReduceExecutor::PrepareSliceDataWithAlignSize(
-    u64 totalSize, u32 sliceNum, u64 piplineOffset, std::vector<Slice>& dataSlice, u64 alignSize)
+    u64 totalSize, u32 sliceNum, u64 piplineOffset, std::vector<Slice>& dataSlice, u64 alignSize) const
 {
     Slice temp;
     dataSlice.clear();
@@ -437,7 +437,7 @@ HcclResult CollAllReduceExecutor::PrepareSliceDataWithAlignSize(
 HcclResult CollAllReduceExecutor::PrepareAivBuffers(
     u32 rankSize, u32 rankId, u32 rankOffset, DeviceMem& inputMem, DeviceMem& outputMem, std::vector<LINK>& links,
     void** dataBuffers, void** flagBuffers, UserMemType dataMemType, UserMemType flagMemType, u32 dataMemOffset,
-    u32 flagMemOffset)
+    u32 flagMemOffset) const
 {
     void* tmpCCLBufferData = nullptr;
     void* tmpCCLBufferFlag = nullptr;

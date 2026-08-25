@@ -28,7 +28,7 @@ HcclResult CollAllReduceFor310PDoublingDirectExecutor::CalcCommInfo(std::vector<
 }
 
 HcclResult CollAllReduceFor310PDoublingDirectExecutor::CalcTransportMemType(
-    TransportMemType& inputType, TransportMemType& outputType)
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;

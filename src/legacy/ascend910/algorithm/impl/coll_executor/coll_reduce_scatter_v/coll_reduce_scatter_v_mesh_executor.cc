@@ -58,7 +58,7 @@ HcclResult CollReduceScatterVMeshExecutor::CalcCommInfo(std::vector<LevelNSubCom
 }
 
 HcclResult
-CollReduceScatterVMeshExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollReduceScatterVMeshExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::PARAM_INPUT;
     outputType = TransportMemType::PARAM_OUTPUT;

@@ -28,8 +28,8 @@ HcclResult CollReduceScatterVAIVBigCountExecutor::CalcCommInfo(std::vector<Level
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollReduceScatterVAIVBigCountExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollReduceScatterVAIVBigCountExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     // ReduceScatterV 大数据量场景下不支持图模式
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {

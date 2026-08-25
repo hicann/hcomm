@@ -666,7 +666,7 @@ u32 HcclSocketManager::GetConnLimit(NicType socketType)
 
 // 生成统一的 SocketTag, 用于标识Socket, 对于一对链接(Server <--> Client), SocketTag 需要相同
 std::string
-HcclSocketManager::MakeUniqueConnTag(const std::string& commTag, bool isInterLink, u32 userRank, u32 indexForLink)
+HcclSocketManager::MakeUniqueConnTag(const std::string& commTag, bool isInterLink, u32 userRank, u32 indexForLink) const
 {
     std::string tmpStr = isInterLink ? "_Inter_" : "_Intra_";
     std::string socketTag
@@ -769,7 +769,7 @@ void HcclSocketManager::SaveSockets(
 // private
 void HcclSocketManager::GetSocketsByRankIP(
     const std::string& commTag, u32 remoteRank, const HcclIpAddress& remoteIp, u32 socketsPerLink,
-    std::vector<std::shared_ptr<HcclSocket>>& ipSockets, u32& gotLinkNum)
+    std::vector<std::shared_ptr<HcclSocket>>& ipSockets, u32& gotLinkNum) const
 {
     HCCL_DEBUG(
         "[Get][SocketsByRankIP]commTag[%s], remoteRank[%u], remoteIp[%s], localRank[%u], SocketsMap size[%u].",
@@ -789,8 +789,8 @@ void HcclSocketManager::GetSocketsByRankIP(
 }
 
 void HcclSocketManager::GetSocketsByRankIP(
-    const HcclIpAddress& remoteIp, u32 socketsPerLink, std::vector<std::shared_ptr<HcclSocket>>& rankSockets,
-    std::vector<std::shared_ptr<HcclSocket>>& ipSockets, u32& gotLinkNum)
+    const HcclIpAddress& remoteIp, u32 socketsPerLink, const std::vector<std::shared_ptr<HcclSocket>>& rankSockets,
+    std::vector<std::shared_ptr<HcclSocket>>& ipSockets, u32& gotLinkNum) const
 {
     for (u32 idx = 0; idx < rankSockets.size(); idx++) {
         if (rankSockets[idx]->GetRemoteIp() == remoteIp) {
@@ -805,8 +805,8 @@ void HcclSocketManager::GetSocketsByRankIP(
 
 // private
 // 同步接口，更新连接状态，并返回连接成功的连接数量
-HcclResult
-HcclSocketManager::WaitLinkEstablish(std::shared_ptr<HcclSocket> socket, std::function<bool()> needStop, s32 timeout)
+HcclResult HcclSocketManager::WaitLinkEstablish(
+    std::shared_ptr<HcclSocket> socket, std::function<bool()> needStop, s32 timeout) const
 {
     CHK_SMART_PTR_NULL(socket);
     u32 count = 0;
@@ -869,7 +869,7 @@ HcclResult HcclSocketManager::WaitLinksEstablishCompleted(
 }
 
 void HcclSocketManager::AddIpQueue(
-    RankInfo& localRankInfo, RankInfo& remoteRankInfo, NicType nicType, s32 deviceLogicId)
+    RankInfo& localRankInfo, RankInfo& remoteRankInfo, NicType nicType, s32 deviceLogicId) const
 {
     if (g_RegisterDetectCallBack != nullptr) {
         g_RegisterDetectCallBack(localRankInfo, remoteRankInfo, nicType, deviceLogicId);

@@ -37,7 +37,7 @@ HcclResult CollReduceScatterMeshAivExecutor::CalcCommInfo(std::vector<LevelNSubC
 }
 
 HcclResult
-CollReduceScatterMeshAivExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollReduceScatterMeshAivExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;

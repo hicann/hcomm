@@ -69,8 +69,8 @@ HcclResult CollReduceScatterMeshGraphExecutor::CalcCommInfo(std::vector<LevelNSu
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollReduceScatterMeshGraphExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollReduceScatterMeshGraphExecutor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::SCRATCH;
     outputType = TransportMemType::PARAM_INPUT;

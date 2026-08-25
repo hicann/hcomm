@@ -37,7 +37,7 @@ HcclResult CollAllReduceAivDeterExecutor::CalcCommInfo(std::vector<LevelNSubComm
 }
 
 HcclResult
-CollAllReduceAivDeterExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollAllReduceAivDeterExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::AIV_OUTPUT;

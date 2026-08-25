@@ -41,8 +41,8 @@ private:
     HcclResult PrepareL1DataSlices(
         const OpParam& param, const SubCommInfo& level1CommInfo, const SubCommInfo& level2CommInfo, u64 inputMemSize,
         u32 moduleId, std::vector<Slice>& dataSlices) const;
-    HcclResult
-    RunLevel1ByNHR(const OpParam& param, ExecMem& execMem, SubCommInfo& level1CommInfo, SubCommInfo& level2CommInfo);
+    HcclResult RunLevel1ByNHR(
+        const OpParam& param, ExecMem& execMem, SubCommInfo& level1CommInfo, SubCommInfo& level2CommInfo) const;
     HcclResult KernelRun(const OpParam& param, ExecMem& execMem) override;
 };
 

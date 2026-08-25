@@ -677,7 +677,7 @@ HcclResult CollBatchSendRecvGroupExecutor::CalcRecvSlices()
     return HCCL_SUCCESS;
 }
 
-u32 CollBatchSendRecvGroupExecutor::GetNextDstRank(u32& curDstRank)
+u32 CollBatchSendRecvGroupExecutor::GetNextDstRank(u32& curDstRank) const
 {
     // 对称场景send方向：沿rank id递增环绕遍历，跳过本pod。移植自alltoallv_direct_fullmesh。
     if (curDstRank >= topoAttr_.userRankSize) {
@@ -690,7 +690,7 @@ u32 CollBatchSendRecvGroupExecutor::GetNextDstRank(u32& curDstRank)
     return curDstRank++;
 }
 
-u32 CollBatchSendRecvGroupExecutor::GetPreSrcRank(u32& curSrcRank)
+u32 CollBatchSendRecvGroupExecutor::GetPreSrcRank(u32& curSrcRank) const
 {
     // 对称场景recv方向：沿rank id递减环绕遍历，跳过本pod。移植自alltoallv_direct_fullmesh。
     if (curSrcRank == podStartRank_ + devNumInlocalPod_ - 1) {

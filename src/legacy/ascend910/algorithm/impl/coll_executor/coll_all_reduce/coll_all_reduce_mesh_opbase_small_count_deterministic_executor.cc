@@ -52,10 +52,13 @@ CollAllReduceMeshOpbaseSmallCountDeterministicExecutor::CalcCommInfo(std::vector
     return HCCL_SUCCESS;
 }
 
-bool CollAllReduceMeshOpbaseSmallCountDeterministicExecutor::IsPowerOfTwo(u32 num) { return (num & (num - 1)) == 0; }
+bool CollAllReduceMeshOpbaseSmallCountDeterministicExecutor::IsPowerOfTwo(u32 num) const
+{
+    return (num & (num - 1)) == 0;
+}
 
 HcclResult CollAllReduceMeshOpbaseSmallCountDeterministicExecutor::CalcTransportMemType(
-    TransportMemType& inputType, TransportMemType& outputType)
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;
@@ -197,7 +200,7 @@ HcclResult CollAllReduceMeshOpbaseSmallCountDeterministicExecutor::KernelRun(con
 }
 
 HcclResult CollAllReduceMeshOpbaseSmallCountDeterministicExecutor::RunDoublingSingleLevel(
-    const OpParam& param, u64 reduceAttr, ExecMem& execMem, SubCommInfo& levelCommInfo)
+    const OpParam& param, u64 reduceAttr, ExecMem& execMem, SubCommInfo& levelCommInfo) const
 {
     std::unique_ptr<AlgTemplateBase> tempAlg;
     tempAlg = AlgTemplateRegistry::Instance().GetAlgTemplate(
@@ -217,7 +220,7 @@ HcclResult CollAllReduceMeshOpbaseSmallCountDeterministicExecutor::RunDoublingSi
 }
 
 HcclResult CollAllReduceMeshOpbaseSmallCountDeterministicExecutor::RunReduceBcastSingleLevel(
-    const OpParam& param, HcomCollOpInfo& opInfo, u64 reduceAttr, ExecMem& execMem, SubCommInfo& levelCommInfo)
+    const OpParam& param, HcomCollOpInfo& opInfo, u64 reduceAttr, ExecMem& execMem, SubCommInfo& levelCommInfo) const
 {
     std::unique_ptr<AlgTemplateBase> tempAlg;
     tempAlg = AlgTemplateRegistry::Instance().GetAlgTemplate(
@@ -239,7 +242,7 @@ HcclResult CollAllReduceMeshOpbaseSmallCountDeterministicExecutor::RunReduceBcas
 }
 
 HcclResult CollAllReduceMeshOpbaseSmallCountDeterministicExecutor::RunTempLevel1(
-    const TemplateType type, const OpParam& param, u64 reduceAttr, ExecMem& execMem, SubCommInfo& level1CommInfo)
+    const TemplateType type, const OpParam& param, u64 reduceAttr, ExecMem& execMem, SubCommInfo& level1CommInfo) const
 {
     std::unique_ptr<AlgTemplateBase> tempAlg;
     tempAlg = AlgTemplateRegistry::Instance().GetAlgTemplate(type, dispatcher_);

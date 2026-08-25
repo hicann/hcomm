@@ -88,8 +88,8 @@ HcclResult CollAllGatherPipelineFor91093Executor::CalcLevel2CommInfo(
     return HCCL_SUCCESS;
 }
 
-HcclResult
-CollAllGatherPipelineFor91093Executor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+HcclResult CollAllGatherPipelineFor91093Executor::CalcTransportMemType(
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::CCL_INPUT;
     outputType = TransportMemType::CCL_OUTPUT;

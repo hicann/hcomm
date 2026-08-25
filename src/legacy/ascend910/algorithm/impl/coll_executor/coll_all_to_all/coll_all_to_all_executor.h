@@ -52,13 +52,13 @@ protected:
     void CalcIntraMeshAggregationSendInfo(
         const AlltoAllUserRankInfo& userRankInfo, const SendRecvInfo& mySendRecvInfo,
         const std::vector<SendRecvInfo>& myMeshAggregationSendRecvInfo, u32 rankInMeshAggregation, u32 infoIndex,
-        OneSendRecvAddrInfo& curSendInfo, u32 meshAggregationRankSize, const bool& isSingleMesh);
+        OneSendRecvAddrInfo& curSendInfo, u32 meshAggregationRankSize, const bool& isSingleMesh) const;
     void CalcIntraMeshAggregationRecvInfo(
         const AlltoAllUserRankInfo& userRankInfo, const std::vector<SendRecvInfo>& myMeshAggregationSendRecvInfo,
         u32 infoIndex, OneSendRecvAddrInfo& curRecvInfo, u32 meshAggregationRankSize, const bool& isSingleMesh);
     void CalcIntraMeshAggregationRecvInfoInMeshAggregation(
         u32 rankIndex, u32 infoIndex, const std::vector<SendRecvInfo>& myMeshAggregationSendRecvInfo, u64& localOffset,
-        u32& offsetCounter, u64& localLength, u64& remoteOffset, u32 meshAggregationRankSize);
+        u32& offsetCounter, u64& localLength, u64& remoteOffset, u32 meshAggregationRankSize) const;
     u64 CalAlltoAllVScratchMemSize(u64& workSpaceMemSize);
     bool HasMassTasks(std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo);
 

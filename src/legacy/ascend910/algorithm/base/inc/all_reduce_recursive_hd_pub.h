@@ -28,10 +28,10 @@ public:
     HcclResult RunAsync(const u32 rank, const u32 rankSize, const std::vector<LINK>& links) override;
     HcclResult
     RunAsyncStaged(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, RunStage stage) override;
+    HcclResult GetCommonNslbAdjInfo(
+        const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) const;
     HcclResult
-    GetCommonNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo);
-    HcclResult
-    GetOddNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo);
+    GetOddNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) const;
     HcclResult
     GetNslbAdjInfo(const u32 rank, const u32 rankSize, const std::vector<LINK>& links, AdjInfo& nslbAdjInfo) override;
 

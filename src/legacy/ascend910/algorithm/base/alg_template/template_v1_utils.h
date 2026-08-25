@@ -85,7 +85,7 @@ struct AdjInfo {
 
 // broadcast_nb_binary_pub.h
 bool ShouldUseBinaryBroadcastOfNB(
-    const u64 dataSize, const u32 rankSize, const u32 userRankSize, const float bandwidth);
+    const u64 dataSize, const u32 rankSize, const u32 userRankSize, const float deviceNumPerAggregation);
 
 // all_reduce_nb_pub.h
 u64 GetSliceSizeOfNB(const u64 dataSize, const u32 rankSize);

@@ -115,7 +115,7 @@ HcclResult BroadCastOperator::SelectAlgforMix(const OpParam& param, std::string&
     return HCCL_SUCCESS;
 }
 
-HcclResult BroadCastOperator::SelectAlgfor310P3(const OpParam& param, std::string& algName)
+HcclResult BroadCastOperator::SelectAlgfor310P3(const OpParam& param, std::string& algName) const
 {
     (void)param;
     algName = "BroadCastCommFor310P";
@@ -123,14 +123,14 @@ HcclResult BroadCastOperator::SelectAlgfor310P3(const OpParam& param, std::strin
     return HCCL_SUCCESS;
 }
 
-HcclResult BroadCastOperator::SelectAlgfor310P([[maybe_unused]] const OpParam& param, std::string& algName)
+HcclResult BroadCastOperator::SelectAlgfor310P([[maybe_unused]] const OpParam& param, std::string& algName) const
 {
     algName = "BroadcastPlusBroadcast";
     HCCL_INFO("[SelectAlgfor310P] broadcast SelectAlgfor310P is algName [%s]", algName.c_str());
     return HCCL_SUCCESS;
 }
 
-HcclResult BroadCastOperator::SelectAlgfor910A(const OpParam& param, std::string& algName)
+HcclResult BroadCastOperator::SelectAlgfor910A(const OpParam& param, std::string& algName) const
 {
     (void)param;
     bool isMeshTopo = topoType_ == TopoType::TOPO_TYPE_4P_MESH || topoType_ == TopoType::TOPO_TYPE_2P_MESH;

@@ -80,7 +80,7 @@ HcclResult CollReduceScatterRingExecutor::CalcCommInfo(std::vector<LevelNSubComm
 }
 
 HcclResult
-CollReduceScatterRingExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType)
+CollReduceScatterRingExecutor::CalcTransportMemType(TransportMemType& inputType, TransportMemType& outputType) const
 {
     if (workflowMode_ == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
         inputType = TransportMemType::CCL_INPUT;

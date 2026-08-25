@@ -1904,7 +1904,7 @@ HcclResult CollCommExecutor::MultiStreamReduceScatterMesh(
 }
 
 HcclResult CollCommExecutor::PrepareReduceScatterSliceData(
-    u64 dataCount, u32 unitSize, u32 sliceNum, std::vector<Slice>& dataSlice)
+    u64 dataCount, u32 unitSize, u32 sliceNum, std::vector<Slice>& dataSlice) const
 {
     CHK_PRT_RET(
         (sliceNum == 0), HCCL_ERROR("[CollCommExecutor][PrepareReduceScatterSliceData]sliceNum is zero."), HCCL_E_PARA);
@@ -1919,7 +1919,7 @@ HcclResult CollCommExecutor::PrepareReduceScatterSliceData(
 }
 
 std::vector<std::vector<u32>>
-CollCommExecutor::GetRingsOrderByTopoType(u32 ranksSize, TopoType topoType, std::vector<u32>& nicList)
+CollCommExecutor::GetRingsOrderByTopoType(u32 ranksSize, TopoType topoType, std::vector<u32>& nicList) const
 {
     std::vector<std::vector<u32>> multiRingOrder;
     if (topoType == TopoType::TOPO_TYPE_8P_RING) { // 4 ring 场景
@@ -1967,7 +1967,7 @@ CollCommExecutor::GetRingsOrderByTopoType(u32 ranksSize, TopoType topoType, std:
 }
 
 std::vector<std::vector<u32>>
-CollCommExecutor::GetRingsOrderForAnyPath(u32 ranksSize, TopoType topoType, std::vector<u32>& nicList)
+CollCommExecutor::GetRingsOrderForAnyPath(u32 ranksSize, TopoType topoType, std::vector<u32>& nicList) const
 {
     std::vector<std::vector<u32>> multiRingOrder;
     if (topoType == TopoType::TOPO_TYPE_NP_DOUBLE_RING) { // 2 ring 场景
@@ -2009,7 +2009,7 @@ CollCommExecutor::GetRingsOrderForAnyPath(u32 ranksSize, TopoType topoType, std:
 }
 
 HcclResult CollCommExecutor::MutliSegSlicePrepare(
-    const std::vector<Slice>& dataSegsSlice, std::vector<std::vector<Slice>>& mutliSegsSlices, u32 ringCount)
+    const std::vector<Slice>& dataSegsSlice, std::vector<std::vector<Slice>>& mutliSegsSlices, u32 ringCount) const
 {
     std::vector<Slice> singleSegSlices;
     singleSegSlices.reserve(ringCount);
@@ -2283,7 +2283,7 @@ HcclResult CollCommExecutor::CalUserMemSlices(
 }
 
 HcclResult CollCommExecutor::GetRankOrder(
-    const std::vector<std::vector<u32>>& multiRingsOrder, u32 ringIndex, std::vector<u32>& rankOrder)
+    const std::vector<std::vector<u32>>& multiRingsOrder, u32 ringIndex, std::vector<u32>& rankOrder) const
 {
     std::vector<u32> ring0 = multiRingsOrder[0];
     std::vector<u32> ringOrder = multiRingsOrder[ringIndex];
@@ -2607,7 +2607,7 @@ HcclResult CollCommExecutor::CalcIntraServerDataSlicesDiscontinuous(
 
 HcclResult CollCommExecutor::CalcIntraServerDataSlicesContinuous(
     const OpParam& param, const ExecMem& execMem, u32 level0RankSize, u32 level1RankSize, u32 level2RankSize,
-    std::vector<Slice>& dataSegsSlice)
+    std::vector<Slice>& dataSegsSlice) const
 {
     u32 perDataSize = 0;
     CHK_RET(SalGetDataTypeSize(param.DataDes.dataType, perDataSize));
@@ -2625,7 +2625,7 @@ HcclResult CollCommExecutor::CalcIntraServerDataSlicesContinuous(
 }
 
 void CollCommExecutor::CalcLevel1DataSlices(
-    u64 sliceSize, u32 level1RankSize, u32 level2RankSize, std::vector<Slice>& level1DataSegsSlice)
+    u64 sliceSize, u32 level1RankSize, u32 level2RankSize, std::vector<Slice>& level1DataSegsSlice) const
 {
     level1DataSegsSlice.resize(level1RankSize);
     u64 level1SliceSize = sliceSize * level2RankSize;

@@ -93,7 +93,7 @@ ReduceOperator::SelectAlg(const std::string& tag, const OpParam& param, std::str
     return ret;
 }
 
-HcclResult ReduceOperator::SelectAlgfor910A(const OpParam& param, std::string& algName)
+HcclResult ReduceOperator::SelectAlgfor910A(const OpParam& param, std::string& algName) const
 {
     (void)param;
     bool isMeshTopo = topoType_ == TopoType::TOPO_TYPE_4P_MESH || topoType_ == TopoType::TOPO_TYPE_2P_MESH;
@@ -111,7 +111,7 @@ HcclResult ReduceOperator::SelectAlgfor910A(const OpParam& param, std::string& a
     return HCCL_SUCCESS;
 }
 
-HcclResult ReduceOperator::SelectAlgfor910B(const OpParam& param, std::string& algName)
+HcclResult ReduceOperator::SelectAlgfor910B(const OpParam& param, std::string& algName) const
 {
     (void)param;
     bool isMeshTopo = topoType_ == TopoType::TOPO_TYPE_NP_MESH || topoType_ == TopoType::TOPO_TYPE_4P_MESH

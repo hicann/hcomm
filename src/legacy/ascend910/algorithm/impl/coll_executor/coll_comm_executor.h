@@ -97,15 +97,17 @@ public:
         const std::string& tag, DeviceMem& inputMem, DeviceMem& outputMem, const u64 count, const HcclDataType dataType,
         const HcclReduceOp reductionOp, const std::vector<Slice>& dataSliceVct, Stream& stream,
         const CommPlane commLevelIndex, const u64 baseOffset = 0, HcomCollOpInfo* opInfo = nullptr);
-    HcclResult PrepareReduceScatterSliceData(u64 dataCount, u32 unitSize, u32 sliceNum, std::vector<Slice>& dataSlice);
+    HcclResult
+    PrepareReduceScatterSliceData(u64 dataCount, u32 unitSize, u32 sliceNum, std::vector<Slice>& dataSlice) const;
 
     HcclResult MultiRingScatter(
         const std::string& tag, DeviceMem inputMem, DeviceMem outputMem, const u64 count, const HcclDataType dataType,
         const std::vector<std::vector<Slice>> multRingsSliceZero, u32 root, Stream stream, const HcomCollOpInfo* opInfo,
         const u64 baseOffset = 0);
-    std::vector<std::vector<u32>> GetRingsOrderByTopoType(u32 ranksSize, TopoType topoType, std::vector<u32>& nicList);
+    std::vector<std::vector<u32>>
+    GetRingsOrderByTopoType(u32 ranksSize, TopoType topoType, std::vector<u32>& nicList) const;
     HcclResult MutliSegSlicePrepare(
-        const std::vector<Slice>& dataSegsSlice, std::vector<std::vector<Slice>>& mutliSegsSlices, u32 ringCount);
+        const std::vector<Slice>& dataSegsSlice, std::vector<std::vector<Slice>>& mutliSegsSlices, u32 ringCount) const;
     HcclResult MutliSegSlicePrepareAvoidCceRewrite(
         const std::vector<Slice>& dataSegsSlice, std::vector<std::vector<Slice>>& mutliSegsSlices, u32 ringCount) const;
     void NicSendSizeCal(
@@ -115,7 +117,8 @@ public:
         const std::vector<Slice>& dataSegsSlice, const std::string& tag, bool avoidCceRewrite = false,
         std::vector<u32> nicList = {0, 1, 2, 3, 4, 5, 6, 7}, CommPlane commLevelIndex = COMM_LEVEL0);
     // AnyPath特性使用
-    std::vector<std::vector<u32>> GetRingsOrderForAnyPath(u32 ranksSize, TopoType topoType, std::vector<u32>& nicList);
+    std::vector<std::vector<u32>>
+    GetRingsOrderForAnyPath(u32 ranksSize, TopoType topoType, std::vector<u32>& nicList) const;
     std::vector<std::vector<Slice>> AnyPathPrepareMultiRingSlice(
         const std::vector<Slice>& dataSegsSlice, const std::string& tag, bool avoidCceRewrite = false,
         std::vector<u32> nicList = {0, 1, 2, 3, 4, 5, 6, 7});
@@ -141,8 +144,8 @@ protected:
     HcclResult CalUserMemSlices(
         const HcclDataType dataType, const HcomCollOpInfo* opInfo, const std::vector<Slice>& singleRingSliceZero,
         u32 ringIndex, const std::vector<std::vector<u32>>& multiRingsOrder, std::vector<Slice>& userMemSlices);
-    HcclResult
-    GetRankOrder(const std::vector<std::vector<u32>>& multiRingsOrder, u32 ringIndex, std::vector<u32>& rankOrder);
+    HcclResult GetRankOrder(
+        const std::vector<std::vector<u32>>& multiRingsOrder, u32 ringIndex, std::vector<u32>& rankOrder) const;
     HcclResult SetRingNics(const std::string& tag, const std::vector<std::vector<u32>>& ringNics);
     HcclResult GetRingNics(const std::string& tag, std::vector<std::vector<u32>>& ringNics);
     HcclResult SetNicSendSize(const std::string& tag, std::vector<u64>& sizeList);
@@ -153,9 +156,9 @@ protected:
         std::vector<Slice>& dataSegsSlice);
     HcclResult CalcIntraServerDataSlicesContinuous(
         const OpParam& param, const ExecMem& execMem, u32 level0RankSize, u32 level1RankSize, u32 level2RankSize,
-        std::vector<Slice>& dataSegsSlice);
+        std::vector<Slice>& dataSegsSlice) const;
     void CalcLevel1DataSlices(
-        u64 sliceSize, u32 level1RankSize, u32 level2RankSize, std::vector<Slice>& level1DataSegsSlice);
+        u64 sliceSize, u32 level1RankSize, u32 level2RankSize, std::vector<Slice>& level1DataSegsSlice) const;
     HcclResult GetCommRankInfoNormal(
         u32& level0Rank, u32& level0RankSize, u32& level1Rank, u32& level1RankSize, u32& level2Rank,
         u32& level2RankSize, bool isAHCAlgo = false);

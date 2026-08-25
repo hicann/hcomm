@@ -31,7 +31,7 @@ public:
     virtual ~AlltoallPipelineBase();
 
     // 适配新CollExecutor接口
-    virtual HcclResult Prepare(
+    HcclResult Prepare(
         u32 userRank, A2aPipelineMemory A2aPipelineMemory, const SubCommInfo& level0CommInfo,
         const SubCommInfo& level1CommInfo, Stream& mainStream, std::vector<Stream>& subStream,
         std::vector<std::shared_ptr<LocalNotify>>& notifyMain, std::vector<std::shared_ptr<LocalNotify>>& notifySub,

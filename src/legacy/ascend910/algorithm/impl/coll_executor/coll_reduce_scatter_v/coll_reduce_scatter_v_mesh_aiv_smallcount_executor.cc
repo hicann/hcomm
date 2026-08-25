@@ -29,7 +29,7 @@ HcclResult CollReduceScatterVMeshAivSmallCountExecutor::CalcCommInfo(std::vector
 }
 
 HcclResult CollReduceScatterVMeshAivSmallCountExecutor::CalcTransportMemType(
-    TransportMemType& inputType, TransportMemType& outputType)
+    TransportMemType& inputType, TransportMemType& outputType) const
 {
     inputType = TransportMemType::AIV_INPUT;
     outputType = TransportMemType::AIV_OUTPUT;

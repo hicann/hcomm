@@ -20,13 +20,13 @@ public:
     HcclResult CheckNeedRecreateComm(u64 lastScratchMemSize, bool& needRecreateAlltoallComm) override;
     HcclResult CheckNeedCreateVirtualLinks(AlgResourceRequest& resourceRequest) override;
     HcclResult ParallelTaskLoaderProcess(
-        const std::string& tag, Stream& stream, SubCommInfo& level0CommInfo, std::vector<Stream>& ringStreams);
+        const std::string& tag, Stream& stream, SubCommInfo& level0CommInfo, std::vector<Stream>& ringStreams) const;
 
 private:
     HcclResult CalcStreamNum(u32& streamNum) override;
     void CalcWorkSpaceMemSize(
         const AlltoAllUserRankInfo& userRankInfo, const std::vector<SendRecvInfo>& allMeshAggregationSendRecvInfo,
-        u64& workspaceMemSize, u32 meshAggregationRankSize);
+        u64& workspaceMemSize, u32 meshAggregationRankSize) const;
     HcclResult CalcScratchMemSize(u64& scratchMemSize) override;
 
     HcclResult CalcLevel0CommInfo(
@@ -50,7 +50,7 @@ private:
         std::unique_ptr<AlgTemplateBase>& alltoallLevel0, ExecMem& execMem);
     void CalcInterMeshAggregationRecvRemoteOffset(
         const AlltoAllUserRankInfo& userRankInfo, const std::vector<SendRecvInfo>& allSendRecvInfo, u32 index,
-        u64& remoteOffset, u32 meshAggregationRankSize);
+        u64& remoteOffset, u32 meshAggregationRankSize) const;
     void CalcInterMeshAggregationAlltoAllMemInfo(
         const AlltoAllUserRankInfo& userRankInfo, const std::vector<SendRecvInfo>& allSendRecvInfo,
         std::map<u32, std::list<OneSendRecvAddrInfo>>& sendAddrInfosInter,
@@ -58,7 +58,7 @@ private:
     HcclResult PrepareAlltoAllVStaged2(
         DeviceMem& recvBuf, DeviceMem& scratchMem, std::map<u32, std::list<OneSendRecvAddrInfo>>& sendAddrInfosInter,
         std::map<u32, std::list<OneSendRecvAddrInfo>>& recvAddrInfosInter, Stream& stream, const std::string& tag,
-        std::unique_ptr<AlgTemplateBase>& alltoallLevel1, ExecMem& execMem);
+        std::unique_ptr<AlgTemplateBase>& alltoallLevel1, ExecMem& execMem) const;
 };
 
 } // namespace hccl

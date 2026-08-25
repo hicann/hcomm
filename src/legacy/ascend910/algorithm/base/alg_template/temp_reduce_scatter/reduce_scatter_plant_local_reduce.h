@@ -36,8 +36,8 @@ private:
     HcclResult MainRecordLocalReduceWait(u32 lRMainStreamIndex);
     u32 CalcOutputIndex(const u32 round);
     bool isLastGroup(const u32 groupId);
-    bool isLastRank(const u32 rankId);
-    bool isLastBlockData(const u32 outputIndex);
+    bool isLastRank(const u32 rankId) const;
+    bool isLastBlockData(const u32 outputIndex) const;
     HcclResult LocalCopy(u32 groupId, const MemBlockInfo& memBlockInfo);
     HcclResult RunAlltoAll(const std::vector<LINK>& links, u32 groupId, const MemBlockInfo& memBlockInfo);
     HcclResult RunGroupAlltoAll(const std::vector<LINK>& links, u32 groupId, const MemBlockInfo& memBlockInfo);

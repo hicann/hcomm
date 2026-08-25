@@ -41,7 +41,7 @@ private:
     RunDestRducer(const LINK& link, const HcclDispatcher dispatcher, const Slice& rxSlice, const DstMemType reduceDst);
 
     u32 GetBlockStep(u32 blocksize) const;
-    HcclResult CalculateSlices(const u64 size, const u32 sliceNum, std::vector<Slice>& slicesOut);
+    HcclResult CalculateSlices(const u64 size, const u32 sliceNum, std::vector<Slice>& slicesOut) const;
     HcclResult CalcStepSlices(
         const std::vector<Slice>& inputSlices, const u32 stepNum, const u32 rank, const SliceType type,
         std::vector<Slice>& slicesOut);

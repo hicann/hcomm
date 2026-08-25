@@ -13,6 +13,9 @@
 
 using namespace AscendC;
 
+// 中间转发节点数: 总rank数减去首(root)尾两个数据端点
+constexpr uint32_t BROADCAST_MID_NODE_COUNT = 2;
+
 class AivBroadcastCrossNode91093 : public AivCrossNode91093Base {
 public:
     __aicore__ inline AivBroadcastCrossNode91093() {}
@@ -89,7 +92,7 @@ __aicore__ inline void AivBroadcastCrossNode91093::InitDataCopyOffset(uint64_t l
     if (len < maxCountPerLoop) {
         countMid = 0;
         countTail = len / (rankSize_ - 1);
-        countTailLast_ = len - (rankSize_ - 2) * countTail;
+        countTailLast_ = len - (rankSize_ - BROADCAST_MID_NODE_COUNT) * countTail;
     } else if (len % maxCountPerLoop == 0) {
         countMid = countPerRank;
         countTail = countPerRank;
@@ -98,7 +101,7 @@ __aicore__ inline void AivBroadcastCrossNode91093::InitDataCopyOffset(uint64_t l
         countMid = countPerRank;
         uint64_t remainLen = len % maxCountPerLoop;
         countTail = remainLen / (rankSize_ - 1);
-        countTailLast_ = remainLen - (rankSize_ - 2) * countTail;
+        countTailLast_ = remainLen - (rankSize_ - BROADCAST_MID_NODE_COUNT) * countTail;
     }
 }
 
@@ -109,7 +112,8 @@ AivBroadcastCrossNode91093::WaitRecordSync(int32_t tag, uint32_t root, GM_ADDR r
         int32_t targetRank = targetRanks[i];
         if (rank_ != root && targetRank == rank_) {
             Wait1vN(
-                tag * (rankSize_ - 2), CommPattern::interRank, true, AivNotifyType::DataSignal); // 等待n个对端拿走数据
+                tag * (rankSize_ - BROADCAST_MID_NODE_COUNT), CommPattern::interRank, true,
+                AivNotifyType::DataSignal); // 等待n个对端拿走数据
             PipeBarrier<PIPE_ALL>();
             Record(tag, rootAddr, AivNotifyType::DataSignal);
         } else if (rank_ != root) {
