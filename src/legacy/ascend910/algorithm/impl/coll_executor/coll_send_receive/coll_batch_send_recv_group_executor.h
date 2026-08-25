@@ -80,6 +80,8 @@ private:
     // 对称场景规则：send前向递增/recv后向递减遍历，跳过本pod。返回当前候选rank并推进游标。
     u32 GetNextDstRank(u32& curDstRank);
     u32 GetPreSrcRank(u32& curSrcRank);
+    // 计算是否为非对称超节点场景(参考alltoallv_direct_fullmesh executor中的isSuPodAsym判断)
+    void CalcIsSuPodAsym(bool isA2MultiModule);
     // 按对称场景规则对RDMA slice排序：isSend=true用前向(GetNextDstRank)，false用后向(GetPreSrcRank)。
     // 遍历所有跨pod对端，仅输出存在任务的对端的slice(起点初始化与每次更新均跳过无任务对端)。
     void OrderRdmaSlices(bool isSend, const std::map<u32, std::deque<SendRecvSlice>>& byRank,
@@ -100,6 +102,7 @@ private:
     u32 podStartRank_ = 0; // pod(rank)范围，用于判定isRdma：[podStartRank_, podEndRank_]内为SDMA，跨pod为RDMA
     u32 podEndRank_ = 0;
     u32 devNumInlocalPod_ = 0; // 本pod内rank数，用于对称场景规则起点的计算
+    bool isSuPodAsym_ = false; // 非对称场景：A2A3卡数不一致或A3多超节点server数不同时为true，send/recv使用相同遍历顺序
     // Ping-pong state
     std::vector<u32> sendCurPhase_;         // which half has loaded data, ready to Record+Send (0=A, 1=B)
     std::vector<u64> sendLoadedSize_;       // size of data loaded in current sendCurPhase_ half (0 = nothing)
