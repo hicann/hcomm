@@ -278,7 +278,8 @@ HcommResult ProcessHcommChannelDescs(const HcommChannelDesc& channelDesc, HcommC
     }
 
     // v3：channelName，低版本时置 NULL
-    if (channelDesc.header.version < HCOMM_CHANNEL_VERSION) {
+    constexpr uint32_t HCOMM_CHANNEL_VERSION_THREE = 3U;
+    if (channelDesc.header.version < HCOMM_CHANNEL_VERSION_THREE) {
         channelDescFinal.channelName = nullptr;
     } else {
         channelDescFinal.channelName = channelDesc.channelName;
