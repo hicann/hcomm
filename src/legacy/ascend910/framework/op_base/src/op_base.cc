@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <future>
 #include <map>
+#include <shared_mutex>
 #include <string>
 #include <hccl/hccl_types.h>
 
@@ -3658,21 +3659,25 @@ HcclResult HcclCommDestroy([[maybe_unused]] HcclComm comm)
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
     HCCLV2_FUNC_RUN([&]() -> HcclResult {
         hccl::hcclComm* hcclComm = static_cast<hccl::hcclComm*>(comm);
+        CHK_RET(HcclCommStateNotify(comm, HcclCommStatePhase::HCCL_COMM_STATE_PHASE_DESTROY_PRE));
         // 先拷贝orion通信域地址，避免coll comm销毁后无法获取
         HcclComm commV2 = hcclComm->GetCommunicatorV2();
         CHK_RET(HcclCommDestroyV2(
             commV2)); // 临时处理，dpustream的销毁要在其他资源销毁前完成。待新方案CpuThread上库后，原dpuStream删除可以恢复顺序
         string group = hcclComm->GetIdentifier();
         HcclOpInfoCtx& opBaseHcom = CollCommMgr::GetInstance().LegacyGetHcclOpInfoCtx(g_hcclDeviceId);
-        std::unique_lock<std::mutex> lock(opBaseHcom.opGroupMapMutex);
-        auto iter = opBaseHcom.opGroup2CommMap.find(group);
-        if (iter != opBaseHcom.opGroup2CommMap.end()) {
-            EXCEPTION_CATCH(opBaseHcom.opGroup2CommMap.erase(group), return HCCL_E_MEMORY);
-        } else {
-            HCCL_ERROR(
-                "[HcclCommDestroy] comm is not exist, comm=%p, group=%s, deviceLogicId=%d", comm, group.c_str(),
-                deviceLogicId);
-            return HCCL_E_PARA;
+        // opGroupMapMutex 仅覆盖对 opGroup2CommMap 的 find/erase 避免回调里销毁子通信域时同线程递归加锁死锁
+        {
+            std::unique_lock<std::mutex> lock(opBaseHcom.opGroupMapMutex);
+            auto iter = opBaseHcom.opGroup2CommMap.find(group);
+            if (iter != opBaseHcom.opGroup2CommMap.end()) {
+                EXCEPTION_CATCH(opBaseHcom.opGroup2CommMap.erase(group), return HCCL_E_MEMORY);
+            } else {
+                HCCL_ERROR(
+                    "[HcclCommDestroy] comm is not exist, comm=%p, group=%s, deviceLogicId=%d", comm, group.c_str(),
+                    deviceLogicId);
+                return HCCL_E_PARA;
+            }
         }
         CHK_RET(HcclCommStateNotify(comm, HcclCommStatePhase::HCCL_COMM_STATE_PHASE_DESTROY_POST));
         HCCL_RUN_INFO(
@@ -5447,10 +5452,11 @@ HcclResult HcclCommSuspend(HcclComm comm)
 }
 
 static std::unordered_map<std::string, pair<HcclCommStateCallback, void*>> g_commStateCallback;
-static std::mutex g_callBackMtx; // 保护 g_commStateCallback
+static std::shared_mutex g_callBackMtx; // 保护 g_commStateCallback
 
 // args参数为调用者注册的函数使用，hcomm只负责透传，由注册的回调函数自行校验，
 // 回调函数不需要额外参数时, args可传nullptr
+// 复写同名回调前，注册方需保证旧回调不在执行且旧 args 不会被释放。
 HcclResult HcclCommRegCommStateCallback(const char* regName, HcclCommStateCallback cb, void* args)
 {
     CHK_PTR_NULL(regName);
@@ -5462,7 +5468,7 @@ HcclResult HcclCommRegCommStateCallback(const char* regName, HcclCommStateCallba
         (nameLen == 0 || nameLen >= MAX_REG_NAME_LEN),
         HCCL_ERROR("[%s]Invalid regName, valid length is (0, %u)", __func__, MAX_REG_NAME_LEN), HCCL_E_PARA);
     {
-        std::lock_guard<std::mutex> lock(g_callBackMtx);
+        std::unique_lock<std::shared_mutex> lock(g_callBackMtx); // 写锁
         g_commStateCallback[regName] = std::make_pair(cb, args);
     }
     HCCL_RUN_INFO("[%s]Register commStateCallBack success, regName[%s], args[%p].", __func__, regName, args);
@@ -5472,10 +5478,17 @@ HcclResult HcclCommRegCommStateCallback(const char* regName, HcclCommStateCallba
 #if (!defined(HCCD)) && (!defined(CCL_KERNEL_AICPU))
 HcclResult HcclCommStateNotify(HcclComm comm, HcclCommStatePhase state)
 {
-    std::lock_guard<std::mutex> lock(g_callBackMtx);
-    for (const auto& [regName, cbPair] : g_commStateCallback) {
-        HcclCommStateCallback cb = cbPair.first;
-        void* args = cbPair.second;
+    // 锁内拷贝回调列表快照，释放锁后再遍历调用回调
+    std::vector<std::tuple<std::string, HcclCommStateCallback, void*>> snapshot;
+    {
+        std::shared_lock<std::shared_mutex> lock(g_callBackMtx); // 读锁
+        snapshot.reserve(g_commStateCallback.size());
+        for (const auto& [regName, cbPair] : g_commStateCallback) {
+            snapshot.emplace_back(regName, cbPair.first, cbPair.second);
+        }
+    }
+
+    for (const auto& [regName, cb, args] : snapshot) {
         HCCL_RUN_INFO(
             "[%s]comm[%p], state[%d], regName[%s], args[%p] callback begin.", __func__, comm, state, regName.c_str(),
             args);
