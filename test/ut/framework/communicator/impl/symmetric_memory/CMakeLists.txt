@@ -15,6 +15,7 @@ set(src_to_test_list
     ut_hccl_mem_alloc.cc
     ut_hccl_communicator_host.cc
     ut_aicpu_communicator.cc
+    ut_aicpu_symmetric_memory.cc
 )
 
 add_executable(hccl_utest_framework_symmetric_memory ${src_to_test_list})

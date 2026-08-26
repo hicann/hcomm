@@ -32,6 +32,17 @@ extern "C" {
  */
 extern HcclResult HcclSymWinGetPeerPointer(HcclCommSymWindow winHandle, size_t offset, uint32_t peerRank, void** ptr);
 
+/**
+ * @brief Get remote symmetric memory pointer (for URMA).
+ *
+ * @param winHandle A pointer identifying the registered memory window handle.
+ * @param offset A size_t identifying the offset of symmetric memory heap.
+ * @param peerRank A u_integer identifying the identify for the peer rank.
+ * @param ptr A pointer identifying the remote symmetric memory heap address.
+ * @return HcclResult
+ */
+extern HcclResult HcclSymWinGetRemoteAddr(HcclCommSymWindow winHandle, size_t offset, uint32_t peerRank, void** ptr);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
