@@ -249,8 +249,8 @@ TEST_F(NewRankInfoParserTest, Ut_Deserialize_When_InvalidLoaclId_Expect_Exceptio
     std::string rankListString = R"(
       {
         "rank_id": 0,
-        "device_id": 0,  
-        "local_id": 65,  
+        "device_id": 0,
+        "local_id": 513,
         "replaced_loacl_id": 0,    
         "device_port": 6666,       
         "level_list": [
@@ -297,9 +297,9 @@ TEST_F(NewRankInfoParserTest, Ut_Deserialize_When_InvalidReLoaclId_Expect_Except
     std::string rankListString = R"(
       {
         "rank_id": 0,
-        "device_id": 0,  
-        "local_id": 64,  
-        "replaced_loacl_id": 64,    
+        "device_id": 0,
+        "local_id": 512,
+        "replaced_loacl_id": 512,    
         "device_port": 6666,       
         "level_list": [
           {
@@ -345,7 +345,7 @@ TEST_F(NewRankInfoParserTest, Ut_Deserialize_When_InvalidDeviceId_Expect_Excepti
     std::string rankListString = R"(
       {
         "rank_id": 0,
-        "device_id": 128,  
+        "device_id": 513,
         "local_id": 0,     
         "device_port": 6666,     
         "level_list": [

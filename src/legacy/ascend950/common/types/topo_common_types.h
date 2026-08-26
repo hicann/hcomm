@@ -36,7 +36,7 @@ MAKE_ENUM(AddrPosition, HOST, DEVICE)
 MAKE_ENUM(AddrType, EID, IPV4, IPV6)
 MAKE_ENUM(NetType, CLOS, MESH_1D, MESH_2D, A3_SERVER, A2_AX_SERVER, TOPO_FILE_DESC)
 MAKE_ENUM(TopoType, CLOS, MESH_1D, MESH_2D, A3_SERVER, A2_AX_SERVER, TOPO_TYPE_RESERVED)
-constexpr LocalId BACKUP_LOCAL_ID = 64;
+constexpr LocalId BACKUP_LOCAL_ID = 512;
 } // namespace Hccl
 
 inline bool operator==(const CommAddr& lhs, const CommAddr& rhs)

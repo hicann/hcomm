@@ -20,7 +20,7 @@
 #include "control_plane.h"
 #include "orion_adapter_hccp.h"
 namespace Hccl {
-constexpr unsigned int MAX_VALUE_DEVICEID = 64;
+constexpr unsigned int MAX_VALUE_DEVICEID = 512;
 constexpr unsigned int DEFAULT_VALUE_TCPPORT = 16666;
 constexpr unsigned int MAX_VALUE_TCPPORT = 65535;
 constexpr unsigned int MIN_VALUE_TCPPORT = 1;

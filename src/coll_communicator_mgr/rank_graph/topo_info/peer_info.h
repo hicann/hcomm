@@ -17,7 +17,7 @@
 
 namespace Hccl {
 
-constexpr u32 MAX_PEER_LOCAL_ID = 64;
+constexpr u32 MAX_PEER_LOCAL_ID = 512;
 class PeerInfo {
 public:
     PeerInfo() {};

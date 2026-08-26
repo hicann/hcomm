@@ -243,7 +243,7 @@ const std::string RANK_TABLE_4P_REPLACE_RANK1 = R"(
 		{
 			"rank_id": 1,
 			"device_id": 64,
-			"local_id": 64,
+			"local_id": 512,
             "replaced_local_id": 1,
 			"level_list":  [
 				{

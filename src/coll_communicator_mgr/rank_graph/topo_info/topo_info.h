@@ -19,7 +19,7 @@
 
 namespace Hccl {
 
-constexpr u32 MAX_PEER_COUNT = 65;
+constexpr u32 MAX_PEER_COUNT = 513;
 class TopoInfo {
 public:
     TopoInfo() {};
