@@ -1,3 +1,13 @@
+# -----------------------------------------------------------------------------------------------------------
+# Copyright (c) 2026 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
+
 LOCAL_PATH 		:= 	$(call my-dir)
 
 include $(CLEAR_VARS)
@@ -7,9 +17,9 @@ LOCAL_MODULE 	:= 	libra_adp
 LOCAL_LDFLAGS	+= 	-lrt
 
 
-# LOCAL_PATHÓÃÓÚbuildºËĞÄ¼ÓÉÏLOCAL_SRC_FILES×éºÏ³ÉÔ´ÎÄ¼ş, Èç¹ûĞèÒª±àÒë
-# Ô´´úÂëÎÄ¼ş. ÔòĞèÒªPATH_BRIDGEÒı¹ıÈ¥, PATH_BRIDGEºÍLOCAL_PATH×éºÏ³Ébuild
-# ºËĞÄĞèÒªµÄÔ´´úÂëÂ·¾¶
+# LOCAL_PATHç”¨äºbuildæ ¸å¿ƒåŠ ä¸ŠLOCAL_SRC_FILESç»„åˆæˆæºæ–‡ä»¶, å¦‚æœéœ€è¦ç¼–è¯‘
+# æºä»£ç æ–‡ä»¶. åˆ™éœ€è¦PATH_BRIDGEå¼•è¿‡å», PATH_BRIDGEå’ŒLOCAL_PATHç»„åˆæˆbuild
+# æ ¸å¿ƒéœ€è¦çš„æºä»£ç è·¯å¾„
 PATH_BRIDGE		:=
 
 LOCAL_SRC_FILES :=
@@ -17,7 +27,7 @@ LOCAL_SRC_FILES :=
 LOCAL_SRC_FILES += $(PATH_BRIDGE)ra_adp.c
 
 LOCAL_C_INCLUDES :=
-#µÚÈı·½Í·ÎÄ¼şËÑË÷Â·¾¶
+#ç¬¬ä¸‰æ–¹å¤´æ–‡ä»¶æœç´¢è·¯å¾„
 LOCAL_C_INCLUDES+= $(TOPDIR)inc/driver \
 			$(TOPDIR)inc/network \
 			$(TOPDIR)inc/toolchain \
@@ -27,7 +37,7 @@ LOCAL_C_INCLUDES+= $(TOPDIR)inc/driver \
 			$(TOPDIR)drivers/network/hccp/rdma_agent/hdc/ \
 			$(TOPDIR)drivers/network/hccp/rdma_agent/comm/ \
 			$(TOPDIR)drivers/network/hccp/rdma_service
-#µÚÈı·½¿âËÑË÷Â·¾¶
+#ç¬¬ä¸‰æ–¹åº“æœç´¢è·¯å¾„
 LOCAL_LD_DIRS :=  
 
 LOCAL_CFLAGS += -Werror -L./

@@ -1,3 +1,13 @@
+# -----------------------------------------------------------------------------------------------------------
+# Copyright (c) 2026 Huawei Technologies Co., Ltd.
+# This program is free software, you can redistribute it and/or modify it under the terms and conditions of
+# CANN Open Software License Agreement Version 2.0 (the "License").
+# Please refer to the License for details. You may not use this file except in compliance with the License.
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
+# See LICENSE in the root of the software repository for the full text of the License.
+# -----------------------------------------------------------------------------------------------------------
+
 LOCAL_PATH 		:= 	$(call my-dir)
 
 include $(CLEAR_VARS)
@@ -8,9 +18,9 @@ LOCAL_LDFLAGS	+= 	-lrt
 
 LOCAL_LDFLAGS	+=	-ldl
 LOCAL_LDFLAGS	+=	-Wl,-Bsymbolic -Wl,--exclude-libs,ALL
-# LOCAL_PATHÓÃÓÚbuildºËÐÄ¼ÓÉÏLOCAL_SRC_FILES×éºÏ³ÉÔ´ÎÄ¼þ, Èç¹ûÐèÒª±àÒë
-# Ô´´úÂëÎÄ¼þ. ÔòÐèÒªPATH_BRIDGEÒý¹ýÈ¥, PATH_BRIDGEºÍLOCAL_PATH×éºÏ³Ébuild
-# ºËÐÄÐèÒªµÄÔ´´úÂëÂ·¾¶
+# LOCAL_PATHç”¨äºŽbuildæ ¸å¿ƒåŠ ä¸ŠLOCAL_SRC_FILESç»„åˆæˆæºæ–‡ä»¶, å¦‚æžœéœ€è¦ç¼–è¯‘
+# æºä»£ç æ–‡ä»¶. åˆ™éœ€è¦PATH_BRIDGEå¼•è¿‡åŽ», PATH_BRIDGEå’ŒLOCAL_PATHç»„åˆæˆbuild
+# æ ¸å¿ƒéœ€è¦çš„æºä»£ç è·¯å¾„
 PATH_BRIDGE		:=
 
 LOCAL_SRC_FILES :=
@@ -24,7 +34,7 @@ LOCAL_C_INCLUDES:= $(TOPDIR)inc/network
 
 IO_ROOT_DIR := $(TOPDIR)third_party
 
-#µÚÈý·½Í·ÎÄ¼þËÑË÷Â·¾¶
+#ç¬¬ä¸‰æ–¹å¤´æ–‡ä»¶æœç´¢è·¯å¾„
 LOCAL_C_INCLUDES+= 	$(IO_ROOT_DIR)/ofed/build/rdma-core/include
 LOCAL_C_INCLUDES+=      $(TOPDIR)open_source/openssl/include
 LOCAL_C_INCLUDES+= 	$(IO_ROOT_DIR)/../libc_sec/include
@@ -40,7 +50,7 @@ LOCAL_C_INCLUDES+=      $(TOPDIR)libkmc/src/sdp
 LOCAL_C_INCLUDES+=      $(TOPDIR)libkmc/src/common
 LOCAL_C_INCLUDES+=      $(HOST_OUT_THIRD_PARTY_LIBS)/rmda_core/open_source/OFED-4.17-1/SRPMS/RH/rdma-core-17.5/build/include \
 
-#µÚÈý·½¿âËÑË÷Â·¾¶
+#ç¬¬ä¸‰æ–¹åº“æœç´¢è·¯å¾„
 LOCAL_LD_DIRS :=
 
 LOCAL_CFLAGS += -Werror -lssl -lcrypto -std=c11 -Wfloat-equal -Wextra
@@ -62,9 +72,9 @@ LOCAL_LDFLAGS	+= 	-lrt
 
 LOCAL_LDFLAGS   +=      -ldl
 LOCAL_LDFLAGS	+=	-Wl,-Bsymbolic -Wl,--exclude-libs,ALL
-# LOCAL_PATHÓÃÓÚbuildºËÐÄ¼ÓÉÏLOCAL_SRC_FILES×éºÏ³ÉÔ´ÎÄ¼þ, Èç¹ûÐèÒª±àÒë
-# Ô´´úÂëÎÄ¼þ. ÔòÐèÒªPATH_BRIDGEÒý¹ýÈ¥, PATH_BRIDGEºÍLOCAL_PATH×éºÏ³Ébuild
-# ºËÐÄÐèÒªµÄÔ´´úÂëÂ·¾¶
+# LOCAL_PATHç”¨äºŽbuildæ ¸å¿ƒåŠ ä¸ŠLOCAL_SRC_FILESç»„åˆæˆæºæ–‡ä»¶, å¦‚æžœéœ€è¦ç¼–è¯‘
+# æºä»£ç æ–‡ä»¶. åˆ™éœ€è¦PATH_BRIDGEå¼•è¿‡åŽ», PATH_BRIDGEå’ŒLOCAL_PATHç»„åˆæˆbuild
+# æ ¸å¿ƒéœ€è¦çš„æºä»£ç è·¯å¾„
 PATH_BRIDGE		:=
 
 LOCAL_SRC_FILES :=
