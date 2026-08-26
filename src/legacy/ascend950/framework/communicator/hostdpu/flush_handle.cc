@@ -68,8 +68,12 @@ HcclResult FlushHandle::GetLbMax(int *lbMax) const
 HcclResult FlushHandle::Destroy()
 {
     HcclResult finalResult = HCCL_SUCCESS;
-    finalResult = std::max(finalResult, DeregisterMr(remoteMrHandle, "Remote"));
-    finalResult = std::max(finalResult, DeregisterMr(localMrHandle, "Local"));
+    if (remoteMrHandle != nullptr) {
+        finalResult = std::max(finalResult, DeregisterMr(remoteMrHandle, "Remote"));
+    }
+    if (localMrHandle != nullptr) {
+        finalResult = std::max(finalResult, DeregisterMr(localMrHandle, "Local"));
+    }
     finalResult = std::max(finalResult, DestroyLoopbackQp());
     finalResult = std::max(finalResult, FreeLocalMemory());
     finalResult = std::max(finalResult, FreeDeviceMemory());

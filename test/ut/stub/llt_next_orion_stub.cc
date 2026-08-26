@@ -1470,9 +1470,13 @@ bool SocketManager::CheckServerPortListening(const PortData &portData, const uin
     return true;
 }
 
-bool SocketManager::ServerDeInit(PortData &portData) const
+bool SocketManager::RegisterHostListenSocket(const PortData &portData, std::shared_ptr<Socket> listenSocket)
 {
     return true;
+}
+
+void SocketManager::ServerDeInit(PortData &portData) const
+{
 }
 
 void SocketManager::SetDeviceServerListenPortMap(

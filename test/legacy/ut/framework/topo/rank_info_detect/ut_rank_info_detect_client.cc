@@ -37,6 +37,9 @@
 #define private public
 #define protected public
 #include "rank_info_detect_client.h"
+#include "preempt_port_manager.h"
+#include "socket_manager.h"
+#include "base_config.h"
 #undef protected
 #undef private
 #include "orion_adapter_rts.h"
@@ -528,4 +531,60 @@ TEST_F(RankInfoDetectClientTest, Ut_TearDown_HostSocketNull_Expect_EarlyReturn)
 
     // When & Then: TearDown should return immediately without any side effects
     EXPECT_NO_THROW(rankInfoDetectClient_->SocketTearDown(0));
+}
+
+// 抢占端口成功后，hostSocket_ 应登记到 SocketManager::GetServerSocketMap()，hostSocketRegistered_ 置 true
+TEST_F(RankInfoDetectClientTest, Ut_SetupHostListenPort_PreemptSuccess_Expect_RegisteredToMap)
+{
+    // Given: portRange 空、basePort 无效 → 走默认 range + ListenPreempt 抢占分支
+    EnvHostNicConfig fakeConfig;
+    fakeConfig.hcclHostSocketPortRange = CfgField<std::vector<SocketPortRange>>{
+        "HCCL_HOST_SOCKET_PORT_RANGE", {}, [](const std::string &s) -> std::vector<SocketPortRange> {
+            return CastSocketPortRange(s, "HCCL_HOST_SOCKET_PORT_RANGE");
+        }};
+    fakeConfig.hcclHostSocketPortRange.isParsed = true;
+    fakeConfig.hcclIfBasePort = CfgField<u32>{"HCCL_IF_BASE_PORT", HCCL_INVALID_PORT, Str2T<u32>};
+    fakeConfig.hcclIfBasePort.isParsed = true;
+    MOCKER_CPP(&EnvConfig::GetHostNicConfig).stubs().will(returnValue(fakeConfig));
+
+    // stub 的 ListenPreempt 会调 Socket::Listen(port) → HrtRaSocketTryListenOneStart 返回 true，usePort 设为 range
+    // 首个端口
+
+    IpAddress hostIp("192.168.1.8");
+    uint32_t hostPort = 0;
+
+    // When: 调 SetupHostListenPort 走抢占分支
+    EXPECT_NO_THROW(rankInfoDetectClient_->SetupHostListenPort(0, 0, hostIp, hostPort));
+
+    // Then: hostPort 被设为抢占端口，hostSocketRegistered_ 置 true
+    EXPECT_NE(hostPort, 0u);
+    EXPECT_TRUE(rankInfoDetectClient_->hostSocketRegistered_);
+    EXPECT_NE(rankInfoDetectClient_->hostSocket_, nullptr);
+
+    // Cleanup
+    rankInfoDetectClient_->SocketTearDown(0);
+    GlobalMockObject::verify();
+}
+
+// hostSocket_ 已登记 map 时，SocketTearDown 应跳过 Release/Destroy，只释放 shared_ptr
+TEST_F(RankInfoDetectClientTest, Ut_SocketTearDown_Registered_Expect_SkipReleaseDestroy)
+{
+    // Given: 手动构造 hostSocket_ 并标记已登记
+    IpAddress hostIp("192.168.1.8");
+    auto socket = std::make_shared<Socket>(
+        socketHandle, hostIp, 60001, hostIp, "hostport_preempt", SocketRole::SERVER, NicType::HOST_NIC_TYPE);
+    rankInfoDetectClient_->hostSocket_ = socket;
+    rankInfoDetectClient_->hostSocketRegistered_ = true;
+
+    // mock Release 和 Destroy，期望不被调用
+    MOCKER_CPP(&PreemptPortManager::Release).expects(never()).with(mockcpp::any());
+    MOCKER_CPP(&HostSocketHandleManager::Destroy).expects(never()).with(mockcpp::any(), mockcpp::any());
+
+    // When: 调 SocketTearDown
+    EXPECT_NO_THROW(rankInfoDetectClient_->SocketTearDown(0));
+
+    // Then: hostSocket_ 被置空，且 Release/Destroy 未被调用
+    EXPECT_EQ(rankInfoDetectClient_->hostSocket_, nullptr);
+
+    GlobalMockObject::verify();
 }
