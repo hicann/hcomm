@@ -1110,7 +1110,7 @@ HcclResult MyRank::ConfigSqDepthByExpansionMode(CommEngine engine, HcommChannelD
 
 void MyRank::LogChannelCreationInfo(
     CommEngine engine, const std::string& commTag, const HcclChannelDesc* channelDescs, uint32_t channelNum,
-    ChannelHandle* hostChannelHandleList)
+    const ChannelHandle* hostChannelHandleList) const
 {
     for (u32 i = 0; i < channelNum; ++i) {
         u32 remoteRank = channelDescs[i].remoteRank;
@@ -1122,7 +1122,7 @@ void MyRank::LogChannelCreationInfo(
                 HCCL_RES,
                 "create channel info:channel handle[%s] comm tag[%s] protocol[%s]"
                 " local rank[%u] local dev phyid[%u] remote rank[%u] remote dev phyid[%u] engine[%s]",
-                std::to_string(reinterpret_cast<uint64_t>(hostChannelHandleList[i])).c_str(), commTag.c_str(),
+                std::to_string(hostChannelHandleList[i]).c_str(), commTag.c_str(),
                 MyRankUtils::GetCommProtocolEnumStr(channelDescs[i].localEndpoint.protocol).c_str(), rankId_,
                 channelDescs[i].localEndpoint.loc.device.devPhyId, remoteRank,
                 channelDescs[i].remoteEndpoint.loc.device.devPhyId,
@@ -1132,7 +1132,7 @@ void MyRank::LogChannelCreationInfo(
                 HCCL_RES,
                 "create channel info:channel handle[%s] comm tag[%s] protocol[%s]"
                 " local rank[%u] remote rank[%u] engine[%s]",
-                std::to_string(reinterpret_cast<uint64_t>(hostChannelHandleList[i])).c_str(), commTag.c_str(),
+                std::to_string(hostChannelHandleList[i]).c_str(), commTag.c_str(),
                 MyRankUtils::GetCommProtocolEnumStr(channelDescs[i].localEndpoint.protocol).c_str(), rankId_,
                 remoteRank, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
         }
@@ -1140,9 +1140,8 @@ void MyRank::LogChannelCreationInfo(
 }
 
 HcclResult MyRank::FinalizeChannelsByEngine(
-    CommEngine engine, const std::string& commTag, [[maybe_unused]] const HcclChannelDesc* channelDescs,
-    uint32_t channelNum, std::vector<HcommChannelDesc>& hcommDescs, ChannelHandle* hostChannelHandleList,
-    ChannelHandle* channelHandles)
+    CommEngine engine, const std::string& commTag, uint32_t channelNum, std::vector<HcommChannelDesc>& hcommDescs,
+    ChannelHandle* hostChannelHandleList, ChannelHandle* channelHandles)
 {
     if (engine == COMM_ENGINE_AICPU || engine == COMM_ENGINE_AICPU_TS) {
         // 新增：添加 kernelLaunchAicpuCommInit 调用
@@ -1165,7 +1164,6 @@ HcclResult MyRank::FinalizeChannelsByEngine(
     }
 
     if (engine == COMM_ENGINE_CPU || engine == COMM_ENGINE_CCU || engine == COMM_ENGINE_AIV) {
-        // TODO: Host侧 Channel 赋值到 channelHandles
         CHK_SAFETY_FUNC_RET(memcpy_s(
             channelHandles, channelNum * sizeof(ChannelHandle), hostChannelHandleList,
             channelNum * sizeof(ChannelHandle)));
@@ -1253,8 +1251,7 @@ HcclResult MyRank::CreateChannels(
     // 添加初始化时进行填表
     LogChannelCreationInfo(engine, commTag, channelDescs, channelNum, hostChannelHandleList);
 
-    return FinalizeChannelsByEngine(
-        engine, commTag, channelDescs, channelNum, hcommDescs, hostChannelHandleList, channelHandles);
+    return FinalizeChannelsByEngine(engine, commTag, channelNum, hcommDescs, hostChannelHandleList, channelHandles);
 }
 
 HcclResult MyRank::ChannelGetHcclBuffer(ChannelHandle channel, void** buffer, uint64_t* size)

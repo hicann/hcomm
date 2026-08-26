@@ -190,13 +190,13 @@ HcclResult CommMems::GetTagsFromHandles(void** memHandles, uint32_t memHandleNum
     }
 
     std::lock_guard<std::mutex> lock(memMutex_);
-    CommMemInfo** handles = reinterpret_cast<CommMemInfo**>(memHandles);
     for (uint32_t i = 0; i < memHandleNum; i++) {
-        if (handles[i] == nullptr) {
-            HCCL_ERROR("[CommMems] memHandle[%p] not found", handles[i]);
+        auto* handle = static_cast<CommMemInfo*>(memHandles[i]);
+        if (handle == nullptr) {
+            HCCL_ERROR("[CommMems] memHandle[%p] not found", handle);
             return HCCL_E_NOT_FOUND;
         }
-        memTags.push_back(handles[i]->memTag);
+        memTags.push_back(handle->memTag);
     }
     return HCCL_SUCCESS;
 }

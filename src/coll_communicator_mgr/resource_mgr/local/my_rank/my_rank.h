@@ -165,10 +165,10 @@ private:
     BatchConnectChannels(const HcclChannelDesc* channelDescs, ChannelHandle* channelHandles, uint32_t channelNum);
     void LogChannelCreationInfo(
         CommEngine engine, const std::string& commTag, const HcclChannelDesc* channelDescs, uint32_t channelNum,
-        ChannelHandle* hostChannelHandleList);
+        const ChannelHandle* hostChannelHandleList) const;
     HcclResult FinalizeChannelsByEngine(
-        CommEngine engine, const std::string& commTag, const HcclChannelDesc* channelDescs, uint32_t channelNum,
-        std::vector<HcommChannelDesc>& hcommDescs, ChannelHandle* hostChannelHandleList, ChannelHandle* channelHandles);
+        CommEngine engine, const std::string& commTag, uint32_t channelNum, std::vector<HcommChannelDesc>& hcommDescs,
+        ChannelHandle* hostChannelHandleList, ChannelHandle* channelHandles);
     HcclResult CheckChannelParam(CommEngine engine, const HcclChannelDesc* channelDesc, uint32_t channelNum) const;
     HcclResult QueryListenPort(
         uint32_t localRank, uint32_t remoteRank, const EndpointDesc& localEndpointDesc,
