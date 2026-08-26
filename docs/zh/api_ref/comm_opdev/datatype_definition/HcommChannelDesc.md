@@ -22,7 +22,7 @@ typedef struct {
     union {
         uint8_t raws[128];            /* 通用缓存 */
         struct {
-            uint32_t queueNum;        /* QP数量，当前仅支持一个QP */
+            uint32_t queueNum;        /* QP数量，取值范围：[1,32]，建议配置范围：[1,8] */
             uint32_t retryCnt;        /* 最大重传次数，范围为0~7，默认为7 */
             uint32_t retryInterval;   /* 重传间隔，范围为5~24，默认为20 (对应时间4.096*2^20us) */
             uint8_t tc;               /* 流量类别(QoS)，范围为0~255，默认为132 */
@@ -30,6 +30,12 @@ typedef struct {
             uint32_t qpThreshold;     /* 多QP场景下，每个QP最小数据量(B) */
             uint32_t cqAttrFlags;     /* CQ属性标志位，用于配置ibv_cq_init_attr_ex的flags标志位，默认0。
                                          备注：NPU网卡不支持该配置；第三方网卡场景下是否有效，与各自网卡能力相关 */
+            uint16_t* srcPortList;    /* QP源端口号列表，用于RoCE网络哈希分流。NULL表示不配置。
+                                         ABI v4新增字段，低版本调用方未设置时HCOMM置NULL
+                                         数组长度需等于queueNum，第i个QP使用srcPortList[i % 数组长度]作为UDP源端口号。
+                                         当通过HcclChannelAcquire创建通道时，HCOMM根据环境变量
+                                         HCCL_RDMA_QP_PORT_CONFIG_PATH指向的MultiQpSrcPort.cfg配置文件自动填充此字段。
+                                         exchangeAllMems为true时（即单边通信场景）此字段不生效（udpSport置0）。 */
         } roceAttr;
         struct {
             uint32_t qos;             /* HCCS QoS */
