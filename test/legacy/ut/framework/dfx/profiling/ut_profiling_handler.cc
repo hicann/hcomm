@@ -16,6 +16,7 @@
 #define private public
 #define protected public
 #include "profiling_handler.h"
+#include "dlprof_function_v2.h"
 #include "mirror_task_manager.h"
 #include "communicator_impl.h"
 
@@ -30,7 +31,13 @@ protected:
 
     static void TearDownTestCase() { std::cout << "ProfilingHandlerTest TearDown" << std::endl; }
 
-    virtual void SetUp() { std::cout << "A Test case in ProfilingHandlerTest SetUP" << std::endl; }
+    virtual void SetUp()
+    {
+        std::cout << "A Test case in ProfilingHandlerTest SetUP" << std::endl;
+        // 重置 DlProfFunction 为 stub 模式，避免加载 libprofapi.so 导致真实 profiling 函数返回错误
+        Hccl::DlProfFunction::GetInstance().initializedFlag_ = false;
+        Hccl::DlProfFunction::GetInstance().DlProfFunctionStubInit();
+    }
 
     virtual void TearDown()
     {

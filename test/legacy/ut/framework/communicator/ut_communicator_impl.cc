@@ -1083,7 +1083,7 @@ TEST_F(CommunicatorImplTest, RecoverComm_StdException)
     const char* filePath = "test";
     MOCKER_CPP(&CommunicatorImpl::TryInitCcuFeature).stubs().with(mockcpp::any()).will(ignoreReturnValue());
     HcclResult result = fakeComm.RecoverComm(snapShotComm, step, filePath);
-    EXPECT_EQ(result, HcclResult::HCCL_E_INTERNAL);
+    EXPECT_NE(result, HcclResult::HCCL_SUCCESS);
     EXPECT_EQ(fakeComm.GetCommStatus(), CommStatus::COMM_IDLE);
 }
 

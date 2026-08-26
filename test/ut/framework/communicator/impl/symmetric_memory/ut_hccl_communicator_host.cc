@@ -320,11 +320,12 @@ TEST_F(HcclCommunicatorHostTest, Ut_HcclGetAlgExecParam_When_Normal_Expect_Retur
 
     MOCKER_CPP(&HcclCommunicator::InitRaResource).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
     MOCKER_CPP(&HcclCommunicator::AllocAlgResource).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&HcclCommunicator::InitProfiler).stubs().with(mockcpp::any()).will(returnValue(HCCL_SUCCESS));
 
     ret = implBase->AtomicInitSet();
-    EXPECT_EQ(ret, HCCL_SUCCESS);
+    ASSERT_EQ(ret, HCCL_SUCCESS);
     ret = implBase->Init(params, rankTable);
-    EXPECT_EQ(ret, HCCL_SUCCESS);
+    ASSERT_EQ(ret, HCCL_SUCCESS);
 
     std::string tag = "test";
     HcclCMDType opType = HcclCMDType::HCCL_CMD_ALLREDUCE;

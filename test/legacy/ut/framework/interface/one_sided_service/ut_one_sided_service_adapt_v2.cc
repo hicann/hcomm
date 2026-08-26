@@ -101,7 +101,11 @@ protected:
         std::cout << "\033[36m--OneSidedUtV2 TearDown--\033[0m" << std::endl;
     }
     virtual void SetUp() { std::cout << "A Test SetUP" << std::endl; }
-    virtual void TearDown() { std::cout << "A Test TearDown" << std::endl; }
+    virtual void TearDown()
+    {
+        std::cout << "A Test TearDown" << std::endl;
+        GlobalMockObject::verify();
+    }
 };
 
 TEST_F(OneSidedUtV2, ut_HcclRegisterMemV2_func)

@@ -21,7 +21,7 @@ class HcclTokenInfoManagerTest : public ::testing::Test {
 protected:
     void SetUp() override {}
 
-    void TearDown() override {}
+    void TearDown() override { GlobalMockObject::verify(); }
 };
 
 // Test case for GetTokenInfo method
