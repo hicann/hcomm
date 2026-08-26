@@ -140,7 +140,7 @@ HcclResult OrderLaunch::InitGroupCtx(const std::string &group)
     return HCCL_SUCCESS;
 }
 
-// aclgraph模式下，先在main stream上写record，再在上order stream写wait；解order stream的wait
+// aclgraph模式下，先在kernel stream上写record，再在上order stream写wait；解order stream的wait
 HcclResult OrderLaunch::AclgraphLaunchInOrderToOrderStream(std::string &group, const Stream& kernelStream,
     const Stream& mainStream, std::shared_ptr<LocalNotify> notify0, std::shared_ptr<LocalNotify> notify1,
     u32 timeOut, HcclRtEvent event)
@@ -155,11 +155,16 @@ HcclResult OrderLaunch::AclgraphLaunchInOrderToOrderStream(std::string &group, c
     Stream& aclgraphStream = contextResMgrMap_[context].aclgraphStream;
     EnsureOrderStreamForGroup(group, context, aclgraphStream); // aclgraph控制流
 
+    rtModel_t rtModel = nullptr;
+    bool isCapture = false;
+    CHK_RET(GetStreamCaptureInfo(mainStream.ptr(), rtModel, isCapture));
+    CHK_RET(AddStreamToModel(aclgraphStream.ptr(), rtModel));
+
     aclError ret = ACL_SUCCESS;
-    // mainStream -> aclgraphStream
-    ret = aclrtRecordEvent(event, mainStream.ptr());
+    // kernelStream -> aclgraphStream
+    ret = aclrtRecordEvent(event, kernelStream.ptr());
     CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtRecordEvent failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
-    HCCL_CONFIG_INFO(HCCL_TASK, "[%s]aclrtRecordEvent para: mainStreamId[%d]", __func__, mainStream.id());
+    HCCL_CONFIG_INFO(HCCL_TASK, "[%s]aclrtRecordEvent para: kernelStreamId[%d]", __func__, kernelStream.id());
 
     ret = aclrtStreamWaitEvent(aclgraphStream.ptr(), event);
     CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtStreamWaitEvent failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
@@ -172,13 +177,13 @@ HcclResult OrderLaunch::AclgraphLaunchInOrderToOrderStream(std::string &group, c
 }
 
 /**
- * @brief ACLGRAPH模式第二步：在order stream上record事件并解main stream的wait
+ * @brief ACLGRAPH模式第二步：在order stream上record事件并解kernel stream的wait
  * 执行流程：
  * 1. 在order stream上record事件
- * 2. 在main stream上wait该事件，解开main stream的阻塞
+ * 2. 在kernel stream上wait该事件，解开kernel stream的阻塞
  */
 HcclResult OrderLaunch::AclgraphLaunchInOrderToKernelStream(std::string &group, const Stream& kernelStream,
-    const Stream& mainStream, HcclRtEvent event)
+    HcclRtEvent event)
 {
     std::unique_lock<std::mutex> mapLock(streamMutex_);
 
@@ -199,9 +204,9 @@ HcclResult OrderLaunch::AclgraphLaunchInOrderToKernelStream(std::string &group, 
     CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtRecordEvent failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
     HCCL_CONFIG_INFO(HCCL_TASK, "[%s]aclrtRecordEvent para: orderStreamId[%d]", __func__, aclgraphStream.id());
 
-    ret = aclrtStreamWaitEvent(mainStream.ptr(), event);
+    ret = aclrtStreamWaitEvent(kernelStream.ptr(), event);
     CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtStreamWaitEvent failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
-    HCCL_CONFIG_INFO(HCCL_TASK, "[%s]aclrtStreamWaitEvent para: mainStreamId[%d]", __func__, mainStream.id());
+    HCCL_CONFIG_INFO(HCCL_TASK, "[%s]aclrtStreamWaitEvent para: kernelStreamId[%d]", __func__, kernelStream.id());
 
     HCCL_INFO("[%s] group[%s], kernelStreamId[%u], orderStreamId[%u], context[0x%llx]",
         __func__, group.c_str(), kernelStream.id(), aclgraphStream.id(), ctxIt->second);
