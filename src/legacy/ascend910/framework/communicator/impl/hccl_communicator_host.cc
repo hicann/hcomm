@@ -8037,7 +8037,7 @@ HcclResult HcclCommunicator::AicpuKfcTilingDataLaunchIn(
         opTilingDataMem.ptr(), opTilingDataSize, kernelName, mode, opParam.tag, isCustom));
     if (opParam.isCapture) {
         HcclRtEvent event1 = localAicpuOpEvent_[static_cast<u32>(AicpuLocalEventIdx::ORDER_INDEX_ACLGRAPH_EVENT_1)];
-        CHK_RET(orderLaunch.AclgraphLaunchInOrderToKernelStream(identifier_, kfcOpStream, opParam.stream, event1));
+        CHK_RET(orderLaunch.AclgraphLaunchInOrderToKernelStream(identifier_, kfcOpStream, event1));
     }
 
     uint64_t endTime = hrtMsprofSysCycleTime();

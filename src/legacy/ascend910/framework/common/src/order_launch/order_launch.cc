@@ -14,6 +14,7 @@
 #include "config_log.h"
 #include "hccl_types.h"
 #include "adapter_rts_common.h"
+#include "stream_utils.h"
 
 namespace hccl {
 OrderLaunch& OrderLaunch::GetInstance(s32 deviceLogicID)
@@ -153,9 +154,14 @@ HcclResult OrderLaunch::AclgraphLaunchInOrderToOrderStream(
     Stream& aclgraphStream = contextResMgrMap_[context].aclgraphStream;
     EnsureOrderStreamForGroup(group, context, aclgraphStream); // aclgraph控制流
 
+    rtModel_t rtModel = nullptr;
+    bool isCapture = false;
+    CHK_RET(GetStreamCaptureInfo(mainStream.ptr(), rtModel, isCapture));
+    CHK_RET(AddStreamToModel(aclgraphStream.ptr(), rtModel));
+
     aclError ret = ACL_SUCCESS;
     // kernelStream -> aclgraphStream
-    ret = aclrtRecordEvent(event, mainStream.ptr());
+    ret = aclrtRecordEvent(event, kernelStream.ptr());
     CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtRecordEvent failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
     HCCL_CONFIG_INFO(HCCL_TASK, "[%s]aclrtRecordEvent para: kernelStreamId[%d]", __func__, kernelStream.id());
 
@@ -177,8 +183,8 @@ HcclResult OrderLaunch::AclgraphLaunchInOrderToOrderStream(
  * 1. 在order stream上record事件
  * 2. 在kernel stream上wait该事件，解开kernel stream的阻塞
  */
-HcclResult OrderLaunch::AclgraphLaunchInOrderToKernelStream(
-    std::string& group, const Stream& kernelStream, const Stream& mainStream, HcclRtEvent event)
+HcclResult
+OrderLaunch::AclgraphLaunchInOrderToKernelStream(std::string& group, const Stream& kernelStream, HcclRtEvent event)
 {
     std::unique_lock<std::mutex> mapLock(streamMutex_);
 
@@ -200,7 +206,7 @@ HcclResult OrderLaunch::AclgraphLaunchInOrderToKernelStream(
     CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtRecordEvent failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
     HCCL_CONFIG_INFO(HCCL_TASK, "[%s]aclrtRecordEvent para: orderStreamId[%d]", __func__, aclgraphStream.id());
 
-    ret = aclrtStreamWaitEvent(mainStream.ptr(), event);
+    ret = aclrtStreamWaitEvent(kernelStream.ptr(), event);
     CHK_PRT_RET(
         ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtStreamWaitEvent failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
     HCCL_CONFIG_INFO(HCCL_TASK, "[%s]aclrtStreamWaitEvent para: kernelStreamId[%d]", __func__, kernelStream.id());

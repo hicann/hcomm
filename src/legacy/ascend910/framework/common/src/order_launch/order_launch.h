@@ -77,8 +77,7 @@ public:
     HcclResult AclgraphLaunchInOrderToOrderStream(
         std::string& group, const Stream& kernelStream, const Stream& mainStream, std::shared_ptr<LocalNotify> notify0,
         std::shared_ptr<LocalNotify> notify1, u32 timeOut, HcclRtEvent event);
-    HcclResult AclgraphLaunchInOrderToKernelStream(
-        std::string& group, const Stream& kernelStream, const Stream& mainStream, HcclRtEvent event);
+    HcclResult AclgraphLaunchInOrderToKernelStream(std::string& group, const Stream& kernelStream, HcclRtEvent event);
 
     HcclResult OpbaseLaunchInOrder(
         std::string& group, const Stream& kernelStream, std::shared_ptr<LocalNotify> notify0,
