@@ -115,10 +115,6 @@ namespace hccl
         **/
         ORDER_INDEX_ACLGRAPH_EVENT_0 = 0, // kernel流 record, host_order流 wait
         ORDER_INDEX_ACLGRAPH_EVENT_1 = 1, // host_order流 record, kernel流 wait
-
-        // 用于Aclgraph模式kernel流入图的event
-        KERNEL_INDEX_ACLGRAPH_EVENT_0 = 2, // kernel流 record, hccl主流 wait
-        KERNEL_INDEX_ACLGRAPH_EVENT_1 = 3, // hccl主流 record, kernel流 wait
     };
 
     HcclCommunicator::HcclCommunicator()
@@ -7631,17 +7627,16 @@ namespace hccl
             opParam.isCapture, mode);
 
         if (opParam.isCapture) { // 非主流下发时，acl graph场景，capture从流
-            // mainStream -> kernelStream, kernel流通过event capture入图
-            aclError ret = ACL_SUCCESS;
-            HcclRtEvent event = localAicpuOpEvent_[static_cast<u32>(AicpuLocalEventIdx::KERNEL_INDEX_ACLGRAPH_EVENT_0)];
-            ret = aclrtRecordEvent(event, opParam.stream.ptr());
-            CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtRecordEvent failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
-            HCCL_CONFIG_INFO(HCCL_TASK, "[%s]aclrtRecordEvent para: opParam.stream[%d]", __func__, opParam.stream.id());
-            ret = aclrtStreamWaitEvent(kfcOpStream.ptr(), event);
-            CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtStreamWaitEvent failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
-            HCCL_CONFIG_INFO(HCCL_TASK, "[%s]aclrtStreamWaitEvent para: kfcOpStream[%d]", __func__, kfcOpStream.id());
-            HCCL_INFO("[HcclCommunicator][%s]tag[%s], capture kfcOpStream, mainStream[%d] recordEvent, kfcOpStream[%d] waitEvent.",
-                __func__, opParam.tag.c_str(), opParam.stream.id(), kfcOpStream.id());
+            u64 modelId = UINT64_MAX;
+            aclmdlRI rtModel = nullptr;
+            bool isCapture = false;
+            CHK_RET(GetStreamCaptureInfo(opParam.stream.ptr(), rtModel, isCapture));
+            CHK_PTR_NULL(rtModel);
+            CHK_RET(AddStreamToModel(kfcOpStream.ptr(), rtModel));
+            CHK_RET(GetModelId(rtModel, modelId));
+            HCCL_INFO(
+                "[HcclCommunicator][%s]tag[%s], add stream[%d] to modelId[%llu] success.", __func__, opParam.tag.c_str(),
+                streamId, modelId);
         }
 
         u32 timeOut = (opResPara_.config.notifyWaitTime == 0) ? opResPara_.config.notifyWaitTime :
@@ -7654,7 +7649,7 @@ namespace hccl
             notify1 = localAiCpuOpNotify_[static_cast<u32>(AicpuLocalNotifyIdx::ORDER_INDEX_ACLGRAPH_1)];
             HcclRtEvent event0 = localAicpuOpEvent_[static_cast<u32>(AicpuLocalEventIdx::ORDER_INDEX_ACLGRAPH_EVENT_0)];
             CHK_RET(orderLaunch.AclgraphLaunchInOrderToOrderStream(
-                identifier_, kfcOpStream, notify0, notify1, timeOut, event0));
+                identifier_, kfcOpStream, opParam.stream, notify0, notify1, timeOut, event0));
         } else if (mode == HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
             notify0 = localAiCpuOpNotify_[static_cast<u32>(AicpuLocalNotifyIdx::ORDER_INDEX_OPBASE_0)];
             notify1 = localAiCpuOpNotify_[static_cast<u32>(AicpuLocalNotifyIdx::ORDER_INDEX_OPBASE_1)];
@@ -7670,19 +7665,7 @@ namespace hccl
                                                 kernelName, mode, opParam.tag, isCustom));
         if (opParam.isCapture) {
             HcclRtEvent event1 = localAicpuOpEvent_[static_cast<u32>(AicpuLocalEventIdx::ORDER_INDEX_ACLGRAPH_EVENT_1)];
-            CHK_RET(orderLaunch.AclgraphLaunchInOrderToKernelStream(identifier_, kfcOpStream, event1));
-            // kernelStream -> mainStream
-            aclError ret = ACL_SUCCESS;
-            HcclRtEvent event = localAicpuOpEvent_[static_cast<u32>(AicpuLocalEventIdx::KERNEL_INDEX_ACLGRAPH_EVENT_1)];
-            ret = aclrtRecordEvent(event, kfcOpStream.ptr());
-            CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtRecordEvent failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
-            HCCL_CONFIG_INFO(HCCL_TASK, "[%s]aclrtRecordEvent para: kfcOpStream[%d]", __func__, kfcOpStream.id());
-            ret = aclrtStreamWaitEvent(opParam.stream.ptr(), event);
-            CHK_PRT_RET(ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtStreamWaitEvent failed, ret[%d]", __func__, ret), HCCL_E_RUNTIME);
-            HCCL_CONFIG_INFO(HCCL_TASK, "[%s]aclrtStreamWaitEvent para: opParam.stream[%d]", __func__, opParam.stream.id());
-            HCCL_INFO("[HcclCommunicator][%s]tag[%s], capture kfcOpStream, mainStream[%d] waitEvent, kfcOpStream[%d] recordEvent.",
-                __func__, opParam.tag.c_str(), opParam.stream.id(), kfcOpStream.id());
-
+            CHK_RET(orderLaunch.AclgraphLaunchInOrderToKernelStream(identifier_, kfcOpStream, opParam.stream, event1));
         }
 
         uint64_t endTime = hrtMsprofSysCycleTime();
