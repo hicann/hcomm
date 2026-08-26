@@ -1,0 +1,28 @@
+# Communication Operations
+
+<!-- md-trans-meta sourceCommit=59b5f25111e74c4a6aea4eef8ee409ef5bf248f6 translatedAt=2026-08-14T10:35:36.631Z pushedAt=2026-08-18T10:56:49.649Z -->
+
+- [HcommWriteOnThread](HcommWriteOnThread.md)  
+- [HcommWriteNbiOnThread](HcommWriteNbiOnThread.md)  
+- [HcommWriteNbi](HcommWriteNbi.md)
+- [HcommWriteReduceOnThread](HcommWriteReduceOnThread.md)  
+- [HcommReadOnThread](HcommReadOnThread.md)  
+- [HcommReadNbiOnThread](HcommReadNbiOnThread.md)  
+- [HcommReadNbi](HcommReadNbi.md)
+- [HcommReadReduceOnThread](HcommReadReduceOnThread.md)  
+- [HcommChannelNotifyRecordOnThread](HcommChannelNotifyRecordOnThread.md)  
+- [HcommChannelNotifyRecord](HcommChannelNotifyRecord.md)
+- [HcommChannelNotifyWaitOnThread](HcommChannelNotifyWaitOnThread.md)
+- [HcommChannelNotifyWait](HcommChannelNotifyWait.md)
+- [HcommChannelNotifyWaitOnThreadWithDefaultTimeout](HcommChannelNotifyWaitOnThreadWithDefaultTimeout.md)  
+- [HcommWriteWithNotifyOnThread](HcommWriteWithNotifyOnThread.md)  
+- [HcommWriteWithNotifyNbiOnThread](HcommWriteWithNotifyNbiOnThread.md)  
+- [HcommWriteWithNotifyNbi](HcommWriteWithNotifyNbi.md)
+- [HcommWriteReduceWithNotifyOnThread](HcommWriteReduceWithNotifyOnThread.md)  
+- [HcommChannelFenceOnThread](HcommChannelFenceOnThread.md)
+- [HcommChannelFence](HcommChannelFence.md)
+- [HcommFenceOnThread](HcommFenceOnThread.md)
+- [HcommBatchTransferOnThread](HcommBatchTransferOnThread.md)
+- [HcommChannelDrainOnThread](HcommChannelDrainOnThread.md)
+- [HcommSetNotifyWaitTimeOut](HcommSetNotifyWaitTimeOut.md)
+- [HcommThreadResAcquireTimeOut](HcommThreadResAcquireTimeOut.md)

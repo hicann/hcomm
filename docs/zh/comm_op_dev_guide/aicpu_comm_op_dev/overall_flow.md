@@ -6,7 +6,6 @@ HCCL AICPU通信算子的开发与执行分为Host侧准备和AICPU侧执行两�
 %%{init: {
   "theme": "base",
   "themeVariables": {
-    "fontFamily": "Microsoft YaHei, Arial, sans-serif",
     "primaryColor": "#EAF2FF",
     "primaryBorderColor": "#4F7CAC",
     "primaryTextColor": "#1F2937",
