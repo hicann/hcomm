@@ -52,13 +52,21 @@ HcclResult HcclCommDestroy(HcclComm comm)
 ## 调用示例
 
 ```c
+// 设备资源初始化
+aclInit(NULL);
 uint32_t rankSize = 2;
 int32_t devices[rankSize] = {0, 1};
 HcclComm comms[rankSize];
+// 指定集合通信操作使用的设备
+for (uint32_t i = 0; i < rankSize; i++) {
+    aclrtSetDevice(devices[i]);
+}
 // 初始化通信域
 HcclCommInitAll(rankSize, devices, comms);
 // 销毁通信域
-for (uint32_t i = 0; i &lt; rankSize; i++) {
+for (uint32_t i = 0; i < rankSize; i++) {
     HcclCommDestroy(comms[i]);
 }
+// 设备资源去初始化
+aclFinalize();
 ```

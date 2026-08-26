@@ -183,4 +183,4 @@ namespace ccu {
 } // namespace ccu
 } // namespace AscendC
 
-#endif // CCU_API_HPP
+#endif // CCU_PRIMITIVES_HPP

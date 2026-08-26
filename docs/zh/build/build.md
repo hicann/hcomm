@@ -12,7 +12,7 @@
 - pip3 >= 20.3.0
 - setuptools >= 45.0.0
 - wheel >= 0.34.0
-- gcc & g++ : 7.3.0至13.3.x
+- gcc & g++ : 7.3.0至14.2.x
 - cmake >= 3.16.0
 - pkg-config >= 0.29.1（用于编译rdma-core）
 - patch >= 2.7.0（用于应用补丁文件）

@@ -12,7 +12,7 @@ The software dependencies required for compiling this project are listed below. 
 - pip3 >= 20.3.0
 - setuptools >= 45.0.0
 - wheel >= 0.34.0
-- gcc and g++: 7.3.0 to 13.3.x
+- gcc and g++: 7.3.0 to 14.2.x
 - cmake >= 3.16.0
 - pkg-config >= 0.29.1 (for compiling rdma-core)
 - patch >= 2.7.0 (for applying patch files)
