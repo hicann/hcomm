@@ -1541,6 +1541,7 @@ HcclResult HcclCommunicator::AicpuInitOpTilingDataFromOpParam(
     opTilingData->inputOffset = opParam.inputOffset;
     opTilingData->outputSymWindow = reinterpret_cast<u64>(opParam.outputSymWindow);
     opTilingData->outputOffset = opParam.outputOffset;
+    opTilingData->aicpuUnfoldMode = static_cast<u8>(opParam.aicpuUnfoldMode);
     return HCCL_SUCCESS;
 }
 

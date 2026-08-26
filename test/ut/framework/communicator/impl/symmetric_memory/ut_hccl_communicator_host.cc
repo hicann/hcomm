@@ -10,6 +10,7 @@
 
 #include "gtest/gtest.h"
 #include <mockcpp/mockcpp.hpp>
+#include <securec.h>
 
 #ifndef private
 #define private public
@@ -509,4 +510,44 @@ TEST_F(
 
     EXPECT_EQ(ret, HCCL_SUCCESS);
     GlobalMockObject::verify();
+}
+
+TEST_F(
+    HcclCommunicatorHostTest,
+    Ut_AicpuInitOpTilingDataFromOpParam_When_AicpuUnfoldModeEnabled_Expect_PropagatedToTilingData)
+{
+    std::unique_ptr<HcclCommunicator> hcclCommunicator(new (std::nothrow) HcclCommunicator());
+    ASSERT_NE(hcclCommunicator, nullptr);
+
+    OpParam opParam;
+    opParam.aicpuUnfoldMode = true;
+    struct OpTilingData tilingData;
+    memset_s(&tilingData, sizeof(tilingData), 0, sizeof(tilingData));
+
+    HcclResult ret = hcclCommunicator->AicpuInitOpTilingDataFromOpParam(
+        opParam, HcclCMDType::HCCL_CMD_BATCH_SEND_RECV, &tilingData);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(tilingData.aicpuUnfoldMode, static_cast<u8>(opParam.aicpuUnfoldMode));
+    EXPECT_EQ(tilingData.aicpuUnfoldMode, 1U);
+}
+
+TEST_F(
+    HcclCommunicatorHostTest,
+    Ut_AicpuInitOpTilingDataFromOpParam_When_AicpuUnfoldModeDisabled_Expect_PropagatedToTilingData)
+{
+    std::unique_ptr<HcclCommunicator> hcclCommunicator(new (std::nothrow) HcclCommunicator());
+    ASSERT_NE(hcclCommunicator, nullptr);
+
+    OpParam opParam;
+    opParam.aicpuUnfoldMode = false;
+    struct OpTilingData tilingData;
+    memset_s(&tilingData, sizeof(tilingData), 0, sizeof(tilingData));
+
+    HcclResult ret = hcclCommunicator->AicpuInitOpTilingDataFromOpParam(
+        opParam, HcclCMDType::HCCL_CMD_BATCH_SEND_RECV, &tilingData);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(tilingData.aicpuUnfoldMode, static_cast<u8>(opParam.aicpuUnfoldMode));
+    EXPECT_EQ(tilingData.aicpuUnfoldMode, 0U);
 }

@@ -172,8 +172,8 @@ HcclResult CollBatchSendRecvExecutor::Orchestrate(OpParam& param, AlgResourceRes
     CHK_RET(CalcSendSlices(algResource));
     CHK_RET(CalcRecvSlices(algResource));
 
-    HCCL_DEBUG("[CollBatchSendRecvExecutor][Orchestrate] aicpuUnfoldMode %d", aicpuUnfoldMode_);
-    if (aicpuUnfoldMode_) {
+    HCCL_INFO("[CollBatchSendRecvExecutor][Orchestrate] aicpuUnfoldMode %d", param.aicpuUnfoldMode);
+    if (param.aicpuUnfoldMode) {
         CHK_RET(RunLoopInAicpuUnfoldMode(param));
     } else {
         CHK_RET(RunLoopInHostUnfoldMode(param));

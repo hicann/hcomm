@@ -1142,6 +1142,62 @@ TEST_F(CollBatchSendRecvGroupExecutorTest, Orchestrate_SingleRankEarlyReturn)
 }
 
 // ============================================================================
+// CollBatchSendRecvExecutor::Orchestrate aicpuUnfoldMode dispatch tests
+// ============================================================================
+
+TEST_F(CollBatchSendRecvGroupExecutorTest, Orchestrate_AicpuUnfoldModeTrue_Expect_RunLoopInAicpuUnfoldMode)
+{
+    // 使用基类 executor 覆盖 CollBatchSendRecvExecutor::Orchestrate 中
+    // param.aicpuUnfoldMode 为 true 时走 aicpu 展开模式分支
+    CollBatchSendRecvExecutor baseExecutor(dispatcher_.get(), topoMatcher_);
+
+    algRes_.opTransportResponse.resize(COMM_COMBINE_ORDER + 1);
+    algRes_.opTransportResponse[COMM_COMBINE_ORDER].resize(COMM_SIZE_TWO); // COMM_SIZE_TWO
+    baseExecutor.algResResp_ = &algRes_;
+
+    HcclSendRecvItem dummyItem;
+    OpParam param;
+    param.BatchSendRecvDataDes.sendRecvItemsPtr = &dummyItem;
+    param.BatchSendRecvDataDes.itemNum = 0;
+    param.aicpuUnfoldMode = true;
+
+    MOCKER_CPP(&CollBatchSendRecvExecutor::RunLoopInAicpuUnfoldMode)
+        .expects(exactly(1))
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&CollBatchSendRecvExecutor::RunLoopInHostUnfoldMode).expects(never());
+
+    HcclResult ret = baseExecutor.Orchestrate(param, algRes_);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(CollBatchSendRecvGroupExecutorTest, Orchestrate_AicpuUnfoldModeFalse_Expect_RunLoopInHostUnfoldMode)
+{
+    // 使用基类 executor 覆盖 CollBatchSendRecvExecutor::Orchestrate 中
+    // param.aicpuUnfoldMode 为 false 时走 host 展开模式分支
+    CollBatchSendRecvExecutor baseExecutor(dispatcher_.get(), topoMatcher_);
+
+    algRes_.opTransportResponse.resize(COMM_COMBINE_ORDER + 1);
+    algRes_.opTransportResponse[COMM_COMBINE_ORDER].resize(COMM_SIZE_TWO); // COMM_SIZE_TWO
+    baseExecutor.algResResp_ = &algRes_;
+
+    HcclSendRecvItem dummyItem;
+    OpParam param;
+    param.BatchSendRecvDataDes.sendRecvItemsPtr = &dummyItem;
+    param.BatchSendRecvDataDes.itemNum = 0;
+    param.aicpuUnfoldMode = false;
+
+    MOCKER_CPP(&CollBatchSendRecvExecutor::RunLoopInAicpuUnfoldMode).expects(never());
+    MOCKER_CPP(&CollBatchSendRecvExecutor::RunLoopInHostUnfoldMode)
+        .expects(exactly(1))
+        .with(mockcpp::any())
+        .will(returnValue(HCCL_SUCCESS));
+
+    HcclResult ret = baseExecutor.Orchestrate(param, algRes_);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+// ============================================================================
 // SetNormalModeIfDeviceDirect tests
 // ============================================================================
 

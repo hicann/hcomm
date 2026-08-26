@@ -758,6 +758,7 @@ struct OpTilingData {
     u8 isCapture = 0;       // 算子是否aclgraph模式
     u8 orderLaunchMode = 0; // 对应AicpuNotifyMode的枚举值
     u8 needIncreLink = 0;   // 是否需要增量建链
+    u8 aicpuUnfoldMode = 0; // 是否aicpu展开模式
 
     /* 不同算子，长度不同，依据opType决定选择使用
      * (1)batchsendrcv

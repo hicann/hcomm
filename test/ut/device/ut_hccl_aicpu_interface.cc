@@ -104,6 +104,44 @@ void SetupRpcSrvLaunchMocks(HcclCommAicpu* hcclCommAicpu)
     MOCKER(AicpuHcclProcess::AicpuReleaseCommbyGroup).stubs().will(ignoreReturnValue());
 }
 
+static u8 g_capturedExecOpUnfoldMode = 0;
+
+HcclResult ExecOpCaptureUnfoldModeStub(
+    HcclCommAicpu* /*This*/, const std::string& /*newTag*/, const std::string& /*algName*/, OpParam& opParam,
+    const HcclOpResParam* /*commParam*/)
+{
+    g_capturedExecOpUnfoldMode = opParam.aicpuUnfoldMode ? 1U : 0U;
+    return HCCL_SUCCESS;
+}
+
+HcclResult RecordHostOrderStub(
+    HcclCommAicpu* /*This*/, const HcclOpResParam* /*commParam*/, const std::string& /*tag*/, u8 /*orderLaunchMode*/)
+{
+    return HCCL_SUCCESS;
+}
+
+HcclResult UpdateNotifyWaitTimeOutStub(HcclCommAicpu* /*This*/, SyncMode /*syncMode*/, u64 /*notifyWaitTime*/)
+{
+    return HCCL_SUCCESS;
+}
+
+HcclResult ParseHierarchicalAlgOptionStub(HcclCommAicpu* /*This*/, u32* /*ahcConfInfo*/) { return HCCL_SUCCESS; }
+
+HcclResult SaveTraceInfoStub(HcclCommAicpu* /*This*/, std::string& /*logInfo*/) { return HCCL_SUCCESS; }
+
+// AicpuRunRpcServerV2 会按 opType 读取 OpTilingData 后的动态数据区，此处额外预留 OpTilingDataDes 空间避免越界
+u8* CreateAllgatherTilingDataBuffer(const char* tag, u8 aicpuUnfoldMode)
+{
+    u64 totalSize = sizeof(OpTilingData) + sizeof(OpTilingDataDes);
+    u8* buffer = new u8[totalSize];
+    memset_s(buffer, totalSize, 0, totalSize);
+    OpTilingData* tilingData = reinterpret_cast<OpTilingData*>(buffer);
+    tilingData->opType = static_cast<u8>(HcclCMDType::HCCL_CMD_ALLGATHER);
+    strcpy_s(tilingData->tag, sizeof(tilingData->tag), tag);
+    tilingData->aicpuUnfoldMode = aicpuUnfoldMode;
+    return buffer;
+}
+
 TEST_F(Test_Hccl_Aicpu_Interface, Ut_RunAicpuRpcSrvLaunchV2_When_SuspendingFlagIsSuspending_Expect_ReturnZero)
 {
     HcclCommAicpu* hcclCommAicpu = CreateHcclCommAicpuWithDefaultDfx();
@@ -177,4 +215,56 @@ TEST_F(Test_Hccl_Aicpu_Interface, Ut_RunAicpuNotifyRecordAicpuKernel_When_AllSuc
     EXPECT_EQ(ret, HCCL_SUCCESS);
 
     delete param;
+}
+
+TEST_F(Test_Hccl_Aicpu_Interface, Ut_AicpuRunRpcServerV2_When_AicpuUnfoldModeEnabled_Expect_PropagatedToOpParam)
+{
+    HcclCommAicpu* hcclCommAicpu = new HcclCommAicpu();
+    ASSERT_NE(hcclCommAicpu, nullptr);
+    HcclOpResParam* commParam = CreateHcclOpResParam("test_group");
+    ASSERT_NE(commParam, nullptr);
+    u8* buffer = CreateAllgatherTilingDataBuffer("test_tag", 1);
+    OpTilingData* tilingData = reinterpret_cast<OpTilingData*>(buffer);
+    g_capturedExecOpUnfoldMode = 0xFF;
+
+    MOCKER_CPP(&HcclCommAicpu::RecordHostOrder).stubs().will(invoke(RecordHostOrderStub));
+    MOCKER_CPP(&HcclCommAicpu::UpdateNotifyWaitTimeOut).stubs().will(invoke(UpdateNotifyWaitTimeOutStub));
+    MOCKER_CPP(&HcclCommAicpu::ParseHierarchicalAlgOption).stubs().will(invoke(ParseHierarchicalAlgOptionStub));
+    MOCKER_CPP(&HcclCommAicpu::SaveTraceInfo).stubs().will(invoke(SaveTraceInfoStub));
+    MOCKER_CPP(&HcclCommAicpu::ExecOp).stubs().will(invoke(ExecOpCaptureUnfoldModeStub));
+
+    HcclResult ret = AicpuHcclProcess::AicpuRunRpcServerV2(hcclCommAicpu, tilingData, commParam);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(g_capturedExecOpUnfoldMode, 1U);
+
+    delete[] buffer;
+    delete commParam;
+    delete hcclCommAicpu;
+}
+
+TEST_F(Test_Hccl_Aicpu_Interface, Ut_AicpuRunRpcServerV2_When_AicpuUnfoldModeDisabled_Expect_PropagatedToOpParam)
+{
+    HcclCommAicpu* hcclCommAicpu = new HcclCommAicpu();
+    ASSERT_NE(hcclCommAicpu, nullptr);
+    HcclOpResParam* commParam = CreateHcclOpResParam("test_group");
+    ASSERT_NE(commParam, nullptr);
+    u8* buffer = CreateAllgatherTilingDataBuffer("test_tag", 0);
+    OpTilingData* tilingData = reinterpret_cast<OpTilingData*>(buffer);
+    g_capturedExecOpUnfoldMode = 0xFF;
+
+    MOCKER_CPP(&HcclCommAicpu::RecordHostOrder).stubs().will(invoke(RecordHostOrderStub));
+    MOCKER_CPP(&HcclCommAicpu::UpdateNotifyWaitTimeOut).stubs().will(invoke(UpdateNotifyWaitTimeOutStub));
+    MOCKER_CPP(&HcclCommAicpu::ParseHierarchicalAlgOption).stubs().will(invoke(ParseHierarchicalAlgOptionStub));
+    MOCKER_CPP(&HcclCommAicpu::SaveTraceInfo).stubs().will(invoke(SaveTraceInfoStub));
+    MOCKER_CPP(&HcclCommAicpu::ExecOp).stubs().will(invoke(ExecOpCaptureUnfoldModeStub));
+
+    HcclResult ret = AicpuHcclProcess::AicpuRunRpcServerV2(hcclCommAicpu, tilingData, commParam);
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(g_capturedExecOpUnfoldMode, 0U);
+
+    delete[] buffer;
+    delete commParam;
+    delete hcclCommAicpu;
 }
