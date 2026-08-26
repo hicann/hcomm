@@ -414,10 +414,10 @@ RankGraph::GetEndpointDesc(uint32_t layer, uint32_t topoInstId, uint32_t* descNu
         // 一个 iface 可能对应多个 protocol（即多个 EndpointDesc）
         const auto& endpointMap = peer->GetEndpointToIfaceMap();
         for (const auto& entry : endpointMap) {
-            const EndpointKey& endpoint = entry.first;
+            std::pair<CommAddr, CommProtocol> endpoint = entry.first;
             const std::shared_ptr<NetInstance::ConnInterface>& mappedIface = entry.second;
 
-            if (mappedIface != iface || endpoint.netLayer != layer || endpoint.topoInstId != topoInstId) {
+            if (mappedIface != iface) {
                 continue;
             }
 
@@ -430,11 +430,9 @@ RankGraph::GetEndpointDesc(uint32_t layer, uint32_t topoInstId, uint32_t* descNu
                 return HCCL_E_PARA;
             }
 
-            CHK_RET(static_cast<HcclResult>(EndpointDescInit(&endpointDesc[count], 1)));
-            endpointDesc[count].commAddr = endpoint.commAddr;
-            endpointDesc[count].protocol = endpoint.protocol;
+            endpointDesc[count].commAddr = endpoint.first;
+            endpointDesc[count].protocol = endpoint.second;
             endpointDesc[count].loc.locType = AddrPositionToEndpointLoc(iface->GetPos());
-            CHK_RET(SetEndpointTopoInfo(endpointDesc[count], layer, topoInstId));
 
             HCCL_INFO(
                 "[RankGraph::GetEndpointDesc] local type is %d, protocol %d", endpointDesc[count].loc.locType,
@@ -461,32 +459,14 @@ HcclResult RankGraph::GetEndpointInfo(
     }
 
     // 查找接口
+    auto key = std::make_pair(endpointDesc->commAddr, endpointDesc->protocol);
     const auto& endpointToIfaceMap = peer->GetEndpointToIfaceMap();
-    u32 endpointNetLayer = UINT32_MAX;
-    u32 endpointTopoInstId = UINT32_MAX;
-    const bool hasTopoInfo = GetEndpointTopoInfo(*endpointDesc, endpointNetLayer, endpointTopoInstId);
-    // 旧描述符未携带拓扑定位信息时仅允许唯一匹配，避免跨层静默选错接口。
-    std::shared_ptr<NetInstance::ConnInterface> iface;
-    for (const auto& entry : endpointToIfaceMap) {
-        const EndpointKey& key = entry.first;
-        if (!(key.commAddr == endpointDesc->commAddr) || key.protocol != endpointDesc->protocol) {
-            continue;
-        }
-        if (hasTopoInfo && (key.netLayer != endpointNetLayer || key.topoInstId != endpointTopoInstId)) {
-            continue;
-        }
-        if (iface != nullptr && iface != entry.second) {
-            HCCL_ERROR(
-                "[GetEndpointInfo] Ambiguous endpoint, netLayer[%u], topoInstId[%u], protocol[%d]", endpointNetLayer,
-                endpointTopoInstId, endpointDesc->protocol);
-            return HCCL_E_PARA;
-        }
-        iface = entry.second;
-    }
-    if (iface == nullptr) {
+    auto it = endpointToIfaceMap.find(key);
+    if (it == endpointToIfaceMap.end()) {
         HCCL_ERROR("[GetEndpointInfo] No matching interface found");
         return HCCL_E_NOT_FOUND;
     }
+    const auto& iface = it->second;
     // 填充信息
     switch (endpointAttr) {
         case ENDPOINT_ATTR_BW_COEFF: {
@@ -732,10 +712,9 @@ void RankGraph::AddSubPeers(const std::vector<RankId>& rankIds, RankGraph* subRa
         peers.emplace(subRankId, subPeer);
         const auto& oldEndpointMap = oldPeer->GetEndpointToIfaceMap();
         for (const auto& entry : oldEndpointMap) {
-            subPeer->SetEndpointToIface(
-                entry.first.netLayer, entry.first.topoInstId, entry.first.commAddr, entry.first.protocol, entry.second);
+            subPeer->SetEndpointToIface(entry.first.first, entry.first.second, entry.second);
             HCCL_DEBUG(
-                "[SubRankGraph][AddSubPeers] endpointToIfaceMap: protocol[%d] for subRankId[%d]", entry.first.protocol,
+                "[SubRankGraph][AddSubPeers] endpointToIfaceMap: protocol[%d] for subRankId[%d]", entry.first.second,
                 subRankId);
         }
         HCCL_DEBUG(

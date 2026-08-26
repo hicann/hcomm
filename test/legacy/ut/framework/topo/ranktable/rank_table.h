@@ -292,7 +292,6 @@ const std::string RankTable4p = R"(
 }
 )";
 
-// Physical topology does not define net_layer; network layers come from the rank table.
 const std::string Topo1Ser8Dev = R"(
     {
   "version": "2.0",
@@ -314,6 +313,7 @@ const std::string Topo1Ser8Dev = R"(
   "edge_count": 14,
   "edge_list": [
     {
+      "net_layer": 0,
       "link_type": "PEER2PEER",
       "protocols": [
         "UB_CTP"
@@ -329,6 +329,7 @@ const std::string Topo1Ser8Dev = R"(
       "position": "DEVICE"
     },
     {
+      "net_layer": 0,
       "link_type": "PEER2PEER",
       "protocols": [
         "UB_CTP"
@@ -344,6 +345,7 @@ const std::string Topo1Ser8Dev = R"(
       "position": "DEVICE"
     },
     {
+      "net_layer": 0,
       "link_type": "PEER2PEER",
       "protocols": [
         "UB_CTP"
@@ -359,6 +361,7 @@ const std::string Topo1Ser8Dev = R"(
       "position": "DEVICE"
     },
     {
+      "net_layer": 0,
       "link_type": "PEER2PEER",
       "protocols": [
         "UB_CTP"
@@ -374,6 +377,7 @@ const std::string Topo1Ser8Dev = R"(
       "position": "DEVICE"
     },
     {
+      "net_layer": 0,
       "link_type": "PEER2PEER",
       "protocols": [
         "UB_CTP"
@@ -389,6 +393,7 @@ const std::string Topo1Ser8Dev = R"(
       "position": "DEVICE"
     },
     {
+      "net_layer": 0,
       "link_type": "PEER2PEER",
       "protocols": [
         "UB_CTP"
@@ -404,6 +409,7 @@ const std::string Topo1Ser8Dev = R"(
       "position": "DEVICE"
     },
     {
+      "net_layer": 1,
       "link_type": "PEER2NET",
       "protocols": [
         "UB_CTP"
@@ -416,6 +422,7 @@ const std::string Topo1Ser8Dev = R"(
       "position": "DEVICE"
     },
     {
+      "net_layer": 1,
       "link_type": "PEER2NET",
       "protocols": [
         "UB_CTP"
@@ -428,6 +435,7 @@ const std::string Topo1Ser8Dev = R"(
       "position": "DEVICE"
     },
     {
+      "net_layer": 1,
       "link_type": "PEER2NET",
       "protocols": [
         "UB_CTP"
@@ -440,6 +448,7 @@ const std::string Topo1Ser8Dev = R"(
       "position": "DEVICE"
     },
     {
+      "net_layer": 1,
       "link_type": "PEER2NET",
       "protocols": [
         "UB_CTP"
@@ -452,6 +461,7 @@ const std::string Topo1Ser8Dev = R"(
       "position": "DEVICE"
     },
     {
+      "net_layer": 2,
       "link_type": "PEER2NET",
       "protocols": [
         "UB_CTP"
@@ -464,6 +474,7 @@ const std::string Topo1Ser8Dev = R"(
       "position": "HOST"
     },
     {
+      "net_layer": 2,
       "link_type": "PEER2NET",
       "protocols": [
         "UB_CTP"
@@ -476,6 +487,7 @@ const std::string Topo1Ser8Dev = R"(
       "position": "HOST"
     },
     {
+      "net_layer": 2,
       "link_type": "PEER2NET",
       "protocols": [
         "UB_CTP"
@@ -488,6 +500,7 @@ const std::string Topo1Ser8Dev = R"(
       "position": "HOST"
     },
     {
+      "net_layer": 2,
       "link_type": "PEER2NET",
       "protocols": [
         "UB_CTP"

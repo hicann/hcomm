@@ -49,20 +49,6 @@ void TopoInfo::Deserialize(const nlohmann::json& topoInfoJson)
 
     DeserializePeers(topoInfoJson);
     DeserializeEdges(topoInfoJson);
-
-    u32 peer2PeerEdgeCount = 0;
-    u32 peer2NetEdgeCount = 0;
-    for (const auto& edge : edges) {
-        if (edge.linkType == LinkType::PEER2PEER) {
-            ++peer2PeerEdgeCount;
-        } else if (edge.linkType == LinkType::PEER2NET) {
-            ++peer2NetEdgeCount;
-        }
-    }
-
-    HCCL_DEBUG(
-        "[TopoInfo::%s] deserialize summary: peers[%zu], edges[%zu], PEER2PEER[%u], PEER2NET[%u]", __func__,
-        peers.size(), edges.size(), peer2PeerEdgeCount, peer2NetEdgeCount);
 }
 
 void TopoInfo::DeserializePeers(const nlohmann::json& topoInfoJson)
@@ -97,17 +83,20 @@ void TopoInfo::VerifyEdges(EdgeInfo& edge)
             "[TopoInfo::%s] endpoint localId [%u] or [%u] is not exist in peers[%zu].", __func__, edge.localA,
             edge.localB, idSet.size()));
     }
-    // net_layer 不参与边语义；线性查重合并旧 topo 重复边，复杂度 O(E²)。
-    if (find(edges.begin(), edges.end(), edge) != edges.end()) {
-        HCCL_DEBUG(
-            "[TopoInfo::%s] ignore duplicate physical edge, linkType[%s], topoType[%s], "
-            "topoInstanceId[%u], localA[%u], localB[%u].",
-            __func__, edge.linkType.Describe().c_str(), edge.topoType.Describe().c_str(), edge.topoInstId, edge.localA,
-            edge.localB);
-        return;
+    //  检查edge.netLayer这一层级是否存在，不存在则初始化
+    if (edges.find(edge.netLayer) == edges.end()) {
+        edges[edge.netLayer] = vector<EdgeInfo>();
+    }
+    //  判断edge.netLayer该层级是否存在重复edge
+    if (find(edges[edge.netLayer].begin(), edges[edge.netLayer].end(), edge) != edges[edge.netLayer].end()) {
+        THROW<InvalidParamsException>(StringFormat(
+            "[TopoInfo::%s] exist duplicate edges. Location information:{edge.netLayer=%u, edge.linkType=%s, "
+            "edge.topoType=%s, edge.topoInstanceId=%u, localA=%u, localB=%u}",
+            __func__, edge.netLayer, edge.linkType.Describe().c_str(), edge.topoType.Describe().c_str(),
+            edge.topoInstId, edge.localA, edge.localB));
     }
 
-    edges.emplace_back(edge);
+    edges[edge.netLayer].emplace_back(edge);
 }
 
 void TopoInfo::DeserializeEdges(const nlohmann::json& topoInfoJson)
@@ -125,19 +114,21 @@ void TopoInfo::DeserializeEdges(const nlohmann::json& topoInfoJson)
             return;
         }
     }
-    if (edgeJsons.size() != edgeCount) {
-        THROW<InvalidParamsException>(StringFormat(
-            "[TopoInfo::%s] Value of edge_count[%u] is inconsistent with the size of edge_list[%zu].", __func__,
-            edgeCount, edgeJsons.size()));
-    }
     for (auto& edgeJson : edgeJsons) {
         EdgeInfo edge;
         edge.Deserialize(edgeJson);
         VerifyEdges(edge);
     }
 
-    // edgeCount 对外表示去重后的物理边数量。
-    edgeCount = static_cast<u32>(edges.size());
+    size_t sumEdge = 0;
+    for (const auto& entry : edges) {
+        sumEdge += entry.second.size();
+    }
+    if (sumEdge != edgeCount) {
+        THROW<InvalidParamsException>(StringFormat(
+            "[TopoInfo::%s] Value of edge_count[%u] is inconsistent with the size of edge_list[%zu].", __func__,
+            edgeCount, sumEdge));
+    }
 }
 
 string TopoInfo::Describe() const
@@ -161,8 +152,11 @@ void TopoInfo::Dump() const
         HCCL_DEBUG("%s", peer.Describe().c_str());
     }
     HCCL_DEBUG("edges:");
-    for (const auto& edge : edges) {
-        HCCL_DEBUG("    %s", edge.Describe().c_str());
+    for (const auto& itor : edges) {
+        HCCL_DEBUG("netLayer[%u]:", itor.first);
+        for (const auto& edge : itor.second) {
+            HCCL_DEBUG("    %s", edge.Describe().c_str());
+        }
     }
 }
 
@@ -175,27 +169,23 @@ TopoInfo::TopoInfo(BinaryStream& binaryStream)
         PeerInfo peer(binaryStream);
         peers.emplace_back(peer);
     }
-    size_t edgeGroupCount = 0;
-    binaryStream >> edgeGroupCount;
+    size_t edgesSize = 0;
+    binaryStream >> edgesSize;
 
     HCCL_INFO(
-        "[TopoInfo] version is [%s], peerCount is [%u], edgeCount is [%u], peers size is [%zu], "
-        "edge group count is [%zu]",
-        version.c_str(), peerCount, edgeCount, peers.size(), edgeGroupCount);
-    // 保留旧快照分组外壳，读取后统一展开物理边。
-    for (size_t i = 0; i < edgeGroupCount; i++) {
-        u32 ignoredBinaryLayer = 0;
-        size_t groupEdgeCount = 0;
-        binaryStream >> ignoredBinaryLayer >> groupEdgeCount;
-        for (size_t j = 0; j < groupEdgeCount; j++) {
+        "[TopoInfo] version is [%s], peerCount is [%u], edgeCount is [%u], peers size is [%u], edges size is [%u]",
+        version.c_str(), peerCount, edgeCount, peers.size(), edgesSize);
+    for (u32 i = 0; i < edgesSize; i++) {
+        u32 edgeInfoIndex = 0;
+        binaryStream >> edgeInfoIndex; // key
+        size_t edgeSize = 0;
+        binaryStream >> edgeSize;
+        HCCL_INFO("[TopoInfo] edges key is [%u], value size is [%u]", edgeInfoIndex, edgeSize);
+        for (u32 j = 0; j < edgeSize; j++) { // value
             EdgeInfo edge(binaryStream);
-            // 旧快照可能按 layer 重复存储同一物理边，展开时合并。
-            if (find(edges.begin(), edges.end(), edge) == edges.end()) {
-                edges.emplace_back(edge);
-            }
+            edges[edgeInfoIndex].emplace_back(edge);
         }
     }
-    edgeCount = static_cast<u32>(edges.size());
 }
 
 void TopoInfo::GetBinStream(BinaryStream& binaryStream) const
@@ -205,16 +195,16 @@ void TopoInfo::GetBinStream(BinaryStream& binaryStream) const
     for (auto& it : peers) {
         it.GetBinStream(binaryStream);
     }
-    const size_t edgeGroupCount = edges.empty() ? 0 : 1;
-    binaryStream << edgeGroupCount;
+    binaryStream << edges.size();
     HCCL_INFO(
-        "[TopoInfo::GetBinStream] version is [%s], peerCount is [%u], edgeCount is [%u], peers size is [%zu], "
-        "edges size is [%zu]",
+        "[TopoInfo::GetBinStream] version is [%s], peerCount is [%u], edgeCount is [%u], peers size is [%u], edges "
+        "size is [%u]",
         version.c_str(), peerCount, edgeCount, peers.size(), edges.size());
-    // 新快照统一写入一个兼容分组，不恢复逻辑分层。
-    if (!edges.empty()) {
-        binaryStream << LEGACY_BINARY_LAYER << edges.size();
-        for (const auto& edge : edges) {
+    for (auto& it : edges) {
+        binaryStream << it.first;
+        binaryStream << it.second.size();
+        HCCL_INFO("[TopoInfo::GetBinStream] edges key is [%u], value size is [%u]", it.first, it.second.size());
+        for (auto& edge : it.second) {
             edge.GetBinStream(binaryStream);
         }
     }

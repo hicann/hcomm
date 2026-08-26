@@ -8,8 +8,6 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include <algorithm>
-
 #include "../rank_graph_builder/updater_for_64_plus_1.h"
 #include "topo_common_types.h"
 #include "exception_util.h"
@@ -18,40 +16,6 @@
 namespace Hccl {
 
 using namespace std;
-
-namespace {
-
-    bool HasLayer0Port(const shared_ptr<NetInstance::Peer>& peer, const set<string>& ports)
-    {
-        if (peer == nullptr || ports.empty()) {
-            return false;
-        }
-        IpAddress addr;
-        return any_of(ports.begin(), ports.end(), [&peer, &addr](const string& port) {
-            return peer->TryGetLayer0Address(port, addr);
-        });
-    }
-
-    bool HasLayer0Peer2PeerLink(
-        const shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>>& phyTopoGraph, const shared_ptr<NetInstance::Peer>& peer,
-        LocalId replacedLocalId)
-    {
-        if (phyTopoGraph == nullptr || peer == nullptr) {
-            return false;
-        }
-        bool matched = false;
-        phyTopoGraph->TraverseEdge(
-            PhyTopo::Peer::GetId(peer->GetLocalId()), PhyTopo::Peer::GetId(replacedLocalId),
-            [&peer, &matched](const shared_ptr<PhyTopo::Link>& link) {
-                if (link == nullptr || link->GetType() != LinkType::PEER2PEER || link->GetSourceIFace() == nullptr) {
-                    return;
-                }
-                matched = matched || HasLayer0Port(peer, link->GetSourceIFace()->GetPorts());
-            });
-        return matched;
-    }
-
-} // namespace
 
 void UpdaterFor64Plus1::SaveReplaceInfo(const NewRankInfo& rank)
 {
@@ -108,7 +72,7 @@ void UpdaterFor64Plus1::UpdateNetInstance(
     if (netInstance == nullptr) {
         THROW<NullPtrException>(StringFormat("[UpdaterFor64Plus1][%s] netInstance is nullptr", __func__));
     }
-    auto phyTopoGraph = PhyTopo::GetInstance()->GetTopoGraph();
+    auto phyTopoGraph = PhyTopo::GetInstance()->GetTopoGraph(0);
     if (phyTopoGraph == nullptr) {
         THROW<NullPtrException>(StringFormat("[UpdaterFor64Plus1][%s] phyTopoGraph is nullptr", __func__));
     }
@@ -128,7 +92,7 @@ void UpdaterFor64Plus1::UpdateNetInstance(
         if (!IsSameX(peer->GetLocalId(), replacedLocalId) && !IsSameY(peer->GetLocalId(), replacedLocalId)) {
             continue;
         }
-        if (!HasLayer0Peer2PeerLink(phyTopoGraph, peer, replacedLocalId)) {
+        if (!phyTopoGraph->HasEdge(PhyTopo::Peer::GetId(peer->GetLocalId()), PhyTopo::Peer::GetId(replacedLocalId))) {
             continue;
         }
         backupLinkedPeers.emplace_back(peer);
@@ -144,7 +108,16 @@ void UpdaterFor64Plus1::AddPeer2BackupLinks(
     shared_ptr<NetInstance::Peer> peer, shared_ptr<NetInstance::Peer> backupPeer, LocalId replacedLocalId,
     NetInstance* netInstance, [[maybe_unused]] const RankTableInfo* rankTable) const
 {
-    auto phyTopoGraph = PhyTopo::GetInstance()->GetTopoGraph();
+    auto phyTopoGraph = PhyTopo::GetInstance()->GetTopoGraph(0);
+
+    std::unordered_map<u64, u64> fabricIds;
+    auto peer2AllPlaneEdges
+        = phyTopoGraph->GetEdges(PhyTopo::Peer::GetId(backupPeer->GetLocalId()), PhyTopo::Fabric::GetId());
+    for (auto edge : peer2AllPlaneEdges) {
+        auto topoInstId = edge->GetTopoInstId();
+        auto fabricId = static_cast<u64>(topoInstId) | (static_cast<u64>(1) << 32);
+        fabricIds[topoInstId] = fabricId;
+    }
 
     auto idx = GetLinkIndex(peer->GetLocalId(), replacedLocalId);
     auto backupPlaneId = idx.first;
@@ -156,10 +129,8 @@ void UpdaterFor64Plus1::AddPeer2BackupLinks(
     // 先获取phyTopoGraph中备份面和备份D的连接，因为只有一个fabric，所以会获取到全量16条备份面和备份D的连接
     // Edges中可能包含多个连接，但是在phytopo中保存为一条连接，内部有多个连接的端口
     // 拿到物理边后，根据backupPlaneId匹配，选择对应的一条物理边
-    std::shared_ptr<PhyTopo::Link> backD2PlaneEdges
-        = GetPeer2PlaneEdges(backupPlaneId, backupPeer, phyTopoGraph, BACKUP_TO_PLANE_ADDR_NUM);
-    std::shared_ptr<PhyTopo::Link> peer2PlaneEdges
-        = GetPeer2PlaneEdges(backupPlaneId, peer, phyTopoGraph, 1, backD2PlaneEdges->GetLinkProtocols());
+    std::shared_ptr<PhyTopo::Link> backD2PlaneEdges = GetPeer2PlaneEdges(backupPlaneId, backupPeer, phyTopoGraph);
+    std::shared_ptr<PhyTopo::Link> peer2PlaneEdges = GetPeer2PlaneEdges(backupPlaneId, peer, phyTopoGraph);
 
     // 取得端口列表，根据backupLinkIdx去选择对应的端口
     std::set<std::string> backD2PlanePorts = backD2PlaneEdges->GetSourceIFace()->GetPorts();
@@ -180,14 +151,10 @@ void UpdaterFor64Plus1::AddPeer2BackupLinks(
     std::string backD2PlanePort = GetPortFromSet(backD2PlanePorts, backupLinkIdx);
     std::string peer2PlanePort = GetPortFromSet(peer2PlanePorts, 0);
 
-    // 最终选中的端口必须能在 RankTable layer 0 中找到地址。
-    IpAddress backD2PlaneAddr;
-    IpAddress peer2PlaneAddr;
-    if (backupPeer == nullptr || peer == nullptr || !backupPeer->TryGetLayer0Address(backD2PlanePort, backD2PlaneAddr)
-        || !peer->TryGetLayer0Address(peer2PlanePort, peer2PlaneAddr)) {
-        THROW<InvalidParamsException>(
-            StringFormat("[UpdaterFor64Plus1][%s] selected port does not belong to layer0", __func__));
-    }
+    // 匹配了对应的端口后，去ranktableinfo中查对应端口的地址信息
+    // todo 加一下peer->GetPortAddrMapLayer0()是否能找到port对应的地址。
+    IpAddress backD2PlaneAddr = backupPeer->GetPortAddrMapLayer0()[backD2PlanePort][0];
+    IpAddress peer2PlaneAddr = peer->GetPortAddrMapLayer0()[peer2PlanePort][0];
 
     // 组装成NetInstance的conninterface，加入peer和backupPeer
     if (backD2PlaneEdges->GetSourceIFace() == nullptr || peer2PlaneEdges->GetSourceIFace() == nullptr) {
@@ -215,44 +182,29 @@ void UpdaterFor64Plus1::AddPeer2BackupLinks(
         backupPeer, peer, backupIface, peerIface, LinkType::PEER2PEER, backD2PlaneEdges->GetLinkProtocols());
     netInstance->AddLink(backup2Peer);
 
-    // 删除备份 D 到所有 Fabric 的链路；Fabric 由 planeId 生成，不能用 topoInstId 推导节点 ID。
-    for (const auto& fabric : netInstance->GetFabrics()) {
-        if (fabric == nullptr) {
-            continue;
-        }
-        netInstance->DeleteLink(backupPeer->GetNodeId(), fabric->GetNodeId());
+    // peer2peer建立后删除graph中DB到所选planeId的对应的peer2net链路
+    // 直接删除备份d和fabric的链接保证GetLinks接口只能获取到peer2db的一条peer2peer
+    // 删除peer到fabric用到的peer2net
+    for (auto id : fabricIds) {
+        netInstance->DeleteLink(backupPeer->GetNodeId(), id.second);
     }
 }
 
 std::shared_ptr<PhyTopo::Link> UpdaterFor64Plus1::GetPeer2PlaneEdges(
     u32 backupPlaneId, shared_ptr<NetInstance::Peer> peer,
-    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> phyTopoGraph, u32 expectedPortNum,
-    const std::set<LinkProtocol>& expectedProtocols) const
+    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> phyTopoGraph) const
 {
     std::shared_ptr<PhyTopo::Link> peer2PlaneEdges = nullptr;
     auto peer2AllPlaneEdges
         = phyTopoGraph->GetEdges(PhyTopo::Peer::GetId(peer->GetLocalId()), PhyTopo::Fabric::GetId());
-    std::set<u32> backupPlaneIds;
-    for (const auto& edge : peer2AllPlaneEdges) {
-        // 按物理属性统计合法备份面，避免 RankTable 仅提供部分备份端口时漏计。
-        if (edge == nullptr || edge->GetType() != LinkType::PEER2NET || edge->GetSourceIFace() == nullptr
-            || edge->GetSourceIFace()->GetPorts().size() != expectedPortNum
-            || (!expectedProtocols.empty() && edge->GetLinkProtocols() != expectedProtocols)
-            || edge->GetTopoInstId() >= BACKUP_PLANE_NUM) {
-            continue;
-        }
-        backupPlaneIds.insert(edge->GetTopoInstId());
-        // 真正选中的边必须命中 RankTable layer 0 端口。
-        if (edge->GetTopoInstId() == backupPlaneId && HasLayer0Port(peer, edge->GetSourceIFace()->GetPorts())) {
-            if (peer2PlaneEdges != nullptr) {
-                THROW<InvalidParamsException>(
-                    "[UpdaterFor64Plus1][%s] BackupPlane[%u] is ambiguous", __func__, backupPlaneId);
-            }
-            peer2PlaneEdges = edge;
-        }
-    }
-    if (backupPlaneIds.size() != BACKUP_PLANE_NUM) {
+    if (peer2AllPlaneEdges.size() != BACKUP_PLANE_NUM) {
         THROW<InvalidParamsException>("[UpdaterFor64Plus1][%s] BackupPlane num error", __func__);
+    }
+    for (auto& edges : peer2AllPlaneEdges) {
+        if (edges->GetTopoInstId() == backupPlaneId) {
+            peer2PlaneEdges = edges;
+            break;
+        }
     }
     if (peer2PlaneEdges == nullptr) {
         THROW<NullPtrException>(StringFormat("[UpdaterFor64Plus1][%s] peer2PlaneEdges is nullptr", __func__));

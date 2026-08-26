@@ -13,6 +13,7 @@
 
 #include <vector>
 #include <set>
+#include <unordered_map>
 #include <memory>
 #include "topo_common_types.h"
 #include "iterator.h"
@@ -115,15 +116,16 @@ public:
         u32 hop{1};
     };
 
-    void AddTopoGraph(std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo);
-    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> GetTopoGraph() const;
+    void AddTopoGraph(const u32 netLayer, std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo);
+    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> GetTopoGraph(const u32 netLayer) const;
     void InitFinish();
     bool IsInitFinished() const;
     void Clear();
     void Dump() const;
+    bool IsNetLayerExisted(const u32 netLayer) const;
 
 private:
-    std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo_{nullptr};
+    std::unordered_map<u32, std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>>> topos;
     bool initFlag{false};
 };
 } // namespace Hccl

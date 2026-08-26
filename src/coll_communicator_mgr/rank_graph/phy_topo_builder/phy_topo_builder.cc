@@ -56,7 +56,28 @@ void PhyTopoBuilder::Build(const std::string& topoPath)
     HCCL_DEBUG("[PhyTopoBuilder::%s]Start to build physic topo.", __func__);
 
     auto topoInfo = LoadTopoInfo(topoPath);
-    BuildPhyTopo(*topoInfo);
+    // 根据topoInfo，按netLayer构造Graph
+    for (const auto& iter : topoInfo->edges) {
+        auto netLayer = iter.first;
+        auto graph = CreateGraph(iter.second);
+        PhyTopo::GetInstance()->AddTopoGraph(netLayer, graph);
+        HCCL_DEBUG("[PhyTopoBuilder::%s]Build netLayer[%u] topo graph success.", __func__, netLayer);
+    }
+
+    // 遍历peerList，把peerList中的localId构造peer节点，加到layer-0的graph中
+    auto graph = PhyTopo::GetInstance()->GetTopoGraph(0);
+    if (graph == nullptr) {
+        HCCL_INFO("[PhyTopoBuilder::%s] layer0 graph is nullptr, build now", __func__);
+        graph = make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
+        PhyTopo::GetInstance()->AddTopoGraph(0, graph);
+    }
+    for (const auto& iter : topoInfo->peers) {
+        // 判断当前layer0的graph有没有这个节点
+        if (!graph->HasNode(iter.localId)) {
+            auto node = CreateNode(PhyTopo::Node::NodeType::PEER, iter.localId);
+            graph->AddNode(iter.localId, node);
+        }
+    }
 
     PhyTopo::GetInstance()->InitFinish();
 
@@ -159,7 +180,6 @@ NodeId GetNodeId(const PhyTopo::Node::NodeType nodeType, LocalId localId)
 std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>>
 PhyTopoBuilder::CreateGraph(const std::vector<EdgeInfo>& edges) const
 {
-    // 所有物理边构建到同一张图，逻辑分层由 RankTable 端口确定。
     auto graph = std::make_shared<Graph<PhyTopo::Node, PhyTopo::Link>>();
 
     for (const auto& edgeInfo : edges) {
@@ -243,22 +263,6 @@ PhyTopoBuilder::CreateGraph(const std::vector<EdgeInfo>& edges) const
     return graph;
 }
 
-void PhyTopoBuilder::BuildPhyTopo(const TopoInfo& topoInfo) const
-{
-    // topo.json 只描述物理连接，不再划分逻辑层。
-    auto graph = CreateGraph(topoInfo.edges);
-    // 补齐未出现在 edge_list 中的 Peer 节点。
-    for (const auto& peerInfo : topoInfo.peers) {
-        NodeId nodeId = PhyTopo::Peer::GetId(peerInfo.localId);
-        if (!graph->HasNode(nodeId)) {
-            auto node = CreateNode(PhyTopo::Node::NodeType::PEER, peerInfo.localId);
-            graph->AddNode(nodeId, node);
-        }
-    }
-    PhyTopo::GetInstance()->AddTopoGraph(graph);
-    HCCL_DEBUG("[PhyTopoBuilder::%s] Build physical topo graph success.", __func__);
-}
-
 void PhyTopoBuilder::RecoverBuild(const TopoInfo& topoInfo)
 {
     std::lock_guard<std::mutex> lock(phyTopoMutex);
@@ -267,8 +271,13 @@ void PhyTopoBuilder::RecoverBuild(const TopoInfo& topoInfo)
     if (PhyTopo::GetInstance()->IsInitFinished()) {
         return;
     }
-    topoInfo_ = std::make_shared<TopoInfo>(topoInfo);
-    BuildPhyTopo(topoInfo);
+    // 根据topoInfo，按netLayer构造Graph
+    for (const auto& iter : topoInfo.edges) {
+        auto netLayer = iter.first;
+        auto graph = CreateGraph(iter.second);
+        PhyTopo::GetInstance()->AddTopoGraph(netLayer, graph);
+        HCCL_DEBUG("[PhyTopoBuilder::%s]Build netLayer[%u] topo graph success.", __func__, netLayer);
+    }
 
     PhyTopo::GetInstance()->InitFinish();
 

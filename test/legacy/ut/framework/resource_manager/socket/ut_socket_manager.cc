@@ -34,7 +34,6 @@ protected:
 
     virtual void SetUp()
     {
-        PhyTopo::GetInstance()->Clear();
         hccpSocketHandle = new int(0);
         MOCKER_CPP(&SocketHandleManager::Create)
             .stubs()
@@ -52,7 +51,6 @@ protected:
 
     virtual void TearDown()
     {
-        PhyTopo::GetInstance()->Clear();
         GlobalMockObject::verify();
         delete hccpSocketHandle;
         std::cout << "A Test case in SocketManagerTest TearDown" << std::endl;
@@ -178,55 +176,6 @@ TEST_F(SocketManagerTest, Ut_ServerInitAll_Skip_Init_When_Env_Config)
     EXPECT_NE(nullptr, graph);
     NewRankInfo rankInfo = rankGraphBuilder.GetRankTableInfo()->ranks[0];
     EXPECT_NO_THROW(SocketManager::ServerInitAll(rankInfo));
-}
-
-TEST_F(SocketManagerTest, Ut_ServerInitAll_When_AllRankPortsUnmatched_Expect_NoSocketOrPortChange)
-{
-    EnvHostNicConfig envConfig;
-    EnvHostNicConfig& fakeEnvConfig = envConfig;
-    fakeEnvConfig.hcclDeviceSocketPortRange = CfgField<std::vector<SocketPortRange>>{
-        "HCCL_NPU_SOCKET_PORT_RANGE", {{16666, 18888}}, [](const std::string& s) -> std::vector<SocketPortRange> {
-            return CastSocketPortRange(s, "HCCL_NPU_SOCKET_PORT_RANGE");
-        }};
-    fakeEnvConfig.hcclDeviceSocketPortRange.isParsed = true;
-    MOCKER_CPP(&EnvConfig::GetHostNicConfig).stubs().will(returnValue(fakeEnvConfig));
-
-    string topoFilePath{HCOMM_CODE_ROOT_DIR "/test/legacy/ut/framework/communicator/topo2pclos.json"};
-    MOCKER_CPP(&CommunicatorImpl::GetTopoFilePath).stubs().will(returnValue(topoFilePath));
-    MOCKER(HrtGetDevice).stubs().will(returnValue(0));
-
-    RankGraphBuilder rankGraphBuilder;
-    unique_ptr<RankGraph> graph = rankGraphBuilder.Build(RankTable2pClos, topoFilePath, 0);
-    ASSERT_NE(nullptr, graph);
-    NewRankInfo rankInfo = rankGraphBuilder.GetRankTableInfo()->ranks[0];
-    auto phyTopoGraph = PhyTopo::GetInstance()->GetTopoGraph();
-    ASSERT_NE(nullptr, phyTopoGraph);
-    ASSERT_FALSE(phyTopoGraph->GetEdges(rankInfo.localId).empty());
-    rankInfo.devicePort = 31000;
-    std::vector<u32> expectedSocketPorts;
-    u32 socketPort = 32000;
-    for (auto& rankLevelInfo : rankInfo.rankLevelInfos) {
-        for (auto& rankAddr : rankLevelInfo.rankAddrs) {
-            rankAddr.ports = {"ut/unmatched/port"};
-            rankAddr.socketPort_ = socketPort++;
-            expectedSocketPorts.push_back(rankAddr.socketPort_);
-        }
-    }
-    auto& serverSocketMap = SocketManager::GetServerSocketMap();
-    const auto serverSocketCount = serverSocketMap.size();
-
-    EXPECT_NO_THROW(SocketManager::ServerInitAll(rankInfo));
-
-    EXPECT_EQ(serverSocketCount, serverSocketMap.size());
-    EXPECT_EQ(31000, rankInfo.devicePort);
-    size_t addrIndex = 0;
-    for (const auto& rankLevelInfo : rankInfo.rankLevelInfos) {
-        for (const auto& rankAddr : rankLevelInfo.rankAddrs) {
-            ASSERT_LT(addrIndex, expectedSocketPorts.size());
-            EXPECT_EQ(expectedSocketPorts[addrIndex++], rankAddr.socketPort_);
-        }
-    }
-    EXPECT_EQ(expectedSocketPorts.size(), addrIndex);
 }
 
 TEST_F(SocketManagerTest, test_BatchCreateSockets_with_SocketConfig)

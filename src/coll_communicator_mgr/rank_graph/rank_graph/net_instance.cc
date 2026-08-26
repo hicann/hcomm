@@ -377,13 +377,13 @@ std::vector<std::shared_ptr<NetInstance::ConnInterface>> NetInstance::Node::GetI
 }
 
 void NetInstance::Node::SetEndpointToIface(
-    u32 netLayer, u32 topoInstId, const CommAddr& commAddr, CommProtocol protocol,
-    const std::shared_ptr<NetInstance::ConnInterface>& iface)
+    const CommAddr& commAddr, CommProtocol protocol, const std::shared_ptr<NetInstance::ConnInterface>& iface)
 {
-    endpointToIfaceMap_[EndpointKey{netLayer, topoInstId, commAddr, protocol}] = iface;
+    endpointToIfaceMap_[std::make_pair(commAddr, protocol)] = iface;
 }
 
-const NetInstance::Node::EndpointToIfaceMap& NetInstance::Node::GetEndpointToIfaceMap() const
+const std::unordered_map<std::pair<CommAddr, CommProtocol>, std::shared_ptr<NetInstance::ConnInterface>>
+NetInstance::Node::GetEndpointToIfaceMap() const
 {
     return endpointToIfaceMap_;
 }
@@ -448,17 +448,6 @@ void NetInstance::Peer::SetPortPortAddrMapLayer0(std::map<std::string, std::vect
 std::map<std::string, std::vector<IpAddress>> NetInstance::Peer::GetPortAddrMapLayer0() const
 {
     return portAddrMapLayer0_;
-}
-
-bool NetInstance::Peer::TryGetLayer0Address(const std::string& port, IpAddress& addr) const
-{
-    // 端口归属以 RankTable layer 0 的地址映射为准。
-    auto addrIt = portAddrMapLayer0_.find(port);
-    if (addrIt == portAddrMapLayer0_.end() || addrIt->second.empty()) {
-        return false;
-    }
-    addr = addrIt->second.front();
-    return true;
 }
 
 PlaneId NetInstance::Fabric::GetPlaneId() const { return planeId_; }

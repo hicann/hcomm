@@ -25,42 +25,54 @@ bool PhyTopo::IsInitFinished() const { return initFlag; }
 
 void PhyTopo::Clear()
 {
-    topo_.reset();
+    topos.clear();
     initFlag = false;
 }
 
-void PhyTopo::AddTopoGraph(std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo)
+void PhyTopo::AddTopoGraph(const u32 netLayer, std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> topo)
 {
     if (!initFlag) {
-        // 物理拓扑只保存一张无逻辑层级的图。
-        topo_ = topo;
-        HCCL_DEBUG("[PhyTopo] add physical topo graph success.");
+        topos[netLayer] = topo;
+        HCCL_DEBUG("[PhyTopo]add topo success, netLayer [%u], topo size is [%zu]", netLayer, topos.size());
     } else {
         THROW<InternalException>("PhyTopo AddTopoGraph fail. PhyTopo has been initialized "
                                  "and cannot be changed, please check.");
     }
 }
 
-std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> PhyTopo::GetTopoGraph() const { return topo_; }
+std::shared_ptr<Graph<PhyTopo::Node, PhyTopo::Link>> PhyTopo::GetTopoGraph(const u32 netLayer) const
+{
+    if (topos.find(netLayer) == topos.end()) {
+        return nullptr;
+    }
+    return topos.at(netLayer);
+}
+
+bool PhyTopo::IsNetLayerExisted(const u32 netLayer) const
+{
+    if (topos.find(netLayer) == topos.end()) {
+        return false;
+    }
+    return true;
+}
 
 void PhyTopo::Dump() const
 {
     HCCL_DEBUG("PhyTopo Dump:");
-    if (topo_ == nullptr) {
-        HCCL_DEBUG("physical topo graph is nullptr.");
-        return;
-    }
-    HCCL_DEBUG("nodes:");
-    std::set<NodeId> nodeIds{};
-    topo_->TraverseNode([&](NodeId nodeId, std::shared_ptr<PhyTopo::Node> node) {
-        nodeIds.insert(nodeId);
-        HCCL_DEBUG("%s", node->Describe().c_str());
-    });
-    HCCL_DEBUG("links:");
-    for (NodeId nodeId : nodeIds) {
-        topo_->TraverseEdge(nodeId, [&](std::shared_ptr<Link> link) {
-            HCCL_DEBUG("%s", link->Describe().c_str());
+    for (auto& pair : topos) {
+        HCCL_DEBUG("netLayer[%u]:", pair.first);
+        HCCL_DEBUG("nodes:");
+        std::set<NodeId> nodeIds{};
+        pair.second->TraverseNode([&](NodeId nodeId, std::shared_ptr<PhyTopo::Node> node) {
+            nodeIds.insert(nodeId);
+            HCCL_DEBUG("%s", node->Describe().c_str());
         });
+        HCCL_DEBUG("links:");
+        for (NodeId nodeId : nodeIds) {
+            pair.second->TraverseEdge(nodeId, [&](std::shared_ptr<Link> link) {
+                HCCL_DEBUG("%s", link->Describe().c_str());
+            });
+        }
     }
 }
 
