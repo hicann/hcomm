@@ -63,9 +63,21 @@ struct ApiParamDef {
 
     ApiParamDef(const char* kName, const char* sName, const char* oName)
     {
-        strncpy_s(kernelName, NAME_SIZE, kName, NAME_SIZE - 1);
-        strncpy_s(soName, NAME_SIZE, sName, NAME_SIZE - 1);
-        strncpy_s(opName, NAME_SIZE, oName, NAME_SIZE - 1);
+        auto ret = strncpy_s(kernelName, NAME_SIZE, kName, NAME_SIZE - 1);
+        if (ret != EOK) {
+            HCCL_ERROR("[ApiParamDef][Check]strncpy_s kernelName failed, ret[%d]", ret);
+            kernelName[0] = '\0';
+        }
+        ret = strncpy_s(soName, NAME_SIZE, sName, NAME_SIZE - 1);
+        if (ret != EOK) {
+            HCCL_ERROR("[ApiParamDef][Check]strncpy_s soName failed, ret[%d]", ret);
+            soName[0] = '\0';
+        }
+        ret = strncpy_s(opName, NAME_SIZE, oName, NAME_SIZE - 1);
+        if (ret != EOK) {
+            HCCL_ERROR("[ApiParamDef][Check]strncpy_s opName failed, ret[%d]", ret);
+            opName[0] = '\0';
+        }
     }
 };
 

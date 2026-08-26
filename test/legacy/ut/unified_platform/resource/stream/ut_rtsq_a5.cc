@@ -51,7 +51,7 @@ protected:
 
     virtual void TearDown()
     {
-        EnvConfig::GetInstance().plfDebugCfg.plfDebugConfig_ = 0;
+        SetPlfDebugConfigValue(0);
         GlobalMockObject::verify();
         std::cout << "A Test case in RtsqA5 TearDown" << std::endl;
     }
@@ -151,7 +151,7 @@ TEST_F(RtsqA5Test, launch_task_with_loop_back)
 
 TEST_F(RtsqA5Test, launch_task_should_dump_generated_sqes_when_task_debug_enabled)
 {
-    EnvConfig::GetInstance().plfDebugCfg.plfDebugConfig_ = PLF_TASK;
+    SetPlfDebugConfigValue(PLF_TASK);
     RtsqA5 rtsq(fakedevPhyId, fakeStreamId, fakeSqId);
     MOCKER_CPP(&RtsqA5::QuerySqHead).stubs().will(returnValue(AC_SQE_MAX_CNT - 1));
 

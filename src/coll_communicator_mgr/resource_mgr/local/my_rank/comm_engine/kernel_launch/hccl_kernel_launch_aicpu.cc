@@ -149,8 +149,8 @@ static HcclResult LaunchP2pExec(
     // 3. 准备参数并 append
     HcclP2pKernelParam params;
     params.sendRecvThread = sendRecvThread;
-    memset_s(params.opParams, P2P_MAX_ARG_SIZE, 0, P2P_MAX_ARG_SIZE);
-    memcpy_s(params.opParams, P2P_MAX_ARG_SIZE, funcArgs, argSize);
+    CHK_SAFETY_FUNC_RET(memset_s(params.opParams, P2P_MAX_ARG_SIZE, 0, P2P_MAX_ARG_SIZE));
+    CHK_SAFETY_FUNC_RET(memcpy_s(params.opParams, P2P_MAX_ARG_SIZE, funcArgs, argSize));
 
     aclrtParamHandle paraHandle;
     ret = aclrtKernelArgsAppend(argsHandle, &params, sizeof(HcclP2pKernelParam), &paraHandle);
@@ -353,13 +353,13 @@ HcclResult HcclAicpuKernelLaunch(
         HcclP2pTask task;
         task.desc = opInfo->p2p;
         task.stream = opInfo->p2p.unfoldStream;
-        memcpy_s(
+        CHK_SAFETY_FUNC_RET(memcpy_s(
             task.funcInfo.kernelSoName, HCCL_KERNEL_SO_NAME_MAX_LEN, funcInfo->kernelSoName,
-            HCCL_KERNEL_SO_NAME_MAX_LEN);
-        memcpy_s(
+            HCCL_KERNEL_SO_NAME_MAX_LEN));
+        CHK_SAFETY_FUNC_RET(memcpy_s(
             task.funcInfo.kernelFuncName, HCCL_KERNEL_FUNC_NAME_MAX_LEN, funcInfo->kernelFuncName,
-            HCCL_KERNEL_FUNC_NAME_MAX_LEN);
-        memcpy_s(task.args, P2P_MAX_ARG_SIZE, args, argSize);
+            HCCL_KERNEL_FUNC_NAME_MAX_LEN));
+        CHK_SAFETY_FUNC_RET(memcpy_s(task.args, P2P_MAX_ARG_SIZE, args, argSize));
         task.argSize = argSize;
         task.usrStream = userStream;
         CHK_RET(collComm->groupScheduleMgr->AppendGroupP2pTask(comm, task, opInfo->p2p));

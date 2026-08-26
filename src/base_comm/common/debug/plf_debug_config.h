@@ -11,13 +11,21 @@
 #ifndef HCCLV2_PLF_DEBUG_CONFIG_H
 #define HCCLV2_PLF_DEBUG_CONFIG_H
 
-#include "base_config_legacy.h"
+#include "hccl/base.h"
 
 namespace Hccl {
 
-class EnvPlfDebugConfig : public BaseConfig {
+constexpr u64 PLF_ALG = 0x1ULL << 0;
+constexpr u64 PLF_TASK = 0x1ULL << 1;
+constexpr u64 PLF_RES = 0x1ULL << 2;
+constexpr u64 PLF_DATA_OP = 0x1ULL << 3;
+
+u64 GetPlfDebugConfigValue();
+void SetPlfDebugConfigValue(u64 value);
+
+class EnvPlfDebugConfig {
 public:
-    void Parse() override;
+    void Parse();
     u64 GetConfigValue() const;
 
 private:

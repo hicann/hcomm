@@ -71,7 +71,7 @@ static const UBEntityRule g_ubrules[] = {
 static int ProcessLayerMesh(int npu_id, NetLayer* layer, UEList* ueList, struct dcmi_spod_info* spod_info)
 {
     char net_instance_id[MAX_INSTANCE_ID_LEN] = {0};
-    sprintf_s(
+    (void)sprintf_s(
         net_instance_id, sizeof(net_instance_id), "sp%ld_srv%ld", spod_info->super_pod_id, spod_info->server_index);
     NetLayerInit(layer, PRODUCT_MESH_LEVEL, net_instance_id);
     NetLayerSetNetType(layer, NET_TYPE_MESH);
@@ -90,11 +90,11 @@ static int ProcessLayerMesh(int npu_id, NetLayer* layer, UEList* ueList, struct 
                 continue;
             }
             Addr addr;
-            memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
+            (void)memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
             AddrSetEID(&addr, &ueList->ueList[i].eidList[j].eid);
             int portId = UrmaEidGetPortId(&ueList->ueList[i].eidList[j].eid);
             char port[MAX_PORT_LEN] = {0};
-            sprintf_s(port, MAX_PORT_LEN, "%d/%d", dieId, portId);
+            (void)sprintf_s(port, MAX_PORT_LEN, "%d/%d", dieId, portId);
             AddrAddPort(&addr, port);
             AddrSetPlaneId(&addr, "plane_0");
             NetLayerAddAddr(layer, &addr);
@@ -142,7 +142,7 @@ static int ProcessLayerClos(
     int npu_id, unsigned int mainBoardId, NetLayer* layer, UEList* ueList, struct dcmi_spod_info* spod_info)
 {
     char net_instance_id[MAX_INSTANCE_ID_LEN] = {0};
-    sprintf_s(net_instance_id, sizeof(net_instance_id), "superpod_%ld", spod_info->super_pod_id);
+    (void)sprintf_s(net_instance_id, sizeof(net_instance_id), "superpod_%ld", spod_info->super_pod_id);
     NetLayerInit(layer, PRODUCT_CLOS_LEVEL, net_instance_id);
     NetLayerSetNetType(layer, NET_TYPE_CLOS);
 
@@ -158,7 +158,7 @@ static int ProcessLayerClos(
             continue;
         }
         Addr addr;
-        memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
+        (void)memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
         AddrSetEID(&addr, &ueList->ueList[i].eidList[portGroupIdx].eid);
 
         int portNum = 0;
@@ -168,7 +168,7 @@ static int ProcessLayerClos(
             }
             int portId = UrmaEidGetPortId(&ueList->ueList[i].eidList[j].eid);
             char port[MAX_PORT_LEN] = {0};
-            sprintf_s(port, MAX_PORT_LEN, "%d/%d", die, portId);
+            (void)sprintf_s(port, MAX_PORT_LEN, "%d/%d", die, portId);
             AddrAddPort(&addr, port);
             portNum++;
         }

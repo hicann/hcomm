@@ -528,14 +528,13 @@ HcclResult RankGraphV1::GetTopoInstsByLayer(uint32_t netLayer, uint32_t** topoIn
     uint32_t instNum = rankSizeList_[netLayer].size();
     *topoInstNum = instNum;
 
-    static std::vector<uint32_t> sTopoInstList;
-    sTopoInstList.clear();
-    sTopoInstList.resize(instNum);
+    topoInstsVec_.clear();
+    topoInstsVec_.resize(instNum);
     for (uint32_t i = 0; i < instNum; ++i) {
-        sTopoInstList[i] = i;
+        topoInstsVec_[i] = i;
     }
 
-    *topoInsts = sTopoInstList.data();
+    *topoInsts = topoInstsVec_.data();
 
     return HCCL_SUCCESS;
 }

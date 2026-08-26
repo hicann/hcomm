@@ -296,18 +296,18 @@ static int LayerAddMesh(const UBEntity* ue, NetLayer* layer, int type)
             continue;
         }
         Addr addr;
-        memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
+        (void)memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
         AddrSetEID(&addr, &ue->eidList[j].eid);
         char port[MAX_PORT_LEN] = {0};
         char planeId[MAX_PLANE_ID_LEN] = {0};
         int portId = UrmaEidGetPortId(&ue->eidList[j].eid);
         int dieId = UrmaEidGetDieId(&ue->eidList[j].eid);
         // topo中端口从0开始编，CNA中需要规避全0，从1开始
-        sprintf_s(port, MAX_PORT_LEN, "%d/%d", dieId, portId);
+        (void)sprintf_s(port, MAX_PORT_LEN, "%d/%d", dieId, portId);
         if (type == UE_TYPE_MESH) {
-            sprintf_s(planeId, sizeof(planeId), "plane_%d", dieId);
+            (void)sprintf_s(planeId, sizeof(planeId), "plane_%d", dieId);
         } else if (type == UE_TYPE_CLOS_PORTS) {
-            sprintf_s(planeId, sizeof(planeId), "plane_clos_%d_%d", dieId, portId);
+            (void)sprintf_s(planeId, sizeof(planeId), "plane_clos_%d_%d", dieId, portId);
         }
         AddrAddPort(&addr, port);
         AddrSetPlaneId(&addr, planeId);
@@ -324,19 +324,19 @@ static int LayerAddClos(const UBEntity* ue, NetLayer* layer)
     }
     int dieId = UrmaEidGetDieId(&ue->eidList[portGroupIdx].eid);
     Addr addr;
-    memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
+    (void)memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
     AddrSetEID(&addr, &ue->eidList[portGroupIdx].eid);
     for (unsigned int i = 0; i < ue->eidNum; ++i) {
         if (UrmaEidIsPortGroup(&ue->eidList[i].eid)) {
             continue;
         }
         char port[MAX_PORT_LEN] = {0};
-        sprintf_s(port, MAX_PORT_LEN, "%d/%d", dieId, UrmaEidGetPortId(&ue->eidList[i].eid));
+        (void)sprintf_s(port, MAX_PORT_LEN, "%d/%d", dieId, UrmaEidGetPortId(&ue->eidList[i].eid));
         AddrAddPort(&addr, port);
     }
 
     char planeId[MAX_PLANE_ID_LEN] = {0};
-    sprintf_s(planeId, sizeof(planeId), "plane_clos_%d", dieId);
+    (void)sprintf_s(planeId, sizeof(planeId), "plane_clos_%d", dieId);
     AddrSetPlaneId(&addr, planeId);
     NetLayerAddAddr(layer, &addr);
     return 0;
@@ -346,7 +346,7 @@ static int LayerAddUBOE(const UBEntity* ue, const UEInfo* ueInfo, NetLayer* laye
 {
 #define INVLID_IP_PREFIX "254" // 该IP是有协议栈无DHCP等场景自动生成的本地私有地址前缀
     Addr addr;
-    memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
+    (void)memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
     int result = -1;
     for (unsigned int i = 0; i < ue->eidNum; ++i) {
         char cna[IP_ADDR_LEN] = {0};

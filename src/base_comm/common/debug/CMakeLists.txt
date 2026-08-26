@@ -12,6 +12,10 @@ set(src_list
     aicpu_task_utils.cc
 )
 
+set(host_src_list
+    plf_debug_config.cc
+)
+
 if(TARGET ccl_kernel)
     target_sources(ccl_kernel PRIVATE
         ${src_list}
@@ -24,6 +28,7 @@ endif()
 if(TARGET hccl_v2)
     target_sources(hccl_v2 PRIVATE
         ${src_list}
+        ${host_src_list}
     )
     target_include_directories(hccl_v2 PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -33,6 +38,7 @@ endif()
 if(TARGET hcomm)
     target_sources(hcomm PRIVATE
         ${src_list}
+        ${host_src_list}
     )
     target_include_directories(hcomm PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}

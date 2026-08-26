@@ -9,6 +9,7 @@
  */
 
 #include "hal.h"
+#include "topo_addr_info_log.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
@@ -186,7 +187,7 @@ int get_server_id(char* server_id, size_t len)
             continue;
         }
         unsigned char* mac = (unsigned char*)ifr[i].ifr_hwaddr.sa_data;
-        sprintf_s(server_id, len, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+        (void)sprintf_s(server_id, len, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
         close(sock_fd);
         return 0;
     }
@@ -285,7 +286,7 @@ int hal_get_npu_count()
     int count = 0;
     for (int i = 0; i < MAX_NPU_COUNT; ++i) {
         char davinci_dev[MAX_DAVINCI_DEV_LEN] = {0};
-        sprintf_s(davinci_dev, sizeof(davinci_dev), "/dev/davinci%d", i);
+        (void)sprintf_s(davinci_dev, sizeof(davinci_dev), "/dev/davinci%d", i);
         if (access(davinci_dev, F_OK) == 0) {
             count++;
         }

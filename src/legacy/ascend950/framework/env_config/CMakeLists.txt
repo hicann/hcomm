@@ -13,6 +13,5 @@ if(TARGET hccl_v2)
             env_func.cc
             base_config_legacy.cc
             env_config.cc
-            plf_debug_config.cc
     )
 endif()

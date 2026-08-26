@@ -181,7 +181,7 @@ HcclOneSidedService::RegMem(void* addr, u64 size, HcclMemType type, RankId remot
     HcclMemDescData* ptr = static_cast<HcclMemDescData*>(static_cast<void*>(localMemDesc.desc));
     ptr->localRankId = localRankInfo_.userRank;
     ptr->remoteRankId = remoteRankId;
-    memset_s(ptr->memDesc, HCCL_MEM_DESC_STR_LEN, 0, HCCL_MEM_DESC_STR_LEN);
+    CHK_SAFETY_FUNC_RET(memset_s(ptr->memDesc, HCCL_MEM_DESC_STR_LEN, 0, HCCL_MEM_DESC_STR_LEN));
     if (memcpy_s(ptr->memDesc, HCCL_MEM_DESC_STR_LEN, desc, descLen + 1) != EOK) {
         HCCL_ERROR("[HcclOneSidedService][RegMem] memcpy_s memDesc failed");
         return HCCL_E_INTERNAL;
@@ -864,7 +864,7 @@ HcclResult HcclOneSidedService::RegBoundMem(
     HcclMemDescData* ptr = static_cast<HcclMemDescData*>(static_cast<void*>(localMemDesc.desc));
     ptr->localRankId = localRankInfo_.userRank;
     ptr->remoteRankId = INVALID_REMOTE_RANK_ID; // 进程粒度注册，不区分对端rank, 填为全F
-    memset_s(ptr->memDesc, HCCL_MEM_DESC_STR_LEN, 0, HCCL_MEM_DESC_STR_LEN);
+    CHK_SAFETY_FUNC_RET(memset_s(ptr->memDesc, HCCL_MEM_DESC_STR_LEN, 0, HCCL_MEM_DESC_STR_LEN));
     if (memcpy_s(ptr->memDesc, HCCL_MEM_DESC_STR_LEN, desc, descLen + 1) != EOK) {
         HCCL_ERROR("[HcclOneSidedService][RegBoundMem] memcpy_s memDesc failed");
         return HCCL_E_INTERNAL;

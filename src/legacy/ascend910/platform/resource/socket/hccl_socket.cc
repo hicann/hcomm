@@ -322,7 +322,11 @@ void HcclSocket::Close()
             connectInfo.remoteIp.addr6 = remoteIp_.GetBinaryAddress().addr6;
             connectInfo.socketHandle = nicSocketHandle_;
             connectInfo.port = remotePort_;
-            strcpy_s(connectInfo.tag, SOCK_CONN_TAG_SIZE, tag_.c_str());
+            auto cpyRet = strcpy_s(connectInfo.tag, SOCK_CONN_TAG_SIZE, tag_.c_str());
+            if (cpyRet != EOK) {
+                HCCL_ERROR("[Abort] strcpy_s failed, ret[%d], tag[%s]", cpyRet, tag_.c_str());
+                connectInfo.tag[0] = '\0';
+            }
 
             HcclResult ret = hrtRaSocketNonBlockBatchAbort(&connectInfo, 1);
             if (ret != HCCL_SUCCESS) {

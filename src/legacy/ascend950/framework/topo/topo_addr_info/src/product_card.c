@@ -56,7 +56,7 @@ static int ProcessLayerMesh(int npu_id, NetLayer* layer, dcmi_urma_eid_info_t* e
         }
         int dieId = UrmaEidGetDieIdForCard(&eid_list[i].eid);
         Addr addr;
-        memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
+        (void)memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
         AddrSetEID(&addr, &eid_list[i].eid);
         char port[MAX_PORT_LEN] = {0};
         char planeId[MAX_PLANE_ID_LEN] = {0};
@@ -95,12 +95,12 @@ static int ProcessLayerMesh2P(int npu_id, NetLayer* layer, dcmi_urma_eid_info_t*
             continue;
         }
         Addr addr;
-        memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
+        (void)memset_s(&addr, sizeof(Addr), 0x00, sizeof(Addr));
         AddrSetEID(&addr, &eid_list[i].eid);
         const int ports[] = {4, 5, 6, 8}; // 2P互联固定使用4568端口
         for (int j = 0; j < 4; ++j) {
             char port[MAX_PORT_LEN] = {0};
-            sprintf_s(port, MAX_PORT_LEN, "0/%d", ports[j]);
+            (void)sprintf_s(port, MAX_PORT_LEN, "0/%d", ports[j]);
             AddrAddPort(&addr, port);
         }
         AddrSetPlaneId(&addr, "plane_0");

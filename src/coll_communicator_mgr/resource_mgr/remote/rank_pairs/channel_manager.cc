@@ -645,8 +645,8 @@ HcclResult ChannelManager::AicpuChannelInit(
     CHK_SAFETY_FUNC_RET(memset_s(&channelParam, sizeof(channelParam), 0, sizeof(channelParam)));
     uint64_t beginTime = hrtMsprofSysCycleTime();
     // channelParam资源参数填充
-    strncpy_s(channelParam.hcomId, HCOMID_MAX_LENGTH, commId.c_str(), HCOMID_MAX_LENGTH - 1);
-    strncpy_s(channelParam.channelTag, TAG_MAX_LENGTH, tag.c_str(), TAG_MAX_LENGTH - 1);
+    CHK_SAFETY_FUNC_RET(strncpy_s(channelParam.hcomId, HCOMID_MAX_LENGTH, commId.c_str(), HCOMID_MAX_LENGTH - 1));
+    CHK_SAFETY_FUNC_RET(strncpy_s(channelParam.channelTag, TAG_MAX_LENGTH, tag.c_str(), TAG_MAX_LENGTH - 1));
     channelParam.engine = engine;
     channelParam.localUserRank = userRank_;
     channelParam.multiQpThreshold = GetExternalInputMultiQpThreshold();

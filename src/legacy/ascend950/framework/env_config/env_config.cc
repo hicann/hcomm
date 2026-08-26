@@ -29,7 +29,6 @@ void EnvConfig::Parse()
     algoCfg.Parse();
     logCfg.Parse();
     detourCfg.Parse();
-    plfDebugCfg.Parse();
 }
 
 const EnvHostNicConfig& EnvConfig::GetHostNicConfig() { return hostNicCfg; }
@@ -45,7 +44,5 @@ const EnvAlgoConfig& EnvConfig::GetAlgoConfig() { return algoCfg; }
 const EnvLogConfig& EnvConfig::GetLogConfig() { return logCfg; }
 
 const EnvDetourConfig& EnvConfig::GetDetourConfig() { return detourCfg; }
-
-const EnvPlfDebugConfig& EnvConfig::GetPlfDebugConfig() { return plfDebugCfg; }
 
 } // namespace Hccl

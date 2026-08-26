@@ -18,6 +18,7 @@
 #include "socket_handle_manager.h"
 #include "base_config_legacy.h"
 #include "env_config_v2.h"
+#include "plf_debug_config.h"
 #include <initializer_list>
 #include "topo_info.h"
 #include "rank_graph_builder.h"
@@ -47,23 +48,6 @@
 #include "rmt_rma_buffer_lite.h"
 #include "rts_notify.h"
 #include "rdma_local_notify.h"
-#include "rdma_handle_manager.h"
-#include "socket/socket.h"
-#include "sal.h"
-
-#include "buffer.h"
-#include "dev_buffer.h"
-#include "local_ub_rma_buffer.h"
-#include "socket_handle_manager.h"
-#include "base_config_legacy.h"
-#include "env_config_v2.h"
-#include <initializer_list>
-#include "topo_info.h"
-#include "rank_graph_builder.h"
-#include "orion_adapter_rts.h"
-#include "net_instance.h"
-#include "host_socket_handle_manager.h"
-#include "base_config_legacy.h"
 
 #include "../../../legacy/ascend950/unified_platform/resource/buffer/local_ipc_rma_buffer_v2.h"
 #include "../../../base_comm/resources/endpoint_pairs/channels/aicpu/device/aicpu_channel_process.h"

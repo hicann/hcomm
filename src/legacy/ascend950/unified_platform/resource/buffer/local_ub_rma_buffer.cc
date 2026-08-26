@@ -35,7 +35,11 @@ LocalUbRmaBuffer::LocalUbRmaBuffer(std::shared_ptr<Buffer> buf, RdmaHandle rdmaH
     tokenValue = GetUbToken();
     HrtRaUbLocMemRegParam lmemReg{alignBuf.first, alignBuf.second, tokenValue, tokenIdHandle, 1};
     reqReg = HrtRaUbLocalMemReg(rdmaHandle, lmemReg);
-    memcpy_s(key, HRT_UB_MEM_KEY_MAX_LEN, reqReg.key, HRT_UB_MEM_KEY_MAX_LEN);
+    auto ret = memcpy_s(key, HRT_UB_MEM_KEY_MAX_LEN, reqReg.key, HRT_UB_MEM_KEY_MAX_LEN);
+    if (ret != EOK) {
+        HCCL_ERROR("[LocalUbRmaBuffer::%s] copy key failed, ret[%d].", __func__, ret);
+        THROW<InvalidParamsException>("LocalUbRmaBuffer copy key failed, ret[%d]", ret);
+    }
 
     HCCL_INFO(
         "[LocalUbRmaBuffer::%s] end, rdmaHandle[%p], lmemHandle[0x%llx], reqReg.keySize[%u]", __func__, rdmaHandle,
@@ -56,7 +60,8 @@ LocalUbRmaBuffer::LocalUbRmaBuffer(std::shared_ptr<Buffer> buf, RdmaHandle rdmaH
 
     auto ret = memcpy_s(key, HRT_UB_MEM_KEY_MAX_LEN, parent.key, HRT_UB_MEM_KEY_MAX_LEN);
     if (ret != EOK) {
-        THROW<InvalidParamsException>("LocalUbRmaBuffer alias copy key failed");
+        HCCL_ERROR("[LocalUbRmaBuffer::%s] alias copy key failed, ret[%d].", __func__, ret);
+        THROW<InvalidParamsException>("LocalUbRmaBuffer alias copy key failed, ret[%d]", ret);
     }
 
     HCCL_INFO(
@@ -84,7 +89,11 @@ LocalUbRmaBuffer::LocalUbRmaBuffer(std::shared_ptr<Buffer> buf, void* netDevice,
     tokenValue = GetUbToken();
     HrtRaUbLocMemRegParam lmemReg{alignBuf.first, alignBuf.second, tokenValue, tokenIdHandle, 1};
     reqReg = HrtRaUbLocalMemReg(rdmaHandle, lmemReg);
-    memcpy_s(key, HRT_UB_MEM_KEY_MAX_LEN, reqReg.key, HRT_UB_MEM_KEY_MAX_LEN);
+    auto ret = memcpy_s(key, HRT_UB_MEM_KEY_MAX_LEN, reqReg.key, HRT_UB_MEM_KEY_MAX_LEN);
+    if (ret != EOK) {
+        HCCL_ERROR("[LocalUbRmaBuffer::%s] netDevice copy key failed, ret[%d].", __func__, ret);
+        THROW<InvalidParamsException>("LocalUbRmaBuffer netDevice copy key failed, ret[%d]", ret);
+    }
     HCCL_INFO(
         "[LocalUbRmaBuffer::%s] end, rdmaHandle[%p], lmemHandle[0x%llx], reqReg.keySize[%u]", __func__, rdmaHandle,
         reqReg.handle, reqReg.keySize);

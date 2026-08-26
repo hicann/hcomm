@@ -90,6 +90,7 @@ private:
     std::unordered_map<uint32_t, std::vector<u32>> rankSizeList_; // level->rankSizeList
     std::vector<RankInfo_t> rankGraph_;
     std::vector<struct GraphRankInfo> graphRankInfo_;
+    std::vector<uint32_t> topoInstsVec_; // 供 GetTopoInstsByLayer 输出 topoInsts
     HcclTopoAttr topoAttr_;
     RankInfo rankData_;
     DevType devType_ = DevType::DEV_TYPE_NOSOC;

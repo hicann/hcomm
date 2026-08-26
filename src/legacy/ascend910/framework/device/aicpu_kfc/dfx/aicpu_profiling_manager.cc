@@ -46,7 +46,7 @@ HcclResult AicpuProfilingManager::ReportTaskInfo()
                 CHK_PRT(ProfilingManager::CallMsprofReportAdditionInfo(
                     MSPROF_REPORT_AICPU_MC2_BATCH_HCCL_INFO, 0, taskInfos, sizeof(MsprofAicpuHcclTaskInfo) * batchId));
                 batchId = 0;
-                memset_s(taskInfos, sizeof(taskInfos), 0, sizeof(taskInfos));
+                CHK_SAFETY_FUNC_RET(memset_s(taskInfos, sizeof(taskInfos), 0, sizeof(taskInfos)));
             }
         }
         lastSqeIdx = buff.tailSqeIdx;

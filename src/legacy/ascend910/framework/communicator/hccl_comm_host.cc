@@ -25,6 +25,7 @@
 #include "coll_comm_config.h"
 #include "coll_comm_mgr.h"
 #include "env_config/env_config_v2.h"
+#include "unified_platform/pub_inc/config_plf_log.h"
 #include "dlprof_function.h"
 
 namespace hccl {
@@ -379,7 +380,7 @@ HcclResult hcclComm::InitCollComm(
     commAicpuParam_.commConfig.taskExceptionEnable
         = Hccl::EnvConfig::GetInstance().GetLogConfig().GetDfsConfig().taskExceptionEnable;
     commAicpuParam_.commConfig.notifyWaitTimeout = Hccl::EnvConfig::GetInstance().GetRtsConfig().GetExecTimeOut();
-    commAicpuParam_.commConfig.plfDebugConfig = Hccl::EnvConfig::GetInstance().GetPlfDebugConfig().GetConfigValue();
+    commAicpuParam_.commConfig.plfDebugConfig = Hccl::GetPlfDebugConfigValue();
     const auto opExpansionMode = GetCollCommOpExpansionMode(collComm_.get());
     HCCL_RUN_INFO(
         "[%s]success, commId[%s], deviceLogicId[%u], devicePhyId[%u], devType[%u], "

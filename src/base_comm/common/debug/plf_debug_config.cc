@@ -9,11 +9,15 @@
  */
 
 #include "plf_debug_config.h"
-#include "env_config_v2.h"
-#include "config_plf_log.h"
+#include "log.h"
 #include <sstream>
+#include <atomic>
+#include <mutex>
 
 namespace Hccl {
+
+static std::atomic<u64> g_plfDebugConfig{0};
+static std::once_flag g_parseOnce;
 
 static u64 ParseDebugConfig(const char* envName, u64 domainMask)
 {
@@ -64,6 +68,19 @@ void EnvPlfDebugConfig::Parse()
 
 u64 EnvPlfDebugConfig::GetConfigValue() const { return plfDebugConfig_; }
 
-u64 GetPlfDebugConfigValue() { return EnvConfig::GetInstance().GetPlfDebugConfig().GetConfigValue(); }
+u64 GetPlfDebugConfigValue()
+{
+    std::call_once(g_parseOnce, []() {
+        EnvPlfDebugConfig cfg;
+        cfg.Parse();
+        g_plfDebugConfig.store(cfg.GetConfigValue(), std::memory_order_relaxed);
+    });
+    return g_plfDebugConfig.load(std::memory_order_relaxed);
+}
+
+void SetPlfDebugConfigValue(u64 value)
+{
+    g_plfDebugConfig.store(value, std::memory_order_relaxed);
+}
 
 } // namespace Hccl

@@ -50,7 +50,11 @@ int GetTopoFilePathFromFile(const char* filePath, char* topoFilePath, size_t buf
         fclose(fp);
         return -1;
     }
-    memset_s(fileBuf, fileSize + 1, 0, fileSize + 1);
+    if (memset_s(fileBuf, fileSize + 1, 0, fileSize + 1) != EOK) {
+        free(fileBuf);
+        fclose(fp);
+        return -1;
+    }
     size_t readBytes = fread(fileBuf, 1, fileSize, fp);
     if (readBytes != fileSize) {
         free(fileBuf); // 释放已分配的内存
@@ -104,7 +108,9 @@ int TopoGetClosPort(unsigned int mainboardId, int dieId, int* ports, int* portCn
     int size = sizeof(closPortMap) / sizeof(ClosPortMap);
     for (int i = 0; i < size; ++i) {
         if (mainboardId == closPortMap[i].mainboardId && dieId == closPortMap[i].dieId) {
-            memcpy_s(ports, (*portCnt), closPortMap[i].ports, closPortMap[i].portCnt);
+            if (memcpy_s(ports, (*portCnt), closPortMap[i].ports, closPortMap[i].portCnt) != EOK) {
+                return -1;
+            }
             *portCnt = closPortMap[i].portCnt;
             return 0;
         }

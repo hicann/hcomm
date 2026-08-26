@@ -1546,7 +1546,7 @@ u32 AicpuKfcProcess::AicpuRpcResInit(HccCommResParamTask* commParam)
         return 0;
     }
     AicpuSqeContext::InitSqeContext();
-    memset_s(ctx, sizeof(AicpuComContext), 0, sizeof(AicpuComContext));
+    (void)memset_s(ctx, sizeof(AicpuComContext), 0, sizeof(AicpuComContext));
     s32 enableEvent = 0;
     ctx->logLevel = dlog_getlevel(HCCL, &enableEvent);
     ctx->rankId = commParam->rankId;

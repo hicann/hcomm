@@ -12,16 +12,7 @@
 #define CONFIG_PLF_LOG_H
 
 #include "log.h"
-
-namespace Hccl {
-constexpr u64 PLF_ALG = 0x1ULL << 0;     // bit 0 — 预留
-constexpr u64 PLF_TASK = 0x1ULL << 1;    // bit 1 — TASK 日志
-constexpr u64 PLF_RES = 0x1ULL << 2;     // bit 2 — 预留
-constexpr u64 PLF_DATA_OP = 0x1ULL << 3; // bit 3 — DATA_OP 日志
-
-u64 GetPlfDebugConfigValue();
-void SetPlfDebugConfigValue(u64 value);
-} // namespace Hccl
+#include "plf_debug_config.h"
 
 // config要求传入宏名字作为日志打印关键字，不可以传入其他变量或常量
 #define PLF_CONFIG_INFO(config, format, ...)                                                                  \
