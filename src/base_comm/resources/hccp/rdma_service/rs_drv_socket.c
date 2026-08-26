@@ -441,10 +441,9 @@ int RsDrvSocketSend(int fd, const void *data, uint64_t size, int flags)
     return ret;
 }
 
-int RsSslReadInnerCheck(struct RsConnInfo *conn, int sslRet, uint64_t size)
+int RsSslReadInnerCheck(SSL *ssl, int fd, int sslRet, uint64_t size)
 {
-    int err = ssl_adp_get_error(conn->ssl, sslRet);
-    int fd = conn->connfd;
+    int err = ssl_adp_get_error(ssl, sslRet);
     int errNo = errno;
 
     rs_ssl_err_string(fd, err);
@@ -473,7 +472,7 @@ int RsDrvSocketRecv(int fd, void *data, uint64_t size, int flags)
             hccp_warn("can not find conn for fd[%d], ret:%d, the local fd may have been closed ", fd, ret), ret);
         ret = ssl_adp_read(conn->ssl, data, size);
         if (ret <= 0) {
-            ret = RsSslReadInnerCheck(conn, ret, size);
+            ret = RsSslReadInnerCheck(conn->ssl, conn->connfd, ret, size);
         }
     } else {
         ret = recv(fd, data, size, flags);

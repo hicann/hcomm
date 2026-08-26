@@ -1893,7 +1893,7 @@ RS_ATTRI_VISI_DEF int RsPeerSocketRecv(uint32_t sslEnable, int fd, void *data, u
             hccp_warn("can not find conn for fd[%d], ret:%d, the local fd may have been closed ", fd, ret), ret);
         ret = ssl_adp_read(conn->ssl, data, (int)size);
         if (ret <= 0) {
-            ret = RsSslReadInnerCheck(conn, ret, size);
+            ret = RsSslReadInnerCheck(conn->ssl, conn->connfd, ret, size);
         }
     } else {
         ret = (int)recv(fd, data, size, MSG_DONTWAIT);

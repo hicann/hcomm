@@ -95,5 +95,5 @@ bool RsSocketIsVnicIp(unsigned int chipId, unsigned int ipAddr);
 void RsConnCostTime(struct RsConnInfo *conn);
 int RsFd2conn(int fd, struct RsConnInfo **conn);
 int RsSslWriteInnerCheck(struct RsConnInfo *conn, int sslRet, uint64_t size);
-int RsSslReadInnerCheck(struct RsConnInfo *conn, int sslRet, uint64_t size);
+int RsSslReadInnerCheck(SSL *ssl, int fd, int sslRet, uint64_t size);
 #endif // RS_DRV_SOCKET_H

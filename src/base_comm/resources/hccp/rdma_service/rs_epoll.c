@@ -141,18 +141,27 @@ STATIC int RsSslRecvTagInHandle(struct RsAcceptInfo *acceptInfo, struct RsConnIn
     char *recvBuff = connTmp->tag;
     struct timeval startTime, now;
     float timeCost = 0.0;
-    int size = expSize;
+    int size = 0;
+    int ret = 0;
 
     RsGetCurTime(&startTime);
-    while (expSize > 0 && size != 0) {
+    while (expSize > 0) {
         connTmp->tagSyncTimes++;
         size = ssl_adp_read(acceptInfo->ssl, recvBuff, expSize);
-        if ((size < 0) && (errno == EINTR)) {
-            connTmp->tagEintrTimes++;
-            continue;
+        if (size > 0) {
+            expSize -= size;
+            recvBuff += size;
+        } else {
+            ret = RsSslReadInnerCheck(acceptInfo->ssl, acceptInfo->connFd, size, (uint64_t)expSize);
+            if (ret == -EAGAIN) {
+                connTmp->tagEintrTimes++;
+            } else {
+                hccp_run_warn("ssl_adp_read unsuccessful, fd:%d ret:%d tagSyncTime:%u tagEintrTime:%u",
+                    acceptInfo->connFd, ret, connTmp->tagSyncTimes, connTmp->tagEintrTimes);
+                return -ESOCKCLOSED;
+            }
         }
-        expSize -= size;
-        recvBuff += size;
+
         RsGetCurTime(&now);
         HccpTimeInterval(&now, &startTime, &timeCost);
         if (timeCost >= RS_RECV_MAX_TIME) {
