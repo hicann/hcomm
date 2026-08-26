@@ -44,6 +44,7 @@ RmaConnLite* UbConnLiteMgr::Get(std::vector<char>& uniqueId)
 {
     UbConnLiteParam liteParam(uniqueId);
     auto key = GetKey(liteParam);
+    std::unique_lock<std::shared_mutex> lock(mtx_);
     if (IsExist(key)) {
         return ubConnLiteMap[key].get();
     }
@@ -56,6 +57,7 @@ void UbConnLiteMgr::Clear(std::vector<char>& uniqueId)
 {
     UbConnLiteParam liteParam(uniqueId);
     auto key = GetKey(liteParam);
+    std::unique_lock<std::shared_mutex> lock(mtx_);
     if (!IsExist(key)) {
         return;
     }

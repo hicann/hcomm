@@ -12,6 +12,8 @@
 #define RMA_BUFFER_MGR_H
 
 #include <map>
+#include <mutex>
+#include <shared_mutex>
 #include <utility>
 #include "buffer_key.h"
 #include "log.h"
@@ -36,6 +38,7 @@ public:
     using ConstIterator = typename MapType::const_iterator;
 
     template <typename... BufferArgs>
+    // 禁止直接调用,请使用加锁版本的 AddWithoutCheck 替代
     std::pair<Iterator, bool> AddToTree(const KeyType& key, BufferArgs&&... bufferArgs)
     {
         auto result = intervalTree_.emplace(
@@ -61,6 +64,7 @@ public:
     template <typename... BufferArgs>
     std::pair<Iterator, bool> AddWithoutCheck(const KeyType& key, BufferArgs&&... bufferArgs)
     {
+        std::unique_lock<std::shared_mutex> lock(mtx_);
         return AddToTree(key, std::forward<BufferArgs>(bufferArgs)...);
     }
 
@@ -70,6 +74,7 @@ public:
     template <typename... BufferArgs>
     std::pair<Iterator, bool> Add(const KeyType& key, BufferArgs&&... bufferArgs)
     {
+        std::unique_lock<std::shared_mutex> lock(mtx_);
         auto overlapResult = CheckOverlap(key);
         if (overlapResult.second) {
             HCCL_ERROR("Error: Buffer key overlaps with existing buffer key.");
@@ -82,6 +87,7 @@ public:
     // 2.查询失败：输入key是表中某一个最相近key的空集、交集。返回false，空bufferType
     std::pair<bool, BufferType> Find(const KeyType& key) const
     {
+        std::shared_lock<std::shared_mutex> lock(mtx_);
         auto it = intervalTree_.lower_bound(key);
         if (it != intervalTree_.end() && (it->first == key || it->first.IsSuperset(key))) {
             return std::make_pair(true, it->second.buffer);
@@ -118,6 +124,7 @@ public:
     // 3.删除失败：输入key是表中某一个最相近key的交集、子集、超集、空集。——抛出NOT_FOUND异常
     bool Del(const KeyType& key)
     {
+        std::unique_lock<std::shared_mutex> lock(mtx_);
         auto it = intervalTree_.find(key);
         if (it == intervalTree_.end()) {
             HCCL_ERROR("Error: Buffer key not found.");
@@ -138,6 +145,7 @@ public:
 
     bool IsInTree(const KeyType& key)
     {
+        std::shared_lock<std::shared_mutex> lock(mtx_);
         auto it = intervalTree_.find(key);
         if (it == intervalTree_.end()) {
             return false;
@@ -153,6 +161,7 @@ public:
     size_t size() const { return intervalTree_.size(); }
     void PrintContents() const
     {
+        std::shared_lock<std::shared_mutex> lock(mtx_);
         for (const auto& pair : intervalTree_) {
             HCCL_INFO("Key: %s, Value: %p", pair.first.ToString().c_str(), pair.second.buffer.get());
         }
@@ -161,6 +170,7 @@ public:
     template <typename Fn>
     void ForEach(Fn&& fn) const
     {
+        std::shared_lock<std::shared_mutex> lock(mtx_);
         for (const auto& pair : intervalTree_) {
             std::forward<Fn>(fn)(pair.first, pair.second.buffer);
         }
@@ -168,6 +178,7 @@ public:
 
 private:
     MapType intervalTree_;
+    mutable std::shared_mutex mtx_{};
 
     std::pair<Iterator, bool> CheckOverlap(const KeyType& key)
     {

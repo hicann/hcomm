@@ -14,6 +14,8 @@
 #include "ub_conn_lite.h"
 #include <unordered_map>
 #include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <functional>
 
 namespace Hccl {
@@ -34,6 +36,8 @@ private:
     std::string GetKey(const UbConnLiteParam& liteParam) const;
 
     std::unordered_map<std::string, std::unique_ptr<UbConnLite>> ubConnLiteMap;
+
+    mutable std::shared_mutex mtx_{};
 
     bool IsExist(const std::string& key);
 };

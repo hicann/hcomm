@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include <shared_mutex>
 
 #include "hccl/hccl_types.h"
 #include "types.h"
@@ -97,7 +98,7 @@ private:
     // CCU Task Kill相关状态
     enum class CcuTaskKillStatus : uint8_t { INIT = 0, TASK_KILL = 1, KILL_DONE = 2, CLEAN_TIF = 3, INVALID = 4 };
     CcuTaskKillStatus status{CcuTaskKillStatus::INVALID};
-    std::mutex innerMutex;
+    mutable std::shared_mutex innerMutex;
     std::mutex taskKillMutex_;
 
     explicit CcuComponent() = default;

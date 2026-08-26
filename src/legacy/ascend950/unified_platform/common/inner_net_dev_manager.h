@@ -12,6 +12,7 @@
 #define HCCLV2_INNER_NET_DEVICE_MANAGER_H
 
 #include <mutex>
+#include <shared_mutex>
 #include <unordered_map>
 #include "port.h"
 #include "orion_adapter_hccp.h"
@@ -45,6 +46,8 @@ private:
 
     std::unordered_map<NetDevInfo, unique_ptr<InnerNetDev>> netDevMap_;
     std::unordered_map<NetDevInfo, uint32_t> netDevCnt_;
+
+    mutable std::shared_mutex mtx_{};
 };
 
 } // namespace Hccl

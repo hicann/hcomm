@@ -99,7 +99,7 @@ void CcuComponent::PrintCcuMissionStatus(int32_t devLogicId) const
 
 void CcuComponent::Init()
 {
-    std::lock_guard<std::mutex> _lock(innerMutex);
+    std::unique_lock<std::shared_mutex> _lock(innerMutex);
 
     if (ifInit) {
         return;
@@ -125,7 +125,7 @@ void CcuComponent::Init()
 // 资源清理
 void CcuComponent::Deinit()
 {
-    std::lock_guard<std::mutex> _lock(innerMutex);
+    std::unique_lock<std::shared_mutex> _lock(innerMutex);
     ReleaseJettyRes();
 
     for (uint8_t dieId = 0; dieId < MAX_CCU_IODIE_NUM; dieId++) {
@@ -778,6 +778,7 @@ CcuComponent::GetCcuResourceSpaceTokenInfo(const uint8_t dieId, uint64_t& tokenI
 HcclResult
 CcuComponent::AllocChannels(const uint8_t dieId, const ChannelPara& channelPara, std::vector<ChannelInfo>& channelInfos)
 {
+    std::shared_lock<std::shared_mutex> lock(innerMutex);
     CHK_RET(CheckDieValid(__func__, devLogicId, dieId, dieEnableFlags));
 
     CHK_PTR_NULL(channelMgrs[dieId]);
@@ -794,6 +795,7 @@ CcuComponent::AllocChannels(const uint8_t dieId, const ChannelPara& channelPara,
 
 HcclResult CcuComponent::ConfigChannel(const uint8_t dieId, const ChannelCfg& cfg)
 {
+    std::shared_lock<std::shared_mutex> lock(innerMutex);
     CHK_RET(CheckDieValid(__func__, devLogicId, dieId, dieEnableFlags));
 
     uint32_t channelId = cfg.channelId;
@@ -819,6 +821,7 @@ HcclResult CcuComponent::ConfigChannel(const uint8_t dieId, const ChannelCfg& cf
 
 HcclResult CcuComponent::ReleaseChannel(const uint8_t dieId, const uint32_t channelId)
 {
+    std::shared_lock<std::shared_mutex> lock(innerMutex);
     CHK_RET(CheckDieValid(__func__, devLogicId, dieId, dieEnableFlags));
     CHK_PRT_RET(
         channelId == loopChannelIds[dieId],
@@ -861,6 +864,7 @@ HcclResult CcuComponent::GetLoopChannelId(const uint8_t srcDieId, const uint8_t 
 HcclResult CcuComponent::AllocRes(
     const uint8_t dieId, const ResType resType, const uint32_t num, const bool consecutive, vector<ResInfo>& resInfos)
 {
+    std::shared_lock<std::shared_mutex> lock(innerMutex);
     CHK_RET(CheckDieValid(__func__, devLogicId, dieId, dieEnableFlags));
 
     CHK_PTR_NULL(resAllocators[dieId]);
@@ -878,6 +882,7 @@ HcclResult CcuComponent::AllocRes(
 HcclResult
 CcuComponent::ReleaseRes(const uint8_t dieId, const ResType resType, const uint32_t startId, const uint32_t num)
 {
+    std::shared_lock<std::shared_mutex> lock(innerMutex);
     CHK_RET(CheckDieValid(__func__, devLogicId, dieId, dieEnableFlags));
 
     CHK_PTR_NULL(resAllocators[dieId]);
@@ -895,6 +900,7 @@ CcuComponent::ReleaseRes(const uint8_t dieId, const ResType resType, const uint3
 
 uint32_t CcuComponent::GetInsConsecutiveRemainSize(const uint8_t dieId) const
 {
+    std::shared_lock<std::shared_mutex> lock(innerMutex);
     CHK_RET(CheckDieValid(__func__, devLogicId, dieId, dieEnableFlags));
     if (resAllocators[dieId] == nullptr)
         return 0;
@@ -903,6 +909,7 @@ uint32_t CcuComponent::GetInsConsecutiveRemainSize(const uint8_t dieId) const
 
 HcclResult CcuComponent::AllocIns(const uint8_t dieId, const uint32_t num, ResInfo& insInfo)
 {
+    std::shared_lock<std::shared_mutex> lock(innerMutex);
     CHK_RET(CheckDieValid(__func__, devLogicId, dieId, dieEnableFlags));
     CHK_PTR_NULL(resAllocators[dieId]);
 
@@ -920,6 +927,7 @@ HcclResult CcuComponent::AllocIns(const uint8_t dieId, const uint32_t num, ResIn
 
 HcclResult CcuComponent::ReleaseIns(const uint8_t dieId, const ResInfo& insInfo)
 {
+    std::shared_lock<std::shared_mutex> lock(innerMutex);
     CHK_RET(CheckDieValid(__func__, devLogicId, dieId, dieEnableFlags));
     CHK_PTR_NULL(resAllocators[dieId]);
 
@@ -936,6 +944,7 @@ HcclResult CcuComponent::ReleaseIns(const uint8_t dieId, const ResInfo& insInfo)
 
 HcclResult CcuComponent::AllocCke(const uint8_t dieId, const uint32_t num, vector<ResInfo>& ckeInfos)
 {
+    std::shared_lock<std::shared_mutex> lock(innerMutex);
     CHK_RET(CheckDieValid(__func__, devLogicId, dieId, dieEnableFlags));
     CHK_PTR_NULL(resAllocators[dieId]);
 
@@ -951,6 +960,7 @@ HcclResult CcuComponent::AllocCke(const uint8_t dieId, const uint32_t num, vecto
 
 HcclResult CcuComponent::ReleaseCke(const uint8_t dieId, const vector<ResInfo>& ckeInfos)
 {
+    std::shared_lock<std::shared_mutex> lock(innerMutex);
     CHK_RET(CheckDieValid(__func__, devLogicId, dieId, dieEnableFlags));
     CHK_PTR_NULL(resAllocators[dieId]);
 
@@ -969,6 +979,7 @@ HcclResult CcuComponent::ReleaseCke(const uint8_t dieId, const vector<ResInfo>& 
 
 HcclResult CcuComponent::AllocXn(const uint8_t dieId, const uint32_t num, vector<ResInfo>& xnInfos)
 {
+    std::shared_lock<std::shared_mutex> lock(innerMutex);
     CHK_RET(CheckDieValid(__func__, devLogicId, dieId, dieEnableFlags));
     CHK_PTR_NULL(resAllocators[dieId]);
 
@@ -984,6 +995,7 @@ HcclResult CcuComponent::AllocXn(const uint8_t dieId, const uint32_t num, vector
 
 HcclResult CcuComponent::ReleaseXn(const uint8_t dieId, const vector<ResInfo>& xnInfos)
 {
+    std::shared_lock<std::shared_mutex> lock(innerMutex);
     CHK_RET(CheckDieValid(__func__, devLogicId, dieId, dieEnableFlags));
     CHK_PTR_NULL(resAllocators[dieId]);
 

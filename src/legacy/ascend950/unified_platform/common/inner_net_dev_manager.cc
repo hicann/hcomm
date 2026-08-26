@@ -25,7 +25,7 @@ HcclResult InnerNetDevManager::AddDevice(const NetDevInfo& info, HcclNetDevice*&
         HCCL_ERROR("new HcclNetDevice fail, devId[%u]", info.devId);
         return HCCL_E_PTR;
     }
-
+    std::unique_lock<std::shared_mutex> lock(mtx_);
     InnerNetDev* innerNetDev = nullptr;
     auto it = netDevMap_.find(info);
     if (it == netDevMap_.end()) {
@@ -52,6 +52,7 @@ HcclResult InnerNetDevManager::AddDevice(const NetDevInfo& info, HcclNetDevice*&
 
 HcclResult InnerNetDevManager::RemoveDevice(const NetDevInfo& info)
 {
+    std::unique_lock<std::shared_mutex> lock(mtx_);
     auto cntIt = netDevCnt_.find(info);
     if (cntIt == netDevCnt_.end()) {
         HCCL_ERROR("find HcclNetDevice fail, devId[%u]", info.devId);
