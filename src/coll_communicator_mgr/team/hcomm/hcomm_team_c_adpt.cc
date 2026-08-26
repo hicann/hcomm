@@ -104,12 +104,3 @@ HcommResult HcommTeamGetNetLayer(HcommTeamHandle team, uint32_t* netLayer)
     CHK_PRT_RET((team == nullptr || netLayer == nullptr), HCCL_ERROR("[%s] nullptr parameter", __func__), HCOMM_E_PTR);
     return HcommTeamMgr::GetInstance().GetNetLayer(team, netLayer);
 }
-
-HcommResult HcommTeamIsSubBelongToWorld(HcommTeamHandle worldTeam, HcommTeamHandle subTeam, bool* isBelong)
-{
-    CHK_PTR_NULL(worldTeam);
-    CHK_PTR_NULL(subTeam);
-    CHK_PTR_NULL(isBelong);
-    HCCL_ERROR("[%s] not support", __func__);
-    return HCOMM_E_NOT_SUPPORT;
-}
