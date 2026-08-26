@@ -110,8 +110,17 @@ void ProfilingHandler::ReportHcclTaskApi(
     reporterData.endTime = endTime;
     const std::string proName(GetProfTaskOpNameV2(taskType));
     reporterData.itemId = GetProfHashId(proName.c_str(), proName.length());
-    if (taskType == TaskParamType::TASK_AICPU_KERNEL) {
-        return;
+    switch (taskType) {
+        case TaskParamType::TASK_DPU_INLINE_WRITE:
+        case TaskParamType::TASK_DPU_NOTIFY_WAIT:
+        case TaskParamType::TASK_DPU_WRITE_WITH_NOTIFY:
+        case TaskParamType::TASK_DPU_CHANNEL_FENCE:
+        case TaskParamType::TASK_DPU_THREAD_FENCE:
+        case TaskParamType::TASK_DPU_KERNEL:
+        case TaskParamType::TASK_AICPU_KERNEL:
+            return;
+        default:
+            break;
     }
     if (cachedReq) {
         std::lock_guard<std::mutex> lock(cachedTaskApiInfoMutex_);
