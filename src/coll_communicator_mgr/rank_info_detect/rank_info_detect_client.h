@@ -55,6 +55,7 @@ private:
     SocketAgent socketAgent_;
     std::mutex hostSocketLock_;
     std::shared_ptr<Socket> hostSocket_ = nullptr;
+    bool hostSocketRegistered_ = false; // 标记 hostSocket_ 是否已登记到 SocketManager::GetServerSocketMap()
 
     void SetupHostListenPort(u32 devLogicId, u32 devPhyId, const IpAddress& hostIp, uint32_t& hostPort);
     void SocketTearDown(u32 devPhyId);

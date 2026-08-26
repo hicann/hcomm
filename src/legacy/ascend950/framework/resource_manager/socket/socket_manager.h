@@ -60,13 +60,16 @@ public:
 
     static void ServerInitAll(NewRankInfo& rankInfo);
 
-    bool ServerDeInit(PortData& localPort) const;
+    void ServerDeInit(PortData& localPort) const;
 
     Socket* CreateConnectedSocket(const SocketConfig& socketConfig);
 
     Socket* GetConnectedSocket(const SocketConfig& socketConfig) const;
 
     bool CheckServerPortListening(const PortData& portData, const uint32_t port) const;
+
+    // 供通信域初始化阶段登记已抢占的 host 监听 socket，供算子下发阶段复用，避免跨阶段端口竞争
+    bool RegisterHostListenSocket(const PortData& portData, std::shared_ptr<Socket> listenSocket);
 
     void DestroyAll();
 

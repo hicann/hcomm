@@ -316,7 +316,7 @@ void SocketManager::ServerInitAll(NewRankInfo& rankInfo)
     }
 }
 
-bool SocketManager::ServerDeInit(PortData& localPort) const
+void SocketManager::ServerDeInit(PortData& localPort) const
 {
     std::lock_guard<std::mutex> lock(socketLock);
     auto& serverSocketMap = SocketManager::GetServerSocketMap();
@@ -325,8 +325,6 @@ bool SocketManager::ServerDeInit(PortData& localPort) const
     if (res != nullptr) {
         serverSocketMap.erase(localPort);
     }
-
-    return true;
 }
 
 Socket* SocketManager::CreateConnectedSocket(const SocketConfig& socketConfig)
@@ -522,6 +520,23 @@ bool SocketManager::CheckServerPortListening(const PortData& portData, const uin
     if (iterSocket->second->GetListenPort() != port) {
         return false;
     }
+    return true;
+}
+
+bool SocketManager::RegisterHostListenSocket(const PortData& portData, std::shared_ptr<Socket> listenSocket)
+{
+    std::lock_guard<std::mutex> lock(socketLock);
+    auto& serverSocketMap = SocketManager::GetServerSocketMap();
+    auto iter = serverSocketMap.find(portData);
+    if (iter != serverSocketMap.end()) {
+        HCCL_WARNING(
+            "[SocketManager::%s] portData[%s] already registered, skip.", __func__, portData.Describe().c_str());
+        return false;
+    }
+    serverSocketMap[portData] = listenSocket;
+    HCCL_INFO(
+        "[SocketManager::%s] register host listen socket, portData[%s], listenPort[%u].", __func__,
+        portData.Describe().c_str(), listenSocket->GetListenPort());
     return true;
 }
 

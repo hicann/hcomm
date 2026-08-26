@@ -258,3 +258,27 @@ TEST_F(ServerSocketManagerTest, Ut_When_HostSocketReuse_Expect_CountIncrement)
     ServerSocketManager::GetInstance().ServerSocketStopListen(localPort, Hccl::NicType::HOST_NIC_TYPE, 43212);
     ServerSocketManager::GetInstance().ServerSocketStopListen(localPort, Hccl::NicType::HOST_NIC_TYPE, 43212);
 }
+
+// HostSocketStopListen refcount 归 0 时，应调用 socketMgrCompat_->ServerDeInit 擦除 GetServerSocketMap 条目
+// stub 中 CheckServerPortListening 固定返回 true，因此 ServerDeInit 必然被调用
+TEST_F(ServerSocketManagerTest, Ut_HostSocketStopListen_RefcountZero_Expect_ServerDeInitCalled)
+{
+    Hccl::IpAddress ipAddr("1.0.0.0");
+    Hccl::DevNetPortType type = Hccl::DevNetPortType(Hccl::ConnectProtoType::RDMA);
+    Hccl::PortData localPort = Hccl::PortData(0, type, 0, ipAddr);
+    uint32_t port = 43213;
+
+    // StartListen: stub CheckServerPortListening 返回 true → isListen=true → 跳过 Listen，建占位
+    HcclResult ret
+        = ServerSocketManager::GetInstance().ServerSocketStartListen(localPort, Hccl::NicType::HOST_NIC_TYPE, 0, &port);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    // mock ServerDeInit，期望被调用一次（refcount 1→0 时触发）
+    MOCKER_CPP(&Hccl::SocketManager::ServerDeInit).expects(once()).with(mockcpp::any());
+
+    // StopListen: refcount 1→0 → CheckServerPortListening(true) → ServerDeInit
+    ret = ServerSocketManager::GetInstance().ServerSocketStopListen(localPort, Hccl::NicType::HOST_NIC_TYPE, port);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    GlobalMockObject::verify();
+}

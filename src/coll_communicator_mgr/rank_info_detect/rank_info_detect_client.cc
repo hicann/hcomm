@@ -801,6 +801,13 @@ void RankInfoDetectClient::SetupHostListenPort(
         NicType::HOST_NIC_TYPE);
     PreemptPortManager::GetInstance(devLogicId).ListenPreempt(hostSocket_, portRange, listenPort);
     HCCL_INFO("[RankInfoDetectClient::%s] preempt hostPort[%u] success.", __func__, listenPort);
+
+    // 登记到进程级 map，供算子下发阶段复用，避免跨阶段端口竞争
+    DevNetPortType portType(ConnectProtoType::RDMA);
+    PortData portData(static_cast<RankId>(devPhyId), portType, 0, hostIp);
+    SocketManager socketMgr(0, devPhyId, static_cast<u32>(devLogicId), "hostport_preempt");
+    hostSocketRegistered_ = socketMgr.RegisterHostListenSocket(portData, hostSocket_);
+
     hostPort = listenPort;
 }
 
@@ -812,13 +819,21 @@ void RankInfoDetectClient::SocketTearDown(u32 devPhyId)
     }
     const IpAddress& hostIp = hostSocket_->GetLocalIp();
     auto devLogicId = HrtGetDevice();
-    if (EnvConfig::GetInstance().GetHostNicConfig().GetHostSocketPortRange().size() > 0
+    if (hostSocketRegistered_) {
+        // 已登记到 SocketManager::GetServerSocketMap()，所有权已转移给 map，
+        // 由算子下发阶段 HostSocketStopListen refcount 归 0 时清理，此处跳过 Release/Destroy
+        HCCL_INFO(
+            "[RankInfoDetectClient::%s] hostSocket already registered to ServerSocketMap, "
+            "skip Release/Destroy, only release local ref.",
+            __func__);
+    } else if (
+        EnvConfig::GetInstance().GetHostNicConfig().GetHostSocketPortRange().size() > 0
         || EnvConfig::GetInstance().GetHostNicConfig().GetIfBasePort() == HCCL_INVALID_PORT) {
         // 若开启抢占监听端口
         PreemptPortManager::GetInstance(devLogicId).Release(hostSocket_);
+        HostSocketHandleManager::GetInstance().Destroy(devPhyId, hostIp);
     }
     hostSocket_ = nullptr;
-    HostSocketHandleManager::GetInstance().Destroy(devPhyId, hostIp);
 }
 
 void RankInfoDetectClient::TearDown()

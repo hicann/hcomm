@@ -1205,7 +1205,12 @@ Socket* SocketManager::GetConnectedSocket(const SocketConfig& socketConfig) cons
 
 bool SocketManager::CheckServerPortListening(const PortData& portData, const uint32_t port) const { return true; }
 
-bool SocketManager::ServerDeInit(PortData& portData) const { return true; }
+bool SocketManager::RegisterHostListenSocket(const PortData& portData, std::shared_ptr<Socket> listenSocket)
+{
+    return true;
+}
+
+void SocketManager::ServerDeInit(PortData& portData) const {}
 
 void SocketManager::SetDeviceServerListenPortMap(
     const std::unordered_map<u32, std::unordered_map<IpAddress, u32>>& rankListenPortMap)

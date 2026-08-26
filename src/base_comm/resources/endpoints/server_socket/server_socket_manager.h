@@ -55,6 +55,8 @@ private:
     HcclResult HostSocketListen(const Hccl::PortData& localPort, const uint32_t devPhyId, uint32_t* port);
     HcclResult DeviceSocketStopListen(const Hccl::PortData& localPort, const uint32_t port);
     HcclResult HostSocketStopListen(const Hccl::PortData& localPort, const uint32_t port);
+    HcclResult ListenSocketIfNeeded(Hccl::Socket* serverSocket, bool isListen, uint32_t& actualPort, uint32_t* outPort);
+    HcclResult DeInitCompatServerIfListening(const Hccl::PortData& localPort, const uint32_t port);
     void DeInitDeviceSockets(u32 devPhyId);
     void DeInitHostSockets(u32 devPhyId);
 
