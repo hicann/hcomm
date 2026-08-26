@@ -45,6 +45,9 @@ HcclResult AicpuTsThread::DeInit()
 {
     streamType_ = StreamType::STREAM_TYPE_RESERVED;
     notifyNum_ = 0;
+    if (stream_) {
+        stream_->SetInvalidFlag();
+    }
     stream_ = nullptr;
     notifys_.clear();
     uniqueIdStr_ = std::string();

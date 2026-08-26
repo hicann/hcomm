@@ -147,6 +147,7 @@ public:
     {
         return invalidFlag_ != nullptr && invalidFlag_->load(std::memory_order_relaxed);
     }
+    HcclResult SetInvalidFlag();
 
     // 取地址
     void *ptr() const

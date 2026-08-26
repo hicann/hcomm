@@ -647,15 +647,22 @@ HcclResult DispatcherAiCpu::LaunchTask(Stream &stream, bool isBlockLaunch)
         }
 
         // 当前流无法下发，把其他流都launch一遍，避免等待的其他流没有launch
+        std::unique_lock<std::recursive_mutex> lock(streamMapMutex_);
+        std::vector<s32> invalidStreamIds;
         for (auto it = streamMap_.begin(); it != streamMap_.end(); ++it) {
+            if (it->second.IsInvalid()) { // 跳过已销毁的stream
+                invalidStreamIds.push_back(it->first);
+                HCCL_WARNING("[DispatcherAiCpu][LaunchTask] skip invalid stream in streamMap, streamId:%d", it->first);
+                continue;
+            }
             if (it->first != streamInfo.actualStreamId) {
-                if (it->second.IsInvalid()) { // 跳过已销毁的stream (streamMap_只增不删, 原stream销毁后副本通过shared invalid标志感知)
-                    HCCL_WARNING("[DispatcherAiCpu][LaunchTask] skip invalid stream in streamMap, streamId:%d", it->first);
-                    continue;
-                }
                 CHK_RET(LaunchTask(it->second, false));
             }
         }
+        for (auto id : invalidStreamIds) {
+            streamMap_.erase(id);
+        }
+        lock.unlock();
         u64 curUsec = GetCurAicpuTimestamp();
         if (dfxTimeOutConfig_.sqFullWaitTimeOut != 0 && 
             (curUsec - startUsec > NANOSECOND_TO_SECOND * dfxTimeOutConfig_.sqFullWaitTimeOut)) {
@@ -858,8 +865,11 @@ HcclResult DispatcherAiCpu::LaunchTasksEx(hccl::Stream &stream, std::vector<Stre
 
 HcclResult DispatcherAiCpu::LaunchAllTasks()
 {
+    std::lock_guard<std::recursive_mutex> lock(streamMapMutex_);
+    std::vector<s32> invalidStreamIds;
     for (auto it = streamMap_.begin(); it != streamMap_.end(); ++it) {
-        if (it->second.IsInvalid()) { // 跳过已销毁的stream (streamMap_只增不删, 原stream销毁后副本通过shared invalid标志感知)
+        if (it->second.IsInvalid()) { // 跳过已销毁的stream
+            invalidStreamIds.push_back(it->first);
             HCCL_WARNING("[DispatcherAiCpu][LaunchAllTasks] skip invalid stream in streamMap, streamId:%d", it->first);
             continue;
         }
@@ -868,6 +878,9 @@ HcclResult DispatcherAiCpu::LaunchAllTasks()
             HCCL_ERROR("DispatcherAiCpu][LaunchAllTasks] launch task failed, sqid:%u, ret:%u", it->second.sqId(), ret);
             return ret;
         }
+    }
+    for (auto id : invalidStreamIds) {
+        streamMap_.erase(id);
     }
     return HCCL_SUCCESS;
 }
@@ -1059,15 +1072,22 @@ HcclResult DispatcherAiCpu::WaitRtsq(Stream& stream, const size_t& sqeCount, con
         }
 
         // 当前流无法下发，把其他流都launch一遍，避免等待的其他流没有launch
+        std::unique_lock<std::recursive_mutex> lock(streamMapMutex_);
+        std::vector<s32> invalidStreamIds;
         for (auto it = streamMap_.begin(); it != streamMap_.end(); ++it) {
+            if (it->second.IsInvalid()) { // 跳过已销毁的stream
+                invalidStreamIds.push_back(it->first);
+                HCCL_WARNING("[DispatcherAiCpu][WaitRtsq] skip invalid stream in streamMap, streamId:%d", it->first);
+                continue;
+            }
             if (it->first != streamInfo.actualStreamId) { // 不是当前stream
-                if (it->second.IsInvalid()) { // 跳过已销毁的stream (streamMap_只增不删, 原stream销毁后副本通过shared invalid标志感知)
-                    HCCL_WARNING("[DispatcherAiCpu][WaitRtsq] skip invalid stream in streamMap, streamId:%d", it->first);
-                    continue;
-                }
                 CHK_RET(LaunchTask(it->second, false)); // 非阻塞launch
             }
         }
+        for (auto id : invalidStreamIds) {
+            streamMap_.erase(id);
+        }
+        lock.unlock();
 
         // 等待超时
         u64 curUsec = GetCurAicpuTimestamp();
@@ -1308,6 +1328,7 @@ HcclResult DispatcherAiCpu::AddRetryPreamble(Stream &stream)
 void DispatcherAiCpu::SaveStreamInfo(hccl::Stream &stream)
 {
     const HcclComStreamInfo &streamInfo = stream.GetHcclStreamInfo();
+    std::lock_guard<std::recursive_mutex> lock(streamMapMutex_);
     auto it = streamMap_.find(streamInfo.actualStreamId);
     if (it == streamMap_.end()) {
         streamMap_.insert({streamInfo.actualStreamId, stream});

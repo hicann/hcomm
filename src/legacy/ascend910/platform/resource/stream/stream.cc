@@ -189,11 +189,6 @@ Stream Stream::operator=(Stream &&that)
 
 void Stream::DestroyStream()
 {
-    // owner销毁stream前先标记invalid, 让持有副本的dispatcher能感知并跳过, 避免访问悬空的sqeContext_
-    // 必须在hrtStreamDestroy之前置位, 确保并发遍历streamMap_的线程在此期间读到true
-    if (invalidFlag_ != nullptr) {
-        invalidFlag_->store(true, std::memory_order_relaxed);
-    }
     // 销毁stream
     if (stream_owner_ && stream_ != nullptr) {
         // stream需要在原ctx上销毁
@@ -402,6 +397,16 @@ HcclResult Stream::GetCqeContext(ErrCqeContext &cqeContext)
 HcclResult Stream::GetStreamInfo(const HcclComStreamInfo *&streamInfo)
 {
     streamInfo = &streamInfo_;
+    return HCCL_SUCCESS;
+}
+
+HcclResult Stream::SetInvalidFlag()
+{
+    // owner销毁stream前先标记invalid, 让持有副本的dispatcher能感知并跳过, 避免访问悬空的sqeContext_
+    // 必须在hrtStreamDestroy之前置位, 确保并发遍历streamMap_的线程在此期间读到true
+    if (invalidFlag_ != nullptr) {
+        invalidFlag_->store(true, std::memory_order_relaxed);
+    }
     return HCCL_SUCCESS;
 }
 }  // namespace hccl
