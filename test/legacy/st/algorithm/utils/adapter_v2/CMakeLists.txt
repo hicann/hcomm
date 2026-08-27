@@ -83,7 +83,7 @@ add_library(hccl_alg_adaption_v2 SHARED
     ${HCOMM_CODE_LEGACY}/common/utils/hash_utils.cc
     ${HCOMM_CODE_LEGACY}/common/log.cc
     ${HCOMM_CODE_LEGACY}/common/exception/hccl_exception.cc
-    ${HCOMM_CODE_LEGACY}/common/exception/exception_defination.cc
+    ${HCOMM_CODE_LEGACY}/common/exception/exception_definition.cc
 
     ${HCOMM_LEGACY_FRAMEWORK}/communicator/hccl_params_pub.cc
 

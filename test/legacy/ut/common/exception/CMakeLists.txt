@@ -15,5 +15,5 @@ target_sources(hccl_v2_utest
     ut_trace.cc
     
     ${HCCL_V2_CODE_ROOT}/common/exception/hccl_exception.cc
-    ${HCCL_V2_CODE_ROOT}/common/exception/exception_defination.cc
+    ${HCCL_V2_CODE_ROOT}/common/exception/exception_definition.cc
 )
