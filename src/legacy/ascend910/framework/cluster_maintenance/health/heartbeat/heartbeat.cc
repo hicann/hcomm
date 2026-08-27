@@ -1021,9 +1021,14 @@ void Heartbeat::GetSendOpInfoList(OpInfoTagQueueFrame& opInfoTagQueueFrame)
         for (u32 index = 0; index < OPINFO_TAG_QUEUE_NUM; index++) {
             // 当前 index 对应的 opInfoTagQueue 为未初始化状态
             if (strncmp(opInfoTagQueue[index].identifier, "\0", ROOTINFO_INDENTIFIER_MAX_LENGTH) == 0) {
-                memcpy_s(
-                    opInfoTagQueue[index].identifier, iter->first.size() + 1, iter->first.c_str(),
+                s32 memcpyRet = memcpy_s(
+                    opInfoTagQueue[index].identifier, ROOTINFO_INDENTIFIER_MAX_LENGTH, iter->first.c_str(),
                     iter->first.size() + 1);
+                if (memcpyRet != EOK) {
+                    HCCL_WARNING(
+                        "[%s]copy tag[%s] to opInfoTagQueue failed, ret[%d]", __func__, iter->first.c_str(), memcpyRet);
+                    break;
+                }
                 opInfoTagQueue[index].opInfoList[opInfoTagQueue[index].opInfoNum] = iter->second;
                 opInfoTagQueue[index].opInfoNum++;
                 isAdd = true;

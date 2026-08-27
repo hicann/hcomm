@@ -217,7 +217,7 @@ HcclResult ProfilingManager::ReportTaskInfo(s32 streamId, void* ctxPtr)
                 }
             }
             batchId = 0;
-            memset_s(taskInfos, sizeof(taskInfos), 0, sizeof(taskInfos));
+            CHK_SAFETY_FUNC_RET(memset_s(taskInfos, sizeof(taskInfos), 0, sizeof(taskInfos)));
         }
     }
     CHK_RET(UpdateStartReportSqeIdx(streamId, sqeContextBuffer->tailSqeIdx));

@@ -1256,3 +1256,27 @@ TEST_F(HeartBeatTest, ut_SaveOpInfo)
     Heartbeat::GetInstance(0).CheckRecvOpInfoList();
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
+
+// 覆盖 GetSendOpInfoList 内 memcpy_s 拷贝 identifier 及返回值校验分支
+TEST_F(HeartBeatTest, ut_GetSendOpInfoList)
+{
+    setenv("HCCL_DFS_CONFIG", "inconsistent_check:on", 1);
+    (void)InitEnvParam();
+
+    OpInfoDesc opInfo;
+    opInfo.isValid = true;
+    std::string tag = "ut_test_op";
+    Heartbeat& heartbeat = Heartbeat::GetInstance(0);
+    heartbeat.opInfoQueueForSend_.clear();
+    heartbeat.opInfoQueueForSend_.push_back(std::make_pair(tag, opInfo));
+
+    OpInfoTagQueueFrame frame;
+    memset_s(&frame, sizeof(frame), 0, sizeof(frame));
+    heartbeat.GetSendOpInfoList(frame);
+
+    EXPECT_STREQ(frame.opInfoTagQueue[0].identifier, tag.c_str());
+    EXPECT_EQ(frame.opInfoTagQueue[0].opInfoNum, 1U);
+
+    unsetenv("HCCL_DFS_CONFIG");
+    GlobalMockObject::verify();
+}

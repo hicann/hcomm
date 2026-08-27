@@ -33,6 +33,9 @@ public:
     HcclResult Register(CollComm* communicator);
     HcclResult UnRegister(CollComm* communicator);
 
+    friend int32_t ProcessTaskAbortHandleCallback(
+        int32_t deviceLogicId, aclrtDeviceTaskAbortStage stage, uint32_t timeout, void* args);
+
 private:
     std::vector<CollComm*> commVector_;
     std::mutex vecMutex_;

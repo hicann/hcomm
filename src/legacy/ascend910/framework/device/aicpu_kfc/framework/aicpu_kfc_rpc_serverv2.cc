@@ -340,12 +340,26 @@ bool AicpuKfcRpcServerV2::IsExceedLimit(HcclCMDType commType, u32 rankSize)
     return false;
 }
 
+bool AicpuKfcRpcServerV2::CheckDebugMode(HcclMsg* rMsg)
+{
+    if (UNLIKELY(
+            AicpuKfcProf::IsDebugModeEquals(MC2_DEBUG_PREPARE_TIMEOUT)
+            && (rMsg->commType.msgType != ControlMsgType::HCCL_CMD_FINALIZE))) {
+        return false;
+    }
+    if (UNLIKELY(
+            AicpuKfcProf::IsDebugModeEquals(MC2_DEBUG_FINALIZE_TIMEOUT)
+            && (rMsg->commType.msgType == ControlMsgType::HCCL_CMD_FINALIZE))) {
+        return false;
+    }
+    return true;
+}
+
 bool AicpuKfcRpcServerV2::ReadValidMsg(HcclMsg* rMsg, HcclMsg* msg, bool needReProcess, uint32_t msgPos, u32 rankSize)
 {
-#ifdef __aarch64__
+#if defined(__aarch64__)
     __asm__ __volatile__("dsb ld" : : : "memory");
-#endif
-#ifdef __amd64__
+#elif defined(__amd64__)
     __asm__ __volatile__("" : : : "memory");
 #endif
     // 重处理消息
@@ -356,7 +370,10 @@ bool AicpuKfcRpcServerV2::ReadValidMsg(HcclMsg* rMsg, HcclMsg* msg, bool needReP
     if (msg->addMsg.v0Msg.valid != HCCL_MSG_VALID_MASK) {
         return false;
     }
-    memcpy_s(rMsg, sizeof(HcclMsg), msg, sizeof(HcclMsg));
+    if (memcpy_s(rMsg, sizeof(HcclMsg), msg, sizeof(HcclMsg)) != EOK) {
+        HCCL_ERROR("rMsg memcpy_s failed!,size:%d", sizeof(HcclMsg));
+        return false;
+    }
     uint32_t msgXorCheck = AicpuKfcUtils::GenXor(rMsg);
     static uint32_t msgXorCheckTurn = 0;
     if (UNLIKELY(msgXorCheck != rMsg->addMsg.v0Msg.xorCheck)) {
@@ -377,14 +394,7 @@ bool AicpuKfcRpcServerV2::ReadValidMsg(HcclMsg* rMsg, HcclMsg* msg, bool needReP
         return false;
     }
     msg->addMsg.v0Msg.valid = ~HCCL_MSG_VALID_MASK;
-    if (UNLIKELY(
-            AicpuKfcProf::IsDebugModeEquals(MC2_DEBUG_PREPARE_TIMEOUT)
-            && (rMsg->commType.msgType != ControlMsgType::HCCL_CMD_FINALIZE))) {
-        return false;
-    }
-    if (UNLIKELY(
-            AicpuKfcProf::IsDebugModeEquals(MC2_DEBUG_FINALIZE_TIMEOUT)
-            && (rMsg->commType.msgType == ControlMsgType::HCCL_CMD_FINALIZE))) {
+    if (UNLIKELY(!CheckDebugMode(rMsg))) {
         return false;
     }
     HCCL_INFO("reset valid value 0x%x", msg->addMsg.v0Msg.valid);

@@ -180,19 +180,12 @@ bool AicpuKfcRpcServer::CheckDebugMode(HcclMsg* rMsg)
     return true;
 }
 
-bool AicpuKfcRpcServer::ReadApiValidMsg(HcclMsg* rMsg, HcclMsg* msg, bool reset)
+bool AicpuKfcRpcServer::CopyAndCheckApiMsg(HcclMsg* rMsg, HcclMsg* msg)
 {
-#ifdef __aarch64__
-    __asm__ __volatile__("dsb ld" : : : "memory");
-#endif
-#ifdef __amd64__
-    __asm__ __volatile__("" : : : "memory");
-#endif
-    if (msg->addMsg.v0Msg.valid != HCCL_MSG_VALID_MASK) {
-        CHK_RET(AicpuKfcUtils::TraceProfSubmit());
+    if (memcpy_s(rMsg, sizeof(HcclMsg), msg, sizeof(HcclMsg)) != EOK) {
+        HCCL_ERROR("rMsg memcpy_s failed!,size:%d", sizeof(HcclMsg));
         return false;
     }
-    memcpy_s(rMsg, sizeof(HcclMsg), msg, sizeof(HcclMsg));
     uint32_t modifiedXor = AicpuKfcUtils::GenXor(rMsg);
     static uint32_t xorCheckNum = 0;
     if (xorCheckNum % MC2_API_XORCHECK_PRINT_NUM == 0 && modifiedXor != rMsg->addMsg.v0Msg.xorCheck) {
@@ -203,10 +196,9 @@ bool AicpuKfcRpcServer::ReadApiValidMsg(HcclMsg* rMsg, HcclMsg* msg, bool reset)
         xorCheckNum++;
         return false;
     }
-#ifdef __aarch64__
+#if defined(__aarch64__)
     __asm__ __volatile__("dsb ld" : : : "memory");
-#endif
-#ifdef __amd64__
+#elif defined(__amd64__)
     __asm__ __volatile__("" : : : "memory");
 #endif
     static uint32_t cmpCheckNum = 0;
@@ -220,10 +212,26 @@ bool AicpuKfcRpcServer::ReadApiValidMsg(HcclMsg* rMsg, HcclMsg* msg, bool reset)
         return false;
     }
 
+    return true;
+}
+
+bool AicpuKfcRpcServer::ReadApiValidMsg(HcclMsg* rMsg, HcclMsg* msg, bool reset)
+{
+#if defined(__aarch64__)
+    __asm__ __volatile__("dsb ld" : : : "memory");
+#elif defined(__amd64__)
+    __asm__ __volatile__("" : : : "memory");
+#endif
+    if (msg->addMsg.v0Msg.valid != HCCL_MSG_VALID_MASK) {
+        CHK_RET(AicpuKfcUtils::TraceProfSubmit());
+        return false;
+    }
+    if (!CopyAndCheckApiMsg(rMsg, msg)) {
+        return false;
+    }
     if (reset) {
         msg->addMsg.v0Msg.valid = ~HCCL_MSG_VALID_MASK;
     }
-
     if (!CheckDebugMode(rMsg)) {
         return false;
     }

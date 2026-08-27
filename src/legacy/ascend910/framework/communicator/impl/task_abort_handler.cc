@@ -31,6 +31,7 @@ ProcessTaskAbortHandleCallback(int32_t deviceLogicId, aclrtDeviceTaskAbortStage 
 {
     HcclUs startut = TIME_NOW();
     CHK_PTR_NULL(args);
+    std::lock_guard<std::mutex> lock(mutex_);
     HCCL_INFO(
         "ProcessTaskAbortHandleCallback begin, deviceLogicId [%d], stage [%d], args [%p], commVector v1 size [%u], "
         "ref_ count is [%d]",

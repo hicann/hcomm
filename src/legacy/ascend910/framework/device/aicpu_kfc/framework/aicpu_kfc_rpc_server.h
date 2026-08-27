@@ -63,6 +63,7 @@ private:
     void CalcAllreduceBuffer(AivAicpuOpParam* outMsg) const;
     void CalcReduceScatterBuffer(AivAicpuOpParam* outMsg) const;
     bool CheckDebugMode(HcclApi::HcclMsg* rMsg);
+    bool CopyAndCheckApiMsg(HcclApi::HcclMsg* rMsg, HcclApi::HcclMsg* msg);
 
 private:
     struct RpcMsgBody {

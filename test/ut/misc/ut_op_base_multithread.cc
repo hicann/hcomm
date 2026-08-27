@@ -555,3 +555,20 @@ TEST_F(OpbaseMultiThreadTest, ut_HcclReduce)
     }
 }
 #endif
+
+// 覆盖 op_base.RunGather 空 addrInfo 分支：清零 sendCounts/sdispls 后直接返回成功，避免越界访问
+TEST(OpbaseRunGatherTest, ut_RunGatherEmptyAddrInfo)
+{
+    GatherPara gatherPara;
+    gatherPara.rankSize = 4;
+    gatherPara.addrLength = -1; // 退化输入下 addrInfo 为空数组
+    u64 sendCounts[4] = {1, 1, 1, 1};
+    u64 sdispls[4] = {0, 1, 2, 3};
+    HcclResult ret = RunGather(sendCounts, sdispls, nullptr, gatherPara);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    for (u32 i = 0; i < gatherPara.rankSize; i++) {
+        EXPECT_EQ(sendCounts[i], 0);
+        EXPECT_EQ(sdispls[i], 0);
+    }
+    GlobalMockObject::verify();
+}

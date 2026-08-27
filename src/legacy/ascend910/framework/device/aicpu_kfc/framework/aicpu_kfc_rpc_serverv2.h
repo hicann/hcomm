@@ -73,6 +73,7 @@ public:
 
 private:
     bool ReadValidMsg(HcclApi::HcclMsg* rMsg, HcclApi::HcclMsg* msg, bool needReProcess, uint32_t msgPos, u32 rankSize);
+    bool CheckDebugMode(HcclApi::HcclMsg* rMsg);
     bool ReadValidMsgExtArea(int32_t idx, u32 rankSize);
 
 private:

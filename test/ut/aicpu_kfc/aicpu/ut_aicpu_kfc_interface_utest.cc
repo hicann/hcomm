@@ -27,6 +27,7 @@
 #include "aicpu_kfc/common/aicpu_kfc_tiling_utils.h"
 #include "hccl_aicpu_utils.h"
 #include "framework/aicpu_kfc_rpc_server.h"
+#include "framework/aicpu_kfc_rpc_serverv2.h"
 #include "framework/aicpu_kfc_batchwrite_process.h"
 #include "aicpu_kfc/common/aicpu_kfc_utils.h"
 #undef private

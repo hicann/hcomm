@@ -2358,6 +2358,7 @@ HcclResult HcclCommunicator::SetDevIbverbsData(
         if (i != curRankId) {
             // 对端link的信息
             const auto transport = comm->GetTransportByRank(i);
+            CHK_PTR_NULL(transport);
             void* bufferIn = nullptr;
             void* bufferOut = nullptr;
             u32 remoteInMemKey = 0;
@@ -2459,6 +2460,7 @@ HcclResult HcclCommunicator::GenAiRMAInfo(CommBase* comm)
         if (i != aiRMAInfoPtr->curRankId) {
             // link rank info
             const auto transport = comm->GetTransportByRank(i);
+            CHK_PTR_NULL(transport);
             CHK_RET(GetTransportRemoteMem(transport, UserMemType::INPUT_MEM, remoteIn));
             CHK_RET(GetTransportRemoteMem(transport, UserMemType::OUTPUT_MEM, remoteOut));
             CHK_RET(GetTransportLocalMem(transport, UserMemType::INPUT_MEM, localIn));
@@ -2739,6 +2741,7 @@ HcclResult HcclCommunicator::GetAIVNormalQPInfo(CommBase* comm, const std::strin
     for (u32 i = 0; i < aiRMAInfoPtr->rankNum; i++) {
         if (i != aiRMAInfoPtr->curRankId) {
             const auto transport = comm->GetTransportByRank(i);
+            CHK_PTR_NULL(transport);
             if (transport->GetTransportType() == TransportType::TRANS_TYPE_IBV_EXP) {
                 std::vector<HcclAiRMAQueueInfo> aiQpVec;
                 CHK_RET(transport->GetAiRMAQueueInfo(aiQpVec));

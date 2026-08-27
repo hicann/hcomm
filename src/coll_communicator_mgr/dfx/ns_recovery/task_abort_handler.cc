@@ -88,7 +88,9 @@ ProcessTaskAbortHandleCallback(int32_t deviceLogicId, aclrtDeviceTaskAbortStage 
 {
     HcclUs startut = std::chrono::steady_clock::now();
     CHK_PTR_NULL(args);
-    auto& commVector = *(static_cast<std::vector<CollComm*>*>(args));
+    auto* handler = static_cast<HcclTaskAbortHandler*>(args);
+    std::lock_guard<std::mutex> lock(handler->vecMutex_);
+    auto& commVector = handler->commVector_;
     HCCL_INFO("[NsRecovery][Callback] ProcessTaskAbortHandleCallback start!");
     const std::chrono::seconds localtimeout = std::chrono::seconds(timeout);
 
@@ -112,7 +114,7 @@ ProcessTaskAbortHandleCallback(int32_t deviceLogicId, aclrtDeviceTaskAbortStage 
 HcclTaskAbortHandler::HcclTaskAbortHandler()
 {
     std::string name = "HCOMM";
-    Hccl::HrtDeviceAbortRegCallBack(ProcessTaskAbortHandleCallback, static_cast<void*>(&commVector_), name);
+    Hccl::HrtDeviceAbortRegCallBack(ProcessTaskAbortHandleCallback, static_cast<void*>(this), name);
 }
 
 HcclTaskAbortHandler::~HcclTaskAbortHandler()

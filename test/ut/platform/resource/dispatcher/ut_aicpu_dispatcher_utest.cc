@@ -350,6 +350,31 @@ TEST_F(DispatcherAiCpu_UT, ut_AdprofReportBatchAdditionalInfo)
     GlobalMockObject::verify();
 }
 
+// 覆盖 ReportTaskInfo 主循环并命中批量上报后的 memset 清理分支
+TEST_F(DispatcherAiCpu_UT, ut_ReportTaskInfo_MemsetClearBranch)
+{
+    uint32_t sqHead = 0;
+    uint32_t sqTail = 1;
+    Stream stream(streamInfo, true);
+    SqCqeContext sqeCqeCtx;
+    sqeCqeCtx.sqContext.inited = false;
+    stream.InitSqAndCqeContext(sqHead, sqTail, &sqeCqeCtx);
+
+    // 打开L1 profiling开关, 否则 ReportTaskInfo 会在循环前直接返回
+    dfx::ProfilingManager::SetProL1On(true);
+    // 只有1个sqe, 使循环内唯一一次迭代满足 idx == (endIdx - 1), 进入批量上报后的清理分支
+    stream.sqeContext_->buffer.sqeCnt = 1;
+    stream.sqeContext_->buffer.tailSqeIdx = 1;
+
+    auto ret = dfx::ProfilingManager::ReportTaskInfo(stream.id(), stream.GetSqeContextPtr());
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(dfx::ProfilingManager::GetProfL1State(), true);
+
+    // 恢复开关, 避免影响其他用例
+    dfx::ProfilingManager::SetProL1On(false);
+    GlobalMockObject::verify();
+}
+
 TEST_F(DispatcherAiCpu_UT, ut_DispatcherAiCpuGetPrivateMember)
 {
     // TEST V2

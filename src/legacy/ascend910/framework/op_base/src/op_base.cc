@@ -4708,6 +4708,13 @@ HcclResult HcclGatherAlltoAllV(HcomGatherAllToAllVParams params, HcclComm comm, 
  */
 HcclResult RunGather(u64* sendCounts, u64* sdispls, void* sendDevBuf, GatherPara& gatherPara)
 {
+    // 所有 rank 计数为 0 的退化输入下 addrInfo 为空数组，无数据可 gather，直接返回成功避免越界访问
+    if (gatherPara.addrInfo.empty()) {
+        CHK_SAFETY_FUNC_RET(
+            memset_s(sendCounts, gatherPara.rankSize * sizeof(u64), 0, gatherPara.rankSize * sizeof(u64)));
+        CHK_SAFETY_FUNC_RET(memset_s(sdispls, gatherPara.rankSize * sizeof(u64), 0, gatherPara.rankSize * sizeof(u64)));
+        return HCCL_SUCCESS;
+    }
     u64 memSize = 0;
     const u32 GATHER_THREAD_NUM = 16;
     const u32 NUM_TWO = 2;

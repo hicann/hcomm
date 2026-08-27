@@ -8593,16 +8593,18 @@ HcclResult HcclCommunicator::SetCommResource(
                 void* bufferIn;
                 void* bufferOut;
                 std::vector<void*> remotePtrVec;
-                CHK_RET(comm->GetTransportByRank(i)->GetRemoteMem(UserMemType::INPUT_MEM, &bufferIn));
+                auto& transport = comm->GetTransportByRank(i);
+                CHK_PTR_NULL(transport);
+                CHK_RET(transport->GetRemoteMem(UserMemType::INPUT_MEM, &bufferIn));
                 combinOparaPtr->windowsIn[i] = reinterpret_cast<u64>(bufferIn);
 
-                CHK_RET(comm->GetTransportByRank(i)->GetRemoteMem(UserMemType::OUTPUT_MEM, &bufferOut));
+                CHK_RET(transport->GetRemoteMem(UserMemType::OUTPUT_MEM, &bufferOut));
                 combinOparaPtr->windowsOut[i] = reinterpret_cast<u64>(bufferOut);
 
-                CHK_RET(comm->GetTransportByRank(i)->GetRemoteMem(&remotePtrVec));
+                CHK_RET(transport->GetRemoteMem(&remotePtrVec));
                 if (remotePtrVec.size() != 0) {
                     combinOparaPtr->windowsExp[i] = reinterpret_cast<u64>(remotePtrVec[0]);
-                    if (comm->GetTransportByRank(i)->GetTransportType() == TransportType::TRANS_TYPE_P2P) {
+                    if (transport->GetTransportType() == TransportType::TRANS_TYPE_P2P) {
                         p2pCclBuf_[i] = remotePtrVec[0];
                     } else {
                         cclBuf_[i] = remotePtrVec[0];
@@ -8610,12 +8612,11 @@ HcclResult HcclCommunicator::SetCommResource(
                     combinOparaPtr->windowsExp[i]
                         += cclBufferManager_.GetInCCLbufferSize() + cclBufferManager_.GetOutCCLbufferSize();
                 }
-                CHK_RET(comm->GetTransportByRank(i)->GetTxAckDevNotifyInfo(combinOparaPtr->signalInfo.ipcNotifys[i]));
-                CHK_RET(comm->GetTransportByRank(i)->GetRxAckDevNotifyInfo(
-                    combinOparaPtr->signalInfo.ipcNotifys[i + rankSize]));
-                CHK_RET(comm->GetTransportByRank(i)->GetTxDataSigleDevNotifyInfo(
+                CHK_RET(transport->GetTxAckDevNotifyInfo(combinOparaPtr->signalInfo.ipcNotifys[i]));
+                CHK_RET(transport->GetRxAckDevNotifyInfo(combinOparaPtr->signalInfo.ipcNotifys[i + rankSize]));
+                CHK_RET(transport->GetTxDataSigleDevNotifyInfo(
                     combinOparaPtr->signalInfo.ipcNotifys[i + rankSize * txSigleBase]));
-                CHK_RET(comm->GetTransportByRank(i)->GetRxDataSigleDevNotifyInfo(
+                CHK_RET(transport->GetRxDataSigleDevNotifyInfo(
                     combinOparaPtr->signalInfo.ipcNotifys[i + rankSize * rxSigleBase]));
                 CHK_RET(GetAiCpuNotifyData(
                     streamInfo.ringDeviceSignalAux[idx], combinOparaPtr->signalInfo.noIpcNotifys[i]));
