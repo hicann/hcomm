@@ -238,7 +238,7 @@ ChannelProcess::ChannelUpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHan
 }
 
 // 是否为通道失败终态（含资源不足），供 ChannelGetStatus 轮询跳过与结果归类使用
-static bool IsChannelFailTerminal(int32_t status)
+static inline bool IsChannelFailureStatus(int32_t status)
 {
     return status == ChannelStatus::FAILED || status == ChannelStatus::SOCKET_TIMEOUT
            || status == ChannelStatus::RES_LOC_UNAVAIL || status == ChannelStatus::RES_RMT_UNAVAIL;
@@ -296,7 +296,7 @@ HcclResult ChannelProcess::ChannelGetStatus(const ChannelHandle* channelList, ui
         int32_t status = 0;
         // 当前通道状态如果已为失败终态(FAILED/SOCKET_TIMEOUT/资源不足)，说明前面已经失败过，
         // 无需再重新获取状态，继续轮询下一个通道，避免日志刷屏
-        if (IsChannelFailTerminal(statusList[i])) {
+        if (IsChannelFailureStatus(statusList[i])) {
             failCount++;
             continue;
         }

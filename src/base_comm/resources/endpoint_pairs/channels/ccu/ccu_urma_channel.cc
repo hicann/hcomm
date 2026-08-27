@@ -35,10 +35,17 @@ CcuUrmaChannel::~CcuUrmaChannel()
     // 再向 endpoint 的 CcuChannelCtxPool 归还 channel ctx / jetty ctx / wqeBB。
     // 顺序必须如此：CcuConnection 持有 batch 内 CcuJetty 裸指针。
     impl_.reset();
-    if (ccuEndpoint_ != nullptr && linkData_.has_value()) {
+    if (ccuEndpoint_ != nullptr) {
+        Hccl::LinkData linkData = BuildDefaultLinkData();
+        HcclResult keyRet
+            = EndpointDescPairToLinkData(ccuEndpoint_->GetEndpointDesc(), channelDesc_.remoteEndpoint, linkData);
+        if (keyRet != HCCL_SUCCESS) {
+            HCCL_ERROR("[CcuUrmaChannel][%s] failed to build link data for release, ret[%d].", __func__, keyRet);
+            return;
+        }
         auto* pool = ccuEndpoint_->GetCcuChannelCtxPool();
         if (pool != nullptr) {
-            HcclResult releaseRet = pool->ReleaseChannel(*linkData_);
+            HcclResult releaseRet = pool->ReleaseChannel(linkData);
             if (releaseRet != HCCL_SUCCESS) {
                 HCCL_WARNING("[CcuUrmaChannel][%s] release channel to pool failed, ret[%d].", __func__, releaseRet);
             }
@@ -162,8 +169,8 @@ HcclResult CcuUrmaChannel::Init()
 
     CHK_RET(CheckEndpointDesc(locEndpointDesc, channelDesc_.remoteEndpoint));
 
-    linkData_ = BuildDefaultLinkData();
-    CHK_RET(EndpointDescPairToLinkData(locEndpointDesc, channelDesc_.remoteEndpoint, *linkData_));
+    Hccl::LinkData linkData = BuildDefaultLinkData();
+    CHK_RET(EndpointDescPairToLinkData(locEndpointDesc, channelDesc_.remoteEndpoint, linkData));
 
     if (channelDesc_.memHandleNum == 0) {
         HCCL_ERROR("[CcuUrmaChannel][%s] failed, unsupported memHandleNum[%u].", __func__, channelDesc_.memHandleNum);
@@ -184,8 +191,16 @@ HcclResult CcuUrmaChannel::Init()
 
 ChannelStatus CcuUrmaChannel::TryPrepareAndConstruct()
 {
+    Hccl::LinkData linkData = BuildDefaultLinkData();
+    HcclResult keyRet
+        = EndpointDescPairToLinkData(ccuEndpoint_->GetEndpointDesc(), channelDesc_.remoteEndpoint, linkData);
+    if (keyRet != HCCL_SUCCESS) {
+        HCCL_ERROR("[CcuUrmaChannel][%s] failed to build link data, ret[%d].", __func__, keyRet);
+        return ChannelStatus::FAILED;
+    }
+
     HcclResult ret = CreateCcuTransport(
-        ccuEndpoint_, *linkData_, socket_, memHandles_.data(), static_cast<uint32_t>(memHandles_.size()),
+        ccuEndpoint_, linkData, socket_, memHandles_.data(), static_cast<uint32_t>(memHandles_.size()),
         channelDesc_.qos, channelDesc_.ubAttr.sqDepth, impl_);
     if (ret == HCCL_SUCCESS) {
         impl_->SetLocResStatus(CcuTransport::CcuResStatus::RES_OK);
@@ -232,13 +247,10 @@ ChannelStatus CcuUrmaChannel::GetStatus()
 {
     std::lock_guard<std::mutex> lock(statusMtx_);
 
-    if (!linkData_.has_value()) {
-        HCCL_ERROR("[CcuUrmaChannel][%s] linkData_ is nullopt, Init() may not have succeeded.", __func__);
-        channelStatus_ = ChannelStatus::FAILED;
-        return channelStatus_;
-    }
-    if (memHandles_.empty()) {
-        HCCL_ERROR("[CcuUrmaChannel][%s] memHandles_ is empty, Init() may not have succeeded.", __func__);
+    if (ccuEndpoint_ == nullptr || socket_ == nullptr || memHandles_.empty()) {
+        HCCL_ERROR(
+            "[CcuUrmaChannel][%s] endpoint[%p], socket[%p], memHandleNum[%zu], Init() may not have succeeded.",
+            __func__, ccuEndpoint_, socket_, memHandles_.size());
         channelStatus_ = ChannelStatus::FAILED;
         return channelStatus_;
     }
@@ -274,7 +286,7 @@ ChannelStatus CcuUrmaChannel::GetStatus()
         }
         isFirstPrintChannelInfo_ = false;
     }
-    return out; // todo: AICPU 重新定义基类的状态后，需要修改为CONNECTING
+    return channelStatus_; // todo: AICPU 重新定义基类的状态后，需要修改为CONNECTING
 }
 
 uint32_t CcuUrmaChannel::GetDieId() const
@@ -388,6 +400,7 @@ HcclResult CcuUrmaChannel::Resume() { return HCCL_SUCCESS; }
 
 HcclResult CcuUrmaChannel::UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum)
 {
+    CHK_PTR_NULL(impl_);
     std::vector<CcuTransport::CclBufferInfo> bufferVecTemp{};
     CHK_RET(BuildBufferInfos(memHandles, memHandleNum, bufferVecTemp));
     return impl_->UpdateMemInfo(bufferVecTemp);

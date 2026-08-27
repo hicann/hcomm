@@ -1045,7 +1045,18 @@ MyRank::BatchConnectChannels(const HcclChannelDesc* channelDescs, ChannelHandle*
             continue;
         }
 
-        // 3. 处理失败
+        // 3. 处理资源不足（属于可预期回退场景）
+        if (ret == HCCL_E_UNAVAIL) {
+            auto elapsed
+                = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime)
+                      .count();
+            HCCL_WARNING(
+                "[%s] channel connect resource unavailable, channelNum[%u], elapsed[%lld]ms, retryCount[%u]", __func__,
+                channelNum, elapsed, retryCount);
+            return ret;
+        }
+
+        // 4. 处理失败
         if (ret != HCCL_SUCCESS) {
             auto elapsed
                 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime)
@@ -1063,7 +1074,7 @@ MyRank::BatchConnectChannels(const HcclChannelDesc* channelDescs, ChannelHandle*
             return ret;
         }
 
-        // 4. 正常情况：所有通道连接成功
+        // 5. 正常情况：所有通道连接成功
         auto elapsed
             = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime)
                   .count();

@@ -15,7 +15,6 @@
 #include <vector>
 #include <atomic>
 #include <mutex>
-#include <optional>
 
 #include "../channel.h"
 
@@ -77,7 +76,6 @@ private:
     EndpointHandle locEndpointHandle_{nullptr};
     HcommChannelDesc channelDesc_{};
     UrmaEndpoint* ccuEndpoint_{nullptr};
-    std::optional<Hccl::LinkData> linkData_;
     Hccl::Socket* socket_{nullptr};
     std::vector<HcommMemHandle> memHandles_{};
 };

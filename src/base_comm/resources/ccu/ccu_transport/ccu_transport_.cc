@@ -243,13 +243,13 @@ HcclResult CcuTransport::StatusMachine()
             break;
         case CcuTransport::TransStatus::RECV_ALL_INFO:
             CHK_RET(RecvDataProcess());
-            if (locResStatus_ == CcuResStatus::RES_OK && rmtResStatus_ == CcuResStatus::RES_OK) {
+            if (IsBothEndResSufficient()) {
                 CHK_RET(ccuConnection_->ImportJetty());
             }
             transStatus_ = TransStatus::SEND_FIN;
             break;
         case CcuTransport::TransStatus::SEND_FIN: {
-            if (locResStatus_ != CcuResStatus::RES_OK || rmtResStatus_ != CcuResStatus::RES_OK) {
+            if (!IsBothEndResSufficient()) {
                 CHK_RET(SendFinish());
                 transStatus_ = CcuTransport::TransStatus::RECVING_FIN;
                 break;

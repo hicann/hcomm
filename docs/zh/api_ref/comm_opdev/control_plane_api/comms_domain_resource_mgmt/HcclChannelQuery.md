@@ -25,7 +25,7 @@
 ## 函数原型
 
 ```c
-HcclResult HcclChannelQuery(HcclComm comm, CommEngine engine, const HcclChannelDesc *channelDescs, uint32_t channelNum, ChannelHandle *channels)
+HcclResult HcclChannelQuery(HcclComm comm, CommEngine engine, const HcclChannelDesc* channelDescs, uint32_t channelNum, ChannelHandle* channels)
 ```
 
 ## 参数说明
@@ -64,7 +64,7 @@ uint32_t channelNum = 2;
 std::vector<HcclChannelDesc> channelDescVec(channelNum);
 for (uint32_t idx = 0; idx < channelNum; idx++) {
     HcclChannelDesc channelDesc;
-    HcclChannelDescInit(&channelDesc, 1);
+    CHK_RET(HcclChannelDescInit(&channelDesc, 1));
     // 按[HcclChannelAcquire](HcclChannelAcquire.md)调用示例填充channelDesc字段
     channelDescVec[idx] = channelDesc;
 }

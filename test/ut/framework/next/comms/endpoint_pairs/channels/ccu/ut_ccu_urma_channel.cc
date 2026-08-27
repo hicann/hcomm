@@ -35,6 +35,12 @@ protected:
     void TearDown() override {}
 };
 
+static UrmaEndpoint& TestUrmaEndpoint()
+{
+    static UrmaEndpoint endpoint{EndpointDesc{}};
+    return endpoint;
+}
+
 TEST_F(CcuUrmaChannelTest, Ut_Clean_When_ImplIsNull_Expect_HCCL_E_PTR)
 {
     HcommChannelDesc desc{};
@@ -121,7 +127,8 @@ TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_DfxDescribe_Expect_ReadyOrFailed)
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(1);
     CcuUrmaChannel ch(ep, desc);
 
-    ch.linkData_ = BuildDefaultLinkData();
+    ch.ccuEndpoint_ = &TestUrmaEndpoint();
+    ch.socket_ = reinterpret_cast<Hccl::Socket*>(1);
     ch.memHandles_.push_back(reinterpret_cast<HcommMemHandle>(0x1));
 
     // 1. 构造依赖
@@ -136,6 +143,7 @@ TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_DfxDescribe_Expect_ReadyOrFailed)
     // 2. 创建 transport
     auto transport = std::make_unique<CcuTransport>(fakeSocket, std::move(conn), bufInfo);
     ch.impl_ = std::move(transport);
+    ch.impl_->SetLocResStatus(CcuTransport::CcuResStatus::RES_OK);
 
     // 3. 从 ch.impl_ 操作，不要再用旧的 transport 指针！
     ch.impl_->transStatus_ = CcuTransport::TransStatus::SOCKET_TIMEOUT;
@@ -182,7 +190,8 @@ ChannelWithTransport MakeChannelWithTransport()
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(1);
     auto ch = std::make_unique<CcuUrmaChannel>(ep, desc);
-    ch->linkData_ = BuildDefaultLinkData();
+    ch->ccuEndpoint_ = &TestUrmaEndpoint();
+    ch->socket_ = reinterpret_cast<Hccl::Socket*>(1);
     ch->memHandles_.push_back(reinterpret_cast<HcommMemHandle>(0x1));
     CommAddr locAddr{}, rmtAddr{};
     CcuChannelInfo channelInfo{};
@@ -277,17 +286,14 @@ TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_SocketTimeout_Expect_SocketTimeout)
     EXPECT_EQ(ctx.ch->GetStatus(), ChannelStatus::SOCKET_TIMEOUT);
 }
 
-// 懒建链失败路径: CreateCcuTransport 硬失败(如端点无效)时构造 msg-only transport 通知对端, 且仅构造一次
 TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_ConstructFails_Expect_MsgOnlyTransport)
 {
     HcommChannelDesc desc{};
     EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
     CcuUrmaChannel ch(ep, desc);
 
-    // 绕过 Init, 直接构造 GetStatus 前置成员; ccuEndpoint_ 置空使 CreateCcuTransport 硬失败
+    ch.ccuEndpoint_ = &TestUrmaEndpoint();
     ch.socket_ = reinterpret_cast<Hccl::Socket*>(0x1);
-    ch.ccuEndpoint_ = nullptr;
-    ch.linkData_ = BuildDefaultLinkData();
     ch.memHandles_ = {reinterpret_cast<HcommMemHandle>(0x2)};
     ch.channelStatus_ = ChannelStatus::INIT;
 
@@ -301,4 +307,15 @@ TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_ConstructFails_Expect_MsgOnlyTransp
     CcuTransport* implPtr = ch.impl_.get();
     EXPECT_EQ(ch.GetStatus(), ChannelStatus::INIT);
     EXPECT_EQ(ch.impl_.get(), implPtr);
+}
+
+// 未初始化路径: endpoint/socket/memHandles 缺失时直接失败, 不再进入懒建链
+TEST_F(CcuUrmaChannelTest, Ut_GetStatus_When_Uninitialized_Expect_Failed)
+{
+    HcommChannelDesc desc{};
+    EndpointHandle ep = reinterpret_cast<EndpointHandle>(0x1);
+    CcuUrmaChannel ch(ep, desc);
+
+    EXPECT_EQ(ch.GetStatus(), ChannelStatus::FAILED);
+    EXPECT_EQ(ch.impl_, nullptr);
 }

@@ -245,7 +245,7 @@ HcclResult CcuChannelCtxPool::ReleaseChannel(const Hccl::LinkData& link)
     std::lock_guard<std::mutex> lock(mtx_);
 
     auto it = allocatedChannelIdMap_.find(link);
-    if (it == allocatedChannelIdMap_.end()) {
+    if (UNLIKELY(it == allocatedChannelIdMap_.end())) {
         // 未分配或已释放的 link 直接返回成功：msg-only(资源不足)等未实际分配资源的
         // channel 销毁路径属正常场景，静默返回即可
         HCCL_DEBUG("[CcuChannelCtxPool][%s] link not allocated, devLogicId[%d], skip release.", __func__, devLogicId_);

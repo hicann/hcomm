@@ -131,6 +131,10 @@ public:
     void SetLocResStatus(CcuResStatus status) { locResStatus_ = status; }
     bool IsLocResUnavailable() const { return locResStatus_ == CcuResStatus::RES_UNAVAIL; }
     bool IsRmtResUnavailable() const { return rmtResStatus_ == CcuResStatus::RES_UNAVAIL; }
+    bool IsBothEndResSufficient() const
+    {
+        return locResStatus_ == CcuResStatus::RES_OK && rmtResStatus_ == CcuResStatus::RES_OK;
+    }
     static HcclResult
     ConstructMsgOnlyTransport(Hccl::Socket* socket, std::unique_ptr<CcuTransport>& impl, CcuResStatus status);
 

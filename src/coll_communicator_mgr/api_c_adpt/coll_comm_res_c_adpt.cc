@@ -640,8 +640,8 @@ static HcclResult FinalizeV2ChannelAcquire(
 }
 
 // 入参校验：HcclChannelAcquire / HcclChannelQuery / HcclChannelAcquireWithConfig 共用，消除重复参数检查
-static HcclResult
-CheckChannelResParams(HcclComm comm, const HcclChannelDesc* channelDescs, ChannelHandle* channels, uint32_t channelNum)
+static HcclResult CheckChannelResParams(
+    HcclComm comm, const HcclChannelDesc* channelDescs, const ChannelHandle* channels, uint32_t channelNum)
 {
     CHK_PTR_NULL(comm);
     CHK_PTR_NULL(channelDescs);
