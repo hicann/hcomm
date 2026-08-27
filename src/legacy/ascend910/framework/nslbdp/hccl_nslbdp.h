@@ -172,7 +172,7 @@ public:
     bool CheckAlgoConsistency(HcclCMDType opType, std::string& algName);
     void SplitString(const std::string& identifier, std::vector<std::string>& splitInfo, const std::string& frag) const;
     void SetGlobalDisRankTable(const HcclBasicRankInfo& rankTable);
-    HcclResult SetCommInfo_NoRankTable(const RankTable_t rankTable, std::string identifier);
+    HcclResult SetCommInfo_NoRankTable(const RankTable_t rankTable, std::string identifier, u32 subCommRankId);
     HcclResult SetCommInfo_RankTableExit(RankTable_t rankTable);
     HcclResult SetGlobalRank_RankTableExit(const RankTable_t rankTable);
     HcclResult GenerateOpAndAdjTable(
@@ -186,11 +186,13 @@ public:
     bool CheckSupportOptype(HcclCMDType opType);
     bool CheckCommDescExit(NslbDpOperatorInfo& OperatorInfo);
     bool CheckSameOperatorVal(size_t operSize, NslbDpOperatorInfo& OperatorInfo, u32 rootRank);
+    bool IsCommDescDuplicated(const char* commDesc, u64 taskId) const;
+    void FillRankInfoFromRankTable(NslbDpCommConfigVal& globalCommInfo, const hccl::RankTable_t& rankTable);
     void SetGlobalCommRankTable_RootInfo(
         const RankTable_t& rankTable, const HcclBasicRankInfo& localRankInfo, const std::vector<RankInfo>& rankLists,
         const std::string& identifier, u32 nRanks, u32 rank);
     void GetGlobalRankTable(const RankTable_t* rankTable, u32 nRanks, HcclUs startut);
-    void fullCommonGlobalRankInfo(NslbDpGlobalRankInfo tab_f, NslbDpGlobalRankVal& cominfo);
+    void fullCommonGlobalRankInfo(NslbDpGlobalRankInfo& tab_f, NslbDpGlobalRankVal& cominfo);
     void fullCommConfigInfo(NslbDpCommConfigInfo& tab_f, NslbDpCommConfigVal cominfo, u32 packetNum);
     void fullcommDescInitTime(std::string identifier, NslbDpOperatorInfo& OperatorInfo);
     HcclResult SetNslbDpRootRank(HcclCMDType opType, u32 rootRank, std::string identifier, u8 algType);
@@ -198,6 +200,20 @@ public:
     std::vector<uint8_t> serializeTLV_TableFir(NslbDpCommConfigInfo cominfo);
     HcclResult SendTableProc(u32 rank, u32 packetNum, NslbDpCommConfigVal cominfo);
     HcclResult SendTableFir(uint32_t rank);
+    // 计算总分片数：在 rankTotalNum <= NSLBDP_RANKTOTALNUM_BLOCK_FOU 前提下等价于
+    // ceil(rankTotalNum / BLOCK_FIR)；超出该范围按分段映射固定返回 4
+    static u32 CalcPacketNum(u32 rankTotalNum)
+    {
+        if (rankTotalNum <= NSLBDP_RANKTOTALNUM_BLOCK_FIR) {
+            return NSLBDP_PKTNUM_FIR;
+        } else if (rankTotalNum <= NSLBDP_RANKTOTALNUM_BLOCK_SEC) {
+            return NSLBDP_PKTNUM_SEC;
+        } else if (rankTotalNum <= NSLBDP_RANKTOTALNUM_BLOCK_THR) {
+            return NSLBDP_PKTNUM_THR;
+        } else {
+            return NSLBDP_PKTNUM_FOU;
+        }
+    }
     HcclResult SetH2DTlvInitInfo(u32 buffer_size, void* tlv_handle);
     u32 ipToUint32(const std::string& ipAddress);
     HcclResult SendOpAndAdjTable();

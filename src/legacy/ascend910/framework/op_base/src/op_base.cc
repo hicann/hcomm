@@ -1254,8 +1254,7 @@ HcclResult HcclCreateSubCommConfigInner(
     std::string identifier = pComm->GetIdentifier();
 
     /* NSLB 填充 表1 */
-    CHK_RET(hcclNslbDp::GetInstance().SetCommInfo_NoRankTable(subRankTable, identifier));
-    hcclNslbDp::GetInstance().SendTableFir(subCommRankId);
+    CHK_RET(hcclNslbDp::GetInstance().SetCommInfo_NoRankTable(subRankTable, identifier, subCommRankId));
 
     HCCL_RUN_INFO(
         "%s success, sub commm identifier[%s], rankNum[%u], rank[%u], server[%s], device[%d].", __func__,
