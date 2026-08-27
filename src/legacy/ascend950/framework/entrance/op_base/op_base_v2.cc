@@ -978,6 +978,7 @@ HcclResult HcclCreateSubCommConfigV2(const HcclComm *comm, uint32_t rankNum, uin
     } while (0);
  	 
     if (errorFlag) {
+        groupParaLock.unlock();
         HCCL_ERROR("[Init][%s]HcclCreateSubCommConfigV2 failed, deviceLogicId[%d], devPhyId[%d], sub comm[%s], world comm[%s]"\
             "return[0x%016llx]", __func__,
             logicDevId, devPhyId, subCommIdStr.c_str(), commId.c_str(), HCCL_ERROR_CODE(ret));

@@ -94,13 +94,6 @@ void NsRecoveryFuncLite::StreamClean(CollCommAicpu *deviceComm)
         HCCL_ERROR("[NsRecovery][BackGround] Stream Stop failed");
         return;
     }
-
-    // 通过thread获得streamlite信息，清理资源
-    std::vector<std::shared_ptr<hccl::Thread>> threads = deviceComm->GetAllThread();
-    for (auto &thread : threads) {
-        Hccl::StreamLite *streamLitePtr = reinterpret_cast<Hccl::StreamLite *>(thread->GetStreamLitePtr());
-        streamLitePtr->GetRtsq()->Reset();
-    }
     HCCL_INFO("[NsRecovery][BackGround] commId[%s] streamClean success.", deviceComm->GetIdentifier().c_str());
 }
 
