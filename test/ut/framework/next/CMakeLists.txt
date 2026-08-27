@@ -60,7 +60,6 @@ set(src_to_test_list
     host/ut_device_reset_callback.cc
     comms/endpoint_pairs/channels/aicpu/ut_aicpu_ts_roce_channel_v2.cc
     comms/endpoint_pairs/channels/aicpu/ut_dev_rdma_connection.cc
-    comms/endpoint_pairs/channels/aicpu/device/ut_dev_aicpu_ts_roce_channel_v2.cc
     comms/endpoints/ut_ub_mem_endpoint.cc
     comms/endpoints/reged_mems/ut_roce_mem_test.cc
     comms/endpoints/reged_mems/ut_urma_mem_test.cc

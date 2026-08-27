@@ -14,7 +14,6 @@ set(src_list
     dev_aicpu_ts_roce_channel.cc
     aicpu_ts_urma_channel_kernel.cc
     dev_aicpu_ts_hccs_channel.cc
-    dev_aicpu_ts_roce_channel_v2.cc
 )
 
 if(TARGET ccl_kernel)

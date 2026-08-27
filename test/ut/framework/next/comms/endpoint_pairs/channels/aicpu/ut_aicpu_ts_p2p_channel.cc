@@ -144,3 +144,14 @@ TEST_F(AicpuTsP2pChannelTest, UT_ParseInputParam_When_ExchangeAllMemsTrue_Expect
     ASSERT_EQ(ch.commonRes_.bufferVec.size(), 1U);
     EXPECT_EQ(ch.commonRes_.bufferVec[0]->GetAddr(), 0x4000U);
 }
+
+// P2P 收编走 V2 后，host V2 分流依赖 GetChannelKind()==AICPU_TS_PCIE 识别；对齐
+// ut_aicpu_ts_roce_channel_v2.cc 的 Ut_When_GetChannelKind_Expect_RoceV2。
+TEST_F(AicpuTsP2pChannelTest, Ut_When_GetChannelKind_Expect_Pcie)
+{
+    StubEndpointForP2pChannel endpoint;
+    HcommChannelDesc desc{};
+    AicpuTsP2pChannel ch(reinterpret_cast<EndpointHandle>(&endpoint), desc);
+
+    EXPECT_EQ(ch.GetChannelKind(), HcommChannelKind::AICPU_TS_PCIE);
+}

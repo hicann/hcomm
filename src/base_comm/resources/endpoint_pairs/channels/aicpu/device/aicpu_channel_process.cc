@@ -13,6 +13,10 @@
 #include "aicpu_res_package_helper.h"
 #include "../channel.h"
 #include "aicpu_ts_channel_helper.h"
+#include "ub_transport_lite_impl.h"
+#include "roce_transport_lite_impl.h"
+#include "p2p_transport_lite_impl.h"
+#include "aicpu_task_cache_manager.h"
 
 #include "adapter_rts_common.h"
 #include "log.h"
@@ -23,7 +27,25 @@
 #include <vector>
 
 std::mutex AicpuChannelProcess::mutex_;
-std::unordered_map<ChannelHandle, std::unique_ptr<Hccl::UbTransportLiteImpl>> AicpuChannelProcess::ubTransportMap_;
+std::unordered_map<ChannelHandle, std::unique_ptr<Hccl::BaseTransportLiteImpl>> AicpuChannelProcess::transportMap_;
+
+namespace {
+// 创建 lite transport 并登记进 transportMap_（handle 即 transport 指针，primitives 层按指针解引用）。
+// ROCE 无额外配置走这里；UB 需在入表前设 cache callback，故单独内联。
+// 注意：本函数不加锁，调用方必须已持有 AicpuChannelProcess::mutex_。
+template <typename T>
+HcclResult CreateAndInsertTransport(
+    std::vector<char>& uniqueId, ChannelHandle& handle,
+    std::unordered_map<ChannelHandle, std::unique_ptr<Hccl::BaseTransportLiteImpl>>& transportMap)
+{
+    std::unique_ptr<T> impl;
+    EXCEPTION_CATCH(impl = std::make_unique<T>(uniqueId), return HCCL_E_PTR);
+    CHK_SMART_PTR_NULL(impl);
+    handle = reinterpret_cast<uint64_t>(impl.get());
+    transportMap.insert({handle, std::move(impl)});
+    return HCCL_SUCCESS;
+}
+} // namespace
 
 HcclResult AicpuChannelProcess::ParsePackData(std::vector<char>& data, ChannelHandle& handle)
 {
@@ -42,9 +64,14 @@ HcclResult AicpuChannelProcess::ParsePackData(std::vector<char>& data, ChannelHa
         EXCEPTION_CATCH(
             (ubTransportLiteImpl = std::make_unique<Hccl::UbTransportLiteImpl>(transpUniqueId)), return HCCL_E_PTR);
         CHK_SMART_PTR_NULL(ubTransportLiteImpl);
-
+        CHK_RET(ubTransportLiteImpl->SetNeedCacheTaskCallback(hcomm::AicpuTaskCacheManager::NeedCacheTask));
+        CHK_RET(ubTransportLiteImpl->SetAddWqeArrayCallback(hcomm::AicpuTaskCacheManager::AddWqeArray));
         handle = reinterpret_cast<uint64_t>(ubTransportLiteImpl.get());
-        ubTransportMap_.insert({handle, std::move(ubTransportLiteImpl)});
+        transportMap_.insert({handle, std::move(ubTransportLiteImpl)});
+    } else if (transType == Hccl::TransportType::ROCE) {
+        CHK_RET(CreateAndInsertTransport<Hccl::RoceTransportLiteImpl>(transpUniqueId, handle, transportMap_));
+    } else if (transType == Hccl::TransportType::P2P) {
+        CHK_RET(CreateAndInsertTransport<Hccl::P2PTransportLiteImpl>(transpUniqueId, handle, transportMap_));
     } else {
         HCCL_ERROR("[AicpuChannelProcess][%s] transType[%u] is invalid", __func__, transType);
         return HCCL_E_PARA;
@@ -220,10 +247,10 @@ HcclResult AicpuChannelProcess::AicpuChannelDestroy(HcclChannelUrmaRes* commPara
     for (u32 index = 0; index < commParam->listNum; ++index) {
         ChannelHandle handle = channelList[index];
 
-        auto it = ubTransportMap_.find(handle);
-        if (it != ubTransportMap_.end()) {
-            ubTransportMap_.erase(it);
-            HCCL_DEBUG("[AicpuChannelProcess][%s] destroyed ub handle[0x%llx]", __func__, handle);
+        auto it = transportMap_.find(handle);
+        if (it != transportMap_.end()) {
+            transportMap_.erase(it);
+            HCCL_DEBUG("[AicpuChannelProcess][%s] destroyed lite transport handle[0x%llx]", __func__, handle);
             continue;
         }
 

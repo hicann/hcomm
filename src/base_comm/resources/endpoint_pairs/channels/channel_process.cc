@@ -903,12 +903,13 @@ HcclResult ChannelProcess::LaunchChannelKernel(
     CHK_PRT_RET(listNum == 0U, HCCL_ERROR("[%s] listNum is 0", __func__), HCCL_E_PARA);
     auto* ch = reinterpret_cast<Channel*>(hostChannelHandles[0]);
     CHK_PTR_NULL(ch);
-    if (ch->GetChannelKind() == HcommChannelKind::AICPU_TS_URMA
-        || ch->GetChannelKind() == HcommChannelKind::AICPU_TS_UBOE
-        || ch->GetChannelKind() == HcommChannelKind::AICPU_TS_UB_RTP) {
+    HcommChannelKind channelKind = ch->GetChannelKind();
+    if (channelKind == HcommChannelKind::AICPU_TS_URMA || channelKind == HcommChannelKind::AICPU_TS_UBOE
+        || channelKind == HcommChannelKind::AICPU_TS_UB_RTP || channelKind == HcommChannelKind::AICPU_TS_ROCE_V2
+        || channelKind == HcommChannelKind::AICPU_TS_PCIE) {
         return ChannelKernelLaunchForBase(channelHandles, hostChannelHandles, hcommDesc, listNum, binHandle);
     }
-    return LaunchCommonChannelKernel(channelHandles, hostChannelHandles, listNum, ch->GetChannelKind(), binHandle);
+    return LaunchCommonChannelKernel(channelHandles, hostChannelHandles, listNum, channelKind, binHandle);
 }
 
 HcclResult ChannelProcess::PrepareUserChannels(

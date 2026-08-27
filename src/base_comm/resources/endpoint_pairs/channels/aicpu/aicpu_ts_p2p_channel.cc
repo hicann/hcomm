@@ -188,6 +188,8 @@ ChannelStatus AicpuTsP2pChannel::GetStatus()
     return out;
 }
 
+HcommChannelKind AicpuTsP2pChannel::GetChannelKind() const { return HcommChannelKind::AICPU_TS_PCIE; }
+
 HcclResult AicpuTsP2pChannel::SetModuleDataName(Hccl::ModuleData& module, const std::string& name)
 {
     int ret = strcpy_s(module.name, sizeof(module.name), name.c_str());

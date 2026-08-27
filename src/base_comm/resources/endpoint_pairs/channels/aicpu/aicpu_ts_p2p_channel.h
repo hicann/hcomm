@@ -38,6 +38,7 @@ public:
     HcclResult GetNotifyNum(uint32_t* notifyNum) const override;
     HcclResult GetRemoteMems(uint32_t* memNum, CommMem** remoteMem, char*** memInfos) override;
     ChannelStatus GetStatus() override;
+    HcommChannelKind GetChannelKind() const override;
     HcclResult UpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum) override;
     const HcommChannelDesc& GetChannelDesc() const override { return channelDesc_; }
     HcclResult H2DResPack(std::vector<char>& buffer);

@@ -53,6 +53,7 @@ enum class HcommChannelKind : uint32_t {
     AICPU_TS_ROCE_V2 = 7U,
     AIV_URMA = 8U,
     AICPU_TS_UB_RTP = 9U,
+    AICPU_TS_PCIE = 10U,
 };
 
 inline const char* HcommChannelKindToString(HcommChannelKind kind)
@@ -78,6 +79,8 @@ inline const char* HcommChannelKindToString(HcommChannelKind kind)
             return "AIV_URMA";
         case HcommChannelKind::AICPU_TS_UB_RTP:
             return "AICPU_TS_UB_RTP";
+        case HcommChannelKind::AICPU_TS_PCIE:
+            return "AICPU_TS_PCIE";
         default:
             return "UNKNOWN";
     }

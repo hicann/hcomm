@@ -17,7 +17,7 @@
 
 #include "common.h"
 #include "channel_param.h"
-#include "ub_transport_lite_impl.h"
+#include "base_transport_lite_impl.h"
 
 class AicpuChannelProcess {
 public:
@@ -30,6 +30,6 @@ public:
 
 private:
     static std::mutex mutex_;
-    static std::unordered_map<ChannelHandle, std::unique_ptr<Hccl::UbTransportLiteImpl>> ubTransportMap_;
+    static std::unordered_map<ChannelHandle, std::unique_ptr<Hccl::BaseTransportLiteImpl>> transportMap_;
 };
 #endif // __AICPU_CHANNEL_PROCESS_H__

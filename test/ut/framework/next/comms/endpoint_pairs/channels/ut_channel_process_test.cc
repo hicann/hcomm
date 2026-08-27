@@ -183,12 +183,14 @@ TEST_F(TestChannelProcess, Ut_ChannelResume_NullList_Returns_E_PARA)
     EXPECT_EQ(ret, HCCL_E_PTR);
 }
 
-TEST_F(TestChannelProcess, Ut_LaunchChannelKernel_When_ChannelKindIsUBOE_CallsChannelKernelLaunchForBase)
+// 公共：mock LaunchChannelKernelCommon 短接 V2 路径，验证指定 kind 命中 V2 分流
+// （ChannelKernelLaunchForBase → LaunchChannelKernelCommon）。UBOE/ROCE_V2/PCIE 三个 kind 共用。
+static void LaunchChannelKernelForKindExpectsV2(hcomm::HcommChannelKind kind)
 {
     HcommChannelDesc hcommDescs[1] = {};
     ChannelHandle deviceHandles[1] = {};
 
-    FakeChannelForProcess fakeChannel(hcomm::HcommChannelKind::AICPU_TS_UBOE);
+    FakeChannelForProcess fakeChannel(kind);
     ChannelHandle hostHandles[1] = {reinterpret_cast<ChannelHandle>(&fakeChannel)};
 
     MOCKER_CPP(
@@ -204,6 +206,21 @@ TEST_F(TestChannelProcess, Ut_LaunchChannelKernel_When_ChannelKindIsUBOE_CallsCh
 
     auto ret = hcomm::ChannelProcess::LaunchChannelKernel(deviceHandles, hostHandles, hcommDescs, 1, nullptr);
     EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(TestChannelProcess, Ut_LaunchChannelKernel_When_ChannelKindIsUBOE_CallsChannelKernelLaunchForBase)
+{
+    LaunchChannelKernelForKindExpectsV2(hcomm::HcommChannelKind::AICPU_TS_UBOE);
+}
+
+TEST_F(TestChannelProcess, Ut_LaunchChannelKernel_When_ChannelKindIsRoceV2_CallsChannelKernelLaunchForBase)
+{
+    LaunchChannelKernelForKindExpectsV2(hcomm::HcommChannelKind::AICPU_TS_ROCE_V2);
+}
+
+TEST_F(TestChannelProcess, Ut_LaunchChannelKernel_When_ChannelKindIsPcie_CallsChannelKernelLaunchForBase)
+{
+    LaunchChannelKernelForKindExpectsV2(hcomm::HcommChannelKind::AICPU_TS_PCIE);
 }
 
 TEST_F(TestChannelProcess, Ut_ChannelUpdateKernelLaunch_When_ChannelKindUnsupported_Expect_NotSupport)
