@@ -23,9 +23,7 @@ HcommResult ChannelConfigCreate(HcommChannelConfig* config)
 
 HcommResult ChannelConfigDestroy(HcommChannelConfig config)
 {
-    if (config == nullptr) {
-        return HCCL_SUCCESS;
-    }
+    CHK_PTR_NULL(config);
     auto* cfg = static_cast<HcommChannelConfigData*>(config);
     if (cfg->destroyed_.exchange(true)) {
         HCCL_WARNING("[%s] config[%p] is already destroyed, skip to avoid double-free.", __func__, config);

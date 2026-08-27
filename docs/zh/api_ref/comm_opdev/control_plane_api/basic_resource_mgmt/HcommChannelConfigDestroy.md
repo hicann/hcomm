@@ -32,7 +32,7 @@ HcommResult HcommChannelConfigDestroy(HcommChannelConfig config)
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| config | 输入 | 待销毁的Channel配置对象句柄。<br>HcommChannelConfig类型的定义请参见[HcommChannelConfig](../../datatype_definition/HcommChannelConfig.md)。<br>传入nullptr时直接返回成功，不会触发错误。 |
+| config | 输入 | 待销毁的Channel配置对象句柄。<br>HcommChannelConfig类型的定义请参见[HcommChannelConfig](../../datatype_definition/HcommChannelConfig.md)。 |
 
 ## 返回值
 
@@ -40,7 +40,6 @@ HcommResult：接口成功返回0，其他失败。
 
 ## 约束说明
 
-- 传入nullptr时接口安全返回成功。
 - 销毁后不可再使用该句柄，否则会导致未定义行为。
 - 配置对象在[HcommChannelCreateWithConfig](HcommChannelCreateWithConfig.md)调用完成后即可销毁，不影响已创建的Channel。
 

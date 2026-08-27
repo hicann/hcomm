@@ -32,7 +32,7 @@ HcclResult HcclChannelConfigDestroy(HcclChannelConfig config)
 
 | 参数名 | 输入/输出 | 描述 |
 | --- | --- | --- |
-| config | 输入 | 待销毁的Channel配置对象句柄。<br>HcclChannelConfig类型的定义请参见[HcclChannelConfig](../../datatype_definition/HcclChannelConfig.md)。<br>传入nullptr时直接返回成功，不会触发错误。 |
+| config | 输入 | 待销毁的Channel配置对象句柄。<br>HcclChannelConfig类型的定义请参见[HcclChannelConfig](../../datatype_definition/HcclChannelConfig.md)。|
 
 ## 返回值
 
@@ -40,7 +40,6 @@ HcclResult HcclChannelConfigDestroy(HcclChannelConfig config)
 
 ## 约束说明
 
-- 传入nullptr时接口安全返回HCCL_SUCCESS。
 - 销毁后不可再使用该句柄，否则会导致未定义行为。
 - 配置对象在[HcclChannelAcquireWithConfig](HcclChannelAcquireWithConfig.md)调用完成后即可销毁，不影响已创建的Channel。
 
