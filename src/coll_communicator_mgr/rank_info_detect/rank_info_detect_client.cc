@@ -69,9 +69,7 @@ namespace {
         candidates.emplace_back(primaryIpAddress);
 
         std::vector<IpAddress> backupAddrs;
-        const std::string msgParseBackupAddr = "parse backup host addr failed";
-        TRY_CATCH_THROW(InvalidParamsException, msgParseBackupAddr,
-                        AddressInfo::ParseBackupAddrs(addrJson.at(BACKUP_ADDR_FIELD), addrType, backupAddrs););
+        AddressInfo::ParseBackupAddrs(addrJson.at(BACKUP_ADDR_FIELD), addrType, backupAddrs);
         candidates.insert(candidates.end(), backupAddrs.begin(), backupAddrs.end());
     }
 
@@ -445,8 +443,7 @@ void RankInfoDetectClient::SelectLocalHostBackupAddr(nlohmann::json& localDevInf
 void RankInfoDetectClient::SelectAvailableHostAddr(nlohmann::json& addrJson)
 {
     std::vector<IpAddress> candidates;
-    const std::string msgBuildCandidates = "build host addr candidates failed";
-    TRY_CATCH_THROW(InvalidParamsException, msgBuildCandidates, BuildHostAddrCandidates(addrJson, candidates););
+    BuildHostAddrCandidates(addrJson, candidates);
     HCCL_INFO(
         "[%s] devPhyId[%u], rankId[%u], primaryAddr[%s], backupAddrSize[%zu], "
         "candidateSize[%zu].",

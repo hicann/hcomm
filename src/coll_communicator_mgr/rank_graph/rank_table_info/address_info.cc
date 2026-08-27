@@ -140,9 +140,7 @@ void AddressInfo::ParseBackupAddrs(
                 "[%s] backup_addr [%.*s] length is out of range [%u] to [%u]", __func__, MAX_DISPLAY_LEN,
                 backupAddrStr.c_str(), MIN_VALUE_ADDR_LENGRH, MAX_VALUE_ADDR_LENGRH));
         IpAddress backupIpAddress;
-        const std::string msgParseBackupAddr = "parse backup_addr failed";
-        TRY_CATCH_THROW(InvalidParamsException, msgParseBackupAddr,
-                        ParseAddrByType(addrType, backupAddrStr, backupIpAddress););
+        ParseAddrByType(addrType, backupAddrStr, backupIpAddress);
         backupAddrs.emplace_back(backupIpAddress);
     }
 }

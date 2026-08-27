@@ -89,15 +89,10 @@ namespace {
         std::shared_ptr<RankInfoDetect> rankInfoDetectAgent;
         EXCEPTION_CATCH((rankInfoDetectAgent = std::make_shared<RankInfoDetect>()), return HCCL_E_MEMORY);
 
-        bool hasException = false;
-        EXCEPTION_CATCH(rankInfoDetectAgent->SetupAgent(nRanks, rank, rootHandle), hasException = true);
+        EXCEPTION_CATCH(rankInfoDetectAgent->SetupAgent(nRanks, rank, rootHandle), return HCCL_E_INTERNAL);
         EXCEPTION_CATCH(
             rankInfoDetectAgent->WaitComplete(rootHandle.listenPort, RANKINFO_DETECT_SERVER_STATUS_IDLE),
-            hasException = true);
-        CHK_PRT_RET(
-            hasException,
-            HCCL_ERROR("[%s] RankInfoDetect SetupAgent fail, identifier[%s].", __func__, rootHandle.identifier),
-            HCCL_E_INTERNAL);
+            return HCCL_E_INTERNAL);
 
         rankInfoDetectAgent->GetRankTable(rankTable);
         // bridge 不暴露 RankInfoDetect 类型；调用方持有类型擦除后的 shared_ptr，
