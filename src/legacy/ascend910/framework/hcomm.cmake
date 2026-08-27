@@ -48,15 +48,50 @@ target_include_directories(hcomm PRIVATE
     ${HCOMM_DIR}/src/legacy/ascend910/framework/communicator/impl/one_sided_service
     ${HCOMM_DIR}/src/legacy/ascend910/framework/op_base/src
 
-    # src/framework/next 头文件 (已拆分到 base_comm 和 coll_communicator_mgr)
+    # src/base_comm 头文件 (hcomm 对 base_comm 的依赖)
+    ${HCOMM_DIR}/src/base_comm
     ${HCOMM_DIR}/src/base_comm/common
-    ${HCOMM_DIR}/src/base_comm/resources/ccu/pub_inc
+    ${HCOMM_DIR}/src/base_comm/common/debug
+    ${HCOMM_DIR}/src/base_comm/primitives
+    ${HCOMM_DIR}/src/base_comm/primitives/api_c_adpt
+    ${HCOMM_DIR}/src/base_comm/primitives/api_c_adpt/nic_plugin
+    ${HCOMM_DIR}/src/base_comm/resources
     ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_device
     ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_device/ccu_comp
     ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_device/ccu_comp/ccu_channel
-    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_device/ccu_comp/ccu_channel/ccu_pfe
-    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_device/ccu_comp/ccu_channel/ccu_channel_ctx_v1
-    ${HCOMM_DIR}/src/base_comm/resources/endpoint_pairs/channels/host
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_dfx
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_instance
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_kernel
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_microcode
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_representation
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_representation/context
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_representation/interface
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_representation/reps
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_representation/reps/arithmetic
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_representation/reps/common
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_representation/reps/control
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_representation/reps/data
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_representation/reps/logical
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_representation/reps/loop
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_representation/reps/shift
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_representation/reps/sync
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_representation/reps/translator
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/ccu_transport
+    ${HCOMM_DIR}/src/base_comm/resources/ccu/pub_inc
+    ${HCOMM_DIR}/src/base_comm/resources/comm_engine_res
+    ${HCOMM_DIR}/src/base_comm/resources/comm_engine_res/engine_ctxs
+    ${HCOMM_DIR}/src/base_comm/resources/comm_engine_res/launch
+    ${HCOMM_DIR}/src/base_comm/resources/comm_engine_res/threads
+    ${HCOMM_DIR}/src/base_comm/resources/endpoint_pairs
+    ${HCOMM_DIR}/src/base_comm/resources/endpoint_pairs/channels
+    ${HCOMM_DIR}/src/base_comm/resources/endpoint_pairs/channels/aicpu
+    ${HCOMM_DIR}/src/base_comm/resources/endpoint_pairs/channels/aiv
+    ${HCOMM_DIR}/src/base_comm/resources/endpoint_pairs/sockets
+    ${HCOMM_DIR}/src/base_comm/resources/endpoints
+    ${HCOMM_DIR}/src/base_comm/resources/hccp/inc
+    ${HCOMM_DIR}/src/base_comm/resources/hccp/inc/network
+    ${HCOMM_DIR}/src/base_comm/resources/reged_mems
+    ${HCOMM_DIR}/src/base_comm/resources/southbound_adpt
 
     # src/common 头文件 (legacy/ascend910)
     ${HCOMM_DIR}/src/legacy/ascend910/common/debug/profiling/inc
@@ -94,9 +129,6 @@ target_include_directories(hcomm PRIVATE
     ${HCOMM_DIR}/src/base_comm/resources/hccp/inc
     ${HCOMM_DIR}/src/base_comm/resources/hccp/inc/network
     ${HCOMM_DIR}/src/base_comm/resources/hccp/external_depends/ubengine
-
-    ${HCOMM_DIR}/src/
-    ${HCOMM_DIR}
 
     # src/legacy 头文件 (legacy/ascend950)
     ${LEGACY_ASCEND950_INCLUDE_LIST}

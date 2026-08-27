@@ -23,20 +23,22 @@ set(src_list
 
 add_subdirectory(nic_plugin)
  
-if(TARGET hcomm)
-    target_sources(hcomm PRIVATE
+if(TARGET hcomm_base_obj)
+    target_sources(hcomm_base_obj PRIVATE
         ${src_list}
         cpu_primitives_c_adpt.cc
     )
-    target_include_directories(hcomm PRIVATE
+    target_include_directories(hcomm_base_obj PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/src/base_comm/resources/endpoint_pairs/channels/aiv
         ${PROJECT_SOURCE_DIR}/src/base_comm/resources/endpoints/dfx
     )
-    target_compile_definitions(hcomm PRIVATE ENABLE_EXPERIMENTAL)
-    target_include_directories(hcomm PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/nic_plugin
-    )
+    if(ENABLE_EXPERIMENTAL)
+        target_compile_definitions(hcomm_base_obj PRIVATE ENABLE_EXPERIMENTAL)
+        target_include_directories(hcomm_base_obj PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/nic_plugin
+        )
+    endif()
 endif()
 
 if(TARGET ccl_kernel)

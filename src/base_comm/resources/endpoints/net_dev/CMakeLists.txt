@@ -12,8 +12,8 @@ set(src_list
     global_net_dev_manager.cc
 )
 
-if(TARGET hcomm)
-    target_sources(hcomm PRIVATE
+if(TARGET hcomm_base_obj)
+    target_sources(hcomm_base_obj PRIVATE
         ${src_list}
     )
 endif()

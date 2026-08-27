@@ -8,24 +8,14 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
+# 创建基础通信层中间对象库, host编hcomm_base_obj
+if(PRODUCT_SIDE STREQUAL "host")
+    include(hcomm_base_obj.cmake)
+endif()
+
+
 add_subdirectory(common)
 add_subdirectory(primitives)
 add_subdirectory(resources)
 add_subdirectory(config_mgr)
 add_subdirectory(dfx)
-
-set(src_list
-    hcomm_res_mgr.cc
-)
-
-if(TARGET hcomm)
-    target_sources(hcomm PRIVATE
-        ${src_list}
-    )
-    target_include_directories(hcomm PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources
-        ${CMAKE_CURRENT_SOURCE_DIR}/resources/ccu/ccu_device
-        ${HCOMM_DIR}/src/legacy/ascend950/unified_platform/ccu/ccu_device
-    )
-endif()

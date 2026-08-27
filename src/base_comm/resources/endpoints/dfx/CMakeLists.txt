@@ -12,8 +12,11 @@ set(src_list
     ${CMAKE_CURRENT_SOURCE_DIR}/endpoint_monitor.cc
 )
 
-if(TARGET hcomm)
-    target_sources(hcomm PRIVATE
+if(TARGET hcomm_base_obj)
+    target_sources(hcomm_base_obj PRIVATE
         ${src_list}
+    )
+    target_include_directories(hcomm_base_obj PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
     )
 endif()

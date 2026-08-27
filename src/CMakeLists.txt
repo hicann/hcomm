@@ -79,3 +79,9 @@ add_subdirectory(coll_communicator_mgr) # 集合通信组件
 if(PRODUCT_SIDE STREQUAL "device")
     include(legacy/ascend910/framework/aicpu_custom.cmake)
 endif()
+
+# 临时修改，后面做base_comm和hcomm二进制分离
+if (TARGET hcomm AND TARGET hcomm_base_obj)
+    target_link_libraries(hcomm hcomm_base_obj)
+    add_dependencies(hcomm hcomm_base_obj)
+endif()

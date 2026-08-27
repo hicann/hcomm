@@ -10,12 +10,12 @@
 
 file(GLOB_RECURSE CCU_REP_SOURCES "*.cc")
 
-if(TARGET hcomm)
-    target_sources(hcomm
+if(TARGET hcomm_base_obj)
+    target_sources(hcomm_base_obj
         PRIVATE
         ${CCU_REP_SOURCES}
     )
-    target_include_directories(hcomm PRIVATE 
+    target_include_directories(hcomm_base_obj PRIVATE 
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/interface
         ${CMAKE_CURRENT_SOURCE_DIR}/context

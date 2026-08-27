@@ -18,11 +18,11 @@ set(src_list
     hccl_next_dl.cc
 )
 
-if(TARGET hcomm)
-    target_sources(hcomm PRIVATE
+if(TARGET hcomm_base_obj)
+    target_sources(hcomm_base_obj PRIVATE
         ${src_list}
     )
-    target_include_directories(hcomm PRIVATE
+    target_include_directories(hcomm_base_obj PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/device
     )
