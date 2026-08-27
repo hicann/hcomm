@@ -221,6 +221,22 @@ protected:
     }
 };
 
+// ===================== GetUbLinkTypeVal Tests =====================
+
+TEST_F(AicpuTaskCacheEntryTest, GetUbLinkTypeVal_Returns_LINK_UB_When_linkType_Is_UB)
+{
+    hcomm::AicpuTaskCacheEntry entry;
+    ubTransport_->linkType_ = Hccl::DfxLinkType::UB;
+    EXPECT_EQ(entry.GetUbLinkTypeVal_(ubTransport_.get()), static_cast<u8>(Hccl::DfxLinkTypeVal::LINK_UB));
+}
+
+TEST_F(AicpuTaskCacheEntryTest, GetUbLinkTypeVal_Returns_LINK_UBoE_When_linkType_Is_UBoE)
+{
+    hcomm::AicpuTaskCacheEntry entry;
+    ubTransport_->linkType_ = Hccl::DfxLinkType::UBoE;
+    EXPECT_EQ(entry.GetUbLinkTypeVal_(ubTransport_.get()), static_cast<u8>(Hccl::DfxLinkTypeVal::LINK_UBoE));
+}
+
 // ===================== Constructor / Destructor Tests =====================
 
 TEST_F(AicpuTaskCacheEntryTest, Constructor_Default)

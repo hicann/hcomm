@@ -133,6 +133,7 @@ private:
     u32 bufferNum{0};
     u32 rmtbufferNum{0};
     u32 connNum{0};
+    DfxLinkType linkType_{DfxLinkType::UB};
     bool fence_{false};
     bool taskExceptionEnable_{true};
 
@@ -281,7 +282,7 @@ private:
         taskParam.taskPara.DMA.size = size;
         taskParam.taskPara.DMA.notifyID = INVALID_VALUE_NOTIFYID;
         taskParam.taskPara.DMA.notifyValue = 0xffffffff;
-        taskParam.taskPara.DMA.linkType = DfxLinkType::UB;
+        taskParam.taskPara.DMA.linkType = linkType_;
         taskParam.taskPara.DMA.dmaOp = dmaOp;
         taskParam.taskPara.DMA.locEid = GetLocEid();
         taskParam.taskPara.DMA.rmtEid = GetRmtEid();
@@ -307,7 +308,7 @@ private:
         taskParam.taskPara.Reduce.dst = dst;
         taskParam.taskPara.Reduce.size = size;
         taskParam.taskPara.Reduce.notifyValue = 1;
-        taskParam.taskPara.Reduce.linkType = DfxLinkType::UB;
+        taskParam.taskPara.Reduce.linkType = linkType_;
         taskParam.taskPara.Reduce.reduceOp = ConvertReduceOpToHcclReduceOp(reduceIn.reduceOp);
         taskParam.taskPara.Reduce.dataType = DataTypeToHcclDataType(reduceIn.dataType);
         taskParam.taskPara.Reduce.locEid = GetLocEid();

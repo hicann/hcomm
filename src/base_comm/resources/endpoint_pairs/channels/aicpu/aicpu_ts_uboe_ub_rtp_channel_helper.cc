@@ -592,9 +592,8 @@ std::vector<char> AicpuTsUboeUbRtpChannelHelper::GetUniqueIdV2()
             Hccl::StringFormat(
                 "channel status[%d] is not ready[%d], please check.", channelStatus, ChannelStatus::READY));
     }
-    u32 type = static_cast<u32>(Hccl::TransportType::UB);
     Hccl::BinaryStream binaryStream;
-    binaryStream << type;
+    binaryStream << type_;
     binaryStream << notifyNum_;
     binaryStream << bufferNum_;
     binaryStream << static_cast<u32>(rmtBufferVec_.size());

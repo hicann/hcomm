@@ -36,6 +36,7 @@ UbTransportLiteImpl::UbTransportLiteImpl(
     binaryStream >> bufferNum;
     binaryStream >> rmtbufferNum;
     binaryStream >> connNum;
+    linkType_ = (theType == static_cast<u32>(TransportType::UB)) ? DfxLinkType::UB : DfxLinkType::UBoE;
 
     std::vector<char> notifyUniqueIds;
     binaryStream >> notifyUniqueIds;
@@ -64,6 +65,7 @@ void UbTransportLiteImpl::Init(std::vector<char>& uniqueId)
     binaryStream >> bufferNum;
     binaryStream >> rmtbufferNum;
     binaryStream >> connNum;
+    linkType_ = (theType == static_cast<u32>(TransportType::UB)) ? DfxLinkType::UB : DfxLinkType::UBoE;
 
     std::vector<char> notifyUniqueIds;
     binaryStream >> notifyUniqueIds;
@@ -463,7 +465,7 @@ void UbTransportLiteImpl::WaitWithTimeout(u32 index, const StreamLite& stream, u
     slot->taskId = taskId;
     const void* opInfo = stream.GetLatestDfxOpInfo();
     slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : INVALID_U64;
-    slot->linkType = DfxLinkTypeVal::LINK_UB;
+    slot->linkType = (linkType_ == DfxLinkType::UB) ? DfxLinkTypeVal::LINK_UB : DfxLinkTypeVal::LINK_UBoE;
     slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_UB);
     slot->channelHandle = reinterpret_cast<u64>(this);
     slot->taskPara.Notify.sqeAddr = stream.GetRtsq()->GetSqeAddr();
@@ -490,6 +492,7 @@ void UbTransportLiteImpl::ProfilingProcess(
 
 void UbTransportLiteImpl::ReduceProfilingProcess(
     void* src, void* dst, u64 size, const ReduceIn& reduceIn, const StreamLite& stream, u32 taskId)
+
 {
     if (!IsReportTask()) {
         return;
@@ -579,7 +582,7 @@ void UbTransportLiteImpl::FillSlotUbDmaInfo(
     slot->taskId = taskId;
     const void* opInfo = stream.GetLatestDfxOpInfo();
     slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : INVALID_U64;
-    slot->linkType = DfxLinkTypeVal::LINK_UB;
+    slot->linkType = (linkType_ == DfxLinkType::UB) ? DfxLinkTypeVal::LINK_UB : DfxLinkTypeVal::LINK_UBoE;
     slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_UB);
     slot->channelHandle = reinterpret_cast<u64>(this);
     slot->taskPara.ubDma.sqeAddr = stream.GetRtsq()->GetSqeAddr();
@@ -599,7 +602,7 @@ void UbTransportLiteImpl::FillSlotReduceInfo(
     slot->taskId = taskId;
     const void* opInfo = stream.GetLatestDfxOpInfo();
     slot->dfxOpInfo = (opInfo != nullptr) ? reinterpret_cast<u64>(opInfo) : INVALID_U64;
-    slot->linkType = DfxLinkTypeVal::LINK_UB;
+    slot->linkType = (linkType_ == DfxLinkType::UB) ? DfxLinkTypeVal::LINK_UB : DfxLinkTypeVal::LINK_UBoE;
     slot->transportType = static_cast<u8>(DfxTransportType::DFX_TRANSPORT_TYPE_UB);
     slot->channelHandle = reinterpret_cast<u64>(this);
     slot->taskPara.Reduce.sqeAddr = stream.GetRtsq()->GetSqeAddr();

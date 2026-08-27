@@ -125,6 +125,7 @@ protected:
 
     ChannelStatus channelStatus{ChannelStatus::INIT};
 
+    u32 type_{1}; // 默认为UB
     u32 bufferNum_{0};
     u32 connNum_{0};
     u32 recvDataSize_{0};

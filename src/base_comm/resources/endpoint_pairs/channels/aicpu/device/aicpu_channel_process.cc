@@ -59,7 +59,7 @@ HcclResult AicpuChannelProcess::ParsePackData(std::vector<char>& data, ChannelHa
     u32 transType;
     binaryStreamForType >> transType;
     HCCL_INFO("[CollCommAicpu][ParsePackData] transType[%u]", transType);
-    if (transType == Hccl::TransportType::UB) {
+    if (transType == Hccl::TransportType::UB || transType == Hccl::TransportType::UBoE) {
         std::unique_ptr<Hccl::UbTransportLiteImpl> ubTransportLiteImpl;
         EXCEPTION_CATCH(
             (ubTransportLiteImpl = std::make_unique<Hccl::UbTransportLiteImpl>(transpUniqueId)), return HCCL_E_PTR);

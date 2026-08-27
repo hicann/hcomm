@@ -1245,6 +1245,12 @@ inline void AicpuTaskCacheEntry::FillSlotCommonFields_(
     slot->channelHandle = channelHandle;
 }
 
+inline u8 AicpuTaskCacheEntry::GetUbLinkTypeVal_(const UbTransportLiteImpl* ubTransportLiteImplPtr) const
+{
+    return (ubTransportLiteImplPtr->linkType_ == Hccl::DfxLinkType::UB) ? Hccl::DfxLinkTypeVal::LINK_UB :
+                                                                          Hccl::DfxLinkTypeVal::LINK_UBoE;
+}
+
 inline u8 AicpuTaskCacheEntry::ConvertSdmaOpCodeToReduceOp_(uint8_t opcode) const
 {
     // opcode 低4位为 RtStarsMemcpyAsyncOperationKind: ADD=0x01, MAX=0x02, MIN=0x03
@@ -1269,7 +1275,7 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotUbDma_(
     const DbSqeProfInfo& profInfo = profAndRefreshInfo.dbSqeProfInfo;
     slot->taskType = static_cast<u8>(profInfo.taskParamType);
     FillSlotCommonFields_(
-        slot, streamLite, taskId, Hccl::DfxLinkTypeVal::LINK_UB,
+        slot, streamLite, taskId, GetUbLinkTypeVal_(ubTransportLiteImplPtr),
         static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_UB), reinterpret_cast<u64>(ubTransportLiteImplPtr));
     slot->taskPara.ubDma.sqeAddr = reinterpret_cast<u64>(sqePtr);
     slot->taskPara.ubDma.srcAddr = profInfo.srcAddr;
@@ -1294,7 +1300,7 @@ inline HcclResult AicpuTaskCacheEntry::FillSlotReduce_(
     const DbSqeProfInfo& profInfo = profAndRefreshInfo.dbSqeProfInfo;
     slot->taskType = static_cast<u8>(profInfo.taskParamType);
     FillSlotCommonFields_(
-        slot, streamLite, taskId, Hccl::DfxLinkTypeVal::LINK_UB,
+        slot, streamLite, taskId, GetUbLinkTypeVal_(ubTransportLiteImplPtr),
         static_cast<u8>(Hccl::DfxTransportType::DFX_TRANSPORT_TYPE_UB), reinterpret_cast<u64>(ubTransportLiteImplPtr));
     slot->taskPara.Reduce.sqeAddr = reinterpret_cast<u64>(sqePtr);
     slot->taskPara.Reduce.srcAddr = profInfo.srcAddr;

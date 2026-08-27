@@ -24,7 +24,9 @@ namespace hcomm {
 
 AicpuTsUboeChannel::AicpuTsUboeChannel(EndpointHandle endpointHandle, const HcommChannelDesc& channelDesc)
     : AicpuTsUboeUbRtpChannelHelper(endpointHandle, channelDesc)
-{}
+{
+    type_ = static_cast<u32>(Hccl::TransportType::UBoE);
+}
 
 AicpuTsUboeChannel::~AicpuTsUboeChannel() = default;
 

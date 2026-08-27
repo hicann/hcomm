@@ -113,7 +113,7 @@ HcclResult ChannelAicpuMgr::ParsePackData(std::vector<char>& data, ChannelHandle
     binaryStreamForType >> transType;
     HCCL_INFO("[ChannelAicpuMgr][ParsePackData] transType[%u]", transType);
 
-    if (transType == Hccl::TransportType::UB) {
+    if (transType == Hccl::TransportType::UB || transType == Hccl::TransportType::UBoE) {
         Hccl::UbTransportLiteImpl* ubPtr = nullptr;
         CHK_RET(CreateAndInsertTransport<Hccl::UbTransportLiteImpl>(transpUniqueId, handle, ubPtr, transportMap_));
         ubPtr->SetTaskExceptionEnable(hcomm::GetTaskExceptionEnable());

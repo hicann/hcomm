@@ -306,6 +306,7 @@ private:
         Hccl::DfxTaskInfo* slot, StreamLite* streamLite, u32 taskId, u8 linkType, u8 transportType,
         u64 channelHandle) const;
     inline u8 ConvertSdmaOpCodeToReduceOp_(uint8_t opcode) const;
+    inline u8 GetUbLinkTypeVal_(const UbTransportLiteImpl* ubTransportLiteImplPtr) const;
 
     // 统计当前cache entry的bytes开销
     uint64_t entryBytes_ = 0;
