@@ -60,6 +60,58 @@ protected:
     std::string tag = "test";
 };
 
+TEST_F(DevUbConnectionTest, set_wq_and_sq_context_info_success)
+{
+    RdmaHandle rdmaHandle = reinterpret_cast<void*>(0x1000000);
+    BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
+    LinkData linkData(portType, 0, 1, 0, 1);
+    DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
+    devUbConnection.jettyId = 100U;
+    devUbConnection.dbAddr = 0x8000000U;
+    devUbConnection.sqBuffVa = 0x9000000U;
+    devUbConnection.sqDepth = 32U;
+    devUbConnection.tpn = 200U;
+    for (size_t idx = 0; idx < sizeof(devUbConnection.rmtReverseEid.raw); ++idx) {
+        devUbConnection.rmtReverseEid.raw[idx] = static_cast<uint8_t>(idx + 1U);
+    }
+
+    HcclAiRMAWQ wq{};
+    SqContext sq{};
+    devUbConnection.SetWqInfo(wq);
+    devUbConnection.SetSqContextInfo(sq);
+
+    EXPECT_EQ(wq.jettyId, devUbConnection.jettyId);
+    EXPECT_EQ(wq.dbAddr, devUbConnection.dbAddr);
+    EXPECT_EQ(wq.sqVA, devUbConnection.sqBuffVa);
+    EXPECT_EQ(wq.sqDepth, devUbConnection.sqDepth * 4U);
+    EXPECT_EQ(wq.tp_id, devUbConnection.tpn);
+    EXPECT_EQ(sq.contextInfo.ubJfs.jfsID, devUbConnection.jettyId);
+    EXPECT_EQ(sq.contextInfo.ubJfs.dbVa, devUbConnection.dbAddr);
+    EXPECT_EQ(sq.contextInfo.ubJfs.sqVa, devUbConnection.sqBuffVa);
+    EXPECT_EQ(sq.contextInfo.ubJfs.sqDepth, devUbConnection.sqDepth * 4U);
+    EXPECT_EQ(sq.contextInfo.ubJfs.tpID, devUbConnection.tpn);
+    for (size_t idx = 0; idx < sizeof(devUbConnection.rmtReverseEid.raw); ++idx) {
+        EXPECT_EQ(wq.rmtEid[idx], devUbConnection.rmtReverseEid.raw[idx]);
+        EXPECT_EQ(sq.contextInfo.ubJfs.remoteEID[idx], devUbConnection.rmtReverseEid.raw[idx]);
+    }
+}
+
+TEST_F(DevUbConnectionTest, set_wq_and_sq_context_info_memcpy_fail_throw)
+{
+    RdmaHandle rdmaHandle = reinterpret_cast<void*>(0x1000000);
+    BasePortType portType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
+    LinkData linkData(portType, 0, 1, 0, 1);
+    DevUbConnection devUbConnection(rdmaHandle, linkData.GetLocalAddr(), linkData.GetRemoteAddr(), OpMode::OPBASE);
+    HcclAiRMAWQ wq{};
+    SqContext sq{};
+    MOCKER(memcpy_s).stubs().will(returnValue(-1));
+
+    EXPECT_THROW(devUbConnection.SetWqInfo(wq), RmaConnException);
+    EXPECT_THROW(devUbConnection.SetSqContextInfo(sq), RmaConnException);
+    EXPECT_EQ(devUbConnection.status, RmaConnStatus::CONN_INVALID);
+    EXPECT_EQ(devUbConnection.ubConnStatus, DevUbConnection::UbConnStatus::CONN_INVALID);
+}
+
 TEST_F(DevUbConnectionTest, rma_ub_connection_get_status_return_exchanging_and_ok)
 {
     // Given

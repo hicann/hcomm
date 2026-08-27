@@ -59,10 +59,10 @@ public:
 
     void SetCqInfo(HcclAiRMACQ& cq) const;
 
-    void SetWqInfo(HcclAiRMAWQ& wq) const;
+    void SetWqInfo(HcclAiRMAWQ& wq);
 
     void SetCqContextInfo(CqContext& cq) const;
-    void SetSqContextInfo(SqContext& sq) const;
+    void SetSqContextInfo(SqContext& sq);
 
     unique_ptr<BaseTask>
     PrepareRead(const MemoryBuffer& remoteMemBuf, const MemoryBuffer& localMemBuf, const SqeConfig& config) override;

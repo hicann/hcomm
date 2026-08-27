@@ -475,7 +475,7 @@ std::vector<char> DevUbConnection::GetUniqueId() const
 
 void DevUbConnection::Connect() {}
 
-void DevUbConnection::SetSqContextInfo(SqContext& sq) const
+void DevUbConnection::SetSqContextInfo(SqContext& sq)
 {
     sq.contextInfo.ubJfs.jfsID = jettyId;
     sq.contextInfo.ubJfs.dbVa = dbAddr;

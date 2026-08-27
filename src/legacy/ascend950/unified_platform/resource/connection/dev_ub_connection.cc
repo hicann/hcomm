@@ -183,26 +183,34 @@ void DevUbConnection::SetCqInfo(HcclAiRMACQ& cq) const
     cq.dbAddr = cqInfo_.swdbAddr;
 }
 
-void DevUbConnection::SetWqInfo(HcclAiRMAWQ& wq) const
+void DevUbConnection::SetWqInfo(HcclAiRMAWQ& wq)
 {
     wq.jettyId = jettyId;
     wq.dbAddr = dbAddr;
     wq.sqVA = sqBuffVa;
     wq.sqDepth = sqDepth * WQE_NUM_PER_SQE;
     wq.tp_id = tpn;
-    memcpy_s(wq.rmtEid, sizeof(wq.rmtEid), rmtReverseEid.raw, sizeof(wq.rmtEid));
+    errno_t ret = memcpy_s(wq.rmtEid, sizeof(wq.rmtEid), rmtReverseEid.raw, sizeof(wq.rmtEid));
+    if (ret != EOK) {
+        HCCL_ERROR("[DevUbConnection][%s] memcpy_s failed, ret=%d", __func__, ret);
+        ThrowAbnormalStatus(std::string(__func__));
+    }
 }
 
-void DevUbConnection::SetSqContextInfo(SqContext& sq) const
+void DevUbConnection::SetSqContextInfo(SqContext& sq)
 {
     sq.contextInfo.ubJfs.jfsID = jettyId;
     sq.contextInfo.ubJfs.dbVa = dbAddr;
     sq.contextInfo.ubJfs.sqVa = sqBuffVa;
     sq.contextInfo.ubJfs.sqDepth = sqDepth * WQE_NUM_PER_SQE;
     sq.contextInfo.ubJfs.tpID = tpn;
-    memcpy_s(
+    errno_t ret = memcpy_s(
         sq.contextInfo.ubJfs.remoteEID, sizeof(sq.contextInfo.ubJfs.remoteEID), rmtReverseEid.raw,
         sizeof(sq.contextInfo.ubJfs.remoteEID));
+    if (ret != EOK) {
+        HCCL_ERROR("[DevUbConnection][%s] memcpy_s failed, ret=%d", __func__, ret);
+        ThrowAbnormalStatus(std::string(__func__));
+    }
 }
 
 void DevUbConnection::SetCqContextInfo(CqContext& cq) const
