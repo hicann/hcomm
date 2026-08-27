@@ -363,6 +363,7 @@ HcclResult AicpuTsHccsChannel::BuildHcclChannelHccsRes(HcclChannelHccsRes& chann
     linkp2p.remoteHcclbuffer.size = 0;
     linkp2p.remoteUserMem = nullptr;
     linkp2p.remoteUserMemCount = 0;
+    linkp2p.qos = channelDesc_.qos;
 
     HCCL_DEBUG("[AicpuTsHccsChannel][%s] finish set remoteMem info", __func__);
 
