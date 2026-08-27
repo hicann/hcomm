@@ -129,7 +129,11 @@ HcclResult TaskExceptionHost::Register(u64 commHandle)
         CHK_PRT_RET(
             ret != ACL_SUCCESS, HCCL_ERROR("[%s]aclrtExceptionInfoCallbackRegister failed, ret[%d]", __func__, ret),
             HCCL_E_RUNTIME);
-        HCCL_RUN_INFO("[%s]aclrtExceptionInfoCallbackRegister set ProcessCallback success", __func__);
+        Hccl::HrtUnregTaskExceptionCallbackByModule(Hccl::TaskExceptionHandler::Process);
+        HCCL_RUN_INFO(
+            "[%s]aclrtExceptionInfoCallbackRegister set ProcessCallback success and unregister legacy "
+            "TaskExceptionHandler::Process callback",
+            __func__);
     }
 
     CommRegisterMap_.insert(commHandle);
@@ -252,6 +256,11 @@ void TaskExceptionHost::Process(rtExceptionInfo_t* exceptionInfo)
         return;
     };
 
+    ProcessHcclTaskException(exceptionInfo);
+}
+
+void TaskExceptionHost::ProcessHcclTaskException(rtExceptionInfo_t* exceptionInfo)
+{
     Hccl::TaskInfo* curTask = nullptr;
     HcclResult ret = Hccl::GlobalMirrorTasks::Instance().FindTaskInfo(
         exceptionInfo->deviceid, exceptionInfo->streamid, exceptionInfo->taskid, curTask);
@@ -266,6 +275,13 @@ void TaskExceptionHost::Process(rtExceptionInfo_t* exceptionInfo)
         HCCL_ERROR(
             "[%s]FindTaskInfo fail, ret[%d], deviceid[%u], streamid[%u], taskid[%u].", __func__, ret,
             exceptionInfo->deviceid, exceptionInfo->streamid, exceptionInfo->taskid), );
+
+    if (curTask->taskParam_.taskType == Hccl::TaskParamType::TASK_AIV) {
+        HCCL_RUN_INFO(
+            "[TaskExceptionHost][%s] AIV taskType, taskid[%u] streamid[%u] deviceid[%u].", __func__,
+            exceptionInfo->taskid, exceptionInfo->streamid, exceptionInfo->deviceid);
+        return;
+    }
 
     CHK_PRT_RET(curTask->dfxOpInfo_ == nullptr, HCCL_ERROR("[%s]fail, dfxOpInfo is nullptr", __func__), );
     bool isIndop_ = curTask->dfxOpInfo_->isIndop_;

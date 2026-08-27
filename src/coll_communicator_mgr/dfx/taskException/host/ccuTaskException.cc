@@ -1376,14 +1376,25 @@ HcclResult CcuTaskException::PrintCcuUbRegisters(
     u32 jettyNum = static_cast<u32>(ccuJettys.size());
     CHK_PRT_RET(jettyNum == 0, HCCL_RUN_INFO("[%s]jettyNum[%u], skip", __func__, jettyNum), HCCL_SUCCESS);
 
-    std::vector<JettyHandle> jettyHandles;
-    jettyHandles.reserve(jettyNum);
-    for (auto& ccuJetty : ccuJettys) {
-        jettyHandles.push_back(ccuJetty->GetJettyHandle());
-    }
-
     std::vector<JettyStatus> jettyStatusVec;
-    CHK_RET(RaBatchQueryJettyStatus(jettyHandles, jettyStatusVec, jettyNum));
+    std::unordered_map<CtxHandle, std::vector<std::pair<JettyHandle, u32>>> ctxGroups;
+    for (u32 i = 0; i < jettyNum; ++i) {
+        ctxGroups[ccuJettys[i]->GetCtxHandle()].emplace_back(ccuJettys[i]->GetJettyHandle(), i);
+    }
+    jettyStatusVec.resize(jettyNum);
+    for (auto& [ctxHandle, group] : ctxGroups) {
+        std::vector<JettyHandle> handles;
+        handles.reserve(group.size());
+        for (auto& item : group) {
+            handles.push_back(item.first);
+        }
+        u32 num = static_cast<u32>(handles.size());
+        std::vector<JettyStatus> statusVec;
+        CHK_RET(HccpBatchQueryJettyStatus(ctxHandle, handles, statusVec, num));
+        for (u32 j = 0; j < num; ++j) {
+            jettyStatusVec[group[j].second] = statusVec[j];
+        }
+    }
 
     for (u32 i = 0; i < jettyNum; ++i) {
         if (jettyStatusVec[i] == JettyStatus::ERROR || jettyStatusVec[i] == JettyStatus::SUSPENDED) {

@@ -1072,9 +1072,9 @@ void HrtAicpuLaunchKernelWithHostArgs(
     }
 }
 
-void HrtRegTaskFailCallbackByModule(aclrtExceptionInfoCallback callback)
+void HrtRegTaskExceptionCallbackByModule(aclrtExceptionInfoCallback callback)
 {
-    HCCL_INFO("[HrtRegTaskFailCallbackByModule] callback[%p].", callback);
+    HCCL_INFO("[HrtRegTaskExceptionCallbackByModule] callback[%p].", callback);
     aclError ret = aclrtExceptionInfoCallbackRegister(callback);
     if (ret != ACL_SUCCESS) {
         string msg
@@ -1083,9 +1083,9 @@ void HrtRegTaskFailCallbackByModule(aclrtExceptionInfoCallback callback)
     }
 }
 
-void HrtUnregTaskFailCallbackByModule(aclrtExceptionInfoCallback callback)
+void HrtUnregTaskExceptionCallbackByModule(aclrtExceptionInfoCallback callback)
 {
-    HCCL_INFO("[HrtUnregTaskFailCallbackByModule] callback[%p].", callback);
+    HCCL_INFO("[HrtUnregTaskExceptionCallbackByModule] callback[%p].", callback);
     aclError ret = aclrtExceptionInfoCallbackUnregister(callback);
     if (ret != ACL_SUCCESS) {
         string msg = StringFormat(

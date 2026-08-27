@@ -60,11 +60,11 @@ TaskExceptionHandler::~TaskExceptionHandler() { UnRegister(); }
 
 void TaskExceptionHandler::Register() const
 {
-    HrtRegTaskFailCallbackByModule(Process);
+    HrtRegTaskExceptionCallbackByModule(Process);
     HCCL_INFO("[TaskExceptionHandler]exception process func registered.");
 }
 
-void TaskExceptionHandler::UnRegister() const { HrtUnregTaskFailCallbackByModule(Process); }
+void TaskExceptionHandler::UnRegister() const { HrtUnregTaskExceptionCallbackByModule(Process); }
 
 TaskExceptionHandler* TaskExceptionHandlerManager::GetHandler(size_t devId)
 {

@@ -14,9 +14,16 @@
 #include "hccl_comm_pub.h"
 #include "hccl_api_base_test.h"
 #include "ccu_comp.h"
+#include "hcomm_c_adpt.h"
 #define private public
+#define protected public
 #include "hcclCommTaskException.h"
 #include "ccuTaskException.h"
+#include "ccu_urma_channel.h"
+#include "urma_endpoint.h"
+#include "ccu_channel_ctx_pool.h"
+#include "ccu_jetty_.h"
+#undef protected
 #undef private
 
 using namespace hccl;
@@ -1494,4 +1501,66 @@ TEST_F(CcuTaskExceptionTest, PrintCcuUbRegisters_MultipleInvalidChannelIds_Expec
     Hccl::TaskParam taskParam{.taskType = Hccl::TaskParamType::TASK_CCU};
     Hccl::TaskInfo taskInfo{0, 0, 0, taskParam, nullptr, false};
     EXPECT_EQ(CcuTaskException::PrintCcuUbRegisters(errorInfos, 0, taskInfo), HCCL_SUCCESS);
+}
+
+// Cover PrintCcuUbRegisters ctxGroups grouping logic added by PR4843:
+// build non-empty ccuJettys, run ctxGroups -> HccpBatchQueryJettyStatus -> statusVec backfill.
+
+TEST_F(CcuTaskExceptionTest, PrintCcuUbRegisters_When_JettysExist_Expect_QueryByCtxGroups)
+{
+    constexpr uint16_t channelId = 200;
+    constexpr uint8_t dieId = 0;
+    {
+        std::lock_guard<std::mutex> lock(g_channelMapMutex);
+        g_channelIdToHandle[channelId] = 0xAAAA;
+    }
+
+    CcuJetty jetty(Hccl::IpAddress{}, CcuJettyInfo{});
+    jetty.ctxHandle_ = reinterpret_cast<CtxHandle>(0x1);
+    jetty.jettyHandlePtr_ = reinterpret_cast<void*>(0x2);
+    jetty.rdmaHandle_ = reinterpret_cast<RdmaHandle>(0x3);
+    jetty.jettyInfo_.taJettyId = 7;
+
+    HcommChannelDesc chDesc{};
+    CcuUrmaChannel channel(reinterpret_cast<EndpointHandle>(0x10), chDesc);
+    void* channelPtr = static_cast<Channel*>(&channel);
+
+    MOCKER(HcommChannelGet)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&channelPtr))
+        .will(returnValue(static_cast<HcommResult>(0)));
+
+    CcuChannelCtxPool pool(0);
+    pool.channelJettyInfoMap_[{dieId, channelId}].second.push_back(&jetty);
+
+    EndpointDesc epDesc{};
+    UrmaEndpoint endpoint(epDesc);
+    endpoint.ccuChannelCtxPool_.reset(&pool);
+    void* endpointPtr = static_cast<Endpoint*>(&endpoint);
+
+    MOCKER(HcommEndpointGet)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&endpointPtr))
+        .will(returnValue(static_cast<HcommResult>(0)));
+
+    MOCKER_CPP(&UrmaEndpoint::GetCcuChannelCtxPool).stubs().will(returnValue(&pool));
+
+    CcuErrorInfo errorInfo{};
+    errorInfo.repType = CcuRep::CcuRepType::READ;
+    errorInfo.dieId = dieId;
+    errorInfo.msg.transMem.channelId = channelId;
+    std::vector<CcuErrorInfo> errorInfos{errorInfo};
+    Hccl::TaskParam taskParam{.taskType = Hccl::TaskParamType::TASK_CCU};
+    Hccl::TaskInfo taskInfo{0, 0, 0, taskParam, nullptr, false};
+
+    HcclResult ret = CcuTaskException::PrintCcuUbRegisters(errorInfos, 0, taskInfo);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    GlobalMockObject::verify();
+    pool.channelJettyInfoMap_.clear();
+    (void)endpoint.ccuChannelCtxPool_.release();
+    {
+        std::lock_guard<std::mutex> lock(g_channelMapMutex);
+        g_channelIdToHandle.erase(channelId);
+    }
 }

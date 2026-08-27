@@ -1653,6 +1653,8 @@ aclError aclrtExceptionInfoCallbackRegister(aclrtExceptionInfoCallback callback)
 aclError aclrtExceptionInfoCallbackUnregister(aclrtExceptionInfoCallback callback) { return ACL_ERROR_NONE; }
 }
 
+void HrtUnregTaskExceptionCallbackByModule(aclrtExceptionInfoCallback callback) {}
+
 u32 Hccl::HcclCommunicator::GetRankInParentComm() { return 0; }
 
 const std::string& Hccl::HcclCommunicator::GetId() const

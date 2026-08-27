@@ -35,6 +35,7 @@ public:
     uint16_t GetJettyId() const { return jettyInfo_.taJettyId; }
     JettyHandle GetJettyHandle() const { return reinterpret_cast<JettyHandle>(jettyHandlePtr_); }
     RdmaHandle GetRdmaHandle() const { return rdmaHandle_; }
+    CtxHandle GetCtxHandle() const { return ctxHandle_; }
 
 private:
     CcuJetty(const CcuJetty& that) = delete;

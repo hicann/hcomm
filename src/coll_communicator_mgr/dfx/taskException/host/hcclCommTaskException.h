@@ -45,6 +45,7 @@ public:
 
 private:
     void Process(rtExceptionInfo_t* exceptionInfo);
+    void ProcessHcclTaskException(rtExceptionInfo_t* exceptionInfo);
     void HandleAicpuErrorReport(
         rtExceptionInfo_t* exceptionInfo, const Hccl::ErrorMessageReport& errorMessage,
         const Hccl::TaskInfo& taskInfo) const;

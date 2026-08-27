@@ -10,6 +10,9 @@
 
 #pragma once
 
+#include <mutex>
+#include <unordered_map>
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <mockcpp/mockcpp.hpp>
 #include <stdio.h>
@@ -437,3 +440,8 @@ void When_Need_HcclGetRootInfo(void);
         Ut_Stream_Destroy(stream);         \
         Ut_Comm_Destroy(comm);             \
     } while (0)
+
+namespace hcomm {
+extern std::mutex g_channelMapMutex;
+extern std::unordered_map<uint16_t, uint64_t> g_channelIdToHandle;
+} // namespace hcomm

@@ -142,8 +142,9 @@ HcclResult HccpUbCreateJettyAsync(
 
 MAKE_ENUM(JettyStatus, RESET, READY, SUSPENDED, ERROR);
 constexpr u32 MAX_JETTY_QUERY_NUM = 128;
-HcclResult
-RaBatchQueryJettyStatus(const std::vector<JettyHandle>& jettyHandles, std::vector<JettyStatus>& jettyAttrs, u32& num);
+HcclResult HccpBatchQueryJettyStatus(
+    const CtxHandle ctxHandle, const std::vector<JettyHandle>& jettyHandles, std::vector<JettyStatus>& jettyAttrs,
+    u32& num);
 
 using HrtRaUbJettyImportedOutParam = struct HrtRaUbJettyImportedOutParamDef {
     TargetJettyHandle handle{0};

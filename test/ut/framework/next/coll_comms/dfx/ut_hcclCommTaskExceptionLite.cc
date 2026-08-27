@@ -649,3 +649,17 @@ TEST_F(hcclCommTaskExceptionLiteTest, Ut_ReportErrorMsg_When_DuplicateReport_Exp
     MOCKER(RptInputErr).expects(never());
     handler->ReportErrorMsg(taskInfo, "", errorMessage, &exceptionInfo);
 }
+
+TEST_F(hcclCommTaskExceptionLiteTest, Ut_Register_When_CommRegisterMapEmpty_Expect_RegisterCallbackAndUnregisterLegacy)
+{
+    const s32 testDeviceId = 62;
+    TaskExceptionHost* handler = TaskExceptionHost::GetInstance(testDeviceId);
+    ASSERT_NE(handler, nullptr);
+    handler->CommRegisterMap_.clear();
+
+    HcclResult ret = handler->Register(0xABCD);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(handler->CommRegisterMap_.count(0xABCD), 1u);
+
+    handler->CommRegisterMap_.clear();
+}

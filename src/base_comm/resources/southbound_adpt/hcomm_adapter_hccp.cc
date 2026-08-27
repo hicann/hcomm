@@ -502,9 +502,11 @@ HcclResult HccpRaTlvRequestForCustomChannel(void* tlvHandle, unsigned int msgTyp
     return HCCL_SUCCESS;
 }
 
-HcclResult
-RaBatchQueryJettyStatus(const std::vector<JettyHandle>& jettyHandles, std::vector<JettyStatus>& jettyAttrs, u32& num)
+HcclResult HccpBatchQueryJettyStatus(
+    const CtxHandle ctxHandle, const std::vector<JettyHandle>& jettyHandles, std::vector<JettyStatus>& jettyAttrs,
+    u32& num)
 {
+    CHK_PTR_NULL(ctxHandle);
     if (jettyHandles.size() != num) {
         HCCL_ERROR("jettyHandles size[%zu] not equal to num[%u]", jettyHandles.size(), num);
         return HCCL_E_PARA;
