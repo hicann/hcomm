@@ -30,7 +30,7 @@
 | 依赖 |    不涉及    | cmake/third_party/gtest.cmake          | https://gitcode.com/cann-src-third-party/googletest/releases/download/v1.14.0/googletest-1.14.0.tar.gz                          | 从 gitcode 下载 googletest 源码，作为编译依赖 |
 | 依赖 |    不涉及    | cmake/third_party/mockcpp.cmake          |  https://gitcode.com/cann-src-third-party/mockcpp/releases/download/v2.7-h4/mockcpp-2.7.tar.gz                         | 从 gitcode 下载 mockcpp 源码，作为编译依赖 |
 | 依赖 |    不涉及    | cmake/third_party/protobuf.cmake          |  https://gitcode.com/cann-src-third-party/protobuf/releases/download/v25.1/protobuf-25.1.tar.gz                         | 从 gitcode 下载 protobuf 源码，作为编译依赖 |
-| 依赖 |    不涉及    | rdma-core      | https://gitcode.com/cann-src-third-party/rdma-core/releases/download/v42.7-h1/rdma-core-42.7.tar.gz                  | 从 gitcode 下载 rdma-core 源码，作为编译依赖 |                                                                                     |
+| 依赖 |    不涉及    | rdma-core      | https://gitcode.com/cann-src-third-party/rdma-core/releases/download/v42.7-h1/rdma-core-42.7.tar.gz                  | 从 gitcode 下载 rdma-core 源码，作为编译依赖 |
 | 依赖 |    不涉及    | rdma-core-patch      | https://gitcode.com/cann-src-third-party/rdma-core/releases/download/v42.7-h1/rdma-core-42.7.patch                            | 从 gitcode 下载 rdma-core-patch 源码，作为编译依赖 |
 
 ---
