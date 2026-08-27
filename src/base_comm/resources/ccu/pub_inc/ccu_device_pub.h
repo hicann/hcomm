@@ -21,7 +21,6 @@
 #include "ccu_drv_handle.h"
 
 #include "hccl_types.h"
-#include "enum_factory.h"
 #include "hccl_rank_graph.h"
 
 // 支持新老通信域混跑，引入legacy数据结构

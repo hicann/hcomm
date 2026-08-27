@@ -570,7 +570,7 @@ namespace CcuRep {
         // MSA~MSH Reduce到 MSA
         inline void Reduce(
             CcuInstr* instr, const uint16_t* ms, uint16_t count, uint16_t castEn, uint16_t dataType, uint16_t setCKEId,
-            uint16_t setCKEMask, uint16_t XnIdLength)
+            uint16_t setCKEMask, uint16_t xnIdLength)
         {
             // 由调用者保证传入的count >= 2(reduce的数据源)
             if (count < CCU_REDUCE_MIN_MS) {
@@ -582,7 +582,7 @@ namespace CcuRep {
             for (uint16_t index = 0; index < CCU_REDUCE_MAX_MS; index++) {
                 instr->v2.reduce.msId[index] = ms[index];
             }
-            instr->v2.reduce.XnIdLength = XnIdLength;
+            instr->v2.reduce.XnIdLength = xnIdLength;
             instr->v2.reduce.count = count & 0x7;
             instr->v2.reduce.castEn = castEn & 0x3;
             instr->v2.reduce.dataType = dataType & 0x1f;
@@ -592,26 +592,26 @@ namespace CcuRep {
 
         void ReduceAdd(
             CcuInstr* instr, const uint16_t* ms, uint16_t count, uint16_t castEn, uint16_t dataType, uint16_t setCKEId,
-            uint16_t setCKEMask, uint16_t XnIdLength)
+            uint16_t setCKEMask, uint16_t xnIdLength)
         {
             if (instr == nullptr) {
                 HCCL_ERROR("[CcuV2::ReduceAdd] instr is nullptr!");
                 return;
             }
             instr->header = InstrHeader(REDUCE_TYPE, REDUCE_ADD_CODE);
-            Reduce(instr, ms, count, castEn, dataType, setCKEId, setCKEMask, XnIdLength);
+            Reduce(instr, ms, count, castEn, dataType, setCKEId, setCKEMask, xnIdLength);
         }
 
         void ReduceMax(
             CcuInstr* instr, const uint16_t* ms, uint16_t count, uint16_t dataType, uint16_t setCKEId,
-            uint16_t setCKEMask, uint16_t XnIdLength)
+            uint16_t setCKEMask, uint16_t xnIdLength)
         {
             if (instr == nullptr) {
                 HCCL_ERROR("[CcuV2::ReduceMax] instr is nullptr!");
                 return;
             }
             instr->header = InstrHeader(REDUCE_TYPE, REDUCE_MAX_CODE);
-            Reduce(instr, ms, count, 0, dataType, setCKEId, setCKEMask, XnIdLength);
+            Reduce(instr, ms, count, 0, dataType, setCKEId, setCKEMask, xnIdLength);
         }
 
         void ReduceMin(

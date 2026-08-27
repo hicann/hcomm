@@ -66,7 +66,7 @@ HcclResult CcuJetty::Init()
         jfcHandle,
         jfcHandle,
         tokenValue,
-        0,
+        nullptr,
         jettyMode,
         jettyInfo_.taJettyId,
         jettyInfo_.sqBufVa,

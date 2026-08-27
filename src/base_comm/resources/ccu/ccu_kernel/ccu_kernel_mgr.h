@@ -65,8 +65,8 @@ private:
 
 private:
     CcuResult BuildKernel(
-        uint32_t dieId, const char* kernelFuncName, const void* kernelFunc, const void** kernelArgs, uint32_t argNum,
-        CcuInstance* ccuIns);
+        const uint32_t dieId, const char* kernelFuncName, const void* kernelFunc, const void** kernelArgs,
+        const uint32_t argNum, CcuInstance* ccuIns);
     CcuResult PrepareConstValueResources();
     CcuResult AllocRes(CcuResPack& resPack);
 

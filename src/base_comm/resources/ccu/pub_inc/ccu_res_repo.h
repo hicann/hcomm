@@ -15,7 +15,6 @@
 #include <string>
 #include <sstream>
 #include <vector>
-
 #include "ccu_common.h"
 
 namespace hcomm {

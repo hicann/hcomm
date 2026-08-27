@@ -23,11 +23,11 @@ class CcuWqeBBMgrV1 : public CcuWqeBBMgr {
 public:
     CcuWqeBBMgrV1(const int32_t devLogicId, const uint8_t dieId) : CcuWqeBBMgr(devLogicId, dieId) {}
     CcuWqeBBMgrV1() = default;
-    ~CcuWqeBBMgrV1() override final = default;
+    ~CcuWqeBBMgrV1() final = default;
 
-    HcclResult Init() override final;
-    HcclResult Alloc(const WqeBBReq& wqeBBReq, ResInfo& wqeBBInfo) override final;
-    HcclResult Release(const ResInfo& wqeBBInfo) override final;
+    HcclResult Init() final;
+    HcclResult Alloc(const WqeBBReq& wqeBBReq, ResInfo& wqeBBInfo) final;
+    HcclResult Release(const ResInfo& wqeBBInfo) final;
 
 private:
     std::unique_ptr<CcuResIdAllocator> idAllocator_{nullptr};

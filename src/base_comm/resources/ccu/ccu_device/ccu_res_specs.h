@@ -15,9 +15,7 @@
 #include <cstdint>
 #include <string>
 #include <utility>
-
 #include "ccu_dev_mgr_imp.h"
-
 #include "dev_type.h"
 
 namespace hcomm {
@@ -184,7 +182,6 @@ private:
     CcuVersion ccuVersion_{CcuVersion::CCU_INVALID};
     std::array<bool, CCU_MAX_IODIE_NUM> dieEnableFlags_{};
     std::array<CcuResSpecInfo, CCU_MAX_IODIE_NUM> resSpecs_{};
-
 }; // class CcuResSpecifications
 } // namespace hcomm
 #endif // CCU_RES_SPECS_H

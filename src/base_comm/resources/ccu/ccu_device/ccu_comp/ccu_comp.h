@@ -73,7 +73,7 @@ public:
 
     HcclResult CleanTaskKillState() const;
     HcclResult CleanDieCkes(const uint8_t dieId) const;
-    HcclResult CcuCleanTaskKillState(const int32_t deviceLogicId);
+    HcclResult CcuCleanTaskKillState(const int32_t deviceLogicId) const;
     HcclResult SetTaskKillDone();
     HcclResult SetTaskKill();
 
@@ -94,7 +94,7 @@ private:
     CreateAndImportLoopJettys(const uint8_t dieId, const CommAddr& commAddr, const std::vector<JettyInfo>& jettyInfos);
     HcclResult GetLoopTpInfo(const uint8_t dieId, const CommAddr& commAddr, TpInfo& tpInfo);
     HcclResult GetLoopTpAttr(const uint8_t dieId, const CommAddr& commAddr, TpAttrInfo& tpAttrInfo);
-    uint32_t GetNewPsn();
+    uint32_t GetNewPsn() const;
     HcclResult ConfigLoopChannel(const uint8_t dieId, const CommAddr& commAddr, const ChannelInfo& channelInfo);
     HcclResult ConfigMsIdToken();
 
@@ -104,7 +104,7 @@ private:
     HcclResult DestroyAllJettys();
 
     HcclResult SetProcess(CcuOpcodeType opCode) const;
-    HcclResult CcuSetTaskKillDone(const int32_t deviceLogicId);
+    HcclResult CcuSetTaskKillDone(const int32_t deviceLogicId) const;
 
     // 0.5rtt专用接口
     HcclResult ConfirmCntXns(const uint8_t dieId, const std::string& resGroupTag, const ResInfo& cntXnInfos);

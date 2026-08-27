@@ -475,18 +475,10 @@ HcclResult CcuComponent::CreateAndImportLoopJettys(
     for (const auto& jettyInfo : jettyInfos) {
         const auto jettyMode = jettyInfo.jettyType == CcuJettyType::CCUM_CACHED_JETTY ? HrtJettyMode::CCU_CCUM_CACHE :
                                                                                         HrtJettyMode::CCU_TA_CACHE;
-        HrtRaUbCreateJettyParam req{
-            jfcHandle,
-            jfcHandle,
-            ccuBufTokenValue,
-            0,
-            jettyMode,
-            jettyInfo.taJettyId,
-            jettyInfo.sqBufVa,
-            jettyInfo.sqBufSize,
-            jettyInfo.wqeBBStartId,
-            jettyInfo.sqDepth,
-            errTimeout};
+        HrtRaUbCreateJettyParam req{jfcHandle,         jfcHandle,           ccuBufTokenValue,
+                                    nullptr,           jettyMode,           jettyInfo.taJettyId,
+                                    jettyInfo.sqBufVa, jettyInfo.sqBufSize, jettyInfo.wqeBBStartId,
+                                    jettyInfo.sqDepth, errTimeout};
         req.qos = loopJettyQos;
 
         HrtRaUbJettyCreatedOutParam createdOutParam{};
@@ -618,7 +610,7 @@ inline uint32_t GenerateRandomNum()
     return randNum;
 }
 
-uint32_t CcuComponent::GetNewPsn() { return GenerateRandomNum(); }
+uint32_t CcuComponent::GetNewPsn() const { return GenerateRandomNum(); }
 
 HcclResult
 CcuComponent::ConfigLoopChannel(const uint8_t dieId, const CommAddr& commAddr, const ChannelInfo& channelInfo)
@@ -1320,7 +1312,7 @@ HcclResult CcuComponent::UnimportAllJettys()
                     "[CcuComponent][%s] skip RaCtxQpUnimport, ctxHandle=%p invalid, "
                     "remoteJettyHandle=%p, devLogicId[%d].",
                     __func__, ctxHandle, remoteJettyHandle, devLogicId_);
-                paramPair.second.handle = 0;
+                paramPair.second.handle = nullptr;
                 continue;
             }
             int32_t ret = RaCtxQpUnimport(ctxHandle, remoteJettyHandle);
@@ -1330,7 +1322,7 @@ HcclResult CcuComponent::UnimportAllJettys()
                     "remoteJettyHandle[%p], devLogicId[%d].",
                     __func__, ctxHandle, remoteJettyHandle, devLogicId_);
             }
-            paramPair.second.handle = 0; // 清理handle，避免重复释放
+            paramPair.second.handle = nullptr; // 清理handle，避免重复释放
         }
     }
     importedOutParamMap_.clear();
@@ -1351,7 +1343,7 @@ HcclResult CcuComponent::ReleaseAllTpInfos()
     for (auto& item : tpInfoMap_) {
         const auto& dieId = item.first;
         const auto& tpInfo = item.second;
-        if (!tpInfo.tpHandle) {
+        if (tpInfo.tpHandle == 0) {
             continue;
         }
 
@@ -1482,7 +1474,7 @@ HcclResult CcuComponent::SetTaskKillDone()
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuComponent::CcuSetTaskKillDone(const int32_t deviceLogicId)
+HcclResult CcuComponent::CcuSetTaskKillDone(const int32_t deviceLogicId) const
 {
     HCCL_INFO("[CcuSetTaskKillDone] Input params: deviceLogicId[%d]", deviceLogicId);
     // 入参校验拦截
@@ -1495,7 +1487,7 @@ HcclResult CcuComponent::CcuSetTaskKillDone(const int32_t deviceLogicId)
     return CcuComponent::GetInstance(deviceLogicId).SetTaskKillDone();
 }
 
-HcclResult CcuComponent::CcuCleanTaskKillState(const int32_t deviceLogicId)
+HcclResult CcuComponent::CcuCleanTaskKillState(const int32_t deviceLogicId) const
 {
     HCCL_INFO("[CcuCleanTaskKillState] Input params: deviceLogicId[%d]", deviceLogicId);
     // 入参校验拦截

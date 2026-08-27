@@ -151,7 +151,7 @@ static void MoveResourcesToDie(CcuRepResource& res, uint32_t targetDieId)
     if (targetDieId == 0)
         return; // 初始资源位于die0，不用设置
 
-    auto moveAndSet = [&](auto& arr) {
+    auto moveAndSet = [&targetDieId](auto& arr) {
         arr[targetDieId] = std::move(arr[0]);
         for (auto& item : arr[targetDieId])
             item.SetDieId(targetDieId);
@@ -229,7 +229,7 @@ HcclResult CcuKernel::ApplyDieFromChannels()
     return HcclResult::HCCL_SUCCESS;
 }
 
-HcclResult CcuKernel::ValidateAndApplyDie(const uint32_t targetDieId)
+HcclResult CcuKernel::ValidateAndApplyDie(uint32_t targetDieId)
 {
     CHK_PRT_RET(
         targetDieId >= CCU_MAX_IODIE_NUM,
@@ -3157,7 +3157,7 @@ HcclResult CcuKernel::AddProfilingInfo(
     HcclReduceOp opType, const std::string& opName)
 {
     CHK_PTR_NULL(channels);
-    ccuProfilingInfoCache.type = (uint8_t)CcuProfilinType::CCU_LOOPGROUP_PROFILING;
+    ccuProfilingInfoCache.type = static_cast<uint8_t>(CcuProfilinType::CCU_LOOPGROUP_PROFILING);
     ccuProfilingInfoCache.name = opName;
     ccuProfilingInfoCache.reduceOpType = opType;
     ccuProfilingInfoCache.inputDataType = dataType;

@@ -525,24 +525,24 @@ HcclResult CcuDevMgrImp::GetLoopChannelId(
 }
 
 HcclResult
-CcuDevMgrImp::GetResource(const int32_t deviceLogicId, const CcuResHandle handle, CcuResRepository& ccuResRepo)
+CcuDevMgrImp::GetResource(const int32_t deviceLogicId, const CcuResHandle resHandle, CcuResRepository& ccuResRepo)
 {
     HcclResult ret;
     EXCEPTION_HANDLE_BEGIN
     ret = CheckCcuOpenSourceEnable() ?
-              CcuResBatchAllocator::GetInstance(deviceLogicId).GetResource(handle, ccuResRepo) :
-              Hccl::CcuResBatchAllocator::GetInstance(deviceLogicId).GetResource(handle, ccuResRepo);
+              CcuResBatchAllocator::GetInstance(deviceLogicId).GetResource(resHandle, ccuResRepo) :
+              Hccl::CcuResBatchAllocator::GetInstance(deviceLogicId).GetResource(resHandle, ccuResRepo);
     EXCEPTION_HANDLE_END
     return ret;
 }
 
-HcclResult CcuDevMgrImp::AllocResHandle(const int32_t deviceLogicId, const CcuResReq resReq, CcuResHandle& handle)
+HcclResult CcuDevMgrImp::AllocResHandle(const int32_t deviceLogicId, const CcuResReq resReq, CcuResHandle& resHandle)
 {
     HcclResult ret;
     EXCEPTION_HANDLE_BEGIN
     ret = CheckCcuOpenSourceEnable() ?
-              CcuResBatchAllocator::GetInstance(deviceLogicId).AllocResHandle(resReq, handle) :
-              Hccl::CcuResBatchAllocator::GetInstance(deviceLogicId).AllocResHandle(resReq, handle);
+              CcuResBatchAllocator::GetInstance(deviceLogicId).AllocResHandle(resReq, resHandle) :
+              Hccl::CcuResBatchAllocator::GetInstance(deviceLogicId).AllocResHandle(resReq, resHandle);
     EXCEPTION_HANDLE_END
     return ret;
 }

@@ -161,8 +161,8 @@ CcuResult CcuKernelMgr::Register(
 }
 
 CcuResult CcuKernelMgr::BuildKernel(
-    const uint32_t dieId, const char* kernelFuncName, const void* kernelFunc, const void** kernelArgs,
-    const uint32_t argNum, CcuInstance* ccuIns)
+    uint32_t dieId, const char* kernelFuncName, const void* kernelFunc, const void** kernelArgs, uint32_t argNum,
+    CcuInstance* ccuIns)
 {
     currKernel_ = std::make_unique<CcuKernel>(); // 重置待构建kernel
     // 执行算法流程时将资源占用临时记录在 die 0，后续确定实际 die 并迁移资源
@@ -693,7 +693,7 @@ static HcclResult ReleaseInstrRes(CcuKernel* kernel, const int32_t devLogicId)
     return HcclResult::HCCL_SUCCESS;
 }
 
-CcuResult CcuKernelMgr::UnRegister(const CcuKernelHandle kernelHandle)
+CcuResult CcuKernelMgr::UnRegister(CcuKernelHandle kernelHandle)
 {
     std::unique_lock<std::mutex> lock(kernelMapMutex_);
 
@@ -879,7 +879,7 @@ HcclResult CcuKernelMgr::TransRepSequenceToMicrocode(const std::vector<CcuKernel
     return HcclResult::HCCL_SUCCESS;
 }
 
-CcuKernel* CcuKernelMgr::GetKernel(const CcuKernelHandle kernelHandle)
+CcuKernel* CcuKernelMgr::GetKernel(CcuKernelHandle kernelHandle)
 {
     std::unique_lock<std::mutex> lock(kernelMapMutex_);
     auto it = kernelMap_.find(kernelHandle);
@@ -891,7 +891,7 @@ CcuKernel* CcuKernelMgr::GetKernel(const CcuKernelHandle kernelHandle)
     return it->second.get();
 }
 
-CcuResult CcuKernelMgr::GetCcuKernelInfo(const CcuKernelHandle kernelHandle, CcuKernelInfo& info)
+CcuResult CcuKernelMgr::GetCcuKernelInfo(CcuKernelHandle kernelHandle, CcuKernelInfo& info)
 {
     std::unique_lock<std::mutex> lock(kernelMapMutex_);
     auto it = kernelMap_.find(kernelHandle);

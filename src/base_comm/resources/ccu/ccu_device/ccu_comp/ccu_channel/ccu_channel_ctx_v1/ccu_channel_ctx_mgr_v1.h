@@ -111,13 +111,13 @@ public:
           jettyCtxMgr_(devLogicId, dieId, devPhyId) {};
 
     CcuChannelCtxMgrV1() = default;
-    ~CcuChannelCtxMgrV1() override final = default;
+    ~CcuChannelCtxMgrV1() final = default;
 
-    HcclResult Init() override final;
+    HcclResult Init() final;
 
-    HcclResult Alloc(const ChannelPara& channelPara, std::vector<ChannelInfo>& channelInfos) override final;
-    HcclResult Config(const ChannelCfg& channelCfg) override final;
-    HcclResult Release(const uint32_t channelId) override final;
+    HcclResult Alloc(const ChannelPara& channelPara, std::vector<ChannelInfo>& channelInfos) final;
+    HcclResult Config(const ChannelCfg& channelCfg) final;
+    HcclResult Release(const uint32_t channelId) final;
 
 private:
     CcuJettyCtxMgrV1 jettyCtxMgr_{};

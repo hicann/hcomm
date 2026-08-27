@@ -31,16 +31,16 @@ public:
     CcuJettyCtxMgrV2(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId);
 
     CcuJettyCtxMgrV2() = default;
-    ~CcuJettyCtxMgrV2() override final = default;
+    ~CcuJettyCtxMgrV2() final = default;
 
-    HcclResult Init() override final;
+    HcclResult Init() final;
     HcclResult Alloc(
-        const uint32_t feId, const uint32_t jettyNum, const uint32_t sqSize,
-        std::vector<JettyInfo>& jettyInfos) override final;
-    HcclResult Config(
-        const uint32_t feId, const std::vector<JettyInfo>& jettyInfos,
-        const std::vector<JettyCfg>& jettyCfgs) override final;
-    HcclResult Release(const uint32_t feId, const std::vector<JettyInfo>& jettyInfos) override final;
+        const uint32_t feId, const uint32_t jettyNum, const uint32_t sqSize, std::vector<JettyInfo>& jettyInfos) final;
+
+    HcclResult
+    Config(const uint32_t feId, const std::vector<JettyInfo>& jettyInfos, const std::vector<JettyCfg>& jettyCfgs) final;
+
+    HcclResult Release(const uint32_t feId, const std::vector<JettyInfo>& jettyInfos) final;
 
 private:
     CcuChannelJettyMap channelJettyMap_{8, 1}; // 默认配比8:1

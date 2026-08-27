@@ -12,7 +12,6 @@
 #define CCU_PRIMITIVES_H
 
 #include "ccu_types.h"
-#include "ccu_res_defs.h"
 
 #ifdef __cplusplus
 extern "C" {

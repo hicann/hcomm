@@ -20,7 +20,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "ccu_task_arg_v1.h"
 #include "ccu_task_param_v1.h"
 
 #include "ccu_kernel_resource.h"
@@ -194,8 +193,8 @@ public:
         HcclReduceOp opType, CcuVariableHandle lenHandle, CcuEventHandle eventHandle, uint32_t mask);
 
     // 运算重载 相关接口
-    CcuResult VariableAssignImm(CcuVariableHandle var, uint64_t immediate);
-    CcuResult VariableAssignVar(CcuVariableHandle var, CcuVariableHandle varA);
+    CcuResult VariableAssignImm(CcuVariableHandle varHandle, uint64_t immediate);
+    CcuResult VariableAssignVar(CcuVariableHandle varHandle, CcuVariableHandle varA);
     CcuResult
     VariableAddVarToVar(CcuVariableHandle varHandle, CcuVariableHandle varAHandle, CcuVariableHandle varBHandle);
     CcuResult
@@ -216,15 +215,16 @@ public:
     VariableShlVarToVar(CcuVariableHandle varHandle, CcuVariableHandle varAHandle, CcuVariableHandle varBHandle);
     CcuResult
     VariableShrVarToVar(CcuVariableHandle varHandle, CcuVariableHandle varAHandle, CcuVariableHandle varBHandle);
-    CcuResult AddressAssignImm(CcuAddressHandle addr, uint64_t immediate);
+    CcuResult AddressAssignImm(CcuAddressHandle addrHandle, uint64_t immediate);
     CcuResult AddressAssignVar(CcuAddressHandle addrHandle, CcuVariableHandle varHandle);
     CcuResult AddressAssignAddr(CcuAddressHandle dstAddrHandle, CcuAddressHandle srcAddrHandle);
-    CcuResult AddressAddVarToAddr(CcuAddressHandle resAddr, CcuAddressHandle lhsAddr, CcuVariableHandle rhsVar);
+    CcuResult
+    AddressAddVarToAddr(CcuAddressHandle resAddrHandle, CcuAddressHandle lhsAddrHandle, CcuVariableHandle rhsVarHandle);
     CcuResult
     AddressAddAddrToAddr(CcuAddressHandle resAddrHandle, CcuAddressHandle addrAHandle, CcuAddressHandle addrBHandle);
-    CcuResult AddressAddAssignVar(CcuAddressHandle addr, CcuVariableHandle var);
+    CcuResult AddressAddAssignVar(CcuAddressHandle addrHandle, CcuVariableHandle varHandle);
     CcuResult AddressAddAssignAddr(CcuAddressHandle addrHandle, CcuAddressHandle otherHandle);
-    CcuResult AddressAddImmToAddr(CcuAddressHandle resAddr, CcuAddressHandle addrA, uint16_t imm);
+    CcuResult AddressAddImmToAddr(CcuAddressHandle resAddrHandle, CcuAddressHandle addrAHandle, uint16_t imm);
 
     // 远端数据传输操作
 
@@ -284,13 +284,13 @@ public:
         CcuLoopGroup* group, uint32_t maxLoopNum, CcuVariableHandle parallelVarHandle,
         CcuVariableHandle offsetVarHandle);
     CcuResult LoopGroupCreateFromVarV2(
-        CcuLoopGroup* group, uint32_t maxLoopNum, CcuVariableHandle parallelVarV2, CcuVariableHandle offsetVarV2,
-        CcuVariableHandle varOffsetVar);
+        CcuLoopGroup* group, uint32_t maxLoopNum, CcuVariableHandle parallelVarV2Handle,
+        CcuVariableHandle offsetVarV2Handle, CcuVariableHandle varOffsetVarHandle);
     CcuResult LoopGroupAddLoop(CcuLoopGroup group, CcuLoop loop, const CcuLoopCfg* cfg);
-    CcuResult LoopGroupAddLoopFromVar(CcuLoopGroup group, CcuLoop loop, CcuVariableHandle loopParamVar);
+    CcuResult LoopGroupAddLoopFromVar(CcuLoopGroup group, CcuLoop loop, CcuVariableHandle loopParamVarHandle);
     CcuResult LoopGroupAddLoopFromVarV2(
-        CcuLoopGroup group, CcuLoop loop, CcuVariableHandle iterNumVar, CcuVariableHandle addrOffsetVar,
-        CcuVariableHandle ctxIdVar);
+        CcuLoopGroup group, CcuLoop loop, CcuVariableHandle iterNumVarHandle, CcuVariableHandle addrOffsetVarHandle,
+        CcuVariableHandle ctxIdVarHandle);
 
     CcuResult FuncBlockLookup(const void* funcPtr, uint64_t* outHandle);
     CcuResult FuncBlockBegin(const void* funcPtr, uint64_t* outHandle);

@@ -663,7 +663,8 @@ void CcuResBatchAllocator::ReleaseBlockResource(std::unique_ptr<CcuResRepository
 
         for (uint32_t j = 0; j < BLOCK_RES_TYPE_NUM; j++) {
             auto req = blockReqParas[j];
-            std::vector<ResInfo>& resInfos = std::get<2>(req);
+            constexpr size_t kResInfoTupleIdx = 2;
+            std::vector<ResInfo>& resInfos = std::get<kResInfoTupleIdx>(req);
             auto resType = std::get<0>(req);
             std::vector<BlockInfo>& blocks = resBlocks_[i][resType];
             if (resInfos.size() == 0 || blocks.size() == 0) {

@@ -44,12 +44,12 @@ public:
     CcuChannelCtxMgrV2(const int32_t devLogicId, const uint8_t dieId, const uint32_t devPhyId);
 
     CcuChannelCtxMgrV2() = default;
-    ~CcuChannelCtxMgrV2() override final = default;
+    ~CcuChannelCtxMgrV2() final = default;
 
-    HcclResult Init() override final;
-    HcclResult Alloc(const ChannelPara& channelPara, std::vector<ChannelInfo>& channelInfos) override final;
-    HcclResult Config(const ChannelCfg& channelCfg) override final;
-    HcclResult Release(const uint32_t channelId) override final;
+    HcclResult Init() final;
+    HcclResult Alloc(const ChannelPara& channelPara, std::vector<ChannelInfo>& channelInfos) final;
+    HcclResult Config(const ChannelCfg& channelCfg) final;
+    HcclResult Release(const uint32_t channelId) final;
 
 private:
     CcuChannelJettyMap channelJettyMap_{8, 1}; // 默认配比8:1
