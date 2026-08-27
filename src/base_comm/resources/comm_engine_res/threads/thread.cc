@@ -438,6 +438,7 @@ HcclResult Thread::AddThreadHandleToMap(CommEngine commEngine, ThreadHandle thre
             "[Thread][%s]Mapping already exists:commEngine[%s], threadHandle[%lu], new threadHandle[%lu]", __func__,
             GetEnumToString(GetCommEngineStatusStrMap(), commEngine).c_str(), threadHandleMap_[commEngine],
             threadHandle);
+        return HCCL_E_PARA;
     }
 
     threadHandleMap_[commEngine] = threadHandle;

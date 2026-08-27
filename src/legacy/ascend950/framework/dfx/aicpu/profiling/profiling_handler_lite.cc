@@ -211,7 +211,13 @@ void ProfilingHandlerLite::ReportHcclTaskDetails(const std::vector<TaskInfo*>& t
                 }
             }
             batchId = 0;
-            memset_s(taskInfos, sizeof(taskInfos), 0, sizeof(taskInfos));
+            errno_t ret = memset_s(taskInfos, sizeof(taskInfos), 0, sizeof(taskInfos));
+            if (ret != EOK) {
+                THROW<InternalException>(
+                    "[ProfilingHandler] Failed to memset_s taskInfos, dest[%p], destMax[%zu], "
+                    "c[%d], count[%zu], ret[%d].",
+                    static_cast<void*>(taskInfos), sizeof(taskInfos), 0, sizeof(taskInfos), ret);
+            }
         }
     }
 }

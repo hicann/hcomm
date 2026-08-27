@@ -71,11 +71,12 @@ HcclResult NotifyAicpuMgr::NotifyAlloc(NotifyMgrAicpuParam* param)
         HCCL_INFO("[NotifyAicpuMgr][%s] %s", __func__, oss.str().c_str());
     }
     HcclResult ret = NotifyManager::ParseBinNotifys(notifysStr, notifys_);
-    if (ret != HCCL_SUCCESS) {
+    if (ret != HCCL_SUCCESS || notifys_.size() < notifyNum + notifySize) {
         HCCL_ERROR(
-            "[NotifyAicpuMgr][%s] comm identifier[%s], alloc notifys num[%u] failed %d", __func__, hcomId.c_str(),
-            notifyNum, static_cast<int>(ret));
-        return ret;
+            "[NotifyAicpuMgr][%s] alloc notifys failed, comm identifier[%s], ret[%d], "
+            "alloc notify num[%u], expect num[%u], actual[%u]",
+            __func__, hcomId.c_str(), static_cast<int>(ret), notifyNum, notifyNum + notifySize, notifys_.size());
+        return HCCL_E_INTERNAL;
     }
     HCCL_INFO(
         "[NotifyAicpuMgr][%s] comm identifier[%s], alloc notifys num[%u] end, after notifySize[%zu]", __func__,

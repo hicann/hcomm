@@ -1044,6 +1044,7 @@ HcclResult HcclCreateSubCommConfigV2(
     } while (0);
 
     if (errorFlag) {
+        groupParaLock.unlock();
         HCCL_ERROR(
             "[Init][%s]HcclCreateSubCommConfigV2 failed, deviceLogicId[%d], devPhyId[%d], sub comm[%s], world comm[%s]"
             "return[0x%016llx]",

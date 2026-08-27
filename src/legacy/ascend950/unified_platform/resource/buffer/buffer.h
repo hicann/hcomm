@@ -58,6 +58,8 @@ public:
     bool operator!=(const Buffer& that) const { return (addr_ != that.GetAddr()) || (size_ != that.GetSize()); }
 
 protected:
+    void SetMemInfo(const char* memInfo);
+
     uintptr_t addr_{0};
     std::size_t size_{0};
     HcclMemType memType_{HcclMemType::HCCL_MEM_TYPE_DEVICE};

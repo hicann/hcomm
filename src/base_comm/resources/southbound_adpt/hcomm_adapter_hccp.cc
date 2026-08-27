@@ -644,7 +644,14 @@ HcclResult HrtRaDumpJettyContext(JettyHandle jettyHandle, u32 jettyId)
 
         char hexBuf[bytesPerLine * 2 + 1] = {0};
         for (u32 i = 0; i < bytesThisLine; i++) {
-            snprintf_s(hexBuf + i * 2, sizeof(hexBuf) - i * 2, 2U, "%02x", context[offset + i]);
+            int sret = snprintf_s(hexBuf + i * 2, sizeof(hexBuf) - i * 2, 2U, "%02x", context[offset + i]);
+            CHK_PRT_RET(
+                sret <= 0,
+                HCCL_ERROR(
+                    "[HrtRaDumpJettyContext] snprintf_s failed, dest[%p], destMax[%zu], count[%u], "
+                    "contextVal[%u], ret[%d].",
+                    static_cast<void*>(hexBuf + i * 2), sizeof(hexBuf) - i * 2, 2U, context[offset + i], sret),
+                HCCL_E_INTERNAL);
         }
 
         HCCL_ERROR("[HrtRaDumpJettyContext] jettyId=%u, len=%u, JettyContext:%s", jettyId, len, hexBuf);

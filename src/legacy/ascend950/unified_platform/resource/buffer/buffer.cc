@@ -12,6 +12,8 @@
 #include "range_utils.h"
 #include "log.h"
 #include "string_util.h"
+#include "exception_util.h"
+#include "internal_exception.h"
 namespace Hccl {
 
 Buffer::Buffer(uintptr_t addr, std::size_t size) : addr_(addr), size_(size) {}
@@ -25,19 +27,29 @@ Buffer::Buffer(uintptr_t addr, std::size_t size, HcclMemType memType, const char
       size_(size),
       memType_(memType)
 {
-    if (memInfo != nullptr) {
-        snprintf_s(memInfo_, sizeof(memInfo_), strlen(memInfo), "%s", memInfo);
-    } else {
-        memInfo_[0] = '\0'; // 初始化为空字符串
-    }
+    SetMemInfo(memInfo);
 }
 
 Buffer::Buffer(uintptr_t addr, std::size_t size, const char* memInfo) : addr_(addr), size_(size)
 {
-    if (memInfo != nullptr) {
-        snprintf_s(memInfo_, sizeof(memInfo_), strlen(memInfo), "%s", memInfo);
-    } else {
+    SetMemInfo(memInfo);
+}
+
+void Buffer::SetMemInfo(const char* memInfo)
+{
+    if (memInfo == nullptr || memInfo[0] == '\0') {
         memInfo_[0] = '\0'; // 初始化为空字符串
+        return;
+    }
+    size_t memLen = strlen(memInfo);
+    if (memLen >= sizeof(memInfo_)) {
+        THROW<InternalException>("[Buffer] memInfo too long, len[%zu], max[%zu].", memLen, sizeof(memInfo_) - 1);
+    }
+    int sret = snprintf_s(memInfo_, sizeof(memInfo_), memLen, "%s", memInfo);
+    if (sret <= 0) {
+        THROW<InternalException>(
+            "[Buffer] snprintf_s failed, dest[%p], destMax[%zu], count[%zu], ret[%d].", static_cast<void*>(memInfo_),
+            sizeof(memInfo_), memLen, sret);
     }
 }
 uintptr_t Buffer::GetAddr() const { return addr_; }
