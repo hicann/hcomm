@@ -10,6 +10,8 @@
 
 #include "gtest/gtest.h"
 
+#include <stdlib.h>
+
 #include "hcomm_nic_plugin.h"
 #include "nic_plugin_manager.h"
 
@@ -30,6 +32,34 @@ TEST(NicPluginManagerValidatePluginInfo, RejectsProtocolBetweenUbgAndCustomBase)
     info.protocolCount = 1U;
     info.protocols[0] = static_cast<CommProtocol>(COMM_PROTOCOL_UBG + 1); // 10, 在内置区间之外且低于 CUSTOM_BASE
     EXPECT_FALSE(hcomm::ValidatePluginInfo("ut_nic_plugin.so", &info, DummyCreateEndpoint, DummyCreateChannel));
+}
+
+// 覆盖 nic_plugin_manager.cc::LoadOnePlugin 中新增的路径规范化分支:
+//   - 不存在路径 /nonexistent/... -> realpath 返回 nullptr -> 提前返回
+//   - /tmp(目录必然存在, 非合法共享库) -> realpath 成功 -> dlopen(canonicalPath) 失败
+// LoadOnePlugin 位于匿名命名空间, 只能经 LoadAllNicPlugins -> LoadExplicitPlugins 触达,
+// 故通过环境变量 HCOMM_NIC_PLUGIN_SO 以冒号分隔注入多个路径, 一次调用同时覆盖两条分支。
+// 不依赖 mkstemp/临时文件, 避免写权限或路径不可用导致的误失败。
+TEST(NicPluginManagerLoadAllNicPlugins, CanonicalizesPluginPathBeforeDlopen)
+{
+    // 保存并清理环境, 确保走 LoadExplicitPlugins 分支
+    const char* savedHome = getenv("ASCEND_HOME_PATH");
+    const char* savedSo = getenv("HCOMM_NIC_PLUGIN_SO");
+    unsetenv("ASCEND_HOME_PATH");
+    ASSERT_EQ(setenv("HCOMM_NIC_PLUGIN_SO", "/nonexistent/ut_nic_plugin_missing.so:/tmp", 1), 0);
+
+    // 经 std::call_once 执行, 同一进程内仅首次调用生效
+    hcomm::LoadAllNicPlugins();
+    hcomm::LoadAllNicPlugins(); // 再次调用确保 once 路径稳定不崩溃
+
+    // 恢复环境
+    (void)unsetenv("HCOMM_NIC_PLUGIN_SO");
+    if (savedSo != nullptr) {
+        (void)setenv("HCOMM_NIC_PLUGIN_SO", savedSo, 1);
+    }
+    if (savedHome != nullptr) {
+        (void)setenv("ASCEND_HOME_PATH", savedHome, 1);
+    }
 }
 
 } // namespace

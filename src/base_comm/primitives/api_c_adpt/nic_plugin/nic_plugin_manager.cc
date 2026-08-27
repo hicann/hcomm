@@ -13,6 +13,7 @@
 #include <acl/acl_rt.h>
 #include <dirent.h>
 #include <dlfcn.h>
+#include <climits>
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
@@ -115,7 +116,13 @@ namespace {
         if (path.empty()) {
             return;
         }
-        void* soHandle = dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
+        // 规范化文件路径后再使用，防范路径遍历风险
+        char canonicalPath[PATH_MAX] = {0};
+        if (realpath(path.c_str(), canonicalPath) == nullptr) {
+            HCCL_RUN_WARNING("[LoadOnePlugin] %s is not a valid real path.", path.c_str());
+            return;
+        }
+        void* soHandle = dlopen(canonicalPath, RTLD_NOW | RTLD_LOCAL);
         if (soHandle == nullptr) {
             HCCL_RUN_WARNING("[NicPlugin] dlopen %s failed: %s.", path.c_str(), dlerror());
             return;
@@ -209,7 +216,7 @@ bool ValidateEndpointOps(const HcommNicEndpointOps* ops)
             ops->header, HCOMM_NIC_ENDPOINT_OPS_MAGIC_WORD, HCOMM_NIC_ENDPOINT_OPS_VERSION, "endpoint ops")) {
         return false;
     }
-    if (!IsPluginOpAvailable(ops, offsetof(HcommNicEndpointOps, destroy), sizeof(ops->destroy))
+    if (!IsPluginOpAvailable(ops, offsetof(HcommNicEndpointOps, destroy), sizeof(decltype(ops->destroy)))
         || ops->destroy == nullptr) {
         HCCL_ERROR("[NicPlugin] plugin endpoint destroy is not implemented.");
         return false;
@@ -224,7 +231,7 @@ bool ValidateChannelOps(const HcommNicChannelOps* ops)
             ops->header, HCOMM_NIC_CHANNEL_OPS_MAGIC_WORD, HCOMM_NIC_CHANNEL_OPS_VERSION, "channel ops")) {
         return false;
     }
-    if (!IsPluginOpAvailable(ops, offsetof(HcommNicChannelOps, destroy), sizeof(ops->destroy))
+    if (!IsPluginOpAvailable(ops, offsetof(HcommNicChannelOps, destroy), sizeof(decltype(ops->destroy)))
         || ops->destroy == nullptr) {
         HCCL_ERROR("[NicPlugin] channel destroy is not implemented.");
         return false;

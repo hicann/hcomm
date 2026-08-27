@@ -29,12 +29,22 @@ struct NicPluginEntry {
 constexpr uintptr_t HCOMM_PLUGIN_HANDLE_FLAG = (static_cast<uintptr_t>(1) << 63);
 constexpr int32_t COMM_PROTOCOL_CUSTOM_BASE = 1000;
 
-#define IS_PLUGIN_HANDLE(h) ((((uintptr_t)(h)) & ::hcomm::HCOMM_PLUGIN_HANDLE_FLAG) != 0)
-#define MAKE_PLUGIN_CH_HANDLE(p) \
-    (static_cast<ChannelHandle>((reinterpret_cast<uintptr_t>(p)) | ::hcomm::HCOMM_PLUGIN_HANDLE_FLAG))
-#define CHANNEL_FROM_HANDLE(h)            \
-    (reinterpret_cast<::hcomm::Channel*>( \
-        (static_cast<uintptr_t>(h)) & ~static_cast<uintptr_t>(::hcomm::HCOMM_PLUGIN_HANDLE_FLAG)))
+class Channel;
+
+inline ChannelHandle MakePluginChHandle(ChannelHandle h)
+{
+    return static_cast<ChannelHandle>(static_cast<uintptr_t>(h) | HCOMM_PLUGIN_HANDLE_FLAG);
+}
+
+inline ::hcomm::Channel* ChannelFromHandle(ChannelHandle h)
+{
+    return reinterpret_cast<::hcomm::Channel*>(
+        static_cast<uintptr_t>(h) & ~static_cast<uintptr_t>(HCOMM_PLUGIN_HANDLE_FLAG));
+}
+
+#define IS_PLUGIN_HANDLE(h) ((((static_cast<uintptr_t>(h))) & ::hcomm::HCOMM_PLUGIN_HANDLE_FLAG) != 0)
+#define MAKE_PLUGIN_CH_HANDLE(p) ::hcomm::MakePluginChHandle(p)
+#define CHANNEL_FROM_HANDLE(h) ::hcomm::ChannelFromHandle(h)
 
 void LoadAllNicPlugins();
 const NicPluginEntry* FindHostNicPlugin(CommProtocol protocol);
@@ -63,9 +73,10 @@ int32_t DefaultEndpointGetListenPort(void* ctx, uint32_t* port);
     F(getListenPort, DefaultEndpointGetListenPort)
 
 // 供 FOR_EACH_ENDPOINT_OP_DEFAULT 使用的填充器
-#define FILL_ENDPOINT_OP_DEFAULT(op, defaultFunc)                                                              \
-    if (!IsPluginOpAvailable(dst, offsetof(HcommNicEndpointOps, op), sizeof(dst->op)) || dst->op == nullptr) { \
-        dst->op = defaultFunc;                                                                                 \
+#define FILL_ENDPOINT_OP_DEFAULT(op, defaultFunc)                                               \
+    if (!IsPluginOpAvailable(dst, offsetof(HcommNicEndpointOps, op), sizeof(decltype(dst->op))) \
+        || dst->op == nullptr) {                                                                \
+        dst->op = defaultFunc;                                                                  \
     }
 
 HcommResult FillDefaultChannelOps(const HcommNicChannelOps* src, HcommNicChannelOps** outOps);
@@ -130,9 +141,10 @@ int32_t DefaultChannelDrainOnThread(void* ctx, ThreadHandle thread);
     F(drainOnThread, DefaultChannelDrainOnThread)
 
 // 供 FOR_EACH_CHANNEL_OP_DEFAULT 使用的填充器
-#define FILL_CHANNEL_OP_DEFAULT(op, defaultFunc)                                                              \
-    if (!IsPluginOpAvailable(dst, offsetof(HcommNicChannelOps, op), sizeof(dst->op)) || dst->op == nullptr) { \
-        dst->op = defaultFunc;                                                                                \
+#define FILL_CHANNEL_OP_DEFAULT(op, defaultFunc)                                               \
+    if (!IsPluginOpAvailable(dst, offsetof(HcommNicChannelOps, op), sizeof(decltype(dst->op))) \
+        || dst->op == nullptr) {                                                               \
+        dst->op = defaultFunc;                                                                 \
     }
 
 bool ValidateEndpointOps(const HcommNicEndpointOps* ops);
