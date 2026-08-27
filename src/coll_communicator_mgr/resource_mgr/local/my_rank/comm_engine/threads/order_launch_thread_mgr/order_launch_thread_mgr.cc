@@ -9,7 +9,6 @@
  */
 
 #include "order_launch_thread_mgr.h"
-#include "exception_util.h"
 #include "acl/acl_rt.h"
 #include "orion_adapter_rts.h"
 #include "coll_comm.h"
@@ -163,7 +162,7 @@ HcclResult OrderLaunchThreadMgr::UnRegisterOrderLaunch(const std::string& group)
     return HCCL_SUCCESS;
 }
 
-HcclResult OrderLaunchThreadMgr::GetCurrentContext(u64& currentContext)
+HcclResult OrderLaunchThreadMgr::GetCurrentContext(u64& currentContext) const
 {
     aclrtContext rtCtx = nullptr;
     aclError ret = aclrtGetCurrentContext(&rtCtx);
@@ -376,7 +375,7 @@ ThreadHandle OrderLaunchThreadMgr::GetHcomAttachedThreadByGroup(const std::strin
     return attachedThreadIt->second;
 }
 
-HcclResult OrderLaunchThreadMgr::RegisterThreadToComm(CollComm* collComm, ThreadHandle thread)
+HcclResult OrderLaunchThreadMgr::RegisterThreadToComm(CollComm* collComm, ThreadHandle thread) const
 {
     CommEngineResMgr* engineResMgr = collComm->GetCommEngineResMgr();
     if (engineResMgr != nullptr) {
@@ -386,7 +385,8 @@ HcclResult OrderLaunchThreadMgr::RegisterThreadToComm(CollComm* collComm, Thread
 }
 
 HcclResult OrderLaunchThreadMgr::RegisterDfx(
-    CollComm* collComm, HcclDedicatedThreadType useType, ThreadHandle thread, u64 beginTime, const std::string& commId)
+    CollComm* collComm, HcclDedicatedThreadType useType, ThreadHandle thread, u64 beginTime,
+    const std::string& commId) const
 {
     if (useType == HCCL_DED_THREAD_TYPE_AICPU_ORDER_LAUNCH_DEVICE) {
         HcclCommDfx* hcclCommDfx = collComm->GetHcclCommDfx();

@@ -15,7 +15,6 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <climits>
 #include "hccl/base.h"
 #include "hccl/hccl_types.h"
 #include "hccl/hccl_res.h"
@@ -72,11 +71,11 @@ public:
 
 private:
     void Destroy();
-    HcclResult RegisterThreadToComm(CollComm* collComm, ThreadHandle thread);
+    HcclResult RegisterThreadToComm(CollComm* collComm, ThreadHandle thread) const;
     HcclResult RegisterDfx(
         CollComm* collComm, HcclDedicatedThreadType useType, ThreadHandle thread, u64 beginTime,
-        const std::string& commId);
-    HcclResult GetCurrentContext(u64& currentContext);
+        const std::string& commId) const;
+    HcclResult GetCurrentContext(u64& currentContext) const;
     HcclResult EnsureContextRes(u64 context);
     void UpdateGroupContextMapping(const std::string& group, u64 currentContext);
     bool IsOrderLaunchDisabled(u64 currentContext);

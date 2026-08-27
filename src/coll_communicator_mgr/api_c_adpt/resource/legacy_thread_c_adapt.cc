@@ -42,7 +42,7 @@ HcclResult HcomSetAttachedStream(const char* group, u32 graphId, const rtStream_
             HCCL_WARNING("[HcomSetAttachedStream] len is 0, no stream");
             return HCCL_SUCCESS;
         }
-        void* attachedStream = const_cast<void*>(static_cast<const void*>(stream[0]));
+        void* attachedStream = stream[0];
         s32 deviceLogicId = Hccl::HrtGetDevice();
         auto& mgr = hccl::CollCommMgr::GetInstance().GetOrderLaunchThreadMgr(deviceLogicId);
         return mgr.SetAttachedStream(std::string(group), graphId, attachedStream);
