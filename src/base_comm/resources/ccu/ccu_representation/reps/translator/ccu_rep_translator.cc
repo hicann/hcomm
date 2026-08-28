@@ -288,7 +288,8 @@ namespace CcuRep {
         }
 
         // 调用 V2 后端优化器 (极简 CkeOnly 档: 只按 CKE 写后读补 NOP, 不重排 / 不重命名寄存器).
-        CcuInstrInfo
+        // 默认关闭 (未定义 CCU_MICROCODE_OPT_ENABLE) 时此函数不被引用, 标注避免未使用告警.
+        [[maybe_unused]] CcuInstrInfo
         RunV2BackendOptimizer(const CcuInstrInfo& instrInfo, CcuKernel* ccuKernel, const TransDep& transDep)
         {
             (void)ccuKernel; // CkeOnly 不使用 pinned Xn / pinned 组.
@@ -353,10 +354,16 @@ namespace CcuRep {
         DumpInstruction(instrInfo);
 
         if (ccuVersion == CcuVersion::CCU_V2) {
+#if !defined(CCU_MICROCODE_OPT_DISABLE)
+            // 编译期开启后端优化 (-DCCU_MICROCODE_OPT_ENABLE=ON): 按 CKE 写后读补 NOP.
             CcuInstrInfo optimizedInstrInfo = RunV2BackendOptimizer(instrInfo, ccuKernel, transDep);
             HCCL_INFO("[CcuMicrocodeOpt] dump instruction after backend optimizer:");
             DumpInstruction(optimizedInstrInfo);
             return optimizedInstrInfo;
+#else
+            // 默认关闭后端优化: 直接返回未优化指令序列, 不做 CKE 补 NOP.
+            HCCL_INFO("[CcuMicrocodeOpt] backend optimizer disabled by default; return raw instrInfo");
+#endif
         }
 
         return instrInfo;

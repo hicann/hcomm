@@ -2722,9 +2722,16 @@ uint32_t CcuKernel::GetInstrCount()
 }
 
 namespace {
-    // 识别三种 wait 类 rep: 无论 profiling 与否都会翻译出一条"既 wait 又 set/clear 同一 CKE 位"的
-    // CTRL 指令 (profiling 分支 -> setcke, 非 profiling 分支 -> clearcke, 二者都是 CKE 写者),
-    // 后端优化可能为其后续读者补 NOP, 因此都要按 CCU_CKE_RAW_LATENCY 预留指令空间.
+    // 识别"会翻译出 waitCKEId!=0 && clearType=1 的 set/clearCKE (即后端优化 ExtractOperandsV2 眼里
+    // 的 CKE 读者+写者)"的 rep. 后端优化 (CkeOnly) 会为每个此类 CKE 读者最多补 (CCU_CKE_RAW_LATENCY-1)
+    // 条 NOP, 故每个此类 rep 都要按 CCU_CKE_RAW_LATENCY 预留指令空间, 保证优化后指令数不越界.
+    // 下列每类 rep 恰好翻译出 1 条此形态指令 (RECORD_SHARED_NOTIFY 仅跨 die 分支出, 本 die 分支
+    // waitCKEId=0 不是读者; 因预留为静态统计无法预知 die, 保守全计, 顶多多留 L 条, 无害), 故计 1 次即可:
+    //   - 三种 wait 类 rep: waitCKEId=事件/通知/信号 CKE, profiling->setcke, 非 profiling->clearcke;
+    //   - LOAD / LOAD_VAR / STORE / STORE_VAR: 搬运后一条 SetCKE(waitCKEId=commSignal) 等搬运完成;
+    //   - RECORD_SHARED_NOTIFY (跨 die): store 对端 cke 后一条 SetCKE(waitCKEId=commSignal) 等 store 完成.
+    // commSignal 在 kernel/die 级共享同一 CKE, 多个搬运类 rep 的 SetCKE 会构成写后读链, 触发补 NOP,
+    // 故必须与三种 wait 类 rep 同等预留. 详见 ccu_ins_generator_v2.cc 各 Translate 与 extract_operands.cc.
     bool IsCkeWaitRep(const std::shared_ptr<CcuRep::CcuRepBase>& rep)
     {
         if (rep == nullptr) {
@@ -2734,6 +2741,11 @@ namespace {
             case CcuRep::CcuRepType::LOC_WAIT_EVENT:
             case CcuRep::CcuRepType::LOC_WAIT_NOTIFY:
             case CcuRep::CcuRepType::REM_WAIT_SEM:
+            case CcuRep::CcuRepType::LOAD:
+            case CcuRep::CcuRepType::LOAD_VAR:
+            case CcuRep::CcuRepType::STORE:
+            case CcuRep::CcuRepType::STORE_VAR:
+            case CcuRep::CcuRepType::RECORD_SHARED_NOTIFY:
                 return true;
             default:
                 return false;
@@ -2741,7 +2753,7 @@ namespace {
     }
 
     // 与 CcuKernelMgr::PrepareConstValueResources 一致地下钻 block 子 rep, 统计其中会翻译出
-    // setcke / clearcke (CKE 写者) 的 wait 类 rep 个数.
+    // waitCKEId!=0 && clearType=1 的 set/clearCKE (CKE 读者+写者) 的 rep 个数 (判定见 IsCkeWaitRep).
     // 只下钻一层是充分的: 表示层禁止 block 嵌套 —— CcuKernel::LoopCreate / FuncBlockBegin /
     // FuncBlockLookup 在 CurrentBlock() 为 LOOP_BLOCK 或 inFuncBody_ 时直接报错 (见 ccu_kernel.cc),
     // 故 LOOP_BLOCK / FUNC_BLOCK 内不可能再出现 block 类型子 rep, 无需递归下钻.
@@ -2768,9 +2780,10 @@ namespace {
 } // namespace
 
 // 统计当前 kernel 中"需要按 cke 写后读 latency 补 NOP"的 rep 个数 (含 block 子 rep).
-// 三种 wait 类 rep 无论 profiling 与否都翻译出一条 CKE 写者微码 (profiling -> setcke, 非 profiling
-// -> clearcke), 后端优化最多为其后续读者补 (CCU_CKE_RAW_LATENCY - 1) 条 NOP, 上层据此为每个此类 rep
-// 预留同等指令空间, 保证优化后指令数不越界.
+// 凡会翻译出 waitCKEId!=0 && clearType=1 的 set/clearCKE (后端优化眼里的 CKE 读者) 的 rep 均计入
+// (判定集合见 IsCkeWaitRep: 三种 wait 类 + LOAD/LOAD_VAR/STORE/STORE_VAR/RECORD_SHARED_NOTIFY),
+// 每个此类 rep 恰出 1 条此形态指令, 后端优化最多为该读者补 (CCU_CKE_RAW_LATENCY - 1) 条 NOP,
+// 上层据此为每个此类 rep 预留同等指令空间, 保证优化后指令数不越界.
 uint32_t CcuKernel::GetRepNeedToAddLatency() const
 {
     // cke 写后读补 NOP 与指令空间预留只属于 A6(CCU_V2) 后端优化; A5(CCU_V1) 不跑后端优化,

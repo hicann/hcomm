@@ -385,8 +385,10 @@ static void LoadRes(std::unique_ptr<CcuKernel>& kernel, CcuResPack& resPack)
 
 // 指令空间区域大小的唯一计算入口:
 //   裸指令数 (rep InstrCount 累加) + 翻译器结构指令 (GetInstrNum) + 常量赋值指令
-//   + 每个会翻译出 waitcke/clearcke 的 wait 类 rep 预留 CCU_CKE_RAW_LATENCY 条 NOP 空间.
-// 后端优化 cke-only 档只会为 CKE 写后读补 NOP, 每个 wait 类 rep 最多补 (latency-1) 条,
+//   + 每个会翻译出 waitCKEId!=0 && clearType=1 的 set/clearCKE 的 rep 预留 CCU_CKE_RAW_LATENCY 条
+//     NOP 空间 (计入集合见 CcuKernel::GetRepNeedToAddLatency / IsCkeWaitRep: 三种 wait 类 +
+//     LOAD/LOAD_VAR/STORE/STORE_VAR/RECORD_SHARED_NOTIFY).
+// 后端优化 cke-only 档只会为 CKE 写后读补 NOP, 每个此类 rep 最多补 (latency-1) 条,
 // 故此预留可从构造上保证优化后指令数不超过申请区. 申请 / 查询 / 释放三处必须走本函数,
 // 保证口径一致 (尤其申请与释放必须完全相等).
 static uint32_t ComputeKernelInstrRegionSize(CcuKernel* kernel, const int32_t devLogicId)
