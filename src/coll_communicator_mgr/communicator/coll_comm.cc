@@ -55,11 +55,6 @@ CollComm::~CollComm()
     // 兜底释放所有team的syncMem本地内存
     HcclTeamMgr::GetInstance().ClearByCollComm(this);
     HCCL_INFO("[CollComm][~CollComm] collComm deinit");
-    // dpu的兜底上报 - 异常退出时捕获异常避免二次崩溃
-    if (hcclCommDfx_ != nullptr) {
-        // 析构属于最终阶段，不再存储数据，直接上报
-        DECTOR_TRY_CATCH("CollComm", hcclCommDfx_->ReportAllTasks(false));
-    }
     (void)DestroyAicpuComm();
     HCCL_RUN_INFO("[CollComm][~CollComm] cclBuffer free, commId[%s].", commId_.c_str());
 }
