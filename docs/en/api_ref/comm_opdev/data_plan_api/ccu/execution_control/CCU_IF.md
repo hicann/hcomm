@@ -48,7 +48,7 @@ CCU_IF(condExpr) {
 ## Constraints
 
 - `CCU_IF(condExpr)` must be followed by a then code block enclosed in {}.
-- For the A5 generation, the current `condExpr` of `CCU_IF` supports only the == and != comparison modes.
+- For Ascend 950PR/Ascend 950DT, the current `condExpr` of `CCU_IF` supports only the == and != comparison modes.
 - `CCU_IF` can be used alone (without `CCU_ELSE`) or together with `CCU_ELSE`. Both usages are valid.
 - Nesting is supported: `CCU_IF` can be nested inside another `CCU_IF`.
 - `CCU_IF` is not recommended for use inside the body lambda of a hardware loop (`ccu::Loop`) -- software branching is not supported inside a hardware loop body. The framework does not forcibly verify it, but the behavior is undefined.
