@@ -21,6 +21,7 @@
 #include "rank_info_detect_client.h"
 #include "socket_handle_manager.h"
 #include "universal_concurrent_map.h"
+#include "adapter_error_manager_pub.h"
 
 namespace Hccl {
 
@@ -50,8 +51,8 @@ private:
     std::string identifier_{};
     std::shared_ptr<RankInfoDetectClient> rankInfoDetectClient;
     void SetupRankInfoDetectService(
-        shared_ptr<Socket> serverSocket, s32 devLogicId, u32 devPhyId, std::string identifier,
-        vector<RaSocketWhitelist> wlistInfo);
+        ErrContextPub errorContext, shared_ptr<Socket> serverSocket, s32 devLogicId, u32 devPhyId,
+        std::string identifier, vector<RaSocketWhitelist> wlistInfo);
     std::shared_ptr<Socket> ServerInit();
     std::shared_ptr<Socket> ClientInit(const HcclRootHandleV2& rootHandle);
     HcclResult GetHandleAndAddHostSocketWhitelist();

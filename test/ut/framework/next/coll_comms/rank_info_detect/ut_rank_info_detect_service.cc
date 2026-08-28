@@ -34,9 +34,20 @@
 #include "env_config/env_config_v2.h"
 #include "base_config_legacy.h"
 #include "socket_agent.h"
+#include "adapter_error_manager_pub.h"
 #undef private
 
 using namespace Hccl;
+
+namespace {
+std::string g_serviceCapturedErrorCode;
+void StubServiceRptInputErr(std::string error_code, std::vector<std::string> key, std::vector<std::string> value)
+{
+    (void)key;
+    (void)value;
+    g_serviceCapturedErrorCode = error_code;
+}
+} // namespace
 
 class RankInfoDetectServiceTest : public testing::Test {
 protected:
@@ -88,6 +99,21 @@ protected:
 
     IpAddress GetAnIpAddress() { return IpAddress("1.0.0.0"); }
 
+    // 辅助函数：配置 1s 建链超时并 mock HostSocketHandleManager::Get
+    void SetupMockSocketAndTimeoutConfig()
+    {
+        static EnvSocketConfig envSocketConfig;
+        EnvSocketConfig& fakeEnvSocketConfig = envSocketConfig;
+        fakeEnvSocketConfig.linkTimeOut = CfgField<s32>{"HCCL_CONNECT_TIMEOUT", s32(1), Str2T<s32>};
+        fakeEnvSocketConfig.linkTimeOut.isParsed = true;
+        MOCKER_CPP(&EnvConfig::GetSocketConfig).stubs().will(returnValue(fakeEnvSocketConfig));
+
+        MOCKER_CPP(&HostSocketHandleManager::Get)
+            .stubs()
+            .with(mockcpp::any(), mockcpp::any())
+            .will(returnValue(hccpSocketHandle));
+    }
+
     // 辅助函数：生成模拟的 RankInfo 消息（用于 GetRankTable 测试）
     std::string GenMockRankInfoMsg(const std::string& rankTableStr, u32 step)
     {
@@ -118,16 +144,7 @@ TEST_F(RankInfoDetectServiceTest, Ut_RankInfoDetectService_When_Init_Expect_Succ
 
 TEST_F(RankInfoDetectServiceTest, Ut_GetConnections_When_Timeout_Expect_fail)
 {
-    EnvSocketConfig envSocketConfig;
-    EnvSocketConfig& fakeEnvSocketConfig = envSocketConfig;
-    fakeEnvSocketConfig.linkTimeOut = CfgField<s32>{"HCCL_CONNECT_TIMEOUT", s32(1), Str2T<s32>};
-    fakeEnvSocketConfig.linkTimeOut.isParsed = true;
-    MOCKER_CPP(&EnvConfig::GetSocketConfig).stubs().will(returnValue(fakeEnvSocketConfig));
-
-    MOCKER_CPP(&HostSocketHandleManager::Get)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any())
-        .will(returnValue(hccpSocketHandle));
+    SetupMockSocketAndTimeoutConfig();
 
     MOCKER_CPP(&Socket::GetStatus)
         .stubs()
@@ -138,6 +155,20 @@ TEST_F(RankInfoDetectServiceTest, Ut_GetConnections_When_Timeout_Expect_fail)
 
     auto res1 = rankInfoDetectService_->connSockets_.size();
     EXPECT_EQ(0, res1);
+}
+
+TEST_F(RankInfoDetectServiceTest, Ut_GetConnections_When_Timeout_Expect_EI0016Report)
+{
+    SetupMockSocketAndTimeoutConfig();
+
+    // 持续 CONNECTING，模拟对端一直未建链直至超时
+    MOCKER_CPP(&Socket::GetStatus).stubs().will(returnValue((SocketStatus)SocketStatus::CONNECTING));
+
+    g_serviceCapturedErrorCode.clear();
+    MOCKER(RptInputErr).stubs().will(invoke(StubServiceRptInputErr));
+
+    EXPECT_THROW(rankInfoDetectService_->GetConnections(), InternalException);
+    EXPECT_EQ(g_serviceCapturedErrorCode, "EI0016");
 }
 
 TEST_F(RankInfoDetectServiceTest, Ut_GetConnections_When_Normal_Expect_Success)

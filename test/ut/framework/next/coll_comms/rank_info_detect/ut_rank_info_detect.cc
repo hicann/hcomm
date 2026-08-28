@@ -285,7 +285,7 @@ TEST_F(RankInfoDetectTest, Ut_SetupRankInfoDetectService_When_Input_Expect_NO_TH
     HcclRootHandleV2 rootHandle;
     std::shared_ptr<Socket> socket = std::make_shared<Socket>(
         socketHandle, localIp, 0, remoteIp, tag, SocketRole::SERVER, Hccl::NicType::DEVICE_NIC_TYPE);
-    EXPECT_NO_THROW(rankInfoDetect.SetupRankInfoDetectService(socket, 0, 0, "test", {}));
+    EXPECT_NO_THROW(rankInfoDetect.SetupRankInfoDetectService(ErrContextPub{}, socket, 0, 0, "test", {}));
 }
 
 TEST_F(RankInfoDetectTest, Ut_SetupRankInfoDetectService_When_Setup_Fail_Expect_THROW)
@@ -300,7 +300,7 @@ TEST_F(RankInfoDetectTest, Ut_SetupRankInfoDetectService_When_Setup_Fail_Expect_
     std::shared_ptr<Socket> socket = std::make_shared<Socket>(
         socketHandle, localIp, listenPort, remoteIp, tag, SocketRole::SERVER, Hccl::NicType::DEVICE_NIC_TYPE);
 
-    EXPECT_NO_THROW(rankInfoDetect.SetupRankInfoDetectService(socket, 0, 0, "test", {}));
+    EXPECT_NO_THROW(rankInfoDetect.SetupRankInfoDetectService(ErrContextPub{}, socket, 0, 0, "test", {}));
     EXPECT_EQ(rankInfoDetect.g_detectServerStatus_.Find(listenPort).first->second, RANKINFO_DETECT_SERVER_STATUS_ERROR);
 }
 

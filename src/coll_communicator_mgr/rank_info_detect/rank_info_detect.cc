@@ -110,8 +110,8 @@ void RankInfoDetect::SetupServer(HcclRootHandleV2& rootHandle)
 
     // 4. 拉起线程，调用RankInfoDetectService.Run()，注意新线程中需要HrtSetDevice
     std::thread threadHandle(
-        &RankInfoDetect::SetupRankInfoDetectService, this, serverSocket, devLogicId_, devPhyId_, identifier_,
-        wlistInfo_);
+        &RankInfoDetect::SetupRankInfoDetectService, this, hrtErrMGetErrorContextPub(), serverSocket, devLogicId_,
+        devPhyId_, identifier_, wlistInfo_);
     threadHandle.detach();
 
     HCCL_DEBUG("[RankInfoDetect::%s] setup server end.", __func__);
@@ -246,9 +246,10 @@ void RankInfoDetect::SetupAgent(u32 rankSize, u32 rankId, const HcclRootHandleV2
 }
 
 void RankInfoDetect::SetupRankInfoDetectService(
-    shared_ptr<Socket> serverSocket, s32 devLogicId, u32 devPhyId, std::string identifier,
+    ErrContextPub errorContext, shared_ptr<Socket> serverSocket, s32 devLogicId, u32 devPhyId, std::string identifier,
     vector<RaSocketWhitelist> wlistInfo)
 {
+    hrtErrMSetErrorContextPub(errorContext);
     HCCL_INFO(
         "[RankInfoDetect::%s] start, devLogicId[%d], devPhyId[%u], identifier[%s].", __func__, devLogicId, devPhyId,
         identifier.c_str());

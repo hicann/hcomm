@@ -38,6 +38,7 @@
 #include "socket_exception.h"
 #include "null_ptr_exception.h"
 #include "rank_info_dispatcher.h"
+#include "adapter_error_manager_pub.h"
 #define private public
 #define protected public
 #include "rank_info_detect_client.h"
@@ -102,9 +103,37 @@ protected:
 
     RankInfoDetectClient* rankInfoDetectClient_{nullptr};
     SocketHandle socketHandle;
+
+    // 辅助函数：构建含指定 failedAgentIdList 的 Mock rankInfo 消息
+    vector<char> BuildMockRankInfoMsg(const std::string& failedAgentIdList)
+    {
+        RankTableInfo localRankTable;
+        localRankTable.version = "1.0";
+        localRankTable.rankCount = 1;
+        NewRankInfo rankInfo{};
+        rankInfo.rankId = 0;
+        rankInfo.rankLevelInfos.emplace_back(RankLevelInfo{});
+        localRankTable.ranks.emplace_back(rankInfo);
+
+        BinaryStream binaryStream;
+        localRankTable.GetBinStream(true, binaryStream);
+        binaryStream << rankInfoDetectClient_->currentStep_;
+        binaryStream << failedAgentIdList;
+
+        vector<char> rankInfoMsg;
+        binaryStream.Dump(rankInfoMsg);
+        return rankInfoMsg;
+    }
 };
 
 namespace {
+std::string g_clientCapturedErrorCode;
+void StubClientRptInputErr(std::string error_code, std::vector<std::string> key, std::vector<std::string> value)
+{
+    (void)key;
+    (void)value;
+    g_clientCapturedErrorCode = error_code;
+}
 std::string BuildRootInfoJsonString()
 {
     nlohmann::json rootInfo;
@@ -587,7 +616,11 @@ TEST_F(
         .with(mockcpp::any(), mockcpp::any())
         .will(returnValue(static_cast<HcommResult>(HCCL_E_NETWORK)));
 
+    g_clientCapturedErrorCode.clear();
+    MOCKER(RptInputErr).stubs().will(invoke(StubClientRptInputErr));
+
     EXPECT_THROW(rankInfoDetectClient_->SelectLocalHostBackupAddr(localDevInfoJson), NetworkApiException);
+    EXPECT_EQ(g_clientCapturedErrorCode, "EI0016");
 }
 
 TEST_F(
@@ -701,26 +734,23 @@ TEST_F(RankInfoDetectClientTest, Ut_ProbeHostRoceAddr_When_EndpointDestroyFails_
         rankInfoDetectClient_->ProbeHostRoceAddr(IpAddress("192.168.1.101", AF_INET), isAvailable), InternalException);
 }
 
+TEST_F(RankInfoDetectClientTest, Ut_ParseRankTable_When_FailedAgentIdListNotEmpty_Expect_EI0015Report)
+{
+    // 非空 failedAgentIdList 表示建链失败
+    vector<char> rankInfoMsg = BuildMockRankInfoMsg("1,2");
+
+    g_clientCapturedErrorCode.clear();
+    MOCKER(RptInputErr).stubs().will(invoke(StubClientRptInputErr));
+
+    EXPECT_NO_THROW(rankInfoDetectClient_->ParseRankTable(rankInfoMsg));
+    EXPECT_EQ(g_clientCapturedErrorCode, "EI0015");
+}
+
 TEST_F(RankInfoDetectClientTest, Ut_RecvRankTable_When_Normal_Expect_Success)
 {
-    RankTableInfo localRankTable;
-    localRankTable.version = "1.0";
-    localRankTable.rankCount = 1;
-    NewRankInfo rankInfo{};
-    rankInfo.rankId = 0;
-    rankInfo.rankLevelInfos.emplace_back(RankLevelInfo{});
-    localRankTable.ranks.emplace_back(rankInfo);
-
-    BinaryStream binaryStream;
-    localRankTable.GetBinStream(true, binaryStream);
-    binaryStream << rankInfoDetectClient_->currentStep_;
-    std::string temp = "";
-    binaryStream << temp;
+    vector<char> rankInfoMsg = BuildMockRankInfoMsg("");
 
     // 字节流转换为vector<char>格式
-    vector<char> rankInfoMsg;
-    binaryStream.Dump(rankInfoMsg);
-
     MOCKER(aclrtMallocHostWithCfg).stubs().will(returnValue(1));
     std::vector<char> hostAlloc(MAX_BUFFER_LEN);
     MOCKER(HrtMallocHost).stubs().with(mockcpp::any()).will(returnValue(static_cast<void*>(hostAlloc.data())));

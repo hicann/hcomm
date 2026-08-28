@@ -115,10 +115,6 @@ void tls_get_enable_info(unsigned int save_mode, unsigned int chipId, unsigned c
     return;
 }
 
-int halSetUserConfig(unsigned int dev_id, const char* name, unsigned char* buf, unsigned int buf_size) { return 0; }
-
-int halClearUserConfig(unsigned int devid, const char* name) { return 0; }
-
 int NetCommGetSelfHome(char* userNamePath, unsigned int pathLen)
 {
     memcpy(userNamePath, "/tmp", strlen("/tmp"));

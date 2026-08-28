@@ -459,6 +459,11 @@ void RankInfoDetectClient::SelectAvailableHostAddr(nlohmann::json& addrJson)
             return;
         }
         if (idx == candidates.size() - 1) {
+            RPT_INPUT_ERR(
+                true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
+                std::vector<std::string>(
+                    {candidates[idx].Describe(), "host addr candidates",
+                     "at least one available host addr for rank connections"}));
             THROW<NetworkApiException>(StringFormat("[%s] all host addr candidates are unavailable", __func__));
         }
         HCCL_WARNING(
@@ -572,6 +577,9 @@ void RankInfoDetectClient::ParseRankTable(vector<char>& rankInfoMsg)
     binStream >> failedAgentIdList;
     if (failedAgentIdList.size() > 0) {
         // 建链失败时，打印 root 节点发来的临终遗言
+        RPT_INPUT_ERR(
+            true, "EI0015", std::vector<std::string>({"error_reason"}),
+            std::vector<std::string>({"rank connection failed, failedRankIdList: " + failedAgentIdList}));
         HCCL_ERROR(
             "[RankInfoDetectClient::%s] TopoDetect ERROR occur, failedRankIdList[%s]", __func__,
             failedAgentIdList.c_str());

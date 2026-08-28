@@ -273,7 +273,8 @@ int halGrpQuery(GroupQueryCmdType cmd, void* inBuff, unsigned int inLen, void* o
 }
 
 int AscendHalDlclose(void* handle) { return 0; }
-int halSetUserConfig(unsigned int dev_id, const char* name, unsigned char* buf, unsigned int buf_size);
+int halSetUserConfig(unsigned int dev_id, const char* name, unsigned char* buf, unsigned int buf_size) { return 0; }
+int halClearUserConfig(unsigned int devid, const char* name) { return 0; }
 void* hal_api_handle = (void*)(uintptr_t)0xabcd;
 
 struct {

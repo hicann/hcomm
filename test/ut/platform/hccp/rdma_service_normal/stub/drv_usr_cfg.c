@@ -115,10 +115,6 @@ void tls_get_enable_info(unsigned int save_mode, unsigned int chipId, unsigned c
     return;
 }
 
-int halSetUserConfig(unsigned int dev_id, const char* name, unsigned char* buf, unsigned int buf_size) { return 0; }
-
-int halClearUserConfig(unsigned int devid, const char* name) { return 0; }
-
 int get_saved_tls_config_file_path(char* path, unsigned int path_len, const char* name) { return 0; }
 
 int ReadFileToBuf(const char* path, char* content, int* len) { return 0; }
