@@ -100,7 +100,7 @@ std::vector<std::tuple<QId, QId, u32>> InsTempReduceMesh2D::CreateNotifiesReques
 
     HCCL_DEBUG(
         "[InsTempReduceMesh2D] Create notifies request: "
-        "totalNotifyReqNum[%u], ctrlNotfiyReqNum[%u], xNotifyReqNum[%u], yNotifyReqNum[%u]",
+        "totalNotifyReqNum[%u], ctrlNotifyReqNum[%u], xNotifyReqNum[%u], yNotifyReqNum[%u]",
         totalNotifyReqNum, ctrlNotfiyReqNum, xNotifyReqNum, yNotifyReqNum);
 
     return notifyRequests;

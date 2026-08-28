@@ -78,7 +78,7 @@ void CcuContextBroadcastMesh1D::LoadAndExchangeData()
 {
     uint16_t selfBit = 1 << rankId_;
     uint16_t allBit = ((1 << rankSize_) - 1) & (~(1 << rankId_));
-    HCCL_DEBUG("[CcuContextBroadcastMesh1D] BroadcastMesh1D LoadAndExchanageData: rankId[%u]", rankId_);
+    HCCL_DEBUG("[CcuContextBroadcastMesh1D] BroadcastMesh1D LoadAndExchangeData: rankId[%u]", rankId_);
     Load(input_);
     Load(output_[rankId_]);
     Load(token_[rankId_]);

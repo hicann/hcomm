@@ -212,7 +212,7 @@ HcclResult CcuJetty::Clean()
 
         auto ret = RaCtxQpDestroy(jettyHandle);
         if (ret != 0) {
-            HCCL_ERROR("[CcuJetty][%s] failed, jettyHanlde[0x%llx].", __func__, jettyHandle);
+            HCCL_ERROR("[CcuJetty][%s] failed, jettyHandle[0x%llx].", __func__, jettyHandle);
             return HcclResult::HCCL_E_NETWORK;
         }
     }

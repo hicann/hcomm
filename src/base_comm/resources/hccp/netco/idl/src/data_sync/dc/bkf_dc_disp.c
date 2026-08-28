@@ -213,7 +213,7 @@ void BkfDcDisp(BkfDc *dc)
     BKF_DISP_PRINTF(disp, "log(%#x/%#x)\n", BKF_MASK_ADDR(dc->argInit.log), BKF_MASK_ADDR(dc->log));
     BKF_DISP_PRINTF(disp, "jobMng(%#x)/jobTypeId(%u)/jobPrio(%u)\n", BKF_MASK_ADDR(dc->argInit.jobMng),
         dc->argInit.jobTypeId, dc->argInit.jobPrio);
-    BKF_DISP_PRINTF(disp, "slie_keyLen(%u)/keyCmp(%#x)/keyGetStrOrNull(%#x)/keyCodec(%#x)\n",
+    BKF_DISP_PRINTF(disp, "slice_keyLen(%u)/keyCmp(%#x)/keyGetStrOrNull(%#x)/keyCodec(%#x)\n",
         dc->argInit.sliceVTbl.keyLen, BKF_MASK_ADDR(dc->argInit.sliceVTbl.keyCmp),
         BKF_MASK_ADDR(dc->argInit.sliceVTbl.keyGetStrOrNull), BKF_MASK_ADDR(dc->argInit.sliceVTbl.keyCodec));
     BKF_DISP_PRINTF(disp, "sysLogMng(%#x)\n", BKF_MASK_ADDR(dc->argInit.sysLogMng));

@@ -1245,7 +1245,7 @@ HcclResult HcclCreateSubCommConfigInner(
     if (errorFlag) {
         HCCL_ERROR(
             "[%s]Create sub communication failed, return[0x%016llx], "
-            "rankNum[%u], subCommRankId[%u], sub commm identifier[%s], server[%s], logicDevId[%d]",
+            "rankNum[%u], subCommRankId[%u], sub comm identifier[%s], server[%s], logicDevId[%d]",
             __func__, HCCL_ERROR_CODE(ret), rankNum, subCommRankId, commIdentifier.c_str(),
             GetLocalServerId(subParams.serverId).c_str(), subParams.logicDevId);
         (void)HcclCommDestroy(pComm.get());
@@ -1257,7 +1257,7 @@ HcclResult HcclCreateSubCommConfigInner(
     CHK_RET(hcclNslbDp::GetInstance().SetCommInfo_NoRankTable(subRankTable, identifier, subCommRankId));
 
     HCCL_RUN_INFO(
-        "%s success, sub commm identifier[%s], rankNum[%u], rank[%u], server[%s], device[%d].", __func__,
+        "%s success, sub comm identifier[%s], rankNum[%u], rank[%u], server[%s], device[%d].", __func__,
         commIdentifier.c_str(), subRankTable.rankNum, subCommRankId, subParams.serverId.c_str(), subParams.logicDevId);
 #endif
     return HCCL_SUCCESS;
@@ -1369,7 +1369,7 @@ HcclResult HcclCreateSubCommConfig(
     /* 关键状态记录 */
     HCCL_RUN_INFO(
         "[HCCL_TRACE]%s success, take time [%lld]us, "
-        "sub commm identifier[%s], rankNum[%u], rank[%u], deviceLogicId[%d]",
+        "sub comm identifier[%s], rankNum[%u], rank[%u], deviceLogicId[%d]",
         __func__, DURATION_US(TIME_NOW() - startut), commConfig.GetConfigCommName().c_str(), rankNum, subCommRankId,
         deviceLogicId);
     return HCCL_SUCCESS;

@@ -152,7 +152,7 @@ HcclResult OpExeCounter::ClearOpCounterMem()
     }
     CHK_RET(hrtMemSet(headCountMem_, memSize_, memSize_));
     CHK_RET(hrtMemSet(tailCountMem_, memSize_, memSize_));
-    HCCL_DEBUG("[OpExeCounter][ClearOpCounterMem] headCountMem or tailCountMem is to success set 0");
+    HCCL_DEBUG("[OpExeCounter][ClearOpCounterMem] headCountMem or tailCountMem is successfully set to 0");
     return HCCL_SUCCESS;
 }
 

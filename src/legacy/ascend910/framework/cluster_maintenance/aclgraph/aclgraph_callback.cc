@@ -48,7 +48,7 @@ HcclResult AclgraphCallback::CleanCaptureRes(u64 modelId)
     std::lock_guard<std::mutex> lock(resMutex_);
     auto modelIt = captureResMap_.find(modelId);
     if (modelIt == captureResMap_.end()) {
-        HCCL_ERROR("[%s] modelID[%llu] is not record", __func__, modelId);
+        HCCL_ERROR("[%s] modelID[%llu] is not recorded", __func__, modelId);
         return HCCL_E_NOT_FOUND;
     }
 

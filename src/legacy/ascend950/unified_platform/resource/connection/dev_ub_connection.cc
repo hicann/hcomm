@@ -994,7 +994,7 @@ void DevUbConnection::ProcessSlices(
     }
 
     HCCL_INFO(
-        "[DevUbConnection::%s] end, locBufSize[%u], sliceNUm[%u], sliceSize[%u], lastSliceSize[%u]", __func__,
+        "[DevUbConnection::%s] end, locBufSize[%u], sliceNum[%u], sliceSize[%u], lastSliceSize[%u]", __func__,
         locBufSize, sliceNum, sliceSize, lastSliceSize);
 }
 

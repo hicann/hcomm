@@ -282,8 +282,8 @@ HcclResult HcomGetCommByGroup(const char* group, std::shared_ptr<hccl::hcclComm>
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
                 HCCL_WARNING(
-                    "[Get][CommByGroup]errNo[0x%016llx] group[%s]"
-                    "group is not exist",
+                    "[Get][CommByGroup]errNo[0x%016llx] group[%s] "
+                    "does not exist",
                     HCOM_ERROR_CODE(HCCL_E_NOT_FOUND), strGroup.c_str()),
                 HCCL_E_NOT_FOUND);
         } else {
@@ -539,7 +539,7 @@ HcclResult DestroyFlag(const char* group, bool flag)
     auto iter = hcomInfo.hcomGroupMap.find(strGroup);
     if (iter == hcomInfo.hcomGroupMap.end()) {
         HCCL_ERROR(
-            "[Get][CommByGroup]errNo[0x%016llx] group[%s] group is not exist", HCOM_ERROR_CODE(HCCL_E_NOT_FOUND),
+            "[Get][CommByGroup]errNo[0x%016llx] group[%s] does not exist", HCOM_ERROR_CODE(HCCL_E_NOT_FOUND),
             strGroup.c_str());
         return HCCL_E_NOT_FOUND; // 不存在该服务器内相关dev的对应信息
     }
@@ -558,7 +558,7 @@ HcclResult QueryDestroyFlag(const char* group)
     auto iter = hcomInfo.hcomGroupMap.find(strGroup);
     if (iter == hcomInfo.hcomGroupMap.end()) {
         HCCL_WARNING(
-            "[Get][CommByGroup]errNo[0x%016llx] group[%s] group is not exist", HCOM_ERROR_CODE(HCCL_E_AGAIN),
+            "[Get][CommByGroup]errNo[0x%016llx] group[%s] does not exist", HCOM_ERROR_CODE(HCCL_E_AGAIN),
             strGroup.c_str());
         return HCCL_E_AGAIN; // 不存在该服务器内相关dev的对应信息
     }
@@ -603,7 +603,7 @@ HcclResult HcomDestroyGroupImpl(const std::string& group)
     auto iter = hcomInfo.hcomGroupMap.find(group);
     if (iter == hcomInfo.hcomGroupMap.end()) {
         HCCL_ERROR(
-            "[Destroy][Group]errNo[0x%016llx] group[%s] is not exist", HCOM_ERROR_CODE(HCCL_E_PARA), group.c_str());
+            "[Destroy][Group]errNo[0x%016llx] group[%s] does not exist", HCOM_ERROR_CODE(HCCL_E_PARA), group.c_str());
         return HCCL_E_PARA;
     }
 
@@ -645,7 +645,8 @@ HcclResult HcomDestroyGroup(const char* group)
         CHK_RET(HcomDestroyGroupImplV2(group));
         auto iter = hcomInfo.hcomGroupMap.find(group);
         if (iter == hcomInfo.hcomGroupMap.end()) {
-            HCCL_ERROR("[Destroy][Group]errNo[0x%016llx] group[%s] is not exist", HCOM_ERROR_CODE(HCCL_E_PARA), group);
+            HCCL_ERROR(
+                "[Destroy][Group]errNo[0x%016llx] group[%s] does not exist", HCOM_ERROR_CODE(HCCL_E_PARA), group);
             return HCCL_E_PARA;
         }
         hcomInfo.hcomGroupMap.erase(group);
@@ -707,7 +708,7 @@ HcclResult HcomStoreBackloggedGroup(const std::string& group, const std::vector<
         HCCL_INFO("[device not set]hcom store group[%s]", group.c_str());
         std::unique_lock<std::mutex> groupParaLock(g_backloggedGroupLock);
         if (g_backloggedGroup.find(group) != g_backloggedGroup.end()) {
-            HCCL_INFO("[Store][BackloggedGroup]group[%s] is existed", group.c_str());
+            HCCL_INFO("[Store][BackloggedGroup]group[%s] already exists", group.c_str());
             if (g_backloggedGroup[group] == groupRanks) {
                 HCCL_ERROR("[Store][BackloggedGroup]group[%s] has been created", group.c_str());
                 return HCCL_E_PARA;
@@ -731,7 +732,7 @@ HcclResult HcomStoreBackloggedGroup(const std::string& group, const std::vector<
 
     std::unique_lock<std::mutex> lock(hcomInfo.backloggedGroupLock);
     if (hcomInfo.backloggedGroup.find(group) != hcomInfo.backloggedGroup.end()) {
-        HCCL_ERROR("[Store][BackloggedGroup]group[%s] is existed", group.c_str());
+        HCCL_ERROR("[Store][BackloggedGroup]group[%s] already exists", group.c_str());
         return HCCL_E_PARA;
     } else {
         hcomInfo.backloggedGroup.insert({group, groupRanks});
@@ -747,10 +748,10 @@ HcclResult HcomDestroyBackloggedGroup(const std::string& group)
     if (hcomInfo.backloggedGroup.find(group) == hcomInfo.backloggedGroup.end()) {
         if (!hcomInfo.isHcomInit) {
             HCCL_WARNING(
-                "[Destroy][BackloggedGroup]group[%s] is not existed, and hcom has not been inited yet", group.c_str());
+                "[Destroy][BackloggedGroup]group[%s] does not exist, and hcom has not been inited yet", group.c_str());
             return HCCL_SUCCESS;
         } else {
-            HCCL_ERROR("[Destroy][BackloggedGroup]group[%s] is not existed", group.c_str());
+            HCCL_ERROR("[Destroy][BackloggedGroup]group[%s] does not exist", group.c_str());
             return HCCL_E_PARA;
         }
     } else {
@@ -780,7 +781,7 @@ HcclResult HcomGetbackloggedByGroup(const char* group, std::vector<u32>& groupRa
     if (iter == hcomInfo.backloggedGroup.end()) {
         groupSize = 0;
         HCCL_DEBUG(
-            "[Get][CommByGroup]errNo[0x%016llx] group[%s] is not exist", HCOM_ERROR_CODE(HCCL_E_NOT_FOUND), group);
+            "[Get][CommByGroup]errNo[0x%016llx] group[%s] does not exist", HCOM_ERROR_CODE(HCCL_E_NOT_FOUND), group);
         return HCCL_SUCCESS; // 不存在该服务器内相关dev的对应信息
     }
     groupRanks = iter->second;
@@ -800,7 +801,7 @@ HcclResult HcomQueryGroupRef(const char* group, u32& groupRef)
     auto iter = hcomInfo.hcomGroupMap.find(strGroup);
     if (iter == hcomInfo.hcomGroupMap.end()) {
         HCCL_WARNING(
-            "[Get][CommByGroup]errNo[0x%016llx] group[%s] group is not exist", HCOM_ERROR_CODE(HCCL_E_AGAIN),
+            "[Get][CommByGroup]errNo[0x%016llx] group[%s] does not exist", HCOM_ERROR_CODE(HCCL_E_AGAIN),
             strGroup.c_str());
         return HCCL_E_AGAIN; // 不存在该服务器内相关dev的对应信息
     }
@@ -956,7 +957,7 @@ HcclResult GetGroupRankInfo(const char* group, RankInfoType rankType, u32 inPara
     CHK_PRT_RET(
         (iter->second).groupRanks.empty(),
         HCCL_ERROR(
-            "[Get][GroupRankInfo]errNo[0x%016llx] group[%s]"
+            "[Get][GroupRankInfo]errNo[0x%016llx] group[%s] "
             "ranks is empty",
             HCOM_ERROR_CODE(HCCL_E_INTERNAL), group),
         HCCL_E_INTERNAL);

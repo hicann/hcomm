@@ -153,7 +153,7 @@ HcclResult ReduceScatterMeshAtomic::RunAsync(const u32 rank, const u32 rankSize,
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
                 "[ReduceScatterMeshAtomic][RunAsync]rank[%u] memcpy async from mem[%p] "
-                "to ouputmem[%p] failed",
+                "to outputmem[%p] failed",
                 rank, src.ptr(), outputMem_.ptr()),
             ret);
     }

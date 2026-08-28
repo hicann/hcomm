@@ -102,7 +102,7 @@ HcclResult InsTempReduceScatterNHR::PreCopy(
         CHK_RET(MultiSliceLocalCopy(tempInsQues[0], tempFuncs.usrData.usrInSlices, tempFuncs.usrData.scratchInSlices));
     } else {
         // 图模式或者单算子模式下非第一个算子，数据已经在 inbuff 上了，不需要拷贝
-        HCCL_INFO("[InsTempReduceScatterNHR][PreCopy] not forpat and opbse, skip precopy");
+        HCCL_INFO("[InsTempReduceScatterNHR][PreCopy] not forepart and opbase, skip precopy");
     }
     return HcclResult::HCCL_SUCCESS;
 }
@@ -136,10 +136,10 @@ HcclResult InsTempReduceScatterNHR::PostCopy(
         u64 srcOffset = sliceInfoVec[tempVirtRankMap_[myRank_]][0].offset + buffInfo_.inBuffBaseOff;
         u64 dstOffset = buffInfo_.outBuffBaseOff;
         if (buffInfo_.inBuffType == buffInfo_.outBuffType && srcOffset == dstOffset) {
-            HCCL_INFO(
-                "[InsTempReduceScatterNHR][PostCopy] not forpat and opbse, inBuffType same as outBuffType, skip copy");
+            HCCL_INFO("[InsTempReduceScatterNHR][PostCopy] not forepart and opbase, inBuffType same as outBuffType, "
+                      "skip copy");
         } else {
-            HCCL_INFO("[InsTempReduceScatterNHR][PostCopy] not forpat and opbse, copy from outBuff to userOut");
+            HCCL_INFO("[InsTempReduceScatterNHR][PostCopy] not forepart and opbase, copy from outBuff to userOut");
             DataSlice srcSlice = DataSlice(buffInfo_.inBuffType, srcOffset, size);
             DataSlice dstSlice = DataSlice(buffInfo_.outBuffType, dstOffset, size);
             CHK_RET(LocalCopy(tempInsQues[0], srcSlice, dstSlice));

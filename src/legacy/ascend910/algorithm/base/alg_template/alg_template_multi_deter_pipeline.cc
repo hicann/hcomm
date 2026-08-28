@@ -560,7 +560,7 @@ HcclResult MultiDeterPipeline::PrepareTopoInfo(const SubCommInfo& level0CommInfo
         "[%s] topoInfo: userRank[%u], intraRankId[%u], intraRankSize[%u], serverId[%u], interRankSize[%u]", __func__,
         userRank_, intraRankId_, intraRankSize_, serverId_, serverSize_);
     HCCL_INFO(
-        "[%s] topoInfo: severLinksNum[%zu], intraLinksNum[%zu]", __func__, serverLinks_.size(), intraLinks_.size());
+        "[%s] topoInfo: serverLinksNum[%zu], intraLinksNum[%zu]", __func__, serverLinks_.size(), intraLinks_.size());
     InitAlltoallRecvBlockIdxMap();
     return HCCL_SUCCESS;
 }

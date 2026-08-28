@@ -214,7 +214,7 @@ HcclResult AlltoAllVDirectFullMesh::UpdateCurrRankRecvInfo(
         const u64 recvLen = 0;
         u64 userOutOffset = localSendRecvInfo.recvOffset[destRank];
         HCCL_DEBUG(
-            "[AlltoAllVDirectFullMesh][UpdateCurrRankRecvInfo] usrRank[%u] recv from destRank [%u]"
+            "[AlltoAllVDirectFullMesh][UpdateCurrRankRecvInfo] usrRank[%u] recv from destRank [%u] "
             "recvStepIdx[%u] recvLen[%lu] userOutOffset[%llu] scratchOffset[%llu]",
             userRank_, destRank, recvStepIdx, recvLen, userOutOffset, scratchOffset);
 
@@ -239,7 +239,7 @@ HcclResult AlltoAllVDirectFullMesh::UpdateCurrRankRecvInfo(
             u64 recvLen = std::min(sdmaDataBlockSize_, currDataRemainLen);
             u64 userOutOffset = localSendRecvInfo.recvOffset[destRank] + dataOffset;
             HCCL_DEBUG(
-                "[AlltoAllVDirectFullMesh][UpdateCurrRankRecvInfo] usrRank[%u] recv from destRank [%u]"
+                "[AlltoAllVDirectFullMesh][UpdateCurrRankRecvInfo] usrRank[%u] recv from destRank [%u] "
                 "recvStepIdx[%u] recvLen[%lu] userOutOffset[%llu] scratchOffset[%llu]",
                 userRank_, destRank, recvStepIdx, recvLen, userOutOffset, scratchOffset);
             readInfo.push_back({recvLen, scratchOffset, userOutOffset});

@@ -279,7 +279,7 @@ HcclResult InsAlltoAllSoleExecutor<AlgTopoMatch, InsAlgTemplate>::OrchestrateOpb
     tempFuncs.isForepart = true; // Usr Buff to CCL Buff required
     tempFuncs.isBottom = true;   // CCL Buff to Usr Buff required
     CHK_RET(tempAlg.Run(tempFuncs, sliceInfoVec, buffInfo, tempResLinks_, requiredQue_));
-    HCCL_INFO("[InsAlltoAllSoleExecutor][OrchestrateOpbase] Run templet success.");
+    HCCL_INFO("[InsAlltoAllSoleExecutor][OrchestrateOpbase] Run template success.");
 
     return HcclResult::HCCL_SUCCESS;
 }

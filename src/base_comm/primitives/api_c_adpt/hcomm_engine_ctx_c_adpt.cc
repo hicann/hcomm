@@ -67,7 +67,7 @@ HcommResult HcommEngineCtxCopy(CommEngine engine, void* dstCtx, const void* srcC
         CHK_SAFETY_FUNC_RET(memcpy_s(reinterpret_cast<uint8_t*>(dstCtx), size, srcCtx, size));
     } else {
         HCCL_ERROR(
-            "[%s]copy engine ctx failed, Unsupported engine[%s]", __func__,
+            "[%s] copy engine ctx failed, Unsupported engine[%s]", __func__,
             GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str());
         return HCCL_E_PARA;
     }

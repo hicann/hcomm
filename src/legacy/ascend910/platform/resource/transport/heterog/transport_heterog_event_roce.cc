@@ -662,7 +662,7 @@ HcclResult TransportHeterogEventRoce::ParseTagSrqes(const struct ibv_wc* wc, int
             gQpnToTransportMap[wc[i].qp_num]->SaveEnvelope(envelopSummary);
         } else {
             HCCL_ERROR(
-                "The transport is no exist, wrId[%llu] status[%u] opcode[%u] qpn[%u]", wc[i].wr_id, wc[i].status,
+                "The transport does not exist, wrId[%llu] status[%u] opcode[%u] qpn[%u]", wc[i].wr_id, wc[i].status,
                 wc[i].opcode, wc[i].qp_num);
             return HCCL_E_PTR;
         }
@@ -689,7 +689,7 @@ HcclResult TransportHeterogEventRoce::ParseDataSrqes(const struct ibv_wc* wc, in
             gQpnToSqMaxWrMap[wc[i].qp_num]++;
         } else {
             HCCL_ERROR(
-                "The qpn is no exist, wrId[%llu] status[%u] opcode[%u] qpn[%u]", wc[i].wr_id, wc[i].status,
+                "The qpn does not exist, wrId[%llu] status[%u] opcode[%u] qpn[%u]", wc[i].wr_id, wc[i].status,
                 wc[i].opcode, wc[i].qp_num);
             return HCCL_E_PTR;
         }

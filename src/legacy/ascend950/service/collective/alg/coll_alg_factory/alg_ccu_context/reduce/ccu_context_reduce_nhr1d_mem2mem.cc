@@ -147,7 +147,7 @@ void CcuContextReduceNHR1DMem2mem::AxisSync(uint32_t signalIndex)
     const uint32_t DIE_NUM = 2;
     if (signalIndex > 1) {
         THROW<InvalidParamsException>(
-            StringFormat("[CcuContextReduceNHR1DMem2mem] Unexpected SignalInex[%u]", signalIndex));
+            StringFormat("[CcuContextReduceNHR1DMem2mem] Unexpected SignalIndex[%u]", signalIndex));
     }
     LocalCtxPost(anotherAxisSignal_, 1 << (axisId_ + signalIndex * DIE_NUM));
     LocalWait(localAxisSignal_, 1 << (1 - axisId_ + signalIndex * DIE_NUM));

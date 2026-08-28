@@ -76,7 +76,7 @@ __attribute__((visibility("default"))) uint32_t RunDpuRpcSrvLaunch(const uint64_
         uint8_t newFlag = TASK_TERMINATE_RESPONSE;
         errno_t cpyRet = memcpy_s(static_cast<uint8_t*>(params->deviceMem), sizeof(newFlag), &newFlag, sizeof(newFlag));
         if (cpyRet != EOK) {
-            HCCL_ERROR("set eixt flag failed: %d", cpyRet);
+            HCCL_ERROR("set exit flag failed: %d", cpyRet);
             return HCCL_E_INTERNAL;
         }
     }

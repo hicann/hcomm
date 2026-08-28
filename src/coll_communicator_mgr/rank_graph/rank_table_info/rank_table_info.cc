@@ -92,7 +92,7 @@ void RankTableInfo::Check()
                 true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
                 std::vector<std::string>(
                     {std::to_string(rank.replacedLocalId), "replacedLocalId",
-                     "replacedLocalId equal to locaId[" + std::to_string(rank.localId) + "]"}));
+                     "replacedLocalId equal to localId[" + std::to_string(rank.localId) + "]"}));
             THROW<InvalidParamsException>(StringFormat(
                 "[Parse][ClusterInfo][RankTableInfo::Check] "
                 "failed with replacedLocalId[%u] not equal to localId[%u].",
@@ -136,7 +136,7 @@ void RankTableInfo::Check()
             true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
             std::vector<std::string>(
                 {std::to_string(recordedReplaceLocalId), "recordedReplacedLocalId",
-                 "failed with configuring same local_id with replaced one simutaneously"}));
+                 "failed with configuring same local_id with replaced one simultaneously"}));
         THROW<InvalidParamsException>(StringFormat(
             "[Parse][ClusterInfo][RankTableInfo::%s] failed with configuring "
             "same local_id[%u] with replaced one simutaneously",

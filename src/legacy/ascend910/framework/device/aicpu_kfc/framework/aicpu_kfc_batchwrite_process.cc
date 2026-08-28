@@ -279,7 +279,7 @@ ANONYMOUS_NAMESPACE_END
 
 void AicpuKfcBatchwriteProcess::FinishProcess()
 {
-    HCCL_INFO("master over task is finish.");
+    HCCL_INFO("master task is finished.");
     g_sharedCtx.taskFinishFlag.store(true, std::memory_order_release);
 }
 
@@ -375,7 +375,7 @@ HcclResult AicpuKfcBatchwriteProcess::RunSlaveRpcServerForApi(AicpuComContext* c
 #endif
 
         if (g_sharedCtx.taskFinishFlag.load(std::memory_order_acquire)) {
-            HCCL_INFO("task is finish, slave process exit");
+            HCCL_INFO("task is finished, slave process exit");
             break;
         }
         u8 needSendTotalNum = 0;

@@ -66,7 +66,7 @@ UbMemoryTransport::UBTransportStatus UbMemoryTransport::GetStatus()
         HCCL_ERROR("%s", e.what());
         return UbMemoryTransport::UBTransportStatus::CONNECT_FAILED;
     } catch (...) {
-        HCCL_ERROR("Unknown error occured when StateMachine!");
+        HCCL_ERROR("Unknown error occurred when StateMachine!");
         return UbMemoryTransport::UBTransportStatus::CONNECT_FAILED;
     }
     return status;

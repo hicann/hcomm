@@ -248,7 +248,7 @@ HcclResult ReduceScatterNHR::InlineReduceRxLastStep(
         DeviceMem tmpMem = scratchMem_.range(outputSlices[rxSliceIdx].offset, outputSlices[rxSliceIdx].size);
         HCCL_DEBUG(
             "[ReduceScatterNHR][RunReduceScatterNHR] final reduce rxSliceIdx[%u] will reduce with "
-            "inputMem_ offset[%llu] to ouput_mem_ offset[%llu] size[%llu]",
+            "inputMem_ offset[%llu] to output_mem_ offset[%llu] size[%llu]",
             rxSliceIdx, inputSlices[rxSliceIdx].offset, outputSlices[rxSliceIdx].offset, outputSlices[rxSliceIdx].size);
 
         rxReduceMems.emplace_back(
@@ -311,7 +311,7 @@ HcclResult ReduceScatterNHR::TbeReduceRxLastStep(
         u64 dataCount = dstMem.size() / SIZE_TABLE[dataType_];
         HCCL_DEBUG(
             "[ReduceScatterNHR][RunReduceScatterNHR] final reduce rxSliceIdx[%u] will reduce with "
-            "inputMem_ offset[%llu] to ouput_mem_ offset[%llu] size[%llu]",
+            "inputMem_ offset[%llu] to output_mem_ offset[%llu] size[%llu]",
             rxSliceIdx, inputSlices[rxSliceIdx].offset, outputSlices[rxSliceIdx].offset, outputSlices[rxSliceIdx].size);
         CHK_RET(HcclD2DMemcpyAsync(
             dispatcher_, tmpMem, srcMemRemote, stream_, linkLeft->GetRemoteRank(), // left的inputMem拷到本端的scratchMem
@@ -343,7 +343,7 @@ HcclResult ReduceScatterNHR::RunDestReducerLastStep(
         DeviceMem tmpMem = scratchMem_.range(outputSlices[rxSliceIdx].offset, outputSlices[rxSliceIdx].size);
         HCCL_DEBUG(
             "[ReduceScatterNHR][RunReduceScatterNHR] final reduce rxSliceIdx[%u] will reduce with "
-            "inputMem_ offset[%llu] to ouput_mem_ offset[%llu] size[%llu]",
+            "inputMem_ offset[%llu] to output_mem_ offset[%llu] size[%llu]",
             rxSliceIdx, inputSlices[rxSliceIdx].offset, outputSlices[rxSliceIdx].offset, outputSlices[rxSliceIdx].size);
 
         rxReduceMems.emplace_back(

@@ -148,7 +148,7 @@ DL_ATTRI_VISI_DEF int RaHdcRdmaLiteApiInit(void)
     ret = RaHdcOpenRdmaLiteSo();
     if (ret) {
         pthread_mutex_unlock(&gRdmaLiteApiLock);
-        hccp_err("HccpDlopen[libascend_rdma_lite.so]"
+        hccp_err("HccpDlopen[libascend_rdma_lite.so] "
                  "failed! ret=[%d][%s]. Please check rdma lite driver has been installed.",
             ret, dlerror());
         return ret;

@@ -63,7 +63,7 @@ HcclResult CollAllGatherHccsSioExecutor::CalcLevel0CommInfo(
             // 根据子通信索引设置isHccs的值
             transportRequest.linkType = (subCommIndex == 0) ? TransportLinkType::SIO : TransportLinkType::HCCS;
             HCCL_INFO(
-                "[CollAllGatherHccsSioExecutor][CalcLevel0CommInfo] set extral notifyNum[%u]",
+                "[CollAllGatherHccsSioExecutor][CalcLevel0CommInfo] set extra notifyNum[%u]",
                 transportRequest.notifyNum);
         }
     }

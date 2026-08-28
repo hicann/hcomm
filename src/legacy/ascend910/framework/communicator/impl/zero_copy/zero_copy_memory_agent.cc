@@ -461,7 +461,7 @@ void ZeroCopyMemoryAgent::ParseReceivedRequests()
             CHK_PRT_CONT(
                 ParseReceivedRequest(req, remoteRank) != HCCL_SUCCESS,
                 HCCL_ERROR(
-                    "[ZeroCopyMemoryAgent][ParseReceivedRequest] failed prase requestType[%s] remote[%u]",
+                    "[ZeroCopyMemoryAgent][ParseReceivedRequest] failed to parse requestType[%s] remote[%u]",
                     GetReadableRequestType(*reinterpret_cast<RequestType*>(req.data())), kv.first));
             recvMgr.praseIndex_++;
             if (recvMgr.praseIndex_ == ZERO_COPY_MEMORY_AGENT_RECV_QUEUE_SIZE) {

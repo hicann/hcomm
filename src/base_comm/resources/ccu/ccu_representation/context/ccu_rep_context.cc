@@ -135,7 +135,7 @@ namespace CcuRep {
         ccuProfilingInfoCache.name = kernelName.c_str();
         ccuProfilingInfoCache.dieId = defaultDieId;
         HCCL_DEBUG(
-            "[%s]type[%d], name[%s], deafultDieId[0]", __func__, ccuProfilingInfoCache.type,
+            "[%s]type[%d], name[%s], defaultDieId[%u]", __func__, ccuProfilingInfoCache.type,
             ccuProfilingInfoCache.name.c_str(), ccuProfilingInfoCache.dieId);
         profilingInfo.push_back(ccuProfilingInfoCache);
     }

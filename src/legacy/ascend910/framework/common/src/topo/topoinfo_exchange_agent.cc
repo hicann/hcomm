@@ -113,7 +113,7 @@ HcclResult TopoInfoExchangeAgent::Setup()
                 });
             }
             HCCL_ERROR(
-                "[TopoInfoExchangeAgent][Setup]VerifyCluseterInfo failed, g_broadcastStage[%d]",
+                "[TopoInfoExchangeAgent][Setup]VerifyClusterInfo failed, g_broadcastStage[%d]",
                 g_broadcastStage.load());
         }
 
@@ -649,7 +649,7 @@ HcclResult TopoInfoExchangeAgent::VerifyClusterInfo(RankTable_t& clusterInfo)
         errormessage = "The number of ranks[" + std::to_string(localRankInfo_.rankSize)
                        + "]passed by the communicator initialization interface does not match the number of ranks["
                        + std::to_string(clusterInfo.rankList.size())
-                       + "]obtained during cluster information negotiction.";
+                       + "] obtained during cluster information negotiation.";
         HCCL_ERROR(
             "[%s][%s]%s", LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_DETECT.c_str(), errormessage.c_str());
         return HCCL_E_PARA;
@@ -658,7 +658,7 @@ HcclResult TopoInfoExchangeAgent::VerifyClusterInfo(RankTable_t& clusterInfo)
     if (clusterInfo.rankNum != localRankInfo_.rankSize) {
         errormessage = "The number of ranks[" + std::to_string(localRankInfo_.rankSize)
                        + "]passed by the communicator initialization interface does not match the number of ranks["
-                       + std::to_string(clusterInfo.rankNum) + "] obtained during cluster information negotiction.";
+                       + std::to_string(clusterInfo.rankNum) + "] obtained during cluster information negotiation.";
         HCCL_ERROR(
             "[%s][%s]%s", LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_DETECT.c_str(), errormessage.c_str());
         return HCCL_E_PARA;

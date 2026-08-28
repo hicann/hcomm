@@ -471,7 +471,7 @@ HcclResult TransportBase::SendNotifyReadyMesg()
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
             "[Send][IpcNotifyReadyMesg]errNo[0x%016llx]In send notify ready mesg, send read msg failed. remote "
-            "userrank[%u] notify locak rank[%u]",
+            "userrank[%u] notify local rank[%u]",
             HCCL_ERROR_CODE(ret), machinePara_.remoteUserrank, machinePara_.localUserrank),
         ret);
 
@@ -520,7 +520,7 @@ HcclResult TransportBase::SendDeviceIpcNotifyReadyMesg()
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
             "[Send][IpcNotifyReadyMesg]errNo[0x%016llx]In send notify ready mesg, send read msg failed. remote "
-            "userrank[%u] notify locak rank[%u]",
+            "userrank[%u] notify local rank[%u]",
             HCCL_ERROR_CODE(ret), machinePara_.remoteUserrank, machinePara_.localUserrank),
         ret);
 
@@ -545,7 +545,7 @@ HcclResult TransportBase::SendDeviceIpcNotifyDoneMesg()
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
             "[Send][IpcNotifyReadyMesg]errNo[0x%016llx]In send notify ready mesg, send read msg failed. remote "
-            "userrank[%u] notify locak rank[%u]",
+            "userrank[%u] notify local rank[%u]",
             HCCL_ERROR_CODE(ret), machinePara_.remoteUserrank, machinePara_.localUserrank),
         ret);
 

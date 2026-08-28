@@ -287,7 +287,7 @@ HcclResult OpUnfoldCache::DumpSqeContent(const uint8_t* sqePtr, const uint8_t sq
                     memcpyAsyncSqePtr->dst_addr_low, memcpyAsyncSqePtr->dst_addr_high);
                 PLF_CONFIG_DEBUG(
                     PLF_TASK,
-                    "[OpUnfoldCache][DumpSqeContent] linkType[%u] resvered[0][%u] resvered[1][%u] resvered[2][%u] "
+                    "[OpUnfoldCache][DumpSqeContent] linkType[%u] reserved[0][%u] reserved[1][%u] reserved[2][%u] "
                     "reslast[0][%u] reslast[1][%u] reslast[2][%u]",
                     memcpyAsyncSqePtr->linkType, memcpyAsyncSqePtr->resvered[0], memcpyAsyncSqePtr->resvered[1],
                     memcpyAsyncSqePtr->resvered[2], memcpyAsyncSqePtr->reslast[0], memcpyAsyncSqePtr->reslast[1],
@@ -731,7 +731,7 @@ HcclResult OpUnfoldCache::DumpSqeContent(const uint8_t* sqePtr, const uint8_t sq
                     placeholderSqePtr->res3);
                 PLF_CONFIG_DEBUG(
                     PLF_TASK,
-                    "[OpUnfoldCache][DumpSqeContent] u.cache_memcpy_record_task_info: length[%u]"
+                    "[OpUnfoldCache][DumpSqeContent] u.cache_memcpy_record_task_info: length[%u] "
                     "src_addr_low[0x%08x] src_addr_high[0x%08x] dst_addr_low[0x%08x] dst_addr_high[0x%08x]",
                     placeholderSqePtr->u.cache_memcpy_record_task_info.length,
                     placeholderSqePtr->u.cache_memcpy_record_task_info.src_addr_low,
@@ -740,7 +740,7 @@ HcclResult OpUnfoldCache::DumpSqeContent(const uint8_t* sqePtr, const uint8_t sq
                     placeholderSqePtr->u.cache_memcpy_record_task_info.dst_addr_high);
                 PLF_CONFIG_DEBUG(
                     PLF_TASK,
-                    "[OpUnfoldCache][DumpSqeContent] u.cache_memcpy_record_task_info: opcode[%u]"
+                    "[OpUnfoldCache][DumpSqeContent] u.cache_memcpy_record_task_info: opcode[%u] "
                     "partid[%u] kernel_credit[%u] linkType[%u]",
                     placeholderSqePtr->u.cache_memcpy_record_task_info.opcode,
                     placeholderSqePtr->u.cache_memcpy_record_task_info.partid,

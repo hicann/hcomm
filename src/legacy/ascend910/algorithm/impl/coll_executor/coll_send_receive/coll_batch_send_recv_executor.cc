@@ -146,7 +146,7 @@ HcclResult CollBatchSendRecvExecutor::ProcessSelfSendRecvTasks(Stream& stream)
             sendToSelfDeque_.pop_front();
             recvFromSelfDeque_.pop_front();
         } else {
-            HCCL_ERROR("[HcclBatchSendRecv] Send task and recv task to self : count or dataType do not equal, please"
+            HCCL_ERROR("[HcclBatchSendRecv] Send task and recv task to self : count or dataType do not equal, please "
                        "check the task list.");
             return HCCL_E_PARA;
         }

@@ -111,7 +111,7 @@ HcclResult InterGroupSyncProcess(std::vector<AscCommServerInfo>& serverList, u32
         ++(server.retryCnt);
         HCCL_INFO("Group sync(%u-%u) will be retried at seq num %u.", curGroupIdx, groupId, server.msgPos);
     } else {
-        HCCL_ERROR("Group sync(%u-%u) failed, handle id %d, error code %u.", groupId, handleId, ret);
+        HCCL_ERROR("Group sync(%u-%u) failed, handle id %d, error code %u.", curGroupIdx, groupId, handleId, ret);
         return ret;
     }
     return HCCL_SUCCESS;

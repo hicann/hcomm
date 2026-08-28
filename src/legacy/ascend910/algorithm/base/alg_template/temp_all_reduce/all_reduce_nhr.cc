@@ -57,7 +57,7 @@ HcclResult AllReduceNHR::RunAsync(const u32 rank, const u32 rankSize, const std:
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[AllReduceNHR][RunAsync] rank[%u] count[%llu] failed in reducescater "
+            "[AllReduceNHR][RunAsync] rank[%u] count[%llu] failed in ReduceScatter "
             "step",
             rank, count_),
         ret);

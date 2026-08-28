@@ -81,7 +81,7 @@ HCCP_ATTRI_VISI_DEF int RaGetDevEidInfoNum(struct RaInfo info, unsigned int *num
 
     CHK_PRT_RETURN(num == NULL, hccp_err("[get][eid]num is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
     CHK_PRT_RETURN(info.phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[get][eid]phy_id(%u) must smaller than %u", info.phyId, RA_MAX_PHY_ID_NUM),
+        hccp_err("[get][eid]phy_id(%u) must be smaller than %u", info.phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
     hccp_run_info("Input parameters: phy_id[%u], nic_position:[%d]", info.phyId, info.mode);
@@ -110,7 +110,7 @@ HCCP_ATTRI_VISI_DEF int RaGetDevEidInfoList(struct RaInfo info, struct HccpDevEi
     CHK_PRT_RETURN(infoList == NULL || num == NULL, hccp_err("[get][eid]info_list or num is NULL"),
         ConverReturnCode(RDMA_OP, -EINVAL));
     CHK_PRT_RETURN(info.phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[get][eid]phy_id(%u) must smaller than %u", info.phyId, RA_MAX_PHY_ID_NUM),
+        hccp_err("[get][eid]phy_id(%u) must be smaller than %u", info.phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
     hccp_run_info("Input parameters: phy_id[%u], nic_position:[%d]", info.phyId, info.mode);
@@ -160,7 +160,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxInit(struct CtxInitCfg *cfg, struct CtxInitAttr *at
     CHK_PRT_RETURN(cfg == NULL || attr == NULL || ctxHandle == NULL,
         hccp_err("[init][ra_ctx]cfg or attr or ctx_handle is NULL"), ConverReturnCode(HCCP_INIT, -EINVAL));
     CHK_PRT_RETURN(attr->phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[init][ra_ctx]phy_id(%u) must smaller than %u", attr->phyId, RA_MAX_PHY_ID_NUM),
+        hccp_err("[init][ra_ctx]phy_id(%u) must be smaller than %u", attr->phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(HCCP_INIT, -EINVAL));
 
     ctxHandleTmp = calloc(1, sizeof(struct RaCtxHandle));
@@ -213,8 +213,8 @@ HCCP_ATTRI_VISI_DEF int RaCtxGetAsyncEvents(void *ctxHandle, struct AsyncEvent e
         hccp_err("[get][async_events]ctx_handle or events or num is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(*num == 0 || *num > ASYNC_EVENT_MAX_NUM,
-        hccp_err("[get][async_events]num:%u must greater than 0"
-                 " and less or equal to %d",
+        hccp_err("[get][async_events]num:%u must be greater than 0 "
+                 "and less than or equal to %d",
             *num, ASYNC_EVENT_MAX_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
@@ -266,8 +266,8 @@ HCCP_ATTRI_VISI_DEF int RaGetEidByIp(void *ctxHandle, struct IpInfo ip[], union 
         hccp_err("[get][eid_by_ip]ctx_handle or ip or eid or num is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(*num == 0 || *num > HCCP_EID_IP_QUERY_MAX_NUM,
-        hccp_err("[get][eid_by_ip]num(%u) must greater than 0"
-                 " and less or equal to %d",
+        hccp_err("[get][eid_by_ip]num(%u) must be greater than 0 "
+                 "and less than or equal to %d",
             *num, HCCP_EID_IP_QUERY_MAX_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
@@ -297,8 +297,8 @@ HCCP_ATTRI_VISI_DEF int RaGetIpByEid(void *ctxHandle, union HccpEid eid[], struc
         hccp_err("[get][IpByEid]ctxHandle or eid or ip or num is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(*num == 0 || *num > HCCP_EID_IP_QUERY_MAX_NUM,
-        hccp_err("[get][IpByEid]num(%u) must greater than 0"
-                 " and less or equal to %d",
+        hccp_err("[get][IpByEid]num(%u) must be greater than 0 "
+                 "and less than or equal to %d",
             *num, HCCP_EID_IP_QUERY_MAX_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
@@ -951,7 +951,7 @@ STATIC int RaCtxBatchSendWrCheck(struct RaCtxQpHandle *qpHandle, struct SendWrDa
             if ((wrList[i].ub.opcode != RA_UB_OPC_WRITE && wrList[i].ub.opcode != RA_UB_OPC_WRITE_NOTIFY &&
                     wrList[i].ub.opcode != RA_UB_OPC_READ) &&
                 wrList[i].ub.reduceInfo.reduceEn) {
-                hccp_err("[send][ra_qp]wr[%u] opcode[%d] not supportreduce", i, wrList[i].ub.opcode);
+                hccp_err("[send][ra_qp]wr[%u] opcode[%d] does not support reduce", i, wrList[i].ub.opcode);
                 return -EINVAL;
             }
         }
@@ -1013,7 +1013,7 @@ HCCP_ATTRI_VISI_DEF int RaCtxGetAuxInfo(void *ctxHandle, struct HccpAuxInfoIn *i
         hccp_err("[get][aux_info]ctx_handle or in or out is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(in->type < AUX_INFO_IN_TYPE_CQE || in->type >= AUX_INFO_IN_TYPE_MAX,
-        hccp_err("[get][aux_info]in->type(%d) must greater or equal to %d and less than %d", in->type,
+        hccp_err("[get][aux_info]in->type(%d) must be greater than or equal to %d and less than %d", in->type,
             AUX_INFO_IN_TYPE_CQE, AUX_INFO_IN_TYPE_MAX),
         ConverReturnCode(RDMA_OP, -EINVAL));
 
@@ -1039,8 +1039,8 @@ HCCP_ATTRI_VISI_DEF int RaCtxGetCrErrInfoList(void *ctxHandle, struct CrErrInfo 
         hccp_err("[get][cr_err_info_list]ctx_handle or info_list or num is NULL"), ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(*num == 0 || *num > CR_ERR_INFO_MAX_NUM,
-        hccp_err("[get][cr_err_info_list]num:%u must greater "
-                 "than 0 and less or equal to %d",
+        hccp_err("[get][cr_err_info_list]num:%u must be greater than 0 "
+                 "and less than or equal to %d",
             *num, CR_ERR_INFO_MAX_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 

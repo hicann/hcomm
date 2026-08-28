@@ -129,7 +129,7 @@ void EdgeInfo::DeserializeEndpoint(const nlohmann::json& edgeInfoJson)
         }
     } else {
         if (edgeInfoJson.contains("local_b") || edgeInfoJson.contains("local_b_ports")) {
-            HCCL_WARNING("[EdgeInfo::%s] local_b and local_b_ports are not need when PEER2NET", __func__);
+            HCCL_WARNING("[EdgeInfo::%s] local_b and local_b_ports are not needed when PEER2NET", __func__);
         }
     }
 

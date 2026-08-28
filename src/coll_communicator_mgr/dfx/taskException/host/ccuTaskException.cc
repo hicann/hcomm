@@ -577,7 +577,7 @@ uint16_t CcuTaskException::GetCcuCKEValue(int32_t deviceId, uint32_t dieId, uint
 
     uint64_t ckeVal{0};
     s32 sret = memcpy_s(&ckeVal, sizeof(ckeVal), outBuff.data.dataInfo.dataArray, inBuff.data.dataInfo.dataLen);
-    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memcpy failed. errorno[%d]:", __func__, sret), INVALID_U16);
+    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memcpy failed. errno[%d]", __func__, sret), INVALID_U16);
     return static_cast<uint16_t>(ckeVal);
 }
 
@@ -697,7 +697,7 @@ uint64_t CcuTaskException::GetCcuGSAValue(int32_t deviceId, uint32_t dieId, uint
         DFX_INVALID_U64);
 
     auto sret = memcpy_s(&gsaVal, sizeof(gsaVal), outBuff.data.dataInfo.dataArray, inBuff.data.dataInfo.dataLen);
-    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memcpy failed. errorno[%d]:", __func__, sret), DFX_INVALID_U64);
+    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memcpy failed. errno[%d]", __func__, sret), DFX_INVALID_U64);
     return gsaVal;
 }
 
@@ -725,7 +725,7 @@ uint64_t CcuTaskException::GetCcuXnValue(int32_t deviceId, uint32_t dieId, uint3
         DFX_INVALID_U64);
 
     auto sret = memcpy_s(&xnVal, sizeof(xnVal), outBuff.data.dataInfo.dataArray, inBuff.data.dataInfo.dataLen);
-    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memcpy failed. errorno[%d]:", __func__, sret), DFX_INVALID_U64);
+    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memcpy failed. errno[%d]", __func__, sret), DFX_INVALID_U64);
     return xnVal;
 }
 
@@ -751,7 +751,7 @@ void CcuTaskException::GenErrorInfoRemPostSem(
     auto sret = memset_s(
         errorMsg.msg.waitSignal.channelId, sizeof(errorMsg.msg.waitSignal.channelId), 0xFF,
         sizeof(errorMsg.msg.waitSignal.channelId));
-    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memset_s failed. errorno[%d]:", __func__, sret), );
+    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memset_s failed. errno[%d]", __func__, sret), );
     errorMsg.msg.waitSignal.channelId[0] = channelId;
 
     errorInfo.push_back(errorMsg);
@@ -781,7 +781,7 @@ void CcuTaskException::GenErrorInfoRemWaitSem(
     auto sret = memset_s(
         errorMsg.msg.waitSignal.channelId, sizeof(errorMsg.msg.waitSignal.channelId), 0xFF,
         sizeof(errorMsg.msg.waitSignal.channelId));
-    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memset_s failed. errorno[%d]:", __func__, sret), );
+    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memset_s failed. errno[%d]", __func__, sret), );
 
     errorMsg.msg.waitSignal.channelId[0] = channelId;
 
@@ -815,7 +815,7 @@ void CcuTaskException::GenErrorInfoRemPostVar(
     auto sret = memset_s(
         errorMsg.msg.waitSignal.channelId, sizeof(errorMsg.msg.waitSignal.channelId), 0xFF,
         sizeof(errorMsg.msg.waitSignal.channelId));
-    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memset_s failed. errorno[%d]:", __func__, sret), );
+    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memset_s failed. errno[%d]", __func__, sret), );
 
     errorMsg.msg.waitSignal.channelId[0] = channelId;
     errorMsg.msg.waitSignal.paramId = rmtXnId;
@@ -1029,7 +1029,7 @@ void CcuTaskException::GenErrorInfoBufReduce(
     auto sret = memset_s(
         errorMsg.msg.bufReduce.bufIds, sizeof(errorMsg.msg.bufReduce.bufIds), 0xFF,
         sizeof(errorMsg.msg.bufReduce.bufIds));
-    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memset failed. errorno[%d]:", __func__, sret), );
+    CHK_PRT_RET(sret != EOK, HCCL_ERROR("[%s]memset failed. errno[%d]", __func__, sret), );
     for (uint32_t i = 0; i < buffs.size() && i < BUF_REDUCE_ID_SIZE; ++i) {
         errorMsg.msg.bufReduce.bufIds[i] = GetMSIdPerDie(buffs[i].Id());
     }

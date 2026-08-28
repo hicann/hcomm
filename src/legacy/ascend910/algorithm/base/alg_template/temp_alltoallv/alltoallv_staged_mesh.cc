@@ -61,7 +61,7 @@ HcclResult AlltoAllVStagedMesh::RunAsync(const u32 rank, const u32 rankSize, con
     CHK_SMART_PTR_NULL(subStreamsPtr_);
 
     CHK_PRT_RET(
-        rankSize == 0, HCCL_ERROR("[AlltoAllVStagedMesh][Prepare] invilad rankSize[%u]", rankSize), HCCL_E_PARA);
+        rankSize == 0, HCCL_ERROR("[AlltoAllVStagedMesh][Prepare] invalid rankSize[%u]", rankSize), HCCL_E_PARA);
 
     CHK_PRT_RET(
         rankSize != links.size(),
@@ -81,7 +81,7 @@ HcclResult AlltoAllVStagedMesh::RunAsync(const u32 rank, const u32 rankSize, con
     CHK_PRT_RET(
         !sizeEqual,
         HCCL_ERROR(
-            "[AlltoAllVStagedMesh][RunAsync] invilad params: "
+            "[AlltoAllVStagedMesh][RunAsync] invalid params: "
             "sendAddrInfo size[%u] recvAddrInfo size[%u] rankSize[%u]",
             sendAddrInfo_.size(), recvAddrInfo_.size(), rankSize),
         HCCL_E_PARA);

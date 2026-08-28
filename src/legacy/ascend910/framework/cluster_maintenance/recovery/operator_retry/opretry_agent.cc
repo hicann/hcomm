@@ -340,7 +340,7 @@ HcclResult OpRetryAgentRunning::ParseKfcErr(RetryContext* retryCtx, RetryState& 
             break;
         }
         case KfcError::kSdma: {
-            HCCL_RUN_INFO("[OpRetry][Agent]Get ErrorCode[%d] rertryCnt[%u]", kfcError, retryCnt);
+            HCCL_RUN_INFO("[OpRetry][Agent]Get ErrorCode[%d] retryCnt[%u]", kfcError, retryCnt);
             nextState = RETRY_STATE_RESP_AICPU_ERR;
             break;
         }
@@ -400,7 +400,7 @@ HcclResult OpRetryAgentWaitCmd::ProcessEvent(RetryContext* retryCtx)
         CHK_PRT_RET(elapsed > timeout, HCCL_ERROR("[OpRetry]WaitCommand timeout"), HCCL_E_TIMEOUT);
         CHK_PRT_RET(
             retryCtx->isAgentStateWaitResume_,
-            HCCL_RUN_INFO("[OpRetry][Agent]switched state form wait cmd to wait resume"), HCCL_SUCCESS);
+            HCCL_RUN_INFO("[OpRetry][Agent]switched state from wait cmd to wait resume"), HCCL_SUCCESS);
 
         HcclResult ret = WaitCommandWithOpId(retryCtx->agentSocket_, commandinfo);
         if (ret == HCCL_SUCCESS) {
@@ -566,7 +566,7 @@ HcclResult OpRetryAgentPollAicpuStop::ProcessEvent(RetryContext* retryCtx)
     while (true) {
         CHK_PRT_RET(
             retryCtx->isAgentStateWaitResume_,
-            HCCL_RUN_INFO("[OpRetry][Agent]switched state form poll aicpu to wait resume"), HCCL_SUCCESS);
+            HCCL_RUN_INFO("[OpRetry][Agent]switched state from poll aicpu to wait resume"), HCCL_SUCCESS);
         // 读取aicpuCtx中的状态
         KfcExecStatus& opInfo = retryCtx->localRetryInfo_.opInfo;
         CHK_RET(GetOpExecInfo(retryCtx->GetD2hPtr(), opInfo));
@@ -721,7 +721,7 @@ HcclResult OpRetryAgentWaitChangeLinkInfo::ProcessEvent(RetryContext* retryCtx)
         CHK_PRT_RET(elapsed > timeout, HCCL_ERROR("[OpRetry]WaitChangeLink timeout"), HCCL_E_TIMEOUT);
         CHK_PRT_RET(
             retryCtx->isAgentStateWaitResume_,
-            HCCL_RUN_INFO("[OpRetry][Agent]switched state form wait change link to wait resume"), HCCL_SUCCESS);
+            HCCL_RUN_INFO("[OpRetry][Agent]switched state from wait change link to wait resume"), HCCL_SUCCESS);
 
         HcclResult ret = WaitChangeLink(retryCtx->agentSocket_, tmpRecvChangeLinkInfo);
         if (ret == HCCL_SUCCESS) {
@@ -735,7 +735,7 @@ HcclResult OpRetryAgentWaitChangeLinkInfo::ProcessEvent(RetryContext* retryCtx)
                     += (std::to_string(retryCtx->localChangeLinkInfo_.remoteRankList[i]) + ":"
                         + std::to_string(retryCtx->localChangeLinkInfo_.isUseDefaultPort[i]) + "; ");
             }
-            HCCL_RUN_INFO("[OpRetry][Agnet]changeLinkInfoStr:%s", changeLinkInfoStr.c_str());
+            HCCL_RUN_INFO("[OpRetry][Agent]changeLinkInfoStr:%s", changeLinkInfoStr.c_str());
 
             // 收到changelinkinfo后切换到RETRY_STATE_WAIT_CMD_RESUME_TRANSPORT状态等待接收resume transport命令
             nextState = RETRY_STATE_WAIT_CMD_RESUME_TRANSPORT;
@@ -852,12 +852,12 @@ HcclResult SwitchNicAgentWaitCmd::ProcessEvent(RetryContext* retryCtx)
     while (true) {
         CHK_PRT_RET(
             retryCtx->isAgentStateWaitResume_,
-            HCCL_RUN_INFO("[OpRetry][Agent]switched state form switch nic to wait resume"), HCCL_SUCCESS);
+            HCCL_RUN_INFO("[OpRetry][Agent]switched state from switch nic to wait resume"), HCCL_SUCCESS);
         std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();
         const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(curTime - startTime);
         CHK_PRT_RET(
             elapsed > timeout,
-            HCCL_ERROR("[SwitchNic][Agent] timeout in getting cmd from server, waitime[%u s>%u s]", elapsed, timeout),
+            HCCL_ERROR("[SwitchNic][Agent] timeout in getting cmd from server, waittime[%u s>%u s]", elapsed, timeout),
             HCCL_E_TIMEOUT);
 
         HcclResult ret = WaitCommand(retryCtx->agentSocket_, command);
@@ -887,7 +887,7 @@ HcclResult SwitchNicAgentSendSwitchInfo::ChangeAicpuStatus(RetryContext* retryCt
     while (true) {
         CHK_PRT_RET(
             retryCtx->isAgentStateWaitResume_,
-            HCCL_RUN_INFO("[OpRetry][Agent]switched state form send swhitch Nic info to wait resume"), HCCL_SUCCESS);
+            HCCL_RUN_INFO("[OpRetry][Agent]switched state from send switch nic info to wait resume"), HCCL_SUCCESS);
         KfcExecStatus& opInfo = retryCtx->localRetryInfo_.opInfo;
         CHK_RET(GetOpExecInfo(retryCtx->GetD2hPtr(), opInfo));
         const KfcStatus& aicpuState = opInfo.execStatus.kfcStatus;

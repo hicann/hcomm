@@ -112,7 +112,7 @@ HcclResult OpRetryConnection::Init(
             serverPort + OP_RETRY_CONN_PORT_MAX_RANGE);
         HCCL_ERROR("2. Somebody may have already listen on those ports, so we connect to wrong server "
                    "and we will meet 'Recv unmatched ack' error");
-        HCCL_ERROR("You may can set system reserved port to avoid this error by:");
+        HCCL_ERROR("You can set system reserved port to avoid this error by:");
         HCCL_ERROR(
             "sysctl -w net.ipv4.ip_local_reserved_ports=%u-%u", serverPort, serverPort + OP_RETRY_CONN_PORT_MAX_RANGE);
         return HCCL_E_INTERNAL;
@@ -437,7 +437,7 @@ HcclResult OpRetryConnection::Accept()
     while (expectAcceptNum > 0) {
         if (backgroudThreadStop_) {
             HCCL_ERROR(
-                "[OpRetryConnection][Accept] OpRetryConnection in acceptting but stop, rankSize_[%u] accept link[%u]",
+                "[OpRetryConnection][Accept] OpRetryConnection in accepting but stop, rankSize_[%u] accept link[%u]",
                 rankSize_, rankSize_ - expectAcceptNum);
             return HCCL_E_INTERNAL;
         }

@@ -1025,7 +1025,7 @@ void HrtRaSocketGetVnicIpInfos(u32 phyId, DeviceIdType deviceIdType, u32 deviceI
 
 static u32 HrtGetIfNum(struct RaGetIfattr& config)
 {
-    HCCL_INFO("[HrtGetIfNum] Input params: phyId=%u, nicPosistion=%u", config.phyId, config.nicPosition);
+    HCCL_INFO("[HrtGetIfNum] Input params: phyId=%u, nicPosition=%u", config.phyId, config.nicPosition);
 
     u32 num = 0;
     s32 ret = RaGetIfnum(&config, &num);
@@ -3147,7 +3147,7 @@ HcclResult HrtGetCcuMemInfo(
 
 HcclResult HrtRaGetEidByIp(RdmaHandle handle, const vector<IpAddress>& ipV4AddrList, vector<IpAddress>& eidAddrList)
 {
-    HCCL_INFO("[HrtRaGetEidByIp] begain, ipV4AddrList size=%zu", ipV4AddrList.size());
+    HCCL_INFO("[HrtRaGetEidByIp] begin, ipV4AddrList size=%zu", ipV4AddrList.size());
     size_t ipV4AddrListSize = ipV4AddrList.size();
     unsigned int num = ipV4AddrListSize;
     IpInfo ipInfoList[num] = {};
@@ -3244,7 +3244,7 @@ bool HrtRaSupportsGetTpAttr(u32 phyId)
 HcclResult
 HrtRaSetTpAttrAsync(RdmaHandle handle, uint64_t tpHandle, uint32_t attrBitmap, TpAttr& attr, RequestHandle& reqHandle)
 {
-    HCCL_INFO("[HrtRaSetTpAttrAsync] begain, reqHandle[%llu]", reqHandle);
+    HCCL_INFO("[HrtRaSetTpAttrAsync] begin, reqHandle[%llu]", reqHandle);
     void* raReqHandle = nullptr;
     s32 ret = RaSetTpAttrAsync(handle, tpHandle, attrBitmap, &attr, &raReqHandle);
     if (ret != 0) {
@@ -3260,7 +3260,7 @@ HrtRaSetTpAttrAsync(RdmaHandle handle, uint64_t tpHandle, uint32_t attrBitmap, T
 HcclResult HrtRaGetTpAttrAsync(
     u32 phyId, RdmaHandle handle, uint64_t tpHandle, uint32_t& attrBitmap, TpAttr& attr, RequestHandle& reqHandle)
 {
-    HCCL_INFO("[HrtRaGetTpAttrAsync] begain, reqHandle[%llu]", reqHandle);
+    HCCL_INFO("[HrtRaGetTpAttrAsync] begin, reqHandle[%llu]", reqHandle);
     if (!HrtRaSupportsGetTpAttr(phyId)) {
         HCCL_ERROR(
             "this package does not support RaGetTpAttrAsync for device, please change new package, phyId=%u.", phyId);

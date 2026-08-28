@@ -23,7 +23,7 @@ HcclResult AivChannelHelper::FillDevEntities(
 {
     CHK_PTR_NULL(channelList);
     CHK_PTR_NULL(linkStatusList);
-    CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s]Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
+    CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s] Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
 
     for (uint32_t i = 0; i < listNum; i++) {
         if (linkStatusList[i] != HCOMM_CHANNEL_STATUS_READY) {
@@ -75,7 +75,7 @@ HcclResult AivChannelHelper::PreAllocChannels(
     CHK_PTR_NULL(targetChannels);
     CHK_PTR_NULL(userChannels);
     CHK_PRT_RET(
-        (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
+        (channelNum == 0), HCCL_ERROR("[%s] Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
 
     bool needD2HMap = false;
     for (uint32_t i = 0; i < channelNum; i++) {

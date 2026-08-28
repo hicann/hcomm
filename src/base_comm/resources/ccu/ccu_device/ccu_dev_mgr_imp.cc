@@ -859,7 +859,7 @@ bool CcuIsInited(const int32_t deviceLogicId)
     CHK_PRT_RET(
         (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM),
         HCCL_ERROR(
-            "[CcuIsInited]deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId, MAX_MODULE_DEVICE_NUM),
+            "[CcuIsInited] deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId, MAX_MODULE_DEVICE_NUM),
         false);
 
     if (!CheckCcuOpenSourceEnable()) {
@@ -887,7 +887,8 @@ HcclResult CcuSetTaskKill(const int32_t deviceLogicId)
     CHK_PRT_RET(
         (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM),
         HCCL_ERROR(
-            "[CcuSetTaskKill]deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId, MAX_MODULE_DEVICE_NUM),
+            "[CcuSetTaskKill] deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
+            MAX_MODULE_DEVICE_NUM),
         HcclResult::HCCL_E_PARA);
     HcclResult ret;
     EXCEPTION_HANDLE_BEGIN
@@ -904,7 +905,7 @@ HcclResult CcuSetTaskKillDone(const int32_t deviceLogicId)
     CHK_PRT_RET(
         (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM),
         HCCL_ERROR(
-            "[CcuSetTaskKillDone]deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
+            "[CcuSetTaskKillDone] deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
             MAX_MODULE_DEVICE_NUM),
         HcclResult::HCCL_E_PARA);
     HcclResult ret;
@@ -922,7 +923,7 @@ HcclResult CcuCleanTaskKillState(const int32_t deviceLogicId)
     CHK_PRT_RET(
         (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM),
         HCCL_ERROR(
-            "[CcuCleanTaskKillState]deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
+            "[CcuCleanTaskKillState] deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
             MAX_MODULE_DEVICE_NUM),
         HcclResult::HCCL_E_PARA);
     HcclResult ret;
@@ -940,7 +941,7 @@ HcclResult CcuCleanDieCkes(const int32_t deviceLogicId, const uint8_t dieId)
     CHK_PRT_RET(
         (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM),
         HCCL_ERROR(
-            "[CcuCleanDieCkes]deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
+            "[CcuCleanDieCkes] deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
             MAX_MODULE_DEVICE_NUM),
         HcclResult::HCCL_E_PARA);
     HcclResult ret;

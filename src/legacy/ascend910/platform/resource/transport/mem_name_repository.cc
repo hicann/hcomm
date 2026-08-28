@@ -206,7 +206,7 @@ HcclResult MemNameRepository::OpenIpcMem(
         s32 sret = memcpy_s(memName.ipcName, HCCL_IPC_MEM_NAME_LEN, name, nameLen);
         if (sret != EOK) {
             HCCL_ERROR(
-                "[Open][IpcMem]errNo[0x%016llx] In SecIpcName, memset_s failed. errorno[%d], params:"
+                "[Open][IpcMem]errNo[0x%016llx] In SecIpcName, memset_s failed. errno[%d], params:"
                 "dest len[%u], src len[%u]",
                 HCCL_ERROR_CODE(HCCL_E_SYSCALL), sret, HCCL_IPC_MEM_NAME_LEN, nameLen);
             return HCCL_E_SYSCALL;
@@ -280,7 +280,7 @@ void MemNameRepository::DestroyIpcMem(void* ptr, u64 size, bool isSioToHccs)
     if (unavailable_) {
         ClearMemNameRepositoryImpl();
         unavailable_ = false;
-        HCCL_RUN_INFO("DestoryIpcMem unavailable_[%d]", unavailable_);
+        HCCL_RUN_INFO("DestroyIpcMem unavailable_[%d]", unavailable_);
         return;
     }
 

@@ -286,7 +286,7 @@ uint32_t BkfSuberConnSndHello(BkfSuberConn *conn)
     uint8_t *sendBuf = VOS_NULL;
     uint32_t ret = BkfSuberConnMallocSendBuf(conn, &sendBuf, BKF_CH_CLI_MALLOC_DATA_BUF_LEN_MAX);
     if (ret != BKF_OK) {
-        BKF_LOG_ERROR(connMng->log, "SendHello mem alloc faild.url %s\n",
+        BKF_LOG_ERROR(connMng->log, "SendHello mem alloc failed. url %s\n",
             BkfUrlGetStr(&conn->puberUrl, urlStr, sizeof(urlStr)));
         return BKF_ERR;
     }
@@ -315,7 +315,7 @@ uint32_t BkfSuberConnSndHello(BkfSuberConn *conn)
 
     if (ret != BKF_OK) {
         BkfChCliFreeDataBuf(env->chCliMng, conn->connId, (void *)sendBuf);
-        BKF_LOG_DEBUG(connMng->log, "Connect Send Hello encap fal.url %s\n",
+        BKF_LOG_DEBUG(connMng->log, "Connect Send Hello encap fail. url %s\n",
             BkfUrlGetStr(&conn->puberUrl, urlStr, sizeof(urlStr)));
         return BKF_SUBER_SESS_SEND_BUF_NOT_ENOUGH;
     }

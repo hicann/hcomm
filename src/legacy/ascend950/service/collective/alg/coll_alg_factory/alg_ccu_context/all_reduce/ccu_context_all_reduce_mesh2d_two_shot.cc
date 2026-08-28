@@ -398,7 +398,7 @@ void CcuContextAllReduceMesh2DTwoShot::DoGroupBroadcast(
 
 std::vector<uint64_t> CcuContextAllReduceMesh2DTwoShot::GeneArgs(const CcuTaskArg& arg)
 {
-    HCCL_INFO("[CcuContextReduceScatterMesh2D] GeneArgs Starts");
+    HCCL_INFO("[CcuContextAllReduceMesh2DTwoShot] GeneArgs Starts");
     const CcuTaskArgAllReduceMesh2DTwoShot* taskArg = dynamic_cast<const CcuTaskArgAllReduceMesh2DTwoShot*>(&arg);
     if (taskArg == nullptr) {
         THROW<NullPtrException>(StringFormat("CcuContextAllReduceMesh2DTwoShot::taskArg ptr is null"));

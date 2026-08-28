@@ -51,7 +51,7 @@ HcclResult CollNativeExecutorBase::CalcResRequest(const OpParam& param, AlgResou
 
     CHK_RET(BuildResourceRequest(scratchMemSize, streamNum, notifyNum, aivBufferRequest, opTransport, resourceRequest));
     HCCL_INFO(
-        "streamNum[%u], notifyNum[%u], sctrachMemSize[%llu], aivBufferRequest[%llu]", resourceRequest.streamNum,
+        "streamNum[%u], notifyNum[%u], scratchMemSize[%llu], aivBufferRequest[%llu]", resourceRequest.streamNum,
         resourceRequest.notifyNum, resourceRequest.scratchMemSize, resourceRequest.aivBufferRequest);
     // 打印建链诉求
     PrintTransportRequest(resourceRequest);
@@ -598,7 +598,7 @@ HcclResult CollNativeExecutorBase::SendRecvSignalOnLinks(OpParam& param, ExecMem
         u64 size = std::min(execMem.inputMem.size(), HCCL_INPLACE_MEMCOPY_SIZE); // 传128K数据量占满所有端口
         HCCL_INFO(
             "[CollNativeExecutorBase][SendRecvSignalOnLinks]"
-            "links[%zu] start memcopy start to memcopy data [%llu]B.",
+            "links[%zu] start to memcopy data [%llu]B.",
             i, size);
         CHK_RET(links[i]->TxAsync(UserMemType::INPUT_MEM, 0, execMem.inputMem.ptr(), size, param.stream));
         CHK_RET(links[i]->RxAsync(UserMemType::INPUT_MEM, 0, execMem.inputMem.ptr(), size, param.stream));

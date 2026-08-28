@@ -50,7 +50,7 @@ HcclResult AlltoAllVStagedPairwise::Prepare(
 
         CHK_PRT_RET(
             scratchInputMem.size() == 0,
-            HCCL_ERROR("[AlltoAllVStagedPairwise][Prepare] invilad scratchMemSize[%llu]", scratchInputMem.size()),
+            HCCL_ERROR("[AlltoAllVStagedPairwise][Prepare] invalid scratchMemSize[%llu]", scratchInputMem.size()),
             HCCL_E_PARA);
         scratchInputMem_ = scratchInputMem;
         scratchOutputMem_ = scratchOutputMem;
@@ -68,7 +68,7 @@ HcclResult AlltoAllVStagedPairwise::RunAsync(const u32 rank, const u32 rankSize,
     CHK_PTR_NULL(mainStreamPtr_);
 
     CHK_PRT_RET(
-        rankSize == 0, HCCL_ERROR("[AlltoAllVStagedPairwise][Prepare] invilad rankSize[%u]", rankSize), HCCL_E_PARA);
+        rankSize == 0, HCCL_ERROR("[AlltoAllVStagedPairwise][Prepare] invalid rankSize[%u]", rankSize), HCCL_E_PARA);
 
     CHK_PRT_RET(
         rankSize != links.size(),
@@ -81,7 +81,7 @@ HcclResult AlltoAllVStagedPairwise::RunAsync(const u32 rank, const u32 rankSize,
     CHK_PRT_RET(
         !sizeEqual,
         HCCL_ERROR(
-            "[AlltoAllVStagedPairwise][RunAsync] invilad params: "
+            "[AlltoAllVStagedPairwise][RunAsync] invalid params: "
             "sendAddrInfo size[%u] recvAddrInfo size[%u] rankSize[%u]",
             sendAddrInfo_.size(), recvAddrInfo_.size(), rankSize),
         HCCL_E_PARA);
@@ -252,7 +252,7 @@ HcclResult AlltoAllVStagedPairwise::CheckPolicies(
     CHK_PRT_RET(
         times != policies.size(),
         HCCL_ERROR(
-            "[AlltoAllVStagedPairwise][CheckPolicies] invilad params: times[%llu] policies size[%u]", times,
+            "[AlltoAllVStagedPairwise][CheckPolicies] invalid params: times[%llu] policies size[%u]", times,
             policies.size()),
         HCCL_E_PARA);
 
@@ -264,7 +264,7 @@ HcclResult AlltoAllVStagedPairwise::CheckPolicies(
         CHK_PRT_RET(
             sum > scratchMemSize_,
             HCCL_ERROR(
-                "[AlltoAllVStagedPairwise][CheckPolicies] invilad params: curTime[%u] sum[%llu] scratchMemSize_[%u]", i,
+                "[AlltoAllVStagedPairwise][CheckPolicies] invalid params: curTime[%u] sum[%llu] scratchMemSize_[%u]", i,
                 sum, scratchMemSize_),
             HCCL_E_PARA);
     }

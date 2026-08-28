@@ -457,7 +457,7 @@ HcclResult hcclComm::InitBinHandle()
     CHK_PRT_RET(
         retCode != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[InitCollComm]errNo[0x%016llx]load aicpu file fail, path[%s] optionType[%u]"
+            "[InitCollComm]errNo[0x%016llx]load aicpu file fail, path[%s] optionType[%u] "
             "cpuKernelMode[%u].",
             retCode, jsonPath.c_str(), ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE, 0),
         retCode);
@@ -557,7 +557,7 @@ HcclResult hcclComm::GetCommStatus(HcclCommStatus& status)
     } else if (devType_ == DevType::DEV_TYPE_910B && collComm_ != nullptr) {
         status = collComm_->GetCommStatus();
     } else {
-        HCCL_ERROR("[%s] deviceType is not support", __func__);
+        HCCL_ERROR("[%s] deviceType is not supported", __func__);
         return HCCL_E_NOT_SUPPORT;
     }
     return HCCL_SUCCESS;

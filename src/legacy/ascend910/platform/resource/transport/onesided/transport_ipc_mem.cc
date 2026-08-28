@@ -249,7 +249,7 @@ HcclResult TransportIpcMem::Write(const HcclBuf& remoteMem, const HcclBuf& local
     CHK_PRT_RET(
         (localMem.len == 0U) || (remoteMem.len == 0U),
         HCCL_ERROR(
-            "[TransportIpcMem]localMem size[%llu] or remoteMem size[%llu]is invalid", localMem.len, remoteMem.len),
+            "[TransportIpcMem]localMem size[%llu] or remoteMem size[%llu] is invalid", localMem.len, remoteMem.len),
         HCCL_E_PARA);
     CHK_PRT_RET(stream == nullptr, HCCL_ERROR("[TransportIpcMem]stream is invalid"), HCCL_E_PARA);
 
@@ -267,7 +267,7 @@ HcclResult TransportIpcMem::Write(const RmaOpMem& remoteMem, const RmaOpMem& loc
     CHK_PRT_RET(
         (localMem.size == 0U) || (remoteMem.size == 0U),
         HCCL_ERROR(
-            "[TransportIpcMem]localMem size[%llu] or remoteMem size[%llu]is invalid", localMem.size, remoteMem.size),
+            "[TransportIpcMem]localMem size[%llu] or remoteMem size[%llu] is invalid", localMem.size, remoteMem.size),
         HCCL_E_PARA);
     CHK_PRT_RET(stream == nullptr, HCCL_ERROR("[TransportIpcMem]stream is invalid"), HCCL_E_PARA);
 
@@ -285,7 +285,7 @@ HcclResult TransportIpcMem::Read(const HcclBuf& localMem, const HcclBuf& remoteM
     CHK_PRT_RET(
         (localMem.len == 0U) || (remoteMem.len == 0U),
         HCCL_ERROR(
-            "[TransportIpcMem]localMem size[%llu] or remoteMem size[%llu]is invalid", localMem.len, remoteMem.len),
+            "[TransportIpcMem]localMem size[%llu] or remoteMem size[%llu] is invalid", localMem.len, remoteMem.len),
         HCCL_E_PARA);
     CHK_PRT_RET(stream == nullptr, HCCL_ERROR("[TransportIpcMem]stream is invalid"), HCCL_E_PARA);
 
@@ -303,7 +303,7 @@ HcclResult TransportIpcMem::Read(const RmaOpMem& localMem, const RmaOpMem& remot
     CHK_PRT_RET(
         (localMem.size == 0U) || (remoteMem.size == 0U),
         HCCL_ERROR(
-            "[TransportIpcMem]localMem size[%llu] or remoteMem size[%llu]is invalid", localMem.size, remoteMem.size),
+            "[TransportIpcMem]localMem size[%llu] or remoteMem size[%llu] is invalid", localMem.size, remoteMem.size),
         HCCL_E_PARA);
     CHK_PRT_RET(stream == nullptr, HCCL_ERROR("[TransportIpcMem]stream is invalid"), HCCL_E_PARA);
 
@@ -329,7 +329,7 @@ HcclResult TransportIpcMem::GetMemInfo(u32& lkey, u32& rkey, HcclBuf& localMem, 
     CHK_PRT_RET(
         (localMem.len == 0U) || (remoteMem.len == 0U),
         HCCL_ERROR(
-            "[TransportIpcMem] localMem size[%llu] or remoteMem size[%llu]is invalid", localMem.len, remoteMem.len),
+            "[TransportIpcMem] localMem size[%llu] or remoteMem size[%llu] is invalid", localMem.len, remoteMem.len),
         HCCL_E_PARA);
 
     RmaBufferSlice localRmaBufferSlice{};

@@ -51,7 +51,7 @@ HcclResult AllReduceAHC::RunInterAllReduce(
 
     if (interLinksVector.size() != interSlicesVector.size()) {
         HCCL_ERROR(
-            "[AllReduceAHC][RunInterAllReduce]rank[%u] linksVector size[%llu] is no equal to slicesVector size [%u]",
+            "[AllReduceAHC][RunInterAllReduce]rank[%u] linksVector size[%llu] is not equal to slicesVector size[%u]",
             rank, interLinksVector.size(), interSlicesVector.size());
         return HCCL_E_INTERNAL;
     }

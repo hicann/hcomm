@@ -42,7 +42,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketBatchConnectAsync(struct SocketConnectInfoT conn
 
         phyId = socketHandle->rdevInfo.phyId;
         CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-            hccp_err("[batch_connect][ra_socket]phyId[%u]invalid, "
+            hccp_err("[batch_connect][ra_socket]phyId[%u] invalid, "
                      "must in range of [0, %u)",
                 phyId, RA_MAX_PHY_ID_NUM),
             ConverReturnCode(SOCKET_OP, -EINVAL));
@@ -93,7 +93,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketListenStartAsync(struct SocketListenInfoT conn[]
 
         phyId = socketHandle->rdevInfo.phyId;
         CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-            hccp_err("[listen_start][ra_socket]phyId[%u]invalid, "
+            hccp_err("[listen_start][ra_socket]phyId[%u] invalid, "
                      "must in range of [0, %u)",
                 phyId, RA_MAX_PHY_ID_NUM),
             ConverReturnCode(SOCKET_OP, -EINVAL));
@@ -133,7 +133,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketListenStopAsync(struct SocketListenInfoT conn[],
 
         phyId = socketHandle->rdevInfo.phyId;
         CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-            hccp_err("[listen_stop][ra_socket]phyId[%u]invalid, "
+            hccp_err("[listen_stop][ra_socket]phyId[%u] invalid, "
                      "must in range of [0, %u)",
                 phyId, RA_MAX_PHY_ID_NUM),
             ConverReturnCode(SOCKET_OP, -EINVAL));
@@ -173,7 +173,7 @@ HCCP_ATTRI_VISI_DEF int RaSocketBatchCloseAsync(struct SocketCloseInfoT conn[], 
 
         phyId = socketHandle->rdevInfo.phyId;
         CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-            hccp_err("[batch_close][ra_socket]phyId[%u]invalid, "
+            hccp_err("[batch_close][ra_socket]phyId[%u] invalid, "
                      "must in range of [0, %u)",
                 phyId, RA_MAX_PHY_ID_NUM),
             ConverReturnCode(SOCKET_OP, -EINVAL));

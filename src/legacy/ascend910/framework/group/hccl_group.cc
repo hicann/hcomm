@@ -297,7 +297,7 @@ static HcclResult groupLaunch()
             CHK_RET(hcclStreamSynchronize(it));
         }
     }
-    HCCL_INFO("groupLauch Done!");
+    HCCL_INFO("groupLaunch Done!");
     return HCCL_SUCCESS;
 }
 

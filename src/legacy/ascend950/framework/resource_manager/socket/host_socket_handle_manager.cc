@@ -32,7 +32,7 @@ SocketHandle HostSocketHandleManager::Create(DevId devicePhyId, const IpAddress&
 
     if (isDestroy) {
         HCCL_WARNING(
-            "[HostSocketHandleManager::%s] devicePhyId[%u] HostSocketHandleManager has been destroy", __func__,
+            "[HostSocketHandleManager::%s] devicePhyId[%u] HostSocketHandleManager has been destroyed", __func__,
             devicePhyId);
         return nullptr;
     }
@@ -76,19 +76,19 @@ SocketHandle HostSocketHandleManager::Get(DevId devicePhyId, const IpAddress& ho
 
     if (isDestroy) {
         HCCL_WARNING(
-            "[HostSocketHandleManager::%s] devicePhyId[%u] HostSocketHandleManager has been detroy", __func__,
+            "[HostSocketHandleManager::%s] devicePhyId[%u] HostSocketHandleManager has been destroyed", __func__,
             devicePhyId);
         return nullptr;
     }
 
     if (devicePhyId > hostSocketHandleMap.size() - 1) {
-        HCCL_WARNING("HostSocketHandleManager for devicePhyId=%u dose not exist", devicePhyId);
+        HCCL_WARNING("HostSocketHandleManager for devicePhyId=%u does not exist", devicePhyId);
         return nullptr;
     }
 
     auto tempiter = hostSocketHandleMap[devicePhyId].find(hostIp.GetIpStr());
     if (tempiter == hostSocketHandleMap[devicePhyId].end()) {
-        HCCL_WARNING("HostSocketHandleManager for IpAddress=%s dose not exist", hostIp.GetIpStr().c_str());
+        HCCL_WARNING("HostSocketHandleManager for IpAddress=%s does not exist", hostIp.GetIpStr().c_str());
         return nullptr;
     }
 
@@ -121,7 +121,7 @@ void HostSocketHandleManager::Destroy(DevId devicePhyId, const IpAddress& hostIp
 
     if (isDestroy) {
         HCCL_WARNING(
-            "[HostSocketHandleManager::%s] devicePhyId[%u] HostSocketHandleManager has been detroy", __func__,
+            "[HostSocketHandleManager::%s] devicePhyId[%u] HostSocketHandleManager has been destroyed", __func__,
             devicePhyId);
         return;
     }
@@ -136,7 +136,7 @@ void HostSocketHandleManager::Destroy(DevId devicePhyId, const IpAddress& hostIp
     CHK_PRT_THROW(
         hostSocketHandleMap[devicePhyId].count(hostIp.GetIpStr()) == 0,
         HCCL_ERROR(
-            "[HostSocketHandleManager::%s] devicePhyId[%u] hostIp[%s] dose not exist", __func__, devicePhyId,
+            "[HostSocketHandleManager::%s] devicePhyId[%u] hostIp[%s] does not exist", __func__, devicePhyId,
             hostIp.GetIpStr().c_str()),
         InvalidParamsException, "hostIp not exist");
 

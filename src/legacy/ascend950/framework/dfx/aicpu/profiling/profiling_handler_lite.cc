@@ -387,7 +387,7 @@ bool ProfilingHandlerLite::IsProfSwitchOn(ProfilingLevel level)
 bool ProfilingHandlerLite::IsL1fromOffToOn()
 {
     if (((!GetProfL1State()) && IsProfSwitchOn(ProfilingLevel::L1))) {
-        HCCL_INFO("Profiling L1 switch form off to on.");
+        HCCL_INFO("Profiling L1 switch from off to on.");
         return true;
     }
     return false;

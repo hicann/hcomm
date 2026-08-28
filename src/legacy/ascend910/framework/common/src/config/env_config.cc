@@ -512,7 +512,7 @@ HcclResult ParseEnvConfig(const EnvConfigParam& param, std::string& envValue, u3
     CHK_PRT_RET(
         (ret != HCCL_SUCCESS || resultValue < param.minValue || resultValue > param.maxValue),
         HCCL_ERROR(
-            "[Parse][%s] is invalid. except: [%u, %u], actual: [%u]", param.envName.c_str(), param.minValue,
+            "[Parse][%s] is invalid. expect: [%u, %u], actual: [%u]", param.envName.c_str(), param.minValue,
             param.maxValue, resultValue),
         HCCL_E_PARA);
 
@@ -591,7 +591,7 @@ HcclResult EnvConfig::ParseRDMATimeOut(std::pair<u32, u32>& rdmaTimeOutRange)
     CHK_PRT_RET(
         (ret != HCCL_SUCCESS || rdmaTimeOut < HCCL_RDMA_TIMEOUT_MIN || rdmaTimeOut > rdmaTimeOutMax),
         HCCL_ERROR(
-            "[Parse][RDMATimeOut]HCCL_RDMA_TIMEOUT[%s] is invalid. except: [%u, %u]", timeOutEnv.c_str(),
+            "[Parse][RDMATimeOut]HCCL_RDMA_TIMEOUT[%s] is invalid. expect: [%u, %u]", timeOutEnv.c_str(),
             HCCL_RDMA_TIMEOUT_MIN, rdmaTimeOutMax),
         HCCL_E_PARA);
 
@@ -630,7 +630,7 @@ HcclResult EnvConfig::ParseRDMARetryCnt()
     CHK_PRT_RET(
         (ret != HCCL_SUCCESS || rdmaRetryCnt < HCCL_RDMA_RETRY_CNT_MIN || rdmaRetryCnt > HCCL_RDMA_RETRY_CNT_MAX),
         HCCL_ERROR(
-            "[Parse][rdmaRetryCnt]HCCL_RDMA_RETRY_CNT[%s] is invalid. except: [%u, %u]", retryCntEnv.c_str(),
+            "[Parse][rdmaRetryCnt]HCCL_RDMA_RETRY_CNT[%s] is invalid. expect: [%u, %u]", retryCntEnv.c_str(),
             HCCL_RDMA_RETRY_CNT_MIN, HCCL_RDMA_RETRY_CNT_MAX),
         HCCL_E_PARA);
     g_envConfig.rdmaRetryCnt = rdmaRetryCnt;
@@ -678,7 +678,7 @@ HcclResult ParseMonitor(std::string& taskMonitorInterval, s32& monitorTime)
         g_envConfig.dfsTaskMonitorInterval = monitorTime;
     } else { // 不在允许范围内报错
         HCCL_ERROR(
-            "[ParseDFSConfig] HCCL_DFS_CONFIG-task_monitor_interval[%d ms] is invalid, except: [0, %d ms]", monitorTime,
+            "[ParseDFSConfig] HCCL_DFS_CONFIG-task_monitor_interval[%d ms] is invalid, expect: [0, %d ms]", monitorTime,
             maxTimeInMs);
         return HCCL_E_PARA;
     }
@@ -708,7 +708,7 @@ HcclResult ParseDFSConfig()
         g_envConfig.enableClusterHeartBeat = true;
     } else {
         HCCL_RUN_WARNING(
-            "[HCCL_ENV][ParseDFSConfig] HCCL_DFS_CONFIG-cluster_heartbeat was configured to [%s], please configured to"
+            "[HCCL_ENV][ParseDFSConfig] HCCL_DFS_CONFIG-cluster_heartbeat was configured to [%s], please configure to "
             "'on' or 'off'",
             heartbeatSwitch.c_str());
     }
@@ -721,7 +721,7 @@ HcclResult ParseDFSConfig()
         g_envConfig.opCounterEnable = true;
     } else {
         HCCL_RUN_WARNING(
-            "[HCCL_ENV][ParseDFSConfig] HCCL_DFS_CONFIG-stuck_detection was configured to [%s], please configured to"
+            "[HCCL_ENV][ParseDFSConfig] HCCL_DFS_CONFIG-stuck_detection was configured to [%s], please configure to "
             "'on' or 'off'",
             stuckDetectSwitch.c_str());
     }
@@ -737,7 +737,7 @@ HcclResult ParseDFSConfig()
         g_envConfig.inconsistentCheckSwitch = InconsistentCheckMode::FIRST;
     } else {
         HCCL_RUN_WARNING(
-            "[ParseDFSConfig] HCCL_DFS_CONFIG-inconsistent_check was configured to [%s], please configured to"
+            "[ParseDFSConfig] HCCL_DFS_CONFIG-inconsistent_check was configured to [%s], please configure to "
             "'on' or 'off' or 'first'",
             inconsistentCheckSwitch.c_str());
     }
@@ -778,7 +778,7 @@ HcclResult ParseDFSConfig()
         g_envConfig.dfsConnectionFaultDetectionTime = detctTime;
     } else { // 不在允许范围内报错
         HCCL_ERROR(
-            "[ParseDFSConfig] HCCL_DFS_CONFIG-connection_fault_detection_time[%d] is invalid, except: [%d, %d]",
+            "[ParseDFSConfig] HCCL_DFS_CONFIG-connection_fault_detection_time[%d] is invalid, expect: [%d, %d]",
             detctTime, HCCL_MIN_CONNECT_FAULT_DETECTION_TIME, HCCL_MAX_LINK_TIME_OUT_S);
         return HCCL_E_PARA;
     }

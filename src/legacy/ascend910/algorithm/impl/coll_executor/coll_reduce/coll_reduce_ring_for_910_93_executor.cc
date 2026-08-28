@@ -106,7 +106,7 @@ HcclResult CollReduceRingFor91093Executor::KernelRun(const OpParam& param, ExecM
     CHK_PRT_RET(
         perDataSize == 0,
         HCCL_ERROR(
-            "[CollReduceRingFor91093Executor][KernelRun]errNo[0x%01611x] datatype[%d] is invalid",
+            "[CollReduceRingFor91093Executor][KernelRun]errNo[0x%016llx] datatype[%d] is invalid",
             HCCL_ERROR_CODE(HCCL_E_PARA), param.DataDes.dataType),
         HCCL_E_PARA);
     std::vector<Slice> dataSegsSlice;                    // 数据分成ranksize份，每份的起始偏移和大小

@@ -206,7 +206,7 @@ HcclResult TopoinfoRanktableConcise::CheckNicDeployConsistence(RankTable_t& clus
             (deploy == NICDeployment::NIC_DEPLOYMENT_HOST && it.hostIp.IsInvalid()),
             HCCL_ERROR(
                 "[Get][RanktableInfo]errNo"
-                "[0x%016llx] hostIp config bettewn ranks is different.",
+                "[0x%016llx] hostIp config between ranks is different.",
                 HCOM_ERROR_CODE(HCCL_E_PARA)),
             HCCL_E_PARA);
     }
@@ -614,7 +614,7 @@ HcclResult TopoinfoRanktableConcise::GetSingleBackupDeviceIp(
     } else {
         HcclIpAddress invalidAddr;
         rankinfo.deviceInfo.backupDeviceIp.push_back(invalidAddr);
-        HCCL_WARNING("objIndex[%u],'bakcup_device_ip' is not set", objIndex);
+        HCCL_WARNING("objIndex[%u], 'backup_device_ip' is not set", objIndex);
     }
     return HCCL_SUCCESS;
 }
@@ -951,7 +951,8 @@ HcclResult TopoinfoRanktableConcise::GetSingleSuperPodSever(
         CHK_PRT_BREAK(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
-                "[Get][SingleSuperPodSever]errNo[0x%016llx]server_id is not found or invalid", HCCL_ERROR_CODE(ret)), );
+                "[Get][SingleSuperPodSever]errNo[0x%016llx] server_id is not found or invalid",
+                HCCL_ERROR_CODE(ret)), );
 
         // 将super_pod_list下的server_id在资源池中进行校验
         ret = CheckUniqueAndInsertPool(
@@ -1037,8 +1038,8 @@ HcclResult TopoinfoRanktableConcise::CheckSuperPodInfo(RankTable_t& clusterInfo)
             CHK_PRT_RET(
                 iter->second.find(rankInfo.superDeviceId) != iter->second.end(),
                 HCCL_ERROR(
-                    "[Verify][SuperPodInfo]superDeviceId[0x%x] in superPod[%s]"
-                    "is already exist.",
+                    "[Verify][SuperPodInfo]superDeviceId[0x%x] in superPod[%s] "
+                    "already exists.",
                     rankInfo.superDeviceId, iter->first.c_str()),
                 HCCL_E_PARA);
         }

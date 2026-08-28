@@ -249,7 +249,7 @@ STATIC int RsIbverbsApiInit(void)
 
     ret = RsOpenIbverbsSo();
     CHK_PRT_RETURN(ret,
-        hccp_err("HccpDlopen[libibverbs.so or libibverbs.so.1] failed! ret=[%d],"
+        hccp_err("HccpDlopen[libibverbs.so or libibverbs.so.1] failed! ret=[%d], "
                  "Please check network adapter driver has been installed",
             ret),
         ret);
@@ -429,7 +429,7 @@ STATIC int RsRoceUserApiInit(void)
 
     ret = RsOpenRoceUserSo(&type);
     CHK_PRT_RETURN(ret != 0,
-        hccp_err("HccpDlopen[libhns-rdmav17.so or libhns-rdmav25.so or libhrn0-rdmav17.so]"
+        hccp_err("HccpDlopen[libhns-rdmav17.so or libhns-rdmav25.so or libhrn0-rdmav17.so] "
                  "failed! ret=[%d]. Please check network adapter driver has been installed.",
             ret),
         ret);

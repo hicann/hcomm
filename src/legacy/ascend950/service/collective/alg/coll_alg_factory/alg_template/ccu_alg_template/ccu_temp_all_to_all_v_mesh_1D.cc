@@ -77,7 +77,7 @@ HcclResult CcuTempAlltoAllVMesh1D::SetConcurrentSendRecvNum(const u32 concurrent
 {
     CHK_PRT_RET(
         concurrentSendRecvNum == 0,
-        HCCL_ERROR("[CcuTempAlltoAllVMesh1D][SetConcurrentSendRecvNum] concurrentSendRecvNum"
+        HCCL_ERROR("[CcuTempAlltoAllVMesh1D][SetConcurrentSendRecvNum] concurrentSendRecvNum "
                    "should not be zero"),
         HcclResult::HCCL_E_PARA);
     concurrentSendRecvNum_ = concurrentSendRecvNum;
@@ -100,7 +100,7 @@ uint64_t CcuTempAlltoAllVMesh1D::CalcSendRecvNumSubStep()
             = ((localSendRecvInfo_.recvLength[destRank] + UB_MAX_DATA_SIZE - 1) / UB_MAX_DATA_SIZE);
         recvNumSubStep_[destRank] = currRankRecvSubStep;
         HCCL_INFO(
-            "[CcuTempAlltoAllVMesh1D][CalcNumSubStep] myRank [%d] currRankSendSubStep[%llu]"
+            "[CcuTempAlltoAllVMesh1D][CalcNumSubStep] myRank [%d] currRankSendSubStep[%llu] "
             "currRankRecvSubStep[%llu]",
             myRank_, currRankSendSubStep, currRankRecvSubStep);
         numSubStep = std::max(numSubStep, std::max(currRankSendSubStep, currRankRecvSubStep));
@@ -123,7 +123,7 @@ HcclResult CcuTempAlltoAllVMesh1D::Run(
         CHK_PRT_RET(
             localSendRecvInfo_.sendLength[myRank_] != localSendRecvInfo_.recvLength[myRank_],
             HCCL_ERROR(
-                "[CcuTempAlltoAllVMesh1D] rankSize = 1, sendLength[%llu] and recvLength[%llu]"
+                "[CcuTempAlltoAllVMesh1D] rankSize = 1, sendLength[%llu] and recvLength[%llu] "
                 "should be equal.",
                 localSendRecvInfo_.sendLength[myRank_], localSendRecvInfo_.recvLength[myRank_]),
             HcclResult::HCCL_E_PARA);

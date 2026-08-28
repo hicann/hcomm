@@ -267,7 +267,7 @@ HcclResult CollAllReduceExecutor::RunLoopInner(OpParam& param, const ReduceType&
     u64 curSize = execMem.count * unitSize; // 单位：字节
     HCCL_DEBUG(
         "[CollAllReduceExecutor][RunLoopInner]inputMem[%p][%llu], outputMem[%p][%llu], "
-        "intputPtr[%p], outputPtr[%p], curCount[%llu], curSize[%llu]",
+        "inputPtr[%p], outputPtr[%p], curCount[%llu], curSize[%llu]",
         execMem.inputMem.ptr(), execMem.inputMem.size(), execMem.outputMem.ptr(), execMem.outputMem.size(),
         execMem.inputPtr, execMem.outputPtr, execMem.count, curSize);
     CHK_PRT_RET(

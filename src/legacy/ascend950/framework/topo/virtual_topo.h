@@ -94,7 +94,7 @@ public:
             if (portGroupSize != tgtPortGroupSize) {
                 HCCL_WARNING(
                     "[LinkData][Constructor]srcConnIface.portGroupSize[%u] "
-                    "is not euqal to targetConnIface.portGroupSize[%u]",
+                    "is not equal to targetConnIface.portGroupSize[%u]",
                     static_cast<u32>(portGroupSize), static_cast<u32>(tgtPortGroupSize));
             }
             fullmesh = false; // 多链路场景，非fullmesh

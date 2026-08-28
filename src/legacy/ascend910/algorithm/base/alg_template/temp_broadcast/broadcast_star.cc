@@ -84,7 +84,7 @@ BroadcastStar::RunAsync(const u32 rank, const u32 rankSize, const std::vector<st
                 rank, root_),
             ret);
     }
-    HCCL_INFO("BroadBastStar finished: rank[%u]", rank);
+    HCCL_INFO("BroadcastStar finished: rank[%u]", rank);
     return HCCL_SUCCESS;
 }
 

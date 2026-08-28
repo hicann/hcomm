@@ -72,7 +72,7 @@ CcuContextAlltoAllMesh2D::CcuContextAlltoAllMesh2D(
     anotherId = dimId[1 - axisId]; // 本rank在另一个轴上的Id
     anotherSize = dimSize[1 - axisId];
     HCCL_INFO(
-        "[CcuContextAlltoAllMesh2D] RankId[%u], DimSize: D0[%u]--D1[%u], localId[%u], lcoalSize[%u]", rankId_,
+        "[CcuContextAlltoAllMesh2D] RankId[%u], DimSize: D0[%u]--D1[%u], localId[%u], localSize[%u]", rankId_,
         dimSize[0], dimSize[1], localId, localSize);
 
     AllocGoResource(LOC_CPY_LOOP_NUM); // 只用8个loop做本地搬运，每个loop搬4K
@@ -192,7 +192,7 @@ void CcuContextAlltoAllMesh2D::AxisSync(uint32_t signalIndex)
     const uint32_t DIE_NUM = 2; // 2个die
     if (signalIndex > 1) {
         THROW<InvalidParamsException>(
-            StringFormat("[CcuContextAlltoAllMesh2D] Unexpected SignalInex[%u]", signalIndex));
+            StringFormat("[CcuContextAlltoAllMesh2D] Unexpected SignalIndex[%u]", signalIndex));
     }
     LocalCtxPost(anotherAxisSignal, 1 << (axisId + signalIndex * DIE_NUM));
     LocalWait(localAxisSignal, 1 << (1 - axisId + signalIndex * DIE_NUM));

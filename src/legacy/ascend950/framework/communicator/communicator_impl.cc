@@ -825,7 +825,7 @@ HcclResult CommunicatorImpl::AllocCollOpResource(const CollOpParams& opParams, v
     } catch (...) {
         SetCommStatus(CommStatus::COMM_READY);
         HCCL_ERROR("AllocCollOpResource OperatorParams: %s", opParams.Describe().c_str());
-        HCCL_ERROR("Unkown error occurs!");
+        HCCL_ERROR("Unknown error occurs!");
         return HcclResult::HCCL_E_INTERNAL;
     }
     return HcclResult::HCCL_SUCCESS;
@@ -918,8 +918,8 @@ void CommunicatorImpl::RegisterOffloadScratchBuffer(
     if (scratchBuffer) {
         offloadScrachBufferMap[opTag] = scratchBuffer;
         HCCL_RUN_INFO(
-            "[CommunicatorImpl] offloadScratchBuffer register, opTag[%s], offloadScrachBufferAddr[%llu], "
-            "offloadScrachBufferBufSize[%llu]M",
+            "[CommunicatorImpl] offloadScratchBuffer register, opTag[%s], offloadScratchBufferAddr[%llu], "
+            "offloadScratchBufferBufSize[%llu]M",
             opTag.c_str(), scratchBuffer->GetAddr(), scratchBuffer->GetSize() / HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE);
     }
 }
@@ -1200,7 +1200,7 @@ void CommunicatorImpl::CovertToCurrentCollOperator(
         if (offloadScrachBufferMap.find(opTag) != offloadScrachBufferMap.end()) {
             auto scratchMem = offloadScrachBufferMap[opTag];
             HCCL_INFO(
-                "[CommunicatorImpl::CovertToCurrentCollOperator] offloadScrachBufferMap[%s] is [%s]", opTag.c_str(),
+                "[CommunicatorImpl::CovertToCurrentCollOperator] offloadScratchBufferMap[%s] is [%s]", opTag.c_str(),
                 scratchMem->Describe().c_str());
             currentCollOperator->scratchMem = scratchMem;
         }
@@ -3822,7 +3822,7 @@ HcclResult CommunicatorImpl::GetInstSizeListByNetLayer(uint32_t netLayer, uint32
         auto ret = rankGraph->GetNetInstanceList(netLayer, instSizeVec, size);
         if (ret != HCCL_SUCCESS) {
             HCCL_ERROR(
-                "[CommunicatorImpl::GetInstSizeListByNetLayer] Failed to get instSzie[%p] at netLayer[%u]", listSize,
+                "[CommunicatorImpl::GetInstSizeListByNetLayer] Failed to get instSize[%p] at netLayer[%u]", listSize,
                 netLayer);
             return ret;
         }
@@ -4093,7 +4093,7 @@ HcclResult CommunicatorImpl::GetEndpointNum(uint32_t layer, uint32_t topoInstId,
     HcclResult ret = rankGraph->GetEndpointNum(layer, topoInstId, num);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
-            "[CommunicatorImpl::GetEndpointNum] Faild to get endpoint num at netLayer [%u] with topoInstId[%u]", layer,
+            "[CommunicatorImpl::GetEndpointNum] Failed to get endpoint num at netLayer [%u] with topoInstId[%u]", layer,
             topoInstId);
         return ret;
     }
@@ -4120,7 +4120,7 @@ HcclResult CommunicatorImpl::GetEndpointInfo(
     CHK_PTR_NULL(rankGraph);
     HcclResult ret = rankGraph->GetEndpointInfo(rankId, endPointDesc, endpointAttr, infoLen, info);
     if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR("[CommunicatorImpl::GetEndpointInfo] Faild to get endpoint info with rank [%u]", rankId);
+        HCCL_ERROR("[CommunicatorImpl::GetEndpointInfo] Failed to get endpoint info with rank [%u]", rankId);
         return ret;
     }
     return HCCL_SUCCESS;
@@ -4256,7 +4256,7 @@ HcclResult CommunicatorImpl::ClearOpResource(const std::string& opTag)
     CHK_RET(GetStreamManager().offload->ClearOpStream(opTag));
     // 清空workspaceMem资源
     offloadScrachBufferMap.erase(opTag);
-    HCCL_RUN_INFO("[CommunicatorImpl][%s] offloadScrachBuffer free, opTag[%s]", __func__, opTag.c_str());
+    HCCL_RUN_INFO("[CommunicatorImpl][%s] offloadScratchBuffer free, opTag[%s]", __func__, opTag.c_str());
     // 清空input/output/scratch资源
     CHK_RET(GetDataBufferManager().Deregister(opTag));
     CHK_RET(GetLocalRmaBufManager().Dereg(opTag));

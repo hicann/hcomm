@@ -364,7 +364,7 @@ HcommResult HcommCollectiveChannelCreate(
     CHK_PTR_NULL(channelDescs);
     CHK_PTR_NULL(channels);
     CHK_PRT_RET(
-        (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
+        (channelNum == 0), HCCL_ERROR("[%s] Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
     std::vector<HcommChannelDesc> channelDescFinals;
     CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals, engine)));
     auto startut = std::chrono::steady_clock::now();
@@ -382,7 +382,8 @@ HcommResult HcommCollectiveChannelCreate(
 HcommResult HcommChannelUpdateMemInfo(HcommMemHandle* memHandles, uint32_t memHandleNum, ChannelHandle channelHandle)
 {
     CHK_PTR_NULL(memHandles);
-    CHK_PRT_RET((memHandleNum == 0), HCCL_ERROR("[%s]Invalid memHandleNum, memHandleNum is 0.", __func__), HCCL_E_PARA);
+    CHK_PRT_RET(
+        (memHandleNum == 0), HCCL_ERROR("[%s] Invalid memHandleNum, memHandleNum is 0.", __func__), HCCL_E_PARA);
     return ChannelProcess::ChannelUpdateMemInfo(memHandles, memHandleNum, channelHandle);
 }
 
@@ -414,7 +415,7 @@ HcommResult HcommChannelCreate(
     CHK_PTR_NULL(channelDescs);
     CHK_PTR_NULL(channels);
     CHK_PRT_RET(
-        (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
+        (channelNum == 0), HCCL_ERROR("[%s] Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
     std::vector<HcommChannelDesc> channelDescFinals;
     CHK_RET(static_cast<HcclResult>(NormalizeHcommChannelDescs(channelDescs, channelNum, channelDescFinals, engine)));
     auto endpoint = GetEndpointMap().GetEndpoint(endpointHandle);
@@ -459,7 +460,7 @@ HcommResult HcommChannelGetStatus(const ChannelHandle* channelList, uint32_t lis
 {
     CHK_PTR_NULL(channelList);
     CHK_PTR_NULL(statusList);
-    CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s]Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
+    CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s] Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
 
     if (IS_PLUGIN_HANDLE(channelList[0])) {
         for (uint32_t i = 0; i < listNum; i++) {
@@ -529,7 +530,7 @@ HcommResult HcommChannelDestroy(const ChannelHandle* channels, uint32_t channelN
 {
     CHK_PTR_NULL(channels);
     CHK_PRT_RET(
-        (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
+        (channelNum == 0), HCCL_ERROR("[%s] Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
     if (IS_PLUGIN_HANDLE(channels[0])) {
         for (uint32_t idx = 0; idx < channelNum; ++idx) {
             auto* ch = CHANNEL_FROM_HANDLE(channels[idx]);
@@ -622,7 +623,7 @@ HcommResult HcommChannelCreateWithConfig(
     CHK_PTR_NULL(channelDescs);
     CHK_PTR_NULL(channels);
     CHK_PRT_RET(
-        (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
+        (channelNum == 0), HCCL_ERROR("[%s] Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
     HCCL_INFO(
         "[%s] START. endpointHandle[0x%llx], engine[%s], channelNum[%u], config[%p].", __func__, endpointHandle,
         GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), channelNum, config);

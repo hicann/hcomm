@@ -40,7 +40,7 @@ void RankInfoDispather::BroadcastRankTable(
     PrepareResource(connectSockets, clusterInfo, failedAgentIdList, step);
     ProcessSend();
     HCCL_INFO(
-        "[RankInfoDispather::%s] broadcast topoinfo success, rankNum[%u], threadNum[%u]", __func__, rankNum_,
+        "[RankInfoDispatcher::%s] broadcast topoinfo success, rankNum[%u], threadNum[%u]", __func__, rankNum_,
         threadNum_);
 }
 

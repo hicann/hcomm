@@ -393,7 +393,7 @@ UboeStatus RmaConnManager::GetUboeSocketStatus(Socket* socket, const LinkData& l
 
 void RmaConnManager::WaitUboeSocketReady(Socket* socket, const LinkData& linkData)
 {
-    HCCL_INFO("[RmaConnManager][%s] begain", __func__);
+    HCCL_INFO("[RmaConnManager][%s] begin", __func__);
     auto timeout = std::chrono::seconds(EnvConfig::GetInstance().GetSocketConfig().GetLinkTimeOut());
     HcclUs startTime = std::chrono::steady_clock::now();
     while (true) {

@@ -167,7 +167,9 @@ HcclResult AllReduceLocalReduceBcast::RunReduce(u32 rank, u32 rankSize, const st
     } else {
         ret = RunAllReduceBDReduceSend(rank, 0, links);
     }
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduceLocalReduceBcastReduce]rank[%u]failed", rank), ret);
+    CHK_PRT_RET(
+        ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduceLocalReduceBcastReduce]rank[%u] RunAllReduceBDReduce failed", rank),
+        ret);
     return HCCL_SUCCESS;
 }
 
@@ -181,7 +183,7 @@ HcclResult AllReduceLocalReduceBcast::RunBroadcast(u32 rank, u32 rankSize, const
     } else {
         ret = RunAllReduceBDMemcpyReceive(rank, 0, links);
     }
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduceLocalReduceBcast]rank[%u]failed", rank), ret);
+    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduceLocalReduceBcast]rank[%u] RunBroadcast failed", rank), ret);
 
     HCCL_INFO("AllReduceLocalReduceBcast RunBroadcast: rank[%u]", rank);
     return HCCL_SUCCESS;

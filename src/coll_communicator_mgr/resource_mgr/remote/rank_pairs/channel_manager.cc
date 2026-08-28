@@ -168,7 +168,8 @@ HcclResult ChannelManager::PrepareHandleArray(
 HcclResult ChannelManager::IsChannelExist(ChannelHandle channel)
 {
     CHK_PRT_RET(
-        (keyMap_.find(channel) == keyMap_.end()), HCCL_ERROR("[%s]ChannelHandle is not exist.", __func__), HCCL_E_PARA);
+        (keyMap_.find(channel) == keyMap_.end()), HCCL_ERROR("[%s]ChannelHandle does not exist.", __func__),
+        HCCL_E_PARA);
     HCCL_INFO(
         "[%s]ChannelHandle exist, ChannelHandle[%llu], channelKey[%s]", __func__, channel, keyMap_[channel].c_str());
     return HCCL_SUCCESS;
@@ -177,7 +178,8 @@ HcclResult ChannelManager::IsChannelExist(ChannelHandle channel)
 HcclResult ChannelManager::UnregisterHandle(ChannelHandle channel)
 {
     CHK_PRT_RET(
-        (keyMap_.find(channel) == keyMap_.end()), HCCL_ERROR("[%s]ChannelHandle is not exist.", __func__), HCCL_E_PARA);
+        (keyMap_.find(channel) == keyMap_.end()), HCCL_ERROR("[%s]ChannelHandle does not exist.", __func__),
+        HCCL_E_PARA);
 
     channelHandleMap_.erase(keyMap_[channel]);
     keyMap_.erase(channel);
@@ -208,7 +210,7 @@ HcclResult ChannelManager::GetHostChannel(ChannelHandle channel, ChannelHandle& 
     if (engineMap_[channel] == COMM_ENGINE_AICPU || engineMap_[channel] == COMM_ENGINE_AICPU_TS) {
         CHK_PRT_RET(
             (channelD2HMap_.find(channel) == channelD2HMap_.end()),
-            HCCL_ERROR("[%s]device channel handle has not existed in channelD2HMap_.", __func__), HCCL_E_PARA);
+            HCCL_ERROR("[%s]device channel handle does not exist in channelD2HMap_.", __func__), HCCL_E_PARA);
         hostChannel = channelD2HMap_[channel];
     } else {
         hostChannel = channel;
@@ -246,7 +248,7 @@ HcclResult ChannelManager::CheckNotifyOrQPMaxNum(u64& existNum, const u64& MaxNu
 HcclResult ChannelManager::CreateWorkSpace(u64 size, DeviceMem& buffer) const
 {
     CHK_PRT_RET(
-        size == 0, HCCL_INFO("[Create][WorkSpace]work space size is zero. not need to malloc memory"), HCCL_SUCCESS);
+        size == 0, HCCL_INFO("[Create][WorkSpace]work space size is zero, no need to allocate memory"), HCCL_SUCCESS);
 
     CHK_PRT_RET(
         (size > ULONG_MAX), HCCL_ERROR("[Create][WorkSpace]work space size is greater than %llu", ULONG_MAX),
@@ -257,7 +259,7 @@ HcclResult ChannelManager::CreateWorkSpace(u64 size, DeviceMem& buffer) const
     CHK_PRT_RET(
         size > 0 && !buffer,
         HCCL_ERROR(
-            "[Create][WorkSpace]Create work space size[%llu] fail,"
+            "[Create][WorkSpace]Create work space failed, size[%llu], "
             "please check workspace size.",
             size),
         HCCL_E_PTR);
@@ -269,7 +271,7 @@ HcclResult ChannelManager::AllocAndClearHostMem(u64 size, std::shared_ptr<HostMe
 {
     CHK_PRT_RET(
         size == 0,
-        HCCL_INFO("[ChannelManager][AllocAndClearHostMem] host memory size is zero. not need to malloc memory"),
+        HCCL_INFO("[ChannelManager][AllocAndClearHostMem] host memory size is zero, no need to allocate memory"),
         HCCL_SUCCESS);
 
     CHK_PRT_RET(
@@ -283,8 +285,8 @@ HcclResult ChannelManager::AllocAndClearHostMem(u64 size, std::shared_ptr<HostMe
     CHK_PRT_RET(
         size > 0 && !bufferPtr.get()->ptr(),
         HCCL_ERROR(
-            "[ChannelManager][AllocAndClearHostMem]host memory space size[%llu] fail,"
-            "please check workspace size.",
+            "[ChannelManager][AllocAndClearHostMem]alloc host memory failed, size[%llu], "
+            "please check host memory size.",
             size),
         HCCL_E_PTR);
     CHK_SAFETY_FUNC_RET(memset_s(bufferPtr.get()->ptr(), size, 0, size));
@@ -295,7 +297,7 @@ template <typename T>
 HcclResult ChannelManager::CopyVectorToDeviceMem(const u64 len, DeviceMem& dstDeviceMem, const std::vector<T>& srcVec)
 {
     CHK_PRT_RET(
-        len == 0, HCCL_INFO("[ChannelManager][CopyVectorToDeviceMem] space size is zero. not need to malloc memory"),
+        len == 0, HCCL_INFO("[ChannelManager][CopyVectorToDeviceMem] space size is zero, no need to allocate memory"),
         HCCL_SUCCESS);
 
     CHK_PRT_RET(

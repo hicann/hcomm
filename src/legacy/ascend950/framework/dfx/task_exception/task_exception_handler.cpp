@@ -455,8 +455,8 @@ void PrintPanicLogInfo(const uint8_t* panicLog)
         HCCL_ERROR("get ccu dfx info fail, ccu dfx info not all correct");
     }
     HCCL_ERROR(
-        "CCU DFX INFO: SQE_RECV_CNT[%u] SQE_SEND_CNT[%u] MISSION_DFX[%u]"
-        "TIF_SQE_CNT[%u] TIF_CQE_CNT[%u] CIF_SQE_CNT[%u] CIF_CQE_CNT[%u]"
+        "CCU DFX INFO: SQE_RECV_CNT[%u] SQE_SEND_CNT[%u] MISSION_DFX[%u] "
+        "TIF_SQE_CNT[%u] TIF_CQE_CNT[%u] CIF_SQE_CNT[%u] CIF_CQE_CNT[%u] "
         "SQE_DROP_CNT[%u] SQE_ADDR_LEN_ERR_DROP_CNT[%u] ccumIsEnable[%u]",
         info->ccum_sqe_recv_cnt, info->ccum_sqe_send_cnt, info->ccum_mission_dfx, info->ccum_tif_sqe_cnt,
         info->ccum_tif_cqe_cnt, info->ccum_cif_sqe_cnt, info->ccum_cif_cqe_cnt, info->ccum_sqe_drop_cnt,
@@ -806,7 +806,7 @@ void TaskExceptionHandler::PrintAicpuErrorMessage(rtExceptionInfo_t* exceptionIn
     if (Hccl::g_commHadCallbackArrayV2[exceptionInfo->deviceid]) {
         // 防止同一个device上出现通信主流和kernel流均出现task exception时runtime调用两次callback
         // HDC通道信息不是读清，防止aicpu task exception重复上报
-        HCCL_WARNING("aicpu error message been reported. deviceid[%u]", exceptionInfo->deviceid);
+        HCCL_WARNING("aicpu error message has been reported. deviceid[%u]", exceptionInfo->deviceid);
         return;
     }
     lock.unlock();
@@ -863,7 +863,7 @@ void TaskExceptionHandler::PrintAicpuErrorMessage(rtExceptionInfo_t* exceptionIn
             lock.lock();
             Hccl::g_commHadCallbackArrayV2[exceptionInfo->deviceid] = true;
         } else {
-            HCCL_WARNING("PrintAicpuErrorMessage No Vaild errorMessage!");
+            HCCL_WARNING("PrintAicpuErrorMessage No Valid errorMessage!");
         }
     } else {
         HCCL_INFO("PrintAicpuErrorMessage streamId[%u] is not found.", exceptionInfo->streamid);
@@ -895,7 +895,7 @@ void TaskExceptionHandler::PrintCcuErrorLog(const std::vector<CcuErrorInfo>& err
     if (errorInfos.empty()) {
         return;
     }
-    HCCL_ERROR("[TaskExceptionHandler]Task run failed, ccu runtime information is: %s", __func__);
+    HCCL_ERROR("[TaskExceptionHandler]Task run failed, ccu runtime information is:");
     for (const auto& errorInfo : errorInfos) {
         HCCL_ERROR("[TaskExceptionHandler][%s]", GetCcuErrorMsgByType(errorInfo, taskInfo).c_str());
     }

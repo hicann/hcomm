@@ -61,7 +61,7 @@ HcclResult CcuJettyCtxMgrV2::CheckCtxGroupsByFeId(const uint32_t feId)
         jettyNum < jettyGroupSize || jettyGroupSize == 0, // fe策略不够分1个jetty组，认为资源不足
         HCCL_WARNING(
             "[CcuJettyCtxMgrV2][%s] failed, jettyNum[%u] of feId[%u] is too small to "
-            "allocated a jetty group, groupSize[%u], devLogicId[%d], dieId[%u].",
+            "allocate a jetty group, groupSize[%u], devLogicId[%d], dieId[%u].",
             __func__, jettyNum, feId, jettyGroupSize, devLogicId_, dieId_),
         HcclResult::HCCL_E_UNAVAIL);
 
@@ -124,7 +124,7 @@ HcclResult CcuJettyCtxMgrV2::Alloc(
     uint32_t allocSqSize = sqSize;
     if (allocSqSize != CCU_V2_FIXED_SQ_SIZE) {
         HCCL_RUN_WARNING(
-            "[CcuJettyCtxMgr][%s] failed, sqSize is not equal 32, "
+            "[CcuJettyCtxMgr][%s] failed, sqSize is not equal to 32, "
             "sqSize is [%u]",
             __func__, allocSqSize);
         allocSqSize = CCU_V2_FIXED_SQ_SIZE;

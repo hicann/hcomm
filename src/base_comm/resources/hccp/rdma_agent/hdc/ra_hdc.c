@@ -195,7 +195,7 @@ static int HdcSendRecvPktSend(struct drvHdcMsg *pMsgSnd, char *sendRcvBuf, unsig
     CHK_PRT_RETURN(ret != 0, hccp_err("[send][hdc_send_recv_pkt]HDC send err ret(%d)", ret), ret);
 
     ret = RA_HDC_OPS.reuseMsg(pMsgSnd);
-    CHK_PRT_RETURN(ret != 0, hccp_err("[send][hdc_send_recv_pkt]HDC reuser msg err ret(%d)", ret), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("[send][hdc_send_recv_pkt]HDC reuse msg err ret(%d)", ret), ret);
 
     *pMsgRcv = pMsgSnd;
     return 0;
@@ -369,7 +369,7 @@ STATIC int HdcSendRecvPktRecvCheck(int rcvBufLen, unsigned int outDataLen, struc
             RA_HDC_OPS.freeMsg(pMsgRcv);
             return -EPERM;
         }
-        hccp_err("[check][hdc_send_recv_pkt_recv]date len err out_data_len(%d) != rcv_buf_len(%d) ", outDataLen,
+        hccp_err("[check][hdc_send_recv_pkt_recv]data len err out_data_len(%d) != rcv_buf_len(%d) ", outDataLen,
             rcvBufLen);
         RA_HDC_OPS.freeMsg(pMsgRcv);
         return -EPIPE;

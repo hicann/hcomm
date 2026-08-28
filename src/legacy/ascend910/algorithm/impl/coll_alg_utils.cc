@@ -72,7 +72,7 @@ bool IsSupportDirectFullmeshForAlltoallv(
                 HcclResult retCapture = GetStreamCaptureInfo(param.stream.ptr(), rtModel, isCapture);
                 CHK_PRT_CONT(
                     retCapture != HCCL_SUCCESS,
-                    HCCL_ERROR("Get capture status error. return[%d], capture model", retCapture));
+                    HCCL_ERROR("Get capture status error. return[%d], capture mode", retCapture));
             }
             isHCCS = (userRankSize <= MAX_ALLTOALLV_DIRECT_FULLMESH_RANKSIZE
                       && serverNum <= MAX_ALLTOALLV_DIRECT_FULLMESH_SERVER_NUM && isCapture)

@@ -183,14 +183,14 @@ HcclResult AllGatherHalvingDoubling::RunAllGather(u32 rank, u32 stepNum, const s
 
         // 本rank的发送侧的动作
         HCCL_DEBUG(
-            "Rank[%u] send to PeerRank[%u] in Round[%u], silce.offset[%llu], slice.size[%llu]", rank, peerRank, step,
+            "Rank[%u] send to PeerRank[%u] in Round[%u], slice.offset[%llu], slice.size[%llu]", rank, peerRank, step,
             txSlices_[step].offset, txSlices_[step].size);
         ret = Tx(links[peerRank], txSlices_[step]);
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR("[Run][AllGather]Rank[%u] end to PeerRank[%u] run tx failed ", rank, peerRank), ret);
         HCCL_DEBUG(
-            "Rank[%u]receive from PeerRank[%u] in Round[%u], silce.offset[%llu], slice.size[%llu]", rank, peerRank,
+            "Rank[%u] receive from PeerRank[%u] in Round[%u], slice.offset[%llu], slice.size[%llu]", rank, peerRank,
             step, rxSlices_[step].offset, rxSlices_[step].size);
         // 本rank的接收侧的动作
         ret = Rx(links[peerRank], rxSlices_[step]);

@@ -58,7 +58,7 @@ HcclResult AllGatherGraphPipeline::Prepare(
     streamNotifyMain_ = notifyMain;
     if (streamNotifyMain_.size() < intraRankSize_) {
         HCCL_ERROR(
-            "[AllGatherGraphPipeline][Prepare]rank[%u] streamNotifyMain_ size[%u] error, is smaller than,"
+            "[AllGatherGraphPipeline][Prepare]rank[%u] streamNotifyMain_ size[%u] is smaller than "
             "intraRankSize_[%u]",
             userRank_, streamNotifyMain_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
@@ -66,7 +66,7 @@ HcclResult AllGatherGraphPipeline::Prepare(
     streamNotifySub_ = notifySub;
     if (streamNotifySub_.size() < intraRankSize_) {
         HCCL_ERROR(
-            "[AllGatherGraphPipeline][Prepare]rank[%u] streamNotifySub_ size[%u] error, is smaller than,"
+            "[AllGatherGraphPipeline][Prepare]rank[%u] streamNotifySub_ size[%u] is smaller than "
             "intraRankSize_[%u]",
             userRank_, streamNotifySub_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
@@ -168,7 +168,7 @@ HcclResult AllGatherGraphPipeline::RunAsync()
                 UserMemType::OUTPUT_MEM, serverOffsetByte, static_cast<u8*>(dmaMem_[1].ptr()) + serverOffsetByte,
                 memSliceSize, subStream_[0]));
             HCCL_DEBUG(
-                "[AllGatherGraphPipeline][RunAsync] local rank[%u] localOffset[%llu]tx with remoteRank[%u], "
+                "[AllGatherGraphPipeline][RunAsync] local rank[%u] localOffset[%llu] tx with remoteRank[%u], "
                 "remoteOffset[%llu] with slice[%llu]",
                 userRank_, serverOffsetByte, nextInterRankId, serverOffsetByte, memSliceSize);
 
@@ -177,7 +177,7 @@ HcclResult AllGatherGraphPipeline::RunAsync()
                 static_cast<u8*>(dmaMem_[1].ptr()) + readRemoteOffsetByte, memSliceSize,
                 subStream_[0])); // wait
             HCCL_DEBUG(
-                "[AllGatherGraphPipeline][RunAsync] read local rank[%u] localOffset[%llu]tx with remoteRank[%u], "
+                "[AllGatherGraphPipeline][RunAsync] read local rank[%u] localOffset[%llu] tx with remoteRank[%u], "
                 "remoteOffset[%llu] with slice[%llu]",
                 userRank_, readRemoteOffsetByte, prevInterRankId, readRemoteOffsetByte, memSliceSize);
 

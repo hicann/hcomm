@@ -62,8 +62,7 @@ HcclResult CollReduceScatterFastDoubleRingFor91093Executor::DoubleRingReduceScat
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
             "[CollReduceScatterFastDoubleRingFor91093Executor][DoubleRingReduceScatter] Double ring ReduceScatter "
-            "failed"
-            "failed,return[%d]",
+            "failed, return[%d]",
             ret),
         ret);
     u32 ringIndexOp = COMM_INDEX_0;
@@ -76,8 +75,7 @@ HcclResult CollReduceScatterFastDoubleRingFor91093Executor::DoubleRingReduceScat
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
             "[CollReduceScatterFastDoubleRingFor91093Executor][DoubleRingReduceScatter] Double ring ReduceScatter "
-            "failed "
-            "failed,return[%d]",
+            "failed, return[%d]",
             ret),
         ret);
     // 空拷贝用于后续操作附着
@@ -87,8 +85,7 @@ HcclResult CollReduceScatterFastDoubleRingFor91093Executor::DoubleRingReduceScat
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
             "[CollReduceScatterFastDoubleRingFor91093Executor][DoubleRingReduceScatter] Double ring ReduceScatter "
-            "failed "
-            "failed,return[%d]",
+            "failed, return[%d]",
             ret),
         ret);
 

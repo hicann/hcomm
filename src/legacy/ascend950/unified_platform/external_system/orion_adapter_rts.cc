@@ -459,7 +459,7 @@ void* HrtMalloc(u64 size, aclrtMemType_t memType)
     aclrtMallocAttribute attrs{.attr = ACL_RT_MEM_ATTR_MODULE_ID, .value = moduleIdValue};
     aclrtMallocConfig cfg{.attrs = &attrs, .numAttrs = 1};
     ret = aclrtMallocWithCfg(&devPtr, size, static_cast<aclrtMemMallocPolicy>(memType), &cfg);
-    HCCL_INFO("[HrtMalloc] ret[%d] size[%llu], memType[%d], devPtr[%p], moudleId: HCCL.", ret, size, memType, devPtr);
+    HCCL_INFO("[HrtMalloc] ret[%d] size[%llu], memType[%d], devPtr[%p], moduleId: HCCL.", ret, size, memType, devPtr);
     if (ret == ACL_ERROR_RT_MEMORY_ALLOCATION) {
         RPT_INPUT_ERR(
             true, "EI0007", std::vector<std::string>({"resource_type", "resource_info"}),
@@ -693,7 +693,7 @@ void* HrtMallocHost(u64 size)
     aclrtMallocConfig cfg{.attrs = &attrs, .numAttrs = 1};
     aclError ret = aclrtMallocHostWithCfg(&hostPtr, size, &cfg);
     HCCL_INFO(
-        "Call aclrtMallocHostWithCfg. return value[%d], para: hostPtr[%p], size[%llu], moudleId: HCCL.", ret, hostPtr,
+        "Call aclrtMallocHostWithCfg. return value[%d], para: hostPtr[%p], size[%llu], moduleId: HCCL.", ret, hostPtr,
         size);
     if (ret != ACL_SUCCESS) {
         RPT_INPUT_ERR(
