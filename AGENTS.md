@@ -104,4 +104,6 @@ bash build.sh -j64             # 并行编译
 
 ---
 
+开发提交前自检与检视他人 PR：使用仓内检视 skill（[`.agents/skills/hcomm-review/`](./.agents/skills/hcomm-review/)），编码时遵循其 `references/` 下的检视规范（编码安全、对外 API、架构合规、PR 完备性）。
+
 *架构约束以 [`docs/zh/architecture/architecture-brief.md`](./docs/zh/architecture/architecture-brief.md) 为权威来源；贡献流程以 [`CONTRIBUTING.md`](./CONTRIBUTING.md) 为准。个人临时偏好放 `AGENTS.local.md`（已 gitignore）。*
