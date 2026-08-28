@@ -31,6 +31,9 @@
 #include "channel_process.h"
 #include "coll_comm_res_c_adpt.h"
 #include "hcomm_c_adpt.h"
+#include "channel_config.h"
+#include "hccl/hccl_channel.h"
+#include "shared_jetty_channel_pool.h"
 
 #define private public
 
@@ -134,6 +137,23 @@ HcclResult StubUpdateSymmetricRemoteMem(uint32_t remoteRank, const CommMem* remo
     (void)memTags;
     (void)memNum;
     return HCCL_SUCCESS;
+}
+
+static uint32_t g_sharedJettyGetStatusCallCount = 0;
+static int32_t StubHcommChannelGetStatus(const ChannelHandle* channelList, uint32_t listNum, int32_t* statusList)
+{
+    (void)channelList;
+    g_sharedJettyGetStatusCallCount++;
+    if (g_sharedJettyGetStatusCallCount == 1) {
+        for (uint32_t i = 0; i < listNum; ++i) {
+            statusList[i] = static_cast<int32_t>(HCOMM_CHANNEL_STATUS_CONNECTING);
+        }
+        return static_cast<int32_t>(HCCL_E_AGAIN);
+    }
+    for (uint32_t i = 0; i < listNum; ++i) {
+        statusList[i] = static_cast<int32_t>(HCOMM_CHANNEL_STATUS_READY);
+    }
+    return 0;
 }
 
 class HcclChannelDescTest : public testing::Test {
@@ -697,4 +717,52 @@ TEST_F(HcclChannelDescTest, Ut_HcclChannelQuery_When_DescMagicWordInvalid_Expect
     GetChannelDesc(channelDesc);
     channelDesc[0].header.magicWord = 0xDEADBEEF;
     EXPECT_EQ(HcclChannelQuery(comm, CommEngine::COMM_ENGINE_CCU, channelDesc.data(), 1, channels.data()), HCCL_E_PARA);
+}
+
+// 共享 jetty 路径覆盖：CreateSharedJettyChannelsForGroup（line 997/1000）与
+// WaitForSharedJettyChannelsReady（line 1256）通过 HcclChannelAcquireWithConfig 公共 API 触发。
+TEST_F(HcclChannelDescTest, Ut_HcclChannelAcquireWithConfig_When_SharedJetty_Expect_Success)
+{
+    HcclChannelConfig config = nullptr;
+    ASSERT_EQ(HcclChannelConfigCreate(&config), HCCL_SUCCESS);
+    ASSERT_EQ(HcclChannelConfigSetInt(config, HCCL_CHANNEL_CONFIG_TYPE_IS_SHARED_QUEUE, 1), HCCL_SUCCESS);
+    ASSERT_EQ(HcclChannelConfigSetStr(config, HCCL_CHANNEL_CONFIG_TYPE_SHARED_QUEUE_TAG, "ut_sj_4900"), HCCL_SUCCESS);
+
+    std::vector<HcclChannelDesc> channelDesc(1);
+    std::vector<ChannelHandle> channels(1);
+    ASSERT_EQ(HcclChannelDescInit(channelDesc.data(), 1), HCCL_SUCCESS);
+    channelDesc[0].remoteRank = 2;
+    channelDesc[0].channelProtocol = COMM_PROTOCOL_UB_CTP;
+    channelDesc[0].notifyNum = 1;
+    channelDesc[0].localEndpoint.protocol = COMM_PROTOCOL_UB_CTP;
+    channelDesc[0].localEndpoint.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+    channelDesc[0].localEndpoint.loc.device.devPhyId = 0U;
+    channelDesc[0].localEndpoint.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+    channelDesc[0].localEndpoint.commAddr.addr.s_addr = 0x01000001U;
+    channelDesc[0].remoteEndpoint.protocol = COMM_PROTOCOL_UB_CTP;
+    channelDesc[0].remoteEndpoint.loc.locType = ENDPOINT_LOC_TYPE_DEVICE;
+    channelDesc[0].remoteEndpoint.loc.device.devPhyId = 1U;
+    channelDesc[0].remoteEndpoint.commAddr.type = COMM_ADDR_TYPE_IP_V4;
+    channelDesc[0].remoteEndpoint.commAddr.addr.s_addr = 0x02000002U;
+
+    MOCKER(&hcomm::ClusterMonitor::RegisterToClusterMonitor).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&MyRank::GetOpExpansionMode).stubs().will(returnValue(0u));
+    MOCKER_CPP(&EndpointMgr::GetWithTag).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&MyRank::PrepareMemHandles).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER_CPP(&MyRank::BatchCreateSockets).stubs().will(returnValue(HCCL_SUCCESS));
+    MOCKER(HcommChannelCreateWithConfig).stubs().will(returnValue(0));
+    g_sharedJettyGetStatusCallCount = 0;
+    MOCKER(HcommChannelGetStatus).stubs().will(invoke(StubHcommChannelGetStatus));
+    MOCKER_CPP(&Hccl::EnvSocketConfig::GetLinkTimeOut).stubs().will(returnValue(static_cast<s32>(5)));
+    MOCKER_CPP(&MyRank::BatchExchangeAndCheckConsistency).stubs().will(returnValue(HCCL_SUCCESS));
+
+    ret = HcclChannelAcquireWithConfig(
+        comm, CommEngine::COMM_ENGINE_AIV, channelDesc.data(), 1, config, channels.data());
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+
+    // 清理共享 jetty 池中本 MyRank 的条目，避免 MyRank 析构时以 null handle 调用真实 HcommChannelDestroy
+    MOCKER(HcommChannelDestroy).stubs().will(returnValue(0));
+    (void)SharedJettyChannelPool::GetInstance().DestroyAllByMyRank(hcclCommPtr->GetCollComm()->GetMyRank());
+
+    HcclChannelConfigDestroy(config);
 }

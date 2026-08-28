@@ -18,7 +18,10 @@
 #include <unordered_map>
 #include <map>
 #include <memory>
-#include "topoinfo_detect.h" // transitively includes hccl_comm_pub.h, comm.h, topoinfo_struct.h
+#include "comm.h"
+#include "hccl_comm_pub.h"
+#include "topoinfo_struct.h"
+#include "topoinfo_detect.h"
 
 struct HcclInfoTag {
     HcclCommPtr pComm;

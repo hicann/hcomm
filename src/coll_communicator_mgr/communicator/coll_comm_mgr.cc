@@ -105,7 +105,7 @@ void CollCommMgr::UnRegisteCollComm(CollComm* collComm)
 
 const std::unordered_map<std::string, CollComm*>& CollCommMgr::GetAllCollComms() const { return allCollComms_; }
 
-void CollCommMgr::InitBaseCommRes(uint32_t devId) { (void)HcommResMgrInit(devId); }
+void CollCommMgr::InitBaseCommRes(uint32_t devId) const { (void)HcommResMgrInit(devId); }
 
 HcclOpInfoCtx& CollCommMgr::LegacyGetOpHcomInfo(uint32_t devId)
 {

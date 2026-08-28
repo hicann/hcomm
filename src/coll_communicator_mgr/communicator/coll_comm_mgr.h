@@ -38,7 +38,7 @@ public:
     void ReleaseCcuMsComm(s32 deviceLogicId, const std::string& commId);
     OrderLaunchThreadMgr& GetOrderLaunchThreadMgr(s32 deviceLogicId);
     HcclTaskAbortHandler& GetTaskAbortHandler() { return taskAbortHandler_; }
-    void InitBaseCommRes(uint32_t devId);
+    void InitBaseCommRes(uint32_t devId) const;
     ~CollCommMgr();
 
     // 以下接口以 Legacy 前缀标记，表示用于兼容历史老接口，仅做 bug 修复与兼容维护，不再承接新特性、不再继续演进

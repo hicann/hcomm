@@ -994,9 +994,10 @@ static HcclResult CreateSharedJettyChannelsForGroup(
 {
     std::vector<HcclChannelDesc> hcclDescs(needCreate, channelDescs[repIdx]);
     std::vector<HcommChannelDesc> hcommDescs(needCreate);
+    const std::string channelNameStr = commTag;
     for (uint32_t j = 0; j < needCreate; ++j) {
         hcommDescs[j] = MyRankUtils::ChannelDescHccl2Hcomm(hcclDescs[j], hccl::CommConfig{});
-        hcommDescs[j].channelName = commTag.c_str();
+        hcommDescs[j].channelName = channelNameStr.c_str();
     }
     std::string socketTag = commTag + "_engine_" + std::to_string(static_cast<uint32_t>(engine));
     HcclResult sockRet = myRank->BatchCreateSockets(hcclDescs.data(), needCreate, socketTag, hcommDescs);
@@ -1219,6 +1220,8 @@ static void DestroyAndClearSharedJettyChannels(
     }
 }
 
+constexpr uint32_t SHARED_JETTY_POLL_INTERVAL_MS = 2; // 共享jetty建链状态轮询间隔（ms）
+
 static HcclResult
 WaitForSharedJettyChannelsReady(uint32_t channelNum, ChannelHandle* channels, hccl::hcclComm* hcclComm)
 {
@@ -1250,7 +1253,7 @@ WaitForSharedJettyChannelsReady(uint32_t channelNum, ChannelHandle* channels, hc
                 "[%s] shared jetty channel connect timeout, group[%s].", __func__, hcclComm->GetIdentifier().c_str());
             return HCCL_E_TIMEOUT;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        std::this_thread::sleep_for(std::chrono::milliseconds(SHARED_JETTY_POLL_INTERVAL_MS));
     }
 }
 
