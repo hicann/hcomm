@@ -9,7 +9,7 @@
  */
 
 #include "dlurma_function.h"
-#include "hccl_next_dl.h"
+#include "hccl_dl.h"
 #include "log.h"
 
 namespace hcomm {
@@ -25,7 +25,7 @@ DlUrmaFunction::~DlUrmaFunction()
 {
     std::lock_guard<std::mutex> lock(handleMutex_);
     if (handle_ != nullptr) {
-        (void)HcclNextDlclose(handle_);
+        (void)HcclDlclose(handle_);
         handle_ = nullptr;
     }
 }
@@ -33,10 +33,10 @@ DlUrmaFunction::~DlUrmaFunction()
 HcclResult DlUrmaFunction::DlUrmaFunctionApiInit()
 {
     dlUrmaPostJettySendWr = (urma_status_t(*)(urma_jetty_t * jetty, urma_jfs_wr_t * wr, urma_jfs_wr_t * *bad_wr))
-        HcclNextDlsym(handle_, "urma_post_jetty_send_wr");
+        HcclDlsym(handle_, "urma_post_jetty_send_wr");
     CHK_SMART_PTR_NULL(dlUrmaPostJettySendWr);
 
-    dlUrmaPollJfc = (int (*)(urma_jfc_t* jfc, int cr_cnt, urma_cr_t* cr))HcclNextDlsym(handle_, "urma_poll_jfc");
+    dlUrmaPollJfc = (int (*)(urma_jfc_t* jfc, int cr_cnt, urma_cr_t* cr))HcclDlsym(handle_, "urma_poll_jfc");
     CHK_SMART_PTR_NULL(dlUrmaPollJfc);
     return HCCL_SUCCESS;
 }
@@ -45,9 +45,9 @@ HcclResult DlUrmaFunction::DlUrmaFunctionInit()
 {
     std::lock_guard<std::mutex> lock(handleMutex_);
     if (handle_ == nullptr) {
-        handle_ = HcclNextDlopen("liburma.so.0", RTLD_NOW);
+        handle_ = HcclDlopen("liburma.so.0", RTLD_NOW);
         if (handle_ == nullptr) {
-            handle_ = HcclNextDlopen("/lib64/liburma.so.0", RTLD_NOW);
+            handle_ = HcclDlopen("/lib64/liburma.so.0", RTLD_NOW);
         }
         const char* errMsg = dlerror();
         CHK_PRT_RET(

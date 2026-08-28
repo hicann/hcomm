@@ -37,7 +37,7 @@ set(adaption_to_test_list
 
     ${HCOMM_CODE_PLATFORM}/common/externalinput.cc
     ${HCOMM_CODE_PLATFORM}/common/dlhal_function.cc
-    ${HCOMM_CODE_PLATFORM}/common/hccl_dl.cc
+    ${HCOMM_CODE_ROOT}/src/base_comm/common/hccl_dl.cc
     ${HCOMM_CODE_PLATFORM}/common/hccl_ip_address.cc
     ${HCOMM_CODE_PLATFORM}/debug/traceinfo/hccl_trace_info.cc
 

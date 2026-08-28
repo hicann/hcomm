@@ -13,7 +13,7 @@ set(src_list
     sal.cc
     log.cc
     workflow.cc
-    hccl_dl.cc
+    ${HCOMM_DIR}/src/base_comm/common/hccl_dl.cc
     hccl_ip_address.cc
     dlhal_function.cc
     dlibv_function.cc
@@ -53,7 +53,7 @@ if(TARGET hccd)
         externalinput.cc
         dlhal_function.cc
         hccl_ip_address.cc
-        hccl_dl.cc
+        ${HCOMM_DIR}/src/base_comm/common/hccl_dl.cc
         device_capacity.cc
         workflow.cc
         dltdt_function.cc

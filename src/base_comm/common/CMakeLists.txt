@@ -15,7 +15,7 @@ set(src_list
     ${HCOMM_DIR}/src/legacy/ascend950/unified_platform/common/tp_qos.cc
     tp_mgr.cc
     dlurma_function.cc
-    hccl_next_dl.cc
+    hccl_dl.cc
 )
 
 if(TARGET hcomm_base_obj)

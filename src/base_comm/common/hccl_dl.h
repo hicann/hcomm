@@ -8,19 +8,24 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
-#include "hccl_next_dl.h"
+#ifndef HCCL_SRC_HCCLDL_H
+#define HCCL_SRC_HCCLDL_H
+#include <dlfcn.h>
+#include <functional>
+
+#ifndef weak_alias
+#define weak_alias(name, aliasname) _weak_alias(name, aliasname)
+#define _weak_alias(name, aliasname) extern __typeof(name) aliasname __attribute__((weak, alias(#name)))
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-int __HcclNextDlclose(void* handle) { return dlclose(handle); }
-
-void* __HcclNextDlsym(void* handle, const char* funcName) { return dlsym(handle, funcName); }
-
-void* __HcclNextDlopen(const char* libName, int mode) { return dlopen(libName, mode); }
-weak_alias(__HcclNextDlopen, HcclNextDlopen);
-weak_alias(__HcclNextDlclose, HcclNextDlclose);
-weak_alias(__HcclNextDlsym, HcclNextDlsym);
-
+void* HcclDlopen(const char* libName, int mode);
+void* HcclDlsym(void* handle, const char* funcName);
+int HcclDlclose(void* handle);
 #ifdef __cplusplus
 } // extern "C"
+#endif
+
 #endif

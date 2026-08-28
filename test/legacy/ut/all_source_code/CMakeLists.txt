@@ -108,6 +108,7 @@ target_sources(hccl_v2_utest
         ${HCCL_V2_CODE_ROOT}/unified_platform/common/hccp_peer_manager.cc
         ${HCCL_V2_CODE_ROOT}/unified_platform/common/dev_capability.cc
         ${HCCL_V2_CODE_ROOT}/unified_platform/common/dlprof_func.cc
+        ${HCCL_CODE_ROOT}/src/base_comm/common/hccl_dl.cc
         ${HCCL_V2_CODE_ROOT}/unified_platform/common/tp_manager.cc
         ${HCCL_V2_CODE_ROOT}/unified_platform/common/tp_qos.cc
         

@@ -24,6 +24,7 @@ if(TARGET hccl_v2)
             net_device.cc
             tokenInfo_manager.cc
             dlhal_function_v2.cc
+            ${HCOMM_DIR}/src/base_comm/common/hccl_dl.cc
             orion_adapter_hal.cc
     )
 endif()

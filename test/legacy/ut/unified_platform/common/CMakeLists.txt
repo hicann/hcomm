@@ -10,6 +10,7 @@
 
 target_sources(hccl_v2_utest
     PUBLIC
+        ut_hccl_dl_v2.cc
         ut_hccp_hdc_manager.cc
         ut_p2p_enable_manager.cc
         ut_rdma_handle_manager.cc

@@ -13,6 +13,7 @@
 
 #include <mutex>
 #include <dlfcn.h>
+#include "hccl_dl.h"
 #include "log.h"
 namespace Hccl {
 template <const char* soName>
@@ -22,7 +23,7 @@ public:
     virtual ~DlRtsFunctionV2()
     {
         if (handle_ != nullptr) {
-            dlclose(handle_);
+            HcclDlclose(handle_);
             handle_ = nullptr;
         }
     }
@@ -34,7 +35,7 @@ public:
         if (handle_ == nullptr) {
             return nullptr;
         }
-        return dlsym(handle_, funcName);
+        return HcclDlsym(handle_, funcName);
     }
 
 private:
@@ -45,7 +46,7 @@ private:
             return;
         }
         HCCL_INFO("DlRtsFunctionInit start, open so: %s", soName);
-        handle_ = dlopen(soName, RTLD_NOW);
+        handle_ = HcclDlopen(soName, RTLD_NOW);
         const char* errMsg = dlerror();
         if (handle_ == nullptr) {
             HCCL_ERROR(

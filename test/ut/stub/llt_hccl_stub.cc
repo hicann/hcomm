@@ -4765,9 +4765,6 @@ namespace hccl {
     strong_alias(__HcclDlsymSub, HcclDlsym);
     strong_alias(__hrtOpenNetServiceSub, hrtOpenNetService);
     strong_alias(__hrtCloseNetServiceSub, hrtCloseNetService);
-    strong_alias(__HcclDlopenSub, HcclNextDlopen);
-    strong_alias(__HcclDlcloseSub, HcclNextDlclose);
-    strong_alias(__HcclDlsymSub, HcclNextDlsym);
 } // namespace hccl
 
 HcclResult __hrtGetDeviceTypeStub(DevType& devType)
