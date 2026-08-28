@@ -33,7 +33,7 @@ std::mutex GlobalNetDevMgr::serverMapMutex_;
 static GlobalNetDevMgr netDevMgrInstance[MAX_MODULE_DEVICE_NUM + 1];
 GlobalNetDevMgr::~GlobalNetDevMgr()
 {
-    if (isInited_) {
+    if (isInited_.load(std::memory_order_acquire)) {
         HCCL_INFO("[GlobalNetDevMgr][%s] start.", __func__);
         UnInit();
         HCCL_INFO("[GlobalNetDevMgr][%s] end.", __func__);
@@ -57,7 +57,7 @@ GlobalNetDevMgr& GlobalNetDevMgr::GetInstance(u32 devicePhyId)
         return netDevMgrInstance[MAX_MODULE_DEVICE_NUM];
     }
 
-    if (!netDevMgrInstance[deviceLogicId].isInited_) {
+    if (!netDevMgrInstance[deviceLogicId].isInited_.load(std::memory_order_acquire)) {
         hcclRet = Init(devicePhyId, deviceLogicId);
         if (hcclRet != HCCL_SUCCESS) {
             HCCL_RUN_WARNING("[Get][Instance]Init deviceLogicId[%u]fail, return reserve instance", deviceLogicId);
@@ -73,7 +73,7 @@ HcclResult GlobalNetDevMgr::Init(u32 devicePhyId, u32 deviceLogicId)
 {
     // init after get the lock
     std::unique_lock<std::mutex> lock(netDevCtxMtx_);
-    if (netDevMgrInstance[deviceLogicId].isInited_) {
+    if (netDevMgrInstance[deviceLogicId].isInited_.load(std::memory_order_relaxed)) {
         return HCCL_SUCCESS;
     }
 
@@ -84,7 +84,7 @@ HcclResult GlobalNetDevMgr::Init(u32 devicePhyId, u32 deviceLogicId)
     }
 
     // need to check again
-    if (netDevMgrInstance[deviceLogicId].isInited_) {
+    if (netDevMgrInstance[deviceLogicId].isInited_.load(std::memory_order_relaxed)) {
         HCCL_INFO(
             "[GlobalNetDevMgr][Init]Has been inited. devicePhyId[%u], deviceLogicId[%u]", devicePhyId, deviceLogicId);
         return HCCL_SUCCESS;
@@ -93,14 +93,14 @@ HcclResult GlobalNetDevMgr::Init(u32 devicePhyId, u32 deviceLogicId)
     netDevMgrInstance[deviceLogicId].devicePhyId_ = devicePhyId;
     netDevMgrInstance[deviceLogicId].deviceLogicId_ = deviceLogicId;
     CHK_RET(HcclNetInit(NICDeployment::NIC_DEPLOYMENT_DEVICE, devicePhyId, static_cast<u32>(deviceLogicId), false));
-    netDevMgrInstance[deviceLogicId].isInited_ = true;
+    netDevMgrInstance[deviceLogicId].isInited_.store(true, std::memory_order_release);
     HCCL_INFO("[GlobalNetDevMgr][Init]Init success, devicePhyId[%u], deviceLogicId[%u]", devicePhyId, deviceLogicId);
     return HCCL_SUCCESS;
 }
 
 void GlobalNetDevMgr::UnInit()
 {
-    if (!isInited_) {
+    if (!isInited_.load(std::memory_order_acquire)) {
         HCCL_INFO(
             "[GlobalNetDevMgr][UnInit]has been deinited. devicePhyId[%u], deviceLogicId[%d]", devicePhyId_,
             deviceLogicId_);
@@ -109,7 +109,7 @@ void GlobalNetDevMgr::UnInit()
 
     (void)HcclNetDeInit(NICDeployment::NIC_DEPLOYMENT_DEVICE, devicePhyId_, static_cast<u32>(deviceLogicId_));
     netDevCtx_ = nullptr;
-    isInited_ = false;
+    isInited_.store(false, std::memory_order_release);
     HCCL_INFO(
         "[GlobalNetDevMgr][UnInit]UnInit success. devicePhyId[%u], deviceLogicId[%d]", devicePhyId_, deviceLogicId_);
 }
@@ -244,10 +244,15 @@ HcclResult GlobalNetDevMgr::UnRefNetDevCtx(NicType nicType, const HcclIpAddress&
 HcclResult GlobalNetDevMgr::ServerInit(u32 port)
 {
     HcclIpAddress localIp{0};
-    CHK_RET(HcclNetDevGetLocalIp(netDevCtx_, localIp));
-    HCCL_INFO("[GlobalNetDevMgr][ServerInit]ip[%s] port[%u]", localIp.GetReadableAddress(), port);
-    PortInfo portInfo(localIp, port);
+    std::shared_ptr<HcclSocket> tempSocket;
+    {
+        std::lock_guard<std::mutex> lock(netDevCtxMtx_);
+        CHK_RET(HcclNetDevGetLocalIp(netDevCtx_, localIp));
+        HCCL_INFO("[GlobalNetDevMgr][ServerInit]ip[%s] port[%u]", localIp.GetReadableAddress(), port);
+        EXCEPTION_CATCH((tempSocket = std::make_shared<HcclSocket>(netDevCtx_, port)), return HCCL_E_PTR);
+    }
 
+    PortInfo portInfo(localIp, port);
     std::unique_lock<std::mutex> lock(serverMapMutex_);
     auto serverSocketInMap = serverSocketMap_.find(portInfo);
     if (serverSocketInMap != serverSocketMap_.end()) {
@@ -257,8 +262,6 @@ HcclResult GlobalNetDevMgr::ServerInit(u32 port)
         return HCCL_SUCCESS;
     }
 
-    std::shared_ptr<HcclSocket> tempSocket;
-    EXCEPTION_CATCH((tempSocket = std::make_shared<HcclSocket>(netDevCtx_, port)), return HCCL_E_PTR);
     CHK_RET(tempSocket->Init());
     CHK_RET(tempSocket->Listen());
     serverSocketMap_.insert(std::make_pair(portInfo, tempSocket));
@@ -273,7 +276,10 @@ HcclResult GlobalNetDevMgr::ServerInit(u32 port)
 HcclResult GlobalNetDevMgr::ServerDeInit(u32 port)
 {
     HcclIpAddress localIp{0};
-    CHK_RET(HcclNetDevGetLocalIp(netDevCtx_, localIp));
+    {
+        std::lock_guard<std::mutex> lock(netDevCtxMtx_);
+        CHK_RET(HcclNetDevGetLocalIp(netDevCtx_, localIp));
+    }
     CHK_RET(ServerDeInit(localIp, port));
 
     return HCCL_SUCCESS;
@@ -306,6 +312,20 @@ HcclResult GlobalNetDevMgr::ServerDeInit(const HcclIpAddress& localIp, u32 port)
     return HCCL_SUCCESS;
 }
 
+HcclResult GlobalNetDevMgr::GetListenSocket(
+    const HcclIpAddress& localIp, uint32_t port, std::shared_ptr<hccl::HcclSocket>& listenSocket)
+{
+    PortInfo portInfo(localIp, port);
+    std::lock_guard<std::mutex> lock(serverMapMutex_);
+    auto it = serverSocketMap_.find(portInfo);
+    if (it == serverSocketMap_.end() || it->second == nullptr) {
+        HCCL_ERROR("[GlobalNetDevMgr][%s] no listen socket for port[%u]", __func__, port);
+        return HCCL_E_NOT_FOUND;
+    }
+    listenSocket = it->second;
+    return HCCL_SUCCESS;
+}
+
 HcclResult GlobalNetDevMgr::AddListenSocketWhiteList(
     const HcclIpAddress& localIp, uint32_t port, const std::vector<SocketWlistInfo>& wlistInfos)
 {
@@ -314,27 +334,19 @@ HcclResult GlobalNetDevMgr::AddListenSocketWhiteList(
         return HCCL_E_PARA;
     }
 
-    PortInfo portInfo(localIp, port);
-    auto it = serverSocketMap_.find(portInfo);
-    if (it == serverSocketMap_.end() || it->second == nullptr) {
-        HCCL_ERROR("[GlobalNetDevMgr][%s] no listen socket for port[%u]", __func__, port);
-        return HCCL_E_NOT_FOUND;
-    }
+    std::shared_ptr<hccl::HcclSocket> listenSocket;
+    CHK_RET(GetListenSocket(localIp, port, listenSocket));
     std::vector<SocketWlistInfo> mutableCopy = wlistInfos;
-    return it->second->AddWhiteList(mutableCopy);
+    return listenSocket->AddWhiteList(mutableCopy);
 }
 
 HcclResult GlobalNetDevMgr::AcceptDataSocket(
     const HcclIpAddress& localIp, uint32_t port, const std::string& tag,
     std::shared_ptr<hccl::HcclSocket>& outConnected, uint32_t acceptTimeoutMs)
 {
-    PortInfo portInfo(localIp, port);
-    auto it = serverSocketMap_.find(portInfo);
-    if (it == serverSocketMap_.end() || it->second == nullptr) {
-        HCCL_ERROR("[GlobalNetDevMgr][%s] no listen socket for port[%u]", __func__, port);
-        return HCCL_E_NOT_FOUND;
-    }
-    return it->second->Accept(tag, outConnected, acceptTimeoutMs);
+    std::shared_ptr<hccl::HcclSocket> listenSocket;
+    CHK_RET(GetListenSocket(localIp, port, listenSocket));
+    return listenSocket->Accept(tag, outConnected, acceptTimeoutMs);
 }
 
 HcclResult
@@ -389,19 +401,25 @@ HcclResult GlobalNetDevMgr::ConnectToServer(
 {
     HCCL_INFO("[GlobalNetDevMgr]ConnectToServer start");
 
-    auto* netDevCtxPtr = static_cast<hccl::NetDevContext*>(netDevCtx_);
-    hccl::HcclIpAddress localIpAddr = netDevCtxPtr->GetLocalIp();
-
-    HCCL_INFO(
-        "[GlobalNetDevMgr]ConnectToServer localIp[%s] localPort[%u] remoteIp[%s] remotePort[%u] socketTag[%s]",
-        localIpAddr.GetReadableIP(), localPort, remoteIp.GetReadableIP(), remotePort, socketTag.c_str());
-
-    HCCL_INFO("[GlobalNetDevMgr][client] ConnectToServer connect to server");
+    hccl::HcclIpAddress localIpAddr;
     std::shared_ptr<hccl::HcclSocket> socketTemp = nullptr;
-    EXCEPTION_CATCH(
-        socketTemp = std::make_shared<hccl::HcclSocket>(
-            socketTag, netDevCtx_, remoteIp, remotePort, hccl::HcclSocketRole::SOCKET_ROLE_CLIENT),
-        return HCCL_E_PTR);
+    {
+        std::lock_guard<std::mutex> lock(netDevCtxMtx_);
+        CHK_PTR_NULL(netDevCtx_);
+        auto* netDevCtxPtr = static_cast<hccl::NetDevContext*>(netDevCtx_);
+        localIpAddr = netDevCtxPtr->GetLocalIp();
+
+        HCCL_INFO(
+            "[GlobalNetDevMgr]ConnectToServer localIp[%s] localPort[%u] remoteIp[%s] remotePort[%u] socketTag[%s]",
+            localIpAddr.GetReadableIP(), localPort, remoteIp.GetReadableIP(), remotePort, socketTag.c_str());
+        HCCL_INFO("[GlobalNetDevMgr][client] ConnectToServer connect to server");
+
+        EXCEPTION_CATCH(
+            socketTemp = std::make_shared<hccl::HcclSocket>(
+                socketTag, netDevCtx_, remoteIp, remotePort, hccl::HcclSocketRole::SOCKET_ROLE_CLIENT),
+            return HCCL_E_PTR);
+    }
+
     CHK_SMART_PTR_NULL(socketTemp);
     CHK_RET(socketTemp->Init());
     CHK_RET(socketTemp->Connect());
@@ -424,8 +442,13 @@ HcclResult GlobalNetDevMgr::AcceptClient(
 {
     HCCL_INFO("[GlobalNetDevMgr]AcceptClient start");
 
-    auto* netDevCtxPtr = static_cast<hccl::NetDevContext*>(netDevCtx_);
-    hccl::HcclIpAddress localIpAddr = netDevCtxPtr->GetLocalIp();
+    hccl::HcclIpAddress localIpAddr;
+    {
+        std::lock_guard<std::mutex> lock(netDevCtxMtx_);
+        CHK_PTR_NULL(netDevCtx_);
+        auto* netDevCtxPtr = static_cast<hccl::NetDevContext*>(netDevCtx_);
+        localIpAddr = netDevCtxPtr->GetLocalIp();
+    }
 
     HCCL_INFO(
         "[GlobalNetDevMgr]AcceptClient localIp[%s] localPort[%u] remoteIp[%s] socketTag[%s]",

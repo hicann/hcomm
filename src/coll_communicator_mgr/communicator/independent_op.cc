@@ -66,11 +66,11 @@ HcclResult IndependentOp::SetIndependentOpConfig(
     return HCCL_SUCCESS;
 }
 
-bool IndependentOp::GetAicpuCommState() { return isAicpuCommInit_; }
+bool IndependentOp::GetAicpuCommState() { return isAicpuCommInit_.load(std::memory_order_acquire); }
 
 void IndependentOp::SetAicpuCommState(bool aicpuCommState)
 {
-    isAicpuCommInit_ = aicpuCommState;
+    isAicpuCommInit_.store(aicpuCommState, std::memory_order_release);
     return;
 }
 

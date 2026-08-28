@@ -11,6 +11,7 @@
 #ifndef GLOBAL_NET_DEV_MANAGER_H
 #define GLOBAL_NET_DEV_MANAGER_H
 
+#include <atomic>
 #include <set>
 #include <map>
 #include <mutex>
@@ -54,6 +55,8 @@ private:
     static HcclResult Init(u32 devicePhyId, u32 deviceLogicId);
     void UnInit();
     HcclResult ServerDeInit(const HcclIpAddress& localIp, u32 port);
+    HcclResult
+    GetListenSocket(const HcclIpAddress& localIp, uint32_t port, std::shared_ptr<hccl::HcclSocket>& listenSocket);
     HcclResult AddListenSocketWhiteList(
         const HcclIpAddress& localIp, uint32_t port, const std::vector<SocketWlistInfo>& wlistInfos);
     HcclResult AcceptDataSocket(
@@ -74,7 +77,7 @@ private:
     u32 devicePhyId_{INVALID_UINT};
     s32 deviceLogicId_{INVALID_INT};
 
-    bool isInited_{false};
+    std::atomic<bool> isInited_{false};
     HcclNetDevCtx netDevCtx_{nullptr};
 };
 

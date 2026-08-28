@@ -75,7 +75,7 @@ private:
     ContextManager contextMgr_;
     ChannelManager channelMgr_;
 
-    bool isAicpuCommInit_ = false;
+    std::atomic<bool> isAicpuCommInit_{false};
     CommAicpuParam commAicpuParam_{};
 };
 

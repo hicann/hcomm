@@ -184,6 +184,7 @@ private:
     std::unique_ptr<SymmetricMemory, SymmetricMemoryDeleter> symmetricMemory_{nullptr};
     aclrtBinHandle binHcclHandle_{nullptr};
     std::mutex binHcclmutex_;
+    mutable std::mutex commMutex_;
 };
 } // namespace hccl
 
