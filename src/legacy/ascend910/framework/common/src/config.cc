@@ -54,8 +54,8 @@ HcclResult CfgGetClusterInfo(
             true, "EI0014", std::vector<std::string>({"value", "variable", "expect"}),
             std::vector<std::string>({rankTable.version, "version", "a valid version number."}));
         HCCL_ERROR(
-            "[%s][%s]version[%s] is not support", LOG_KEYWORDS_INIT_GROUP.c_str(), LOG_KEYWORDS_RANKTABLE_CHECK.c_str(),
-            rankTable.version.c_str());
+            "[%s][%s]version[%s] is not supported", LOG_KEYWORDS_INIT_GROUP.c_str(),
+            LOG_KEYWORDS_RANKTABLE_CHECK.c_str(), rankTable.version.c_str());
         return HCCL_E_NOT_SUPPORT;
     }
     // 检查指针是否为空
@@ -65,7 +65,7 @@ HcclResult CfgGetClusterInfo(
     // 将解析到的内容保存到入参hcomInfo中
     HcclResult ret = pTopoRanktable->GetClusterInfo(params, rankTable);
     CHK_PRT_RET(
-        ret != HCCL_SUCCESS, HCCL_ERROR("[Get][ClusterInfo]identify[%s],get cluterInfo info error", identify.c_str()),
+        ret != HCCL_SUCCESS, HCCL_ERROR("[Get][ClusterInfo]identify[%s],get clusterInfo info error", identify.c_str()),
         ret);
 
     CHK_PRT_RET((rankTable.serverNum == 0), HCCL_ERROR("[Get][ClusterInfo]serverNum is zero."), HCCL_E_PARA);
@@ -102,7 +102,7 @@ HcclResult CfgGetClusterInfoWithoutDev(
     } else if (rankTable.version.compare("Standard") == 0) {
         pTopoRanktable.reset(new (std::nothrow) TopoinfoRanktableStandard(rankTableM, identify));
     } else {
-        HCCL_ERROR("[Get][RanktableVersion]version[%s] is not support", rankTable.version.c_str());
+        HCCL_ERROR("[Get][RanktableVersion]version[%s] is not supported", rankTable.version.c_str());
         return HCCL_E_NOT_SUPPORT;
     }
     // 检查指针是否为空
@@ -112,7 +112,7 @@ HcclResult CfgGetClusterInfoWithoutDev(
     // 将解析到的内容保存到入参params、rankTable中
     HcclResult ret = pTopoRanktable->GetClusterInfo(params, rankTable);
     CHK_PRT_RET(
-        ret != HCCL_SUCCESS, HCCL_ERROR("[Get][ClusterInfo]identify[%s],get cluterInfo info error", identify.c_str()),
+        ret != HCCL_SUCCESS, HCCL_ERROR("[Get][ClusterInfo]identify[%s],get clusterInfo info error", identify.c_str()),
         ret);
 
     CHK_RET(CheckRankListInfo(rankTable.rankList));

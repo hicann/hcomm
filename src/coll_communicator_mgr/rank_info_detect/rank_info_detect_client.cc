@@ -308,7 +308,7 @@ void CheckRootInfoJson(const nlohmann::json& parseJson)
             true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
             std::vector<std::string>({std::to_string(rankCount), "rankCount", std::to_string(rankJsons.size())}));
         HCCL_ERROR(
-            "[%s] failed with rankCount is not equal to rank_list size."
+            "[%s] failed with rankCount is not equal to rank_list size. "
             "rankCount[%u], ranks.size[%u]",
             __func__, rankCount, rankJsons.size());
         THROW<InvalidParamsException>("rankCount error");

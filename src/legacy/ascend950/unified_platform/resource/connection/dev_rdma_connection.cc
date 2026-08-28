@@ -24,7 +24,7 @@ DevRdmaConnection::DevRdmaConnection(Socket* socket, RdmaHandle rdmaHandle, OpMo
         qpMode = (opMode == OpMode::OPBASE) ? OPBASE_QP_MODE : OFFLINE_QP_MODE;
     } else {
         HCCL_ERROR(
-            "Cannot support this device type!"
+            "Cannot support this device type! "
             "errNo[0x%016llx], device type[%s]",
             HCCL_ERROR_CODE(HcclResult::HCCL_E_NOT_SUPPORT), DevTypeToString(devType).c_str());
         throw NotSupportException(DevTypeToString(devType));

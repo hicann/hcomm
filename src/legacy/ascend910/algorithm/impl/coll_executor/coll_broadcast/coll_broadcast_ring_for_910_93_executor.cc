@@ -90,7 +90,7 @@ HcclResult CollBroadCastRingFor91093::KernelRun(const OpParam& param, ExecMem& e
     CHK_PRT_RET(
         perDataSize == 0,
         HCCL_ERROR(
-            "[CollBroadCastRingFor91093][KernelRun]errNo[0x%01611x] datatype[%d] is invalid",
+            "[CollBroadCastRingFor91093][KernelRun]errNo[0x%016llx] datatype[%d] is invalid",
             HCCL_ERROR_CODE(HCCL_E_PARA), param.DataDes.dataType),
         HCCL_E_PARA);
     std::vector<Slice> dataSegsSlice;             // 数据分成ranksize份，每份的起始偏移和大小
@@ -330,7 +330,7 @@ HcclResult CollBroadCastRingFor91093::KernelRun(const OpParam& param, ExecMem& e
             HcclReduceOp::HCCL_REDUCE_RESERVED, planeRootSupperPod, std::vector<Slice>(0),
             dataSegsSlice[localRank].offset + level1Offset));
         HCCL_DEBUG(
-            "[superpod]Broadcast level2-broadcast : dataSegsSlice[localRank].offset[%llu]"
+            "[superpod]Broadcast level2-broadcast : dataSegsSlice[localRank].offset[%llu] "
             "dataSegsSlice[localRank].size[%llu] level1Offset[%llu]",
             dataSegsSlice[localRank].offset, dataSegsSlice[localRank].size, level1Offset);
 

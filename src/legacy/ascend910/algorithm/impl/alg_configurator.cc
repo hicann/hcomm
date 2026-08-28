@@ -407,7 +407,7 @@ HcclResult AlgConfigurator::GetDefaultAlgoLevel0Module(AlgTypeLevel0& algType)
                 == FACTOR_NUM_TWO * deviceNumPerAggregation * (deviceNumPerAggregation - 1))
         && topoAttr_.deviceType == DevType::DEV_TYPE_910B) {
         algType = AlgTypeLevel0::ALG_LEVEL0_NP_MESH;
-        HCCL_DEBUG("[GetDefaultAlgoLevel0Module] AlgTypeLevel0 is set to ALG_LEVEL0_NP_MESH (HCCS links is enabled).");
+        HCCL_DEBUG("[GetDefaultAlgoLevel0Module] AlgTypeLevel0 is set to ALG_LEVEL0_NP_MESH (HCCS links are enabled).");
     }
 
     if (topoAttr_.deviceType == DevType::DEV_TYPE_910_93) {

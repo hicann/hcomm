@@ -275,7 +275,7 @@ HcclResult AllReduceGraphPipeline::Prepare(
     streamNotifyMain_ = notifyMain;
     if (streamNotifyMain_.size() < intraRankSize_ - 1) {
         HCCL_ERROR(
-            "[AllReduceGraphPipeline][Prepare]rank[%u] streamNotifyMain_ size [%u] error, is smaller than,"
+            "[AllReduceGraphPipeline][Prepare]rank[%u] streamNotifyMain_ size[%u] is smaller than "
             "intraRankSize_[%u]",
             rankId_, streamNotifyMain_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
@@ -283,7 +283,7 @@ HcclResult AllReduceGraphPipeline::Prepare(
     streamNotifySub_ = notifySub;
     if (streamNotifySub_.size() < intraRankSize_ - 1) {
         HCCL_ERROR(
-            "[AllReduceGraphPipeline][Prepare]rank[%u] streamNotifySub_ size [%u] error, is smaller than,"
+            "[AllReduceGraphPipeline][Prepare]rank[%u] streamNotifySub_ size[%u] is smaller than "
             "intraRankSize_[%u]",
             rankId_, streamNotifySub_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;

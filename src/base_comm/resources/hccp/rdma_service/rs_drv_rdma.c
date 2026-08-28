@@ -677,7 +677,7 @@ int RsDrvRegNotifyMr(struct RsRdevCb *rdevCb)
     }
 
     CHK_PRT_RETURN(rdevCb->notifyMr == NULL,
-        hccp_err("ibv_reg_mr addr[0x%llx] len[%llu] errno[%d]failed", rdevCb->notifyVaBase, rdevCb->notifySize, errno),
+        hccp_err("ibv_reg_mr addr[0x%llx] len[%llu] errno[%d] failed", rdevCb->notifyVaBase, rdevCb->notifySize, errno),
         -EACCES);
 
     hccp_info("ibv_reg_mr ok");
@@ -1276,7 +1276,7 @@ int RsDrvCreateCqWithChannel(struct RsCqContext *cqContext, struct CqAttr *attr)
 
     cqContext->ibRecvCq = RsIbvCreateCq(cqContext->rdevCb->ibCtx, attr->recvCqDepth, NULL, attr->recvChannel, 1);
     if (cqContext->ibRecvCq == NULL) {
-        hccp_err("rs_drv_create_cq_with_channel ibv create serecvnd cq failed.");
+        hccp_err("rs_drv_create_cq_with_channel ibv create recv cq failed.");
         goto create_recv_cq_err;
     }
 

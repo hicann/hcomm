@@ -117,7 +117,7 @@ HcclResult CollAllReduceRingExecutor::KernelRun(const OpParam& param, ExecMem& e
             multRingsSliceZero.size() != ringNum,
             HCCL_ERROR(
                 "[CollAllReduceRingExecutor]"
-                "ringNum[%u] !=multRingsSliceZero size[%zu]",
+                "ringNum[%u] != multRingsSliceZero size[%zu]",
                 ringNum, multRingsSliceZero.size()),
             HCCL_E_INTERNAL);
     } else {

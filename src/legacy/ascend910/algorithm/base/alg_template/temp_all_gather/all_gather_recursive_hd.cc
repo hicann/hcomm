@@ -48,7 +48,7 @@ HcclResult AllGatherRecursiveHalvingDoubling::RunAsync(
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[AllGatherRecursiveHalvingDoubling][RunAsync]Calculate Par1Size[%u] "
+            "[AllGatherRecursiveHalvingDoubling][RunAsync]Calculate part1Size[%u] "
             "And BlockSize[%u] Failed! rankSize[%u]",
             part1Size_, blockSize_, rankSize),
         ret);
@@ -105,11 +105,11 @@ HcclResult AllGatherRecursiveHalvingDoubling::GatherInPartOneToEven(u32 rank, co
             HcclResult ret = links[peerRank]->TxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] tx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] tx ack from peerRank[%u] failed", rank, peerRank), ret);
             ret = links[peerRank]->RxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] rx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] rx ack from peerRank[%u] failed", rank, peerRank), ret);
             DeviceMem gatherOutputMem = outputMem_.range(dataBytes_ * rank, dataBytes_);
             //  接收数据到本端的 output
             HCCL_DEBUG(
@@ -137,13 +137,13 @@ HcclResult AllGatherRecursiveHalvingDoubling::GatherInPartOneToEven(u32 rank, co
             HcclResult ret = links[peerRank]->TxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] tx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] tx ack from peerRank[%u] failed", rank, peerRank), ret);
             ret = links[peerRank]->RxAck(stream_);
             HCCL_DEBUG("[AllGatherRecursiveHalvingDoubling][GatherInPartOneToEven]peerRank is %u", peerRank);
             //  等待对端可以接收数据
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] rx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InPartOneToEven]rank[%u] rx ack from peerRank[%u] failed", rank, peerRank), ret);
             //  设置gather的发送内存范围
             DeviceMem gatherOutputMem = outputMem_.range(dataBytes_ * rank, dataBytes_);
             //  发送数据到对端的 output
@@ -174,12 +174,12 @@ HcclResult AllGatherRecursiveHalvingDoubling::GatherInPartOneToOdd(u32 rank, con
             HcclResult ret = links[peerRank]->TxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InPartOneToOdd]rank[%u] tx ack from peerank[%u] failed.", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InPartOneToOdd]rank[%u] tx ack from peerRank[%u] failed.", rank, peerRank), ret);
             ret = links[peerRank]->RxAck(stream_);
             //  等待对端可以接收数据
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InPartOneToOdd]rank[%u] rx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InPartOneToOdd]rank[%u] rx ack from peerRank[%u] failed", rank, peerRank), ret);
 
             HCCL_DEBUG(
                 "rank[%u] outputMem[%p] sends to PeerRank[%u] outputMem, Offset[%llu], Size[%llu]", rank,
@@ -201,11 +201,11 @@ HcclResult AllGatherRecursiveHalvingDoubling::GatherInPartOneToOdd(u32 rank, con
             //  等待对端可以接收数据
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InPartOneToOdd]rank[%u] tx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InPartOneToOdd]rank[%u] tx ack from peerRank[%u] failed", rank, peerRank), ret);
             ret = links[peerRank]->RxAck(stream_);
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
-                HCCL_ERROR("[Gather][InPartOneToOdd]rank[%u] rx ack from peerank[%u] failed", rank, peerRank), ret);
+                HCCL_ERROR("[Gather][InPartOneToOdd]rank[%u] rx ack from peerRank[%u] failed", rank, peerRank), ret);
             //  接收数据到本端的 output
             HCCL_DEBUG(
                 "rank[%u] outputMem[%p] receive from PeerRank[%u] outputMem, Offset[%llu], "

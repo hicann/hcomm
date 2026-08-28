@@ -48,7 +48,7 @@ void TaskExceptionHost::ClusterMoniterGetAicpuCqeErrInfo(
     if (g_getAicpuCqeErrInfoCallBack != nullptr) {
         g_getAicpuCqeErrInfoCallBack(remoteLocalId, locDeviceId, status, localEid, remoteEid, remoteInsId);
     } else {
-        HCCL_RUN_WARNING("[ClusterMoniterGetAicpuCqeErrInfo]g_getAicpuCqeErrInfoCallBack is nullptr.");
+        HCCL_RUN_WARNING("[%s]g_getAicpuCqeErrInfoCallBack is nullptr.", __func__);
     }
     return;
 }
@@ -475,7 +475,7 @@ void TaskExceptionHost::PrintTaskContextInfo(uint32_t deviceId, uint32_t streamI
     for (uint32_t i = 0; i < TASK_CONTEXT_SIZE && *taskIterPtr != *queue->Begin(); ++i, --(*taskIterPtr)) {
         if ((**taskIterPtr)->taskId_ > taskId) {
             HCCL_ERROR(
-                "[%s]prev taskId[%u]is bigger than err taskId[%u], traversal end.", __func__, (**taskIterPtr)->taskId_,
+                "[%s]prev taskId[%u] is bigger than err taskId[%u], traversal end.", __func__, (**taskIterPtr)->taskId_,
                 taskId);
             break;
         }
@@ -734,7 +734,7 @@ void GetTaskParam(Hccl::TaskParam& taskParam, const Hccl::ErrorMessageReport& er
             taskParam.taskPara.DMA.dst = reinterpret_cast<void*>(errMsgInfo.taskDstAddr);
             break;
         default:
-            HCCL_ERROR("[TaskException][HOST]%s taskType[%d] is not support", __func__, taskParam.taskType);
+            HCCL_ERROR("[TaskException][HOST]%s taskType[%d] is not supported", __func__, taskParam.taskType);
             return;
     }
 }

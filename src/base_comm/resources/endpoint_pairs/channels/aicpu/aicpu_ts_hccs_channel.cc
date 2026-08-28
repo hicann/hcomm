@@ -89,7 +89,7 @@ HcclResult AicpuTsHccsChannel::ParseInputParam()
     }
 
     HCCL_INFO(
-        "[AicpuTsHccsChannel][ParseInputParam] local devPhyId [%u] ip[%u] remote devPhyId[%u] ip[%s], "
+        "[AicpuTsHccsChannel][ParseInputParam] local devPhyId [%u] ip[%s] remote devPhyId[%u] ip[%s], "
         "isSocketServer_[%u], serverPort_[%u]",
         localEp_.loc.device.devPhyId, localReadableAddress.c_str(), remoteEp_.loc.device.devPhyId,
         remoteReadableAddress.c_str(), static_cast<u32>(isSocketServer_), serverPort_);
@@ -117,7 +117,7 @@ HcclResult AicpuTsHccsChannel::BuildConnection()
     std::string remoteReadableAddress = remoteIp_.GetReadableAddress();
 
     HCCL_INFO(
-        "[AicpuTsHccsChannel][BuildConnection] local devPhyId [%u] ip[%u] remote devPhyId[%u] ip[%s]",
+        "[AicpuTsHccsChannel][BuildConnection] local devPhyId [%u] ip[%s] remote devPhyId[%u] ip[%s]",
         localEp_.loc.device.devPhyId, localReadableAddress.c_str(), remoteEp_.loc.device.devPhyId,
         remoteReadableAddress.c_str());
 
@@ -137,7 +137,7 @@ HcclResult AicpuTsHccsChannel::BuildConnection()
                     .ConnectToServer(serverPort_, remoteIp_, serverPort_, socketTag_, socket_));
     }
     HCCL_INFO(
-        "[AicpuTsHccsChannel][BuildConnection] local devPhyId [%u] ip[%u] "
+        "[AicpuTsHccsChannel][BuildConnection] local devPhyId [%u] ip[%s] "
         "remote devPhyId[%u] ip[%s] socketTag_[%s]",
         localEp_.loc.device.devPhyId, localReadableAddress.c_str(), remoteEp_.loc.device.devPhyId,
         remoteReadableAddress.c_str(), socketTag_.c_str());

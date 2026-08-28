@@ -167,7 +167,7 @@ HcclResult TransportDirectNpu::LoadAICPUKernel(void)
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[LoadAICPUKernel]errNo[0x%016llx]load aicpu file fail, path[%s] optionType[%u]"
+            "[LoadAICPUKernel]errNo[0x%016llx]load aicpu file fail, path[%s] optionType[%u] "
             "cpuKernelMode[%u].",
             ret, jsonPath.c_str(), ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE, 0),
         ret);
@@ -1156,7 +1156,7 @@ void TransportDirectNpu::ProcessCqeInfo(
                 std::make_pair(ptr, CqeInfo(infolist[i].time, infolist[i].status, it.first->second->GetRemoteIp())));
             cqeErrQpn_ = infolist[i].qpn;
         } else {
-            HCCL_RUN_WARNING("[GetTransportErrorCqe]get err failed, transport is not find.");
+            HCCL_RUN_WARNING("[GetTransportErrorCqe]get err failed, transport was not found.");
         }
     }
     return;

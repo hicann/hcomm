@@ -230,7 +230,7 @@ void CcuContextAllReduceMesh2DOneShot::LoadArgs()
     Load(ySliceOffset_);
     Load(xGoSize_);
     Load(yGoSize_);
-    HCCL_INFO("[CcuContextAllReduceMesh2DOneShot] LoadArgs Eends");
+    HCCL_INFO("[CcuContextAllReduceMesh2DOneShot] LoadArgs Ends");
     return;
 }
 

@@ -154,7 +154,7 @@ HcclResult AicpuAclKernelLaunch(
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
-                "[TaskCommKernelArgsPrepare]errNo[0x%016llx]taskCOmm args prepare failed, kernelName[%s], "
+                "[TaskCommKernelArgsPrepare]errNo[0x%016llx]TaskComm args prepare failed, kernelName[%s], "
                 "contextAddr[%p], size[%u]",
                 ret, kernelName.c_str(), addr, size),
             HCCL_E_RUNTIME);

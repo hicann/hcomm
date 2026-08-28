@@ -103,7 +103,7 @@ HcclResult CollReceiveExecutor::CalcResRequest(const OpParam& param, AlgResource
 
     CHK_RET(BuildResourceRequest(scratchMemSize, streamNum, notifyNum, aivBufferRequest, opTransport, resourceRequest));
     HCCL_INFO(
-        "streamNum[%u], notifyNum[%u], sctrachMemSize[%llu], aivBufferRequest[%llu]", resourceRequest.streamNum,
+        "streamNum[%u], notifyNum[%u], scratchMemSize[%llu], aivBufferRequest[%llu]", resourceRequest.streamNum,
         resourceRequest.notifyNum, resourceRequest.scratchMemSize, resourceRequest.aivBufferRequest);
     // 打印建链诉求
     PrintTransportRequest(resourceRequest);

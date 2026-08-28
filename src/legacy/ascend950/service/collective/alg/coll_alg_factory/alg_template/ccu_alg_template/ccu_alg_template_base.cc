@@ -189,7 +189,7 @@ HcclResult CcuAlgTemplateBase::CalNumBlocks(u32& numBlocks, u64 dataSize, u32 nu
     (void)numBlocks;
     (void)dataSize;
     (void)numBlocksLimit;
-    HCCL_WARNING("CalNumBlocks not support ccu template.");
+    HCCL_WARNING("CalNumBlocks does not support ccu template.");
     return HCCL_SUCCESS;
 }
 

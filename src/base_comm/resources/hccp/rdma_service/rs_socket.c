@@ -2163,7 +2163,7 @@ RS_ATTRI_VISI_DEF int RsSocketWhiteListDel(struct rdev rdevInfo, struct SocketWl
 
     for (i = 0; i < num; ++i) {
         CHK_PRT_RETURN(strlen(whiteList[i].tag) >= SOCK_CONN_TAG_SIZE,
-            hccp_err("white_list tag len:%u more than"
+            hccp_err("white_list tag len:%u more than "
                      "max len:%d",
                 strlen(whiteList[i].tag), SOCK_CONN_TAG_SIZE),
             -EINVAL);
@@ -2374,7 +2374,7 @@ RS_ATTRI_VISI_DEF int RsGetIfaddrs(struct IfaddrInfo ifaddrInfos[], unsigned int
     int ret;
 
     CHK_PRT_RETURN(ifaddrInfos == NULL || num == NULL,
-        hccp_err("rs_get_ifaddrs param error,"
+        hccp_err("rs_get_ifaddrs param error, "
                  "ifaddrInfos or num is NULL"),
         -EINVAL);
 

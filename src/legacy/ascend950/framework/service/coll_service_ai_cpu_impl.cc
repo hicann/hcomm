@@ -458,7 +458,7 @@ void CollServiceAiCpuImpl::AicpuKernelLaunch(HcclKernelLaunchParam& param, Strea
         funcHandle, numBlocks, mStream.GetPtr(), &cfg, reinterpret_cast<void*>(kernelParamBuf_.get()->GetAddr()),
         sizeof(HcclKernelParamLite) + dynamicDataSize);
     HCCL_INFO(
-        "[AicpuKernelLauncher][AicpuKernelLaunch] param.kernel.algName: %s, %s mode, %s"
+        "[AicpuKernelLauncher][AicpuKernelLaunch] param.kernel.algName: %s, %s mode, %s "
         "HrtAicpuLaunchKernelWithHostArgs end!",
         param.kernel.algName, mode.c_str(), mStream.Describe().c_str());
     taskParam.taskType = TaskParamType::TASK_AICPU_KERNEL;

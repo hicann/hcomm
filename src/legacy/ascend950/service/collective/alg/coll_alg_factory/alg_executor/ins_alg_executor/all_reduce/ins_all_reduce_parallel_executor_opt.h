@@ -130,7 +130,7 @@ private:
         // 申请算法模板所需资源
         if (!(resReqIntraRS.queNum > 0 && resReqInterRS.queNum > 0 && resReqIntraAG.queNum > 0
               && resReqInterAG.queNum > 0)) {
-            HCCL_ERROR("resReqIntra.queNum and resReqInter.queNum must larger than 0.");
+            HCCL_ERROR("resReqIntra.queNum and resReqInter.queNum must be larger than 0.");
             return HcclResult::HCCL_E_INTERNAL;
         }
         u32 intraQueNum = std::max(resReqIntraRS.queNum, resReqIntraAG.queNum);

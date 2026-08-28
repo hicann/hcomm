@@ -77,7 +77,7 @@ HcclResult CcuTempReduceScatterNHR1DMem2Mem::GenExtIns(
     std::vector<uint64_t> dimSize;
     dimSize.push_back(tempRankSize_);
     if (tempAlgParams.sliceSize == 0) {
-        HCCL_INFO("[CcuTempReduceScatterNHRMem2Mem1D] sliceSize is 0, no need do, just success.");
+        HCCL_INFO("[CcuTempReduceScatterNHRMem2Mem1D] sliceSize is 0, nothing to do, just return success.");
         return HCCL_SUCCESS;
     }
     uint64_t die0Size = 0;

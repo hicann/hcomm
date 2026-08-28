@@ -125,7 +125,7 @@ TaskInfo* MirrorTaskManagerLite::GetTaskInfo(u32 streamId, u32 taskId) const
         return nullptr;
     };
 
-    HCCL_INFO("[MirrorTaskManagerLite][GetTaskInfo]find streamdId(sqId)[%u] taskId(sqeId)[%u]", streamId, taskId);
+    HCCL_INFO("[MirrorTaskManagerLite][GetTaskInfo]find streamId(sqId)[%u] taskId(sqeId)[%u]", streamId, taskId);
 
     return (*task).get();
 }

@@ -90,7 +90,7 @@ HcclResult CollAllReduceMeshAivExecutor::CalNumBlocks(
     }
 
     HCCL_INFO(
-        "[CollAllReduceMeshAivExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommanded[%u]", numBlocks,
+        "[CollAllReduceMeshAivExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommended[%u]", numBlocks,
         numBlocks_, bestNumBlocks);
     return HCCL_SUCCESS;
 }
@@ -171,7 +171,7 @@ HcclResult CollAllReduceMeshAivExecutor::GetAivExecParam(
     }
 
     HCCL_INFO(
-        "SPK, buffersIn [%p] [%p] [%p] [%p]"
+        "SPK, buffersIn [%p] [%p] [%p] [%p] "
         "buffersOut [%p] [%p] [%p] [%p]",
         args.buffersIn[0], args.buffersIn[1], args.buffersIn[2], args.buffersIn[3], args.buffersOut[0],
         args.buffersOut[1], args.buffersOut[2], args.buffersOut[3]);

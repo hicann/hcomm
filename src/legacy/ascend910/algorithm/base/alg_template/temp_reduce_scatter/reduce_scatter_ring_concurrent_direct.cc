@@ -106,7 +106,7 @@ ReduceScatterRingConcurrentDirect::CheckParameters(const u32 rank, const u32 ran
     CHK_PRT_RET(
         userSlices_.size() % rankSize != 0,
         HCCL_ERROR(
-            "[ReduceScatterRingConcurrentDirect] userMemInputSlices size[%u] can not divided by size[%u]",
+            "[ReduceScatterRingConcurrentDirect] userMemInputSlices size[%u] cannot be divided by size[%u]",
             userSlices_.size(), rankSize),
         HCCL_E_PARA);
     HCCL_INFO("ReduceScatterRingConcurrentDirect CheckParameters success");

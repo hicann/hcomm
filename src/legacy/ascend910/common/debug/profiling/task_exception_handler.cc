@@ -937,7 +937,7 @@ bool TaskExceptionHandler::ProcessContext(
             if (exceptionInfo->expandInfo.u.fftsPlusInfo.contextId == invalidCtxid) {
                 // 子图任务粒度下，RTS返回的异常task不包含contexId时的处理，约定contextId为65535。只记录算子信息
                 HCCL_WARNING(
-                    "%sTask run failed, invalid contexid,"
+                    "%sTask run failed, invalid contextId, "
                     "base opInformation is %s",
                     stageErrInfo.c_str(), fftsOpInfo.GetBaseInfoStr().c_str());
             } else if (exceptionInfo->expandInfo.u.fftsPlusInfo.contextId >= queIt->back().second->size()) {
@@ -1341,7 +1341,7 @@ void TaskExceptionHandler::PrintAicpuErrorMessage(rtExceptionInfo* exceptionInfo
     if (g_commHadCallbackArray[exceptionInfo->deviceid]) {
         // 防止同一个device上出现通信主流和kernel流均出现task exception时runtime调用两次callback
         // HDC通道信息不是读清，防止aicpu task exception重复上报
-        HCCL_WARNING("aicpu error message been reported. deviceid[%u]", exceptionInfo->deviceid);
+        HCCL_WARNING("aicpu error message has been reported. deviceid[%u]", exceptionInfo->deviceid);
         return;
     }
     lock.unlock();

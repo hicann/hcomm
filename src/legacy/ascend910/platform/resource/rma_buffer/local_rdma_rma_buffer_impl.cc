@@ -118,7 +118,7 @@ HcclResult LocalRdmaRmaBufferImpl::Init()
             "[%s] before hrtGetDevice deviceLogicId[%d], isBackupIpValid[%d]", __func__, deviceLogicId,
             isBackupIpValid);
         CHK_RET(hrtGetDevice(&deviceLogicId));
-        HCCL_INFO("[%s] after hrtGetDevice deviceLogiID[%d]", __func__, deviceLogicId);
+        HCCL_INFO("[%s] after hrtGetDevice deviceLogicId[%d]", __func__, deviceLogicId);
     }
     // host内存地址映射
     devAddr = addr;

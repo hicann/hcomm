@@ -29,9 +29,7 @@ HcclResult AllReduceMultiDeterPipeline::GetRemoteCclbufferDeviceMem(
     u8* intraSrcAddr = beginAddrU8 + offset;
     remoteMem = DeviceMem::create(intraSrcAddr, size);
     if (remoteMem.ptr() == nullptr) {
-        HCCL_ERROR(
-            "[%s] offset + size = [%llu] > cclBufferSize[%llu] > cclBufferSize", __func__, offset + size,
-            outCclBuffer_.size());
+        HCCL_ERROR("[%s] offset + size = [%llu] > cclBufferSize[%llu]", __func__, offset + size, outCclBuffer_.size());
         return HCCL_E_MEMORY;
     }
     HCCL_DEBUG(
@@ -162,7 +160,7 @@ HcclResult AllReduceMultiDeterPipeline::BatchPostNotifyForStreams(
     const std::vector<std::vector<std::pair<u32, u32>>>& streamTasks, bool isStartPhase, bool useMainStream)
 {
     if (useMainStream) {
-        HCCL_DEBUG("[%s] use mainStrem, skip notify wait", __func__);
+        HCCL_DEBUG("[%s] use mainStream, skip notify wait", __func__);
         return HCCL_SUCCESS;
     }
     for (u32 s = 0; s < MAX_REDUCE_STREAM_NUM; s++) {
@@ -579,14 +577,14 @@ HcclResult AllReduceMultiDeterPipeline::Prepare(
     streamNotifyMain_ = notifyMain;
     if (streamNotifyMain_.size() < intraRankSize_) {
         HCCL_ERROR(
-            "[%s] rank[%u] streamNotifyMain_ size [%u] error, is smaller than intraRankSize[%u]", __func__, userRank_,
+            "[%s] rank[%u] streamNotifyMain_ size[%u] is smaller than intraRankSize[%u]", __func__, userRank_,
             streamNotifyMain_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
     }
     streamNotifySub_ = notifySub;
     if (streamNotifySub_.size() < intraRankSize_) {
         HCCL_ERROR(
-            "[%s] rank[%u] streamNotifySub_ size [%u] error, is smaller than intraRankSize[%u]", __func__, userRank_,
+            "[%s] rank[%u] streamNotifySub_ size[%u] is smaller than intraRankSize[%u]", __func__, userRank_,
             streamNotifySub_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
     }

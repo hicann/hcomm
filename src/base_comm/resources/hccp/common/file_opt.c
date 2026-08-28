@@ -195,7 +195,7 @@ int CheckFilePath(const char *path, mode_t mode)
     if (realpath(path, realConfPath) == NULL) {
         ret = -errno;
         if (ret == -ENOENT) {
-            roce_warn("path[%s] is not exist, real_path[%s]", path, realConfPath);
+            roce_warn("path[%s] does not exist, real_path[%s]", path, realConfPath);
             ret = mkdir(realConfPath, mode);
             if (ret) {
                 roce_err("mkdir real_conf_path[%s] failed, ret[%d]", realConfPath, ret);

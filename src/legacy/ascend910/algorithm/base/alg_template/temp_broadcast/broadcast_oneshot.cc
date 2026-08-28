@@ -143,7 +143,7 @@ HcclResult BroadcastHD::RunAsync(const u32 rank, const u32 rankSize, const std::
     ret = RunFinalStep(rank, rankSize, links);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
-        HCCL_ERROR("[BroadcastHD][RunAsync]rank[%u] count[%llu]failed in RunFinalStep", rank, count_), ret);
+        HCCL_ERROR("[BroadcastHD][RunAsync]rank[%u] count[%llu] failed in RunFinalStep", rank, count_), ret);
     HCCL_INFO("BroadcastHD finished: rank[%u] ranksize[%u].", rank, rankSize);
     return HCCL_SUCCESS;
 }

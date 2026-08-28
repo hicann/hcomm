@@ -106,7 +106,7 @@ AlignedReduceScatterDoubleRing::CheckParameters(const u32 rank, const u32 rankSi
         CHK_PRT_RET(
             userMemInputSlicesOfDoubleRing_[ringIndex].size() % rankSize != 0,
             HCCL_ERROR(
-                "[AlignedReduceScatterDoubleRing] userMemInputSlicesOfDoubleRing[%u] size[%u] can not divided by "
+                "[AlignedReduceScatterDoubleRing] userMemInputSlicesOfDoubleRing[%u] size[%u] cannot be divided by "
                 "size[%u]",
                 ringIndex, userMemInputSlicesOfDoubleRing_[ringIndex].size(), rankSize),
             HCCL_E_PARA);

@@ -34,7 +34,7 @@ HCCP_ATTRI_VISI_DEF int RaQpCreateWithCQWithAttrs(void *rdevHandle, struct QpExt
         ConverReturnCode(RDMA_OP, -EINVAL));
 
     CHK_PRT_RETURN(extAttrs->qpMode < 0 || extAttrs->qpMode >= RA_RS_ERR_QP_MODE,
-        hccp_err("[create][ra_qp_with_cq_attrs]QP mode[%d] must greater or equal to 0 and less than %d",
+        hccp_err("[create][ra_qp_with_cq_attrs]QP mode[%d] must be greater than or equal to 0 and less than %d",
             extAttrs->qpMode, RA_RS_ERR_QP_MODE),
         ConverReturnCode(RDMA_OP, -EINVAL));
     // no need and disallow to set data_plane_flag, set it to default value 0
@@ -42,7 +42,7 @@ HCCP_ATTRI_VISI_DEF int RaQpCreateWithCQWithAttrs(void *rdevHandle, struct QpExt
 
     phyId = rdmaHandleTmp->rdevInfo.phyId;
     CHK_PRT_RETURN(phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[create][ra_qp_with_cq_attrs]phyId(%u) must greater or equal to 0 and less than %d!", phyId,
+        hccp_err("[create][ra_qp_with_cq_attrs]phyId(%u) must be greater than or equal to 0 and less than %d!", phyId,
             RA_MAX_PHY_ID_NUM),
         ConverReturnCode(RDMA_OP, -EINVAL));
 

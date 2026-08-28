@@ -165,7 +165,7 @@ void UbConnLite::ProcessSlices(
     }
 
     HCCL_INFO(
-        "[UbConnLite::%s] end, locBufSize[%u], sliceNUm[%u], sliceSize[%u], lastSliceSize[%u]", __func__, locBufSize,
+        "[UbConnLite::%s] end, locBufSize[%u], sliceNum[%u], sliceSize[%u], lastSliceSize[%u]", __func__, locBufSize,
         sliceNum, sliceSize, lastSliceSize);
 }
 
@@ -216,7 +216,7 @@ void UbConnLite::ProcessSlicesWithNotify(
     }
 
     HCCL_INFO(
-        "[UbConnLite::%s] end, locBufSize[%u], sliceNUm[%u], sliceSize[%u], lastSliceSize[%u]", __func__, locBufSize,
+        "[UbConnLite::%s] end, locBufSize[%u], sliceNum[%u], sliceSize[%u], lastSliceSize[%u]", __func__, locBufSize,
         sliceNum, sliceSize, lastSliceSize);
 }
 

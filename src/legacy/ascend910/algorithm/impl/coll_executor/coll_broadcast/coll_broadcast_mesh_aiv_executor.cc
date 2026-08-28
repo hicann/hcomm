@@ -56,7 +56,7 @@ HcclResult CollBroadcastMeshAivExecutor::CalNumBlocks(
         HCCL_E_PARA);
 
     HCCL_INFO(
-        "[CollBroadcastMeshAivExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommanded[%u]", numBlocks,
+        "[CollBroadcastMeshAivExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommended[%u]", numBlocks,
         numBlocks_, numBlocks);
     return HCCL_SUCCESS;
 }

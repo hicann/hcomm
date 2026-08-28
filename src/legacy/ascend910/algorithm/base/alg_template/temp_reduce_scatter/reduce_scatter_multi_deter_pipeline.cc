@@ -134,7 +134,7 @@ HcclResult ReduceScatterMultiDeterPipeline::BatchPostNotifyForStreams(
     const std::vector<std::vector<std::pair<u32, u32>>>& streamTasks, bool isStartPhase, bool useMainStream)
 {
     if (useMainStream) {
-        HCCL_DEBUG("[%s] use mainStrem, skip notify wait", __func__);
+        HCCL_DEBUG("[%s] use mainStream, skip notify wait", __func__);
         return HCCL_SUCCESS;
     }
     for (u32 s = 0; s < MAX_REDUCE_STREAM_NUM; s++) {
@@ -394,14 +394,14 @@ HcclResult ReduceScatterMultiDeterPipeline::Prepare(
     streamNotifySub_ = notifySub;
     if (streamNotifySub_.size() < intraRankSize_) {
         HCCL_ERROR(
-            "[%s] rank[%u] streamNotifySub_ size [%u] error, is smaller than intraRankSize[%u]", __func__, userRank_,
+            "[%s] rank[%u] streamNotifySub_ size[%u] is smaller than intraRankSize[%u]", __func__, userRank_,
             streamNotifySub_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
     }
     streamNotifyMain_ = notifyMain;
     if (streamNotifyMain_.size() < intraRankSize_) {
         HCCL_ERROR(
-            "[%s] rank[%u] streamNotifyMain_ size [%u] error, is smaller than intraRankSize[%u]", __func__, userRank_,
+            "[%s] rank[%u] streamNotifyMain_ size[%u] is smaller than intraRankSize[%u]", __func__, userRank_,
             streamNotifyMain_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
     }

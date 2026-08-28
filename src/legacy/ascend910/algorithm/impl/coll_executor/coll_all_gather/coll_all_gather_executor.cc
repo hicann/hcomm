@@ -427,7 +427,7 @@ HcclResult CollAllGatherExecutor::CalculateLevel1AllgatherSlice(
         for (u32 level0Idx = 0; level0Idx < level0RankSize; level0Idx++) {
             CHK_PRT_RET(
                 multRingsSliceZero[ringIndex].size() < level0RankSize,
-                HCCL_ERROR("[CalculateLevel1AllgatherSlice]multRingsSliceZero[ringIndex]"
+                HCCL_ERROR("[CalculateLevel1AllgatherSlice]multRingsSliceZero[ringIndex] "
                            "size is smaller than level0RankSize."),
                 HCCL_E_INTERNAL);
             for (u32 level1Idx = 0; level1Idx < level1RankSize; level1Idx++) {

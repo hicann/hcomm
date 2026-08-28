@@ -320,7 +320,7 @@ CqeStatus CqReportRecv(const CqeQueryInput& cqeQueryInput, rtLogicCqReport_t& cq
         reportNum > AC_SQE_REV_MAX_CNT,
         HCCL_ERROR(
             "report cqe num %u should "
-            "not big than %u",
+            "not be bigger than %u",
             reportNum, AC_SQE_REV_MAX_CNT),
         CqeStatus::kCqeUnknown);
     for (uint32_t idx = 0U; idx < reportNum; ++idx) {

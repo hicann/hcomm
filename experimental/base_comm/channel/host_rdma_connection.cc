@@ -71,7 +71,7 @@ std::string HostRdmaConnection::Describe() const
 HcclResult HostRdmaConnection::CreateQp()
 {
     if (socket_->GetStatus() != Hccl::SocketStatus::OK) {
-        HCCL_WARNING("[HostRdmaConnection::CreateQp] socket status is not ok, please");
+        HCCL_WARNING("[HostRdmaConnection::CreateQp] socket status is not ok, please check socket connection");
         return HCCL_E_AGAIN;
     }
 
@@ -226,7 +226,7 @@ HcclResult HostRdmaConnection::ModifyQp()
     }
 
     if (!rmtQpAttr_.IsValid()) {
-        HCCL_ERROR("[HostRdmaConnection][%s] romate Qp Attr is empty, exchange qp attr first", __func__);
+        HCCL_ERROR("[HostRdmaConnection][%s] remote Qp Attr is empty, exchange qp attr first", __func__);
         return HCCL_E_INTERNAL;
     }
 

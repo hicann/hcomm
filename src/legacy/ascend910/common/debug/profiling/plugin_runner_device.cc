@@ -16,6 +16,6 @@ using namespace hccl;
 
 HcclResult PluginRunner::isStreamCapture([[maybe_unused]] rtStream_t stream, [[maybe_unused]] bool& isCapture) const
 {
-    HCCL_WARNING("[PluginRunner][isStreamCapture]Stream capture does not support!");
+    HCCL_WARNING("[PluginRunner][isStreamCapture]Stream capture is not supported!");
     return HCCL_SUCCESS;
 }

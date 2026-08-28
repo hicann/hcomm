@@ -137,7 +137,7 @@ HcclResult ReduceScatterUnifiedMarch::NotifyNeighborsStart(LINK& prevIntraLink, 
             }
         }
         HCCL_DEBUG(
-            "[ReduceScatterUnifiedMarch][NotifyNeighborsStart] intraRank[%u] switch on [%u]neigbhbors done", intraRank_,
+            "[ReduceScatterUnifiedMarch][NotifyNeighborsStart] intraRank[%u] switch on [%u]neighbors done", intraRank_,
             neighbors);
         return HCCL_SUCCESS;
     }
@@ -165,7 +165,7 @@ HcclResult ReduceScatterUnifiedMarch::NotifyNeighborsStart(LINK& prevIntraLink, 
         }
     }
     HCCL_DEBUG(
-        "[ReduceScatterUnifiedMarch][NotifyNeighborsStart] intraRank[%u] switch on [%u]neigbhbors done", intraRank_,
+        "[ReduceScatterUnifiedMarch][NotifyNeighborsStart] intraRank[%u] switch on [%u]neighbors done", intraRank_,
         neighbors);
     return HCCL_SUCCESS;
 }
@@ -182,7 +182,7 @@ HcclResult ReduceScatterUnifiedMarch::NotifyNeighborsEnd(LINK& prevIntraLink, LI
         }
     }
     HCCL_DEBUG(
-        "[ReduceScatterUnifiedMarch][NotifyNeighborsEnd] intraRank[%u] notifys [%u]neigbhbors reduce done", intraRank_,
+        "[ReduceScatterUnifiedMarch][NotifyNeighborsEnd] intraRank[%u] notifys [%u]neighbors reduce done", intraRank_,
         neighbors);
     return HCCL_SUCCESS;
 }
@@ -205,7 +205,7 @@ HcclResult ReduceScatterUnifiedMarch::DoSerialReduce(
             localBuf.addr = dstMem.ptr();
             localBuf.size = dstMem.size();
             HCCL_DEBUG(
-                "intralRank[%u] slice[%u] offset[%llu] do inlinereduce with remoteBuf[addr[%p], size[%llu]] and "
+                "intraRank[%u] slice[%u] offset[%llu] do inlinereduce with remoteBuf[addr[%p], size[%llu]] and "
                 "localBuf[addr[%p], size[%llu]]",
                 intraRank_, sliceIdx, multRingsUserMemSlice_[0][sliceIdx].offset, remoteBuf.addr, remoteBuf.size,
                 localBuf.addr, localBuf.size);
@@ -220,7 +220,7 @@ HcclResult ReduceScatterUnifiedMarch::DoSerialReduce(
             localBuf.addr = tempMem.ptr();
             localBuf.size = tempMem.size();
             HCCL_DEBUG(
-                "intralRank[%u] slice[%u] offset[%llu] do SDMA read with remoteBuf[addr[%p], size[%llu]] and "
+                "intraRank[%u] slice[%u] offset[%llu] do SDMA read with remoteBuf[addr[%p], size[%llu]] and "
                 "localBuf[addr[%p], size[%llu]]",
                 intraRank_, sliceIdx, multRingsUserMemSlice_[0][sliceIdx].offset, remoteBuf.addr, remoteBuf.size,
                 localBuf.addr, localBuf.size);
@@ -256,8 +256,8 @@ HcclResult ReduceScatterUnifiedMarch::RunSingleSliceRead(u32 ringPrevRank, u32 r
     CHK_RET(DoSerialReduce(
         preRemDMAMemPtr, preDstAddr, blockDataByte_, totalCount_, subStreams_[0], prevIntraLink, preOffsetByte));
     HCCL_INFO(
-        "[ReduceScatterUnifiedMarch][RunSingleSliceRead] intralRank [%u] reduce with ringPrevRank [%u] done",
-        intraRank_, ringPrevRank);
+        "[ReduceScatterUnifiedMarch][RunSingleSliceRead] intraRank [%u] reduce with ringPrevRank [%u] done", intraRank_,
+        ringPrevRank);
 
     // 从后向rank读取数据
     if (neighbors > NEIGHBORS_NUM_ONE) {
@@ -271,7 +271,7 @@ HcclResult ReduceScatterUnifiedMarch::RunSingleSliceRead(u32 ringPrevRank, u32 r
             nextRemDMAMemPtr, nextDstAddr, blockDataByte_, totalCount_, subStreams_[1], nextIntralLink,
             nextOffsetByte));
         HCCL_INFO(
-            "[ReduceScatterUnifiedMarch][RunSingleSliceRead] intralRank [%u]"
+            "[ReduceScatterUnifiedMarch][RunSingleSliceRead] intraRank [%u] "
             "reduce with ringNextRank [%u] done",
             intraRank_, ringNextRank);
     }
@@ -314,7 +314,7 @@ HcclResult ReduceScatterUnifiedMarch::RunHalfSliceRead(u32 ringPrevRank, u32 rin
     CHK_RET(DoSerialReduce(
         preRemDMAMemPtr, preDstAddr, partOneSize, partOneCount, subStreams_[0], prevIntraLink, preOffsetByte));
     HCCL_INFO(
-        "[ReduceScatterUnifiedMarch][RunHalfSliceRead] intralRank [%u] reduce with ringPrevRank [%u] done", intraRank_,
+        "[ReduceScatterUnifiedMarch][RunHalfSliceRead] intraRank [%u] reduce with ringPrevRank [%u] done", intraRank_,
         ringPrevRank);
 
     // 从后向rank读取数据
@@ -331,7 +331,7 @@ HcclResult ReduceScatterUnifiedMarch::RunHalfSliceRead(u32 ringPrevRank, u32 rin
     CHK_RET(DoSerialReduce(
         nextRemDMAMemPtr, nextDstAddr, partTwoSize, partTwoCount, subStreams_[1], nextIntralLink, nextOffsetByte));
     HCCL_INFO(
-        "[ReduceScatterUnifiedMarch][RunHalfSliceRead] intralRank [%u] reduce with ringNextRank [%u] done", intraRank_,
+        "[ReduceScatterUnifiedMarch][RunHalfSliceRead] intraRank [%u] reduce with ringNextRank [%u] done", intraRank_,
         ringNextRank);
 
     /* 4卡及以上的 场景，在最后一步的notifyDone */

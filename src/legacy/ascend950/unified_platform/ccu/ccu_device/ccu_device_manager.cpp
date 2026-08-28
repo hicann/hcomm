@@ -81,7 +81,7 @@ bool CcuIsInited(const int32_t deviceLogicId)
     CHK_PRT_RET(
         (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM),
         HCCL_ERROR(
-            "[CcuIsInited]deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId, MAX_MODULE_DEVICE_NUM),
+            "[CcuIsInited] deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId, MAX_MODULE_DEVICE_NUM),
         false);
     return CcuComponent::GetInstance(deviceLogicId).IsInited();
 }
@@ -93,7 +93,8 @@ HcclResult CcuSetTaskKill(const int32_t deviceLogicId)
     CHK_PRT_RET(
         (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM),
         HCCL_ERROR(
-            "[CcuSetTaskKill]deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId, MAX_MODULE_DEVICE_NUM),
+            "[CcuSetTaskKill] deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
+            MAX_MODULE_DEVICE_NUM),
         HcclResult::HCCL_E_PARA);
     TRY_CATCH_RETURN(return CcuComponent::GetInstance(deviceLogicId).SetTaskKill(););
 }
@@ -105,7 +106,7 @@ HcclResult CcuSetTaskKillDone(const int32_t deviceLogicId)
     CHK_PRT_RET(
         (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM),
         HCCL_ERROR(
-            "[CcuSetTaskKillDone]deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
+            "[CcuSetTaskKillDone] deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
             MAX_MODULE_DEVICE_NUM),
         HcclResult::HCCL_E_PARA);
     TRY_CATCH_RETURN(return CcuComponent::GetInstance(deviceLogicId).SetTaskKillDone(););
@@ -118,7 +119,7 @@ HcclResult CcuCleanTaskKillState(const int32_t deviceLogicId)
     CHK_PRT_RET(
         (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM),
         HCCL_ERROR(
-            "[CcuCleanTaskKillState]deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
+            "[CcuCleanTaskKillState] deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
             MAX_MODULE_DEVICE_NUM),
         HcclResult::HCCL_E_PARA);
     TRY_CATCH_RETURN(return CcuComponent::GetInstance(deviceLogicId).CleanTaskKillState(););
@@ -131,7 +132,7 @@ HcclResult CcuCleanDieCkes(const int32_t deviceLogicId, const uint8_t dieId)
     CHK_PRT_RET(
         (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM),
         HCCL_ERROR(
-            "[CcuCleanDieCkes]deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
+            "[CcuCleanDieCkes] deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
             MAX_MODULE_DEVICE_NUM),
         HcclResult::HCCL_E_PARA);
     TRY_CATCH_RETURN(return CcuComponent::GetInstance(deviceLogicId).CleanDieCkes(dieId););
@@ -247,7 +248,7 @@ HcclResult CheckDieValid(
     CHK_PRT_RET(
         dieId >= MAX_CCU_IODIE_NUM,
         HCCL_ERROR(
-            "[%s] failed, dieId[%u] is invalid, shoudle be in [0-%u), devLogicId[%d].", funcName, dieId,
+            "[%s] failed, dieId[%u] is invalid, should be in [0-%u), devLogicId[%d].", funcName, dieId,
             MAX_CCU_IODIE_NUM, devLogicId),
         HcclResult::HCCL_E_PARA);
 

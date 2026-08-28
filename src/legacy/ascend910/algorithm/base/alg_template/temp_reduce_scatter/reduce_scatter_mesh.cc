@@ -43,7 +43,7 @@ HcclResult ReduceScatterMesh::RunDestRducer(const LINK& link, const Slice& rxSli
 
     HcclResult ret
         = reducerInfo_->run(dispatcher_, link, baseOffset_ + rxSlice.offset, dstMem, dstMem, srcMem, stream_);
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Run][DestRducer]rank[%u] reducer info run failed", interRank_), ret);
+    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[%s]rank[%u] reducer info run failed", __func__, interRank_), ret);
 
     return HCCL_SUCCESS;
 }
@@ -205,7 +205,7 @@ HcclResult ReduceScatterMesh::RunAsync(const u32 rank, const u32 rankSize, const
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
                 "[ReduceScatterMesh][RunAsync]rank[%u] memcpy async from mem[%p] "
-                "to ouputmem[%p] failed",
+                "to outputmem[%p] failed",
                 rank, src.ptr(), outputMem_.ptr()),
             ret);
     }

@@ -300,7 +300,7 @@ HcclResult HcomCreateGroupImplV2(const std::string& group, u32 rankNum, const st
     std::unique_lock<std::mutex> groupParaLock(hcomCommInfoV2.groupParamsLock);
     if (hcomCommInfoV2.hcclGroupMap.find(group) != hcomCommInfoV2.hcclGroupMap.end()) {
         HCCL_ERROR(
-            "[Create][Group]errNo[0x%016llx] group[%s] is already exist", HCOM_ERROR_CODE(HCCL_E_PARA), group.c_str());
+            "[Create][Group]errNo[0x%016llx] group[%s] already exists", HCOM_ERROR_CODE(HCCL_E_PARA), group.c_str());
         return HCCL_E_PARA;
     }
     groupParaLock.unlock();
@@ -355,7 +355,7 @@ HcclResult HcomDestroyGroupImplV2(const std::string& group)
     auto iter = hcomCommInfoV2.hcclGroupMap.find(group);
     if (iter == hcomCommInfoV2.hcclGroupMap.end()) {
         HCCL_ERROR(
-            "[Destroy][Group]errNo[0x%016llx] group[%s] is not exist", HCOM_ERROR_CODE(HCCL_E_PARA), group.c_str());
+            "[Destroy][Group]errNo[0x%016llx] group[%s] does not exist", HCOM_ERROR_CODE(HCCL_E_PARA), group.c_str());
         return HCCL_E_PARA;
     }
     hcomCommInfoV2.hcclGroupMap.erase(group);
@@ -807,7 +807,7 @@ HcclResult CommManager::SetCommAcceleratorV2(Hccl::HcclCommunicator* communicato
     std::unique_lock<std::mutex> lock(opbasedCommInfoV2.groupParamsLock);
     if ((hcclAccelerator == HcclAccelerator::CCU_MS || hcclAccelerator == HcclAccelerator::CCU_SCHED)
         && !isCcuAvailable) {
-        HCCL_WARNING("CCU not support reuse in single device multi-precess services, accelerator fallback AICPU_TS");
+        HCCL_WARNING("CCU not support reuse in single device multi-process services, accelerator fallback AICPU_TS");
         hcclAccelerator = HcclAccelerator::AICPU_TS;
     }
     bool isMsAvailable = opbasedCommInfoV2.ccuStatus.IsMsAvailable(communicator->GetId());

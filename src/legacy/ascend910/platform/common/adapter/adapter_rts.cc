@@ -145,7 +145,7 @@ HcclResult hrtGetHcclV2Support([[maybe_unused]] bool* isSupport)
     return HcclResult::HCCL_SUCCESS;
 
 #endif
-    HCCL_WARNING("[%s] Does does not support this interface.", __func__);
+    HCCL_WARNING("[%s] Does not support this interface.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
@@ -326,7 +326,7 @@ HcclResult __hrtGetDevice(s32* deviceLogicId)
         return HCCL_SUCCESS;
     }
     *deviceLogicId = 0;
-    HCCL_WARNING("[hrtGetDevice]Does does not support this interface.");
+    HCCL_WARNING("[hrtGetDevice]Does not support this interface.");
     return HCCL_E_NOT_SUPPORT;
 #endif
 }
@@ -2539,7 +2539,7 @@ HcclResult hrtRDMADBSend(uint32_t dbindex, uint64_t dbinfo, rtStream_t stream)
         ret != RT_ERROR_NONE,
         HCCL_ERROR(
             "[rtRDMADBSend]errNo[0x%016llx] rt rdma send fail, "
-            "return[%d]. para: dbindex[%u]dbinfo[%llu].",
+            "return[%d]. para: dbindex[%u] dbinfo[%llu].",
             HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret, dbindex, dbinfo),
         HCCL_E_RUNTIME);
     return HCCL_SUCCESS;
@@ -2908,7 +2908,7 @@ HcclResult hrtGetEventID([[maybe_unused]] rtEvent_t event, [[maybe_unused]] uint
     CHK_PRT_RET(
         ret != ACL_SUCCESS,
         HCCL_ERROR(
-            "[aclrtGetEventId]rtGet EventID failed event:%p, eventId:%u"
+            "[aclrtGetEventId]rtGet EventID failed event:%p, eventId:%u "
             "return value[%d].",
             event, *eventId, ret),
         HCCL_E_RUNTIME);

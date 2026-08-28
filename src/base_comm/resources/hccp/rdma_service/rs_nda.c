@@ -714,7 +714,7 @@ RS_ATTRI_VISI_DEF int RsNdaQpCreate(unsigned int phyId, unsigned int rdevIndex, 
 
     ret = RsNdaQpCreateEx(qpCb, &qpInitAttrEx, info);
     if (ret != 0) {
-        hccp_err("create nda qp create extend failed, ret:%d", ret);
+        hccp_err("create nda qp extend failed, ret:%d", ret);
         goto create_qp_err;
     }
 

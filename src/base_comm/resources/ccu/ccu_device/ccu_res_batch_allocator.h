@@ -69,7 +69,7 @@ private:
         const std::vector<BlockInfo>& GetBlocks() const { return blocks_; }
 
     private:
-        uint32_t stragtegy_{0};
+        uint32_t strategy_{0};
         std::array<bool, CCU_MAX_IODIE_NUM> dieEnableFlags_;
         std::vector<BlockInfo> blocks_;
     };

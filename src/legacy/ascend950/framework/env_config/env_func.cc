@@ -279,7 +279,7 @@ void ConvertUnitQpThreshold(u32& multiQpThreshold)
 {
     HCCL_RUN_INFO(
         "[Init][TransferUnitQpThreshold]Env config HCCL_MULTI_QP_THRESHOLD is %u[KB], converted to %u[B] for "
-        "subsequant use.",
+        "subsequent use.",
         multiQpThreshold, multiQpThreshold * BYTES_PER_KB);
     multiQpThreshold *= BYTES_PER_KB;
 }
@@ -781,7 +781,7 @@ std::string CastCannVersion(const std::string& cannEnv)
         return cannVersion;
     }
 
-    HCCL_INFO("cannot found version file in %s.", cannEnv.c_str());
+    HCCL_INFO("cannot find the version file in %s.", cannEnv.c_str());
     return "";
 }
 
@@ -809,7 +809,7 @@ void CastDfsConfigParseTaskExceptionEnable(bool& taskExceptionEnable, const std:
 {
     if (configValue == "off") {
         taskExceptionEnable = false;
-        HCCL_WARNING("env[HCCL_DFS_CONFIG] task_exception was configed to [%s]", configValue.c_str());
+        HCCL_WARNING("env[HCCL_DFS_CONFIG] task_exception was configured to [%s]", configValue.c_str());
     } else if (configValue == "on") {
         taskExceptionEnable = true;
     } else {
@@ -822,7 +822,7 @@ void CastDfsConfigParseClusterHeartBeatEnable(bool& clusterHeartBeatEnable, cons
 {
     if (configValue == "off") {
         clusterHeartBeatEnable = false;
-        HCCL_WARNING("env[HCCL_DFS_CONFIG] cluster_heartbeat was configed to [%s]", configValue.c_str());
+        HCCL_WARNING("env[HCCL_DFS_CONFIG] cluster_heartbeat was configured to [%s]", configValue.c_str());
     } else if (configValue == "on") {
         clusterHeartBeatEnable = true;
     } else {

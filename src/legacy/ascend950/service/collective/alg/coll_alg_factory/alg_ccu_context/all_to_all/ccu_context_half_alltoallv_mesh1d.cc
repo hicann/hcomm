@@ -161,7 +161,7 @@ void CcuContextHalfAllToAllVMesh1D::MissionSync(uint32_t signalIndex)
     const uint32_t MISSION_NUM = 2;
     if (signalIndex > 1) {
         THROW<InvalidParamsException>(
-            StringFormat("[CcuContextHalfAllToAllVMesh1D] Unexpected SignalInex[%u]", signalIndex));
+            StringFormat("[CcuContextHalfAllToAllVMesh1D] Unexpected SignalIndex[%u]", signalIndex));
     }
     LocalCtxPost(anoMiSignal1_, 1 << (missionId_ + signalIndex * MISSION_NUM));
     LocalWait(locMiSignal1_, 1 << (1 - missionId_ + signalIndex * MISSION_NUM));

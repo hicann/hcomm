@@ -39,7 +39,7 @@ intptr_t TraceCreate(const char* objName)
     traHandle = AtraceCreateWithAttr(TRACER_TYPE_SCHEDULE, objName, &hcclAtraceAttr);
     if (traHandle == TRACE_INVALID_HANDLE && CheckLogTime(lastLogTimeTrace)) {
         HCCL_ERROR(
-            "[TraceCrate]errNo[0x%016llx] rt trace create failed. return[%d]",
+            "[TraceCreate]errNo[0x%016llx] rt trace create failed. return[%d]",
             HCCL_ERROR_CODE(HcclResult::HCCL_E_INTERNAL), traHandle);
     }
     return traHandle;

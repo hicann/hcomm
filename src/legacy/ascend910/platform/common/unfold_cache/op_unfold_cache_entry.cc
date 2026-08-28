@@ -625,7 +625,7 @@ OpUnfoldCacheEntry::UpdateRefreshAddrInfoForAlltoallv(const uint32_t curRank, Al
                     CHK_PRT_RET(
                         sqeSrcAddr != localUserInputEndAddr,
                         HCCL_ERROR(
-                            "[OpUnfoldCacheEntry][UpdateRefreshAddrInfoForAlltoallv] sqeSrcAddr[0x%016llx]"
+                            "[OpUnfoldCacheEntry][UpdateRefreshAddrInfoForAlltoallv] sqeSrcAddr[0x%016llx] "
                             "!= localUserInputEndAddr[0x%016llx]",
                             sqeSrcAddr, localUserInputEndAddr),
                         HCCL_E_INTERNAL);
@@ -648,7 +648,7 @@ OpUnfoldCacheEntry::UpdateRefreshAddrInfoForAlltoallv(const uint32_t curRank, Al
                     CHK_PRT_RET(
                         sqeDstAddr != localUserOutputEndAddr,
                         HCCL_ERROR(
-                            "[OpUnfoldCacheEntry][UpdateRefreshAddrInfoForAlltoallv] sqeDstAddr[0x%016llx]"
+                            "[OpUnfoldCacheEntry][UpdateRefreshAddrInfoForAlltoallv] sqeDstAddr[0x%016llx] "
                             "!= localUserOutputEndAddr[0x%016llx]",
                             sqeDstAddr, localUserOutputEndAddr),
                         HCCL_E_INTERNAL);
@@ -1033,8 +1033,8 @@ HcclResult OpUnfoldCacheEntry::UpdateAndGetSqeArray(
                 CHK_PRT_RET(
                     !isAlltoallv,
                     HCCL_ERROR(
-                        "[OpUnfoldCacheEntry][UpdateAndGetSqeArray] cache-memcpy placeholder"
-                        "should be not cached for non-alltoallv op, sqeType[%u] sqeIdx[%u]",
+                        "[OpUnfoldCacheEntry][UpdateAndGetSqeArray] cache-memcpy placeholder "
+                        "should not be cached for non-alltoallv op, sqeType[%u] sqeIdx[%u]",
                         sqeType, sqeIdx),
                     HCCL_E_INTERNAL);
 
@@ -1053,8 +1053,8 @@ HcclResult OpUnfoldCacheEntry::UpdateAndGetSqeArray(
                 CHK_PRT_RET(
                     !isAlltoallv,
                     HCCL_ERROR(
-                        "[OpUnfoldCacheEntry][UpdateAndGetSqeArray] cache-notify/write/memcpy-record placeholder"
-                        "should be not cached for non-alltoallv op, sqeType[%u] sqeIdx[%u]",
+                        "[OpUnfoldCacheEntry][UpdateAndGetSqeArray] cache-notify/write/memcpy-record placeholder "
+                        "should not be cached for non-alltoallv op, sqeType[%u] sqeIdx[%u]",
                         sqeType, sqeIdx),
                     HCCL_E_INTERNAL);
 

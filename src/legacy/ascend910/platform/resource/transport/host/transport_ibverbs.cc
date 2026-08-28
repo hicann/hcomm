@@ -2936,7 +2936,7 @@ void TransportIbverbs::ProcessCqeInfo(
                 std::make_pair(ptr, CqeInfo(infolist[i].time, infolist[i].status, it.first->second->GetRemoteIp())));
             cqeErrQpn_ = infolist[i].qpn;
         } else {
-            HCCL_RUN_WARNING("[GetTransportErrorCqe]get err failed, transport is not find.");
+            HCCL_RUN_WARNING("[GetTransportErrorCqe]get err failed, transport was not found.");
         }
     }
     return;

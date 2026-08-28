@@ -1648,7 +1648,7 @@ STATIC int RaCheckParam(char *recvBuf, int rcvBufLen, char **sendBuf, int *sndBu
 
     *paramCheckResult = 1;
     if (rcvBufLen < (int)sizeof(struct MsgHead)) { // check rcv_buf_len
-        hccp_err("rcv_buf_len[%d] form ra is invalid", rcvBufLen);
+        hccp_err("rcv_buf_len[%d] from ra is invalid", rcvBufLen);
         ret = OpMsgErr(sendBuf, recvMsgHead, sndBufLen, RECV_BUF_LEN_INVALID);
         return ret;
     }
@@ -1691,7 +1691,7 @@ int RaHandle(struct RaHdcOpSec *opSec, char *recvBuf, int rcvBufLen, char **send
 
     ret = RaCheckParam(recvBuf, rcvBufLen, sendBuf, sndBufLen, &paramCheckRet);
     CHK_PRT_RETURN(paramCheckRet != 0 || ret != 0,
-        hccp_err("ra param check failed. param check ret:[%d]"
+        hccp_err("ra param check failed. param check ret:[%d] "
                  "function call ret:[%d]",
             paramCheckRet, ret),
         ret);

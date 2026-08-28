@@ -137,7 +137,7 @@ HcclResult GlobalMemRegMgr::DeReg(void* memRecordHandle)
     const auto it = memRecordSet_.find(*memRecordPtr);
     if (it == memRecordSet_.cend()) {
         // 找不到记录报错退出
-        HCCL_ERROR("[GlobalMemRegMgr][DeReg] Cannot found the corresponding record of memory[%s].", memInfo.c_str());
+        HCCL_ERROR("[GlobalMemRegMgr][DeReg] Cannot find the corresponding record of memory[%s].", memInfo.c_str());
         return HCCL_E_NOT_FOUND;
     }
 
@@ -146,7 +146,7 @@ HcclResult GlobalMemRegMgr::DeReg(void* memRecordHandle)
         // 该内存还与一个或多个通信域绑定，报错并打印绑定的信息
         const auto boundComm = memRecordPtr->GetBoundComm();
         HCCL_ERROR(
-            "[GlobalMemRegMgr][DeReg] Cannot deregistor memory[%s] since it is still bound to comm(s) listed below:",
+            "[GlobalMemRegMgr][DeReg] Cannot deregister memory[%s] since it is still bound to comm(s) listed below:",
             memInfo.c_str());
 
         for (const auto& commIdentifier : boundComm) {
@@ -298,7 +298,7 @@ GlobalMemRegMgr::GetNetDevCtx(NicType nicType, const HcclIpAddress& ipAddr, u32 
     HcclNetDevCtx tempNetDevCtx;
     if (isOneSidedTaskAndBackupInitA3) {
         HCCL_INFO(
-            "[GlobalMemRegMgr::GetNetDevCtx] OneSeidedService backupInit: backupDevPhyId[%d], backupDevLogicId[%d], "
+            "[GlobalMemRegMgr::GetNetDevCtx] OneSidedService backupInit: backupDevPhyId[%d], backupDevLogicId[%d], "
             "localIp[%s], backupIp[%s]",
             backupDevPhyId, backupDevLogicId, localIpList[0].GetReadableAddress(), ipAddr.GetReadableAddress());
         CHK_RET(HcclNetInit(NICDeployment::NIC_DEPLOYMENT_DEVICE, backupDevPhyId, backupDevLogicId, false, true));

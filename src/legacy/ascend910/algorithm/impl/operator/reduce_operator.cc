@@ -20,7 +20,7 @@ ReduceOperator::ReduceOperator(
     if (algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NHR || algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NHR_V1
         || algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_NB
         || algType_.algoLevel1 == AlgTypeLevel1::ALG_LEVEL1_PIPELINE) {
-        HCCL_WARNING("[ReduceOperator][ReduceOperator] nonuniform-hierachical-ring and nonuniform-bruck and pipeline "
+        HCCL_WARNING("[ReduceOperator][ReduceOperator] nonuniform-hierarchical-ring and nonuniform-bruck and pipeline "
                      "algorithms do not support Reduce yet, reset algo to halving-doubling");
         algType_.algoLevel1 = AlgTypeLevel1::ALG_LEVEL1_HD;
     }

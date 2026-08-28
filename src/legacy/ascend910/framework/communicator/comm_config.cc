@@ -488,7 +488,7 @@ HcclResult CommConfig::SetConfigHcclRetryEnable(const CommConfigHandle& config)
     retryConfig.erase(std::remove(retryConfig.begin(), retryConfig.end(), ' '), retryConfig.end());
     if (retryConfig.empty()) {
         HCCL_WARNING(
-            "[%s] Hccl retry config is empty. The retryEnable of all levels is"
+            "[%s] Hccl retry config is empty. The retryEnable of all levels is "
             "set by environment variable.",
             __func__);
         return HCCL_SUCCESS;

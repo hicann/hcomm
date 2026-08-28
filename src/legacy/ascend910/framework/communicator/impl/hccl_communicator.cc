@@ -685,7 +685,7 @@ ErrorMessageReport HcclCommunicator::GetAicpuTaskException()
         CHK_PRT_RET(
             isInvalidComm_,
             HCCL_ERROR(
-                "[HcclCommunicator][%s] comm[%s], rank[%u], devId[%d], snapshot recoverying, "
+                "[HcclCommunicator][%s] comm[%s], rank[%u], devId[%d], snapshot recovering, "
                 "this comm is invalid.",
                 __func__, identifier_.c_str(), userRank_, deviceLogicId_),
             errorMessage);
@@ -704,7 +704,7 @@ HcclResult HcclCommunicator::UnRegisterBackGroundThread()
     CHK_PRT_RET(
         isInvalidComm_,
         HCCL_ERROR(
-            "[HcclCommunicator][%s] comm[%s], rank[%u], devId[%d], snapshot recoverying, "
+            "[HcclCommunicator][%s] comm[%s], rank[%u], devId[%d], snapshot recovering, "
             "this comm is invalid.",
             __func__, identifier_.c_str(), userRank_, deviceLogicId_),
         HCCL_E_UNAVAIL);
@@ -752,7 +752,7 @@ HcclResult HcclCommunicator::DestroyAicpuComm()
     CHK_PRT_RET(
         isInvalidComm_,
         HCCL_ERROR(
-            "[HcclCommunicator][%s] comm[%s], rank[%u], devId[%d], snapshot recoverying, "
+            "[HcclCommunicator][%s] comm[%s], rank[%u], devId[%d], snapshot recovering, "
             "this comm is invalid.",
             __func__, identifier_.c_str(), userRank_, deviceLogicId_),
         HCCL_E_UNAVAIL);
@@ -1044,7 +1044,7 @@ HcclResult HcclCommunicator::Suspend()
     CHK_PRT_RET(
         isInvalidComm_,
         HCCL_ERROR(
-            "[HcclCommunicator][%s] comm[%s], rank[%u], devId[%d], snapshot recoverying, "
+            "[HcclCommunicator][%s] comm[%s], rank[%u], devId[%d], snapshot recovering, "
             "this comm is invalid.",
             __func__, identifier_.c_str(), userRank_, deviceLogicId_),
         HCCL_E_UNAVAIL);
@@ -1102,7 +1102,7 @@ HcclResult HcclCommunicator::StopExec()
     CHK_PRT_RET(
         isInvalidComm_,
         HCCL_ERROR(
-            "[HcclCommunicator][%s] comm[%s], rank[%u], devId[%d], snapshot recoverying, "
+            "[HcclCommunicator][%s] comm[%s], rank[%u], devId[%d], snapshot recovering, "
             "this comm is invalid.",
             __func__, identifier_.c_str(), userRank_, deviceLogicId_),
         HCCL_E_UNAVAIL);
@@ -1865,7 +1865,7 @@ HcclResult HcclCommunicator::SetTransportStatusImpl(
            && remoteRankPortMap.find(remoteRank)->second == isUseDefault);
     bool isQpnSatify = (opId.bsrInfo[HCCL_RECV].tpQpn != 0) && (opId.bsrInfo[HCCL_SEND].tpQpn != 0);
     HCCL_INFO(
-        "[SetBsrTransportStatusImpl]SendremoteRank[%u], RecvremoteRank[%u], isUseDefault[%d], isQpnSatify[%d], "
+        "[SetBsrTransportStatusImpl]SendremoteRank[%u], RecvremoteRank[%u], isUseDefault[%d], isQpnSatisfy[%d], "
         "isBsrPortSatisfy[%d]",
         sendRemoteRank, recvRemoteRank, isUseDefault, isQpnSatify, isBsrPortSatisfy);
     if (opId.opType == HcclCMDType::HCCL_CMD_BATCH_SEND_RECV && sendRemoteRank == recvRemoteRank && isBsrPortSatisfy
@@ -1911,7 +1911,7 @@ HcclResult HcclCommunicator::SetTransportStatusImplForChange(
                                                                         opId.bsrInfo[HCCL_RECV].detRank;
     bool isQpnSatify = (opId.bsrInfo[HCCL_RECV].tpQpn != 0) && (opId.bsrInfo[HCCL_SEND].tpQpn != 0);
     HCCL_INFO(
-        "[SetBsrTransportStatusImpl]SendremoteRank[%u], RecvremoteRank[%u], isUseDefault[%d], isQpnSatify[%d]",
+        "[SetBsrTransportStatusImpl]SendremoteRank[%u], RecvremoteRank[%u], isUseDefault[%d], isQpnSatisfy[%d]",
         sendRemoteRank, recvRemoteRank, isUseDefault, isQpnSatify);
     if (opId.opType == HcclCMDType::HCCL_CMD_BATCH_SEND_RECV && sendRemoteRank == recvRemoteRank && isQpnSatify) {
         CHK_RET(SetBsrTransportStatusImplforchange(

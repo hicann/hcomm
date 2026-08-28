@@ -111,7 +111,7 @@ HcclResult AlltoallvContinuousPipeline::Prepare(
     workMode_ = workMode;
     CHK_PRT_RET(
         workMode_ != HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE,
-        HCCL_ERROR("[AlltoallvContinuousPipeline] This template support opbase mode only."), HCCL_E_INTERNAL);
+        HCCL_ERROR("[AlltoallvContinuousPipeline] This template supports opbase mode only."), HCCL_E_INTERNAL);
 
     // 拓扑信息
     CHK_RET(PrepareTopoInfo(userRank, level0CommInfo, level1CommInfo));
@@ -228,7 +228,7 @@ HcclResult AlltoallvContinuousPipeline::PartitionSubStreamsAndNotifies(
             || signalSubToMain.size() < totalSubstreamSize,
         HCCL_ERROR(
             "[AlltoallvContinuousPipeline] subStreams size [%u] or signalMainToSub size [%u] or signalSubToMain "
-            "size [%u] is small than totalSubstreamSize [%u].",
+            "size [%u] is smaller than totalSubstreamSize [%u].",
             subStreams.size(), signalMainToSub.size(), signalSubToMain.size(), totalSubstreamSize),
         HCCL_E_PARA);
 

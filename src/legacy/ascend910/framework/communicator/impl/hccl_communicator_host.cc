@@ -354,7 +354,7 @@ HcclCommunicator::~HcclCommunicator()
         HcclResult ret = hrtEventDestroy(eventInfo);
         if (ret != HCCL_SUCCESS) {
             HCCL_ERROR(
-                "[Destroy][AicpuNoIpcEvnet]errNo[0x%016llx] rt event destroy fail, "
+                "[Destroy][AicpuNoIpcEvent]errNo[0x%016llx] rt event destroy fail, "
                 "return[%d].",
                 HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret);
         }
@@ -487,7 +487,7 @@ HcclResult HcclCommunicator::LoadAICPUKernel(void)
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
-                "[LoadAICPUKernel]errNo[0x%016llx]load aicpu file fail, path[%s] optionType[%u]"
+                "[LoadAICPUKernel]errNo[0x%016llx]load aicpu file fail, path[%s] optionType[%u] "
                 "cpuKernelMode[%u].",
                 ret, jsonPath.c_str(), ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE, 0),
             ret);
@@ -711,7 +711,7 @@ bool HcclCommunicator::IsSupportSymmetricMemory(HcclCMDType opType, OpParam& opP
         HCCL_INFO("[%s] deviceType:%d not support symmetric memory", __func__, deviceType_), false);
     CHK_PRT_RET(
         superPodNum_ == 1 && serverNum_ > 1 && GetExternalInputInterHccsDisable(),
-        HCCL_INFO("[%s] mutilSever use roce not support symmetric memory", __func__), false);
+        HCCL_INFO("[%s] multi-server uses roce, not support symmetric memory", __func__), false);
 
     // 判断拓扑逻辑是否支持symmetric memory
     // 每个节点只有一张卡或节点间非对称场景不支持对称内存
@@ -1305,7 +1305,7 @@ HcclResult HcclCommunicator::InitPara()
 bool HcclCommunicator::IsStandardCard()
 {
     if (Is310P3Common(isHaveCpuRank_, deviceType_)) {
-        HCCL_INFO("The current device just support this StandardCard case.");
+        HCCL_INFO("The current device only supports the StandardCard case.");
         return true;
     }
 
@@ -2167,7 +2167,7 @@ HcclResult HcclCommunicator::GetGroupRanksInfo(const std::vector<u32>& groupRank
         tmpRankInfoList[groupRanks[index]].userRank = index;
         ranksInfo.push_back(tmpRankInfoList[groupRanks[index]]);
         HCCL_DEBUG(
-            "index: %d userRank: %dhost ip: %s host port: %u dev phy id: %d serverIdx:%d", index,
+            "index: %d userRank: %d host ip: %s host port: %u dev phy id: %d serverIdx:%d", index,
             tmpRankInfoList[groupRanks[index]].userRank, tmpRankInfoList[groupRanks[index]].hostIp.GetReadableAddress(),
             tmpRankInfoList[groupRanks[index]].hostPort, tmpRankInfoList[groupRanks[index]].devicePhyId,
             tmpRankInfoList[groupRanks[index]].serverIdx);
@@ -4576,7 +4576,7 @@ HcclResult HcclCommunicator::ExecOp(HcclCMDType opType, OpParam& opParam, bool i
     CHK_PRT_RET(
         isInvalidComm_,
         HCCL_ERROR(
-            "[HcclCommunicator][%s] comm[%s], rank[%u], devId[%d], snapshot recoverying, "
+            "[HcclCommunicator][%s] comm[%s], rank[%u], devId[%d], snapshot recovering, "
             "this comm is invalid, no operator is allowed to execute.",
             __func__, identifier_.c_str(), userRank_, deviceLogicId_),
         HCCL_E_UNAVAIL);
@@ -4584,7 +4584,7 @@ HcclResult HcclCommunicator::ExecOp(HcclCMDType opType, OpParam& opParam, bool i
     if (retryEnable_ && needWarnAboutReduceProdInt64_ && IsReduceWithInt64OrProd(opType, opParam)) {
         HCCL_RUN_WARNING(
             "[HcclCommunicator][%s]comm[%s], opType[%d], reduceType[%d]. Reduce operators with prod operation or int64 "
-            "data type. This operator type unsupportd for AICPU mode, retry disabled",
+            "data type. This operator type is unsupported for AICPU mode, retry disabled",
             __func__, identifier_.c_str(), opType, opParam.reduceType);
         needWarnAboutReduceProdInt64_ = false;
     }
@@ -4646,7 +4646,7 @@ HcclResult HcclCommunicator::ExecOp(HcclCMDType opType, OpParam& opParam, bool i
     if (isOnlyAiv_ && !algDesc.isAivMode) {
         std::string opTypeName = GetCMDTypeEnumStr(opType);
         HCCL_ERROR(
-            "[HcclCommunicator][ExecOp] opType[%s] currently do not select aiv mode, aiv only not support.",
+            "[HcclCommunicator][ExecOp] opType[%s] does not select aiv mode, aiv only mode is not supported.",
             opTypeName.c_str());
         return HCCL_E_NOT_SUPPORT;
     }
@@ -4920,7 +4920,7 @@ HcclResult HcclCommunicator::ExecOpAlltoAll(HcclCMDType opType, OpParam& opParam
     CHK_PRT_RET(
         isInvalidComm_,
         HCCL_ERROR(
-            "[HcclCommunicator][%s] comm[%s], rank[%u], devId[%d], snapshot recoverying, "
+            "[HcclCommunicator][%s] comm[%s], rank[%u], devId[%d], snapshot recovering, "
             "this comm is invalid, no operator is allowed to execute.",
             __func__, identifier_.c_str(), userRank_, deviceLogicId_),
         HCCL_E_UNAVAIL);
@@ -5006,7 +5006,7 @@ HcclResult HcclCommunicator::ExecOpAlltoAll(HcclCMDType opType, OpParam& opParam
     if (isOnlyAiv_ && !algDesc.isAivMode) {
         std::string opTypeName = GetCMDTypeEnumStr(opType);
         HCCL_ERROR(
-            "[HcclCommunicator][ExecOp] opType[%s] currently do not select aiv mode, aiv only not support.",
+            "[HcclCommunicator][ExecOp] opType[%s] does not select aiv mode, aiv only mode is not supported.",
             opTypeName.c_str());
         return HCCL_E_NOT_SUPPORT;
     }
@@ -5422,7 +5422,7 @@ HcclResult HcclCommunicator::BuildOpLocalResParam(const AlgResourceResponse& alg
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[HcclCommunicator][BuildOpLocalResParam]get aicpu notify 0 error,"
+            "[HcclCommunicator][BuildOpLocalResParam]get aicpu notify 0 error, "
             "errNo[0x%016llx]",
             HCCL_ERROR_CODE(ret)),
         ret);
@@ -5432,7 +5432,7 @@ HcclResult HcclCommunicator::BuildOpLocalResParam(const AlgResourceResponse& alg
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[HcclCommunicator][BuildOpLocalResParam]get aicpu notify 1 error,errNo[0x%016llx]", HCCL_ERROR_CODE(ret)),
+            "[HcclCommunicator][BuildOpLocalResParam]get aicpu notify 1 error, errNo[0x%016llx]", HCCL_ERROR_CODE(ret)),
         ret);
 
     if (opMainStream_.ptr() == nullptr) {
@@ -5660,7 +5660,7 @@ template <typename T>
 HcclResult HcclCommunicator::CopyVectorToDeviceMem(const u64 len, DeviceMem& dstDeviceMem, const std::vector<T>& srcVec)
 {
     CHK_PRT_RET(
-        len == 0, HCCL_INFO("[HcclCommunicator][CopyVectorToDeviceMem] space size is zero. not need to malloc memory"),
+        len == 0, HCCL_INFO("[HcclCommunicator][CopyVectorToDeviceMem] space size is zero, no need to malloc memory"),
         HCCL_SUCCESS);
 
     CHK_PRT_RET(
@@ -5978,7 +5978,7 @@ HcclResult HcclCommunicator::BuildOpRemoteLinkP2pResParam(
     }
     if (linkp2p->localIpcSignal[0].resId != INVALID_U64) {
         HCCL_INFO(
-            "[%s]the linkP2p is existed, no need to refresh transport resource, resId[%llu]", __func__,
+            "[%s]the linkP2p already exists, no need to refresh transport resource, resId[%llu]", __func__,
             linkp2p->localIpcSignal[0].resId);
         return HCCL_SUCCESS;
     }
@@ -6025,7 +6025,7 @@ HcclResult HcclCommunicator::BuildOpRemoteLinkRoceResParam(
                                    &(tagRemoteRes.tagRemoteResPtr->linkRoce[AICPU_RETRY_LINKROCE_DEFAULT + iter]);
     if (!isRetry && linkRoce->localNotifyList != 0) {
         HCCL_INFO(
-            "[%s]the linkRoce is existed, no need to refresh transport resource, localNotifyListPtr[%p], iter[%u]",
+            "[%s]the linkRoce already exists, no need to refresh transport resource, localNotifyListPtr[%p], iter[%u]",
             __func__, reinterpret_cast<void*>(linkRoce->localNotifyList), iter);
         return HCCL_SUCCESS;
     }
@@ -7359,7 +7359,7 @@ HcclResult HcclCommunicator::CreateCommResource(
     if ((deviceType_ != DevType::DEV_TYPE_910_93 && moduleNum_ > 1 && !isA2MC2MultiServer_)
         || (deviceType_ == DevType::DEV_TYPE_910_93 && superPodNum_ > 1)) {
         HCCL_ERROR(
-            "[HcclCommunicator][CommResource]MC2 does not support in the current scenario, "
+            "[HcclCommunicator][CommResource]MC2 is not supported in the current scenario, "
             "device type[%d] moduleNum[%d] serverNum[%d] superPodNum[%d], isMC2MultiServer[%d].",
             deviceType_, moduleNum_, serverNum_, superPodNum_, isA2MC2MultiServer_);
         return HCCL_E_NOT_SUPPORT;
@@ -8715,7 +8715,7 @@ HcclResult HcclCommunicator::CreateDeviceCommContext(u64 size, DeviceMem& buffer
 
     CHK_PRT_RET(
         (size > ULONG_MAX),
-        HCCL_ERROR("[Create][DeviceCommContext]device commContext size %llu is large than ULONG_MAX", size),
+        HCCL_ERROR("[Create][DeviceCommContext]device commContext size %llu is larger than ULONG_MAX", size),
         HCCL_E_PARA);
 
     if (!buffer.ptr()) {
@@ -9131,7 +9131,7 @@ HcclResult HcclCommunicator::SwitchNic(
         !IsEnableBackupLink(),
         HCCL_RUN_WARNING(
             "[HcclCommunicator][%s]Backup link is not enabled, "
-            "switch nic will not be prorocessed, comm identifier[%s], rank[%u], devType[%u], opretry enable[%u], "
+            "switch nic will not be processed, comm identifier[%s], rank[%u], devType[%u], opretry enable[%u], "
             "backup ip valid[%u], roce enable[%u].",
             __func__, identifier_.c_str(), userRank_, deviceType_,
             GetAicpuUnfoldConfig() && commConfig_.GetConfigInterSuperPodRetryEnable(), !devBackupIpAddr_[0].IsInvalid(),
@@ -9247,7 +9247,7 @@ HcclResult GetCannPath(const char* binPath, std::string& cannPath)
 
     ret = GetKeyWordPath(libraryPath, "/hccl", tmpPath);
     CHK_PRT_RET(
-        ret != HCCL_SUCCESS, HCCL_ERROR("[GetCannPath]cannot found version file in %s.", libraryPath.c_str()),
+        ret != HCCL_SUCCESS, HCCL_ERROR("[GetCannPath]cannot find the version file in %s.", libraryPath.c_str()),
         HCCL_E_PARA);
     tmpPath += binPath;
     cannPath = tmpPath;
@@ -9884,7 +9884,7 @@ bool HcclCommunicator::EnableAicpuUnfold(bool isCapture)
 aclrtBinHandle HcclCommunicator::GetBinHandle()
 {
     if (binHandle_ == nullptr) {
-        HCCL_ERROR("[HcclCommunicator][GetBinHandle] GetBinHandle binHandle failed.binHandle is nullptr");
+        HCCL_ERROR("[HcclCommunicator][GetBinHandle] GetBinHandle binHandle failed. binHandle is nullptr");
         return nullptr;
     }
     return binHandle_;

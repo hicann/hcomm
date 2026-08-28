@@ -106,7 +106,7 @@ HcclResult InitEnvVarParam()
     // 解析server内通信方式
     ret = ParseIntraLinkType();
     std::string userInput = "PCIE enable: " + std::string(GET_ENV(MM_ENV_HCCL_INTRA_PCIE_ENABLE))
-                            + "or ROCE enable:" + std::string(GET_ENV(MM_ENV_HCCL_INTRA_ROCE_ENABLE));
+                            + " or ROCE enable:" + std::string(GET_ENV(MM_ENV_HCCL_INTRA_ROCE_ENABLE));
     RPT_ENV_ERR(
         ret != HCCL_SUCCESS, "EI0001", std::vector<std::string>({"value", "env", "expect"}),
         std::vector<std::string>(
@@ -1002,7 +1002,7 @@ HcclResult SetHccLExecTimeOut(const char* execTimeOutStr, const HcclExecTimeoutS
         CHK_PRT_RET(
             flag,
             HCCL_ERROR(
-                "[%s][%s]ExecTimeOut[%s]s is invalid. except: [0, %d]", LOG_KEYWORDS_INIT_GROUP.c_str(),
+                "[%s][%s]ExecTimeOut[%s]s is invalid. expect: [0, %d]", LOG_KEYWORDS_INIT_GROUP.c_str(),
                 LOG_KEYWORDS_ENV_CONFIG.c_str(), execTimeOutStr, HCCL_EXEC_TIME_OUT_S_910_93),
             HCCL_E_PARA);
     } else {
@@ -1016,7 +1016,7 @@ HcclResult SetHccLExecTimeOut(const char* execTimeOutStr, const HcclExecTimeoutS
         CHK_PRT_RET(
             flag,
             HCCL_ERROR(
-                "[%s][%s]ExecTimeOut[%s]s is invalid. except: [1, %d]", LOG_KEYWORDS_INIT_GROUP.c_str(),
+                "[%s][%s]ExecTimeOut[%s]s is invalid. expect: [1, %d]", LOG_KEYWORDS_INIT_GROUP.c_str(),
                 LOG_KEYWORDS_ENV_CONFIG.c_str(), execTimeOutStr, HCCL_EXEC_TIME_OUT_S),
             HCCL_E_PARA);
         s32 intPart = static_cast<s32>(execTimeOut / HCCL_INTEVAL_EXEC_TIME_OUT_S);
@@ -1181,7 +1181,7 @@ HcclResult ParseRDMATrafficClass()
     CHK_PRT_RET(
         (ret != HCCL_SUCCESS || rdmaTrafficClass > HCCL_RDMA_TC_MAX),
         HCCL_ERROR(
-            "[Parse][TrafficClass]HCCL_RDMA_TC[%s] is invalid. except: [%u, %u]", trafficClassEnv.c_str(),
+            "[Parse][TrafficClass]HCCL_RDMA_TC[%s] is invalid. expect: [%u, %u]", trafficClassEnv.c_str(),
             HCCL_RDMA_TC_MIN, HCCL_RDMA_TC_MAX),
         HCCL_E_PARA);
     // 设置的RDMATrafficClass需要是4的整数倍, 否则报错
@@ -1223,7 +1223,7 @@ HcclResult ParseRDMAServerLevel()
     CHK_PRT_RET(
         (ret != HCCL_SUCCESS || rdmaServerLevel > HCCL_RDMA_SL_MAX),
         HCCL_ERROR(
-            "[Parse][rdmaServerLevel]HCCL_RDMA_SL[%s] is invalid. except: [%u, %u]", serverLevelEnv.c_str(),
+            "[Parse][rdmaServerLevel]HCCL_RDMA_SL[%s] is invalid. expect: [%u, %u]", serverLevelEnv.c_str(),
             HCCL_RDMA_SL_MIN, HCCL_RDMA_SL_MAX),
         HCCL_E_PARA);
     g_externalInput.rdmaServerLevel = rdmaServerLevel;
@@ -1275,7 +1275,7 @@ HcclResult ParseRDMATimeOut(std::pair<u32, u32>& rdmaTimeOutRange)
     CHK_PRT_RET(
         (ret != HCCL_SUCCESS || rdmaTimeOut < HCCL_RDMA_TIMEOUT_MIN || rdmaTimeOut > rdmaTimeOutMax),
         HCCL_ERROR(
-            "[Parse][TrafficClass]HCCL_RDMA_TIMEOUT[%s] is invalid. except: [%u, %u]", timeOutEnv.c_str(),
+            "[Parse][RdmaTimeout]HCCL_RDMA_TIMEOUT[%s] is invalid. expect: [%u, %u]", timeOutEnv.c_str(),
             HCCL_RDMA_TIMEOUT_MIN, rdmaTimeOutMax),
         HCCL_E_PARA);
 
@@ -1312,7 +1312,7 @@ HcclResult ParseRDMARetryCnt()
     CHK_PRT_RET(
         (ret != HCCL_SUCCESS || rdmaRetryCnt < HCCL_RDMA_RETRY_CNT_MIN || rdmaRetryCnt > HCCL_RDMA_RETRY_CNT_MAX),
         HCCL_ERROR(
-            "[Parse][rdmaRetryCnt]HCCL_RDMA_RETRY_CNT[%s] is invalid. except: [%u, %u]", retryCntEnv.c_str(),
+            "[Parse][rdmaRetryCnt]HCCL_RDMA_RETRY_CNT[%s] is invalid. expect: [%u, %u]", retryCntEnv.c_str(),
             HCCL_RDMA_RETRY_CNT_MIN, HCCL_RDMA_RETRY_CNT_MAX),
         HCCL_E_PARA);
     g_externalInput.rdmaRetryCnt = rdmaRetryCnt;

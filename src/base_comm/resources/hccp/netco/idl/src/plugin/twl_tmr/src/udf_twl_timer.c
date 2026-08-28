@@ -668,7 +668,7 @@ void UdfTwlTimerReloadInst(UdfTwlTimerWheelCtrl *wheelCtrl, UdfTwlTimerInst *tim
             VOS_ListAdd(&(timerInst->nodeForMT), &(wheelCtrl->timerlist));
             ret = UdfTimerInstCalcPrecision(wheelCtrl, timerInst, timerInst->resizeInterval);
             if (ret != UDF_OK) {
-                LOG_INNER_ERR("Udf timer instance timout interval resize unsuccess. (0x%x).", ret);
+                LOG_INNER_ERR("Udf timer instance timeout interval resize unsuccess. (0x%x).", ret);
             }
         }
         return;
@@ -1256,7 +1256,7 @@ uint32_t UdfTimerInstResize(UdfTmrInstHandle tmrInst, uint32_t timeOutMs)
     UdfTimerInstMoveNode(timerInst->tmrWheel, timerInst);
     uint32_t ret = UdfTimerInstCalcPrecision(wheelCtrl, timerInst, timerInst->resizeInterval);
     if (ret != UDF_OK) {
-        LOG_INNER_ERR("Udf timer instance timout interval resize unsuccess. (0x%x).", ret);
+        LOG_INNER_ERR("Udf timer instance timeout interval resize unsuccess. (0x%x).", ret);
         return UDF_ERROR;
     }
 

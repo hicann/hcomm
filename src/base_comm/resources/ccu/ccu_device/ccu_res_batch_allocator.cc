@@ -815,13 +815,13 @@ HcclResult CcuResBatchAllocator::CcuMissionMgr::PreAlloc(
         return HcclResult::HCCL_E_INTERNAL;
     }
 
-    stragtegy_ = blockSize;
-    uint32_t blockNum = missionNum / stragtegy_;
+    strategy_ = blockSize;
+    uint32_t blockNum = missionNum / strategy_;
     for (uint32_t i = 0; i < blockNum; i++) {
         BlockInfo blockInfo;
         blockInfo.id = i;
-        blockInfo.startId = missionStartIds[0] + i * stragtegy_;
-        blockInfo.num = stragtegy_;
+        blockInfo.startId = missionStartIds[0] + i * strategy_;
+        blockInfo.num = strategy_;
         blockInfo.allocated = false;
         blockInfo.handle = 0;
         blocks_.emplace_back(blockInfo);
@@ -882,12 +882,12 @@ HcclResult CcuResBatchAllocator::CcuMissionMgr::Alloc(
     }
 
     std::vector<ResInfo> resInfos;
-    auto ret = HandleBlockRes(handleKey, reqNum, stragtegy_, blocks_, resInfos);
+    auto ret = HandleBlockRes(handleKey, reqNum, strategy_, blocks_, resInfos);
     if (ret == HcclResult::HCCL_E_UNAVAIL) {
         HCCL_WARNING(
             "[CcuMissionMgr][%s] failed, mission block resources are unavailable, "
-            "reqNum[%u], stragtegy[%u], reqType[%d].",
-            __func__, reqNum, stragtegy_, reqType);
+            "reqNum[%u], strategy[%u], reqType[%d].",
+            __func__, reqNum, strategy_, reqType);
         DumpBlockResInfo(ResType::MISSION, blocks_);
         return ret;
     }
@@ -909,7 +909,7 @@ void CcuResBatchAllocator::CcuMissionMgr::Release(MissionResInfo& missionInfos)
     // 目前支持 FUSION_MULTIPLE_DIE 类型，故多die同步释放
     for (uint8_t i = 0; i < CCU_MAX_IODIE_NUM; i++) {
         if (dieEnableFlags_[i] && missionInfos.mission[i].size() != 0) {
-            ReleaseBlockRes(stragtegy_, blocks_, missionInfos.mission[i]);
+            ReleaseBlockRes(strategy_, blocks_, missionInfos.mission[i]);
             break;
         }
     }

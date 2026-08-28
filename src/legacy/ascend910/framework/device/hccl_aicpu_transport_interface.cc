@@ -39,8 +39,7 @@ __attribute__((visibility("default"))) uint32_t RunTransportRoceTx(void* args)
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
             "[AiCpuKernel][RunTransportRoceTx]InitAsyncFlag Failed, lFlagAddr is [%p], rFlagAddr is [%p], "
-            "localFlagBufforCheck is [%p], localFlagBufforWrite is [%p], remoteFlagBuf is [%p]"
-            "remoteFlagBuf.size is [%u]",
+            "localFlagBufforCheck is [%p], localFlagBufforWrite is [%p], remoteFlagBuf is [%p].",
             lFlagAddr, rFlagAddr, localFlagBufforCheck, localFlagBufforWrite, remoteFlagBuf);
         return ret;
     }
@@ -143,8 +142,7 @@ __attribute__((visibility("default"))) uint32_t RunTransportRoceRx(void* args)
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
             "[AiCpuKernel][RunTransportRoceTx]InitAsyncFlag Failed, lFlagAddr is [%p], rFlagAddr is [%p], "
-            "localFlagBufforCheck is [%p], localFlagBufforWrite is [%p], remoteFlagBuf is [%p]"
-            "remoteFlagBuf.size is [%u]",
+            "localFlagBufforCheck is [%p], localFlagBufforWrite is [%p], remoteFlagBuf is [%p].",
             lFlagAddr, rFlagAddr, localFlagBufforCheck, localFlagBufforWrite, remoteFlagBuf);
         return ret;
     }

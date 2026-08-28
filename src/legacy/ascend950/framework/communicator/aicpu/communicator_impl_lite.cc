@@ -47,7 +47,7 @@ int CommunicatorImplLite::LoadWithOpBasedMode(HcclKernelParamLite* kernelParam)
         HCCL_ERROR("Std exception %s was caught.", e.what());
         return KERNEL_ERROR_CODE;
     } catch (...) {
-        HCCL_ERROR("Some unknown error ocured.");
+        HCCL_ERROR("Some unknown error occurred.");
         return KERNEL_ERROR_CODE;
     }
 
@@ -79,7 +79,7 @@ int CommunicatorImplLite::UpdateComm(HcclKernelParamLite* kernelParam)
         HCCL_ERROR("CommunicatorImplLite::UpdateComm Std exception %s was caught.", e.what());
         return KERNEL_ERROR_CODE;
     } catch (...) {
-        HCCL_ERROR("CommunicatorImplLite::UpdateComm Some unknown error ocured.");
+        HCCL_ERROR("CommunicatorImplLite::UpdateComm Some unknown error occurred.");
         return KERNEL_ERROR_CODE;
     }
     isSuspended = false;

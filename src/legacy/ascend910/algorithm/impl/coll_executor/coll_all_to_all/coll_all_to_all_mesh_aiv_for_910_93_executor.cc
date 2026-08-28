@@ -85,7 +85,7 @@ HcclResult CollAlltoAllMeshAivFor91093Executor::CalNumBlocks(
         HCCL_E_PARA);
 
     HCCL_INFO(
-        "[CollAlltoAllMeshAivFor91093Executor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommanded[%u]",
+        "[CollAlltoAllMeshAivFor91093Executor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommended[%u]",
         numBlocks, numBlocks_, bestNumBlocks);
     return HCCL_SUCCESS;
 }

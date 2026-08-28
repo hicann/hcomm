@@ -870,8 +870,8 @@ HcclResult CcuResBatchAllocator::CcuMissionMgr::Alloc(
     auto ret = HandleBlockRes(handleKey, reqNum, stragtegy, blocks, resInfos);
     if (ret != HcclResult::HCCL_SUCCESS) {
         HCCL_WARNING(
-            "[CcuMissionMgr][%s] failed, mission block resources are unavaiable, "
-            "reqNum[%u], stragtegy[%u], reqType[%d].",
+            "[CcuMissionMgr][%s] failed, mission block resources are unavailable, "
+            "reqNum[%u], strategy[%u], reqType[%d].",
             __func__, reqNum, stragtegy, reqType);
         DumpBlockResInfo(ResType::MISSION, blocks);
         return ret;

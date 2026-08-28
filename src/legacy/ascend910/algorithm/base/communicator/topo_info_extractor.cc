@@ -496,7 +496,7 @@ HcclResult TopoInfoExtractor::CheckPlaneInfo()
     CHK_PRT_RET(
         isTopoComm,
         HCCL_ERROR(
-            "[Check][PlaneInfo]topo type[%d] and combined plane nub[%llu] are not match", topoType_,
+            "[Check][PlaneInfo]topo type[%d] and combined plane num[%llu] are not match", topoType_,
             CommPlaneVector_[COMM_COMBINE].size()),
         HCCL_E_INTERNAL);
 
@@ -506,7 +506,7 @@ HcclResult TopoInfoExtractor::CheckPlaneInfo()
     CHK_PRT_RET(
         isTopo8pring,
         HCCL_ERROR(
-            "[Check][PlaneInfo]topo type[%d], level0 plane nub[%llu], level1 plane nub[%llu], is not match", topoType_,
+            "[Check][PlaneInfo]topo type[%d], level0 plane num[%llu], level1 plane num[%llu], is not match", topoType_,
             CommPlaneVector_[COMM_LEVEL0].size(), CommPlaneVector_[COMM_LEVEL1].size()),
         HCCL_E_INTERNAL);
 
@@ -516,7 +516,7 @@ HcclResult TopoInfoExtractor::CheckPlaneInfo()
     CHK_PRT_RET(
         isTopo2pring,
         HCCL_ERROR(
-            "[Check][PlaneInfo]topo type[%d], level0 plane nub[%llu], level1 plane nub[%llu], is not match", topoType_,
+            "[Check][PlaneInfo]topo type[%d], level0 plane num[%llu], level1 plane num[%llu], is not match", topoType_,
             CommPlaneVector_[COMM_LEVEL0].size(), CommPlaneVector_[COMM_LEVEL1].size()),
         HCCL_E_INTERNAL);
 
@@ -527,7 +527,7 @@ HcclResult TopoInfoExtractor::CheckPlaneInfo()
     CHK_PRT_RET(
         isTopo4pRing,
         HCCL_ERROR(
-            "[Check][PlaneInfo]topo type[%d], level0 plane nub[%llu], level1 plane nub[%llu], is not match", topoType_,
+            "[Check][PlaneInfo]topo type[%d], level0 plane num[%llu], level1 plane num[%llu], is not match", topoType_,
             CommPlaneVector_[COMM_LEVEL0].size(), CommPlaneVector_[COMM_LEVEL1].size()),
         HCCL_E_INTERNAL);
 
@@ -537,7 +537,7 @@ HcclResult TopoInfoExtractor::CheckPlaneInfo()
     CHK_PRT_RET(
         isTopo4pMesh,
         HCCL_ERROR(
-            "[Check][PlaneInfo]topo type[%d], level0 plane nub[%llu], level1 plane nub[%llu], is not match", topoType_,
+            "[Check][PlaneInfo]topo type[%d], level0 plane num[%llu], level1 plane num[%llu], is not match", topoType_,
             CommPlaneVector_[COMM_LEVEL0].size(), CommPlaneVector_[COMM_LEVEL1].size()),
         HCCL_E_INTERNAL);
 
@@ -547,7 +547,7 @@ HcclResult TopoInfoExtractor::CheckPlaneInfo()
     CHK_PRT_RET(
         isTopoNpMesh,
         HCCL_ERROR(
-            "[Check][PlaneInfo]topo type[%d], level0 plane nub[%llu], level1 plane nub[%llu], is not match", topoType_,
+            "[Check][PlaneInfo]topo type[%d], level0 plane num[%llu], level1 plane num[%llu], is not match", topoType_,
             CommPlaneVector_[COMM_LEVEL0].size(), CommPlaneVector_[COMM_LEVEL1].size()),
         HCCL_E_INTERNAL);
 
@@ -558,7 +558,7 @@ HcclResult TopoInfoExtractor::CheckPlaneInfo()
     CHK_PRT_RET(
         isTopo2pMesh,
         HCCL_ERROR(
-            "[Check][PlaneInfo]topo type[%d], level0 plane nub[%llu], level1 plane nub[%llu], is not match", topoType_,
+            "[Check][PlaneInfo]topo type[%d], level0 plane num[%llu], level1 plane num[%llu], is not match", topoType_,
             CommPlaneVector_[COMM_LEVEL0].size(), CommPlaneVector_[COMM_LEVEL1].size()),
         HCCL_E_INTERNAL);
 
@@ -569,7 +569,7 @@ HcclResult TopoInfoExtractor::CheckPlaneInfo()
     CHK_PRT_RET(
         isTopo1pMesh,
         HCCL_ERROR(
-            "[Check][PlaneInfo]topo type[%d], level0 plane nub[%llu], level1 plane nub[%llu], is not match", topoType_,
+            "[Check][PlaneInfo]topo type[%d], level0 plane num[%llu], level1 plane num[%llu], is not match", topoType_,
             CommPlaneVector_[COMM_LEVEL0].size(), CommPlaneVector_[COMM_LEVEL1].size()),
         HCCL_E_INTERNAL);
 
@@ -580,7 +580,7 @@ HcclResult TopoInfoExtractor::CheckPlaneInfo()
     CHK_PRT_RET(
         isTopoNpSingleRing,
         HCCL_ERROR(
-            "[Check][PlaneInfo]topo type[%d], level0 plane nub[%llu], level1 plane nub[%llu], is not match", topoType_,
+            "[Check][PlaneInfo]topo type[%d], level0 plane num[%llu], level1 plane num[%llu], is not match", topoType_,
             CommPlaneVector_[COMM_LEVEL0].size(), CommPlaneVector_[COMM_LEVEL1].size()),
         HCCL_E_INTERNAL);
 
@@ -1256,7 +1256,7 @@ HcclResult TopoInfoExtractor::SetTopoInfoForCombineL1()
                 continue; // 只在自己所在的超节点创建
             }
             CommPlaneVector_[COMM_COMBINE_L1].push_back(iter->second);
-            HCCL_DEBUG("[SetTopoInfoForARS]Superpod rankdSize[%u].", CommPlaneVector_[COMM_COMBINE_L1][0].size());
+            HCCL_DEBUG("[SetTopoInfoForARS]Superpod rankSize[%u].", CommPlaneVector_[COMM_COMBINE_L1][0].size());
         }
     }
     return HCCL_SUCCESS;
@@ -1270,7 +1270,7 @@ HcclResult TopoInfoExtractor::SetTopoInfoForARS() // 针对ARS特性
                 continue; // 只在自己所在的超节点创建
             }
             CommPlaneVector_[COMM_ARS].push_back(iter->second);
-            HCCL_DEBUG("[SetTopoInfoForARS]Superpod rankdSize[%u].", CommPlaneVector_[COMM_ARS][0].size());
+            HCCL_DEBUG("[SetTopoInfoForARS]Superpod rankSize[%u].", CommPlaneVector_[COMM_ARS][0].size());
         }
     }
     return HCCL_SUCCESS;

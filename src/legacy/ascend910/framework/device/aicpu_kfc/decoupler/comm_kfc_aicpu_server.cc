@@ -155,10 +155,10 @@ HcclResult CommKfcAicpuServer::IsAllTaskFinished(u32 msgPos, bool& isFinish)
     __asm__ __volatile__("dsb st" : : : "memory");
 #endif
     isFinish = true;
-    HCCL_INFO("Group %u: all task is finished at message pos %u.", groupIdx_, msgPos);
+    HCCL_INFO("Group %u: all tasks are finished at message pos %u.", groupIdx_, msgPos);
     for (auto it : ctxToOpHandle_) {
         CHK_RET(HcclReleaseComm(it.second));
-        HCCL_INFO("Group %u: Op handle %#llx is released, HCCL context %#llxx.", groupIdx_, it.second, it.first);
+        HCCL_INFO("Group %u: Op handle %#llx is released, HCCL context %#llx.", groupIdx_, it.second, it.first);
     }
     return HCCL_SUCCESS;
 }

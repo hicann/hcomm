@@ -563,7 +563,8 @@ std::vector<std::shared_ptr<NetInstance::ConnInterface>> ConstructConnIFromPhyTo
             auto itPort = portAddrMap.find(port);
             if (itPort == portAddrMap.end()) {
                 HCCL_WARNING(
-                    "[RankGraphBuilder][ConstructConnIFromPhyTopoConnIAndPortMap] topo use port [%s] not find addrs in "
+                    "[RankGraphBuilder][ConstructConnIFromPhyTopoConnIAndPortMap] topo uses port [%s] but cannot find "
+                    "addrs in "
                     "ranktable.",
                     port.c_str());
                 continue;

@@ -1312,7 +1312,7 @@ HcclResult TransportManager::PrintErrorInfo(NicType nicType)
         HCCL_ERROR(
             "[TransportManager][%s]local rank information: nicType[%s], logicSuperPodId[%s], phySuperPodId[%lld]. "
             "Note: Do not "
-            "configure ranks belonging to different physical superpod ID info a single logical superpod ID",
+            "configure ranks belonging to different physical superpod ID into a single logical superpod ID",
             __func__, nicTypeStr.c_str(), logicSuperPodId.c_str(), phySuperPodId);
     }
     return HCCL_SUCCESS;

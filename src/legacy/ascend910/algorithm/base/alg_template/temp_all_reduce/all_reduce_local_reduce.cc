@@ -158,7 +158,7 @@ HcclResult AllReduceLocalReduce::RunAsync(const u32 rank, const u32 rankSize, co
             DeviceMem userMemOut = DeviceMem::create(opInfo_->outputAddr, count_ * DataUnitSize(dataType_));
             ret = HcclD2DMemcpyAsync(dispatcher_, userMemOut, userMemIn, stream_);
             CHK_PRT_RET(
-                ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduceLocalReuce][RunAsync]rank[%u] memcpy async failed", rank),
+                ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduceLocalReduce][RunAsync]rank[%u] memcpy async failed", rank),
                 ret);
         }
         return ret;
@@ -167,19 +167,20 @@ HcclResult AllReduceLocalReduce::RunAsync(const u32 rank, const u32 rankSize, co
     ret = PrepareAllreduceSliceData();
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
-        HCCL_ERROR("[AllReduceLocalReuce][RunAsync]rank[%u] count[%llu] failed in PrepareSliceData step", rank, count_),
+        HCCL_ERROR(
+            "[AllReduceLocalReduce][RunAsync]rank[%u] count[%llu] failed in PrepareSliceData step", rank, count_),
         ret);
 
     ret = RunReduceScatter(rank, rankSize, links);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
-        HCCL_ERROR("[AllReduceLocalReuce][RunAsync]rank[%u] count[%llu] failed in reducescater step", rank, count_),
+        HCCL_ERROR("[AllReduceLocalReduce][RunAsync]rank[%u] count[%llu] failed in ReduceScatter step", rank, count_),
         ret);
 
     ret = RunAllGather(rank, rankSize, links);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
-        HCCL_ERROR("[AllReduceLocalReuce][RunAsync]rank[%u] count[%llu] failed in AllGather step", rank, count_), ret);
+        HCCL_ERROR("[AllReduceLocalReduce][RunAsync]rank[%u] count[%llu] failed in AllGather step", rank, count_), ret);
 
     HCCL_INFO("AllReduceLocalReduce finished: rank[%u] ranksize[%u]", rank, rankSize);
     return HCCL_SUCCESS;
@@ -294,7 +295,7 @@ HcclResult AllReduceLocalReduce::RunReduceScatter(u32 rank, u32 rankSize, const 
     HcclResult ret = HCCL_SUCCESS;
     ret = RunLocalReduce(rank, rankSize);
 
-    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduclocalReduce]rank[%u] ReduceScatter failed", rank), ret);
+    CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[AllReduceLocalReduce]rank[%u] ReduceScatter failed", rank), ret);
     return HCCL_SUCCESS;
 }
 

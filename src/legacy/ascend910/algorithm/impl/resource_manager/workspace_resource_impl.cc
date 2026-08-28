@@ -184,7 +184,7 @@ HcclResult WorkspaceResourceImpl::GetDevMemSize(const std::string& tag)
 {
     auto interIter = opBaseDeviceMemMap_.find(tag);
     if (interIter == opBaseDeviceMemMap_.end()) {
-        HCCL_INFO("[WorkspaceResourceImpl][GetDevMemSize]tag[%s] is exit, don't need get memsize", tag.c_str());
+        HCCL_INFO("[WorkspaceResourceImpl][GetDevMemSize]tag[%s] already exists, don't need get memsize", tag.c_str());
         return HCCL_SUCCESS;
     } else {
         return (interIter->second.size() == HCCL_WORKSPACE_MEM_32_KB) ? HCCL_SUCCESS : HCCL_E_INTERNAL;
@@ -246,7 +246,7 @@ HcclResult WorkspaceResourceImpl::CreateOpBasedResources(
 {
     if (IsExistResourceWorkSpaceMem(tag) && GetDevMemSize(tag) != HCCL_SUCCESS) {
         HCCL_INFO(
-            "[WorkspaceResourceImpl][CreateOpBasedResources]tag[%s] is exit, don't create workspace Memory",
+            "[WorkspaceResourceImpl][CreateOpBasedResources]tag[%s] already exists, don't create workspace Memory",
             tag.c_str());
         return HCCL_SUCCESS;
     }
@@ -274,7 +274,7 @@ HcclResult WorkspaceResourceImpl::InsertRemoteOpStream(const std::string& tag, s
     CHK_PRT_RET(
         interIter != remoteOpStreamMap_.end(),
         HCCL_ERROR(
-            "[WorkspaceResourceImpl][InsertRemoteOpStream]tag[%s] is exit, "
+            "[WorkspaceResourceImpl][InsertRemoteOpStream]tag[%s] already exists, "
             "don't insert remote operation stream",
             tag.c_str()),
         HCCL_E_INTERNAL);
@@ -343,7 +343,7 @@ HcclResult WorkspaceResourceImpl::CreateRemoteOpBasedResources(u64 memSize, cons
 {
     if (IsExistResourceWorkSpaceMem(tag)) {
         HCCL_INFO(
-            "[WorkspaceResourceImpl][CreateRemoteOpBasedResources]tag[%s] is exit, "
+            "[WorkspaceResourceImpl][CreateRemoteOpBasedResources]tag[%s] already exists, "
             "don't create workspace Memory",
             tag.c_str());
         return HCCL_SUCCESS;
@@ -362,7 +362,7 @@ HcclResult WorkspaceResourceImpl::CreateOrUpdateRemoteOpBasedResources(u64 memSi
         auto interMemIter = workSpaceMem_.memResMap_.find(tag);
         if (interMemIter->second.maxSize >= memSize) {
             HCCL_INFO(
-                "[WorkspaceResourceImpl][CreateOrUpdateRemoteOpBasedResources]tag[%s] is exit, "
+                "[WorkspaceResourceImpl][CreateOrUpdateRemoteOpBasedResources]tag[%s] already exists, "
                 "and memSize meets the requirements, don't create workspace Memory",
                 tag.c_str());
             return HCCL_SUCCESS;

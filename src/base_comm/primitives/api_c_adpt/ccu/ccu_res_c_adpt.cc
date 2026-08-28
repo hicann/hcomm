@@ -29,7 +29,7 @@
 CcuResult HcommCcuInsResDescCreate(uint32_t dieId, HcommCcuResDescHandle* handle)
 {
     if (dieId >= hcomm::CCU_MAX_IODIE_NUM) {
-        HCCL_ERROR("[%s] dieId[%u] is invalid, dieId should in [0, %u).", __func__, dieId, hcomm::CCU_MAX_IODIE_NUM);
+        HCCL_ERROR("[%s] dieId[%u] is invalid, dieId should be in [0, %u).", __func__, dieId, hcomm::CCU_MAX_IODIE_NUM);
         return CcuResult::CCU_E_PARA;
     }
 

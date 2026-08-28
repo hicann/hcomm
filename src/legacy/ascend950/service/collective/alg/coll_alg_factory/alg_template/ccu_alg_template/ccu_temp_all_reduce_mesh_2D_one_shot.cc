@@ -134,7 +134,7 @@ HcclResult CcuTempAllReduceMesh2DOneShot::GetBufferAddr(
 
     HCCL_INFO(
         "[GetBufferAddr] inputBaseAddr[%llu], inputOffSet[%llu], outputBaseAddr[%llu], outputOffSet[%llu], "
-        "sctrachBaseAddr[%llu], sctrachOffSet[%llu]",
+        "scratchBaseAddr[%llu], scratchOffSet[%llu]",
         inputBaseAddr, inputOffSet, outputBaseAddr, outputOffSet, scratchBaseAddr, scratchOffSet);
 
     inputAddr = inputBaseAddr + inputOffSet;
@@ -172,7 +172,7 @@ HcclResult CcuTempAllReduceMesh2DOneShot::PrepareLinks(const ResLinks& tempLinks
         }
     }
     HCCL_INFO(
-        "[CcuTempAllReduceMesh2DOneShot] PrepareLinks Eends. linksX Size[%u], linksY Size[%u]", linksX_.size(),
+        "[CcuTempAllReduceMesh2DOneShot] PrepareLinks Ends. linksX Size[%u], linksY Size[%u]", linksX_.size(),
         linksY_.size());
     return HcclResult::HCCL_SUCCESS;
 }

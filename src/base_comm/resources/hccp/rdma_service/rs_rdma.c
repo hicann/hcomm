@@ -63,7 +63,7 @@ STATIC int RsGetQpcb(struct RsRdevCb *rdevCb, uint32_t qpn, struct RsQpCb **qpCb
     }
 
     *qpCb = NULL;
-    hccp_err("qp_cb for qp %u do not available!", qpn);
+    hccp_err("qp_cb for qp %u is not available!", qpn);
 
     return -ENODEV;
 }
@@ -475,12 +475,12 @@ STATIC int RsMrInfoSync(struct RsMrCb *mrCb)
 
     CHK_PRT_RETURN(mrCb->qpCb->state == RS_QP_STATUS_REM_FD_CLOSE,
         hccp_warn("remote qp fd closed,"
-                  "cann not use it anymore! status[%d](RS_QP_STATUS_REM_FD_CLOSE)",
+                  "can not use it anymore! status[%d](RS_QP_STATUS_REM_FD_CLOSE)",
             mrCb->qpCb->state),
         -EFAULT);
 
     CHK_PRT_RETURN(mrCb->qpCb->connInfo->connfd == RS_FD_INVALID,
-        hccp_warn("rm info sync failed! fd not ready!"
+        hccp_warn("mr info sync failed! fd not ready!"
                   "connfd[%d](RS_FD_INVALID)",
             mrCb->qpCb->connInfo->connfd),
         -ENETUNREACH);
@@ -1024,7 +1024,7 @@ RS_ATTRI_VISI_DEF int RsSendWr(unsigned int phyId, unsigned int rdevIndex, uint3
     CHK_PRT_RETURN(wr->bufNum > MAX_SGE_NUM || wr->bufNum == 0, hccp_err("invalid buf_num[%u]!", wr->bufNum), -EINVAL);
 
     CHK_PRT_RETURN(wr->bufList->len > RS_SGLIST_LEN_MAX || wr->bufList->len == 0,
-        hccp_err("sg list"
+        hccp_err("sg list "
                  "len is more than 2G, len[%u]",
             wr->bufList->len),
         -EINVAL);
@@ -1453,7 +1453,7 @@ RS_ATTRI_VISI_DEF int RsSetTsqpDepth(unsigned int phyId, unsigned int rdevIndex,
 
     CHK_PRT_RETURN(tempDepth < RS_MIN_TEMPTH_DEPTH || tempDepth > RS_MAX_TEMPTH_DEPTH,
         hccp_err("param error!"
-                 "temp_depth[%u] can not smaller than [%d] or bigerr than [%d]",
+                 "temp_depth[%u] can not be smaller than [%d] or bigger than [%d]",
             tempDepth, RS_MIN_TEMPTH_DEPTH, RS_MAX_TEMPTH_DEPTH),
         -EINVAL);
 
@@ -1462,7 +1462,7 @@ RS_ATTRI_VISI_DEF int RsSetTsqpDepth(unsigned int phyId, unsigned int rdevIndex,
 
     ret = RsRdev2rdevCb(chipId, rdevIndex, &rdevCb);
     CHK_PRT_RETURN(ret || rdevCb == NULL,
-        hccp_err("rs_set_tsqp_depth rs_rdev2rdev_cb for chip_id[%u]"
+        hccp_err("rs_set_tsqp_depth rs_rdev2rdev_cb for chip_id[%u] "
                  "failed, ret %d",
             chipId, ret),
         ret);
@@ -1505,7 +1505,7 @@ RS_ATTRI_VISI_DEF int RsGetTsqpDepth(unsigned int phyId, unsigned int rdevIndex,
 
     ret = RsRdev2rdevCb(chipId, rdevIndex, &rdevCb);
     CHK_PRT_RETURN(ret != 0 || rdevCb == NULL,
-        hccp_err("rs_get_tsqp_depth rs_rdev2rdev_cb for chip_id[%u]"
+        hccp_err("rs_get_tsqp_depth rs_rdev2rdev_cb for chip_id[%u] "
                  "failed, ret %d",
             chipId, ret),
         ret);
@@ -1984,7 +1984,7 @@ STATIC int RsQpCheckQpNorm(struct RsQpNormWithAttrs *qpNorm, int *qpMode)
 
     *qpMode = qpNorm->extAttrs.qpMode;
     if (*qpMode < 0 || *qpMode >= RA_RS_ERR_QP_MODE) {
-        hccp_err("qp_mode[%d] must greater or equal to 0 and less than %d", *qpMode, RA_RS_ERR_QP_MODE);
+        hccp_err("qp_mode[%d] must be greater than or equal to 0 and less than %d", *qpMode, RA_RS_ERR_QP_MODE);
         return -EINVAL;
     }
 
@@ -2287,7 +2287,7 @@ static int RsQpConnectAsyncInitPara(struct RsQpConnPara qpConnPara, int fd, stru
 
     CHK_PRT_RETURN(qpConnPara.phyId >= RS_MAX_DEV_NUM, hccp_err("param error ! phyId:%u", qpConnPara.phyId), -EINVAL);
 
-    CHK_PRT_RETURN(fd < 0, hccp_err("param error ! fd:%d must bigger than 0", fd), -EINVAL);
+    CHK_PRT_RETURN(fd < 0, hccp_err("param error ! fd:%d must be greater than or equal to 0", fd), -EINVAL);
 
     ret = RsQpn2qpcb(qpConnPara.phyId, qpConnPara.rdevIndex, qpConnPara.qpn, qpCb);
     CHK_PRT_RETURN(ret, hccp_err("get qpcb failed, qpn %u, ret %d", qpConnPara.qpn, ret), ret);

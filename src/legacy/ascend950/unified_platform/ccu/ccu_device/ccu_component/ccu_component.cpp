@@ -395,7 +395,7 @@ HcclResult CcuComponent::CreateLoopChannel(const uint8_t dieId, uint32_t& channe
 {
     if (!dieEnableFlags[dieId]) {
         HCCL_WARNING(
-            "CcuComponent][%s] passed, dieId[%u] is not enable, "
+            "[CcuComponent][%s] passed, dieId[%u] is not enabled, skip. "
             "devLogicId[%d].",
             __func__, dieId, devLogicId);
         return HcclResult::HCCL_SUCCESS;
@@ -1018,7 +1018,7 @@ HcclResult CcuComponent::CleanDieCkes(const uint8_t dieId) const
     CHK_PRT_RET(
         dieId >= MAX_CCU_IODIE_NUM,
         HCCL_WARNING(
-            "[CcuComponent][%s] failed, dieId[%u] is invalid, shoudle be in [0-%u), devLogicId[%d].", __func__, dieId,
+            "[CcuComponent][%s] failed, dieId[%u] is invalid, should be in [0-%u), devLogicId[%d].", __func__, dieId,
             MAX_CCU_IODIE_NUM, devLogicId),
         HcclResult::HCCL_E_PARA);
 

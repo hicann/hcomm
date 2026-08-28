@@ -87,7 +87,7 @@ halResAddrMap(unsigned int devId, struct res_addr_info* res_info, unsigned long*
 HcclResult TransportDeviceP2p::GetNotifyAddr(s32 deviceId, const HcclSignalInfo& signalInfo, u64& addr)
 {
     if (halResAddrMap == nullptr) {
-        HCCL_ERROR("driver package is not support function [halResAddrMap], please update the package.");
+        HCCL_ERROR("driver package does not support function [halResAddrMap], please update the package.");
         return HCCL_E_DRV;
     }
 
@@ -139,7 +139,7 @@ HcclResult TransportDeviceP2p::CheckRelationship(u32 relationship)
     constexpr u32 sameSuperpod = HCCL_TRANSPORT_RELATIONSHIP_SAME_SUPERPOD;
 
     if ((relationship != sameChip) && (relationship != sameServer) && (relationship != sameSuperpod)) {
-        HCCL_ERROR("[TransportDeviceP2p] relationship is not support, relationship:%d", relationship);
+        HCCL_ERROR("[TransportDeviceP2p] relationship is not supported, relationship:%d", relationship);
         return HCCL_E_INTERNAL;
     }
     return HCCL_SUCCESS;

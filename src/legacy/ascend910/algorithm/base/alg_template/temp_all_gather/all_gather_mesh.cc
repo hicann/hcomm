@@ -213,7 +213,7 @@ HcclResult AllGatherMesh::RunAsync(const u32 rank, const u32 rankSize, const std
             meshStreams_[streamIndex], dispatcher_, (*meshSignalAux_)[streamIndex], profilerInput_.stage));
 
         HCCL_DEBUG(
-            "rank[%u] siganl_aux index[%u] signal record signalaux[%p]", rank, streamIndex,
+            "rank[%u] signal_aux index[%u] signal record signalaux[%p]", rank, streamIndex,
             (*meshSignalAux_)[streamIndex]->ptr());
         CHK_RET(LocalNotify::Post(stream_, dispatcher_, (*meshSignalAux_)[streamIndex], profilerInput_.stage));
     }

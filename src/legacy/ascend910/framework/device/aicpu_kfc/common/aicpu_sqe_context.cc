@@ -133,7 +133,7 @@ HcclResult AicpuSqeContext::AddFlipTask(uint32_t streamId)
     buff.sqeCnt++;
 
     HCCL_INFO(
-        "[AicpuSqeContext][AddFlipTask] Call AddFlipTask. para: taskId[%u], streamId[%u], filpNum[%u]]", taskId,
+        "[AicpuSqeContext][AddFlipTask] Call AddFlipTask. para: taskId[%u], streamId[%u], flipNum[%u]]", taskId,
         streamInfo->actualStreamId, filpNum);
 
     return HCCL_SUCCESS;
@@ -168,7 +168,7 @@ HcclResult AicpuSqeContext::QuerySqeInfoByHead(uint32_t streamId, uint32_t sqHea
     const uint32_t sqDepth = AicpuGetComContext()->streamInfo[streamId].sqDepth;
     uint32_t sqUnexecuted = (buff.sqTail + sqDepth - sqHead) % sqDepth;
     if (buff.tailSqeIdx < sqUnexecuted) {
-        HCCL_WARNING("tail sqe idx %u is less then sq unexecuted num %u", buff.tailSqeIdx, sqUnexecuted);
+        HCCL_WARNING("tail sqe idx %u is less than sq unexecuted num %u", buff.tailSqeIdx, sqUnexecuted);
         return HCCL_E_INTERNAL;
     }
     uint16_t idx = buff.tailSqeIdx - sqUnexecuted;
@@ -192,7 +192,7 @@ HcclResult AicpuSqeContext::QuerySqeInfoByTaskId(uint32_t streamId, uint16_t tas
     const uint32_t sqDepth = AicpuGetComContext()->streamInfo[streamId].sqDepth;
     uint32_t sqHeadIdx = (buff.sqTail + sqDepth - tailRemain) % sqDepth;
     if (buff.tailSqeIdx < tailRemain) {
-        HCCL_WARNING("tail sqe idx %u is less then tail remain num %u", buff.tailSqeIdx, tailRemain);
+        HCCL_WARNING("tail sqe idx %u is less than tail remain num %u", buff.tailSqeIdx, tailRemain);
         return HCCL_E_INTERNAL;
     }
     uint16_t idx = buff.tailSqeIdx - tailRemain;

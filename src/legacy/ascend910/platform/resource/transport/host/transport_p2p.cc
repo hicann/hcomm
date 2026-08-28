@@ -196,14 +196,16 @@ HcclResult TransportP2p::ParseSpecifyLink(LinkTypeInServer& linkType)
         s32 sendPid = 0;
         CHK_RET(SalGetBareTgid(&sendPid));
         CHK_PRT_RET(
-            sendPid == recvPid_, HCCL_WARNING("%s specifyLink is not support in multi-thread", __func__), HCCL_SUCCESS);
+            sendPid == recvPid_, HCCL_WARNING("%s specifyLink is not supported in multi-thread", __func__),
+            HCCL_SUCCESS);
 
         // A3 DIE间通信场景, 将链路从SIO切换到HCCS
         linkType = LinkTypeInServer::HCCS_SW_TYPE;
         isSioToHccs_ = true;
         HCCL_INFO("%s specifyLink change to HCCS_SW_TYPE", __func__);
     } else {
-        HCCL_ERROR("%s fail, linkType:%d, specifyLink:%d is not support", __func__, linkType, machinePara_.specifyLink);
+        HCCL_ERROR(
+            "%s fail, linkType:%d, specifyLink:%d is not supported", __func__, linkType, machinePara_.specifyLink);
         return HCCL_E_NOT_SUPPORT;
     }
     return HCCL_SUCCESS;
@@ -521,7 +523,7 @@ HcclResult TransportP2p::ParseIpcMemInfo(
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
-                "[Recv][IpcMemMesg]errNo[0x%016llx]In recv ipc mem mesg, wait peer mem config "
+                "[Recv][IpcMemMesg]errNo[0x%016llx] In recv ipc mem mesg, wait peer mem config "
                 "failed. local rank[%u]",
                 HCCL_ERROR_CODE(ret), machinePara_.localUserrank),
             ret);
@@ -742,8 +744,8 @@ HcclResult TransportP2p::ParseReceivedExchangeData()
     CHK_RET(ParseCheckDataLen(remoteInfoSize, exchangeDataPtr, exchangeDataBlankSize));
     if (!exchangeInfoSize_.compare(remoteInfoSize)) {
         HCCL_ERROR(
-            "remoteExchangeDataSize check fail, localIpcMenSize[%u] localNotifySize[%u] localExDataSize[%u]"
-            "remoteIpcMenSize[%u] remoteNotifySize[%u] remoteExDataSize[%u]",
+            "remoteExchangeDataSize check fail, localIpcMemSize[%u] localNotifySize[%u] localExDataSize[%u] "
+            "remoteIpcMemSize[%u] remoteNotifySize[%u] remoteExDataSize[%u]",
             exchangeInfoSize_.ipcMenSize, exchangeInfoSize_.notifySize, exchangeInfoSize_.exDataSize,
             remoteInfoSize.ipcMenSize, remoteInfoSize.notifySize, remoteInfoSize.exDataSize);
         return HCCL_E_INTERNAL;
@@ -887,7 +889,7 @@ HcclResult TransportP2p::TxDataSignal(Stream& stream)
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[TransportP2p][TxDataSignal]errNo[0x%016llx]In tx data signal, signal record failed.",
+            "[TransportP2p][TxDataSignal]errNo[0x%016llx] In tx data signal, signal record failed.",
             HCCL_ERROR_CODE(ret)),
         ret);
     return HCCL_SUCCESS;
@@ -989,7 +991,7 @@ HcclResult TransportP2p::ExchangeMemAndNotifyWithoutIpc()
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[ExchangeI][pcMesg]In exchange ipc mesg, send ipc mem output mesg fail. ret[%d], "
+            "[Exchange][IpcMesg] In exchange ipc mesg, send ipc mem output mesg fail. ret[%d], "
             "ptr[%p], size[%llu]",
             ret, machinePara_.outputMem.ptr(), machinePara_.outputMem.size()),
         ret);
@@ -999,7 +1001,7 @@ HcclResult TransportP2p::ExchangeMemAndNotifyWithoutIpc()
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[ExchangeI][pcMesg]In exchange ipc mesg, send ipc mem input mesg fail. ret[%d], "
+            "[Exchange][IpcMesg] In exchange ipc mesg, send ipc mem input mesg fail. ret[%d], "
             "ptr[%p], size[%llu]",
             ret, machinePara_.inputMem.ptr(), machinePara_.inputMem.size()),
         ret);
@@ -1044,7 +1046,7 @@ HcclResult TransportP2p::ExchangeMemAndNotifyWithIpc()
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[ExchangeI][pcMesg]In exchange ipc mesg, send ipc mem output mesg fail. ret[%d], "
+            "[Exchange][IpcMesg] In exchange ipc mesg, send ipc mem output mesg fail. ret[%d], "
             "ptr[%p], size[%llu]",
             ret, machinePara_.outputMem.ptr(), machinePara_.outputMem.size()),
         ret);
@@ -1054,7 +1056,7 @@ HcclResult TransportP2p::ExchangeMemAndNotifyWithIpc()
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[ExchangeI][pcMesg]In exchange ipc mesg, send ipc mem input mesg fail. ret[%d], "
+            "[Exchange][IpcMesg] In exchange ipc mesg, send ipc mem input mesg fail. ret[%d], "
             "ptr[%p], size[%llu]",
             ret, machinePara_.inputMem.ptr(), machinePara_.inputMem.size()),
         ret);
@@ -1122,7 +1124,7 @@ HcclResult TransportP2p::SendMemMesgWithoutIpc(void* ptr, u64 size) const
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[Send]errNo[0x%016llx]In send ipc mesg, send size failed. remote rank[%u] "
+            "[Send]errNo[0x%016llx] In send ipc mesg, send size failed. remote rank[%u] "
             "size[%s] local rank[%u]",
             HCCL_ERROR_CODE(ret), machinePara_.remoteUserrank, memSize.c_str(), machinePara_.localUserrank),
         ret);
@@ -1139,7 +1141,7 @@ HcclResult TransportP2p::RecvMemMesgWithoutIpc(u64& addr, [[maybe_unused]] u8* m
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[Recv]errNo[0x%016llx]In recv ipc mem mesg, receive mem name failed."
+            "[Recv]errNo[0x%016llx] In recv ipc mem mesg, receive mem name failed."
             "remote userrank[%u] local rank[%u]",
             HCCL_ERROR_CODE(ret), machinePara_.remoteUserrank, machinePara_.localUserrank),
         ret);
@@ -1152,7 +1154,7 @@ HcclResult TransportP2p::RecvMemMesgWithoutIpc(u64& addr, [[maybe_unused]] u8* m
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[Recv]errNo[0x%016llx]In recv ipc mem mesg, receive offset name failed."
+            "[Recv]errNo[0x%016llx] In recv ipc mem mesg, receive offset name failed."
             "remote userrank[%u] local rank[%u], remoteMemSize[%s]",
             HCCL_ERROR_CODE(ret), machinePara_.remoteUserrank, machinePara_.localUserrank, remoteMemSize.c_str()),
         ret);
@@ -1199,7 +1201,7 @@ HcclResult TransportP2p::SendIpcMemMesg(void* ptr, u64 size) const
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[Send][IpcMemMesg]errNo[0x%016llx]In send ipc mesg, send size failed. remote rank[%u] "
+            "[Send][IpcMemMesg]errNo[0x%016llx] In send ipc mesg, send size failed. remote rank[%u] "
             "size[%s] local rank[%u]",
             HCCL_ERROR_CODE(ret), machinePara_.remoteUserrank, memSize.c_str(), machinePara_.localUserrank),
         ret);
@@ -1209,7 +1211,7 @@ HcclResult TransportP2p::SendIpcMemMesg(void* ptr, u64 size) const
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[Send][IpcMemMesg]errNo[0x%016llx]In send ipc mesg, send offset failed. remote rank[%u] "
+            "[Send][IpcMemMesg]errNo[0x%016llx] In send ipc mesg, send offset failed. remote rank[%u] "
             "offset[%s] local rank[%u]",
             HCCL_ERROR_CODE(ret), machinePara_.remoteUserrank, memOffset.c_str(), machinePara_.localUserrank),
         ret);
@@ -1228,7 +1230,7 @@ HcclResult TransportP2p::RecvIpcMemMesg(void** memPtr, u8* memName, u64& offset)
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[Recv][IpcMemMesg]errNo[0x%016llx]In recv ipc mem mesg, receive mem name failed."
+            "[Recv][IpcMemMesg]errNo[0x%016llx] In recv ipc mem mesg, receive mem name failed."
             "remote userrank[%u] local rank[%u]",
             HCCL_ERROR_CODE(ret), machinePara_.remoteUserrank, machinePara_.localUserrank),
         ret);
@@ -1239,7 +1241,7 @@ HcclResult TransportP2p::RecvIpcMemMesg(void** memPtr, u8* memName, u64& offset)
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[Recv][IpcMemMesg]errNo[0x%016llx]In recv ipc mem mesg, receive offset name failed."
+            "[Recv][IpcMemMesg]errNo[0x%016llx] In recv ipc mem mesg, receive offset name failed."
             "remote userrank[%u] local rank[%u], remoteMemSize[%s]",
             HCCL_ERROR_CODE(ret), machinePara_.remoteUserrank, machinePara_.localUserrank, remoteMemSize.c_str()),
         ret);
@@ -1252,7 +1254,7 @@ HcclResult TransportP2p::RecvIpcMemMesg(void** memPtr, u8* memName, u64& offset)
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[Recv][IpcMemMesg]errNo[0x%016llx]In recv ipc mem mesg, receive offset name failed."
+            "[Recv][IpcMemMesg]errNo[0x%016llx] In recv ipc mem mesg, receive offset name failed."
             "remote userrank[%u] local rank[%u], remoteOffsetName[%s]",
             HCCL_ERROR_CODE(ret), machinePara_.remoteUserrank, machinePara_.localUserrank, remoteOffsetName.c_str()),
         ret);
@@ -1264,7 +1266,7 @@ HcclResult TransportP2p::RecvIpcMemMesg(void** memPtr, u8* memName, u64& offset)
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[Recv][IpcMemMesg]errNo[0x%016llx]In recv ipc mem mesg, wait peer mem config "
+            "[Recv][IpcMemMesg]errNo[0x%016llx] In recv ipc mem mesg, wait peer mem config "
             "failed. local rank[%u]",
             HCCL_ERROR_CODE(ret), machinePara_.localUserrank),
         ret);
@@ -1297,7 +1299,7 @@ HcclResult TransportP2p::TxAsync(UserMemType dstMemType, u64 dstOffset, const vo
     ret = SignalRecord(remoteSendReadyNotify_, remoteSendReadyAddress_, remoteSendReadyOffset_, stream);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
-        HCCL_ERROR("[TransportP2p][TxAsync]errNo[0x%016llx]In tx async, signal record failed.", HCCL_ERROR_CODE(ret)),
+        HCCL_ERROR("[TransportP2p][TxAsync]errNo[0x%016llx] In tx async, signal record failed.", HCCL_ERROR_CODE(ret)),
         ret);
 
     return HCCL_SUCCESS;
@@ -1364,7 +1366,7 @@ HcclResult TransportP2p::TxAsync(std::vector<TxMemoryInfo>& txMems, Stream& stre
     ret = SignalRecord(remoteSendReadyNotify_, remoteSendReadyAddress_, remoteSendReadyOffset_, stream);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
-        HCCL_ERROR("[TransportP2p][TxAsync]errNo[0x%016llx]In tx async, signal record failed.", HCCL_ERROR_CODE(ret)),
+        HCCL_ERROR("[TransportP2p][TxAsync]errNo[0x%016llx] In tx async, signal record failed.", HCCL_ERROR_CODE(ret)),
         ret);
 
     return HCCL_SUCCESS;
@@ -1626,7 +1628,7 @@ HcclResult TransportP2p::WaitPeerMemConfig(void** memPtr, const u8* memName, uin
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[Wait][WaitPeerMemConfig]errNo[0x%016llx]In link pcie, open mem failed. "
+            "[Wait][WaitPeerMemConfig]errNo[0x%016llx] In link pcie, open mem failed. "
             "offset[%llu], size[%llu Byte], linkType[%d]",
             HCCL_ERROR_CODE(ret), offset, size, transportAttr_.linkType),
         ret);
@@ -1849,9 +1851,9 @@ void TransportP2p::SetMemIncludeFlag()
     u64 outputMemPtr = reinterpret_cast<u64>(machinePara_.outputMem.ptr());
     u64 outputMemEndPtr = outputMemPtr + machinePara_.outputMem.size();
     HCCL_DEBUG(
-        "[SetMemIncludeFlag] memPtr[%u] memEndPtr[%u], inputMemPtr[%u] inputMemEndPtr[%u],",
-        "outputMemPtr[%u] outputMemEndPtr[%u]", memPtr, memEndPtr, inputMemPtr, inputMemEndPtr, outputMemPtr,
-        outputMemEndPtr);
+        "[SetMemIncludeFlag] memPtr[%u] memEndPtr[%u], inputMemPtr[%u] inputMemEndPtr[%u], "
+        "outputMemPtr[%u] outputMemEndPtr[%u]",
+        memPtr, memEndPtr, inputMemPtr, inputMemEndPtr, outputMemPtr, outputMemEndPtr);
     if ((memPtr <= inputMemPtr && inputMemEndPtr <= memEndPtr)
         && (memPtr <= outputMemPtr && outputMemEndPtr <= memEndPtr)) {
         isMemInclude_ = true;

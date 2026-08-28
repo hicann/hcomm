@@ -202,7 +202,7 @@ CcuChannelCtxPool::GetChannelCtx(const Hccl::LinkData& link, CcuChannelCtxPool::
     CHK_PRT_RET(
         it == allocatedChannelIdMap_.end(),
         HCCL_ERROR(
-            "[CcuChannelCtxPool][%s] failed to find allocated channelId of link[%s], ", "devLogicId[%d].", __func__,
+            "[CcuChannelCtxPool][%s] failed to find allocated channelId of link[%s], devLogicId[%d].", __func__,
             link.Describe().c_str(), devLogicId_),
         HcclResult::HCCL_E_NOT_FOUND);
     // 内部维护数据保证channelJettyInfoMap_记录的资源存在

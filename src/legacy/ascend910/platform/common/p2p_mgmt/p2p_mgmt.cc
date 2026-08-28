@@ -71,7 +71,7 @@ HcclResult P2PMgmt::EnableP2P(uint32_t remoteDevicePhysicID)
         CHK_RET(hrtGetDevicePhyIdByIndex(localDeviceLogicID, localDevicePhysicID));
         CHK_RET(CheckMarsterId(remoteDevicePhysicID, localDevicePhysicID, isMarsterIdDiff));
         HCCL_INFO(
-            "[EnableP2P][CheckMarsterId]localDevicePhysicID[%u], remoteDevicePhysicID[%u], isMarsterIdDiff[%s]",
+            "[EnableP2P][CheckMasterId]localDevicePhysicID[%u], remoteDevicePhysicID[%u], isMarsterIdDiff[%s]",
             localDevicePhysicID, remoteDevicePhysicID, isMarsterIdDiff ? "true" : "false");
         if (isMarsterIdDiff) {
             CHK_RET(hrtEnableP2P(localDeviceLogicID, remoteDevicePhysicID));
@@ -283,7 +283,7 @@ HcclResult P2PMgmt::WaitP2PEnabled(uint32_t remoteDevicePhysicID, std::function<
         CHK_RET(hrtGetDevicePhyIdByIndex(localDeviceLogicID, localDevicePhysicID));
         HcclResult ret = CheckMarsterId(remoteDevicePhysicID, localDevicePhysicID, isMarsterIdDiff);
         HCCL_INFO(
-            "[WaitP2PEnabled][CheckMarsterId]localDevicePhysicID[%u], remoteDevicePhysicID[%u], isMarsterIdDiff[%s]",
+            "[WaitP2PEnabled][CheckMasterId]localDevicePhysicID[%u], remoteDevicePhysicID[%u], isMarsterIdDiff[%s]",
             localDevicePhysicID, remoteDevicePhysicID, isMarsterIdDiff ? "true" : "false");
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
@@ -328,10 +328,10 @@ P2PMgmt::WaitP2PConnected(int32_t localDeviceLogicID, uint32_t remoteDevicePhysi
         const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(TIME_NOW() - start);
         if (elapsed > timeout) {
             RPT_INNER_ERR_PRT(
-                "connected p2p timeout, timeout:%d s.local logicDevid:%d,"
-                "remote physic id:%u The possible causes are as follows:1.the connection "
-                "between this device and the target device is abnormal 2.an exception occurred "
-                "at the target devices 3.The ranktable is not matched.",
+                "connected p2p timeout, timeout:%d s. local logicDevid:%d, "
+                "remote physic id:%u The possible causes are as follows: 1. the connection "
+                "between this device and the target device is abnormal 2. an exception occurred "
+                "at the target devices 3. The ranktable is not matched.",
                 GetExternalInputHcclLinkTimeOut(), localDeviceLogicID, remoteDevicePhysicID);
 
             HCCL_ERROR(

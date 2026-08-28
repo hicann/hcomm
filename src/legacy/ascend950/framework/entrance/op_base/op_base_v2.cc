@@ -405,7 +405,7 @@ HcclResult HcclCommInitClusterInfoV2(const char* clusterInfo, uint32_t rank, Hcc
     if (errorFlag) {
         HCCL_ERROR(
             "[Init][%s]HcclCommInitClusterInfoV2 failed, clusterInfo[%s], rank[%u], deviceLogicId[%d], devPhyId[%d], "
-            "commId[%s]"
+            "commId[%s] "
             "return[0x%016llx]",
             __func__, clusterInfo, rank, deviceLogicId, devPhyId, commId.c_str(), HCCL_ERROR_CODE(ret));
         (void)HcclCommDestroyV2(opbasedCommInfoV2.pComm.get());
@@ -444,7 +444,7 @@ HcclCommInitClusterInfoMemConfigV2(const char* rankTableString, uint32_t rank, H
     CHK_PRT_RET(
         ret,
         HCCL_ERROR(
-            "[Parse][Json]errNo[0x%016llx] and create comm failed, commName[%s.", HCCL_ERROR_CODE(ret),
+            "[Parse][Json]errNo[0x%016llx] and create comm failed, commName[%s].", HCCL_ERROR_CODE(ret),
             config->hcclCommName),
         static_cast<HcclResult>(ret));
     HCCL_INFO("HcclCommInitClusterInfoMemConfigV2 End, commName[%s]", config->hcclCommName);
@@ -568,7 +568,7 @@ HcclResult HcclTaskReportRegisterV2(HcclComm comm, ReportCallbackTemplate report
 
 HcclResult HcclGetDpuSteamIdV2(HcclComm comm, u32& dpuStreamId)
 {
-    HCCL_RUN_INFO("[HcclTaskRegisterV2] start to Get DpuSteamId");
+    HCCL_RUN_INFO("[HcclTaskRegisterV2] start to Get DpuStreamId");
     CHK_PTR_NULL(comm);
     Hccl::HcclCommunicator* communicator = static_cast<Hccl::HcclCommunicator*>(comm);
     auto ret = communicator->GetStreamId(dpuStreamId);
@@ -1046,7 +1046,7 @@ HcclResult HcclCreateSubCommConfigV2(
     if (errorFlag) {
         groupParaLock.unlock();
         HCCL_ERROR(
-            "[Init][%s]HcclCreateSubCommConfigV2 failed, deviceLogicId[%d], devPhyId[%d], sub comm[%s], world comm[%s]"
+            "[Init][%s]HcclCreateSubCommConfigV2 failed, deviceLogicId[%d], devPhyId[%d], sub comm[%s], world comm[%s] "
             "return[0x%016llx]",
             __func__, logicDevId, devPhyId, subCommIdStr.c_str(), commId.c_str(), HCCL_ERROR_CODE(ret));
         (void)HcclCommDestroyV2(subCommunicator.get());
@@ -1850,7 +1850,7 @@ CommInitRootInfo(u32 nRanks, u32 rank, const HcclRootHandleV2& rootHandle, const
     if (errorFlag) {
         HCCL_ERROR(
             "[Init][%s]HcclCommInitClusterInfoV2 failed, rankNum[%u], rank[%u], logicDevId[%d], rootInfo "
-            "identifier[%s],"
+            "identifier[%s], "
             "return[0x%016llx]",
             __func__, nRanks, rank, logicDevId, identifier.c_str(), HCCL_ERROR_CODE(ret));
         (void)HcclCommDestroyV2(opbasedCommInfoV2.pComm.get());
@@ -3171,7 +3171,7 @@ HcclResult HcclGetTopoTypeV2(HcclComm comm, uint32_t netLayer, uint32_t topoInst
     }
     /* 关键状态记录 */
     HCCL_INFO(
-        "HcclGetInstSizeListByNetLayer success, netLayer[%u] topoType[%u] commId[%s]", netLayer, *topoType,
+        "HcclGetTopoType success, netLayer[%u] topoType[%u] commId[%s]", netLayer, *topoType,
         communicator->GetId().c_str());
     return HCCL_SUCCESS;
 }
@@ -3184,7 +3184,7 @@ HcclGetRanksByTopoInstV2(HcclComm comm, uint32_t netLayer, uint32_t topoInstId, 
     auto ret = communicator->GetRanksByTopoInst(netLayer, topoInstId, ranks, rankNum);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
-            "HcclGetTopoInstsByLayer get ranks from communicator failed at netLayer[%u], commId[%s], ret[%d]", netLayer,
+            "HcclGetRanksByTopoInst get ranks from communicator failed at netLayer[%u], commId[%s], ret[%d]", netLayer,
             communicator->GetId().c_str(), ret);
         return HCCL_E_NOT_FOUND;
     }

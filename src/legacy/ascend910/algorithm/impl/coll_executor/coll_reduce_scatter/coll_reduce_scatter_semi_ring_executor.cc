@@ -62,7 +62,7 @@ HcclResult CollReduceScatterSemiRingExecutor::CalcLevel0CommInfo(
         for (auto& transportRequest : commTransportLevel0[subCommIndex].transportRequests) {
             transportRequest.notifyNum = topoAttr_.deviceNumPerAggregation + 4U; // 只传递额外的notify个数
             HCCL_INFO(
-                "[CollReduceScatterSemiRingExecutor][CalcLevel0CommInfo] set extral notifyNum[%u]",
+                "[CollReduceScatterSemiRingExecutor][CalcLevel0CommInfo] set extra notifyNum[%u]",
                 transportRequest.notifyNum);
         }
     }
