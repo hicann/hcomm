@@ -251,10 +251,15 @@ void DevUbConnection::GetTimeOut() // 基于调用方按协议从环境变量获
         return;
     }
 
+    // CTP 协议不感知 TP 建链，跳过 CalcTotalTimeout，
+    // tpTimeOutMs 保持 0，由 TpManager::CalcTaTimeout 内部按 CTP 规则直接使用 taTimeOut_
     uint32_t tpTimeOutMs = 0;
-    HcclResult ret = CalcTotalTimeout(tpTimeOutMs);
-    if (ret != HCCL_SUCCESS) {
-        HCCL_WARNING("[DevUbConnection][%s] CalcTotalTimeout failed[%d], tpTimeOutMs remains 0.", __func__, ret);
+    if (tpProtocol != TpProtocol::CTP) {
+        HcclResult ret = CalcTotalTimeout(tpTimeOutMs);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_RUN_WARNING(
+                "[DevUbConnection][%s] CalcTotalTimeout failed[%d], tpTimeOutMs remains 0.", __func__, ret);
+        }
     }
     jettyTimeOut = TpManager::CalcTaTimeout(tpProtocol, taTimeOut_, tpTimeOutMs);
     HCCL_INFO(

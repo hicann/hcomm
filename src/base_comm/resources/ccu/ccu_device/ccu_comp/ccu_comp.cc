@@ -466,11 +466,8 @@ HcclResult CcuComponent::CreateAndImportLoopJettys(
     const uint32_t loopJettyQos
         = loopTpInfo.hasMappedJettyPriority ? (loopTpInfo.mappedJettyPriority & 0xFU) : EnvConfig::UB_QOS_DEFAULT;
 
-    TpAttrInfo tpAttrInfo{};
-    CHK_RET(GetLoopTpAttr(dieId, commAddr, tpAttrInfo));
-    uint32_t tpTimeOutMs = 0;
-    (void)TpMgr::GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs);
-    const uint8_t errTimeout = TpMgr::CalcTaTimeout(LOOP_JETTY_PROTOCOL, TpMgr::TA_TIMEOUT_NOT_SET, tpTimeOutMs);
+    uint8_t errTimeout = 0;
+    CHK_RET(GetLoopJettyTimeout(dieId, commAddr, errTimeout));
 
     for (const auto& jettyInfo : jettyInfos) {
         const auto jettyMode = jettyInfo.jettyType == CcuJettyType::CCUM_CACHED_JETTY ? HrtJettyMode::CCU_CCUM_CACHE :
@@ -601,6 +598,20 @@ HcclResult CcuComponent::GetLoopTpAttr(const uint8_t dieId, const CommAddr& comm
     }
 
     tpAttrInfo = tpAttrInfoMap_[dieId];
+    return HcclResult::HCCL_SUCCESS;
+}
+
+HcclResult CcuComponent::GetLoopJettyTimeout(const uint8_t dieId, const CommAddr& commAddr, uint8_t& errTimeout)
+{
+    TpAttrInfo tpAttrInfo{};
+    CHK_RET(GetLoopTpAttr(dieId, commAddr, tpAttrInfo));
+    // CTP 协议不感知 TP 建链，跳过 GetTpTotalTimeout（对齐 DevUbConnection::GetTimeOut 的 CTP 分支），
+    // tpTimeOutMs 保持 0，由 TpManager::CalcTaTimeout 内部按 CTP 规则直接使用 taTimeOut_
+    uint32_t tpTimeOutMs = 0;
+    if (LOOP_JETTY_PROTOCOL != TpProtocol::CTP) {
+        CHK_RET(TpMgr::GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs));
+    }
+    errTimeout = TpMgr::CalcTaTimeout(LOOP_JETTY_PROTOCOL, TpMgr::TA_TIMEOUT_NOT_SET, tpTimeOutMs);
     return HcclResult::HCCL_SUCCESS;
 }
 

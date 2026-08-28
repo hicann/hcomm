@@ -482,10 +482,8 @@ HcclResult CcuComponent::CreateAndImportLoopJettys(
     const auto ccuBufTokenValue = ccuRmaBuffer->GetTokenValue();
 
     const auto& tpInfo = GetTpInfo(ipAddr);
-    const auto tpAttrInfo = GetLoopTpAttr(ipAddr, tpInfo.tpHandle);
-    uint32_t tpTimeOutMs = 0;
-    (void)TpManager::GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs);
-    const auto errTimeout = TpManager::CalcTaTimeout(LOOP_JETTY_PROTOCOL, TpManager::TA_TIMEOUT_NOT_SET, tpTimeOutMs);
+    uint8_t errTimeout = 0;
+    CHK_RET(GetLoopJettyTimeout(ipAddr, tpInfo.tpHandle, errTimeout));
 
     auto& createdVec = createdOutParamMap[dieId];
     auto& importedVec = importedOutParamMap[dieId];
@@ -608,6 +606,19 @@ TpAttrInfo CcuComponent::GetLoopTpAttr(const IpAddress& ipAddr, const TpHandle t
 
     tpAttrInfoMap[ipAddr] = tpAttrInfo;
     return tpAttrInfo;
+}
+
+HcclResult CcuComponent::GetLoopJettyTimeout(const IpAddress& ipAddr, const TpHandle tpHandle, uint8_t& errTimeout)
+{
+    const auto tpAttrInfo = GetLoopTpAttr(ipAddr, tpHandle);
+    // CTP 协议不感知 TP 建链，跳过 GetTpTotalTimeout（对齐 DevUbConnection::GetTimeOut 的 CTP 分支），
+    // tpTimeOutMs 保持 0，由 TpManager::CalcTaTimeout 内部按 CTP 规则直接使用 taTimeOut_
+    uint32_t tpTimeOutMs = 0;
+    if (LOOP_JETTY_PROTOCOL != TpProtocol::CTP) {
+        CHK_RET(TpManager::GetTpTotalTimeout(tpAttrInfo, tpTimeOutMs));
+    }
+    errTimeout = TpManager::CalcTaTimeout(LOOP_JETTY_PROTOCOL, TpManager::TA_TIMEOUT_NOT_SET, tpTimeOutMs);
+    return HcclResult::HCCL_SUCCESS;
 }
 
 inline uint32_t GetRandomNum()

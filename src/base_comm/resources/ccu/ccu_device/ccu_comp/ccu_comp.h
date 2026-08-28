@@ -94,6 +94,7 @@ private:
     CreateAndImportLoopJettys(const uint8_t dieId, const CommAddr& commAddr, const std::vector<JettyInfo>& jettyInfos);
     HcclResult GetLoopTpInfo(const uint8_t dieId, const CommAddr& commAddr, TpInfo& tpInfo);
     HcclResult GetLoopTpAttr(const uint8_t dieId, const CommAddr& commAddr, TpAttrInfo& tpAttrInfo);
+    HcclResult GetLoopJettyTimeout(const uint8_t dieId, const CommAddr& commAddr, uint8_t& errTimeout);
     uint32_t GetNewPsn() const;
     HcclResult ConfigLoopChannel(const uint8_t dieId, const CommAddr& commAddr, const ChannelInfo& channelInfo);
     HcclResult ConfigMsIdToken();

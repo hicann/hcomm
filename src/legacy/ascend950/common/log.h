@@ -33,6 +33,7 @@ constexpr u32 HCCL_LOG_WARN = 0x2;
 constexpr u32 HCCL_LOG_ERROR = 0x3;
 constexpr u32 HCCL_LOG_OPLOG = 0x6;
 constexpr u32 HCCL_LOG_RUN_INFO = 0xff;
+constexpr u32 HCCL_LOG_RUN_WARN = 0xfe;
 
 enum class HcclSubModuleID {
     LOG_SUB_MODULE_ID_HCCL = 0,
@@ -127,6 +128,12 @@ int HcclCheckLogLevel(int logLevel);
         LOG_PRINT(::Hccl::HCCL_LOG_RUN_INFO, format, ##__VA_ARGS__); \
     } while (0)
 
+/* 运行警告日志，记录在run目录下 */
+#define MODULE_RUN_WARNING(format, ...)                              \
+    do {                                                             \
+        LOG_PRINT(::Hccl::HCCL_LOG_RUN_WARN, format, ##__VA_ARGS__); \
+    } while (0)
+
 // 错误码
 const u64 SYSTEM_RESERVE_ERROR = 0;
 const u64 HCCL_MODULE_ID = 5;
@@ -138,6 +145,7 @@ const u64 HCCL_MODULE_ID = 5;
 #define HCCL_ERROR(...) MODULE_ERROR(__VA_ARGS__)
 /* 运行日志 */
 #define HCCL_RUN_INFO(...) MODULE_RUN_INFO(__VA_ARGS__)
+#define HCCL_RUN_WARNING(...) MODULE_RUN_WARNING(__VA_ARGS__)
 
 #define HCCL_ERROR_CODE(error)                                             \
     ((::Hccl::SYSTEM_RESERVE_ERROR << 32) + (::Hccl::HCCL_MODULE_ID << 24) \

@@ -116,6 +116,7 @@ private:
     TpInfo RequestNewTpInfo(const IpAddress& srcIpAddr, const IpAddress& dstIpAddr) const;
     TpInfo GetTpInfo(const IpAddress& ipAddr);
     TpAttrInfo GetLoopTpAttr(const IpAddress& ipAddr, const TpHandle tpHandle);
+    HcclResult GetLoopJettyTimeout(const IpAddress& ipAddr, const TpHandle tpHandle, uint8_t& errTimeout);
     uint32_t GetPsn(const IpAddress& ipAddr);
     HcclResult ConfigLoopChannel(const uint8_t dieId, const IpAddress& ipAddr, const ChannelInfo& channelInfo);
     void ConfigMsIdToken();
