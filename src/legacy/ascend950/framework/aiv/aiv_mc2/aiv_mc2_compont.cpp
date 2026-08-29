@@ -14,6 +14,7 @@
 #include <unordered_set>
 #include "coll_service_device_mode.h"
 #include "aiv_ins.h"
+#include "local_rma_buf_manager.h"
 
 namespace Hccl {
 
@@ -126,7 +127,8 @@ void AivMc2Compont::GenerateAivUrmaCommContext(HcclCombinOpParam& combinOpParam)
     if (links.empty()) {
         THROW<InvalidParamsException>(StringFormat("AivMc2Compont::GenerateAivUrmaCommContext links is empty"));
     }
-    auto localBuffer = comm->GetLocalRmaBufManager().Get(comm->GetId(), links[0].GetLocalPort(), BufferType::SCRATCH);
+    auto localBuffer = comm->GetLocalRmaBufManager().Get(
+        GetAivUrmaBufferTag(comm->GetId()), links[0].GetLocalPort(), BufferType::SCRATCH);
     CHECK_NULLPTR(localBuffer, "[AivMc2Compont::GenerateAivUrmaCommContext] localBuffer is nullptr!");
     uint64_t localBufferSize = static_cast<uint64_t>(localBuffer->GetBuf()->GetSize());
     uint64_t localBufferAddr = static_cast<uint64_t>(localBuffer->GetBuf()->GetAddr());

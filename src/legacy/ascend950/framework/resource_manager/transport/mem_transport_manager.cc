@@ -16,6 +16,7 @@
 #include "p2p_transport.h"
 #include "cnt_notify_res_helper.h"
 #include "timeout_exception.h"
+#include "local_rma_buf_manager.h"
 namespace Hccl {
 MemTransportManager::MemTransportManager(const CommunicatorImpl& communicator) : comm(&communicator) {}
 
@@ -965,7 +966,7 @@ BaseMemTransport* MemTransportManager::CreateUrmaDirectTransport(const LinkData&
     BaseMemTransport::CommonLocRes locRes;
 
     // buffer 来自localRmaBufferManager, input/output/scratch
-    locRes.bufferVec = GetBufferVec(comm->GetId(), linkData, OpMode::OPBASE);
+    locRes.bufferVec = GetBufferVec(GetAivUrmaBufferTag(comm->GetId()), linkData, OpMode::OPBASE);
     HCCL_INFO("link=%s get bufferVec OK", linkData.Describe().c_str());
 
     // connection是一个，来自 RmaConnManager

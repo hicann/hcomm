@@ -11,6 +11,7 @@
 #include "aiv_ins_preprocessor.h"
 #include "aiv_ins.h"
 #include "env_config_v2.h"
+#include "local_rma_buf_manager.h"
 
 namespace Hccl {
 
@@ -69,6 +70,18 @@ void AivInsPreprocessor::BatchBuildUrmaTransports(const vector<LinkData>& links)
     HCCL_RUN_INFO("[AivInsPreprocessor::%s] start.", __func__);
 
     std::string opTag = comm->GetCurrentCollOperator()->opTag;
+
+    auto& localRmaBufManager = comm->GetLocalRmaBufManager();
+    const string aivUrmaBufferTag = GetAivUrmaBufferTag(comm->GetId());
+    for (size_t i = 0; i < links.size(); ++i) {
+        const auto& link = links[i];
+        auto localBuffer = localRmaBufManager.Reg(
+            aivUrmaBufferTag, BufferType::SCRATCH, comm->GetCclBuffer(), link.GetLocalPort(), link.GetLinkProtocol());
+        CHECK_NULLPTR(
+            localBuffer, StringFormat(
+                             "[AivInsPreprocessor::%s] fake local buffer is nullptr, linkIdx[%zu], port[%u]", __func__,
+                             i, link.GetLocalPort().GetId()));
+    }
 
     // 创建RmaConnectiuon
     RmaConnManager& connManager = comm->GetRmaConnManager();

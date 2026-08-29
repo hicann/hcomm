@@ -24,6 +24,7 @@
 #include "endpoint.h"
 #include "exchange_ub_buffer_dto.h"
 #include "runtime_api_exception.h"
+#include "hcomm_adapter_rts.h"
 
 using namespace hcomm;
 using namespace Hccl;
@@ -59,6 +60,16 @@ public:
     HcclResult MemoryImport(const void*, uint32_t, HcommMem*) override { return HCCL_SUCCESS; }
     HcclResult MemoryUnimport(const void*, uint32_t) override { return HCCL_SUCCESS; }
     HcclResult GetAllMemHandles(void**, uint32_t*) override { return HCCL_SUCCESS; }
+};
+
+class StubLocalUbRmaBufferWithExchangeDto : public LocalUbRmaBuffer {
+public:
+    explicit StubLocalUbRmaBufferWithExchangeDto(const std::shared_ptr<Buffer>& buffer) : LocalUbRmaBuffer(buffer) {}
+
+    std::unique_ptr<Serializable> GetExchangeDto() override
+    {
+        return std::make_unique<ExchangeUbBufferDto>(GetAddr(), GetSize(), 0, 0, 0, UINT32_MAX);
+    }
 };
 
 HcommResult StubHcommMemGetAllMemHandlesFail(EndpointHandle, void**, uint32_t*) { return HCCL_E_INTERNAL; }
@@ -737,6 +748,26 @@ TEST_F(AivUrmaTransportTest, Ut_BufferVecPack_WhenCalled_FillsBinaryStream)
     BinaryStream binaryStream;
 
     EXPECT_NO_THROW(transport->BufferVecPack(binaryStream));
+}
+
+// 覆盖 commit 改动：QueryProcessToken 进程级 token 查询路径（bufferVec 非空 + 调用 hcomm::RtsUbDevQueryInfo）
+TEST_F(AivUrmaTransportTest, Ut_BufferVecPack_WhenBufferVecHasLocalBuffer_QueriesProcessToken)
+{
+    MOCKER_CPP(&hcomm::RtsUbDevQueryInfo)
+        .expects(once())
+        .with(mockcpp::any(), mockcpp::any())
+        .will(returnValue(static_cast<HcclResult>(HCCL_SUCCESS)));
+
+    auto conn = MakeConn();
+    Socket socket(nullptr, IpAddress(), 0, IpAddress(), "ut", SocketRole::CLIENT, Hccl::NicType::DEVICE_NIC_TYPE);
+    auto transport = MakeTransport(*conn, socket);
+    auto buffer = std::make_shared<Hccl::Buffer>(0x99880000U, 0x1000U, "aiv_urma_qpt");
+    auto localBuffer = std::make_shared<StubLocalUbRmaBufferWithExchangeDto>(buffer);
+    transport->commonLocRes_.bufferVec.emplace_back(localBuffer.get());
+    BinaryStream binaryStream;
+
+    EXPECT_NO_THROW(transport->BufferVecPack(binaryStream));
+    EXPECT_GT(binaryStream.GetSize(), 0U);
 }
 
 TEST_F(AivUrmaTransportTest, Ut_IsResReadyAndConnsReady_WhenConnReady_ReturnsTrue)

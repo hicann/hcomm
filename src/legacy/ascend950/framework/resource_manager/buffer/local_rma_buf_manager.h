@@ -21,6 +21,9 @@
 #include "buffer_type.h"
 
 namespace Hccl {
+// Keep fake registration isolated from the real CCL buffer registered under commId.
+inline string GetAivUrmaBufferTag(const string& commId) { return commId + "_aiv_urma"; }
+
 class CommunicatorImpl;
 class LocalRmaBufManager {
 public:

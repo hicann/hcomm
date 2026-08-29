@@ -26,6 +26,7 @@
 #include "dev_buffer.h"
 #include "rma_buffer.h"
 #include "internal_exception.h"
+#include "invalid_params_exception.h"
 #undef private
 #undef protected
 
@@ -151,4 +152,29 @@ TEST_F(AivMc2CompontTest, should_return_early_when_mc2Tiling_is_nullptr)
     void* commContext = nullptr;
     aivMc2Compont.AllocCommResource(nullptr, &commContext);
     EXPECT_EQ(nullptr, commContext);
+}
+
+// 覆盖 GenerateAivUrmaCommContext 的 links.empty() 异常路径及 opTag 改动（GetAivUrmaBufferTag）
+TEST_F(AivMc2CompontTest, should_throw_when_calling_GenerateCommContext_urma_links_empty)
+{
+    MOCKER(CcuRep::GetTokenInfo).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(1000));
+    HcclCombinOpParam opParam;
+    MOCKER(HrtMallocHost).stubs().with(mockcpp::any()).will(returnValue(static_cast<void*>(&opParam)));
+    MOCKER(HrtMalloc).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue((void*)0x10000));
+
+    std::unique_ptr<CommunicatorImpl> comm = std::make_unique<CommunicatorImpl>();
+    comm->rankSize = 1;
+    comm->myRank = 0;
+    AivMc2Compont aivMc2Compont(comm.get());
+    comm->cclBuffer = DevBuffer::Create(0x100, 0x100);
+    comm->ubMemoryTransportMgr = std::make_unique<UbMemoryTransportMgr>(*comm);
+
+    auto tmp = std::make_shared<CollServiceDeviceMode>(comm.get());
+    comm->collService = tmp.get();
+    auto collService = dynamic_cast<CollServiceDeviceMode*>(comm->GetCollService());
+    collService->GetAivInsPreprocessor()->SetProtocol(1); // urma 走 GenerateAivUrmaCommContext
+
+    // fullMeshLinks 默认为空，触发 links.empty() 异常
+    void* commContext;
+    EXPECT_THROW(aivMc2Compont.GenerateCommContext(&commContext), InvalidParamsException);
 }

@@ -124,3 +124,58 @@ TEST_F(LocalRmaBufManagerTest, reg_port_ub_first_time_get_then_second_no_throw_a
     auto res3 = localRmaBufManager.Get(opTag, port, bufferType);
     EXPECT_EQ(res, res3);
 }
+
+// 覆盖 GetAivUrmaBufferTag 纯函数：返回 commId + "_aiv_urma" 后缀，用于隔离 fake 注册与真实 CCL buffer
+TEST_F(LocalRmaBufManagerTest, get_aiv_urma_buffer_tag_appends_suffix)
+{
+    EXPECT_EQ("comm123_aiv_urma", GetAivUrmaBufferTag("comm123"));
+    EXPECT_EQ("_aiv_urma", GetAivUrmaBufferTag(""));
+}
+
+// 覆盖 Reg UB 分支新增条件 || comm->GetOpAivFeatureFlag()：AIV flag 开启时走 LocalUbRmaBuffer(buffer) 无 rdmaHandle
+// 路径
+TEST_F(LocalRmaBufManagerTest, reg_port_ub_aiv_flag_on_uses_local_ub_rma_buffer_without_rdma_handle)
+{
+    MOCKER(HrtUbDevQueryInfo).stubs().with(mockcpp::any(), mockcpp::any());
+
+    CommunicatorImpl comm;
+    comm.opExecuteConfig.accState = AcceleratorState::AIV; // 开启 AIV flag
+    LocalRmaBufManager localRmaBufManager(comm);
+    BasePortType basePortType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
+    PortData port(0, basePortType, 0, IpAddress());
+    string opTag = GetAivUrmaBufferTag("aiv_comm");
+
+    // AIV flag on 时不应调用 HrtRaUbCtxInit（走无 rdmaHandle 路径）
+    auto res = localRmaBufManager.Reg(opTag, bufferType, devBuffer, port, LinkProtocol::UB_CTP);
+    EXPECT_NE(nullptr, res);
+    EXPECT_EQ(RmaType::UB, res->GetRmaType());
+
+    // 用隔离后的 opTag 能 Get 到同一对象
+    auto res2 = localRmaBufManager.Get(opTag, port, bufferType);
+    EXPECT_EQ(res, res2);
+    localRmaBufManager.Destroy();
+}
+
+// 覆盖 Reg UB 分支条件为 false（AIV/AICPU flag 均关闭）时走带 rdmaHandle 的 else 路径
+TEST_F(LocalRmaBufManagerTest, reg_port_ub_aiv_flag_off_uses_rdma_handle_path)
+{
+    CommunicatorImpl comm;
+    // 默认 accState=CCU_MS，AIV/AICPU flag 均为 false
+    EXPECT_FALSE(comm.GetOpAivFeatureFlag());
+    EXPECT_FALSE(comm.GetOpAiCpuTSFeatureFlag());
+
+    LocalRmaBufManager localRmaBufManager(comm);
+    BasePortType basePortType(PortDeploymentType::DEV_NET, ConnectProtoType::UB);
+    PortData port(0, basePortType, 0, IpAddress());
+    string opTag = "real_ccl_buffer";
+
+    void* rdmaHandle = (void*)0x300;
+    MOCKER(HrtRaUbCtxInit).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(rdmaHandle));
+    MOCKER_CPP(&RdmaHandleManager::Get).stubs().with(mockcpp::any(), mockcpp::any()).will(returnValue(rdmaHandle));
+    RdmaHandleManager::GetInstance().tokenInfoMap[rdmaHandle] = make_unique<TokenInfoManager>(0, rdmaHandle);
+
+    auto res = localRmaBufManager.Reg(opTag, bufferType, devBuffer, port, LinkProtocol::UB_CTP);
+    EXPECT_NE(nullptr, res);
+    EXPECT_EQ(RmaType::UB, res->GetRmaType());
+    localRmaBufManager.Destroy();
+}

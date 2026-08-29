@@ -62,8 +62,10 @@ LocalRmaBuffer* LocalRmaBufManager::Reg(
             bufs[opTag][portData][bufferType] = make_unique<LocalRdmaRmaBuffer>(buffer, rdmaHandle);
             return bufs[opTag][portData][bufferType].get();
         } else if (portData.GetProto() == LinkProtoType::UB) {
-            HCCL_INFO("LocalRmaBufManager::Reg, comm->GetOpAiCpuTSFeatureFlag[%d]", comm->GetOpAiCpuTSFeatureFlag());
-            if (comm->GetOpAiCpuTSFeatureFlag()) { // 算子粒度
+            HCCL_INFO(
+                "LocalRmaBufManager::Reg, comm->GetOpAiCpuTSFeatureFlag[%d], comm->GetOpAivFeatureFlag[%d]",
+                comm->GetOpAiCpuTSFeatureFlag(), comm->GetOpAivFeatureFlag());
+            if (comm->GetOpAiCpuTSFeatureFlag() || comm->GetOpAivFeatureFlag()) { // 算子粒度
                 bufs[opTag][portData][bufferType] = make_unique<LocalUbRmaBuffer>(buffer);
             } else {
                 RdmaHandle rdmaHandle

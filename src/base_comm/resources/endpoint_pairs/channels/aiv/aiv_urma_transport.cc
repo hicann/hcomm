@@ -14,6 +14,7 @@
 #include "exchange_ub_conn_dto.h"
 #include "local_ub_rma_buffer.h"
 #include "orion_adapter_hccp.h"
+#include "hcomm_adapter_rts.h"
 #include "coll_operator_check.h"
 #include "user_remote_mem_getter.h"
 
@@ -22,6 +23,23 @@ constexpr uint32_t FINISH_MSG_SIZE = 128;
 constexpr char_t FINISH_MSG[FINISH_MSG_SIZE] = "Ub Comm Pipe ready!";
 constexpr uint32_t WQE_SIZE = 64;
 constexpr uint32_t QUEUE_INDEX_MEM_UNIT_SIZE = sizeof(void*);
+
+static hcomm::rtMemUbTokenInfo QueryProcessToken(const LocalRmaBuffer& buffer)
+{
+    hcomm::rtMemUbTokenInfo processTokenInfo{};
+    processTokenInfo.va = buffer.GetAddr();
+    processTokenInfo.size = buffer.GetSize();
+    HcclResult ret = hcomm::RtsUbDevQueryInfo(QUERY_PROCESS_TOKEN, processTokenInfo);
+    if (ret != HCCL_SUCCESS) {
+        MACRO_THROW(
+            InternalException, StringFormat(
+                                   "[AivUrmaTransport::%s] query process token failed, addr[0x%llx], size[%llu], "
+                                   "ret[%d]",
+                                   __func__, static_cast<unsigned long long>(buffer.GetAddr()),
+                                   static_cast<unsigned long long>(buffer.GetSize()), ret));
+    }
+    return processTokenInfo;
+}
 
 AivUrmaTransport::AivUrmaTransport(
     BaseMemTransport::CommonLocRes& commonLocRes, BaseMemTransport::Attribution& attr, const LinkData& linkData,
@@ -215,8 +233,12 @@ void AivUrmaTransport::GetProtectionInfo()
             localBufferInfo_[i].bufferInfo.rma.addr = it->GetAddr();
             localBufferInfo_[i].bufferInfo.rma.size = it->GetSize();
             localBufferInfo_[i].bufferInfo.rma.protectionInfo.type = PROTECTION_TYPE_UB;
-            localBufferInfo_[i].bufferInfo.rma.protectionInfo.memInfo.ub.tokenId = localBuffer->GetTokenId();
-            localBufferInfo_[i].bufferInfo.rma.protectionInfo.memInfo.ub.tokenValue = localBuffer->GetTokenValue();
+            const hcomm::rtMemUbTokenInfo processTokenInfo = QueryProcessToken(*localBuffer);
+            localBufferInfo_[i].bufferInfo.rma.protectionInfo.memInfo.ub.tokenId = processTokenInfo.tokenId;
+            localBufferInfo_[i].bufferInfo.rma.protectionInfo.memInfo.ub.tokenValue = processTokenInfo.tokenValue;
+            HCCL_INFO(
+                "use process token for AIV local buffer, addr[0x%llx], size[%llu]",
+                static_cast<unsigned long long>(it->GetAddr()), static_cast<unsigned long long>(it->GetSize()));
         }
     }
 
@@ -289,6 +311,13 @@ void AivUrmaTransport::BufferVecPack(BinaryStream& binaryStream)
         binaryStream << pos;
         if (it != nullptr) { // 非空的buffer，从buffer中获取 dto
             std::unique_ptr<Serializable> dto = it->GetExchangeDto();
+            auto* ubBufferDto = dynamic_cast<ExchangeUbBufferDto*>(dto.get());
+            CHECK_NULLPTR(
+                ubBufferDto,
+                StringFormat("[AivUrmaTransport::%s] exchange buffer dto is not ExchangeUbBufferDto", __func__));
+            const hcomm::rtMemUbTokenInfo processTokenInfo = QueryProcessToken(*it);
+            ubBufferDto->tokenId = processTokenInfo.tokenId;
+            ubBufferDto->tokenValue = processTokenInfo.tokenValue;
             dto->Serialize(binaryStream);
             HCCL_INFO("pack buffer pos=%u dto %s", pos, dto->Describe().c_str());
         } else { // 空的buffer，dto所有字段为0(size=0)
