@@ -29,4 +29,5 @@ void TcRaPeerLoopbackSingleQpCreate();
 void TcRaPeerSetQpLbValue();
 void TcRaPeerGetQpLbValue();
 void TcRaPeerGetLbMax();
+void TcRaPeerGetHccnCfg();
 #endif

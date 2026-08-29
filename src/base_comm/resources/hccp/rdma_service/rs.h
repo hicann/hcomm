@@ -189,7 +189,7 @@ RS_ATTRI_VISI_DEF int RsSetHostPid(uint32_t phyId, pid_t hostPid, const char *pi
 
 RS_ATTRI_VISI_DEF int RsInit(struct RsInitConfig *cfg);
 RS_ATTRI_VISI_DEF int RsGetTlsEnable(unsigned int phyId, bool *tlsEnable);
-RS_ATTRI_VISI_DEF int RsGetHccnCfg(unsigned int phyId, enum HccnCfgKey key, char *value, unsigned int *valueLen);
+RS_ATTRI_VISI_DEF int RsGetHccnCfg(struct RaInfo *info, enum HccnCfgKey key, char *value, unsigned int *valueLen);
 RS_ATTRI_VISI_DEF int RsBindHostpid(unsigned int chipId, pid_t pid);
 RS_ATTRI_VISI_DEF int RsDeinit(struct RsInitConfig *cfg);
 

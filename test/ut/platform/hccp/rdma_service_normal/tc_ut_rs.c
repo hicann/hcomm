@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include "ascend_hal.h"
+#include "securec.h"
 #include "dl_hal_function.h"
 #include "dl_ibverbs_function.h"
 #include "dl_net_function.h"
@@ -40,6 +41,7 @@
 #include "rs_ping_inner.h"
 #include "rs_ping.h"
 #include "ra_rs_err.h"
+#include "file_opt.h"
 #include "rs_drv_rdma.h"
 #include "rs_ub_tp.h"
 #include "rs_ub_dfx.h"
@@ -6732,6 +6734,25 @@ int RsGetLinuxVersionStub(struct RsLinuxVersionInfo* verInfo)
     return 0;
 }
 
+static char gRsHccnCfgFilePath[32] = {0};
+static char gRsHccnCfgKeyName[32] = {0};
+static unsigned int gRsHccnCfgBufLen = 0;
+static int gRsHccnCfgDevId = -1;
+
+static int
+StubRsHccnCfgFileRead(const char* filePath, int devId, const char* confName, char* confValue, unsigned int len)
+{
+    const char cfgValue[] = "stub_value";
+
+    if (filePath == NULL || confName == NULL || strcpy_s(gRsHccnCfgFilePath, sizeof(gRsHccnCfgFilePath), filePath) != 0
+        || strcpy_s(gRsHccnCfgKeyName, sizeof(gRsHccnCfgKeyName), confName) != 0) {
+        return -EINVAL;
+    }
+    gRsHccnCfgBufLen = len;
+    gRsHccnCfgDevId = devId;
+    return (memcpy_s(confValue, len, cfgValue, sizeof(cfgValue)) == 0) ? 0 : -EINVAL;
+}
+
 void TcRsGetSecRandom()
 {
     unsigned int value = 0;
@@ -6761,11 +6782,43 @@ void TcRsGetHccnCfg()
 {
     char value[2048] = {0};
     unsigned int valueLen = 2048;
+    struct RaInfo info = {
+        .mode = NETWORK_OFFLINE,
+        .phyId = 0,
+    };
 
     int ret = 0;
 
-    ret = RsGetHccnCfg(0, HCCN_CFG_UDP_PORT_MODE, value, &valueLen);
+    ret = RsGetHccnCfg(NULL, HCCN_CFG_UDP_PORT_MODE, value, &valueLen);
+    EXPECT_INT_EQ(-EINVAL, ret);
+
+    info.mode = NETWORK_ONLINE;
+    ret = RsGetHccnCfg(&info, HCCN_CFG_UDP_PORT_MODE, value, &valueLen);
+    EXPECT_INT_EQ(-ENOTSUPP, ret);
+
+    mocker_invoke_p5(
+        "FileReadCfg", "StubRsHccnCfgFileRead", (stub_fn_t)FileReadCfg, (stub_fn_t)StubRsHccnCfgFileRead, 2);
+    info.mode = NETWORK_OFFLINE;
+    ret = RsGetHccnCfg(&info, HCCN_CFG_UDP_PORT_MODE, value, &valueLen);
     EXPECT_INT_EQ(0, ret);
+    EXPECT_STR_EQ("/etc/hccl.cfg", gRsHccnCfgFilePath);
+    EXPECT_STR_EQ("udp_port_mode", gRsHccnCfgKeyName);
+    EXPECT_INT_EQ(0, gRsHccnCfgDevId);
+    EXPECT_INT_EQ(2048, (int)gRsHccnCfgBufLen);
+    EXPECT_STR_EQ("stub_value", value);
+    EXPECT_INT_EQ((int)sizeof("stub_value"), (int)valueLen);
+
+    info.mode = NETWORK_PEER_ONLINE;
+    info.phyId = 1;
+    valueLen = sizeof(value);
+    ret = RsGetHccnCfg(&info, HCCN_CFG_MULTI_QP_COUNT, value, &valueLen);
+    EXPECT_INT_EQ(0, ret);
+    EXPECT_STR_EQ("/etc/hcomm.cfg", gRsHccnCfgFilePath);
+    EXPECT_STR_EQ("multi_qp_count", gRsHccnCfgKeyName);
+    EXPECT_INT_EQ(1, gRsHccnCfgDevId);
+    EXPECT_INT_EQ((int)sizeof(value), (int)gRsHccnCfgBufLen);
+    EXPECT_STR_EQ("stub_value", value);
+    EXPECT_INT_EQ((int)sizeof("stub_value"), (int)valueLen);
     mocker_clean();
 }
 

@@ -11,6 +11,7 @@
 #include "ra_peer.h"
 #include "ra_rs_err.h"
 #include <errno.h>
+#include <string.h>
 #include "securec.h"
 #include "ut_dispatch.h"
 #include "rs.h"
@@ -863,4 +864,71 @@ void TcRaPeerGetLbMax()
     ret = RaPeerGetLbMax(&rdmaHandle, &lbMax);
     EXPECT_INT_EQ(-1, ret);
     mocker_clean();
+}
+
+int gRaPeerRsCapturedMode = -1;
+unsigned int gRaPeerRsCapturedPhyId = 0;
+int gRaPeerRsCapturedKey = -1;
+
+int StubRsGetHccnCfgCaptureInfo(struct RaInfo* info, enum HccnCfgKey key, char* value, unsigned int* valueLen)
+{
+    const char* cfgValue = "nslb_dp";
+
+    gRaPeerRsCapturedMode = (int)info->mode;
+    gRaPeerRsCapturedPhyId = info->phyId;
+    gRaPeerRsCapturedKey = (int)key;
+    if (key == HCCN_CFG_QOS_DSCP) {
+        cfgValue = "0:33,1:65";
+    }
+    if (memcpy_s(value, *valueLen, cfgValue, strlen(cfgValue)) != EOK) {
+        return -EINVAL;
+    }
+    *valueLen = (unsigned int)(strlen(cfgValue) + 1);
+    return 0;
+}
+
+void TcRaPeerGetHccnCfg()
+{
+    unsigned int phyId = 3;
+    struct RaInitConfig config = {
+        .phyId = phyId,
+        .nicPosition = NETWORK_PEER_ONLINE,
+        .hdcType = 0,
+    };
+    struct RaInfo info = {
+        .mode = NETWORK_PEER_ONLINE,
+        .phyId = phyId,
+    };
+    char value[2048] = {0};
+    unsigned int valueLen = 2048;
+    int ret = 0;
+
+    ret = RaPeerInit(&config, 1);
+    EXPECT_INT_EQ(0, ret);
+
+    ret = RaPeerGetHccnCfg(&info, HCCN_CFG_UDP_PORT_MODE, value, &valueLen);
+    EXPECT_INT_EQ(0, ret);
+
+    mocker_invoke(RsGetHccnCfg, StubRsGetHccnCfgCaptureInfo, 2);
+    ret = RaPeerGetHccnCfg(&info, HCCN_CFG_QOS_DSCP, value, &valueLen);
+    EXPECT_INT_EQ(0, ret);
+    EXPECT_INT_EQ(NETWORK_PEER_ONLINE, gRaPeerRsCapturedMode);
+    EXPECT_INT_EQ((int)phyId, (int)gRaPeerRsCapturedPhyId);
+    EXPECT_INT_EQ(HCCN_CFG_QOS_DSCP, gRaPeerRsCapturedKey);
+    EXPECT_STR_EQ("0:33,1:65", value);
+    EXPECT_INT_EQ(10, (int)valueLen);
+
+    memset_s(value, sizeof(value), 0, sizeof(value));
+    valueLen = 2048;
+    ret = RaPeerGetHccnCfg(&info, HCCN_CFG_UDP_PORT_MODE, value, &valueLen);
+    EXPECT_INT_EQ(0, ret);
+    EXPECT_INT_EQ(NETWORK_PEER_ONLINE, gRaPeerRsCapturedMode);
+    EXPECT_INT_EQ((int)phyId, (int)gRaPeerRsCapturedPhyId);
+    EXPECT_INT_EQ(HCCN_CFG_UDP_PORT_MODE, gRaPeerRsCapturedKey);
+    EXPECT_STR_EQ("nslb_dp", value);
+    EXPECT_INT_EQ(8, (int)valueLen);
+    mocker_clean();
+
+    ret = RaPeerDeinit(&config);
+    EXPECT_INT_EQ(0, ret);
 }

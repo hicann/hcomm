@@ -1420,9 +1420,30 @@ void TcRaRsGetTlsEnable()
     outBuf = NULL;
 }
 
+static int StubRsGetHccnCfgValue(struct RaInfo* info, enum HccnCfgKey key, char* value, unsigned int* valueLen)
+{
+    const char cfgValue[] = "nslb_dp";
+
+    (void)info;
+    (void)key;
+    if (value == NULL || valueLen == NULL || *valueLen < sizeof(cfgValue)) {
+        return -EINVAL;
+    }
+    if (memcpy_s(value, *valueLen, cfgValue, sizeof(cfgValue)) != EOK) {
+        return -EINVAL;
+    }
+    *valueLen = sizeof(cfgValue);
+    return 0;
+}
+
 void TcRaGetHccnCfg()
 {
     struct RaInfo info = {0};
+    struct RaInitConfig cfg = {
+        .phyId = 2,
+        .nicPosition = NETWORK_PEER_ONLINE,
+        .hdcType = 0,
+    };
     char* value = calloc(1, 2048);
     unsigned int valLen = 2048;
     int ret;
@@ -1430,6 +1451,12 @@ void TcRaGetHccnCfg()
     mocker_clean();
     info.mode = NETWORK_OFFLINE;
     ret = RaGetHccnCfg(NULL, HCCN_CFG_UDP_PORT_MODE, value, &valLen);
+    EXPECT_INT_EQ(128303, ret);
+
+    ret = RaGetHccnCfg(&info, HCCN_CFG_UDP_PORT_MODE, NULL, &valLen);
+    EXPECT_INT_EQ(128303, ret);
+
+    ret = RaGetHccnCfg(&info, HCCN_CFG_UDP_PORT_MODE, value, NULL);
     EXPECT_INT_EQ(128303, ret);
 
     valLen = 1024;
@@ -1447,6 +1474,28 @@ void TcRaGetHccnCfg()
     ret = RaGetHccnCfg(&info, HCCN_CFG_UDP_PORT_MODE, value, &valLen);
     EXPECT_INT_EQ(0, ret);
     mocker_clean();
+
+    info.phyId = 2;
+    info.mode = NETWORK_PEER_ONLINE;
+    valLen = 2048;
+    ret = RaPeerInit(&cfg, 1);
+    EXPECT_INT_EQ(0, ret);
+
+    mocker_invoke(RsGetHccnCfg, StubRsGetHccnCfgValue, 1);
+    ret = RaGetHccnCfg(&info, HCCN_CFG_UDP_PORT_MODE, value, &valLen);
+    EXPECT_INT_EQ(0, ret);
+    EXPECT_STR_EQ("nslb_dp", value);
+    EXPECT_INT_EQ(8, (int)valLen);
+    mocker_clean();
+
+    ret = RaPeerDeinit(&cfg);
+    EXPECT_INT_EQ(0, ret);
+
+    info.mode = NETWORK_ONLINE;
+    valLen = 2048;
+    ret = RaGetHccnCfg(&info, HCCN_CFG_UDP_PORT_MODE, value, &valLen);
+    EXPECT_INT_EQ(528302, ret);
+
     free(value);
 }
 

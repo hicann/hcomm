@@ -130,6 +130,8 @@ int RaPeerInit(struct RaInitConfig *cfg, unsigned int whiteListStatus);
 
 int RaPeerGetTlsEnable(unsigned int phyId, bool *tlsEnable);
 
+int RaPeerGetHccnCfg(struct RaInfo *info, enum HccnCfgKey key, char *value, unsigned int *valueLen);
+
 int RaPeerGetSecRandom(unsigned int *value);
 
 int RaPeerDeinit(struct RaInitConfig *cfg);

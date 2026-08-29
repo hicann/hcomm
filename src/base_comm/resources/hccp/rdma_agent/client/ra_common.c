@@ -122,13 +122,18 @@ HCCP_ATTRI_VISI_DEF int RaGetHccnCfg(struct RaInfo *info, enum HccnCfgKey key, c
     CHK_PRT_RETURN(info->phyId >= RA_MAX_PHY_ID_NUM,
         hccp_err("[get][hccn_cfg]phyId(%u) must be smaller than %u", info->phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(OTHERS, -EINVAL));
-    CHK_PRT_RETURN(info->mode != NETWORK_OFFLINE, hccp_err("[get][hccn_cfg]do not support mode(%u)", info->mode),
-        ConverReturnCode(OTHERS, -EINVAL));
 
     hccp_run_info("Input parameters: phyId[%u], nicPosition:[%d], hccn_cfg_key[%d]", info->phyId, info->mode, key);
-    ret = RaHdcGetHccnCfg(info->phyId, key, value, valueLen);
+    if (info->mode == NETWORK_PEER_ONLINE) {
+        ret = RaPeerGetHccnCfg(info, key, value, valueLen);
+    } else if (info->mode == NETWORK_OFFLINE) {
+        ret = RaHdcGetHccnCfg(info->phyId, key, value, valueLen);
+    } else {
+        hccp_err("[get][hccn_cfg]do not support mode(%d) phyId(%u)", info->mode, info->phyId);
+        return ConverReturnCode(OTHERS, -ENOTSUPP);
+    }
     if (ret != 0) {
-        hccp_err("[get][hccn_cfg] failed, phyId[%u], ret[%d]", info->phyId, ret);
+        hccp_err("[get][hccn_cfg] failed, mode[%d], phyId[%u], ret[%d]", info->mode, info->phyId, ret);
     }
 
     return ConverReturnCode(OTHERS, ret);

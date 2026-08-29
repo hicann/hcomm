@@ -89,7 +89,7 @@ struct RsOps {
     int (*getCqeErrInfoList)(unsigned int phyId, unsigned int rdevIdx, struct CqeErrInfo *info, unsigned int *num);
     int (*getTlsEnable)(unsigned int phyId, bool *tlsEnable);
     int (*getSecRandom)(int *value);
-    int (*getHccnCfg)(unsigned int phyId, enum HccnCfgKey key, char *value, unsigned int *valueLen);
+    int (*getHccnCfg)(struct RaInfo *info, enum HccnCfgKey key, char *value, unsigned int *valueLen);
 };
 
 struct RsOps gRaRsOps = {
@@ -1429,9 +1429,12 @@ STATIC int RaRsGetHccnCfg(char *inBuf, char *outBuf, int *outLen, int *opResult,
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpGetHccnCfgData), sizeof(struct MsgHead), rcvBufLen, opResult);
 
+    struct RaInfo raInfo = {
+        .mode = NETWORK_OFFLINE,
+        .phyId = opData->txData.phyId,
+    };
     opDataRet->rxData.valueLen = HCCN_CFG_MSG_DATA_LEN;
-    *opResult = gRaRsOps.getHccnCfg(opData->txData.phyId, opData->txData.key, opDataRet->rxData.value,
-        &opDataRet->rxData.valueLen);
+    *opResult = gRaRsOps.getHccnCfg(&raInfo, opData->txData.key, opDataRet->rxData.value, &opDataRet->rxData.valueLen);
     if (*opResult != 0) {
         hccp_err("get hccn cfg failed, ret %d", *opResult);
     }

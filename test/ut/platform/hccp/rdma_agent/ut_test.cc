@@ -217,6 +217,7 @@ TEST_M(RdmaAgent, TcRaPeerLoopbackSingleQpCreate);
 TEST_M(RdmaAgent, TcRaPeerSetQpLbValue);
 TEST_M(RdmaAgent, TcRaPeerGetQpLbValue);
 TEST_M(RdmaAgent, TcRaPeerGetLbMax);
+TEST_M(RdmaAgent, TcRaPeerGetHccnCfg);
 TEST_M(RdmaAgent, TcRaPollCq);
 TEST_M(RdmaAgent, TcHdcRecvWrlist);
 TEST_M(RdmaAgent, TcHdcPollCq);

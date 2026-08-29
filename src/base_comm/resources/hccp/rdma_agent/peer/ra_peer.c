@@ -1096,6 +1096,21 @@ int RaPeerGetSecRandom(unsigned int *value)
     return ret;
 }
 
+int RaPeerGetHccnCfg(struct RaInfo *info, enum HccnCfgKey key, char *value, unsigned int *valueLen)
+{
+    unsigned int phyId = info->phyId;
+    int ret;
+
+    RaPeerMutexLock(phyId);
+    RsSetCtx(phyId);
+    ret = RsGetHccnCfg(info, key, value, valueLen);
+    if (ret != 0) {
+        hccp_err("[get][hccn_cfg]RsGetHccnCfg failed, ret(%d) phyId(%u)", ret, phyId);
+    }
+    RaPeerMutexUnlock(phyId);
+    return ret;
+}
+
 int RaPeerDeinit(struct RaInitConfig *cfg)
 {
     int ret = 0;

@@ -471,26 +471,44 @@ RS_ATTRI_VISI_DEF int RsGetTlsEnable(unsigned int phyId, bool *tlsEnable)
     return 0;
 }
 
-RS_ATTRI_VISI_DEF int RsGetHccnCfg(unsigned int phyId, enum HccnCfgKey key, char *value, unsigned int *valueLen)
+STATIC const char *RsGetHccnCfgFilePath(int mode)
 {
-#define HCCN_CFGFILE_PATH "/etc/hccl.cfg"
+#define HCCN_OFFLINE_CFGFILE_PATH "/etc/hccl.cfg"
+#define HCCN_PEER_ONLINE_CFGFILE_PATH "/etc/hcomm.cfg"
+    if (mode == NETWORK_OFFLINE) {
+        return HCCN_OFFLINE_CFGFILE_PATH;
+    }
+    if (mode == NETWORK_PEER_ONLINE) {
+        return HCCN_PEER_ONLINE_CFGFILE_PATH;
+    }
+    return NULL;
+}
+
+RS_ATTRI_VISI_DEF int RsGetHccnCfg(struct RaInfo *info, enum HccnCfgKey key, char *value, unsigned int *valueLen)
+{
     const char *keyName[HCCN_CFG_KEY_INVALID] = {
         "udp_port_mode", "multi_qp_count", "multi_qp_udp_ports", "resv_mem", "qos_dscp"};
     unsigned int cfg_key = (unsigned int)key;
+    const char *cfgFilePath = NULL;
     unsigned int valLen = 0;
     unsigned int bufLen;
     int ret = 0;
 
+    CHK_PRT_RETURN(info == NULL, hccp_err("param err, info is NULL"), -EINVAL);
     CHK_PRT_RETURN(value == NULL || valueLen == NULL, hccp_err("param err, value or valueLen is NULL"), -EINVAL);
     CHK_PRT_RETURN(cfg_key >= HCCN_CFG_KEY_INVALID,
         hccp_err("param err, key[%u] should < [%d]", cfg_key, HCCN_CFG_KEY_INVALID), -EINVAL);
+
+    cfgFilePath = RsGetHccnCfgFilePath(info->mode);
+    CHK_PRT_RETURN(cfgFilePath == NULL,
+        hccp_err("param err, do not support mode[%d] phyId(%u)", info->mode, info->phyId), -ENOTSUPP);
 
     bufLen = *valueLen;
     CHK_PRT_RETURN(bufLen < HCCN_CFG_MSG_DATA_LEN,
         hccp_err("param err, bufLen[%u] should >= [%u]", bufLen, HCCN_CFG_MSG_DATA_LEN), -EINVAL);
 
     *valueLen = 0;
-    ret = FileReadCfg(HCCN_CFGFILE_PATH, (int)phyId, keyName[cfg_key], value, bufLen);
+    ret = FileReadCfg(cfgFilePath, (int)info->phyId, keyName[cfg_key], value, bufLen);
     CHK_PRT_RETURN(ret == FILE_OPT_INNER_PARAM_ERR || ret == FILE_OPT_SYS_READ_FILE_ERR,
         hccp_run_warn("get hccn cfg file unsuccessful, ret(%d)", ret), 0);
     CHK_PRT_RETURN(ret == FILE_OPT_NO_MEM_ERR, hccp_err("value_len > buf_len[%d], ret(%d)", bufLen, ret), -ENOMEM);

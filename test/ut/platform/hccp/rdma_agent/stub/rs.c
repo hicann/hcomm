@@ -461,7 +461,7 @@ int RsGetSecRandom(unsigned int* value) { return 0; }
 
 int RsDrvGetRandomNum(int* randNum) { return 0; }
 
-int RsGetHccnCfg(unsigned int phyId, enum HccnCfgKey key, char* value, unsigned int* valueLen) { return 0; }
+int RsGetHccnCfg(struct RaInfo* info, enum HccnCfgKey key, char* value, unsigned int* valueLen) { return 0; }
 
 int RsSetQpLbValue(unsigned int phyId, unsigned int rdevIndex, unsigned int qpn, int lbValue) { return 0; }
 
