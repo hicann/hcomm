@@ -12,12 +12,12 @@
 #include <mockcpp/mockcpp.hpp>
 #include <vector>
 #include <string>
-#include "group_schedule_mgr.h"
 #include "hccl/hccl_types.h"
 #include "hccl/hccl_launch.h"
 #include "hccl/hccl_rank_graph.h"
 #include "acl/acl_base_rt.h"
 #define private public
+#include "group_schedule_mgr.h"
 #include "hccl_comm_pub.h"
 #include "coll_comm.h"
 #undef private
@@ -207,4 +207,17 @@ TEST_F(GroupScheduleMgrTest, Ut_pow2Up_When_InputPowerOfTwo_Expect_ReturnSameVal
         power = power << 1U;
     }
     EXPECT_EQ(power, expected);
+}
+
+TEST_F(GroupScheduleMgrTest, Ut_GetCurLocalRank_When_RankNotInList_Expect_InternalError)
+{
+    GroupScheduleMgr mgr;
+    mgr.userRank_ = 5;
+    mgr.serverNum_ = 1;
+    mgr.serverToRankSize_[0] = 2;
+    mgr.serverToRankList_[0] = {0, 1};
+
+    uint32_t localRank = 0;
+    HcclResult ret = mgr.GetCurLocalRank(localRank);
+    EXPECT_EQ(ret, HCCL_E_INTERNAL);
 }

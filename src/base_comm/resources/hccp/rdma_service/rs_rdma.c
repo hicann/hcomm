@@ -63,7 +63,7 @@ STATIC int RsGetQpcb(struct RsRdevCb *rdevCb, uint32_t qpn, struct RsQpCb **qpCb
     }
 
     *qpCb = NULL;
-    hccp_err("qp_cb for qp %u is not available!", qpn);
+    hccp_err("qp_cb for qp %u is not available", qpn);
 
     return -ENODEV;
 }
@@ -474,15 +474,13 @@ STATIC int RsMrInfoSync(struct RsMrCb *mrCb)
     CHK_PRT_RETURN(mrCb->qpCb->connInfo == NULL, hccp_warn("no conn available !"), 0);
 
     CHK_PRT_RETURN(mrCb->qpCb->state == RS_QP_STATUS_REM_FD_CLOSE,
-        hccp_warn("remote qp fd closed,"
+        hccp_warn("remote qp fd closed, "
                   "can not use it anymore! status[%d](RS_QP_STATUS_REM_FD_CLOSE)",
             mrCb->qpCb->state),
         -EFAULT);
 
     CHK_PRT_RETURN(mrCb->qpCb->connInfo->connfd == RS_FD_INVALID,
-        hccp_warn("mr info sync failed! fd not ready!"
-                  "connfd[%d](RS_FD_INVALID)",
-            mrCb->qpCb->connInfo->connfd),
+        hccp_warn("mr info sync failed! fd not ready! connfd[%d](RS_FD_INVALID)", mrCb->qpCb->connInfo->connfd),
         -ENETUNREACH);
 
     mrCb->mrInfo.cmd = (unsigned int)RS_CMD_MR_INFO;
@@ -638,10 +636,7 @@ RS_ATTRI_VISI_DEF int RsMrDereg(unsigned int phyId, unsigned int rdevIndex, unsi
     CHK_PRT_RETURN(ret, hccp_err("rs_qpn2qpcb failed ret[%d]", ret), ret);
 
     CHK_PRT_RETURN(RsGetMrcb(qpCb, (uintptr_t)addr, &mrCb, &qpCb->mrList),
-        hccp_err("rs_get_mrcb failed "
-                 "g_rs_send_wr_num[%u]",
-            gRsSendWrNum),
-        -EFAULT);
+        hccp_err("rs_get_mrcb failed, qpn[%u] addr[0x%llx]", qpn, (unsigned long long)(uintptr_t)addr), -EFAULT);
 
     ret = RsDrvMrDereg(mrCb->ibMr);
     CHK_PRT_RETURN(ret, hccp_err("rs_drv_mr_dereg failed ret[%d] ", ret), -EACCES);
@@ -769,12 +764,14 @@ STATIC int RsInitTypicalMrCb(unsigned int phyId, struct RdmaMrRegInfo *mrRegInfo
 
     if (devCb->rsCb->hccpMode == NETWORK_PEER_ONLINE || devCb->rsCb->hccpMode == NETWORK_ONLINE) {
         mrCb->ibMr = RsDrvMrReg(devCb->ibPd, addr, len, access);
-        CHK_PRT_RETURN(mrCb->ibMr == NULL, hccp_err("rs_drv_mr_reg addr is NULL len[%lld] failed", len), -EACCES);
+        CHK_PRT_RETURN(mrCb->ibMr == NULL,
+            hccp_err("rs_drv_mr_reg ibMr is NULL len[%lld] failed, errno:%d", len, errno), -EACCES);
     } else {
         ret = RsMrPrepareRoceSign(phyId, devCb, &roceSign);
         CHK_PRT_RETURN(ret != 0, hccp_err("RsMrPrepareRoceSign failed, ret(%d)", ret), ret);
         mrCb->ibMr = RsDrvExpMrReg(devCb->ibPd, addr, len, access, roceSign);
-        CHK_PRT_RETURN(mrCb->ibMr == NULL, hccp_err("rs_drv_exp_mr_reg addr is NULL len[%lld] failed", len), -EACCES);
+        CHK_PRT_RETURN(mrCb->ibMr == NULL,
+            hccp_err("rs_drv_exp_mr_reg ibMr is NULL len[%lld] failed, errno:%d", len, errno), -EACCES);
     }
 
     mrCb->mrInfo.addr = (uintptr_t)addr;
@@ -2287,7 +2284,7 @@ static int RsQpConnectAsyncInitPara(struct RsQpConnPara qpConnPara, int fd, stru
 
     CHK_PRT_RETURN(qpConnPara.phyId >= RS_MAX_DEV_NUM, hccp_err("param error ! phyId:%u", qpConnPara.phyId), -EINVAL);
 
-    CHK_PRT_RETURN(fd < 0, hccp_err("param error ! fd:%d must be greater than or equal to 0", fd), -EINVAL);
+    CHK_PRT_RETURN(fd < 0, hccp_err("param error ! fd:%d must be non-negative", fd), -EINVAL);
 
     ret = RsQpn2qpcb(qpConnPara.phyId, qpConnPara.rdevIndex, qpConnPara.qpn, qpCb);
     CHK_PRT_RETURN(ret, hccp_err("get qpcb failed, qpn %u, ret %d", qpConnPara.qpn, ret), ret);

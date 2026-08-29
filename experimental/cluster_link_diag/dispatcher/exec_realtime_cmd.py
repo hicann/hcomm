@@ -29,21 +29,21 @@ _executor_instance = None
 
 
 def signal_handler(sig, frame):
-    """处理Ctrl+C信号的函数"""
-    common.log_info("\n\033[33m接收到Ctrl+C，正在关闭所有连接...\033[0m")
+    """Handle Ctrl+C signal."""
+    common.log_info("\n\033[33mReceived Ctrl+C, closing all connections...\033[0m")
     if _executor_instance:
         _executor_instance.force_close()
 
 
 def setup_signal_handler(executor):
-    """设置信号处理器"""
+    """Set up signal handler."""
     global _executor_instance
     _executor_instance = executor
     signal.signal(signal.SIGINT, signal_handler)
 
 
 def setup_logger(host_path, host_name):
-    """为每个主机设置独立的logger"""
+    """Set up an independent logger for each host."""
     return common.setup_file_logger(host_path, log_dir, _enable_logger_ref["value"])
 
 
@@ -69,9 +69,9 @@ class ParallelSSHExecutor:
             context.logger.info(f"command: {original_cmd}")
 
     def force_close(self):
-        """强制关闭所有连接"""
+        """Forcefully close all connections."""
         self.force_closing = True
-        common.log_info("\033[33m正在强制关闭所有SSH连接...\033[0m")
+        common.log_info("\033[33mForcefully closing all SSH connections...\033[0m")
         
         # 首先尝试正常关闭所有客户端
         for client in self.clients[::-1]:
@@ -94,7 +94,8 @@ class ParallelSSHExecutor:
         if alive_threads:
             self.completed = False
             common.log_error(
-                "\033[31m有些线程无法正常结束，请确认远端命令是否仍在运行。\033[0m"
+                "\033[31mSome threads cannot terminate normally, please check if remote "
+                "commands are still running.\033[0m"
             )
 
     def exec_realtime_commands(self, context):
@@ -155,10 +156,11 @@ class ParallelSSHExecutor:
         if self.force_closing:
             return
         common.log_error(
-            f"\033[31m[{context.host:<{self._ipv4_print_len}}] 执行命令时发生错误: {str(err)}\033[0m"
+            f"\033[31m[{context.host:<{self._ipv4_print_len}}] error occurred while executing command: "
+            f"{str(err)}\033[0m"
         )
         if context.logger:
-            context.logger.error(f"执行命令时发生错误: {str(err)}")
+            context.logger.error(f"error occurred while executing command: {str(err)}")
 
     def _log_realtime_line(self, context, line):
         common.log_info(f"[{context.host:<{self._ipv4_print_len}}] {line.rstrip()}")
@@ -250,7 +252,7 @@ class ParallelSSHExecutor:
                 self._recurse_realtime_child(target_cmd, client, task)
         except (paramiko.SSHException, OSError, RuntimeError, ValueError) as err:
             if not self.force_closing:
-                common.log_error(f"\033[31m连接 {task.host_name} 失败: {str(err)}\033[0m")
+                common.log_error(f"\033[31mconnect to {task.host_name} failed: {str(err)}\033[0m")
 
     def _realtime_exec_host(self, target_cmd, task):
         host_name = task.host_name
@@ -298,5 +300,5 @@ if __name__ == "__main__":
         executor.re_realtime_exec(commands)
         executor.wait_and_close()
     except (paramiko.SSHException, OSError, RuntimeError, ValueError) as err:
-        common.log_error(f"\033[31m程序执行出错: {str(err)}\033[0m")
+        common.log_error(f"\033[31mprogram execution error: {str(err)}\033[0m")
         executor.force_close()

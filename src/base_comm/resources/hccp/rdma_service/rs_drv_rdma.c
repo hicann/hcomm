@@ -343,7 +343,7 @@ int RsDrvCreateCqWithAttrs(struct RsQpCb *qpCb, int isExt, struct CqExtAttr *cqA
     if (isExt == 1) {
         qpCb->ibSendCq = RsIbvExpCreateCq(qpCb->rdevCb->ibCtx, cqAttr->sendCqDepth, NULL, channel, sendEqNum, &attr,
             &qpCb->qpResp.sendCqData);
-        hccp_info("rs_ibv_exp_create_cq");
+        hccp_info("rs_ibv_exp_create_cq ibSendCq");
     } else {
         qpCb->ibSendCq = RsIbvCreateCq(qpCb->rdevCb->ibCtx, cqAttr->sendCqDepth, NULL, channel, sendEqNum);
     }
@@ -354,7 +354,7 @@ int RsDrvCreateCqWithAttrs(struct RsQpCb *qpCb, int isExt, struct CqExtAttr *cqA
     if (isExt == 1) {
         qpCb->ibRecvCq = RsIbvExpCreateCq(qpCb->rdevCb->ibCtx, cqAttr->recvCqDepth, NULL, channel, recvEqNum, &attr,
             &qpCb->qpResp.recvCqData);
-        hccp_info("rs_ibv_exp_create_cq");
+        hccp_info("rs_ibv_exp_create_cq ibRecvCq");
     } else {
         qpCb->ibRecvCq = RsIbvCreateCq(qpCb->rdevCb->ibCtx, cqAttr->recvCqDepth, NULL, channel, recvEqNum);
     }

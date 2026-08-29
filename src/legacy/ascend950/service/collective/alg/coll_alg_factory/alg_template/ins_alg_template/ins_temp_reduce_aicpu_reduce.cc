@@ -73,7 +73,7 @@ HcclResult InsTempReduceAicpuReduce::RunGatherMesh(
             DataInfo recvData(neighborLinkData, rxSlicesList);
             CHK_PRT_RET(
                 Recv(recvData, tempInsQues[queIdx], 0, true, dmaMode_),
-                HCCL_ERROR("[InsTempReduceAicpuReduce] BatchSend failed"), HcclResult::HCCL_E_INTERNAL);
+                HCCL_ERROR("[InsTempReduceAicpuReduce] BatchRecv failed"), HcclResult::HCCL_E_INTERNAL);
         }
         CHK_RET(PostSyncInterQueues(tempInsQues));
     } else {

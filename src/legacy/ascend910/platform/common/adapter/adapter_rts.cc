@@ -326,7 +326,7 @@ HcclResult __hrtGetDevice(s32* deviceLogicId)
         return HCCL_SUCCESS;
     }
     *deviceLogicId = 0;
-    HCCL_WARNING("[hrtGetDevice]Does not support this interface.");
+    HCCL_WARNING("[hrtGetDevice] Does not support this interface.");
     return HCCL_E_NOT_SUPPORT;
 #endif
 }

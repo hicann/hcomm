@@ -333,7 +333,7 @@ HcclResult AicpuZeroCopyExchanger::BatchSetLocalAddrToRemote(void* in, void* out
         CHK_PRT_RET(
             ret != 0,
             HCCL_ERROR(
-                "[[AicpuZeroCopyExchanger][BatchSetLocalAddrToRemote] Batch get remote "
+                "[AicpuZeroCopyExchanger][BatchSetLocalAddrToRemote] sdma batch copy "
                 "failed, ret[%u]",
                 ret),
             HCCL_E_INTERNAL);
@@ -368,7 +368,7 @@ HcclResult AicpuZeroCopyExchanger::BatchSetLocalAddrToRemote(void* in, void* out
         CHK_PRT_RET(
             ret != 0,
             HCCL_ERROR(
-                "[[AicpuZeroCopyExchanger][BatchSetLocalAddrToRemote] Batch get remote "
+                "[AicpuZeroCopyExchanger][BatchSetLocalAddrToRemote] sdma batch copy "
                 "failed, ret[%u]",
                 ret),
             HCCL_E_INTERNAL);

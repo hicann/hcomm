@@ -20,6 +20,7 @@
 #include "dfx/cluster_monitor/cluster_monitor.h"
 #include "hccl_comm_pub.h"
 #include "rank_graph_v2.h"
+#include "new_rank_info.h"
 #undef private
 #include "hccl_comm_socket_c_adpt.h"
 #include "base_config_legacy.h"
@@ -957,6 +958,66 @@ TEST_F(ClusterMonitorTest, Ut_FormatUID_When_NormalInput_Expect_ReturnUid)
     ClusterUIDCxt cxt(netInstId, localId);
     ClusterUIDType uid = g_monitor.FormatUID(cxt);
     EXPECT_TRUE(uid.id[0] != '\0');
+}
+
+TEST_F(ClusterMonitorTest, Ut_GetSocketDescFromRankInfo_When_RemotePortInvalid_Expect_ParaError)
+{
+    auto ctx = CreateHcclCommForInsertTest();
+    ASSERT_NE(ctx.hcclCommPtr, nullptr);
+    HcclComm comm = static_cast<HcclComm>(ctx.hcclCommPtr.get());
+
+    uint32_t invalidPort = Hccl::MAX_VALUE_TCPPORT + 1;
+    MOCKER_CPP(&Hccl::IRankGraph::GetDevicePort)
+        .stubs()
+        .with(mockcpp::any(), outBoundP(&invalidPort, sizeof(invalidPort)))
+        .will(returnValue(HCCL_SUCCESS));
+
+    SocketDesc socketDesc{};
+    HcclResult result = g_monitor.GetSocketDescFromRankInfo(comm, 0, 0, ClusterUIDType{}, socketDesc);
+    EXPECT_EQ(result, HCCL_E_PARA);
+
+    GlobalMockObject::verify();
+}
+
+// 对端端口正常，本端作为server但监听端口非法时命中 GetSocketDescFromRankInfo 的校验分支
+static HcclResult GetDevicePortStub(Hccl::IRankGraph* self, uint32_t rank, uint32_t* devPort)
+{
+    // remoteRank=0 返回合法端口，myRankId=1 返回非法端口（触发 listenPort 校验）
+    *devPort = (rank == 0) ? 10000 : (Hccl::MAX_VALUE_TCPPORT + 1);
+    return HCCL_SUCCESS;
+}
+
+static HcclResult HcclRankGraphGetLinksDeviceStub(
+    HcclComm comm, uint32_t netLayer, uint32_t srcRank, uint32_t dstRank, CommLink** links, uint32_t* linkNum)
+{
+    static CommLink link;
+    (void)memset_s(&link, sizeof(link), 0, sizeof(link));
+    // local(src)地址 < remote(dst)地址，使本端作为server监听
+    link.srcEndpointDesc.commAddr.type = CommAddrType::COMM_ADDR_TYPE_IP_V4;
+    inet_pton(AF_INET, "1.0.0.1", &link.srcEndpointDesc.commAddr.addr);
+    link.srcEndpointDesc.loc.locType = EndpointLocType::ENDPOINT_LOC_TYPE_DEVICE;
+    link.dstEndpointDesc.commAddr.type = CommAddrType::COMM_ADDR_TYPE_IP_V4;
+    inet_pton(AF_INET, "2.0.0.1", &link.dstEndpointDesc.commAddr.addr);
+    link.dstEndpointDesc.loc.locType = EndpointLocType::ENDPOINT_LOC_TYPE_DEVICE;
+    *links = &link;
+    *linkNum = 1;
+    return HCCL_SUCCESS;
+}
+
+TEST_F(ClusterMonitorTest, Ut_GetSocketDescFromRankInfo_When_ListenPortInvalid_Expect_ParaError)
+{
+    auto ctx = CreateHcclCommForInsertTest();
+    ASSERT_NE(ctx.hcclCommPtr, nullptr);
+    HcclComm comm = static_cast<HcclComm>(ctx.hcclCommPtr.get());
+
+    MOCKER_CPP(&Hccl::IRankGraph::GetDevicePort).stubs().will(invoke(GetDevicePortStub));
+    MOCKER(HcclRankGraphGetLinks).stubs().will(invoke(HcclRankGraphGetLinksDeviceStub));
+
+    SocketDesc socketDesc{};
+    HcclResult result = g_monitor.GetSocketDescFromRankInfo(comm, 0, 0, ClusterUIDType{}, socketDesc);
+    EXPECT_EQ(result, HCCL_E_PARA);
+
+    GlobalMockObject::verify();
 }
 
 TEST_F(ClusterMonitorTest, Ut_GetUID_When_NormalInput_Expect_ReturnString)

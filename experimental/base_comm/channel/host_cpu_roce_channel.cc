@@ -193,7 +193,8 @@ HcclResult HostCpuRoceChannel::BuildSocket()
     uint16_t port = channelDesc_.port;
     if (port == 0) {
         port = DEFAULT_LISTENING_PORT;
-        HCCL_INFO("[HostCpuRoceChannel::%s] channelDesc port is 0, use default port [%u]", __func__, port);
+        HCCL_INFO(
+            "[HostCpuRoceChannel::%s] channelDesc port is 0, use default port [%u] for BuildSocket", __func__, port);
     }
     std::string socketTag = "AUTOMATIC_SOCKET_TAG";
     Hccl::SocketConfig socketConfig
@@ -201,7 +202,7 @@ HcclResult HostCpuRoceChannel::BuildSocket()
               Hccl::SocketConfig(linkData, port, socketTag, channelDesc_.role == HCOMM_SOCKET_ROLE_SERVER) :
               Hccl::SocketConfig(linkData, port, socketTag);
     CHK_RET(hcomm::SocketMgr::GetInstance(devicePhyId_).GetSocket(socketConfig, socket_));
-    HCCL_INFO("[HostCpuRoceChannel::%s] SUCCESS. port[%u].", __func__, port);
+    HCCL_INFO("[HostCpuRoceChannel::%s] BuildSocket SUCCESS. port[%u].", __func__, port);
     return HCCL_SUCCESS;
 }
 

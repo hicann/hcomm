@@ -2739,17 +2739,17 @@ bool CollCommExecutor::IsLevel0Neighbor(u32 remoteRank, u32 level0RankSize)
 
 HcclResult CollCommExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& adjInfo)
 {
-    HCCL_INFO("[nslbdp] Entry GetAdjInfo.");
+    HCCL_INFO("[GetAdjInfo] Entry GetAdjInfo.");
     algResResp_ = &algRes;
     SubCommInfo level1CommInfo = {};
     AdjInfo nslbAdjInfo = {};
     if (Getlevel1CommRank(level1CommInfo) != HCCL_SUCCESS) {
-        HCCL_INFO("[nslbdp-GetAdjInfo] Getlevel1CommRank is NULL.");
+        HCCL_WARNING("[GetAdjInfo] Getlevel1CommRank is NULL.");
         return HCCL_SUCCESS;
     }
     u32 localRank = level1CommInfo.localRank;
     u32 localRankSize = level1CommInfo.localRankSize;
-    HCCL_INFO("[nslbdp-GetAdjInfo] level1CommInfo.localRank = [%u] localRankSize = [%u].", localRank, localRankSize);
+    HCCL_INFO("[GetAdjInfo] level1CommInfo.localRank = [%u] localRankSize = [%u].", localRank, localRankSize);
 
     if (localRankSize == 1) {
         return HCCL_SUCCESS;
@@ -2761,7 +2761,7 @@ HcclResult CollCommExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& ad
 
     std::unique_ptr<AlgTemplateBase> nslbdp_levelTempAlg;
     if (SelectTempAlg(nslbdp_levelTempAlg, localRankSize) != HCCL_SUCCESS) {
-        HCCL_INFO("[nslbdp-GetAdjInfo] SelectTempAlg is unsuccessful.");
+        HCCL_WARNING("[GetAdjInfo] SelectTempAlg is unsuccessful.");
         return HCCL_SUCCESS;
     }
     if (nslbdp_levelTempAlg == nullptr) {
@@ -2770,7 +2770,7 @@ HcclResult CollCommExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& ad
     CHK_RET(nslbdp_levelTempAlg->GetNslbAdjInfo(localRank, localRankSize, level1CommInfo.links, nslbAdjInfo));
 
     adjInfo.dstRankNum = nslbAdjInfo.dstRankNum;
-    HCCL_INFO("[nslbdp-GetAdjInfo] adjInfo.dstRankNum[%u].", adjInfo.dstRankNum);
+    HCCL_INFO("[GetAdjInfo] adjInfo.dstRankNum[%u].", adjInfo.dstRankNum);
 
     for (size_t i = 0; i < nslbAdjInfo.nsAdjInfo.size(); i++) {
         NslbDpAdjInfo dpAdjInfo = {};
@@ -2779,7 +2779,7 @@ HcclResult CollCommExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& ad
         dpAdjInfo.rev = 0;
         adjInfo.nsAdjInfo.push_back(dpAdjInfo);
         HCCL_INFO(
-            "[nslbdp]GetAdjInfo dstLocalRankId[%u], phaseId[%u].", nslbAdjInfo.nsAdjInfo[i].dstLocalRankId,
+            "[GetAdjInfo] dstLocalRankId[%u], phaseId[%u].", nslbAdjInfo.nsAdjInfo[i].dstLocalRankId,
             nslbAdjInfo.nsAdjInfo[i].phaseId);
     }
     return HCCL_SUCCESS;

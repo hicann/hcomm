@@ -240,7 +240,7 @@ HcclResult CommConfig::SetConfigByVersion(const CommConfigHandle& config)
         // 版本大于等于11，支持配置通信域级别的sqDepth
         sqDepth_ = config.sqDepth;
     }
-    HCCL_INFO("NSLBDP-VERSION config.info.version = [%u] .", config.info.version);
+    HCCL_INFO("CommConfig version: config.info.version = [%u].", config.info.version);
     return HCCL_SUCCESS;
 }
 

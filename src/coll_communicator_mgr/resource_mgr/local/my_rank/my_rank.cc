@@ -461,7 +461,9 @@ HcclResult MyRank::QueryListenPort(
     uint32_t rmtPort = 0;
     CHK_RET(GetDevicePortInternal(remoteRank, &rmtPort, remoteEndpointDesc.loc.locType));
     if (rmtPort > Hccl::MAX_VALUE_TCPPORT) {
-        HCCL_ERROR("[%s] Invalid port[%u] of Rank[%u]", __func__, rmtPort, remoteRank);
+        HCCL_ERROR(
+            "[%s] Invalid port[%u] of Rank[%u], max valid port is %u", __func__, rmtPort, remoteRank,
+            Hccl::MAX_VALUE_TCPPORT);
         return HCCL_E_PARA;
     }
     // 查询该socket链接的server端监听的端口（监听方的选择策略需要跟SocketConfig中保持一致）

@@ -109,7 +109,9 @@ HcclResult GroupScheduleMgr::GetCurLocalRank(uint32_t& localRank)
     }
 
     if (curLocalRank >= this->serverToRankSize_.at(curServerIdx)) {
-        HCCL_ERROR("[getCurLocalRank] is invalid:%u", curLocalRank);
+        HCCL_ERROR(
+            "[getCurLocalRank] curLocalRank[%u] is invalid, valid range [0, %u)", curLocalRank,
+            this->serverToRankSize_.at(curServerIdx));
         return HCCL_E_INTERNAL;
     }
 

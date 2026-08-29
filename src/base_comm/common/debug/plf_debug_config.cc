@@ -78,9 +78,6 @@ u64 GetPlfDebugConfigValue()
     return g_plfDebugConfig.load(std::memory_order_relaxed);
 }
 
-void SetPlfDebugConfigValue(u64 value)
-{
-    g_plfDebugConfig.store(value, std::memory_order_relaxed);
-}
+void SetPlfDebugConfigValue(u64 value) { g_plfDebugConfig.store(value, std::memory_order_relaxed); }
 
 } // namespace Hccl

@@ -420,10 +420,10 @@ struct TransportDeviceNormalData {
             "remoteOutputMem: addr[%llu], size[%llu], key[%u]", remoteOutputMem.addr, remoteOutputMem.size,
             remoteOutputMem.key);
         HCCL_DEBUG(
-            "remoteInputMem: addr[%llu], size[%llu], key[%u]", localInputMem.addr, localInputMem.size,
+            "localInputMem: addr[%llu], size[%llu], key[%u]", localInputMem.addr, localInputMem.size,
             localInputMem.key);
         HCCL_DEBUG(
-            "remoteOutputMem: addr[%llu], size[%llu], key[%u]", localOutputMem.addr, localOutputMem.size,
+            "localOutputMem: addr[%llu], size[%llu], key[%u]", localOutputMem.addr, localOutputMem.size,
             localOutputMem.key);
         HCCL_DEBUG("qpInfo: qpPtr[%llu], sqIndex[%u], dbIndex[%u]", qpInfo.qpPtr, qpInfo.sqIndex, qpInfo.dbIndex);
         HCCL_DEBUG("qpMode[%d]", static_cast<int32_t>(qpMode));
