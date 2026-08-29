@@ -11,6 +11,9 @@
 # 注意a3与a5测试用例拆分不同可执行文件
 set(src_to_test_list
     main.cc
+    # 设备状态刷新回调UT：依赖进程级注册标志位初始为false，须作为首个测试单元链接，
+    # 请勿将其移动到其他触发 HcommEndpoint* 接口的测试文件之后
+    host/ut_device_refresh_callback.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/hccl_api_base_test.cc
     ut_HcclRankGraph_API.cc
     ut_HcomInitCollComm.cc

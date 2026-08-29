@@ -50,6 +50,8 @@ class HcommResMgr {
 public:
     static HcommResMgr& GetInstance();
     static void RegisterDeviceResetCallback();
+    static void RegisterDeviceRefreshCallback();
+    static void UnregisterDeviceRefreshCallback();
 
     HcommBaseResMgr& GetDeviceResMgr(uint32_t devicePhyId);
     ConfigMgr& GetConfigMgr();
@@ -60,7 +62,7 @@ public:
 
 private:
     HcommResMgr();
-    ~HcommResMgr() = default;
+    ~HcommResMgr();
     HcommResMgr(const HcommResMgr& that) = delete;
     HcommResMgr& operator=(const HcommResMgr& that) = delete;
 

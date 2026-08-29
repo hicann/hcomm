@@ -47,6 +47,9 @@
 namespace hcomm {
 
 static std::mutex g_deviceResetRegMutex;
+static std::mutex g_deviceRefreshRegMutex;
+static std::mutex g_deviceRefreshMutex;
+static bool g_deviceRefreshCallbackRegistered = false;
 static bool g_deviceResetCallbackRegistered = false;
 
 aclrtBinHandle HcommResMgr::binHandle_ = nullptr;
@@ -113,6 +116,13 @@ void HcommBaseResMgr::Init()
 
 HcommResMgr::HcommResMgr() = default;
 
+HcommResMgr::~HcommResMgr()
+{
+    g_deviceRefreshCallbackRegistered = false;
+    g_deviceResetCallbackRegistered = false;
+    UnregisterDeviceRefreshCallback();
+}
+
 HcommResMgr& HcommResMgr::GetInstance()
 {
     static HcommResMgr instance;
@@ -154,12 +164,12 @@ static void OnDeviceResetPre(int32_t deviceId, aclrtDeviceState state, [[maybe_u
         if (state != ACL_RT_DEVICE_STATE_RESET_PRE) {
             return;
         }
-        HCCL_INFO("[OnDeviceResetPre] deviceId[%d] state[%d] ", deviceId, static_cast<int>(state));
+        HCCL_INFO("[%s] deviceId[%d] state[%d] ", __func__, deviceId, static_cast<int>(state));
 
         u32 devPhyId = 0;
         HcclResult ret = hrtGetDevicePhyIdByIndex(static_cast<u32>(deviceId), devPhyId);
         if (ret != HCCL_SUCCESS) {
-            HCCL_WARNING("[OnDeviceResetPre] hrtGetDevicePhyIdByIndex failed, deviceId[%d] ret[%d]", deviceId, ret);
+            HCCL_WARNING("[%s] hrtGetDevicePhyIdByIndex failed, deviceId[%d] ret[%d]", __func__, deviceId, ret);
             return;
         }
         SocketMgr::DeInit(devPhyId);
@@ -169,9 +179,9 @@ static void OnDeviceResetPre(int32_t deviceId, aclrtDeviceState state, [[maybe_u
         Hccl::SocketHandleManager::GetInstance().DeInit(devPhyId);
         Hccl::HccpHdcManager::GetInstance().DeInit(deviceId);
     } catch (const std::exception& e) {
-        HCCL_WARNING("[OnDeviceResetPre][%s] exception caught:%s", __func__, e.what());
+        HCCL_WARNING("[%s] exception caught:%s", __func__, e.what());
     } catch (...) {
-        HCCL_WARNING("[OnDeviceResetPre][%s] unknown exception caught", __func__);
+        HCCL_WARNING("[%s] unknown exception caught", __func__);
     }
 }
 
@@ -187,7 +197,72 @@ void HcommResMgr::RegisterDeviceResetCallback()
         return;
     }
     g_deviceResetCallbackRegistered = true;
-    HCCL_INFO("[RegisterDeviceResetCallback] aclrtRegDeviceStateCallback success");
+    HCCL_INFO("[%s] aclrtRegDeviceStateCallback success", __func__);
+}
+
+static void OnDeviceStateRefresh(int32_t deviceId, aclrtDeviceState state, [[maybe_unused]] void* args)
+{
+    std::lock_guard<std::mutex> lock(g_deviceRefreshMutex);
+    try {
+        if (state != ACL_RT_DEVICE_STATE_SET_POST) {
+            return;
+        }
+        HCCL_INFO("[%s] deviceId[%d] state[%d]", __func__, deviceId, static_cast<int>(state));
+        s32 deviceLogicId = 0;
+        HcclResult ret = hrtGetDeviceRefresh(&deviceLogicId);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_WARNING("[%s] hrtGetDeviceRefresh failed, deviceId[%d] ret[%d]", __func__, deviceId, ret);
+            return;
+        }
+
+        u32 devicePhyId = 0;
+        ret = hrtGetDevicePhyIdByIndex(static_cast<u32>(deviceLogicId), devicePhyId, true);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_WARNING("[%s] hrtGetDevicePhyIdByIndex failed, deviceId[%d] ret[%d]", __func__, deviceId, ret);
+            return;
+        }
+
+        DevType deviceType = DevType::DEV_TYPE_COUNT;
+        ret = hrtGetDeviceType(deviceType);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_WARNING("[%s] hrtGetDeviceType failed, deviceId[%d] ret[%d]", __func__, deviceId, ret);
+            return;
+        }
+        HCCL_INFO(
+            "[%s] refresh success, deviceLogicId[%d] devicePhyId[%d], deviceType[%d]", __func__, deviceLogicId,
+            devicePhyId, static_cast<int>(deviceType));
+    } catch (const std::exception& e) {
+        HCCL_WARNING("[%s] exception caught:%s", __func__, e.what());
+    } catch (...) {
+        HCCL_WARNING("[%s] unknown exception caught", __func__);
+    }
+}
+
+void HcommResMgr::RegisterDeviceRefreshCallback()
+{
+    std::lock_guard<std::mutex> lock(g_deviceRefreshRegMutex);
+    if (g_deviceRefreshCallbackRegistered) {
+        return;
+    }
+    aclError ret = aclrtRegDeviceStateCallback("hcomm_refresh_device", OnDeviceStateRefresh, nullptr);
+    if (ret != ACL_SUCCESS) {
+        HCCL_WARNING("[%s] aclrtRegDeviceStateCallback failed, ret[%d]", __func__, ret);
+        return;
+    }
+    g_deviceRefreshCallbackRegistered = true;
+    HCCL_INFO("[%s] aclrtRegDeviceStateCallback success, regName[%s]", __func__, "hcomm_refresh_device");
+}
+
+void HcommResMgr::UnregisterDeviceRefreshCallback()
+{
+    aclError ret = aclrtRegDeviceStateCallback("hcomm_refresh_device", nullptr, nullptr);
+    if (ret != ACL_SUCCESS) {
+        HCCL_WARNING(
+            "[%s] aclrtRegDeviceStateCallback unregister failed, "
+            "regName[%s] ret[%d]",
+            __func__, "hcomm_refresh_device", ret);
+    }
+    HCCL_INFO("[%s] unregister success", __func__);
 }
 
 } // namespace hcomm

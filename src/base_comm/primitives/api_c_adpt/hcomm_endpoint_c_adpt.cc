@@ -216,6 +216,7 @@ HcommResult HcommEndpointGetDescNum(int32_t deviceLogicId, uint32_t* descNum)
     CHK_PTR_NULL(descNum);
     *descNum = 0;
     HcommResMgr::RegisterDeviceResetCallback();
+    HcommResMgr::RegisterDeviceRefreshCallback();
 
     CHK_PRT_RET(
         deviceLogicId < 0, HCCL_ERROR("[%s] deviceLogicId[%d] is invalid.", __func__, deviceLogicId), HCCL_E_PARA);
@@ -246,6 +247,7 @@ HcommResult HcommEndpointGetDescs(int32_t deviceLogicId, uint32_t* descNum, Endp
     CHK_PTR_NULL(descNum);
     CHK_PTR_NULL(endpointDescs);
     HcommResMgr::RegisterDeviceResetCallback();
+    HcommResMgr::RegisterDeviceRefreshCallback();
 
     uint32_t devicePhyId = 0;
     std::vector<DevEidInfo> eidInfos;
@@ -314,6 +316,7 @@ HcommResult HcommEndpointCreate(const EndpointDesc* endpoint, EndpointHandle* en
     (void)HcommResMgrInit();
     CHK_RET(CreateBuiltinEndpoint(endpoint, endpointHandle));
     HcommResMgr::RegisterDeviceResetCallback();
+    HcommResMgr::RegisterDeviceRefreshCallback();
     EXCEPTION_HANDLE_END
     return HCCL_SUCCESS;
 }
