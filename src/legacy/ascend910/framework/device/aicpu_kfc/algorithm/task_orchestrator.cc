@@ -1106,7 +1106,7 @@ HcclResult TaskOrchestrator::DealKfcCommand(AicpuComContext* ctx)
         HCCL_WARNING("hccl aicpu stop wait finish, for recv stop launch cmd");
         return HCCL_E_SUSPENDING;
     } else if ((cmd == KfcCommand::NsStopLaunch) && (ctx->commOpenStatus == true) && (ctx->endStopLaunch == false)) {
-        HCCL_WARNING("N second stop Launch for recv stop launch cmd.");
+        HCCL_WARNING("Stop launch due to receiving stop launch cmd.");
         AicpuUpdatComContextMumber(offsetof(AicpuComContext, isStopLaunch), true);
         AicpuUpdatComContextMumber(offsetof(AicpuComContext, endStopLaunch), true);
         return HCCL_E_SUSPENDING;

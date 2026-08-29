@@ -396,7 +396,9 @@ HcclResult NetworkManager::HeterogStartListen(const HcclIpAddress& ipAddr, u32 p
 
     CHK_PRT_RET(
         port > MAX_PORT_ID || port < MIN_PORT_ID,
-        HCCL_ERROR("[NetworkManager][HeterogStartListen] port error[%u]", port), HCCL_E_NETWORK);
+        HCCL_ERROR(
+            "[NetworkManager][HeterogStartListen] port error[%u], valid range[%u, %u]", port, MIN_PORT_ID, MAX_PORT_ID),
+        HCCL_E_NETWORK);
 
     if (nicSocketHandle != nullptr
         && raResourceInfo_.nicSocketMap[ipAddr].listenedPort.find(port)
@@ -700,7 +702,9 @@ HcclResult NetworkManager::StartVnic(HcclIpAddress localIp, u32& port)
         deviceNicInitRef_.Count() <= 0, HCCL_ERROR("[Start][Vnic]can't start vnic socket before init device nic!"),
         HCCL_E_INTERNAL);
     CHK_PRT_RET(Is310PDevice(), HCCL_INFO("DC does not need vnic"), HCCL_SUCCESS);
-    CHK_PRT_RET(port > MAX_PORT_ID, HCCL_ERROR("[Start][Vnic]invalid port id[%u]", port), HCCL_E_PARA);
+    CHK_PRT_RET(
+        port > MAX_PORT_ID, HCCL_ERROR("[Start][Vnic]invalid port id[%u], max port id[%u]", port, MAX_PORT_ID),
+        HCCL_E_PARA);
 
     auto sockInfo = raResourceInfo_.vnicSocketMap.find(localIp);
     if (sockInfo == raResourceInfo_.vnicSocketMap.end()) {
@@ -804,7 +808,7 @@ HcclResult NetworkManager::StopVnic(const HcclIpAddress& localIp, u32 port)
         HCCL_SUCCESS);
     CHK_PRT_RET(
         count < 0,
-        HCCL_INFO(
+        HCCL_WARNING(
             "[Stop][Vnic]ip[%s] port[%u] devicePhyId_[%u] vnic stopped ERROR, refcount[%d].",
             localIp.GetReadableAddress(), port, devicePhyId_, count),
         HCCL_SUCCESS);
@@ -927,7 +931,9 @@ HcclResult NetworkManager::StartNic(const HcclIpAddress& ipAddr, u32& port, bool
     }
     // 如果port id传入的值无效值0xFFFFFFFF, 不启动监听
     CHK_PRT_RET(port == MAX_VALUE_U32, HCCL_INFO("[Start][Nic] port id[%u], skip listen socket", port), HCCL_SUCCESS);
-    CHK_PRT_RET(port > MAX_PORT_ID, HCCL_ERROR("[Start][Nic]invalid port id[%u]", port), HCCL_E_INTERNAL);
+    CHK_PRT_RET(
+        port > MAX_PORT_ID, HCCL_ERROR("[Start][Nic]invalid port id[%u], max port id[%u]", port, MAX_PORT_ID),
+        HCCL_E_INTERNAL);
     if (sock.listenedPort.find(port) != sock.listenedPort.end()) {
         HCCL_WARNING("port[%u] is already listened.", port);
     } else {
@@ -1103,7 +1109,7 @@ HcclResult NetworkManager::StopRdmaHandle(const HcclIpAddress& ipAddr, HcclNetDe
             }
             IpSocket& ipSock = it->second;
             if (ipSock.nicRdmaHandle != nullptr && HrtRaRdmaDeInit(ipSock.nicRdmaHandle, notifyType_) != HCCL_SUCCESS) {
-                HCCL_ERROR("[Stop][rmda]NIC rdev deInit not successfully, notifyType_[%d]", notifyType_);
+                HCCL_ERROR("[Stop][rdma]NIC rdev deInit not successfully, notifyType_[%d]", notifyType_);
                 return HCCL_E_NETWORK;
             }
             ipSock.nicRdmaHandle = nullptr;
@@ -1585,7 +1591,8 @@ HcclResult NetworkManager::Destroy()
     /* 停止host nic ra的监听 */
     if (raResourceInfo_.hostNetSocketMap.size() != 0) {
         for (auto it : raResourceInfo_.hostNetSocketMap) {
-            HCCL_WARNING("hostNicSocketMap[%s] is not stop when NetworkManager Destroy", it.first.GetReadableAddress());
+            HCCL_WARNING(
+                "hostNicSocketMap[%s] is not stopped when NetworkManager Destroy", it.first.GetReadableAddress());
         }
         StopAllHostNicSockets();
     }
@@ -1715,11 +1722,11 @@ HcclResult NetworkManager::PsWorkerRaInit(
         deviceNicInitRef_.Ref();
         CHK_RET(hrtRaIsFirstUsed(devicePhyId, fistUsed));
         HCCL_INFO(
-            "deviceNicInitRef_[%d] fistUsed[%u] devicePhyId[%u]", deviceNicInitRef_.Count(), fistUsed, devicePhyId);
+            "deviceNicInitRef_[%d] firstUsed[%u] devicePhyId[%u]", deviceNicInitRef_.Count(), fistUsed, devicePhyId);
         if (deviceNicInitRef_.Count() == 1 && !fistUsed) {
             isRaInitRepeated_ = true;
         } else if (!fistUsed) {
-            HCCL_INFO("[NetworkManager] PsWorkerRa is not fistUsed");
+            HCCL_INFO("[NetworkManager] PsWorkerRa is not firstUsed");
             return HCCL_SUCCESS;
         }
     }

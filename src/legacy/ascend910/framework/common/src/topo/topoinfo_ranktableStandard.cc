@@ -81,7 +81,7 @@ HcclResult TopoinfoRanktableStandard::GetClusterInfo(RankTable_t& clusterInfo)
 HcclResult TopoinfoRanktableStandard::ParserClusterInfo(hccl::HcclCommParams& params, hccl::RankTable_t& rankTable)
 {
     CHK_RET(GetDeployMode(cloudFlag_));
-    HCCL_INFO("deploy mode is %s", cloudFlag_ ? "cloud" : "Laborratory");
+    HCCL_INFO("deploy mode is %s", cloudFlag_ ? "cloud" : "Laboratory");
     if (!IsTaskNumCalMode()) {
         CHK_RET(hrtGetDeviceType(params.deviceType));
     }

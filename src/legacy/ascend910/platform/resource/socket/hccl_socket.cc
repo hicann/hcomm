@@ -168,8 +168,8 @@ HcclResult HcclSocket::Listen(u32 port)
     HCCL_INFO("[HcclSocket][Listen] device[%d] trying to listen on port[%u]", localDeviceLogicId_, port);
     if (socketType_ == NicType::VNIC_TYPE) {
         ret = NetworkManager::GetInstance(localDeviceLogicId_).StartVnic(localIp_, port);
-        errormessage = "The IP address " + std::string(localIp_.GetReadableIP()) + " and port "
-                       + std::to_string(localPort_) + " have already been bound.";
+        errormessage = "The IP address " + std::string(localIp_.GetReadableIP()) + " and port " + std::to_string(port)
+                       + " have already been bound.";
         RPT_INPUT_ERR(
             ret == HCCL_E_UNAVAIL, "EI0020", std::vector<std::string>({"reason"}),
             std::vector<std::string>({errormessage}));
@@ -182,8 +182,8 @@ HcclResult HcclSocket::Listen(u32 port)
             backupIp_.GetReadableIP());
         // 如果是backup，传入额外的rdev信息
         ret = NetworkManager::GetInstance(localDeviceLogicId_).StartNic(localIp_, port, rdmaFlag, backupIp_);
-        errormessage = "The IP address " + std::string(localIp_.GetReadableIP()) + " and port "
-                       + std::to_string(localPort_) + " have already been bound.";
+        errormessage = "The IP address " + std::string(localIp_.GetReadableIP()) + " and port " + std::to_string(port)
+                       + " have already been bound.";
         RPT_INPUT_ERR(
             ret == HCCL_E_UNAVAIL, "EI0020", std::vector<std::string>({"reason"}),
             std::vector<std::string>({errormessage}));
@@ -464,7 +464,10 @@ HcclResult HcclSocket::Accept(const std::string& tag, std::shared_ptr<HcclSocket
     while (1) {
         if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
             if (acceptTimeOutTmp != 0) {
-                HCCL_WARNING("[Get][Connection]topo exchange server get socket timeout! timeout[%d s]", timer);
+                HCCL_WARNING(
+                    "[Get][Connection]topo exchange server get socket timeout, waiting continues! "
+                    "timeout[%d s]",
+                    timer);
             } else {
                 HCCL_ERROR("[Get][Connection]topo exchange server get socket timeout! timeout[%d s]", timer);
             }

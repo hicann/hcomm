@@ -28,7 +28,7 @@ HcclResult TopoMatchBase::MatchTopo(
     (void)vTopo;
     (void)virtRanks;
     (void)virtRankMap;
-    HCCL_ERROR("[CollAlgFactory] Rank [%d], use proper multi-level interfacce to match topo.", myRank_);
+    HCCL_ERROR("[CollAlgFactory] Rank [%d], use proper multi-level interface to match topo.", myRank_);
     return HcclResult::HCCL_E_INTERNAL;
 }
 
@@ -39,7 +39,7 @@ HcclResult TopoMatchBase::MatchTopo(
     (void)vTopo;
     (void)virtRanks;
     (void)virtRankMap;
-    HCCL_ERROR("[CollAlgFactory] Rank [%d], use proper 1-level interfacce to match topo.", myRank_);
+    HCCL_ERROR("[CollAlgFactory] Rank [%d], use proper 1-level interface to match topo.", myRank_);
     return HcclResult::HCCL_E_INTERNAL;
 }
 
@@ -93,7 +93,8 @@ HcclResult TopoMatchBase::CalcRankOnSamePlaneOfR0(
     for (RankId rankId : rankSet) {
         u32 localId = rankGraph_->GetReplacedLocalId(rankId);
         CHK_PRT_RET(
-            localId >= RANK_SIZE_EIGHT * RANK_SIZE_EIGHT, HCCL_ERROR("localId is bigger than 63."),
+            localId >= RANK_SIZE_EIGHT * RANK_SIZE_EIGHT,
+            HCCL_ERROR("localId[%u] is bigger than 63 (RANK_SIZE_EIGHT * RANK_SIZE_EIGHT - 1).", localId),
             HcclResult::HCCL_E_PARA);
         rankOnSameBoardVector[localId / RANK_SIZE_EIGHT].push_back(rankId);
         rankOnSameSlotVector[localId % RANK_SIZE_EIGHT].push_back(rankId);

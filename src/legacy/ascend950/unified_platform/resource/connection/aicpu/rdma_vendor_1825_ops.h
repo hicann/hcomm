@@ -409,7 +409,7 @@ private:
         }
         uint32_t reduceDataType = Roce3ReduceDataTypeMap[dataTypeIdx];
         if (reduceDataType == DTYPE_INVALID) {
-            HCCL_ERROR("[Rdma1825Ops::%s] DataType %u not support by inline reduce", __func__, dataTypeIdx);
+            HCCL_ERROR("[Rdma1825Ops::%s] DataType %u is not supported by inline reduce", __func__, dataTypeIdx);
             return HCCL_E_NOT_SUPPORT;
         }
 
@@ -420,7 +420,7 @@ private:
         }
         uint32_t reduceOpType = Roce3ReduceOpTypeMap[reduceOpIdx];
         if (reduceOpType == DTYPE_INVALID) {
-            HCCL_ERROR("[Rdma1825Ops::%s] ReduceOpType %u not support by inline reduce", __func__, reduceOpIdx);
+            HCCL_ERROR("[Rdma1825Ops::%s] ReduceOpType %u is not supported by inline reduce", __func__, reduceOpIdx);
             return HCCL_E_NOT_SUPPORT;
         }
 

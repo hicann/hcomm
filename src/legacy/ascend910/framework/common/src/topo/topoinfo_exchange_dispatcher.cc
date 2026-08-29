@@ -51,22 +51,22 @@ void TopoInfoExchangeDispather::InitWorkerThread()
 {
     threadNum_ = std::max(1, std::min(int(rankNum_ / RANK_CAPACITY_PER_THREAD), int(MAX_THREAD_NUM)));
     HCCL_INFO(
-        "[TopoInfoExchangeDispather][InitWorkerThread]calculate threadNum[%u], rankNum[%d]", threadNum_, rankNum_);
+        "[TopoInfoExchangeDispatcher][InitWorkerThread]calculate threadNum[%u], rankNum[%d]", threadNum_, rankNum_);
     for (u32 i = 0; i < threadNum_; ++i) {
         auto th = std::thread(&TopoInfoExchangeDispather::RunWorkerThread, this, i);
         workerThreads_.emplace_back(std::move(th));
-        HCCL_DEBUG("[TopoInfoExchangeDispather][InitWorkerThread]create thread[%u]", i);
+        HCCL_DEBUG("[TopoInfoExchangeDispatcher][InitWorkerThread]create thread[%u]", i);
     }
 }
 
 void TopoInfoExchangeDispather::WorkerWait(int workId)
 {
-    HCCL_DEBUG("[TopoInfoExchangeDispather][WorkerWait]start wait! workId[%d]", workId);
+    HCCL_DEBUG("[TopoInfoExchangeDispatcher][WorkerWait]start wait! workId[%d]", workId);
     std::unique_lock<std::mutex> lck(wakeMutex_);
     while (!ready_ && !stop_) {
         wakeManager_.wait(lck);
     }
-    HCCL_DEBUG("[TopoInfoExchangeDispather][WorkerWait]finish wait! workId[%d]", workId);
+    HCCL_DEBUG("[TopoInfoExchangeDispatcher][WorkerWait]finish wait! workId[%d]", workId);
 }
 
 bool TopoInfoExchangeDispather::GetTask(WorkerTask& workTask)
@@ -98,7 +98,7 @@ void TopoInfoExchangeDispather::RunWorkerThread(int workId)
             }
         }
     }
-    HCCL_DEBUG("[TopoInfoExchangeDispather][RunWorkerThread]finish thread! workId[%d]", workId);
+    HCCL_DEBUG("[TopoInfoExchangeDispatcher][RunWorkerThread]finish thread! workId[%d]", workId);
 }
 
 HcclResult TopoInfoExchangeDispather::PrepareResource(
@@ -111,7 +111,7 @@ HcclResult TopoInfoExchangeDispather::PrepareResource(
     HcclResult ret = hrtRaCreateEventHandle(epollFds_);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
-            "[TopoInfoExchangeDispather][PrepareEpollResource]hrtRaCreateEventHandle create"
+            "[TopoInfoExchangeDispatcher][PrepareEpollResource]hrtRaCreateEventHandle create"
             " epollFds_ failed, ret[%d]",
             ret);
         return HCCL_E_TCP_TRANSFER;
@@ -138,13 +138,13 @@ HcclResult TopoInfoExchangeDispather::PrepareResource(
         fdcontext.txState.rankId = socketIndex;
         socketIndex++;
         HCCL_DEBUG(
-            "[TopoInfoExchangeDispather][PrepareResource]socketIndex:%u, bodyLen:%u, data:%u", socketIndex,
+            "[TopoInfoExchangeDispatcher][PrepareResource]socketIndex:%u, bodyLen:%u, data:%u", socketIndex,
             fdcontext.txState.bodyLen, fdcontext.txState.data);
         fdHandleToFdContextMap_.emplace(it.second->GetFdHandle(), fdcontext);
     }
 
     HCCL_DEBUG(
-        "[TopoInfoExchangeDispather][PrepareEpollResource]fdHandleToFdContextMap_ size[%d]",
+        "[TopoInfoExchangeDispatcher][PrepareEpollResource]fdHandleToFdContextMap_ size[%d]",
         fdHandleToFdContextMap_.size());
     return HCCL_SUCCESS;
 }
@@ -158,7 +158,7 @@ HcclResult TopoInfoExchangeDispather::PrepareLeaderResource(
     HcclResult ret = hrtRaCreateEventHandle(epollFds_);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
-            "[TopoInfoExchangeDispather][PrepareEpollResource]hrtRaCreateEventHandle create"
+            "[TopoInfoExchangeDispatcher][PrepareEpollResource]hrtRaCreateEventHandle create"
             " epollFds_ failed, ret[%d]",
             ret);
         return HCCL_E_TCP_TRANSFER;
@@ -181,13 +181,13 @@ HcclResult TopoInfoExchangeDispather::PrepareLeaderResource(
         fdContext.txState.rankId = socketIndex;
         socketIndex++;
         HCCL_DEBUG(
-            "[TopoInfoExchangeDispather][PrepareLeaderResource]socketIndex:%u, bodyLen:%u, data:%u", socketIndex,
+            "[TopoInfoExchangeDispatcher][PrepareLeaderResource]socketIndex:%u, bodyLen:%u, data:%u", socketIndex,
             fdContext.txState.bodyLen, fdContext.txState.data);
         fdHandleToFdContextMap_.emplace(it.second->GetFdHandle(), fdContext);
     }
 
     HCCL_DEBUG(
-        "[TopoInfoExchangeDispather][PrepareEpollResource]fdHandleToFdContextMap_ size[%d]",
+        "[TopoInfoExchangeDispatcher][PrepareEpollResource]fdHandleToFdContextMap_ size[%d]",
         fdHandleToFdContextMap_.size());
     return HCCL_SUCCESS;
 }
@@ -204,7 +204,7 @@ void TopoInfoExchangeDispather::CleanResource()
     // 主线程广播结束，结束从线程（不确定是否存在出于wait状态的线程，统一全部唤醒）
     stop_ = true;
     WakeWoker();
-    HCCL_INFO("[TopoInfoExchangeDispather][PrepareEpollResource]wake all workers.");
+    HCCL_INFO("[TopoInfoExchangeDispatcher][PrepareEpollResource]wake all workers.");
     for (auto& th : workerThreads_) {
         if (th.joinable()) {
             th.join();
@@ -219,7 +219,7 @@ HcclResult TopoInfoExchangeDispather::CloseEpollFd()
     HcclResult ret = hrtRaDestroyEventHandle(epollFds_);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
-            "[TopoInfoExchangeDispather][CloseEpollFd]DestroyEventHandle destroy "
+            "[TopoInfoExchangeDispatcher][CloseEpollFd]DestroyEventHandle destroy "
             "epollFds_ failed, ret[%d]",
             ret);
         return HCCL_E_TCP_TRANSFER;
@@ -231,14 +231,14 @@ HcclResult TopoInfoExchangeDispather::ProcessOneSendEvent([[maybe_unused]] s32 e
 {
     std::unique_lock<std::mutex> lckForMap(fdHandleMapMutex_);
     if (fdHandleToFdContextMap_.find(fdHandle) == fdHandleToFdContextMap_.end()) {
-        HCCL_ERROR("[TopoInfoExchangeDispather][ProcessOneSendEvent]no fdhandle[%p]", fdHandle);
+        HCCL_ERROR("[TopoInfoExchangeDispatcher][ProcessOneSendEvent]no fdhandle[%p]", fdHandle);
         stop_ = true;
         return HCCL_E_INTERNAL;
     }
     auto ctx = &(fdHandleToFdContextMap_.at(fdHandle));
     if (ctx->txState.Send(ctx->socket) != 0) {
         HCCL_ERROR(
-            "[TopoInfoExchangeDispather][ProcessOneSendEvent]send data to rank[%u] failed.", ctx->txState.rankId);
+            "[TopoInfoExchangeDispatcher][ProcessOneSendEvent]send data to rank[%u] failed.", ctx->txState.rankId);
         stop_ = true;
         return HCCL_E_INTERNAL;
     }
@@ -253,7 +253,7 @@ HcclResult TopoInfoExchangeDispather::ProcessOneSendEvent([[maybe_unused]] s32 e
     HcclResult ret = hrtRaCtlEventHandle(epollFds_, fdHandle, ctlType, HcclEpollEvent::HCCL_EPOLLOUT_LET_ONESHOT);
     if (ret != HCCL_SUCCESS) {
         HCCL_ERROR(
-            "[TopoInfoExchangeDispather][ProcessOneSendEvent]epoll_ctl delete/modify "
+            "[TopoInfoExchangeDispatcher][ProcessOneSendEvent]epoll_ctl delete/modify "
             "failed, ctlType[%d]",
             ctlType);
         stop_ = true;
@@ -268,7 +268,7 @@ HcclResult TopoInfoExchangeDispather::SendOnce()
     for (auto& it : fdHandleToFdContextMap_) {
         auto fdCtx = &(it.second);
         if (fdCtx->txState.Send(fdCtx->socket) != 0) {
-            HCCL_ERROR("[TopoInfoExchangeDispather][SendOnce]Send data to rank[%u] failed.", fdCtx->txState.rankId);
+            HCCL_ERROR("[TopoInfoExchangeDispatcher][SendOnce]Send data to rank[%u] failed.", fdCtx->txState.rankId);
             stop_ = true;
             return HCCL_E_INTERNAL;
         }
@@ -278,7 +278,7 @@ HcclResult TopoInfoExchangeDispather::SendOnce()
             // EPOLLOUT_LET_ONESHOT -> EPOLLOUT | EPOLLET | EPOLLONESHOT, 防止多个线程同时操作同一个fd（fd重复触发）
             ret = hrtRaCtlEventHandle(epollFds_, it.first, EPOLL_CTL_ADD, HcclEpollEvent::HCCL_EPOLLOUT_LET_ONESHOT);
             if (ret != HCCL_SUCCESS) {
-                HCCL_ERROR("[TopoInfoExchangeDispather][SendOnce]epoll_ctl add fd failed.");
+                HCCL_ERROR("[TopoInfoExchangeDispatcher][SendOnce]epoll_ctl add fd failed.");
                 stop_ = true;
                 return HCCL_E_INTERNAL;
             }
@@ -294,7 +294,7 @@ HcclResult TopoInfoExchangeDispather::ProcessSend()
     HcclResult ret = SendOnce(); // 先尝试发送数据
     CHK_RET(ret);
     HCCL_INFO(
-        "[TopoInfoExchangeDispather][ProcessSend]sendOnce success, start epoll_wait."
+        "[TopoInfoExchangeDispatcher][ProcessSend]sendOnce success, start epoll_wait."
         " sendDoneCount[%d], rankNum[%d].",
         sendDoneCount_.load(), rankNum_);
     const int sendEvsCount = 20; // epoll_wait 缓冲区大小（单次触发的事件个数）
@@ -310,7 +310,7 @@ HcclResult TopoInfoExchangeDispather::ProcessSend()
             lastEpollWaitFlag = true;
         }
         if ((std::chrono::steady_clock::now() - startTime) >= timeout) {
-            HCCL_ERROR("[TopoInfoExchangeDispather][ProcessSend]epoll_wait timeout!");
+            HCCL_ERROR("[TopoInfoExchangeDispatcher][ProcessSend]epoll_wait timeout!");
             return HCCL_E_INTERNAL;
         }
         s32 epollTimeout = lastEpollWaitFlag ? LAST_EPOLL_TIMEOUT_MS : EPOLL_TIMEOUT_MS;
@@ -319,14 +319,14 @@ HcclResult TopoInfoExchangeDispather::ProcessSend()
         if (eventsNum == 0 && ret == HCCL_SUCCESS && sendDoneCount_ == rankNum_) {
             // 最后一轮epoll_wait结束, 等待超时，epoll池内无事件
             HCCL_WARNING(
-                "[TopoInfoExchangeDispather][ProcessSend]hrtRaWaitEventHandle is timeout[%d] ms, "
+                "[TopoInfoExchangeDispatcher][ProcessSend]hrtRaWaitEventHandle is timeout[%d] ms, "
                 "eventsNum[%u], ret[%d], sendDoneCount_[%d]",
                 epollTimeout, eventsNum, ret, sendDoneCount_.load());
             return HCCL_SUCCESS;
         }
         if (eventsNum <= 0 && ret != HCCL_SUCCESS) {
             HCCL_ERROR(
-                "[TopoInfoExchangeDispather][ProcessSend]hrtRaWaitEventHandle failed, eventsNum[%u], "
+                "[TopoInfoExchangeDispatcher][ProcessSend]hrtRaWaitEventHandle failed, eventsNum[%u], "
                 "ret[%d]",
                 eventsNum, ret);
             return HCCL_E_INTERNAL;
@@ -387,11 +387,11 @@ HcclResult TopoInfoExchangeDispather::SendState::SendHelper(
     u64 sentSize = 0;
     HcclResult ret = socket->ISend(buf + sendedLen, needSend, sentSize);
     if (ret == HCCL_E_NETWORK) {
-        HCCL_ERROR("[TopoInfoExchangeDispather][SendState][SendHelper]SendHelper fail error[%d].", ret);
+        HCCL_ERROR("[TopoInfoExchangeDispatcher][SendState][SendHelper]SendHelper fail error[%d].", ret);
         return HCCL_E_TCP_TRANSFER;
     }
     if (ret != HCCL_SUCCESS && ret != HCCL_E_AGAIN) {
-        HCCL_ERROR("[TopoInfoExchangeDispather][SendState][SendHelper]socket send fail error[%d].", ret);
+        HCCL_ERROR("[TopoInfoExchangeDispatcher][SendState][SendHelper]socket send fail error[%d].", ret);
         return HCCL_E_INTERNAL;
     }
     if (ret == HCCL_SUCCESS) {

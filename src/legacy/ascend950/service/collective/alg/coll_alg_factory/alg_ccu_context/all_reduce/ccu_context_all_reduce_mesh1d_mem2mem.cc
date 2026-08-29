@@ -308,7 +308,7 @@ void CcuContextAllReduceMeshMem2Mem1D::BcastLocToRmt(
 {
     CHK_PRT_THROW(
         dstAddr.size() != transports.size() + 1,
-        HCCL_ERROR("[ReduceRmtToLoc] srcAddr.size[%zu] != transports size[%zu] + 1", dstAddr.size(), transports.size()),
+        HCCL_ERROR("[ReduceRmtToLoc] dstAddr.size[%zu] != transports size[%zu] + 1", dstAddr.size(), transports.size()),
         InvalidParamsException, "Invalid srcAddr size");
 
     srcMem_.addr = srcAddr;

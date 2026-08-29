@@ -325,7 +325,7 @@ HcclResult AllReduceOpbasePipeline::Prepare(
     streamNotifyMain_ = notifyMain;
     if (streamNotifyMain_.size() < intraRankSize_) {
         HCCL_ERROR(
-            "[AllReduceOpbasePipeline][Prepare]rank[%u] streamNotifyMain_ size [%u] error, is smaller than,"
+            "[AllReduceOpbasePipeline][Prepare]rank[%u] streamNotifyMain_ size [%u] is smaller than "
             "intraRankSize_[%u]",
             rankId_, streamNotifyMain_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
@@ -333,7 +333,7 @@ HcclResult AllReduceOpbasePipeline::Prepare(
     streamNotifySub_ = notifySub;
     if (streamNotifySub_.size() < intraRankSize_) {
         HCCL_ERROR(
-            "[AllReduceOpbasePipeline][Prepare]rank[%u] streamNotifySub_ size [%u] error, is smaller than,"
+            "[AllReduceOpbasePipeline][Prepare]rank[%u] streamNotifySub_ size [%u] is smaller than "
             "intraRankSize_[%u]",
             rankId_, streamNotifySub_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;

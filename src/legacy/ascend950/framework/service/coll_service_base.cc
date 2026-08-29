@@ -191,7 +191,7 @@ void CollServiceBase::AllocCommResource(
 HcclResult CollServiceBase::AllocCollOpResource(
     [[maybe_unused]] CollOperator& op, [[maybe_unused]] const std::string& opAlgTag, [[maybe_unused]] void** addr)
 {
-    HCCL_ERROR("[%s] was not support in this mode.", __func__);
+    HCCL_ERROR("[%s] is not supported in this mode.", __func__);
     return HCCL_E_NOT_SUPPORT;
 }
 
@@ -459,7 +459,7 @@ HcclResult CollServiceBase::GetAlgExecParam(
     [[maybe_unused]] bool clearEnable, [[maybe_unused]] u32 numBlocks, [[maybe_unused]] void*& commContext,
     [[maybe_unused]] u64& len)
 {
-    HCCL_ERROR("GetAlgExecParam was not support in this mode.");
+    HCCL_ERROR("GetAlgExecParam is not supported in this mode.");
     return HCCL_E_NOT_SUPPORT;
 }
 

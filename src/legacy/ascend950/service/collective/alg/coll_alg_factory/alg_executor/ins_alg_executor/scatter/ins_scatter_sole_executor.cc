@@ -46,7 +46,8 @@ HcclResult InsScatterSoleExecutor<AlgTopoMatch, InsAlgTemplate>::CalcResOffload(
     if (tempAlg.GetExpandedMode() == DeviceMode::CCU) {
         resReq.requiredScratchMemSize = dataSize * rankSize_;
         HCCL_DEBUG(
-            "[InsScatterSoleExecutor][CalcResOffload][CCU] reqiredScratchSize:[%llu], dataSize:[%llu], rankSize:[%llu]",
+            "[InsScatterSoleExecutor][CalcResOffload][CCU] requiredScratchSize:[%llu], dataSize:[%llu], "
+            "rankSize:[%llu]",
             resReq.requiredScratchMemSize, dataSize, rankSize_);
     } else {
         (void)dataSize;

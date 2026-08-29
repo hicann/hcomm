@@ -517,7 +517,7 @@ HcclResult HcclCommAicpu::RecordHostOrder(const HcclOpResParam* commParam, const
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
-                "[%s] check localRes noftify failed, resId[%u], group[%s]", __func__, aicpuOrderNotify->resId,
+                "[%s] check localRes notify failed, resId[%u], group[%s]", __func__, aicpuOrderNotify->resId,
                 identifier_.c_str()),
             ret);
         orderNotifies_[orderLaunchMode] = notify;
@@ -568,7 +568,7 @@ HcclResult HcclCommAicpu::InitSlaveStreamObjs(const HcclOpResParam* commParam)
 {
     if (commParam->localRes.streamNum > LOCAL_STREAM_MAX_NUM) {
         HCCL_ERROR(
-            "[HcclCommAicpu][InitSlaveStreamObjs] local streams great max numbers,current numbers[%u], max "
+            "[HcclCommAicpu][InitSlaveStreamObjs] local streams exceed max number, current numbers[%u], max "
             "numbers[%u], group[%s]",
             commParam->localRes.streamNum, LOCAL_STREAM_MAX_NUM, identifier_.c_str());
         return HCCL_E_PARA;
@@ -636,7 +636,7 @@ HcclResult HcclCommAicpu::InitOpNotifyObj(const HcclOpResParam* commParam)
         CHK_PRT_RET(
             ret != HCCL_SUCCESS,
             HCCL_ERROR(
-                "[HcclCommAicpu][InitOpNotifyObj] check localRes op noftify failed, resId[%u], group[%s]",
+                "[HcclCommAicpu][InitOpNotifyObj] check localRes op notify failed, resId[%u], group[%s]",
                 commParam->localRes.localSignals[i].resId, identifier_.c_str()),
             ret);
     }
@@ -651,8 +651,8 @@ HcclResult HcclCommAicpu::InitLocalNotifyObj(const HcclOpResParam* commParam)
 
     if (commParam->localRes.signalNum > LOCAL_NOTIFY_MAX_NUM) {
         HCCL_ERROR(
-            "[HcclCommAicpu][InitLocalNotifyObj] local notifys great max numbers, numbers[%u], max numbers[%u], "
-            "group[%s]",
+            "[HcclCommAicpu][InitLocalNotifyObj] local notify count exceeds max number, numbers[%u], max "
+            "numbers[%u], group[%s]",
             commParam->localRes.signalNum, LOCAL_NOTIFY_MAX_NUM, identifier_.c_str());
         return HCCL_E_PARA;
     }
@@ -662,7 +662,7 @@ HcclResult HcclCommAicpu::InitLocalNotifyObj(const HcclOpResParam* commParam)
             CHK_PRT_RET(
                 ret != HCCL_SUCCESS,
                 HCCL_ERROR(
-                    "[HcclCommAicpu][InitLocalNotifyObj] check localRes prenoftify failed, resId[%u]",
+                    "[HcclCommAicpu][InitLocalNotifyObj] check localRes prenotify failed, resId[%u]",
                     commParam->localRes.localSignals[i].resId),
                 ret);
             notifysToObj_.insert(commParam->localRes.localSignals[i].resId);
@@ -839,7 +839,7 @@ HcclResult HcclCommAicpu::InitTopoInfo(const HcclOpResParam* commParam)
     }
     u32* pairLinkCounterPtr = reinterpret_cast<u32*>(commParam->topoInfo.pairLinkCounter);
     if (pairLinkCounterPtr == nullptr) {
-        HCCL_ERROR("[HcclCommAicpu][InitTopoInfo]rdma rank pair ptr is null.");
+        HCCL_ERROR("[HcclCommAicpu][InitTopoInfo]pair link counter ptr is null.");
         return HCCL_E_PARA;
     }
 
@@ -1849,10 +1849,10 @@ HcclResult HcclCommAicpu::AllocLocalNotifysResource(
     std::vector<std::shared_ptr<LocalNotify>>& notifiesMain, std::vector<std::shared_ptr<LocalNotify>>& notifiesAux)
 {
     HCCL_INFO(
-        "[HcclCommAicpu][AllocLocalNotifysResource]requesting for [%u] notifys, tag[%s].", notifyNum, newTag.c_str());
+        "[HcclCommAicpu][AllocLocalNotifysResource]requesting for [%u] notifies, tag[%s].", notifyNum, newTag.c_str());
     if (localNotifies_.capacity() < notifyNum) {
         HCCL_ERROR(
-            "[HcclCommAicpu][AllocLocalNotifysResource]request number exceed max notify numbers, alloc failed. Max "
+            "[HcclCommAicpu][AllocLocalNotifysResource]request number exceeds max notify number, alloc failed. Max "
             "number is [%u],request num[%u], tag[%s]",
             localNotifies_.capacity(), notifyNum, newTag.c_str());
         return HCCL_E_PARA;
@@ -1876,7 +1876,7 @@ HcclResult HcclCommAicpu::AllocLocalNotifysResource(
         notifiesAux[i] = localNotifies_[(i << 1) + 1];
     }
     HCCL_INFO(
-        "[HcclCommAicpu][AllocLocalNotifysResource]find enough notifys, numbers[%u], tag[%s].", notifyNum,
+        "[HcclCommAicpu][AllocLocalNotifysResource]find enough notifies, numbers[%u], tag[%s].", notifyNum,
         newTag.c_str());
     return HCCL_SUCCESS;
 }
@@ -1892,7 +1892,7 @@ HcclResult HcclCommAicpu::AllocStreamsResource(
     }
     if (slaveStreams_.capacity() < streamNum) {
         HCCL_ERROR(
-            "[HcclCommAicpu][AllocStreamsResource]request number exceed max substream num, alloc failed. Max "
+            "[HcclCommAicpu][AllocStreamsResource]request number exceeds max substream number, alloc failed. Max "
             "number is [%u],request num[%u], tag[%s]",
             slaveStreams_.capacity(), streamNum, newTag.c_str());
         return HCCL_E_PARA;
@@ -2113,7 +2113,7 @@ HcclResult HcclCommAicpu::ExecOp(
             algResResponse->scratchMem = DeviceMem::create(opParam.inputPtr, opParam.inputSize);
             HCCL_INFO(
                 "[HcclCommAicpu][ExecOp] ZeroCopy reduce-scatter use userInput as scratchMem, inputPtr[%p] "
-                "intputSize[%lu]",
+                "inputSize[%lu]",
                 opParam.inputPtr, opParam.inputSize);
         }
 
@@ -2806,12 +2806,12 @@ HcclResult HcclCommAicpu::BSRStopedProcess(HcclOpExecFSM& fsmState, KfcError& er
     u32 bsrRecvSqHead;
     auto ret = QuerySqStatusByType(devId_, bsrSendStream_.sqId(), DRV_SQCQ_PROP_SQ_HEAD, bsrSendSqHead);
     HCCL_RETRY_CHK_RET_AND_TRANS_FSM(
-        ret, HCCL_ERROR("[OpRetry][AICPU]quert send stream sq head failed, ret:%u", ret), KfcError::kExec,
+        ret, HCCL_ERROR("[OpRetry][AICPU]query send stream sq head failed, ret:%u", ret), KfcError::kExec,
         HcclOpExecFSM::HCCL_OP_EXEC_FSM_ERROR);
 
     ret = QuerySqStatusByType(devId_, bsrRecvStream_.sqId(), DRV_SQCQ_PROP_SQ_HEAD, bsrRecvSqHead);
     HCCL_RETRY_CHK_RET_AND_TRANS_FSM(
-        ret, HCCL_ERROR("[OpRetry][AICPU]quert recv stream sq head failed, ret:%u", ret), KfcError::kExec,
+        ret, HCCL_ERROR("[OpRetry][AICPU]query recv stream sq head failed, ret:%u", ret), KfcError::kExec,
         HcclOpExecFSM::HCCL_OP_EXEC_FSM_ERROR);
 
     ret = ((bsrSendOpBeginSqePos_ == bsrSendSqHead) || (bsrRecvOpBeginSqePos_ == bsrRecvSqHead)) ? HCCL_E_OPRETRY_FAIL :
@@ -2902,7 +2902,7 @@ HcclResult HcclCommAicpu::HcclOpExecFsmStoppedProcess(
             CHK_PRT(SendTaskExceptionByMBox(rsErrorCode));
             HCCL_RETRY_CHK_RET_AND_TRANS_FSM(
                 HCCL_E_OPRETRY_FAIL,
-                HCCL_ERROR("[Opretry][AICPU][HcclOpExecFsmStoppedProcess]can not retry for inpace error."),
+                HCCL_ERROR("[Opretry][AICPU][HcclOpExecFsmStoppedProcess]can not retry for inplace error."),
                 KfcError::kExecConstraint, HcclOpExecFSM::HCCL_OP_EXEC_FSM_ERROR);
         } else if (isPollutedZeroCopyOp(param)) {
             errorCode = KfcError::kExecConstraint;
@@ -4621,7 +4621,7 @@ void HcclCommAicpu::UpdateBSRRetryCnt()
     } else {
         bsrRecvRetryCnt_++;
     }
-    HCCL_INFO("UpdateBSRRetryCnt, SendCnt[%u], RecvCnt[%u]", bsrRecvRetryCnt_, bsrRecvRetryCnt_);
+    HCCL_INFO("UpdateBSRRetryCnt, SendCnt[%u], RecvCnt[%u]", bsrSendRetryCnt_, bsrRecvRetryCnt_);
     return;
 }
 
@@ -4934,7 +4934,7 @@ HcclResult HcclCommAicpu::InitExecLoop(OpParam& param, std::unique_ptr<CollExecu
         for (size_t i = 0; i < bsrSendRecvPairs_.size(); i++) {
             CHK_PRT_RET(
                 (bsrSendRecvPairs_[i].size() > BSR_RETRY_SENDRECV_PAIR_NUM_MAX) || bsrSendRecvPairs_[i].empty(),
-                HCCL_ERROR("batchsendrecv pairs[%u] size[%u] is out of range [1,2]", i, bsrSendRecvPairs_.size()),
+                HCCL_ERROR("batchsendrecv pairs[%u] size[%u] is out of range [1,2]", i, bsrSendRecvPairs_[i].size()),
                 HCCL_E_INTERNAL);
 
             for (size_t j = 0; j < bsrSendRecvPairs_[i].size(); j++) {
@@ -5267,7 +5267,7 @@ HcclResult HcclCommAicpu::RefreshLinkForSwitchNic(
             isSecondBuild && iterRankLinks->second[newTag].size() < 2U,
             HCCL_ERROR(
                 "[HcclCommAicpu][%s] comm[%s], local rank[%u], isSecondBuild[%u], "
-                "fail to find second link for remmote rank[%u]",
+                "fail to find second link for remote rank[%u]",
                 __func__, identifier_.c_str(), localUserRank_, isSecondBuild, remoteRankId),
             HCCL_E_INTERNAL);
 

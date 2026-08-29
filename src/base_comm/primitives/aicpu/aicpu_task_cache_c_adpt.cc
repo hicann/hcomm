@@ -23,7 +23,7 @@ HcommResult HcommAicpuTsTaskCacheLookup(const char* tag, bool* isHit)
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType != DevType::DEV_TYPE_950) {
-        HCCL_ERROR("[%s] deviceType[%d] is not support", __func__, deviceType);
+        HCCL_ERROR("[%s] deviceType[%d] is not supported", __func__, deviceType);
         return HCCL_E_NOT_SUPPORT;
     }
 
@@ -60,7 +60,7 @@ HcommResult HcommAicpuTsTaskCacheStart(const char* tag, void** addrs, uint64_t* 
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType != DevType::DEV_TYPE_950) {
-        HCCL_ERROR("[HcommAicpuTsTaskCacheStart] deviceType[%d] is not support", deviceType);
+        HCCL_ERROR("[HcommAicpuTsTaskCacheStart] deviceType[%d] is not supported", deviceType);
         return HCCL_E_NOT_SUPPORT;
     }
 
@@ -96,7 +96,7 @@ HcommResult HcommAicpuTsTaskCacheEnd(const char* tag)
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType != DevType::DEV_TYPE_950) {
-        HCCL_ERROR("[HcommAicpuTsTaskCacheEnd] deviceType[%d] is not support", deviceType);
+        HCCL_ERROR("[HcommAicpuTsTaskCacheEnd] deviceType[%d] is not supported", deviceType);
         return HCCL_E_NOT_SUPPORT;
     }
 
@@ -148,7 +148,7 @@ HcommResult HcommAicpuTsTaskCacheExecute(const char* tag, void** addrs, uint64_t
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType != DevType::DEV_TYPE_950) {
-        HCCL_ERROR("[HcommAicpuTsTaskCacheExecute] deviceType[%d] is not support", deviceType);
+        HCCL_ERROR("[HcommAicpuTsTaskCacheExecute] deviceType[%d] is not supported", deviceType);
         return HCCL_E_NOT_SUPPORT;
     }
 
@@ -192,7 +192,7 @@ HcommResult HcommAicpuTsTaskCacheClear(const char* tag)
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType != DevType::DEV_TYPE_950) {
-        HCCL_ERROR("[%s] deviceType[%d] is not support", __func__, deviceType);
+        HCCL_ERROR("[%s] deviceType[%d] is not supported", __func__, deviceType);
         return HCCL_E_NOT_SUPPORT;
     }
 

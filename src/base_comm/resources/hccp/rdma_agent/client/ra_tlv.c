@@ -33,7 +33,7 @@ HCCP_ATTRI_VISI_DEF int RaTlvInit(struct TlvInitInfo *initInfo, unsigned int *bu
     CHK_PRT_RETURN(initInfo->nicPosition != NETWORK_OFFLINE,
         hccp_err("[init][ra_tlv]mode(%u) not support", initInfo->nicPosition), ConverReturnCode(HCCP_INIT, -EINVAL));
     CHK_PRT_RETURN(initInfo->phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[init][ra_tlv]phy_id(%u) must smaller than %u", initInfo->phyId, RA_MAX_PHY_ID_NUM),
+        hccp_err("[init][ra_tlv]phy_id(%u) must be smaller than %u", initInfo->phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(HCCP_INIT, -EINVAL));
 
     tlvHandleTmp = calloc(1, sizeof(struct RaTlvHandle));
@@ -60,7 +60,7 @@ HCCP_ATTRI_VISI_DEF int RaTlvInit(struct TlvInitInfo *initInfo, unsigned int *bu
 
     ret = pthread_mutex_init(&tlvHandleTmp->mutex, NULL);
     if (ret != 0) {
-        hccp_err("[init][ra_tlv]init mutext failed, ret(%d), phyId(%u)", ret, initInfo->phyId);
+        hccp_err("[init][ra_tlv]init mutex failed, ret(%d), phyId(%u)", ret, initInfo->phyId);
         goto ra_tlv_init_err;
     }
 
@@ -116,7 +116,8 @@ HCCP_ATTRI_VISI_DEF int RaTlvRequest(void *tlvHandle, unsigned int moduleType, s
         hccp_err("[request][ra_tlv]tlv_handle or send_msg or recv_msg is NULL"), ConverReturnCode(OTHERS, -EINVAL));
 
     CHK_PRT_RETURN(moduleType > TLV_MODULE_TYPE_MAX,
-        hccp_err("[request][ra_tlv]module_type(%u) invalid, must smaller than (%u)", moduleType, TLV_MODULE_TYPE_MAX),
+        hccp_err("[request][ra_tlv]module_type(%u) invalid, must be smaller than (%u)", moduleType,
+            TLV_MODULE_TYPE_MAX),
         -EINVAL);
 
     tlvHandleTmp = (struct RaTlvHandle *)tlvHandle;

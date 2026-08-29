@@ -119,7 +119,7 @@ HcclResult ReduceScatterHalvingDoubling::RunDestRducer(
     DeviceMem reduceDstMem;
 
     if (DataUnitSize(dataType_) == 0) {
-        HCCL_ERROR("[Run][DestRducer]DataUnitSize(data_type_) == 0, error");
+        HCCL_ERROR("[Run][DestReducer]DataUnitSize(data_type_) == 0, error");
         return HCCL_E_INTERNAL;
     }
 
@@ -135,7 +135,7 @@ HcclResult ReduceScatterHalvingDoubling::RunDestRducer(
         DstMemType::RESULT_INPUT_MEM);
 
     CHK_PRT_RET(
-        ret != HCCL_SUCCESS, HCCL_ERROR("[Run][DestRducer]offset[%llu] reduce_async failed", rxSlice.offset), ret);
+        ret != HCCL_SUCCESS, HCCL_ERROR("[Run][DestReducer]offset[%llu] reduce_async failed", rxSlice.offset), ret);
 
     return HCCL_SUCCESS;
 }
@@ -215,7 +215,7 @@ HcclResult ReduceScatterHalvingDoubling::RunReduceScatter(
             ret);
 
         HCCL_DEBUG(
-            "rank[%u] send to peerrank[%u] in step[%u], silce.offset[%llu], slice.size[%llu]", rank, peerRank, step,
+            "rank[%u] send to peerrank[%u] in step[%u], slice.offset[%llu], slice.size[%llu]", rank, peerRank, step,
             txSlices_[step].offset, txSlices_[step].size);
         // 本rank作为reducer的发送侧的动作
         ret = RunSourceReducer(links[peerRank], txSlices_[step]);
@@ -231,7 +231,7 @@ HcclResult ReduceScatterHalvingDoubling::RunReduceScatter(
         DstMemType reduceDst = (step == stepNum - 1) ? DstMemType::RESULT_OUTPUT_MEM : DstMemType::RESULT_INPUT_MEM;
 
         HCCL_DEBUG(
-            "rank[%u] Reduce from peerrank[%u] in step[%u], silce.offset[%llu], slice.size[%llu]", rank, peerRank, step,
+            "rank[%u] Reduce from peerrank[%u] in step[%u], slice.offset[%llu], slice.size[%llu]", rank, peerRank, step,
             rxSlices_[step].offset, rxSlices_[step].size);
 
         ret = RunDestRducer(links[peerRank], dispatcher, rxSlices_[step], reduceDst);

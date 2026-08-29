@@ -191,7 +191,7 @@ HcclResult DispatcherAiCpu::SignalRecord(
         CHK_PRT_RET(
             !(needAddSqe_ && isAlltoallv_),
             HCCL_ERROR(
-                "[DispatcherAiCpu][SignalRecord] isPlaceholder_[%u]"
+                "[DispatcherAiCpu][SignalRecord] isPlaceholder_[%u] "
                 "needAddSqe_[%u] isAlltoallv_[%u]",
                 isPlaceholder_, needAddSqe_, isAlltoallv_),
             HCCL_E_INTERNAL);
@@ -260,7 +260,7 @@ HcclResult DispatcherAiCpu::SignalRecord(
         CHK_PRT_RET(
             !(needAddSqe_ && isAlltoallv_),
             HCCL_ERROR(
-                "[DispatcherAiCpu][SignalRecord] isPlaceholder_[%u]"
+                "[DispatcherAiCpu][SignalRecord] isPlaceholder_[%u] "
                 "needAddSqe_[%u] isAlltoallv_[%u]",
                 isPlaceholder_, needAddSqe_, isAlltoallv_),
             HCCL_E_INTERNAL);
@@ -308,7 +308,7 @@ HcclResult DispatcherAiCpu::SignalWait(
         CHK_PRT_RET(
             !(needAddSqe_ && isAlltoallv_),
             HCCL_ERROR(
-                "[DispatcherAiCpu][SignalWait] isPlaceholder_[%u]"
+                "[DispatcherAiCpu][SignalWait] isPlaceholder_[%u] "
                 "needAddSqe_[%u] isAlltoallv_[%u]",
                 isPlaceholder_, needAddSqe_, isAlltoallv_),
             HCCL_E_INTERNAL);
@@ -379,7 +379,7 @@ HcclResult DispatcherAiCpu::MemcpyAsync(
         CHK_PRT_RET(
             !(needAddSqe_ && isAlltoallv_),
             HCCL_ERROR(
-                "[DispatcherAiCpu][MemcpyAsync] isPlaceholder_[%u]"
+                "[DispatcherAiCpu][MemcpyAsync] isPlaceholder_[%u] "
                 "needAddSqe_[%u] isAlltoallv_[%u]",
                 isPlaceholder_, needAddSqe_, isAlltoallv_),
             HCCL_E_INTERNAL);
@@ -1563,7 +1563,7 @@ HcclResult DispatcherAiCpu::StreamSync(Stream& stream)
         u64 curUsec = GetCurAicpuTimestamp();
         if (curUsec - startUsec > NANOSECOND_TO_SECOND * dfxTimeOutConfig_.sqeTimeOutTimeOut) {
             HCCL_ERROR(
-                "stream sync timeout %lus. curhead:%u, curtall:%u, sqId:%d", dfxTimeOutConfig_.sqeTimeOutTimeOut, head,
+                "stream sync timeout %lus. curhead:%u, curtail:%u, sqId:%d", dfxTimeOutConfig_.sqeTimeOutTimeOut, head,
                 tail, streamInfo->sqId);
             return HCCL_E_TIMEOUT;
         }

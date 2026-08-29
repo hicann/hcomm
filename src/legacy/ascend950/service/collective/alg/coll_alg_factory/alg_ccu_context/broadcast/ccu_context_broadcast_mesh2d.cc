@@ -46,7 +46,7 @@ CcuContextBroadcastMesh2D::CcuContextBroadcastMesh2D(
     localId_ = dimId_[axisId_];
     localSize_ = dimSize_[axisId_];
     HCCL_INFO(
-        "[CcuContextBroadcastMesh2D] RankId[%u], DimSize0[%llu], DimSize1[%llu], localId[%llu], lcoalSize[%llu].",
+        "[CcuContextBroadcastMesh2D] RankId[%u], DimSize0[%llu], DimSize1[%llu], localId[%llu], localSize[%llu].",
         rankId_, dimSize_[0], dimSize_[1], localId_, localSize_);
     rootId_ = ctxArg->op_.root;
     dataType_ = ctxArg->op_.dataType;
@@ -125,7 +125,7 @@ void CcuContextBroadcastMesh2D::AxisSync(uint32_t signalIndex)
     const uint32_t DIE_NUM = 2;
     if (signalIndex > 1) {
         THROW<InvalidParamsException>(
-            StringFormat("[CcuContextBroadcastMesh2D] Unexpected SignalInex[%u]", signalIndex));
+            StringFormat("[CcuContextBroadcastMesh2D] Unexpected SignalIndex[%u]", signalIndex));
     }
     LocalCtxPost(anotherAxisSignal_, 1 << (axisId_ + signalIndex * DIE_NUM));
     LocalWait(localAxisSignal_, 1 << (1 - axisId_ + signalIndex * DIE_NUM));

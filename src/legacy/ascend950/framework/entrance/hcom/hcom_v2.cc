@@ -179,7 +179,7 @@ HcclResult HcomAllGatherVV2(
     /* 关键状态记录 */
     HCCL_RUN_INFO(
         "hcom allgatherv success,take time [%lld]us, tag[%s], sendBuf[%p], sendCount[%llu], "
-        "recvBuf[%p], recvCounts[%p], sdispls[%p], data_type[%d]",
+        "recvBuf[%p], recvCounts[%p], rdispls[%p], data_type[%d]",
         DURATION_US(TIME_NOW() - startut), tag, sendBuf, sendCount, recvBuf, recvCounts, rdispls, dataType);
 
     return HCCL_SUCCESS;

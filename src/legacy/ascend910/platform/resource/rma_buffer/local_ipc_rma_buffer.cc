@@ -48,7 +48,7 @@ HcclResult LocalIpcRmaBuffer::Init()
          || (memType == RmaMemType::DEVICE && size >= DEVICE_MEM_MAX_COUNT)),
         HCCL_ERROR(
             "[LocalIpcRmaBuffer][Init]memory size[%llu] should be greater than 0 and less than [%llu].", size,
-            (memType == RmaMemType::DEVICE ? HOST_MEM_MAX_COUNT : DEVICE_MEM_MAX_COUNT)),
+            (memType == RmaMemType::DEVICE ? DEVICE_MEM_MAX_COUNT : HOST_MEM_MAX_COUNT)),
         HCCL_E_PARA);
 
     CHK_SMART_PTR_NULL(pimpl_);

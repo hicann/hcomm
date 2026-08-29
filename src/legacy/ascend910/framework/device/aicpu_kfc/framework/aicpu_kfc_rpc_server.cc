@@ -204,8 +204,8 @@ bool AicpuKfcRpcServer::CopyAndCheckApiMsg(HcclMsg* rMsg, HcclMsg* msg)
     static uint32_t cmpCheckNum = 0;
     if (memcmp(rMsg, msg, sizeof(HcclMsg)) != 0) {
         if (cmpCheckNum % MC2_API_XORCHECK_PRINT_NUM == 0) {
-            HCCL_RUN_INFO(
-                "[MC2] Check msg equal fail, rMsg:%s msg:%s", AicpuKfcUtils::GetMsgSimpleStr(*rMsg).c_str(),
+            HCCL_WARNING(
+                "[MC2] Check msg equal failed, rMsg:%s msg:%s", AicpuKfcUtils::GetMsgSimpleStr(*rMsg).c_str(),
                 AicpuKfcUtils::GetMsgSimpleStr(*msg).c_str());
         }
         cmpCheckNum++;
@@ -343,7 +343,7 @@ bool AicpuKfcRpcServer::ReadAddrMsg(HcclMsg* hcclMsg, uint32_t msgPos)
         KfcCommand cmd = KfcCommand::kNone;
         CHK_RET(AicpuHdcUtils::GetOpExecCtrlCmd(ctx->kfcControlTransferH2D, cmd));
         if ((cmd == KfcCommand::NsStopLaunch) && (ctx->commOpenStatus) && (!ctx->endStopLaunch)) {
-            HCCL_WARNING("N second stop Launch for recv stop launch cmd.");
+            HCCL_WARNING("Stop launch due to receiving stop launch cmd.");
             AicpuUpdatComContextMumber(offsetof(AicpuComContext, isStopLaunch), true);
             AicpuUpdatComContextMumber(offsetof(AicpuComContext, endStopLaunch), true);
             return false;

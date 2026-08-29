@@ -355,7 +355,7 @@ static void PrintChannelStatusDistribution(
     auto now = std::chrono::steady_clock::now();
     if (std::chrono::duration_cast<std::chrono::seconds>(now - lastLog).count() >= statusLogIntervalSec) {
         HCCL_RUN_INFO(
-            "[%s] batch[0x%llx] link_ready[%u] socket_ok[%u] connecting[%u] failed[%u] total[%u]", __func__,
+            "[%s] batch[0x%llx] link_ready[%u] socket_ok[%u] connecting[%u] abnormal[%u] total[%u]", __func__,
             static_cast<unsigned long long>(channelList[0]), ready, socketOk, listNum - ready - socketOk - failed,
             failed, listNum);
         lastLog = now;
@@ -367,7 +367,7 @@ HcclResult ChannelProcess::GetChannelsInfo(
     std::vector<HcommChannelDesc>& channelDescs, std::vector<ChannelStatus>& statusList)
 {
     CHK_PTR_NULL(channelList);
-    CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s]Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
+    CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s] Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
 
     channelDescs.resize(listNum);
     statusList.resize(listNum);
@@ -507,7 +507,7 @@ HcclResult ChannelProcess::FillChannelD2HMap(
 {
     CHK_PTR_NULL(deviceChannelHandles);
     CHK_PTR_NULL(hostChannelHandles);
-    CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s]Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
+    CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s] Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
 
     int32_t deviceId = 0;
     CHK_RET(hrtGetDevice(&deviceId));
@@ -681,7 +681,7 @@ HcclResult ChannelProcess::LaunchChannelKernelCommon(
 {
     CHK_PTR_NULL(channelHandles);
     CHK_PTR_NULL(hostChannelHandles);
-    CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s]Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
+    CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s] Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
 
     HCCL_RUN_INFO("[%s] listNum[%u], commTag[%s]", __func__, listNum, commTag.c_str());
     std::vector<std::vector<char>> hostPackBuffers(listNum);
@@ -854,7 +854,7 @@ HcclResult ChannelProcess::LaunchCommonChannelKernel(
     aclrtBinHandle binHandle)
 {
     HCCL_RUN_INFO("[%s] listNum[%u] HcommChannelRes path", __func__, listNum);
-    CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s]Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
+    CHK_PRT_RET((listNum == 0), HCCL_ERROR("[%s] Invalid listNum, listNum[%u]", __func__, listNum), HCCL_E_PARA);
 
     KHost host;
     CHK_RET(PackHost(hostChannelHandles, listNum, channelKind, host));
@@ -919,7 +919,7 @@ HcclResult ChannelProcess::PrepareUserChannels(
     CHK_PTR_NULL(targetChannels);
     CHK_PTR_NULL(userChannels);
     CHK_PRT_RET(
-        (channelNum == 0), HCCL_ERROR("[%s]Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
+        (channelNum == 0), HCCL_ERROR("[%s] Invalid channelNum, channelNum[%u]", __func__, channelNum), HCCL_E_PARA);
 
     HCCL_INFO(
         "[%s] engine[%s], channelNum[%u].", __func__, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(),

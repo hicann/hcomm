@@ -367,7 +367,7 @@ HcclResult CcuComponent::CreateLoopChannel(const uint8_t dieId, uint32_t& channe
 {
     if (!dieEnableFlags_[dieId]) {
         HCCL_WARNING(
-            "CcuComponent][%s] passed, dieId[%u] is not enable, "
+            "[CcuComponent][%s] passed, dieId[%u] is not enabled, "
             "devLogicId[%d].",
             __func__, dieId, devLogicId_);
         return HcclResult::HCCL_SUCCESS;
@@ -997,7 +997,7 @@ HcclResult CcuComponent::SetSplitUnit(uint8_t dieId, uint32_t splitPktUnit) cons
     CHK_PRT_RET(
         dieId >= MAX_CCU_IODIE_NUM,
         HCCL_ERROR(
-            "[CcuComponent][%s] failed, dieId[%u] is invalid, shoudle be in [0-%u), devLogicId[%d].", __func__, dieId,
+            "[CcuComponent][%s] failed, dieId[%u] is invalid, should be in [0-%u), devLogicId[%d].", __func__, dieId,
             MAX_CCU_IODIE_NUM, devLogicId_),
         HcclResult::HCCL_E_PARA);
 
@@ -1090,14 +1090,14 @@ HcclResult CcuComponent::SetTotalCntXnProcess(
     CHK_PRT_RET(
         dieId >= MAX_CCU_IODIE_NUM,
         HCCL_ERROR(
-            "[CcuComponent][%s] failed, dieId[%u] is invalid, shoudle be in [0-%u), devLogicId[%d].", __func__, dieId,
+            "[CcuComponent][%s] failed, dieId[%u] is invalid, should be in [0-%u), devLogicId[%d].", __func__, dieId,
             MAX_CCU_IODIE_NUM, devLogicId_),
         HcclResult::HCCL_E_PARA);
 
     CHK_PRT_RET(
         index >= CCU_V2_RESOURCE_TOTAL_CNT_XNS_NUM,
         HCCL_ERROR(
-            "[CcuComponent][%s] failed, index[%u] is invalid, shoudle be in [0-%u), devLogicId[%d].", __func__, index,
+            "[CcuComponent][%s] failed, index[%u] is invalid, should be in [0-%u), devLogicId[%d].", __func__, index,
             CCU_V2_RESOURCE_TOTAL_CNT_XNS_NUM, devLogicId_),
         HcclResult::HCCL_E_PARA);
 
@@ -1212,7 +1212,7 @@ HcclResult CcuComponent::AllocWishCntXn(const uint8_t dieId, const std::string& 
         }
     }
     auto& xnBlock = cntXnBlocks_[dieId][resGroupTag];
-    HCCL_INFO("resGroupTag[%s]stack size[%u]", resGroupTag.c_str(), xnBlock.wishCntXns.size());
+    HCCL_INFO("resGroupTag[%s] stack size[%u]", resGroupTag.c_str(), xnBlock.wishCntXns.size());
     wishCntXn = xnBlock.wishCntXns.top();
     xnBlock.wishCntXns.pop();
     uint32_t totalCntXn = xnBlock.totalCntXn;
@@ -1405,10 +1405,10 @@ HcclResult CcuComponent::SetProcess(CcuOpcodeType opCode) const
     inBuff.op = opCode;
     for (uint8_t dieId = 0; dieId < MAX_CCU_IODIE_NUM; dieId++) {
         if (!dieEnableFlags_[dieId]) {
-            HCCL_WARNING("[%s]devLogicId[%d], dieId[%u] is not enable, skip.", __func__, devLogicId_, dieId);
+            HCCL_WARNING("[%s] devLogicId[%d], dieId[%u] is not enable, skip.", __func__, devLogicId_, dieId);
             continue;
         }
-        HCCL_INFO("[%s]devLogicId[%d], dieId[%u] start.", __func__, devLogicId_, dieId);
+        HCCL_INFO("[%s] devLogicId[%d], dieId[%u] start.", __func__, devLogicId_, dieId);
         inBuff.data.dataInfo.udieIdx = dieId;
         auto ret = HccpRaTlvCcuCustomChannel(devLogicId_, static_cast<void*>(&inBuff), static_cast<void*>(&outBuff));
         CHK_PRT_RET(
@@ -1481,7 +1481,9 @@ HcclResult CcuComponent::SetTaskKillDone()
 
     CHK_RET(SetProcess(CcuOpcodeType::CCU_U_OP_CLEAN_TASKKILL_STATE));
     status = CcuTaskKillStatus::INIT;
-    HCCL_INFO("[CcuComponent][%s] success, state = %u, devLogicId = %d", __func__, status, devLogicId_);
+    HCCL_INFO(
+        "[CcuComponent][%s] success, state = INIT(%u), devLogicId = %d", __func__, static_cast<uint8_t>(status),
+        devLogicId_);
     return HcclResult::HCCL_SUCCESS;
 }
 
@@ -1492,7 +1494,7 @@ HcclResult CcuComponent::CcuSetTaskKillDone(const int32_t deviceLogicId) const
     CHK_PRT_RET(
         (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM),
         HCCL_ERROR(
-            "[CcuSetTaskKillDone]deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
+            "[CcuSetTaskKillDone] deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
             MAX_MODULE_DEVICE_NUM),
         HcclResult::HCCL_E_PARA);
     return CcuComponent::GetInstance(deviceLogicId).SetTaskKillDone();
@@ -1505,7 +1507,7 @@ HcclResult CcuComponent::CcuCleanTaskKillState(const int32_t deviceLogicId) cons
     CHK_PRT_RET(
         (deviceLogicId < 0 || static_cast<u32>(deviceLogicId) >= MAX_MODULE_DEVICE_NUM),
         HCCL_ERROR(
-            "[CcuCleanTaskKillState]deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
+            "[CcuCleanTaskKillState] deviceLogicId[%d] error, MAX_MODULE_DEVICE_NUM[%u]", deviceLogicId,
             MAX_MODULE_DEVICE_NUM),
         HcclResult::HCCL_E_PARA);
     return CcuComponent::GetInstance(deviceLogicId).CleanTaskKillState();
@@ -1533,7 +1535,7 @@ HcclResult CcuComponent::CleanDieCkes(const uint8_t dieId) const
     uint32_t ckeNum = 0;
     CHK_RET(CcuResSpecifications::GetInstance(devLogicId_).GetCkeNum(dieId, ckeNum));
     HCCL_INFO(
-        "[CcuComponent][CleanAllCke]Nsrecovery devLogicId[%d], dieId[%u] ckeNum[%u].", devLogicId_, dieId, ckeNum);
+        "[CcuComponent][CleanAllCke]NS recovery devLogicId[%d], dieId[%u], ckeNum[%u].", devLogicId_, dieId, ckeNum);
 
     inBuff.op = CcuOpcodeType::CCU_U_OP_SET_CKE;
     inBuff.data.dataInfo.udieIdx = dieId;

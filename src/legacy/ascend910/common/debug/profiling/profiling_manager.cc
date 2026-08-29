@@ -216,7 +216,7 @@ ProfilingManager::ReportTaskApi(bool isMainStrem, uint64_t beginTime, ProfTaskTy
     }
 
     HCCL_INFO(
-        "CallMsprofReportTaskApi, isMainStrem[%u], taskType[%d], taskName[%s]", isMainStrem,
+        "CallMsprofReportTaskApi, isMainStream[%u], taskType[%d], taskName[%s]", isMainStrem,
         static_cast<int32_t>(taskType), taskName.c_str());
     CHK_RET(hrtMsprofReportApi(agingFlag, &reporterData));
     return HCCL_SUCCESS;
@@ -426,7 +426,7 @@ ProfilingManager::CallEsMsprofReportTaskApi(bool isMainStrem, uint64_t beginTime
     const std::string taskName(GetProfTaskOpName(taskType));
     reporterData.itemId = hrtMsprofGetHashId(taskName.c_str(), taskName.length());
     HCCL_INFO(
-        "ReportTaskApi, isMainStrem[%u], taskType[%d], taskName[%s]", isMainStrem, static_cast<int32_t>(taskType),
+        "ReportTaskApi, isMainStream[%u], taskType[%d], taskName[%s]", isMainStrem, static_cast<int32_t>(taskType),
         taskName.c_str());
     CHK_RET(hrtMsprofReportApi(aging, &reporterData));
     return HCCL_SUCCESS;
@@ -627,10 +627,10 @@ Prof_Status ProfilingManager::PluginUnInit() const
         static_cast<uint32_t>(MsprofReporterModuleId::MSPROF_MODULE_HCCL),
         static_cast<uint32_t>(MsprofReporterCallbackType::MSPROF_REPORTER_UNINIT), nullptr, 0);
     CHK_PRT_RET(
-        (cb_ret != MSPROF_ERROR_NONE), HCCL_ERROR("[ProfilingManager][PluginUnInit] Profiling reporter uinit failed."),
+        (cb_ret != MSPROF_ERROR_NONE), HCCL_ERROR("[ProfilingManager][PluginUnInit] Profiling reporter uninit failed."),
         FAILED);
 
-    HCCL_INFO("[ProfilingManager][PluginUnInit] Profiling reporter uinit success.");
+    HCCL_INFO("[ProfilingManager][PluginUnInit] Profiling reporter uninit success.");
 
     return SUCCESS;
 }

@@ -81,7 +81,7 @@ HcclResult HcclDfxRegOpInfoByCommId(char* commId, void* hcclDfxOpInfo)
     DevType deviceType;
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType == DevType::DEV_TYPE_910B) {
-        HCCL_INFO("[%s]not support, comId[%s], devType[%d]", __func__, commId, deviceType);
+        HCCL_INFO("[%s] is not supported, commId[%s], devType[%d]", __func__, commId, deviceType);
         return HCCL_SUCCESS;
     }
 

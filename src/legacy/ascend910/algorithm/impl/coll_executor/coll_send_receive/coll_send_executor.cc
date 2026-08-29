@@ -68,7 +68,7 @@ HcclResult CollSendExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo& ad
     adjInfoStep.rev = 0;
     adjInfo.nsAdjInfo.push_back(adjInfoStep);
 
-    HCCL_INFO("[nslbdp]GetAdjInfo localRank[%u], phaseId[%u].", localRank, ringNextRank);
+    HCCL_INFO("[NSLB-DP]GetAdjInfo localRank[%u], phaseId[%u].", localRank, ringNextRank);
     return HCCL_SUCCESS;
 }
 
@@ -123,7 +123,7 @@ HcclResult CollSendExecutor::CalcResRequest(const OpParam& param, AlgResourceReq
 
     CHK_RET(BuildResourceRequest(scratchMemSize, streamNum, notifyNum, aivBufferRequest, opTransport, resourceRequest));
     HCCL_INFO(
-        "streamNum[%u], notifyNum[%u], sctrachMemSize[%llu], aivBufferRequest[%llu]", resourceRequest.streamNum,
+        "streamNum[%u], notifyNum[%u], scratchMemSize[%llu], aivBufferRequest[%llu]", resourceRequest.streamNum,
         resourceRequest.notifyNum, resourceRequest.scratchMemSize, resourceRequest.aivBufferRequest);
     // 打印建链诉求
     PrintTransportRequest(resourceRequest);

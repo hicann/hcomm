@@ -295,7 +295,7 @@ HcclResult ReduceScatterRing::RunReduceScatter(
         DeviceMem scratchMem
             = scratchMem_.range(outputSlices[rank * sliceSize + i].offset, outputSlices[rank * sliceSize + i].size);
         HCCL_DEBUG(
-            "final reduce rank[%u] reduce with inputMem_ offset[%llu] to ouput_mem_ offset[%llu] size[%llu]", rank,
+            "final reduce rank[%u] reduce with inputMem_ offset[%llu] to output_mem_ offset[%llu] size[%llu]", rank,
             inputSlices[rank * sliceSize + i].offset, outputSlices[rank * sliceSize + i].offset,
             outputSlices[rank * sliceSize + i].size);
         rxReduceMems.emplace_back(

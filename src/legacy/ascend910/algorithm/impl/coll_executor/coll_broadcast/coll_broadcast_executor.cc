@@ -180,8 +180,8 @@ HcclResult CollBroadcastExecutor::RunLoopInner(OpParam& param, ExecMem& execMem)
                                && (topoAttr_.deviceType == DevType::DEV_TYPE_910_93) && isDMATopoOn91093)
                               && DMAReduceFlag_;
     HCCL_DEBUG(
-        "[CollBroadcastExecutor][RunLoopInner]inputMem[%p], outputMem[%p]"
-        "intputPtr[%p], curCount[%llu], curSize[%llu]",
+        "[CollBroadcastExecutor][RunLoopInner]inputMem[%p], outputMem[%p] "
+        "inputPtr[%p], curCount[%llu], curSize[%llu]",
         execMem.inputMem.ptr(), execMem.outputMem.ptr(), execMem.inputPtr, execMem.count, curSize);
     CHK_PRT_RET(
         (execMem.count == 0), HCCL_ERROR("[CollBroadcastExecutor][RunLoop]In OP_BASE curCount is zero."), HCCL_E_PARA);

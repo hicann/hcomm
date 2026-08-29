@@ -40,7 +40,7 @@ HcclResult hcclH2dTlv::InitHccpChannel(u32 devicePhyId)
     u32 tlvBuffersize = 0;
     void* tlvHandle;
     HCCL_INFO(
-        "Entry InitHccpChannel version:[%u]-phy_id:[%u]-nic_posion:[%u] .", nslbHccp.version, nslbHccp.phyId,
+        "Entry InitHccpChannel version:[%u]-phy_id:[%u]-nic_position:[%u] .", nslbHccp.version, nslbHccp.phyId,
         nslbHccp.nic_posion);
 
     HcclResult ret = H2DTlvInit(reinterpret_cast<TlvInitInfo*>(&nslbHccp), &tlvBuffersize, &tlvHandle);

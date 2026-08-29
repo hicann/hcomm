@@ -107,7 +107,7 @@ HcclResult AlltoallPipelineMeshPairwisePingPong::PrepareInterSendData(u32 mainSt
         }
         HCCL_DEBUG(
             "[AlltoallPipelineMeshPairwisePingPong][PrepareInterSendData] userRank %u, interRank %u, "
-            "intraRank %u data index %llu move from userInput offset %llu length %llu to %s, total size %llu"
+            "intraRank %u data index %llu move from userInput offset %llu length %llu to %s, total size %llu, "
             "send to remote %s",
             userRank_, interRankId_, intraRankId_, dataIndex, localSendRecvInfo_.sendOffset[dataIndex] + preStepMaxSend,
             sendLen, interSendUsePingMem_ ? "localInterSendPingMem" : "localInterSendPongMem", totalSendLen,

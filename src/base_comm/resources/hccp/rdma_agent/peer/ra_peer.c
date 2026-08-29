@@ -140,8 +140,9 @@ int RaPeerSocketListenStart(unsigned int devId, struct SocketListenInfoT conn[],
     for (i = 0; i < num; i++) {
         CHK_PRT_RETURN(conn[i].port > MAX_PORT_NUM,
             hccp_err("[listen_start][ra_peer_socket]port(%u) of "
-                     "conn(%u) is invalid, phyId(%u)",
-                conn[i].port, i, devId),
+                     "conn(%u) is invalid, max port(%u), "
+                     "phyId(%u)",
+                conn[i].port, i, MAX_PORT_NUM, devId),
             -EINVAL);
     }
 
@@ -193,8 +194,9 @@ int RaPeerSocketListenStop(unsigned int devId, struct SocketListenInfoT conn[], 
     for (i = 0; i < num; i++) {
         CHK_PRT_RETURN(conn[i].port > MAX_PORT_NUM,
             hccp_err("[listen_stop][ra_peer_socket]port(%u) of "
-                     "conn(%u) is invalid, phyId(%u)",
-                conn[i].port, i, devId),
+                     "conn(%u) is invalid, max port(%u), "
+                     "phyId(%u)",
+                conn[i].port, i, MAX_PORT_NUM, devId),
             -EINVAL);
     }
 
@@ -223,7 +225,7 @@ STATIC int RaPeerSetRsConnParam(struct SocketInfoT conn[], unsigned int num, str
     struct RaSocketHandle *socketHandle = NULL;
 
     CHK_PRT_RETURN(num > rsNum,
-        hccp_err("[set][ra_peer_rs_conn_param]num(%u) must smaller than rs_num(%u)", num, rsNum), -EINVAL);
+        hccp_err("[set][ra_peer_rs_conn_param]num(%u) must be smaller than rs_num(%u)", num, rsNum), -EINVAL);
 
     for (i = 0; i < num; i++) {
         socketHandle = (struct RaSocketHandle *)conn[i].socketHandle;
@@ -467,7 +469,7 @@ int RaPeerSocketWhiteListDel(struct rdev rdevInfo, struct SocketWlistInfoT white
     RsSetCtx(rdevInfo.phyId);
     ret = RsSocketWhiteListDel(rdevInfo, whiteList, num);
     if (ret) {
-        hccp_err("[del][ra_peer_socket_white_list]ra socket listen stop failed ret(%d), phyId(%u)", ret,
+        hccp_err("[del][ra_peer_socket_white_list]rs_socket_white_list_del failed ret(%d), phyId(%u)", ret,
             rdevInfo.phyId);
     }
     PEER_PTHREAD_MUTEX_UNLOCK(&gRaPeerMutex[rdevInfo.phyId]);
@@ -1223,7 +1225,7 @@ int RaPeerNotifyBaseAddrInit(unsigned int notifyType, unsigned int phyId)
         case NO_USE:
             return 0;
         default: {
-            hccp_err("[init][base_addr]notify_type[%u] error, phyId[%u]", notifyType, phyId);
+            hccp_err("[init][base_addr]notify_type[%u] is invalid, valid value[0-2], phyId[%u]", notifyType, phyId);
             return -EINVAL;
         }
     }
@@ -1278,7 +1280,7 @@ int NotifyBaseAddrUninit(unsigned int notifyType, unsigned int phyId)
         case NO_USE:
             return 0;
         default: {
-            hccp_err("[uninit][base_addr]notify_type[%u] error, phyId[%u]", notifyType, phyId);
+            hccp_err("[uninit][base_addr]notify_type[%u] is invalid, valid value[0-2], phyId[%u]", notifyType, phyId);
             return -EINVAL;
         }
     }
@@ -1395,7 +1397,7 @@ int RaPeerGetTsqpDepth(struct RaRdmaHandle *rdmaHandle, unsigned int *tempDepth,
     RsSetCtx(rdmaHandle->rdevInfo.phyId);
     ret = RsGetTsqpDepth(rdmaHandle->rdevInfo.phyId, rdmaHandle->rdevIndex, tempDepth, qpNum);
     if (ret) {
-        hccp_err("[get][peer_set_tsqp_depth]rs_get_tsqp_depth failed[%d], phyId[%u]", ret, rdmaHandle->rdevInfo.phyId);
+        hccp_err("[get][peer_get_tsqp_depth]rs_get_tsqp_depth failed[%d], phyId[%u]", ret, rdmaHandle->rdevInfo.phyId);
         PEER_PTHREAD_MUTEX_UNLOCK(&gRaPeerMutex[rdmaHandle->rdevInfo.phyId]);
         return ret;
     }
@@ -1595,7 +1597,8 @@ int RaPeerDestroyCompChannel(void *compChannel)
     int ret;
 
     ret = RsDestroyCompChannel(compChannel);
-    CHK_PRT_RETURN(ret != 0, hccp_err("[ra_peer_destroy_comp_channel]rs_create_comp_channel failed ret(%d)", ret), ret);
+    CHK_PRT_RETURN(ret != 0, hccp_err("[ra_peer_destroy_comp_channel]rs_destroy_comp_channel failed ret(%d)", ret),
+        ret);
 
     return ret;
 }

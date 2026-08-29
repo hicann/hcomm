@@ -117,7 +117,7 @@ HcclResult CollAllGatherCommExecutor::Getlevel1CommRank(SubCommInfo& level1CommI
     CommPlane commPlane = COMM_COMBINE;
     if (topoAttr_.deviceType == DevType::DEV_TYPE_910_93) {
         commPlane = COMM_COMBINE_ORDER;
-        HCCL_INFO("nslbdp AllGather comm: Getlevel1CommRank.");
+        HCCL_INFO("NSLB-DP AllGather comm: Getlevel1CommRank.");
     }
     CHK_RET(CheckCommSize(commPlane, COMM_INDEX_0 + 1));
     level1CommInfo = GetSubCommInfo(commPlane, COMM_INDEX_0);

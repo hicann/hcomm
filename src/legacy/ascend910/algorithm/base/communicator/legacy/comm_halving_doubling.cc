@@ -76,7 +76,7 @@ HcclResult CommHalvingDoubling::CalcLink()
 }
 bool CommHalvingDoubling::NeedDataReceivedAck()
 {
-    HCCL_INFO("having-doubling need make a comm supporting DataReceivedAck");
+    HCCL_INFO("halving-doubling need make a comm supporting DataReceivedAck");
     return true;
 }
 } // namespace hccl

@@ -46,7 +46,7 @@ InsV2RecvExecutor::CalcResOffload(const RankGraph* rankGraph, const u64& dataSiz
     (void)rankGraph;
     (void)dataSize;
     (void)resReq;
-    HCCL_ERROR("[InsCollAlgFactory][InsV2RecvExecutor][CalcResOffload] offload is not support");
+    HCCL_ERROR("[InsCollAlgFactory][InsV2RecvExecutor][CalcResOffload] offload is not supported");
     return HcclResult::HCCL_E_NOT_SUPPORT;
 }
 
@@ -107,7 +107,7 @@ HcclResult InsV2RecvExecutor::Orchestrate(
 
     // 模式判断
     if (opMode_ == OpMode::OFFLOAD) {
-        HCCL_ERROR("[InsCollAlgFactory][InsV2RecvExecutor][Orchestrate] offload is not support");
+        HCCL_ERROR("[InsCollAlgFactory][InsV2RecvExecutor][Orchestrate] offload is not supported");
         return HcclResult::HCCL_E_NOT_SUPPORT;
     } else {
         HCCL_DEBUG("[InsCollAlgFactory] Rank[%d], Generating Instruction Queues in OPBASE Mode for HOST.", myRank_);
@@ -153,7 +153,7 @@ HcclResult InsV2RecvExecutor::Orchestrate(
 
     // 模式判断
     if (opMode_ == OpMode::OFFLOAD) {
-        HCCL_ERROR("[InsCollAlgFactory][InsV2RecvExecutor][Orchestrate] offload is not support");
+        HCCL_ERROR("[InsCollAlgFactory][InsV2RecvExecutor][Orchestrate] offload is not supported");
         return HcclResult::HCCL_E_NOT_SUPPORT;
     } else {
         HCCL_DEBUG("[InsCollAlgFactory] Rank[%d], Generating Instruction Queues in OPBASE Mode for HOST.", myRank_);

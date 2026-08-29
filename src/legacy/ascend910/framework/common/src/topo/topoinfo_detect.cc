@@ -515,7 +515,7 @@ HcclResult TopoInfoDetect::SetupAgent(
     CHK_PRT_RET(
         (rootInfo.nicDeploy == NICDeployment::NIC_DEPLOYMENT_HOST),
         HCCL_ERROR(
-            "[Setup][Agent]hcclDeviceNicDisable is [%u] when nicDeploy form root is NIC_DEPLOYMENT_HOST",
+            "[Setup][Agent]hcclDeviceNicDisable is [%u] when nicDeploy from root is NIC_DEPLOYMENT_HOST",
             rootInfo.nicDeploy),
         HCCL_E_PARA);
     CHK_RET(hrtGetDevice(&deviceLogicID_));
@@ -1172,7 +1172,7 @@ HcclResult TopoInfoDetect::GetCluterInfo(RankTable_t& clusterInfo)
 {
     CHK_PRT_RET(
         (clusterTopoInfo_.rankList.size() == 0),
-        HCCL_ERROR("[Get][CluterInfo]GetCluterInfo failed, topo detect has not started."), HCCL_E_INTERNAL);
+        HCCL_ERROR("[Get][ClusterInfo]GetCluterInfo failed, topo detect has not started."), HCCL_E_INTERNAL);
     clusterInfo = clusterTopoInfo_;
     return HCCL_SUCCESS;
 }

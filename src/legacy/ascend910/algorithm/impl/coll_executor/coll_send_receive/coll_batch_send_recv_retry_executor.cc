@@ -134,7 +134,7 @@ HcclResult CollBatchSendRecvRetryExecutor::Orchestrate(OpParam& param, AlgResour
             CHK_RET(HcclD2DMemcpyAsync(dispatcher_, outUserMem, inUserMem, param.stream));
             return HCCL_SUCCESS;
         } else {
-            HCCL_ERROR("[HcclBatchSendRecvRetry] Send task and recv task to self : data size do not equal, please"
+            HCCL_ERROR("[HcclBatchSendRecvRetry] Send task and recv task to self : data size do not equal, please "
                        "check the task list.");
             return HCCL_E_PARA;
         }

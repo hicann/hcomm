@@ -614,13 +614,13 @@ HcclResult CommFactory::CreateCommP2PQuarry(std::vector<std::unique_ptr<CommBase
         CHK_SMART_PTR_NULL(comm[index]);
         ret = comm[index]->BuildQuerry(commStatus[index]);
         if (ret != HCCL_SUCCESS) {
-            HCCL_ERROR("[Quarry][CommP2P]comm p2p array[%u] init failed", index);
+            HCCL_ERROR("[Query][CommP2P]comm p2p array[%u] init failed", index);
             comm[index].reset(nullptr);
             return ret;
         }
     }
     status = (static_cast<int>(comm.size()) == std::count(commStatus.begin(), commStatus.end(), 0)) ? 0 : 1;
-    HCCL_DEBUG("CreateCommP2PQuarry %u", status);
+    HCCL_DEBUG("CreateCommP2PQuery %u", status);
     return HCCL_SUCCESS;
 }
 

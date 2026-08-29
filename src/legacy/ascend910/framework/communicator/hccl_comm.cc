@@ -237,7 +237,7 @@ HcclResult hcclComm::SetQpQosAttr(u32 trafficClass, u32 serviceLevel)
     // 若转换出错或者设置的RDMATrafficClass不在有效范围内，则报错
     if (trafficClass > EnvConfig::HCCL_RDMA_TC_MAX) {
         HCCL_ERROR(
-            "[SetQpQosAttr]rdmaTrafficClass is invalid. except:[%u, %u], actual:[%u]", EnvConfig::HCCL_RDMA_TC_MIN,
+            "[SetQpQosAttr]rdmaTrafficClass is invalid. expect:[%u, %u], actual:[%u]", EnvConfig::HCCL_RDMA_TC_MIN,
             EnvConfig::HCCL_RDMA_TC_MAX, trafficClass);
         return HCCL_E_PARA;
     }
@@ -251,7 +251,7 @@ HcclResult hcclComm::SetQpQosAttr(u32 trafficClass, u32 serviceLevel)
     // 校验config中SL是否合法
     if (serviceLevel > EnvConfig::HCCL_RDMA_SL_MAX) {
         HCCL_ERROR(
-            "[SetQpQosAttr]rdmaServiceLevel is invalid. except:[%u, %u], actual:[%u]", EnvConfig::HCCL_RDMA_SL_MIN,
+            "[SetQpQosAttr]rdmaServiceLevel is invalid. expect:[%u, %u], actual:[%u]", EnvConfig::HCCL_RDMA_SL_MIN,
             EnvConfig::HCCL_RDMA_SL_MAX, serviceLevel);
         return HCCL_E_PARA;
     }
@@ -647,7 +647,7 @@ HcclResult hcclComm::ReduceScatter(
 
     if (tag.empty()) {
         HCCL_ERROR(
-            "[HcclComm][ReduceScatter]errNo[0x%016llx] reduceScatter tag length is"
+            "[HcclComm][ReduceScatter]errNo[0x%016llx] reduceScatter tag length is "
             "0",
             HCCL_ERROR_CODE(HCCL_E_PARA));
         return HCCL_E_PARA;
@@ -705,7 +705,7 @@ HcclResult hcclComm::ReduceScatterV(
 
     if (tag.empty()) {
         HCCL_ERROR(
-            "[HcclComm][ReduceScatterV]errNo[0x%016llx] reduceScatterV tag length is"
+            "[HcclComm][ReduceScatterV]errNo[0x%016llx] reduceScatterV tag length is "
             "0",
             HCCL_ERROR_CODE(HCCL_E_PARA));
         return HCCL_E_PARA;

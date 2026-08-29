@@ -227,7 +227,7 @@ HcclResult TransportHeterogRawRoce::PrepareModifyInfo(struct QpAttr& qpAttr, str
     typicalQpInfo.retryTime = GetExternalInputRdmaTimeOut();
     CHK_SAFETY_FUNC_RET(memcpy_s(typicalQpInfo.gid, HCCP_GID_RAW_LEN, qpAttr.gid, HCCP_GID_RAW_LEN));
     HCCL_INFO(
-        "TransportHeterogRawRoce ModifyInfo qpn[%u] psn[%u] gid_idxp[%u] gid[%p] tc[%u] sl[%u] retryCnt[%u]"
+        "TransportHeterogRawRoce ModifyInfo qpn[%u] psn[%u] gid_idxp[%u] gid[%p] tc[%u] sl[%u] retryCnt[%u] "
         "retryTime[%u]",
         typicalQpInfo.qpn, typicalQpInfo.psn, typicalQpInfo.gidIdx, typicalQpInfo.gid, typicalQpInfo.tc,
         typicalQpInfo.sl, typicalQpInfo.retryCnt, typicalQpInfo.retryTime);
@@ -313,7 +313,7 @@ HcclResult TransportHeterogRawRoce::TypicalQpModify(
         completed = true;
     } else if (ret != HCCL_E_AGAIN) {
         HCCL_ERROR(
-            "hrtRaTypicalQpModify fail qpHandle[%p] completed[%u]"
+            "hrtRaTypicalQpModify fail qpHandle[%p] completed[%u] "
             "local: qpn[%u] psn[%u] gidIdx[%u] gid[%p] tc[%u] sl[%u] retryCnt[%u] retryTime[%u]"
             "remote: qpn[%u] psn[%u] gidIdx[%u] gid[%p] tc[%u] sl[%u] retryCnt[%u] retryTime[%u] ",
             qpHandle, completed, localQpInfo->qpn, localQpInfo->psn, localQpInfo->gidIdx, localQpInfo->gid,

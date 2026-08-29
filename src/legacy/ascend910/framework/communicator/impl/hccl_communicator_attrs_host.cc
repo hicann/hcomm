@@ -55,7 +55,7 @@ HcclResult HcclCommunicatorAttrs::Init(
 bool HcclCommunicatorAttrs::IsStandardCard()
 {
     if (Is310P3Common()) {
-        HCCL_INFO("The current device just support this StandardCard case.");
+        HCCL_INFO("The current device only supports the StandardCard case.");
         return true;
     }
     if (isDiffDeviceType_) {
@@ -418,7 +418,7 @@ HcclResult HcclCommunicatorAttrs::SetSuperPodInfo(const std::vector<RankInfo_t>&
             superPodItem.second.size());
     }
     HCCL_RUN_INFO(
-        "[Set][SuperPodInfo]different surperPod contains different numbers of servers:[%d]",
+        "[Set][SuperPodInfo]different superPod contains different numbers of servers:[%d]",
         multiSuperPodDiffServerNumMode_);
 
     for (auto item : superPodToDeviceNum) {

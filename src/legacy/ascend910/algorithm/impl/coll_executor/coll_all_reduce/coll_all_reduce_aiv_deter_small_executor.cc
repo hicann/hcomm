@@ -78,7 +78,7 @@ HcclResult CollAllReduceAivDeterSmallExecutor::CalNumBlocks(
     }
 
     HCCL_INFO(
-        "[CollAllReduceAivDeterSmallExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommanded[%u]",
+        "[CollAllReduceAivDeterSmallExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommended[%u]",
         numBlocks, numBlocks_, bestNumBlocks);
     return HCCL_SUCCESS;
 }

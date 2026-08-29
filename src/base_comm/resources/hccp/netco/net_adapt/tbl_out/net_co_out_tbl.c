@@ -555,12 +555,12 @@ STATIC uint32_t NetCoOutInitCommInfo(NetCo *co)
     dcVTbl.onFillUpdateData = (F_BIFROST_CNCOI_PUBER_ON_FILL_COMMINFO_UPDATE_DATA)NetCoOutOnCommInfoTupleUpdCode;
     uint32_t ret = BifrostCncoiPuberComminfoReg(co->out->puber, &dcVTbl);
     if (ret != BKF_OK) {
-        BKF_LOG_ERROR(BKF_LOG_HND, "ret(u%)\n", ret);
+        BKF_LOG_ERROR(BKF_LOG_HND, "ret(%u)\n", ret);
         return BKF_ERR;
     }
     ret = BifrostCncoiPuberComminfoCreateTable(co->out->puber, g_NetCoDftSliceKey);
     if (ret != BKF_OK) {
-        BKF_LOG_ERROR(BKF_LOG_HND, "ret(u%)\n", ret);
+        BKF_LOG_ERROR(BKF_LOG_HND, "ret(%u)\n", ret);
         return BKF_ERR;
     }
 
@@ -698,12 +698,12 @@ STATIC uint32_t NetCoOutInitOper(NetCo *co)
     dcVTbl.onFillUpdateData = (F_BIFROST_CNCOI_PUBER_ON_FILL_OPERATOR_UPDATE_DATA)NetCoOutOnOperTupleUpdCode;
     uint32_t ret = BifrostCncoiPuberOperatorReg(co->out->puber, &dcVTbl);
     if (ret != BKF_OK) {
-        BKF_LOG_ERROR(BKF_LOG_HND, "ret(u%)\n", ret);
+        BKF_LOG_ERROR(BKF_LOG_HND, "ret(%u)\n", ret);
         return BKF_ERR;
     }
     ret = BifrostCncoiPuberOperatorCreateTable(co->out->puber, g_NetCoDftSliceKey);
     if (ret != BKF_OK) {
-        BKF_LOG_ERROR(BKF_LOG_HND, "ret(u%)\n", ret);
+        BKF_LOG_ERROR(BKF_LOG_HND, "ret(%u)\n", ret);
         return BKF_ERR;
     }
 
@@ -818,12 +818,12 @@ STATIC uint32_t NetCoOutInitAdj(NetCo *co)
     dcVTbl.onFillUpdateData = (F_BIFROST_CNCOI_PUBER_ON_FILL_ADJACENCY_UPDATE_DATA)NetCoOutOnAdjTupleUpdCode;
     uint32_t ret = BifrostCncoiPuberAdjacencyReg(co->out->puber, &dcVTbl);
     if (ret != BKF_OK) {
-        BKF_LOG_ERROR(BKF_LOG_HND, "ret(u%)\n", ret);
+        BKF_LOG_ERROR(BKF_LOG_HND, "ret(%u)\n", ret);
         return BKF_ERR;
     }
     ret = BifrostCncoiPuberAdjacencyCreateTable(co->out->puber, g_NetCoDftSliceKey);
     if (ret != BKF_OK) {
-        BKF_LOG_ERROR(BKF_LOG_HND, "ret(u%)\n", ret);
+        BKF_LOG_ERROR(BKF_LOG_HND, "ret(%u)\n", ret);
         return BKF_ERR;
     }
 
@@ -936,12 +936,12 @@ STATIC uint32_t NetCoOutInitRank(NetCo *co)
     dcVTbl.onFillUpdateData = (F_BIFROST_CNCOI_PUBER_ON_FILL_RANK_UPDATE_DATA)NetCoOutOnRankTupleUpdCode;
     uint32_t ret = BifrostCncoiPuberRankReg(co->out->puber, &dcVTbl);
     if (ret != BKF_OK) {
-        BKF_LOG_ERROR(BKF_LOG_HND, "ret(u%)\n", ret);
+        BKF_LOG_ERROR(BKF_LOG_HND, "ret(%u)\n", ret);
         return BKF_ERR;
     }
     ret = BifrostCncoiPuberRankCreateTable(co->out->puber, g_NetCoDftSliceKey);
     if (ret != BKF_OK) {
-        BKF_LOG_ERROR(BKF_LOG_HND, "ret(u%)\n", ret);
+        BKF_LOG_ERROR(BKF_LOG_HND, "ret(%u)\n", ret);
         return BKF_ERR;
     }
 
@@ -1066,12 +1066,12 @@ STATIC uint32_t NetCoOutInitRankDist(NetCo *co)
     dcVTbl.onFillUpdateData = (F_BIFROST_CNCOI_PUBER_ON_FILL_RANK_DISTRIBUTE_UPDATE_DATA)NetCoOutOnRankDistTupleUpdCode;
     uint32_t ret = BifrostCncoiPuberRankDistributeReg(co->out->puber, &dcVTbl);
     if (ret != BKF_OK) {
-        BKF_LOG_ERROR(BKF_LOG_HND, "ret(u%)\n", ret);
+        BKF_LOG_ERROR(BKF_LOG_HND, "ret(%u)\n", ret);
         return BKF_ERR;
     }
     ret = BifrostCncoiPuberRankDistributeCreateTable(co->out->puber, g_NetCoDftSliceKey);
     if (ret != BKF_OK) {
-        BKF_LOG_ERROR(BKF_LOG_HND, "ret(u%)\n", ret);
+        BKF_LOG_ERROR(BKF_LOG_HND, "ret(%u)\n", ret);
         return BKF_ERR;
     }
 
@@ -1180,12 +1180,12 @@ STATIC uint32_t NetCoOutInitRootRank(NetCo *co)
     dcVTbl.onFillUpdateData = (F_BIFROST_CNCOI_PUBER_ON_FILL_ROOT_RANK_UPDATE_DATA)NetCoOutOnRootRankTupleUpdCode;
     uint32_t ret = BifrostCncoiPuberRootRankReg(co->out->puber, &dcVTbl);
     if (ret != BKF_OK) {
-        BKF_LOG_ERROR(BKF_LOG_HND, "ret(u%)\n", ret);
+        BKF_LOG_ERROR(BKF_LOG_HND, "ret(%u)\n", ret);
         return BKF_ERR;
     }
     ret = BifrostCncoiPuberRootRankCreateTable(co->out->puber, g_NetCoDftSliceKey);
     if (ret != BKF_OK) {
-        BKF_LOG_ERROR(BKF_LOG_HND, "ret(u%)\n", ret);
+        BKF_LOG_ERROR(BKF_LOG_HND, "ret(%u)\n", ret);
         return BKF_ERR;
     }
 

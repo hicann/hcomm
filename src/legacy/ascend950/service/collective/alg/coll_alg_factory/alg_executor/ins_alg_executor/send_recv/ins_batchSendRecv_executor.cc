@@ -189,7 +189,7 @@ HcclResult InsBatchSendRecvExecutor<AlgTopoMatch>::ProcessSelfSendRecvTasks(InsQ
             sendToSelfDeque_.pop_front();
             recvFromSelfDeque_.pop_front();
         } else {
-            HCCL_ERROR("[HcclBatchSendRecv] Send task and recv task to self : count or dataType do not equal, please"
+            HCCL_ERROR("[HcclBatchSendRecv] Send task and recv task to self : count or dataType do not equal, please "
                        "check the task list.");
             return HCCL_E_PARA;
         }
@@ -202,7 +202,7 @@ HcclResult InsBatchSendRecvExecutor<AlgTopoMatch>::ProcessSendRecv(
     const CollAlgOperator& op, InsQuePtr& queue, u32 remoteRank, std::vector<SendRecvSlice>& sendRemoteSlices,
     std::vector<SendRecvSlice>& recvRemoteSlices, LinkData& link) const
 {
-    HCCL_INFO("[InsBatchSendRecvExecutor][ProcessSendRecv] Start to with rank[%u].", remoteRank);
+    HCCL_INFO("[InsBatchSendRecvExecutor][ProcessSendRecv] Start to send/recv with rank[%u].", remoteRank);
     u32 maxSendRecvStep = std::max(sendRemoteSlices.size(), recvRemoteSlices.size());
     HCCL_DEBUG("[InsBatchSendRecvExecutor][ProcessSendRecv] maxSendRecvStep[%u].", maxSendRecvStep);
 

@@ -42,7 +42,7 @@ HcclOneSidedService::HcclOneSidedService(
 HcclOneSidedService::~HcclOneSidedService()
 {
     HCCL_RUN_INFO(
-        "[~HcclOneSidedService] localRankId[%u] has registedMemCnt[%u] mem didn't dereg", localRankInfo_.userRank,
+        "[~HcclOneSidedService] localRankId[%u] has registeredMemCnt[%u] mem didn't dereg", localRankInfo_.userRank,
         registedMemCnt_);
     HcclResult ret = HCCL_SUCCESS;
     for (auto it = desc2HcclBufMapIpc_.begin(); it != desc2HcclBufMapIpc_.end(); ++it) {
@@ -198,7 +198,7 @@ HcclOneSidedService::RegMem(void* addr, u64 size, HcclMemType type, RankId remot
     }
     HCCL_DEBUG(
         "[HcclOneSidedService][RegMem] localRankId[%u] remoteRankId[%u] size[%lu] useRdma[%d] "
-        "desc2HcclBufMap[%u] registedMemCnt[%u]",
+        "desc2HcclBufMap[%u] registeredMemCnt[%u]",
         ptr->localRankId, ptr->remoteRankId, size, useRdma,
         useRdma ? desc2HcclBufMapRoce_.size() : desc2HcclBufMapIpc_.size(), registedMemCnt_);
     return HCCL_SUCCESS;
@@ -252,7 +252,7 @@ HcclResult HcclOneSidedService::DeregMem(const HcclMemDesc& localMemDesc)
 
     HCCL_DEBUG(
         "[HcclOneSidedService][DeregMem] localRankId[%u] remoteRankId[%u] size[%lu] useRdma[%d] "
-        "desc2HcclBufMap[%u] registedMemCnt[%u]",
+        "desc2HcclBufMap[%u] registeredMemCnt[%u]",
         ptr->localRankId, ptr->remoteRankId, buf->len, useRdma,
         useRdma ? desc2HcclBufMapRoce_.size() : desc2HcclBufMapIpc_.size(), registedMemCnt_);
 
@@ -366,7 +366,7 @@ HcclResult HcclOneSidedService::LoadAICPUKernel(void)
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
         HCCL_ERROR(
-            "[LoadAICPUKernel]errNo[0x%016llx]load aicpu file fail, path[%s] optionType[%u]"
+            "[LoadAICPUKernel]errNo[0x%016llx]load aicpu file fail, path[%s] optionType[%u] "
             "cpuKernelMode[%u].",
             ret, jsonPath.c_str(), ACL_RT_BINARY_LOAD_OPT_CPU_KERNEL_MODE, 0),
         ret);
@@ -778,7 +778,7 @@ void HcclOneSidedService::ConnectByThread(
         if (ret == HCCL_E_TIMEOUT) {
             hasTimeoutErrorFlag_ = true;
         }
-        HCCL_ERROR("[ConnectByThread] Connect failed. userrank[%u], ret[%d].", localRankInfo_.userRank, ret);
+        HCCL_ERROR("[ConnectByThread] Connect failed. userRank[%u], ret[%d].", localRankInfo_.userRank, ret);
     }
     hrtResetDevice(deviceLogicId_);
 }
@@ -1088,7 +1088,7 @@ HcclResult HcclOneSidedService::AicpuResourceInit()
     CHK_RET(DeviceMem::alloc(commResParaDevice_, sizeof(HcclOneSideCommResParam)));
 
     const u64 endTime = hrtMsprofSysCycleTime();
-    HCCL_DEBUG("[AicpuResourceInit] done, time cost[%llu]", (endTime - beginTime));
+    HCCL_DEBUG("[AicpuResourceInit] done, time cost[%llu us]", (endTime - beginTime));
 
     return HCCL_SUCCESS;
 }
@@ -1288,7 +1288,7 @@ HcclResult HcclOneSidedService::AicpuKernelLaunch(
     }
 
     HCCL_INFO(
-        "[HcclOneSidedService][AicpuKernelLaunch] exec succ, conn[%p], streamId[%u]. time[%u]", conn.get(),
+        "[HcclOneSidedService][AicpuKernelLaunch] exec succ, conn[%p], streamId[%u]. time[%u us]", conn.get(),
         mainStream.id(), (endTime - beginTime));
 
     return HCCL_SUCCESS;

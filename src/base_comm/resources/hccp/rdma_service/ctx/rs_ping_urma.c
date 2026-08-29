@@ -153,7 +153,7 @@ STATIC int RsPingCommonInitRecvJfcWithAttr(struct RsPingCtxCb *pingCb, union Pin
     jettyCb->recvJfc.numEvents = 0;
     jettyCb->recvJfc.maxRecvWcNum = RS_PING_URMA_RECV_WC_NUM;
     jettyCb->recvJfc.jfc = RsUrmaCreateJfc(pingCb->udevCb.urmaCtx, &recvJfcCfg);
-    CHK_PRT_RETURN(jettyCb->recvJfc.jfc == NULL, hccp_err("urma_create_jfc failed, errno:%d", errno), -EOPENSRC);
+    CHK_PRT_RETURN(jettyCb->recvJfc.jfc == NULL, hccp_err("create recv jfc failed, errno:%d", errno), -EOPENSRC);
 
     hccp_run_info("eid:%016llx:%016llx init recv jfc success, jfc_id:%u", pingCb->udevCb.eidInfo.eid.in6.subnetPrefix,
         pingCb->udevCb.eidInfo.eid.in6.interfaceId, jettyCb->recvJfc.jfc->jfc_id.id);

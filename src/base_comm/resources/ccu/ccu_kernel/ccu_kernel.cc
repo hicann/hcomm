@@ -316,12 +316,12 @@ CcuResult CcuKernel::GeneTaskParams(const uint64_t* taskArgs, uint32_t argsNum, 
     const uint32_t seqNum
         = (argsNum / CCU_SQE_ARGS_LEN) + ((argsNum % CCU_SQE_ARGS_LEN) == 0 ? 0 : 1) + (argsNum == 0 ? 1 : 0);
 
-    const uint32_t preMissonSqeInsCnt = (seqNum - 1) * CCU_SQE_ARGS_LEN;
-    if (instrInfo_.missionInstrCount < preMissonSqeInsCnt) {
+    const uint32_t preMissionSqeInsCnt = (seqNum - 1) * CCU_SQE_ARGS_LEN;
+    if (instrInfo_.missionInstrCount < preMissionSqeInsCnt) {
         HCCL_ERROR(
             "[CcuKernel][%s] failed, missionInstrCount[%u] should be greater "
-            "than preMissonSqeInsCnt[%u].",
-            __func__, instrInfo_.missionInstrCount, preMissonSqeInsCnt);
+            "than preMissionSqeInsCnt[%u].",
+            __func__, instrInfo_.missionInstrCount, preMissionSqeInsCnt);
         return CcuResult::CCU_E_INTERNAL;
     }
 
@@ -2971,7 +2971,7 @@ void DumpCcuProfilingInfo(const std::vector<CcuProfilingInfo>& ccuProfilingInfo)
     for (const auto& profInfo : ccuProfilingInfo) {
         if (profInfo.type == static_cast<uint8_t>(CcuProfilinType::CCU_TASK_PROFILING)) {
             HCCL_INFO(
-                "Dump CCU Profiling Info:SQE Profiling Info: ctxSignautre(%s), "
+                "Dump CCU Profiling Info:SQE Profiling Info: ctxSignature(%s), "
                 "dieId(%d), missionId(%d), instrId(%d).",
                 profInfo.name.c_str(), static_cast<int>(profInfo.dieId), static_cast<int>(profInfo.missionId),
                 static_cast<int>(profInfo.instrId));

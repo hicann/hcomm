@@ -466,8 +466,8 @@ HcclResult MrManager::UnmapMem(MrInfo mrInfo)
     u64 userAddr = reinterpret_cast<u64>(mrInfo.addr);
     auto iter = SearchMappingMap(userAddr, mrInfo.size);
     CHK_PRT_RET(
-        (iter == mappedHostToDevMap_.end()), HCCL_ERROR("[MrManager][UnmapMem]the memory dereged isn't been reged"),
-        HCCL_E_PARA);
+        (iter == mappedHostToDevMap_.end()),
+        HCCL_ERROR("[MrManager][UnmapMem]the memory to be deregistered has not been registered"), HCCL_E_PARA);
     if (iter->second.mappingRef == 0) {
         // 解除内存映射
         CHK_RET(hrtHalHostUnregister(mrInfo.addr, curDevId_));
@@ -553,8 +553,8 @@ HcclResult MrManager::ReleaseKey(void* addr, u64 size) // 释放临时MR
     CHK_PRT_RET(
         (iter == regedMrMap_.end()),
         HCCL_ERROR(
-            "[MrManager][ReleaseKey] release key failed, size[%llu Byte]"
-            "size[%llu], regMrMap size[%u].",
+            "[MrManager][ReleaseKey] release key failed, size[%llu Byte], "
+            "mrInfo.size[%llu], regMrMap size[%u].",
             size, mrInfo.size, regedMrMap_.size()),
         HCCL_E_INTERNAL);
 

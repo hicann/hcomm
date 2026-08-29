@@ -112,7 +112,7 @@ HcclResult CollAlltoAllMeshAivExecutor::CalNumBlocks(u32& numBlocks, u32 rankSiz
     }
 
     HCCL_INFO(
-        "[CollAlltoAllMeshAivExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommanded[%u]", numBlocks,
+        "[CollAlltoAllMeshAivExecutor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommended[%u]", numBlocks,
         numBlocks_, bestNumBlocks);
     return HCCL_SUCCESS;
 }

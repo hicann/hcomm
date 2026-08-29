@@ -185,7 +185,7 @@ HcclResult InsAllReduceParallelExecutor<AlgTopoMatch, InsAlgTemplate0, InsAlgTem
 
     // 申请算法模板所需资源
     if (!(resReqIntra.queNum > 0 && resReqInter.queNum > 0)) {
-        HCCL_ERROR("[InsAllReduceParallelExecutor]resReqIntra.queNum and resReqInter.queNum must larger than 0.");
+        HCCL_ERROR("[InsAllReduceParallelExecutor]resReqIntra.queNum and resReqInter.queNum must be larger than 0.");
         return HcclResult::HCCL_E_INTERNAL;
     }
     u32 totalQueueNum = resReqIntra.queNum + resReqInter.queNum;
@@ -225,7 +225,7 @@ HcclResult InsAllReduceParallelExecutor<AlgTopoMatch, InsAlgTemplate0, InsAlgTem
 
     // 申请算法模板所需资源
     if (!(resReqIntra.queNum > 0 && resReqInter.queNum > 0)) {
-        HCCL_ERROR("[InsAllReduceParallelExecutor] Intra queNum and Inter queNum must larger than 0.");
+        HCCL_ERROR("[InsAllReduceParallelExecutor] Intra queNum and Inter queNum must be larger than 0.");
         return HcclResult::HCCL_E_INTERNAL;
     }
     u32 totalQueueNum = resReqIntra.queNum + resReqInter.queNum;

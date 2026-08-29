@@ -288,7 +288,7 @@ HcclResult Stream::InitStream()
         if (ret != HCCL_SUCCESS) {
             SetEmpty();
             HCCL_ERROR(
-                "[InitStream]Failed to get the streamId through the rtstream, errNo[0x%016llx]"
+                "[InitStream]Failed to get the streamId through the rtstream, errNo[0x%016llx] "
                 "hrtGetStreamId error, ret[%d]",
                 HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret);
             return HCCL_E_INTERNAL;
@@ -298,7 +298,7 @@ HcclResult Stream::InitStream()
         if (ret != HCCL_SUCCESS) {
             SetEmpty();
             HCCL_ERROR(
-                "[InitStream]Failed to get the sqId through the rtstream, errNo[0x%016llx]"
+                "[InitStream]Failed to get the sqId through the rtstream, errNo[0x%016llx] "
                 "hrtStreamGetSqid error, ret[%d]",
                 HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret);
             return HCCL_E_INTERNAL;
@@ -309,7 +309,7 @@ HcclResult Stream::InitStream()
         if (ret != HCCL_SUCCESS) {
             SetEmpty();
             HCCL_ERROR(
-                "[InitStream]Failed to get the cqId through the rtstream, errNo[0x%016llx]"
+                "[InitStream]Failed to get the cqId through the rtstream, errNo[0x%016llx] "
                 "hrtStreamGetCqid error, ret[%d]",
                 HCCL_ERROR_CODE(HCCL_E_RUNTIME), ret);
             return HCCL_E_INTERNAL;

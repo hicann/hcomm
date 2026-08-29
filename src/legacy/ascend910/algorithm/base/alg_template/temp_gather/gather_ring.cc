@@ -58,7 +58,7 @@ HcclResult GatherRing::RunGatherOnRootRank()
             ret);
 
         HCCL_INFO(
-            "GatherRing rootrank[%u] round[%u] rx data ouputoffset[%llu] size[%llu]", interRank_, i, rcvOffset,
+            "GatherRing rootrank[%u] round[%u] rx data outputoffset[%llu] size[%llu]", interRank_, i, rcvOffset,
             rcvSize);
     }
     return HCCL_SUCCESS;

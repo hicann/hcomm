@@ -410,7 +410,8 @@ int RaRsGetIfaddrs(char *inBuf, char *outBuf, int *outLen, int *opResult, int rc
 
     HCCP_CHECK_PARAM_LEN_RET_HOST(sizeof(union OpIfaddrData), sizeof(struct MsgHead), rcvBufLen, opResult);
     CHK_PRT_RETURN(ifaddrData->txData.num > MAX_INTERFACE_NUM || ifaddrData->txData.num == 0,
-        hccp_err("interface number is invalid, num[%u]", ifaddrData->txData.num), -EINVAL);
+        hccp_err("interface number is invalid, num[%u], valid range[1, %u]", ifaddrData->txData.num, MAX_INTERFACE_NUM),
+        -EINVAL);
 
     *opResult = gSocketOps.getIfaddrs(ifaddrData->txData.ifaddrInfos, &(ifaddrData->txData.num),
         ifaddrData->txData.phyId);
@@ -445,7 +446,9 @@ int RaRsGetIfaddrsV2(char *inBuf, char *outBuf, int *outLen, int *opResult, int 
     }
     ifaddrData->txData.num = ifaddrData->txData.num & (~RA_RS_GET_ALL_IP_BIT_MASK);
     CHK_PRT_RETURN(ifaddrData->txData.num > MAX_INTERFACE_NUM || ifaddrData->txData.num == 0,
-        hccp_err("interface number of op_ifaddr_data_v2 is invalid, num[%u]", ifaddrData->txData.num), -EINVAL);
+        hccp_err("interface number of op_ifaddr_data_v2 is invalid, num[%u], valid range[1, %u]",
+            ifaddrData->txData.num, MAX_INTERFACE_NUM),
+        -EINVAL);
 
     *opResult = gSocketOps.getIfaddrsV2(ifaddrData->txData.interfaceInfos, &(ifaddrData->txData.num),
         ifaddrData->txData.phyId, isAll);

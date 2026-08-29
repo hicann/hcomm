@@ -375,7 +375,7 @@ HcclResult CollBroadCastRingZerocopyExecutor::KernelRunInterServerBroadcastMulti
         HcclReduceOp::HCCL_REDUCE_RESERVED, planeRootSupperPod, std::vector<Slice>(0),
         level1DataSlices[level1Rank_].offset));
     HCCL_DEBUG(
-        "[superpod]Broadcast level2-broadcast : level1DataSlices[localRank].offset[%llu]"
+        "[superpod]Broadcast level2-broadcast : level1DataSlices[localRank].offset[%llu] "
         "level1DataSlices[localRank].size[%llu]",
         level1DataSlices[level1Rank_].offset, level1DataSlices[level1Rank_].size);
     CHK_RET(level2TempAlg->RegisterProfiler(

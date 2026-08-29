@@ -292,7 +292,7 @@ namespace CcuRep {
         CHK_PTR_NULL(ccuRepBufReduce);
         if (ccuRepBufReduce->GetCount() > CCU_REDUCE_MAX_MS || ccuRepBufReduce->GetMem().size() > CCU_REDUCE_MAX_MS) {
             HCCL_ERROR(
-                "count[%u] and mem size[%zu] must less than %u", ccuRepBufReduce->GetCount(),
+                "count[%u] and mem size[%zu] must be less than %u", ccuRepBufReduce->GetCount(),
                 ccuRepBufReduce->GetMem().size(), CCU_REDUCE_MAX_MS);
             return HCCL_E_PARA;
         }

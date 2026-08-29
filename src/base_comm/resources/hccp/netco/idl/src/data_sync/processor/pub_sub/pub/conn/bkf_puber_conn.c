@@ -59,7 +59,7 @@ STATIC BOOL BkfPuberConnOnMayAccept(BkfPuberConnMng *connMng, BkfUrl *urlCli)
         connMng->argInit->onConnectOver(connMng->argInit->cookie, urlCli);
     }
     uint8_t buf[BKF_LOG_LEN] = {0};
-    BKF_LOG_WARN(BKF_LOG_HND, "connMng(%#x), %d/%d, urlCli(%s), can not accpet more conn\n", BKF_MASK_ADDR(connMng),
+    BKF_LOG_WARN(BKF_LOG_HND, "connMng(%#x), %d/%d, urlCli(%s), can not accept more conn\n", BKF_MASK_ADDR(connMng),
         connMng->connCnt, connMng->argInit->connCntMax, BkfUrlGetStr(urlCli, buf, sizeof(buf)));
     (void)BkfPuberConnLimitSysLog(connMng, urlCli);
     return VOS_FALSE;

@@ -127,7 +127,7 @@ public:
         const RmtRmaBufSliceLite& notify, u64 notifyData)
     {
         HCCL_INFO(
-            "RmaConnLite WriteReduceWithNotify start. dataType = %d, , reduceOp %d, loc.addr = %llx, "
+            "RmaConnLite WriteReduceWithNotify start. dataType = %d, reduceOp %d, loc.addr = %llx, "
             "rmt.addr = %llx, cfg.cqeEn = %u, out.pi = %u, notify.addr = %llx, notifyData = %llu",
             dataType, reduceOp, loc.GetAddr(), rmt.GetAddr(), cfg.cqeEn, out.pi, notify.GetAddr(), notifyData);
     }

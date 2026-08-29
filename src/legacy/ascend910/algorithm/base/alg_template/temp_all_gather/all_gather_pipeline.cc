@@ -58,7 +58,7 @@ HcclResult AllGatherPipeline::Prepare(
     streamNotifyMain_ = notifyMain;
     if (streamNotifyMain_.size() < intraRankSize_) {
         HCCL_ERROR(
-            "[AllGatherPipeline][Prepare]rank[%u] streamNotifyMain_ size[%u] error, is smaller than,"
+            "[AllGatherPipeline][Prepare]rank[%u] streamNotifyMain_ size[%u] is smaller than "
             "intraRankSize_[%u]",
             userRank_, streamNotifyMain_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
@@ -66,7 +66,7 @@ HcclResult AllGatherPipeline::Prepare(
     streamNotifySub_ = notifySub;
     if (streamNotifySub_.size() < intraRankSize_) {
         HCCL_ERROR(
-            "[AllGatherPipeline][Prepare]rank[%u] streamNotifySub_ size[%u] error, is smaller than, "
+            "[AllGatherPipeline][Prepare]rank[%u] streamNotifySub_ size[%u] is smaller than "
             "intraRankSize_[%u]",
             userRank_, streamNotifySub_.size(), intraRankSize_);
         return HCCL_E_INTERNAL;
@@ -176,7 +176,7 @@ HcclResult AllGatherPipeline::RunAsync()
                 (dstDMAMemSliceId == 1 ? UserMemType::OUTPUT_MEM : UserMemType::INPUT_MEM), serverOffsetByte,
                 static_cast<u8*>(dmaMem_[srcDMAMemSliceId].ptr()) + serverOffsetByte, memSliceSize, subStream_[0]));
             HCCL_DEBUG(
-                "[AllGatherPipeline][RunAsync] local rank[%u] localOffset[%llu]tx with remoteRank[%u],"
+                "[AllGatherPipeline][RunAsync] local rank[%u] localOffset[%llu] tx with remoteRank[%u],"
                 "remoteOffset[%llu] with slice[%llu].",
                 userRank_, serverOffsetByte, nextInterRankId, serverOffsetByte, memSliceSize);
             // 对于RDM RxAsync，内存属性入参无效 RDMA::Wait
@@ -186,7 +186,7 @@ HcclResult AllGatherPipeline::RunAsync()
                 static_cast<u8*>(dmaMem_[dstDMAMemSliceId].ptr()) + readRemoteOffsetByte, memSliceSize,
                 subStream_[0])); // wait
             HCCL_DEBUG(
-                "[AllGatherPipeline][RunAsync]read local rank[%u] localOffset[%llu]tx with remoteRank[%u],"
+                "[AllGatherPipeline][RunAsync]read local rank[%u] localOffset[%llu] tx with remoteRank[%u],"
                 "remoteOffset[%llu] with slice[%llu].",
                 userRank_, readRemoteOffsetByte, readRemoteOffset, readRemoteOffsetByte, memSliceSize);
             CHK_RET(prevInterLink->PostFinAck(subStream_[0]));

@@ -20,14 +20,14 @@ HcclResult PluginRunner::isStreamCapture(rtStream_t stream, bool& isCapture) con
     DevType devType;
     CHK_RET(hrtGetDeviceType(devType));
     if (GetWorkflowMode() != HcclWorkflowMode::HCCL_WORKFLOW_MODE_OP_BASE) {
-        HCCL_WARNING("[PluginRunner][isStreamCapture]Stream capture only support opbase mode!");
+        HCCL_WARNING("[PluginRunner][isStreamCapture]Stream capture only supports opbase mode!");
         return HCCL_SUCCESS;
     }
     aclmdlRICaptureStatus captureStatus = aclmdlRICaptureStatus::ACL_MODEL_RI_CAPTURE_STATUS_NONE;
     aclmdlRI rtModel = nullptr;
     aclError ret = aclmdlRICaptureGetInfo(stream, &captureStatus, &rtModel);
     if (ret == ACL_ERROR_RT_FEATURE_NOT_SUPPORT) {
-        HCCL_WARNING("[PluginRunner][isStreamCapture]Stream capture does not support!");
+        HCCL_WARNING("[PluginRunner][isStreamCapture]Stream capture is not supported!");
         return HCCL_SUCCESS;
     } else {
         CHK_PRT_RET(
@@ -50,7 +50,7 @@ HcclResult PluginRunner::isStreamCapture(rtStream_t stream, bool& isCapture) con
             break;
         }
         default: {
-            HCCL_ERROR("[PluginRunner][isStreamCapture]rtGet not support stream capture status.");
+            HCCL_ERROR("[PluginRunner][isStreamCapture]rtGet does not support stream capture status.");
             break;
         }
     }

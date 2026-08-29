@@ -54,7 +54,7 @@ HcclResult AlltoAllVPairWise::Prepare(
 
         CHK_PRT_RET(
             scratchInputMem.size() == 0 || scratchOutputMem.size() == 0,
-            HCCL_ERROR("[AlltoAllVPairWise][Prepare] invilad scratchMemSize[%llu]", scratchInputMem.size()),
+            HCCL_ERROR("[AlltoAllVPairWise][Prepare] invalid scratchMemSize[%llu]", scratchInputMem.size()),
             HCCL_E_PARA);
         scratchInputMem_ = scratchInputMem;
         scratchOutputMem_ = scratchOutputMem;
@@ -77,7 +77,7 @@ HcclResult AlltoAllVPairWise::RunAsync(const u32 rank, const u32 rankSize, const
     CHK_SMART_PTR_NULL(dispatcher_);
     CHK_PTR_NULL(stream_.ptr());
 
-    CHK_PRT_RET(rankSize == 0, HCCL_ERROR("[AlltoAllVPairWise][Prepare] invilad rankSize[%u]", rankSize), HCCL_E_PARA);
+    CHK_PRT_RET(rankSize == 0, HCCL_ERROR("[AlltoAllVPairWise][Prepare] invalid rankSize[%u]", rankSize), HCCL_E_PARA);
 
     CHK_PRT_RET(
         rankSize != links.size(),
@@ -301,7 +301,8 @@ HcclResult AlltoAllVPairWise::GetNslbAdjInfo(
             adjInfoStep.phaseId = i;
             adjInfoStep.rev = 0;
             HCCL_INFO(
-                "AlltoAllVPairWise-nslb: adjInfoStep.phaseId[%u], remoteuserRank[%u]", adjInfoStep.phaseId, nextRank);
+                "AlltoAllVPairWise-NSLB-DP: adjInfoStep.phaseId[%u], remoteuserRank[%u]", adjInfoStep.phaseId,
+                nextRank);
             nslbAdjInfo.nsAdjInfo.push_back(adjInfoStep);
         }
     }

@@ -1546,7 +1546,7 @@ int RaHdcSetTsqpDepth(struct RaRdmaHandle *rdmaHandle, unsigned int tempDepth, u
 
     ret = RaHdcProcessMsg(RA_RS_SET_TSQP_DEPTH, phyId, (char *)&setTsqpDepthData, sizeof(union OpSetTsqpDepthData));
     CHK_PRT_RETURN(ret,
-        hccp_err("[set][ra_hdc_tsqp_depth]ra hdc message process failed ret(%d), opcode(%d)"
+        hccp_err("[set][ra_hdc_tsqp_depth]ra hdc message process failed ret(%d), opcode(%d), "
                  "phyId(%u)",
             ret, RA_RS_SET_TSQP_DEPTH, phyId),
         ret);
@@ -1566,7 +1566,7 @@ int RaHdcGetTsqpDepth(struct RaRdmaHandle *rdmaHandle, unsigned int *tempDepth, 
 
     ret = RaHdcProcessMsg(RA_RS_GET_TSQP_DEPTH, phyId, (char *)&getTsqpDepthData, sizeof(union OpGetTsqpDepthData));
     CHK_PRT_RETURN(ret,
-        hccp_err("[get][ra_hdc_tsqp_depth]ra hdc message process failed ret(%d), opcode(%d)"
+        hccp_err("[get][ra_hdc_tsqp_depth]ra hdc message process failed ret(%d), opcode(%d), "
                  "phyId(%u)",
             ret, RA_RS_GET_TSQP_DEPTH, phyId),
         ret);

@@ -236,7 +236,7 @@ u32 RunAicpuApiRpcSrvLaunchV1(void* args[], CommKfcParamDesc* desc)
 
     AicpuComContext* ctx = AicpuGetComContext();
     if (ctx == nullptr || !ctx->alreadyInit || strcmp(ctx->hcomId, contextParam->hcomId) != 0) {
-        HCCL_ERROR("The comm domain %s have not exist.", contextParam->hcomId);
+        HCCL_ERROR("The comm domain %s does not exist.", contextParam->hcomId);
         return HCCL_E_PARA;
     }
     AicpuServerRole role = AicpuKfcBatchwriteProcess::GetVerifiedServerRole(*ctx);
@@ -442,7 +442,7 @@ __attribute__((visibility("default"))) uint32_t RunAicpuRpcSrvLaunch(void* args)
 
     AicpuComContext* ctx = AicpuGetComContext();
     if (ctx == nullptr || !ctx->alreadyInit || strcmp(ctx->hcomId, contextParam->hcomId) != 0) {
-        HCCL_ERROR("The comm domain %s have not exist.", contextParam->hcomId);
+        HCCL_ERROR("The comm domain %s does not exist.", contextParam->hcomId);
         return HCCL_E_PARA;
     }
     if ((ctx->dfxExtendInfo.cqeStatus != dfx::CqeStatus::kDefault)
@@ -536,7 +536,7 @@ __attribute__((visibility("default"))) uint32_t RunAicpuRpcSrvLaunch(void* args)
                 ctx->sendCntRecord[1], ctx->sendCntRecord[2], ctx->sendCntRecord[3], ctx->recvCntRecord[0],
                 ctx->recvCntRecord[1], ctx->recvCntRecord[2], ctx->recvCntRecord[3]);
         }
-        HCCL_ERROR("Failed to run aicpu server failed, MC2 opIdx:%u", aicpuOpIdx);
+        HCCL_ERROR("Failed to run aicpu server, MC2 opIdx:%u", aicpuOpIdx);
         return ret;
     } else if (ret == HCCL_E_SUSPENDING) {
         HCCL_INFO("mc2 opp is suspended");

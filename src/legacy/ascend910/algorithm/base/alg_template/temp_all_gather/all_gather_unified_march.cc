@@ -35,7 +35,7 @@ HcclResult AllGatherUnifiedMarch::NotifySubStreamStart(u32 streamSize)
     CHK_PRT_RET(
         streamSize > subStreams_.size() || streamSize > meshSignalSubToMain_.size(),
         HCCL_ERROR(
-            "[AllGatherUnifiedMarch][NotifySubStreamStart] streamSize[%u] is out of range"
+            "[AllGatherUnifiedMarch][NotifySubStreamStart] streamSize[%u] is out of range "
             "subStreams_ size[%zu] or meshSignalSubToMain_ size[%zu]",
             streamSize, subStreams_.size(), meshSignalSubToMain_.size()),
         HCCL_E_PARA);
@@ -55,7 +55,7 @@ HcclResult AllGatherUnifiedMarch::WaitSubStreamFinish(u32 streamSize)
     CHK_PRT_RET(
         streamSize > subStreams_.size() || streamSize > meshSignalMainToSub_.size(),
         HCCL_ERROR(
-            "[AllGatherUnifiedMarch][NotifySubStreamStart] streamSize[%u] is out of range"
+            "[AllGatherUnifiedMarch][NotifySubStreamStart] streamSize[%u] is out of range "
             "subStreams_ size[%zu] or meshSignalMainToSub_ size[%zu]",
             streamSize, subStreams_.size(), meshSignalMainToSub_.size()),
         HCCL_E_PARA);
@@ -83,7 +83,7 @@ HcclResult AllGatherUnifiedMarch::DoSerialSDMA(
         localBuf.addr = static_cast<u8*>(dstAddr) + multRingsUserMemSlice_[0][sliceIdx].offset;
         localBuf.size = memSize;
         HCCL_DEBUG(
-            "intralRank[%u] slice[%u] offset[%llu] do SDMA read with remoteBuf[addr[%p], size[%llu]] and "
+            "intraRank[%u] slice[%u] offset[%llu] do SDMA read with remoteBuf[addr[%p], size[%llu]] and "
             "localBuf[addr[%p], size[%llu]]",
             intraRank_, sliceIdx, multRingsUserMemSlice_[0][sliceIdx].offset, remoteBuf.addr, remoteBuf.size,
             localBuf.addr, localBuf.size);
@@ -108,7 +108,7 @@ HcclResult AllGatherUnifiedMarch::NotifyNeighborsStart(LINK& prevIntraLink, LINK
             }
         }
         HCCL_DEBUG(
-            "[AllGatherUnifiedMarch][NotifyNeighborsStart] intraRank[%u] switch on [%u]neigbhbors done", intraRank_,
+            "[AllGatherUnifiedMarch][NotifyNeighborsStart] intraRank[%u] switch on [%u] neighbors done", intraRank_,
             neighbors);
         return HCCL_SUCCESS;
     }
@@ -136,7 +136,7 @@ HcclResult AllGatherUnifiedMarch::NotifyNeighborsStart(LINK& prevIntraLink, LINK
         }
     }
     HCCL_DEBUG(
-        "[AllGatherUnifiedMarch][NotifyNeighborsStart] intraRank[%u] switch on [%u]neigbhbors done", intraRank_,
+        "[AllGatherUnifiedMarch][NotifyNeighborsStart] intraRank[%u] switch on [%u] neighbors done", intraRank_,
         neighbors);
 
     return HCCL_SUCCESS;
@@ -155,8 +155,8 @@ HcclResult AllGatherUnifiedMarch::NotifyNeighborsEnd(LINK& prevIntraLink, LINK& 
         }
     }
     HCCL_DEBUG(
-        "[AllGatherUnifiedMarch][NotifyNeighborsStart] intraRank[%u] notifys [%u]neigbhbors sdma read done", intraRank_,
-        neighbors);
+        "[AllGatherUnifiedMarch][NotifyNeighborsStart] intraRank[%u] notified [%u] neighbors sdma read done",
+        intraRank_, neighbors);
 
     return HCCL_SUCCESS;
 }
@@ -184,7 +184,7 @@ HcclResult AllGatherUnifiedMarch::RunSingleStep(u32 ringPrevRank, u32 ringNextRa
     CHK_RET(DoSerialSDMA(
         preRemDMAMemPtr, preRemoteOffsetByte, preDstAddr, subStreams_[0], prevIntraLink, blockDataByte_, step));
     HCCL_INFO(
-        "[AllGatherUnifiedMarch][RunSingleStep] intralRank [%u] read from ringPrevRank [%u] done", intraRank_,
+        "[AllGatherUnifiedMarch][RunSingleStep] intraRank [%u] read from ringPrevRank [%u] done", intraRank_,
         ringPrevRank);
 
     // 从后向rank读取数据
@@ -198,7 +198,7 @@ HcclResult AllGatherUnifiedMarch::RunSingleStep(u32 ringPrevRank, u32 ringNextRa
         CHK_RET(DoSerialSDMA(
             nextRemDMAMemPtr, nextRemoteOffsetByte, nextDstAddr, subStreams_[1], nextIntralLink, blockDataByte_, step));
         HCCL_INFO(
-            "[AllGatherUnifiedMarch][RunSingleStep] intralRank [%u] read from ringNextRank [%u] done", intraRank_,
+            "[AllGatherUnifiedMarch][RunSingleStep] intraRank [%u] read from ringNextRank [%u] done", intraRank_,
             ringNextRank);
     }
 
@@ -231,7 +231,7 @@ HcclResult AllGatherUnifiedMarch::RunLastStep(u32 ringPrevRank, u32 ringNextRank
     CHK_RET(DoSerialSDMA(
         preRemDMAMemPtr, preOffsetByte, preDstAddr, subStreams_[0], prevIntraLink, blockDataByte_ / DIVISOR_NUM_TWO));
     HCCL_INFO(
-        "[AllGatherUnifiedMarch][RunLastStep] intralRank [%u] read from ringPrevRank [%u] done", intraRank_,
+        "[AllGatherUnifiedMarch][RunLastStep] intraRank [%u] read from ringPrevRank [%u] done", intraRank_,
         ringPrevRank);
 
     // 从后向rank读取数据
@@ -244,7 +244,7 @@ HcclResult AllGatherUnifiedMarch::RunLastStep(u32 ringPrevRank, u32 ringNextRank
         nextRemDMAMemPtr, nextOffsetByte, nextDstAddr, subStreams_[1], nextIntralLink,
         (blockDataByte_ - blockDataByte_ / DIVISOR_NUM_TWO))); // 兼容单块儿allgather数据量不是2的倍数场景
     HCCL_INFO(
-        "[AllGatherUnifiedMarch][RunLastStep] intralRank [%u] read from ringNextRank [%u] done", intraRank_,
+        "[AllGatherUnifiedMarch][RunLastStep] intraRank [%u] read from ringNextRank [%u] done", intraRank_,
         ringNextRank);
 
     // 单算子使用Ack/Datasignal接口，必须保证两者交替使用

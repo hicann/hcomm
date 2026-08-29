@@ -71,8 +71,7 @@ HcclResult HDCommunicateLite::Get(u32 offset, u32 length, u8* value)
     CHK_PTR_NULL(value);
     CHK_PRT_RET(
         (static_cast<u64>(offset) + length > buffLen),
-        HCCL_ERROR(
-            "[HDCommunicateLite][Get]Invalid length, offset=%u, length=%u, befferLen=%u", offset, length, buffLen),
+        HCCL_ERROR("[HDCommunicateLite][Get]Invalid length, offset=%u, length=%u, buffLen=%u", offset, length, buffLen),
         HCCL_E_PARA);
     std::unique_lock<std::mutex> lock(shmLock);
     return Read(offset, length, value);

@@ -631,7 +631,7 @@ HcclResult Transport::GetTransportErrorCqe(
             infos.push_back(std::make_pair(iter->second, info.second));
         } else {
             HCCL_RUN_WARNING(
-                "[GetTransportErrorCqe]get err failed, transport is not find, localIp[%s], remoteIp[%s]",
+                "[GetTransportErrorCqe]get err failed, transport is not found, localIp[%s], remoteIp[%s]",
                 localIp.GetReadableAddress(), info.second.remoteIp.GetReadableAddress());
         }
     }

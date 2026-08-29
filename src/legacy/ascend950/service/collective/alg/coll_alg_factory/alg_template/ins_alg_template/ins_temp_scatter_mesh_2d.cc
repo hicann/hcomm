@@ -49,7 +49,7 @@ HcclResult InsTempScatterMesh2D::CalcRes(AlgTempResReq& tempResReq)
             u32 neighborAlgRank = (myAlgRank + 1 + queIdx) % (tempVTopo_[dim].size());
             if (neighborAlgRank > (tempVTopo_[dim].size() - 1)) {
                 HCCL_ERROR(
-                    "[CollAlgFactory] [InsTempScatterMesh2D] neighborAlgRank[%u] is invalid,"
+                    "[CollAlgFactory] [InsTempScatterMesh2D] neighborAlgRank[%u] is invalid, "
                     "the Max rank[%zu].",
                     neighborAlgRank, tempVTopo_[dim].size() - 1);
                 return HcclResult::HCCL_E_PARA;

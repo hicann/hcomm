@@ -134,7 +134,7 @@ def finalize_command_args(args, log_dir, enable_logger_ref):
     enable_logger_ref["value"] = args.enable_logger
     if args.enable_logger:
         os.makedirs(log_dir, exist_ok=True)
-        log_info(f"log will saved in: {log_dir}")
+        log_info(f"log will be saved in: {log_dir}")
     return args.commands
 
 

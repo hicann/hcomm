@@ -53,7 +53,7 @@ HcclResult ProfilerBase::AddStream(s32 streamID, const std::string& tag, s32 pla
     CHK_PRT_RET(
         static_cast<u32>(deviceLogicId) >= maxDeviceNum,
         HCCL_ERROR(
-            "[Add][Stream]deviceLogicId_[%d]"
+            "[Add][Stream]deviceLogicId_[%d] "
             "is bigger than HCCL_AISERVER_DEVICE_NUM[%u]",
             deviceLogicId, maxDeviceNum),
         HCCL_E_INTERNAL);
@@ -77,7 +77,7 @@ HcclResult ProfilerBase::DelStream(s32 streamID)
     CHK_PRT_RET(
         static_cast<u32>(deviceLogicId) >= maxDeviceNum,
         HCCL_WARNING(
-            "deviceLogicId_[%d] is bigger"
+            "deviceLogicId_[%d] is bigger "
             "than maxDeviceNum[%u]",
             deviceLogicId, maxDeviceNum),
         HCCL_E_INTERNAL);
@@ -141,7 +141,7 @@ HcclResult ProfilerBase::DelTag(const std::string& tag)
     CHK_PRT_RET(
         static_cast<u32>(deviceLogicId) >= maxDeviceNum,
         HCCL_WARNING(
-            "deviceLogicId_[%d] is bigger"
+            "deviceLogicId_[%d] is bigger "
             "than maxDeviceNum[%u]",
             deviceLogicId, maxDeviceNum),
         HCCL_E_INTERNAL);
@@ -202,7 +202,7 @@ HcclResult ProfilerBase::DelOpData(const std::string& tag)
     CHK_PRT_RET(
         static_cast<u32>(deviceLogicId) >= maxDeviceNum,
         HCCL_WARNING(
-            "deviceLogicId_[%d] is bigger"
+            "deviceLogicId_[%d] is bigger "
             "than maxDeviceNum[%u]",
             deviceLogicId, maxDeviceNum),
         HCCL_E_INTERNAL);
@@ -253,7 +253,7 @@ HcclResult ProfilerBase::DelGroupRankInfo(const std::string& group)
     CHK_PRT_RET(
         static_cast<u32>(deviceLogicId) >= maxDeviceNum,
         HCCL_WARNING(
-            "deviceLogicId_[%d] is bigger"
+            "deviceLogicId_[%d] is bigger "
             "than maxDeviceNum[%u]",
             deviceLogicId, maxDeviceNum),
         HCCL_E_INTERNAL);
@@ -275,7 +275,7 @@ HcclResult ProfilerBase::GetTagByStream(u32& streamID, std::string& tag)
     CHK_PRT_RET(
         static_cast<u32>(deviceLogicId) >= maxDeviceNum,
         HCCL_WARNING(
-            "deviceLogicId_[%d] is bigger"
+            "deviceLogicId_[%d] is bigger "
             "than maxDeviceNum[%u]",
             deviceLogicId, maxDeviceNum),
         HCCL_E_INTERNAL);

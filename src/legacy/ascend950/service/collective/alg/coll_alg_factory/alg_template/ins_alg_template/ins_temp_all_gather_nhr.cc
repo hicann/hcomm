@@ -84,7 +84,7 @@ HcclResult InsTempAllGatherNHR::GenExtIns(
     // 流的数量不能少于linkNum
     CHK_PRT_RET(
         linkNum > tempInsQues.size(),
-        HCCL_ERROR("[CollAlgFactory] [InsTempAllReduceNHR] Rank [%d], requiredQue Error.", myRank_),
+        HCCL_ERROR("[CollAlgFactory] [InsTempAllGatherNHR] Rank [%d], requiredQue Error.", myRank_),
         HcclResult::HCCL_E_INTERNAL);
     CHK_RET(LocalDataCopy(tempInsQues));
     CHK_RET(RunNHR(tempInsQues));

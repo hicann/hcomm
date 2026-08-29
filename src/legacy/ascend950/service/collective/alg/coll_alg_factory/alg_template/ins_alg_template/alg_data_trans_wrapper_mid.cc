@@ -298,7 +298,7 @@ HcclResult MultiTxDataWithFinCounter(
     CHK_PRT_RET(
         !DevCapability::GetInstance().IsSupportWriteWithNotify(),
         HCCL_ERROR("[InsCollAlgFactory] [AlgDataTrans] MultiTxDataWithFinCounter: inter-rank counterNotify is "
-                   "supported only when the device support WriteWithNotify."),
+                   "supported only when the device supports WriteWithNotify."),
         HcclResult::HCCL_E_INTERNAL);
 
     CHK_PRT_RET(
@@ -343,7 +343,7 @@ HcclResult MultiRxDataWithFinCounter(
     CHK_PRT_RET(
         !DevCapability::GetInstance().IsSupportWriteWithNotify(),
         HCCL_ERROR("[InsCollAlgFactory] [AlgDataTrans] MultiTxDataWithMultiFinCounter: inter-rank counterNotify is "
-                   "supported only when the device support WriteWithNotify."),
+                   "supported only when the device supports WriteWithNotify."),
         HcclResult::HCCL_E_INTERNAL);
 
     std::unique_ptr<InsWaitGroupFin> insWaitGroupFin = std::make_unique<InsWaitGroupFin>(topicId);
@@ -370,7 +370,7 @@ HcclResult MultiTxReduceWithFinCounter(
     CHK_PRT_RET(
         !DevCapability::GetInstance().IsSupportWriteWithNotify(),
         HCCL_ERROR("[InsCollAlgFactory] [AlgDataTrans] MultiTxReduceWithFinCounter: inter-rank counterNotify is "
-                   "supported only when the device support WriteWithNotify."),
+                   "supported only when the device supports WriteWithNotify."),
         HcclResult::HCCL_E_INTERNAL);
 
     CHK_PRT_RET(
@@ -419,7 +419,7 @@ HcclResult MultiRxReduceWithFinCounter(
     CHK_PRT_RET(
         !DevCapability::GetInstance().IsSupportWriteWithNotify(),
         HCCL_ERROR("[InsCollAlgFactory] [AlgDataTrans] MultiRxReduceWithFinCounter: inter-rank counterNotify is "
-                   "supported only when the device support WriteWithNotify."),
+                   "supported only when the device supports WriteWithNotify."),
         HcclResult::HCCL_E_INTERNAL);
 
     std::unique_ptr<InsWaitGroupFin> insWaitGroupFin = std::make_unique<InsWaitGroupFin>(topicId);
@@ -651,7 +651,7 @@ HcclResult MultiTxRxDataWithFinCounter(
     CHK_PRT_RET(
         !DevCapability::GetInstance().IsSupportWriteWithNotify(),
         HCCL_ERROR("[InsCollAlgFactory] [AlgDataTrans] MultiTxRxDataWithFinCounter: inter-rank counterNotify is "
-                   "supported only when the device support WriteWithNotify."),
+                   "supported only when the device supports WriteWithNotify."),
         HcclResult::HCCL_E_INTERNAL);
 
     CHK_PRT_RET(
@@ -704,7 +704,7 @@ HcclResult MultiTxRxReduceWithFinCounter(
     CHK_PRT_RET(
         !DevCapability::GetInstance().IsSupportWriteWithNotify(),
         HCCL_ERROR("[InsCollAlgFactory] [AlgDataTrans] MultiTxRxReduceWithFinCounter: inter-rank counterNotify is "
-                   "supported only when the device support WriteReduceWithNotify."),
+                   "supported only when the device supports WriteReduceWithNotify."),
         HcclResult::HCCL_E_INTERNAL);
 
     CHK_PRT_RET(
@@ -848,7 +848,7 @@ LocalCopySlices(InsQuePtr queue, const std::vector<DataSlice>& srcSlices, const 
     CHK_PRT_RET(
         srcSlices.size() != dstSlices.size(),
         HCCL_ERROR(
-            "[InsCollAlgFactory] [AlgDataTrans] LocalCopySlices: num of src slices [%u], is not equal "
+            "[AlgDataTransWrapper] [AlgDataTrans] LocalCopySlices: num of src slices [%u], is not equal "
             "to num of dst slices [%u].",
             srcSlices.size(), dstSlices.size()),
         HcclResult::HCCL_E_INTERNAL);

@@ -63,7 +63,7 @@ HcclResult AllGatherVGraphPipeline::ExecInterServer(u32 step)
             UserMemType::OUTPUT_MEM, serverOffsetByte, static_cast<u8*>(dmaMem_[1].ptr()) + serverOffsetByte,
             userMemSlice_[serverRankOffset].size, subStream_[0]));
         HCCL_DEBUG(
-            "[AllGatherVGraphPipeline][RunAsync] local rank[%u] localOffset[%llu]tx with remoteRank[%u],"
+            "[AllGatherVGraphPipeline][RunAsync] local rank[%u] localOffset[%llu] tx with remoteRank[%u],"
             "remoteOffset[%llu] with slice[%llu]",
             userRank_, serverOffsetByte, nextInterRankId, serverOffsetByte, userMemSlice_[serverRankOffset].size);
         // 对于RDMA RxAsync，内存属性入参无效 RDMA::Wait
@@ -72,7 +72,7 @@ HcclResult AllGatherVGraphPipeline::ExecInterServer(u32 step)
             UserMemType::OUTPUT_MEM, readRemoteOffsetByte, static_cast<u8*>(dmaMem_[1].ptr()) + readRemoteOffsetByte,
             userMemSlice_[readRemoteOffset].size, subStream_[0])); // wait
         HCCL_DEBUG(
-            "[AllGatherVGraphPipeline][RunAsync]read local rank[%u] localOffset[%llu]tx with remoteRank[%u],"
+            "[AllGatherVGraphPipeline][RunAsync]read local rank[%u] localOffset[%llu] tx with remoteRank[%u],"
             "remoteOffset[%llu] with slice[%llu]",
             userRank_, readRemoteOffsetByte, readRemoteOffset, readRemoteOffsetByte,
             userMemSlice_[readRemoteOffset].size);

@@ -205,8 +205,9 @@ HcclResult RankConsistentcyChecker::CheckFrameRecv(const u8* recvBuf, u32 recvBu
     CHK_PRT_RET(
         recvBufLen == 0 || recvBufLen > MAX_FRAME_LEN,
         HCCL_ERROR(
-            "[RankConsistentcyChecker][CheckFrameRecv] errNo[0x%016llx] recvBufLen is wrong.",
-            HCCL_ERROR_CODE(HCCL_E_INTERNAL)),
+            "[RankConsistentcyChecker][CheckFrameRecv] errNo[0x%016llx] recvBufLen[%u] is invalid, "
+            "valid range is (0, %u].",
+            HCCL_ERROR_CODE(HCCL_E_INTERNAL), recvBufLen, MAX_FRAME_LEN),
         HCCL_E_INTERNAL);
 
     CHK_PRT_RET(

@@ -75,7 +75,7 @@ HcclResult CcuTransportMgr::PrepareCreate(const LinkData& link, CcuTransport*& t
     if (ret == HcclResult::HCCL_E_UNAVAIL) {
         HCCL_WARNING(
             "[CcuTransportMgr::%s]Fail to create CcuTransport. "
-            "The above error log can be ignores.",
+            "The above error log can be ignored.",
             __func__);
         comm->PrintChannelInfoCallback();
     }
@@ -99,7 +99,7 @@ static HcclResult CheckIfLinkProtocolSupport(const LinkData& link)
 
 HcclResult CcuTransportMgr::CreateTransportByLink(const LinkData& link, CcuTransport*& transport)
 {
-    HCCL_INFO("[CcuTransportMgr][%s] begain", __func__);
+    HCCL_INFO("[CcuTransportMgr][%s] begin", __func__);
     CHECK_NULLPTR(comm, "[CcuTransportMgr::CreateTransportByLink] comm is nullptr!");
     CHK_RET(CheckIfLinkProtocolSupport(link));
 
@@ -144,7 +144,7 @@ HcclResult CcuTransportMgr::CreateTransportByLink(const LinkData& link, CcuTrans
     auto ret = CcuCreateTransport(socket, connectionInfo, locCclBufInfo, transportPtr);
     if (ret == HcclResult::HCCL_E_UNAVAIL) {
         HCCL_WARNING(
-            "[CcuTransportMgr][%s] failed, some ccu resources are unavaialble, "
+            "[CcuTransportMgr][%s] failed, some ccu resources are unavailable, "
             "locAddr[%s] rmtAddr[%s].",
             __func__, locAddr.Describe().c_str(), rmtAddr.Describe().c_str());
         return ret;

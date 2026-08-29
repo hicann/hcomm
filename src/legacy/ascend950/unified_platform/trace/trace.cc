@@ -49,7 +49,7 @@ void Trace::Save(std::string& buffer)
     totLen = buffer.length();
     bool ret = true;
     if (traceHandle == TRACE_INVALID_HANDLE) {
-        HCCL_WARNING("Tracve::Save Info = %s", buffer.c_str());
+        HCCL_WARNING("Trace::Save Info = %s", buffer.c_str());
         return;
     }
     char* startPos = static_cast<char*>(const_cast<char*>(buffer.c_str()));

@@ -35,7 +35,8 @@ int RsInetNtop(int family, union HccpIpAddr *ip, char readAddr[], unsigned int l
     // IPv4/IPv6 二进制转字符串
     const char *str = NULL;
     str = inet_ntop(family, ip, readAddr, len);
-    CHK_PRT_RETURN(str == NULL, hccp_err("[rs][inet_ntop]ip is a invalid, err(%d), family %d", errno, family), -EINVAL);
+    CHK_PRT_RETURN(str == NULL, hccp_err("[rs][inet_ntop]ip is an invalid address, err(%d), family %d", errno, family),
+        -EINVAL);
     return 0;
 }
 

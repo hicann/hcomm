@@ -849,7 +849,7 @@ std::vector<char> RankGraph::GetPackedData(const std::vector<std::pair<u32, Rank
         }
     }
     if (links.empty()) {
-        HCCL_WARNING("[RankGraph][GetPackedData]connected links is empty");
+        HCCL_WARNING("[RankGraph][GetPackedData] connected links are empty");
     }
 
     std::vector<char> result;

@@ -304,7 +304,7 @@ uint32_t BkfMsgCodeMsgHead(BkfMsgCoder *coder, uint16_t msgId, uint8_t flag)
     leftLen = BKF_MSG_CODE_GET_LEFT_LEN(coder);
     needLen = sizeof(BkfMsgHead);
     if (leftLen < needLen) {
-        BKF_LOG_INFO(BKF_LOG_HND, "leftLen(%d)/needLen(%d), sned buf not enough & OK!\n", leftLen, needLen);
+        BKF_LOG_INFO(BKF_LOG_HND, "leftLen(%d)/needLen(%d), send buf not enough & OK!\n", leftLen, needLen);
         goto error;
     }
     curMsgHead = (BkfMsgHead *)BKF_MSG_CODE_GET_LEFT_BEGIN(coder);
@@ -568,7 +568,7 @@ uint32_t BkfMsgCodeAppendValLen(BkfMsgCoder *coder, uint8_t flag, int32_t valRea
     leftLen = BKF_MSG_CODE_GET_LEFT_LEN(coder);
     needLen = BKF_GET_ALIGN4_LEN(valRealLen);
     if (leftLen < needLen) {
-        BKF_LOG_DEBUG(BKF_LOG_HND, "leftLen(%d)/needLen(%d), send buf not engouth & OK!\n", leftLen, needLen);
+        BKF_LOG_DEBUG(BKF_LOG_HND, "leftLen(%d)/needLen(%d), send buf not enough & OK!\n", leftLen, needLen);
         goto error;
     }
     curTl = coder->curTl;
@@ -906,7 +906,7 @@ BkfTL *BkfMsgDecodeTLV(BkfMsgDecoder *decoder, uint32_t *errCode)
     needLen = sizeof(BkfTL);
     leftLen = (int32_t)(curMsgHead->bodyLen) - decoder->curMsgDecodedLen;
     if (leftLen < needLen) {
-        BKF_LOG_INFO(BKF_LOG_HND, "leftLen(%d)/needLen(%d), rcv buf not engouth & ng\n", leftLen, needLen);
+        BKF_LOG_INFO(BKF_LOG_HND, "leftLen(%d)/needLen(%d), rcv buf not enough & ng\n", leftLen, needLen);
         ret = BKF_ERR;
         goto error;
     }
@@ -919,7 +919,7 @@ BkfTL *BkfMsgDecodeTLV(BkfMsgDecoder *decoder, uint32_t *errCode)
     needLen = (int32_t)BKF_GET_ALIGN4_LEN(curTl->valLen);
     BKF_LOG_DEBUG(BKF_LOG_HND, "tlvType %u, len %u\n", curTl->typeId, curTl->valLen);
     if (leftLen < needLen) {
-        BKF_LOG_INFO(BKF_LOG_HND, "leftLen(%d)/needLen(%d), rcv buf not engouth & ng\n", leftLen, needLen);
+        BKF_LOG_INFO(BKF_LOG_HND, "leftLen(%d)/needLen(%d), rcv buf not enough & ng\n", leftLen, needLen);
         ret = BKF_ERR;
         goto error;
     }

@@ -233,7 +233,8 @@ HcclResult InsReduceScatterParallelExecutor<AlgTopoMatch, InsAlgTemplate0, InsAl
 
     // 申请算法模板所需资源
     if (!(resReqIntra.queNum > 0 && resReqInter.queNum > 0)) {
-        HCCL_ERROR("[InsReduceScatterParallelExecutor]resReqIntra.queNum and resReqInter.queNum must larger than 0.");
+        HCCL_ERROR(
+            "[InsReduceScatterParallelExecutor]resReqIntra.queNum and resReqInter.queNum must be larger than 0.");
         return HcclResult::HCCL_E_INTERNAL;
     }
     u32 totalQueueNum = resReqIntra.queNum + resReqInter.queNum;
@@ -273,7 +274,8 @@ HcclResult InsReduceScatterParallelExecutor<AlgTopoMatch, InsAlgTemplate0, InsAl
 
     // 申请算法模板所需资源
     if (!(resReqIntra.queNum > 0 && resReqInter.queNum > 0)) {
-        HCCL_ERROR("[InsReduceScatterParallelExecutor]resReqIntra.queNum and resReqInter.queNum must larger than 0.");
+        HCCL_ERROR(
+            "[InsReduceScatterParallelExecutor]resReqIntra.queNum and resReqInter.queNum must be larger than 0.");
         return HcclResult::HCCL_E_INTERNAL;
     }
     u32 totalQueueNum = resReqIntra.queNum + resReqInter.queNum;
@@ -403,8 +405,8 @@ template <typename AlgTopoMatch, typename InsAlgTemplate0, typename InsAlgTempla
 HcclResult InsReduceScatterParallelExecutor<AlgTopoMatch, InsAlgTemplate0, InsAlgTemplate1>::GenInsQuesHost(
     InsAlgTemplate0& tempAlgIntra, InsAlgTemplate1& tempAlgInter)
 {
-    HCCL_INFO("[InsReduceScatterParallelExecutor] AlgTemplate inter server is [%s]", tempAlgIntra.Describe().c_str());
-    HCCL_INFO("[InsReduceScatterParallelExecutor] AlgTemplate intra server is [%s]", tempAlgInter.Describe().c_str());
+    HCCL_INFO("[InsReduceScatterParallelExecutor] AlgTemplate inter server is [%s]", tempAlgInter.Describe().c_str());
+    HCCL_INFO("[InsReduceScatterParallelExecutor] AlgTemplate intra server is [%s]", tempAlgIntra.Describe().c_str());
     std::vector<float> dataSplitSize;
     GetParallelDataSplit(dataSplitSize);
     u64 alignedSize = 16 * 1024; // 假设需要16K对齐

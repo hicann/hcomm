@@ -79,7 +79,9 @@ bool IsAddressAlign(const void* inputPtr, const void* outputPtr, DevType devType
             return (reinterpret_cast<intptr_t>(inputPtr) % INLINEREDUCE_ALIGN_BYTES_310P)
                    == (reinterpret_cast<intptr_t>(outputPtr) % INLINEREDUCE_ALIGN_BYTES_310P);
         default:
-            HCCL_WARNING("device type[%d] is out of range", static_cast<s32>(devType));
+            HCCL_WARNING(
+                "device type[%d] is out of range, valid range[0, %d]", static_cast<s32>(devType),
+                static_cast<s32>(DevType::DEV_TYPE_COUNT) - 1);
             return false;
     }
 }
@@ -100,7 +102,9 @@ bool IsDataTypeSupport(HcclDataType dataType, DevType devType)
             return (
                 dataType == HCCL_DATA_TYPE_FP32 || dataType == HCCL_DATA_TYPE_INT16 || dataType == HCCL_DATA_TYPE_FP16);
         default:
-            HCCL_WARNING("device type[%d] is out of range", static_cast<s32>(devType));
+            HCCL_WARNING(
+                "device type[%d] is out of range, valid range[0, %d]", static_cast<s32>(devType),
+                static_cast<s32>(DevType::DEV_TYPE_COUNT) - 1);
             return false;
     }
 }
@@ -116,7 +120,9 @@ bool IsRedOpSupport(HcclReduceOp op, DevType devType)
         case DevType::DEV_TYPE_310P1:
             return op == HCCL_REDUCE_SUM;
         default:
-            HCCL_WARNING("device type[%d] is out of range", static_cast<s32>(devType));
+            HCCL_WARNING(
+                "device type[%d] is out of range, valid range[0, %d]", static_cast<s32>(devType),
+                static_cast<s32>(DevType::DEV_TYPE_COUNT) - 1);
             return false;
     }
 }

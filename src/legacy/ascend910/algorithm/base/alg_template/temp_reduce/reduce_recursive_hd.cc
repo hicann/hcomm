@@ -309,7 +309,7 @@ HcclResult ReduceRecursiveHalvingDoubling::GatherInBlock(u32 rank, u32 rankSize,
                 ret != HCCL_SUCCESS,
                 HCCL_ERROR("[Gather][InBlock]rank[%u] rx sync from PeerRank[%u] failed", rank, peerRank), ret);
             ret = subLinks[peerRank]->RxWaitDone(stream_);
-            CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]RxWaitDone failed"), ret);
+            CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Gather][InBlock]RxWaitDone failed"), ret);
         } else {
             DeviceMem txMem = outputMem_.range(txSlices_[step].offset, txSlices_[step].size);
             HcclResult ret = subLinks[peerRank]->TxAck(stream_);
@@ -331,7 +331,7 @@ HcclResult ReduceRecursiveHalvingDoubling::GatherInBlock(u32 rank, u32 rankSize,
                 ret != HCCL_SUCCESS,
                 HCCL_ERROR("[Gather][InBlock]rank[%u] tx sync to PeerRank[%u] failed", rank, peerRank), ret);
             ret = subLinks[peerRank]->TxWaitDone(stream_);
-            CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Reduce][InPartOne]TxWaitDone failed"), ret);
+            CHK_PRT_RET(ret != HCCL_SUCCESS, HCCL_ERROR("[Gather][InBlock]TxWaitDone failed"), ret);
         }
     }
 

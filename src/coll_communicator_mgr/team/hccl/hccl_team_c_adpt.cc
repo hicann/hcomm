@@ -383,7 +383,7 @@ HcclResult HcclTeamWindowRegister(
     CHK_PTR_NULL(worldCollComm);
     CHK_PRT_RET(
         worldCollComm->GetCommId() != commId,
-        HCCL_ERROR("[%s] worldTeam[%p] is not belong to comm[%s]", __func__, worldTeam, commId.c_str()), HCCL_E_PARA);
+        HCCL_ERROR("[%s] worldTeam[%p] does not belong to comm[%s]", __func__, worldTeam, commId.c_str()), HCCL_E_PARA);
 
     auto myRank = collComm->GetMyRank();
     CHK_PTR_NULL(myRank);
@@ -681,7 +681,7 @@ HcclResult HcclTeamChannelsCreate(HcclComm comm, HcommTeamHandle team, const Hcc
     CHK_PTR_NULL(worldCollComm);
     CHK_PRT_RET(
         worldCollComm->GetCommId() != commId,
-        HCCL_ERROR("[%s] team[%p] is not belong to comm[%s]", __func__, team, commId.c_str()), HCCL_E_PARA);
+        HCCL_ERROR("[%s] team[%p] does not belong to comm[%s]", __func__, team, commId.c_str()), HCCL_E_PARA);
 
     ChannelsCreateCtx ctx{};
     CHK_RET(GetTeamMemberInfo(team, selfRank, ctx));

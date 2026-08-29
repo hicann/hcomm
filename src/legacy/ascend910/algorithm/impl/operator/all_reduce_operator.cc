@@ -512,7 +512,8 @@ HcclResult AllReduceOperator::SelectAlgfor910B(const OpParam& param, std::string
                 isSingleMeshAggregation_, multiModuleDiffDeviceNumMode_),
             HCCL_E_NOT_SUPPORT);
 
-        CHK_PRT_RET(!isServNumPowOfTwo, HCCL_ERROR("server num[%u] is pow of two.", serverNum_), HCCL_E_NOT_SUPPORT);
+        CHK_PRT_RET(
+            !isServNumPowOfTwo, HCCL_ERROR("server num[%u] is not pow of two.", serverNum_), HCCL_E_NOT_SUPPORT);
 
         CHK_PRT_RET(
             !isSupportAivRdmaMidCount, HCCL_ERROR("current data size[%llu] not support aiv rdma mid count.", dataSize),

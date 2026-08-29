@@ -93,7 +93,7 @@ HcclResult CommMems::CommRegMem(const std::string& memTag, const CommMem& mem, v
         HCCL_ERROR("[CommRegMem] invalid mem. addr[%p] size[%llu]", mem.addr, (unsigned long long)mem.size),
         HCCL_E_PARA);
     if (UNLIKELY(memTag.size() >= HCOMM_RES_TAG_MAX_LEN)) {
-        HCCL_ERROR("[CommRegMem] memTag.size() exceeds limit[%u]", HCOMM_RES_TAG_MAX_LEN);
+        HCCL_ERROR("[CommRegMem] memTag.size()[%zu] exceeds limit[%u]", memTag.size(), HCOMM_RES_TAG_MAX_LEN);
         return HCCL_E_PARA;
     }
 

@@ -395,7 +395,7 @@ void RankInfoDetect::WaitComplete(u32 listenPort, u32 listenStatus) const
             THROW<InternalException>(
                 StringFormat("[RankInfoDetect::%s] topo detect failed, port[%u].", __func__, listenPort));
         } else if (status == listenStatus) {
-            HCCL_INFO("[RankInfoDetect::%s] topoExchangeServer port[%u] compeleted.", __func__, listenPort);
+            HCCL_INFO("[RankInfoDetect::%s] topoExchangeServer port[%u] completed.", __func__, listenPort);
             return;
         } else {
             const auto elapsed = chrono::duration_cast<chrono::seconds>(chrono::steady_clock::now() - start);

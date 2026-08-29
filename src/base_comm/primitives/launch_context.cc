@@ -28,14 +28,14 @@ HcclResult LaunchContext::HandleEagerMode()
         if (it != launchModeMap_.end()) {
             std::vector<ThreadHandle> threadVec(it->second.begin(), it->second.end());
             CHK_RET(CommTaskLaunch(threadVec.data(), threadVec.size()));
-            HCCL_INFO("[%s]success, launchTag[%s], size[%zu]", __func__, launchTag_.c_str(), threadVec.size());
+            HCCL_INFO("[%s] success, launchTag[%s], size[%zu]", __func__, launchTag_.c_str(), threadVec.size());
         }
     }
 
     // 不带launchTag部分
     if (!threadVec_.empty()) {
         CHK_RET(CommTaskLaunch(threadVec_.data(), threadVec_.size()));
-        HCCL_INFO("[%s]success, size[%zu]", __func__, threadVec_.size());
+        HCCL_INFO("[%s] success, size[%zu]", __func__, threadVec_.size());
     }
     return HCCL_SUCCESS;
 }
@@ -152,7 +152,7 @@ HcclResult LaunchContext::SetLaunchMode(const char* launchTag, HcommLaunchMode m
                 HCCL_INFO("[%s] Running on A5, CommTaskPrepare skipped.", __func__);
                 return HCCL_SUCCESS;
             }
-            HCCL_INFO("[%s]host mode, need CommTaskPrepare", __func__);
+            HCCL_INFO("[%s] host mode, need CommTaskPrepare", __func__);
             if (!defaultTag) {
                 // 仅非缺省 tag 需要准备任务缓存
                 return CommTaskPrepare(const_cast<char*>(launchTag_.c_str()), launchTag_.length());

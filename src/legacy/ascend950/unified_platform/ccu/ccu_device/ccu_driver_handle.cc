@@ -23,9 +23,9 @@ CcuDriverHandle::CcuDriverHandle(s32 deviceLogicId) : devLogicId(deviceLogicId) 
 
 CcuDriverHandle::~CcuDriverHandle()
 {
-    HCCL_RUN_INFO("Start destorying CCU, deviceLogicId: %d", devLogicId);
+    HCCL_RUN_INFO("Start destroying CCU, deviceLogicId: %d", devLogicId);
 
-    HCCL_INFO("Start destorying CCU, deviceLogicId: %d", devLogicId);
+    HCCL_INFO("Start destroying CCU, deviceLogicId: %d", devLogicId);
 
     DECTOR_TRY_CATCH("CcuDriverHandle", {
         // 清理ccu平台层持有的资源与缓存信息
@@ -38,7 +38,7 @@ CcuDriverHandle::~CcuDriverHandle()
         HrtRaTlvRequest(tlvHandle, TLV_MODULE_TYPE_CCU, MSG_TYPE_CCU_UNINIT);
     });
 
-    HCCL_INFO("Destory CCU success, deviceLogicId: %d", devLogicId);
+    HCCL_INFO("Destroy CCU success, deviceLogicId: %d", devLogicId);
 }
 
 HcclResult CcuDriverHandle::Init() const

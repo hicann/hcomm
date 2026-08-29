@@ -89,7 +89,7 @@ DispatcherPub::~DispatcherPub()
         ret = hrtResetDevice(deviceLogicId_);
         if (ret != HCCL_SUCCESS) {
             HCCL_ERROR(
-                "[DispatcherPub][Destroy]In dispathcer enhanced destruct, reset device failed.errno[%d] "
+                "[DispatcherPub][Destroy]In dispatcher enhanced destruct, reset device failed.errno[%d] "
                 "device id[%d]",
                 ret, deviceLogicId_);
         }
@@ -493,7 +493,7 @@ HcclResult DispatcherPub::MemcpyAsyncWithoutCheckKind(
     }
 
     if (count == 0 || src == dst) {
-        HCCL_DEBUG("count[%llu]] is 0 or src is equal to dst, return success.", count);
+        HCCL_DEBUG("count[%llu] is 0 or src is equal to dst, return success.", count);
         return HCCL_SUCCESS;
     }
 

@@ -184,7 +184,7 @@ HcclResult HcclRawImrecvScatter(
     CHK_PTR_NULL(request);
 
     if (bufCount > MAX_SCATTER_BUF_NUM) {
-        HCCL_ERROR("bufCount[%d] should less than %d", bufCount, MAX_SCATTER_BUF_NUM);
+        HCCL_ERROR("bufCount[%d] should be less than %d", bufCount, MAX_SCATTER_BUF_NUM);
         return HCCL_E_PARA;
     }
 

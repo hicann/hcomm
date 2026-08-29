@@ -35,7 +35,7 @@ HCCP_ATTRI_VISI_DEF int RaGetTlsEnable(struct RaInfo *info, bool *tlsEnable)
     CHK_PRT_RETURN(info == NULL || tlsEnable == NULL, hccp_err("[get][tls_enable]info or tls_enable is NULL"),
         ConverReturnCode(OTHERS, -EINVAL));
     CHK_PRT_RETURN(info->phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[get][tls_enable]phyId(%u) must smaller than %u", info->phyId, RA_MAX_PHY_ID_NUM),
+        hccp_err("[get][tls_enable]phyId(%u) must be smaller than %u", info->phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(OTHERS, -EINVAL));
 
     hccp_run_info("Input parameters: phyId[%u], nicPosition:[%d]", info->phyId, info->mode);
@@ -120,7 +120,7 @@ HCCP_ATTRI_VISI_DEF int RaGetHccnCfg(struct RaInfo *info, enum HccnCfgKey key, c
         hccp_err("[get][hccn_cfg] failed, valueLen[%d] < min_len[%d]", *valueLen, HCCN_CFG_MSG_DATA_LEN),
         ConverReturnCode(OTHERS, -EINVAL));
     CHK_PRT_RETURN(info->phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_err("[get][hccn_cfg]phyId(%u) must smaller than %u", info->phyId, RA_MAX_PHY_ID_NUM),
+        hccp_err("[get][hccn_cfg]phyId(%u) must be smaller than %u", info->phyId, RA_MAX_PHY_ID_NUM),
         ConverReturnCode(OTHERS, -EINVAL));
     CHK_PRT_RETURN(info->mode != NETWORK_OFFLINE, hccp_err("[get][hccn_cfg]do not support mode(%u)", info->mode),
         ConverReturnCode(OTHERS, -EINVAL));
@@ -145,7 +145,7 @@ HCCP_ATTRI_VISI_DEF int RaGetSecRandom(struct RaInfo *info, u32 *value)
     ret = RaPeerGetSecRandom(value);
     if (ret != 0 && info->mode == NETWORK_OFFLINE) {
         CHK_PRT_RETURN(info->phyId >= RA_MAX_PHY_ID_NUM,
-            hccp_err("[get][sec_random]phy_id(%u) must smaller than %u", info->phyId, RA_MAX_PHY_ID_NUM),
+            hccp_err("[get][sec_random]phy_id(%u) must be smaller than %u", info->phyId, RA_MAX_PHY_ID_NUM),
             ConverReturnCode(OTHERS, -EINVAL));
         ret = RaHdcGetSecRandom(info->phyId, value);
     } else if (ret != 0 && info->mode != NETWORK_OFFLINE) {
@@ -159,7 +159,7 @@ HCCP_ATTRI_VISI_DEF bool RaHasCapability(struct RaInfo *info, unsigned int capab
 {
     CHK_PRT_RETURN(info == NULL, hccp_warn("info is NULL"), false);
     CHK_PRT_RETURN(info->phyId >= RA_MAX_PHY_ID_NUM,
-        hccp_warn("phy_id(%u) must smaller than %u", info->phyId, RA_MAX_PHY_ID_NUM), false);
+        hccp_warn("phy_id(%u) must be smaller than %u", info->phyId, RA_MAX_PHY_ID_NUM), false);
     CHK_PRT_RETURN(info->mode != NETWORK_OFFLINE, hccp_warn("mode:%u not support", info->mode), false);
 
     return RaHdcHasCapability(info->phyId, capability);

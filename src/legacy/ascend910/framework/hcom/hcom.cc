@@ -1870,7 +1870,7 @@ HcclResult HcomCreateGroupImplHeterog(const std::string& group, const std::vecto
     std::unique_lock<std::mutex> groupParaLock(hcomInfo.groupParamsLock);
     if (hcomInfo.hcomGroupMap.find(group) != hcomInfo.hcomGroupMap.end()) {
         HCCL_ERROR(
-            "[Create][Group]errNo[0x%016llx] group[%s] is already exist", HCOM_ERROR_CODE(HCCL_E_PARA), group.c_str());
+            "[Create][Group]errNo[0x%016llx] group[%s] already exists", HCOM_ERROR_CODE(HCCL_E_PARA), group.c_str());
         return HCCL_E_PARA;
     }
     groupParaLock.unlock();
@@ -1941,7 +1941,7 @@ HcclResult HcomDestroyGroupImplHeterog(const std::string& group)
     auto iter = hcomInfo.hcomGroupMap.find(group);
     if (iter == hcomInfo.hcomGroupMap.end()) {
         HCCL_ERROR(
-            "[Destroy][Group]errNo[0x%016llx] group[%s] is not exist", HCOM_ERROR_CODE(HCCL_E_PARA), group.c_str());
+            "[Destroy][Group]errNo[0x%016llx] group[%s] does not exist", HCOM_ERROR_CODE(HCCL_E_PARA), group.c_str());
         return HCCL_E_PARA;
     }
 
@@ -2256,7 +2256,7 @@ HcomGetWorkspaceMemSize(const std::string& opType, u64 count, HcclDataType dataT
 
     CHK_PRT_RET(
         memSize > DEVICE_MEMORY_MAX_ALLOC_SIZE,
-        HCCL_ERROR("[GetWorkspaceMemSize]workspace memory size is over than %llu bytes.", DEVICE_MEMORY_MAX_ALLOC_SIZE),
+        HCCL_ERROR("[GetWorkspaceMemSize]workspace memory size exceeds %llu bytes.", DEVICE_MEMORY_MAX_ALLOC_SIZE),
         HCCL_E_PARA);
     return HCCL_SUCCESS;
 }
@@ -3091,7 +3091,7 @@ HcclResult HcclIgetLookupRequest(
     [[maybe_unused]] HcclComm comm, [[maybe_unused]] s32* tag, [[maybe_unused]] ServiceHandle* handle,
     [[maybe_unused]] uint64_t* keys, [[maybe_unused]] uint64_t keyMaxNum, [[maybe_unused]] HcclRequest* request)
 {
-    HCCL_ERROR("[Iget][LookupRequest] is not support HcclIgetLookupRequest interface");
+    HCCL_ERROR("[Iget][LookupRequest] does not support the HcclIgetLookupRequest interface");
     return HCCL_E_PARA;
 }
 
@@ -3501,7 +3501,7 @@ HcclResult GetOffDeviceTypeWithoutDev(std::string socVersionStr, DevType& devTyp
         && tempDevType != DevType::DEV_TYPE_310P1 && tempDevType != DevType::DEV_TYPE_310P3
         && tempDevType != DevType::DEV_TYPE_910_93 && tempDevType != DevType::DEV_TYPE_950
         && tempDevType != DevType::DEV_TYPE_960) {
-        HCCL_ERROR("[offline][compilation] cur dev type[%u] is not support.", tempDevType);
+        HCCL_ERROR("[offline][compilation] cur dev type[%u] is not supported.", tempDevType);
         return HCCL_E_RUNTIME;
     }
     devType = tempDevType;
@@ -3795,7 +3795,7 @@ HcclResult GetOpScratchMemSize(
         // 离线编译场景需要重新计算
         if (isOfflineCompilation) {
             if (hcclOpType == HCCL_CMD_ALLTOALLV) {
-                HCCL_ERROR("[GetOpScratchMemSize] offline compilation is not support HcomAllToAllV");
+                HCCL_ERROR("[GetOpScratchMemSize] offline compilation does not support HcomAllToAllV");
                 return HCCL_E_PARA;
             }
         }
@@ -4288,7 +4288,7 @@ HcclResult GetIntraComTaskNum(
         commStep = deviceNumPerServer - 1; // 按照pairwise计算server内通信步数
         taskNum = ALLTOALL_DEFAULT_COM_STEP * commStep;
     } else {
-        HCCL_ERROR("The current operator is not supported tasknum accurate evaluation.");
+        HCCL_ERROR("The current operator does not support accurate tasknum evaluation.");
         return HCCL_E_NOT_SUPPORT;
     }
     HCCL_INFO(
@@ -4346,7 +4346,7 @@ HcclResult GetInterComTaskNum(
             commStep = useOneLevelAlgorithm ? ((meshNum - 1) * deviceNumPerServer) : (meshNum - 1);
             taskNum = ALLTOALL_DEFAULT_COM_STEP * commStep;
         } else {
-            HCCL_ERROR("The current operator is not supported tasknum accurate evaluation.");
+            HCCL_ERROR("The current operator does not support accurate tasknum evaluation.");
             return HCCL_E_NOT_SUPPORT;
         }
     }
@@ -4581,7 +4581,8 @@ HcclResult GetDeterministic(DevType devType, u8 geDetOption, u8& deterministic)
             deterministic = DETERMINISTIC_STRICT;
         } else {
             HCCL_ERROR(
-                "[GetDeterministic] HCCL_DETERMINISTIC is set to [%s], which is incorrect. Please check",
+                "[GetDeterministic] HCCL_DETERMINISTIC is set to [%s], which is incorrect, expected values: 0 or 1. "
+                "Please check",
                 hcclDeterministicEnv.c_str());
             return HCCL_E_PARA;
         }

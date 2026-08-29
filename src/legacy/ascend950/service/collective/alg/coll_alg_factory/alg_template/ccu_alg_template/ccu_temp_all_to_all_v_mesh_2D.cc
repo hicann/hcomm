@@ -104,7 +104,7 @@ uint64_t CcuTempAlltoAllVMesh2D::CalcSendRecvNumSubStep(uint64_t sliceSize)
         uint64_t currRankRecvSubStep = ((localSendRecvInfo_.recvLength[destRank] + sliceSize - 1) / sliceSize);
         recvNumSubStep_[destRank] = currRankRecvSubStep;
         HCCL_INFO(
-            "[CcuTempAlltoAllVMesh2D][CalcNumSubStep] myRank [%d] currRankSendSubStep[%llu]"
+            "[CcuTempAlltoAllVMesh2D][CalcNumSubStep] myRank [%d] currRankSendSubStep[%llu] "
             "currRankRecvSubStep[%llu]",
             myRank_, currRankSendSubStep, currRankRecvSubStep);
         numSubStep = std::max(numSubStep, std::max(currRankSendSubStep, currRankRecvSubStep));

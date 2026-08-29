@@ -229,7 +229,7 @@ const std::map<ProfTaskType, std::string> PROF_TASK_OP_NAME
 
 inline std::string GetProfTaskOpName(ProfTaskType type)
 {
-    CHK_PRT_RET(PROF_TASK_OP_NAME.empty(), HCCL_ERROR("PROF_OP_NAME has not inited."), "invalid");
+    CHK_PRT_RET(PROF_TASK_OP_NAME.empty(), HCCL_ERROR("PROF_OP_NAME has not been initialized."), "invalid");
     auto it = PROF_TASK_OP_NAME.find(type);
     if (it != PROF_TASK_OP_NAME.end()) {
         return it->second;
@@ -258,7 +258,7 @@ const std::map<HcclCMDType, std::string> PROF_OP_NAME
 
 inline std::string GetProfOpName(HcclCMDType cmdType)
 {
-    CHK_PRT_RET(PROF_OP_NAME.empty(), HCCL_ERROR("PROF_OP_NAME has not inited."), "hcom_ivalid_");
+    CHK_PRT_RET(PROF_OP_NAME.empty(), HCCL_ERROR("PROF_OP_NAME has not been initialized."), "hcom_ivalid_");
     auto it = PROF_OP_NAME.find(cmdType);
     if (it != PROF_OP_NAME.end()) {
         return it->second;

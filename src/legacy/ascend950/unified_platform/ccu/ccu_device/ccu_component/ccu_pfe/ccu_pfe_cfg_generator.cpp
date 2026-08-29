@@ -93,7 +93,7 @@ void CcuPfeCfgGenerator::Init(const int32_t deviceLogicId)
 std::vector<PfeJettyCtxCfg> CcuPfeCfgGenerator::GetPfeJettyCtxCfg(const uint8_t dieId)
 {
     if (dieId >= MAX_CCU_IODIE_NUM) {
-        HCCL_WARNING("[CcuPfeCfgGenerator][PfeJettyCtxCfg] invaild dieId[%u]", dieId);
+        HCCL_WARNING("[CcuPfeCfgGenerator][PfeJettyCtxCfg] invalid dieId[%u]", dieId);
         return std::vector<PfeJettyCtxCfg>();
     }
 

@@ -27,7 +27,7 @@ HcclResult UbRtpEndpoint::Init()
     CHK_RET(hrtGetDeviceType(deviceType));
     if (deviceType != DevType::DEV_TYPE_950 && deviceType != DevType::DEV_TYPE_960) {
         HCCL_ERROR(
-            "[%s] UB_RTP protocol only support DEV_TYPE_950/960, current deviceType=%d", __func__,
+            "[%s] UB_RTP protocol only supports DEV_TYPE_950/960, current deviceType=%d", __func__,
             static_cast<int>(deviceType));
         return HCCL_E_NOT_SUPPORT;
     }

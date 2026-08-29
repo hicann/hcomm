@@ -112,7 +112,7 @@ void BkfSuberDispAppSub(BkfSuber *suber)
         if (vtbl == VOS_NULL) {
             BKF_DISP_PRINTF(disp, "Not register vtbl for table type\n");
         } else {
-            BKF_DISP_PRINTF(disp, "TableIsNeedCompelete: %u\n", vtbl->needTableComplete);
+            BKF_DISP_PRINTF(disp, "TableIsNeedComplete: %u\n", vtbl->needTableComplete);
         }
 
         int32_t err = memcpy_s(curCtx.sliceKey, sizeof(curCtx.sliceKey), appSub->key.sliceKey,
@@ -200,7 +200,7 @@ void BkfSuberDispTestAddSvcInst(BkfSuber *suber, uint64_t instId)
     BkfSuberInst *inst = VOS_NULL;
     inst = BkfSuberDataFindInst(suber->dataMng, instId);
     if (inst != VOS_NULL) {
-        BKF_DISP_PRINTF(disp, "========inst %llu have exist! =========\n", instId);
+        BKF_DISP_PRINTF(disp, "========inst %llu already exists! =========\n", instId);
         return;
     }
     uint32_t ret;

@@ -82,7 +82,7 @@ HcclResult CollAlltoAllExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo
     }
     GetDevNumInlocalPod(devNumInlocalPod);
     if (devNumInlocalPod == INVALID_VALUE_RANKSIZE) {
-        HCCL_INFO("[GetAdjInfo-nslbdp] devNumInlocalPod == INVALID_VALUE_RANKSIZE.");
+        HCCL_INFO("[GetAdjInfo-NSLB-DP] devNumInlocalPod == INVALID_VALUE_RANKSIZE.");
         return HCCL_SUCCESS;
     }
 
@@ -90,7 +90,7 @@ HcclResult CollAlltoAllExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo
     CHK_RET(levelTempAlg->GetNslbAdjInfo(localRank, localRankSize, levelCommInfo.links, nslbAdjInfo));
 
     adjInfo.dstRankNum = nslbAdjInfo.dstRankNum;
-    HCCL_INFO("[GetAdjInfo-nslbdp] adjInfo.dstRankNum[%u].", adjInfo.dstRankNum);
+    HCCL_INFO("[GetAdjInfo-NSLB-DP] adjInfo.dstRankNum[%u].", adjInfo.dstRankNum);
 
     for (size_t i = 0; i < nslbAdjInfo.nsAdjInfo.size(); i++) {
         NslbDpAdjInfo dpAdjInfo = {};
@@ -99,7 +99,7 @@ HcclResult CollAlltoAllExecutor::GetAdjInfo(AlgResourceResponse& algRes, AdjInfo
         dpAdjInfo.rev = 0;
         adjInfo.nsAdjInfo.push_back(dpAdjInfo);
         HCCL_INFO(
-            "[nslbdp]GetAdjInfo dstLocalRankId[%u], phaseId[%u].", nslbAdjInfo.nsAdjInfo[i].dstLocalRankId,
+            "[NSLB-DP]GetAdjInfo dstLocalRankId[%u], phaseId[%u].", nslbAdjInfo.nsAdjInfo[i].dstLocalRankId,
             nslbAdjInfo.nsAdjInfo[i].phaseId);
     }
     return HCCL_SUCCESS;
@@ -152,7 +152,7 @@ HcclResult CollAlltoAllExecutor::CalcResRequest(const OpParam& param, AlgResourc
 
     CHK_RET(BuildResourceRequest(scratchMemSize, streamNum, notifyNum, aivBufferRequest, opTransport, resourceRequest));
     HCCL_INFO(
-        "[CollAlltoAllExecutor][%s] streamNum[%u], notifyNum[%u], sctrachMemSize[%llu], aivBufferRequest[%llu]",
+        "[CollAlltoAllExecutor][%s] streamNum[%u], notifyNum[%u], scratchMemSize[%llu], aivBufferRequest[%llu]",
         __func__, resourceRequest.streamNum, resourceRequest.notifyNum, resourceRequest.scratchMemSize,
         resourceRequest.aivBufferRequest);
     // 打印建链诉求
@@ -166,7 +166,7 @@ HcclResult CollAlltoAllExecutor::CalcResRequest(const OpParam& param, AlgResourc
                 if (subCommTransport.transportRequests[rankIndex].isValid == true) {
                     HCCL_INFO(
                         "[CollAlltoAllExecutor][CalcResRequest]"
-                        "levelIndex[%u], ringIndex[%u], rankIndex[%u], userRank[%u], remoteRank[%u]"
+                        "levelIndex[%u], ringIndex[%u], rankIndex[%u], userRank[%u], remoteRank[%u] "
                         "isUsedRdma[%d]",
                         levelIndex, ringIndex, rankIndex, subCommTransport.transportRequests[rankIndex].localUserRank,
                         subCommTransport.transportRequests[rankIndex].remoteUserRank,

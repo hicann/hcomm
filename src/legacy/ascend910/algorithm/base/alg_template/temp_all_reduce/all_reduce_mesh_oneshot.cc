@@ -65,11 +65,7 @@ HcclResult AllReduceMeshDirectOneshot::RunAsync(const u32 rank, const u32 rankSi
     ret = RunAllReduceOne(rank, rankSize, links);
     CHK_PRT_RET(
         ret != HCCL_SUCCESS,
-        HCCL_ERROR(
-            "[AllReduceMeshOneshot][RunAsync]rank[%u] count[%llu] failed"
-            "step",
-            rank, count_),
-        ret);
+        HCCL_ERROR("[AllReduceMeshOneshot][RunAsync]rank[%u] count[%llu] failed in step", rank, count_), ret);
 
     HCCL_INFO("AllReduceMeshDirectOneshot finished: rank[%u] ranksize[%u]", rank, rankSize);
     return HCCL_SUCCESS;

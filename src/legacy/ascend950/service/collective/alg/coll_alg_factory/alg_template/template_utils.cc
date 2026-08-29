@@ -20,7 +20,7 @@ HcclResult GetUnitAllignSize(const AllignInfo& allignInfo, u64& unitAllignSize)
     if (allignInfo.enableAllign) {
         CHK_PRT_RET(
             allignInfo.allignSize < dataSizePerVolume,
-            HCCL_ERROR("[CollAlgFactory] Invalid input allignSize [%u].", allignInfo.allignSize),
+            HCCL_ERROR("[CollAlgFactory] Invalid input alignSize [%u].", allignInfo.allignSize),
             HcclResult::HCCL_E_PARA);
         unitAllignSize = (allignInfo.allignSize % dataSizePerVolume == 0) ? allignInfo.allignSize :
                                                                             allignInfo.allignSize * dataSizePerVolume;
@@ -184,7 +184,7 @@ HcclResult CalcResLinksMesh2D(
             u32 neighborAlgRank = (myAlgRank + 1 + queIdx) % (tempVTopo[dim].size());
             CHK_PRT_RET(neighborAlgRank > (tempVTopo[dim].size() - 1),
                         HCCL_ERROR(
-                            "[CalcResLinksMesh2D] neighborAlgRank[%u] is invalid,"
+                            "[CalcResLinksMesh2D] neighborAlgRank[%u] is invalid, "
                             "the Max rank[%zu].",
                             neighborAlgRank, tempVTopo[dim].size() - 1);
                         , HcclResult::HCCL_E_INTERNAL);

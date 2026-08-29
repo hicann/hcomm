@@ -92,11 +92,11 @@ HcclResult CollAllGatherMeshAivFor91093Executor::CalNumBlocks(
         numBlocks < minNumBlocks,
         HCCL_ERROR(
             "[CollAllGatherMeshAivFor91093Executor][CalNumBlocks]aivCore[%u] is invalid, at least need [%u].",
-            numBlocks_, minNumBlocks),
+            numBlocks, minNumBlocks),
         HCCL_E_PARA);
 
     HCCL_INFO(
-        "[CollAllGatherMeshAivFor91093Executor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommanded[%u].",
+        "[CollAllGatherMeshAivFor91093Executor][CalNumBlocks] numBlocks is set to [%u], limit[%u], recommended[%u].",
         numBlocks, numBlocks_, bestNumBlocks);
     return HCCL_SUCCESS;
 }
@@ -137,7 +137,7 @@ HcclResult CollAllGatherMeshAivFor91093Executor::GetAivExecParam(
     args.reduceOp = param.reduceType;
     args.devType = static_cast<u32>(topoAttr_.deviceType);
     HCCL_INFO(
-        "SPK [CollAllGatherMeshAivFor91093Executor][GetAivExecParam], rank[%llu], rankSize[%llu], "
+        "[CollAllGatherMeshAivFor91093Executor][GetAivExecParam], rank[%llu], rankSize[%llu], "
         "len[%llu],datatype[%llu], op[%llu]",
         args.rank, args.rankSize, args.len, args.dataType, args.reduceOp);
 
