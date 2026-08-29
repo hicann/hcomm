@@ -332,17 +332,14 @@ HcclResult HcclThreadAcquireWithStream(
         CommEngineResMgr* engineResMgr = collComm->GetCommEngineResMgr();
         CHK_PTR_NULL(engineResMgr);
         ret = engineResMgr->HcclThreadAcquireWithStream(newEngine, stream, notifyNum, thread);
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS, HCCL_ERROR("[%s] HcclThreadAcquireWithStream failed, ret[%d]", __func__, ret), ret);
         CHK_RET(HcclThreadAcquireWithStreamDfx(collComm, commId, newEngine, *thread));
     } else {
         auto& engineResMgr = hcclComm->GetIndependentOp().GetCommEngineResMgr();
         ret = engineResMgr.HcclThreadAcquireWithStream(newEngine, stream, notifyNum, thread);
-    }
-
-    if (ret != HCCL_SUCCESS) {
-        HCCL_ERROR(
-            "[HcclThreadAcquireWithStream] Failed to create thread for engine[%s], ret[%d]",
-            GetEnumToString(GetCommEngineStatusStrMap(), newEngine).c_str(), ret);
-        return ret;
+        CHK_PRT_RET(
+            ret != HCCL_SUCCESS, HCCL_ERROR("[%s] HcclThreadAcquireWithStream failed, ret[%d]", __func__, ret), ret);
     }
 
     HCCL_INFO(
