@@ -110,6 +110,8 @@ drvError_t drvQueryProcessHostPid(
     return drvError_t(0);
 }
 
+drvError_t drvGetDevIDByLocalDevID(unsigned int pid, unsigned int* chip_id) { return drvError_t(0); }
+
 #define PLAT_COMBINE(arch, chip, ver) (((arch) << 16U) | ((chip) << 8U) | (ver))
 #define PLAT_GET_ARCH(type) (((type) >> 16U) & 0xffffU)
 #define PLAT_GET_CHIP(type) (((type) >> 8U) & 0xffU)

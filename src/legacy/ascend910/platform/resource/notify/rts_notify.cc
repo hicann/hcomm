@@ -13,6 +13,8 @@
 
 namespace hccl {
 
+constexpr u32 CHIP_ID = 32;
+
 RtsNotify::RtsNotify(NotifyType notifyType) : NotifyBase(notifyType) {}
 
 RtsNotify::RtsNotify(NotifyType notifyType, HcclNotifyInfo notifyInfo) : NotifyBase(notifyType, notifyInfo) {}
@@ -221,25 +223,23 @@ drvError_t __attribute__((weak)) halResourceIdCheck(struct drvResIdKey* info);
 drvError_t __attribute__((weak)) halResourceIdInfoGet(struct drvResIdKey* key, drvResIdProcType type, uint64_t* value);
 };
 
-HcclResult RtsNotify::InitAndVerifySingleSignal()
-{
 #ifdef CCL_KERNEL
-    if (id == INVALID_UINT) {
-        // 无效值不做校验
-        HCCL_DEBUG("[%s]resId[%u] is invalid, need not check", __func__, id);
+static HcclResult GetResVerifyDevId(bool isLocalSignal, u32& resDevId)
+{
+    if (!isLocalSignal) {
         return HCCL_SUCCESS;
     }
+    u32 localDevId = 0;
+    u32 hostPid = 0;
+    CHK_RET(HrtHalDrvQueryProcessHostPid(getpid(), &localDevId, nullptr, &hostPid, nullptr));
+    if (localDevId >= CHIP_ID) {
+        CHK_PRT(HrtHalDrvGetDevIDByLocalDevID(localDevId, &resDevId));
+    }
+    return HCCL_SUCCESS;
+}
 
-    drvResIdKey resInfo = {};
-    resInfo.ruDevId = devId;
-    resInfo.tsId = tsId;
-    resInfo.resType = DRV_NOTIFY_ID;
-    resInfo.resId = static_cast<uint32_t>(id);
-    resInfo.flag = flag;
-    resInfo.rsv[0] = 0; // 0 is reserved array idx
-    resInfo.rsv[1] = 0; // 1 is reserved array idx
-    resInfo.rsv[2] = 0; // 2 is reserved array idx
-
+static HcclResult RestoreResourceId(drvResIdKey& resInfo)
+{
     static bool init = false;
     if (!init) {
         CHK_PRT_RET(
@@ -266,7 +266,11 @@ HcclResult RtsNotify::InitAndVerifySingleSignal()
     HCCL_DEBUG(
         "res restore end, ret:%d, resType:%d, resId:%u, tsId:%u, ruDevId:%u, flag:%u", ret, resInfo.resType,
         resInfo.resId, resInfo.tsId, resInfo.ruDevId, resInfo.flag);
+    return HCCL_SUCCESS;
+}
 
+static HcclResult CheckAndGetResourceAddr(drvResIdKey& resInfo, u64& address)
+{
     int checkResult = halResourceIdCheck(&resInfo);
     if (checkResult != 0) {
         HCCL_ERROR(
@@ -286,8 +290,37 @@ HcclResult RtsNotify::InitAndVerifySingleSignal()
         return HCCL_E_DRV;
     }
     HCCL_DEBUG(
-        "res get write value success, resType:%d, resId:%u, tsId:%u, ruDevId:%u, flag:%u, addr:%llu", resInfo.resType,
+        "res get write value success, resType:%d, resId:%u, tsId:%u, ruDevId:%u, flag:%u, addr:0x%lx", resInfo.resType,
         resInfo.resId, resInfo.tsId, resInfo.ruDevId, resInfo.flag, address);
+    return HCCL_SUCCESS;
+}
+#endif
+
+HcclResult RtsNotify::InitAndVerifySingleSignal(bool isLocalSignal)
+{
+    (void)isLocalSignal;
+#ifdef CCL_KERNEL
+    if (id == INVALID_UINT) {
+        // 无效值不做校验
+        HCCL_DEBUG("[%s]resId[%u] is invalid, need not check", __func__, id);
+        return HCCL_SUCCESS;
+    }
+
+    u32 tmpDevId = devId;
+    CHK_RET(GetResVerifyDevId(isLocalSignal, tmpDevId));
+
+    drvResIdKey resInfo = {};
+    resInfo.ruDevId = tmpDevId;
+    resInfo.tsId = tsId;
+    resInfo.resType = DRV_NOTIFY_ID;
+    resInfo.resId = static_cast<uint32_t>(id);
+    resInfo.flag = flag;
+    resInfo.rsv[0] = 0; // 0 is reserved array idx
+    resInfo.rsv[1] = 0; // 1 is reserved array idx
+    resInfo.rsv[2] = 0; // 2 is reserved array idx
+
+    CHK_RET(RestoreResourceId(resInfo));
+    CHK_RET(CheckAndGetResourceAddr(resInfo, address));
 #endif
 
     return HCCL_SUCCESS;

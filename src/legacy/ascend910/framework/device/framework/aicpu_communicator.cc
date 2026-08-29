@@ -640,7 +640,8 @@ HcclResult HcclCommAicpu::InitOpNotifyObj(const HcclOpResParam* commParam)
                 commParam->localRes.localSignals[i].resId, identifier_.c_str()),
             ret);
     }
-    CHK_RET(hrtDrvGetLocalDevIDByHostDevID(commParam->localRes.aicpuOpNotify[0].devId, &devId_));
+    u32 hostPid = 0;
+    CHK_RET(HrtHalDrvQueryProcessHostPid(getpid(), &devId_, nullptr, &hostPid, nullptr));
     HCCL_INFO("[HcclCommAicpu][InitOpNotifyObj] success, group[%s]", identifier_.c_str());
     return HCCL_SUCCESS;
 }
@@ -952,7 +953,8 @@ HcclCommAicpu::InitAndVerifySignal(const HcclSignalInfo& signalInfo, std::vector
     std::shared_ptr<T> notify;
     EXCEPTION_CATCH((notify = std::make_shared<T>()), return HCCL_E_PTR);
     CHK_SMART_PTR_NULL(notify);
-    CHK_RET(notify->Init(signalInfo, NotifyLoadType::DEVICE_NOTIFY));
+    HcclSignalInfo notifySignalInfo = signalInfo;
+    CHK_RET(notify->Init(notifySignalInfo, NotifyLoadType::DEVICE_NOTIFY));
     notifyVec.push_back(notify);
     HCCL_INFO(
         "[HcclCommAicpu][InitAndVerifySignal] success group[%s], resId[%u], tsId:%d, devId[%u]", identifier_.c_str(),
@@ -1096,11 +1098,11 @@ HcclResult HcclCommAicpu::InitAndVerifySingleSignal(const HcclSignalInfo& signal
         HCCL_DEBUG("[%s]resId[%llu] is invalid, need not check", __func__, signalInfo.resId);
         return HCCL_SUCCESS;
     }
-    HcclSignalInfo tmpSignalInfo;
+    HcclSignalInfo tmpSignalInfo = signalInfo;
 
     EXCEPTION_CATCH((notify = std::make_shared<T>()), return HCCL_E_PTR);
     CHK_SMART_PTR_NULL(notify);
-    CHK_RET(notify->Init(signalInfo, NotifyLoadType::DEVICE_NOTIFY));
+    CHK_RET(notify->Init(tmpSignalInfo, NotifyLoadType::DEVICE_NOTIFY));
     CHK_RET(notify->GetNotifyData(tmpSignalInfo));
     HCCL_DEBUG(
         "[%s] success group[%s], resId[%llu], tsId:%d, devId[%u]", __func__, identifier_.c_str(), tmpSignalInfo.resId,
@@ -5150,14 +5152,12 @@ void HcclCommAicpu::ReportErrCqe(hccl::Stream& stream, ErrCqeContext& cqeCtx)
 
 HcclResult HcclCommAicpu::SendTaskExceptionByMBox(const uint16_t& rsErrorCode)
 {
-    u32 localDeviceId = 0;
     HcclSignalInfo notifyInfo;
     opNotifies_[1]->GetNotifyData(notifyInfo);
 
-    HCCL_INFO("[HcclCommAicpu][SendTaskExceptionByMBox] HostToDeviceLogicId[%u]", notifyInfo.devId);
-    CHK_RET(hrtDrvGetLocalDevIDByHostDevID(notifyInfo.devId, &localDeviceId));
+    HCCL_INFO("[HcclCommAicpu][SendTaskExceptionByMBox] HostToDeviceLogicId[%u]", devId_);
     CHK_RET(hccl_plf::SendTaskExceptionByMBox(
-        localDeviceId, opNotifies_[1]->notifyId_, notifyInfo.tsId, userStreamId_, rsErrorCode));
+        devId_, opNotifies_[1]->notifyId_, notifyInfo.tsId, userStreamId_, rsErrorCode));
     return HCCL_SUCCESS;
 }
 

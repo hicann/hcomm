@@ -216,6 +216,10 @@ HcclResult hrtHalDrvIpcNotifyRecord([[maybe_unused]] const char* name) { return 
 HcclResult HrtHalDrvQueryProcessHostPid(
     int pid, unsigned int* chipId, unsigned int* vfid, unsigned int* hostPid, unsigned int* cpType)
 {
+    if (UNLIKELY(!hccl::DlHalFunction::GetInstance().DlHalFunctionIsInit())) {
+        CHK_RET(DlHalFunction::GetInstance().DlHalFunctionInit());
+    }
+
     CHK_PTR_NULL(hostPid);
     // 和底软确认，chipId、vfid、hostPid、cpType不需要校验空指针，如果传入空指针表示当前不获取该值
     drvError_t ret = DlHalFunction::GetInstance().dlHalDrvQueryProcessHostPid(pid, chipId, vfid, hostPid, cpType);
@@ -227,6 +231,25 @@ HcclResult HrtHalDrvQueryProcessHostPid(
             HCCL_ERROR_CODE(HCCL_E_DRV), ret, pid),
         HCCL_E_DRV);
     HCCL_INFO("HrtHalDrvQueryProcessHostPid pid[%d] hostPid[%u]", pid, *hostPid);
+    return HCCL_SUCCESS;
+}
+
+HcclResult HrtHalDrvGetDevIDByLocalDevID(uint32_t localDevId, uint32_t* devId)
+{
+    if (UNLIKELY(!hccl::DlHalFunction::GetInstance().DlHalFunctionIsInit())) {
+        CHK_RET(DlHalFunction::GetInstance().DlHalFunctionInit());
+    }
+
+    CHK_PTR_NULL(devId);
+    drvError_t ret = DlHalFunction::GetInstance().dlHalDrvGetDevIDByLocalDevID(localDevId, devId);
+    CHK_PRT_RET(
+        ret != DRV_ERROR_NONE,
+        HCCL_ERROR(
+            "errNo[0x%016llx] HrtHalDrvGetDevIDByLocalDevID fail,"
+            "return[%d], para: localDevId[%d].",
+            HCCL_ERROR_CODE(HCCL_E_DRV), ret, localDevId),
+        HCCL_E_DRV);
+    HCCL_INFO("HrtHalDrvGetDevIDByLocalDevID localDevId[%d] devId[%u]", localDevId, *devId);
     return HCCL_SUCCESS;
 }
 

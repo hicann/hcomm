@@ -34,6 +34,7 @@ public:
         dlHalEschedRegisterAckFunc;
     std::function<drvError_t(int, unsigned int*, unsigned int*, unsigned int*, unsigned int*)>
         dlHalDrvQueryProcessHostPid;
+    std::function<drvError_t(unsigned int, unsigned int*)> dlHalDrvGetDevIDByLocalDevID;
     std::function<DVresult(
         unsigned long long dst, unsigned long long destMax, unsigned long long src, unsigned long long count)>
         dlDrvMemCpy;

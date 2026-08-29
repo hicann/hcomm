@@ -27,6 +27,7 @@ HcclResult hrtHalGetDeviceType(const uint32_t devId, DevType& devType);
 HcclResult hrtHalGetDeviceInfo(uint32_t devId, int32_t moduleType, int32_t infoType, int64_t* value);
 HcclResult HrtHalDrvQueryProcessHostPid(
     int pid, unsigned int* chipId, unsigned int* vfid, unsigned int* hostPid, unsigned int* cpType);
+HcclResult HrtHalDrvGetDevIDByLocalDevID(uint32_t localDevId, uint32_t* devId);
 
 HcclResult hrtHalSensorNodeRegister(uint32_t devId, uint64_t* handle);
 HcclResult hrtHalSensorNodeUnregister(uint32_t devId, uint64_t handle);

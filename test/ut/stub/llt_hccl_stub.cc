@@ -4627,6 +4627,7 @@ namespace hccl {
         {"halSensorNodeUpdateState", (void*)&halSensorNodeUpdateState},
         {"halSdmaCopy", (void*)&halSdmaCopy},
         {"drvQueryProcessHostPid", (void*)&drvQueryProcessHostPid},
+        {"drvGetDevIDByLocalDevID", (void*)&drvGetDevIDByLocalDevID},
     };
     std::map<std::string, void*> dlIbvFuntionPtrMap
         = {{"ibv_get_cq_event", (void*)&ibv_get_cq_event_stub},

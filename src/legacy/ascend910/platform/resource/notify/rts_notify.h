@@ -48,7 +48,7 @@ public:
         notifyInfo.tsId = tsId;
         notifyInfo.flag = flag;
         HCCL_DEBUG(
-            "GetNotifyData resId[%lld], addr[%llu], devId[%u], tsId[%u]", notifyInfo.resId, notifyInfo.addr,
+            "GetNotifyData resId[%lld], addr[0x%lx], devId[%u], tsId[%u]", notifyInfo.resId, notifyInfo.addr,
             notifyInfo.devId, notifyInfo.tsId);
         return HCCL_SUCCESS;
     }
@@ -60,7 +60,7 @@ public:
         devId = notifyInfo.devId;
         tsId = notifyInfo.tsId;
         flag = notifyInfo.flag;
-        HCCL_DEBUG("SetNotifyData resId[%lld], addr[%llu], devId[%u], tsId[%u]", id, address, devId, tsId);
+        HCCL_DEBUG("SetNotifyData resId[%lld], addr[0x%lx], devId[%u], tsId[%u]", id, address, devId, tsId);
         return HCCL_SUCCESS;
     }
 
@@ -70,7 +70,7 @@ public:
         return HCCL_SUCCESS;
     }
 
-    HcclResult InitAndVerifySingleSignal();
+    HcclResult InitAndVerifySingleSignal(bool isLocalSignal);
 
 private:
     HcclResult UpdateNotifyInfo();

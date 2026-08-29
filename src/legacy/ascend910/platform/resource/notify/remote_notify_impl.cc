@@ -66,7 +66,7 @@ HcclResult RemoteNotifyImpl::Init(const HcclSignalInfo& notifyInfo, const Notify
     CHK_SMART_PTR_NULL(notify_);
 
 #ifdef CCL_KERNEL
-    CHK_RET(static_cast<RtsNotify*>(notify_.get())->InitAndVerifySingleSignal());
+    CHK_RET(static_cast<RtsNotify*>(notify_.get())->InitAndVerifySingleSignal(false));
 #endif
 
     return HCCL_SUCCESS;

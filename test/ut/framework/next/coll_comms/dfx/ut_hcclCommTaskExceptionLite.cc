@@ -49,6 +49,7 @@ protected:
     {
         MOCKER(::getpid).stubs().will(returnValue(12345));
         MOCKER(HrtHalDrvQueryProcessHostPid).stubs().will(returnValue(HCCL_SUCCESS));
+        MOCKER(HrtHalDrvGetDevIDByLocalDevID).stubs().will(returnValue(HCCL_SUCCESS));
         Hccl::DlHalFunctionV2::GetInstance().dlHalEschedSubmitEvent
             = [](unsigned int, struct event_summary*) -> drvError_t {
             return DRV_ERROR_NONE;

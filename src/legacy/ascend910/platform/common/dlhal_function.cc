@@ -60,6 +60,10 @@ HcclResult DlHalFunction::DlHalFunctionEschedInit()
         int, unsigned int*, unsigned int*, unsigned int*, unsigned int*))HcclDlsym(handle_, "drvQueryProcessHostPid");
     CHK_SMART_PTR_NULL(dlHalDrvQueryProcessHostPid);
 
+    dlHalDrvGetDevIDByLocalDevID
+        = (drvError_t(*)(unsigned int, unsigned int*))HcclDlsym(handle_, "drvGetDevIDByLocalDevID");
+    CHK_SMART_PTR_NULL(dlHalDrvGetDevIDByLocalDevID);
+
     dlDrvMemCpy = (DVresult(*)(
         unsigned long long dst, unsigned long long destMax, unsigned long long src,
         unsigned long long count))HcclDlsym(handle_, "drvMemcpy");
