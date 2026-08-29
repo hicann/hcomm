@@ -60,15 +60,6 @@ target_include_directories(hccl_headers INTERFACE
     $<INSTALL_INTERFACE:include/hccl/external/hccl>
 )
 
-# 获取 src/legacy/ascend950 所有子目录，用于设置头文件搜索路径
-set(LEGACY_ASCEND950_INCLUDE_LIST)
-FILE(GLOB_RECURSE LEGACY_DIRS LIST_DIRECTORIES TRUE ${HCOMM_DIR}/src/legacy/ascend950)
-foreach(dir ${LEGACY_DIRS})
-    if((IS_DIRECTORY ${dir}) AND (${dir} MATCHES "src/legacy/ascend950"))
-        list(APPEND LEGACY_ASCEND950_INCLUDE_LIST ${dir}) 
-    endif()
-endforeach()
-
 # 将子目录添加到构建过程
 add_subdirectory(legacy)            # 包含 ascend910 和 ascend950
 add_subdirectory(base_comm)         # 基础通信组件
