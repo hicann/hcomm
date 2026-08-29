@@ -8,6 +8,8 @@
  * See LICENSE in the root of the software repository for the full text of the License.
  */
 
+#include <cstdint>
+
 #include "ut_HcommCcuControlApi_common.h"
 
 #define private public
@@ -339,6 +341,62 @@ TEST_F(HcommCcuControlApiTest, Ut_LoopGroupCfgApi_When_V2_Expect_Success)
 // 版本化 cfg C ABI 的 strict 校验:非法版本头(magic 未初始化)被拒绝,注册失败。
 CCU_FUNC_KERNEL_TEST(Ut_LoopGroupCreateCfg_BadHeader_Expect_Fail, CcuLoopGroupCreateCfgBadHeaderDemoKernel, false)
 CCU_FUNC_KERNEL_TEST(Ut_LoopGroupAddLoopCfg_BadHeader_Expect_Fail, CcuLoopGroupAddLoopCfgBadHeaderDemoKernel, false)
+
+static void
+RegisterLoopGroupWithMaxLoopNum(hcomm::CcuVersion ccuVersion, uint32_t maxLoopNum, bool expectRegisterSuccess)
+{
+    constexpr uint32_t fakeDevId = MAX_MODULE_DEVICE_NUM - 2;
+    (void)MockCcuDeviceEnv(fakeDevId, ccuVersion);
+
+    HcommCcuResDescHandle resDescs[hcomm::CCU_MAX_IODIE_NUM] = {0, 0};
+    CreateCcuResDescsPair(resDescs, ccuVersion);
+    constexpr uint32_t descNum = 2;
+    CcuInsHandle insHandle{0};
+    EXPECT_EQ(HcommCcuInsCreate(resDescs, descNum, &insHandle), CcuResult::CCU_SUCCESS);
+    EXPECT_EQ(HcommCcuKernelRegisterStart(insHandle), CcuResult::CCU_SUCCESS);
+
+    CcuLoopGroupMaxLoopNumKernelArg demoArg{};
+    demoArg.maxLoopNum = maxLoopNum;
+    CcuKernelArg kernelArg = static_cast<CcuKernelArg>(&demoArg);
+    const void* kernelArgs[] = {kernelArg};
+    CcuKernelHandle kernelHandle{0};
+    auto kernelFunc = reinterpret_cast<void*>(CcuLoopGroupMaxLoopNumDemoKernel);
+    CcuResult ccuRet = HcommCcuKernelRegister(
+        insHandle, 0, const_cast<char*>("CcuLoopGroupMaxLoopNumDemoKernel"), kernelFunc, kernelArgs, 1, &kernelHandle);
+    if (expectRegisterSuccess) {
+        EXPECT_EQ(ccuRet, CcuResult::CCU_SUCCESS);
+        EXPECT_EQ(HcommCcuKernelRegisterEnd(insHandle), CcuResult::CCU_SUCCESS);
+    } else {
+        EXPECT_NE(ccuRet, CcuResult::CCU_SUCCESS);
+    }
+    EXPECT_EQ(HcommCcuInsDestroy(insHandle), CcuResult::CCU_SUCCESS);
+    DestroyCcuResDescs(resDescs);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_LoopGroupCreate_HugeMaxLoopNum_When_V1_Expect_Fail)
+{
+    RegisterLoopGroupWithMaxLoopNum(hcomm::CcuVersion::CCU_V1, UINT32_MAX, false);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_LoopGroupCreate_HugeMaxLoopNum_When_V2_Expect_Fail)
+{
+    RegisterLoopGroupWithMaxLoopNum(hcomm::CcuVersion::CCU_V2, UINT32_MAX, false);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_LoopGroupCreate_MaxLoopNumAtV1Limit_Expect_Success)
+{
+    RegisterLoopGroupWithMaxLoopNum(hcomm::CcuVersion::CCU_V1, 128, true);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_LoopGroupCreate_MaxLoopNumOverV1Limit_Expect_Fail)
+{
+    RegisterLoopGroupWithMaxLoopNum(hcomm::CcuVersion::CCU_V1, 129, false);
+}
+
+TEST_F(HcommCcuControlApiTest, Ut_LoopGroupCreate_MaxLoopNumOverV2Limit_Expect_Fail)
+{
+    RegisterLoopGroupWithMaxLoopNum(hcomm::CcuVersion::CCU_V2, 513, false);
+}
 
 TEST_F(HcommCcuControlApiTest, Ut_HcommCcuKernelRegister_When_AllFine_Expect_ReturnCcuSUCCESS)
 {

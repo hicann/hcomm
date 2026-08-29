@@ -51,6 +51,8 @@ using Hccl::PLF_DATA_OP;
 
 constexpr uint32_t TOKEN_VALUE_INDEX = 2;
 constexpr uint16_t INVALID_U16 = 65535;
+constexpr uint32_t MAX_LOOP_ENGINE_POOL_SIZE_V1 = 128;
+constexpr uint32_t MAX_LOOP_ENGINE_POOL_SIZE_V2 = 512;
 
 using CcuRep::CcuInsGeneratorBase;
 using CcuRep::CcuInsGeneratorV1;
@@ -2393,6 +2395,13 @@ CcuResult CcuKernel::EnsureLoopEnginePool(uint32_t maxLoopNum)
 {
     if (maxLoopNum == 0) {
         HCCL_ERROR("[CcuKernel::EnsureLoopEnginePool] maxLoopNum must be > 0");
+        return CcuResult::CCU_E_PARA;
+    }
+    const uint32_t maxPoolSize
+        = (ccuVersion_ == CcuVersion::CCU_V2) ? MAX_LOOP_ENGINE_POOL_SIZE_V2 : MAX_LOOP_ENGINE_POOL_SIZE_V1;
+    if (maxLoopNum > maxPoolSize) {
+        HCCL_ERROR(
+            "[CcuKernel::EnsureLoopEnginePool] maxLoopNum(%u) exceeds max supported %u", maxLoopNum, maxPoolSize);
         return CcuResult::CCU_E_PARA;
     }
     constexpr uint32_t poolDieId = 0;

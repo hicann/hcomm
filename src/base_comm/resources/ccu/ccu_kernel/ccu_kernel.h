@@ -302,8 +302,6 @@ private:
     CcuResult GetVariableByHandle(CcuVariableHandle varHandle, CcuRep::Variable** variable);
     CcuResult GetEventByHandle(CcuEventHandle eventHandle, CcuRep::CompletedEvent** event);
     CcuResult LatchBodyError(CcuResult err);
-    // 按需扩容 res_.blockExecutor[0]：不足 maxLoopNum 时补足，足够则不动；
-    // 由 LoopGroupCreate / LoopGroupCreateFromVar 在 LoopGroup 创建时调用。
     CcuResult EnsureLoopEnginePool(uint32_t maxLoopNum);
 
     CcuResult ValidateTaskArgs(const uint64_t* taskArgs, uint32_t argsNum) const;

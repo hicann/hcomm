@@ -368,6 +368,23 @@ inline CcuResult CcuLoopGroupAddLoopCfgBadHeaderDemoKernel(CcuKernelArg arg)
     return ::CcuLoopGroupAddLoopCfg(1, 1, &badCfg);
 }
 
+struct CcuLoopGroupMaxLoopNumKernelArg {
+    uint32_t maxLoopNum{1};
+};
+
+inline CcuResult CcuLoopGroupMaxLoopNumDemoKernel(CcuKernelArg arg)
+{
+    using namespace ccu;
+    auto* args = static_cast<CcuLoopGroupMaxLoopNumKernelArg*>(arg);
+    Func body([&]() {});
+    LoopConfig loopCfg = {.addrOffset = 0, .iterNum = 1};
+    Loop loop(loopCfg, body);
+    LoopGroupConfig grpCfg
+        = {.cloneNum = 0, .cloneLoopOffset = 0, .addrOffset = 0, .ccuBufferOffset = 0, .eventOffset = 0};
+    LoopGroup group(grpCfg, args->maxLoopNum, {loop});
+    return CcuResult::CCU_SUCCESS;
+}
+
 inline CcuResult CcuIfInLoopInvalidDemoKernel(CcuKernelArg arg)
 {
     using namespace ccu;

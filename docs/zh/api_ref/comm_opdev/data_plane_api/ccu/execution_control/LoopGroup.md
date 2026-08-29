@@ -130,3 +130,45 @@ CcuResult MyKernel(CcuKernelArg arg) {
     return CCU_SUCCESS;
 }
 ```
+
+基于variable直接构建loop/loopgroup，要保证variable的值符合指令要求。
+
+```cpp
+CcuResult CcuLoopAddDemoKernel(CcuKernelArg arg)
+{
+    using namespace ccu;
+    auto* args = static_cast<CcuLoopAddKernelArg*>(arg);
+
+    Variable numA{}, numB{}, r1{}, r2{};
+    numA = args->numA;
+    numB = args->numB;
+
+    // ========== LoopGroup variable-based ==========
+    Variable varLoopParam1{}, varLoopParam2{}, varParallel{}, varOffset{};
+
+    // loopParam: ctxId[52:45] | gsaOffset[44:13] | iterNum[12:0]
+    varLoopParam1 = 0x0000000002000003ULL; // gsaOffset=4096, iterNum=3
+    varLoopParam2 = 0x0000000002000004ULL; // gsaOffset=4096, iterNum=4
+
+    // repeatNum=2, repeatLoopIndex=1, totalLoopNum=2
+    varParallel = 0x0101040000000000ULL;
+
+    // gsaOffset=4096, msOffset=1, ckeOffset=1
+    varOffset = 0x0000000200000401ULL;
+
+    Func body1([&]() {
+        r1 = numA + numB;
+    });
+    Func body2([&]() {
+        r2 = numA + numB;
+    });
+
+    Loop loop1(varLoopParam1, body1);
+    Loop loop2(varLoopParam2, body2);
+
+    LoopGroup group(varParallel, varOffset, /*maxLoopNum=*/4, {loop1, loop2});
+
+    return CcuResult::CCU_SUCCESS;
+}
+```
+
