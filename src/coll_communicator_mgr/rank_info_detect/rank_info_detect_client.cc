@@ -251,6 +251,9 @@ void RankInfoDetectClient::ConstructSingleRank(RankTableInfo& localRankTable)
     rankInfo.rankId = rankId_;
     rankInfo.rankLevelInfos.emplace_back(RankLevelInfo{});
     CHK_PRT_CONT(GetLocalTlsStatus(rankInfo.tlsStatus), HCCL_WARNING("[GetLocalTlsStatus] Can not get TlsStatus"));
+    CHK_PRT_CONT(
+        GetLocalHostDpuTlsStatus(rankInfo.hostDpuTlsStatus),
+        HCCL_WARNING("[GetLocalHostDpuTlsStatus] Can not get Host DPU TlsStatus"));
     localRankTable.ranks.emplace_back(rankInfo);
 
     // 打印
@@ -368,6 +371,9 @@ void RankInfoDetectClient::ConstructRankTable(RankTableInfo& localRankTable)
     CHK_PRT_CONT(
         GetLocalTlsStatus(localRankTable.ranks[0].tlsStatus),
         HCCL_WARNING("[GetLocalTlsStatus] Can not get TlsStatus"));
+    CHK_PRT_CONT(
+        GetLocalHostDpuTlsStatus(localRankTable.ranks[0].hostDpuTlsStatus),
+        HCCL_WARNING("[GetLocalHostDpuTlsStatus] Can not get Host DPU TlsStatus"));
     HCCL_INFO("[RankInfoDetectClient::%s] end.", __func__);
 }
 
@@ -622,13 +628,27 @@ void RankInfoDetectClient::VerifyRankTable()
         HCCL_ERROR("[RankInfoDetectClient::%s] tls consistency verify failed, ret[%d]", __func__, ret),
         InvalidParamsException, "tls consistency verify failed");
 
+    HcclResult hostDpuRet = VerifyHostDpuTlsConsistency();
+    CHK_PRT_THROW(
+        hostDpuRet != HCCL_SUCCESS,
+        HCCL_ERROR("[RankInfoDetectClient::%s] hostDpuTls consistency verify failed, ret[%d]", __func__, hostDpuRet),
+        InvalidParamsException, "hostDpuTls consistency verify failed");
+
     HCCL_INFO("[RankInfoDetectClient::%s] end.", __func__);
 }
 
 HcclResult RankInfoDetectClient::GetLocalTlsStatus(TlsStatus& tlsStatus) const
 {
-    struct RaInfo raInfo;
+    struct RaInfo raInfo {};
     raInfo.mode = NetworkMode::NETWORK_OFFLINE;
+    raInfo.phyId = devPhyId_;
+    return HrtRaGetTlsStatus(&raInfo, tlsStatus);
+}
+
+HcclResult RankInfoDetectClient::GetLocalHostDpuTlsStatus(TlsStatus& tlsStatus) const
+{
+    struct RaInfo raInfo {};
+    raInfo.mode = NetworkMode::NETWORK_PEER_ONLINE;
     raInfo.phyId = devPhyId_;
     return HrtRaGetTlsStatus(&raInfo, tlsStatus);
 }
@@ -645,23 +665,40 @@ void RankInfoDetectClient::GenerateTlsStatusStr(std::string& tlsStatusStr, const
 }
 
 void RankInfoDetectClient::ReportTlsConfigurationError(
-    const std::string& tlsInconsistentTlsType, const std::string& tlsEnableRankStr,
+    const std::string& tlsType, const std::string& tlsInconsistentTlsType, const std::string& tlsEnableRankStr,
     const std::string& tlsDisableRankStr, const std::string& tlsUnknownRankStr) const
 {
     std::string expectMessage = "\"All ranks are consistent. Current status: rankList for enabled tls: "
                                 + tlsEnableRankStr + "; rankList for disabled tls: " + tlsDisableRankStr
                                 + "; rankList for query failure tls: " + tlsUnknownRankStr;
-    std::string errormessage
-        = "Value \"" + tlsInconsistentTlsType + "\" for config \"tls\" is invalid. Expected: " + expectMessage;
+    std::string errormessage = "Value \"" + tlsInconsistentTlsType + "\" for config \"" + tlsType
+                               + "\" is invalid. Expected: " + expectMessage;
 
     RPT_INPUT_ERR(
         true, "EI0016", std::vector<std::string>({"value", "variable", "expect"}),
-        std::vector<std::string>({tlsInconsistentTlsType, "\"tls\"", expectMessage}));
+        std::vector<std::string>({tlsInconsistentTlsType, "\"" + tlsType + "\"", expectMessage}));
 
     HCCL_ERROR("[ReportTlsConfigurationError][RanktableCheck] %s", errormessage.c_str());
 }
 
 HcclResult RankInfoDetectClient::VerifyTlsConsistency() const
+{
+    auto getTlsStatus = [](const NewRankInfo& rankInfo) {
+        return rankInfo.tlsStatus;
+    };
+    return VerifyTlsConsistencyByTlsType("tls", getTlsStatus);
+}
+
+HcclResult RankInfoDetectClient::VerifyHostDpuTlsConsistency() const
+{
+    auto getTlsStatus = [](const NewRankInfo& rankInfo) {
+        return rankInfo.hostDpuTlsStatus;
+    };
+    return VerifyTlsConsistencyByTlsType("hostDpuTls", getTlsStatus);
+}
+
+HcclResult RankInfoDetectClient::VerifyTlsConsistencyByTlsType(
+    const std::string& tlsType, const std::function<TlsStatus(const NewRankInfo&)>& getTlsStatus) const
 {
     bool isSupportCheckTlsStatus = true; // 用于标识是否存在不支持查询Tls开关状态的情况
     bool isTlsConsistent = true;         // 用于标识TLS开关状态是否一致
@@ -670,9 +707,10 @@ HcclResult RankInfoDetectClient::VerifyTlsConsistency() const
     std::vector<u32> tlsUnknownRank;
 
     for (const auto& rankInfo : rankTable_.ranks) {
-        if (rankInfo.tlsStatus == TlsStatus::ENABLE) {
+        const TlsStatus tlsStatus = getTlsStatus(rankInfo);
+        if (tlsStatus == TlsStatus::ENABLE) {
             tlsEnableRank.push_back(rankInfo.rankId);
-        } else if (rankInfo.tlsStatus == TlsStatus::DISABLE) {
+        } else if (tlsStatus == TlsStatus::DISABLE) {
             tlsDisableRank.push_back(rankInfo.rankId);
         } else {
             isSupportCheckTlsStatus = false;
@@ -699,20 +737,22 @@ HcclResult RankInfoDetectClient::VerifyTlsConsistency() const
     // 四种不同情况
     if (isTlsConsistent && isSupportCheckTlsStatus) {
         // 1.通信域所有卡都支持查询TLS开关状态，并且TLS开关状态都是一致的。
-        HCCL_INFO("[Verify][TlsConsistency] All ranks tlsStatus are consistent");
+        HCCL_INFO("[Verify][%sConsistency] All ranks %sStatus are consistent", tlsType.c_str(), tlsType.c_str());
     } else if (!isTlsConsistent && isSupportCheckTlsStatus) {
         // 2.通信域所有卡都支持查询TLS开关状态，但是TLS开关状态存在不一致，报错。
-        ReportTlsConfigurationError(tlsInconsistentTlsType, tlsEnableRankStr, tlsDisableRankStr, tlsUnknownRankStr);
+        ReportTlsConfigurationError(
+            tlsType, tlsInconsistentTlsType, tlsEnableRankStr, tlsDisableRankStr, tlsUnknownRankStr);
         return HCCL_E_PARA;
     } else if (isTlsConsistent && !isSupportCheckTlsStatus) {
         // 3.通信域内的部分卡不支持查询TLS开关状态，目前能查询到的卡的TLS开关状态是一致的，打印warning提醒
         HCCL_WARNING(
-            "[Verify][TlsConsistency] Some ranks do not support to check tlsStatus, "
+            "[Verify][%sConsistency] Some ranks do not support to check %sStatus, "
             "not support rankId: [%s]",
-            tlsUnknownRankStr.c_str());
+            tlsType.c_str(), tlsType.c_str(), tlsUnknownRankStr.c_str());
     } else {
         // 4.通信域内的部分卡不支持查询TLS开关状态，但是目前能查询到的卡的TLS开关状态已经不一致，报错
-        ReportTlsConfigurationError(tlsInconsistentTlsType, tlsEnableRankStr, tlsDisableRankStr, tlsUnknownRankStr);
+        ReportTlsConfigurationError(
+            tlsType, tlsInconsistentTlsType, tlsEnableRankStr, tlsDisableRankStr, tlsUnknownRankStr);
         return HCCL_E_PARA;
     }
 

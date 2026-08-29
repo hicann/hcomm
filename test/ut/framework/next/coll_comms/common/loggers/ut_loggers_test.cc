@@ -368,7 +368,8 @@ namespace logger {
             HcclChannelDesc descs[2] = {desc, descRoce};
             ChannelHandle handles[2] = {0x111, 0x222};
             int32_t statusList[2] = {static_cast<int32_t>(3), static_cast<int32_t>(3)};
-            ChannelLogger::PrintChannelErrorDetails(0, 2, descs, handles, statusList, 100, Hccl::TlsStatus::ENABLE);
+            Hccl::TlsStatus tlsStatusList[2] = {Hccl::TlsStatus::ENABLE, Hccl::TlsStatus::ENABLE};
+            ChannelLogger::PrintChannelErrorDetails(0, 2, descs, handles, statusList, 100, tlsStatusList);
             SUCCEED();
         }
 
@@ -377,7 +378,9 @@ namespace logger {
             HcclChannelDesc descs[3] = {desc, descRoce, desc};
             ChannelHandle handles[3] = {0x111, 0x222, 0x333};
             int32_t statusList[3] = {static_cast<int32_t>(3), static_cast<int32_t>(4), static_cast<int32_t>(2)};
-            ChannelLogger::PrintChannelErrorDetails(0, 3, descs, handles, statusList, 200, Hccl::TlsStatus::DISABLE);
+            Hccl::TlsStatus tlsStatusList[3]
+                = {Hccl::TlsStatus::DISABLE, Hccl::TlsStatus::DISABLE, Hccl::TlsStatus::DISABLE};
+            ChannelLogger::PrintChannelErrorDetails(0, 3, descs, handles, statusList, 200, tlsStatusList);
             SUCCEED();
         }
 

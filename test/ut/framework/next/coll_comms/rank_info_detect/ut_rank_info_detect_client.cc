@@ -214,6 +214,17 @@ NewRankInfo BuildRankInfoForTls(u32 rankId, TlsStatus tlsStatus)
     return rankInfo;
 }
 
+NewRankInfo BuildRankInfoForHostDpuTls(u32 rankId, TlsStatus hostDpuTlsStatus)
+{
+    NewRankInfo rankInfo{};
+    rankInfo.rankId = rankId;
+    rankInfo.localId = rankId;
+    rankInfo.replacedLocalId = rankId;
+    rankInfo.rankLevelInfos.emplace_back(RankLevelInfo{});
+    rankInfo.hostDpuTlsStatus = hostDpuTlsStatus;
+    return rankInfo;
+}
+
 void BuildRankTableForTls(RankTableInfo& rankTable, const std::vector<TlsStatus>& tlsStatusList)
 {
     rankTable.version = "2.0";
@@ -222,6 +233,53 @@ void BuildRankTableForTls(RankTableInfo& rankTable, const std::vector<TlsStatus>
     for (u32 idx = 0; idx < tlsStatusList.size(); ++idx) {
         rankTable.ranks.emplace_back(BuildRankInfoForTls(idx, tlsStatusList[idx]));
     }
+}
+
+void BuildRankTableForHostDpuTls(RankTableInfo& rankTable, const std::vector<TlsStatus>& hostDpuTlsStatusList)
+{
+    rankTable.version = "2.0";
+    rankTable.rankCount = hostDpuTlsStatusList.size();
+    rankTable.ranks.clear();
+    for (u32 idx = 0; idx < hostDpuTlsStatusList.size(); ++idx) {
+        rankTable.ranks.emplace_back(BuildRankInfoForHostDpuTls(idx, hostDpuTlsStatusList[idx]));
+    }
+}
+
+HcclResult StubLocalTlsStatusQuery(RaInfo* info, TlsStatus& tlsStatus)
+{
+    EXPECT_EQ(info->phyId, 0U);
+    if (info->mode == static_cast<int>(NetworkMode::NETWORK_OFFLINE)) {
+        tlsStatus = TlsStatus::DISABLE;
+    } else {
+        EXPECT_EQ(info->mode, static_cast<int>(NetworkMode::NETWORK_PEER_ONLINE));
+        tlsStatus = TlsStatus::ENABLE;
+    }
+    return HCCL_SUCCESS;
+}
+
+HcclResult StubHostDpuTlsQueryNotSupport(RaInfo* info, TlsStatus& tlsStatus)
+{
+    EXPECT_EQ(info->mode, static_cast<int>(NetworkMode::NETWORK_PEER_ONLINE));
+    tlsStatus = TlsStatus::UNKNOWN;
+    return HCCL_E_NOT_SUPPORT;
+}
+
+HcclResult StubHostDpuTlsQueryRuntimeFail(RaInfo* info, TlsStatus& tlsStatus)
+{
+    EXPECT_EQ(info->mode, static_cast<int>(NetworkMode::NETWORK_PEER_ONLINE));
+    tlsStatus = TlsStatus::DISABLE;
+    return HCCL_E_NETWORK;
+}
+
+std::string g_reportedErrorCode;
+std::vector<std::string> g_reportedKeys;
+std::vector<std::string> g_reportedValues;
+
+void StubRptInputErr(std::string errorCode, std::vector<std::string> keys, std::vector<std::string> values)
+{
+    g_reportedErrorCode = errorCode;
+    g_reportedKeys = keys;
+    g_reportedValues = values;
 }
 
 nlohmann::json BuildLocalDevInfoWithBackupAddrs(
@@ -285,6 +343,40 @@ TEST_F(RankInfoDetectClientTest, Ut_ConstructSingleRank_When_Normal_Expect_Succe
     const NewRankInfo& actualRankInfo = localRankTable.ranks[0];
     EXPECT_EQ(actualRankInfo.rankId, 0);
     EXPECT_EQ(actualRankInfo.rankLevelInfos.size(), 1U);
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_ConstructSingleRank_When_TlsQueriesSucceed_Expect_BothStatusesUpdated)
+{
+    RankTableInfo localRankTable;
+    MOCKER(HrtRaGetTlsStatus).stubs().will(invoke(StubLocalTlsStatusQuery));
+
+    EXPECT_NO_THROW(rankInfoDetectClient_->ConstructSingleRank(localRankTable));
+
+    ASSERT_EQ(localRankTable.ranks.size(), 1U);
+    EXPECT_EQ(localRankTable.ranks[0].tlsStatus, TlsStatus::DISABLE);
+    EXPECT_EQ(localRankTable.ranks[0].hostDpuTlsStatus, TlsStatus::ENABLE);
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_GetLocalHostDpuTlsStatus_When_NotSupported_Expect_Unknown)
+{
+    TlsStatus tlsStatus = TlsStatus::ENABLE;
+    MOCKER(HrtRaGetTlsStatus).stubs().will(invoke(StubHostDpuTlsQueryNotSupport));
+
+    HcclResult ret = rankInfoDetectClient_->GetLocalHostDpuTlsStatus(tlsStatus);
+
+    EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
+    EXPECT_EQ(tlsStatus, TlsStatus::UNKNOWN);
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_GetLocalHostDpuTlsStatus_When_QueryFails_Expect_Disable)
+{
+    TlsStatus tlsStatus = TlsStatus::UNKNOWN;
+    MOCKER(HrtRaGetTlsStatus).stubs().will(invoke(StubHostDpuTlsQueryRuntimeFail));
+
+    HcclResult ret = rankInfoDetectClient_->GetLocalHostDpuTlsStatus(tlsStatus);
+
+    EXPECT_EQ(ret, HCCL_E_NETWORK);
+    EXPECT_EQ(tlsStatus, TlsStatus::DISABLE);
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_ConstructRankTable_When_Normal_Expect_Success)
@@ -810,6 +902,83 @@ TEST_F(RankInfoDetectClientTest, Ut_VerifyTlsConsistency_When_KnownInconsistentA
     HcclResult ret = rankInfoDetectClient_->VerifyTlsConsistency();
 
     EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_VerifyHostDpuTlsConsistency_When_AllRanksEnable_Expect_ReturnSuccess)
+{
+    BuildRankTableForHostDpuTls(rankInfoDetectClient_->rankTable_, {TlsStatus::ENABLE, TlsStatus::ENABLE});
+
+    HcclResult ret = rankInfoDetectClient_->VerifyHostDpuTlsConsistency();
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_VerifyHostDpuTlsConsistency_When_AllRanksDisable_Expect_ReturnSuccess)
+{
+    BuildRankTableForHostDpuTls(rankInfoDetectClient_->rankTable_, {TlsStatus::DISABLE, TlsStatus::DISABLE});
+
+    HcclResult ret = rankInfoDetectClient_->VerifyHostDpuTlsConsistency();
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_VerifyHostDpuTlsConsistency_When_EnableAndDisableMixed_Expect_ReturnParaError)
+{
+    BuildRankTableForHostDpuTls(rankInfoDetectClient_->rankTable_, {TlsStatus::ENABLE, TlsStatus::DISABLE});
+
+    HcclResult ret = rankInfoDetectClient_->VerifyHostDpuTlsConsistency();
+
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_VerifyHostDpuTlsConsistency_When_KnownConsistentAndUnknownExists_Expect_Success)
+{
+    BuildRankTableForHostDpuTls(rankInfoDetectClient_->rankTable_, {TlsStatus::ENABLE, TlsStatus::UNKNOWN});
+
+    HcclResult ret = rankInfoDetectClient_->VerifyHostDpuTlsConsistency();
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_VerifyHostDpuTlsConsistency_When_KnownInconsistentAndUnknownExists_Expect_ParaError)
+{
+    BuildRankTableForHostDpuTls(
+        rankInfoDetectClient_->rankTable_, {TlsStatus::ENABLE, TlsStatus::DISABLE, TlsStatus::UNKNOWN});
+
+    HcclResult ret = rankInfoDetectClient_->VerifyHostDpuTlsConsistency();
+
+    EXPECT_EQ(ret, HCCL_E_PARA);
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_VerifyHostDpuTlsConsistency_When_AllRanksUnknown_Expect_ReturnSuccess)
+{
+    BuildRankTableForHostDpuTls(rankInfoDetectClient_->rankTable_, {TlsStatus::UNKNOWN, TlsStatus::UNKNOWN});
+
+    HcclResult ret = rankInfoDetectClient_->VerifyHostDpuTlsConsistency();
+
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+}
+
+TEST_F(RankInfoDetectClientTest, Ut_VerifyRankTable_When_HostDpuTlsInconsistent_Expect_ReportAndThrow)
+{
+    rankInfoDetectClient_->rankSize_ = 3;
+    BuildRankTableForHostDpuTls(
+        rankInfoDetectClient_->rankTable_, {TlsStatus::ENABLE, TlsStatus::DISABLE, TlsStatus::UNKNOWN});
+    g_reportedErrorCode.clear();
+    g_reportedKeys.clear();
+    g_reportedValues.clear();
+    MOCKER(RptInputErr).stubs().will(invoke(StubRptInputErr));
+
+    EXPECT_THROW(rankInfoDetectClient_->VerifyRankTable(), InvalidParamsException);
+
+    EXPECT_EQ(g_reportedErrorCode, "EI0016");
+    EXPECT_EQ(g_reportedKeys, std::vector<std::string>({"value", "variable", "expect"}));
+    ASSERT_EQ(g_reportedValues.size(), 3U);
+    EXPECT_EQ(g_reportedValues[0], "Disable");
+    EXPECT_EQ(g_reportedValues[1], "\"hostDpuTls\"");
+    EXPECT_NE(g_reportedValues[2].find("enabled tls: 0"), std::string::npos);
+    EXPECT_NE(g_reportedValues[2].find("disabled tls: 1"), std::string::npos);
+    EXPECT_NE(g_reportedValues[2].find("query failure tls: 2"), std::string::npos);
 }
 
 TEST_F(RankInfoDetectClientTest, Ut_CheckStatus_When_Timeout_Expect_Throw)

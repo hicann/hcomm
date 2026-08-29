@@ -40,6 +40,7 @@ public:
     std::vector<RankLevelInfo> rankLevelInfos{};
     ControlPlane controlPlane{};
     TlsStatus tlsStatus{TlsStatus::UNKNOWN};
+    TlsStatus hostDpuTlsStatus{TlsStatus::UNKNOWN};
     std::string Describe() const;
     void Deserialize(const nlohmann::json& newRankInfoJson);
     explicit NewRankInfo(BinaryStream& binStream);

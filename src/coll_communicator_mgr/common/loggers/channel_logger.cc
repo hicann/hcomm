@@ -127,14 +127,15 @@ namespace logger {
 
     void ChannelLogger::PrintChannelErrorDetails(
         uint32_t localRank, uint32_t channelNum, const HcclChannelDesc* channelDescs, ChannelHandle* channelHandles,
-        int32_t* statusList, int64_t elapsedMs, Hccl::TlsStatus tlsStatus)
+        int32_t* statusList, int64_t elapsedMs, const Hccl::TlsStatus* tlsStatusList)
     {
         // 打印错误详情表格（只打印异常状态的 Channel）
         PrintErrorTableHeader(localRank);
 
         for (uint32_t i = 0; i < channelNum; ++i) {
             if (IsAbnormalStatus(statusList[i])) {
-                PrintErrorInfo(i, localRank, channelDescs[i], channelHandles[i], statusList[i], elapsedMs, tlsStatus);
+                PrintErrorInfo(
+                    i, localRank, channelDescs[i], channelHandles[i], statusList[i], elapsedMs, tlsStatusList[i]);
             }
         }
 

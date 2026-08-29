@@ -16,10 +16,13 @@
 #include "my_rank.h"
 #undef private
 
+#include "channel.h"
+
 using namespace hccl;
 
 namespace {
 Hccl::TlsStatus g_expectedTlsStatus = Hccl::TlsStatus::UNKNOWN;
+int g_expectedNetworkMode = NetworkMode::NETWORK_OFFLINE;
 
 HcclResult StubHrtGetDeviceSuccess(s32* deviceLogicId)
 {
@@ -37,8 +40,18 @@ HcclResult StubMyRankHrtRaGetTlsStatus(RaInfo* info, Hccl::TlsStatus& tlsStatus)
 {
     EXPECT_NE(info, nullptr);
     EXPECT_EQ(info->phyId, 8U);
+    EXPECT_EQ(info->mode, g_expectedNetworkMode);
     tlsStatus = g_expectedTlsStatus;
     return HCCL_SUCCESS;
+}
+
+HcclChannelDesc CreateChannelDesc(CommProtocol protocol, EndpointLocType locType)
+{
+    HcclChannelDesc channelDesc{};
+    (void)HcclChannelDescInit(&channelDesc, 1);
+    channelDesc.localEndpoint.protocol = protocol;
+    channelDesc.localEndpoint.loc.locType = locType;
+    return channelDesc;
 }
 } // namespace
 
@@ -55,6 +68,7 @@ protected:
         };
         myRank_.reset(new MyRank(nullptr, 0, config_, callbacks_, nullptr, nullptr));
         g_expectedTlsStatus = Hccl::TlsStatus::UNKNOWN;
+        g_expectedNetworkMode = NetworkMode::NETWORK_OFFLINE;
     }
 
     void TearDown() override
@@ -74,7 +88,7 @@ TEST_F(MyRankTlsTest, Ut_GetLocalTlsStatus_When_HrtGetDeviceFails_Expect_ReturnS
 
     MOCKER(hrtGetDevice).stubs().will(returnValue(HCCL_E_RUNTIME));
 
-    HcclResult ret = myRank_->GetLocalTlsStatus(tlsStatus);
+    HcclResult ret = myRank_->GetLocalTlsStatus(ENDPOINT_LOC_TYPE_DEVICE, tlsStatus);
 
     EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }
@@ -86,7 +100,7 @@ TEST_F(MyRankTlsTest, Ut_GetLocalTlsStatus_When_HrtGetDevicePhyIdByIndexFails_Ex
     MOCKER(hrtGetDevice).stubs().will(invoke(StubHrtGetDeviceSuccess));
     MOCKER(hrtGetDevicePhyIdByIndex).stubs().will(returnValue(HCCL_E_RUNTIME));
 
-    HcclResult ret = myRank_->GetLocalTlsStatus(tlsStatus);
+    HcclResult ret = myRank_->GetLocalTlsStatus(ENDPOINT_LOC_TYPE_DEVICE, tlsStatus);
 
     EXPECT_EQ(ret, HCCL_E_RUNTIME);
 }
@@ -100,8 +114,48 @@ TEST_F(MyRankTlsTest, Ut_GetLocalTlsStatus_When_AllDependenciesSucceed_Expect_Re
     MOCKER(hrtGetDevicePhyIdByIndex).stubs().will(invoke(StubHrtGetDevicePhyIdByIndexSuccess));
     MOCKER(Hccl::HrtRaGetTlsStatus).stubs().will(invoke(StubMyRankHrtRaGetTlsStatus));
 
-    HcclResult ret = myRank_->GetLocalTlsStatus(tlsStatus);
+    HcclResult ret = myRank_->GetLocalTlsStatus(ENDPOINT_LOC_TYPE_DEVICE, tlsStatus);
 
     EXPECT_EQ(ret, HCCL_SUCCESS);
     EXPECT_EQ(tlsStatus, Hccl::TlsStatus::ENABLE);
+}
+
+TEST_F(MyRankTlsTest, Ut_GetAbnormalChannelTlsStatus_When_LaterChannelFails_Expect_OnlyAbnormalChannelQueried)
+{
+    g_expectedTlsStatus = Hccl::TlsStatus::ENABLE;
+    g_expectedNetworkMode = NetworkMode::NETWORK_PEER_ONLINE;
+    HcclChannelDesc channelDescs[2] = {
+        CreateChannelDesc(COMM_PROTOCOL_HCCS, ENDPOINT_LOC_TYPE_DEVICE),
+        CreateChannelDesc(COMM_PROTOCOL_ROCE, ENDPOINT_LOC_TYPE_HOST),
+    };
+    int32_t statusList[2] = {hcomm::ChannelStatus::READY, hcomm::ChannelStatus::FAILED};
+    MOCKER(hrtGetDevice).stubs().will(invoke(StubHrtGetDeviceSuccess));
+    MOCKER(hrtGetDevicePhyIdByIndex).stubs().will(invoke(StubHrtGetDevicePhyIdByIndexSuccess));
+    MOCKER(Hccl::HrtRaGetTlsStatus).stubs().will(invoke(StubMyRankHrtRaGetTlsStatus));
+
+    std::vector<Hccl::TlsStatus> tlsStatusList;
+    myRank_->GetAbnormalChannelTlsStatus(channelDescs, statusList, 2, tlsStatusList);
+
+    ASSERT_EQ(tlsStatusList.size(), 2U);
+    EXPECT_EQ(tlsStatusList[0], Hccl::TlsStatus::UNKNOWN);
+    EXPECT_EQ(tlsStatusList[1], Hccl::TlsStatus::ENABLE);
+}
+
+TEST_F(MyRankTlsTest, Ut_GetAbnormalChannelTlsStatus_When_AllReady_Expect_NoChannelQueried)
+{
+    HcclChannelDesc channelDescs[2] = {
+        CreateChannelDesc(COMM_PROTOCOL_HCCS, ENDPOINT_LOC_TYPE_DEVICE),
+        CreateChannelDesc(COMM_PROTOCOL_ROCE, ENDPOINT_LOC_TYPE_HOST),
+    };
+    int32_t statusList[2] = {hcomm::ChannelStatus::READY, hcomm::ChannelStatus::READY};
+    MOCKER(hrtGetDevice).stubs().will(invoke(StubHrtGetDeviceSuccess));
+    MOCKER(hrtGetDevicePhyIdByIndex).stubs().will(invoke(StubHrtGetDevicePhyIdByIndexSuccess));
+    MOCKER(Hccl::HrtRaGetTlsStatus).stubs().will(invoke(StubMyRankHrtRaGetTlsStatus));
+
+    std::vector<Hccl::TlsStatus> tlsStatusList;
+    myRank_->GetAbnormalChannelTlsStatus(channelDescs, statusList, 2, tlsStatusList);
+
+    ASSERT_EQ(tlsStatusList.size(), 2U);
+    EXPECT_EQ(tlsStatusList[0], Hccl::TlsStatus::UNKNOWN);
+    EXPECT_EQ(tlsStatusList[1], Hccl::TlsStatus::UNKNOWN);
 }

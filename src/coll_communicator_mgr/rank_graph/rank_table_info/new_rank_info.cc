@@ -114,8 +114,9 @@ std::string NewRankInfo::Describe() const
 {
     return StringFormat(
         "NewRankInfo[rankId=%d, localId=%d, replacedLocalId=%d, ranklevelInfos size=%d, device_port=%d, "
-        "host_port=%d, tlsStatus=%d]",
-        rankId, localId, replacedLocalId, rankLevelInfos.size(), devicePort, hostPort, static_cast<int>(tlsStatus));
+        "host_port=%d, tlsStatus=%d, hostDpuTlsStatus=%d]",
+        rankId, localId, replacedLocalId, rankLevelInfos.size(), devicePort, hostPort, static_cast<int>(tlsStatus),
+        static_cast<int>(hostDpuTlsStatus));
 }
 
 NewRankInfo::NewRankInfo(BinaryStream& binStream)
@@ -131,6 +132,7 @@ NewRankInfo::NewRankInfo(BinaryStream& binStream)
     ControlPlane controlPlanes(binStream);
     controlPlane = controlPlanes;
     binStream >> tlsStatus;
+    binStream >> hostDpuTlsStatus;
 }
 
 void NewRankInfo::GetBinStream(bool isContainLoaId, BinaryStream& binStream) const
@@ -151,6 +153,7 @@ void NewRankInfo::GetBinStream(bool isContainLoaId, BinaryStream& binStream) con
     }
     controlPlane.GetBinStream(binStream);
     binStream << tlsStatus;
+    binStream << hostDpuTlsStatus;
 }
 
 } // namespace Hccl

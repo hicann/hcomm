@@ -90,6 +90,22 @@ inline std::string GetCommProtocolEnumStr(CommProtocol protocol)
     }
 }
 
+inline const char* GetTlsTypeStr(EndpointLocType localType)
+{
+    return localType == ENDPOINT_LOC_TYPE_HOST ? "HostDpu" : "Device";
+}
+
+inline const char* GetTlsStatusStr(Hccl::TlsStatus tlsStatus)
+{
+    if (tlsStatus == Hccl::TlsStatus::ENABLE) {
+        return "ENABLE";
+    }
+    if (tlsStatus == Hccl::TlsStatus::DISABLE) {
+        return "DISABLE";
+    }
+    return "UNKNOWN";
+}
+
 } // namespace MyRankUtils
 
 HcclResult MyRankUtils::FillRoceSrcPortList(
@@ -214,7 +230,7 @@ MyRank::~MyRank()
     }
 }
 
-HcclResult MyRank::GetLocalTlsStatus(Hccl::TlsStatus& tlsStatus) const
+HcclResult MyRank::GetLocalTlsStatus(EndpointLocType localType, Hccl::TlsStatus& tlsStatus) const
 {
     tlsStatus = Hccl::TlsStatus::UNKNOWN;
     s32 deviceLogicId = -1;
@@ -223,9 +239,28 @@ HcclResult MyRank::GetLocalTlsStatus(Hccl::TlsStatus& tlsStatus) const
     CHK_RET(hrtGetDevicePhyIdByIndex(static_cast<u32>(deviceLogicId), devicePhyId));
 
     RaInfo info{};
-    info.mode = NetworkMode::NETWORK_OFFLINE;
+    info.mode = localType == ENDPOINT_LOC_TYPE_HOST ? NetworkMode::NETWORK_PEER_ONLINE : NetworkMode::NETWORK_OFFLINE;
     info.phyId = devicePhyId;
     return Hccl::HrtRaGetTlsStatus(&info, tlsStatus);
+}
+
+void MyRank::GetAbnormalChannelTlsStatus(
+    const HcclChannelDesc* channelDescs, const int32_t* statusList, uint32_t channelNum,
+    std::vector<Hccl::TlsStatus>& tlsStatusList) const
+{
+    tlsStatusList.assign(channelNum, Hccl::TlsStatus::UNKNOWN);
+    for (uint32_t i = 0; i < channelNum; ++i) {
+        if (statusList[i] == ChannelStatus::READY) {
+            continue;
+        }
+        Hccl::TlsStatus tlsStatus = Hccl::TlsStatus::UNKNOWN;
+        HcclResult ret = GetLocalTlsStatus(channelDescs[i].localEndpoint.loc.locType, tlsStatus);
+        if (ret != HCCL_SUCCESS) {
+            HCCL_WARNING("[GetLocalTlsStatus] Can not get TlsStatus, channelIndex[%u], ret[%d]", i, ret);
+            continue;
+        }
+        tlsStatusList[i] = tlsStatus;
+    }
 }
 
 HcclResult MyRank::RegisterCommMemsToEndpoint(EndpointHandle epHandle)
@@ -749,8 +784,15 @@ HcclResult MyRank::BatchCreateChannels(
         if (ret == HCCL_E_TIMEOUT || ret == HCCL_E_INTERNAL) {
             Hccl::TlsStatus tlsStatus = Hccl::TlsStatus::UNKNOWN;
             CHK_PRT_CONT(
-                GetLocalTlsStatus(tlsStatus) != HCCL_SUCCESS,
+                GetLocalTlsStatus(localEndpointDesc.loc.locType, tlsStatus) != HCCL_SUCCESS,
                 HCCL_WARNING("[GetLocalTlsStatus] Can not get TlsStatus"));
+            HCCL_ERROR(
+                "[%s] failed to create channel, channelIndex[%u], localRank[%u], remoteRank[%u], protocol[%s], "
+                "tlsType[%s], tlsStatus[%s], ret[%d]",
+                __func__, i, localRank, remoteRank,
+                MyRankUtils::GetCommProtocolEnumStr(localEndpointDesc.protocol).c_str(),
+                MyRankUtils::GetTlsTypeStr(localEndpointDesc.loc.locType), MyRankUtils::GetTlsStatusStr(tlsStatus),
+                ret);
         }
         if (ret == HCCL_E_UNAVAIL) {
             // 申请channel因资源不足失败，清理已申请的channel
@@ -766,12 +808,15 @@ HcclResult MyRank::BatchCreateChannels(
             newChannels_.emplace_back(std::make_pair(i, reuseIdx));
         }
 
-        CHK_PRT_RET(
-            ret != HCCL_SUCCESS,
-            HCCL_ERROR(
-                "[%s] failed to create channel, channelIndex[%u], remoteRank[%u], engine[%s], reuseIndex[%u]", __func__,
-                i + 1, remoteRank, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(), reuseIdx),
-            ret);
+        if (ret != HCCL_SUCCESS) {
+            if (ret != HCCL_E_TIMEOUT && ret != HCCL_E_INTERNAL) {
+                HCCL_ERROR(
+                    "[%s] failed to create channel, channelIndex[%u], remoteRank[%u], engine[%s], reuseIndex[%u]",
+                    __func__, i + 1, remoteRank, GetEnumToString(GetCommEngineStatusStrMap(), engine).c_str(),
+                    reuseIdx);
+            }
+            return ret;
+        }
         if (idx != UNREUSE_CHANNEL_IDX) {
             reuseIdx++;
         }
@@ -1029,13 +1074,11 @@ MyRank::BatchConnectChannels(const HcclChannelDesc* channelDescs, ChannelHandle*
             RPT_INPUT_ERR(
                 true, "EI0006", std::vector<std::string>({"reason"}),
                 std::vector<std::string>({GET_SOCKET_TIMEOUT_REASON_CLOSE_DETECT}));
-            Hccl::TlsStatus tlsStatus = Hccl::TlsStatus::UNKNOWN;
-            CHK_PRT_CONT(
-                GetLocalTlsStatus(tlsStatus) != HCCL_SUCCESS,
-                HCCL_WARNING("[GetLocalTlsStatus] Can not get TlsStatus"));
+            std::vector<Hccl::TlsStatus> tlsStatusList(channelNum, Hccl::TlsStatus::UNKNOWN);
+            GetAbnormalChannelTlsStatus(channelDescs, statusList, channelNum, tlsStatusList);
             logger::ChannelLogger::PrintChannelErrorDetails(
                 rankId_, channelNum, channelDescs, channelHandles, statusList, static_cast<uint64_t>(elapsed),
-                tlsStatus);
+                tlsStatusList.data());
             return HCCL_E_TIMEOUT;
         }
 
@@ -1064,13 +1107,11 @@ MyRank::BatchConnectChannels(const HcclChannelDesc* channelDescs, ChannelHandle*
             HCCL_ERROR(
                 "[%s] channel connect failed, channelNum[%u], ret[%d], elapsed[%lld]ms, retryCount[%u]", __func__,
                 channelNum, ret, elapsed, retryCount);
-            Hccl::TlsStatus tlsStatus = Hccl::TlsStatus::UNKNOWN;
-            CHK_PRT_CONT(
-                GetLocalTlsStatus(tlsStatus) != HCCL_SUCCESS,
-                HCCL_WARNING("[GetLocalTlsStatus] Can not get TlsStatus"));
+            std::vector<Hccl::TlsStatus> tlsStatusList(channelNum, Hccl::TlsStatus::UNKNOWN);
+            GetAbnormalChannelTlsStatus(channelDescs, statusList, channelNum, tlsStatusList);
             logger::ChannelLogger::PrintChannelErrorDetails(
                 rankId_, channelNum, channelDescs, channelHandles, statusList, static_cast<uint64_t>(elapsed),
-                tlsStatus);
+                tlsStatusList.data());
             return ret;
         }
 

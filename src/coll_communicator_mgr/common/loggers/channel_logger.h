@@ -86,6 +86,7 @@ namespace hcomm {
              * @param channelHandle Channel 句柄
              * @param status Channel 状态值
              * @param elapsedMs 已耗时（毫秒）
+             * @param tlsStatus 当前 Channel 对应的 TLS 状态
              */
             static void PrintErrorInfo(
                 uint32_t idx, uint32_t localRank, const HcclChannelDesc& channelDesc, ChannelHandle channelHandle,
@@ -99,6 +100,7 @@ namespace hcomm {
              * @param channelHandles Channel 句柄数组
              * @param statusList Channel 状态数组
              * @param elapsedMs 已耗时（毫秒）
+             * @param tlsStatusList 逐通道 TLS 状态数组
              *
              * 功能：
              * - 打印错误详情表格（只打印异常状态的 Channel）
@@ -106,7 +108,8 @@ namespace hcomm {
              */
             static void PrintChannelErrorDetails(
                 uint32_t localRank, uint32_t channelNum, const HcclChannelDesc* channelDescs,
-                ChannelHandle* channelHandles, int32_t* statusList, int64_t elapsedMs, Hccl::TlsStatus tlsStatus);
+                ChannelHandle* channelHandles, int32_t* statusList, int64_t elapsedMs,
+                const Hccl::TlsStatus* tlsStatusList);
 
         private:
             // 私有构造函数（静态工具类）

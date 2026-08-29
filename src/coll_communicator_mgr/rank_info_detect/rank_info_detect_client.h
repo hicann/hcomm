@@ -12,6 +12,7 @@
 #define HCCLV2_RANK_INFO_DETECT_CLIENT_H
 
 #include <cstddef>
+#include <functional>
 #include <vector>
 #include "socket.h"
 #include "new_rank_info.h"
@@ -77,10 +78,14 @@ private:
     void ProbeHostRoceAddr(const IpAddress& hostAddr, bool& isAvailable) const;
     void ConstructSingleRank(RankTableInfo& localRankTable);
     HcclResult GetLocalTlsStatus(TlsStatus& tlsStatus) const;
+    HcclResult GetLocalHostDpuTlsStatus(TlsStatus& tlsStatus) const;
     HcclResult VerifyTlsConsistency() const;
+    HcclResult VerifyHostDpuTlsConsistency() const;
+    HcclResult VerifyTlsConsistencyByTlsType(
+        const std::string& tlsType, const std::function<TlsStatus(const NewRankInfo&)>& getTlsStatus) const;
     void GenerateTlsStatusStr(std::string& tlsStatusStr, const std::vector<u32>& tlsStatusRanks) const;
     void ReportTlsConfigurationError(
-        const std::string& tlsInconsistentTlsType, const std::string& tlsEnableRankStr,
+        const std::string& tlsType, const std::string& tlsInconsistentTlsType, const std::string& tlsEnableRankStr,
         const std::string& tlsDisableRankStr, const std::string& tlsUnknownRankStr) const;
     void TearDown();
     void HostListenPortDetect(NewRankInfo& rankInfo);
