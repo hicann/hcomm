@@ -107,18 +107,19 @@ HcclResult HcclCommTaskExceptionLite::HandleDpuTaskexception(CollCommAicpu* aicp
         return HCCL_SUCCESS;
     }
     // 查是否有错误
-    uint16_t flag = 0;
+    uint16_t errorCode = 0;
     errno_t ret = memcpy_s(
-        &flag, sizeof(flag), taskexceptionVa + sizeof(uint8_t), sizeof(flag)); // 读标志位,第2-3字节，存放HcclResult。
+        &errorCode, sizeof(errorCode), taskexceptionVa + sizeof(uint8_t),
+        sizeof(errorCode)); // 读标志位,第2-3字节，存放HcclResult。
     if (ret != EOK) {
-        HCCL_ERROR("[HcclCommTaskExceptionLite::%s] memcpy_s failed on flag, return[%d].", __func__, ret);
+        HCCL_ERROR("[HcclCommTaskExceptionLite::%s] memcpy_s failed on errorCode, return[%d].", __func__, ret);
         return HCCL_E_MEMORY;
     }
-    if (flag != 0) {
+    if (errorCode != 0) {
         // 触发taskexception
         HCCL_ERROR(
             "[HcclCommTaskExceptionLite][DPU] taskexceptionVa[%p], errorCode[%d], devId[%u], commId[%s]",
-            taskexceptionVa, flag, aicpuComm->GetDevId(), commId.c_str());
+            taskexceptionVa, errorCode, aicpuComm->GetDevId(), commId.c_str());
         // 1、取notify，并构造rtLogicCqReport_t
         auto* hcclCommDfxLite = aicpuComm->GetHcclCommDfxLite();
         CHK_PTR_NULL(hcclCommDfxLite);

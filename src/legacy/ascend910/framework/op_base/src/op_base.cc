@@ -5365,6 +5365,7 @@ HcclTaskRegister([[maybe_unused]] HcclComm comm, [[maybe_unused]] const char* ms
             HCCL_ERROR("[HcclTaskRegister] TaskRegisterV2 failed, ret[0x%016llx]", HCCL_ERROR_CODE(ret)), ret);
     } else {
         std::string commId = hcclComm->GetIdentifier();
+        std::lock_guard<std::mutex> lock(g_serMapMutex);
         CHK_RET(HcclCheckTaskServiceExist(commId, g_hcclDeviceId));
         ret = g_taskServiceMap[commId][g_hcclDeviceId]->TaskRegister(msgTag, cb);
         CHK_PRT_RET(
@@ -5405,6 +5406,7 @@ int32_t HcclTaskUnRegister([[maybe_unused]] HcclComm comm, [[maybe_unused]] cons
         return HcclTaskUnRegisterV2(commV2, msgTag);
     } else {
         std::string commId = hcclComm->GetIdentifier();
+        std::lock_guard<std::mutex> lock(g_serMapMutex);
         CHK_RET(HcclCheckTaskServiceExist(commId, g_hcclDeviceId));
         return g_taskServiceMap[commId][g_hcclDeviceId]->TaskUnRegister(msgTag);
     }

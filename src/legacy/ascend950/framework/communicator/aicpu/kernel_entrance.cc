@@ -127,6 +127,9 @@ uint32_t HcclDpuTaskexpShmemRestore(void* args)
         auto it = g_taskExpDevMemMap.find(commId);
         if (it == g_taskExpDevMemMap.end()) {
             g_taskExpDevMemMap.insert({commId, kernelParam->taskexceptionVa});
+        } else {
+            HCCL_ERROR(
+                "taskexceptionVa[%p] already in map, key is commId[%s]", kernelParam->taskexceptionVa, commId.c_str());
         }
     } // 只在通信域创建时保存一次，通信域销毁时该处会同步销毁，不存在需要更新的场景
     HCCL_INFO(

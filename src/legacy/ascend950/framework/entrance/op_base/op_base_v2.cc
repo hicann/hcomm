@@ -539,6 +539,7 @@ HcclResult HcclTaskRegisterV2(HcclComm comm, const char* msgTag, Callback cb)
     Hccl::HcclCommunicator* communicator = static_cast<Hccl::HcclCommunicator*>(comm);
     std::string commId = communicator->GetId();
     s32 deviceId = communicator->GetDeviceLogicId();
+    std::lock_guard<std::mutex> lock(g_serMapMutex);
     CHK_RET(HcclCheckTaskServiceExist(commId, deviceId));
 
     return g_taskServiceMap[commId][deviceId]->TaskRegister(msgTag, cb);
@@ -551,6 +552,7 @@ HcclResult HcclTaskRegisterProfV2(HcclComm comm, ProfCallbackTemplate profCallba
     std::string commId = communicator->GetId();
     HCCL_INFO("[HcclTaskRegisterProfV2] commId[%s]", commId.c_str());
     s32 deviceId = communicator->GetDeviceLogicId();
+    std::lock_guard<std::mutex> lock(g_serMapMutex);
     CHK_RET(HcclCheckTaskServiceExist(commId, deviceId));
     return g_taskServiceMap[commId][deviceId]->TaskProfRegister(profCallback);
 }
@@ -562,6 +564,7 @@ HcclResult HcclTaskReportRegisterV2(HcclComm comm, ReportCallbackTemplate report
     std::string commId = communicator->GetId();
     HCCL_INFO("[HcclTaskReportRegisterV2] commId[%s]", commId.c_str());
     s32 deviceId = communicator->GetDeviceLogicId();
+    std::lock_guard<std::mutex> lock(g_serMapMutex);
     CHK_RET(HcclCheckTaskServiceExist(commId, deviceId));
     return g_taskServiceMap[commId][deviceId]->TaskReportRegister(reportCallback);
 }
@@ -581,12 +584,13 @@ HcclResult HcclGetDpuSteamIdV2(HcclComm comm, u32& dpuStreamId)
 
 HcclResult HcclTaskUnRegisterV2(HcclComm comm, const char* msgTag)
 {
-    HCCL_RUN_INFO(
-        "[HcclTaskUnRegisterV2] start to unregister task, g_taskServiceMap.size()==%zu", g_taskServiceMap.size());
     CHK_PTR_NULL(comm);
     Hccl::HcclCommunicator* communicator = static_cast<Hccl::HcclCommunicator*>(comm);
     std::string commId = communicator->GetId();
     s32 deviceId = communicator->GetDeviceLogicId();
+    std::lock_guard<std::mutex> lock(g_serMapMutex);
+    HCCL_RUN_INFO(
+        "[HcclTaskUnRegisterV2] start to unregister task, g_taskServiceMap.size()==%zu", g_taskServiceMap.size());
     CHK_RET(HcclCheckTaskServiceExist(commId, deviceId));
     return g_taskServiceMap[commId][deviceId]->TaskUnRegister(msgTag);
 }

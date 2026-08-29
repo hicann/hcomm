@@ -64,7 +64,8 @@ constexpr u64 HCCL_CCL_AIV_TAG_BUFFER_SIZE = 2;   // 指定存放aiv tag的大�
 constexpr u32 HCCL_CCL_AIV_CLEAR_STEP_MAX = 1000; // aiv tag算子下发时++，大于1000置位
 constexpr u32 BASE_BIT = 1;                       // 用于左移设置二进制数的特定位
 constexpr u64 SHARE_HBM_MEMORY_SIZE = (100 * 1024 * 1024);
-constexpr u64 DPU_TASKEXCEPTION_MEMORY_SIZE = 10; // DPU TASKEXCEPTION共享内存大小 |stopflag[1]|hcclret[2]|hcclret[2]|
+constexpr u64 DPU_TASKEXCEPTION_MEMORY_SIZE
+    = 10; // DPU TASKEXCEPTION共享内存大小 |stopflag[1]|hcclret[2]|hcclret[2]|,预留5字节
 constexpr u64 ALIGN_4K = 4096U;
 constexpr const char* DPUTAG = "DPUTAG";
 constexpr const char* DPUTASKEXCEPTION = "DPUTASKEXCEPTION";
@@ -2479,20 +2480,29 @@ void CommunicatorImpl::DestroyImpl()
     HCCL_INFO("[~CommunicatorImpl] start CommunicatorImpl destroy, commId[%s]", id.c_str());
     (void)DestroyDpuKernelResource();
     (void)DestroyDpuTaskexpShmemInDevice();
-    (void)DestroyKFCWorkSpaceVA();
     // 释放
     if (hostShareBuf != nullptr) {
         free(hostShareBuf);
         hostShareBuf = nullptr;
     }
-    auto outerIt = g_taskServiceMap.find(id);
-    if (outerIt != g_taskServiceMap.end()) {
-        outerIt->second.erase(devLogicId);
-        if (outerIt->second.empty()) {
-            g_taskServiceMap.erase(id);
+    {
+        std::lock_guard<std::mutex> lock(g_serMapMutex);
+        auto outerIt = g_taskServiceMap.find(id);
+        if (outerIt != g_taskServiceMap.end()) {
+            outerIt->second.erase(devLogicId);
+            if (outerIt->second.empty()) {
+                g_taskServiceMap.erase(id);
+            }
+        }
+        auto expOuterIt = g_taskExpMemMap.find(id);
+        if (expOuterIt != g_taskExpMemMap.end()) {
+            expOuterIt->second.erase(devLogicId);
+            if (expOuterIt->second.empty()) {
+                g_taskExpMemMap.erase(id);
+            }
         }
     }
-    g_taskExpMemMap.erase(id);
+    (void)DestroyKFCWorkSpaceVA();
     (void)NotifyAicpuDestroyComm();
     ccuDrvHandle = nullptr;
 
@@ -3411,8 +3421,8 @@ HcclResult CommunicatorImpl::InitAndLaunchDpuKernel()
                                                       static_cast<uint64_t>(DPU_TASKEXCEPTION_MEMORY_SIZE);
         HcclResult memRet = GetKFCWorkSpaceVA(tmpShmem.first, &memSize, &tmpShmem.second.accessVA_, &newCreate);
         if (memRet != HCCL_SUCCESS) {
-            HCCL_ERROR("[CommunicatorImpl::InitCommResource] Alloc Share HBM Failed");
-            return HCCL_E_RUNTIME;
+            HCCL_ERROR("[CommunicatorImpl::InitAndLaunchDpuKernel] Alloc Share HBM Failed");
+            return memRet;
         }
     }
     // 设置XPU
@@ -3654,7 +3664,8 @@ CommunicatorImpl::AllocAndRegKFCWorkSpace(uint64_t size, const std::string& memT
         HCCL_ERROR("[CommunicatorImpl::AllocAndRegKFCWorkSpace] set 0 failed: %d", cpyRet);
         return HCCL_E_MEMORY; // 如果失败，会在~CommunicatorImpl中进行解注册与内存释放
     }
-    HCCL_INFO("CommunicatorImpl::AllocAndRegKFCWorkSpace va_[%p], accessVA_[%p]", it->second.va_, it->second.accessVA_);
+    HCCL_INFO(
+        "CommunicatorImpl::AllocAndRegKFCWorkSpace, va_[%p], accessVA_[%p]", it->second.va_, it->second.accessVA_);
     return HCCL_SUCCESS;
 }
 
@@ -3679,7 +3690,6 @@ HcclResult CommunicatorImpl::CleanupKFCWorkSpaceOnFailure(DpuShmem& shmem, HcclR
 HcclResult
 CommunicatorImpl::GetKFCWorkSpaceVA(const std::string& memTag, const uint64_t* size, void** addr, bool* newCreated)
 {
-    HCCL_INFO("CommunicatorImpl::GetKFCWorkSpaceVA tag[%s]", memTag.c_str()); // 调试日志
     auto it = tagDpuShmemArgsMap_.find(memTag);
     if (it == tagDpuShmemArgsMap_.end()) {
         HCCL_ERROR("memTag is invalid, memTag: %s", memTag.c_str());

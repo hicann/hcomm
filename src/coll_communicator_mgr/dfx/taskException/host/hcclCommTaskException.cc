@@ -203,39 +203,39 @@ bool IsMC2Exception(const rtExceptionInfo_t* exceptionInfo)
 
 bool TaskExceptionHost::ProcessDpuException(const rtExceptionInfo_t* exceptionInfo) const
 {
-    HCCL_RUN_INFO("[TaskExceptionHost][%s]begin to execute hccl task exception callback function.", __func__);
-    bool isExce = false;
+    bool isDpuErr = false;
     errno_t ret = EOK;
     uint16_t hcclRet = 0;
-    for (auto pairMap : g_taskExpMemMap) {
-        std::string commId = pairMap.first;
+    std::lock_guard<std::mutex> lock(g_serMapMutex);
+    for (const auto& pairMap : g_taskExpMemMap) {
+        auto innerIt = pairMap.second.find(exceptionInfo->deviceid);
+        if (innerIt == pairMap.second.end() || innerIt->second == nullptr) {
+            continue;
+        }
+        auto taskExpPtr = reinterpret_cast<uint8_t*>(innerIt->second);
         // 读取共享内存内容并打印
-        ret = memcpy_s(
-            &hcclRet, sizeof(uint16_t),
-            reinterpret_cast<uint8_t*>(pairMap.second[exceptionInfo->deviceid]) + sizeof(uint8_t) + sizeof(uint16_t),
-            sizeof(uint16_t));
+        ret = memcpy_s(&hcclRet, sizeof(uint16_t), taskExpPtr + sizeof(uint8_t) + sizeof(uint16_t), sizeof(uint16_t));
         if (ret != EOK) {
             HCCL_ERROR("memcpy_s get dpu taskexception failed: %d", ret);
-            return isExce;
+            return isDpuErr;
         }
         if (hcclRet != 0) { // 有dpu任务出错
             HCCL_ERROR("[TaskExceptionHost][ProcessDpuException] Task from HCCL run failed.");
             HCCL_ERROR(
                 "[TaskExceptionHost][ProcessDpuException] errorCode[%d], devId[%u], commId[%s]", hcclRet,
-                exceptionInfo->deviceid, commId.c_str());
+                exceptionInfo->deviceid, pairMap.first.c_str());
             ret = memset_s(
-                reinterpret_cast<uint8_t*>(pairMap.second[exceptionInfo->deviceid]) + sizeof(uint8_t)
-                    + sizeof(uint16_t),
-                sizeof(uint16_t), 0, sizeof(uint16_t)); // 清空 dpu taskexception共享内存内容
+                taskExpPtr + sizeof(uint8_t) + sizeof(uint16_t), sizeof(uint16_t), 0,
+                sizeof(uint16_t)); // 清空 dpu taskexception共享内存内容
             if (ret != EOK) {
                 HCCL_ERROR("memset_s clean dpu taskexception failed: %d", ret);
-                return isExce;
+                return isDpuErr;
             }
-            isExce = true;
+            isDpuErr = true;
             break;
         }
     }
-    return isExce;
+    return isDpuErr;
 }
 
 void TaskExceptionHost::Process(rtExceptionInfo_t* exceptionInfo)

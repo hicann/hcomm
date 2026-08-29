@@ -11,7 +11,6 @@
 #ifndef HCCL_COMMUNICATOR_DPU_TYPES_H
 #define HCCL_COMMUNICATOR_DPU_TYPES_H
 
-#include <unordered_map>
 #include <string>
 #include <cstdint>
 #include "types.h"

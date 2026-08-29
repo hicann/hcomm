@@ -150,11 +150,21 @@ HcclResult TaskService::ReadTaskType(
 // dstret为host侧taskexception回调读取是否有错的标志位
 HcclResult TaskService::ExecuteTaskexception(int32_t ret)
 {
-    if (g_taskExpMemMap.find(commId_) == g_taskExpMemMap.end()) {
-        HCCL_ERROR("TaskService::ExecuteTaskexception commId not in g_taskExpMemMap, please check");
-        return HCCL_E_NOT_FOUND;
+    void* taskexpShmem = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(g_serMapMutex);
+        auto outerIt = g_taskExpMemMap.find(commId_);
+        if (outerIt == g_taskExpMemMap.end()) {
+            HCCL_ERROR("TaskService::ExecuteTaskexception commId not in g_taskExpMemMap, please check");
+            return HCCL_E_NOT_FOUND;
+        }
+        auto innerIt = outerIt->second.find(devId_);
+        if (innerIt == outerIt->second.end()) {
+            HCCL_ERROR("TaskService::ExecuteTaskexception devId not in g_taskExpMemMap, please check");
+            return HCCL_E_NOT_FOUND;
+        }
+        taskexpShmem = innerIt->second;
     }
-    void* taskexpShmem = g_taskExpMemMap[commId_][devId_];
     HcclResult hcclRet = static_cast<HcclResult>(ret);
     if (taskexpShmem != nullptr) {
         uint8_t* stopFlagPtr = static_cast<uint8_t*>(taskexpShmem);

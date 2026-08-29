@@ -3986,25 +3986,8 @@ TEST_F(CommunicatorImplTest, Ut_DestroyDpuTaskexpShmemInDevice_When_UbPath_Expec
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
-TEST_F(CommunicatorImplTest, Ut_InitAndLaunchAicpuKernel_When_CreateStreamFail_Expect_ReturnInternalError)
+void SetupAicpuKernelTestComm(CommunicatorImpl& comm, aclError streamCreateRet)
 {
-    CommunicatorImpl comm;
-    comm.id = "aicpuTest";
-    comm.devLogicId = 0;
-    comm.tagDpuShmemArgsMap_["DPUTASKEXCEPTION"].accessVA_ = reinterpret_cast<void*>(0x1000);
-
-    MOCKER_CPP(&CommunicatorImpl::GetAicpuKernelFuncHandle)
-        .stubs()
-        .will(returnValue(reinterpret_cast<aclrtFuncHandle>(0x1)));
-    MOCKER(aclrtCreateStreamWithConfig).stubs().will(returnValue(ACL_ERROR_INVALID_PARAM));
-
-    HcclResult ret = comm.InitAndLaunchAicpuKernel();
-    EXPECT_EQ(ret, HCCL_E_INTERNAL);
-}
-
-TEST_F(CommunicatorImplTest, Ut_InitAndLaunchAicpuKernel_When_LaunchFail_Expect_ReturnInternalError)
-{
-    CommunicatorImpl comm;
     comm.id = "aicpuTest";
     comm.devLogicId = 0;
     comm.tagDpuShmemArgsMap_["DPUTASKEXCEPTION"].accessVA_ = reinterpret_cast<void*>(0x1000);
@@ -4015,7 +3998,22 @@ TEST_F(CommunicatorImplTest, Ut_InitAndLaunchAicpuKernel_When_LaunchFail_Expect_
     MOCKER(aclrtCreateStreamWithConfig)
         .stubs()
         .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(ACL_SUCCESS));
+        .will(returnValue(streamCreateRet));
+}
+
+TEST_F(CommunicatorImplTest, Ut_InitAndLaunchAicpuKernel_When_CreateStreamFail_Expect_ReturnInternalError)
+{
+    CommunicatorImpl comm;
+    SetupAicpuKernelTestComm(comm, ACL_ERROR_INVALID_PARAM);
+
+    HcclResult ret = comm.InitAndLaunchAicpuKernel();
+    EXPECT_EQ(ret, HCCL_E_INTERNAL);
+}
+
+TEST_F(CommunicatorImplTest, Ut_InitAndLaunchAicpuKernel_When_LaunchFail_Expect_ReturnInternalError)
+{
+    CommunicatorImpl comm;
+    SetupAicpuKernelTestComm(comm, ACL_SUCCESS);
     MOCKER(aclrtLaunchKernelWithHostArgs).stubs().will(returnValue(static_cast<rtError_t>(1)));
 
     HcclResult ret = comm.InitAndLaunchAicpuKernel();
@@ -4025,17 +4023,7 @@ TEST_F(CommunicatorImplTest, Ut_InitAndLaunchAicpuKernel_When_LaunchFail_Expect_
 TEST_F(CommunicatorImplTest, Ut_InitAndLaunchAicpuKernel_When_DestroyStreamFail_Expect_ReturnRuntimeError)
 {
     CommunicatorImpl comm;
-    comm.id = "aicpuTest";
-    comm.devLogicId = 0;
-    comm.tagDpuShmemArgsMap_["DPUTASKEXCEPTION"].accessVA_ = reinterpret_cast<void*>(0x1000);
-
-    MOCKER_CPP(&CommunicatorImpl::GetAicpuKernelFuncHandle)
-        .stubs()
-        .will(returnValue(reinterpret_cast<aclrtFuncHandle>(0x1)));
-    MOCKER(aclrtCreateStreamWithConfig)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(ACL_SUCCESS));
+    SetupAicpuKernelTestComm(comm, ACL_SUCCESS);
     MOCKER(aclrtLaunchKernelWithHostArgs).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(HcclStreamSynchronize).stubs();
     MOCKER(aclrtDestroyStreamForce).stubs().will(returnValue(ACL_ERROR_INVALID_PARAM));
@@ -4047,17 +4035,7 @@ TEST_F(CommunicatorImplTest, Ut_InitAndLaunchAicpuKernel_When_DestroyStreamFail_
 TEST_F(CommunicatorImplTest, Ut_InitAndLaunchAicpuKernel_When_AllSuccess_Expect_ReturnSuccess)
 {
     CommunicatorImpl comm;
-    comm.id = "aicpuTest";
-    comm.devLogicId = 0;
-    comm.tagDpuShmemArgsMap_["DPUTASKEXCEPTION"].accessVA_ = reinterpret_cast<void*>(0x1000);
-
-    MOCKER_CPP(&CommunicatorImpl::GetAicpuKernelFuncHandle)
-        .stubs()
-        .will(returnValue(reinterpret_cast<aclrtFuncHandle>(0x1)));
-    MOCKER(aclrtCreateStreamWithConfig)
-        .stubs()
-        .with(mockcpp::any(), mockcpp::any(), mockcpp::any())
-        .will(returnValue(ACL_SUCCESS));
+    SetupAicpuKernelTestComm(comm, ACL_SUCCESS);
     MOCKER(aclrtLaunchKernelWithHostArgs).stubs().will(returnValue(RT_ERROR_NONE));
     MOCKER(HcclStreamSynchronize).stubs();
     MOCKER(aclrtDestroyStreamForce).stubs().will(returnValue(ACL_SUCCESS));
