@@ -25,6 +25,8 @@ namespace Hccl {
 
 static constexpr u32 aging = 1;
 constexpr std::uint32_t HCCLINFO_REPORT_BATCH_NUM = 2;
+constexpr u32 TASK_ID_HIGH_WORD_SHIFT_BITS = 16;
+constexpr u32 ADDR_WORD_SHIFT_BITS = 32;
 DfxProfilingHandlerLite DfxProfilingHandlerLite::instance_;
 
 static const std::map<OpTypeVal, std::string> OP_TYPE_NAME_MAP = {
@@ -251,11 +253,11 @@ void DfxProfilingHandlerLite::ReportMainStreamTask(const DfxFlagTaskInfo& flagTa
     reporterData.dataLen = sizeof(MsprofAicpuHcclMainStreamTask);
     reporterData.timeStamp = ProfGetCurCpuTimestampLite();
     auto* flagtask = reinterpret_cast<MsprofAicpuHcclMainStreamTask*>(reporterData.data);
-    flagtask->taskId = static_cast<uint16_t>(flagTaskInfo.taskId >> 16);
+    flagtask->taskId = static_cast<uint16_t>(flagTaskInfo.taskId >> TASK_ID_HIGH_WORD_SHIFT_BITS);
     flagtask->streamId = static_cast<uint16_t>(flagTaskInfo.taskId);
     flagtask->type = flagTaskInfo.type;
     uint32_t aicpuKernelTaskIdLow32 = static_cast<uint32_t>(aicpuKernelTaskId);
-    flagtask->aicpuTaskId = static_cast<uint16_t>(aicpuKernelTaskIdLow32 >> 16);
+    flagtask->aicpuTaskId = static_cast<uint16_t>(aicpuKernelTaskIdLow32 >> TASK_ID_HIGH_WORD_SHIFT_BITS);
     flagtask->aicpuStreamId = static_cast<uint16_t>(aicpuKernelTaskIdLow32);
     HCCL_INFO(
         "[DfxProfilingHandlerLite][ReportMainStreamTask] streamId:%u, taskId:%u, type:%u,"
@@ -499,10 +501,10 @@ void DfxProfilingHandlerLite::FillSdmaRdmaDetail(const DfxTaskInfo* it, MsprofAi
         auto* header = reinterpret_cast<Hccl::Rt91095StarsSqeHeader*>(sqePtr);
         if (static_cast<Hccl::Rt91095StarsSqeType>(header->type) == Hccl::Rt91095StarsSqeType::RT_91095_SQE_TYPE_SDMA) {
             auto* dmaSqe = reinterpret_cast<Hccl::Rt91095StarsMemcpySqe*>(sqePtr);
-            taskDetailsInfos.srcAddr
-                = (static_cast<u64>(dmaSqe->u.strideMode0.srcAddrHigh) << 32) | dmaSqe->u.strideMode0.srcAddrLow;
-            taskDetailsInfos.dstAddr
-                = (static_cast<u64>(dmaSqe->u.strideMode0.dstAddrHigh) << 32) | dmaSqe->u.strideMode0.dstAddrLow;
+            taskDetailsInfos.srcAddr = (static_cast<u64>(dmaSqe->u.strideMode0.srcAddrHigh) << ADDR_WORD_SHIFT_BITS)
+                                       | dmaSqe->u.strideMode0.srcAddrLow;
+            taskDetailsInfos.dstAddr = (static_cast<u64>(dmaSqe->u.strideMode0.dstAddrHigh) << ADDR_WORD_SHIFT_BITS)
+                                       | dmaSqe->u.strideMode0.dstAddrLow;
             taskDetailsInfos.dataSize = dmaSqe->u.strideMode0.lengthMove;
         }
     }

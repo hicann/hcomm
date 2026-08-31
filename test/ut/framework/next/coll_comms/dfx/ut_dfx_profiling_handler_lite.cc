@@ -16,6 +16,7 @@
 #define protected public
 #include "dfx_profiling_handler_lite.h"
 #include "res_pub.h"
+#include "sqe_a5.h"
 #undef private
 #undef protected
 
@@ -482,6 +483,32 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_FillSdmaRdmaDetail_When_CalledViaGetDetai
     taskInfo.linkType = 2;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
     EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+}
+
+TEST_F(DfxProfilingHandlerLiteTest, Ut_FillSdmaRdmaDetail_When_SdmaSqe_Expect_AddrMerged)
+{
+    PrepareHandlerInit(handler_);
+    handler_.SetCachedCommInfo(100, 0, 8);
+
+    Hccl::Rt91095StarsMemcpySqe sqe = {};
+    sqe.header.type = static_cast<uint8_t>(Hccl::Rt91095StarsSqeType::RT_91095_SQE_TYPE_SDMA);
+    sqe.u.strideMode0.srcAddrHigh = 0x00000001u;
+    sqe.u.strideMode0.srcAddrLow = 0x22223333u;
+    sqe.u.strideMode0.dstAddrHigh = 0x00000002u;
+    sqe.u.strideMode0.dstAddrLow = 0x44445555u;
+    sqe.u.strideMode0.lengthMove = 0x1234u;
+
+    Hccl::DfxTaskInfo taskInfo{};
+    FillDfxTaskInfoForType(taskInfo, static_cast<u8>(Hccl::TaskParamTypeVal::TASK_SDMA));
+    taskInfo.linkType = 2;
+    taskInfo.taskPara.Dma.sqeAddr = reinterpret_cast<u64>(&sqe);
+
+    MsprofAicpuHcclTaskInfo taskDetailsInfos{};
+    handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos);
+
+    EXPECT_EQ(taskDetailsInfos.srcAddr, (static_cast<u64>(0x00000001) << 32) | 0x22223333ULL);
+    EXPECT_EQ(taskDetailsInfos.dstAddr, (static_cast<u64>(0x00000002) << 32) | 0x44445555ULL);
+    EXPECT_EQ(taskDetailsInfos.dataSize, 0x1234u);
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_FillUbDmaDetail_When_Normal_CalledViaGetDetail_Expect_NoThrow)

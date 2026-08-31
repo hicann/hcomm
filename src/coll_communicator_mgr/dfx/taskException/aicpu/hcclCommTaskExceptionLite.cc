@@ -34,6 +34,7 @@ constexpr uint32_t TASK_CONTEXT_INFO_SIZE
     = LOG_TMPBUF_SIZE - TASK_CONTEXT_SIZE; // task 执行失败时打印前序task信息的长度限制
 constexpr u32 MAX_NAME_LEN = 64;
 constexpr u32 TASK_ID_SHIFT_BITS = 16;
+constexpr u32 ADDR_WORD_SHIFT_BITS = 32; // 将32位高位地址与低地址拼接为64位地址的移位数
 
 HcclCommTaskExceptionLite& HcclCommTaskExceptionLite::GetInstance()
 {
@@ -502,10 +503,10 @@ void HcclCommTaskExceptionLite::FillSdmaErrMsg(const Hccl::DfxTaskInfo& taskInfo
         auto* header = reinterpret_cast<Hccl::Rt91095StarsSqeHeader*>(sqePtr);
         if (static_cast<Hccl::Rt91095StarsSqeType>(header->type) == Hccl::Rt91095StarsSqeType::RT_91095_SQE_TYPE_SDMA) {
             auto* dmaSqe = reinterpret_cast<Hccl::Rt91095StarsMemcpySqe*>(sqePtr);
-            errMsgInfo.taskSrcAddr
-                = (static_cast<u64>(dmaSqe->u.strideMode0.srcAddrHigh) << 32) | dmaSqe->u.strideMode0.srcAddrLow;
-            errMsgInfo.taskDstAddr
-                = (static_cast<u64>(dmaSqe->u.strideMode0.dstAddrHigh) << 32) | dmaSqe->u.strideMode0.dstAddrLow;
+            errMsgInfo.taskSrcAddr = (static_cast<u64>(dmaSqe->u.strideMode0.srcAddrHigh) << ADDR_WORD_SHIFT_BITS)
+                                     | dmaSqe->u.strideMode0.srcAddrLow;
+            errMsgInfo.taskDstAddr = (static_cast<u64>(dmaSqe->u.strideMode0.dstAddrHigh) << ADDR_WORD_SHIFT_BITS)
+                                     | dmaSqe->u.strideMode0.dstAddrLow;
             errMsgInfo.size = dmaSqe->u.strideMode0.lengthMove;
         }
     }

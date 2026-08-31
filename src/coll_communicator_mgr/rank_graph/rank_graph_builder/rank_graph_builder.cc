@@ -19,6 +19,9 @@ namespace Hccl {
 
 using namespace std;
 
+// peer 与 fabric 之间的 hop 数（peer 经 fabric 一跳到达 = 2 hop）
+constexpr u32 PEER2NET_LINK_HOP = 2;
+
 unique_ptr<RankGraph> RankGraphBuilder::Build(const string& ranktableM, const string& topoPath, RankId myRank)
 {
     PhyTopoBuilder::GetInstance().Build(topoPath);
@@ -121,10 +124,10 @@ void RankGraphBuilder::AddPeer2NetLink(
         // 构造 peer2netLink 和 net2peerLink 两条link
         shared_ptr<NetInstance::Link> peer2netLink = make_shared<NetInstance::Link>(
             peerNode, fabNode, peerIface, nullptr, LinkType::PEER2NET, link->GetLinkProtocols(), LinkDirection::BOTH,
-            2);
+            PEER2NET_LINK_HOP);
         shared_ptr<NetInstance::Link> net2peerLink = make_shared<NetInstance::Link>(
             fabNode, peerNode, nullptr, peerIface, LinkType::PEER2NET, link->GetLinkProtocols(), LinkDirection::BOTH,
-            2);
+            PEER2NET_LINK_HOP);
 
         // 插入 link
         tempNetInsts_[netLayer][netInstId]->AddLink(peer2netLink);
@@ -267,11 +270,11 @@ void RankGraphBuilder::AddTopoDescFabricInfo()
             for (const auto& iface : peerIfaces) {
                 auto peer2netLink = std::make_shared<NetInstance::Link>(
                     peerNode, fabNodePtr, iface, nullptr, LinkType::PEER2NET, link->GetLinkProtocols(),
-                    LinkDirection::BOTH, 2);
+                    LinkDirection::BOTH, PEER2NET_LINK_HOP);
 
                 auto net2peerLink = std::make_shared<NetInstance::Link>(
                     fabNodePtr, peerNode, nullptr, iface, LinkType::PEER2NET, link->GetLinkProtocols(),
-                    LinkDirection::BOTH, 2);
+                    LinkDirection::BOTH, PEER2NET_LINK_HOP);
 
                 // 插入 link
                 tempNetInsts_[0][netInstId]->AddLink(peer2netLink);
