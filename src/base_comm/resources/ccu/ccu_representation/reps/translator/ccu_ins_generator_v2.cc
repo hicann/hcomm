@@ -64,7 +64,7 @@ namespace CcuRep {
             return HcclResult::HCCL_SUCCESS;
         }
 
-        HcclResult GetRmtToken(CcuUrmaChannel* channelImpl, uint64_t& rmtToken)
+        HcclResult GetRmtToken(const CcuUrmaChannel* channelImpl, uint64_t& rmtToken)
         {
             uint32_t rmtTokenId{0};
             uint32_t rmtTokenValue{0};
@@ -906,7 +906,7 @@ namespace CcuRep {
     }
 
     void CcuInsGeneratorV2::LoadFuncCallInArgs(
-        CcuInstr* instr, std::vector<CcuRepArg>& inArgs, std::vector<Variable>& formalIns, uint16_t reserveXnId)
+        CcuInstr* instr, std::vector<CcuRepArg>& inArgs, std::vector<Variable>& formalIns, uint16_t reserveXnId) const
     {
         uint32_t idx = 0;
         for (uint32_t i = 0; i < inArgs.size(); i++) {
@@ -924,7 +924,7 @@ namespace CcuRep {
 
     void CcuInsGeneratorV2::LoadFuncCallOutArgs(
         CcuInstr* instr, uint32_t offset, std::vector<CcuRepArg>& outArgs, CcuRepReferenceManager* funcManager,
-        uint16_t reserveXnId)
+        uint16_t reserveXnId) const
     {
         uint32_t idx = 0;
         for (uint32_t i = 0; i < outArgs.size(); i++) {
@@ -1024,8 +1024,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::CcuRepJumpTranslateV2Base(
-        CcuInstr*& curInstr, uint16_t& curInstrId, CcuRepJumpBase* jumpBasePtr, uint64_t expected,
-        const Variable& condition, const Variable& expectedVar, ConditionType condType)
+        CcuInstr* const& curInstr, uint16_t& curInstrId, CcuRepJumpBase* jumpBasePtr, uint64_t expected,
+        const Variable& condition, const Variable& expectedVar, ConditionType condType) const
     {
         (void)curInstr;
         (void)curInstrId;
@@ -1131,7 +1131,8 @@ namespace CcuRep {
         return HcclResult::HCCL_SUCCESS;
     }
 
-    HcclResult CcuInsGeneratorV2::LoadLoopCallArg(CcuInstr*& instr, const CcuRepArg& inArg, const CcuRepArg& blkArg)
+    HcclResult
+    CcuInsGeneratorV2::LoadLoopCallArg(CcuInstr*& instr, const CcuRepArg& inArg, const CcuRepArg& blkArg) const
     {
         switch (inArg.type) {
             case CcuArgType::VARIABLE:
@@ -1360,7 +1361,8 @@ namespace CcuRep {
         return HcclResult::HCCL_SUCCESS;
     }
 
-    HcclResult CcuInsGeneratorV2::PrepareLoadConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel)
+    HcclResult
+    CcuInsGeneratorV2::PrepareLoadConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const
     {
         CcuRepLoad* loadPtr = dynamic_cast<CcuRepLoad*>(repPtr);
         CHK_PTR_NULL(loadPtr);
@@ -1370,7 +1372,7 @@ namespace CcuRep {
     }
 
     HcclResult
-    CcuInsGeneratorV2::PrepareLoadVarConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel)
+    CcuInsGeneratorV2::PrepareLoadVarConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const
     {
         CcuRepLoadVar* loadVarPtr = dynamic_cast<CcuRepLoadVar*>(repPtr);
         CHK_PTR_NULL(loadVarPtr);
@@ -1378,7 +1380,8 @@ namespace CcuRep {
         return ccuKernel->Add2ConstValue2VarMap(values);
     }
 
-    HcclResult CcuInsGeneratorV2::PrepareStoreConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel)
+    HcclResult
+    CcuInsGeneratorV2::PrepareStoreConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const
     {
         CcuRepStore* storePtr = dynamic_cast<CcuRepStore*>(repPtr);
         CHK_PTR_NULL(storePtr);
@@ -1388,7 +1391,7 @@ namespace CcuRep {
     }
 
     HcclResult
-    CcuInsGeneratorV2::PrepareStoreVarConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel)
+    CcuInsGeneratorV2::PrepareStoreVarConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const
     {
         CcuRepStoreVar* storeVarPtr = dynamic_cast<CcuRepStoreVar*>(repPtr);
         CHK_PTR_NULL(storeVarPtr);
@@ -1400,7 +1403,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::PrepareRemPostSemConstValue(
-        CcuRepBase* repPtr, [[maybe_unused]] const TransDep& dep, CcuKernel* ccuKernel)
+        CcuRepBase* repPtr, [[maybe_unused]] const TransDep& dep, CcuKernel* ccuKernel) const
     {
         CcuRepRemPostSem* repRemPostSemPtr = dynamic_cast<CcuRepRemPostSem*>(repPtr);
         CHK_PTR_NULL(repRemPostSemPtr);
@@ -1421,7 +1424,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::PrepareRemPostVarConstValue(
-        CcuRepBase* repPtr, [[maybe_unused]] const TransDep& dep, CcuKernel* ccuKernel)
+        CcuRepBase* repPtr, [[maybe_unused]] const TransDep& dep, CcuKernel* ccuKernel) const
     {
         CcuRepRemPostVar* repRemPostVarPtr = dynamic_cast<CcuRepRemPostVar*>(repPtr);
         CHK_PTR_NULL(repRemPostVarPtr);
@@ -1450,7 +1453,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::PrepareWriteConstValue(
-        CcuRepBase* repPtr, [[maybe_unused]] const TransDep& dep, CcuKernel* ccuKernel)
+        CcuRepBase* repPtr, [[maybe_unused]] const TransDep& dep, CcuKernel* ccuKernel) const
     {
         CcuRepWrite* repWritePtr = dynamic_cast<CcuRepWrite*>(repPtr);
         CHK_PTR_NULL(repWritePtr);
@@ -1463,7 +1466,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::PrepareReadConstValue(
-        CcuRepBase* repPtr, [[maybe_unused]] const TransDep& dep, CcuKernel* ccuKernel)
+        CcuRepBase* repPtr, [[maybe_unused]] const TransDep& dep, CcuKernel* ccuKernel) const
     {
         CcuRepRead* repReadPtr = dynamic_cast<CcuRepRead*>(repPtr);
         CHK_PTR_NULL(repReadPtr);
@@ -1474,7 +1477,7 @@ namespace CcuRep {
     }
 
     HcclResult
-    CcuInsGeneratorV2::PrepareBufWriteConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel)
+    CcuInsGeneratorV2::PrepareBufWriteConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const
     {
         CcuRepBufWrite* repBufWritePtr = dynamic_cast<CcuRepBufWrite*>(repPtr);
         CHK_PTR_NULL(repBufWritePtr);
@@ -1487,7 +1490,7 @@ namespace CcuRep {
     }
 
     HcclResult
-    CcuInsGeneratorV2::PrepareBufReadConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel)
+    CcuInsGeneratorV2::PrepareBufReadConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const
     {
         CcuRepBufRead* repBufReadPtr = dynamic_cast<CcuRepBufRead*>(repPtr);
         CHK_PTR_NULL(repBufReadPtr);
@@ -1497,7 +1500,8 @@ namespace CcuRep {
         return ccuKernel->Add2ConstValue2VarMap(values);
     }
 
-    HcclResult CcuInsGeneratorV2::PrepareLocCpyConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel)
+    HcclResult
+    CcuInsGeneratorV2::PrepareLocCpyConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const
     {
         CcuRepLocCpy* repLocCpyPtr = dynamic_cast<CcuRepLocCpy*>(repPtr);
         CHK_PTR_NULL(repLocCpyPtr);
@@ -1506,7 +1510,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::PrepareRecordSharedNotifyConstValue(
-        CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel)
+        CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const
     {
         CcuRepRecordSharedNotify* sharedNotifyPtr = dynamic_cast<CcuRepRecordSharedNotify*>(repPtr);
         CHK_PTR_NULL(sharedNotifyPtr);
@@ -1518,7 +1522,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::LoopConfigTranslate(
-        CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoopGroupBundle* bundlePtr, const TransDep& dep)
+        CcuInstr*& instr, uint16_t& curInstrId, const CcuRepLoopGroupBundle* bundlePtr, const TransDep& dep) const
     {
         for (const auto& loop : bundlePtr->GetLoops()) {
             CcuV2::LoadImdToXn(instr++, loop.ctxIdVar.Id(), loop.executor.Id());
@@ -1548,8 +1552,8 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV2::LoopGroupConfigTranslate(
-        CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoopGroupBundle* bundlePtr, const TransDep& dep, bool isConfig,
-        bool isCompat, uint16_t& loopGroupConfigId)
+        CcuInstr*& instr, uint16_t& curInstrId, const CcuRepLoopGroupBundle* bundlePtr, const TransDep& dep,
+        bool isConfig, bool isCompat, uint16_t& loopGroupConfigId) const
     {
         loopGroupConfigId = bundlePtr->GetParallelVar().Id();
         if (isConfig) {
@@ -1621,9 +1625,10 @@ namespace CcuRep {
 
         // LoopGroup：loops 定义在其后第 3 条起（跳过 2 条无条件跳转）
         // xnOffset(Xp)：config/version960 有来源，兼容路径无来源填 0
+        constexpr uint16_t kLoopEntryInstrOffset = 3;
         const uint16_t xnOffsetId = isCompat ? dep.reserveXnId : bundlePtr->GetXnOffsetVar().Id();
         CcuV2::LoopGroup(
-            instr++, curInstrId + 3, loopGroupConfigId, bundlePtr->GetOffsetParam().Id(),
+            instr++, curInstrId + kLoopEntryInstrOffset, loopGroupConfigId, bundlePtr->GetOffsetParam().Id(),
             xnOffsetId); // 向后3条为loop入口
         curInstrId++;
 
@@ -1651,38 +1656,44 @@ namespace CcuRep {
         return HcclResult::HCCL_SUCCESS;
     }
 
-    uint16_t CcuInsGeneratorV2::CcuRepLoopGroupBundleInstrCount(CcuRepLoopGroupBundle* bundlePtr)
+    uint16_t CcuInsGeneratorV2::CcuRepLoopGroupBundleInstrCount(const CcuRepLoopGroupBundle* bundlePtr) const
     {
         if (bundlePtr == nullptr) {
             Hccl::THROW<Hccl::CcuApiException>("[%s] bundlePtr is nullptr", __func__);
         }
         uint16_t total = 0;
         // 每 loop 按自身构造方式计条数
+        constexpr uint16_t kConfigLoopInstrCount = 4;       // 3 条载入(ctxId/iterNum/gsaOffset) + 1 条 Loop
+        constexpr uint16_t kVersionV2LoopInstrCount = 2;    // 1 条 ctxId 载入 + 1 条 Loop
+        constexpr uint16_t kPackedVarLoopInstrCount = 8;    // 7 条(ctxId1 + 位重排6) + 1 条 Loop
+        constexpr uint16_t kConfigGroupHeaderCount = 7;     // 打包3 + loopgroup1 + 跳过2 + 收尾1
+        constexpr uint16_t kVersionV2GroupHeaderCount = 4;  // loopgroup1 + 跳过2 + 收尾1
+        constexpr uint16_t kPackedVarGroupHeaderCount = 23; // 位重排19 + loopgroup1 + 跳过2 + 收尾1
         for (const auto& loop : bundlePtr->GetLoops()) {
             switch (loop.layout) {
                 case CcuRepLoopGroupBundle::Layout::Config:
-                    total += 4; // 3 条载入(ctxId/iterNum/gsaOffset) + 1 条 Loop
+                    total += kConfigLoopInstrCount;
                     break;
                 case CcuRepLoopGroupBundle::Layout::VersionV2:
-                    total += 2; // 1 条 ctxId 载入 + 1 条 Loop
+                    total += kVersionV2LoopInstrCount;
                     break;
                 case CcuRepLoopGroupBundle::Layout::PackedVar:
                 default:
-                    total += 8; // 7 条(ctxId1 + 位重排6) + 1 条 Loop
+                    total += kPackedVarLoopInstrCount;
                     break;
             }
         }
         // group 头按 group 自身构造方式计条数
         switch (bundlePtr->GetLayout()) {
             case CcuRepLoopGroupBundle::Layout::Config:
-                total += 7; // 打包3(parallel/offset/xnOffset) + loopgroup1 + 跳过2 + 收尾1
+                total += kConfigGroupHeaderCount;
                 break;
             case CcuRepLoopGroupBundle::Layout::VersionV2:
-                total += 4; // loopgroup1 + 跳过2 + 收尾1
+                total += kVersionV2GroupHeaderCount;
                 break;
             case CcuRepLoopGroupBundle::Layout::PackedVar:
             default:
-                total += 23; // 位重排19 + loopgroup1 + 跳过2 + 收尾1
+                total += kPackedVarGroupHeaderCount;
                 break;
         }
         return total;

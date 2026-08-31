@@ -310,31 +310,31 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV1::CcuRepRemWaitSemTranslate(
-        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemWaitSem* cuRepRemWaitSem)
+        CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemWaitSem* ccuRepRemWaitSem)
     {
         UNUSED(ccuKernel);
-        CHK_PTR_NULL(cuRepRemWaitSem);
+        CHK_PTR_NULL(ccuRepRemWaitSem);
         void* channelPtr{nullptr};
         CHK_PRT_RET(
-            static_cast<HcclResult>(HcommChannelGet(cuRepRemWaitSem->GetChannel(), &channelPtr))
+            static_cast<HcclResult>(HcommChannelGet(ccuRepRemWaitSem->GetChannel(), &channelPtr))
                 != HcclResult::HCCL_SUCCESS,
-            HCCL_ERROR("failed to get ccu channel, type[%d]", cuRepRemWaitSem->Type()), HCCL_E_INTERNAL);
+            HCCL_ERROR("failed to get ccu channel, type[%d]", ccuRepRemWaitSem->Type()), HCCL_E_INTERNAL);
 
         auto* channelImpl = dynamic_cast<CcuUrmaChannel*>(static_cast<Channel*>(channelPtr));
         CHK_PTR_NULL(channelImpl);
         uint32_t locCkeId{0};
         CHK_PRT_RET(
-            channelImpl->GetLocCkeByIndex(cuRepRemWaitSem->GetSemIndex(), locCkeId) != HcclResult::HCCL_SUCCESS,
+            channelImpl->GetLocCkeByIndex(ccuRepRemWaitSem->GetSemIndex(), locCkeId) != HcclResult::HCCL_SUCCESS,
             HCCL_ERROR(
                 "[CcuRepRemWaitSem][%s] failed to get loc cke id, channelHandle[0x%llx], semIndex[%u].", __func__,
-                cuRepRemWaitSem->GetChannel(), cuRepRemWaitSem->GetSemIndex()),
+                ccuRepRemWaitSem->GetChannel(), ccuRepRemWaitSem->GetSemIndex()),
             HCCL_E_UNAVAIL);
 
         // 需要profiling的使用SetCKEInstr, 否则使用ClearCKEInstr
-        if (cuRepRemWaitSem->GetIsProfiling()) {
-            SetCKEInstr(instr++, 0, 0, locCkeId, cuRepRemWaitSem->GetMask(), 1);
+        if (ccuRepRemWaitSem->GetIsProfiling()) {
+            SetCKEInstr(instr++, 0, 0, locCkeId, ccuRepRemWaitSem->GetMask(), 1);
         } else {
-            ClearCKEInstr(instr++, 0, 0, locCkeId, cuRepRemWaitSem->GetMask(), 1);
+            ClearCKEInstr(instr++, 0, 0, locCkeId, ccuRepRemWaitSem->GetMask(), 1);
         }
 
         return HcclResult::HCCL_SUCCESS;
@@ -614,7 +614,7 @@ namespace CcuRep {
     }
 
     void CcuInsGeneratorV1::LoadFuncCallInArgs(
-        CcuInstr* instr, std::vector<CcuRepArg>& inArgs, std::vector<Variable>& formalIns, uint16_t reserveXnId)
+        CcuInstr* instr, std::vector<CcuRepArg>& inArgs, std::vector<Variable>& formalIns, uint16_t reserveXnId) const
     {
         uint32_t idx = 0;
         for (uint32_t i = 0; i < inArgs.size(); i++) {
@@ -816,7 +816,7 @@ namespace CcuRep {
     }
 
     HcclResult CcuInsGeneratorV1::LoadLoopCallArg(
-        CcuInstr*& instr, const CcuRepArg& inArg, const CcuRepArg& blkArg, const TransDep& dep)
+        CcuInstr*& instr, const CcuRepArg& inArg, const CcuRepArg& blkArg, const TransDep& dep) const
     {
         switch (inArg.type) {
             case CcuArgType::VARIABLE:
@@ -1012,36 +1012,13 @@ namespace CcuRep {
         CHK_PTR_NULL(bundlePtr);
         const auto& loops = bundlePtr->GetLoops();
 
-        for (const auto& loop : loops) {
-            if (loop.layout == CcuRepLoopGroupBundle::Layout::Config) {
-                uint64_t lpImm = GetLoopParam(loop.executor.Id(), loop.config.addrOffset, loop.config.iterNum);
-                LoadImdToXnInstr(instr++, loop.loopParamVar.Id(), lpImm);
-                curInstrId++;
-            } else {
-                uint64_t ctxImm = static_cast<uint64_t>(loop.executor.Id()) << 45; // 左移45位到对应字段然后相加
-                LoadImdToXnInstr(instr++, dep.reserveXnId, ctxImm);
-                curInstrId++;
-                LoadXXInstr(instr++, loop.loopParamVar.Id(), loop.loopParamVar.Id(), dep.reserveXnId);
-                curInstrId++;
-            }
-        }
+        LoadLoopGroupParams(instr, curInstrId, bundlePtr, dep);
+        LoadLoopGroupBundleConfig(instr, curInstrId, bundlePtr);
 
-        if (bundlePtr->GetLayout() == CcuRepLoopGroupBundle::Layout::Config) {
-            uint64_t parallelImm = GetParallelParam(
-                bundlePtr->GetConfig().cloneNum, bundlePtr->GetRepeatLoopIdx(), bundlePtr->GetTotalLoopNum());
-            LoadImdToXnInstr(instr++, bundlePtr->GetParallelVar().Id(), parallelImm);
-            curInstrId++;
-
-            uint64_t offsetImm = ::hcomm::CcuRep::GetOffsetParam(
-                bundlePtr->GetConfig().addrOffset, bundlePtr->GetConfig().ccuBufferOffset,
-                bundlePtr->GetConfig().eventOffset);
-            LoadImdToXnInstr(instr++, bundlePtr->GetOffsetParam().Id(), offsetImm);
-            curInstrId++;
-        }
-
+        constexpr uint16_t kLoopEntryInstrOffset = 3;
         LoopGroupInstr(
-            instr++, curInstrId + 3, bundlePtr->GetParallelVar().Id(), bundlePtr->GetOffsetParam().Id(),
-            0); // 向后3条为loop指令
+            instr++, curInstrId + kLoopEntryInstrOffset, bundlePtr->GetParallelVar().Id(),
+            bundlePtr->GetOffsetParam().Id(), 0); // 向后3条为loop指令
         curInstrId++;
 
         uint16_t loopCount = static_cast<uint16_t>(loops.size());
@@ -1066,7 +1043,44 @@ namespace CcuRep {
         return HcclResult::HCCL_SUCCESS;
     }
 
-    uint16_t CcuInsGeneratorV1::CcuRepLoopGroupBundleInstrCount(CcuRepLoopGroupBundle* bundlePtr)
+    void CcuInsGeneratorV1::LoadLoopGroupParams(
+        CcuInstr*& instr, uint16_t& curInstrId, const CcuRepLoopGroupBundle* bundlePtr, const TransDep& dep) const
+    {
+        const auto& loops = bundlePtr->GetLoops();
+        for (const auto& loop : loops) {
+            if (loop.layout == CcuRepLoopGroupBundle::Layout::Config) {
+                uint64_t lpImm = GetLoopParam(loop.executor.Id(), loop.config.addrOffset, loop.config.iterNum);
+                LoadImdToXnInstr(instr++, loop.loopParamVar.Id(), lpImm);
+                curInstrId++;
+            } else {
+                uint64_t ctxImm = static_cast<uint64_t>(loop.executor.Id()) << 45; // 左移45位到对应字段然后相加
+                LoadImdToXnInstr(instr++, dep.reserveXnId, ctxImm);
+                curInstrId++;
+                LoadXXInstr(instr++, loop.loopParamVar.Id(), loop.loopParamVar.Id(), dep.reserveXnId);
+                curInstrId++;
+            }
+        }
+    }
+
+    void CcuInsGeneratorV1::LoadLoopGroupBundleConfig(
+        CcuInstr*& instr, uint16_t& curInstrId, const CcuRepLoopGroupBundle* bundlePtr) const
+    {
+        if (bundlePtr->GetLayout() != CcuRepLoopGroupBundle::Layout::Config) {
+            return;
+        }
+        uint64_t parallelImm = GetParallelParam(
+            bundlePtr->GetConfig().cloneNum, bundlePtr->GetRepeatLoopIdx(), bundlePtr->GetTotalLoopNum());
+        LoadImdToXnInstr(instr++, bundlePtr->GetParallelVar().Id(), parallelImm);
+        curInstrId++;
+
+        uint64_t offsetImm = ::hcomm::CcuRep::GetOffsetParam(
+            bundlePtr->GetConfig().addrOffset, bundlePtr->GetConfig().ccuBufferOffset,
+            bundlePtr->GetConfig().eventOffset);
+        LoadImdToXnInstr(instr++, bundlePtr->GetOffsetParam().Id(), offsetImm);
+        curInstrId++;
+    }
+
+    uint16_t CcuInsGeneratorV1::CcuRepLoopGroupBundleInstrCount(const CcuRepLoopGroupBundle* bundlePtr) const
     {
         if (bundlePtr == nullptr) {
             Hccl::THROW<Hccl::CcuApiException>("[%s] bundlePtr is nullptr", __func__);

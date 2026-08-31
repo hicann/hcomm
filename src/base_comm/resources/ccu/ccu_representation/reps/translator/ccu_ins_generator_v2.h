@@ -22,7 +22,7 @@ namespace CcuRep {
         CcuInsGeneratorV2() {}
 
         // 虚析构函数，确保派生类对象正确析构
-        virtual ~CcuInsGeneratorV2() = default;
+        virtual ~CcuInsGeneratorV2() override = default;
 
         // data
         HcclResult CcuRepBufLocReadTranslate(
@@ -52,7 +52,7 @@ namespace CcuRep {
             CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRecordSharedNotify* ccuRepRecordSharedNotify,
             const TransDep& dep) override;
         HcclResult
-        CcuRepRemWaitSemTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemWaitSem* cuRepRemWaitSem) override;
+        CcuRepRemWaitSemTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemWaitSem* ccuRepRemWaitSem) override;
         HcclResult
         CcuRepRemPostVarTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemPostVar* ccuRepRemPostVar) override;
         HcclResult CcuRepRemPostSemTranslate(
@@ -122,7 +122,7 @@ namespace CcuRep {
         HcclResult CcuRepLoopGroupBundleTranslate(
             CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoopGroupBundle* bundlePtr,
             const TransDep& dep) override;
-        uint16_t CcuRepLoopGroupBundleInstrCount(CcuRepLoopGroupBundle* bundlePtr) override;
+        uint16_t CcuRepLoopGroupBundleInstrCount(const CcuRepLoopGroupBundle* bundlePtr) const override;
 
         // common
         HcclResult CcuRepLoadTranslate(
@@ -150,32 +150,34 @@ namespace CcuRep {
 
     private:
         HcclResult CcuRepJumpTranslateV2Base(
-            CcuInstr*& curInstr, uint16_t& curInstrId, CcuRepJumpBase* jumpBasePtr, uint64_t expected,
-            const Variable& condition, const Variable& expectedVar, ConditionType condType);
+            CcuInstr* const& curInstr, uint16_t& curInstrId, CcuRepJumpBase* jumpBasePtr, uint64_t expected,
+            const Variable& condition, const Variable& expectedVar, ConditionType condType) const;
 
         void LoadFuncCallInArgs(
-            CcuInstr* instr, std::vector<CcuRepArg>& inArgs, std::vector<Variable>& formalIns, uint16_t reserveXnId);
+            CcuInstr* instr, std::vector<CcuRepArg>& inArgs, std::vector<Variable>& formalIns,
+            uint16_t reserveXnId) const;
         void LoadFuncCallOutArgs(
             CcuInstr* instr, uint32_t offset, std::vector<CcuRepArg>& outArgs, CcuRepReferenceManager* funcManager,
-            uint16_t reserveXnId);
-        HcclResult LoadLoopCallArg(CcuInstr*& instr, const CcuRepArg& inArg, const CcuRepArg& blkArg);
-        HcclResult PrepareLoadConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel);
-        HcclResult PrepareLoadVarConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel);
-        HcclResult PrepareStoreConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel);
-        HcclResult PrepareStoreVarConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel);
-        HcclResult PrepareRemPostSemConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel);
-        HcclResult PrepareRemPostVarConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel);
-        HcclResult PrepareWriteConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel);
-        HcclResult PrepareReadConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel);
-        HcclResult PrepareBufWriteConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel);
-        HcclResult PrepareBufReadConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel);
-        HcclResult PrepareLocCpyConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel);
-        HcclResult PrepareRecordSharedNotifyConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel);
+            uint16_t reserveXnId) const;
+        HcclResult LoadLoopCallArg(CcuInstr*& instr, const CcuRepArg& inArg, const CcuRepArg& blkArg) const;
+        HcclResult PrepareLoadConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const;
+        HcclResult PrepareLoadVarConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const;
+        HcclResult PrepareStoreConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const;
+        HcclResult PrepareStoreVarConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const;
+        HcclResult PrepareRemPostSemConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const;
+        HcclResult PrepareRemPostVarConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const;
+        HcclResult PrepareWriteConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const;
+        HcclResult PrepareReadConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const;
+        HcclResult PrepareBufWriteConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const;
+        HcclResult PrepareBufReadConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const;
+        HcclResult PrepareLocCpyConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const;
+        HcclResult
+        PrepareRecordSharedNotifyConstValue(CcuRepBase* repPtr, const TransDep& dep, CcuKernel* ccuKernel) const;
         HcclResult LoopConfigTranslate(
-            CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoopGroupBundle* bundlePtr, const TransDep& dep);
+            CcuInstr*& instr, uint16_t& curInstrId, const CcuRepLoopGroupBundle* bundlePtr, const TransDep& dep) const;
         HcclResult LoopGroupConfigTranslate(
-            CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoopGroupBundle* bundlePtr, const TransDep& dep,
-            bool isConfig, bool isCompat, uint16_t& loopGroupConfigId);
+            CcuInstr*& instr, uint16_t& curInstrId, const CcuRepLoopGroupBundle* bundlePtr, const TransDep& dep,
+            bool isConfig, bool isCompat, uint16_t& loopGroupConfigId) const;
 
         static constexpr uint32_t V2_FUNC_BLOCK_INSTR_NUM = 11; // FuncBlock: RelJmp(9)+Jump(1)+Nop(1)
         static constexpr uint32_t V2_FUNC_CALL_INSTR_NUM = 13;  // FuncCall: FuncBlock(11)+Call(2)

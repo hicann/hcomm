@@ -20,7 +20,7 @@ namespace CcuRep {
         CcuInsGeneratorV1() {}
 
         // 虚析构函数，确保派生类对象正确析构
-        virtual ~CcuInsGeneratorV1() = default;
+        virtual ~CcuInsGeneratorV1() override = default;
 
         // data
         HcclResult CcuRepLocCpyTranslate(
@@ -48,7 +48,7 @@ namespace CcuRep {
         HcclResult CcuRepRemPostSemTranslate(
             CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemPostSem* ccuRepRemPostSem, const TransDep& dep) override;
         HcclResult
-        CcuRepRemWaitSemTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemWaitSem* cuRepRemWaitSem) override;
+        CcuRepRemWaitSemTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemWaitSem* ccuRepRemWaitSem) override;
         HcclResult CcuRepLocRecordEventTranslate(
             CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepLocRecordEvent* ccuRepLocRecordEvent) override;
         HcclResult CcuRepLocWaitEventTranslate(
@@ -91,7 +91,7 @@ namespace CcuRep {
         HcclResult CcuRepLoopGroupBundleTranslate(
             CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoopGroupBundle* bundlePtr,
             const TransDep& dep) override;
-        uint16_t CcuRepLoopGroupBundleInstrCount(CcuRepLoopGroupBundle* bundlePtr) override;
+        uint16_t CcuRepLoopGroupBundleInstrCount(const CcuRepLoopGroupBundle* bundlePtr) const override;
 
         // control
         HcclResult CcuRepFuncBlockTranslate(
@@ -146,12 +146,17 @@ namespace CcuRep {
 
     private:
         void LoadFuncCallInArgs(
-            CcuInstr* instr, std::vector<CcuRepArg>& inArgs, std::vector<Variable>& formalIns, uint16_t reserveXnId);
+            CcuInstr* instr, std::vector<CcuRepArg>& inArgs, std::vector<Variable>& formalIns,
+            uint16_t reserveXnId) const;
         void LoadFuncCallOutArgs(
             CcuInstr* instr, uint32_t offset, std::vector<CcuRepArg>& outArgs, CcuRepReferenceManager* funcManager,
             uint16_t reserveXnId);
         HcclResult
-        LoadLoopCallArg(CcuInstr*& instr, const CcuRepArg& inArg, const CcuRepArg& blkArg, const TransDep& dep);
+        LoadLoopCallArg(CcuInstr*& instr, const CcuRepArg& inArg, const CcuRepArg& blkArg, const TransDep& dep) const;
+        void LoadLoopGroupParams(
+            CcuInstr*& instr, uint16_t& curInstrId, const CcuRepLoopGroupBundle* bundlePtr, const TransDep& dep) const;
+        void
+        LoadLoopGroupBundleConfig(CcuInstr*& instr, uint16_t& curInstrId, const CcuRepLoopGroupBundle* bundlePtr) const;
 
         std::unordered_map<CcuRepType, uint32_t> repTypeInstrCount
             = {{CcuRepType::READ, 1},

@@ -65,7 +65,7 @@ namespace CcuRep {
             const TransDep& dep)
             = 0;
         virtual HcclResult
-        CcuRepRemWaitSemTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemWaitSem* cuRepRemWaitSem)
+        CcuRepRemWaitSemTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemWaitSem* ccuRepRemWaitSem)
             = 0;
         virtual HcclResult
         CcuRepRemPostVarTranslate(CcuKernel* ccuKernel, CcuInstr*& instr, CcuRepRemPostVar* ccuRepRemPostVar)
@@ -152,7 +152,7 @@ namespace CcuRep {
             CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, CcuRepLoopGroupBundle* bundlePtr,
             const TransDep& dep)
             = 0;
-        virtual uint16_t CcuRepLoopGroupBundleInstrCount(CcuRepLoopGroupBundle* bundlePtr) = 0;
+        virtual uint16_t CcuRepLoopGroupBundleInstrCount(const CcuRepLoopGroupBundle* bundlePtr) const = 0;
 
         // common
         virtual HcclResult CcuRepLoadTranslate(
@@ -197,7 +197,7 @@ namespace CcuRep {
             std::vector<Variable> formalIns;
         };
 
-        HcclResult PrepareFuncCallContext(CcuRepFuncCall* funcCallPtr, FuncCallContext& ctx)
+        HcclResult PrepareFuncCallContext(CcuRepFuncCall* funcCallPtr, FuncCallContext& ctx) const
         {
             CHK_PTR_NULL(funcCallPtr);
             ctx.inArgCount = funcCallPtr->GetInArgCount();
