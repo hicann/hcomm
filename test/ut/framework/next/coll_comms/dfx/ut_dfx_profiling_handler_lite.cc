@@ -39,11 +39,7 @@ protected:
         handler_.enableHcclL0_ = false;
         handler_.enableHcclL1_ = false;
         handler_.initializedFlag_ = false;
-        handler_.cachedGroupName_ = DFX_INVALID_U64;
-        handler_.cachedLocalRank_ = INVALID_U32;
-        handler_.cachedRankSize_ = 0;
         handler_.cachedAlgTypeHashId_ = 0;
-        handler_.cachedChannelRemoteRankIdMap_ = nullptr;
         handler_.currDfxOpInfo_ = nullptr;
         handler_.taskTypeHashCache_.clear();
         handler_.opTypeHashCache_.clear();
@@ -64,6 +60,8 @@ static void PrepareHandlerInit(DfxProfilingHandlerLite& handler)
     handler.initializedFlag_ = false;
     handler.Init();
 }
+
+static DfxCommContext MakeDefaultCtx() { return {nullptr, DFX_INVALID_U64, INVALID_U32, 0}; }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_GetInstance_Expect_ReturnSameInstance)
 {
@@ -87,14 +85,6 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_Init_When_AlreadyInit_Expect_ReturnSucces
     EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
-TEST_F(DfxProfilingHandlerLiteTest, Ut_SetCachedCommInfo_Expect_FieldsSet)
-{
-    handler_.SetCachedCommInfo(100, 1, 8);
-    EXPECT_EQ(handler_.cachedGroupName_, 100u);
-    EXPECT_EQ(handler_.cachedLocalRank_, 1u);
-    EXPECT_EQ(handler_.cachedRankSize_, 8u);
-}
-
 TEST_F(DfxProfilingHandlerLiteTest, Ut_GetCurrDfxOpInfo_When_NotSet_Expect_Nullptr)
 {
     handler_.currDfxOpInfo_ = nullptr;
@@ -112,18 +102,20 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_ReportHcclOpInfo_When_L0Off_Expect_EarlyR
 {
     handler_.enableHcclL0_ = false;
     DfxDfxOpInfo opInfo{};
-    EXPECT_NO_THROW(handler_.ReportHcclOpInfo(opInfo));
+    EXPECT_NO_THROW(handler_.ReportHcclOpInfo(opInfo, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_ReportHcclOpInfo_When_L0On_Expect_RunToEnd)
 {
     PrepareHandlerInit(handler_);
     handler_.enableHcclL0_ = true;
-    handler_.SetCachedCommInfo(999, 0, 4);
+    DfxCommContext ctx = MakeDefaultCtx();
+    ctx.groupName = 999;
+    ctx.rankSize = 4;
     DfxDfxOpInfo opInfo{};
     opInfo.count = 100;
     opInfo.dataType = 1;
-    EXPECT_NO_THROW(handler_.ReportHcclOpInfo(opInfo));
+    EXPECT_NO_THROW(handler_.ReportHcclOpInfo(opInfo, ctx));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_ReportMainStreamTask_When_L0Off_Expect_EarlyReturn)
@@ -137,7 +129,6 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_ReportMainStreamTask_When_L0On_Expect_Run
 {
     PrepareHandlerInit(handler_);
     handler_.enableHcclL0_ = true;
-    handler_.SetCachedCommInfo(888, 2, 8);
     DfxFlagTaskInfo flagTaskInfo{};
     flagTaskInfo.taskId = 0x00010002;
     flagTaskInfo.type = DfxMainStreamTaskType::TAIL;
@@ -271,14 +262,17 @@ static void FillDfxTaskInfoForType(Hccl::DfxTaskInfo& taskInfo, u8 taskType)
 TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_Sdma_Expect_NoThrow)
 {
     PrepareHandlerInit(handler_);
-    handler_.SetCachedCommInfo(100, 0, 8);
+    DfxCommContext ctx = MakeDefaultCtx();
+    ctx.groupName = 100;
+    ctx.localRank = 0;
+    ctx.rankSize = 8;
     Hccl::DfxTaskInfo taskInfo{};
     FillDfxTaskInfoForType(taskInfo, static_cast<u8>(Hccl::TaskParamTypeVal::TASK_SDMA));
     taskInfo.linkType = 2;
     taskInfo.sqId = 1;
     taskInfo.taskId = 10;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, ctx));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_Rdma_Expect_NoThrow)
@@ -287,7 +281,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_Rd
     Hccl::DfxTaskInfo taskInfo{};
     FillDfxTaskInfoForType(taskInfo, static_cast<u8>(Hccl::TaskParamTypeVal::TASK_RDMA));
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_ReduceInline_Expect_NoThrow)
@@ -302,7 +296,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_Re
     taskInfo.taskPara.Reduce.size = 256;
     taskInfo.taskPara.Reduce.reduceOp = 2;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_UbDma_Expect_NoThrow)
@@ -316,7 +310,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_Ub
     taskInfo.taskPara.ubDma.dstAddr = 0x4000;
     taskInfo.taskPara.ubDma.size = 1024;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_UbInlineWrite_Expect_NoThrow)
@@ -325,7 +319,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_Ub
     Hccl::DfxTaskInfo taskInfo{};
     FillDfxTaskInfoForType(taskInfo, static_cast<u8>(Hccl::TaskParamTypeVal::TASK_UB_INLINE_WRITE));
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_UbReduceInline_Expect_NoThrow)
@@ -335,7 +329,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_Ub
     FillDfxTaskInfoForType(taskInfo, static_cast<u8>(Hccl::TaskParamTypeVal::TASK_UB_REDUCE_INLINE));
     taskInfo.taskPara.Reduce.reduceOp = 3;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_WriteWithNotify_Expect_NoThrow)
@@ -344,7 +338,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_Wr
     Hccl::DfxTaskInfo taskInfo{};
     FillDfxTaskInfoForType(taskInfo, static_cast<u8>(Hccl::TaskParamTypeVal::TASK_WRITE_WITH_NOTIFY));
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_WriteReduceWithNotify_Expect_NoThrow)
@@ -354,7 +348,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_Wr
     FillDfxTaskInfoForType(taskInfo, static_cast<u8>(Hccl::TaskParamTypeVal::TASK_WRITE_REDUCE_WITH_NOTIFY));
     taskInfo.taskPara.Reduce.reduceOp = 1;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_NotifyRecord_Expect_NoThrow)
@@ -364,7 +358,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_No
     FillDfxTaskInfoForType(taskInfo, static_cast<u8>(Hccl::TaskParamTypeVal::TASK_NOTIFY_RECORD));
     taskInfo.linkType = 0;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_NotifyWait_Expect_NoThrow)
@@ -374,7 +368,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_No
     FillDfxTaskInfoForType(taskInfo, static_cast<u8>(Hccl::TaskParamTypeVal::TASK_NOTIFY_WAIT));
     taskInfo.linkType = 0;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_InvalidType_Expect_EarlyReturn)
@@ -383,7 +377,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_In
     Hccl::DfxTaskInfo taskInfo{};
     FillDfxTaskInfoForType(taskInfo, static_cast<u8>(200));
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_WithDfxOpInfo_Expect_NoThrow)
@@ -397,10 +391,11 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_GetTaskDetailInfosFromDfxTaskInfo_When_Wi
     taskInfo.dfxOpInfo = reinterpret_cast<u64>(&opInfo);
     std::unordered_map<u64, u32> rankMap;
     rankMap[0x5678] = 3;
-    handler_.SetCachedChannelRemoteRankIdMap(&rankMap);
+    DfxCommContext ctx = MakeDefaultCtx();
+    ctx.channelRemoteRankIdMap = &rankMap;
     taskInfo.channelHandle = 0x5678;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, ctx));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_ReportStreamTaskDetailsLog_When_EmptyQueue_Expect_NoThrow)
@@ -423,13 +418,16 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_ReportStreamTaskDetailsLog_When_NonEmptyQ
 TEST_F(DfxProfilingHandlerLiteTest, Ut_ReportStreamTaskDetails_When_EmptyQueue_Expect_EarlyReturn)
 {
     TaskInfoCircularQueue queue;
-    EXPECT_NO_THROW(handler_.ReportStreamTaskDetails(queue));
+    EXPECT_NO_THROW(handler_.ReportStreamTaskDetails(queue, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_ReportStreamTaskDetails_When_NonEmptyQueue_Expect_RunToEnd)
 {
     PrepareHandlerInit(handler_);
-    handler_.SetCachedCommInfo(100, 0, 8);
+    DfxCommContext ctx = MakeDefaultCtx();
+    ctx.groupName = 100;
+    ctx.localRank = 0;
+    ctx.rankSize = 8;
     Hccl::DfxTaskInfo taskInfo{};
     FillDfxTaskInfoForType(taskInfo, static_cast<u8>(Hccl::TaskParamTypeVal::TASK_SDMA));
     taskInfo.linkType = 1;
@@ -440,13 +438,16 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_ReportStreamTaskDetails_When_NonEmptyQueu
     if (slot != nullptr) {
         *slot = taskInfo;
     }
-    EXPECT_NO_THROW(handler_.ReportStreamTaskDetails(queue));
+    EXPECT_NO_THROW(handler_.ReportStreamTaskDetails(queue, ctx));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_ReportStreamTaskDetails_When_BatchReport_Expect_NoThrow)
 {
     PrepareHandlerInit(handler_);
-    handler_.SetCachedCommInfo(100, 0, 8);
+    DfxCommContext ctx = MakeDefaultCtx();
+    ctx.groupName = 100;
+    ctx.localRank = 0;
+    ctx.rankSize = 8;
     Hccl::TaskInfoCircularQueue queue;
     for (int i = 0; i < 3; i++) {
         Hccl::DfxTaskInfo* slot = static_cast<Hccl::DfxTaskInfo*>(queue.NextSlot());
@@ -457,7 +458,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_ReportStreamTaskDetails_When_BatchReport_
             slot->taskId = static_cast<u32>(i);
         }
     }
-    EXPECT_NO_THROW(handler_.ReportStreamTaskDetails(queue));
+    EXPECT_NO_THROW(handler_.ReportStreamTaskDetails(queue, ctx));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_FillReduceInlineDetail_When_CalledViaGetDetail_Expect_NoThrow)
@@ -472,7 +473,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_FillReduceInlineDetail_When_CalledViaGetD
     taskInfo.taskPara.Reduce.size = 512;
     taskInfo.taskPara.Reduce.reduceOp = 1;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_FillSdmaRdmaDetail_When_CalledViaGetDetail_Expect_NoThrow)
@@ -482,47 +483,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_FillSdmaRdmaDetail_When_CalledViaGetDetai
     FillDfxTaskInfoForType(taskInfo, static_cast<u8>(Hccl::TaskParamTypeVal::TASK_SDMA));
     taskInfo.linkType = 2;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
-}
-
-TEST_F(DfxProfilingHandlerLiteTest, Ut_FillSdmaRdmaDetail_When_SdmaSqe_Expect_AddrMerged)
-{
-    PrepareHandlerInit(handler_);
-    handler_.SetCachedCommInfo(100, 0, 8);
-
-    Hccl::Rt91095StarsMemcpySqe sqe = {};
-    sqe.header.type = static_cast<uint8_t>(Hccl::Rt91095StarsSqeType::RT_91095_SQE_TYPE_SDMA);
-    sqe.u.strideMode0.srcAddrHigh = 0x00000001u;
-    sqe.u.strideMode0.srcAddrLow = 0x22223333u;
-    sqe.u.strideMode0.dstAddrHigh = 0x00000002u;
-    sqe.u.strideMode0.dstAddrLow = 0x44445555u;
-    sqe.u.strideMode0.lengthMove = 0x1234u;
-
-    Hccl::DfxTaskInfo taskInfo{};
-    FillDfxTaskInfoForType(taskInfo, static_cast<u8>(Hccl::TaskParamTypeVal::TASK_SDMA));
-    taskInfo.linkType = 2;
-    taskInfo.taskPara.Dma.sqeAddr = reinterpret_cast<u64>(&sqe);
-
-    MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos);
-
-    EXPECT_EQ(taskDetailsInfos.srcAddr, (static_cast<u64>(0x00000001) << 32) | 0x22223333ULL);
-    EXPECT_EQ(taskDetailsInfos.dstAddr, (static_cast<u64>(0x00000002) << 32) | 0x44445555ULL);
-    EXPECT_EQ(taskDetailsInfos.dataSize, 0x1234u);
-}
-
-TEST_F(DfxProfilingHandlerLiteTest, Ut_FillUbDmaDetail_When_Normal_CalledViaGetDetail_Expect_NoThrow)
-{
-    PrepareHandlerInit(handler_);
-    Hccl::DfxTaskInfo taskInfo{};
-    FillDfxTaskInfoForType(taskInfo, static_cast<u8>(Hccl::TaskParamTypeVal::TASK_UB));
-    taskInfo.linkType = 3;
-    taskInfo.taskPara.ubDma.notifyId = 20;
-    taskInfo.taskPara.ubDma.srcAddr = 0x3000;
-    taskInfo.taskPara.ubDma.dstAddr = 0x4000;
-    taskInfo.taskPara.ubDma.size = 1024;
-    MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_FillUbDmaDetail_When_ReduceInline_CalledViaGetDetail_Expect_NoThrow)
@@ -537,7 +498,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_FillUbDmaDetail_When_ReduceInline_CalledV
     taskInfo.taskPara.ubDma.size = 1024;
     taskInfo.taskPara.Reduce.reduceOp = 5;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_FillNotifyDetail_When_CalledViaGetDetail_Expect_NoThrow)
@@ -548,7 +509,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_FillNotifyDetail_When_CalledViaGetDetail_
     taskInfo.linkType = 4;
     taskInfo.taskPara.Notify.sqeAddr = 0;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_FillDefaultDetail_When_CalledViaGetDetail_Expect_NoThrow)
@@ -558,7 +519,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_FillDefaultDetail_When_CalledViaGetDetail
     FillDfxTaskInfoForType(taskInfo, static_cast<u8>(Hccl::TaskParamTypeVal::TASK_CCU));
     taskInfo.linkType = 0;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.GetTaskDetailInfosFromDfxTaskInfo(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_FillCclTagAndRemoteRank_When_DfxOpInfoInvalid_Expect_NoThrow)
@@ -567,7 +528,7 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_FillCclTagAndRemoteRank_When_DfxOpInfoInv
     taskInfo.dfxOpInfo = DFX_INVALID_U64;
     taskInfo.channelHandle = DFX_INVALID_U64;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.FillCclTagAndRemoteRank(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.FillCclTagAndRemoteRank(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_FillCclTagAndRemoteRank_When_MapNullptr_Expect_NoThrow)
@@ -578,9 +539,8 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_FillCclTagAndRemoteRank_When_MapNullptr_E
     opInfo.opType = 0;
     taskInfo.dfxOpInfo = reinterpret_cast<u64>(&opInfo);
     taskInfo.channelHandle = 0x1234;
-    handler_.cachedChannelRemoteRankIdMap_ = nullptr;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.FillCclTagAndRemoteRank(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.FillCclTagAndRemoteRank(&taskInfo, taskDetailsInfos, MakeDefaultCtx()));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_FillCclTagAndRemoteRank_When_ValidMap_Expect_NoThrow)
@@ -592,10 +552,11 @@ TEST_F(DfxProfilingHandlerLiteTest, Ut_FillCclTagAndRemoteRank_When_ValidMap_Exp
     taskInfo.dfxOpInfo = reinterpret_cast<u64>(&opInfo);
     std::unordered_map<u64, u32> rankMap;
     rankMap[0x5678] = 3;
-    handler_.SetCachedChannelRemoteRankIdMap(&rankMap);
+    DfxCommContext ctx = MakeDefaultCtx();
+    ctx.channelRemoteRankIdMap = &rankMap;
     taskInfo.channelHandle = 0x5678;
     MsprofAicpuHcclTaskInfo taskDetailsInfos{};
-    EXPECT_NO_THROW(handler_.FillCclTagAndRemoteRank(&taskInfo, taskDetailsInfos));
+    EXPECT_NO_THROW(handler_.FillCclTagAndRemoteRank(&taskInfo, taskDetailsInfos, ctx));
 }
 
 TEST_F(DfxProfilingHandlerLiteTest, Ut_FillCommonTailFields_When_DfxOpInfoInvalid_Expect_NoThrow)

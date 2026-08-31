@@ -31,7 +31,7 @@ HcclResult DfxProfilingReporterLite::Init()
     return HCCL_SUCCESS;
 }
 
-void DfxProfilingReporterLite::ReportStreamTask(TaskInfoCircularQueue* taskQueue)
+void DfxProfilingReporterLite::ReportStreamTask(TaskInfoCircularQueue* taskQueue, const DfxCommContext& ctx)
 {
     if (taskQueue == nullptr) {
         return;
@@ -40,7 +40,7 @@ void DfxProfilingReporterLite::ReportStreamTask(TaskInfoCircularQueue* taskQueue
         taskQueue->MarkAllRead(); // L1关闭时跳过上报，但仍需标记已读，防止L1重新开启后重复上报
         return;
     }
-    profilingHandlerLite_->ReportStreamTaskDetails(*taskQueue);
+    profilingHandlerLite_->ReportStreamTaskDetails(*taskQueue, ctx);
     taskQueue->MarkAllRead(); // 将队列begin推到end，标记已上报的task为已读，下次只遍历新增task
 }
 
@@ -62,7 +62,7 @@ void DfxProfilingReporterLite::ReportAllTasksLog(const std::vector<hccl::Thread*
     }
 }
 
-void DfxProfilingReporterLite::ReportAllTasks(const std::vector<hccl::Thread*>& threads)
+void DfxProfilingReporterLite::ReportAllTasks(const std::vector<hccl::Thread*>& threads, const DfxCommContext& ctx)
 {
     ReportAllTasksLog(threads);
     if (!profilingHandlerLite_->GetProfL1State()) {
@@ -85,7 +85,7 @@ void DfxProfilingReporterLite::ReportAllTasks(const std::vector<hccl::Thread*>& 
         if (aicpuThread == nullptr) {
             continue;
         }
-        ReportStreamTask(aicpuThread->GetTaskInfos());
+        ReportStreamTask(aicpuThread->GetTaskInfos(), ctx);
     }
 }
 

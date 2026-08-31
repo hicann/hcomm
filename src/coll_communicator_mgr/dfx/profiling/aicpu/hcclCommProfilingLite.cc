@@ -33,14 +33,14 @@ HcclResult HcclCommProfilingLite::Init()
     return HCCL_SUCCESS;
 }
 
-void HcclCommProfilingLite::ReportAllTasks(const std::vector<hccl::Thread*>& threads)
+void HcclCommProfilingLite::ReportAllTasks(const std::vector<hccl::Thread*>& threads, const Hccl::DfxCommContext& ctx)
 {
-    profilingReporterLite_->ReportAllTasks(threads);
+    profilingReporterLite_->ReportAllTasks(threads, ctx);
 }
 
-void HcclCommProfilingLite::ReportStreamTask(Hccl::TaskInfoCircularQueue* taskQueue)
+void HcclCommProfilingLite::ReportStreamTask(Hccl::TaskInfoCircularQueue* taskQueue, const Hccl::DfxCommContext& ctx)
 {
-    profilingReporterLite_->ReportStreamTask(taskQueue);
+    profilingReporterLite_->ReportStreamTask(taskQueue, ctx);
 }
 
 void HcclCommProfilingLite::UpdateProfStat() { profilingReporterLite_->UpdateProfStat(); }

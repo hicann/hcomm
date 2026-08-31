@@ -45,10 +45,7 @@ HcclResult HcclCommDfxLite::Init(u32 deviceId, const std::string& commTag, u32 r
     opInfoQueue_ = new Hccl::DfxOpInfoCircularQueue();
     queueInitialized_ = true;
 
-    Hccl::DfxProfilingHandlerLite::GetInstance().SetCachedCommInfo(
-        Hccl::DfxProfilingHandlerLite::GetInstance().GetProfHashId(commTag_.c_str(), commTag_.length()), localRank_,
-        rankSize_);
-    Hccl::DfxProfilingHandlerLite::GetInstance().SetCachedChannelRemoteRankIdMap(&channelRemoteRankIdLite_);
+    groupNameHash_ = Hccl::DfxProfilingHandlerLite::GetInstance().GetProfHashId(commTag_.c_str(), commTag_.length());
     initializedFlag_ = true;
     return HCCL_SUCCESS;
 }
@@ -75,12 +72,12 @@ HcclResult HcclCommDfxLite::SetCurrDfxOpInfo(const Hccl::DfxDfxOpInfo* newDfxOpI
 
 void HcclCommDfxLite::ReportAllTasks(const std::vector<hccl::Thread*>& threads)
 {
-    profilingImpl_->ReportAllTasks(threads);
+    profilingImpl_->ReportAllTasks(threads, GetDfxCommContext());
 }
 
 HcclResult HcclCommDfxLite::ReportStreamTask(Hccl::TaskInfoCircularQueue* taskQueue)
 {
-    profilingImpl_->ReportStreamTask(taskQueue);
+    profilingImpl_->ReportStreamTask(taskQueue, GetDfxCommContext());
     return HCCL_SUCCESS;
 }
 
@@ -121,5 +118,10 @@ const void* HcclCommDfxLite::GetLatestDfxOpInfo() const
     u16 end = queue->GetEnd();
     u16 latest = (end == 0) ? static_cast<u16>(queue->GetCapacity() - 1) : static_cast<u16>(end - 1);
     return queue->GetSlot(latest);
+}
+
+Hccl::DfxCommContext HcclCommDfxLite::GetDfxCommContext() const
+{
+    return {&channelRemoteRankIdLite_, groupNameHash_, localRank_, rankSize_};
 }
 } // namespace hccl

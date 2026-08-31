@@ -26,8 +26,8 @@ public:
     virtual ~DfxProfilingReporterLite();
     HcclResult Init();
 
-    void ReportAllTasks(const std::vector<hccl::Thread*>& threads);
-    void ReportStreamTask(TaskInfoCircularQueue* taskQueue);
+    void ReportAllTasks(const std::vector<hccl::Thread*>& threads, const DfxCommContext& ctx);
+    void ReportStreamTask(TaskInfoCircularQueue* taskQueue, const DfxCommContext& ctx);
     void UpdateProfStat();
 
 private:

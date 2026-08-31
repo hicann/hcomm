@@ -93,18 +93,6 @@ DfxProfilingHandlerLite::~DfxProfilingHandlerLite() {}
 
 DfxProfilingHandlerLite& DfxProfilingHandlerLite::GetInstance() { return instance_; }
 
-void DfxProfilingHandlerLite::SetCachedCommInfo(u64 groupName, u32 localRank, u32 rankSize)
-{
-    cachedGroupName_ = groupName;
-    cachedLocalRank_ = localRank;
-    cachedRankSize_ = rankSize;
-}
-
-void DfxProfilingHandlerLite::SetCachedChannelRemoteRankIdMap(const std::unordered_map<u64, u32>* mapPtr)
-{
-    cachedChannelRemoteRankIdMap_ = mapPtr;
-}
-
 HcclResult DfxProfilingHandlerLite::SetCurrDfxOpInfo(const DfxDfxOpInfo* dfxOpInfo)
 {
     currDfxOpInfo_ = dfxOpInfo;
@@ -183,7 +171,7 @@ HcclResult DfxProfilingHandlerLite::Init()
     return HCCL_SUCCESS;
 }
 
-void DfxProfilingHandlerLite::ReportHcclOpInfo(const DfxDfxOpInfo& opInfo) const
+void DfxProfilingHandlerLite::ReportHcclOpInfo(const DfxDfxOpInfo& opInfo, const DfxCommContext& ctx) const
 {
     if (!GetProfL0State()) {
         HCCL_INFO("[DfxProfilingHandlerLite][ReportHcclOpInfo] l0 is false.");
@@ -216,8 +204,8 @@ void DfxProfilingHandlerLite::ReportHcclOpInfo(const DfxDfxOpInfo& opInfo) const
     hcclOpInfo->streamId = streamId;
     hcclOpInfo->count = opInfo.count;
     hcclOpInfo->dataType = opInfo.dataType;
-    hcclOpInfo->groupName = cachedGroupName_;
-    hcclOpInfo->ranksize = cachedRankSize_;
+    hcclOpInfo->groupName = ctx.groupName;
+    hcclOpInfo->ranksize = ctx.rankSize;
     HCCL_INFO(
         "[DfxProfilingHandlerLite][ReportHcclOpInfo] relay:%u, retry:%u, dataType:%u, algType:%u, count:%llu, "
         "groupName:%lu, ranksize:%u, taskId:%u, streamId:%u",
@@ -370,7 +358,7 @@ uint64_t DfxProfilingHandlerLite::GetProfHashId(const char* name, uint32_t len) 
 uint64_t DfxProfilingHandlerLite::GetCachedAlgTypeHashId() const { return cachedAlgTypeHashId_; }
 
 void DfxProfilingHandlerLite::GetTaskDetailInfosFromDfxTaskInfo(
-    const DfxTaskInfo* it, MsprofAicpuHcclTaskInfo& taskDetailsInfos) const
+    const DfxTaskInfo* it, MsprofAicpuHcclTaskInfo& taskDetailsInfos, const DfxCommContext& ctx) const
 {
     if (!it->IsTaskTypeValid()) {
         HCCL_WARNING("[DfxProfilingHandlerLite] invalid taskType[%u], skip task detail", it->taskType);
@@ -380,11 +368,11 @@ void DfxProfilingHandlerLite::GetTaskDetailInfosFromDfxTaskInfo(
     auto cacheIt = taskTypeHashCache_.find(static_cast<uint32_t>(it->taskType));
     taskDetailsInfos.itemId = (cacheIt != taskTypeHashCache_.end()) ? cacheIt->second : DFX_INVALID_U64;
 
-    FillCclTagAndRemoteRank(it, taskDetailsInfos);
+    FillCclTagAndRemoteRank(it, taskDetailsInfos, ctx);
 
-    taskDetailsInfos.groupName = cachedGroupName_;
-    taskDetailsInfos.localRank = cachedLocalRank_;
-    taskDetailsInfos.rankSize = cachedRankSize_;
+    taskDetailsInfos.groupName = ctx.groupName;
+    taskDetailsInfos.localRank = ctx.localRank;
+    taskDetailsInfos.rankSize = ctx.rankSize;
     taskDetailsInfos.stage = 0;
     taskDetailsInfos.timeStamp = ProfGetCurCpuTimestampLite();
     taskDetailsInfos.durationEstimated = 0;
@@ -434,7 +422,7 @@ void DfxProfilingHandlerLite::ReportStreamTaskDetailsLog(TaskInfoCircularQueue& 
     }
 }
 
-void DfxProfilingHandlerLite::ReportStreamTaskDetails(TaskInfoCircularQueue& taskQueue) const
+void DfxProfilingHandlerLite::ReportStreamTaskDetails(TaskInfoCircularQueue& taskQueue, const DfxCommContext& ctx) const
 {
     u16 begin = taskQueue.GetBegin();
     u16 count = taskQueue.GetCount();
@@ -458,7 +446,7 @@ void DfxProfilingHandlerLite::ReportStreamTaskDetails(TaskInfoCircularQueue& tas
         if (ptr == nullptr) {
             continue;
         }
-        GetTaskDetailInfosFromDfxTaskInfo(ptr, taskInfos[batchId++]);
+        GetTaskDetailInfosFromDfxTaskInfo(ptr, taskInfos[batchId++], ctx);
         reportedTasks++;
         if (batchId == HCCLINFO_REPORT_BATCH_NUM || reportedTasks == totalTasks) {
             if (!isSupportBatchReport) {
@@ -549,16 +537,16 @@ void DfxProfilingHandlerLite::FillDefaultDetail(const DfxTaskInfo* it, MsprofAic
 }
 
 void DfxProfilingHandlerLite::FillCclTagAndRemoteRank(
-    const DfxTaskInfo* it, MsprofAicpuHcclTaskInfo& taskDetailsInfos) const
+    const DfxTaskInfo* it, MsprofAicpuHcclTaskInfo& taskDetailsInfos, const DfxCommContext& ctx) const
 {
     if (it->dfxOpInfo != DFX_INVALID_U64) {
         auto* opInfo = reinterpret_cast<const DfxDfxOpInfo*>(it->dfxOpInfo);
         auto opTypeCclTagIt = opTypeHashCache_.find(opInfo->opType);
         taskDetailsInfos.cclTag = (opTypeCclTagIt != opTypeHashCache_.end()) ? opTypeCclTagIt->second : DFX_INVALID_U64;
         taskDetailsInfos.remoteRank = INVALID_U32;
-        if (cachedChannelRemoteRankIdMap_ != nullptr && it->channelHandle != DFX_INVALID_U64) {
-            auto rankIt = cachedChannelRemoteRankIdMap_->find(it->channelHandle);
-            if (rankIt != cachedChannelRemoteRankIdMap_->end()) {
+        if (ctx.channelRemoteRankIdMap != nullptr && it->channelHandle != DFX_INVALID_U64) {
+            auto rankIt = ctx.channelRemoteRankIdMap->find(it->channelHandle);
+            if (rankIt != ctx.channelRemoteRankIdMap->end()) {
                 taskDetailsInfos.remoteRank = rankIt->second;
             }
         }

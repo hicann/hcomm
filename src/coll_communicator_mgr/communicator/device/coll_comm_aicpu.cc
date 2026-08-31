@@ -223,7 +223,9 @@ HcclResult CollCommAicpu::ProfilingReportDeviceOp()
     }
     hcclCommDfxLite->ReportAllTasks(threads);
     EXCEPTION_CATCH(
-        Hccl::DfxProfilingHandlerLite::GetInstance().ReportHcclOpInfo(*currDfxOpInfo), return HCCL_E_INTERNAL);
+        Hccl::DfxProfilingHandlerLite::GetInstance().ReportHcclOpInfo(
+            *currDfxOpInfo, hcclCommDfxLite->GetDfxCommContext()),
+        return HCCL_E_INTERNAL);
     return HCCL_SUCCESS;
 }
 

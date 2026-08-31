@@ -74,34 +74,34 @@ TEST_F(DfxProfilingReporterLiteTest, Ut_Init_When_AlreadyInitialized_Expect_Retu
 
 TEST_F(DfxProfilingReporterLiteTest, Ut_ReportStreamTask_When_NullptrQueue_Expect_NoThrow)
 {
-    EXPECT_NO_THROW(reporter_->ReportStreamTask(nullptr));
+    EXPECT_NO_THROW(reporter_->ReportStreamTask(nullptr, DfxCommContext{}));
 }
 
 TEST_F(DfxProfilingReporterLiteTest, Ut_ReportStreamTask_When_L1Off_Expect_NoThrow)
 {
     handler_.enableHcclL1_ = false;
     TaskInfoCircularQueue queue;
-    EXPECT_NO_THROW(reporter_->ReportStreamTask(&queue));
+    EXPECT_NO_THROW(reporter_->ReportStreamTask(&queue, DfxCommContext{}));
 }
 
 TEST_F(DfxProfilingReporterLiteTest, Ut_ReportStreamTask_When_L1On_Expect_NoThrow)
 {
     handler_.enableHcclL1_ = true;
     TaskInfoCircularQueue queue;
-    EXPECT_NO_THROW(reporter_->ReportStreamTask(&queue));
+    EXPECT_NO_THROW(reporter_->ReportStreamTask(&queue, DfxCommContext{}));
 }
 
 TEST_F(DfxProfilingReporterLiteTest, Ut_ReportAllTasks_When_EmptyThreads_Expect_NoThrow)
 {
     std::vector<hccl::Thread*> threads;
-    EXPECT_NO_THROW(reporter_->ReportAllTasks(threads));
+    EXPECT_NO_THROW(reporter_->ReportAllTasks(threads, DfxCommContext{}));
 }
 
 TEST_F(DfxProfilingReporterLiteTest, Ut_ReportAllTasks_When_L1Off_Expect_NoThrow)
 {
     handler_.enableHcclL1_ = false;
     std::vector<hccl::Thread*> threads;
-    EXPECT_NO_THROW(reporter_->ReportAllTasks(threads));
+    EXPECT_NO_THROW(reporter_->ReportAllTasks(threads, DfxCommContext{}));
 }
 
 TEST_F(DfxProfilingReporterLiteTest, Ut_UpdateProfStat_Expect_NoThrow) { EXPECT_NO_THROW(reporter_->UpdateProfStat()); }

@@ -116,5 +116,6 @@ TEST_F(HcclCommProfilingLiteTest, UpdateProfStat_NotInitialized) { EXPECT_NO_THR
 TEST_F(HcclCommProfilingLiteTest, ReportAllTasks_NotInitialized)
 {
     std::vector<hccl::Thread*> threads;
-    EXPECT_NO_THROW(profilingLite_->ReportAllTasks(threads));
+    Hccl::DfxCommContext ctx{};
+    EXPECT_NO_THROW(profilingLite_->ReportAllTasks(threads, ctx));
 }

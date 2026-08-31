@@ -2172,9 +2172,9 @@ DfxProfilingReporterLite::~DfxProfilingReporterLite() {}
 
 HcclResult DfxProfilingReporterLite::Init() { return HCCL_SUCCESS; }
 
-void DfxProfilingReporterLite::ReportAllTasks(const std::vector<hccl::Thread*>& threads) {}
+void DfxProfilingReporterLite::ReportAllTasks(const std::vector<hccl::Thread*>& threads, const DfxCommContext& ctx) {}
 
-void DfxProfilingReporterLite::ReportStreamTask(TaskInfoCircularQueue* taskQueue) {}
+void DfxProfilingReporterLite::ReportStreamTask(TaskInfoCircularQueue* taskQueue, const DfxCommContext& ctx) {}
 
 void DfxProfilingReporterLite::UpdateProfStat() {}
 

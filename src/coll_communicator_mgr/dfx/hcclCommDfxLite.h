@@ -35,12 +35,14 @@ public:
     const void* GetLatestDfxOpInfo() const;
     void AddChannelRemoteRankId(u64 handle, u32 remoteRankId);
     u32 GetChannelRemoteRankId(u64 handle);
+    Hccl::DfxCommContext GetDfxCommContext() const;
 
 private:
     HcclCommProfilingLite* profilingImpl_{nullptr};
     void* opInfoQueue_{nullptr};
     bool queueInitialized_{false};
     std::unordered_map<u64, u32> channelRemoteRankIdLite_{};
+    u64 groupNameHash_{DFX_INVALID_U64};
     std::string commTag_{};
     u32 deviceId_{0};
     u32 rankSize_{0};
