@@ -31,8 +31,8 @@ namespace CcuRep {
         Address GetAddrB();
         Variable GetVarA();
         Variable GetVarB();
-        uint64_t GetImmed();
-        AssignSubType GetSubType();
+        uint64_t GetImmed() const;
+        AssignSubType GetSubType() const;
 
     private:
         void SetCommonInfo();

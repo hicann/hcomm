@@ -40,8 +40,8 @@ namespace CcuRep {
         CcuInsGeneratorBase* insGenPtr{nullptr};
 
     public:
-        ShiftSubType GetShiftSubType() { return subType; }
-        ShiftType GetShiftType() { return shiftType; }
+        ShiftSubType GetShiftSubType() const { return subType; }
+        ShiftType GetShiftType() const { return shiftType; }
         Variable GetVarN() { return varN; }
         Variable GetVarM() { return varM; }
         Variable GetVarD() { return varD; }

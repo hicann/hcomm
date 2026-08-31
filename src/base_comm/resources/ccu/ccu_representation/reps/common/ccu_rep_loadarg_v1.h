@@ -24,7 +24,7 @@ namespace CcuRep {
         std::string Describe() override;
 
         CcuRep::Variable GetVar() { return var; }
-        uint16_t GetArgId() { return argId; }
+        uint16_t GetArgId() const { return argId; }
         uint16_t GetVarId() const { return var.Id(); }
         uint16_t GetFullArgId() const { return fullArgId; }
 

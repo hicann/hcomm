@@ -39,7 +39,7 @@ namespace CcuRep {
 
         std::shared_ptr<CcuRepLoopBlock> GetLoopBlock() { return loopBlock; }
         std::vector<CcuRepArg>& GetInArgs() { return inArgs; }
-        uint32_t GetInArgCount() { return inArgCount; }
+        uint32_t GetInArgCount() const { return inArgCount; }
 
     private:
         CcuInsGeneratorBase* insGeneratorPtr_;

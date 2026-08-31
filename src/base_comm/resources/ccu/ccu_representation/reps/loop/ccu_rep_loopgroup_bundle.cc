@@ -11,7 +11,6 @@
 #include "ccu_rep_loopgroup_bundle_v1.h"
 #include "ccu_ins_generator_base.h"
 #include "ccu_api_exception.h"
-#include "exception_util.h"
 #include "string_util.h"
 
 namespace hcomm {
@@ -33,6 +32,7 @@ namespace CcuRep {
     CcuRepLoopGroupBundle::CcuRepLoopGroupBundle(
         CcuInsGeneratorBase* insGenPtr, const Variable& parallelVar, const Variable& offsetVar)
         : insGenPtr_(insGenPtr),
+          config_{},
           parallelVar_(parallelVar),
           offsetVar_(offsetVar),
           layout_(Layout::PackedVar)
@@ -51,7 +51,10 @@ namespace CcuRep {
                 varBasedLoopCount++;
             }
         }
-        return (loopCount - varBasedLoopCount) + (varBasedLoopCount * 2) + (layout_ != Layout::Config ? 0 : 2);
+        constexpr uint16_t kVarBasedLoopInstrCount = 2;
+        constexpr uint16_t kConfigLayoutExtraInstrCount = 2;
+        return (loopCount - varBasedLoopCount) + (varBasedLoopCount * kVarBasedLoopInstrCount)
+               + (layout_ != Layout::Config ? 0 : kConfigLayoutExtraInstrCount);
     }
 
     uint16_t CcuRepLoopGroupBundle::GetStartLoopInstrId() const { return instrId + LoopGroupInstrOffsetInBundle() + 3; }

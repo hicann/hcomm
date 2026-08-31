@@ -48,7 +48,7 @@ namespace CcuRep {
         supportCcuV2 = true;
     }
 
-    void CcuRepLoop::ValidateInsGeneratorForLoop()
+    void CcuRepLoop::ValidateInsGeneratorForLoop() const
     {
         CcuInsGeneratorV1* tmpPtrV1 = dynamic_cast<CcuInsGeneratorV1*>(insGeneratorPtr_);
         CcuInsGeneratorV2* tmpPtrV2 = dynamic_cast<CcuInsGeneratorV2*>(insGeneratorPtr_);

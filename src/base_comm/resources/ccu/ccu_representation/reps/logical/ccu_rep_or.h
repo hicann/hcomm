@@ -29,7 +29,7 @@ namespace CcuRep {
         Variable GetVarA() { return varA; }
         Variable GetVarB() { return varB; }
         Variable GetVarC() { return varC; }
-        OrSubType GetSubType() { return subType; }
+        OrSubType GetSubType() const { return subType; }
 
     private:
         OrSubType subType{OrSubType::INVALID};

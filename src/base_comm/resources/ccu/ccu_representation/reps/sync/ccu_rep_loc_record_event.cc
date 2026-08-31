@@ -10,7 +10,6 @@
 
 #include "ccu_rep_loc_record_event.h"
 #include <climits>
-#include "exception_util.h"
 #include "ccu_api_exception.h"
 #include "ccu_ins_generator_base.h"
 

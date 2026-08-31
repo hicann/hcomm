@@ -124,7 +124,7 @@ namespace CcuRep {
         SetCommonInfo();
     }
 
-    void CcuRepSub::ValidateInsGenPtrForSub()
+    void CcuRepSub::ValidateInsGenPtrForSub() const
     {
         CcuInsGeneratorV1* tmpPtrV1 = dynamic_cast<CcuInsGeneratorV1*>(insGenPtr);
         CHK_PRT_THROW(
@@ -210,8 +210,8 @@ namespace CcuRep {
 
     Variable CcuRepSub::GetVarC() { return varC; }
 
-    uint16_t CcuRepSub::GetImmedB() { return immedB; }
+    uint16_t CcuRepSub::GetImmedB() const { return immedB; }
 
-    MinusSubType CcuRepSub::GetSubType() { return subType; }
+    MinusSubType CcuRepSub::GetSubType() const { return subType; }
 }; // namespace CcuRep
 }; // namespace hcomm

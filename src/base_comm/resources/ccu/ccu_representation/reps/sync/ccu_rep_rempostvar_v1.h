@@ -24,15 +24,15 @@ namespace CcuRep {
             uint16_t semIndex, uint16_t mask);
         bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
         std::string Describe() override;
-        uint32_t GetRmtXnId() { return rmtXnId; }
-        uint32_t GetRmtCkeId() { return rmtCkeId; }
-        uint16_t GetParamIndex() { return paramIndex; }
+        uint32_t GetRmtXnId() const { return rmtXnId; }
+        uint32_t GetRmtCkeId() const { return rmtCkeId; }
+        uint16_t GetParamIndex() const { return paramIndex; }
         Variable GetParam() { return param; }
-        uint32_t GetChannelId() { return channelId; }
+        uint32_t GetChannelId() const { return channelId; }
 
-        ChannelHandle GetChannel() { return channel; }
-        uint16_t GetSemIndex() { return semIndex; }
-        uint16_t GetMask() { return mask; }
+        ChannelHandle GetChannel() const { return channel; }
+        uint16_t GetSemIndex() const { return semIndex; }
+        uint16_t GetMask() const { return mask; }
 
     private:
         CcuInsGeneratorBase* insGenPtr{nullptr};

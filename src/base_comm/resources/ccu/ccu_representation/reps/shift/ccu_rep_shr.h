@@ -26,9 +26,9 @@ namespace CcuRep {
             CcuInsGeneratorBase* insGenPtr, const Address& addrD, const Variable& varN, const Variable& varM);
         explicit CcuRepShR(CcuInsGeneratorBase* insGenPtr, const Address& addrD, const Variable& varM);
         bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& curInstrId, const TransDep& dep) override;
-        ShiftSubType GetShiftSubType() { return subType; }
+        ShiftSubType GetShiftSubType() const { return subType; }
 
-        ShiftType GetShiftType() { return shiftType; }
+        ShiftType GetShiftType() const { return shiftType; }
 
         Variable GetVarN() { return varN; }
 

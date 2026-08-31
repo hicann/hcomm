@@ -39,7 +39,7 @@ namespace CcuRep {
         Variable GetLoopGsaOffset() { return loopGsaOffset; }
 
     private:
-        void ValidateInsGeneratorForLoop();
+        void ValidateInsGeneratorForLoop() const;
 
         CcuInsGeneratorBase* insGeneratorPtr_;
         std::string label;

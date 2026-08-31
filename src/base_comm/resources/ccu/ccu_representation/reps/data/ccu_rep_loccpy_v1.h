@@ -39,23 +39,23 @@ namespace CcuRep {
         uint16_t GetDstTokenId() { return dst.token.Id(); }
         uint16_t GetLenId() { return len.Id(); }
         uint16_t GetSemId() { return sem.Id(); }
-        uint16_t GetDataType() { return dataType; }
-        uint16_t GetOpType() { return opType; }
+        uint16_t GetDataType() const { return dataType; }
+        uint16_t GetOpType() const { return opType; }
         const std::vector<CcuBuf>& GetBufs() { return bufs; }
 
         LocalAddr GetDst() { return dst; }
         LocalAddr GetSrc() { return src; }
         Variable GetLen() { return len; }
         CompletedEvent GetSem() { return sem; }
-        uint16_t GetMask() { return mask; }
-        uint16_t GetReduceFlag() { return reduceFlag; }
-        bool GetUseCcuBuffer() { return useCcuBuffer; }
+        uint16_t GetMask() const { return mask; }
+        uint16_t GetReduceFlag() const { return reduceFlag; }
+        bool GetUseCcuBuffer() const { return useCcuBuffer; }
 
         uint16_t GetFirstBufId();
         uint16_t GetUsedBufNum();
 
     private:
-        void ValidateInsGeneratorForLocCpy();
+        void ValidateInsGeneratorForLocCpy() const;
 
         CcuInsGeneratorBase* insGenPtr{nullptr};
         LocalAddr dst;

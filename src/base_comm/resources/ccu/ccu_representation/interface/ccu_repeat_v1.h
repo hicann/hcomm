@@ -26,7 +26,7 @@ namespace CcuRep {
     public:
         Repeat(CcuRepContext* context, CcuRelationalOperator<Variable, uint64_t> rel);
         ~Repeat();
-        void Break();
+        void Break() const;
         bool Check() const;
         void Run();
 

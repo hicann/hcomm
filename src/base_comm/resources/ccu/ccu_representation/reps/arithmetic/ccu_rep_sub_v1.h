@@ -46,8 +46,8 @@ namespace CcuRep {
         Variable GetVarA();
         Variable GetVarB();
         Variable GetVarC();
-        uint16_t GetImmedB();
-        MinusSubType GetSubType();
+        uint16_t GetImmedB() const;
+        MinusSubType GetSubType() const;
 
     private:
         CcuInsGeneratorBase* insGenPtr{nullptr};
@@ -64,7 +64,7 @@ namespace CcuRep {
         uint16_t immedB{0};
 
         void SetCommonInfo();
-        void ValidateInsGenPtrForSub();
+        void ValidateInsGenPtrForSub() const;
         bool supportCcuV1{false};
     };
 

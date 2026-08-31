@@ -33,17 +33,17 @@ namespace CcuRep {
         uint16_t GetRemTokenId() { return rem.token.Id(); }
         uint16_t GetLenId() { return len.Id(); }
         uint16_t GetSemId() { return sem.Id(); }
-        uint32_t GetChannelId() { return channelId; }
+        uint32_t GetChannelId() const { return channelId; }
 
-        ChannelHandle GetChannel() { return channel; }
+        ChannelHandle GetChannel() const { return channel; }
         LocalAddr GetLoc() { return loc; }
         RemoteAddr GetRem() { return rem; }
         Variable GetLen() { return len; }
         CompletedEvent GetSem() { return sem; }
-        uint16_t GetMask() { return mask; }
-        uint16_t GetDataType() { return dataType; }
-        uint16_t GetOpType() { return opType; }
-        uint16_t GetReduceFlag() { return reduceFlag; }
+        uint16_t GetMask() const { return mask; }
+        uint16_t GetDataType() const { return dataType; }
+        uint16_t GetOpType() const { return opType; }
+        uint16_t GetReduceFlag() const { return reduceFlag; }
 
     private:
         CcuInsGeneratorBase* insGenPtr{nullptr};

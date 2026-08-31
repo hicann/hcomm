@@ -11,7 +11,6 @@
 #include "ccu_rep_store_var_v1.h"
 #include "string_util.h"
 #include "ccu_rep_v1.h"
-#include "exception_util.h"
 #include "ccu_api_exception.h"
 
 #include "ccu_ins_generator_base.h"

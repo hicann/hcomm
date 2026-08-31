@@ -54,11 +54,11 @@ namespace CcuRep {
         Variable GetVarA();
         Variable GetVarB();
         Variable GetVarC();
-        uint16_t GetImmedB();
-        AddSubType GetSubType();
+        uint16_t GetImmedB() const;
+        AddSubType GetSubType() const;
 
     private:
-        void ValidateInsGenPtrForAdd();
+        void ValidateInsGenPtrForAdd() const;
         void SetCommonInfo();
 
         CcuInsGeneratorBase* insGenPtr{nullptr};

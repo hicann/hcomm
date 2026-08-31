@@ -30,13 +30,13 @@ namespace CcuRep {
         uint16_t GetDstTokenId() { return dst.token.Id(); }
         uint16_t GetLenId() { return len.Id(); }
         uint16_t GetSemId() { return sem.Id(); }
-        uint32_t GetChannelId() { return channelId; }
+        uint32_t GetChannelId() const { return channelId; }
         CcuBuf GetSrc() { return src; }
         RemoteAddr GetDst() { return dst; }
         Variable GetLen() { return len; }
         CompletedEvent GetSem() { return sem; }
-        uint16_t GetMask() { return mask; }
-        ChannelHandle GetChannel() { return channel; }
+        uint16_t GetMask() const { return mask; }
+        ChannelHandle GetChannel() const { return channel; }
 
     private:
         CcuInsGeneratorBase* insGenPtr{nullptr};

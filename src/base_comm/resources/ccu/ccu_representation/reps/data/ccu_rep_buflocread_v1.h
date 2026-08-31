@@ -33,7 +33,7 @@ namespace CcuRep {
         CcuBuf GetDst() { return dst; }
         Variable GetLen() { return len; }
         CompletedEvent GetSem() { return sem; }
-        uint16_t GetMask() { return mask; }
+        uint16_t GetMask() const { return mask; }
 
     private:
         CcuInsGeneratorBase* insGenPtr{nullptr};

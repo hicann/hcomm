@@ -126,8 +126,8 @@ namespace CcuRep {
 
     Variable CcuRepAssign::GetVarB() { return varB; }
 
-    uint64_t CcuRepAssign::GetImmed() { return immediate; }
+    uint64_t CcuRepAssign::GetImmed() const { return immediate; }
 
-    AssignSubType CcuRepAssign::GetSubType() { return subType; }
+    AssignSubType CcuRepAssign::GetSubType() const { return subType; }
 }; // namespace CcuRep
 }; // namespace hcomm

@@ -23,7 +23,7 @@ namespace CcuRep {
         bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
         std::string Describe() override;
 
-        ChannelHandle GetChannel() { return channel; }
+        ChannelHandle GetChannel() const { return channel; }
         RemoteAddr GetRem() { return rem; }
 
     private:

@@ -28,7 +28,7 @@ namespace CcuRep {
 
         Variable GetVarC() { return varC; }
 
-        AndSubType GetSubType() { return subType; }
+        AndSubType GetSubType() const { return subType; }
 
         std::string Describe() override;
 

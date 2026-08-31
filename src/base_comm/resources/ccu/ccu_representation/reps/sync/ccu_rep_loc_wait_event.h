@@ -24,12 +24,12 @@ namespace CcuRep {
             CcuInsGeneratorBase* insGenPtr, const CompletedEvent& event, uint32_t mask, bool isProfiling = true);
         bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
         std::string Describe() override;
-        uint32_t GetMask() { return mask_; };
+        uint32_t GetMask() const { return mask_; };
         uint32_t GetEventId() { return event_.Id(); };
 
         CompletedEvent GetEvent() { return event_; }
 
-        bool GetIsProfiling() { return isProfiling_; }
+        bool GetIsProfiling() const { return isProfiling_; }
         void SetDependencyInfo(const std::unordered_map<uint32_t, std::vector<std::shared_ptr<CcuRepBase>>>& depInfo);
         std::vector<std::shared_ptr<CcuRepBase>> GetDependencyInfo(uint32_t bit);
 

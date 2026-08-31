@@ -15,14 +15,8 @@
 #include "ccu_rep_loadarg_v1.h"
 #include "ccu_rep_add_v1.h"
 #include "ccu_rep_assign_v1.h"
-
-#include "ccu_rep_and.h"
-#include "ccu_rep_or.h"
-#include "ccu_rep_not.h"
-#include "ccu_rep_xor.h"
-
-#include "ccu_rep_shl.h"
-#include "ccu_rep_shr.h"
+#include "ccu_rep_mul_v1.h"
+#include "ccu_rep_sub_v1.h"
 
 #include "ccu_rep_setloop_v1.h"
 #include "ccu_rep_loop_v1.h"
@@ -52,22 +46,26 @@
 
 #include "ccu_rep_funccall_v1.h"
 #include "ccu_rep_funcblock_v1.h"
-#include "ccu_rep_jump_v1.h"
-#include "ccu_rep_jumplabel_v1.h"
 
 #include "ccu_condition_v1.h"
 #include "ccu_repeat_v1.h"
 #include "ccu_loopblock_v1.h"
 #include "ccu_funcblock_v1.h"
 #include "ccu_funccall_v1.h"
-#include "ccu_rep_block_v1.h"
 
 #include "ccu_interface_assist_v1.h"
 #include "ccu_rep_load_v1.h"
 #include "ccu_rep_store_v1.h"
-#include "ccu_rep_store_var_v1.h"
-#include "../ccu_device/ccu_res_specs.h"
 #include "ccu_rep_load_var_v1.h"
+#include "ccu_rep_store_var_v1.h"
+
+#include "ccu_rep_and.h"
+#include "ccu_rep_or.h"
+#include "ccu_rep_not.h"
+#include "ccu_rep_xor.h"
+
+#include "ccu_rep_shl.h"
+#include "ccu_rep_shr.h"
 
 #include "ccu_datatype_v1.h"
 #include "ccu_microcode_v1.h"
@@ -76,7 +74,5 @@
 
 #include "ccu_rep_add_v1.h"
 #include "ccu_rep_assign_v1.h"
-#include "ccu_rep_mul_v1.h"
-#include "ccu_rep_sub_v1.h"
 
 #endif // HCCL_CCU_REPRESENTATION

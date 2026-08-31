@@ -15,6 +15,7 @@
 #include "ccu_api_exception.h"
 #include "ccu_assist_v1.h"
 #include "ccu_log.h"
+#include "../../../ccu_device/ccu_res_specs.h"
 
 namespace hcomm {
 namespace CcuRep {

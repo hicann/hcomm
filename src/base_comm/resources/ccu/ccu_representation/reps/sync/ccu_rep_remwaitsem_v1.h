@@ -24,12 +24,12 @@ namespace CcuRep {
         bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
         std::string Describe() override;
         uint32_t GetId() override { return signalId; }
-        uint16_t GetChannelId() { return channelId; }
+        uint16_t GetChannelId() const { return channelId; }
 
-        bool GetIsProfiling() { return isProfiling; }
-        ChannelHandle GetChannel() { return channel; }
-        uint16_t GetSemIndex() { return semIndex; }
-        uint16_t GetMask() { return mask; }
+        bool GetIsProfiling() const { return isProfiling; }
+        ChannelHandle GetChannel() const { return channel; }
+        uint16_t GetSemIndex() const { return semIndex; }
+        uint16_t GetMask() const { return mask; }
 
     private:
         CcuInsGeneratorBase* insGenPtr{nullptr};

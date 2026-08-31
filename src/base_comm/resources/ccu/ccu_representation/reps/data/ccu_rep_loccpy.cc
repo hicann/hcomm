@@ -68,7 +68,7 @@ namespace CcuRep {
         useCcuBuffer = true;
     }
 
-    void CcuRepLocCpy::ValidateInsGeneratorForLocCpy()
+    void CcuRepLocCpy::ValidateInsGeneratorForLocCpy() const
     {
         CcuInsGeneratorV1* tmpPtrV1 = dynamic_cast<CcuInsGeneratorV1*>(insGenPtr);
         if (tmpPtrV1 && useCcuBuffer) {

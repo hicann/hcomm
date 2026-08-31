@@ -23,11 +23,11 @@ namespace CcuRep {
         bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
         std::string Describe() override;
         uint32_t GetId() override { return signalId; }
-        uint32_t GetChannelId() { return channelId; }
+        uint32_t GetChannelId() const { return channelId; }
 
-        ChannelHandle GetChannel() { return channel; }
-        uint16_t GetSemIndex() { return semIndex; }
-        uint16_t GetMask() { return mask; }
+        ChannelHandle GetChannel() const { return channel; }
+        uint16_t GetSemIndex() const { return semIndex; }
+        uint16_t GetMask() const { return mask; }
 
     private:
         CcuInsGeneratorBase* insGenPtr{nullptr};

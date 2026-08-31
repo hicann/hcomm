@@ -131,7 +131,7 @@ namespace CcuRep {
         AppendToContext(context, std::make_shared<CcuRepMul>(context->GetInsGenerator(), *this, other));
     }
 
-    void Variable::operator*=(uint16_t immediate)
+    void Variable::operator*=(const uint16_t immediate)
     {
         AppendToContext(context, std::make_shared<CcuRepMul>(context->GetInsGenerator(), *this, immediate));
     }
@@ -141,7 +141,7 @@ namespace CcuRep {
         AppendToContext(context, std::make_shared<CcuRepSub>(context->GetInsGenerator(), *this, other));
     }
 
-    void Variable::operator-=(uint16_t immediate)
+    void Variable::operator-=(const uint16_t immediate)
     {
         AppendToContext(context, std::make_shared<CcuRepSub>(context->GetInsGenerator(), *this, immediate));
     }

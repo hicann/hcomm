@@ -41,11 +41,11 @@ namespace CcuRep {
 
         Variable& GetExpectedVar() { return expectedVar; }
 
-        uint64_t GetExpectedNum() { return expected; }
+        uint64_t GetExpectedNum() const { return expected; }
 
         CcuInstr* GetInstr() { return instr; }
 
-        bool IsComparedWithImmd() { return comp2Immed; }
+        bool IsComparedWithImmd() const { return comp2Immed; }
 
     protected:
         CcuResult InitInstr(CcuInstr*& instr, uint16_t& instrId);

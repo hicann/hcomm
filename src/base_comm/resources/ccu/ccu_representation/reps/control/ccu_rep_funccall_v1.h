@@ -42,8 +42,8 @@ namespace CcuRep {
         Variable GetFuncAddrVar() { return funcAddrVar; }
         std::vector<CcuRepArg>& GetInArgs() { return inArgs; }
         std::vector<CcuRepArg>& GetOutArgs() { return outArgs; }
-        uint32_t GetInArgCount() { return inArgCount; }
-        uint32_t GetOutArgCount() { return outArgCount; }
+        uint32_t GetInArgCount() const { return inArgCount; }
+        uint32_t GetOutArgCount() const { return outArgCount; }
         CcuInstr* GetInstr() { return instr; }
 
     private:

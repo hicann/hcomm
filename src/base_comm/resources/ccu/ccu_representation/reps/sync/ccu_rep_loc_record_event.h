@@ -23,7 +23,7 @@ namespace CcuRep {
         bool Translate(CcuKernel* ccuKernel, CcuInstr*& instr, uint16_t& instrId, const TransDep& dep) override;
         std::string Describe() override;
         uint16_t GetEventId() { return event_.Id(); }
-        uint32_t GetMask() { return mask_; }
+        uint32_t GetMask() const { return mask_; }
 
         CompletedEvent GetEvent() { return event_; }
 

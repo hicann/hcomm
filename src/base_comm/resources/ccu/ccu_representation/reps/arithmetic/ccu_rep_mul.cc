@@ -53,7 +53,7 @@ namespace CcuRep {
         SetCommonInfo();
     }
 
-    CcuRepMul::CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable& varA, uint16_t immedB)
+    CcuRepMul::CcuRepMul(CcuInsGeneratorBase* insGenPtr, const Variable& varA, const uint16_t immedB)
         : insGenPtr(insGenPtr),
           subType(MulSubType::SELF_MUL_IMMED_VARIABLE),
           varA(varA),
@@ -135,7 +135,7 @@ namespace CcuRep {
         SetCommonInfo();
     }
 
-    void CcuRepMul::ValidateInsGenPtrForMul()
+    void CcuRepMul::ValidateInsGenPtrForMul() const
     {
         CcuInsGeneratorV1* tmpPtrV1 = dynamic_cast<CcuInsGeneratorV1*>(insGenPtr);
         CHK_PRT_THROW(
@@ -225,8 +225,8 @@ namespace CcuRep {
 
     Variable CcuRepMul::GetVarC() { return varC; }
 
-    uint16_t CcuRepMul::GetImmedB() { return immedB; }
+    uint16_t CcuRepMul::GetImmedB() const { return immedB; }
 
-    MulSubType CcuRepMul::GetSubType() { return subType; }
+    MulSubType CcuRepMul::GetSubType() const { return subType; }
 }; // namespace CcuRep
 }; // namespace hcomm

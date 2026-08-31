@@ -27,7 +27,7 @@ namespace CcuRep {
         Variable GetVarA() { return varA; }
         Variable GetVarB() { return varB; }
         Variable GetVarC() { return varC; }
-        XorSubType GetSubType() { return subType; }
+        XorSubType GetSubType() const { return subType; }
 
         std::string Describe() override;
 

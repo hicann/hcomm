@@ -13,7 +13,6 @@
 
 #include "string_util.h"
 
-#include "exception_util.h"
 #include "ccu_api_exception.h"
 #include "hcomm_c_adpt.h"
 

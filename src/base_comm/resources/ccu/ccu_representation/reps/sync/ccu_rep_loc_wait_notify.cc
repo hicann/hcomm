@@ -12,7 +12,6 @@
 #include "ccu_rep_loc_wait_notify.h"
 #include <climits>
 #include "string_util.h"
-#include "exception_util.h"
 #include "ccu_api_exception.h"
 #include "ccu_ins_generator_v1.h"
 #include "ccu_kernel.h"

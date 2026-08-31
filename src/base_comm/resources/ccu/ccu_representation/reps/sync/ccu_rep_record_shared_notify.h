@@ -25,7 +25,7 @@ namespace CcuRep {
         uint16_t GetNotifyId() { return notify_.Id(); }
         LocalNotify GetNotify() { return notify_; }
 
-        uint16_t GetMask() { return mask_; }
+        uint16_t GetMask() const { return mask_; }
 
     private:
         CcuInsGeneratorBase* insGenPtr{nullptr};

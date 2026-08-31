@@ -27,9 +27,9 @@ namespace CcuRep {
 
         Variable GetVar() { return var; }
         Variable GetDst() { return dst; }
-        uint32_t GetNum() { return num; }
-        uint16_t GetMask() { return mask; }
-        bool GetHscbFlag() { return hscbFlag; }
+        uint32_t GetNum() const { return num; }
+        uint16_t GetMask() const { return mask; }
+        bool GetHscbFlag() const { return hscbFlag; }
 
     private:
         CcuInsGeneratorBase* insGeneratorPtr_{nullptr};

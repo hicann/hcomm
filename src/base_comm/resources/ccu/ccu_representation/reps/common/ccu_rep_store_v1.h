@@ -25,9 +25,9 @@ namespace CcuRep {
         std::string Describe() override;
 
         CcuRep::Variable GetVar() { return var; }
-        uint64_t GetAddr() { return addr; }
-        uint32_t GetNum() { return num; }
-        uint16_t GetMask() { return mask; }
+        uint64_t GetAddr() const { return addr; }
+        uint32_t GetNum() const { return num; }
+        uint16_t GetMask() const { return mask; }
 
     private:
         uint16_t mask{1};

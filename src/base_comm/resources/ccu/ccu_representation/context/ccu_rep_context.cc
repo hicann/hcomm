@@ -131,7 +131,7 @@ namespace CcuRep {
     {
         constexpr uint32_t defaultDieId = 0; // 首次填写profiling时dieId未确定
         // 生成SQE粒度profiling信息
-        ccuProfilingInfoCache.type = (uint8_t)CcuProfilinType::CCU_TASK_PROFILING;
+        ccuProfilingInfoCache.type = static_cast<uint8_t>(CcuProfilinType::CCU_TASK_PROFILING);
         ccuProfilingInfoCache.name = kernelName.c_str();
         ccuProfilingInfoCache.dieId = defaultDieId;
         HCCL_DEBUG(
@@ -142,7 +142,7 @@ namespace CcuRep {
 
     int32_t CcuRepContext::AddProfiling(const std::string& name, uint32_t mask)
     {
-        ccuProfilingInfoCache.type = (uint8_t)CcuProfilinType::CCU_WAITCKE_PROFILING;
+        ccuProfilingInfoCache.type = static_cast<uint8_t>(CcuProfilinType::CCU_WAITCKE_PROFILING);
         ccuProfilingInfoCache.name = name;
         ccuProfilingInfoCache.ckeId = INVALID_CKE_ID;
         ccuProfilingInfoCache.mask = mask;
@@ -163,7 +163,7 @@ namespace CcuRep {
         auto* channelImpl = dynamic_cast<CcuUrmaChannel*>(static_cast<Channel*>(channelPtr));
         CHK_PTR_NULL(channelImpl);
 
-        ccuProfilingInfoCache.type = (uint8_t)CcuProfilinType::CCU_WAITCKE_PROFILING;
+        ccuProfilingInfoCache.type = static_cast<uint8_t>(CcuProfilinType::CCU_WAITCKE_PROFILING);
         ccuProfilingInfoCache.name = name;
         CHK_RET(channelImpl->GetLocCkeByIndex(signalIndex, ccuProfilingInfoCache.ckeId));
         ccuProfilingInfoCache.mask = mask;
@@ -184,7 +184,7 @@ namespace CcuRep {
     int32_t CcuRepContext::AddProfiling(const ChannelHandle* channels, uint32_t channelNum)
     {
         CHK_PTR_NULL(channels);
-        ccuProfilingInfoCache.type = (uint8_t)CcuProfilinType::CCU_LOOPGROUP_PROFILING;
+        ccuProfilingInfoCache.type = static_cast<uint8_t>(CcuProfilinType::CCU_LOOPGROUP_PROFILING);
         ccuProfilingInfoCache.name = "GroupBroadcast";
         ccuProfilingInfoCache.reduceOpType = 0xFF;   // 0xFF 无效值
         ccuProfilingInfoCache.inputDataType = 0xFF;  // 0xFF 无效值
@@ -223,7 +223,7 @@ namespace CcuRep {
         HcclReduceOp opType = static_cast<HcclReduceOp>(hcommOpType);
 
         CHK_PTR_NULL(channels);
-        ccuProfilingInfoCache.type = (uint8_t)CcuProfilinType::CCU_LOOPGROUP_PROFILING;
+        ccuProfilingInfoCache.type = static_cast<uint8_t>(CcuProfilinType::CCU_LOOPGROUP_PROFILING);
         ccuProfilingInfoCache.name = "GroupReduce";
         ccuProfilingInfoCache.reduceOpType = opType;
         ccuProfilingInfoCache.inputDataType = dataType;
