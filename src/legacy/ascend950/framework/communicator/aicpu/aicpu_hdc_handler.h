@@ -18,7 +18,7 @@ namespace Hccl {
 
 class AicpuHdcHandler {
 public:
-    AicpuHdcHandler(const HDCommunicateLite& h2dTransfer, const HDCommunicateLite& d2hTransfer);
+    AicpuHdcHandler(HDCommunicateLite& h2dTransfer, HDCommunicateLite& d2hTransfer);
     ~AicpuHdcHandler() = default;
 
     KfcCommand GetKfcCommand();

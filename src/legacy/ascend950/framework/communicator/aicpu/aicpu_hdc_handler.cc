@@ -15,9 +15,9 @@
 
 namespace Hccl {
 
-AicpuHdcHandler::AicpuHdcHandler(const HDCommunicateLite& h2dTransfer, const HDCommunicateLite& d2hTransfer)
-    : h2dTransfer_(const_cast<HDCommunicateLite*>(&h2dTransfer)),
-      d2hTransfer_(const_cast<HDCommunicateLite*>(&d2hTransfer))
+AicpuHdcHandler::AicpuHdcHandler(HDCommunicateLite& h2dTransfer, HDCommunicateLite& d2hTransfer)
+    : h2dTransfer_(&h2dTransfer),
+      d2hTransfer_(&d2hTransfer)
 {}
 
 KfcCommand AicpuHdcHandler::GetKfcCommand()

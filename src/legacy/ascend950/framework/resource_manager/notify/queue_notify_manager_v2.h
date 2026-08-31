@@ -41,7 +41,7 @@ public:
     vector<char> GetPackedData();
 
 private:
-    CommunicatorImpl* comm;
+    const CommunicatorImpl* comm;
     QueueNotifyPool notifyPool;
 
     bool IsExist(QId postQid, QId waitQid, u32 topicId);

@@ -12,7 +12,7 @@
 #include "communicator_impl.h"
 namespace Hccl {
 
-QueueNotifyManager::QueueNotifyManager(const CommunicatorImpl& comm) : comm(const_cast<CommunicatorImpl*>(&comm)) {}
+QueueNotifyManager::QueueNotifyManager(const CommunicatorImpl& comm) : comm(&comm) {}
 
 QueueNotifyManager::~QueueNotifyManager() { DECTOR_TRY_CATCH("QueueNotifyManager", Destroy()); }
 
