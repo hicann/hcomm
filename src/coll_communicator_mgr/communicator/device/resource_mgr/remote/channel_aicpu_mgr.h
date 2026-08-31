@@ -20,11 +20,9 @@
 #include <vector>
 #include <memory>
 
-using namespace hccl;
-
 class ChannelAicpuMgr {
 public:
-    ChannelAicpuMgr(HcclCommDfxLite& dfx, const HcclTopoInfo& topoInfo);
+    ChannelAicpuMgr(hccl::HcclCommDfxLite& dfx, const hccl::HcclTopoInfo& topoInfo);
     ~ChannelAicpuMgr() = default;
 
     HcclResult AllocChannelResource(HcclChannelUrmaRes* commParam);
@@ -39,8 +37,8 @@ private:
     HcclResult RegisterChannelCacheCallback(ChannelHandle channel);
 
     std::unordered_map<ChannelHandle, std::unique_ptr<Hccl::BaseTransportLiteImpl>> transportMap_;
-    HcclCommDfxLite& dfx_;
-    const HcclTopoInfo& topoInfo_;
+    hccl::HcclCommDfxLite& dfx_;
+    const hccl::HcclTopoInfo& topoInfo_;
 };
 
 #endif // CHANNEL_AICPU_MGR_H

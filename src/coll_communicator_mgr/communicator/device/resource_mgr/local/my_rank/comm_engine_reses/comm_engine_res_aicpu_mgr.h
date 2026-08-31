@@ -16,18 +16,16 @@
 #include "notify/notify_aicpu_mgr.h"
 #include <memory>
 
-using namespace hccl;
-
 class CommEngineResAicpuMgr {
 public:
-    CommEngineResAicpuMgr(HcclCommDfxLite& dfx, std::function<HcclResult(bool)> checkExecStatusCallback);
+    CommEngineResAicpuMgr(hccl::HcclCommDfxLite& dfx, std::function<HcclResult(bool)> checkExecStatusCallback);
     ~CommEngineResAicpuMgr();
 
     HcclResult InitThreads(ThreadMgrAicpuParam* param);
     HcclResult NotifyFree(NotifyMgrAicpuParam* param);
     HcclResult NotifyAlloc(NotifyMgrAicpuParam* param);
     void ReserveNotifyCapacity(size_t n);
-    const std::vector<std::shared_ptr<Thread>>& GetAllThread();
+    const std::vector<std::shared_ptr<hccl::Thread>>& GetAllThread();
     std::shared_mutex& GetThreadMutex();
 
 private:

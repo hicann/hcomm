@@ -29,13 +29,14 @@ HcclResult NotifyAicpuMgr::NotifyFree(NotifyMgrAicpuParam* param)
     std::string hcomId(param->hcomId);
     CHK_PTR_NULL(notifyArray);
     for (size_t i = 0; i < notifyNum; ++i) {
-        LocalNotify* notify = reinterpret_cast<LocalNotify*>(notifyArray[i]);
+        hccl::LocalNotify* notify = reinterpret_cast<hccl::LocalNotify*>(notifyArray[i]);
         HCCL_INFO(
             "[NotifyAicpuMgr][%s] notifyArray[%zu]=[%llu]", __func__, i,
             static_cast<unsigned long long>(notifyArray[i]));
-        auto it = std::find_if(notifys_.begin(), notifys_.end(), [notify](const std::unique_ptr<LocalNotify>& ptr) {
-            return ptr.get() == notify;
-        });
+        auto it
+            = std::find_if(notifys_.begin(), notifys_.end(), [notify](const std::unique_ptr<hccl::LocalNotify>& ptr) {
+                  return ptr.get() == notify;
+              });
         if (it != notifys_.end()) {
             HCCL_INFO(
                 "[NotifyAicpuMgr][%s] comm identifier[%s], free notifys[%llu] success", __func__, hcomId.c_str(),
@@ -64,13 +65,14 @@ HcclResult NotifyAicpuMgr::NotifyAlloc(NotifyMgrAicpuParam* param)
     if (UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
         std::ostringstream oss;
         oss << "notifyParam" << " raw bytes: ";
+        constexpr u32 HEX_WIDTH = 2;
         for (u32 i = 0; i < NOTIFY_UNIQUE_ID_MAX_SIZE; ++i) {
-            oss << std::hex << std::setw(2) << std::setfill('0')
+            oss << std::hex << std::setw(HEX_WIDTH) << std::setfill('0')
                 << static_cast<unsigned int>(static_cast<unsigned char>(param->notifyParam[i])) << " ";
         }
         HCCL_INFO("[NotifyAicpuMgr][%s] %s", __func__, oss.str().c_str());
     }
-    HcclResult ret = NotifyManager::ParseBinNotifys(notifysStr, notifys_);
+    HcclResult ret = hccl::NotifyManager::ParseBinNotifys(notifysStr, notifys_);
     if (ret != HCCL_SUCCESS || notifys_.size() < notifyNum + notifySize) {
         HCCL_ERROR(
             "[NotifyAicpuMgr][%s] alloc notifys failed, comm identifier[%s], ret[%d], "

@@ -20,27 +20,25 @@
 #include <memory>
 #include <functional>
 
-using namespace hccl;
-
 namespace hccl {
 class AicpuTsThread;
 }
 
 class ThreadAicpuMgr {
 public:
-    ThreadAicpuMgr(HcclCommDfxLite& dfx, std::function<HcclResult(bool)> checkExecStatusCallback);
+    ThreadAicpuMgr(hccl::HcclCommDfxLite& dfx, std::function<HcclResult(bool)> checkExecStatusCallback);
     ~ThreadAicpuMgr();
     HcclResult InitThreads(ThreadMgrAicpuParam* param);
-    const std::vector<std::shared_ptr<Thread>>& GetAllThread() { return threads_; }
+    const std::vector<std::shared_ptr<hccl::Thread>>& GetAllThread() { return threads_; }
     std::shared_mutex& GetThreadMutex() { return threadMutex_; }
 
 private:
     HcclResult RegisterThreadAddDfxTaskInfo(ThreadHandle thread);
-    HcclResult RegisterThreadCacheCallback(AicpuTsThread* thread);
+    HcclResult RegisterThreadCacheCallback(hccl::AicpuTsThread* thread);
 
     std::shared_mutex threadMutex_;
-    std::vector<std::shared_ptr<Thread>> threads_;
-    HcclCommDfxLite& dfx_;
+    std::vector<std::shared_ptr<hccl::Thread>> threads_;
+    hccl::HcclCommDfxLite& dfx_;
     std::function<HcclResult(bool)> checkExecStatusCallback_;
 };
 

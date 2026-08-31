@@ -236,7 +236,7 @@ void CollCommAicpuMgr::InitBackGroundThread(u32 devId)
     hcomm::HcclCommTaskExceptionLite::GetInstance().Init(devId);
     Hccl::AicpuDaemonService::GetInstance().Register(&hcomm::HcclCommTaskExceptionLite::GetInstance());
     Hccl::AicpuDaemonService::GetInstance().Register(&hccl::CollCommAicpuDestroyFunc::GetInstance());
-    Hccl::AicpuDaemonService::GetInstance().Register(&NsRecoveryFuncLite::GetInstance());
+    Hccl::AicpuDaemonService::GetInstance().Register(&hccl::NsRecoveryFuncLite::GetInstance());
 
     if (Hccl::StartMC2MaintenanceThread != nullptr) {
         Hccl::StartMC2MaintenanceThread(daemonServiceRun, &commandToBackGroud, daemonServiceStop, &commandToBackGroud);

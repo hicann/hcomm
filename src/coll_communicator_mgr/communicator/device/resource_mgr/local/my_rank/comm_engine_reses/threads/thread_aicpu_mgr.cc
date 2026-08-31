@@ -18,7 +18,7 @@
 #include <sstream>
 #include <iomanip>
 
-ThreadAicpuMgr::ThreadAicpuMgr(HcclCommDfxLite& dfx, std::function<HcclResult(bool)> checkExecStatusCallback)
+ThreadAicpuMgr::ThreadAicpuMgr(hccl::HcclCommDfxLite& dfx, std::function<HcclResult(bool)> checkExecStatusCallback)
     : dfx_(dfx),
       checkExecStatusCallback_(std::move(checkExecStatusCallback))
 {}
@@ -36,7 +36,7 @@ HcclResult ThreadAicpuMgr::InitThreads(ThreadMgrAicpuParam* param)
 {
     CHK_PTR_NULL(param);
     u32 threadNum = param->threadNum;
-    std::vector<std::shared_ptr<Thread>> outThreads;
+    std::vector<std::shared_ptr<hccl::Thread>> outThreads;
     outThreads.reserve(threadNum);
     std::string hcomId(param->hcomId);
     for (u32 i = 0; i < threadNum; ++i) {
@@ -44,14 +44,15 @@ HcclResult ThreadAicpuMgr::InitThreads(ThreadMgrAicpuParam* param)
         if (UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
             std::ostringstream oss;
             oss << "threadParam[" << i << "] raw bytes: ";
+            constexpr u32 HEX_WIDTH = 2;
             for (u32 j = 0; j < THREAD_UNIQUE_ID_MAX_SIZE; ++j) {
-                oss << std::hex << std::setw(2) << std::setfill('0')
+                oss << std::hex << std::setw(HEX_WIDTH) << std::setfill('0')
                     << static_cast<unsigned int>(static_cast<unsigned char>(param->threadParam[i][j])) << " ";
             }
             HCCL_INFO("[ThreadAicpuMgr][%s] %s", __func__, oss.str().c_str());
         }
-        std::shared_ptr<AicpuTsThread> thread;
-        EXCEPTION_CATCH((thread = std::make_shared<AicpuTsThread>(thdUniqueId)), return HCCL_E_PTR);
+        std::shared_ptr<hccl::AicpuTsThread> thread;
+        EXCEPTION_CATCH((thread = std::make_shared<hccl::AicpuTsThread>(thdUniqueId)), return HCCL_E_PTR);
         HcclResult ret = thread->Init();
         if (ret != HCCL_SUCCESS) {
             HCCL_ERROR(
@@ -70,7 +71,7 @@ HcclResult ThreadAicpuMgr::InitThreads(ThreadMgrAicpuParam* param)
             "[ThreadAicpuMgr][%s] threadArray[%zu] = [%llu]", __func__, i,
             static_cast<unsigned long long>(threadArray[i]));
         CHK_RET(RegisterThreadAddDfxTaskInfo(threadArray[i]));
-        CHK_RET(RegisterThreadCacheCallback(static_cast<AicpuTsThread*>(outThreads[i].get())));
+        CHK_RET(RegisterThreadCacheCallback(static_cast<hccl::AicpuTsThread*>(outThreads[i].get())));
     }
     std::unique_lock<std::shared_mutex> rwLock(threadMutex_);
     threads_.insert(
@@ -113,7 +114,7 @@ HcclResult ThreadAicpuMgr::RegisterThreadAddDfxTaskInfo(ThreadHandle thread)
     return HCCL_SUCCESS;
 }
 
-HcclResult ThreadAicpuMgr::RegisterThreadCacheCallback(AicpuTsThread* thread)
+HcclResult ThreadAicpuMgr::RegisterThreadCacheCallback(hccl::AicpuTsThread* thread)
 {
     HCCL_INFO("[ThreadAicpuMgr][%s] register cache callback for thread[%p]", __func__, thread);
     CHK_PTR_NULL(thread);

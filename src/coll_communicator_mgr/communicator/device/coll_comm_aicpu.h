@@ -35,8 +35,6 @@
 #include "comm_engine_res_aicpu_mgr.h"
 #include "channel_aicpu_mgr.h"
 
-using namespace hccl;
-
 namespace hccl {
 class HcclCommAicpu;
 }
@@ -56,7 +54,7 @@ public:
     bool IsLegacy910CollCommBusy();
     void SetLegacy910CollCommBusy(bool busy);
 
-    const HcclTopoInfo& GetTopoInfo() { return topoInfo_; }
+    const hccl::HcclTopoInfo& GetTopoInfo() { return topoInfo_; }
     const std::string& GetIdentifier() { return identifier_; }
 
     // taskException
@@ -64,7 +62,7 @@ public:
     void SetErrorReported(bool isErrorReported) { isErrorReported_ = isErrorReported; }
     HcclResult SendErrorMessageReportToHost(Hccl::ErrorMessageReport& errMsgInfo);
     HcclResult RegisterProfCallBack();
-    HcclCommDfxLite* GetHcclCommDfxLite() { return &dfx_; };
+    hccl::HcclCommDfxLite* GetHcclCommDfxLite() { return &dfx_; };
     u32 GetDevId() { return devId_; }
 
     // h2d - d2h通道信息交互
@@ -97,11 +95,11 @@ private:
 
     std::string identifier_;
     HcclCommStatus commStatus_{HcclCommStatus::HCCL_COMM_STATUS_INVALID};
-    HcclTopoInfo topoInfo_;
+    hccl::HcclTopoInfo topoInfo_;
 
     // dfx — 必须在 commEngineResMgr_/channelMgr_ 之前声明，确保后析构
     bool isErrorReported_{false};
-    HcclCommDfxLite dfx_;
+    hccl::HcclCommDfxLite dfx_;
 
     // 资源管理 — 通过mgr持有（持有 dfx_ 引用）
     std::unique_ptr<CommEngineResAicpuMgr> commEngineResMgr_;

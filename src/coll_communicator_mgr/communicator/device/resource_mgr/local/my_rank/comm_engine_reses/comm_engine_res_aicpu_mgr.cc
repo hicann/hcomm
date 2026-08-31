@@ -12,7 +12,7 @@
 #include "log.h"
 
 CommEngineResAicpuMgr::CommEngineResAicpuMgr(
-    HcclCommDfxLite& dfx, std::function<HcclResult(bool)> checkExecStatusCallback)
+    hccl::HcclCommDfxLite& dfx, std::function<HcclResult(bool)> checkExecStatusCallback)
 {
     threadMgr_ = std::make_unique<ThreadAicpuMgr>(dfx, std::move(checkExecStatusCallback));
     notifyMgr_ = std::make_unique<NotifyAicpuMgr>();
@@ -46,6 +46,9 @@ void CommEngineResAicpuMgr::ReserveNotifyCapacity(size_t n)
     }
 }
 
-const std::vector<std::shared_ptr<Thread>>& CommEngineResAicpuMgr::GetAllThread() { return threadMgr_->GetAllThread(); }
+const std::vector<std::shared_ptr<hccl::Thread>>& CommEngineResAicpuMgr::GetAllThread()
+{
+    return threadMgr_->GetAllThread();
+}
 
 std::shared_mutex& CommEngineResAicpuMgr::GetThreadMutex() { return threadMgr_->GetThreadMutex(); }

@@ -18,7 +18,10 @@
 #include "adapter_hal_pub.h"
 #include "log.h"
 
-ChannelAicpuMgr::ChannelAicpuMgr(HcclCommDfxLite& dfx, const HcclTopoInfo& topoInfo) : dfx_(dfx), topoInfo_(topoInfo) {}
+ChannelAicpuMgr::ChannelAicpuMgr(hccl::HcclCommDfxLite& dfx, const hccl::HcclTopoInfo& topoInfo)
+    : dfx_(dfx),
+      topoInfo_(topoInfo)
+{}
 
 HcclResult ChannelAicpuMgr::AllocChannelResource(HcclChannelUrmaRes* commParam)
 {
@@ -39,9 +42,9 @@ HcclResult ChannelAicpuMgr::ProcessUrmaRes(HcclChannelUrmaRes* commParam, bool i
     HCCL_INFO(
         "[ChannelAicpuMgr][%s] commParam->uniqueIdAddr[%p], commParam->uniqueIdSize[%u]", __func__,
         commParam->uniqueIdAddr, commParam->uniqueIdSize);
-    ChannelHandle* channelList = reinterpret_cast<ChannelHandle*>(commParam->channelList);
-    u8* currentSrcAddr = reinterpret_cast<u8*>(commParam->uniqueIdAddr);
-    u32* addSize = reinterpret_cast<u32*>(commParam->channelSizeAddr);
+    ChannelHandle* channelList = static_cast<ChannelHandle*>(commParam->channelList);
+    u8* currentSrcAddr = static_cast<u8*>(commParam->uniqueIdAddr);
+    u32* addSize = static_cast<u32*>(commParam->channelSizeAddr);
     CHK_PTR_NULL(channelList);
     CHK_PTR_NULL(currentSrcAddr);
     CHK_PTR_NULL(addSize);

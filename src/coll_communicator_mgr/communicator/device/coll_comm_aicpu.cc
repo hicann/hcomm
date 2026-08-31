@@ -49,7 +49,7 @@ HcclResult CollCommAicpu::InitAicpuIndOp(CommAicpuParam* commAicpuParam)
     CHK_RET(RegisterProfCallBack());
     CHK_RET(InitHDCommunicate(commAicpuParam));
 
-    EXCEPTION_CATCH(nsRecoveryLitePtr_ = std::make_shared<NsRecoveryLite>(), return HCCL_E_PTR);
+    EXCEPTION_CATCH(nsRecoveryLitePtr_ = std::make_shared<hccl::NsRecoveryLite>(), return HCCL_E_PTR);
     nsRecoveryLitePtr_->Init(kfcControlTransferH2D_, kfcStatusTransferD2H_);
 
     CHK_RET(Hccl::DlHalFunctionV2::GetInstance().DlHalFunctionInit());
@@ -188,7 +188,7 @@ HcclResult CollCommAicpu::InitDfxOpInfo(HcclDfxOpInfo* aicpuDfxInfo)
     newDfxOpInfo.opType = static_cast<u8>(aicpuDfxInfo->opType);
     newDfxOpInfo.dataType = static_cast<u8>(aicpuDfxInfo->dataType);
 
-    newDfxOpInfo.commHandle = reinterpret_cast<void*>(this);
+    newDfxOpInfo.commHandle = this;
     newDfxOpInfo.count = aicpuDfxInfo->dataCount;
     newDfxOpInfo.srcAddr = aicpuDfxInfo->inputMemAddr;
     newDfxOpInfo.dstAddr = aicpuDfxInfo->outputMemAddr;
@@ -207,7 +207,7 @@ HcclResult CollCommAicpu::InitDfxOpInfo(HcclDfxOpInfo* aicpuDfxInfo)
 
 HcclResult CollCommAicpu::ProfilingReportDeviceOp()
 {
-    HcclCommDfxLite* hcclCommDfxLite = GetHcclCommDfxLite();
+    hccl::HcclCommDfxLite* hcclCommDfxLite = GetHcclCommDfxLite();
     CHK_PTR_NULL(hcclCommDfxLite);
     auto* currDfxOpInfo = static_cast<const Hccl::DfxDfxOpInfo*>(hcclCommDfxLite->GetLatestDfxOpInfo());
     if (currDfxOpInfo == nullptr) {

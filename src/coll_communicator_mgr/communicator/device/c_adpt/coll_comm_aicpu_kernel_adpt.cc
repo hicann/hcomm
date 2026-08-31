@@ -12,8 +12,6 @@
 #include "coll_comm_aicpu_mgr.h"
 #include "log.h"
 
-using namespace hccl;
-
 namespace {
 // Acquire → 操作 → Release 的公共骨架：获取 CommEngineResMgr
 inline HcclResult

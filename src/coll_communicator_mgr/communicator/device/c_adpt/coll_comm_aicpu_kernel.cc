@@ -19,7 +19,7 @@ __attribute__((visibility("default"))) uint32_t RunAicpuCommInit(void* args)
 {
     CHK_PRT_RET(args == nullptr, HCCL_ERROR("[%s]args is null.", __func__), HCCL_E_PARA);
 
-    CommAicpuParam* commAicpuParam = reinterpret_cast<CommAicpuParam*>(args);
+    CommAicpuParam* commAicpuParam = static_cast<CommAicpuParam*>(args);
     DevType devType = static_cast<DevType>(commAicpuParam->deviceType);
     if (devType == DevType::DEV_TYPE_950 || devType == DevType::DEV_TYPE_960) {
         HCCL_INFO(
@@ -38,7 +38,7 @@ __attribute__((visibility("default"))) uint32_t RunAicpuDfxInitV2(void* args)
         u64 context;
         char commTag[256];
     };
-    InitTask* ctxArgs = reinterpret_cast<InitTask*>(args);
+    InitTask* ctxArgs = static_cast<InitTask*>(args);
     CHK_PRT_RET(ctxArgs == nullptr, HCCL_ERROR("[%s]ctxArgs is null.", __func__), HCCL_E_PTR);
     HcclDfxOpInfo* dfxOpInfo = reinterpret_cast<HcclDfxOpInfo*>(ctxArgs->context);
     CollCommAicpu* currentComm = CollCommAicpuMgr::GetInstance().GetCurrentComm();

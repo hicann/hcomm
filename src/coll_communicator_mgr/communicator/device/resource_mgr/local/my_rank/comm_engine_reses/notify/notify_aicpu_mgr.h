@@ -17,8 +17,6 @@
 #include <vector>
 #include <memory>
 
-using namespace hccl;
-
 class NotifyAicpuMgr {
 public:
     NotifyAicpuMgr();
@@ -28,7 +26,7 @@ public:
     void ReserveNotifyCapacity(size_t n);
 
 private:
-    std::vector<std::unique_ptr<LocalNotify>> notifys_;
+    std::vector<std::unique_ptr<hccl::LocalNotify>> notifys_;
 };
 
 #endif // NOTIFY_AICPU_MGR_H
