@@ -437,7 +437,7 @@ private:
 
         // 校验是否需要打印WQE
         bool needDumpWqe = false;
-        if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_DEBUG))) {
+        if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
             needDumpWqe = true;
         }
 
@@ -471,7 +471,7 @@ private:
     {
         // 校验是否需要打印WQE
         bool needDumpWqe = false;
-        if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_DEBUG))) {
+        if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
             needDumpWqe = true;
         }
 
@@ -509,14 +509,14 @@ private:
             if (UNLIKELY(needDumpWqe)) {
                 const std::vector<WqeTask>& wqeTasks = ubConnLitePtr->GetWqeTasks();
                 const uint64_t wqeCount = wqeTasks.size();
-                PLF_CONFIG_DEBUG(
+                PLF_CONFIG_INFO(
                     PLF_TASK,
                     "[UbTransportLiteImpl][PostLaunchWqe] dump %llu generated WQEs "
                     "in jetty[%u, %u, %u]",
                     wqeCount, ubConnLitePtr->GetUbJettyLiteId().GetDieId(),
                     ubConnLitePtr->GetUbJettyLiteId().GetFuncId(), ubConnLitePtr->GetUbJettyLiteId().GetJettyId());
                 for (size_t wqeIdx = 0; wqeIdx < wqeCount; wqeIdx++) {
-                    PLF_CONFIG_DEBUG(
+                    PLF_CONFIG_INFO(
                         PLF_TASK,
                         "[UbTransportLiteImpl][PostLaunchWqe] %uth generated WQE "
                         "in jetty[%u, %u, %u]",

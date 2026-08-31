@@ -219,14 +219,14 @@ void RtsqA5::LaunchTask()
     CopySqeBufToSq(locBuf);
 
     // 正常展开按需打印SQE
-    if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_DEBUG))) {
-        PLF_CONFIG_DEBUG(
+    if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
+        PLF_CONFIG_INFO(
             PLF_TASK, "[RtsqA5][LaunchTask] dump %llu generated SQEs in stream[%u]", pendingSqeCnt, streamId_);
 
         int ret = HCCL_SUCCESS;
         uint8_t* sqePtr = locBuf;
         for (size_t sqeIdx = 0; sqeIdx < pendingSqeCnt; sqeIdx++) {
-            PLF_CONFIG_DEBUG(PLF_TASK, "[RtsqA5][LaunchTask] %uth generated SQE in stream[%u]", sqeIdx, streamId_);
+            PLF_CONFIG_INFO(PLF_TASK, "[RtsqA5][LaunchTask] %uth generated SQE in stream[%u]", sqeIdx, streamId_);
             ret = hcomm::AicpuTaskUtils::DumpSqeContent(sqePtr);
             if (UNLIKELY(ret != HCCL_SUCCESS)) {
                 THROW<InternalException>(StringFormat("RtsqA5::%s DumpSqeContent failed, ret = %d", __func__, ret));

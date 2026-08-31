@@ -24,7 +24,7 @@ namespace hcomm {
 
 HcclResult AicpuTaskUtils::DumpSqeContent(const uint8_t* sqePtr)
 {
-    if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_DEBUG))) {
+    if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
         CHK_PTR_NULL(sqePtr);
         Rt91095StarsSqeHeader* sqeHeaderPtr = (Rt91095StarsSqeHeader*)sqePtr;
         const Rt91095StarsSqeType sqeType = static_cast<Rt91095StarsSqeType>(sqeHeaderPtr->type);
@@ -98,7 +98,7 @@ inline HcclResult AicpuTaskUtils::DumpSdmaSqe_(const uint8_t* sqePtr)
 HcclResult AicpuTaskUtils::DumpWqeContent(const uint8_t* wqePtr)
 {
     // 注意: UdmaSqOpcode::UDMA_OPC_READ/UDMA_OPC_WRITE均使用UdmaSqeWrite
-    if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_DEBUG))) {
+    if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
         CHK_PTR_NULL(wqePtr);
         UdmaSqeCommon* wqeCommonPtr = (UdmaSqeCommon*)(wqePtr);
         const uint8_t wqeCode = static_cast<uint8_t>(wqeCommonPtr->opcode);
@@ -135,27 +135,27 @@ inline HcclResult AicpuTaskUtils::DumpReadWriteWqe_(const uint8_t* wqePtr)
             PLF_TASK,
             "[AicpuTaskUtils][DumpWqeContent] type[%s] placeOdr[%u] "
             "compOrder[%u] fence[%u] cqe[%u] opcode[%u] "
-            "tpn[%u] rmtObjId[%u] rmtEid[%u,%u,%u,%u] rmtTokenValue[%u] rmtAddr[0x%016llx] "
+            "tpn[%u] rmtEid[%u,%u,%u,%u] rmtAddr[0x%016llx] "
             "inlineEn[%u] inlineMsgLen[%u]",
             wqeType, wqeCommonPtr->placeOdr, wqeCommonPtr->compOrder, wqeCommonPtr->fence, wqeCommonPtr->cqe,
-            wqeCommonPtr->opcode, wqeCommonPtr->tpn, wqeCommonPtr->rmtObjId, wqeCommonPtr->rmtEid[0],
-            wqeCommonPtr->rmtEid[1], wqeCommonPtr->rmtEid[2], wqeCommonPtr->rmtEid[3], wqeCommonPtr->rmtTokenValue,
-            static_cast<unsigned long long>(rmtAddr), wqeCommonPtr->inlineEn, wqeCommonPtr->inlineMsgLen);
+            wqeCommonPtr->opcode, wqeCommonPtr->tpn, wqeCommonPtr->rmtEid[0], wqeCommonPtr->rmtEid[1],
+            wqeCommonPtr->rmtEid[2], wqeCommonPtr->rmtEid[3], static_cast<unsigned long long>(rmtAddr),
+            wqeCommonPtr->inlineEn, wqeCommonPtr->inlineMsgLen);
     } else {
         const uint64_t locAddr = (static_cast<uint64_t>(udmaSqeWrite->u.sge.dataAddrHigh) << UINT32_BIT_WIDTH)
                                  | udmaSqeWrite->u.sge.dataAddrLow;
         PLF_CONFIG_INFO(
             PLF_TASK,
             "[AicpuTaskUtils][DumpWqeContent] type[%s] placeOdr[%u] "
-            "compOrder[%u] fence[%u] cqe[%u] opcode[%u] tpn[%u] rmtObjId[%u] rmtEid[%u,%u,%u,%u] "
-            "rmtTokenValue[%u] rmtAddr[0x%016llx] length[%u] locTokenId[%u] locAddr[0x%016llx] "
+            "compOrder[%u] fence[%u] cqe[%u] opcode[%u] tpn[%u] rmtEid[%u,%u,%u,%u] "
+            "rmtAddr[0x%016llx] length[%u] locAddr[0x%016llx] "
             "udfFlag[%u] udfType[%u] reduceType[%u] reduceOp[%u]",
             wqeType, wqeCommonPtr->placeOdr, wqeCommonPtr->compOrder, wqeCommonPtr->fence, wqeCommonPtr->cqe,
-            wqeCommonPtr->opcode, wqeCommonPtr->tpn, wqeCommonPtr->rmtObjId, wqeCommonPtr->rmtEid[0],
-            wqeCommonPtr->rmtEid[1], wqeCommonPtr->rmtEid[2], wqeCommonPtr->rmtEid[3], wqeCommonPtr->rmtTokenValue,
-            static_cast<unsigned long long>(rmtAddr), udmaSqeWrite->u.sge.length, udmaSqeWrite->u.sge.tokenId,
-            static_cast<unsigned long long>(locAddr), wqeCommonPtr->udfFlag, wqeCommonPtr->inlinedata.udfData.udfType,
-            wqeCommonPtr->inlinedata.udfData.reduceType, wqeCommonPtr->inlinedata.udfData.reduceOp);
+            wqeCommonPtr->opcode, wqeCommonPtr->tpn, wqeCommonPtr->rmtEid[0], wqeCommonPtr->rmtEid[1],
+            wqeCommonPtr->rmtEid[2], wqeCommonPtr->rmtEid[3], static_cast<unsigned long long>(rmtAddr),
+            udmaSqeWrite->u.sge.length, static_cast<unsigned long long>(locAddr), wqeCommonPtr->udfFlag,
+            wqeCommonPtr->inlinedata.udfData.udfType, wqeCommonPtr->inlinedata.udfData.reduceType,
+            wqeCommonPtr->inlinedata.udfData.reduceOp);
     }
     return HCCL_SUCCESS;
 }
@@ -179,19 +179,16 @@ inline HcclResult AicpuTaskUtils::DumpWriteWithNotifyWqe_(const uint8_t* wqePtr)
     PLF_CONFIG_INFO(
         PLF_TASK,
         "[AicpuTaskUtils][DumpWqeContent] type[WriteWithNotify] placeOdr[%u] "
-        "compOrder[%u] fence[%u] cqe[%u] opcode[%u] tpn[%u] rmtObjId[%u] rmtEid[%u,%u,%u,%u] "
-        "rmtTokenValue[%u] rmtAddr[0x%016llx] length[%u] locTokenId[%u] locAddr[0x%016llx] "
-        "notifyTokenId[%u] notifyTokenValue[%u] notifyAddr[0x%016llx] notifyData[0x%016llx] "
+        "compOrder[%u] fence[%u] cqe[%u] opcode[%u] tpn[%u] rmtEid[%u,%u,%u,%u] "
+        "rmtAddr[0x%016llx] length[%u] locAddr[0x%016llx] "
+        "notifyAddr[0x%016llx] notifyData[0x%016llx] "
         "udfFlag[%u] udfType[%u] reduceType[%u] reduceOp[%u]",
         wqeCommonPtr->placeOdr, wqeCommonPtr->compOrder, wqeCommonPtr->fence, wqeCommonPtr->cqe, wqeCommonPtr->opcode,
-        wqeCommonPtr->tpn, wqeCommonPtr->rmtObjId, wqeCommonPtr->rmtEid[0], wqeCommonPtr->rmtEid[1],
-        wqeCommonPtr->rmtEid[2], wqeCommonPtr->rmtEid[3], wqeCommonPtr->rmtTokenValue,
-        static_cast<unsigned long long>(rmtAddr), udmaSqeWriteWithNotify->localU.sge.length,
-        udmaSqeWriteWithNotify->localU.sge.tokenId, static_cast<unsigned long long>(locAddr),
-        udmaSqeWriteWithNotify->notify.notifyTokenId, udmaSqeWriteWithNotify->notify.notifyTokenValue,
-        static_cast<unsigned long long>(notifyAddr), static_cast<unsigned long long>(notifyData), wqeCommonPtr->udfFlag,
-        wqeCommonPtr->inlinedata.udfData.udfType, wqeCommonPtr->inlinedata.udfData.reduceType,
-        wqeCommonPtr->inlinedata.udfData.reduceOp);
+        wqeCommonPtr->tpn, wqeCommonPtr->rmtEid[0], wqeCommonPtr->rmtEid[1], wqeCommonPtr->rmtEid[2],
+        wqeCommonPtr->rmtEid[3], static_cast<unsigned long long>(rmtAddr), udmaSqeWriteWithNotify->localU.sge.length,
+        static_cast<unsigned long long>(locAddr), static_cast<unsigned long long>(notifyAddr),
+        static_cast<unsigned long long>(notifyData), wqeCommonPtr->udfFlag, wqeCommonPtr->inlinedata.udfData.udfType,
+        wqeCommonPtr->inlinedata.udfData.reduceType, wqeCommonPtr->inlinedata.udfData.reduceOp);
     return HCCL_SUCCESS;
 }
 

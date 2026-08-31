@@ -48,7 +48,7 @@ const AddrRefreshInfo& AddrRefreshInfo::operator=(const AddrRefreshInfo& other)
 
 AicpuTaskCacheEntry::AicpuTaskCacheEntry()
 {
-    if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_DEBUG))) {
+    if ((UNLIKELY(GetPlfDebugConfigValue() & PLF_TASK)) || UNLIKELY(HcclCheckLogLevel(HCCL_LOG_INFO))) {
         isTaskConfigDebug_ = true;
     }
 }
@@ -533,9 +533,8 @@ inline HcclResult AicpuTaskCacheEntry::PrintRefreshResult_(
             TokenInfo& tokenInfo = tokenInfos[memIdx];
             HCCL_INFO(
                 "[AicpuTaskCacheEntry][RefreshAndLaunch] tokenInfosMap_[0x%016llx][%u]: "
-                "needLocTokenIdFlag[%d] locTokenId[%u]; rmtTokenIdAndValueFlag[%d] rmtTokenId[%u] rmtTokenValue[%u]",
-                ubTransportLitePtr, memIdx, tokenInfo.needLocTokenIdFlag, tokenInfo.locTokenId,
-                tokenInfo.needRmtTokenIdAndValueFlag, tokenInfo.rmtTokenId, tokenInfo.rmtTokenValue);
+                "needLocTokenIdFlag[%d]; rmtTokenIdAndValueFlag[%d]",
+                ubTransportLitePtr, memIdx, tokenInfo.needLocTokenIdFlag, tokenInfo.needRmtTokenIdAndValueFlag);
         }
     }
     // 打印刷新的顺序
@@ -762,7 +761,7 @@ inline HcclResult AicpuTaskCacheEntry::RefreshSqeTasks_(const SqeArrayInfo& sqeA
     const vector<AddrRefreshInfo>& sqeSrcAddrRefreshInfoArray = sqeArrayInfo.srcAddrRefreshInfoArray;
     const vector<AddrRefreshInfo>& sqeDstAddrRefreshInfoArray = sqeArrayInfo.dstAddrRefreshInfoArray;
     if (UNLIKELY(isTaskConfigDebug_)) {
-        PLF_CONFIG_DEBUG(
+        PLF_CONFIG_INFO(
             PLF_TASK, "[AicpuTaskCacheEntry][RefreshSqeTasks_] dump %llu cached SQEs in stream[%u]", sqeCount,
             rtsqA5Ptr->GetStreamId());
     }
@@ -785,7 +784,7 @@ inline HcclResult AicpuTaskCacheEntry::RefreshSqeTasks_(const SqeArrayInfo& sqeA
         sqeArrayPtr = sqeArrayInfo.sqeArray;
         for (size_t sqeIdx = 0; sqeIdx < sqeCount; ++sqeIdx) {
             // 打印当前SQE
-            PLF_CONFIG_DEBUG(
+            PLF_CONFIG_INFO(
                 PLF_TASK, "[AicpuTaskCacheEntry][RefreshSqeTasks_] %uth cached SQE in stream[%u]", sqeIdx,
                 rtsqA5Ptr->GetStreamId());
             CHK_RET(AicpuTaskUtils::DumpSqeContent(sqeArrayPtr));
@@ -881,7 +880,7 @@ inline void AicpuTaskCacheEntry::RefreshTaskAddr_(
 
 inline void AicpuTaskCacheEntry::DumpWqeTasksHeader_(uint64_t wqeCount, const UbConnLite* ubConnLitePtr) const
 {
-    PLF_CONFIG_DEBUG(
+    PLF_CONFIG_INFO(
         PLF_TASK, "[AicpuTaskCacheEntry][RefreshWqeTasks_] dump %llu cached WQEs in jetty[%u, %u, %u]", wqeCount,
         ubConnLitePtr->GetUbJettyLiteId().GetDieId(), ubConnLitePtr->GetUbJettyLiteId().GetFuncId(),
         ubConnLitePtr->GetUbJettyLiteId().GetJettyId());
@@ -890,7 +889,7 @@ inline void AicpuTaskCacheEntry::DumpWqeTasksHeader_(uint64_t wqeCount, const Ub
 inline HcclResult
 AicpuTaskCacheEntry::DumpWqeTasksPerWqe_(size_t wqeIdx, const WqeTask& wqeTask, const UbConnLite* ubConnLitePtr) const
 {
-    PLF_CONFIG_DEBUG(
+    PLF_CONFIG_INFO(
         PLF_TASK, "[AicpuTaskCacheEntry][%s] %uth cached WQE in jetty[%u, %u, %u]", __func__, wqeIdx,
         ubConnLitePtr->GetUbJettyLiteId().GetDieId(), ubConnLitePtr->GetUbJettyLiteId().GetFuncId(),
         ubConnLitePtr->GetUbJettyLiteId().GetJettyId());
