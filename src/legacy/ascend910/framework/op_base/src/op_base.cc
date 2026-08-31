@@ -2315,7 +2315,8 @@ HcclResult HcclSetConfig([[maybe_unused]] HcclConfig config, [[maybe_unused]] Hc
             } else {
                 DevType devType;
                 CHK_RET(hrtGetDeviceType(devType));
-                if (configValue.value == DETERMINISTIC_STRICT && devType != DevType::DEV_TYPE_910B) {
+                if (configValue.value == DETERMINISTIC_STRICT && devType != DevType::DEV_TYPE_910B
+                    && devType != DevType::DEV_TYPE_910_93) {
                     HCCL_ERROR(
                         "[HcclSetConfig] configValue[%d], reduce order preservation is not supported for"
                         " devType[%d]",

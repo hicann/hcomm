@@ -51,7 +51,7 @@ TEST_F(HcclGetConfigTest, Ut_HcclGetConfig_When_SetFailed_Expect_ReturnValueIsDE
 {
     union HcclConfigValue hcclConfigValue;
     union HcclConfigValue hcclConfigValueRet;
-    DevType deviceType = DevType::DEV_TYPE_910_93;
+    DevType deviceType = DevType::DEV_TYPE_910;
     MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
     hcclConfigValue.value = 2;
     HcclResult ret = HcclSetConfig(HCCL_DETERMINISTIC, hcclConfigValue);

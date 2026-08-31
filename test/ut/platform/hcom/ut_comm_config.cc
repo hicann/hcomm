@@ -319,30 +319,27 @@ TEST_F(CommConfigTest, Ut_GetAicpuUnfoldConfig_When_SetConfigOpExpansionMode_Aic
     GlobalMockObject::verify();
 }
 
-#if 0
-
-TEST_F(CommConfigTest, utCommConfig_deterministic_strcit_fail)
+TEST_F(CommConfigTest, utCommConfig_deterministic_strcit_910_93_success)
 {
     MOCKER(GetExternalInputCCLBuffSize)
-    .stubs()
-    .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
+        .stubs()
+        .will(returnValue(static_cast<u64>(200 * HCCL_CCL_COMM_FIXED_CALC_BUFFER_SIZE)));
 
     MOCKER(GetExternalInputHcclDeterministicV2).stubs().will(returnValue(0));
 
-    // 确定性计算配置为规约保序仅支持A2场景
+    // 确定性计算配置为规约保序支持A2/A3场景
     DevType deviceType = DevType::DEV_TYPE_910_93;
     MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
 
     CommConfig commConfig("comm_ID");
-    CommConfigInfo configInfo = { sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 1, { 0 } };
-    CommConfigHandle configHandle = { configInfo, 300, 2, "comm_ID", "should_not_be_loaded", 0, 132, 4};
+    CommConfigInfo configInfo = {sizeof(CommConfigHandle), COMM_CONFIG_MAGIC_WORD, 1, {0}};
+    CommConfigHandle configHandle = {configInfo, 300, 2, "comm_ID", "should_not_be_loaded", 0, 132, 4};
 
     HcclResult ret = commConfig.SetConfigByVersion(configHandle);
-    EXPECT_EQ(ret, HCCL_E_PARA);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
+    EXPECT_EQ(commConfig.GetConfigDeterministic(), 2);
     GlobalMockObject::verify();
 }
-
-#endif
 
 TEST_F(CommConfigTest, CheckRankIpFamily_ValidIPv4_Success)
 {

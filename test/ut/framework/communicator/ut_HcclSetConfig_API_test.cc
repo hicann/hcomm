@@ -35,8 +35,18 @@ TEST_F(HcclSetConfigTest, Ut_HcclSetConfig_When_ConfigValueIsNotInDeterministicE
     EXPECT_EQ(ret, HCCL_E_PARA);
 }
 
-TEST_F(
-    HcclSetConfigTest, Ut_HcclSetConfig_When_ConfigValueIsSTRICTButDevTypeIsNot910B_Expect_ReturnIsHCCL_E_NOT_SUPPORT)
+TEST_F(HcclSetConfigTest, Ut_HcclSetConfig_When_StrictButDevTypeNotSupport_Expect_ReturnIsHCCL_E_NOT_SUPPORT)
+{
+    HcclConfigValue value;
+    value.value = DETERMINISTIC_STRICT;
+    DevType deviceType = DevType::DEV_TYPE_910;
+    MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
+
+    HcclResult ret = HcclSetConfig(HCCL_DETERMINISTIC, value);
+    EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
+}
+
+TEST_F(HcclSetConfigTest, Ut_HcclSetConfig_When_ConfigValueIsSTRICTAndDevTypeIs910_93_Expect_ReturnIsHCCL_SUCCESS)
 {
     HcclConfigValue value;
     value.value = DETERMINISTIC_STRICT;
@@ -44,7 +54,7 @@ TEST_F(
     MOCKER(hrtGetDeviceType).stubs().with(outBound(deviceType)).will(returnValue(HCCL_SUCCESS));
 
     HcclResult ret = HcclSetConfig(HCCL_DETERMINISTIC, value);
-    EXPECT_EQ(ret, HCCL_E_NOT_SUPPORT);
+    EXPECT_EQ(ret, HCCL_SUCCESS);
 }
 
 TEST_F(HcclSetConfigTest, Ut_HcclSetConfigTest_When_Normal_Expect_ReturnIsHCCL_SUCCESS)

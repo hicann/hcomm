@@ -292,15 +292,15 @@ HcclResult CommConfig::SetConfigDeterministic(const CommConfigHandle& config)
         if (config.deterministic == DETERMINISTIC_STRICT) {
             DevType deviceType;
             CHK_RET(hrtGetDeviceType(deviceType));
-            if (deviceType != DevType::DEV_TYPE_910B) {
+            if (deviceType != DevType::DEV_TYPE_910B && deviceType != DevType::DEV_TYPE_910_93) {
                 RPT_INPUT_ERR(
                     true, "EI0003", std::vector<std::string>({"ccl_op", "value", "parameter", "expect"}),
                     std::vector<std::string>(
                         {"HcclCommInitRootInfoConfig", std::to_string(config.deterministic), "hcclDeterministic",
-                         "set to 2(strict), only support A2."}));
+                         "set to 2(strict), only support A2/A3."}));
                 HCCL_ERROR(
                     "[%s][%s] The configuration of hcclDeterministic[%u] is set to "
-                    "2(strict), and only support A2",
+                    "2(strict), and only support A2/A3",
                     LOG_KEYWORDS_TASK_EXEC.c_str(), LOG_KEYWORDS_INVALID_ARGUMENT.c_str(), config.deterministic);
                 return HCCL_E_PARA;
             }
