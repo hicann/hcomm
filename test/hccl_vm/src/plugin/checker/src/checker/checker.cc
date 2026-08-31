@@ -32,6 +32,7 @@
 #include "dump_v3/dump_v3_manager.h"
 #include "framework/task_graph_generator_v3/task_graph_generator_v3.h"
 #include "framework/task_graph_generator_v3/task_graph_mem_conflict_v3.h"
+#include "framework/task_graph_generator_v3/task_graph_sync_conflict_v3.h"
 #include "framework/task_graph_generator_v3/task_graph_semantic_check_v3.h"
 #include "framework/task_graph_generator_v3/task_graph_single_task_check_v3.h"
 #include "framework/task_graph_generator_v3/task_meta_translator_v3.h"
@@ -449,6 +450,30 @@ HcclResult CheckGraphV3MemConflict(const V3TaskNode *start)
     return ret;
 }
 
+HcclResult CheckGraphV3SyncConflict(const V3TaskNode *start)
+{
+    V3StageTimer timer("SyncConflict");
+    if (start == nullptr) {
+        HCCL_VM_WARN("Skip sync-conflict check because the graph start node is null");
+        timer.SetStatus("skipped");
+        return HCCL_SUCCESS;
+    }
+
+    TaskGraphGeneratorV3::SyncConflictCheckStats stats;
+    HcclResult ret = TaskGraphGeneratorV3::CheckSyncResourceConflict(start, &stats);
+    std::ostringstream extraInfo;
+    extraInfo << "originalNodeCount=" << stats.originalNodeCount
+              << ", copiedNodeCount=" << stats.copiedNodeCount
+              << ", copiedEdgeCount=" << stats.copiedEdgeCount
+              << ", resourceBucketCount=" << stats.resourceBucketCount
+              << ", pairCount=" << stats.pairCount
+              << ", checkedBucketCount=" << stats.checkedBucketCount
+              << ", conflictCount=" << stats.conflictCount;
+    timer.SetExtraInfo(extraInfo.str());
+    timer.SetStatus(ret == HCCL_SUCCESS ? "success" : "failed");
+    return ret;
+}
+
 HcclResult CheckGraphV3Semantic(const V3TaskNode *start)
 {
     V3StageTimer timer("SemanticCheck");
@@ -513,8 +538,9 @@ HcclResult GenAndCheckGraphV3()
     LogGraphV3Dag(dummyStartV3);
 
     // V3 检查顺序与日志阶段保持一致：
-    // 成图 -> 单 task 内存校验 -> 内存冲突校验 -> 语义校验。
+    // 成图 -> 单 task 内存校验 -> 同步资源校验 -> 内存冲突校验 -> 语义校验。
     CHK_RET(CheckGraphV3TaskMem(dummyStartV3));
+    CHK_RET(CheckGraphV3SyncConflict(dummyStartV3));
     if (ENABLE_V3_MEM_CONFLICT_CHECK) {
         CHK_RET(CheckGraphV3MemConflict(dummyStartV3));
     }
