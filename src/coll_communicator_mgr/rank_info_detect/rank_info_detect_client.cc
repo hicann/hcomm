@@ -249,6 +249,7 @@ void RankInfoDetectClient::ConstructSingleRank(RankTableInfo& localRankTable)
     localRankTable.rankCount = 1;
     NewRankInfo rankInfo{};
     rankInfo.rankId = rankId_;
+    rankInfo.deviceId = devPhyId_;
     rankInfo.rankLevelInfos.emplace_back(RankLevelInfo{});
     CHK_PRT_CONT(GetLocalTlsStatus(rankInfo.tlsStatus), HCCL_WARNING("[GetLocalTlsStatus] Can not get TlsStatus"));
     CHK_PRT_CONT(
